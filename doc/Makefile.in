@@ -49,7 +49,7 @@ EMACS           = emacs
 
 SUBDIRS         = @SUBDIRS@
 
-.PHONY: all quick bootstrap bootquick boot-quick check install clean veryclean distclean depend ps installps $(DOCDIR)/idx xref clean-xref bootidx THEINDEX
+.PHONY: all quick bootstrap bootquick boot-quick check install clean veryclean distclean depend ps pdf installps $(DOCDIR)/idx xref clean-xref bootidx THEINDEX
 
 Makefile: Makefile.in config.status
         ./config.status
@@ -144,6 +144,11 @@ ps:
         $(MAKE) global-xref-db.xml; \
         dirs="$(PSDOCDIRS)"; \
         for i in $$dirs; do (cd $$i && $(MAKE) $$i.ps) || exit 1; done
+
+pdf:
+        $(MAKE) global-xref-db.xml; \
+        dirs="$(PSDOCDIRS)"; \
+        for i in $$dirs; do (cd $$i && $(MAKE) $$i.pdf) || exit 1; done
 
 ps.veryclean:
         -rm -f global-xref-db.xml;

@@ -20,6 +20,9 @@
 \RequirePackage{times}
 \RequirePackage{mathptm}
 
+\newif\ifmozart@hyper \mozart@hypertrue
+\DeclareOption{nohyper}{\mozart@hyperfalse}
+
 % pass options down to book class
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{book}}
 \ProcessOptions
@@ -222,6 +225,9 @@
   \pagestyle{mozart}\thispagestyle{mozart}%
   \setcounter{page}{1}\setcounter{footnote}{0}}
 
+\ifmozart@hyper
+\RequirePackage{hyperref}
+\fi
 \AtBeginDocument{\mozart@front}
 
 \newcommand{\mozart@title@font@one}{%
@@ -819,20 +825,22 @@
 \newcommand{\mozartREFEXTKEY}[1]{ (#1)}
 \newcommand{\mozartDEFAULTREFEXT}{\texttt}
 
-\let\latex@ref\ref
-\let\latex@pageref\pageref
-
 \newcommand{\mozart@noweird}{\useochar@defs\def\usechar##1{##1}\def\protect{}}
 
-\def\ref#1{{\mozart@specials@ref\latex@ref{#1}}}
-\def\pageref#1{{\mozart@specials@ref\latex@pageref{#1}}}
+\AtBeginDocument{%
+\let\latex@ref\ref
+\let\latex@pageref\pageref
+\let\latex@label\label
+\def\ref#1{{\mozart@specials@ref\latex@ref{#1}}}%
+\def\pageref#1{{\mozart@specials@ref\latex@pageref{#1}}}%
 \def\label#1{\@bsphack
   {\mozart@specials@ref\xdef\mozart@temp{#1}}%
-  \expandafter\mozart@label\expandafter{\mozart@temp}}
-\def\mozart@label#1{%
-  \protected@write\@auxout{}%
-         {\string\newlabel{#1}{{\@currentlabel}{\thepage}}}%
-  \@esphack}
+  \expandafter\latex@label\expandafter{\mozart@temp}}}
+
+%\def\mozart@label#1{%
+%  \protected@write\@auxout{}%
+%         {\string\newlabel{#1}{{\@currentlabel}{\thepage}}}%
+%  \@esphack}
 
 % figures
 
@@ -917,13 +925,23 @@
 \newcommand{\mozart@chunk@prev@page}{}
 \newcommand{\mozart@chunk@curr@page}{}
 
+\ifmozart@hyper
+\def\mozart@pick@first#1#2#3#4#5{#1}
+\def\mozart@pick@second#1#2#3#4#5{#2}
+\else
+\def\mozart@pick@first#1#2{#1}
+\def\mozart@pick@second#1#2{#2}
+\fi
+
 \newcommand{\mozart@chunk@init}{%
   \xdef\mozart@chunk@prev@page{\mozart@chunk@curr@page}%
   \stepcounter{mozart@chunk}%
   \@ifundefined{r@chunk.glob.\themozart@chunk}%
     {\xdef\mozart@chunk@curr@page{\thepage}}%
-    {\edef\mozart@temp{\csname r@chunk.glob.\themozart@chunk\endcsname}%
-     \xdef\mozart@chunk@curr@page{\expandafter\@secondoftwo\mozart@temp}}%
+    {\xdef\mozart@chunk@curr@page{%
+       \expandafter\expandafter
+       \expandafter\mozart@pick@second
+       \csname r@chunk.glob.\themozart@chunk\endcsname}}%
   \ifnum\themozart@chunk=\@ne
     \xdef\mozart@chunk@prev@page{\mozart@chunk@curr@page}%
   \fi
@@ -975,7 +993,7 @@
 \newcommand{\mozart@chunk@ref@def}[1]{%
   \@ifundefined{r@chunk.#1.1}{}%
     {\edef\mozart@temp{\expandafter\expandafter
-       \expandafter\@firstoftwo\csname r@chunk.#1.1\endcsname}%
+       \expandafter\mozart@pick@first\csname r@chunk.#1.1\endcsname}%
      ~~{\chunk@ref@font\pageref{chunk.#1.1}\@alph{\mozart@temp}}}}
 
 \newenvironment{mozartCHUNK}[3]
@@ -1049,6 +1067,8 @@
   \let\ENTRY@MBOX\relax\mbox{}\par\noindent}
 \newcommand{\@ITEM}{%
   \let\ENTRY@MBOX\relax\vspace{\parsep}\noindent}
+\newcommand{\mozartITEMnotes}{%
+  \mozartITEM\let\mozartITEM\relax}
 
 %\def\mozart@temp{\long\def\@item[##1]}
 %\expandafter\mozart@temp\expandafter{\the\@item}

@@ -426,6 +426,11 @@
   <if test=".//CODE|.//MENU">
     <txt:usemap>\mozartENTRYHASCODE</txt:usemap>
   </if>
+  <variable name="notes" select="descendant::NOTE[@FOOT='FOOT']"/>
+  <if test="$notes">
+    <txt:usemap>\mozartITEMnotes </txt:usemap>
+    <apply-templates mode="footnotetext" select="$notes"/>
+  </if>
   <txt:usemap><text>
 </text></txt:usemap>
 </template>
@@ -722,6 +727,10 @@
 
 <template match="TABLE">
   <call-template name="maybe.display.begin.table"/>
+  <variable name="minipage" select=".//*[(self::NOTE and @FOOT='FOOT') or self::REF.EXTERN]"/>
+  <if test="$minipage">
+    <txt:usemap>\begin{minipage}{\linewidth}</txt:usemap>
+  </if>
   <txt:usemap>\begin{tabular}{</txt:usemap>
   <choose>
     <when test="@ID and meta:latexTableSpecExists((string(@ID)))">
@@ -738,6 +747,9 @@
   <txt:usemap>}</txt:usemap>
   <apply-templates/>
   <txt:usemap>\end{tabular}</txt:usemap>
+  <if test="$minipage">
+    <txt:usemap>\end{minipage}</txt:usemap>
+  </if>
   <call-template name="maybe.display.end.table"/>
 </template>
 
@@ -1146,19 +1158,29 @@
 
 <template match="NOTE[@FOOT='FOOT']" mode="footnotetext">
   <txt:usemap>
-\footnotetext{</txt:usemap>
+\leavevmode\footnotetext{</txt:usemap>
   <apply-templates/>
-  <txt:usemap>}</txt:usemap>
+  <txt:usemap>}\ignorespaces</txt:usemap>
 </template>
 
 <template match="REF.EXTERN" mode="footnotetext">
   <txt:usemap>
-\footnotetext{</txt:usemap>
+\leavevmode\footnotetext{</txt:usemap>
   <call-template name="ref.extern" select="."/>
-  <txt:usemap>}</txt:usemap>
+  <txt:usemap>}\ignorespaces</txt:usemap>
 </template>
 
 <template match="TITLE//NOTE[@FOOT='FOOT']" priority="3.0">
+  <txt:usemap>\protect\footnotemark{}</txt:usemap>
+</template>
+
+<template match="NOTE[@FOOT='FOOT' and (ancestor::NOTE[@FOOT='FOOT']
+          or ancestor::ENTRY)]" priority="3.0">
+  <txt:usemap>\protect\footnotemark{}</txt:usemap>
+</template>
+
+<template match="REF.EXTERN[ancestor::NOTE[@FOOT='FOOT']]" priority="3.0">
+  <apply-templates/>
   <txt:usemap>\protect\footnotemark{}</txt:usemap>
 </template>
 
@@ -1166,6 +1188,8 @@
   <txt:usemap>\footnote{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
+  <apply-templates mode="footnotetext"
+  select="descendant::*[(self::NOTE and @FOOT='FOOT') or self::REF.EXTERN]"/>
 </template>
 
 <template match="NOTE">

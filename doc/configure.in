@@ -50,14 +50,31 @@ fi
 JAVA_BIN=${oz_java_bin}
 AC_SUBST(JAVA_BIN)
 
-AC_MSG_CHECKING(for --with-java-threads)
-AC_ARG_WITH(java-threads,
-  [--with-java-threads='OPTION'
-       option for java threads support selection (default=-green)],
-  oz_java_threads=${with_java_threads})
-: ${oz_java_threads=-green}
-AC_MSG_RESULT($oz_java_threads)
-JAVA_THREADS=${oz_java_threads}
+oz_path_save=$PATH
+OZ_PATH_PROG(JAVA,java)
+if test -n "$JAVA"; then
+  OZ_PATH_PROG(JAVAC,javac)
+  OZ_PATH_PROG(JAR,jar)
+  AC_MSG_CHECKING(for class path option)
+  case `$JAVA -version 2>&1` in
+  Kaffe*) JAVACP=-addclasspath;;
+  *) JAVACP=-classpath;;
+  esac
+  AC_MSG_RESULT($JAVACP)
+  AC_MSG_CHECKING(for --with-java-threads)
+  AC_ARG_WITH(java-threads,
+    [--with-java-threads='OPTION'
+         option for java threads support selection (e.g. -green) (default=)],
+    oz_java_threads=${with_java_threads})
+  : ${oz_java_threads=}
+  AC_MSG_RESULT($oz_java_threads)
+  JAVA_THREADS=${oz_java_threads}
+fi
+PATH=$oz_path_save
+AC_SUBST(JAVA)
+AC_SUBST(JAVAC)
+AC_SUBST(JAR)
+AC_SUBST(JAVACP)
 AC_SUBST(JAVA_THREADS)
 
 AC_MSG_CHECKING(for --with-documents)

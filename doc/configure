@@ -21,7 +21,7 @@ ac_help="$ac_help
        directory where java executables/wrappers reside"
 ac_help="$ac_help
 --with-java-threads='OPTION'
-       option for java threads support selection (default=-green)"
+         option for java threads support selection (e.g. -green) (default=)"
 ac_help="$ac_help
 --with-documents='DIR1 ... DIRN' (or all)
        document subdirectories (default=none)"
@@ -1302,21 +1302,198 @@ fi
 JAVA_BIN=${oz_java_bin}
 
 
-echo $ac_n "checking for --with-java-threads""... $ac_c" 1>&6
-echo "configure:1307: checking for --with-java-threads" >&5
-# Check whether --with-java-threads or --without-java-threads was given.
+oz_path_save=$PATH
+
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    oz_for="$dummy_PATH:$SRCTOP/share/bin:$SRCTOP"
+    # Extract the first word of "java", so it can be a program name with args.
+set dummy java; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1319: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_JAVA'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$JAVA" in
+  /*)
+  ac_cv_path_JAVA="$JAVA" # Let the user override the test with a path.
+  ;;
+  ?:/*)
+  ac_cv_path_JAVA="$JAVA" # Let the user override the test with a dos path.
+  ;;
+  *)
+  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS=":"
+  ac_dummy="$oz_for"
+  for ac_dir in $ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_JAVA="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+JAVA="$ac_cv_path_JAVA"
+if test -n "$JAVA"; then
+  echo "$ac_t""$JAVA" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    case "$host_os" in
+      cygwin32) ;;
+      *) JAVA=`echo $JAVA | sed -e "s|//|/|g"`;;
+    esac
+    if test ! -n "$JAVA"
+    then
+        JAVA=undefined
+
+    fi
+
+if test -n "$JAVA"; then
+
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    oz_for="$dummy_PATH:$SRCTOP/share/bin:$SRCTOP"
+    # Extract the first word of "javac", so it can be a program name with args.
+set dummy javac; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1374: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_JAVAC'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$JAVAC" in
+  /*)
+  ac_cv_path_JAVAC="$JAVAC" # Let the user override the test with a path.
+  ;;
+  ?:/*)
+  ac_cv_path_JAVAC="$JAVAC" # Let the user override the test with a dos path.
+  ;;
+  *)
+  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS=":"
+  ac_dummy="$oz_for"
+  for ac_dir in $ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_JAVAC="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+JAVAC="$ac_cv_path_JAVAC"
+if test -n "$JAVAC"; then
+  echo "$ac_t""$JAVAC" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    case "$host_os" in
+      cygwin32) ;;
+      *) JAVAC=`echo $JAVAC | sed -e "s|//|/|g"`;;
+    esac
+    if test ! -n "$JAVAC"
+    then
+        JAVAC=undefined
+
+    fi
+
+
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    oz_for="$dummy_PATH:$SRCTOP/share/bin:$SRCTOP"
+    # Extract the first word of "jar", so it can be a program name with args.
+set dummy jar; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1428: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_JAR'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$JAR" in
+  /*)
+  ac_cv_path_JAR="$JAR" # Let the user override the test with a path.
+  ;;
+  ?:/*)
+  ac_cv_path_JAR="$JAR" # Let the user override the test with a dos path.
+  ;;
+  *)
+  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS=":"
+  ac_dummy="$oz_for"
+  for ac_dir in $ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_JAR="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+JAR="$ac_cv_path_JAR"
+if test -n "$JAR"; then
+  echo "$ac_t""$JAR" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    case "$host_os" in
+      cygwin32) ;;
+      *) JAR=`echo $JAR | sed -e "s|//|/|g"`;;
+    esac
+    if test ! -n "$JAR"
+    then
+        JAR=undefined
+
+    fi
+
+  echo $ac_n "checking for class path option""... $ac_c" 1>&6
+echo "configure:1471: checking for class path option" >&5
+  case `$JAVA -version 2>&1` in
+  Kaffe*) JAVACP=-addclasspath;;
+  *) JAVACP=-classpath;;
+  esac
+  echo "$ac_t""$JAVACP" 1>&6
+  echo $ac_n "checking for --with-java-threads""... $ac_c" 1>&6
+echo "configure:1478: checking for --with-java-threads" >&5
+  # Check whether --with-java-threads or --without-java-threads was given.
 if test "${with_java_threads+set}" = set; then
   withval="$with_java_threads"
   oz_java_threads=${with_java_threads}
 fi
 
-: ${oz_java_threads=-green}
-echo "$ac_t""$oz_java_threads" 1>&6
-JAVA_THREADS=${oz_java_threads}
+  : ${oz_java_threads=}
+  echo "$ac_t""$oz_java_threads" 1>&6
+  JAVA_THREADS=${oz_java_threads}
+fi
+PATH=$oz_path_save
+
+
+
+
 
 
 echo $ac_n "checking for --with-documents""... $ac_c" 1>&6
-echo "configure:1320: checking for --with-documents" >&5
+echo "configure:1497: checking for --with-documents" >&5
 # Check whether --with-documents or --without-documents was given.
 if test "${with_documents+set}" = set; then
   withval="$with_documents"
@@ -1328,7 +1505,7 @@ echo "$ac_t""$oz_doc_dirs" 1>&6
 
 
     echo $ac_n "checking for --enable-qtk""... $ac_c" 1>&6
-echo "configure:1332: checking for --enable-qtk" >&5
+echo "configure:1509: checking for --enable-qtk" >&5
     # Check whether --enable-qtk or --disable-qtk was given.
 if test "${enable_qtk+set}" = set; then
   enableval="$enable_qtk"
@@ -1359,7 +1536,7 @@ DOC_DIRS=$oz_doc_dirs
 
 
 echo $ac_n "checking for --enable-chm""... $ac_c" 1>&6
-echo "configure:1363: checking for --enable-chm" >&5
+echo "configure:1540: checking for --enable-chm" >&5
 # Check whether --enable-chm or --disable-chm was given.
 if test "${enable_chm+set}" = set; then
   enableval="$enable_chm"
@@ -1551,6 +1728,10 @@ s%@PLATFORM@%$PLATFORM%g
 s%@OZENGINE@%$OZENGINE%g
 s%@OZDOC@%$OZDOC%g
 s%@JAVA_BIN@%$JAVA_BIN%g
+s%@JAVA@%$JAVA%g
+s%@JAVAC@%$JAVAC%g
+s%@JAR@%$JAR%g
+s%@JAVACP@%$JAVACP%g
 s%@JAVA_THREADS@%$JAVA_THREADS%g
 s%@QTK_ENABLED@%$QTK_ENABLED%g
 s%@DOC_DIRS@%$DOC_DIRS%g
