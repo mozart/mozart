@@ -24,7 +24,7 @@ define
 	 in
 	    if Body\=unit then
 	       {Manager trace('Parsing message body')}
-	       Toc = {ParseNodup Body}
+	       Toc = {ParseNodup {Sanitize {VirtualString.toString Body}}}
 	    in
 	       toc <- {List.toRecord toc
 		       {Map {Toc entries($)}
@@ -77,6 +77,28 @@ define
 	 finally
 	    {Manager decTrace('<-- updatePkgList section '#@id)}
 	 end
+      end
+   end
+   %%
+   %% fix section body for users who just cannot get it right
+   %%
+   local
+      fun {Loop S}
+	 case S
+	 of nil then nil
+	 [] &\n|T then &\n|{Sanitize T}
+	 []   C|T then   C|{Loop T}
+	 end
+      end
+   in
+      fun {Sanitize S}
+	 case S
+	 of &m|&o|&g|&u|&l|&:|L then
+	    case L
+	    of &/|&/|&/|T then &/|{Loop T}
+	    []    &/|&/|T then &/|{Loop T}
+	    else {Loop L} end
+	 else {Loop S} end
       end
    end
 end
