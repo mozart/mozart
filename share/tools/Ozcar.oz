@@ -16,6 +16,8 @@ fun
       = IMPORT.'WP'
    \insert 'Browser.env'
       = IMPORT.'Browser'
+   \insert 'Emacs.env'
+      = IMPORT.'Emacs'
 
    \insert 'ozcar/config'
    \insert 'ozcar/prelude'
