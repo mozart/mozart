@@ -98,6 +98,12 @@ GENOBJS    = Collect.ozf \
              Main.ozf
 GENINSTALL = $(LIB_DIR)/Generator.ozf
 
+BUILDERSRCS = GBuilderTypes.oz \
+	      GBuilderWidgets.oz \
+	      GBuilder.oz
+BUILDEROBJS = $(BUILDERSRCS:%.oz=%.ozf)
+BUILDERINSTALL = $(BUILDEROBJS:%=$(LIB_DIR)/%)
+
 CSIGSRCS = GOZSignal.c
 CSRCS    = $(CSIGSRCS) GOZArguments.c
 COBJS    = $(CSRCS:%.c=%.o)
@@ -146,10 +152,10 @@ WRPINSTALL = $(WRPSRCS:%.oz=$(LIB_DIR)/%.ozf)
 # Target Variables
 #---------------------------------------------------------------------
 
-TARGETS     = gtkraw.c $(PARSERCMPS) $(OZOBJS) Generator.ozf
+TARGETS     = gtkraw.c $(PARSERCMPS) $(OZOBJS) Generator.ozf $(BUILDEROBJS)
 GEN_TARGETS = $(NATCMPS) $(WRPOBJS)
 LIB_TARGETS = $(CINSTALL) $(OZINSTALL) $(WRPINSTALL) $(NATINSTALL) \
-              $(GENINSTALL)
+              $(GENINSTALL) $(BUILDERINSTALL)
 
 #---------------------------------------------------------------------
 # Rules
@@ -165,7 +171,11 @@ LIB_TARGETS = $(CINSTALL) $(OZINSTALL) $(WRPINSTALL) $(NATINSTALL) \
 
 %.ozf: %.oz
 	$(COMPILE) `$(CYGPATH) $<` \
-        -I`$(CYGPATH) $(SRCDIR)` -I`$(CYGPATH) $(BUILDDIR)` -o $@
+	-I`$(CYGPATH) $(SRCDIR)` -I`$(CYGPATH) $(BUILDDIR)` -o $@
+
+%.ozf: builder/%.oz
+	$(COMPILE) `$(CYGPATH) $<` \
+	-I`$(CYGPATH) $(SRCDIR)` -I`$(CYGPATH) $(BUILDDIR)` -o $@
 
 $(PARSERCMPS):%.so-$(PLATFORM): $(PARSEROBJS)
 	$(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $^
@@ -255,7 +265,7 @@ distclean: clean
 # Bootstrap Stuff
 #---------------------------------------------------------------------
 
-include $(BUILDTOP)/share/Makefile.boot
+-include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 
