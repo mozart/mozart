@@ -649,7 +649,7 @@ void Propagator_D_FD_D::sClone(void) {
 
 OZ_Term Propagator_D_FD_D::getParameters(void) const
 {
-  OZ_Term d = OZ_setValue(new OZ_FSetValue(reg_domain));
+  OZ_Term d = OZ_fsetValue(new OZ_FSetValue(reg_domain));
 
   RETURN_LIST3(reg_v, d, reg_b);
 }
