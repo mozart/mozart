@@ -488,7 +488,7 @@ ProgramCounter unmarshalLocation(ProgramCounter PC,MsgBuffer *bs)
     loc->set(i,n);
   }
 
-  return (writeAddress(loc, PC));
+  return (writeAddress(loc->compress(inAr+outAr), PC));
 }
 
 //

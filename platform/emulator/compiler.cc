@@ -512,7 +512,7 @@ OZ_BI_define(BIstoreLocation,2,0)
     outLocs = oz_deref(oz_tail(outLocs));
   }
 
-  code->writeAddress(loc);
+  code->writeAddress(loc->compress(inArity+outArity));
   return PROCEED;
 } OZ_BI_end
 

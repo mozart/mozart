@@ -546,14 +546,25 @@ public:
   void dispose()      { delete this; }
 };
 
+class OZ_LocList {
+public:
+  OZ_Location * loc;
+  OZ_LocList  * next;
+  OZ_LocList(OZ_Location * l,OZ_LocList *n) : loc(l), next(n) {}
+};
+
 class OZ_Location {
 private:
+  int         fingerprint;
   TaggedRef * map[1];
+  static OZ_LocList * cache[];
+
 public:
   NO_DEFAULT_CONSTRUCTORS(OZ_Location)
+  static void initCache(void);
   static OZ_Location *newLocation(int n) {
     int sz = sizeof(OZ_Location)+sizeof(TaggedRef*)*(n-1);
-    OZ_Location *loc = (OZ_Location *)new char[sz];
+    OZ_Location *loc = (OZ_Location *) malloc(sz);
     return loc;
   }
   TaggedRef ** getMapping(void) {
@@ -580,6 +591,7 @@ public:
   void set(int n, int i) {
     map[n]=&(XREGS[i]);
   }
+  OZ_Location * compress(int n);
   TaggedRef getInArgs(Builtin *);
   TaggedRef getArgs(Builtin *);
 };
