@@ -137,9 +137,10 @@ define
    end
 
    class Archive
-      attr zfile offset toc
+      attr zfile offset toc temp
       meth init(File)
-	 zfile <- {ZFile.open File "rb9"}
+	 temp<-unit
+	 zfile <- {ZFile.open {VirtualString.toString File} "rb9"}
 	 toc <- 
 	 {Map {List.number 1 {ReadInt @zfile} 1}
 	  fun {$ I}
@@ -160,6 +161,10 @@ define
 		 {Map @toc
 		  fun {$ F} F.path#F end}}
       end
+      meth initTemp(File)
+	 Archive,init(File)
+	 temp<-File
+      end
       meth extract(From To)
 	 F = @toc.{VirtualString.toAtom From}
       in
@@ -177,6 +182,7 @@ define
       meth lsla($) {Record.toList @toc} end
       meth close
 	 if @zfile\=unit then {ZFile.close @zfile} zfile<-unit end
+	 if @temp\=unit then try {OS.unlink @temp} catch _ then skip end end
       end
    end
 end

@@ -7,13 +7,15 @@ import
    Global(localDB
 	  packageMogulDB
 	  authorMogulDB
-	  background       : Background
-	  getLabel         : GetLabel
+%	  background       : Background
+%	  getLabel         : GetLabel
 	  getImage         : GetImage)
-   ActionInstall(install:Install)
+   ActionInstall(loadPackage : LoadPackage
+		 doInstall   : DoInstall
+		 calcActions : CalcActions)
    ActionRemove(remove:Remove)
    ActionInfo(view)
-   System(show:Show)
+%   System(show:Show)
 %   Browser(browse:Browse)
    FileUtils(isExtension:IsExtension)
    OS(stat unlink)
@@ -26,7 +28,8 @@ import
 			   simpleInfoView:NiceInfoView)
    
 define
-   
+
+
    class InteractiveManager
 
       feat
@@ -418,79 +421,473 @@ define
 	    else nil end
 	 end
       in
-	 {Loop Pkg.url_pkg}
+	 {Loop {CondSelect Pkg url_pkg nil}}
       end
       
-      meth install(pkg:Pkg<=@curpkg nu:Nu<=0 force:Force<=false leave:Leave<=false)
-	 Packages={self filterPkg(Pkg fun{$ URL} {IsExtension "pkg" URL} end $)}
-	 N
-      in
-	 if Nu==0 then
-	    N={self selectPackages("Install a package" Packages $)}
-	 else
-	    N=Nu
+ %     meth install(pkg:Pkg<=@curpkg nu:Nu<=0 force:Force<=false leave:Leave<=false)
+%	 Packages={self filterPkg(Pkg fun{$ URL} {IsExtension "pkg" URL} end $)}
+%	 N
+%      in
+%	 if Nu==0 then
+%	    N={self selectPackages("Install a package" Packages $)}
+%	 else
+%	    N=Nu
+%	 end
+%	 if N>0 then
+%	    ToInstall={List.nth Packages N}
+%	 in
+%	    case {Install ToInstall Force Leave}
+%	    of success(pkg:P) then
+%	       {{QTk.build td(title:"Package installation"
+%			      label(padx:10 pady:10
+%				    text:P.id#" was successfully installed")
+%			      button(glue:s
+%				     text:"Close"
+%				     action:toplevel#close))} show(wait:true modal:true)}
+%	       {self displayInstalled}
+%	    []  nameclash(L) then
+%	       Return
+%	    in
+%	       {self conflict("Package installation"
+%			      "Files are conflicting with other installed packages"
+%			      "Overwrite these files"
+%			      "Don't overwrite these files"
+%			      L
+%			      Return)}
+%	       if Return\=cancel then
+%		  {self install(pkg:Pkg nu:N force:Return==choice1 leave:Return==choice2)}
+%	       end
+%	    [] alreadyinstalled(loc:L pkg:P) then
+%	       UnInstall Overwrite
+%	    in
+%	       {{QTk.build td(title:"Installation failed"
+%			      label(padx:10 pady:10
+%				    text:
+%				       if {HasFeature P version} then
+%					  "Unable to install package '"#P.id#"', version "#P.version
+%				       else
+%					  "Unable to install package '"#P.id#"'"
+%				       end#"\n"#
+%				    if {HasFeature L version} then
+%				       "This package is already installed in version "#L.version
+%				    else
+%				       "A package of the same id is already installed"
+%				    end)
+%			      lr(glue:swe
+%				 button(text:"Uninstall first"
+%					tooltips:"Properly uninstall the old package, then install this one"
+%					return:UnInstall
+%					action:toplevel#close)
+%				 button(text:"Overwrite installation"
+%					tooltips:"Install this package on top of the old one.\nUse with care..."
+%					return:Overwrite
+%					action:toplevel#close)
+%				 button(text:"Cancel"
+%					action:toplevel#close)))} show(wait:true modal:true)}
+%	       if UnInstall then
+%		  %% first uninstall the other package
+%		  {self desinstall(pkg:Pkg)}
+%		  {self install(pkg:Pkg nu:N)}
+%	       elseif Overwrite then
+%		  %% force installation of this package
+%		  {self install(pkg:Pkg nu:N force:true)}
+%	       end
+%	    end
+%	 end
+%      end
+
+      meth install(pkg:Pkg<=@curpkg site:Site<=_ cancel:Cancel<=_)
+	 fun{FilterPkg Info}
+	    {Record.adjoinAt
+	     Info
+	     url_pkg
+	     {self filterPkg(Info fun{$ URL} {IsExtension "pkg" URL} end $)}}
 	 end
-	 if N>0 then
-	    ToInstall={List.nth Packages N}
-	 in
-	    case {Install ToInstall Force Leave}
-	    of success(pkg:P) then
-	       {{QTk.build td(title:"Package installation"
-			      label(padx:10 pady:10
-				    text:P.id#" was successfully installed")
-			      button(glue:s
-				     text:"Close"
-				     action:toplevel#close))} show(wait:true modal:true)}
-	       {self displayInstalled}
-	    []  nameclash(L) then
-	       Return
-	    in
-	       {self conflict("Package installation"
-			      "Files are conflicting with other installed packages"
-			      "Overwrite these files"
-			      "Don't overwrite these files"
-			      L
-			      Return)}
-	       if Return\=cancel then
-		  {self install(pkg:Pkg nu:N force:Return==choice1 leave:Return==choice2)}
-	       end
-	    [] alreadyinstalled(loc:L pkg:P) then
-	       UnInstall Overwrite
-	    in
-	       {{QTk.build td(title:"Installation failed"
-			      label(padx:10 pady:10
-				    text:
-				       if {HasFeature P version} then
-					  "Unable to install package '"#P.id#"', version "#P.version
-				       else
-					  "Unable to install package '"#P.id#"'"
-				       end#"\n"#
-				    if {HasFeature L version} then
-				       "This package is already installed in version "#L.version
-				    else
-				       "A package of the same id is already installed"
-				    end)
-			      lr(glue:swe
-				 button(text:"Uninstall first"
-					tooltips:"Properly uninstall the old package, then install this one"
-					return:UnInstall
-					action:toplevel#close)
-				 button(text:"Overwrite installation"
-					tooltips:"Install this package on top of the old one.\nUse with care..."
-					return:Overwrite
-					action:toplevel#close)
-				 button(text:"Cancel"
-					action:toplevel#close)))} show(wait:true modal:true)}
-	       if UnInstall then
-		  %% first uninstall the other package
-		  {self desinstall(pkg:Pkg)}
-		  {self install(pkg:Pkg nu:N)}
-	       elseif Overwrite then
-		  %% force installation of this package
-		  {self install(pkg:Pkg nu:N force:true)}
+	 fun{Shorten St}
+	    Str={VirtualString.toString St}
+	    End={Reverse {List.takeWhile {Reverse Str} fun{$ C} C\=&/ end}}
+	    fun{Loop L Step}
+	       case L
+	       of X|Xs then
+		  case Step
+		  of 0 then
+		     case X
+		     of &: then X|{Loop Xs 1}
+		     else X|{Loop Xs 0}
+		     end
+		  [] 1 then
+		     case X
+		     of &/ then X|{Loop Xs 2}
+		     else X|{Loop Xs 0}
+		     end
+		  [] 2 then
+		     case X
+		     of &/ then X|{Loop Xs 3}
+		     else X|{Loop Xs 0}
+		     end
+		  [] 3 then
+		     case X
+		     of &/ then nil
+		     else X|{Loop Xs 3}
+		     end
+		  end
+	       else
+		  nil
 	       end
 	    end
+	    Start={Loop Str 0}
+	 in
+	    if {Length Start}+{Length End}+5<{Length Str} then
+	       {VirtualString.toString Start#"/.../"#End}
+	    else
+	       Str
+	    end
 	 end
+	 fun{Package Info}
+	    button(glue:w
+		   borderwidth:1
+		   text:""#Info.id
+		   action:proc{$}
+			     Class={@info getClass($)}
+			     Window
+			     Desc
+			     N={New Class init(self
+					       proc{$ Title} {Window set(title:Title)} end
+					       Desc)}
+			     Window={QTk.build td(Desc)}
+			     {N display(r(info:Info
+					  title:"Conflicting package"))}
+			  in
+			     {Window show}
+			  end)
+	 end
+	 fun{DownloadFrom Info DownloadSite}
+	    C={NewCell {CondSelect {CondSelect Info url_pkg nil} 1 nil}}
+	 in
+	    fun{DownloadSite}
+	       {Access C}
+	    end
+	    if {Label Info}==notFound then
+	       label(text:""#Info.id glue:nw)
+	    else
+	       D L
+	       DownloadLook={QTk.newLook}
+	    in
+	       {DownloadLook.set lr(borderwidth:1 relief:raised glue:nswe)}
+	       {Record.adjoin
+		lr(look:DownloadLook
+		   {Package Info})
+		case {Length Info.url_pkg}
+		of 0 then
+		   lr(2:label(text:'No installable package'))
+		[] 1 then
+		   lr(2:label(text:Info.url_pkg.1))
+		else
+		   lr(2:label(text:{Shorten Info.url_pkg.1} handle:L)
+		      3:dropdownlistbox(init:Info.url_pkg handle:D
+					width:{Length {VirtualString.toString Info.url_pkg.1}}
+					action:proc{$}
+						  Sel={List.nth {D get($)} {D get(firstselection:$)}}
+					       in
+						  {Assign C Sel}
+						  {L set({Shorten Sel})}
+						  {L set(tooltips:Sel)}
+					       end
+				       ))
+		end}
+	    end
+	 end
+	 Place
+	 Out
+	 In={NewPort Out}
+	 Window={QTk.build td(title:"Install a package"
+			      placeholder(handle:Place glue:nswe)
+			      lrline(glue:swe)
+			      lr(glue:swe padx:5 pady:5
+				 button(glue:w text:"Next >" action:In#next)
+				 button(glue:w padx:10 text:"Cancel" action:In#cancel)
+				 button(glue:e text:"Help" action:In#help)))}
+	 Stream={NewCell Out}
+
+	 Help={NewCell nil}
+	 
+	 proc{SetHelp Str} {Assign Help Str} end
+	 fun{Confirm}
+	    fun{Loop L}
+	       if {IsDet L} then %% skips all elements already determined
+		  _|Xs=L
+	       in
+		  {Loop Xs}
+	       else %% waits for the next element and returns it
+		  X|Xs=L
+	       in
+		  {Assign Stream Xs}
+		  X
+	       end
+	    end
+	in	   
+	    case {Loop {Access Stream}}
+	    of next then
+	       O={Place get($)}
+	    in
+	       {Place set(empty)}
+	       {O close}
+	       true
+	    [] cancel then
+	       Yes
+	    in
+	       {{QTk.build td(title:"Cancel installation"
+			      label(text:"\nAre you sure you want to cancel the installation ?\n")
+			      lr(glue:swe
+				 button(text:"Yes" return:Yes action:toplevel#close)
+				 button(text:"No" action:toplevel#close)))} show(wait:true modal:true)}
+	       if Yes then
+		  false
+	       else
+		  {Confirm}
+	       end
+	    [] help then
+	       {{QTk.build td(title:"Installation help"
+			      label(text:{Access Help})
+			      button(glue:s text:"Close" action:toplevel#close))} show}
+	       {Confirm}
+	    end
+	 end
+	 FPkg={FilterPkg Pkg}
+      in
+	 try
+	    %%
+	    %% Step 1 : select a place to download the package
+	    %%
+	    Archive Info
+	 in
+	    {Window show}
+	    if {IsFree Site} then
+	       SiteProc
+	    in
+	       if {Length FPkg.url_pkg}==0 then
+		  {{QTk.build td(title:"Installation error"
+				 label(text:"Unable to install package "#FPkg.id#"\n"#
+				       "There is no installable package defined.")
+				 button(text:"Cancel" action:toplevel#close glue:s))} show(wait:true modal:true)}
+		  raise cancel end
+	       end
+	       {Place set(td(glue:nswe
+			     label(glue:nw text:"Downloading the package to install")
+			     {DownloadFrom FPkg SiteProc}))}
+	       {SetHelp "\n\n"}
+	       if {Not {Confirm}} then
+		  raise cancel end
+	       end
+	       Site={SiteProc}
+	    else skip end
+	    {LoadPackage Site Archive Info}
+%	    install(package:Info
+%  		    requires:PackagesToInstall
+%		    alreadyinstalled:AlreadyInstalled
+%		    conflicts:Conflicts)
+	    local
+	       fun{Loop1}
+		  %%
+		  %% Package already installed
+		  %%
+		  Actions={CalcActions Info}
+	       in
+		  if Actions.alreadyinstalled then
+		     R1 R2
+		  in
+		     {Place set(td(glue:nswe
+				   label(glue:nw text:"Warning : the package is already installed")
+				   radiobutton(glue:nw
+					       group:st
+					       init:true
+					       return:R1
+					       text:"Uninstall installed version first")
+				   radiobutton(glue:nw
+					       group:st
+					       return:R2
+					       text:"Overwrite intalled version")
+				   radiobutton(glue:nw
+					       group:st
+					       text:"Keep older version, installing only new files")))}
+		     if {Not {Confirm}} then
+			raise cancel end
+		     end
+		     if R1 then
+			L
+		     in
+			{Place set(label(text:"Desinstalling older version" handle:L))}
+			{self desinstall(pkg:Pkg)}
+			{Place set(empty)}
+			{L close}
+			{Loop1}
+		     elseif R2 then
+			%% supress conflicts from the older version
+			{Record.adjoinAt Actions
+			 conflicts {List.filter
+				    Actions.conflicts
+				    fun{$ R}
+				       R.loc.id\=Info.id
+				    end}}
+		     else
+			%% supress conflicts from the older version and from the filelist to install
+			{Record.adjoin Actions
+			 install(conflicts:{List.filter
+					    Actions.conflicts
+					    fun{$ R}
+					       R.loc.id\=Info.id
+					    end}
+				 installfiles:{List.filter Actions.installfiles
+					       fun{$ F}
+						  {List.all
+						   Actions.conflicts
+						   fun{$ C}
+						      C.name\=F orelse C.loc.id\=Info.id
+						   end}
+					       end} %% do not install files that conflicts and are from previous version
+				)}
+		     end
+		  else
+		     Actions
+		  end
+	       end
+	       fun{Loop2 Actions}
+		  %%
+		  %% Installation conflicts
+		  %%
+		  R1 R2
+	       in
+		  if Actions.conflicts==nil then
+		     Actions %% no conflicts
+		  else
+		     {Place set(td(label(glue:nw text:"Warning : the installation of the package conflicts with other packages")
+				   radiobutton(glue:nw
+					       group:sl
+					       return:R1
+					       text:"Overwrite conflicting files")
+				   radiobutton(glue:nw
+					       group:sl
+					       return:R2
+					       text:"Keep conflicting files")
+				   button(glue:nw
+					  text:"More informations..."
+					  action:proc{$}
+						    Rec={Record.adjoin
+							 {List.toRecord
+							  td
+							  {List.mapInd
+							   {List.map
+							    Actions.conflicts
+							    fun{$ C}
+							       lr(glue:nwe
+								  {Package C.loc}
+								  label(glue:w
+									text:C.name))
+							    end
+							   }
+							   fun{$ I L}
+							      I#L
+							   end}}
+							 td(title:"Conflicting packages/files")}
+						 in
+						    {{QTk.build Rec} show}
+						 end)))}
+		     if {Not {Confirm}} then
+			raise cancel end
+		     end
+		     if R1 then
+			%%
+			%% no more conflicts...
+			%%
+			{Record.adjoinAt Actions
+			 conflicts nil}
+		     else
+			{Record.adjoin Actions
+			 install(conflicts:nil
+				 installfiles:{List.filter Actions.installfiles
+					       fun{$ F}
+						  {List.all
+						   Actions.conflicts
+						   fun{$ C}
+						      C.name\=F
+						   end}
+					       end})} % do not install files that conflicts
+		     end
+		  end   
+	       end
+	       fun{Loop3 Actions}
+		  %%
+		  %% Install requirements
+		  %%
+		  if {CondSelect Actions requires nil}==nil then
+		     Actions %% no requirements to install
+		  else
+		     proc{Loop L1 L2 L3}
+			case L1 of A#B|Xs then
+			   R1 R2
+			in
+			   L2=A|R1
+			   L3=B|R2
+			   {Loop Xs R1 R2}
+			else
+			   L2=nil
+			   L3=nil
+			end
+		     end
+		     L
+		     R
+		     {Loop {List.map
+			    Actions.requires
+			    fun{$ P}
+			       SiteProc
+			       Desc={DownloadFrom {FilterPkg P} SiteProc}
+			    in
+			       Desc#(SiteProc#Pkg)
+			    end}
+		      L R}
+		  in
+		     {Place set({Record.adjoin
+				 {List.toRecord
+				  td
+				  {List.mapInd
+				   label(glue:nw text:"The installation of "#Actions.package.id#" requires the installation of")|L
+				   fun{$ I T} I#T end}}
+				 td(glue:nswe)}
+			       )}
+		     if {Not {Confirm}} then raise cancel end end
+		     if {List.takeWhile R
+			 fun{$ P}
+			    Proc#Pkg=P
+			    C
+			 in
+			    if {Proc}\=nil then
+			       {self install(pkg:Pkg site:{Proc} cancel:C)}
+			       {Not C}
+			    else
+			       true
+			    end
+			 end}\=R
+		     then raise cancel end end
+		     Actions
+		  end	   
+	       end
+	       proc{Loop4 Actions}
+		  %%
+		  %% install package
+		  %%
+		  {DoInstall Actions.package Actions.installfiles Archive}
+	       end
+	    in
+	       {Loop4 {Loop3 {Loop2 {Loop1}}}}
+	       {Place set(label(text:"Package sucessfully installed"))}
+	       {Confirm _}
+	       {Window close}
+	    end					
+	 catch cancel then
+	    Cancel=true
+	    try {Window close} catch _ then skip end
+	 end
+	 if {IsFree Cancel} then Cancel=false end
       end
 
       meth desinstall(pkg:Pkg<=@curpkg)
@@ -593,7 +990,7 @@ define
 		  try
 		     if {OS.stat SaveFile}.type==reg then
 			{{QTk.build td(title:"Download package"
-				       label(text:"Downdload successfull")
+				       label(text:"Download successfull")
 				       button(text:"Close"
 					      action:toplevel#close
 					      glue:s))}
@@ -609,8 +1006,6 @@ define
 					   glue:s))}
 		      show(wait:true modal:true)}
 		  end
-%		  {Show download#{VirtualString.toAtom ToInstall}}
-%		  {Show to#SaveFile}
 	       finally
 		  if {IsDet In} then try {In close} catch _ then skip end end
 		  if {IsDet Out} then try {Out close} catch _ then skip end end
