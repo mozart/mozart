@@ -46,10 +46,10 @@ define
 		  in
 		     if {self get_veryVerbose($)} then
 			for U in X.build do
-			   {self vtrace('... '#U#' (when building)')}
+			   {self vtrace('... '#U#'\t[Build Time]')}
 			end
 			for U in X.install do
-			   {self vtrace('... '#U#' (when installing)')}
+			   {self vtrace('... '#U#'\t[Run Time]')}
 			end
 		     end
 		     X
@@ -132,10 +132,16 @@ define
       %% run-time ozf imports.  If one of the recursive imports is
       %% again an ozl-linked ozf file, then we don't recurse through
       %% it since it already contains all its recursive imports.
+      %%
+      %% if T is a regular ozf file, then we also want the recursive
+      %% run-time dependencies of its build-time dependencies
 
       meth get_depends_build(T $)
-	 if {self get_rule(T $)}.tool==ozl
-	 then {self get_depends_ozl(T $)}
+	 Rule = {self get_rule(T $)}
+      in
+	 case Rule.tool
+	 of 'ozl' then {self get_depends_ozl(T $)}
+	 [] 'ozc' then {self get_depends_ozc(T $)}
 	 else {self get_depends(T $)} end
       end
 
@@ -281,6 +287,37 @@ define
 	       [] 'ozg' then
 		  Accu.D := unit
 	       else skip end
+	    end
+	 end
+	 {DictKeys Accu}
+      end
+
+      %% get_depends_ozc(T $)
+      %%
+      %% given a regular ozf file T to be built using ozc, return
+      %% its build-time dependencies.  This includes the recursive
+      %% run-time dependencies of its build-time dependencies.
+
+      meth get_depends_ozc(T $)
+	 Todo = {Utils.newStack}
+	 Accu = {NewDictionary}
+	 Rule = {self get_rule(T $)}
+      in
+	 if Rule.tool==ozc then
+	    for X in {self get_depends(T $)} do
+	       {Todo.push X}
+	    end
+	 else
+	    raise ozmake(get_depends_ozc:T) end
+	 end
+	 for while:{Not {Todo.isEmpty}} do
+	    D = {Todo.pop}
+	 in
+	    if {HasFeature Accu D} then skip else
+	       Accu.D := unit
+	       for X in {self get_depends_install(D $)} do
+		  {Todo.push X}
+	       end
 	    end
 	 end
 	 {DictKeys Accu}
