@@ -1208,6 +1208,10 @@ BIspec fdSpec[] = {
   {"sched_cpIterate", 2, sched_cpIterate},
   {"sched_cpIterateCap", 4, sched_cpIterateCap},
   {"sched_disjunctive", 2, sched_disjunctive},
+  // dummies
+  {"fdp_twice", 2, fdp_twice},
+  {"fdp_square", 2, fdp_square},
+  {"fdp_subset", 2, fdp_subset},
 #endif
 #ifdef DEBUG_STABLE
   {"debugStable", 0, debugStable},
