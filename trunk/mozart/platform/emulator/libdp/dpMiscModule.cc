@@ -64,8 +64,8 @@
 #include "virtual.hh"
 #endif
 
-OZ_Term defaultAcceptProcedure = 0;
-OZ_Term defaultConnectionProcedure = 0;
+extern OZ_Term defaultAcceptProcedure;
+extern OZ_Term defaultConnectionProcedure;
 
 extern
 int raiseUnixError(char *f,int n, char * e, char * g);
