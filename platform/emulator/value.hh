@@ -491,6 +491,13 @@ TaggedRef tail(TaggedRef list)
 }
 
 inline
+TaggedRef * tailRef(TaggedRef list)
+{
+  Assert(isLTuple(list));
+  return tagged2LTuple(list)->getRefTail();
+}
+
+inline
 int length(OZ_Term l)
 {
   int len = 0;

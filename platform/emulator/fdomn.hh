@@ -212,7 +212,7 @@ protected:
 
   OZ_Boolean isConsistent(void) const;
 public:
-  void dispose(void);
+  void disposeExtension(void);
   void FiniteDomainInit(void * d);
 
   OZ_FiniteDomainImpl(void);

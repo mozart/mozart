@@ -1102,7 +1102,7 @@ OZ_FiniteDomainImpl::OZ_FiniteDomainImpl(const OZ_FiniteDomainImpl &fd) {
 }
 
 inline
-void OZ_FiniteDomainImpl::dispose(void) {
+void OZ_FiniteDomainImpl::disposeExtension(void) {
   switch (getType()) {
   case iv_descr: get_iv()->dispose(); return;
   case bv_descr: get_bv()->dispose(); return;
@@ -1925,9 +1925,9 @@ OZ_FiniteDomain::OZ_FiniteDomain(const OZ_FiniteDomain &fd)
   CASTTHIS->operator =(CASTREF fd);
 }
 
-void OZ_FiniteDomain::dispose(void)
+void OZ_FiniteDomain::disposeExtension(void)
 {
-  CASTTHIS->dispose();
+  CASTTHIS->disposeExtension();
 }
 
 const OZ_FiniteDomain &OZ_FiniteDomain::operator = (const OZ_FiniteDomain &fd)
