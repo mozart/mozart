@@ -301,8 +301,8 @@ inline EntityCond getSummaryWatchCond(Tertiary* t){
   if(t->getInfo()==NULL) return ENTITY_NORMAL;
   return t->getInfo()->getSummaryWatchCond();}
 
-void installWatcher(Tertiary *t, EntityCond,TaggedRef,Thread*,Bool,Bool);
-Bool deinstallWatcher(Tertiary *t, EntityCond,TaggedRef,Thread*,Bool,Bool);
+Bool installWatcher(Tertiary *t, EntityCond,TaggedRef,Thread*,unsigned int);
+Bool deinstallWatcher(Tertiary *t, EntityCond,TaggedRef,Thread*,unsigned int);
 void entityProblem(Tertiary *t);
 void deferEntityProblem(Tertiary *t);
 void managerProbeFault(Tertiary *t, DSite*, int);
