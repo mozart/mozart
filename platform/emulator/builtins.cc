@@ -5525,27 +5525,6 @@ OZ_C_proc_begin(BIapply,2)
 OZ_C_proc_end
 
 // ------------------------------------------------------------------------
-// --- Catch
-// ------------------------------------------------------------------------
-
-OZ_C_proc_begin(BIcatch,1)
-{
-  OZ_Term proc = OZ_getCArg(0);
-
-  DEREF(proc,procPtr,_2);
-  if (isAnyVar(proc)) OZ_suspendOn(makeTaggedRef(procPtr));
-
-  if (!isProcedure(proc) || tagged2Const(proc)->getArity() !=1) {
-    TypeErrorT(0,"Procedure/1");
-  }
-  
-  am.currentThread->pushCatch(proc);
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
-// ------------------------------------------------------------------------
 // --- special Cell access
 // ------------------------------------------------------------------------
 
@@ -7324,7 +7303,6 @@ BIspec allSpec2[] = {
   {"garbageCollection",0,BIgarbageCollection,	0},
 
   {"apply",          2, BIapply,		0},
-  {"catch",          1, BIcatch,		0},
 
   {"eq",             2, BIsystemEq,	        0},
   {"eqB",            3, BIsystemEqB,		0},

@@ -1220,17 +1220,9 @@ LBLpopTask:
       taskstack->setTop(topCache);
       goto LBLemulate;
 
-    case C_CATCH:
-      {
-	(void) TaskStackPop(--topCache);
-	goto next_task;
-      }
-
     case C_SETFINAL:
-      {
-	am.setFinal();
-	goto next_task;
-      }
+      am.setFinal();
+      goto next_task;
 
     case C_DEBUG_CONT:
       {
@@ -2291,9 +2283,24 @@ LBLdispatcher:
     DISPATCH(1);
 
   Case(SAVECONT)
-    e->pushTask(getLabelArg(PC+1),Y,G);
+    /*     e->pushTask(getLabelArg(PC+1),Y,G); */
+    error("unused");
     DISPATCH(2);
 
+  Case(EXHANDLER)
+    e->pushTask(PC+2,Y,G);
+    e->currentThread->pushCatch();
+    JUMP(getLabelArg(PC+1));
+
+  Case(POPEX)
+    {
+      TaskStack *taskstack = CTT->getTaskStackRef();
+      TaskStackEntry topElem = taskstack->pop();
+      Assert(getContFlag(ToInt32(topElem))==C_CATCH);
+      /* remove unused continuation for handler */
+      taskstack->pop(TaskStack::frameSize(C_CONT));
+      DISPATCH(1);
+    }
   Case(LOCKOBJECT)
     { 
       if (e->isLocked()) {
@@ -2724,17 +2731,8 @@ LBLdispatcher:
 
        shallowCP = 0; // failure in shallow guard can never be handled
 
-       TaggedRef pred = 0;
        TaskStackEntry *lastTop=CTT->getTop();
-       pred = CTT->findCatch();
-       if (!pred) {
-	 if (exceptionType==E_DEEP_FAILURE ||
-	     (exceptionType==E_USER &&
-	      OZ_eq(OZ_label(exceptionValue),OZ_atom("failure")))) {
-	   goto LBLfailure;
-	 }
-	 pred = e->defaultExceptionHandler;
-       }
+       Bool foundHdl = CTT->findCatch(); /* topmost entry points to handler now */
 
        if (exceptionType!=E_USER) {
 	 char *lab;
@@ -2759,9 +2757,19 @@ LBLdispatcher:
 	 exceptionValue = OZ_mkTupleC(lab,3,exceptionValue,spaces,traceBack);
        }
 
+       if (foundHdl) {
+	 X[0] = exceptionValue;
+	 goto LBLpopTask;
+       }
+
+       if (exceptionType==E_DEEP_FAILURE ||
+	   (exceptionType==E_USER &&
+	    OZ_eq(OZ_label(exceptionValue),OZ_atom("failure")))) {
+	 goto LBLfailure;
+       }
        RefsArray argsArray = allocateRefsArray(1,NO);
        argsArray[0] = exceptionValue;
-       CTT->pushCall(pred,argsArray,1);
+       CTT->pushCall(e->defaultExceptionHandler,argsArray,1);
        goto LBLpopTask;
      }
    }
@@ -2946,7 +2954,7 @@ LBLdispatcher:
 #endif
 
       ozstat.createdThreads.incf();
-      RefsArray newY = Y==NULL ? NULL : copyRefsArray(Y);
+      RefsArray newY = Y==NULL ? (RefsArray) NULL : copyRefsArray(Y);
       tt->pushCont(newPC,newY,G,NULL,0);
       e->scheduleThread (tt);
 

@@ -1911,14 +1911,8 @@ void TaskStack::gc(TaskStack *newstack)
       break;
 
     case C_CATCH:
-      {
-	COUNT(cCatch);
-	TaggedRef tt=deref((TaggedRef) ToInt32(*(--oldtop)));
-	Assert(!isAnyVar(tt));
-	gcTagged(tt,tt);
-	*(--newtop) = ToPointer(tt);
-	break;
-      }
+      COUNT(cCatch);
+      break;
 
     case C_CFUNC_CONT:
       COUNT(cCFuncCont);
