@@ -144,33 +144,16 @@ public:
   }
 };
 
-//-----------------------------------------------------------------------------
-
-class TestSum : public Propagator_VD {
-private:
-  static OZ_PropagatorProfile profile;
-  OZ_Term _v; 
-
-public:
-  TestSum(OZ_Term vd, OZ_Term v) : Propagator_VD(vd), _v(v) 
-  { }
-
-  virtual size_t sizeOf(void) { return sizeof(TestSum); }
-  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
-
-  virtual OZ_Return propagate(void);
-
-  virtual void updateHeapRefs(OZ_Boolean dup) {
-    Propagator_VD::updateHeapRefs(dup);
-
-    OZ_updateHeapTerm(_v);
-  }
-
-  virtual OZ_Term getParameters(void) const {  
-    TERMVECTOR2LIST(reg_l, reg_l_sz, vd);
-    RETURN_LIST2(vd, _v);
-  }
-};
-
-
 #endif // __MISC_HH__
+
+
+
+
+
+
+
+
+
+
+
+
