@@ -684,10 +684,8 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case FASTTAILCALL:
       {
 	AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
-	int dummy = getPosIntArg(PC+2);
 	fprintf(ofile,"(%p[pc:%p n:%d] %d)\n",entry,
-		entry->getPC(),entry->getArity(),
-		dummy);
+		entry->getPC(),entry->getArity(),getPosIntArg(PC+2));
 	DISPATCH();
       }
 
