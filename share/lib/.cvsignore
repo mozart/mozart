@@ -6,5 +6,5 @@ compiler-Builtins.oz
 tyc
 *.ozc
 *.ozf
-ozbatch ozserver
+ozbatch ozserver ozvsserver
 stage1 stage2 stage2b stage3 stage3b
