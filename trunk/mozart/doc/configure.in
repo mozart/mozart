@@ -25,7 +25,15 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(ozdoc.dtd)
 OZ_INIT
+BUILDTOP=`cd ..; pwd`
+SRCTOP=`cd $srcdir/..; pwd`
 AC_PROG_INSTALL
+OZ_PATH_PROG(OZENGINE,ozengine)
+OZ_PATH_PROG(OZDOC,ozdoc,OZDOC=$BUILDTOP/doc/utilities/ozdoc)
+AC_SUBST(BUILDTOP)
+AC_SUBST(SRCTOP)
+AC_SUBST(OZENGINE)
+AC_SUBST(OZDOC)
 AC_MSG_CHECKING(for --with-psgml-dir)
 AC_ARG_WITH(psgml-dir,
     [--with-psgml-dir=DIR
@@ -43,10 +51,9 @@ else
 fi
 AC_SUBST(PSGML)
 AC_SUBST(CED)
-SUBDIRS="utilities gump ozdoc"
 AC_SUBST(SUBDIRS)
-AC_CONFIG_SUBDIRS($SUBDIRS)
-AC_OUTPUT(Makefile catalog ced.el)
+AC_CONFIG_SUBDIRS(utilities)
+AC_OUTPUT(Makefile catalog ced.el gump/Makefile ozdoc/Makefile compiler/Makefile)
 errprint(ifdef([OZ_INIT],
  [],
  [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
