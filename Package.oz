@@ -90,17 +90,6 @@ define
 	    {self get_id_as_rel_path($)}}}
 	  #'/__'#Format#'__'#Platform#'__'#Version}
       end
-      %% here, we compute a new style pkg file name
-      meth get_this_pkgname_uploaded($ format:FMT<=unit)
-	 Main = {Manager id_to_package_name(@id $)}
-	 Format = if FMT\=unit then FMT
-		  elseif @format==nil orelse @format==unit
-		  then 'xxx' else @format end
-	 Platform = 'source' % currently
-	 Version = if @version==unit then '0' else @version end
-      in
-	 Main#'__'#Format#'__'#Platform#'__'#Version#'.uploaded'
-      end
       meth UpdatePkg(U DB)
 	 M = {Regex.search RE_PROVIDES U}
 	 U2 = {Regex.group 2 M U}
