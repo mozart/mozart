@@ -10,7 +10,7 @@ HOMEURL         = @HOMEURL@
 
 OZC		= @OZC@
 OZL		= @OZL@
-COMPILE		= $(OZC) -c
+COMPILE		= $(OZC) -z 9 -c
 OZTOOL		= @OZTOOL@
 CPPFLAGS	= -I$(SRCTOP)/platform/emulator \
 		  -I$(BUILDTOP)/platform/emulator \
@@ -54,7 +54,7 @@ all:     $(TARGETS)
 install: $(LIB_TARGETS)
 
 DaVinci.ozf: $(OZFNCTS)
-	$(OZL) DaVinciObject.ozf -o $@
+	$(OZL) -z 9 DaVinciObject.ozf -o $@
 
 $(LIB_DIR)/DaVinci.ozf: DaVinci.ozf
 	$(INSTALL_LIB) $< $@
@@ -67,10 +67,10 @@ $(LIB_DIR)/DaVinci.ozf: DaVinci.ozf
 #----------------------------------------------------------------------
 
 %.ozf: %.oz 
-	$(OZC) -c $< -o $@ 
+	$(OZC) -z 9 -c $< -o $@ 
 
 %.ozf: %.ozg 
-	$(OZC) -c --gump $< -o $@ 
+	$(OZC) -z 9 -c --gump $< -o $@ 
 
 #----------------------------------------------------------------------
 # C part
