@@ -24,15 +24,12 @@
 
 (require 'font-lock)
 
-(add-hook 'font-lock-mode-hook
-	  (function
-	   (lambda ()
-	     (if (fboundp 'font-lock-add-keywords)
-		 (font-lock-add-keywords
-		  'emacs-lisp-mode
-		  '(("(\\(setq\\)[ \t]+\\([^ \t\n]+\\)\\>" .
-		     '((1 font-lock-keyword-face)
-		       (2 font-lock-variable-name-face)))))))))
+(if (fboundp 'font-lock-add-keywords)
+    (font-lock-add-keywords
+     'emacs-lisp-mode
+     '(("(\\(setq\\)[ \t]+\\([^ \t\n]+\\)\\>"
+	(1 font-lock-keyword-face)
+	(2 font-lock-variable-name-face)))))
 
 (setq font-lock-maximum-decoration t)
 
@@ -40,7 +37,7 @@
   '((font-lock-comment-face       . comment)
     (font-lock-keyword-face       . keyword)
     (font-lock-string-face        . string)
-    (font-lock-variable-face      . variable)
+    (font-lock-variable-name-face . variable)
     (font-lock-function-name-face . function)
     (font-lock-builtin-name       . builtin)
     (font-lock-reference-face     . reference)
