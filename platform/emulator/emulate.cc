@@ -2569,7 +2569,9 @@ LBLdispatcher:
         Assert(literalEq(getLiteralArg(dbg->PC+4),getLiteralArg(PC+4)));
         Assert(dbg->Y == Y && dbg->G == G);
 
-        if (dothis != DBG_EXIT && CodeArea::getOpcode(dbg->PC+6) == CALLBI) {
+        if (dothis != DBG_EXIT
+            && literalEq(getLiteralArg(PC+4), AtomDebugCall)
+            && CodeArea::getOpcode(dbg->PC+6) == CALLBI) {
           Builtin *bi = GetBI(dbg->PC+7);
           int iarity = bi->getInArity(), oarity = bi->getOutArity();
           int *map = GetLoc(dbg->PC+8)->mapping();
