@@ -2737,7 +2737,14 @@ LBLsuspendThread:
                CallPushCont(PC);
              }
              SaveSelf(e,o,OK);
-             // o->deepness handelt by 'objectIsFree'
+#ifdef DOESNOTWORK
+             if (o->getDeepness()==0) {
+               /* lock the object: important if we are about to execute
+                * the init method after having just created the object
+                */
+               o->incDeepness();
+             }
+#endif
            } else {
              def = (Abstraction *) predicate;
              if (def->isDistributed() && !def->isFetched()) {
