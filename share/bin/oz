@@ -147,7 +147,7 @@ case "$cmd" in
            esac
         done
         export OZARGV
-        exec $OZEMACS -l $OZHOME/lib/elisp/ozstartup.el $EMACSARGV
+        exec $OZEMACS -l $OZHOME/lib/elisp/oz.elc -f run-oz $EMACSARGV
    ;;
 
    ozdemo)
