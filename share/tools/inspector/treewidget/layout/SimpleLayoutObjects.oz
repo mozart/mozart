@@ -52,6 +52,15 @@ in
       end
    end
 
+   class WordSMLLayoutObject from SimpleLayoutObject
+      meth createRep(PrintStr LengthStr)
+	 Value = @value
+      in
+	 PrintStr  = {Word.toInt Value} %% More to be determined
+	 LengthStr = PrintStr
+      end
+   end
+   
    class FloatLayoutObject from SimpleLayoutObject
       meth createRep(PrintStr LengthStr)
 	 PrintStr  = {Float.toString @value}
@@ -80,6 +89,20 @@ in
       end
    end
 
+   class NameSMLLayoutObject from SimpleLayoutObject
+      meth createRep(PrintStr LengthStr)
+	 Value = @value
+      in
+	 PrintStr  = case Value
+		     of false then type <- bool   'false'
+		     [] true  then type <- bool   'true'
+		     [] unit  then type <- 'unit' '()'
+		     else '<N: '#{System.printName Value}#'>'
+		     end
+	 LengthStr = PrintStr
+      end
+   end
+   
    class ProcedureLayoutObject from SimpleLayoutObject
       meth createRep(PrintStr LengthStr)
 	 Value = @value
