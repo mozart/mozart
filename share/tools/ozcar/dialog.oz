@@ -161,7 +161,6 @@ local
 					  anchor: w
 					  text:   'Query:')}
 	 ExprEntry = {New TkExtEntry tkInit(parent:     Frame.inner
-					    bd:         1
 					    font:       DefaultFont
 					    background: DefaultBackground
 					    width:      40)}
@@ -170,7 +169,6 @@ local
 					    text:   'Result:')}
 	 ResultEntry = {New Tk.label tkInit(parent:     Frame.inner
 					    relief:     sunken
-					    bd:         1
 					    anchor:     w
 					    font:       DefaultFont
 					    background: DefaultBackground
