@@ -140,7 +140,8 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
               termVar->propagate(term, r_dom, makeTaggedRef(vPtr), pc_cv_unif);
               propagate(var, l_dom, makeTaggedRef(vPtr), pc_cv_unif);
               termVar->addSuspension(new Suspension(am.currentBoard));
-              doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
+              doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
+                                  this, termVar);
             }
           } else {
             termVar->propagate(term, r_dom, makeTaggedRef(tPtr), pc_cv_unif);
@@ -167,7 +168,8 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
               propagate(var, l_dom, makeTaggedRef(tPtr), pc_cv_unif);
               termVar->propagate(term, r_dom, makeTaggedRef(tPtr), pc_cv_unif);
               addSuspension(new Suspension(am.currentBoard));
-              doBindAndTrail(var, vPtr, makeTaggedRef(tPtr));
+              doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
+                                  termVar, this);
             }
           } else {
             termVar->propagate(term, r_dom, makeTaggedRef(vPtr), pc_cv_unif);
@@ -189,13 +191,16 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
             doBindAndTrail(var, vPtr, int_val);
             doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
           } else {
-            TaggedRef * var_val = newTaggedCVar(new GenFDVariable(intsct));
+            GenFDVariable * fd_var = new GenFDVariable(intsct);
+            TaggedRef * var_val = newTaggedCVar(fd_var);
             if (prop) {
               propagate(var, l_dom, makeTaggedRef(var_val), pc_cv_unif);
               termVar->propagate(term, r_dom, makeTaggedRef(var_val), pc_cv_unif);
             }
-            doBindAndTrail(var, vPtr, makeTaggedRef(var_val));
-            doBindAndTrail(term, tPtr, makeTaggedRef(var_val));
+            doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
+                                fd_var, this);
+            doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
+                                fd_var, termVar);
           }
           if (prop) {
             Suspension * susp = new Suspension(am.currentBoard);

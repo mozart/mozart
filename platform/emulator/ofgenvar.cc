@@ -455,19 +455,23 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         } else if (vLoc && !tLoc) {
             // Global term is constrained if result has more features than term:
             if (mergeWidth>termWidth)
-                doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
+                doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
+                                    newVar, otherVar);
             else
                 doBind(vPtr, makeTaggedRef(tPtr));
         } else if (!vLoc && tLoc) {
             // Global var is constrained if result has more features than var:
             if (mergeWidth>varWidth)
-                doBindAndTrail(var, vPtr, makeTaggedRef(tPtr));
+                doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
+                                    newVar, otherVar);
             else
                 doBind(tPtr, makeTaggedRef(vPtr));
         } else if (!vLoc && !tLoc) {
             // bind to new term with trailing:
-            doBindAndTrail(var, vPtr, makeTaggedRef(nvRefPtr));
-            doBindAndTrail(term, tPtr, makeTaggedRef(nvRefPtr));
+            doBindAndTrailAndIP(var, vPtr, makeTaggedRef(nvRefPtr),
+                                newVar, this);
+            doBindAndTrailAndIP(term, tPtr, makeTaggedRef(nvRefPtr),
+                                newVar, termVar);
         } else Assert(FALSE);
 
         // Unify the corresponding feature values in the two variables:

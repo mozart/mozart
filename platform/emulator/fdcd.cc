@@ -287,12 +287,12 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
 // Note: since Bs and Vps are local, reintroduction is actual superfluous,
 // since domains can get singletons and the according variable get disposed,
 // we need to reintroduce Bs and Vps
-  // introduce Bs
+  // reintroduce Bs
   for (c = clauses; c--; ) {
     x.reintroduce(idx_b(c), makeTaggedRef(&_b[c]));
   }
 
-  // introduce Vps
+  // reintroduce Vps
   for (c = 0; c < clauses; c += 1) {  // acendingly counting ('cause of x.add)
     STuple &vp_c = *tagged2STuple(deref(_vp[c]));
     for (v = variables; v--; ) {
@@ -365,7 +365,7 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
   DebugCode(for (c = clauses; c--; ) Assert(x[idx_b(c)] != 1);;)
 
   return x.releaseReify(idx_b(0), idx_b(clauses - 1),
-                        idx_v(0), idx_v(variables-1));
+                        idx_v(0), idx_v(variables - 1));
 }
 OZ_C_proc_end
 
