@@ -124,6 +124,7 @@ AC_DEFUN(OZ_PROG_INSTALL,[
   OZ_PATH_PROG(INSTALL_DIR,  mkinstalldirs)])
 
 AC_DEFUN(OZ_INIT, [
+  AC_CANONICAL_HOST
   AC_PREFIX_DEFAULT(/usr/local/oz)
   OZ_PATH_SRCDIR
   OZ_PATH_SRCTOP
@@ -797,7 +798,10 @@ AC_DEFUN(OZ_PATH_PROG, [
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
     AC_PATH_PROG($1,$2,,$dummy_PATH:$SRCTOP/share/bin:$SRCTOP)
-    $1=`echo $$1 | sed -e "s|//|/|g"`
+    case "$host_os" in
+      cygwin32) ;;
+      *) $1=`echo $$1 | sed -e "s|//|/|g"`;;
+    esac
     if test ! -n "$$1"
     then
 	$1=undefined
