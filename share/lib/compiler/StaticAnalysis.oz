@@ -31,7 +31,11 @@ import
 		   nameVariable chunkArity
 		   isBuiltin
 		   isLocalDet) at 'x-oz://boot/CompilerSupport'
-   System(eq printName)
+   System(eq printName
+\ifdef DEBUGSA
+	  show
+\endif
+	 )
    RecordC(hasLabel tell reflectArity '^')
    Type(is)
    Core
@@ -1204,6 +1208,7 @@ define
 	    skip                         % then terminate
 	 else
 	    {Ctrl setCoord(@coord)}      % save coordinates for error messages
+	    {self applyEnvSubst(Ctrl)}
 	    {self saSimple(Ctrl)}
 	    if @next \= self then        % if there is another one
 	       {@next SaLookahead(Ctrl)}
@@ -1881,10 +1886,16 @@ define
 	    then
 	       BndVO = {Nth @actualArgs 3}
 	    in
+\ifdef DEBUGSA
+	       {System.show dotSelectionFromRecord}
+\endif
 	       {Ctrl setErrorMsg('feature selection (.) on record failed')}
 	       {Ctrl setUnifier(BndVO RecOrCh.F)}
 
 	       {BndVO unify(Ctrl RecOrCh.F)}
+\ifdef DEBUGSA
+	       {System.show unified({BndVO getLastValue($)})}
+\endif
 
 	       {Ctrl resetUnifier}
 	       {Ctrl resetErrorMsg}
