@@ -27,7 +27,7 @@ JAVAC		= $(JAVA_BIN)javac $(JAVA_THREADS)
 JAR		= $(JAVA_BIN)jar   $(JAVA_THREADS)
 
 HTMLSUPPORTFILES0 = \
-	page.gif $(HTMLEXTRASUPPORTFILES)
+	ozdoc.css page.gif $(HTMLEXTRASUPPORTFILES)
 HTMLSUPPORTFILES = \
 	$(addprefix $(SRCTOP)/doc/utilities/,$(HTMLSUPPORTFILES0))
 
@@ -52,14 +52,14 @@ $(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
 	if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTLINK)\?class=$(WHATCLASS)\&name=$(PRINTNAME); \
 	else opt=; fi; \
 	$(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
-	--type=html-stylesheets --stylesheet=../ozdoc.css \
+	--type=html-stylesheets --stylesheet=ozdoc.css \
 	--link=Top,../index.html $$opt \
 	--bib-path=$(SRCDIR):$(SRCTOP)/doc \
 	--bst-path=$(SRCTOP)/doc/utilities \
 	--latexdb=latex.db \
 	--xrefdb=../xref.db --xrefdir=$(WHAT) --indexdb=../index.db \
 	--make-hhc=$(WHAT).hhc && \
-	if [ $(HTMLSUPPORTFILES) ]; then \
+	if [ "$(HTMLSUPPORTFILES)" ]; then \
 	cp -p $(HTMLSUPPORTFILES) $(WHAT)-html; fi && \
 	for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)) NONE; \
 	do { test $$i = NONE || cp -p $$i $(WHAT)-html; } done
@@ -76,13 +76,13 @@ quick:: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
 	if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTLINK)\?class=$(WHATCLASS)\&name=$(PRINTNAME); \
 	else opt=; fi; \
 	$(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
-	--type=html-stylesheets --stylesheet=../ozdoc.css \
+	--type=html-stylesheets --stylesheet=ozdoc.css \
 	--link=Top,../index.html $$opt \
 	--bib-path=$(SRCDIR):$(SRCTOP)/doc \
 	--bst-path=$(SRCTOP)/doc/utilities \
 	--latexdb=latex.db --keeppictures \
 	--xrefdb=../xref.db --xrefdir=$(WHAT)  --indexdb=../index.db && \
-	if [ $(HTMLSUPPORTFILES) ]; then \
+	if [ "$(HTMLSUPPORTFILES)" ]; then \
 	cp -p $(HTMLSUPPORTFILES) $(WHAT)-html; fi && \
 	for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)) NONE; \
 	do { test $$i = NONE || cp -p $$i $(WHAT)-html; } done

@@ -22,7 +22,7 @@ dnl
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(Mozart.hhp)
+AC_INIT(Mozart.hhc.in)
 OZ_INIT
 OZ_PATH_PROG(AWK,gawk awk)
 AC_SUBST(AWK)
