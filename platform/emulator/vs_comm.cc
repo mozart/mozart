@@ -59,6 +59,7 @@ VirtualSite::VirtualSite(Site *s,
 			 VSSiteQueue *sqIn)
   : site(s), status(SITE_OK), vsStatus(0), 
     isAliveSent(0), aliveAck(0),
+    probeAllCnt(0), probePermCnt(0),
     fmp(fmpIn), sq(sqIn),
     mboxMgr((VSMailboxManagerImported *) 0)
 {
@@ -225,6 +226,230 @@ void unmarshalUselessVirtualInfo(MsgBuffer *mb)
   (void) unmarshalNumber(mb);
   //
   (void) unmarshalNumber(mb);
+}
+
+//
+//
+GenHashNode* VSSiteHashTable::findNode(int hvalue, Site *s)
+{
+  GenHashNode *aux = htFindFirst(hvalue);
+  Site *sf;
+
+  while(aux) {
+    GenCast(aux->getEntry(), GenHashEntry*, sf, Site*);
+
+    //
+    if (!s->compareSites(sf))
+      return (aux);
+
+    //
+    aux = htFindNext(aux, hvalue);
+  }
+
+  //
+  return ((GenHashNode *) 0);
+}
+
+//
+//
+Bool VSSiteHashTable::check(Site *s)
+{
+  GenHashNode *ghn = findNode(hash(s), s);
+  return (ghn ? TRUE : FALSE);
+}
+
+//
+void VSSiteHashTable::enter(Site *s)
+{
+  GenHashBaseKey* ghn_bk;
+  GenHashEntry* ghn_e;
+  int hvalue = hash(s);
+  Assert(!check(s));
+
+  //
+  // Actually we don't need keys...
+  GenCast(s, Site*, ghn_bk, GenHashBaseKey*);
+  GenCast(s, Site*, ghn_e, GenHashEntry*);
+  //
+  htAdd(hvalue, ghn_bk, ghn_e);
+}
+
+//
+void VSSiteHashTable::remove(Site *s) {
+  int hvalue = hash(s);
+  GenHashNode *ghn = findNode(hvalue, s);
+  Assert(ghn);
+  htSub(hvalue, ghn);
+}
+
+//
+Site *VSSiteHashTable::getFirst()
+{
+  Site *s;
+  seqGHN = GenHashTable::getFirst(seqIndex);
+  if (seqGHN) {
+    GenCast(seqGHN->getEntry(), GenHashEntry*, s, Site*);
+  } else {
+    s = (Site *) 0;
+  }
+  return (s);
+}
+
+//
+Site *VSSiteHashTable::getNext(Site *prev)
+{
+  Site *s;
+  seqGHN = GenHashTable::getNext(seqGHN, seqIndex);
+  if (seqGHN) {
+    GenCast(seqGHN->getEntry(), GenHashEntry*, s, Site*);
+  } else {
+    s = (Site *) 0;
+  }
+  return (s);
+}
+
+//
+// Note we cannot ignore probe types even though there is only type
+// of problems - the permanent one. This is because the perdio layer
+// can ask for different probes separately;
+ProbeReturn VSProbingObject::installProbe(VirtualSite *vs,
+					  ProbeType pt, int frequency)
+{
+  Site *s = vs->getSite();
+  Assert(s->virtualComm());
+
+  //
+  if (check(s)) {
+    Assert(vs->hasProbesAll() || vs->hasProbesPerm());
+  } else {
+    Assert(!vs->hasProbesAll() && !vs->hasProbesPerm());
+    enter(s);
+    probesNum++;
+  }
+
+  //
+  switch (pt) {
+  case PROBE_TYPE_ALL:
+    vs->incProbesAll();
+    break;
+
+  case PROBE_TYPE_PERM:
+    vs->incProbesPerm();
+    break;
+
+  default:
+    error("Virtual sites: unexpected type of probe");
+    break;
+  }
+
+  //
+  return (PROBE_INSTALLED);
+}
+
+//
+ProbeReturn VSProbingObject::deinstallProbe(VirtualSite *vs, ProbeType pt)
+{
+  ProbeReturn ret;
+  Site *s = vs->getSite();
+  Assert(s->virtualComm());
+
+  //
+  switch (pt) {
+  case PROBE_TYPE_ALL:
+    if (vs->hasProbesAll()) {
+      vs->decProbesAll();
+      ret = PROBE_DEINSTALLED;
+    } else {
+      ret = PROBE_NONEXISTENT;
+    }
+    break;
+
+  case PROBE_TYPE_PERM:
+    if (vs->hasProbesPerm()) {
+      vs->decProbesPerm();
+      ret = PROBE_DEINSTALLED;
+    } else {
+      ret = PROBE_NONEXISTENT;
+    }
+    break;
+
+  default:
+    error("Virtual sites: unexpected type of probe");
+    ret = PROBE_NONEXISTENT;
+    break;
+  }
+
+  //
+  Assert(check(s));
+  if (!vs->hasProbesAll() && !vs->hasProbesPerm()) {
+    remove(s);
+    probesNum--;
+  }
+
+  //
+  return (ret);
+}
+
+//
+Bool VSProbingObject::processProbes(unsigned long clock) {
+  //
+  Site *s = getFirst();
+  while (s) {
+    if (s->isConnected()) {
+      //
+      VirtualSite *vs = s->getVirtualSite();
+      int pid;
+      Assert(vs->hasProbesAll() || vs->hasProbesPerm());
+
+      //
+      pid = vs->getVSPid();
+      if (pid && oskill(pid, 0)) {
+	// no such process;
+	s->probeFault(PROBE_PERM);
+      }
+    }
+
+    //
+    s = getNext(s);
+  }
+
+  //
+  if (clock - lastPing > PROBE_WAIT_TIME) {
+    //
+    Site *s = getFirst();
+    while (s) {
+      if (s->isConnected()) {
+	//
+	VirtualSite *vs = s->getVirtualSite();
+	int pid;
+	Assert(vs->hasProbesAll() || vs->hasProbesPerm());
+
+	//
+	// First check old pings;
+	if (vs->getTimeIsAliveSent() > lastPing &&
+	    vs->getTimeIsAliveSent() > vs->getTimeAliveAck()) {
+	  // effectively dead;
+	  s->probeFault(PROBE_PERM);
+	} else {
+	  // if it seems to be alive, init a new round...
+	  MsgBuffer *mb = getVirtualMsgBuffer(s);
+	  marshal_M_SITE_IS_ALIVE(mb, mySite);
+	  if (sendTo_VirtualSite(vs, mb, M_SITE_IS_ALIVE, (Site *) 0, 0)
+	      != ACCEPTED)
+	    s->probeFault(PROBE_PERM);
+	}
+      }
+
+      //
+      s = getNext(s);
+    }
+
+    //
+    lastPing = clock;
+  }
+
+  //
+  return (TRUE);
 }
 
 #endif // VIRTUALSITES

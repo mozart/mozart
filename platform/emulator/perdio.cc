@@ -3824,6 +3824,38 @@ void msgReceived(MsgBuffer* bs)
     break;
 #endif
 
+  case M_SITE_IS_ALIVE:
+#ifdef VIRTUALSITES
+    {
+      Site *s;
+
+      //
+      unmarshal_M_INIT_VS(bs, s);
+      MsgBuffer *bs = msgBufferManager->getMsgBuffer(s);  
+      marshal_M_SITE_ALIVE(bs, mySite);
+      SendTo(s, bs, M_SITE_ALIVE, (Site *) 0, 0);
+
+      //
+      break;
+    }
+#else
+    error("siteReceive: 'M_SITE_IS_ALIVE' received without 'VIRTUALSITES'?");
+    break;
+#endif
+
+  case M_SITE_ALIVE:
+#ifdef VIRTUALSITES
+    {
+      Site *s;
+      unmarshal_M_INIT_VS(bs, s);
+      s->siteAlive();
+      break;
+    }
+#else
+    error("siteReceive: 'M_SITE_ALIVE' received without 'VIRTUALSITES'?");
+    break;
+#endif
+
   default:
     error("siteReceive: unknown message %d\n",mt);
     break;

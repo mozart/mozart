@@ -34,6 +34,7 @@
 
 #ifdef VIRTUALSITES
 
+#include "genhashtbl.hh"
 #include "comm.hh"
 #include "vs_msgbuffer.hh"
 #include "vs_mailbox.hh"
@@ -348,14 +349,18 @@ public:
 // virtual site, and created whenever something is to be sent there;
 class VirtualSite : private VSSiteQueueNode, public VSMsgQueue  {
   friend class VSSiteQueue;
+  friend class VSProbingObject;
 private:
   Site *site;			// backward (cross) reference;
   SiteStatus status;		// (values;)
   int vsStatus;			// (flags;)
   //
   // 'isAliveSent==0' means no request was sent;
-  double isAliveSent;		// when a last 'is alive' was sent
-  double aliveAck;		// and received;
+  unsigned long isAliveSent;		// when a last 'is alive' was sent
+  unsigned long aliveAck;		// and received;
+  //
+  int probeAllCnt;
+  int probePermCnt;
 
   //
   VSMailboxManagerImported *mboxMgr; // ... of that virtual site;
@@ -372,17 +377,34 @@ private:
 private:
   //
   void setStatus(SiteStatus statusIn) { status = statusIn; }
-  void setVSFlag(int flag) { vsStatus |= flag; }
-  void clearVSFlag(int flag) { vsStatus &= ~flag; }
-
-  //
-  Bool isSetVSFlag(int flag) { return ((Bool) vsStatus & flag); }
 
   //
   // All currently unsent messages to a site being disconnected
   // will be sent ('VS_PENDING_UNMAP_MBOX');
   void connect();
   void disconnect();
+
+  //
+  Bool isSetVSFlag(int flag) { return ((Bool) vsStatus & flag); }
+  void setVSFlag(int flag) { vsStatus |= flag; }
+  void clearVSFlag(int flag) { vsStatus &= ~flag; }
+
+  //
+  // 'VSProbingObject' needs pids of virtual sites;
+  int getVSPid() { return (mboxMgr->getMailbox()->getPid()); }
+
+  //
+  unsigned long getTimeIsAliveSent() { return (isAliveSent); }
+  unsigned long getTimeAliveAck() { return (aliveAck); }
+  void setTimeIsAliveSent(unsigned long ms) { isAliveSent = ms; }
+
+  //
+  Bool hasProbesAll() { return (probeAllCnt); }
+  Bool hasProbesPerm() { return (probePermCnt); }
+  void incProbesAll() { probeAllCnt++; }
+  void incProbesPerm() { probePermCnt++; }
+  void decProbesAll() { probeAllCnt--; }
+  void decProbesPerm() { probePermCnt--; }
 
   //
 public:
@@ -423,6 +445,12 @@ public:
     noMsgs = 0; 
     return (0);
   }
+
+  //
+  Site *getSite() { return (site); }
+
+  //
+  void setTimeAliveAck(unsigned long ms) { aliveAck = ms; }
 };
 
 //
@@ -484,6 +512,103 @@ public:
     //
     return (r);
   }
+};
+
+//
+// Probing for virtual sites.
+// There are two components of probing: (a) checking the site's
+// process using kill(2) system call, and (b) sending 'ping'
+// requests. Note that the first component does not guarantee the
+// process with pid is still the right one. Note also that ping"ing
+// ('M_SITE_IS_ALIVE'/'M_SITE_ALIVE') require in the worst case some
+// unpredictable umount of time (speaking more precisely, that's the
+// time for processing all the messages in the mailbox given that each
+// message can be as long as senders (sic!) are allowed to create),
+// since these messages are delivered with the same priority as all
+// other messages;
+
+//
+//
+class VSSiteHashTable : public GenHashTable {
+private:
+  int seqIndex;
+  GenHashNode *seqGHN;		// both needed for 'getFirst'/'getNext';
+
+  //
+private:
+  //
+  // OK, other hash functions can be used as well...
+  unsigned int hash(Site *s) { return (s->hashPrimary()); }
+
+  //
+  GenHashNode* findNode(int hvalue, Site *s);
+
+  //
+protected:
+  VSSiteHashTable(int size) : GenHashTable(size) {}
+  ~VSSiteHashTable() {}
+
+  //
+  Bool check(Site *s);
+  void enter(Site *s);
+  void remove(Site *s);
+
+  //
+  Site *getFirst();
+  Site *getNext(Site *prev);
+};
+
+//
+//
+class VSProbingObject : VSSiteHashTable {
+private:
+  //
+  int probesNum;
+  // Perform checks at this interval. Right now checks are performed
+  // at the same frequency for all virtual sites requested, which is
+  // a minimal frequency among requested ones;
+  unsigned long minInterval;
+  // The time last checks were performed;
+  unsigned long lastCheck;
+  // The time last pings were sent out;
+  unsigned long lastPing;
+
+  //
+public:
+  VSProbingObject(int size)
+    : VSSiteHashTable(size),
+      probesNum(0), lastCheck(0), lastPing(0), 
+      minInterval(PROBE_INTERVAL) {
+    // kost@ : task manager does not keep track who and which minimal
+    // service interval has requested, virtual sites just say from
+    // scratch "we want to have PROBE_INTERVAL";
+    am.setMinimalTaskInterval(PROBE_INTERVAL);
+  }
+  ~VSProbingObject() {}
+
+  //
+  // Note we cannot ignore probe types even though there is only type
+  // of real problems - the permanent one. This is because the perdio
+  // layer can ask for different probes separately;
+  ProbeReturn installProbe(VirtualSite *vs, ProbeType pt, int frequency);
+  ProbeReturn deinstallProbe(VirtualSite *vs, ProbeType pt);
+
+  //
+  Bool checkProbes(unsigned long clock) {
+    if (!probesNum) 
+      return (FALSE);
+
+    //
+    if (clock - lastCheck > minInterval) {
+      lastCheck = clock;
+      return (TRUE);
+    } else {
+      return (FALSE);
+    }
+  }
+
+  //
+  Bool processProbes(unsigned long clock);
 };
 
 #endif // VIRTUALSITES

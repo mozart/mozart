@@ -407,7 +407,7 @@ void AM::init(int argc,char **argv)
   //
   sleepQueue = (OzSleep *) 0;
   emulatorClock = 0;
-  taskMinInterval = 0;
+  taskMinInterval = DEFAULT_MIN_INTERVAL;
 
   profileMode = NO;
 }
@@ -1607,7 +1607,7 @@ void AM::handleIO()
 }
 
 //
-Bool NeverDo_CheckProc(double, void*)
+Bool NeverDo_CheckProc(unsigned long, void*)
 {
   return (NO);
 }
@@ -2010,7 +2010,7 @@ void handlerUSR2()
 
 void AM::handleAlarm(unsigned int ms)
 {
-  emulatorClock =+ ms;
+  emulatorClock = emulatorClock + (unsigned long) ms;
 
   if (ozstat.currPropagator) {
     ozstat.currPropagator->incSamples();

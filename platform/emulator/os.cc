@@ -226,31 +226,6 @@ unsigned int osTotalTime()
 #endif
 }
 
-#if !defined(WINDOWS)
-//
-// kost@ : i've added this because of ridiculous signature for the
-// previous one (one cannot fit the time in ms in an integer (or long)
-// just per definition);
-double osTotalTimeReally()
-{
-#ifdef SUNOS_SPARC
-  struct timeval tp;
-  (void) gettimeofday(&tp, NULL);
-  return (double) ((tp.tv_sec - emulatorStartTime) * 1000 +
-		   tp.tv_usec / 1000);
-#else
-  struct tms buffer;
-  time_t t = times(&buffer) - emulatorStartTime;
-  return ((double) (((double) (t * 1000.0)) /
-		    ((double) sysconf(_SC_CLK_TCK))));
-#endif
-}
-#else
-#define osTotalTimeReally() osTotalTime()
-#endif
-
-
-
 #ifdef WINDOWS
 class TimerThread {
 public:
@@ -659,7 +634,7 @@ int osGetAlarmTimer()
  * spent in waiting;
  */
 static 
-int osSelect(fd_set *readfds, fd_set *writefds, int *ptimeout)
+int osSelect(fd_set *readfds, fd_set *writefds, unsigned int *ptimeout)
 {
 #ifdef WINDOWS
 
@@ -668,7 +643,7 @@ int osSelect(fd_set *readfds, fd_set *writefds, int *ptimeout)
 #else
 
   struct timeval timeoutstruct, *timeoutptr;
-  double currentSystemTime;
+  unsigned int currentSystemTime;
 
   if (ptimeout == WAIT_NULL) {
     timeoutstruct.tv_sec = 0;
@@ -685,7 +660,7 @@ int osSelect(fd_set *readfds, fd_set *writefds, int *ptimeout)
     }
 
     //
-    currentSystemTime = osTotalTimeReally();
+    currentSystemTime = osTotalTime();
     // note that the alarm clock is untouched here now;
     osUnblockSignals();
   }
@@ -700,7 +675,7 @@ int osSelect(fd_set *readfds, fd_set *writefds, int *ptimeout)
   if (ptimeout != WAIT_NULL) {
     // kost@ : Note that effectively the time spent in wait 
     // may be greater than specified;
-    *ptimeout = (int) (osTotalTimeReally() - currentSystemTime);
+    *ptimeout = (int) (osTotalTime() - currentSystemTime);
     Assert(*ptimeout >= 0);
     osBlockSignals();
   }
