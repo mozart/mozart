@@ -29,9 +29,53 @@
     in a modular fashion. This chapter explains how modular
     applications are executed.
 
+  <p>
+    The chapter is kept informal, a more detailed explanation of
+    module managers and how module managers link applications can be
+    found in <ptr to="modules.98">.
+
   <section id="section.modman.overview">
     <title/Overview/
 
+    <p>
+      A module manager maintains a <def/module table/. The module
+      table maps urls (or to be more precise, full module urls) to
+      modules.
+
+    <p>
+      A module manager <def/links/ a functor at url ?{U} as follows:
+      <list enum>
+        <item>
+          If ?{U} is already in the module table, the module manager
+          returns the entry in the module table.
+        <item>
+          If ?{U} is not yet in the module table, the module manager
+          creates a new future ?{M} and stores ?{M} under ?{U} in the
+          module table. As soon as the value of the future ?{M} gets
+          requested, the module manager <def/installs/ the functor at
+          ?{U}.
+      </list>
+
+    <p>
+      Linking of a functor is done lazily: Only when the value of the
+      module is requested, the module is installed. A module with full
+      module url ?{U} is installed as follows Installation returns a
+      module ?{M}.
+      <list enum>
+        <item>
+          The pickled functor stored at ?{U} is loaded.
+        <item>
+          The module manager computes the full module urls for its
+          imports. This step is detailed in <ptr
+          to="section.modman.import"> and <ptr
+          to="section.modman.resolve">.
+        <item>
+          It recursively links all functors with the full module urls
+          computed before. This yields the <def/argument modules/.
+        <item>
+          It applies the functor body to the argument modules, which
+          returns the module ?{M}. 
+      </list>
 
   <section id="section.modman.import">
     <title/Import Specifications/
@@ -205,11 +249,6 @@ import
 
   </section>
 
-  <section id="section.modman.link">
-    <title/Linking/
-
-  </section>
-
   <section id="section.modman.user">
     <title/User-defined Module Managers/
 
@@ -224,6 +263,44 @@ import
       As an example, suppose we want to use more than a single data
       base as implemented by the functor <file/DB.ozf/ as shown in
       <ptr to="section.development.db">
+
+    <p>
+      In the Oz Programming Interface, we can link <file/DB.ozf/
+      twice with two new and different module managers as follows:
+<<<
+[DBA]={Module.link ['DB.ozf']}
+[DBB]={Module.link ['DB.ozf']}
+>>>
+      Both <<DBA>> and <<DBB>> refer to two independent data bases.
+
+    <p>
+      You can observe lazy linking easily. Browsing <<DBA>> as
+      follows
+      <<<{Browse DBA}>>>
+      shows <samp/DBA&le;Future&gt;/, which means that <<DBA>> still
+      refers to a future. Requesting the module by for example adding
+      an entry to the data base also shows effect on the Browser
+      display in that the module is displayed.
+
+    <p>
+      That both module managers work independently you can verify by
+      browsing <<DBB>>.
+
+    <p>
+      <<Module.link>> takes a list of urls, creates a new module
+      manager and maps each url ?{U} to the module created by
+      linking the functor at ?{U}. Reference description you can
+      find in <ptr.extern to="ozdoc:system" key="chapter.module">.
+
+  <section id="section.modman.opi">
+    <title/Functors in the Oz Programming Environment/
+
+    <p>
+      Functors are first class entities in the language, that can be
+      also created in the Oz Programming Interface.
+
+     
+
 
     
 
