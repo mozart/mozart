@@ -57,8 +57,12 @@ Makefile: Makefile.in config.status
 Makefile.vars: Makefile.vars.in config.status
 	./config.status
 
+CSSFILES = ozdoc.css page.gif
+CSSSRCFILES = $(addprefix $(SRCTOP)/doc/utilities/,$(CSSFILES))
+CSSDSTFILES = $(addprefix $(SHDOCDIR)/,$(CSSFILES))
+
 install:: all $(SHDOCDIR) $(DOCDIR) $(LIBFILES) $(DOCDIR)/.htaccess \
-	$(DOCDIR)/idx $(DOCDIR)/idx/index.html
+	$(DOCDIR)/idx $(DOCDIR)/idx/index.html $(CSSDSTFILES)
 
 $(SHDOCDIR) $(DOCDIR) $(DOCDIR)/idx:
 	$(INSTALL_DIR) $@
@@ -66,13 +70,16 @@ $(SHDOCDIR) $(DOCDIR) $(DOCDIR)/idx:
 $(DOCDIR)/.htaccess: .htaccess
 	$(INSTALL_FILE) $< $@
 
-CSSFILES = $(SRCTOP)/doc/utilities/ozdoc.css $(SRCTOP)/doc/utilities/page.gif
-
 $(DOCDIR)/idx/index.html: idx/index.html $(DOCDIR)/idx
 	$(INSTALL_FILE) $< $@ && \
 	$(INSTALL_DIR) $(DOCDIR)/idx && \
-	(cd idx && for i in * $(CSSFILES); do \
+	(cd idx && for i in * $(CSSSRCFILES); do \
 	$(INSTALL_FILE) $$i $(DOCDIR)/idx || exit 1; done)
+
+$(SHDOCDIR)/ozdoc.css: $(SRCTOP)/doc/utilities/ozdoc.css
+	$(INSTALL_FILE) $< $@
+$(SHDOCDIR)/%.gif: $(SRCTOP)/doc/utilities/%.gif
+	$(INSTALL_FILE) $< $@
 
 $(LIBFILES): $(SHDOCDIR)/% : %
 	$(INSTALL_FILE) $< $@
