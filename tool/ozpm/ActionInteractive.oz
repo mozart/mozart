@@ -3,452 +3,26 @@ export 'class' : InteractiveManager
 import
    Application
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
-   Global(localDB packageMogulDB authorMogulDB)
+   Global(localDB
+	  packageMogulDB
+	  authorMogulDB
+	  background       : Background
+	  getLabel         : GetLabel)
    ActionInstall(install:Install)
    ActionRemove(remove:Remove)
    ActionInfo(view)
    System(show:Show)
 %   Browser(browse:Browse)
    FileUtils(isExtension:IsExtension)
-   Tree(treeNode:TreeNode)
-   String(capitalize:Capitalize) at 'x-ozlib://duchier/lib/String.ozf'
    OS(stat unlink)
    Open
    Resolve(localize)
+   InteractiveListDataView(dataView:ListDataView)
+   InteractiveTreeDataView(dataView:TreeDataView)
+   InteractiveFullInfoView(infoView:InfoView)
+   InteractiveNiceInfoView(infoView:NiceInfoView)
+   
 define
-
-   PackageIcon={QTk.newImage photo(file:"package_small.gif")}
-   InstalledPackageIcon={QTk.newImage photo(file:"installed_package_small.gif")}
-   InstallablePackageIcon={QTk.newImage photo(file:"installable_package_small.gif")}
-   FolderIcon={QTk.newImage photo(file:"folder_small.gif")}
-   FolderOpenIcon={QTk.newImage photo(file:"folder_open_small.gif")}
-   Background=c(240 250 242)
-
-
-   %% two functions on mogul names
-   
-   fun{GetParent X}
-      %%
-      %% returns the parent mogul name
-      %% ignore last /, my return a name with an ending /
-      %%
-      {VirtualString.toAtom
-       {Reverse
-	{List.dropWhileInd {Reverse {VirtualString.toString X}}
-	 fun{$ I C} C\=&/ orelse I==1 end}}}
-   end
-   fun{GetLabel X}
-      %%
-      %% returns the last basename of a mogul name
-      %% ignore last last /
-      %%
-      VS={VirtualString.toString
-	  {Reverse
-	   {List.takeWhileInd {Reverse {VirtualString.toString X}}
-	    fun{$ I C} C\=&/ orelse I==1 end}}}
-   in
-      if {List.last VS}\=&/ then
-	 VS
-      else
-	 {List.take VS {Length VS}-1}
-      end
-   end	       
-
-   class ListDataView
-      feat
-	 parent
-	 setTitle
-	 handle
-      attr
-	 info
-	 title
-      meth init(Parent ST Desc)
-	 self.parent=Parent
-	 self.setTitle=ST
-	 Desc=listbox(glue:nswe
-		      bg:Background
-		      tdscrollbar:true
-		      action:self#select
-		      handle:self.handle)
-      end
-      meth display(Info)
-	 info<-{Record.adjoinAt
-		Info
-		info
-		{List.sort Info.info
-		 fun{$ A B} {VirtualString.toAtom A.id}<{VirtualString.toAtom B.id} end}}
-	 {self.setTitle Info.title}
-	 {self.handle set({List.map @info.info fun{$ I} I.id end})}
-     end
-      meth get(Info)
-	 Info=@info
-	 skip
-      end
-      meth getClass(C)
-	 C=ListDataView
-      end
-      meth select
-	 N={self.handle get(firstselection:$)}
-	 D
-      in
-	 try
-	    Info={List.nth @info.info N}
-	 in
-	    D=r(info:Info)
-	 catch _ then D=unit end
-	 {self.parent displayInfo(D)}
-      end
-   end
-
-   
-
-   class TreeDataView
-      feat
-	 parent
-	 setTitle
-	 handle
-	 allTag
-	 selTag
-      attr
-	 info
-	 title
-	 rootNode
-	 dictNode
-	 sel:nil
-      meth init(Parent ST Desc)
-	 self.parent=Parent
-	 self.setTitle=ST
-	 rootNode<-nil
-	 Desc=canvas(glue:nswe
-		     bg:Background
-		     tdscrollbar:true
-		     lrscrollbar:true
-		     handle:self.handle)
-      end
-%      meth setScrollbar
-%	 {self.handle set(scrollregion:{List.toRecord q
-%					{List.mapInd
-%					 {self.allTag bbox($)}
-%					 fun{$ I V} I#V end}
-%				       })}
-%      end
-      meth display(Info)
-	 if {IsFree self.allTag} then
-	    self.allTag={self.handle newTag($)}
-	    {self.allTag addtag(withtag all)}
-	    self.selTag={self.handle newTag($)}
-	 else
-	    {self.selTag delete}
-	 end
-	 info<-Info
-	 {self.setTitle Info.title}
-	 if @rootNode\=nil then
-	    {@rootNode delete(height:_)}
-	 end
-	 if Info.info==nil then
-	    rootNode<-nil
-	 else
-	    rootNode<-{New TreeNode init(canvas:self.handle
-					 font:"Times 12"
-					 height:18
-					 icon:FolderIcon
-					 eicon:FolderOpenIcon
-					 label:"mogul")}
-	    dictNode<-{NewDictionary}
-	    {Dictionary.put @dictNode 'mogul:/' @rootNode}
-	    local
-	       fun{ToKey X}
-		  {VirtualString.toAtom
-		   if {List.last {VirtualString.toString X}}\=&/ then
-		      X#"/" else X end}
-	       end
-	       proc{CreateNode I X Icon}
-		  Parent={GetParent X}
-		  ParentNode={Dictionary.condGet @dictNode Parent
-			      {ByNeed fun{$}
-					 {CreateNode 0 Parent FolderIcon}
-					 {Dictionary.get @dictNode Parent}
-				      end}
-			     }
-		  {Wait ParentNode}
-		  Node={New TreeNode init(parent:ParentNode
-					  icon:Icon
-					  eicon:if I\=0 then
-						   nil
-						else
-						   FolderOpenIcon
-						end
-					  label:{GetLabel X})}
-	       in
-		  {Dictionary.put @dictNode {ToKey X} Node}
-		  {ParentNode addLeaf(node:Node)}
-		  {Node expand}
-		  if I\=0 then
-		     {Node bind(event:"<1>"
-				action:{self.parent.toplevel newAction(self#select(I Node) $)})}
-		  end
-	       end
-	    in
-	       for
-		  X in @info.info
-		  I in 1 ; I+1
-	       do
-		  {CreateNode I X.id
-		   case {self.parent state(X $)}
-		   of installed then InstalledPackageIcon
-		   [] installedable then InstalledPackageIcon
-		   [] installable then InstallablePackageIcon
-		   else PackageIcon end}
-	       end
-	    end
-	    {@rootNode draw(x:2 y:2 height:_)}
-	    {@rootNode expand}
-	 end
-	 %%
-	 %% 
-	 %%
-     end
-      meth get(Info)
-	 Info=@info
-	 skip
-      end
-      meth getClass(C)
-	 C=TreeDataView
-      end
-      meth select(I Node)
-	 Info={List.nth @info.info I}
-	 D=r(info:Info)
-      in
-	 if @sel\=nil then {@sel select(state:false)} end
-	 sel<-Node
-	 {Node select(state:true)}
-	 {self.parent displayInfo(D)}
-      end
-   end
-   %%
-   %%
-   %%
-   class InfoView
-      feat
-	 setTitle
-	 handle
-	 parent
-      attr
-	 info:unit
-      meth init(Parent ST Desc)
-	 self.parent=Parent
-	 self.setTitle=ST
-	 Desc=listbox(glue:nswe
-		      bg:Background
-		      tdscrollbar:true
-		      lrscrollbar:true
-		      handle:self.handle)
-      end
-      meth display(Inf)
-	 info<-Inf
-	 {self.handle set(nil)}
-	 if Inf==unit then
-	    {self.setTitle ""}
-	 else
-	    Info=Inf.info
-	 in
-	    {self.setTitle {VirtualString.toString Info.id}}
-	    local
-	       L1={List.filter
-		   {List.map
-		    {Record.toListInd Info}
-		    fun{$ En}
-		       I#V=En
-		    in
-		       case I
-		       of lsla then unit
-		       [] filelist then unit
-		       [] id then unit
-		       else
-			  if {List.is V} then
-			     I#":"#{List.drop
-				    {VirtualString.toString
-				     {List.foldL V fun{$ S X} S#","#X end ""}}
-				    1}
-			  elseif {VirtualString.is V} then
-			     I#":"#{VirtualString.toString V}
-			  else
-			     unit
-			  end
-		       end
-		    end}
-		   fun{$ L} L\=unit end}
-	       L2=if {HasFeature Info filelist} then
-		     ""|"Contains the following files :"|""|{List.map Info.filelist fun{$ R} R end}
-		  else
-		     nil
-		  end
-	       L={List.append L1 L2}
-	    in
-	       {self.handle set(L)}
-	    end
-	 end
-      end
-      meth get(Info)
-	 Info=@info
-	 skip
-      end
-      meth getClass(C)
-	 C=InfoView
-      end
-   end
-   
-   fun{AuthorsToString L}
-      fun{AuthorIDToName ID}
-	 {Global.authorMogulDB condGet({VirtualString.toAtom ID} ID $)}.name
-      end
-   in
-      if {List.is L} then
-	 {List.drop
-	  {VirtualString.toString
-	   {List.foldL L fun{$ S X} S#"\n"#{AuthorIDToName X} end ""}
-	  } 1}
-      else
-	 {VirtualString.toString {AuthorIDToName L}}
-      end
-   end
-   %%
-   %%
-   %%
-   TitleLook={QTk.newLook}
-   {TitleLook.set label(bg:red
-			glue:we
-			fg:white
-			font:{QTk.newFont font(family:'Times'
-					       weight:bold
-					       size:16)})}
-   AuthorLook={QTk.newLook}
-   {AuthorLook.set label(bg:Background
-			 font:{QTk.newFont font(family:'Times'
-						slant:italic
-						size:12)})}
-
-   DescLook={QTk.newLook}
-   {DescLook.set text(bg:Background
-		      font:{QTk.newFont font(family:'Times'
-					     size:12)})}
-					      
-   
-   WhiteLook={QTk.newLook}
-   {WhiteLook.set label(bg:Background)}
-   {WhiteLook.set td(bg:Background)}
-   {WhiteLook.set lr(bg:Background)}
-   
-   class NiceInfoView
-      feat
-	 setTitle
-	 handle
-	 parent
-      attr
-	 info:unit
-      meth init(Parent ST Desc)
-	 self.parent=Parent
-	 self.setTitle=ST
-	 Desc=td(glue:nswe
-		 bg:Background
-		 look:WhiteLook
-%		 tdscrollbar:true
-		 td(glue:nswe
-		    handle:self.handle
-		    label(glue:nwe
-			  look:TitleLook
-			  feature:title)
-		    lr(glue:nwe
-		       feature:author
-		       label(glue:w
-			     feature:desc)
-		       label(glue:nwe
-			     anchor:nw
-			     justify:left
-			     look:AuthorLook
-			     feature:data))
-		    lr(glue:nswe
-		       feature:blurb
-		       label(glue:nw
-			     feature:desc)
-		       placeholder(feature:place
-				   bg:Background
-				   padx:5 pady:5
-				   glue:nswe))
-		))
-      end
-      meth display(Inf)
-	 info<-Inf
-	 {self.handle.title set("")}
-	 {self.handle.author.desc set("")}
-	 {self.handle.author.data set("")}
-	 {self.handle.blurb.desc set("")}
-	 {self.handle.blurb.place set(empty)}
-	 if Inf==unit then
-	    {self.setTitle ""}
-	 else
-	    Info=Inf.info
-	    fun{ListToString L}
-	       {List.map
-		if {List.is L} then
-		   {List.drop
-		    {VirtualString.toString
-		     {List.foldL L fun{$ S X} S#"\n"#X end ""}
-		    } 1}
-		else
-		   {VirtualString.toString L}
-		end
-		fun{$ C} if C==&\n then & else C end end}
-	    end
-	 in
-	    {self.setTitle {VirtualString.toString Info.id}}
-	    {self.handle.title set({Capitalize {GetLabel Info.id}})}
-	    if {CondSelect Info author unit}\=unit then 
-	       {self.handle.author.desc set("Author : ")}
-	       {self.handle.author.data set({AuthorsToString Info.author})}
-%					   {ListToString Info.author})}
-	    else
-	       {self.handle.author.desc set("No author defined.")}
-	    end
-	    local
-	       Desc=if {HasFeature Info body} andthen
-		       Info.body\=unit andthen
-		       {VirtualString.toString Info.body}\=nil then
-		       Info.body
-		    elseif {HasFeature Info blurb} andthen
-		       Info.blurb\=unit andthen
-		       {VirtualString.toString Info.blurb}\=nil then
-		       Info.blurb
-		    else
-		       ""
-		    end
-	       Handle
-	    in
-	       if Desc\=nil then
-		  {self.handle.blurb.desc set("Description : ")}
-		  {self.handle.blurb.place
-		   set(text(glue:nswe
-			    look:DescLook
-			    bg:Background
-			    handle:Handle
-			    wrap:word
-			    tdscrollbar:true
-			    init:{ListToString Desc}))}
-		  {Handle set(state:disabled)}
-	       else
-		  {self.handle.blurb.desc set("No description available.")}
-	       end
-	    end
-	 end
-      end
-      meth get(Info)
-	 Info=@info
-	 skip
-      end
-      meth getClass(C)
-	 C=NiceInfoView
-      end
-   end
    
    class InteractiveManager
 
@@ -458,11 +32,16 @@ define
 	 infoPlace
 	 infoLabel
 	 installButton
-	 installTbButton
 	 desinstallButton
 	 downloadButton
 	 toplevel
-
+	 installTbButton
+	 mogulTbButton
+	 fileTbButton
+	 treeTbButton
+	 listTbButton
+	 niceTbButton
+	 allTbButton
       attr
 	 data
 	 info
@@ -485,16 +64,59 @@ define
 	 data<-{New TreeDataView init(self
 				      proc{$ Title} {self.dataLabel set(text:Title)} end
 				      DataMain)}
+	 InstallM
+	 DesinstallM
+	 DownloadM
+	 
 	 MenuDesc=
 	 lr(glue:nwe
 	    menubutton(
+	       action:proc{$}
+			 {InstallM set(state:{self.installButton get(state:$)})}
+			 {DesinstallM set(state:{self.desinstallButton get(state:$)})}
+			 {DownloadM set(state:{self.downloadButton get(state:$)})}
+		      end
 	       text:'File'
 	       glue:w
 	       menu:menu(
-		       command(text:'Install package...')
-		       command(text:'Remove package...')
+		       command(text:'Install package...'
+			       handle:InstallM
+			       action:self#install)
+		       command(text:'Desinstall package...'
+			       handle:DesinstallM
+			       action:self#desinstall)
+		       command(text:'Download package...'
+			       handle:DownloadM
+			       action:self#download)
 		       separator
-		       command(text:'Exit' action:toplevel#close)))
+		       command(text:'Check database integrity...'
+			       action:self#check)
+		       separator
+		       command(text:'Exit'
+			       accelerator:alt(x)
+			       action:toplevel#close)))
+	    menubutton(
+	       text:'View'
+	       glue:w
+	       menu:menu(
+		       command(text:'Installed packages'
+			       action:self#displayInstalled)
+		       command(text:'Mogul entries'
+			       action:self#displayMogul)
+		       command(text:'Package from file...'
+			       action:self#displayFile)
+		       separator
+		       command(text:'Packages as tree'
+			       action:self#displayDataAs(TreeDataView)
+			      )
+		       command(text:'Packages as list'
+			       action:self#displayDataAs(ListDataView))
+		       separator
+		       command(text:'Formatted package information'
+			       action:self#displayInfoAs(NiceInfoView))
+		       command(text:'Full package information'
+			       action:self#displayInfoAs(InfoView))
+		       ))
 	    menubutton(
 	       text:'Help'
 	       glue:e
@@ -526,25 +148,31 @@ define
 				      group:viewmode)
 			tbradiobutton(text:'Mogul'
 				      action:self#displayMogul
+				      handle:self.mogulTbButton
 				      group:viewmode)
 			tbradiobutton(text:'File...'
 				      action:self#displayFile
+				      handle:self.fileTbButton
 				      group:viewmode)
 			tdline
 			tbradiobutton(text:'Tree'
 				      init:true
 				      group:dataview
+				      handle:self.treeTbButton
 				      action:self#displayDataAs(TreeDataView))
 			tbradiobutton(text:'List'
 				      group:dataview
+				      handle:self.listTbButton
 				      action:self#displayDataAs(ListDataView))
 			tdline
 			tbradiobutton(text:'Nice'
 				      init:true
 				      group:infoview
+				      handle:self.niceTbButton
 				      action:self#displayInfoAs(NiceInfoView))
 			tbradiobutton(text:'All'
 				      group:infoview
+				      handle:self.allTbButton
 				      action:self#displayInfoAs(InfoView))
 		       )
 				 
@@ -556,6 +184,7 @@ define
 	 %%
 	 MainWindowDesc=
 	 tdrubberframe(glue:nswe
+%		       continue:true
 		       td(glue:nwe
 			  lr(glue:we
 			     label(look:TitleLook
@@ -636,6 +265,11 @@ define
       end
 
       meth displayDataAs(Class)
+	 if Class==ListDataView then
+	    {self.listTbButton set(true)}
+	 else
+	    {self.treeTbButton set(true)}
+	 end
 	 Desc
 	 Info={@data get($)}
       in
@@ -647,6 +281,11 @@ define
       end
 
       meth displayInfoAs(Class)
+	 if Class==NiceInfoView then
+	    {self.niceTbButton set(true)}
+	 else
+	    {self.allTbButton set(true)}
+	 end
 	 Desc
 	 Info={@info get($)}
       in
@@ -664,16 +303,20 @@ define
       end
 
       meth displayMogul
+	 {self.mogulTbButton set(true)}
 	 {@data display(r(info:{Global.packageMogulDB items($)}
 			  title:"Available packages from MOGUL"))}
       end
 
       meth displayFile
+	 {self.fileTbButton set(true)}
 	 File={QTk.dialogbox load($
 				  filetypes:q(q("Mozart Packages" "*.pkg"))
 				  title:"Select a package")}
       in
-	 if File==nil then skip else
+	 if File==nil then
+	    {@data display(r(info:nil title:nil))}
+	 else
 	    Package#_={ActionInfo.view File}
 	    Info={Record.adjoinAt Package
 		  url_pkg [File]}
@@ -1048,6 +691,10 @@ define
 	 {LB set(selection:[true])} % select the first element
 	 {Wait Ok} % wait for the window to close
 	 if Ok==false then 0 else {Access N} end
+      end
+
+      meth check
+	 skip
       end
       
    end

@@ -24,6 +24,9 @@ export
    mogulData        : MOGULDB
    packageMogulDB   : PACKAGEMOGULDB
    authorMogulDB    : AUTHORMOGULDB
+   background       : BackgroundColor
+   getParent        : GetParent
+   getLabel         : GetLabel
    
 define
    FILEPKGDFT       = 'ozpm.dsc'
@@ -94,4 +97,36 @@ define
 			       {New Database.'class' initFromList(MOGULDB.authors)}
 			    end}
 
+   BackgroundColor = c(240 250 242)
+
+   %% two functions on mogul names
+   
+   fun{GetParent X}
+      %%
+      %% returns the parent mogul name
+      %% ignore last /, my return a name with an ending /
+      %%
+      {VirtualString.toAtom
+       {Reverse
+	{List.dropWhileInd {Reverse {VirtualString.toString X}}
+	 fun{$ I C} C\=&/ orelse I==1 end}}}
+   end
+   fun{GetLabel X}
+      %%
+      %% returns the last basename of a mogul name
+      %% ignore last last /
+      %%
+      VS={VirtualString.toString
+	  {Reverse
+	   {List.takeWhileInd {Reverse {VirtualString.toString X}}
+	    fun{$ I C} C\=&/ orelse I==1 end}}}
+   in
+      if {List.last VS}\=&/ then
+	 VS
+      else
+	 {List.take VS {Length VS}-1}
+      end
+   end	       
+   
+   
 end
