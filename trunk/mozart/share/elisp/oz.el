@@ -682,7 +682,7 @@ the GDB commands `cd DIR' and `directory'."
 	 (oz-search-matching-begin t)
 	 (cond ((looking-at oz-declare-pattern)
 		(current-column))
-	       ((= (point) 0)
+	       ((= (point) 1)
 		0)
 	       ((looking-at oz-left-pattern)
 		(let ((col (current-column)))
@@ -808,6 +808,7 @@ the GDB commands `cd DIR' and `directory'."
 		(t (error "mm2: beg"))
 		)
 	(message "no matching begin token")
+	(goto-char 1)
 	(setq do-loop nil))))
   (current-column))
 
