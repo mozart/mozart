@@ -34,7 +34,8 @@
     these data types and show some operations which may prove helpful
     in the context of Open Programming.  Additional information on these
     data types can be found in <Ptr.extern to="ozdoc:base" key="chapter.text">.
-  <Section>
+
+  <Section id="section.data.strings">
     <Title/Strings/
     <P>
       Strings are lists of characters, with characters being small
@@ -93,7 +94,8 @@
       <<<"hi there">>>
       can be written equivalently as
       <<<[&amp;h &amp;i &amp;  &amp;t &amp;h &amp;e &amp;r &amp;e]>>>
-  <Section id="section.virtualstrings">
+
+  <Section id="section.data.virtualstrings">
     <Title/Virtual Strings/
     <P>
       The data to be sent or to be written consists of a sequence of integers,
