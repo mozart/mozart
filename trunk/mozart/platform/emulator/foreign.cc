@@ -676,6 +676,7 @@ OZ_Term OZ_record(OZ_Term label, OZ_Term arity)
 OZ_Term OZ_recordProp(OZ_Term label, OZ_Term propList) 
 {
   OZ_warning("not impl");
+  return OZ_nil();
 #ifdef MM2
   OZ_Term out;
   OZ_Bool ret = adjoinPropList(label,propList,out,NO);
