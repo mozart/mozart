@@ -617,7 +617,8 @@ exit:
 
 class URLInfo {
 public:
-  char *tmpfile, *url;
+  char *tmpfile;
+  const char *url;
   int fd;
   URLInfo(char *file, char *u, int f):
     tmpfile(ozstrdup(file)), url(ozstrdup(u)), fd(f) {}
@@ -832,7 +833,7 @@ void getURL(const char *url, TaggedRef out, URLAction act, Thread *th)
 OZ_Return URL_get(const char*url,OZ_Term out,URLAction act)
 {
 #ifdef WINDOWS
-      // check for WINDOWS style absolute pathname
+  // check for WINDOWS style absolute pathname
   if (isalpha(url[0]) && url[1]==':' && (url[2]=='/' || url[2]=='\\')) {
     goto url_local;
   }
