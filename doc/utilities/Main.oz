@@ -40,9 +40,11 @@ define
       elsecase Syslet.args.2 of _|_ then
          {Raise usage('unrecognized command line arguments')}
       elsecase Syslet.args.'type' of "html-color" then
-         {OzDocToHTML.translate true Syslet.args}
+         {OzDocToHTML.translate color Syslet.args}
       elseof "html-mono" then
-         {OzDocToHTML.translate false Syslet.args}
+         {OzDocToHTML.translate mono Syslet.args}
+      elseof "html-stylesheets" then
+         {OzDocToHTML.translate stylesheets Syslet.args}
       else
          {Raise usage('illegal output type specified')}
       end
@@ -54,7 +56,8 @@ define
           'Usage: '#{Property.get 'root.url'}#' [options]\n'#
           '--in=<File>         The input SGML file.\n'#
           '--type=<Type>       What format to generate\n'#
-          '                    (supported: html).\n'#
+          '                    (supported: '#
+          'html-color html-mono html-stylesheets).\n'#
           '--out=<Dir>         The output directory.\n'#
           '\n'#
           'HTML options\n'#

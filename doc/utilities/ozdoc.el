@@ -82,26 +82,38 @@ STRING should be given if the last search was by `string-match' on STRING."
         (if (eq face 'font-lock-type-face) "U"
           nil)))))
 
-(defun ozdoc-htmlize-generate (iscolor start end face)
-  (let ((color-or-tag-name
-         (if iscolor
-             (ozdoc-htmlize-face-color-string face)
-           (ozdoc-htmlize-face-mono-string face))))
-    (if color-or-tag-name
-        (if iscolor
-            (ozdoc-target-insert-string
-             (concat "<FONT color=\"" color-or-tag-name "\">"))
-          (ozdoc-target-insert-string
-           (concat "<" color-or-tag-name ">"))))
+(defun ozdoc-htmlize-face-stylesheets-string (face)
+  (if (eq face 'font-lock-comment-face) "comment"
+    (if (eq face 'font-lock-keyword-face) "keyword"
+      (if (eq face 'font-lock-string-face) "string"
+        (if (eq face 'font-lock-function-name-face) "functionname"
+          (if (eq face 'font-lock-type-face) "type"
+            (if (eq face 'font-lock-variable-name-face) "variablename"
+              (if (eq face 'font-lock-reference-face) "reference"
+                nil))))))))
+
+(defun ozdoc-htmlize-generate (mode start end face)
+  (let (s)
+    (cond ((equal mode 'color)
+           (setq s (ozdoc-htmlize-face-color-string face))
+           (ozdoc-target-insert-string (concat "<FONT color=\"" s "\">")))
+          ((equal mode 'mono)
+           (setq s (ozdoc-htmlize-face-mono-string face))
+           (ozdoc-target-insert-string (concat "<" s ">")))
+          (t
+           (setq s (ozdoc-htmlize-face-stylesheets-string face))
+           (if s (ozdoc-target-insert-string (concat "<SPAN class=" s ">")))))
     (ozdoc-target-insert-string
      (ozdoc-htmlize-protect (buffer-substring start end)))
-    (if color-or-tag-name
-        (if iscolor
-            (ozdoc-target-insert-string "</FONT>")
-          (ozdoc-target-insert-string
-           (concat "</" color-or-tag-name ">"))))))
+    (cond ((equal mode 'color)
+           (ozdoc-target-insert-string "</FONT>"))
+          ((equal mode 'mono)
+           (ozdoc-target-insert-string
+            (concat "</" s ">")))
+          (t
+           (if s (ozdoc-target-insert-string "</SPAN>"))))))
 
-(defun ozdoc-htmlize-buffer (iscolor)
+(defun ozdoc-htmlize-buffer (mode)
   (while (not (eobp))
     (let* ((plist (text-properties-at (point)))
            (next-change (or (next-property-change (point) (current-buffer))
@@ -110,7 +122,7 @@ STRING should be given if the last search was by `string-match' on STRING."
            (face (cond ((consp face-list) (car face-list))
                        ((null face-list) 'default)
                        (t face-list))))
-      (ozdoc-htmlize-generate iscolor (point) next-change face)
+      (ozdoc-htmlize-generate mode (point) next-change face)
       (goto-char next-change))))
 
 ;;; Converting to LaTeX
@@ -241,9 +253,11 @@ STRING should be given if the last search was by `string-match' on STRING."
               (funcall major-mode-to-set))
           (font-lock-fontify-buffer)
           (cond ((string= target "html-color")
-                 (ozdoc-htmlize-buffer t))
+                 (ozdoc-htmlize-buffer 'color))
                 ((string= target "html-mono")
-                 (ozdoc-htmlize-buffer nil))
+                 (ozdoc-htmlize-buffer 'mono))
+                ((string= target "html-stylesheets")
+                 (ozdoc-htmlize-buffer 'stylesheets))
                 ((string= target "latex")
                  (ozdoc-latexize-buffer))
                 (t
