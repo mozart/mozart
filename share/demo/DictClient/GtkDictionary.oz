@@ -565,7 +565,7 @@ define
 	 catch E then
 	    GtkDictionary, HandleException(E)
 	 end
-	 {self.Toplevel close()}
+	 {self.Toplevel hideAll()}
 	 self.closed = unit
       end
 
