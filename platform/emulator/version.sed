@@ -1,7 +1,7 @@
-
 #include <stdio.h>
+#include "../include/config.h"
 
-#define AMVersion "0.9.0"
+#define AMVersion OZVERSION
 #define AMDate "HEREGOESDATE"
 
 void version() {
