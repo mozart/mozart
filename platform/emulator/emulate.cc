@@ -431,13 +431,11 @@ Bool AM::hookCheckNeeded()
 
 
 /* define REGOPT if you want the into register optimization for GCC */
-#if defined(REGOPT) &&__GNUC__ >= 2 && (defined(LINUX_I486) || defined(MIPS) || defined(OSF1_ALPHA) || defined(SPARC)) && !defined(DEBUG_CHECK)
+#if defined(REGOPT) &&__GNUC__ >= 2 && (defined(GNUWIN32) || defined(LINUX_I486) || defined(MIPS) || defined(OSF1_ALPHA) || defined(SPARC)) && !defined(DEBUG_CHECK)
 #define Into(Reg) asm(#Reg)
 
-#ifdef LINUX_I486
-/* This does NOT pay off */
+#if defined(LINUX_I486) || defined(GNUWIN32)
 #define Reg1 asm("%esi")
-#define XReg1
 #define Reg2
 #define Reg3
 #define Reg4
