@@ -32,7 +32,7 @@
 #endif
 
 #include <stdarg.h>
-#include "oz_cpi.hh"
+#include "mozart_cpi.hh"
 #include "builtins.hh"
 #include "var_base.hh"
 #include "cpi_heap.hh"

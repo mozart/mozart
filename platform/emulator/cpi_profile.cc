@@ -26,7 +26,7 @@
 
 #include <string.h>
 
-#include "oz_cpi.hh"
+#include "mozart_cpi.hh"
 
 OZ_PropagatorProfile * OZ_PropagatorProfile::_all_headers = NULL;
 

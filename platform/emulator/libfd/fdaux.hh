@@ -30,7 +30,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "oz_cpi.hh"
+#include "mozart_cpi.hh"
 
 //-----------------------------------------------------------------------------
 // debug macros

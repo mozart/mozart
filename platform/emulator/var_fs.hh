@@ -34,7 +34,7 @@
 
 #include "var_base.hh"
 #include "fset.hh"
-#include "oz_cpi.hh"
+#include "mozart_cpi.hh"
 
 class OzFSVariable: public OzVariable {
 

@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef __OZ_CPI_HH__
-#define __OZ_CPI_HH__
+#ifndef __MOZART_CPI_HH__
+#define __MOZART_CPI_HH__
 
 #include <stddef.h>
 #include <stdio.h>
@@ -942,7 +942,7 @@ public:
 };
 
 
-#endif // __OZ_CPI_HH__
+#endif // __MOZART_CPI_HH__
 
 //
 //-----------------------------------------------------------------------------

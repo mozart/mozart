@@ -32,7 +32,7 @@
 #endif
 
 #include "base.hh"
-#include "oz_cpi.hh"
+#include "mozart_cpi.hh"
 
 // loeckelt
 #include "fdomn.hh"

@@ -1595,7 +1595,7 @@ void FSetConstraint::init(void)
   _known_in = _known_not_in = _card_min = 0;
 
   // careful (fset_sup originally used, used too in cpi.icc,
-  // fs_sup is defined statically in oz_cpi.hh, fset_sup dynamically
+  // fs_sup is defined statically in mozart_cpi.hh, fset_sup dynamically
   // in fset.hh)
 
   FSDEBUG(printf("fsc::init() => "));

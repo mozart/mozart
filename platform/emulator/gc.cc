@@ -33,7 +33,7 @@
  ****************************************************************************/
 
 // loeckelt (for big fsets)
-#include "oz_cpi.hh"
+#include "mozart_cpi.hh"
 
 #ifdef LINUX
 /* FD_ISSET missing */
