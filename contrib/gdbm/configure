@@ -977,8 +977,14 @@ else
   test "${CXXFLAGS+set}" = set || CXXFLAGS="-g"
 fi
 
+    if test "${GXX}" = yes; then
+      CXXAVOID="-fno-rtti -fno-exceptions"
+    else
+      CXXAVOID=
+    fi
+
     echo $ac_n "checking how to run the C++ preprocessor""... $ac_c" 1>&6
-echo "configure:982: checking how to run the C++ preprocessor" >&5
+echo "configure:988: checking how to run the C++ preprocessor" >&5
 if test -z "$CXXCPP"; then
 if eval "test \"`echo '$''{'ac_cv_prog_CXXCPP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -991,12 +997,12 @@ ac_link='${CXX-g++} -o conftest $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $L
 cross_compiling=$ac_cv_prog_cxx_cross
   CXXCPP="${CXX-g++} -E"
   cat > conftest.$ac_ext <<EOF
-#line 995 "configure"
+#line 1001 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1000: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1006: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   :
@@ -1038,7 +1044,7 @@ cross_compiling=$ac_cv_prog_cxx_cross
     # Extract the first word of "ozdynld", so it can be a program name with args.
 set dummy ozdynld; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1042: checking for $ac_word" >&5
+echo "configure:1048: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZDYNLD'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1076,14 +1082,14 @@ fi
 
 my_cppflags="$CPPFLAGS"
 echo $ac_n "checking for gdbm.h (default)""... $ac_c" 1>&6
-echo "configure:1080: checking for gdbm.h (default)" >&5
+echo "configure:1086: checking for gdbm.h (default)" >&5
 cat > conftest.$ac_ext <<EOF
-#line 1082 "configure"
+#line 1088 "configure"
 #include "confdefs.h"
 #include "gdbm.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1087: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1093: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1095,15 +1101,15 @@ else
   rm -rf conftest*
   echo "$ac_t""no" 1>&6
   echo $ac_n "checking for gdbm.h (/usr/local/include)""... $ac_c" 1>&6
-echo "configure:1099: checking for gdbm.h (/usr/local/include)" >&5
+echo "configure:1105: checking for gdbm.h (/usr/local/include)" >&5
   CPPFLAGS="$my_cppflags -I/usr/local/include"
   cat > conftest.$ac_ext <<EOF
-#line 1102 "configure"
+#line 1108 "configure"
 #include "confdefs.h"
 #include "gdbm.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1107: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1113: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1115,15 +1121,15 @@ else
   rm -rf conftest*
   echo "$ac_t""no" 1>&6
     echo $ac_n "checking for gdbm.h (/opt/gnu/include)""... $ac_c" 1>&6
-echo "configure:1119: checking for gdbm.h (/opt/gnu/include)" >&5
+echo "configure:1125: checking for gdbm.h (/opt/gnu/include)" >&5
     CPPFLAGS="$my_cppflags -I/opt/gnu/include"
     cat > conftest.$ac_ext <<EOF
-#line 1122 "configure"
+#line 1128 "configure"
 #include "confdefs.h"
 #include "gdbm.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1127: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1133: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1148,16 +1154,16 @@ rm -f conftest*
 my_libs="$LIBS"
 LIBS="$LIBS -lgdbm -lc"
 echo $ac_n "checking for gdbm library (default)""... $ac_c" 1>&6
-echo "configure:1152: checking for gdbm library (default)" >&5
+echo "configure:1158: checking for gdbm library (default)" >&5
 cat > conftest.$ac_ext <<EOF
-#line 1154 "configure"
+#line 1160 "configure"
 #include "confdefs.h"
 
 int main() {
 gdbm_open()
 ; return 0; }
 EOF
-if { (eval echo configure:1161: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1167: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
 else
@@ -1167,16 +1173,16 @@ else
   echo "$ac_t""no" 1>&6
   LIBS="$my_libs -L/usr/lib -lgdbm -lc"
   echo $ac_n "checking for gdbm library (/usr/lib)""... $ac_c" 1>&6
-echo "configure:1171: checking for gdbm library (/usr/lib)" >&5
+echo "configure:1177: checking for gdbm library (/usr/lib)" >&5
   cat > conftest.$ac_ext <<EOF
-#line 1173 "configure"
+#line 1179 "configure"
 #include "confdefs.h"
 
 int main() {
 gdbm_open()
 ; return 0; }
 EOF
-if { (eval echo configure:1180: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1186: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
 else
@@ -1186,16 +1192,16 @@ else
   echo "$ac_t""no" 1>&6
     LIBS="$my_libs -L/usr/local/lib -lgdbm -lc"
     echo $ac_n "checking for gdbm library (/usr/local/lib)""... $ac_c" 1>&6
-echo "configure:1190: checking for gdbm library (/usr/local/lib)" >&5
+echo "configure:1196: checking for gdbm library (/usr/local/lib)" >&5
     cat > conftest.$ac_ext <<EOF
-#line 1192 "configure"
+#line 1198 "configure"
 #include "confdefs.h"
 
 int main() {
 gdbm_open()
 ; return 0; }
 EOF
-if { (eval echo configure:1199: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1205: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
 else
@@ -1205,16 +1211,16 @@ else
   echo "$ac_t""no" 1>&6
       LIBS="$my_libs -L/opt/gnu/lib -lgdbm -lc"
       echo $ac_n "checking for gdbm library (/opt/gnu/lib)""... $ac_c" 1>&6
-echo "configure:1209: checking for gdbm library (/opt/gnu/lib)" >&5
+echo "configure:1215: checking for gdbm library (/opt/gnu/lib)" >&5
       cat > conftest.$ac_ext <<EOF
-#line 1211 "configure"
+#line 1217 "configure"
 #include "confdefs.h"
 
 int main() {
 gdbm_open()
 ; return 0; }
 EOF
-if { (eval echo configure:1218: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1224: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6
 else
@@ -1393,6 +1399,7 @@ s%@OZC@%$OZC%g
 s%@OZPLATFORM@%$OZPLATFORM%g
 s%@PLATFORM@%$PLATFORM%g
 s%@CXX@%$CXX%g
+s%@CXXAVOID@%$CXXAVOID%g
 s%@CXXCPP@%$CXXCPP%g
 s%@OZDYNLD@%$OZDYNLD%g
 

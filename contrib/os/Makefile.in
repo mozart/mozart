@@ -14,7 +14,7 @@ CXX             = @CXX@
 CPPFLAGS        = -I$(SRCTOP)/platform/emulator \
                   -I$(BUILDTOP)/platform/emulator \
                   -I$(PREFIX)/include @CPPFLAGS@
-CXXFLAGS        = $(CFLAGS)
+CXXFLAGS        = @CXXAVOID@ $(CFLAGS)
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@
 
