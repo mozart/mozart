@@ -793,9 +793,11 @@ OzVariable * OzVariable::gcVarInline(void) {
 
 }
 
+#ifdef CS_UNUSED
 OzVariable * OzVariable::gcVar(void) {
   gcVarInline();
 }
+#endif
 
 inline
 DynamicTable * DynamicTable::gc(void) {
