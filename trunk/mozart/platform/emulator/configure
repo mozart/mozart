@@ -2807,7 +2807,7 @@ fi
 
 	    if test "$with_pgcc" != xno; then
 	        echo "$ac_t""yes" 1>&6
-		COPT="$C_OPT -frisc -fno-rtti -Wno-sign-compare -mpentium"
+		COPT="$COPT -frisc -fno-rtti -Wno-sign-compare -mpentium"
 		CXX=$PGXX
 	    else
 		echo "$ac_t""no" 1>&6

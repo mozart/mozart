@@ -36,7 +36,7 @@ ECHO		= @@ECHO@
 M4		= @M4@
 RM		= @RM@ -f
 CXX		= @CXX@
-
+INSTALL		= @INSTALL@
 LIBS            = @LIBS@
 LDFLAGS		= @LDFLAGS@
 
@@ -46,6 +46,12 @@ CWARN		= @CWARN@
 CFLAGS		= $(COPT) $(DEFS) $(CWARN) $(CUSR)
 CXXFLAGS	= $(CFLAGS) $(CCINCLUDES)
 CXXDEPEND	= $(CXX) $(CXXFLAGS) -MM
+
+prefix		= @prefix@
+bindir		= $(prefix)/platform/@platform@
+libdir		= $(prefix)/lib
+includedir	= $(prefix)/include
+
 
 MOREWARNINGS  =   -Wall -pedantic-errors -W -Wtraditional -Wshadow \
 	-Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
@@ -131,8 +137,6 @@ FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
 PROPOBJ = $(FDLIBOBJS) $(SCHEDLIBOBJS) $(FSETLIBOBJS)
 
-DESTBIN = $(OZHOME)/platform/@platform@
-
 .NOEXPORT: emulate.o @EMUEXE@ peanuts.o
 
 all:: @EMUEXE@
@@ -140,7 +144,7 @@ all:: @EMUEXE@
 win:: ozlib.lnk $(M4FILES)
 
 win-install::
-	Install(ozemulator.exe,775,$(OZHOME)/platform/win32-i486)
+	$(INSTALL) -m 775 ozemulator.exe $bindir
 
 first: version $(M4FILES) $(SRCS)
 
@@ -152,18 +156,10 @@ fd: $(FDLIB) $(SCHEDLIB)
 	   main.o $(OBJS) @PROPOBJ@ $(LIBS); \
 	echo 'moving ...'; mv /tmp/$@.$$$$ $@
 
-install:: $(DESTBIN)/oz.emulator.bin \
-	$(OZHOME)/include/oz.h \
-	$(OZHOME)/include/oz_cpi.hh
-
-$(DESTBIN)/oz.emulator.bin: oz.emulator.bin
-	Install(oz.emulator.bin,755,$(DESTBIN))
-
-$(OZHOME)/include/oz.h: oz.h
-	Install($<,755,$(OZHOME)/include)
-
-$(OZHOME)/include/oz_cpi.hh: oz_cpi.hh
-	Install($<,755,$(OZHOME)/include)
+install:: oz.emulator.bin oz.h oz_cpi.hh
+	$(INSTALL) -m 555 oz.emulator.bin $(bindir)
+	$(INSTALL) -m 444 oz.h $(includedir)
+	$(INSTALL) -m 444 oz_cpi.hh $(includedir)
 
 
 version.cc: version 
