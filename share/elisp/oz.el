@@ -256,7 +256,7 @@ Note that this variable is only checked once when oz.el is loaded."
   (concat
    (oz-make-keywords-for-match
     '("local" "proc" "fun" "case" "if" "cond" "or" "dis" "choice" "not"
-      "thread" "try" "raise" "lock" "loop"))
+      "thread" "try" "raise" "lock" "loop" "for"))
    "\\|<<"))
 
 (defconst oz-gump-between-pattern
@@ -266,7 +266,7 @@ Note that this variable is only checked once when oz.el is loaded."
   (concat (oz-make-keywords-for-match
 	   '("in" "then" "else" "of" "elseof" "elsecase" "elseif"
 	     "catch" "finally" "with" "require" "prepare" "import" "export"
-	     "define"))
+	     "define" "do"))
 	  "\\|" "\\[\\]"))
 (defconst oz-gump-middle-pattern
   "//")
@@ -283,16 +283,16 @@ Note that this variable is only checked once when oz.el is loaded."
 
 (defconst oz-any-pattern
   (concat "\\<\\(at\\|attr\\|case\\|catch\\|class\\|choice\\|cond\\|"
-	  "declare\\|define\\|dis\\|else\\|elsecase\\|elseif\\|"
-	  "elseof\\|end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|"
+	  "declare\\|define\\|do\\|dis\\|else\\|elsecase\\|elseif\\|"
+	  "elseof\\|end\\|export\\|feat\\|finally\\|for\\|from\\|fun\\|functor\\|"
 	  "if\\|in\\|import\\|local\\|lock\\|loop\\|meth\\|not\\|of\\|or\\|prepare\\|"
 	  "proc\\|prop\\|raise\\|require\\|then\\|thread\\|try\\)\\>\\|"
 	  "\\[\\]\\|"
 	  oz-left-or-right-pattern))
 (defconst oz-gump-any-pattern
   (concat "\\<\\(at\\|attr\\|case\\|catch\\|class\\|choice\\|cond\\|"
-	  "declare\\|define\\|dis\\|else\\|elsecase\\|elseif\\|"
-	  "elseof\\|end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|"
+	  "declare\\|define\\|do\\|dis\\|else\\|elsecase\\|elseif\\|"
+	  "elseof\\|end\\|export\\|feat\\|finally\\|for\\|from\\|fun\\|functor\\|"
 	  "if\\|in\\|import\\|lex\\|local\\|lock\\|loop\\|meth\\|mode\\|not\\|of\\|"
 	  "or\\|parser\\|prepare\\|proc\\|prod\\|prop\\|raise\\|require\\|"
 	  "scanner\\|syn\\|then\\|thread\\|token\\|try\\)\\>\\|=>\\|"
@@ -1339,7 +1339,7 @@ and initial percent signs."
     "div" "mod" "andthen" "orelse"
     "cond" "or" "dis" "choice" "not"
     "thread" "try" "catch" "finally" "raise" "lock"
-    "skip" "fail" "loop")
+    "skip" "fail" "loop" "for" "do")
   "List of all Oz keywords with identifier syntax.")
 
 (defconst oz-char-matcher
