@@ -130,7 +130,7 @@ public:
 
   void activate(void) {
     Suspendable * susp = (Suspendable *) _p;
-    (void) susp->_wakeup(oz_currentBoard(), pc_propagator);
+    (void) susp->_wakeup_outline(oz_currentBoard(), pc_propagator);
     susp->setActive();
   }
 
@@ -206,7 +206,9 @@ typedef OZ_expect_t (VarListExpect::*PropagatorExpectMeth) (OZ_Term);
 class VarListExpect : public ExpectOnly {
 public:
   OZ_expect_t expectList(OZ_Term t, PropagatorExpectMeth expectf) {
-    return OZ_Expect::expectList(t, (OZ_ExpectMeth) expectf);
+    return (OZ_isNil(t) 
+	    ? OZ_expect_t(1, 1) 
+	    : OZ_Expect::expectList(t, (OZ_ExpectMeth) expectf));
   }
   OZ_expect_t expectAny(OZ_Term) {
     return OZ_expect_t(1, 1);
