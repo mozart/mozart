@@ -2017,9 +2017,11 @@ void TaskStack::gc(TaskStack *newstack)
     } else if (PC == C_DEBUG_CONT_Ptr) {
       Y = (RefsArray) ((OzDebug *) Y)->gcOzDebug();
     } else if (PC == C_CALL_CONT_Ptr) {
-      TaggedRef tt = (TaggedRef) ToInt32(Y);
-      gcTagged(tt,tt);
-      Y = (RefsArray) ToPointer(tt);
+      /* tt might be a variable, so use this ugly construction */
+      *(newtop-2) = Y; /* UGLYYYYYYYYYYYY !!!!!!!! */
+      TaggedRef *tt = (TaggedRef*) (newtop-2);
+      gcTagged(*tt,*tt);
+      Y = (RefsArray) ToPointer(*tt);
       G = gcRefsArray(G);
     } else if (PC == C_CFUNC_CONT_Ptr) {
       G = gcRefsArray(G);
