@@ -250,9 +250,10 @@ void *ozMalloc(int chunk_size)
       DebugCheckT(message("fakeMallocing 1MB\n"));
       // message("fakeMallocing 1MB\n");
       fakeMalloc(1*MB);
+      old = sbrk(0);
     }
     void *ret_val = sbrk(chunk_size);
-    lastBrk = sbrk(0);
+    lastBrk = old;
     if (ret_val == (caddr_t) - 1) {
       fprintf(stderr,"Virtual memory exhausted\n");
       osExit(1);
