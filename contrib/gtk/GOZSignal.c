@@ -512,7 +512,8 @@ OZ_BI_define(native_points_put, 3, 0) {
 OZ_BI_define(native_make_empty_arg, 1, 1) {
   GOZ_declareString(0, name);
   GtkArg *ret = (GtkArg *) g_malloc(sizeof(GtkArg));
-  ret->name = name;
+  ret->type = GTK_TYPE_DOUBLE;
+  ret->name = g_strdup(name);
   OZ_out(0) = OZ_makeForeignPointer(ret);
   return OZ_ENTAILED;
 } OZ_BI_end
