@@ -36,8 +36,16 @@ DENYS_FLAGS	=
 DENYS_SPSRCS	=
 DENYS_DPSRCS	=
 endif
+SITE_PROPERTY	= @SITE_PROPERTY@
+ifeq($(SITE_PROPERTY),yes)
+SITE_PROPERTY_FLAGS	= -DSITE_PROPERTY
+SITE_PROPERTY_SRCS	= SiteProperty
+else
+SITE_PROPERTY_FLAGS	=
+SITE_PROPERTY_SRCS	=
+endif
 
-OZCFLAGS	= $(COMPRESSFLAGS) $(DENYS_FLAGS)
+OZCFLAGS	= $(COMPRESSFLAGS) $(DENYS_FLAGS) $(SITE_PROPERTY_FLAGS)
 OZC		= @OZC@
 
 COMPILENOMODE   = $(OZC) $(OZCFLAGS) -l Base=$(SRCDIR)/Base.ozf -b $(BUILDDIR)/
@@ -132,7 +140,7 @@ BASESRC1 = \
 	VirtualString Object Loop Port \
 	Time Thread Array Dictionary WeakDictionary \
 	Exception Functor BitArray BitString \
-	ByteString ForeignPointer Base
+	ByteString ForeignPointer $(SITE_PROPERTY_SRCS) Base
 
 BASESRC = $(BASESRC1:%=base/%.oz)
 
@@ -233,7 +241,7 @@ BIMODSPECS = \
 	Dictionary Exception Float ForeignPointer Int List Literal \
 	Lock Name Number Object Port Procedure Record \
 	String Thread Time Tuple Unit Value VirtualString \
-	BitString ByteString InterFault WeakDictionary
+	BitString ByteString InterFault WeakDictionary $(SITE_PROPERTY_SRCS)
 
 EMUSRCDIR=$(SRCDIR)/../../platform/emulator
 BIDECL=$(EMUSRCDIR)/bidecl.perl
