@@ -42,8 +42,6 @@ AC_INIT(base.hh)
 OZ_INIT
 
 
-AC_LANG_CPLUSPLUS
-
 dnl *****************************************************************
 dnl additional tests
 dnl *****************************************************************
@@ -150,7 +148,7 @@ AC_ARG_WITH(sunpro,
         AC_MSG_RESULT(no))
 
 OZ_CXX_CHOOSE
-
+AC_LANG_CPLUSPLUS
 OZ_PROG_FLEX
 OZ_PROG_BISON
 AC_PROG_LN_S
@@ -312,17 +310,6 @@ OZ_CXX_OPTIONS($oz_warn_error,oz_a)
 oz_warn_error=$oz_a
 
 dnl *****************************************************************
-dnl Checks for libraries.
-dnl *****************************************************************
-
-AC_CHECK_LIB(nsl, gethostbyaddr)
-AC_CHECK_LIB(socket, socket)
-AC_CHECK_LIB(m, fabs)
-AC_CHECK_LIB(kernel32,main)
-AC_CHECK_LIB(wsock32,main)
-AC_CHECK_LIB(dl, dlopen)
-
-dnl *****************************************************************
 dnl Checks for header files.
 dnl *****************************************************************
 
@@ -332,6 +319,52 @@ dnl AC_HEADER_SYS_WAIT
 dnl AC_CHECK_HEADERS(fcntl.h limits.h malloc.h strings.h sys/time.h unistd.h)
 
 AC_CHECK_HEADERS(dlfcn.h)
+
+dnl *****************************************************************
+dnl Checks for typedefs, structures, and compiler characteristics.
+dnl *****************************************************************
+
+dnl const test not needed for C++!
+dnl AC_C_CONST
+
+dnl AC_C_INLINE
+dnl AC_TYPE_MODE_T
+dnl AC_TYPE_PID_T
+dnl AC_TYPE_SIZE_T
+dnl AC_HEADER_TIME
+dnl AC_STRUCT_TM
+
+dnl *****************************************************************
+dnl Checks for libraries.
+dnl *****************************************************************
+
+AC_CHECK_LIB(nsl, gethostbyaddr)
+OZ_NEEDS_FUNC(gethostbyaddr)
+AC_CHECK_LIB(socket, socket)
+OZ_NEEDS_FUNC(socket)
+AC_CHECK_LIB(m, fabs)
+OZ_NEEDS_FUNC(fabs)
+AC_CHECK_LIB(kernel32,main)
+AC_CHECK_LIB(wsock32,main)
+AC_CHECK_LIB(dl, dlopen)
+
+dnl *****************************************************************
+dnl Checks for library functions.
+dnl *****************************************************************
+
+dnl AC_FUNC_ALLOCA
+dnl AC_FUNC_MEMCMP
+dnl AC_TYPE_SIGNAL
+dnl AC_FUNC_VPRINTF
+dnl AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname setpgid)
+
+if test -z "${enable_wincross}"; then
+    AC_CHECK_FUNCS(sbrk dlopen mmap)
+fi
+
+dnl *****************************************************************
+dnl MISC
+dnl *****************************************************************
 
 AC_DEFUN(OZ_CHECK_DLOPEN_UNDERSCORE,[
 if test "$ac_cv_lib_dl_dlopen" = yes || \
@@ -362,38 +395,6 @@ EOF
   fi
 fi])
 
-dnl *****************************************************************
-dnl Checks for typedefs, structures, and compiler characteristics.
-dnl *****************************************************************
-
-dnl const test not needed for C++!
-dnl AC_C_CONST
-
-dnl AC_C_INLINE
-dnl AC_TYPE_MODE_T
-dnl AC_TYPE_PID_T
-dnl AC_TYPE_SIZE_T
-dnl AC_HEADER_TIME
-dnl AC_STRUCT_TM
-
-dnl *****************************************************************
-dnl Checks for library functions.
-dnl *****************************************************************
-
-dnl AC_FUNC_ALLOCA
-dnl AC_FUNC_MEMCMP
-dnl AC_TYPE_SIGNAL
-dnl AC_FUNC_VPRINTF
-dnl AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname setpgid)
-
-if test -z "${enable_wincross}"; then
-    AC_CHECK_FUNCS(sbrk dlopen mmap)
-fi
-
-dnl *****************************************************************
-dnl MISC
-dnl *****************************************************************
-
 OZ_CHECK_DLOPEN_UNDERSCORE
 
 # AC_CHECK_SIZEOF(int)
@@ -408,33 +409,7 @@ dnl *****************************************************************
 : ${oz_inc_path="/usr/local/include"}
 : ${oz_lib_path="/usr/local/lib"}
 
-AC_MSG_CHECKING(for --with-gmp)
-AC_ARG_WITH(gmp,
-        [--with-gmp=<dir>   search gmp library and header in <dir> (default: yes)],
-    with_gmp=$withval,
-    with_gmp=yes)
-
-if test "$with_gmp" != no
-then
-    AC_MSG_RESULT(yes)
-
-    if test "${with_gmp}" != yes
-    then
-        oz_gmp_lib_dir=$with_gmp
-        oz_gmp_inc_dir=$with_gmp
-    fi
-
-    oz_inc_path="$oz_gmp_inc_dir $oz_inc_path"
-    oz_lib_path="$oz_gmp_lib_dir $oz_lib_path"
-
-    OZ_CHECK_HEADER_PATH(gmp.h,,
-            [AC_MSG_ERROR(required GNU MP include file not found)])
-
-    OZ_CHECK_LIB_PATH(gmp, mpz_init, ,
-            [AC_MSG_ERROR(required GNU MP lib not found)])
-else
-    AC_MSG_RESULT(no)
-fi
+OZ_LIB_GMP
 
 dnl *****************************************************************
 dnl *** zlib
@@ -459,14 +434,15 @@ then
     oz_inc_path="$oz_zlib_inc_dir $oz_inc_path"
     oz_lib_path="$oz_zlib_lib_dir $oz_lib_path"
 
-    OZ_CHECK_HEADER_PATH(zlib.h,,
-            AC_MSG_ERROR(required zlib include file not found))
-
-    OZ_CHECK_LIB_PATH(z, zlibVersion, ,
-            AC_MSG_ERROR(required zlib lib not found))
 else
     AC_MSG_RESULT(no)
 fi
+
+OZ_CHECK_HEADER_PATH(zlib.h,,
+  AC_MSG_ERROR(required zlib include file not found))
+
+OZ_CHECK_LIB_PATH(z, zlibVersion, ,
+  AC_MSG_ERROR(required zlib lib not found))
 
 dnl *****************************************************************
 dnl ccmalloc
