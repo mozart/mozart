@@ -61,6 +61,8 @@
     <Meta name="entry.category" value="face">
     <Meta name="entry.category" value="function">
 
+    <Meta name="latex.picture.width" arg1="menu.gif" arg2="\linewidth">
+
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
     <Title/The Oz Programming Interface/
@@ -258,7 +260,7 @@
             <Figure float id="figure.menu" class="maxi figure">
               <Caption>The Oz Menu.</Caption>
               <P>
-                <Picture.Extern GIF display to="menu.gif">
+                <Picture.Extern id="menu.gif" GIF display to="menu.gif">
             </Figure>
           <Para class=apropos><Title/Emacs Conventions/
             <Index/Emacs<And>conventions/
