@@ -107,7 +107,7 @@ define
                       if {IsInt F} orelse X == unit orelse F == id then In
                       else
                          case F of 'class' then
-                            case X of X1|Xr then
+                            case X of X1|_ then
                                % The following does not work in all browsers:
                                % {FoldL Xr fun {$ In X} In#' '#X end X1}
                                In#' '#F#'='#{MakeCDATA X1}
@@ -153,8 +153,8 @@ define
    end
 
    fun {Clean HTML}
-      case HTML of PCDATA(VS) then HTML
-      [] VERBATIM(VS) then HTML
+      case HTML of PCDATA(_) then HTML
+      [] VERBATIM(_) then HTML
       [] SEQ(Xs) then SEQ({Map Xs Clean})
       [] !EMPTY then EMPTY
       [] BLOCK(X) then {Clean X}

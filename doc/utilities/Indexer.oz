@@ -125,7 +125,7 @@ define
    end
 
    fun {Group Es}
-      case Es of E|Er then G Gs Rest in
+      case Es of E|_ then G Gs Rest in
          G = {GetGroup E.1}
          {List.takeDropWhile Es fun {$ E} {GetGroup E.1} == G end ?Gs ?Rest}
          G#Gs|{Group Rest}
