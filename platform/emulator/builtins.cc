@@ -3786,7 +3786,10 @@ OZ_Return printInline(TaggedRef term)
   //  oz_printStream(term,cout,ozconf.printDepth,ozconf.printWidth);
   char *s = OZ_toC(term,ozconf.printDepth,ozconf.printWidth);
   if (ossafewrite(STDOUT_FILENO,s,strlen(s)) < 0)
-    return oz_raise(E_ERROR,E_KERNEL,"writeFailed",1,OZ_unixError(ossockerrno()));
+    if (isDeadSTDOUT())
+      am.exitOz(1);
+    else
+      return oz_raise(E_ERROR,E_KERNEL,"writeFailed",1,OZ_string(OZ_unixError(ossockerrno())));
 
   return PROCEED;
 }
@@ -3800,7 +3803,10 @@ OZ_Return printVS(char*s,int n, int fd, Bool newline)
   char c = '\n';
   if ((ossafewrite(fd,s,n) < 0) ||
       (newline && (ossafewrite(fd,&c,1) < 0))) {
-    return oz_raise(E_ERROR,E_KERNEL,"writeFailed",1,OZ_unixError(ossockerrno()));
+    if (isDeadSTDOUT())
+      am.exitOz(1);
+    else
+      return oz_raise(E_ERROR,E_KERNEL,"writeFailed",1,OZ_string(OZ_unixError(ossockerrno())));
   }
   return PROCEED;
 }

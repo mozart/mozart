@@ -84,7 +84,7 @@ void OZ_error(const char *format, ...)
 
   //
   // kost@ : *i want* to halt the program at the point of an error!!!
-#if defined(DEBUG_CHECK) && defined(VIRTUALSITES)
+#if defined(DEBUG_CHECK)
   // just get a synchronous signal on the same thread;
   *((int *) 0) = 0;
 #else
@@ -138,7 +138,7 @@ Bool isDeadSTDOUT()
 {
   char *buf = "\n";
   fflush(stdout);
-  if (write(fileno(stdout), buf, 1) == -1 && errno == EPIPE)
+  if (write(fileno(stdout), buf, 1) == -1)
     return (TRUE);
   else
     return (FALSE);

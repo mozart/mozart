@@ -753,10 +753,10 @@ OZ_BI_define(BIVSinitServer,1,0)
 
   //
 #ifdef DEBUG_CHECK
-  fprintf(stdout, "*** Sleeping for 10 secs - hook it up (pid %d)!\n",
-          getpid());
-  fflush(stdout);
-  sleep(10);                    // IMHO more than enough;
+//   fprintf(stdout, "*** Sleeping for 10 secs - hook it up (pid %d)!\n",
+//        getpid());
+//   fflush(stdout);
+//   sleep(10);                 // IMHO more than enough;
 #endif
 
   //

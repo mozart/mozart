@@ -117,9 +117,7 @@ public:
   //
   VSMessage(VSMsgBufferOwned *mbIn, MessageType mtIn, DSite *sIn, int stIn)
     : mb(mbIn), msgType(mtIn), storeIndex(stIn)
-  {
-    Assert(mbIn->getSite() == sIn);
-  }
+  {}
   ~VSMessage() { OZ_error("VSMessage destroyed??"); }
 
   //
