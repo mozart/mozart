@@ -416,7 +416,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 			(oz-make-temp-name "/tmp/ozpipein"))))
       (if (not start-flag) (message "Oz died. Restarting ..."))
       (if oz-win32
-	  (make-comint "Oz Compiler" "ozcompiler" nil "-emacs")
+	  (make-comint "Oz Compiler" "ozcompiler" nil "+E")
 	(make-comint "Oz Compiler" "oz.compiler" nil "-emacs" "-S" file))
       (setq oz-compiler-buffer "*Oz Compiler*") 
       (oz-create-buffer oz-compiler-buffer t)
