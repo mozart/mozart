@@ -35,7 +35,7 @@ enum unmarshalReturn {
 };
 
 class TCPTransObj: public TransObj {
-  friend TCPTransController;
+  friend class TCPTransController;
 protected:
   ByteBuffer *readBuffer;
   ByteBuffer *writeBuffer;

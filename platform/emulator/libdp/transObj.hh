@@ -36,7 +36,7 @@ class TransController;
 class TimerElement;
 
 class TransObj {
-  friend TransController;
+  friend class TransController;
 protected:
   ComObj *comObj;
   DSite *site;

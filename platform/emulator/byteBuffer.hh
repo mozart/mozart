@@ -41,7 +41,7 @@
 class ByteBufferManager;
 
 class ByteBuffer :public MarshalerBuffer {
-  friend ByteBufferManager;
+  friend class ByteBufferManager;
 protected:
   BYTE *buf;
   virtual Bool putDebug();
