@@ -34,6 +34,18 @@
 #include <signal.h>
 #include <setjmp.h>
 
+OZ_BI_define(BIgetGlobals,1,1)
+{
+  oz_declareNonvarIN(0, proc);
+  if (oz_isConst(proc) && tagged2Const(proc)->getType() == Co_Abstraction) {
+    OZ_RETURN(((Abstraction *) tagged2Const(proc))->DBGgetGlobals());
+  } else if (oz_isProcedure(proc)) {
+    OZ_RETURN(OZ_atom("globals"));
+  } else {
+    oz_typeError(0,"User-defined Procedure");
+  }
+} OZ_BI_end
+
 OZ_BI_define(BIgetDebugStream,0,1)
 {
   OZ_RETURN(am.getDebugStreamTail());
