@@ -43,7 +43,7 @@
     <Meta name="html.split.index" value="">
     <Meta name="html.split.toc"   value="">
 
-    <Meta name=latex.input   value="browser.tex">
+    <Meta name=latex.input   value="browser-utils.tex">
 
     <Meta name=ozversion value="3.0">
     <Meta name=status value=revised>
