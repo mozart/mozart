@@ -1,0 +1,159 @@
+\documentclass[11pt]{article} 
+
+\newtheorem{satz}{Theorem}
+\newtheorem{corr}{Corrolary}
+\newtheorem{lemma}{Lemma}
+
+\input macros.tex
+\parskip6pt
+\parindent0pt
+
+\title{The Complexity of Checking Satisfiability of Non-Structural
+  Subtyping Constraints}
+
+\author{Joachim Niehren \and Tim Priesnitz \and Ralf Treinen}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  We show that satisfiability of non-structural subtype constraints
+  can be checked in cubic time provided that the signature is an upper
+  semi-lattice with a smallest element, or a lower semi-lattice with a
+  greatest element.
+\end{abstract}
+
+\section{Introduction}
+
+\section{The Semi-Lattice Case}
+
+We want to prove the following theorem:
+
+\begin{satz}
+\label{uppersemilatice}
+Let the signature $\Sigma$ be an upper semi-lattice with a smallest
+element. Satisfiability of non-structural subtyping constraints in the
+structure of possibly infinte trees can be checked in cubic time.
+\end{satz}
+
+Let $\bot$ denote the smallest element of $\Sigma$. $\bot$ may be a
+constant, or a function symbol with a non-zero arity. We can assume
+without loss of generality that the constraint is of the following
+form:
+\[
+\phi ::= x \leq f(x_1,\ldots,x_n) \mid x \geq f(x_1,\ldots,x_n) \mid \phi \und \phi
+\]
+Here we allow that the arity $n$ of a functiomn symbol is $0$. In this
+case we write $x \leq f$ instead of $x \leq f()$, etc.
+
+We define the set of inequations which are syntactically supported by
+a constraint $\phi$, written $\phi \vdash x \leq y$, by the following
+rules:
+\[ \frac{}{\phi \vdash x \leq x}\]
+\[ \frac{\phi \vdash x \leq y \qquad \phi \vdash y \leq z}{\phi \vdash
+  x \leq z} \]
+\[ \frac{f(x_1,\ldots,x_n)\leq x \in \phi
+  \qquad \phi \vdash x \leq y
+  \qquad y \leq g(y_1,\ldots,y_m) \in \phi}{\phi \vdash x_i \leq
+  y_i}\]
+
+\begin{lemma}
+  If $\phi\vdash x\leq y$, then $x\leq y$ holds in any solution of
+  $\phi$.
+\end{lemma}
+\begin{proof}
+Obvious.
+\end{proof}
+
+We say that a constraint $\phi$ \emph{clashes} if it contains
+constraints $f(x_1,\ldots,x_n) \leq x$ and $y \leq g(y_1,\ldots,y_m)$
+with $f \not\leq g$, and if $\phi \vdash x \leq y$.
+
+\begin{lemma}
+  The constraint $\phi$ is satisfiable in the structure of possibly
+  infinite trees if and only if it does not clash.
+\end{lemma}
+
+\begin{proof}
+  Obviously, if $\phi$ clashes then it does not have a solution.
+  
+  Let $\phi$ be clash-free. We define the set of \emph{derived path
+    constraints} by the following rules:
+
+\[\ldots \]
+
+\begin{proof}
+
+\end{proof}
+
+For any variable $z$ and path $\pi$, we define 
+\[
+L^z_\pi  := \{f \in \Sigma \mid \phi \vdash z \leq \pi(f) \}
+\]
+This set is finite even if the signature is infinite, since it can
+only contain symbols that occur syntactically in the constraint.
+Hence, any set $L^z_\phi$ has a supremum (which is $\bot$ in case the
+set is empty).  We now define the valuation $\alpha$ by
+\begin{itemize}
+\item $ \alpha(z)(\epsilon) := \sup L^z_\epsilon$
+\item For any path $\pi$ such that $\alpha(z)(\pi)=f$ and $1 \leq i
+  \leq arity(f)$ :\\ $\alpha(z)(\pi\cdot i) = \sup L^z_{\pi\cdot i}$
+\end{itemize}
+By construction, $\alpha$ assigns any variable a well-formed, but
+possibly infinite $\Sigma$-tree. We now have to show that $\alpha$ is
+a solution of $\phi$, that is that $\alpha$ is a solution of any
+atomic contraint contained in $\phi$:
+\begin{enumerate}
+\item $f(z_1,\ldots,z_n) \leq z \in \phi$
+
+Let $\pi \in D(f(\alpha(z_1),\ldots,\alpha(z_n))) \cap
+D(\alpha(z))$.
+
+\begin{enumerate}
+
+\item $\pi=\epsilon$:
+We have that $f\in L^z_\pi$, hence by construction that
+$\alpha(z)(\epsilon) \geq f$.
+
+\item $\pi = i\pi'$:
+We have that $L^{z_i}_{\pi'} \subseteq L^z_{\pi}$, hence
+$\alpha(z)(\pi) = \sup L^z_{\pi} \geq \sup L^{z_i}_{\pi'} =
+\alpha(z_i)(\pi') = f(\alpha(z_1),\ldots,\alpha(z_n))(\pi)$.
+
+\end{enumerate}
+
+\item $z \leq f(z_1,\ldots,z_n) \in \phi$
+
+Let $\pi \in D(f(\alpha(z_1),\ldots,\alpha(z_n))) \cap
+D(\alpha(z))$.
+\begin{enumerate}
+
+\item $\pi=\epsilon$:
+Since $\phi$ is clash-free we have that for all $g \in L^z_\epsilon$
+we have that $g\leq f$. Hence, $\alpha(z)(\epsilon) = \sup
+L^z_\epsilon \leq f$.
+
+\item $\pi = i\pi'$:
+  
+  Let $g\in L^z_\pi$. Then we know that $\phi \vdash i\pi'(g) \leq z$,
+  that is there is an inequation $\leq h(\ldots,v_i,\ldots)\leq z$ with
+  $\phi \vdash \pi'(g) \leq v_i$. By the last rule of the syntactic
+  support of inequations we have that $\phi \vdash v_i \leq z_i$
+
+\end{enumerate}
+
+\end{enumerate}
+\end{proof}
+
+\begin{corr}
+\label{lowersemilattice}
+Let the signature $\Sigma$ be a lower semi-lattice with a greatest
+element. Satisfiability of non-structural subtyping constraints in the
+structure of possibly infinite trees can be checked in cubic time.
+\end{corr}
+
+\begin{proof}
+By symmetry from Theorem~\ref{uppersemilatice}.
+\end{proof}
+\end{document}
