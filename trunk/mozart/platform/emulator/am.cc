@@ -659,7 +659,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
   
   /* second step: mark binding for non-local variable in trail;     */
   /* also mark such (i.e. this) variable in suspention list;        */
-  if ( !isLocalVariable(var) || prop==NO ) {
+  if ( !isLocalVariable(var) || !prop ) {
     trail.pushRef(varPtr,var);
   } else  { // isLocalVariable(var)
     if (isSVar(var)) {
@@ -766,9 +766,8 @@ void AM::reduceTrailOnUnitCommit()
 
 void AM::reduceTrailOnSuspend()
 {
-  int numbOfCons = trail.chunkSize();
-
-  if (numbOfCons > 0) {
+  if (!trail.isEmptyChunk()) {
+    int numbOfCons = trail.chunkSize();
     Board * bb = currentBoard;
     bb->newScript(numbOfCons);
 
@@ -807,8 +806,7 @@ void AM::reduceTrailOnSuspend()
 
 void AM::reduceTrailOnFail()
 {
-  int numbOfCons = trail.chunkSize();
-  for (int index = 0; index < numbOfCons; index++) {
+  while(!trail.isEmptyChunk()) {
     TaggedRef *refPtr;
     TaggedRef value;
     trail.popRef(refPtr,value);
@@ -821,10 +819,11 @@ void AM::reduceTrailOnFail()
  * shallow guards sometimes do not bind variables but only push them
  * return the list of variable in am.suspendVarList
  */
-void AM::reduceTrailOnShallow(int numbOfCons)
+void AM::reduceTrailOnShallow()
 {
-  am.suspendVarList=makeTaggedNULL();
-  for (int i = 0; i < numbOfCons; i++) {
+  am.suspendVarList = makeTaggedNULL();
+
+  while(!trail.isEmptyChunk()) {
     TaggedRef *refPtr;
     TaggedRef value;
     trail.popRef(refPtr,value);
