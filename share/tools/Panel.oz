@@ -5,6 +5,21 @@
 %%%  Last modified: $Date$ by $Author$
 %%%  Version: $Revision$
 
+\ifdef NEWSAVE
+declare
+fun {NewPanel Standard Tk TkTools}
+\insert 'Standard.env'
+   = Standard
+in
+   local
+\insert 'panel/main.oz'
+      Panel = {New PanelClass init}
+   in
+\insert 'Panel.env'
+   end
+end
+\else
+
 declare
    PanelClass Panel
 \ifdef SAVE
@@ -24,4 +39,5 @@ fun {NewPanel Tk TkTools}
 in
 \insert 'Panel.env'
 end
+\endif
 \endif

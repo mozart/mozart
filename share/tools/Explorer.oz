@@ -7,15 +7,26 @@
 
 
 declare
+\ifndef NEWSAVE
    Explorer ExplorerClass
    ExploreOne ExploreAll ExploreBest
+\endif
 \ifdef SAVE
    NewExplorer
 \endif
 in
 
 \ifdef SAVE
-fun {NewExplorer Tk TkTools Browse}
+fun {NewExplorer
+\ifdef NEWSAVE
+     Standard
+\endif
+     Tk TkTools Browse}
+\endif
+
+\ifdef NEWSAVE
+\insert 'Standard.env'
+   = Standard
 \endif
    
    \insert 'explorer/main.oz'

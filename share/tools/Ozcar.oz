@@ -2,14 +2,24 @@
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
 declare
+\ifndef NEWSAVE
 Ozcar
+\endif
 \ifdef SAVE
 NewOzcar
 \endif
 in
 
 \ifdef SAVE
-proc {NewOzcar Compile Error Tk TkTools Browse ?Ozcar}
+proc {NewOzcar
+\ifdef NEWSAVE
+      Standard
+\endif
+      Compile Error Tk TkTools Browse ?Ozcar}
+\ifdef NEWSAVE
+\insert 'Standard.env'
+   = Standard
+\endif
 \else
 local
 \endif   
