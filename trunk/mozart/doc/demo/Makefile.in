@@ -7,9 +7,10 @@ MAIN = main.sgml
 SGMLSRCS = \
 	board.sgml bounce.sgml corpus.sgml flights.sgml \
 	jobshop.sgml lift.sgml main.sgml queens.sgml \
-	 transportation.sgml trucks.sgml
+	 transportation.sgml trucks.sgml enable.sgml
 
-HTMLEXTRAFILES = 
+HTMLEXTRAFILES = \
+	note-gui-l1.gif note-gui-lm1.gif netscape.gif
 
 OZDOCHTMLFLAGS = --autoindex
 
