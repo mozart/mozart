@@ -251,7 +251,7 @@ EOF
 
 # removes tag before type string
 # Tags are:
-#   !        Object with corresponding Oz object
+#   !        C Object with corresponding Oz object
 #   ^        Same as ! but also allows unit to stand for NULL
 #   %        Enumeration type
 #   +        Out value (eg. gchar** in gtk_label_get)
