@@ -187,6 +187,10 @@ ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
   return offset;
 }
 
+#ifdef OUTLINE
+#define inline
+#endif
+
 inline
 Bool Board::isFailureInBody ()
 {
@@ -201,10 +205,6 @@ Bool Board::isFailureInBody ()
 // -----------------------------------------------------------------------
 // CALL HOOK
 
-
-#ifdef OUTLINE
-#define inline
-#endif
 
 /* the hook functions return:
      TRUE: must reschedule
