@@ -38,7 +38,7 @@ BUILDDIR=$1
 SRCTAR=`ls ${BUILDDIR}/mozart-*-*-src.tar.gz`
 DOCTAR=`ls ${BUILDDIR}/mozart-*-*-doc.tar.gz`
 DSTDIR=$2
-OZHOME=/usr/local/mozart
+OZHOME=/usr/lib/mozart
 
 #
 # Find version
@@ -98,7 +98,7 @@ Mozart is jointly developed by DFKI and SICS.
 %package doc
 Summary: Mozart documentation
 Group: Development/Languages
-requires: mozart = ${VERSION}
+requires: mozart
 %description doc
 Mozart is an efficient and distributed implementation of Oz.
 
@@ -107,7 +107,7 @@ Documentation
 %package contrib
 Summary: Mozart contributions
 Group: Development/Languages
-requires: mozart = ${VERSION}
+requires: mozart
 %description contrib
 Mozart is an efficient and distributed implementation of Oz.
 
@@ -167,18 +167,18 @@ rm -rf \$RPM_BUILD_ROOT
 %doc mozart/README mozart/LICENSE mozart/LICENSE.html
 %config /etc/profile.d/oz.sh
 %config /etc/profile.d/oz.csh
-/usr/local/mozart/LICENSE
-/usr/local/mozart/LICENSE.html
-/usr/local/mozart/bin
-/usr/local/mozart/cache
-/usr/local/mozart/include
-/usr/local/mozart/platform
-/usr/local/mozart/share
+$OZHOME/LICENSE
+$OZHOME/LICENSE.html
+$OZHOME/bin
+$OZHOME/cache
+$OZHOME/include
+$OZHOME/platform
+$OZHOME/share
 %files doc
-/usr/local/mozart/doc
-/usr/local/mozart/examples
+$OZHOME/doc
+$OZHOME/examples
 %files contrib
-/usr/local/mozart/contrib
+$OZHOME/contrib
 EOF
 
 #
