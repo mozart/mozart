@@ -77,12 +77,12 @@
        <ENTRY><<create>>
        <ITEM>
          initializes a new inspector object with reasonable defaults.
-       <ENTRY><<inspect(?+{Value}>>
+       <ENTRY><<inspect(?_{X})>>
        <ITEM>
-         inspects the value denoted by ?_{Value}.
-       <ENTRY><<inspectN(?+{N} ?+{Value})>>
+         inspects the value ?_{X}.
+       <ENTRY><<inspectN(?+{N} ?_{X})>>
        <ITEM>
-         inspects the value denoted by ?_{Value} using widget number ?_{N}. Keep in mind
+         inspects the value denoted by ?_{X} using widget number ?_{N}. Keep in mind
          then the corresponding widget must have been created already.
        <ENTRY><<configureEntry(?+{Key} ?+{Value})>>
        <ITEM>
@@ -97,53 +97,53 @@
       inspector object itself but not its widgets.
   <SECTION id="section.configure.inspector"><TITLE/Inspector Options/
     <P>
-      This sections covers global Inspector options.
+      This section covers global Inspector options.
       <LIST>
         <ENTRY><<inspectorWidth>>
         <SYNOPSIS>
           <<{Inspector.configure inspectorWidth ?+{I}}>>
         <ITEM>
-          adjusts the Inspector's horizontal window dimension to&nbsp;?_{I} pixel.
-          It defaults to 600.
+          adjusts the Inspector's horizontal window dimension to ?_{I}&nbsp;pixels.
+          Defaults to 600.
         <ENTRY><<inspectorDepth>>
         <SYNOPSIS>
           <<{Inspector.configure inspectorDepth ?+{I}}>>
         <ITEM>
-          adjusts the Inspector's vertical window dimension to&nbsp;?_{I} pixel.
-          It defaults to 400.
+          adjusts the Inspector's vertical window dimension to ?_{I}&nbsp;pixels.
+          Defaults to 400.
         <ENTRY><<inspectorOptionsRange>>
         <SYNOPSIS>
           <<{Inspector.configure inspectorOptionsRange ?+{A}}>>
         <ITEM>
-           determines how many widgets will be affected during configuration.
+           determines which widgets will be affected by reconfiguration.
            ?_{A} can be either <<'active'>> or <<'all'>>, with the obvious meaning.
       </LIST>
    <SECTION id="section.configure.representation"><TITLE/Value Represenation/
     <P>
-      This sections explains how to configure the value representation using the API.
+      This section explains how to configure the value representation using the API.
       <LIST>
         <ENTRY><<widgetTreeWidth>>
         <SYNOPSIS>
           <<{Inspector.configure widgetTreeWidth ?+{I}}>>
         <ITEM>
-          adjusts the global width traversal limit to&nbsp;?_{I}. It defaults to 50.
+          adjusts the global width traversal limit to&nbsp;?_{I}. Defaults to 50.
         <ENTRY><<widgetTreeDepth>>
         <SYNOPSIS>
           <<{Inspector.configure widgetTreeDepth ?+{I}}>>
         <ITEM>
-          adjusts the global depth traversal limit to&nbsp;?_{I}. It defaults to 15.
+          adjusts the global depth traversal limit to&nbsp;?_{I}. Defaults to 15.
         <ENTRY><<widgetTreeDisplayMode>>
         <SYNOPSIS>
           <<{Inspector.configure widgetTreeDisplayMode ?+{B}}>>
         <ITEM>
           switches between tree and graph representation, depending on whether&nbsp;?_{B}
-          denotes <<true>> or <<false>>.
+          denotes <<true>> or <<false>>, respectively.
         <ENTRY><<widgetUseNodeSet>>
         <SYNOPSIS>
           <<{Inspector.configure widgetUseNodeSet ?+{I}}>>
         <ITEM>
-          determines the subtree alignment. If&nbsp;?_{I} denotes <<1>>,
-          the standard aligment is used. A value of <<2>> selects fixed width indentation.
+          determines the subtree alignment. If ?_{I} is&nbsp;<<1>>,
+          the standard aligment is used. A value of&nbsp;<<2>> selects fixed width indentation.
       </LIST>
   <SECTION id="section.configure.visual"><TITLE/Visual Settings/
     <P>
@@ -153,28 +153,28 @@
         <SYNOPSIS>
           <<{Inspector.configure widgetTreeFont font(family:?+{F} size:?+{S} weight:?+{W})}>>
         <ITEM>
-          selects the widget's fonts as follows.
+          selects the widget font as follows:
           <LIST>
             <ITEM>?+{F} denotes either <<'courier'>> or <<'helvetica'>>.
-            <ITEM>?+{S} denotes any value from the list <<[10, 12, 14, 18, 24]>>.
+            <ITEM>?+{S} denotes any integer out of <<{10, 12, 14, 18, 24}>>.
             <ITEM>?+{W} denotes either <<'normal'>> or <<'bold'>>.
           </LIST>
-          It defaults to <<font(family:'courier' size:12 weight:'normal')>>.
+          The default is <<font(family:'courier' size:12 weight:'normal')>>.
         <ENTRY><<widgetContextMenuFont>>
         <SYNOPSIS>
-          <<{Inspector.configure widgetContextMenuFont ?+{F})}>>
+          <<{Inspector.configure widgetContextMenuFont ?+{V})}>>
 	<ITEM>
-          selects the font used to draw the context menus. ?_{F} denotes any valid
+          selects the font used to draw the context menus. ?_{V} denotes any valid
           X font description. It defaults to <<'-adobe-helvetica-bold-r-*-*-*-100-*'>>.
       </LIST>
   <SUBSECTION id="section.configure.colors"><TITLE/Color Assignment/
     <P>
       <LIST>
-        <ENTRY><<{Inspector.configure ?+{IT} ?+{C})}>>
+        <ENTRY><<{Inspector.configure ?+{A} ?+{Color})}>>
         <ITEM>
-          assigns color&nbsp;?_{C} to item type &nbsp;?_{IT}.
-          ?_{C} denotes an atom describing any valid hexadecimal RGB color code and
-          ?_{IT} is composed of a type prefix and a color suffix. For example,
+          assigns color&nbsp;?_{Color} to item type &nbsp;?_{A}.
+          ?_{Color} denotes an atom describing any valid hexadecimal RGB color code.
+          ?_{A} is composed of a type prefix and a 'Color' suffix. For example,
 <<<{Inspector.configure intColor '#AAFF11'}>>>
         <P>
           chooses to draw integer nodes with
@@ -195,8 +195,8 @@
             <TR><TD><<variableref>></TD><TD COLSPAN=2>using occurence of graph reference</TD</TR>
             <TR><TD><<ref>></TD><TD COLSPAN=2>defining occurence of graph reference</TD></TR>
             <TR><TD><<generic>></TD><TD COLSPAN=2>the generic value</TD></TR>
-            <TR><TD><<braces>></TD><TD COLSPAN=2>brackets around mixfix tuples</TD></TR>
-            <TR><TD><<colon>></TD><TD COLSPAN=2>separator between feture and subtree</TD></TR>
+            <TR><TD><<braces>></TD><TD COLSPAN=2>parentheses around mixfix tuples</TD></TR>
+            <TR><TD><<colon>></TD><TD COLSPAN=2>separator between feature and subtree</TD></TR>
             <TR><TD><<widthbitmap>></TD><TD COLSPAN=2>left arrow</TD></TR>
             <TR><TD><<depthbitmap>></TD><TD COLSPAN=2>down arrow</TD></TR>
             <TR><TD><<separator>></TD><TD COLSPAN=2>separators such as <<#>> and <<|>></TD></TR>
