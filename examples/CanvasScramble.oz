@@ -212,7 +212,7 @@ define
 	 then
 	    if {Dictionary.get PosArr I} == Pos
 	    then I else {TranslateIndex PosArr Pos (I + 1)} end
-	 else raise tranlation_error end
+	 else raise translation_error end
 	 end
       end
 
