@@ -38,6 +38,7 @@ M4		= @M4@ $(M4A)
 M4_S		= @M4_S@ $(M4A)
 export RM		= @RM@ -f
 export CXX		= @CXX@
+export CXXCPP		= @CXXCPP@
 export LD		= @LD@
 export DYNLD		= @DYNLD@
 export RANLIB		= @RANLIB@
@@ -50,13 +51,13 @@ export INSTALL_OTHER   = $(INSTALL) -m 444
 export LIBS            = @LIBS@
 export LDFLAGS		= @LDFLAGS@
 
-export COPT		= @COPT@
 export DEFS		= @DEFS@
 export CWARN		= @CWARN@
 export INCS		= -I. -I$(OZDIR) -I$(OZINCDIR)
-export CFLAGS		= $(COPT) $(DEFS) $(INCS) $(CWARN) $(CUSR)
-export CXXFLAGS	= $(CFLAGS)
-export DEPEND		= @DEPEND@ $(DEFS) $(INCS)
+export CPPFLAGS		= @CPPFLAGS@ $(INCS) $(DEFS)
+export CFLAGS		= @CFLAGS@ $(CPPFLAGS) $(CWARN) $(CUSR)
+export CXXFLAGS		= $(CFLAGS)
+export DEPEND		= @DEPEND@ $(CPPFLAGS)
 
 TARGETS		= @TARGETS@
 
@@ -65,8 +66,6 @@ platform	= @platform@
 export platformdir	= $(prefix)/platform
 export bindir		= $(platformdir)/$(platform)
 export incdir		= $(prefix)/include
-
-INSTRDEFS 	= $(OZINCDIR)/instrDefs.m4
 
 #MOREWARNINGS  =   -Wall -pedantic-errors -W -Wtraditional -Wshadow \
 #	-Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
@@ -251,9 +250,7 @@ depend: $(CREATEDFILES) $(SRCS)
 		$(CREATEDSRCS) >> Makefile
 	for d in $(SUBDIRS); do (cd $$d; $(MAKE) depend); done
 
-$(M4FILES): $(INSTRDEFS)
-
-tags:	$(M4FILES) version.cc
+tags:	$(CREATEDFILES) version.cc
 	etags --regex='/OZ_C[^(]+([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
 	*c *h */*c */*h
 
@@ -268,7 +265,6 @@ realclean: clean
 	$(RM) version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
 		ozma-s.cc ozma-p.cc ozma.hh \
 		ozlib.lnk *.exe *.map *.imp *.sym *.so \
-		$(M4FILES) \
 		$(CREATEDFILES) TAGS \
 		conf.h Makefile config.cache config.log config.status
 	for d in $(SUBDIRS); do (cd $$d; $(MAKE) realclean); done
@@ -321,7 +317,7 @@ ozma-p.yy: ozma-p.m4yy
 	$(CXX) $(CXXFLAGS) -S -o $@ $<
 
 .cc.E:
-	$(CXX) $(CXXFLAGS) -E -o $@ $<
+	$(CXXCPP) $(CPPFLAGS) -o $@ $<
 
 .m4cc.cc:
 	$(M4_S) $< > $@
@@ -334,7 +330,6 @@ ozma-p.yy: ozma-p.m4yy
 		rcp /tmp/$$$$.o @tmphack_host@:`pwd`/$@; \
 		rm -f /tmp/$$$$.o
 
+# dependencies
 marshaler.hh marshalMsg.cc: $(OZDIR)/msgFormat.m4
 scancode.cc ozma-s.ll ozma-p.yy optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh: $(OZINCDIR)/instrDefs.m4
-
-
