@@ -232,7 +232,7 @@ void  FiniteDomain::printLong(ostream &ofile, int offset) const
   }
 }
 
-#ifdef OUTLINE 
+#if defined(OUTLINE) || defined(FDOUTLINE)
 #define inline 
 #include "fdomn.icc"
 #undef inline 
