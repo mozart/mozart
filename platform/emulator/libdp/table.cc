@@ -976,6 +976,8 @@ void BorrowEntry::freeBorrowEntry(){
   Assert(!isExtended());
   if(isVar() && typeOfBorrowVar(this)==VAR_PROXY){
     GET_VAR(this,Proxy)->nowGarbage(this);}
+  // AN! nowGarbage could make the structure extended again if
+  // implicit credits are used.
   if(!isPersistent())
     giveBackCredit(getCreditOB());}
 

@@ -562,7 +562,9 @@ static void sendDeRegister(BorrowEntry *be) {
   NetAddress *na = be->getNetAddress();  
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_DEREGISTER(na->index,myDSite);
-  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
+  // Taking an implicit credit here might extend a non extended structure
+  // and cause errors at freeBorrowEntry that assumes a non extended structure
+//    msgC->setImplicitMessageCredit(be->getOneMsgCredit());
   send(msgC,3);
 }
 
