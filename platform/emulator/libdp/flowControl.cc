@@ -49,6 +49,7 @@ void FlowControler::addElement(TaggedRef e){
   newE->next = NULL;
   newE->ele  = e;
   if(first==NULL){
+    am.setMinimalTaskInterval((void*)this,ozconf.perdioFlowBufferTime);
     first = last = newE;
     return;}
   last->next = newE;
@@ -72,6 +73,8 @@ void FlowControler::wakeUpExecute(unsigned int t){
       ptrOld->next = ptr->next;
     if(ptr == last)
       last = ptrOld;
+    if(first==NULL)
+      am.setMinimalTaskInterval((void*)this,0);
     ((PortProxy*)tagged2Tert(ptr->ele))->wakeUp();
 }
 

@@ -416,6 +416,7 @@ void proxyProbeFault(Tertiary *t, int pr) {
     portProxyProbeFault(t,pr);
     return;
   case Co_Object:
+  case Co_Resource:
     return;
   default: Assert(0);
     return;}
