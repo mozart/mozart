@@ -74,7 +74,10 @@
   <SECTION><TITLE>Primary Oz Types</TITLE>
   <P><FIGURE ID="TypeHier" CLASS="Figure">
     <CAPTION>Oz Type Hierarchy</CAPTION>
-    <P><PICTURE.EXTERN TO="image33.gif" TYPE=gif>
+    <P>
+    <PICTURE.CHOICE DISPLAY>
+    <PICTURE.EXTERN TO="image33.gif" TYPE=gif>
+    </PICTURE.CHOICE>
   </FIGURE>
 
   <P>Oz is a dynamically typed language. <PTR TO="TypeHier"> shows the

@@ -330,7 +330,9 @@ class B from A ... end
 
 <P><FIGURE ID="cycle" CLASS="Figure">
 <CAPTION>Illegal class hierarchy</CAPTION>
+<PICTURE.CHOICE DISPLAY>
 <PICTURE.EXTERN TO="image161.gif" TYPE="gif" >
+</PICTURE.CHOICE>
 </FIGURE>
 
 <P>Second, after striking out all overridden methods each remaining
@@ -348,7 +350,9 @@ class C from A B end
 
 <P><FIGURE ID="illegalClassInheritance" CLASS="Figure">
 <CAPTION>Illegal class hierarchy in method <<m>></CAPTION>
-<PICTURE.EXTERN TO="image57.gif" TYPE=gif>
+<PICTURE.CHOICE DISPLAY>
+<PICTURE.EXTERN TO="inheritance1.gif" TYPE=gif>
+</PICTURE.CHOICE>
 </FIGURE>
 
 
