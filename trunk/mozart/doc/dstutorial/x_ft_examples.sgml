@@ -515,6 +515,7 @@ in
 end
 </chunk>
 
+<<<
 proc {NewSafeStat Class Init ?Object}
    Object={MakeStat {New Class Init}}
 end
