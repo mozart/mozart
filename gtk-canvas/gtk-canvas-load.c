@@ -12,7 +12,8 @@
  */
 #include <config.h>
 #include <gdk_imlib.h>
-#include <malloc.h>
+/*#include <malloc.h>*/
+#include <stdlib.h>
 #include "gtk-canvas.h"
 #include "gtk-canvas-load.h"
 
