@@ -64,13 +64,20 @@ define
          {Dictionary.put ObjectTable {ForeignPointer.toInt Pointer} Object}
          Object
       end
-      %% Pointer Tranlation (necessary for GDK Events)
+      %% Pointer Tranlation (necessary for GDK Events and GLists)
       fun {TranslatePointer Pointer}
          {Dictionary.condGet ObjectTable {ForeignPointer.toInt Pointer} Pointer}
       end
       %% Release Object Ptr (necessary for GC)
       proc {RemoveObject Pointer}
          {Dictionary.remove ObjectTable {ForeignPointer.toInt Pointer}}
+      end
+      %% GList Import/Export
+      fun {ImportList Ls}
+         {Map Ls TranslatePointer}
+      end
+      fun {ExportList Ls}
+         {Map Ls ObjectToPointer}
       end
    end
 
@@ -364,9 +371,12 @@ define
       end
 
       %% Create Interface
-      GOZCore = 'GOZCore'(%% Native Pointer Import/Translation
+      GOZCore = 'GOZCore'(%% Native Pointer Import/Export
                           pointerToObject      : PointerToObject
                           objectToPointer      : ObjectToPointer
+                          %% GList Import/Export
+                          importList           : ImportList
+                          exportList           : ExportList
                           %% Signal Handling
                           signalConnect        : SignalConnect
                           signalDisconnect     : SignalDisconnect

@@ -62,10 +62,10 @@ define
                         "export"]
 
    GdkInitStub = ["define"
-                  "   OzBase   = GOZCore.ozBase"
-                  "   P2O      = GOZCore.pointerToObject"
-                  "   O2P      = GOZCore.objectToPointer"
-                  "   GetEvent = GOZCore.getGdkEvent"
+                  "   OzBase     = GOZCore.ozBase"
+                  "   P2O        = GOZCore.pointerToObject"
+                  "   O2P        = GOZCore.objectToPointer"
+                  "   GetEvent   = GOZCore.getGdkEvent"
                   "   class OzColorBase from OzBase"
                   "      meth new(R G B)"
                   "         @object = {GOZCore.allocColor R G B}"
@@ -73,9 +73,12 @@ define
                   "   end"]
 
    GtkInitStub = ["define"
-                  "   OzBase = GOZCore.ozBase"
-                  "   P2O    = GOZCore.pointerToObject"
-                  "   O2P    = GOZCore.objectToPointer"]
+                  "   OzBase     = GOZCore.ozBase"
+                  "   P2O        = GOZCore.pointerToObject"
+                  "   O2P        = GOZCore.objectToPointer"
+                  "   ExportList = GOZCore.exportList"
+                  "   ImportList = GOZCore.importList"
+                 ]
 
    CanvasInitStub = ["define"
                      "   P2O    = GOZCore.pointerToObject"
@@ -497,10 +500,6 @@ define
          end
          TextFile, putS({Util.indent 3}#ResStart#"{"#@module#"."#Name#" "#Self#CallStr#"}"#ResEnd)
          GtkClasses, handleOutArgs(CallArgs)
-         if Name == "gtkWindowNew"
-         then
-            TextFile, putS({Util.indent 3}#"if A0 == WINDOW_TOPLEVEL then gcMode <- toplevel end")
-         end
          if IsCont then TextFile, putS({Util.indent 3}#"children <- A0|@children") end
          TextFile, putS({Util.indent 2}#"end")
       end
@@ -515,7 +514,8 @@ define
                    [] "gdouble*" then 'OUT'('Double')
                    [] _          then 'IN'
                    end
-            Conv = if {IsBasicType @allTypes TStr} then 'NONE' else 'OBJECT' end
+            Conv = if TStr == "GList*" then 'GLIST'
+                   elseif {IsBasicType @allTypes TStr} then 'NONE' else 'OBJECT' end
          in
             GtkClasses, prepareArgs(Ar (I + 1) (I#Type#Conv)|OutArgs $)
          [] nil then {Reverse OutArgs}
@@ -527,6 +527,7 @@ define
             Str = case Arg
                   of I#'OUT'(...)#_  then "AO"#I
                   [] I#'IN'#'NONE'   then "A"#I
+                  [] I#'IN'#'GLIST'  then "{ExportList A"#I#"}"
                   [] I#'IN'#'OBJECT' then "{O2P A"#I#"}"
                   end
             Space = case Ar of nil then "" else " " end
@@ -565,7 +566,9 @@ define
             TypeS = {Util.toString Base#Ptrs}
             TypeA = {Util.toAtom TypeS}
          in
-            if {IsBasicType @allTypes TypeS}
+            if TypeS == "GList*"
+            then "{ImportList "
+            elseif {IsBasicType @allTypes TypeS}
             then nil
             elseif {ClassReg member(TypeA $)}
             then "{P2O "#{ClassReg className(TypeA $)}#" "

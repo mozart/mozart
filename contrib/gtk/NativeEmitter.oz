@@ -282,6 +282,7 @@ define
                           [] arg(type("gchar" "*") _)       then {Base "GOZ_declareString"}#f
                           [] arg(type("const char" "*") _)  then {Base "GOZ_declareString"}#f
                           [] arg(type("const gchar" "*") _) then {Base "GOZ_declareString"}#f
+                          [] arg(type("GList" "*") _)       then {Base "GOZ_declareGList"}#f
                           [] arg(type(Type Ptrs) _)         then {Generic Type Ptrs}#f
                           end
          in
@@ -335,6 +336,7 @@ define
                      of type(Type "")     then {CoreResultType Type @types}
                      [] type("char" "*")  then "OZ_string"
                      [] type("gchar" "*") then "OZ_string"
+                     [] type("GList" "*") then "GOZ_makeGList"
                      [] type(_ _)         then "OZ_makeForeignPointer"
                      end
             in
