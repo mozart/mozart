@@ -494,8 +494,19 @@ public:
   OZ_Boolean operator != (const OZ_FSetConstraint &);
   OZ_Boolean operator == (const OZ_FSetConstraint &) const;
 
-  OZ_Boolean le (const int);
-  OZ_Boolean ge (const int);
+  OZ_Boolean le(const int);
+  OZ_Boolean ge(const int);
+
+  // these member functions support automatically generated set
+  // propagators
+  OZ_Boolean operator <= (const int);
+  OZ_Boolean operator >= (const int);
+  OZ_Boolean operator |= (const int);
+  OZ_Boolean operator &= (const int);
+  int lbc(void) const;
+  int ubc(void) const;
+  OZ_FSetValue lb(void) const;
+  OZ_FSetValue ub(void) const;
 
   char * toString(void) const;
 };
