@@ -47,7 +47,6 @@
 (defvar oz-mode-abbrev-table nil)
 (defvar oz-mode-map (make-sparse-keymap))
 
-(defvar oz-compiler nil)
 (defvar oz-machine nil)
 (defvar oz-machine-buffer "*Oz Machine*")
 
@@ -500,7 +499,7 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 	(setq oz-machine-visible (get-buffer-window oz-machine-buffer))
 
 	(oz-set-state 'oz-compiler-state "booting")
-        (make-comint "Oz Compiler" oz-compiler nil "-S" file)
+        (make-comint "Oz Compiler" "oz.compiler" nil "-S" file)
 	(oz-create-buffer "*Oz Compiler*")
 	(set-process-filter (get-process "Oz Compiler") 'oz-compiler-filter)
 	(bury-buffer "*Oz Compiler*")
