@@ -556,6 +556,13 @@ SuspList* AM::checkSuspensionList(SVariable* var, TaggedRef taggedvar,
   
   while (suspList) {
     Suspension* susp = suspList->getElem();
+
+    // suspension has already been marked 'dead' 
+    if (susp->isDead()) {
+      suspList = suspList->dispose();
+      continue;
+    }
+
     Board* n = susp->getNode()->getBoardDeref();
 
     // suspension points to an already reduced branch of the computation tree
@@ -566,12 +573,6 @@ SuspList* AM::checkSuspensionList(SVariable* var, TaggedRef taggedvar,
       continue;
     }
     
-    // suspension has already been marked 'dead' 
-    if (susp->isDead()) {
-      suspList = suspList->dispose();
-      continue;
-    }
-
     // already propagated susps remain in suspList
     if (susp->isPropagated() == NO) {      
       if ((suspList->checkCondition(taggedvar, term) == OK) &&
