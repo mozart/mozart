@@ -1180,8 +1180,6 @@ void engine()
    *  since they don't differ in 'suspended' and 'runnable' states;
    */
   if (e->currentThread->isNewPropagator ()) {
-    CFuncContinuation *ccont;
-
     //
     //  First, get the home board of that propagator, 
     // and try to install it;

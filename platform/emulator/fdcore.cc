@@ -254,27 +254,28 @@ OZ_C_proc_begin(BIfdPutGe, 2)
 OZ_C_proc_end // BIfdPutGe
 
 
-OZ_C_proc_begin(BIfdPutList, 3)
+OZ_C_proc_begin(BIfdPutList, 3) // TMUELLER; 3rd arg is redundant soon
 {
   Assert (!(am.currentThread->isPropagator () || am.currentThread->isNewPropagator ()));
   
   ExpectedTypes("FiniteDomain,List of SmallInts or Tuples,SmallInt");
   
   OZ_getCArgDeref(2, s, sptr, stag); // sign
-
+  
   if (isAnyVar(stag)) {
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, sptr);
   } else if (! isSmallInt(stag)) {
     TypeError(2, "");
   }
-
-  switch (checkDomDescr(OZ_getCArg(1), OZ_self, OZ_args, OZ_arity)) {
-  case SUSPEND: return SUSPEND_PROCEED;
-  case FAILED:  return FAILED;
-  case PROCEED: break;
-  default:      error("Unexpected value"); break;
+  
+  OZ_PropagatorExpect pe;
+  OZ_expect_t r = pe.expectDomainDescription(OZ_getCArg(1));
+  if (pe.isFailing(r)) {
+    TypeError(1, "");
+  } else if (pe.isSuspending(r)) {
+    return pe.suspend(OZ_makeSelfThread());
   }
-
+  
   BIfdBodyManager x;
 
   if (! x.introduce(OZ_getCArg(0))) return FAILED;

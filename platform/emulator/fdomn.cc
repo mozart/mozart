@@ -147,6 +147,8 @@ int FDIntervals::nextBiggerElem(int v, int max_elem) const
   for (int i = 0; i < high; i += 1) {
     if (i_arr[i].left <= v && i_arr[i].right < v)
       return v + 1;
+    if (v <= i_arr[i].left)
+      return i_arr[i].left;
   }
   error ("no bigger element in domain");
   return -1;
@@ -1217,12 +1219,69 @@ int OZ_FiniteDomainImpl::initList(int list_len,
   return size;
 }
 
+inline
+OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator ~ (void) const
+{
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << " = ~ ");
+  
+  OZ_FiniteDomainImpl y; y.initEmpty();
+
+  if (*this == fd_empty) {
+    y.initFull();
+  } else if (size == fd_full_size) {
+    y.initEmpty();
+  } else {
+    descr_type type = getType();
+    if (type == fd_descr) {
+      if (min_elem == 0) {
+	y.min_elem = max_elem + 1;
+	y.max_elem = fd_sup;
+	y.size = y.findSize();
+      } else if (max_elem == fd_sup) {
+	y.max_elem = min_elem - 1;
+	y.min_elem = 0;
+	y.size = y.findSize();
+      } else {
+	FDIntervals * iv = newIntervals(2);
+	iv->init(fd_inf, min_elem - 1, max_elem + 1, fd_sup);
+	y.size = iv->findSize();
+	y.min_elem = 0;
+	y.max_elem = fd_sup;
+	y.setType(iv);
+      }
+    } else {      // reserve one interval too many !!!
+      FDIntervals * iv;
+      if (type == bv_descr) {
+	int s = get_bv()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
+	int t = s + (0 < min_elem);
+	iv = newIntervals(t)->complement(s, fd_bv_left_conv, fd_bv_right_conv);
+      } else {
+	FDIntervals * x_iv = get_iv();
+	int s = x_iv->high - 1 + (fd_inf < min_elem) + (max_elem < fd_sup);
+	iv = newIntervals(s)->complement(x_iv);
+      }
+      y.size = iv->findSize();
+      y.min_elem = iv->findMinElem();
+      y.max_elem = iv->findMaxElem();
+      y.setType(iv);
+      if (y.isSingleInterval()) y.setType(fd_descr);
+    }
+  }
+
+  AssertFD(y.isConsistent());
+  DEBUG_FD_IR(OZ_FALSE, cout << y << endl);
+  
+  return y;
+}
+
 int OZ_FiniteDomainImpl::init(OZ_Term d)
 {
   DEREF(d, d_ptr, d_tag);
   
   if (isSTuple(d) && tagged2SRecord(d)->getWidth() == 1) {
-    return ~ init((*tagged2SRecord(d))[0]);
+    init((*tagged2SRecord(d))[0]);
+    *this = ~ *this;
+    return size;
   } else if (isSmallInt(d_tag)) {
     return initSingleton(OZ_intToC(d));
   } else if (AtomSup == d) {
@@ -1636,61 +1695,6 @@ int OZ_FiniteDomainImpl::operator += (const int put_in)
   AssertFD(isConsistent());
   DEBUG_FD_IR(OZ_FALSE, cout << *this << endl);
   return size;
-}
-
-inline
-OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator ~ (void) const
-{
-  DEBUG_FD_IR(OZ_FALSE, cout << *this << " = ~ ");
-  
-  OZ_FiniteDomainImpl y; y.initEmpty();
-
-  if (*this == fd_empty) {
-    y.initFull();
-  } else if (size == fd_full_size) {
-    y.initEmpty();
-  } else {
-    descr_type type = getType();
-    if (type == fd_descr) {
-      if (min_elem == 0) {
-	y.min_elem = max_elem + 1;
-	y.max_elem = fd_sup;
-	y.size = y.findSize();
-      } else if (max_elem == fd_sup) {
-	y.max_elem = min_elem - 1;
-	y.min_elem = 0;
-	y.size = y.findSize();
-      } else {
-	FDIntervals * iv = newIntervals(2);
-	iv->init(fd_inf, min_elem - 1, max_elem + 1, fd_sup);
-	y.size = iv->findSize();
-	y.min_elem = 0;
-	y.max_elem = fd_sup;
-	y.setType(iv);
-      }
-    } else {      // reserve one interval too many !!!
-      FDIntervals * iv;
-      if (type == bv_descr) {
-	int s = get_bv()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
-	int t = s + (0 < min_elem);
-	iv = newIntervals(t)->complement(s, fd_bv_left_conv, fd_bv_right_conv);
-      } else {
-	FDIntervals * x_iv = get_iv();
-	int s = x_iv->high - 1 + (fd_inf < min_elem) + (max_elem < fd_sup);
-	iv = newIntervals(s)->complement(x_iv);
-      }
-      y.size = iv->findSize();
-      y.min_elem = iv->findMinElem();
-      y.max_elem = iv->findMaxElem();
-      y.setType(iv);
-      if (y.isSingleInterval()) y.setType(fd_descr);
-    }
-  }
-
-  AssertFD(y.isConsistent());
-  DEBUG_FD_IR(OZ_FALSE, cout << y << endl);
-  
-  return y;
 }
 
 inline
