@@ -51,13 +51,13 @@ void marshalFloat(MARSHALERBUFFER *bs, OZ_Term floatTerm)
   static DoubleConv dc;
   marshalDIF(bs, DIF_FLOAT);
   dc.u.d = tagged2Float(floatTerm)->getValue();
-  if (lowendian) {
+#if defined(ARCH_LITTLE_ENDIAN) && !defined(ARCH_BIG_WORDIAN)
     marshalNumber(bs, dc.u.i[0]);
     marshalNumber(bs, dc.u.i[1]);
-  } else {
+#else
     marshalNumber(bs, dc.u.i[1]);
     marshalNumber(bs, dc.u.i[0]);
-  }
+#endif
 }
 
 //

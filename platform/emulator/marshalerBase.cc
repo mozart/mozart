@@ -268,13 +268,13 @@ char *getString(MarshalerBuffer *bs, unsigned int i)
 double unmarshalFloat(MarshalerBuffer *bs)
 {
   static DoubleConv dc;
-  if (lowendian) {
+#if defined(ARCH_LITTLE_ENDIAN) && !defined(ARCH_BIG_WORDIAN)
     dc.u.i[0] = unmarshalNumber(bs);
     dc.u.i[1] = unmarshalNumber(bs);
-  } else {
+#else
     dc.u.i[1] = unmarshalNumber(bs);
     dc.u.i[0] = unmarshalNumber(bs);
-  }
+#endif
   return dc.u.d;
 }
 
