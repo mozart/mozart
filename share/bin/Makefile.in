@@ -21,7 +21,8 @@
 #  of this file, and for a DISCLAIMER OF ALL 
 #  WARRANTIES.
 
-PREFIX		= @prefix@
+PREFIX=		@prefix@
+
 SRCDIR		= @srcdir@
 BINDIR		= $(PREFIX)/bin
 RM		= @RM@ -f
