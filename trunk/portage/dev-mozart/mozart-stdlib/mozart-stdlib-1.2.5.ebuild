@@ -1,5 +1,5 @@
 DESCRIPTION="Mozart/Oz's standard library"
-SRC_URI="ftp://ftp.mozart-oz.org/pub/mozart/store/1.2.5-2003-02-01/mozart-1.2.5.20030131-std.tar.gz"
+SRC_URI="ftp://ftp.mozart-oz.org/pub/mozart/store/1.2.5-2003-02-03/mozart-1.2.5.20030203-std.tar.gz"
 HOMEPAGE="http://www.mozart-oz.org/"
 KEYWORDS="x86 ppc sparc hppa"
 DEPEND="
