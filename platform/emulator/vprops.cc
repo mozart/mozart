@@ -180,7 +180,14 @@ enum EmulatorPropertyIndex {
   PROP_DPLOG_CONNECTLOG,
   PROP_DPLOG_MESSAGELOG,
   PROP_DPLOG,
-
+  // DPGC
+  PROP_DPGC_TIMELEASE,
+  PROP_DPGC_FRACWRC,
+  PROP_DPGC_TL_LEASETIME,
+  PROP_DPGC_TL_UPDATETIME,
+  PROP_DPGC_WRC_ALPHA,
+  PROP_DPGC,
+  
   PROP_CLOSE_TIME,
 
   PROP_OZ_STYLE_USE_FUTURES,
@@ -535,6 +542,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	   SET_INT(oz_atomNoDup("worthwhileRealloc"), 
 		   ozconf.dpTableWorthwhileRealloc);
 	   );
+
   CASE_BOOL(PROP_DPLOG_CONNECTLOG,ozconf.dpLogConnectLog);
   CASE_BOOL(PROP_DPLOG_MESSAGELOG,ozconf.dpLogMessageLog);
   CASE_REC(PROP_DPLOG,"dpLog",
@@ -542,7 +550,23 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	   SET_BOOL(oz_atomNoDup("connectLog"),ozconf.dpLogConnectLog);
 	   SET_BOOL(oz_atomNoDup("messageLog"),ozconf.dpLogMessageLog);
 	   );
+  
+  CASE_BOOL(PROP_DPGC_TIMELEASE,ozconf.dpUseTimeLease);
+  CASE_BOOL(PROP_DPGC_FRACWRC,ozconf.dpUseFracWRC);
+  CASE_INT(PROP_DPGC_TL_LEASETIME,ozconf.dp_tl_leaseTime);
+  CASE_INT(PROP_DPGC_WRC_ALPHA,ozconf.dp_wrc_alpha);
+  CASE_INT(PROP_DPGC_TL_UPDATETIME,ozconf.dp_tl_updateTime);
 
+  CASE_REC(PROP_DPGC,"dpGC",
+	   (5,oz_atomNoDup("useTimeLease"),oz_atomNoDup("useWRC"),oz_atomNoDup("wrc_alpha"),oz_atomNoDup("tl_leaseTime"),oz_atomNoDup("tl_updateTime")),
+	   SET_BOOL(oz_atomNoDup("useTimeLease"),ozconf.dpUseTimeLease);
+	   SET_BOOL(oz_atomNoDup("useWRC"),ozconf.dpUseFracWRC);
+	   SET_INT(oz_atomNoDup("wrc_alpha"),ozconf.dp_wrc_alpha);
+	   SET_INT(oz_atomNoDup("tl_leaseTime"),ozconf.dp_tl_leaseTime);
+	   SET_INT(oz_atomNoDup("tl_updateTime"),ozconf.dp_tl_updateTime);
+	   );
+  
+  
   CASE_INT(PROP_CLOSE_TIME,ozconf.closetime);
   CASE_BOOL(PROP_OZ_STYLE_USE_FUTURES,ozconf.useFutures);
   default:
@@ -869,6 +893,19 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 	     SET_BOOL(oz_atomNoDup("messageLog"),ozconf.dpLogMessageLog);
 	     );
 
+    CASE_BOOL(PROP_DPGC_TIMELEASE,ozconf.dpUseTimeLease);
+    CASE_BOOL(PROP_DPGC_FRACWRC,ozconf.dpUseFracWRC);
+    CASE_NAT(PROP_DPGC_TL_LEASETIME,ozconf.dp_tl_leaseTime);
+    CASE_NAT(PROP_DPGC_TL_UPDATETIME,ozconf.dp_tl_updateTime);
+    CASE_NAT(PROP_DPGC_WRC_ALPHA, ozconf.dp_wrc_alpha);
+    CASE_REC(PROP_DPGC,
+	     SET_BOOL(oz_atomNoDup("useTimeLease"),ozconf.dpUseTimeLease);
+	     SET_BOOL(oz_atomNoDup("useWRC"),ozconf.dpUseFracWRC);
+	     SET_NAT(oz_atomNoDup("wrc_alpha"),ozconf.dp_wrc_alpha);
+	     SET_NAT(oz_atomNoDup("tl_leaseTime"),ozconf.dp_tl_leaseTime);
+	     SET_NAT(oz_atomNoDup("tl_updateTime"),ozconf.dp_tl_updateTime);
+	     );
+    
     CASE_NAT(PROP_CLOSE_TIME,ozconf.closetime);
     CASE_BOOL_DO(PROP_STANDALONE,ozconf.runningUnderEmacs=!INT__);
     CASE_BOOL(PROP_OZ_STYLE_USE_FUTURES,ozconf.useFutures);
@@ -1144,6 +1181,14 @@ static const struct prop_entry prop_entries[] = {
   {"dpLog.connectLog",PROP_DPLOG_CONNECTLOG},
   {"dpLog.messageLog",PROP_DPLOG_MESSAGELOG},
   {"dpLog",PROP_DPLOG},
+  // DPGC
+  {"dpGC.useTimeLease",PROP_DPGC_TIMELEASE },
+  {"dpGC.useWRC",PROP_DPGC_FRACWRC},
+  {"dpGC.wrc_alpha",PROP_DPGC_WRC_ALPHA},
+  {"dpGC.tl_leaseTime",PROP_DPGC_TL_LEASETIME},
+  {"dpGC.tl_updateTime",PROP_DPGC_TL_UPDATETIME},
+  {"dpGC",PROP_DPGC},
+  
   //CLOSE
   {"close.time",PROP_CLOSE_TIME},
   {0,PROP__LAST},
