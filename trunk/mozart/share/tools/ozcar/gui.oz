@@ -55,46 +55,47 @@ local
 
    fun {CheckType X}
       case {IsDet X} then
-	 case     {IsArray X}      then ArrayType
-	 elsecase {IsThread X}     then ThreadType
-	 elsecase {IsAtom X}       then {System.valueToVirtualString X 0 0}
-	 elsecase {IsBool X}       then {System.valueToVirtualString X 0 0}
-	 elsecase {IsCell X}       then CellType
-	 elsecase {IsClass X}      then ClassType
-	 elsecase {IsDictionary X} then DictionaryType
-	 elsecase {IsFloat X}      then case X >= BigFloat then
-					   BigFloatType
-					else
-					   {V2VS X}
-					end
-%	 elsecase {IsChar X}       then CharType
-%	 elsecase {FD.is X}        then FDValueType
-	 elsecase {IsInt X}        then case X >= BigInt then
-					   BigIntType
-					else
-					   X
-					end
-	 elsecase {IsUnit  X}      then UnitType
-	 elsecase {IsName X}       then NameType
-	 elsecase {IsLock X}       then LockType
-	 elsecase {IsObject X}     then ObjectType
-	 elsecase {IsPort X}       then PortType
-	 elsecase {IsProcedure X}  then ProcedureType
-	 elsecase {IsDefList X}    then ListType
-	 elsecase {IsTuple X}      then TupleType
-	 elsecase {IsRecord X}     then RecordType
-	 elsecase {IsChunk X}      then ChunkType
-	 elsecase {IsSpace X}      then SpaceType
-	 elsecase {FS.value.is X}  then FSValueType
-	 else                           UnknownType
+	 case     {IsArray X}            then ArrayType
+	 elsecase {IsThread X}           then ThreadType
+	 elsecase {IsAtom X}             then {System.valueToVirtualString X 0 0}
+	 elsecase {IsBool X}             then {System.valueToVirtualString X 0 0}
+	 elsecase {IsCell X}             then CellType
+	 elsecase {IsClass X}            then ClassType
+	 elsecase {IsDictionary X}       then DictionaryType
+	 elsecase {IsFloat X}            then case X >= BigFloat then
+						 BigFloatType
+					      else
+						 {V2VS X}
+					      end
+%	 elsecase {IsChar X}             then CharType
+%	 elsecase {FD.is X}              then FDValueType
+	 elsecase {IsInt X}              then case X >= BigInt then
+						 BigIntType
+					      else
+						 X
+					      end
+	 elsecase {IsUnit  X}            then UnitType
+	 elsecase {IsName X}             then NameType
+	 elsecase {IsLock X}             then LockType
+	 elsecase {IsObject X}           then ObjectType
+	 elsecase {IsPort X}             then PortType
+	 elsecase {IsProcedure X}        then ProcedureType
+	 elsecase {IsDefList X}          then ListType
+	 elsecase {IsTuple X}            then TupleType
+	 elsecase {IsRecord X}           then RecordType
+	 elsecase {IsChunk X}            then ChunkType
+	 elsecase {IsSpace X}            then SpaceType
+	 elsecase {FS.value.is X}        then FSValueType
+	 elsecase {Foreign.pointer.is X} then ForeignPointerType
+	 else                                 UnknownType
 	 end
       elsecase {IsKinded X} then
-	 case     {FD.is X}        then FDVarType
-	 elsecase {FS.var.is X}    then FSVarType
-	 elsecase {IsRecordC X}    then KindedRecordType
-	 else                           UnknownType
+	 case     {FD.is X}              then FDVarType
+	 elsecase {FS.var.is X}          then FSVarType
+	 elsecase {IsRecordC X}          then KindedRecordType
+	 else                                 UnknownType
 	 end
-      else                              UnboundType
+      else                                    UnboundType
       end
    end
 
