@@ -30,8 +30,8 @@
   <Title/Widgets/
 
   <P>
-    This chapter introduces some of the widget objects the Tk
-    interface provides.  Examples illustrate the most common options and
+    This chapter introduces some of the widget objects provided by the Tk
+    interface.  Examples illustrate the most common options and
     the values they can take.
 
   <Section id="section.widgets-1.toplevel">
@@ -62,8 +62,8 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
       its widget.  A toplevel widget is special in that its graphical image
       appears immediately on the screen after the widget object has been
       initialized.  Other widgets require to be managed by a so-called
-      geometry manager before they appear on the screen.  In <Ptr
-      to="chapter.geometry"> we will discuss geometry managers.
+      geometry manager before they appear on the screen.  See <Ptr
+      to="chapter.geometry"> for a discussion of geometry managers.
 
     <P>
       A widget object can be sent a message with label <<tk>> to change the
@@ -72,14 +72,14 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
 <chunk class=anonymous><title/{Tk.toplevel tk(configure)}/
 {W tk(configure background:purple)}
 </chunk>
-      Additionally, widget objects understand messages
-      to query the state of a widget.  We will discuss these messages later.
+      Additionally, a widget object understands messages that
+      query its state.  These will be discussed later.
 
     <P>
       A widget object can be closed by applying the object to the message
       <<tkClose>>.  Closing the widget object also destroys the widget
       displayed on the screen.  <Ptr to="section.widgets-1.hierarchy">
-      contains more details how widget objects are closed.
+      contains more details concerning how widget objects are closed.
 
     <P>
       The structure of messages with labels <<tkInit>> and <<tk>>
@@ -117,9 +117,9 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
         management, as is discussed in <Ptr to="chapter.geometry">.
 
       <P>
-        Messages send to widget objects and other objects the Tk interface
-        provides are translated in a straightforward way to tickles.  These
-        tickles are then send to the graphics engine.
+        Messages sent to widgets and other objects of the Tk interface
+        are translated in a straightforward fashion to tickles.  These
+        tickles are then forwarded to the graphics engine.
 
     <SubSection>
       <Title/Tickles and Widget Messages/
@@ -128,8 +128,8 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
         Tickles are used to describe messages for the graphics engine.
         A tickle is either a boolean value, the name <<unit>>, a
         virtual string, a record that has neither a name as label nor
-        as feature, or a tickle object.  A <def/tickle object/ is an
-        instance of a class the Tk module provides, unless otherwise
+        as feature, or a tickle object.  A <def/tickle object/ is any
+        instance of a class that the Tk module provides, unless otherwise
         mentioned (the only exception is the class <<Tk.listener>>,
         see <ptr to="section.widgets-2.action">).
 
@@ -142,7 +142,7 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
 
       <P>
         To the features we refer to as <Def/configuration options/, or
-        short as <Def/options/.  Their values we refer to as
+        for short as <Def/options/.  Their values we refer to as
         <Def/option values/.
 
       <P>

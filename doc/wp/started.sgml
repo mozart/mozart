@@ -32,7 +32,7 @@
     This chapter shows a small graphical application from which we will
     identify the most important concepts found in the window
     interface. The presentation is really designed for identification
-    of issues, an explanation of the issues follows in the remaining
+    of issues. An explanation of these issues follows in the remaining
     chapters of this document.
 
   <Section id="section.started.first">
@@ -70,7 +70,7 @@
       <item> Attach an action to the button widget such that pressing
       the button changes the capitalization of the entry text.
       </list>
-      In the following we will show the code handling these
+      In the sections below, we exhibit the code handling these
       issues. The complete application then has the following
       structure:
 <chunk class=anonymous><title/Capitalization/
@@ -103,17 +103,16 @@ B={New Tk.button   tkInit(parent: W
       <title/Geometry/
 
       <p>
-        The following
+        Here we define the geometry for the entry and button widgets:
 <chunk><title/Geometry management/
 {Tk.send pack(E B fill:x padx:4 pady:4)}
 </chunk>
-        defines the geometry for the entry and button widget.
 
     <subsection >
       <title/Actions/
 
       <p>
-        The following
+        The remaining program fragment:
 <chunk><title/Action definition/
 proc {$}
    S={E tkReturn(get $)}
@@ -123,10 +122,11 @@ in
 end
 </chunk>
         defines the action as a procedure to be executed when the
-        button is pressed. It retrieves the entries current content
-        <<S>>, deletes it, and enters the <<S>> with toggled
-        capitalization. This identifies another important issue:
-        returning values from widgets.
+        button is pressed. It retrieves the current content
+        <<S>> from entry <code/E/, clears <code/E/, and reinserts
+        <<S>> in <code/E/, but with toggled
+        capitalization. <code/tkReturn/ illustrates another important
+        issue: returning values from widgets.
 
 
   <Section id="section.started.architecture">
@@ -192,9 +192,10 @@ end
 
     <p>
       To get an impression of the efficiency of the implementation,
-      try some examples and also the <ref.extern
+      try some examples, as well as the <ref.extern to="ozdoc:demo"/demos/
+      and the <ref.extern
       to="ozdoc:tools"/tools/ that come with Mozart. They are all
-      build on top of the window interface.
+      built on top of the Tk window programming interface.
 
 
 
