@@ -385,6 +385,11 @@ void CodeArea::gCollectInstructions(void) {
     case PUTLISTX:
     case CREATEVARIABLEY:
     case CREATEVARIABLEX:
+    case DECONSCALLX:
+    case DECONSCALLY:
+    case DECONSCALLG:
+    case TAILDECONSCALLX:
+    case TAILDECONSCALLG:
     case ENDDEFINITION:
       PC += 2;
       break;
@@ -404,6 +409,11 @@ void CodeArea::gCollectInstructions(void) {
     case CALLG:
     case CALLY:
     case CALLX:
+    case CONSCALLX:
+    case CONSCALLY:
+    case CONSCALLG:
+    case TAILCONSCALLX:
+    case TAILCONSCALLG:
     case CALLGLOBAL:
     case UNIFYVALVARGY:
     case UNIFYVALVARGX:
