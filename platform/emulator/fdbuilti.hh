@@ -500,6 +500,8 @@ Suspension * createResSusp(OZ_CFun func, int arity, RefsArray xregs)
 
   s->headInit();
 
+  Assert(FDcurrentTaskSusp == NULL);
+
   FDcurrentTaskSusp = s;
   return s;
 }

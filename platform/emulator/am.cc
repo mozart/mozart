@@ -709,11 +709,10 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
     checkSuspensionList(var, tvar ? makeTaggedRef(termPtr) : term,
                         pc_std_unif);
 
-    SVariable * svar = tagged2SVar(var);
-
     // suspension entries with conditions may remain unpropagated, so that
     // they have to be saved to the suspension list of the remaining variable
     if (tvar) {
+      SVariable * svar = tagged2SVar(var);
       tvar->setSuspList(tvar->getSuspList()->appendTo(svar->getSuspList()));
       svar->setSuspList(NULL);
     }
