@@ -324,18 +324,25 @@ Bool hookCheckNeeded(AM *e)
 
 #define INSTRUCTION(INSTR)   INSTR##LBL: asmLbl(INSTR);
 
+/* threaded code broken on linux, leads to memory leek,
+ * this is a workaround
+ */
+#ifdef LINUX
+#define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
+#else
 // let gcc fill in the delay slot of the "jmp" instruction:
 #define DISPATCH(INC) {							      \
   intlong help = *(PC+INC);						      \
   INCFPC(INC);								      \
   goto* (void*) (help|textBase);					      \
 }
+#endif
 
 #else /* THREADED */
 
-#   define asmLbl(INSTR)
+#define asmLbl(INSTR)
 
-#   define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
+#define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
 
 #if defined(WANT_INSTRPROFILE)
 #   define INSTRUCTION(INSTR)   case INSTR: asm(" " #INSTR ":");
@@ -985,10 +992,14 @@ void engine() {
 
   JUMP( PC );
 
-#ifndef THREADED
-
  LBLdispatcher:
 
+#ifdef THREADED
+  /* threaded code broken under linux */
+#ifdef LINUX
+  goto* (void*) (*PC);
+#endif
+#else
 #ifdef SLOW_DEBUG_CHECK
   /* These tests make the emulator really sloooooww */
   DebugCheck(blockSignals() == NO,
