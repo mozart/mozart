@@ -35,7 +35,7 @@
 
 class AbstractionEntry {
 private:
-  Abstraction *abstr;
+  TaggedRef      abstr;
   ProgramCounter pc;
   int arity;
   AbstractionEntry *next;
@@ -49,7 +49,7 @@ public:
   IHashTable *indexTable;
 
   AbstractionEntry(Bool fc) {
-    abstr      = 0;
+    abstr      = makeTaggedNULL();
     pc         = NOCODE;
     copyable   = fc;
     collected  = NO;
@@ -57,7 +57,9 @@ public:
     next       = allEntries;
     allEntries = this;
   }
-  Abstraction *getAbstr() { return abstr; };
+  Abstraction *getAbstr() {
+    return abstr ? (Abstraction *) tagged2Const(abstr) : (Abstraction *) NULL;
+  };
   ProgramCounter getPC()  { return pc; };
   int getArity()          { return arity; };
   void setPred(Abstraction *abs);

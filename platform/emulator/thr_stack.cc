@@ -225,7 +225,7 @@ TaggedRef TaskStack::findAbstrRecord(void)
     }
     if (PC == C_DEBUG_CONT_Ptr) {
       OzDebug *dbg = (OzDebug *) Y;
-      abstr = dbg->CAP->getPred();
+      abstr = ((Abstraction *) tagged2Const(dbg->CAP))->getPred();
     }
     //
     if (PC == C_SET_ABSTR_Ptr && abstr != NULL &&
@@ -316,7 +316,7 @@ Bool TaskStack::findCatch(Thread *thr,
       OzDebug *dbg = (OzDebug *) Y;
       dbg->dispose();
     } else if (PC==C_LOCK_Ptr) {
-      OzLock *lck = (OzLock *) Y;
+      OzLock *lck = (OzLock *) G;
       switch(lck->getTertType()){
       case Te_Local:
         if (((LockLocal*)lck)->hasLock(thr))
@@ -332,7 +332,7 @@ Bool TaskStack::findCatch(Thread *thr,
         break;
       case Te_Proxy: OZ_error("lock proxy unlocking\n");break;}
     } else if (PC==C_SET_SELF_Ptr) {
-      foundSelf = (Object*) Y;
+      foundSelf = (Object*) G;
     } else if (PC==C_SET_ABSTR_Ptr) {
       ozstat.leaveCall((PrTabEntry*)Y);
     }
@@ -426,7 +426,7 @@ void TaskStack::unleash(int frameId) {
     if (PC == C_DEBUG_CONT_Ptr) {
       OzDebugDoit dothis = (OzDebugDoit) (int) G;
       if (dothis != DBG_EXIT)
-        ReplaceFrame(auxtos,PC,Y,dothislater);
+        ReplaceFrame(auxtos,PC,Y,makeTaggedSmallInt(dothislater));
     } else if (PC == C_EMPTY_STACK)
       return;
   }

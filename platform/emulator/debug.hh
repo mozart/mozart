@@ -44,15 +44,14 @@ public:
 
   ProgramCounter PC;
   RefsArray Y;
-  Abstraction *CAP;
-  TaggedRef data;
+  TaggedRef CAP, data; // Never change the order!
   int arity;
   TaggedRef * arguments;
 
   OzDebug(ProgramCounter pc, RefsArray y, Abstraction *cap) {
     PC        = pc;
     Y         = y;
-    CAP       = cap;
+    CAP       = makeTaggedConst(cap);
     data      = makeTaggedNULL();
     arity     = 0;
     arguments = (TaggedRef *) NULL;

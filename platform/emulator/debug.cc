@@ -67,7 +67,7 @@ TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
 }
 
 TaggedRef OzDebug::getFrameVariables() {
-  return CodeArea::getFrameVariables(PC,Y,CAP);
+  return CodeArea::getFrameVariables(PC,Y,(Abstraction *) tagged2Const(CAP));
 }
 
 // ------------------ debug stream messages ---------------------------

@@ -65,8 +65,7 @@ extern unsigned invoc_counter;
 class TaskStack: public Stack {
 private:
 
-  StackEntry *ensureFree(int n)
-  {
+  StackEntry *ensureFree(int n) {
     StackEntry *ret=tos;
     if (stackEnd <= ret+n) {
       checkMax(n);
@@ -75,19 +74,15 @@ private:
     return ret;
   }
 
+  int suggestNewSize() {
+      int used = getUsed();
+      return max(ozconf.stackMinSize,
+                 min(used * 2, (getMaxSize() + used + 1) >> 1));
+  }
+
 public:
   USEFREELISTMEMORY;
   NO_DEFAULT_CONSTRUCTORS(TaskStack);
-
-  void pushFrame(ProgramCounter pc,void *y, void *g)
-  {
-    Frame *newTop = ensureFree(frameSz);
-    *(newTop)   = g;
-    *(newTop+1) = y;
-    *(newTop+2) = pc;
-
-    tos = newTop+frameSz;
-  }
 
   int getFrameId(Frame *frame) {
     return frame - array;
@@ -97,32 +92,16 @@ public:
     return getFrameId(tos);
   }
 
-  int suggestNewSize() {
-      int used = getUsed();
-      return max(ozconf.stackMinSize,
-                 min(used * 2, (getMaxSize() + used + 1) >> 1));
-  }
 
-  void restoreFrame() { tos += frameSz; Assert(tos<stackEnd); }
+  void restoreFrame() {
+    tos += frameSz; Assert(tos<stackEnd);
+  }
   Bool checkFrame(ProgramCounter pc) {
     return (ProgramCounter)*(tos-1)==pc;
   }
   void discardFrame(ProgramCounter pc) {
     Assert(pc==NOCODE || checkFrame(pc));
     tos -= frameSz;
-  }
-
-  void pushEmpty() {
-    pushFrame(C_EMPTY_STACK,0,0);
-  }
-
-  void makeEmpty() {
-    mkEmpty();
-    pushEmpty();
-  }
-  void init() {
-    mkEmpty();
-    pushEmpty();
   }
 
   void printTaskStack(int depth);
@@ -151,12 +130,29 @@ public:
 
   void checkLiveness(RefsArray X);
 
+  void pushFrame(ProgramCounter pc, void *y, TaggedRef cap) {
+    Frame *newTop = ensureFree(frameSz);
+    *(newTop)   = ToPointer(cap);
+    *(newTop+1) = y;
+    *(newTop+2) = pc;
+    tos = newTop+frameSz;
+  }
+
+  void pushEmpty() {
+    pushFrame(C_EMPTY_STACK,0,0);
+  }
+
+  void init() {
+    mkEmpty();
+    pushEmpty();
+  }
+
   void pushX(RefsArray X) {
 #ifdef DEBUG_LIVENESS
     checkLiveness(X);
 #endif
     Assert(X);
-    pushFrame(C_XCONT_Ptr,X,0);
+    pushFrame(C_XCONT_Ptr,X,makeTaggedNULL());
   }
 
   void pushX(RefsArray X, int i) {
@@ -168,60 +164,72 @@ public:
     }
   }
 
-  void pushCFun(OZ_CFun f, RefsArray  x, int i)
-  {
+  void pushCFun(OZ_CFun f, RefsArray  x, int i) {
     Assert(i>=0);
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
-
     Assert(MemChunks::areRegsInHeap(x, i));
-
-
-    pushFrame(C_CFUNC_CONT_Ptr,(void*)f, i>0 ? copyRefsArray(x, i) : NULL);
+    pushFrame(C_CFUNC_CONT_Ptr,
+              i>0 ? copyRefsArray(x, i) : NULL,
+              makeTaggedMiscp((void *) f));
   }
 
-  void pushCont(ProgramCounter pc,RefsArray y,Abstraction *cap)
-  {
+  void pushCont(ProgramCounter pc,RefsArray y,Abstraction *cap) {
     Assert(!isFreedRefsArray(y));
-
     Assert(!y || MemChunks::areRegsInHeap(y,getRefsArraySize(y)));
-
-    pushFrame(pc,y,cap);
+    pushFrame(pc, y, makeTaggedConst((ConstTerm *) cap));
   }
 
   void pushCall(TaggedRef pred, TaggedRef arg0, TaggedRef arg1,
                 TaggedRef arg2, TaggedRef arg3, TaggedRef arg4);
 
-  void pushCall(TaggedRef pred, RefsArray  x, int i)
-  {
+  void pushCallNoCopy(TaggedRef pred, RefsArray  x) {
+    pushFrame(C_CALL_CONT_Ptr, (void *) pred, makeTaggedMiscp(x));
+  }
+
+  void pushCall(TaggedRef pred, RefsArray  x, int i) {
     Assert(i>=0);
-    pushFrame(C_CALL_CONT_Ptr, ToPointer(pred), i>0 ? copyRefsArray(x, i) : NULL);
+    pushCallNoCopy(pred, i>0 ? copyRefsArray(x, i) : (RefsArray) NULL);
   }
 
-  void pushCallNoCopy(TaggedRef pred, RefsArray  x)
-  {
-    pushFrame(C_CALL_CONT_Ptr, ToPointer(pred), x);
+  void pushLock(OzLock *lck)     {
+    pushFrame(C_LOCK_Ptr, NULL, makeTaggedConst((ConstTerm *) lck));
   }
-
-  void pushLock(OzLock *lck)     { pushFrame(C_LOCK_Ptr,lck,0); }
-  void pushCatch()               { pushFrame(C_CATCH_Ptr,0,0); }
-  void discardCatch()            { discardFrame(C_CATCH_Ptr); }
-  void pushDebug(OzDebug *dbg, OzDebugDoit dothis)
-                                 { pushFrame(C_DEBUG_CONT_Ptr,dbg,
-                                             (void *)dothis); }
-  void pushSelf(Object *o)       { pushFrame(C_SET_SELF_Ptr,o,NULL); }
-  void pushAbstr(PrTabEntry  *a) { pushFrame(C_SET_ABSTR_Ptr,a,(void *) invoc_counter++); }
+  void pushCatch()               {
+    pushFrame(C_CATCH_Ptr, NULL, makeTaggedNULL());
+  }
+  void discardCatch()            {
+    discardFrame(C_CATCH_Ptr);
+  }
+  void pushDebug(OzDebug *dbg, OzDebugDoit dothis) {
+    pushFrame(C_DEBUG_CONT_Ptr, dbg, makeTaggedSmallInt((int) dothis));
+  }
+  void pushSelf(Object *o) {
+    pushFrame(C_SET_SELF_Ptr,
+              NULL,
+              o ? makeTaggedConst((ConstTerm *) o) : makeTaggedNULL());
+  }
+  void pushAbstr(PrTabEntry  *a) {
+    pushFrame(C_SET_ABSTR_Ptr,
+              a,
+              makeTaggedSmallInt(invoc_counter++));
+  }
 
   int tasks();
 
   TaskStack(int s): Stack(s,Stack_WithFreelist) { pushEmpty(); }
+  TaskStack(TaskStack * f) : Stack(f->suggestNewSize(),Stack_WithFreelist) {
+    int used = f->getUsed();
+    memcpy(array, f->array, used * sizeof(Frame));
+    tos += used;
+  }
 
 };
 
 #define GetFrameNoDecl(top,pc,y,cap)            \
 {                                               \
   pc   = (ProgramCounter) *(top-1);             \
-  y    = (RefsArray) *(top-2);                  \
-  cap    = (Abstraction *) *(top-3);            \
+  y    = (RefsArray)      *(top-2);             \
+  cap  = (Abstraction *)  tagValueOf((TaggedRef) *(top-3));     \
   top -= frameSz;                               \
 }
 
@@ -240,8 +248,6 @@ public:
   __ts->setTop(__top);                          \
 }
 
-#endif
-
 #define PopFrame(ts,pc,y,cap)                   \
     ProgramCounter pc;                          \
     RefsArray y;                                \
@@ -253,3 +259,5 @@ public:
     RefsArray y;                                \
     Abstraction *cap;                           \
     GetFrameNoDecl(top,pc,y,cap)
+
+#endif
