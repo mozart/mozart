@@ -2541,6 +2541,13 @@ class CellLocal:public Tertiary{
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
+  // DENYS:
+  // if I understand things correctly, the dummy member is there to
+  // make it half-way likely that we can somehow cast between
+  // CellFrame and CellLocal.  Such a cast may be used for forwarding,
+  // although I was not really able to locate such a cast precisely.
+  // WARNING: TaggedRef needs to be the same size as void* else this
+  // won't work.
   TaggedRef val;
   void *dummy; // mm2
 public:
