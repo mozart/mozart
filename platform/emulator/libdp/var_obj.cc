@@ -184,11 +184,12 @@ void ObjectVar::sendObjectAndClass(ObjectFields& of, BorrowEntry *be)
   gnobj->setValue(makeTaggedConst(o));
       
   fillInObjectAndClass(&of,o);
+  EntityInfo *savedInfo = info; // bind disposes this!
   oz_bindLocalVar(this,be->getPtr(),makeTaggedConst(o));
   be->changeToRef();
   BT->maybeFreeBorrowEntry(o->getIndex());
   o->localize(); 
-  maybeHandOver(info,makeTaggedConst(o));
+  maybeHandOver(savedInfo,makeTaggedConst(o));
 }
 
 // failure stuff
