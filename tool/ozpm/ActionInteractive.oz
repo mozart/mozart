@@ -22,8 +22,8 @@ import
    InteractiveListDataView(dataView:ListDataView)
    InteractiveTreeDataView(dataView:TreeDataView)
    InteractiveCategoryDataView(dataView:CatDataView)
-   InteractiveFullInfoView(infoView:InfoView)
-   InteractiveNiceInfoView(infoView:NiceInfoView)
+   InteractiveFullInfoView(infoView:InfoView
+			   simpleInfoView:NiceInfoView)
    
 define
    

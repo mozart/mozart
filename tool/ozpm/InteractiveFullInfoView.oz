@@ -2,11 +2,15 @@ functor
 
 import
    Global(background       : Background
+	  authorMogulDB
 	  fileMftPkl       : FILEMFTPKL
 	  fileMftTxt       : FILEMFTTXT)
    Text(strip : Strip) at 'x-ozlib://duchier/lib/String.ozf'
    Look
-export infoView:InfoView
+   System(show:Show)
+export
+   infoView       : InfoView
+   simpleInfoView : SimpleInfoView
 
 define
 
@@ -26,11 +30,27 @@ define
       end
    end
    
+   fun{AuthorsToString L}
+      fun{AuthorIDToName ID}
+	 {Global.authorMogulDB condGet({VirtualString.toAtom ID} ID $)}.name
+      end
+   in
+      if {List.is L} then
+	 {List.drop
+	  {VirtualString.toString
+	   {List.foldL L fun{$ S X} S#"\n"#{AuthorIDToName X} end ""}
+	  } 1}
+      else
+	 {VirtualString.toString {AuthorIDToName L}}
+      end
+   end
+   
    class InfoView
       feat
 	 setTitle
 	 handle
 	 parent
+	 simple:false
       attr
 	 info:unit
       meth init(Parent ST Desc)
@@ -62,28 +82,37 @@ define
 		     [] filelist then {Loop1 Xs I}
 		     [] id then {Loop1 Xs I}
 		     else
-			if {List.is V} then
-			   if V\=nil then
+			if self.simple==false orelse {List.member D [author version blurb body]} then
+			   if D==author then
 			      I#label(text:D look:KeyLook)|
-			      I+1#label(text:{List.drop
-					      {VirtualString.toString
-					       {List.foldL V fun{$ S X} S#"\n"#X end ""}}
-					      1}
-					look:ValueLook)|
+			      I+1#label(text:{AuthorsToString V} look:ValueLook)|
 			      I+2#newline|
 			      {Loop1 Xs I+3}
-			   else
-			      {Loop1 Xs I}
-			   end
-			elseif {VirtualString.is V} then
-			   Vs0 = {VirtualString.toString {Strip V}}
-			   Vs=if {Member D [body]} then Vs0 else {NormalizeWS Vs0} end
-			in
-			   if Vs\="" then
-			      I#label(text:D look:KeyLook)|
-			      I+1#label(text:Vs look:ValueLook)|
-			      I+2#newline|
-			      {Loop1 Xs I+3}
+			   elseif {List.is V} then
+			      if V\=nil then
+				 I#label(text:D look:KeyLook)|
+				 I+1#label(text:{List.drop
+						 {VirtualString.toString
+						  {List.foldL V fun{$ S X} S#"\n"#X end ""}}
+						 1}
+					   look:ValueLook)|
+				 I+2#newline|
+				 {Loop1 Xs I+3}
+			      else
+				 {Loop1 Xs I}
+			      end
+			   elseif {VirtualString.is V} then
+			      Vs0 = {VirtualString.toString {Strip V}}
+			      Vs=if {Member D [body]} then Vs0 else {NormalizeWS Vs0} end
+			   in
+			      if Vs\="" then
+				 I#label(text:D look:KeyLook)|
+				 I+1#label(text:Vs look:ValueLook)|
+				 I+2#newline|
+				 {Loop1 Xs I+3}
+			      else
+				 {Loop1 Xs I}
+			      end
 			   else
 			      {Loop1 Xs I}
 			   end
@@ -141,6 +170,13 @@ define
       meth getClass(C)
 	 C=InfoView
       end
+   end
+
+   class SimpleInfoView
+
+      from InfoView
+      feat simple:true
+      
    end
 
 end
