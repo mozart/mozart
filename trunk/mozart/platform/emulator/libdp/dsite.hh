@@ -410,9 +410,9 @@ char *oz_site2String(DSite *s);
 //
 // Marshaller uses that;
 #ifdef USE_FAST_UNMARSHALER   
-DSite* unmarshalDSite(MarshalerBuffer *);
+DSite* unmarshalDSite(MarshalerBuffer *mb);
 #else
-DSite* unmarshalDSiteRobust(MarshalerBuffer *, int *);
+DSite* unmarshalDSiteRobust(MarshalerBuffer *mb, int *error);
 #endif
 
 //

@@ -934,11 +934,7 @@ void Builder::gCollect()
 
       //
     default:
-#ifndef USE_FAST_UNMARSHALER
-      RAISE_UNMARSHAL_ERROR;
-#else
-      OZD_error("Builder: unknown task!");
-#endif
+      OZ_error("Builder: unknown task!");
     }
   }
 
