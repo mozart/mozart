@@ -66,13 +66,13 @@ define(opAction,
         $1,XRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
         $1,YRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
         $1,Arity,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
-        $1,Label,marshalLabel(instrstart,getLabelArg(PC++),bs);,
+        $1,Label,marshalLabel(instrstart-start,getLabelArg(PC++),bs);,
         $1,Count,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,ArityAndIsTail,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,Dummy,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,PredicateRef,marshalPredicateRef((AbstractionEntry*) getAdressArg(PC++),bs);,
         $1,PredId,marshalPredId((PrTabEntry*)getAdressArg(PC++),bs);,
-        $1,HashTableRef,marshalHashTableRef(instrstart,(IHashTable *)getAdressArg(PC++),bs);,
+        $1,HashTableRef,marshalHashTableRef(instrstart-start,(IHashTable *)getAdressArg(PC++),bs);,
         $1,RecordArity,marshalRecordArity((SRecordArity) getAdressArg(PC++),bs);,
         $1,GenCallInfo,marshalGenCallInfo((GenCallInfoClass*)getAdressArg(PC++),bs);,
         $1,ApplMethInfo,marshalApplMethInfo((ApplMethInfoClass*)getAdressArg(PC++),bs);,
@@ -187,8 +187,7 @@ ProgramCounter unmarshalPredicateRef(ProgramCounter PC,MsgBuffer *bs)
 
 
 
-void marshalHashTableRef(ProgramCounter start,
-                          IHashTable *table,MsgBuffer *bs);
+void marshalHashTableRef(int start, IHashTable *table,MsgBuffer *bs);
 
 
 void marshalApplMethInfo(ApplMethInfoClass *ami,MsgBuffer *bs)
@@ -232,7 +231,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC);
       if (!entry->copyable) {
         PD((MARSHAL,"marshalledfastcall"));
-        marshalOpCode(instrstart,MARSHALLEDFASTCALL,bs);
+        marshalOpCode(instrstart-start,MARSHALLEDFASTCALL,bs);
         Abstraction *abstr = entry->getAbstr();
         marshalTerm(makeTaggedConst(abstr),bs);
         Bool istailcall = (op==FASTTAILCALL);
@@ -243,7 +242,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
       }
     }
 
-    marshalOpCode(instrstart,op,bs);
+    marshalOpCode(instrstart-start,op,bs);
     PD((MARSHAL,"op put %d",op));
     switch(op) {
 
@@ -255,14 +254,14 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
     }
   }
 
-  marshalOpCode(PC,ENDOFFILE,bs);
-  marshalCodeEnd(PC,bs);
+  marshalOpCode(PC-start,ENDOFFILE,bs);
+  marshalCodeEnd(bs);
   PD((MARSHAL,"end of file put %d"));
 }
 
 enum { ATOMTAG, NUMBERTAG, RECORDTAG};
 
-void marshalHashTableRef(ProgramCounter start, IHashTable *table,MsgBuffer *bs)
+void marshalHashTableRef(int start, IHashTable *table,MsgBuffer *bs)
 {
   int sz = table->size;
   marshalNumber(sz,bs);

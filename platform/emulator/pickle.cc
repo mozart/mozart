@@ -183,13 +183,13 @@ int unmarshalNumber(MsgBuffer *bs)
 #endif
 
 
-void marshalLabel(ProgramCounter PC, int lbl, MsgBuffer *bs)
+void marshalLabel(int start, int lbl, MsgBuffer *bs)
 {
   //fprintf(stderr,"Label: %d\n",lbl);
 
   if (bs->textmode()) {
     putTag(TAG_LABELREF,bs);
-    putNumber((int)(PC+lbl),bs);
+    putNumber(start+lbl,bs);
     return;
   }
 
@@ -206,12 +206,12 @@ void marshalLabelDef(char *lbl, MsgBuffer *bs)
 }
 
 
-void marshalOpCode(ProgramCounter PC, Opcode op, MsgBuffer *bs)
+void marshalOpCode(int lbl, Opcode op, MsgBuffer *bs, Bool showLabel)
 {
   if (bs->textmode()) {
-    if (PC != NOCODE) {
+    if (showLabel) {
       putTag(TAG_LABELDEF,bs);
-      putNumber((int)PC,bs);
+      putNumber(lbl,bs);
     }
     putTag(TAG_OPCODE,bs);
     putString(opcodeToString(op),bs);
@@ -231,7 +231,7 @@ void marshalCodeStart(int codesize, MsgBuffer *bs)
 }
 
 
-void marshalCodeEnd(ProgramCounter PC, MsgBuffer *bs)
+void marshalCodeEnd(MsgBuffer *bs)
 {
   if (bs->textmode()) {
     putTag(TAG_CODEEND,bs);

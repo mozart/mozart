@@ -28,6 +28,7 @@ void error(const char *format, ...)
 
 /************************************************************/
 
+int xx=0;
 class MsgBuffer {
   FILE *fd;
   int mode;
@@ -35,7 +36,7 @@ class MsgBuffer {
 public:
   MsgBuffer(FILE *f, int m): fd(f), mode(m) {}
   int textmode()   { return mode!=0; }
-  void put(char c) { fputc(c,fd); }
+  void put(char c) { xx++; fputc(c,fd); }
 };
 
 
@@ -320,9 +321,9 @@ void pickle(TaggedPair *aux, MsgBuffer *out)
       }
 
     case TAG_INT:       marshalNumber(aux->val.num,out); break;
-    case TAG_CODEEND:   marshalCodeEnd(aux->val.pc,out); break;
+    case TAG_CODEEND:   marshalCodeEnd(out); break;
     case TAG_BYTE:      marshalByte(aux->val.num,out); break;
-    case TAG_OPCODE:    marshalOpCode(NOCODE,aux->val.opcode,out); break;
+    case TAG_OPCODE:    marshalOpCode(0,aux->val.opcode,out,0); break;
     case TAG_STRING:    marshalString(aux->val.string,out); break;
     case TAG_COMMENT:   putComment(aux->val.string,out); break;
     case TAG_DIF:       marshalDIF(out,aux->val.mtag); break;
