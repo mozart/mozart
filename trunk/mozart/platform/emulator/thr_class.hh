@@ -433,8 +433,6 @@ public:
     ozstat.propagatorsInvoked.incf();
     extern char * ctHeap, * ctHeapTop;
     ctHeap = ctHeapTop;
-    extern int staticSpawnVarsNumber, staticSuspendVarsNumber;
-    staticSpawnVarsNumber = 0, staticSuspendVarsNumber = 0;
     return item.propagator->run();
   }
   OZ_Propagator * getPropagator(void) {
