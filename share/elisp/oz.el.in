@@ -1409,8 +1409,10 @@ to handle lines like 'attr a:'."
 	    (widen)
 	    (goto-char start2)))
 	(set-window-point window start2)
-	(if (not (pos-visible-in-window-p))
-	    (recenter))))))
+	(if (not (pos-visible-in-window-p start2 window))
+	    (let ((old-window (selected-window)))
+	      (select-window window)
+	      (recenter)))))))
 
 (defun oz-bar-configure (state)
   "Change color of bar while not moving it."
