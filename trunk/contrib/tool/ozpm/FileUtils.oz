@@ -1,6 +1,7 @@
 functor
 export
    Expand FileTree Mkdir Rmtree Exists WithSlash FullName
+   Dirname Basename
 import
    URL(toVirtualStringExtended isAbsolute make) Resolve(expand)
    OS(getDir stat system unlink)
@@ -124,5 +125,22 @@ define
 	  else {WithSlash Home}#File
 	  end
        end}
+   end
+   %%
+   %%
+   fun {Dirname F}
+      U = {URL.make {Encode F}}
+      L = case U.path of unit then unit
+	  [] nil then nil
+	  else {Reverse {Reverse U.path}.2} end
+   in
+      {URL.toVirtualStringExtended {AdjoinAt U path L}
+       o(full:true raw:true)}
+   end
+   %%
+   fun {Basename F}
+      U = {URL.make {Encode F}}
+   in
+      case {Reverse U.path} of H|_ then H end
    end
 end
