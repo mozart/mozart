@@ -371,7 +371,7 @@ DSite* myDSite =  NULL;
 // kost@ : that's a part of the boot-up procedure ('perdioInit()');
 // Actually, it is used by 'initNetwork()' because ip, port, timestamp
 // are not known prior its initialization;
-DSite* makeMyDSite(ip_address a, port_t p, TimeStamp &t) {
+DSite* makeMyDSite(ip_address a, oz_port_t p, TimeStamp &t) {
   DSite *s = new DSite(a,p,t);
   s->setMyDSite();
   int hvalue = s->hashPrimary();
