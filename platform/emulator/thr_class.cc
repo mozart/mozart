@@ -86,12 +86,7 @@ void Thread::checkExtThreadOutlined ()
 
     SolveActor *sa = SolveActor::Cast (sb->getActor ());
     if (e->isStableSolve (sa)) {
-#ifdef NEWCOUNTER
       e->scheduleThread (new Thread (sa->getPriority (), sb));
-#else
-      does not work;
-      e->scheduleSolve (sb);
-#endif
     }
     sb = (sa->getBoardFast ())->getSolveBoard ();
   }
