@@ -263,7 +263,7 @@ void Statistics::initCount() {
 
 void Statistics::leaveCall(PrTabEntry  *newp)
 {
-  int usedHeap = getUsedMemoryBytes();
+  unsigned int usedHeap = getUsedMemoryBytes();
   if (currAbstr) {
     Assert(currAbstr->lastHeap>0);
     currAbstr->heapUsed += usedHeap - currAbstr->lastHeap;

@@ -1224,14 +1224,14 @@ PrTabEntry *PrTabEntry::allPrTabEntries = NULL;
 void PrTabEntry::printPrTabEntries()
 {
   PrTabEntry *aux = allPrTabEntries;
-  int heapTotal = 0, callsTotal = 0, samplesTotal = 0;
+  unsigned int heapTotal = 0, callsTotal = 0, samplesTotal = 0;
   while(aux) {
     heapTotal    += aux->heapUsed;
     callsTotal   += aux->numCalled;
     samplesTotal += aux->samples;
     if (aux->numClosures || aux->numCalled || aux->heapUsed || aux->samples) {
       char *name = ozstrdup(toC(aux->printname)); // cannot have 2 toC in one line
-      printf("%20.20s Created: %5d Called: %6d Heap: %5d B, Samples: %5d %s(%d)\n",
+      printf("%20.20s Created: %5u Called: %6u Heap: %5u B, Samples: %5u %s(%d)\n",
              name,aux->numClosures,aux->numCalled,aux->heapUsed,
              aux->samples,toC(aux->fileName),aux->lineno);
       delete name;
@@ -1271,10 +1271,10 @@ TaggedRef PrTabEntry::getProfileStats()
     while(aux) {
       if (aux->numClosures || aux->numCalled || aux->heapUsed || aux->samples) {
         SRecord *rec = SRecord::newSRecord(ps,arity);
-        rec->setFeature(samples,oz_int(aux->samples));
-        rec->setFeature(calls,oz_int(aux->numCalled));
-        rec->setFeature(heap,oz_int(aux->heapUsed));
-        rec->setFeature(closures,oz_int(aux->numClosures));
+        rec->setFeature(samples,oz_unsignedint(aux->samples));
+        rec->setFeature(calls,oz_unsignedint(aux->numCalled));
+        rec->setFeature(heap,oz_unsignedint(aux->heapUsed));
+        rec->setFeature(closures,oz_unsignedint(aux->numClosures));
         rec->setFeature(line,oz_int(aux->lineno));
         rec->setFeature(name,aux->printname);
         rec->setFeature(file,aux->fileName);
@@ -1290,9 +1290,9 @@ TaggedRef PrTabEntry::getProfileStats()
     while(aux) {
       if (aux->getSamples() || aux->getCalls()) {
         SRecord *rec = SRecord::newSRecord(ps,arity);
-        rec->setFeature(samples,oz_int(aux->getSamples()));
-        rec->setFeature(calls,oz_int(aux->getCalls()));
-        rec->setFeature(heap,oz_int(aux->getHeap()));
+        rec->setFeature(samples,oz_unsignedint(aux->getSamples()));
+        rec->setFeature(calls,oz_unsignedint(aux->getCalls()));
+        rec->setFeature(heap,oz_unsignedint(aux->getHeap()));
         rec->setFeature(closures,oz_int(0));
         rec->setFeature(line,oz_int(1));
         rec->setFeature(name,oz_atom(builtinTab.getName((void *)(aux->getHeaderFunc()))));

@@ -365,9 +365,10 @@ public:
   BigInt() {
     mpz_init(&value);
   }
-  BigInt(int i) {
-    mpz_init_set_si(&value,i);
-  }
+
+  BigInt(int i)          { mpz_init_set_si(&value,i); }
+  BigInt(unsigned int i) { mpz_init_set_ui(&value,i); }
+
   BigInt(char *s) {
     if(mpz_init_set_str(&value, s, 10)) {
       Assert(0);
@@ -444,6 +445,15 @@ inline
 TaggedRef makeInt(int i)
 {
   if (i > OzMaxInt || i < OzMinInt)
+    return makeTaggedBigInt(new BigInt(i));
+  else
+    return newSmallInt(i);
+}
+
+inline
+TaggedRef makeUnsignedInt(unsigned int i)
+{
+  if (i > OzMaxInt)
     return makeTaggedBigInt(new BigInt(i));
   else
     return newSmallInt(i);
@@ -1614,11 +1624,7 @@ private:
 
 public:
   PrTabEntry *next;
-  int numClosures;
-  int numCalled;
-  int heapUsed;
-  int samples;
-  int lastHeap;
+  unsigned int numClosures, numCalled, heapUsed, samples, lastHeap;
   static PrTabEntry *allPrTabEntries;
   static void printPrTabEntries();
   static TaggedRef getProfileStats();
