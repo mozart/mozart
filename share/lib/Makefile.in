@@ -132,6 +132,7 @@ ENVS1 = \
         Emacs.env Ozcar.env Profiler.env
 ENVS = $(ENVS1:%=$(SRCDIR)/%)
 TYPS = $(ENVS1:%.env=%.typ)
+TYCS = $(ENVS1:%.env=%.tyc)
 
 LIBFILES = \
         $(ALLSRCS:$(SRCDIR)/%=$(OZLIB)/%) \
@@ -167,6 +168,8 @@ OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
 .PHONY: all install clean realclean veryclean
 
 all: Makefile $(COMPONENTS) ozbatch
+
+tycs: $(TYCS)
 
 ozbatch.ozm.gz: ozbatch.ozm
         $(GZIP) --best < $< > $@
@@ -229,11 +232,17 @@ $(OZLIB)/%.env: $(SRCDIR)/%.env
 $(OZLIB)/%.typ: %.typ
         $(INSTALLFILE) $< $@
 
+$(OZLIB)/%.tyc: %.tyc
+        $(INSTALLFILE) $< $@
+
 $(OZBIN)/ozbatch: ozbatch
         $(INSTALLPRG) $< $@
 
 %.typ: $(SRCDIR)/%.env
         $(ENV2TYPE) $< > $@
+
+%.tyc: $(SRCDIR)/%.typ
+        $(COMPILE) $< -o $@
 
 %.ozc:
         $(COMPILE) $*
@@ -243,7 +252,7 @@ OPI.ozc: $(DUMPINTRO) $(SRCDIR)/OPI.oz SP.ozc OP.ozc \
 
 SP.ozc: $(DUMPINTRO) $(SPSRC) $(SRCDIR)/SP.env
 
-OP.ozc: $(DUMPINTRO) $(OPSRC) $(TYPS) $(SRCDIR)/SP.env $(SRCDIR)/OP.env
+OP.ozc: $(DUMPINTRO) $(OPSRC) $(TYCS) $(SRCDIR)/SP.env $(SRCDIR)/OP.env
 
 CP.ozc: $(DUMPINTRO) $(CPSRC) $(SRCDIR)/SP.env $(SRCDIR)/CP.env
 
