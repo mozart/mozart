@@ -248,7 +248,7 @@ void *gcRealloc(void *ptr, size_t sz)
 inline
 void RebindTrail::gc()
 {
-  Assert(empty());
+  Assert(isEmpty());
 }
 
 
@@ -256,7 +256,7 @@ void RebindTrail::gc()
 inline
 void Trail::gc()
 {
-  Assert(empty());
+  Assert(isEmpty());
 }
 
 
