@@ -78,6 +78,12 @@ public:
   }
 
   void installPropagators(GenFDVariable *, Board *);
+
+  void addDetSusp(Suspension *susp) {
+    fdSuspList[fd_det] = addSuspToList(fdSuspList[fd_det], 
+				       new SuspList(susp,NULL), home);
+  }
+
 };
 
 inline Bool isGenFDVar(TaggedRef term);

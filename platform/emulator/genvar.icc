@@ -137,6 +137,22 @@ void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
   }
 }
 
+inline
+void GenCVariable::addDetSusp(Suspension *susp) 
+{ 
+  switch (getType()){
+  case FDVariable:
+    ((GenFDVariable *)this)->addDetSusp(susp);
+    return;
+  case OFSVariable:
+    ((GenOFSVariable *)this)->addDetSusp(susp);
+    return;
+  default:
+    addSuspension(susp);
+    return;
+  }
+}
+
 #endif //__genvar_icc__
 
 
