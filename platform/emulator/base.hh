@@ -147,31 +147,17 @@ typedef OZ_Return (*InlineFun3)(TaggedRef In1, TaggedRef In2,
    */
 
 #ifdef DEBUG_CHECK
-#define WHERE(file) 							      \
-  fprintf(file,"%s:%d ",__FILE__,__LINE__);
-
-#define DebugCheck(Cond,Then)						      \
-     if (Cond) { WHERE(stderr);Then;}
-
+#define DebugCheck(Cond,Then)			\
+if (Cond) {					\
+  fprintf(stderr,"%s:%d ",__FILE__,__LINE__);	\
+  Then;						\
+}
 #define DebugCheckT(Then) Then
-
 #define DebugCode(C) C
-
-#ifndef Assert
-#define Assert(Cond)							      \
-  if (! (Cond)) {							      \
-    WHERE(stderr);							      \
-    OZ_error(" assertion '%s' failed", #Cond);				      \
-  }
-#endif
 #else
-#define WHERE(file)
 #define DebugCheck(Cond,Then) 
 #define DebugCheckT(Then)
 #define DebugCode(C)
-#ifndef Assert
-#define Assert(Cond)
-#endif
 #endif
 
 
