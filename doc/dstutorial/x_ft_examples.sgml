@@ -238,7 +238,7 @@ including raising the same exceptions.
 <ITEM> If there is a problem in the distributed execution preventing
 its successful completion, then the call <<{C Msg}>> will raise
 the exception <<remoteObjectError>>.
-It is unspecified how much of the remote object's method
+It is unspecified how much of the object's method
 was executed before the failure.
 <ITEM> If there is a problem communicating with the client,
 then the server tries to communicate
@@ -253,7 +253,7 @@ The guard-based technique is the shortest and simplest to understand.
 The exception-based technique is similar to what one would
 do in standard languages such as Java.
 
-<P>But first, let's see how simple it is to create and use
+<P>But first let's see how easy it is to create and use
 a remote stationary object.
 
 <SUBSECTION><TITLE>Using fault-tolerant stationary objects</TITLE>
@@ -275,7 +275,7 @@ end
 <P>Then we define a functor that creates
 an instance of <<Counter>> with <<NewSafeStat>>.
 Note that the object is not created yet.
-It will be only when the functor is applied.
+It will be created when the functor is applied.
 
 <<<
 declare
