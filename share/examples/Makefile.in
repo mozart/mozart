@@ -75,3 +75,6 @@ clean:
 realclean: clean
 
 veryclean: realclean
+
+distclean: realclean
+        $(RM) Makefile

@@ -54,7 +54,7 @@ ozdemo.exe ozengine.exe: oz.exe
         cp oz.exe ozdemo.exe
         cp oz.exe ozengine.exe
 
-version.h: ../OZVERSION
+version.h: ../../OZVERSION
         echo "#define OZVERSION \"`$<`\"" > $@
 
 
@@ -64,5 +64,9 @@ win-install: setup.exe oz.exe ozdemo.exe ozengine.exe
 clean:
         $(RM) *.exe *.obj *.sym *.map *.mk* *.lk* *.err oz.res setup.res ozdemo.cpp version.h
 
+veryclean: clean
+
+realclean: clean
+
 distclean: clean
-        $(RM) Makefile config.cache config.log config.status
+        $(RM) Makefile
