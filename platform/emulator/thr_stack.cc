@@ -63,7 +63,7 @@ loop:
       goto loop;
 
     case 'b':
-      printTaskStack();
+      printTaskStack(ozconf.errorThreadDepth);
       goto loop;
     default:
       goto loop;
@@ -82,8 +82,7 @@ static Bool isUninterestingTask(ProgramCounter PC) {
     PC == C_SET_ABSTR_Ptr ||
     PC == C_LTQ_Ptr ||
     PC == C_ACTOR_Ptr ||
-    PC == C_CATCH_Ptr ||
-    PC == C_EMPTY_STACK;
+    PC == C_CATCH_Ptr;
 }
 
 
@@ -125,7 +124,10 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
       lastframe = auxframe;
       GetFrameNoDecl(auxframe,auxPC,auxY,auxG);
     }
-    if (auxPC == C_DEBUG_CONT_Ptr) {
+    if (auxPC == C_EMPTY_STACK) {
+      frame = NULL;
+      return makeTaggedNULL();
+    } else if (auxPC == C_DEBUG_CONT_Ptr) {
       // the OzDebug in the next stack frame has more to tell than
       // this builtin-application frame:
       frame = lastframe;
@@ -167,13 +169,16 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
     lastframe = auxframe;
     GetFrameNoDecl(auxframe,auxPC,auxY,auxG);
   }
-  if (auxPC == C_DEBUG_CONT_Ptr) {
+  if (auxPC == C_EMPTY_STACK) {
+    frame = NULL;
+    return makeTaggedNULL();
+  } else if (auxPC == C_DEBUG_CONT_Ptr) {
     // the OzDebug in the next stack frame has more to tell than
     // this builtin frame:
     frame = lastframe;
     return makeTaggedNULL();
   } else {
-    frame = auxframe;
+    frame = lastframe;
     return CodeArea::dbgGetDef(PC,definitionPC,verbose);
   }
 }
@@ -240,10 +245,10 @@ Bool TaskStack::findCatch(ProgramCounter PC, TaggedRef *out, Bool verbose)
 // for debugging:
 void printStack()
 {
-  am.currentThread->getTaskStackRef()->printTaskStack(OK);
+  am.currentThread->getTaskStackRef()->printTaskStack(ozconf.errorThreadDepth);
 }
 
-void TaskStack::printTaskStack(Bool verbose, int depth)
+void TaskStack::printTaskStack(int depth)
 {
   Assert(this);
   if (isEmpty()) {
@@ -253,30 +258,30 @@ void TaskStack::printTaskStack(Bool verbose, int depth)
   }
 
   Frame *auxtos = getTop();
-  while (depth-- > 0) {
+  while (auxtos != NULL && depth > 0) {
     GetFrame(auxtos,PC,Y,G);
     if (PC==C_EMPTY_STACK) {
       message("\n");
       return;
     }
     CodeArea::printDef(PC);
-    if (verbose)
-      message("\t\tPC=%p, Y=%p, G=%p\n",PC,Y,G);
+    depth--;
   }
-  message("\t ...\n");
+  if (depth == 0)
+    message("\t...\n");
   message("\n");
 }
-
 
 TaggedRef TaskStack::getTaskStack(Thread *tt, Bool verbose, int depth) {
   Assert(this);
 
   TaggedRef out = nil();
   Frame *auxtos = getTop();
-  while (auxtos != NULL && depth-- > 0) {
+  while (auxtos != NULL && depth > 0) {
     TaggedRef frameRec = frameToRecord(auxtos,tt,verbose);
     if (frameRec != makeTaggedNULL()) {
       out = cons(frameRec,out);
+      depth--;
     }
   }
 
