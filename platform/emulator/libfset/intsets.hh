@@ -71,6 +71,25 @@ public:
   }
 };
 
+
+class FSetMatchPropagator : public Propagator_S_VD {
+private:
+  static OZ_CFun header;
+
+  int _firsttime, _last_min, _last_max, _l, _k;
+
+public:
+  FSetMatchPropagator(OZ_Term s, OZ_Term vd)
+    : _firsttime(1), Propagator_S_VD(s, vd) { }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const {
+    return header;
+  }
+  virtual size_t sizeOf(void) {
+    return sizeof(FSetMatchPropagator);
+  }
+};
+
 #endif /* __INTSETS_HH__ */
 
 

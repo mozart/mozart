@@ -219,6 +219,15 @@ FSetValue::FSetValue(OZ_Term t)
 }
 
 
+FSetValue::FSetValue(const int * in)
+{
+  for (int i = fset_high; i--; )
+    _in[i] = in[i];
+
+  _card = findBitsSet(fset_high, _in);
+}
+
+
 OZ_Boolean FSetValue::unify(OZ_Term t)
 {
   DEREF(t, tptr, ttag);
@@ -254,6 +263,80 @@ OZ_Term FSetValue::getKnownInList(void) const
 OZ_Term FSetValue::getKnownNotInList(void) const
 {
   return getAsList(_in, 1);
+}
+
+int FSetValue::getMinElem(void) const
+{
+  int v, i;
+  for (v = 0, i = 0; i < fset_high; v += 32, i += 1)
+    if (_in[i] != 0)
+      break;
+
+  if (i < fset_high) {
+    int word = _in[i];
+
+    if (!(word << 16)) {
+      word >>= 16; v += 16;
+    }
+    if (!(word << 24)) {
+      word >>= 8; v += 8;
+    }
+    if (!(word << 28)) {
+      word >>= 4; v += 4;
+    }
+    if (!(word << 30)) {
+      word >>= 2; v += 2;
+    }
+    if (!(word << 31))
+      v++;
+  }
+  return v;
+}
+
+int FSetValue::getMaxElem(void) const
+{
+  int v, i;
+  for (v = 32 * fset_high - 1, i = fset_high - 1; i >= 0; v -= 32, i--)
+    if (_in[i] != 0)
+      break;
+
+  if (i >= 0) {
+    int word = _in[i];
+
+    if (!(word >> 16)) {
+      word <<= 16; v -= 16;
+    }
+    if (!(word >> 24)) {
+      word <<= 8; v -= 8;
+    }
+    if (!(word >> 28)) {
+      word <<= 4; v -= 4;
+    }
+    if (!(word >> 30)) {
+      word <<= 2; v -= 2;
+    }
+    if (!(word >> 31))
+      v--;
+  }
+  return v;
+}
+
+int FSetValue::getNextLargerElem(int v) const
+{
+  for (int new_v = v + 1; new_v <= 32 * fset_high - 1; new_v += 1)
+    if (testBit(_in, new_v))
+      return new_v;
+
+  return -1;
+}
+
+int FSetValue::getNextSmallerElem(int v) const
+{
+  for (int new_v = v - 1; new_v >= 0; new_v -= 1)
+    if (testBit(_in, new_v))
+      return new_v;
+
+  return -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -749,6 +832,36 @@ end:
   return z;
 }
 
+FSetValue OZ_FSetImpl::getGlbSet(void) const
+{
+  return FSetValue(_in);
+}
+
+FSetValue OZ_FSetImpl::getLubSet(void) const
+{
+  int i, lub[fset_high];
+
+  for (i = fset_high; i--; )
+    lub[i] = ~_not_in[i];
+
+  return FSetValue(lub);
+}
+
+FSetValue OZ_FSetImpl::getUnknownSet(void) const
+{
+  int i, unknown[fset_high];
+
+  for (i = fset_high; i--; )
+    unknown[i] = ~(_in[i] | _not_in[i]);
+
+  return FSetValue(unknown);
+}
+
+FSetValue OZ_FSetImpl::getNotInSet(void) const
+{
+  return FSetValue(_not_in);
+}
+
 //*****************************************************************************
 
 #define CASTPTR (FSetValue *)
@@ -774,6 +887,36 @@ OZ_Term OZ_FSetValue::getKnownInList(void) const
 OZ_Term OZ_FSetValue::getKnownNotInList(void) const
 {
   return CASTTHIS->getKnownNotInList();
+}
+
+OZ_Boolean OZ_FSetValue::isIn(int i) const
+{
+  return CASTTHIS->isIn(i);
+}
+
+OZ_Boolean OZ_FSetValue::isNotIn(int i) const
+{
+  return CASTTHIS->isNotIn(i);
+}
+
+int OZ_FSetValue::getMinElem(void) const
+{
+  return CASTTHIS->getMinElem();
+}
+
+int OZ_FSetValue::getMaxElem(void) const
+{
+  return CASTTHIS->getMaxElem();
+}
+
+int OZ_FSetValue::getNextLargerElem(int i) const
+{
+  return CASTTHIS->getNextLargerElem(i);
+}
+
+int OZ_FSetValue::getNextSmallerElem(int i) const
+{
+  return CASTTHIS->getNextSmallerElem(i);
 }
 
 //-----------------------------------------------------------------------------
@@ -916,4 +1059,24 @@ OZ_Boolean OZ_FSetConstraint::operator == (const OZ_FSetConstraint &y)
 OZ_Boolean OZ_FSetConstraint::putCard(int min_card, int max_card)
 {
   return CASTTHIS->putCard(min_card, max_card);
+}
+
+OZ_FSetValue OZ_FSetConstraint::getGlbSet(void) const
+{
+  return CASTTHIS->getGlbSet();
+}
+
+OZ_FSetValue OZ_FSetConstraint::getLubSet(void) const
+{
+  return CASTTHIS->getLubSet();
+}
+
+OZ_FSetValue OZ_FSetConstraint::getUnknownSet(void) const
+{
+  return CASTTHIS->getUnknownSet();
+}
+
+OZ_FSetValue OZ_FSetConstraint::getNotInSet(void) const
+{
+  return CASTTHIS->getNotInSet();
 }

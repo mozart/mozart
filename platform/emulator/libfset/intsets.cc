@@ -193,4 +193,172 @@ failure:
 }
 
 //-----------------------------------------------------------------------------
+// match propagator
+
+OZ_C_proc_begin(fsp_match, 2)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_VECT OZ_EM_FD);
+
+  PropagatorExpect pe;
+
+  OZ_EXPECT(pe, 0, expectFSetVarAny);
+  OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
+
+  return pe.impose(new FSetMatchPropagator(OZ_args[0],
+                                           OZ_args[1]));
+}
+OZ_C_proc_end
+
+OZ_CFun FSetMatchPropagator::header = fsp_match;
+
+OZ_Return FSetMatchPropagator::propagate(void)
+{
+  _OZ_DEBUGPRINT(endl << "in " << *this);
+
+  OZ_FSetVar s(_s);
+  DECL_DYN_ARRAY(OZ_FDIntVar, vd, _vd_size);
+  PropagatorController_S_VD P(s, _vd_size, vd);
+  int old_size, new_size, i;
+  FSetTouched st;
+  int max_fd = OZ_getFDInf();
+  int min_fd = OZ_getFDSup();
+
+  for (i = _vd_size; i--; ) {
+    vd[i].read(_vd[i]);
+    min_fd = min(min_fd, vd[i]->getMinElem());
+    max_fd = max(max_fd, vd[i]->getMaxElem());
+  }
+
+  if (_firsttime) {
+    _OZ_DEBUGPRINT("firsttime==1");
+
+    _firsttime = 0; // do it only once
+
+    _k = 0; _l = _vd_size - 1;
+    _last_min = s->getLubSet().getMinElem() - 1;
+    _last_max = s->getLubSet().getMaxElem() + 1;
+
+    // (1) card of s is _vd_size
+    FailOnInvalid(s->putCard(_vd_size, _vd_size));
+  }
+
+  _OZ_DEBUGPRINT("(1) " << *this);
+
+  for (old_size = 0, i = _k; i <= _l; i += 1)
+    old_size += vd[i]->getSize();
+
+loop:
+  _OZ_DEBUGPRINT("_k=" << _k << " _l=" << _l <<
+                 " _last_min=" << _last_min << " _last_max=" << _last_max <<
+                 " min_fd=" << min_fd << " max_fd=" << max_fd);
+
+  st = s;
+
+  {
+    // (2)
+    //
+    FailOnEmpty(*vd[_k] >= _last_min + 1);
+    for (i = _k; i < _l; i += 1) {
+      FailOnEmpty(*vd[i + 1] >= vd[i]->getMinElem() + 1);
+    }
+    _OZ_DEBUGPRINT("(2a) " << *this);
+    FailOnEmpty(*vd[_l] <= _last_max - 1);
+    for (i = _l; i > _k; i -= 1) {
+      FailOnEmpty(*vd[i - 1] <= vd[i]->getMaxElem() - 1);
+    }
+    _OZ_DEBUGPRINT("(2b) " << *this);
+  }
+  {
+    // (3)
+    OZ_FSetValue notinset = s->getNotInSet();
+    OZ_FiniteDomain notin(fd_empty);
+    FSetIterator it(&notinset, min_fd - 1);
+    for (i = it.getNextLarger(); i > -1 && i <= max_fd;
+         i = it.getNextLarger())
+      notin += i;
+
+    for (i = _k; i <= _l; i += 1)
+      FailOnEmpty(*vd[i] -= notin);
+    _OZ_DEBUGPRINT("(3) " << *this << "removed " << notin << "]");
+  }
+  {
+    _OZ_DEBUGPRINT("_k=" << _k << " _l=" << _l);
+
+    if (_k == 0) { // TMUELLER
+      for (i = OZ_getFSetInf(); i < vd[0]->getMinElem(); i += 1)
+        FailOnInvalid(*s -= i);
+    } else {
+      for (i = vd[_k - 1]->getMaxElem() + 1; i < vd[_k]->getMinElem(); i += 1)
+        FailOnInvalid(*s -= i);
+    }
+    _OZ_DEBUGPRINT("(3a) " << *this);
+    if (_l == _vd_size - 1) { // TMUELLER
+      for (i = OZ_getFSetSup(); i > vd[_l]->getMaxElem(); i -= 1)
+        FailOnInvalid(*s -= i);
+    } else {
+      for (i = vd[_l + 1]->getMinElem() - 1; i > vd[_l]->getMaxElem(); i -= 1)
+        FailOnInvalid(*s -= i);
+    }
+
+      _OZ_DEBUGPRINT("(3b) " << *this);
+  }
+
+  {
+    // (6)
+    for (i = _k; i <= _l; i += 1)
+      if (*vd[i] == fd_singl)
+        FailOnInvalid(*s += vd[i]->getMinElem());
+
+    _OZ_DEBUGPRINT("loop (6) " << *this);
+  }
+
+  {
+    // (4)
+    OZ_FSetValue glb_s = s->getGlbSet(), lub_s = s->getLubSet();
+    FSetIterator glb_it(&glb_s, _last_min), lub_it(&lub_s, _last_min);
+
+    int min_lub = lub_it.getNextLarger(), min_glb = glb_it.getNextLarger();
+    for ( ; min_lub == min_glb && min_lub != -1;
+          min_lub = lub_it.getNextLarger(),
+            min_glb = glb_it.getNextLarger(), _k += 1 ) {
+      FailOnEmpty(*vd[_k] &= min_glb);
+      _last_min = min_lub;
+
+      _OZ_DEBUGPRINT("(4) " << *this);
+    }
+
+    // (5)
+    if (_k != _l) {
+      lub_it.init(_last_max);
+      glb_it.init(_last_max);
+      int max_lub = lub_it.getNextSmaller(), max_glb = glb_it.getNextSmaller();
+      for ( ; max_lub == max_glb && max_lub != -1;
+            max_lub = lub_it.getNextSmaller(),
+              max_glb = glb_it.getNextSmaller(), _l -= 1) {
+        FailOnEmpty(*vd[_l] &= max_glb);
+        _last_max = max_lub;
+      }
+
+      _OZ_DEBUGPRINT("(5) " << *this);
+    }
+  }
+  for (new_size = 0, i = _k; i <= _l; i += 1)
+    new_size += vd[i]->getSize();
+
+  if (((old_size != new_size && new_size > _vd_size) || st <= s) &&
+      _k < _vd_size && _l > -1) {
+    old_size = new_size;
+    goto loop;
+  }
+
+  _OZ_DEBUGPRINT("out " << *this);
+
+  return P.leave();
+
+failure:
+  return P.fail();
+}
+
+
+//-----------------------------------------------------------------------------
 // eof

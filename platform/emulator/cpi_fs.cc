@@ -241,5 +241,16 @@ OZ_Boolean OZ_FSetVar::isTouched(void) const
           (card_size > setPtr->getCardSize()));
 }
 
+int OZ_getFSetInf(void)
+{
+  return fset_inf;
+}
+
+int OZ_getFSetSup(void)
+{
+  return fset_sup;
+}
+
+
 // End of File
 //-----------------------------------------------------------------------------

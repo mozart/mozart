@@ -12,7 +12,6 @@
 #ifndef __FSSTD_HH__
 #define __FSSTD_HH__
 
-#include "fsstd.hh"
 #include "fsaux.hh"
 
 //-----------------------------------------------------------------------------
@@ -147,6 +146,22 @@ public:
     return OZ_cons(_s, OZ_cons(_d, OZ_cons(_r, OZ_nil())));
   }
 };
+
+//-----------------------------------------------------------------------------
+
+class Propagator_S_VD : public OZ_Propagator {
+protected:
+  OZ_Term _s, * _vd;
+  int _vd_size;
+public:
+  Propagator_S_VD(OZ_Term s, OZ_Term vd);
+  ~Propagator_S_VD(void);
+
+  virtual size_t sizeOf(void) { return sizeof(Propagator_S_VD); }
+  virtual void updateHeapRefs(OZ_Boolean);
+  virtual OZ_Term getParameters(void) const;
+};
+
 
 #endif /* __FSSTD_HH__ */
 

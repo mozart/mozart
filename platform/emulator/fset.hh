@@ -31,6 +31,7 @@ public:
     init(s);
   }
   FSetValue(OZ_Term);
+  FSetValue(const int *);
 
   void init(const OZ_FSetImpl &);
 
@@ -45,6 +46,11 @@ public:
   Bool operator == (const FSetValue&) const;
   OZ_Term getKnownInList(void) const;
   OZ_Term getKnownNotInList(void) const;
+
+  int getMinElem(void) const;
+  int getMaxElem(void) const;
+  int getNextLargerElem(int) const;
+  int getNextSmallerElem(int) const;
 };
 
 inline
@@ -52,6 +58,7 @@ ostream &operator << (ostream &ofile, const FSetValue &fs) {
   return fs.print2stream(ofile);
 }
 
+const int fset_inf = 0;
 const int fset_sup = (32 * fset_high) - 1;
 
 class OZ_FSetImpl : public OZ_FSetConstraint {
@@ -98,6 +105,11 @@ public:
   OZ_Term getUnknownList(void) const;
   OZ_Term getLubList(void) const;
   OZ_Term getCardTuple(void) const;
+
+  FSetValue getGlbSet(void) const;
+  FSetValue getLubSet(void) const;
+  FSetValue getUnknownSet(void) const;
+  FSetValue getNotInSet(void) const;
 
   OZ_FSetImpl operator - (void) const;
   OZ_Boolean operator += (int i); // assert i is in *this

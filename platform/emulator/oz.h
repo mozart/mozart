@@ -55,6 +55,7 @@ typedef unsigned int OZ_Return;
 #define OZ_ENTAILED    PROCEED
 #define SUSPEND     2
 #define SLEEP       3
+#define OZ_SLEEP    SLEEP
 #define SCHEDULED   4
 #define RAISE       5
 

@@ -167,6 +167,10 @@ public:
   int getKnownNotIn(void) const { return 32 * fset_high - _card; }
   OZ_Boolean isIn(int) const;
   OZ_Boolean isNotIn(int) const;
+  int getMinElem(void) const;
+  int getMaxElem(void) const;
+  int getNextLargerElem(int) const;
+  int getNextSmallerElem(int) const;
   OZ_Term getKnownInList(void) const;
   OZ_Term getKnownNotInList(void) const;
 };
@@ -203,6 +207,11 @@ public:
   int getUnknown(void) const {
     return 32 * fset_high - _known_in - _known_not_in;
   }
+
+  OZ_FSetValue getGlbSet(void) const;
+  OZ_FSetValue getLubSet(void) const;
+  OZ_FSetValue getUnknownSet(void) const;
+  OZ_FSetValue getNotInSet(void) const;
 
   int getCardSize(void) const { return _card_max - _card_min + 1; }
   int getCardMin(void) const { return _card_min; }
@@ -489,6 +498,8 @@ OZ_Return OZ_typeError(char *, int, char *);
 
 int OZ_getFDInf(void);
 int OZ_getFDSup(void);
+int OZ_getFSetInf(void);
+int OZ_getFSetSup(void);
 
 int OZ_vectorSize(OZ_Term);
 
