@@ -216,7 +216,7 @@ void CodeArea::printDef(ProgramCounter PC)
 
   pc = definitionStart(PC);
   if (pc == NOCODE || pc == NOCODE_GLOBALVARNAME) {
-    message("\tSpecial task or on toplevel\n");
+    message("\tSpecial task or on toplevel (PC=%s)\n",opToString[(int)getOpcode(PC)]);
     return;
   }
 
