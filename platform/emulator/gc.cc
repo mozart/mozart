@@ -1379,6 +1379,8 @@ void AM::gc(int msgLevel)
   GCPROCMSG("updating external references to terms into heap");
   ExtRefNode::gc();
 
+  PROFILE_CODE1(FDProfiles.gc());
+
   performCopying();
 
 // -----------------------------------------------------------------------
@@ -1467,7 +1469,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
     verbReopen ();
 #endif
 
-  PROFILE_CODE1(FDProfiles.add(); FDVarsTouched.discard();)
+  PROFILE_CODE1(FDProfiles.add(bb); FDVarsTouched.discard();)
 
   if (isGround == (Bool *) NULL) {
     GCMETHMSG(" ********** AM::copyTree **********");
@@ -1513,6 +1515,8 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
     else
       *isGround = NO;
   }
+
+  PROFILE_CODE1(FDProfiles.setBoard(toCopyBoard);)
 
   return toCopyBoard;
 }
@@ -1847,7 +1851,7 @@ HeapChunk * HeapChunk::gc(void)
 
   HeapChunk * ret = (HeapChunk *) gcRealloc(this, sizeof(HeapChunk));
 
-  ret->chunk_data = (char *) gcRealloc(chunk_data, chunk_size);
+  ret->chunk_data = copyChunkData();
 
   GCNEWADDRMSG(ret);
   storeForward(getGCField(), ret);
