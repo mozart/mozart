@@ -197,32 +197,35 @@ Group: Development/Languages
 requires: mozart
 %description contrib
 This package contains a collection of contributed software packages
-fro Mozart that might come in handy for applications like a regular
+for Mozart that might come in handy for applications like a regular
 expression package, data base interfaces, and so on.
 %prep
-rm -rf \$RPM_BUILD_DIR/mozart-${VERSION} 
-%setup -c -D -T -a 0
+rm -rf \$RPM_BUILD_DIR/mozart-${VERSION}
+mkdir -p \$RPM_BUILD_DIR/mozart-${VERSION}
+cd \$RPM_BUILD_DIR/mozart-${VERSION}
+bzip2 -dc \$RPM_SOURCE_DIR/mozart-${VERSION}-src.tar.bz2 | tar xf -
 mkdir tmp-doc
 cd tmp-doc
-bzip2 < \$RPM_SOURCE_DIR/mozart-${VERSION}-doc.tar.bz2 | tar xf -
+bzip2 -dc \$RPM_SOURCE_DIR/mozart-${VERSION}-doc.tar.bz2 | tar xf -
 mv mozart/doc ..
 cd ..
 chown -R root .
 chgrp -R root .
 chmod -R a+rX,g-w,o-w .
 rm -rf tmp-doc 
-%setup -c -D -T -a 2
 
 %build
-cd mozart
-: \${CFLAGS="\$RPM_OPT_FLAGS"} && \
-: \${CXXFLAGS="\$RPM_OPT_FLAGS"} && \
-export CFLAGS && export CXXFLAGS && \
+cd \$RPM_BUILD_DIR/mozart-${VERSION}/mozart
+: \${CFLAGS="\$RPM_OPT_FLAGS"}
+: \${CXXFLAGS="\$RPM_OPT_FLAGS"}
+LDFLAGS=-s
+export CFLAGS CXXFLAGS LDFLAGS
 ./configure --prefix=\$RPM_BUILD_ROOT$OZHOME
 
 make
 
 %install
+cd \$RPM_BUILD_DIR/mozart-${VERSION}
 PREFIX=\$RPM_BUILD_ROOT$OZHOME
 rm -rf \$PREFIX
 mkdir -p \$PREFIX
@@ -232,28 +235,16 @@ cp -a doc \$PREFIX
 # Generic install
 (cd mozart && make install)
 
-# With this installation stripping works fine
-
-%ifarch i386
-
-(cd \$PREFIX/platform/linux-i486 && \
-	strip *.exe && \
-	strip *.so )
-
-(cd \$PREFIX/contrib && \
-	strip ./*/*.so-linux-i486 && \
-	strip *.so-linux-i486 )
-
-%endif
-
 # config files
 mkdir -p \$RPM_BUILD_ROOT/etc/profile.d
-cp -a oz.sh oz.csh \$RPM_BUILD_ROOT/etc/profile.d
+cd \$RPM_BUILD_ROOT/etc/profile.d
+bzip2 -dc \$RPM_SOURCE_DIR/mozart-profiles.tar.bz2 | tar xf -
+
 
 %clean
 rm -rf \$RPM_BUILD_ROOT
 %files
-%doc mozart/README mozart/LICENSE mozart/LICENSE.html
+%doc mozart-${VERSION}/mozart/README mozart-${VERSION}/mozart/LICENSE mozart-${VERSION}/mozart/LICENSE.html
 %config /etc/profile.d/oz.sh
 %config /etc/profile.d/oz.csh
 $OZHOME/LICENSE
