@@ -50,10 +50,6 @@ in
 	 Stacked:    nil
          MyManager:  False
 
-      meth init
-	 true
-      end
-      
       meth Init()
 	 case @MyManager\=False then true else
 	    MyManager <- {New Manager init(self)}
@@ -73,18 +69,18 @@ in
 	 MyManager <- False
       end
       
-      meth query(Query Order <=False)
+      meth solver(Solver Order <=False)
 	 <<ExplorerClass Init>>
-	 {@MyManager query(Query Order)}
+	 {@MyManager query(Solver Order)}
       end
 
-      meth one(Query Order <=False)
-	 <<ExplorerClass query(Query Order)>>
+      meth one(Solver Order <=False)
+	 <<ExplorerClass solver(Solver Order)>>
 	 {@MyManager.menu.search.next tk(invoke)}
       end
 
-      meth all(Query Order <=False)
-	 <<ExplorerClass query(Query Order)>>
+      meth all(Solver Order <=False)
+	 <<ExplorerClass solver(Solver Order)>>
 	 {@MyManager.menu.search.all  tk(invoke)}
       end
 

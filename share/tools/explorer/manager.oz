@@ -365,6 +365,11 @@ in
 	 <<Manager nodes(What)>>
       end
       
+      meth doByXY(What X Y)
+	 <<Manager setCursor(<<ToplevelManager findByXY(X Y $)>> False)>>
+	 <<Manager What>>
+      end
+      
       meth selInfo(X Y)
 	 Node = <<ToplevelManager findByXY(X Y $)>>
       in
