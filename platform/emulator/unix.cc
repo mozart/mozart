@@ -1433,7 +1433,7 @@ static char* argv[maxArgv];
 
 OZ_C_ioproc_begin(unix_pipe,4)
 {
-  OZ_declareVsArg(0,s);
+  OZ_declareVsArg(0, s);
   OZ_declareArg(1, args);
   OZ_declareArg(2, rpid);
   OZ_declareArg(3, rwsock);
@@ -1444,13 +1444,23 @@ OZ_C_ioproc_begin(unix_pipe,4)
   argl=args;
   
   while (unixIsCons(argl, &hd, &tl)) {
-    if (OZ_isVariable(hd)) return SUSPEND;
+    OZ_Term var = (OZ_Term) 0;
+    if (!OZ_isVirtualString(hd,&var)) {
+      if (var) {
+	OZ_suspendOnInternal(var);
+	return SUSPEND;
+      } else {
+	return OZ_typeError(1, "list(VirtualString)");
+      }
+    }
     argno++;
     argl = tl;
   }
 
-  if (OZ_isVariable(argl))
+  if (OZ_isVariable(argl)) {
+    OZ_suspendOnInternal(argl);
     return SUSPEND;
+  }
 
   if (!OZ_isNil(argl))
     return OZ_typeError(1,"list(VirtualString)");
@@ -1458,7 +1468,8 @@ OZ_C_ioproc_begin(unix_pipe,4)
   argl=args;
   
   if (argno+2 >= maxArgv) {
-    return OZ_raiseC("systemLimitInternal",1,OZ_string("too many arguments for pipe"));
+    return OZ_raiseC("systemLimitInternal",1,
+		     OZ_string("too many arguments for pipe"));
   }
   argv[0] = s;
   argv[argno+1] = 0;
@@ -1476,15 +1487,11 @@ OZ_C_ioproc_begin(unix_pipe,4)
     
     if (status == SUSPEND) {
       free(vsarg);
-      if (OZ_isVariable(susp)) {
-        return SUSPEND;
-      } else {
-	return OZ_raiseC("systemLimitInternal",1,OZ_string("virtual string too long")); \
-      }
-    } else if (status != PROCEED) {
-      free(vsarg);
-      return status;
+      Assert(!OZ_isVariable(susp));
+      return OZ_raiseC("systemLimitInternal",1,
+		       OZ_string("virtual string too long"));
     }
+    Assert(status == PROCEED);
     *(vsarg+len) = '\0';
 
     argv[argno++] = vsarg;
@@ -1554,7 +1561,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
        *   this allows to press Control-C when debugging the emulator
        */
       if (setsid() < 0) {
-      	ozperror("unix_pipe: setsid");
+        RETURN_UNIX_ERROR;
       }
 #endif
 
@@ -1708,7 +1715,7 @@ OZ_C_ioproc_begin(unix_tempName, 3)
 
   if (strlen(prefix) > 5)
     return OZ_raiseC("systemLimitExternal",1,
-		     OZ_string("max 5 characters for tempName prefix"));
+		     OZ_string("Maximal 5 characters for Unix.tempName prefix allowed."));
   
   if (!(filename = tempnam(directory, prefix))) {
     return OZ_raiseC("os",1,OZ_string("tempNam failed"));
