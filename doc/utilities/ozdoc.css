@@ -13,7 +13,7 @@ BODY, P, H1, H2, H3, H4, TABLE, TR, TH, TD, IMG {
   font-family: sans-serif;
 }
 
-PRE, CODE, KBD, SPAN.key {
+PRE, CODE, KBD, SPAN.key, SPAN.buffer {
   font-family: courier, monospace;
 }
 
