@@ -28,7 +28,6 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown,
   AtomMin, AtomMax, AtomMid,
   AtomNaive, AtomSize, AtomConstraints,
-  AtomDistributed, AtomMobile, AtomFetched,
   NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
   NameOoDefaultVar,NameOoRequiredArg,
   NameUnit,
@@ -90,10 +89,6 @@ void initLiterals()
   AtomNaive        = makeTaggedAtom("naive");
   AtomSize         = makeTaggedAtom("size");
   AtomConstraints  = makeTaggedAtom("constraints");
-
-  AtomMobile      = makeTaggedAtom("mobile");
-  AtomFetched     = makeTaggedAtom("fetched");
-  AtomDistributed = makeTaggedAtom("distributed");
 
   // For system set and get
   AtomActive                = makeTaggedAtom("active");
@@ -228,7 +223,7 @@ int ConstTerm::getArity()
  * Ports
  *=================================================================== */
 
-Port::Port(NetAddress *na) : DistObject(am.rootBoard, Co_Port),
+Port::Port(NetAddress *na) : ConstTermWithHome(am.rootBoard, Co_Port),
   strm(makeTaggedNULL()), addr(na)
 {}
 
@@ -399,28 +394,6 @@ Bool Object::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X)
   }
 
   return OK;
-}
-
-/*===================================================================
- * Abstractions and cells
- *=================================================================== */
-
-Abstraction::Abstraction(Bool mobile) :
-  DistObject(am.rootBoard,Co_Abstraction), gRegs(0)
-{
-  pred = new PrTabEntry(AtomNil, 0, 0);
-
-  setDistFlag(Distributed);
-  if (mobile)
-    setDistFlag(Mobile);
-}
-
-Cell::Cell(TaggedRef v, Bool mobile) :
-  DistObject(am.rootBoard, Co_Cell), val(v)
-{
-  setDistFlag(Distributed);
-  if (mobile)
-    setDistFlag(Mobile);
 }
 
 /*===================================================================
