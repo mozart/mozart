@@ -866,9 +866,15 @@ and source-file directory for gdb.  If you wish to change this, use
 the gdb commands `cd DIR' and `directory'."
   (let ((old-buffer (current-buffer))
 	(init-str (if oz-using-new-compiler
-		      (concat "set args -u " oz-new-compiler-url "\n")
+		      (concat "set args -u "
+			      (or (getenv "OZCOMPILERCOMP")
+				  (concat "file:" (oz-home)
+					  "/lib/Compiler.ozc"))
+			      "\n")
 		    (concat "set args -S " file "\n"))))
-    (delete-windows-on oz-emulator-buffer)
+    (cond ((get-buffer oz-emulator-buffer)
+	   (delete-windows-on oz-emulator-buffer)
+	   (kill-buffer oz-emulator-buffer)))
     (cond (oz-gnu-emacs
 	   (gdb (concat "gdb " oz-emulator)))
 	  (oz-lucid-emacs
