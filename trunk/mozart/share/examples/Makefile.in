@@ -1,3 +1,4 @@
+BUILDTOP	= @BUILDTOP@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 TOPDIR		= @TOPDIR@
@@ -78,3 +79,5 @@ veryclean: realclean
 
 distclean: realclean
 	$(RM) Makefile
+
+include ../Makefile.boot
