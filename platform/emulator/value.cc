@@ -18,13 +18,9 @@
  *=================================================================== */
 
 TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
-  AtomLess, AtomGreater, AtomSame, AtomUncomparable,
-  AtomInt, AtomFloat, AtomTuple, AtomProcedure, AtomCell,
-  AtomChunk, AtomSpace,
-  AtomRecord, AtomAtom, AtomName, AtomUnknown,
-  AtomClosed, AtomVariable,
   AtomSucceeded, AtomAlt, AtomMerged, AtomFailed,
   AtomEntailed, AtomSuspended, AtomBlocked,
+  AtomClosed, 
   NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl;
 
 // Some often used constants
@@ -34,27 +30,12 @@ void initLiterals()
   AtomCons  = makeTaggedAtom(NameOfCons);
   AtomPair  = makeTaggedAtom(NameOfPair);
   AtomVoid  = makeTaggedAtom(NameOfVoid);
+
   AtomBool  = makeTaggedAtom(NameOfBool);
   AtomSup   = makeTaggedAtom(NameOfSup);
   AtomCompl = makeTaggedAtom(NameOfCompl);
   
-  AtomLess         = makeTaggedAtom("less");
-  AtomSame         = makeTaggedAtom("same");
-  AtomGreater      = makeTaggedAtom("greater");
-  AtomUncomparable = makeTaggedAtom("uncomparable");
-  AtomInt          = makeTaggedAtom("int");
-  AtomFloat        = makeTaggedAtom("float");
-  AtomTuple        = makeTaggedAtom("tuple");
-  AtomProcedure    = makeTaggedAtom("procedure");
-  AtomCell         = makeTaggedAtom("cell");
-  AtomSpace        = makeTaggedAtom("space");
-  AtomChunk        = makeTaggedAtom("chunk");
-  AtomRecord       = makeTaggedAtom("record");
-  AtomAtom         = makeTaggedAtom("atom");
-  AtomName         = makeTaggedAtom("name");
-  AtomUnknown      = makeTaggedAtom("unknown");
   AtomClosed       = makeTaggedAtom("closed");
-  AtomVariable     = makeTaggedAtom("variable");
   AtomSucceeded    = makeTaggedAtom("succeeded");
   AtomAlt          = makeTaggedAtom("alternatives");
   AtomEntailed     = makeTaggedAtom("entailed");
