@@ -116,7 +116,27 @@ if (FORCE_ALL || COND) { \
   } \
 }
 
-// mm2 markDead ???
+/*
+#define SimplifyOnUnify(EQ01, EQ02, EQ12) \
+  if (isUnifyCurrentTaskSusp()) { \
+    OZ_getCArgDeref(0, x, xPtr, xTag); \
+    OZ_getCArgDeref(1, y, yPtr, yTag); \
+    if (xPtr == yPtr && isAnyVar(xTag)) { \
+      killPropagatedCurrentTaskSusp(); \
+      return (EQ01); \
+    } \
+    OZ_getCArgDeref(2, z, zPtr, zTag); \
+    if (xPtr == zPtr && isAnyVar(xTag)) { \
+      killPropagatedCurrentTaskSusp(); \
+      return (EQ02); \
+    } \
+    if (yPtr == zPtr && isAnyVar(yTag)) { \
+      killPropagatedCurrentTaskSusp(); \
+      return (EQ12); \
+    } \
+  }
+  */
+
 #define SimplifyOnUnify(EQ01, EQ02, EQ12) \
   if (isUnifyCurrentTaskSusp()) { \
     OZ_getCArgDeref(0, x, xPtr, xTag); \
@@ -124,7 +144,7 @@ if (FORCE_ALL || COND) { \
     if (xPtr == yPtr && isAnyVar(xTag)) { \
       FDcurrentTaskSusp->markDead(); \
       FDcurrentTaskSusp = NULL; \
-      return (EQ01); \
+       return (EQ01); \
     } \
     OZ_getCArgDeref(2, z, zPtr, zTag); \
     if (xPtr == zPtr && isAnyVar(xTag)) { \
@@ -138,9 +158,21 @@ if (FORCE_ALL || COND) { \
       return (EQ12); \
     } \
   }
+ 
+enum pm_term_type {pm_none = 0x0, pm_singl = 0x1, 
+		   pm_bool = 0x2, pm_fd = 0x4, 
+		   pm_svar = 0x8, pm_uvar = 0x10, 
+		   pm_tuple = 0x20, pm_literal = 0x40};
 
-enum pm_term_type {pm_none, pm_singl, pm_bool, pm_fd, pm_svar, pm_uvar, 
-		   pm_tuple, pm_literal};
+inline 
+Bool pm_is_var(pm_term_type t) {
+  return t & (pm_bool | pm_fd | pm_svar | pm_uvar);
+}
+
+inline 
+Bool pm_is_noncvar(pm_term_type t) {
+  return t & (pm_svar | pm_uvar);
+}
 
 inline
 char * pm_term_type2string(int t) {
@@ -388,9 +420,6 @@ public:
 		    int &s, OZ_CFun func, RefsArray xregs, int arity);
   
   void addResSusp(int i, Suspension * susp, FDPropState target);
-  void addForIntSusp(int i, Suspension * susp);
-  void addForFDishSusp(int i, Suspension * susp);
-  Bool addForXorYdet(OZ_CFun func, RefsArray xregs, int arity);
   
   void addResSusps(Suspension * susp, FDPropState target) {
     for (int i = curr_num_of_items; i--; )
@@ -399,14 +428,10 @@ public:
     if (global_vars == 0)
       FDcurrentTaskSusp->markLocalSusp();
   }
-  void addForIntSusps(Suspension * susp) {
-    for (int i = curr_num_of_items; i--; )
-      addForIntSusp(i, susp);
-  }
-  void addForFDishSusps(Suspension * susp) {
-    for (int i = curr_num_of_items; i--; )
-      addForFDishSusp(i, susp);
-  }
+
+  OZ_Bool addSuspFDish(void);
+  OZ_Bool addSuspSingl(void);
+  Bool addSuspXorYdet(void);
   
   int simplify(STuple &a, STuple &x) {
     return curr_num_of_items = simplifyHead(curr_num_of_items, a, x);
@@ -827,11 +852,6 @@ OZ_Bool checkDomDescr(OZ_Term descr,
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdbuilti.icc"
-#else
-OZ_Bool addNonResSuspForDet(TaggedRef v, TaggedRefPtr vp, TypeOfTerm vt,
-			    Suspension * s);
-OZ_Bool addNonResSuspForCon(TaggedRef v, TaggedRefPtr vp, TypeOfTerm vt,
-			    Suspension * s);
 #endif
 
 
