@@ -9,12 +9,12 @@ The Internet provides the first steps towards
 a global infrastructure for distributed applications:
 a global namespace (URLs) and
 a global communications protocol (TCP/IP).
-Platforms such as
+Both platforms based on
 <index id=idx.java/Java language<and>/
-Java and
+the Java language and on
 <index id=idx.corba/CORBA/
-CORBA that take advantage
-of this infrastructure have become widely-used.
+the CORBA standard take advantage
+of this infrastructure and have become widely-used.
 On first glance, one might think that distributed
 programming has become a solved problem.
 But this is far from the case.
