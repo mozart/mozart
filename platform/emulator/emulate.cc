@@ -2869,7 +2869,7 @@ LBLdispatcher:
         break;
       }
       case DBG_STEP : {
-        if (CTT->isTraced() && !CTT->contFlag()) {
+        if (CTT->isTraced() && !CTT->contFlag() && !am.runChildren) {
           debugStreamExit(ozdeb->info);
           goto LBLpreemption;
         }
