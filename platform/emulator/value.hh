@@ -5,7 +5,7 @@
  * Version: $Revision$
  * State: $State$
  *
- * Values: literal, list, stuple, records
+ * Values: literal, list, records
  */
 
 #ifndef __VALUEHH
@@ -286,9 +286,6 @@ TaggedRef makeTaggedFloat(double i)
 /*===================================================================
  * BigInt
  *=================================================================== */
-/********************************************************************
- *
- ********************************************************************/
 
 class BigInt {
 public:
@@ -370,7 +367,7 @@ public:
   int stringLength()      { return mpz_sizeinbase(&value,10)+2; }
   void getString(char *s) { mpz_get_str(s,10,&value); }
   OZPRINTLONG;
-  unsigned int hash() { return(((unsigned int) ToInt32(this)) >> 2); }
+  unsigned int hash() { return 75; } // all BigInt hash to same value
   BigInt *gc();
 };
 
@@ -406,132 +403,6 @@ Bool numberEq(TaggedRef a, TaggedRef b)
 #define CHECK_LITERAL(lab) \
 Assert(!isRef(lab) && !isAnyVar(lab) && isLiteral(lab));
 
-/*===================================================================
- * STuple
- *=================================================================== */
-
-class STuple {
-protected:
-// DATA
-  TaggedRef label;
-  unsigned int size;
-  TaggedRef args[1];
-public:
-  USEHEAPMEMORY;
-
-  STuple *gc();
-
-  STuple() { Assert(0); };
-
-  // no initialisation of args !!
-  static STuple * newSTuple(TaggedRef lab, int sz) {
-    Assert(sz > 0);
-    CHECK_LITERAL(lab);
-    int memSize = sizeof(STuple) + sizeof(TaggedRef) * (sz - 1);
-    STuple * ret = (STuple *) int32Malloc(memSize);
-    ret->label = lab;
-    ret->size  = sz;
-    return ret;
-  }
-
-  // returns copy of tuple st (args are appropriately copied as well)
-  static STuple * newSTuple(STuple * st) {
-    STuple * ret = newSTuple(st->label,st->size);
-    for (int i = st->size; i--; )
-      ret->args[i] = tagged2NonVariable((st->args)+i);
-    return ret;
-  }
-
-  TaggedRef getLabel() { return label; }
-  Literal *getLabelLiteral() {
-    Assert(isLiteral(label));
-    return tagged2Literal(label);
-  }
-  int  getSize ()      { return size; }
-  void downSize(unsigned int s) { if (s < size) size = s;} // FD
-
-  TaggedRef getArg(int i) { return tagged2NonVariable(args+i); }
-
-  void setArg(int i, TaggedRef t) { args[i] = t; }
-  TaggedRef *getRef()      { return args; }
-  TaggedRef *getRef(int i) { return args+i; }
-
-  TaggedRef &operator [] (int i) {return args[i];}
-
-  Bool compareSortAndSize(TaggedRef name, int sz) {
-    return (sameLiteral(name,label) && (getSize() == sz));
-  }
-
-  Bool compareFunctor (STuple *str) {
-    return compareSortAndSize(str->label, str->getSize());
-  }
-
-  void gcRecurse();
-
-  OZPRINT;
-  OZPRINTLONG;
-};
-
-inline
-Bool isPair(TaggedRef term) {
-  DEREF(term,zzz,tag);
-  return (Bool) (isSTuple(tag) &&
-                 tagged2Literal(AtomPair)
-                 == tagged2STuple(term)->getLabelLiteral());
-}
-
-inline
-TaggedRef left(TaggedRef pair)
-{
-  DEREF(pair,zzz,tag);
-  Assert(isPair(pair));
-  return tagged2STuple(pair)->getArg(0);
-}
-
-inline
-TaggedRef right(TaggedRef pair)
-{
-  DEREF(pair,zzz,tag);
-  Assert(isPair(pair));
-  return tagged2STuple(pair)->getArg(1);
-}
-
-inline
-TaggedRef arg(TaggedRef tuple, int i)
-{
-  DEREF(tuple,zzz,tag);
-  Assert(isSTuple(tuple));
-  return tagged2STuple(tuple)->getArg(i);
-}
-
-
-inline
-TaggedRef leftDeref(TaggedRef pair)
-{
-  TaggedRef ret = tagged2STuple(pair)->getArg(0);
-  DEREF(ret,_1,_2);
-  CHECK_NONVAR(ret);
-  return ret;
-}
-
-inline
-TaggedRef rightDeref(TaggedRef pair)
-{
-  TaggedRef ret = tagged2STuple(pair)->getArg(1);
-  DEREF(ret,_1,_2);
-  CHECK_NONVAR(ret);
-  return ret;
-}
-
-inline
-TaggedRef argDeref(TaggedRef tuple, int i)
-{
-  DEREF(tuple,zzz,tag)
-  TaggedRef ret = tagged2STuple(tuple)->getArg(i);
-  DEREF(ret,_1,_2);
-  CHECK_NONVAR(ret);
-  return ret;
-}
 
 /*===================================================================
  * LTuple
@@ -820,7 +691,7 @@ int featureHash(TaggedRef a)
 class Arity {
 friend class ArityTable;
 private:
-  Arity ( TaggedRef );
+  Arity ( TaggedRef, Bool );
 
   void gc();
 
@@ -829,9 +700,10 @@ private:
 
   int size;             // size is always a power of 2
   int hashmask;         // size-1, used as mask for hashing
-  int nextindex;        // next unused index in RefsArray
-  int numberofentries;
-  int numberofcollisions;
+  int width;            // next unused index in RefsArray (for add())
+  DebugCheckT(int numberofentries);
+  DebugCheckT(int numberofcollisions);
+  Bool isTupleFlag;
 
   TaggedRef *keytable;
   int *indextable;
@@ -840,19 +712,24 @@ private:
   void add (TaggedRef);
 
 public:
+  Bool isTuple() {
+    return isTupleFlag;
+  }
   int find(TaggedRef entry)   // return -1, if argument not found.
   {
+    if (isTuple()) return isSmallInt(entry) ? smallIntValue(entry)-1 : -1;
+
     int i=hashfold(featureHash(entry));
     int step=scndhash(entry);
     while ( keytable[i] != entry ) {
-      if ( keytable[i] == makeTaggedNULL()) return(-1);
+      if ( keytable[i] == makeTaggedNULL()) return -1;
       i = hashfold(i+step);
     }
     return(indextable[i]);
   }
 public:
   TaggedRef getList() { return list; }
-  int getSize() { return nextindex; }
+  int getWidth() { return width; }
 
   OZPRINT;
 };
@@ -865,12 +742,12 @@ class ArityTable {
 friend class Arity;
 public:
   ArityTable ( unsigned int );
-  Arity* find ( TaggedRef );
+  Arity *find ( TaggedRef);
   void gc();
 private:
   OZPRINT;
 
-  unsigned int hashvalue( TaggedRef );
+  Bool hashvalue( TaggedRef, unsigned int & );
   Arity* *table;
 
   int size;
@@ -880,10 +757,12 @@ private:
 
 extern ArityTable aritytable;
 
+TaggedRef makeTupleArityList(int i);
+
 class SRecord {
 private:
   TaggedRef label;
-  Arity* theArity;
+  void *recordArity;
   TaggedRef args[1];   // really maybe more
 
 public:
@@ -893,33 +772,68 @@ public:
 
   SRecord() { error("do not use SRecord"); }
 
+  Bool isTuple() { return ((int)recordArity)&1; }
+
+  TaggedRef normalize()
+  {
+    if (isTuple() && label == AtomCons && getWidth()==2) {
+      return makeTaggedLTuple(new LTuple(getArg(0),getArg(1)));
+    }
+    return makeTaggedSRecord(this);
+  }
+
   void initArgs(TaggedRef val)
   {
-    for (int i = theArity->getSize(); i--; )
+    for (int i = getWidth(); i--; )
       args[i] = val;
   }
 
-  int getWidth() { return theArity->getSize(); }
-
+  int getWidth() {
+    return ((int)recordArity)&1
+      ? ((int) recordArity)>>1
+      : ((Arity *) recordArity)->getWidth(); }
+  void downSize(unsigned int s) { // TMUELLER
+    Assert(isTuple());
+    recordArity = (void *) ((s<<1)|1);
+  } // FD
 
   static SRecord *newSRecord(TaggedRef lab, Arity *f)
   {
+    if (f->isTuple()) return newSRecord(lab,f->getWidth());
+
     CHECK_LITERAL(lab);
     Assert(f != NULL);
-    int sz = f->getSize();
+    int sz = f->getWidth();
     int memSize = sizeof(SRecord) + sizeof(TaggedRef) * (sz - 1);
     SRecord *ret = (SRecord *) heapMalloc(memSize);
     ret->label = lab;
-    ret->theArity = f;
+    ret->recordArity = f;
+    return ret;
+  }
+
+  static SRecord *newSRecord(TaggedRef lab, int w)
+  {
+    CHECK_LITERAL(lab);
+    Assert(w > 0);
+    int memSize = sizeof(SRecord) + sizeof(TaggedRef) * (w - 1);
+    SRecord *ret = (SRecord *) heapMalloc(memSize);
+    ret->label = lab;
+    ret->recordArity = (void *) ((w<<1)|1);
     return ret;
   }
 
   // returns copy of tuple st (args are appropriately copied as well)
   static SRecord * newSRecord(SRecord * st)
   {
-    SRecord *ret = newSRecord(st->label,st->theArity);
-    for (int i = st->getWidth(); i--; )
+    SRecord *ret;
+    if (st->isTuple()) {
+      ret = newSRecord(st->label, st->getWidth());
+    } else {
+      ret = newSRecord(st->label, st->getArity());
+    }
+    for (int i = st->getWidth(); i--; ) {
       ret->args[i] = tagged2NonVariable((st->args)+i);
+    }
     return ret;
   }
 
@@ -927,57 +841,76 @@ public:
   void setArg(int i, TaggedRef t) { args[i] = t; }
   TaggedRef *getRef() { return args; }
   TaggedRef *getRef(int i) { return args+i; }
+  TaggedRef &operator [] (int i) {return args[i];}
 
-  SRecord *adjoinAt(TaggedRef feature, TaggedRef value);
-  SRecord *copySRecord() { return newSRecord(this); }
+  TaggedRef adjoinAt(TaggedRef feature, TaggedRef value);
 
   SRecord *replaceLabel(TaggedRef newlabel)
   {
-    SRecord *copy = copySRecord();
+    SRecord *copy = newSRecord(this);
     copy->label = newlabel;
     return copy;
   }
 
-  SRecord *adjoin(SRecord* highstr);
-  SRecord *adjoinList(TaggedRef arity, TaggedRef proplist);
+  TaggedRef adjoin(SRecord* highstr);
+  TaggedRef adjoinList(TaggedRef arity, TaggedRef proplist);
   void setFeatures(TaggedRef proplist);
 
   TaggedRef getLabel() { return label; }
+  Literal *getLabelLiteral() { return tagged2Literal(label); }
   void setLabel(TaggedRef newLabel) { label = newLabel; }
 
-  TaggedRef getArityList() { return theArity->getList(); }
-
-  Arity* getTheArity () { return theArity; }
-
-  Bool hasFeature(TaggedRef feature)
-  {
-    CHECK_FEATURE(feature);
-    return theArity->find(feature) >= 0;
+  TaggedRef getArityList() {
+    return isTuple() ? makeTupleArityList(getWidth()) : getArity()->getList();
   }
 
-  TaggedRef getFeature(TaggedRef feature)
+  Arity* getArity () {
+    return isTuple()
+      ? aritytable.find(getArityList())
+      : ((Arity *) recordArity);
+  }
+
+  int getIndex(TaggedRef feature)
   {
     CHECK_FEATURE(feature);
-    Assert(theArity != NULL);
+    if (isTuple()) {
+      if (!isSmallInt(feature)) return -1;
+      int f=smallIntValue(feature);
+      return (1 <= f && f <= getWidth()) ? f-1 : -1;
+    }
+    return getArity()->find(feature);
+  }
 
-    int i = theArity->find(feature);
-    return (i==-1) ? makeTaggedNULL() : getArg(i);
+  Bool hasFeature(TaggedRef feature) { return getIndex(feature) >= 0; }
+  TaggedRef getFeature(TaggedRef feature)
+  {
+    int i = getIndex(feature);
+    return i < 0 ? makeTaggedNULL() : getArg(i);
   }
 
   Bool setFeature(TaggedRef feature,TaggedRef value);
-  SRecord *replaceFeature(TaggedRef feature,TaggedRef value);
+  TaggedRef replaceFeature(TaggedRef feature,TaggedRef value);
 
   void gcRecurse();
+
+  Bool isPair() { return isTuple() && sameLiteral(label,AtomPair); }
 
   OZPRINT;
   OZPRINTLONG;
 
   Bool compareSortAndArity(TaggedRef lbl, Arity *ff) {
-    return (sameLiteral(getLabel(),lbl) &&
-            getTheArity() == ff);
+    return !isTuple() &&
+      sameLiteral(getLabel(),lbl) &&
+      getArity() == ff;
+  }
+  Bool compareSortAndSize(TaggedRef lbl, int ww) {
+    return isTuple() &&
+      sameLiteral(getLabel(),lbl) &&
+      getWidth() == ww;
   }
   Bool compareFunctor(SRecord* str) {
-    return compareSortAndArity(str->getLabel(),str->getTheArity());
+    return sameLiteral(getLabel(),str->getLabel()) &&
+      recordArity == str->recordArity;
   }
 };
 
@@ -990,22 +923,82 @@ Bool isRecord(TaggedRef term) {
   return isSRecord(tag) || isLiteral(tag);
 }
 
-inline
-Bool isNoNumber(TypeOfTerm tag) {
-  return isRecord(tag) || isTuple(tag);
-}
-
-inline
-Bool isNoNumber(TaggedRef term) {
-  GCDEBUG(term);
-  return isNoNumber(tagTypeOf(term));
-}
-
-
 
 State adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
                      Bool recordFlag);
 
+SRecord *makeRecord(TaggedRef t);
+
+
+inline
+int isPair(TaggedRef term) {
+  DEREF(term,zzz,tag);
+  return isSRecord(tag) &&
+    tagged2SRecord(term)->isPair();
+}
+
+inline
+int isSTuple(TaggedRef term) {
+  return isSRecord(term) && tagged2SRecord(term)->isTuple();
+}
+
+inline
+int isTuple(TaggedRef term) {
+  return isLTuple(term) || isSTuple(term);
+}
+
+inline
+TaggedRef left(TaggedRef pair)
+{
+  DEREF(pair,zzz,tag);
+  Assert(isPair(pair));
+  return tagged2SRecord(pair)->getArg(0);
+}
+
+inline
+TaggedRef right(TaggedRef pair)
+{
+  DEREF(pair,zzz,tag);
+  Assert(isPair(pair));
+  return tagged2SRecord(pair)->getArg(1);
+}
+
+inline
+TaggedRef arg(TaggedRef tuple, int i)
+{
+  DEREF(tuple,zzz,tag);
+  Assert(isSTuple(tuple));
+  return tagged2SRecord(tuple)->getArg(i);
+}
+
+
+inline
+TaggedRef leftDeref(TaggedRef pair)
+{
+  TaggedRef ret = tagged2SRecord(pair)->getArg(0);
+  DEREF(ret,_1,_2);
+  CHECK_NONVAR(ret);
+  return ret;
+}
+
+inline
+TaggedRef rightDeref(TaggedRef pair)
+{
+  TaggedRef ret = tagged2SRecord(pair)->getArg(1);
+  DEREF(ret,_1,_2);
+  CHECK_NONVAR(ret);
+  return ret;
+}
+
+inline
+TaggedRef argDeref(TaggedRef tuple, int i)
+{
+  DEREF(tuple,zzz,tag)
+  TaggedRef ret = tagged2SRecord(tuple)->getArg(i);
+  DEREF(ret,_1,_2);
+  CHECK_NONVAR(ret);
+  return ret;
+}
 
 /*===================================================================
  * ObjectOrClass incl. ObjectClass, DeepObjectOrClass

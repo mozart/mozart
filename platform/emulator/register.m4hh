@@ -170,9 +170,9 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 
   CaseOneRegGImpossible( PUTSTRUCTURE,
                ``
-                 STuple *stuple =
-                   STuple::newSTuple(getLiteralArg(PC+1),getPosIntArg(PC+2));
-                 Reg1(getRegArg(PC+3)) = makeTaggedSTuple(stuple);
+                 SRecord *stuple =
+                   SRecord::newSRecord(getLiteralArg(PC+1),getPosIntArg(PC+2));
+                 Reg1(getRegArg(PC+3)) = makeTaggedSRecord(stuple);
                  sPointer = stuple->getRef();
 
                  DISPATCH(4);''
@@ -262,28 +262,28 @@ Case(SETVOID)
                  DEREF(term,termPtr,tag);
 
                  if (isAnyVar(term)) {
-                   STuple *stuple = STuple::newSTuple(label,arity);
+                   SRecord *stuple = SRecord::newSRecord(label,arity);
                    sPointer = stuple->getRef();
                    SetWriteMode;
 
                    if (isCVar(term)) {
                      if (tagged2CVar(term)->unifyOutline(termPtr, term, NULL,
-                                                         makeTaggedSTuple(stuple),
+                                                         makeTaggedSRecord(stuple),
                                                          NOFLATGUARD)) {
                        DISPATCH(4);
                      }
                    } else {
 
-                     e->bindToNonvar(termPtr,term,makeTaggedSTuple(stuple),
+                     e->bindToNonvar(termPtr,term,makeTaggedSRecord(stuple),
                                      NOFLATGUARD);
 
                      DISPATCH(4);
                    }
                  }
 
-                 if (isSTuple(tag) &&
-                     tagged2STuple(term)->compareSortAndSize(label,arity)) {
-                   sPointer = tagged2STuple(term)->getRef();
+                 if (isSTuple(term) &&
+                     tagged2SRecord(term)->compareSortAndSize(label,arity)) {
+                   sPointer = tagged2SRecord(term)->getRef();
                    SetReadMode;
                    DISPATCH(4);
                  }

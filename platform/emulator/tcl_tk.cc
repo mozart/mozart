@@ -83,10 +83,10 @@ State isVirtualString(TaggedRef vs) {
       (isLiteral(vs_tag) && tagged2Literal(vs)->isAtom()))
     return PROCEED;
 
-  if (isSTuple(vs_tag) &&
-      sameLiteral(tagged2STuple(vs)->getLabel(),AtomPair)) {
-    for (int i=0; i < tagged2STuple(vs)->getSize(); i++) {
-      State argstate = isVirtualString(tagged2STuple(vs)->getArg(i));
+  if (isSTuple(vs) &&
+      sameLiteral(tagged2SRecord(vs)->getLabel(),AtomPair)) {
+    for (int i=0; i < tagged2SRecord(vs)->getWidth(); i++) {
+      State argstate = isVirtualString(tagged2SRecord(vs)->getArg(i));
       if (argstate!=PROCEED)
         return argstate;
     }
@@ -143,21 +143,8 @@ State isTcl(TaggedRef tcl) {
     } else {
       return FAILED;
     }
-  } else if (isSRecord(tcl_tag)) {
-    SRecord * sr = tagged2SRecord(tcl);
-
-    if (tagged2Literal(sr->getLabel())->isAtom()) {
-      for (int i=0; i < sr->getWidth(); i++) {
-      State argstate = isTcl(sr->getArg(i));
-      if (argstate!=PROCEED)
-        return argstate;
-      }
-      return PROCEED;
-    } else {
-      return FAILED;
-    }
-  } else if (isSTuple(tcl_tag)) {
-    STuple  * st = tagged2STuple(tcl);
+  } else if (isSTuple(tcl)) {
+    SRecord  * st = tagged2SRecord(tcl);
     TaggedRef l  = st->getLabel();
 
     if (isAtom(l)) {
@@ -196,13 +183,25 @@ State isTcl(TaggedRef tcl) {
         }
 
       } else {
-        for (int i=0; i < st->getSize(); i++) {
+        for (int i=0; i < st->getWidth(); i++) {
           State argstate = isTcl(st->getArg(i));
           if (argstate!=PROCEED)
             return argstate;
         }
         return PROCEED;
       }
+    }
+  } else if (isSRecord(tcl_tag)) {
+    SRecord * sr = tagged2SRecord(tcl);
+    if (tagged2Literal(sr->getLabel())->isAtom()) {
+      for (int i=0; i < sr->getWidth(); i++) {
+      State argstate = isTcl(sr->getArg(i));
+      if (argstate!=PROCEED)
+        return argstate;
+      }
+      return PROCEED;
+    } else {
+      return FAILED;
     }
 
   } else if (isLTuple(tcl_tag)) {
@@ -423,11 +422,11 @@ void vs2buffer(TaggedRef vs) {
 
     if (!sameLiteral(vs, AtomNil) && !sameLiteral(vs, AtomPair))
       atom2buffer(vs);
-  } else if (isSTuple(vs_tag)) {
-    Assert(sameLiteral(tagged2STuple(vs)->getLabel(),AtomPair));
+  } else if (isSTuple(vs)) {
+    Assert(sameLiteral(tagged2SRecord(vs)->getLabel(),AtomPair));
 
-    for (int i=0; i < tagged2STuple(vs)->getSize(); i++)
-      vs2buffer(tagged2STuple(vs)->getArg(i));
+    for (int i=0; i < tagged2SRecord(vs)->getWidth(); i++)
+      vs2buffer(tagged2SRecord(vs)->getArg(i));
   } else if (isLTuple(vs_tag)) {
     string2buffer(vs);
   }
@@ -482,11 +481,11 @@ void protect_vs2buffer(TaggedRef vs) {
 
     if (!sameLiteral(vs, AtomNil) && !sameLiteral(vs, AtomPair))
       protect_atom2buffer(vs);
-  } else if (isSTuple(vs_tag)) {
-    Assert(sameLiteral(tagged2STuple(vs)->getLabel(),AtomPair));
+  } else if (isSTuple(vs)) {
+    Assert(sameLiteral(tagged2SRecord(vs)->getLabel(),AtomPair));
 
-    for (int i=0; i < tagged2STuple(vs)->getSize(); i++)
-      protect_vs2buffer(tagged2STuple(vs)->getArg(i));
+    for (int i=0; i < tagged2SRecord(vs)->getWidth(); i++)
+      protect_vs2buffer(tagged2SRecord(vs)->getArg(i));
   } else if (isLTuple(vs_tag)) {
     protect_string2buffer(vs);
   }
@@ -497,10 +496,10 @@ void tcl2buffer(TaggedRef);
 
 
 inline
-void tuple2buffer(STuple *st, int start = 0) {
-  if (start < st->getSize()) {
+void tuple2buffer(SRecord *st, int start = 0) {
+  if (start < st->getWidth()) {
     tcl2buffer(st->getArg(start));
-    for (int i=start+1; i < st->getSize(); i++) {
+    for (int i=start+1; i < st->getWidth(); i++) {
       tcl_put(' ');
       tcl2buffer(st->getArg(i));
     }
@@ -532,8 +531,8 @@ void tcl2buffer(TaggedRef tcl) {
     start_protect();
     protect_string2buffer(tcl);
     stop_protect();
-  } else if (isSTuple(tcl_tag)) {
-    STuple  * st = tagged2STuple(tcl);
+  } else if (isSTuple(tcl)) {
+    SRecord  * st = tagged2SRecord(tcl);
     TaggedRef l  = st->getLabel();
 
     if (sameLiteral(l,AtomPair)) {
@@ -549,7 +548,7 @@ void tcl2buffer(TaggedRef tcl) {
     } else if (sameLiteral(l,AtomTclString)) {
       tcl_put('"'); tuple2buffer(st); tcl_put('"');
     } else if (sameLiteral(l,AtomTclPosition)) {
-      if (st->getSize() > 1) {
+      if (st->getWidth() > 1) {
         tcl_put('{'); tcl2buffer(st->getArg(0));
         tcl_put('.'); tuple2buffer(st, 1);
         tcl_put('}');
@@ -614,12 +613,12 @@ void tcl2buffer(TaggedRef tcl) {
 
 
 State ret_unix_error(TaggedRef out) {
-  STuple * err_tuple = STuple::newSTuple(AtomError, 2);
+  SRecord * err_tuple = SRecord::newSRecord(AtomError, 2);
 
   err_tuple->setArg(0, OZ_CToInt(errno));
   err_tuple->setArg(1, OZ_CToString(OZ_unixError(errno)));
 
-  return OZ_unify(out,makeTaggedSTuple(err_tuple));
+  return OZ_unify(out,makeTaggedSRecord(err_tuple));
 }
 
 
@@ -688,7 +687,7 @@ OZ_C_proc_begin(BItclWriteTuple,4) {
   init_tcl_buffer();
   tcl2buffer(OZ_getCArg(1));
   tcl_put(' ');
-  tuple2buffer(tagged2STuple(deref(OZ_getCArg(2))));
+  tuple2buffer(tagged2SRecord(deref(OZ_getCArg(2))));
   tcl_put('\n');
 
   return tcl_write(fd, tcl_buffer_start, tcl_buffer-tcl_buffer_start,
@@ -705,11 +704,11 @@ OZ_C_proc_begin(BItclWriteTagTuple,5) {
   init_tcl_buffer();
   tcl2buffer(OZ_getCArg(1));
   tcl_put(' ');
-  tcl2buffer(tagged2STuple(tuple)->getArg(0));
+  tcl2buffer(tagged2SRecord(tuple)->getArg(0));
   tcl_put(' ');
   tcl2buffer(OZ_getCArg(2));
   tcl_put(' ');
-  tuple2buffer(tagged2STuple(tuple),1);
+  tuple2buffer(tagged2SRecord(tuple),1);
   tcl_put('\n');
 
   return tcl_write(fd, tcl_buffer_start, tcl_buffer-tcl_buffer_start,
@@ -890,10 +889,10 @@ static int var_ctr    = 0;
 static int image_ctr  = 0;
 
 OZ_C_proc_begin(BIgenTopName,1) {
-  STuple * s = STuple::newSTuple(AtomPair,2);
+  SRecord * s = SRecord::newSRecord(AtomPair,2);
   s->setArg(0,AtomDot);
   s->setArg(1,makeInt(top_ctr++));
-  return OZ_unify(OZ_getCArg(0),makeTaggedSTuple(s));
+  return OZ_unify(OZ_getCArg(0),makeTaggedSRecord(s));
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIgenWidgetName,2) {
@@ -904,32 +903,32 @@ OZ_C_proc_begin(BIgenWidgetName,2) {
   if (isAnyVar(p_tag))
     return OZ_suspendOnVar(makeTaggedRef(p_ptr));
 
-  STuple * s = STuple::newSTuple(AtomPair,3);
+  SRecord * s = SRecord::newSRecord(AtomPair,3);
   s->setArg(0,parent);
   s->setArg(1,AtomDot);
   s->setArg(2,makeInt(widget_ctr++));
-  return OZ_unify(OZ_getCArg(1),makeTaggedSTuple(s));
+  return OZ_unify(OZ_getCArg(1),makeTaggedSRecord(s));
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIgenTagName,1) {
-  STuple * s = STuple::newSTuple(AtomPair,2);
+  SRecord * s = SRecord::newSRecord(AtomPair,2);
   s->setArg(0,AtomTagPrefix);
   s->setArg(1,makeInt(tag_ctr++));
-  return OZ_unify(OZ_getCArg(0),makeTaggedSTuple(s));
+  return OZ_unify(OZ_getCArg(0),makeTaggedSRecord(s));
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIgenVarName,1) {
-  STuple * s = STuple::newSTuple(AtomPair,2);
+  SRecord * s = SRecord::newSRecord(AtomPair,2);
   s->setArg(0,AtomVarPrefix);
   s->setArg(1,makeInt(var_ctr++));
-  return OZ_unify(OZ_getCArg(0),makeTaggedSTuple(s));
+  return OZ_unify(OZ_getCArg(0),makeTaggedSRecord(s));
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIgenImageName,1) {
-  STuple * s = STuple::newSTuple(AtomPair,2);
+  SRecord * s = SRecord::newSRecord(AtomPair,2);
   s->setArg(0,AtomImagePrefix);
   s->setArg(1,makeInt(image_ctr++));
-  return OZ_unify(OZ_getCArg(0),makeTaggedSTuple(s));
+  return OZ_unify(OZ_getCArg(0),makeTaggedSRecord(s));
 } OZ_C_proc_end
 
 // ---------------------------------------------------------------------

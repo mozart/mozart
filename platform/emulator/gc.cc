@@ -328,7 +328,6 @@ void Trail::gc()
 enum TypeOfPtr {
   PTR_LTUPLE,
   PTR_SRECORD,
-  PTR_STUPLE,
   PTR_NAME,
   PTR_BOARD,
   PTR_ACTOR,
@@ -906,7 +905,7 @@ Continuation *Continuation::gc()
   return (ret);
 }
 
-/* collect STuple, LTuple, SRecord */
+/* collect LTuple, SRecord */
 
 inline Bool isDirectVar(TaggedRef t)
 {
@@ -922,27 +921,6 @@ void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int sz)
     }
   }
 }
-
-inline
-STuple *STuple::gc()
-{
-  GCMETHMSG("STuple::gc");
-  CHECKCOLLECTED(label, STuple *);
-
-  COUNT(sTuple);
-  COUNT1(sTupleLen,size);
-  int len = (size-1)*sizeof(TaggedRef)+sizeof(STuple);
-
-  STuple *ret = (STuple*) gcRealloc(this,len);
-  GCNEWADDRMSG(ret);
-  ptrStack.push(ret,PTR_STUPLE);
-  storeForward((int *) &label, ret);
-  gcTaggedBlock(getRef(),ret->getRef(),getSize());
-  FDPROFILE_GC(cp_size_stuple, len);
-
-  return ret;
-}
-
 
 inline
 LTuple *LTuple::gc()
@@ -1395,7 +1373,6 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
   case SMALLINT: toTerm = auxTerm; break;
   case LITERAL:  toTerm = makeTaggedLiteral(tagged2Literal(auxTerm)->gc()); break;
   case LTUPLE:   toTerm = makeTaggedLTuple(tagged2LTuple(auxTerm)->gc()); break;
-  case STUPLE:   toTerm = makeTaggedSTuple(tagged2STuple(auxTerm)->gc()); break;
   case SRECORD:  toTerm = makeTaggedSRecord(tagged2SRecord(auxTerm)->gcSRecord()); break;
   case BIGINT:   toTerm = makeTaggedBigInt(tagged2BigInt(auxTerm)->gc()); break;
   case OZFLOAT:  toTerm = makeTaggedFloat(tagged2Float(auxTerm)->gc());   break;
@@ -1673,14 +1650,22 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
 //                                GC-METHODS
 //*****************************************************************************
 
-inline void Arity::gc()
+
+/*
+ * class Arity is not allocated on heap!
+ * but must collect the list && the values in keytable
+ */
+inline
+void Arity::gc()
 {
   Arity *aux = this;
   while(aux) {
     GCMETHMSG("Arity::gc");
-    for (int i = 0; i < aux->size; i++) {
-      if (aux->keytable[i] != makeTaggedNULL()) {
-        gcTagged(aux->keytable[i],aux->keytable[i]);
+    if (!isTuple()) {
+      for (int i = 0; i < aux->size; i++) {
+        if (aux->keytable[i] != makeTaggedNULL()) {
+          gcTagged(aux->keytable[i],aux->keytable[i]);
+        }
       }
     }
     gcTagged(aux->list, aux->list);
@@ -2262,7 +2247,7 @@ void DLLStack::gc (DLLStackEntry (*f)(DLLStackEntry))
 #define ERROR(Fun, Msg)                                                       \
         error("%s in %s at %s:%d", Msg, Fun, __FILE__, __LINE__);
 
-/* collect STuple, LTuple */
+/* collect LTuple */
 
 inline
 void gcTaggedBlockRecurse(TaggedRef *block,int sz)
@@ -2272,14 +2257,6 @@ void gcTaggedBlockRecurse(TaggedRef *block,int sz)
       gcTagged(block[i],block[i]);
     }
   }
-}
-
-inline
-void STuple::gcRecurse()
-{
-  GCMETHMSG("STuple::gcRecurse");
-  gcTagged(label,label);
-  gcTaggedBlockRecurse(getRef(),getSize());
 }
 
 
@@ -2312,7 +2289,6 @@ void performCopying(void)
 
     case PTR_LTUPLE:    ((LTuple *) ptr)->gcRecurse();           break;
     case PTR_SRECORD:   ((SRecord *) ptr)->gcRecurse();          break;
-    case PTR_STUPLE:    ((STuple *) ptr)->gcRecurse();           break;
     case PTR_NAME:      ((Literal *) ptr)->gcRecurse ();         break;
     case PTR_BOARD:     ((Board *) ptr)->gcRecurse();            break;
     case PTR_ACTOR:     ((Actor *) ptr)->gcRecurse();            break;

@@ -203,12 +203,13 @@ void bigIntInit()
 /************************************************************************/
 
 /*
- *      Precondition: lista and listb are increasing lists of features.
- *      Test, whether the two lists are equal.
- * completely deref'd
+ * Precondition: lista and listb are increasing lists of features.
+ * Test, whether the two lists are equal.
+ * Completely deref'd
+ *
+ * mm2: possible bug: two different names may have the same Id
+ *      (modulo counter).
  */
-
-
 
 static
 Bool listequal(TaggedRef lista, TaggedRef listb)
@@ -225,12 +226,11 @@ Bool listequal(TaggedRef lista, TaggedRef listb)
 }
 
 /*
- *      Precondition: list is an increasing list of atoms.
- *      If a is contained in list, return a list which is structally
- *      equivalent to list. Otherwise, return the list which is obtained
- *      by inserting a into list.
-
- * everything is deref'd
+ * Precondition: list is an increasing list of atoms.
+ * If a is contained in list, return a list which is structally
+ * equivalent to list. Otherwise, return the list which is obtained
+ * by inserting a into list.
+ * Everything is deref'd
  */
 
 static
@@ -238,40 +238,44 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
 
   Assert(isFeature(a));
 
-  if (isNil(list)) {
-    return cons(a,list);
-  }
+  TaggedRef out;
+  TaggedRef *ptr=&out;
 
-  Assert(isCons(list));
+  while (isCons(list)) {
+    TaggedRef oldhead = head(list);
+    CHECK_DEREF(oldhead);
 
-  TaggedRef oldhead = head(list);
-  CHECK_DEREF(oldhead);
-
-  switch (featureCmp(a,oldhead)) {
-
-  case 0:
-    return makeTaggedNULL();
-
-  case -1:
-    return cons(a,list);
-
-  case 1:
-    {
-      TaggedRef rest = insert(a,tail(list));
-      return (rest == makeTaggedNULL()) ? rest : cons(oldhead,rest);
+    switch (featureCmp(a,oldhead)) {
+    case 0:
+      *ptr = list;
+      return out;
+    case -1:
+      *ptr = cons(a,list);
+      return out;
+    case 1:
+      {
+        LTuple *lt = new LTuple(oldhead,makeTaggedNULL());
+        *ptr = makeTaggedLTuple(lt);
+        ptr = lt->getRefTail();
+        list=tail(list);
+      }
+      break;
+    default:
+      error("insert");
+      return 0;
     }
-
-  default:
-    error("insert");
-    return 0;
   }
+  Assert(isNil(list));
+  *ptr=cons(a,nil());
+
+  return out;
 }
 
 /*
- *      Precondition: old is an increasing list of features, ins is a list of
- *      features. Return the list obtained by succesively inserting all the
- *      elements of ins into old.
- * old is deref'd
+ * Precondition: old is an increasing list of features, ins is a list of
+ * features. Return the list obtained by succesively inserting all the
+ * elements of ins into old.
+ * Old is deref'd
  */
 
 static
@@ -282,8 +286,7 @@ TaggedRef insertlist(TaggedRef ins, TaggedRef old)
   CHECK_NONVAR(ins);
 
   while (isCons(ins)) {
-    TaggedRef aux = insert(headDeref(ins),old);
-    old = aux ? aux : old;
+    old = insert(headDeref(ins),old);
     CHECK_DEREF(old);
     ins = tailDeref(ins);
     CHECK_NONVAR(ins);
@@ -291,7 +294,7 @@ TaggedRef insertlist(TaggedRef ins, TaggedRef old)
 
   Assert(isNil(ins));
 
-  return(old);
+  return old;
 }
 
 /*
@@ -349,13 +352,6 @@ TaggedRef merge(TaggedRef lista, TaggedRef listb)
   goto loop;
 }
 
-
-/*      Extract returns the list of heads of the list conslist in strictly
- *      increasing order. If pairlist is not a propertylist, return NULL.
- */
-/*
- * Auxiliary functions for extract.
- */
 
 inline
 void swap(TaggedRef** a, TaggedRef** b)
@@ -452,7 +448,6 @@ TaggedRef packsort(TaggedRef list)
   return sortlist(list,len);
 }
 
-
 Arity *mkArity(TaggedRef list)
 {
   list=packsort(list);
@@ -509,14 +504,21 @@ unsigned int intlog(unsigned int i)
  *      different successive indices.
  */
 
-Arity::Arity ( TaggedRef entrylist )
+Arity::Arity ( TaggedRef entrylist , Bool isTupleFlag )
+  : isTupleFlag(isTupleFlag)
 {
   next = NULL;
   list = entrylist;
+  DebugCheckT(numberofentries = 0);
+  DebugCheckT(numberofcollisions = 0);
+  if (isTupleFlag) {
+    width=lengthOfList(entrylist);
+    DebugCheckT(indextable=0);
+    DebugCheckT(keytable=0);
+    return;
+  }
   size = nextpowerof2((unsigned int)(lengthOfList(entrylist)*1.5));
-  nextindex = 0;
-  numberofentries = 0;
-  numberofcollisions = 0;
+  width = 0;
   hashmask = size-1;
   indextable = ::new int[size];
   keytable = ::new TaggedRef[size];
@@ -535,15 +537,16 @@ Arity::Arity ( TaggedRef entrylist )
 
 void Arity::add( TaggedRef entry )
 {
+  Assert(!isTuple());
   int i=hashfold(featureHash(entry));
   int step=scndhash(entry);
   while ( keytable[i] != makeTaggedNULL() ) {
-    numberofcollisions++;
+    DebugCheckT(numberofcollisions++);
     i = hashfold(i+step);
   }
   keytable[i] = entry;
-  indextable[i] = nextindex++;
-  numberofentries++;
+  indextable[i] = width++;
+  DebugCheckT(numberofentries++);
 }
 
 
@@ -571,37 +574,49 @@ ArityTable::ArityTable ( unsigned int n )
 }
 
 /*
- *      Compute the hashvalue of a list into aritytable.
- *      For now, we just take the average of the hashvalues of the first three
- *      entries in the list. The hashvalues of the entries are computed
- *      analogously to the class Arity.
- *      TODO: find a better hash heuristics!
+ * Compute the hashvalue of a list into aritytable.
+ * For now, we just take the average of the hashvalues of the first three
+ * entries in the list. The hashvalues of the entries are computed
+ * analogously to the class Arity.
+ * TODO: find a better hash heuristics!
+ *
+ * return NO, if no tuple
+ *        OK, if tuple
  */
 
 inline
-unsigned int ArityTable::hashvalue( TaggedRef list )
+Bool ArityTable::hashvalue( TaggedRef list, unsigned int &ret )
 {
   int i = 0;
+  int len = 0;
   while(isCons(list)){
-    i += featureHash(head(list));
+    TaggedRef it=head(list);
+    if (len>=0 && isSmallInt(it) && smallIntValue(it)==len+1) {
+      len++;
+    } else {
+      len = -1;
+    }
+    i += featureHash(it);
     list = tail(list);
   }
   Assert(isNil(list));
-  return hashfold(i);
+  ret = hashfold(i);
+  return len < 0 ? NO : OK;
 }
 
 /*
- *      If list is already registered in aritytable, then return the associated
- *      Arity. Otherwise, create a Hashtable, insert the new pair of
- *      arity and Arity into aritytable, and return the new Arity.
+ * If list is already registered in aritytable, then return the associated
+ * Arity. Otherwise, create a Hashtable, insert the new pair of
+ * arity and Arity into aritytable, and return the new Arity.
  */
-
-Arity* ArityTable::find( TaggedRef list )
+Arity *ArityTable::find( TaggedRef list)
 {
-  Arity* ret;
-  unsigned int hsh = hashvalue(list);
+  unsigned int hsh;
+  int isTuple = hashvalue(list,hsh);
+
+  Arity *ret;
   if ( table[hsh] == NULL ) {
-    ret = ::new Arity(list);
+    ret = ::new Arity(list,isTuple);
     table[hsh] = ret;
   } else {
     Arity* c = table[hsh];
@@ -610,10 +625,10 @@ Arity* ArityTable::find( TaggedRef list )
       c = c->next;
     }
     if ( listequal(c->list,list) ) return c;
-    ret = ::new Arity(list);
+    ret = ::new Arity(list,isTuple);
     c->next = ret;
   }
-  return(ret);
+  return ret;
 }
 
 /************************************************************************/
@@ -627,15 +642,17 @@ Arity* ArityTable::find( TaggedRef list )
  *      and feature is not contained in old.
  */
 
-SRecord *SRecord::adjoinAt(TaggedRef feature, TaggedRef value)
+TaggedRef SRecord::adjoinAt(TaggedRef feature, TaggedRef value)
 {
-  TaggedRef oldArityList = getArityList();
-  TaggedRef newArityList = insert(feature,oldArityList);
-  SRecord *newrec;
-  if (!newArityList) {
-    newrec = this->copySRecord();
+  if (getIndex(feature) != -1) {
+    SRecord *newrec = newSRecord(this);
+    newrec->setFeature(feature,value);
+    return makeTaggedSRecord(newrec);
   } else {
-    newrec = newSRecord(getLabel(),aritytable.find(newArityList));
+    TaggedRef oldArityList = getArityList();
+    TaggedRef newArityList = insert(feature,oldArityList);
+    Arity *arity = aritytable.find(newArityList);
+    SRecord *newrec = newSRecord(getLabel(),arity);
 
     CHECK_DEREF(oldArityList);
     while (isCons(oldArityList)) {
@@ -645,31 +662,30 @@ SRecord *SRecord::adjoinAt(TaggedRef feature, TaggedRef value)
       oldArityList = tail(oldArityList);
       CHECK_DEREF(oldArityList);
     }
-
     Assert(isNil(oldArityList));
+    newrec->setFeature(feature,value);
+    return newrec->normalize();
   }
-
-  newrec->setFeature(feature,value);
-  return newrec;
 }
 
-SRecord *SRecord::adjoin(SRecord* hrecord)
+TaggedRef SRecord::adjoin(SRecord* hrecord)
 {
   TaggedRef list1 = this->getArityList();
   TaggedRef list2 = hrecord->getArityList();
 
   if (isNil(list1)) {
-    return hrecord->copySRecord();
+    return makeTaggedSRecord(newSRecord(hrecord));
   }
   if (isNil(list2)) {
-    return this->replaceLabel(hrecord->getLabel());
+    return makeTaggedSRecord(this->replaceLabel(hrecord->getLabel()));
   }
 
   TaggedRef newArityList = merge(list1,list2);
   Arity *newArity = aritytable.find(newArityList);
+
   SRecord *newrec = newSRecord(hrecord->getLabel(),newArity);
 
-  if (newArity != hrecord->theArity) {
+  if (newArity != hrecord->recordArity) {
     TaggedRef ar = list1;
     CHECK_DEREF(ar);
     while (isCons(ar)) {
@@ -689,21 +705,21 @@ SRecord *SRecord::adjoin(SRecord* hrecord)
     har = tail(har);
     CHECK_DEREF(har);
   }
-  return newrec;
+  return newrec->normalize();
 }
 
 /*
- *      This is the functionality of adjoinlist(old,proplist). We assume
- *      that addarity is the sorted list of the keys in proplist. addlist
- *      is computed by the builtin in order to ease error handling.
+ * This is the functionality of adjoinlist(old,proplist). We assume
+ * that arityList is the list of the keys in proplist. arityList
+ * is computed by the builtin in order to ease error handling.
  */
-SRecord *SRecord::adjoinList(TaggedRef arityList,TaggedRef proplist)
+TaggedRef SRecord::adjoinList(TaggedRef arityList,TaggedRef proplist)
 {
   TaggedRef newArityList = insertlist(arityList,getArityList());
   Arity *newArity = aritytable.find(newArityList);
-  SRecord *newrec = SRecord::newSRecord(getLabel(),newArity);
-  Assert(lengthOfList(newArityList) == newrec->theArity->getSize());
 
+  SRecord *newrec = SRecord::newSRecord(getLabel(),newArity);
+  Assert(lengthOfList(newArityList) == newrec->getWidth());
 
   TaggedRef ar = getArityList();
   CHECK_DEREF(ar);
@@ -716,8 +732,9 @@ SRecord *SRecord::adjoinList(TaggedRef arityList,TaggedRef proplist)
   }
 
   newrec->setFeatures(proplist);
-  return newrec;
+  return newrec->normalize();
 }
+
 
 void SRecord::setFeatures(TaggedRef proplist)
 {
@@ -756,9 +773,8 @@ void SRecord::setFeatures(TaggedRef proplist)
 Bool SRecord::setFeature(TaggedRef feature,TaggedRef value)
 {
   CHECK_FEATURE(feature);
-  Assert(theArity!=NULL);
 
-  int i = theArity->find(feature);
+  int i = getIndex(feature);
   if ( i == -1 ) {
     return NO;
   }
@@ -766,13 +782,13 @@ Bool SRecord::setFeature(TaggedRef feature,TaggedRef value)
   return OK;
 }
 
-SRecord *SRecord::replaceFeature(TaggedRef feature,TaggedRef value)
+TaggedRef SRecord::replaceFeature(TaggedRef feature,TaggedRef value)
 {
   CHECK_FEATURE(feature);
 
-  int i = theArity->find(feature);
+  int i = getIndex(feature);
   if ( i == -1 ) {
-    return NULL;
+    return makeTaggedNULL();
   }
 
   TaggedRef oldVal = args[i];
@@ -780,7 +796,33 @@ SRecord *SRecord::replaceFeature(TaggedRef feature,TaggedRef value)
     return adjoinAt(feature,value);
   }
   setArg(i,value);
-  return this;
+  return makeTaggedSRecord(this);
+}
+
+TaggedRef makeTupleArityList(int i)
+{
+  Assert(i>0);
+  TaggedRef out = nil();
+  while (i>0) {
+    out=cons(newSmallInt(i),out);
+    i--;
+  }
+  return out;
+}
+
+/*
+ * make LTuple to SRecord
+ */
+SRecord *makeRecord(TaggedRef t)
+{
+  if (isSRecord(t)) return tagged2SRecord(t);
+  Assert(isLTuple(t));
+  LTuple *lt=tagged2LTuple(t);
+  SRecord *ret = SRecord::newSRecord(AtomCons,
+                                     aritytable.find(makeTupleArityList(2)));
+  ret->setArg(0,lt->getHead());
+  ret->setArg(1,lt->getTail());
+  return ret;
 }
 
 /*===================================================================

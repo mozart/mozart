@@ -67,7 +67,7 @@ enum Recalc_e {lower, upper};
 #ifdef PURE
 // temporary changes
 class Suspension;
-class STuple {
+class SRecord {
 public:
   int getSize(void);
   OZ_Term &operator [] (int);
@@ -75,7 +75,7 @@ public:
 
 OZ_Term deref(OZ_Term);
 OZ_Term makeTaggedRef(OZ_Term *);
-STuple * tagged2STuple(OZ_Term);
+SRecord * tagged2SRecord(OZ_Term);
 
 #define SimplifyOnUnify(EQ01, EQ02, EQ12)
 
@@ -191,7 +191,7 @@ public:
 
   OZ_Boolean expectFDish(int i, OZ_Term v, int &s);
   OZ_Boolean expectInt(int i, OZ_Term v, int &s);
-  OZ_Boolean expectNonLin(int i, STuple &at, STuple &xt, OZ_Term tagged_xtc,
+  OZ_Boolean expectNonLin(int i, SRecord &at, SRecord &xt, OZ_Term tagged_xtc,
                     int &s, OZ_CFun func, OZ_Term * xregs, int arity);
 
   OZ_Bool addSuspFDish(OZ_CFun, OZ_Term *, int);
@@ -286,10 +286,10 @@ private:
   void _introduce(int i, OZ_Term v);
   void introduceLocal(int i, OZ_Term v);
   void saveDomainOnTopLevel(int i);
-  int simplifyBody(int ts, STuple &a, STuple &x,
+  int simplifyBody(int ts, SRecord &a, SRecord &x,
                    OZ_Boolean sign_bits[], double coeffs[],
                    OZ_Term ct, int &c);
-  void _propagate_unify_cd(int clauses, int variables, STuple &st);
+  void _propagate_unify_cd(int clauses, int variables, SRecord &st);
 
   enum {cache_slot_size = 4};
 
@@ -349,18 +349,18 @@ public:
   // used by putList, putNot, putLe, putGe
   OZ_Bool releaseNonRes(void);
 
-  int simplifyOnUnify(STuple &a, OZ_Boolean sign_bits[],
-                      double coeffs[], STuple &x,
+  int simplifyOnUnify(SRecord &a, OZ_Boolean sign_bits[],
+                      double coeffs[], SRecord &x,
                       OZ_Term * ct, int &c);
 
-  int simplifyOnUnify(int ts, STuple &a, OZ_Boolean sign_bits[],
-                      double coeffs[], STuple &x,
+  int simplifyOnUnify(int ts, SRecord &a, OZ_Boolean sign_bits[],
+                      double coeffs[], SRecord &x,
                       OZ_Term * ct, int &c);
 
   OZ_Boolean _unifiedVars(void);
   OZ_Boolean unifiedVars(void);
 
-  void propagate_unify_cd(int cl, int vars, STuple &st);
+  void propagate_unify_cd(int cl, int vars, SRecord &st);
 
   OZ_Boolean isNotCDVoid(int i) {return bifdbm_dom[i] != &__CDVoidFiniteDomain;}
 

@@ -62,7 +62,7 @@ OZ_Term deref(OZ_Term &tr, OZ_Term * &ptr, pm_term_type &tag)
     break;
   case SVAR: tag = pm_svar; break;
   case UVAR: tag = pm_uvar; break;
-  case STUPLE: tag = pm_tuple; break;
+  case SRECORD: tag = isSTuple(tr1) ? pm_tuple : pm_none; break;
   case LITERAL: tag = pm_literal; break;
   default: tag = pm_none; break;
   }
@@ -184,7 +184,7 @@ OZ_Boolean BIfdHeadManager::expectInt(int i, OZ_Term v, int &s)
   return OZ_FALSE;
 }
 
-OZ_Boolean BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
+OZ_Boolean BIfdHeadManager::expectNonLin(int i, SRecord &at, SRecord &xt,
                                    OZ_Term tagged_xtc, int &s,
                                    OZ_CFun f, RefsArray x, int a)
 {
@@ -206,8 +206,8 @@ OZ_Boolean BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
     return OZ_TRUE;
   }
 
-  STuple &xtc = *tagged2STuple(tagged_xtc);
-  const int ts = xtc.getSize();
+  SRecord &xtc = *tagged2SRecord(tagged_xtc);
+  const int ts = xtc.getWidth();
   OZ_Term last_fdvar;
   OZ_Term * last_fdvarptr = NULL, * prev_fdvarptr;
   OZ_Term var;
@@ -814,9 +814,9 @@ OZ_Bool checkDomDescr(OZ_Term descr,
     return SUSPEND; // checkDomDescr
   } else if (AtomBool == descr && (expect >= 2)) { // (1)
     return PROCEED;
-  } else if (isSTuple(descr_tag) && (expect >= 2)) {
-    STuple &tuple = *tagged2STuple(descr);
-    if (tuple.getSize() != 2) {
+  } else if (isSRecord(descr_tag) && (expect >= 2)) {
+    SRecord &tuple = *tagged2SRecord(descr);
+    if (tuple.getWidth() != 2) {
       return FAILED;
     }
     for (int i = 0; i < 2; i++) {
@@ -1010,7 +1010,7 @@ OZ_Boolean BIfdBodyManager::unifiedVars(void) {
   return _unifiedVars();
 }
 
-void BIfdBodyManager::propagate_unify_cd(int cl, int vars, STuple &st) {
+void BIfdBodyManager::propagate_unify_cd(int cl, int vars, SRecord &st) {
   if (isUnifyCurrentPropagator ())
     _propagate_unify_cd(cl, vars, st);
 }
@@ -1022,7 +1022,7 @@ inline OZ_Term getIndex(OZ_Term t) {return (t & ~taggedIndex);}
 inline OZ_Boolean isTaggedIndex(OZ_Term t) {return (t & taggedIndex);}
 
 inline
-int BIfdBodyManager::simplifyBody(int ts, STuple &a, STuple &x,
+int BIfdBodyManager::simplifyBody(int ts, SRecord &a, SRecord &x,
                                   OZ_Boolean sign_bits[], double coeffs[],
                                   OZ_Term ct, int &c)
 {
@@ -1095,9 +1095,9 @@ int BIfdBodyManager::simplifyBody(int ts, STuple &a, STuple &x,
   return to;
 } // simplifyBody
 
-int BIfdBodyManager::simplifyOnUnify(int ts, STuple &a,
+int BIfdBodyManager::simplifyOnUnify(int ts, SRecord &a,
                                      OZ_Boolean sign_bits[],
-                                     double coeffs[], STuple &x,
+                                     double coeffs[], SRecord &x,
                                      OZ_Term * ct, int &c) {
   if (isUnifyCurrentPropagator ()) {
     AssertFD(curr_num_of_vars >= ts);
@@ -1118,8 +1118,8 @@ int BIfdBodyManager::simplifyOnUnify(int ts, STuple &a,
   return curr_num_of_vars;
 }
 
-int BIfdBodyManager::simplifyOnUnify(STuple &a, OZ_Boolean sign_bits[],
-                                     double coeffs[], STuple &x,
+int BIfdBodyManager::simplifyOnUnify(SRecord &a, OZ_Boolean sign_bits[],
+                                     double coeffs[], SRecord &x,
                                      OZ_Term * ct, int &c)
 {
   if (isUnifyCurrentPropagator ())
@@ -1527,7 +1527,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
 } // BIfdBodyManager::introduce
 
 void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
-                                          STuple &vp)
+                                          SRecord &vp)
 {
   // 1st pass: mark first occ of a var
   int v, c;
@@ -1557,7 +1557,7 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
             l_var = makeTaggedRef(bifdbm_varptr[idx_vp(c, v)]);
             bifdbm_vartag[idx_vp(c, fs)] = pm_fd;
             // update arguments
-            STuple &vp_c = *tagged2STuple(deref(vp[c]));
+            SRecord &vp_c = *tagged2SRecord(deref(vp[c]));
             vp_c[fs] = l_var;
           } else if (bifdbm_vartag[idx_vp(c, fs)] == pm_singl) {
             l_var = bifdbm_var[idx_vp(c, fs)];
@@ -1576,7 +1576,7 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
             r_var = makeTaggedRef(bifdbm_varptr[idx_vp(c, v)]);
             bifdbm_vartag[idx_vp(c, v)] = pm_fd;
             // update arguments
-            STuple &vp_c = *tagged2STuple(deref(vp[c]));
+            SRecord &vp_c = *tagged2SRecord(deref(vp[c]));
             vp_c[v] = r_var;
           } else if (bifdbm_vartag[idx_vp(c, v)] == pm_singl) {
             r_var = bifdbm_var[idx_vp(c, v)];

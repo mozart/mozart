@@ -519,22 +519,6 @@ start:
       goto unify_args;
     }
 
-  case STUPLE:
-    {
-      STuple *st1 = tagged2STuple(term1);
-      STuple *st2 = tagged2STuple(term2);
-
-      if ( ! st1->compareFunctor(st2) ) {
-        return NO;
-      }
-
-      argSize = st1->getSize();
-      args1 = st1->getRef();
-      args2 = st2->getRef();
-
-      goto unify_args;
-    }
-
   case SRECORD:
     {
       SRecord *sr1 = tagged2SRecord(term1);

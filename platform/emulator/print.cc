@@ -124,9 +124,6 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
   case CVAR:
     tagged2CVar(ref)->print(stream, depth, offset,origRef);
     break;
-  case STUPLE:
-    tagged2STuple(ref)->print(stream,depth,offset);
-    break;
   case SRECORD:
     tagged2SRecord(ref)->print(stream,depth,offset);
     break;
@@ -344,21 +341,6 @@ PRINTLONG(DynamicTable)
   print(stream, depth, offset);
 }
 
-PRINT(STuple)
-{
-  CHECKDEPTH;
-  int i;
-
-  tagged2Stream(getLabel(),stream,depth,offset);
-  stream << "(";
-  NEWLINE(offset+2);
-  for (i = 0; i < getSize (); i++) {
-    tagged2Stream(getArg(i),stream, DEC(depth),offset+2);
-    NEWLINE(offset+2);
-  }
-  stream << ")";
-}
-
 PRINT(SRecord)
 {
   CHECKDEPTH;
@@ -368,14 +350,21 @@ PRINT(SRecord)
   CHECK_DEREF(ar);
   if (isCons(ar)) {
     stream << "(";
+    int i=1;
+    Bool isTuple=OK;
     while (isCons(ar)) {
       NEWLINE(offset+2);
       TaggedRef feat = head(ar);
       CHECK_DEREF(feat);
-      tagged2Stream(feat,stream,depth,offset);
+      if (isTuple && isSmallInt(feat) && smallIntValue(feat)==i) {
+        i++;
+      } else {
+        isTuple = NO;
+        tagged2Stream(feat,stream,depth,offset);
+        stream << ": ";
+      }
       ar = tail(ar);
       CHECK_DEREF(ar);
-      stream << ": ";
       tagged2Stream(getFeature(feat),stream,DEC(depth),offset+2);
     }
     NEWLINE(offset);
@@ -545,10 +534,12 @@ PRINT(Arity)
       stream << " Value: " << indextable[i] << endl;
     }
   }
+#ifdef DEBUG_CHECK
   stream << numberofentries
     << " entries, but only "
     << numberofcollisions
     << " collisions.\n";
+#endif
 }
 
 
@@ -640,9 +631,6 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
     break;
   case CVAR:
     tagged2CVar(ref)->printLong(stream, depth, offset,AtomVoid);
-    break;
-  case STUPLE:
-    tagged2STuple(ref)->printLong(stream,depth,offset);
     break;
   case SRECORD:
     tagged2SRecord(ref)->printLong(stream,depth,offset);
@@ -1197,24 +1185,6 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
 } // PRINTLONG(GenCVariable)
 
 
-PRINTLONG(STuple)
-{
-  CHECKDEPTHLONG;
-  int i;
-
-  stream << indent(offset) << "Tuple @" << this << endl
-         << indent(offset) << "Label: ";
-  tagged2StreamLong(label,stream,depth,offset);
-  stream << endl;
-  for (i = 0; i < getSize (); i++) {
-    stream << indent(offset) <<  "Arg "<< i << ":\n";
-    tagged2StreamLong(args[i],stream,DEC(depth),offset);
-    stream << " ";
-  }
-  stream << endl;
-}
-
-
 PRINTLONG(LTuple)
 {
   CHECKDEPTHLONG;
@@ -1335,6 +1305,21 @@ PRINTLONG(SChunk)
 PRINTLONG(SRecord)
 {
   CHECKDEPTHLONG;
+  if (isTuple()) {
+    int i;
+
+    stream << indent(offset) << "Tuple @" << this << endl
+           << indent(offset) << "Label: ";
+    tagged2StreamLong(label,stream,depth,offset);
+    stream << endl;
+    for (i = 0; i < getWidth(); i++) {
+      stream << indent(offset) <<  "Arg "<< i << ":\n";
+      tagged2StreamLong(args[i],stream,DEC(depth),offset);
+      stream << " ";
+    }
+    stream << endl;
+    return;
+  }
   stream << indent(offset);
   stream << "Record @"
          << this << ":\n"

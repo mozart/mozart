@@ -65,7 +65,6 @@ extern int OZ_isInt        _PROTOTYPE((OZ_Term));
 extern int OZ_isLiteral    _PROTOTYPE((OZ_Term));
 extern int OZ_isName       _PROTOTYPE((OZ_Term));
 extern int OZ_isNil        _PROTOTYPE((OZ_Term));
-extern int OZ_isNoNumber   _PROTOTYPE((OZ_Term));
 extern int OZ_isProcedure  _PROTOTYPE((OZ_Term));
 extern int OZ_isRecord     _PROTOTYPE((OZ_Term));
 extern int OZ_isTuple      _PROTOTYPE((OZ_Term));
