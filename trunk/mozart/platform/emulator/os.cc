@@ -1183,7 +1183,12 @@ int osDlopen(char *filename, OZ_Term& ret)
   }
 #else
   {
-    void *handle=dlopen(filename, RTLD_NOW);
+    // RTLD_GLOBAL is important: it serves the same purpose
+    // as -rdynamic for executables: newly loaded objects
+    // are linked against symbols coming from already
+    // liked objects (example: libfd and libschedule)
+
+    void *handle=dlopen(filename, RTLD_NOW | RTLD_GLOBAL);
 
     if (!handle) {
       err=oz_atom(dlerror());
