@@ -1,0 +1,67 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Denys Duchier, (duchier@ps.uni-sb.de)
+dnl 
+dnl  Contributors:
+dnl    optional, Contributor's name (Contributor's email address)
+dnl 
+dnl  Copyright:
+dnl    Michael Mehl (1997)
+dnl 
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl 
+dnl  This file is part of Mozart, an implementation 
+dnl  of Oz 3:
+dnl     $MOZARTURL$
+dnl 
+dnl  See the file "LICENSE" or
+dnl     $LICENSEURL$
+dnl  for information on usage and redistribution 
+dnl  of this file, and for a DISCLAIMER OF ALL 
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+dnl *****************************************************************
+dnl INITIALIZE
+dnl *****************************************************************
+
+dnl This will check that we are in the Oz directory and initiate
+AC_INIT(gdbm)
+
+OZ_INIT
+AC_PROG_MAKE_SET
+BUILDTOP=`cd .. && pwd`
+AC_SUBST(BUILDTOP)
+
+AC_MSG_CHECKING(for --enable-contrib)
+AC_ARG_ENABLE(contrib,
+    [--enable-contrib=c1,c2,...
+	add these contributions to the configuration (default: NONE)])
+
+if test -z "${enable_contrib}"; then
+    : ${oz_enable_contrib=}
+else
+    case "${enable_contrib}" in
+    no)		oz_enable_contrib=;;
+    yes)	oz_enable_contrib=gdbm,regex;;
+    *)		oz_enable_contrib=${enable_contrib};;
+    esac
+fi
+AC_MSG_RESULT($oz_enable_contrib)
+
+CONTRIBDIRS=`echo $oz_enable_contrib | sed 's/,/ /g'`
+AC_SUBST(CONTRIBDIRS)
+AC_CONFIG_SUBDIRS($CONTRIBDIRS)
+
+AC_OUTPUT(Makefile conf.all:conf.in)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+]))

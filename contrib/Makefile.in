@@ -1,0 +1,22 @@
+@SET_MAKE@
+
+BUILDTOP= @BUILDTOP@
+PREFIX  = @prefix@
+RM      = @RM@ -f
+SUBDIRS = @CONTRIBDIRS@
+
+.PHONY:	bootstrap all install clean distclean realclean veryclean World files check
+
+bootstrap::
+
+bootstrap all install clean realclean veryclean depend distclean::
+	dirs="$(SUBDIRS)"; for i in $$dirs; do (cd $$i && $(MAKE) $@); done
+
+clean realclean veryclean distclean::
+	-$(RM) *~
+
+distclean:: 
+	-$(RM) Makefile conf.all
+	-$(RM) config.log config.status config.cache
+
+check::
