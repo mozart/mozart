@@ -164,13 +164,6 @@ public:
   }
 };
 
-//
-// By now we need three:
-// (a) input between virtual sites,
-// (b) pending (because of locks at the receiver site) sends,
-// (c) probing of virtual sites.
-#define	MAXTASKS	3
-
 
 /* -----------------------------------------------------------------------
  * OO

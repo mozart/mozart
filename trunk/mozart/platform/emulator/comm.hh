@@ -745,8 +745,8 @@ public:
       dumpVirtualInfo(info);}}
 
   //
-  // kost@ : applied whenever a "alive acknowledgement" ('M_SITE_ALIVE')
-  // message is received;
+  // kost@ : applied whenever a "alive acknowledgement"
+  // ('VS_M_SITE_ALIVE') message is received;
   void siteAlive() {
     if(connect()) {
       if(getType() & REMOTE_SITE) {
