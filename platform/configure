@@ -916,6 +916,10 @@ fi
         RANLIB=${target}-ranlib
         AR=${target}-ar
         STRIP=${target}-strip
+        WINDRES=${target}-windres
+        AS=${target}-as
+        DLLTOOL=${target}-dlltool
+        DLLWRAP=${target}-dllwrap
         OZTOOL="sh $BUILDTOP/platform/emulator/${target}-oztool"
         enable_contrib_psql=no
         enable_contrib_gdbm=yes
@@ -936,7 +940,7 @@ fi
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:940: checking for $ac_word" >&5
+echo "configure:944: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -991,7 +995,7 @@ fi
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:995: checking for $ac_word" >&5
+echo "configure:999: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1037,7 +1041,7 @@ fi
   esac
 
   echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
-echo "configure:1041: checking for --with-inc-dir" >&5
+echo "configure:1045: checking for --with-inc-dir" >&5
   # Check whether --with-inc-dir or --without-inc-dir was given.
 if test "${with_inc_dir+set}" = set; then
   withval="$with_inc_dir"
@@ -1079,7 +1083,7 @@ fi
 
 
   echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:1083: checking for --with-lib-dir" >&5
+echo "configure:1087: checking for --with-lib-dir" >&5
   # Check whether --with-lib-dir or --without-lib-dir was given.
 if test "${with_lib_dir+set}" = set; then
   withval="$with_lib_dir"
@@ -1123,7 +1127,7 @@ fi
 
 
   echo $ac_n "checking for oz version""... $ac_c" 1>&6
-echo "configure:1127: checking for oz version" >&5
+echo "configure:1131: checking for oz version" >&5
 if eval "test \"`echo '$''{'oz_cv_ozversion'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1136,7 +1140,7 @@ echo "$ac_t""$oz_cv_ozversion" 1>&6
 
 
   echo $ac_n "checking for build date""... $ac_c" 1>&6
-echo "configure:1140: checking for build date" >&5
+echo "configure:1144: checking for build date" >&5
 if eval "test \"`echo '$''{'oz_cv_build_date'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1152,7 +1156,7 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
 
 : ${oz_enable_wish=yes}
 echo $ac_n "checking for --enable-wish""... $ac_c" 1>&6
-echo "configure:1156: checking for --enable-wish" >&5
+echo "configure:1160: checking for --enable-wish" >&5
 # Check whether --enable-wish or --disable-wish was given.
 if test "${enable_wish+set}" = set; then
   enableval="$enable_wish"
@@ -1178,7 +1182,7 @@ case "$target" in
    NONE)
    ;;
    i386-mingw32)
-    PLATFORMDIRS="mswindows $PLATFORMDIRS"
+    PLATFORMDIRS="$PLATFORMDIRS mswindows"
     ;;
 
    *) { echo "configure: error: "can only cross-compile for target i386-mingw32 not for $target"" 1>&2; exit 1; }
