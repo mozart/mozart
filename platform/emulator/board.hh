@@ -105,9 +105,9 @@ public:
   int getCompModeHackForBoardToInstall() {
     return flags>>16;
   }
-  void incSuspCount(int n=1);
+  inline void incSuspCount(int n=1);
   void decSuspCount();
-  Board *getBoardFast();
+  inline Board *getBoardFast();
   Board *getParentAndTest();
   Board *getParentFast();
 
