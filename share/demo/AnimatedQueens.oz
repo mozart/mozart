@@ -62,21 +62,13 @@ define
                    else black # white # black # black # black
                    end
 
-   QueenByMag = q(micro:  {New Tk.image
-                           tkInit(type:bitmap foreground:QueenColor
-                                  url: URL # 'micro-queen.xbm')}
-                  tiny:   {New Tk.image
-                           tkInit(type:bitmap foreground:QueenColor
-                                  url: URL # 'tiny-queen.xbm')}
-                  small:  {New Tk.image
-                           tkInit(type:bitmap foreground:QueenColor
-                                  url: URL # 'small-queen.xbm')}
-                  middle: {New Tk.image
-                           tkInit(type:bitmap foreground:QueenColor
-                                  url: URL # 'middle-queen.xbm')}
-                  large:  {New Tk.image
-                           tkInit(type:bitmap foreground:QueenColor
-                                  url: URL # 'large-queen.xbm')})
+   QueenByMag = {List.toRecord ''
+                 {Map [micro tiny small middle large]
+                  fun {$ S}
+                     S#{New Tk.image
+                        tkInit(type:bitmap foreground:QueenColor
+                               url: URL # S# '-queen.xbm')}
+                  end}}
 
    CrossByMag = c(micro:  false
                   tiny:   false
@@ -110,28 +102,26 @@ define
          {FD.reflect.min X} < {FD.reflect.min Y}
       end
 
-      fun {QueensSolver Size Strategy}
-         Enum = case Strategy
-                of !NaiveStrat     then naive
-                [] !FirstFailStrat then ff
-                [] !UpFirstStrat   then generic(order:OrderUp)
-                [] !MiddleOutStrat then generic(value:mid)
-                end
+      fun {QueensScript Size Strategy}
+         Distribute = case Strategy
+                      of !NaiveStrat     then naive
+                      [] !FirstFailStrat then ff
+                      [] !UpFirstStrat   then generic(order:OrderUp)
+                      [] !MiddleOutStrat then generic(value:mid)
+                      end
       in
          proc {$ Xs}
             Xs = {FD.list Size 1#Size}
             {FD.distinct Xs}
             {FD.distinctOffset Xs {List.number 1 Size 1}}
             {FD.distinctOffset Xs {List.number Size 1 ~1}}
-            {FD.distribute Enum Xs}
+            {FD.distribute Distribute Xs}
          end
       end
 
    in
 
       class Engine
-         from BaseObject
-
          feat
             canvas
 
@@ -140,10 +130,12 @@ define
             Stopped:   false
 
          meth init(Size Strategy Canvas)
-            S={Space.new {QueensSolver Size Strategy}}
+            S={Space.new {QueensScript Size Strategy}}
          in
-            Stopped   <- false
-            Stack     <- [S]
+            Stopped    <- false
+            Stack      <- [S]
+            self.canvas = Canvas
+            {self next}
          end
 
          meth next
@@ -229,7 +221,7 @@ define
 
          proc {DrawQueen X Y T}
             if X\=void andthen Y\=void then
-               {Canvas tk(crea image (X-1)*Width (Y-1)*Width
+               {Canvas tk(create image (X-1)*Width (Y-1)*Width
                           image:  Queen
                           tags:   T
                           anchor: nw)}
@@ -241,7 +233,7 @@ define
 
          if Cross\=false then
             proc {DrawCross X Y T}
-               {Canvas tk(crea image (X-1)*Width (Y-1)*Width
+               {Canvas tk(create image (X-1)*Width (Y-1)*Width
                           image:  Cross
                           tags:   T
                           anchor: nw)}
@@ -261,7 +253,10 @@ define
                case Os of nil then skip
                [] O|Or then N|Nr=Ns in
                   if O.2\=nil then
-                     case N of [M] then {DrawQueen M I T} else skip end
+                     case N of [M] then
+                        {DrawQueen M I T}
+                     else skip
+                     end
                      {DrawCrosses O N I T}
                   end
                   {UpdateBoard Or Nr I+1 T}
@@ -272,7 +267,9 @@ define
             proc {UpdateBoard Os Ns I T}
                case Os of nil then skip
                [] O|Or then N|Nr=Ns in
-                  if O\=N then {DrawQueen N I T} end
+                  if O\=N then
+                     {DrawQueen N I T}
+                  end
                   {UpdateBoard Or Nr I+1 T}
                end
             end
@@ -302,7 +299,7 @@ define
                in
                   case @Stack of nil then
                      Stack <- [NewB#NewT]
-                  [] OldB#OldT|Sr then
+                  [] OldB#_|_ then
                      {UpdateBoard OldB NewB 1 NewT}
                      Stack <- NewB#NewT|@Stack
                   end
