@@ -399,8 +399,9 @@ ByteSource::getTerm(OZ_Term out, const char *compname)
                     oz_atom(PERDIOVERSION),
                     vergot);
   } else {
-    return oz_raise(E_ERROR,OZ_atom("dp"),"load",1,
-                    oz_atom("notComponent"));
+    return oz_raise(E_ERROR,OZ_atom("dp"),"load",2,
+                    oz_atom("notComponent"),
+                    oz_atom(compname));
   }
 }
 
