@@ -4593,6 +4593,13 @@ OZ_C_proc_begin(BInewCell,2)
 OZ_C_proc_end
 
 
+inline
+OZ_Return checkSuspend()
+{
+  return oz_currentThread->stopped() ? BI_PREEMPT : PROCEED;
+}
+
+
 OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef &newVal)
 {
   NONVAR(c,rec);
@@ -4603,7 +4610,8 @@ OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef &newVal)
   Tertiary *tert = tagged2Tert(rec);
   if(tert->getTertType()!=Te_Local){
     cellDoExchange(tert,oldVal,newVal,oz_currentThread);
-    return PROCEED;}
+    return checkSuspend();
+  }
 
   CellLocal *cell=(CellLocal*)tert;
   CheckLocalBoard(cell,"cell");
@@ -4665,7 +4673,8 @@ OZ_Return BIassignCellInline(TaggedRef c, TaggedRef in)
   if(tert->getTertType()!=Te_Local){
     TaggedRef oldIgnored = oz_newVariable();
     cellDoExchange(tert,oldIgnored,in,oz_currentThread);
-    return PROCEED;}
+    return checkSuspend();
+  }
 
   CellLocal *cell=(CellLocal*)tert;
   CheckLocalBoard(cell,"cell");
