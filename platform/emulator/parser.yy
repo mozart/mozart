@@ -204,7 +204,7 @@ extern CTerm xyFileNameAtom;
 extern char xyhelpFileName[];
 
 static void xyerror(char *);
-extern "C" void xyreportError(char *, char *, char *, int ,int);
+extern "C" void xyreportError(char *, char *, const char *, int ,int);
 
 static inline int xycharno() {
   int n = xytext - xylastline;
@@ -219,6 +219,7 @@ static inline int xycharno() {
 // Operations on CTerms
 //----------------------
 
+static int nerrors;
 static CTerm yyoutput;
 
 inline CTerm pos() {
@@ -421,8 +422,8 @@ static CTerm decls[DEPTH];
 %%
 
 file		: queries ENDOFFILE
-		  { if (yynerrs) {
-		      yyoutput = newCTerm("parseErrors",OZ_int(yynerrs));
+		  { if (nerrors) {
+		      yyoutput = newCTerm("parseErrors",OZ_int(nerrors));
 		      YYABORT;
 		    } else {
 		      yyoutput = $1;
@@ -430,8 +431,8 @@ file		: queries ENDOFFILE
 		    }
 		  }
 		| prodClauseList ENDOFFILE
-		  { if (yynerrs) {
-		      yyoutput = newCTerm("parseErrors",OZ_int(yynerrs));
+		  { if (nerrors) {
+		      yyoutput = newCTerm("parseErrors",OZ_int(nerrors));
 		      YYABORT;
 		    } else {
 		      yyoutput = newCTerm("fSynTopLevelProductionTemplates",$1);
@@ -439,7 +440,7 @@ file		: queries ENDOFFILE
 		    }
 		  }
 		| error
-		  { yyoutput = newCTerm("parseErrors",OZ_int(yynerrs));
+		  { yyoutput = newCTerm("parseErrors",OZ_int(nerrors));
 		    YYABORT;
 		  }
 		;
@@ -1373,7 +1374,7 @@ synProdCallParams
 
 %%
 
-static void append(char *s) {
+static void append(const char *s) {
   xy_errorMessages = OZ_pair2(xy_errorMessages,OZ_string(s));
 }
 
@@ -1381,9 +1382,10 @@ static void append(int i) {
   xy_errorMessages = OZ_pair2(xy_errorMessages,OZ_int(i));
 }
 
-void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
+void xyreportError(char *kind, char *msg, const char *file,
+		   int line, int offset) {
   if (strcmp(kind,"warning"))
-    yynerrs++;
+    nerrors++;
 
   append("\n%************ ");
   append(kind);
@@ -1458,11 +1460,12 @@ void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
 
 static void xyerror(char *s) {
   char *news;
-  if (strlen(s) > 13)
-    news = s + 13;
+  if (!strncmp(s, "parse error", 11) && strlen(s) > 13)
+    xyreportError("parse error", s + 13, xyFileName, xylino, xycharno());
+  else if (!strncmp(s, "syntax error: ", 14))
+    xyreportError("syntax error", s + 14, xyFileName, xylino, xycharno());
   else
-    news = "";
-  xyreportError("parse error", news, xyFileName, xylino, xycharno());
+    xyreportError("parse error", s, xyFileName, xylino, xycharno());
 }
 
 
@@ -1470,6 +1473,7 @@ static void parserInit() {
   xyscannerInit();
   for (int i = 0; i < DEPTH; i++)
     terms[i] = 0;
+  nerrors = 0;
 }
 
 static CTerm parse() {

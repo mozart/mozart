@@ -243,6 +243,7 @@ void AM::init(int argc,char **argv)
   }
 
   isStandaloneF=NO;
+  compStream = 0;
   if (url) {
     isStandaloneF=OK;
   } else {
@@ -291,7 +292,7 @@ void AM::init(int argc,char **argv)
 
   lastThreadID     = 0;
   lastFrameID      = 0;
-  suspendDebug     = runChildren = NO;
+  addEmacsThreads  = addSubThreads = OK;
   threadStreamTail = OZ_newVariable();
 
   initThreads();
@@ -332,7 +333,7 @@ void AM::init(int argc,char **argv)
     }
 
     OZ_Term v=oz_newVariable();
-    OZ_Return ret = loadURL(url,v);
+    OZ_Return ret = loadURL(url,v,makeTaggedNULL());
     if (ret!=PROCEED) {
       char *aux = (ret==RAISE) ? toC(exception.value) : "unknown error";
       fprintf(stderr,"Loading from URL '%s' failed: %s\n",url,aux);
@@ -1840,14 +1841,14 @@ void AM::checkDebugOutline(Thread *tt)
 {
   Assert(debugmode());
   if (currentThread && tt->getThrType() == S_RTHREAD)
-    if (currentThread == rootThread && !suspendDebug ||
-	currentThread->isTraced() && !runChildren) {
+    if (currentThread == rootThread && addEmacsThreads ||
+	currentThread->getTrace() && addSubThreads) {
 
       debugStreamThread(tt,currentThread);
 
-      tt->traced();
-      tt->startStepMode();
-      tt->stop();
+      tt->setTrace(OK);
+      tt->setStep(OK);
+      tt->setStop(OK);
     }
 }
 
@@ -1876,7 +1877,7 @@ void AM::stopThread(Thread *th)
     if (th==currentThread) {
       setSFlag(StopThread);
     }
-    th->stop();
+    th->setStop(OK);
     if (th->isRunnable())
       th->unmarkRunnable();
   }
@@ -1885,7 +1886,7 @@ void AM::stopThread(Thread *th)
 void AM::resumeThread(Thread *th)
 {
   if (th->pCont()==0) {
-    th->cont();
+    th->setStop(NO);
 
     if (!th->isDeadThread()) {
       if (th == currentThread) {

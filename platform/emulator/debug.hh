@@ -43,15 +43,15 @@ void debugStreamSuspend(ProgramCounter, Thread*, TaggedRef, TaggedRef, Bool);
 void debugStreamCont(Thread*);
 void debugStreamThread(Thread*,Thread* parent=NULL);
 void debugStreamTerm(Thread*);
-void debugStreamCall(ProgramCounter, char*, int, TaggedRef*, Bool, int);
+void debugStreamCall(ProgramCounter, const char*, int, TaggedRef*, Bool, int);
 void debugStreamExit(TaggedRef);
 void debugStreamRaise(Thread*, TaggedRef);
 
 OZ_C_proc_proto(BIdebugmode)
 OZ_C_proc_proto(BIcheckStopped)
 OZ_C_proc_proto(BItaskStack)
-OZ_C_proc_proto(BIsuspendDebug)
-OZ_C_proc_proto(BIrunChildren)
+OZ_C_proc_proto(BIdebugEmacsThreads)
+OZ_C_proc_proto(BIdebugSubThreads)
 OZ_C_proc_proto(BIframeVariables)
 OZ_C_proc_proto(BIbreakpointAt)
 OZ_C_proc_proto(BIbreakpoint)

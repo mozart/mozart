@@ -23,7 +23,7 @@ class HashNode;
 /* keys of hashtables may be integers or strings */
 typedef enum {HT_INTKEY = 0, HT_CHARKEY = 1} HtKeyType;
 
-typedef union {char *fstr; intlong fint; } HtKey;
+typedef union {const char *fstr; intlong fint; } HtKey;
 
 class HashNode {
   public:
@@ -46,9 +46,9 @@ protected:
   HtKeyType type;
   HashNode * table;
   int hashFunc(intlong);
-  int hashFunc(char *);
+  int hashFunc(const char *);
   int findIndex(intlong);
-  int findIndex(char *);
+  int findIndex(const char *);
   int lengthList(int i);
   void resize();
 
@@ -56,11 +56,10 @@ public:
   HashTable(HtKeyType,int sz);
   ~HashTable();
 
-  // return NO iff already in there and replace = NO
-  Bool htAdd(char *k, void *val, Bool duplicate=OK);
-  Bool htAdd(intlong k, void *val);
+  void htAdd(const char *k, void *val);
+  void htAdd(intlong k, void *val);
   void *htFind(intlong);
-  void *htFind(char *);
+  void *htFind(const char *);
   void print();
   void printStatistic();
   unsigned memRequired(int valSize = 0);

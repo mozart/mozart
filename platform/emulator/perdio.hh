@@ -177,6 +177,7 @@ void marshalSite(Site *,MsgBuffer*);
 
 void addGName(GName*,TaggedRef);
 TaggedRef findGName(GName*);
+void deleteGName(GName*);
 
 // isn't this a variety of globalization - ATTENTION
 PerdioVar *var2PerdioVar(TaggedRef *);  
@@ -311,8 +312,8 @@ void gcGName(GName *);
 /*  SECTION ::  provided by components                                      */
 /* ************************************************************************ */
 
-int loadURL(TaggedRef,OZ_Term); // ATTENTION maybe not needed 
-int loadURL(char *,OZ_Term);
+int loadURL(const char *,OZ_Term,OZ_Term);
+int loadURL(TaggedRef,OZ_Term,OZ_Term);
 void initComponents();
 
 /* __PERDIOHH */

@@ -152,8 +152,8 @@ void debugStreamExit(TaggedRef frameId) {
   TaggedRef tail    = am.threadStreamTail;
   TaggedRef newTail = OZ_newVariable();
   
-  am.currentThread->startStepMode();
-  am.currentThread->stop();
+  am.currentThread->setStep(OK);
+  am.currentThread->setStop(OK);
   
   TaggedRef pairlist =
     cons(OZ_pairA("thr",
@@ -175,7 +175,7 @@ void debugStreamRaise(Thread *tt, TaggedRef exc) {
   TaggedRef tail    = am.threadStreamTail;
   TaggedRef newTail = OZ_newVariable();
  
-  am.currentThread->stop();
+  am.currentThread->setStop(OK);
 
   TaggedRef pairlist =
     cons(OZ_pairA("thr",
@@ -190,7 +190,7 @@ void debugStreamRaise(Thread *tt, TaggedRef exc) {
   gotoBoard(bb);
 }
 
-void debugStreamCall(ProgramCounter debugPC, char *name, int arity, 
+void debugStreamCall(ProgramCounter debugPC, const char *name, int arity,
 		     TaggedRef *arguments, Bool builtin, int frameId) {
   Board *bb = gotoRootBoard();
   
@@ -201,7 +201,7 @@ void debugStreamCall(ProgramCounter debugPC, char *name, int arity,
   int line, abspos;
   time_t feedtime;
   
-  am.currentThread->stop();
+  am.currentThread->setStop(OK);
   
   CodeArea::getDebugInfoArgs(debugPC,file,line,abspos,comment);
   TaggedRef arglist = CodeArea::argumentList(arguments, arity);
@@ -256,30 +256,30 @@ OZ_C_proc_begin(BIcheckStopped,2)
 {
   oz_declareThreadArg(0,th);
   oz_declareArg(1,out);
-  return OZ_unify(out,th->stopped() ? OZ_true() : OZ_false());
+  return OZ_unify(out, th->getStop() ? NameTrue : NameFalse);
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIdebugmode,1)
 {
-  return OZ_unify(OZ_getCArg(0), am.debugmode() ? OZ_true() : OZ_false());
+  return OZ_unify(OZ_getCArg(0), am.debugmode() ? NameTrue : NameFalse);
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIsuspendDebug,1)
+OZ_C_proc_begin(BIdebugEmacsThreads,1)
 {
   OZ_declareNonvarArg(0,in);
   in = OZ_deref(in);
-  am.suspendDebug = OZ_isTrue(in) ? OK : NO;
+  am.addEmacsThreads = OZ_isTrue(in) ? OK : NO;
   return PROCEED;
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIrunChildren,1)
+OZ_C_proc_begin(BIdebugSubThreads,1)
 {
   OZ_declareNonvarArg(0,in);
   in = OZ_deref(in);
-  am.runChildren = OZ_isTrue(in) ? OK : NO;
+  am.addSubThreads = OZ_isTrue(in) ? OK : NO;
   return PROCEED;
 }
 OZ_C_proc_end
@@ -332,9 +332,9 @@ OZ_C_proc_begin(BIsetContFlag,2)
   Thread *thread = (Thread*) rec;
   
   if (OZ_isTrue(yesno))
-    thread->setContFlag();
+    thread->setCont(OK);
   else if (OZ_isFalse(yesno))
-    thread->deleteContFlag();
+    thread->setCont(NO);
   else warning("BIsetContFlag: invalid argument");
   return PROCEED;
 }
@@ -349,9 +349,9 @@ OZ_C_proc_begin(BIsetStepMode,2)
   Thread *thread = (Thread*) rec;
   
   if (OZ_isTrue(yesno))
-    thread->startStepMode();
+    thread->setStep(OK);
   else if (OZ_isFalse(yesno))
-    thread->stopStepMode();
+    thread->setStep(NO);
   else warning("BIsetStepMode: invalid argument");
   return PROCEED;
 }
@@ -366,9 +366,9 @@ OZ_C_proc_begin(BItraceThread,2)
   Thread *thread = (Thread*) rec;
   
   if (OZ_isTrue(yesno))
-    thread->traced();
+    thread->setTrace(OK);
   else if (OZ_isFalse(yesno))
-    thread->notTraced();
+    thread->setTrace(NO);
   else warning("traceThread: invalid argument");
   return PROCEED;
 }
@@ -435,9 +435,9 @@ OZ_C_proc_begin(BIbreakpointAt, 4)
 OZ_C_proc_end
 
 void execBreakpoint(Thread *t, Bool message) {
-  t->startStepMode();
-  t->deleteContFlag();
-  t->traced();
+  t->setTrace(OK);
+  t->setStep(OK);
+  t->setCont(NO);
   if (message)
     debugStreamThread(t);
 }
@@ -475,7 +475,7 @@ static Bool isSpied(TaggedRef def)
   return NO;
 }
 
-static char *getPrintName(TaggedRef def)
+static const char *getPrintName(TaggedRef def)
 {
   if (isAbstraction(def)) {
     return tagged2Abstraction(def)->getPrintName();
@@ -517,7 +517,7 @@ char *binaryInfixes [] = {
 
 Bool isInTable(TaggedRef def, char **table)
 {
-  char *pn = getPrintName(def);
+  const char *pn = getPrintName(def);
   for (char **i=table; *i; i++) {
     if (strcmp(*i,pn) == 0) {
       return OK;
