@@ -41,29 +41,27 @@ unsigned int  ipPortNumber  = OZReadPortNumber;
 int  ipIpNumber    = 0; // Zero indicates that the default should be used.
 
 void tcpListenPort(int port, char* nodename){
-  // Here should the parameter of the engine be set.
-  
-  // Klippt fran createTcpPort 
-  struct sockaddr_in addr;
-  addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  if(nodename==0) {
-    NETWORK_ERROR(("tcpListenPort"));
+  ip_address ip;
+  if (ipIpNumber!=0) {
+    ip=ipIpNumber;
   }
-  struct hostent *hostaddr;
-  hostaddr=gethostbyname(nodename);
-  if (hostaddr==NULL) {
-    nodename = "localhost";
+  else {
+    if(nodename==0) {
+      NETWORK_ERROR(("tcpListenPort"));
+    }
+    struct hostent *hostaddr;
     hostaddr=gethostbyname(nodename);
-    OZ_warning("Unable to reach the net, using localhost instead\n");
+    if (hostaddr==NULL) {
+      nodename = "localhost";
+      hostaddr=gethostbyname(nodename);
+      OZ_warning("Unable to reach the net, using localhost instead\n");
+    }
+    
+    struct in_addr tmp;
+    memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
+    ip=ntohl(tmp.s_addr);
   }
-  
-  struct in_addr tmp;
-  memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
-  ip_address ip=ntohl(tmp.s_addr);
-  
-  // Klipp klart
-  
+
   TimeStamp timestamp(time(0),osgetpid());
   myDSite = makeMyDSite(ip, port, timestamp); 
   Assert(myDSite!=NULL);
