@@ -105,7 +105,7 @@ public:
 
   static void getDefinitionArgs(ProgramCounter PC,
 				Reg &reg, ProgramCounter &next, TaggedRef &file,
-				TaggedRef &line, PrTabEntry *& pred);
+				TaggedRef &line, PrTabEntry *& pred, int &mode);
 
   /* with one argument it means that we need the code till the "query"  */
   static void display (ProgramCounter from, int size = 1, FILE* = stderr);

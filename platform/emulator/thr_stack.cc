@@ -61,13 +61,15 @@ void printDef(ProgramCounter PC)
   ProgramCounter next;
   TaggedRef file, line;
   PrTabEntry *pred;
+  int xdummy;
+  
   ProgramCounter pc = CodeArea::definitionStart(PC);
   if (pc == NOCODE) {
     message("\tOn toplevel\n");
     return;
   }
     
-  CodeArea::getDefinitionArgs(pc,reg,next,file,line,pred);
+  CodeArea::getDefinitionArgs(pc,reg,next,file,line,pred,xdummy);
 
   message("\tIn procedure %s (File %s, line %s)\n",
 	  pred ? pred->getPrintName() : "???",
