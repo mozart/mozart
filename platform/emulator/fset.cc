@@ -598,7 +598,8 @@ OZ_Boolean OZ_FSetImpl::operator += (int i)
 {
   DEBUG_FSETIR('(' << *this << " += " << i << ") = ");
 
-  Assert(0 <= i && i < 32 * fset_high);
+  if (i < 0 || 32 * fset_high <= i)
+    return OZ_TRUE;
 
   setBit(_in, i);
   return normalize();
@@ -608,7 +609,8 @@ OZ_Boolean OZ_FSetImpl::operator -= (int i)
 {
   DEBUG_FSETIR('(' << *this << " -= " << i << ") = ");
 
-  Assert(0 <= i && i < 32 * fset_high);
+  if (i < 0 || 32 * fset_high <= i)
+    return OZ_TRUE;
  
   setBit(_not_in, i);
   return normalize();
