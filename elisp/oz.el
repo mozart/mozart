@@ -371,7 +371,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
       (if oz-emulator-hook
 	  (funcall oz-emulator-hook file)
 	(setq oz-emulator-buffer "*Oz Emulator*")
-	(make-comint "Oz Emulator" "oz.machine" nil "-emacs" "-S" file)
+	(make-comint "Oz Emulator" "oz.emulator" nil "-emacs" "-S" file)
 	(set-process-filter (get-buffer-process oz-emulator-buffer)
 			    'oz-emulator-filter)
 	(oz-create-buffer oz-emulator-buffer)
@@ -400,8 +400,8 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 			 nil
 			 t
 			 nil)))
-  (if (getenv "OZMACHINE")
-      (setenv "OZMACHINE" oz-emulator)))
+  (if (getenv "OZEMULATOR")
+      (setenv "OZEMULATOR" oz-emulator)))
 
 (defun oz-gdb()
   (interactive)
@@ -431,11 +431,11 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 
 (defun oz-other()
   (interactive)
-  (if (getenv "OZMACHINE")
-      (setenv "OZMACHINE" nil)
-    (setenv "OZMACHINE" oz-emulator))
+  (if (getenv "OZEMULATOR")
+      (setenv "OZEMULATOR" nil)
+    (setenv "OZEMULATOR" oz-emulator))
 
-  (if (getenv "OZMACHINE")
+  (if (getenv "OZEMULATOR")
       (message "Oz Emulator: %s" oz-emulator)
     (message "Oz Emulator: global")))
 
@@ -534,7 +534,8 @@ the GDB commands `cd DIR' and `directory'."
      '(
        "proc" "fun"
        "local" "declare"
-       "if" "or" "OR" "case" "then" "else" "elseif" "of" "elseof" "end" "fi" "ro" "RO"
+       "if" "or" "OR" "case" "then" "else" "elseif" "of" "elseof"
+       "end" "fi" "ro" "RO"
        "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
        "true" "false"
        "div" "mod"
