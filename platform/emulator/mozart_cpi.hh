@@ -1274,6 +1274,9 @@ public:
   OZ_expect_t expectProperTuple(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectList(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectStream(OZ_Term st);
+  OZ_expect_t expectCtVar(OZ_Term x, OZ_CtDefinition * d, OZ_CtWakeUp e) {
+    return expectGenCtVar(x, d, e);
+  }
   OZ_expect_t expectGenCtVar(OZ_Term, OZ_CtDefinition *, OZ_CtWakeUp);
 
   OZ_Return impose(OZ_Propagator * p);
