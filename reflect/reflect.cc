@@ -36,7 +36,7 @@ int PropagatorReference::_id;
 
 OZ_Term prop_name(char * name) 
 {
-  struct prop_names_tab_t {
+  static struct prop_names_tab_t {
     char * internal_name; 
     char * external_name;
   } prop_names_tab[] = {
@@ -59,7 +59,7 @@ OZ_Term atom_var, atom_any, atom_type, atom_fd, atom_fs, atom_bool,
   atom_space, atom_susp, atom_thread, atom_ct, atom_susplists, atom_ref,
   atom_id, atom_loc, atom_vars, atom_props, atom_reflect, 
   atom_reflect_vartable, atom_reflect_proptable;
-  
+
 //=============================================================================
 // interface to the Oz loader
 
