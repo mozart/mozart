@@ -29,8 +29,9 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 			    TaggedRef * tPtr, TaggedRef term,
 			    Bool prop, Bool disp)
 {
-  // TMUELLER
-  //  printf(am.isInstallingScript() ? "installing script\n" : "NOT installing script\n"); fflush(stdout);
+#ifdef SCRIPTDEBUG
+  printf(am.isInstallingScript() ? "fd installing script\n" : "fd NOT installing script\n"); fflush(stdout);
+#endif
 
   TypeOfTerm tTag = tagTypeOf(term);
   
@@ -41,9 +42,18 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 	PROFILE_CODE1(FDProfiles.inc_item(no_failed_fdunify_vars);)
 	return FALSE;
       }
-      if (prop) propagateUnify(var);
+      
+      Bool isLocalVar = am.isLocalSVar(this);
+      Bool isNotInstallingScript = !am.isInstallingScript();
 
-      if (prop && am.isLocalSVar(this)) {
+#ifdef SCRIPTDEBUG
+      printf("fd-int %s\n", isLocalVar ? "local" : "global"); fflush(stdout);
+#endif
+
+      if (prop && (isNotInstallingScript || isLocalVar)) 
+	propagate(var, fd_det);
+
+      if (prop && isLocalVar) {
 	doBind(vPtr, term);
 	if (disp) dispose();
       } else {
@@ -84,6 +94,9 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 	  switch (varIsLocal + 2 * termIsLocal) {
 	  case TRUE + 2 * TRUE: // var and term are local
 	    {
+#ifdef SCRIPTDEBUG
+	      printf("fd-fd local local\n"); fflush(stdout);
+#endif
 	      if (intsct == fd_singleton) {
 		TaggedRef int_var = OZ_int(intsct.getSingleElem());
 		termVar->propagateUnify(term);
@@ -126,6 +139,9 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 	    }
 	  case TRUE + 2 * FALSE: // var is local and term is global
 	    {
+#ifdef SCRIPTDEBUG
+	      printf("fd-fd local global\n"); fflush(stdout);
+#endif
 	      if (intsct.getSize() != termDom.getSize()){
 		if (intsct == fd_singleton) {
 		  TaggedRef int_var = OZ_int(intsct.getSingleElem());
@@ -160,6 +176,9 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 	    }
 	  case FALSE + 2 * TRUE: // var is global and term is local
 	    {
+#ifdef SCRIPTDEBUG
+	      printf("fd-fd global local\n"); fflush(stdout);
+#endif
 	      if (intsct.getSize() != finiteDomain.getSize()){
 		if(intsct == fd_singleton) {
 		  TaggedRef int_term = OZ_int(intsct.getSingleElem());
@@ -194,6 +213,9 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 	    }
 	  case FALSE + 2 * FALSE: // var and term is global
 	    {
+#ifdef SCRIPTDEBUG
+	      printf("fd-fd global global\n"); fflush(stdout);
+#endif
 	      if (intsct == fd_singleton){
 		TaggedRef int_val = OZ_int(intsct.getSingleElem());
 		if (prop) {
