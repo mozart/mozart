@@ -409,18 +409,18 @@
 	<Synopsis>
 	  <<{Record.waitOr ?+{R} ??{LI}}>>
 	<Item>
-          blocks until at least one field of ?+{R} is
-	  determined. Returns the feature ?_{LI} of a determined
-	  field. Raises an exception if ?_{R} is not a proper record,
-	  that is, if ?_{R} is a literal.
-        <P>
-          For example,
-          <<<{Record.waitOr a(_ b:1)}>>
-          returns <<b>> while
-          <<<{Record.waitOr a(2 b:_)}>>
-          returns <<1>>, and 
-          <<<{Record.waitOr a(_ b:_)}>>
-          blocks.
+	  blocks until at least one field of&nbsp;?+{R} is determined.
+	  Returns the feature ?_{LI} of a determined field.  Raises an
+	  exception if ?_{R} is not a proper record, that is, if ?_{R}
+	  is a literal.
+	<P>
+	  For example,
+	  <<<{Record.waitOr a(_ b: 1)}>>
+	  returns&nbsp;<<b>> while
+	  <<<{Record.waitOr a(2 b: _)}>>
+	  returns&nbsp;<<1>>, and
+	  <<<{Record.waitOr a(_ b: _)}>>
+	  blocks.
       </List>
 
   <Section>
