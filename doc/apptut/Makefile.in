@@ -1,58 +1,10 @@
-PREFIX		= @prefix@
-VPATH		= @srcdir@
-SRCDIR		= @srcdir@
-BUILDTOP	= @BUILDTOP@
 SRCTOP		= @SRCTOP@
-OZENGINE	= @OZENGINE@
-OZDOC		= @OZDOC@
-OZDOCFLAGS	=
-DOCIFY		= $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
 
-DOCDIR		= /www/mozart/documentation/explorer
-
-INSTALL		= @INSTALL@
-INSTALL_FILE	= $(INSTALL) -m 444
-INSTALL_BIN	= $(INSTALL) -m 555
-INSTALL_DIR	= @INSTALL_DIR@
-
+WHAT = apptut
+MAIN = main.sgml
 SGMLSRCS = \
 	deploy.sgml devel.sgml hello.sgml link.sgml \
-	main.sgml module.sgml native.sgml started.sgml
+	module.sgml native.sgml
+HTMLEXTRAFILES =
 
-.PHONY: all validate install clean veryclean distclean
-
-all: apptut-html
-
-include $(SRCDIR)/../../share/Makefile.boot
-
-bootstrap: boot-all
-
-Makefile: Makefile.in ../config.status
-	cd .. && ./config.status
-
-apptut-html: $(SGMLSRCS)
-	$(DOCIFY) --in=$(SRCDIR)/main.sgml --out=$@ \
-	--type=html-stylesheets --autoindex \
-	--stylesheet=ozdoc.css && \
-	cp $(SRCTOP)/doc/utilities/ozdoc.css apptut-html
-
-verify: main.sgml
-	nsgmls -c/usr/local/oz/share/doc/catalog $< > /dev/null
-
-validate: apptut-html
-	nsgmls -cHTML4.soc -sB explorer-html/*.html
-
-install: apptut-html $(DOCDIR)
-	for i in explorer-html/*.*; do $(INSTALL_FILE) $$i $(DOCDIR); done
-
-$(DOCDIR):
-	$(INSTALL_DIR) $@
-
-clean:
-	-rm -rf apptut-html
-	-rm -f *~
-
-veryclean: clean
-
-distclean: veryclean
-	-rm -f Makefile
+include $(SRCTOP)/doc/Makefile.common
