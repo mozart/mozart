@@ -43,8 +43,9 @@
 
     <Meta name="html.split"       value="chapter.compiler">
     <Meta name="html.split"       value="section.compiler.modes">
-    <Meta name="html.split"       value="section.compiler.options">
-    <Meta name="html.split"       value="section.compiler.switches">
+    <Meta name="html.split"       value="section.compiler.general">
+    <Meta name="html.split"       value="section.compiler.outputfiles">
+    <Meta name="html.split"       value="section.compiler.state">
 
     <Meta name="html.split"       value="chapter.debugger">
     <Meta name="html.split"       value="chapter.profiler">
