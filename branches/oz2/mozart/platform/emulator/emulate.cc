@@ -218,7 +218,7 @@ void genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
   Abstraction *abstr = NULL;
   if (gci->isMethAppl) {
     if (!isObject(pred) ||
-	NULL == (abstr = getApplyMethodForGenCall((Object *) tagged2Const(pred),
+	NULL == (abstr = getApplyMethodForGenCall(tagged2Object(pred),
 						  gci->mn,gci->arity))) {
       ApplMethInfoClass *ami = new ApplMethInfoClass(gci->mn,gci->arity);
       CodeArea::writeOpcode(gci->isTailCall ? TAILAPPLMETHG : APPLMETHG, PC);
@@ -2442,11 +2442,11 @@ LBLdispatcher:
 	tmpBB->setCommitted(CBB);
 	CBB->decSuspCount();
 
-	goto LBLpopTask;
+	DISPATCH(1);
       }
       CBB->setWaiting();
       CBB->setWaitTop();
-      goto LBLsuspendBoardWaitTop;
+      goto LBLsuspendBoard;
     }
 
 
@@ -2468,10 +2468,7 @@ LBLdispatcher:
       }
 
     LBLsuspendBoard:
-
       CBB->setBody(PC+1, Y, G,NULL,0);
-
-    LBLsuspendBoardWaitTop:
       Assert(CAA == AWActor::Cast (CBB->getActor()));
 
       e->deinstallCurrent();
