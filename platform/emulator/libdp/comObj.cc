@@ -38,6 +38,7 @@
                                                              // Connection.take
 #define CLOSE_TIMEOUT		(ozconf.dpProbeTimeout * 10)
 #define WF_REMOTE_TIMEOUT	(ozconf.dpProbeTimeout * 100)
+#define WF_REOPEN_TIMEOUT	(ozconf.dpProbeTimeout / 10)
 
 #define MSG_ACK_TIMEOUT 1000
 #define MSG_ACK_LENGTH 50
@@ -949,8 +950,12 @@ void ComObj::connectionLost() {
   case CLOSING_WF_DISCONNECT: // Now the connection was closed as expected.
     close(CLOSED_WF_REMOTE);
     PD((TCPCACHE,"Closed remote, setting timer"));
-    timers->setTimer(reopentimer,WF_REMOTE_TIMEOUT,
-  		     comObj_reopen,(void *) this);
+    if (ipIsbehindFW)
+      timers->setTimer(reopentimer,WF_REOPEN_TIMEOUT,
+		       comObj_reopen,(void *) this);
+    else
+      timers->setTimer(reopentimer,WF_REMOTE_TIMEOUT,
+		       comObj_reopen,(void *) this);
     break;
   case CLOSED: // We accepted gc initiated by him
     close(CLOSED);
