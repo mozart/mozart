@@ -79,16 +79,14 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
 static
 void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
 {
-  OZ_Term e = OZ_subtree(value,OZ_int(1));
+  OZ_Term e = OZ_subtree(value,newSmallInt(1));
   OZ_putArg(e,1,OZ_atom((OZ_CONST char*)fun));
   OZ_putArg(e,2,args);
 }
 
 inline
 TaggedRef formatError(TaggedRef info, TaggedRef val, TaggedRef traceBack) {
-  OZ_Term d = OZ_record(AtomD,
-                        oz_cons(AtomInfo,
-                                oz_cons(AtomStack, oz_nil())));
+  OZ_Term d = OZ_record(AtomD,oz_mklist(AtomInfo,AtomStack));
   OZ_putSubtree(d, AtomStack, traceBack);
   OZ_putSubtree(d, AtomInfo,  info);
 
@@ -101,7 +99,7 @@ TaggedRef formatError(TaggedRef info, TaggedRef val, TaggedRef traceBack) {
   RAISE_THREAD;
 
 #define RAISE_TYPE1_FUN(fun,args) \
-  RAISE_TYPE1(fun, appendI(args,oz_cons(oz_newVariable(),oz_nil())));
+  RAISE_TYPE1(fun, appendI(args,oz_mklist(oz_newVariable())));
 
 #define RAISE_TYPE_NEW(bi,loc) \
   RAISE_TYPE1(bi->getPrintName(), biArgs(loc,X));
@@ -2087,7 +2085,7 @@ Case(GETVOID)
       switch(tmpRet) {
       case PROCEED:       DISPATCH(auxInt);
       case BI_TYPE_ERROR: RAISE_TYPE1_FUN(auxString,
-                                          oz_cons(auxTaggedA,oz_cons(auxTaggedB,oz_nil())));
+                                          oz_mklist(auxTaggedA,auxTaggedB));
 
       case SUSPEND:
         {
@@ -2134,7 +2132,7 @@ Case(GETVOID)
           RAISE_THREAD;
 
         case BI_TYPE_ERROR:
-          RAISE_TYPE1_FUN(".", oz_cons(XPC(1), oz_cons(feature, oz_nil())));
+          RAISE_TYPE1_FUN(".", oz_mklist(XPC(1),feature));
 
         case SLEEP:
         default:
@@ -2264,7 +2262,7 @@ Case(GETVOID)
         }
 
       case BI_TYPE_ERROR:
-        RAISE_TYPE1(auxString,oz_cons(XPC(1),oz_cons(XPC(2),oz_nil())));
+        RAISE_TYPE1(auxString,oz_mklist(XPC(1),XPC(2)));
 
       default:
         Assert(0);
@@ -2380,7 +2378,7 @@ Case(GETVOID)
                     OZ_atom("Lock"),
                     OZ_int(1),
                     OZ_string(""));
-    RAISE_TYPE1("lock",oz_cons(aux,oz_nil()));
+    RAISE_TYPE1("lock",oz_mklist(aux));
   }
 
   OzLock *t = (OzLock*)tagged2Tert(aux);
@@ -2556,7 +2554,7 @@ Case(GETVOID)
     if (oz_isProcedure(object))
       goto bombSend;
 
-    RAISE_APPLY(object, oz_cons(makeMessage(arity,label,X),oz_nil()));
+    RAISE_APPLY(object, oz_mklist(makeMessage(arity,label,X)));
 
   bombSend:
     if (!isTailCall) PC = PC+6;
@@ -2910,7 +2908,7 @@ Case(GETVOID)
     {
       OZ_warning("\n      TASKDEBUGCONT instruction executed -- "
                  "this should not happen.\n      "
-                 "Please send a bug report to <lorenz@dfki.de>.");
+                 "Please send a bug report to <support@mozart-oz.org>.");
       if (e->debugmode() && CTT->isTrace())
         debugStreamUpdate(CTT);
       ((OzDebug *) Y)->dispose();
@@ -3208,7 +3206,7 @@ Case(GETVOID)
         predicate = tagged2Const(pred);
         goto LBLcall;
       }
-      RAISE_APPLY(pred,oz_cons(OZ_atom("proc or builtin expected."),oz_nil()));
+      RAISE_APPLY(pred,oz_mklist(OZ_atom("proc or builtin expected.")));
     }
 
   Case(GENCALL)
