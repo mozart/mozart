@@ -1,6 +1,0 @@
-#! /bin/sh
-
-unset OZHOME OZPATH OZCOMPILER OZEMULATOR OZARCH OZ_PI
-export OZHOME OZPATH OZCOMPILER OZEMULATOR OZARCH OZ_PI
-
-exec /usr/share/dfki/oz/bin/oz
