@@ -90,7 +90,7 @@ OSSRCS=\
 
 STORESRCS=\
 	tagged.cc value.cc atoms.cc \
-	dictionary.cc \
+	dictionary.cc extension.cc \
 	variable.cc susplist.cc genvar.cc \
 	simplevar.cc future.cc \
 	fdgenvar.cc
