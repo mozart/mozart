@@ -152,7 +152,7 @@
 	be applied to an already-mapped node.
       <ITEM>
 	Mapping works on a per-node basis.  In particular, the Inspector will
-	happily apply new mappings to any child nodes of a mapped node.
+	apply new mappings to any child nodes of a mapped node.
       <ITEM>
 	Mapping functions are type-specific. That means that every type offers
 	its own collection of mapping functions.
