@@ -1521,17 +1521,18 @@ OZ_C_proc_begin(BImergeSpace, 2) {
   Board *SBB = space->getSolveBoard()->derefBoard();
   Board *SBP = SBB->getParent()->derefBoard();
 
-  // There can be two different situations during merging:
-  //  1) SBB is subordinated to CBB:          CBB  <-+
-  //                                           |     |
-  //                                          SBB   -+
-  //
-  //
-  //  2) SBB is a sibling of CBB:            parent
-  //                                          /   \
-  //                                        CBB   SBB
-  //                                         ^     |
-  //                                         +-----+
+  /* There can be two different situations during merging:
+   *  1) SBB is subordinated to CBB:          CBB  <-+
+   *                                           |     |
+   *                                          SBB   -+
+   *
+   *
+   *  2) SBB is a sibling of CBB:            parent
+   *                                          /   \
+   *                                        CBB   SBB
+   *                                         ^     |
+   *                                         +-----+
+   */
 
   Assert(CBB == CBB->derefBoard());
 
