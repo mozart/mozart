@@ -76,8 +76,11 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomPermMe, AtomTempMe,
   AtomPermAllOthers, AtomTempAllOthers,
   AtomPermSomeOther, AtomTempSomeOther,AtomEntityNormal,
-  
+  AtomPerm, AtomTemp,AtomTempHome,AtomTempForeign,
+  AtomPermHome,AtomPermForeign,
   AtomContinue, AtomRetry,
+  AtomYes,AtomNo,AtomPerSite,AtomPerThread,
+  AtomHandler,AtomWatcher,
 
 RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
@@ -94,9 +97,11 @@ extern Board *ozx_rootBoard();
  *=================================================================== */
 
 enum WatcherKind{
-  KIND_RETRY_HANDLER = 0,
-  KIND_CONTINUE_HANDLER = 1,
-  KIND_WATCHER = 2};
+  HANDLER    = 1,
+  WATCHER    = 2,
+  RETRY      = 4,
+  PERSISTENT = 8
+};
 
 enum EntityCondFlags{
   ENTITY_NORMAL = 0,
@@ -164,7 +169,7 @@ public:
     proc=p;
     next=NULL;
     thread=t;
-    kind=KIND_RETRY_HANDLER;
+    kind=HANDLER;
     Assert((wc==PERM_BLOCKED) || (wc==TEMP_BLOCKED|PERM_BLOCKED));
     watchcond=wc;}
 
@@ -173,15 +178,19 @@ public:
     proc=p;
     next=NULL;
     thread=NULL;
-    kind=KIND_WATCHER;
+    kind=WATCHER;
     watchcond=wc;}
 
-  Bool isHandler(){ return kind!=KIND_WATCHER;}
-  Bool isContinueHandler(){Assert(isHandler());return kind == KIND_CONTINUE_HANDLER;} 
-  void setContinueHandler(){Assert(isHandler()); kind = KIND_CONTINUE_HANDLER;} 
+  Bool isHandler(){ return kind&HANDLER;}
+  Bool isContinueHandler(){Assert(isHandler());return kind & RETRY;} 
+  void setContinueHandler(){Assert(isHandler()); kind = kind | RETRY;} 
+  Bool isPersistent(){return kind & PERSISTENT;}
+  void setPersistent(){kind = kind | PERSISTENT;}
+  
+
   void setNext(Watcher* w){next=w;}
   Watcher* getNext(){return next;}
-  void invokeHandler(EntityCond ec,Tertiary* t);
+  void invokeHandler(EntityCond ec,Tertiary* t,Thread *);
   void invokeWatcher(EntityCond ec,Tertiary* t);
   Thread* getThread(){Assert(thread!=NULL);return thread;}
   Bool isTriggered(EntityCond ec){
@@ -947,6 +956,7 @@ public:
   void insertWatcher(Watcher* w);
   void releaseWatcher(Watcher*);
   Bool handlerExists(Thread *);
+  Bool handlerExistsThread(Thread *);
   
   void setIndex(int i) { tagged.setIndex(i); }
   int getIndex() { return tagged.getIndex(); }
@@ -973,9 +983,9 @@ public:
   void gcTertiaryInfo();
   void gcBorrowMark();
 
-  Bool installHandler(EntityCond,TaggedRef,Thread*,Bool);
+  Bool installHandler(EntityCond,TaggedRef,Thread*,Bool,Bool);
   Bool deinstallHandler(Thread*);
-  void installWatcher(EntityCond,TaggedRef);
+  void installWatcher(EntityCond,TaggedRef,Bool);
   Bool deinstallWatcher(EntityCond,TaggedRef);
 
   void entityProblem();
@@ -2164,10 +2174,13 @@ public:
 };
 
 enum ExKind{
-  EXCHANGE = 0,
-  ASSIGN   = 1,
-  AT       = 2,
-  NOEX     = 3
+  EXCHANGE    = 0,
+  ASSIGN      = 1,
+  AT          = 2,
+  NOEX        = 3,
+  ACCESS      = 4,
+  DEEPAT      = 5,
+  REMOTEACCESS = 6
 };
 
 
@@ -2185,13 +2198,10 @@ friend class CellManager;
 friend class Chain;
 private:
   unsigned int state;
-  /*
-  TaggedRef head;
-  */
   PendThread* pending;
   Site* next;
   TaggedRef contents;
-  PendBinding* pendBinding;
+  PendThread* pendBinding;
 
 public:
   USEHEAPMEMORY;
@@ -2231,10 +2241,10 @@ public:
 
   void gcCellSec();
   void exchange(Tertiary*,TaggedRef,TaggedRef,Thread*,ExKind);
-  void access(Tertiary*,TaggedRef);
+  void access(Tertiary*,TaggedRef,TaggedRef);
   void exchangeVal(TaggedRef,TaggedRef,Thread*,ExKind);
   Bool cellRecovery(TaggedRef);
-  Bool secReceiveRemoteRead(TaggedRef&);
+  Bool secReceiveRemoteRead(Site*,Site*,int);
   void secReceiveReadAns(TaggedRef);
   Bool secReceiveContents(TaggedRef,Site* &,TaggedRef &);
   Bool secForward(Site*,TaggedRef&);
@@ -2267,7 +2277,7 @@ public:
   void gcCellManager();
   void tokenLost();
   PendThread* getPending(){return sec->pending;}
-  PendBinding *getPendBinding(){return sec->pendBinding;}
+  PendThread *getPendBinding(){return sec->pendBinding;}
 };
 
 class CellProxy:public Tertiary{
