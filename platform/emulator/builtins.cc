@@ -314,11 +314,14 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
   DEREF(term, _2);
 
   if (oz_isVar(fea)) {
-    switch (tagTypeOf(term)) {
-    case TAG_LTUPLE:
-    case TAG_SRECORD:
+    switch (tagged2ltag(term)) {
+    case LTAG_LTUPLE0:
+    case LTAG_LTUPLE1:
+    case LTAG_SRECORD0:
+    case LTAG_SRECORD1:
       return SUSPEND;
-    case TAG_VAR:
+    case LTAG_VAR0:
+    case LTAG_VAR1:
       switch (tagged2Var(term)->getType()) {
       case OZ_VAR_FD:
       case OZ_VAR_BOOL:
@@ -327,7 +330,7 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
       default:
           return SUSPEND;
       }
-    case TAG_LITERAL:
+    case LTAG_LITERAL:
       goto typeError0;
     default:
       if (oz_isChunk(term)) return SUSPEND;
@@ -337,8 +340,9 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
 
   if (!oz_isFeature(fea)) goto typeError1;
 
-  switch (tagTypeOf(term)) {
-  case TAG_LTUPLE:
+  switch (tagged2ltag(term)) {
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
     {
       if (!oz_isSmallInt(fea)) {
 	if (dot) goto raise; else return FAILED;
@@ -357,7 +361,8 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
       if (dot) goto raise; else return FAILED;
     }
     
-  case TAG_SRECORD:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     {
       TaggedRef t = tagged2SRecord(term)->getFeatureInline(fea);
       if (t == makeTaggedNULL()) {
@@ -367,7 +372,8 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
       return PROCEED;
     }
 
-  case TAG_VAR:
+  case LTAG_VAR0:
+  case LTAG_VAR1:
     switch (tagged2Var(term)->getType()) {
     case OZ_VAR_OF:
       {
@@ -385,7 +391,7 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
       return SUSPEND;
     }
 
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     if (dot) goto raise; else return FAILED;
 
   default:
@@ -504,17 +510,20 @@ OZ_BI_define(BImatchDefault,3,1) {
 OZ_Return widthInline(TaggedRef term, TaggedRef &out) {
   DEREF(term,_);
 
-  switch (tagTypeOf(term)) {
-  case TAG_LTUPLE:
+  switch (tagged2ltag(term)) {
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
     out = makeTaggedSmallInt(2);
     return PROCEED;
-  case TAG_SRECORD:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     out = makeTaggedSmallInt(tagged2SRecord(term)->getWidth());
     return PROCEED;
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     out = makeTaggedSmallInt(0);
     return PROCEED;
-  case TAG_VAR:
+  case LTAG_VAR0:
+  case LTAG_VAR1:
     switch (tagged2Var(term)->getType()) {
     case OZ_VAR_OF:
         return SUSPEND;
@@ -539,11 +548,14 @@ OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
   DEREF(term, _2);
 
   if (oz_isVar(fea)) {
-    switch (tagTypeOf(term)) {
-    case TAG_LTUPLE:
-    case TAG_SRECORD:
+    switch (tagged2ltag(term)) {
+    case LTAG_LTUPLE0:
+    case LTAG_LTUPLE1:
+    case LTAG_SRECORD0:
+    case LTAG_SRECORD1:
       return SUSPEND;
-    case TAG_VAR:
+    case LTAG_VAR0:
+    case LTAG_VAR1:
       switch (tagged2Var(term)->getType()) {
       case OZ_VAR_FD:
       case OZ_VAR_BOOL:
@@ -552,7 +564,7 @@ OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
       default:
           return SUSPEND;
       }
-    case TAG_LITERAL:
+    case LTAG_LITERAL:
       goto typeError0;
     default:
       if (oz_isChunk(term)) return SUSPEND;
@@ -562,12 +574,15 @@ OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
 
   if (!oz_isFeature(fea)) goto typeError1;
 
-  switch (tagTypeOf(term)) {
-  case TAG_LTUPLE:
-  case TAG_SRECORD:
+  switch (tagged2ltag(term)) {
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     goto raise;
     
-  case TAG_VAR:
+  case LTAG_VAR0:
+  case LTAG_VAR1:
     switch (tagged2Var(term)->getType()) {
     case OZ_VAR_OF:
     case OZ_VAR_FD:
@@ -578,7 +593,8 @@ OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
       return SUSPEND;
     }
 
-  case TAG_LITERAL: goto raise;
+  case LTAG_LITERAL: 
+    goto raise;
 
   default:
     if (oz_isChunk(term)) {
@@ -1489,16 +1505,16 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   DEREF(t0,t0Ptr);
   if (oz_isRef(arity)) { // must suspend
     out=arity;
-    switch (tagTypeOf(t0)) {
-    case TAG_LITERAL:
+    switch (tagged2ltag(t0)) {
+    case LTAG_LITERAL:
       return SUSPEND;
-    case TAG_SRECORD:
-    case TAG_LTUPLE:
+    case LTAG_SRECORD0: case LTAG_SRECORD1:
+    case LTAG_LTUPLE0:  case LTAG_LTUPLE1:
       if (recordFlag) {
 	return SUSPEND;
       }
       goto typeError0;
-    case TAG_VAR:
+    case LTAG_VAR0: case LTAG_VAR1:
       if (oz_isKinded(t0) && tagged2Var(t0)->getType()!=OZ_VAR_OF)
 	goto typeError0;
       if (recordFlag) {
@@ -1511,18 +1527,18 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   }
   
   if (oz_isNil(arity)) { // adjoin nothing
-    switch (tagTypeOf(t0)) {
-    case TAG_SRECORD:
-    case TAG_LTUPLE:
+    switch (tagged2ltag(t0)) {
+    case LTAG_SRECORD0: case LTAG_SRECORD1:
+    case LTAG_LTUPLE0:  case LTAG_LTUPLE1:
       if (recordFlag) {
 	out = t0;
 	return PROCEED;
       }
       goto typeError0;
-    case TAG_LITERAL:
+    case LTAG_LITERAL:
       out = t0;
       return PROCEED;
-    case TAG_VAR:
+    case LTAG_VAR0: case LTAG_VAR1:
       if (oz_isKinded(t0) && tagged2Var(t0)->getType()!=OZ_VAR_OF)
 	goto typeError0;
       out=makeTaggedRef(t0Ptr);
@@ -1532,8 +1548,8 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
     }
   }
 
-  switch (tagTypeOf(t0)) {
-  case TAG_LITERAL:
+  switch (tagged2ltag(t0)) {
+  case LTAG_LITERAL:
     {
       int len1 = oz_fastlength(arity);
       arity = sortlist(arity,len1);
@@ -1548,14 +1564,14 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
       out = newrec->normalize();
       return PROCEED;
     }
-  case TAG_SRECORD:
-  case TAG_LTUPLE:
+  case LTAG_SRECORD0: case LTAG_SRECORD1:
+  case LTAG_LTUPLE0:  case LTAG_LTUPLE1:
     if (recordFlag) {
       out = oz_adjoinList(makeRecord(t0),arity,list);
       return PROCEED;
     }
     goto typeError0;
-  case TAG_VAR:
+  case LTAG_VAR0: case LTAG_VAR1:
     if (oz_isKinded(t0) && tagged2Var(t0)->getType()!=OZ_VAR_OF)
         goto typeError0;
     out=makeTaggedRef(t0Ptr);
@@ -2041,7 +2057,7 @@ int multOverflow(int a, int b)
 {
   int absa = ozabs(a);
   int absb = ozabs(b);
-  const int bits = (sizeof(TaggedRef)*8-TAG_SIZE)/2 - 1;
+  const int bits = (sizeof(TaggedRef)*8-LTAG_BITS)/2 - 1;
 
   if (!((absa|absb)>>bits)) /* if none of the 13 MSB in neither a nor b are set */
     return NO;
@@ -2187,7 +2203,7 @@ OZ_Return BIadd1Inline(TaggedRef A, TaggedRef &out)
 
   if (oz_isSmallInt(A)) {
     /* INTDEP */
-    int res = (int)A + (1<<TAG_SIZE);
+    int res = (int)A + (1<<LTAG_BITS);
     if ((int)A < res) {
       out = res;
       return PROCEED;
@@ -2204,7 +2220,7 @@ OZ_Return BIsub1Inline(TaggedRef A, TaggedRef &out)
 
   if (oz_isSmallInt(A)) {
     /* INTDEP */
-    int res = (int)A - (1<<TAG_SIZE);
+    int res = (int)A - (1<<LTAG_BITS);
     if ((int)A > res) {
       out = res;
       return PROCEED;

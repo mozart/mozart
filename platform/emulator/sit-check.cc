@@ -297,46 +297,47 @@ void checkSituatedBlock(OZ_Term * tb, int sz) {
     TaggedRef   x     = *x_ptr;
     
   again:
-    switch (tagTypeOf(x)) {
-    case TAG_REF:
-      if (!x) continue;
-    case TAG_REF2:
-    case TAG_REF3:
-    case TAG_REF4:
+    switch (tagged2ltag(x)) {
+    case LTAG_REF00:
+      if (!x) 
+	continue;
+    case LTAG_REF01:
+    case LTAG_REF10:
+    case LTAG_REF11:
       x_ptr = tagged2Ref(x);
       x     = *x_ptr;
       goto again;
       
-    case TAG_UNUSED_UVAR:
-    case TAG_UNUSED_SVAR:
-    case TAG_UNUSED_FSETVALUE:
-    case TAG_UNUSED_FLOAT:
-    case TAG_UNUSED_EXT:
-    case TAG_GCMARK:
-    case TAG_SMALLINT:
+    case LTAG_MARK0:
+    case LTAG_MARK1:
+    case LTAG_SMALLINT:
       continue;
 
-    case TAG_LITERAL:
+    case LTAG_LITERAL:
       if (!tagged2Literal(x)->checkSituatedness())
 	bads = oz_cons(x,bads);
       continue;
       
-    case TAG_LTUPLE:
+    case LTAG_LTUPLE0:
+    case LTAG_LTUPLE1:
       if (!tagged2LTuple(x)->cacIsMarked())
 	scStack.push(x);
       continue;
 
-    case TAG_SRECORD:
+    case LTAG_SRECORD0:
+    case LTAG_SRECORD1:
       if (!tagged2SRecord(x)->cacIsMarked())
 	scStack.push(x);
       continue;
      
-    case TAG_CONST:
+    case LTAG_CONST0:
+    case LTAG_CONST1:
       if (!tagged2Const(x)->checkSituatedness())
 	bads = oz_cons(x,bads);
       continue;
 
-    case TAG_VAR: 
+    case LTAG_VAR0: 
+    case LTAG_VAR1: 
       {
 	OzVariable * cv = tagged2Var(x);
       
@@ -352,3 +353,4 @@ void checkSituatedBlock(OZ_Term * tb, int sz) {
     }
   }
 }
+

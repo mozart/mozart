@@ -1412,8 +1412,9 @@ OZ_Term __OMR_dynamic(const int width, OZ_Term label, Arity * arity,
 TaggedRef oz_getPrintName(TaggedRef t) {
   TaggedRef ot = t;
   DEREF(t, tPtr);
-  switch (tagTypeOf(t)) {
-  case TAG_CONST:
+  switch (tagged2ltag(t)) {
+  case LTAG_CONST0:
+  case LTAG_CONST1:
     {
       ConstTerm *rec = tagged2Const(t);
       switch (rec->getType()) {
@@ -1428,9 +1429,10 @@ TaggedRef oz_getPrintName(TaggedRef t) {
       }
       break;
     }
-  case TAG_VAR:
+  case LTAG_VAR0:
+  case LTAG_VAR1:
     return oz_atom((OZ_CONST char*) oz_varGetName(ot));
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     {
       const char *s = tagged2Literal(t)->getPrintName();
       return (s ? oz_atom(s) : AtomEmpty);
