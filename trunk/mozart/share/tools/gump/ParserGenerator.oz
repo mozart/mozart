@@ -26,6 +26,8 @@
 local
    \insert Bison
 
+   ParserGeneratorError = 'parser generator error'
+
    %--------------------------------------------------------------------
    % Auxiliary Functions and Classes
    %--------------------------------------------------------------------
@@ -212,7 +214,7 @@ local
 	       grammarSymbols <- Symbol#Entry|@grammarSymbols
 	    elsecase {CurrEntry getEntryType($)} \= terminal then
 	       {Rep error(coord: {CoordinatesOf Symbol}
-			  kind: 'parser generator error'
+			  kind: ParserGeneratorError
 			  msg: ('grammar symbol '#{OutputOz Symbol}#
 				' multiply defined'))}
 	    else
@@ -227,7 +229,7 @@ local
 	    grammarSymbolsNotAnalysed <- Entry|@grammarSymbolsNotAnalysed
 	 else
 	    {Rep error(coord: {CoordinatesOf Symbol}
-		       kind: 'parser generator error'
+		       kind: ParserGeneratorError
 		       msg: ('grammar symbol '#{OutputOz Symbol}#
 			     ' multiply defined'))}
 	 end
@@ -349,7 +351,7 @@ local
 	  fun {$ R Vs} Symbol in
 	     {R getSymbol(?Symbol)}
 	     case Symbol of fAtom(_ C) then
-		{Rep error(coord: C kind: 'parser generator error'
+		{Rep error(coord: C kind: ParserGeneratorError
 			   msg: ('Atom '#{OutputOz Symbol}#
 				 ' not allowed as local rule name'))}
 		Vs
@@ -361,7 +363,7 @@ local
 	  proc {$ V|Vr}
 	     case {Some Vr fun {$ V0} {SymbolEq V V0} end} then
 		{Rep error(coord: {CoordinatesOf V}
-			   kind: 'parser generator error'
+			   kind: ParserGeneratorError
 			   msg: ('Symbol '#{OutputOz V}#
 				 ' multiply defined in production template'))}
 	     else skip
@@ -400,18 +402,18 @@ local
 	       [] rightAssoc then assoc <- rightAssoc#Prec
 	       [] nonAssoc then assoc <- nonAssoc#Prec
 	       else
-		  {Rep error(coord: APos kind: 'parser generator error'
+		  {Rep error(coord: APos kind: ParserGeneratorError
 			     msg: 'illegal associativity declaration')}
 	       end
 	    else
-	       {Rep error(coord: IPos kind: 'parser generator error'
+	       {Rep error(coord: IPos kind: ParserGeneratorError
 			  msg: 'precedence must be > 0')}
 	    end
 	 elseof Sym2#fRecord(Label [fColon(fInt(1 _) I)]) then
 	    % allow for e. g. `leftAssoc(1: 6)'
 	    Terminal, init(Sym2#fRecord(Label [I]) Rep)
 	 elseof fAtom(_ Pos)#_ then
-	    {Rep error(coord: Pos kind: 'parser generator error'
+	    {Rep error(coord: Pos kind: ParserGeneratorError
 		       msg: 'illegal token declaration')}
 	 end
       end
@@ -423,7 +425,7 @@ local
 	 elsecase Assoc of none then skip
 	 else
 	    {Rep error(coord: {CoordinatesOf @symbol}
-		       kind: 'parser generator error'
+		       kind: ParserGeneratorError
 		       msg: ('multiple associativity declarations for '#
 			     'terminal '#{OutputOz @symbol}))}
 	 end
@@ -459,7 +461,7 @@ local
       meth addParameter(Parameter Rep)
 	 case Parameter of fDollar(P) then
 	    case @dollarIndex \= ~1 then
-	       {Rep error(coord: P kind: 'parser generator error'
+	       {Rep error(coord: P kind: ParserGeneratorError
 			  msg: ('multiple nesting markers in formal '#
 				'parameters'))}
 	    else
@@ -473,7 +475,7 @@ local
 		  fun {$ _#(P#_#_)}
 		     case P of fVar(Y _) then X == Y else false end
 		  end} then
-	       {Rep error(coord: P kind: 'parser generator error'
+	       {Rep error(coord: P kind: ParserGeneratorError
 			  msg: ({OutputOz Parameter}#
 				' multiply contained in formal parameters'))}
 	    else
@@ -521,7 +523,7 @@ local
 			'this is an inherited use' P]
 		    end
 	    {Rep error(coord: {CoordinatesOf Parameter}
-		       kind: 'parser generator error'
+		       kind: ParserGeneratorError
 		       msg: ('conflicting attribute types of formal '#
 			     'parameter '#{OutputOz Parameter})
 		       items: Items)}
@@ -648,10 +650,10 @@ local
       meth synCompareResult(Result Expected Rep Pos)
 	 case Result == Expected then skip
 	 elsecase Expected of term then
-	    {Rep error(coord: Pos kind: 'parser generator error'
+	    {Rep error(coord: Pos kind: ParserGeneratorError
 		       msg: 'statement at expression position')}
 	 [] expr then
-	    {Rep error(coord: Pos kind: 'parser generator error'
+	    {Rep error(coord: Pos kind: ParserGeneratorError
 		       msg: 'expression at statement position')}
 	 end
       end
@@ -693,7 +695,7 @@ local
 	    {@actualParameterList replaceParameter(DollarIndex Parameter)}
 	 else
 	    {Rep error(coord: {CoordinatesOf @symbol}
-		       kind: 'parser generator error'
+		       kind: ParserGeneratorError
 		       msg: ('no nesting marker in application of '#
 			     {OutputOz @symbol}))}
 	 end
@@ -707,24 +709,24 @@ local
 		  Entry = {Globals getGrammarSymbol(Parameter $)}
 		  case Entry of notFound then
 		     {Rep error(coord: {CoordinatesOf Parameter}
-				kind: 'parser generator error'
+				kind: ParserGeneratorError
 				msg: ('unknown grammar symbol '#
 				      {OutputOz Parameter}))}
 		  elsecase {Entry getEntryType($)} \= terminal then
 		     {Rep error(coord: {CoordinatesOf Parameter}
-				kind: 'parser generator error'
+				kind: ParserGeneratorError
 				msg: ('precedence token '#{OutputOz Parameter}#
 				      ' must be a terminal'))}
 		  else skip
 		  end
 	       else
 		  {Rep error(coord: {CoordinatesOf Parameter}
-			     kind: 'parser generator error'
+			     kind: ParserGeneratorError
 			     msg: 'illegal precedence specification')}
 	       end
 	    else
 	       {Rep error(coord: {CoordinatesOf @symbol}
-			  kind: 'parser generator error'
+			  kind: ParserGeneratorError
 			  msg: 'illegal precedence specification')}
 	    end
 	    SynExpression, synCompareResult(expr Expected Rep @symbol)
@@ -755,7 +757,7 @@ local
 	       NewEx
 	    else
 	       {Rep error(coord: {CoordinatesOf @symbol}
-			  kind: 'parser generator error'
+			  kind: ParserGeneratorError
 			  msg: ('wrong number of parameters '#
 				'in application of '#{OutputOz @symbol}))}
 	       self
@@ -786,7 +788,7 @@ local
 		  case {IsFree Attr} then
 		     Attr = synthesized
 		  elsecase Attr of inherited then
-		     {Rep error(coord: P kind: 'parser generator error'
+		     {Rep error(coord: P kind: ParserGeneratorError
 				msg: ('inherited attribute illegal for '#
 				      'terminal'#{OutputOz @symbol}))}
 		  [] synthesized then skip
@@ -824,7 +826,7 @@ local
 		end
 		case Value of fVar(X P) then
 		   case {Member X Illegal} then
-		      {Rep error(coord: P kind: 'parser generator error'
+		      {Rep error(coord: P kind: ParserGeneratorError
 				 msg: 'variable synthesized more than once')}
 		   else Attr NewAs in
 		      Attr = {FindAttribute X As ?NewAs}
@@ -849,7 +851,7 @@ local
 		   {ForAll {FreeVariablesOf Value $ nil}
 		    proc {$ fVar(X P)}
 		       case {Member X Synthesized} then
-			  {Rep error(coord: P kind: 'parser generator error'
+			  {Rep error(coord: P kind: ParserGeneratorError
 				     msg: ('illegal use of non-allocated '#
 					   'variable'))}
 		       else skip
@@ -912,7 +914,7 @@ local
 	 Entry = {Globals getGrammarSymbol(@symbol $)}
 	 case Entry of notFound then
 	    {Rep error(coord: {CoordinatesOf @symbol}
-		       kind: 'parser generator error'
+		       kind: ParserGeneratorError
 		       msg: 'undefined grammar symbol '#{OutputOz @symbol})}
 	    self
 	 elsecase {Entry getEntryType($)} of terminal then
@@ -922,7 +924,7 @@ local
 						    Expected $)
 	 else
 	    {Rep error(coord: {CoordinatesOf @symbol}
-		       kind: 'parser generator error'
+		       kind: ParserGeneratorError
 		       msg: {OutputOz @symbol}#' is not a grammar symbol')}
 	    self
 	 end
@@ -938,13 +940,13 @@ local
 	       SynExpression, synCompareResult(expr Expected Rep @symbol)
 	    else
 	       {Rep error(coord: {CoordinatesOf {Parameter getValue($)}}
-			  kind: 'parser generator error'
+			  kind: ParserGeneratorError
 			  msg: ('expression at position of '#
 				'synthesized attribute'))}
 	    end
 	 else
 	    {Rep error(coord: {CoordinatesOf @symbol}
-		       kind: 'parser generator error'
+		       kind: ParserGeneratorError
 		       msg: ('too many arguments in application of terminal '#
 			     {OutputOz @symbol}))}
 	 end
@@ -955,7 +957,7 @@ local
 	 Length = {@actualParameterList getLength($)}
 	 case Length \= {Entry getParameterListLength($)} then
 	    {Rep error(coord: {CoordinatesOf @symbol}
-		       kind: 'parser generator error'
+		       kind: ParserGeneratorError
 		       msg: ('wrong number of parameters in application of '#
 			     {OutputOz @symbol}))}
 	 else skip
@@ -1047,7 +1049,7 @@ local
 	    {{List.last Expressions} assignTo(OzTerm Rep)}
 	 [] nil then
 	    {Rep error(coord: {CoordinatesOf OzTerm}
-		       kind: 'parser generator error'
+		       kind: ParserGeneratorError
 		       msg: 'epsilon sequence may not be assigned to')}
 	 end
       end
@@ -1339,7 +1341,7 @@ local
 	    case @key of none#S then S
 	    elseof fAtom(X _)#S then X#':'#S
 	    end = Key
-	    {Rep error(coord: @pos kind: 'parser generator error'
+	    {Rep error(coord: @pos kind: ParserGeneratorError
 		       msg: 'unknown production template with key `'#Key#'\'')}
 	    {New SynSequence init(nil nil)}
 	 else VariableNames LocalRules Vs NewSubst NewTemplI in
@@ -1424,7 +1426,7 @@ local
 	       length <- @length + 1
 	    else
 	       {Rep error(coord: {CoordinatesOf {ActualParameter getValue($)}}
-			  kind: 'parser generator error'
+			  kind: ParserGeneratorError
 			  msg: ('multiple nesting markers in '#
 				'actual parameters'))}
 	    end
@@ -1560,9 +1562,15 @@ local
 				fNoElse(unit) unit) unit)]
 	    Grammar = (ParseTableGenerator, ConvertSymbol(@start $)#@tokens#
 		       @assocs#@rules#{Globals getFlag(expect $)})
-	    Tables0 = {Bison {Length @symbols} Grammar VerboseFile Rep}
-	    StartSymbols = {AdjoinList synStartSymbols @startSymbols}
-	    Tables = {AdjoinAt Tables0 synStartSymbols StartSymbols}
+	    try
+	       Tables0 = {Bison {Length @symbols} Grammar VerboseFile Rep}
+	       StartSymbols = {AdjoinList synStartSymbols @startSymbols}
+	       Tables = {AdjoinAt Tables0 synStartSymbols StartSymbols}
+	    catch ozbison(I) then
+	       {Rep error(kind: ParserGeneratorError
+			  msg: 'parse table generator exited abnormally'
+			  items: [hint(l: 'Exit code' m: I)])}
+	    end
 	 end
       end
 
@@ -1803,7 +1811,7 @@ in
 	 {Globals generate(?PTG)}
 	 case {PTG hasStartSymbols($)} then skip
 	 else
-	    {Rep error(coord: P kind: 'parser generator error'
+	    {Rep error(coord: P kind: ParserGeneratorError
 		       msg: 'grammar has no start symbol')}
 	 end
 	 case {Globals getFlag(outputSimplified $)} then
@@ -1818,7 +1826,6 @@ in
 	     end
 	 {PTG generateTables(Globals F Rep ?SynMeth ?Tables)}
 	 case {Rep hasSeenError($)} then fSkip(unit)
-	 elsecase Tables of fatal(_) then fSkip(unit)
 	 else Descrs Meths in
 	    {Rep logSubPhase('building class definition ...')}
 	    {Globals
