@@ -25,7 +25,6 @@
 
 functor
 import
-   Error(formatGeneric format dispatch)
    ErrorRegistry(put)
    Finalize(register)
    LexBase at 'GumpScanner.so{native}'
