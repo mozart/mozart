@@ -3,7 +3,9 @@ import
    PROC(
       is        : IS
       make      : MAKE
+      dropDead  : DROPDEAD
       ) @ 'process.so{native}'
+   Finalize
 export
    is   : IS
    make : Make
@@ -24,5 +26,12 @@ define
       then {MAKE CMD ARGS IOMAP}
       else raise process(make CMD ARGS IOMAP) end end
    end
+
+   proc {AfterGC _}
+      {DROPDEAD}
+      {Finalize.register AfterGC AfterGC}
+   end
+
+   {Finalize.register AfterGC AfterGC}
 
 end

@@ -251,22 +251,6 @@ OZ_BI_define(io_fork,0,1)
   OZ_RETURN_INT(pid);
 } OZ_BI_end
 
-OZ_BI_define(io_execvp,2,0)
-{
-  OZ_declareDetTerm(1,ARGS);
-  OZ_declareVS(0,CMD,LEN);
-  int i = 1;
-  static char* argv[100];
-  argv[0] = strdup(CMD);
-  while (!OZ_isNil(ARGS)) {
-    argv[i] = strdup(OZ_virtualStringToC(OZ_head(ARGS),0));
-    i++;
-  }
-  argv[i] = NULL;
-  execvp(argv[0],argv);
-  RETURN_UNIX_ERROR("execvp");  // should never return
-} OZ_BI_end
-
 OZ_BI_define(io_pipe,0,2)
 {
   int sv[2];
@@ -300,7 +284,6 @@ extern "C"
       {"socketpair"     ,0,2,io_socketpair},
       {"dup"            ,1,1,io_dup},
       {"fork"           ,0,1,io_fork},
-      {"execvp"         ,2,0,io_execvp},
       {"pipe"           ,0,2,io_pipe},
       {"getfd"          ,1,1,io_getfd},
       {0,0,0,0}

@@ -1,11 +1,13 @@
 #include "oz_api.h"
 #include "extension.hh"
 #include <unistd.h>
+#include <sys/wait.h>
 
 class Process : public Extension {
 public:
-  pid_t pid;
-  Process(pid_t i):Extension(),pid(i){}
+  int pid;
+  OZ_Term status;
+  Process(pid_t i,OZ_Term s):Extension(),pid(i),status(s){}
   Process(Process&);
   // Extension
   static int id;
@@ -15,6 +17,8 @@ public:
   virtual Extension* gcV();
   //virtual void gcRecurseV();
 };
+
+OZ_Term all_processes;
 
 int Process::id;
 
@@ -43,7 +47,7 @@ void Process::printStreamV(ostream &out,int depth = 10)
 
 Extension* Process::gcV()
 {
-  return new Process(pid);
+  return new Process(pid,status);
 }
 
 typedef struct { int from; int to; } fdPair;
@@ -91,7 +95,7 @@ Process* makeProcess(char* const argv[],
   } else {
     // PARENT
     addChildProc(pid);
-    return new Process(pid);
+    return new Process(pid,OZ_newVariable());
   }
 }
 
@@ -150,7 +154,13 @@ OZ_BI_define(process_make,3,1)
   delete iomap;
   if (p==0)
     return OZ_raiseErrorC("process",1,OZ_atom("forkFailed"));
-  OZ_RETURN(oz_makeTaggedExtension(p));
+  //
+  // register process
+  //
+  cerr << "REGISTERING CHILD: " << p->pid << endl;
+  OZ_Term proc = oz_makeTaggedExtension(p);
+  all_processes = OZ_cons(proc,all_processes);
+  OZ_RETURN(proc);
 } OZ_BI_end
 
 OZ_BI_define(process_is,1,1)
@@ -159,6 +169,48 @@ OZ_BI_define(process_is,1,1)
   OZ_RETURN_BOOL(OZ_isProcess(X));
 } OZ_BI_end
 
+void process_child_handler()
+{
+  cerr << "[BEGIN] Process Child Handler" << endl;
+  OZ_Term l = all_processes;
+  while (!OZ_isNil(l)) {
+    Process*p = OZ_toProcess(OZ_head(l));
+    l = OZ_tail(l);
+    int status;
+    if (p->pid<0) continue;
+    waitpid(p->pid,&status,WNOHANG);
+    if (WIFEXITED(status)) {
+      cerr << "\tprocess done: " << p->pid << endl;
+      p->pid = -(p->pid);
+    }
+  }
+  cerr << "[END] Process Child Handler" << endl;
+}
+
+OZ_BI_define(process_dropDead,0,0)
+{
+  OZ_Term l1 = all_processes;
+  OZ_Term l2 = OZ_nil();
+  cerr << "[BEGIN] CHILD HANDLER" << endl;
+  while (!OZ_isNil(l1)) {
+    OZ_Term head = OZ_head(l1);
+    Process*p = OZ_toProcess(head);
+    // pid==-1 indicates a dead process
+    if (p->pid>=0) {
+      l2=OZ_cons(head,l2);
+      cerr << "\tkeeping " << (p->pid) << endl;
+    } else {
+      cerr << "\tdropping " << -(p->pid) << endl;
+    }
+    l1 = OZ_tail(l1);
+  }
+  cerr << "[END] CHILD HANDLER" << endl;
+  all_processes=l2;
+  return PROCEED;
+} OZ_BI_end
+
+extern void (*oz_child_handle)();
+
 extern "C"
 {
   OZ_C_proc_interface * oz_init_module(void)
@@ -166,9 +218,13 @@ extern "C"
     static OZ_C_proc_interface i_table[] = {
       {"make"           ,3,1,process_make},
       {"is"             ,1,1,process_is},
+      {"dropDead"       ,0,0,process_dropDead},
       {0,0,0,0}
     };
     Process::id = oz_newUniqueId();
+    all_processes = OZ_nil();
+    OZ_protect(&all_processes);
+    oz_child_handle = process_child_handler;
     return i_table;
   }
 } /* extern "C" */
