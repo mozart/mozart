@@ -798,7 +798,7 @@ static OZ_Return vs_length(OZ_Term vs, OZ_Term *rest, int *len) {
 
 
 OZ_BI_define(BIvsLength,2,1) {
-  TaggedRef rest = makeTaggedNULL();
+  TaggedRef rest = taggedVoidValue;
   int len = smallIntValue(oz_deref(OZ_in(1)));
   OZ_Return status = vs_length(OZ_in(0), &rest, &len);
   if (status == SUSPEND) {
@@ -813,7 +813,7 @@ OZ_BI_define(BIvsLength,2,1) {
 } OZ_BI_end
 
 OZ_BI_define(BIvsIs,1,1) {
-  TaggedRef rest = makeTaggedNULL();
+  TaggedRef rest = taggedVoidValue;
   OZ_Return status = vs_check(OZ_in(0), &rest);
   if (status == SUSPEND) {
     OZ_in(0) = rest;
@@ -830,7 +830,7 @@ OZ_BI_define(BIvsToBs,3,1)
   //
   // OZ_in(0) is side effected to hold what remains so far undetermined
   // packed up as a new virtual string
-  TaggedRef rest = makeTaggedNULL();
+  TaggedRef rest = taggedVoidValue;
   int len = smallIntValue(oz_deref(OZ_in(1)));
   OZ_Return status = vs_length(OZ_in(0), &rest, &len);
   if (status == SUSPEND) {
@@ -4048,9 +4048,9 @@ OZ_BI_define(BIraiseError,1,0)
 // is the handler specified by Finalize.setHandler and FINALIZE_LIST
 // is the FINALIZE list.
 
-OZ_Term guardian_list	= 0;
-OZ_Term finalize_list	= 0;
-OZ_Term finalize_handler= 0;
+OZ_Term guardian_list	 = 0;
+OZ_Term finalize_list	 = 0;
+OZ_Term finalize_handler = taggedVoidValue;
 
 // returns 0 if non determined
 //         1 if determined and (literal or top-level)
