@@ -152,10 +152,11 @@ int VirtualSite::sendTo(VSMsgBufferOwned *mb, MessageType mt,
     VirtualInfo *myVI = myDSite->getVirtualInfo();
 
     //
-    if (!mbox->enqueue(mb->getFirstChunkSHMKey(),
-		       mb->getFirstChunkNum())) {
-      // Failed to enqueue it inline - then create a job which will
-      // try to do that later;
+    //
+    if (isNotEmpty() || !mbox->enqueue(mb->getFirstChunkSHMKey(),
+				       mb->getFirstChunkNum())) {
+      // The queue wasn't empty, or failed to enqueue it inline - then
+      // create a job which will try to do that later;
       VSMessage *voidM = fmp->allocate();
       VSMessage *m = new (voidM) VSMessage(mb, mt, storeSite, storeIndex);
 
@@ -518,7 +519,7 @@ Bool VSProbingObject::processProbes(unsigned long clock,
 	    vs->getTimeIsAliveSent() > vs->getTimeAliveAck()) {
 #else
 	if (0) {
-#endif // VS_DO_VOID_PROBING
+#endif // VS_PROBING_BELIEVE_OK
 	  // effectively dead;
 	  vs->gcResources(cpm);
 	  s->discoveryPerm();
