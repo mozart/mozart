@@ -13,6 +13,7 @@ FILES = index.html getstarted.html tutorials.html reference.html \
         ozdoc.css page.gif
 
 all:
+quick:
 
 install: $(DOCDIR) $(addprefix $(DOCDIR)/,$(FILES))
 $(DOCDIR):
