@@ -54,9 +54,14 @@
   <Front>
     <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
 
+    <Meta name="html.split"       value="chapter.m120">
     <Meta name="html.split"       value="chapter.m110">
     <Meta name="html.split"       value="chapter.m101">
     <Meta name="html.split"       value="chapter.m100">
+
+    <Meta name="html.split"       value="section.m120.changes">
+    <Meta name="html.split"       value="section.m120.fixes">
+    <Meta name="html.split"       value="section.m120.internal">
 
     <Meta name="html.split"       value="section.m110.changes">
     <Meta name="html.split"       value="section.m110.fixes">
@@ -78,6 +83,258 @@ particular, it lists the changes from
       implementation Mozart).
     </Abstract>
   <Body>
+
+    <chapter id="chapter.m120">
+      <title/Changes between Mozart 1.1.0 and Mozart 1.2.0/
+
+      <p>
+        Mozart 1.2.0 is primarily a maintenance release with improved
+        usability, maintainability and performance. The changes in the
+        language, Mozart libraries and the implementation are
+        summarized in the following sections.
+      </p>
+
+
+      <section id="section.m120.changes">
+        <title/Changes in Oz, Mozart libraries and UI/
+
+        <subsection><title/Loops/
+          <p>
+          <list>
+            <entry>* patterns are now supported:
+            <item>
+<code display>for X#Y in L do ... end</code>
+
+            <entry>* iterator expressions with a bit of a C-flavor
+are supported:
+            <item>
+<code display>for X in Init;Cond;Next do ... end</code>
+for example:
+<code display>for I in 1;I<5;I+1 do ... end</code>
+also iterators of the form <code/E1..E2/, <code/E1..E2;E3/,
+<code/E1;E3/ as before.
+
+            <entry>* nullary <code/break/ and <code/continue/ procedures
+can be obtained using loop features, e.g:
+            <item>
+<code display>for break:B X in L do ...{B}... end</code>
+
+            <entry>* EXPERIMENTAL: loops can be used as expressions
+using a hidden accumulator, e.g.:
+            <item>
+<code display>
+        {Show
+         for collect:C
+             L in Ls
+         do
+            for X in L do
+               if {IsOdd X} then {C X} end
+            end
+         end}
+</code>
+
+This experimental facility uses loop features <code/collect/,
+<code/append/, <code/prepend/, <code/minimize/, <code/maximize/,
+<code/count/, <code/sum/, <code/multiply/, <code/return/,
+<code/default/.
+
+For more information check the documentation (<ptr.extern
+to="ozdoc:loop">).
+          </list>
+          </p>
+
+        <subsection><title/<Q/Failed/ Futures and Module Manager/
+          <p>
+          <list>
+            <item> <code>{Value.byNeedFail E ?V}</code>
+binds <code/V/ to the new notion of a <Q/failed future/.  Any attempt
+to synchronize on <code/V/ raises <code/E/ as an exception.
+            <item> The module manager was updated to use <Q/failed
+futures/: when a module cannot be successfully linked its value
+becomes a failed future (instead of a record) which raises the
+exception which caused linking to fail each time the module is
+subsequently accessed.  Thus, programmers have a chance of catching
+and recovering from linking errors.
+          </list>
+          </p>
+
+        <subsection><title/Spaces/
+          <p>
+          <list>
+            <item> <code/Space.askVerbose/ returns <code/suspended/
+rather than <code/blocked/
+            <item> An exception is raised, if the argument to
+<code/Space.commit/ refers to a non-existing alternative
+            <item> The control condition for application of space
+operations have been unified and extended, see the documentation
+            <item> <code/Space.kill/ kills a space by injecting fail into it
+          </list>
+
+A full treatment of spaces is available in the Christian Schulte's
+doctoral dissertation "Programming Constraint Services", from the
+Mozart publications page.
+          </p>
+
+        <subsection><title/Distribution Subsystem/
+          <p>
+          <list>
+            <item> The Oz programmer interface to the distributed
+subsystem has been extended. Parameters like buffer size and timeouts
+can now be specified at runtime.
+            <item> The family of tools for monitoring the behavior of
+the Mozart system has been extended with a new member, the
+Distribution Panel. The tool displays information about known remote
+Mozart sites, amount of communication, measured round-trip and
+exported/imported entities. Possibilities to remotely monitor other
+Mozart processes does also exist.
+          </list>
+          </p>        
+
+        <subsection><title/Constraint Systems/
+          <p>
+Constraint systems (finite domains, finite sets) have undergone, as
+usual, various improvements and bug fixes.  Check the documentation.
+          </p>
+
+        <subsection><title/Port Improvements/
+          <p>
+          <list>
+            <item> Ability to send from a subordinated space to a
+superordinated space (provided that no local variables and names
+are referred to).
+            <item> SendRecv does a send and returns an answer. For
+details, see doc. This again works across spaces.
+          </list>
+          </p>
+
+        <subsection><title/Pickling Format/
+          <p>
+Unfortunately, old pickles cannot be read by this new system. We do
+plan to have a generic conversion tool, but face a lack of human
+resources.
+          </p>
+
+        <subsection><title/`ozl --rewrite'/
+          <p>
+The Oz linker (ozl) now supports a new command-line option,
+`--rewrite', which allows to transform the import URLs used
+by the output functor. Check the documentation for details.
+          </p>
+
+
+      <section id="section.m120.fixes">
+        <title/Changes in the implementation that affect usability and performance/
+
+        <subsection><title/Bugs/
+          <p>
+Bug fixes, including, but not limited to:
+          <list>
+            <item> the core (centralized) system
+            <item> distribution subsystem
+            <item> constraint solving facilities
+            <item> Oz debugger (ozcar)
+            <item> the Windows port
+            <item> various memory leaks
+          </list>
+
+All in all, a lot of them. Really a lot..  The system is used now
+for a series of our projects, as well as for projects outside the
+Mozart consortium, and also for teaching at all our three sites.
+
+Have also a look at http://www.mozart-oz.org/cgi-bin/oz-bugs/FIXED
+          </p>
+
+        <subsection><title/2GB of Live Data/
+          <p>
+Oz programs can reference now up to 2GB of live data on a computer
+with the 32bit address space, compared to .5GB for all the previous
+releases.
+          </p>
+
+        <subsection><title/New Supported Platforms/
+          <p>
+New supported platforms - linux ppc & pentium 4.
+          </p>
+
+        <subsection><title/Improved Distribution Subsystem/
+          <p>
+The distribution subsystem has been improved, in particular, as the
+traffic between Mozart sites increases. In extreme cases the win is
+up to orders of magnitude.
+          </p>
+
+        <subsection><title/No Fast Inter-Site Communication/
+          <p>
+Unfortunately, the inter-site communication over shared memory
+(property <code/'distribution.virtualsites'/, see also <ptr.extern
+to="ozdoc:system" key="chapter.remote"> is currently inoperable. We
+are working on bringing it back in the next release. This is caused by
+extensive changes in the implementation of the distribution subsystem,
+as outlined in <ptr to="section.m120.internal">.
+          </p>
+
+
+      <section id="section.m120.internal">
+        <title/Changes in the implementation that affect maintainability and portability/
+
+        <subsection><title/Accessing Oz Data Structures/
+          <p>
+Mozart 1.2.0 features the new design and implementation of the part of
+the run-time system (engine) that deals with allocation and accessing
+Oz data structures. This not only allows 2GB of live data, as
+mentioned in <ptr to="section.m120.changes">, but also:
+          <list>
+            <entry>* Greatly enhanced portability
+            <item>
+Mozart does not impose anymore any constraints on where the "C"
+data regions are mapped, which is different across different
+flavors of Un*x. This also simplified the Windows port.
+            <entry>* Is THE prerequisite for clean 64bit ports
+            <item>
+while this release still does not support 64 Bit machines such
+as Alphas, etc, this change is the first -- and quite big --
+step towards that goal.
+          </list>
+          </p>
+
+        <subsection><title/Redesign of the Distribution Subsystem/
+          <p>
+Distribution subsystem has undergone a principle overhaul.
+          <list>
+            <item> The distribution subsystem is cleanly divided into
+a protocol layer and a message-passing layer, with interfaces
+between them explicitly specified.
+            <item> Flexible connection establishment. A pair of
+Mozart sites connect now by execution of dedicated, replaceable Mozart
+functors. This enables customization of connection protocols for
+creation of closed subdomains or traversal of fire-walls. Currently
+there is no user interface to this facility, but we plan to introduce
+one.
+            <item> The message-passing layer has been redesigned and
+re-implemented.  The new design is featured by:
+            <list>
+              <item> better resource utilization, both in terms of
+memory and system resources (e.g file descriptors).
+              <item> improved balance between the (centralized)
+engine and the distribution subsystem in terms of run time. In
+particular, large messages sent between Mozart sites do not lock out
+the engines on either side.
+              <item> an open architecture enabling introduction of
+new transportation mediums.
+              <item> higher throughput by better pipelining of messages.
+              <item> caching of TCP channels reworked.
+              <item> automatic round trip calculation.
+              <item> failure detection on measured round trips rather
+than by TCP.
+            </list>
+          </list>
+
+A document describing the Distributed Subsystem added to the
+documentation tree.
+          </p>
+
+      </section>
+
 
     <chapter id="chapter.m110">
       <title/Changes between Mozart 1.0.1 and Mozart 1.1.0/
