@@ -523,7 +523,6 @@ TaggedRef tailDeref(TaggedRef list)
 enum TypeOfConst {
   Co_Board,
   Co_Actor,
-  Co_Class,
   Co_HeapChunk,
 
   Co_Abstraction,
@@ -773,7 +772,10 @@ inline int getTupleWidth(SRecordArity a)    { return a>>1; }
 inline SRecordArity mkRecordArity(Arity *a) { return ToInt32(a); }
 inline Arity *getRecordArity(SRecordArity a){ return (Arity*) ToPointer(a); }
 inline Bool sameSRecordArity(SRecordArity a, SRecordArity b) { return a==b; }
-
+inline int getWidth(SRecordArity a)
+{
+  return sraIsTuple(a) ? getTupleWidth(a) : getRecordArity(a)->getWidth();
+}
 
 class SRecord {
 private:
@@ -818,48 +820,41 @@ public:
       args[i] = val;
   }
 
-  int getWidth() {
-    return isTuple() ? getTupleWidth() : getRecordArity()->getWidth();
-  }
+  int getWidth() { return ::getWidth(getSRecordArity()); }
+
   void downSize(unsigned int s) { // TMUELLER
     Assert(isTuple());
     setTupleWidth(s);
   } // FD
 
-  static SRecord *newSRecord(TaggedRef lab, Arity *f)
+  static SRecord *newSRecord(TaggedRef lab, SRecordArity arity, int width)
   {
-    if (f->isTuple()) return newSRecord(lab,f->getWidth());
-
     CHECK_LITERAL(lab);
-    Assert(f != NULL);
-    int sz = f->getWidth();
-    int memSize = sizeof(SRecord) + sizeof(TaggedRef) * (sz - 1);
+    Assert(width > 0);
+    int memSize = sizeof(SRecord) + sizeof(TaggedRef) * (width - 1);
     SRecord *ret = (SRecord *) heapMalloc(memSize);
     ret->label = lab;
-    ret->setRecordArity(f);
+    ret->recordArity = arity;
     return ret;
   }
 
-  static SRecord *newSRecord(TaggedRef lab, int w)
+  static SRecord *newSRecord(TaggedRef lab, int i)
   {
-    CHECK_LITERAL(lab);
-    Assert(w > 0);
-    int memSize = sizeof(SRecord) + sizeof(TaggedRef) * (w - 1);
-    SRecord *ret = (SRecord *) heapMalloc(memSize);
-    ret->label = lab;
-    ret->setTupleWidth(w);
-    return ret;
+    return newSRecord(lab,mkTupleWidth(i),i);
+  }
+
+  static SRecord *newSRecord(TaggedRef lab, Arity *arity)
+  {
+    if (arity->isTuple())
+      return newSRecord(lab,arity->getWidth());
+
+    return newSRecord(lab,mkRecordArity(arity),arity->getWidth());
   }
 
   // returns copy of tuple st (args are appropriately copied as well)
   static SRecord * newSRecord(SRecord * st)
   {
-    SRecord *ret;
-    if (st->isTuple()) {
-      ret = newSRecord(st->label, st->getWidth());
-    } else {
-      ret = newSRecord(st->label, st->getArity());
-    }
+    SRecord *ret = newSRecord(st->label, st->getSRecordArity(),st->getWidth());
     for (int i = st->getWidth(); i--; ) {
       ret->args[i] = tagged2NonVariable((st->args)+i);
     }
@@ -925,19 +920,13 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  Bool compareSortAndArity(TaggedRef lbl, Arity *ff) {
-    return !isTuple() &&
-      sameLiteral(getLabel(),lbl) &&
-      getArity() == ff;
+  Bool compareSortAndArity(TaggedRef lbl, SRecordArity arity) {
+    return sameLiteral(getLabel(),lbl) &&
+           sameSRecordArity(getSRecordArity(),arity);
   }
-  Bool compareSortAndSize(TaggedRef lbl, int ww) {
-    return isTuple() &&
-      sameLiteral(getLabel(),lbl) &&
-      getWidth() == ww;
-  }
+
   Bool compareFunctor(SRecord* str) {
-    return sameLiteral(getLabel(),str->getLabel()) &&
-      sameSRecordArity(recordArity,str->recordArity);
+    return compareSortAndArity(str->getLabel(),str->getSRecordArity());
   }
 };
 
@@ -1033,7 +1022,7 @@ TaggedRef argDeref(TaggedRef tuple, int i)
 
 /* Internal representation of Oz classes */
 
-class ObjectClass: public ConstTerm {
+class ObjectClass {
 private:
   SRecord *fastMethods;
   Literal *printName;
@@ -1043,11 +1032,12 @@ private:
   TaggedRef ozclass;    /* the class as seen by the Oz user */
 
 public:
+  USEHEAPMEMORY;
+
   Bool hasFastBatch;    /* for optimized batches */
 
   ObjectClass(SRecord *fm, Literal *pn, TaggedRef sm,
-              Abstraction *snd, Bool hfb, SRecord *uf):
-    ConstTerm(Co_Class)
+              Abstraction *snd, Bool hfb, SRecord *uf)
   {
     fastMethods    = fm;
     printName      = pn;
@@ -1138,7 +1128,7 @@ public:
 
   char *getPrintName()          { return getClass()->getPrintName(); }
   SRecord *getMethods()         { return getClass()->getfastMethods(); }
-  Abstraction *getMethod(TaggedRef label, int arity);
+  Abstraction *getMethod(TaggedRef label, SRecordArity arity);
   SRecord *getState()           { return (SRecord*) ToPointer(state); }
   void setState(SRecord *s)     { state = ToInt32(s); }
   Abstraction *getAbstraction() { return getClass()->getAbstraction(); }
@@ -1307,11 +1297,13 @@ private:
   AssReg* first;
 };
 
+
 class PrTabEntry {
 private:
-  TaggedRef printname; // must be atom
+  TaggedRef printname;
   unsigned short arity;
   unsigned short spyFlag;
+  SRecordArity methodArity;
 
 public:
   AssRegArray gRegs;
@@ -1323,11 +1315,13 @@ public:
   {
       Assert(arityInit==(unsigned short) arityInit);
       Assert(isLiteral(name));
+      methodArity = mkTupleWidth(arityInit);
   }
 
   OZPRINTLONG;
 
   int getArity () { return (int) arity; }
+  SRecordArity getMethodArity() { return methodArity; }
   int getGSize () { return gRegs.getSize(); }
   char *getPrintName () { return tagged2Literal(printname)->getPrintName(); }
   TaggedRef getName () { return printname; }
@@ -1358,6 +1352,7 @@ public:
   RefsArray &getGRegs()  { return gRegs; }
   ProgramCounter getPC() { return pred->getPC(); }
   int getArity()         { return pred->getArity(); }
+  SRecordArity getMethodArity()   { return pred->getMethodArity(); }
   int getGSize()         { return pred->getGSize(); }
   char *getPrintName()   { return pred->getPrintName(); }
   PrTabEntry *getPred()  { return pred; }

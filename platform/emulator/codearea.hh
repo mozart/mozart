@@ -339,14 +339,16 @@ public:
   int regIndex;
   Bool isMethAppl, isTailCall;
   TaggedRef lit;
+  SRecordArity arity;
 
-  GenCallInfoClass(int ri, Bool ism, TaggedRef l, Bool ist)
+  GenCallInfoClass(int ri, Bool ism, TaggedRef l, Bool ist, SRecordArity ar)
   {
     regIndex   = ri;
     isMethAppl = ism;
     lit = l;
     gcProtect(&lit);
     isTailCall = ist;
+    arity = ar;
   }
 
   void dispose()
@@ -359,8 +361,8 @@ public:
 class ApplMethInfoClass {
 public:
   TaggedRef methName;
-  int arity;
-  ApplMethInfoClass(TaggedRef m, int i) {
+  SRecordArity arity;
+  ApplMethInfoClass(TaggedRef m, SRecordArity i) {
     methName = m;
     arity = i;
     gcProtect(&methName);
