@@ -168,4 +168,12 @@ int osClockTickToMs(int cl)
 extern int _hdopen(int, int flags);
 #endif
 
+
+#ifdef WINDOWS
+#define PathSeparator ';'
+#else
+#define PathSeparator ':'
+#endif
+
+
 #endif

@@ -32,6 +32,7 @@
 
 #include "config.h"
 #include "oz.h"
+#include "os.hh"
 
 typedef OZ_Term CTerm;
 
@@ -399,15 +400,9 @@ static char *scExpndFileName(char *fileName, char *curfile) {
   if (path == NULL)
     path = ".";
 
-#ifdef WINDOWS
-  char sep = ';';
-#else
-  char sep = ':';
-#endif
-
   while (path[0] != '\0') {
     int i;
-    for (i = 0; path[i] != sep && path[i] != '\0'; i++);
+    for (i = 0; path[i] != PathSeparator && path[i] != '\0'; i++);
     char *help = new char[i + 1 + strlen(fileName) + 1];
     strncpy(help, path, i);
     help[i] = '/';

@@ -5278,12 +5278,6 @@ OZ_C_proc_end
    ----------------------------------------------------------------- */
 
 
-#ifdef WINDOWS
-#define PATHSEP ';'
-#else
-#define PATHSEP ':'
-#endif
-
 #ifdef _MSC_VER
 #define F_OK 00
 #endif
@@ -5312,7 +5306,7 @@ char *expandFileName(const char *fileName,char *path) {
   char *tmp = new char[strlen(path)+strlen(fileName)+2];
   char *last = tmp;
   while (1) {
-    if (*path == PATHSEP || *path == 0) {
+    if (*path == PathSeparator || *path == 0) {
 
       if (last == tmp && *path == 0) { // path empty ??
         return NULL;
@@ -5760,10 +5754,10 @@ OZ_C_proc_begin(BIFindFile,3)
 OZ_C_proc_end
 
 // {EnvToTuple "PATH" ?Tuple}
-// looks up an environment variable that is supposed to be a list
-// of pathnames separated by ':' and turns it into a tuple appropriate
-// as an argument to FindFile.  If the environment variable does not
-// exist, `false' is returned instead.
+// looks up an environment variable that is supposed to be a list of
+// pathnames separated by ':' (or ';' on Windows) and turns it into a
+// tuple appropriate as an argument to FindFile.  If the environment
+// variable does not exist, `false' is returned instead.
 
 int env_to_tuple(char*var,OZ_Term* tup)
 {
@@ -5786,7 +5780,7 @@ int env_to_tuple(char*var,OZ_Term* tup)
 split:
   switch (*S) {
   case '\0': goto finish;
-  case ':' : QPUSH(OZ_nil()); S++; goto split;
+  case PathSeparator : QPUSH(OZ_nil()); S++; goto split;
   case ' ' :
   case '\t':
   case '\n': S++; goto split;
@@ -5801,7 +5795,7 @@ splitx:
     buffer[index] = '\0';
     QPUSH(OZ_atom(buffer));
     goto finish;
-  case ':' :
+  case PathSeparator :
     buffer[index] = '\0';
     QPUSH(OZ_atom(buffer));
     S++; goto split;

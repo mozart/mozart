@@ -759,8 +759,8 @@ int loadURL(const char *url0, OZ_Term out, Thread *th)
     int idx = 0;
     char *s = url;
     if (strlen(s)>=NAMESIZE) goto fall_through;
-    while (*s!='\0' && *s!=':') buffer[idx++]=*s++;
-    if (s[0]!=':' || s[1]!='/' || s[2]!='/') goto fall_through;
+    while (*s!='\0' && *s!=PathSeparator) buffer[idx++]=*s++;
+    if (s[0]!=PathSeparator || s[1]!='/' || s[2]!='/') goto fall_through;
     s += 3;
     buffer[idx++] = '/';
     strcpy(buffer+idx,s);
