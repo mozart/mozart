@@ -37,18 +37,21 @@ local
 
      BreakpointStaticHelp #
      ('Static Breakpoints' #
-      ('You can set a Static Breakpoint by inserting ' #
-       '{Debug.breakpoint} into ' #
+      ('You can set a static Breakpoint by inserting' #
+       '\n\n    {Debug.breakpoint}\n\ninto ' #
        'your code, just before the line where you want ' #
        'the thread to stop.'))
 
      BreakpointDynamicHelp #
      ('Dynamic Breakpoints' #
-      ('You can set / delete a Dynamic Breakpoint at the current line of ' #
-       'an Emacs buffer by entering C-c C-d C-b / C-c C-d C-d.\n' #
+      ('You can set a dynamic Breakpoint at the current line of ' #
+       'an Emacs buffer by entering (in Emacs)\n\n' #
+       '    C-c C-d C-b    or    C-x SPC.\n\n ' #
+       'To delete a breakpoint, use\n\n' #
+       '    C-c C-d C-d.   or    C-0 C-x SPC\n\n' #
        'Alternatively, click with the left / right mouse button ' #
        'on the line where you wish to set / delete a breakpoint, while ' #
-       'holding down the Shift and Meta key.'))
+       'holding down the `Shift\' and `Meta\' keys.'))
 
      TreeTitle #
      ('The Thread Tree' #
@@ -158,10 +161,6 @@ local
 in
 
    class Help
-
-      meth init
-	 skip
-      end
 
       meth help(Topic)
 	 {Wait {New OzcarHelp init(master:self.toplevel topic:Topic)}.tkClosed}

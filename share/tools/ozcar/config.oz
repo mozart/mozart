@@ -97,6 +97,7 @@ UnboundType            = '_'
 %%
 
 ToplevelGeometry       = '510x360'
+ToplevelMinSize        = 459 # 324   %%  10% less than the default
 
 ThreadTreeWidth        = 120
 ThreadTreeStretchX     = 11
