@@ -51,7 +51,7 @@ BINFILES = $(SYSLETS:%=$(BINDIR)/%)
 DOCBINFILES = $(SHELLSCRIPTS:%=$(DOCDIR)/%)
 DOCFILES = $(DOCDIR)/html.bst
 
-.PHONY: bootstrap bootquick all clean veryclean distclean quick boot-quick
+.PHONY: bootstrap bootquick all clean veryclean distclean quick boot-quick clean-xref
 
 all: $(FUNCTORS) $(SYSLETS) $(ELCS)
 
@@ -101,3 +101,4 @@ veryclean: clean
 
 distclean: veryclean
 	rm -f Makefile config.log config.status config.cache
+clean-xref:
