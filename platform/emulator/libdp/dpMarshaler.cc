@@ -1720,7 +1720,7 @@ void marshalBorrowHeadSaved(MarshalerBuffer *bs, MarshalTag tag, DSite *ms,
 
 //
 // The problem with borrow entries is that they can go away.
-void discardBorrowHeadSaved(DSite *ms, int oti,
+void discardBgorrowHeadSaved(DSite *ms, int oti,
 			    RRinstance *credit)
 {
   //
@@ -1732,7 +1732,6 @@ void discardBorrowHeadSaved(DSite *ms, int oti,
     // still there - then just nail credits back;
     b->mergeReference(credit);
   } else {
-    printf("discardBorrowHeadSaved - weird case reached\n");
     sendRRinstanceBack(ms,oti,credit);
   }
 }
