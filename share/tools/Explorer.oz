@@ -20,6 +20,48 @@
 %%% WARRANTIES.
 %%%
 
+\ifdef LILO
+
+functor $
+
+import
+   SP.{Show   = 'Show'
+       System = 'System'}
+
+   WP.{Tk      = 'Tk'
+       TkTools = 'TkTools'}
+
+   Browser.{Browse = 'Browse'}
+
+export
+   'ExplorerClass': ExplorerClass
+   'Explorer':      Explorer
+   'ExploreOne':    ExploreOne
+   'ExploreAll':    ExploreAll
+   'ExploreBest':   ExploreBest
+
+body
+   
+   \insert 'explorer/main.oz'
+   
+   Explorer = {New ExplorerClass init}
+
+   proc {ExploreOne P}
+      {Explorer one(P)}
+   end
+
+   proc {ExploreAll P}
+      {Explorer all(P)}
+   end
+   
+   proc {ExploreBest P O}
+      {Explorer all(P O)}
+   end
+
+end
+
+\else
+
 fun instantiate {$ IMPORT}
    \insert 'SP.env'
        = IMPORT.'SP'
@@ -47,3 +89,6 @@ fun instantiate {$ IMPORT}
 in
    \insert 'Explorer.env'
 end
+
+\endif
+
