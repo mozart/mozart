@@ -62,6 +62,7 @@ public:
 
   FSetValue * gc(void);
   void copyExtension(void);
+  void disposeExtension(void);
 
   OZ_Boolean unify(OZ_Term t);
   Bool operator == (const FSetValue&) const;
@@ -136,7 +137,8 @@ public:
   void init(OZ_FSetState);
 
   FSetConstraint * gc(void);
-  void copyExtensions(void);
+  void copyExtension(void);
+  void disposeExtension(void);
 
   FSetConstraint unify(const FSetConstraint &) const;
   OZ_Boolean valid(const FSetValue &) const;
