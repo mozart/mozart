@@ -233,15 +233,15 @@ public:
   NO_DEFAULT_CONSTRUCTORS2(LockManager);
   LockManager() {Assert(0);}
 
+  Chain *getChain() {return chain;}
+  void setChain(Chain *ch) { chain = ch; }
+
   void init(int index,Chain *ch, LockSec *secX){
     setTertType(Te_Manager);
     setIndex(index);
     setChain(ch);
     sec=secX;}
   
-  Chain *getChain() {return chain;}
-  void setChain(Chain *ch) { chain = ch; }
-
   void gcLockManager();
   void setOwnCurrent();
   Bool isOwnCurrent();

@@ -134,6 +134,10 @@ public:
     flags=0;
     first=last=e;}
 
+  void setFlag(int f){flags |= f;}
+  void resetFlag(int f){flags &= ~f;}
+  Bool hasFlag(int f){return f & flags;}
+    
   void setFlagAndCheck(int f){
     Assert(!hasFlag(f));
     setFlag(f);}
@@ -142,10 +146,6 @@ public:
     Assert(hasFlag(f));
     resetFlag(f);}
 
-  void setFlag(int f){flags |= f;}
-  void resetFlag(int f){flags &= ~f;}
-  Bool hasFlag(int f){return f & flags;}
-    
   DSite* getCurrent(){
     Assert(last != NULL);
     return last->site;}

@@ -30,11 +30,11 @@ class HeapChunk: public OZ_Extension {
 private:
   size_t chunk_size;
   char * chunk_data;
-  char * copyChunkData(void) {
-    return (char *) memcpy(allocate(chunk_size), chunk_data, chunk_size);
-  }
   char * allocate(int size) {
     return (char *) alignedMalloc(size, sizeof(double));
+  }
+  char * copyChunkData(void) {
+    return (char *) memcpy(allocate(chunk_size), chunk_data, chunk_size);
   }
 public:
   HeapChunk(int size)
