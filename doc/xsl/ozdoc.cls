@@ -106,7 +106,9 @@
         {1.3ex plus .2ex}%
         {\mozart@section}}
 
-\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\renewcommand{\chaptermark}[1]{%
+  \markboth{\ifnum \c@secnumdepth >\z@
+    \@chapapp\ \thechapter. \ \fi #1}{}}
 
 \renewcommand{\@makechapterhead}[1]{%
   \thispagestyle{empty}%
@@ -204,9 +206,9 @@
 
 \newcommand{\ps@mozart}{%
   \renewcommand{\@oddhead}{%
-    \mozart@head{\textrm{\rightmark}\hfil\textbf{\thepage}}}%
+    \mozart@head{\normalfont\sffamily\rightmark\hfil\bfseries\thepage}}%
   \renewcommand{\@evenhead}{%
-    \mozart@head{\textbf{\thepage}\hfil\textsl{\leftmark}}}%
+    \mozart@head{\normalfont\sffamily{\bfseries\thepage}\hfil\leftmark}}%
   \renewcommand{\@oddfoot}{}%
   \renewcommand{\@evenfoot}{}}
 
