@@ -28,6 +28,7 @@
 static void cdecl WishPanic(char *x,...);
 static void cdecl WishInfo(char *x,...);
 
+extern "C" int close(int);
 
 #define xxDEBUG
 
