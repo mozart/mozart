@@ -74,6 +74,10 @@
 			     out => [],
 			     bi  => BIfdTellConstraint},
 
+    'tellBoolConstraint'=> { in  => ['int'],
+			     out => [],
+			     bi  => BIfdboolTellConstraint},
+
     'watchSize'	=> { in  => ['*int','+int','bool'],
 			     out => [],
 			     bi  => BIfdWatchSize},

@@ -882,12 +882,14 @@ private:
 
   OZ_expect_t _expectFSetDescr(OZ_Term descr, int level);
 
-protected:
+protected: //tmueller: protected?
+  void addSpawnBool(OZ_Term *);
   void addSpawn(OZ_FDPropState, OZ_Term *);
   void addSpawn(OZ_FSetPropState, OZ_Term *);
   void addSpawn(OZ_CtDefinition *, OZ_CtWakeUp, OZ_Term *);
 
   void addSuspend(OZ_Term *);
+  void addSuspendBool(OZ_Term *);
   void addSuspend(OZ_FDPropState, OZ_Term *);
   void addSuspend(OZ_FSetPropState, OZ_Term *);
   void addSuspend(OZ_CtDefinition *, OZ_CtWakeUp, OZ_Term *);
@@ -905,6 +907,7 @@ public:
   }
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
+  OZ_expect_t expectBoolVar(OZ_Term);
   OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState = fd_prop_any);
   OZ_expect_t expectFSetVar(OZ_Term, OZ_FSetPropState = fs_prop_any);
   OZ_expect_t expectInt(OZ_Term);

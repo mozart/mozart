@@ -318,6 +318,11 @@ Bool GenBoolVariable::valid(TaggedRef val)
   return FALSE;
 }
 
+OZ_Return tellBasicBoolConstraint(OZ_Term t) 
+{
+  OZ_FiniteDomain bool_dom(fd_bool);
+  return tellBasicConstraint(t, &bool_dom);
+}
 
 #ifdef OUTLINE 
 #define inline
