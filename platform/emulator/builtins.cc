@@ -2792,11 +2792,24 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
     // *** HOWEVER I SEE NO REASON FOR INTRODUCING A VARIABLE
     // *** AND PERFORMING AN ADDITIONAL UNIFY
     OZ_Term newFut = oz_newFuture(home);
-    OZ_Term newVar = oz_newVariable(home);
-    OZ_Term lt     = oz_cons(newVar,newFut);
+
+    // kost@ --> Denys: that's how it looked:
+    //   OZ_Term newVar = oz_newVariable(home);
+    //   OZ_Term lt     = oz_cons(newVar,newFut);
+    //
+    // My *theory* is that a variable was introduced at the point the
+    // so-called "SB distribution model" was brought in (which is gone
+    // by now, God bless). We are used to have "oz_cons(val, newFut)"
+    // in the past (though not for this case, of course). Even more:
+    // what was written is illegal 'cause it introduces potentially
+    // observable variables that do not exists from the computation
+    // model's point of view. Please correct me if i'm wrong.
+    OZ_Term lt     = oz_cons(val,newFut);
+
     OZ_Term oldFut = port->exchangeStream(newFut);
     Thread * t = oz_newThreadInject(home);
-    t->pushCall(BI_Unify,RefsArray::make(val,newVar));
+    // kost@ : so, this one goes away as well:
+    // t->pushCall(BI_Unify,RefsArray::make(val,newVar));
     t->pushCall(BI_bindFuture,RefsArray::make(oldFut,lt));
   }
 }
