@@ -154,6 +154,9 @@ public:
   }
   Bool hasJobs () { return (state.flags & T_hasjob); }
 
+  /* check is thread has a stack */
+  Bool isRThread() { return (state.flags & S_TYPE_MASK) == S_RTHREAD; }
+
   //  
   Bool isDeadThread () { return (state.flags & T_dead); }
 
