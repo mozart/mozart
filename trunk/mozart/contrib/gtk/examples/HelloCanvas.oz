@@ -72,7 +72,7 @@ define
    %% Make Canvas child of toplevel
    {Toplevel add(MyCanvas)}
    %% Create our item (member of root group); ignore item object
-   _ = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas textGetType($)}
+   _ = {MyCanvas newItem({MyCanvas root($)} {MyCanvas textGetType($)}
 			 TextItem $)}
 
    %% Make it all visible

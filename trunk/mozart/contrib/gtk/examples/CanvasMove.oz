@@ -74,13 +74,13 @@ define
 		   "-adobe-helvetica-medium-r-normal--12-*-72-72-p-*-iso8859-1"
 		   "fill_color_gdk"#Black
 		   "anchor"#GTK.aNCHOR_NORTH_WEST]
-   _ = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas textGetType($)}
+   _ = {MyCanvas newItem({MyCanvas root($)} {MyCanvas textGetType($)}
 			 TextItemPars $)}
 
    %% Create a rectangle item
    RectItemPars = ["x1"#200.0 "y1"#60.0 "x2"#400.0 "y2"#180.0
 		   "fill_color_gdk"#Black "outline_color_gdk"#White]
-   RectItem = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas rectGetType($)}
+   RectItem = {MyCanvas newItem({MyCanvas root($)} {MyCanvas rectGetType($)}
 				RectItemPars $)}
 
    %% Create Rectangle Item Event Handler
