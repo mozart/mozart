@@ -169,9 +169,13 @@ void ByteBuffer::getBegin() {
   posMB = getptr;
 }
 
+void ByteBuffer::setFrameSize(int size) {
+  framesize=size;
+}
+
 Bool ByteBuffer::getDebug() {
   return canGet(1);
-};
+}
 
 BYTE ByteBuffer::getNext() {
   Assert(posMB==endMB);
