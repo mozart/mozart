@@ -1,5 +1,5 @@
 declare
-[QTk]={Module.link ["http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf"]}
+[QTk]={Module.link ["x-oz://system/wp/QTk.ozf"]}
 
 proc{SaveText}
    Name={QTk.dialogbox save($)}
