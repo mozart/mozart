@@ -118,6 +118,9 @@ static Bool checkGCMsgChunks(unsigned long clock,
 static Bool processGCMsgChunks(unsigned long clock,
                                VSMsgChunkPoolManagerOwned *cpm);
 
+//
+DebugCode(VSSendRecvCounter vsSRCounter;);
+
 ///
 /// (static) interface methods for virtual sites;
 ///
@@ -143,6 +146,7 @@ void zeroRefsToVirtualImpl(VirtualSite *vs)
 int sendTo_VirtualSiteImpl(VirtualSite *vs, MsgBuffer *mb,
                            MessageType mt, DSite *storeSite, int storeIndex)
 {
+  DebugCode(vsSRCounter.send(););
   return (vs->sendTo((VSMsgBufferOwned *) mb, mt, storeSite, storeIndex,
                      &freeMsgBufferPool));
 }
@@ -396,6 +400,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
 
       //
       if (msgType == VS_M_PERDIO) {
+        DebugCode(vsSRCounter.recv(););
         msgReceived(myVSMsgBufferImported);
       } else {
         //
@@ -491,14 +496,13 @@ static Bool processMessageQueue(unsigned long clock, void *sqi)
     //
     Assert(vsm);
     while (vsm) {
-      Bool messageReady;
-
-      //
-      messageReady = vs->tryToSendToAgain(vsm, &freeMsgBufferPool);
-      siteReady = siteReady && messageReady;
-
-      //
-      vsm = vs->getNext();
+      // spin up to the first message that cannot be delivered;
+      if (vs->tryToSendToAgain(vsm, &freeMsgBufferPool)) {
+        vsm = vs->getNext();
+      } else {
+        siteReady = FALSE;
+        break;
+      }
     }
 
     //

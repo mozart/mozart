@@ -67,7 +67,11 @@ protected:
   int next;                     // next chunk if any (and -1 otherwise);
   key_t shmKey;                 // ... of that (next) chunk;
   volatile Bool busy;           // set by owner and dropped by receiver;
+#ifdef DEBUG_CHECK
+  BYTE buffer[0];               // 'gdb' crashes with '[0]';
+#else
   BYTE buffer[0];               // actually more - fills up the chunk;
+#endif
 
   //
 public:

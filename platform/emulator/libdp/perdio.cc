@@ -703,7 +703,8 @@ void msgReceived(MsgBuffer* bs)
       unmarshal_M_GETSTATUS(bs,site,OTI);
       PD((MSG_RECEIVED,"M_GETSTATUS index:%d",OTI));
       OwnerEntry *oe = receiveAtOwner(OTI);
-      (GET_VAR(oe,Manager))->getStatus(site,OTI,oz_status(oe->getValue()));
+
+      (GET_TERM(oe,Manager))->getStatus(site,OTI,oz_status(oe->getValue()));
       break;
     }
 

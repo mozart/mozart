@@ -50,6 +50,22 @@ enum VSMsgType {
 };
 
 //
+class VSSendRecvCounter {
+private:
+  long s;
+  long r;
+public:
+  VSSendRecvCounter() { s = r = 0; }
+  void reset() { s = r = 0; }
+  void send() { s++; }
+  long getSend() { return (s); }
+  void recv() { r++; }
+  long getRecv() { return (r); }
+};
+//
+DebugCode(extern VSSendRecvCounter vsSRCounter;);
+
+//
 class VSMsgBuffer;
 class VSMsgBufferOwned;
 class VSMsgBufferImported;
