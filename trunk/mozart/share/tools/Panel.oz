@@ -20,6 +20,30 @@
 %%% WARRANTIES.
 %%%
 
+\ifdef LILO
+
+functor $
+
+import
+   SP.{System = 'System'}
+
+   OP.{Open = 'Open'}
+
+   WP.{Tk      = 'Tk'
+       TkTools = 'TkTools'}
+   
+export
+   'PanelClass': PanelClass
+   'Panel':      Panel
+
+body
+   \insert 'panel/main.oz'
+
+   Panel = {New PanelClass init}
+end
+
+\else
+
 fun instantiate {$ IMPORT}
    \insert 'SP.env'
        = IMPORT.'SP'
@@ -35,3 +59,6 @@ in
       \insert 'Panel.env'
    end
 end
+
+\endif
+

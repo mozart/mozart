@@ -2,8 +2,12 @@
 %%% Authors:
 %%%   Benjamin Lorenz (lorenz@ps.uni-sb.de)
 %%%
+%%% Contributor:
+%%%   Christian Schulte
+%%%
 %%% Copyright:
 %%%   Benjamin Lorenz, 1997
+%%%   Christian Schulte, 1998
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -19,6 +23,39 @@
 %%% of this file, and for a DISCLAIMER OF ALL
 %%% WARRANTIES.
 %%%
+
+\ifdef LILO
+
+functor $
+
+import
+   SP.{System  = 'System'}
+
+   OP.{OS = 'OS'}
+
+   WP.{Tk      = 'Tk'
+       TkTools = 'TkTools' }
+
+   Emacs.{RealEmacs = emacs}
+
+export
+   'Profiler': Profiler
+
+body
+   Emacs = RealEmacs
+   
+   \insert 'profiler/prof-config'
+   \insert 'profiler/prof-prelude'
+
+   \insert 'profiler/prof-menu'
+   \insert 'profiler/prof-dialog'
+   \insert 'profiler/prof-help'
+   \insert 'profiler/prof-gui'
+in
+   \insert 'profiler/profiler'
+end
+
+\else
 
 fun instantiate {$ IMPORT}
    \insert 'SP.env'
@@ -47,3 +84,5 @@ in
    \insert 'Profiler.env'
 
 end
+
+\endif
