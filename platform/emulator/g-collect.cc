@@ -954,7 +954,7 @@ void Builder::gCollect()
   // In addition, we have to GC the BuilderIndexTable as well:
   const int *ttsTop = getTTSTop();
   const int *ttsBottom = getTTSBottom();
-  int *ttsI = ttsTop;
+  const int *ttsI = ttsTop;
 
   //
   while (--ttsI >= ttsBottom) {
