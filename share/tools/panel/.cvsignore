@@ -1,0 +1,5 @@
+*.~
+*.ozo
+*.ozs
+Makefile
+
