@@ -739,13 +739,11 @@ Bool ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
       goto adopt_anon;
     }
     else {
-      printf("closing anon 1\n");
       anon->close(CLOSED,TRUE);
       return FALSE;
     }
   case WORKING:
   case CLOSING_HARD: // Resources are poor, wait in line...?
-      printf("closing anon 2\n");
     anon->close(CLOSED,TRUE);
     return FALSE;
   case CLOSING_WF_DISCONNECT:
