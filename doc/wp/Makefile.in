@@ -21,5 +21,6 @@ HTMLEXTRAFILES0 = \
 HTMLEXTRAFILES = \
 	wp.gif \
 	$(addprefix pictures/,$(HTMLEXTRAFILES0))
+OZDOCHTMLFLAGS = --autoindex
 
 include $(SRCDIR)/../Makefile.common
