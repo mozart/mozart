@@ -690,10 +690,9 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
   if (prop) {
     if (isSVar(var)) {
       checkSuspensionList(var, pc_std_unif);
-
-      if (isSVar(term)) {
-	checkSuspensionList(term, pc_std_unif);
-      }
+    }
+    if (isSVar(term)) {
+      checkSuspensionList(term, pc_std_unif);
     }
   }
 
