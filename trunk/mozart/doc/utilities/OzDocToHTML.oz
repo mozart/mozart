@@ -27,6 +27,7 @@ import
    AuthorDB('class')
    BibliographyDB('class')
    Fontifier('class' noProgLang)
+   MathToGIF('class')
 export
    Translate
 define
@@ -179,6 +180,7 @@ define
 	 Labels: unit ToGenerate: unit
 	 % for Math and Math.Choice:
 	 MathDisplay: unit
+	 MyMathToGIF: unit
 	 % for Figure:
 	 Floats: unit
 	 FigureCounters: unit
@@ -193,6 +195,7 @@ define
 	 IsColor <- B
 	 MyFontifier <- {New Fontifier.'class' init()}
 	 OutputDirectory <- Dir
+	 MyMathToGIF <- {New MathToGIF.'class' init(Dir)}
 	 CurrentNode <- "index.html"
 	 NodeCounter <- 0
 	 ToWrite <- nil
@@ -239,20 +242,6 @@ define
 	       Out <- @Out#('<CODE>'#
 			    {@MyFontifier
 			     enqueueVirtualString(@ProgLang.1 S '<BR>' $)}#
-			    '</CODE>')
-	    [] nil then skip
-	    elseof N then
-	       OzDocToHTML, Process(N)
-	    end
-	    OzDocToHTML, BatchCode(M I + 1)
-	 else skip
-	 end
-      end
-      meth BatchMathTex(M I)
-	 if {HasFeature M I} then
-	    case M.I of S=_|_ then
-	       Out <- @Out#('<CODE>'#
-			    {MakePCDATA S}#   %--** try to translate
 			    '</CODE>')
 	    [] nil then skip
 	    elseof N then
@@ -567,10 +556,9 @@ define
 		  Out <- @Out#'</P><BLOCKQUOTE>'
 	       [] inline then skip
 	       end
-	       case M.type of 'TEX' then
-		  OzDocToHTML, BatchMathTex(M 1)
-	       [] 'LATEX' then
-		  OzDocToHTML, BatchMathTex(M 1)
+	       case M.type of 'LATEX' then FileName in
+		  {@MyMathToGIF convertLaTeX(M.1 Display ?FileName)}
+		  Out <- @Out#'<IMG src='#{MakeCDATA FileName}#'>'
 	       [] 'HTML' then
 		  Out <- @Out#M.1
 	       else
@@ -601,6 +589,10 @@ define
 		  case M.display of display then Out <- @Out#'<P'#@Align#'>\n'
 		  [] inline then skip
 		  end
+	       [] unit then
+		  %--** the notation should be derived from the file name
+		  {Exception.raiseError
+		   ozDoc(sgmlToHTML unspecifiedPictureNotation M)}
 	       else
 		  {Exception.raiseError
 		   ozDoc(sgmlToHTML unsupportedPictureNotation M)}   %--**
