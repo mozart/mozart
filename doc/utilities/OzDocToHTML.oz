@@ -280,6 +280,7 @@ define
 	 OutputDirectory: unit CurrentNode: unit NodeCounter: unit
 	 ToWrite: unit
 	 Split: unit
+	 MakeAbstract: unit
 	 Threading: unit
 	 SomeSplit: unit
 	 % managing common attributes:
@@ -354,6 +355,7 @@ define
 	    NodeCounter <- 0
 	    ToWrite <- nil
 	    Split <- Args.'split'
+	    MakeAbstract <- Args.'abstract'
 	    SomeSplit <- false
 	    Threading <- nil
 	    ProgLang <- Fontifier.noProgLang
@@ -375,10 +377,8 @@ define
 	     end}
 	    {@Reporter startSubPhase('writing output files')}
 	    {ForAll @ToWrite
-	     proc {$ Node#File}
-		{WriteFile
-		 '<!DOCTYPE html PUBLIC '#DOCTYPE_PUBLIC#'>\n'#
-		 {HTML.toVirtualString Node} File}
+	     proc {$ DocType#Node#File}
+		{WriteFile DocType#{HTML.toVirtualString Node} File}
 	     end}
 	 end
 	 if {@Reporter hasSeenError($)} then
@@ -543,7 +543,8 @@ define
 		       end
 		       TopTOC
 		       OzDocToHTML, Process(M.2='body'(...) $)
-		       case {@MyBibliographyDB process($)} of unit then EMPTY
+		       case {@MyBibliographyDB process(@Reporter $)}
+		       of unit then EMPTY
 		       elseof VS then Title Label X HTML1 HTML in
 			  {@Reporter startSubPhase('generating bibliography')}
 			  Title = PCDATA('Bibliography')
@@ -588,9 +589,24 @@ define
 	    %-----------------------------------------------------------
 	    [] front then HTML in
 	       Authors <- nil
-	       MyAuthorDB <- {New AuthorDB.'class' init()}
+	       MyAuthorDB <- {New AuthorDB.'class' init(@Reporter)}
 	       Meta <- {NewDictionary}
 	       OzDocToHTML, Batch(M 1 ?HTML)
+	       if @MakeAbstract then
+		  Node = 'div'(hr()
+			       h2(@TopTitle)
+			       case @Authors of nil then EMPTY
+			       else
+				  span('class': [subtitle]
+				       OzDocToHTML, FormatAuthors($))
+			       end
+			       case @Abstract of unit then EMPTY
+			       elseof A then
+				  A
+			       end)
+	       in
+		  ToWrite <- ''#Node#'abstract.html'|@ToWrite
+	       end
 	       'div'(COMMON: @Common
 		     h1(align: center 'class': [title] @TopTitle)
 		     HTML
@@ -603,7 +619,7 @@ define
 		     elseof M then p(OzDocToHTML, Process(M $))
 		     end
 		     case @Abstract of unit then EMPTY
-		     elseof A then A
+		     elseof A then blockquote(A)
 		     end)
 	    [] title then
 	       TopTitle <- span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
@@ -613,8 +629,14 @@ define
 			   [author(name: OzDocToHTML, Batch(M 1 $))]}
 	       EMPTY
 	    [] 'author.extern' then
-	       Authors <- {Append @Authors
-			   [{@MyAuthorDB get(M.to M.key $)}]}
+	       case {CondSelect M key unit} of unit then
+		  {@Reporter error(kind: OzDocError
+				   msg: 'missing attribute `key\''
+				   items: [hint(l: 'Node' m: oz(M))])}
+	       elseof Key then
+		  Authors <- {Append @Authors
+			      [{@MyAuthorDB get(M.to Key $)}]}
+	       end
 	       EMPTY
 	    [] meta then
 	       if {HasFeature M value} then
@@ -640,8 +662,8 @@ define
 	       end
 	       EMPTY
 	    [] abstract then
-	       Abstract <- blockquote(COMMON: @Common
-				      OzDocToHTML, Batch(M 1 $))
+	       Abstract <- span(COMMON: @Common
+				OzDocToHTML, Batch(M 1 $))
 	       EMPTY
 	    [] back then
 	       OzDocToHTML, Batch(M 1 $)
@@ -1409,7 +1431,8 @@ define
 				    end
 				    PCDATA('Generated on '#
 					   {FormatDate {OS.localTime}}))))
-	 ToWrite <- Node#(@OutputDirectory#'/'#@CurrentNode)|@ToWrite
+	 ToWrite <- (('<!DOCTYPE html PUBLIC '#DOCTYPE_PUBLIC#'>\n')#Node#
+		     (@OutputDirectory#'/'#@CurrentNode))|@ToWrite
       end
       meth FlushFloats($) HTML in
 	 case @Floats of F|Fr then OldCommon in
