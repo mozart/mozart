@@ -158,6 +158,8 @@ public:
   Bool _wakeup(Board *, PropCaller);
   Bool wakeup(Board *, PropCaller);
 
+  Bool _wakeupLocal(PropCaller);
+
   /*
    * Threads 
    */
@@ -203,13 +205,13 @@ public:
 
 inline
 Propagator * SuspToPropagator(Suspendable * s) {
-  Assert(!s || s->isPropagator());
+  Assert(!s || s->isGcMarked() || s->isPropagator());
   return (Propagator *) s;
 }
 
 inline
 Thread * SuspToThread(Suspendable * s) {
-  Assert(!s || s->isThread());
+  Assert(!s || s->isGcMarked() || s->isThread());
   return (Thread *) s;
 }
 

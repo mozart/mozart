@@ -113,6 +113,9 @@ Bool oz_isLocalVariable(TaggedRef *varPtr)
 void oz_checkAnySuspensionList(SuspList ** suspList, Board *home,
 			       PropCaller calledBy);
 
+void oz_checkLocalSuspensionList(SuspList ** suspList,
+				 PropCaller calledBy);
+
 #define oz_checkSuspensionList(var, calledBy) \
   oz_checkAnySuspensionList((var)->getSuspListRef(),   \
 			    (var)->getBoardInternal(), \
