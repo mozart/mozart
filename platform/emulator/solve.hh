@@ -38,8 +38,8 @@
 
 class SolveActor : public Actor {
 public:
-  OZPRINT;
-  OZPRINTLONG;
+
+  void printLongStreamSolve(ostream &stream, int depth, int offset);
 
   static SolveActor *Cast(Actor *a) {
     Assert(a->isSolve());

@@ -53,8 +53,8 @@ public:
 
   ostream &print2stream(ostream &) const;
 
-  OZPRINT;
-  OZPRINTLONG;
+  void print(ostream &stream, int depth=10, int offset=0);
+  void printDebug(void) {print(cerr,10,0); cerr << endl; cerr.flush();}
 
   FSetValue * gc(void);
 

@@ -27,7 +27,6 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 
 dnl mm2: Known Problems and Bugs
-dnl  Warnings pedwarn
 dnl  Windows support
 dnl  pmake support
 dnl  ensure that all needed programs are really found
@@ -53,16 +52,11 @@ dnl *****************************************************************
 dnl topdir/oz version
 dnl *****************************************************************
 
-srcdira=`(cd $srcdir; pwd)`
-AC_SUBST(srcdira)
-
 if test "${TOPDIR+set}" != set
 then
     TOPDIR="$srcdir/.."
 fi
-TOPDIRA=`(cd $TOPDIR; pwd)`
 AC_SUBST(TOPDIR)
-AC_SUBST(TOPDIRA)
 
 dnl *****************************************************************
 dnl windows cross compilation
@@ -89,8 +83,6 @@ fi
 dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
-
-PATH=$PATH:$TOPDIRA/bin:$TOPDIRA:$prefix/bin
 
 AC_MSG_CHECKING(for --with-pgcc)
 AC_ARG_WITH(pgcc,
@@ -159,10 +151,9 @@ AC_PROG_RANLIB
 
 AC_CHECK_PROGS(M4, gm4 m4, true)
 
-# check if M4 understands option -E
 if test -n "$M4"
 then
-    AC_MSG_CHECKING(if $M4 understands -E option)
+    AC_MSG_CHECKING(whether $M4 understands -E option)
     ac_res=`$M4 -E < /dev/null 2>&1`
     if test -n "$ac_res"
     then
@@ -180,8 +171,11 @@ AC_CHECK_PROGS(ECHO, echo, true)
 AC_CHECK_PROGS(SED, gnused sed, true)
 AC_CHECK_PROGS(AR, gar ar, true)
 
-AC_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-AC_PATH_PROG(DYNLD, ozdynld, true)
+topdira=`(cd $TOPDIR; pwd)`
+oz_path=$PATH:$topdira/bin:$topdira:$prefix/bin
+AC_PATH_PROG(PLATFORMSCRIPT, ozplatform,       , $oz_path)
+AC_PATH_PROG(DYNLD,          ozdynld,      true, $oz_path)
+AC_PATH_PROG(MKINSTALLDIRS,  mkinstalldirs,    , $oz_path)
 
 if test -z "${PLATFORMSCRIPT}"
 then
@@ -225,13 +219,25 @@ then
 fi
 
 AC_SUBST(CWARN)
+AC_SUBST(DWARN)
+
+dnl MOREWARNINGS  =   -Wall -pedantic-errors -W -Wtraditional -Wshadow \
+dnl     -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
+dnl     -Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes \
+dnl     -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls \
+dnl     -Wnested-externs -Winline -Woverloaded-virtual -Wsynth -Werror
 
 if test "${GXX}" = yes; then
     O_OPT="$O_OPT -O6"
     G_OPT="$G_OPT -g3 -DINTERFACE"
     M4_S="-s"
     DEPEND="$CXX -MM"
-    CWARN="\$(WARNINGS)"
+    CWARN="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual"
+    CWARN="$CWARN -Wstrict-prototypes -Wmissing-prototypes"
+    CWARN="$CWARN -Wmissing-declarations -Wnested-externs"
+    CWARN="$CWARN -Wsynth -Wno-unused -Wno-reorder -Wno-uninitialized"
+    CWARN="$CWARN -Werror"
+    DWARN="-Wno-error"
     if test "${platform}" = linux-i486
     then
       if test -n "${PGXX}"

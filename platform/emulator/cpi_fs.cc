@@ -219,14 +219,14 @@ OZ_Boolean OZ_FSetVar::tell(void)
   }
 t:
 #ifdef DEBUG_TELLCONSTRAINTS
-  taggedPrint(makeTaggedRef(varPtr));
+  oz_print(makeTaggedRef(varPtr));
   cout << "(t)" << endl << flush;
 #endif
   return OZ_TRUE;
 
 f:
 #ifdef DEBUG_TELLCONSTRAINTS
-  taggedPrint(makeTaggedRef(varPtr));
+  oz_print(makeTaggedRef(varPtr));
   cout << "(f)" << endl << flush;
 #endif
   return OZ_FALSE;

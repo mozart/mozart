@@ -32,8 +32,6 @@
 #pragma interface
 #endif
 
-typedef Thread* ThreadPtr;
-
 //
 //  A queue a'la 'LocalPropagationQueue' by Tobias;
 
@@ -86,9 +84,8 @@ public:
     size--;
     return (th);
   }
-  void print(void);
+  OZPRINT;
 
-  Board * getHighestSolveDebug(void); // TMUELLER
   int getRunnableNumber();
   void deleteThread(Thread *th);
 
@@ -106,6 +103,10 @@ public:
   void printThreads(void);
 };
 
+//-----------------------------------------------------------------------------
+//#define LOCAL_THREAD_STACK
+
+#ifdef LOCAL_THREAD_STACK
 class ThreadStackImpl {
 private:
   int tos, size, maxsize;
@@ -120,6 +121,7 @@ public:
   ~ThreadStackImpl(void) {}
 
   USEFREELISTMEMORY;
+  OZPRINT;
 
   void allocate(int initsize) {
     maxsize = initsize;
@@ -153,8 +155,6 @@ public:
   }
   void initReadOutFromBottom(void) { fromBos = 0; }
 
-  void print(void) {}
-
   int suggestNewSize(void) {
     return max(min(size * 2,(maxsize + size + 1) >> 1), QUEUEMINSIZE);
   }
@@ -163,10 +163,7 @@ public:
     freeListDispose (stack, (size_t) (maxsize * sizeof (Thread *)));
   }
 }; // class ThreadStackImpl
-
-//-----------------------------------------------------------------------------
-//#define LOCAL_THREAD_STACK
-
+#endif
 
 #ifdef LOCAL_THREAD_STACK
 typedef ThreadStackImpl LocalThreadImpl;

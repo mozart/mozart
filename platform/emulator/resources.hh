@@ -126,8 +126,8 @@
 
 /* if defined the builtin print long is available to print detailed
  * informations about values */
-#ifndef PRINT_LONG
-#define PRINT_LONG
+#ifndef DEBUG_PRINT
+#define DEBUG_PRINT
 #endif
 
 /* all debug switches for the emulator */

@@ -103,7 +103,6 @@ public:
 
   Actor * gcActor();
   void gcRecurse(void);
-  OZPRINT;
   OZPRINTLONG;
 
   Board *getBoardInternal() { return board; }

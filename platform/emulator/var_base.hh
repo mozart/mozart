@@ -136,8 +136,7 @@ public:
     AddSuspToList(suspList,el,unstable?home:0);
   }
 
-  void print(ostream &stream, int depth, int offset, TaggedRef v);
-  void printLong(ostream &stream, int depth, int offset, TaggedRef v);
+  OZPRINTLONG;
 };
 
 inline

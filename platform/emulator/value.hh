@@ -187,6 +187,8 @@ const int litFlagsMask   = (1<<sizeOfLitFlags)-1;
 class Literal {
   int32 flagsAndOthers;
 public:
+  OZPRINTLONG;
+
   void init() { flagsAndOthers=0; }
   void setFlag(int flag) { flagsAndOthers |= flag; }
   int getFlags() { return (flagsAndOthers&litFlagsMask); }
@@ -205,8 +207,6 @@ public:
   Literal *gc();
 
   TaggedRef *getRef() { return (TaggedRef*)&flagsAndOthers; }
-  OZPRINT;
-  OZPRINTLONG;
 
   inline unsigned int hash();
 };
@@ -430,11 +430,11 @@ protected:
   double value;
 
 public:
+  OZPRINTLONG;
+
   Float() { error("use newFloat");; };
   static Float *newFloat(double val);
   double getValue() { return value; }
-  OZPRINT;
-  OZPRINTLONG;
   unsigned int hash() { return (unsigned int) value; }
 
   Float *gc();
@@ -471,13 +471,13 @@ TaggedRef newTaggedFloat(double i)
  *=================================================================== */
 
 class BigInt {
-public:
-  USEFREELISTMEMORY;
-
 private:
   MP_INT value;
 
 public:
+  USEFREELISTMEMORY;
+  OZPRINT;
+
   BigInt() {
     mpz_init(&value);
   }
@@ -552,7 +552,7 @@ public:
   Bool leq(BigInt *b)     { return cmp(b) <= 0; }
   int stringLength()      { return mpz_sizeinbase(&value,10)+2; }
   void getString(char *s) { mpz_get_str(s,10,&value); }
-  OZPRINTLONG;
+
   unsigned int hash()              { return 75; } // all BigInt hash to same value
   BigInt *gc();
 };
@@ -609,6 +609,7 @@ private:
 
 public:
   USEHEAPMEMORY32;
+  OZPRINTLONG;
 
   LTuple(void) {
     COUNT1(sizeLists,sizeof(LTuple));
@@ -618,8 +619,6 @@ public:
     args[0] = head; args[1] = tail;
   }
 
-  OZPRINT;
-  OZPRINTLONG;
   void gcRecurse();
   LTuple *gc();
 
@@ -742,6 +741,7 @@ protected:
   } ctu;
 public:
   USEHEAPMEMORY;
+  OZPRINTLONG;
 
   Bool gcIsMarked(void) {
     return GCISMARKED(ctu.tagged);
@@ -773,9 +773,6 @@ public:
   }
   void setPtr(void *p)  { setTagged(getType(),p); }
   TaggedRef *getRef()   { return &ctu.tagged; }
-
-  OZPRINT;
-  OZPRINTLONG;
 
   /* optimized isChunk test */
   Bool isChunk() { return (int) getType() >= (int) Co_Object; }
@@ -963,6 +960,8 @@ private:
     return (void *) alignedMalloc(size, sizeof(double));
   }
 public:
+  OZPRINT;
+
   HeapChunk(HeapChunk&);
   HeapChunk(int size)
   : ConstTerm(Co_HeapChunk), chunk_size(size), chunk_data(allocate(size))
@@ -973,9 +972,6 @@ public:
   size_t getChunkSize(void) { return chunk_size; }
 
   void * getChunkData(void) { return chunk_data; }
-
-  OZPRINT;
-  OZPRINTLONG;
 
   HeapChunk * gc(void);
 };
@@ -989,11 +985,11 @@ class ForeignPointer: public ConstTerm {
 private:
   void* ptr;
 public:
+  OZPRINT;
+
   ForeignPointer():ConstTerm(Co_Foreign_Pointer),ptr(0){}
   ForeignPointer(void*p):ConstTerm(Co_Foreign_Pointer),ptr(p){}
   void*getPointer(){ return ptr; }
-  OZPRINT;
-  OZPRINTLONG;
   ForeignPointer* gc(void);
 };
 #endif
@@ -1103,6 +1099,8 @@ private:
   int hashfold(int i) { return i&hashmask; }
 
 public:
+  OZPRINT;
+
   Bool isTuple() { return hashmask == 0; }
 
   int getCollisions() {
@@ -1116,7 +1114,6 @@ public:
   TaggedRef getList() { return list; }
   int getWidth()      { return width; }
   int getSize()       { return hashmask+1; }
-  OZPRINT;
 };
 
 #define ARITYTABLESIZE 8000
@@ -1205,6 +1202,7 @@ private:
 
 public:
   USEHEAPMEMORY;
+  OZPRINTLONG;
 
   SRecord *gcSRecord();
 
@@ -1327,9 +1325,6 @@ public:
 
   void gcRecurse();
 
-  OZPRINT;
-  OZPRINTLONG;
-
   Bool compareSortAndArity(TaggedRef lbl, SRecordArity arity) {
     return literalEq(getLabel(),lbl) &&
            sameSRecordArity(getSRecordArity(),arity);
@@ -1419,6 +1414,7 @@ private:
   Bool locking;
 public:
   USEHEAPMEMORY;
+  OZPRINTLONG;
 
   ObjectClass(SRecord *feat,OzDictionary *fm,SRecord *uf,OzDictionary *dm,
               Bool lck, Board *b)
@@ -1476,9 +1472,6 @@ public:
     return gn;
   }
   void globalize();
-
-  OZPRINT;
-  OZPRINTLONG;
 };
 
 
@@ -1517,6 +1510,8 @@ protected:
   OzLock *lock;
   SRecord *freeFeatures;
 public:
+  OZPRINTLONG;
+
   Object();
   ~Object();
   Object(Object&);
@@ -1598,9 +1593,6 @@ public:
   int getWidth ();
 
   Object *gcObject();
-
-  OZPRINT;
-  OZPRINTLONG;
 };
 
 SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val);
@@ -1658,15 +1650,14 @@ friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef value;
 public:
+  OZPRINTLONG;
+
   SChunk(Board *b,TaggedRef v)
     : ConstTermWithHome(b,Co_Chunk), value(v)
   {
     Assert(v==0||isRecord(v));
     Assert(b);
   };
-
-  OZPRINT;
-  OZPRINTLONG;
 
   TaggedRef getValue() { return value; }
   TaggedRef getFeature(TaggedRef fea) { return OZ_subtree(value,fea); }
@@ -1726,8 +1717,10 @@ private:
   TaggedRef *getArgs() { return (TaggedRef*) getPtr(); }
 
 public:
+  OZPRINT;
 
-  OzArray(Board *b, int low, int high, TaggedRef initvalue) : ConstTermWithHome(b,Co_Array)
+  OzArray(Board *b, int low, int high, TaggedRef initvalue)
+    : ConstTermWithHome(b,Co_Array)
   {
     Assert(isRef(initvalue) || !isAnyVar(initvalue));
 
@@ -1771,10 +1764,6 @@ public:
     getArgs()[n] = val;
     return TRUE;
   }
-
-  OZPRINT;
-  OZPRINTLONG;
-
 };
 
 
@@ -1804,7 +1793,7 @@ enum KindOfReg {
 
 class AssReg {
 public:
-  void print();
+  OZPRINT;
 
   PosInt number;
   KindOfReg kind;
@@ -1876,7 +1865,10 @@ public:
 
   ProgramCounter PC;
 
-  PrTabEntry (TaggedRef name,SRecordArity arityInit,TaggedRef file,int line,Bool co)
+public:
+  OZPRINT;
+  PrTabEntry (TaggedRef name, SRecordArity arityInit,
+              TaggedRef file, int line, Bool co)
   : printname(name), fileName(file), lineno(line)
   {
     Assert(isLiteral(name));
@@ -1891,8 +1883,6 @@ public:
     next = allPrTabEntries;
     allPrTabEntries = this;
   }
-
-  OZPRINTLONG;
 
   int getArity () { return (int) arity; }
   TaggedRef getFileName() { return fileName; }
@@ -1922,15 +1912,14 @@ protected:
   // PrTabEntry *pred is in ptr field of ConstTerm
   RefsArray gRegs;
 public:
+  OZPRINTLONG;
+
   Abstraction(Abstraction&);
   Abstraction(PrTabEntry *prd, RefsArray gregs, Board *b)
     : ConstTermWithHome(b,Co_Abstraction), gRegs(gregs)
   {
     setPtr(prd);
   }
-
-  OZPRINT;
-  OZPRINTLONG;
 
   PrTabEntry *getPred()  { return (PrTabEntry *) getPtr(); }
   RefsArray &getGRegs()  { return gRegs; }
@@ -2008,6 +1997,7 @@ private:
 #endif
 
 public:
+  OZPRINTLONG;
 
   /* use malloc to allocate memory */
   static void *operator new(size_t chunk_size)
@@ -2023,9 +2013,6 @@ public:
   }
 
   ~BuiltinTabEntry () {}
-
-  OZPRINT;
-  OZPRINTLONG;
 
   OZ_CFun getFun() { return fun; }
   int getArity() { return arity; }
@@ -2070,11 +2057,9 @@ friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef val;
 public:
-
-  CellLocal(Board *b,TaggedRef v) : Tertiary(b, Co_Cell,Te_Local), val(v) {}
-  OZPRINT;
   OZPRINTLONG;
 
+  CellLocal(Board *b,TaggedRef v) : Tertiary(b, Co_Cell,Te_Local), val(v) {}
   TaggedRef getValue() { return val; }
 
   void setValue(TaggedRef v) { val=v; }
@@ -2155,7 +2140,6 @@ private:
   CellSec *sec;
 public:
   OZPRINT;
-  OZPRINTLONG;
 
   CellManager() : Tertiary(0,Co_Cell,Te_Manager){Assert(0);}
 
@@ -2184,7 +2168,6 @@ private:
   int holder;
 public:
   OZPRINT;
-  OZPRINTLONG;
 
  CellProxy(int manager):Tertiary(manager,Co_Cell,Te_Proxy){  // on import
    holder = 0;}
@@ -2196,7 +2179,6 @@ private:
   CellSec *sec;
 public:
   OZPRINT;
-  OZPRINTLONG;
 
   CellFrame():Tertiary((Board*)NULL,Co_Cell,Te_Frame){Assert(0);}
 
@@ -2272,7 +2254,7 @@ class PortManager: public PortWithStream {
 friend void ConstTerm::gcConstRecurse(void);
 public:
   OZPRINTLONG;
-  OZPRINT;
+
   PortManager() : PortWithStream(0,0) { Assert(0); };
 };
 
@@ -2287,16 +2269,14 @@ class PortLocal: public PortWithStream {
 friend void ConstTerm::gcConstRecurse(void);
 public:
   OZPRINTLONG;
-  OZPRINT;
   PortLocal(Board *b, TaggedRef s) : PortWithStream(b,s) {};
 };
 
 class PortProxy: public Port {
 friend void ConstTerm::gcConstRecurse(void);
 public:
-  PortProxy(int i): Port(0,Te_Proxy) { setIndex(i); }
-  OZPRINTLONG;
   OZPRINT;
+  PortProxy(int i): Port(0,Te_Proxy) { setIndex(i); }
 };
 
 inline Bool isPort(TaggedRef term)
@@ -2322,11 +2302,10 @@ private:
   // - 1 (the space has been merged)
   // or a valid pointer
 public:
+  OZPRINTLONG;
+
   Space(Board *h, Board *s) : Tertiary(h,Co_Space,Te_Local), solve(s) {};
   Space(int i, TertType t) : Tertiary(i,Co_Space,t) {}
-
-  OZPRINT;
-  OZPRINTLONG;
 
   SolveActor *getSolveActor();
   Board *getSolveBoard() { return solve; }
@@ -2365,6 +2344,8 @@ friend void ConstTerm::gcConstRecurse(void);
 private:
   PendThread *pending;
 public:
+  OZPRINT;
+
   LockLocal(Board *b) : OzLock(b,Te_Local){
     pending=NULL;
     setPtr(NULL);
@@ -2400,8 +2381,6 @@ public:
     lockComplex(t);
     return FALSE;}
 
-  OZPRINT;
-  OZPRINTLONG;
   void globalize(int);
 
   void convertToLocal(Thread *t,PendThread *pt){
@@ -2474,7 +2453,6 @@ private:
   LockSec *sec;
 public:
   OZPRINT;
-  OZPRINTLONG;
 
   LockFrame():OzLock((Board*)NULL,Te_Frame){Assert(0);}
 
@@ -2541,7 +2519,6 @@ private:
   LockSec *sec;
 public:
   OZPRINT;
-  OZPRINTLONG;
 
   LockManager() : OzLock((Board*)NULL,Te_Manager){Assert(0);}
 
@@ -2591,7 +2568,6 @@ private:
   int holder;
 public:
   OZPRINT;
-  OZPRINTLONG;
 
  LockProxy(int manager):OzLock(manager,Te_Proxy){  // on import
    holder = 0;}

@@ -55,7 +55,7 @@ public:
 
   USEFREELISTMEMORY;
   SuspList * gc();
-  OZPRINT;
+  OZPRINTLONG;
 
   SuspList(Thread *t, SuspList * n = NULL)
     : thr(t), next(n)
@@ -98,7 +98,7 @@ public:
 
   OrderedSuspList(Thread * thr, OrderedSuspList * l) : t(thr), n(l) {}
   OrderedSuspList * insert(Thread *);
-  void print(void);
+  OZPRINT;
   OrderedSuspList * gc(void);
   OrderedSuspList * getNext(void) const { return n; }
   Thread * getThread(void) const { return t; }

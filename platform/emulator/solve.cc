@@ -104,7 +104,7 @@ Bool extParameters(OZ_Term list, Board * solve_board)
     if (OZ_isVariable(h)) {
 
 #ifdef DEBUG_PROP_STABILTY_TEST
-      taggedPrint(h);
+      oz_print(h);
 #endif
 
       DEREF(h, hptr, htag);

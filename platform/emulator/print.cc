@@ -24,10 +24,66 @@
  *
  */
 
-#include "base.hh"
+/*
+ * oz_printStream(OZ_Term t, ostream &stream, int depth=-1, int width=-1);
+ *   print t in canonical for on stream without newlines
+ *   (-1 means use ozconf.printDepth/Width)
+ *
+ * oz_print(OZ_Term t);
+ *   dito, but on stderr and with newline
+ *
+ * char *OZ_toC(OZ_Term t, int depth, int width)
+ *   dito, but return a string
+ *   NOTE: the string is allocated in a static area and the next call
+ *         of OZ_toC overwrites it.
+ *
+ * char *toC(OZ_Term)
+ *    dito, using ozconf.errorPrintDepth/Width
+ *
+ *
+ * naming convention for debug methods of objects:
+ *
+ *   printStream(ostream &stream, int depth=20)
+ *     print short description of object without newline on stream
+ *
+ *   print()
+ *     dito, but with newline on stderr
+ *
+ *   printLongStream(ostream &stream, int depth=20)
+ *     print long description of object using several lines on stream
+ *
+ *   printLong()
+ *     dito, but on stderr
+ *
+ * printing values
+ *
+ *   ozd_printStream(OZ_Term val, ostream &stream, int depth=20)
+ *     print short description of val without newline on stream
+ *
+ *   ozd_print(OZ_Term val)
+ *     dito, but with newline on stderr
+ *
+ *   ozd_printLongStream(OZ_Term val, ostream &stream,
+ *                       int depth = 20, int offset = 0)
+ *     print long description of val using several lines on stream
+ *
+ *   ozd_printLong(OZ_Term val)
+ *     dito, but on stderr
+ *
+ *
+ * macros used in class definitions
+ *
+ *   OZPRINT
+ *     declare all debug methods
+ *     only printStream needs to be implemented
+ *
+ *   OZPRINTLONG
+ *     dito, but also printLongStream must be implemented
+ */
 
-#ifdef PRINT_LONG
-#include "am.hh"
+#include "runtime.hh"
+
+#ifdef DEBUG_PRINT
 
 #include "genvar.hh"
 #include "fdomn.hh"
@@ -53,42 +109,11 @@ inline Indent indent(int i) {
 }
 
 
-void printWhere(ostream &cout,ProgramCounter PC);
-
-
-#define PRINT(C) \
-     void C::print(ostream &stream, int depth, int offset)
-
-#define PRINTLONG(C) \
-     void C::printLong(ostream &stream, int depth, int offset)
-
-
-/* print tuple & records in one or more lines ??? */
-// #define NEWLINE(off) stream << endl << indent((off));
-#define NEWLINE(off) stream << " ";
-
-
-#define DEC(depth) ((depth)==-1?(depth):(depth)-1)
-#define CHECKDEPTH                                                            \
-{                                                                             \
-  if (depth == 0) {                                                           \
-    stream << ",,,";                                                          \
-    return;                                                                   \
-  }                                                                           \
-}
-
-#define CHECKDEPTHLONG                                                        \
-{                                                                             \
-  if (depth == 0) {                                                           \
-    stream << indent(offset) << ",,," << endl;                                \
-    return;                                                                   \
-  }                                                                           \
-}
+#define PRINT_DEPTH_DEC(depth) ((depth)==-1?(depth):(depth)-1)
 
 //-----------------------------------------------------------------------------
 //                         Miscellaneous stuff
 
-// mm2
 // returns OK if associated suspension is alive
 inline Bool isEffectiveSusp(SuspList* sl)
 {
@@ -109,209 +134,348 @@ inline Bool isEffectiveList(SuspList* sl) {
 }
 
 
+void ozd_printStream(OZ_Term val, ostream &stream, int depth)
+{
+  if (!val) {
+    stream << "<NULL>";
+    return;
+  }
+
+  if (depth == 0) {
+    stream << ",,,";
+    return;
+  }
+
+  OZ_Term ref=deref(val);
+
+  switch(tagTypeOf(ref)) {
+  case UVAR:
+    stream << getVarName(val);
+    stream << "<UV @" << &ref << ">";
+    break;
+
+  case SVAR:
+    stream << getVarName(val);
+    tagged2SVar(ref)->printStream(stream,depth);
+    break;
+  case CVAR:
+    stream << getVarName(val);
+    tagged2CVar(ref)->printStream(stream, depth);
+    break;
+  case SRECORD:
+    tagged2SRecord(ref)->printStream(stream,depth);
+    break;
+  case LTUPLE:
+    tagged2LTuple(ref)->printStream(stream,depth);
+    break;
+  case LITERAL:
+    tagged2Literal(ref)->printStream(stream,depth);
+    break;
+  case OZFLOAT:
+    tagged2Float(ref)->printStream(stream,depth);
+    break;
+  case BIGINT:
+    tagged2BigInt(ref)->printStream(stream,depth);
+    break;
+  case SMALLINT:
+    stream << "<SmallInt @" << &ref << ": " << toC(ref) << ">";
+    break;
+  case OZCONST:
+    tagged2Const(ref)->printStream(stream,depth);
+    break;
+  case FSETVALUE:
+    ((FSetValue *) tagged2FSetValue(ref))->print(stream,depth);
+    break;
+  default:
+    stream << "<unknown tag " << (int) tagTypeOf(ref) << ">";
+    break;
+  }
+}
+
+void ozd_print(OZ_Term val) {
+  ozd_printStream(val,cerr);
+  cerr << endl;
+  flush(cerr);
+}
+
+void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
+{
+  if (!val) {
+    stream << indent(offset) << "*** NULL TERM ***" << endl;
+    return;
+  }
+
+  if (depth == 0) {
+    stream << indent(offset) << ",,," << endl;
+    return;
+  }
+
+  OZ_Term ref=val;
+  if (isRef(ref)) {
+    stream << indent(offset) << "Reference chain: ";
+    while (isRef(ref)) {
+      stream << '@'
+             << (void *) tagged2Ref(ref);
+      ref = *tagged2Ref(ref);
+    }
+    stream << endl;
+  }
+
+  switch(tagTypeOf(ref)) {
+  case UVAR:
+    stream << indent(offset) << getVarName(val);
+    stream << indent(offset) << "<UV @" << &ref << ">" << endl;
+    stream << indent(offset) << "Home: ";
+    tagged2VarHome(ref)->derefBoard()
+      ->printStream(stream,PRINT_DEPTH_DEC(depth));
+    stream << endl;
+    break;
+
+  case SVAR:
+    stream << indent(offset) << getVarName(val);
+    tagged2SVar(ref)->printLongStream(stream,depth,offset);
+    break;
+  case CVAR:
+    stream << indent(offset) << getVarName(val);
+    tagged2CVar(ref)->printLongStream(stream, depth, offset);
+    break;
+  case SRECORD:
+    tagged2SRecord(ref)->printLongStream(stream,depth,offset);
+    break;
+  case LTUPLE:
+    tagged2LTuple(ref)->printLongStream(stream,depth,offset);
+    break;
+  case LITERAL:
+    tagged2Literal(ref)->printLongStream(stream,depth,offset);
+    break;
+  case OZFLOAT:
+    tagged2Float(ref)->printLongStream(stream,depth,offset);
+    break;
+  case BIGINT:
+    tagged2BigInt(ref)->printLongStream(stream,depth,offset);
+    break;
+  case SMALLINT:
+    break;
+  case OZCONST:
+    tagged2Const(ref)->printLongStream(stream,depth,offset);
+    break;
+  case FSETVALUE:
+    ((FSetValue *) tagged2FSetValue(ref))
+      ->print(stream,depth);
+    break;
+  default:
+    break;
+  }
+}
+
+void ozd_printLong(OZ_Term val) {
+  ozd_printLongStream(val,cerr);
+  flush(cerr);
+}
+
+
 // ----------------------------------------------------------------
 // PRINT
 // ----------------------------------------------------------------
 
-void tagged2Stream(TaggedRef ref, ostream &stream, int depth, int offset)
+void SVariable::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
-  if (ref == makeTaggedNULL()) {
-    stream << "*** NULL TERM ***";
-    return;
-  }
-
-  TaggedRef origRef = ref;
-  DEREF(ref,refPtr,tag)
-  switch(tag) {
-  case UVAR:
-    stream << "_"
-           << ToInt32(refPtr);
-    break;
-  case SVAR:
-    tagged2SVar(ref)->print(stream,depth,offset,origRef);
-    break;
-  case CVAR:
-    tagged2CVar(ref)->print(stream, depth, offset,origRef);
-    break;
-  case SRECORD:
-    tagged2SRecord(ref)->print(stream,depth,offset);
-    break;
-  case LTUPLE:
-    tagged2LTuple(ref)->print(stream,depth,offset);
-    break;
-  case LITERAL:
-    tagged2Literal(ref)->print(stream,depth,offset);
-    break;
-  case OZFLOAT:
-    tagged2Float(ref)->print(stream,depth,offset);
-    break;
-  case BIGINT:
-  case SMALLINT:
-    stream << toC(ref);
-    break;
-  case OZCONST:
-    tagged2Const(ref)->print(stream,depth,offset);
-    break;
-  case FSETVALUE:
-    ((FSetValue *) tagged2FSetValue(ref))->print(stream,depth,offset);
-    break;
-  default:
-    if (isRef(ref)) {
-      stream << "PRINT: REF detected";
-    } else {
-      stream << "PRINT: unknown tag in term: " << (int) tag;
-    }
-    break;
-  }
+  stream << "<SV @" << this
+         << (isEffectiveList(suspList) ? "*" : "") << ">";
 }
 
-void printTerm(TaggedRef t, ostream &stream, int depth = 10, int offset= 0){
-  CHECKDEPTH;
-  tagged2Stream(t, stream, depth, offset);
+void SVariable::printLongStream(ostream &stream, int depth, int offset)
+{
+  this->printStream(stream);
+  stream << endl
+         << indent(offset)
+         << "SuspList:\n";
+  suspList->printLongStream(stream, PRINT_DEPTH_DEC(depth), offset+3);
+
+  stream << indent(offset)
+         << "Home: ";
+  GETBOARD(this)->printStream(stream,PRINT_DEPTH_DEC(depth));
+  stream << endl;
 }
 
-
-void SVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
+void GenCVariable::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
-  stream << "SV:"
-         << getVarName(v)
-         << "@"
-         << this
-         << (isEffectiveList(suspList) == OK ? "*" : "");
-}
+  stream << "<CV @" << this;
+  if (isEffectiveList(suspList))
+    stream << " a" << suspList->length();
 
-void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
-{
-  CHECKDEPTH;
   switch(getType()){
   case FDVariable:
     {
-      stream << indent(offset)
-             << "<CV: "
-             << getVarName(v)
-             << " @"
-             << this;
-      if (isEffectiveList(suspList) == OK)
-        stream << " a" << suspList->length();
-
       GenFDVariable * me = (GenFDVariable *) this;
-      if (isEffectiveList(me->fdSuspList[fd_prop_singl]) == OK)
+      if (isEffectiveList(me->fdSuspList[fd_prop_singl]))
         stream << " s("
                << me->fdSuspList[fd_prop_singl]->length()
                << '/'
                << me->fdSuspList[fd_prop_singl]->lengthProp()
                << ')';
-      if (isEffectiveList(me->fdSuspList[fd_prop_bounds]) == OK)
+      if (isEffectiveList(me->fdSuspList[fd_prop_bounds]))
         stream << " b(" << me->fdSuspList[fd_prop_bounds]->length()
                << '/'
                << me->fdSuspList[fd_prop_bounds]->lengthProp()
                << ')';
-      stream << ' ' <<  me->getDom().toString() << ">";
+      stream << ' ' <<  me->getDom().toString();
       break;
     }
 
   case BoolVariable:
     {
-      stream << indent(offset)
-             << "<CV: "
-             << getVarName(v)
-             << " @"
-             << this;
-      if (isEffectiveList(suspList))
-        stream << " a" << suspList->length();
-
-      stream << " {0 1}>";
+      stream << " {0 1}";
       break;
     }
 
   case FSetVariable:
     {
-      stream << indent(offset)
-             << "<CV: "
-             << getVarName(v)
-             << " @"
-             << this;
-      if (isEffectiveList(suspList) == OK)
-        stream << " a" << suspList->length();
-
       GenFSetVariable * me = (GenFSetVariable *) this;
-      if (isEffectiveList(me->fsSuspList[fs_prop_val]) == OK)
+      if (isEffectiveList(me->fsSuspList[fs_prop_val]))
         stream << " val("
                << me->fsSuspList[fs_prop_val]->length()
                << '/'
                << me->fsSuspList[fs_prop_val]->lengthProp()
                << ')';
-      if (isEffectiveList(me->fsSuspList[fs_prop_glb]) == OK)
+      if (isEffectiveList(me->fsSuspList[fs_prop_glb]))
         stream << " glb(" << me->fsSuspList[fs_prop_glb]->length()
                << '/'
                << me->fsSuspList[fs_prop_glb]->lengthProp()
                << ')';
-      if (isEffectiveList(me->fsSuspList[fs_prop_lub]) == OK)
+      if (isEffectiveList(me->fsSuspList[fs_prop_lub]))
         stream << " lub(" << me->fsSuspList[fs_prop_lub]->length()
                << '/'
                << me->fsSuspList[fs_prop_lub]->lengthProp()
                << ')';
-      stream << ' ' <<  me->getSet().toString() << ">";
+      stream << ' ' <<  me->getSet().toString();
       break;
     }
 
   case OFSVariable:
     {
-      stream << indent(offset)
-             << "<CV: "
-             << getVarName(v)
-             << " @"
-             << this;
-      if (isEffectiveList(suspList))
-        stream << " a" << suspList->length();
-
       stream << ' ';
       GenOFSVariable* me = (GenOFSVariable *) this;
-      tagged2Stream(me->getLabel(),stream,DEC(depth),offset);
-      // me->getLabel()->print(stream,DEC(depth), offset);
-      me->getTable()->print(stream,DEC(depth), offset+2);
+      stream << " ";
+      ozd_printStream(me->getLabel(),stream,depth);
+      me->getTable()->printStream(stream,PRINT_DEPTH_DEC(depth));
       break;
    }
 
   case MetaVariable:
     {
       GenMetaVariable* me = (GenMetaVariable *) this;
-      stream << indent(offset) << "<MV." << me->getName() << ": "
-             << getVarName(v) << " @" << this;
-
-      if (isEffectiveList(suspList))
-        stream << " a" << suspList->length();
-
-      stream << ' ' << me->toString(DEC(depth)) << '>';
+      stream << " MV " << me->toString(PRINT_DEPTH_DEC(depth));
       break;
     }
   case AVAR:
-    stream << indent(offset) << "<AVAR "
-             << getVarName(v) << " @" << this << ">";
-      break;
+    stream << " AVAR";
+    break;
   case PerdioVariable:
-    stream << indent(offset) << "<PerdioVariable "
-             << getVarName(v) << " @" << this << ">";
+    stream << " PerdioVariable";
       break;
 
   default:
-    error("Unexpected type of generic variable at %s:%d.",
-          __FILE__, __LINE__);
+    stream << " unknown type: " << getType();
     break;
   }
-} // PRINT(GenCVariable)
+  stream << ">";
+} // PRINTSTREAM(GenCVariable)
+
+void GenCVariable::printLongStream(ostream &stream, int depth, int offset)
+{
+  this->printStream(stream);
+
+  stream << endl
+         << indent(offset) << "Home: ";
+  GETBOARD(this)->printStream(stream,depth);
+  stream << endl;
+
+  stream << indent(offset) << "Suspension List:\n";
+  suspList->printLongStream(stream, depth, offset+3);
+
+  switch(getType()){
+  case FDVariable:
+    stream << indent(offset) << "FD Singleton SuspList:\n";
+    ((GenFDVariable*)this)->fdSuspList[fd_prop_singl]
+      ->printLongStream(stream, depth, offset+3);
+      stream << indent(offset) << "FD Bounds SuspList:\n";
+    ((GenFDVariable*)this)->fdSuspList[fd_prop_bounds]
+      ->printLongStream(stream, depth, offset+3);
+    stream << indent(offset) << "FD Domain:\n";
+    ((OZ_FiniteDomainImpl *) &((GenFDVariable*)this)->getDom())
+      ->printLong(stream, offset+3);
+    break;
+
+  case BoolVariable:
+    stream << indent(offset) << "Boolean Domain: {0 1}" << endl;
+    break;
+
+  case FSetVariable:
+    stream << indent(offset) << "FSet val SuspList:\n";
+    ((GenFSetVariable*)this)->fsSuspList[fs_prop_val]
+      ->printLongStream(stream, depth, offset+3);
+    stream << indent(offset) << "FSet glb SuspList:\n";
+    ((GenFSetVariable*)this)->fsSuspList[fs_prop_glb]
+      ->printLongStream(stream, depth, offset+3);
+    stream << indent(offset) << "FSet lub SuspList:\n";
+    ((GenFSetVariable*)this)->fsSuspList[fs_prop_lub]
+      ->printLongStream(stream, depth, offset+3);
+    stream << indent(offset) << "FSet :\n" << indent(offset + 3);
+    ((FSetConstraint *) &((GenFSetVariable*)this)->getSet())
+      ->print(stream);
+    stream << endl;
+    break;
+
+  case OFSVariable:
+    {
+      stream << indent(offset);
+      GenOFSVariable* me = (GenOFSVariable *) this;
+      ozd_printStream(me->getLabel(),stream,PRINT_DEPTH_DEC(depth));
+      // me->getLabel()->printStream(stream, PRINT_DEPTH_DEC(depth));
+      me->getTable()->printStream(stream, PRINT_DEPTH_DEC(depth));
+      stream << endl;
+      break;
+    }
+
+  case MetaVariable:
+    {
+      GenMetaVariable* me = (GenMetaVariable *) this;
+      stream << indent(offset)
+             << "<<MV: '" << me->getName() << "' "
+             << me->toString(PRINT_DEPTH_DEC(depth))
+             << endl;
+      ozd_printStream(me->data, stream, PRINT_DEPTH_DEC(depth));
+      stream << endl << indent(offset) << ">>" << endl;
+      break;
+    }
+  case PerdioVariable:
+    stream << indent(offset) << "<PerdioVariable *" << this << ">" << endl;
+      break;
+  case AVAR:
+    {
+      AVar* me = (AVar *) this;
+      stream << indent(offset); this->printStream(stream,depth);
+      stream << endl << indent(offset) << "Value: ";
+      ozd_printStream(me->getValue(), stream, PRINT_DEPTH_DEC(depth));
+      stream << endl;
+      break;
+    }
+  default:
+    stream << indent(offset) << " unknown type: " << getType() << endl;
+    break;
+  }
+
+} // printLongStream(GenCVariable)
 
 
 // Non-Name Features are output in alphanumeric order (ints before atoms):
-PRINT(DynamicTable)
+void DynamicTable::printStream(ostream &stream, int depth)
 {
-    CHECKDEPTH;
     stream << '(';
     int nonempty=FALSE;
     // Count Atoms & Names in dynamictable:
-    TaggedRef tmplit,tmpval;
+    OZ_Term tmplit,tmpval;
     dt_index di;
     long ai;
     long nAtomOrInt=0;
@@ -328,7 +492,8 @@ PRINT(DynamicTable)
     // Allocate array on heap, put Atoms in array:
     //STuple *stuple=STuple::newSTuple(AtomNil,nAtomOrInt);
     //TaggedRef *arr=stuple->getRef();
-    TaggedRef *arr = new TaggedRef[nAtomOrInt+1]; // +1 since nAtomOrInt may be zero
+    TaggedRef *arr = new TaggedRef[nAtomOrInt+1];
+    //      +1 since nAtomOrInt may be zero
     for (ai=0,di=0; di<size; di++) {
         tmplit=table[di].ident;
         tmpval=table[di].value;
@@ -339,22 +504,20 @@ PRINT(DynamicTable)
     inplace_quicksort(arr, arr+(nAtomOrInt-1));
     // Output the Atoms first, in order:
     for (ai=0; ai<nAtomOrInt; ai++) {
-        stream << ' ';
-        tagged2Stream(arr[ai],stream,depth);
-        stream << ':';
-        stream << ' ';
-        tagged2Stream(lookup(arr[ai]),stream,depth);
+      stream << " ";
+      ozd_printStream(arr[ai],stream,depth);
+      stream << ": ";
+      ozd_printStream(lookup(arr[ai]),stream,PRINT_DEPTH_DEC(depth));
     }
     // Output the Names last, unordered:
     for (di=0; di<size; di++) {
         tmplit=table[di].ident;
         tmpval=table[di].value;
         if (tmpval!=makeTaggedNULL() && !(isAtom(tmplit)||isInt(tmplit))) {
-            stream << ' ';
-            tagged2Stream(tmplit,stream,depth);
-            stream << ':';
-            stream << ' ';
-            tagged2Stream(tmpval,stream,depth);
+          stream << " ";
+          ozd_printStream(tmplit,stream,depth);
+          stream << ": ";
+          ozd_printStream(tmpval,stream,PRINT_DEPTH_DEC(depth));
         }
     }
     // Deallocate array:
@@ -364,259 +527,183 @@ PRINT(DynamicTable)
     stream << "...)" ;
 }
 
-
-PRINTLONG(DynamicTable)
+void SRecord::printStream(ostream &stream, int depth)
 {
-  print(stream, depth, offset);
-}
-
-PRINT(SRecord)
-{
-  CHECKDEPTH;
-  tagged2Stream(getLabel(),stream,depth,offset);
-
-  TaggedRef ar = getArityList();
-  CHECK_DEREF(ar);
-  if (isCons(ar)) {
-    stream << "(";
-    int i=1;
-    Bool isTuple=OK;
-    while (isCons(ar)) {
-      NEWLINE(offset+2);
-      TaggedRef feat = head(ar);
-      CHECK_DEREF(feat);
-      if (isTuple && isSmallInt(feat) && smallIntValue(feat)==i) {
-        i++;
-      } else {
-        isTuple = NO;
-        tagged2Stream(feat,stream,depth,offset);
-        stream << ": ";
-      }
-      ar = tail(ar);
-      CHECK_DEREF(ar);
-      tagged2Stream(getFeature(feat),stream,DEC(depth),offset+2);
+  ozd_printStream(getLabel(),stream,depth);
+  stream << '(';
+  if (isTuple()) {
+    int len = getWidth();
+    for (int i=0; i < len; i++) {
+      stream << ' ';
+      ozd_printStream(getArg(i), stream, PRINT_DEPTH_DEC(depth));
     }
-    NEWLINE(offset);
-    stream << ")";
-  }
-}
-
-PRINT(LTuple)
-{
-  CHECKDEPTH;
-  TaggedRef headd = getHead();
-  DEREF(headd,_1,tag1);
-  if (isLTuple(tag1) ) {
-    stream << "(";
-    tagged2Stream(headd,stream, DEC(depth),offset);
-    stream << ")|";
   } else {
-    tagged2Stream(getHead(),stream, DEC(depth),offset);
-    stream << '|';
+    OZ_Term as = getArityList();
+    Assert(isCons(as));
+    while (isCons(as)) {
+      stream << ' ';
+      ozd_printStream(head(as), stream, PRINT_DEPTH_DEC(depth));
+      stream << ": ";
+      ozd_printStream(getFeature(head(as)), stream, PRINT_DEPTH_DEC(depth));
+      as = tail(as);
+    }
   }
-  tagged2Stream(getTail(),stream, DEC(depth), offset);
+  stream << ')';
+}
+
+void LTuple::printStream(ostream &stream, int depth)
+{
+  stream << "|(";
+  ozd_printStream(getHead(), stream, PRINT_DEPTH_DEC(depth));
+  ozd_printStream(getTail(), stream, PRINT_DEPTH_DEC(depth));
+  stream << ")";
 }
 
 
-PRINT(Literal)
+void Literal::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
-  stream << toC(makeTaggedLiteral(this));
+  if (isAtom()) {
+    stream << "<Atom " << getPrintName() << ">";
+  } else {
+    stream << "<";
+    if (isNamedName()) {
+      stream << "Named";
+    }
+    if (isUniqueName()) {
+      stream << "Unique";
+    }
+    stream << "Name " << getPrintName() << ">";
+  }
 }
 
-PRINT(Float)
+void Float::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
-  stream << toC(makeTaggedFloat(this));
+  stream << "<Float " << toC(makeTaggedFloat(this)) << ">";
 }
 
-PRINT(CellLocal)
+void CellLocal::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   stream << "CellLocal@" << this;
 }
 
-PRINT(CellManager)
+void CellManager::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   stream << "CellManager@" << this;
 }
 
-PRINT(CellProxy)
+void CellProxy::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   stream << "CellProxy@" << this;
 }
 
-PRINT(CellFrame)
+void CellFrame::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   stream << "CellFrame@" << this;
 }
 
-PRINT(PortLocal)
+void PortLocal::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   stream << "PortLocal@" << this;
 }
 
-PRINT(PortProxy)
+void PortProxy::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   stream << "PortProxy@" << this;
 }
 
-PRINT(PortManager)
+void PortManager::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   stream << "PortManager@" << this;
 }
 
-PRINT(Space)
+void Space::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   stream << "Space@" << this;
 }
 
-PRINT(OzArray)
+void OzArray::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
-  depth--;
   stream << "Array@" << this << "[ ";
   for (int i=getLow(); i<=getHigh(); i++) {
     stream << i << ": ";
     TaggedRef t=getArg(i);
-    tagged2Stream(t,stream, depth,offset);
+    ozd_printStream(t,stream, PRINT_DEPTH_DEC(depth));
     stream << " ";
   }
   stream << "]";
 }
 
-PRINTLONG(OzArray)
+void OzDictionary::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTHLONG;
-  print(stream,depth+1,offset);
-}
-
-PRINTLONG(FSetValue)
-{
-  CHECKDEPTHLONG;
-  print(stream,depth+1,offset);
-}
-
-PRINT(OzDictionary)
-{
-  CHECKDEPTH;
   stream << "<Dictionary@" << this << ">";
 }
 
-PRINTLONG(OzDictionary)
+void LockLocal::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTHLONG;
-  print(stream,depth+1,offset);
-}
-
-PRINT(LockLocal)
-{
-  CHECKDEPTH;
   stream << "<LockLocal@" << this << ">";
 }
 
-PRINTLONG(LockLocal)
+void LockProxy::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTHLONG;
-  stream << "<LockLocal@" << this << ">";
-}
-
-PRINT(LockProxy)
-{
-  CHECKDEPTH;
   stream << "<LockProxy@" << this << ">";
 }
 
-PRINTLONG(LockProxy)
+void LockFrame::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTHLONG;
-  stream << "<LockProxy@" << this << ">";
-}
-
-PRINT(LockFrame)
-{
-  CHECKDEPTH;
   stream << "<LockFrame@" << this << ">";
 }
 
-PRINTLONG(LockFrame)
+void LockManager::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTHLONG;
-  stream << "<LockFrame@" << this << ">";
-}
-
-PRINT(LockManager)
-{
-  CHECKDEPTH;
   stream << "<LockManager@" << this << ">";
 }
 
-PRINTLONG(LockManager)
+void SChunk::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTHLONG;
-  stream << "<LockManager@" << this << ">";
-}
-
-PRINT(SChunk)
-{
-  CHECKDEPTH;
   stream << "Chunk@" << this;
 }
 
-
-PRINT(Abstraction)
+void Abstraction::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   stream << "P:"
          << getPrintName() << "/" << getArity();
 }
 
-PRINT(Object)
+void Object::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   stream << "<O:" << getPrintName()
          << ", ";
   if (getFreeRecord())
-    getFreeRecord()->print(stream,depth+1,offset);
+    getFreeRecord()->printStream(stream,depth);
   else
     stream << "nofreefeatures";
   stream << ", State: ";
   RecOrCell state = getState();
   if (stateIsCell(state)) {
-    getCell(state)->print(stream,depth+1,offset);
+    getCell(state)->printStream(stream,depth);
   } else if(getRecord(state)) {
-    getRecord(state)->print(stream,depth+1,offset);
+    getRecord(state)->printStream(stream,depth);
   }
   stream << ">";
 }
 
-PRINT(ObjectClass)
+void ObjectClass::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   stream << "C:" << getPrintName();
 }
 
-PRINT(BuiltinTabEntry)
+void BuiltinTabEntry::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   stream << "B:"
          << getPrintName() << "/" << getArity();
 }
 
 
-PRINT(Arity)
+void Arity::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   stream << (isTuple() ? "Tuple" : "Record") << "Arity: #"
          << getWidth() << endl;
-  tagged2Stream(list,stream,depth,offset);
+  ozd_printStream(list,stream,depth);
   stream << endl;
   if (!isTuple()) {
     stream << "Hashtable:" << endl;
@@ -626,7 +713,7 @@ PRINT(Arity)
       if (!table[i].key) {
         stream << "<empty>" << endl;
       } else {
-        tagged2Stream(table[i].key,stream,depth,offset);
+        ozd_printStream(table[i].key,stream,depth);
         stream << " " << table[i].index
                << " (#" << featureHash(table[i].key)
                << " " << hashfold(featureHash(table[i].key)) << ")"
@@ -637,13 +724,12 @@ PRINT(Arity)
 }
 
 
-PRINT(ArityTable)
+void ArityTable::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   for (int i = 0 ; i < size ; i ++) {
     Arity *ar = table[i];
     while (ar) {
-      ar->print(stream,depth,offset);
+      ar->printStream(stream,depth);
       ar = ar->next;
     }
   }
@@ -652,10 +738,12 @@ PRINT(ArityTable)
 
 // ---------------------------------------------------
 
-PRINT(SuspList)
+void SuspList::printStream(ostream &stream, int depth) {
+}
+
+void SuspList::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTH;
-  if (isEffectiveList(this) == NO) {
+  if (!isEffectiveList(this)) {
     stream << indent(offset) << "- empty -" << endl;
     return;
   }
@@ -663,219 +751,169 @@ PRINT(SuspList)
   for (SuspList* sl = this; sl != NULL; sl = sl->getNext()) {
     if (isEffectiveSusp(sl)) {
       stream << indent(offset);
-      (sl->getElem ())->print (stream);
+      (sl->getElem ())->printStream(stream);
       stream << endl;
     }
   } // for
 }
 
-// ----------------------------------------------------------------
-// PRINT LONG
-// ----------------------------------------------------------------
-
-static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
-                              int depth = 1,int offset = 0)
+void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
-  if (ref == makeTaggedNULL()) {
-    stream << indent(offset) << "*** NULL TERM ***" << endl;
-    return;
-  }
-
-  if (isRef(ref)) {
-    stream << indent(offset)
-           << '@'
-           << (void *) tagged2Ref(ref)
-           << ": "
-           << (void *) *tagged2Ref(ref)
-           << endl;
-    tagged2StreamLong(*tagged2Ref(ref),stream,DEC(depth),offset+2);
-    return;
-  }
-
-  switch(tagTypeOf(ref)) {
-  case UVAR:
-    {
-      stream << indent(offset)
-             << "UV @"
-             << tagValueOf(ref)
-             << endl
-             << indent(offset)
-             << "HomeNode: ";
-      tagged2VarHome(ref)->derefBoard()->print(stream,DEC(depth));
-      stream << endl;
-    }
-    break;
-
-  case SVAR:
-    tagged2SVar(ref)->printLong(stream,depth,offset,AtomVoid);
-    break;
-  case CVAR:
-    tagged2CVar(ref)->printLong(stream, depth, offset,AtomVoid);
-    break;
-  case SRECORD:
-    tagged2SRecord(ref)->printLong(stream,depth,offset);
-    break;
-  case LTUPLE:
-    tagged2LTuple(ref)->printLong(stream,depth,offset);
-    break;
-  case LITERAL:
-    tagged2Literal(ref)->printLong(stream,depth,offset);
-    break;
-  case OZFLOAT:
-    tagged2Float(ref)->printLong(stream,depth,offset);
-    break;
-  case BIGINT:
-    tagged2BigInt(ref)->printLong(stream,depth,offset);
-    break;
-  case SMALLINT:
-    {
-      stream << indent(offset)
-             << "SmallInt @"
-             << ref
-             << ": ";
-      tagged2Stream(ref,stream,depth,offset);
-      stream << endl;
-    }
-    break;
-  case OZCONST:
-    tagged2Const(ref)->printLong(stream,depth,offset);
-    break;
-  case FSETVALUE:
-    ((FSetValue *) tagged2FSetValue(ref))->printLong(stream,depth,offset);
-    break;
-  default:
-    if (isRef(ref)) {
-      stream << "PRINT: REF detected" << endl;
-    } else {
-      stream << "PRINT: unknown tag in term: " << (int) tagTypeOf(ref) << endl;
-    }
-    break;
-  }
-}
-
-PRINTLONG(ConstTerm)
-{
-  CHECKDEPTHLONG;
   switch (getType()) {
-  case Co_HeapChunk:  ((HeapChunk *) this)->printLong(stream, depth, offset); break;
-  case Co_Abstraction:((Abstraction *) this)->printLong(stream,depth,offset); break;
-  case Co_Object:     ((Object *) this)->printLong(stream,depth,offset);      break;
-  case Co_Class:      ((ObjectClass *) this)->printLong(stream,depth,offset);      break;
+  case Co_HeapChunk:
+    ((HeapChunk *) this)->printLongStream(stream, depth, offset);
+    break;
+  case Co_Abstraction:
+    ((Abstraction *) this)->printLongStream(stream,depth,offset);
+    break;
+  case Co_Object:
+    ((Object *) this)->printLongStream(stream,depth,offset);
+    break;
+  case Co_Class:
+    ((ObjectClass *) this)->printLongStream(stream,depth,offset);
+    break;
   case Co_Cell:
     switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:   ((CellLocal *)   this)->printLong(stream,depth,offset); break;
-    case Te_Frame:   ((CellFrame *)   this)->printLong(stream,depth,offset); break;
-    case Te_Manager: ((CellManager *) this)->printLong(stream,depth,offset); break;
-    case Te_Proxy:   ((CellProxy *)   this)->printLong(stream,depth,offset); break;
-    default:         Assert(NO);
+    case Te_Local:
+      ((CellLocal *)   this)->printLongStream(stream,depth,offset);
+      break;
+    case Te_Frame:
+      ((CellFrame *)   this)->printLongStream(stream,depth,offset);
+      break;
+    case Te_Manager:
+      ((CellManager *) this)->printLongStream(stream,depth,offset);
+      break;
+    case Te_Proxy:
+      ((CellProxy *)   this)->printLongStream(stream,depth,offset);
+      break;
+    default:
+      Assert(NO);
     }
     break;
   case Co_Port:
     switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:   ((PortLocal *)   this)->printLong(stream,depth,offset); break;
-    case Te_Manager: ((PortManager *) this)->printLong(stream,depth,offset); break;
-    case Te_Proxy:   ((PortProxy *)   this)->printLong(stream,depth,offset); break;
-    default:         Assert(NO);
+    case Te_Local:
+      ((PortLocal *)   this)->printLongStream(stream,depth,offset);
+      break;
+    case Te_Manager:
+      ((PortManager *) this)->printLongStream(stream,depth,offset);
+      break;
+    case Te_Proxy:
+      ((PortProxy *)   this)->printLongStream(stream,depth,offset);
+      break;
+    default:
+      Assert(NO);
     }
     break;
-  case Co_Space:      ((Space *) this)->printLong(stream,depth,offset);       break;
-  case Co_Chunk:      ((SChunk *) this)->printLong(stream,depth,offset);      break;
-  case Co_Array:      ((OzArray *) this)->printLong(stream,depth,offset);     break;
-  case Co_Dictionary: ((OzDictionary *) this)->printLong(stream,depth,offset);break;
+  case Co_Space:
+    ((Space *) this)->printLongStream(stream,depth,offset);
+    break;
+  case Co_Chunk:
+    ((SChunk *) this)->printLongStream(stream,depth,offset);
+    break;
+  case Co_Array:
+    ((OzArray *) this)->printLongStream(stream,depth,offset);
+    break;
+  case Co_Dictionary:
+    ((OzDictionary *) this)->printLongStream(stream,depth,offset);
+    break;
   case Co_Lock:
     switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:   ((LockLocal *)   this)->printLong(stream,depth,offset); break;
-    case Te_Frame:   ((LockFrame *)   this)->printLong(stream,depth,offset); break;
-    case Te_Manager: ((LockManager *) this)->printLong(stream,depth,offset); break;
-    case Te_Proxy:   ((LockProxy *)   this)->printLong(stream,depth,offset); break;
+    case Te_Local:
+      ((LockLocal *)   this)->printLongStream(stream,depth,offset);
+      break;
+    case Te_Frame:
+      ((LockFrame *)   this)->printLongStream(stream,depth,offset);
+      break;
+    case Te_Manager:
+      ((LockManager *) this)->printLongStream(stream,depth,offset);
+      break;
+    case Te_Proxy:
+      ((LockProxy *)   this)->printLongStream(stream,depth,offset);
+      break;
     default:         Assert(NO);
     }
     break;
-  case Co_Thread:     ((Thread *) this)->printLong(stream,depth,offset);    break;
-  case Co_Builtin:    ((BuiltinTabEntry *) this)->printLong(stream,depth,offset);     break;
+  case Co_Thread:
+    ((Thread *) this)->printLongStream(stream,depth,offset);
+    break;
+  case Co_Builtin:
+    ((BuiltinTabEntry *) this)->printLongStream(stream,depth,offset);
+    break;
 #ifdef FOREIGN_POINTER
   case Co_Foreign_Pointer:
-    ((ForeignPointer*)this)->printLong(stream,depth,offset); break;
+    ((ForeignPointer*)this)->printLongStream(stream,depth,offset); break;
 #endif
   default:            Assert(NO);
   }
 }
 
-PRINT(ConstTerm)
+void ConstTerm::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   switch (getType()) {
-  case Co_HeapChunk:   ((HeapChunk *) this)->print(stream, depth, offset); break;
-  case Co_Abstraction: ((Abstraction *) this)->print(stream,depth,offset); break;
-  case Co_Object:      ((Object *) this)->print(stream,depth,offset);      break;
-  case Co_Class:       ((ObjectClass *) this)->print(stream,depth,offset);      break;
-  case Co_Cell:        ((CellLocal *) this)->print(stream,depth,offset);        break;
-  case Co_Port:        ((Port *) this)->print(stream,depth,offset);        break;
-  case Co_Space:       ((Space *) this)->print(stream,depth,offset);       break;
-  case Co_Chunk:       ((SChunk *) this)->print(stream,depth,offset);      break;
-  case Co_Array:       ((OzArray *) this)->print(stream,depth,offset);     break;
-  case Co_Dictionary:  ((OzDictionary *) this)->print(stream,depth,offset);break;
-  case Co_Lock:        ((LockLocal *) this)->print(stream,depth,offset);break;
-  case Co_Thread:      ((Thread *) this)->print(stream,depth,offset);    break;
-  case Co_Builtin:     ((BuiltinTabEntry *) this)->print(stream,depth,offset);     break;
+  case Co_HeapChunk:   ((HeapChunk *) this)->printStream(stream, depth);
+    break;
+  case Co_Abstraction: ((Abstraction *) this)->printStream(stream,depth);
+    break;
+  case Co_Object:      ((Object *) this)->printStream(stream,depth);
+    break;
+  case Co_Class:       ((ObjectClass *) this)->printStream(stream,depth);
+    break;
+  case Co_Cell:        ((CellLocal *) this)->printStream(stream,depth);
+    break;
+  case Co_Port:        ((Port *) this)->printStream(stream,depth);
+    break;
+  case Co_Space:       ((Space *) this)->printStream(stream,depth);
+    break;
+  case Co_Chunk:       ((SChunk *) this)->printStream(stream,depth);
+    break;
+  case Co_Array:       ((OzArray *) this)->printStream(stream,depth);
+    break;
+  case Co_Dictionary:  ((OzDictionary *) this)->printStream(stream,depth);
+    break;
+  case Co_Lock:        ((LockLocal *) this)->printStream(stream,depth);
+    break;
+  case Co_Thread:      ((Thread *) this)->printStream(stream,depth);
+    break;
+  case Co_Builtin:     ((BuiltinTabEntry *) this)->printStream(stream,depth);
+    break;
 #ifdef FOREIGN_POINTER
   case Co_Foreign_Pointer:
-    ((ForeignPointer*)this)->print(stream,depth,offset); break;
+    ((ForeignPointer*)this)->printStream(stream,depth); break;
 #endif
   default:             Assert(NO);
   }
 }
 
-PRINT(HeapChunk)
+void HeapChunk::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
-  stream << indent(offset)
-         << "heap chunk: " << (int) chunk_size << " bytes at " << this << '.';
+  stream << "heap chunk: " << (int) chunk_size << " bytes at " << this << '.';
 /*
   char * data = (char *) chunk_data;
   for (int i = 0; i < chunk_size; i += 1)
-    stream << indent(offset + 3)
-           << "chunk_data[" << i << "]@" << &data[i] << "="
+    stream << "chunk_data[" << i << "]@" << &data[i] << "="
            << data[i] << endl;
            */
 }
 
-PRINTLONG(HeapChunk)
-{
-  CHECKDEPTHLONG;
-  stream << indent(offset)
-         << "heap chunk: " << (int) chunk_size << " bytes at " << this << '.';
-}
-
 #ifdef FOREIGN_POINTER
-PRINT(ForeignPointer)
+void ForeignPointer::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
-  stream << indent(offset)
-         << "foreign pointer: " << getPointer() << " at " << this << '.';
-}
-PRINTLONG(ForeignPointer)
-{
-  CHECKDEPTHLONG;
-  stream << indent(offset)
-         << "foreign pointer: " << getPointer() << " at " << this << '.';
+  stream << "foreign pointer: " << getPointer() << " at " << this << '.';
 }
 #endif
 
-PRINTLONG(ObjectClass)
+
+void ObjectClass::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
   stream << indent(offset)
          << "Class: "
          << getPrintName() << endl;
 }
 
 
-PRINT(Board)
+void Board::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
-  stream << indent(offset);
   if (!this) {
     stream << "(NULL Board)";
     return;
@@ -893,79 +931,73 @@ PRINT(Board)
 
   stream << "Board @" << this << " [";
 
-  if (isInstalled())    stream << 'I';
-  if (isNervous())      stream << 'N';
-  if (isWaitTop())      stream << 'T';
-  if (isMarkedGlobal()) stream << 'G';
-  if (isFailed())       stream << 'F';
-  if (isCommitted())    stream << 'C';
-  if (isWaiting())      stream << 'W';
+  if (isInstalled())    stream << " Installed";
+  if (isNervous())      stream << " Nervous";
+  if (isWaitTop())      stream << " WaitTop";
+  if (isMarkedGlobal()) stream << " MarkedGlobal";
+  if (isFailed())       stream << " Failed";
+  if (isCommitted())    stream << " Committed";
+  if (isWaiting())      stream << " Waiting";
 
-  stream << " #" << suspCount;
-  stream << ']';
+  stream << " Suspensions: #" << suspCount;
+  stream << " ]";
 }
 
-PRINTLONG(Board)
+void Board::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
-  print(stream,depth,offset); stream << endl;
+  // printTree?
+  if (depth == 0) {
+    stream << indent(offset) << ",,," << endl;
+    return;
+  }
+
+  stream << indent(offset);
+  printStream(stream,depth);
+  stream << endl;
+
   stream << indent(offset) << "Flags: " << (void *) flags << endl;
   stream << indent(offset) << "Script: " << endl;
-  script.printLong(stream,DEC(depth),offset+2);
+  script.printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
   if (_isRoot()) return;
   if (isCommitted()) {
     stream << indent(offset) << "Board:" << endl;
-    u.ref->printLong(stream,DEC(depth),offset+2);
+    u.ref->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
   } else {
     stream << indent(offset) << "Actor:" << endl;
-    u.actor->printLong(stream,DEC(depth),offset+2);
+    u.actor->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
   }
 }
 
-PRINT(Script)
+void Script::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
-  stream << indent(offset);
   if (getSize() <= 0) {
     stream << "- empty -";
     return;
   }
   for (int i = 0; i < getSize(); i++) {
-    (*this)[i].print(stream,depth,offset);
+    (*this)[i].printStream(stream,depth);
     stream << ", ";
   }
 }
 
-PRINTLONG(Script)
+void Equation::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTHLONG;
-  print(stream,depth,offset);
-  stream << endl;
-}
-
-PRINT(Equation)
-{
-  CHECKDEPTH;
-  tagged2Stream(getLeft(),stream,depth,offset);
+  ozd_printStream(getLeft(),stream,depth);
   stream << " = ";
-  tagged2Stream(getRight(),stream,depth,offset);
+  ozd_printStream(getRight(),stream,depth);
 }
 
-PRINTLONG(Equation)
+void Actor::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTHLONG;
-  print(stream,depth,offset);
-}
-
-PRINT(Actor)
-{
-  CHECKDEPTH;
   if (!this) {
-    stream << indent(offset) << "(NULL Actor)";
+    stream << "(NULL Actor)";
+    return;
+  }
+  if (depth == 0) {
+    stream << ",,,";
     return;
   }
 
-  stream << indent(offset);
   if (isAsk()) {
     stream << "Ask";
   } else if (isWait()) {
@@ -982,35 +1014,32 @@ PRINT(Actor)
   }
 }
 
-PRINTLONG(Actor)
+void Actor::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
-  print(stream,depth,offset);
+  if (depth == 0) {
+    stream << indent(offset) << ",,," << endl;
+    return;
+  }
+  printStream(stream,depth);
   stream << endl;
   if (isSolve()) {
-    ((SolveActor *)this)->printLong(stream,depth,offset);
+    ((SolveActor *)this)->printLongStreamSolve(stream,depth,offset);
   }
   stream << indent(offset) << "Board: " << endl;
-  board->printLong(stream,DEC(depth),offset+2);
+  board->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
 }
 
-PRINT(SolveActor)
+void SolveActor::printLongStreamSolve(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTH;
-}
-
-PRINTLONG(SolveActor)
-{
-  CHECKDEPTHLONG;
   stream  << indent(offset) << "solveVar=";
-  tagged2Stream(solveVar,stream,DEC(depth),0);
+  ozd_printStream(solveVar,stream,PRINT_DEPTH_DEC(depth));
   stream << endl;
   stream << indent(offset) << "result=";
-  tagged2Stream(result,stream,DEC(depth),0);
+  ozd_printStream(result,stream,PRINT_DEPTH_DEC(depth));
   stream << endl;
   stream << indent(offset) << "threads=" << threads << endl;
   stream << indent(offset) << "SuspList:" << endl;
-  suspList->print(stream,DEC(depth),offset+2);
+  suspList->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
   stream << "Local thread queue: " << localThreadQueue << endl;
 }
 
@@ -1018,10 +1047,10 @@ void ThreadsPool::printThreads()
 {
   cout << "Threads" << endl
        << "  running: ";
-  _currentThread->print(cout,-1,0);
+  _currentThread->printStream(cout,-1);
   cout << endl
        << "  toplevel:    ";
-  _rootThread->print(cout,-1,0);
+  _rootThread->printStream(cout,-1);
   cout << endl
        << "  runnable:" << endl;
 
@@ -1046,7 +1075,7 @@ void ThreadQueue::printThreads()
 
   for (; i; i--) {
     Thread *th = dequeue();
-    th->print (cout,-1,4);
+    th->printStream(cout,-1);
     if (th == am.currentThread())
       cout << " RUNNING ";
     if (th == am.rootThread())
@@ -1060,11 +1089,11 @@ void ozd_printBoards()
 {
   cout << "class Board" << endl
        << "  currentBoard: ";
-  am.currentBoard()->print(cout,-1,0);
+  am.currentBoard()->printStream(cout,-1);
   cout << endl;
 #ifdef NOMORE
   cout << "  rootBoard:    ";
-  am.rootBoard->print(cout,-1,0);
+  am.rootBoard->printStream(cout,-1);
   cout << endl;
 #endif
 }
@@ -1081,20 +1110,19 @@ void ozd_printAM()
   ozd_printThreads();
 }
 
-PRINT(Thread)
+void Thread::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTH;
   if (!this) {
-    stream << indent(offset) << "(NULL Thread)" << endl;
+    stream << "NULL Thread" << endl;
     return;
   }
 
   if (isDeadThread ()) {
-    stream << indent(offset) << "(Dead Thread @" << this << ")" << endl;
+    stream << "Dead Thread @" << this << "" << endl;
     return;
   }
 
-  stream << indent(offset) << "Thread @c" << this;
+  stream << "Thread @" << this;
 
   switch (getPriority()) {
   case LOW_PRIORITY:
@@ -1111,217 +1139,96 @@ PRINT(Thread)
     break;
   }
 
-  stream << (isSuspended() ? " (susp)" : " (run)") << endl << indent(offset+1);
+  stream << (isSuspended() ? " (susp)" : " (run)");
 
   switch (getThrType ()) {
   case S_RTHREAD:
-    stream << " #" << item.threadBody->taskStack.tasks();
+    stream << " Tasks #" << item.threadBody->taskStack.tasks();
     break;
 
   case S_WAKEUP:
-    stream << " W";
+    stream << " Wakeup";
     break;
 
   case S_PR_THR:
-    stream << " P: " << getPropagator()->toString();
+    stream << " Propagator: " << getPropagator()->toString();
     break;
 
   default:
-    stream << "(unknown)";
+    stream << "(unknown type " << getThrType() << ")";
   }
 
-  stream << endl << indent(offset+1);
-
-  if ((getFlags ()) & T_solve)     stream << " S";
-  if ((getFlags ()) & T_ext)       stream << " E";
-  if ((getFlags ()) & T_loca)      stream << " L";
-  if ((getFlags ()) & T_unif)      stream << " U";
-  if ((getFlags ()) & T_ofs)       stream << " O";
-  if ((getFlags ()) & T_tag)       stream << " T";
-  if ((getFlags ()) & T_ltq)       stream << " Q";
-  if ((getFlags ()) & T_nmo)       stream << " N";
+  if ((getFlags ()) & T_solve)     stream << " solve";
+  if ((getFlags ()) & T_ext)       stream << " ext";
+  if ((getFlags ()) & T_loca)      stream << " loca";
+  if ((getFlags ()) & T_unif)      stream << " unif";
+  if ((getFlags ()) & T_ofs)       stream << " ofs";
+  if ((getFlags ()) & T_tag)       stream << " tag";
+  if ((getFlags ()) & T_ltq)       stream << " ltq";
+  if ((getFlags ()) & T_nmo)       stream << " nmo";
   stream << " <";
-  GETBOARD(this)->print(stream, DEC(depth));
+  GETBOARD(this)->printStream(stream, PRINT_DEPTH_DEC(depth));
   stream << ">";
 }
 
-PRINTLONG(Thread)
+void Thread::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
-  this->print(stream,depth,offset);
+  this->printStream(stream,depth);
   stream << endl;
-  if (hasStack ())
-    item.threadBody->taskStack.printTaskStack(ozconf.errorThreadDepth);
+  if (hasStack())
+    item.threadBody->taskStack.printTaskStack(depth);
 }
 
-PRINTLONG(Literal)
+void Literal::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
-  if (isAtom()) {
-    stream << indent(offset) << "Atom";
-  } else {
-    stream << indent(offset) << "Name";
-  }
-  stream << " #" << this->hash() << " @" << this << ": ";
-  this->print(stream,depth,offset);
+  stream << indent(offset);
+  this->printStream(stream,depth);
+  stream << endl;
+  stream << " Hash: " << this->hash() << " @" << this;
   stream << endl;
 }
 
-
-void SVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v)
+void LTuple::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
-  stream << indent(offset)
-         << "SV "
-         << getVarName(v)
-         << " @"
-         << this
-         << endl
-         << indent(offset)
-         << "SuspList:\n";
-  suspList->print(stream, DEC(depth), offset+3);
-
-  stream << indent(offset)
-         << "HomeNode: ";
-  GETBOARD(this)->print(stream,DEC(depth));
-  stream << endl;
-}
-
-void GenCVariable::printLong(ostream &stream, int depth, int offset,
-                             TaggedRef v)
-{
-  CHECKDEPTHLONG;
-  stream << indent(offset)
-         << "CV "
-         << getVarName(v)
-         << " @"
-         << this
-         << endl;
-
-  stream << indent(offset) << "Home board: ";
-  GETBOARD(this)->print(stream,depth);
-  stream << endl;
-
-  stream << indent(offset) << "Suspension List:\n";
-  suspList->print(stream, depth, offset+3);
-
-  switch(getType()){
-  case FDVariable:
-    stream << indent(offset) << "FD Singleton SuspList:\n";
-    ((GenFDVariable*)this)->fdSuspList[fd_prop_singl]->print(stream, depth, offset+3);
-
-    stream << indent(offset) << "FD Bounds SuspList:\n";
-    ((GenFDVariable*)this)->fdSuspList[fd_prop_bounds]->print(stream, depth, offset+3);
-    stream << indent(offset) << "FD Domain:\n";
-    ((OZ_FiniteDomainImpl *) &((GenFDVariable*)this)->getDom())->printLong(stream, offset+3);
-    break;
-
-  case BoolVariable:
-    stream << indent(offset) << "Boolean Domain: {0 1}" << endl;
-    break;
-
-  case FSetVariable:
-    stream << indent(offset) << "FSet val SuspList:\n";
-    ((GenFSetVariable*)this)->fsSuspList[fs_prop_val]->print(stream, depth, offset+3);
-
-    stream << indent(offset) << "FSet glb SuspList:\n";
-    ((GenFSetVariable*)this)->fsSuspList[fs_prop_glb]->print(stream, depth, offset+3);
-
-    stream << indent(offset) << "FSet lub SuspList:\n";
-    ((GenFSetVariable*)this)->fsSuspList[fs_prop_lub]->print(stream, depth, offset+3);
-
-    stream << indent(offset) << "FSet :\n" << indent(offset + 3);
-    ((FSetConstraint *) &((GenFSetVariable*)this)->getSet())->print(stream);
-    stream << endl;
-    break;
-
-  case OFSVariable:
-    {
-      stream << indent(offset);
-      GenOFSVariable* me = (GenOFSVariable *) this;
-      tagged2Stream(me->getLabel(),stream,DEC(depth),offset);
-      // me->getLabel()->print(stream, DEC(depth), offset);
-      me->getTable()->print(stream, DEC(depth), offset+2);
-      stream << endl;
-      break;
-    }
-
-  case MetaVariable:
-    {
-      GenMetaVariable* me = (GenMetaVariable *) this;
-      stream << indent(offset)
-             << "<<MV: '" << me->getName() << "' " << me->toString(DEC(depth))
-             << endl;
-      tagged2Stream(me->data, stream, DEC(depth), offset + 2);
-      stream << endl << indent(offset) << ">>" << endl;
-      break;
-    }
-  case PerdioVariable:
-    stream << indent(offset) << "<PerdioVariable "
-           << getVarName(v) << " @" << this << ">" << endl;
-      break;
-  case AVAR:
-    {
-      AVar* me = (AVar *) this;
-      stream << indent(offset); this->print(stream,depth, 0,v);
-      stream << endl << indent(offset) << "Value: ";
-      tagged2Stream(me->getValue(), stream, DEC(depth), offset + 2);
-      stream << endl;
-      break;
-    }
-  default:
-    error("Unexpected type generic variable at %s:%d.",
-          __FILE__, __LINE__);
-    break;
-  }
-
-} // PRINTLONG(GenCVariable)
-
-
-PRINTLONG(LTuple)
-{
-  CHECKDEPTHLONG;
   stream << indent(offset) << "List @" << this << endl;
 
   stream << indent(offset) << "Head:\n";
-  tagged2StreamLong(args[0],stream,DEC(depth),offset+2);
+  ozd_printLongStream(args[0],stream,PRINT_DEPTH_DEC(depth),offset+2);
   stream << indent(offset) << "Tail:\n";
-  tagged2StreamLong(args[1],stream,DEC(depth),offset+2);
+  ozd_printLongStream(args[1],stream,PRINT_DEPTH_DEC(depth),offset+2);
 }
 
-PRINTLONG(Object)
+void Object::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
   stream << indent(offset)
          << "Object: "
          << getPrintName() << endl
          << "Features: ";
   if (getFreeRecord()) {
-    getFreeRecord()->printLong(stream,depth,offset);
+    getFreeRecord()->printLongStream(stream,depth,offset);
   }
   stream << endl;
   stream << "State: ";
   if (stateIsCell(state)) {
-    getCell(state)->printLong(stream,depth+1,offset);
+    getCell(state)->printLongStream(stream,depth,offset);
   } else if(getRecord(state)) {
-    getRecord(state)->printLong(stream,depth+1,offset);
+    getRecord(state)->printLongStream(stream,depth,offset);
   }
 }
 
-PRINTLONG(Abstraction)
+void Abstraction::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
   stream << indent(offset)
          << "Abstraction @id"
          << this << endl;
-  getPred()->printLong(stream,depth,offset);
+  getPred()->printLongStream(stream,depth,offset);
   int n = gRegs ? getRefsArraySize(gRegs) : 0;
   if (offset == 0) {
     if (n > 0) {
       stream <<  "G Regs:";
       for (int i = 0; i < n; i++) {
         stream << " G[" << i << "]:\n";
-        tagged2StreamLong(gRegs[i],stream,depth,offset+2);
+        ozd_printLongStream(gRegs[i],stream,depth,offset+2);
       }
     } else {
       stream << "No G-Regs" << endl;
@@ -1332,7 +1239,7 @@ PRINTLONG(Abstraction)
 }
 
 
-void AssReg::print()
+void AssReg::printStream(ostream &stream, int depth)
 {
   char c;
   switch (kind) {
@@ -1347,125 +1254,84 @@ void AssReg::print()
     c = 'G';
     break;
   }
-  printf ("%c%d", c, number);
+  stream << c << number;
 }
 
-PRINTLONG(PrTabEntry)
-{
-  CHECKDEPTHLONG;
-  stream << indent(offset)
-         <<  "Name: " << getPrintName()
-         << "/" << (int) arity << endl
-         << indent(offset)
-         <<  "ProgramCounter: " << (void *) PC << endl
-         << indent(offset) <<  "Arity: " << (int) arity << endl;
+void PrTabEntry::printStream(ostream &stream, int depth) {
+  stream << "<PrTabEntry: " << getPrintName()
+         << "/" << (int) arity <<  "PC: " << (void *) PC
+         << ">";
 }
 
-PRINTLONG(BuiltinTabEntry)
+void BuiltinTabEntry::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
-  print(stream,depth,offset);
+  printStream(stream,depth);
   stream << endl;
   stream << indent(offset) << "gRegs: -" << endl;
 }
 
 
-PRINTLONG(CellLocal)
+void CellLocal::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
   stream << indent(offset)
          << "CellLocal@id" << this << endl
          << indent(offset)
          << " value:"<<endl;
-  tagged2StreamLong(val,stream,depth,offset+2);
+  ozd_printLongStream(val,stream,depth,offset+2);
 }
 
-PRINTLONG(CellManager)
+void PortLocal::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
-  stream << indent(offset)
-         << "CellManager@id" << this << endl;
-}
-
-PRINTLONG(CellProxy)
-{
-  CHECKDEPTHLONG;
-  stream << indent(offset)
-         << "CellProxy@id" << this << endl;
-}
-
-PRINTLONG(CellFrame)
-{
-  CHECKDEPTHLONG;
-  stream << indent(offset)
-         << "CellFrame@id" << this << endl;
-}
-
-
-PRINTLONG(PortLocal)
-{
-  CHECKDEPTHLONG;
   stream << indent(offset)
          << "PortLocal@id" << this << endl
          << indent(offset)
          << " stream:"<<endl;
-  tagged2StreamLong(strm,stream,depth,offset+2);
+  ozd_printLongStream(strm,stream,depth,offset+2);
 }
 
 
-PRINTLONG(PortManager)
+void PortManager::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
   stream << indent(offset)
          << "PortManager@id" << this << endl
          << indent(offset)
          << " stream:"<<endl;
-  tagged2StreamLong(strm,stream,depth,offset+2);
+  ozd_printLongStream(strm,stream,depth,offset+2);
 }
 
-PRINTLONG(PortProxy)
+void Space::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
-  stream << indent(offset)
-         << "PortProxy@id" << this << endl;
-}
-
-PRINTLONG(Space)
-{
-  CHECKDEPTHLONG;
   stream << indent(offset)
          << "Space@id" << this << endl
          << indent(offset)
          << " actor:"<<endl;
-  ((SolveActor *) solve->getActor())->printLong(stream,depth,offset+2);
+  ((SolveActor *) solve->getActor())->printLongStream(stream,depth,offset+2);
 }
 
-PRINTLONG(SChunk)
+void SChunk::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
   stream << indent(offset)
          << "Chunk@id" << this << endl
          << indent(offset)
          << " value:"<<endl;
-  tagged2StreamLong(value,stream,depth,offset+2);
+  ozd_printLongStream(value,stream,depth,offset+2);
   stream << indent(offset)
     << " home:"<<endl;
-  ((Board *)getPtr())->printLong(stream,depth,offset);
+  ((Board *)getPtr())->printLongStream(stream,depth,offset);
 }
 
-PRINTLONG(SRecord)
+void SRecord::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
   if (isTuple()) {
     int i;
 
     stream << indent(offset) << "Tuple @" << this << endl
            << indent(offset) << "Label: ";
-    tagged2StreamLong(label,stream,depth,offset);
+    ozd_printStream(label,stream,depth);
     stream << endl;
     for (i = 0; i < getWidth(); i++) {
       stream << indent(offset) <<  "Arg "<< i << ":\n";
-      tagged2StreamLong(args[i],stream,DEC(depth),offset);
+      ozd_printLongStream(args[i],stream,PRINT_DEPTH_DEC(depth),offset);
       stream << " ";
     }
     stream << endl;
@@ -1476,7 +1342,7 @@ PRINTLONG(SRecord)
          << this << ":\n"
          << indent(offset)
          << "Label: ";
-  tagged2Stream(label,stream,DEC(depth),offset);
+  ozd_printStream(label,stream,depth);
   stream << endl;
 
   stream << indent(offset) << "Args:\n";
@@ -1486,289 +1352,167 @@ PRINTLONG(SRecord)
     stream << indent(offset+2);
     TaggedRef feat = head(ar);
     CHECK_DEREF(feat);
-    tagged2Stream(feat,stream,DEC(depth),offset+2);
+    ozd_printStream(feat,stream);
     ar = tail(ar);
     CHECK_DEREF(ar);
     stream << ": ";
-    tagged2StreamLong(getFeature(feat),stream,DEC(depth),offset+2);
+    ozd_printLongStream(getFeature(feat),stream,
+                        PRINT_DEPTH_DEC(depth),offset+2);
   }
   stream << indent(offset) << "End of Args\n";
 }
 
 
-PRINTLONG(Float)
+void Float::printLongStream(ostream &stream, int depth, int offset)
 {
-  CHECKDEPTHLONG;
   stream << indent(offset) << "Float @" << this << ": ";
-  print(stream,depth,offset);
+  this->printStream(stream);
   stream << endl;
 }
 
-PRINTLONG(BigInt)
+void BigInt::printStream(ostream &stream, int depth)
 {
-  CHECKDEPTHLONG;
-  stream << indent(offset)
-         << "BigInt @" << this << ": ";
-  tagged2Stream(makeTaggedBigInt(this),stream,depth,offset);
-  stream << endl;
+  stream << "<BigInt @" << this << ": " << toC(makeTaggedBigInt(this)) << ">";
 }
 
 
-static
-void printX(FILE *fd, RefsArray X)
-{
-  int xsize = getRefsArraySize(X);
-  while (--xsize >= 0) {
-    fprintf(fd,"\t\tX[%d]=0x%x\n", xsize, X[xsize]);
-  }
-}
-
-void ThreadQueueImpl::print(void)
+void ThreadQueueImpl::printStream(ostream &stream, int depth)
 {
   if (isEmpty()) {
-    message("Thread queue empty.\n");
+    stream << "Thread queue empty.\n";
   } else {
-    cout << "Thread #" << size << endl << flush;
+    stream << "Thread #" << size << endl << flush;
 
     for (int aux_size = size, aux_head = head;
          aux_size;
          aux_head = (aux_head + 1) & (maxsize - 1), aux_size--) {
-      cout << "queue[" << aux_head << "]=" << flush;
-      queue[aux_head]->print();
+      stream << "queue[" << aux_head << "]=" << flush;
+      queue[aux_head]->printStream(stream,depth);
     }
   }
 }
 
-
-void FDIntervals::printLong(ostream &ofile, int idnt) const
+#ifdef LOCAL_THREAD_STACK
+void ThreadStackImpl::printStream(ostream &stream, int depth)
 {
-  ofile << endl << indent(idnt) << "high=" << endl;
-  print(ofile, idnt);
+}
+#endif
+
+void FDIntervals::printLong(ostream &stream, int idnt) const
+{
+  stream << endl << indent(idnt) << "high=" << endl;
+  print(stream, idnt);
   for (int i = 0; i < high; i += 1)
-    ofile << endl << indent(idnt)
+    stream << endl << indent(idnt)
           << "i_arr[" << i << "]@" << (const void*) &i_arr[i]
           << " left=" << i_arr[i].left << " right=" << i_arr[i].right;
-  ofile << endl;
+  stream << endl;
 }
 
-void FDIntervals::printDebug(void) const
+void FDBitVector::printLong(ostream &stream, int idnt) const
 {
-  print(cerr, 0);
-  cerr << endl;
-  cerr.flush();
-}
-
-void FDIntervals::printDebugLong(void) const
-{
-  printLong(cerr, 0);
-  cerr << endl;
-  cerr.flush();
-}
-
-void FDBitVector::printLong(ostream &ofile, int idnt) const
-{
-  ofile << "  high=" << high << endl;
-  print(ofile, idnt);
+  stream << "  high=" << high << endl;
+  print(stream, idnt);
   for (int i = 0; i < high; i++) {
-    ofile << endl << indent(idnt + 2) << '[' << i << "]:  ";
+    stream << endl << indent(idnt + 2) << '[' << i << "]:  ";
     for (int j = 31; j >= 0; j--) {
-      ofile << ((b_arr[i] & (1 << j)) ? '1' : 'o');
-      if (j % 8 == 0) ofile << ' ';
+      stream << ((b_arr[i] & (1 << j)) ? '1' : 'o');
+      if (j % 8 == 0) stream << ' ';
     }
   }
-  ofile << endl;
+  stream << endl;
 }
 
-void FDBitVector::printDebug(void) const
-{
-  print(cerr, 0);
-  cerr << endl;
-  cerr.flush();
-}
-
-void FDBitVector::printDebugLong(void) const
-{
-  printLong(cerr, 0);
-  cerr << endl;
-  cerr.flush();
-}
-
-void OZ_FiniteDomainImpl::printLong(ostream &ofile, int idnt) const
+void OZ_FiniteDomainImpl::printLong(ostream &stream, int idnt) const
 {
   static char * descr_type_text[3] = {"bv_descr", "iv_descr", "fd_descr"};
 
-  ofile << indent(idnt) << "min_elem=" << min_elem
+  stream << indent(idnt) << "min_elem=" << min_elem
         << " max_elem=" << max_elem << " size=" << getSize()
         << " type=" << descr_type_text[getType()];
 
   switch (getType()) {
   case fd_descr:
-    ofile << endl;
-    print(ofile, idnt);
-    ofile << endl;
+    stream << endl;
+    print(stream, idnt);
+    stream << endl;
     break;
   case bv_descr:
-    get_bv()->printLong(ofile, idnt);
+    get_bv()->printLong(stream, idnt);
     break;
   case iv_descr:
-    get_iv()->printLong(ofile, idnt);
+    get_iv()->printLong(stream, idnt);
     break;
   default:
     error("unexpected case");
   }
 }
 
-void OZ_FiniteDomainImpl::printDebug(void) const
-{
-  print(cerr, 0);
-  cerr << endl;
-  cerr.flush();
-}
-
-void OZ_FiniteDomainImpl::printDebugLong(void) const
-{
-  printLong(cerr, 0);
-  cerr << endl;
-  cerr.flush();
-}
-
-#ifdef RECINSTRFETCH
-
-#define InstrDumpFile "fetchedInstr.dump"
-
-void CodeArea::writeInstr(void){
-  FILE* ofile;
-  if((ofile = fopen(InstrDumpFile, "w"))){
-    int i = fetchedInstr;
-//    ofile=stdout;
-    do {
-      if (ops[i]) {
-        display(ops[i], 1, ofile);
-      }
-      i++;
-      if(i >= RECINSTRFETCH)
-        i = 0;
-    } while (i != fetchedInstr);
-    fclose(ofile);
-    fprintf(stderr,
-            "Wrote the %d most recently fetched instructions in file '%s'\n",
-            RECINSTRFETCH, InstrDumpFile);
-  } else
-    error("Cannot open file '%s'.", InstrDumpFile);
-} // CodeArea::writeInstr
-#endif
-
-
-
 // ----------------------------------------------------
 
-char *tagged2String(TaggedRef ref,int depth,int offset)
-{
-  ostrstream *out = new ostrstream;
-
-  tagged2Stream(ref,*out,depth,offset);
-
-  (*out).ends();
-  char *s = ozstrdup(out->str());
-  delete out;
-
-  return s;
-}
-
-void taggedPrint(TaggedRef ref, int depth, int offset)
-{
-  tagged2Stream(ref,cout,depth,offset);
-  cout << flush;
-}
-
-void taggedPrintLong(TaggedRef ref, int depth, int offset)
-{
-  tagged2StreamLong(ref,cout,depth,offset);
-  cout << flush;
-}
-
+// mm2!
 void Board::printTree()
 {
   Board *bb = this;
   Actor *aa;
   int off=0;
   while (!am.isRootBoard(bb)) {
-    bb->print(cout,1,off);
+    cout << indent(off);
+    bb->printStream(cout,1);
     cout << endl;
     Assert(!bb->isCommitted());
     off++;
     aa = bb->u.actor;
-    aa->print(cout,1,off);
+    cout << indent(off);
+    aa->printStream(cout,1);
     cout << endl;
     off++;
     bb = GETBOARD(aa);
   }
-  bb->print(cout,1,off);
+  cout << indent(off);
+  bb->printStream(cout,1);
   cout << endl;
 }
 
-// for debugging
-void printWhere(ostream &stream,ProgramCounter PC)
+void LocalPropagationQueue::printStream(ostream &stream, int depth)
 {
-  PC = CodeArea::definitionStart(PC);
-
-  if (PC == NOCODE) {
-    stream << "in toplevel code";
-  } else {
-    TaggedRef file      = getLiteralArg(PC+3);
-    TaggedRef line      = getNumberArg(PC+4);
-    PrTabEntry *pred    = getPredArg(PC+5);
-
-    stream << "procedure "
-           << (pred ? pred->getPrintName() : "(NULL)")
-           << " in file \""
-           << toC(file)
-           << "\", line "
-           << toC(line);
-  }
-}
-
-void LocalPropagationQueue::printDebug () {
   int psize = size, phead = head;
 
   for (; psize; psize --) {
-    cout << "lpqueue[" << phead << "]="
+    stream << "lpqueue[" << phead << "]="
          << "@" << queue[phead].thr << endl;
 
-    phead = (phead + 1) & (maxsize - 1);
-  }
-}
-
-void LocalPropagationQueue::printDebugLong () {
-  int psize = size, phead = head;
-
-  for (; psize; psize --) {
-    cout << "lpqueue[" << phead << "]="
-         << "@" << queue[phead].thr << "(";
-    queue[phead].thr->print(cout);
-    cout << ")" << endl;
+    stream << "(" << endl;
+    queue[phead].thr->printStream(stream,depth);
+    stream << ")" << endl;
 
     phead = (phead + 1) & (maxsize - 1);
   }
 }
 
-// #define DEBUG_STATUS
-#ifdef DEBUG_STATUS
-  /*
-   * Print capital letter, when flag is set and
-   * lower case letter when unset.
-   */
-  char flagChar(StatusBit flag)
-  {
-    switch (flag) {
-    case ThreadSwitch: return 'T';
-    case IOReady:      return 'I';
-    case UserAlarm:    return 'U';
-    case StartGC:      return 'G';
-    case DebugMode:    return 'D';
-    default:           return 'X';
-    }
-  }
-#endif
+
+// -----------------------------------------------------------------------
+// Debug.print Builtins
+// -----------------------------------------------------------------------
+
+OZ_C_proc_begin(BIdebugPrint,2)
+{
+  oz_declareArg(0,t);
+  oz_declareIntArg(1,depth);
+  ozd_printStream(t,cerr,depth);
+  cerr << endl;
+  flush(cerr);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIdebugPrintLong,2)
+{
+  oz_declareArg(0,t);
+  oz_declareIntArg(1,depth);
+  ozd_printLongStream(t,cerr,depth);
+  return PROCEED;
+}
+OZ_C_proc_end
 
 #endif

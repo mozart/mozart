@@ -212,9 +212,9 @@ public:
   TaggedRef getKey(int i)   { return table[i].ident; }
   TaggedRef getValue(int i) { return table[i].value; }
 
-    void print(ostream & = cout, int=0, int=0);
-    void printLong(ostream & = cout, int=0, int=0);
-    ostream &newprint(ostream &, int depth);
+  OZPRINT;
+
+  ostream &newprint(ostream &, int depth);
 
     // Copy the dynamictable from 'from' to 'to' space:
     DynamicTable* gc(void); // See definition in gc.cc
@@ -464,7 +464,6 @@ public:
   TaggedRef getValue(int i) { return table->getValue(i); }
 
   OZPRINT;
-  OZPRINTLONG;
 };
 
 

@@ -167,7 +167,6 @@ public:
   }
 
   USEHEAPMEMORY;
-  OZPRINT;
   OZPRINTLONG;
 
   Thread *gcThread();

@@ -84,8 +84,6 @@ public:
 
   Bool isScheduledSlow(Thread *thr);
 
-  Board * getHighestSolveDebug(void); // TMUELLER
-
   Thread *getFirstThreadOutline();
   Thread *getFirstThread()
   {

@@ -48,7 +48,6 @@ public:
   TaggedRef getLeft() { return left; }
   TaggedRef getRight() { return right; }
   OZPRINT;
-  OZPRINTLONG;
 };
 
 class Script {
@@ -59,7 +58,6 @@ public:
   Script(int sizeInit);
   ~Script();
   OZPRINT;
-  OZPRINTLONG;
   void allocate(int sizeInit);
   void dealloc();
 
@@ -144,11 +142,9 @@ public:
   Bool checkAlive();
   Board *gcGetNotificationBoard ();
 
-  OZPRINT;
   OZPRINTLONG;
 
   void printTree();
-  Board * getHighestSolveDebug(void); // TMUELLER
 
   void incSuspCount(int n=1) {
     Assert(!isCommitted() && !isFailed());

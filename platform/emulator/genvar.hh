@@ -122,8 +122,7 @@ public:
   Bool valid(TaggedRef *varPtr, TaggedRef val);
   int hasFeature(TaggedRef fea,TaggedRef *out);
 
-  void print(ostream &stream, int depth, int offset, TaggedRef v);
-  void printLong(ostream &stream, int depth, int offset, TaggedRef v);
+  OZPRINTLONG;
 
   void installPropagators(GenCVariable *);
 

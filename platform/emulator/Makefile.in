@@ -23,22 +23,19 @@
 
 # !!! THIS MAKEFILE REQUIRES GNU MAKE !!!!
 
+VPATH           = @srcdir@
+SRCDIR          = @srcdir@
+TOPDIR          = @TOPDIR@
+
 include Makefile.vars
 
+INCS            = -I. -I$(SRCDIR)
+M4_D            = -DEMUDIR=$(SRCDIR)
 FDTARGETS       = @FDTARGETS@
 FSETTARGETS     = @FSETTARGETS@
 TARGETS         = @TARGETS@
 SUBDIRS         = FDLib FSetLib
-
-#MOREWARNINGS  =   -Wall -pedantic-errors -W -Wtraditional -Wshadow \
-#       -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
-#       -Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes \
-#       -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls \
-#       -Wnested-externs -Winline -Woverloaded-virtual -Wsynth -Werror
-
-WARNINGS = -Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
-        -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
-        -Wnested-externs -Wsynth -Wno-unused -Wno-reorder -Wno-uninitialized
+OZVERSION       = $(TOPDIR)/OZVERSION
 
 CREATEDOTHERS = \
         instrtab.hh opcodes.hh optostr.hh marshaler.hh\
@@ -178,7 +175,7 @@ parser.hh: parser.yy
 # this special rule ensures that warnings issued in bison.simple
 # are not treated as errors:
 parser.o: parser.cc
-        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -w -c $< -o $@
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DWARN) -c $< -o $@
 
 ozma-s.cc: ozma-s.ll
         $(LEX) $(LFLAGS) -Pozma $<
@@ -189,8 +186,10 @@ ozma-p.cc ozma.hh: ozma-p.yy
         @$(MV) y.tab.c ozma-p.cc
         @$(MV) y.tab.h ozma.hh
 
+# this special rule ensures that warnings issued in bison.simple
+# are not treated as errors:
 ozma-p.o: ozma-p.cc
-        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -w -c $< -o $@
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DWARN) -c $< -o $@
 
 ozma-s.ll: ozma-s.m4ll
         $(M4) $(M4_D) $< > $@
@@ -204,8 +203,8 @@ config.h: config.m4h $(OZVERSION)
 #/usr/include/signal.h is broken on Linux:
 #os.cc: In function `void osBlockSignals(int = 0)':
 #os.cc:208: warning: assignment of negative value `-1' to `long unsigned int'
-#os.o: os.cc
-#       $(CXX) $(CPPFLAGS) $(CXXFLAGS) -w -c $< -o $@
+os.o: os.cc
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DWARN) -c $< -o $@
 
 include Makefile.rules
 

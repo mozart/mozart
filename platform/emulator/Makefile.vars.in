@@ -21,10 +21,6 @@
 #  of this file, and for a DISCLAIMER OF ALL
 #  WARRANTIES.
 
-VPATH           = @srcdir@
-SRCDIR          = @srcdir@
-TOPDIR          = @TOPDIR@
-SRCDIRA         = @srcdira@
 TOPDIRA         = @TOPDIRA@
 SHELL           = @SH@
 LEX             = @LEX@
@@ -35,7 +31,6 @@ MV              = @MV@
 SED             = @SED@
 ECHO            = @@ECHO@
 M4              = @M4@
-M4_D            = -DEMUDIR=$(SRCDIR)
 M4_S            = @M4_S@
 RM              = @RM@ -f
 CXX             = @CXX@
@@ -46,7 +41,7 @@ RANLIB          = @RANLIB@
 AR              = @AR@
 
 INSTALL         = @INSTALL@
-INSTALL_DIR     = $(TOPDIRA)/mkinstalldirs
+INSTALL_DIR     = @MKINSTALLDIRS@
 INSTALL_BIN     = $(INSTALL) -m 555
 INSTALL_OTHER   = $(INSTALL) -m 444
 LIBS            = @LIBS@
@@ -54,9 +49,10 @@ LDFLAGS         = @LDFLAGS@ $(CUSR)
 
 DEFS            = @DEFS@
 CWARN           = @CWARN@
-INCS            = -I. -I$(SRCDIR)
+DWARN           = @DWARN@
 CPPFLAGS        = @CPPFLAGS@ $(INCS) $(DEFS)
-CFLAGS          = @CFLAGS@ $(CWARN) $(CUSR)
+COPT            = @CFLAGS@
+CFLAGS          = $(COPT) $(CWARN) $(CUSR)
 CXXFLAGS        = $(CFLAGS)
 DEPEND          = @DEPEND@ $(CPPFLAGS)
 
@@ -65,5 +61,3 @@ PLATFORM        = @platform@
 PLATFORMDIR     = $(PREFIX)/platform
 BINDIR          = $(PLATFORMDIR)/$(PLATFORM)
 INCDIR          = $(PREFIX)/include
-
-OZVERSION       = $(TOPDIRA)/OZVERSION

@@ -1067,3 +1067,52 @@ void CodeArea::init(void **instrTable)
   /* mark end with GLOBALVARNAME, so definitionEnd works properly */
   (void) writeOpcode(GLOBALVARNAME,aux);
 }
+
+#ifdef RECINSTRFETCH
+
+#define InstrDumpFile "fetchedInstr.dump"
+
+void CodeArea::writeInstr(void){
+  FILE* ofile;
+  if((ofile = fopen(InstrDumpFile, "w"))){
+    int i = fetchedInstr;
+//    ofile=stdout;
+    do {
+      if (ops[i]) {
+        display(ops[i], 1, ofile);
+      }
+      i++;
+      if(i >= RECINSTRFETCH)
+        i = 0;
+    } while (i != fetchedInstr);
+    fclose(ofile);
+    fprintf(stderr,
+            "Wrote the %d most recently fetched instructions in file '%s'\n",
+            RECINSTRFETCH, InstrDumpFile);
+  } else
+    error("Cannot open file '%s'.", InstrDumpFile);
+} // CodeArea::writeInstr
+#endif
+
+#ifdef DEBUG_CHECK
+// for debugging
+void printWhere(ostream &stream,ProgramCounter PC)
+{
+  PC = CodeArea::definitionStart(PC);
+
+  if (PC == NOCODE) {
+    stream << "in toplevel code";
+  } else {
+    TaggedRef file      = getLiteralArg(PC+3);
+    TaggedRef line      = getNumberArg(PC+4);
+    PrTabEntry *pred    = getPredArg(PC+5);
+
+    stream << "procedure "
+           << (pred ? pred->getPrintName() : "(NULL)")
+           << " in file \""
+           << toC(file)
+           << "\", line "
+           << toC(line);
+  }
+}
+#endif
