@@ -56,9 +56,9 @@ public:
   void disposeV(void) { freeListDispose(this, sizeof(ByNeedVariable)); }
   void printStreamV(ostream &out,int depth = 10) {
     OZ_Term f = getFunction();
-    if (f==0) out << "<onByNeed>";
+    if (f==0) out << "<byNeed requested>";
     else {
-      out << "<onByNeed: ";
+      out << "<byNeed: ";
       oz_printStream(f,out,depth-1);
       out << ">";
     }
