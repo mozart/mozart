@@ -511,7 +511,7 @@ public:
   TaggedRef thread, out;
   URLAction action;
 
-  PipeInfo(int f, int p, char *tmpf, char *u, TaggedRef o, Thread *t,
+  PipeInfo(int f, int p, char *tmpf, const char *u, TaggedRef o, Thread *t,
 	   URLAction act):
     fd(f), pid(p), file(tmpf), out(o), action(act)
   {
@@ -529,7 +529,7 @@ public:
 };
 
 
-void doRaise(Thread *th, char *msg, char *url,URLAction act)
+void doRaise(Thread *th, char *msg, const char *url,URLAction act)
 {
   threadRaise(th,
 	      OZ_mkTuple(E_ERROR,
@@ -640,7 +640,7 @@ unsigned __stdcall fetchThread(void *p)
 
 
 
-void getURL(char *url, TaggedRef out, URLAction act, Thread *th)
+void getURL(const char *url, TaggedRef out, URLAction act, Thread *th)
 {
   char *tmpfile = newTempFile();
 
@@ -810,6 +810,81 @@ bomb:
   return BI_PREEMPT;
 }
 
+// URL_get is a primitive that performs an action on a url.
+// It always returns PROCEED.  If an error occurs, a raise is
+// pushed on the thread and will happen next, after this
+// primitive has returned (successfully!!!).  I think the
+// advantage of doing it this way is that you can ignore the
+// return value when you are calling this not as a builtin.
+
+#include <ctype.h>
+
+OZ_Return URL_get(const char*url,OZ_Term out,Thread *th,URLAction act)
+{
+  if (act==URL_LOCALIZE) goto url_remote; // to force a copy
+  if (strncmp(url,"file:/",6)==0) { url+=5; goto url_local; }
+  {
+    const char*s=url;
+    while (isalnum(*s)) s++;
+    if (*s==':') goto url_remote;
+  }
+url_local:
+  {
+    int fd = osopen(url,O_RDONLY,0);
+    if (fd < 0) {
+      doRaise(th,OZ_unixError(errno),url,act);
+      return PROCEED;
+    }
+    switch (act) {
+    case URL_OPEN:
+      {
+	pushUnify(th,out,OZ_int(fd));
+	return PROCEED;
+      }
+    case URL_LOAD:
+      {
+	OZ_Term   val    = oz_newVariable();
+	OZ_Return status = loadFD(fd,val);
+	if (status==RAISE)
+	  threadRaise(th,am.getExceptionValue());
+	else
+	  pushUnify(th,out,val);
+	return PROCEED;
+      }
+    default:
+      Assert(0);
+      return FAILED;
+    }
+  }
+url_remote:
+  getURL(url,out,act,th);
+  return BI_PREEMPT;
+}
+
+OZ_C_proc_begin(BIurl_localize,2)
+{
+  OZ_declareVirtualStringArg(0,url);
+  OZ_declareArg(1,out);
+  return URL_get(url,out,am.currentThread(),URL_LOCALIZE);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIurl_open,2)
+{
+  OZ_declareVirtualStringArg(0,url);
+  OZ_declareArg(1,out);
+  return URL_get(url,out,am.currentThread(),URL_OPEN);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIurl_load,2)
+{
+  OZ_declareVirtualStringArg(0,url);
+  OZ_declareArg(1,out);
+  return URL_get(url,out,am.currentThread(),URL_LOAD);
+}
+OZ_C_proc_end
+
 
 OZ_C_proc_begin(BIload,2)
 {
@@ -975,6 +1050,10 @@ BIspec componentsSpec[] = {
   {"OpenGate",     1, BIOpenGate},
   {"CloseGate",    0, BICloseGate},
   {"SendGate",     2, BISendGate},
+
+  {"URL.localize", 2, BIurl_localize},
+  {"URL.open",     2, BIurl_open},
+  {"URL.load",     2, BIurl_load},
   {0,0,0,0}
 };
 
