@@ -8,7 +8,7 @@
 #
 #  Copyright:
 #    Christian Schulte, 1998
-#    Konstantin Popov, 2001
+#    Konstantin Popov, 2001, 2004
 #
 #  Last change:
 #    $Date$ by $Author$
@@ -28,117 +28,84 @@
 # The list of packages (that have to be in the directory where
 # 'make-packages.sh' is called):
 #
-# kost (1539) ll *gz
-# -r--r--r--    1 kost     dsl       7284401 May 10 14:42 binutils-2.10.1.tar.gz
-# -r--r--r--    1 kost     dsl        420341 May 11 12:00 bison-1.28.tar.gz
-# -r--r--r--    1 kost     dsl        380995 May 11 12:06 flex-2.5.4a.tar.gz
-# -r--r--r--    1 kost     dsl      12911721 May 10 14:42 gcc-2.95.3.tar.gz
-# -r--r--r--    1 kost     dsl        134080 May 10 14:42 gdbm-1.8.0.tar.gz
-# -r--r--r--    1 kost     dsl       1033780 May 10 14:42 gmp-3.1.1.tar.gz
-# -r--r--r--    1 kost     dsl        317588 May 10 14:42 m4-1.4.tar.gz
-# -r--r--r--    1 kost     dsl       3679040 May 10 14:42 perl5.005_03.tar.gz
-# -r--r--r--    1 kost     dsl        297790 May 10 14:42 regex-0.12.tar.gz
-# -r--r--r--    1 kost     dsl       2502194 May 10 14:42 tcl8.2.3.tar.gz
-# -r--r--r--    1 kost     dsl       2336472 May 10 14:42 tk8.2.3.tar.gz
-# -r--r--r--    1 kost     dsl        168463 May 10 14:42 zlib-1.1.3.tar.gz
+# -r--r--r--    2 kost      14269432 Mar  1 00:44 binutils-2.14.tar.gz
+# -r--r--r--    3 kost        420341 Mar  4 11:04 bison-1.28.tar.gz
+# -r--r--r--    3 kost        380995 Mar  4 10:57 flex-2.5.4a.tar.gz
+# -r--r--r--    2 kost      31242089 Oct 20 15:21 gcc-3.3.2.tar.gz
+# -r--r--r--    3 kost        134080 Mar  4 10:57 gdbm-1.8.0.tar.gz
+# -r--r--r--    2 kost      18115189 Mar  1 00:47 glibc-2.3.2.tar.gz
+# -r--r--r--    2 kost       2159329 Mar  1 01:52 gmp-4.1.2.tar.gz
+# -r--r--r--    3 kost        317588 Mar  4 10:57 m4-1.4.tar.gz
+# -r--r--r--    2 kost      12002329 Mar  1 01:57 perl-5.8.3.tar.gz
+# -r--r--r--    3 kost        297790 Mar  4 10:57 regex-0.12.tar.gz
+# -r--r--r--    2 kost       2863381 Mar  1 02:06 tcl8.3.5-src.tar.gz
+# -r--r--r--    2 kost       2598030 Mar  1 02:07 tk8.3.5-src.tar.gz
+# -r--r--r--    2 kost        345833 Mar  1 02:17 zlib-1.2.1.tar.gz
 
 #PLAT=$1
 #BASE=$2
 PLAT=`ozplatform`
 BASE=`pwd`
 
+CPPFLAGS=
+CFLAGS=
+CXXFLAGS=
+LDFLAGS=
+LD_LIBRARY_PATH=
+export CPPFLAGS CFLAGS CXXFLAGS LDFLAGS LD_LIBRARY_PATH
+
 PREFIX=$BASE/packages/$PLAT
 
 case $PLAT in
     linux-i486)
-	 CFLAGS=
-	 CXXFLAGS=
-	 GCC=gcc-2.95.3
-	 BINUTILS=binutils-2.10.1
-	 zcat $GCC.tar.gz | tar xf -
-	 cd $GCC
-	 zcat ../$BINUTILS.tar.gz | tar xf -
-	 mv $BINUTILS binutils
-	 cd ..
-	 mkdir $GCC-build
-	 (cd $GCC-build; \
-	  ../$GCC/configure --prefix=$PREFIX --enable-languages=c,c++; \
-	  make MAKE="make" CFLAGS="$CFLAGS" LIBCFLAGS="$CFLAGS" \
-	       LIBCXXFLAGS="$CXXFLAGS" bootstrap; \
-	  make install)
-	 rm -rf $GCC-build $GCC
-	 CFLAGS="-O3 -fomit-frame-pointer -mcpu=pentium"
+         # Requires gcc 3.3+, as stated
+         # Building compiler from scratch is not supported
+         # since in general one must also have the right
+         # binutils (at least 2.12.1) and glibc (at least 2.2.5)
+         # Use the 'toolchain.csh' script if in dire straights..
+	 CFLAGS="-O3 -pipe -fomit-frame-pointer -march=pentium -mcpu=pentiumpro -fno-tracer -static-libgcc"
 	 CXXFLAGS="$CFLAGS"
-         GMP_TARGET=
+         HOST="--host=i586-*-linux"
+         BUILD="--build=i586-*-linux"
          ;;
 
     solaris-sparc)
-	 CFLAGS=
-	 CXXFLAGS=
-	 GCC=gcc-2.95.3
+	 GCC=gcc-3.3.2
 	 zcat $GCC.tar.gz | tar xf -
 	 mkdir $GCC-build
 	 (cd $GCC-build; \
-	  ../$GCC/configure --prefix=$PREFIX --enable-languages=c,c++; \
-	  make CFLAGS="$CFLAGS" LIBCFLAGS="$CFLAGS" \
-	       LIBCXXFLAGS="$CXXFLAGS" bootstrap; \
+	  ../$GCC/configure --prefix=$PREFIX \
+	          --enable-languages=c,c++ --disable-nls --disable-multilib; \
+	  make bootstrap; \
 	  make install)
 	 rm -rf $GCC-build $GCC
-	 CFLAGS="-O3 -mcpu=v8 -fdelayed-branch"
+	 CFLAGS="-O3 -pipe -mcpu=v8 -fdelayed-branch -fno-tracer -static-libgcc"
 	 CXXFLAGS="$CFLAGS"
-	# fix v8 for the time being; 
-         GMP_TARGET="--target=sparcv8-sun-solaris2.7"
+	 # fix v8 for the time being; 
+         BUILD="--build=supersparc-sun-solaris"
          ;;
 
     openbsd-sparc)
-	 CFLAGS=
-	 CXXFLAGS=
-	 GCC=gcc-2.95.3
-	 zcat $GCC.tar.gz | tar xf -
-	 mkdir $GCC-build
-	 (cd $GCC-build; \
-	  ../$GCC/configure --prefix=$PREFIX --enable-languages=c,c++; \
-	  make CFLAGS="$CFLAGS" LIBCFLAGS="$CFLAGS" \
-	       LIBCXXFLAGS="$CXXFLAGS" bootstrap; \
-	  make install)
-	 rm -rf $GCC-build
-	 CFLAGS="-O3 -mcpu=v8 -fdelayed-branch"
+         # not verified;
+	 CFLAGS="-O3 -pipe -mcpu=v8 -fdelayed-branch -fno-tracer -static-libgcc"
 	 CXXFLAGS="$CFLAGS"
-         GMP_TARGET=
+	 # fix v8 for the time being; 
+         BUILD="--build=supersparc-sun-solaris"
          ;;
 
     netbsd-sparc)
-	 CFLAGS=
-	 CXXFLAGS=
-	 GCC=gcc-2.95.3
-	 zcat $GCC.tar.gz | tar xf -
-	 mkdir $GCC-build
-	 (cd $GCC-build; \
-	  ../$GCC/configure --prefix=$PREFIX --enable-languages=c,c++; \
-	  make CFLAGS="$CFLAGS" LIBCFLAGS="$CFLAGS" \
-	       LIBCXXFLAGS="$CXXFLAGS" bootstrap; \
-	  make install)
-	 rm -rf $GCC-build
-	 CFLAGS="-O3 -mcpu=v8 -fdelayed-branch"
+         # not verified;
+	 CFLAGS="-O3 -pipe -mcpu=v8 -fdelayed-branch -fno-tracer -static-libgcc"
 	 CXXFLAGS="$CFLAGS"
-         GMP_TARGET=
+	 # fix v8 for the time being; 
+         BUILD="--build=sparcv8-sun-solaris"
          ;;
 
     freebsdelf-i486)
-	 CFLAGS=
-	 CXXFLAGS=
-	 GCC=gcc-2.95.3
-	 zcat $GCC.tar.gz | tar xf -
-	 mkdir $GCC-build
-	 (cd $GCC-build; \
-	  ../$GCC/configure --prefix=$PREFIX --enable-languages=c,c++; \
-	  make CFLAGS="$CFLAGS" LIBCFLAGS="$CFLAGS" \
-	       LIBCXXFLAGS="$CXXFLAGS" bootstrap; \
-	  make install)
-	 rm -rf $GCC-build
-	 CFLAGS="-O3 -fomit-frame-pointer -mcpu=pentium"
+         # not verified;
+	 CFLAGS="-O3 -pipe -fomit-frame-pointer -march=pentium -mcpu=pentiumpro -fno-tracer -static-libgcc"
 	 CXXFLAGS="$CFLAGS"
-         GMP_TARGET=
+         BUILD="--build=i586-*-linux"
          ;;
 
     *)
@@ -148,23 +115,24 @@ case $PLAT in
 esac
 
 PATH=$PREFIX/bin:$PATH
-export CFLAGS CXXFLAGS PATH
+LD_LIBRARY_PATH=$PREFIX/lib:$LD_LIBRARY_PATH
+export CFLAGS CXXFLAGS PATH LD_LIBRARY_PATH
 
-GDBM=gdbm-1.8.0
-ZLIB=zlib-1.1.3
-GMP=gmp-3.1.1
-REGEX=regex-0.12
-TCL=tcl8.2.3
-TK=tk8.2.3
-PERL=perl5.005_03
-M4=m4-1.4
-FLEX=flex-2.5.4a
-FLEXDIR=flex-2.5.4
 BISON=bison-1.28
+FLEX=flex-2.5.4a
+GDBM=gdbm-1.8.0
+GMP=gmp-4.1.2
+M4=m4-1.4
+PERL=perl-5.8.3
+REGEX=regex-0.12
+TCL=tcl8.3.5
+TK=tk8.3.5
+ZLIB=zlib-1.2.1
+FLEXDIR=flex-2.5.4
 
 zcat $GDBM.tar.gz | tar xf -
 (cd $GDBM; \
- ./configure --disable-shared; \
+ ./configure --disable-shared $HOST $BUILD; \
  mv Makefile Makefile.orig; \
  sed -e '1,$s/-o $(BINOWN) -g $(BINGRP) //g' < Makefile.orig > Makefile; \
  make CFLAGS="$CFLAGS -fpic"; \
@@ -178,7 +146,10 @@ zcat $ZLIB.tar.gz | tar xf -
 
 zcat $GMP.tar.gz | tar xf -
 (cd $GMP; \
- ./configure --prefix=$PREFIX $GMP_TARGET; \
+ cp libtool tmplt; \
+ sed -e '1,$s/CC -shared/CC -shared -static-libgcc/g' < tmplt > libtool; \
+ rm tmplt; \
+ ./configure --prefix=$PREFIX --disable-shared $BUILD; \
  make CFLAGS="$CFLAGS"; \
  make install )
 
