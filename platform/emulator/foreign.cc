@@ -42,6 +42,8 @@
 
 #include "bytedata.hh"
 
+#include "mozart.h"
+
 // forward decl
 static
 void term2Buffer(ostream &out, OZ_Term term, int depth=0);
@@ -1201,7 +1203,7 @@ OZ_Term OZ_string(OZ_CONST char *s) {
   return s ? oz_string(s,strlen(s),AtomNil) : AtomNil;
 }
 
-void string2buffer(ostream &out,OZ_Term list,int nulok)
+static void string2buffer(ostream &out,OZ_Term list,int nulok)
 {
   OZ_Term tmp = oz_deref(list);
   for (; oz_isCons(tmp); tmp=oz_deref(oz_tail(tmp))) {
@@ -1356,29 +1358,6 @@ char* OZ_vsToC(OZ_Term t,int*n)
     s = OZ_virtualStringToC(t,n);
   }
   return s;
-}
-
-OZ_Term OZ_toVirtualString(OZ_Term t,int depth, int width)
-{
-  switch (tagTypeOf(oz_deref(t))) {
-  case SMALLINT:
-  case OZFLOAT:
-    return t;
-  case UVAR:
-    // FUT
-  case CVAR:
-  case LTUPLE:
-  case SRECORD:
-  case EXT:
-  case OZCONST:
-    if (oz_isBigInt(t) || oz_isByteString(t)) return t;
-    return OZ_string(OZ_toC(t,depth,width));
-  case LITERAL:
-    if (OZ_isAtom(t)) return t;
-    return OZ_string(toC(t));
-  default:
-    return 0;
-  }
 }
 
 /* -----------------------------------------------------------------

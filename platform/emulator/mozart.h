@@ -34,21 +34,22 @@
  * 0. intro
  * ------------------------------------------------------------------------ */
 
-#define ozdeclspec
-
 /* calling convention "cdecl" under win32 */
 #if defined(__WATCOMC__) || defined(__BORLANDC__)
-#define ozcdecl __export __cdecl
-#define OZWIN
+#  define ozdeclspec
+#  define ozcdecl __export __cdecl
+#  define OZWIN
 #elif defined(__CYGWIN32__) || defined(__MINGW32__) || defined(_MSC_VER)
-#define ozcdecl __cdecl
-#ifndef WINDOWS_EMULATOR
-#undef  ozdeclspec
-#define ozdeclspec __declspec( dllexport )
-#endif
-#define OZWIN
+#  ifdef WINDOWS_EMULATOR
+#    define ozdeclspec __declspec(dllexport)
+#  else
+#    define ozdeclspec __declspec(dllimport)
+#  endif
+#  define ozcdecl __cdecl
+#  define OZWIN
 #else
-#define ozcdecl
+#  define ozdeclspec
+#  define ozcdecl
 #endif
 
 
@@ -60,19 +61,11 @@
 #define OZ_CONST
 #endif
 
-/* we use function pointers only when creating DLLs
- * WINDOWS_EMULATOR is defined when compiling the emulator */
-#if defined(OZWIN) && !defined(WINDOWS_EMULATOR)
-#define OzFun(fun) (ozcdecl *fun)
-#else
-#define OzFun(fun) (ozcdecl fun)
-#endif
-
 #if defined(__STDC__) || defined(__cplusplus) || __BORLANDC__ || _MSC_VER
-#define _FUNDECL(rettype,fun,arglist) extern ozdeclspec rettype OzFun(fun) arglist
+#define _FUNDECL(rettype,fun,arglist) extern ozdeclspec rettype ozcdecl fun arglist
 #define _FUNTYPEDECL(rettype,fun,arglist) ozdeclspec rettype (ozcdecl *fun) arglist
 #else
-#define _FUNDECL(rettype,fun,ignore) extern ozdeclspec rettype OzFun(fun) ()
+#define _FUNDECL(rettype,fun,ignore) extern ozdeclspec rettype ozcdecl fun ()
 #define _FUNTYPEDECL(rettype,fun,ignore) ozdeclspec rettype (ozcdecl *fun) ()
 #endif
 
@@ -310,8 +303,14 @@ typedef struct {
 } OZ_Datum;
 
 
-/* declare here, so C linkage is used */
-ozdeclspec OZ_C_proc_interface * ozcdecl oz_init_module();
+/* declare here, so C linkage is used and symbol is exported */
+#ifndef WINDOWS_EMULATOR
+#if defined(__CYGWIN32__) || defined(__MINGW32__) || defined(_MSC_VER)
+__declspec(dllexport) OZ_C_proc_interface * ozcdecl oz_init_module();
+#else
+OZ_C_proc_interface * ozcdecl oz_init_module();
+#endif
+#endif
 
 #define OZ_DATUM_UNKNOWNERROR -1
 #define OZ_DATUM_OUTOFMEMORY  -2
@@ -409,9 +408,9 @@ _FUNDECL(void,OZ_eventPush,(OZ_Term));
    */
 
 #ifdef __cplusplus
-#define OZ_BI_proto(Name)  extern "C" ozdeclspec OZ_Return (ozcdecl Name)(OZ_Term * [])
+#define OZ_BI_proto(Name)  extern "C" OZ_Return (ozcdecl Name)(OZ_Term * [])
 #else
-#define OZ_BI_proto(Name)  extern ozdeclspec OZ_Return (ozcdecl Name)()
+#define OZ_BI_proto(Name)  extern OZ_Return (ozcdecl Name)()
 #endif
 
 _FUNDECL(OZ_Term, _OZ_LOC_TO_LIST,(int,OZ_Term**));

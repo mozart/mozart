@@ -52,8 +52,13 @@ dnl *****************************************************************
 dnl windows cross compilation
 dnl *****************************************************************
 
+AC_CHECK_TOOL(AS, as)
+AC_CHECK_TOOL(DLLTOOL, dlltool)
+AC_CHECK_TOOL(DLLWRAP, dllwrap)
+
 case "$target" in
    NONE)
+        EMULATOR_EXE=emulator.exe
    ;;
    i386-mingw32)
         AC_MSG_RESULT(cross compiling for windows)
@@ -64,6 +69,8 @@ case "$target" in
 
         # -DINTERFACE does not work
         oz_copt_debug="-g"
+
+        EMULATOR_EXE=emulator.dll
    ;;
 
    *)
@@ -71,6 +78,7 @@ case "$target" in
     ;;
 esac
 
+AC_SUBST(EMULATOR_EXE)
 
 dnl *****************************************************************
 dnl Checks for programs.
@@ -241,10 +249,10 @@ case $platform in
         ;;
     win32*)
         oz_enable_modules_static=yes
+        TOOLLDCMD="sh `pwd`/$target-oztool ld"
         AC_DEFINE(WINDOWS)
         AC_DEFINE(ARCH_I486)
-        OZ_CXX_OPTIONS(-mno-cygwin,oz_a)
-        LDFLAGS="$oz_a $LDFLAGS"
+        LDFLAGS="$LDFLAGS"
         CPPFLAGS="-DWINDOWS_EMULATOR $oz_a $CPPFLAGS"
         if test "$host_os" = cygwin32
         then LD=gcc # otherwise it allways uses -lm which has reference to _errno

@@ -131,7 +131,6 @@ void printBanner()
 extern void initOzIdLoc(void);
 extern void initBuiltins();
 extern void bigIntInit(); /* from value.cc */
-extern void initffuns();  /* from initffuns.cc */
 extern void initVirtualProperties();
 extern void initExtensions(); /* extensions */
 #ifdef DENYS_EVENTS
@@ -145,14 +144,13 @@ void AM::init(int argc,char **argv)
 
   ozconf.init();
   osInit();
-  initffuns();
   AssRegArray::init();
 
   defaultExceptionHdl = makeTaggedNULL();
 
   preparedCalls = NULL;
 
-  char *home = getenv("OZHOME");
+  char *home = osgetenv("OZHOME");
 
   if (!home)
     home ="unknown";
@@ -161,7 +159,7 @@ void AM::init(int argc,char **argv)
   ozconf.ozHome = home;
 
   char *url = NULL;
-  char *initFile = getenv("OZINIT");
+  char *initFile = osgetenv("OZINIT");
 
   /* process command line arguments */
   ozconf.argV = NULL;
@@ -248,7 +246,7 @@ void AM::init(int argc,char **argv)
   }
 
   printBanner();
-  if (getenv("OZ_TRACE_LOAD"))
+  if (osgetenv("OZ_TRACE_LOAD"))
     if (initFile)
       fprintf(stderr,"Init file: %s\n",initFile);
     else

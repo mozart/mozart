@@ -31,6 +31,8 @@ PREFIX=         @prefix@
 BINDIR=         $(PREFIX)/platform/$(PLATFORM)
 INCDIR=         $(PREFIX)/include
 
+EMULATOR_EXE=   @EMULATOR_EXE@
+
 SHELL=          /bin/sh
 LEX=            @LEX@
 LFLAGS=         -8
@@ -46,6 +48,10 @@ DYNLD=          @OZTOOL_SH@ ld
 RANLIB=         @RANLIB@
 AR=             @AR@
 PERL=           perl
+
+AS=             @AS@
+DLLTOOL=        @DLLTOOL@
+DLLWRAP=        @DLLWRAP@
 
 INSTALL=        @INSTALL@
 INSTALL_DIR=    @INSTALL_DIR@

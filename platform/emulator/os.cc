@@ -949,7 +949,7 @@ char *oslocalhostname()
 
 char *ostmpnam(char *s)
 {
-  char *prefix = getenv("TMPDIR");
+  char *prefix = osgetenv("TMPDIR");
   if (prefix==NULL)
     prefix = "C:\\TEMP";
 
@@ -985,49 +985,23 @@ int osdup(int fd)
   return fd;
 }
 
-DWORD __stdcall watchParentThread(void *arg)
+char *osgetenv(char *var)
 {
-  HANDLE handle = (HANDLE) arg;
-  DWORD ret = WaitForSingleObject(handle,INFINITE);
-  if (ret != WAIT_OBJECT_0) {
-    OZ_warning("WaitForSingleObject(0x%x) failed: %d (error=%d)",
-               handle,ret,GetLastError());
-    ExitThread(0);
-  }
-  ExitProcess(0);
-  return 1;
+  static char buffer[2048];
+  int n = GetEnvironmentVariable(var,buffer,sizeof(buffer));
+  if (n == 0 || n > sizeof(buffer))
+    return NULL;
+  else
+    return buffer;
 }
-
-/* there are no process groups under Win32
- * so Emulator hands its pid via envvar OZPPID to emulator
- * it then creates a thread watching whether the Emulator is still living
- * and terminates otherwise
- */
-void watchParent()
-{
-  char buf[100];
-  if (GetEnvironmentVariable("OZPPID",buf,sizeof(buf)) == 0) {
-    OZ_warning("getenv OZPPID failed");
-    return;
-  }
-
-  int pid = atoi(buf);
-  HANDLE handle = OpenProcess(SYNCHRONIZE, 0, pid);
-  if (handle==0) {
-    OZ_warning("OpenProcess(%d) failed",pid);
-  } else {
-    DWORD thrid;
-    HANDLE th = CreateThread(0,0,watchParentThread,handle,0,&thrid);
-    CloseHandle(th);
-  }
-}
-
 
 #else
 
 char *ostmpnam(char *s) { return tmpnam(s); }
 
 int osdup(int fd) { return dup(fd); }
+
+char *osgetenv(char *var) { return getenv(var); }
 
 #endif
 
@@ -1098,10 +1072,8 @@ void osInit()
   createReader(sv[0],GetStdHandle(STD_INPUT_HANDLE));
   wrappedStdin = sv[1];
 
-  watchParent(); // check whether ozengine still lives
-
   /* win32 does not support process groups,
-   * so we set OZPPID such that subprocess can check whether
+   * so we set OZPPID such that a subprocess can check whether
    * its father still lives
    */
   char auxbuf[100];
@@ -1565,15 +1537,6 @@ TaggedRef osDlopen(char *filename, void **hdl)
   void *handle = (void *)LoadLibrary(filename);
   if (!handle) {
     return oz_int(GetLastError());
-  }
-
-  int (*linkff)(char*,void**) = (int (*)(char*,void**)) osDlsym(handle, "OZ_linkFF");
-  if (linkff==0) {
-    return oz_atom("OZ_linkFF not found, maybe not exported from DLL?");
-  }
-  extern void **ffuns;
-  if (linkff(OZVERSION,ffuns)==0) {
-    return oz_atom("call of 'OZ_linkFF' failed, maybe recompilation needed?");
   }
 
 #else

@@ -21,6 +21,7 @@ do
     case "$1" in
     -o)  shift; libname=$1;;
     -lc) ;;  # just ignore it
+    -mno-cygwin) ;;  # just ignore it
     -L*) libdirs="$libdirs $1";;
     *)   args="$args $1";;
     esac
@@ -28,19 +29,13 @@ do
 done
 
 defname=${libname}.def
-aname=lib${libname}.a
-tempfile=/tmp/oztool$$.o
 
-
-trap "rm -f $tempfile $aname $defname" 0 1 15
-
-
-${plat}-gcc -c -I@srcdir@ @BUILDTOP@/platform/emulator/mozart.c -o $tempfile
-
-${plat}-dlltool --as ${plat}-as --output-def $defname\
-                --dllname $libname --output-lib $aname $tempfile $args
+${plat}-dlltool --as ${plat}-as --output-def $defname \
+                --dllname $libname $args
 
 ${plat}-dllwrap --dlltool-name ${plat}-dlltool \
                 --driver-name ${plat}-gcc \
                 --as ${plat}-as -s -o $libname --def $defname \
-                --dllname $libname $tempfile $args $libdirs
+                --dllname $libname $args \
+                @BUILDTOP@/platform/emulator/libemulator.a \
+                $libdirs
