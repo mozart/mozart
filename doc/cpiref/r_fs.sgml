@@ -180,7 +180,7 @@ containing the elements in the complementary set.
 <Item> Returns the elements in <<*this>> not in <<fs>>.
 
 
-<Entry class="operator member function"><<operator &amp;=>>/
+<Entry class="operator member function"><<operator &amp;=>>
 <Index class=proglang><<OZ_FSetValue>><And><<operator &amp;=>></Index>
 <Synopsis><<OZ_FSetValue operator &amp;= (const OZ_FSetValue &amp;fs);>>
 
