@@ -610,8 +610,8 @@ the variable `oz-pedantic-spaces' is non-nil."
      ("Region"             oz-browse-region (mark t))
      ("Line"               oz-browse-line t)
      ("Paragraph"          oz-browse-paragraph t))
-    ("Panel"               oz-view-panel t)
-    ("Compiler Panel"      oz-compiler-panel t)
+    ("Panel"               oz-open-panel t)
+    ("Compiler Panel"      oz-open-compiler-panel t)
     ("Debugger"            oz-debugger t)
     ("Profiler"            oz-profiler t)
     ("-----")
@@ -1914,9 +1914,9 @@ buffer."
 	(define-key map (oz-kbd "M-r")   'oz-feed-region)
 	(define-key map (oz-kbd "M-l")   'oz-feed-line)
 
-	(define-key map (oz-kbd "C-c p") 'oz-view-panel)
+	(define-key map (oz-kbd "C-c p") 'oz-open-panel)
 	(define-key map (oz-kbd "C-c b") 'oz-browse-line)
-	(define-key map (oz-kbd "C-c c") 'oz-compiler-panel)
+	(define-key map (oz-kbd "C-c c") 'oz-open-compiler-panel)
 
 	(define-key map (oz-kbd "C-c m") 'oz-set-other)
 	(define-key map (oz-kbd "C-c o") 'oz-other)
@@ -2725,12 +2725,12 @@ feed that many preceding paragraphs as well as the current paragraph."
   (let ((region (oz-paragraph-region arg)))
     (oz-browse-region (car region) (cdr region))))
 
-(defun oz-view-panel ()
+(defun oz-open-panel ()
   "Feed `{Panel.open}' to the Oz Compiler."
   (interactive)
   (oz-send-string "{Panel.open}" t))
 
-(defun oz-compiler-panel ()
+(defun oz-open-compiler-panel ()
   "Feed `{New CompilerPanel.'class' init(`Compiler`) _}' to the Oz Compiler."
   (interactive)
   (oz-send-string "{New CompilerPanel.'class' init(`Compiler`) _}" t))
