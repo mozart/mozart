@@ -458,13 +458,16 @@ are called <EM>sited</EM>.
 We call this site their <EM>owner site</EM>
 or <EM>home site</EM>.
 References to these entities can be passed to other
-sites, but they do not work there.
+sites, but they do not work there
+(an exception will be raised if an operation is attempted).
 They work only on their owner site.
 Entities that can be used on any site
 <index/unsited entity/
 <index/language entity<and>unsited/
 are called <EM>unsited</EM>.
-Since Oz is a network-transparent
+Because of network transparency,
+unsited entities have the same language semantics
+independent of where they are used.
 
 <P>In Mozart, all sited entities are modules,
 except for a few exceptional cases listed below.
