@@ -502,11 +502,11 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                 | '_'
                   { $$ = newCTerm("fWildcard",pos()); }
                 | unit
-                  { $$ = newCTerm("fEscape",makeVar("`unit`"),pos()); }
+                  { $$ = newCTerm("fAtom",OZ_unit(),pos()); }
                 | true
-                  { $$ = newCTerm("fEscape",makeVar("`true`"),pos()); }
+                  { $$ = newCTerm("fAtom",OZ_true(),pos()); }
                 | false
-                  { $$ = newCTerm("fEscape",makeVar("`false`"),pos()); }
+                  { $$ = newCTerm("fAtom",OZ_false(),pos()); }
                 | self
                   { $$ = newCTerm("fSelf",pos()); }
                 | '$'
@@ -717,16 +717,16 @@ record          : recordAtomLabel coord '(' recordArguments optDots ')' coord
 
 recordAtomLabel : ATOM_LABEL
                   { $$ = OZ_atom(xytext); }
+                | UNIT_LABEL
+                  { $$ = OZ_unit(); }
+                | TRUE_LABEL
+                  { $$ = OZ_true(); }
+                | FALSE_LABEL
+                  { $$ = OZ_false(); }
                 ;
 
 recordVarLabel  : VARIABLE_LABEL
                   { $$ = OZ_atom(xytext); }
-                | UNIT_LABEL
-                  { $$ = OZ_atom("`unit`"); }
-                | TRUE_LABEL
-                  { $$ = OZ_atom("`true`"); }
-                | FALSE_LABEL
-                  { $$ = OZ_atom("`false`"); }
                 ;
 
 recordArguments : /* empty */
@@ -750,11 +750,11 @@ feature         : atom
                 | int
                   { $$ = $1; }
                 | unit
-                  { $$ = makeVar("`unit`"); }
+                  { $$ = newCTerm("fAtom",OZ_unit(),pos()); }
                 | true
-                  { $$ = makeVar("`true`"); }
+                  { $$ = newCTerm("fAtom",OZ_true(),pos()); }
                 | false
-                  { $$ = makeVar("`false`"); }
+                  { $$ = newCTerm("fAtom",OZ_false(),pos()); }
                 ;
 
 featureNoVar    : atom
@@ -862,11 +862,11 @@ attrFeatFeature : atom
                 | int
                   { $$ = $1; }
                 | unit
-                  { $$ = newCTerm("fEscape",makeVar("`unit`"),pos()); }
+                  { $$ = newCTerm("fAtom",OZ_unit(),pos()); }
                 | true
-                  { $$ = newCTerm("fEscape",makeVar("`true`"),pos()); }
+                  { $$ = newCTerm("fAtom",OZ_true(),pos()); }
                 | false
-                  { $$ = newCTerm("fEscape",makeVar("`false`"),pos()); }
+                  { $$ = newCTerm("fAtom",OZ_false(),pos()); }
                 ;
 
 methList        : /* empty */
@@ -890,11 +890,11 @@ methHead1       : atom
                 | variable
                   { $$ = $1; }
                 | unit
-                  { $$ = newCTerm("fEscape",makeVar("`unit`"),pos()); }
+                  { $$ = newCTerm("fAtom",OZ_unit(),pos()); }
                 | true
-                  { $$ = newCTerm("fEscape",makeVar("`true`"),pos()); }
+                  { $$ = newCTerm("fAtom",OZ_true(),pos()); }
                 | false
-                  { $$ = newCTerm("fEscape",makeVar("`false`"),pos()); }
+                  { $$ = newCTerm("fAtom",OZ_false(),pos()); }
                 | methHeadLabel '(' methHeadArgumentList ')'
                   { $$ = newCTerm("fRecord",$1,$3); }
                 | methHeadLabel '(' methHeadArgumentList LDOTS ')'
@@ -908,11 +908,11 @@ methHeadLabel   : ATOM_LABEL
                 | '!' coord VARIABLE_LABEL
                   { $$ = newCTerm("fEscape",makeVar(xytext),$2); }
                 | UNIT_LABEL
-                  { $$ = newCTerm("fEscape",makeVar("`unit`"),pos()); }
+                  { $$ = newCTerm("fAtom",OZ_unit(),pos()); }
                 | TRUE_LABEL
-                  { $$ = newCTerm("fEscape",makeVar("`true`"),pos()); }
+                  { $$ = newCTerm("fAtom",OZ_true(),pos()); }
                 | FALSE_LABEL
-                  { $$ = newCTerm("fEscape",makeVar("`false`"),pos()); }
+                  { $$ = newCTerm("fAtom",OZ_false(),pos()); }
                 ;
 
 methHeadArgumentList
@@ -1483,7 +1483,7 @@ static OZ_Term init_options(OZ_Term optRec) {
   xy_allowDeprecated = x == 0? 1: OZ_eq(x, OZ_true());
 
   OZ_Term defines = OZ_subtree(optRec, OZ_atom("defines"));
-  return defines? defines: OZ_nil();
+  return defines;
 }
 
 static OZ_Term parse() {
@@ -1512,8 +1512,6 @@ static OZ_Term parse() {
   return OZ_pair2(yyoutput, xy_errorMessages);
 }
 
-//extern Bool oz_isDictionary(TaggedRef term);
-
 OZ_BI_define(parser_parseFile, 2, 1)
 {
   // {ParseFile FileName OptRec ?(AST#ReporterMessages)}
@@ -1522,8 +1520,8 @@ OZ_BI_define(parser_parseFile, 2, 1)
   if (!OZ_isRecord(optRec))
     return OZ_typeError(1, "ParseOptions");
   OZ_Term defines = init_options(optRec);
-  //if (!oz_isDictionary(defines))
-  //  return OZ_typeError(0, "ParseOptions");
+  if (defines == 0 || !OZ_isDictionary(defines))
+    return OZ_typeError(1, "ParseOptions");
   if (!xy_init_from_file(file, defines))
     OZ_RETURN(OZ_pair2(OZ_atom("fileNotFound"), OZ_nil()));
   else
@@ -1539,8 +1537,8 @@ OZ_BI_define(parser_parseVirtualString, 2, 1)
   if (!OZ_isRecord(optRec))
     return OZ_typeError(1, "ParseOptions");
   OZ_Term defines = init_options(optRec);
-  //if (!oz_isDictionary(defines))
-  //  return OZ_typeError(0, "ParseOptions");
+  if (defines == 0 || !OZ_isDictionary(defines))
+    return OZ_typeError(1, "ParseOptions");
   xy_init_from_string(str, defines);
   OZ_RETURN(parse());
 }
