@@ -1289,8 +1289,12 @@ fi
 
 : ${oz_java_bin=}
 echo "$ac_t""$oz_java_bin" 1>&6
-if test -n "${oz_java_bin}" ; then
-  if expr "${oz_java_bin}" : '.*/$' ; then
+if test -n "${oz_java_bin}" ;
+then
+  if expr "${oz_java_bin}" : '.*/$' ;
+  then
+    # really do nothing portably
+    oz_tmp=
   else
     oz_java_bin=${oz_java_bin}/
   fi
@@ -1299,7 +1303,7 @@ JAVA_BIN=${oz_java_bin}
 
 
 echo $ac_n "checking for --with-java-threads""... $ac_c" 1>&6
-echo "configure:1303: checking for --with-java-threads" >&5
+echo "configure:1307: checking for --with-java-threads" >&5
 # Check whether --with-java-threads or --without-java-threads was given.
 if test "${with_java_threads+set}" = set; then
   withval="$with_java_threads"
@@ -1312,7 +1316,7 @@ JAVA_THREADS=${oz_java_threads}
 
 
 echo $ac_n "checking for --with-documents""... $ac_c" 1>&6
-echo "configure:1316: checking for --with-documents" >&5
+echo "configure:1320: checking for --with-documents" >&5
 # Check whether --with-documents or --without-documents was given.
 if test "${with_documents+set}" = set; then
   withval="$with_documents"
@@ -1328,7 +1332,7 @@ DOC_DIRS=$oz_doc_dirs
 
 
 echo $ac_n "checking for --enable-chm""... $ac_c" 1>&6
-echo "configure:1332: checking for --enable-chm" >&5
+echo "configure:1336: checking for --enable-chm" >&5
 # Check whether --enable-chm or --disable-chm was given.
 if test "${enable_chm+set}" = set; then
   enableval="$enable_chm"
@@ -1348,7 +1352,7 @@ fi
 
 
     echo $ac_n "checking for --enable-qtk""... $ac_c" 1>&6
-echo "configure:1352: checking for --enable-qtk" >&5
+echo "configure:1356: checking for --enable-qtk" >&5
     # Check whether --enable-qtk or --disable-qtk was given.
 if test "${enable_qtk+set}" = set; then
   enableval="$enable_qtk"
