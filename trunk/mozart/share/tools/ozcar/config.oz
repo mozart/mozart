@@ -17,8 +17,12 @@ AltStackTitle          = 'Stack of Thread  #'
 EnvTitle               = 'Environment'
 AltEnvTitle            = 'Environment of Frame  #'
 
-StatusInitText         = 'No current Thread'
+StatusInitText         = 'No current thread'
+StatusEndText          = 'See you again...'
 
+ApplPrefixText         = 'Current application: '
+ApplLabelInit          = ' none'
+					
 InvalidThreadID        = 'Invalid Thread ID in step message'
 NoFileInfo             = 'step message without line number information, ' #
                          'continuing thread #'

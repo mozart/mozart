@@ -5,6 +5,13 @@ declare
 T={New Tk.toplevel tkInit}
 B={New Tk.button tkInit(parent:T action:proc {$}
 					   {Debug.breakpoint}
-					   {Browse a}
+					   {Show inAction}
+					   thread
+					      {Show a}
+					   end
+					   thread
+					      {Show b}
+					   end
+					   {Show c}
 					end)}
 {Tk.send pack(B)}
