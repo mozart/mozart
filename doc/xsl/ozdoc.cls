@@ -213,7 +213,6 @@
 \newcommand{\mozart@front}{%
   \mozart@titlepage
   \mozart@license
-  \mozart@abstract
   \mozart@contents
   \clearpage
   \pagestyle{mozart}\thispagestyle{mozart}%
@@ -285,16 +284,21 @@
 \newcommand{\mozart@topcomic}{}
 \newcommand{\mozartstyle@A}{%
   \renewcommand{\mozart@topcomic}{%
-    \begin{flushleft}\@comic\end{flushleft}}}
+    \begin{flushleft}%
+      \ifx\@comix\long@empty\vspace*{\mozart@comic@height}\else\@comic\fi
+    \end{flushleft}}}
 
 \newcommand{\mozartstyle@B}{%
   \renewcommand{\mozart@topcomic}{%
-    \begin{flushleft}\fbox{\@comic}\end{flushleft}}}
+    \begin{flushleft}%
+      \ifx\@comic\long@empty\vspace*{\mozart@comic@height}\else\fbox{\@comic}\fi
+    \end{flushleft}}}
 
 \newcommand{\mozartstyle@C}{%
   \renewcommand{\mozart@topcomic}{%
     \begin{tabular*}{\mozart@fullwidth}{@{}l@{\extracolsep{\fill}}l|p{1cm}@{}}%
-      \@comic&&\\\hline&&
+      \ifx\@comic\long@empty\vbox{\kern\z@\vskip\mozart@comic@height}\else
+        \@comic\fi&&\\\hline&&
     \end{tabular*}}}
 
 \newcommand{\mozartstyle@D}{%
@@ -345,11 +349,7 @@
   \@nameuse{mozartstyle@\@mozartstyle}%
   \begin{titlepage}%
     \begin{FULLWIDTH}%
-      \ifx\@comic\long@empty
-        \vspace*{\mozart@comic@height}%
-      \else
-        \mozart@topcomic%
-      \fi
+      \mozart@topcomic%
       \vspace*{2cm}%
       \begin{flushright}
         \ifx\@title\@empty\else{\mozart@title@font@one\@title\\[1cm]}\fi
@@ -358,13 +358,21 @@
       \vfill
       \mozart@title@font@three
       \noindent
-      \begin{tabular}{@{}l@{}}%
-        Version \mozart@version\\\mozart@date
-      \end{tabular}\hfill\hbox{}\mozart@bottomcomic
+      \mozart@titlepage@bottom@left\hfill\hbox{}%
+      \mozart@titlepage@bottom@right
     \end{FULLWIDTH}%
   \end{titlepage}%
 \egroup}
 \fi
+
+\providecommand{\mozart@titlepage@bottom@left}{%
+  \begin{tabular}{@{}l@{}}%
+    Version \mozart@version\\\mozart@date
+  \end{tabular}%
+}
+
+\providecommand{\mozart@titlepage@bottom@right}{%
+  \mozart@bottomcomic}
 
 \newcommand{\mozart@logo}{%
   \lower10mm\hbox{\@PICEXT{mozart-grey}{5cm}}%
@@ -383,10 +391,13 @@
   \clearpage
   \pagestyle{empty}\thispagestyle{empty}%
   \begin{FULLWIDTH}%
+    \begin{center}\mozart@section@font\Large Abstract\end{center}%
+    \begin{mozart@quote}\@abstract\end{mozart@quote}%
+    \vspace*{\fill}%
     \begin{center}\mozart@section@font
       \Large License Agreement%
     \end{center}%
-    \begin{mozart@quote}%
+    \begin{mozart@quote}\footnotesize%
       This software is copyrighted by the German Research Center for
       Artificial Intelligence (DFKI), the Swedish Institute of
       Computer Science (SICS), and other parties.  The following terms
@@ -423,17 +434,6 @@
 \newcommand{\mozAbstract}[1]{%
   \long\def\@abstract{#1}}
 \newcommand{\long@empty}{}
-\newcommand{\mozart@abstract}{%
-  \ifx\@abstract\@long@empty\else
-    \clearpage
-    \thispagestyle{empty}%
-    \begin{FULLWIDTH}%
-      \vspace*{\fill}%
-      \begin{center}\mozart@section@font\Large Abstract\end{center}%
-      \begin{mozart@quote}\@abstract\end{mozart@quote}%
-      \vspace*{\fill}%
-    \end{FULLWIDTH}%
-  \fi}
 
 \newcommand{\mozart@contents}{%
   \clearpage\pagestyle{empty}\thispagestyle{empty}%
@@ -467,16 +467,26 @@
   \@setnobreak
   \@setminipage}
 
-\floatstyle{ruled}
+\newlength{\mozart@len}
+
+\newcommand{\mozart@floatc@ruled}[2]{%
+  \setlength{\mozart@len}{\mozart@fullwidth}%
+  \addtolength{\mozart@len}{-2\fboxsep}%
+  \colorbox{menucolor}{\parbox{\mozart@len}{\sffamily{\bfseries #1} #2}}}
+
+\newcommand{\fs@mozart}{\def\@fs@cfont{\bfseries}\let\@fs@capt\mozart@floatc@ruled
+  \def\@fs@pre{\hrule height.8pt depth0pt \kern2pt}%
+  \def\@fs@post{\kern2pt\hrule\relax}%
+  \def\@fs@mid{\kern2pt\hrule\kern2pt}%
+  \let\@fs@iftopcapt\iftrue}
+\floatstyle{mozart}
 \newfloat{FIGURE}{htbp}{lof}[chapter]
 \floatname{FIGURE}{Figure}
 
-\newlength{\mozart@len}
-
-\renewcommand{\floatc@ruled}[2]{
-  \setlength{\mozart@len}{\mozart@fullwidth}%
-  \addtolength{\mozart@len}{-2\fboxsep}%
-  \colorbox{menucolor}{\parbox{\mozart@len}{{\@fs@cfont #1} #2}}}
+% \renewcommand{\floatc@ruled}[2]{
+%   \setlength{\mozart@len}{\mozart@fullwidth}%
+%   \addtolength{\mozart@len}{-2\fboxsep}%
+%   \colorbox{menucolor}{\parbox{\mozart@len}{{\@fs@cfont #1} #2}}}
 
 % XSL SUPPORT
 
@@ -580,7 +590,7 @@
   \let\mozart@PERCENT	\mozart@DOT
   \let\mozart@AMPERSAND	\mozart@DOT
   \let\mozart@TILDE	\mozart@DOT
-  \let\mozart@UNDERSCORE\mozart@DOT
+  \let\mozart@UNDERSCORE\mozart@other@UNDERSCORE
   \let\mozart@CARET	\mozart@DOT
   \let\mozart@BSLASH	\mozart@DOT
   \let\mozart@LBRACE	\mozart@DOT
@@ -674,8 +684,16 @@
 \setlength{\mozart@displaymargin}{1cm}
 
 \newenvironment{DISPLAY}
-  {\begin{list}{}{\leftmargin\mozart@displaymargin}\item[]\ignorespaces}
+  {\begin{list}{}{\leftmargin\mozart@display@use@margin}%
+     \def\mozart@display@use@margin{\mozart@displaymargin}%
+     \item[]\ignorespaces}
   {\end{list}}
+
+\newcommand{\mozart@display@use@margin}{\mozart@displaymargin}
+
+\newenvironment{FIGURENODISPLAY}
+  {\begin{FIGURE}\def\mozart@display@use@margin{\z@}}
+  {\end{FIGURE}}
 
 \newcommand{\mozart@code@smaller}{%
   \ifx\@currsize\small		\scriptsize\else
@@ -721,7 +739,7 @@
 \DeclareRobustCommand{\FACEBUILTIN}{\textcolor{builtin}}
 \DeclareRobustCommand{\FACEREFERENCE}{\textcolor{reference}}
 \DeclareRobustCommand{\FACETYPE}{\textcolor{type}}
-\DeclareRobustCommand{\FACETEXT}{}
+\DeclareRobustCommand{\FACETEXT}[1]{#1}%strip the braces
 
 \definecolor{chunkborder}{rgb}{1.0,0.647,0}
 \definecolor{chunktitle}{rgb}{0.4196,0.556862745,0.1372549}
@@ -930,15 +948,29 @@
 % rewrite rules
 
 \newenvironment{REWRITE}
-  {\begin{DISPLAY}\begin{tabular}{|l@{\quad\ensuremath{\rightarrow}\quad}l|}\hline}
-  {\end{tabular}\end{DISPLAY}}
+  {\begin{flushleft}\begin{tabular}{|l@{\quad\ensuremath{\rightarrow}\quad}l|}\hline}
+  {\end{tabular}\end{flushleft}}
 \newcommand{\REWRITEVAR}[1]{%
   \multicolumn{2}{|l|}{#1 \GRAMDEF}\\\hline}
-\newcommand{\REWRITEFROM}[1]{#1&}
-\newcommand{\REWRITETO}[1]{#1\\\hline}
+\newcommand{\REWRITEFROM}[1]{\begin{MINCODE}#1\end{MINCODE}&}
+\newcommand{\REWRITETO}[1]{\begin{MINCODE}#1\end{MINCODE}\\\hline}
 \newcommand{\REWRITECONDITION}[1]{\multicolumn{2}{|@{\qquad}p{0.7\linewidth}|}{#1}\\\hline}
 
 \newcommand{\EOLN}{\\\mozartEMPTY}
+
+\newenvironment{MINCODE}
+  {\vtop\bgroup\mincode@line}
+  {\mincode@end\egroup}
+
+\newcommand{\mincode@end}{}
+\newcommand{\mincode@newline}{\egroup\mincode@line}
+
+\newcommand{\mincode@line}{\hbox\bgroup\strut
+  \let\mozartNEWLINE\mincode@newline
+  \let\mozart@NEWLINE\mincode@newline
+  \let\mozart@code@NEWLINE\mincode@newline
+  \let\mozart@code@NEWLINE@display\mincode@newline
+  \let\mincode@end\egroup}
 
 % ozdoc external cross references
 
@@ -1010,3 +1042,7 @@
 \newcommand{\DOINDEX}{%
   \usepackage{makeidx}\makeindex
   \def\mozart@printindex{\clearpage\printindex}}
+
+%% table headings
+
+\newcommand{\mozartTH}{\mozart@section@font\large}
