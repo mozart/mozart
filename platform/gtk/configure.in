@@ -65,6 +65,9 @@ dnl ** GLIB
 dnl *********************************************************************
 
 AC_PATH_PROG(glibpath, glib-config)
+if test -z $glibpath; then
+    AC_MSG_ERROR(You need the glib library to enable GTK support. It can be found at http://www.gtk.org)
+fi
 AC_MSG_CHECKING(for Glib compile flags)
 GLIB_CFLAGS=`$glibpath --cflags`
 GLIB_LIBS=`$glibpath --libs`
@@ -77,6 +80,9 @@ dnl ** GTK
 dnl *********************************************************************
 
 AC_PATH_PROG(gtkpath, gtk-config)
+if test -z $gtkpath; then
+    AC_MSG_ERROR(You need the GTK library to enable GTK support. It can be found at http://www.gtk.org)
+fi
 AC_MSG_CHECKING(for Gtk compile flags)
 GTK_CFLAGS=`$gtkpath --cflags`
 GTK_LIBS=`$gtkpath --libs`
