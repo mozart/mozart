@@ -7,7 +7,7 @@ export
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import
-   
+
    FS(value intersect reflect include var)
    System
    Tables(getVar getVarId getPropId)

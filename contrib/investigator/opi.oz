@@ -87,5 +87,6 @@ B <: C
 
 {InvestigateConstraints A}
 
-
+declare S in {Coins S}
+{Browse S}
 */
