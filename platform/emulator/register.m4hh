@@ -449,24 +449,14 @@ Case(CREATEVARIABLEMOVEY)
             SUSP_PC(termPtr,PC);
           } else if (isCVar(term)) {
             OzVariable *cvar = tagged2CVar(term);
-            switch (cvar->getType()) {
-            case OZ_VAR_OF:
-              {
-                OzOFVariable *ofsvar = (OzOFVariable *) cvar;
-                Literal *lit = tagged2Literal(label);
-                if (sraIsTuple(sra)) {
-                  if (ofsvar->disentailed(lit,getTupleWidth(sra))) {
-                    JUMPRELATIVE(getLabelArg(PC+4));
-                  }
-                } else {
-                  if (ofsvar->disentailed(lit,getRecordArity(sra))) {
-                    JUMPRELATIVE(getLabelArg(PC+4));
-                  }
-                }
-                SUSP_PC(termPtr,PC);
+            if (cvar->getType() == OZ_VAR_OF) {
+              OzOFVariable *ofsvar = (OzOFVariable *) cvar;
+              Literal *lit = tagged2Literal(label);
+              if (sraIsTuple(sra) && ofsvar->disentailed(lit,getTupleWidth(sra)) ||
+                  ofsvar->disentailed(lit,getRecordArity(sra))) {
+                JUMPRELATIVE(getLabelArg(PC+4));
               }
-            default:
-              break;
+              SUSP_PC(termPtr,PC);
             }
           }
           // fall through
@@ -490,17 +480,12 @@ Case(CREATEVARIABLEMOVEY)
             SUSP_PC(termPtr,PC);
           } else if (isCVar(term)) {
             OzVariable *cvar = tagged2CVar(term);
-            switch (cvar->getType()) {
-            case OZ_VAR_OF:
-              {
-                OzOFVariable *ofsvar = (OzOFVariable *) cvar;
-                if (ofsvar->disentailed(tagged2Literal(AtomCons),2)) {
-                  JUMPRELATIVE(getLabelArg(PC+2));
-                }
-                SUSP_PC(termPtr,PC);
+            if (cvar->getType() == OZ_VAR_OF) {
+              OzOFVariable *ofsvar = (OzOFVariable *) cvar;
+              if (ofsvar->disentailed(tagged2Literal(AtomCons),2)) {
+                JUMPRELATIVE(getLabelArg(PC+2));
               }
-            default:
-              break;
+              SUSP_PC(termPtr,PC);
             }
           }
           // fall through
