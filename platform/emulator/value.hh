@@ -351,7 +351,7 @@ public:
 inline
 Float *Float::newFloat(double val)
 {
-  Float *ret = (Float *) doubleMalloc(sizeof(Float));
+  Float *ret = (Float *) oz_heapMalloc(sizeof(Float));
   ret->value = val;
   return ret;
 }
@@ -387,7 +387,7 @@ private:
   TaggedRef args[2];
 
 public:
-  USEHEAPMEMORY32;
+  USEHEAPMEMORY;
   OZPRINTLONG
 
   NO_DEFAULT_CONSTRUCTORS2(LTuple)
@@ -460,7 +460,7 @@ TaggedRef oz_mklist(TaggedRef l1) {
 
 inline
 TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2) {
-  LTuple * l = (LTuple *) heapMalloc(2 * sizeof(LTuple));
+  LTuple * l = (LTuple *) oz_heapMalloc(2 * sizeof(LTuple));
   l[0].setBoth(l1,makeTaggedLTuple(l+1));
   l[1].setBoth(l2,AtomNil);
   return makeTaggedLTuple(l);
@@ -468,7 +468,7 @@ TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2) {
 
 inline
 TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3) {
-  LTuple * l = (LTuple *) heapMalloc(3 * sizeof(LTuple));
+  LTuple * l = (LTuple *) oz_heapMalloc(3 * sizeof(LTuple));
   l[0].setBoth(l1,makeTaggedLTuple(l+1));
   l[1].setBoth(l2,makeTaggedLTuple(l+2));
   l[2].setBoth(l3,AtomNil);
@@ -477,7 +477,7 @@ TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3) {
 
 inline
 TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3,TaggedRef l4) {
-  LTuple * l = (LTuple *) heapMalloc(4 * sizeof(LTuple));
+  LTuple * l = (LTuple *) oz_heapMalloc(4 * sizeof(LTuple));
   l[0].setBoth(l1,makeTaggedLTuple(l+1));
   l[1].setBoth(l2,makeTaggedLTuple(l+2));
   l[2].setBoth(l3,makeTaggedLTuple(l+3));
@@ -487,7 +487,7 @@ TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3,TaggedRef l4) {
 
 inline
 TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3,TaggedRef l4,TaggedRef l5) {
-  LTuple * l = (LTuple *) heapMalloc(5 * sizeof(LTuple));
+  LTuple * l = (LTuple *) oz_heapMalloc(5 * sizeof(LTuple));
   l[0].setBoth(l1,makeTaggedLTuple(l+1));
   l[1].setBoth(l2,makeTaggedLTuple(l+2));
   l[2].setBoth(l3,makeTaggedLTuple(l+3));
@@ -713,7 +713,7 @@ public:
   void dispose()
   {
     mpz_clear(&value);
-    freeListDispose(this,sizeof(BigInt));
+    oz_freeListDispose(this,sizeof(BigInt));
   }
 /* make a small int if <Big> fits into it, else return big int */
   TaggedRef shrink(void) {
@@ -904,7 +904,7 @@ public:
     _fsv = fsv;
   }
   void dispose(void) {
-    freeListDispose(this,sizeof(Co_FSetValue));
+    oz_freeListDispose(this,sizeof(Co_FSetValue));
   }
   OZ_FSetValue * getValue(void) {
     return _fsv;
@@ -1294,7 +1294,7 @@ public:
     CHECK_LITERAL(lab);
     Assert(width > 0);
     int memSize = sizeof(SRecord) + sizeof(TaggedRef) * (width - 1);
-    SRecord *ret = (SRecord *) int32Malloc(memSize);
+    SRecord *ret = (SRecord *) oz_heapMalloc(memSize);
     ret->label = lab;
     ret->recordArity = arity;
     return ret;
@@ -1977,7 +1977,7 @@ public:
       width = 0;
       args = NULL; // mm2: attention if globalize gname!
     } else {
-      args = (TaggedRef*) int32Malloc(sizeof(TaggedRef)*width);
+      args = (TaggedRef*) oz_heapMalloc(sizeof(TaggedRef)*width);
       if (args==NULL) { width = -1; return; }
       for(int i=0; i<width; i++) {
         args[i] = initvalue;
@@ -2265,7 +2265,7 @@ public:
   {
     Assert(prd->getGSize()>=0);
     int sz=sizeof(Abstraction)+sizeof(TaggedRef)*(prd->getGSize()-1);
-    Abstraction *ab = (Abstraction *) heapMalloc(sz);
+    Abstraction *ab = (Abstraction *) oz_heapMalloc(sz);
     ab->ConstTermWithHome::init(bb,Co_Abstraction);
     ab->pred=prd;
     DebugCheckT(for (int i=prd->getGSize(); i--; ) ab->globals[i]=0);
@@ -2675,7 +2675,7 @@ public:
   PendThread(Thread *th,PendThread *pt,TaggedRef cv,ExKind e)
     :next(pt), thread(th),old(0),nw(0), exKind(e), controlvar(cv) {}
   USEFREELISTMEMORY;
-  void dispose(){freeListDispose(this,sizeof(PendThread));}
+  void dispose(){oz_freeListDispose(this,sizeof(PendThread));}
 };
 
 Thread* pendThreadResumeFirst(PendThread **pt);

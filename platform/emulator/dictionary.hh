@@ -114,10 +114,10 @@ public:
   void free() {
       while (list) {
           Pair* next=list->next;
-          freeListDispose(list, sizeof(*list));
+          oz_freeListDispose(list, sizeof(*list));
           list=next;
       }
-      freeListDispose(this, sizeof(*this)); // IS THIS REASONABLE?
+      oz_freeListDispose(this, sizeof(*this)); // IS THIS REASONABLE?
   }
 };
 
@@ -252,7 +252,7 @@ public:
     return sizeof(DynamicTable) + sizeof(HashElement)*(s-1);
   }
 
-    void dispose() { freeListDispose(this, DTBlockSize(size)); }
+    void dispose() { oz_freeListDispose(this, DTBlockSize(size)); }
     // Insert val at index id
     // If valid==FALSE then nothing has been done.
     // Otherwise, return NULL if val is successfully inserted (id did not exist)

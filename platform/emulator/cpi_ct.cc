@@ -31,12 +31,12 @@
 
 void * OZ_Ct::operator new(size_t s, int)
 {
-  return doubleMalloc(s);
+  return oz_heapMalloc(s);
 }
 
 void OZ_Ct::operator delete(void * p, size_t s)
 {
-  freeListDispose(p, s);
+  oz_freeListDisposeUnsafe(p, s);
 }
 
 void OZ_CtVar::ask(OZ_Term v)

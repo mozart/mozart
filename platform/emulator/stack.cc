@@ -47,7 +47,7 @@ void Stack::reallocate(int newsize)
   if (stkalloc==Stack_WithMalloc)
     free(savearray);
   else
-    freeListDispose(savearray,sizeof(StackEntry)*oldsize);
+    oz_freeListDispose(savearray,sizeof(StackEntry)*oldsize);
 }
 
 

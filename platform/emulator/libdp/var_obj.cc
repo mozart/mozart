@@ -94,7 +94,7 @@ void ObjectVar::disposeV()
   // PER-LOOK
   // kost@ : ... so what? found something?
   // Don't touch gname, since it appears in the object itself!!!
-  freeListDispose(this, sizeof(ObjectVar));
+  oz_freeListDispose(this, sizeof(ObjectVar));
 }
 
 void ObjectVar::transfer(Object *o, BorrowEntry *be)

@@ -131,7 +131,7 @@ public:
       LQ_TRACE(cerr << " from heap" << endl);
       block = (LinkedQueueBlock*)
         // allocate a block with an array of SIZE elements
-        heapMalloc(sizeof(LinkedQueueBlock)+(SIZE-1)*sizeof(void*));
+        oz_heapMalloc(sizeof(LinkedQueueBlock)+(SIZE-1)*sizeof(void*));
       block->size = SIZE;
     }
     // set all pointers to 0

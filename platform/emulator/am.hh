@@ -77,7 +77,7 @@ public:
 
   CallList *next;
   CallList(TaggedRef p, RefsArray a) : proc(p), args(a), next(NULL) {}
-  void dispose() { freeListDispose(this,sizeof(*this)); }
+  void dispose() { oz_freeListDispose(this,sizeof(*this)); }
 };
 
 /*
@@ -562,7 +562,7 @@ inline OZ_Term oz_newCell(OZ_Term val)
 inline
 TaggedRef oz_newVariable()
 {
-  TaggedRef *ret = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
+  TaggedRef *ret = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
   *ret = am.getCurrentOptVar(); // cached in AM;
   return (makeTaggedRef(ret));
 }

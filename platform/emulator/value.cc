@@ -93,7 +93,7 @@ Atom *Atom::newAtom(const char *str)
 
 Name *Name::newName(Board *home)
 {
-  Name *ret = (Name*) heapMalloc(sizeof(Name));
+  Name *ret = (Name*) oz_heapMalloc(sizeof(Name));
   ret->init();
   ret->homeOrGName = ToInt32(home);
   ret->setOthers(NameCurrentNumber += 1 << sizeOfCopyCount);
@@ -437,12 +437,12 @@ TaggedRef ObjectClass::getFallbackApply() {
 
 static void *bigint_alloc(size_t size)
 {
-  return freeListMalloc(size);
+  return oz_freeListMalloc(size);
 }
 
 static void bigint_dealloc(void *ptr, size_t size)
 {
-  freeListDispose(ptr,size);
+  oz_freeListDisposeUnsafe(ptr,size);
 }
 
 static void *bigint_realloc(void *ptr, size_t old_size, size_t new_size)
@@ -1363,7 +1363,7 @@ OZ_Term oz_string(const char * s, const int len, const OZ_Term tail) {
   while (i > 0) {
     int j = min(STRING_BLOCK_SZ,i);
 
-    LTuple * lb = (LTuple *) heapMalloc(j * sizeof(LTuple));
+    LTuple * lb = (LTuple *) oz_heapMalloc(j * sizeof(LTuple));
 
     lb[--j].setBoth(makeTaggedSmallInt((unsigned char) s[--i]),t);
 

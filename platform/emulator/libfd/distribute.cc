@@ -113,7 +113,7 @@ public:
   }
 
   void dispose(void) {
-    freeListDispose(this, sizeof(FdDistributor));
+    //    oz_freeListDispose(this, sizeof(FdDistributor));
   }
 
   TaggedRef getSync(void) {
@@ -201,29 +201,29 @@ public:
  */
 
 #define ITERATOR(INIT,UPDATE) \
-  int i = size, j = size;                         \
-  TaggedRef vd;                                   \
-  while (i--) {                                   \
-    vd = oz_deref(vars[i]);                       \
-    if (!oz_isSmallInt(vd)) break;                \
-  }                                               \
-  if (i < 0) {                                    \
-    size = 0; return;                             \
-  }                                               \
-  vars[--j] = vars[i];                            \
-  INIT;                                           \
-  sel_var = j;                                    \
-  while (i--) {                                   \
-    vd = oz_deref(vars[i]);                       \
-    if (oz_isSmallInt(vd)) continue;              \
-    vars[--j] = vars[i];                          \
-    UPDATE;                                       \
-  }                                               \
-  if (j > 0) {                                    \
-    freeListDispose(vars, j * sizeof(TaggedRef)); \
-    vars    += j;                                 \
-    size    -= j;                                 \
-    sel_var -= j;                                 \
+  int i = size, j = size;                            \
+  TaggedRef vd;                                      \
+  while (i--) {                                      \
+    vd = oz_deref(vars[i]);                          \
+    if (!oz_isSmallInt(vd)) break;                   \
+  }                                                  \
+  if (i < 0) {                                       \
+    size = 0; return;                                \
+  }                                                  \
+  vars[--j] = vars[i];                               \
+  INIT;                                              \
+  sel_var = j;                                       \
+  while (i--) {                                      \
+    vd = oz_deref(vars[i]);                          \
+    if (oz_isSmallInt(vd)) continue;                 \
+    vars[--j] = vars[i];                             \
+    UPDATE;                                          \
+  }                                                  \
+  if (j > 0) {                                       \
+    oz_freeListDisposeUnsafe(vars, j * sizeof(TaggedRef)); \
+    vars    += j;                                    \
+    size    -= j;                                    \
+    sel_var -= j;                                    \
   }
 
 
@@ -455,7 +455,7 @@ OZ_BI_define(fdd_distribute, 3, 1) {
     OZ_RETURN(NameUnit);
 
   // This is inverse order!
-  vars = (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * n);
+  vars = (TaggedRef *) oz_freeListMalloc(sizeof(TaggedRef) * n);
 
   if (oz_isCons(vv)) {
     TaggedRef vs = vv;
@@ -569,7 +569,7 @@ OZ_BI_define(fdd_assign, 2, 1) {
     OZ_RETURN(NameUnit);
 
   // This is inverse order!
-  vars = (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * n);
+  vars = (TaggedRef *) oz_freeListMalloc(sizeof(TaggedRef) * n);
 
   if (oz_isCons(vv)) {
     TaggedRef vs = vv;

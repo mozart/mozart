@@ -82,7 +82,7 @@ public:
 
   SuspList * dispose(void) {
     SuspList * ret = _next;
-    freeListDispose(this, sizeof(SuspList));
+    oz_freeListDispose(this, sizeof(SuspList));
     return ret;
   }
 

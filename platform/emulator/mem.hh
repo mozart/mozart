@@ -79,9 +79,12 @@ public:
 
 /*
  * Basic aligned allocation routine:
- *  - Supports alignment of 4 and 8
+ *  - Supports alignment of 8
+ *  - OZ_HEAPALIGNMENT MUST BE POWER OF 2
  *
  */
+
+#define OZ_HEAPALIGNMENT 8
 
 #ifdef HEAPCURINTOREGISTER
 register char * _oz_heap_cur asm("g6");
@@ -94,73 +97,51 @@ extern   char * _oz_heap_end;
 
 void _oz_getNewHeapChunk(const size_t);
 
+#ifdef DEBUG_CHECK
+#define CHECK_ALIGNMENT(p) Assert(!(ToInt32(p) & (OZ_HEAPALIGNMENT - 1)));
+#else
+#define CHECK_ALIGNMENT(p)
+#endif
+
+/*
+ * Sum up to next multiple of OZ_HEAPALIGNMENT
+ *
+ */
+
+#define oz_alignSize(sz) (((sz) + OZ_HEAPALIGNMENT - 1) & (-OZ_HEAPALIGNMENT))
 
 inline
-void * _oz_amalloc(const size_t sz, const size_t align) {
+void * oz_heapMalloc(const size_t sz) {
   /*
    * The following invariants are enforced:
-   *  - _oz_heap_cur is always aligned to sizeof(int32)
-   *  - alignment can be only 4 or 8
+   *  - _oz_heap_cur is always aligned to OZ_HEAPALIGMENT
    *  - if alignment == 4, then sz is multiple of 4
    *
    */
 
-  Assert(((sz & 3) == 0) || (align == 8));
-
-  Assert(ToInt32(_oz_heap_cur) % sizeof(int32) == 0);
-
-  Assert(align == 4 || align == 8);
+  CHECK_ALIGNMENT(_oz_heap_cur);
 
  retry:
 
-  _oz_heap_cur -= sz;
+  {
+    size_t a_sz = oz_alignSize(sz);
 
-  if (align == 8)
-    _oz_heap_cur = (char *) (((long) _oz_heap_cur) & (~((long) 7)));
+    _oz_heap_cur -= a_sz;
 
-  Assert(((long) _oz_heap_cur) % align == 0);
+    CHECK_ALIGNMENT(_oz_heap_cur);
 
-  /* _oz_heap_cur might be negative!! */
-  if (((long) _oz_heap_end) > ((long) _oz_heap_cur)) {
-    Assert(((long) _oz_heap_end) > 0);
-    _oz_getNewHeapChunk(sz);
-    goto retry;
+    /* _oz_heap_cur might be negative!! */
+    if (((long) _oz_heap_end) > ((long) _oz_heap_cur)) {
+      Assert(((long) _oz_heap_end) > 0);
+      _oz_getNewHeapChunk(a_sz);
+      goto retry;
+    }
+
+    return _oz_heap_cur;
+
   }
 
-  return _oz_heap_cur;
 }
-
-/*
- * Routine that rounds a requested size to a multiple of
- * sizeof(int32)
- *
- */
-
-#define HMALLOC_SAFE_SZ(sz) \
-   (((sz) + (sizeof(int32)-1)) & (~(sizeof(int32)-1)))
-
-/*
- * Unsafe allocation routines:
- *  - various alignment types
- *  - requested sz must be multiple of sizeof(int32)
- *
- */
-
-#define int32Malloc(sz)  (_oz_amalloc((sz),sizeof(int32)))
-#define doubleMalloc(sz) (_oz_amalloc((sz),sizeof(double)))
-#define heapMalloc(sz)   (_oz_amalloc((sz),sizeof(void *)))
-
-/*
- * Safe allocation routines:
- *  - various alignment types
- *  - requested sz can be arbitrary
- *
- */
-
-#define int32MallocSafe(sz)  int32Malloc(HMALLOC_SAFE_SZ(sz))
-#define doubleMallocSafe(sz) doubleMalloc(sz)
-#define heapMallocSafe(sz)   heapMalloc(HMALLOC_SAFE_SZ(sz))
-
 
 void initMemoryManagement(void);
 void deleteChunkChain(char *);
@@ -184,7 +165,7 @@ void printChunkChain(void *);
 
 inline
 void * oz_hrealloc(const void * p, size_t sz) {
-  return memcpy(heapMalloc(sz), p, sz);
+  return memcpy(oz_heapMalloc(sz), p, sz);
 }
 
 /*
@@ -216,11 +197,11 @@ unsigned int getUsedMemoryBytes(void) {
 #define FL_MaxSize  64
 
 // Transformations between FreeListIndex and Size
-#define FL_SizeToIndex(sz) ((sz) >> 2)
-#define FL_IndexToSize(i)  ((i)  << 2)
+#define FL_SizeToIndex(sz) ((sz) >> 3)
+#define FL_IndexToSize(i)  ((i)  << 3)
 
 // Alignment restrictions
-#define FL_IsValidSize(sz) (!((sz) & 3))
+#define FL_IsValidSize(sz) (!((sz) & (OZ_HEAPALIGNMENT - 1)))
 
 
 /*
@@ -282,7 +263,7 @@ public:
   static void * alloc(const size_t s) {
     Assert(FL_IsValidSize(s));
     if (s > FL_MaxSize) {
-      return heapMalloc(s);
+      return oz_heapMalloc(s);
     } else {
       FL_Small * f = smmal[FL_SizeToIndex(s)];
       Assert(f);
@@ -315,22 +296,29 @@ public:
 
 /*
  * The real allocation routines:
- *  - aligment is fixed to 4
- *  - for difference between Safe and other see above
  *
  */
 
-#define freeListMalloc(s)     (FL_Manager::alloc((s)))
-#define freeListMallocSafe(s) freeListMalloc(HMALLOC_SAFE_SZ(s))
+#define oz_freeListMalloc(s)     (FL_Manager::alloc(oz_alignSize(s)))
 
 #ifdef CS_PROFILE
 #define freeListDispose(p,s)
 #else
-#define freeListDispose(p,s) FL_Manager::free((p),(s))
+#define oz_freeListDispose(p,s) FL_Manager::free((p),oz_alignSize(s))
 #endif
 
-#define freeListDisposeSafe(p,s) freeListDispose(p,HMALLOC_SAFE_SZ(s))
+/*
+ * Use this for dynamically allocated memory blocks that haven't been
+ * allocated with the same size. For example, parts of memory areas
+ * that are not longer needed. Unsafe will enforce the right alignment!
+ *
+ */
+#define oz_freeListDisposeUnsafe(p,s)
 
+/*
+ * AS YOU CAN SEE: THIS ROUTINE IS MISSING FOR NOW
+ *
+ */
 
 
 /*
@@ -344,31 +332,21 @@ public:
 
 #define USEFREELISTMEMORY                               \
   static void *operator new(size_t chunk_size)          \
-    { return freeListMalloc(chunk_size); }              \
+    { return oz_freeListMalloc(chunk_size); }           \
   static void operator delete(void *,size_t )           \
     { Assert(NO); }                                     \
   static void *operator new[](size_t chunk_size)        \
-    { return freeListMalloc(chunk_size); }              \
+    { return oz_freeListMalloc(chunk_size); }           \
   static void operator delete[](void *,size_t )         \
     { Assert(NO); }
 
 #define USEHEAPMEMORY                                   \
   static void *operator new(size_t chunk_size)          \
-    { return heapMalloc(chunk_size); }                  \
+    { return oz_heapMalloc(chunk_size); }               \
   static void operator delete(void *,size_t)            \
     { Assert(NO); }                                     \
   static void *operator new[](size_t chunk_size)        \
-    { return heapMalloc(chunk_size); }                  \
-  static void operator delete[](void *,size_t)          \
-    { Assert(NO); }
-
-#define USEHEAPMEMORY32                                 \
-  static void *operator new(size_t chunk_size)          \
-    { return int32Malloc(chunk_size); }                 \
-  static void operator delete(void *,size_t)            \
-    { Assert(NO); }                                     \
-  static void *operator new[](size_t chunk_size)        \
-    { return int32Malloc(chunk_size); }                 \
+    { return oz_heapMalloc(chunk_size); }               \
   static void operator delete[](void *,size_t)          \
     { Assert(NO); }
 
@@ -376,24 +354,17 @@ public:
 
 #define USEFREELISTMEMORY                       \
   static void *operator new(size_t chunk_size)  \
-    { return freeListMalloc(chunk_size); }      \
+    { return oz_freeListMalloc(chunk_size); }   \
   static void operator delete(void *,size_t )   \
     { Assert(NO); }
 
 #define USEHEAPMEMORY                           \
   static void *operator new(size_t chunk_size)  \
-    { return heapMalloc(chunk_size); }          \
-  static void operator delete(void *,size_t)    \
-    { Assert(NO); }
-
-#define USEHEAPMEMORY32                         \
-  static void *operator new(size_t chunk_size)  \
-    { return int32Malloc(chunk_size); }         \
+    { return oz_heapMalloc(chunk_size); }       \
   static void operator delete(void *,size_t)    \
     { Assert(NO); }
 
 #endif
-
 
 
 #endif

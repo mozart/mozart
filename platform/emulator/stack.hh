@@ -63,14 +63,14 @@ protected:
     if (stkalloc==Stack_WithMalloc)
       free(p);
     else
-      freeListDispose(p, n*sizeof(StackEntry));
+      oz_freeListDispose(p, n*sizeof(StackEntry));
   }
 
   void allocate(int sz, int alloc)
   {
     int auxsz = sz*sizeof(StackEntry);
     array = alloc==Stack_WithMalloc
-         ? (StackEntry*)malloc(auxsz):(StackEntry*)freeListMalloc(auxsz);
+         ? (StackEntry*)malloc(auxsz):(StackEntry*)oz_freeListMalloc(auxsz);
     Assert(array);
     tos = array;
     stackEnd = array+sz;

@@ -194,9 +194,9 @@ void oz_sCloneTerm(TaggedRef & f, TaggedRef & t) {
  */
 
 #ifdef G_COLLECT
-#define CAC_MALLOC(sz) heapMalloc((sz))
+#define CAC_MALLOC(sz) oz_heapMalloc((sz))
 #else
-#define CAC_MALLOC(sz) freeListMalloc((sz))
+#define CAC_MALLOC(sz) oz_freeListMalloc((sz))
 #endif
 
 
@@ -497,8 +497,8 @@ DynamicTable * DynamicTable::_cac(void) {
   Assert(isPwrTwo(size));
 
   // Copy the table:
-  DynamicTable * to = (DynamicTable *) heapMalloc((size-1)*sizeof(HashElement)
-                                                  + sizeof(DynamicTable));
+  DynamicTable * to = (DynamicTable *)
+    oz_heapMalloc((size-1)*sizeof(HashElement) + sizeof(DynamicTable));
   to->numelem = numelem;
   to->size    = size;
 
@@ -543,7 +543,7 @@ void OzCtVariable::_cac(Board * bb) {
 
   // copy
   SuspList ** new_susp_lists = (SuspList **)
-    heapMalloc(sizeof(SuspList *) * noOfSuspLists);
+    oz_heapMalloc(sizeof(SuspList *) * noOfSuspLists);
   for (int i = noOfSuspLists; i--; )
     new_susp_lists[i] = _susp_lists[i];
   _susp_lists = new_susp_lists;
@@ -1130,7 +1130,8 @@ void ConstTerm::_cacConstRecurse(void) {
 #endif
       int aw = a->getWidth();
       if (aw > 0) {
-        TaggedRef *newargs = (TaggedRef*) heapMalloc(sizeof(TaggedRef) * aw);
+        TaggedRef * newargs =
+          (TaggedRef*) oz_heapMalloc(sizeof(TaggedRef) * aw);
         OZ_cacBlock(a->getArgs(), newargs, aw);
         a->args=newargs;
       }
@@ -1426,7 +1427,7 @@ OzDebug *OzDebug::gCollectOzDebug(void) {
 
   if (ret->arity > 0) {
     ret->arguments = (TaggedRef *)
-      heapMalloc(ret->arity * sizeof(TaggedRef));
+      oz_heapMalloc(ret->arity * sizeof(TaggedRef));
 
     OZ_gCollectBlock(arguments, ret->arguments, arity);
   }
@@ -1937,7 +1938,7 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
        continue;
      }
 
-     var_ptr = (TaggedRef *) heapMalloc(sizeof(TaggedRef));
+     var_ptr = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
      *t = makeTaggedRef(var_ptr);
 
   DO_VAR:

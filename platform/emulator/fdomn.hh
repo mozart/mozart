@@ -89,7 +89,7 @@ public:
     return sizeOf(high);
   }
   void * operator new(size_t, int hi) {
-    return heapMalloc(FDIntervals::sizeOf(hi));
+    return oz_heapMalloc(FDIntervals::sizeOf(hi));
   }
 #ifdef DEBUG_CHECK
   void * operator new (size_t)  {
@@ -101,7 +101,7 @@ public:
   }
 #endif
   void dispose(void) {
-    freeListDispose(this, sizeOf());
+    oz_freeListDispose(this, sizeOf());
   }
   int getHigh(void) { return high; }
 
@@ -185,10 +185,10 @@ public:
   int currBvMaxElem(void) const { return 32*high-1; }
   int getHigh(void) { return high; }
   void * operator new(size_t, int hi) {
-    return heapMalloc(FDBitVector::sizeOf(hi));
+    return oz_heapMalloc(FDBitVector::sizeOf(hi));
   }
   void dispose(void) {
-    freeListDispose(this, sizeOf());
+    oz_freeListDispose(this, sizeOf());
   }
 
   void print(ostream &, int = 0) const;

@@ -44,7 +44,7 @@ public:
 
   void dispose(void) {
     disposeS();
-    freeListDispose(this, sizeof(SimpleVar));
+    oz_freeListDispose(this, sizeof(SimpleVar));
   }
 
   void printStream(ostream &out,int depth = 10) {

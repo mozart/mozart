@@ -87,5 +87,5 @@ void ExportedProxyVar::disposeV()
       discardBorrowHeadSaved(ms, oti, credit);
     }
   }
-  freeListDispose(this, sizeof(ExportedProxyVar));
+  oz_freeListDispose(this, sizeof(ExportedProxyVar));
 }

@@ -1060,7 +1060,7 @@ OZ_Return AM::suspendOnVarList(Thread *thr)
 //
 TaggedRef oz_newVariable(Board *b)
 {
-  TaggedRef *ret = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
+  TaggedRef *ret = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
   *ret = b->getOptVar();
   return makeTaggedRef(ret);
 }

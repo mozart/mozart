@@ -31,7 +31,7 @@ private:
   size_t chunk_size;
   char * chunk_data;
   char * allocate(int size) {
-    return (char *) doubleMalloc(size);
+    return (char *) oz_heapMalloc(size);
   }
   char * copyChunkData(void) {
     return (char *) memcpy(allocate(chunk_size), chunk_data, chunk_size);

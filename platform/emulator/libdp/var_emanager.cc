@@ -69,5 +69,5 @@ void ExportedManagerVar::disposeV()
   if (!isMarshaled) {
     discardOwnHeadSaved(oti, credit);
   }
-  freeListDispose(this, sizeof(ExportedManagerVar));
+  oz_freeListDispose(this, sizeof(ExportedManagerVar));
 }

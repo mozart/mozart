@@ -91,7 +91,7 @@ public:
   }
   virtual void          disposeV() {
     Assert(isEmptySuspList());
-    freeListDispose(this, sizeof(GCStubVar));
+    oz_freeListDispose(this, sizeof(GCStubVar));
   }
 
   //

@@ -217,7 +217,7 @@ public:
     // FiniteDomain &getDom (meaningless for ofs)
 
 
-  void dispose(void) { freeListDispose(this, sizeof(OzOFVariable)); }
+  void dispose(void) { oz_freeListDispose(this, sizeof(OzOFVariable)); }
   void printStream(ostream &out,int depth = 10) {
     oz_printStream(getLabel(),out,0,0);
     out << '(';
