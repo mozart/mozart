@@ -2751,29 +2751,6 @@ OZ_C_proc_begin(BIthreadRaise,2)
 OZ_C_proc_end 
 
 /*
- * terminate a thread
- */
-OZ_C_proc_begin(BIthreadTerminate,1)
-{
-  OZ_declareThreadArg(0,th);
-
-  if (th->isDeadThread()) return PROCEED;
-
-  th->terminate();
-
-  if (!th->isRunnable()) {
-    th->markPropagated();
-    am.scheduleThread(th);
-  }
-
-  if (am.currentThread == th) {
-    return BI_TERMINATE;
-  }
-  return PROCEED;
-}
-OZ_C_proc_end 
-
-/*
  * suspend a thread
  *   is done lazy: when the thread becomes running the stop flag is tested
  */
@@ -6893,7 +6870,6 @@ BIspec allSpec[] = {
   {"Thread.this",1,BIthreadThis},
   {"Thread.suspend",1,BIthreadSuspend},
   {"Thread.resume",1,BIthreadResume},
-  {"Thread.terminate",1,BIthreadTerminate},
   {"Thread.injectException",2,BIthreadRaise},
   {"Thread.preempt",1,BIthreadPreempt},
   {"Thread.setPriority",2,BIthreadSetPriority},
