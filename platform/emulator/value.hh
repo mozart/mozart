@@ -1200,6 +1200,10 @@ public:
   Abstraction *getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
 			 Bool &defaultsUsed);
 
+  TaggedRef getFallbackNew();
+  TaggedRef getFallbackSend();
+  TaggedRef getFallbackApply();
+
   Bool lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X);
 
   TaggedRef classGetFeature(TaggedRef lit) { return features->getFeature(lit); }

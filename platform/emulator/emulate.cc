@@ -2163,13 +2163,13 @@ LBLdispatcher:
 
 
   bombApply:
-    Assert(e->methApplHdl != makeTaggedNULL());
+    Assert(tagged2ObjectClass(cls)->getFallbackApply());
 
     X[1] = makeMessage(arity,ami->methName,X);
     X[0] = origCls;
 
     predArity = 2;
-    predicate = tagged2Const(e->methApplHdl);
+    predicate = tagged2Const(tagged2ObjectClass(cls)->getFallbackApply());
     goto LBLcall;
   }
 
@@ -2234,8 +2234,8 @@ LBLdispatcher:
 	 if (typ==Co_Object) {
 	   COUNT(nonoptsendmsg);
 	   Object *o = (Object*) predicate;
-	   Assert(e->sendHdl != makeTaggedNULL());
-	   def = tagged2Abstraction(e->sendHdl);
+	   Assert(o->getClass()->getFallbackSend());
+	   def = tagged2Abstraction(o->getClass()->getFallbackSend());
 	   /* {Obj Msg} --> {Send Msg Class Obj} */
 	   X[predArity++] = makeTaggedConst(o->getClass());
 	   X[predArity++] = makeTaggedConst(o);
@@ -3094,13 +3094,13 @@ LBLdispatcher:
       if (!isTailCall) PC = PC+3;
 
       /* the following adapted from bombApply */
-      Assert(e->methApplHdl != makeTaggedNULL());
+      Assert(tagged2ObjectClass(pred)->getFallbackApply());
 
       X[1] = makeMessage(gci->arity,gci->mn,X);
       X[0] = pred;
       
       predArity = 2;
-      predicate = tagged2Const(e->methApplHdl);
+      predicate = tagged2Const(tagged2ObjectClass(pred)->getFallbackApply());
       goto LBLcall;
     }
 
