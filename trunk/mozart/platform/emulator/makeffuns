@@ -17,7 +17,8 @@
 
 
 srcdir=$1
-OZINCDIR=$srcdir/../include
+OZVERSION=$2
+
 ozc=oz.c
 in=$srcdir/oz.h
 initffuns=initffuns.cc
@@ -32,7 +33,7 @@ EOF
 
 grep _FUNDECL $in | grep -v define | sed -e 's/extern //' >> $ozc
 
-grep OZVERSION $OZINCDIR/config.h >> $ozc
+echo "#define OZVERSION \"$OZVERSION\"" >> $ozc
 
 cat >> $ozc << EOF
 
