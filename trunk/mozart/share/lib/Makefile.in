@@ -439,8 +439,10 @@ tags:
 	--regex='/[ \t]*meth\([ \t]+\|[ \t]*![ \t]*\)\([A-Za-z0-9][A-Za-z0-9_]*\|`.+`|'\''.+'\''\)/\2/' \
 	$(ALLSRCS)
 
-bootstrap: ${OZMA_LIB}
-	$(MAKE) Init.ozc all OZBATCH=$(SRCDIR)/ozbatch.sh OZ_LIB=.
+bootstrap:
+	$(MAKE) Init.ozc ozbatch CP.ozc Compiler.ozc Gump.ozc \
+		OZBATCH=$(SRCDIR)/ozbatch.sh OZ_LIB=.
+	$(MAKE) all OZBATCH=./ozbatch OZ_LIB=. OZINIT=./Init.ozc
 
 #
 # testing components locally
