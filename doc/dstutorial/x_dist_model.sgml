@@ -15,7 +15,7 @@ and stationary single-threaded objects.
 
 <SECTION><TITLE>Objects</TITLE>
 
-<P>The most critical entities in a distributed application
+<P>The most critical entities
 in terms of network efficiency are the objects.
 Objects have a state that has to be updated in a
 globally-consistent way.
