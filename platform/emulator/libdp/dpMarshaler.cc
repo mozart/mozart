@@ -120,9 +120,9 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
   PD((UNMARSHAL,"Borrow"));
 #ifndef USE_FAST_UNMARSHALER
   DSite*  sd=unmarshalDSiteRobust(bs,error);
-  if(*error) return 0;
+  if(*error)  {Assert(0); return 0;}
   int si=unmarshalNumberRobust(bs,error);
-  if(*error) return 0;
+  if(*error) {Assert(0); return 0;}
 #else
   DSite*  sd=unmarshalDSite(bs);
   int si=unmarshalNumber(bs);
@@ -155,7 +155,7 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
     PD((UNMARSHAL,"borrow found"));
 #ifndef USE_FAST_UNMARSHALER
     cred = unmarshalCreditRobust(bs,error);    
-    if(*error) return 0;
+    if(*error){ Assert(0); return 0;}
 #else
     cred = unmarshalCredit(bs);    
 #endif
@@ -167,16 +167,17 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
       Assert(mt==DIF_SECONDARY);
 #ifndef USE_FAST_UNMARSHALER
       DSite* s=unmarshalDSiteRobust(bs,error);
-      if(*error) return 0;
+      if(*error){ Assert(0);return 0;}
 #else
       DSite* s=unmarshalDSite(bs);
 #endif
       b->addSecondaryCredit(cred,s);}
     ob = b;
+    // Assert(b->getValue() != (OZ_Term) 0);
     return b->getValue();}
 #ifndef USE_FAST_UNMARSHALER
   cred = unmarshalCreditRobust(bs,error);    		
-  if(*error) return 0;
+  if(*error) {Assert(0);return 0;}
 #else
   cred = unmarshalCredit(bs);    		
 #endif
@@ -191,7 +192,7 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
   Assert(mt==DIF_SECONDARY);
 #ifndef USE_FAST_UNMARSHALER
   DSite* site = unmarshalDSiteRobust(bs,error);    		  
-  if(*error) return 0;
+  if(*error) {Assert(0);return 0;}
 #else
   DSite* site = unmarshalDSite(bs);    		  
 #endif
@@ -531,8 +532,13 @@ OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag)
       GName *gnclass = unmarshalGName(&clas,bs);
 #endif
       if(!gnobj){
-	BT->maybeFreeBorrowEntry(bi);
-	return obj;}
+	if(!(BT->maybeFreeBorrowEntry(bi))){
+	  ob->mkRef(obj,ob->getFlags());
+	  //printf("indx:%d %xd\n",((BorrowEntry *)ob)->getNetAddress()->index,
+	  //	 ((BorrowEntry *)ob)->getNetAddress()->site);
+	}
+	return obj;
+      }
       
       Object *o = new Object(bi);
       o->setGName(gnobj);
