@@ -53,8 +53,10 @@ prepare
 		'Explorer'('ExploreOne':  [one]
 			   'ExploreAll':  [all]
 			   'ExploreBest': [best])
-
-		'Inspector'('Inspect': [inspect])]
+\ifdef INSPECTOR
+		'Inspector'('Inspect': [inspect])
+\endif
+	       ]
 
    fun {Dots M Fs}
       case Fs of nil then M
