@@ -147,8 +147,21 @@ public:
   // Garbage collection and copying
   //
 public:
-  Bool    cacIsMarked(void);
-  Board * cacGetFwd(void);
+  Bool cacIsMarked(void) {
+    return hasMarkTwo();
+  }
+  Board * cacGetFwd(void) {
+    Assert(cacIsMarked());
+    return getParentInternal();
+  }
+  int32 ** cacGetMarkField(void) {
+    return (int32 **) &parentAndFlags;
+  }
+  void cacMark(Board * fwd) {
+    Assert(!cacIsMarked());
+    parentAndFlags.set((void *) fwd, BoTag_MarkTwo);
+  }
+
   Bool    cacIsAlive(void);
 
   Board * sCloneBoard(void);
@@ -202,11 +215,15 @@ public:
   void decRunnableThreads(void);
 
   //
+  // All taggedrefs in a row for garbage collection
+  //
+private:
+  TaggedRef script, status, rootVar;
+
+  //
   // Script and script installation
   //
 private:
-  TaggedRef script;
-
   OZ_Return installScript(Bool isMerging);
 
   Bool installDown(Board *);
@@ -305,9 +322,6 @@ public:
   //
   // Status variable
   //
-private:
-  TaggedRef status;
-  
 public:
   TaggedRef getStatus() { 
     return status; 
@@ -329,9 +343,6 @@ public:
   //
   // Root variable
   //
-private:
-  TaggedRef rootVar;
-
 public:
   TaggedRef getRootVar() {
     return makeTaggedRef(&rootVar);

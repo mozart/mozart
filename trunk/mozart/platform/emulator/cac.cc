@@ -29,11 +29,6 @@
  *
  */
 
-/****************************************************************************
- ****************************************************************************/
-
-#include "cac.hh"
-
 #include "tagged.hh"
 #include "board.hh"
 #include "var_base.hh"
@@ -64,13 +59,103 @@
 #endif
 
 /*
- * Notes on global stucture of garbage collection and space cloning
- *
- * The routines fall into several classes:
- *  - Collection
- *  - Recursion
+ * Do some bad style renaming
  *
  */
+
+#ifdef G_COLLECT
+
+#define OZ_cacBlock              OZ_gCollectBlock
+#define OZ_cacAllocBlock         OZ_gCollectAllocBlock
+#define oz_cacTerm               oz_gCollectTerm
+
+#define _cacRecurse              gCollectRecurse
+#define _cac                     gCollect
+#define _cacRecurseV             gCollectRecurseV
+#define _cacV                    gCollectV
+
+#define _cacMark                 gCollectMark
+#define _cacFix                  gCollectFix
+
+#define _cacConstTermInline      gCollectConstTermInline
+#define _cacConstRecurse         gCollectConstRecurse
+
+#define _cacBoard                gCollectBoard
+
+#define _cacName                 gCollectName
+
+#define _cacVarRecurse           gCollectVarRecurse
+#define _cacVarInline            gCollectVarInline
+
+#define _cacSRecord              gCollectSRecord
+
+#define _cacSuspendableInline    gCollectSuspendableInline
+#define _cacSuspendable          gCollectSuspendable
+
+#define _cacLocalInline          gCollectLocalInline
+#define _cacLocalRecurse         gCollectLocalRecurse
+
+#define _cacExtension            gCollectExtension
+#define _cacExtensionRecurse     gCollectExtensionRecurse
+
+#define _cacPendThreadEmul       gCollectPendThreadEmul
+
+#define _cacReallocStatic        gCollectReallocStatic
+
+#define _cacRefsArray            gCollectRefsArray
+
+#define _cacSuspList             gCollectSuspList
+#define _cacLocalSuspList        gCollectLocalSuspList
+
+#endif
+
+
+#ifdef S_CLONE
+
+#define OZ_cacBlock              OZ_sCloneBlock
+#define OZ_cacAllocBlock         OZ_sCloneAllocBlock
+#define oz_cacTerm               oz_sCloneTerm
+
+#define _cacRecurse              sCloneRecurse
+#define _cac                     sClone
+#define _cacRecurseV             sCloneRecurseV
+#define _cacV                    sCloneV
+
+#define _cacMark                 sCloneMark
+#define _cacFix                  sCloneFix
+
+#define _cacConstTermInline      sCloneConstTermInline
+#define _cacConstRecurse         sCloneConstRecurse
+
+#define _cacBoard                sCloneBoard
+
+#define _cacName                 sCloneName
+
+#define _cacVarRecurse           sCloneVarRecurse
+#define _cacVarInline            sCloneVarInline
+
+#define _cacSRecord              sCloneSRecord
+
+#define _cacSuspendableInline    sCloneSuspendableInline
+#define _cacSuspendable          sCloneSuspendable
+
+#define _cacLocalInline          sCloneLocalInline
+#define _cacLocalRecurse         sCloneLocalRecurse
+
+#define _cacExtension            sCloneExtension
+#define _cacExtensionRecurse     sCloneExtensionRecurse
+
+#define _cacPendThreadEmul       sClonePendThreadEmul
+
+#define _cacReallocStatic        sCloneReallocStatic
+
+#define _cacRefsArray            sCloneRefsArray
+
+#define _cacSuspList             sCloneSuspList
+#define _cacLocalSuspList        sCloneLocalSuspList
+
+#endif
+
 
 
 /*
@@ -94,16 +179,8 @@ int     cs_copy_size  = 0;
 #endif
 #endif
 
-#ifdef G_COLLECT
 
-/*
- * Forward reference
- */
-
-static void gCollectCode(CodeArea *block);
-static void gCollectCode(ProgramCounter PC);
-
-#else
+#ifdef S_CLONE
 
 inline 
 void oz_sCloneTerm(TaggedRef & f, TaggedRef & t) {
@@ -181,15 +258,14 @@ void exitCheckSpace() {
 
 
 /*
- * Allocate and copy memory blocks.
+ * Allocate and copy memory blocks for which the size is known at compile
+ * time.
  * 
  */
 
 inline
 void * _cacReallocStatic(void * p, size_t sz) {
-  // Use for blocks where size is known statically at compile time
-  DebugCheck(sz%sizeof(int) != 0,
-	     OZ_error("_cacReallocStatic: can only handle word sized blocks"););
+  Assert(sz % sizeof(int) == 0);
 
   if (sz > 24) {
     return memcpy(CAC_MALLOC(sz), p, sz);
@@ -199,34 +275,22 @@ void * _cacReallocStatic(void * p, size_t sz) {
   
     switch(sz) {
     case 24:
-      to[0]=frm[0];
-      to[1]=frm[1];
-      to[2]=frm[2];
-      to[3]=frm[3];
-      to[4]=frm[4];
-      to[5]=frm[5];
+      to[0]=frm[0]; to[1]=frm[1]; to[2]=frm[2];
+      to[3]=frm[3]; to[4]=frm[4]; to[5]=frm[5];
       break;
     case 20:
-      to[0]=frm[0];
-      to[1]=frm[1];
-      to[2]=frm[2];
-      to[3]=frm[3];
-      to[4]=frm[4];
+      to[0]=frm[0]; to[1]=frm[1]; to[2]=frm[2];
+      to[3]=frm[3]; to[4]=frm[4];
       break;
     case 16:
-      to[0]=frm[0];
-      to[1]=frm[1];
-      to[2]=frm[2];
+      to[0]=frm[0]; to[1]=frm[1]; to[2]=frm[2];
       to[3]=frm[3];
       break;
     case 12:
-      to[0]=frm[0];
-      to[1]=frm[1];
-      to[2]=frm[2];
+      to[0]=frm[0]; to[1]=frm[1]; to[2]=frm[2];
       break;
     case 8:
-      to[0]=frm[0];
-      to[1]=frm[1];
+      to[0]=frm[0]; to[1]=frm[1];
       break;
     case 4:
       to[0]=frm[0];
@@ -242,37 +306,6 @@ void * _cacReallocStatic(void * p, size_t sz) {
 
 #ifdef S_CLONE
 
-/*
- * The copy trail: CpTrail
- *
- * During copying fields that are overwritten must be saved in order 
- * to reestablish the space that has been copied.
- *
- */
-
-class CpTrail: public Stack {
-public:
-  CpTrail() : Stack(1024, Stack_WithMalloc) {}
-  ~CpTrail() {}
-  
-  void save(int * p) {
-    // Save content and address
-    ensureFree(2);
-    push((StackEntry) *p, NO);
-    push((StackEntry) p,  NO);
-  }
-
-  void unwind(void) {
-    while (!isEmpty()) {
-      int * p = (int *) pop();
-      int   v = (int)   pop();
-      *p = v;
-    } 
-  }
-};
-
-static CpTrail cpTrail;
-
 #define CPTRAIL(p) cpTrail.save(((int *) p))
 
 #else
@@ -282,19 +315,9 @@ static CpTrail cpTrail;
 #endif
 
 /*
- * GCMARK
+ * Marking of collected data structures
  *
- */
-
-/*
- * Check if object in from-space (elem) is already collected.
- *   Then return the forward pointer to to-space.
- */
-#define CHECKCOLLECTED(elem,Type)  \
-if (GCISMARKED(elem)) {return (Type) GCUNMARK(elem);}
-
-
-/*
+ *
  * Write a marked forward pointer (pointing into the to-space)
  * into a structure in the from-space.
  *
@@ -307,143 +330,13 @@ if (GCISMARKED(elem)) {return (Type) GCUNMARK(elem);}
   CPTRAIL(fromPtr);                       \
   *((int32 *) fromPtr) = GCMARK(newValue);
 
-#define STOREFWDFIELD(d,t)                 \
-  STOREFWDNOMARK(d->cacGetMarkField(), t); \
+#define STOREFWDFIELD(d,t) \
+  CPTRAIL(d->cacGetMarkField()); \
   d->cacMark(t);
 
 
-/*
- * Section ():
- *    Maintaining external references into heap
- *
- */
-
-#ifdef G_COLLECT
-
-class ExtRefNode;
-static ExtRefNode *extRefs = NULL;
-
-class ExtRefNode {
-public:
-  USEHEAPMEMORY;
-
-  TaggedRef *elem;
-  ExtRefNode *next;
-
-  ExtRefNode(TaggedRef *el, ExtRefNode *n): elem(el), next(n){ 
-    Assert(elem); 
-  }
-
-  void remove(void) { 
-    elem = NULL; 
-  }
-  ExtRefNode *add(TaggedRef *el) { 
-    return new ExtRefNode(el,this); 
-  }
-  
-  ExtRefNode *gCollect(void) {
-    ExtRefNode *aux = this;
-    ExtRefNode *ret = NULL;
-    while (aux) {
-      if (aux->elem) {
-	ret = new ExtRefNode(aux->elem,ret);
-	oz_gCollectTerm(*ret->elem,*ret->elem);
-      }
-      aux = aux->next;
-    }
-    return ret;
-  }
-
-  ExtRefNode *protect(TaggedRef *el) {
-    Assert(oz_isRef(*el) || !oz_isVariable(*el));
-    Assert(!find(el));
-    return add(el);
-  }
-
-  Bool unprotect(TaggedRef *el) {
-    Assert(el);
-    ExtRefNode *aux = extRefs;
-    while (aux) {
-      if (aux->elem==el) {
-	aux->remove();
-	return OK;
-      }
-      aux = aux->next;
-    }
-    return NO;
-  }
-
-  ExtRefNode * find(TaggedRef *el) {
-    Assert(el);
-    ExtRefNode *aux = extRefs;
-    while (aux) {
-      if (aux->elem==el)
-	break;
-      aux = aux->next;
-    }
-    return aux;
-  }
-
-};
-
-
-Bool oz_protect(TaggedRef *ref) {
-  extRefs = extRefs->protect(ref);
-  return OK;
-}
-
-/* protect a ref, that will never change its initial value
- *  --> no need to remember it, if it's a small int or atom 
- */
-Bool oz_staticProtect(TaggedRef *ref) {
-  if (needsNoCollection(*ref))
-    return OK;
-  
-  return oz_protect(ref);
-}
-
-Bool oz_unprotect(TaggedRef *ref) {
-  ExtRefNode *aux = extRefs->find(ref);
-
-  if (aux == NULL)
-    return NO;
-
-  aux->remove();
-  return OK;
-} 
 
 /*
- * Garbage collection needs to be aware of certain objects, e.g.,
- * since these objects store references into the heap. The gc-routine
- * of `GCMeManager' is called after all collection has been done, such
- * that the individual gc routines of the objects can avoid copying
- * references that are only established by themselves (in other words,
- * memory leaks can be avoided).
- */
-
-#ifdef NEW_NAMER
-GCMeManager * GCMeManager::_head;
-#endif
-
-#endif
-
-
-/*
- * Section ()
- *    Collection stacks
- *
- */
-
-#ifdef G_COLLECT
-
-VarFix   varFix;
-CacStack cacStack;
-
-#endif
-
-
-/*
- * Section () 
  *   Collection of terms
  *
  */
@@ -506,28 +399,10 @@ RefsArray _cacRefsArray(RefsArray r) {
 
 #else
 
-#ifdef DEBUG_CHECK
-
-inline
-int NEEDSCOPYING(Board * bb) {
- return !bb->hasMarkOne();
-}
-
-#else
-
 #define NEEDSCOPYING(bb) (!(bb)->hasMarkOne())
 
 #endif
 
-#endif
-
-
-inline
-void Board::_cacMark(Board * fwd) {
-  Assert(!cacIsMarked());
-  CPTRAIL((int32 *) &parentAndFlags);
-  parentAndFlags.set((void *) fwd, BoTag_MarkTwo);
-}
 
 inline
 Board * Board::_cacBoard(void) {
@@ -549,7 +424,7 @@ Board * Board::_cacBoard(void) {
 
   cacStack.push(ret,PTR_BOARD);
 
-  bb->_cacMark(ret);
+  STOREFWDFIELD(bb,ret);
 
   return ret;
 }
@@ -562,7 +437,10 @@ Board * Board::_cacBoard(void) {
 
 inline
 Name *Name::_cacName(void) {
-  CHECKCOLLECTED(homeOrGName, Name *);
+
+  if (cacIsMarked())
+    return cacGetFwd();
+  
 #ifdef G_COLLECT
   GName * gn = NULL;
 
@@ -579,7 +457,7 @@ Name *Name::_cacName(void) {
 
     Name *aux = (Name*) _cacReallocStatic(this,sizeof(Name));
 
-    STOREFWDMARK(&homeOrGName, aux);
+    STOREFWDFIELD(this, aux);
     
 #ifdef G_COLLECT
     if (gn) {
@@ -752,14 +630,18 @@ inline
 void OzVariable::_cacVarRecurse(void) {
   
   switch (getType()) {
-  case OZ_VAR_SIMPLE:  Assert(0); break;
-  case OZ_VAR_FUTURE:  ((Future *)this)->_cacRecurse(); break;
-  case OZ_VAR_BOOL:    Assert(0); break;
-  case OZ_VAR_FD:      Assert(0); break;
-  case OZ_VAR_OF:      ((OzOFVariable*)this)->_cacRecurse(); break;
-  case OZ_VAR_FS:      Assert(0); break;
-  case OZ_VAR_CT:      ((OzCtVariable*)this)->_cacRecurse(); break;
-  case OZ_VAR_EXT:     ((ExtVar *)this)->_cacRecurseV(); break;
+  case OZ_VAR_FUTURE:  
+    ((Future *)      this)->_cacRecurse(); 
+    break;
+  case OZ_VAR_OF:      
+    ((OzOFVariable*) this)->_cacRecurse(); 
+    break;
+  case OZ_VAR_CT:      
+    ((OzCtVariable*) this)->_cacRecurse(); 
+    break;
+  case OZ_VAR_EXT:     
+    ((ExtVar *)      this)->_cacRecurseV(); 
+    break;
   default: 
     Assert(0);
   }
@@ -797,21 +679,14 @@ BigInt * BigInt::gCollect(void) {
 #endif
 
 
-/*
- *  Thread items methods;
- *
- */
-
-/* collect LTuple, SRecord */
-
 inline
 LTuple * LTuple::_cac(void) {
   // Does basically nothing, the real stuff is in Recurse
 
   GCDBG_INFROMSPACE(this);
 
-  if (GCISMARKED(args[0]))
-    return (LTuple *) GCUNMARK(args[0]);
+  if (cacIsMarked())
+    return cacGetFwd();
   
   LTuple * to = (LTuple *) CAC_MALLOC(sizeof(LTuple));
 
@@ -819,7 +694,7 @@ LTuple * LTuple::_cac(void) {
   to->args[0] = args[0];
 
   // Do not store foreward! Recurse takes care of this!
-  args[0] = GCMARK(to->args);
+  cacMark(to);
 
   cacStack.push(this, PTR_LTUPLE);
 
@@ -830,34 +705,26 @@ inline
 SRecord *SRecord::_cacSRecord(void) {
   Assert(this);
 
-  CHECKCOLLECTED(label, SRecord *);
+  if (cacIsMarked())
+    return cacGetFwd();
   
-  int len = (getWidth()-1)*sizeof(TaggedRef)+sizeof(SRecord);
-
-  SRecord *ret = (SRecord*) CAC_MALLOC(len);
+  SRecord * to = 
+    (SRecord*) CAC_MALLOC((getWidth()-1)*sizeof(TaggedRef)+sizeof(SRecord));
   
-  ret->label       = label;
-  ret->recordArity = recordArity;
+  to->recordArity = recordArity;
 
-  STOREFWDMARK(&label, ret);
+  STOREFWDFIELD(this, to);
 
   cacStack.push(this, PTR_SRECORD);
-
-  return ret;
-}
-
-#ifdef G_COLLECT
-
-OZ_Propagator * OZ_Propagator::cac(void) {
-  OZ_Propagator * to = (OZ_Propagator *) oz_hrealloc(this, sizeOf());
 
   return to;
 }
 
-#endif
 
-// ===================================================================
-// Extension
+/*
+ * Extension
+ *
+ */
 
 inline
 TaggedRef _cacExtension(TaggedRef term) {
@@ -972,8 +839,7 @@ inline int isNowMarked(OZ_Term t)
 }
 
 void WeakDictionary::gCollectRecurseV(void) {
-  if (stream) 
-    oz_gCollectTerm(stream, stream);
+  oz_gCollectTerm(stream, stream);
 }
 
 void WeakDictionary::sCloneRecurseV(void) {
@@ -1089,115 +955,6 @@ void gCollect_finalize()
 
 
 
-#ifdef G_COLLECT
-
-//*****************************************************************************
-//                               AM::gc            
-//*****************************************************************************
-
-
-// This method is responsible for the heap garbage collection of the
-// abstract machine, ie that all entry points into heap are properly 
-// treated and references to variables are properly updated
-void AM::gCollect(int msgLevel) {
-
-  (*gCollectFrameToProxy)();
-
-#ifdef DEBUG_CHECK
-  isCollecting = OK;
-#endif
-
-  ozstat.initGcMsg(msgLevel);
-  
-  MemChunks * oldChain = MemChunks::list;
-
-#ifndef NEW_NAMER
-  oz_varCleanup();  /* drop bound variables */
-#endif
-
-  GCDBG_INITSPACE;
-
-  initMemoryManagement();
-
-  for (int j=NumberOfXRegisters; j--; )
-    xRegs[j] = taggedVoidValue;
-  
-  Assert(trail.getUsed() == 1);
-  Assert(cachedSelf==0);
-  Assert(ozstat.currAbstr==NULL);
-  Assert(_inEqEq==FALSE);
-  Assert(_rootBoard);
-
-  _rootBoard = _rootBoard->gCollectBoard();   // must go first!
-  setCurrent(_currentBoard->gCollectBoard());
-
-  aritytable.gCollect();
-  threadsPool.gCollect();
-
-  // mm2: Assert(isEmptySuspendVarList());
-  emptySuspendVarList();
-
-  if (defaultExceptionHdl)
-    oz_gCollectTerm(defaultExceptionHdl,defaultExceptionHdl);
-  oz_gCollectTerm(debugStreamTail,debugStreamTail);
-
-  CodeArea::gCollectCodeAreaStart();
-  PrTabEntry::gCollectPrTabEntries();
-  extRefs = extRefs->gCollect();
-  
-  oz_gCollectTerm(finalize_handler,finalize_handler);
-  cacStack.gCollectRecurse();
-  gCollect_finalize();
-  gCollectWeakDictionaries();
-  gCollectDeferWatchers();
-  (*gCollectPerdioRoots)();
-  cacStack.gCollectRecurse();
-
-  (*gCollectBorrowTableUnusedFrames)();
-  cacStack.gCollectRecurse();
-
-#ifdef NEW_NAMER
-  GCMeManager::gCollect();
-  cacStack.gCollectRecurse();
-#endif
-
-  weakStack.recurse();		// must come after namer gc
-
-// -----------------------------------------------------------------------
-// ** second phase: the reference update stack has to checked now
-
-  varFix.gCollectFix();
-
-  Assert(cacStack.isEmpty());
-
-  GT.gCollectGNameTable();
-  //   MERGECON gcPerdioFinal();
-  gCollectSiteTable();
-  (*gCollectPerdioFinal)();
-  Assert(cacStack.isEmpty());
-
-  GCDBG_EXITSPACE;
-
-  CodeArea::gCollectCollectCodeBlocks();
-  AbstractionEntry::freeUnusedEntries();
-
-  oldChain->deleteChunkChain();
-
-// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//                garbage collection is finished here
-
-  cachedStack = NULL;
-
-  ozstat.printGcMsg(msgLevel);
-  
-#ifdef DEBUG_CHECK
-  isCollecting = NO;
-#endif
-
-} // AM::gc
-
-#endif
-
 /*
  * After collection has finished, update variable references
  *
@@ -1229,166 +986,6 @@ void VarFix::_cacFix(void) {
 
 }
 
-
-#ifdef S_CLONE
-
-#ifdef CS_PROFILE
-static Bool across_redid = NO;
-#endif
-
-Board * Board::clone(void) {
-
-#ifdef CS_PROFILE
-  across_redid  = NO;
-  across_chunks = NO;
-#endif
-
-#ifdef DEBUG_CHECK
-  isCollecting = OK;
-#endif
-
-  unsigned int starttime = 0;
-
-  if (ozconf.timeDetailed)
-    starttime = osUserTime();
-
-#ifdef CS_PROFILE
-redo: 
-  if (across_redid)
-    OZ_error("Redoing cloning across chunk boundaries. Giving up!\n");
-  
-  if (across_chunks)
-    across_redid = OK;
-
-  across_chunks = NO;
-
-  cs_orig_start = (int32 *) heapTop;
-#endif
-
-  Assert(!isCommitted());
-
-  setGlobalMarks();
-  
-  Board * copy = sCloneBoard();
-  
-  Assert(copy);
-
-  cacStack.sCloneRecurse();
-  
-  varFix.sCloneFix();
-  
-#ifdef NEW_NAMER
-  if (am.isPropagatorLocation()) {
-    GCMeManager::sClone();
-  }
-#endif
-
-  cpTrail.unwind();
-  
-  unsetGlobalMarks();
-  
-#ifdef CS_PROFILE
-  if (across_chunks) {
-    goto redo;
-  }
-
-  cs_copy_size = cs_orig_start - ((int32 *) heapTop);
-  cs_orig_start = (int32 *) heapTop;
-  cs_copy_start = (int32*) malloc(4 * cs_copy_size + 256);
-
-  {
-    int n = cs_copy_size;
-
-    while (n) {
-      *(cs_copy_start + n) = *(cs_orig_start + n);
-      n--;
-    }
-
-  }
-#endif
-
-  if (ozconf.timeDetailed)
-    ozstat.timeForCopy.incf(osUserTime()-starttime);
-
-#ifdef DEBUG_CHECK
-  isCollecting = NO;
-#endif
-
-  return copy;
-}
-
-#endif
-
-
-
-#ifdef G_COLLECT
-
-//*****************************************************************************
-//                                GC-METHODS
-//*****************************************************************************
-
-
-/*
- * class Arity is not allocated on heap!
- * but must collect the list && the values in keytable
- */
-inline
-void Arity::gCollect(void) {
-  Arity *aux = this;
-  while(aux) {
-    if (!aux->isTuple()) {
-      for (int i = aux->getSize(); i--; ) {
-	if (aux->table[i].key) {
-	  oz_gCollectTerm(aux->table[i].key,aux->table[i].key);
-	}
-      }
-    }
-    oz_gCollectTerm(aux->list,aux->list);
-    aux = aux->next;
-  }
-}
-
-void ArityTable::gCollect(void) {
-  for (int i = size; i--; ) {
-    if (table[i] != NULL)
-      (table[i])->gCollect();
-  }
-}
-
-void PrTabEntry::gCollectPrTabEntries(void) {
-  for (PrTabEntry *aux = allPrTabEntries; aux; aux=aux->next)
-    OZ_gCollectBlock(&(aux->printname),&(aux->printname),3);    
-}
-
-void AbstractionEntry::freeUnusedEntries()
-{
-  AbstractionEntry *aux = allEntries;
-  allEntries = NULL;
-  while (aux) {
-    AbstractionEntry *aux1 = aux->next;
-    if (aux->collected || 
-	aux->abstr==makeTaggedNULL()) { 
-      // RS: HACK alert: compiler might have reference to
-      // abstraction entries: how to detect them??
-      aux->collected = NO;
-      aux->next  = allEntries;
-      allEntries = aux;
-    } else {
-      delete aux;
-    }
-    aux = aux1;
-  }
-}
-
-inline
-void AbstractionEntry::gCollectAbstractionEntry(void) {
-  if (this==NULL || collected) return;
-
-  collected = OK;
-  oz_cacTerm(abstr,abstr);
-}
-
-#endif
 
 /*
  * CONST collection
@@ -1881,7 +1478,7 @@ void Thread::_cacRecurse(Thread * fr) {
 
 inline 
 void Propagator::_cacRecurse(Propagator * fr) {
-  _p = fr->_p->cac();
+  _p = (OZ_Propagator *) oz_hrealloc(fr->_p, fr->_p->sizeOf());
   _p->_cac();
 
 }
@@ -2079,9 +1676,7 @@ void Board::_cacRecurse() {
   
   lpq._cac();
 
-  oz_cacTerm(script,script);
-  oz_cacTerm(rootVar,rootVar);
-  oz_cacTerm(status,status);
+  OZ_cacBlock(&script,&script,3);
 
   cacStack.push(&suspList, PTR_SUSPLIST);
   setDistBag(getDistBag()->_cac());
@@ -2107,11 +1702,9 @@ void Board::_cacRecurse() {
 
 inline
 void SRecord::_cacRecurse() {
-  SRecord * to = (SRecord *) GCUNMARK(label);
+  SRecord * to = cacGetFwd();
 
-  oz_cacTerm(to->label,to->label);
-
-  OZ_cacBlock(getRef(), to->getRef(), getWidth());
+  OZ_cacBlock(&label, &(to->label), to->getWidth()+1);
 
 }
 
@@ -2119,14 +1712,14 @@ void SRecord::_cacRecurse() {
 inline
 void LTuple::_cacRecurse() {
   LTuple * frm = this;
-  LTuple * to  = (LTuple *) GCUNMARK(frm->args[0]);
+  LTuple * to  = frm->cacGetFwd();
   TaggedRef aux = oz_deref(to->args[0]);
 
   //
   if (!oz_isLTuple(aux) || tagged2LTuple(aux) != this) {
     frm->args[0] = to->args[0];
     oz_cacTerm(frm->args[0], to->args[0]);
-    STOREFWDMARK(frm->args, to->args);
+    STOREFWDFIELD(frm, to);
   } else {
     to->args[0] = makeTaggedLTuple((LTuple *) to);
   }
@@ -2143,8 +1736,8 @@ void LTuple::_cacRecurse() {
 
     frm = tagged2LTuple(t);
 
-    if (GCISMARKED(frm->args[0])) {
-      to->args[1] = makeTaggedLTuple((LTuple *) GCUNMARK(frm->args[0]));
+    if (frm->cacIsMarked()) {
+      to->args[1] = makeTaggedLTuple(frm->cacGetFwd());
       return;
     }
 
@@ -2155,7 +1748,7 @@ void LTuple::_cacRecurse() {
     
     oz_cacTerm(frm->args[0], to->args[0]);
 
-    STOREFWDMARK(frm->args, to->args);
+    STOREFWDFIELD(frm, to);
 
   } 
   
@@ -2210,156 +1803,6 @@ void CacStack::_cacRecurse(void) {
 }
   
 
-#ifdef G_COLLECT
-
-//*****************************************************************************
-//             AM methods to launch gc under certain conditions
-//*****************************************************************************
-
-
-// signal handler
-void checkGC() {
-  Assert(!am.isCritical());
-  if (getUsedMemory() > unsigned(ozconf.heapThreshold) && ozconf.gcFlag) {
-    am.setSFlag(StartGC);
-  }
-}
-
-void AM::doGCollect() {
-  Assert(oz_onToplevel());
-
-  /* do gc */
-  gCollect(ozconf.gcVerbosity);
-
-  /* calc limits for next gc */
-  int used   = getUsedMemory();
-  int wanted = ((ozconf.heapFree == 100) 
-		? ozconf.heapMaxSize 
-		: max(((long) used) * (100 / (100 - ozconf.heapFree)),
-		      ozconf.heapMinSize));
-
-  /* Try to align as much as possible to end of blocksize */
-  int block_size = HEAPBLOCKSIZE / KB;
-  int block_dist = wanted % block_size; 
-
-  if (block_dist > 0)
-    block_dist = block_size - block_dist;
-
-  wanted += min(block_dist,
-		(((long) wanted) * ozconf.heapTolerance / 100));
-
-  if (wanted > ozconf.heapMaxSize) {
-    if (ozconf.runningUnderEmacs) {
-      OZ_warning("\n*** Heap Max Size exceeded: Increasing from %d to %d.\n",
-		 ozconf.heapMaxSize,wanted);
-      prefixError();
-      fflush(stdout);
-    }
-    ozconf.heapMaxSize = wanted;
-  }
-  
-  ozconf.heapThreshold = wanted;
-  
-  unsetSFlag(StartGC);
-}
-
-//*****************************************************************************
-//       GC Code Area
-//*****************************************************************************
-
-static int codeGCgeneration = CODE_GC_CYLES;
-
-void CodeArea::gCollectCodeBlock()
-{
-  if (referenced == NO) {
-    referenced = OK;
-    gclist->collectGClist();
-  }
-}
-
-void gCollectCode(CodeArea *block) {
-  if (codeGCgeneration!=0)
-    return;
-
-  block->gCollectCodeBlock();
-}
-
-
-void gCollectCode(ProgramCounter PC) {
-  gCollectCode(CodeArea::findBlock(PC));
-}
-
-void CodeGCList::collectGClist()
-{
-  CodeGCList *aux = this;
-  while(aux) {
-    for (int i=aux->nextFree; i--; ) {
-      switch(aux->block[i].tag) {
-      case C_TAGGED:
-	oz_gCollectTerm(*(TaggedRef*)aux->block[i].pc,
-			*(TaggedRef*)aux->block[i].pc);
-	break;
-      case C_ABSTRENTRY:
-	((AbstractionEntry*)*(aux->block[i].pc))->gCollectAbstractionEntry();
-	break;
-      case C_INLINECACHE:
-	((InlineCache*)aux->block[i].pc)->invalidate();
-	break;
-      case C_FREE:
-	break;
-      default:
-	Assert(0);
-      }
-    }
-    aux = aux->next;
-  }
-}
-
-void CodeArea::gCollectCodeAreaStart()
-{
-// #define CODEGCOFF
-#ifndef CODEGCOFF
-  if (ozconf.codeGCcycles == 0) {
-    codeGCgeneration = 1;
-  } else if (++codeGCgeneration >= ozconf.codeGCcycles) {
-    // switch code GC on
-    codeGCgeneration = 0;
-    return;
-  }
-#endif
-
-  CodeArea *code = allBlocks;
-
-  while (code) {
-    code->gCollectCodeBlock();
-    code = code->nextBlock;
-  }
-}
-
-void CodeArea::gCollectCollectCodeBlocks()
-{
-  CodeArea *code = allBlocks;
-  allBlocks = NULL;
-  while (code) {
-    if (code->referenced == NO) {
-      //message("collected(%x): %d\n",code,code->size*sizeof(ByteCode));
-      //displayCode(code->getStart(),5);
-      CodeArea *aux = code;
-      code = code->nextBlock;
-      delete aux;
-    } else {
-      code->referenced = NO;
-      CodeArea *aux    = code;
-      code             = code->nextBlock;
-      aux->nextBlock   = allBlocks;
-      allBlocks        = aux;
-    }
-  }
-}
-
-#endif
-
-
 /*
  * Entry points into garbage collection
  *
@@ -2368,16 +1811,6 @@ void CodeArea::gCollectCollectCodeBlocks()
 
 void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
   
-  /*
-   * Reserve space on the various stacks
-   */
-
-  /*
-   * varFix: at maximum one entry per block field
-   */
-
-  varFix.ensureFree(sz);
-
   register TaggedRef * f = frm - 1;
   register TaggedRef * t = to - 1;
   
@@ -2564,5 +1997,19 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
 Suspendable * Suspendable::_cacSuspendable(void) {
   return (this == NULL) ? (Suspendable *) NULL : _cacSuspendableInline();
 }
+
+OZ_Term * OZ_cacAllocBlock(int n, OZ_Term * frm) {
+  if (n==0)
+    return (OZ_Term *) NULL;
+
+  OZ_Term * to = (OZ_Term *) CAC_MALLOC(n * sizeof(OZ_Term));
+
+  OZ_cacBlock(frm, to, n);
+
+  return to;
+}
+
+
+
 
 

@@ -249,6 +249,7 @@ libTk.a: $(TKOBJS)
 	$(AR) -rc $@ $(TKOBJS) && $(RANLIB) $@
 
 s-clone.lo: cac.cc
+g-collect.o: cac.cc
 
 Space.so: $(SPACEOPOBJS)
 	$(DYNLD) -o $@ $(SPACEOPOBJS)
