@@ -22,19 +22,7 @@ dnl
 
 AC_INIT(oz.el)
 
-if test -n "$oz_default_prefix" && test -d $oz_default_prefix
-then
-  ac_default_prefix=$oz_default_prefix
-fi
-
-SRCDIRA=`(cd $srcdir; pwd)`
-AC_SUBST(SRCDIRA)
-
-TOPDIR=$srcdir/..
-AC_SUBST(TOPDIR)
-
-TOPDIRA=`(cd $srcdir; cd ..; pwd)`
-AC_SUBST(TOPDIRA)
+OZ_INIT
 
 AC_PROG_INSTALL
 
@@ -42,8 +30,12 @@ AC_CHECK_PROGS(EMACS, emacs xemacs)
 AC_CHECK_PROGS(RM, rm)
 AC_CHECK_PROGS(ECHO, echo)
 
-OZPATH=$PATH:$TOPDIRA/bin:$TOPDIRA:$prefix/bin
-AC_PATH_PROG(INSTALLSRC, ozinstallsrc, , $OZPATH)
-AC_SUBST(INSTALLSRC)
+OZ_PATH_PROG(INSTALLSRC, ozinstallsrc)
+OZ_PATH_PROG(MKINSTALLDIRS, mkinstalldirs)
 
 AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [],
+ [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+]))
