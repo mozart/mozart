@@ -477,7 +477,7 @@ int BaseSite::hashPrimary(){
 
 void Site :: marshalPSite(MsgBuffer *buf){
   PD((MARSHAL,"Psite"));
-  marshalDIF(buf,(flags & PERM_SITE)? DIF_SITE_PERM: DIF_PASSIVE);
+  marshalDIF(buf,(flags & PERM_SITE) && !buf->textmode()? DIF_SITE_PERM: DIF_PASSIVE);
   marshalBaseSite(buf);}
 
 #ifdef VIRTUALSITES
