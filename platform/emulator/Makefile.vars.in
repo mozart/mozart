@@ -44,7 +44,7 @@ RANLIB          = @RANLIB@
 AR              = @AR@
 
 INSTALL         = @INSTALL@
-INSTALL_DIR     = $(INSTALL) -m 775 -d
+INSTALL_DIR     = $(TOPDIR)/mkinstalldirs
 INSTALL_BIN     = $(INSTALL) -m 555
 INSTALL_OTHER   = $(INSTALL) -m 444
 LIBS            = @LIBS@
