@@ -65,7 +65,7 @@ OZ_Return LazyVar::addSuspV(TaggedRef * v, Suspendable * susp)
   if(!errorIgnore()){
     if(failurePreemption()) return BI_REPLACEBICALL;}
 
-  addSuspSVar(susp);
+  extVar2Var(this)->addSuspSVar(susp);
   if (!requested) {
     requested = 1;
     sendRequest();
@@ -137,7 +137,8 @@ Bool LazyVar::errorIgnore(){
   return FALSE;}
 
 void LazyVar::wakeAll(){ // mm3 // kost@ who is that???
-  oz_checkSuspensionList(this,pc_all);
+  OzVariable*p=extVar2Var(this);
+  oz_checkSuspensionList(p,pc_all);
 }
 
 void LazyVar::newWatcher(Bool b){

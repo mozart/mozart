@@ -613,16 +613,27 @@ Bool oz_isExtension(TaggedRef t) {
   return oz_isConst(t) && tagged2Const(t)->getType() == Co_Extension;
 }
 
+inline
+OZ_Extension* const2Extension(ConstTerm* p) {
+  return reinterpret_cast<OZ_Extension*>(reinterpret_cast<void**>(p)+1);
+}
+
+inline
+ConstTerm* extension2Const(OZ_Extension* p) {
+  return reinterpret_cast<ConstTerm*>(reinterpret_cast<void**>(p)-1);
+}
+
 inline 
 OZ_Extension * tagged2Extension(TaggedRef t) {
   Assert(oz_isExtension(t));
-  return (OZ_Extension *) (OZ_Container *) tagged2Const(t);
+  return reinterpret_cast<OZ_Extension*>(reinterpret_cast<void**>(tagged2Const(t))+1);
 }
 
 inline 
 TaggedRef makeTaggedExtension(OZ_Extension * s) {
-  return makeTaggedConst((ConstTerm *) (OZ_Container *) s);
+  return makeTaggedConst(reinterpret_cast<ConstTerm*>(reinterpret_cast<void**>(s)-1));
 }
+
 
 /*===================================================================
  * Float
@@ -2433,8 +2444,7 @@ public:
   NO_DEFAULT_CONSTRUCTORS(Builtin)
 
   /* use malloc to allocate memory */
-  static void *operator new(size_t chunk_size)
-  { return ::new char[chunk_size]; }
+  static void *operator new(size_t chunk_size) { return ::new char[chunk_size]; }
   
   Builtin(const char * mn, const char * bn, 
 	  int inArity, int outArity, 

@@ -75,8 +75,8 @@ void NetHashTable::add(NetAddress *na,int bindex){
 	       hvalue,na->site,na->index,bindex));
   GenHashBaseKey* ghn_bk;
   GenHashEntry* ghn_e;
-  GenCast(na,NetAddress*,ghn_bk,GenHashBaseKey*);
-  GenCast(bindex,int,ghn_e,GenHashEntry*);  
+  ghn_bk = (GenHashBaseKey*)(void*) na;
+  ghn_e = (GenHashEntry*)(void*) bindex;
   htAdd(hvalue,ghn_bk,ghn_e);}
 
 void NetHashTable::sub(NetAddress *na){

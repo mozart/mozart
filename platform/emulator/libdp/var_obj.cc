@@ -52,7 +52,7 @@ void ObjectVar::marshal(ByteBuffer *bs)
 TaggedRef newObjectProxy(int bi, GName *gnobj, TaggedRef cl)
 {
   ObjectVar *pvar = new ObjectVar(oz_currentBoard(), bi, gnobj, cl);
-  TaggedRef val = makeTaggedRef(newTaggedVar(pvar));
+  TaggedRef val = makeTaggedRef(newTaggedVar(extVar2Var(pvar)));
   return (val);
 }
 
@@ -94,7 +94,7 @@ void ObjectVar::disposeV()
   // PER-LOOK
   // kost@ : ... so what? found something?
   // Don't touch gname, since it appears in the object itself!!!
-  oz_freeListDispose(this, sizeof(ObjectVar));
+  freeListDispose(sizeof(ObjectVar));
 }
 
 void ObjectVar::transfer(Object *o, BorrowEntry *be)
@@ -107,7 +107,7 @@ void ObjectVar::transfer(Object *o, BorrowEntry *be)
   //
   EntityInfo *savedInfo = info; // bind disposes this!
   Assert(be->isVar());
-  oz_bindLocalVar(this, be->getPtr(), makeTaggedConst(o));
+  oz_bindLocalVar(extVar2Var(this), be->getPtr(), makeTaggedConst(o));
 
   //
   be->changeToRef();

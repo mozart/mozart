@@ -60,9 +60,9 @@ public:
 
   //
   virtual ExtVarType    getIdV() { return (OZ_EVAR_EPROXY); }
-  virtual OzVariable*   gCollectV() { return new ExportedProxyVar(*this); }
+  virtual ExtVar*       gCollectV() { return new ExportedProxyVar(*this); }
   virtual void          gCollectRecurseV();
-  virtual OzVariable*   sCloneV() {
+  virtual ExtVar*       sCloneV() {
     Assert(0);
     return ((ExportedProxyVar *) 0);
   }

@@ -133,7 +133,7 @@ OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspendable * susp)
   if(!errorIgnore()){
     if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
   BorrowEntry *be=BT->getBorrow(getIndex());
-  addSuspSVar(susp);
+  extVar2Var(this)->addSuspSVar(susp);
   return SUSPEND;
 }
 
@@ -230,7 +230,7 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
     if(!errorIgnore()){
       if(failurePreemption(mkOp1("bind",r))) {
 	return BI_REPLACEBICALL;}}
-    oz_bindGlobalVar(this,lPtr,r);
+    oz_bindGlobalVar(extVar2Var(this),lPtr,r);
     return PROCEED;
   }    
 }
@@ -251,7 +251,7 @@ void ProxyVar::redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
     PD((PD_VAR,"REDIRECT while pending"));
   }
   EntityInfo* ei=info;
-  oz_bindLocalVar(this,vPtr,val);
+  oz_bindLocalVar(extVar2Var(this),vPtr,val);
   be->changeToRef();
   maybeHandOver(ei,val);
   (void) BT->maybeFreeBorrowEntry(BTI);
@@ -265,7 +265,7 @@ void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be)
   PD((PD_VAR,"acknowledge"));
 
   EntityInfo* ei=info;
-  oz_bindLocalVar(this,vPtr,binding);
+  oz_bindLocalVar(extVar2Var(this),vPtr,binding);
 
   be->changeToRef();
   maybeHandOver(ei,binding);
@@ -285,7 +285,7 @@ OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspendable * susp)
       return PROCEED;
   }
   */
-  addSuspSVar(susp);
+  extVar2Var(this)->addSuspSVar(susp);
   return SUSPEND;
 }
 
@@ -377,12 +377,12 @@ OZ_Return ManagerVar::bindVInternal(TaggedRef *lPtr, TaggedRef r,DSite *s)
     }
     EntityInfo *ei=info;
     sendRedirectToProxies(r, s);
-    oz_bindLocalVar(this,lPtr,r);
+    oz_bindLocalVar(extVar2Var(this),lPtr,r);
     OT->getOwner(OTI)->changeToRef();
     maybeHandOver(ei,r);
     return PROCEED;
   } else {
-    oz_bindGlobalVar(this,lPtr,r);
+    oz_bindGlobalVar(extVar2Var(this),lPtr,r);
     return PROCEED;
   }
 } 
@@ -421,12 +421,12 @@ OZ_Return ManagerVar::forceBindV(TaggedRef *lPtr, TaggedRef r)
     // In this case noone could get acknowledge => NULL
     sendRedirectToProxies(r, NULL);
     EntityInfo *ei=info;
-    oz_bindLocalVar(this,lPtr,r);
+    oz_bindLocalVar(extVar2Var(this),lPtr,r);
     OT->getOwner(OTI)->changeToRef();
     maybeHandOver(ei,r);
     return PROCEED;
   } else {
-    oz_bindGlobalVar(this,lPtr,r);
+    oz_bindGlobalVar(extVar2Var(this),lPtr,r);
     return PROCEED;
   }
 } 
@@ -474,8 +474,8 @@ ManagerVar* globalizeFreeVariable(TaggedRef *tPtr){
   oe->mkVar(makeTaggedRef(tPtr));
   OzVariable *cv = oz_getNonOptVar(tPtr);
   ManagerVar *mv = new ManagerVar(cv,i);
-  mv->setSuspList(cv->unlinkSuspList());
-  *tPtr = makeTaggedVar(mv);
+  extVar2Var(mv)->setSuspList(cv->unlinkSuspList());
+  *tPtr = makeTaggedVar(extVar2Var(mv));
   return (mv);
 }
 
@@ -588,7 +588,7 @@ OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isFuture, Bool isAuto)
   PD((UNMARSHAL,"var miss: b:%d",bi));
   ProxyVar *pvar = new ProxyVar(oz_currentBoard(),bi,isFuture);
 
-  TaggedRef val = makeTaggedRef(newTaggedVar(pvar));
+  TaggedRef val = makeTaggedRef(newTaggedVar(extVar2Var(pvar)));
   ob->changeToVar(val); // PLEASE DONT CHANGE THIS 
   if(!isAuto) {
     sendRegister((BorrowEntry *)ob);}
@@ -628,7 +628,7 @@ OZ_Term unmarshalVarRobust(MarshalerBuffer* bs, Bool isFuture,
   PD((UNMARSHAL,"var miss: b:%d",bi));
   ProxyVar *pvar = new ProxyVar(oz_currentBoard(),bi,isFuture);
 
-  TaggedRef val = makeTaggedRef(newTaggedVar(pvar));
+  TaggedRef val = makeTaggedRef(newTaggedVar(extVar2Var(pvar)));
   ob->changeToVar(val); // PLEASE DONT CHANGE THIS 
   if(!isAuto) {
     sendRegister((BorrowEntry *)ob);}
@@ -682,7 +682,7 @@ inline
 void ManagerVar::localize(TaggedRef *vPtr)
 {
   Assert(getInfo()==NULL);
-  getOrigVar()->setSuspList(unlinkSuspList());
+  getOrigVar()->setSuspList(extVar2Var(this)->unlinkSuspList());
   *vPtr=origVar;
   origVar=makeTaggedNULL();
   disposeV();
@@ -920,11 +920,13 @@ void ManagerVar::newInform(DSite* s,EntityCond ec){
 }
 
 void ProxyVar::wakeAll(){
-  oz_checkSuspensionList(this,pc_all);
+  OzVariable*p=extVar2Var(this);
+  oz_checkSuspensionList(p,pc_all);
 }
 
 void ManagerVar::wakeAll(){
-  oz_checkSuspensionList(this,pc_all);
+  OzVariable*p=extVar2Var(this);
+  oz_checkSuspensionList(p,pc_all);
 }
 
 //

@@ -27,6 +27,10 @@
  *
  */
 
+#if defined(INTERFACE)
+#pragma implementation "ofs-prop.hh"
+#endif
+
 #include "ofs-prop.hh"
 
 /*********************************************************************

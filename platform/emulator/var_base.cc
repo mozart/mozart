@@ -75,7 +75,7 @@ Bool oz_var_valid(OzVariable *ov,TaggedRef val) {
   case OZ_VAR_OF:      return ((OzOFVariable*) ov)->valid(val);
   case OZ_VAR_FS:      return ((OzFSVariable*) ov)->valid(val);
   case OZ_VAR_CT:      return ((OzCtVariable*) ov)->valid(val);
-  case OZ_VAR_EXT:     return ((ExtVar *) ov)->validV(val);
+  case OZ_VAR_EXT:     return var2ExtVar(ov)->validV(val);
   ExhaustiveSwitch();
   }
   return NO;
@@ -91,7 +91,7 @@ OZ_Return oz_var_unify(OzVariable *ov,TaggedRef *ptr,TaggedRef *val) {
   case OZ_VAR_OF:      return ((OzOFVariable*) ov)->unify(ptr,val);
   case OZ_VAR_FS:      return ((OzFSVariable*) ov)->unify(ptr,val);
   case OZ_VAR_CT:      return ((OzCtVariable*) ov)->unify(ptr,val);
-  case OZ_VAR_EXT:     return ((ExtVar *) ov)->unifyV(ptr,val);
+  case OZ_VAR_EXT:     return var2ExtVar(ov)->unifyV(ptr,val);
   ExhaustiveSwitch();
   }
   return FAILED;
@@ -107,7 +107,7 @@ OZ_Return oz_var_bind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   case OZ_VAR_OF:      return ((OzOFVariable*) ov)->bind(ptr,val);
   case OZ_VAR_FS:      return ((OzFSVariable*) ov)->bind(ptr,val);
   case OZ_VAR_CT:      return ((OzCtVariable*) ov)->bind(ptr,val);
-  case OZ_VAR_EXT:     return ((ExtVar *) ov)->bindV(ptr,val);
+  case OZ_VAR_EXT:     return var2ExtVar(ov)->bindV(ptr,val);
   ExhaustiveSwitch();
   }
   return FAILED;
@@ -123,7 +123,7 @@ OZ_Return oz_var_forceBind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   case OZ_VAR_OF:      return ((OzOFVariable*) ov)->bind(ptr,val);
   case OZ_VAR_FS:      return ((OzFSVariable*) ov)->bind(ptr,val);
   case OZ_VAR_CT:      return ((OzCtVariable*) ov)->bind(ptr,val);
-  case OZ_VAR_EXT:     return ((ExtVar *) ov)->forceBindV(ptr,val);
+  case OZ_VAR_EXT:     return var2ExtVar(ov)->forceBindV(ptr,val);
   ExhaustiveSwitch();
   }
   return FAILED;
@@ -148,7 +148,7 @@ OZ_Return oz_var_addSusp(TaggedRef *v, Suspendable * susp) {
   case OZ_VAR_FUTURE:
     return ((Future *) ov)->addSusp(v, susp);
   case OZ_VAR_EXT:
-    return ((ExtVar *) ov)->addSuspV(v, susp);
+    return var2ExtVar(ov)->addSuspV(v, susp);
   case OZ_VAR_OPT:
     ov = new SimpleVar(ov->getBoardInternal());
     *v = makeTaggedVar(ov);
@@ -174,7 +174,7 @@ void oz_var_dispose(OzVariable *ov) {
   case OZ_VAR_OF:      ((OzOFVariable*) ov)->dispose(); break;
   case OZ_VAR_FS:      ((OzFSVariable*) ov)->dispose(); break;
   case OZ_VAR_CT:      ((OzCtVariable*) ov)->dispose(); break;
-  case OZ_VAR_EXT:     ((ExtVar *) ov)->disposeV(); break;
+  case OZ_VAR_EXT:     var2ExtVar(ov)->disposeV(); break;
   ExhaustiveSwitch();
   }
 }
@@ -208,7 +208,7 @@ void oz_var_printStream(ostream &out, const char *s, OzVariable *cv, int depth)
       ((OzCtVariable*)cv)->printStream(out,depth); return;
     case OZ_VAR_EXT:
       out << s;
-      ((ExtVar *)cv)->printStreamV(out,depth); return;
+      var2ExtVar(cv)->printStreamV(out,depth); return;
       ExhaustiveSwitch();
     }
   else
@@ -225,7 +225,7 @@ int oz_var_getSuspListLength(OzVariable *cv)
   case OZ_VAR_OF:     return ((OzOFVariable*)cv)->getSuspListLength();
   case OZ_VAR_FS:     return ((OzFSVariable*)cv)->getSuspListLength();
   case OZ_VAR_CT:     return ((OzCtVariable*)cv)->getSuspListLength();
-  case OZ_VAR_EXT:    return ((ExtVar *)cv)->getSuspListLengthV();
+  case OZ_VAR_EXT:    return var2ExtVar(cv)->getSuspListLengthV();
   case OZ_VAR_OPT:    return (0); // per definition;
   default:            return cv->getSuspListLengthS();
   }
@@ -378,13 +378,13 @@ OZ_Return oz_var_cast(TaggedRef * & fp, Board * fb, TypeOfVariable tt) {
 
 OZ_Term _var_status(OzVariable *cv) {
   Assert(cv->getType()==OZ_VAR_EXT);
-  return ((ExtVar*)cv)->statusV();
+  return var2ExtVar(cv)->statusV();
 }
 
 
 VarStatus _var_check_status(OzVariable *cv) {
   Assert(cv->getType()==OZ_VAR_EXT);
-  return ((ExtVar*)cv)->checkStatusV();
+  return var2ExtVar(cv)->checkStatusV();
 }
 
 // dealing with global variables

@@ -310,7 +310,7 @@ if ("$option" eq "-body") {
 	print "   \"$atoms{$key}\",\n"; $atoms++;
     }
     print "};\n\n";
-    print "TaggedRef _StaticAtomTable[$atoms];\n\n";
+    print "volatile TaggedRef _StaticAtomTable[$atoms];\n\n";
     $names = 0;
     
     print "const char * _StaticNameChars[] = {\n";
@@ -318,7 +318,7 @@ if ("$option" eq "-body") {
 	print "   \"$names{$key}\",\n"; $names++;
     }
     print "};\n\n";
-    print "TaggedRef _StaticNameTable[$names];\n\n";
+    print "volatile TaggedRef _StaticNameTable[$names];\n\n";
 
     print <<EOF;
 	void initAtomsAndNames() {
@@ -337,8 +337,8 @@ EOF
 } elsif ("$option" eq "-header") {
 
     print "void initAtomsAndNames();\n\n\n";
-    print "extern TaggedRef _StaticAtomTable[];\n";
-    print "extern TaggedRef _StaticNameTable[];\n\n\n";
+    print "extern volatile TaggedRef _StaticAtomTable[];\n";
+    print "extern volatile TaggedRef _StaticNameTable[];\n\n\n";
     $i=0;
     foreach $key (keys %atoms) { 
 	print "#define $key _StaticAtomTable[$i] \n"; $i++;

@@ -2732,7 +2732,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    } else if (oz_isVar(vd)) {
 	      OzVariable *var = tagged2Var(vd);
 	      Assert(var->getType() == OZ_VAR_EXT);
-	      ExtVar *evar = (ExtVar *) var;
+	      ExtVar *evar = var2ExtVar(var);
 	      Assert(evar->getIdV() == OZ_EVAR_LAZY);
 	      LazyVar *lvar = (LazyVar *) evar;
 	      Assert(lvar->getLazyType() == LT_CLASS);
@@ -2879,7 +2879,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    } else if (oz_isVar(vd)) {
 	      OzVariable *var = tagged2Var(vd);
 	      Assert(var->getType() == OZ_VAR_EXT);
-	      ExtVar *evar = (ExtVar *) var;
+	      ExtVar *evar = var2ExtVar(var);
 	      Assert(evar->getIdV() == OZ_EVAR_LAZY);
 	      LazyVar *lvar = (LazyVar *) evar;
 	      Assert(lvar->getLazyType() == LT_OBJECT);
@@ -3376,7 +3376,7 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
 	  // make&save an "exported" manager;
 	  ManagerVar *mvp = oz_getManagerVar(v);
 	  ExportedManagerVar *emvp = new ExportedManagerVar(mvp, dest);
-	  OZ_Term emv = makeTaggedVar(emvp);
+	  OZ_Term emv = makeTaggedVar(extVar2Var(emvp));
 	  //
 	  svl = new SntVarLocation(makeTaggedRef(vp), emv, svl);
 
@@ -3394,7 +3394,7 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
 	  // make&save an "exported" proxy:
 	  ProxyVar *pvp = oz_getProxyVar(v);
 	  ExportedProxyVar *epvp = new ExportedProxyVar(pvp, dest);
-	  OZ_Term epv = makeTaggedVar(epvp);
+	  OZ_Term epv = makeTaggedVar(extVar2Var(epvp));
 	  //
 	  svl = new SntVarLocation(makeTaggedRef(vp), epv, svl);
 	}
@@ -3424,7 +3424,7 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
       //
       ManagerVar *mvp = globalizeFreeVariable(vp);
       ExportedManagerVar *emvp = new ExportedManagerVar(mvp, dest);
-      OZ_Term emv = makeTaggedVar(emvp);
+      OZ_Term emv = makeTaggedVar(extVar2Var(emvp));
       //
       svl = new SntVarLocation(makeTaggedRef(vp), emv, svl);
 
@@ -3511,7 +3511,7 @@ void MsgTermSnapshotImpl::gcStart()
     // GC.
     if (oz_isRef(hv) || !oz_isVarOrRef(hv)) {
       GCStubVar *svp = new GCStubVar(hv);
-      *hvp = makeTaggedVar(svp);
+      *hvp = makeTaggedVar(extVar2Var(svp));
     }
 
     //    

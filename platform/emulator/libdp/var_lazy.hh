@@ -62,8 +62,8 @@ public:
   virtual LazyType getLazyType() = 0;
   virtual void sendRequest() = 0;
   virtual Bool validV(TaggedRef v) { return (TRUE); }
-  virtual OzVariable* gCollectV() { Assert(0); return NULL; }
-  virtual OzVariable* sCloneV() { Assert(0); return NULL; }
+  virtual ExtVar* gCollectV() { Assert(0); return NULL; }
+  virtual ExtVar* sCloneV() { Assert(0); return NULL; }
   virtual void gCollectRecurseV(void);
   virtual void sCloneRecurseV(void) { Assert(0); }
   virtual void printStreamV(ostream &out,int depth = 10) {

@@ -144,6 +144,7 @@ public:
   void* operator new(size_t size){ 
     Assert(sizeof(Site) <= sizeof(Construct_5));
     return ((Site *) genFreeListManager->getOne_5());}
+
   void freeSite(){
     genFreeListManager->putOne_5((FreeListEntry*) this);}
 
@@ -183,7 +184,7 @@ public:
     GenHashNode *ghn = htFindFirst(hvalue);
     Site* found;
     while (ghn!=NULL) {
-      GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,Site*);    
+      found = (Site*) (ghn->getBaseKey());
       if(s->compareSites(found)==0) return found;
       ghn=htFindNext(ghn,hvalue);}
     return NULL;}
@@ -191,14 +192,14 @@ public:
   void insert(Site *s, int hvalue) {
     GenHashBaseKey *ghn_bk;
     GenHashEntry *ghn_e=NULL;  
-    GenCast(s,Site*,ghn_bk,GenHashBaseKey*);
+    ghn_bk = (GenHashBaseKey*)(void*) s;
     htAdd(hvalue,ghn_bk,ghn_e);}
 
   void remove(Site *s, int hvalue) {
     GenHashNode *ghn=htFindFirst(hvalue);
     Site* found;
     while(ghn!=NULL){
-      GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,Site*);    
+      found = (Site*) (ghn->getBaseKey());
       if(s->compareSites(found)==0){
 	htSub(hvalue,ghn);
 	return;}
