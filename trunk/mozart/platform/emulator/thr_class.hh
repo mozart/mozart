@@ -55,6 +55,7 @@ enum ThreadFlag {
   T_ofs    = 0x000400,   // the OFS thread (needed for DynamicArity);
 
   T_ltq    = 0x000800,   // designates local thread queue
+  T_nmo    = 0x001000,   // designates nonmonotonic propagator
 
   // debugger
   T_G_trace= 0x010000,   // thread is being traced
@@ -201,7 +202,15 @@ public:
   void gcRecurse();
 
   void setBody(RunnableThreadBody *rb) { item.threadBody=rb; }
-  void setInitialPropagator(OZ_Propagator *pro) { item.propagator=pro; }
+
+  void setInitialPropagator(OZ_Propagator * pro) { 
+    item.propagator = pro; 
+
+    state.flags = T_p_thr | T_runnable | T_unif;
+
+    if (!pro->isMonotonic())
+      markNonMonotonicPropagatorThread();
+  }
 
   unsigned int getID() { return id; }
 
@@ -289,10 +298,19 @@ public:
     return (state.flags & T_p_thr);
   }
   
-  void headInitPropagator(void) {
-    state.flags = T_p_thr | T_runnable | T_unif;
+  void markNonMonotonicPropagatorThread(void) { 
+    Assert (!isDeadThread() && isPropagator());
+    state.flags = state.flags | T_nmo;
   }
-
+  void unmarkNonMonotonicPropagatorThread(void) { 
+    Assert (!isDeadThread() && isPropagator());
+    state.flags = state.flags & ~T_nmo;
+  }
+  Bool isNonMonotonicPropagatorThread(void) { 
+    Assert (!isDeadThread() && isPropagator());
+    return (state.flags & T_nmo);
+  }
+  
   // debugger
   Bool isTraced() {
     return (state.flags & T_G_trace);
@@ -443,7 +461,7 @@ public:
     return item.propagator->propagate();
   }
   OZ_Propagator * getPropagator(void) {
-    Assert(isPropagator());
+    //    Assert(isPropagator()); TMUELLER
     return item.propagator;
   }
   
@@ -453,6 +471,7 @@ public:
   void suspThreadToRunnable ();
   void wakeupToRunnable ();
   void propagatorToRunnable ();
+  void updateSolveBoardPropagatorToRunnable ();
 
   void terminate();
   void propagatorToNormal();

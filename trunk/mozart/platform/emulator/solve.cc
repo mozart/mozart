@@ -204,7 +204,7 @@ void SolveActor::clearSuspList(Thread *killThr) {
 
 SolveActor::SolveActor(Board *bb)
  : Actor (Ac_Solve, bb), suspList (NULL), threads (0), cpb(NULL), 
-   localThreadQueue(NULL) {
+   localThreadQueue(NULL), nonMonoSuspList(NULL) {
   result     = makeTaggedRef(newTaggedUVar(bb));
   solveBoard = new Board(this, Bo_Solve);
   solveVar   = makeTaggedRef(newTaggedUVar(solveBoard));
@@ -212,6 +212,46 @@ SolveActor::SolveActor(Board *bb)
 }
 
 // ------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// support for nonmonotonic propagators
+
+void SolveActor::addToNonMonoSuspList(Thread * thr)
+{
+  nonMonoSuspList = nonMonoSuspList->insert(thr);
+}
+
+void SolveActor::mergeNonMonoSuspListWith(OrderedSuspList * p)
+{
+  for (; p != NULL; p = p->getNext())
+    nonMonoSuspList = nonMonoSuspList->insert(p->getThread()); 
+}
+
+void SolveActor::scheduleNonMonoSuspList(void)
+{
+#ifdef DEBUG_NONMONOTONIC
+  cout << "SolveActor::scheduleNonMonoSuspList" << endl << flush;
+#endif
+
+  for (OrderedSuspList * p = nonMonoSuspList; p != NULL; p = p->getNext()) {
+    Thread * thr = p->getThread();
+
+#ifdef DEBUG_NONMONOTONIC
+    cout << "   "; thr->printDebug();
+#endif
+    
+    thr->updateSolveBoardPropagatorToRunnable();
+    am.scheduleThreadInline(thr, thr->getPriority());
+  }  
+
+  nonMonoSuspList = NULL;
+
+#ifdef DEBUG_NONMONOTONIC
+  cout << "Done" << endl << flush;
+#endif
+}
+
+//-----------------------------------------------------------------------------
 
 #ifdef OUTLINE
 #define inline

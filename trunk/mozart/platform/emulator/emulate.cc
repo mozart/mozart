@@ -688,6 +688,10 @@ void AM::checkEntailment()
 {
   DebugTrace(trace("check entailment",currentBoard));
 
+#ifdef DEBUG_NONMONOTONIC
+  cout << "AM::checkEntailment" << endl << flush;
+#endif
+
   currentBoard->unsetNervous();
 
   // check for entailment of ASK and WAITTOP
@@ -724,6 +728,11 @@ void AM::checkEntailment()
       }
       return;
     }
+
+    // check for nonmonotonic propagators
+    solveAA->scheduleNonMonoSuspList();
+    if (! isStableSolve(solveAA))
+      return;
 
     WaitActor *wa = solveAA->getChoice();
 
