@@ -710,7 +710,7 @@ void sh(int sig)
 
 main()
 {
-#ifdef _POSIX_MAPPED_FILES
+#if defined(_POSIX_MAPPED_FILES) || defined(_MMAP_DECLARED)
   void *loc1, *loc2;
 
 #ifdef MAP_ANONYMOUS
