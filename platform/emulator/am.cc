@@ -440,7 +440,13 @@ void (*oz_child_handle)() = 0;
 // * where to longjmp to is stored in global variable wake_jmp
 // * whether to longjmp is indicated by global variable use_wake_jmp
 
+#ifdef WINDOWS
+jmp_buf wake_jmp;
+#define sigsetjmp(X,Y) setjmp(X)
+#define siglongjmp(X,Y) longjmp(X)
+#else /* !WINDOWS */
 sigjmp_buf wake_jmp;
+#endif
 volatile int use_wake_jmp = 0;
 
 void AM::suspendEngine()
@@ -506,7 +512,9 @@ void AM::suspendEngine()
       use_wake_jmp=1;
       // reenable appropriate signal handlers
       // i.e. all since alarm is disabled anyway
+#ifndef WINDOWS
       osUnblockSignals();
+#endif
       // now perform blocking select
       osBlockSelect(sleepTime);
       // it returned normally
@@ -514,7 +522,9 @@ void AM::suspendEngine()
       // it through because a signal handler is invoked and does
       // a siglongjump that returns to the `else' below.  Either
       // way the engine is going to be properly woken up.
+#ifndef WINDOWS
       osBlockSignals(NO);
+#endif
       use_wake_jmp=0;
       // here 'sleepTime' contains #msecs really spent in waiting;
       setSFlag(IOReady);
