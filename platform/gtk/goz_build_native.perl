@@ -530,7 +530,7 @@ Generate glue code for the GTK+ binding for Oz
   --c-wrappers              generate the C glue code
   --interface               generate the interface definition for
                             Oz C/C++ interface
-  --gnome                   generate macros for gnome/ftk renaming
+  --gnome                   generate macros for gnome/gtk canvas renaming
   --includes                Optional header files to include
 EOF
 
