@@ -19,8 +19,10 @@ define
       in
 	 {BatchCompiler enqueue(setSwitch(showdeclares false))}
 	 {BatchCompiler enqueue(setSwitch(threadedqueries false))}
-	 if Gumpdir==unit then
-	    {BatchCompiler enqueue(setGumpDirectory({Path.dirname ToFile}))}
+	 if Gumpdir==unit then D={Path.dirname ToFile} in
+	    if D\=nil then
+	       {BatchCompiler enqueue(setGumpDirectory({Path.dirname ToFile}))}
+	    end
 	 else
 	    {BatchCompiler enqueue(setGumpDirectory(Gumpdir))}
 	 end
