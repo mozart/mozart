@@ -22,7 +22,7 @@
 functor
 import
    Application(save)
-   System(valueToVirtualString show)
+   System(show)
    Error(formatLine msg)
    FS(value)
    Open(file)
