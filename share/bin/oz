@@ -119,12 +119,9 @@ case "$cmd" in
 
    ozsa)    exec $OZEMULATOR "$@" ;;
 
-   oz-)     exec $OZCOMPILER "$@" ;;
-
    ozdo)    exec "$@" ;;
 
-   oznc)    exec $OZEMULATOR -u http://www.ps.uni-sb.de/ozhome/lib/OPI.ozc \
-	    "$@" -a $OZARGV ;;
+   oznc)    exec $OZEMULATOR "$@" -a $OZARGV ;;
 
    oz)
 	echo "Using emacs '${OZEMACS}'"
@@ -232,5 +229,3 @@ case "$cmd" in
        exit 1
    ;;
 esac
-
-
