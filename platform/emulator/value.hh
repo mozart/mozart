@@ -474,6 +474,7 @@ TaggedRef newTaggedFloat(double i)
 
 class BigInt {
 private:
+  BigInt *gcForwardPtr;
   MP_INT value;
 
 public:
@@ -482,21 +483,18 @@ public:
 
   NO_DEFAULT_CONSTRUCTORS2(BigInt);
 
-  BigInt() {
-    mpz_init(&value);
-  }
-
-  BigInt(int i)          { mpz_init_set_si(&value,i); }
-  BigInt(unsigned int i) { mpz_init_set_ui(&value,i); }
+  void init()            { gcForwardPtr = NULL; }
+  BigInt()               { init(); mpz_init(&value); }
+  BigInt(int i)          { init(); mpz_init_set_si(&value,i); }
+  BigInt(unsigned int i) { init(); mpz_init_set_ui(&value,i); }
 
   BigInt(char *s) {
+    init();
     if(mpz_init_set_str(&value, s, 10)) {
       Assert(0);
     }
   }
-  BigInt(MP_INT *i) {
-    mpz_init_set(&value, i);
-  }
+  BigInt(MP_INT *i) { init(); mpz_init_set(&value, i); }
   void dispose()
   {
     mpz_clear(&value);

@@ -1182,11 +1182,12 @@ FSetValue * FSetValue::gc(void) {
 BigInt * BigInt::gc() {
   Assert(isInGc);
 
-  CHECKCOLLECTED(*(int *)&value, BigInt *);
+  if (gcForwardPtr)
+    return gcForwardPtr;
 
   BigInt *ret = new BigInt();
   mpz_set(&ret->value,&value);
-  storeFwd((int *)&value, ret);
+  gcForwardPtr = ret;
   return ret;
 }
 
