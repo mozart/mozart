@@ -121,6 +121,20 @@ local
 	 PU#'fun '#IN#{LI ProcFlags OutputOz}#
 	 '{'#PU#{LI {Map T|Fs OutputOz} GL}#PO#'}'#IN#NL#
 	 {OzBlock E}#EX#NL#PO#'end'
+      [] fFunctor(T Ds S _) then
+	 'functor '#{OutputOz T}#NL#{LI {Map Ds OutputOz} NL}#NL#
+	 'body'#IN#NL#{OutputOz S}#EX#NL#'end'
+      [] fImport(Is _) then 'import'#IN#NL#{LI {Map Is OutputOz} NL}#EX
+      [] fImportItem(V Fs OptFrom) then
+	 {OutputOz V}#
+	 case Fs of _|_ then '.{'#{LI {Map Fs OutputOz} GL}#'}'
+	 [] nil then ""
+	 end#
+	 case OptFrom of fFrom(A) then ' from '#{OutputOz A}
+	 [] fNoFrom() then ""
+	 end
+      [] fExport(Es _) then 'export'#IN#NL#{LI {Map Es OutputOz} NL}#EX
+      [] fExportItem(V) then {OutputOz V}
       [] fOpApply(O Ts _) then
 	 case O of '~' then [T] = Ts in
 	    {DoOutput '~'#{Oz T 1201} P 1200}
