@@ -24,9 +24,10 @@ OZFLAGS         =
 OZC             = @OZC@
 
 SCOMPILE        = $(OZC) $(OZFLAGS) -c
-COMPILE         = $(OZC) $(OZFLAGS) -l Standard.ozf -c
+COMPILE         = $(OZC) $(OZFLAGS) -l Standard -c
 EXEC            = $(OZC) $(OZFLAGS)
-EXECWITHSTD     = $(OZC) $(OZFLAGS) -l Standard.ozf,Application
+EXECWITHSTD     = $(OZC) $(OZFLAGS) \
+        -l Application=$(SRCDIR)/Application.ozf,Standard
 OZMA            = $(OZC) $(OZFLAGS) -DOZM --ozma
 
 # exports
@@ -34,15 +35,15 @@ export BUILDTOP
 export SRCDIR
 export OZPREFIX
 export OZLIB
-export OZMAINIT = Init.ozc
-export OZMAFILE = -u ozc.ozc
+export OZMAINIT = Init.ozp
+export OZMAFILE = -u ozc.ozp
 export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
 export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/
 
 SPSRC = System Debug Foreign Error Finalize
-OPSRC = OS Open Component
+OPSRC = OS Open Pickle
 APSRC = Application
 CPSRC = Search FD Schedule FS
 DPSRC = Connection Remote
@@ -76,8 +77,8 @@ all: $(FUNCTORS) $(SYSLETS)
 INITSRC1 = URL.oz Prop.oz
 INITSRC = $(INITSRC1:%=init/%) Init.oz
 
-Init.ozc: $(INITSRC)
-        OZMAINIT="" $(SCOMPILE) Init.oz -o Init.ozc
+Init.ozp: $(INITSRC)
+        OZMAINIT="" $(SCOMPILE) Init.oz -o Init.ozp
 
 #---------------------------------------------------------------------
 # Standard
@@ -103,9 +104,9 @@ Standard.ozf: $(STANDARDSRC)
 # Remaining functors
 #---------------------------------------------------------------------
 
-$(FUNCTORS): Standard.ozf Init.ozc
+$(FUNCTORS): Standard.ozf Init.ozp
 
-Standard.ozf: Init.ozc
+Standard.ozf: Init.ozp
 
 %.ozf: sp/%.oz
         $(COMPILE) $< -o $@
@@ -190,12 +191,12 @@ ozvsserver: Standard.ozf MakeOzVSServer.oz
 # Boot compiler
 #---------------------------------------------------------------------
 
-ozc.ozm: compiler-Opcodes.oz compiler-Builtins.oz
-# Don't use this as target: compiler-Env.oz
+ozc.ozm:
+# Don't use this as target: compiler-Env.oz compiler-Opcodes.oz compiler-Builtins.oz
         $(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
         mv -f /tmp/$$$$.ozm $@
 
-ozc.ozc: ozc.ozm
+ozc.ozp: ozc.ozm
         OZMAINIT="" OZMAFILE="-b $<" $(SRCDIR)/ozc.sh
 
 #---------------------------------------------------------------------
@@ -203,12 +204,12 @@ ozc.ozc: ozc.ozm
 #---------------------------------------------------------------------
 
 LIBFUNCTORS = \
-        $(FUNCTORS:%=$(OZLIB)/%) $(OZLIB)/Init.ozc
+        $(FUNCTORS:%=$(OZLIB)/%) $(OZLIB)/Init.ozp
 BINFILES = \
         $(SYSLETS:%=$(OZBIN)/%)
 STAGEEXTRAFILES = \
         $(OZLIB)/Standard.ozf $(OZLIB)/ozc.ozm \
-        $(OZLIB)/ozc.ozc
+        $(OZLIB)/ozc.ozp
 
 .PHONY: install install-stage install-main install-images install-cache
 
@@ -245,7 +246,7 @@ $(OZLIB) $(IMAGESDIR) $(OZBIN):
 $(OZLIB)/%.ozf: %.ozf
         $(INSTALL_FILE) $< $@
 
-$(OZLIB)/%.ozc: %.ozc
+$(OZLIB)/%.ozp: %.ozp
         $(INSTALL_FILE) $< $@
 
 $(OZLIB)/%.ozm: %.ozm
@@ -279,7 +280,7 @@ clean:
         -rm -f compiler-Version.oz compiler-Builtins.oz
         -rm -f compiler-Opcodes.oz
         -rm -f envgen compiler-Env.oz
-        -rm -f $(FUNCTORS) Standard.ozf Init.ozc
+        -rm -f $(FUNCTORS) Standard.ozf Init.ozp
         -rm -f $(SYSLETS)
 
 veryclean: clean
@@ -297,7 +298,7 @@ tags:
         $(ALLSRCS)
 
 #---------------------------------------------------------------------
-# Bootstrapping and Testing Components Locally
+# Bootstrapping and Testing Functors Locally
 #---------------------------------------------------------------------
 #    make check   or   make thorough-check
 # Test a new emulator with
@@ -307,11 +308,11 @@ tags:
 
 URL=http\\://www.ps.uni-sb.de/ozhome
 
-# use Ozma to create the components
+# use Ozma to create the functors
 bootstrap:
-        $(MAKE) ozc.ozc all \
+        $(MAKE) ozc.ozp all \
         OZC=$(SRCDIR)/ozc.sh \
-        OZINIT=Init.ozc \
+        OZINIT=Init.ozp \
         OZ_LIB=. \
         OZ_LOAD=root=.:prefix=$(URL)/lib/=./:=
 
@@ -321,44 +322,44 @@ STAGE2B=./stage2b
 STAGE3=./stage3
 STAGE3B=./stage3b
 
-# stage1: create the initial components using the installed ones
+# stage1: create the initial functors using the installed ones
 stage1:
         $(MAKE) install-main PREFIX=$(STAGE1)
 
-# stage2: recreate the components and Ozma file using the stage1 components
+# stage2: recreate the functors and Ozma file using the stage1 functors
 stage2:
         mv $(SRCDIR)/ozc.ozm ozc.ozm.save
         trap "s=$$?;mv ozc.ozm.save $(SRCDIR)/ozc.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
         $(MAKE) install-stage PREFIX=$(STAGE2) \
         OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:.:=\
         OZC=$(STAGE1)/bin/ozc \
-        OZINIT=$(STAGE1)/lib/Init.ozc
+        OZINIT=$(STAGE1)/lib/Init.ozp
 
 
-# stage2b: recreate the components and Ozma file using the stage2 components
+# stage2b: recreate the functors and Ozma file using the stage2 functors
 stage2b:
         mv $(SRCDIR)/ozc.ozm ozc.ozm.save
         trap "s=$$?;mv ozc.ozm.save $(SRCDIR)/ozc.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
         $(MAKE) install-stage PREFIX=$(STAGE2B) \
         OZ_LOAD=prefix=$(URL)/lib/=$(STAGE2)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
         OZC=$(STAGE2)/bin/ozc \
-        OZINIT=$(STAGE2)/lib/Init.ozc
+        OZINIT=$(STAGE2)/lib/Init.ozp
 
-# stage3: recreate the components and Ozma file using the stage2 Ozma file
+# stage3: recreate the functors and Ozma file using the stage2 Ozma file
 stage3:
-        $(MAKE) ozc.ozc install-stage PREFIX=$(STAGE3) \
+        $(MAKE) ozc.ozp install-stage PREFIX=$(STAGE3) \
         OZ_LOAD=all=.:all=tyc/lib:all=tyc/tools:prefix=$(URL)/tools/=$(URL)/tools/:= \
         OZC=$(SRCDIR)/ozc.sh \
-        OZINIT=$(STAGE2)/lib/Init.ozc \
-        OZMAINIT=$(STAGE2)/lib/Init.ozc \
-        OZMAFILE="-u $(STAGE2)/lib/ozc.ozc"
+        OZINIT=$(STAGE2)/lib/Init.ozp \
+        OZMAINIT=$(STAGE2)/lib/Init.ozp \
+        OZMAFILE="-u $(STAGE2)/lib/ozc.ozp"
 
-# stage3b: recreate the components and Ozma file using the stage3 components
+# stage3b: recreate the functorss and Ozma file using the stage3 functors
 stage3b:
         $(MAKE) install-stage PREFIX=$(STAGE3B) \
         OZ_LOAD=prefix=$(URL)/lib/=$(STAGE3)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
         OZC=$(STAGE3)/bin/ozc \
-        OZINIT=$(STAGE3)/lib/Init.ozc
+        OZINIT=$(STAGE3)/lib/Init.ozp
 
 # for making incompatible changes to instructions
 #  1. make newozma                 # create new ozc.ozm with old emulator
@@ -370,7 +371,7 @@ newozma:
         $(MAKE) ozc.ozm \
          OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:.:=\
          OZC=$(STAGE1)/bin/ozc \
-         OZINIT=$(STAGE1)/lib/Init.ozc
+         OZINIT=$(STAGE1)/lib/Init.ozp
 
 check:
         $(MAKE) bootstrap stage1 && \
@@ -394,27 +395,27 @@ thorough-check:
 #---------------------------------------------------------------------
 # Compiler
 
-#FunMisc.ozc: compiler/Misc.oz $(STANDARD)
+#FunMisc.ozp: compiler/Misc.oz $(STANDARD)
 #
-#FunBuiltins.ozc: compiler/Builtins.oz compiler-Builtins.oz $(STANDARD)
+#FunBuiltins.ozp: compiler/Builtins.oz compiler-Builtins.oz $(STANDARD)
 #
-#FunSA.ozc: SP-new.env CP-new.env compiler/Misc-new.env \
+#FunSA.ozp: SP-new.env CP-new.env compiler/Misc-new.env \
 #       compiler/POTypes.oz compiler/StaticAnalysis.oz $(STANDARD)
 #
-#FunCode.ozc: SP-new.env compiler/Misc-new.env compiler/CodeStore.oz \
+#FunCode.ozp: SP-new.env compiler/Misc-new.env compiler/CodeStore.oz \
 #       compiler/CodeEmitter.oz compiler/CodeGen.oz $(STANDARD)
 #
-#FunCore.ozc: SP-new.env compiler/Misc-new.env compiler/Annotate.oz \
+#FunCore.ozp: SP-new.env compiler/Misc-new.env compiler/Annotate.oz \
 #       compiler/CoreLanguage.oz $(STANDARD)
 #
-#FunUnnest.ozc: CP-new.env compiler/Misc-new.env compiler/TupleSyntax.oz \
+#FunUnnest.ozp: CP-new.env compiler/Misc-new.env compiler/TupleSyntax.oz \
 #       compiler/BindingAnalysis.oz compiler/UnnestFD.oz compiler/Unnester.oz \
 #       $(STANDARD)
 #
-#FunAssembler.ozc: SP-new.env compiler/Assembler.oz compiler-Opcodes.oz \
+#FunAssembler.ozp: SP-new.env compiler/Assembler.oz compiler-Opcodes.oz \
 #       $(STANDARD)
 #
-#FunCompiler.ozc: SP-new.env compiler/Misc-new.env \
+#FunCompiler.ozp: SP-new.env compiler/Misc-new.env \
 #       compiler/FormatStrings.oz compiler/Reporter.oz compiler/ParseOz.oz \
 #       compiler/Interface.oz compiler/CompilerClass.oz \
 #       compiler/GenericInterface.oz compiler/QuietInterface.oz \
@@ -424,12 +425,12 @@ thorough-check:
 #COMPILER_FUN = @COMPILER_FUN@
 #
 #$(COMPILER_BIG): $(DUMPINTRO) $(COMPILERSRC) SP.env CP.env \
-#       ../tools/Gump.env Compiler.env Init.ozc
+#       ../tools/Gump.env Compiler.env Init.ozp
 #
 #$(COMPILER_FUN): $(DUMPINTRO) SP.env CP.env ../tools/Gump.env Compiler.env \
-#       Init.ozc FunMisc.ozc FunBuiltins.ozc FunSA.ozc FunCode.ozc \
-#       FunCore.ozc FunUnnest.ozc FunAssembler.ozc FunCompiler.ozc \
+#       Init.ozp FunMisc.ozp FunBuiltins.ozp FunSA.ozp FunCode.ozp \
+#       FunCore.ozp FunUnnest.ozp FunAssembler.ozp FunCompiler.ozp \
 #       compiler/FunMake.oz $(TYCS)
 #       $(OZC) $(OZFLAGS) --include=DumpIntro.oz -l OP \
-#       -c compiler/FunMake.oz -o Compiler.ozc
+#       -c compiler/FunMake.oz -o Compiler.ozp
 #
