@@ -152,12 +152,12 @@ public:
 };
 
 // not yet inlined
-void addSuspUVar(TaggedRefPtr v, Suspension susp, int unstable = TRUE);
+void addSuspUVar(TaggedRef * v, Suspension susp, int unstable = TRUE);
 
 void oz_cv_addSusp(GenCVariable *, TaggedRef *, Suspension, int = TRUE);
 
 inline
-void addSuspAnyVar(TaggedRefPtr v, Suspension susp,int unstable = TRUE)
+void addSuspAnyVar(TaggedRef * v, Suspension susp,int unstable = TRUE)
 {
   TaggedRef t = *v;
   // FUT

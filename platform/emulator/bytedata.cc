@@ -27,7 +27,7 @@
 // BitData
 // -------------------------------------------------------------------
 
-void BitData::printStream(ostream& out) {
+void BitData::bitPrintStream(ostream& out) {
   int w = getWidth();
   for (int i=0; i<w; i++) out << ((get(i))?"1":"0");
 }
@@ -139,7 +139,7 @@ OZ_Term unmarshalBitString(MsgBuffer*bs) {
 
 void BitString::printStreamV(ostream &out,int depth = 10) {
   out << "<BitString \"";
-  printStream(out);
+  bitPrintStream(out);
   out << "\">";
 }
 
@@ -290,7 +290,7 @@ OZ_BI_define(BIBitString_toList,1,1)
 // ByteData
 // -------------------------------------------------------------------
 
-void ByteData::printStream(ostream& out) {
+void ByteData::bytePrintStream(ostream& out) {
   int w = getWidth();
   for (int i=0; i<w; i++) out << get(i);
 }
@@ -341,7 +341,7 @@ void ByteString_init() {
 
 void ByteString::printStreamV(ostream &out,int depth = 10) {
   out << "<ByteString \"";
-  printStream(out);
+  bytePrintStream(out);
   out << "\">";
 }
 

@@ -275,7 +275,7 @@ OZ_C_proc_begin(BIfdGetAsList, 2)
     OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
     return OZ_unify(fdomain.getDescr(), OZ_getCArg(1));
   } else if (isGenBoolVar(var,vartag)) {
-    return OZ_unify(makeTaggedLTuple(new LTuple(mkTuple(0, 1), AtomNil)),
+    return OZ_unify(makeTaggedLTuple(new LTuple(oz_pairII(0, 1), AtomNil)),
                     OZ_getCArg(1));
   } else if (oz_isFree(var)) {
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);

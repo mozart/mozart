@@ -411,7 +411,7 @@ void marshalRef(int n, MsgBuffer *bs, TypeOfTerm tag)
 {
   PD((MARSHAL,"circular: %d",n));
 
-  if (debugRefs && tag!=REFTAG1) {
+  if (debugRefs && tag!=REF) {
     Assert(0); // not yet implemented
     marshalDIF(bs,DIF_REF_DEBUG);
     marshalNumber(n,bs);

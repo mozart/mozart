@@ -81,6 +81,8 @@
  *     dito, but also printLongStream must be implemented
  */
 
+#include "base.hh"
+
 #ifdef DEBUG_PRINT
 
 #include "genvar.hh"
@@ -88,6 +90,12 @@
 #include "dictionary.hh"
 #include "builtins.hh"
 #include "extension.hh"
+#include "fdgenvar.hh"
+#include "fsgenvar.hh"
+#include "ctgenvar.hh"
+#include "ofgenvar.hh"
+#include "solve.hh"
+#include "lps.hh"
 
 class Indent {
 public:
@@ -154,10 +162,8 @@ void ozd_printStream(OZ_Term val, ostream &stream, int depth)
     stream << "<UV @" << &ref << ">";
     break;
 
-  case SVAR:
-    stream << getVarName(val);
-    tagged2SVar(ref)->printStream(stream,depth);
-    break;
+    //FUT
+
   case CVAR:
     stream << getVarName(val);
     tagged2CVar(ref)->printStream(stream, depth);
@@ -228,10 +234,8 @@ void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
     stream << endl;
     break;
 
-  case SVAR:
-    stream << indent(offset) << getVarName(val);
-    tagged2SVar(ref)->printLongStream(stream,depth,offset);
-    break;
+    // FUT
+
   case CVAR:
     stream << indent(offset) << getVarName(val);
     tagged2CVar(ref)->printLongStream(stream, depth, offset);
@@ -833,21 +837,14 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
     default:         Assert(NO);
     }
     break;
-  case Co_Thread:
-    ((Thread *) this)->printLongStream(stream,depth,offset);
-    break;
   case Co_Builtin:
     ((Builtin *) this)->printLongStream(stream,depth,offset);
     break;
   case Co_Foreign_Pointer:
     ((ForeignPointer*)this)->printLongStream(stream,depth,offset); break;
 
-  case Co_SituatedExtension:
-    ((SituatedExtension *) c)->printLongStreamV(out,depth,offset);
-    break;
-
-  case Co_ConstExtension:
-    ((ConstExtension *) c)->printLongStreamV(out,depth,offset);
+  case Co_Extension:
+    ((Extension *)this)->printLongStreamV(stream,depth,offset);
     break;
 
   default:            Assert(NO);
@@ -858,8 +855,6 @@ void ConstTerm::printStream(ostream &stream, int depth)
 {
   switch (getType()) {
   case Co_BigInt:      ((BigInt *) this)->printStream(stream, depth);
-    break;
-  case Co_BitArray:
     break;
   case Co_Abstraction: ((Abstraction *) this)->printStream(stream,depth);
     break;
@@ -913,8 +908,6 @@ void ConstTerm::printStream(ostream &stream, int depth)
       break;
     default:         Assert(NO);
     }
-    break;
-  case Co_Thread:      ((Thread *) this)->printStream(stream,depth);
     break;
   case Co_Builtin:     ((Builtin *) this)->printStream(stream,depth);
     break;

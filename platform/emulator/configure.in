@@ -41,7 +41,7 @@ AC_INIT(base.hh)
 
 OZ_INIT
 
-dnl hack: support that the emulator is configure'd in a subdir
+dnl hack: support that the emulator is configured in a subdir
 if test "$srcdir" = ".."
 then
     BUILDTOP=`cd ../../.. && pwd`
@@ -459,6 +459,7 @@ AC_ARG_WITH(zlib,
 
 if test "$with_zlib" != no
 then
+    AC_MSG_RESULT(yes)
     AC_ARG_WITH(zlib_lib,
         [--with-zlib-lib=<dir>
             search zlib library in <dir> (default: /usr/local/lib)])
@@ -485,6 +486,8 @@ then
     else CPPFLAGS=$OLDCPPFLAGS
          LDFLAGS=$OLDLDFLAGS
     fi
+else
+    AC_MSG_RESULT(no)
 fi
 
 dnl *****************************************************************

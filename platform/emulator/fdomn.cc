@@ -351,7 +351,7 @@ OZ_Term FDIntervals::getAsList(void) const
   for (int i = 0; i < high; i += 1)
       l_ptr = (i_arr[i].left == i_arr[i].right)
         ? mkListEl(hd, l_ptr, OZ_int(i_arr[i].left))
-        : mkListEl(hd, l_ptr, mkTuple(i_arr[i].left, i_arr[i].right));
+        : mkListEl(hd, l_ptr, oz_pairII(i_arr[i].left, i_arr[i].right));
 
   return makeTaggedLTuple(hd);
 }
@@ -955,8 +955,8 @@ OZ_Term FDBitVector::getAsList(void) const
     if (fd_bv_left_conv[i] == fd_bv_right_conv[i])
       l_ptr = mkListEl(hd, l_ptr, OZ_int(fd_bv_left_conv[i]));
     else
-      l_ptr = mkListEl(hd, l_ptr, mkTuple(fd_bv_left_conv[i],
-                                          fd_bv_right_conv[i]));
+      l_ptr = mkListEl(hd, l_ptr, oz_pairII(fd_bv_left_conv[i],
+                                            fd_bv_right_conv[i]));
 
   return makeTaggedLTuple(hd);
 }
@@ -1710,7 +1710,7 @@ OZ_Term OZ_FiniteDomainImpl::getAsList(void) const
 
   descr_type type = getType();
   if (type == fd_descr) {
-    return makeTaggedLTuple(new LTuple(mkTuple(min_elem, max_elem), AtomNil));
+    return makeTaggedLTuple(new LTuple(oz_pairII(min_elem,max_elem), AtomNil));
   } else if (type == bv_descr) {
     return get_bv()->getAsList();
   } else {

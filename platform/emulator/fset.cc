@@ -200,8 +200,8 @@ OZ_Term getAsList(const int * bv, int neg = 0)
     if (fd_bv_left_conv[i] == fd_bv_right_conv[i])
       l_ptr = mkListEl(hd, l_ptr, OZ_int(fd_bv_left_conv[i]));
     else
-      l_ptr = mkListEl(hd, l_ptr, mkTuple(fd_bv_left_conv[i],
-                                          fd_bv_right_conv[i]));
+      l_ptr = mkListEl(hd, l_ptr, oz_pairII(fd_bv_left_conv[i],
+                                            fd_bv_right_conv[i]));
 
   return hd ? makeTaggedLTuple(hd) : OZ_nil();
 }
@@ -972,7 +972,7 @@ OZ_Term FSetConstraint::getCardTuple(void) const
 {
   return ((_card_min == _card_max)
           ? OZ_int(_card_min)
-          : mkTuple(_card_min, _card_max));
+          : oz_pairII(_card_min, _card_max));
 }
 
 inline

@@ -34,7 +34,7 @@
 OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
 {
   Assert(!oz_isRef(t));
-  oz_bindToNonvar(vPtr, *vPtr, t);
+  oz_bindToNonvar(vPtr, t);
   return PROCEED;
 }
 
@@ -57,14 +57,14 @@ OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
       v =    *tPtr;
       vPtr = tPtr;
     }
-    oz_bind(vPtr, v, t);
+    oz_bind(vPtr, t);
   } else {
-    oz_bindToNonvar(vPtr, v, t);
+    oz_bindToNonvar(vPtr, t);
   }
   return PROCEED;
 }
 
-void addSuspUVar(TaggedRefPtr v, Suspension susp, int unstable)
+void addSuspUVar(TaggedRef *v, Suspension susp, int unstable)
 {
   GenCVariable *sv = new SimpleVar(tagged2VarHome(*v));
   *v = makeTaggedCVar(sv);

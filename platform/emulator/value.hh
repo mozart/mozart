@@ -1562,6 +1562,7 @@ OZ_Term oz_pair2(OZ_Term t1,OZ_Term t2) {
 #define oz_pairAI(s1,i)     oz_pair2(oz_atom(s1),oz_int(i))
 #define oz_pairAA(s1,s2)    oz_pair2(oz_atom(s1),oz_atom(s2))
 #define oz_pairAS(s1,s2)    oz_pair2(oz_atom(s1),oz_string(s2))
+#define oz_pairII(i1,i2)    oz_pair2(oz_int(i1),oz_int(i2))
 
 /* -----------------------------------------------------------------------
  * lists
@@ -1582,7 +1583,7 @@ OZ_Term oz_pair2(OZ_Term t1,OZ_Term t2) {
 inline
 OZ_Term oz_isList(OZ_Term l, int checkChar=0)
 {
-  DerefReturnVar(l);
+  DerefIfVarReturnIt(l);
   OZ_Term old = l;
   Bool updateF = 0;
   int len = 0;
@@ -1590,14 +1591,14 @@ OZ_Term oz_isList(OZ_Term l, int checkChar=0)
     len++;
     if (checkChar) {
       OZ_Term h = oz_head(l);
-      DerefReturnVar(h);
+      DerefIfVarReturnIt(h);
       if (!oz_isSmallInt(h)) return NameFalse;
       int i=smallIntValue(h);
       if (i<0 || i>255) return NameFalse;
       if (checkChar>1 && i==0) return NameFalse;
     }
     l = oz_tail(l);
-    DerefReturnVar(l);
+    DerefIfVarReturnIt(l);
     if (l==old) return NameFalse; // cyclic
     if (updateF) {
       old=oz_deref(oz_tail(old));

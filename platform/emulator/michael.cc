@@ -148,6 +148,12 @@ OZ_BI_define(BIhalt, 0,0)
   return PROCEED;
 } OZ_BI_end
 
+OZ_BI_define(BIdebugRef, 0,0)
+{
+  debugRef = debugRef?0:1;
+  return PROCEED;
+} OZ_BI_end
+
 OZ_BI_define(BIlivenessX, 1,1)
 {
   OZ_declareIntIN(0,pc);
@@ -290,6 +296,8 @@ OZ_BI_proto(BIHeapChunk_poke);
 static
 OZ_C_proc_interface oz_interface[] = {
   {"stop",0,0,BIstop},
+  {"halt",0,0,BIhalt},
+  {"debugRef",0,0,BIdebugRef},
   {"status",1,1,BIstatusNew},
   {"displayDef",2,0,BIdisplayDef},
   {"displayCode",2,0,BIdisplayCode},
