@@ -234,15 +234,53 @@ import
       base url of the containing document.
 
     <p>
-      I this respect, a module manager will behave similarly to a
+      In this respect, a module manager will behave similarly to a
       web-browser.  When it
       installs a module that was loaded from url ?{U}, the latter's
       full import urls are resolved with respect to ?{U}.
-      <ptr to="figure.modman.resolve"> shows two small examples.
+      <ptr to="figure.modman.resolve"> shows a small example, where the root functor has the absolut filename <file>/home/schulte/A.ozf</file>.
 
     <figure id="figure.modman.resolve">
-      <caption/Examples for resolving urls./
-      <p> Gaga
+      <caption/Example for resolving urls./
+
+      <table>
+        <tr/ <th/Module name/ <th/Resolved url/ <th/Import specification/
+        <tr>
+           <td/<<A>>/
+           <td>
+              <file>/home/schulte/A.ozf</file>
+           </td>
+           <td>
+<<<import
+   B at 'down/B.ozf'
+   C at 'http://www.foo.org/C.ozf'>>>
+           </td>
+        </tr>
+        <tr>
+           <td/<<B>>/
+           <td>
+              <file>/home/schulte/down/B.ozf</file>
+           </td>
+           <td>empty</td>
+        </tr>
+        <tr>
+           <td/<<C>>/
+           <td>
+              <file>http://www.foo.org/C.ozf</file>
+           </td>
+           <td>
+<<<import D at 'D.ozf'>>
+           </td>
+        </tr>
+        <tr>
+           <td/<<D>>/
+           <td>
+              <file>http://www.foo.org/D.ozf</file>
+           </td>
+           <td> empty
+           </td>
+        </tr>
+      </table>
     </figure>
 
 
@@ -308,8 +346,8 @@ functor F
 export Pam
 define
    fun {DoPam Xs P Ys}
-      case Xs of nil then nil
-      [] X|Xr then {DoPam Xr {P X}|Ys}
+      case Xs of nil then Ys
+      [] X|Xr then {DoPam Xr P {P X}|Ys}
       end
    end
 

@@ -34,7 +34,7 @@
 
     <p>
       Our first application is a program that copies a file from a
-      URL to a local file. The program is called <kbd/Webget.oza/.
+      url to a local file. The program is called <kbd/Webget.oza/.
 
     <p>
       Our goal is to have an application that can be started like any
@@ -56,7 +56,7 @@
     <p>
       In the following we consider the three main steps in
       constructing our application. We give a brief outline of what to
-      do, the following section are going to detail the steps.
+      do, the following sections are going to detail the steps.
 
     <p>
     <list>
@@ -126,7 +126,7 @@ import
       with a lexical scope that extends over the entire
       body of the functor. Secondly, the identifiers also serve
       as <def/module names/. When the functor corresponding to this
-      definition is executed, these variables are given as values the
+      definition is executed, the variables are given as values the
       system modules with the same names.
 
     <p>
@@ -139,7 +139,7 @@ import
 </chunk>
       In <ptr to="section.modman.import"> we will discuss system
       modules in more detail. In particular, <ptr
-      to="table.modman.system"> lists all available system modules.
+      to="table.modman.system"> lists available system modules.
 
     <para class=apropos><title/Functor body/
       The <def/body of a functor/ is a statement that is executed
@@ -271,7 +271,7 @@ end
       The functor pickled into <file/Webget.oza/ can be executed by
       applying the program <file/ozengine/ to the functor and the
       application arguments. For example, to copy the Mozart license
-      file at URL
+      file at url
       <file>http://mozart.ps.uni-sb.de/LICENSE</file> to the local
       file <file/LICENSE/, simply enter the command line below at your
       shell promt:
@@ -286,16 +286,17 @@ end
         <item> The module manager loads the pickled functor
         <file/Webget.oza/. This initial application functor is called
         the <def/root functor/.
-        <item> The module manager <def/links/ the functor by applying the functor body to
-        the imported system modules <code proglang=oz/Application/ and
+        <item> The module manager <def/links/ the functor by applying
+        the functor body to <def/argument modules/. The argument
+        modules in our example are
+        the system modules <code proglang=oz/Application/ and
         <code proglang=oz/Open/.
-        <item> It <def/instantiates/ the functor by executing its body.
-<!--
-<def/executes/ the functor by
--->
+        <item> Then it executes the functor body.
       </list>
 
     <p>
+      The different steps in application are detailled in the
+      following sections.
 
   </section>
 
