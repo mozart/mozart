@@ -113,7 +113,7 @@ define(M4INSTRTWOREGS,``''
     ``
     {
       int regIndex = getRegArg(PC+1);
-      TaggedRef name   = getAtomArg(PC+2);
+      TaggedRef name   = getLiteralArg(PC+2);
       DebugCheck(&Reg1(0)!= &(e->toplevelVars[0]),
                  error("createNamedVar: e->toplevelVars expected"););
       TaggedRef newVar = createNamedVariable(regIndex,name,e);
@@ -150,11 +150,11 @@ define(M4INSTRTWOREGS,``''
                                     Reg2(getRegArg(PC+2)),
                                     NOFLATGUARD())) {
                    SHALLOWFAIL;
-                   HANDLE_FAILURE(PC+3,
-                                  message("unify: %s = %s",
+                   HANDLE_FAILURE(message("%s = %s failed\n",
                                           OZ_toC(Reg1(getRegArg(PC+1))),
                                           OZ_toC(Reg2(getRegArg(PC+2)))),
-                                          );
+                                  message("In instruction UNIFY\n")
+                                  );
                  }
                }''
                DISPATCH(3);
@@ -164,7 +164,7 @@ define(M4INSTRTWOREGS,``''
   M4INSTRONEREG( PUTSTRUCTURE,
                ``
                  STuple *stuple =
-                   STuple::newSTuple(getAtomArg(PC+1),getPosIntArg(PC+2));
+                   STuple::newSTuple(getLiteralArg(PC+1),getPosIntArg(PC+2));
                  TaggedRef term = makeTaggedSTuple(stuple);
 
                  Reg1(getRegArg(PC+3)) = term;
@@ -176,7 +176,7 @@ define(M4INSTRTWOREGS,``''
 
   M4INSTRONEREG( PUTRECORD,
                ``
-                 TaggedRef label = getAtomArg(PC+1);
+                 TaggedRef label = getLiteralArg(PC+1);
                  Arity *ff = (Arity *) getAdressArg(PC+2);
                  SRecord *srecord = new SRecord(ff,label,-1,NO);
 
@@ -189,7 +189,7 @@ define(M4INSTRTWOREGS,``''
 
   M4INSTRONEREG( PUTCONSTANT,
                ``
-               Reg1(getRegArg(PC+2)) = getAtomArg(PC+1);
+               Reg1(getRegArg(PC+2)) = getLiteralArg(PC+1);
                DISPATCH(3);
                ''
                );
@@ -233,7 +233,7 @@ define(M4INSTRTWOREGS,``''
 
   INSTRUCTION(SETCONSTANT)
     {
-      *sPointer++ = getAtomArg(PC+1);
+      *sPointer++ = getLiteralArg(PC+1);
       DISPATCH(2);
     }
 
@@ -258,7 +258,7 @@ define(M4INSTRTWOREGS,``''
 
   M4INSTRONEREG( GETSTRUCTURE,
                ``{
-                 TaggedRef label = getAtomArg(PC+1);
+                 TaggedRef label = getLiteralArg(PC+1);
                  int arity       = getPosIntArg(PC+2);
 
                  TaggedRef term = Reg1( getRegArg(PC+3) );
@@ -273,10 +273,10 @@ define(M4INSTRTWOREGS,``''
                                                   NOFLATGUARD())) {
                        DISPATCH(4);
                      }
-
                    } else {
 
-                     e->bindToNonvar(termPtr,term,makeTaggedSTuple(stuple),NOFLATGUARD());
+                     e->bindToNonvar(termPtr,term,makeTaggedSTuple(stuple),
+                                     NOFLATGUARD());
 
                      sPointer = stuple->getRef();
                      mode = WRITE;
@@ -292,13 +292,11 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  SHALLOWFAIL;
-                 HANDLE_FAILUREX(PC+4,
-                                STuple *stuple = newSTupleOutline(label,arity);
-                                mode = WRITE;
-                                sPointer = stuple->getRef(),
-                                message("getstructure %s/%d = %s",
-                                        OZ_toC(label),arity,
-                                        OZ_toC(*termPtr)),
+                 HANDLE_FAILURE(message("%s(..#%d..) = %s failed\n",
+                                        OZ_toC(getLiteralArg(PC+1)),
+                                        getPosIntArg(PC+2),
+                                        OZ_toC(Reg1(getRegArg(PC+3)))),
+                                message("In instruction GETSTRUCTURE\n");
                                 );
                }''
                );
@@ -306,7 +304,7 @@ define(M4INSTRTWOREGS,``''
 
   M4INSTRONEREG( GETRECORD,
                ``{
-                 TaggedRef label = getAtomArg(PC+1);
+                 TaggedRef label = getLiteralArg(PC+1);
                  Arity *ff = (Arity *) getAdressArg(PC+2);
 
                  TaggedRef term = Reg1( getRegArg(PC+3) );
@@ -340,13 +338,10 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  SHALLOWFAIL;
-                 HANDLE_FAILUREX(PC+4,
-                                SRecord *srecord = newSRecordOutline(ff,label);
-                                mode = WRITE;
-                                sPointer = srecord->getRef(),
-                                message("getrecord %s/%d = %s",
-                                        OZ_toC(label),ff,
-                                        OZ_toC(*termPtr)),
+                 HANDLE_FAILURE(message("%s(..:.. ...) = %s failed\n",
+                                        OZ_toC(getLiteralArg(PC+1)),
+                                        OZ_toC(Reg1(getRegArg(PC+3)))),
+                                message("In instruction GETRECORD\n")
                                 );
                }''
                );
@@ -355,11 +350,11 @@ define(M4INSTRTWOREGS,``''
   M4INSTRONEREG(TESTCONST,
     ``{
         TaggedRef term = Reg1(getRegArg(PC+1));
-        TaggedRef atm  = getAtomArg(PC+2);
+        TaggedRef atm  = getLiteralArg(PC+2);
 
         DEREF(term,termPtr,tag);
 
-        if (sameAtom(atm,term)) {
+        if (sameLiteral(term,atm)) {
           JUMP( getLabelArg(PC+3) );
         }
 
@@ -399,7 +394,7 @@ define(M4INSTRTWOREGS,``''
 
   M4INSTRONEREG( GETCONSTANT,
                ``{
-                 TaggedRef atm = getAtomArg(PC+1);
+                 TaggedRef atm = getLiteralArg(PC+1);
 
                  TaggedRef term = Reg1( getRegArg(PC+2) );
                  DEREF(term,termPtr,tag);
@@ -409,20 +404,23 @@ define(M4INSTRTWOREGS,``''
                    DISPATCH(3);
                  }
 
-                 if ( isLiteral(tag) && sameAtom(term,atm) ) {
+                 if ( isLiteral(tag) && sameLiteral(term,atm) ) {
                    DISPATCH(3);
                  }
 
-                 if (isCVar(term) &&
-                     tagged2CVar(term)->unify(termPtr,term,NULL,atm,NOFLATGUARD())) {
-                   DISPATCH(3);
+                 if (isCVar(term)) {
+                   if (tagged2CVar(term)->unify(termPtr,term,NULL,
+                                                atm,NOFLATGUARD())) {
+                     DISPATCH(3);
+                   }
+                   term = *termPtr;  // Note: 'term' may be disposed
                  }
 
                  SHALLOWFAIL;
-                 HANDLE_FAILURE(PC+3,
-                                message("getconstant %s = %s",
-                                        OZ_toC(atm),
-                                        OZ_toC(term)),
+                 HANDLE_FAILURE(message("%s = %s failed\n",
+                                        OZ_toC(Reg1(getRegArg(PC+2))),
+                                        OZ_toC(getLiteralArg(PC+1))),
+                                message("In instruction GETCONSTANT\n")
                                 );
                }''
                );
@@ -431,9 +429,7 @@ define(M4INSTRTWOREGS,``''
   M4INSTRONEREG( GETINT,
                ``{
                  TaggedRef i = getNumberArg(PC+1);
-                 Reg reg = getRegArg(PC+2);
-
-                 TaggedRef term = Reg1(reg);
+                 TaggedRef term = Reg1(getRegArg(PC+2));
                  DEREF(term,termPtr,tag);
 
                  if (isNotCVar(tag)) {
@@ -445,16 +441,19 @@ define(M4INSTRTWOREGS,``''
                    DISPATCH(3);
                  }
 
-                 if (isCVar(term) &&
-                     tagged2CVar(term)->unify(termPtr,term,NULL,i,NOFLATGUARD())) {
-                   DISPATCH(3);
+                 if (isCVar(term)) {
+                   if (tagged2CVar(term)->unify(termPtr,term,NULL,
+                                                i,NOFLATGUARD())) {
+                     DISPATCH(3);
+                   }
+                   term = *termPtr;  // Note: 'term' may be disposed
                  }
 
                  SHALLOWFAIL;
-                 HANDLE_FAILURE(PC+3,
-                                message("getint %s = %s",
-                                        OZ_toC(i),
-                                        OZ_toC(term)),
+                 HANDLE_FAILURE(message("%s = %s failed\n",
+                                        OZ_toC(Reg1(getRegArg(PC+2))),
+                                        OZ_toC(getNumberArg(PC+1))),
+                                message("In instruction GETINT\n")
                                 );
                }''
                );
@@ -475,11 +474,13 @@ define(M4INSTRTWOREGS,``''
 
                    if (isCVar(term) == OK) {
                      if (tagged2CVar(term)->unify(termPtr, term, NULL,
-                                                  makeTaggedLTuple(ltuple),NOFLATGUARD())) {
+                                                  makeTaggedLTuple(ltuple),
+                                                  NOFLATGUARD())) {
                        DISPATCH(4);
                      }
                    } else {
-                     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),NOFLATGUARD());
+                     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),
+                                     NOFLATGUARD());
                      Xreg(reg3) = makeTaggedRef(ltuple->getRef()+1);
 
                      DISPATCH(4);
@@ -488,7 +489,8 @@ define(M4INSTRTWOREGS,``''
 
                  if (isLTuple(term)) {
                    TaggedRef *argg = tagged2LTuple(term)->getRef();
-                   if (e->fastUnify(Reg1(reg2),makeTaggedRef(argg),NOFLATGUARD())) {
+                   if (e->fastUnify(Reg1(reg2),makeTaggedRef(argg),
+                                    NOFLATGUARD())) {
                      Xreg(reg3) = tagged2NonVariable(argg+1);
 
                      DISPATCH(4);
@@ -496,15 +498,11 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  SHALLOWFAIL;
-                 HANDLE_FAILUREX(PC+4,
-                                 LTuple *ltuple
-                                 = new LTuple(Reg1(reg2),
-                                              e->currentUVarPrototype);
-                                 Xreg(reg1) = makeTaggedLTuple(ltuple);
-                                 Xreg(reg3) = makeTaggedRef(ltuple
-                                                            ->getRef()+1),
-                                 message("getLisValVar %s", OZ_toC(*termPtr)),
-                                 );
+                 HANDLE_FAILURE(message("%s = %s|_ failed\n",
+                                        OZ_toC(Xreg(getRegArg(PC+1))),
+                                        OZ_toC(Reg1(getRegArg(PC+2)))),
+                                message("In instruction GETLISTVALVAR\n")
+                                );
                }''
                );
 
@@ -520,11 +518,14 @@ define(M4INSTRTWOREGS,``''
                    LTuple *ltuple = new LTuple();
                    if (isCVar(term) == OK) {
                      if(tagged2CVar(term)->unify(termPtr, term, NULL,
-                                                 makeTaggedLTuple(ltuple),NOFLATGUARD())) {
+                                                 makeTaggedLTuple(ltuple),
+                                                 NOFLATGUARD())) {
                        DISPATCH(2);
                      }
+                     term = *termPtr;  // Note: 'term' may be disposed
                    } else {
-                     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),NOFLATGUARD());
+                     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),
+                                     NOFLATGUARD());
                      sPointer = ltuple->getRef();
                      mode = WRITE;
                      DISPATCH(2);
@@ -539,13 +540,10 @@ define(M4INSTRTWOREGS,``''
 
 
                  SHALLOWFAIL;
-                 HANDLE_FAILUREX(PC+2,
-                                 LTuple *ltuple = new LTuple();
-                                 mode = WRITE;
-                                 sPointer = ltuple->getRef(),
-                                 message("getlist = %s",
-                                         OZ_toC(*termPtr)),
-                                 );
+                 HANDLE_FAILURE(message("%s = _|_ failed\n",
+                                        OZ_toC(Reg1(getRegArg(PC+1)))),
+                                message("In instruction GETLIST\n")
+                                );
                }''
                );
 
@@ -614,10 +612,10 @@ define(M4INSTRTWOREGS,``''
                      DISPATCH(2);
                    }
                    SHALLOWFAIL;
-                   HANDLE_FAILURE(PC+2,
-                                  message("unifyvalue %s = %s",
+                   HANDLE_FAILURE(message("%s = %s failed\n",
                                           OZ_toC(*(sPointer-1)),
                                           OZ_toC(Reg1(reg))),
+                                  message("In instruction UNIFYVALUE\n")
                                   );
                  }
                }''
@@ -641,10 +639,10 @@ define(M4INSTRTWOREGS,``''
                    if ( !e->fastUnify(Reg1(reg), makeTaggedRef(sPointer),
                                       NOFLATGUARD()) ) {
                      SHALLOWFAIL;
-                     HANDLE_FAILURE(PC+3,
-                                    message("unifyvalvar %s = %s",
+                     HANDLE_FAILURE(message("%s = %s failed\n",
                                             OZ_toC(*sPointer),
                                             OZ_toC(Reg1(reg))),
+                                    message("In instruction UNIFYVALVAR\n")
                                     );
                    }
 
@@ -661,21 +659,21 @@ define(M4INSTRTWOREGS,``''
     {
       switch(mode) {
       case WRITE:
-        *sPointer++ = getAtomArg(PC+1);
+        *sPointer++ = getLiteralArg(PC+1);
         DISPATCH(2);
 //      case READ:
       default:
         if (e->fastUnify(makeTaggedRef(sPointer++),
-                         getAtomArg(PC+1),
+                         getLiteralArg(PC+1),
                          NOFLATGUARD()) ) {
           DISPATCH(2);
         }
 
         SHALLOWFAIL;
-        HANDLE_FAILURE(PC+2,
-                       message("unifyconst %s = %s",
-                                 OZ_toC(getAtomArg(PC+1)),
+        HANDLE_FAILURE(message("%s = %s failed\n",
+                               OZ_toC(getLiteralArg(PC+1)),
                                OZ_toC(*(sPointer-1))),
+                       message("In instruction UNIFYCONSTANT\n")
                        );
       }
     }
@@ -695,10 +693,10 @@ define(M4INSTRTWOREGS,``''
         }
 
         SHALLOWFAIL;
-        HANDLE_FAILURE(PC+2,
-                       message("unifyint %s = %s",
+        HANDLE_FAILURE(message("%s = %s failed\n",
                                OZ_toC(getNumberArg(PC+1)),
                                OZ_toC(*(sPointer-1))),
+                       message("In instruction UNIFYINT\n")
                        );
       }
     }

@@ -9,6 +9,9 @@
   ------------------------------------------------------------------------
 */
 
+/****************************************************************************
+ ****************************************************************************/
+
 #undef TURNED_OFF
 // #define TURNED_OFF
 
@@ -42,127 +45,169 @@
 #define inline
 #endif
 
+/****************************************************************************
+ * MACROS
+ ****************************************************************************/
+
+/* collect a pointer */
 #define GCREF(field) if (field) { field = field->gc(); }
 
-//*****************************************************************************
-//               Forward Declarations
-//*****************************************************************************
+
+/****************************************************************************
+ *               Forward Declarations
+ ****************************************************************************/
 
 static void processUpdateStack (void);
 void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm);
 void performCopying(void);
 Bool isInTree(Board *b);
 
-//*****************************************************************************
-//               Macros and Inlines
-//*****************************************************************************
 
-#define MEMCPY(N,P,S) memcpy(N, P, S); INITMEM(P, S, 0xff); MOVEMSG(P, N, S);
+/****************************************************************************
+ *               Debug
+ ****************************************************************************/
 
-#define CHECKCOLLECTED(elem,type)  \
-  if (GCISMARKED((int)elem)) return (type) GCUNMARK((int) elem);
+/*
+ * CHECKSPACE  - check if object is really copied from heap (1 chunk)
+ * VERBOSE     - inform user about current state of gc
+ * WIPEOUTFROM - fill from space after collection with 0xff
+ *     Note: in VERBOSE modus big external file (verb-out.txt) is produced.
+ *    It contains very detailed debug (trace) information;
+ */
 
-
-//// switches for debug macros
-#define CHECKSPACE  // check if object is really copied from heap (1 chunk)
-// #define INITFROM    // initialise copied object
-// #define VERBOSE     // inform user about current state of gc
-// Note: in VERBOSE modus big external file (verb-out.txt) is produced.
-// It contains very detailed debug (trace) information;
-
-// the debug macros themselves
-#ifndef DEBUG_GC
-#  undef CHECKSPACE
-#  undef INITFROM
-#  undef VERBOSE
+#ifdef DEBUG_GC
+#  define CHECKSPACE
+#  define VERBOSE
+// #  define WIPEOUTFROM
 #endif
 
+
+
+/*
+ * CHECKSPACE -- check if object is really copied from heap
+ *   has as set of macros:
+ *    INITCHECKSPACE - save pointer to from-space & print from-space
+ *    EXITCHECKSPACE - print to-space
+ *    INFROMSPACE    - assert in from-space
+ *    NOTINTOSPACE   - assert not in to-space
+ *    INTOSPACE      - assert in to-space
+ * NOTE: this works only for chunk
+ */
 
 #ifdef CHECKSPACE
-   MemChunks *from;
-#   define INITCHECKSPACE printf("FROM-SPACE:\n");                            \
-                          from = MemChunks::list;                             \
-                          from->print();
+
+MemChunks *from;
+
+#   define INITCHECKSPACE                                                     \
+{                                                                             \
+  printf("FROM-SPACE:\n");                                                    \
+  from = MemChunks::list;                                                     \
+  from->print();                                                              \
+}
+
+#   define EXITCHECKSPACE                                                     \
+{                                                                             \
+  printf("TO-SPACE:\n");                                                      \
+  MemChunks::list->print();                                                   \
+}
+
+/* assert that P is in from-space or that P is NULL */
 #   define INFROMSPACE(P)                                                     \
-      if (opMode == IN_GC && P != NULL && !from->inChunkChain((void*)P))      \
-           error("NOT taken from heap.");
+  if (opMode == IN_GC && P != NULL && !from->inChunkChain((void*)P)) {        \
+    error("not in from-space: 0x%x %d", P, __LINE__);                         \
+  }
+
+/* assert that P is not in to-space or that P is NULL */
+#   define NOTINTOSPACE(P)                                                    \
+  if (opMode == IN_GC && P != NULL                                            \
+      && MemChunks::list->inChunkChain((void*)P)) {                           \
+    error("in to-space 0x%x %d", P, __LINE__);                                \
+  }
+
+
+/* assert that P is in to-space or that P is NULL */
 #   define INTOSPACE(P)                                                       \
-      if (opMode == IN_GC && P != NULL && MemChunks::list->inChunkChain((void*)P)) \
-                             error("Taken from TO-SPACE 0x%x %d", P, __LINE__);
-#   define TOSPACE(P)                                                         \
-      if (opMode == IN_GC && P != NULL && !MemChunks::list->inChunkChain((void*)P)) \
-                        error("Not taken from TO-SPACE 0x%x %d", P, __LINE__);
+  if (opMode == IN_GC && P != NULL                                            \
+      && !MemChunks::list->inChunkChain((void*)P)) {                          \
+    error("not in to-space 0x%x %d", P, __LINE__);                            \
+  }
 
-#   define TAGINTOSPACE(T) if(!(isRef(T) || isAnyVar(T) ||                   \
-                                tagTypeOf(T) == ATOM || tagTypeOf(T) == SMALLINT || \
-                                tagTypeOf(T) == FLOAT || tagTypeOf(T) == BIGINT))   \
-                          if (opMode == IN_GC &&                              \
-                              MemChunks::list->inChunkChain(tagValueOf(T)))    \
-                              error("Taken from TO-SPACE 0x%x %d",            \
-                                   tagValueOf(T), __LINE__);
-#   define PRINTTOSPACE   printf("TO:\n");                                    \
-                          MemChunks::list->print();
-#else
+#else // CHECKSPACE
 #   define INITCHECKSPACE
+#   define EXITCHECKSPACE
 #   define INFROMSPACE(P)
+#   define NOTINTOSPACE(P)
 #   define INTOSPACE(P)
-#   define TOSPACE(P)
-#   define TAGINTOSPACE(T)
-#   define PRINTTOSPACE
-#endif
+#endif // CHECKSPACE
 
-#ifdef INITFROM
-#  define INITMEM(A,S,B)   memset(A,B,S)
-#else
-#  define INITMEM(A,S,B)
-#endif
+
+
+/*
+ * VERBOSE  --- print various debug information to the file verb-out.txt
+ */
 
 #ifdef VERBOSE
-#  define PUTCHAR(C) putc(C, verbOut)
 #  define GCMETHMSG(S)                                                        \
-    fprintf(verbOut,"(gc) [%d] %s this: 0x%p :%d\n",                          \
-            (ptrStack.getUsed ()), S,this,__LINE__);                          \
+    fprintf(verbOut,"(gc) [%d] %s this: 0x%p ",(ptrStack.getUsed ()),S,this); \
+    WHERE(verbOut);                                                           \
+    fprintf(verbOut,"\n");                                                    \
     fflush(verbOut);
 #  define GCNEWADDRMSG(A)                                                     \
-    fprintf(verbOut,"(gc) --> 0x%p :%d\n",(void *)A,__LINE__);                \
+    fprintf(verbOut,"(gc) --> 0x%p ",(void *)A);                              \
+    WHERE(verbOut);                                                           \
+    fprintf(verbOut,"\n");                                                    \
     fflush(verbOut);
 #  define GCOLDADDRMSG(A)                                                     \
-    fprintf(verbOut,"(gc) <-- 0x%p :%d\n",(void *)A,__LINE__);                \
+    fprintf(verbOut,"(gc) <-- 0x%p ",(void *)A);                              \
+    WHERE(verbOut);                                                           \
+    fprintf(verbOut,"\n");                                                    \
     fflush(verbOut);
 #  define GCPROCMSG(S)                                                        \
-    fprintf(verbOut,"(gc) [%d] %s :%d\n",                                     \
-            (ptrStack.getUsed ()),S,__LINE__);                                \
+    fprintf(verbOut,"(gc) [%d] %s ",(ptrStack.getUsed ()),S);                 \
+    WHERE(verbOut);                                                           \
+    fprintf(verbOut,"\n");                                                    \
     fflush(verbOut);
-# define MOVEMSG(F,T,S)                                                       \
-     fprintf(verbOut,"(gc) \t%d bytes moved from 0x%p to 0x%p\n",S,F,T);      \
-     fflush(verbOut)
 #else
-#  define PUTCHAR(C)
 #  define GCMETHMSG(S)
 #  define GCPROCMSG(S)
 #  define GCNEWADDRMSG(A)
 #  define GCOLDADDRMSG(A)
-#  define MOVEMSG(F,T,S)
 #endif
 
-/*
+
+/****************************************************************************
  *   Modes of working:
- */
+ *     IN_GC: garbage collecting
+ *     IN_TC: term copying
+ ****************************************************************************/
+
 typedef enum {IN_GC = 0, IN_TC} GcMode;
 
 GcMode opMode;
-static int varCount;   // not only variables, but names, cells & abstractions;
+
+/*
+ * TC: groundness check needs to count the number of
+ *    variables, names, cells & abstractions
+ */
+static int varCount;
+
+
+/*
+ * TC: the copy board in from-space and to-space
+ */
 static Board* fromCopyBoard;
 static Board* toCopyBoard;
 
-inline int  GCMARK(int S)      { return (S | GCTAG); }
-inline int  GCMARK(void *S)    { return GCMARK((int) S); }
-inline int  GCUNMARK(int S)    { return S & ~GCTAG; }
-inline Bool GCISMARKED(int S)  { return S &  GCTAG ? OK : NO; }
 
+/****************************************************************************
+ * copy from from-space to to-space
+ ****************************************************************************/
 inline
 void fastmemcpy(int *to, int *frm, int sz)
 {
+#ifdef VERBOSE
+  fprintf(verbOut,"(gc) \tcopy %d bytes from 0x%p to 0x%p\n",sz,frm,to);
+#endif
   switch(sz) {
   case 36: *(to+8) = *(frm+8);
   case 32: *(to+7) = *(frm+7);
@@ -180,8 +225,10 @@ void fastmemcpy(int *to, int *frm, int sz)
       sz -= sizeof(int);
     }
   }
+#ifdef WIPEOUTFROM
+  if (opMode == IN_GC) memset(frm,sz,0xff);
+#endif
 }
-
 
 inline
 void *gcRealloc(void *ptr, size_t sz)
@@ -193,19 +240,6 @@ void *gcRealloc(void *ptr, size_t sz)
   return ret;
 }
 
-
-
-inline
-Bool needsNoCollection(TaggedRef t)
-{
-  Assert(t!=makeTaggedNULL());
-
-  TypeOfTerm tag = tagTypeOf(t);
-  return (tag == SMALLINT ||
-          (tag == ATOM && (tagged2Atom(t)->isDynXName ()) == NO))
-         ? OK
-         : NO;
-}
 
 //*****************************************************************************
 //                        Consistency checks of trails
@@ -226,9 +260,16 @@ void Trail::gc()
 }
 
 
-//*****************************************************************************
-//               ADT  TypedPtr
-//*****************************************************************************
+
+/****************************************************************************
+ * The pointer stack is the recursion stack for garbage collection
+ * to avoid the usage of the runtime call stack
+ *
+ * Elements of the stack are of the type "TypePtr" which has a tag
+ * and a value field.
+ *
+ * The stack is stored in the global variable "ptrStack".
+ ****************************************************************************/
 
 enum TypeOfPtr {
   PTR_LTUPLE,
@@ -244,70 +285,65 @@ enum TypeOfPtr {
 };
 
 
-typedef TaggedRef TaggedPtr;
+typedef TaggedRef TypedPtr;
 
 inline
-TaggedPtr makeTaggedPtr(void *ptr, TypeOfPtr tag)
+TypedPtr makeTypedPtr(void *ptr, TypeOfPtr tag)
 {
   return makeTaggedRef((TypeOfTerm) tag, ptr);
 }
 
 inline
-TypeOfPtr getType(TaggedPtr tp)
+TypeOfPtr getType(TypedPtr tp)
 {
   return (TypeOfPtr) tagTypeOf(tp);
 }
 
 inline
-void *getPtr(TaggedPtr tp)
+void *getPtr(TypedPtr tp)
 {
   return tagValueOf(tp);
 }
 
-//*****************************************************************************
-//               Recursion stack for GC
-//*****************************************************************************
-
 class TypedPtrStack: public Stack {
 public:
-  TypedPtrStack();
-  ~TypedPtrStack();
+  TypedPtrStack() : Stack() {}
+  ~TypedPtrStack() {}
 
   void push(void *ptr, TypeOfPtr type) {
-    Stack::push((StackEntry)makeTaggedPtr(ptr,type));
+    Stack::push((StackEntry)makeTypedPtr(ptr,type));
   }
 
-  TaggedPtr pop()  { return (TaggedPtr) Stack::pop(); }
+  TypedPtr pop()  { return (TypedPtr) Stack::pop(); }
 };
 
+#ifdef MM2
 // gcc on SGI needs this
 TypedPtrStack::TypedPtrStack() : Stack() {}
 TypedPtrStack::~TypedPtrStack() {}
+#endif
+
+static TypedPtrStack ptrStack;
 
 
-
-//**************************************
-//               SavedPtrStack
-//**************************************
-
-/*
+/****************************************************************************
  *  SavedPtrStack consists of SavedPtr's and is used by coping
  * of terms (in common sense) to save overwrited value.
  *
  *  We must make here some note:
  *  such technic is used since it is was already used (in gc):)),
  * and since it seems to be efficient.
- *  It ralays heavy on fact that first cell of every term contains
+ *  It relies heavyly on fact that first cell of every term contains
  * no data that can have GCTAG bit, and, moreover, this cell
  * contains no compiler-related information (for instance,
  * pointer to procedure table if we are using run-time resolution
  * of class' methods across class hierarchy
- */
+ ****************************************************************************/
 
 class SavedPtrStack: public Stack {
 public:
-  SavedPtrStack();
-  ~SavedPtrStack();
+  SavedPtrStack() : Stack() {}
+  ~SavedPtrStack() {}
   void pushPtr(int* ptr, int value)
   {
     ensureFree(2);
@@ -316,10 +352,58 @@ public:
   }
 };
 
-// gcc on SGI needs this
-SavedPtrStack::SavedPtrStack() : Stack() {}
-SavedPtrStack::~SavedPtrStack() {}
+static SavedPtrStack savedPtrStack;
 
+
+/****************************************************************************
+ * GCMARK
+ ****************************************************************************/
+
+/*
+ * set: only used in conjunction with the function setHeapCell ???
+ */
+inline int  GCMARK(int S)      { return (S | GCTAG); }
+inline int  GCMARK(void *S)    { return GCMARK((int) S); }
+
+inline int  GCUNMARK(int S)    { return S & ~GCTAG; }
+inline Bool GCISMARKED(int S)  { return S &  GCTAG ? OK : NO; }
+
+
+/*
+ * Check if object in from-space (elem) is already collected.
+ *   Then return the forward pointer to to-space.
+ */
+#define CHECKCOLLECTED(elem,type)  \
+  if (GCISMARKED((int)elem)) return (type) GCUNMARK((int) elem);
+
+
+/*
+ * Write a marked forward pointer (pointing into the to-space)
+ * into a structure in the from-space.
+ *
+ *  If mode is IN_GC, store value in cell ptr only;
+ *  else save cell at ptr and also store in this cell.
+ *
+ */
+inline
+void storeForward (int* fromPtr, int newValue)
+{
+  if (opMode == IN_TC) {
+    savedPtrStack.pushPtr(fromPtr, (int) *fromPtr);
+  }
+  DebugGC(opMode == IN_GC
+          && MemChunks::list->inChunkChain((void *)fromPtr),
+          error ("storing marked value in 'TO' space"));
+  DebugGC(opMode == IN_GC
+          && from->inChunkChain ((void *) newValue),
+          error ("storing (marked) ref in to FROM-space"));
+  *fromPtr = GCMARK(newValue);
+}
+
+inline
+void storeForward (int* fromPtr, void *newValue) {
+  storeForward (fromPtr, (int) newValue);
+}
 
 //*****************************************************************************
 //               Functions to gc external references into heap
@@ -349,6 +433,18 @@ public:
 };
 
 
+inline
+Bool needsNoCollection(TaggedRef t)
+{
+  Assert(t!=makeTaggedNULL());
+
+  TypeOfTerm tag = tagTypeOf(t);
+  return (tag == SMALLINT ||
+          (tag == LITERAL && (tagged2Literal(t)->isDynName ()) == NO))
+         ? OK
+         : NO;
+}
+
 Bool gcProtect(TaggedRef *ref)
 {
   if (needsNoCollection(*ref))
@@ -376,81 +472,34 @@ Bool gcUnprotect(TaggedRef *ref)
 }
 
 
-//*****************************************************************************
-//                          Global variables
-//*****************************************************************************
+/****************************************************************************
+ * The update stack contains REF's to not yet copied variables
+ ****************************************************************************/
 
 
+DebugGCT(static int updateStackCount = 0);
 
-class TaggedRefStack: public Stack {
+class UpdateStack: public Stack {
 public:
-  TaggedRefStack();
-  ~TaggedRefStack();
-  void       push(TaggedRef *t) { Stack::push((StackEntry)t); }
-  TaggedRef *pop()              { return (TaggedRef*) Stack::pop(); }
+  UpdateStack() : Stack() {}
+  ~UpdateStack() {}
+  void push(TaggedRef *t) {
+    DebugGCT(updateStackCount++);
+    Stack::push((StackEntry)t);
+  }
+  TaggedRef *pop() {
+    DebugGCT(updateStackCount--;);
+    return (TaggedRef*) Stack::pop();
+  }
 };
 
-// gcc on SGI needs this
-TaggedRefStack::TaggedRefStack() : Stack() {}
-TaggedRefStack::~TaggedRefStack() {}
-
-TaggedRefStack updateStack;
-
-static TypedPtrStack ptrStack;
-
-static SavedPtrStack savedPtrStack;
-
-DebugGCT(static int updateStackCount);
+UpdateStack updateStack;
 
 
-//*****************************************************************************
-//                    Auxiliary stuff to collect TERMs
-//*****************************************************************************
 
-
-/*
- *  Destructive modification of term:
- *  If mode is IN_GC, store value in cell ptr only;
- *  else save cell at ptr and also store in this cell.
- *
- */
-inline
-void setHeapCell (int* ptr, int newValue)
-{
-  if (opMode == IN_TC) {
-    savedPtrStack.pushPtr(ptr, (int) *ptr);
-  }
-  DebugGC(opMode == IN_GC
-           && MemChunks::list->inChunkChain((void *)ptr)
-           && GCISMARKED (newValue),
-           error ("storing marked value in 'TO' space"));
-  DebugGC(opMode == IN_GC
-          && from->inChunkChain ((void *) GCUNMARK (newValue)),
-          error ("storing (marked) ref in to FROM-space"));
-  *ptr = newValue;
-}
-
-
-inline
-void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int sz)
-{
-  for(int i = sz-1; i>=0; i--) {
-    if (!isRef(oldBlock[i]) && isAnyVar(oldBlock[i])) {
-      gcTagged(oldBlock[i],newBlock[i]);
-    }
-  }
-}
-
-inline
-void gcTaggedBlockRecurse(TaggedRef *block,int sz)
-{
-  for(int i = sz-1; i>=0; i--) {
-    if (isRef(block[i]) || !isAnyVar(block[i])) {
-      gcTagged(block[i],block[i]);
-    }
-  }
-}
-
+/****************************************************************************
+ * TC: Path marks are used to decide if a board is local
+ ****************************************************************************/
 
 inline
 Bool isLocalBoard (Board* b)
@@ -458,21 +507,74 @@ Bool isLocalBoard (Board* b)
   return b->isPathMark() ? NO : OK;
 }
 
+/*
+ * TC: before copying:  all nodes are marked, but node self
+ */
 inline
-Atom *Atom::gc()
+void setPathMarks (Board *bb)
 {
-  if (isDynXName() == NO) {
+  bb = bb->getParentBoard ();
+  while (OK) {
+    bb->setPathMark();
+    if (bb->isRoot () == OK) {
+      return;
+    } else if (bb->isCommitted () == OK) {
+      bb = bb->getBoard ();
+    } else {
+      bb = bb->getParentBoard ();
+    }
+  }
+  error ("(gc) setPathMarks");
+}
+
+/*
+ * TC: after copying
+ */
+
+inline
+void unsetPathMarks (Board *bb)
+{
+  bb = bb->getParentBoard ();
+  while (OK) {
+    bb->unsetPathMark();
+    if (bb->isRoot () == OK) {
+      return;
+    } else if (bb->isCommitted () == OK) {
+      bb = bb->getBoard ();
+    } else {
+      bb = bb->getParentBoard ();
+    }
+  }
+  error ("(gc) unsetPathMarks");
+}
+
+
+/****************************************************************************
+ * Collect all types of terms
+ ****************************************************************************/
+
+/*
+ * Literals:
+ *   forward in 'printName'
+ * NOTE:
+ *   3 case: atom, optimized name, dynamic name
+ *   only dynamic names need to be copied
+ */
+inline
+Literal *Literal::gc()
+{
+  if (isDynName() == NO) {
     return (this);
   }
 
   if (opMode == IN_GC || isLocalBoard (home) == OK) {
-    GCMETHMSG("Atom::gc");
-    CHECKCOLLECTED (printName, Atom *);
+    GCMETHMSG("Literal::gc");
+    CHECKCOLLECTED (printName, Literal *);
     varCount++;
     Name *aux = (Name *) gcRealloc (this,sizeof (*this));
     GCNEWADDRMSG (aux);
     ptrStack.push (aux, PTR_NAME);
-    setHeapCell((int*) &printName, GCMARK(aux));
+    storeForward((int*) &printName, aux);
     return (aux);
   } else {
     return (this);
@@ -480,19 +582,28 @@ Atom *Atom::gc()
 }
 
 inline
-void Atom::gcRecurse ()
+void Literal::gcRecurse ()
 {
-  GCMETHMSG("Atom::gcRecurse");
-  DebugGC((isDynXName () == NO),
+  GCMETHMSG("Literal::gcRecurse");
+  DebugGC((isDynName () == NO),
           error ("non-dynamic name is found in gcRecurse"));
   home = home->gcBoard ();
-  if (home == (Board *) NULL)
+  if (home == (Board *) NULL) {
+    /*
+     * mm2
+     *  kludge: 'home' mayn't be (Board *) NULL;
+     *  therefore lets it be the rootBoard;
+     */
     home = am.rootBoard;
-  // kludge: 'home' mayn't be (Board *) NULL; therefore lets it be the rootBoard;
+  }
 }
 
-// WARNING: the value field of floats has no bit left for a gc mark
-//   --> copy every float !! so that X=Y=1.0 --> X=1.0, Y=1.0
+
+/*
+ * Float
+ * WARNING: the value field of floats has no bit left for a gc mark
+ *   --> copy every float !! so that X=Y=1.0 --> X=1.0, Y=1.0
+ */
 inline
 Float *Float::gc()
 {
@@ -507,14 +618,14 @@ BigInt *BigInt::gc()
 
   BigInt *ret = new BigInt();
   mpz_set(&ret->value,&value);
-  setHeapCell((int *)&value.alloc, GCMARK(ret));
+  storeForward((int *)&value.alloc, ret);
   return ret;
 }
 
 inline
-void ConsList::gc()
+void Script::gc()
 {
-  GCMETHMSG("ConsList::gc");
+  GCMETHMSG("Script::gc");
   if(first){
     int sz = numbOfCons*sizeof(Equation);
     Equation *aux = (Equation*)gcRealloc(first,sz);
@@ -523,7 +634,7 @@ void ConsList::gc()
 #ifdef DEBUG_CHECK
       //  This is the very useful consistency check.
       //  'Equations' with non-variable at the left side are figured out;
-      TaggedRef auxTerm = first[i].getLeft ();
+      TaggedRef auxTerm = first[i].left;
       TaggedRef *auxTermPtr;
       if (opMode == IN_TC && IsRef(auxTerm)) {
         do {
@@ -540,12 +651,12 @@ void ConsList::gc()
           }
           if (isAnyVar (auxTerm))
             break;   // ok;
-          error ("non-variable is found at left side in consList");
+          error ("non-variable is found at left side in Script");
         } while (1);
       }
 #endif
-      gcTagged(*first[i].getLeftRef(),  *aux[i].getLeftRef());
-      gcTagged(*first[i].getRightRef(), *aux[i].getRightRef());
+      gcTagged(first[i].left,  aux[i].left);
+      gcTagged(first[i].right, aux[i].right);
     }
 
     first = aux;
@@ -572,7 +683,7 @@ SuspContinuation *SuspContinuation::gcCont()
                               !isInTree(board->gcGetBoardDeref ())),
           error ("non-local board in TC mode is being copied"));
 
-  setHeapCell((int *)&pc, GCMARK(ret));
+  storeForward((int *)&pc, ret);
   return ret;
 }
 
@@ -587,7 +698,7 @@ RefsArray gcRefsArray(RefsArray r)
   if (r == NULL)
     return r;
 
-  INTOSPACE(r);
+  NOTINTOSPACE(r);
 
   CHECKCOLLECTED(r[-1], RefsArray);
 
@@ -603,7 +714,7 @@ RefsArray gcRefsArray(RefsArray r)
   DebugCheck(isFreedRefsArray(r),
              markFreedRefsArray(aux););
 
-  setHeapCell((int*) &r[-1], GCMARK(aux));
+  storeForward((int*) &r[-1], aux);
 
   for(int i = sz-1; i >= 0; i--)
     gcTagged(r[i],aux[i]);
@@ -629,7 +740,7 @@ CFuncContinuation *CFuncContinuation::gcCont(void)
   CFuncContinuation *ret = (CFuncContinuation*) gcRealloc(this,sizeof(*this));
   GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_CFUNCONT);
-  setHeapCell((int *)&cFunc, GCMARK(ret));
+  storeForward((int *)&cFunc, ret);
   return ret;
 }
 
@@ -642,7 +753,7 @@ Continuation *Continuation::gc()
   Continuation *ret = (Continuation *) gcRealloc(this,sizeof(Continuation));
   GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_CONT);
-  setHeapCell((int *)&pc, GCMARK(ret));
+  storeForward((int *)&pc, ret);
   return ret;
 }
 
@@ -668,6 +779,18 @@ void SuspContinuation::gcRecurse(){
 }
 
 
+/* collect STuple, LTuple */
+
+inline
+void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int sz)
+{
+  for(int i = sz-1; i>=0; i--) {
+    if (!isRef(oldBlock[i]) && isAnyVar(oldBlock[i])) {
+      gcTagged(oldBlock[i],newBlock[i]);
+    }
+  }
+}
+
 inline
 STuple *STuple::gc()
 {
@@ -679,7 +802,7 @@ STuple *STuple::gc()
   STuple *ret = (STuple*) gcRealloc(this,len);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_STUPLE);
-  setHeapCell((int *)&label, GCMARK(ret));
+  storeForward((int *)&label, ret);
   gcTaggedBlock(getRef(),ret->getRef(),getSize());
   return ret;
 }
@@ -697,7 +820,7 @@ LTuple *LTuple::gc()
 
   gcTaggedBlock(args,ret->args,2);
 
-  setHeapCell((int*) &args[0], GCMARK(ret));
+  storeForward((int*) &args[0], ret);
   return ret;
 }
 
@@ -718,7 +841,8 @@ SRecord *SRecord::gcSRecord()
     if (opMode == IN_TC && isLocalBoard (((Abstraction *) this)->getBoard ()) == NO)
       return this;
     sz = sizeof(Abstraction);
-    DebugGCT(if (opMode == IN_GC) INTOSPACE(((Abstraction *) this)->name););
+    DebugGCT(if (opMode == IN_GC)
+             NOTINTOSPACE(((Abstraction *) this)->name););
     break;
   case R_OBJECT:
     sz = sizeof(Object);
@@ -755,11 +879,10 @@ SRecord *SRecord::gcSRecord()
   SRecord *ret = (SRecord*) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_SRECORD);
-  setHeapCell((int *)&u.type, GCMARK(ret));
+  storeForward((int *)&u.type, ret);
   return ret;
 }
 
-// mm2: what shall we check here ???
 // kost@: we have to split suspension lists of variables which are quantified
 //        in "solve" board itself in two parts - "relevant" wrt copy and
 //        'irrelevant';
@@ -848,7 +971,7 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
   DebugCheck(!getBoard()->gcGetBoardDeref(),
              warning("gc: adding dead node (3)"));
 
-  setHeapCell((int *)&flag, GCMARK(newSusp));
+  storeForward((int *)&flag, newSusp);
   return newSusp;
 }
 
@@ -901,7 +1024,7 @@ TaggedRef gcVariable(TaggedRef var)
       Board *home = tagged2VarHome(var);
       INFROMSPACE(home);
       home = home->gcBoard();
-      TOSPACE (home);
+      INTOSPACE (home);
       GCNEWADDRMSG((home ? makeTaggedUVar(home) : makeTaggedUVar(am.rootBoard)));
       // kludge: if its board is not alive, lets its board to be the root...
       return home ? makeTaggedUVar(home) : makeTaggedUVar(am.rootBoard);
@@ -927,7 +1050,7 @@ TaggedRef gcVariable(TaggedRef var)
 
       SVariable *new_cv = (SVariable*)gcRealloc(cv,cv_size);
 
-      setHeapCell((int *)cv, GCMARK(new_cv));
+      storeForward((int *)cv, new_cv);
 
       if (opMode == IN_TC && new_cv->getHome () == fromCopyBoard)
         new_cv->suspList = new_cv->suspList->gc(OK);
@@ -961,7 +1084,7 @@ TaggedRef gcVariable(TaggedRef var)
 
       GenCVariable *new_gv = (GenCVariable*)gcRealloc(gv, gv_size);
 
-      setHeapCell((int *)gv, GCMARK(new_gv));
+      storeForward((int *)gv, new_gv);
 
       if (opMode == IN_TC && new_gv->getHome () == fromCopyBoard)
         new_gv->suspList = new_gv->suspList->gc(OK);
@@ -1103,7 +1226,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
 
   TypeOfTerm auxTermTag = tagTypeOf(auxTerm);
 
-  DebugGCT(INTOSPACE(auxTermPtr));
+  DebugGCT(NOTINTOSPACE(auxTermPtr));
 
   switch (auxTermTag) {
 
@@ -1111,8 +1234,8 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     toTerm = auxTerm;
     return;
 
-  case ATOM:
-    toTerm = makeTaggedAtom (tagged2Atom (auxTerm)->gc ());
+  case LITERAL:
+    toTerm = makeTaggedLiteral (tagged2Literal (auxTerm)->gc ());
     return;
 
   case LTUPLE:
@@ -1147,7 +1270,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
 
       DebugGCT(toTerm = fromTerm); // otherwise 'makeTaggedRef' complains
       if (updateVar(auxTerm)) {
-        setHeapCell((int*) &fromTerm, GCMARK(makeTaggedRef(&toTerm)));
+        storeForward((int*) &fromTerm, makeTaggedRef(&toTerm));
 
         // updating toTerm AFTER fromTerm:
         toTerm = gcVariable(auxTerm);
@@ -1161,7 +1284,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     if (updateVar(auxTerm) && auxTermTag == CVAR) {
       TaggedRef *ref = (TaggedRef *) heapMalloc(sizeof(TaggedRef));
       *ref = gcVariable(auxTerm);
-      setHeapCell(auxTermPtr, GCMARK(ref));
+      storeForward(auxTermPtr, ref);
       return;
     }
 #endif
@@ -1169,7 +1292,6 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     // put address of ref cell to be updated onto update stack
     if (updateVar(auxTerm)) {
       updateStack.push(&toTerm);
-      DebugGCT(updateStackCount++);
       gcVariable(auxTerm);
       toTerm = (TaggedRef) auxTermPtr;
       DebugGC((auxTermPtr == NULL), error ("auxTermPtr == NULL"));
@@ -1201,7 +1323,6 @@ void AM::gc(int msgLevel)
   GCMETHMSG(" ********** AM::gc **********");
   opMode = IN_GC;
   gcing = 0;
-  DebugGCT(updateStackCount = 0);
 
   stat.initGcMsg(msgLevel);
 
@@ -1275,9 +1396,10 @@ void AM::gc(int msgLevel)
   GCPROCMSG("updating references");
   processUpdateStack ();
 
-  if(!ptrStack.empty())
+  if(!ptrStack.isEmpty())
     error("ptrStack should be empty");
-  PRINTTOSPACE;
+
+  EXITCHECKSPACE;
 
   oldChain->deleteChunkChain();
 
@@ -1298,10 +1420,9 @@ void processUpdateStack(void)
 {
  loop:
 
-  while (!updateStack.empty())
+  while (!updateStack.isEmpty())
     {
       TaggedRef *Term = updateStack.pop();
-      DebugGCT(updateStackCount--;);
       TaggedRef auxTerm     = *Term;
       TaggedRef *auxTermPtr = NULL;
 
@@ -1322,8 +1443,12 @@ void processUpdateStack(void)
 //      Assert(tagTypeOf(newVar) == tagTypeOf(auxTerm));
 
       if (newVar == makeTaggedNULL()) {
+        /*
+         * mm2: I don't know if this is correct
+         *   the handling of dead nodes should be reconsidered carefully
+         */
         *Term = newVar;
-        setHeapCell((int*) auxTermPtr,newVar);
+        *auxTermPtr = newVar;
       } else {
         switch(tagTypeOf(newVar)){
         case UVAR:
@@ -1341,8 +1466,8 @@ void processUpdateStack(void)
           error("processUpdateStack: variable expected here.");
         } // switch
         INFROMSPACE(auxTermPtr);
-        setHeapCell((int*) auxTermPtr,
-                    GCMARK((int) *Term));
+        storeForward((int*) auxTermPtr,
+                     *Term);
       }
     } // while
 
@@ -1350,40 +1475,7 @@ void processUpdateStack(void)
           error ("updateStackCount != 0"));
 }
 
-// all nodes but node self
-inline
-void setPathMarks (Board *bb)
-{
-  bb = bb->getParentBoard ();
-  while (OK) {
-    bb->setPathMark();
-    if (bb->isRoot () == OK) {
-      return;
-    } else if (bb->isCommitted () == OK) {
-      bb = bb->getBoard ();
-    } else {
-      bb = bb->getParentBoard ();
-    }
-  }
-  error ("(gc) getPathMarks");
-}
 
-inline
-void unsetPathMarks (Board *bb)
-{
-  bb = bb->getParentBoard ();
-  while (OK) {
-    bb->unsetPathMark();
-    if (bb->isRoot () == OK) {
-      return;
-    } else if (bb->isCommitted () == OK) {
-      bb = bb->getBoard ();
-    } else {
-      bb = bb->getParentBoard ();
-    }
-  }
-  error ("(gc) getPathMarks");
-}
 
 
 /*
@@ -1406,7 +1498,6 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   varCount = 0;
   stat.timeForCopy -= usertime();
 
-  DebugGCT(updateStackCount = 0);
   DebugGC ((bb->isCommitted () == OK), error ("committed board to be copied"));
   fromCopyBoard = bb;
   setPathMarks(fromCopyBoard);
@@ -1417,10 +1508,10 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
 
   processUpdateStack();
 
-  if (!ptrStack.empty())
+  if (!ptrStack.isEmpty())
     error("ptrStack should be empty");
 
-  while (!savedPtrStack.empty()) {
+  while (!savedPtrStack.isEmpty()) {
     int value = (int)  savedPtrStack.pop();
     int* ptr  = (int*) savedPtrStack.pop();
     *ptr = value;
@@ -1617,7 +1708,7 @@ Thread *Thread::gc()
   Thread *ret = (Thread *) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_THREAD);
-  setHeapCell((int *)&flags, GCMARK(ret));
+  storeForward((int *)&flags, ret);
   return ret;
 }
 
@@ -1690,8 +1781,8 @@ Board* Board::gcGetNotificationBoard ()
   }
 }
 
-// #define  OUR_SPECS
-#undef   OUR_SPECS
+#define  OUR_SPECS
+// #undef   OUR_SPECS
 #ifdef   OUR_SPECS
 //  The idea:
 //  In canonical version of the Board::gcGetBoardDeref a node can be determined
@@ -1776,14 +1867,14 @@ Board *Board::gcBoard1()
   // 'SuspContinuation' may containt in these registers any ***irrelevant***
   // values) a non-'isInTree' board can be reached;
   if (opMode == IN_TC && isInTree (this) == NO) {
-    setHeapCell ((int *) &suspCount, GCMARK(this));
+    storeForward ((int *) &suspCount, this);
     return (this);
   }
   size_t sz = sizeof(Board);
   Board *ret = (Board *) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_BOARD);
-  setHeapCell((int *)&suspCount, GCMARK(ret));
+  storeForward((int *)&suspCount, ret);
   return ret;
 }
 
@@ -1800,7 +1891,7 @@ void Board::gcRecurse()
     body.gcRecurse();
     GCREF(u.actor);
   }
-  script.gc();
+  script.Script::gc();
 }
 
 Actor *Actor::gc()
@@ -1819,7 +1910,7 @@ Actor *Actor::gc()
   Actor *ret = (Actor *) gcRealloc(this,sz);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_ACTOR);
-  setHeapCell((int *)&priority, GCMARK(ret));
+  storeForward((int *)&priority, ret);
   return ret;
 }
 
@@ -1931,7 +2022,7 @@ void SRecord::gcRecurse()
       DebugGC((a->name->getHome () == (Board *) ALLBITS ||
                a->name->getHome () == (Board *) NULL),
               error ("non-dynamic name is met in Abstraction::gcRecurse"));
-      TOSPACE(a->name);
+      INTOSPACE(a->name);
       break;
     }
 
@@ -1943,7 +2034,7 @@ void SRecord::gcRecurse()
       o->gRegs       = gcRefsArray(o->gRegs);
       o->cell        = (Cell*)o->cell->gcSRecord();
       o->fastMethods = o->fastMethods->gcSRecord();
-      // "Atom *printName" needs no collection
+      // "Literal *printName" needs no collection
       break;
     }
 
@@ -1980,6 +2071,18 @@ void SRecord::gcRecurse()
   args = gcRefsArray(args);
 }
 
+/* collect STuple, LTuple */
+
+inline
+void gcTaggedBlockRecurse(TaggedRef *block,int sz)
+{
+  for(int i = sz-1; i>=0; i--) {
+    if (isRef(block[i]) || !isAnyVar(block[i])) {
+      gcTagged(block[i],block[i]);
+    }
+  }
+}
+
 inline
 void STuple::gcRecurse()
 {
@@ -1999,8 +2102,8 @@ void LTuple::gcRecurse()
 
 
 void performCopying(void){
-  while (!ptrStack.empty()) {
-    TaggedPtr tptr    = ptrStack.pop();
+  while (!ptrStack.isEmpty()) {
+    TypedPtr tptr    = ptrStack.pop();
     void *ptr         = getPtr(tptr);
     TypeOfPtr ptrType = getType(tptr);
 
@@ -2019,7 +2122,7 @@ void performCopying(void){
       break;
 
     case PTR_NAME:
-      ((Atom *) ptr)->gcRecurse ();
+      ((Literal *) ptr)->gcRecurse ();
       break;
 
     case PTR_CONT:
@@ -2116,39 +2219,6 @@ Bool AM::idleGC()
   }
   return NO;
 }
-
-
-#ifdef DEBUG_CHECK
-void checkInToSpace(TaggedRef term)
-{
-  if (isRef (term) && term != makeTaggedNULL() &&
-      !MemChunks::list->inChunkChain((void *)term))
-    error ("reference to 'from' space");
-  if (!isRef (term)) {
-    switch (tagTypeOf (term)) {
-    case UVAR:
-    case SVAR:
-    case LTUPLE:
-    case STUPLE:
-    case CONST:
-    case SRECORD:
-      if (!MemChunks::list->inChunkChain((void *)tagValueOf (term)))
-        error ("reference to 'from' space");
-      break;
-    default:
-      break;
-    }
-  }
-}
-
-void regsInToSpace(TaggedRef *regs, int sz)
-{
-  for (int i=0; i<sz; i++) {
-    checkInToSpace(regs[i]);
-  }
-}
-
-#endif
 
 OzDebug *OzDebug::gcOzDebug()
 {

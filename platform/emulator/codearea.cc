@@ -70,15 +70,15 @@ void CodeArea::showAtomNames()
   atomTab.print();
 }
 
-inline Atom *addToLiteralTab(char *str, HashTable *table, Bool isName)
+inline Literal *addToLiteralTab(char *str, HashTable *table, Bool isName)
 {
-  Atom *found = (Atom *) table->ffind(str);
+  Literal *found = (Literal *) table->ffind(str);
 
-  if (found != (Atom *) htEmpty) {
+  if (found != (Literal *) htEmpty) {
     return found;
   }
 
-  found = new Atom(str,isName);
+  found = new Literal(str,isName);
   if (table->aadd(found,str) != (unsigned) htEmpty) {
     return found;
   } else {
@@ -88,12 +88,12 @@ inline Atom *addToLiteralTab(char *str, HashTable *table, Bool isName)
 }
 
 
-Atom *addToAtomTab(char *str)
+Literal *addToAtomTab(char *str)
 {
   return addToLiteralTab(str,&CodeArea::atomTab,NO);
 }
 
-Atom *addToNameTab(char *str)
+Literal *addToNameTab(char *str)
 {
   return addToLiteralTab(str,&CodeArea::nameTab,OK);
 }
@@ -284,7 +284,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       DISPATCH();
     case DEBUGINFO:
       {
-        TaggedRef name       = getAtomArg(PC+1);
+        TaggedRef name       = getLiteralArg(PC+1);
         TaggedRef lineTerm   = getNumberArg(PC+2);
         TaggedRef absposTerm = getNumberArg(PC+3);
         int line,abspos;
@@ -365,11 +365,11 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case TESTNUMBERY:
     case TESTNUMBERG:
       {
-        TaggedRef atom = getAtomArg(PC+2);
+        TaggedRef literal = getLiteralArg(PC+2);
         fprintf (ofile,
                  "(%d,%s,0x%x,0x%x,%d)\n",
                  regToInt(getRegArg(PC+1)),
-                 OZ_toC(atom),
+                 OZ_toC(literal),
                  getLabelArg(PC+3),
                  getLabelArg(PC+4),
                  getPosIntArg(PC+5));
@@ -461,10 +461,10 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case EXECUTEMETHODY:
     case EXECUTEMETHODG:
       {
-        TaggedRef atom = getAtomArg(PC+1);
+        TaggedRef literal = getLiteralArg(PC+1);
         Reg reg        = regToInt(getRegArg(PC+2));
         int arity      = getPosIntArg(PC+3);
-        fprintf(ofile, "(%s,%d,%d)\n", OZ_toC(atom),reg,arity);
+        fprintf(ofile, "(%s,%d,%d)\n", OZ_toC(literal),reg,arity);
         DISPATCH();
       }
     case CALLX:
@@ -568,9 +568,9 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case UNIFYCONSTANT:
           /* ***type 5:    OP ConstantName  */
       {
-        TaggedRef atom = getAtomArg(PC+1);
+        TaggedRef literal = getLiteralArg(PC+1);
 
-        fprintf(ofile, "(%s)\n", OZ_toC(atom));
+        fprintf(ofile, "(%s)\n", OZ_toC(literal));
       }
       DISPATCH();
     case DEFINITIONX:
@@ -580,7 +580,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       {
         Reg reg = regToInt(getRegArg(PC+1));
         ProgramCounter next = getLabelArg(PC+2);
-        TaggedRef file      = getAtomArg(PC+3);
+        TaggedRef file      = getLiteralArg(PC+3);
         TaggedRef line      = getNumberArg(PC+4);
         PrTabEntry *pred    = getPredArg(PC+5);
 
@@ -602,12 +602,12 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case GETSTRUCTUREX:
     case GETSTRUCTUREY:
     case GETSTRUCTUREG:
-          /* ***type 6:    OP AtomName Reg */
+          /* ***type 6:    OP LiteralName Reg */
       {
-        TaggedRef atom = getAtomArg(PC+1);
+        TaggedRef literal = getLiteralArg(PC+1);
         int n = getPosIntArg(PC+2);
 
-        fprintf(ofile, "(%s,%i,%d)\n", OZ_toC(atom),
+        fprintf(ofile, "(%s,%i,%d)\n", OZ_toC(literal),
                  n, regToInt(getRegArg(PC+3)));
       }
       DISPATCH();
@@ -619,9 +619,9 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case GETCONSTANTG:
           /* ***type 7:    OP ConstantName Reg */
       {
-        TaggedRef atom = getAtomArg(PC+1);
+        TaggedRef literal = getLiteralArg(PC+1);
 
-        fprintf(ofile, "(%s,%d)\n", OZ_toC(atom),
+        fprintf(ofile, "(%s,%d)\n", OZ_toC(literal),
                  regToInt(getRegArg(PC+2)));
       }
       DISPATCH();
@@ -631,9 +631,9 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case CREATENAMEDVARIABLEG:
           /* ***type 7:    OP ConstantName Reg */
       {
-        TaggedRef atom = getAtomArg(PC+2);
+        TaggedRef literal = getLiteralArg(PC+2);
 
-        fprintf(ofile, "(%s,%d)\n", OZ_toC(atom),
+        fprintf(ofile, "(%s,%d)\n", OZ_toC(literal),
                  regToInt(getRegArg(PC+1)));
       }
       DISPATCH();

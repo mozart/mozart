@@ -91,7 +91,8 @@ public:
   int argC;
 
 public:
-  ConfigData();
+  ConfigData() {};
+  void init();
 };
 
 // this class contains the central global data
@@ -154,7 +155,7 @@ public:
 
   void setCurrent(Board *c, Bool checkNotGC=OK);
   InstType installPath(Board *to); // ###
-  Bool installScript(ConsList &script);
+  Bool installScript(Script &script);
   Bool install(Board *bb);
   void deinstallPath(Board *top);
   void deinstallCurrent();
@@ -202,7 +203,6 @@ public:
   void pushTaskOutline(Board *n,ProgramCounter pc,
                        RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
   void pushCFun(Board *n, OZ_CFun f, RefsArray x=NULL, int i=0);
-  void pushNervous (Board *n);
   void genericBind(TaggedRef *varPtr, TaggedRef var,
                    TaggedRef *termPtr, TaggedRef term, Bool prop);
   void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr, Bool prop);

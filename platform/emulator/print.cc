@@ -100,8 +100,8 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
   case LTUPLE:
     tagged2LTuple(ref)->print(stream,depth,offset);
     break;
-  case ATOM:
-    tagged2Atom(ref)->print(stream,depth,offset);
+  case LITERAL:
+    tagged2Literal(ref)->print(stream,depth,offset);
     break;
   case FLOAT:
     tagged2Float(ref)->print(stream,depth,offset);
@@ -274,7 +274,7 @@ PRINT(LTuple)
 }
 
 
-static void ppAtom(ostream &stream, char *s) {
+static void ppLiteral(ostream &stream, char *s) {
   stream << "'";
   char c;
   while (c = *s) {
@@ -323,18 +323,18 @@ static Bool isWellFormed(char *s)
   return OK;
 }
 
-PRINT(Atom)
+PRINT(Literal)
 {
-  if (isXName()) {
-    stream << OZ_literalToC(makeTaggedAtom(this));
+  if (!isAtom()) {
+    stream << OZ_literalToC(makeTaggedLiteral(this));
     return;
   }
 
   char *s = getPrintName();
   if (isWellFormed(s)) {
-    stream << OZ_atomToC(makeTaggedAtom(this));
+    stream << OZ_atomToC(makeTaggedLiteral(this));
   } else {
-    ppAtom(stream,s);
+    ppLiteral(stream,s);
   }
 }
 
@@ -524,8 +524,8 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
   case LTUPLE:
     tagged2LTuple(ref)->printLong(stream,depth,offset);
     break;
-  case ATOM:
-    tagged2Atom(ref)->printLong(stream,depth,offset);
+  case LITERAL:
+    tagged2Literal(ref)->printLong(stream,depth,offset);
     break;
   case FLOAT:
     tagged2Float(ref)->printLong(stream,depth,offset);
@@ -738,12 +738,12 @@ PRINTLONG(Thread)
   stream << endl;
 }
 
-PRINTLONG(Atom)
+PRINTLONG(Literal)
 {
-  if (isXName()) {
-    stream << indent(offset) << "Name @" << this << ": ";
-  } else {
+  if (isAtom()) {
     stream << indent(offset) << "Atom @" << this << ": ";
+  } else {
+    stream << indent(offset) << "Name @" << this << ": ";
   }
   this->print(stream,depth,offset);
   stream << endl;

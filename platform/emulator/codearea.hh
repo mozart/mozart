@@ -84,8 +84,8 @@ class CodeArea {
   static HashTable atomTab;
   static HashTable nameTab;
   static AbstractionTable abstractionTab;
-  friend Atom *addToAtomTab(char *str);
-  friend Atom *addToNameTab(char *str);
+  friend Literal *addToAtomTab(char *str);
+  friend Literal *addToNameTab(char *str);
   friend AbstractionEntry *addAbstractionTab(int id);
   friend void printAtomTab();
   friend void printNameTab();
@@ -149,7 +149,7 @@ private:
   static int scanUInt (FILE *fd);
   void scanVariablename (FILE *fd);
   void scanLiteral(FILE *fd);
-  TaggedRef scanAtom(FILE *fd);
+  TaggedRef parseLiteral(FILE *fd);
   void scanRegister (FILE *fd, int &regAdd);
   void scanRegisterIndex (FILE *fd);
   void scanArity (FILE *fd);
@@ -158,7 +158,7 @@ private:
   void scanPredicateRef(FILE *fd);
   void scanLabel (FILE *fd, ProgramCounter start);
   void scanRecordArity (FILE *fd);
-  TaggedRef scanRecordArity1 (FILE *fd, int length);
+  TaggedRef parseRecordArity (FILE *fd, int length);
   void scanBuiltinname(FILE *fd);
   BuiltinTabEntry *scanFun(FILE *fd);
 
@@ -184,10 +184,10 @@ public:
     return ptr + SizeofIHashTable;
   }
 
-  static ProgramCounter writeAtom(TaggedRef atom, ProgramCounter ptr)
+  static ProgramCounter writeLiteral(TaggedRef literal, ProgramCounter ptr)
   {
-    Assert(isLiteral(atom));
-    return writeWord(atom,ptr);
+    Assert(isLiteral(literal));
+    return writeWord(literal,ptr);
   }
 
   static ProgramCounter writeInt(TaggedRef i, ProgramCounter ptr)
@@ -280,7 +280,7 @@ inline TaggedRef getNumberArg(ProgramCounter PC)
   return (TaggedRef) CodeArea::getWord(PC);
 }
 
-inline  TaggedRef getAtomArg(ProgramCounter PC)
+inline  TaggedRef getLiteralArg(ProgramCounter PC)
 {
   return (TaggedRef) CodeArea::getWord(PC);
 }

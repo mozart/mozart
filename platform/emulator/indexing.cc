@@ -28,18 +28,18 @@ EntryTable newEntryTable(int sz)
 }
 
 
-void IHashTable::add(Atom *constant, ProgramCounter label)
+void IHashTable::add(Literal *constant, ProgramCounter label)
 {
   int hsh = constant->hash() % size;
 
-  if (atomTable == NULL)
-    atomTable = newEntryTable(size);
+  if (literalTable == NULL)
+    literalTable = newEntryTable(size);
 
   /* we do not check, whether it is already in there */
-  atomTable[hsh] = new HTEntry(constant,label,atomTable[hsh]);
+  literalTable[hsh] = new HTEntry(constant,label,literalTable[hsh]);
 }
 
-void IHashTable::add(Atom *name, int arity, ProgramCounter label)
+void IHashTable::add(Literal *name, int arity, ProgramCounter label)
 {
   int hsh = name->hash() % size;
 

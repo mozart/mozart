@@ -47,6 +47,7 @@
 #include "suspensi.hh"
 #include "taskstk.hh"
 #include "thread.hh"
+#include "verbose.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -84,13 +85,67 @@
 Thread *Thread::Head;
 Thread *Thread::Tail;
 
+/*
+ * Toplevel is a queue of toplevel queries, which must be executed
+ * sequentially.
+ *   see Thread::checkToplevel()  called when disposing a thread
+ *       Thread::addToplevel()    called when a new query arrives
+ */
+class Toplevel {
+public:
+  ProgramCounter pc;
+  Toplevel *next;
+  Toplevel(ProgramCounter pc, Toplevel *next) : pc(pc), next(next) {}
+};
+
+Toplevel *Thread::ToplevelQueue;
+
 void Thread::Init()
 {
   Head = (Thread *) NULL;
   Tail = (Thread *) NULL;
+  ToplevelQueue = (Toplevel *) NULL;
   am.currentThread = (Thread *) NULL;
   am.rootThread = new Thread(am.conf.defaultPriority);
+
   am.currentTaskStack = NULL;
+}
+
+/*
+ * The Toplevel
+ */
+void Thread::checkToplevel()
+{
+  if (ToplevelQueue) {
+    verbose(VERB_THREAD,"Thread::checkToplevel: pushNext: 0x%x\n",this);
+    for (Toplevel **last = &ToplevelQueue;
+         ((*last)->next) != NULL;
+         last = &((*last)->next)) {
+    }
+    pushToplevel((*last)->pc);
+    *last = (Toplevel *) NULL;
+  }
+}
+
+void Thread::addToplevel(ProgramCounter pc)
+{
+  if (u.taskStack->isEmpty()) {
+    verbose(VERB_THREAD,"Thread::addToplevel: push\n");
+    pushToplevel(pc);
+  } else {
+    verbose(VERB_THREAD,"Thread::addToplevel: delay\n");
+    ToplevelQueue = new Toplevel(pc,ToplevelQueue);
+  }
+}
+
+void Thread::pushToplevel(ProgramCounter pc)
+{
+  Assert(isNormal() && u.taskStack);
+  am.rootBoard->incSuspCount();
+  u.taskStack->pushCont(am.rootBoard,pc,am.toplevelVars);
+  if (this!=am.currentThread && !this->isScheduled()) {
+    schedule();
+  }
 }
 
 /* for gdb debugging: cannot access static member data */
@@ -136,19 +191,6 @@ void Thread::ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
   t->schedule();
 }
 
-
-/* Thread::queueCont
-     insert a top level continuation at the bottom of the rootThread
-     NOTE: the compiler depends on the order of toplevel queries
-     */
-void Thread::queueCont(Board *bb,ProgramCounter PC,RefsArray y) {
-  Assert(isNormal() && u.taskStack);
-  bb->incSuspCount();
-  u.taskStack->queueCont(bb,PC,y);
-  if (this!=am.currentThread && !this->isScheduled()) {
-    schedule();
-  }
-}
 
 // create a new thread after wakeup (nervous)
 void Thread::ScheduleWakeup(Board *b, Bool wasExtSusp)

@@ -274,8 +274,8 @@ void MemChunks::deleteChunkChain()
   MemChunks *aux = this;
   while (aux) {
 #ifdef DEBUG_GC
-//    memset(aux->block,0x14,aux->size);
-    memset(aux->block,-1,aux->size);
+//    memset(aux->block,0x14,aux->xsize);
+    memset(aux->block,-1,aux->xsize);
 #endif
     ozFree(aux->block);
 
@@ -289,16 +289,62 @@ void MemChunks::deleteChunkChain()
 Bool MemChunks::inChunkChain(void *value)
 {
   for (MemChunks *aux = this; aux != NULL; aux = aux->next) {
-    if ((aux->block <= (char *) value) && ((char*) value <= aux->block + aux->size))
+    if ((aux->block <= (char *) value)
+        && ((char*) value <= aux->block + aux->xsize))
       return OK;
   }
   return NO;
 }
 
+/*
+ * debugging aids for memory problems
+ */
+Bool MemChunks::isInHeap(TaggedRef term)
+{
+  if (isRef (term) && term != makeTaggedNULL() &&
+      !list->inChunkChain((void *)term)) {
+    return NO;
+  }
+  if (!isRef (term)) {
+    switch (tagTypeOf (term)) {
+    case UVAR:
+    case SVAR:
+    case LTUPLE:
+    case STUPLE:
+    case CONST:
+    case SRECORD:
+      if (!list->inChunkChain((void *)tagValueOf (term))) {
+        return NO;
+      }
+      break;
+    default:
+      break;
+    }
+  }
+  return OK;
+}
+
+Bool MemChunks::areRegsInHeap(TaggedRef *regs, int sz)
+{
+  for (int i=0; i<sz; i++) {
+    if (!isInHeap(regs[i])) {
+      return NO;
+    }
+  }
+  return OK;
+}
+
+
 void MemChunks::print()
 {
-  for (MemChunks *aux = this; aux != NULL; aux = aux->next) {
-    printf("chunk( from: 0x%x, to: 0x%x )\n", aux->block, aux->block + aux->size);
+  MemChunks *aux = this;
+  while (aux) {
+    printf(" chunk( from: 0x%x, to: 0x%x )\n",
+           aux->block, aux->block + aux->xsize);
+    aux = aux->next;
+    if (aux) {
+      printf("  --> ");
+    }
   }
 }
 
@@ -339,23 +385,10 @@ void getMemFromOS(size_t sz)
   MemChunks::list = new MemChunks(heapTop,MemChunks::list,heapBlockSize);
 
   DebugCheck(heapTotalSize > heapBlockSize/KB,
-             message("Increasing heap memory to %d kilo bytes\n",
-                     heapTotalSize));
+             printf("Increasing heap memory to %d kilo bytes\n",
+                    heapTotalSize));
 }
 
-
-
-int inTospace(void *p)
-{
-  for(MemChunks *help=MemChunks::list; help!=NULL; help=help->next) {
-    char *ptr = help->block;
-    if ((char *) p <= ptr+help->size && (char*) p >= ptr) {
-      return 1;
-    }
-  }
-
-  return 0;
-}
 
 #ifdef OUTLINE
 #define inline

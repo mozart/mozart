@@ -64,7 +64,7 @@ int getenvDefault(char *envvar, int def)
   return def;
 }
 
-ConfigData::ConfigData() {
+void ConfigData::init() {
   ozPath                = OZ_PATH;
   linkPath              = OZ_PATH;
   printDepth            = PRINT_DEPTH;
@@ -158,6 +158,8 @@ void AM::init(int argc,char **argv)
 #endif
 #endif
 
+
+  conf.init();
 
 #ifdef MAKEANEWPGRP
   // create a new process group, so that we can
@@ -275,7 +277,7 @@ void AM::init(int argc,char **argv)
     exit(1);
   }
 
-  initAtoms();
+  initLiterals();
   SolveActor::Init();
 
   int numToplevelVars = getenvDefault("OZTOPLEVELVARS",NUM_TOPLEVEL_VARS);
@@ -302,7 +304,7 @@ Bool AM::unify(TaggedRef t1, TaggedRef t2, Bool prop)
   TaggedRef *refPtr;
   TaggedRef value;
 
-  while (!rebindTrail.empty ()) {
+  while (!rebindTrail.isEmpty ()) {
     rebindTrail.popCouple(refPtr, value);
     doBind(refPtr,value);
   }
@@ -441,8 +443,8 @@ start:
       goto unify_args;
     }
 
-  case ATOM:
-    /* atoms unify if their pointers are equal */
+  case LITERAL:
+    /* literals unify if their pointers are equal */
     return NO;
 
   case FLOAT:

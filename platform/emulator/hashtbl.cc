@@ -287,6 +287,6 @@ void HashTable::printStatistic()
   printf("\tmaximum bucket length     : %d\n", maxx);
   printf("\tnumber of collision places: %d\n", collpl);
   printf("\tnumber of collisions      : %d\n", coll);
-  printf("\t%d table entries have been used for %d atoms (%d%%)\n",
+  printf("\t%d table entries have been used for %d literals (%d%%)\n",
          tableSize, counter, counter*100/tableSize);
 }

@@ -16,7 +16,7 @@
 
 void Stack::resize(int newSize)
 {
-  DebugCheckT(message("Resizing stack from %d to %d\n",size,newSize));
+  DebugCheckT(printf("Resizing stack from %d to %d\n",size,newSize));
   DebugCheck(newSize <= 0,error("Resizing stack <= 0\n"));
   int used = tos-array;
   array = reallocate(array, size, newSize);

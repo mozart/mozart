@@ -21,6 +21,51 @@
 #include "actor.hh"
 #include "codearea.hh"
 
+
+
+Equation *ScriptAllocate(int size)
+{
+  return (Equation *) freeListMalloc(size * sizeof(Equation));
+}
+
+void ScriptDealloc(Equation *ptr, int size)
+{
+  if (ptr == (Equation *)0)
+    return;
+  freeListDispose(ptr,size * sizeof(Equation));
+}
+
+Script::Script(int sizeInit)
+{
+  first = ScriptAllocate(sizeInit);
+  numbOfCons = sizeInit;
+}
+
+Script::~Script()
+{
+  ScriptDealloc(first,numbOfCons);
+}
+
+void Script::allocate(int sizeInit)
+{
+  if (sizeInit != 0)
+    first = ScriptAllocate(sizeInit);
+  else
+    first = (Equation *)NULL;
+  numbOfCons = sizeInit;
+}
+
+void Script::dealloc()
+{
+  if (numbOfCons != 0) {
+    ScriptDealloc(first,numbOfCons);
+    first = (Equation *)NULL;
+    numbOfCons = 0;
+  }
+}
+
+
+
 /* some random comments:
    flags:
      type:

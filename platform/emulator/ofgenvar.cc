@@ -16,7 +16,7 @@ void DynamicTable::print(ostream& ofile, int idnt) const {
         if (table[i].ident) {
             if (!first) ofile << ' ';
             first=FALSE;
-            ofile << tagged2Atom(table[i].ident)->getPrintName() << ':';
+            ofile << tagged2Literal(table[i].ident)->getPrintName() << ':';
         }
     }
     ofile << ' ' << ')';
@@ -47,7 +47,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         Assert(termSRec!=NULL);
 
         // Check that the label is 'open':
-        if (!sameAtom(termSRec->getLabel(),AtomOpen)) return FALSE;
+        if (!sameLiteral(termSRec->getLabel(),AtomOpen)) return FALSE;
 
         // Get local/global flag:
         Bool vLoc=(prop && isLocalVariable());

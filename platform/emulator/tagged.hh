@@ -12,7 +12,6 @@
 /* classes:
      TaggedRef
      RefsArray
-     Equation
      */
 
 
@@ -50,7 +49,7 @@ enum TypeOfTerm {
   STUPLE           =  6,   // 0110
   SRECORD          = 14,   // 1110
 
-  ATOM             = 15,   // 1111
+  LITERAL          = 15,   // 1111
 
   CONST            = 10,   // 1010
 
@@ -272,7 +271,7 @@ Bool isNotCVar(TaggedRef term) {
 
 inline
 Bool isLiteral(TypeOfTerm tag) {
-  return tag == ATOM;
+  return tag == LITERAL;
 }
 
 inline
@@ -482,21 +481,21 @@ inline
 TaggedRef makeTaggedAtom(char *s)
 {
   CHECK_STRPTR(s);
-  return makeTaggedRef(ATOM,addToAtomTab(s));
+  return makeTaggedRef(LITERAL,addToAtomTab(s));
 }
 
 inline
 TaggedRef makeTaggedName(char *s)
 {
   CHECK_STRPTR(s);
-  return makeTaggedRef(ATOM,addToNameTab(s));
+  return makeTaggedRef(LITERAL,addToNameTab(s));
 }
 
 inline
-TaggedRef makeTaggedAtom(Atom *s)
+TaggedRef makeTaggedLiteral(Literal *s)
 {
   CHECK_POINTER(s);
-  return makeTaggedRef(ATOM,s);
+  return makeTaggedRef(LITERAL,s);
 }
 
 inline
@@ -630,11 +629,11 @@ LTuple *tagged2LTuple(TaggedRef ref)
 }
 
 inline
-Atom *tagged2Atom(TaggedRef ref)
+Literal *tagged2Literal(TaggedRef ref)
 {
   GCDEBUG(ref);
-  CHECKTAG(ATOM);
-  return (Atom *) tagValueOf(ATOM,ref);
+  CHECKTAG(LITERAL);
+  return (Literal *) tagValueOf(LITERAL,ref);
 }
 
 inline
@@ -732,22 +731,6 @@ GenCVariable *tagged2CVar(TaggedRef ref) {
   }                                                                           \
   TypeOfTerm tag = tagTypeOf(term);                                           \
 
-// ---------------------------------------------------------------------------
-// --- Equation Class --------------------------------------------------------
-// ---------------------------------------------------------------------------
-
-struct Equation {
-private:
-  TaggedRef left;
-  TaggedRef right;
-public:
-  void setLeft(TaggedRef *l) { left = makeTaggedRef(l); }
-  void setRight(TaggedRef r) { right = r; }
-  TaggedRef getLeft() { return left; }
-  TaggedRef getRight() { return right; }
-  TaggedRef *getLeftRef() { return &left; }
-  TaggedRef *getRightRef() { return &right; }
-};
 
 // ---------------------------------------------------------------------------
 // ------- RefsArray ----------------------------------------------------------
@@ -824,8 +807,10 @@ Bool initRefsArray(RefsArray a, int size, Bool init)
     case  1: a[0] = makeTaggedNULL();
       break;
     default:
-      for(int i = size-1; i >= 0; i--)
-        a[i] = makeTaggedNULL();
+      {
+        for(int i = size-1; i >= 0; i--)
+          a[i] = makeTaggedNULL();
+      }
       break;
     }
   }

@@ -103,7 +103,7 @@ void AM::deinstallCurrent()
 }
 
 inline
-Bool AM::installScript(ConsList &script)
+Bool AM::installScript(Script &script)
 {
   Bool ret = OK;
   for (int index = 0; index < script.getSize(); index++) {
@@ -141,12 +141,6 @@ void AM::pushTask(Board *n,ProgramCounter pc,
 {
   n->incSuspCount();
   ensureTaskStack()->pushCont(n,pc,y,g,x,i);
-}
-
-inline
-void AM::pushNervous(Board *n)
-{
-  ensureTaskStack()->pushNervous (n);
 }
 
 inline

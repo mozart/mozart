@@ -210,19 +210,19 @@ BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t,
 class BuiltinTabEntry {
   friend class Debugger;
 public:
-  BuiltinTabEntry (Atom *name,int arty,OZ_CFun fn,
+  BuiltinTabEntry (Literal *name,int arty,OZ_CFun fn,
                    InlineFunOrRel infun=NULL)
-  : printname(makeTaggedAtom(name)), arity(arty),fun(fn),
+  : printname(makeTaggedLiteral(name)), arity(arty),fun(fn),
     inlineFun(infun), type(BIDefault)
   {
-    Assert(isXAtom(printname));
+    Assert(isAtom(printname));
   }
   BuiltinTabEntry (char *s,int arty,OZ_CFun fn,
                    InlineFunOrRel infun=NULL)
   : arity(arty),fun(fn), inlineFun(infun), type(BIDefault)
   {
     printname = makeTaggedAtom(s);
-    Assert(isXAtom(printname));
+    Assert(isAtom(printname));
   }
   BuiltinTabEntry (char *s,int arty,OZ_CFun fn,BIType t,
                    InlineFunOrRel infun=NULL)
@@ -233,7 +233,7 @@ public:
     : arity(arty),fun((OZ_CFun)NULL), inlineFun(infun), type(t)
   {
     printname = makeTaggedAtom(s);
-    Assert(isXAtom(printname));
+    Assert(isAtom(printname));
   }
 
   ~BuiltinTabEntry () {}
@@ -241,7 +241,7 @@ public:
   OZPRINT;
   OZ_CFun getFun() { return fun; }
   int getArity() { return arity; }
-  char *getPrintName() { return tagged2Atom(printname)->getPrintName(); }
+  char *getPrintName() { return tagged2Literal(printname)->getPrintName(); }
   TaggedRef getName() { return printname; }
   InlineFunOrRel getInlineFun() { return inlineFun; }
   BIType getType() { return type; }

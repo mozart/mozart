@@ -48,8 +48,7 @@ public:
 
   virtual ~Stack() { deallocate(array,size); }
 
-  Bool empty(void) { return (tos <= array) ? OK : NO; }
-
+  Bool isEmpty(void) { return (tos <= array) ? OK : NO; }
   void ensureFree(int n)
   {
     if (stackEnd <= tos+n) {
@@ -74,7 +73,7 @@ public:
   StackEntry pop(int n=1)
   {
     checkConsistency();
-    Assert(empty() == NO);
+    Assert(isEmpty() == NO);
     tos -= n;
     return *tos;
   }
