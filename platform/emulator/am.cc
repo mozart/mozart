@@ -144,9 +144,14 @@ void AM::init(int argc,char **argv)
   Assert(PROCEED && !FAILED);
 
 #ifdef DEBUG_CHECK
-//    fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", osgetpid());
-//    fflush(stderr);
-//    sleep(10);
+  {
+    char *eh = osgetenv("OZ_EHOOK");
+    if (eh) {
+      fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", osgetpid());
+      fflush(stderr);
+      sleep(10);
+    }
+  }
 #endif
 
   ozconf.init();
