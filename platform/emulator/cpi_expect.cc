@@ -35,11 +35,7 @@
 
 void splitfname(const char * fname, char * &dirname, char * &basename)
 {
-#ifdef WINDOWS
-  const char delim_char = '\\';
-#else
   const char delim_char = '/';
-#endif
 
   const int splitlen = 1024;
   static char split[splitlen];
