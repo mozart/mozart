@@ -45,7 +45,6 @@
 #include "genvar.hh"
 
 #include "fdhook.hh"
-#include "fdprofil.hh"
 
 #include "fdomn.hh"
 
@@ -1899,8 +1898,6 @@ void AM::gc(int msgLevel)
   PrTabEntry::gcPrTabEntries();
   extRefs = extRefs->gc();
   
-  PROFILE_CODE1(FDProfiles.gc());
-
 #ifdef FINALIZATION
   OZ_collectHeapTerm(finalize_handler,finalize_handler);
   gcStack.recurse();
@@ -1999,8 +1996,6 @@ Board* AM::copyTree(Board* bb, Bool *getIsGround)
   across_chunks = NO;
 #endif
 
-  PROFILE_CODE1(FDProfiles.add(bb); FDVarsTouched.discard();)
-  
   isCollecting = OK;
   isInGc       = NO;
   isGround     = OK;
@@ -2070,8 +2065,6 @@ redo:
 
   if (getIsGround != (Bool *) NULL)
     *getIsGround = isGround;
-
-  PROFILE_CODE1(FDProfiles.setBoard(toCopyBoard);)
 
   isCollecting = NO;
 

@@ -32,7 +32,6 @@
 #endif
 
 #include "fdomn.hh"
-#include "fdprofil.hh"
 
 #include "fdproto.hh"
 
@@ -51,23 +50,16 @@ enum Recalc_e {lower, upper};
 
 #define MAXFDBIARGS 1000
 
-#if PROFILE_FD == 1
-#define FailFD (_PROFILE_CODE1(FDProfiles.inc_item(no_failed_props)), FAILED)
-#define SuspendFD (_PROFILE_CODE1(FDProfiles.inc_item(no_susp_props)), SLEEP)
-#define EntailFD (_PROFILE_CODE1(FDProfiles.inc_item(no_ent_props)), PROCEED)
-#else
 #define FailFD FAILED
 #define SuspendFD SLEEP
 #define EntailFD PROCEED
-#endif
 
-#define FailOnEmpty(X) \
-{ \
-  if((X) == 0) { \
-    BIfdBodyManager::restoreDomainOnToplevel(); \
-    PROFILE_CODE1(FDProfiles.inc_item(no_failed_props);) \
-    return FailFD; \
-  } \
+#define FailOnEmpty(X)				\
+{						\
+  if((X) == 0) {				\
+    BIfdBodyManager::restoreDomainOnToplevel();	\
+    return FailFD;				\
+  }						\
 }
 
 #include "fdhook.hh"
