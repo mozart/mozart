@@ -7,7 +7,7 @@ declare
 
 local
    
-   \insert 'prelude'
+   \insert 'ozcar-prelude'
    \insert 'config'
 
    \insert 'tree'
@@ -22,7 +22,6 @@ local
 in
 
    \insert 'ozcar'
-
    %% turn the emulator into debug mode
    %% compiler switches are set in oz.el
    {Debug.on}

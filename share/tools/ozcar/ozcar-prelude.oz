@@ -8,7 +8,7 @@
 
 local
    
-   TS  = {`Builtin` taskstack 2}
+   TS  = {`Builtin` taskstack 3}
    SS  = {`Builtin` globalThreadStream 1}
    P   = {`Builtin` 'Thread.parent' 2}
    C   = {`Builtin` 'Thread.children' 2}
