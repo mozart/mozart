@@ -375,7 +375,7 @@ problem.
 
 <SECTION id=section.classes.features><TITLE/Features/
 <P>Objects may have features similar to records. Features are
-components that are specified in the class declaration:
+stateless components that are specified in the class declaration:
 
 <<<
 class ?{C} from ...
@@ -467,6 +467,7 @@ Apt1.streetName = f(york)
 <P>binds the corresponding feature of <<Apt2>> to the same value as 
 that of <<Apt1>>. 
 
+<P> What has been said of features also holds for attributes.
 
 <SECTION id=section.classes.parametrized><TITLE/Parameterized Classes/
 <P>There are many ways to get your classes more generic, which later
@@ -497,7 +498,7 @@ fun {SortClass Type}
 	 of nil then Ys = nil
 	 [] P|Xr then S L in
 	    {self partition(Xr P S L)}
-	    ListC, append(C,qsort(S $) P|(C,qsort(L $)) Ys)
+	    ListC, append({self qsort(S $)} P|{self qsort(L $)} Ys)
 	 end
       end
       meth partition(Xs P Ss Ls)
@@ -509,7 +510,7 @@ fun {SortClass Type}
 	    else
 	       Ss = Sr Ls = X|Lr
 	    end
-	    C,partition(Xr P Sr Lr)
+	    {self partition(Xr P Sr Lr)}
 	 end
       end
    end
@@ -521,16 +522,16 @@ end
 
 <<<
 class Int
-   meth less(X Y B)
-      B = X&lt;Y
+   meth less(X Y $)
+      X&lt;Y
    end
 end
 class Rat from Object
-   meth less(X Y B)
+   meth less(X Y $)
      '/'(P Q) = X
      '/'(R S) = Y
       in
-     B = P*S &lt; Q*R
+     P*S &lt; Q*R
    end
 end
 >>>
@@ -566,7 +567,7 @@ instead of a specific object as in
 
 <P>We mean that we dynamically pick the method <<partition>> that is
 defined (available) in the current object.  Thereafter we apply the
-object (as a procedure) on the message. This is a form of dynamic
+object (as a procedure) to the message. This is a form of dynamic
 binding common in all object-oriented languages.
 
 
@@ -581,7 +582,7 @@ assigned, reassigned and accessed at will. However, attributes are
 private to their objects. The only way to manipulate an attribute from
 outside an object is to force the class designer to write a method
 that manipulates the attribute. In the <PTR TO="pointClass"> we define
-an the class <<Point>>. Note that the attributes <<x>> and <<y>> are
+the class <<Point>>. Note that the attributes <<x>> and <<y>> are
 initialized to zero before the initial message is applied. The method
 <<move>> uses <<self>>-application internally.
 
@@ -661,7 +662,7 @@ subsubclasses etc. In Oz there is no direct way to define a method to
 be protected.  However there is a programming technique that gives the
 same effect. We know that attributes are only visible inside a class
 or to descendants of a class by inheritance.  We may make a method
-protected by firstly making it private and secondly storing it is in
+protected by first making it private and second by storing it is in
 an attribute.  Consider the following example:
 
 <<<
@@ -771,11 +772,11 @@ class BoundedPoint from Point
         Point,move(X Y)
       else skip end
    end
-   meth BoundConstraint(X Y B)
-      B = (X &gt;= @xbounds.1 andthen
-           X =&lt; @xbounds.2 andthen
-           Y &gt;= @ybounds.1 andthen
-           Y =&lt; @ybounds.2 )
+   meth BoundConstraint(X Y $)
+      (X &gt;= @xbounds.1 andthen
+       X =&lt; @xbounds.2 andthen
+       Y &gt;= @ybounds.1 andthen
+       Y =&lt; @ybounds.2 )
    end
    meth display
       Point,display
