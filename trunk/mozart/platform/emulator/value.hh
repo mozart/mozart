@@ -506,6 +506,7 @@ enum TypeOfConst {
   Co_Board,
   Co_Actor,
   Co_HeapChunk,
+  Co_Thread,
 
   Co_Abstraction,
   Co_Builtin,  
@@ -521,7 +522,6 @@ enum TypeOfConst {
   Co_Chunk,
   Co_Array,
   Co_Dictionary,
-  Co_Thread,
   Co_Group,
   Dummy      // GCTAG
 };
@@ -1314,26 +1314,17 @@ class OzThread: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 private:
   Thread* t;
-  TaggedRef value;
 
 public:
-  OzThread(Board *b, Thread *th, OZ_Term st) : ConstTermWithHome(b,Co_Thread)
+  OzThread(Board *b, Thread *th) : ConstTermWithHome(b,Co_Thread)
   {
     t = th;
-    
-    OZ_Term pairlist= OZ_cons(OZ_pairA("stack",st), OZ_nil());
-    value = OZ_recordInit(OZ_atom("thread"),pairlist);
   }
 
   Thread  *th() { return t; }
 
   OZPRINT;
   OZPRINTLONG;
-
-  TaggedRef getValue() { return value; }
-  TaggedRef getFeature(TaggedRef fea) { return OZ_subtree(value,fea); }
-  TaggedRef getArityList() { return ::getArityList(value); }
-  Board *getBoardFast();
 };
   
 inline

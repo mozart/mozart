@@ -229,6 +229,10 @@ OZ_Term OZ_termType(OZ_Term term)
 {
   term = deref(term);
 
+  if (isThread(term)) {
+    return OZ_atom("thread");
+  }
+  
   if (isAnyVar(term)) {
     return OZ_atom("variable");
   }
@@ -665,6 +669,9 @@ void const2buffer(ostream &out, ConstTerm *c)
   int arity = c->getArity();
 
   switch (c->getType()) {
+  case Co_Thread:
+    out << "<Thread>";
+    break; 
   case Co_Abstraction:
   case Co_Builtin:
     {
@@ -703,7 +710,7 @@ void const2buffer(ostream &out, ConstTerm *c)
     if (c->isChunk()) {
       out << "<Chunk>";
     } else {
-      out << "<UNKNKOWN>";
+      out << "<UNKNOWN>";
     }
     break;
   }
