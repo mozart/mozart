@@ -570,6 +570,8 @@ If FORCE is non-nil, kill the processes immediately."
   (interactive "P")
   (message "Halting Oz ...")
   (if (get-buffer oz-temp-buffer) (kill-buffer oz-temp-buffer))
+  (if oz-bar-overlay
+      (delete-overlay oz-bar-overlay))
   (if (and (not force)
 	   (get-buffer-process oz-compiler-buffer)
 	   (or oz-win32 (get-buffer-process oz-emulator-buffer)))
