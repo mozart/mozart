@@ -23,7 +23,7 @@ OZBATCH		= $(OZHOME)/bin/ozbatch
 
 ### TARGETS
 
-all:	simple.dl simple.ozc posix.dl posix.ozc
+all:	simple.so simple.ozc posix.so posix.ozc
 
 simple.o:	simple.cc $(OZHOME)/include/oz.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c simple.cc
@@ -31,19 +31,19 @@ simple.o:	simple.cc $(OZHOME)/include/oz.h
 posix.o:	posix.cc $(OZHOME)/include/oz.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c posix.cc
 
-simple.dl:	simple.o
-	$(DYNLD) -o simple.dl simple.o $(LDFLAGS) $(LIBS)
+simple.so:	simple.o
+	$(DYNLD) -o simple.so simple.o $(LDFLAGS) $(LIBS)
 
-posix.dl:	posix.o
-	$(DYNLD) -o posix.dl posix.o $(LDFLAGS) $(LIBS)
+posix.so:	posix.o
+	$(DYNLD) -o posix.so posix.o $(LDFLAGS) $(LIBS)
 
-install:	simple.dl simple.ozc posix.dl posix.ozc
+install:	simple.so simple.ozc posix.so posix.ozc
 	$(INSTALL_DIR)			$(COMPDIR)
 	$(INSTALL_LIB) simple.ozc	$(COMPDIR)
 	$(INSTALL_LIB) posix.ozc	$(COMPDIR)
 	$(INSTALL_DIR)			$(DYNLDIR)
-	$(INSTALL_LIB) simple.dl	$(DYNLDIR)
-	$(INSTALL_LIB) posix.dl		$(DYNLDIR)
+	$(INSTALL_LIB) simple.so	$(DYNLDIR)
+	$(INSTALL_LIB) posix.so		$(DYNLDIR)
 
 simple.ozc:	simple.oz
 	$(OZBATCH) -c simple.oz
@@ -52,7 +52,9 @@ posix.ozc:	posix.oz
 	$(OZBATCH) -c posix.oz
 
 clean:
-	-rm *~ *.ozc *.o *.dl
+	-rm *~ *.ozc *.o *.so
 
 veryclean: clean
 	-rm config.*
+
+distclean: veryclean

@@ -1,11 +1,10 @@
 %%% Copyright © by Denys Duchier, Dec 1997, Universität des Saarlandes
 
 fun {$ IMPORT}
-   Require  = IMPORT.'SP'.'Foreign'.require
+   Fload    = IMPORT.'SP'.'Foreign'.load
    Register = IMPORT.'SP'.'Finalize'.register
    regex(compile:COMPILE execute:EXECUTE free:FREE flags:FLAGS)
-   = {Require 'tools/regex/posix.dl'
-      regex(compile:3 execute:5 free:1 flags:1)}
+   = {Fload 'tools/regex/posix.so'}
    flag(EXTENDED ICASE NEWLINE NOSUB NOTBOL NOTEOL)={FLAGS}
    Flags = flag(extended:EXTENDED
 		icase   :ICASE
