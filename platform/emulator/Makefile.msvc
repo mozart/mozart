@@ -1,12 +1,12 @@
 WINDIR=Y:/.root/project/ps/soft/win32-i486
 
 # at sics use
-WINDIR=Y:/.root/home/scheidhr/build/packages/win32-i486
+#WINDIR=Y:/.root/home/scheidhr/build/packages/win32-i486
 
 # debugging flags
 
 DBG = -Zi
-DBG = -Zi
+#DBG = -Ox
 
 
 
@@ -53,10 +53,10 @@ SRCS= \
 	am.cc unify.cc indexing.cc codearea.cc lps.cc \
 	trail.cc emulate.cc scheduler.cc \
 	copycode.cc opcodes.cc controlvar.cc \
-	cont.cc prop_int.cc suspension.cc prop_class.cc \
+	prop_int.cc suspension.cc prop_class.cc \
 	thr_stack.cc thr_class.cc thr_pool.cc \
 	thr_queue.cc thr_int.cc\
-	actor.cc board.cc solve.cc distributor.obj cpbag.cc space.cc\
+	board.cc distributor.obj space.cc\
 	gc.cc mem.cc liveness.cc\
 	gname.cc components.cc marshaler.cc site.cc\
 	var_of.cc ofbi.cc\
@@ -102,3 +102,5 @@ all: emulator.exe
 
 emulator.exe: $(OBJS)
 	cl $(DBG) $(OBJS) $(LIBS) wsock32.lib -Feemulator.exe 
+
+
