@@ -243,6 +243,7 @@ TaggedRef *tagged2Ref(TaggedRef ref)
 // ---------------------------------------------------------------------------
 
 
+// mm2: isCVar-> isVar
 inline
 Bool isCVar(TypeOfTerm tag) {
   return (tag == CVAR);
