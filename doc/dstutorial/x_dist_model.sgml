@@ -73,8 +73,12 @@ among the sites, giving everyone a fair share of the object use.
 
 <P>The site where the object is created
 is called its <EM>owner site</EM>.
+A reference to an object on its owner site
+is called an <EM>owner</EM> or <EM>owner node</EM>.
 All other sites referencing the object are
 <EM>proxy sites</EM>.
+A remote reference to an object is
+called a <EM>proxy</EM> or a <EM>proxy node</EM>.
 A site requesting the object
 first sends a message to the owner site.
 The owner site then
@@ -393,6 +397,30 @@ Some commonly-used system modules are
 <<Open>> and <<Pickle>> (the file system),
 <<OS>> and <<Property>> (the OS and emulator),
 and so forth.
+
+<SECTION><TITLE>Controlled system shutdown</TITLE>
+
+<P>A site can be stopped in two ways:
+by a controlled shutdown initiated
+within the site, or by an external problem
+that causes the site to crash.
+The failure model (explained later) is used
+to survive site crashes.
+Here we explain what a controlled shutdown means
+in the distribution model.
+
+<P>All language entities, except for stateless entities
+that are copied immediately, have an owner site and proxy sites.
+The owner site is always the site on which the entity was created.
+A controlled shutdown has no effect on any
+distributed entity whose owner node is
+on another site.
+This is enforced by the distributed protocols.
+For example, if a cell's state pointer is on
+the shutting down site, then the state pointer is
+moved to the owner site before shutting down.
+If the owner node is on the shutting down site,
+then that entity will no longer work.
 
 <SECTION><TITLE>Bringing it all together</TITLE>
 
