@@ -63,16 +63,5 @@ static void *instrTable[OZERROR+1];
 
 #undef INSTR
 
-#ifdef INLINEOPCODEMAP
-
-#define INSTR(instr) && instr##FAKE,
-
-static void * instrFakeTable[OZERROR+1] = {
-  include(EMUDIR/instrDefs.m4)
-0};
-
-#undef INSTR
-
-#endif
 
 

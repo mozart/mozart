@@ -3615,7 +3615,7 @@ fi
 	3.3.*)
 	    oz_opt="-O3 -pipe -fstrict-aliasing"
 	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
-	    EMULATE_CXXFLAGS="-finline-limit=500 -fno-tracer -fno-guess-branch-probability"
+	    EMULATE_CXXFLAGS="-finline-limit=500 -fno-tracer"
 	    ;;
 	*)
 	    oz_opt="-O3 -pipe -fstrict-aliasing"
@@ -9829,56 +9829,43 @@ EOF
 
 echo $ac_n "checking whether .align is multiple""... $ac_c" 1>&6
 echo "configure:9832: checking whether .align is multiple" >&5
-if test "$cross_compiling" = yes; then
-  echo "$ac_t""no" 1>&6
+if eval "test \"`echo '$''{'oz_cv_mul_align'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test "$cross_compiling" = yes; then
+  oz_cv_mul_align=no
+echo "configure: warning: cannot determine alignment when cross-compiling" 1>&2
 else
   cat > conftest.$ac_ext <<EOF
-#line 9837 "configure"
+#line 9841 "configure"
 #include "confdefs.h"
 
 #ifdef __GNUC__
 
-#include <stdio.h>
+int main(int argc, char **argv)
+{
+  char *ptr = (char) 0;
+  int cnt = 0;
+  const void *block = && lbl;
 
-static int nonsense(int);
-int main(void) {
-  int j;
+  ptr = (char *) block;
+  while (*ptr == (char) 0xff)
+    ptr++;
+  ptr++;
+  while (*ptr == (char) 0xff) {
+    cnt++;
+    ptr++;
+  }
 
-  goto leave;
-  
- start:
-  asm volatile(".align 16");
- la1:
-  asm volatile(".long 1");
-  asm volatile(".align 16");
- la2:
-  j=nonsense(42);
-  goto leave;
-  
-  asm volatile(".align 16");
- lb1:
-  asm volatile(".long 2");
-  asm volatile(".align 16");
- lb2:
-  j=nonsense(4711);
-  goto leave;
+  if (cnt == 15)
+    return (0);
 
- leave:
-  static void * fake[] = {
-    && start, && la1, && la2,
-    && lb1, && lb2, && leave};
-
-  if (((((char *) && lb2) - ((char *) && lb1)) == 16) &&
-      ((((char *) && la2) - ((char *) && la1)) == 16) &&
-      (*((int *) && la1)==1) &&
-      (*((int *) && lb1)==2)) {
-    return 0;
-  } 
-  return -1;
-    
-}
-static int nonsense(int i) {
-  return i*i;
+ lbl:
+  asm volatile(".align 16,0xff");
+  asm volatile(".byte 0");
+  asm volatile(".align 16,0xff");
+  asm volatile(".byte 0");
+  return (1);
 }
 
 #else
@@ -9888,76 +9875,68 @@ BOOOOOOOM
 #endif
 
 EOF
-if { (eval echo configure:9892: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:9879: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
-  echo "$ac_t""yes" 1>&6
+  oz_cv_mul_align=yes
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -fr conftest*
+  oz_cv_mul_align=no
+fi
+rm -fr conftest*
+fi
+
+fi
+
+echo "$ac_t""$oz_cv_mul_align" 1>&6
+
+if test "$oz_cv_mul_align" = yes; then
   cat >> confdefs.h <<\EOF
 #define AS_HAS_MULTIPLE_ALIGN 1
 EOF
 
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -fr conftest*
-  echo "$ac_t""no" 1>&6
 fi
-rm -fr conftest*
-fi
-
-
 
 echo $ac_n "checking whether .align is power of 2""... $ac_c" 1>&6
-echo "configure:9911: checking whether .align is power of 2" >&5
-if test "$cross_compiling" = yes; then
-  echo "$ac_t""no" 1>&6
+echo "configure:9903: checking whether .align is power of 2" >&5
+if eval "test \"`echo '$''{'oz_cv_power_align'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test "$cross_compiling" = yes; then
+  oz_cv_power_align=no
+echo "configure: warning: cannot determine alignment when cross-compiling" 1>&2
 else
   cat > conftest.$ac_ext <<EOF
-#line 9916 "configure"
+#line 9912 "configure"
 #include "confdefs.h"
 
 #ifdef __GNUC__
 
-#include <stdio.h>
+int main(int argc, char **argv)
+{
+  char *ptr = (char) 0;
+  int cnt = 0;
+  const void *block = && lbl;
 
-static int nonsense(int);
-int main(void) {
-  int j;
+  ptr = (char *) block;
+  while (*ptr == (char) 0xff)
+    ptr++;
+  ptr++;
+  while (*ptr == (char) 0xff) {
+    cnt++;
+    ptr++;
+  }
 
-  goto leave;
-  
- start:
-  asm volatile(".align 4");
- la1:
-  asm volatile(".long 1");
-  asm volatile(".align 4");
- la2:
-  j=nonsense(42);
-  goto leave;
-  
-  asm volatile(".align 4");
- lb1:
-  asm volatile(".long 2");
-  asm volatile(".align 4");
- lb2:
-  j=nonsense(4711);
-  goto leave;
+  if (cnt == 15)
+    return (0);
 
- leave:
-  static void * fake[] = {
-    && start, && la1, && la2,
-    && lb1, && lb2, && leave};
-
-  if (((((char *) && lb2) - ((char *) && lb1)) == 16) &&
-      ((((char *) && la2) - ((char *) && la1)) == 16) &&
-      (*((int *) && la1)==1) &&
-      (*((int *) && lb1)==2)) {
-    return 0;
-  } 
-  return -1;
-    
-}
-static int nonsense(int i) {
-  return i*i;
+ lbl:
+  asm volatile(".align 4,0xff");
+  asm volatile(".byte 0");
+  asm volatile(".align 4,0xff");
+  asm volatile(".byte 0");
+  return (1);
 }
 
 #else
@@ -9967,31 +9946,145 @@ BOOOOOOOM
 #endif
 
 EOF
-if { (eval echo configure:9971: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:9950: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
-  echo "$ac_t""yes" 1>&6
-  cat >> confdefs.h <<\EOF
-#define AS_HAS_POWER_ALIGN 1
-EOF
-
+  oz_cv_power_align=yes
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -fr conftest*
-  echo "$ac_t""no" 1>&6
+  oz_cv_power_align=no
 fi
 rm -fr conftest*
 fi
 
+fi
+
+echo "$ac_t""$oz_cv_power_align" 1>&6
+
+if test "$oz_cv_power_align" = yes; then
+  cat >> confdefs.h <<\EOF
+#define AS_HAS_POWER_ALIGN 1
+EOF
+
+fi
+
+
+echo $ac_n "checking whether we can store opcode before instructions""... $ac_c" 1>&6
+echo "configure:9975: checking whether we can store opcode before instructions" >&5
+if eval "test \"`echo '$''{'oz_cv_opcode_map'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test "$cross_compiling" = yes; then
+  oz_cv_opcode_map=no
+echo "configure: warning: cannot determine whether we can do opcode-map when cross-compiling" 1>&2
+else
+  cat > conftest.$ac_ext <<EOF
+#line 9984 "configure"
+#include "confdefs.h"
+
+#ifdef __GNUC__
+
+#include <stdio.h>
+#include <string.h>
+
+void *program[10];
+
+#define DISPATCH(N) goto ** (PC+=N)
+
+int main(int argc, char **argv)
+{
+  void **PC;
+  int j;
+
+  goto doit;
+
+ ins0:
+  asm volatile(".align 4,0xff");
+  asm volatile(".long 0");
+  j = j * j;
+  DISPATCH(1);
+  
+ ins1:
+  asm volatile(".align 4,0xff");
+  asm volatile(".long 1");
+  j = j + j;
+  DISPATCH(1);
+
+ ins2:
+  asm volatile(".align 4,0xff");
+  asm volatile(".long 2");
+  if (j == 8 &&
+      *((long *) (((char *) program[0]) - sizeof(long))) == 0 &&
+      *((long *) (((char *) program[1]) - sizeof(long))) == 1 &&
+      *((long *) (((char *) program[2]) - sizeof(long))) == 2)
+    return (0);
+  else
+    return (1);
+
+ doit:
+  if (argc == 1) {
+    program[0] = &&ins0;
+    program[1] = &&ins1;
+    program[2] = &&ins2;
+  } else {
+    program[0] = &&ins2;
+    program[1] = &&ins0;
+    program[2] = &&ins1;
+  }
+  for (j = 0; j < 3; j++) {
+    int i = j;
+    char *cptr;
+
+    cptr = (char *) program[j];
+    while (strncmp((const char *) &i, cptr, sizeof(int)))
+      cptr++;
+    program[j] = (void *) (cptr + sizeof(int));
+  }
+
+  j = 2;
+  PC = & program[argc-1];
+  DISPATCH(0);
+}
+
+#else
+
+BOOOOOOOM
+
+#endif
+
+EOF
+if { (eval echo configure:10058: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+then
+  oz_cv_opcode_map=yes
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -fr conftest*
+  oz_cv_opcode_map=no
+fi
+rm -fr conftest*
+fi
+
+fi
+
+echo "$ac_t""$oz_cv_opcode_map" 1>&6
+
+if test "$oz_cv_opcode_map" = yes; then
+  cat >> confdefs.h <<\EOF
+#define AS_CAN_OPCODE_MAP 1
+EOF
+
+fi
 
 
 echo $ac_n "checking alignment of secondary tag for const terms""... $ac_c" 1>&6
-echo "configure:9990: checking alignment of secondary tag for const terms" >&5
+echo "configure:10083: checking alignment of secondary tag for const terms" >&5
 if test "$cross_compiling" = yes; then
   echo "$ac_t""assume optimistic ok for cross compilation" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 9995 "configure"
+#line 10088 "configure"
 #include "confdefs.h"
 
 class Tag {
@@ -10008,7 +10101,7 @@ int main()
   return (((void*)&c)==((void*)(Tag*)&c))?0:-1;
 }
 EOF
-if { (eval echo configure:10012: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10105: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""ok" 1>&6
 else
@@ -10023,13 +10116,13 @@ fi
 
 
 echo $ac_n "checking if alignment of secondary tags for extensions needs padding""... $ac_c" 1>&6
-echo "configure:10027: checking if alignment of secondary tags for extensions needs padding" >&5
+echo "configure:10120: checking if alignment of secondary tags for extensions needs padding" >&5
 if test "$cross_compiling" = yes; then
   echo "$ac_t""assume optimistic no for cross compilation" 1>&6
   needs_padding=no
 else
   cat > conftest.$ac_ext <<EOF
-#line 10033 "configure"
+#line 10126 "configure"
 #include "confdefs.h"
 
 class Tag {
@@ -10053,7 +10146,7 @@ int main()
   return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
 }
 EOF
-if { (eval echo configure:10057: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10150: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""no" 1>&6
   needs_padding=no
@@ -10072,12 +10165,12 @@ NEEDS_PADDING=0
 
 if test "$needs_padding" = "yes"; then
 echo $ac_n "checking if padding works""... $ac_c" 1>&6
-echo "configure:10076: checking if padding works" >&5
+echo "configure:10169: checking if padding works" >&5
 if test "$cross_compiling" = yes; then
   { echo "configure: error: we should not get here when cross compiling" 1>&2; exit 1; }
 else
   cat > conftest.$ac_ext <<EOF
-#line 10081 "configure"
+#line 10174 "configure"
 #include "confdefs.h"
 
 class Tag {
@@ -10105,7 +10198,7 @@ int main()
   return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
 }
 EOF
-if { (eval echo configure:10109: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10202: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""yes" 1>&6
   NEEDS_PADDING=1

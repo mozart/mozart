@@ -413,17 +413,15 @@ void pushContX(TaskStack *stk,
 
 #ifdef INLINEOPCODEMAP
 #define INSERTOPCODE(INSTR) \
-        INSTR##FAKE: \
         asm(OPCODEALIGNINSTR); \
-        asm(OPM_##INSTR); \
-        asm(OPCODEALIGNINSTR);
+        asm(OPM_##INSTR);
 #else
 #define INSERTOPCODE(INSTR)
 #endif
 
 #ifdef THREADED
 
-#define Case(INSTR) INSERTOPCODE(INSTR); INSTR##LBL : asmLbl(INSTR); 
+#define Case(INSTR) INSTR##LBL : INSERTOPCODE(INSTR); asmLbl(INSTR); 
 
 #ifdef DELAY_SLOT
 // let gcc fill in the delay slot of the "jmp" instruction:
@@ -624,7 +622,23 @@ int engine(Bool init)
 #ifdef THREADED
   if (init) {
 #include "instrtab.hh"
+    // kost@ : adjust entries in the 'instrTable' so that they point
+    // to the instruction code;
+    int ind  = 0;
+    while (instrTable[ind]) {
+      long i = ind;
+      char *cptr;
+
+      cptr = (char *) instrTable[ind];
+      while (strncmp((const char *) &i, cptr, sizeof(long)))
+	cptr++;
+      instrTable[ind] = (void *) (cptr + sizeof(int));
+
+      ind++;
+    }
+
     CodeArea::init(instrTable);
+// #define DEBUG_INLINEOPCODES
 #ifdef DEBUG_INLINEOPCODES
     for (int i=0; i<OZERROR; i++)
       if (CodeArea::adressToOpcode(CodeArea::opcodeToAdress((Opcode) i)) != i) {
