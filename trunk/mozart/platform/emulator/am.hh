@@ -290,6 +290,15 @@ public:
   void unsetProfileMode() { _profileMode=FALSE; }
   Bool profileMode()      { return _profileMode; }
 
+#ifdef DEBUG_CHECK
+private:
+  Bool merging;  // ask TM
+public:
+  void setMerging()   { merging=TRUE; }
+  void unsetMerging() { merging=FALSE; }
+  Bool isMerging(void) {return merging;}
+#endif
+
 private:
   Bool installingScript;  // ask TM
 public:

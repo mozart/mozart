@@ -40,7 +40,7 @@
 #include "dpInterface.hh"
 #include "boot-manager.hh"
 
-unsigned invoc_counter = 0;
+unsigned invoc_counter = 1000;
 
 int TaskStack::tasks()
 {

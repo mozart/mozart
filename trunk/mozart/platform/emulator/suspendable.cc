@@ -3,24 +3,24 @@
  *    Konstantin Popov (popow@ps.uni-sb.de)
  *    Tobias Müller (tmueller@ps.uni-sb.de)
  *    Christian Schulte <schulte@ps.uni-sb.de>
- * 
+ *
  *  Copyright:
  *    Konstantin Popov, 1999
  *    Tobias Müller, 1999
  *    Christian Schulte, 1999
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
+ *
+ *  This file is part of Mozart, an implementation
  *  of Oz 3:
  *     http://www.mozart-oz.org
- * 
+ *
  *  See the file "LICENSE" or
  *     http://www.mozart-oz.org/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -37,14 +37,14 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
   // Returns OK, if suspension can go away
   // This can happen, if either the suspension is dead
   // or gets woken
-  
+
   if (isDead())
     return OK;
 
   Board * sb = getBoardInternal()->derefBoard();
 
   oz_BFlag between = oz_isBetween(sb, home);
-  
+
   if (isRunnable()) {
 
     if (isThread()) {
@@ -53,7 +53,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
       if (calledBy && !isUnify()) {
 	switch (between) {
 	case B_BETWEEN:
-	  setUnify(); 
+	  setUnify();
 	  return NO;
 	case B_DEAD:
 	  return OK;
@@ -61,7 +61,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 	  return NO;
 	}
       }
-    } 
+    }
 
     return NO;
 
@@ -88,7 +88,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 	SuspToThread(this)->disposeStack();
 	return OK;
       }
-      
+
     } else {
 
       switch (between) {
@@ -96,6 +96,10 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 	if (calledBy)
 	  setUnify();
 	setRunnable();
+
+	DEBUG_CONSTRAIN_CVAR(("Suspendable::_wakeup [%p]\n",
+			      SuspToPropagator(this)->getPropagator()));
+
 	if (isNMO() && !oz_onToplevel()) {
 	  Assert(!SuspToPropagator(this)->getPropagator()->isMonotonic());
 
@@ -114,10 +118,10 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 	return OK;
       }
 
-    } 
-    
+    }
+
   }
-  
+
   return NO;
 
 }
@@ -134,15 +138,15 @@ void oz_checkAnySuspensionList(SuspList ** suspList,
     return;
 
   home = home->derefBoard();
- 
+
   SuspList ** p  = suspList;
 
-  SuspList * sl = *suspList; 
+  SuspList * sl = *suspList;
 
   while (sl) {
-    
+
     SuspList ** n = sl->getNextRef();
-    
+
     if (sl->getSuspendable()->_wakeup(home,calledBy)) {
       *p = *n;
       sl->dispose();
@@ -151,10 +155,10 @@ void oz_checkAnySuspensionList(SuspList ** suspList,
       sl = *n;
       p  = n;
     }
-    
-    
+
+
   }
-    
+
 }
 
 
@@ -162,48 +166,58 @@ inline
 Bool Suspendable::_wakeupLocal(Board * sb, PropCaller calledBy) {
   if (isDead())
     return OK;
-  
+
+#ifdef DEBUG_CHECK
+  Assert(am.isMerging() || !am.isInstallingScript());
+#endif
+
   if (calledBy)
     setUnify();
-    
+
   if (!isRunnable()) {
     setRunnable();
-    
+
+    DEBUG_CONSTRAIN_CVAR(("Suspendable::_wakeupLocal [%p]\n",
+			  SuspToPropagator(this)->getPropagator()));
+
     if (isNMO() && !oz_onToplevel()) {
       Assert(!SuspToPropagator(this)->getPropagator()->isMonotonic());
-      
+
       sb->addToNonMono(SuspToPropagator(this));
     } else {
       sb->addToLPQ(SuspToPropagator(this));
     }
-    
+
   }
 
   return NO;
-  
+
 }
 
 void oz_checkLocalSuspensionList(SuspList ** suspList,
 				 PropCaller calledBy) {
+  // tmueller: what is that?
   if (am.inEqEq())
     return;
 
-
   SuspList ** p = suspList;
 
-  SuspList * sl = *p; 
+  SuspList * sl = *p;
 
   if (!sl)
     return;
 
   Board * sb = sl->getSuspendable()->getBoardInternal()->derefBoard();
 
+  if (sb != am.currentBoard()) 
+    return;
+
   do {
-    
+
     SuspList ** n = sl->getNextRef();
 
     Assert(sb == sl->getSuspendable()->getBoardInternal()->derefBoard());
-  
+
     if (sl->getSuspendable()->_wakeupLocal(sb,calledBy)) {
       *p = *n;
       sl->dispose();
@@ -212,9 +226,9 @@ void oz_checkLocalSuspensionList(SuspList ** suspList,
       sl = *n;
       p  = n;
     }
-    
-    
+
+
   } while (sl);
-    
+
 }
 
