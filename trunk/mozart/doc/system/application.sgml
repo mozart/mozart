@@ -3,7 +3,7 @@
   -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
   -
   - Copyright:
-  -   Leif Kornstaedt, 1998
+  -   Leif Kornstaedt, 1998-2001
   -
   - Last change:
   -   $Date$ by $Author$
@@ -118,15 +118,18 @@
 	<P>
 	  Boolean options ?{option} may be given as <<--?{option}>> (meaning
 	  <Code proglang=oz/true/) or <<--no?{option}>> (meaning <Code
-	  proglang=oz/false/).  A single hyphen&nbsp;<<->> is not considered
-	  to be an option and thus is returned unchanged.  Parsing stops at
-	  a double hyphen&nbsp;<<-->> not followed by an option name; the
-	  double hyphen itself does not appear in the output.
+	  proglang=oz/false/).  A single hyphen&nbsp;<<->> by itself is not
+	  considered to be an option and thus is returned unchanged.  Parsing
+	  stops at a double hyphen&nbsp;<<-->> appearing by itself; the double
+	  hyphen itself does not appear in the output.
+	<P>
+	  In the case of an unrecognized long option name or single-character
+	  option, or of an ambiguous long option prefix, an error is raised.
 
     <Section id="section.application.specifications">
       <Title/Option Specifications/
       <P>
-	There are several ways to specify the way the arguments are parsed,
+	There are several ways to specify the way the arguments are parsed;
 	we present them in order of increasing processing power.
 
       <Subsection>
@@ -224,12 +227,11 @@
 	  that this option is equivalent to another option used with the
 	  supplied value (or a combination of several options).  In the
 	  latter case, the value will be transferred to the output without
-	  any additional transformations.  (It should be list however, if
-	  the <<type>> specification was <<list(?={primary type})>>.)
+	  any additional transformations.
 	  <Grammar.Rule>?={alias}
 	    <Grammar.Alt/?={option name}/
-	    <Grammar.Alt/?={option name}<<#>>?={value}
-	      | <<[>>?={option name}<<#>>?={value}<<]>>/
+	    <Grammar.Alt/?={option name}<<#>>?={value}/
+	    <Grammar.Alt/<<[>>?={option name}<<#>>?={value}<<]>>/
 	  </Grammar.Rule>
 	<Para class=apropos><Title/Returned Result/
 	  The result of this processing step is a list of parsed options,
@@ -338,20 +340,20 @@
 	    <Grammar.Alt add/<<record(>>[<<mode: ?={mode}>>] ?={option}
 	      &ellipsis; ?={option})/
 	  </Grammar.Rule>
-	  The specification for <Q class=quasi/real/ options take some
-	  more information into consideration, namely how often the
-	  option may appear and how several occurrences combine (?={occ}),
-	  and whether it is a required option (<<optional>>; the default
-	  is <<true>>) or whether it takes a default value (<<default>>),
-	  which it does not by default.  At most one of <<default>> and
-	  <<optional>> may be given.
+	  The specifications for <Q class=quasi/real/ (&ie;, non-alias)
+	  options take some more information into consideration, namely how
+	  often the option may appear and how several occurrences combine
+	  (?={occ}), and whether it is a required option (<<optional>>;
+	  the default is <<true>>) or whether it takes a default value
+	  (<<default>>), which it does not by default.  At most one of
+	  <<default>> and <<optional>> may be given.
 	  <Grammar.Rule>?={option}
 	    <Grammar.Alt add/?={option name}<<(>>/
 	    <Grammar.Alt space/<<   1: ?={occ}>>/
 	    <Grammar.Alt space/<<   >>[<<char: ?={char or chars}>>]/
 	    <Grammar.Alt space/<<   >>[<<type: ?={type}>>]/
-	    <Grammar.Alt space/<<   >>[<<default: ?={value}>>]/
-	    <Grammar.Alt space/<<   >>[<<optional: ?={bool}>>]<<)>>/
+	    <Grammar.Alt space
+	      /<<   >>[<<default: ?={value}>> | <<optional: ?={bool}>>]<<)>>/
 	  </Grammar.Rule>
 	  An option may be allowed to occur at most once (<<single>>) or
 	  any number of times.  In the latter case, the result may either
@@ -371,14 +373,17 @@
           <ref.extern to="ozdoc:tools" key="chapter.linker"
 		      /the Oz linker <<ozl>>/.
 	<Para class=apropos><Title/Returned Result/
-	  The result consists of an option record.  The options which had
+	  The result consists of an option record.  All options which had
 	  an explicit ?={occ} given in their specification are moved from
-	  the option list into this record.  Options with default values
-	  appear with these values in the option record unless they were
-	  explicitly given in the argument list.  It is ensured that all
-	  non-optional options are present in this record.  All other options,
-	  interspersed with non-parsed arguments, are stored as an option list
-	  under feature&nbsp;<<1>> of this record.
+	  the option list into this record, the feature being the option
+	  name, the subtree the associated value.  Defaulted options that
+	  have not been overridden by the argument list appear in this
+	  record with their default value.  Only optional options may be
+	  missing from this record, namely when they have not been specified
+	  in the argument list.  Those options which did not have an explicit
+	  ?={occ} given in their specification are found, interspersed with
+	  non-parsed arguments, in an option list under feature&nbsp;<<1>>
+	  of the option record.
 	  <Grammar.Rule>?={option record}
 	    <Grammar.Alt/<<optRec(1: ?={option list}>>/
 	    <Grammar.Alt space
