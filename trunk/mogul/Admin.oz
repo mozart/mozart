@@ -23,7 +23,7 @@ define
 	 categories categoriesURL packages mogulTOP
       meth init
 	 db      <- unit
-	 rootID  <- {NormalizeID 'mogul' 'mogul:'}
+	 rootID  <- {NormalizeID 'mogul' 'mogul:/'}
 	 rootURL <- 'mogul.mogul'
 	 reports <- nil
 	 verbose <- false
@@ -69,7 +69,7 @@ define
       %%
       meth 'verbose'(V) verbose<-V end
       meth 'quiet'(V) verbose<-{Not V} end
-      meth 'root-id'(V) rootID<-{NormalizeID V 'mogul:'} end
+      meth 'root-id'(V) rootID<-{NormalizeID V 'mogul:/'} end
       meth 'root-url'(V) rootURL<-V end
       meth 'open-db'(V)
 	 if @db\=unit then

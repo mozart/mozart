@@ -9,7 +9,7 @@ AC_ARG_WITH(mogul-top,
 	top URL for the MOGUL Archive],
   [mogul_cv_MOGUL_TOP=$with_mogul_top
    MOGUL_TOP=$mogul_cv_MOGUL_TOP],
-  [MOGUL_TOP=${mogul_cv_MOGUL_TOP:-$USER/mogul}])
+  [MOGUL_TOP=${mogul_cv_MOGUL_TOP:-/~$USER/mogul}])
 AC_MSG_RESULT($MOGUL_TOP)
 AC_SUBST(MOGUL_TOP)
 AC_OUTPUT(Makefile mogul.css:mogul.css.in)

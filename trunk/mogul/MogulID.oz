@@ -34,12 +34,12 @@ define
       if {Regex.search ID_BAD_CHAR ID}\=false then
 	 {Raise mogul(id_syntax(ID))}
       end
-      BaseU = {URL.toBase {URL.make if Base==unit then 'mogul:' else Base end}}
+      BaseU = {URL.toBase {URL.make if Base==unit then 'mogul:/' else Base end}}
 \ifdef HYPHEN_HACK
       IdU = if {HasHyphen ID} then
-	       {URL.resolve 'mogul:' {Dehyphenize ID}}
+	       {URL.resolve 'mogul:/' {Dehyphenize ID}}
 	    elsecase BaseU.path of "mogul"|_ then
-	       {URL.resolve 'mogul:' ID}
+	       {URL.resolve 'mogul:/' ID}
 	    else
 	       {URL.resolve BaseU ID}
 	    end

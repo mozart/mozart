@@ -11,7 +11,10 @@
 ac_help=
 ac_default_prefix=/usr/local
 # Any additions from configure.in:
-ac_default_prefix=${HOME}/.oz
+ac_default_prefix=${OZSKEL_PREFIX:-${HOME}/.oz}
+ac_help="$ac_help
+--with-mogul-top=URL		this will be used as the
+	top URL for the MOGUL Archive"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -550,7 +553,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:554: checking host system type" >&5
+echo "configure:557: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -571,7 +574,7 @@ host_os=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
 echo "$ac_t""$host" 1>&6
 
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:575: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:578: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -604,7 +607,7 @@ fi
   
   if test "${INSTALL+set}" = set; then
     echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
-echo "configure:608: checking whether to unset broken INSTALL" >&5
+echo "configure:611: checking whether to unset broken INSTALL" >&5
 if eval "test \"`echo '$''{'mozart_cv_unset_INSTALL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -634,7 +637,7 @@ echo "$ac_t""$mozart_cv_unset_INSTALL" 1>&6
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:638: checking for a BSD compatible install" >&5
+echo "configure:641: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -698,7 +701,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:702: checking for $ac_word" >&5
+echo "configure:705: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_VAR_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -751,7 +754,7 @@ fi
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:755: checking for $ac_word" >&5
+echo "configure:758: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_VAR_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -804,7 +807,7 @@ fi
     # Extract the first word of "ozc", so it can be a program name with args.
 set dummy ozc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:808: checking for $ac_word" >&5
+echo "configure:811: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_VAR_OZC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -857,7 +860,7 @@ fi
     # Extract the first word of "ozl", so it can be a program name with args.
 set dummy ozl; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:861: checking for $ac_word" >&5
+echo "configure:864: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_VAR_OZL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -910,7 +913,7 @@ fi
     # Extract the first word of "ozengine", so it can be a program name with args.
 set dummy ozengine; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:914: checking for $ac_word" >&5
+echo "configure:917: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_VAR_OZE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -972,7 +975,7 @@ fi
     # Extract the first word of "ozdoc", so it can be a program name with args.
 set dummy ozdoc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:976: checking for $ac_word" >&5
+echo "configure:979: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_VAR_OZDOC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1013,6 +1016,19 @@ fi
 	VAR_OZDOC=undefined
 	{ echo "configure: error: ozdoc not found" 1>&2; exit 1; }
     fi
+echo $ac_n "checking for --with-mogul-top""... $ac_c" 1>&6
+echo "configure:1021: checking for --with-mogul-top" >&5
+# Check whether --with-mogul-top or --without-mogul-top was given.
+if test "${with_mogul_top+set}" = set; then
+  withval="$with_mogul_top"
+  mogul_cv_MOGUL_TOP=$with_mogul_top
+   MOGUL_TOP=$mogul_cv_MOGUL_TOP
+else
+  MOGUL_TOP=${mogul_cv_MOGUL_TOP:-/~$USER/mogul}
+fi
+
+echo "$ac_t""$MOGUL_TOP" 1>&6
+
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
@@ -1126,7 +1142,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile mogul.css:mogul.css.in" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -1174,6 +1190,7 @@ s%@VAR_OZL@%$VAR_OZL%g
 s%@VAR_OZE@%$VAR_OZE%g
 s%@OZHOME@%$OZHOME%g
 s%@VAR_OZDOC@%$VAR_OZDOC%g
+s%@MOGUL_TOP@%$MOGUL_TOP%g
 
 CEOF
 EOF
@@ -1215,7 +1232,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile mogul.css:mogul.css.in"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
