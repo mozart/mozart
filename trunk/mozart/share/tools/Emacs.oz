@@ -289,7 +289,7 @@ body
 			  proc {$ M}
 			     case {GetOPI} of false then skip
 			     elseof OPI then
-				{{OPI getCompiler($)} M}
+				{{OPI getNarrator($)} M}
 			     end
 			  end)
 
