@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 #else
 int WINAPI
 WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
-        LPSTR lpszCmdLine, int /*nCmdShow*/)
+        LPSTR /*lpszCmdLine*/, int /*nCmdShow*/)
 #endif
 {
   /* win32 does not support process groups,
@@ -133,7 +133,7 @@ WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
   }
   char *ozemulator = getEmulator(ozhome);
   char *url = argv[1];
-  sprintf(buffer,"%s -u \"%s\" -- ", ozemulator,url);
+  sprintf(buffer,"\"%s\" -u \"%s\" -- ", ozemulator,url);
   for (int i=2; i<argc; i++) {
     strcat(buffer," \"");
     strcat(buffer,argv[i]);
@@ -146,21 +146,26 @@ WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
   si.cb = sizeof(si);
   si.dwFlags = STARTF_FORCEOFFFEEDBACK;
 
+#ifdef OZENGINEW
+  HANDLE rh,wh;
+  {
+    SECURITY_ATTRIBUTES sa;
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = TRUE;
+    if (CreatePipe(&rh,&wh,&sa,0) == FALSE) {
+      panic(1,"Could not create pipe.\n");
+    }
+    si.dwFlags |= STARTF_USESTDHANDLES;
+    si.hStdOutput = wh;
+    si.hStdError  = wh;
+  }
+#endif
+
   SECURITY_ATTRIBUTES sa;
   sa.nLength = sizeof(sa);
   sa.lpSecurityDescriptor = NULL;
   sa.bInheritHandle = TRUE;
-
-#ifdef OZENGINEW
-  HANDLE rh,wh;
-  if (CreatePipe(&rh,&wh,&sa,0) == FALSE) {
-    panic(1,"Could not create pipe.\n");
-  }
-  si.dwFlags |= STARTF_USESTDHANDLES;
-  si.hStdOutput = wh;
-  si.hStdError  = wh;
-#endif
-
   PROCESS_INFORMATION pinf;
   BOOL ret = CreateProcess(NULL,buffer,&sa,NULL,TRUE,
                            console,NULL,NULL,&si,&pinf);
