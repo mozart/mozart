@@ -3,10 +3,12 @@
 # oztool c++ ...	invokes the right c++ compiler with the right options
 # oztool cc  ...	same for the c compiler
 # oztool ld  ...	creates DLLs
+# oztool platform	echoes the oz platform
 
 : ${oztool_cxx="@OZTOOL_CXX@"}
 : ${oztool_cc="cc"}
 : ${oztool_ld="$oztool_cxx @TOOLLDFLAGS@"}
+: ${oztool_platform="@platform@"}
 cmd=$1
 shift
 
@@ -14,6 +16,9 @@ case "$cmd" in
   c++) cmd=$oztool_cxx;;
   cc ) cmd=$oztool_cc;;
   ld ) cmd=$oztool_ld;;
+  platform )
+    echo "$oztool_platform"
+    exit 0;;
   *  )
   echo "oztool: unknown command $cmd" 1>&2
   exit 1
