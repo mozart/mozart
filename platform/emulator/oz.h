@@ -538,7 +538,7 @@ extern OZ_Return _FUNDECL(OZ_suspendMetaProp,(OZ_CFun, OZ_Term *, int));
 #define OZ_MetaPropSuspend OZ_suspendMetaProp(OZ_self, OZ_args, OZ_arity)
 
 
-// Perdio related things
+/* Perdio related things */
 
 struct OZ_Datum {
   char *data;  /* NULL on error */
