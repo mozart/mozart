@@ -90,9 +90,9 @@ Makefile: Makefile.in config.status
 	./config.status
 
 config.status: configure
-	config.status --recheck
+	./config.status --recheck
 
-install: $(BINDIR) $(EXES:%=$(BINDIR)/%) $(BINDIR)/mozart.ico
+install: $(BINDIR) $(EXES:%=$(BINDIR)/%)
 
 $(BINDIR):
 	$(INSTALL_DIR) $@
@@ -101,9 +101,6 @@ $(BINDIR)/%.exe: %.exe
 	$(INSTALL_BIN) $< $@
 
 $(BINDIR)/%.bin: %.bin
-	$(INSTALL_FILE) $< $@
-
-$(BINDIR)/%.ico: %.ico
 	$(INSTALL_FILE) $< $@
 
 clean:
