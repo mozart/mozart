@@ -583,6 +583,43 @@ inline OZ_PropagatorProfile * OZ_PropagatorProfile::getNext(void) {
   return _next;
 }
 
+//-----------------------------------------------------------------------------
+// OZ_CtWakeUp
+
+// there are not more than 32 wake up lists
+class ozdeclspec OZ_CtWakeUp {
+private:
+  unsigned _wakeUpDescriptor;
+public:
+  // don't define any constructor
+  void init(void);
+  OZ_Boolean isEmpty(void);
+  OZ_Boolean setWakeUp(int i);
+  OZ_Boolean isWakeUp(int i);
+  static OZ_CtWakeUp getWakeUpAll(void);
+};
+
+#define OZ_WAKEUP_ALL OZ_CtWakeUp::getWakeUpAll()
+
+inline
+void OZ_CtWakeUp::init(void) { _wakeUpDescriptor = 0; }
+inline
+OZ_Boolean OZ_CtWakeUp::isEmpty(void) { return (_wakeUpDescriptor == 0); }
+inline
+OZ_Boolean OZ_CtWakeUp::setWakeUp(int i) { return (_wakeUpDescriptor |= (1 << i)); }
+inline
+OZ_Boolean OZ_CtWakeUp::isWakeUp(int i) { return (_wakeUpDescriptor & (1 << i)); }
+inline
+OZ_CtWakeUp OZ_CtWakeUp::getWakeUpAll(void) {
+  OZ_CtWakeUp aux;
+  aux._wakeUpDescriptor = 0xffff;
+  return aux;
+};
+
+//----------------------------------------------------------------------
+
+class OZ_CtDefinition;
+
 enum OZ_FDPropState {fd_prop_singl = 0, fd_prop_bounds, fd_prop_any};
 
 // virtual base class; never create an object from this class
@@ -611,6 +648,7 @@ public:
     return 0;
   }
   OZ_Boolean addImpose(OZ_FSetPropState s, OZ_Term v);
+  OZ_Boolean addImpose(OZ_CtWakeUp e, OZ_CtDefinition * d, OZ_Term v);
   int impose(OZ_Propagator *);
   virtual size_t sizeOf(void) = 0;
   virtual void sClone(void) = 0;
@@ -913,39 +951,6 @@ public:
   virtual OZ_Ct * leastConstraint(void) = 0;
   virtual OZ_Boolean isValidValue(OZ_Term) = 0;
 
-};
-
-//-----------------------------------------------------------------------------
-// OZ_CtWakeUp
-
-// there are not more than 32 wake up lists
-class ozdeclspec OZ_CtWakeUp {
-private:
-  unsigned _wakeUpDescriptor;
-public:
-  // don't define any constructor
-  void init(void);
-  OZ_Boolean isEmpty(void);
-  OZ_Boolean setWakeUp(int i);
-  OZ_Boolean isWakeUp(int i);
-  static OZ_CtWakeUp getWakeUpAll(void);
-};
-
-#define OZ_WAKEUP_ALL OZ_CtWakeUp::getWakeUpAll()
-
-inline
-void OZ_CtWakeUp::init(void) { _wakeUpDescriptor = 0; }
-inline
-OZ_Boolean OZ_CtWakeUp::isEmpty(void) { return (_wakeUpDescriptor == 0); }
-inline
-OZ_Boolean OZ_CtWakeUp::setWakeUp(int i) { return (_wakeUpDescriptor |= (1 << i)); }
-inline
-OZ_Boolean OZ_CtWakeUp::isWakeUp(int i) { return (_wakeUpDescriptor & (1 << i)); }
-inline
-OZ_CtWakeUp OZ_CtWakeUp::getWakeUpAll(void) {
-  OZ_CtWakeUp aux;
-  aux._wakeUpDescriptor = 0xffff;
-  return aux;
 };
 
 //-----------------------------------------------------------------------------
@@ -1261,11 +1266,11 @@ typedef OZ_Return (*make_prop_fn_2)(OZ_Term, OZ_Term);
 typedef OZ_Return (*make_prop_fn_3)(OZ_Term, OZ_Term, OZ_Term);
 typedef OZ_Return (*make_prop_fn_4)(OZ_Term, OZ_Term, OZ_Term, OZ_Term);
 
-
+template <class PROPAGATOR>
 class OZ_Service {
 private:
   int _closed;
-  OZ_Propagator * _prop;
+  PROPAGATOR * _prop;
   OZ_ParamIterator * _iter;
   static const int _max_actions = 10;
   struct _actions_t {
@@ -1277,7 +1282,7 @@ private:
       _serv_equate} _what;
     union _action_params_t {
       int _vars_left;
-      OZ_Propagator * _replacement;
+      PROPAGATOR * _replacement;
       struct { OZ_Term _x, _y; } _equat;
     } _action_params;
   } _actions[_max_actions];
@@ -1295,7 +1300,7 @@ private:
     }
   }
 public:  //
-  OZ_Service(OZ_Propagator * prop, OZ_ParamIterator * iter)
+  OZ_Service(PROPAGATOR * prop, OZ_ParamIterator * iter)
     : _closed(0), _prop(prop), _iter(iter), _nb_actions(0) {}
   //
   // sleep is default, after one of these operations, the object is
@@ -1362,8 +1367,17 @@ public:  //
   // dedicated fucntion is introduced, not that ununsed parameters
   // have to be passed as arguments and the replacment react on the
   // same events at the respective parameters
-  OZ_Service &replace_propagator(OZ_Propagator * prop,
-				 int vars_drop = 0, /* (OZ_CPIVar *) */ ...);
+  OZ_Service &replace_propagator(PROPAGATOR * prop )
+  {
+    if (!_closed) {
+      _actions[_nb_actions]._what = _actions_t::_serv_replace;
+      _actions[_nb_actions]._action_params._replacement = prop;
+      _nb_actions += 1;
+    }
+    //
+    _closed = 1;
+    return *this;
+  }
   // changes state of propagator, propagator shall
   // not be set `scheduled' (hence, `impose_propagator' does not work)
   void condens_vector(OZ_FDIntVarVector &);
@@ -1418,7 +1432,7 @@ public:  //
     }
     return r;
   }
-  OZ_Propagator &operator *(void) { return *_prop; }
+  PROPAGATOR &operator *(void) { return *_prop; }
 };
 
 #endif // __MOZART_CPI_HH__
