@@ -112,9 +112,8 @@ define
                                            end)}
       BrowserF={New Tk.frame tkInit(parent:T)}
       BrowserV={New Tk.variable tkInit({CondSelect {Access UICell} browser false})}
-      BrowserL={New Tk.label tkInit(parent:BrowserF text:"Using Netscape")}
+      BrowserL={New Tk.label tkInit(parent:BrowserF text:"Using web-browser")}
       BrowserB={New Tk.checkbutton tkInit(parent:BrowserF variable:BrowserV)}
-
    in
       {Tk.batch [grid(FontL row:0 column:0 sticky:e)
                  grid(FontB1 row:0 column:1 sticky:we pady:3 padx:1)
