@@ -252,9 +252,6 @@ loop:
  /*************/
  var_var:
 
-
-  // #define CORRECT_UNIFY
-
 #ifdef CORRECT_UNIFY
 
   /*

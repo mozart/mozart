@@ -43,6 +43,13 @@
 
 #ifdef DEBUG_CHECK
 #include "am.hh"
+
+#define DEBUG_CONSTRAIN_CVAR(ARGS) printf ARGS; fflush(stdout)
+
+#else
+
+#define DEBUG_CONSTRAIN_CVAR(ARGS)
+
 #endif
 
 //#define DEBUG_TELLCONSTRAINTS
@@ -440,8 +447,8 @@ OZ_FiniteDomain * unpatchReifiedFD(OZ_Term t, Bool isBool)
   return v->getReifiedPatch();
 }
 
-// #define TMUELLER
-#ifdef TMUELLER
+//#define CORRECT_UNIFY
+#ifdef CORRECT_UNIFY
 // dealing with global variables
 void bindGlobalVar(OZ_Term *, OZ_Term *);
 void bindGlobalVarToValue(OZ_Term *, OZ_Term);

@@ -244,12 +244,14 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
    (initial_width > ((OZ_FiniteDomainImpl *)domPtr)->getWidth()         \
      ? fd_prop_bounds : fd_prop_any)
 
-#ifdef TMUELLER
+#ifdef CORRECT_UNIFY
 OZ_Boolean OZ_FDIntVar::tell(void)
 {
+  DEBUG_CONSTRAIN_CVAR(("OZ_FDIntVar::tell "));
+
   // someone else has already determined it
   if (!oz_isVariable(*varPtr)) {
-    return OZ_FALSE;
+    goto oz_false;
   }
   //
   if (testReifiedFlag(var)) {
@@ -259,11 +261,11 @@ OZ_Boolean OZ_FDIntVar::tell(void)
   if (!testResetStoreFlag(var)) {
     // the constraint has already been told, i.e., there were at least
     // two OZ_FDIntVar connected to the same store variable
-    return OZ_FALSE;
+    goto oz_false;
   } else if(!isTouched()) {
     // no constraints have been imposed by the current propagator run.
     // note the cases caches integers too.
-    return OZ_TRUE;
+    goto oz_true;
   } else if (isSort(int_e)) {
     //
     // there is a finite domain variable in the store
@@ -302,7 +304,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
 	OZ_Term * newboolvar = newTaggedCVar(new OzBoolVariable(fdvarhome));
 	castGlobalVar(varPtr, newboolvar);
       }
-      return OZ_TRUE;
+      goto oz_true;
     } else {
       //
       // propagation produced proper domain
@@ -314,7 +316,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
 	// constrain global variable
 	constrainGlobalVar(varPtr, *domPtr);
       }
-      return OZ_TRUE;
+      goto oz_true;
     }
   } else {
     //
@@ -332,7 +334,12 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       bindGlobalVarToValue(varPtr, newSmallInt(int_val));
     }
   }
+ oz_false:
+  DEBUG_CONSTRAIN_CVAR(("FALSE\n"));
   return OZ_FALSE;
+ oz_true:
+  DEBUG_CONSTRAIN_CVAR(("TRUE\n"));
+  return OZ_TRUE;  
 }
 #else
 OZ_Boolean OZ_FDIntVar::tell(void)
