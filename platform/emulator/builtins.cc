@@ -6274,9 +6274,9 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
   SetIfPos(ozconf.debugPerdio,           debugPerdio,1);
 
   DoBoolFeature(b, t, AtomBrowser);
-  ozconf.browser = b;
+  if (b>0) ozconf.browser = b;
   DoBoolFeature(a, t, AtomApplet);
-  ozconf.applet = a;
+  if (a>0) ozconf.applet = a;
 
   return PROCEED;
 }
