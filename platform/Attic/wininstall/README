@@ -5,13 +5,6 @@ Freeman installer is available from
 
         http://netnet.net/~freeman/
 
-To turn the demo version into a one that does not always show the
-"demo", edit fctor.ini:
-
-   [general]
-
-   passwd=overdue
-
 ----------------------------------------------------------------------------
 
 
