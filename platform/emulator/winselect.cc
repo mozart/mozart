@@ -14,6 +14,7 @@
 #define rawread(fd,buf,sz) read(fd,buf,sz)
 #define isSocket(fd) 0
 #define Assert(x)
+#define getTime() 0
 #endif
 
 
@@ -26,30 +27,53 @@
 
 #ifdef WINDOWS
 
+class IOChannel;
+static void deleteReader(IOChannel *ch);
+
+
+static IOChannel *channels = NULL;
+
+typedef enum {ST_ERROR, ST_AVAIL, ST_NOTAVAIL, ST_EOF} ReadStatus;
+
 class IOChannel {
 public:
   int fd;
   HANDLE char_avail;      /* set iff char has been read*/
   HANDLE char_consumed;   /* used to restart reader thread*/
   char chr;               /* this is the char, that was read */
-  Bool status;            /* true iff input is available */
-  HANDLE thrd;             /* reader thread */
+  ReadStatus status;
+  HANDLE thrd;            /* reader thread */
   IOChannel *next;
 
   IOChannel(int f, IOChannel *nxt) {
     fd = f;
     chr = 0;
-    status = NO;
+    status = ST_NOTAVAIL;
     thrd = 0;
     next = nxt;
     char_avail    = CreateEvent(NULL, TRUE, FALSE, NULL);
     char_consumed = CreateEvent(NULL, TRUE, FALSE, NULL);
+  }
+  
+  void close()
+  {
+    CloseHandle(char_avail);
+    CloseHandle(char_consumed);
+    deleteReader(this);
 
+    if (channels==this) {
+      channels = next;
+    } else {
+      IOChannel *aux = channels;
+      while(aux->next!=this) {
+	aux = aux->next;
+      }
+      aux->next = aux->next->next;
+    }
+    delete this;
   }
 };
 
-
-static IOChannel *channels = NULL;
 
 IOChannel *findChannel(int fd)
 {
@@ -75,35 +99,32 @@ IOChannel *lookupChannel(int fd)
   return aux;
 }
 
-unsigned long fileTimeToMS(FILETIME *ft)
-{
-  //  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime/10000)<<32)
-  //  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime/16*625)<<32)
-  // prototypes under gnu-win32 are wrong:
-  return (((unsigned long)ft->dwLowDateTime)/10000) + 
-         ((((unsigned long)ft->dwHighDateTime)<<28)/625);
-}
-
-
 unsigned __stdcall readerThread(void *arg)
 {
   IOChannel *sr = (IOChannel *)arg;
 
   while(1) {
-    sr->status=NO;
-    if (rawread(sr->fd, &sr->chr, sizeof(char))<0) {
+    sr->status=ST_NOTAVAIL;
+    int ret = rawread(sr->fd, &sr->chr, sizeof(char));
+    if (ret < 0) {
+      sr->status = ST_ERROR;
+      break;
+    }
+    if (ret==0) {
+      sr->status = ST_EOF;
       break;
     }
 
-    sr->status = OK;
+    sr->status = ST_AVAIL;
     SetEvent(sr->char_avail);
 
     /* Wait until our input is acknowledged before reading again */
-    if (WaitForSingleObject(sr->char_consumed, INFINITE) != WAIT_OBJECT_0)
+    if (WaitForSingleObject(sr->char_consumed, INFINITE) != WAIT_OBJECT_0) {
+      sr->status = ST_ERROR;
       break;
+    }
     ResetEvent(sr->char_consumed);
   }
-  sr->status = NO;
   sr->thrd = 0;
   _endthreadex(0);
   return 0;
@@ -111,10 +132,10 @@ unsigned __stdcall readerThread(void *arg)
 
 
 static 
-void deleteReader(int fd)
+void deleteReader(IOChannel *ch)
 {
-  TerminateThread((HANDLE)lookupChannel(fd)->thrd,0);
-  lookupChannel(fd)->thrd = 0;
+  TerminateThread((HANDLE)ch->thrd,0);
+  ch->thrd = 0;
 }
 
 static int maxfd = 0; /* highest fd for which we ever created a reader */
@@ -193,7 +214,7 @@ int getAvailFDs(fd_set *rfds, fd_set *wfds)
 
   for (int i=0; i<maxfd; i++) {
     if (FD_ISSET(i,rfds)) {
-      if (lookupChannel(i)->status==OK) {
+      if (lookupChannel(i)->status==ST_AVAIL) {
 	ret++;
       } else {
 	FD_CLR(i,rfds);
@@ -209,16 +230,6 @@ int getAvailFDs(fd_set *rfds, fd_set *wfds)
 #endif
 
   return ret;
-}
-
-
-int getTime()
-{
-  SYSTEMTIME st;
-  GetSystemTime(&st);
-  FILETIME ft;
-  SystemTimeToFileTime(&st,&ft);
-  return fileTimeToMS(&ft);
 }
 
 class SelectInfo {
@@ -319,7 +330,7 @@ int win32Select(fd_set *rfds, fd_set *wfds, int *timeout)
     return -1;
   }
   
-  DWORD startTime = getTime();
+  unsigned int startTime = getTime();
   DWORD active = WaitForMultipleObjects(nh, wait_hnd, FALSE, wait);
   si->timestamp++;  /* cancel select thread */
 
@@ -334,7 +345,7 @@ int win32Select(fd_set *rfds, fd_set *wfds, int *timeout)
   }
   
   if (*timeout != 0) {
-    DWORD endTime = getTime();
+    unsigned int endTime = getTime();
     int resttime = wait - (endTime-startTime);
     *timeout = max(0, resttime);
   }
