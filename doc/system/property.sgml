@@ -440,6 +440,20 @@
           <Td/<<Int>>/
           <Td/Maximal depth used for printing values in error messages./
         </Tr>
+        <Tr>
+          <Td/<<toplevel>>/
+          <Td/yes/
+          <Td/<<Procedure>>/
+          <Td/Nullary procedure invoked after a message has been printed out
+	    about an uncaught exception raised on top level./
+        </Tr>
+        <Tr>
+          <Td/<<subordinate>>/
+          <Td/yes/
+          <Td/<<Procedure>>/
+          <Td/Nullary procedure invoked after a message has been printed out
+	    about an uncaught exception raised within a computation space./
+        </Tr>
       </Table>
     </P>
 
