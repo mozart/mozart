@@ -698,6 +698,7 @@
 </xsl:template>
 
 <xsl:template match="GRAMMAR/GRAMMAR.RULE" priority="2.0">
+<xsl:if test="position()>1">\\</xsl:if>
 <xsl:apply-templates/>
 </xsl:template>
 
