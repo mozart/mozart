@@ -191,13 +191,23 @@ class=module/OZ_FAILED/ (in which case failure will occur), <code
 /OZ_ENTAILED/<index class=module/OZ_ENTAILED/ to signal successful
 completion. <code /OZ_Return/ also contains several other values,
 which are not visible to the user. They are only used for internal
-purposes, for example to handle suspension or raising exceptions.
+purposes, for example to handle suspension or
+raising exceptions.
+<p class=danger>
+It is important that your C function returns one
+of the above values. Not returning a value will
+inevitably crash the executing Oz engine!
 <p>
 In line 5 we use the macro <code /OZ_declareAtom(n,name)/: it checks
 whether the <code /n/-th input argument is an atom and declares
 a new C++ variable of type <code /char*/ with name <code /name/. So
 line 5 declares <code /envVarName/ which holds the C++ string
 representation of the first and only input argument.
+<p>
+Values that can be passed as input arguments can
+of course be logic variables! Do not confuse this
+with output arguments: Output arguments are
+handled only after the C function returns! 
 <p>
 In line 7 we declare a C++ variable <code /envValue/ which will
 temporarily hold the return value of <code /BIgetenv/.
@@ -591,6 +601,11 @@ exported from a native module.
 <item> Declares a new variable of type <code /OZ_Term/ named <code
 /var/, which is initialized with the value of the <code /n/-th
 (counting starts from zero) input argument.
+<p>
+In case you plan to use unification for passing
+output arguments, you still have to pass the logic
+variable with which you want to unify as
+<em/input/ argument. 
 
 <entry/<<OZ_declareDetTerm(n,var)>><index class=module/OZ_declareDetTerm//
 <item> Works like <code /OZ_declareTerm/ but additionally suspends if
