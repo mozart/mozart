@@ -1,6 +1,8 @@
 %%% $Id$
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
+\insert string
+\insert tk
 
 %% some builtins...
 
@@ -58,17 +60,16 @@ fun {FormatArgs A}
    {List.mapInd A
     fun {$ N X}
        case {IsDet X} then
-	  case     {IsArray X}      then N # '<array>'      # X
+	  case     {IsUnit X}       then N # '<unit>'       # X
+	  elsecase {IsArray X}      then N # '<array>'      # X
 	  elsecase {IsAtom X}       then N # '<atom>'       # X
 	  elsecase {IsBool X}       then N # '<bool>'       # X
 	  elsecase {IsCell X}       then N # '<cell>'       # X
-	  elsecase {IsChunk X}      then N # '<chunk>'      # X
 	  elsecase {IsClass X}      then N # '<class>'      # X
 	  elsecase {IsDictionary X} then N # '<dictionary>' # X
 	  elsecase {IsFloat X}      then N # '<float>'      # X
 	  elsecase {IsInt   X}      then N # '<int>'        # X
 	  elsecase {IsList X}       then N # '<list>'       # X
-	  elsecase {IsUnit X}       then N # '<unit>'       # X
 	  elsecase {IsLiteral X}    then N # '<literal>'    # X
 	  elsecase {IsLock X}       then N # '<lock>'       # X
 	  elsecase {IsName X}       then N # '<name>'       # X
@@ -77,6 +78,7 @@ fun {FormatArgs A}
 	  elsecase {IsProcedure X}  then N # '<procedure>'  # X
 	  elsecase {IsTuple X}      then N # '<tuple>'      # X
 	  elsecase {IsRecord X}     then N # '<record>'     # X
+	  elsecase {IsChunk X}      then N # '<chunk>'      # X
 	  else                           N # '<???>'        # X
 	  end
        else                              N # '_'            # X
