@@ -1650,6 +1650,7 @@ private:
   SRecordArity methodArity;
   TaggedRef fileName;
   int lineno;
+  TaggedRef info;
 
 public:
   ProfileCode(
@@ -1670,6 +1671,7 @@ public:
     arity =  (unsigned short) getWidth(arityInit);
     Assert((int)arity == getWidth(arityInit)); /* check for overflow */
     PC = NOCODE;
+    info = nil();
     ProfileCode(numClosures=0; numCalled=0; next=allPrTabEntries; allPrTabEntries=this);
   }
 
@@ -1686,6 +1688,11 @@ public:
   Bool getSpyFlag()   { return (Bool) spyFlag; }
   void setSpyFlag()   { spyFlag = OK; }
   void unsetSpyFlag() { spyFlag = NO; }
+
+  void setInfo(TaggedRef t) { info = t; }
+  TaggedRef getInfo()       { return info; }
+
+  void gcPrTabEntry();
 };
 
 
