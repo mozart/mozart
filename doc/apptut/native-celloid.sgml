@@ -25,12 +25,13 @@
   <p>In this chapter, we implement <code/&cc.class;Celloid/s: an
 extension class for objects that behave essentially like cells; they
 have content which can be accessed (read) and assigned (written).  The
-new challenge here is twofold: (1) since the content may be any Oz
-value, a <code/&cc.class;Celloid/ must be <em/situated/, (2) during
-garbage collection the content of a <code/&cc.class;Celloid/ must also
-be copied.</p>
-  <p>What does <def/situated/ mean?  Simply that the object resides in
-one specific constraint store, aka a space.  If
+new challenge here is twofold: (1) during garbage collection the
+content of a <code/&cc.class;Celloid/ must also be copied, (2) we must
+ensure that only a local <code/&cc.class;Celloid/ can be mutated (for
+a non-local one, we should signal an error).</p>
+  <p>A <code/&cc.class;Celloid/ is <em/situated/.  What does
+<def/situated/ mean?  Simply that the object resides in
+one specific constraint store, aka a computation space.  If
 <code/&cc.class;Celloid/ <code/C/ resides in space S1, and S2 is a
 subspace of S1 (&ie; is subordinated to S1), it is meaningful for a
 thread in S2 to <em/access/ <code/C/ since any constraint (therefore
@@ -41,24 +42,24 @@ implementation will enforce the appropriate restrictions.</p>
 
   <section>
     <title/Celloid Class/
-    <p>Here we need to subclass <code/&cc.class;OZ_SituatedExtension/
-which has the same interface as before but equips its instances with a
-home space.
-<code display>
+    <p>Again, we subclass <code/&cc.class;OZ_Extension/.
+<chunk class=ANONYMOUS><title/celloid.cc/
 #include "mozart.h"
 
-class Celloid : public OZ_SituatedExtension {
+class Celloid : public OZ_Extension {
 public:
   OZ_Term content;
   Celloid(OZ_Term t):content(t){}
   static int id;
   virtual int getIdV() { return id; }
   virtual OZ_Term typeV() { return OZ_atom("celloid"); }
-  virtual OZ_Extension* gcV();
-  virtual void gcRecurseV();
+  virtual OZ_Extension* gCollectV();
+  virtual OZ_Extension* sCloneV();
+  virtual void gCollectRecurseV();
+  virtual void sCloneRecurseV();
   virtual OZ_Term printV(int depth = 10);
 };
-</code></p>
+</chunk></p>
   </section>
 
   <section>
@@ -66,21 +67,21 @@ public:
     <p>The <code/celloid_new/ builtin takes one input argument
 <code/t/, creates a new celloid whose content is initialized to
 <code/t/, boxes it and returns the result.
-<code display>
+<chunk class=ANONYMOUS><title/celloid.cc/
 OZ_BI_define(celloid_new,1,1)
 {
   OZ_declareTerm(0,t);
   OZ_RETURN(OZ_extension(new Celloid(t)));
 }
 OZ_BI_end
-</code></p>
+</chunk></p>
   </section>
 
   <section>
     <title/Type Testing/
     <p>The definitions here are similar to the ones presented earlier
 for the <code/&cc.class;Counter/ class.
-<code display>
+<chunk class=ANONYMOUS><title/celloid.cc/
 int Celloid::id;
 
 inline OZ_Boolean OZ_isCelloid(OZ_Term t)
@@ -96,14 +97,14 @@ OZ_BI_define(celloid_is,1,1)
   OZ_RETURN_BOOL(OZ_isCelloid(t));
 }
 OZ_BI_end
-</code></p>
+</chunk></p>
   </section>
 
   <section>
     <title/Expecting Celloid Arguments in Builtins/
     <p>Again this is similar to the <code/&cc.class;Counter/ class: we
 define an unboxing function and a convenience macro.
-<code display>
+<chunk class=ANONYMOUS><title/celloid.cc/
 inline Celloid* OZ_CelloidToC(OZ_Term t)
 {
   return (Celloid*) OZ_getExtension(OZ_deref(t));
@@ -111,37 +112,37 @@ inline Celloid* OZ_CelloidToC(OZ_Term t)
 
 #define OZ_declareCelloid(ARG,VAR) \
 OZ_declareType(ARG,VAR,Celloid*,"celloid",OZ_isCelloid,OZ_CelloidToC)
-</code></p>
+</chunk></p>
   </section>
 
   <section>
     <title/Operations on Celloids/
     <p>First, we provide an <em/access/ builtin that retrieves the content
 of the celloid.
-<code display>
+<chunk class=ANONYMOUS><title/celloid.cc/
 OZ_BI_define(celloid_access,1,1)
 {
   OZ_declareCelloid(0,c);
   OZ_RETURN(c->content);
 }
 OZ_BI_end
-</code>
+</chunk>
 Second, we provide an <em/assign/ builtin that sets the content of
 the celloid.  This operation should only be allowed for a thread
 executing in the home space of the celloid.  For a thread executing in
 a subordinated space, an exception will be raised.
-<code display>
+<chunk class=ANONYMOUS><title/celloid.cc/
 OZ_BI_define(celloid_assign,2,0)
 {
   OZ_declareCelloid(0,c);
   OZ_declareTerm(1,t);
-  if (c->isLocalV()) { content = t; return PROCEED; }
+  if (c->isLocal()) { c->content=t; return PROCEED; }
   else return OZ_raiseErrorC("celloid",3,OZ_atom("nonLocal"),
                              OZ_in(0),OZ_in(1));
 }
 OZ_BI_end
-</code>
-virtual member function <code/isLocalV()/ indicates whether the
+</chunk>
+virtual member function <code/isLocal()/ indicates whether the
 current space is the home space of the celloid.  If yes, we set the
 content to the given argument; if no, we raise an
 error. <code/OZ_in(?{n})/ refers to the ?{n}th input argument of the
@@ -151,12 +152,12 @@ builtin.</p>
   <section>
     <title/Printing Support/
     <p>We provide here only minimal printing support.
-<code display>
+<chunk class=ANONYMOUS><title/celloid.cc/
 OZ_Term Celloid::printV(int depth = 10)
 {
   return OZ_atom("&lt;celloid&gt;");
 }
-</code></p>
+</chunk></p>
   </section>
 
   <section>
@@ -164,34 +165,45 @@ OZ_Term Celloid::printV(int depth = 10)
     <p>The first part of garbage collection is as before: we create a
 new instance of <code/&cc.class;Celloid/ initialized with the current
 content of the celloid that is being copied by gc.
-<code display>
-OZ_Extension* Celloid::gcV() { return new Celloid(content); }
-</code>
+<chunk class=ANONYMOUS><title/celloid.cc/
+OZ_Extension* Celloid::gCollectV() { return new Celloid(content); }
+</chunk>
 The second part involves recursively copying the content of the
 celloid.  This is implemented in a different virtual function:
-<code display>
-void Celloid::gcRecurseV() { OZ_collect(content); }
-</code>
-The procedure <code/OZ_collect(OZ_Term&amp;)/
+<chunk class=ANONYMOUS><title/celloid.cc/
+void Celloid::gCollectRecurseV() { OZ_gCollect(&amp;content); }
+</chunk>
+The procedure <code/OZ_gCollect(OZ_Term*)/
 performs the gc copy and update of its argument.</p>
     <p>You may wonder: why not perform the recursive copy of the
-content in <code/gcV()/ itself.  Under no circumstances should you do
-this!  It would break essential invariants in the garbage collector.
-GC copy must proceed in these 2 phases:
+content in <code/gCollectV()/ itself.  Under no circumstances should
+you do this!  It would break essential invariants in the garbage
+collector. GC copy must proceed in these 2 phases:
 <list enum>
-        <item><code/gcV()/ creates a new instance (on the <em/to/
+        <item><code/gCollectV()/ creates a new instance (on the <em/to/
 heap) and initializes it with the current contents of the object being
 gced.
-        <item><code/gcRecurseV()/ is at some subsequent point invoked
-on the new instance and should perform the gc copy and update of its
-contents.
+        <item><code/gCollectRecurseV()/ is at some subsequent point
+invoked on the new instance and should perform the gc copy and update
+of its contents.
 </list></p>
+  </section>
+
+  <section>
+    <title/Cloning/
+    <p>Cloning is used to produce a copy of a computation space.  It
+has the same structure, and the underlying implementation in fact
+shares most of the code with, garbage collection.
+<chunk class=ANONYMOUS><title/celloid.cc/
+OZ_Extension* Celloid::sCloneV() { return new Celloid(content); }
+void Celloid::sCloneRecurseV() { OZ_sClone(&amp;content); }
+</chunk>
   </section>
 
   <section>
     <title/Native Functor/
     <p>Again, we proceed as before:
-<code display>
+<chunk class=ANONYMOUS><title/celloid.cc/
 OZ_C_proc_interface * oz_init_module(void)
 {
   static OZ_C_proc_interface table[] = {
@@ -204,13 +216,13 @@ OZ_C_proc_interface * oz_init_module(void)
   Celloid::id = OZ_getUniqueId();
   return table;
 }
-</code>
+</chunk>
 Assuming the code above is put in file
-<ref.extern to="native-celloid.cc"/<file/native-celloid.cc//, we
+<ref.extern to="celloid.cc"/<file/celloid.cc//, we
 first compile and then create a DLL as follows
 <code display proglang=sh>
-oztool c++ -c native-celloid.cc
-oztool ld native-celloid.o -o native-celloid.so-`oztool platform`
+oztool c++ -c celloid.cc
+oztool ld celloid.o -o celloid.so-`oztool platform`
 </code></p>
   </section>
 
@@ -221,7 +233,33 @@ objects, we don't need to register celloid for finalization: there are
 no resources off the heap.  However, we can provide a nice error print
 formatter for the case when an access is attempted from without the
 celloid's home space.
-<code.extern display to="celloid.oz" proglang=oz></p>
+<chunk class=ANONYMOUS proglang=oz><title/celloid.oz/
+functor
+import
+   Celloid(new:New is:Is access:Access assign:Assign)
+   at 'celloid.so{native}'
+   Error(registerFormatter)
+export
+   New Is Access Assign
+define
+   fun {CelloidFormatter E}
+      T = 'Celloid Error'
+   in
+      case E of celloid(nonLocal C V) then
+         error(kind: T
+               msg: 'Attempted assign on non local celloid'
+               items: [hint(l:'Operation' m:'Celloid.assign')
+                       hint(l:'Celloid'   m:oz(C))
+                       hint(l:'Value'     m:oz(V))])
+      else
+         error(kind: T
+               items: [line(oz(E))])
+      end
+   end
+   {Error.registerFormatter celloid CelloidFormatter}
+end
+</chunk>
+</p>
   </section>
 </chapter>
 

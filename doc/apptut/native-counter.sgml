@@ -39,7 +39,27 @@ function which returns the next value of a global counter each time it
 is called.</p>
   <section>
     <title/Implementation/
-    <p><code.extern display to="counter.cc">
+    <p><chunk class=ANONYMOUS><title/counter.cc/
+#include "mozart.h"
+
+static long n;
+
+OZ_BI_define(counter_next,0,1)
+{
+  OZ_RETURN_INT(n++);
+}
+OZ_BI_end
+
+OZ_C_proc_interface * oz_init_module(void)
+{
+  static OZ_C_proc_interface table[] = {
+    {"next",0,1,counter_next},
+    {0,0,0,0}
+  };
+  n = 1;
+  return table;
+}
+</chunk>
 <code/OZ_BI_define(counter_next,0,1)/ indicates that we are defining a
 procedure <code/<span class=ignore/ /counter_next/ that implements a new builtin which
 takes 0 input arguments and returns 1 output value. <code/OZ_BI_end/
@@ -47,7 +67,13 @@ is required to finish this definition.</p>
 
     <p><code/<span class=ignore/ /OZ_RETURN_INT(?{d})/ is a macro that causes
 the builtin to return integer ?{d} as an Oz integer.  This should only
-be used when the builtin has one unique output value.</p>
+be used when the builtin has one unique output value; and it is essentially
+equivalent to the code sequence:
+<code display>
+OZ_out(0)=OZ_int(d);
+return PROCEED;
+</code>
+</p>
 
     <p>Finally procedure <code/<span class=ignore/ /oz_init_module/
 implements the native functor: it performs

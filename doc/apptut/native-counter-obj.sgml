@@ -31,7 +31,7 @@ easily be defined as Oz objects directly.</p>
     <title/Counter Class/
     <p>We derive a new <code/&cc.class;Counter/ class from the base class
 <code/&cc.class;OZ_Extension/.
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 #include "mozart.h"
 
 class Counter : public OZ_Extension {
@@ -42,10 +42,13 @@ public:
   static int id;
   virtual int getIdV();
   virtual OZ_Term typeV();
-  virtual OZ_Extension* gcV();
+  virtual OZ_Extension* gCollectV(void);
+  virtual OZ_Extension* sCloneV(void);
+  virtual void gCollectRecurseV(void) {}
+  virtual void sCloneRecurseV(void) {}
   virtual OZ_Term printV(int depth = 10);
 };
-</code>
+</chunk>
 A <code/&cc.class;Counter/ object contains a pointer to a malloced
 <code/long/. Why not simply have a member of type <code/long/: simply
 because
@@ -66,7 +69,7 @@ with&nbsp;1.  The builtin creates a new instance of the
 <code/&cc.class;Counter/
 class, boxes it as an Oz value by invoking <code/OZ_extension/ and
 returns the result.
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 Counter::Counter() { n = new long[1]; n[0]=1; }
 
 OZ_BI_define(counter_new,0,1)
@@ -74,7 +77,7 @@ OZ_BI_define(counter_new,0,1)
   OZ_RETURN(OZ_extension(new Counter));
 }
 OZ_BI_end
-</code>
+</chunk>
 </p>
   </section>
 
@@ -86,56 +89,56 @@ usual way of doing so: the class is equipped with a static <code/id/
 member and <code/getIdV()/ returns it.  This static member is
 initialized by <code/oz_init_module()/ (see
 <ptr to=section.counter.object.functor>).
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 int Counter::id;
 int Counter::getIdV() { return id; }
-</code>
+</chunk>
 Your code will also need to test whether some <code/OZ_Term/ is in
 fact a boxed <code/&cc.class;Counter/.
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 inline OZ_Boolean OZ_isCounter(OZ_Term t)
 {
   t = OZ_deref(t);
   return OZ_isExtension(t) &&
     OZ_getExtension(t)->getIdV()==Counter::id;
 }
-</code>
+</chunk>
 Additionally, you should probably provide a builtin to perform this
 test in Oz code:
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 OZ_BI_define(counter_is,1,1)
 {
   OZ_declareDetTerm(0,t);
   OZ_RETURN_BOOL(OZ_isCounter(t));
 }
 OZ_BI_end
-</code>
+</chunk>
 Finally, it would be nice if <code proglang=oz/{Value.type C}/ would
 return the atom <code proglang=oz/counter/ when <code proglang=oz/C/
 is a counter object.
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 OZ_Term Counter::typeV() { return OZ_atom("counter"); }
-</code>
+</chunk>
 </p>
   </section>
 
   <section>
     <title/Expecting Counter Arguments in Builtins/
     <p>Obviously we need a way to unbox counter objects.
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 inline Counter* OZ_CounterToC(OZ_Term t)
 {
   return (Counter*) OZ_getExtension(OZ_deref(t));
 }
-</code>
+</chunk>
 Now we can define a convenient macro that we can use in the
 implementation of a builtin to wait until argument <code/ARG/ is
 determined, check that it is a boxed <code/&cc.class;Counter/, and
 declare a variable <code/VAR/ to hold a pointer to its unboxed value.
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 #define OZ_declareCounter(ARG,VAR) \
 OZ_declareType(ARG,VAR,Counter*,"counter",OZ_isCounter,OZ_CounterToC)
-</code>
+</chunk>
 Next, we illustrate how to use this macro.</p>
   </section>
 
@@ -146,20 +149,20 @@ object, but does not change it.  We use our new macro to state that
 the first argument (&ie; argument number&nbsp;0) should be a
 determined boxed counter and that <code/c/ should be set to point to
 its unboxed value.
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 OZ_BI_define(counter_get,1,1)
 {
   OZ_declareCounter(0,c);
   OZ_RETURN_INT(*c->n);
 }
 OZ_BI_end
-</code>
+</chunk>
 Thanks to our macro, if the argument is not determined, the builtin
 will automatically suspend, and if it is determined but is not a
 counter object, it will raise an error exception.</p>
     <p>We can similarly define a builtin for setting the value of
 the counter.  It takes 2 arguments: a counter object and an integer.
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 OZ_BI_define(counter_set,2,0)
 {
   OZ_declareCounter(0,c);
@@ -168,10 +171,10 @@ OZ_BI_define(counter_set,2,0)
   return PROCEED;
 }
 OZ_BI_end
-</code></p>
+</chunk></p>
     <p>Finally, we can define a builtin to obtain the current value
 of a counter object and post increment the counter by 1.
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 OZ_BI_define(counter_next,1,1)
 {
   OZ_declareCounter(0,c);
@@ -180,7 +183,7 @@ OZ_BI_define(counter_next,1,1)
   OZ_RETURN_INT(i);
 }
 OZ_BI_end
-</code></p>
+</chunk></p>
   </section>
 
   <section>
@@ -190,7 +193,7 @@ is a counter object, would display <samp/&lt;counter /?{n}<samp/&gt/
 where ?{n} is the current value of the counter.  This is easily
 achieved by defining virtual function <code/printV/ to return an
 appropriate virtual string.
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 OZ_Term Counter::printV(int depth = 10)
 {
   return OZ_mkTupleC("#",3,
@@ -198,7 +201,7 @@ OZ_Term Counter::printV(int depth = 10)
                      OZ_int(*n),
                      OZ_atom("&gt;"));
 }
-</code></p>
+</chunk></p>
   </section>
 
   <section>
@@ -210,10 +213,44 @@ allocated on the <em/to/ heap) and initializing it with the
 appropriate info.  In the case of a counter object, we must copy the
 <code/n/ pointer.  For this purpose we define a one argument
 constructor.
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 Counter::Counter(long*p):n(p){}
-OZ_Extension* Counter::gcV() { return new Counter(n); }
-</code></p>
+OZ_Extension* Counter::gCollectV() { return new Counter(n); }
+</chunk>
+<!--
+THE FOLLOWING IS BULLSHIT IF WE KEEP FINALIZATION SINCE WE DON'T
+WANT A CLONE THAT IS NO LONGER REACHABLE TO FREE THE N POINTER
+
+Cloning is a kind of copying used during search rather than garbage
+collection.  Every variable and every data-structure that has
+<em/token/ equality
+(rather than structural equality), &eg; <code/OZ_Extension/, is
+<em/situated/ in a space: its home space, &ie; the computation space
+in which it was created.  When its home space H is cloned, the
+data-structure D must also be cloned: the clone of D must be situated
+in the clone of H.  In the present case, we just need to do the same
+thing as the collection method:
+<chunk class=ANONYMOUS><title/counter-obj.cc/
+OZ_Extension* Counter::sCloneV() { return gCollectV(); }
+</chunk>
+This has the effect that clones will share the same <code/n/ pointer:
+thus, changing the value of the counter in one space can also be
+observed in another.
+-->
+Cloning is a kind of copying used during search rather than garbage
+collection.  Every variable and every data-structure that has
+<em/token/ equality
+(rather than structural equality), &eg; <code/OZ_Extension/, is
+<em/situated/ in a space: its home space, &ie; the computation space
+in which it was created.  When its home space H is cloned, the
+data-structure D must also be cloned: the clone of D must be situated
+in the clone of H.  In the present case, for simplicity we only intend
+to support counters at top level; thus, the <code/sClone/ method
+should never be used:
+<chunk class=ANONYMOUS><title/counter-obj.cc/
+OZ_Extension* Counter::sCloneV() { Assert(0); return 0; }
+</chunk>
+</p>
   </section>
 
   <section>
@@ -223,7 +260,7 @@ like the malloced <code/long/ to be freed.  We cannot easily register
 a counter object for finalization from the C++ code (this will have to
 be delegated to Oz code), but we can provide the implementation of the
 finalization handler.
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 OZ_BI_define(counter_free,1,0)
 {
   OZ_declareCounter(0,c);
@@ -231,7 +268,7 @@ OZ_BI_define(counter_free,1,0)
   return PROCEED;
 }
 OZ_BI_end
-</code></p>
+</chunk></p>
   </section>
 
   <section id=section.counter.object.functor>
@@ -240,7 +277,7 @@ OZ_BI_end
 done by providing the function <code/oz_init_module()/ which returns a
 table of builtins.  Here, it must also initialize the static member
 <code/Counter::id/.
-<code display>
+<chunk class=ANONYMOUS><title/counter-obj.cc/
 OZ_C_proc_interface * oz_init_module(void)
 {
   static OZ_C_proc_interface table[] = {
@@ -255,7 +292,7 @@ OZ_C_proc_interface * oz_init_module(void)
   Counter::id = OZ_getUniqueId();
   return table;
 }
-</code>
+</chunk>
 Assuming the code above is put in file
 <ref.extern to="counter-obj.cc"/<file/counter-obj.cc//, we
 first compile and then create a DLL as follows
@@ -275,16 +312,18 @@ functor
 import
    CNT(new:NEW is:Is get:Get set:Set next:Next free:Free)
    at 'counter-obj.so{native}'
-   Finalize(register)
+   Finalize(guardian)
 export
    New Is Get Set Next
 define
-   proc {New I C}
-      {NEW I C}
-      {Finalize.register C Free}
+   Register = {Finalize.guardian Free}
+   proc {New C}
+      {NEW C}
+      {Register C}
    end
 end
-</code></p>
+</code>
+</p>
   </section>
 </chapter>
 <!--
