@@ -84,8 +84,15 @@ define
 
       meth ToProvides(R Uri Table)
 	 if {HasFeature R provides} then
-	    for E in R.provides do
-	       Table.{Path.resolveAtom Uri E} := unit
+	    for E in R.provides do A={VS2A E} in
+	       %% this sucks!!! it needs to be resolved
+	       %% by the makefile object, not approximated here
+	       %% in this fashion.
+	       if {Member A {CondSelect R bin nil}} then
+		  Table.A := unit
+	       else
+		  Table.{Path.resolveAtom Uri A} := unit
+	       end
 	    end
 	 else
 	    for E in {CondSelect R bin nil} do
@@ -145,7 +152,7 @@ define
 	 else skip end
 	 local Table={NewDictionary} in
 	    {self ToProvides(R {CondSelect R uri nil} Table)}
-	    for T in {Dictionary.keys Table} do
+	    for T in {Sort {Dictionary.keys Table} Value.'<'} do
 	       {Q.put 'provides:       '#T#'\n'}
 	    end
 	 end
@@ -256,6 +263,9 @@ define
 	 of nil  then skip
 	 [] unit then skip
 	 [] L    then D.requires := L end
+	 case {CondSelect R provides unit}
+	 of unit then skip
+	 [] L    then D.provides := L end
 	 local P = {Dictionary.toRecord package D} in
 	    @DB.(R.mogul) := P
 	    {self trace('updated entry for '#R.mogul)}

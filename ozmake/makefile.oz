@@ -27,15 +27,15 @@ makefile(
    categories : [tool]
    version: "0.74"
    info_html:
-      "<P>
-<SPAN CLASS='TOOL'>ozmake</SPAN> is a tool for building Mozart-based projects
+      '<P>
+<SPAN CLASS="TOOL">ozmake</SPAN> is a tool for building Mozart-based projects
 and for creating and installing Mozart packages.  It was inspired by
-the Unix tools <SPAN CLASS='TOOL'>make</SPAN> and <SPAN CLASS='TOOL'>rpm</SPAN>, but is much,
+the Unix tools <SPAN CLASS="TOOL">make</SPAN> and <SPAN CLASS="TOOL">rpm</SPAN>, but is much,
 much simpler and specialized for Mozart-based software development and
 deployment.
-<SPAN CLASS='TOOL'>ozmake</SPAN> must currently be invoked from a shell, but it
+<SPAN CLASS="TOOL">ozmake</SPAN> must currently be invoked from a shell, but it
 will eventually acquire additionally an optional, user-friendly
 graphical interface.
 Precompiled versions for both Unix and Windows can be downloaded from the documentation
-page</P>")
+page</P>')
 
