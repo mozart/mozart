@@ -22,7 +22,7 @@
 functor prop once
 import
    Property(get)
-   OS(tmpnam system unlink)
+   OS(tmpnam system unlink getEnv)
    Open(file text)
 export
    'class': FontifierClass
@@ -31,7 +31,9 @@ define
    NoProgLang = {NewName}
 
    local
-      FONTIFY = {Property.get 'oz.home'}#'/share/doc/fontify'
+      FONTIFY = case {OS.getEnv 'OZ_DOC_PATH'} of false
+		then {Property.get 'oz.home'}#'/share/doc/fontify'
+		elseof X then X#'/utilities/fontify' end
 
       fun {NotIsEOF C}
 	 C \= 4

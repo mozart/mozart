@@ -21,6 +21,9 @@
 
 PREFIX		= @prefix@
 VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
 BINDIR		= $(PREFIX)/bin
 DOCDIR		= $(PREFIX)/share/doc
 ELISPDIR	= $(PREFIX)/share/elisp
@@ -32,9 +35,10 @@ INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_FILE	= $(INSTALL) -m 444
 
 OZFLAGS		= 
-OZC		= ozc $(OZFLAGS)
-OZAR		= ozar
+OZC		= @OZC@
+OZAR		= @OZAR@
 EMACS		= emacs
+OZENGINE	= @OZENGINE@
 
 FUNCTORS = \
 	SGML.ozf AuthorDB.ozf BibliographyDB.ozf Fontifier.ozf Thumbnails.ozf \
@@ -54,7 +58,9 @@ CSSFILES = $(CSSDIR)/ozdoc.css
 
 all: $(FUNCTORS) $(SYSLETS) $(ELCS)
 
-bootstrap: all
+include $(SRCDIR)/../../share/Makefile.boot
+
+bootstrap: boot-all
 
 Makefile: Makefile.in config.status
 	./config.status
@@ -63,7 +69,7 @@ ozdoc: $(FUNCTORS)
 	$(OZAR) --syslet --in=Main.ozf --out=$@
 
 %.ozf: %.oz
-	$(OZC) -c $< -o $@
+	$(OZC) $(OZFLAGS) -c $< -o $@
 
 %.elc: %.el
 	$(EMACS) -q -batch -f batch-byte-compile $<
