@@ -137,15 +137,6 @@ backward compatible with Mozart 1.2.0.
     <<FD.distinctB>> (bounds-consistent alldifferent, naive quadratic version)
 </list>
 </p>
-      <section id="section.m121.bugs">
-        <title/Known Bugs/
-
-<p>
-   While the Windows port has been greatly improved, some problems
-   remain: oztool and ozmake crash frequently under Windows 2000.
-   Sometimes retrying the same command works.
-   We haven't been able to fix this yet.
-</p>
 
       <section id="section.m121.fixes">
         <title/Bug Fixes in Detail/
@@ -169,6 +160,7 @@ backward compatible with Mozart 1.2.0.
 	-I, -l, -L and -s are supported for gcc and Microsoft Visual C++
 <entry><code>OS.system</code> and <code>Open.pipe</code> (Windows)
 <item>
+	OS.system was broken in 1.2.0 and has now been repaired;
 	bug fixes in inheritance and closing of handles
 <entry>failed futures
 <item>
