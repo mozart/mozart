@@ -169,7 +169,7 @@ local
    HT={New Tk.textTag tkInit(parent:T font:HF foreground:orange)}
 in
    proc {Head E Rs}
-      {Te tk(insert p(0 0) E#'\n' HT)}
+      {T tk(insert p(0 0) E#'\n' HT)}
       {HT tkBind(event:  '<1>'
 		 action: proc {$} {Display Rs} end)}
    end
@@ -188,7 +188,7 @@ local
       [] E|Er then
 	 case E
 	 of a(ref:R Es) then
-	    RT={New Tk.textTag tkInit(parent:Te font:BF
+	    RT={New Tk.textTag tkInit(parent:T font:BF
                                       foreground:blue underline:true)}
 	 in
 	    {RT tkBind(event: '<1>'
@@ -284,8 +284,9 @@ W={New Tk.toplevel tkInit}
 declare
 W={New Tk.toplevel tkInit}
 <chunk.ref/text display/
-{Tk.send pack(W)}
+{Tk.send pack(T)}
 
+declare
 <chunk.ref/text tag init/
 
 <chunk.ref/text tag add/
