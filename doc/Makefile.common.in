@@ -48,7 +48,8 @@ $(WHAT)-tex/$(WHAT).ps: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
 
 quick: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
-        --type=html-stylesheets --stylesheet=ozdoc.css --keeppictures && \
+        --type=html-stylesheets --stylesheet=ozdoc.css --keeppictures \
+        --latexdb=latex.db && \
         cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
         for i in $(HTMLEXTRAFILES); do cp -p $$i $(WHAT)-html; done
 
@@ -68,6 +69,7 @@ clean:
         -rm -rf $(WHAT)-html $(WHAT)-tex *~
 
 veryclean: clean
+        -rm -f latex.db
 
 distclean: veryclean
         -rm -f Makefile
