@@ -25,19 +25,19 @@
 
 functor
 import
-   Property.{get condGet}
-   System.{showInfo valueToVirtualString print}
-   Error.{formatLine msg}
-   OS.{getEnv stat uName getHostByName tmpnam}
-   Open.{socket text file}
-   Compiler.genericInterface
+   Property(get condGet)
+   System(showInfo valueToVirtualString print)
+   Error(formatLine msg)
+   OS(getEnv stat uName getHostByName tmpnam)
+   Open(socket text file)
+   Compiler(genericInterface)
 
 export
    getOPI:    GetOPI
    condSend:  CondSend
    interface: CompilerInterfaceEmacs
 
-body
+define
    TimeoutToConfigBar = 200
    TimeoutToUpdateBar = TimeoutToConfigBar
 
@@ -162,7 +162,7 @@ body
       class CompilerInterfaceEmacs from Compiler.genericInterface
 	 prop final
 	 attr
-	    Socket BarSync: _ BarLock: {NewLock} Trace: false
+	    Socket BarSync: _ BarLock: {NewLock} Trace: false Topped: false
 	    lastFile: unit lastLine: unit lastColumn: unit
 	 meth init(CompilerObject)
 	    lock Port NodeName in
@@ -197,6 +197,10 @@ body
 	       [] info(VS _) then
 		  {@Socket write(vs: VS)}
 	       [] message(Record _) then
+		  case {Label Record} of error then
+		     CompilerInterfaceEmacs, ToTop()
+		  else skip
+		  end
 		  {Error.msg
 		   proc {$ X}
 		      {@Socket write(vs: {Error.formatLine X})}
@@ -211,14 +215,21 @@ body
 		  {File close()}
 		  {@Socket write(vs: {VirtualString.toAtom
 				      '\'oz-show-temp '#Name#'\''})}
-	       [] toTop() then
-		  case {Property.get 'oz.standalone'} then skip
-		  else
-		     {@Socket write(vs: MSG_ERROR)}
-		  end
+	       [] runQuery(_ _) then
+		  Topped <- false
+	       [] attention() then
+		  CompilerInterfaceEmacs, ToTop()
 	       else skip
 	       end
 	       CompilerInterfaceEmacs, Serve(Mr)
+	    end
+	 end
+	 meth ToTop()
+	    if {Property.get 'oz.standalone'} then skip
+	    elseif @Topped then skip
+	    else
+	       {@Socket write(vs: MSG_ERROR)}
+	       Topped <- true
 	    end
 	 end
 
