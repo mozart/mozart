@@ -33,9 +33,9 @@ friend void engine();
 private:
   static Thread *Head;
   static Thread *Tail;
+  static Thread *Current;
 
 public:
-  static Thread *Current;
   static int TimeSlice;
   static int UserPriority;
   static int SystemPriority;
@@ -47,7 +47,15 @@ public:
   static void Start();
   static void GC();
   static void MakeTaskStack();
-
+  static void ScheduleCurrent();
+  static Thread *GetCurrent();
+  static void FinishCurrent();
+  static int GetCurrentPriority();
+  static TaskStack *GetCurrentTaskStack();
+  static void NewCurrent(int prio);
+  static void Schedule(Suspension *s);
+  static void ScheduleRoot(Continuation *c);
+  static void Schedule(Board *n);
 private:
   static Thread *UnlinkHead();
 
@@ -68,13 +76,7 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  Thread(Suspension *s);
-  Thread(Continuation *c,int p);
-  Thread(int p);
-  Thread(Board *n);
-
   void activate();
-  void finished();
   int getPriority();
   TaskStack *getTaskStack();
   State getValue(TaggedRef feature,TaggedRef out); // see ../builtins/debug.C
@@ -82,6 +84,7 @@ public:
   State setValue(TaggedRef feature,TaggedRef value);
   void schedule();
 private:
+  Thread(int p);
   Bool isFreezed();
   Bool isScheduled();
   void insertFromTail();

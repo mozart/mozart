@@ -256,7 +256,7 @@ void AM::init(int argc,char **argv)
   }
   Builtin *bi = new Builtin(entry,makeTaggedNULL());
   globalStore[0] = makeTaggedSRecord(bi);
-  SVariable *svar = new SVariable(Board::Root,OZ_stringToTerm("TopLevelFailed"));
+  SVariable *svar = new SVariable(Board::GetRoot(),OZ_stringToTerm("TopLevelFailed"));
   globalStore[1] =  makeTaggedRef(newTaggedSVar(svar));
 
 
@@ -506,7 +506,7 @@ Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2)
 Bool AM::isBetween(Board *to, Board *varHome)
 {
   for (Board *tmp = to->getBoardDeref();
-       tmp != Board::Current;
+       tmp != Board::GetCurrent();
        tmp = tmp->getParentBoardDeref()) {
     if (tmp == varHome) {
       return NO;
@@ -583,7 +583,7 @@ void AM::awakeNode(Board *node)
     return;
 
   node->removeSuspension();
-  Thread *n = new Thread(node);
+  Thread::Schedule(node);
 }
 
 // exception from general rule that arguments are never variables!
@@ -665,7 +665,7 @@ Bool AM::installPath(Board *to,Bool &isDead)
     return NO;
   }
 
-  DebugCheck(to == Board::Root,
+  DebugCheck(to == Board::GetRoot(),
              error("AM::installPath: root node reached");
              return NO;);
 
@@ -679,7 +679,7 @@ Bool AM::installPath(Board *to,Bool &isDead)
   if (installOne() == NO) {
     return NO;
   }
-  DebugCheck(Board::Current->isCommitted(),
+  DebugCheck(Board::GetCurrent()->isCommitted(),
              error ("install Board that is already committed"));
   return OK;
 }
@@ -703,9 +703,9 @@ void AM::reduceTrailFrame(Bool writeScript, int numbOfCons)
   Suspension *susp;
 
   if (writeScript) {
-    Board::Current->newScript(numbOfCons);
+    Board::GetCurrent()->newScript(numbOfCons);
     if (numbOfCons > 0)
-      susp = new Suspension (Board::Current);
+      susp = new Suspension (Board::GetCurrent());
   }
 
   Bool isOuterSuspMaint = NO;
@@ -722,7 +722,7 @@ void AM::reduceTrailFrame(Bool writeScript, int numbOfCons)
     DEREF(oldVal,ptrOldVal,tagOldVal);
 
     if (writeScript) {
-      Board::Current->setScript(index,refPtr,*refPtr);
+      Board::GetCurrent()->setScript(index,refPtr,*refPtr);
 
       if (isAnyVar(oldVal)) {
         // local generic variables are allowed to occure here
@@ -783,8 +783,8 @@ inline void AM::reduceTrailFrame(Bool writeScript)
 inline void AM::deinstallOne(Bool writeScript)
 {
   reduceTrailFrame(writeScript);
-  Board::Current->unsetInstalled();
-  Board::SetCurrent(Board::Current->getParentBoardDeref());
+  Board::GetCurrent()->unsetInstalled();
+  Board::SetCurrent(Board::GetCurrent()->getParentBoardDeref());
 }
 
 inline void AM::deinstallPath(Board *top)
@@ -793,9 +793,9 @@ inline void AM::deinstallPath(Board *top)
              error("AM::deinstallPath: top already commited");
              return;);
 
-  while (Board::Current != top) {
+  while (Board::GetCurrent() != top) {
     deinstallOne(OK);
-    DebugCheck(Board::Current == Board::Root && top != Board::Root,
+    DebugCheck(Board::GetCurrent() == Board::GetRoot() && top != Board::GetRoot(),
                error("AM::deinstallPath: root node reached");
                return;);
   }
@@ -873,10 +873,10 @@ inline Bool AM::installOne()
 {
   Bool ret;
   trail.pushMark();
-  if (!installScript(Board::Current->getScriptRef ())) {
+  if (!installScript(Board::GetCurrent()->getScriptRef ())) {
     ret = NO;
   } else {
-    Board::Current->setInstalled();
+    Board::GetCurrent()->setInstalled();
     ret = OK;
   }
   return ret;
@@ -914,7 +914,7 @@ inline Bool AM::shallowEntailed(Board *node, ProgramCounter PC,
  *
  */
 inline Bool AM::isInScope (Board *above, Board* node) {
-  while (node != Board::Root) {
+  while (node != Board::GetRoot()) {
     if (node == above)
       return (OK);
     node = node->getParentBoardDeref();
@@ -928,23 +928,23 @@ inline Bool AM::isLocalUVar(TaggedRef var)
   return (var == currentUVarPrototype ||
           // variables are usually bound
           // in the node where they are created
-          tagged2VarHome(var)->getBoardDeref() == Board::Current )
+          tagged2VarHome(var)->getBoardDeref() == Board::GetCurrent() )
     ? OK : NO;
 }
 
 inline Bool AM::isLocalSVar(TaggedRef var) {
   Board *home = tagged2SVar(var)->getHome1();
 
-  return (home == Board::Current ||
-          home->getBoardDeref() == Board::Current )
+  return (home == Board::GetCurrent() ||
+          home->getBoardDeref() == Board::GetCurrent() )
     ? OK : NO;
 }
 
 inline Bool AM::isLocalCVar(TaggedRef var) {
   Board *home = tagged2CVar(var)->getHome1();
 
-  return (home == Board::Current ||
-          home->getBoardDeref() == Board::Current )
+  return (home == Board::GetCurrent() ||
+          home->getBoardDeref() == Board::GetCurrent() )
     ? OK : NO;
 }
 
@@ -979,8 +979,8 @@ inline void AM::reviveCurrentTaskSusp(void)
   DebugCheck(currentTaskSusp->isDead() == OK,
              error("Cannot revive non-resistant suspension."));
   currentTaskSusp->unmarkPropagated();
-  currentTaskSusp->setNode(Board::Current);
-  Board::Current->addSuspension();
+  currentTaskSusp->setNode(Board::GetCurrent());
+  Board::GetCurrent()->addSuspension();
 }
 
 inline void AM::killCurrentTaskSusp(void) {
@@ -992,7 +992,7 @@ inline void AM::killCurrentTaskSusp(void) {
 
 inline Bool AM::entailment ()
 {
-  return (!Board::Current->hasSuspension()
+  return (!Board::GetCurrent()->hasSuspension()
           // First test: no subtrees;
           && trail.isEmptyChunk()
           // second test: is this node stable?
@@ -1005,7 +1005,7 @@ inline Bool AM::isEmptyTrailChunk ()
 }
 
 inline Bool AM::isToplevel() {
-  return Board::Current == Board::Root ? OK : NO;
+  return Board::GetCurrent() == Board::GetRoot() ? OK : NO;
 }
 
 inline void AM::bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr)
@@ -1016,7 +1016,7 @@ inline void AM::bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr)
 inline void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef a)
 {
   // most probable case first: local UVar
-  // if (isUVar(var) && Board::Current == tagged2VarHome(var)) {
+  // if (isUVar(var) && Board::GetCurrent() == tagged2VarHome(var)) {
   // more efficient:
   if (var == currentUVarPrototype) {
     doBind(varPtr,a);

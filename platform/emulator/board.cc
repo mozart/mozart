@@ -76,6 +76,16 @@ void Board::SetCurrent(Board *c, Bool checkNotGC)
   DebugCheckT(oldBoard=c);
 }
 
+Board *Board::GetCurrent()
+{
+  return Current;
+}
+
+Board *Board::GetRoot()
+{
+  return Root;
+}
+
 Board::Board(Actor *a,int type)
 : ConstTerm(Co_Board)
 {

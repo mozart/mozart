@@ -18,14 +18,6 @@
 
 // ------------------------------------------------------------------------
 
-/* class Actor:
-     may be conditional or disjunction
-     member data:
-       flags: see enum ActorFlags
-       next: continuation for next clause
-       board: board in which actor is installed
-     */
-
 class Actor : public ConstTerm {
 private:
   int flags;
@@ -54,17 +46,14 @@ public:
   Bool isAsk();
   Bool isLeaf();
   Bool isWait();
+  Bool isDisWait();
   void lastClause();
   void nextClause(ProgramCounter pc);
   void setCommitted();
+  void setDisWait();
 };
 
 // ------------------------------------------------------------------------
-
-/* class AskActor:
-   member data
-     elsePC: programm counter of else
-     */
 
 class AskActor : public Actor {
 private:
@@ -81,11 +70,6 @@ public:
 AskActor *CastAskActor(Actor *a);
 
 // ------------------------------------------------------------------------
-
-/* class WaitActor
-    member data
-      childs: list of childs
-      */
 
 class WaitActor : public Actor {
 private:

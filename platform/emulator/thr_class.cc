@@ -118,47 +118,39 @@ Bool Thread::isScheduled() {
 #endif
 
 
-// create a new thread after wakeup (warm)
-Thread::Thread(Suspension *s)
-: ConstTerm(Co_Thread)
+void Thread::Schedule(Suspension *s)
 {
-  DebugCheckT(prev=next=0);
-  flags = T_Warm;
-  priority = s->getPriority();
-  suspension = s;
-  schedule();
+  Thread *t=new Thread(T_Warm);
+  t->priority = s->getPriority();
+  t->suspension = s;
+  t->schedule();
 }
 
-// create a new thread after wakeup (warm)
-Thread::Thread(Continuation *c,int p)
-: ConstTerm(Co_Thread)
+// create a new thread on root
+void Thread::ScheduleRoot(Continuation *c)
 {
-  DebugCheckT(prev=next=0);
-  flags = T_RootTask;
-  Board::Root->addSuspension();
-  priority = p;
-  continuation = c;
-  schedule();
+  Thread *t=new Thread(T_RootTask);
+  Board::GetRoot()->addSuspension();
+  t->priority = UserPriority;
+  t->continuation = c;
+  t->schedule();
 }
 
 // create a new thread after wakeup (nervous)
-Thread::Thread(Board *s)
-: ConstTerm(Co_Thread)
+void Thread::Schedule(Board *b)
 {
-  DebugCheckT(prev=next=0);
-  flags = T_Nervous;
-  priority = s->getActor()->getPriority();
-  board = s;
-  schedule();
+  Thread *t=new Thread(T_Nervous);
+  t->priority = b->getActor()->getPriority();
+  t->board = b;
+  t->schedule();
 }
 
-// create a new thread with a task stack
-Thread::Thread(int p)
-: priority(p), flags(T_Normal) , ConstTerm(Co_Thread)
+// create a new thread without any value
+Thread::Thread(int f)
+: flags(f) , ConstTerm(Co_Thread)
 {
-  DebugCheckT(prev=next=0);
-  taskStack = new TaskStack();
-  schedule();
+  prev=next= (Thread *) NULL;
+  DebugCheckT(priority = -1; taskStack = (TaskStack *) -1);
 }
 
 
@@ -188,13 +180,13 @@ Thread *Thread::gc() {
 }
 #endif
 
-// Thread has finished
-void Thread::finished() {
-  dispose();
-}
-
 // free the memory of the thread (there are no references to it anymore)
 void Thread::dispose() {
+  if (flags == T_Normal) {
+    if (taskStack) {
+      taskStack->dispose();
+    }
+  }
   DebugCheck(prev!=0 || next!=0,error("Thread::dispose"));
   freeListDispose(this,sizeof(Thread));
 }
@@ -215,19 +207,26 @@ Thread *Thread::unlink() {
     DebugCheck(Tail!=this,error("Thread::unlink"));
     Tail=prev;
   }
-  DebugCheckT(prev=next=0);
+  prev=next=(Thread *) NULL;
   return this;
 }
 
 
 Bool Thread::isFreezed() { return (flags&T_Freezed) ? OK : NO; }
 
-int Thread::getPriority() { return priority; }
-void Thread::setPriority(int i) { priority = i; }
+int Thread::getPriority()
+{
+  DebugCheck(priority < 0,error("Thread::getPriority"));
+  return priority;
+}
+void Thread::setPriority(int i)
+{
+  priority = i;
+}
 
 TaskStack *Thread::getTaskStack()
 {
-  DebugCheck(type!=T_Normal,error("Thread::getTaskStack"));
+  DebugCheck(flags!=T_Normal,error("Thread::getTaskStack"));
   return taskStack;
 }
 
@@ -355,16 +354,16 @@ Thread *Thread::UnlinkHead() {
   Head=ret->next;
   if (Head) {
     DebugCheck(Head->prev!=ret,error("Thread::UnlinkHead"));
-    DebugCheckT(Head->prev=0);
+    Head->prev= (Thread *) NULL;
   } else {
     DebugCheck(Tail!=ret,error("Thread::UnlinkHead"));
     Tail=Head;
   }
+  ret->prev=ret->next=(Thread *) NULL;
   return ret;
 }
 
 void Thread::Start() {
- Loop:
   if (QueueIsEmpty()) {
     am.suspendEngine();
   }
@@ -380,7 +379,7 @@ void Thread::Start() {
    */
 void Thread::activate()
 {
-  if (type==T_Normal) {
+  if (flags==T_Normal) {
     am.currentTaskStack = taskStack;
   } else {
     am.currentTaskStack = (TaskStack *) NULL;
@@ -389,8 +388,43 @@ void Thread::activate()
 
 void Thread::MakeTaskStack()
 {
-  DebugCheck(Current->type!=T_Normal || Current->taskStack,
+  DebugCheck(Current->flags!=T_Normal || Current->taskStack,
              error("Thread::pushTask"));
   am.currentTaskStack= Current->taskStack = new TaskStack();
+
+}
+
+void Thread::ScheduleCurrent()
+{
+  Current->schedule();
+  Current=(Thread *) NULL;
+}
+
+
+Thread *Thread::GetCurrent()
+{
+  return Current;
+}
+
+void Thread::FinishCurrent()
+{
+  Current->dispose();
+  Current=(Thread *) NULL;
+}
+
+
+int Thread::GetCurrentPriority() {
+  return Current->priority;
+}
+
+TaskStack *Thread::GetCurrentTaskStack() {
+  return Current->taskStack;
+}
+
+
+void Thread::NewCurrent(int prio) {
+  Current = new Thread(T_Normal);
+  Current->priority = prio;
+  Current->taskStack = new TaskStack();
 
 }

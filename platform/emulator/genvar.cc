@@ -18,14 +18,14 @@ Bool GenCVariable::unifyGenCVariables = OK;
 
 GenCVariable::GenCVariable(TypeOfGenCVariable t, TaggedRef pn,
                            Board *n)
-:type(t), SVariable(n==NULL ? Board::Current : n, pn){}
+:type(t), SVariable(n==NULL ? Board::GetCurrent() : n, pn){}
 
 
 Bool GenCVariable::isLocalVariable(void){
   Board *home = getHome1();
 
-  return (home == Board::Current ||
-          home->getBoardDeref() == Board::Current )
+  return (home == Board::GetCurrent() ||
+          home->getBoardDeref() == Board::GetCurrent() )
     ? OK : NO;
 }
 

@@ -18,9 +18,13 @@
 #include "suspension.hh"
 
 class Board : public ConstTerm {
-public:
+friend void engine();
+private:
   static Board *Root;
   static Board *Current;
+public:
+  static Board *GetCurrent();
+  static Board *GetRoot();
   static void SetCurrent(Board *c, Bool checkNotGC=OK);
 
 private:

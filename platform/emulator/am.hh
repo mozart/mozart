@@ -98,7 +98,7 @@ public:
   void doGC();
   Bool smallGC();
 // coping of trees (and terms);
-  Board* copyTree (Board* node);
+  Board* copyTree (Board* node, Bool *isGround);
 
   void awakeNode(Board *node);
 
