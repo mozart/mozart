@@ -5961,41 +5961,6 @@ OZ_C_proc_begin(BImakeClass,8)
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BImakeObject,4)
-{
-  OZ_declareArg(0,initState);
-  OZ_declareArg(1,ffeatures);
-  OZ_declareArg(2,clas);
-  OZ_declareArg(3,obj);
-  { DEREF(initState,_1,_2); }
-  { DEREF(ffeatures,_1,_2); }
-  { DEREF(clas,_1,_2); }
-
-  if (!isRecord(initState)) {
-    warning("makeObject: record expected: %s", toC(initState));
-    return FAILED;
-  }
-
-  if (!isRecord(ffeatures)) {
-    warning("makeObject: record expected: %s", toC(ffeatures));
-    return FAILED;
-  }
-
-  if (!isObject(clas)) {
-    warning("makeObject: class expected: %s", toC(clas));
-    return FAILED;
-  }
-
-  Object *out =
-    newObject(isSRecord(ffeatures) ? tagged2SRecord(ffeatures) : (SRecord*) NULL,
-              isSRecord(initState) ? tagged2SRecord(initState) : (SRecord*) NULL,
-              ((Object*)tagged2Const(clas))->getClass(),
-              NO,
-              am.currentBoard);
-  return OZ_unify(obj,makeTaggedConst(out));
-}
-OZ_C_proc_end
-
 
 
 TaggedRef methApplHdl = makeTaggedNULL();
@@ -6086,6 +6051,90 @@ OZ_Return getClassInline(TaggedRef t, TaggedRef &out)
 DECLAREBI_USEINLINEFUN1(BIgetClass,getClassInline)
 
 
+
+
+inline
+TaggedRef cloneObjectRecord(TaggedRef record, Bool cloneAll)
+{
+  if (isLiteral(record))
+    return record;
+
+  Assert(isSRecord(record));
+
+  SRecord *in  = tagged2SRecord(record);
+  SRecord *rec = SRecord::newSRecord(in);
+
+  OZ_Term proto = am.currentUVarPrototype;
+
+  for(int i=0; i < in->getWidth(); i++) {
+    OZ_Term arg = in->getArg(i);
+    if (cloneAll || literalEq(NameOoFreeFlag,deref(arg))) {
+      arg = makeTaggedRef(newTaggedUVar(proto));
+    }
+    rec->setArg(i,arg);
+  }
+
+  return makeTaggedSRecord(rec);
+}
+
+inline
+OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
+{
+  Assert(isRecord(initState) && isRecord(ffeatures));
+
+  Object *out =
+    newObject(isSRecord(ffeatures) ? tagged2SRecord(ffeatures) : (SRecord*) NULL,
+              isSRecord(initState) ? tagged2SRecord(initState) : (SRecord*) NULL,
+              clas,
+              NO,
+              am.currentBoard);
+
+  return makeTaggedConst(out);
+}
+
+
+OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
+{
+  { DEREF(cla,_1,_2); }
+  if (isAnyVar(cla)) return SUSPEND;
+  if (!isObject(cla)) {
+    TypeErrorT(0,"Class");
+  }
+
+  Object *obj = (Object *)tagged2Const(cla);
+  TaggedRef realclass = obj->getOzClass();
+  { DEREF(realclass,_1,_2); }
+  Assert(isObject(realclass));
+
+  Object *realcl = (Object *)tagged2Const(realclass);
+  TaggedRef attr = realcl->getFeature(NameOoAttr);
+  { DEREF(attr,_1,_2); }
+  if (isAnyVar(attr)) return SUSPEND;
+
+  TaggedRef attrclone = cloneObjectRecord(attr,NO);
+
+  TaggedRef freefeat = realcl->getFeature(NameOoFreeFeatR);
+  { DEREF(freefeat,_1,_2); }
+  Assert(!isAnyVar(freefeat));
+  TaggedRef freefeatclone = cloneObjectRecord(freefeat,OK);
+
+  out = makeObject(attrclone, freefeatclone, obj->getClass());
+
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEFUN1(BInewObject,newObjectInline)
+
+
+OZ_C_proc_begin(BInew,3)
+{
+  /* the suspension handler does the real work */
+  return SUSPEND;
+}
+OZ_C_proc_end
+
+
+
 OZ_C_proc_begin(BIsetClosed,1)
 {
   OZ_Term obj=OZ_getCArg(0);
@@ -6097,6 +6146,17 @@ OZ_C_proc_begin(BIsetClosed,1)
   Object *oo = (Object *)tagged2Const(obj);
   oo->close();
   return PROCEED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIgetOONames,3)
+{
+  if (OZ_unify(OZ_getCArg(0),NameOoAttr) &&
+      OZ_unify(OZ_getCArg(1),NameOoFreeFeatR) &&
+      OZ_unify(OZ_getCArg(2),NameOoFreeFlag))
+    return PROCEED;
+  return FAILED;
 }
 OZ_C_proc_end
 
@@ -6176,53 +6236,6 @@ OZ_C_proc_begin(BIsetModeToDeep,0)
 }
 OZ_C_proc_end
 
-
-/* cloneObjectRecord(in,nocopy,varOnHeap,out):
- *      "out" is a copy of record "in", except that for those arguments
- *     in "in" which are equal to literal "nocopy", a new Variable is created
- *     this new var is created on the heap iff varOnHeap==True
- */
-OZ_C_proc_begin(BIcloneObjectRecord,4)
-{
-  OZ_Term record    = OZ_getCArg(0); DEREF(record,_1,_2);
-  OZ_Term nocopy    = OZ_getCArg(1); DEREF(nocopy,_3,_4);
-  OZ_Term varOnHeap = OZ_getCArg(2); DEREF(varOnHeap,_5,_6);
-  OZ_Term out       = OZ_getCArg(3);
-
-  if (isLiteral(record)) {
-    return OZ_unify(record,out);
-  }
-
-  if (!isSRecord(record)) {
-    warning("BIcloneObjectRecord: record expected: %s", toC(record));
-    return FAILED;
-  }
-  if (!isLiteral(nocopy)) {
-    warning("BIcloneObjectRecord: literal expected: %s", toC(nocopy));
-    return FAILED;
-  }
-
-  SRecord *in  = tagged2SRecord(record);
-  SRecord *rec = SRecord::newSRecord(in);
-
-  OZ_Term proto = am.currentUVarPrototype;
-  Assert(isLiteral(varOnHeap));
-  TaggedRef newvar = proto;
-  for(int i=0; i < in->getWidth(); i++) {
-    OZ_Term arg = in->getArg(i);
-    if (literalEq(nocopy,deref(arg))) {
-      if (literalEq(NameTrue,varOnHeap)) {
-        newvar = makeTaggedRef(newTaggedUVar(proto));
-      }
-      rec->setArg(i,newvar);
-    } else {
-      rec->setArg(i,arg);
-    }
-  }
-
-  return OZ_unify(makeTaggedSRecord(rec),out);
-}
-OZ_C_proc_end
 
 
 #endif /* BUILTINS2 */
@@ -6543,13 +6556,14 @@ BIspec allSpec2[] = {
   {"ozhome",         1, BIozhome},
 
   {"makeClass",        8,BImakeClass,          0},
-  {"makeObject",       4,BImakeObject,         0},
-  {"cloneObjectRecord",4,BIcloneObjectRecord,  0},
   {"setModeToDeep",    0,BIsetModeToDeep,  0},
   {"setMethApplHdl",   1,BIsetMethApplHdl,     0},
   {"getClass",         2,BIgetClass,           (IFOR) getClassInline},
+  {"new",              3,BInew,                0},
+  {"newObject",        2,BInewObject,          (IFOR) newObjectInline},
   {"hasFastBatch",     1,BIhasFastBatch,       (IFOR) hasFastBatchInline},
   {"objectIsFree",     2,BIobjectIsFree,       (IFOR) objectIsFreeInline},
+  {"getOONames",       3,BIgetOONames,         0},
   {"releaseObject",    0,BIreleaseObject,      0},
   {"getSelf",          1,BIgetSelf,            0},
   {"setSelf",          1,BIsetSelf,            0},

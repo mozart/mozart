@@ -26,7 +26,8 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown,
        AtomMin, AtomMax, AtomMid,
        AtomNaive, AtomSize, AtomConstraints,
-       AtomDistributed, AtomMobile, AtomFetched;
+       AtomDistributed, AtomMobile, AtomFetched,
+       NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag;
 
 /*===================================================================
  * Literal
