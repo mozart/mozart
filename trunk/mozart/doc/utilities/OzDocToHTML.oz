@@ -184,8 +184,6 @@ define
 	 FigureCounters: unit
 	 % for List:
 	 InDescription: unit
-	 % for GrammarAlt:
-	 GrammarAltIndent: unit
 	 % back matter:
 	 MyBibliographyDB: unit
       meth init(B SGML Dir)
@@ -732,36 +730,40 @@ define
 	    %-----------------------------------------------------------
 	    [] 'grammar.rule' then
 	       %--** display attribute?
-	       Out <- @Out#'</P><PRE>\n'
-	       case M.1 of X=var(...) then Var in
+	       Out <- @Out#'</P><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>\n'
+	       case M.1
+	       of X=var(...) then Var in
 		  OzDocToHTML, Excursion(X ?Var)
-		  %--** this is only OK if type=grammar:
-		  Out <- @Out#'  &lt;<I>'#Var#'</I>&gt; '
-		  %--** try to guess the length better:
-		  GrammarAltIndent <- {VirtualString.length Var} + 5
+		  Out <- @Out#'<TR><TD>&lt;<I>'#Var#'</I>&gt;</TD>'
 	       [] 'grammar.head' then
-		  Out <- @Out#'  '
+		  Out <- @Out#'<TR><TD>'
 		  OzDocToHTML, Batch(M.1 1)
-		  Out <- @Out#'\n      '
-		  GrammarAltIndent <- 6
+		  Out <- @Out#'</TD>\n'
 	       end
 	       OzDocToHTML, Batch(M 2)
-	       Out <- @Out#'</PRE><P'#@Align#'>\n'
+	       Out <- @Out#'</TABLE><P'#@Align#'>\n'
 	    [] 'grammar.head' then
 	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
 	    [] 'grammar.alt' then
-	       Out <- @Out#case {CondSelect M type unit} of def then '::= '
+	       Out <- @Out#case {CondSelect M type unit}
+			   of def then
+			      '<TD ALIGN=CENTER>&nbsp;::=&nbsp;</TD>'
 			   [] add then
-			      GrammarAltIndent <- @GrammarAltIndent - 1
-			      '+= '
-			   [] 'or' then {Spaces @GrammarAltIndent}#' |  '
-			   [] space then {Spaces @GrammarAltIndent}#'    '
-			   [] unit then {Spaces @GrammarAltIndent}#'    '
+			      '<TD ALIGN="CENTER">&nbsp;+=&nbsp;</TD>'
+			   [] 'or' then
+			      '<TR><TD></TD><TD ALIGN=CENTER>&nbsp;|&nbsp;</TD>'
+			   [] space then
+			      '<TR><TD></TD><TD ALIGN=CENTER></TD>'
+			   [] unit then
+			      '<TR><TD></TD><TD ALIGN=CENTER></TD>'
 			   end
+	       Out <- @Out#'<TD>'
 	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'\n'
+	       Out <- @Out#'</TD><TR>\n'
 	    [] 'grammar.note' then
-	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
+	       Out <- @Out#'<TD ALIGN=LEFT><I>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;% '
+	       OzDocToHTML, Batch(M 1)
+	       Out <- @Out#'</I></TD>'	       
 	    [] 'grammar' then
 	       OzDocToHTML, Batch(M 1)
 	    %-----------------------------------------------------------
