@@ -33,10 +33,10 @@ distclean::
 #=====================================================================
 
 MOGUL_DATABASE	= MOGUL.DB
-MOGUL_DIRECTORY	= /services/mozart/httpd/html/mogul
-MOGUL_ROOT_URL	= http://www.mozart-oz.org/mogul/db
+MOGUL_DIRECTORY	= tmp
+MOGUL_ROOT_URL	= db
 MOGUL_IGNORE	=
-MOGUL_URI = /home/mogul/mogul
+MOGUL_URI = .
 MOGUL_LIBRARIAN	= $(OZE) $(MOGUL_URI)/Librarian.exe	\
 	--verbose 					\
 	--mogul-url=$(MOGUL_ROOT_URL)			\
