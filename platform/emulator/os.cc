@@ -212,10 +212,8 @@ unsigned int osTotalTime()
 {
 #if defined(WINDOWS)
   return getTime();
-#else
 
-
-#ifdef SUNOS_SPARC
+#elif defined(SUNOS_SPARC)
 
   struct timeval tp;
 
@@ -224,14 +222,11 @@ unsigned int osTotalTime()
   return (unsigned int) ((tp.tv_sec - emulatorStartTime) * 1000 +
 			 tp.tv_usec / 1000);
 
-  
 #else
 
   struct tms buffer;
   int t = times(&buffer) - emulatorStartTime;
   return (unsigned int) (t*1000.0/(double)sysconf(_SC_CLK_TCK));
-
-#endif
 
 #endif
 }
@@ -246,6 +241,32 @@ public:
 
 
 static TimerThread *timerthread = NULL;
+
+DWORD __stdcall timerFun(void *p)
+{
+  TimerThread *ti = (TimerThread*) p;
+  /* make sure that this thread is not mixed with others */
+  if (SetThreadPriority(GetCurrentThread(),THREAD_PRIORITY_HIGHEST)==FALSE) {
+    OZ_warning("SetThreadPriority failed: %d\n",GetLastError());
+  }
+  while(1) {
+    Sleep(ti->wait);
+    handlerALRM(0);
+  }
+  delete ti;
+  ExitThread(1);
+  return 1;
+}
+
+TimerThread::TimerThread(int w)
+{
+  wait = w;
+  DWORD tid;
+  thrd = CreateThread(NULL,10000,&timerFun,this,0,&tid);
+  if (thrd==NULL) {
+    ozpwarning("osSetAlarmTimer(start thread)");
+  }
+}
 
 #endif
 
@@ -602,107 +623,31 @@ extern "C" void __builtin_vec_delete (void *ptr)
 #endif  /* __GNUC__ */
 
 
+static int wrappedStdin = -1;
+
 
 #ifdef WINDOWS
 
-const int wrappedHDStart = 200000; /* hope that's enough (RS) */
-
-class WrappedHandle {
-public:
-  static int nextno;
-  static WrappedHandle *allHandles;
-  HANDLE hd;
-  int fd;
-  WrappedHandle *next;
-  WrappedHandle(HANDLE h) 
-  {
-    hd = h;
-    fd = nextno++;
-    next = allHandles;
-    allHandles = this;
-  }
-  
-  static WrappedHandle *find(int f)
-  {
-    WrappedHandle *aux = allHandles;
-    while(aux) {
-      if (f == aux->fd)
-	return aux;
-      aux = aux->next;
-    }
-    return 0;
-  }
-
-  static WrappedHandle *getHandle(HANDLE hd)
-  {
-    WrappedHandle *aux = allHandles;
-    while (aux) {
-      if (aux->hd==0) {
-	aux->hd = hd;
-	return aux;
-      }
-      aux = aux->next;
-    }
-    return new WrappedHandle(hd);
-  }
-
-  void close()
-  {
-    CloseHandle(hd);
-    hd = 0;
-  }
-};
-
-int WrappedHandle::nextno = wrappedHDStart;
-
-WrappedHandle *WrappedHandle::allHandles = NULL;
-
-
+static
 int rawread(int fd, void *buf, int sz)
 {
+  if (fd==STDIN_FILENO)
+    fd = wrappedStdin;
+
   if (isSocket(fd))
     return recv(fd,((char*)buf),sz,0);
   
-  if (fd < wrappedHDStart)
-    return read(fd,buf,sz);
-
-  HANDLE hd = WrappedHandle::find(fd)->hd;
-  Assert(hd!=0);
-  DWORD ret;
-  if (ReadFile(hd,buf,sz,&ret,0)==FALSE)
-    return -1;
-
-  return ret;
+  return read(fd,buf,sz);
 }
 
 
+static
 int rawwrite(int fd, void *buf, int sz)
 {
   if (isSocket(fd))
     return send(fd, (char *)buf, sz, 0);
   
-  if (fd < wrappedHDStart)
-    return write(fd,buf,sz);
-
-  HANDLE hd = WrappedHandle::find(fd)->hd;
-  Assert(hd!=0);
-  
-  DWORD ret;
-  if (WriteFile(hd,buf,sz,&ret,0)==FALSE)
-      return -1;
-
-  return ret;
-}
-
-Bool createReader(int fd);
-
-int oshdopen(int handle, int flags)
-{
-  WrappedHandle *wh = WrappedHandle::getHandle((HANDLE)handle);
-  if ((flags&O_WRONLY)==0) {
-    createReader(wh->fd);
-  }
-  return wh->fd;
+  return write(fd,buf,sz);
 }
 
 #else
@@ -722,51 +667,40 @@ int nonBlockSelect(int nfds, fd_set *readfds, fd_set *writefds)
 }
 
 
+/* under windows FD_SET is not idempotent */
+#define OZ_FD_SET(i,fds) if (!FD_ISSET(i,fds)) { FD_SET(i,fds); }
+#define OZ_FD_CLR(i,fds) if (FD_ISSET(i,fds))  { FD_CLR(i,fds); }
 
-#include "winselect.cc"
+
+/* abstract timeout values */
+#define WAIT_NULL     (int*) -1
+
+int osOpenMax();
+
+void printfds(fd_set *fds)
+{
+  fprintf(stderr,"FDS: ");
+  for(int i=0; i<osOpenMax(); i++) {
+    if (FD_ISSET(i,fds)) {
+      fprintf(stderr,"%d,",i);
+    }
+  }
+  fprintf(stderr,"\n");
+  fflush(stderr);
+}
 
 
 void registerSocket(int fd)
 {
 #ifdef WINDOWS
-  if (fd>=wrappedHDStart) {
-    OZ_error("registerSocket: %d >= wrappedHDStart(=%d)\n",fd,wrappedHDStart);
-  }
+  if (fd==STDIN_FILENO)
+    fd = wrappedStdin;
 #endif
   OZ_FD_SET(fd,&socketFDs);
   maxSocket = max(fd,maxSocket);
 }
 
 
-
-#ifdef WINDOWS
-
-DWORD __stdcall timerFun(void *p)
-{
-  TimerThread *ti = (TimerThread*) p;
-  /* make sure that this thread is not mixed with others */
-  if (SetThreadPriority(GetCurrentThread(),THREAD_PRIORITY_HIGHEST)==FALSE) {
-    OZ_warning("SetThreadPriority failed: %d\n",GetLastError());
-  }
-  while(1) {
-    Sleep(ti->wait);
-    handlerALRM(0);
-  }
-  delete ti;
-  ExitThread(1);
-  return 1;
-}
-
-TimerThread::TimerThread(int w)
-{
-  wait = w;
-  DWORD tid;
-  thrd = CreateThread(NULL,10000,&timerFun,this,0,&tid);
-  if (thrd==NULL) {
-    ozpwarning("osSetAlarmTimer(start thread)");
-  }
-}
-#endif
 
 
 // 't' is in miliseconds;
@@ -827,6 +761,42 @@ int osGetAlarmTimer()
 #endif
 
 
+#ifdef WINDOWS
+int splitSocks(fd_set *in, fd_set *socks, fd_set *other)
+{
+  FD_ZERO(socks);
+  FD_ZERO(other);
+
+  /* hack: optimized scanning "in" by using definition of adt "fd_set" */
+  int ret=0;
+  for (unsigned i = 0; i < in->fd_count ; i++) {
+    int fd = in->fd_array[i];
+    if (isSocket(fd)) {
+      ret++;
+      OZ_FD_SET(fd,socks);
+    } else {
+      OZ_FD_SET(fd,other);
+    }
+  }
+  return ret;
+}
+
+
+int addOther(fd_set *socks, fd_set *other, fd_set *out)
+{
+  FD_ZERO(out);
+  *out = *socks;
+
+  /* hack: optimized scanning fd_set by using definition of adt "fd_set" */
+  for (unsigned i = 0; i < other->fd_count ; i++) {
+    OZ_FD_SET(i,out);
+  }
+
+  return out->fd_count;
+}
+#endif
+
+
 /* 
  * Wait *timeout msecs on given fds. If 'ptimeout' is WAIT_NULL, 
  * return immediately.
@@ -836,12 +806,6 @@ int osGetAlarmTimer()
 static 
 int osSelect(fd_set *readfds, fd_set *writefds, unsigned int *ptimeout)
 {
-#ifdef WINDOWS
-
-  return win32Select(readfds,writefds,ptimeout);
-
-#else
-
   struct timeval timeoutstruct, *timeoutptr;
   unsigned int currentSystemTime;
 
@@ -865,7 +829,21 @@ int osSelect(fd_set *readfds, fd_set *writefds, unsigned int *ptimeout)
     osUnblockSignals();
   }
 
+#ifdef WINDOWS
+  fd_set rsocks, wsocks, rother, wother;
+  int numSocks = splitSocks(readfds,&rsocks,&rother) 
+               + splitSocks(writefds,&wsocks,&wother);
+  int ret = 0;
+  if (numSocks != 0) {
+    ret = select(openMax,&rsocks,&wsocks,NULL,timeoutptr);
+  }
+  if (ret < 0 )
+    return ret;
+  ret = addOther(&rsocks,&rother,readfds) + addOther(&wsocks,&wother,writefds);
+  *readfds = rsocks; *writefds = wsocks;
+#else
   int ret = select(openMax,readfds,writefds,NULL,timeoutptr);
+#endif
 
   if (ptimeout != (unsigned int*) WAIT_NULL) {
     // kost@ : Note that effectively the time spent in wait 
@@ -876,7 +854,6 @@ int osSelect(fd_set *readfds, fd_set *writefds, unsigned int *ptimeout)
   }
 
   return ret;
-#endif  /* WINDOWS */
 }
 
 void osInitSignals()
@@ -991,12 +968,10 @@ char *ostmpnam(char *s)
   return tn;
 }
 
-static int wrappedStdin = -1;
-
 int osdup(int fd)
 {
-  // no dup yet: conflicts with reader threads
-  return fd==STDIN_FILENO ? wrappedStdin : fd;
+  // no dup yet
+  return fd;
 }
 
 DWORD __stdcall watchParentThread(void *arg)
@@ -1031,7 +1006,8 @@ void watchParent()
     OZ_warning("OpenProcess(%d) failed",pid);
   } else {
     DWORD thrid;
-    CreateThread(0,0,watchParentThread,handle,0,&thrid);
+    HANDLE th = CreateThread(0,0,watchParentThread,handle,0,&thrid);
+    CloseHandle(th);
   }
 }
 
@@ -1081,8 +1057,7 @@ void osInit()
 
   emulatorStartTime = tp.tv_sec;
 
-#else
-#ifdef WINDOWS
+#elif defined(WINDOWS)
 
   /* make sure everything is opened in binary mode */
   setmode(fileno(stdin),O_BINARY);  // otherwise input blocks!!
@@ -1092,9 +1067,6 @@ void osInit()
   GetSystemTime(&st);
   SystemTimeToFileTime(&st,&emuStartTime);
 
-  /* allow select on stdin */
-  wrappedStdin = oshdopen(STD_INPUT_HANDLE, O_RDONLY);
-  
   /* init sockets */
   WSADATA wsa_data;
   WORD req_version = MAKEWORD(1,1);
@@ -1109,10 +1081,12 @@ void osInit()
     am.exitOz(1);    
   }
 
-  //  fprintf(stderr, "szDescription = \"%s\"", wsa_data.szDescription);
-  //  fprintf(stderr, "szSystemStatus = \"%s\"", wsa_data.szSystemStatus);
-
-
+  /* allow select on stdin */
+  int sv[2];
+  int aux = ossocketpair(PF_UNIX,SOCK_STREAM,0,sv);
+  createReader(sv[0],GetStdHandle(STD_INPUT_HANDLE));
+  wrappedStdin = sv[1];
+  
   watchParent(); // check whether ozengine still lives
 
   /* win32 does not support process groups,
@@ -1129,7 +1103,6 @@ void osInit()
   struct tms buffer;
   emulatorStartTime = times(&buffer);;
 
-#endif
 #endif
 }
 
@@ -1212,11 +1185,6 @@ int osTestSelect(int fd, int mode)
 {
   CheckMode(mode);
 #ifdef WINDOWS
-  IOChannel *ch = lookupChannel(fd);
-  /* no select on write */
-  if (ch)
-    return (mode==SEL_WRITE || ch->status==ST_AVAIL);
-
   if (!isSocket(fd))
     return OK;
 #endif
@@ -1274,9 +1242,6 @@ int osFirstSelect()
 
 Bool osNextSelect(int fd, int mode)
 {
-#ifndef WINDOWS
-  Assert(fd<openMax);
-#endif
   CheckMode(mode);
 
   if (FD_ISSET(fd,&tmpFDs[mode])) {
@@ -1363,24 +1328,6 @@ void osExit(int status)
 
 int osread(int fd, void *buf, unsigned int len)
 {
-#ifdef WINDOWS
-  IOChannel *ch = lookupChannel(fd);
-  if (ch!=NULL) {
-    Assert(ch->thrd);
-    if (ch->status==ST_ERROR) return -1;
-    if (ch->status==ST_EOF)   return 0;
-    Assert(ch->status==ST_AVAIL);
-    ch->status=ST_NOTAVAIL;
-    *(char*)buf = ch->chr;
-    int ret = rawread(fd,((char*)buf)+1,len-1);
-    if (ret<0)
-      return ret;
-    ResetEvent(ch->char_avail);
-    SetEvent(ch->char_consumed);
-    return ret+1;
-  }
-#endif
-
   return rawread(fd, buf, len);
 }
 
@@ -1434,11 +1381,6 @@ int osclose(int fd)
     OZ_FD_CLR((unsigned int)fd,&socketFDs);
     return closesocket(fd);
   }
-  
-  IOChannel *ch = lookupChannel(fd);
-  if (ch) { ch->close(); }
-  WrappedHandle *wh = WrappedHandle::find(fd);
-  if (wh) { wh->close(); return 0; }
 #endif
   return close(fd);
 }
@@ -1874,6 +1816,156 @@ closedir (DIR* dirp)
 	free (dirp);
 
 	return rc;
+}
+
+#endif
+
+#ifdef WINDOWS
+/* stolen from cygwin32 */
+int ossocketpair (int, int type, int, int *sb)
+{
+  int res = -1;
+  SOCKET insock, outsock, newsock;
+  struct sockaddr_in sock_in;
+  int len = sizeof (sock_in);
+
+  newsock = ossocket(AF_INET, type, 0);
+  if (newsock == INVALID_SOCKET) {
+    goto done;
+  }
+
+  /* bind the socket to any unused port */
+  sock_in.sin_family = AF_INET;
+  sock_in.sin_port = 0;
+  sock_in.sin_addr.s_addr = INADDR_ANY;
+  if (bind(newsock, (struct sockaddr *) &sock_in, sizeof (sock_in)) < 0) {
+    goto done;
+  }
+
+  if (getsockname(newsock, (struct sockaddr *) &sock_in, &len) < 0) {
+    closesocket(newsock);
+    goto done;
+  }
+  listen(newsock, 2);
+  
+  /* create a connecting socket */
+  outsock = ossocket(AF_INET, type, 0);
+  if (outsock == INVALID_SOCKET) {
+    closesocket(newsock);
+    goto done;
+  }
+  sock_in.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+  /* Do a connect and accept the connection */
+  if (connect(outsock, (struct sockaddr *) &sock_in, sizeof (sock_in)) < 0) {
+    closesocket(newsock);
+    closesocket(outsock);
+    goto done;
+  }
+  insock = osaccept(newsock, (struct sockaddr *) &sock_in, &len);
+  if (insock == INVALID_SOCKET) {
+    closesocket(newsock);
+    closesocket(outsock);
+    goto done;
+  }
+
+  closesocket(newsock);
+  res = 0;
+
+  sb[0] = insock;
+  sb[1] = outsock;
+
+done:
+  return res;
+}
+
+
+class InOut {
+public:
+  SOCKET fd1;
+  HANDLE fd2;
+  InOut(SOCKET f1, HANDLE f2): fd1(f1), fd2(f2) {}
+};
+
+
+#define bufSz 10000
+
+static DWORD __stdcall readerThread(void *p)
+{
+  InOut *io = (InOut*) p;
+  SOCKET out = io->fd1;
+  HANDLE in = io->fd2;
+  delete io;
+
+  char buf[bufSz];
+  while(1) {
+    DWORD count;
+    if (ReadFile(in,buf,bufSz,&count,0)==FALSE) {
+      //message("ReadFile(%d) failed: %d\n",in,GetLastError());
+      break;
+    }
+
+  loop:
+    int sent= send(out,buf,count,0);
+    if (sent<0) {
+      // message("send failed: %d\n",WSAGetLastError());
+      break;
+    }
+    count -= sent;
+    if (count > 0)
+      goto loop;
+  }
+  CloseHandle(in);
+  osclose(out);
+  ExitThread(1);
+  return 1;
+}
+
+
+static DWORD __stdcall writerThread(void *p)
+{
+  InOut *io = (InOut*) p;
+  SOCKET in = io->fd1;
+  HANDLE out = io->fd2;
+  delete io;
+
+  char buf[bufSz];
+  while(1) {
+    int got = recv(in,buf,bufSz,0);
+    if (got<0) {
+      //message("recv(%d) failed: %d\n",in,WSAGetLastError());
+      break;
+    }
+
+  loop:
+    DWORD count;
+    if (WriteFile(out,buf,got,&count,0)==FALSE) {
+      //message("WriteFile(%d) failed: %d\n",out,GetLastError());
+      break;
+    }
+    got -= count;
+    if (got>0)
+      goto loop;
+  }
+  CloseHandle(out);
+  osclose(in);
+  ExitThread(1);
+  return 1;
+}
+
+
+void createReader(SOCKET s,HANDLE h)
+{
+  DWORD tid;
+  HANDLE th = CreateThread(NULL,10000,&readerThread,new InOut(s,h),0,&tid);
+  CloseHandle(th);
+}
+
+void createWriter(SOCKET s,HANDLE h)
+{
+  DWORD tid;
+  HANDLE th = CreateThread(NULL,10000,&writerThread,new InOut(s,h),0,&tid);
+  CloseHandle(th);
 }
 
 #endif
