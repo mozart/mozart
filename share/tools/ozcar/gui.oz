@@ -93,7 +93,7 @@ local
       elseif {IsKinded X} then
 	 if     {FD.is X}              then FDVarType
 	 elseif {FS.var.is X}          then FSVarType
-	 elseif {IsRecordC X}          then KindedRecordType
+	 elseif {RecordC.is X}         then KindedRecordType
 	 else                                 UnknownType
 	 end
       else                                  UnboundType % {System.printName X}

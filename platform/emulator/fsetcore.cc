@@ -69,12 +69,6 @@ OZ_BI_define(BIfsIsValueB, 1, 1)
 } OZ_BI_end
 
 
-void
-makeFSetValue(OZ_Term desc,OZ_Term*fs)
-{
-  *fs = makeTaggedFSetValue(new FSetValue(desc));
-}
-
 OZ_BI_define(BIfsSetValue, 1, 1) 
 {
   ExpectedTypes(OZ_EM_FSETDESCR "," OZ_EM_FSETVAL);
@@ -354,6 +348,15 @@ OZ_BI_define(BIfsCardRange, 3, 0)
 OZ_BI_end
 
 
+/*
+ * The builtin table
+ */
+
+#ifndef MODULES_LINK_STATIC
+
+#include "modFSB-if.cc"
+
+#endif
 
 
 

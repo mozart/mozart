@@ -62,8 +62,16 @@
 			     out => [],
 			     BI  => BIinjectSpace},
 
+     'discard'	        => { in  => ['+space'],
+			     out => [],
+			     BI  => BIdiscardSpace},
+
      'choose'           => { in  => ['+int'],
                              out => ['value'],
-                             BI  => BIregisterSpace},
+                             BI  => BIchooseSpace},
+
+     'waitStable'       => { in  => [],
+                             out => [],
+                             BI  => BIwaitStableSpace},
      );
 1;;

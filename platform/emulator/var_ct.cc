@@ -31,7 +31,6 @@
 
 #include "var_ct.hh"
 #include "am.hh"
-#include "builtins.hh"
 #include "unify.hh"
 
 OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term)
@@ -404,52 +403,6 @@ void OzCtVariable::installPropagators(OzCtVariable * glob_var)
 					   glob_var->_susp_lists[i],
 					   gb);
 }
-
-//-----------------------------------------------------------------------------
-// built-ins
-
-OZ_BI_define(BIIsGenCtVarB, 1,1)
-{
-  OZ_getINDeref(0, v, vptr, vtag);
-
-  OZ_RETURN(oz_bool(isGenCtVar(v, vtag)));
-} OZ_BI_end
-
-OZ_BI_define(BIGetCtVarConstraintAsAtom, 1, 1)
-{ 
-  ExpectedTypes("OzCtVariable<ConstraintData>,Atom");
-  
-  OZ_getINDeref(0, var, varptr, vartag);
-
-  if (!oz_isVariable(vartag)) {
-    OZ_RETURN(var);
-  } else if (isGenCtVar(var, vartag)) {
-    OZ_RETURN(oz_atom(((OzCtVariable *) tagged2CVar(var))->getConstraint()->toString(ozconf.printDepth)));
-  } else if (oz_isNonKinded(var)) {
-    oz_suspendOnPtr(varptr);
-  } else {
-    TypeError(0, "");
-  }
-}
-OZ_BI_end
-
-OZ_BI_define(BIGetCtVarNameAsAtom, 1, 1)
-{ 
-  ExpectedTypes("OzCtVariable<ConstraintData>,Atom");
-  
-  OZ_getINDeref(0, var, varptr, vartag);
-
-  if (!oz_isVariable(vartag)) {
-    OZ_RETURN(var);
-  } else if (isGenCtVar(var, vartag)) {
-    OZ_RETURN(oz_atom(((OzCtVariable*)tagged2CVar(var))->getDefinition()->getName()));
-  } else if (oz_isNonKinded(var)) {
-    oz_suspendOnPtr(varptr);
-  } else {
-    TypeError(0, "");
-  }
-}
-OZ_BI_end
 
 
 /*
