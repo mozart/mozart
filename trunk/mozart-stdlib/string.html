@@ -84,13 +84,13 @@ which is identical except for the first letter which has been capitalized
 <DD>splits string <CODE>S</CODE> at all occurrences of string <CODE>Sep</CODE>
 and returns the resulting list <CODE>L</CODE>.  <CODE>Sep</CODE> may also be
 <CODE>unit</CODE> in which case splits occur at all non-empty sequences of
-whitespace characters.  It can also be <CODE>unit</CODE>, in which case
-splits occur between every two character
+whitespace characters.  It can also be <CODE>nil</CODE>, in which case
+splits occur between every two characters
 <DT><CODE>{String.splitAtMost +S +Sep +N ?L}</CODE>
 <DD>same as above, but at most <CODE>N</CODE> splits are performed: the
 remainder of the string is returned as the last element of list <CODE>L</CODE>
 <DT><CODE>{String.lstrip +S1 +Chars ?S2}</CODE>
-<DD>takes a string a string <CODE>S1</CODE> and returns a string
+<DD>takes a string <CODE>S1</CODE> and returns a string
 <CODE>S2</CODE> where all characters at the left of <CODE>S1</CODE>
 which are in <CODE>Chars</CODE> have been removed. <CODE>Chars</CODE>
 can also be <CODE>unit</CODE>, in which case it stands for all whitespace

@@ -14,5 +14,8 @@ makefile(
 	     'index.html'
 	     'ozdoc.css'
 	     'page.gif'
+             'string.html'
+             'mapping.html'
+             'generator.html'
 	    ]
    )
