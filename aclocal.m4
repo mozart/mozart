@@ -136,6 +136,10 @@ AC_DEFUN(OZ_INIT, [
   HOMECACHE="http/mozart.ps.uni-sb.de/home"
   AC_SUBST(HOMEURL)
   AC_SUBST(HOMECACHE)
+  OZ_ARG_WITH_INC_DIR
+  OZ_ARG_WITH_LIB_DIR
+  AC_SUBST(CPPFLAGS)
+  AC_SUBST(LDFLAGS)
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 ])
 
@@ -1020,3 +1024,69 @@ AC_DEFUN(OZ_ENABLE, [
         ifelse($5,[],AC_MSG_RESULT(no),$5)
     fi
     ])
+
+dnl ------------------------------------------------------------------
+dnl OZ_ARG_WITH_LIB_DIR
+dnl
+dnl maybe adds some directories to LDFLAGS and oz_lib_path
+dnl --with-lib-dirs=d1,...,dn
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_ARG_WITH_LIB_DIR,[
+  AC_MSG_CHECKING(for --with-lib-dir)
+  AC_ARG_WITH(lib-dir,
+    [--with-lib-dir=d1,...,dn   add these dirs to LDFLAGS],
+    oz_cv_with_lib_dirs=$with_lib_dir)
+  AC_MSG_RESULT($with_lib_dir)
+  oz_tmp_IFS="$IFS"
+  IFS=","
+  # reverse the list of dirs
+  oz_tmp_dirs=""
+  for oz_tmp in $oz_cv_with_lib_dirs DONE; do
+    if test "$oz_tmp" != DONE; then
+      oz_tmp_dirs="$oz_tmp${oz_tmp_dirs:+ }$oz_tmp_dirs"
+    fi
+  done
+  # add them to LDFLAGS and oz_lib_path
+  IFS=$oz_tmp_IFS
+  : ${oz_lib_path="/usr/local/lib"}
+  for oz_tmp1 in $oz_tmp_dirs DONE; do
+    if test "$oz_tmp1" != DONE; then
+      OZ_ADDTO_LDFLAGS(-L$oz_tmp1)
+      oz_lib_path="$oz_tmp1${oz_lib_path:+ }$oz_lib_path"
+    fi
+  done
+])
+
+dnl ------------------------------------------------------------------
+dnl OZ_ARG_WITH_INC_DIR
+dnl
+dnl maybe adds some directories to CPPFLAGS
+dnl --with-lib-dirs=d1,...,dn
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_ARG_WITH_INC_DIR,[
+  AC_MSG_CHECKING(for --with-inc-dir)
+  AC_ARG_WITH(inc-dir,
+    [--with-inc-dir=d1,...,dn   add these dirs to CPPFLAGS],
+    oz_cv_with_inc_dirs=$with_inc_dir)
+  AC_MSG_RESULT($with_inc_dir)
+  oz_tmp_IFS="$IFS"
+  IFS=","
+  # reverse the list of dirs
+  oz_tmp_dirs=""
+  for oz_tmp in $oz_cv_with_inc_dirs DONE; do
+    if test "$oz_tmp" != DONE; then
+      oz_tmp_dirs="$oz_tmp${oz_tmp_dirs:+ }$oz_tmp_dirs"
+    fi
+  done
+  # add them to CPPFLAGS and oz_inc_path
+  IFS=$oz_tmp_IFS
+  : ${oz_inc_path="/usr/local/include"}
+  for oz_tmp1 in $oz_tmp_dirs DONE; do
+    if test "$oz_tmp1" != DONE; then
+      OZ_ADDTO_CPPFLAGS(-I$oz_tmp1)
+      oz_inc_path="$oz_tmp1${oz_inc_path:+ }$oz_inc_path"
+    fi
+  done
+])
