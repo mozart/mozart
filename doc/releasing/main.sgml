@@ -170,7 +170,9 @@ make bin</code>
 	  <code display>cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/services/mozart/CVS get -r $REL mozart-stdlib</code>
 	  you can create a tarball for the standard library by
 	  invoking
-	  <code display>make std</code>
+	  <code display>make STDLIB=... std</code>
+	  where <code/.../ is the directory where you checked out the
+	  standard library.
 	  However, before you do this, you need to have
 	  <code/ozengine/ and <code/ozmake/ in your path.  As a
 	  result, the following tarball is created:
