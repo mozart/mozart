@@ -202,7 +202,7 @@ initffuns.cc oz.c: oz.h $(OZVERSION)
         $(SHELL) $(SRCDIR)/makeffuns $(SRCDIR) `$(OZVERSION)`
 
 version.cc: version.sed $(filter-out version.cc,$(SRCS))
-        sed -e "s/HEREGOESDATE/`date '+%h %d 19%y \(%T\)'`/" \
+        sed -e "s/HEREGOESDATE/`date '+%h %d %Y \(%T\)'`/" \
              -e "s/OZPLATFORM/$(PLATFORM)/" \
              $(SRCDIR)/version.sed > version.cc
 
