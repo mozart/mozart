@@ -81,7 +81,11 @@
 
      'connFailed'            => { in => ['+int','+atom'],
 				  out => [],
-				  BI  => BIconnFailed}
+				  BI  => BIconnFailed},
+
+     'printDPTables'	     => { in  => [],
+				  out => [],
+				  BI  => BIprintDPTables}
 );
 
 
