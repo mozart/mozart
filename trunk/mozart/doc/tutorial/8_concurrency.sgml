@@ -145,7 +145,7 @@ use it without hesitation. However sequential programs are
 always faster than concurrent programs having the same structure.
 The <<Fib>> program in <PTR TO="concurrentFib"> is faster if
 you remove <<thread ... end>>.
-Therefore, create threads only when the application need it, and
+Therefore, create threads only when the application needs it, and
 not because concurrency is fun.
 
 <SECTION id=section.concurrency.time><TITLE/Time/
@@ -168,12 +168,12 @@ can find a number of useful soft real-time procedures. Among them are:
 <<<
 local
    proc {Ping N}
-      case N==0 then {Browse 'ping terminated'}
+      if N==0 then {Browse 'ping terminated'}
       else {Delay 500} {Browse ping} {Ping N-1} end
    end
    proc {Pong N}
       {For 1 N 1 
-    proc {$ I} {Delay 600} {Browse pong} end }
+         proc {$ I} {Delay 600} {Browse pong} end }
       {Browse 'pong terminated'}
    end
 in
@@ -189,6 +189,37 @@ displays <<ping>> periodically after 500 milliseconds, and the other
 <<pong>> after 600 milliseconds. Some <<pings>> will be displayed
 immediately after each other because of the periodicity difference.
 
+<SUBSECTION> <TITLE>Making Standalone Application</TITLE>
+<P>It is easy to make stand-alone applications in Mozart.
+We show this by make the program in <PTR TO="pingpong"> stand-alone
+by making a functor of the program as shown in <PTR TO="pingpong1">,
+and storing it in your file <<PingPong.oz>>. Thereafter use the
+command:
+<<< ozc -x PingPong.oz >>>
+<P> Now type PingPong in your shell to start the program.
+<P><FIGURE ID="pingpong1" CLASS="Figure">
+<CAPTION>A 'Ping Pong' program stand-alone</CAPTION>
+<<<
+functor
+import
+   Browser(browse:Browse) %Import Browse form Browser module
+define
+   proc {Ping N}
+      if N==0 then {Browse 'ping terminated'}
+      else {Delay 500} {Browse ping} {Ping N-1} end
+   end
+   proc {Pong N}
+      {For 1 N 1 
+         proc {$ I} {Delay 600} {Browse pong} end }
+      {Browse 'pong terminated'}
+   end
+in
+   {Browse 'game started'}
+   thread {Ping 50} end
+   thread {Pong 50} end
+end
+>>>
+</FIGURE>
 
 <SECTION id=section.concurrency.stream><TITLE/Stream Communication/
 <P>The data-flow property of Oz easily enables writing threads that
