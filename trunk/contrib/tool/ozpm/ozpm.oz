@@ -169,42 +169,6 @@ define
 	 {OS.unlink MFTTXT}
       end
       
-%      meth create(Package)
-%	 F={ParseFile Package}
-%	 fun{Filter What}
-%	    {List.map 
-%	     {List.filter F fun{$ I} I.1==What end}
-%	     fun{$ I}
-%		I.2
-%	     end}
-%	 end
-%	 fun{Get What}
-%	    Fi={Filter What}
-%	 in
-%	    if {Length Fi}\=1 then
-%	       raise error(parameterIsNotOccuringOnce What) end
-%	       nil
-%	    else
-%	       Fi.1
-%	    end
-%	 end
-%	 Name={Get name}
-%	 Version={Get version}
-%	 Files={Filter file}
-%	 Desc={Get description}
-%	 Pkg={Get 'pkg-name'}
-%	 Info=package(name:Name
-%		      version:Version
-%		      filelist:Files
-%		      description:Desc
-%		      pkg:Pkg
-%		      text:Package)
-%      in
-%	 {Pickle.save Info OZPMMANIFEST}
-%	 {Archive.make Pkg OZPMMANIFEST|Package|Files}
-%	 {OS.unlink OZPMMANIFEST}
-%      end
-
       meth view(Package Info LS)
 	 A = {New Archive.'class' init(Package)}
       in
