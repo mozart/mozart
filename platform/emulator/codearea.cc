@@ -210,9 +210,9 @@ void CodeArea::printDef(ProgramCounter PC)
     
   getDefinitionArgs(pc,reg,next,file,line,pred);
 
-  message("\tIn procedure %s (File %s, line %s)\n",
+  message("\tIn procedure %s (File %s, line %s, PC=%ld)\n",
 	  pred ? pred->getPrintName() : "???",
-	  tagged2String(file,10),tagged2String(line,10));
+	  tagged2String(file,10),tagged2String(line,10),PC);
 }
 
 /* find the start of the definition where from points into */
@@ -248,7 +248,8 @@ ProgramCounter CodeArea::definitionStart(ProgramCounter from)
   return NOCODE;
 }
 
-void displayCode(ProgramCounter from, int ssize) {
+void displayCode(ProgramCounter from, int ssize) 
+{
  CodeArea::display(from,ssize,stderr);
  fflush(stderr);
 }
