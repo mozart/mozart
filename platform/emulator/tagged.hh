@@ -1111,9 +1111,9 @@ public:
 };
 
 inline
-unsigned int nextPowerOf2(unsigned int n)
+int nextPowerOf2(int n)
 {
-  for(unsigned int i=2;; i*=2) {
+  for(int i=2;; i*=2) {
     if (i>=n) return i;
   }
 }

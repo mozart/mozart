@@ -856,53 +856,59 @@ unsigned int intlog(unsigned int i)
  *      different successive indices.
  */
 
-Arity::Arity(TaggedRef entrylist , Bool itf)
-  : isTupleFlag(itf)
+Arity *Arity::newArity(TaggedRef entrylist , Bool itf)
 {
-  next = NULL;
-  list = entrylist;
-  DebugCheckT(numberofentries = 0);
-  DebugCheckT(numberofcollisions = 0);
-
   int w = length(entrylist);
-  if (isTupleFlag) {
-    width = w;
-    DebugCheckT(indextable=0);
-    DebugCheckT(keytable=0);
-  } else {
-    size = nextPowerOf2((unsigned int)(w*1.5));
-    width = 0;
-    hashmask = size-1;
-    indextable = ::new int[size];
-    keytable = ::new TaggedRef[size];
-    for (int i=0 ; i<size ; keytable[i++] = makeTaggedNULL());
-    while (isCons(entrylist)) {
-      TaggedRef entry = head(entrylist);
 
-      int i = hashfold(featureHash(entry));
-      int step = scndhash(entry);
-      while ( keytable[i] != makeTaggedNULL() ) {
-        DebugCheckT(numberofcollisions++);
-        i = hashfold(i+step);
-      }
-      keytable[i] = entry;
-      indextable[i] = width++;
-      DebugCheckT(numberofentries++);
-
-      entrylist = tail(entrylist);
-    }
+  if (itf) {
+    Arity *ar=(Arity *) new char[sizeof(Arity)];
+    ar->next = NULL;
+    ar->list = entrylist;
+    ar->hashmask = 0;
+    ar->width = w;
+    return ar;
   }
+
+  int size  = nextPowerOf2((int)(w*1.5));
+  Arity *ar = (Arity *) new char[sizeof(Arity)+sizeof(KeyAndIndex)*size];
+
+  DebugCheckT(ar->numberOfCollisions = 0);
+  ar->next = NULL;
+  ar->list = entrylist;
+  ar->width = w;
+  ar->hashmask = size-1;
+  int j=0;
+  for (int i=0 ; i<size ; ar->table[i++].key = 0);
+  while (isCons(entrylist)) {
+    const TaggedRef entry = head(entrylist);
+    const int hsh         = featureHash(entry);
+    int i                 = ar->hashfold(hsh);
+    const int step        = ar->scndhash(hsh);
+    while (ar->table[i].key) {
+      DebugCheckT(ar->numberOfCollisions++);
+      i = ar->hashfold(i+step);
+    }
+    ar->table[i].key   = entry;
+    ar->table[i].index = j++;
+    entrylist = tail(entrylist);
+  }
+  return ar;
 }
 
 
 int Arity::lookupInternal(TaggedRef entry)
 {
   Assert(!isTuple());
-  int i=hashfold(featureHash(entry));
-  int step=scndhash(entry);
-  while (OK) {
-    if ( keytable[i] == makeTaggedNULL()) return -1;
-    if ( featureEq(keytable[i],entry) ) return indextable[i];
+  const int hsh  = featureHash(entry);
+
+  int i          = hashfold(hsh);
+  const int step = scndhash(hsh);
+  while (1) {
+    const TaggedRef key = table[i].key;
+    if (!key) return -1;
+    if (featureEq(key,entry)) {
+      return table[i].index;
+    }
     i = hashfold(i+step);
   }
 }
@@ -922,7 +928,7 @@ ArityTable aritytable(ARITYTABLESIZE);
  *      in order to make the hashing work.
  */
 
-ArityTable::ArityTable ( unsigned int n )
+ArityTable::ArityTable ( int n )
 {
   size = nextPowerOf2(n);
   table = ::new Arity*[size];
@@ -942,7 +948,7 @@ ArityTable::ArityTable ( unsigned int n )
  */
 
 inline
-Bool ArityTable::hashvalue( TaggedRef list, unsigned int &ret )
+Bool ArityTable::hashvalue( TaggedRef list, int &ret )
 {
   int i = 0;
   int len = 0;
@@ -968,12 +974,12 @@ Bool ArityTable::hashvalue( TaggedRef list, unsigned int &ret )
  */
 Arity *ArityTable::find( TaggedRef list)
 {
-  unsigned int hsh;
+  int hsh;
   int isTuple = hashvalue(list,hsh);
 
   Arity *ret;
   if ( table[hsh] == NULL ) {
-    ret = ::new Arity(list,isTuple);
+    ret = Arity::newArity(list,isTuple);
     table[hsh] = ret;
   } else {
     Arity* c = table[hsh];
@@ -982,10 +988,31 @@ Arity *ArityTable::find( TaggedRef list)
       c = c->next;
     }
     if ( listequal(c->list,list) ) return c;
-    ret = ::new Arity(list,isTuple);
+    ret = Arity::newArity(list,isTuple);
     c->next = ret;
   }
   return ret;
+}
+
+
+void ArityTable::printStat()
+{
+  int ec=0,ne=0,na=0,ac=0;
+  for (int i = 0 ; i < size ; i ++) {
+    Arity *ar = table[i];
+    while (ar) {
+      na++;
+      ne += ar->getWidth();
+      ec += ar->getCollisions();
+      ar = ar->next;
+      if (ar) ac++;
+    }
+  }
+  printf("Aritytable statistics\n");
+  printf("Arities:          %d\n", na);
+  printf("Arity collisions: %d\n", ac);
+  printf("Entries:          %d\n", ne);
+  printf("Entry collisions: %d\n", ec);
 }
 
 /************************************************************************/

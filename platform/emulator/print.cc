@@ -601,40 +601,37 @@ PRINT(BuiltinTabEntry)
 PRINT(Arity)
 {
   CHECKDEPTH;
-  stream << "Arity: ";
+  stream << (isTuple() ? "Tuple" : "Record") << "Arity: #"
+         << getWidth() << endl;
   tagged2Stream(list,stream,depth,offset);
   stream << endl;
-
-  for(int i=0; i< size ; i++) {
-    stream << "Slot: "
-           << i
-           << " Entry: ";
-    if (keytable[i] == makeTaggedNULL()) {
-      stream << "<empty>\n";
-    } else {
-      tagged2Stream(keytable[i],stream,depth,offset);
-      stream << " Value: " << indextable[i] << endl;
+  if (!isTuple()) {
+    stream << "Hashtable:" << endl;
+    DebugCode(stream << " Collisions: " << numberOfCollisions << endl);
+    for(int i=0; i<getSize(); i++) {
+      stream << " " << i << ": ";
+      if (!table[i].key) {
+        stream << "<empty>" << endl;
+      } else {
+        tagged2Stream(table[i].key,stream,depth,offset);
+        stream << " " << table[i].index
+               << " (#" << featureHash(table[i].key)
+               << " " << hashfold(featureHash(table[i].key)) << ")"
+               << endl;
+      }
     }
   }
-#ifdef DEBUG_CHECK
-  stream << numberofentries
-    << " entries, but only "
-    << numberofcollisions
-    << " collisions.\n";
-#endif
 }
 
 
 PRINT(ArityTable)
 {
   CHECKDEPTH;
-  Arity *c;
   for (int i = 0 ; i < size ; i ++) {
-    stream << "Position " << i << endl;
-    c = table[i];
-    while (c != NULL ) {
-      c->print(stream,depth,offset);
-      c = c->next;
+    Arity *ar = table[i];
+    while (ar) {
+      ar->print(stream,depth,offset);
+      ar = ar->next;
     }
   }
 }

@@ -144,7 +144,7 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  inline unsigned int hash();
+  inline int hash();
 };
 
 class Atom: public Literal {
@@ -154,7 +154,7 @@ public:
   static Atom *newAtom(const char *str);
   const char* getPrintName() { return printName; }
   int getSize() { return getOthers(); }
-  unsigned int hash() { return ToInt32(getPrintName()); } // == this!
+  int hash() { return ToInt32(this)>>3; }
 };
 
 
@@ -173,7 +173,7 @@ public:
   }
 
   int getSeqNumber() { return getOthers(); }
-  unsigned int hash() { return getSeqNumber(); }
+  int hash() { return getSeqNumber(); }
 
   Bool isOnHeap() { return (getFlags()&Lit_isNamedName)==0; }
   Bool hasGName() { return (getFlags()&Lit_hasGName); }
@@ -198,7 +198,7 @@ public:
 };
 
 
-unsigned int Literal::hash()
+int Literal::hash()
 {
   if (isAtom()) return ((Atom*)this)->hash();
   return ((Name*)this)->hash();
@@ -337,9 +337,9 @@ Bool smallIntLE(TaggedRef A, TaggedRef B)
 }
 
 inline
-unsigned int smallIntHash(TaggedRef n)
+int smallIntHash(TaggedRef n)
 {
-  return (unsigned int) ToInt32(tagValueOf(n));
+  return ((int)n)>>tagSize;
 }
 
 
@@ -371,7 +371,7 @@ public:
   double getValue() { return value; }
   OZPRINT;
   OZPRINTLONG;
-  unsigned int hash() { return (unsigned int) value; }
+  int hash() { return (int) value; }
 
   Float *gc();
 };
@@ -489,7 +489,7 @@ public:
   int stringLength()      { return mpz_sizeinbase(&value,10)+2; }
   void getString(char *s) { mpz_get_str(s,10,&value); }
   OZPRINTLONG;
-  unsigned int hash() { return 75; } // all BigInt hash to same value
+  int hash()              { return 75; } // all BigInt hash to same value
   BigInt *gc();
 };
 
@@ -922,56 +922,59 @@ int featureCmp(TaggedRef a,TaggedRef b)
  * NOTE: all bigints are hashed to the same value
  */
 inline
-unsigned int featureHash(TaggedRef a)
+int featureHash(TaggedRef a)
 {
   CHECK_FEATURE(a);
-  TypeOfTerm tag = tagTypeOf(a);
-  switch (tag) {
-  case LITERAL:
+  const TypeOfTerm tag = tagTypeOf(a);
+  if (tag == LITERAL) {
     return tagged2Literal(a)->hash();
-  case SMALLINT:
-    return (unsigned int) a;
-  case BIGINT:
-    return 75;
-  default:
-    error("featureHash");
-    return 0;
+  } else if (tag == SMALLINT) {
+    return smallIntHash(a);
+  } else {
+    return tagged2BigInt(a)->hash();
   }
 }
+
+class KeyAndIndex {
+public:
+  TaggedRef key;
+  int index;
+};
 
 class Arity {
 friend class ArityTable;
 private:
-  Arity ( TaggedRef, Bool );
+  Arity() {}
+  static Arity *newArity(TaggedRef, Bool);
 
   void gc();
 
   TaggedRef list;
   Arity *next;
 
-  int size;             // size is always a power of 2
   int hashmask;         // size-1, used as mask for hashing and opt marker
   int width;            // next unused index in RefsArray (for add())
-  DebugCheckT(int numberofentries;)
-  DebugCheckT(int numberofcollisions;)
-  Bool isTupleFlag;
+  DebugCheckT(int numberOfCollisions);
 
-  TaggedRef *keytable;
-  int *indextable;
-  int scndhash(TaggedRef a) { return ((featureHash(a)&7)<<1)|1; }
-  int hashfold(int i) { return(i&hashmask); }
+  KeyAndIndex table[0];
+
+  int scndhash(int i) { return ((i&7)<<1)|1; }
+  int hashfold(int i) { return i&hashmask; }
 
 public:
-  Bool isTuple() {
-    return isTupleFlag;
+  Bool isTuple() { return hashmask == 0; }
+
+  int getCollisions() {
+    DebugCode(return numberOfCollisions);
+    return -1;
   }
 
   // use SRecord::getIndex instead of this!
   int lookupInternal(TaggedRef entry);   // return -1, if argument not found.
 
   TaggedRef getList() { return list; }
-  int getWidth() { return width; }
-
+  int getWidth()      { return width; }
+  int getSize()       { return hashmask+1; }
   OZPRINT;
 };
 
@@ -982,13 +985,15 @@ Arity *mkArity(TaggedRef list);
 class ArityTable {
 friend class Arity;
 public:
-  ArityTable ( unsigned int );
+  ArityTable ( int );
   Arity *find ( TaggedRef);
   void gc();
-private:
   OZPRINT;
+  void printStat();
 
-  Bool hashvalue( TaggedRef, unsigned int & );
+private:
+
+  Bool hashvalue( TaggedRef, int & );
   Arity* *table;
 
   int size;
