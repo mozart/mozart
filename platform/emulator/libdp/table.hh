@@ -279,7 +279,8 @@ protected:
   void addCreditOB(Credit c) {
     Assert(!isExtended());
     uOB.credit += c;
-    Assert(uOB.credit<=(START_CREDIT_SIZE));}
+    Assert(uOB.credit<=(START_CREDIT_SIZE));
+  }
 
   void subCreditOB(Credit c) {
     Assert(uOB.credit>c);
@@ -350,6 +351,7 @@ public:
 class OwnerEntry: public OB_Entry {
 friend class OwnerTable;
 private:
+  int oti;
 
   OwnerCreditExtension* getOwnerCreditExtension(){
     Assert(isExtended());
@@ -365,6 +367,7 @@ private:
   void addCreditExtended(Credit);
 
   void addCredit(Credit back){
+//      printf("oe i:%d %d c:+%d\n",oti,osgetpid(),back);
     if(isExtended()){
       addCreditExtended(back);
       return;}
@@ -372,6 +375,7 @@ private:
     return;}
 
 public:
+  void setOTI(int i){oti=i;}
 
   void localize(int index);
 
@@ -493,7 +497,9 @@ friend class BorrowEntry;
   Credit primCredit;
   DSite* site;                // non-NULL SecSlave SecMaster
 
-
+public:
+  Credit msGetPrimCredit(){return primCredit;}
+  Credit slaveGetSecCredit(){return uSOB.secCredit;}
 
 protected:
 
@@ -519,8 +525,8 @@ protected:
   Credit addPrimaryCredit_Master(Credit); // called from Master
   Credit addPrimaryCredit_SlaveMaster(Credit); // called from Master
 
-  Credit msGetPrimCredit(){return primCredit;}
-  Credit slaveGetSecCredit(){return uSOB.secCredit;}
+
+
   Credit masterGetSecCredit(){return uSOB.secCredit;}
 
   void msSetPrimCredit(Credit c){primCredit=c;}
@@ -649,6 +655,7 @@ public:
     unsetFree();
     setFlags(PO_NONE);
     netaddr.set(s,i);
+//      printf("be i:%d %d c:+%d\n",getOTI(),netaddr.site->getTimeStamp()->pid,c);
     return;}
 
   void initSecBorrow(DSite*,Credit,DSite*,int);
@@ -665,6 +672,7 @@ public:
   void addSecondaryCredit(Credit c,DSite *s);
 
   void addPrimaryCredit(Credit c){
+//      printf("be i:%d %d c:+%d\n",getOTI(),netaddr.site->getTimeStamp()->pid,c);
     if(isExtended()) {
       addPrimaryCreditExtended(c);
       return;}
@@ -693,6 +701,7 @@ public:
       PD((CREDIT,"gopc low credit %d",tmp));
       PD((CREDIT,"got no credit"));
       return NO;}
+//      printf("be i:%d %d c:-%d\n",getOTI(),netaddr.site->getTimeStamp()->pid,1);
     setCreditOB(tmp-1);
     thresholdCheck(1);
     PD((CREDIT,"Got one credit, %d credit left", tmp-1));
@@ -714,9 +723,12 @@ public:
           BORROW_GIVE_CREDIT_SIZE,
           tmp-BORROW_GIVE_CREDIT_SIZE));
       thresholdCheck(BORROW_GIVE_CREDIT_SIZE);
+//        printf("be i:%d %d c:-%d\n",getOTI(),netaddr.site->getTimeStamp()->pid
+//           ,BORROW_GIVE_CREDIT_SIZE);
       return BORROW_GIVE_CREDIT_SIZE;}
     PD((CREDIT,"gspc low credit %d",tmp));
     if(tmp-2>=BORROW_MIN){
+//        printf("be i:%d %d c:-%d\n",getOTI(),netaddr.site->getTimeStamp()->pid,2);
       setCreditOB(tmp-2);
       PD((CREDIT,"Got 2 credit, %d credit left", tmp-2));
       thresholdCheck(2);

@@ -383,14 +383,15 @@ void globalizeTert(Tertiary *t)
   OwnerEntry *oe;
   int i = ownerTable->newOwner(oe);
   PD((GLOBALIZING,"GLOBALIZING port/object index:%d",i));
-  if(t->getType()==Co_Object)
+  DebugCode(if(t->getType()==Co_Object)
     {
-//  printf("globalizingObject  index:%d %s\n",i,toC(makeTaggedConst(t)));
-    PD((SPECIAL,"object:%x class%x",t,((Object *)t)->getClass()));}
+      printf("globalizingObject  index:%d %s %d\n",i,toC(makeTaggedConst(t)),osgetpid());
+      PD((SPECIAL,"object:%x class%x",t,((Object *)t)->getClass()));})
   oe->mkTertiary(t);
   t->setIndex(i);
-  if(t->getType()==Co_Object)
-    {PD((SPECIAL,"object:%x class%x",t,((Object *)t)->getClass()));}
+  DebugCode(if(t->getType()==Co_Object) {
+    PD((SPECIAL,"object:%x class%x",t,((Object *)t)->getClass()));
+  })
 }
 
 
@@ -439,6 +440,7 @@ Bool localizeTertiary(Tertiary*t){
     localizePort(t);
     return OK;
   case Co_Object:
+    printf("localizingObject  index:%d %s %d\n",t->getIndex(),toC(makeTaggedConst(t)),osgetpid());
     ((Object*)t)->localize();
     return OK;
   default:
@@ -567,6 +569,7 @@ void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
       Credit c;
       msgC->get_M_OWNER_CREDIT(index,c);
       PD((MSG_RECEIVED,"OWNER_CREDIT index:%d credit:%d",index,c));
+      printf("m-oc i:%d c:+%d %d\n",index,c,osgetpid());
       receiveAtOwnerNoCredit(index)->returnCreditOwner(c,index);
       break;
     }
@@ -599,7 +602,7 @@ void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
       NetAddress na=NetAddress(sd,si);
       BorrowEntry* be=BT->find(&na);
       if(be==NULL){
-        //printf("Sending back to %xd#%d  %d\n",(int)sd, si, c);
+        // printf("Sending back to %xd#%d  %d\n",(int)sd, si, c);
         sendCreditBack(na.site,na.index,c);}
       else {
         be->addPrimaryCredit(c);}
@@ -650,7 +653,7 @@ void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
 //           OTI, rsite->stringrep());
       //
       OwnerEntry *oe = receiveAtOwner(OTI);
-
+      printf("gl i:%d c:+1 %d\n",OTI,osgetpid());
       //
       OZ_Term t = oe->getTertTerm();
       Assert(oz_isObject(t));
@@ -662,6 +665,7 @@ void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
         // with the object itself, so object's credits will be handed
         // back when borrow entry is freed by 'ObjectVar::transfer()';
         oe->getOneCreditOwner();
+        printf("m-sl i:%d c:-1 %d\n",OTI,osgetpid());
         //
         MsgContainer *newmsgC = msgContainerManager->newMsgContainer(rsite);
 
@@ -676,6 +680,7 @@ void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
 
       //
       oe->getOneCreditOwner();
+      printf("m-sl i:%d c:-1 %d\n",OTI,osgetpid());
       //
       MsgContainer *msgC = msgContainerManager->newMsgContainer(rsite);
 
@@ -693,10 +698,11 @@ void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
       OZ_Term t;
 
       msgC->get_M_SEND_LAZY(sd, si, t);
-
       PD((MSG_RECEIVED,"M_SEND_LAZY site:%s index:%d", sd->stringrep(), si));
       BorrowEntry *be = receiveAtBorrow(sd, si);
       Assert(be->isVar()); // check for duplicate requests;
+
+      DebugCode(printf("p-sl i:%d c:1 %d\n",be->getOTI(),be->getNetAddress()->site->getTimeStamp()->pid);)
 
       //
       // Currently, there is only "lazy object" protocol, but later
@@ -1097,9 +1103,12 @@ OZ_BI_proto(BIstartTmp);
 OZ_BI_proto(BIdefer);
 OZ_BI_proto(BIfailureDefault);
 
+//  DebugCode(FILE *log;)
 void initDPCore()
 {
   // link interface...
+//    DebugCode(char *s;sprintf(s,"~/tmp/%d",osgetpid()));
+//    DebugCode(log=freopen(s,"w",stdout);)
   isPerdioInitialized = isPerdioInitializedImpl;
   portSend = portSendImpl;
   cellDoExchange = cellDoExchangeImpl;
@@ -1125,6 +1134,7 @@ void initDPCore()
   gCollectPerdioRoots = gcPerdioRootsImpl;
   gCollectEntityInfo = gcEntityInfoImpl;
   dpExit = dpExitImpl;
+  changeMaxTCPCache = changeMaxTCPCacheImpl;
   distHandlerInstall = distHandlerInstallImpl;
   distHandlerDeInstall = distHandlerDeInstallImpl;
   //

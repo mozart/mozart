@@ -243,6 +243,10 @@ void ByteBuffer::hasRead(int sizeRead) {
   //  mode = BYTE_MODE_NONE;
 }
 
+Bool ByteBuffer::putDebug() {
+  return availableSpace()>0;
+};
+
 // Glue and fixes during development.
 // To be REMOVED!
 OZ_Term ByteBuffer::ByteBuffer::getNoGoods() {

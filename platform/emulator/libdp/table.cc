@@ -206,6 +206,7 @@ int OwnerTable::newOwner(OwnerEntry *&oe){
   oe = (OwnerEntry *)&(array[index]);
   oe->setCreditOB(START_CREDIT_SIZE);
   oe->setFlags(PO_NONE);
+  oe->setOTI(index);
   PD((TABLE,"owner insert: o:%d",index));
   no_used++;
   return index;}
@@ -302,6 +303,7 @@ void OwnerCreditExtension::init(Credit c){
   next=NULL;}
 
 void OwnerCreditExtension::requestCreditE(Credit req){
+//    printf("requestCreidtE \n");
   if(credit[0]>=req) {
     credit[0] -= req;
     PD((CREDIT,"request from owner credit extension credit[0] %d %d", credit[0], credit[1]));
@@ -394,6 +396,7 @@ Bool BorrowCreditExtension::getOne_Slave(){
 /* reduce */
 
 Credit BorrowCreditExtension::reduceSlave(Credit more,DSite* &s,Credit &secCredit){
+//    printf("reduce Slave in:%d prim:%d sec:%d\n",more,msGetPrimCredit(),slaveGetSecCredit());
   Assert(msGetPrimCredit()+more < BORROW_HIGH_THRESHOLD);
   s=site;
   secCredit=slaveGetSecCredit();
@@ -434,6 +437,7 @@ void OwnerEntry::extend(){
   setOwnerCreditExtension(oce);}
 
 void OwnerEntry::requestCredit(Credit req){
+//    printf("oe i:%d %d c:-%d\n",oti,osgetpid(),req);
   if(isExtended()){
     getOwnerCreditExtension()->requestCreditE(req);
     return;}
@@ -460,6 +464,8 @@ void BorrowEntry::initSecBorrow(DSite *cs,Credit c,DSite *s,int i){
   unsetFree();
   netaddr.set(s,i);
   createSecSlave(c,cs);
+
+//    printf("secondary i:%d %d\n",this->getOTI(),this->getNetAddress()->site->getTimeStamp()->pid);
 }
 
 void BorrowEntry::removeSoleExtension(Credit c){
@@ -476,7 +482,7 @@ void BorrowEntry::createSecMaster(){
 
 void BorrowEntry::createSecSlave(Credit cred,DSite *s){
   BorrowCreditExtension *bce=newBorrowCreditExtension();
-  bce->initSlave(getCreditOB(),cred,s);
+  bce->initSlave(0,cred,s);
   setFlags(PO_SLAVE|PO_EXTENDED);
   setSlave(bce);}
 
@@ -586,6 +592,8 @@ void BorrowEntry::addPrimaryCreditExtended(Credit c){
     overflow=getSlave()->reduceSlave(c,s,sec);
     removeSoleExtension(overflow);
     giveBackSecCredit(s,sec);
+//      printf("reduce Slave fin %d\n",getCreditOB());
+    overflow=0;
     break;}
   case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:
   case PO_EXTENDED|PO_MASTER:{
@@ -946,6 +954,8 @@ void BorrowEntry::moreCredit(){
 }
 
 void BorrowEntry::giveBackCredit(Credit c){
+//    printf("be i:%d %d c:-%d\n",getOTI(),netaddr.site->getTimeStamp()->pid
+//       ,c);
   NetAddress *na = getNetAddress();
   DSite* site = na->site;
   int index = na->index;
@@ -1098,7 +1108,7 @@ Bool BorrowTable::maybeFreeBorrowEntry(int index){
         b->changeToRef();}
       //Assert(b->initialized());
       return FALSE;}
-    Assert(b->getExtendFlags()==PO_SLAVE);
+    Assert(b->getExtendFlags() & PO_SLAVE);
     b->removeSlave();}
   Assert(!b->isExtended());
   b->freeBorrowEntry();
@@ -1274,6 +1284,22 @@ void BorrowTable::gcBorrowTableFinal()
   }
   compactify();
   hshtbl->compactify();
+  DebugCode(for(i=0;i<size;i++) {
+    BorrowEntry *b=getBorrow(i);
+    if(b->isVar()) {
+      ;
+              }
+              else
+                if(b->isTertiary()){
+                  ;
+                }
+                else
+                  if(b->isRef()){
+                    ;
+                  }
+                  else {
+                    Assert(b->isFree());}
+            })
 }
 
 

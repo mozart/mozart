@@ -15,6 +15,7 @@ class ByteBuffer :public MarshalerBuffer {
   friend ByteBufferManager;
 protected:
   BYTE *buf;
+  virtual Bool putDebug();
 private:
   BYTE *putptr;
   BYTE *getptr;

@@ -82,6 +82,8 @@ public:
   }
   void put(BYTE b) {
     Assert(posMB != 0);         // kost@ : used before for weird stuff!
+    Assert(putDebug()); // AN! this debugcheck might have to be removed also
+                        //     at debugtime
     if (posMB > endMB)
       putNext(b);
     else
@@ -94,6 +96,7 @@ public:
   // 'maybeDebugBuffer{Put,Get}()'), then one HAS to declare virtual
   // 'putDebug()' methods here, and define them in corresponding
   // subclasses!! No "dpInterface" methods here!!!
+  virtual Bool putDebug() {return true;};
 };
 
 #endif // __MBUFFER_HH
