@@ -390,7 +390,7 @@ Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
     abstr = tagged2ObjectClass(pred)->getMethod(gci->mn,gci->arity,
                                                 0,defaultsUsed);
     /* fill cache and try again later */
-    if (abstr==NULL) return NO;
+    if (abstr==NULL || defaultsUsed) return NO;
   } else {
     if(!oz_isAbstraction(pred)) goto bombGenCall;
 
