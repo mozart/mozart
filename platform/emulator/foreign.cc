@@ -202,6 +202,12 @@ int OZ_isFalse(OZ_Term term)
   return literalEq(term,NameFalse);
 }
 
+int OZ_isUnit(OZ_Term term)
+{
+  term = deref(term);
+  return literalEq(term,NameUnit);
+}
+
 inline
 int isPair(OZ_Term term)
 {
@@ -342,6 +348,11 @@ OZ_Term OZ_false(void)
 OZ_Term OZ_true(void)
 {
   return NameTrue;
+}
+
+OZ_Term OZ_unit(void)
+{
+  return NameUnit;
 }
 
 /* -----------------------------------------------------------------
