@@ -28,6 +28,129 @@
 <Chapter id="Chapter.Development">
   <Title/Application Development/
 
+  <p>
+    The last chapter (<ptr to="chapter.hello">) used a rather simple
+    application as example. This chapter shows how to use functors for
+    the modular development of larger applications.
+
+  <section id="section.development.functors">
+    <title/Functors for Modular Applications/
+
+    <p>
+      Larger applications are usually decomposed in several
+      modules. Oz supports modular programs by applications that are
+      implemented by multiple functor definitions.
+
+    <p>
+      A functor is a function computing with modules: It takes modules
+      as input and computes a new module as output. As we have seen
+      already, the <<import>> part of a functor defines its inputs by
+      a list of module names. In addition, functors also allow for an
+      <<export>> part. The <<export>> part of functor is basically a
+      list of feature value pairs that describe the module computed by
+      the functor.
+
+    <p>
+      As we have already seen in <ptr to="section.hello.exec"> an
+      application is run by executing the root functor. In
+our particular example, the root functor restricted itself by only
+importing system modules. However, larger applications will import
+modules computed by other functors.
+
+    <p>
+      The module names internet wide
+
+      dynamic linking
+
+
+  <section id="section.devel.lmf">
+    <title/Example: Last Minute Flights/
+
+    <p>
+      In the following we will build a mickey mouse flight booking
+system. The booking system consist of three components:
+    <p>
+      <list enum>
+        <item>
+          A data base server: It maintains a data base that contains
+available flights, where each flight as a unique id by which it can be
+identified. In the beginning, the data base will be not even
+persistent, but as this documents goes along, the data base evolves
+into a persistent and distributed data base server.
+
+        <item>
+          A graphical flight booking form, where a travel-minded user
+can choose a flight, enter her name, her E-mail address and so
+on. Later we will show how to build a web-based interface serving the
+same purpose.
+
+        <item>
+          The main component of our application that manages user
+requests to the data base and sets up the application.
+      </list>
+
+    <p>
+      All components are programmed as functors.
+
+
+<chunk><title/DB.oz/
+functor
+  <chunk.ref/Export specification for DB.oz/
+  <chunk.ref/Body for DB.oz/
+end
+</chunk>
+
+<chunk><title/Export specification for DB.oz/
+export
+   add:    Add
+   get:    Get
+   getAll: GetAll
+   remove: Remove
+</chunk>
+
+<chunk><title/Export specification (with syntactic sugar)/
+export
+   Add
+   Get
+   GetAll
+   Remove
+</chunk>
+
+<chunk><title/Body for DB.oz/
+define
+   Data = {Dictionary.new}
+   Ctr  = {New class $
+                  prop locking
+                  attr i:0
+                  meth init
+                     lock i <- 0 end
+                  end
+                  meth inc($)
+                     lock I=@i+1 in i <- I I end
+                  end
+               end init()}
+
+   fun {Add X}
+      I={Ctr inc($)}
+   in
+      {Dictionary.put Data I X} I
+   end
+
+   fun {Get ID}
+      {Dictionary.get Data ID}
+   end
+
+   fun {GetAll}
+      {Dictionary.entries Data}
+   end
+
+   proc {Remove ID}
+      {Dictionary.remove Data ID}
+   end
+</chunk>
+
+
+
   <Section id="Section.Development.OPI">
     <Title/Exploration: The Oz Programming Interface/
 
@@ -42,8 +165,6 @@
   <Section id="section.development.form">
     <Title/The Entry Form/
 
-  <Section id="Section.Development.Functors">
-    <Title/Functors Revisited/
 
   </Section>
 
@@ -66,5 +187,10 @@
     <title/System Modules/
 
   </section>
+
+<!--
+- compilation unit
+
+-->
 
 </Chapter>
