@@ -23,5 +23,5 @@ ozma-s.cc
 ozma-p.yy
 ozma-p.cc
 perdio.cc
-*.tbl
-*.dcl
+*-if.cc
+
