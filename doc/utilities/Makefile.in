@@ -42,7 +42,7 @@ OZENGINE	= @OZENGINE@
 
 FUNCTORS = \
 	SGML.ozf AuthorDB.ozf BibliographyDB.ozf Fontifier.ozf Thumbnails.ozf \
-	MathToGIF.ozf OzDocToHTML.ozf Main.ozf
+	MathToGIF.ozf HTML.ozf OzDocToHTML.ozf Main.ozf
 SYSLETS = ozdoc
 ELS = ozdoc.el
 ELCS = $(ELS:%.el=%.elc)
@@ -74,7 +74,7 @@ ozdoc: $(FUNCTORS)
 %.elc: %.el
 	-rm -f $@
 	$(EMACS) -q -batch -f batch-byte-compile $<
-	mv $<c $@
+	if [ $<c != $@ ]; then mv $<c $@; fi
 
 install: $(BINDIR) $(BINFILES)
 install: $(DOCDIR) $(DOCBINFILES) $(DOCFILES)
