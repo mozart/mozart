@@ -27,14 +27,17 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   char *progname = getProgname(buffer);
 
   char *ozhome = getRegistry("OZHOME");
+#ifdef OZSA
+  char *ebin = "unused";
+#else
   char *ehome  = getRegistry("EMACSHOME");
-
   if (ehome==NULL || ozhome==NULL) {
     OzPanic(1,"Installation incorrect.\nDid you run setup?");
   }
 
   sprintf(buffer,"%s/bin/runemacs.exe",ehome);
   char *ebin = strdup(buffer);
+#endif
 
   ozSetenv("OZPLATFORM",ozplatform);
   ozSetenv("OZHOME",ozhome);
@@ -86,11 +89,13 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
     sprintf(buffer,"%s/platform/%s/ozcompiler +p /dev/null +c %s +dn %s",
             ozhome,ozplatform,argv[1],argv[2]);
 #else
-  } else if (stricmp(progname,"ozsa.exe")==0) {
+  } else if (stricmp(progname,"ozsa.exe")==0 ||
+             stricmp(progname,"ozsaw.exe")==0) {
     char *rest = splitFirstArg(lpszCmdLine);
     sprintf(buffer,"%s/platform/%s/ozemulator -E -quiet -f %s %s %s",
             ozhome,ozplatform,lpszCmdLine,((*rest)==0) ? "" : "-a", rest);
-    // console = CREATE_NEW_CONSOLE;
+    if (stricmp(progname,"ozsaw.exe")==0)
+      console = DETACHED_PROCESS;
 #endif
   } else {
     OzPanic(1,"Unknown invocation: %s", progname);
