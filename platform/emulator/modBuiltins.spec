@@ -880,34 +880,6 @@
                              bi  => BItuple},
 
 
-
- ##
- ## Module: Type
- ##
-
-
- 'Type.ofValue'         => { in  => ['+value'],
-                             out => ['+atom'],
-                             bi  => BItermType},
-
- # These guys really suck, they are in FDB, FSB and System as well
- 'fdIs'                 => { in  => ['*value','bool'],
-                             out => [],
-                             bi  => BIfdIs},
-
- 'fsIsVarB'             => { in  => ['value'],
-                             out => ['+bool'],
-                             BI  => BIfsIsVarB},
-
- 'fsIsValueB'           => { in  => ['+value','bool'],
-                             out => [],
-                             bi  => BIfsIsValueB},
-
- 'UnSitedPrintName'     => { in  => ['value'],
-                             out => ['+atom'],
-                             BI  => BIgetPrintName},
-
-
  ##
  ## Module: Unit
  ##
@@ -1002,6 +974,10 @@
  'Value.status'         => { in  => ['value'],
                              out => ['+tuple'],
                              bi  => BIstatus},
+
+ 'Value.type'           => { in  => ['+value'],
+                             out => ['+atom'],
+                             bi  => BItermType},
 
 
 
