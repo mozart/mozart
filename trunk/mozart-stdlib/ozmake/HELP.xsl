@@ -119,43 +119,7 @@ SPAN.BUILTIN      { color: #DA70D6; }
     <xsl:with-param name="VERSION" select="''"/>
   </xsl:call-template>
   <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.7g'"/>
-  </xsl:call-template>
-  <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.7f'"/>
-  </xsl:call-template>
-  <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.7e'"/>
-  </xsl:call-template>
-  <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.7d'"/>
-  </xsl:call-template>
-  <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.7c'"/>
-  </xsl:call-template>
-  <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.7b'"/>
-  </xsl:call-template>
-  <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.7'"/>
-  </xsl:call-template>
-  <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.6'"/>
-  </xsl:call-template>
-  <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.5'"/>
-  </xsl:call-template>
-  <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.4'"/>
-  </xsl:call-template>
-  <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.3'"/>
-  </xsl:call-template>
-  <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.2'"/>
-  </xsl:call-template>
-  <xsl:call-template name="PREBUILT">
-    <xsl:with-param name="VERSION" select="'0.1'"/>
+    <xsl:with-param name="VERSION" select="'0.7h'"/>
   </xsl:call-template>
 </DL>
 <HR/>
