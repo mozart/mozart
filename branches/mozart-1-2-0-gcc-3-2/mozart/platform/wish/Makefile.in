@@ -63,8 +63,8 @@ ifeq ($(IS_DARWIN),yes)
 # DARWIN SPECIFIC
 ######################################################################
 
-$(OZWISH): unixMain.cc OzWish.pbxproj/project.pbxproj OzWish.pbxproj/icns
-	cd OzWish.pbxproj && pbxbuild SYMROOT=$(BUILTOP)/platform/wish
+$(OZWISH): unixMain.cc MacOSX/OzWish.pbxproj/project.pbxproj MacOSX/OzWish.pbxproj/icns
+	cd MacOSX/OzWish.pbxproj && pbxbuild SYMROOT=$(BUILTOP)/platform/wish
 
 clean:
 	-rm *~
@@ -73,10 +73,10 @@ veryclean: clean
 	-rm -rf OzWish.app
 
 distclean: veryclean
-	-rm -f conf.h config.* Makefile OzWish.pbxproj/project.pbxproj
+	-rm -f conf.h config.* Makefile MacOSX/OzWish.pbxproj/project.pbxproj
 
 install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS)
-	cd OzWish.pbxproj && pbxbuild SYMROOT=$(BUILDTOP)/platform/wish DSTROOT=/ install
+	cd MacOSX/OzWish.pbxproj && pbxbuild SYMROOT=$(BUILDTOP)/platform/wish DSTROOT=/ install
 
 else
 ######################################################################
