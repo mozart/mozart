@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#ifdef FOPEN_MAX
+#if defined(FOPEN_MAX) && !defined(OPEN_MAX)
 #define OPEN_MAX  FOPEN_MAX
 #endif
 
