@@ -1286,6 +1286,7 @@ Possible values are one of <code/No/, <code/Yes/, and
             <TD/start debugger//
           <TR/<TD/<Ptr to="key.oz-breakpoint-at-point">/
             <TD/set breakpoint on current line//
+<!--
           <TR/<TH colspan=2/Mozart System Development Support//
           <TR/<TD/<Ptr to="key.oz-gdb">/
             <TD/toggle gdb//
@@ -1297,6 +1298,7 @@ Possible values are one of <code/No/, <code/Yes/, and
             <TD>toggle global&slash;local functors/
           <TR/<TD/<Ptr to="key.oz-set-functor-path">/
             <TD/set search path to local functors//
+-->
         </Table>
     <Appendix id="appendix.devel">
       <Title/Mozart System Development Support/
