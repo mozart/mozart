@@ -1173,16 +1173,14 @@ loop:
       gotRef(bs,*ret);
 
       RefsArray globals = unmarshalClosure(bs);
+      PD((UNMARSHAL,"code begin"));
       if (pp) {
-	PD((UNMARSHAL,"code begin"));
 	pp->import(globals,unmarshalCode(bs,NO));
 	pp->getPred()->patchFileAndLine();
-	PD((UNMARSHAL,"code end"));
       } else {
-	PD((UNMARSHAL,"code begin"));
 	(void) unmarshalCode(bs,OK);
-	PD((UNMARSHAL,"code end"));
       }
+      PD((UNMARSHAL,"code end"));
       return;
     }
 
