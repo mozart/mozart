@@ -31,7 +31,7 @@ defaults(lib:
 	     'Fault' 'Connection' 'Remote' 'VirtualSite' 'URL'
 	     'Open'
 	     'Tk' 'TkTools'
-	     'Compiler' 'RunTimeLibrary'
+	     'Compiler'
 	     'Type'
 	     'Misc']
 
@@ -41,5 +41,5 @@ defaults(lib:
 	 tools:
 	    ['Panel' 'Browser' 'Explorer' 'CompilerPanel'
 	     'Emacs' 'Ozcar' 'Profiler' 'Gump' 'GumpScanner'
-	     'GumpParser']
+	     'GumpParser' 'ProductionTemplates']
 	)
