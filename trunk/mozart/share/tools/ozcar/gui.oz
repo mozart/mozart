@@ -57,8 +57,8 @@ local
       case {IsDet X} then
 	 case     {IsArray X}            then ArrayType
 	 elsecase {IsThread X}           then ThreadType
-	 elsecase {IsAtom X}             then {System.valueToVirtualString X 0 0}
-	 elsecase {IsBool X}             then {System.valueToVirtualString X 0 0}
+	 elsecase {IsAtom X}           then {System.valueToVirtualString X 0 0}
+	 elsecase {IsBool X}           then {System.valueToVirtualString X 0 0}
 	 elsecase {IsCell X}             then CellType
 	 elsecase {IsClass X}            then ClassType
 	 elsecase {IsDictionary X}       then DictionaryType
@@ -120,10 +120,10 @@ in
       feat
 	 toplevel
 	 menuBar
-	 emacsThreadsButton
-	 subThreadsButton
 
 	 ButtonFrame
+	 emacsThreadsMenu
+	 subThreadsMenu
 
 	 ThreadTree
 	 StackText
@@ -235,45 +235,56 @@ in
 %		     {Tk.send balloonhelp(B BalloonHelpText)}
 		     B
 		  end}
-	 in
-	    {ForAll
-	     [self.emacsThreadsButton #
-	      AddQueriesBitmap #
-	      toggleEmacsThreads #
-	      ConfigEmacsThreads #
-	      'attach queries'
 
-	      self.subThreadsButton #
-	      AddSubThreadsBitmap #
-	      toggleSubThreads #
-	      ConfigSubThreads #
-	      'attach subthreads']
-	     proc {$ B}
-		C # Xbm # Action # Default # _ = B
-	     in
-		C = {New Tk.checkbutton
-		     tkInit(parent:           self.ButtonFrame
-			    %indicatoron:      false
-			    %selectcolor:      CheckButtonSelectColor
-			    fg:               ButtonForeground
-			    activeforeground: case UseColors then
-						 ButtonForeground
-					      else
-						 SelectedForeground
-					      end
-			    bitmap:           OzcarBitmapDir # Xbm
-			    relief:           flat %raised
-			    width:            CheckButtonWidth
-			    height:           CheckButtonHeight
-			    variable:         {New Tk.variable tkInit(Default)}
-			    action:           self # Action)}
-		{C tkBind(event:  HelpEvent
-			  action: self # help(Xbm))}
-%		{Tk.send balloonhelp(C BalloonHelpText)}
-	     end}
+	    EmacsThreadsLabel = {New Tk.label
+				 tkInit(parent: self.ButtonFrame
+					text:   EmacsThreadsText
+					pady:   3
+					font:   ButtonFont)}
+	    SubThreadsLabel = {New Tk.label
+			       tkInit(parent: self.ButtonFrame
+				      text:   SubThreadsText
+				      pady:   3
+				      font:   ButtonFont)}
+	 in
+
+	    self.emacsThreadsMenu =
+	    {New TkTools.popupmenu tkInit(parent:   self.ButtonFrame
+					  entries:  EmacsThreadsList
+					  selected: 2
+					  relief:   raised
+					  padx:     5
+					  pady:     2
+					  width:    5
+					  font:     ButtonFont
+					  action:   proc {$ S}
+						       Gui,setEmacsThreads(S)
+						    end)}
+	    {self.emacsThreadsMenu
+	     tkBind(event:  HelpEvent
+		    action: self # help(EmacsThreadsText))}
+
+	    self.subThreadsMenu =
+	    {New TkTools.popupmenu tkInit(parent:   self.ButtonFrame
+					  entries:  SubThreadsList
+					  selected: 3
+					  relief:   raised
+					  padx:     5
+					  pady:     2
+					  width:    7
+					  font:     ButtonFont)}
+	    {self.subThreadsMenu
+	     tkBind(event:  HelpEvent
+		    action: self # help(SubThreadsText))}
+
 	    {Tk.batch [pack(b(Bs) side:left padx:1 pady:1)
-		       pack(self.emacsThreadsButton self.subThreadsButton
-			    side:right padx:0)]}
+		       pack(self.emacsThreadsMenu side:right padx:2)
+		       pack(EmacsThreadsLabel side:right padx:0)
+		       pack({New Tk.label tkInit(parent:self.ButtonFrame
+						 width:0)} side:right padx:2)
+		       pack(self.subThreadsMenu side:right padx:2)
+		       pack(SubThreadsLabel side:right padx:0)]}
+
 	 end
 
 	 %% border line
@@ -346,6 +357,18 @@ in
 		    grid(columnconfigure    self.toplevel 1 weight:1)
 		    grid(columnconfigure    self.toplevel 2 weight:1)
 		   ]}
+      end
+
+      meth setEmacsThreads(S)
+	 case S == AttachText then
+	    {EnqueueCompilerQuery setSwitch(runwithdebugger true)}
+	 else
+	    {EnqueueCompilerQuery setSwitch(runwithdebugger false)}
+	 end
+      end
+
+      meth checkSubThreads($)
+	 {self.subThreadsMenu getCurrent($)}
       end
 
       meth getEnv(Frame $)
