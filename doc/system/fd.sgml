@@ -1467,10 +1467,11 @@ middle of the domain of <<X>> (see <<FD.reflect.mid>>).
 
 <item>
 <<<
-generic(order:  ?+{Order}  <= size
-        filter: ?+{Filter} <= undet
-        select: ?+{Select} <= id
-        value:  ?+{Value}  <= min)
+generic(order:     ?+{Order}  <= size
+        filter:    ?+{Filter} <= undet
+        select:    ?+{Select} <= id
+        value:     ?+{Value}  <= min
+        procedure: ?+{Proc}   <= proc {$} skip end)
 >>>
 Considers only those elements in ?_{Xv}, for which ?_{Filter} is
 true. Chooses the leftmost element, which is minimal with respect to ?_{Order}
@@ -1529,6 +1530,10 @@ the leftmost variable whose domain is minimal is selected.
         <item> <<splitMax>>: Selects the interval from the element
         following the middle to the upper bound  of the domain (see <<mid>>).
 </list>
+<item> ?_{Proc}: Is applied when stability is reached. Since this
+      application may cause instability, distribution is continued when
+      stability is reached again.
+
 </list>
 Note, that in case ?_{Det} is <<det>> or in case ?_{Order} is <<size>>,
 <<lower>>, <<upper>>, or <<nbSusps>>, the elements of ?_{Xv} must be
