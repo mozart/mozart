@@ -165,28 +165,32 @@ M={R apply(F $)}
 {Browse M.x}
 >>>
 
-<P>The answer is returned to the client site in the module <<M>>,
+<P>The result <<X>> is returned to the client site in the module <<M>>,
 which is calculated on the remote site and returned to the
 application site.
-Module <<M>> should not reference any resources.
+The module is a record and
+the result is at the field <<x>>, namely <<M.x>>.
+The module should not reference any resources.
 If it does, an exception will be raised in the thread
 doing the <<apply>>.
-Since the module is a record, the answer is one of
-its fields, namely at <<M.x>>.
 
 <P>Any Oz statement <EM>S</EM> can be executed
 remotely by creating a functor:
 <LIST>
 <ITEM>
 </LIST> <<F=functor import>> <EM>ResourceList</EM>
-<<export>> <EM>Results</EM> <<define>> <EM>S</EM> <<end>>.
-<P>The <EM>ResourceList</EM> must list all the resources used by <EM>S</EM>.
+<<export>> <EM>Results</EM> <<define>> <EM>S</EM> <<end>>
+<P>To evaluate this functor remotely,
+the client executes <<M={R apply(F $)}>>.
+The <EM>ResourceList</EM> must list all the resources used by <EM>S</EM>.
+If not all are listed then an exception will be raised in the
+thread doing the <<apply>>.
 The remote execution will use the resources of the remote site
-and return a module that contains all the fields mentioned
+and return a module <<M>> that contains all the fields mentioned
 in <EM>Results</EM>.
 If <EM>S</EM> does not use any resources, then there is
 a slightly simpler way to do remote computations.
-The next section gives an example when it talks
+The next section shows how when it talks
 about compute servers.
 
 <P>A second solution is to use a functor with
@@ -404,10 +408,14 @@ is immediately sent to the server.
 This is how the client gets a result from the server
 
 <P>Any Oz statement <EM>S</EM> that does not use resources
-can be executed remotely by prefixing it by
-<<{C run(proc {$}>> and suffixing it by <<end)}>>.
+can be executed remotely by making a procedure out
+of it:
+<LIST>
+<ITEM><<P=proc {$}>> <EM>S</EM> <<end>>
+</LIST>
+<P>To run this, the client just executes <<{C run(P)}>>.
 Because Mozart is fully network-transparent,
-<EM>S</EM> can be almost any expression
+<EM>S</EM> can be any statement
 in the language: for example,
 <EM>S</EM> can define new classes
 inheriting from client classes.
