@@ -59,9 +59,9 @@ define(opAction,
         $1,Literal,marshalTerm(getTaggedArg(PC++),bs);,
         $1,Feature,marshalTerm(getTaggedArg(PC++),bs);,
         $1,Constant,marshalTerm(getTaggedArg(PC++),bs);,
-        $1,RelBuiltinname,marshalBuiltinTabEntry((BuiltinTabEntry*) getAdressArg(PC++),bs);,
-        $1,FunBuiltinname,marshalBuiltinTabEntry((BuiltinTabEntry*) getAdressArg(PC++),bs);,
-        $1,Builtinname,marshalBuiltinTabEntry((BuiltinTabEntry*) getAdressArg(PC++),bs);,
+        $1,RelBuiltinname,marshalBuiltin((Builtin*) getAdressArg(PC++),bs);,
+        $1,FunBuiltinname,marshalBuiltin((Builtin*) getAdressArg(PC++),bs);,
+        $1,Builtinname,marshalBuiltin((Builtin*) getAdressArg(PC++),bs);,
         $1,Variablename,marshalTerm(getTaggedArg(PC++),bs);,
         $1,Register,marshalNumber(regToInt(getRegArg(PC++)),bs);,
         $1,XRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
@@ -84,7 +84,7 @@ define(opAction,
 
 
 inline
-void marshalBuiltinTabEntry(BuiltinTabEntry *entry,MsgBuffer *bs)
+void marshalBuiltin(Builtin *entry,MsgBuffer *bs)
 {
   marshalTerm(entry->getName(),bs);
 }
@@ -313,9 +313,9 @@ define(opAction,
         $1,Literal,PC=unmarshalTagged(PC,bs);,
         $1,Feature,PC=unmarshalTagged(PC,bs);,
         $1,Constant,PC=unmarshalTagged(PC,bs);,
-        $1,RelBuiltinname,PC=unmarshalBuiltinTabEntry(PC,bs);,
-        $1,FunBuiltinname,PC=unmarshalBuiltinTabEntry(PC,bs);,
-        $1,Builtinname,PC=unmarshalBuiltinTabEntry(PC,bs);,
+        $1,RelBuiltinname,PC=unmarshalBuiltin(PC,bs);,
+        $1,FunBuiltinname,PC=unmarshalBuiltin(PC,bs);,
+        $1,Builtinname,PC=unmarshalBuiltin(PC,bs);,
         $1,Variablename,PC=unmarshalTagged(PC,bs);,
         $1,Register,PC=unmarshalReg(PC,bs);,
         $1,XRegisterIndex,PC=unmarshalReg(PC,bs);,
@@ -359,7 +359,7 @@ ProgramCounter unmarshalTagged(ProgramCounter PC, MsgBuffer *bs)
 }
 
 inline
-ProgramCounter unmarshalBuiltinTabEntry(ProgramCounter PC, MsgBuffer *bs)
+ProgramCounter unmarshalBuiltin(ProgramCounter PC, MsgBuffer *bs)
 {
   TaggedRef name = unmarshalTerm(bs);
   Assert(isAtom(name));
@@ -367,11 +367,11 @@ ProgramCounter unmarshalBuiltinTabEntry(ProgramCounter PC, MsgBuffer *bs)
   if (PC==NULL) return 0;
 
   const char *biName = tagged2Literal(name)->getPrintName();
-  BuiltinTabEntry *found = (BuiltinTabEntry *)builtinTab.htFind(biName);
+  Builtin *found = (Builtin *)builtinTab.htFind(biName);
   
   if (found == htEmpty) {
     warning("`builtin'(%s) not found", biName);
-    found = (BuiltinTabEntry *)builtinTab.htFind("fail");
+    found = (Builtin *)builtinTab.htFind("fail");
   }
   return writeAddress(found,PC);
 }
@@ -520,7 +520,7 @@ Bool changeMarshaledFastCall(ProgramCounter PC,TaggedRef pred, int tailcallAndAr
 
   if (isBuiltin(pred)) {
     Assert((tailcallAndArity&1)==0); // there is no tail version  for CALLBUILTIN
-    BuiltinTabEntry* entry = tagged2Builtin(pred);
+    Builtin* entry = tagged2Builtin(pred);
     CodeArea::writeBuiltin(entry,PC+1);
     CodeArea::writeOpcode(CALLBUILTIN, PC);
     return OK;

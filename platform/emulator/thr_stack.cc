@@ -171,9 +171,9 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
 				 nil())))));
       if (frameId != -1)
 	pairlist = cons(OZ_pairAI("frameID",frameId),pairlist);
-      BuiltinTabEntry *biTabEntry = builtinTab.getEntry((void *) Y);
-      Assert(biTabEntry != NULL);
-      pairlist = cons(OZ_pairA("data",makeTaggedConst(biTabEntry)),pairlist);
+      Builtin *bi = builtinTab.getEntry((void *) Y);
+      Assert(bi != NULL);
+      pairlist = cons(OZ_pairA("data",makeTaggedConst(bi)),pairlist);
 
       return OZ_recordInit(OZ_atom("entry"), pairlist);
     }

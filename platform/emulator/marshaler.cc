@@ -546,7 +546,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       PD((MARSHAL,"builtin"));
       marshalDIF(bs,DIF_BUILTIN);
       PD((MARSHAL_CT,"tag DIF_BUILTIN BYTES:1"));
-      marshalString(((BuiltinTabEntry *)t)->getPrintName(),bs);
+      marshalString(((Builtin *)t)->getPrintName(),bs);
       break;
     }
   case Co_Chunk:
@@ -1165,7 +1165,7 @@ loop:
     {
       char *name = unmarshalString(bs); // ATTENTION deletion
       PD((UNMARSHAL,"builtin: %s",name));
-      BuiltinTabEntry *found = builtinTab.find(name);
+      Builtin *found = builtinTab.find(name);
 
       if (found == htEmpty) {
 	warning("Builtin '%s' not in table.", name);

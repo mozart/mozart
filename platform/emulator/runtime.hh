@@ -440,38 +440,38 @@ class BuiltinTab : public HashTable {
 public:
   BuiltinTab(int sz) : HashTable(HT_CHARKEY,sz) {};
   unsigned memRequired(void) {
-    return HashTable::memRequired(sizeof(BuiltinTabEntry));
+    return HashTable::memRequired(sizeof(Builtin));
   }
   const char * getName(void * fp) {
     HashNode * hn = getFirst();
     for (; hn != NULL; hn = getNext(hn)) {
-      BuiltinTabEntry * abit = (BuiltinTabEntry *) hn->value;
+      Builtin * abit = (Builtin *) hn->value;
       if (abit->getInlineFun() == (IFOR) fp ||
 	  abit->getFun() == (OZ_CFun) fp)
 	return hn->key.fstr;
     }
     return "???";
   }
-  BuiltinTabEntry * getEntry(void * fp) {
+  Builtin * getEntry(void * fp) {
     HashNode * hn = getFirst();
     for (; hn != NULL; hn = getNext(hn)) {
-      BuiltinTabEntry * abit = (BuiltinTabEntry *) hn->value;
+      Builtin * abit = (Builtin *) hn->value;
       if (abit->getInlineFun() == (IFOR) fp ||
 	  abit->getFun() == (OZ_CFun) fp)
 	return abit;
     }
-    return (BuiltinTabEntry *) NULL;
+    return (Builtin *) NULL;
   }
 
-  BuiltinTabEntry *find(const char *name) {
-    return (BuiltinTabEntry*) htFind(name);
+  Builtin *find(const char *name) {
+    return (Builtin*) htFind(name);
   }
 };
 
 extern BuiltinTab builtinTab;
 
 // (see builtins.hh)
-BuiltinTabEntry *BIadd(const char *name,int arity,OZ_CFun fun,
+Builtin *BIadd(const char *name,int arity,OZ_CFun fun,
 		       IFOR infun=(IFOR) NULL);
 void BIaddSpec(BIspec *spec); // add specification to builtin table
 

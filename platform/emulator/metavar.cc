@@ -386,12 +386,12 @@ OZ_TermType OZ_typeOf(OZ_Term t)
 OZ_BI_define(BImetaIsVar, 1,0)
 { 
   return isGenMetaVar(deref(OZ_in(0))) ? PROCEED : FAILED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BImetaIsVarB, 1,1)
 {
   OZ_RETURN(isGenMetaVar(deref(OZ_in(0))) ? NameTrue : NameFalse);
-}
+} OZ_BI_end
 
 #define OZ_getINDeref(N, V, VPTR, VTAG) \
   OZ_Term V = OZ_in(N); \
