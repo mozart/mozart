@@ -110,13 +110,12 @@ extern DSite *myDSite;
 
 class DSite: public BaseSite {
 friend class DSiteHashTable;
-friend class RemoteSite; 
 friend class ComObj;
 private:
   unsigned short flags;
   VirtualInfo *info;
   union {
-    ComObj* rsite;
+    ComObj* comObj;
     VirtualSite* vsite;
     int readCtr;
   } u;
@@ -146,10 +145,10 @@ private:
     if(t & (PERM_SITE)) return NO;
     if(t & REMOTE_SITE){
       ComObj *rs=createComObj(this,u.readCtr);
-      // AN this instantiation makes latter changes of perdioCh... unused
+      // AN! this instantiation makes latter changes of perdioCh... unused
 //        rs->installProbe(0,PROBE_WAIT_TIME,ozconf.perdioCheckAliveInterval);
       Assert(rs!=NULL);
-      u.rsite=rs;
+      u.comObj=rs;
       PD((SITE,"connect; not connected yet, connecting to remote %d",rs));}
     else{
       Assert(t & VIRTUAL_SITE);
@@ -164,15 +163,15 @@ private:
 public:
   // If this site allready has a comObj that one is returned,
   // else the incoming is used and the state is set to connected.
-  // AN - neither PERM nor VIRTUAL_SITE considered
+  // AN! - neither PERM nor VIRTUAL_SITE considered
   ComObj *setComObj(ComObj *comObj) {
     unsigned int t=getType();
     if(t & CONNECTED) 
-      return u.rsite;
+      return u.comObj;
     else {
       setType(CONNECTED|REMOTE_SITE);
 //        comObj->installProbe(0,PROBE_WAIT_TIME,PERDIO_CHECK_ALIVE_INTERVAL);
-      u.rsite=comObj;
+      u.comObj=comObj;
       return NULL;
     }
   }
@@ -181,7 +180,7 @@ public:
     if(!connect()) {PD((SITE,"getComObj not connected"));return NULL;}
     Assert(getType() & CONNECTED);
     Assert(getType() & REMOTE_SITE);
-    ComObj *rs = u.rsite;
+    ComObj *rs = u.comObj;
     PD((SITE,"getComObj returning the remote %d",rs));
     Assert(rs!=NULL);
     return  rs;}
@@ -197,7 +196,7 @@ public:
 
 private:
 // hopefully this is used to tell comm layer that the site is garbage for closing connection early 
-  // AN never called!
+  // AN! never called!
   void zeroActive(){ 
     if(getType() & CONNECTED){
       if(getType() & REMOTE_SITE){
@@ -300,10 +299,10 @@ public:
     if(flags & MY_SITE) {return NO;}
     unsigned short t=getType();
     if(ActiveSite() && !isPerm() &&
-       ((t & CONNECTED) || u.readCtr!=0)){ // Check over tests AN
-      Assert(u.rsite!=NULL);
-      if(u.rsite->canBeFreed()) {
-	comController->deleteComObj(u.rsite);
+       ((t & CONNECTED) || u.readCtr!=0)){ // Check over tests AN!
+      Assert(u.comObj!=NULL);
+      if(u.comObj->canBeFreed()) {
+	comController->deleteComObj(u.comObj);
 	disconnect();
 	return OK;
       }
@@ -326,7 +325,7 @@ public:
   // upon 'M_INIT_VS');
   void makeMySiteVirtual(VirtualInfo *v) {
     info = v;
-    Assert(u.rsite == (ComObj *) 0);
+    Assert(u.comObj == (ComObj *) 0);
     Assert(u.vsite == (VirtualSite *) 0);
     Assert(u.readCtr == 0);
     setType(getType() | VIRTUAL_INFO);
@@ -445,24 +444,27 @@ public:
   
   // for use by the protocol-layer
 
-  int sendTo(MsgContainer *msgC,MessageType mt,DSite* storeSite,int storeIndex)
-    {printf("dsite.hh: OLD sendTo used\n");
-    return PERM_NOT_SENT;}
+  // AN!
+//    int sendTo(MsgContainer *msgC,MessageType mt,DSite* storeSite,int storeIndex)
+//      {printf("dsite.hh: OLD sendTo used\n");
+//      return PERM_NOT_SENT;}
 
-  int sendTo(MsgContainer *msgC,int priority) {
+  int send(MsgContainer *msgC,int priority) {
     if(connect()){
       if(getType() & REMOTE_SITE){
 	Assert(priority<5 && priority>1);
 	getComObj()->send(msgC,priority);
-	return ACCEPTED;
       }
-      Assert(0);
+      else
+	Assert(0);
+      return ACCEPTED;
+    }
+    else {
       return PERM_NOT_SENT;
     }
-    return PERM_NOT_SENT;
   }
 
-  // AN this is no longer defined
+  // AN! this is no longer defined
   int discardUnsentMessage(int msgNum){
     Assert(getType() & CONNECTED);
     if(getType() & VIRTUAL_SITE) {
@@ -473,7 +475,7 @@ public:
     return 4711;
   }
 
-  // Should this be redefined for ComObjects? AN
+  // Should this be redefined for ComObjects? AN!
   int getQueueStatus(int &noMsgs){
     unsigned short t=getType();
     if(!(t & CONNECTED)){
@@ -494,7 +496,7 @@ public:
       return SITE_OK;
     }
     if(t & REMOTE_SITE)
-      return SITE_OK;//AN siteStatus_RemoteSite(getComObj());
+      return SITE_OK;//AN! siteStatus_RemoteSite(getComObj());
     Assert(t & VIRTUAL_SITE);
     return (*siteStatus_VirtualSite)(getVirtualSite());
   }
@@ -580,7 +582,7 @@ public:
     }
   }
 
-  // AN: left only for VS
+  // AN!: left only for VS
   //
   // kost@ : applied whenever an "alive acknowledgement"
   // (e.g. virtual site's 'VS_M_SITE_ALIVE') message is received;

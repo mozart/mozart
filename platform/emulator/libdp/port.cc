@@ -75,7 +75,7 @@ OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
   msgC->setImplicitMessageCredit(b->getOneMsgCredit());
 
   PD((PORT,"sendingTo %s %d",site->stringrep(),index));
-  sendTo(site,msgC,3);
+  send(msgC,3);
 
   return PROCEED;
 }
