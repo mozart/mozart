@@ -2,26 +2,26 @@
  *  Authors:
  *    Michael Mehl (mehl@dfki.de)
  *    Ralf Scheidhauer (scheidhr@ps.uni-sb.de)
- * 
+ *
  *  Contributors:
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Christian Schulte <schulte@ps.uni-sb.de>
- * 
+ *
  *  Copyright:
  *    Organization or Person (Year(s))
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
+ *
+ *  This file is part of Mozart, an implementation
  *  of Oz 3:
  *     http://www.mozart-oz.org
- * 
+ *
  *  See the file "LICENSE" or
  *     http://www.mozart-oz.org/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -146,7 +146,7 @@ Board *getVarBoard(TaggedRef var)
   if (isUVar(var))
     return tagged2VarHome(var);
   return tagged2SVarPlus(var)->getBoardInternal();
-}  
+}
 
 inline
 Bool isMoreLocal(TaggedRef var1, TaggedRef var2)
@@ -185,9 +185,9 @@ void rebind(TaggedRef *refPtr, TaggedRef term2)
   doBind(refPtr,term2);
 }
 
-#define PopRebindTrail(value,refPtr)			\
-    TaggedRef value   = ToInt32(rebindTrail.pop()); 	\
-    TaggedRef *refPtr = (TaggedRef*) rebindTrail.pop(); 
+#define PopRebindTrail(value,refPtr)                    \
+    TaggedRef value   = ToInt32(rebindTrail.pop());     \
+    TaggedRef *refPtr = (TaggedRef*) rebindTrail.pop();
 
 
 OZ_Return oz_unify(TaggedRef t1, TaggedRef t2)
@@ -212,12 +212,12 @@ loop:
   if (isUVar(term1) ? termPtr1 == termPtr2 : term1 == term2) {
     goto next;
   }
-  
+
   if (oz_isVariable(term1)) {
     if (oz_isVariable(term2)) {
       goto var_var;
     } else {
-      goto var_nonvar; 
+      goto var_nonvar;
     }
   } else {
     if (oz_isVariable(term2)) {
@@ -229,7 +229,7 @@ loop:
       goto nonvar_nonvar;
     }
   }
-    
+
 
  /*************/
  var_nonvar:
@@ -247,7 +247,7 @@ loop:
   goto next;
 
 
-  
+
  /*************/
  var_var:
 
@@ -258,7 +258,7 @@ loop:
    *   local newer -> local older
    */
   if (isUVar(tag1)) {
-    if (isUVar(tag2) && 
+    if (isUVar(tag2) &&
 	isMoreLocal(term2,term1) &&
 	(!oz_isLocalUVar(termPtr1) ||
 	 heapNewer(termPtr2,termPtr1))) {
@@ -268,14 +268,14 @@ loop:
     }
     goto next;
   }
-  
+
   if (isUVar(tag2)) {
     oz_bindUVar(termPtr2, makeTaggedRef(termPtr1));
     goto next;
   }
 
   Assert(isCVar(tag1) && isCVar(tag2));
-  /* prefered binding of perdio vars */
+  /* preferred binding of perdio vars */
   if (cmpCVar(tagged2CVar(term1),tagged2CVar(term2))>0) {
     Swap(term1,term2,TaggedRef);
     Swap(termPtr1,termPtr2,TaggedRef*);
@@ -339,12 +339,12 @@ loop:
       goto next;
     else
       goto fail;
-   
+
   case SMALLINT:
     if (smallIntEq(term1,term2))
       goto next;
     goto fail;
-    
+
   case EXT:
     {
       int res = oz_tagged2Extension(term1)->eqV(term2);
@@ -394,7 +394,7 @@ push:
   term1=tagged2NonVariable(termPtr1);
   term2=tagged2NonVariable(termPtr2);
   goto loop;
- 
+
 fail:
   Assert(result!=PROCEED);
   while (!unifyStack.isMark()) {
