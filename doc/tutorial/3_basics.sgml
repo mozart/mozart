@@ -96,6 +96,7 @@
   is introduced its type, as well as its value, is unknown. Only when
   the variable is bound to an Oz value, its type becomes determined.
 
+<!--
   <SECTION><TITLE>Hello World</TITLE>
   <P>Let us do like everybody else. If you are unfamiliar with Oz, here
   is your first Oz program. Start your Mozart system. You typically
@@ -138,7 +139,7 @@
   TO="http://www.ps.uni-sb.de/mozart">http://www.ps.uni-sb.de/mozart</REF.EXTERN>
   or <REF.EXTERN
   TO="http://www.sics.se/mozart">http://www.sics.se/mozart</REF.EXTERN>
-  
+-->
 
 
 <SECTION><TITLE>Adding Information</TITLE>
