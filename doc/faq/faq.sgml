@@ -1,0 +1,215 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+
+<!ENTITY % proglang.values.local "|sh|makefile|fundamental">
+<!ENTITY % p.mix.local "|em">
+<!ELEMENT em - - (#PCDATA)>
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY ie PI "ie">
+<!ENTITY eg PI "eg">
+<!ENTITY le "<">
+<!ENTITY gt ">">
+<!entity amp "&">
+<!entity etc PI "ellipsis">
+]>
+<book>
+  <front>
+    <title/The Mozart FAQ/
+    <author.Extern to="author.db" key="Denys.Duchier">
+  </front>
+  <body>
+    <chapter>
+	<title/General Information/
+
+      <section>
+	  <title/What is Mozart?/
+	<p>Mozart is a programming system providing state-of-the-art
+support especially in two areas: constraint-based problem solving and
+open distributed computing.  Mozart implements the Oz language and
+provides libraries, tools, and a complete development environment.</p>
+      </section>
+
+      <section>
+	  <title/What is Oz?/
+	<p>Oz is a concurrent object-oriented programming language
+with dataflow synchronization.  Like Java, it is <q/write once, run
+everywhere/ and provides automatic local and distributed garbage
+collection.  Oz is based on the concurrent constraint programming
+paradigm.  Aarghh! I don't want to write this entry...</p>
+      </section>
+
+      <section>
+	  <title/Why is it called Oz (resp. Mozart)?/
+	<p>???</p>
+      </section>
+
+      <section>
+	  <title/Is there a WWW page for Mozart?/
+	<p>Yes, the primary WWW site for Mozart is located at the
+Programming Systems Lab of the the university of the Saarland in
+Germany:
+<ref.extern
+to="http://mozart.ps.uni-sb.de/">http://mozart.ps.uni-sb.de/</ref.extern>
+Another site is located at SICS, the Swedish Institute of COmputer
+Science:
+<ref.extern
+to="http://www.sics.se/mozart/">http://www.sics.se/mozart/</ref.extern></p>
+      </section>
+
+      <section id=get.doc>
+	  <title/How do I get documentation on Mozart?/
+	<p>There is a lot of documentation for Mozart: tutorials,
+demos, and reference manuals.  This documentation is available on-line
+from the Mozart sites, see &eg; <ref.extern to
+="http://mozart.ps.uni-sb.de/documentation/"
+>http://mozart.ps.uni-sb.de/documentation/</ref.extern>.</p>
+	<p>You can also download the full documentation package and
+install it on your computer.  See the on-line
+<ref.extern to="http://mozart.ps.uni-sb.de/download/index.html"
+>Dowload Instructions</ref.extern> for details.</p>
+      </section>
+
+      <section>
+	  <title/Is the documentation available on the WWW/
+	<p>Yes it is, see <ptr to=get.doc></p>
+      </section>
+
+      <section>
+	  <title/How to I download and install the system?/
+	<p>The Mozart system is available (1) as binary tarballs for
+various Unix platforms, (2) as a self-extracting archive for Windows
+95/98/NT, (3) as RPM packages for Linux, (4) as source tarballs, (5)
+as source obtained directly from our anonymous CVS server. Please
+consult the on-line
+<ref.extern to="http://mozart.ps.uni-sb.de/download/index.html"
+>Dowload Instructions</ref.extern> for details.</p>
+      </section>
+
+      <section>
+	  <title/What platforms are supported?/
+	<p>The Mozart system is known to run on most flavors of Unix
+as well as on Windows 95/98/NT.  It has been successfully built and
+installed on the following platforms:
+
+</p>
+      </section>
+
+      <section>
+	  <title/Are there newgroups or mailing-lists devoted to
+Mozart?/
+	<p>
+</p>
+      </section>
+
+      <section>
+	  <title/Is there a CVS server for Mozart?/
+	<p>Yes, there is.  All our sources are accessible through our
+anonymous CVS server.  First you need to login with CVS password
+<code proglang=sh/anoncvs/:
+<code display proglang=sh>
+% cvs -d :pserver:anoncvs@ps.uni-sb.de:/CVS login
+(Logging in to anoncvs@ps.uni-sb.de)
+CVS password: anoncvs
+</code>
+You only need to do this once since cvs then correspondingly updates
+your <file>~/.cvspass</file> file.  Then you cvan retrieve the
+complete sources with the command below:
+<code display proglang=sh>
+% cvs -d :pserver:anoncvs@ps.uni-sb.de:/CVS get mozart
+</code>
+Further instructions about getting the sources from CVS, configuring,
+and building the distribution are available in <ptr.extern
+to="ozdoc:install">.</p>
+      </section>
+
+      <section>
+	  <title/Are there licensing or copyright restrictions on
+Mozart?/
+	<p>No, Mozart is released with a very liberal license.  You
+can basically do anything you want with it and, as usual, we decline
+any responsibility.  Please consult the <ref.extern
+to="http://mozart.ps.uni-sb.de/LICENSE.html">License
+Statemen</ref.extern> for precise wording.</p>
+      </section>
+
+      <section>
+	  <title/What is Mozart good for?/
+	<p>Mozart particularly excels in two domains:
+<list enum>
+	    <item><em/Constraint-Based Problem Solving:/
+Mozart is the result of 10 years of research and
+development in concurrent constraint programming. It implements
+Oz , a powerful constraint language with logic variables,
+record constraints, finite domains, and finite sets. The
+system is competitive in performance with state-of-the-art
+commercial solutions, but is much more expressive
+and flexible, providing 1st-class computation spaces, programmable
+search strategies, a GUI for the interactive exploration of search
+trees, and allows to implement efficient constraint systems from
+scratch.</item>
+
+	    <item><em/Open Distributed Computing:/
+Mozart is the result of 3 years of research and development in open
+distributed computing, involving an international collaboration
+between the German Research Center for Artificial Intelligence (DFKI),
+the University of the Saarland in Germany, the Swedish
+Institute for Computer Science (SICS), and the University of Louvain
+la neuve in Belgium.
+<p>
+The Mozart system is an ideal platform for open distributed computing:
+it makes the network completely transparent. The illusion of a common
+store is extended across multiple sites and automatically supported by
+very efficient protocols. In addition, full control is retained over
+network communication patterns, permitting very efficient use of
+network resources. Furthermore, reliable, fault tolerant applications
+can easily be developed.</p>
+	    </item>
+	  </list>
+Mozart is also excellent at general programming tasks.  For example,
+all our documentation is processed by <code proglang=sh/ozdoc/ which
+is written in Oz.
+</p>
+      </section>
+
+    </chapter>
+  </body>
+</book>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "../book.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
