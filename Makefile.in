@@ -173,7 +173,7 @@ oz-win::
 	$(INSTALL_DIR) oz3
 	( cd $(PREFIX); \
 	  $(TAR) cf - \
-		   LICENSE \
+		   $(FILES) \
 		   include share \
 		   contrib doc\
 		   winbin platform/win32-i486 \
