@@ -27,6 +27,7 @@
 #include "taskstack.hh"
 #include "term.hh"
 #include "trail.hh"
+#include "unify.hh"
 
 // -----------------------------------------------------------------------
 
