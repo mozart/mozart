@@ -34,6 +34,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdMin, 2)
 {
+  ExpectedTypes("FDish,SmallInt");
+  
   OZ_getCArgDeref(0, var, varptr, vartag);
 
   if(isSmallInt(vartag)) {
@@ -49,8 +51,7 @@ OZ_C_proc_begin(BIfdMin, 2)
     return addNonResSuspForCon(var, varptr, vartag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else {
-    warning("BIfdMin: Expected fdish value, got 0x%x.", vartag);
-    return FAILED;
+    TypeError(0, "");
   }
 }
 OZ_C_proc_end     
@@ -58,6 +59,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdMax,2)
 {
+  ExpectedTypes("FDish,SmallInt");
+  
   OZ_getCArgDeref(0, var, varptr, vartag);
 
   if(isSmallInt(vartag)) {
@@ -73,8 +76,7 @@ OZ_C_proc_begin(BIfdMax,2)
     return addNonResSuspForCon(var, varptr, vartag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else {
-    warning("BIfdMax: Expected fdish value, got 0x%x.", vartag);
-    return FAILED;
+    TypeError(0, "");
   }
 }
 OZ_C_proc_end     
@@ -82,6 +84,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdGetAsList, 2)
 {
+  ExpectedTypes("FDish,List");
+  
   OZ_getCArgDeref(0, var, varptr, vartag);
   
   if(isSmallInt(vartag)) {
@@ -98,8 +102,7 @@ OZ_C_proc_begin(BIfdGetAsList, 2)
     return addNonResSuspForCon(var, varptr, vartag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else {
-    warning("BIfdGetAsList: Expected fdish value, got 0x%x.", vartag);
-    return FAILED;
+    TypeError(0, "");
   }
 }
 OZ_C_proc_end     
@@ -107,6 +110,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdGetCardinality,2)
 {
+  ExpectedTypes("FDish,SmallInt");
+  
   OZ_getCArgDeref(0, var, varptr, vartag);
 
   if(isSmallInt(vartag)) {
@@ -122,8 +127,7 @@ OZ_C_proc_begin(BIfdGetCardinality,2)
     return addNonResSuspForCon(var, varptr, vartag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else { 
-    warning("BIfdGetCardinality: Expected fdish value, got 0x%x.", vartag);
-    return FAILED;
+    TypeError(0, "");
   }
 }
 OZ_C_proc_end
@@ -132,14 +136,15 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdNextTo, 3)
 {
+  ExpectedTypes("FDish,SmallInt,SmallInt or Tuple");
+  
   OZ_getCArgDeref(1, n, nptr, ntag);
 
   if (isAnyVar(ntag)) {
     return addNonResSuspForDet(n, nptr, ntag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else if (! isSmallInt(ntag)) {
-    warning("BIfdNextTo: Expected small integer, got 0x%x.", ntag);
-    return FAILED;
+    TypeError(1, "");
   }
 
   OZ_getCArgDeref(0, var, varptr, vartag);
@@ -159,8 +164,7 @@ OZ_C_proc_begin(BIfdNextTo, 3)
     return addNonResSuspForCon(var, varptr, vartag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else {
-    warning("BIfdNextTo: Expected fdish value, got got 0x%x.", vartag);
-    return FAILED;
+    TypeError(0, "");
   }
 }
 OZ_C_proc_end
@@ -168,14 +172,15 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutLe, 2)
 {
+  ExpectedTypes("FDishSmallInt");
+  
   OZ_getCArgDeref(1, n, nptr, ntag);
 
   if (isAnyVar(ntag)) {
     return addNonResSuspForDet(n, nptr, ntag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else if (! isSmallInt(ntag)) {
-    warning("BIfdPutLe: Expected small integer, got 0x%x.", ntag);
-    return FAILED;
+    TypeError(1, "");
   }
 
   OZ_getCArgDeref(0, var, varptr, vartag);
@@ -189,9 +194,7 @@ OZ_C_proc_begin(BIfdPutLe, 2)
       return addNonResSuspForCon(var, varptr, vartag,
 				 createNonResSusp(OZ_self, OZ_args, OZ_arity));
     } else {
-      warning("BIfdPutLe: Expected fdish value or variable, got 0x%x.",
-	      vartag);
-      return FAILED;
+      TypeError(0, "");
     }
   }
   
@@ -199,7 +202,7 @@ OZ_C_proc_begin(BIfdPutLe, 2)
 
   if (! x.introduce(OZ_getCArg(0))) return FAILED;
   
-  if ((*x <= smallIntValue(n)) == 0) return FAILED;
+  FailOnEmpty(*x <= smallIntValue(n));
   
   return x.releaseNonRes();
 }
@@ -208,14 +211,15 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutGe, 2)
 {
+  ExpectedTypes("FDish,SmallInt");
+  
   OZ_getCArgDeref(1, n, nptr, ntag);
 
   if (isAnyVar(ntag)) {
     return addNonResSuspForDet(n, nptr, ntag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else if (! isSmallInt(ntag)) {
-    warning("BIfdPutGe: Expected small integer, got 0x%x.", ntag);
-    return FAILED;
+    TypeError(1, "");
   }
 
   OZ_getCArgDeref(0, var, varptr, vartag);
@@ -229,9 +233,7 @@ OZ_C_proc_begin(BIfdPutGe, 2)
       return addNonResSuspForCon(var, varptr, vartag,
 				 createNonResSusp(OZ_self, OZ_args, OZ_arity));
     } else {
-      warning("BIfdPutGe: Expected fdish value or variable, got 0x%x.",
-	      vartag);
-      return FAILED;
+      TypeError(0, "");
     }
   }
   
@@ -239,7 +241,7 @@ OZ_C_proc_begin(BIfdPutGe, 2)
 
   if (! x.introduce(OZ_getCArg(0))) return FAILED;
   
-  if ((*x >= smallIntValue(n)) == 0) return FAILED;
+  FailOnEmpty(*x >= smallIntValue(n));
   
   return x.releaseNonRes();
 }
@@ -248,14 +250,15 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutList, 3)
 {
+  ExpectedTypes("FDish,List of SmallInts or Tuples,SmallInt");
+  
   OZ_getCArgDeref(2, s, sptr, stag); // sign
 
   if (isAnyVar(stag)) {
     return addNonResSuspForDet(s, sptr, stag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else if (! isSmallInt(stag)) {
-    warning("BIfdPutList: Expected small integer, got 0x%x.", stag);
-    return FAILED;
+    TypeError(2, "");
   }
 
   OZ_getCArgDeref(1, list, listptr, listtag);
@@ -264,8 +267,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
     return addNonResSuspForDet(list, listptr, listtag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else if (! isLTuple(listtag)) {
-    warning("BIfdPutList: Expected list tuple, got 0x%x.", listtag);
-    return FAILED;
+    TypeError(1, "");
   }
 
   int * left_arr = static_int_a, * right_arr = static_int_b;
@@ -288,8 +290,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
       STuple * t = tagged2STuple(val);
 
       if (t->getSize() != 2) {
-	warning("BIfdPutList: Expected 2-tuple");
-	return FAILED;
+	TypeError(1, "Expected 2-tuple as tuple.");
       }
       TaggedRef t_l = (*t)[0];
       DEREF(t_l, t_lptr, t_ltag);
@@ -299,8 +300,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
 	return addNonResSuspForDet(t_l, t_lptr, t_ltag,
 				   createNonResSusp(OZ_self,OZ_args,OZ_arity));
       } else {
-	warning("BIfdPutList: Expected tuple of small ints, got 0x%x", t_ltag);
-	return FAILED;
+	TypeError(1, "Expected SmallInt in 2-tuple.");
       }
       
       TaggedRef t_r = (*t)[1];
@@ -311,8 +311,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
 	return addNonResSuspForDet(t_r, t_rptr, t_rtag,
 				   createNonResSusp(OZ_self,OZ_args,OZ_arity));
       } else {
-	warning("BIfdPutList: Expected tuple of small ints, got 0x%x", t_rtag);
-	return FAILED;
+	TypeError(1, "Expected SmallInt in 2-tuple.");
       }
 
       if (0 <= left_arr[len_arr] &&
@@ -326,9 +325,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
       return addNonResSuspForDet(val, valptr, valtag,
 				 createNonResSusp(OZ_self, OZ_args, OZ_arity));
     } else {
-      warning("BIfdPutList: Expected list of small ints or small int 2-tuple,"
-	      " got 0x%x.", valtag);
-      return FAILED;
+      TypeError(1, "Expected list of SmallInts or SmallInt 2-tuple.");
     }
 	       
     list = tagged2LTuple(list)->getTail();
@@ -346,7 +343,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
 
   if (smallIntValue(s) != 0) aux = ~aux;
   
-  if ((*x &= aux) == 0) return FAILED;
+  FailOnEmpty(*x &= aux);
 
   return x.releaseNonRes();
 }
@@ -355,14 +352,15 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutNot, 2)
 {
+  ExpectedTypes("FDish,SmallInt");
+  
   OZ_getCArgDeref(1, n, nptr, ntag);
 
   if (isAnyVar(ntag)) {
     return addNonResSuspForDet(n, nptr, ntag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else if (! isSmallInt(ntag)) {
-    warning("BIfdPutNot: Expected small integer, got 0x%x.", ntag);
-    return FAILED;
+    TypeError(1, "");
   }
 
   OZ_getCArgDeref(0, var, varptr, vartag);
@@ -376,9 +374,7 @@ OZ_C_proc_begin(BIfdPutNot, 2)
       return addNonResSuspForCon(var, varptr, vartag,
 				 createNonResSusp(OZ_self, OZ_args, OZ_arity));
     } else {
-      warning("BIfdPutNot: Expected fdish value or variable, got 0x%x.",
-	      vartag);
-      return FAILED;
+      TypeError(0, "");
     }
   }
 
@@ -386,7 +382,7 @@ OZ_C_proc_begin(BIfdPutNot, 2)
 
   if (! x.introduce(OZ_getCArg(0))) return FAILED;
 
-  if ((*x -= smallIntValue(n)) == 0) return FAILED;
+  FailOnEmpty(*x -= smallIntValue(n));
   
   return x.releaseNonRes();
 }
@@ -395,14 +391,15 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutFromTo, 3)
 {
+  ExpectedTypes("FDish,SmallInt,SmallInt");
+  
   OZ_getCArgDeref(1, f, fptr, ftag); // from
 
   if (isAnyVar(ftag)) {
     return addNonResSuspForDet(f, fptr, ftag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else if (! isSmallInt(ftag)) {
-    warning("BIfdPutFromTo: Expected small integer, got 0x%x.", ftag);
-    return FAILED;
+    TypeError(1, "");
   }
 
   OZ_getCArgDeref(2, t, tptr, ttag); // to
@@ -411,17 +408,17 @@ OZ_C_proc_begin(BIfdPutFromTo, 3)
     return addNonResSuspForDet(t, tptr, ttag,
 			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else if (! isSmallInt(ttag)) {
-    warning("BIfdPutFromTo: Expected small integer, got 0x%x.", ttag);
-    return FAILED;
+    TypeError(2, "");
   }
 
   BIfdBodyManager x;
 
   if (! x.introduce(OZ_getCArg(0))) return FAILED;
   
-  if ((*x >= smallIntValue(f)) == 0) return FAILED;
-  if ((*x <= smallIntValue(t)) == 0) return FAILED;
+  FailOnEmpty(*x >= smallIntValue(f));
+  FailOnEmpty(*x <= smallIntValue(t));
   
   return x.releaseNonRes();
 }
 OZ_C_proc_end
+
