@@ -80,15 +80,39 @@ struct ModuleEntry {
 
 
 #include "modProperty.dcl"
+#include "modOS.dcl"
+#include "modPickle.dcl"
+#include "modURL.dcl"
+#include "modPID.dcl"
+#include "modFDB.dcl"
+#include "modFSB.dcl"
+
 static OZ_C_proc_interface mod_int_Property[] = {
 #include "modProperty.tbl"
  {0,0,0,0}
 };
-
-
-#include "modOS.dcl"
 static OZ_C_proc_interface mod_int_OS[] = {
 #include "modOS.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_Pickle[] = {
+#include "modPickle.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_URL[] = {
+#include "modURL.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_PID[] = {
+#include "modPID.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_FDB[] = {
+#include "modFDB.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_FSB[] = {
+#include "modFSB.tbl"
  {0,0,0,0}
 };
 
@@ -96,6 +120,12 @@ static OZ_C_proc_interface mod_int_OS[] = {
 static ModuleEntry module_table[] = {
   {"Property", mod_int_Property},
   {"OS",       mod_int_OS},
+  {"URL",      mod_int_URL},
+  {"Pickle",   mod_int_Pickle},
+
+  {"FDB",      mod_int_FDB},
+  {"FSB",      mod_int_FSB},
+  {"PID",      mod_int_PID},
 
   {"Wif",      DYNAMIC_MODULE(mod_int_Wif) },
   {"Parser",   DYNAMIC_MODULE(mod_int_Parser) },
@@ -107,7 +137,7 @@ static ModuleEntry module_table[] = {
 };
 
 
-inline TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I) {
+static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I) {
   OZ_Term l = oz_nil();
 
   Builtin *bi;
