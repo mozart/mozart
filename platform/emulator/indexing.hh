@@ -49,6 +49,7 @@ class HTEntry {
 
   HTEntry* getNext(void) {return next;}
 
+  ProgramCounter getLabel()  {return label;}
   TaggedRef getNumber()  {return u.number;}
   Literal *getLiteral()  {return u.literal;}
   Literal *getFunctor(SRecordArity &a)  
@@ -116,6 +117,7 @@ class IHashTable {
  public:
   int size;      // is always a power of 2
   int hashMask;  // always size-1
+  int numentries;
   
   EntryTable literalTable;
   EntryTable functorTable;
@@ -126,6 +128,7 @@ class IHashTable {
   ProgramCounter varLabel;
 
   IHashTable(int sz, ProgramCounter elseLbl) {
+    numentries = 0;
     size = nextPowerOf2(sz);
     hashMask = size-1;
     literalTable = functorTable = numberTable = NULL;
@@ -137,12 +140,8 @@ class IHashTable {
   void add(TaggedRef number, ProgramCounter label);
   void add(Literal *constant, ProgramCounter label);
   void add(Literal *functor, SRecordArity arity, ProgramCounter label);
-  void addVar(/* no arg means list structure*/ ProgramCounter label) {
-    varLabel = label;
-  }
-  void addList(ProgramCounter label) {
-    listLabel = label;
-  }
+  void addVar(ProgramCounter label)  { varLabel  = label; }
+  void addList(ProgramCounter label) { listLabel = label; }
 
   int hash(int n) { return (n & hashMask); }  // return a value n with 0 <= n < size
   ProgramCounter getElse() { return elseLabel; }
