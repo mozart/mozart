@@ -520,54 +520,6 @@ fi
 
 
 
-  echo $ac_n "checking for test""... $ac_c" 1>&6
-echo "configure:525: checking for test" >&5
-if eval "test \"`echo '$''{'oz_cv_TEST'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  
-    if test -e . 2>/dev/null; then
-      oz_cv_TEST=test
-    else
-      oz_tmp_IFS="$IFS"
-      IFS="$IFS:"
-      for oz_tmp in $PATH; do
-        if $oz_tmp/test -e . 2>/dev/null; then
-          oz_tmp=`cd $oz_tmp && pwd`
-          oz_cv_TEST="$oz_tmp/test"
-          break
-        fi
-      done
-      IFS=$oz_tmp_IFS
-      if test -n "$oz_cv_TEST"; then
-        { echo "configure: error: cannot locate a working test" 1>&2; exit 1; }
-      fi
-    fi
-fi
-
-echo "$ac_t""$oz_cv_TEST" 1>&6
-  TEST=$oz_cv_TEST
-  
-ac_aux_dir=
-for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
-  if test -f $ac_dir/install-sh; then
-    ac_aux_dir=$ac_dir
-    ac_install_sh="$ac_aux_dir/install-sh -c"
-    break
-  elif test -f $ac_dir/install.sh; then
-    ac_aux_dir=$ac_dir
-    ac_install_sh="$ac_aux_dir/install.sh -c"
-    break
-  fi
-done
-if test -z "$ac_aux_dir"; then
-  { echo "configure: error: can not find install-sh or install.sh in $srcdir $srcdir/.. $srcdir/../.." 1>&2; exit 1; }
-fi
-ac_config_guess=$ac_aux_dir/config.guess
-ac_config_sub=$ac_aux_dir/config.sub
-ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
-
-
   
   
   srcdir=`cd $srcdir && pwd`
@@ -576,13 +528,12 @@ ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
 
   
   echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:580: checking for SRCTOP" >&5
+echo "configure:532: checking for SRCTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   
     
-  
   oz_tmp_dir=$srcdir
   oz_tmp_ok=
   for oz_tmp1 in OZVERSION; do
@@ -592,7 +543,7 @@ else
 		   $oz_tmp_dir/../../.. \
 		   $oz_tmp_dir/../../../.. \
 		   $oz_tmp_dir/../../../../..; do
-      if $TEST -e "$oz_tmp2/$oz_tmp1"; then
+      if test -r "$oz_tmp2/$oz_tmp1"; then
         oz_cv_path_SRCTOP=`cd $oz_tmp2 && pwd`
         oz_tmp_ok=yes
         break
@@ -610,13 +561,12 @@ echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
   
   
   echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:614: checking for BUILDTOP" >&5
+echo "configure:565: checking for BUILDTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   
     
-  
   oz_tmp_dir=.
   oz_tmp_ok=
   for oz_tmp1 in contrib config.cache; do
@@ -626,7 +576,7 @@ else
 		   $oz_tmp_dir/../../.. \
 		   $oz_tmp_dir/../../../.. \
 		   $oz_tmp_dir/../../../../..; do
-      if $TEST -e "$oz_tmp2/$oz_tmp1"; then
+      if test -r "$oz_tmp2/$oz_tmp1"; then
         oz_cv_path_BUILDTOP=`cd $oz_tmp2 && pwd`
         oz_tmp_ok=yes
         break
@@ -642,8 +592,27 @@ fi
 echo "$ac_t""$oz_cv_path_BUILDTOP" 1>&6
   BUILDTOP=$oz_cv_path_BUILDTOP
   
+  ac_aux_dir=
+for ac_dir in $SRCTOP $srcdir/$SRCTOP; do
+  if test -f $ac_dir/install-sh; then
+    ac_aux_dir=$ac_dir
+    ac_install_sh="$ac_aux_dir/install-sh -c"
+    break
+  elif test -f $ac_dir/install.sh; then
+    ac_aux_dir=$ac_dir
+    ac_install_sh="$ac_aux_dir/install.sh -c"
+    break
+  fi
+done
+if test -z "$ac_aux_dir"; then
+  { echo "configure: error: can not find install-sh or install.sh in $SRCTOP $srcdir/$SRCTOP" 1>&2; exit 1; }
+fi
+ac_config_guess=$ac_aux_dir/config.guess
+ac_config_sub=$ac_aux_dir/config.sub
+ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
+
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:647: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:616: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -669,6 +638,27 @@ else
   SET_MAKE="MAKE=${MAKE-make}"
 fi
 
+  
+  if test "${INSTALL+set}" = set; then
+    echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
+echo "configure:645: checking whether to unset broken INSTALL" >&5
+if eval "test \"`echo '$''{'oz_cv_unset_INSTALL'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+        echo >conftest.$$
+        if $INSTALL -c -m 644 conftest.$$ /tmp >/dev/null 2>&1; then
+          rm -f /tmp/conftest.$$ 2>/dev/null
+          oz_cv_unset_INSTALL=no
+        else
+          oz_cv_unset_INSTALL=yes
+        fi
+        rm -f conftest.$$ 2>/dev/null
+fi
+
+echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
+    test "$oz_cv_unset_INSTALL" = yes && unset INSTALL
+  fi
   # Find a good install program.  We prefer a C program (faster),
 # so one script is as good as another.  But avoid the broken or
 # incompatible versions:
@@ -680,7 +670,7 @@ fi
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:684: checking for a BSD compatible install" >&5
+echo "configure:674: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -740,7 +730,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:744: checking for $ac_word" >&5
+echo "configure:734: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -778,68 +768,6 @@ fi
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 #OZ_PATH_PROG(DYNLD,          ozdynld)
 
-BUILDTOP=`cd ../..; pwd`
-SRCTOP=`cd $srcdir/../..; pwd`
-# Find a good install program.  We prefer a C program (faster),
-# so one script is as good as another.  But avoid the broken or
-# incompatible versions:
-# SysV /etc/install, /usr/sbin/install
-# SunOS /usr/etc/install
-# IRIX /sbin/install
-# AIX /bin/install
-# AFS /usr/afsws/bin/install, which mishandles nonexistent args
-# SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
-# ./install, which can be erroneously created by make from ./install.sh.
-echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:795: checking for a BSD compatible install" >&5
-if test -z "$INSTALL"; then
-if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-    IFS="${IFS= 	}"; ac_save_IFS="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    # Account for people who put trailing slashes in PATH elements.
-    case "$ac_dir/" in
-    /|./|.//|/etc/*|/usr/sbin/*|/usr/etc/*|/sbin/*|/usr/afsws/bin/*|/usr/ucb/*) ;;
-    *)
-      # OSF1 and SCO ODT 3.0 have their own names for install.
-      for ac_prog in ginstall installbsd scoinst install; do
-        if test -f $ac_dir/$ac_prog; then
-	  if test $ac_prog = install &&
-            grep dspmsg $ac_dir/$ac_prog >/dev/null 2>&1; then
-	    # AIX install.  It has an incompatible calling convention.
-	    # OSF/1 installbsd also uses dspmsg, but is usable.
-	    :
-	  else
-	    ac_cv_path_install="$ac_dir/$ac_prog -c"
-	    break 2
-	  fi
-	fi
-      done
-      ;;
-    esac
-  done
-  IFS="$ac_save_IFS"
-
-fi
-  if test "${ac_cv_path_install+set}" = set; then
-    INSTALL="$ac_cv_path_install"
-  else
-    # As a last resort, use the slow shell script.  We don't cache a
-    # path for INSTALL within a source directory, because that will
-    # break other packages using the cache if that directory is
-    # removed, or if the path is relative.
-    INSTALL="$ac_install_sh"
-  fi
-fi
-echo "$ac_t""$INSTALL" 1>&6
-
-# Use test -z because SunOS4 sh mishandles braces in ${var-val}.
-# It thinks the first close brace ends the variable substitution.
-test -z "$INSTALL_PROGRAM" && INSTALL_PROGRAM='${INSTALL}'
-
-test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
-
 
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $PATH | sed -e 's/:://g'`
@@ -851,7 +779,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "ozengine", so it can be a program name with args.
 set dummy ozengine; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:855: checking for $ac_word" >&5
+echo "configure:783: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZENGINE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -897,7 +825,7 @@ fi
     # Extract the first word of "ozc", so it can be a program name with args.
 set dummy ozc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:901: checking for $ac_word" >&5
+echo "configure:829: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -943,7 +871,7 @@ fi
     # Extract the first word of "ozl", so it can be a program name with args.
 set dummy ozl; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:947: checking for $ac_word" >&5
+echo "configure:875: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -978,8 +906,6 @@ fi
 	
     fi
     
-
-
 
 
 
@@ -1127,7 +1053,6 @@ s%@oldincludedir@%$oldincludedir%g
 s%@infodir@%$infodir%g
 s%@mandir@%$mandir%g
 s%@SRCDIR@%$SRCDIR%g
-s%@TEST@%$TEST%g
 s%@SRCTOP@%$SRCTOP%g
 s%@BUILDTOP@%$BUILDTOP%g
 s%@SET_MAKE@%$SET_MAKE%g
