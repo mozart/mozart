@@ -1479,6 +1479,34 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
   }
 }
 
+TaggedRef TaskStack::dbgFrameVariables(int frameId)
+{
+  int     depth = 10000;
+  bool    match = NO;
+
+  TaskStackEntry *auxtos = getTop();
+  
+  while (depth-- > 0) {
+    PopFrame(auxtos,PC,Y,G);
+
+    if (PC==C_EMPTY_STACK)
+      break;
+
+    if (PC==C_DEBUG_CONT_Ptr) {
+      if (match) continue;
+      OzDebug *ozdeb = (OzDebug *) Y;
+      int curId = OZ_intToC(ozdeb->info);
+      if (frameId == curId)
+	match = OK;
+      continue;
+    }
+    
+    if (match)
+      return CodeArea::varNames(PC,G,Y);
+  }
+  return nil();
+}
+
 TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
 {
   Assert(this);

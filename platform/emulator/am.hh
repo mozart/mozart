@@ -170,6 +170,7 @@ public:
   TaggedRef defaultExceptionHandler;
 
   unsigned int lastThreadID;
+  unsigned int lastFrameID;
 
   // Debugging stuff
   TaggedRef threadStream;
