@@ -1079,6 +1079,10 @@ OZ_Return WidthPropagator::run(void)
 // RecordC) and hence fails if X is not a record.
 OZ_C_proc_begin(BImonitorArity, 3)
 {
+#ifdef DEBUG_MONITORARITY
+  cout << "Entering monitorArity" << endl << flush;
+#endif
+
     OZ_EXPECTED_TYPE("any(record),any,any(list)");
 
     OZ_Term rec = OZ_getCArg(0);
@@ -1120,17 +1124,30 @@ OZ_C_proc_begin(BImonitorArity, 3)
     default:
         TypeErrorT(0,"Record");
     }
+
+#ifdef DEBUG_MONITORARITY
+  cout << "\tArg 0 is OFS Variable" << endl << flush;
+#endif
+
     tmprec=OZ_getCArg(0);
     DEREF(tmprec,_3,_4);
 
     // At this point, rec is OFS and tmprec is dereferenced and undetermined
 
     if (isKilled) {
+#ifdef DEBUG_MONITORARITY
+      cout << "\tmonitorArity killed!" << endl << flush;
+#endif
+      
         TaggedRef featlist;
         featlist=tagged2GenOFSVar(tmprec)->getArityList();
 
         return am.unify(arity,featlist)?PROCEED:FAILED;
     } else {
+#ifdef DEBUG_MONITORARITY
+      cout << "\tSpawning monitorArity" << endl << flush;
+#endif
+      
         TaggedRef featlist;
         TaggedRef feattail;
         Board *home=am.currentBoard;
@@ -1143,9 +1160,8 @@ OZ_C_proc_begin(BImonitorArity, 3)
         OZ_EXPECT(pe, 1, expectVar);
 
         TaggedRef uvar=makeTaggedRef(newTaggedUVar(home));
-        return pe.spawn(
-            new MonitorArityPropagator(rec,kill,feattail,uvar,uvar),
-            OFS_flag);
+        return pe.spawn(new MonitorArityPropagator(rec,kill,feattail,uvar,uvar)
+			,OZ_getMediumPrio(),OFS_flag);
     }
 
     return PROCEED;
@@ -1162,6 +1178,11 @@ OZ_CFun MonitorArityPropagator::spawner = BImonitorArity;
 // have been added.
 OZ_Return MonitorArityPropagator::run(void)
 {
+#ifdef DEBUG_MONITORARITY
+      cout << "MonitorArityPropagator::run" << endl << flush;
+      cout << *this << endl << flush;
+#endif
+
     // Check if killed:
     TaggedRef kill=K;
     TaggedRef tmpkill=kill;
@@ -1176,6 +1197,10 @@ OZ_Return MonitorArityPropagator::run(void)
     TaggedRef ftail = FT;
 
     if (tmptail!=AtomNil) {
+#ifdef DEBUG_MONITORARITY
+      cout << "\tRecord not determined yet." << endl << flush;
+#endif
+
         // The record is not determined, so reinitialize the featlist:
         // The home board of uvar must be taken from outside propFeat!
         // Get the home board for any new variables:
@@ -1184,6 +1209,10 @@ OZ_Return MonitorArityPropagator::run(void)
         FH=uvar;
         FT=uvar;
     } else {
+#ifdef DEBUG_MONITORARITY
+      cout << "\tRecord is determined." << endl << flush;
+#endif
+
         // Precaution for the GC?
         FH=makeTaggedNULL();
         FT=makeTaggedNULL();
@@ -1196,8 +1225,14 @@ OZ_Return MonitorArityPropagator::run(void)
 
     if (tmptail!=AtomNil) {
         // The record is not determined, so the suspension is revived:
-        if (!isKilled) return (SLEEP);
-        else return am.unify(ftail,AtomNil)?PROCEED:FAILED;
+        if (!isKilled) {
+#ifdef DEBUG_MONITORARITY
+	  cout << "Falling asleep" << endl << flush;
+#endif
+	  return (SLEEP);
+        } else {
+	  return am.unify(ftail,AtomNil)?PROCEED:FAILED;
+	}
     }
     return PROCEED;
 }
@@ -1321,7 +1356,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
                 out=uvar;
                 // Unify newofsvar and term (which is also an ofsvar):
                 Bool ok2=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
-				       makeTaggedRef(termPtr));
+				  makeTaggedRef(termPtr));
                 Assert(ok2);
             }
         }
@@ -6624,6 +6659,16 @@ OZ_C_proc_begin(BIraiseError,1)
 }
 OZ_C_proc_end
 
+#ifdef DEBUG_CHECK
+OZ_C_proc_begin(BIprintLong,1)
+{
+  OZ_declareArg(0,t);
+  taggedPrintLong(t);
+  return PROCEED;
+}
+OZ_C_proc_end
+#endif
+
 #endif /* BUILTINS2 */
 
 
@@ -6916,8 +6961,9 @@ BIspec allSpec2[] = {
   {"Debug.displayCode", 2, BIdisplayCode},
   {"dumpThreads",       0, BIdumpThreads},
   {"listThreads",       1, BIlistThreads},
-
-
+#ifdef DEBUG_CHECK
+  {"printLong",1,BIprintLong},
+#endif
   // System functionality
   {"Print",                       1, BIprint,  (IFOR) printInline},
   {"Show",                        1, BIshow,   (IFOR) showInline},
