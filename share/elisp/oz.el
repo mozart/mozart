@@ -498,33 +498,36 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 	(error "Compiler has died, for some unknown reason, try halting Oz"))))
 
 (defun start-oz-process()
-  (or (get-process "Oz Compiler")
-      (let ((file (oz-make-temp-name "/tmp/ozsock")))
-	(setq oz-machine-visible (get-buffer-window oz-machine-buffer))
+  (let ((file (oz-make-temp-name "/tmp/ozsock")))
+    (setq oz-errors-found nil)
+    (setq oz-machine-visible (get-buffer-window oz-machine-buffer))
 
-	(oz-set-state 'oz-compiler-state "booting")
-        (make-comint "Oz Compiler" "oz.compiler" nil "-S" file)
-	(oz-create-buffer "*Oz Compiler*")
-	(set-process-filter (get-process "Oz Compiler") 'oz-compiler-filter)
-	(bury-buffer "*Oz Compiler*")
+    (oz-set-state 'oz-compiler-state "booting")
+    (make-comint "Oz Compiler" "oz.compiler" nil "-S" file)
+    (oz-create-buffer "*Oz Compiler*")
+    (set-process-filter (get-process "Oz Compiler") 'oz-compiler-filter)
+    (bury-buffer "*Oz Compiler*")
+    (if oz-wait-for-compiler (sleep-for oz-wait-for-compiler))
 
-	(if oz-machine-hook
-	    (funcall oz-machine-hook file)
-	  (if oz-wait-for-compiler (sleep-for oz-wait-for-compiler))
-	  (oz-set-state 'oz-machine-state "booting")
-	  (setq oz-machine-buffer "*Oz Machine*")
-	  (make-comint "Oz Machine" "oz.machine" nil "-S" file)
-	  (set-process-filter (get-buffer-process oz-machine-buffer)
-			      'oz-machine-filter)
-	  (oz-create-buffer oz-machine-buffer)
-	  (bury-buffer oz-machine-buffer)
-	  )
+    (if oz-machine-hook
+	(funcall oz-machine-hook file)
+      (oz-set-state 'oz-machine-state "booting")
+      (setq oz-machine-buffer "*Oz Machine*")
+      (make-comint "Oz Machine" "oz.machine" nil "-S" file)
+      (set-process-filter (get-buffer-process oz-machine-buffer)
+			  'oz-machine-filter)
+      (oz-create-buffer oz-machine-buffer)
+      (save-excursion
+	(set-buffer oz-machine-buffer)
+	(define-key (current-local-map) "\C-m" 'comint-send-input)))
 
-	;; make sure buffers exist
-	(oz-create-buffer "*Oz Errors*")
+    (bury-buffer oz-machine-buffer)
 
-	(if oz-lucid
-	 (setq screen-title-format oz-title-format)))))
+    ;; make sure buffers exist
+    (oz-create-buffer "*Oz Errors*")
+
+    (if oz-lucid
+	(setq screen-title-format oz-title-format))))
 
 
 
@@ -627,7 +630,7 @@ the GDB commands `cd DIR' and `directory'."
 
 (defun oz-send-string(string)
   (oz-check-running)
-  (start-oz-process)
+  (or (get-process "Oz Compiler") (start-oz-process))
   (comint-send-string "Oz Compiler" string)
   (process-send-eof "Oz Compiler"))
 
