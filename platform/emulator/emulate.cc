@@ -306,7 +306,7 @@ Bool hookCheckNeeded(AM *e)
 // -----------------------------------------------------------------------
 // THREADED CODE
 
-//#define WANT_INSTRPROFILE
+#define WANT_INSTRPROFILE
 
 #if defined(RECINSTRFETCH) && defined(THREADED)
  Error: RECINSTRFETCH requires THREADED == 0;
@@ -389,7 +389,7 @@ Bool hookCheckNeeded(AM *e)
 
 
 /* define REGOPT if you want the into register optimization for GCC */
-#if defined(REGOPT) &&__GNUC__ >= 2 && (defined(OSF1_ALPHA) || defined(SPARC)) && !defined(DEBUG_CHECK)
+#if defined(REGOPT) &&__GNUC__ >= 2 && (defined(MIPS) || defined(OSF1_ALPHA) || defined(SPARC)) && !defined(DEBUG_CHECK)
 #define Into(Reg) asm(#Reg)
 
 #ifdef SPARC
@@ -412,7 +412,18 @@ Bool hookCheckNeeded(AM *e)
 #define Reg7
 #endif
 
+#ifdef MIPS
+#define Reg1 asm("$16")
+#define Reg2 asm("$17")
+#define Reg3 asm("$18")
+#define Reg4 asm("$19")
+#define Reg5 asm("$20")
+#define Reg6
+#define Reg7
+#endif
+
 #else
+
 #define Reg1
 #define Reg2
 #define Reg3
@@ -420,6 +431,7 @@ Bool hookCheckNeeded(AM *e)
 #define Reg5
 #define Reg6
 #define Reg7
+
 #endif
 
 
@@ -595,19 +607,13 @@ void engine() {
   RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
   OZ_CFun biFun = NULL;
 
-// shallow choice pointer
+  /* shallow choice pointer */
   ByteCode *shallowCP = NULL;
 
   SRecord *predicate;
   int predArity;
 
-#ifdef THREADED
-#  include "instrtab.hh"
-  CodeArea::globalInstrTable = instrTable;
-#else
-  Opcode op = (Opcode) -1;
-#endif
-
+#ifdef CATCH_SEGV
   switch (setjmp(IO::engineEnvironment)) {
 
   case NOEXCEPTION:
@@ -616,10 +622,19 @@ void engine() {
   case SEGVIO:
     HF_FAIL(message("segmentation violation"),);
     break;
-  case BUSERROR:
+   case BUSERROR:
     HF_FAIL(message("bus error"),);
     break;
   }
+#endif
+
+
+#ifdef THREADED
+#  include "instrtab.hh"
+  CodeArea::globalInstrTable = instrTable;
+#else
+  Opcode op = (Opcode) -1;
+#endif
 
   goto LBLstart;
 
