@@ -1883,7 +1883,7 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz) {
        if (NEEDSCOPYING(bb)) {
          bb = bb->_cacBoard();
          Assert(bb);
-         varFix.defer(aux_ptr, t);
+         vf.defer(aux_ptr, t);
        } else {
          *t = makeTaggedRef(aux_ptr);
        }

@@ -58,7 +58,7 @@ void gCollectCode(ProgramCounter PC) {
  *
  */
 
-VarFix   varFix;
+VarFix   vf;
 CacStack cacStack;
 
 
@@ -392,7 +392,7 @@ void AM::doGCollect(void) {
 void AM::gCollect(int msgLevel) {
 
   gCollectWeakDictionariesInit();
-  varFix.init();
+  vf.init();
   cacStack.init();
 
   (*gCollectFrameToProxy)();
@@ -471,7 +471,7 @@ void AM::gCollect(int msgLevel) {
 // -----------------------------------------------------------------------
 // ** second phase: the reference update stack has to checked now
 
-  varFix.gCollectFix();
+  vf.gCollectFix();
 
   Assert(cacStack.isEmpty());
 
@@ -501,7 +501,7 @@ void AM::gCollect(int msgLevel) {
   isCollecting = NO;
 #endif
 
-  varFix.exit();
+  vf.exit();
   cacStack.exit();
 
   //  malloc_stats();

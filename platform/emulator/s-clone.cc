@@ -73,7 +73,7 @@ static Bool across_redid = NO;
 Board * Board::clone(void) {
 
   cpTrail.init();
-  varFix.init();
+  vf.init();
   cacStack.init();
 
 #ifdef CS_PROFILE
@@ -113,7 +113,7 @@ redo:
 
   cacStack.sCloneRecurse();
 
-  varFix.sCloneFix();
+  vf.sCloneFix();
 
 #ifdef NEW_NAMER
   if (am.isPropagatorLocation()) {
@@ -153,7 +153,7 @@ redo:
 #endif
 
   cpTrail.exit();
-  varFix.exit();
+  vf.exit();
   cacStack.exit();
 
   return copy;

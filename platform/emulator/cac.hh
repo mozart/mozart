@@ -67,7 +67,7 @@ public:
 
 };
 
-extern VarFix varFix;
+extern VarFix vf;
 
 
 /*
