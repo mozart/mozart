@@ -617,7 +617,7 @@ case $platform in
     linux*)
         if ! test -f /usr/include/xopen_lim.h
         then
-            OZ_ENABLE_YES(lstatic,[  statically link on linux],
+            OZ_ENABLE_YES(lstatic,[  statically link on linux-libc5],
                     AC_MSG_RESULT(yes)
                     LIBS=`echo $LIBS | sed -e 's/[ ]-ldl//g'`
                     LIBS="-ldl -Xlinker -Bstatic $LIBS"
