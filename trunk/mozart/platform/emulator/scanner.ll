@@ -1061,9 +1061,6 @@ void xyscannerInit()
   SCANNERMajorVersion[i - 1] = '\0';
 
   bufferStack = NULL;
-
-  xy_showInsert = 0;
-  xy_gumpSyntax = 0;
 }
 
 // this one is called before every new parser run
