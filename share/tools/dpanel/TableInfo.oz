@@ -25,7 +25,7 @@
 functor
 import
    Browser(browse)
-   DPStatistics(getTablesInfo) at 'x-oz://boot/DPStatistics'
+   DPStatistics(getTablesInfo)
    DPB at 'x-oz://boot/DPB'
 export
    ownerTable:OwnerTable

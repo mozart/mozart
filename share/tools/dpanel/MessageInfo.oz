@@ -22,7 +22,7 @@
 
 functor
 import
-   DPStatistics(perdioStatistics) at 'x-oz://boot/DPStatistics'
+   DPStatistics(perdioStatistics)
 export
    MessageDiffInfoClass
 define
