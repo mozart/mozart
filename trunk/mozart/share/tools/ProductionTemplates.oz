@@ -45,7 +45,11 @@ local
       case AST of [fSynTopLevelProductionTemplates(_)] then skip
       else {Exception.raiseError gump(noProductionTemplates AST)}
       end
-   elseof Ms then {Exception.raiseError gump(errorsInProductionTemplates Ms)}
+   elseof _ then
+      skip
+%      {Exception.raiseError gump(errorsInProductionTemplates
+%				 {String.toAtom Ms})}
+      %% Leif??
    end
 in
    functor

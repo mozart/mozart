@@ -84,7 +84,7 @@ in
 	    Gui,status(NoThreads)
 	 else
 	    T = @currentThread
-	    I = {Thread.id T}
+	    I = {Debug.getId T}
 	    R = case {Dbg.checkStopped T} then 'stopped' else 'not stopped' end
 	    S = {Thread.state T}
 	    N = {Length {Dictionary.items self.ThreadDic}}
@@ -95,7 +95,7 @@ in
 		       else
 			  ': #'
 		       end #
-		       I # '/' # {Thread.parentId T} #
+		       I # '/' # {Debug.getParentId T} #
 		       ' (' # R # ', ' # S # ')')
 	 end
       end
@@ -120,7 +120,7 @@ in
 	 case M
 
 	 of breakpoint(thr:T) then
-	    I = {Thread.id T}
+	    I = {Debug.getId T}
 	 in
 	    case ThreadManager,Exists(I $) then %% already attached thread
 	       M = 'Thread #' # I # ' has reached a breakpoint'
@@ -135,7 +135,7 @@ in
 	    end
 
 	 [] entry(thr:T ...) then
-	    I = {Thread.id T}
+	    I = {Debug.getId T}
 	 in
 	    case ThreadManager,Exists(I $) then %% already attached thread
 	       Name = {CondSelect M data unit}
@@ -149,7 +149,7 @@ in
 	       end
 
 	    else %% this is a (not yet) attached thread
-	       Q = {Thread.parentId T}
+	       Q = {Debug.getParentId T}
 	       S = Gui,checkSubThreads($)
 	    in
 	       case S == AttachText orelse
@@ -173,7 +173,7 @@ in
 	    end
 
 	 elseof exit(thr:T frameID:FrameId ...) then
-	    I     = {Thread.id T}
+	    I     = {Debug.getId T}
 	    Key   = FrameId # I
 	    Found = {Member Key @SkippedProcs}
 	 in
@@ -198,7 +198,7 @@ in
 	    end
 
 	 elseof term(thr:T) then
-	    I = {Thread.id T}
+	    I = {Debug.getId T}
 	 in
 	    case ThreadManager,Exists(I $) then
 	       ThreadManager,remove(T I noKill)
@@ -208,7 +208,7 @@ in
 	    end
 
 	 [] blocked(thr:T) then
-	    I = {Thread.id T}
+	    I = {Debug.getId T}
 	 in
 	    case ThreadManager,Exists(I $) then
 	       ThreadManager,blocked(thr:T id:I)
@@ -218,7 +218,7 @@ in
 	    end
 
 	 [] ready(thr:T) then
-	    I = {Thread.id T}
+	    I = {Debug.getId T}
 	 in
 	    case ThreadManager,Exists(I $) then
 	       case {Dbg.checkStopped T} then
@@ -236,20 +236,20 @@ in
 	    end
 
 	 [] exception(thr:T exc:X) then
-	    I = {Thread.id T}
+	    I = {Debug.getId T}
 	 in
 	    case ThreadManager,Exists(I $) then
 	       {OzcarMessage 'exception of attached thread'}
 	       {{Dictionary.get self.ThreadDic I} printException(X)}
 	    else
-	       Q = {Thread.parentId T}
+	       Q = {Debug.getParentId T}
 	    in
 	       {OzcarMessage 'exception of unattached thread'}
 	       ThreadManager,add(T I Q exc(X))
 	    end
 
 	 [] update(thr:T) then
-	    I = {Thread.id T}
+	    I = {Debug.getId T}
 	 in
 	    case ThreadManager,Exists(I $) then
 	       Stack = {Dictionary.get self.ThreadDic I}
@@ -427,7 +427,7 @@ in
       end
 
       meth entry(thr: T ...)=Frame
-	 I     = {Thread.id T}
+	 I     = {Debug.getId T}
 	 Stack = {Dictionary.get self.ThreadDic I}
       in
 	 Gui,markNode(I runnable) % thread is not running anymore
@@ -460,7 +460,7 @@ in
 	    Gui,status('Cannot recalculate stack while thread is running')
 	 else
 	    Gui,status('Recalculating stack of thread #' #
-		       {Thread.id T} # '...')
+		       {Debug.getId T} # '...')
 	    {S rebuild(true)}
 	    {S print}
 	    {S emacsBarToTop}
@@ -498,7 +498,7 @@ in
 	    Gui,resetLastSelectedFrame
 	    case {CheckState CurT} == running then
 	       {OzcarMessage 'setting `rebuild\' flag' #
-		' of (running) thread #' # {Thread.id CurT}}
+		' of (running) thread #' # {Debug.getId CurT}}
 	       {CurS rebuild(true)}
 	    else skip end
 	 end

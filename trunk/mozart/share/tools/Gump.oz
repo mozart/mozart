@@ -28,6 +28,7 @@ import
    Open.file
    OS.system
    Property.get
+   Debug
    System.valueToVirtualString
    Foreign.load
 export
