@@ -167,7 +167,7 @@ in
 	 in
 	    Status = {FormatExceptionLine {Error.formatExc X}}
 	    {Ozcar PrivateSend(status(Status clear BlockedThreadColor))}
-	    {Emacs bar(file:F line:L column:C state:blocked)}
+	    {SendEmacs bar(file:F line:L column:C state:blocked)}
 	    StackManager,ReCalculate({Reverse S})
 
 	 else              % no stack available
@@ -175,7 +175,7 @@ in
 	 in
 	    Status = 'Exception: ' # E # ' / no stack available'
 	    {Ozcar PrivateSend(status(Status clear BlockedThreadColor))}
-	    {Emacs removeBar}
+	    {SendEmacs removeBar}
 	    StackManager,ReCalculate(nil)
 	 end
 
@@ -214,7 +214,7 @@ in
 	 case F == unit then skip else
 	    S = {CheckState self.T}
 	 in
-	    {Emacs bar(file:F.file line:F.line column:F.column state:S)}
+	    {SendEmacs bar(file:F.file line:F.line column:F.column state:S)}
 	 end
       end
 

@@ -5,19 +5,19 @@ local
 
    TkVerbose             = {New Tk.variable tkInit(ConfigVerbose)}
 
-   TkStepSystemProcedures= {New Tk.variable tkInit(ConfigStepSystemProcedures)}
-   TkStepRecordBuiltin   = {New Tk.variable tkInit(ConfigStepRecordBuiltin)}
    TkStepDotBuiltin      = {New Tk.variable tkInit(ConfigStepDotBuiltin)}
-   TkStepWidthBuiltin    = {New Tk.variable tkInit(ConfigStepWidthBuiltin)}
    TkStepNewNameBuiltin  = {New Tk.variable tkInit(ConfigStepNewNameBuiltin)}
-   TkStepSetSelfBuiltin  = {New Tk.variable tkInit(ConfigStepSetSelfBuiltin)}
 
    TkEnvSystemVariables  = {New Tk.variable tkInit(ConfigEnvSystemVariables)}
-   TkEnvProcedures       = {New Tk.variable tkInit(ConfigEnvProcedures)}
+   TkEnvPrintTypes       = {New Tk.variable tkInit(ConfigEnvPrintTypes)}
+
+   TkUpdateEnv           = {New Tk.variable tkInit(ConfigUpdateEnv)}
+   TkUseEmacsBar         = {New Tk.variable tkInit(ConfigUseEmacsBar)}
 
    C  = command
    MB = menubutton
    CB = checkbutton
+   RB = radiobutton
    CC = cascade
 
 in
@@ -39,12 +39,12 @@ in
 		    action:  self # action(RemoveAllDeadAction)
 		    key:     ctrl(u))
 		  separator
-		  C(label:   'Suspend Debugging'
-		    action:  self # off
-		    key:     ctrl(x))
 		  C(label:   'Destroy Ozcar'
 		    action:  Ozcar # reInit
-		    key:     ctrl(d))])
+		    key:     ctrl(d))
+		  C(label:   'Suspend Debugging'
+		    action:  self # off
+		    key:     ctrl(x))])
 	   MB(text: 'Thread'
 	      menu:
 		 [C(label:  'Previous'
@@ -94,53 +94,50 @@ in
 		  C(label:  'Re-Calculate'
 		    action: self # rebuildCurrentStack
 		    key:    ctrl(l))
+		  C(label:  'Update Environment'
+		    action: self # updateEnv
+		    key:    v)
 		  C(label:  'Browse'
 		    action: self # action(StackAction)
 		    key:    ctrl(b))
 		  separator
 		  C(label:  'Query...'
 		    action: self # eval
-		    key:    ctrl(e))])
+		    key:    e)])
 	   MB(text: 'Options'
 	      menu:
-		 [CB(label:    'Step on All System Procedures'
-		     variable: TkStepSystemProcedures
-		     action:   Config # toggle(stepSystemProcedures)
-		     feature:  stepSystemProcedures)
-		  CC(label:    'Step on Builtin'
+		 [CC(label: 'Step on Builtin'
 		     menu:
-			[CB(label:    '\'record\''
-			    variable: TkStepRecordBuiltin
-			    action:   Config # toggle(stepRecordBuiltin)
-			    feature:  stepRecordBuiltin)
-			 CB(label:    '\'.\''
+			[CB(label:    '\'.\''
 			    variable: TkStepDotBuiltin
-			    action:   Config # toggle(stepDotBuiltin)
-			    feature:  stepDotBuiltin)
-			 CB(label:    '\'width\''
-			    variable: TkStepWidthBuiltin
-			    action:   Config # toggle(stepWidthBuiltin)
-			    feature:  stepWidthBuiltin)
+			    action:   Config # toggle(stepDotBuiltin))
 			 CB(label:    '\'NewName\''
 			    variable: TkStepNewNameBuiltin
-			    action:   Config # toggle(stepNewNameBuiltin)
-			    feature:  stepNewNameBuiltin)
-			 CB(label:    '\'setSelf\''
-			    variable: TkStepSetSelfBuiltin
-			    action:   Config # toggle(stepSetSelfBuiltin)
-			    feature:  stepSetSelfBuiltin)]
-		     feature:  stepOnBuiltin)
+			    action:   Config # toggle(stepNewNameBuiltin))])
+		  CC(label:   'Value Printing'
+		     menu:
+			[RB(label:    'Types Only'
+			    variable: TkEnvPrintTypes
+			    value:    true
+			    action:   Config # set(envPrintTypes true))
+			 RB(label:    'Complete'
+			    variable: TkEnvPrintTypes
+			    value:    false
+			    action:   Config # set(envPrintTypes false))])
 		  separator
-		  CB(label:   'Filter System Variables'
+		  CB(label:    'Show System Variables'
 		     variable: TkEnvSystemVariables
-		     action:   Config # toggle(envSystemVariables)
-		     feature:  envSystemVariables)
-		  CB(label:   'Filter Procedures'
-		     variable: TkEnvProcedures
-		     action:   Config # toggle(envProcedures)
-		     feature:  envProcedures)
+		     action:   Config # toggle(envSystemVariables))
+		  CB(label:    'Auto Update of Environment'
+		     variable: TkUpdateEnv
+		     action:   self # toggleUpdateEnv
+		     key:      ctrl(a))
+		  CB(label:    'Use Emacs'
+		     variable: TkUseEmacsBar
+		     action:   self # toggleEmacs
+		     key:      ctrl(e))
 		  separator
-		  CB(label:   'Messages in Emulator Buffer'
+		  CB(label:   'Debug Debugger'
 		     variable: TkVerbose
 		     action:   Config # toggle(verbose)
 		     feature:  verbose)])]
