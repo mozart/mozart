@@ -1,0 +1,433 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: popow, mehl
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __AM_ICC
+#define __AM_ICC
+
+#if !defined(OUTLINE) && defined(INTERFACE)
+#pragma interface
+#endif
+
+// optimize: inline ....
+
+inline
+void AM::rebind(TaggedRef *refPtr, TaggedRef newRef)
+/* (re)bind Ref *ref to Term *ptr;                     */
+/* We need this procedure for the rational unification */
+/* algorithm;                                          */
+{
+  rebindTrail.pushCouple(refPtr, *refPtr);   /* always;   */
+  doBind(refPtr,newRef);
+}
+
+
+inline
+void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var,
+		      TaggedRef a, Bool prop) 
+{
+  // most probable case first: local UVar
+  // if (isUVar(var) && currentBoard == tagged2VarHome(var)) {
+  // more efficient:
+  if (var == currentUVarPrototype && prop) {
+    doBind(varPtr,a);
+  } else {
+    genericBind(varPtr,var,NULL,a,prop);
+  }
+}
+
+
+/* specially optimized unify: test two most probable cases first:
+ *
+ *     1. bind a variable
+ *     2. test two non-variables
+ *     3. but don't forget to check identical variables
+ */
+
+inline
+Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
+{
+  if (!prop) goto bomb;
+  
+  {
+    TaggedRef proto = currentUVarPrototype;
+    TaggedRef term1 = A;
+    TaggedRef term2 = B;
+    
+    DEREF(term1,term1Ptr,_1);
+    
+    if (proto == term1) {
+      DEREF(term2,_2,_3);
+      if (!isAnyVar(term2)) {
+	doBind(term1Ptr,term2);
+	goto exit;	
+      }
+    } 
+    DEREF(term2,term2Ptr,_2);
+    if (proto == term2 && !isAnyVar(term1)) {
+      doBind(term2Ptr,term1);
+      goto exit;
+    }
+    if (term1==term2 && !isAnyVar(term1)) {
+      goto exit;
+    }
+  }
+ bomb:
+  return unify(A,B,prop);
+
+ exit:
+  return OK;
+}
+
+inline
+void AM::deinstallCurrent()
+{
+  reduceTrailOnSuspend();
+  currentBoard->unsetInstalled();
+  setCurrent(currentBoard->getParent());
+}
+
+inline
+void AM::deinstallPath(Board *top)
+{
+  Assert(!top->isCommitted() && !top->isFailed());
+  
+  while (currentBoard != top) {
+    deinstallCurrent();
+    Assert(currentBoard != rootBoard || top == rootBoard);
+  }
+}
+
+inline
+Bool AM::installScript(Script &script)
+{
+  Bool ret = OK;
+  installingScript = TRUE;
+  for (int index = 0; index < script.getSize(); index++) {
+    if (!unify(script[index].getLeft(),script[index].getRight())) {
+      ret = NO;
+      if (!isToplevel()) {
+	break;
+      }
+    }
+  }
+  installingScript = FALSE;
+#ifndef DEBUG_CHECK
+  script.dealloc();
+#else
+  if (ret == OK) 
+    script.dealloc ();
+#endif
+  return ret;
+}
+
+inline
+Bool AM::entailment ()
+{
+  return (!currentBoard->hasSuspension()
+	  // First test: no subtrees;
+	  && trail.isEmptyChunk()
+	  // second test: is this node stable?
+	  );
+}
+
+inline
+Bool AM::isLocalUVar(TaggedRef var,TaggedRef *varPtr)
+{
+  // variables are usually bound 
+  // in the node where they are created
+  if (var == currentUVarPrototype) return OK;
+  return isLocalUVarOutline(var,varPtr);
+}
+
+inline
+Bool AM::isLocalUVar(TaggedRef var)
+{
+  // variables are usually bound 
+  // in the node where they are created
+  if (var == currentUVarPrototype) return OK;
+  return tagged2VarHome(var)->derefBoard()==currentBoard;
+}
+
+
+inline
+Bool AM::isLocalSVar(SVariable *var) {
+  Board *home = var->getHome1();
+
+  if (home == currentBoard) return OK;
+  return isLocalSVarOutline(var);
+}
+
+inline
+Bool AM::isLocalSVar(TaggedRef var)
+{
+  return isLocalSVar(tagged2SVar(var));
+}
+
+inline
+Bool AM::isLocalCVar(TaggedRef var) {
+  return isLocalSVar(taggedCVar2SVar(var));
+}
+
+inline
+Bool AM::isLocalVariable(TaggedRef var,TaggedRef *varPtr)
+{
+  CHECK_ISVAR(var);
+
+  if (isUVar(var))
+    return isLocalUVar(var,varPtr);
+  if (isSVar(var))
+    return isLocalSVar(var);
+
+  return isLocalCVar(var);
+}
+
+inline
+void AM::checkSuspensionList(TaggedRef taggedvar, PropCaller calledBy)
+{
+  SVariable * var = tagged2SuspVar(taggedvar);
+  var->setSuspList(checkSuspensionList(var, var->getSuspList(),
+				       calledBy));
+}
+
+/* ------------------------------------------------------------------------
+ * Threads
+ * ------------------------------------------------------------------------ */
+
+inline
+void AM::pushCall(TaggedRef def, int arity, RefsArray args)
+{
+  currentThread->pushCall(def,args,arity);
+}
+
+inline
+void AM::pushTaskInline(ProgramCounter pc,RefsArray y,RefsArray g)
+{
+  cachedStack->pushCont(pc,y,g,0);
+}
+
+inline
+void AM::pushCFun(OZ_CFun f, RefsArray x=0, int i=0)
+{
+  currentThread->pushCFunCont(f, x, i, OK);
+}
+
+// unset the ThreadSwitch flag and reset the counter
+inline
+void AM::restartThread()
+{
+  unsetSFlag(ThreadSwitch);
+  threadSwitchCounter=osMsToClockTick(ozconf.timeSlice);
+}
+
+inline
+void AM::addSuspendVarList(TaggedRef * t)
+{
+  Assert(isAnyVar(*t));
+
+  if (suspendVarList==makeTaggedNULL()) {
+    suspendVarList=makeTaggedRef(t);
+  } else {
+    suspendVarList=cons(makeTaggedRef(t),suspendVarList);
+  }
+}
+
+/*
+ * MISC
+ */
+
+inline
+Board *Name::getBoard()
+{
+  return (hasGName()) ? am.rootBoard : ((Board*)ToPointer(homeOrGName))->derefBoard();
+}
+
+inline
+Board *Object::getBoard()
+{
+  return isDeep() ? ((DeepObject*)this)->home->derefBoard() : am.rootBoard;
+}
+
+inline
+Board *SChunk::getBoard()
+{
+  return ((Board *) getPtr())->derefBoard();
+}
+
+inline
+Board *ConstTermWithHome::getBoard() { 
+  return home->derefBoard();
+}
+
+
+inline
+Board *Tertiary::getBoard()
+{
+  if (getTertType() == Te_Local)
+    return ((Board*)getPointer())->derefBoard();
+  return am.rootBoard;
+}
+
+
+/*
+ * Threads
+ */
+
+//
+//  An allocator for thread's bodies;
+inline
+RunnableThreadBody* AM::allocateBody()
+{
+  RunnableThreadBody *body = threadBodyFreeList;
+  if (body) {
+    threadBodyFreeList = threadBodyFreeList->next;
+  } else {
+    body = new RunnableThreadBody(ozconf.taskStackSize);
+  }
+
+  body->taskStack.makeEmpty();
+
+#ifdef LINKEDTHREADS
+  body->parentThread = nil();
+  body->childThreads = nil();
+#endif
+
+  return body;
+}
+
+//
+//  Make a runnable thread with a task stack;
+inline 
+Thread *AM::mkRunnableThread(int prio, Board *bb, Bool inSolve, Bool link)
+{
+  Thread *th = new Thread(S_RTHREAD | T_prop,prio,bb,link);
+  th->setBody(allocateBody());
+
+  Assert(bb==currentBoard ||
+	 bb->getParent() == currentBoard ||
+	 inSolve);
+  if (currentSolveBoard != (Board *) NULL || inSolve) {
+    Assert (isInSolveDebug (bb));
+    incSolveThreads (bb);
+    th->setInSolve ();
+  } else {
+    Assert (!(isInSolveDebug (bb)));
+  }
+  return th;
+}
+
+//
+//  Constructors for 'suspended' cases:
+//    deep 'unify' suspension;
+//    suspension with continuation;
+//    suspension with a 'C' function;
+//    suspended sequential thread (with a task stack);
+//
+inline
+Thread *AM::mkWakeupThread(Board *bb) 
+{
+  return new Thread(S_WAKEUP,bb->getActor()->getPriority(),bb,0);
+}
+
+//
+inline
+Thread *AM::mkPropagator(Board *bb, int prio, OZ_Propagator *pro)
+{
+  Thread * th = new Thread(S_PR_THR, prio, bb, 0);
+  th->setInitialPropagator(pro);
+
+  return th;
+}
+
+//
+inline 
+Thread *AM::mkSuspendedThread(Board *bb, int prio, TaggedRef val)
+{
+  Thread *th = new Thread(S_RTHREAD,prio,bb,val);
+  th->setBody(allocateBody());
+
+  return th;
+}
+
+
+inline
+int AM::commit(Board *bb, Thread *tt=0)
+{
+  Assert(!currentBoard->isCommitted());
+  Assert(bb->getParent()==currentBoard);
+
+  AWActor *aw = AWActor::Cast(bb->getActor());
+
+  Assert(!tt || tt==aw->getThread());
+
+  if (!tt) {
+    tt=aw->getThread();
+    DebugCheckT(aw->setThread(0));
+    if (tt->isSuspended()) {
+      tt->suspThreadToRunnable();
+      scheduleThread(tt);
+    }
+
+    // remove the actor task
+    tt->getTaskStackRef()->discardFrame(C_ACTOR_Ptr);
+  }
+
+  if (!bb->isWaitTop()) {
+    tt->pushCont(bb->getBodyPtr());
+  }
+
+  bb->setCommitted(currentBoard);
+  currentBoard->incSuspCount(bb->getSuspCount()-1);
+
+  if (bb->isWait()) {
+    Assert(bb->isWaiting());
+
+    WaitActor *wa = WaitActor::Cast(aw);
+    if (wa->hasChoices()) {
+      if (currentBoard->isWait()) {
+	WaitActor::Cast(currentBoard->getActor())->pushChoices(wa->getCps());
+      } else if (currentBoard->isSolve()) {
+	SolveActor::Cast(currentBoard->getActor())->pushChoices(wa->getCps());
+      } else {
+	// forget the choice stack when committing to a conditional
+      }
+    }
+
+    if (!installScriptOutline(bb->getScriptRef())) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+/* ------------------------------------------------------------------------
+ * OO stuff
+ * ------------------------------------------------------------------------ */
+
+inline
+void AM::changeSelf(Object *o)
+{
+  Object *oldSelf = cachedSelf;
+  if(o != oldSelf) {
+    cachedStack->pushSelf(oldSelf);
+    cachedSelf = o;
+  }
+}
+
+inline
+void AM::saveSelf()
+{
+  if (cachedSelf != 0) {
+    currentThread->setSelf(cachedSelf);
+    cachedSelf = 0;
+  }
+}
+
+#endif  // __AM_ICC

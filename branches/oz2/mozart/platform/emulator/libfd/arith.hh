@@ -1,0 +1,126 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __ARITH_HH__
+#define __ARITH_HH__
+
+#include "std.hh"
+
+//-----------------------------------------------------------------------------
+
+class TwicePropagator : public Propagator_D_D {
+private:
+  static OZ_CFun spawner;
+public:
+  TwicePropagator(OZ_Term x, OZ_Term y) : Propagator_D_D(x, y) {}
+  
+  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return run(void);
+};
+
+//-----------------------------------------------------------------------------
+
+class SquarePropagator : public Propagator_D_D {
+private:
+  static OZ_CFun spawner;
+public:
+  SquarePropagator(OZ_Term x, OZ_Term y) : Propagator_D_D(x, y) {}
+  
+  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return run(void);
+};
+
+//-----------------------------------------------------------------------------
+
+class PlusPropagator : public Propagator_D_D_D {
+private:
+  static OZ_CFun spawner;
+public:
+  PlusPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
+    : Propagator_D_D_D(x, y, z) {}
+
+  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return run(void);
+};
+
+//-----------------------------------------------------------------------------
+
+class MinusPropagator : public Propagator_D_D_D {
+private:
+  static OZ_CFun spawner;
+public:
+  MinusPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
+    : Propagator_D_D_D(x, y, z) { };
+
+  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return run(void);
+};
+
+//-----------------------------------------------------------------------------
+
+class TimesPropagator : public Propagator_D_D_D {
+private:
+  static OZ_CFun spawner;
+public:
+  TimesPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
+    : Propagator_D_D_D(x, y, z) { };
+  
+  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return run(void);
+};
+
+//-----------------------------------------------------------------------------
+
+class DivPropagator : public Propagator_D_I_D {
+private:
+  static OZ_CFun spawner;
+public:
+  DivPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
+    : Propagator_D_I_D(x, y, z) { };
+  
+  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return run(void);
+};
+
+class DivIPropagator : public Propagator_D_I_D {
+private:
+  static OZ_CFun spawner;
+public:
+  DivIPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
+    : Propagator_D_I_D(x, y, z) { };
+  
+  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return run(void);
+};
+
+class ModPropagator : public Propagator_D_I_D {
+private:
+  static OZ_CFun spawner;
+public:
+  ModPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
+    : Propagator_D_I_D(x, y, z) { };
+  
+  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return run(void);
+};
+
+class ModIPropagator : public Propagator_D_I_D {
+private:
+  static OZ_CFun spawner;
+public:
+  ModIPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
+    : Propagator_D_I_D(x, y, z) { };
+  
+  virtual OZ_CFun getSpawner(void) const { return spawner; }
+  virtual OZ_Return run(void);
+};
+
+#endif

@@ -1,0 +1,197 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __genvar_icc__
+#define __genvar_icc__
+
+#if defined(INTERFACE) && !defined(OUTLINE)
+#pragma interface
+#endif
+
+
+inline
+Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
+			 TaggedRef * tptr2, TaggedRef term2,
+			 Bool prop)
+{
+  switch (getType()){
+  case FDVariable:
+    {
+      if (! ((GenFDVariable *)this)->unifyFD(tptr1, term1, tptr2, term2, prop))
+	return FALSE;
+    }
+    break;
+  case FSetVariable:
+    {
+      if (! ((GenFSetVariable *)this)->unifyFSet(tptr1, term1, tptr2, term2, prop))
+	return FALSE;
+    }
+    break;
+  case OFSVariable:
+    if (! ((GenOFSVariable *)this)->unifyOFS(tptr1, term1, tptr2, term2, prop)) {
+      return FALSE;
+    }
+    break;
+  case MetaVariable:
+    {
+      if (! ((GenMetaVariable *)this)->unifyMeta(tptr1, term1, tptr2, term2, prop))
+	return FALSE;
+    }
+    break;
+  case BoolVariable:
+    {
+      if (! ((GenBoolVariable *)this)->unifyBool(tptr1, term1, tptr2, term2, prop))
+	return FALSE;
+    }
+    break;
+  case AVAR:
+    if (! ((AVar *)this)->unifyAVar(tptr1, tptr2==0?&term2:tptr2, prop))
+      return FALSE;
+    break;
+  case PerdioVariable:
+    if (! ((PerdioVar *)this)->unifyPerdioVar(tptr1, tptr2==0?&term2:tptr2,
+					      prop))
+      return FALSE;
+    break;
+  default:
+    Assert(0);
+    return FALSE;
+  }
+      
+  return TRUE;
+} 
+
+inline
+int GenCVariable::getSuspListLength(void)
+{
+  GenVarCheckType(getType());
+
+  switch (getType()){
+  case FDVariable:
+    return ((GenFDVariable *)this)->getSuspListLength();
+  case BoolVariable:
+    return ((GenBoolVariable *)this)->getSuspListLength();
+  case OFSVariable:
+    return ((GenOFSVariable *)this)->getSuspListLength();
+  case FSetVariable:
+    return ((GenFSetVariable *)this)->getSuspListLength();
+  default:
+    break;
+  }
+  return -1;
+}
+
+inline
+size_t GenCVariable::getSize(void)
+{
+  switch (getType()){
+  case FDVariable:   return ((GenFDVariable*)this)->getSize();
+  case OFSVariable:  return ((GenOFSVariable*)this)->getSize();
+  case MetaVariable: return ((GenMetaVariable*)this)->getSize();
+  case BoolVariable: return ((GenBoolVariable*)this)->getSize();
+  case FSetVariable: return ((GenFSetVariable*)this)->getSize();
+  case AVAR:         return ((AVar *)this)->getSize();
+  case PerdioVariable: return ((PerdioVar *)this)->getSize();
+  default:           Assert(0);
+  }
+  return 0;
+} 
+
+inline
+Bool GenCVariable::valid(TaggedRef *ptr,TaggedRef val)
+{
+  switch (getType()){
+  case FDVariable:   return ((GenFDVariable*)this)->valid(val);
+  case OFSVariable:  return ((GenOFSVariable*)this)->valid(val);
+  case MetaVariable: return ((GenMetaVariable*)this)->valid(val);
+  case BoolVariable: return ((GenBoolVariable*)this)->valid(val);
+  case FSetVariable: return ((GenFSetVariable*)this)->valid(val);
+  case AVAR:         return ((AVar *)this)->valid(val);
+  case PerdioVariable: return ((PerdioVar *)this)->valid(ptr,val);
+  default: Assert(0); break;
+  }  
+  return FALSE;
+}
+
+// this is supposed to be the local variable 
+inline
+void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
+{
+  Assert(getType() == glob_var->getType() || 
+	 (getType() == BoolVariable && glob_var->getType() == FDVariable));
+  Assert(!prop || am.isLocalSVar(this) && ! am.isLocalSVar(glob_var));
+  
+  Board * glob_home = glob_var->getBoard();
+  suspList = ::installPropagators(suspList, glob_var->getSuspList(),
+				  glob_home);
+			
+  switch (glob_var->getType()) {
+  case FDVariable:
+
+    switch (getType()){
+    case FDVariable:
+      ((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var, glob_home);
+    break;
+    case BoolVariable:     
+      ((GenBoolVariable *)this)->installPropagators((GenFDVariable *) glob_var, glob_home);
+    break;
+    case OFSVariable: 
+    case MetaVariable: 
+    case AVAR:
+    case PerdioVariable:
+    case FSetVariable:
+      break;
+    default:
+      Assert(0);
+    }
+    break;
+  default:
+    break;
+  }
+}
+
+inline
+void GenCVariable::addDetSusp (Thread *thr) 
+{ 
+  switch (getType()){
+  case FDVariable:
+    ((GenFDVariable *)this)->addDetSusp (thr);
+    return;
+  case OFSVariable:
+    ((GenOFSVariable *)this)->addDetSusp (thr);
+    return;
+  default:
+    addSuspension (thr);
+    return;
+  }
+}
+
+inline
+void GenCVariable::dispose(void) 
+{ 
+  switch (getType()){
+  case FDVariable:
+    ((GenFDVariable *)this)->dispose();
+    break;
+  case BoolVariable:
+    ((GenBoolVariable *)this)->dispose();
+    break;
+  case FSetVariable:
+    ((GenFSetVariable *)this)->dispose();
+    break;
+  default:
+    break;
+  }
+}
+
+#endif //__genvar_icc__
+
+
