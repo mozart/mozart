@@ -39,6 +39,7 @@ extern int h_errno;
 #include <sys/wait.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <sys/utsname.h>
 
 #ifdef IRIX5_MIPS
 #include <bstring.h>
@@ -534,6 +535,26 @@ OZ_C_proc_begin(unix_stat,2)
             OZ_cons(OZ_pairAI("size",fileSize),
                     OZ_nil()));
   return OZ_unify(out,OZ_recordInit(OZ_CToAtom("stat"),pairlist));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(unix_uname,1)
+{
+  OZ_declareArg(0, out);
+
+  struct utsname buf;
+  if (uname(&buf) < 0)
+    RETURN_UNIX_ERROR(out);
+
+  OZ_Term t1=OZ_pairAA("sysname",buf.sysname);
+  OZ_Term t2=OZ_pairAA("nodename",buf.nodename);
+  OZ_Term t3=OZ_pairAA("release",buf.release);
+  OZ_Term t4=OZ_pairAA("version",buf.version);
+  OZ_Term t5=OZ_pairAA("machine",buf.machine);
+
+  OZ_Term pairlist=
+    OZ_cons(t1,OZ_cons(t2,OZ_cons(t3,OZ_cons(t4,OZ_cons(t5,OZ_nil())))));
+  return OZ_unify(out,OZ_recordInit(OZ_CToAtom("uname"),pairlist));
 }
 OZ_C_proc_end
 
@@ -1735,6 +1756,7 @@ void MyinitUnix()
 {
   OZ_addBuiltin("unix_getDir",2,unix_getDir);
   OZ_addBuiltin("unix_stat",2,unix_stat);
+  OZ_addBuiltin("unix_uname",1,unix_uname);
   OZ_addBuiltin("unix_getCWD",1,unix_getCWD);
   OZ_addBuiltin("unix_open",4,unix_open);
   OZ_addBuiltin("unix_fileDesc",2,unix_fileDesc);
