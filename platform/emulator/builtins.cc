@@ -6877,12 +6877,12 @@ OZ_C_proc_proto(BIdebugPrintLong);
 // fun String.isFloat	(+string ?+bool)
 // fun String.isAtom	(+string ?+bool)
 // fun IsArray		(+value ?+bool)			inline
-// fun NewArray		(+int +int ?+value ?+array)
+// fun NewArray		(+int +int value -+array)
 // fun Array.high	(+array ?+int)			inline
 // fun Array.low	(+array ?+int)			inline
 // fun Get		(+array +int value)		inline
 // fun Put		(+array +int value)		inline
-// fun NewDictionary	(?+dictionary)
+// fun NewDictionary	(-+dictionary)
 // fun IsDictionary	(+value ?+bool)			inline
 // fun Dictionary.isEmpty	(+dictionary ?+bool)	inline
 // fun Dictionary.get	(+dictionary +feature value)	inline
@@ -6902,8 +6902,116 @@ OZ_C_proc_proto(BIdebugPrintLong);
 // fun NewLock	(?+lock)
 // prd Lock	(+lock)
 // prd Unlock	(+lock)
-// fun NewPort	(?+[value] ?+port)
-// prd Send	(+port ?+value)
+// fun NewPort	([value] ?+port)
+// prd Send	(+port value)
+// fun NewCell	(value -+cell)
+// fun Exchange	(+cell value value)			inline
+// fun Access	(+cell value)				inline
+// fun Assign	(+cell value)				inline
+// fun perdioRestop	(+cellOrLock)
+// fun crash	()
+// fun InstallHandler	(+value +value value)
+// fun InstallWatcher	(+value +value value)
+// fun IsChar	(+value ?+bool)
+// fun Char.isAlNum	(+char ?+bool)
+// fun Char.isAlpha	(+char ?+bool)
+// fun Char.isCntrl	(+char ?+bool)
+// fun Char.isDigit	(+char ?+bool)
+// fun Char.isGraph	(+char ?+bool)
+// fun Char.isLower	(+char ?+bool)
+// fun Char.isPrint	(+char ?+bool)
+// fun Char.isPunct	(+char ?+bool)
+// fun Char.isSpace	(+char ?+bool)
+// fun Char.isUpper	(+char ?+bool)
+// fun Char.isXDigit	(+char ?+bool)
+// fun Char.toLower	(+char ?+char)
+// fun Char.toUpper	(+char ?+char)
+// fun Char.toAtom	(+char ?+atom)
+// fun Char.type	(+char ?+atom)
+// fun Adjoin		(+record +record ?+record)	inline
+// fun AdjoinList	(+record +[feature#value] ?+record)
+// fun record		(+literal +[feature#value] ?+record)
+// fun Arity		(+record ?+[feature])		inline
+// fun AdjoinAt		(+record +feature value ?+record)
+// fun IsNumber		(+value ?+bool)	inline shallow isNumberRel
+// fun IsInt		(+value ?+bool)	inline shallow isIntRel
+// fun IsFloat		(+value ?+bool)	inline shallow isFloatRel
+// fun IsRecord		(+value ?+bool)	inline shallow isRecordRel
+// fun IsTuple		(+value ?+bool)	inline shallow isTupleRel
+// fun IsLiteral	(+value ?+bool)	inline shallow isLiteralRel
+// fun IsLock		(+value ?+bool)	inline shallow isLockRel
+// fun IsCell		(+value ?+bool)	inline shallow isCellRel
+// fun IsPort		(+value ?+bool)	inline shallow isPortRel
+// fun IsProcedure	(+value ?+bool)	inline shallow isProcedureRel
+// fun IsName		(+value ?+bool)	inline shallow isNameRel
+// fun IsAtom		(+value ?+bool)	inline shallow isAtomRel
+// fun IsBool		(+value ?+bool)	inline shallow isBoolRel
+// fun IsUnit		(+value ?+bool)	inline shallow isUnitRel
+// fun IsChunk		(+value ?+bool)	inline shallow isChunkRel
+// fun IsRecordC	(*value ?+bool)	inline shallow isRecordCRel
+// fun IsObject		(+value ?+bool) inline shallow isObjectRel
+// fun IsString		(+value ?+bool)
+// fun IsVirtualString	(+value ?+bool)
+// fun IsFree		(value  ?+bool)	inline shallow isFreeRel
+// fun IsKinded		(value  ?+bool)	inline shallow isKindedRel
+// fun IsDet		(value  ?+bool)	inline shallow isDetRel
+// prd isNumberRel	(+value)	inline
+// prd isIntRel		(+value)	inline
+// prd isFloatRel	(+value)	inline
+// prd isRecordRel	(+value)	inline
+// prd isTupleRel	(+value)	inline
+// prd isLiteralRel	(+value)	inline
+// prd isCellRel	(+value)	inline
+// prd isPortRel	(+value)	inline
+// prd isProcedureRel	(+value)	inline
+// prd isNameRel	(+value)	inline
+// prd isAtomRel	(+value)	inline
+// prd isLockRel	(+value)	inline
+// prd isBoolRel	(+value)	inline
+// prd isUnitRel	(+value)	inline
+// prd isChunkRel	(+value)	inline
+// prd isRecordRel	(+value)	inline
+// prd isRecordCRel	(*value)	inline
+// prd isObjectRel	(+value)	inline
+// prd isFreeRel	(value)		inline
+// prd isKindedRel	(value)		inline
+// prd isDetRel		(value)		inline
+// prd Wait		(?+value)	inline
+// prd WaitOr		(value value)
+// fun virtualStringLength (virtualString +int ?+int)
+// fun Length		([value] ?+int)
+// fun Not		(+bool ?+bool)	inline
+// fun And	(+bool +bool ?+bool)	inline
+// fun Or	(+bool +bool ?+bool)	inline
+// fun Type.ofValue	(+value ?+atom)	inline
+// fun Value.status	(value ?+tuple)	inline
+// fun procedureEnvironment	(+procedure ?+tuple)
+// fun getProcInfo	(+procedure value)
+// fun setProcInfo	(+procedure value)
+// fun getProcNames	(+procedure value)
+// fun setProcNames	(+procedure value)
+// fun getProcPos	(+procedure ?+literal ?+int)
+// fun MakeTuple	(+literal +int ?+tuple)	inline
+// fun Label		(*recordC ?+literal)	inline
+// fun hasLabel		(value ?+bool)		inline
+// fun ProcedureArity	(+procedure ?+int)	inline
+// fun TellRecord	(+literal record)
+// fun WidthC		(*recordC int)
+// fun monitorArity	(*recordC value [feature])
+// fun tellRecordSize	(+literal +int record)
+// fun .		(*recordCOrChunk +feature value)	inline
+// fun ^		(*recordC +feature value)		inline
+// fun HasFeature	(*recordCOrChunk +feature ?+bool)	inline
+// fun CondSelect	(*recordCOrChunk +feature value value)	inline
+// fun Width		(+record ?+int)		inline
+// fun AtomToString	(+atom ?+string)	inline
+// fun StringToAtom	(+string ?+atom)
+// fun NewChunk		(+record -+chunk)
+// fun chunkArity	(+chunk ?+[feature])
+// fun chunkWidth	(+chunk ?+int)
+// fun NewName		(-+name)
+// fun NewUniqueName	(+atom ?+name)
+// fun ==		(*value *value ?+bool)	inline
 //
 // OZ COMPILER END
 
