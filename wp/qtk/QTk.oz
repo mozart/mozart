@@ -55,7 +55,8 @@ import
    QTkScrollframe
    QTkToolbar
    QTkFrame
-%   System(show:Show)
+   PrintCanvas
+   System(show:Show)
    
 export
 
@@ -69,20 +70,12 @@ export
    LoadImageLibrary
    SaveImageLibrary
    BuildImageLibrary
-   NewMenu
-   buildmenu:NewMenu
    buildMenu:NewMenu
-%   registerWidget:QTkRegisterWidget
    newLook:NewLook
-%   LoadTk
-%   LoadTkPI
    WInfo
    SetAssertLevel
    QTkDesc
-   GetBuilder
-%   SetAlias
-%   UnSetAlias
-%   GetAlias
+   newBuilder:GetBuilder
 
 prepare
    NoArgs={NewName}
@@ -97,9 +90,6 @@ prepare
    
 define
 
-   
-%   LoadTk		= QTkDevel.loadTk
-%   LoadTkPI		= QTkDevel.loadTkPI
    SetAssertLevel	= QTkDevel.setAssertLevel
    QTkAction		= QTkDevel.qTkAction
    NewLook		= QTkDevel.newLook
@@ -121,30 +111,30 @@ define
    QTkDesc              = QTkDevel.qTkDesc
    WInfo                = QTkDevel.wInfo
 
-   %% create a module manager with Tk and QTkDevel
-   %% so that these don't get reloaded and relinked
+%    %% create a module manager with Tk and QTkDevel
+%    %% so that these don't get reloaded and relinked
 
-   ModMan={New Module.manager init}
-   {ModMan enter(name:"QTkDevel" QTkDevel)}
-   {ModMan enter(name:"QTk" QTkDevel.qTk)}
+%    ModMan={New Module.manager init}
+%    {ModMan enter(name:"QTkDevel" QTkDevel)}
+%    {ModMan enter(name:"QTk" QTkDevel.qTk)}
 
-   fun{QTkRegisterWidget GName}
-      FName={VsToString
-	     "QTK" #
-	     case {VsToString GName}
-	     of &t|&d|X then {Majus X}
-	     [] &l|&r|X then {Majus X}
-	     []       X then {Majus X}
-	     end   #
-	     ".ozf"}
-      M
-   in
-      %% this has become simpler with the new usage of
-      %% failed futures to capture concurrent exceptions
-      {ModMan link(url:FName M)}
-      {Wait M}
-      M
-   end
+%    fun{QTkRegisterWidget GName}
+%       FName={VsToString
+% 	     "QTK" #
+% 	     case {VsToString GName}
+% 	     of &t|&d|X then {Majus X}
+% 	     [] &l|&r|X then {Majus X}
+% 	     []       X then {Majus X}
+% 	     end   #
+% 	     ".ozf"}
+%       M
+%    in
+%       %% this has become simpler with the new usage of
+%       %% failed futures to capture concurrent exceptions
+%       {ModMan link(url:FName M)}
+%       {Wait M}
+%       M
+%    end
 
    
    \insert QTkClipboard.oz
@@ -226,6 +216,9 @@ define
 	    lock
 	       if {IsFree self.Inited} then self.Inited=unit else
 		  {Exception.raiseError qtk(custom "Can't build a window" "The window has already been initialized" M)}
+	       end
+	       if {Label M}\=td andthen {Label M}\=lr then
+		  {Exception.raiseError qtk(custom "Bad toplevel widget" {Label M} M)}
 	       end
 	       Out
 	       proc{Listen L}
@@ -725,7 +718,22 @@ define
  	       QTkNumberentry]
         proc{$ V}
  	  {ForAll V.register proc{$ W} {Builder.setAlias W.widgetType W.widget} end}
-        end}
+	end}
+      {ForAll [td lr grid]
+       proc{$ V}
+	  {Builder.setAlias {VirtualString.toAtom V#l}
+	   fun{$ M}
+	      if {HasFeature M 1} andthen {List.is M.1} andthen {Not {HasFeature M 2}} then
+		 {Record.adjoin M
+		  {List.toTuple V M.1}}
+	      else
+		 {Exception.raiseError qtk(custom "Error : bad parameter 1 or 2"
+					   "Contained widgets are specified as a list at the feature 1 of this record only."
+					   M)}
+		 V
+	      end
+	   end}
+       end}
       Builder
    end
 

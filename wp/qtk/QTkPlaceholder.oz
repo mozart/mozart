@@ -38,7 +38,6 @@ import
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
 	    globalUngetType:    GlobalUngetType
-	    redirector:         Redirector
 	    splitParams:        SplitParams)
 
 export
@@ -127,13 +126,13 @@ define
 %		  if {HasFeature B handle} andthen {IsFree B.handle} then
 %		     B.handle=NC
 %		  end
-		  Pack<-r(obj:NC.Redirector
+		  Pack<-r(obj:NC
 			  sticky:{CondSelect B glue ""}
 			  padx:{CondSelect B padx 0}
 			  pady:{CondSelect B pady 0})|@Pack
 	       end
 	       if {IsFree NC} then {Exception.raiseError qtk(badParameter 1 self.widgetType M)} end
-	       if NC\=empty then {ForAll @Pack proc{$ R} if R.obj==NC.Redirector then P=R end end} end
+	       if NC\=empty then {ForAll @Pack proc{$ R} if R.obj==NC then P=R end end} end
 	       if @Child\=empty then {Tk.send grid(forget @Child)} end
 	       if NC\=empty then
 		  if {IsFree P} then {Exception.raiseError qtk(badParameter 1 self.widgetType M)} end
@@ -154,7 +153,7 @@ define
 	    {SplitParams M [1] A B}
 	    QTkClass,A
 	    {Assert self.widgetType self.typeInfo B}
-	    {CondSelect B 1 _}=if @Child==empty then empty else @Child.Redirector end
+	    {CondSelect B 1 _}=if @Child==empty then empty else @Child end
 	 end
       end
 

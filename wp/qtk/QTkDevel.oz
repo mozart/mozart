@@ -67,8 +67,6 @@ export
    NewLook
    DefLook
 %   PropagateLook
-   NewRedirector
-   Redirector
 %   SetAlias
 %   UnSetAlias
 %   GetAlias
@@ -78,19 +76,17 @@ export
    WInfo
    Feature
    ParentFeature
+   EventDict
+   StoreInEventDict
 
    
-require
-   BootObject at 'x-oz://boot/Object'
-   BootName   at 'x-oz://boot/Name'
 prepare
-%   GetClass = BootObject.getClass
-%   OoFeat   = {BootName.newUnique 'ooFeat'}
    MapLabelToObject={NewName}
    QTkDesc = {NewName}
    Builder = {NewName}
    Init    = {NewName}
-   
+   EventDict={NewName}
+   StoreInEventDict={NewName}   
 
 %%% Functions and procedures that are heavily used when developping QTk widgets
 
@@ -450,14 +446,10 @@ prepare
 
 define
 
-   NotifyMeth={NewName}
-   NotifyEvent={NewName}
    Lock={NewLock}
    NoArgs={NewName}
    Toplevel={NewName}
    NQTk={ByNeed fun{$} QTk end}
-   Redirector={NewName}
-   Blackbox={NewName}
    Win32=({Property.get 'platform'}.os==win32)
 
    fun{NewLook}
@@ -468,7 +460,7 @@ define
 	       end
 	   get:fun{$ P}
 		  {Record.adjoin
-		   {Dictionary.condGet L {Label P} P}
+		   {Dictionary.condGet L {Label P} r}
 		   P}
 	       end)
    end
@@ -1278,300 +1270,48 @@ define
    
    end
 
-   BindBlackBox={NewName}
-   Events={NewName}
-
-   fun{FindEntry DB DBL K} % find entry under key K
+%    fun{FindEntry DB DBL K} % find entry under key K
       
-      if {Dictionary.member DB K} then
-	 DB.K
-      else
-	 V
-      in
-	 {Dictionary.put DB K V}
-	 {Assign DBL K#V|{Access DBL}}
-	 V
-      end
-   end
+%       if {Dictionary.member DB K} then
+% 	 DB.K
+%       else
+% 	 V
+%       in
+% 	 {Dictionary.put DB K V}
+% 	 {Assign DBL K#V|{Access DBL}}
+% 	 V
+%       end
+%    end
    
-   fun{FindKey DB DBL V} % find key with entry V
-      S
-      fun{Loop L R}
-	 case R
-	 of K#N|Xs then
-	    if {IsDet N} andthen N==V then
-	       %% bring this pair in front of the DBL list so that next search is fast
-	       L=Xs
-	       {Assign DBL K#V|S}
-	       K
-	    else
-	       %% puts X on the left list and loops with next item
-	       E
-	    in
-	       L=K#N|E
-	       {Loop E Xs}
-	    end
-	 else
-	    %% key not already existing : create one
-	    K={NewName}
-	 in
-	    {Dictionary.put DB K V}
-	    {Assign DBL K#V|{Access DBL}}
-	    K
-	 end
-      end
-   in
-      {Loop S {Access DBL}}
-   end
-
-   Obj={NewName}
-   
-   class BlackboxClass
-
-      attr
-	 OutS
-	 LocIn
-	 LocOut
-	 Multiplex
-	 
-      feat
-	 FMeth
-	 FParam
-	 FMParam
-	 FEParam
-	 FEvent
-	 !Obj
-	 InP
-	 DB DBL
-	 OutP
-
-      meth init(O)
-	 InS
-      in
-	 LocIn<-fun{$ V _} V end
-	 LocOut<-fun{$ V _} V end
-	 Multiplex<-unit
-	 self.FMeth={NewDictionary}
-	 self.FParam={NewDictionary}
-	 self.FMParam={NewDictionary}
-	 self.FEParam={NewDictionary}
-	 self.FEvent={NewDictionary}
-	 self.Obj=O
-	 self.DB={NewDictionary}
-	 self.DBL={NewCell nil}
-	 self.InP={NewPort InS}
-	 self.OutP={NewPort @OutS}
-	 thread
-	    {ForAll InS
-	     proc{$ M}
-		{self Apply(M)}
-	     end}
-	 end
-	 thread
-	    proc{Loop O}
-	       case O of _|Xs then
-		  OutS<-Xs
-		  {Loop Xs}
-	       end
-	    end
-	 in
-	    {Loop @OutS}
-	 end
-      end
-
-      meth Apply(M1)
-	 M={self localize(M1 $)}
-      in
-	 case M
-	 of 'meth'(X) then {self.Obj X}
-	 [] param(_ P V) then {self.Obj set(P:V)}
-	 [] event(E A) then
-	    if {Dictionary.member self.Obj.Events E} then
-	       Act={New QTkAction init(parent:self.Obj
-				       action:self.Obj.Events.E)}
-	    in
-	       {Send self.Obj.Toplevel.port
-		{List.toTuple r Act|execute|A}}
-	    end
-	 [] multiplex(O M) then
-	    Ob={self getLocalResource(O $)}
-	 in
-	    if {IsFree Ob} then
-	       raise unknownMultiplexObject(O M) end
-	    else
-	       {Ob.Blackbox Apply(M)}
-	    end
-	 end
-      end
-      
-      meth setFilter(Filter)
-	 % methcall ou methcall(name)
-	 % event(onkeypress)
-	 % parameter(value events:[onkeypress] meths:[])
-	 proc{WatchEvent Event Args}
-	    fun{Add L1 L2}
-	       {List.append {List.filter L2 fun{$ A} {Not {List.member A L1}} end} L1}
-	    end
-	    OldArgs=if {Dictionary.member self.FEvent Event} then self.FEvent.Event
-		    elseif {Dictionary.member self.FEParam Event} then nil
-		    else unit end
-	    NewArgs=if OldArgs==unit then Args else {Add NewArgs OldArgs} end
-	 in
-	    if OldArgs\=NewArgs then
-	       {self.Obj BindBlackBox(Event NewArgs)}
-	    end
-	 end
-      in
-	 case Filter
-	 of 'meth' then
-	    {self setFilter('meth'(unit))}
-	 [] 'meth'(N) then
-	    {Dictionary.put self.FMeth N unit}
-	 [] event(N) then
-	    {self setFilter(event(N args:nil))}
-	 [] event(N args:A) then
-	    {WatchEvent N A}
-	    {Dictionary.put self.FEvent N A}
-	 [] param(V) then
-	    {self setFilter(param(V events:nil meths:nil))}
-	 [] param(V events:L) then
-	    {self setFilter(param(V events:L meths:nil))}
-	 [] param(V meths:M) then
-	    {self setFilter(param(V events:nil meths:M))}
-	 [] param(V events:L meths:M) then
-	    proc{Add D K}
-	       E={Dictionary.condGet D K nil}
-	    in
-	       if {List.member V E} then skip
-	       else {Dictionary.put D K V|E} end
-	    end
-	 in
-	    {Dictionary.put self.FParam V unit}
-	    {ForAll M proc{$ Me} {Add self.FMParam Me} end}
-	    {ForAll L proc{$ Ee}
-			 {WatchEvent Ee nil}
-			 {Add self.FEParam Ee}
-		      end}
-	 else
-	    raise invalidFilter(Filter) end
-	 end
-      end
-
-      meth removeFilter(Filter)
-	 skip
-      end
-
-      meth setLocalizer(L)
-	 LocIn<-L
-      end
-
-      meth setGlobalizer(L)
-	 LocOut<-L
-      end
-
-      meth localize(M $)
-	 {@LocIn M fun{$ V} {FindEntry self.DB self.DBL V} end}
-      end
-
-      meth globalize(M $)
-	 {@LocOut M fun{$ V} {FindKey self.DB self.DBL V} end}
-      end
-      
-      meth getGlobalName(V $)
-	 R={FindKey self.DB self.DBL V}
-      in
-	 R
-      end
-
-      meth getLocalResource(E $)
-	 {FindEntry self.DB self.DBL E}
-      end
-      
-      meth getOutputStream($)
-	 @OutS
-      end
-
-      meth getInputPort($)
-	 self.InP
-      end
-
-      meth getFullState($)
-	 % sync
-	 % pack data
-	 {List.map {Dictionary.keys self.FParam}
-	  fun{$ P}
-	     P#{self.Obj get(P:$)}
-	  end}
-      end
-
-      meth setFullState(LS)
-	 % set data
-	 {ForAll LS
-	  proc{$ P#V}
-	     {self.Obj set(P:V)}
-	  end}
-      end
-
-      meth !NotifyMeth(M)
-	 Meth={Label M}
-      in
-	 if Meth==set then
-	    % check if a watched parameter is modified by a call to set
-	    {Record.forAllInd M
-	     proc{$ P V}
-		if {Dictionary.member self.FParam P} then
-		   {self SendOut(param(set P V))}
-		end
-	     end}
-	 end
-	 {ForAll {Dictionary.condGet self.FMParam Meth nil}
-	  proc{$ P}
-	    % check if a watched parameter is modified by a method
-	     {self SendOut(param(Meth P {self.Obj get(P:$)}))}
-	  end}
-	 if {Dictionary.member self.FMeth unit}
-	    % check if this method call is watched
-	    orelse {Dictionary.member self.FMeth Meth} then
-	    {self SendOut('meth'(M))}
-	 end
-      end
-
-      meth !NotifyEvent(...)=M
-	 Event=M.event
-	 Args={Record.toList {Record.subtract M event}}
-      in
-	 {ForAll {Dictionary.condGet self.FEParam Event nil}
-	  proc{$ P}
-	    % check if a watched parameter is modified by an event
-	     {self SendOut(param(Event P {self.Obj get(P:$)}))}
-	  end}
-	 if {Dictionary.member self.FEvent Event} then
-	     % check if this event has to be checked anyway
-	    {self SendOut(event(Event Args))}
-	 end
-      end
-
-      meth sendMsg(M)
-	 {self SendOut(M)}
-      end
-      
-      meth multiplex(O)
-	 % multiplex a message of the blackbox from the local object O to this port
-	 Multiplex<-O#{O getGlobalName(self.Obj.Redirector $)}
-%	 {self SendOut(multiplex({self getGlobalName(O $)} M))}
-      end
-
-      meth SendOut(M)
-	 if @Multiplex==unit then
-	    {Port.send self.OutP
-	     {self globalize(M $)}}
-	 else
-	    {@Multiplex.1 sendMsg(multiplex(@Multiplex.2
-					    {self globalize(M $)}))}
-	 end
-      end
-      
-   end
+%    fun{FindKey DB DBL V} % find key with entry V
+%       S
+%       fun{Loop L R}
+% 	 case R
+% 	 of K#N|Xs then
+% 	    if {IsDet N} andthen N==V then
+% 	       %% bring this pair in front of the DBL list so that next search is fast
+% 	       L=Xs
+% 	       {Assign DBL K#V|S}
+% 	       K
+% 	    else
+% 	       %% puts X on the left list and loops with next item
+% 	       E
+% 	    in
+% 	       L=K#N|E
+% 	       {Loop E Xs}
+% 	    end
+% 	 else
+% 	    %% key not already existing : create one
+% 	    K={NewName}
+% 	 in
+% 	    {Dictionary.put DB K V}
+% 	    {Assign DBL K#V|{Access DBL}}
+% 	    K
+% 	 end
+%       end
+%    in
+%       {Loop S {Access DBL}}
+%    end
 
    class QTkClass % QTk mixin class 
 
@@ -1585,20 +1325,14 @@ define
 	 tooltipsAvailable:true
 	 toplevel
 	 parent
-	 !Blackbox
-	 BBEvents
-	 !Redirector
-	 !Events
+	 !EventDict
 	 typeInfo:unit % different from unit means type checking is on : r(init:r unset:r unget:r)
       
       meth !Init(...)=M
 	 lock
-	    self.Redirector={NewRedirector self}
 	    self.parent=M.parent
 	    self.toplevel=M.parent.toplevel
-	    self.Blackbox={New BlackboxClass init(self)}
-	    self.BBEvents={NewDictionary}
-	    self.Events={NewDictionary}
+	    self.EventDict={NewDictionary}
 	    {Assert self.widgetType self.typeInfo M}
 	    if {HasFeature self action} then % action widget
 	       self.action={New QTkAction init(parent:self action:{CondSelect M action proc{$} skip end})}
@@ -1606,7 +1340,6 @@ define
 	    if self.tooltipsAvailable==true then % this widget has got a tooltips
 	       {self SetToolTip(M)}
 	    end
-	    if {HasFeature M blackbox} then M.blackbox=self.Blackbox end
 	 end
       end
 
@@ -1636,7 +1369,6 @@ define
 			     {self.ToolTip get($)}
 			  end
 	    end
-	    if {HasFeature M blackbox} then M.blackbox=self.Blackbox end
 	    if self.typeInfo==unit then
 	       SetGet,{Subtracts M [action tooltips blackbox]}
 	    else
@@ -1659,29 +1391,35 @@ define
 	    else skip end
 	 end
       end
-
-      meth !BindBlackBox(E P)
-	 lock
-	    Event={VirtualString.toAtom E}
-	 in
-	    self.BBEvents.Event:=P
-	    {self tkBind(event:Event
-			 append:true
-			 action:self.Blackbox#NotifyEvent(event:Event)
-			 args:P)}
-	 end
-      end
       
-      meth bind(action:A<=proc{$} skip end event:E args:G<=nil)
+      meth bind(action:A<=NoArgs
+		event:E
+		append:P<=false
+		StoreInEventDict:S<=true
+		args:G<=nil)
 	 lock
 	    Event={VirtualString.toAtom E}
 	 in
-	    self.Events.Event:={{New QTkAction init(parent:self action:A)} action($)}
-	    {self tkBind(event:Event
-			 action:self.Events.Event
-			 args:G)}
-	    if {Dictionary.member self.BBEvents {VirtualString.toAtom E}} then
-	       {self BindBlackBox(E self.BBEvents)}
+	    if A==NoArgs then
+	       {self tkBind(event:Event
+			    args:G)}
+	       {Dictionary.remove self.EventDict Event}
+	    else
+	       Act={{New QTkAction init(parent:self action:A)} action($)}
+	    in
+	       {self tkBind(event:Event
+			    action:Act
+			    append:P
+			    args:G)}
+	       if S then
+		  if P then
+		     {Dictionary.put self.EventDict Event
+		      Act|{Dictionary.condGet self.EventDict Event nil}}
+		  else
+		     {Dictionary.put self.EventDict Event
+		      Act|nil}
+		  end
+	       end
 	    end
 	 end
       end
@@ -1992,44 +1730,6 @@ define
 %       {New {MakeClass Class Desc} {PropagateLook Desc}}
 %    end
 
-
-   NewRedirector
-   local
-      Init={NewName}
-      NewUniqueName=BootName.newUnique
-      GetClass=BootObject.getClass
-      
-      `ooFeat`={NewUniqueName 'ooFeat'}
-      
-      fun{GetFeats Obj}
-	 C={GetClass Obj}
-      in
-	 {Record.map C.`ooFeat` fun{$ _} _ end}
-      end
-      class RedirectorClass
-	 feat Obj BB
-	 meth !Init(O)
-	    self.Obj=O
-	    self.BB=O.Blackbox
-	 end
-	 meth otherwise(M)
-	    {self.Obj M}
-	    {self.BB NotifyMeth(M)}
-	 end
-      end
-   in
-      fun{NewRedirector O}
-	 Feats={GetFeats O}
-	 R={New {Class.new [RedirectorClass] q Feats nil}
-	    Init(O)}
-	 {ForAll {Arity Feats} % copy all features
-	  proc{$ F} R.F=O.F end}
-      in
-	 R
-      end
-   end
-
-
 %    fun{PropagateLook Rec}
 %       Look={CondSelect Rec look DefLook}
 %    in
@@ -2148,7 +1848,9 @@ define
    
    fun{GetBuilder GetToplevelClass}
       fun{ApplyLook R L}
-	 {Record.adjoinAt {{CondSelect R look L}.get R} look L}
+	 Look={CondSelect R look L}
+      in
+	 {Record.adjoinAt {Look.get R} look Look}
       end
       Register={NewName}
       Builder={New
@@ -2163,18 +1865,33 @@ define
 		     Widgets
 		     Aliases
 		     ToplevelClass
+		     getWidgetList
+		     getAliasList
 		  meth !Init
 		     self.register    = proc{$ W} {self Register(W)} end
+		     self.getWidgetList  = fun{$} {List.filter
+						   {Dictionary.keys self.Widgets}
+						   fun{$ K} {Atom.is K} end}
+					   end
+		     self.getAliasList   = fun{$} {Dictionary.keys self.Aliases} end
 		     self.defaultLook = {NewLook}
 		     self.ToplevelClass    = {GetToplevelClass self}
-		     self.build       = fun{$ Desc1}
-					   Look={CondSelect Desc1 look self.defaultLook}
-					   Desc={ApplyLook Desc1 Look}
-%					   R={NewFeat self.ToplevelClass Init({self Expand(Desc $)})}
-					   Exp={self Expand(Desc $)}
-					   R={NewFeat {MakeClass self.ToplevelClass Exp} Init(Exp)}
+		     self.build       = fun{$ Desc}
+					   fun{Loop Desc1}
+					      Alias={Dictionary.condGet self.Aliases {Label Desc1} unit}
+					      Desc={ApplyLook Desc1 self.defaultLook}
+					   in
+					      if Alias==unit then
+						 Exp={self Expand(Desc $)}
+						 R={NewFeat {MakeClass self.ToplevelClass Exp} Init(Exp)}
+					      in
+						 R
+					      else
+						 {Loop {Alias Desc}}
+					      end
+					   end
 					in
-					   R
+					   {Loop Desc}
 					end
 		     self.Widgets     = {NewDictionary}
 		     self.Aliases     = {NewDictionary}
@@ -2288,7 +2005,13 @@ define
 			    end
 			 end}
 		     elseif {Procedure.is R} then
-			self.Aliases.A:=R
+			self.Aliases.A:=fun{$ M}
+					   if {HasFeature M parent} then
+					      {Record.adjoinAt {R {Record.subtract M parent}} parent M.parent}
+					   else
+					      {R M}
+					   end
+					end
 		     else
 			{Exception.raiseError qtk(custom "Invalid alias format, expecting a record, a class or a procedure." A setAlias(A R))}
 		     end	     
@@ -2426,19 +2149,42 @@ define
 		  meth MapFlatLabelToObject(R1 $)
 		     %% pre : R has fully flattened its look and alias and is now a fully regular widget
 		     Name={Label R1}
-		     R={Record.adjoin R1 Init}
+		     Object
+		     R=if {HasFeature R1 actionh} then
+			  {Record.adjoin
+			   {Record.subtract R1 actionh}
+			   Init(action:proc{$}
+					  if {Procedure.is R1.actionh} then
+					     {R1.actionh Object}
+					  elsecase R1.actionh
+					  of W#M then
+					     if {Object.is W} then
+						{W M(Object)}
+					     elseif {Port.is W} then
+						{Port.send W M(Object)}
+					     else
+						{Exception.raiseError qtk(custom "Invalid actionh parameter"
+									  R1.actionh R1)}
+					     end
+					  else
+					     {Exception.raiseError qtk(custom "Invalid actionh parameter"
+								       R1.actionh R1)}
+					  end
+				       end)}
+		       else
+			  {Record.adjoin R1 Init}
+		       end
 		     D={Dictionary.condGet self.Widgets Name nil}
 		     if D==nil then
 			{Exception.raiseError qtk(custom "Invalid Widget" Name#" is not a valid widget name." R1)}
 		     end
-		     Object
 		     proc{SetHandle}
 			if {HasFeature R handle} then
-			   R.handle=Object.Redirector
+			   R.handle=Object
 			end
 			if {HasFeature R feature} then
 			   try
-			      (R.parent).(R.feature)=Object.Redirector
+			      (R.parent).(R.feature)=Object
 			   catch _ then
 			      {Exception.raiseError qtk(custom "Invalid feature parameter" "Can't set parent widget feature :"#R.feature R1)}
 			   end
