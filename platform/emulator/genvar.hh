@@ -108,7 +108,7 @@ public:
   void ** gcGetMarkField(void);
   void gcMark(GenCVariable *);
   GenCVariable * gcGetFwd(void);
-  GenCVariable * gc(void);
+  void gc(void);
 
   // unifies a generic variable with another generic variable
   // or a non-variable
