@@ -18,7 +18,7 @@
 
 inline
 void GenFDVariable::propagate(TaggedRef var, FDState state,
-			      TaggedRef term)
+			      TaggedRef term, Bool prop_eq)
 {
 #ifdef DEBUG_FD
   if ((int)this != var >> 4)
@@ -38,15 +38,15 @@ void GenFDVariable::propagate(TaggedRef var, FDState state,
   default:
     error("Unexpected case in GenFDVariable::propagate.");
   }
-  if (GenCVariable::unifyGenCVariables == OK)
+  if (prop_eq)
     GenCVariable::propagate(var, fdSuspList[eqvar], term);
 }
 
 
 inline
 void GenFDVariable::propagate(TaggedRef var, FDState state,
-			      TaggedRef * tPtr) {
-  propagate(var, state, makeTaggedRef(tPtr));
+			      TaggedRef * tPtr, Bool prop_eq) {
+  propagate(var, state, makeTaggedRef(tPtr), prop_eq);
 }
 
 
