@@ -197,7 +197,7 @@ ozma-p.yy: ozma-p.m4yy
         $(M4) $(M4_D) $< > $@
 
 config.h: config.m4h $(OZVERSION)
-        $(M4) $(M4_S) -DOZVERSION=\"`$(OZVERSION)`\" $< > $@
+        $(M4) $(M4_D) -DOZVERSION=\"`$(OZVERSION)`\" $< > $@
 
 #/usr/include/signal.h is broken on Linux:
 #os.cc: In function `void osBlockSignals(int = 0)':
