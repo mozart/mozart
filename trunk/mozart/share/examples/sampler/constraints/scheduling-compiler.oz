@@ -149,11 +149,11 @@ in
 
       % impose resource constraints
 
-      {FD.schedule.serialized ExclusiveTasks Start Dur}
+      {Schedule.serialized ExclusiveTasks Start Dur}
 
       % enumerate exclusion choices
 
-      {FD.schedule.firstsLastsDist ExclusiveTasks Start Dur}
+      {Schedule.firstsLastsDist ExclusiveTasks Start Dur}
 
       % fix all start points to minimum after enumeration
       {Record.forAll Start proc {$ S} S = {FD.reflect.min S} end}
