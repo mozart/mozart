@@ -1,5 +1,40 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@dfki.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
 <!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
 <!ENTITY part.native SYSTEM "native.sgml">
+
+<!ENTITY chapter.hello       SYSTEM "hello.sgml">
+<!ENTITY chapter.development SYSTEM "devel.sgml">
+<!ENTITY chapter.deployment  SYSTEM "deploy.sgml">
+
+<!ENTITY chapter.linking     SYSTEM "link.sgml">
+<!ENTITY chapter.module      SYSTEM "module.sgml">
+
 <!ENTITY nbsp PI "nbsp">
 <!ENTITY ellipsis PI "ellipsis">
 <!ENTITY ie PI "ie">
@@ -10,5 +45,16 @@
 <Author.Extern to="author.db" key="Denys.Duchier">
 <Author.Extern to="author.db" key="Leif.Kornstaedt">
 <Author.Extern to="author.db" key="Christian.Schulte">
-&part.native;
+<PART>
+  <Title/Getting Started/
+  &chapter.hello;
+  &chapter.development;
+  &chapter.deployment;
+</PART>
+<!-- &part.native; -->
+<PART>
+  <Title/Managing Modules/
+  &chapter.linking;
+  &chapter.module;
+</PART>
 </BOOK>

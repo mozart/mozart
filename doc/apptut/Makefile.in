@@ -16,7 +16,8 @@ INSTALL_BIN     = $(INSTALL) -m 555
 INSTALL_DIR     = @INSTALL_DIR@
 
 SGMLSRCS = \
-        main.sgml native.sgml
+        deploy.sgml devel.sgml hello.sgml link.sgml \
+        main.sgml module.sgml native.sgml started.sgml
 
 .PHONY: all validate install clean veryclean distclean
 
