@@ -5705,9 +5705,9 @@ OZ_BI_define(BIforeignFDProps, 0,1)
 
 // ---------------------------------------------------------------------------
 
-OZ_C_proc_proto(ozparser_parseFile)
-OZ_C_proc_proto(ozparser_parseVirtualString)
-OZ_C_proc_proto(ozparser_fileExists)
+OZ_C_proc_proto(ozparser_parseFile);
+OZ_C_proc_proto(ozparser_parseVirtualString);
+OZ_C_proc_proto(ozparser_fileExists);
 
 
 // ---------------------------------------------------------------------
@@ -5738,8 +5738,8 @@ OZ_BI_define(BIcopyRecord,1,1)
 } OZ_BI_end
 
 
-OZ_C_proc_proto(BIatWithState)
-OZ_C_proc_proto(BIassignWithState)
+OZ_C_proc_proto(BIatWithState);
+OZ_C_proc_proto(BIassignWithState);
 
 inline
 SRecord *getStateInline(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val)

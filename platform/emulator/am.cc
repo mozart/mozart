@@ -344,7 +344,7 @@ void AM::init(int argc,char **argv)
     fprintf(stderr,"Init file: %s\n",initFile);
   }
 
-  isStandaloneF=NO;
+  isStandaloneF=NO;  // mm2 seems to be OLD_COMPILER only?
 #ifdef OLD_COMPILER
   compStream = 0;
 #endif
