@@ -764,11 +764,25 @@ private:
   enum {cache_slot_size = 4};
 public:
   BIfdBodyManager(int s) {
-    DebugCheck(s < 0 || s > MAXFDBIARGS, error("too many variables."));
-    curr_num_of_vars = s;
-    Assert(FDcurrentTaskSusp);
-    only_local_vars = FDcurrentTaskSusp->isLocalSusp();
+    if (s == -1) {
+      curr_num_of_vars = 0;
+      only_local_vars = FALSE;
+    } else {
+      DebugCheck(s < 0 || s > MAXFDBIARGS, error("too many variables."));
+      curr_num_of_vars = s;
+      Assert(FDcurrentTaskSusp);
+      only_local_vars = FDcurrentTaskSusp->isLocalSusp();
+    }
   }
+
+  Bool setCurr_num_of_vars(int i) {
+    if (i < 0 || i > MAXFDBIARGS)
+      return TRUE;
+    curr_num_of_vars = i;
+   return FALSE;
+  }
+
+  Bool indexIsInvalid(int i) {return (i < 0) || (i >= curr_num_of_vars);}
 
   void add(int i, int size) {
     curr_num_of_vars += size;
@@ -827,6 +841,8 @@ public:
     // restoration on failure
     saveDomainOnTopLevel(i);
   }
+
+  OZ_Bool checkAndIntroduce(int i, TaggedRef v);
 
   void reintroduce(int i, TaggedRef v) {
     int aux = bifdbm_init_dom_size[i];

@@ -374,6 +374,51 @@ void BIfdBodyManager::_introduce(int i, TaggedRef v)
   bifdbm_vartag[i] = vtag;
 } // BIfdBodyManager::_introduce
 
+// returns FAILED for incompatible values
+// returns SUSPEND for UVAR and SVAR
+OZ_Bool BIfdBodyManager::checkAndIntroduce(int i, TaggedRef v)
+{
+  DebugCheck(i < 0 || i >= curr_num_of_vars, error("index overflow"));
+
+  TypeOfTerm vtag;
+  TaggedRef *vptr;
+
+  deref(v, vptr, vtag);
+
+  if (vtag == SMALLINT) {
+    int i_val = smallIntValue(v);
+    if (i_val >= 0) {
+      bifdbm_domain[i].setSingleton(i_val);
+      bifdbm_dom[i] = &bifdbm_domain[i];
+      bifdbm_is_local[i] = TRUE;
+      bifdbm_init_dom_size[i] = 1;
+    } else {
+      warning("Expected positive small integer.");;
+      return FAILED;
+    }
+  } else if (isGenFDVar(v, vtag)) {
+    GenFDVariable * fdvar = tagged2GenFDVar(v);
+    Bool is_local = bifdbm_is_local[i] = am.isLocalCVar(v);
+    bifdbm_domain[i].FiniteDomainInit();
+    if (is_local) {
+      bifdbm_dom[i] = &fdvar->getDom();
+    } else {
+      bifdbm_domain[i] = fdvar->getDom();
+      bifdbm_dom[i] = &bifdbm_domain[i];
+    }
+    bifdbm_init_dom_size[i] = bifdbm_dom[i]->getSize();
+    saveDomainOnTopLevel(i);
+  } else if (isNotCVar(vtag)) {
+    return SUSPEND;
+  } else {
+    return FAILED;
+  }
+  bifdbm_var[i] = v;
+  bifdbm_varptr[i] = vptr;
+  bifdbm_vartag[i] = vtag;
+  return PROCEED;
+}
+
 inline
 void BIfdBodyManager::processFromTo(int from, int to)
 {
