@@ -1,0 +1,90 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="Chapter.ErrorFormatters">
+  <Title/System Error Formatters: <<ErrorFormatters>>/
+  <P>
+    This module provides a set of formatters for system componeents.
+    These formatters are registered by the <<Error>> module.  The system
+    components handled by this module are the following:
+    <List>
+      <Entry/<<kernel>>
+	<Index class=tails/<<ErrorFormatters>><And><<kernel>>//
+      <Item>
+	is an error formatter for exceptions coming from Kernel Oz,
+	such as type errors.
+      <Entry/<<object>>
+	<Index class=tails/<<ErrorFormatters>><And><<object>>//
+      <Item>
+	is an error formatter for exceptions coming from the object
+	system, &eg;, inheritance errors.
+      <Entry/<<failure>>
+	<Index class=tails/<<ErrorFormatters>><And><<failure>>//
+      <Item>
+	is an error formatter for exceptions pertaining to failure
+	(&ie;, inconsistent <Q/tell/ operations on the store).
+      <Entry/<<recordC>>
+	<Index class=tails/<<ErrorFormatters>><And><<recordC>>//
+      <Item>
+	is an error formatter for exceptions coming from the feature
+	constraint system.
+      <Entry/<<system>>
+	<Index class=tails/<<ErrorFormatters>><And><<system>>//
+      <Item>
+	is an error formatter for exceptions coming from libraries
+	used for system programming.
+      <Entry/<<ap>>
+	<Index class=tails/<<ErrorFormatters>><And><<ap>>//
+      <Item>
+	is an error formatter for exceptions coming from libraries
+	used for application programming.
+      <Entry/<<dp>>
+	<Index class=tails/<<ErrorFormatters>><And><<dp>>//
+      <Item>
+	is an error formatter for exceptions coming from libraries
+	used for distributed programming.
+      <Entry/<<os>>
+	<Index class=tails/<<ErrorFormatters>><And><<os>>//
+      <Item>
+	is an error formatter for exceptions coming from the operating
+	system interface.
+      <Entry/<<foreign>>
+	<Index class=tails/<<ErrorFormatters>><And><<foreign>>//
+      <Item>
+	is an error formatter for exceptions coming from foreign function
+	interface.
+      <Entry/<<url>>
+	<Index class=tails/<<ErrorFormatters>><And><<url>>//
+      <Item>
+	is an error formatter for exceptions coming from the URL resolving
+	library.
+      <Entry/<<module>>
+	<Index class=tails/<<ErrorFormatters>><And><<module>>//
+      <Item>
+	is an error formatter for exceptions coming from the module manager.
+    </List>
+</Chapter>

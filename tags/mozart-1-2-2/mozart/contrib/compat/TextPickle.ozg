@@ -1,0 +1,538 @@
+%%%
+%%% Author:
+%%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Leif Kornstaedt, 1997
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation of Oz 3:
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
+%%
+%%--** TODO:
+%% -- extensions not supported (excepting byte strings)
+%%
+
+functor
+import
+   BootName(newUnique) at 'x-oz://boot/Name'
+   CompilerSupport(isBuiltin newCopyableName newCopyablePredicateRef)
+   at 'x-oz://boot/CompilerSupport'
+   System(printName)
+   Error(registerFormatter)
+   GumpScanner('class': GS)
+   GumpParser('class')
+   Compat(importFloat importName importBuiltin
+	  importClass importChunk importFSetValue) at 'x-oz://boot/Compat'
+export
+   Load
+define
+   fun {ButLast Xs}
+      case Xs of X|(Xr=_|_) then X|{ButLast Xr}
+      else nil
+      end
+   end
+
+   fun {Strip C S}
+      case S of !C|Sr then {ButLast Sr} else S end
+   end
+
+   Hex = hex(&0: 0x0 &1: 0x1 &2: 0x2 &3: 0x3 &4: 0x4
+	     &5: 0x5 &6: 0x6 &7: 0x7 &8: 0x8 &9: 0x9
+	     &A: 0xA &B: 0xB &C: 0xC &D: 0xD &E: 0xE &F: 0xF
+	     &a: 0xA &b: 0xB &c: 0xC &d: 0xD &e: 0xE &f: 0xF)
+
+   fun {ConvertPseudoChars S}
+      case S of &\\|C1|Cr then
+	 case C1 of &a then &\a|{ConvertPseudoChars Cr}
+	 [] &b then &\b|{ConvertPseudoChars Cr}
+	 [] &f then &\f|{ConvertPseudoChars Cr}
+	 [] &n then &\n|{ConvertPseudoChars Cr}
+	 [] &r then &\r|{ConvertPseudoChars Cr}
+	 [] &t then &\t|{ConvertPseudoChars Cr}
+	 [] &v then &\v|{ConvertPseudoChars Cr}
+	 [] &\\ then &\\|{ConvertPseudoChars Cr}
+	 [] &` then &`|{ConvertPseudoChars Cr}
+	 [] &" then &"|{ConvertPseudoChars Cr}
+	 [] &' then &'|{ConvertPseudoChars Cr}
+	 [] && then &&|{ConvertPseudoChars Cr}
+	 elseif C1 == &x orelse C1 == &X then C2|C3|Crr = Cr C in
+	    C = Hex.C2 * 16 + Hex.C3
+	    if C == 0 then
+	       {Exception.raiseError textPickle(illegalHex C)}
+	    end
+	    C|{ConvertPseudoChars Crr}
+	 else C2|C3|Crr = Cr C in   % must be an octal constant
+	    C = Hex.C1 * 64 + Hex.C2 * 8 + Hex.C3
+	    if C == 0 orelse C >= 256 then
+	       {Exception.raiseError textPickle(illegalOct C)}
+	    end
+	    C|{ConvertPseudoChars Crr}
+	 end
+      elseof C|Cr then
+	 C|{ConvertPseudoChars Cr}
+      else ""
+      end
+   end
+
+   scanner TextPickleScanner from GS
+      meth PutDIF()
+	 case GS, getString($) of &D|&:|Rest then
+	    GS, putToken1({String.toAtom Rest})
+	 end
+      end
+      meth PutString(A)
+	 case GS, getString($) of _|&:|Rest then S in
+	    S = {ConvertPseudoChars {Strip &' Rest}}
+	    GS, putToken1(A(S))
+	 end
+      end
+      meth PutAtom(A)
+	 case GS, getString($) of _|&:|Rest then S in
+	    S = {ConvertPseudoChars {Strip &' Rest}}
+	    GS, putToken1(A({String.toAtom S}))
+	 end
+      end
+      meth PutInt(A)
+	 case GS, getString($) of _|&:|Rest then
+	    GS, putToken1(A({String.toInt Rest}))
+	 end
+      end
+
+      lex space = <[\t\n\v\f\r ]> end
+      lex lower = "[a-z\337-\366\370-\377]" end
+      lex upper = "[A-Z\300-\326\330-\336]" end
+      lex digit = "[0-9]" end
+      lex alphaNum = "{lower}|{upper}|{digit}|_" end
+      lex oct = "[0-7]" end
+      lex hex = "[0-9a-fA-F]" end
+      lex escape = "[abfnrtv\\\\'\"`&]" end
+      lex pseudoChar = "\\\\({oct}{3}|[xX]{hex}{2}|{escape})" end
+      lex quotedString = "\"'\"([^'\\\\\\x00]|{pseudoChar})*\"'\"" end
+      lex string = "{alphaNum}+|{quotedString}" end
+
+      lex "D:[A-Z]+"       TextPickleScanner, PutDIF()          end
+      lex "S:{string}"     TextPickleScanner, PutString(string) end
+      lex "I:{digit}+"     TextPickleScanner, PutInt(integer)   end
+      lex "O:{string}"     TextPickleScanner, PutAtom(opcode)   end
+      lex "L:{string}"     TextPickleScanner, PutAtom(labelRef) end
+      lex "l:{string}"     TextPickleScanner, PutAtom(labelDef) end
+      lex "B:{digit}+"     TextPickleScanner, PutInt(byte)      end
+      lex "C:"             GS, putToken1(codeStart)             end
+      lex "c:"             GS, putToken1(codeEnd)               end
+      lex "T:{string}"     TextPickleScanner, PutAtom(termRef)  end
+      lex "t:{string}"     TextPickleScanner, PutAtom(termDef)  end
+
+      lex "#:.*"           skip                                 end
+      lex "{space}+"       skip                                 end
+
+      lex "."
+	 {Exception.raiseError textPickle(illegalChar (GS, getString($)).1)}
+      end
+
+      lex "<<EOF>>"
+	 GS, putToken1('EOF')
+      end
+   end
+
+   fun {Scan File} O Loop in
+      O = {New TextPickleScanner init()}
+      {O scanFile(File)}
+      fun lazy {Loop}
+	 case {O getToken($ _)} of 'EOF' then
+	    {O close()}
+	    nil
+	 elseof X then X|{Loop}
+	 end
+      end
+      {Loop}
+   end
+
+   \insert Instrs
+
+   fun {Sign I}
+      if I > 0x7FFFFFFF then I - 0x100000000 else I end
+   end
+
+   fun {Indices ArgList I}
+      case ArgList of registerArg|Rest then I|{Indices Rest I + 1}
+      [] _|Rest then {Indices Rest I + 1}
+      [] nil then nil
+      end
+   end
+
+   class P
+      attr
+	 Xs: unit TermDict: unit
+	 IsFirst: unit FirstLs: unit
+	 Inconvertible: unit
+      meth init(File ?V ?Procs)
+	 TermDict <- {NewDictionary}
+	 IsFirst <- false
+	 FirstLs <- nil
+	 Inconvertible <- nil
+	 case {Scan File} of string("1#5")|Xr then
+	    Xs <- Xr
+	    P, Value(?V)
+	    case @Xs of nil then
+	       Procs = @Inconvertible
+	    end
+	 end
+      end
+      meth Def(T X $)
+	 {Dictionary.put @TermDict T X}
+	 X
+      end
+      meth ImportProc(G PrintName Ari MaxXIndex Globals Code $) P X in
+	 %--** try to assemble this procedure
+	 P = procedure(G PrintName Ari MaxXIndex Globals Code)
+	 Inconvertible <- X#P|@Inconvertible
+	 X
+      end
+
+      meth Value($)
+	 case @Xs of 'SMALLINT'|integer(I)|Xr then
+	    Xs <- Xr
+	    I
+	 [] 'BIGINT'|string(S)|Xr then
+	    Xs <- Xr
+	    {String.toInt S}
+	 [] 'FLOAT'|integer(I1)|integer(I2)|Xr then
+	    Xs <- Xr
+	    {Compat.importFloat {Sign I1} {Sign I2}}
+	 [] 'ATOM'|termDef(T)|string(S)|Xr then
+	    Xs <- Xr
+	    P, Def(T {String.toAtom S} $)
+	 [] 'UNIQUENAME'|termDef(T)|string(PrintName)|Xr then
+	    Xs <- Xr
+	    P, Def(T {BootName.newUnique {String.toAtom PrintName}} $)
+	 [] 'COPYABLENAME'|termDef(T)|string(PrintName)|Xr then
+	    Xs <- Xr
+	    P, Def(T {CompilerSupport.newCopyableName
+		      {String.toAtom PrintName}} $)
+	 [] 'NAME'|termDef(T)|string(PrintName)|Xr then G in
+	    Xs <- Xr
+	    P, GName(?G)
+	    P, Def(T {Compat.importName PrintName G} $)
+	 [] 'LIST'|termDef(T)|Xr then V V1 V2 in
+	    Xs <- Xr
+	    P, Def(T V _)
+	    P, Value(?V1)
+	    P, Value(?V2)
+	    V = V1|V2
+	 [] 'TUPLE'|termDef(T)|integer(N)|Xr then V Lab Vs in
+	    Xs <- Xr
+	    P, Def(T V _)
+	    P, Value(?Lab)
+	    Vs = {Reverse {ForThread 1 N 1
+			   fun {$ Vs _} (P, Value($))|Vs end nil}}
+	    V = {List.toTuple Lab Vs}
+	 [] 'RECORD'|termDef(T)|Xr then V Ari Lab FXs in
+	    Xs <- Xr
+	    P, Def(T V _)
+	    P, Value(?Ari)
+	    P, Value(?Lab)
+	    FXs = {Map Ari fun {$ F} F#(P, Value($)) end}
+	    V = {List.toRecord Lab FXs}
+	 [] 'BUILTIN'|termDef(T)|string(PrintName)|Xr then
+	    Xs <- Xr
+	    P, Def(T {Compat.importBuiltin PrintName} $)
+	 [] 'CHUNK'|termDef(T)|Xr then V G V1 in
+	    Xs <- Xr
+	    P, Def(T V _)
+	    P, GName(?G)
+	    P, Value(?V1)
+	    V = {Compat.importChunk G V1}
+	 [] 'FSETVALUE'|Xr then V in
+	    Xs <- Xr
+	    P, Value(?V)
+	    {Compat.importFSetValue V}
+	 [] 'DICT'|termDef(T)|integer(N)|Xr then V in
+	    Xs <- Xr
+	    P, Def(T V _)
+	    V = {NewDictionary}
+	    {For 1 N 1
+	     proc {$ _} {Dictionary.put V P, Value($) P, Value($)} end}
+	    V
+	 [] 'CLASS'|termDef(T)|Xr then V G Features in
+	    Xs <- Xr
+	    P, Def(T V _)
+	    P, GName(?G)
+	    case @Xs of integer(Flags)|Xr then
+	       Xs <- Xr
+	       P, Value(?Features)
+	       V = {Compat.importClass G Flags Features}
+	    end
+	 [] 'PROC'|termDef(T)|Xr then V G PrintName in
+	    Xs <- Xr
+	    P, Def(T V _)
+	    P, GName(?G)
+	    P, Value(?PrintName)
+	    case @Xs of integer(Ari)|integer(NGRegs)|integer(MaxXIndex)|Xr then
+	       GRegs Instrs
+	    in
+	       Xs <- Xr
+	       GRegs = {Reverse {ForThread 1 NGRegs 1
+				 fun {$ Vs _} (P, Value($))|Vs end nil}}
+	       P, Code(?Instrs)
+	       P, ImportProc(G PrintName Ari MaxXIndex GRegs Instrs ?V)
+	       V
+	    end
+	 [] 'REF'|termRef(T)|Xr then
+	    Xs <- Xr
+	    {Dictionary.get @TermDict T}
+	 [] 'EXTENSION'|integer(3)|integer(N)|Xr then
+	    Xs <- Xr
+	    {ByteString.make
+	     {Reverse {ForThread 1 N 1 fun {$ Cs _} (P, Byte($))|Cs end nil}}}
+	 end
+      end
+      meth Byte($)
+	 case @Xs of byte(C)|Xr then
+	    Xs <- Xr
+	    C
+	 end
+      end
+      meth GName($)
+	 case @Xs of
+	    integer(IP)|integer(Stamp)|integer(Pid)|
+	    integer(I1)|integer(I2)|integer(Type)|Xr
+	 then
+	    Xs <- Xr
+	    gname({Sign IP} {Sign Stamp} {Sign Pid} {Sign I1} {Sign I2} Type)
+	 end
+      end
+      meth Code($)
+	 case @Xs of codeStart|Xr then
+	    Xs <- Xr
+	    P, Instrs($)
+	 end
+      end
+      meth Instrs($)
+	 case @Xs of codeEnd|Xr then
+	    Xs <- Xr
+	    nil
+	 else Instr1 in
+	    P, Instr(?Instr1)
+	    case Instr1 of definition(...) then
+	       IsFirst <- true
+	       FirstLs <- unit|@FirstLs
+	    [] definitionCopy(...) then
+	       IsFirst <- true
+	       FirstLs <- unit|@FirstLs
+	    [] endDefinition(...) then
+	       IsFirst <- false
+	       case @FirstLs of _|Rest then
+		  FirstLs <- Rest
+	       end
+	    else skip
+	    end
+	    Instr1|(P, Instrs($))
+	 end
+      end
+      meth Instr($)
+	 case @Xs of opcode(Op)|Xr then Args Instr in
+	    Xs <- Xr
+	    Args = {Map InstrArgs.Op.1 fun {$ Type} P, Type($) end}
+	    Instr = {List.toTuple Op Args}
+	    case InstrArgs.Op of none(_) then Instr
+	    [] none(_ Lab) then {Adjoin Instr Lab}
+	    [] one(ArgList Lab R) then
+	       case {Indices ArgList 1} of [I] then
+		  {Adjoin Instr Lab(I: R(Instr.I))}
+	       end
+	    [] two(ArgList Lab R1 R2) then
+	       case {Indices ArgList 1} of [I1 I2] then
+		  {Adjoin Instr Lab(I1: R1(Instr.I1) I2: R2(Instr.I2))}
+	       end
+	    end
+	 [] labelDef(L)|Xr then
+	    Xs <- Xr
+	    if @IsFirst then
+	       IsFirst <- false
+	       case @FirstLs of unit|Rest then
+		  FirstLs <- L|Rest
+	       end
+	    end
+	    lbl(L)
+	 end
+      end
+      meth RecordArity($)
+	 case @Xs of integer(0)|integer(N)|Xr then
+	    Xs <- Xr
+	    N
+	 [] integer(1)|Xr then
+	    Xs <- Xr
+	    P, Value($)
+	 end
+      end
+
+      meth registerArg($)
+	 P, integerArg($)
+      end
+      meth xRegisterIndexArg($)
+	 x(P, integerArg($))
+      end
+      meth yRegisterIndexArg($)
+	 y(P, integerArg($))
+      end
+      meth integerArg($)
+	 case @Xs of integer(I)|Xr then
+	    Xs <- Xr
+	    I
+	 end
+      end
+      meth valueArg($)
+	 P, Value($)
+      end
+      meth builtinnameArg($) V in
+	 P, Value(?V)
+	 case {CompilerSupport.isBuiltin V} of true then
+	    {System.printName V}
+	 end
+      end
+      meth labelArg($)
+	 case @Xs of labelRef(L)|Xr then
+	    Xs <- Xr
+	    L
+	 end
+      end
+      meth predicateRefArg($)
+	 case @Xs of integer(0)|Xr then
+	    Xs <- Xr
+	    unit
+	 [] integer(1)|'ABSTRENTRY'|termDef(T)|Xr then
+	    Xs <- Xr
+	    P, Def(T {CompilerSupport.newCopyablePredicateRef} $)
+	 [] integer(1)|'REF'|termRef(T)|Xr then
+	    Xs <- Xr
+	    {Dictionary.get @TermDict T}
+	 end
+      end
+      meth predIdArg($) PrintName Ari File in
+	 P, Value(?PrintName)
+	 P, RecordArity(?Ari)
+	 P, Value(?File)
+	 case @Xs of integer(Line)|integer(Col)|Xr then Flags in
+	    Xs <- Xr
+	    P, Value(?Flags)
+	    case @Xs of integer(NLiveRegs)|Xr then
+	       Xs <- Xr
+	       pid(PrintName Ari pos(File Line Col) Flags NLiveRegs)
+	    end
+	 end
+      end
+      meth hashTableArg($)
+	 case @Xs of integer(_)|labelRef(ElseL)|labelRef(ListL)|integer(N)|Xr
+	 then Entries in
+	    Xs <- Xr
+	    Entries = {ForThread 1 N 1
+		       fun {$ Entries _} (P, HTEntry($))|Entries end nil}
+	    ht(ElseL if ListL == @FirstLs.1 then Entries
+		     else onRecord('|' 2 ListL)|Entries
+		     end)
+	 end
+      end
+      meth HTEntry($)
+	 case @Xs of integer(0)|labelRef(L)|Xr then Literal in
+	    Xs <- Xr
+	    P, Value(?Literal)
+	    onScalar(Literal L)
+	 [] integer(1)|labelRef(L)|Xr then Number in
+	    Xs <- Xr
+	    P, Value(?Number)
+	    onScalar(Number L)
+	 [] integer(2)|labelRef(L)|Xr then Lab Ari in
+	    Xs <- Xr
+	    P, Value(?Lab)
+	    P, RecordArity(?Ari)
+	    onRecord(Lab Ari L)
+	 end
+      end
+      meth recordArityArg($)
+	 P, RecordArity($)
+      end
+      meth genCallInfoArg($)
+	 case @Xs of integer(Flags)|Xr then IsTail IsMethod Index Name Ari in
+	    Xs <- Xr
+	    IsTail = Flags mod 2
+	    IsMethod = (Flags div 2) mod 2
+	    Index = Flags div 4
+	    P, Value(?Name)
+	    P, RecordArity(?Ari)
+	    gci(g(Index) IsMethod Name IsTail Ari)
+	 end
+      end
+      meth gRegRefArg($)
+	 case @Xs of integer(N)|Xr then
+	    Xs <- Xr
+	    {Reverse {ForThread 1 N 1
+		      fun {$ Rs _}
+			 case @Xs of integer(I)|Xr then Kind in
+			    Xs <- Xr
+			    Kind = case I mod 4 of 0 then x
+				   [] 1 then y
+				   [] 2 then g
+				   end
+			    Kind(I div 4)|Rs
+			 end
+		      end nil}}
+	 end
+      end
+      meth locationArg($)
+	 case @Xs of integer(NI)|integer(NO)|Xr then
+	    Xs <- Xr
+	    {Reverse {ForThread 1 NI 1
+		      fun {$ Is _}
+			 case @Xs of integer(I)|Xr then
+			    Xs <- Xr
+			    x(I)|Is
+			 end
+		      end nil}}#
+	    {Reverse {ForThread 1 NO 1
+		      fun {$ Is _}
+			 case @Xs of integer(I)|Xr then
+			    Xs <- Xr
+			    x(I)|Is
+			 end
+		      end nil}}
+	 end
+      end
+   end
+
+   proc {Load File ?V ?Procs}
+      {New P init(File ?V ?Procs) _}
+   end
+
+   {Error.registerFormatter textPickle
+    fun {$ E} T in
+       T = 'Text pickle error'
+       case E of textPickle(illegalHex C) then
+	  error(kind: T
+		msg: 'illegal hexadecimal character escape'
+		items: [hint(l: 'Found' m: C)])
+       [] textPickle(illegalOct C) then
+	  error(kind: T
+		msg: 'illegal octal character escape'
+		items: [hint(l: 'Found' m: C)])
+       [] textPickle(illegalChar C) then
+	  error(kind: T
+		msg: 'illegal character'
+		items: [hint(l: 'Found' m: C)])
+       else
+	  error(kind: T
+		items: [line(oz(E))])
+       end
+    end}
+end

@@ -1,0 +1,841 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="Chapter.Search">
+  <Title/Search Engines: <<Search>>/
+
+  <p>
+    This chapter describes various search engines. The engines fall
+    into the following categories. 
+    <list>
+      <entry>Basic Search Engines
+      <item>
+        Easy to use engines for single, all, and best solution
+        search. 
+      <entry>General Purpose Search Engines
+      <item>
+        Engines that offer additional support for:
+        <list>
+          <entry>Recomputation
+          <item>
+            Recomputation allows to trade space for time, allowing to
+          solve problems which otherwise would use too much 
+          memory. 
+          <entry>Killing
+          <item>
+            The execution of engines can be killed.
+          <entry>Output
+          <item>
+            Solutions computed can be returned as procedures or
+            first-class computation spaces. 
+       </list>
+    </list> 
+
+  <para><title/<ref to="sec.search.object"/Search Object//
+    The search object supports demand-driven search for single, all,
+    and best solutions. Search can be stopped and resumed as
+    needed. The object supports recomputation and the different kinds
+    of output as described above.
+
+  <para><title/<ref to="section.search.parallel"/Parallel Search Engines//
+    Parallel search engines use multiple networked computers to speed
+    up the exploration of search trees. During exploration of a search
+    tree entire subtrees are delegated to Oz engines that run on
+    different computers in parallel.
+
+  <para><title/Oz Explorer/
+    Besides of the engines described here, Mozart features the
+    OzExplorer, an interactive graphical search engine. A short
+    description of its use can be found in <ptr.extern to="ozdoc:fdt" 
+    key="section.problem.explorer">. Reference information on the Oz
+    Explorer can be found in <ptr.extern to="ozdoc:explorer">, a
+    research paper is&nbsp;<ptr to="Explorer.97">.
+
+<p>
+<section id="VanillaSearch"><title/Basic Search Engines/
+<index class=module/Search<and>base/
+
+<p>
+All these engines take a script as input and return a list of its
+solutions.
+<p>
+
+<list>
+<entry><<base.one>>
+<Synopsis>
+<<<
+{Search.base.one ?+{ScriptP} ??{Xs}}
+>>>
+<Item>
+returns a singleton list containing the first solution of the script
+?+{ScriptP} (a unary procedure) obtained by depth-first search. If
+no solution exists, <<nil>> is returned.
+<p>
+As an example, 
+<<<
+{Search.base.one proc {$ X}
+                    choice 
+                       choice X=ape [] X=bear end 
+                    [] X=cat 
+                    end
+                 end}
+>>>
+returns the list <<[ape]>>.
+
+<entry><<base.all>>
+<Synopsis>
+<<<
+{Search.base.all ?+{ScriptP} ??{Xs}}
+>>>
+<item>
+returns the list of all solutions of the script ?+{ScriptP} (a
+unary procedure) obtained by depth-first serach.
+
+As an example, 
+<<<
+{Search.base.all proc {$ X}
+                    choice 
+                       choice X=ape [] X=bear end 
+                    [] X=cat 
+                    end
+                 end}
+>>>
+returns the list <<[ape bear cat]>>.
+
+<entry><<Search.base.best>>
+<Synopsis>
+<<<
+{Search.base.best ?+{ScriptP} ?+{OrderP} ??{Xs}}
+>>>
+<item>
+returns a singleton list containing the best solution with respect to
+the order ?+{OrderP} (a binary procedure) of the script ?+{ScriptP} (a
+unary procedure) obtained by branch and bound search. If no solution
+does exist, <<nil>> is returned.
+<p>
+The branch and bound strategy works as follows. When a solution is
+found, all the remaining alternatives are constrained to be <em/better/ with respect to the order 
+?+{OrderP}. The binary procedure
+?+{OrderP} is applied with its first argument being the previous
+solution, and its second argument the root variable of a space for one
+of the remaining alternatives.
+
+<p>
+For instance, the following script constrains its root variable to a
+pair of integers, such that a certain equation holds between its
+components.
+<<<
+proc {Script Root}
+   X={FD.int 1#10} Y={FD.int 1#10}
+in
+   Y =: 10 - X - 2*Y
+   Root = X#Y
+   {FD.distribute split Root}
+end
+>>>
+
+<p>
+With the order
+<<<
+proc {MaxSum Old New}
+   Old.1 + Old.2 <: New.1 + New.2
+end
+>>>
+we can search for a solution with maximal sum of <<X>> and <<Y>> by 
+<<<
+{SearchBest Script MaxSum}
+>>>
+This returns the singleton list <<[7#1]>>.
+
+<p>
+Similarly, we can search for the solution with the maximal product, by using
+the order:
+<<<
+proc {MaxProduct Old New}
+   Old.1 * Old.2 <: New.1 * New.2
+end
+>>>
+in:
+<<<
+{SearchBest Script MaxProduct}
+>>>
+This returns the singleton list <<[4#2]>>.
+</list>
+</section>
+
+<section id="GeneralSearch">
+<title/General Purpose Search Engines/
+
+<p>
+This section describes the search engines found in the module
+<<Search>>. All of these engines support recomputation, the possibility
+to stop their execution and various kinds of output.
+
+<para><title/Recomputation./
+Scripts which create a large number of variables or
+propagators or scripts for which the search tree is very deep
+might use too much memory to be feasible. The search engines described in
+this section feature support for so-called <def/
+recomputation/. Recomputation reduces the space requirements for
+these scripts in that it trades space for time.
+
+<p>
+Search engines that do not use recomputation, create a copy of a
+computation space in each distribution step. This copy is needed such
+that the engine is able to follow more than one alternative of a choice.
+
+<p>
+If, for instance, a single solution search engine finds a solution after
+200 distribution steps (&ie; the search tree has a depth of 201), 200
+copies are created and stored by the engine.
+
+<p>
+Recomputation reduces the number of copies needed: Instead of creating a
+copy in each distribution step, only every <math/n/-th distribution step a
+copy is created. A space for which no copy has been created can be
+recomputed from a copy located higher above in the search tree by
+recomputing some distribution steps. In the worst case, <math/n-1/
+distribution steps have to be recomputed. The parameter <math/n/ is the
+so-called <def/recomputation distance/. A recomputation distance of
+<math/n/ means that the <em/space/ needed <em/decreases/ by a factor of
+<math/n/ and that the <em/time/ needed <em/increases/ by a factor of
+<math/n/.
+
+<p>
+The following search engines take the recomputation distance as an
+argument (it is denoted by ?{RcdI}). A value of <<2>>  for ?{RcdI}
+means that only each second distribution step a copy is created. The
+value <<1>>  for ?{RcdI} means that in each distrbution step a copy is
+created, that is no recomputation is used. Values less than <<1>> mean
+that none but an initial copy is created: from this initial copy all
+other spaces are recomputed.
+
+<p>
+Recomputation can also <em/reduce/ both <em/space and time/
+requirements.  Searching a single solution of a script which
+features a good heuristic (&ie; there are only very few failures)
+creates copies which are not used.  Recomputation avoids this, resulting
+in improvement with respect to both space and time.
+
+<p class=danger> Recomputation requires that the distribution
+strategy used in the script be <em/deterministic/. Deterministic
+means that the created choices and their order are identical
+in repeated runs of the script. This is true for all strategies 
+in the finite domain module, but for example not for strategies 
+with randomized components.
+
+<para><title/Killing the Engine./
+All engines described in this section return a nullary procedure, which
+is denoted by ?+{KillP}. Applying this procedure kills the search
+engine.
+
+<p>
+A search engine, which can be stopped and resumed is described in
+Section&nbsp;<ptr to="sec.search.object">.
+
+<para><title/Different Types of Output./
+Each of the engines is provided with three different types of
+output. The first kind returns a list of solutions as the engines in
+<ptr to="VanillaSearch">. The second kind returns a list of unary
+procedures. Applying one of these procedures merges a copy of the
+succeeded space and gives reference to its root variable variable by the
+actual argument of the procedure application.  The third kind returns a
+list of succeeded spaces.
+
+
+<subsection><title/Single Solution Search/
+
+<p>
+<index class=module/Search<and>one/
+
+<list>
+<entry><<one.depth>>
+<index class=module/Search<and>one<and>depth/
+<Synopsis>
+<<<
+{Search.one.depth ?+{ScriptP} ?+{RcdI} 
+                  ??{KillP} ??{Xs}}
+>>>
+<item>
+returns a singleton list containing the first solution of the script
+?+{ScriptP} (a unary procedure) obtained by depth-first search. If
+no solution exists, <<nil>> is returned.
+
+<p>
+For instance, the procedure <<Search.base.one>> (see
+<Ptr to="VanillaSearch">) can be defined as:
+<<<
+fun {Search.base.one ScriptP}
+   {Search.one.depth ScriptP 1 _}
+end
+>>>
+
+<p>
+Suppose that <<Script>> is a script for which search does not terminate
+because it keeps on creating choices forever. It could look like the
+following:
+<<<
+proc {Script X}
+   &cdots;
+   choice {Script X} [] {Script X} end
+end
+>>>
+If <<Search.one.depth>> is applied to this particular script by
+<<<
+Solutions={Search.one.depth Script 1 KillP}
+>>>
+the search engine can be killed by applying <<KillP>> as follows:
+<<<
+{KillP}
+>>>
+
+<p>
+Note that a script which keeps on computing forever even without search
+(&ie;, because it contains an infinite recursion or loop) can not be
+killed.
+
+
+<entry><<one.depthS>>
+<index/Search<and>one<and>depthS/
+<Synopsis>
+<<<
+{Search.one.depthS ?+{ScriptP} ?+{RcdI} 
+                   ??{KillP} ??{Spaces}}
+>>>
+<item>
+returns a singleton list containing the first succeeded space for the script
+?+{ScriptP} (a unary procedure) obtained by depth-first search. If
+no solution exists, <<nil>> is returned.
+
+
+<entry><<one.depthP>>
+<index/Search<and>one<and>depthP/
+<Synopsis>
+<<<
+{Search.one.depthP ?+{ScriptP} ?+{RcdI} 
+                   ??{KillP} ??{Ps}}
+>>>
+<item>
+Similar to <<Search.one.depthS>>, but returns a list of unary procedures
+as output. 
+<p>
+<<Search.one.depthP>> can be defined using
+<<Search.one.depthS>> as follows:
+<<<
+fun {Search.one.depthP Script RcdI ?KillP}
+   {Map thread
+           {Search.one.depthS Script RcdI ?KillP}
+        end
+        fun {$ SuccSpace}
+           proc {$ Root}
+              {Space.merge SuccSpace Root}
+           end
+        end}
+end
+>>>
+
+<entry><<one.bound>>
+<index class=module/Search<and>one<and>bound/
+<synopsis><<{Search.one.bound ?+{ScriptP} ?+{BoundI} ?+{RcdI} ??{KillP} ??{Xs}}>>
+<entry><<one.boundS>>
+<index class=module/Search<and>one<and>boundS/
+<synopsis><<{Search.one.boundS ?+{ScriptP} ?+{BoundI} ?+{RcdI} ??{KillP} ??{Spaces}>>
+<entry><<one.boundP>>
+<index class=module/Search<and>one<and>boundP/
+<synopsis><<{Search.one.boundP ?+{ScriptP} ?+{BoundI} ?+{RcdI} ??{KillP} ??{Ps}>>
+<item>returns a singleton list containing the first solution of the script
+?+{ScriptP} (a unary procedure) obtained by depth-first search, where
+the depth of the search tree explored is less than or equal to ?+{BoundI}. 
+
+<p>
+If there is no solution in a depth less than or equal to
+?+{BoundI}, but there might be solutions deeper in the tree, 
+<<cut>> is returned. In case the entire search tree has a depth
+less than ?+{BoundI} and no solution exists, <<nil>> is
+returned. 
+
+<p>
+Otherwise the output is a singleton list containing the
+solution (<<Search.one.bound>>), a succeeded space
+(<<Search.one.boundS>>), or a procedure (<<Search.one.boundP>>).
+
+<p>
+For instance
+<<<
+{Search.one.bound proc {$ X}
+                     choice fail [] fail end
+                  end
+                  1 1 _}
+>>>
+returns the output <<nil>>, whereas
+<<<
+{Search.one.bound proc {$ X}
+                     choice 
+                        choice fail [] fail end
+                     [] choice fail [] fail end
+                     end
+                  end
+                  1 1 _}
+>>>
+returns the output <<cut>>.
+
+<entry><<one.iter>>
+<index class=module/Search<and>one<and>iter/
+<synopsis><<{Search.one.iter ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Xs}}>>
+<entry><<one.iterS>>
+<index class=module/Search<and>one<and>iterS/
+<synopsis><<{Search.one.iterS ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Spaces}}>>
+<entry><<one.iterP>>
+<index class=module/Search<and>one<and>iterP/
+<synopsis><<{Search.one.iterP ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Ps}}>>
+<item>
+returns a singleton list containing the first solution of the script
+?+{ScriptP} (a unary procedure) obtained by iterative deepening
+depth-first search. If no solution exists, <<nil>> is returned.
+<p>
+Iterative deepening applies <<Search.one.bound>> to ?+{ScriptP} with
+depth-bounds 1, 2, 4, 8, &ellipsis; until either a solution is
+found or <<Search.one.bound>> returns <<nil>>.
+</list>
+</subsection>
+
+
+<subsection>
+<title/All Solution Search/
+<p>
+<list>
+<entry><<all>>
+<index class=module/Search<and>all/
+<synopsis><<{Search.all ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Xs}}>>
+<entry><<allS>>
+<index class=module/Search<and>allS/
+<synopsis><<{Search.allS ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Spaces}}>>
+<entry><<allP>>
+<index class=module/Search<and>allP/
+<synopsis><<{Search.allP ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Ps}}>>
+<item>
+returns the list of all solutions of the script ?+{ScriptP} (a unary
+procedure) obtained by depth-first search.  
+<p>
+The output is a list of solutions (<<Search.all>>), a list of succeeded
+spaces (<<Search.allS>>), or a list of procedures (<<Search.allP>>).
+</list>
+</subsection>
+
+<subsection id=section.best.solution.search>
+<title/Best Solution Search/
+<p>
+<index scope=section.best.solution.search class=module/best/
+
+<list>
+<entry><<best.bab>>
+<index class=module/Search<and>best<and>bab/
+<synopsis><<{Search.best.bab ?+{ScriptP} ?+{OrderP} ?+{RcdI} ??{KillP} ??{Xs}}>>
+<entry><<best.babS>>
+<index class=module/Search<and>best<and>babP/
+<synopsis><<{Search.best.babS ?+{ScriptP} ?+{OrderP} ?+{RcdI} ??{KillP} ??{Spaces}}>>
+<entry><<best.babP>>
+<index class=module/Search<and>best<and>babS/
+<synopsis><<{Search.best.babP ?+{ScriptP} ?+{OrderP} ?+{RcdI} ??{KillP} ??{Ps}}>>
+<item>
+returns a singleton list containing the best solution with respect to
+the order ?+{OrderP} (a binary procedure) of the script ?+{ScriptP} (a
+unary procedure) obtained by branch and bound search. If no solution
+does exist, <<nil>> is returned.
+<p>
+The branch and bound strategy works as follows. When a solution is
+found, all the remaining alternatives are constrained to be
+<em/better/ with respect to the order ?+{OrderP}. The binary procedure 
+?+{OrderP} is applied with its first argument being the previous
+solution, and its second argument the root variable of a space for one
+of the remaining alternatives.
+
+<entry><<best.restart>>
+<index class=module/Search<and>best<and>restart/
+<synopsis><<{Search.best.restart ?+{ScriptP} ?+{OrderP} ?+{RcdI} ??{KillP} ??{Xs}}>>
+<entry><<best.restartS>>
+<index class=module/Search<and>best<and>restartP/
+<synopsis><<{Search.best.restartS ?+{ScriptP} ?+{OrderP} ?+{RcdI} ??{KillP} ??{Spaces}}>>
+<entry><<best.restartP>>
+<index class=module/Search<and>best<and>restartS/
+<synopsis><<{Search.best.restartP ?+{ScriptP} ?+{OrderP} ?+{RcdI} ??{KillP} ??{Ps}}>>
+<item>
+returns a singleton list containing the best solution with respect to
+the order ?+{OrderP} (a binary procedure) of the script ?+{ScriptP} (a
+unary procedure) obtained by branch and bound search. If no solution
+does exist, <<nil>> is returned.
+<p>
+The restart strategy works as follows. When a solution is found,
+search is restarted for ?+{ScriptP} with the additional constraint
+stating that the solution must be better with respect to the order
+?+{OrderP}. The binary procedure ?+{OrderP} is applied with 
+the previous solution as first argument, and the root variable of the
+script ?+{ScriptP} as its second argument.
+</list>
+</subsection>
+</section>
+
+<section id=sec.search.object>
+<title/<<Search.object>>/
+<p>
+The object <<Search.object>> implements a demand driven search engine
+which supports recomputation, single, all, and best solution search
+and different kinds of output in the same way as the search engines in
+the previous section. 
+
+<index class=module scope=sec.search.object/search<and>object/
+
+<list>
+<entry><<script>>
+<index class=module/Search<and>object<and>script/
+<Synopsis>
+<<<
+script(?+{ScriptP} 
+       ?+{OrderP} <= _ 
+       rcd:?+{RcdI} <= 1)
+>>>
+<item>
+Initializes the object for the script ?+{Script} (a unary
+procedure). If the optional argument ?+{OrderP} (a binary procedure)
+is given, the object uses a branch and bound strategy for best
+solution search.
+<p>
+?+{RcdI} is the recomputation distance (see
+<ptr to="GeneralSearch">).
+
+<entry><<next>>
+<index class=module/Search<and>object<and>next/
+<synopsis><<next(??{Xs})>>
+<entry><<nextS>>
+<index class=module/Search<and>object<and>nextP/
+<synopsis><<nextS(??{Spaces})>>
+<entry><<nextP>>
+<index class=module/Search<and>object<and>nextS/
+<synopsis><<nextP(??{Ps})>>
+<item>
+returns a singleton list which contains the next solution. If no
+further solution exists, <<nil>> is returned. If the search is stopped
+by a message <<stop>>, <<stopped>> is returned.
+<p>
+The object releases its state immediately.
+
+<entry><<last>>
+<index class=module/Search<and>object<and>last/
+<synopsis><<last(??{Xs})>>
+<entry><<lastS>>
+<index class=module/Search<and>object<and>lastS/
+<synopsis><<lastS(??{Spaces})>>
+<entry><<lastP>>
+<index class=module/Search<and>object<and>lastP/
+<synopsis><<lastP(??{Ps})>>
+<item>
+returns a singleton list which contains the last solution. If no
+further solution exists, <<nil>> is returned. If the search is stopped
+by a message <<stop>>, <<stopped>> is returned.
+<p>
+The object releases its state immediately.
+If the object has been initialized for best solution search,
+the last solution is the best solution.
+
+<entry><<stop>>
+<index class=module/Search<and>object<and>stop/
+<Synopsis>
+<<<
+stop
+>>>
+<item>
+stops the search engine. The search engine can be restarted by
+<<next>>, <<nextS>>, <<nextP>>, <<last>>, <<lastS>>, and <<lastP>>.
+
+</list>
+</section>
+
+  <section id="section.search.parallel">
+    <title/Parallel Search Engines/
+
+      <p>
+        Parallel search engines use multiple networked computers to
+        speed up the exploration of search trees. During exploration
+        of a search tree entire subtrees are delegated to
+        multiple workers. Each worker is powered by a single Oz
+        engine. This means that all worker run in parallel:
+        subtrees are explored in parallel rather than
+        sequentially. Each engine runs on a networked
+        computer, or multiple engines can even run on a single networked
+        computer. The latter makes sense if the computer has more than
+        a single processor and can run the engines in parallel.
+      </p>
+     
+      <para class=apropos><title/When to use?/
+        Delegating subtrees for exploration to workers incurs some
+        overhead. But if the number of subtrees is significant,
+        parallel execution can gain over the required overhead. If no subtrees
+        exist (the search tree is just a single path) or the
+        subtrees are small (just a small search tree),
+        parallel search engines do not improve. 
+        Branch and bound search for
+        hard problems (like scheduling problems) in particular can take
+        advantage. Currently, you can expect linear speedup for up to six
+        workers (that is, six times faster!) with well suited
+        problems.
+      </para>
+
+      <para class=apropos><title/What to do?/
+        Your scripts do not need rewriting. They must be wrapped
+        into a functor definition.
+      </para>
+
+  <subsection id="section.search.parallel.example">
+    <title/An Example/
+
+    <p>
+      Let us take as small constraint problem the fraction problem,
+      which is explained in <ptr.extern to="ozdoc:fdt"
+      key="section.propagators.fractions">. However we will choose
+      here a formulation that artificially increases the search tree
+      in that we do not impose a canonical order and leave out
+      redundant constraints.
+
+    <p>
+      The script as you can try it from the <ref.extern
+      to="ozdoc:opi"/OPI/, looks as follows:
+
+    <p>
+<chunk><title/Fractions script/
+proc {Script Root}
+   sol(a:A b:B c:C d:D e:E f:F g:G h:H i:I) = Root
+   BC = {FD.decl}
+   EF = {FD.decl}
+   HI = {FD.decl}
+in
+   Root ::: 1#9
+   {FD.distinct Root}
+   BC =: 10*B + C
+   EF =: 10*E + F
+   HI =: 10*H + I 
+   A*EF*HI + D*BC*HI + G*BC*EF =: BC*EF*HI
+   {FD.distribute ff Root}
+end
+</chunk>
+
+    <p>
+      It is wrapped into a functor that must export a single feature
+      <<script>> under which the script (<<Fraction>> in our case) is
+      available. This is easy, the following does the job:
+    
+    <p>
+<chunk><title/Fractions functor/
+functor Fractions
+import FD
+export Script
+define 
+   <chunk.ref/Fractions script/
+end
+</chunk>
+
+    <p>
+      If you want to learn more about functors, you should consult
+      <ptr.extern to="ozdoc:apptut">.
+
+    <p>
+      After executing the functor definition in the OPI, we can now
+      start the search engine.
+
+    <p>
+      Let us assume that we want to create two processes on the
+      computers with hostname <<godzilla>> (because it is a double
+      processor machine), and a single process on both <<orca>> and
+      <<grizzly>>. We create a parallel search engine that runs on
+      these hosts as follows:
+<<<E={New Search.parallel init(godzilla:2 orca:1 grizzly:1)}>>>
+
+    <p>
+      A list of all solutions <<Xs>> can now be computed as follows: 
+      <<<Xs={E all(Fractions $)}>>>
+
+    <p>
+      Similarly, a single solution <<Ys>> can be computed by
+      <<<Xs={E one(Fractions $)}>>>
+      Here, ?_{Ys} is either a singleton list containg the solution,
+      or <<nil>> if no solution does exist. Note that the first
+      solution returned is not necessarily the solution found by the
+      non-parallel search engines first.
+
+    <p>
+      Parallel search engines support a (rudimentary) form of
+      tracing. After
+      <<<{E trace(true)}>>>
+      a window appears as that gives graphical information on how many
+      nodes each Oz engine explored. The graphical information is in a
+      very early beta stage and will improve soon.
+      <<<{E trace(false)}>>>
+      switches tracing off again.
+
+    <p>
+      Rather than using a functor as an argument for the methods
+      <<one>> and <<all>> a url can be used that refers to a pickled
+      functor stored under that url.
+
+    <p>
+      Search for best solution works similar. Let us consider as a
+      more interesting example the really hard scheduling problem MT10
+      (for more information on that problem see <ptr.extern
+      to="ozdoc:fdt" key="section.scheduling.hard">). A functor for
+      best solution search must export both <<script>> and
+      <<order>>. How this is done you can see in the functor
+      definition <ref.extern to="MT10.oz"/<file/MT10.oz// for the MT10
+      problem. 
+
+    <p>
+      Now the list of solutions <<Zs>> in strictly increasing order
+      can be computed by
+      <<<Zs={E best('x-oz://doc/system/MT10.ozf' $)}>>>
+      The best solution is the last element of the list <<Zs>>. The
+      speed up you can expect is almost a factor of six with six
+      processes started!
+
+    <p>
+      Parallel search engines only work properly, if your computing
+      environment is set up such that the facilities for remote module
+      managers work. The requirements are described in <ptr
+      to="chapter.remote">.
+
+
+  <subsection id="section.search.parallel.api">
+    <title/The Class <<Search.parallel>>/
+
+    <p>
+      The class <<Search.parallel>> provides the following methods.
+
+    <list>
+      <entry> <<init>>
+        <index class=module/Search<AND>parallel<AND>init/
+      <synopsis>
+        <<<init(?+{HostA1}:?+{I1}#?+{ForkA1} ... ?+{HostAn}:?+{In}#?+{ForkAn})>>>
+      <item>
+        Creates and initializes a new parallel search engine by
+        forking new Oz processes. At host ?_{HostA1} the number of
+        newly forked processes is ?_{I1} and the fork method
+        ?_{ForkA1} is used (see <ptr to="chapter.remote"> for a discussion
+        of fork methods), and so on.
+      <p>
+        For example,
+        <<<E={New Search.parallel init(wallaby:  1#automatic
+                            godzilla: 2#ssh 
+                            grizzly:  1#ssh)}>>>
+        creates a single process at the computer <<wallaby>>, two
+        processes at <<godzilla>>, and one process at <<grizzly>>. The
+        fork method for <<wallaby>> is automatically determined, for
+        <<godzilla>> and <<grizzly>> the method <<ssh>> (secure shell)
+        is used. 
+      <p>
+        Equivalently, this can be abbreviated
+        as follows:
+        <<<E={New Search.parallel init(wallaby godzilla:2#ssh grizzly:ssh)}>>>
+        That is, a field with integer feature is assumed to be a
+        host where a single process is to be forked, and the atom
+        <<automatic>> for a fork method or the number <<1>> as number
+        of processes to be forked can be left out.
+
+      <entry> <<one>>
+        <index class=module/Search<AND>parallel<AND>one/
+      <synopsis>
+        <<<one(?+{FunctorOrUrl} ??{Xs})>>>
+      <item>
+        Searches a single solution for the script specified by
+        ?_{FunctorOrUrl}. ?_{FunctorOrUrl} must be either a functor or
+        a url given as virtual string that refers to a pickled
+        functor. The engine runs the script that must be exported by
+        the field <<script>>.
+      <p>
+        Returns in ?_{Xs} either <<nil>> in case no solution does
+        exists, or a singleton list containing the solution.
+      <p>
+        Blocks until search terminates.
+    
+
+      <entry> <<all>>
+        <index class=module/Search<AND>parallel<AND>all/
+      <synopsis>
+        <<<all(?+{FunctorOrUrl} ??{Xs})>>>
+      <item>
+        Searches all solutions for the script specified by
+        ?_{FunctorOrUrl}. ?_{FunctorOrUrl} must be either a functor or
+        a url given as virtual string that refers to a pickled
+        functor. The engine runs the script that must be exported by
+        the field <<script>>.
+      <p>
+        Returns in ?_{Xs} the list of solutions.
+      <p>
+        Blocks until search terminates.
+
+      <entry> <<best>>
+        <index class=module/Search<AND>parallel<AND>best/
+      <synopsis>
+        <<<best(?+{FunctorOrUrl} ??{Xs})>>>
+      <item>
+        Searches the best solution for the script and order specified by
+        ?_{FunctorOrUrl}. ?_{FunctorOrUrl} must be either a functor or
+        a url given as virtual string that refers to a pickled
+        functor. The engine runs the script that must be exported by
+        the field <<script>> and uses as order for branch and bound
+        search the fields <<order>>.
+      <p>
+        Returns in ?_{Xs} either <<nil>> in case no solution does
+        exists, or a list containing the solutions in increasing
+        order. That is the last element (if any) is the best
+        solution.
+      <p>
+        Blocks until search terminates.
+
+      <entry> <<stop>>
+        <index class=module/Search<AND>parallel<AND>stop/
+      <synopsis>
+        <<<stop()>>>
+      <item>
+        Stops the current search started by <<one>>, <<all>>, or
+        <<best>>. 
+      <p>
+        Blocks until search has been terminated.
+
+      <entry> <<close>>
+        <index class=module/Search<AND>parallel<AND>close/
+      <synopsis>
+        <<<close()>>>
+      <item>
+        Closes the object and terminates all forked Oz processes.
+
+      <entry> <<trace>>
+        <index class=module/Search<AND>parallel<AND>close/
+      <synopsis>
+        <<<trace(?+{B})>>>
+      <item>
+        Switches graphical tracing of search tree delegation on or
+        off, depending on ?+{B}.
+      <p class=danger>
+        Method is highly speculative and is subject to change.
+      </p>
+
+    </list>
+
+</Chapter>
