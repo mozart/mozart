@@ -48,13 +48,14 @@ LIBS=           $(CORE_LIBS) @LIBS@
 
 INCS=           -I. -I$(SRCDIR)
 M4_D=           -DEMUDIR=$(SRCDIR)
-TARGETS=        @TARGETS@ text2pickle Builtins.oz
+TARGETS=        @TARGETS@ text2pickle
 MODULETARGETS=  @MODULETARGETS@
 MODULEINSTALL=  @MODULEINSTALL@
 SUBDIRS=        libfd libfset
 OZVERSION=      $(SRCTOP)/OZVERSION
 
 # these are the builtin modules: non-sited primitives
+# NOTE: update this list also in share/lib/Makefile.in
 BIMODSPECS = \
         Boot Array Atom BitArray Bool Cell Char Chunk Class \
         Dictionary Exception Float ForeignPointer Int Literal \
@@ -80,7 +81,7 @@ CREATEDFILES= \
         atoms.hh atoms.cc\
         config.h scanner.cc parser.cc \
         version.cc initffuns.cc copycode.cc opcodes.cc\
-        $(MODINTERS) Builtins.oz
+        $(MODINTERS)
 
 OTHERSRCS= \
         main.cc \
@@ -176,12 +177,7 @@ all: $(TARGETS)
 
 bootstrap:: all
 
-BIMODFILES = $(BIMODSPECS:%=mod%.spec)
-
 $(MODINTERS): bidecl.perl
-
-Builtins.oz: $(BIMODFILES) bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -srcdir $(SRCDIR) -builtins $(BIMODSPECS) > $@
 
 .PHONY: libFDP.a FDP.so libSchedule.a Schedule.so
 libFDP.a FDP.so libSchedule.a Schedule.so:
