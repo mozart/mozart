@@ -249,16 +249,16 @@ private:
 protected:
   RefsArray gRegs;       // context;
 public:
-  Builtin(Builtin *b)
-  : suspHandler(b->suspHandler), fun(b->fun), Chunk(C_BUILTIN),
-    gRegs (b->gRegs) {}
   Builtin(BuiltinTabEntry *fn, TaggedRef handler, RefsArray gregs = NULL)
-    : suspHandler(handler), fun(fn), Chunk(C_BUILTIN),
+    : suspHandler(handler), fun(fn), Chunk(Co_Builtin),
     gRegs (gregs) {}
   Builtin(BuiltinTabEntry *fn, TaggedRef handler, RefsArray gregs,
           Arity *arity)
-    : suspHandler(handler), fun(fn), Chunk(C_BUILTIN,arity),
+    : suspHandler(handler), fun(fn), Chunk(Co_Builtin,arity),
     gRegs (gregs) {}
+
+  Builtin *clone() { return new Builtin(fun,suspHandler,gRegs); }
+
   OZPRINT;
   OZPRINTLONG;
 

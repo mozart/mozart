@@ -111,7 +111,7 @@ OZ_C_proc_begin(BIwriteBuiltin,3)
   OZ_Term bi  = OZ_getCArg(1);
 
   DEREF(bi,_1,_2);
-  if (!isConstChunk(bi) || chunkCast(bi)->getCType() != C_BUILTIN) {
+  if (!isConst(bi) || tagged2Const(bi)->getType() != Co_Builtin) {
     warning("writeBuiltin: builtin expected", OZ_toC(bi));
     return FAILED;
   }

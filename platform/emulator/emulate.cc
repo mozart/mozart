@@ -271,7 +271,7 @@ Bool AM::hookCheckNeeded()
      G = gRegs;                                                               \
      if (CheckMode) e->currentThread->checkCompMode(Pred->getCompMode()); \
      if (emulateHook(e,Pred,Arity,X)) {                                       \
-        e->pushTask(CBB,Pred->getPC(),NULL,G,X,Arity);                \
+        e->pushTaskOutline(CBB,Pred->getPC(),NULL,G,X,Arity);                 \
         goto LBLschedule;                                                     \
      }
 
@@ -2065,14 +2065,24 @@ void engine() {
 // --- Call: Abstraction
 // -----------------------------------------------------------------------
 
-    TypeOfChunk typ = predicate->getCType();
+    TypeOfConst typ = predicate->getType();
 
     switch (typ) {
-    case C_ABSTRACTION:
-    case C_OBJECT:
+    case Co_Abstraction:
+    case Co_Object:
       {
-        Abstraction *def = (Abstraction *) predicate;
-
+        Abstraction *def;
+        if (typ==Co_Object) {
+          Object *o = (Object*) predicate;
+          if (o->getIsClass()) {
+            HF_FAIL(message("classes cannot be applied "),);
+          }
+          def = o->getAbstraction();
+          X[predArity++] = o->getSlowMethods();
+          X[predArity++] = makeTaggedConst(predicate);
+        } else {
+          def = (Abstraction *) predicate;
+        }
         CheckArity(predArity, def->getArity(), def, PC);
         CallDoChecks(def,def->getGRegs(),isTailCall,PC,def->getArity(),OK);
         Y = NULL; // allocateL(0);
@@ -2084,7 +2094,7 @@ void engine() {
 // -----------------------------------------------------------------------
 // --- Call: Builtin
 // -----------------------------------------------------------------------
-    case C_BUILTIN:
+    case Co_Builtin:
       {
         bi = (Builtin *) predicate;
 
@@ -2142,7 +2152,7 @@ void engine() {
 
               predicate = bi->getSuspHandler();
               if (!predicate) {
-                if (!isTailCall) e->pushTask(CBB,PC,Y,G);
+                if (!isTailCall) e->pushTaskOutline(CBB,PC,Y,G);
                 Suspension *susp=e->mkSuspension(CBB,CPP,
                                                  bi->getFun(),X,predArity);
                 e->suspendOnVarList(susp);
@@ -2159,7 +2169,7 @@ void engine() {
                                    goto localHack0;);
               if (emulateHook0(e)) {
                 if (!isTailCall) {
-                  e->pushTask(CBB,PC,Y,G);
+                  e->pushTaskOutline(CBB,PC,Y,G);
                 }
                 goto LBLschedule;
               }
@@ -2206,9 +2216,9 @@ void engine() {
          goto LBLcall;
        }
 
-       if (!isConstChunk(x0) ||
-           !(chunkCast(x0)->getCType () == C_ABSTRACTION ||
-             chunkCast(x0)->getCType () == C_BUILTIN)) {
+       if (!isConst(x0) ||
+           !(tagged2Const(x0)->getType () == Co_Abstraction ||
+             tagged2Const(x0)->getType () == Co_Builtin)) {
          HF_FAIL (,
                   message("Application failed: no procedure in solve combinator\n"));
 

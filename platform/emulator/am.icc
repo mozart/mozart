@@ -273,6 +273,13 @@ Board *Abstraction::getBoardFast()
   return home->getBoardFast();
 }
 
+
+inline
+Board *Object::getBoardFast()
+{
+  return isDeep() ? ((DeepObject*)this)->getBoardFast() : am.rootBoard;
+}
+
 /*
 inline
 Board *Cell::getBoardFast()

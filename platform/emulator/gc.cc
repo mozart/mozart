@@ -1712,17 +1712,24 @@ void TaskStack::gcRecurse()
 
 void Chunk::gcRecurse()
 {
-  record = getRecord()->gcSRecord();
-  switch(getCType()) {
+  setRecord(getRecord()->gcSRecord());
+  switch(getType()) {
 
-  case C_OBJECT:
+  case Co_Object:
     {
       Object *o = (Object *) this;
+      Bool isc = o->getIsClass();
+      o->claas = o->getClass()->gcClass();
       gcTagged(o->cell,o->cell);
-      o->fastMethods = o->fastMethods->gcSRecord();
-    }   // no break here!
+      if (o->getIsClass())
+        o->setIsClass();
+      if (o->isDeep()){
+        ((DeepObject*)o)->home = o->getBoardFast()->gcBoard();
+      }
+      break;
+    }
 
-  case C_ABSTRACTION:
+  case Co_Abstraction:
     {
       Abstraction *a = (Abstraction *) this;
       Assert(!isFreedRefsArray(a->gRegs));
@@ -1738,7 +1745,7 @@ void Chunk::gcRecurse()
       break;
     }
 
-  case C_CELL:
+  case Co_Cell:
     {
       Cell *c = (Cell *) this;
 
@@ -1749,7 +1756,7 @@ void Chunk::gcRecurse()
       break;
     }
 
-  case C_BUILTIN:
+  case Co_Builtin:
     {
       Builtin *bi = (Builtin *) this;
       gcTagged(bi->suspHandler,bi->suspHandler);
@@ -1766,13 +1773,8 @@ void Chunk::gcRecurse()
 
 void ConstTerm::gcConstRecurse()
 {
-  switch (typeOf()) {
-  case Co_Chunk:
-    ((Chunk *) this)->gcRecurse();
-    break;
-  default:
-    Assert(NO);
-  }
+  Assert(isConstChunk(this));
+  ((Chunk *) this)->gcRecurse();
 }
 
 
@@ -1783,20 +1785,18 @@ ConstTerm *ConstTerm::gcConstTerm()
   CHECKCOLLECTED(*getGCField(), ConstTerm *);
 
   switch (typeOf()) {
-  case Co_Board:
-    {
-      Board *newBoard = ((Board *) this)->gcBoard();
-      return newBoard;
-    }
+  case Co_Board:     return ((Board *) this)->gcBoard();
   case Co_Actor:     return ((Actor *) this)->gcActor();
   case Co_Thread:    return ((Thread *) this)->gcThread();
+  case Co_Class:     return ((ObjectClass *) this)->gcClass();
   case Co_HeapChunk: return ((HeapChunk *) this)->gc();
 
-  case Co_Chunk:
+  default:
     {
+      Assert(isConstChunk(this));
       size_t sz;
-      switch(((Chunk*) this)->getCType()) {
-      case C_ABSTRACTION: {
+      switch(((Chunk*) this)->getType()) {
+      case Co_Abstraction: {
         Abstraction *a = (Abstraction *) this;
         Board *bb=a->getBoardFast();
         if (!bb->gcIsAlive()) return 0;
@@ -1805,10 +1805,10 @@ ConstTerm *ConstTerm::gcConstTerm()
 //      DebugGCT(if (opMode == IN_GC) NOTINTOSPACE(bb));
         break;
       }
-      case C_OBJECT:
-        sz = sizeof(Object);
+      case Co_Object:
+        sz = ((Object*)this)->isDeep() ? sizeof(DeepObject): sizeof(Object);
         break;
-      case C_CELL:
+      case Co_Cell:
         {
           Board *bb=((Cell *) this)->getBoardFast();
           if (!bb->gcIsAlive()) return 0;
@@ -1816,7 +1816,7 @@ ConstTerm *ConstTerm::gcConstTerm()
           sz = sizeof(Cell);
         }
         break;
-      case C_BUILTIN:
+      case Co_Builtin:
         switch (((Builtin *) this)->getType()) {
         case BIsolveCont:
           sz = sizeof(OneCallBuiltin);
@@ -1829,7 +1829,7 @@ ConstTerm *ConstTerm::gcConstTerm()
         }
         break;
       default:
-        error("ConstTerm::gcConstTerm: unexpected case");
+        Assert(0);
         return 0;
       }
       Chunk *ret = (Chunk*) gcRealloc(this,sz);
@@ -1838,9 +1838,6 @@ ConstTerm *ConstTerm::gcConstTerm()
       storeForward(getGCField(), ret);
       return ret;
     }
-  default:
-    Assert(NO);
-    return NULL;
   }
 }
 
@@ -1995,6 +1992,26 @@ void Board::gcRecurse()
 
   script.Script::gc();
 }
+
+ObjectClass *ObjectClass::gcClass()
+{
+  if (this==0) return 0;
+
+  GCMETHMSG("ObjectClass::gcClass");
+  CHECKCOLLECTED(*getGCField(), ObjectClass *);
+
+  ObjectClass *ret = (ObjectClass *) gcRealloc(this,sizeof(*this));
+  GCNEWADDRMSG(ret);
+  storeForward(getGCField(), ret);
+  ret->fastMethods = fastMethods->gcSRecord();
+  ret->printName = printName->gc();
+  gcTagged(slowMethods,ret->slowMethods);
+  ret->send = (Abstraction *) send->gcConstTerm();
+  gcTagged(ozclass,ret->ozclass);
+  return ret;
+}
+
+
 
 Actor *Actor::gcActor()
 {
