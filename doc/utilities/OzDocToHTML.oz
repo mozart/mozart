@@ -591,7 +591,24 @@ define
             [] picture then
                {Exception.raiseError ozdoc(sgmlToHTML unsupported M)}   %--**
             [] 'picture.extern' then
-               {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
+               case M.type
+               of gif then
+                  case M.display
+                  of display then Out <- @Out#'</P>\n'
+                  [] inline then skip
+                  end
+
+                  Out <- @Out#'<IMG src='#{MakeCDATA M.to}#'>'
+
+                  case M.display
+                  of display then Out <- @Out#'<P>\n'
+                  [] inline then skip
+                  end
+
+               else
+                  {Exception.raiseError
+                   ozDoc(sgmlToHTML unsupportedPictureNotation M)}   %--**
+               end
             [] 'picture.choice' then
                {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
             %-----------------------------------------------------------
