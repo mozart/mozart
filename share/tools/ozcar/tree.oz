@@ -21,28 +21,6 @@
 
 local
 
-   fun {TreeNext L Xs I}
-      case Xs of nil then nil
-      [] X|Xr then
-	 case X == I then
-	    case Xr == nil then L.1
-	    else Xr.1 end
-	 else
-	    {TreeNext L Xr I}
-	 end
-      end
-   end
-
-   fun {TreePrev Xs I}
-      case Xs of nil then nil
-      [] X|Xr then
-	 case Xr == nil then X else
-	    case Xr.1 == I then X
-	    else {TreePrev Xr I} end
-	 end
-      end
-   end
-
    local
       fun {DoTreeRemoveAndNext Xs F N}
 	 case Xs of nil then nil
@@ -122,6 +100,8 @@ local
 
       feat
 	 ThreadDic
+	 ytoNodeDic
+	 idtoYDic
 
       attr
 	 nodes
@@ -133,12 +113,16 @@ local
 
       meth init(O)
 	 self.ThreadDic = {O getThreadDic($)}
+	 self.ytoNodeDic = {Dictionary.new}
+	 self.idtoYDic = {Dictionary.new}
 	 nodes <- nil
 	 width <- 0
       end
 
       meth calculatePositions
 	 trees <- {Dictionary.new}
+	 {Dictionary.removeAll self.ytoNodeDic}
+	 {Dictionary.removeAll self.idtoYDic}
 	 {ForAll @nodes
 	  proc {$ N}
 	     Q = {N get($)}.q
@@ -203,9 +187,12 @@ local
 	    {ForAll NG
 	     proc{$ N}
 		Wnew = {WC inc($)}
+		I    = {N get($)}.i
 	     in
+		{Dictionary.put self.ytoNodeDic Wnew N}
+		{Dictionary.put self.idtoYDic I Wnew}
 		{N setXY(X Wnew Wnew-Wold)}
-		{self DoCalculatePositions({N get($)}.i X+1)}
+		{self DoCalculatePositions(I X+1)}
 	     end}
 	 end
       end
@@ -231,11 +218,11 @@ in
       meth add(I Q)
 	 lock
 	    nodes <- {New Node init(I Q stopped#runnable)} | @nodes
-	    Tree,syncCalc
+	    Tree,syncCalc(I)
 	 end
       end
 
-      meth syncCalc
+      meth syncCalc(I<=unit)
 	 New in
 	 CalcSync <- New = unit
 	 thread
@@ -243,7 +230,7 @@ in
 	    case {IsDet New} then skip else
 	       lock
 		  BaseTree,calculatePositions
-		  Tree,display
+		  Tree,display(I)
 	       end
 	    end
 	 end
@@ -260,20 +247,59 @@ in
 
       meth selectPrevious
 	 Old = @Selected
-	 New = {TreeNext @nodes @nodes Old}
+	 OldY = {Dictionary.get self.idtoYDic {Old get($)}.i}
+	 NewY = if OldY == 2 then
+		   @width + 1
+		else
+		   OldY - 1
+		end
+	 New = {Dictionary.get self.ytoNodeDic NewY}
       in
-	 case New == nil orelse New == Old then skip else
+	 case New == Old then skip else
 	    Tree,SwitchToThread({New get($)}.i)
 	 end
       end
 
       meth selectNext
 	 Old = @Selected
-	 New = {TreePrev @nodes Old}
+	 OldY = {Dictionary.get self.idtoYDic {Old get($)}.i}
+	 NewY = if OldY == @width + 1 then
+		   2
+		else
+		   OldY + 1
+		end
+	 New = {Dictionary.get self.ytoNodeDic NewY}
       in
-	 case New == nil orelse New == Old then skip else
+	 case New == Old then skip else
 	    Tree,SwitchToThread({New get($)}.i)
 	 end
+      end
+
+      meth IsVisible(Y $)
+	 [A B] = {Tk.returnListFloat o(self yview)}
+	 N     = {Int.toFloat @width + 3}
+	 YF    = {Int.toFloat Y}
+      in
+	 N*A+1.0 =< YF andthen YF =< N*B-1.0
+      end
+
+      meth MakeVisible(Y $)
+	 [A B] = {Tk.returnListFloat o(self yview)}
+	 N     = {Int.toFloat @width + 3}
+	 YF    = {Int.toFloat Y}
+	 A2    = YF/N - (B-A)/2.0
+      in
+	 if A2 < 0.0 then 0.0 elseif A2 > 1.0 then 1.0 else A2 end
+      end
+
+      meth condScroll(I)
+	 try
+	    Y = {Dictionary.get self.idtoYDic I}
+	 in
+	    if Tree,IsVisible(Y $) then skip else
+	       {self tk(yview moveto Tree,MakeVisible(Y $))}
+	    end
+	 catch _ then skip end
       end
 
       meth select(I)
@@ -293,6 +319,7 @@ in
 	       else skip end
 	       node(ct:CT ...) = {@Selected get($)}
 	       {self tk(itemconfigure CT text:I#' *')}
+	       Tree,condScroll(I)
 	    else
 	       {OzcarError 'attempt to select unknown node ' # I}
 	    end
@@ -328,7 +355,7 @@ in
 	 end
       end
 
-      meth display
+      meth display(ScrollTo)
 	 SFX    = ThreadTreeStretchX
 	 SFY    = ThreadTreeStretchY
 	 OS     = ThreadTreeOffset
@@ -378,6 +405,9 @@ in
 	    Height = ThreadTreeStretchY * (@width + 3)
 	 in
 	    {self tk(conf scrollregion:q(0 0 ThreadTreeWidth Height))}
+	    if ScrollTo \= unit then
+	       Tree,condScroll(ScrollTo)
+	    end
 	 end
       end
 
