@@ -469,7 +469,7 @@ void Thread::makeRunning ()
 
 #define INCFPC(N) PC += N
 
-#define WANT_INSTRPROFILE
+// #define WANT_INSTRPROFILE
 #if defined(WANT_INSTRPROFILE) && defined(__GNUC__)
 #define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
@@ -2185,11 +2185,10 @@ LBLdispatcher:
   Case(RETURN)
     LBLpopTask:
       {
-        Assert(!CTT->isSuspended());
-        Assert(CBB==currentDebugBoard);
-
         emulateHookPopTask(e);
 
+        Assert(!CTT->isSuspended());
+        Assert(CBB==currentDebugBoard);
         DebugCheckT(CAA = NULL);
 
       LBLpopTaskNoPreempt:
@@ -3254,13 +3253,18 @@ LBLdispatcher:
       static int sizeOfDef = -1;
       if (sizeOfDef==-1) sizeOfDef = sizeOf(DEFINITION);
 
+#ifdef DEBUG_CHECK
       Reg reg;
       ProgramCounter next;
-      PrTabEntry *pred;
+      PrTabEntry *predaux;
       int line;
       TaggedRef file;
 
-      CodeArea::getDefinitionArgs(PC-sizeOfDef,reg,next,file,line,pred);
+      CodeArea::getDefinitionArgs(PC-sizeOfDef,reg,next,file,line,predaux);
+#endif
+
+      PrTabEntry *pred = getPredArg(PC+3-sizeOfDef); /* this is faster */
+      Assert(pred==predaux);
 
       pred->numCalled++;
       if (pred!=ozstat.currAbstr) {
