@@ -25,7 +25,10 @@
     (nil                          . TEXT)))
 
 (defun ozdoc-face-to-name (face)
-  (cdr (assq face ozdoc-face-to-name-alist)))
+  (if (consp face) (setq face (car face)))
+  (let ((entry (assq face ozdoc-face-to-name-alist)))
+    (if (null entry) (message (format "*** UNKNOWN FACE: %s" face)))
+    (cdr entry)))
 
 (defun ozdoc-output (data) (princ data t))
 
@@ -133,3 +136,21 @@
           (ozdoc-output "</HILITE.FACE>")
           (goto-char e))
         (ozdoc-output "</HILITE>\n")))))
+
+(defun ozdoc-fontify-file (mode id file)
+  (ozdoc-fontify-alist mode (list (cons id (ozdoc-find-file file)))))
+
+(defvar ozdoc-file-path '("."))
+
+(defun ozdoc-find-file (file)
+  (let ((dirs ozdoc-file-path) (found file) path)
+    (while dirs
+      (setq path (expand-file-name file (car dirs)))
+      (if(file-exists-p path)
+          (setq dirs nil found path)
+        (setq dirs (cdr dirs))))
+    (save-excursion
+      (set-buffer ozdoc-encode-buffer)
+      (erase-buffer)
+      (insert-file-contents-literally found)
+      (buffer-string))))

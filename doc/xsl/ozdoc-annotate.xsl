@@ -17,12 +17,29 @@
   </copy>
 </template>
 
-<template match="CODE">
+<template match="CODE|CHUNK.SILENT">
   <element name="HILITE.MODE" namespace="">
     <attribute name="PROGLANG">
       <value-of select="ancestor-or-self::*[@PROGLANG][1]/@PROGLANG"/>
     </attribute>
     <apply-templates select="." mode="ok"/>
+  </element>
+</template>
+
+<template match="CODE.EXTERN">
+  <element name="CODE" namespace="">
+    <apply-templates select="@*"/>
+    <element name="HILITE.FILE" namespace="">
+      <attribute name="PROGLANG">
+        <value-of select="ancestor-or-self::*[@PROGLANG][1]/@PROGLANG"/>
+      </attribute>
+      <attribute name="FILE">
+        <value-of select="@TO"/>
+      </attribute>
+      <attribute name="ID">
+        <value-of select="generate-id(.)"/>
+      </attribute>
+    </element>
   </element>
 </template>
 
@@ -33,12 +50,16 @@
 </template>
 
 <template match="text()" mode="ok">
-  <element name="HILITE" namespace="">
+  <element name="HILITE.ITEM" namespace="">
     <attribute name="ID">
       <value-of select="generate-id(.)"/>
     </attribute>
     <value-of select="."/>
   </element>
+</template>
+
+<template match="CHUNK.REF" mode="ok">
+  <copy-of select="."/>
 </template>
 
 </stylesheet>

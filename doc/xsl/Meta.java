@@ -12,4 +12,16 @@ public class Meta {
     public static boolean latexTableSpecExists(String id) {
         return table_map.containsKey(id);
     }
+
+    private static Hashtable mode_map = new Hashtable();
+    public static boolean emacsModePut(String mode,String elisp) {
+        mode_map.put(mode.toUpperCase(),elisp);
+        return true;
+    }
+    public static String emacsModeGet(String mode) {
+        if (mode_map.containsKey(mode))
+            return (String) mode_map.get(mode);
+        else
+            return mode.toLowerCase();
+    }
 }

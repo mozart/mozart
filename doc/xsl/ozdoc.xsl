@@ -276,6 +276,16 @@
 </tex:code>
 </template>
 
+<template match="HILITE">
+  <apply-templates/>
+</template>
+
+<template match="HILITE.FACE">
+  <tex:code>\FACE<value-of select="@NAME"/>{</tex:code>
+  <apply-templates/>
+  <tex:code>}</tex:code>
+</template>
+
 <!-- format variables -->
 
 <template match="VAR">

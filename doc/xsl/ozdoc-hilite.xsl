@@ -20,6 +20,11 @@
   </nxml:nxml>
 </template>
 
+<template match="CHUNK.REF">
+  <nxml:control>(nil . " X ")
+</nxml:control>
+</template>
+
 <template match="HILITE.MODE">
   <nxml:control>
     <text>(ozdoc-fontify-alist "</text>
@@ -31,7 +36,20 @@
   </nxml:control>
 </template>
 
-<template match="HILITE">
+<template match="HILITE.FILE">
+  <nxml:control>
+    <text>(ozdoc-fontify-file "</text>
+    <value-of select="@PROGLANG"/>
+    <text>" '</text>
+    <value-of select="@ID"/>
+    <text> "</text>
+    <value-of select="@FILE"/>
+    <text>")
+</text>
+  </nxml:control>
+</template>
+
+<template match="HILITE.ITEM">
   <nxml:control>(<value-of select="@ID"/> . "</nxml:control>
   <nxml:data><value-of select="."/></nxml:data>
   <nxml:control>")
