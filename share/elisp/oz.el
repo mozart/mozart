@@ -440,7 +440,7 @@ starts the emulator under gdb")
 
 (let ((planes (x-display-planes)))
   (modify-face 'bar-running      "white"
-	       (if (eq planes 1) "black" "#afafff")
+	       (if (eq planes 1) "black" "#b0b0b0")
 	       nil nil nil nil)
   (modify-face 'bar-runnable     "white"
 	       (if (eq planes 1) "black" "#7070c0")
