@@ -1001,7 +1001,7 @@ fi
 
     fi
 
-        PLATFORM=`$OZPLATFORM`
+        PLATFORM=`$OZPLATFORM || exit 1`
 
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $PATH | sed -e 's/:://g'`
@@ -1160,9 +1160,12 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
 
 
 
+# PLATFORM is defined by OZ_INIT
+: ${platform=$PLATFORM}
+
 : ${oz_enable_wish=yes}
 echo $ac_n "checking for --enable-wish""... $ac_c" 1>&6
-echo "configure:1166: checking for --enable-wish" >&5
+echo "configure:1169: checking for --enable-wish" >&5
 # Check whether --enable-wish or --disable-wish was given.
 if test "${enable_wish+set}" = set; then
   enableval="$enable_wish"
@@ -1185,7 +1188,7 @@ fi
 
 
     echo $ac_n "checking for --enable-gtk""... $ac_c" 1>&6
-echo "configure:1189: checking for --enable-gtk" >&5
+echo "configure:1192: checking for --enable-gtk" >&5
     # Check whether --enable-gtk or --disable-gtk was given.
 if test "${enable_gtk+set}" = set; then
   enableval="$enable_gtk"

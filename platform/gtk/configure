@@ -897,7 +897,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) INSTALL_DIR=`echo $INSTALL_DIR | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$INSTALL_DIR"
@@ -993,7 +993,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZPLATFORM=`echo $OZPLATFORM | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZPLATFORM"
@@ -1002,7 +1002,7 @@ fi
 
     fi
 
-        PLATFORM=`$OZPLATFORM`
+        PLATFORM=`$OZPLATFORM || exit 1`
 
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $PATH | sed -e 's/:://g'`
@@ -1048,7 +1048,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZTOOL=`echo $OZTOOL | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZTOOL"
@@ -1907,7 +1907,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) PLATFORMSCRIPT=`echo $PLATFORMSCRIPT | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$PLATFORMSCRIPT"
@@ -2114,7 +2114,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) gnome_config=`echo $gnome_config | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$gnome_config"
