@@ -28,7 +28,7 @@ local
 
    %% colors
    FromLineColor   = lightseagreen
-   ToLineColor     =  lightseagreen
+   ToLineColor     = lightseagreen
    AllowedColor    = red
    Colors          = 'deep sky blue'|'dark orange'|green3|cyan4|tomato2|firebrick4|darkorchid|wheat3|cornsilk3|palegoldenrod|pink2|burlywood3|Colors
 
@@ -80,10 +80,15 @@ in
 		      end positions}
 	 
 	 SumDur = {FoldL TaskSpec fun {$ In _#D#_#_} D+In end 0}
-	 
-	 Unit = ((10+(SumDur div 30)) div 10)*10
-	 TaskStretch = 7 % (RightScroll div 2) div SumDur
 
+	 {Show SumDur}
+	 Unit = ((10+(SumDur div 30)) div 10)*10
+	 local  
+	    LocalTaskStretch = /*7 */ (RightScroll div 2) div SumDur
+	 in
+	    TaskStretch = if LocalTaskStretch == 0 then 1
+			  else LocalTaskStretch end
+	 end
 	 UnitLength = TaskStretch*Unit
 
 	 W = {New Tk.toplevel tkInit(title:'Gantt Chart ('#Node#')')}
@@ -230,10 +235,13 @@ end
 
 in
 
-proc {DrawGantt Node Sol}
-   Gantt = {New GanttClass noop}
-in
-   {Gantt draw(Bridge.tasks#Sol Node)}
-end
-			    
+   fun {DrawGantt Spec}
+      proc {DrawGanttChart Node Sol}
+	 Gantt = {New GanttClass noop}
+      in
+	 {Gantt draw(Spec.tasks#Sol Node)}
+      end
+   in
+      DrawGanttChart
+   end
 end
