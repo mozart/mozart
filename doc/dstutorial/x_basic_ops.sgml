@@ -3,6 +3,31 @@
 
 <SECTION><TITLE>Distribution model</TITLE>
 
+The distribution model gives well-defined distribution
+behaviors to the Oz language entities.
+The distribution behaviors are designed to do the
+right thing by default in almost all cases.
+For example, procedure code is transferred to sites
+immediately, so that sites never need ask for
+procedure code.
+In the other cases, e.g., objects, the developer can
+specify what distribution behavior he wants, e.g.,
+mobile (cached) objects, stationary objects,
+stationary single-threaded objects.
+
+The following distribution behaviors exist:
+<LIST>
+<ITEM> Objects and cells are cached by default--we also call
+this "mobile objects".
+A site attempting to execute a method will first fetch the object,
+which requires up to three network messages.
+Later execution on the same site needs no network messages.
+A cached object optimizes writing its state relative to reading its state.
+
+<ITEM> Objects can be made stationary.
+A stationary object will always execute on the same site.
+Calling a method is asynchronous
+
 <SECTION><TITLE>Global naming</TITLE>
 
 Global names are needed when an application
