@@ -115,6 +115,11 @@ Takes a value ?_{X} and pickles it to a bytestring.
 <p>
 Unpacks a virtual string ?_{PickleV} that has
 created by pickling (e.g., by <<Pickle.pack>>).
+</p>
+<p class=danger>
+<<Pickle.unpack>> may crash the Oz Engine if given a
+corrupt pickle.
+</p>
 
 </list>
 
