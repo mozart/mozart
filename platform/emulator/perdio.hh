@@ -441,5 +441,9 @@ public:
   OZ_Return maybeSaveHeader(ByteStream*);
 };
 
+
+
+Bool changeMarshalledFastCall(ProgramCounter PC,TaggedRef pred, int tailcallAndArity);
+
 /* __PERDIOHH */
 #endif

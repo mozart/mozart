@@ -177,7 +177,8 @@ void AbstractionEntry::setPred(Abstraction *ab)
   arity = abstr->getArity();
 
   // indexing on X[0] optimized !!!
-  if (CodeArea::getOpcode(pc) == SWITCHONTERMX &&
+  if (pc != NOCODE &&
+      CodeArea::getOpcode(pc) == SWITCHONTERMX &&
       getRegArg(pc+1) == 0) {
     indexTable = (IHashTable *) getAdressArg(pc+2);
   } else {
