@@ -82,6 +82,10 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
   (void) oz_raise(E_ERROR,E_KERNEL,"apply",2,fun,args);	\
   RAISE_THREAD;
 
+#define RAISE_ARITY(fun,args)				\
+  (void) oz_raise(E_ERROR,E_KERNEL,"arity",2,fun,args);	\
+  RAISE_THREAD;
+
 static
 void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
 {
@@ -140,11 +144,9 @@ Bool AM::hf_raise_failure()
 #define HF_APPLY(N,A)  HF_RAISE_FAILURE(OZ_mkTupleC("apply",2,N,A))
 #define HF_BI(bi,loc)  HF_APPLY(bi->getName(),loc->getArgs(bi));
 
-#define CheckArity(arityExp,proc)				   \
-if (predArity != arityExp) {					   \
-  (void) oz_raise(E_ERROR,E_KERNEL,"arity",2,proc,                 \
-                  OZ_toList(predArity,XREGS));                     \
-  RAISE_THREAD;							   \
+#define CheckArity(arityExp,proc)			\
+if (predArity != arityExp) {				\
+  RAISE_ARITY(proc,OZ_toList(predArity,XREGS));		\
 }
 
 // -----------------------------------------------------------------------
@@ -2918,6 +2920,127 @@ Case(GETVOID)
 // --- end call/execute -----------------------------------------------------
 // --------------------------------------------------------------------------
 
+  Case(DECONSCALLX)
+    isTailCall = NO; SETAUX(XPC(1)); goto LBLdeconsCall;
+  Case(DECONSCALLY)
+    isTailCall = NO; SETAUX(YPC(1)); goto LBLdeconsCall;
+  Case(DECONSCALLG)
+    isTailCall = NO; SETAUX(GPC(1)); goto LBLdeconsCall;
+
+  Case(TAILDECONSCALLX)
+    isTailCall = OK; SETAUX(XPC(1)); goto LBLdeconsCall;
+  Case(TAILDECONSCALLG)
+    isTailCall = OK; SETAUX(GPC(1)); goto LBLdeconsCall;
+
+  LBLdeconsCall:
+    {
+      TaggedRef taggedPredicate = auxTaggedA;
+
+      DEREF(taggedPredicate,predPtr,_1);
+
+      if (oz_isAbstraction(taggedPredicate)) {
+	Abstraction *def = tagged2Abstraction(taggedPredicate);
+	PrTabEntry *pte = def->getPred();
+	int calleeArity = pte->getArity();
+	if (calleeArity == 2) {   // direct call
+	  if (!isTailCall) { PushCont(PC+2); }
+	  CallDoChecks(def);
+	  JUMPABSOLUTE(pte->getPC());
+	} else {   // deconstruct and call
+	  TaggedRef taggedArgument = XREGS[0];
+	  DEREF(taggedArgument,argPtr,_2);
+	  if (oz_isSTuple(taggedArgument)) {
+	    SRecord *srec = tagged2SRecord(taggedArgument);
+	    int callerArity = srec->getWidth();
+	    if (srec->getLabel() == AtomPair &&
+		callerArity == calleeArity - 1) {
+	      int i = callerArity;
+	      XREGS[i] = XREGS[1];
+	      while (--i >= 0)
+		XREGS[i] = srec->getArg(i);
+	      if (!isTailCall) { PushCont(PC+2); }
+	      CallDoChecks(def);
+	      JUMPABSOLUTE(pte->getPC());
+	    }
+	  }
+	  if (oz_isVariable(taggedArgument)) {
+	    SUSP_PC(argPtr,PC);
+	  }
+	  RAISE_ARITY(taggedPredicate,OZ_toList(2,XREGS));
+	}
+      }
+
+      if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
+	if (oz_isVariable(taggedPredicate)) {
+	  SUSP_PC(predPtr,PC);
+	}
+	RAISE_APPLY(taggedPredicate,OZ_toList(2,XREGS));
+      }
+
+      if (!isTailCall) PC = PC+2;
+      predicate = tagged2Const(taggedPredicate);
+      predArity = 2;
+      goto LBLcall;
+    }
+
+  Case(CONSCALLX)
+    isTailCall = NO; SETAUX(XPC(1)); goto LBLconsCall;
+  Case(CONSCALLY)
+    isTailCall = NO; SETAUX(YPC(1)); goto LBLconsCall;
+  Case(CONSCALLG)
+    isTailCall = NO; SETAUX(GPC(1)); goto LBLconsCall;
+
+  Case(TAILCONSCALLX)
+    isTailCall = OK; SETAUX(XPC(1)); goto LBLconsCall;
+  Case(TAILCONSCALLG)
+    isTailCall = OK; SETAUX(GPC(1)); goto LBLconsCall;
+
+  LBLconsCall:
+    {
+      TaggedRef taggedPredicate = auxTaggedA;
+      int callerArity = getPosIntArg(PC+2);
+
+      DEREF(taggedPredicate,predPtr,_1);
+
+      if (oz_isAbstraction(taggedPredicate)) {
+	Abstraction *def = tagged2Abstraction(taggedPredicate);
+	PrTabEntry *pte = def->getPred();
+	int calleeArity = pte->getArity();
+	if (calleeArity == callerArity) {   // direct call
+	  if (!isTailCall) { PushCont(PC+3); }
+	  CallDoChecks(def);
+	  JUMPABSOLUTE(pte->getPC());
+	} else {   // construct and call
+	  int width = callerArity - 1;
+	  SRecord *srec =
+	    SRecord::newSRecord(AtomPair,mkTupleWidth(width),width);
+	  int i = width;
+	  while (--i >= 0)
+	    srec->setArg(i,XREGS[i]);
+	  XREGS[0] = makeTaggedSRecord(srec);
+	  XREGS[1] = XREGS[width];
+	  if (calleeArity == 2) {
+	    if (!isTailCall) { PushCont(PC+3); }
+	    CallDoChecks(def);
+	    JUMPABSOLUTE(pte->getPC());
+	  } else {
+	    RAISE_ARITY(taggedPredicate,OZ_toList(2,XREGS));
+	  }
+	}
+      }
+
+      if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
+	if (oz_isVariable(taggedPredicate)) {
+	  SUSP_PC(predPtr,PC);
+	}
+	RAISE_APPLY(taggedPredicate,OZ_toList(callerArity,XREGS));
+      }
+
+      if (!isTailCall) PC = PC+3;
+      predicate = tagged2Const(taggedPredicate);
+      predArity = callerArity;
+      goto LBLcall;
+    }
 
 // -------------------------------------------------------------------------
 // INSTRUCTIONS: MISC: ERROR/NOOP/default

@@ -245,12 +245,23 @@ instruction(testLE,readArg(XRegisterIndex),
 		   writeArg(XRegisterIndex),
 		   Label)
 
-dnl   dummy instructions to allow easy testing of new 
-dnl   instructions via assembler
+dnl   instructions to support SML-style cartesian procedures
+
+instruction(deconsCallX,readArg(XRegisterIndex))
+instruction(deconsCallY,readArg(YRegisterIndex))
+instruction(deconsCallG,readArg(GRegisterIndex))
+instruction(tailDeconsCallX,readArg(XRegisterIndex))
+instruction(tailDeconsCallG,readArg(GRegisterIndex))
+
+instruction(consCallX,readArg(XRegisterIndex),Arity)
+instruction(consCallY,readArg(YRegisterIndex),Arity)
+instruction(consCallG,readArg(GRegisterIndex),Arity)
+instruction(tailConsCallX,readArg(XRegisterIndex),Arity)
+instruction(tailConsCallG,readArg(GRegisterIndex),Arity)
 
 instructionsUnneededForNewCompiler
 
-dnl   Instruction for efficiently interpreting different tasks on the stack;
+dnl   Instructions for efficiently interpreting different tasks on the stack;
 dnl   only used internally by the emulator
 
 instruction(taskXCont)
