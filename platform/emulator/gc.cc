@@ -57,6 +57,7 @@
 #include "pointer-marks.hh"
 #include "dpInterface.hh"
 #include "gname.hh"
+#include "interFault.hh"
 
 // loeckelt (for big fsets)
 #include "mozart_cpi.hh"
@@ -1746,7 +1747,7 @@ void AM::gc(int msgLevel) {
   OZ_collectHeapTerm(finalize_handler,finalize_handler);
   gcStack.recurse();
   gc_finalize();
-
+  gcDeferWatchers();
   (*gcPerdioRoots)();
   gcStack.recurse();
 

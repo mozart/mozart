@@ -47,7 +47,6 @@
 #include "port.hh"
 #include "var.hh"
 #include "var_obj.hh"
-#include "builtins.hh"
 
 Twin *usedTwins;
 Watcher* globalWatcher;
@@ -61,7 +60,6 @@ void adjustProxyForFailure(Tertiary*,EntityCond,EntityCond);
 /**********************************************************************/
 /*   deferoperations                                          */
 /**********************************************************************/
-
 
 TaggedRef BI_defer;
 
@@ -747,7 +745,7 @@ void varAdjustPOForFailure(int index,EntityCond oldC, EntityCond newC){
 /*   SECTION::       installation/deinstallation utility  VARS        */
 /**********************************************************************/
 
-OZ_Return installWatcher(TaggedRef* tPtr,EntityCond wc,TaggedRef proc, 
+Bool installWatcher(TaggedRef* tPtr,EntityCond wc,TaggedRef proc, 
 		    Thread* th, unsigned int kind) {
 
   VarKind vk=classifyVar(tPtr);
@@ -759,7 +757,7 @@ OZ_Return installWatcher(TaggedRef* tPtr,EntityCond wc,TaggedRef proc,
     
   EntityInfo *ei=varMakeOrGetEntityInfo(tPtr);
   if(checkForExistentInjector(ei,th,wc,kind)) 
-    return InjectorAllredyExists;
+    return FALSE;
   Watcher* w=new Watcher(proc,th,wc,kind);
   EntityCond oldC,newC;
   insertWatcher(ei,w,oldC,newC);
@@ -846,14 +844,14 @@ Bool isWatcherEligible(Tertiary *c){
   return FALSE;
 }
 
-OZ_Return installGlobalWatcher(EntityCond wc,TaggedRef proc,int kind){
-  if(globalWatcher!=NULL) {return IncorrectFaultSpecification;}
+Bool installGlobalWatcher(EntityCond wc,TaggedRef proc,int kind){
+  if(globalWatcher!=NULL) {return FALSE;}
   globalWatcher=new Watcher(proc,NULL,wc,kind);
-  return PROCEED;}
+  return TRUE;}
 
-OZ_Return deInstallGlobalWatcher(EntityCond wc,TaggedRef proc,int kind){
-  if(wc!=globalWatcher->watchcond) {return IncorrectFaultSpecification;}
-  if(globalWatcher==NULL) {return IncorrectFaultSpecification;}
+Bool deInstallGlobalWatcher(EntityCond wc,TaggedRef proc,int kind){
+  if(wc!=globalWatcher->watchcond) {return FALSE;}
+  if(globalWatcher==NULL) {return FALSE;}
   globalWatcher=NULL;
   return PROCEED;}
 
@@ -890,43 +888,43 @@ void transferWatchers(Object* o){
     nw=aux;}
 }
 
-OZ_Return installWatcher(Tertiary* t,EntityCond wc,TaggedRef proc, 
+Bool installWatcher(Tertiary* t,EntityCond wc,TaggedRef proc, 
 		    Thread* th, unsigned int kind) {
 
-  if(!isWatcherEligible(t)) {return IncorrectFaultSpecification;}
+  if(!isWatcherEligible(t)) {return FALSE;}
   Watcher *w=new Watcher(proc,th,wc,kind);
 
   PD((NET_HANDLER,"Watcher installed on tertiary %x",t));  
   EntityInfo *ei=tertiaryMakeOrGetEntityInfo(t);
   if(checkForExistentInjector(ei,th,wc,kind)){
-    return InjectorAllredyExists;}
+    return FALSE;}
 
-    EntityCond oldC,newC;
+  EntityCond oldC,newC;
   if(t->isLocal()){
     insertWatcherLocal(t,w);    
-    return PROCEED;}
+    return TRUE;}
   insertWatcher(t,w,oldC,newC);
   if(t->isManager()){}
   else{
     adjustProxyForFailure(t,oldC,newC);}
   if(w->isTriggered(getEntityCond(t))) deferEntityProblem(t);
-  return PROCEED;
+  return TRUE;
 }
 
-  OZ_Return deinstallWatcher(Tertiary* t,EntityCond wc,TaggedRef proc, 
-			   Thread* th, unsigned int kind){
-  if(!isWatcherEligible(t)) {return IncorrectFaultSpecification;}
+Bool deinstallWatcher(Tertiary* t,EntityCond wc,TaggedRef proc, 
+		      Thread* th, unsigned int kind){
+  if(!isWatcherEligible(t)) {return FALSE;}
 
   if((t->getType()==Co_Object) & (t->getTertType()!=Te_Local)){
     Object* o= (Object*) t;
     if(!stateIsCell(o->getState())){
-      return IncorrectFaultSpecification;}
-    OZ_Return ret=deinstallWatcher(o->getLock(),wc,proc,th,kind);
-    if(ret!=PROCEED) return ret;
+      return FALSE;}
+    Bool ret=deinstallWatcher(o->getLock(),wc,proc,th,kind);
+    if(!ret) return FALSE;
     PD((NET_HANDLER,"Watcher on object deinstalled")); 
     ret=deinstallWatcher(getCell(o->getState()),wc,proc,th,kind);
     Assert(ret==TRUE);
-    return PROCEED;}
+    return TRUE;}
 
   EntityCond oldEC=getSummaryWatchCond(t);
   Bool found = FALSE;
@@ -940,63 +938,20 @@ OZ_Return installWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
       else{ 
 	base= &((*base)->next);}}
 
-  if(!found) return IncorrectFaultSpecification;
+  if(!found) return FALSE;
 
   PD((NET_HANDLER,"Watcher deinstalled")); 
   EntityCond newEC=getSummaryWatchCond(t);
 
-  if(t->isLocal()) return PROCEED;
+  if(t->isLocal()) return FALSE;
   if(!t->isManager())
     adjustProxyForFailure(t,oldEC,newEC);
-  return PROCEED;
+  return TRUE;
 }
 
 /**********************************************************************/
 /*   SECTION::              user interface                            */
 /**********************************************************************/
-
-EntityCond translateWatcherCond(TaggedRef tr){
-  if(tr==AtomPermBlocked)
-    return PERM_BLOCKED;
- if(tr== AtomBlocked)
-    return PERM_BLOCKED|TEMP_BLOCKED;
-  if(tr== AtomPermWillBlock)
-    return PERM_ME;
-  if(tr== AtomWillBlock)
-    return TEMP_ME|PERM_ME;
-  if(tr== AtomPermSome)
-    return PERM_SOME;
-  if(tr== AtomSome)
-    return TEMP_SOME|PERM_SOME;
-  if(tr== AtomPermAll)
-    return PERM_ALL;
-  if(tr== AtomAll)
-    return TEMP_ALL|PERM_ALL;
-  Assert(0);
-  return 0;
-}
-
-#define DerefVarTest(tt) { \
-  if(OZ_isVariable(tt)){OZ_suspendOn(tt);} \
-  tt=oz_deref(tt);}
-
-OZ_Return translateWatcherConds(TaggedRef tr,EntityCond &ec){
-  TaggedRef car,cdr;
-  ec=ENTITY_NORMAL;
-  
-  cdr=tr;
-  DerefVarTest(cdr);
-  while(!oz_isNil(cdr)){
-    if(!oz_isLTuple(cdr)){
-      return IncorrectFaultSpecification;}
-    car=tagged2LTuple(cdr)->getHead();
-    cdr=tagged2LTuple(cdr)->getTail();
-    DerefVarTest(car);
-    DerefVarTest(cdr);
-    ec |= translateWatcherCond(car);}
-  if(ec == ENTITY_NORMAL) ec=UNREACHABLE;
-  return PROCEED;
-}
 
 TaggedRef listifyWatcherCond(EntityCond ec){
   TaggedRef list = oz_nil();
@@ -1031,100 +986,9 @@ TaggedRef listifyWatcherCond(EntityCond ec){
 /*   new                          */
 /**********************************************************************/
 
-inline OZ_Return checkWatcherConds(EntityCond ec,EntityCond allowed){
-  if((ec & ~allowed) != ENTITY_NORMAL) return IncorrectFaultSpecification;
-  return PROCEED;}
-
-
-#define FeatureTest(cond,tt,atom) { \
-   tt = cond->getFeature(OZ_atom(atom)); \
-   if(tt==0) {return IncorrectFaultSpecification;}}
-
-OZ_Return checkRetry(SRecord *condStruct,short &kind){
-  TaggedRef aux;
-
-  aux = condStruct->getFeature(OZ_atom("prop"));
-  if(aux==0) {
-    return PROCEED;}
-  DerefVarTest(aux);
-  if(aux==AtomRetry){
-    kind |= WATCHER_RETRY;    
-    return PROCEED;}
-  if(aux!=AtomSkip){
-    return IncorrectFaultSpecification;}
-  return PROCEED;
-}
-
-// the following should check for the existence of not allowed features 
-  
-OZ_Return distHandlerInstallHelp(SRecord *condStruct, 
-		     EntityCond& ec,Thread* &th,TaggedRef &entity,short &kind){
-  kind=0;
-  ec=ENTITY_NORMAL;
-  entity=0;
-  th=NULL;
-
-  TaggedRef aux,aux2;
-
-  FeatureTest(condStruct,aux,"cond");
-
-  OZ_Return ret = translateWatcherConds(aux,ec);
-  if(ret!=PROCEED) return  ret;
-
-  TaggedRef label=condStruct->getLabel();
-
-  if(label==AtomInjector){
-    kind |= (WATCHER_PERSISTENT|WATCHER_INJECTOR);
-    ret=checkWatcherConds(ec,PERM_BLOCKED|TEMP_BLOCKED);
-    if(ret!=PROCEED) return ret;
-    FeatureTest(condStruct,aux,"entityType");  
-    DerefVarTest(aux);
-    if(aux==AtomAll) {
-      entity=0;
-      kind |= WATCHER_SITE_BASED;
-      FeatureTest(condStruct,aux,"thread");  
-      DerefVarTest(aux);
-      if(aux!=AtomAll){return IncorrectFaultSpecification;}
-      return checkRetry(condStruct,kind);}
-
-    if(aux!=AtomSingle) {return IncorrectFaultSpecification;}
-    FeatureTest(condStruct,aux,"entity");
-    entity=aux;
-    FeatureTest(condStruct,aux,"thread");  
-    DerefVarTest(aux);
-    if(aux==AtomAll){ 
-      th=NULL;
-      kind |= WATCHER_SITE_BASED;
-      return checkRetry(condStruct,kind);}
-    if(aux==AtomThis){
-      th=oz_currentThread();
-      return checkRetry(condStruct,kind);}      
-    if(!oz_isThread(aux)) {return IncorrectFaultSpecification;}      
-    th=oz_ThreadToC(aux);
-    return checkRetry(condStruct,kind);}
-
-  if(label==AtomSiteWatcher){
-    FeatureTest(condStruct,aux,"entity");    
-    entity=aux;
-    return checkWatcherConds(ec,PERM_BLOCKED|TEMP_BLOCKED|PERM_ME|TEMP_ME);}
-
-  if(label!=AtomNetWatcher) {return IncorrectFaultSpecification;}
-  FeatureTest(condStruct,aux,"entity");    
-  entity=aux;
-  return checkWatcherConds(ec,PERM_SOME|TEMP_SOME|PERM_ALL|TEMP_ALL);
-}
-
-
-OZ_Return DistHandlerInstall(SRecord *condStruct, TaggedRef proc){
-			    
-  EntityCond ec;
-  short kind;
-  Thread *th;
-  OZ_Return ret;
-  TaggedRef entity;
-
-  ret=distHandlerInstallHelp(condStruct,ec,th,entity,kind);
-  if(ret!=PROCEED) return ret;
+Bool distHandlerInstallImpl(unsigned short kind,unsigned short ec,
+				 Thread* th,TaggedRef entity,
+				 TaggedRef proc){
   if(entity==0){
     return installGlobalWatcher(ec,proc,kind);}
   DEREF(entity,vs_ptr,vs_tag);
@@ -1134,7 +998,34 @@ OZ_Return DistHandlerInstall(SRecord *condStruct, TaggedRef proc){
   return installWatcher(vs_ptr,ec,proc,th,kind);
 }
 
-OZ_Return DistHandlerDeInstall(SRecord *condStruct, TaggedRef proc){
+Bool distHandlerDeInstallImpl(unsigned short kind,unsigned short ec,
+				 Thread* th,TaggedRef entity,
+				 TaggedRef proc){
+  Bool ret;
+  if(entity==0){
+    return deInstallGlobalWatcher(ec,proc,kind);}
+  DEREF(entity,vs_ptr,vs_tag);
+  if(!isVariableTag(vs_tag)){
+    Tertiary* tert = tagged2Tert(entity);
+    return deinstallWatcher(tert,ec,proc,th,kind);}
+  return deinstallWatcher(vs_ptr,ec,proc,th,kind);
+}
+
+OZ_Return DistHandlerInstall(SRecord *condStruct, TaggedRef proc, Bool& suc){
+			    
+  EntityCond ec;
+  short kind;
+  Thread *th;
+  OZ_Return ret;
+  TaggedRef entity;
+
+  ret=distHandlerInstallHelp(condStruct,ec,th,entity,kind);
+  if(ret!=PROCEED) return ret;
+  suc=distHandlerInstallImpl(kind,ec,th,entity,proc);
+  return PROCEED;
+}
+
+OZ_Return DistHandlerDeInstall(SRecord *condStruct, TaggedRef proc, Bool &suc){
 			    
   EntityCond ec;
   short kind;
@@ -1144,14 +1035,8 @@ OZ_Return DistHandlerDeInstall(SRecord *condStruct, TaggedRef proc){
 
   ret=distHandlerInstallHelp(condStruct,ec,th,entity,kind);
   if(ret!=PROCEED) return ret;
-  if(entity==0){
-    return deInstallGlobalWatcher(ec,proc,kind);}
-
-  DEREF(entity,vs_ptr,vs_tag);
-  if(!isVariableTag(vs_tag)){
-    Tertiary* tert = tagged2Tert(entity);
-    return deinstallWatcher(tert,ec,proc,th,kind);}
-  return deinstallWatcher(vs_ptr,ec,proc,th,kind);
+  suc=distHandlerDeInstallImpl(kind,ec,th,entity,proc);
+  return PROCEED;
 }
 
 /**********************************************************************/
@@ -1335,5 +1220,13 @@ void maybeHandOver(EntityInfo* oldE, TaggedRef t){
   if(flag) transferWatchers((Object*)c);
 }
 
-
-
+void dealWithDeferredWatchers(){
+  DeferWatcher* w=deferWatchers;
+  while(w!=NULL){
+    distHandlerInstall(w->kind,w->watchcond,w->thread,w->entity,w->proc);
+    w=w->next;}
+  deferWatchers=NULL;
+}
+  
+    
+  

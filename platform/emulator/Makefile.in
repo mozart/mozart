@@ -65,7 +65,7 @@ BIMODSPECS = \
 	Dictionary Exception Float ForeignPointer Int List Literal \
 	Lock Name Number Object Port Procedure Record Space \
 	String Thread Time Tuple Unit Value VirtualString \
-	BitString ByteString
+	BitString ByteString InterFault
 
 MODSPECS= \
 	FDP FSP Schedule Tk Parser OS Property Pickle \
@@ -93,7 +93,7 @@ OTHERSRCS= \
 	statisti.cc trace.cc \
 	print.cc base.cc ozconfig.cc \
 	foreign.cc dpInterface.cc boot-manager.cc \
-	builtins.cc vprops.cc debug.cc
+	builtins.cc vprops.cc debug.cc interFault.cc
 
 SUPPORTSRCS=\
 	stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
@@ -196,6 +196,7 @@ libPID.a PID.so:
 .PHONY: libFault.a Fault.so
 libFault.a Fault.so:
 	cd libdp; $(MAKE) ../$@
+
 
 .PHONY: libDPMisc.a DPMisc.so
 libDPMisc.a DPMisc.so:
