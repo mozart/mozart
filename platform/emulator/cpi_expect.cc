@@ -197,7 +197,7 @@ OZ_expect_t OZ_Expect::expectVar(OZ_Term t)
   DEREF(t, tptr, ttag);
   
   if (isAnyVar(ttag)) {
-    addSpawn(fd_any, tptr);
+    addSpawn(fd_prop_any, tptr);
     return expectProceed(1, 1);
   }
   return expectFail();  
@@ -210,7 +210,7 @@ OZ_expect_t OZ_Expect::expectRecordVar(OZ_Term t)
   if (isRecord(t)) {
     return expectProceed(1, 1);
   } else if (isGenOFSVar(t, ttag)) {
-    addSpawn(fd_any, tptr);
+    addSpawn(fd_prop_any, tptr);
     return expectProceed(1, 1);
   } else if (isNotCVar(ttag)) {
     addSuspend(tptr);
@@ -334,7 +334,7 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
   DEREF(st, stptr, sttag);
 
   if (isNotCVar(sttag)) {
-    addSpawn(fd_any, stptr);
+    addSpawn(fd_prop_any, stptr);
     return expectProceed(1, 1);
   } else if (isNil(st)) { 
     return expectProceed(1, 1);
@@ -351,7 +351,7 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
     if (isNil(st)) {
       return expectProceed(len, len);
     } else if (isNotCVar(sttag)) {
-      addSpawn(fd_any, stptr);
+      addSpawn(fd_prop_any, stptr);
       return expectProceed(len, len);
     } 
   } 

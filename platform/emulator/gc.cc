@@ -1311,7 +1311,7 @@ void GenFDVariable::gc(void)
   ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
   
   int i;
-  for (i = fd_any; i--; )
+  for (i = fd_prop_any; i--; )
     fdSuspList[i] = fdSuspList[i]->gc();
 }
 

@@ -167,7 +167,7 @@ OZ_Return LinNotEqPropagator::run(void)
   int i;
   for (i = sz; i--; ) {
     x[i].read(reg_x[i]);
-    if (*x[i] == fd_singleton) 
+    if (*x[i] == fd_singl) 
       num_of_singl += 1;
     else
       last_nonsingl = i;
