@@ -383,7 +383,7 @@ in
 	       {Canvas
 		tkCreate(li(Scale*{IntToFloat X} Scale*{IntToFloat Y}
 			    Scale*{IntToFloat CmpX} Scale*{IntToFloat CmpY}
-			    ar: last
+			    arrow: last
 			    fi: CursorColor
 			    wi: LinkWidth
 			    ta: Connection))}
