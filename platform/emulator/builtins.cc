@@ -2674,6 +2674,35 @@ OZ_C_proc_begin(BIthreadIs,2)
 OZ_C_proc_end
 
 /*
+ * raise exception on thread
+ */
+OZ_C_proc_proto(BIraise);
+
+OZ_C_proc_begin(BIthreadRaise,2)
+{
+  OZ_declareThreadArg(0,th);
+  OZ_declareNonvarArg(1,E);
+
+  if (th->isDeadThread()) return PROCEED;
+
+  if (am.currentThread == th) {
+    return OZ_raise(E);
+  }
+
+  RefsArray args=allocateRefsArray(1, NO);
+  args[0]=E;
+
+  th->pushCFunCont (BIraise, args, 1, OK);
+
+  if (th->isSuspended()) {
+    th->suspThreadToRunnable();
+    am.scheduleThread(th);
+  }
+  return PROCEED;
+}
+OZ_C_proc_end
+
+/*
  * terminate a thread
  *   in deep guard == failed
  */
@@ -7194,6 +7223,7 @@ BIspec allSpec2[] = {
   {"Thread.suspend",1,BIthreadSuspend},
   {"Thread.resume",1,BIthreadResume},
   {"Thread.terminate",1,BIthreadTerminate},
+  {"Thread.raise",2,BIthreadRaise},
   {"Thread.preempt",1,BIthreadPreempt},
   {"Thread.setPriority",2,BIthreadSetPriority},
   {"Thread.getPriority",2,BIthreadGetPriority},
