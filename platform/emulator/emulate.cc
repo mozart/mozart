@@ -1057,7 +1057,7 @@ LBLstart:
 
     {
       OZ_Propagator *prop = CTT->getPropagator();
-      CTT = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB);
+      CTT = e->mkRunnableThreadOPT(PROPAGATOR_PRIORITY, CBB);
       CTS = CTT->getTaskStackRef();
       e->restartThread();
       HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getHeader()->getHeaderFunc()))),
@@ -2729,7 +2729,7 @@ LBLdispatcher:
 	prio = DEFAULT_PRIORITY;
       }
 
-      Thread *tt = e->mkRunnableThread(prio, CBB);
+      Thread *tt = e->mkRunnableThreadOPT(prio, CBB);
 
       COUNT(numThreads);
       ozstat.createdThreads.incf();
