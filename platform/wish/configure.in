@@ -155,6 +155,32 @@ AC_SUBST(TK_LIBS)
 AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(TK_XINCLUDES)
 
+dnl check if we have the combination of an old style Xlib.h and gcc
+PERMISSIVEOPT=
+if test "$GCC" = yes; then
+OZ_CC_OPTIONS(-fpermissive,PERMISSIVEOPT)
+if test -n "$PERMISSIVEOPT"; then
+AC_MSG_CHECKING([whether we need -fpermissive for Xlib.h])
+AC_CACHE_VAL(ac_cv_xlib_permissive,
+  save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$TK_XINCLUDES $CPPFLAGS"
+  AC_TRY_COMPILE([
+#include <X11/Xlib.h>
+],[
+void foo() {}
+],[
+  ac_cv_xlib_permissive=no
+],[
+  ac_cv_xlib_permissive=yes
+])
+CPPFLAGS="$save_CPPFLAGS")
+AC_MSG_RESULT($ac_cv_xlib_permissive)
+else
+PERMISSIVEOPT=
+fi
+fi
+AC_SUBST(PERMISSIVEOPT)
+
 dnl *****************************************************************
 dnl where to look for the public header files
 dnl *****************************************************************
