@@ -612,7 +612,8 @@ void msgReceived(MsgContainer* msgC)
       DSite* rsite;
       msgC->get_M_REGISTER(OTI,rsite);
       PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
-      OwnerEntry *oe=receiveAtOwner(OTI);
+//        OwnerEntry *oe=receiveAtOwner(OTI);
+      OwnerEntry *oe=receiveAtOwnerNoCredit(OTI); // no implicit credit any more
       if (oe->isVar()) {
 	(GET_VAR(oe,Manager))->deregisterSite(rsite);
       } else {
