@@ -172,7 +172,9 @@ PendThread* threadTrigger(Tertiary* t,Watcher* w){
     Assert(0); // ERIK-LOOK
   default:
     Assert(0);
-  }}
+  }
+  return NULL; // stupid compiler
+}
 
 void dealWithContinue(Tertiary* t,PendThread* pd){
   switch(t->getType()){
@@ -668,7 +670,7 @@ void adjustManagerForFailure(Tertiary* t,EntityCond oldEC, EntityCond newEC){
                      wc: only PERM_BLOCKED and/or TEMP_BLOCKED are set
 
   ALL ENTITY:
-   site handler     (t!=NULL, thread =NULL, isRetry=FALSE, isPersistent=TRUE)
+   site handler     (t==NULL, thread =NULL, isRetry=FALSE, isPersistent=TRUE)
 */
 
 // only debug
@@ -939,13 +941,14 @@ TaggedRef listifyWatcherCond(EntityCond ec){
 /*   gc                           */
 /**********************************************************************/
 
-void gcEntityInfoImpl(Tertiary *t) {
-  EntityInfo* info = t->getInfo();
-  if (info==NULL) return;
+EntityInfo* gcEntityInfoInternal(EntityInfo *info){
+  if(info==NULL) return NULL;
   EntityInfo *newInfo = (EntityInfo *) gcRealloc(info,sizeof(EntityInfo));
-  t->setInfo(newInfo);
   newInfo->gcWatchers();
-}
+  return newInfo;}
+
+void gcEntityInfoImpl(Tertiary *t) {
+  t->setInfo(gcEntityInfoInternal(t->getInfo()));}
 
 void gcTwins(){
   Twin** base=&usedTwins;

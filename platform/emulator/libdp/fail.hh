@@ -166,7 +166,7 @@ public:
   Watcher *next;
   Thread *thread; // thread of handler
   short kind;
-  short watchcond;
+  unsigned short watchcond;
   Twin* twin;
 
   USEHEAPMEMORY;
