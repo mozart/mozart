@@ -56,6 +56,11 @@
   <Front>
     <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
 
+    <Meta name="html.split"       value="chapter.general">
+    <Meta name="html.split"       value="chapter.syntax">
+    <Meta name="html.split"       value="chapter.base">
+    <Meta name="html.split"       value="chapter.system">
+
     <Meta name=ozversion value="3.0">
     <Meta name=status value=revised>
     <Title/Changes/
@@ -67,13 +72,60 @@
   <Body>
     <chapter id="chapter.general">
       <title/General Changes/
+
+      <section id="section.general.modules">
+        <title/Functors and Modules/
+
+        <p>
+          Mozart now comes with a powerful internet-based module
+          system that supports lazy loading, native modules and
+          more. For an introduction see <ptr.extern
+          to="ozdoc:apptut">. 
+
+        <p>
+          To make best use of the new module system, the previous Oz
+          Standard Modules have been split into the <em/base
+          environment/ and the <em/system modules/. The compiler
+          always provides the base environment, it contains all
+          operations working on data structures like records, lists,
+          and so on. For more information see <ptr.extern
+          to="ozdoc:base">. 
+
+        <p>
+          All remaining modules (including the constraint programming
+          support) are now provided as system modules that are subject
+          to import in functor definitions. The system modules are
+          described in <ptr.extern to="ozdoc:system">.
+
+        <p>
+          The Oz Programming Environment however still follows the
+          design to ease explorative development. For that reason all
+          system modules are still available in the Oz Programming
+          Environment. The Environment nicely exemplifies the merits
+          of the new module system: while providing all system modules
+          the Environment starts in a fraction of a second by taking
+          advantage of dynamic linking.
+
+      <section id="section.general.app">
+        <title/Applications/
+
+        <p>
+          The rudimentary standalone application support available in
+          DFKI Oz has been replaced by powerful abstractions and
+          command line tools (see <ptr.extern to="ozdoc:tools">) to
+          support different aspects of application programming. In
+          fact, a new tutorial (see <ptr.extern to="ozdoc:apptut">)
+          is entirely devoted to application programming with Oz and
+          Mozart. 
+
     <chapter id="chapter.syntax">
-      <title/Syntax Imporvements/
+      <title/Syntax Improvements/
+
     <chapter id="chapter.base">
       <title/Base/
     
       <section id="section.base.objects">
-        <title/Classes and Objects
+        <title/Classes and Objects/
 
         <subsection class=unumbered>
           <title/Multiple Inheritance/
@@ -97,8 +149,29 @@ class C from A B end>>>
             <<<class C from A B meth m skip end end>>>
           <p>
             Features and attributes are handled identically. For a
-            more thorough discussion, see <ptr.extern
+            more thorough discussion see <ptr.extern
             to="ozdoc:tutorial" key="chapter.classes">.
+
+        <subsection class=unumbered>
+          <title/The Modules <<Class>> and <<Object>>/
+
+          <p>
+            The modules <<Class>> and <<Object>> underwent a major
+            redesign and re-implementation. The redesign became
+            necessary because the old modules compromised both system
+            and application security. Programming abstractions that
+            support common patterns of object oriented programming are
+            described in the module <<ObjectSupport>> (see <ptr.extern
+            to="ozdoc:system" key="chapter.objectsupport">).
+
+
+      <section id="section.base.chunks">
+        <title/Chunks/
+
+        <p>
+          The procedures <<Chunk.hasFeature>> and <<Chunk.getFeature>>
+          are gone. Just use <<HasFeature>> and <<Value.'.'>> (see
+          <ptr.extern to="ozdoc:base" key="chapter.values">).
 
     <chapter id="chapter.system">
       <title/System Modules/
@@ -106,6 +179,16 @@ class C from A B end>>>
       
       <section id="section.system.search">
         <title/Search Engines renamed/
+
+        <p>
+          The engines that used to be available by <<SearchOne>>,
+          <<SearchAll>>, and <<SearchBest>> are now available under
+          <<Search.base.one>>, <<Search.base.all>>, and
+          <<Search.base.best>> (for more information see <ptr.extern
+          to="ozdoc:system" key="chapter.search">). However in the Oz
+          Programming Interface <<SearchOne>>,
+          <<SearchAll>>, and <<SearchBest>> are still available for
+          convenience. 
 
       <section id="section.system.schedule">
         <title/Scheduling support moved/
@@ -115,6 +198,31 @@ class C from A B end>>>
           <<Schedule>> rather than <<FD.schedule>>. See also
           <ptr.extern to="ozdoc:fdt" key="chapter.scheduling">  and
           <ptr.extern to="ozdoc:system" key="chapter.schedule">.
+
+      <section id="section.system.property">
+        <title/<<System.get>> and <<System.set>>/
+
+        <p>
+          <<System.get>> and <<System.set>> have been replaced by more
+          powerful procedures that are available in the module
+          <<Property>>, which is described in 
+          <ptr.extern to="ozdoc:system" key="chapter.property">.
+
+      <section id="section.system.vstoval">
+        <title/<<System.valueToVirtualString>> and <<System.virtualStringToValue>>/
+
+        <p>
+          <<System.valueToVirtualString>> and
+          <<System.virtualStringToValue>> are now available as
+<<Value.toVirtualString>> (see
+          <ptr.extern to="ozdoc:base" key="chapter.values">) and
+<<Compiler.virtualStringToValue>> (see
+          <ptr.extern to="ozdoc:compiler"
+          key="section.api.module">). In particular, 
+          <<Compiler.virtualStringToValue>> is a full featured and
+	  stable replacement for the ad-hoc
+          <<System.virtualStringToValue>>. 
+
 
       
 </Book>
