@@ -58,7 +58,7 @@ public:
   }
 
 
-  OZ_Return valid(TaggedRef /* val */) { return OK; }
+  Bool valid(TaggedRef /* val */) { return TRUE; }
 
   // disposing of opt var"s is done only when its space is gone.
   void dispose(void) {}
