@@ -49,6 +49,14 @@ This chapter and the next one give the first results
 of this research.
 All comments and suggestions for improvements are welcome.
 
+<P>This chapter carefully indicates where the current release
+is incomplete with respect to the specification
+(this is called a <EM>limitation</EM>)
+or has a different behavior (this is called a <EM>modification</EM>).
+All limitations and modifications are listed where
+they occur.
+A complete list is given at the end of the chapter.
+
 <SECTION><TITLE>Fault states</TITLE>
 
 <P>All failure modes are defined with respect to
@@ -629,14 +637,14 @@ i.e., the call <<{Fault.install _ global _ _}>> is undefined.
 If an attempt is made to install a <<global>> handler,
 then a <<notImplemented>> exception is given.
 </list>
-The modifications are:
+<P>The modifications are:
 <list>
 <item>A handler installed on a <EM>variable</EM> will retry
 the operation (i.e., bind or wait) after it returns.
 That is, the handler is inserted before the operation
 instead of replacing the operation.
 </list>
-These limitations and modifications
+<P>These limitations and modifications
 will be removed in future releases.
 
 </CHAPTER>
