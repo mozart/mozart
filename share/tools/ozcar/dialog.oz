@@ -76,7 +76,7 @@ local
 				    'self':   if {IsFree Self} then unit
 					      else Self
 					      end)
-	 {TkTools.evalDialog, getNarrator($)
+	 {TkTools.evalDialog, getCompiler($)
 	  enqueue([setSwitch(debuginfovarnames true)
 		   setSwitch(debuginfocontrol true)])}
 
