@@ -306,17 +306,17 @@ FDIntervals * FDIntervals::operator += (const int put_in)
 
     return this;
 
-  if (put_in == i_arr[index].right + 1) {
-    if (put_in == i_arr[index + 1].left - 1) { // closing a gap
-      i_arr[index].right = i_arr[index + 1].right;
-      for (int i = index + 2; i < high; i += 1)
+  if (index > 0 && (put_in == i_arr[index - 1].right + 1)) {
+    if (put_in == i_arr[index].left - 1) { // closing a gap
+      i_arr[index - 1].right = i_arr[index].right;
+      for (int i = index + 1; i < high; i += 1)
         i_arr[i - 1] = i_arr[i];
       high -= 1;
     } else {
-      i_arr[index].right += 1;
+      i_arr[index - 1].right += 1;
     }
-  } else if (put_in == i_arr[index + 1].left - 1) {
-    i_arr[index + 1].left -= 1;
+  } else if (put_in == i_arr[index].left - 1) {
+    i_arr[index].left -= 1;
   } else {
     int new_max_high = high + 1;
     index += 1;
