@@ -85,6 +85,19 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1, TypeOfTerm ttag1,
   return NO;
 }
 
+int GenCVariable::getSuspListLength(void)
+{
+  switch (type){
+  case FDVariable:
+    return ((GenFDVariable *)this)->getSuspListLength();
+  default:
+    error("Unexpected type generic variable at %s:%d.",
+          __FILE__, __LINE__);
+    break;
+  }
+  return -1;
+}
+
 
 size_t GenCVariable::getSize(void){
   switch (type){
