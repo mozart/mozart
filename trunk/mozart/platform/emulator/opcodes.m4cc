@@ -11,9 +11,8 @@ define(makeInstr,
 
 define(instruction,
        `makeInstr(eval(numOfRegs($2)+numOfRegs($3)+numOfRegs($4)),TOUPPER($1)) return dnl
-	ifelse($1,definition,7,
-		$1,switchOnTerm,2+SizeofIHashTable,
-		eval(1+Size($2)+Size($3)+Size($4)+Size($5)+Size($6)+Size($7)+Size($8)))dnl
+	ifelse($1,switchOnTerm,2+SizeofIHashTable,
+	       eval(1+Size($2)+Size($3)+Size($4)+Size($5)+Size($6)+Size($7)+Size($8)))dnl
 ;')
 
 
