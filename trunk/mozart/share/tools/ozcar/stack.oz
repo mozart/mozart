@@ -82,7 +82,7 @@ local
 				 {System.valueToVirtualString Data 0 0}
 			      else {System.printName Data}
 			      end
-			   else '_'   %--** should be clickable!
+			   else '_'
 			   end
 			[] 'lock' then 'lock'
 			[] handler then 'exception handler'
