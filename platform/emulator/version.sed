@@ -5,6 +5,5 @@
 #define AMDate "HEREGOESDATE"
 
 void version() {
-  printf("Oz Emulator %s (OZPLATFORM) of %s\n",AMVersion,AMDate);
-  printf("Copyright (C) 1994, DFKI GmbH, Saarbr\"ucken, Germany.\n");
+  printf("DFKI Oz Emulator %s (OZPLATFORM) of %s\n",AMVersion,AMDate);
 }
