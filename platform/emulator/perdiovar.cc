@@ -52,21 +52,8 @@ void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
     relinkSuspListTo(pv);
   }
   doBind(lPtr, v);
-  if (isObjectGName()) {
+  if (isObjectClassNotAvail()) {
     deleteGName(u.gnameClass);
-  }
-}
-
-GName *getGNameForUnify(TaggedRef val) {
-  if (!isConst(val)) return 0;
-  ConstTerm *c=tagged2Const(val);
-  switch(c->getType()) {
-  case Co_Abstraction:
-  case Co_Class:
-  case Co_Chunk:
-    return ((ConstTermWithHome *)c)->getGName1();
-  default:
-    return 0;
   }
 }
 
@@ -82,15 +69,12 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
   if (isPerdioVar(rVal)) {
     PerdioVar *rVar = tagged2PerdioVar(rVal);
 
-    if (isObject() || isObjectGName()) {
-      if (rVar->isObject() || rVar->isObjectGName()) {
-        if (getGName() != rVar->getGName()) {
-          // the following is completely legal
-          // warning("mm2:gname mismatch (var-var)");
-          return FALSE;
-        }
+    if (isObject()) {
+      if (rVar->isObject()) {
+        // both are objects --> token equality
+        return lVar==rVar ? PROCEED : FALSE;
       }
-      if (!rVar->isObject() && !rVar->isObjectGName()) {
+      if (!rVar->isObject()) {
         /*
          * binding preferences
          * bind perdiovar -> proxy
@@ -145,12 +129,7 @@ Bool PerdioVar::valid(TaggedRef *varPtr, TaggedRef v)
 {
   Assert(!isRef(v) && !isAnyVar(v));
 
-  if (isObject() || isObjectGName()) {
-    if (getGName() != getGNameForUnify(v)) {
-      return FALSE;
-    }
-  }
-  return TRUE;
+  return (isObject()) ? FALSE : TRUE;
 }
 
 //-----------------------------------------------------------------------------
