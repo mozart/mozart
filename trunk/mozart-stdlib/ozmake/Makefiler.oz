@@ -637,6 +637,7 @@ define
       %% turn the makefile back into a record for inclusion in a package
 
       meth makefile_to_record($ relax:RELAX<=false)
+	 {self makefile_read}
 	 MAK={NewDictionary}
 	 Clean     = {self get_clean($)}
 	 Veryclean = {self get_veryclean($)}

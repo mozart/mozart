@@ -219,13 +219,9 @@ define
 	 end
       end
 
-      meth mogul_put_package(R)
-	 {self mogul_read}
-	 {self mogul_validate_id(R.mogul)}
+      meth mogul_sanitize_record(R $)
 	 D = {NewDictionary}
       in
-	 D.type := package
-	 D.mogul := R.mogul
 	 case {CondSelect R author nil}
 	 of nil  then skip
 	 [] unit then skip
@@ -270,11 +266,25 @@ define
 	 case {CondSelect R provides unit}
 	 of unit then skip
 	 [] L    then D.provides := L end
-	 local P = {Dictionary.toRecord package D} in
-	    @DB.(R.mogul) := P
-	    {self trace('updated entry for '#R.mogul)}
-	    {self mogul_trace_package(P)}
+	 case {CondSelect R submakefiles unit}
+	 of unit then skip
+	 [] RR   then D.submakefiles := {Record.map RR
+					 fun {$ R}
+					    {self mogul_sanitize_record(R $)}
+					 end}
 	 end
+	 {Dictionary.toRecord makefile D}
+      end
+
+      meth mogul_put_package(R)
+	 {self mogul_read}
+	 {self mogul_validate_id(R.mogul)}
+	 P = {Adjoin {self mogul_sanitize_record(R $)}
+	      package(type:package mogul:R.mogul)}
+      in
+	 @DB.(R.mogul) := P
+	 {self trace('updated entry for '#R.mogul)}
+	 {self mogul_trace_package(P)}
       end
 
       meth mogul_put_contact(R)

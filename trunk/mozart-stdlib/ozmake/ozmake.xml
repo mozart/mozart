@@ -11,7 +11,6 @@
     <blurb>a tool for Mozart project building and package
     management</blurb>
     <provides>ozmake</provides>
-    <version>0.78</version>
   </head>
 
   <p.center>
