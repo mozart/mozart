@@ -206,12 +206,23 @@ where the corresponding end tag occurs
 form: <code>coord(Filename LineNumber)</code>. <code>Alist</code> is
 the list of accumulated attributes and possibly namespace
 declarations. <code>Children</code> is the, as yet uninstantiated,
-list of accumulated children of this element.<p>
+list of accumulated children of this element.
+<p>
+material contributed with <code>append</code> by <code>onStartElement</code> and
+<code>onEndElement</code> is added to the content list of the element's
+parent.  See <code>onStartChildren</code>/<code>onEndChildren</code> for similar
+functionality adding to the element's own content list.
+<p>
 <dt><code>append(X)</code>
 <dd>contribute the item <code>X</code> to the contents list being
 accumulated for the current element.<p>
 <dt><code>onEndElement(Tag)
 <dd>invoked on an end tag<p>
+<dt><code>onStartChildren</code>
+<dt><code>onEndChildren</code>
+<dd>invoked respectively just before and just after processing the children
+of an element.  Material contributed at these points is added to the element's
+content list.<p>
 <dt><code>onAttribute(Tag Value)</code>
 <dd>invoked for each attribute of an element.  It is its
 responsability to construct a representation of the attribute and to

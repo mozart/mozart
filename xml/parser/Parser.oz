@@ -913,6 +913,8 @@ prepare
       %% onProcessingInstruction(Name Data Coord)
       %% onCharacters(Chars Coord)
       %% onComment(Data Coord)
+      %% onStartChildren()
+      %% onEndChildren()
       %%
       %% append(_)
       %% attributeAppend(_)
@@ -950,6 +952,11 @@ prepare
       %%
       %% Children is the, as yet uninstantiated, list of accummulated
       %% children of this elements
+      %%
+      %% material contributed with append by onStartElement and
+      %% onEndElement is added to the content list of the element's
+      %% parent.  See onStartChildren/onEndChildren for similar
+      %% functionality adding to the element's own content list.
       
       meth onStartElement(Tag Alist Children)
 	 {self append(
@@ -970,6 +977,16 @@ prepare
       %% invoked on an end tag
       
       meth onEndElement(Tag) skip end
+
+      %% onStartChildren()
+      %% onEndChildren()
+      %%
+      %% invoked before and after processing the children of an
+      %% element.  Material contributed with append(_) is added to
+      %% the element's content list.
+
+      meth onStartChildren() skip end
+      meth onEndChildren() skip end
 
       %% onAttribute(Tag Value)
       %%
@@ -1098,14 +1115,21 @@ prepare
 		      endCoord : _)
 	 in
 	    {self onStartElement(Tag Alist2 Children)}
-	    if Empty then
-	       Children = nil
+	    if Empty then SaveCONTENTS=@CONTENTS SaveTAG=@TAG in
+	       CONTENTS <- Children
+	       TAG <- Tag
+	       {self onStartChildren()}
+	       {self onEndChildren()}
+	       @CONTENTS=nil
+	       CONTENTS <- SaveCONTENTS
+	       TAG <- SaveTAG
 	       Tag.endCoord=Coord
 	       Parser,UnTrail()
 	    else
 	       STACK <- (@CONTENTS|@TAG)|@STACK
 	       CONTENTS <- Children
 	       TAG <- Tag
+	       {self onStartChildren()}
 	    end
 	    Parser,PARSE()
 	 [] etag(Name Coord) then
@@ -1120,6 +1144,7 @@ prepare
 				  found :Fullname
 				  coord :Coord))
 	       else
+		  {self onEndChildren()}
 		  @CONTENTS = nil
 		  CONTENTS <- Tail
 		  @TAG.endCoord=Coord
