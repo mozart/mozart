@@ -216,6 +216,8 @@ public:
   static void gCollectCodeAreaStart(void);
   static void gCollectCollectCodeBlocks(void);
 
+  TaggedRef disassemble(void);
+
 #ifdef RECINSTRFETCH  
   static void writeInstr(void);
 #else
