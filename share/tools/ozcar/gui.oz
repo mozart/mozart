@@ -462,7 +462,7 @@ in
 	 case {UnknownFile File} then skip else
 	    {Delay TimeoutToMessage}
 	    case {IsDet Ack} then skip else
-	       RealFile = {LookupPath File}
+	       RealFile = {LookupFile File}
 	    in
 	       Gui,rawStatus('Loading file ' # RealFile # '...')
 	       {Wait Ack}
