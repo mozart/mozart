@@ -104,7 +104,7 @@ OwnerEntry *maybeReceiveAtOwner(DSite*,int);
 void pendThreadRemoveFirst(PendThread **pt);
 
 void pendThreadAddToEnd(PendThread **,TaggedRef,TaggedRef, ExKind);
-void pendThreadAddToEnd(PendThread **,Thread*);
+void pendThreadAddToEnd(PendThread **);
 
 void pendThreadAddDummyToEnd(PendThread **);
 void pendThreadAddRAToEnd(PendThread **,DSite* , DSite*, int);

@@ -205,10 +205,10 @@ void pendThreadAddDummyToEnd(PendThread **pt){
   *pt=new PendThread(NULL,NULL,DUMMY);
 }
 
-void pendThreadAddToEnd(PendThread **pt,Thread *th){
+void pendThreadAddToEnd(PendThread **pt){
   while(*pt!=NULL){pt= &((*pt)->next);}
   ControlVarNew(controlvar,oz_rootBoard());  
-  *pt=new PendThread(th,NULL,controlvar,NOEX);
+  *pt=new PendThread(oz_currentThread(),NULL,controlvar,NOEX);
   suspendOnControlVar2();
 }
 
