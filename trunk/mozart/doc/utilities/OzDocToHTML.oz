@@ -1251,7 +1251,8 @@ define
 	    [] span then HTML1 HTML in
 	       OzDocToHTML, Batch(M 1 ?HTML1)
 	       HTML = span(HTML1)
-	       case M.display of inline then
+	       case {CondSelect M display inline}
+	       of inline then
 		  if {SGML.isOfClass M index} then HTML2 in
 		     OzDocToHTML, Index(M [HTML1] ?HTML2)
 		     SEQ([HTML2 {AdjoinAt HTML COMMON @Common}])
