@@ -233,18 +233,19 @@ local
 	 Height = {IntToFloat @bottom} * Scale
 	 Width  = {IntToFloat (@right - @left)} * Scale
       in
-	 Tk.canvas,tk(postscript
-		      case H/Height > W/Width then o(pagewidth: W#c)
-		      else o(pageheight: H#c)
-		      end
-		      file:       F
-		      colormode:  C
-		      rotate:     R
-		      height:     Height
-		      width:      Width
-		      x:          {IntToFloat @left} * Scale
-		      y:          0)
-	 
+	 {Wait Tk.canvas,tkReturn(postscript
+				  case H/Height > W/Width then
+				     o(pagewidth: W#c)
+				  else o(pageheight: H#c)
+				  end
+				  file:       F
+				  colormode:  C
+				  rotate:     R
+				  height:     Height
+				  width:      Width
+				  x:          {IntToFloat @left} * Scale
+				  y:          0
+				  $)}
       end
       
    end
