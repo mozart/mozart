@@ -248,6 +248,7 @@ public:
     ByteBuffer *bb;
     if(f==NULL) {bb=new ByteBuffer();}
     else{GenCast(f,FreeListEntry*,bb,ByteBuffer*);}
+    bb->init();
     return bb;}
   
   void deleteByteBuffer(ByteBuffer* bb){
@@ -2247,8 +2248,8 @@ ipReturn tcpSend(int fd,NetMsgBuffer *bs, Bool flag)
     BYTE* pos=bs->getWritePos();
     while(TRUE){
       ret=oswrite(fd,pos,len);
-      if(ret>0) break;
 
+      if(ret>0) break;
       // EK check ret. The Assert will disapear in
       // non-debug code.
       Assert(ret<0);
@@ -2256,7 +2257,7 @@ ipReturn tcpSend(int fd,NetMsgBuffer *bs, Bool flag)
       if(!((errno==EWOULDBLOCK) || (errno==EAGAIN)))
 	return tcpWriteError();
       break;}
-    PD((WRITE,"wr:%d try:%d",ret,len));
+    PD((WRITE,"wr:%d try:%d error:%d",ret,len,errno));
     if(ret<len){
       if(ret>0){
 	bs->incPosAfterWrite(ret);
@@ -2585,6 +2586,7 @@ inline Message* newReadCur(Message *m,NetMsgBuffer *bs,
 
 static int tcpReadHandler(int fd,void *r0)
 {  
+  PD((TCP,"tcpReadHandler Invoked"));
   ReadConnection *r = (ReadConnection*) r0;
   tcpCache->touchRead(r);
 
@@ -2623,20 +2625,20 @@ start:
   if (ret<0) {
     //EK
     // This one is noy handled right now....
-    warning("Connection Site Has Crashed\n");
-      PD((WEIRD,"readHandler sees crashed Connection site %s",r->remoteSite->site->stringrep()));
-      if(m!=NULL){
-	fprintf(stderr,"dumping incomplete read\n");
-	Assert(r->isIncomplete());
-	m = r->getCurQueue();
-	messageManager->freeMessage(m);}
-      
-      // EK
-      // check if this is right....
-
-      netMsgBufferManager->dumpNetMsgBuffer(bs);
-      r->connectionLost();
-      return 0;
+    warning("Connection Site Has Crashed\n%s",
+	    r->remoteSite->site->stringrep());
+    if(m!=NULL){
+      fprintf(stderr,"dumping incomplete read\n");
+      Assert(r->isIncomplete());
+      m = r->getCurQueue();
+      messageManager->freeMessage(m);}
+    
+    // EK
+    // check if this is right....
+    
+    netMsgBufferManager->dumpNetMsgBuffer(bs);
+    r->connectionLost();
+    return 0;
   }
 
   PD((READ,"no:%d av:%d rem:%d",ret,len,rem));
