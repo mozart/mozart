@@ -3,7 +3,7 @@
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Joerg Wuertz (wuertz@ps.uni-sb.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))

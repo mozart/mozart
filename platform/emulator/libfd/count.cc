@@ -1,6 +1,7 @@
 /*
  *  Authors:
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ *    Joerg Wuertz (wuertz@ps.uni-sb.de)
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
