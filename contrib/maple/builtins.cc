@@ -1,25 +1,25 @@
 /*
  *  Authors:
  *    Jürgen Zimmer (jzimmer@ps.uni-sb.de)
- * 
+ *
  *  Contributors:
  *    Tobias Müller (tmueller@ps.uni-sb.de)
- * 
+ *
  *  Copyright:
  *    1999
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
+ *
+ *  This file is part of Mozart, an implementation
  *  of Oz 3:
  *     $MOZARTURL$
- * 
+ *
  *  See the file "LICENSE" or
  *     $LICENSEURL$
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -41,8 +41,6 @@ OZ_BI_define(maple_call, 2, 1)
   char * input     = strdup(OZ_virtualStringToC(OZ_in(0), &input_len));
   char * maple_str = strdup(OZ_virtualStringToC(OZ_in(1), &maple_len));
 
-  printf("input=%s\nmaple_str=%s\n", input, maple_str);
- 
   char * maple_in_name  = mktemp(strdup(MAPLE_IN_TEMPLATE));
   char * maple_out_name = mktemp(strdup(MAPLE_OUT_TEMPLATE));
   char * parse_out_name = mktemp(strdup(PARSE_OUT_TEMPLATE));
@@ -56,61 +54,53 @@ OZ_BI_define(maple_call, 2, 1)
 				 maple_in_name,
 				 maple_out_name);
 
-  printf("actual_maple_len=%i total_maple_len=%i\n", 
-	 actual_maple_len, total_maple_len);
-
   FOPEN(maple_in, maple_in_name, writing);
 
   fputs(input, maple_in);
 
   FCLOSE(maple_in, maple_in_name);
 
-  {
-    maple_system(call_maple_str);       // call Maple(tm) ...
+  OZ_Term rv = OZ_nil();
 
-    FOPEN(maple_out, maple_out_name, reading);
-
-    const int top_str_len = 6;
-    char top_str[top_str_len];
-
-    fgets(top_str, top_str_len, maple_out);
-
-    // check if Maple produced an error
-    if (strncmp("Error", top_str, 5) == 0) {
-      int c;
-      OZ_Term rv = OZ_nil(); 
-
-      add_list('\'', rv);
-
-      for (int k = 1; k<6; k++)
-	add_list(top_str[k-1], rv);
-      add_list('\'', rv);
-      add_list('(', rv);
-      add_list('\'', rv);
-
-      int i = 9;
-      int first_blank = 1;
-      do {              // read the Error message
-	c = fgetc(maple_out);
-	if (! ((c == ',') ||
-	       (c == EOF) ||
-	       (c == '\n') ||
-	       (c == ' ' && first_blank))) {
-	  first_blank = 0;
-	  add_list(c, rv);
-	}
-      } while (!(c == EOF));
-      add_list('\'', rv);
-      add_list(')', rv);
-
-      FCLOSE(maple_out, maple_out_name);
-
-      ret_val = OZ_unify(OZ_out(0), close_list(rv));
-      goto exit;
-    }
-
-    OZ_Term rv = OZ_nil(); 
+  maple_system(call_maple_str);       // call Maple(tm) ...
+  
+  FOPEN(maple_out, maple_out_name, reading);
+  
+  const int top_str_len = 6;
+  char top_str[top_str_len];
+  
+  fgets(top_str, top_str_len, maple_out);
+  
+  // check if Maple produced an error
+  if (strncmp("Error", top_str, 5) == 0) {
+    int c;
     
+    add_list(rv, '\'');
+    
+    for (int k = 1; k<6; k++)
+      add_list(rv, top_str[k-1]);
+    add_list(rv, '\'');
+    add_list(rv, '(');
+    add_list(rv, '\'');
+    
+    int first_blank = 1;
+    do {              // read the Error message
+      c = fgetc(maple_out);
+      if (! ((c == ',') ||
+	     (c == EOF) ||
+	     (c == '\n') ||
+	     (c == ' ' && first_blank))) {
+	first_blank = 0;
+	add_list(rv, c);
+      }
+    } while (!(c == EOF));
+    add_list(rv, '\'');
+    add_list(rv, ')');
+    
+    FCLOSE(maple_out, maple_out_name);
+    
+  } else {
+
     // everything went fine
     
     FCLOSE(maple_out, maple_out_name);
@@ -126,7 +116,7 @@ OZ_BI_define(maple_call, 2, 1)
 
     FOPEN(parse_out, parse_out_name, reading);
 
-    int i = 0, end = 0, c;
+    int end = 0, c;
 
     // skip initial blanks
     do {
@@ -137,19 +127,16 @@ OZ_BI_define(maple_call, 2, 1)
     if (!(c == EOF)) {
       do {
 	c = fgetc(parse_out);
-	if ((c == EOF) || (c == '"')) { 
+	if ((c == EOF) || (c == '"')) {
 	  end = 1;
 	} else {
-	  add_list(c, rv);
+	  add_list(rv, c);
 	}
       } while (!end);
 
       FCLOSE(parse_out, parse_out_name);
     }
-    ret_val = OZ_unify(OZ_out(0), close_list(rv));
   }
-
- exit:
 
   free(input);
   free(maple_str);
@@ -167,9 +154,6 @@ OZ_BI_define(maple_call, 2, 1)
 
   maple_system(delete_str);          // delete temporary files...
 
-  return ret_val;
+  OZ_RETURN(close_list(rv));
 }
 OZ_BI_end
-
-
-
