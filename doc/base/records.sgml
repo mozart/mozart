@@ -164,6 +164,18 @@
 	  If ?_{R1} has feature&nbsp;?_{LI}, returns record&nbsp;?_{R1} with
 	  feature&nbsp;?_{LI} removed.  Otherwise, returns&nbsp;?_{R1}.
 
+	<Entry><<subtractList>>
+	  <Index class=tails/<<Record>><And><<subtractList>>/
+	<Synopsis>
+	  <<{Record.subtractList ?+{R1} ?+{LIs} ??{R2}}>>
+	<Item>
+	  Returns record&nbsp;?_{R1} with
+	  all features in&nbsp;?_{LIs} removed.
+        <p>
+	  For example,
+<<<{Record.subtractList f(jim: 1 jack: 2 jesse: 4) [jesse jim]}>>>
+	  returns the record <<f(jack: 2)>>.
+
 	<Entry><<zip>>
 	  <Index class=tails/<<Record>><And><<zip>>/
 	<Synopsis>
