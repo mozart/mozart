@@ -76,6 +76,9 @@ int  globalContCounter = 0;
 
 OZ_Term defaultAcceptProcedure = 0;
 OZ_Term defaultConnectionProcedure = 0;
+
+FILE *logfile=stdout;
+
 /* *********************************************************************/
 /*   init;                                                             */
 /* *********************************************************************/
@@ -1305,6 +1308,8 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
   //  printf("times left %d\n", timeUntilClose);
   //  printf("connections left %d\n", connectionsLeft);
   //  printf("Close done at %s\n", myDSite->stringrep());
+
+  if(logfile!=stdout) fclose(logfile);
 }
 
 void dpExitImpl() {

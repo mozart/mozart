@@ -144,6 +144,9 @@ extern int  globalOSWriteCounter;
 extern int  globalOSReadCounter;
 extern int  globalContCounter;
 
+// Logging
+extern FILE *logfile;
+
 
 /* __PERDIOHH */
 #endif 
