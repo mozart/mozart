@@ -1,10 +1,6 @@
 /*
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-W-6600 Saarbruecken 11, Phone (+49) 681 302-5312
-  Author: scheidhr
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
   ------------------------------------------------------------------------
   Unix/Posix functions
   ------------------------------------------------------------------------
@@ -38,6 +34,7 @@
 #include <time.h>
 #include <process.h>
 extern "C" int _fmode;
+extern "C" void setmode(int,mode_t);
 
 #else
 #include <sys/times.h>
@@ -62,8 +59,17 @@ extern "C" int _fmode;
 static long emulatorStartTime = 0;
 #endif
 
-fd_set isSocket;
+fd_set socketFDs;
+static int maxSocket = 0;
+
+inline
+Bool isSocket(int fd)
+{
+  return (FD_ISSET(fd,&socketFDs));
+}
+
 static long openMax;
+
 
 #ifdef WINDOWS
 int runningUnderNT = 0;
@@ -77,7 +83,7 @@ int getTime();
 // return current usertime in milliseconds
 unsigned int osUserTime()
 {
-#if defined(WINDOWS)
+#ifdef WINDOWS
   if (!runningUnderNT) {
     return getTime();
   }
@@ -98,7 +104,7 @@ unsigned int osUserTime()
 // return current systemtime in milliseconds
 unsigned int osSystemTime()
 {
-#if defined(WINDOWS)
+#ifdef WINDOWS
   if (!runningUnderNT) {
     return 0;
   }
@@ -360,10 +366,13 @@ int WrappedHandles::nextno = wrappedHDStart;
 
 WrappedHandles *WrappedHandles::allHandles = NULL;
 
-int lowread(int fd, void *buf, int sz)
+int rawread(int fd, void *buf, int sz)
 {
   if (fd < wrappedHDStart)
     return read(fd,buf,sz);
+
+  if (isSocket(fd))
+    return recv(fd,((char*)buf),sz,0);
 
   HANDLE hd = WrappedHandles::find(fd);
   Assert(hd!=0);
@@ -375,10 +384,13 @@ int lowread(int fd, void *buf, int sz)
 }
 
 
-int lowwrite(int fd, void *buf, int sz)
+int rawwrite(int fd, void *buf, int sz)
 {
   if (fd < wrappedHDStart)
     return write(fd,buf,sz);
+
+  if (isSocket(fd))
+    return send(fd, (char *)buf, sz, 0);
 
   HANDLE hd = WrappedHandles::find(fd);
   Assert(hd!=0);
@@ -392,21 +404,40 @@ int lowwrite(int fd, void *buf, int sz)
 int _hdopen(int handle, int flags)
 {
   WrappedHandles *wh = new WrappedHandles((HANDLE)handle);
+  if ((flags&O_WRONLY)==0)
+    osWatchFD(wh->fd,SEL_READ);
   return wh->fd;
 }
 
 #else
 
-#define lowread(fd,buf,sz) read(fd,buf,sz)
-#define lowwrite(fd,buf,sz) write(fd,buf,sz)
+#define rawwrite(fd,buf,sz) write(fd,buf,sz)
+#define rawread(fd,buf,sz) read(fd,buf,sz)
 
 #endif
+
+
+static
+int nonBlockSelect(int nfds, fd_set *readfds, fd_set *writefds)
+{
+  struct timeval timeout;
+  timeout.tv_sec = 0;
+  timeout.tv_usec = 0;
+  return select(nfds,readfds,writefds,NULL,&timeout);
+}
 
 
 
 #define EMULATOR
 #include "winselect.cc"
 #undef EMULATOR
+
+void registerSocket(int fd)
+{
+  OZ_FD_SET(fd,&socketFDs);
+  maxSocket = max(fd,maxSocket);
+}
+
 
 
 #ifdef WINDOWS
@@ -493,11 +524,11 @@ int osGetAlarmTimer()
  * return number of fds ready and return in *timeout msecs left
  */
 static
-int osSelect(int nfds, fd_set *readfds, fd_set *writefds, int *timeout)
+int osSelect(fd_set *readfds, fd_set *writefds, int *timeout)
 {
 #ifdef WINDOWS
 
-  return win32Select(readfds,timeout);
+  return win32Select(readfds,writefds,timeout);
 
 #else
 
@@ -514,9 +545,9 @@ int osSelect(int nfds, fd_set *readfds, fd_set *writefds, int *timeout)
 
 /* The prototypes for select are wrong on HP-UX 9.x */
 #ifdef HPUX_700
-  int ret = select(nfds,(int*)readfds,(int*)writefds,NULL,timeoutptr);
+  int ret = select(openMax,(int*)readfds,(int*)writefds,NULL,timeoutptr);
 #else
-  int ret = select(nfds,readfds,writefds,NULL,timeoutptr);
+  int ret = select(openMax,readfds,writefds,NULL,timeoutptr);
 #endif
 
   if (timeout!=WAIT_NULL) {
@@ -616,7 +647,7 @@ void osInit()
   FD_ZERO(&globalFDs[SEL_READ]);
   FD_ZERO(&globalFDs[SEL_WRITE]);
 
-  FD_ZERO(&isSocket);
+  FD_ZERO(&socketFDs);
 
 #ifdef SUNOS_SPARC
 
@@ -644,25 +675,26 @@ void osInit()
 #define CheckMode(mode) Assert(mode==SEL_READ || mode==SEL_WRITE)
 
 static
-void osWatchFDInternal(int fd, int mode, Bool watchAccept)
+void osWatchFDInternal(int fd, int mode)
 {
   CheckMode(mode);
-  FD_SET(fd,&globalFDs[mode]);
+  OZ_FD_SET(fd,&globalFDs[mode]);
 #ifdef WINDOWS
   Assert(mode==SEL_READ);
-  createReader(fd,watchAccept);
+  if (!isSocket(fd))
+    createReader(fd);
 #endif
 }
 
 
 void osWatchFD(int fd, int mode)
 {
-  osWatchFDInternal(fd,mode,NO);
+  osWatchFDInternal(fd,mode);
 }
 
 void osWatchAccept(int fd)
 {
-  osWatchFDInternal(fd,SEL_READ,OK);
+  osWatchFDInternal(fd,SEL_READ);
 }
 
 
@@ -675,6 +707,7 @@ void osClrWatchedFD(int fd, int mode)
   // deleteReader(fd);
 #endif
 }
+
 
 Bool osIsWatchedFD(int fd, int mode)
 {
@@ -693,7 +726,7 @@ int osBlockSelect(int ticks)
   copyFDs[SEL_READ]  = globalFDs[SEL_READ];
   copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
   int wait = osClockTickToMs(ticks);
-  int ret = osSelect(openMax,&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],&wait);
+  int ret = osSelect(&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],&wait);
   int ticksleft = osMsToClockTick(wait);
   return ticksleft;
 }
@@ -720,37 +753,34 @@ int osTestSelect(int fd, int mode)
 {
   CheckMode(mode);
 #ifdef WINDOWS
+  IOChannel *ch = lookupChannel(fd);
   /* no select on write */
-  if (mode==SEL_WRITE)
-    return 1;
+  if (ch)
+    return (mode==SEL_WRITE || ch->status==OK);
 
-  /* for a disk file hopefully input will not block */
-  IOChannel *ch = findChannel(fd);
-  //  fprintf(stderr,"before GFT(%d,%d)\n",h,fd); fflush(stderr);
-  if (!FD_ISSET(fd,&isSocket) && ch == NULL) {
-    //    fprintf(stderr,"after GFT(%d), success\n",h); fflush(stderr);
-    return 1;
-  }
+  if (!isSocket(fd))
+    return OK;
+#endif
 
-  //  fprintf(stderr,"after GFT(%d), fail\n",h); fflush(stderr);
-  return ch->status==OK;
-#else
   while(1) {
     fd_set fdset, *readFDs=NULL, *writeFDs=NULL;
     FD_ZERO(&fdset);
-    FD_SET(fd,&fdset);
+    OZ_FD_SET(fd,&fdset);
 
     if (mode==SEL_READ) {
       readFDs = &fdset;
     } else {
       writeFDs = &fdset;
     }
-    int ret = osSelect(fd+1, readFDs, writeFDs, WAIT_NULL);
-    if (ret >= 0 || errno != EINTR) {
+
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
+    int ret = nonBlockSelect(fd+1, readFDs, writeFDs);
+    if (ret >= 0 || ossockerrno() != EINTR) {
       return ret;
     }
   }
-#endif
 }
 
 /* -------------------------------------------------------------------------
@@ -766,14 +796,14 @@ int osFirstSelect()
   tmpFDs[SEL_READ]  = globalFDs[SEL_READ];
   tmpFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
 
-  int numbOfFDs = osSelect(openMax,&tmpFDs[SEL_READ],&tmpFDs[SEL_WRITE], WAIT_NULL);
+  int numbOfFDs = osSelect(&tmpFDs[SEL_READ],&tmpFDs[SEL_WRITE], WAIT_NULL);
 
   if (numbOfFDs < 0) {
-    if (errno == EINTR) {
+    if (ossockerrno() == EINTR) {
       goto loop;
     }
 
-    if (errno != EBADF) {  /* the compiler may have terminated */
+    if (ossockerrno() != EBADF) {  /* the compiler may have terminated */
       ozpwarning("select failed");
     }
     osClearSocketErrors();
@@ -809,10 +839,10 @@ int osCheckIO()
   copyFDs[SEL_READ]  = globalFDs[SEL_READ];
   copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
 
-  int numbOfFDs = osSelect(openMax,&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],WAIT_NULL);
+  int numbOfFDs = osSelect(&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],WAIT_NULL);
   if (numbOfFDs < 0) {
-    if (errno == EINTR) goto loop;
-    if (errno != EBADF) { /* the compiler may have terminated (rs) */
+    if (ossockerrno() == EINTR) goto loop;
+    if (ossockerrno() != EBADF) { /* the compiler may have terminated (rs) */
       ozpwarning("checkIO: select failed");
     }
     osClearSocketErrors();
@@ -858,8 +888,7 @@ void osExit(int status)
 #ifdef WINDOWS
     TerminateProcess((HANDLE)aux->pid,0);
 #else
-    int ret = oskill(aux->pid,SIGTERM);
-    /* ignore return value */
+    (void) oskill(aux->pid,SIGTERM);
 #endif
     aux = aux->next;
   }
@@ -873,26 +902,16 @@ void osExit(int status)
 
 
 
-void registerSocket(int fd)
-{
-  FD_SET(fd,&isSocket);
-}
-
-
 int osread(int fd, void *buf, unsigned int len)
 {
 #ifdef WINDOWS
   IOChannel *ch = lookupChannel(fd);
-  if (ch!=NULL && ch->thrd) {
+  if (ch!=NULL) {
+    Assert(ch->thrd);
     WaitForSingleObject(ch->char_avail, INFINITE);
 
     *(char*)buf = ch->chr;
-    int ret;
-      if (FD_ISSET(fd,&isSocket))
-        ret = recv(fd,((char*)buf)+1,len-1,0);
-      else {
-        ret = lowread(fd,((char*)buf)+1,len-1);
-      }
+    int ret = rawread(fd,((char*)buf)+1,len-1);
     if (ret<0)
       return ret;
     ch->status=NO;
@@ -901,25 +920,26 @@ int osread(int fd, void *buf, unsigned int len)
     return ret+1;
   }
 #endif
-  return lowread(fd, buf, len);
+
+  return rawread(fd, buf, len);
 }
 
 
 /* currently no wrapping for write */
 int oswrite(int fd, void *buf, unsigned int len)
 {
-  if (FD_ISSET(fd,&isSocket))
-    return send(fd, (char *)buf, len, 0);
-  return lowwrite(fd, buf, len);
+  return rawwrite(fd, buf, len);
 }
 
 int osclose(int fd)
 {
 #ifdef WINDOWS
-  if (FD_ISSET(fd,&isSocket))
+  if (isSocket(fd)) {
+    FD_CLR(fd,&socketFDs);
     return closesocket(fd);
+  }
 #endif
-  FD_CLR(fd,&isSocket);
+  FD_CLR(fd,&socketFDs);
   return close(fd);
 }
 
@@ -927,7 +947,7 @@ int osopen(const char *path, int flags, int mode)
 {
   int ret = open(path,flags,mode);
   if (ret >= 0)
-    FD_CLR(ret,&isSocket);
+    FD_CLR(ret,&socketFDs);
   return ret;
 }
 
@@ -935,8 +955,26 @@ int ossocket(int domain, int type, int protocol)
 {
   int ret = socket(domain,type,protocol);
   if (ret >= 0)
-    FD_SET(ret,&isSocket);
+    registerSocket(ret);
   return ret;
+}
+
+int osaccept(int s, struct sockaddr *addr, int *addrlen)
+{
+  int ret = accept(s,addr,addrlen);
+  if (ret >= 0)
+    registerSocket(ret);
+  return ret;
+}
+
+
+int ossockerrno()
+{
+#ifdef WINDOWS
+  return WSAGetLastError();
+#else
+  return errno;
+#endif
 }
 
 void ossleep(int secs)
