@@ -159,7 +159,7 @@ Transport.oza: $(TRANSPORTFUN)
 DictClient/%.ozf: DictClient/%.oz
 	$(COMPILE) -b $(CYG_BUILDDIR)/DictClient/ $(shell $(CYGPATH) "$<") -o $@
 
-DICTCLIENT = Main NetDictionary TkDictionary
+DICTCLIENT = Main NetDictionary TkDictionary GtkDictionary
 DICTCLIENTFUN = $(DICTCLIENT:%=DictClient/%.ozf)
 
 DictClient.oza: $(DICTCLIENTFUN)
