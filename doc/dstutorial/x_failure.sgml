@@ -201,8 +201,8 @@ synchronous <EM>exceptions</EM> on language entities.
 That is, attempting to perform operations
 on entities with faults will
 either block or raise an exception without doing the operation.
-Fault detection can be enabled on each of two levels:
-per site and per thread.
+This fault detection can be enabled either on a per-site
+level or a per-thread level.
 
 <P>The advanced model allows to install or
 deinstall <EM>handlers</EM> and <EM>watchers</EM>
@@ -224,14 +224,15 @@ The following operations are provided to do other
 kinds of fault detection:
 <LIST>
 <ENTRY> <<fun {Fault.defaultEnable FStates}>>
-<ITEM> sets the currently detected default fault states
+<ITEM> sets the site's default for detected fault states
 to <<FStates>>.
-Attempting to perform an operation on an entity that has
-a fault state in the current <<FStates>> will raise an exception.
-Enabled site or thread-level detection for an entity
-will override the default.
-<<FStates>> is a list of fault states that cause exceptions.
-This list can be changed as often as desired.
+Each site has a default that is set independently
+of that of other sites.
+Enabling site or thread-level detection for an entity
+overrides this default.
+Attempting to perform an operation on an entity with
+a fault state in the default <<FStates>> raises an exception.
+The <<FStates>> can be changed as often as desired.
 When the system starts up, the defaults are set up as if
 the call <<{Fault.defaultEnable [tempFail permFail]}>> had been done.
 
@@ -243,27 +244,29 @@ It is exactly the same as doing <<{Fault.defaultEnable nil}>>.
 <ENTRY> <<fun {Fault.enable Entity Level FStates}>>
 <ITEM> is a more targeted
 way to do fault detection.
-It enables fault detection on a given entity at a given
-level for a given set of fault states.
-If one or more of these faults occurs while attempting
+It enables fault detection on a given entity at a given level.
+If a fault in <<FStates>> occurs while attempting
 an operation at the given level,
 then an exception is raised instead of doing the operation.
 The <<Entity>> is a reference to
-a particular object, cell, port, lock, or logic variable.
+any language entity.
+Exceptions are enabled only if the entity is an
+object, cell, port, lock, or logic variable.
 The <<Level>> is <<site>>, <<'thread'(this)>>
 (for the current thread), or <<'thread'(T)>>
 (for an arbitrary thread identifier <<T>>).<NOTE
 FOOT>Since <<thread>> is already used as a keyword in the language,
-it has to be quoted.</NOTE>
+it has to be quoted to make it an atom.</NOTE>
 More information on levels is given below.
 
 <ENTRY> <<fun {Fault.disable Entity Level}>>
 <ITEM> disables
 fault detection on the given entity at the given level.
-If a fault occurs, then the system checks whether any exceptions
+If a fault occurs, then the system does nothing at the
+given level, but checks whether any exceptions
 are enabled at the next higher level.
 This is <EM>not</EM> the same as <<{Fault.enable Entity Level nil}>>,
-which causes the entity to block on all faults.
+which always causes the entity to block at the given level.
 </LIST>
 <P>The function <<Fault.enable>> returns
 <<true>> if and only if the
@@ -273,6 +276,9 @@ The function <<Fault.disable>> returns
 <<true>> if and only if the
 disable was successful, i.e., the entity was already
 enabled for that level.
+The functions <<Fault.defaultEnable>> and
+<<Fault.defaultDisable>> always return <<true>>.
+At its creation, an entity is not enabled at any level.
 All four functions raise a type error exception if their arguments
 do not have the correct type.
 
@@ -295,12 +301,12 @@ the fault.
 The possible elements of <<FS>> are
 currently the following:
 <LIST>
-<ITEM> <<tempFail(info:I)>> or <<permFail(info:I)>>,
+<ITEM> <<tempFail(info:I)>> and <<permFail(info:I)>>,
 where <<I>> is in {<<state>>, <<owner>>}.
 The <<info>> field only exists for
 objects, cells, and locks.
 <ITEM> <<remoteProblem(tempSome)>>, <<remoteProblem(permSome)>>,
-<<remoteProblem(tempAll)>>, or
+<<remoteProblem(tempAll)>>, and
 <<remoteProblem(permAll)>>.
 </LIST>
 
@@ -315,7 +321,9 @@ where <<T>> is what the variable was attempted to be bound with.
 <<cellAccess(Old)>>,
 where <<Old>> is the cell content before the attempted operation
 and <<New>> is the cell content after the attempted operation.
-<ITEM> For locks: <<'lock'>>.
+<ITEM> For locks: <<'lock'>>.<NOTE
+FOOT>Since <<lock>> is already used as a keyword in the language,
+it has to be quoted to make it an atom.</NOTE>
 <ITEM> For ports: <<send(Msg)>>,
 where <<Msg>> is the message attempted to be sent to the port.
 <ITEM> For objects:
@@ -343,14 +351,13 @@ the <<Probe>> operation is not available to users.
 
 <SUBSECTION><TITLE>Levels of fault detection</TITLE>
 
-<P>There are three levels of fault detection,
+<P>There are three levels of fault detection, namely
 default site-based, site-based, and thread-based.
 A more specific level, if it exists,
 overrides a more general level.
-The most general is default site-based,
-which determines what faults raise exceptions
-for all entities,
-if the entity is not enabled at a site or thread level.
+The most general is <EM>default site-based</EM>,
+which determines what exceptions are raised
+if the entity is not enabled at the site or thread level.
 Next is site-based, which detects a fault for a
 specific entity when an operation is tried on one
 particular site.
@@ -363,8 +370,8 @@ operation is attempted in a particular thread.
 be enabled specifically for a given entity.
 The call <<{Fault.enable Entity Level FStates}>> is
 used, where <<Level>> is either <<site>> or
-<<thread(T)>>.
-The thread <<T>> is either <<this>> (for the current thread),
+<<'thread'(T)>>.
+The thread <<T>> is either the atom <<this>> (for the current thread),
 or a thread identifier.
 Any thread's identifier
 can be obtained by executing <<{Thread.this T}>>
@@ -372,51 +379,73 @@ in the thread.
 
 <P>The thread level is the most specific; if it is enabled
 it overrides the two others in its thread.
-The site level, if it is enabled, overrides the global level.
-Finally, if neither a thread nor a site level are
-enabled, then the global level is used.
-It doesn't matter what the actual fault states are;
-the thread level always overrides the site level,
-which always overrides the global level.
+The site level, if it is enabled, overrides the default.
+If neither a thread nor a site level are
+enabled, then the default is used.
+Even if the actual fault state does not give an exception,
+the mere fact that a level is enabled always overrides the
+next higher level.
 
 <P>For example, assume that the cell <<C>>
 is on a site with
-default detection for <<[tempFail permFail]>>
+default detection for <<[tempFail permFail]>>,
 and a thread-specific detection for <<[permFail]>>
 in thread <<T1>>.
 What happens if many threads try to do
-an exchange if cell's actual fault state
-is <<tempFail>> everywhere?
+an exchange if C's actual fault state
+is <<tempFail>>?
 Then thread <<T1>> will block, since it is set up
 to detect only <<permFail>>.
-All other threads will raise the exception <<tempFail>>.
+All other threads will raise the exception <<tempFail>>
+(since it is enabled by default).
 Thread <<T1>> will continue the operation when and
 if the <<tempFail>> state goes away.
 
 <SUBSECTION><TITLE>Levels and sitedness</TITLE>
 
-<P>The act of enabling or installing on <<global>> or <<site>> levels
+<P>The <<Fault>> module has both sited and unsited operations.
+Enabling or setting the default at the site level
 is <EM>sited</EM>.
-(Enabling or installing on the <<thread>> level is sited.)
-In other words, the calls
-<<{Fault.enable E L ...}>> or <<{Fault.install E L ...}>>,
-where <<L>> is either <<global>> or <<site>>,
+This protects the site attempts to remotely change
+its settings.
+Enabling at the thread level is <EM>unsited</EM>.
+This allows fault-tolerant abstractions to be network-transparent,
+i.e., when passed to another site they continue to work.
+
+<P>To be precise, the calls
+<<{Fault.enable E site ...}>> and <<{Fault.install E site ...}>>,
 will only work on the home site of the <<Fault>> module.
 A procedure containing these calls may be passed around
 the network at will, and executed anywhere.
 However, any attempt to execute either of the
 above two calls on another site will raise an exception.
+The calls <<{Fault.enable E thread(T) ...}>>
+and <<{Fault.install E thread(T) ...}>> will work anywhere.
+A procedure containing these calls may be passed around
+the network at will, and will work correctly anywhere.
 
 <SECTION><TITLE>Advanced model</TITLE>
 
-<P>The basic model lets you set up the system to do
-one of two things when an operation is attempted:
-either raise an exception or block (do nothing).
-The advanced model calls a user-defined
-procedure instead of raising an exception.
-This procedure is called a <EM>fault handler</EM>,
+<P>The basic model lets you set up the system to
+raise an exception when an operation is attempted
+on a faulty entity.
+The advanced model extends this to <EM>call a
+user-defined procedure</EM>.
+Furthermore, the advanced model can call
+the procedure <EM>synchronously</EM>,
+i.e., when an operation is attempted,
+and <EM>asynchronously</EM>, i.e.,
+as soon as the fault is known, even
+if no operation is attempted.
+In the synchronous case,
+the procedure is called a <EM>fault handler</EM>,
 or just <EM>handler</EM>.
-When an operation is attempted
+In the asynchronous case,
+the procedure is called <EM>watcher</EM>.
+
+<SUBSECTION><TITLE>Lazy detection with handlers</TITLE>
+
+<P>When an operation is attempted
 on an entity with a problem,
 then a handler call replaces the operation.
 This call is done in the context of the thread
@@ -427,41 +456,49 @@ and <<remoteProblem>>) then the
 handler can just try the operation again.
 
 <P>In an exact analogy to the basic model,
-a fault handler can be installed to be called
+a fault handler can be installed
 on a given entity at a given level
 for a given set of fault states.
 The possible entities, levels, and fault states
-are the same.
+are exactly the same.
 Handlers are installed and deinstalled with the
 following two built-in operations:
 <LIST>
 <ENTRY> <<fun {Fault.install Entity Level FStates HandlerProc}>>
-<ITEM>The function <<Fault.install>> returns <<true>> if and only if the
+<ITEM>installs handler <<HandlerProc>> on <<Entity>> at <<Level>>
+for fault states <<FStates>>.
+If an operation is attempted and there is a fault
+in <<FStates>>, then the operation is replaced by
+a call to <<HandlerProc>>.
+At most one handler can be installed on a given entity
+at a given level.
+<ENTRY> <<fun {Fault.deInstall Entity Level}>>
+<ITEM>deinstalls a previously installed handler from
+<<Entity>> at <<Level>>.
+</LIST>
+<P>The function <<Fault.install>> returns <<true>> if and only if the
 installation was successful, i.e., the entity did not already
 have an installation or an enable for that level.
-<ENTRY> <<fun {Fault.deInstall Entity Level}>>
-<ITEM>The function <<Fault.deInstall>> returns <<true>> if and only if the
+The function <<Fault.deInstall>> returns <<true>> if and only if the
 deinstall was successful, i.e., the entity had a handler installed
 for that level.
-</LIST>
-<P>
 Both functions raise a type error exception if their arguments
 do not have the correct type.
-A handler <<HandlerProc>> is a three-argument
+
+<P>A handler <<HandlerProc>> is a three-argument
 procedure that is called as <<{HandlerProc E FS OP}>>.
 The arguments <<E>>, <<FS>>, <<OP>>,
 are exactly the same as in a distribution exception.
 
-<P>A limitation of the current release is that
-handlers cannot be installed at the <<global>> level.
-A modification of the current release with respect
+<P>A modification of the current release with respect
 to handler semantics is that
 handlers installed on <EM>variables</EM> always retry
 the operation after they return.
 
-<SUBSECTION><TITLE>Eager failure detection</TITLE>
+<SUBSECTION><TITLE>Eager detection with watchers</TITLE>
 
-<P>Fault handlers detect failure when an operation is attempted.
+<P>Fault handlers detect failure synchronously,
+i.e., when an operation is attempted.
 One often wants to be informed earlier.
 The advanced model allows the application to be informed
 asynchronously, that is,
