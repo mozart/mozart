@@ -513,7 +513,7 @@ UpdateStack updateStack;
 inline
 Bool isLocalBoard (Board* b)
 {
-  return b->isPathMark() ? NO : OK;
+  return !b->isPathMark();
 }
 
 /*
@@ -1890,7 +1890,7 @@ ConstTerm *ConstTerm::gcConstTerm()
 {
   GCMETHMSG("ConstTerm::gcConstTerm");
   if (this == NULL) return NULL;
-  CHECKCOLLECTED(type, ConstTerm *);
+  CHECKCOLLECTED(*getGCField(), ConstTerm *);
 
   switch (typeOf()) {
   case Co_Board:

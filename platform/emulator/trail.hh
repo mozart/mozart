@@ -77,7 +77,7 @@ public:
   }
 
   int chunkSize()     { return (tos-1-lastMark)/2; }
-  Bool isEmptyChunk() { return lastMark == tos-1 ? OK : NO; }
+  Bool isEmptyChunk() { return (lastMark == tos-1); }
   virtual void resize(int newSize);
 };
 

@@ -142,7 +142,7 @@ Bool AM::entailment ()
           // First test: no subtrees;
           && trail.isEmptyChunk()
           // second test: is this node stable?
-          ? OK : NO);
+          );
 }
 
 inline
@@ -172,8 +172,7 @@ Bool AM::isLocalUVar(TaggedRef var)
   return (var == currentUVarPrototype ||
           // variables are usually bound
           // in the node where they are created
-          tagged2VarHome(var)->getBoardDeref() == currentBoard )
-    ? OK : NO;
+          tagged2VarHome(var)->getBoardDeref() == currentBoard );
 }
 
 inline
@@ -181,8 +180,7 @@ Bool AM::isLocalSVar(TaggedRef var) {
   Board *home = tagged2SVar(var)->getHome1();
 
   return (home == currentBoard ||
-          home->getBoardDeref() == currentBoard )
-    ? OK : NO;
+          home->getBoardDeref() == currentBoard );
 }
 
 inline
@@ -190,8 +188,7 @@ Bool AM::isLocalCVar(TaggedRef var) {
   Board *home = tagged2CVar(var)->getHome1();
 
   return (home == currentBoard ||
-          home->getBoardDeref() == currentBoard )
-    ? OK : NO;
+          home->getBoardDeref() == currentBoard );
 }
 
 inline
@@ -236,12 +233,14 @@ void AM::pushCall(Board *b, Chunk *def, int arity, RefsArray args)
 {
   currentThread->pushCall(b,def,args,arity);
 }
+
 void AM::pushTask(Board *n,ProgramCounter pc,
-                  RefsArray y,RefsArray g,RefsArray x=0,int i=0)
+                  RefsArray y,RefsArray g,RefsArray x,int i)
 {
   currentThread->pushCont(n,pc,y,g,x,i);
 }
-void AM::pushCFun(Board *n, OZ_CFun f, RefsArray x=0, int i=0)
+
+void AM::pushCFun(Board *n, OZ_CFun f, RefsArray x, int i)
 {
   currentThread->pushCFunCont(n, f, (Suspension *) NULL, x, i);
 }

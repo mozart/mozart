@@ -364,7 +364,7 @@ Bool SolveActor::checkExtSuspList ()
     addSuspension (helpList);
   }
 
-  return ((suspList == NULL) ? OK : NO);
+  return (suspList == NULL);
 }
 
 //  'OZ_CFun' solveActorWaker;

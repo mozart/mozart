@@ -539,7 +539,7 @@ Bool AM::_checkExtSuspension (Suspension *susp)
               error ("no board is found in AM::checkExtSuspension"));
   sb = sb->getSolveBoard ();
 
-  Bool wasFound = (sb == (Board *) NULL) ? NO : OK;
+  Bool wasFound = (sb != (Board *) NULL);
   while (sb != (Board *) NULL) {
     DebugCheck ((sb->isSolve () == NO),
                 error ("no solve board is found in AM::checkExtSuspension"));
