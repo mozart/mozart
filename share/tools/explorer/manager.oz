@@ -62,7 +62,7 @@ in
       end
 
       meth clearDialogs
-	 case @ToClose of nil then true elseof POs then
+	 case @ToClose of nil then skip elseof POs then
 	    {ForAll POs
 	     proc {$ PO}
 		case {IsDet PO} then 
@@ -72,7 +72,7 @@ in
 		      {Procedure.is PO} andthen {Procedure.arity PO}==0
 		   then thread {PO} end
 		   end
-		else true
+		else skip
 		end
 	     end}
 	    ToClose <- nil
@@ -80,7 +80,7 @@ in
       end
 
       meth reset
-	 case @query of !False then true elseof Query then
+	 case @query of !False then skip elseof Query then
 	    <<Manager query(Query @order)>>
 	 end
       end
@@ -90,7 +90,7 @@ in
 	 <<MenuManager normal(explorer([clear postscript reset]))>>
 	 case {@root isFinished($)} then
 	    <<StatusManager finish>>
-	 else true end
+	 else skip end
 	 case CurNode.kind==failed orelse CurNode.kind==blocked then
 	    %% Can only happen if there is a single failed or blocked node
 	    <<MenuManager disable([move([top cur])
@@ -152,7 +152,7 @@ in
       in
 	 <<ToplevelManager configurePointer(drawing)>>
 	 case <<StatusManager getBreakStatus($)>>
-	 of kill then true
+	 of kill then skip
 	 [] break then
 	    {Root hideUndrawn}
 	    {Root layout(_ Scale Font)}
@@ -166,20 +166,20 @@ in
 	       <<ToplevelManager makeDirty(<<StatusManager
 					   getBrokenNodes($)>>)>>
 	       {Root layout(_ Scale Font)}
-	    else true
+	    else skip
 	    end
 	    <<ToplevelManager refreshNumbers>>
 	 end
 	 case {Dictionary.get self.options.drawing scale} then
 	    <<ToplevelManager scaleToFit>>
-	 else true
+	 else skip
 	 end
       end
 
       meth LayoutAfterSearch
 	 case {Dictionary.get self.options.drawing hide} then
 	    {@curNode hideFailed}
-	 else true
+	 else skip
 	 end
 	 <<Manager Layout>>
       end
@@ -221,7 +221,7 @@ in
       end
       
       meth moveFrom(What)
-	 case {@curNode What($)} of !False then true elseof Dest then
+	 case {@curNode What($)} of !False then skip elseof Dest then
 	    <<Manager setCursor(Dest)>>
 	 end
       end
@@ -249,12 +249,12 @@ in
       end
 
       meth stopSearch(Sol Cursor <= False)
-	 case @root==nil then true else
+	 case @root==nil then skip else
 	    TryCursor = case Cursor==False then
 			   case Sol==False then @curNode
 			   else
 			      case @IsBAB then PrevSol <- Sol
-			      else true
+			      else skip
 			      end
 			      Sol
 			   end
@@ -297,7 +297,7 @@ in
       in
 	 case Sol\=False andthen <<StatusManager getBreakStatus($)>>==none then
 	    case @IsBAB then PrevSol <- Sol
-	    else true
+	    else skip
 	    end
 	    case NoSol==1 then
 	       <<StatusManager stop>>
@@ -341,7 +341,7 @@ in
 		    elseof CurNode then CurNode
 		    end
       in
-	 case StatNode==False then true else
+	 case StatNode==False then skip else
 	    Number  = <<Manager getNumber(StatNode $)>>
 	    Handler = {self.statAction get($)}.3
 	    Stat    = {StatNode stat($)}
@@ -372,7 +372,7 @@ in
       meth selInfo(X Y)
 	 Node = <<ToplevelManager findByXY(X Y $)>>
       in
-	 case {Node isHidden($)} then true else
+	 case {Node isHidden($)} then skip else
 	    <<Manager nodesInfo(Node)>>
 	 end
       end
@@ -380,7 +380,7 @@ in
       meth nodesInfo(Node <= False)
 	 RealNode = case Node==False then @curNode else Node end
       in
-	 case RealNode of !False then true elseof CurNode then
+	 case RealNode of !False then skip elseof CurNode then
 	    <<MenuManager busy>>
 	    Action  = {self.infoAction get($)}
 	    Handler = Action.3
@@ -421,7 +421,7 @@ in
 	 CmpNode = @cmpNode
 	 CurNode = @curNode
       in
-	 case CurNode==CmpNode then true else
+	 case CurNode==CmpNode then skip else
 	    <<MenuManager busy>>
 	    CurNumber = <<ToplevelManager getNumber(CurNode $)>>
 	    CmpNumber = <<ToplevelManager getNumber(CmpNode $)>>
@@ -461,14 +461,14 @@ in
 	       curNode <- Mom
 	       <<Manager step>>
 	    end
-	 else true
+	 else skip
 	 end
       end
 
       meth updateAfterOption
 	 case {Dictionary.get self.options.drawing scale} then
 	    <<ToplevelManager scaleToFit>>
-	 else true
+	 else skip
 	 end
 	 {self.status setOrder({Dictionary.get self.options.search order})}
       end
@@ -480,7 +480,7 @@ in
 	 <<Manager idle>>
 	 case @curNode\=False then
 	    <<Manager setCursor(@curNode False)>>
-	 else true
+	 else skip
 	 end
       end
       
@@ -493,14 +493,14 @@ in
 	 <<Manager idle>>
 	 case @curNode\=False then
 	    <<Manager setCursor(@curNode False)>>
-	 else true
+	 else skip
 	 end
       end
       
       meth close
 	 <<UrObject close>>
 	 {self.explorer ManagerClosed}
-	 case @root of !False then true elseof Root then
+	 case @root of !False then skip elseof Root then
 	    {Root close}
 	 end
 	 <<Manager         clearDialogs>>

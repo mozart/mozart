@@ -72,7 +72,7 @@ local
 	    {Status getKill(KillFlag KillId)}
 	    thread
 	       if {Wait UnwrapControl} then {self.manager wake(self KillId)}
-	       [] {Wait KillFlag} then true
+	       [] {Wait KillFlag} then skip
 	       end
 	    end
 	    <<TkNodes.blocked init>>

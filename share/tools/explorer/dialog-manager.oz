@@ -41,7 +41,7 @@ local
 	 proc {Okay}
 	    SizeString={SizeEntry tkReturn(get $)}
 	 in
-	    case {Misc.check SizeString} of !False then true
+	    case {Misc.check SizeString} of !False then skip
 	    elseof Size then
 	       {Dictionary.put O size        SizeString}
 	       {Dictionary.put O width       Size.width}
@@ -113,8 +113,7 @@ local
 	 proc {Okay}
 	    case {Tk.string.toInt {Filter {Update tkReturn(get $)}
 				   Char.isDigit}}
-	    of !False then true
-	    elseof I then
+	    of !False then skip elseof I then
 	       {Dictionary.put O hide   {IsHide tkReturnInt($)}==1}
 	       {Dictionary.put O scale  {IsScale tkReturnInt($)}==1}
 	       {Dictionary.put O update I}
@@ -200,7 +199,7 @@ local
 		  {Dictionary.put O information ID}
 		  {Dictionary.put O order    {OrderVar tkReturnInt($)}==1}
 		  {self close}
-	       else true
+	       else skip
 	       end
 	    end
 
@@ -306,7 +305,7 @@ in
       end
 
       meth postscript
-	 case {self.fileSelector select(file:$)} of !False then true
+	 case {self.fileSelector select(file:$)} of !False then skip
 	 elseof Filename then O=self.options.postscript in
 	    {self.canvas postscript(colormode: {Dictionary.get O color}
 				    rotate:    {Dictionary.get O orientation}

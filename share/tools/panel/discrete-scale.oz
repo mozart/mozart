@@ -28,7 +28,7 @@ local
       end
       
       meth drawTicks(Xs)
-	 case Xs of nil then true
+	 case Xs of nil then skip
 	 [] X|Xr then
 	    X0 = X - ScaleBorder - 2
 	    X1 = X0 + 1

@@ -109,7 +109,7 @@ in
 
       meth DrawTicks(N D)
 	 <<Load tk(crea line 0 D*N LoadWidth D*N stipple:DashLine)>>
-	 case N>0 then <<Load DrawTicks(N-1 D)>> else true end
+	 case N>0 then <<Load DrawTicks(N-1 D)>> else skip end
       end
       
       meth DrawLabel(N D Y)
@@ -119,11 +119,11 @@ in
 		   anchor: e
 		   tags:   self.TextTag)>>
 	 <<Load tk(raise self.TextTag)>>
-	 case N>0 then <<Load DrawLabel(N-1 D Y)>> else true end
+	 case N>0 then <<Load DrawLabel(N-1 D Y)>> else skip end
       end
       
       meth DisplayLoads(Y1s Y2s X1 X2 Cs Ss T)
-	 case Y1s of nil then true
+	 case Y1s of nil then skip
 	 [] Y1|Y1r then
 	    !Y2s = Y2|Y2r
 	    !Cs  = C|Cr
@@ -159,7 +159,7 @@ in
 	 {@LeftTag  tk(delete)}
 	 {@RightTag tk(delete)}
 	 CurX <- 0
-	 case NewLimit==@CurLimit then true else
+	 case NewLimit==@CurLimit then skip else
 	    <<Load ReScale(NewLimit)>>
 	    CurLimit <- NewLimit
 	 end
@@ -185,22 +185,24 @@ in
 	    CurX     <- @CurX - HalfWidth
 	    LeftTag  <- @RightTag
 	    RightTag <- TmpTag
-	    case NeedsScale then true
+	    case NeedsScale then skip
 	    else RightLimit = {GetLimit @RightMaxY} in
 	       case RightLimit < L then
 		  <<Load ReScale(RightLimit)>>
 		  CurLimit  <- RightLimit
-	       else true
+	       else skip
 	       end
 	    end
 	    LeftMaxY  <- @RightMaxY
 	    RightMaxY <- Y
-	 else true end
+	 else skip
+	 end
 	 %% Check whether display needs to be rescaled
 	 case NeedsScale then NewLimit = {GetLimit Y} in
 	    <<Load ReScale(NewLimit)>>
 	    CurLimit <- NewLimit
-	 else true end
+	 else skip
+	 end
 	 case @CurX+S < HalfWidth then LeftMaxY <- {Max @LeftMaxY Y}
 	 else RightMaxY <- {Max @RightMaxY Y}
 	 end 

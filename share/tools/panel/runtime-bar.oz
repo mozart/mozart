@@ -85,7 +85,7 @@ in
       end
       
       meth display(T)
-	 case T==@Saved then true else
+	 case T==@Saved then skip else
 	    C           = @Clear
 	    GcTime      = T.gc   - C.gc
 	    CopyTime    = T.copy - C.copy
