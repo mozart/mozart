@@ -253,7 +253,9 @@ in
       %% local helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       meth GetStack($)
-	 {Reverse {Thread.taskStack self.T MaxStackSize false}}
+	 P = {System.get errors}
+      in
+	 {Reverse {Thread.taskStack self.T P.'thread' false}}
       end
 
       meth RemoveAllFrames
