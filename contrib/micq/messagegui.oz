@@ -26,7 +26,9 @@ functor
    
 import
    Tk
+   Browser(browse:Browse)
    DD(dragAndDrop:DragAndDrop) at 'draganddrop.ozf'
+   OS(system)
 %   Pop(popup:Popup) at 'popup.ozf'
 export
    new:NewMess
@@ -60,6 +62,7 @@ define
    end
 
    proc{Start Arg Type}
+%      {Browse Arg#Type}
       T={New Tk.toplevel tkInit(title:"Message ("#if Arg.user.name\=nil then Arg.user.name else
 							  Arg.user.id end#")")}
       F1={New Tk.frame tkInit(parent:T)}
@@ -79,10 +82,33 @@ define
 	 else
 	    {New Tk.entry tkInit(parent:F1 textvariable:VT state:disabled)}
 	 end
-      TB={New Tk.text tkInit(parent:T width:50 height:10)}
+      TB={New Tk.text tkInit(parent:T width:50 height:10 bg:white wrap:word fg:black insertbackground:black exportselection:true)}
       SY={New Tk.scrollbar tkInit(parent:T width:8 orient:vertical)}
       B1 B2={New Tk.button tkInit(parent:T text:if Type==new then "Cancel!" else "Close Window!" end
 				  action:proc{$} {T tkClose} end bd:1 relief:groove)}
+
+      fun{MySplit In}
+	 case In of nil then nil
+	 elseof &h | &t | &t | &p | &: | &/ | &/ | Ss then Url Rs={List.takeDropWhile Ss Char.isGraph Url} in
+	    http(Url)|{MySplit Rs}
+	 elseof A|As then
+	    A|{MySplit As}
+	 end
+      end
+      
+      fun{MyCollect Xs}
+	 R Rs={List.takeDropWhile Xs fun{$ X} {IsRecord X}==false end R}
+      in
+	 case Rs of http(X)|Ss then
+	    [R]|http(X)|{MyCollect Ss}
+	 elseof nil then
+	    [R]
+	 end
+      end
+
+      fun{FindHttp Xs}
+	 {MyCollect {MySplit Xs}}
+      end
    in
       if Type==new then
 	 proc{GO} Mess={TB tkReturnString(get p(1 0) 'end' $)} in
@@ -123,11 +149,34 @@ define
 		 grid(columnconfigure F1 1 weight:1)
 		 grid(rowconfigure T 5 weight:1)
 		 focus(TB)]}
-      {TB tk(insert p(1 0) Arg.message)}
+
+      if {CondSelect Arg browser false}==true then
+	 {ForAll {FindHttp {VirtualString.toString Arg.message}}
+	  proc{$ X}
+	     if {IsRecord X} andthen {Label X}==http then Tag FI LI in
+		Tag={New Tk.textTag tkInit(parent:TB)}
+		FI={TB tkReturn(index insert $)}
+		{TB tk(insert 'end' "http://"#X.1)}
+		LI={TB tkReturn(index insert $)}
+		{TB tk(tag add Tag FI LI)}
+		{TB tk(tag config Tag underline:true foreground:blue)}
+		{Tag tkBind(event:'<1>'
+			    action:proc{$}
+				      _={OS.system  "netscape -raise -remote 'openURL(http://"#
+					 X.1#", new-window)'"}
+				   end)}
+	     elseif {IsInt X} then
+		{TB tk(insert 'end' {Char.toAtom X})}
+	     else
+		{TB tk(insert 'end' {Flatten X})}
+	     end
+	  end}
+      else
+	 {TB tk(insert p(1 0) Arg.message)}
+      end
       {TB tk(config state:if Type==new then normal else disabled end)}
       if Type==new andthen Arg.message\=nil then {TB tk(see 'end')} end
    end
    proc{NewMess X} {Start X new} end
    proc{ReadMess X} {Start X read} end
 end
-
