@@ -6409,7 +6409,7 @@ extern Bool checkMySite(){
 /**********************************************************************/
 
 OZ_Term getGatePort(Site *sd){
-  int si=0; /* Gates are allways located at possition 0 */
+  int si=0; /* Gates are always located at position 0 */
   if(sd==mySite){
     OwnerEntry* oe=OT->getOwner(si);
     Assert(oe->isPersistent());
