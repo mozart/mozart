@@ -222,9 +222,7 @@ void saveTerm(ByteStream* buf,TaggedRef t) {
   buf->marshalEnd();
   return;
 }
-//
 
-//
 OZ_Return onlyFutures(OZ_Term l) {
   if (oz_isNil(l)) return PROCEED;
   while (oz_isCons(l)) {
@@ -460,12 +458,7 @@ OZ_Return export(OZ_Term t)
     while (!oz_isNil(vars)) {
       OZ_Term t = oz_head(vars);
       DEREF(t,tPtr,_2);
-      if (isSimpleVar(t)) { // mm2 use abstraction
-        tagged2SimpleVar(t)->markExported();
-      } else if (isUVar(t)) {
-        uvar2SimpleVar(tPtr);
-        continue; // redo
-      }
+      oz_getVar(tPtr)->markExported();
       vars = oz_tail(vars);
     }
 

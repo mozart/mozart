@@ -186,13 +186,13 @@ void oz_reduceTrailOnSuspend()
       TaggedRef vv= *refPtr;
       DEREF(vv,vvPtr,_vvTag);
       if (oz_isVariable(vv)) {
-        addSuspAnyVar(vvPtr,thr,NO);  // !!! Makes space *not* unstable !!!
+        oz_var_addSusp(vvPtr,thr,NO);  // !!! Makes space *not* unstable !!!
       }
 
       unBind(refPtr, value);
 
       // value is always global variable, so add always a thread;
-      addSuspAnyVar(refPtr,thr);
+      oz_var_addSusp(refPtr,thr);
 
     } // for
   } // if
@@ -232,11 +232,11 @@ void oz_reduceTrailOnShallow()
      */
     if (refPtr!=ptrOldVal) {
       if (oz_isVariable(oldVal)) {
-        addSuspAnyVar(ptrOldVal,oz_currentThread());
+        oz_var_addSusp(ptrOldVal,oz_currentThread());
       }
     }
 
-    addSuspAnyVar(refPtr,oz_currentThread());
+    oz_var_addSusp(refPtr,oz_currentThread());
   }
   am.trail.popMark();
 }
@@ -326,7 +326,7 @@ void oz_decSolveThreads(Board *bb)
         //
         // ... first - notification board below the failed solve board;
         if (!(sa->isCommitted ()) && oz_isStableSolve (sa)) {
-          oz_newThreadInject(DEFAULT_PRIORITY, bb);
+          oz_newThreadInject(bb);
         }
       } else {
         Assert (sa->getThreads () > 0);

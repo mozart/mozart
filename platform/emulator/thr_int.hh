@@ -103,7 +103,7 @@ Thread * oz_newThreadToplevel(int prio=DEFAULT_PRIORITY)
 }
 
 inline
-Thread * oz_newThreadInject(int prio,Board *bb)
+Thread * oz_newThreadInject(Board *bb,int prio=DEFAULT_PRIORITY)
 {
   Thread *tt = _newThread(prio,bb);
 
@@ -117,9 +117,8 @@ Thread * oz_newThreadInject(int prio,Board *bb)
 
 
 inline
-Thread * oz_newThreadSuspended(int prio=DEFAULT_PRIORITY)
+Thread * oz_newThreadSuspendedInject(Board *bb, int prio=DEFAULT_PRIORITY)
 {
-  Board *bb = oz_currentBoard();
   Thread *th = new Thread(S_RTHREAD,prio,bb,oz_newId());
   th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
@@ -127,6 +126,12 @@ Thread * oz_newThreadSuspended(int prio=DEFAULT_PRIORITY)
   oz_checkDebug(th,bb);
 
   return th;
+}
+
+inline
+Thread * oz_newThreadSuspended(int prio=DEFAULT_PRIORITY)
+{
+  return oz_newThreadSuspendedInject(oz_currentBoard(),prio);
 }
 
 inline

@@ -28,7 +28,7 @@
     (
      'is'    => { in  => ['+value'],
                   out => ['+bool'],
-                  bi  => BIisProcedureB},
+                  bi  => BIisProcedure},
 
      'arity' => { in  => ['+procedure'],
                   out => ['+int'],

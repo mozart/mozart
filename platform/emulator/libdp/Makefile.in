@@ -28,7 +28,6 @@ VPATH           = @srcdir@
 SRCDIR          = @srcdir@
 INCS            = -I. -I$(SRCDIR)/.. -I..
 M4_D=           -DEMUDIR=$(SRCDIR)
-LIBS=           @LIBS@
 
 REALCORESRCS = dpMarshaler.cc port.cc dpDebug.cc network.cc             \
                protocolState.cc dsite.cc perdio.cc state.cc             \
@@ -66,7 +65,7 @@ all:
 pidModule.o: ../modPID-if.cc
 
 ../PID.so: pidModule.o
-        $(DYNLD) $(LDFLAGS) -o $@ pidModule.o $(LIBS)
+        $(DYNLD) -o $@ pidModule.o
 
 ../libPID.a: pidModule.o
         $(AR) -rc $@ pidModule.o && $(RANLIB) $@
@@ -75,7 +74,7 @@ pidModule.o: ../modPID-if.cc
 faultModule.o: ../modFault-if.cc
 
 ../Fault.so: faultModule.o
-        $(DYNLD) $(LDFLAGS) -o $@ faultModule.o $(LIBS)
+        $(DYNLD) -o $@ faultModule.o
 
 ../libFault.a: faultModule.o
         $(AR) -rc $@ faultModule.o && $(RANLIB) $@
@@ -84,14 +83,14 @@ faultModule.o: ../modFault-if.cc
 dpMiscModule.o: ../modDPMisc-if.cc
 
 ../DPMisc.so: dpMiscModule.o
-        $(DYNLD) $(LDFLAGS) -o $@ dpMiscModule.o $(LIBS)
+        $(DYNLD) -o $@ dpMiscModule.o
 
 ../libDPMisc.a: dpMiscModule.o
         $(AR) -rc $@ dpMiscModule.o && $(RANLIB) $@
 
 #
 ../VirtualSite.so: $(VSOBJS)
-        $(DYNLD) $(LDFLAGS) -o $@ $(VSOBJS) $(LIBS)
+        $(DYNLD) -o $@ $(VSOBJS)
 
 ../libVirtualSite.a: $(VSOBJS)
         $(AR) -rc $@ $(VSOBJS) && $(RANLIB) $@

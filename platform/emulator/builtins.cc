@@ -64,13 +64,11 @@
  * Type tests
  ******************************************************************** */
 
-OZ_Return isValueInline(TaggedRef val)
+OZ_BI_define(BIwait,1,0)
 {
-  NONVAR( val, _1);
+  oz_declareNonvarIN(0, val);
   return PROCEED;
-}
-OZ_DECLAREBI_USEINLINEREL1(BIisValue,isValueInline)
-
+} OZ_BI_end
 
 OZ_BI_define(BIwaitOr,2,0)
 {
@@ -86,7 +84,6 @@ OZ_BI_define(BIwaitOr,2,0)
 
   am.addSuspendVarList(aPtr);
   am.addSuspendVarList(bPtr);
-
   return SUSPEND;
 } OZ_BI_end
 
@@ -99,57 +96,37 @@ OZ_BI_define(BIwaitOrF,1,1)
 
   TaggedRef arity=OZ_arityList(a);
   while (!OZ_isNil(arity)) {
-      TaggedRef v=OZ_subtree(a,OZ_head(arity));
-      DEREF(v,vPtr,_);
-      if (!oz_isVariable(v)) {
-          am.emptySuspendVarList();
-          OZ_RETURN(OZ_head(arity));
-      }
-      am.addSuspendVarList(vPtr);
-      arity=OZ_tail(arity);
+    TaggedRef v=OZ_subtree(a,OZ_head(arity));
+    DEREF(v,vPtr,_);
+    if (!oz_isVariable(v)) {
+      am.emptySuspendVarList();
+      OZ_RETURN(OZ_head(arity));
+    }
+    am.addSuspendVarList(vPtr);
+    arity=OZ_tail(arity);
   }
 
   return SUSPEND;
 } OZ_BI_end
 
 
-OZ_Return isLiteralInline(TaggedRef t)
+OZ_BI_define(BIisLiteral, 1,1)
 {
-  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
-  if (isGenOFSVar(term)) {
-    OzOFVariable *ofsvar=tagged2GenOFSVar(term);
-    if (ofsvar->getWidth()>0) return FAILED;
-    return SUSPEND;
-  }
-  return isLiteralTag(tag) ? PROCEED : FAILED;
-}
+  oz_declareNonvarIN(0,term);
+  OZ_RETURN(oz_isLiteral(term) ? oz_true() : oz_false());
+} OZ_BI_end
 
-OZ_DECLAREBOOLFUN1(BIisLiteralB,isLiteralInline)
-
-
-OZ_Return isAtomInline(TaggedRef t)
+OZ_BI_define(BIisAtom, 1,1)
 {
-  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
-  if (isGenOFSVar(term)) {
-    OzOFVariable *ofsvar=tagged2GenOFSVar(term);
-    TaggedRef lbl=ofsvar->getLabel();
-    DEREF(lbl,_1,lblTag);
-    if (isLiteralTag(lblTag) && !oz_isAtom(lbl)) return FAILED;
-    if (ofsvar->getWidth()>0) return FAILED;
-    return SUSPEND;
-  }
-  return oz_isAtom(term) ? PROCEED : FAILED;
-}
+  oz_declareNonvarIN(0,term);
+  OZ_RETURN(oz_isAtom(term) ? oz_true() : oz_false());
+} OZ_BI_end
 
-OZ_DECLAREBOOLFUN1(BIisAtomB,isAtomInline)
-
-OZ_Return isLockInline(TaggedRef t)
+OZ_BI_define(BIisLock, 1,1)
 {
-  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
-  return oz_isLock(term) ? PROCEED : FAILED;
-}
-
-OZ_DECLAREBOOLFUN1(BIisLockB,isLockInline)
+  oz_declareNonvarIN(0,term);
+  OZ_RETURN(oz_isLock(term) ? oz_true() : oz_false());
+} OZ_BI_end
 
 OZ_BI_define(BIisFree, 1,1)
 {
@@ -172,73 +149,41 @@ OZ_BI_define(BIisFuture, 1,1)
 
 OZ_BI_define(BIisDet,1,1)
 {
-  TaggedRef term = OZ_in(0);
-  DEREF(term, _1, _2);
-  if (!oz_isVariable(term)) OZ_RETURN(oz_true());
-  if (oz_isExtVar(term)) OZ_RETURN(oz_getExtVar(term)->isDetV());
+  oz_declareDerefIN(0,var);
+  if (!oz_isVariable(var)) OZ_RETURN(oz_true());
+  if (oz_isExtVar(var)) OZ_RETURN(oz_getExtVar(var)->isDetV());
   OZ_RETURN(oz_false());
 } OZ_BI_end
 
-OZ_Return isNameInline(TaggedRef t)
+OZ_BI_define(BIisName, 1,1)
 {
-  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
-  if (isGenOFSVar(term)) {
-    OzOFVariable *ofsvar=tagged2GenOFSVar(term);
-    TaggedRef lbl=ofsvar->getLabel();
-    Assert(lbl!=makeTaggedNULL());
-    DEREF(lbl,_1,lblTag);
-    if (oz_isAtom(lbl)) return FAILED;
-    if (ofsvar->getWidth()>0) return FAILED;
-    return SUSPEND;
-  }
-  if (!isLiteralTag(tag)) return FAILED;
-  return oz_isAtom(term) ? FAILED: PROCEED;
-}
+  oz_declareNonvarIN(0,term);
+  OZ_RETURN(oz_isName(term) ? oz_true() : oz_false());
+} OZ_BI_end
 
-OZ_DECLAREBOOLFUN1(BIisNameB,isNameInline)
-
-
-OZ_Return isTupleInline(TaggedRef t)
+OZ_BI_define(BIisTuple, 1,1)
 {
-  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
-  if (isGenOFSVar(term)) {
-    return SUSPEND;
-  }
-  return oz_isTuple(term) ? PROCEED : FAILED;
-}
+  oz_declareNonvarIN(0,term);
+  OZ_RETURN(oz_isTuple(term) ? oz_true() : oz_false());
+} OZ_BI_end
 
-OZ_DECLAREBOOLFUN1(BIisTupleB,isTupleInline)
-
-
-OZ_Return isRecordInline(TaggedRef t)
+OZ_BI_define(BIisRecord, 1,1)
 {
-  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
-  if (isGenOFSVar(term)) {
-    return SUSPEND;
-  }
-  return oz_isRecord(term) ? PROCEED : FAILED;
-}
+  oz_declareNonvarIN(0,term);
+  OZ_RETURN(oz_isRecord(term) ? oz_true() : oz_false());
+} OZ_BI_end
 
-OZ_DECLAREBOOLFUN1(BIisRecordB,isRecordInline)
-
-
-OZ_Return isProcedureInline(TaggedRef t)
+OZ_BI_define(BIisProcedure, 1,1)
 {
-  NONVAR( t, term);
-  return oz_isProcedure(term) ? PROCEED : FAILED;
-}
+  oz_declareNonvarIN(0,term);
+  OZ_RETURN(oz_isProcedure(term) ? oz_true() : oz_false());
+} OZ_BI_end
 
-OZ_DECLAREBOOLFUN1(BIisProcedureB,isProcedureInline)
-
-OZ_Return isChunkInline(TaggedRef t)
+OZ_BI_define(BIisChunk, 1,1)
 {
-  SUSPEND_ON_NONKINDED_VAR( t, term, tag );
-  if (isGenOFSVar(term)) {
-    return SUSPEND;
-  }
-  return oz_isChunk(term) ? PROCEED : FAILED;
-}
-OZ_DECLAREBOOLFUN1(BIisChunkB,isChunkInline)
+  oz_declareNonvarIN(0,term);
+  OZ_RETURN(oz_isChunk(term) ? oz_true() : oz_false());
+} OZ_BI_end
 
 OZ_BI_define(BIisExtension, 1, 1)
 {
@@ -257,12 +202,11 @@ OZ_BI_define(BIprocedureArity, 1,1)
   }
 } OZ_BI_end
 
-OZ_Return isCellInline(TaggedRef cell)
+OZ_BI_define(BIisCell, 1,1)
 {
-  NONVAR( cell, term);
-  return oz_isCell(term) ? PROCEED : FAILED;
-}
-OZ_DECLAREBOOLFUN1(BIisCellB,isCellInline)
+  oz_declareNonvarIN(0,term);
+  OZ_RETURN(oz_isCell(term) ? oz_true() : oz_false());
+} OZ_BI_end
 
 // ---------------------------------------------------------------------
 // Spaces
@@ -287,7 +231,7 @@ void oz_solve_inject(TaggedRef var, int prio, TaggedRef proc,
   RefsArray args = allocateRefsArray(1, NO);
   args[0] = var;
 
-  Thread *it = oz_newThreadInject(prio, solveBoard);
+  Thread *it = oz_newThreadInject(solveBoard,prio);
   it->pushCall(proc, args, 1);
 }
 
@@ -673,147 +617,60 @@ OZ_BI_define(BIgetCloneDiff, 1,1) {
 // Tuple
 // ---------------------------------------------------------------------
 
-OZ_Return tupleInline(TaggedRef label, TaggedRef argno, TaggedRef &out)
+OZ_BI_define(BItuple, 2, 1)
 {
-  DEREF(argno,_1,argnoTag);
-  DEREF(label,_2,labelTag);
+  oz_declareNonvarIN(0, label);
+  oz_declareIntIN(1, i);
 
-  if (isSmallIntTag(argnoTag)) {
-    if (isLiteralTag(labelTag)) {
-      int i = smallIntValue(argno);
+  if (!oz_isLiteral(label)) oz_typeError(0, "Literal");
+  if (i < 0) oz_typeError(1, "(non-negative small) Int");
+  if (i == 0) OZ_RETURN(label);
 
-      if (i < 0) {
-        goto typeError1;
-      }
+  SRecord *sr = SRecord::newSRecord(label, i);
 
-      // literals
-      if (i == 0) {
-        out = label;
-        return PROCEED;
-      }
-
-      {
-        SRecord *s = SRecord::newSRecord(label,i);
-
-        for (int j = 0; j < i; j++) {
-          s->setArg(j,am.currentUVarPrototype());
-        }
-
-        out = s->normalize();
-        return PROCEED;
-      }
-    }
-    if (isVariableTag(labelTag)) {
-      return SUSPEND;
-    }
-    goto typeError0;
+  for (int j = 0; j < i; j++) {
+    sr->setArg(j, am.currentUVarPrototype());
   }
-  if (isVariableTag(argnoTag)) {
-    if (isVariableTag(labelTag) || isLiteralTag(labelTag)) {
-      return SUSPEND;
-    }
-    goto typeError0;
-  }
-  goto typeError1;
 
- typeError0:
-  oz_typeError(0,"Literal");
- typeError1:
-  oz_typeError(1,"(non-negative small) Int");
-}
-
-OZ_DECLAREBI_USEINLINEFUN2(BItuple,tupleInline)
-
+  OZ_RETURN(sr->normalize());
+} OZ_BI_end
 
 // ---------------------------------------------------------------------
 // Tuple & Record
 // ---------------------------------------------------------------------
 
-
-OZ_Return labelInline(TaggedRef term, TaggedRef &out)
+OZ_BI_define(BIlabel, 1, 1)
 {
+ oz_declareNonKindedIN(0,rec);
+ if (oz_isCons(rec)) OZ_RETURN(AtomCons);
+ if (oz_isLiteral(rec)) OZ_RETURN(rec);
+ if (oz_isSRecord(rec)) OZ_RETURN(tagged2SRecord(rec)->getLabel());
+ if (isGenOFSVar(rec)) {
+   TaggedRef thelabel=tagged2GenOFSVar(rec)->getLabel();
+   DEREF(thelabel,lPtr,_2);
+   if (oz_isVariable(thelabel)) oz_suspendOnPtr(lPtr);
+   OZ_RETURN(thelabel);
+ }
+ oz_typeError(0,"Record");
+} OZ_BI_end
+
+// mm2: who needs this?
+OZ_BI_define(BIhasLabel, 1, 1)
+{
+  oz_declareDerefIN(0,rec);
   // Wait for term to be a record with determined label:
   // Get the term's label, if it exists
-  DEREF(term,_1,tag);
-  switch (tag) {
-  case LTUPLE:
-    out=AtomCons;
-    return PROCEED;
-  case LITERAL:
-    out=term;
-    return PROCEED;
-  case SRECORD:
-  record:
-    out=tagged2SRecord(term)->getLabel();
-    return PROCEED;
-  case UVAR:
-    // FUT
-    return SUSPEND;
-  case CVAR:
-    switch (tagged2CVar(term)->getType()) {
-    case OZ_VAR_OF:
-      {
-        TaggedRef thelabel=tagged2GenOFSVar(term)->getLabel();
-        DEREF(thelabel,_1,_2);
-        if (oz_isVariable(thelabel)) return SUSPEND;
-        out=thelabel;
-        return PROCEED;
-      }
-    case OZ_VAR_FD:
-    case OZ_VAR_BOOL:
-        oz_typeError(0,"Record");
-    default:
-        return SUSPEND;
+  if (oz_isVariable(rec)) {
+    if (isGenOFSVar(rec)) {
+      TaggedRef thelabel=tagged2GenOFSVar(rec)->getLabel();
+      DEREF(thelabel,lPtr,_2);
+      OZ_RETURN(oz_isVariable(thelabel) ? NameFalse: NameTrue);
     }
-  default:
-    oz_typeError(0,"Record");
+    OZ_RETURN(NameFalse);
   }
-}
-
-OZ_DECLAREBI_USEINLINEFUN1(BIlabel,labelInline)
-
-OZ_Return hasLabelInline(TaggedRef term, TaggedRef &out)
-{
-  // Wait for term to be a record with determined label:
-  // Get the term's label, if it exists
-  DEREF(term,_1,tag);
-  switch (tag) {
-  case LTUPLE:
-    out=NameTrue;
-    return PROCEED;
-  case LITERAL:
-    out=NameTrue;
-    return PROCEED;
-  case SRECORD:
-  record:
-    out=NameTrue;
-    return PROCEED;
-  case UVAR:
-    // FUT
-    out=NameFalse;
-    return PROCEED;
-  case CVAR:
-    switch (tagged2CVar(term)->getType()) {
-    case OZ_VAR_OF:
-      {
-        TaggedRef thelabel=tagged2GenOFSVar(term)->getLabel();
-        DEREF(thelabel,_1,_2);
-        out = oz_isVariable(thelabel) ? NameFalse : NameTrue;
-        return PROCEED;
-      }
-    case OZ_VAR_FD:
-    case OZ_VAR_BOOL:
-      oz_typeError(0,"Record");
-    default:
-      out=NameFalse;
-      return PROCEED;
-    }
-  default:
-    oz_typeError(0,"Record");
-  }
-}
-
-OZ_DECLAREBI_USEINLINEFUN1(BIhasLabel,hasLabelInline)
+  if (oz_isRecord(rec)) OZ_RETURN(NameTrue);
+  oz_typeError(0,"Record");
+} OZ_BI_end
 
 /*
  * NOTE: similar functions are dot, genericSet, uparrow
@@ -953,7 +810,7 @@ raise:
   return oz_raise(E_ERROR,E_KERNEL,".",2,term,fea);
 }
 
-
+// extern
 OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 {
   return genericDot(term,fea,&out,TRUE);
@@ -966,7 +823,7 @@ OZ_Return hasFeatureInline(TaggedRef term, TaggedRef fea)
   return genericDot(term,fea,0,FALSE);
 }
 
-OZ_BI_define(BIhasFeatureB,2,1)
+OZ_BI_define(BIhasFeature,2,1)
 {
   OZ_Return r = hasFeatureInline(OZ_in(0),OZ_in(1));
   switch (r) {
@@ -977,45 +834,32 @@ OZ_BI_define(BIhasFeatureB,2,1)
   }
 } OZ_BI_end
 
-OZ_Return hasFeatureBInline(TaggedRef val1, TaggedRef val2, TaggedRef &out)
-{
-  OZ_Return r = hasFeatureInline(val1,val2);
-  switch (r) {
-  case PROCEED: out=NameTrue; return PROCEED;
-  case FAILED : out=NameFalse; return PROCEED;
-  default: return r;
-  }
-}
-
+/*
+ * fun {matchDefault Term Attr Defau}
+ *    if X in Term.Attr = X then X else Defau fi
+ * end
+ */
 inline
 OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 {
   return genericDot(term,fea,&out,FALSE);
 }
 
-/*
- * fun {matchDefault Term Attr Defau}
- *    if X in Term.Attr = X then X else Defau fi
- * end
- */
-
-OZ_Return matchDefaultInline(TaggedRef term, TaggedRef attr, TaggedRef defau,
-                             TaggedRef &out)
+OZ_BI_define(BImatchDefault,3,1)
 {
-  switch(subtreeInline(term,attr,out)) {
-  case PROCEED:
-    return PROCEED;
-  case SUSPEND:
-    return SUSPEND;
-  case FAILED:
-  default:
-    out = defau;
-    return PROCEED;
+  OZ_Term aux=0;
+  oz_declareIN(0,rec);
+  oz_declareIN(1,fea);
+  OZ_Return ret=subtreeInline(rec,fea,aux);
+  if (ret==SUSPEND) {
+    oz_suspendOn2(rec,fea);
+  } else if (ret==PROCEED) {
+    OZ_RETURN(aux);
+  } else {
+    oz_declareIN(2,out);
+    OZ_RETURN(out);
   }
-}
-
-OZ_DECLAREBI_USEINLINEFUN3(BImatchDefault,matchDefaultInline)
-
+} OZ_BI_end
 
 OZ_Return widthInline(TaggedRef term, TaggedRef &out)
 {
@@ -1060,149 +904,79 @@ OZ_DECLAREBI_USEINLINEFUN1(BIwidth,widthInline)
 // Unit
 // ---------------------------------------------------------------------
 
-OZ_Return isUnitInline(TaggedRef t)
+OZ_BI_define(BIisUnit, 1,1)
 {
-  SUSPEND_ON_NONKINDED_VAR( t, term, tag);
-  if (isGenOFSVar(term)) {
-    OzOFVariable *ofsvar=tagged2GenOFSVar(term);
-    if (ofsvar->getWidth()>0) return FAILED;
-    TaggedRef lbl=ofsvar->getLabel();
-    DEREF(lbl,_1,lblTag);
-    if (isLiteralTag(lblTag)) {
-      if (oz_isAtom(lbl)) {
-        if (literalEq(term,NameUnit))
-          return SUSPEND;
-        else
-          return FAILED;
-      } else { // isName
-        return FAILED;
-      }
-    }
-    return SUSPEND;
-  }
-
-  if (oz_isLiteral(term) && literalEq(term,NameUnit))
-    return PROCEED;
-  else
-    return FAILED;
-}
-
-OZ_DECLAREBOOLFUN1(BIisUnitB,isUnitInline)
+  oz_declareNonvarIN(0,term);
+  OZ_RETURN(oz_isLiteral(term) && literalEq(term,NameUnit)
+            ? oz_true() : oz_false());
+} OZ_BI_end
 
 // ---------------------------------------------------------------------
 // Bool things
 // ---------------------------------------------------------------------
 
-OZ_Return isBoolInline(TaggedRef t)
+OZ_BI_define(BIisBool, 1, 1)
 {
-  SUSPEND_ON_NONKINDED_VAR(t, term, tag);
-  if (isGenOFSVar(term)) {
-    OzOFVariable *ofsvar=tagged2GenOFSVar(term);
-    if (ofsvar->getWidth()>0) return FAILED;
-    TaggedRef lbl=ofsvar->getLabel();
-    DEREF(lbl,_1,lblTag);
-    if (isLiteralTag(lblTag)) {
-      if (oz_isAtom(lbl)) {
-        if (literalEq(term,NameTrue) ||
-            literalEq(term,NameFalse))
-          return SUSPEND;
-        else
-          return FAILED;
-      } else { // isName
-        return FAILED;
-      }
-    }
-    return SUSPEND;
-  }
-  return (oz_isLiteral(term) &&
-          (literalEq(term,NameTrue) || literalEq(term,NameFalse)))
-    ? PROCEED : FAILED;
-}
+  oz_declareNonvarIN(0,term);
+  OZ_RETURN(oz_isLiteral(term) &&
+            (literalEq(term,NameTrue) || literalEq(term,NameFalse))
+            ? oz_true() : oz_false());
+} OZ_BI_end
 
-OZ_DECLAREBOOLFUN1(BIisBoolB,isBoolInline)
-
-OZ_Return notInline(TaggedRef A, TaggedRef &out)
+OZ_BI_define(BInot, 1, 1)
 {
-  NONVAR(A,term);
+  oz_declareNonvarIN(0,term);
 
   if (literalEq(term,NameTrue)) {
-    out = NameFalse;
-    return PROCEED;
-  } else {
-    if (literalEq(term,NameFalse)) {
-      out = NameTrue;
-      return PROCEED;
-    }
+    OZ_RETURN(NameFalse);
+  } else if (literalEq(term,NameFalse)) {
+    OZ_RETURN(NameTrue);
   }
 
   oz_typeError(0,"Bool");
-}
+} OZ_BI_end
 
-OZ_DECLAREBI_USEINLINEFUN1(BInot,notInline)
-
-
-OZ_Return andInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+OZ_BI_define(BIand, 2, 1)
+{
+  oz_declareNonvarIN(0,A);
+  oz_declareNonvarIN(1,B);
 
   if (literalEq(A,NameTrue)) {
-    if (oz_isVariable(B)) {
-      return SUSPEND;
-    } else if (literalEq(B,NameTrue) || literalEq(B,NameFalse)) {
-      out = B;
-      return PROCEED;
+    if (literalEq(B,NameTrue) || literalEq(B,NameFalse)) {
+      OZ_RETURN(B);
     } else {
       oz_typeError(1,"Bool");
     }
   } else if (literalEq(A,NameFalse)) {
-    if (oz_isVariable(B)) {
-      return SUSPEND;
-    } else if (literalEq(B,NameTrue) || literalEq(B,NameFalse)) {
-      out = NameFalse;
-      return PROCEED;
+    if (literalEq(B,NameTrue) || literalEq(B,NameFalse)) {
+      OZ_RETURN(NameFalse);
     } else {
       oz_typeError(1,"Bool");
     }
-  } else if (oz_isVariable(A)) {
-    return SUSPEND;
-  } else {
-    oz_typeError(0,"Bool");
   }
-}
+  oz_typeError(0,"Bool");
+} OZ_BI_end
 
-OZ_DECLAREBI_USEINLINEFUN2(BIand,andInline)
-
-
-OZ_Return orInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+OZ_BI_define(BIor, 2, 1)
+{
+  oz_declareNonvarIN(0,A);
+  oz_declareNonvarIN(1,B);
 
   if (literalEq(A,NameTrue)) {
-    if (oz_isVariable(B)) {
-      return SUSPEND;
-    } else if (literalEq(B,NameTrue) || literalEq(B,NameFalse)) {
-      out = NameTrue;
-      return PROCEED;
+    if (literalEq(B,NameTrue) || literalEq(B,NameFalse)) {
+      OZ_RETURN(NameTrue);
     } else {
       oz_typeError(1,"Bool");
     }
   } else if (literalEq(A,NameFalse)) {
-    if (oz_isVariable(B)) {
-      return SUSPEND;
-    } else if (literalEq(B,NameTrue) || literalEq(B,NameFalse)) {
-      out = B;
-      return PROCEED;
+    if (literalEq(B,NameTrue) || literalEq(B,NameFalse)) {
+      OZ_RETURN(B);
     } else {
       oz_typeError(1,"Bool");
     }
-  } else if (oz_isVariable(A)) {
-    return SUSPEND;
-  } else {
-    oz_typeError(0,"Bool");
   }
-}
-
-OZ_DECLAREBI_USEINLINEFUN2(BIor,orInline)
+  oz_typeError(0,"Bool");
+} OZ_BI_end
 
 
 
@@ -1210,20 +984,14 @@ OZ_DECLAREBI_USEINLINEFUN2(BIor,orInline)
 // Atom
 // ---------------------------------------------------------------------
 
-OZ_Return atomToStringInline(TaggedRef t, TaggedRef &out)
+OZ_BI_define(BIatomToString, 1, 1)
 {
-  DEREF(t,_1,_2);
-  if (oz_isVariable(t)) return SUSPEND;
+  oz_declareNonvarIN(0,t);
 
-  if (!oz_isAtom(t)) {
-    oz_typeError(-1,"atom");
-  }
+  if (!oz_isAtom(t)) oz_typeError(0,"atom");
 
-  out = OZ_string(tagged2Literal(t)->getPrintName());
-  return PROCEED;
-}
-OZ_DECLAREBI_USEINLINEFUN1(BIatomToString,atomToStringInline)
-
+  OZ_RETURN(OZ_string(tagged2Literal(t)->getPrintName()));
+} OZ_BI_end
 
 OZ_BI_define(BIstringToAtom,1,1)
 {
@@ -1713,16 +1481,11 @@ OZ_BI_define(BInewUniqueName,1,1)
 // term type
 // ---------------------------------------------------------------------
 
-OZ_Return BItermTypeInline(TaggedRef term, TaggedRef &out)
+OZ_BI_define(BItermType,1,1)
 {
-  out = OZ_termType(term);
-  if (out == AtomVariable) {
-    return SUSPEND;
-  }
-  return PROCEED;
-}
-
-OZ_DECLAREBI_USEINLINEFUN1(BItermType,BItermTypeInline)
+  oz_declareNonvarIN(0,term);
+  OZ_RETURN(OZ_termType(term));
+} OZ_BI_end
 
 OZ_BI_define(BIstatus,1,1)
 {
@@ -2009,156 +1772,51 @@ OZ_BI_define(BIcharType,1,1) {
  ******************************************************************** */
 
 
-OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
+OZ_BI_define(BIadjoin,2,1)
 {
-  DEREF(t0,_0,tag0);
-  DEREF(t1,_1,tag1);
+  oz_declareNonvarIN(0,t0);
+  oz_declareNonvarIN(1,t1);
 
-  switch (tag0) {
-  case LITERAL:
-    switch (tag1) {
-    case SRECORD:
-    case LITERAL:
-    case LTUPLE:
-      out = t1;
-      return PROCEED;
-    case UVAR:
-      // FUT
-      return SUSPEND;
-    case CVAR:
-      switch (tagged2CVar(t1)->getType()) {
-      case OZ_VAR_FD:
-      case OZ_VAR_BOOL:
-          oz_typeError(1,"Record");
-      default:
-          return SUSPEND;
-      }
-    default:
-      oz_typeError(1,"Record");
-    }
-  case LTUPLE:
-  case SRECORD:
-    {
-      SRecord *rec= makeRecord(t0);
-      switch (tag1) {
-      case LITERAL:
-        {
-          SRecord *newrec = SRecord::newSRecord(rec);
-          newrec->setLabelForAdjoinOpt(t1);
-          out = newrec->normalize();
-          return PROCEED;
-        }
-      case SRECORD:
-      case LTUPLE:
-        {
-          out = oz_adjoin(rec,makeRecord(t1));
-          return PROCEED;
-        }
-      case UVAR:
-        // FUT
-        return SUSPEND;
-      case CVAR:
-        switch (tagged2CVar(t1)->getType()) {
-        case OZ_VAR_FD:
-        case OZ_VAR_BOOL:
-            oz_typeError(1,"Record");
-        default:
-            return SUSPEND;
-        }
-      default:
-        oz_typeError(1,"Record");
-      }
-    }
-  case UVAR:
-    // FUT
-  case CVAR:
-    if (tag0==CVAR) {
-        switch (tagged2CVar(t0)->getType()) {
-        case OZ_VAR_FD:
-        case OZ_VAR_BOOL:
-          oz_typeError(0,"Record");
-        default:
-          break;
-        }
-    }
-    switch (tag1) {
-    case UVAR:
-      // FUT
-    case SRECORD:
-    case LTUPLE:
-    case LITERAL:
-      return SUSPEND;
-    case CVAR:
-      switch (tagged2CVar(t1)->getType()) {
-      case OZ_VAR_FD:
-      case OZ_VAR_BOOL:
-          oz_typeError(1,"Record");
-      default:
-        return SUSPEND;
-      }
-    default:
-      oz_typeError(1,"Record");
-    }
-  default:
-    oz_typeError(0,"Record");
+  if (oz_isLiteral(t0)) {
+    if (oz_isRecord(t1)) OZ_RETURN(t1);
+    oz_typeError(1,"Record");
   }
-}
-
-OZ_DECLAREBI_USEINLINEFUN2(BIadjoin,BIadjoinInline)
+  if (oz_isRecord(t0)) {
+    SRecord *rec= makeRecord(t0);
+    if (oz_isLiteral(t1)) {
+      SRecord *newrec = SRecord::newSRecord(rec);
+      newrec->setLabelForAdjoinOpt(t1);
+      OZ_RETURN(newrec->normalize());
+    }
+    if (oz_isRecord(t1)) {
+      OZ_RETURN(oz_adjoin(rec,makeRecord(t1)));
+    }
+    oz_typeError(1,"Record");
+  }
+  oz_typeError(0,"Record");
+} OZ_BI_end
 
 OZ_BI_define(BIadjoinAt,3,1)
 {
-  OZ_Term rec = OZ_in(0);
-  OZ_Term fea = OZ_in(1);
-  OZ_Term value = OZ_in(2);
+  oz_declareNonvarIN(0,rec);
+  oz_declareNonvarIN(1,fea);
+  oz_declareIN(2,value);
 
-  DEREF(rec,recPtr,recTag);
-  DEREF(fea,feaPtr,feaTag);
+  if (!oz_isFeature(fea)) oz_typeError(1,"Feature");
 
-  switch (recTag) {
-  case LITERAL:
-    if (oz_isFeature(fea)) {
-      SRecord *newrec
-        = SRecord::newSRecord(rec,aritytable.find(oz_cons(fea,oz_nil())));
-      newrec->setArg(0,value);
-      OZ_RETURN(makeTaggedSRecord(newrec));
-    }
-    if (oz_isVariable(fea)) {
-      if (isGenOFSVar(fea) && tagged2GenOFSVar(fea)->getWidth()>0) {
-        oz_typeError(1,"Feature");
-      }
-      oz_suspendOnPtr(feaPtr);
-    }
-    oz_typeError(1,"Feature");
-
-  case LTUPLE:
-  case SRECORD:
-    {
-      if (isVariableTag(feaTag)) {
-        oz_suspendOnPtr(feaPtr);
-      }
-      if (!oz_isFeature(fea)) {
-        oz_typeError(1,"Feature");
-      }
-      OZ_RETURN(oz_adjoinAt(makeRecord(rec),fea,value));
-    }
-
-  case UVAR:
-    // FUT
-  case CVAR:
-    if (oz_isKinded(rec) && !isGenOFSVar(rec)) {
-      oz_typeError(0,"Record");
-    }
-    if (isGenOFSVar(fea) && tagged2GenOFSVar(fea)->getWidth()>0) {
-      oz_typeError(1,"Feature");
-    }
-    oz_suspendOnPtr(recPtr);
-
-  default:
-    oz_typeError(0,"Record");
+  if (oz_isLiteral(rec)) {
+    SRecord *newrec
+      = SRecord::newSRecord(rec,aritytable.find(oz_cons(fea,oz_nil())));
+    newrec->setArg(0,value);
+    OZ_RETURN(makeTaggedSRecord(newrec));
   }
+  if (oz_isRecord(rec)) {
+    OZ_RETURN(oz_adjoinAt(makeRecord(rec),fea,value));
+  }
+  oz_typeError(0,"Record");
 } OZ_BI_end
 
+static
 TaggedRef getArityFromPairList(TaggedRef list)
 {
   TaggedRef arity;
@@ -2203,7 +1861,7 @@ loop:
 /* common subroutine for builtins adjoinList and record:
    recordFlag=OK: 'adjoinList' allows records as first arg
               N0: 'makeRecord' only allows literals */
-
+static
 OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
                            Bool recordFlag)
 {
@@ -2307,6 +1965,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   }
 }
 
+// extern
 OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
                      Bool recordFlag)
 {
@@ -3898,7 +3557,7 @@ OZ_BI_define(BIForeignPointerToInt,1,1)
 
 OZ_BI_define(BIshutdown,1,0)
 {
-  OZ_declareIntIN(0,status);
+  oz_declareIntIN(0,status);
   am.exitOz(status);
   return(PROCEED); /* not reached but anyway */
 } OZ_BI_end

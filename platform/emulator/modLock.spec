@@ -28,7 +28,7 @@
     (
      'is'       => { in  => ['+value'],
                      out => ['+bool'],
-                     bi  => BIisLockB},
+                     bi  => BIisLock},
 
      'new'      => { in  => [],
                      out => ['+lock'],

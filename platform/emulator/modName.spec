@@ -28,7 +28,7 @@
     (
      'is'               => { in  => ['+value'],
                              out => ['+bool'],
-                             bi  => BIisNameB},
+                             bi  => BIisName},
 
      'new'              => { in  => [],
                              out => ['+name'],

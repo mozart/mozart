@@ -82,7 +82,7 @@ OZ_Boolean OZ_Stream::leave(void)
   OZ_Term t = tail;
   DEREF(t, tailptr, tailtag);
 
-  addSuspAnyVar(tailptr, Propagator::getRunningPropagator());
+  oz_var_addSusp(tailptr, Propagator::getRunningPropagator());
   return TRUE;
 }
 

@@ -32,7 +32,11 @@
 
      'wait'             => { in  => ['+value'],
                              out => [],
-                             bi  => BIisValue},
+                             bi  => BIwait},
+
+     'waitQuiet'        => { in  => ['+value'],
+                             out => [],
+                             bi  => BIwaitQuiet},
 
      'waitOr'           => { in  => ['value','value'],
                              out => [],
@@ -64,7 +68,7 @@
 
      'hasFeature'       => { in  => ['*recordCOrChunk','+feature'],
                              out => ['+bool'],
-                             bi  => BIhasFeatureB},
+                             bi  => BIhasFeature},
 
      'condSelect'       => { in  => ['*recordCOrChunk','+feature','value'],
                              out => ['value'],
@@ -73,6 +77,10 @@
      'byNeed'           => { in  => ['value'],
                              out => ['value'],
                              BI  => BIbyNeed},
+
+     'byNeedDot'        => { in  => ['value','+feature'],
+                             out => ['value'],
+                             BI  => BIbyNeedDot},
 
      'future'           => { in  => ['value'],
                              out => ['value'],

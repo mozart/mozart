@@ -200,6 +200,10 @@ extern int debugRef;
 #define DebugRef(s)
 #endif
 
+#ifdef DEBUG_DET
+#define NO_MACROS
+#endif
+
 #ifdef NO_MACROS
 inline
 TaggedRef makeTaggedRef(TaggedRef *s)

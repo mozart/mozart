@@ -30,7 +30,7 @@
     (
      'is'       => { in  => ['+value'],
                      out => ['+bool'],
-                     bi  => BIisBoolB},
+                     bi  => BIisBool},
 
      'not'      => { in  => ['+bool'],
                      out => ['+bool'],

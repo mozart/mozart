@@ -382,6 +382,14 @@ public:
     return tmp;
   }
 
+  TaggedRef getSuspendVarList(void) {
+    return _suspendVarList;
+  }
+
+  void putSuspendVarList(TaggedRef slv) {
+    _suspendVarList=slv;
+  }
+
   int isEmptySuspendVarList(void) { return OZ_eq(_suspendVarList,oz_nil()); }
 
   void addSuspendVarList(TaggedRef t)
@@ -394,7 +402,7 @@ public:
   {
     addSuspendVarList(makeTaggedRef(t));
   }
-  void suspendOnVarList(Thread *thr);
+  Bool suspendOnVarList(Thread *thr);
   void prepareCall(TaggedRef pred, TaggedRef arg0=0, TaggedRef arg1=0,
                    TaggedRef arg2=0, TaggedRef arg3=0, TaggedRef arg4=0);
 
@@ -540,5 +548,9 @@ inline
 void oz_checkDebug(Thread *tt, Board *bb) {
   if (am.debugmode() && oz_isRootBoard(bb)) oz_checkDebugOutline(tt);
 }
+
+/* -----------------------------------------------------------------------
+ * Suspensions
+ * ----------------------------------------------------------------------- */
 
 #endif

@@ -30,7 +30,7 @@
     (
      'is'               => { in  => ['+value'],
                              out => ['+bool'],
-                             bi  => BIisCellB},
+                             bi  => BIisCell},
 
      'new'              => { in  => ['value'],
                              out => ['+cell'],

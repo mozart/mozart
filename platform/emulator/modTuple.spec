@@ -28,7 +28,7 @@
     (
      'is'               => { in  => ['+value'],
                              out => ['+bool'],
-                             bi  => BIisTupleB},
+                             bi  => BIisTuple},
 
      'make'             => { in  => ['+literal','+int'],
                              out => ['+tuple'],

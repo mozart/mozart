@@ -110,13 +110,14 @@ void sendRequested(BorrowEntry *be){
   SendTo(na->site,bs,M_REQUESTED,na->site,na->index);
 }
 
-void ProxyVar::addSuspV(TaggedRef *, Suspension susp, int unstable)
+Bool ProxyVar::addSuspV(TaggedRef *, Suspension susp, int unstable)
 {
   if (!suspList) {
     BorrowEntry *be=BT->getBorrow(getIndex());
     sendRequested(be);
   }
   addSuspSVar(susp, unstable);
+  return FALSE;
 }
 
 void ProxyVar::gcRecurseV(void)
@@ -185,12 +186,14 @@ void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be)
 
 /* --- ManagerVar --- */
 
-void ManagerVar::addSuspV(TaggedRef *vPtr, Suspension susp, int unstable)
+Bool ManagerVar::addSuspV(TaggedRef *vPtr, Suspension susp, int unstable)
 {
   if (origVar->getType()==OZ_VAR_FUTURE) {
-    ((Future *)origVar)->kick(vPtr);
+    if (((Future *)origVar)->kick(vPtr))
+      return TRUE;
   }
   addSuspSVar(susp, unstable);
+  return FALSE;
 }
 
 void ManagerVar::gcRecurseV(void)
@@ -356,8 +359,7 @@ Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs) {
     int i = ownerTable->newOwner(oe);
     PD((GLOBALIZING,"globalize var index:%d",i));
     oe->mkVar(makeTaggedRef(tPtr));
-    ManagerVar *mv =
-      new ManagerVar(isUVar(var)?uvar2SimpleVar(tPtr):tagged2CVar(var),i);
+    ManagerVar *mv = new ManagerVar(oz_getVar(tPtr),i);
     if (isCVar(var)) {
       OzVariable *cv=tagged2CVar(var);
       mv->setSuspList(cv->unlinkSuspList());
