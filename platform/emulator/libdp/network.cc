@@ -2,6 +2,7 @@
  *  Authors:
  *    Per Brand (perbrand@sics.se)
  *    Erik Klintskog (erik@sics.se)
+ *    Anna Neiderud (annan@sics.se)
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
