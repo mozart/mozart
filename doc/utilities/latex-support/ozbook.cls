@@ -12,8 +12,25 @@
 \RequirePackage{times}
 
 % Declaration of Options
-\newif\if@draftmode \@draftmodefalse
-\DeclareOption{draft}{\@draftmodetrue}
+\newif\if@coverPage \@coverPagetrue
+\newif\if@infoPage  \@infoPagetrue
+\newif\if@titlePage \@titlePagetrue
+\newif\if@abstractPage \@abstractPagetrue
+\newif\if@tableofcontents \@tableofcontentstrue
+
+\newcommand{\oz@draft}{%
+  \@coverPagefalse
+  \@infoPagefalse
+  \@abstractPagefalse
+  \@titlePagetrue
+  \@tableofcontentstrue}%
+\DeclareOption{draft}{\oz@draft}
+\DeclareOption{cover}{\@coverPagetrue}
+\DeclareOption{nocover}{\@coverPagefalse}
+\DeclareOption{info}{\@infoPagetrue}
+\DeclareOption{noinfo}{\@infoPagefalse}
+\DeclareOption{abstract}{\@abstractPagetrue}
+\DeclareOption{noabstract}{\@abstractPagefalse}
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{book}}
 
 % Execution of Options
@@ -284,20 +301,8 @@
   \renewcommand{\@oddfoot}{}%
   \renewcommand{\@evenfoot}{}}
 
-\AtBeginDocument{\ozfrontmatter}
-\if@draftmode
-\newcommand{\ozfrontmatter}{%
-  \pagestyle{empty}%
-  \thispagestyle{empty}%
- {\let\ps@plain\ps@empty
-  \tableofcontents\cleardoublepage}%
-  \pagestyle{oz}%
-  \thispagestyle{oz}%
-  \setcounter{page}{1}%
-  \setcounter{footnote}{0}%
-}
-\else
-\newcommand{\ozfrontmatter}{%
+\newcommand{\front@one}{%
+\if@coverPage
   \begin{titlepage}%
     \thispagestyle{oztitlepage}%
     \hbox{}\vfill
@@ -330,7 +335,12 @@
       \end{tabular*}%
     \end{maxipage}%
   \end{titlepage}%
-  \clearpage
+\fi
+}
+
+\newcommand{\front@two}{%
+\if@infoPage
+\clearpage
 \pagestyle{empty}%
 \thispagestyle{empty}%
 \begin{maxipage}%
@@ -397,32 +407,60 @@
    republishing for any other purpose shall require a licence with
    payment of fee to Deutsches Forschungszentrum f{\"u}r K{\"u}nstliche
    Intelligenz.}%
+\end{maxipage}%
+\fi
+}
+
+\newcommand{\front@three}{%
+\if@titlePage
 \clearpage
-\vspace*{\fill}
-\begin{center}
+\thispagestyle{empty}%
+\begin{maxipage}%
+\vspace*{\fill}%
+\begin{center}%
   {\LARGE\@title\par}%
   \vspace{3em}%
   {\large\begin{tabular}[t]{c}\@author\end{tabular}\par}%
   \vspace{1.5em}%
   {\large\@date\par}%
-\end{center}
+\end{center}%
 \@thanks
 \vspace*{\fill}%
+\end{maxipage}%
+\fi
+}
+
+\newcommand{\front@four}{%
+\if@abstractPage
 \ifx\@abstract\long@empty\else
   \clearpage
-  \begin{center}\textbf{Abstract}\end{center}\@abstract
+  \thispagestyle{empty}%
+  \begin{maxipage}%
+    \begin{center}\textbf{Abstract}\end{center}\@abstract
+  \end{maxipage}%
 \fi
-\end{maxipage}%
+\fi
+}
+
+\newcommand{\front@five}{%
+\if@tableofcontents
 \cleardoublepage
+\pagestyle{empty}%
+  \thispagestyle{empty}%
 {\let\ps@plain\ps@empty
  \tableofcontents
  \cleardoublepage}%
+\fi
+}
+
+\AtBeginDocument{\ozfrontmatter}
+\newcommand{\ozfrontmatter}{%
+\front@one\front@two\front@three\front@four\front@five
 \pagestyle{oz}%
 \thispagestyle{oz}%
 \setcounter{page}{1}%
 \setcounter{footnote}{0}%
 }
-\fi
 
 \newcommand{\@ozversion}{%
   \@ozwarning{Missing \string\ozversion}??OZ VERSION??}
@@ -544,7 +582,8 @@ referenced is defined on this page.}
   ../references,/usr/share/gs/soft/query/data/bibtex-here/fbps}
 \newcommand{\doreferences}{%
   \clearpage
-  \addcontentsline{toc}{chapter}{References}%
+  \addcontentsline{toc}{chapter}{\bibname}%
+  \chaptermark{\MakeUppercase\bibname}%
   \let\em\sl
   \bibliographystyle{plain}%
   \bibliography{\bibliographies}}
