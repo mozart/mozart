@@ -268,6 +268,7 @@ define
 	 Common: unit BodyCommon: unit
 	 ProgLang: unit
 	 % front matter:
+	 TopLink: unit
 	 TopTitle: unit
 	 MyAuthorDB: unit
 	 Authors: unit
@@ -329,6 +330,7 @@ define
 	    if {@Reporter hasSeenError($)} then skip
 	    else N in
 	       FontifyMode <- Mode
+	       TopLink <- Args.'top'
 	       StyleSheet <- {Property.get 'ozdoc.stylesheet'}
 	       MyFontifier <- {New Fontifier.'class' init(@Meta)}
 	       OutputDirectory <- Args.'out'
@@ -675,6 +677,10 @@ define
 		  ToWrite <- ''#Node#'abstract.html'|@ToWrite
 	       end
 	       'div'(COMMON: @Common
+		     case @TopLink of unit then EMPTY
+		     elseof URL then
+			p('class': [margin] a(href: URL PCDATA('Top')))
+		     end
 		     h1(align: center 'class': [title] @TopTitle)
 		     HTML
 		     case @Authors of nil then EMPTY
