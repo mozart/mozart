@@ -5,8 +5,8 @@
 %%%  Last modified: $Date$ by $Author$
 %%%  Version: $Revision$
 
-\ifdef NEWSAVE
 declare
+
 fun
 \ifdef NEWCOMPILER
    instantiate
@@ -16,32 +16,9 @@ fun
    = Standard
 in
    local
-\insert 'panel/main.oz'
+      \insert 'panel/main.oz'
       Panel = {New PanelClass init}
    in
-\insert 'Panel.env'
+      \insert 'Panel.env'
    end
 end
-\else
-
-declare
-   PanelClass Panel
-\ifdef SAVE
-   NewPanel
-\endif
-in
-
-\ifdef SAVE
-fun {NewPanel Tk TkTools}
-\endif
-   
-\insert panel/main.oz
-
-   Panel = {New PanelClass init}
-
-\ifdef SAVE
-in
-\insert 'Panel.env'
-end
-\endif
-\endif
