@@ -351,15 +351,16 @@ make install>>>
       where ?{linux-install} is a directory different from the ?{install}
       directory.  Get back to your Windows machine and do:
 <<<cd ?{linux-install}/doc
-/cygdrive/c/Program\ Files/HTML\ Help\ Workshop/hcc Mozart>>>
+/cygdrive/c/Program\ Files/HTML\ Help\ Workshop/hhc Mozart>>>
       (assuming that you have ?{linux-install} on a network shared file
       system.  If not, you'll have to somehow copy this directory to
       your Windows machine).  <File/hhc/ is the HTML Help Compiler from
       Microsoft's HTML Help Workshop, available freely for download at
       <Ref.Extern to="http://msdn.microsoft.com/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp"><File>http://msdn.microsoft.com/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp</File></Ref.Extern>.
-      The current version is 1.31.  (If the URL is invalid, search
-      Microsoft's site for <Q/download html help workshop/.  It seems
-      Microsoft tends to reorganize their site every so often.)
+      The current version is 1.31.  (If the URL is broken, search
+      <Ref.Extern to="http://www.microsoft.com/"/Microsoft/'s site for
+      <Q/download html help workshop/.  It seems Microsoft tends to
+      reorganize their site every so often.)
     <P>
       This process will leave behind a file <File/Mozart.chm/, which we
       can copy to a sensible place:
