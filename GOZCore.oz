@@ -37,7 +37,6 @@ import
 \ifdef DEBUG
    System(show)
 \endif
-   System(show)
 export
    'GOZCore' : GOZCore
 define
@@ -373,6 +372,7 @@ define
       feat !GtkObject         %% Native Object Ptr (must not change)
       attr !GtkSignals : nil  %% Connected Signals List
       meth signalConnect(Signal ProcOrMeth $)
+	 SignalId
 	 SigHandler = if {IsProcedure ProcOrMeth}
 		      then ProcOrMeth
 		      else
@@ -380,12 +380,12 @@ define
 			    {self ProcOrMeth(Event)}
 			 end
 		      end
-	 SignalIds  = {Dispatcher
-		       signalConnect(SigHandler self.GtkObject Signal $)}
+	 GtkSignalId = {Dispatcher signalConnect(SigHandler self.GtkObject
+						 Signal ?SignalId $)}
 	 CurSignals = @GtkSignals
       in
-	 case SignalIds of SignalId#_ then GtkSignals <- SignalId|CurSignals end
-	 SignalIds
+	 GtkSignals <- SignalId|CurSignals
+	 SignalId#GtkSignalId
       end
       meth signalDisconnect(SignalIds)
 	 {Dispatcher signalDisconnect(self.GtkObject SignalIds)}
@@ -663,12 +663,11 @@ define
 	    meth !NewSignalId($)
 	       signalId <- (@signalId + 1)
 	    end
-	    meth signalConnect(Handler Object Signal $)
-	       SignalId = DispatcherObject, NewSignalId($)
+	    meth signalConnect(Handler Object Signal ?SignalId $)
 	       IsNormal = if Signal == 'delete-event' then 0 else 1 end
 	    in
+	       SignalId = DispatcherObject, NewSignalId($)
 	       {Dictionary.put @handlerDict SignalId Handler}
-	       SignalId#
 	       {GOZSignal.signalConnect Object Signal SignalId IsNormal}
 	    end
 	    meth signalDisconnect(Object SignalIds)
