@@ -697,6 +697,7 @@
 \newcommand{\usepi@eg}{e.g.\@\xspace}
 \newcommand{\usepi@ie}{i.e.\@\xspace}
 \newcommand{\usepi@nbsp}{~}
+\newcommand{\usepi@NBSP}{~}
 \newcommand{\usepi@LaTeX}{\LaTeX{}}
 \newcommand{\usepi@LATEX}{\LaTeX{}}
 \newcommand{\usepi@ellipsis}{\ldots}
