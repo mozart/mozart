@@ -377,19 +377,19 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (if (and (get-buffer-process oz-compiler-buffer)
 	   (not (get-buffer-process oz-emulator-buffer)))
       (progn
-	(message "Emulator died for some reason")
+	(message "Emulator died.")
 	(delete-process oz-compiler-buffer)))
   (if (and (not (get-buffer-process oz-compiler-buffer))
 	   (get-buffer-process oz-emulator-buffer))
       (progn
-	(message "Compiler died for some reason")
+	(message "Compiler died.")
 	(delete-process oz-emulator-buffer)))
   (if (get-buffer-process oz-compiler-buffer)
       t
     (let ((file (concat (oz-make-temp-name "/tmp/ozpipeout")
 			":"
 			(oz-make-temp-name "/tmp/ozpipein"))))
-      (if (not start-flag) (message "Oz died for some reason. Restarting ..."))
+      (if (not start-flag) (message "Oz died. Restarting ..."))
       (make-comint "Oz Compiler" "oz.compiler" nil "-emacs" "-S" file)
       (setq oz-compiler-buffer "*Oz Compiler*")
       (oz-create-buffer oz-compiler-buffer t)
@@ -410,7 +410,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
       (bury-buffer oz-emulator-buffer)
 
       (oz-set-title)
-      (message "Oz started")
+      (message "Oz started.")
       ;(sleep-for 10)
       )))
 
@@ -877,7 +877,7 @@ the GDB commands `cd DIR' and `directory'."
 		 ;; '('
 		 (if (and search-paren (= nesting 0))
 		     (setq ret (current-column))
-		   (message "unbalanced open paren")
+		   (message "unbalanced open paren.")
 		   (setq ret -1)))
 		((looking-at oz-middle-pattern)
 		 ;; 'then' '[]'
