@@ -26,11 +26,7 @@
  *
  */
 
-#include <math.h>
-#include "var_of.hh"
-#include "var_fd.hh"
-#include "builtins.hh"
-#include "fdomn.hh"
+#include "ofs-prop.hh"
 
 /*********************************************************************
  * OF builtins
@@ -42,156 +38,39 @@ extern Propagator * imposed_propagator;
 // -----------------------------------------------------------------------
 // propagators
 
-class WidthPropagator : public OZ_Propagator {
-private:
-  static OZ_PropagatorProfile profile;
-protected:
-  OZ_Term rawrec, rawwid;
-public:
-  WidthPropagator(OZ_Term r, OZ_Term w)
-    : rawrec(r), rawwid(w) {}
+void WidthPropagator::gCollect(void) {
+  oz_gCollectTerm(rawrec,rawrec);
+  oz_gCollectTerm(rawwid,rawwid);
+}
 
-  virtual void gCollect(void) {
-    oz_gCollectTerm(rawrec,rawrec);
-    oz_gCollectTerm(rawwid,rawwid);
-  }
+void WidthPropagator::sClone(void) {
+  oz_sCloneTerm(rawrec,rawrec);
+  oz_sCloneTerm(rawwid,rawwid);
+}
 
-  virtual void sClone(void) {
-    oz_sCloneTerm(rawrec,rawrec);
-    oz_sCloneTerm(rawwid,rawwid);
-  }
-
-  virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
-  virtual OZ_Return propagate(void);
-  virtual OZ_PropagatorProfile * getProfile(void) const {return &profile; }
-  virtual OZ_Term getParameters(void) const { return OZ_nil(); }
-};
-
-class MonitorArityPropagator : public OZ_Propagator {
-private:
-  static OZ_PropagatorProfile profile;
-protected:
-  OZ_Term X, K, L, FH, FT;
-public:
-  MonitorArityPropagator(OZ_Term X1, OZ_Term K1, OZ_Term L1,
-                         OZ_Term FH1, OZ_Term FT1)
-    : X(X1), K(K1), L(L1), FH(FH1), FT(FT1) {}
-
-  virtual void gCollect(void) {
-    oz_gCollectTerm(X,X);
-    oz_gCollectTerm(K,K);
-    oz_gCollectTerm(L,L);
-    if (FH)
-      oz_gCollectTerm(FH,FH);
-    if (FT)
-      oz_gCollectTerm(FT,FT);
-  }
-  virtual void sClone(void) {
-    oz_sCloneTerm(X,X);
-    oz_sCloneTerm(K,K);
-    oz_sCloneTerm(L,L);
-    if (FH)
-      oz_sCloneTerm(FH,FH);
-    if (FT)
-      oz_sCloneTerm(FT,FT);
-  }
-  virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
-  virtual OZ_Return propagate(void);
-  virtual OZ_PropagatorProfile * getProfile(void) const {return &profile; }
-  virtual OZ_Term getParameters(void) const { return OZ_nil(); }
-  
-  TaggedRef getX(void) { return X; }
-  TaggedRef getK(void) { return K; }
-  TaggedRef getFH(void) { return FH; }
-  TaggedRef getFT(void) { return FT; }
-  void setFH(TaggedRef FH1) { FH=FH1; }
-};
-
-
+void MonitorArityPropagator::gCollect(void) {
+  oz_gCollectTerm(X,X);
+  oz_gCollectTerm(K,K);
+  oz_gCollectTerm(L,L);
+  if (FH)
+    oz_gCollectTerm(FH,FH);
+  if (FT)
+    oz_gCollectTerm(FT,FT);
+}
+ 
+void MonitorArityPropagator::sClone(void) {
+  oz_sCloneTerm(X,X);
+  oz_sCloneTerm(K,K);
+  oz_sCloneTerm(L,L);
+  if (FH)
+    oz_sCloneTerm(FH,FH);
+  if (FT)
+    oz_sCloneTerm(FT,FT);
+}
 
 /* -------------------------------------------------------------------------
  * OFS
 * -------------------------------------------------------------------------*/
-
-/* Add list of features to each OFS-marked suspension list 'flist' has
- * three possible values: a single feature (literal or integer), a
- * nonempty list of features, or NULL (no extra features).
- * 'determined'==TRUE iff the unify makes the OFS determined.  'var'
- * (which must be deref'ed) is used to make sure that features are
- * added only to variables that are indeed waiting for features. This
- * routine is inspired by am.checkSuspensionList, and must track all
- * changes to it.  */
-void addFeatOFSSuspensionList(TaggedRef var,
-			      SuspList * suspList,
-			      TaggedRef flist,
-			      Bool determ)
-{
-  while (suspList) {
-    Suspendable * susp = suspList->getSuspendable();
-
-    // The added condition ' || thr->isRunnable () ' is incorrect
-    // since isPropagated means only that the thread is runnable
-    if (susp->isDead()) {
-      suspList = suspList->getNext();
-      continue;
-    }
-
-    if (susp->isOFS()) {
-      MonitorArityPropagator * prop = 
-	(MonitorArityPropagator *) SuspToPropagator(susp)->getPropagator();
-
-      Assert(sizeof(MonitorArityPropagator) == prop->sizeOf());
-
-      // Only add features if var and fvar are the same:
-      TaggedRef fvar=prop->getX();
-      DEREF(fvar,_1,_2);
-      if (var!=fvar) {
-	suspList=suspList->getNext();
-	continue;
-      }
-      // Only add features if the 'kill' variable is undetermined:
-      TaggedRef killl=prop->getK();
-      DEREF(killl,_,killTag);
-      if (!isVariableTag(killTag)) {
-	suspList=suspList->getNext();
-	continue;
-      }
-
-      // Add the feature or list to the diff. list in FH and FT:
-      if (flist) {
-	if (oz_isFeature(flist))
-	  prop->setFH(oz_cons(flist,prop->getFH()));
-	else {
-	  // flist must be a list
-	  Assert(oz_isCons(flist));
-	  TaggedRef tmplist=flist;
-	  while (tmplist!=AtomNil) {
-	    prop->setFH(oz_cons(oz_head(tmplist),prop->getFH()));
-	    tmplist=oz_tail(tmplist);
-	  }
-	}
-      }
-      if (determ) {
-	// FS is det.: tail of list must be bound to nil: (always succeeds)
-	// Do *not* use unification to do this binding!
-	TaggedRef tl=prop->getFT();
-	DEREF(tl,tailPtr,tailTag);
-	switch (tailTag) {
-	case LITERAL:
-	  Assert(tl==AtomNil);
-	  break;
-	case UVAR:
-	  DoBind(tailPtr, AtomNil);
-	  break;
-	default:
-	  Assert(FALSE);
-	}
-      }
-    }
-
-    suspList = suspList->getNext();
-  }
-}
 
 /*
  * Constrain term to a record, with given label (wait until
@@ -938,3 +817,15 @@ OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea, TaggedRef &out)
 {
     return genericUparrowInline(term, fea, out, TRUE);
 }
+
+
+
+/*
+ * The builtin table
+ */
+
+#ifndef MODULES_LINK_STATIC
+
+#include "modRecordC-if.cc"
+
+#endif

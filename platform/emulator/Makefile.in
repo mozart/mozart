@@ -34,7 +34,7 @@ include Makefile.vars
 
 MODULE_NAMES =							\
 	PID Fault DPMisc DPB VirtualSite DPPane Tk Schedule FDP FSP Parser \
-	CompilerSupport Browser Debug Space FDB FSB CTB
+	CompilerSupport Browser Debug Space FDB FSB CTB RecordC
 
 STATIC_MODULES=		@STATIC_MODULES@
 DYNAMIC_MODULES=	@DYNAMIC_MODULES@
@@ -121,7 +121,7 @@ PICKLESRCS=\
 	gname.cc components.cc marshaler.cc site.cc
 #	gentraverser.cc newmarshaler.cc
 
-OFSRCS=	var_of.cc ofbi.cc
+OFSRCS=	var_of.cc
 
 FDSRCS=\
 	fdomn.cc \
@@ -164,6 +164,8 @@ FSBSRCS = \
 	fsetcore.cc
 CTBSRCS = \
 	ct-bi.cc
+RECORDCSRCS = \
+	ofs-bi.cc
 
 TKOBJS=	$(TKSRCS:%.cc=%.lo)
 COMPILERSUPPORTOBJS=	$(COMPILERSUPPORTSRCS:%.cc=%.lo)
@@ -173,11 +175,13 @@ SPACEOPOBJS=	$(SPACEOPSRCS:%.cc=%.lo)
 FDBOBJS=	$(FDBSRCS:%.cc=%.lo)
 FSBOBJS=	$(FSBSRCS:%.cc=%.lo)
 CTBOBJS=	$(CTBSRCS:%.cc=%.lo)
+RECORDCOBJS=	$(RECORDCSRCS:%.cc=%.lo)
 
 
 ALLSRCS= $(SRCS) \
 	$(TKSRCS) $(COMPILERSUPPORTSRCS) $(BROWSERSRCS) \
 	$(SPACEOPSRCS) $(FDBSRCS) $(FSBSRCS) $(CTBSRCS) \
+	$(RECORDCSRCS) \
 	$(DEBUGSRCS) $(TEXT2PICKLESRCS)
 
 ############################################################################
@@ -256,6 +260,12 @@ CTB.so: $(CTBOBJS)
 
 libCTB.a: $(CTBOBJS)
 	$(AR) -rc $@ $(CTBOBJS) && $(RANLIB) $@
+
+RecordC.so: $(RECORDCOBJS)
+	$(DYNLD) -o $@ $(RECORDCOBJS)
+
+libRecordC.a: $(RECORDCOBJS)
+	$(AR) -rc $@ $(RECORDCOBJS) && $(RANLIB) $@
 
 CompilerSupport.so: $(COMPILERSUPPORTOBJS)
 	$(DYNLD) -o $@ $(COMPILERSUPPORTOBJS)

@@ -50,7 +50,6 @@ static TaggedRef dictionary_of_modules;
 #include "modURL-if.cc"
 #include "modSystem-if.cc"
 #include "modApplication-if.cc"
-#include "modRecordC-if.cc"
 #include "modFinalize-if.cc"
 #include "modProfile-if.cc"
 #include "modDistribution-if.cc"
@@ -108,6 +107,7 @@ static TaggedRef dictionary_of_modules;
 #include "modFDB-if.cc"
 #include "modFDP-if.cc"
 #include "modCTB-if.cc"
+#include "modRecordC-if.cc"
 #include "modSchedule-if.cc"
 #include "modParser-if.cc"
 #include "modFSB-if.cc"
@@ -183,7 +183,6 @@ static ModuleEntry ext_module_table[] = {
   {"Finalize",        mod_int_Finalize},
   {"Profile",         mod_int_Profile},
   {"Distribution",    mod_int_Distribution},
-  {"RecordC",         mod_int_RecordC},
   {"WeakDictionary",  mod_int_WeakDictionary},
   {"INTERNAL",        mod_int_INTERNAL},
 #ifdef DENYS_EVENTS
@@ -198,6 +197,7 @@ static ModuleEntry ext_module_table[] = {
   {"FSB",             mod_int_FSB},
   {"FDP",             mod_int_FDP},
   {"CTB",             mod_int_CTB},
+  {"RecordC",         mod_int_RecordC},
   {"CompilerSupport", mod_int_CompilerSupport},
   {"Parser",          mod_int_Parser},
   {"Browser",         mod_int_Browser},
