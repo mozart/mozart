@@ -1783,7 +1783,7 @@ The first subexpression matches the keyword proper (for fontification).")
   "Regular expression matching non-identifier keywords.")
 
 (defconst oz-proc-fun-matcher
-  (concat "\\<\\(proc\\|fun\\)[ \t]*{!?"
+  (concat "\\<\\(proc\\|fun\\)\\>\\([^{\n]*\\){!?"
 	  "\\([A-Z][A-Za-z0-9_]*\\|`[^`\n]*`\\)")
   "Regular expression matching proc or fun definitions.
 The second subexpression matches the definition's identifier
@@ -1821,7 +1821,8 @@ and is used for fontification.")
 
 (defconst oz-font-lock-keywords-3
   (append (list (list oz-proc-fun-matcher
-		      '(2 font-lock-function-name-face))
+		      '(2 font-lock-variable-name-face)
+		      '(3 font-lock-function-name-face))
 		(list oz-class-matcher
 		      '(2 font-lock-type-face))
 		(list oz-meth-matcher
