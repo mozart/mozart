@@ -466,20 +466,6 @@ in
 	 self.StackText
       end
       
-      meth status(I S<=nil)
-	 W = self.StatusText
-      in
-	 Gui,Clear(W)
-	 Gui,Append(W case I of
-			 ~1 then StatusEndText
-		      elseof
-			 0  then StatusInitText
-		      else
-			 'Current Thread: #' # I # ' (' # S # ')'
-		      end)
-	 Gui,Disable(W)
-      end
-   
       meth rawStatus(S M<=clear)
 	 W = self.StatusText
       in
@@ -516,51 +502,60 @@ in
 	    
       meth action(A)
 	 T = @currentThread
+	 L = {Label A}
 	 I
       in
-	 case T \= undef then
-	    I = {Thread.id T}
-
-	    case {Label A}
-	    
-	    of ' step' then
-	       {Thread.resume T}
-	    
-	    elseof ' next' then
-	       ThreadDic = ThreadManager,getThreadDic($)
-	       TopFrame  = {{Dget ThreadDic I} getTop($)}
-	       Dir = case TopFrame == nil then enter else TopFrame.dir end
-	    in
-	       case Dir == leave then
-		  {OzcarMessage NextOnLeave}
-	       else
+	 case L == ' reset' then
+	    N in
+	    Gui,rawStatus(ResetStatus)
+	    ThreadManager,killAll(N)
+	    Gui,rawStatus(' done (killed ' # N # ' thread' #
+				  case N == 1 then nil else 's' end #
+				  ')' append)
+	 else
+	    case T == undef then
+	       Gui,rawStatus('You must select a thread first!')
+	    else
+	       I = {Thread.id T}
+	       
+	       case L
+	       of ' step' then
+		  {Thread.resume T}
+		  
+	       elseof ' next' then
+		  ThreadDic = ThreadManager,getThreadDic($)
+		  TopFrame  = {{Dget ThreadDic I} getTop($)}
+		  Dir = case TopFrame == nil then enter else TopFrame.dir end
+	       in
+		  case Dir == leave then
+		     {OzcarMessage NextOnLeave}
+		  else
+		     {Dbg.stepmode T false}
+		  end
+		  {Thread.resume T}
+		  
+	       elseof ' finish' then
+		  {Browse 'not yet implemented'}
+		  skip
+		  
+	       elseof ' cont' then
 		  {Dbg.stepmode T false}
+		  {Dbg.contflag T true}
+		  {Thread.resume T}
+		  
+	       elseof ' forget' then
+		  ThreadManager,forget(T I)
+		  Gui,rawStatus('I don\'t care anymore about thread #' # I)
+	  
+	       elseof ' term' then
+		  ThreadManager,kill(T I)
+		  Gui,rawStatus('You have terminated thread #' # I)
+		  
+	       elseof ' stack' then  %% will go away, someday...
+		  {Browse {Dbg.taskstack T MaxStackBrowseSize}}
 	       end
-	       {Thread.resume T}
-	       
-	    elseof ' finish' then
-	       {Browse 'not yet implemented'}
-	       skip
-	    
-	    elseof ' cont' then
-	       {Dbg.stepmode T false}
-	       {Dbg.contflag T true}
-	       {Thread.resume T}
-	    
-	    elseof ' forget' then
-	       ThreadManager,forget(T I)
-
-	    elseof ' term' then
-	       ThreadManager,kill(T I)
-
-	    elseof ' reset' then
-	       ThreadManager,killAll
-	       
-	    elseof ' stack' then  %% will go away, someday...
-	       {Browse {Dbg.taskstack T MaxStackBrowseSize}}
 	    end
-	 
-	 else skip end
+	 end
       end
 
       meth Clear(Widget)

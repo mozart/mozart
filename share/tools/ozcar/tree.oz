@@ -233,7 +233,7 @@ in
 			    anchor:w font:ThreadTreeFont)}
 		   {CT tkBind(event:  '<1>'
  			   %action: self # select(I CT))}
-			      action: Ozcar # switch(I))}
+			      action: self # SwitchToThread(I))}
 		end
 	     end
 	     {N setTag(CT)}
@@ -244,6 +244,11 @@ in
 	    {OzcarMessage 'Tk.canvas scrollregion: _ _ _ ' # Height}
 	    {self tk(conf scrollregion:q(0 0 ThreadTreeWidth Height))}
 	 end
+      end
+
+      meth SwitchToThread(I)
+	 {ForAll [rawStatus('You have selected thread #' # I)
+		  switch(I)] Ozcar}
       end
    end
 end
