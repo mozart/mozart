@@ -641,19 +641,21 @@ Converts <<M>> to a string and returns it in <<M>>.
 <index class=module/FS<and>reified<and>include/
 <<reified.include>>
 <synopsis>
-<<<{FS.reified.include +D1 *S $D2}
+<<<{FS.reified.include +D1 *M $D2}
 >>>
 <item>
-?{D2} reifies the presence of ?{D1} in the set ?{S}.
+?{D2} reifies the presence of ?{D1} in the set ?{M}. This propagator
+detects in contrast to <<FS.reified.isIn>> earlier if ?{D1} is or is not
+constained  in ?{M}.
 
 <entry>
 <index class=module/FS<and>reified<and>equal/
 <<reified.equal>>
 <synopsis>
-<<<{FS.reified.equal *S1 *S2 $D}
+<<<{FS.reified.equal *M1 *M2 $D}
 >>>
 <item>
-?{D} reifies the equality of ?{S1} and ?{S2}.
+?{D} reifies the equality of ?{M1} and ?{M2}.
 
 <entry>
 <index class=module/FS<and>reified<and>partition/
