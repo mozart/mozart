@@ -163,6 +163,7 @@ define
 	 OPTS = for O in Options collect:Collect do
 		   case O
 		   of include(D) then {Collect '-I'#D}
+		   [] 'define'(S) then {Collect '-D'#S}
 		   end
 		end
 	 L0 = [SRC '-o' DST]

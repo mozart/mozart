@@ -18,6 +18,7 @@ ozmake.ozf: $(OZMAKE_FILES)
 	$(OZL) $(OZLFLAGS) Main.ozf -o $@
 
 Help.ozf: Help.oz HELP.txt Utils.ozf
+Utils.ozf: Utils.oz Path.ozf Windows.ozf Shell.ozf
 
 clean::
 	-rm -f ozmake
