@@ -38,3 +38,9 @@
   (show-branches))
 
 (provide 'oz-extra)
+
+;;; Local Variables: ***
+;;; mode: emacs-lisp ***
+;;; byte-compile-dynamic-docstrings: nil ***
+;;; byte-compile-compatibility: t ***
+;;; End: ***
