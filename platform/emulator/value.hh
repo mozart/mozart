@@ -2088,15 +2088,7 @@ public:
 
   Builtin(const char * mn, const char * bn,
           int inArity, int outArity,
-          OZ_CFun fn, Bool nat)
-    : mod_name(mn), bi_name(bn),
-      inArity(inArity), outArity(outArity),
-      fun(fn), sited(nat),
-      ConstTerm(Co_Builtin) {
-#ifdef PROFILE_BI
-    counter = 0;
-#endif
-  }
+          OZ_CFun fn, Bool nat);
 
   OZ_CFun getFun(void) {
     return fun;

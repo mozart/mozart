@@ -1366,6 +1366,20 @@ OZ_Term oz_list(OZ_Term t1, ...)
  *
  */
 
+Builtin::Builtin(const char * mn, const char * bn,
+                 int inArity, int outArity,
+                 OZ_CFun fn, Bool nat)
+  : bi_name(bn),
+    inArity(inArity), outArity(outArity),
+    fun(fn), sited(nat),
+    ConstTerm(Co_Builtin) {
+  Assert(bn);
+  mod_name = mn ? mn : "`missing module name`";
+#ifdef PROFILE_BI
+    counter = 0;
+#endif
+}
+
 void Builtin::initname(void) {
   Assert(mod_name);
 
