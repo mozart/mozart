@@ -193,7 +193,7 @@ unsigned __stdcall watchEmulatorThread(void *arg)
 /* there are no process groups under Win32
  * so Emulator hands its pid via envvar OZPPID to emulator
  * it then creates a thread watching whether the Emulator is still living
- * and terminating otherwise
+ * and terminates otherwise
  */
 void watchParent()
 {
