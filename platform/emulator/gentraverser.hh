@@ -1229,7 +1229,11 @@ public:
   //
   // begin building:
   void build() {
-    DebugCode(resetTT(););
+    // kost@ : don't run 'resetTT()' in general, because things like
+    // 'unmarshalFullObjectAndClass()' require the table to be passed
+    // between builder's steps. It is OK to enable it when checking
+    // plain pickles.
+    // DebugCode(resetTT(););
     CrazyDebug(debugNODES = 0;);
     DebugCode(ringbuf.init(););
     putTask(BT_spointer, &result);
