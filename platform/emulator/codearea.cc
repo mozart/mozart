@@ -211,7 +211,7 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
 			     oz_cons(OZ_pairAI("PC",(int)PC),
 				  oz_cons(OZ_pairA("kind",OZ_atom("call")),
 				       oz_cons(OZ_pairA("origin",
-						     OZ_atom("dbgGetDef")),
+						  OZ_atom("procedureFrame")),
 					    pairlist))))))));
   if (frameId != -1)
     pairlist = oz_cons(OZ_pairAI("frameID",frameId),pairlist);
