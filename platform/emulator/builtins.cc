@@ -7320,7 +7320,7 @@ BIspec allSpec2[] = {
   {"Thread.isSuspended",2,BIthreadIsSuspended},
   {"Thread.state",2,BIthreadState},
   {"Thread.getName",2,BIthreadGetName},
-  {"Thread.SetName",2,BIthreadSetName},
+  {"Thread.setName",2,BIthreadSetName},
 
   {"printLong",1,BIprintLong},
 
