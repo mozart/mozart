@@ -145,6 +145,16 @@
 	the object code produced by the C++&nbsp;compiler) and the last one is
 	the resulting dynamic library used by the generated scanner, loaded
 	via <<Foreign.load>>.
+      <Para class=apropos><Title/Implementation Limitation/
+	Note that due to limitations of dynamic linking, a scanner may only
+	be loaded once into the system.  When interactively developing a
+	scanner, this means that you will not see changes you make to the
+	set and order of the regular expressions consistently.  You should
+	thus halt and restart Oz each time you make changes to the regular
+	expressions.
+      <P>
+	See also <Ptr to="section.scanner.params"> for a workaround around
+	this limitation.
     <SubSection>
       <Title/Using the Generated Scanner/
       <P>
@@ -391,14 +401,14 @@
 	The &Gump; Scanner Generator supports several configuration
 	parameters, which may be set on a per-scanner basis via the use
 	of macro directives.
-      <P>
+      <Para class=apropos><Title/Macro Directives/
 	Due to the implementation of scanners in&nbsp;C, a unique prefix is
 	required for each scanner to avoid symbol conflicts when several
 	scanners reside at the same time in the Mozart system.  The following
 	macro directive allows this prefix to be changed (the default <<zy>>
 	is all right if only a single scanner is used at any time):
 	<<<\gumpscannerprefix ?={atom}>>>
-      <P>
+      <Para class=apropos><Title/Switches/
 	<Ptr to="table.scanner.switches"> summarizes some compiler switches
 	that control the &Gump; Scanner Generator.
 	<Figure float id="table.scanner.switches" class=table>
@@ -429,7 +439,7 @@
 	&Gump;-generated scanners.  All operations and data are encapsulated
 	in the mixin class <<GumpScanner.'class'>> that scanners have to
 	inherit from in order to be executable.
-      <P>
+      <Para class=apropos><Title/Abstract Members/
 	The mixin class expects the following features and methods to be
 	defined by derivate classes.  (It is a good idea not to define any
 	class members whose name begins with <<lex&ellipsis;>> since these
@@ -446,6 +456,7 @@
 	    ?_{I}&nbsp;indicates which rule's associated action is to be
 	    run.
 	</List>
+      <Para class=apropos><Title/Provided Members/
 	The <<GumpScanner.'class'>> class defines some user functionality
 	that is to be used either by users of the generated scanner or by
 	the semantic actions in the scanner itself.
