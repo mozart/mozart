@@ -390,7 +390,7 @@ proc {SMerge Xs Ys Zs}
    of nil#Ys then Zs=Ys
    [] Xs#nil then Zs=Xs
    [] (X|Xr) # (Y|Yr) then
-      if X=<Y then Zr in
+      if X=&lt;Y then Zr in
          Zs = X|Zr
          {SMerge Xr Ys Zr}
       else Zr in
