@@ -195,12 +195,20 @@ in
 	    Gui,displayTree
 	 end
       end
+
+      meth forget(T I)
+	 {Dbg.trace T false}      %% thread is not traced anymore
+	 {Dbg.stepmode T false}   %% no step mode, run as you like!
+	 {Thread.resume T}        %% run, run to freedom!! :-)
+	 ThreadManager,remove(T I kill)
+      end
       
       meth remove(T I Mode)
 	 Threads <- {List.filter @Threads fun {$ X} X\=T end}
 	 ThreadManager,setThrPos(id:I name:undef)
 	 SourceManager,scrollbar(file:'' line:undef color:undef what:both)
-	 Gui,printStack(id:0 stack:nil)
+	 Gui,printAppl(id:I name:undef args:undef builtin:false)
+	 Gui,printStack(id:I stack:nil)
 	 case Mode == kill then
 	    currentThread <- undef
 	    Gui,killNode(I)
@@ -249,7 +257,7 @@ in
       
       meth step(file:F line:L thr:T id:I name:N args:A
 		builtin:IsBuiltin)
-	 case F == '' then
+	 case F == '' orelse F == noDebugInfo then
 	    {OzcarMessage NoFileInfo # I}
 	    SourceManager,scrollbar(file:'' line:undef color:undef what:both)
 	    {Thread.resume @currentThread}
@@ -280,14 +288,17 @@ in
 	    
 	    Gui,selectNode(I)
 	    Gui,displayTree
-	    
-	    SourceManager,scrollbar(file:F line:L
-				    color:
-				       case S
-				       of runnable then ScrollbarApplColor
-				       [] blocked  then ScrollbarBlockedColor
-				       end
-				    what:appl)
+
+	    case S \= terminated then
+	       SourceManager,
+	       scrollbar(file:F line:L
+			 color:
+			    case S
+			    of runnable then ScrollbarApplColor
+			    [] blocked  then ScrollbarBlockedColor
+			    end
+			 what:appl)
+	    else skip end
 	    SourceManager,scrollbar(file:undef line:undef
 				    color:undef what:stack)
 	 end

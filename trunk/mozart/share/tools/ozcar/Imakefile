@@ -1,0 +1,37 @@
+OZLIB     = $(OZHOME)/lib
+BITMAPDIR = $(OZLIB)/bitmaps
+OZCAR     = $(OZLIB)/ozcar
+
+
+LOCALFILES = \
+	prelude.oz string.oz tk.oz config.oz \
+	tree.oz thread.oz source.oz menu.oz dialog.oz gui.oz \
+	ozcar.oz
+
+BITMAPS = debugger.xbm
+
+
+LOCALBITMAPFILES = ${BITMAPS:%=../bitmaps/%}
+
+LIBFILES = ${LOCALFILES:%.oz=$(OZCAR)/%.oz}
+
+all::	../Ozcar.oz
+
+../Ozcar.oz:: $(LOCALFILES)
+	touch ../Ozcar.oz
+
+clean::
+	rm -f *~ *.oz?
+
+install:: $(OZCAR) $(LIBFILES) bitmaps
+
+
+bitmaps: $(LOCALBITMAPFILES)
+	$(INSTALL) -m 444 $(LOCALBITMAPFILES) $(OZLIB)/bitmaps
+
+$(OZCAR):
+	$(INSTALL) -m 775 -d $@
+
+$(OZCAR)/%.oz: %.oz
+	$(INSTALL) -m 444 '$<' '$@'
+

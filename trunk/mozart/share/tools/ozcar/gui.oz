@@ -19,10 +19,9 @@ class Gui from Menu Dialog
    
       StatusFrame
       StatusLabel
-   
+
    meth init
       %% create the main window, but delay showing it
-      %% until everything has been packed inside
       self.toplevel = {New Tk.toplevel tkInit(title:TitleName withdraw:true)}
       {Tk.batch [wm(iconname   self.toplevel IconName)
 		 wm(iconbitmap self.toplevel BitMap)
@@ -113,7 +112,6 @@ class Gui from Menu Dialog
 		 grid(rowconfigure    self.toplevel 4 weight:1)
 		 grid(columnconfigure self.toplevel 0 weight:1)
 		 grid(columnconfigure self.toplevel 1 weight:2)
-		 wm(deiconify         self.toplevel)
 		]}
    end
 
@@ -334,10 +332,7 @@ class Gui from Menu Dialog
 	    skip
 	    
 	 elseof ' forget' then
-	    {Dbg.trace T false}      %% thread is not traced anymore
-	    {Dbg.stepmode T false}   %% no step mode, run as you like!
-	    {Thread.resume T}        %% run, run to freedom!! :-)
-	    ThreadManager,remove(T I kill)
+	    ThreadManager,forget(T I)
 	    
 	 elseof ' stack' then  %% will go away, someday...
 	    {Browse {Dbg.taskstack T 25}}
