@@ -72,6 +72,9 @@ prepare
       [] F|Fr then {Dots M.F Fr}
       end
    end
+export
+   compiler: OPICompiler
+   interface: CompilerUI
 define
    Args = {Application.getCmdArgs Spec}
 
@@ -157,5 +160,5 @@ define
       {CompilerReadEvalLoop}
    end
 
-   {CompilerReadEvalLoop}
+   thread {CompilerReadEvalLoop} end
 end
