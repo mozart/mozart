@@ -47,14 +47,17 @@
 (defvar oz-mode-abbrev-table nil)
 (defvar oz-mode-map (make-sparse-keymap))
 
-(defvar oz-machine (concat (getenv "HOME") "/Oz/AM/oz.machine.bin"))
-(defvar oz-machine-buffer "*Oz Machine*")
+(defvar oz-machine (concat (getenv "HOME") "/Oz/AM/oz.machine.bin")
+  "The machine for gdb mode and for [oz-other]")
+
+(defvar oz-machine-buffer "*Oz Machine*"
+  "The buffername of the Oz Machine output")
 
 (defvar oz-machine-hook nil
-  "Hook used if non nil for starting machine.
+  "Hook used if non nil for starting the Oz Machine.
 For example
-  (setq oz-machine-hook 'oz-gdb-machine)
-")
+  (setq oz-machine-hook 'oz-start-gdb-machine)
+starts the machine under gdb")
 
 (defvar oz-wait-for-compiler 5
   "Wait between startup of compiler and engine")
@@ -97,14 +100,14 @@ For example
 ;	 ("   M:  " (-30 . oz-machine-state)))))
 
 
-(defvar oz-old-screen-title nil
+(defvar oz-old-screen-title
+  (if oz-lucid
+      (setq oz-old-screen-title
+	    screen-title-format)
+    (if oz-gnu19
+	(setq oz-old-screen-title
+	      (cdr (assoc 'name (frame-parameters))))))
   "The saved window title")
-(if oz-lucid
- (setq oz-old-screen-title
-       screen-title-format))
-(if oz-gnu19
- (setq oz-old-screen-title
-       (cdr (assoc 'name (frame-parameters)))))
 
 
 ;;------------------------------------------------------------
@@ -138,6 +141,7 @@ For example
 
 (defun oz-canon-status-string(s)
   (cond ((string-match "\\<idle\\>" s) s)
+	((string-match "\\<gdb\\>" s) "gdb mode")
 	((string-match "\\<running\\>" s) "running")
 	((string-match "\\<halted\\>" s) "halted")
 	((string-match "\\<booting\\>" s) "booting")
@@ -512,12 +516,8 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 	  (make-comint "Oz Machine" "oz.machine" nil "-S" file)
 	  (set-process-filter (get-buffer-process oz-machine-buffer)
 			      'oz-machine-filter)
-	  )
-	(oz-create-buffer oz-machine-buffer)
-	(bury-buffer oz-machine-buffer)
-	(save-excursion
-	  (set-buffer (get-buffer oz-machine-buffer))
-	  (delete-region (point-min) (point-max))
+	  (oz-create-buffer oz-machine-buffer)
+	  (bury-buffer oz-machine-buffer)
 	  )
 
 	;; make sure buffers exist
@@ -584,7 +584,7 @@ The directory containing FILE becomes the initial working directory
 and source-file directory for GDB.  If you wish to change this, use
 the GDB commands `cd DIR' and `directory'."
   (let ((old-buffer (current-buffer)))
-    (oz-set-state 'oz-machine-state "running under gdb")
+    (oz-set-state 'oz-machine-state "gdb")
     (if oz-gnu19 (gdb (concat "gdb " oz-machine)))
     (if oz-lucid (gdb oz-machine))
     (setq oz-machine-buffer (buffer-name (current-buffer)))
@@ -1176,7 +1176,7 @@ OZ compiler, machine and error window")
 ;; enter oz-mode but no highlighting !
     (kill-all-local-variables)
     (use-local-map oz-mode-map)
-    (setq mode-name "Oz-View")
+    (setq mode-name "Oz-Output")
     (setq major-mode 'oz-mode)
     (if oz-lucid
      (set-buffer-menubar (append current-menubar oz-menubar)))
