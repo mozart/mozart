@@ -73,6 +73,10 @@ extern "C" char *ozStrerror(int errno);
 #define OZ_declareArg(ARG,VAR) \
      OZ_Term VAR = OZ_getCArg(ARG);
 
+#define IsPair(s) (s[0]=='#' && s[1]=='\0')
+
+
+
 static inline char *ozstrdup(char *s)
 {
   char *ret = new char[strlen(s)+1];
@@ -280,7 +284,7 @@ inline OZ_Term buff2list(int len, const char *s)
 
 
 
-inline OZ_Bool atom2buff(OZ_Term atom, char **write_buff, int *len, 
+OZ_Bool atom2buff(OZ_Term atom, char **write_buff, int *len, 
 			 OZ_Term *rest, OZ_Term *susp)
 {
   char c;
@@ -292,7 +296,7 @@ inline OZ_Bool atom2buff(OZ_Term atom, char **write_buff, int *len,
 
   char *string = OZ_atomToC(atom);
 
-  if (string[0] == '#' && string[1] == '\0')
+  if (IsPair(string))
     return PROCEED;
   
   while ((c = *string) &&
@@ -313,7 +317,7 @@ inline OZ_Bool atom2buff(OZ_Term atom, char **write_buff, int *len,
 }
     
 
-inline OZ_Bool int2buff(OZ_Term ozint, char **write_buff, int *len,
+OZ_Bool int2buff(OZ_Term ozint, char **write_buff, int *len,
 			OZ_Term *rest, OZ_Term *susp)
 {
   char *string = OZ_intToCString(ozint);
@@ -339,7 +343,7 @@ inline OZ_Bool int2buff(OZ_Term ozint, char **write_buff, int *len,
   return PROCEED;
 }
 
-inline OZ_Bool float2buff(OZ_Term ozfloat, char **write_buff, int *len,
+OZ_Bool float2buff(OZ_Term ozfloat, char **write_buff, int *len,
 			  OZ_Term *rest, OZ_Term *susp)
 {
   char *string = OZ_floatToCString(ozfloat);
@@ -366,7 +370,7 @@ inline OZ_Bool float2buff(OZ_Term ozfloat, char **write_buff, int *len,
 }
 
 
-inline OZ_Bool list2buff(OZ_Term list, char **write_buff, int *len,
+OZ_Bool list2buff(OZ_Term list, char **write_buff, int *len,
 			 OZ_Term *rest, OZ_Term *susp)
 {
   OZ_Term head, tail;
@@ -426,7 +430,7 @@ static OZ_Bool vs2buff(OZ_Term vs, char **write_buff, int *len,
     return float2buff(vs, write_buff, len, rest, susp);
   } else if (OZ_isTuple(vs) && (label = OZ_atomToC(OZ_label(vs)))) {
     width = OZ_width(vs);
-    if (label[0] == '#' && label[1] == '\0' && width > 0) {
+    if (IsPair(label) && width > 0) {
       int i,j;
       OZ_Term arg_susp, arg_rest;
 
