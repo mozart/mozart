@@ -133,6 +133,8 @@
 #endif
 #define OZWritePortNumber 9500
 
+
+
 static const int netIntSize=4;
 static const int msgNrSize =4;
 static const int ansNrSize =4;
@@ -506,13 +508,11 @@ public:
     else{GenCast(f,FreeListEntry*,bb,NetByteBuffer*);}
     bb->init();
     ++wc;
-    //printf("BB take nr:%d \n", ++wc);
     return bb;}
 
   void deleteNetByteBuffer(NetByteBuffer* bb){
     FreeListEntry *f;
     --wc;
-    //printf("BB return %d\n",--wc);
     GenCast(bb,NetByteBuffer*,f,FreeListEntry*);
     if(putOne(f)) return;
     delete bb;
@@ -726,25 +726,25 @@ public:
   int no_bufs();
 
   void dumpNetByteBuffers(){
-    if(type == BS_Write){
+    /*if(type == BS_Write){
       Assert(start != NULL);
       while(start!=stop) {
         NetByteBuffer *bb=start;
         start=bb->next;
         netByteBufferManager->deleteNetByteBuffer(bb);
-      }
+        }
       netByteBufferManager->deleteNetByteBuffer(start);
       start=stop=NULL;}
-    else{
-      Assert(first != NULL);
-      while(first!=last) {
-        NetByteBuffer *bb=first;
-        first=bb->next;
-        netByteBufferManager->deleteNetByteBuffer(bb);
-      }
-      netByteBufferManager->deleteNetByteBuffer(first);
-      first=last=NULL;}}
-
+      else{*/
+    Assert(first != NULL);
+    while(first!=last) {
+      NetByteBuffer *bb=first;
+      first=bb->next;
+      netByteBufferManager->deleteNetByteBuffer(bb);
+    }
+    netByteBufferManager->deleteNetByteBuffer(first);
+    first=last=NULL; //}
+  }
 };
 
 
@@ -834,14 +834,13 @@ int NetMsgBuffer::getWriteLen(){
   if(first==last){
     if(endpos!=NULL) {return endpos-pos;}
     return first->tail()-pos+1;}
-  return first->tail()-pos+1;}
+  return first->tail()-pos+1;
+}
+
+#define RECYCLE  (NetByteBuffer*) 0x1
 
 
 class NetMsgBufferManager:public FreeListManager{
-public:
-  NetMsgBufferManager():FreeListManager(NetMsgBuffer_CUTOFF){wc=0;}
-
-  int wc; // for debug purposes
 
   NetMsgBuffer*newNetMsgBuffer(DSite *s){
     FreeListEntry *f=getOne();
@@ -854,16 +853,28 @@ public:
     return bb;}
 
   void deleteNetMsgBuffer(NetMsgBuffer* b){
-    Assert(b->start == b->stop);
-    Assert(b->start == NULL);
+    Assert(b->first == b->last);
+    Assert(b->first == NULL);
+    DebugCode(b->start=RECYCLE;b->stop=RECYCLE;
+    b->first=RECYCLE;b->last=RECYCLE;);
+
     wc--;
     FreeListEntry *f;
     GenCast(b,NetMsgBuffer*,f,FreeListEntry*);
     if(putOne(f)) return;
-    delete b;
-    return;}
+    delete b;}
+public:
+  NetMsgBufferManager():FreeListManager(NetMsgBuffer_CUTOFF){wc=0;}
+
+  int wc; // for debug purposes
 
   void dumpNetMsgBuffer(NetMsgBuffer* nb) {
+    Assert(nb->start != RECYCLE);
+    Assert(nb->stop  != RECYCLE);
+    Assert(nb->first != RECYCLE);
+    Assert(nb->last  != RECYCLE);
+
+
     if(nb->start!=NULL && nb->first==NULL)
       nb->reset();
     if(nb->first!=NULL)
@@ -872,12 +883,6 @@ public:
 
   NetMsgBuffer *getNetMsgBuffer(DSite *s) {
     return newNetMsgBuffer(s);}
-
-  void freeNetMsgBuffer(NetMsgBuffer* bs){
-    if(bs->first!=NULL){
-      Assert(bs->last==bs->first);
-      bs->removeSingle();}
-    deleteNetMsgBuffer(bs);}
 
   int getCTR(){ return wc;}
 };
@@ -1372,11 +1377,11 @@ class RemoteSiteManager: public FreeListManager{
 
   void deleteRemoteSite(RemoteSite *s){
     FreeListEntry *f;
+    wc--;
     GenCast(s,RemoteSite*,f,FreeListEntry*);
     if(putOne(f)) {return;}
     delete s;
-    wc--;
-    return;}
+      return;}
 
 public:
   int wc;
@@ -2017,6 +2022,8 @@ ipReturn WriteConnection::open(){
 /*   SECTION 14: MessageManagers                                           */
 /**********************************************************************/
 
+#define RECYCLE2  (NetMsgBuffer*) 0x1
+
 class MessageManager: public FreeListManager {
 private:
   int wc;
@@ -2032,6 +2039,7 @@ private:
 
   void deleteMessage(Message *m){
     FreeListEntry *f;
+    DebugCode(m->bs = RECYCLE2;)
     GenCast(m,Message*,f,FreeListEntry*);
     if(!putOne(f)) {delete m;}
     wc--;
@@ -2056,10 +2064,12 @@ public:
     return m;}
 
   void freeMessage(Message *m){
+    Assert(m->bs!=RECYCLE2);
     PD((MESSAGE,"freed nr: %d", --Msgs));
     deleteMessage(m);}
 
   void freeMessageAndMsgBuffer(Message *m){
+    Assert(m->bs!=RECYCLE2);
     netMsgBufferManager->dumpNetMsgBuffer(m->bs);
     PD((MESSAGE,"BM freed nr:%d", --Msgs));
     deleteMessage(m);}
@@ -3300,7 +3310,6 @@ writeHerrorBlock:
   case IP_PERM_BLOCK:{
     PD((WEIRD,"Site lost in maybeWrite %x",r));
     r->connectionLost();
-    messageManager->freeMessageAndMsgBuffer(m);
     break;}
   default:{
     OZ_warning("Tmp block during send, not handled...");
@@ -3394,8 +3403,6 @@ Bool ReadConnection::resend(){
 
 void WriteConnection::ackReceived(int nr){
     int ctr = sentMsgCtr;
-    PD((ACK_QUEUE,"Ack nr:%d received, total sent: %d",nr,ctr));
-    PD((ACK_QUEUE,"*** QUEUE CHECKED %d***",checkAckQueue()));
     Message *ptr = sentMsg;
     Message *old;
     if(ctr >= nr && ptr!=NULL){
@@ -3410,8 +3417,6 @@ void WriteConnection::ackReceived(int nr){
           ctr = ptr -> msgNum;}
         old->next = NULL;}
       while(ptr!=NULL) {
-        PD((ACK_QUEUE,"Removing from queue nr %d %d",
-            ptr->msgNum,ptr));
             old = ptr;
             ptr=ptr->next;
             // EK I dont know about this resend....
@@ -3477,6 +3482,7 @@ void RemoteSite::sitePrmDwn(){
   while((m = writeQueue.removeFirst()) && m != NULL) {
     site->communicationProblem(m->msgType, m->site, m->storeIndx,
                                COMM_FAULT_PERM_NOT_SENT,(FaultInfo) m->bs);
+    //printf("RS wq %d\n",(int)m->bs);
     messageManager->freeMessageAndMsgBuffer(m);}
   remoteSiteManager->freeRemoteSite(this);}
 
@@ -3525,13 +3531,7 @@ void WriteConnection::prmDwn(){
 
   if(isIncomplete()) {
     clearIncomplete();
-      Assert(current != NULL);
-      remoteSite->site->communicationProblem(current->msgType, current->site,
-                                             current->storeIndx,COMM_FAULT_PERM_NOT_SENT,
-                                             (FaultInfo) current->bs);
-
-      messageManager->freeMessageAndMsgBuffer(current);
-      current = NULL;}
+    current = NULL;}
   if(isInWriteQueue())
     clearInWriteQueue();
 }
@@ -3807,17 +3807,16 @@ sendTo(NetMsgBuffer *bs, MessageType msg,
   Message *m=messageManager->allocMessage(bs,NO_MSG_NUM,
 storeS,msg,storeInd);
 
-  queueMessage(m->getMsgBuffer()->getTotLen());
+
   switch (siteStatus()){
   case SITE_TEMP:{
-    PD((TCP_HERROR,"Site Temp, seen before send"));
+    queueMessage(m->getMsgBuffer()->getTotLen());
     bs->beginWrite(this);
     goto tmpdwnsend2;}
   case SITE_PERM:{
-    PD((TCP_HERROR,"Discovered perm before send"));
     return PERM_NOT_SENT;}
   case SITE_OK:{
-    PD((TCP_INTERFACE,"OK"));}}
+    queueMessage(m->getMsgBuffer()->getTotLen());}}
   bs->beginWrite(this);
   int fd;
   if(writeConnection==NULL){
@@ -3872,7 +3871,8 @@ storeS,msg,storeInd);
   case IP_PERM_BLOCK:{
     PD((TCP_INTERFACE,"reliableSend- perm failed"));
     site->discoveryPerm();
-    return PERM_NOT_SENT;}
+    // The message will be removed at network level.
+    return ACCEPTED;}
   default:{
     Assert(0);
     return PERM_NOT_SENT;}}

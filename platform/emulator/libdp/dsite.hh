@@ -412,8 +412,7 @@ public:
         return sendTo_RemoteSite(getRemoteSite(),buf,mt,storeSite,storeIndex);}
       Assert(getType() & VIRTUAL_SITE);
       return (*sendTo_VirtualSite)(getVirtualSite(),buf,mt,storeSite,storeIndex);}
-    PD((ERROR_DET,"MsgNot sent, discovered at Site level %d",
-        PERM_NOT_SENT));
+    // MsgNot sent, discovered at Site level
     return PERM_NOT_SENT;}
 
   int discardUnsentMessage(int msgNum){
