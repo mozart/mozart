@@ -4,31 +4,11 @@ SRCDIR          = @srcdir@
 WHAT = tools
 MAIN = main.sgml
 
-EXPLORERSRCS = \
-        actions interface menu status \
-        tree invoke object summary
-
-OTHERSRCS = \
-        linker panel browser compiler
-
 SGMLSRCS0 = \
-        $(EXPLORERSRCS:%=e-%) \
-        $(OTHERSRCS)
+        linker compiler debugger profiler
 
 SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
 
-HTMLEXTRAFILES0 = \
-        note-gui-l1 note-gui-l2 \
-        note-gui-m1 note-gui-m2 \
-        note-gui-r1 note-gui-r2 \
-        explain arrow-r post search draw \
-        memory-heap \
-        runtime-dist runtime-load \
-        threads-runnable \
-        nicebrowser emb_nicebrowser
-
-HTMLEXTRAFILES = \
-        $(HTMLEXTRAFILES0:%=pictures/%.gif)
 HTMLEXTRASUPPORTFILES = \
         danger.gif
 
