@@ -42,10 +42,6 @@
 		       out => ['+record'],
 		       BI  => BIadjoinList},
 
-     'record'	  => { in  => ['+literal','+[feature#value]'],
-		       out => ['+record'],
-		       BI  => BImakeRecord},
-
      'arity'	  => { in  => ['+record'],
 		       out => ['+[feature]'],
 		       bi  => BIarity},
@@ -77,10 +73,6 @@
      'tellRecordSize'=> { in  => ['+literal','+int','record'],
 			  out => [],
 			  BI  => BIsystemTellSize},
-
-     '.'	  => { in  => ['*recordCOrChunk','+feature'],
-		       out => ['value'],
-		       bi  => BIdot},
 
      '^'	  => { in  => ['*recordCOrChunk','+feature'],
 		       out => ['value'],

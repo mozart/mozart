@@ -224,7 +224,7 @@ RunTime.ozf: compiler/RunTime.oz Base.ozf BaseBuiltins.ozf
 	$(COMPILE) -l BaseBuiltins $< -o $@
 
 Compiler.ozf: $(FUNFUNCTORS) ozar
-	$(OZENGINE) $(ARCHIVE) --in=Main.ozf --out=Compiler.ozf
+	$(OZENGINE) ozar --in=Main.ozf --out=Compiler.ozf
 
 #---------------------------------------------------------------------
 # Syslets

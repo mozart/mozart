@@ -53,10 +53,6 @@
 			     out    => [],
 			     BI     => BIshowError},
  
- 'valueToVirtualString' => { in     => ['value','+int','+int'],
-			     out    => ['+string'],
-			     BI     => BItermToVS},
-
  'exit'		        => { in  => ['+int'],
 			     out => [],
 			     BI  => BIshutdown,
@@ -66,10 +62,6 @@
 			     out => [],
 			     BI  => BIgarbageCollection},
  
- 'apply'	        => { in  => ['+procedureOrObject','+[value]'],
-			     out => [],
-			     BI  => BIapply},
-
  'eq'		        => { in  => ['value','value'],
 			     out => ['+bool'],
 			     BI  => BIsystemEq},
