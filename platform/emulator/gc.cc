@@ -1119,7 +1119,7 @@ inline int isNowMarked(OZ_Term t)
 }
 
 void WeakDictionary::gcRecurseV(void) {
-  if (stream) OZ_collect(&stream);
+  if (stream) OZ_collectHeapTerm(stream, stream);
 }
 
 void WeakDictionary::weakGC()
@@ -1138,8 +1138,8 @@ void WeakDictionary::weakGC()
         if (!list) newstream=list=oz_newFuture(oz_rootBoard());
         OZ_Term k = table->getKey(i);
         // collect key and value
-        OZ_collect(&t);
-        OZ_collect(&k);
+        OZ_collectHeapTerm(t,t);
+        OZ_collectHeapTerm(k,k);
         list = oz_cons(oz_pair2(k,t),list);
         count++;
       }
@@ -1158,8 +1158,8 @@ void WeakDictionary::weakGC()
     OZ_Term v = frm->getValue(i);
     if (v!=0) {
       OZ_Term k = frm->getKey(i);
-      OZ_collect(&k);
-      OZ_collect(&v);
+      OZ_collectHeapTerm(k,k);
+      OZ_collectHeapTerm(v,v);
       put(k,v);
     }
   }
@@ -1410,10 +1410,6 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
 // extern
 void OZ_collect(OZ_Term *to) {
   OZ_collectHeapTerm(*to,*to);
-}
-
-void OZ_collectHeapTerm(TaggedRef & frm, TaggedRef & to) {
-  gcTagged(frm, to);
 }
 
 void OZ_collectHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {

@@ -95,7 +95,7 @@ public:
 
 class Propagator_D_I_D : public OZ_Propagator {
 protected:
-  OZ_Term reg_x, reg_z;
+  OZ_Term reg_x, reg_z; // Keep this order!
   int reg_y;
 public:
   Propagator_D_I_D(OZ_Term x, OZ_Term y, OZ_Term z)
@@ -110,7 +110,7 @@ public:
 
 class Propagator_D_D_I : public OZ_Propagator {
 protected:
-  OZ_Term reg_x, reg_y;
+  OZ_Term reg_x, reg_y; // Keep this order!
   int reg_c;
 public:
   Propagator_D_D_I(OZ_Term x, OZ_Term y, int c)
@@ -143,7 +143,7 @@ public:
 
 class Propagator_D_VI_D : public OZ_Propagator {
 protected:
-  OZ_Term reg_n, reg_v;
+  OZ_Term reg_n, reg_v;  // Keep this order!
   int     reg_l_sz;
   int *   reg_l;
 public:
@@ -375,7 +375,7 @@ class Propagator_VD_D_D_D : public OZ_Propagator {
 protected:
   int reg_v_sz;
   OZ_Term * reg_v;
-  OZ_Term reg_low, reg_up, reg_b;
+  OZ_Term reg_low, reg_up, reg_b; // Keep this order
 public:
   Propagator_VD_D_D_D(OZ_Term, OZ_Term, OZ_Term, OZ_Term);
   virtual ~Propagator_VD_D_D_D(void);
@@ -389,7 +389,7 @@ public:
 
 class Propagator_D_I_D_I : public OZ_Propagator {
 protected:
-  OZ_Term reg_x, reg_y;
+  OZ_Term reg_x, reg_y; // Keep this order
   int reg_xd, reg_yd;
 public:
   Propagator_D_I_D_I(OZ_Term x, OZ_Term xd, OZ_Term y, OZ_Term yd)

@@ -65,8 +65,7 @@ void warn_inexact(double v)
 
 void Propagator_D_D::updateHeapRefs(OZ_Boolean)
 {
-  OZ_updateHeapTerm(reg_x);
-  OZ_updateHeapTerm(reg_y);
+  OZ_updateHeapBlock(&reg_x, &reg_x, 2);
 }
 
 OZ_Term Propagator_D_D::getParameters(void) const
@@ -78,9 +77,7 @@ OZ_Term Propagator_D_D::getParameters(void) const
 
 void Propagator_D_D_D::updateHeapRefs(OZ_Boolean)
 {
-  OZ_updateHeapTerm(reg_x);
-  OZ_updateHeapTerm(reg_y);
-  OZ_updateHeapTerm(reg_z);
+  OZ_updateHeapBlock(&reg_x, &reg_x, 3);
 }
 
 OZ_Term Propagator_D_D_D::getParameters(void) const
@@ -93,9 +90,7 @@ OZ_Term Propagator_D_D_D::getParameters(void) const
 
 void Propagator_D_D_D_I::updateHeapRefs(OZ_Boolean)
 {
-  OZ_updateHeapTerm(reg_x);
-  OZ_updateHeapTerm(reg_y);
-  OZ_updateHeapTerm(reg_z);
+  OZ_updateHeapBlock(&reg_x, &reg_x, 3);
 }
 
 OZ_Term Propagator_D_D_D_I::getParameters(void) const
@@ -112,8 +107,7 @@ OZ_Term Propagator_D_D_D_I::getParametersC(char * lit) const
 
 void Propagator_D_I_D::updateHeapRefs(OZ_Boolean)
 {
-  OZ_updateHeapTerm(reg_x);
-  OZ_updateHeapTerm(reg_z);
+  OZ_updateHeapBlock(&reg_x, &reg_x, 2);
 }
 
 OZ_Term Propagator_D_I_D::getParameters(void) const
@@ -125,8 +119,7 @@ OZ_Term Propagator_D_I_D::getParameters(void) const
 
 void Propagator_D_D_I::updateHeapRefs(OZ_Boolean)
 {
-  OZ_updateHeapTerm(reg_x);
-  OZ_updateHeapTerm(reg_y);
+  OZ_updateHeapBlock(&reg_x, &reg_x, 2);
 }
 
 OZ_Term Propagator_D_D_I::getParameters(void) const
@@ -183,8 +176,7 @@ Propagator_D_VI_D::~Propagator_D_VI_D(void)
 
 void Propagator_D_VI_D::updateHeapRefs(OZ_Boolean)
 {
-  OZ_updateHeapTerm(reg_n);
-  OZ_updateHeapTerm(reg_v);
+  OZ_updateHeapBlock(&reg_n, &reg_n, 2);
 
   reg_l = OZ_copyCInts(reg_l_sz, reg_l);
 
@@ -630,9 +622,7 @@ Propagator_VD_D_D_D::Propagator_VD_D_D_D(OZ_Term v, OZ_Term l,
 
 void Propagator_VD_D_D_D::updateHeapRefs(OZ_Boolean)
 {
-  OZ_updateHeapTerm(reg_low);
-  OZ_updateHeapTerm(reg_up);
-  OZ_updateHeapTerm(reg_b);
+  OZ_updateHeapBlock(&reg_low, &reg_low, 3);
   reg_v = OZ_copyOzTerms(reg_v_sz, reg_v);
 }
 
@@ -651,8 +641,7 @@ OZ_Term Propagator_VD_D_D_D::getParameters(void) const
 
 void Propagator_D_I_D_I::updateHeapRefs(OZ_Boolean)
 {
-  OZ_updateHeapTerm(reg_x);
-  OZ_updateHeapTerm(reg_y);
+  OZ_updateHeapBlock(&reg_x, &reg_x, 2);
 }
 
 OZ_Term Propagator_D_I_D_I::getParameters(void) const
