@@ -177,15 +177,49 @@ int OZ_intToC(OZ_Term term)
   return 0;
 }
 
+
 OZ_Term OZ_CStringToInt(char *str)
 {
-  char *help = ozstrdup(str);
-  replChar(help,'~','-');
+  if (str == NULL || str[0] == '\0') {
+    OZ_warning("OZ_CStringToInt(\"\")");
+    goto bomb;
+  }
 
-  OZ_Term ret = (new BigInt(help))->shrink();
-  delete [] help;
-  return ret;
+  {
+    char *aux = str;
+    while(isspace(*aux) && *aux)
+      aux++;
+    int sign = (aux[0] == '~') ? (aux++),-1 : 1;
+    int i = 0;
+    while(*aux) {
+      if (!isdigit(*aux)) {
+	OZ_warning("OZ_CStringToInt(%s): digit expected",str);
+	goto bomb;
+      }
+      i = i*10 + (*aux - '0');
+      if (i > OzMaxInt)
+	goto bigInt;
+      aux++;
+    }
+
+    i *= sign;
+    return newSmallInt(i);
+  }
+  
+ bigInt:
+  {
+    char *help = ozstrdup(str);
+    replChar(help,'~','-');
+    
+    OZ_Term ret = (new BigInt(help))->shrink();
+    delete [] help;
+    return ret;
+  }
+
+ bomb:
+  return newSmallInt(0);
 }
+  
 
 char *OZ_normInt(char *s)
 {
