@@ -24,7 +24,7 @@ LIBS = $(LHOME)/zlib.lib $(LHOME)/gmp.lib
 .SUFFIXES: .obj .cc .hh .s
 
 SRCS= \
-        main.cc \
+        main.cc board-bi.cc event.cc ct-bi.cc\
         version.cc initffuns.cc \
         statisti.cc trace.cc \
         print.cc base.cc ozconfig.cc \
@@ -46,23 +46,23 @@ SRCS= \
         iso-ctype.cc weakdict.cc\
         os.cc unix.cc urlc.cc ioHandler.cc\
         tagged.cc value.cc atoms.cc \
-        dictionary.cc extension.cc bitarray.cc \
+        dictionary.cc extension.cc bits.cc bitarray.cc \
         ozthread.cc heapchunk.cc bytedata.cc\
-        susplist.cc \
+        susplist.cc susp_queue.cc suspendable.cc\
         var_base.cc var_ext.cc var_simple.cc var_future.cc \
         namer.cc\
-        am.cc unify.cc indexing.cc codearea.cc lps.cc \
+        am.cc unify.cc indexing.cc codearea.cc \
         trail.cc emulate.cc scheduler.cc \
         copycode.cc opcodes.cc controlvar.cc \
-        prop_int.cc suspension.cc prop_class.cc \
+        prop_int.cc prop_class.cc \
         thr_stack.cc thr_class.cc thr_pool.cc \
-        thr_queue.cc thr_int.cc\
+        thr_int.cc\
         board.cc distributor.obj space.cc\
         gc.cc mem.cc liveness.cc\
         gname.cc components.cc marshaler.cc site.cc\
         var_of.cc ofbi.cc\
         fdomn.cc fdcore.cc \
-        fdcd.cc var_fd.cc var_bool.cc\
+        var_fd.cc var_bool.cc\
         cpi.cc cpi_fd.cc cpi_prop.cc \
         cpi_fs.cc cpi_expect.cc cpi_misc.cc \
         cpi_stream.cc cpi_profile.cc cpi_ct.cc \
@@ -77,8 +77,10 @@ SRCS= \
         libfset/fsinit.cc\
         \
         libfd/arith.cc libfd/fdaux.cc libfd/bool.cc \
-        libfd/card.cc libfd/cd.cc libfd/count.cc \
-        libfd/rel.cc libfd/disjoint.cc libfd/std.cc \
+        libfd/card.cc libfd/count.cc \
+        libfd/rel.cc libfd/disjoint.cc libfd/prop_fncts.cc\
+        libfd/prop_engine.cc\
+        libfd/std.cc \
         libfd/sum.cc libfd/sumequal.cc \
         libfd/distance.cc libfd/streamProps.cc \
         libfd/sumd.cc libfd/sumabs.cc libfd/complalldist.cc libfd/diffn.cc \
