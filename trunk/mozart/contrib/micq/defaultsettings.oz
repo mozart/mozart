@@ -29,8 +29,8 @@ export
    ticketfile:TicketFile
    systemdir:SystemDir
 define
-   URL='http://www.sics.se/~nilsf/micq/ticket'
-   TicketFile='/home/nilsf/public_html/micq/ticket'
-   PicturesURL='http://www.sics.se/~nilsf/micq/pictures/'
-   SystemDir='/home/nilsf/public_html/micq/system/'
+   URL='http://www.sics.se/mozart/mim/ticket'
+   TicketFile='/home/www/mozart/mim/ticket'
+   PicturesURL='http://www.sics.se/mozart/mim/pictures/'
+   SystemDir='/home/www/mozart/mim/system/'
 end
