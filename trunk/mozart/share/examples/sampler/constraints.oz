@@ -30,7 +30,7 @@
 
 declare L X Y Z in L = [X Y Z]
 
-{Browse L}
+{Inspect L}
 
 {FD.dom 1#10 L}
 
@@ -60,9 +60,9 @@ in
    {FD.distribute naive Sol}
 end
 
-{Browse {SearchOne Problem}}
+{Inspect {SearchOne Problem}}
 
-{Browse {SearchAll Problem}}
+{Inspect {SearchAll Problem}}
      
 {Explorer.object script(Problem)}
 
@@ -103,14 +103,12 @@ end
 %%%
 declare
 proc {MagicSquare ?Sol}
-   Square
-   [N11 N12 N13 N21 N22 N23 N31 N32 N33]
-       = Square
-       = {FD.distinct}
-   Sum = {FD.decl}
+   s(square:Square sum:Sum) = Sol
+   [N11 N12 N13 N21 N22 N23 N31 N32 N33] = Square
 in
-   Sol=s(square:Square sum:Sum)
+   Sum = {FD.decl}
    Square ::: 1#9
+   {FD.distinct Square}
    N11 + N12 + N13 =: Sum
    N21 + N22 + N23 =: Sum
    N31 + N32 + N33 =: Sum
@@ -166,15 +164,15 @@ Prefs   = [alice#chris bert#evan chris#deb
 proc {PhotoConstraints Sol}
    Pos   = {FD.record pos Persons
 	              1#{Length Persons}}
-         = {FD.distinct}
    Sat   = {Map Prefs
 	    fun {$ A#B}
 	       (Pos.A+1 =: Pos.B) +
 	       (Pos.A-1 =: Pos.B) =: 1
 	    end}
    Total = {FD.int 0#{Length Prefs}}
-         = {FD.sum Sat '=:'}
 in
+   {FD.distinct Pos}
+   {FD.sum Sat '=:' Total}
    Sol = s(pos:Pos total:Total sat:Sat)
 end
 
@@ -385,8 +383,7 @@ end
 \insert constraints/crew.oz
 
 declare
-Flights = [
-	   flight(no: 1 crew:4 stewards:1 stewardesses:1
+Flights = [flight(no: 1 crew:4 stewards:1 stewardesses:1
 		  frenchspeaking:1 spanishspeaking:1 germanspeaking:1)
 	   flight(no: 2 crew:5 stewards:1 stewardesses:1
 		  frenchspeaking:1 spanishspeaking:1 germanspeaking:1)
@@ -423,22 +420,3 @@ Crew = crew(stewards:
 
 
 {ExploreOne {CrewProb Flights Crew}}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

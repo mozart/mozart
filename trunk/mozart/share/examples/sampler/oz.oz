@@ -34,7 +34,7 @@ end
 
 
 declare L F O in 
-{Browse O}
+{Inspect O}
 O={MAP L F}
 
 L = _|_|_
@@ -59,7 +59,7 @@ end
 
 declare L X Y Z in L=[X Y Z]
 {FD.dom 1#10 L}
-{Browse L}
+{Inspect L}
 
 2*Y=:Z
 
@@ -79,9 +79,9 @@ in
    {FD.distribute ff L}
 end
 
-{Browse {SearchOne Q}}
+{Inspect {SearchOne Q}}
 
-{Browse {SearchAll Q}}
+{Inspect {SearchAll Q}}
 
 {ExploreOne Q}
 
@@ -108,8 +108,8 @@ end
 
 
 declare L N in 
-{Browse L}
-{Browse N}
+{Inspect L}
+{Inspect N}
 
 
 {LENGTH L N}
@@ -146,15 +146,15 @@ class Counter
    meth inc
       val <- @val + 1
    end
-   meth browse
-      {Browse counter(@val)} 
+   meth inspect
+      {Inspect counter(@val)} 
    end
 end
-C = {New Counter browse}
+C = {New Counter inspect}
 
 {C inc}
 
-{C browse}
+{C inspect}
 
 %%% a concurrent object
 
@@ -164,19 +164,19 @@ class DCounter from Counter
    meth set(X)
       lock
 	 val <- X 
-	 {self browse}
+	 {self inspect}
       end
    end
    meth dec
       lock 
 	 val <- @val-1
-	 {self browse}
+	 {self inspect}
       end
    end
    meth inc
       lock
 	 Counter,inc
-	 {self browse}
+	 {self inspect}
       end
    end
 end
@@ -196,7 +196,7 @@ X=56
 
 
 {Delay 3000}
-{Browse 'fired after 3 seconds'}
+{Inspect 'fired after 3 seconds'}
 
 
 declare
@@ -207,7 +207,7 @@ proc {DoWithDelay Xs T P}
    end
 end
 
-{DoWithDelay [this is a nice list] 1000 Browse}
+{DoWithDelay [this is a nice list] 1000 Inspect}
 
 
 %%%%%%%%%%%%%%%%%% Animation
@@ -215,7 +215,7 @@ end
 
 declare
 class TimeCounter from DCounter Time.repeat end
-D = {New TimeCounter browse}
+D = {New TimeCounter inspect}
 
 {D setRepAction(inc)}
 
@@ -397,7 +397,7 @@ class InternetController
       end
    end
 end
-IC={New InternetController server(port:{Browse portNumber($)})}
+IC={New InternetController server(port:{Inspect portNumber($)})}
 {IC getCommand}
 
 
