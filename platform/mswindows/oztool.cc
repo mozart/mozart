@@ -40,11 +40,11 @@
 // Summary of how oztool behaves:
 //
 // oztool -gnu c++ -c <cfile> [ -o <ofile> ]
-//    g++-2 -mno-cygwin -I"$OZHOME/include" -c <cfile> [ -o <ofile> ]
+//    g++ -mno-cygwin -I"$OZHOME/include" -c <cfile> [ -o <ofile> ]
 // oztool -gnu cc -c <cfile> [ -o <ofile> ]
-//    gcc-2 -mno-cygwin -I"$OZHOME/include" -c <cfile> [ -o <ofile> ]
+//    gcc -mno-cygwin -I"$OZHOME/include" -c <cfile> [ -o <ofile> ]
 // oztool -gnu ld -o <target> <file1> ... <filen>
-//    g++-2 -mno-cygwin -shared <args> \
+//    g++ -mno-cygwin -shared <args> \
 //       $OZHOME/platform/win32-i486/emulator.dll -lmsvcrt
 //
 // oztool -msvc c++ -c <cfile> [ -o <ofile> ]
@@ -279,11 +279,11 @@ int main(int argc, char **argv)
   }
 
   char *gccProg = ozGetenv("OZTOOL_CC");
-  gccProg = gccProg? strdup(gccProg): const_cast<char *>("gcc-2 -mno-cygwin");
+  gccProg = gccProg? strdup(gccProg): const_cast<char *>("gcc -mno-cygwin");
   char *gxxProg = ozGetenv("OZTOOL_CXX");
-  gxxProg = gxxProg? strdup(gxxProg): const_cast<char *>("g++-2 -mno-cygwin");
+  gxxProg = gxxProg? strdup(gxxProg): const_cast<char *>("g++ -mno-cygwin");
   char *gldProg = ozGetenv("OZTOOL_LD");
-  gldProg = gldProg? strdup(gldProg): const_cast<char *>("g++-2 -mno-cygwin");
+  gldProg = gldProg? strdup(gldProg): const_cast<char *>("g++ -mno-cygwin");
   char *incdir = getIncDir(argc,argv);
   bool hasIncdir = incdir != NULL;
   if (!hasIncdir) incdir = concat(getOzHome(true),"/include");
