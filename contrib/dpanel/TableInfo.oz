@@ -3,7 +3,6 @@ import
    Browser(browse)
    DPPane(getTablesInfo) at 'x-oz://boot/DPPane'
    DPB at 'x-oz://boot/DPB'
-   System
 export
    ownerTable:OwnerTable
    borrowTable:BorrowTable
@@ -133,13 +132,10 @@ define
       meth updateEntity(Data Key) Site Col Index Used in
          Key =  {self.makeKey Data}
          Site = {self.makeSite Data}
-         {System.show updatingEntity(Data)}
          if {Dictionary.member self.table Key} then
             OldCredit = {self.getCredit {Dictionary.get self.table Key}}
          in
-            {System.show wasMember#Data}
             if OldCredit \= {self.getCredit Data} then
-               {System.show foundUsed(Key#Data)}
                Used = self.usedCounter.Key + 1
                Table, increment(self.diff Site)
                updates <- Key|@updates
@@ -147,7 +143,6 @@ define
                Used = self.usedCounter.Key
             end
          else
-            {System.show wasNEw#Data}
             Used = 1
             {self.colorAlloc get(Site Col Index)}
             new <- site(key:Key fg:Col
@@ -203,7 +198,6 @@ define
          if @remove \= nil then
             {self.guiSites deleteSite(@remove)}
          end
-         {System.show @updates}
          {ForAll @updates
           proc{$ K}
              Data = self.table.K
