@@ -70,7 +70,7 @@ public:
   MPRINT
   void printTree();
 
-  void addSuspension(int n=1) { suspCount += n; }
+  void incSuspCount(int n=1) { suspCount += n; }
   void addSuspension (Suspension *susp);
   // should be applied only for 'solve' boards;
   Board *gcGetBoardDeref();

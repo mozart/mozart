@@ -291,13 +291,13 @@ inline Bool isTuple(TaggedRef term) {
   return isTuple(tagTypeOf(term));
 }
 
-inline Bool isTree(TypeOfTerm tag) {
+inline Bool isNoNumber(TypeOfTerm tag) {
   return isRecord(tag) || isTuple(tag) ? OK : NO ;
 }
 
-inline Bool isTree(TaggedRef term) {
+inline Bool isNoNumber(TaggedRef term) {
   GCDEBUG(term);
-  return isTree(tagTypeOf(term));
+  return isNoNumber(tagTypeOf(term));
 }
 
 inline Bool isFloat(TypeOfTerm tag) {

@@ -48,12 +48,12 @@ TypeOfTerm tag;								      \
   DEREF(V, VPTR, VTAG);
 
 #define CREATE_SUSP_SELF(S) 						      \
-  Suspension *S = (Suspension *) OZ_makeSuspension(OZ_self, OZ_args, OZ_arity);
+  Suspension *S = (Suspension *) OZ_makeSelfSuspension();
 
 #define CREATE_SUSP_SELF_IF(C, S)                                             \
   Suspension *S=NULL;                                                         \
   if (C) {                                                                    \
-    S = (Suspension *) OZ_makeSuspension(OZ_self, OZ_args, OZ_arity);         \
+    S = (Suspension *) OZ_makeSelfSuspension();				      \
   }
     
 #define CREATE_SUSP(S, F, X, A)                                               \
@@ -74,9 +74,8 @@ OZ_C_proc_begin(Name,1)							      \
   OZ_Term arg = OZ_getCArg(0);						      \
   State state = InlineName(arg);				      	      \
   if (state == SUSPEND) {						      \
-    DEREF(arg,APtr,_1);							      \
-    OZ_Suspension susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
-    OZ_addSuspension(APtr,susp);					      \
+    OZ_Suspension susp = OZ_makeSelfSuspension();			      \
+    OZ_addSuspension(arg,susp);						      \
     return PROCEED;							      \
   } else {								      \
     return state;							      \
@@ -92,11 +91,9 @@ OZ_C_proc_begin(Name,2)							      \
   OZ_Term arg1 = OZ_getCArg(1);						      \
   State state = InlineName(arg0,arg1);					      \
   if (state == SUSPEND) {						      \
-    DEREF(arg0,APtr,_1);						      \
-    DEREF(arg1,BPtr,_2);						      \
-    OZ_Suspension susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
-    if (isAnyVar(arg0)) OZ_addSuspension(APtr,susp);			      \
-    if (isAnyVar(arg1)) OZ_addSuspension(BPtr,susp);			      \
+    OZ_Suspension susp = OZ_makeSelfSuspension();			      \
+    if (OZ_isVariable(arg0)) OZ_addSuspension(arg0,susp);		      \
+    if (OZ_isVariable(arg1)) OZ_addSuspension(arg1,susp);		      \
     return PROCEED;							      \
   } else {								      \
     return state;							      \
@@ -114,9 +111,8 @@ OZ_C_proc_begin(Name,2)							      \
   State state = InlineName(arg,help);					      \
   switch (state) {							      \
   case SUSPEND:	{							      \
-    DEREF(arg,APtr,_1);							      \
-    OZ_Suspension susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
-    OZ_addSuspension(APtr,susp);					      \
+    OZ_Suspension susp = OZ_makeSelfSuspension();			      \
+    OZ_addSuspension(arg,susp);						      \
     return PROCEED;							      \
    }									      \
   case FAILED:								      \
@@ -141,11 +137,9 @@ OZ_C_proc_begin(Name,3)							      \
   State state=InlineName(arg0,arg1,help);		  		      \
   switch (state) {							      \
   case SUSPEND:	{							      \
-    DEREF(arg0,APtr,_1);						      \
-    DEREF(arg1,BPtr,_2);						      \
-    OZ_Suspension susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
-    if (isAnyVar(arg0)) OZ_addSuspension(APtr,susp);			      \
-    if (isAnyVar(arg1)) OZ_addSuspension(BPtr,susp);			      \
+    OZ_Suspension susp = OZ_makeSelfSuspension();			      \
+    if (OZ_isVariable(arg0)) OZ_addSuspension(arg0,susp);		      \
+    if (OZ_isVariable(arg1)) OZ_addSuspension(arg1,susp);		      \
     return PROCEED;							      \
     }									      \
   case FAILED:								      \
@@ -170,13 +164,10 @@ OZ_C_proc_begin(Name,4)							      \
   State state=InlineName(arg0,arg1,arg2,help);		  		      \
   switch (state) {							      \
   case SUSPEND:	{							      \
-    DEREF(arg0,APtr,_1);						      \
-    DEREF(arg1,BPtr,_2);						      \
-    DEREF(arg2,CPtr,_3);						      \
-    OZ_Suspension susp = OZ_makeSuspension(Name, OZ_args, OZ_arity);	      \
-    if (isAnyVar(arg0)) OZ_addSuspension(APtr,susp);			      \
-    if (isAnyVar(arg1)) OZ_addSuspension(BPtr,susp);			      \
-    if (isAnyVar(arg2)) OZ_addSuspension(CPtr,susp);			      \
+    OZ_Suspension susp = OZ_makeSelfSuspension();			      \
+    if (OZ_isVariable(arg0)) OZ_addSuspension(arg0,susp);		      \
+    if (OZ_isVariable(arg1)) OZ_addSuspension(arg1,susp);		      \
+    if (OZ_isVariable(arg2)) OZ_addSuspension(arg2,susp);		      \
     return PROCEED;							      \
     }									      \
   case FAILED:								      \
@@ -210,18 +201,18 @@ public:
 		   InlineFunOrRel infun=NULL)
   : arity(arty),fun(fn), inlineFun(infun), type(BIDefault)
   {
-    printname = OZ_stringToTerm(s);
+    printname = makeTaggedAtom(s);
     Assert(isXAtom(printname));
   }
   BuiltinTabEntry (char *s,int arty,OZ_CFun fn,BIType t,
 		   InlineFunOrRel infun=NULL)
     : arity(arty),fun(fn), inlineFun(infun), type(t) {
-      printname = OZ_stringToTerm(s);
+      printname = makeTaggedAtom(s);
     }
   BuiltinTabEntry (char *s,int arty,BIType t, InlineFunOrRel infun=NULL)
     : arity(arty),fun(NULL), inlineFun(infun), type(t)
   {
-    printname = OZ_stringToTerm(s);
+    printname = makeTaggedAtom(s);
     Assert(isXAtom(printname));
   }
 
@@ -248,7 +239,7 @@ public:
   }
 
   Bool operator== (char *s) {
-    return printname == OZ_stringToTerm(s) ? OK : NO;
+    return printname == makeTaggedAtom(s) ? OK : NO;
   }
   Bool operator<  (char *s) {
     error("not impl");

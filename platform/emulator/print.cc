@@ -336,7 +336,7 @@ PRINT(Float)
 
 PRINT(BigInt)
 {
-  char *s = string();
+  char *s = stringTilde();
   stream << s;
 //       << "B";
 
@@ -753,7 +753,7 @@ PRINTLONG(SVariable)
   
   stream << indent(offset)
 	 << "HomeNode: ";
-  clusterNode->getBoardDeref()->print(stream,0);
+  home->getBoardDeref()->print(stream,0);
   stream << endl;
 }
 
@@ -784,7 +784,7 @@ PRINTLONG(GenCVariable){
    }
   
   stream << indent(offset) << "HomeNode: ";
-  clusterNode->getBoardDeref()->print(stream,0);
+  home->getBoardDeref()->print(stream,0);
   stream << endl;
 
   switch(type){
@@ -948,7 +948,7 @@ PRINTLONG(Float)
 
 PRINTLONG(BigInt)
 {
-  char *s = string();
+  char *s = stringTilde();
 
   stream << indent(offset)
 	 << "BigInt @" << this << ": "
