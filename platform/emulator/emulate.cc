@@ -34,6 +34,10 @@
 #include "fdhook.hh"
 
 
+extern State BIexchangeCellInline(TaggedRef c, TaggedRef out,TaggedRef &in);
+extern TaggedRef getSuspHandlerBool(InlineFun2);
+
+
 // -----------------------------------------------------------------------
 // TOPLEVEL FAILURE
 
@@ -76,16 +80,17 @@
       TaggedRef term = indexTerm;					      \
       DEREF(term,_1,_2);						      \
 									      \
-      if (isLTuple(term)) {						      \
-	ProgramCounter offset = table->listLabel;			      \
-	sPointer = tagged2LTuple(term)->getRef();			      \
+      if (!isLTuple(term)) {						      \
+	TaggedRef *sp = sPointer;					      \
+	ProgramCounter offset = switchOnTermOutline(term,table,sp);	      \
+	sPointer = sp;							      \
 	JUMP(offset);							      \
       }									      \
-      									      \
-      TaggedRef *sp = sPointer;						      \
-      ProgramCounter offset = switchOnTermOutline(term,table,sp);	      \
-      sPointer = sp;							      \
-      JUMP(offset);
+									      \
+      ProgramCounter offset = table->listLabel;				      \
+      sPointer = tagged2LTuple(term)->getRef();				      \
+      JUMP(offset);							      \
+
 
 
 static ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
@@ -140,7 +145,7 @@ static ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
   }
 
   if (isCVar(term)) {
-    return (tagged2CVar(term)->index(offset, table));
+    return (table->index(tagged2CVar(term),offset));
   }
 
   return offset;
@@ -163,8 +168,8 @@ static ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
 
 static
 Bool emulateHookOutline(AM *e, Abstraction *def=NULL,
-			     int arity=0,
-			     TaggedRef *arguments=NULL)
+			int arity=0,
+			TaggedRef *arguments=NULL)
 {
   // without signal blocking;
   if (e->isSetSFlag(ThreadSwitch)) {
@@ -206,40 +211,18 @@ Bool hookCheckNeeded(AM *e)
   Alarm::Handle();   // simulate an alarm
 #endif
   
-  return (e->isSetSFlag()) ? OK:NO;
-}
-
-inline
-Bool emulateHook(AM * e,
-		 Abstraction * def=NULL,
-		 int arity=0,
-		 TaggedRef * arguments=NULL)
-{
-  if (!hookCheckNeeded(e)) {
-    return FALSE;
-  }
-  return emulateHookOutline(e, def, arity, arguments);
+  return (e->isSetSFlag());
 }
 
 
 
-static
-TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
-{
-  if (arity == 0) {
-    return makeTaggedAtom(label);
-  } else {
-    if (arity == 2 && sameLiteral(makeTaggedAtom(label),AtomCons)) {
-      return makeTaggedLTuple(new LTuple(X[3],X[4]));
-    } else {
-      STuple *tuple = STuple::newSTuple(makeTaggedAtom(label),arity);
-      for (int i = arity-1;i >= 0; i--) {
-	tuple->setArg(i,X[i+3]);
-      }
-      return makeTaggedSTuple(tuple);
-    }
-  }
-}
+
+
+/* macros are faster ! */
+#define emulateHook(e,def,arity,arguments) \
+ (!hookCheckNeeded(e) ? FALSE : emulateHookOutline(e, def, arity, arguments))
+
+#define emulateHook0(e) emulateHook(e,NULL,0,NULL)
 
 /* NOTE:
  * in case we have call(x-N) and we have to switch process or do GC
@@ -326,8 +309,9 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
 #define Yreg(N) RegAccess(Y,N)
 #define Greg(N) RegAccess(G,N)
 
+#define XPC(N) Xreg(getRegArg(PC+N))
 
-
+ 
 /* install new board, continue only if successful
    opt:
      if already installed do nothing
@@ -356,6 +340,130 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
 #define Into(Reg)
 #endif
 
+
+
+// ------------------------------------------------------------------------
+// outlined auxiliary functions
+// ------------------------------------------------------------------------
+
+static
+void suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
+		  RefsArray X, RefsArray Y, RefsArray G, int prio)
+{
+  DEREF(A,APtr,ATag);
+  if (isAnyVar(ATag)) {
+    Suspension *susp =
+      new Suspension(new SuspContinuation(b,prio,PC,Y,G,X,argsToSave));
+    b->incSuspCount();
+    taggedBecomesSuspVar(APtr)->addSuspension(susp);
+  }
+}
+
+static
+void suspendInlineRel(TaggedRef A, TaggedRef B, int noArgs,
+		      OZ_CFun fun, AM *e, ByteCode *shallowCP)
+{
+  Assert(noArgs==1 || noArgs==2);
+  
+  static RefsArray X = allocateStaticRefsArray(2);
+  
+  if (shallowCP) {
+    e->trail.pushIfVar(A);
+    if (noArgs>1) e->trail.pushIfVar(B);
+    return;
+  }
+
+  X[0] = A;
+  X[1] = B;
+  
+  OZ_Suspension susp = OZ_makeSuspension(fun,X,noArgs);
+  if (OZ_isVariable(A)) OZ_addSuspension(A,susp);
+  if (noArgs>1 && OZ_isVariable(B)) OZ_addSuspension(B,susp);
+}
+
+
+static
+void suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C, TaggedRef &Out,
+		      int noArgs,
+		      BuiltinTabEntry *entry, AM *e, ByteCode *shallowCP)
+{
+  static RefsArray X = allocateStaticRefsArray(4);
+
+  TaggedRef newVar = makeTaggedRef(newTaggedUVar(e->currentBoard));
+  Out = newVar;
+  
+  if (shallowCP) {
+    e->trail.pushIfVar(A);
+    if (noArgs>=3) e->trail.pushIfVar(B);
+    if (noArgs>=4) e->trail.pushIfVar(C);
+    return;
+  }
+
+  int i=0;
+  X[i++] = A;
+  if (noArgs>=3) X[i++] = B;
+  if (noArgs>=4) X[i++] = C;
+  X[i] = newVar;
+  
+  OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, noArgs);
+
+  if (OZ_isVariable(A)) OZ_addSuspension(A,susp);
+
+  // special hack for exchangeCell: suspends only on the first argument
+  if (noArgs == 3 &&
+      OZ_isVariable(B) && (InlineFun2) entry->getInlineFun() != BIexchangeCellInline) {
+    OZ_addSuspension(B,susp);
+  } else {
+    if (noArgs>=3 && OZ_isVariable(B)) OZ_addSuspension(B,susp);
+    if (noArgs>=4 && OZ_isVariable(C)) OZ_addSuspension(C,susp);
+  }
+}
+
+
+static
+TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
+{
+  if (arity == 0) {
+    return makeTaggedAtom(label);
+  } else {
+    if (arity == 2 && sameLiteral(makeTaggedAtom(label),AtomCons)) {
+      return makeTaggedLTuple(new LTuple(X[3],X[4]));
+    } else {
+      STuple *tuple = STuple::newSTuple(makeTaggedAtom(label),arity);
+      for (int i = arity-1;i >= 0; i--) {
+	tuple->setArg(i,X[i+3]);
+      }
+      return makeTaggedSTuple(tuple);
+    }
+  }
+}
+
+static
+TaggedRef createNamedVariable(int regIndex, Atom *name, AM *e, RefsArray Y)
+{
+  int size = getRefsArraySize(e->toplevelVars);
+  if (LessIndex(size,regIndex)) {
+    int newSize = int(size*1.5);
+    message("resizing store for toplevel vars from %d to %d\n",size,newSize);
+    e->toplevelVars = resize(e->toplevelVars,newSize);
+    Y = e->toplevelVars;
+    // no deletion of old array --> GC does it
+  }
+  SVariable *svar = new SVariable(e->currentBoard, makeTaggedAtom(name));
+  return makeTaggedRef(newTaggedSVar(svar));
+}
+
+static
+STuple *newSTupleOutline(Atom *atom, int arity)
+{
+  return STuple::newSTuple(atom,arity);
+}
+
+static
+SRecord *newSRecordOutline(Arity *ff, TaggedRef label)
+{
+  return new SRecord(ff,label,-1,NO);
+}
 
 void engine() {
   
@@ -459,7 +567,7 @@ void engine() {
  LBLpopTask:
   {
     DebugCheckT(Board *fsb);
-    if (emulateHook(e)) {
+    if (emulateHook0(e)) {
       goto LBLschedule;
     }
 
@@ -712,7 +820,7 @@ void engine() {
 // ------------------------------------------------------------------------
 
  LBLemulateHook:
-  if (emulateHook(e)) {
+  if (emulateHook0(e)) {
     e->pushTaskOutline(CBB,PC,Y,G,X,XSize);
     goto LBLschedule;
   }
@@ -841,8 +949,7 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
 
-      TaggedRef A = Xreg(getRegArg(PC+2));
-      OZ_Bool res = rel(A);
+      OZ_Bool res = rel(XPC(2));
 
       switch(res) {
 
@@ -851,19 +958,7 @@ void engine() {
 
       case SUSPEND:
 	{
-	  if (shallowCP) {
-	    e->trail.pushIfVar(A);
-	    DISPATCH(3);
-	  }
-
-	  TaggedRef saveX0 = X[0];
-	  X[0] = A;
-
-	  OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 1);
-	  OZ_addSuspension(A,susp);
-
-	  X[0] = saveX0;
-
+	  suspendInlineRel(XPC(2),makeTaggedNULL(),1,entry->getFun(),e,shallowCP);
 	  DISPATCH(3);
 	}
       case FAILED:
@@ -871,7 +966,7 @@ void engine() {
 	  SHALLOWFAIL;
 	  HANDLE_FAILURE(PC+3,
 			 message("INLINEREL = {`%s` %s}",
-				 entry->getPrintName(),tagged2String(A)));
+				 entry->getPrintName(),tagged2String(XPC(2))));
 	}
       }
     }
@@ -881,9 +976,7 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel2 rel         = (InlineRel2)entry->getInlineFun();
 
-      TaggedRef A = Xreg(getRegArg(PC+2));
-      TaggedRef B = Xreg(getRegArg(PC+3));
-      OZ_Bool res = rel(A,B);
+      OZ_Bool res = rel(XPC(2),XPC(3));
 
       switch(res) {
 
@@ -892,25 +985,7 @@ void engine() {
 
       case SUSPEND:
 	{
-	  if (shallowCP) {
-	    e->trail.pushIfVar(A);
-	    e->trail.pushIfVar(B);
-	    DISPATCH(4);
-	  }
-
-	  TaggedRef saveX0 = X[0];
-	  TaggedRef saveX1 = X[1];
-
-	  X[0] = A;
-	  X[1] = B;
-
-	  OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 2);
-	  if (OZ_isVariable(A)) OZ_addSuspension(A,susp);
-	  if (OZ_isVariable(B)) OZ_addSuspension(B,susp);
-
-	  X[0] = saveX0;
-	  X[1] = saveX1;
-
+	  suspendInlineRel(XPC(2),XPC(3),2,entry->getFun(),e,shallowCP);
 	  DISPATCH(4);
 	}
       case FAILED:
@@ -919,7 +994,7 @@ void engine() {
 	  HANDLE_FAILURE(PC+4,
 			 message("INLINEREL = {`%s` %s %s}",
 				 entry->getPrintName(),
-				 tagged2String(A),tagged2String(B)));
+				 tagged2String(XPC(2)),tagged2String(XPC(3))));
 	}
       }
     }
@@ -932,10 +1007,8 @@ void engine() {
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun1 fun         = (InlineFun1)entry->getInlineFun();
-      TaggedRef &Out         = Xreg(getRegArg(PC+3));
 
-      TaggedRef A = Xreg(getRegArg(PC+2));
-      OZ_Bool res = fun(A,Out);
+      OZ_Bool res = fun(XPC(2),XPC(3));
 
       switch(res) {
 
@@ -944,36 +1017,17 @@ void engine() {
 
       case SUSPEND:
 	{
-	  TaggedRef newVar = makeTaggedRef(newTaggedUVar(CBB));
-
-	  Xreg(getRegArg(PC+3)) = newVar;
-
-	  if (shallowCP) {
-	    e->trail.pushIfVar(A);
-	    DISPATCH(4);
-	  }
-
-	  TaggedRef saveX0 = X[0];
-	  TaggedRef saveX1 = X[1];
-
-	  X[0] = A;
-	  X[1] = newVar;
-
-	  OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 2);
-	  OZ_addSuspension(A,susp);
-
-	  X[0] = saveX0;
-	  X[1] = saveX1;
-
+	  suspendInlineFun(XPC(2),makeTaggedNULL(),makeTaggedNULL(),XPC(3),2,
+			   entry,e,shallowCP);
 	  DISPATCH(4);
 	}
       case FAILED:
 	{
 	  SHALLOWFAIL;
 	  HANDLE_FAILURE(PC+4,
-			 Out = makeTaggedRef(newTaggedUVar(CBB));
+			 XPC(3) = makeTaggedRef(newTaggedUVar(CBB));
 			 message("INLINEFUN = {`%s` %s}",
-				 entry->getPrintName(),tagged2String(A)));
+				 entry->getPrintName(),tagged2String(XPC(2))));
 	}
       }
     }
@@ -982,12 +1036,8 @@ void engine() {
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun2 fun = (InlineFun2)entry->getInlineFun();
-      TaggedRef &Out = Xreg(getRegArg(PC+4));
 
-      TaggedRef A      = Xreg(getRegArg(PC+2));
-      TaggedRef B      = Xreg(getRegArg(PC+3));
-
-      OZ_Bool res = fun(A,B,Out);
+      OZ_Bool res = fun(XPC(2),XPC(3),XPC(4));
 
       switch(res) {
 
@@ -995,64 +1045,31 @@ void engine() {
 	DISPATCH(5);
 
       case SUSPEND:
-	{
-	  TaggedRef newVar = makeTaggedRef(newTaggedUVar(CBB));
+	suspendInlineFun(XPC(2),XPC(3),makeTaggedNULL(),XPC(4),3,entry,e,shallowCP);
+	DISPATCH(5);
 
-	  Xreg(getRegArg(PC+4)) = newVar;
-
-	  if (shallowCP) {
-	    e->trail.pushIfVar(A);
-	    e->trail.pushIfVar(B);
-	    DISPATCH(5);
-	  }
-
-	  TaggedRef saveX0 = X[0];
-	  TaggedRef saveX1 = X[1];
-	  TaggedRef saveX2 = X[2];
-
-	  X[0] = A;
-	  X[1] = B;
-	  X[2] = newVar;
-
-	  OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 3);
-	  if (OZ_isVariable(A)) OZ_addSuspension(A,susp);
-
-	  extern State BIexchangeCellInline(TaggedRef c, TaggedRef out,
-					    TaggedRef &in);
-	  // special hack for exchangeCell: suspends only on the first argument
-	  if (OZ_isVariable(B) && fun != BIexchangeCellInline)
-	    OZ_addSuspension(B,susp);
-
-	  X[0] = saveX0;
-	  X[1] = saveX1;
-	  X[2] = saveX2;
-
-	  DISPATCH(5);
-	}
       case FAILED:
 	{
 	  SHALLOWFAIL;
 	  HANDLE_FAILURE(PC+5,
-			 Out = makeTaggedRef(newTaggedUVar(CBB));
+			 XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
 			 message("INLINEFUN = {`%s` %s %s}",
 				 entry->getPrintName(),
-				 tagged2String(A),
-				 tagged2String(B)));
+				 tagged2String(XPC(2)),
+				 tagged2String(XPC(3))));
+
+
 	}
       }
     }
 
 
-  INSTRUCTION(INLINEEQEQ)
+  INSTRUCTION(INLINEFUN3)
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
-      InlineFun2 fun = (InlineFun2)entry->getInlineFun();
-      TaggedRef &Out = Xreg(getRegArg(PC+4));
+      InlineFun3 fun = (InlineFun3)entry->getInlineFun();
 
-      TaggedRef A      = Xreg(getRegArg(PC+2));
-      TaggedRef B      = Xreg(getRegArg(PC+3));
-
-      OZ_Bool res = fun(A,B,Out);
+      OZ_Bool res = fun(XPC(2),XPC(3),XPC(4),XPC(5));
 
       switch(res) {
 
@@ -1061,18 +1078,51 @@ void engine() {
 
       case SUSPEND:
 	{
+	  suspendInlineFun(XPC(2),XPC(3),XPC(4),XPC(5),4,entry,e,shallowCP);
+	  DISPATCH(6);
+	}
+      case FAILED:
+	{
+	  SHALLOWFAIL;
+	  HANDLE_FAILURE(PC+6,
+			 XPC(5) = makeTaggedRef(newTaggedUVar(CBB));
+			 message("INLINEFUN = {`%s` %s %s %s}",
+				 entry->getPrintName(),
+				 tagged2String(XPC(2)),
+				 tagged2String(XPC(3)),
+				 tagged2String(XPC(4))));
+	}
+      }
+    }
+
+  INSTRUCTION(INLINEEQEQ)
+    {
+      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
+      InlineFun2 fun = (InlineFun2)entry->getInlineFun();
+
+      OZ_Bool res = fun(XPC(2),XPC(3),XPC(4));
+
+      switch(res) {
+
+      case PROCEED:
+	DISPATCH(6);
+
+      case SUSPEND:
+	{
+	  TaggedRef A = XPC(2);
+	  TaggedRef B = XPC(3);
+
 	  TaggedRef newVar = makeTaggedRef(newTaggedUVar(CBB));
 	  int argsToSave = getPosIntArg(PC+5);
 
-	  Xreg(getRegArg(PC+4)) = newVar;
+	  XPC(4) = newVar;
 
-	  e->pushTask(CBB,PC+6,Y,G,X,argsToSave);
+	  e->pushTaskOutline(CBB,PC+6,Y,G,X,argsToSave);
 
 	  X[0] = A;
 	  X[1] = B;
 	  X[2] = newVar;
 
-	  extern TaggedRef getSuspHandlerBool(InlineFun2);
 	  TaggedRef handler = getSuspHandlerBool(fun);
 	  if (handler != makeTaggedNULL()) {
 	    predicate = tagged2SRecord(handler);
@@ -1083,75 +1133,17 @@ void engine() {
 	  
 	  HANDLE_FAILURE(PC+6,message("susp handler for ==B, \\=B not set"));
 	}
-	  
+
+#ifdef DEBUG_CHECK
       case FAILED:
 	error("{`%s` %s %s} unexpectedly failed",
-	      entry->getPrintName(), tagged2String(A),tagged2String(B));
+	      entry->getPrintName(), tagged2String(XPC(2)), tagged2String(XPC(3)));
 	break;
+#endif
       }
     }
 
 
-  INSTRUCTION(INLINEFUN3)
-    {
-      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
-      InlineFun3 fun = (InlineFun3)entry->getInlineFun();
-
-      TaggedRef A    = Xreg(getRegArg(PC+2));
-      TaggedRef B    = Xreg(getRegArg(PC+3));
-      TaggedRef C    = Xreg(getRegArg(PC+4));
-      TaggedRef &Out = Xreg(getRegArg(PC+5));
-
-      OZ_Bool res = fun(A,B,C,Out);
-
-      switch(res) {
-
-      case PROCEED:
-	DISPATCH(6);
-
-      case SUSPEND:
-	{
-	  TaggedRef newVar = makeTaggedRef(newTaggedUVar(CBB));
-
-	  Xreg(getRegArg(PC+5)) = newVar;
-
-	  if (shallowCP) {
-	    e->trail.pushIfVar(A);
-	    e->trail.pushIfVar(B);
-	    e->trail.pushIfVar(C);
-	    DISPATCH(6);
-	  }
-
-	  TaggedRef saveX0 = X[0];
-	  TaggedRef saveX1 = X[1];
-	  TaggedRef saveX2 = X[2];
-	  TaggedRef saveX3 = X[3];
-
-	  X[0] = A; X[1] = B; X[2] = C; X[3] = newVar;
-
-	  OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 4);
-	  if (OZ_isVariable(A)) OZ_addSuspension(A,susp);
-	  if (OZ_isVariable(B)) OZ_addSuspension(B,susp);
-	  if (OZ_isVariable(C)) OZ_addSuspension(C,susp);
-
-	  X[0] = saveX0; X[1] = saveX1;
-	  X[2] = saveX2; X[3] = saveX3;
-
-	  DISPATCH(6);
-	}
-      case FAILED:
-	{
-	  SHALLOWFAIL;
-	  HANDLE_FAILURE(PC+6,
-			 Out = makeTaggedRef(newTaggedUVar(CBB));
-			 message("INLINEFUN = {`%s` %s %s %s}",
-				 entry->getPrintName(),
-				 tagged2String(A),
-				 tagged2String(C),
-				 tagged2String(B)));
-	}
-      }
-    }
 #undef SHALLOWFAIL
 
 // ------------------------------------------------------------------------
@@ -1170,7 +1162,7 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
 
-      OZ_Bool res = rel(Xreg(getRegArg(PC+2)));
+      OZ_Bool res = rel(XPC(2));
 
       switch(res) {
 
@@ -1179,17 +1171,8 @@ void engine() {
 
       case SUSPEND:
         {
-	  TaggedRef A = Xreg(getRegArg(PC+2));
-	  DEREF(A,APtr,ATag);
-	  if (isAnyVar(ATag)) {
-	    int argsToSave   = getPosIntArg(PC+5);
-	    Suspension *susp =
-	      new Suspension(new SuspContinuation(CBB,
-						  GET_CURRENT_PRIORITY(),
-						  PC, Y, G, X, argsToSave));
-	    CBB->incSuspCount();
-	    taggedBecomesSuspVar(APtr)->addSuspension(susp);
-	  }
+	  suspendOnVar(XPC(2),getPosIntArg(PC+5),
+		       CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
 	  goto LBLcheckEntailment;
 	}
 
@@ -1203,8 +1186,7 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel2 rel         = (InlineRel2)entry->getInlineFun();
 
-      OZ_Bool res = rel(Xreg(getRegArg(PC+2)),
-			Xreg(getRegArg(PC+3)));
+      OZ_Bool res = rel(XPC(2),XPC(3));
 
       switch(res) {
 
@@ -1213,8 +1195,8 @@ void engine() {
 
       case SUSPEND:
 	{
-	  TaggedRef A    = Xreg(getRegArg(PC+2));
-	  TaggedRef B    = Xreg(getRegArg(PC+3));
+	  TaggedRef A    = XPC(2);
+	  TaggedRef B    = XPC(3);
 	  DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
 	  int argsToSave    = getPosIntArg(PC+6);
 	  Suspension *susp  =
@@ -1252,9 +1234,9 @@ void engine() {
 
       int argsToSave = getPosIntArg(shallowCP+2);
       Suspension *susp = 
-	new Suspension(new SuspContinuation(CBB,
-					    GET_CURRENT_PRIORITY(),
-					    shallowCP, Y, G, X, argsToSave));
+        new Suspension(new SuspContinuation(CBB,
+                                            GET_CURRENT_PRIORITY(),
+                                            shallowCP, Y, G, X, argsToSave));
 
       CBB->incSuspCount();
       e->reduceTrailOnShallow(susp,numbOfCons);
@@ -1344,8 +1326,8 @@ void engine() {
     {
       Reg reg                     = getRegArg(PC+1);
       ProgramCounter next         = getLabelArg(PC+2);
-      PrTabEntry *predd            = getPredArg(PC+3);
-      AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
+      PrTabEntry *predd           = getPredArg(PC+5);
+      AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+6);
 
       AssRegArray &list = predd->gRegs;
       int size = list.getSize();
@@ -1669,7 +1651,7 @@ void engine() {
 			     { message("\nArg %d: %s",i+1,tagged2String(X[i])); }
 			     );
 	    case PROCEED:
-	      if (emulateHook(e)) {
+	      if (emulateHook0(e)) {
 		if (!isExecute) {
 		  e->pushTaskOutline(CBB,PC,Y,G);
 		}
