@@ -20,7 +20,3 @@ install:: $(BINDIR)
 	   ln -s oz $$file; \
         done
 
-$(BINDIR):
-	install -d -m 775 $@
-
-
