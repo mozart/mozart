@@ -27,10 +27,10 @@ it can hold any kind of stateless data--procedures,
 classes, functors, records, strings, and so forth
 (see module <ref.extern to="ozdoc:system"
 key="chapter.pickle"/<<Pickle>>/).
-<ITEM>
+<ITEM> A <EM>hostname</EM>
 <index/hostname/
 <index/global name<and>hostname/
-A <EM>hostname</EM> is a string that
+is a string that
 refers to a host (another machine) across the network.
 The string follows the standard DNS syntax.
 An application can use the hostname to start up a
