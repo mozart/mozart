@@ -5250,20 +5250,6 @@ OZ_BI_define(BIgetDefaultExceptionHandler,0,1)
   OZ_RETURN(hdl);
 } OZ_BI_end
 
-/*
- * the builtin exception handler
- */
-OZ_BI_define(BIbiExceptionHandler,1,0)
-{
-  OZ_Term arg=OZ_in(0);
-
-  errorHeader();
-  message("UNCAUGHT EXCEPTION: %s\n",toC(arg));
-  errorTrailer();
-
-  return oz_onToplevel() ? PROCEED : FAILED;
-} OZ_BI_end
-
 OZ_BI_define(BIraise,1,0)
 {
   oz_declareIN(0,exc);

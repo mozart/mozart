@@ -1331,13 +1331,6 @@ $cmode='stat';
                              BI  => BIonToplevel,
                              native => false},
 
-    ##* Exceptions
-
-    'biExceptionHandler'=> { in  => ['value'],
-                             out => [],
-                             BI  => BIbiExceptionHandler,
-                             native => true},
-
     'setDefaultExceptionHandler'=> { in  => ['+procedure/1'],
                                      out => [],
                                      BI  => BIsetDefaultExceptionHandler,
