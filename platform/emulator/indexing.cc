@@ -31,7 +31,7 @@ EntryTable newEntryTable(int sz)
 void IHashTable::add(Literal *constant, ProgramCounter label)
 {
   numentries++;
-  int hsh = constant->hash() % size;
+  unsigned int hsh = constant->hash() % size;
 
   if (literalTable == NULL)
     literalTable = newEntryTable(size);
@@ -43,7 +43,7 @@ void IHashTable::add(Literal *constant, ProgramCounter label)
 void IHashTable::add(Literal *name, SRecordArity arity, ProgramCounter label)
 {
   numentries++;
-  int hsh = name->hash() % size;
+  unsigned int hsh = name->hash() % size;
 
   if (functorTable == NULL)
     functorTable = newEntryTable(size);
@@ -57,7 +57,7 @@ void IHashTable::add(TaggedRef number, ProgramCounter label)
 {
   numentries++;
 
-  int hsh;
+  unsigned int hsh;
   switch (tagTypeOf(number)) {
 
   case OZFLOAT:  hsh = tagged2Float(number)->hash() % size;  break;
@@ -154,7 +154,7 @@ ProgramCounter switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
       SRecord *rec = tagged2SRecord(term);
       Literal *lname = rec->getLabelLiteral();
       Assert(lname!=NULL);
-      int hsh = table->hash(lname->hash());
+      unsigned int hsh = table->hash(lname->hash());
       offset = table->functorTable[hsh]->lookup(lname,rec->getSRecordArity(),offset);
       sP = rec->getRef();
     }
@@ -163,7 +163,7 @@ ProgramCounter switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
 
   if (isLiteral(term)) {
     if (table->literalTable) {
-      int hsh = table->hash(tagged2Literal(term)->hash());
+      unsigned int hsh = table->hash(tagged2Literal(term)->hash());
       offset = table->literalTable[hsh]->lookup(tagged2Literal(term),offset);
     }
     return offset;
@@ -183,7 +183,7 @@ ProgramCounter switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
 
   if (isFloat(term)) {
     if (table->numberTable) {
-      int hsh = table->hash(tagged2Float(term)->hash());
+      unsigned int hsh = table->hash(tagged2Float(term)->hash());
       offset = table->numberTable[hsh]->lookup(term,offset);
     }
     return offset;
@@ -191,7 +191,7 @@ ProgramCounter switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
 
   if (isBigInt(term)) {
     if (table->numberTable) {
-      int hsh = table->hash(tagged2BigInt(term)->hash());
+      unsigned int hsh = table->hash(tagged2BigInt(term)->hash());
       offset =table->numberTable[hsh]->lookup(term,offset);
     }
     return offset;

@@ -396,7 +396,7 @@ void getMemFromOS(size_t sz) {
 
   heapTop = heapEnd+ozconf.heapBlockSize;
 
-//  message("heapEnd: 0x%lx\n maxPointer: 0x%lx\n",heapEnd,maxPointer+1);
+  //message("heapTop: 0x%lx\n",heapTop);
   if (tagValueOf(makeTaggedMisc(heapTop)) != heapTop) {
     warning("Oz adress space exhausted\n");
     osExit(1);

@@ -32,7 +32,9 @@
  *
  */
 
+#ifndef LINUX_M68K
 #define LARGEADRESSES
+#endif
 
 
 
@@ -70,10 +72,14 @@
 #if defined(OSF1_ALPHA) && !defined(LARGEADRESSES)
 #define mallocBase 0x30000000
 #else
+#if defined(LINUX_M68K)
+#define mallocBase 0x80000000
+#else
 #ifdef HPUX_700
 #define mallocBase 0x40000000
 #else
 #define mallocBase 0x0
+#endif
 #endif
 #endif
 #endif
