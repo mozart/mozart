@@ -31,11 +31,11 @@
 
 template  <class SERVICE, class FDVAR>
 SERVICE &FilterTasksOverlap<SERVICE, FDVAR>::filter(SERVICE & s,
-                                                               FDVAR &x,
-                                                               int xd,
-                                                               FDVAR &y,
-                                                               int yd,
-                                                               FDVAR &o)
+                                                    FDVAR &x,
+                                                    int xd,
+                                                    FDVAR &y,
+                                                    int yd,
+                                                    FDVAR &o)
 {
   PEL_FDIntVar cl1_t1, cl1_t2, cl1_o;
   PEL_FDIntVar cl2_t1, cl2_t2, cl2_o;
