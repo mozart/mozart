@@ -1,0 +1,31 @@
+.\" Copyright stuff
+.TH ozd 1
+.SH NAME
+ozd \- oz debugger/profiler
+.SH SYNOPSIS
+.B ozd \fIoptions\fP \fIURL\fP \-\- \fIargs.\|.\|.\|\fP
+.PP
+Run application \fIURL\fP under control of the Oz
+debugger. \fIoptions\fP are for the debugger and \fIargs\fP are the
+command line arguments for the application itself. The double dash \-\-
+separates the arguments intended for \fBozd\fP from those intended for
+the application being run under the debugger.
+.TP
+.B \-\-help, \-h, \-?
+Display information on legal options, then exit
+.TP
+.B \-g, \-\-debugger, \-\-mode=debugger
+This option is the default: it starts the debugger. The other
+possibility is \fB\-p\fP to start the profiler.
+.TP
+.B \-p, \-\-profiler, \-\-mode=profiler
+This is the other mode of operation: it starts the profiler instead.
+.TP
+.B \-E, \-\-(no)useemacs
+Starts a subordinate Emacs process. This will be used to display the
+source code currently being debugged. You will also be able to set
+breakpoints easily on source lines.
+.TP
+.B \-\-emacs=\fIFILE\fP
+Specifies the Emacs binary to run for option \fB\-E\fP. The default is
+$OZEMACS if set, else emacs.

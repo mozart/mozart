@@ -1,0 +1,122 @@
+<!--
+  - Authors:
+  -   Denys Duchier <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Ralf Scheidhauer <Ralf.Scheidhauer@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 2002
+  -   Ralf Scheidhauer, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh|none">
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+
+<!-- Processing Instructions -->
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY ie PI "ie">
+<!ENTITY eg PI "eg">
+<!ENTITY amp "&">
+<!ENTITY etc PI "ellipsis">
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY slash PI "slash">
+<!ENTITY wrt PI "wrt">
+
+<!ENTITY chapter.windows       system "windows.sgml">
+<!ENTITY chapter.rpm           system "rpm.sgml">
+<!ENTITY chapter.tarball       system "tarball.sgml">
+<!ENTITY chapter.src.get       system "src-get.sgml">
+<!ENTITY chapter.src.make      system "src-make.sgml">
+<!ENTITY chapter.src.cygwin    system "cygwin.sgml">
+<!ENTITY chapter.src.configure system "configure.sgml">
+<!ENTITY appendix.emacs        system "emacs.sgml">
+<!ENTITY appendix.applets      system "applets.sgml">
+
+]>
+
+<Book proglang=sh>
+  <Meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
+  <Meta name="proglang.mode" arg1="none" arg2="fundamental-mode">
+  <Meta name="entry.category" value="option">
+  <Meta name="entry.category" value="variable">
+  <!-- split statements -->
+  <Meta name="html.split" value="chapter.windows">
+  <Meta name="html.split" value="chapter.rpm">
+  <Meta name="html.split" value="chapter.tarball">
+  <Meta name="html.split" value="chapter.src.get">
+  <Meta name="html.split" value="chapter.src.make">
+  <Meta name="html.split" value="chapter.src.cygwin">
+  <Meta name="html.split" value="section.cygwin.environment">
+  <Meta name="html.split" value="section.cygwin.packages">
+  <Meta name="html.split" value="section.cygwin.building">
+  <Meta name="html.split" value="section.cygwin.documentation">
+  <Meta name="html.split" value="section.cygwin.installer">
+  <Meta name="html.split" value="chapter.src.configure">
+  <Meta name="html.split" value="appendix.applets">
+  <Meta name="html.split" value="appendix.emacsunix">
+
+  <Meta name="latex.table.spec" arg1="table.rpm.bin" arg2="@{}lp{0.6\linewidth}@{}">
+
+  <Title/Installation Manual/
+  <Author.Extern to="author.db" key="Denys.Duchier">
+  <Author.Extern to="author.db" key="Leif.Kornstaedt">
+  <Author.Extern to="author.db" key="Ralf.Scheidhauer">
+  <Author.Extern to="author.db" key="Christian.Schulte">
+
+  <Part id=part.bin>
+    <Title/Click-and-Go Installation/
+      &chapter.windows;
+      &chapter.rpm;
+      &chapter.tarball;
+  </Part>
+
+  <Part id=part.src>
+    <Title/Compiling from Source/
+      &chapter.src.get;
+      &chapter.src.make;
+      &chapter.src.cygwin;
+      &chapter.src.configure;
+  </Part>
+
+  <Part id=part.appendices>
+    <Title/Appendices/
+      &appendix.emacs;
+      &appendix.applets;
+  </Part>
+</Book>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "book.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

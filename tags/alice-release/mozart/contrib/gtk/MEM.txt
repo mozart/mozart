@@ -1,0 +1,53 @@
+1. GTK+/GNOME Memory Management Overview
+
+GDK provides managed and unmanaged data structures. The latter
+do not have a ref count based memory management. Instead, those
+structures are allocated and freed manually.
+
+GTK+ safely handles its widgets automaticly using a
+reference counting based GC. This also applies to the
+canvas structures which are descendants of GTK+ objects.
+
+2. GOZ Memory Managemnt
+
+Managing GDK/GTK objects from oz side has to make sure that
+live objects will not be garbaged at c side. On the other
+hand, garbage collection has to take place as early as possible
+to prevent pollution of memory.
+
+Two things need to be handled:
+
+- The object pointers itself
+- Connected handlers to the objects
+
+2.1 Object pointers
+
+Imported and created objects are refed and stored in a Weak
+Dictionary. The finalizer will then unfref the not longer
+referenced object, thereby possibly triggering c side collection.
+The most specific ref function avialable will be called.
+
+Object import tries to map to an existing object before creating
+a new wrapper.
+
+2.2 Handler
+
+Any unary procedure can be connected to a signal. Since the procedure
+does not need to be closed over the object it refers to, it is necessary
+to maintain a handler list within the object wrapper.
+
+The delete handler is a special case. The marshaller makes sure that
+the c side keeps the object alive. The callback then is given the
+change either to delete the object explicitly or to do nothing.
+
+2.3 Canvas Items
+
+Canvas items are available in two fashions: native and wrapped.
+Native creation is the default.
+This is due to the fact that items are linked
+to a group upon creation making it unecessary to register them using
+the heavy object wrapper.
+
+Connecting signal handlers, however, require wrapper objects. Therefore
+the item may be created with a additional wrapper shipped.
+This wrapper must be deleted explicitly using the gtkClose call.

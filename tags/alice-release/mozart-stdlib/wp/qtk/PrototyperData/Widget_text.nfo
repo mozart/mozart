@@ -1,0 +1,8 @@
+This example shows the text widget.
+
+The text widget is a small word processing widget. The user can type text over several long lines. This is a very powerful widget for editing text, with many commands (see the widget documentation).
+
+- the init parameter specifies a text to display when the window is first opened.
+- the return parameter allows to specify a variable that will be bound to the text inside the widget when the window is closed.
+- the tdscrollbar and lrscrollbar parameters sets vertical and horizontal scrollbars (default:false).
+- for advanced control, the handle parameter allows to get a reference over the Oz object that fully controls the widget.

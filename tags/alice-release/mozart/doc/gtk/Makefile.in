@@ -1,0 +1,12 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = gtk
+MAIN = gtk.sgml
+WHATCLASS=reference
+PRINTNAME=Gtk
+SGMLSRCS = intro.sgml basics.sgml mapping.sgml builder.sgml reference.sgml
+HTMLEXTRAFILES = 
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common

@@ -1,0 +1,831 @@
+<?xml version="1.0"?>
+<xsl:stylesheet
+  xmlns:xsl="http://www.w3.org/XSL/Transform/1.0"
+  xmlns:tex="http://www.jclark.com/xt/java/TeX"
+  xmlns:id="http://www.jclark.com/xt/java/ID"
+  xmlns:msg="http://www.jclark.com/xt/java/Msg"
+  xmlns:meta="http://www.jclark.com/xt/java/Meta"
+  xmlns="java:com.jclark.xsl.sax.NXMLOutputHandler"
+  result-ns=""
+>
+
+<xsl:strip-space elements="BOOK FRONT BACK BODY PART CHAPTER SECTION SUBSECTION SUBSUBSECTION APPENDIX LIST ENTRY SYNOPSIS MATH.CHOICE PICTURE.CHOICE CHUNK FIGURE INDEX SEE GRAMMAR.RULE GRAMMAR TABLE TR"/>
+
+<xsl:template name="makeID">
+<xsl:if test="id:put((string(@ID)),.)"/>
+<xsl:for-each select="*">
+  <xsl:call-template name="makeID"/>
+</xsl:for-each>
+</xsl:template>
+
+<xsl:template name="makeMeta">
+ <xsl:for-each select="/BOOK/FRONT/META[@NAME='LATEX.TABLE.SPEC']">
+  <xsl:if test="meta:latexTableSpecPut((string(@ARG1)),(string(@ARG2)))"/>
+ </xsl:for-each>
+</xsl:template>
+
+<xsl:template match="/">
+<xsl:call-template name="makeID"/>
+<xsl:call-template name="makeMeta"/>
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="BOOK">
+<nxml>
+<data>
+<xsl:text>\documentclass{book}
+\lefthyphenmin=2
+\righthyphenmin=2
+\usepackage{verbatim}
+\usepackage{epsfig}
+</xsl:text>
+<xsl:for-each select="FRONT/META[@NAME='LATEX.PACKAGE']">
+\usepackage{<xsl:value-of select="@VALUE"/>}
+</xsl:for-each>
+<xsl:for-each select="FRONT/META[@NAME='LATEX.INPUT']">
+\input{<xsl:value-of select="@VALUE"/>}
+</xsl:for-each>
+<xsl:text>\usepackage{alltt}
+\newcommand{\ZCHAR}[1]{%
+  \ifx#1\|\ensuremath{\vert}\else\char`#1\fi}
+\newenvironment{SYNOPSIS}
+  {\begin{list}{}{\leftmargin=1cm}\item[]\ignorespaces}
+  {\end{list}}
+\newenvironment{CHUNK}[1]
+  {\begin{list}{}{\leftmargin=1cm}\item[\mbox{$\langle$#1$\rangle\equiv$}]%
+\topsep=0pt\parskip=0pt\partopsep=0pt\parsep=0pt\itemsep=0pt%
+\hfill\hbox{}\begin{alltt}}
+  {\end{alltt}\end{list}}
+\newcommand{\GRAMMARNOTE}[1]{\textsl{\% #1}}
+\newenvironment{CODEDISPLAY}
+  {\begin{list}{}{\leftmargin=1cm}\item[]\begin{alltt}}
+  {\end{alltt}\end{list}}
+\newcommand{\CODEEXTERN}[1]{%
+  \begin{list}{}{\leftmargin=1cm}\item[]\verbatiminput{#1}\end{list}}
+\newcommand{\APPENDIX}{\appendix\let\APPENDIX\chapter\chapter}
+\title{</xsl:text>
+<xsl:apply-templates select="FRONT/TITLE"/>
+<xsl:text>}
+\author{</xsl:text>
+<xsl:apply-templates select="FRONT/AUTHOR.EXTERN"/>
+<xsl:text>}
+\begin{document}
+\maketitle
+</xsl:text>
+<xsl:apply-templates select="BODY"/>
+<xsl:apply-templates select="BACK" mode="back"/>
+<xsl:text>\end{document}
+</xsl:text>
+</data>
+</nxml>
+</xsl:template>
+
+<xsl:template match="TITLE|BODY"><xsl:apply-templates/></xsl:template>
+<xsl:template match="FRONT"/>
+
+<xsl:template match="AUTHOR.EXTERN">
+<xsl:if test="not(position()=1)"><xsl:text>, </xsl:text></xsl:if>
+<xsl:value-of select="translate((string(@KEY)),'.',' ')"/>
+</xsl:template>
+
+<xsl:template name="seccmd">
+<xsl:param-variable name="seccmd"/>
+<xsl:text>\</xsl:text>
+<xsl:value-of select="$seccmd"/>
+<xsl:text>{</xsl:text>
+<xsl:apply-templates select="TITLE|FRONT/TITLE"/>
+<xsl:text>}</xsl:text>
+<xsl:if test="@ID">
+  <xsl:text>\label{</xsl:text>
+  <xsl:value-of select="@ID"/>
+  <xsl:text>}</xsl:text>
+</xsl:if>
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="P">
+<xsl:text>
+
+</xsl:text>
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="PART">
+<xsl:call-template name="seccmd">
+  <xsl:param name="seccmd">part</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template match="CHAPTER">
+<xsl:call-template name="seccmd">
+  <xsl:param name="seccmd">chapter</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template match="APPENDIX">
+<xsl:call-template name="seccmd">
+  <xsl:param name="seccmd">APPENDIX</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template match="SECTION">
+<xsl:call-template name="seccmd">
+  <xsl:param name="seccmd">section</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template match="SUBSECTION">
+<xsl:call-template name="seccmd">
+  <xsl:param name="seccmd">subsection</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template match="SUBSUBSECTION">
+<xsl:call-template name="seccmd">
+  <xsl:param name="seccmd">subsubsection</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template match="PARA">
+<xsl:call-template name="seccmd">
+  <xsl:param name="seccmd">paragraph</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template match="*">
+<xsl:text>\BEGIN{</xsl:text>
+<xsl:value-of select="qname(.)"/>
+<xsl:text>}</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>\END{</xsl:text>
+<xsl:value-of select="qname(.)"/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template match="LIST[not(ENTRY) and @ENUM='ENUM']">
+<xsl:text>\begin{enumerate}</xsl:text>
+<xsl:apply-templates mode="list-enum"/>
+<xsl:text>\end{enumerate}</xsl:text>
+</xsl:template>
+
+<xsl:template mode="list-enum" match="ITEM">
+<xsl:text>\item{}</xsl:text>
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="LIST[not(ENTRY) and not(@ENUM)]">
+<xsl:text>\begin{itemize}</xsl:text>
+<xsl:apply-templates mode="list-item"/>
+<xsl:text>\end{itemize}</xsl:text>
+</xsl:template>
+
+<xsl:template mode="list-item" match="ITEM">
+<xsl:text>\item{}</xsl:text>
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="LIST[ENTRY and @ENUM='ENUM']">
+<xsl:text>\begin{enumerate}</xsl:text>
+<xsl:apply-templates mode="list-enum-entry"/>
+<xsl:text>\end{enumerate}</xsl:text>
+</xsl:template>
+
+<xsl:template mode="list-enum-entry" match="ITEM">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template mode="list-enum-entry" match="ENTRY">
+<xsl:text>\item{}</xsl:text>
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="LIST[ENTRY and not(@ENUM)]">
+<xsl:text>\begin{description}</xsl:text>
+<xsl:apply-templates mode="list-desc"/>
+<xsl:text>\end{description}</xsl:text>
+</xsl:template>
+
+<xsl:template name="maybelabel">
+<xsl:if test="@ID">
+  <xsl:text>\label{</xsl:text>
+  <xsl:value-of select="@ID"/>
+  <xsl:text>}</xsl:text>
+</xsl:if>
+</xsl:template>
+
+<xsl:template mode="list-desc" match="ENTRY">
+<xsl:text>\item[{</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>}]</xsl:text>
+<xsl:call-template name="maybelabel"/>
+</xsl:template>
+
+<xsl:template mode="list-desc" match="ITEM">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template mode="list-desc" match="SYNOPSIS">
+\mbox{}\nobreak\hfill\par
+\begin{SYNOPSIS}
+<xsl:apply-templates/>
+\end{SYNOPSIS}
+</xsl:template>
+
+<xsl:template match="ITEM/P.SILENT">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="ENTRY/P.SILENT">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="SYNOPSIS/P.SILENT">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="TD/P.SILENT">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="TH/P.SILENT">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="CODE[@DISPLAY='INLINE']">
+<xsl:text>\texttt{</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template match="CODE.EXTERN[@DISPLAY='DISPLAY']">
+ <xsl:text>\CODEEXTERN{</xsl:text>
+ <xsl:value-of select="@TO"/>
+ <xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template match="SYNOPSIS/P.SILENT/CODE[@DISPLAY='DISPLAY']" priority="2.0">
+\begin{alltt}<xsl:apply-templates/>\end{alltt}
+</xsl:template>
+
+<xsl:template match="CODE[@DISPLAY='DISPLAY']">
+<xsl:text>\begin{CODEDISPLAY}</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>\end{CODEDISPLAY}</xsl:text>
+</xsl:template>
+
+<xsl:template match="VAR">
+<xsl:choose>
+  <xsl:when test="@TYPE='PROG'">
+    <xsl:choose>
+      <xsl:when test="@MODE='IN'">
+        <xsl:text>\ensuremath{+}</xsl:text>
+      </xsl:when>
+      <xsl:when test="@MODE='OUT'">
+        <xsl:text>\ensuremath{?}</xsl:text>
+      </xsl:when>
+      <xsl:when test="@MODE='CIN'">
+        <xsl:text>\ensuremath{*}</xsl:text>
+      </xsl:when>
+      <xsl:when test="@MODE='CNIN'">
+        <xsl:text>\ensuremath{\$}</xsl:text>
+      </xsl:when>
+    </xsl:choose>
+    <xsl:text>{\normalfont\texttt{</xsl:text>
+    <xsl:apply-templates/>
+    <xsl:text>}}</xsl:text>
+  </xsl:when>
+  <xsl:when test="@TYPE='META'">
+    <xsl:text>{\normalfont\textit{</xsl:text>
+    <xsl:apply-templates/>
+    <xsl:text>}}</xsl:text>
+  </xsl:when>
+  <xsl:when test="@TYPE='ENV'">
+    <xsl:text>{\normalfont\texttt{</xsl:text>
+    <xsl:apply-templates/>
+    <xsl:text>}}</xsl:text>
+  </xsl:when>
+  <xsl:when test="@TYPE='GRAMMAR'">
+    <xsl:text>{\normalfont\ensuremath{\langle\textsf{</xsl:text>
+    <xsl:apply-templates/>
+    <xsl:text>}\rangle}}</xsl:text>
+  </xsl:when>
+</xsl:choose>
+</xsl:template>
+
+<xsl:template match="CODE/text()|CHUNK.SILENT/text()">
+<xsl:value-of select="tex:quote((string(.)))"/>
+</xsl:template>
+
+<xsl:template match="text()">
+<xsl:value-of select="tex:noeol((tex:quote((string(.)))))"/>
+</xsl:template>
+
+<xsl:template match="pi('eg')">
+<xsl:text>{e.g.}</xsl:text>
+</xsl:template>
+
+<xsl:template match="pi('ie')">
+<xsl:text>{i.e.}</xsl:text>
+</xsl:template>
+
+<xsl:template match="FILE">
+<xsl:call-template name="usecmd">
+  <xsl:param name="cmd">texttt</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template name="usecmd">
+<xsl:param-variable name="cmd"/>
+<xsl:text>\</xsl:text>
+<xsl:value-of select="$cmd"/>
+<xsl:text>{</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template name="useenv">
+<xsl:param-variable name="env"/>
+<xsl:text>\begin{</xsl:text>
+<xsl:value-of select="$env"/>
+<xsl:text>}</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>\end{</xsl:text>
+<xsl:value-of select="$env"/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template match="REF.EXTERN">
+<xsl:apply-templates/>
+<xsl:text>\footnote{</xsl:text>
+<xsl:call-template name="ref" select="."/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<!-- no DTD therefore no IDs and keys are not yet implemented -->
+
+<xsl:template match="PTR">
+<xsl:apply-templates mode="ref" select="id:get((string(@TO)))"/>
+</xsl:template>
+
+<xsl:template match="REF">
+<xsl:apply-templates/>
+<xsl:text> (page~\pageref{</xsl:text>
+<xsl:value-of select="@TO"/>
+<xsl:text>})</xsl:text>
+</xsl:template>
+
+<xsl:template name="secref">
+<xsl:param-variable name="label"/>
+<xsl:value-of select="$label"/>
+<xsl:text>~\ref{</xsl:text>
+<xsl:value-of select="@ID"/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template name="pageref">
+<xsl:text>(page~\pageref{</xsl:text>
+<xsl:value-of select="@ID"/>
+<xsl:text>})</xsl:text>
+</xsl:template>
+
+<xsl:template mode="ref" match="CHAPTER">
+<xsl:call-template name="secref">
+  <xsl:param name="label">Chapter</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template mode="ref" match="APPENDIX">
+<xsl:call-template name="secref">
+  <xsl:param name="label">Appendix</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template mode="ref" match="SECTION|SUBSECTION|SUBSUBSECTION">
+<xsl:call-template name="secref">
+  <xsl:param name="label">Section</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template mode="ref" match="FIGURE">
+<xsl:call-template name="secref">
+  <xsl:param name="label">Figure</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template mode="ref" match="PARA">
+<xsl:call-template name="pageref"/>
+</xsl:template>
+
+<xsl:template mode="ref" match="BIB.EXTERN">
+<xsl:text>\cite{</xsl:text>
+<xsl:value-of select="@KEY"/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template mode="ref" match="*">
+<xsl:text>{UNEXPECTED REF </xsl:text>
+<xsl:value-of select="tex:quote((string(@ID)))"/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template match="PTR.EXTERN">
+ <xsl:call-template name="ref" select="."/>
+</xsl:template>
+
+<xsl:template name="ref">
+ <xsl:variable name="to">
+  <xsl:value-of select="@TO"/>
+ </xsl:variable>
+ <xsl:choose>
+  <xsl:when test="starts-with($to,'ozdoc')">
+   <xsl:text>\textsl{</xsl:text>
+   <xsl:choose>
+    <xsl:when test="$to='ozdoc:loop'">
+      <xsl:text>Loop Support</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:system'">
+     <xsl:text>The System Modules</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:apptut'">
+     <xsl:text>The Application Programming Tutorial</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:opi'">
+     <xsl:text>The Oz Programming Interface</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:fdt'">
+     <xsl:text>Finite Domain Constraint Programming</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:notation'">
+     <xsl:text>The Oz Notation</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:base'">
+     <xsl:text>The Oz Base Environment</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:browser'">
+     <xsl:text>The Oz Browser</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:explorer'">
+     <xsl:text>Oz Explorer - Visual Constraint Programming Support</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:panel'">
+     <xsl:text>Oz Panel</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:dpanel'">
+     <xsl:text>Distribution Panel</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:ozcar'">
+     <xsl:text>The Mozart Debugger</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:profiler'">
+     <xsl:text>The Mozart Profiler</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:dstutorial'">
+     <xsl:text>Distributed Programming in Mozart - A Tutorial Introduction</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:install'">
+     <xsl:text>Installation Manual</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:tools'">
+     <xsl:text>Oz Shell Utilities</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:foreign'">
+     <xsl:text>Interfacing to C and C++</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:cpiref'">
+     <xsl:text>The Mozart Constraint Extensions Reference</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:wp'">
+     <xsl:text>Window Programming in Mozart</xsl:text>
+    </xsl:when>
+    <xsl:otherwise>
+     <xsl:text>!!!UNKNOWN REF!!!</xsl:text>
+     <xsl:value-of select="tex:quote((string(@TO)))"/>
+     <xsl:text>!!!</xsl:text>
+    </xsl:otherwise>
+   </xsl:choose>
+   <xsl:if test="@KEY">
+    <xsl:text> (</xsl:text>
+    <xsl:value-of select="tex:quote((string(@KEY)))"/>
+    <xsl:text>)</xsl:text>
+   </xsl:if>
+   <xsl:text>}</xsl:text>
+  </xsl:when>
+  <xsl:otherwise>
+   <xsl:text>\texttt{</xsl:text>
+   <xsl:value-of select="tex:quote((string($to)))"/>
+   <xsl:text>}</xsl:text>
+  </xsl:otherwise>
+ </xsl:choose>
+</xsl:template>
+
+<xsl:template match="TABLE">
+<xsl:if test="@DISPLAY='DISPLAY'">
+  <xsl:text>\begin{center}</xsl:text>
+</xsl:if>
+<xsl:text>\begin{tabular}{</xsl:text>
+<xsl:choose>
+ <xsl:when test="@ID and meta:latexTableSpecExists((string(@ID)))">
+  <xsl:value-of select="meta:latexTableSpecGet((string(@ID)))"/>
+ </xsl:when>
+ <xsl:otherwise>
+  <xsl:for-each select="TR[position()=1]/*">
+    <xsl:text>l</xsl:text>
+  </xsl:for-each>
+ </xsl:otherwise>
+</xsl:choose>
+<xsl:text>}</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>\end{tabular}</xsl:text>
+<xsl:if test="@DISPLAY='DISPLAY'">
+  <xsl:text>\end{center}</xsl:text>
+</xsl:if>
+</xsl:template>
+
+<xsl:template match="TR">
+<xsl:apply-templates/>
+<xsl:if test="not(position()=last())">
+  <xsl:text>\\</xsl:text>
+</xsl:if>
+</xsl:template>
+
+<xsl:template match="TD[@COLSPAN]">
+<xsl:if test="not(position()=1)">
+  <data>&amp;</data>
+</xsl:if>
+<xsl:text>\multicolumn{</xsl:text>
+<xsl:value-of select="@COLSPAN"/>
+<xsl:text>}{l}{</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template match="TD[not(@COLSPAN)]">
+<xsl:if test="not(position()=1)">
+  <data>&amp;</data>
+</xsl:if>
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="TH[@COLSPAN]">
+<xsl:if test="not(position()=1)">
+  <data>&amp;</data>
+</xsl:if>
+<xsl:text>\multicolumn{</xsl:text>
+<xsl:value-of select="@COLSPAN"/>
+<xsl:text>}{l}{\bf{}</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template match="TH[not(@COLSPAN)]">
+<xsl:if test="not(position()=1)">
+  <data>&amp;</data>
+</xsl:if>
+<xsl:text>\textbf{</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template match="SAMP">
+<xsl:call-template name="usecmd">
+  <xsl:param name="cmd">texttt</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template match="DEF|SPAN">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="INDEX"/>
+
+<xsl:template match="EM">
+<xsl:call-template name="usecmd">
+  <xsl:param name="cmd">emph</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template match="KBD|KEY">
+<xsl:call-template name="usecmd">
+  <xsl:param name="cmd">texttt</xsl:param>
+</xsl:call-template>
+</xsl:template>
+
+<xsl:template match="FIGURE">
+<xsl:text>\begin{figure}</xsl:text>
+<xsl:apply-templates/>
+<xsl:if test="@ID and not(CAPTION)">
+  <xsl:text>\caption{\label{</xsl:text>
+  <xsl:value-of select="@ID"/>
+  <xsl:text>}\kern0pt\relax}</xsl:text>
+</xsl:if>
+<xsl:text>\end{figure}</xsl:text>
+</xsl:template>
+
+<xsl:template match="FIGURE/TITLE">
+<xsl:text>\begin{center}\large\bf </xsl:text>
+<xsl:apply-templates/>
+<xsl:text>\end{center}</xsl:text>
+</xsl:template>
+
+<xsl:template match="FIGURE/CAPTION">
+<xsl:text>\caption{</xsl:text>
+<xsl:if test="../@ID">
+  <xsl:text>\label{</xsl:text>
+  <xsl:value-of select="../@ID"/>
+  <xsl:text>}</xsl:text>
+</xsl:if>
+<xsl:apply-templates/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template match="FIGURE/CAPTION/P.SILENT">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="PICTURE.CHOICE">
+<xsl:if test="@DISPLAY='DISPLAY'">
+  <xsl:text>\begin{center}</xsl:text>
+</xsl:if>
+<xsl:choose>
+  <xsl:when test="PICTURE[@TYPE='LATEX']">
+    <xsl:value-of select="PICTURE[@TYPE='LATEX']"/>
+  </xsl:when>
+  <xsl:when test="PICTURE.EXTERN[@TYPE='PS']">
+    <xsl:text>\epsfig{file=</xsl:text>
+    <xsl:value-of select="PICTURE.EXTERN[@TYPE='PS']/@TO"/>
+    <xsl:text>,width=0.7\linewidth}</xsl:text>
+  </xsl:when>
+  <xsl:when test="PICTURE.EXTERN[@TYPE='GIF']">
+    <xsl:text>\epsfig{file=</xsl:text>
+    <xsl:value-of select="PICTURE.EXTERN[@TYPE='GIF']/@TO"/>
+    <xsl:text>.ps,width=0.7\linewidth}</xsl:text>
+  </xsl:when>
+  <xsl:otherwise>
+    <xsl:text>{UNKNOWN PICTURE}</xsl:text>
+  </xsl:otherwise>
+</xsl:choose>
+<xsl:if test="@DISPLAY='DISPLAY'">
+  <xsl:text>\end{center}</xsl:text>
+</xsl:if>
+</xsl:template>
+
+<xsl:template match="PICTURE[@TYPE='LATEX']">
+<xsl:value-of select="."/>
+</xsl:template>
+
+<xsl:template match="PICTURE.EXTERN[@DISPLAY='DISPLAY' and @TYPE='LATEX']">
+<xsl:text>\begin{center}\begin{minipage}{\linewidth}\input{</xsl:text>
+<xsl:value-of select="@TO"/>
+<xsl:text>}\end{minipage}\end{center}</xsl:text>
+</xsl:template>
+
+<xsl:template match="PICTURE.EXTERN[@DISPLAY='DISPLAY' and @TYPE='GIF']">
+<xsl:text>\begin{center}\begin{minipage}{\linewidth}\begin{center}\epsfig{file=</xsl:text>
+<xsl:value-of select="@TO"/>
+<xsl:text>.ps,width=\linewidth}\end{center}\end{minipage}\end{center}</xsl:text>
+</xsl:template>
+
+<xsl:template match="Q">
+<xsl:text>`</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>'</xsl:text>
+</xsl:template>
+
+<xsl:template match="GRAMMAR.RULE">
+<xsl:if test="@DISPLAY='DISPLAY'">
+\begin{center}
+</xsl:if>
+\begin{tabular}{lrll}
+<xsl:apply-templates/>
+\end{tabular}
+<xsl:if test="@DISPLAY='DISPLAY'">
+\end{center}
+</xsl:if>
+</xsl:template>
+
+<xsl:template match="GRAMMAR/GRAMMAR.RULE" priority="2.0">
+<xsl:if test="position()>1">\\</xsl:if>
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="GRAMMAR">
+\begin{center}
+\begin{tabular}{lrll}
+<xsl:apply-templates/>
+\end{tabular}
+\end{center}
+</xsl:template>
+
+<xsl:template match="GRAMMAR.HEAD">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="GRAMMAR.ALT">
+<xsl:text>&amp;</xsl:text>
+<xsl:choose>
+  <xsl:when test="not(@TYPE) and position()=2 or @TYPE='DEF'">
+    <xsl:text>\ensuremath{{:}{:}{=}}</xsl:text>
+  </xsl:when>
+  <xsl:when test="@TYPE='ADD'">
+    <xsl:text>\ensuremath{{+}{=}}</xsl:text>
+  </xsl:when>
+  <xsl:when test="not(@TYPE) and position()>2 or @TYPE='OR'">
+    <xsl:text>\ensuremath{|}</xsl:text>
+  </xsl:when>
+  <xsl:when test="@TYPE='SPACE'">
+  </xsl:when>
+</xsl:choose>
+<xsl:text>&amp;</xsl:text>
+<xsl:apply-templates/>
+<xsl:if test="not(from-children(GRAMMAR.NOTE))">&amp;</xsl:if>
+<xsl:if test="not(position()=last())">\\</xsl:if>
+</xsl:template>
+
+<xsl:template match="GRAMMAR.NOTE">
+<xsl:text>&amp;\GRAMMARNOTE{</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template match="MATH[@TYPE='LATEX']">
+<xsl:param-variable name="mathopen">
+<xsl:choose>
+  <xsl:when test="from-parent(MATH.CHOICE[@DISPLAY='DISPLAY'])">\[</xsl:when>
+  <xsl:when test="@DISPLAY='DISPLAY'">\[</xsl:when>
+  <xsl:otherwise>\(</xsl:otherwise>
+</xsl:choose>
+</xsl:param-variable>
+<xsl:param-variable name="mathclose">
+<xsl:choose>
+  <xsl:when test="from-parent(MATH.CHOICE[@DISPLAY='DISPLAY'])">\]</xsl:when>
+  <xsl:when test="@DISPLAY='DISPLAY'">\]</xsl:when>
+  <xsl:otherwise>\)</xsl:otherwise>
+</xsl:choose>
+</xsl:param-variable>
+<xsl:value-of select="$mathopen"/>
+<xsl:value-of select="."/>
+<xsl:value-of select="$mathclose"/>
+</xsl:template>
+
+<xsl:template match="MATH.CHOICE[(MATH[@TYPE='LATEX'])]">
+<xsl:apply-templates select="MATH[@TYPE='LATEX']"/>
+</xsl:template>
+
+<xsl:template match="CHUNK">
+<xsl:text>\begin{CHUNK}{</xsl:text>
+<xsl:apply-templates select="TITLE"/>
+<xsl:text>}</xsl:text>
+<xsl:apply-templates select="CHUNK.SILENT"/>
+<xsl:text>\end{CHUNK}</xsl:text>
+</xsl:template>
+
+<xsl:template match="CHUNK/TITLE">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="CHUNK/TITLE/P.SILENT">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="CHUNK.REF">
+<xsl:text>\mbox{\rm\(\langle\)</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>\(\rangle\)}</xsl:text>
+</xsl:template>
+
+<xsl:template match="CHUNK.SILENT">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="NAME">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="NOTE[@FOOT='FOOT']">
+<xsl:text>\footnote{</xsl:text>
+<xsl:apply-templates/>
+<xsl:text>}</xsl:text>
+</xsl:template>
+
+<xsl:template match="NOTE[not(@FOOT='FOOT')]">
+<xsl:text>\paragraph{Note:}</xsl:text>
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="NOTE/P.SILENT">
+<xsl:apply-templates/>
+</xsl:template>
+
+<xsl:template match="BACK" mode="back">
+<xsl:apply-templates mode="bibdecl" select="BIB.EXTERN[position()=1]"/>
+</xsl:template>
+
+<xsl:template mode="bibdecl" match="BIB.EXTERN">
+<xsl:text>
+\bibliographystyle{plain}
+\bibliography{</xsl:text>
+<xsl:value-of select="substring-before((string(@TO)),'.bib')"/>
+<xsl:text>}
+</xsl:text>
+</xsl:template>
+</xsl:stylesheet>
