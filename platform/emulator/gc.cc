@@ -2161,7 +2161,8 @@ void ConstTerm::gcConstRecurse()
     {
       Abstraction *a = (Abstraction *) this;
       a->gcConstTermWithHome();
-      gcCode(a->getPC());
+      if (isInGc)
+        gcCode(a->getPC());
       break;
     }
 
@@ -2605,7 +2606,8 @@ void TaskStack::gc(TaskStack *newstack) {
   while (1) {
     GetFrame(oldtop,PC,Y,CAP);
 
-    gcCode(PC);
+    if (isInGc)
+      gcCode(PC);
 
     if (PC == C_EMPTY_STACK) {
       *(--newtop) = PC;
@@ -2618,7 +2620,8 @@ void TaskStack::gc(TaskStack *newstack) {
     } else if (PC == C_XCONT_Ptr) {
       // mm2: opt: only the top task can/should be xcont!!
       ProgramCounter pc   = (ProgramCounter) *(oldtop-1);
-      gcCode(pc);
+      if (isInGc)
+        gcCode(pc);
       (void) CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
       Y = gcRefsArray(Y); // X
     } else if (PC == C_LOCK_Ptr) {
@@ -3018,9 +3021,9 @@ void CodeArea::gcCodeBlock()
   }
 }
 
-void gcCode(ProgramCounter PC)
-{
-  if (!isInGc || codeGCgeneration!=0)
+void gcCode(ProgramCounter PC) {
+  Assert(isInGc);
+  if (codeGCgeneration!=0)
     return;
 
   CodeArea::findBlock(PC)->gcCodeBlock();
@@ -3060,6 +3063,7 @@ void CodeArea::gcCodeAreaStart()
   }
 
   CodeArea *code = allBlocks;
+
   while (code) {
     code->gcCodeBlock();
     code = code->nextBlock;
