@@ -52,7 +52,7 @@ void SolveActor::inject(int prio, TaggedRef proc) {
 }
 
 inline
-TaggedRef SolveActor::merge(Board *bb) {
+TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
   solveBoard->setCommitted(bb);
   bb->incSuspCount(solveBoard->getSuspCount());
 
@@ -67,8 +67,12 @@ TaggedRef SolveActor::merge(Board *bb) {
   if (bb->isWait()) {
     WaitActor::Cast(bb->getActor())->mergeChoices(cpb);
   } else if (bb->isSolve()) {
-    SolveActor::Cast(bb->getActor())->mergeChoices(cpb);
-    threads += SolveActor::Cast(bb->getActor())->getThreads();
+    SolveActor *sa = SolveActor::Cast(bb->getActor());
+
+    sa->mergeChoices(cpb);
+
+    if (isSibling)
+      sa->incThreads(threads);
   }
 
   // merge local thread queue
@@ -77,7 +81,7 @@ TaggedRef SolveActor::merge(Board *bb) {
     bb = am.currentSolveBoard;
 
     if (bb && bb->isSolve()) {
-    // merge local thread queue to another solve space
+      // merge local thread queue to another solve space
 
       SolveActor * sa = SolveActor::Cast(bb->getActor());
 
@@ -89,7 +93,7 @@ TaggedRef SolveActor::merge(Board *bb) {
       }
 
     } else {
-    // merge ltq (local thread queue) to a non-solve space
+      // merge ltq (local thread queue) to a non-solve space
 
       DebugCode(OZ_warning("Merging solve space with non-solve space."));
 
