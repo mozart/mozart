@@ -857,22 +857,10 @@ The emulator to use for debugging is set via \\[oz-set-emulator]."
   (if (getenv "OZ_PI")
       t
     (setenv "OZ_PI" "1")
-    (if (getenv "OZPLATFORM")
-	t
-      (let ((res (oz-shell-command-to-string
-		  (concat (oz-home) "/bin/ozplatform"))))
-	(string-match "[a-zA-Z0-9-]+" res)
-	(setenv "OZPLATFORM" (oz-match-string 0 res))))
     (setenv "OZPATH"
 	    (concat (or (getenv "OZPATH") ".") ":"
 		    (oz-home) ":"
-		    (oz-home) "/share" ":"
-		    (oz-home) "/platform/" (getenv "OZPLATFORM") ":"
-		    (oz-home) "/demo"))
-    (setenv "PATH"
-	    (concat (oz-home) "/bin" ":"
-		    (oz-home) "/platform/" (getenv "OZPLATFORM") ":"
-		    (getenv "PATH"))))
+		    (oz-home) "/share")))
   (cond (oz-emulator-hook
 	 (setq oz-emulator-hook nil)
 	 (message "gdb disabled"))
