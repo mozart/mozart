@@ -389,7 +389,6 @@ void engine() {
 
   SRecord *predicate;
   int predArity;
-  ProgramCounter contAdr;
 
 #if THREADED > 0
 #  include "instrTable.hh"
@@ -1367,12 +1366,12 @@ void engine() {
     TaggedRef origObj = RegAccess(HelpReg1,getRegArg(PC+2));
     TaggedRef object  = origObj;
     int arity         = getPosIntArg(PC+3);
-    ProgramCounter contadr = isExecute ? 0 : getLabelArg(PC+4);
+
+    isExecute ? PC = 0 : PC+=4;
 
     DEREF(object,_1,objectTag);
     if (!isSRecord(objectTag)) {
       if (isAnyVar(objectTag)) {
-	contAdr = contadr;
 	X[0] = makeMethod(arity,label,X);
 	X[1] = origObj;
 	predArity = 2;
@@ -1382,7 +1381,7 @@ void engine() {
       }
 
       warning("send method: no abstraction or builtin: %s",tagged2String(object));
-      HANDLE_FAILURE(contadr,;)
+      HANDLE_FAILURE(PC,;)
     }
 
     Abstraction *def = getSendMethod(object,label,arity,X);
@@ -1390,14 +1389,13 @@ void engine() {
       goto bombSend;
     }
 
-    CallDoChecks(def,isExecute,contadr,arity+3);
+    CallDoChecks(def,isExecute,PC,arity+3);
     Y = NULL; // allocateL(0);
 
     JUMP(def->getPC());
 
 
   bombSend:
-    contAdr = contadr;
     X[0] = makeMethod(arity,label,X);
     predArity = 1;
     predicate = tagged2SRecord(object);
@@ -1432,8 +1430,9 @@ void engine() {
     TaggedRef origObject   = RegAccess(HelpReg1,getRegArg(PC+2));
     TaggedRef object       = origObject;
     int arity              = getPosIntArg(PC+3);
-    ProgramCounter contadr = isExecute ? 0 : getLabelArg(PC+4);
     Abstraction *def;
+
+    isExecute ? PC=0 : PC+=4;
 
     DEREF(object,objectPtr,objectTag);
     if (!isSRecord(objectTag) ||
@@ -1441,7 +1440,7 @@ void engine() {
       goto bombApply;
     }
     
-    CallDoChecks(def,isExecute,contadr,arity);
+    CallDoChecks(def,isExecute,PC,arity);
     Y = NULL; // allocateL(0);
 
     JUMP(def->getPC());
@@ -1449,11 +1448,10 @@ void engine() {
 
   bombApply:
     if (methApplHdl == makeTaggedNULL()) {
-      HANDLE_FAILURE1(contadr,("apply method: method Application Handler not set"));
+      HANDLE_FAILURE1(PC,("apply method: method Application Handler not set"));
     }
 
     TaggedRef method = makeMethod(arity-3,label,X);
-    contAdr = contadr;
     X[4] = X[2];   // outState
     X[3] = X[1];   // ooSelf
     X[2] = method;
@@ -1497,9 +1495,7 @@ void engine() {
        TaggedRef functor = RegAccess(HelpReg1,getRegArg(PC+1));
        predArity = getPosIntArg(PC+2);
 
-       // argument 3 is continuation adress
-       // code after call is suspension handler
-       contAdr = isExecute ? 0 : getLabelArg(PC+3);
+       isExecute ? PC=0 : PC+=3;
 
        DEREF(functor,functorPtr,functorTag);
        if (!isSRecord(functorTag)) {
@@ -1509,7 +1505,7 @@ void engine() {
 	   predicate = tagged2SRecord(suspCallHandler);
 	   goto LBLcall;
 	 }
-	 HANDLE_FAILURE1(contAdr,("call: no abstraction or builtin: %s",
+	 HANDLE_FAILURE1(PC,("call: no abstraction or builtin: %s",
 				  tagged2String(functor)));
        }
 
@@ -1535,8 +1531,8 @@ void engine() {
       {
 	Abstraction *def = (Abstraction *) predicate;
 
-        CheckArity(def->getArity(), predArity, def, contAdr);
-	CallDoChecks(def,isExecute,contAdr,def->getArity());
+        CheckArity(def->getArity(), predArity, def, PC);
+	CallDoChecks(def,isExecute,PC,def->getArity());
 	Y = NULL; // allocateL(0);
 
 	JUMP(def->getPC());
@@ -1550,7 +1546,7 @@ void engine() {
       {
 	bi = (Builtin *) predicate;
 
-	CheckArity(bi->getArity(),predArity,bi,contAdr);
+	CheckArity(bi->getArity(),predArity,bi,PC);
 
 	switch (bi->getType()) {
 
@@ -1578,7 +1574,7 @@ void engine() {
 	    case SUSPEND:
 	      predicate = bi->getSuspHandler();
 	      if (!predicate) {
-		HANDLE_FAILURE1(contAdr,
+		HANDLE_FAILURE1(PC,
 				("call: builtin %s/%d: no suspension handler",
 				 bi->getPrintName(),
 				 bi->getArity()));
@@ -1586,7 +1582,7 @@ void engine() {
 	      }
 	      goto LBLcall;
 	    case FAILED:
-	      HANDLE_FAILURE(contAdr,
+	      HANDLE_FAILURE(PC,
 			     message("call: builtin %s/%d failed",
 				     bi->getPrintName(),bi->getArity());
 			     for (int i = 0; i < predArity; i++)
@@ -1598,10 +1594,10 @@ void engine() {
 	      }
 	      switch (emulateHook(e,NULL,0,NULL)) {
 	      case HOOK_SCHEDULE:
-		e->pushTaskOutline(CBB, contAdr,Y,G);
+		e->pushTaskOutline(CBB,PC,Y,G);
 		goto LBLschedule;
 	      }
-	      JUMP(contAdr);
+	      JUMP(PC);
 	    default:
 	      error("builtin: bad return value");
 	      goto LBLerror;
@@ -1615,7 +1611,7 @@ void engine() {
 	goto LBLerror;
       } // end builtin
     default:
-      HANDLE_FAILURE1(contAdr,("call: no abstraction or builtin: %s",
+      HANDLE_FAILURE1(PC,("call: no abstraction or builtin: %s",
 			       tagged2String(makeTaggedSRecord(predicate))));
     } // end switch on type of predicate
 
@@ -1634,7 +1630,7 @@ void engine() {
 	   warning("call: builtin %s/%d: no suspension handler",
 		   bi->getPrintName(),
 		   bi->getArity());
-	   HANDLE_FAILURE(contAdr, message(""));
+	   HANDLE_FAILURE(PC, message(""));
 	 }
 	 goto LBLcall;
        }
@@ -1643,12 +1639,12 @@ void engine() {
 	   !(tagged2SRecord (x0)->getType () == R_ABSTRACTION ||
 	     tagged2SRecord (x0)->getType () == R_BUILTIN)) {
 	 warning("call: no abstraction or builtin in solve");
-	 HANDLE_FAILURE (contAdr, message(""));
+	 HANDLE_FAILURE (PC, message(""));
        }
 
        // put continuation if any;
        if (isExecute == NO)
-	 e->pushTaskOutline(CBB, contAdr, Y, G);
+	 e->pushTaskOutline(CBB, PC, Y, G);
 
        // create solve actor(x1);
        // Note: don't perform any derefencing on X[1];
@@ -1678,7 +1674,7 @@ void engine() {
    LBLBIsolveCont:
      {
        if (((OneCallBuiltin *)bi)->isSeen () == OK) {
-	 HANDLE_FAILURE1(contAdr, ("not first call of solve continuation"));
+	 HANDLE_FAILURE1(PC, ("not first call of solve continuation"));
        }
 
        ((OneCallBuiltin *) bi)->hasSeen ();
@@ -1749,7 +1745,7 @@ void engine() {
        if (isExecute) {
 	 goto LBLreduce;
        }
-       JUMP(contAdr);
+       JUMP(PC);
      }
 
 // ------------------------------------------------------------------------
@@ -1806,7 +1802,7 @@ void engine() {
        if (isExecute) {
 	 goto LBLreduce;
        }
-       JUMP(contAdr);
+       JUMP(PC);
      }
 
    }
