@@ -606,8 +606,7 @@ PROFILE_CODE1
   
   // already propagated susps remain in suspList
     if (! susp->isPropagated()) {      
-      if ((suspList->checkCondition(taggedvar, term)) &&
-	  (susp->wakeUp(var->getBoardFast(), calledBy))) {
+      if ((susp->wakeUp(var->getBoardFast(), calledBy))) {
         // dispose only non-resistant susps
 	if (! susp->isResistant()) {
 	  suspList = suspList->dispose();
