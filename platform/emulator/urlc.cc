@@ -1362,8 +1362,11 @@ urlc::http_get_header(char* buf, int* brem, int& n, int sockfd)
             i++;
             n -= i;
             p = buf+i;
-            if(URLC_REDIRECT == http_header_interp(buf, linenr))
+            int aux = http_header_interp(buf, linenr);
+            if(URLC_REDIRECT == aux)
                 return (URLC_REDIRECT);
+            if (aux != URLC_OK)
+              return aux;
             for (i = 0; i < n; i++)
               buf[i] = p[i];
             p = buf+n;
