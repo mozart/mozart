@@ -137,7 +137,7 @@ src: $(PACKDIR)
 	 find mozart -name CVS -type d -exec rm -rf '{}' ';' 2>/dev/null ; \
 	 find mozart -name '.cvsignore' -type f -exec rm -f '{}' ';' ; \
 	 $(TAR) -cf - mozart ) | \
-	 $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-src.tar.gz
+	 $(COMPRESS) > mozart-`$(OZVERSION)`.`date +"%m%d%y"`-src.tar.gz
 	rm -rf $(PACKDIR)/mozart
 
 doc: $(PACKDIR) $(PACKDIR)/mozart/doc
@@ -145,7 +145,7 @@ doc: $(PACKDIR) $(PACKDIR)/mozart/doc
 	(cd $(PREFIX)/doc; \
 	 $(TAR) -cf - .) | (cd mozart/doc; $(TAR) -xf -); \
 	 $(TAR) -cf - mozart ) | \
-	 $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-doc.tar.gz
+	 $(COMPRESS) > mozart-`$(OZVERSION)`.`date +"%m%d%y"`-doc.tar.gz
 	rm -rf $(PACKDIR)/mozart
 
 $(PLATFORMS): $(PACKDIR) $(PACKDIR)/mozart
@@ -156,10 +156,10 @@ $(PLATFORMS): $(PACKDIR) $(PACKDIR)/mozart
 	 find mozart -name '*.so-*' \
                      -not -name \*.so-$@ -exec rm -f '{}' ';' )
 	(cd $(PACKDIR); $(TAR) -cf - mozart/contrib ) | \
-	 $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-$@-contrib.tar.gz
+	 $(COMPRESS) > mozart-`$(OZVERSION)`.`date +"%m%d%y"`-$@-contrib.tar.gz
 	rm -rf $(PACKDIR)/mozart/contrib
 	(cd $(PACKDIR); $(TAR) -cf - mozart ) | \
-	$(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-$@.tar.gz
+	$(COMPRESS) > mozart-`$(OZVERSION)`.`date +"%m%d%y"`-$@.tar.gz
 	rm -rf $(PACKDIR)/mozart
 
 
