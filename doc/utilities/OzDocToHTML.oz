@@ -311,6 +311,7 @@ define
          ListType: unit
          OLTypes: (X = '1'|'a'|'i'|'A'|'I'|X in X)
          % back matter:
+         Exercises: unit Answers: unit
          MyBibliographyDB: unit
          BibNode: unit
          MyIndexer: unit
@@ -518,6 +519,8 @@ define
                Floats <- nil
                FootNotes <- nil
                FigureCounters <- {NewDictionary}
+               Exercises <- nil
+               Answers <- {NewDictionary}
                MyBibliographyDB <- {New BibliographyDB.'class'
                                     init(@OutputDirectory)}
                BibNode <- _
@@ -546,6 +549,19 @@ define
                        end
                        TopTOC
                        OzDocToHTML, Process(M.2='body'(...) $)
+                       case @Exercises of nil then EMPTY
+                       else Title Label X HTML1 HTML in
+                          {@Reporter startSubPhase('generating answers')}
+                          Title = PCDATA('Answers to the Exercises')
+                          OzDocToHTML, PrepareAnswersNode(?X ?HTML1)
+                          ToGenerate <- Label|@ToGenerate
+                          TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
+                          Threading <- sect(@CurrentNode Label)|@Threading
+                          HTML = SEQ([HTML1
+                                      h1(a(name: Label Title))
+                                      OzDocToHTML, OutputAnswers($)])
+                          OzDocToHTML, FinishNode(Title X HTML $)
+                       end
                        case {@MyBibliographyDB process(@Reporter $)}
                        of unit then EMPTY
                        elseof VS then Title Label X HTML1 HTML in
@@ -830,6 +846,25 @@ define
                      else EMPTY
                      end
                      OzDocToHTML, Batch(M 1 $))
+            [] exercise then N Number See in
+               N = {Dictionary.condGet @FigureCounters exercise 0} + 1
+               {Dictionary.put @FigureCounters exercise N}
+               Number = if @Appendix then {Alpha @Chapter}
+                        else @Chapter
+                        end#'.'#N
+               case {CondSelect M id unit} of unit then
+                  {@Reporter error(kind: OzDocError
+                                   msg: 'exercise must have an ID')}
+                  See = EMPTY
+               elseof ID then
+                  Exercises <- ID#Number#See|@Exercises
+               end
+               'div'(COMMON: @Common 'class': [exercise]
+                     p(b(VERBATIM('Exercise&nbsp;'#Number)) See)
+                     blockquote(OzDocToHTML, Batch(M 1 $)))
+            [] answer then
+               {Dictionary.put @Answers M.to M}
+               EMPTY
             %-----------------------------------------------------------
             % Lists
             %-----------------------------------------------------------
@@ -1530,28 +1565,24 @@ define
          HTML = EMPTY
          TOCMode <- false
       end
+      meth PrepareAnswersNode(?X ?HTML)
+         OzDocToHTML, PrepareBackMatter('html.split.answers' 'answers.html'
+                                        X HTML)
+      end
       meth PrepareBibNode(?X ?HTML)
-         if @Split andthen {Dictionary.member @Meta 'html.split.bib'} then
-            SomeSplit <- true
-            X = @CurrentNode#@TOC#@TOCMode
-            Threading <- down(@CurrentNode)|@Threading
-            CurrentNode <- 'bib.html'
-            TOC <- nil
-            HTML = EMPTY
-         else
-            X = unit
-            HTML = if @TOCMode then hr()
-                   else EMPTY
-                   end
-         end
-         TOCMode <- false
+         OzDocToHTML, PrepareBackMatter('html.split.bib' 'bib.html'
+                                        X HTML)
       end
       meth PrepareIdxNode(?X ?HTML)
-         if @Split andthen {Dictionary.member @Meta 'html.split.index'} then
+         OzDocToHTML, PrepareBackMatter('html.split.index' 'idx.html'
+                                        X HTML)
+      end
+      meth PrepareBackMatter(SplitMeta NodeName ?X ?HTML)
+         if @Split andthen {Dictionary.member @Meta SplitMeta} then
             SomeSplit <- true
             X = @CurrentNode#@TOC#@TOCMode
             Threading <- down(@CurrentNode)|@Threading
-            CurrentNode <- 'idx.html'
+            CurrentNode <- NodeName
             TOC <- nil
             HTML = EMPTY
          else
@@ -1700,6 +1731,31 @@ define
             BLOCK('div'(align: Align HTML))
          [] inline then HTML
          end
+      end
+      meth OutputAnswers($)
+         SEQ({FoldR @Exercises
+              proc {$ ID#Number#See In ?HTML}
+                 case {Dictionary.condGet @Answers ID unit} of unit then VS in
+                    VS = {Value.toVirtualString ID 0 0}
+                    {@Reporter warn(kind: OzDocWarning
+                                    msg: 'exercise has no answer'
+                                    items: [hint(l: 'ID' m: VS)])}
+                    See = EMPTY
+                    HTML = In
+                 elseof M then OldCommon Label in
+                    OzDocToHTML, PushCommon(M ?OldCommon)
+                    HTML = 'div'(COMMON: @Common 'class': [answer]
+                                 p(a(name: Label
+                                     b(VERBATIM('Answer&nbsp;'#Number))))
+                                 blockquote(OzDocToHTML, Batch(M 1 $)))|In
+                    ToGenerate <- Label|@ToGenerate
+                    See = SEQ([PCDATA(' (')
+                               a(href: @CurrentNode#"#"#Label
+                                 VERBATIM('See solution'))
+                               PCDATA(')')])
+                    OzDocToHTML, PopCommon(OldCommon)
+                 end
+              end nil})
       end
       meth Index(M Ands $) IsTails L in
          IsTails = ({SGML.isOfClass M tails}
