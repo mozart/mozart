@@ -187,19 +187,11 @@ int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar)
 }
 
 void sendRegister(BorrowEntry *be) {
-  // EK Hack to avoid credit crashes
-  // In case of secondary credits in the
-  // Message that contained the Var we must
-  // nullify the globalvar creditSite
-  Site * tmpS = creditSite;
-  creditSite = NULL;
-
-
+  Assert(creditSiteOut == NULL);
   be->getOneMsgCredit();
   NetAddress *na = be->getNetAddress();
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
   marshal_M_REGISTER(bs,na->index,mySite);
-  creditSite = tmpS;
   SendTo(na->site,bs,M_REGISTER,na->site,na->index);}
 
 OZ_Term unmarshalVar(MsgBuffer* bs){

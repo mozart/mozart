@@ -215,7 +215,8 @@ PERDIO_DEBUG_DO(void printTables());
 // global variables
 MsgBufferManager* msgBufferManager= new MsgBufferManager();
 Site* mySite;  // known to network-layer also
-Site* creditSite;
+Site* creditSiteIn;
+Site* creditSiteOut;
 OZ_Term GateStream;
 
 int PortSendTreash = 100000;
@@ -1016,6 +1017,7 @@ inline void marshalCredit(Credit credit,MsgBuffer *bs){
   Assert(sizeof(Credit)==sizeof(long));
   Assert(sizeof(Credit)==sizeof(unsigned int));
   PD((MARSHAL,"credit c:%d",credit));
+  PD((CREDIT,"marshal:credit c:%d",credit));
   marshalNumber(credit,bs);}
 
 void marshalCreditOutline(Credit credit,MsgBuffer *bs){
@@ -1026,6 +1028,7 @@ inline Credit unmarshalCredit(MsgBuffer *bs){
   Assert(sizeof(Credit)==sizeof(long));
   Credit c=unmarshalNumber(bs);
   PD((UNMARSHAL,"credit c:%d",c));
+  PD((CREDIT,"unmarshal:credit c:%d",c));
   return c;}
 
 Credit unmarshalCreditOutline(MsgBuffer *bs){
@@ -1087,6 +1090,7 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
   MarshalTag mt=(MarshalTag) bs->get();
   PD((UNMARSHAL,"borrow o:%d",si));
   if(sd==mySite){
+    Assert(0);
     if(mt==DIF_PRIMARY){
       cred = unmarshalCredit(bs);
       PD((UNMARSHAL,"mySite is owner"));
@@ -1132,6 +1136,7 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
   bi=borrowTable->newSecBorrow(site,cred,sd,si);
   b=borrowTable->getBorrow(bi);
   PD((UNMARSHAL,"borrowed miss"));
+  b->moreCredit(); // The Borrow needs some of the real McCoys
   ob=b;
   return 0;
 }
@@ -1266,7 +1271,7 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
         pvar->setClass(tagged2ObjectClass(oz_deref(clas)));
       }
 
-      ob->mkVar(val);
+      ob->mkVar(val, ob->getFlags());
       return val;}
   default:
     Assert(0);
@@ -1345,8 +1350,13 @@ inline void sendPrepOwner(int index){
 void msgReceived(MsgBuffer* bs)
 {
   Assert(oz_onToplevel());
+  Assert(creditSiteIn==NULL);
+  Assert(creditSiteOut==NULL);
   MessageType mt = (MessageType) unmarshalHeader(bs);
   PD((MSG_RECEIVED,"msg type %d",mt));
+
+  //  OT->print();
+  //  BT->print();
 
   switch (mt) {
   case M_PORT_SEND:
@@ -1431,7 +1441,7 @@ void msgReceived(MsgBuffer* bs)
       PD((MSG_RECEIVED,"OWNER_SEC_CREDIT site:%s index:%d credit:%d",
           s->stringrep(),index,c));
       receiveAtBorrowNoCredit(s,index)->addSecondaryCredit(c,mySite);
-      creditSite = NULL;
+      creditSiteIn = NULL;
       break;
     }
 
@@ -1811,6 +1821,12 @@ void msgReceived(MsgBuffer* bs)
     error("siteReceive: unknown message %d\n",mt);
     break;
   }
+
+  //  OT->print();
+  //  BT->print();
+
+  Assert(creditSiteIn==NULL);
+  Assert(creditSiteOut==NULL);
 }
 
 
@@ -1937,6 +1953,7 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg)
   }
 
 
+  PD((PORT,"sendingTo %s %d",site->stringrep(),index));
   SendTo(site,bs,M_PORT_SEND,site,index);
   return wait ? portWait(site->getQueueStatus(dummy), 0, p)
               : PROCEED;
@@ -1967,27 +1984,25 @@ void sendObject(Site* sd, Object *o, Bool sendClass){ // holding one credit
 /**********************************************************************/
 
 void sendPrimaryCredit(Site *sd,int OTI,Credit c){
-  PD((CREDIT,"Sending PrimaryCreds"));
+  PD((CREDIT,"Sending PrimaryCreds c:%d", c));
   MsgBuffer *bs= msgBufferManager->getMsgBuffer(sd);
-  Site *cr = creditSite;
-  marshal_M_OWNER_CREDIT(bs,OTI,c);
-  creditSite = cr;
+  Assert(creditSiteOut==NULL);
+  marshal_M_OWNER_CREDIT(bs,OTI,c); // no msg credit
   SendTo(sd,bs,M_OWNER_CREDIT,sd,OTI);}
 
 void sendSecondaryCredit(Site *cs,Site *sd,int OTI,Credit c){
-  PD((CREDIT,"Sending PrimaryCreds"));
+  PD((CREDIT,"Sending SecondaryCreds c:%d", c));
   MsgBuffer *bs= msgBufferManager->getMsgBuffer(cs);
-  Site *cr = creditSite;
-  marshal_M_OWNER_SEC_CREDIT(bs,sd,OTI,c);
-  creditSite = cr;
+  marshal_M_OWNER_SEC_CREDIT(bs,sd,OTI,c); // no msg credit
   SendTo(cs,bs,M_OWNER_SEC_CREDIT,sd,OTI);}
 
 void sendCreditBack(Site* sd,int OTI,Credit c){
   int ret;
-  if(creditSite==NULL){
+  if(creditSiteIn==NULL){
     sendPrimaryCredit(sd,OTI,c);
     return;}
-  sendSecondaryCredit(creditSite,sd,OTI,c);
+  sendSecondaryCredit(creditSiteIn,sd,OTI,c);
+  creditSiteIn=NULL;
   return;}
 
 /**********************************************************************/
@@ -2046,8 +2061,10 @@ void cellLockReceiveDump(OwnerEntry *oe,Site* fromS){
 
 void cellLockSendDump(BorrowEntry *be){
   NetAddress *na=be->getNetAddress();
+  PD((GC,"CLDump %d ",na->index));
   Site *toS=na->site;
   if(SEND_SHORT(toS)){return;}
+  be->getOneMsgCredit();
   MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
   marshal_M_CELL_LOCK_DUMP(bs,na->index,mySite);
   SendTo(toS,bs,M_CELL_LOCK_DUMP,toS,na->index);}
@@ -4071,6 +4088,21 @@ GenHashNode *getSecondaryNode(GenHashNode* node, int &i);
 
 #ifdef MISC_BUILTINS
 
+OZ_BI_define(BItablesExtract,0,1)
+{
+  OZ_Term borrowlist = oz_nil();
+  int bt_size=BT->getSize();
+  for(int ctr=0; ctr<bt_size; ctr++){
+    BorrowEntry *be = BT->getEntry(ctr);
+    if(be==NULL){continue;}
+    Assert(be!=NULL);
+    borrowlist = oz_cons(be->extract_info(ctr), borrowlist);}
+  OZ_RETURN(oz_cons(OZ_recordInit(oz_atom("bt"),
+                oz_cons(oz_pairAI("size", bt_size),
+                oz_cons(oz_pairA("list", borrowlist), oz_nil()))),
+              oz_cons(OT->extract_info(), oz_nil())));
+} OZ_BI_end
+
 OZ_BI_define(BIsiteStatistics,0,1)
 {
   int indx;
@@ -4187,7 +4219,8 @@ void BIinitPerdio()
 
   initMarshaler();
 
-  creditSite=NULL;
+  creditSiteIn=NULL;
+  creditSiteOut=NULL;
 
   genFreeListManager=new GenFreeListManager();
   ownerTable = new OwnerTable(DEFAULT_OWNER_TABLE_SIZE);
