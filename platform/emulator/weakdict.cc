@@ -4,7 +4,7 @@
 #include "tagged.hh"
 #include "am.hh"
 
-static WeakDictionary* gcLinkedList;
+static WeakDictionary* gcLinkedList = 0;
 
 OZ_Term WeakDictionary::printV(int depth)
 {
@@ -163,20 +163,3 @@ OZ_BI_define(weakdict_close,0,0)
   return PROCEED;
 }
 OZ_BI_end
-
-OZ_C_proc_interface * oz_init_module(void)
-{
-  static OZ_C_proc_interface table[] = {
-    {"is"     ,1,1,weakdict_is     },
-    {"new"    ,0,2,weakdict_new    },
-    {"put"    ,2,0,weakdict_put    },
-    {"get"    ,2,1,weakdict_get    },
-    {"condGet",3,1,weakdict_condGet},
-    {"close"  ,0,0,weakdict_close  },
-    {0,0,0,0}
-  };
-  gcLinkedList = 0;
-  return table;
-}
-
-char oz_module_name[] = "WeakDictionary";
