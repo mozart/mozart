@@ -218,6 +218,7 @@ extern OZ_Term  _FUNDECL(OZ_recordInit,(OZ_Term, OZ_Term));
 extern void     _FUNDECL(OZ_putSubtree,(OZ_Term, OZ_Term, OZ_Term));
 extern OZ_Term  _FUNDECL(OZ_subtree,(OZ_Term, OZ_Term));
 extern OZ_Term  _FUNDECL(OZ_arityList,(OZ_Term));
+extern OZ_Term  _FUNDECL(OZ_adjoinAt,(OZ_Term, OZ_Term, OZ_Term));
 
 /* unification */
 extern OZ_Return _FUNDECL(OZ_unify,(OZ_Term, OZ_Term));
