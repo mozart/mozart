@@ -74,7 +74,7 @@ void error(const char *format, ...)
 
   DebugCheckT(osUnblockSignals());
 
-#ifdef DEBUG_CHECK
+#ifdef DEBUG_OS_THREADS
   // just get a synchronous signal on the same thread;
   *((int *) 0) = 0;
 #else
