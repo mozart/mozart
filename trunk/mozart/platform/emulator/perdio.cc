@@ -2192,24 +2192,33 @@ void GNameTable::gcGNameTable()
 {
   PD((GC,"gname gc"));
   int index;
-  for (GenHashNode *aux=getFirst(index); aux!=NULL; aux=getNext(aux,index)) {
+  GenHashNode *aux = getFirst(index);
+  DebugCode(int used = getUsed());
+  while (aux!=NULL) {
     GName *gn = (GName*) aux->getBaseKey();
+
+    DebugCode(used--);
 
     /* code is never garbage collected */
     if (gn->getGNameType()==GNT_CODE)
-      continue;
+      goto next_one;
 
     if (gn->getGCMark()) {
       gn->resetGCMark();
     } else {
       if (gn->getGNameType()==GNT_NAME &&
 	  tagged2Literal(gn->getValue())->isNamedName()) {
-	continue;
+	goto next_one;
       }
       delete gn;
-      if (!htSub(index,aux)) continue;
+      if (!htSub(index,aux)) 
+	continue;
     }
+  next_one:
+    aux = getNext(aux,index);
   }
+
+  Assert(used==0);
   compactify();
 }
 
