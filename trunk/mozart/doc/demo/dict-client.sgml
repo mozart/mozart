@@ -1,0 +1,41 @@
+<!--
+  - Author:
+  -   Leif Kornstaedt <kornstae@uni-sb.de>
+  -
+  - Copyright:
+  -   Leif Kornstaedt, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.dict-client">
+  <Title/A Client for the DICT Protocol/
+  <P>
+    <List class=linkmenu>
+      <Item>
+	<Ref.Extern to="applets/DictClient.oza"/Start Applet/
+      <Item>
+	<Ref to="appendix.enable"/How to enable Applets/
+    </List>
+  <P>
+    The Dictionary Server Protocol (DICT) is a TCP transaction based
+    query&slash;response protocol that allows a client to access dictionary
+    definitions from a set of natural language dictionary databases.
+    For further information see <Ref.Extern to="http://www.dict.org/"
+    /The DICT Development Group/.
+  <P>
+    This application implements an interactive graphical client
+    for the DICT protocol.
+</Chapter>
