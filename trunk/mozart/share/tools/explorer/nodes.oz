@@ -69,10 +69,11 @@ local
 	    KillFlag KillId
 	 in
 	    self.mom = Mom
-	    {Status getKill(KillFlag KillId)}
+	    {Status getKill(?KillFlag ?KillId)}
 	    thread
-	       if {Wait UnwrapControl} then {self.manager wake(self KillId)}
-	       [] {Wait KillFlag} then skip
+	       case {Select UnwrapControl KillFlag} then
+		  {self.manager wake(self KillId)}
+	       else skip
 	       end
 	    end
 	    <<TkNodes.blocked init>>
