@@ -33,6 +33,15 @@ public:
   void put(OZ_Term,OZ_Term);
   OZ_Boolean get(OZ_Term,OZ_Term&);
   void weakGC();
+  //
+  OZ_Term getKeys();
+  OZ_Term getPairs();
+  OZ_Term getItems();
+  bool isEmpty();
+  OZ_Term toRecord(OZ_Term);
+  void remove(OZ_Term);
+  void remove_all();
+  bool member(OZ_Term);
 };
 
 #endif
