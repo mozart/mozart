@@ -14,6 +14,8 @@ local
       andthen
       ({Cget stepSetSelfBuiltin} orelse Name \= 'setSelf')
       andthen
+      ({Cget stepWaitForArbiterBuiltin} orelse Name \= 'waitForArbiter')
+      andthen
       ({Cget stepSystemProcedures} orelse
        Name == ''         orelse
        Name == '`,`'      orelse
