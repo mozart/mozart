@@ -337,7 +337,7 @@ out the commands it executes.  This will also give you an idea of
 what steps to perform if you want to use another compiler than those
 mentioned in the above list.
 
-<section><title>Known Bugs and Problems</title>
+<section id=section.compilerproblems><title>Known Bugs and Problems</title>
 <p>
 
 <list enum>
