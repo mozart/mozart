@@ -27,6 +27,7 @@ VPATH=          @srcdir@
 BINDIR=         $(PREFIX)/@BINDIRNAME@
 
 CXX=            @CXX@ @CXXFLAGS@
+LD=             $(CXX) @LDFLAGS@
 AR=             @AR@
 WINDRES=        @WINDRES@
 
@@ -61,16 +62,16 @@ libstartup.a: $(LIBOBJS)
         $(AR) rcs $@ $(LIBOBJS)
 
 $(CONSOLE_EXES): %.exe: %.o res.o libstartup.a
-        $(CXX) $(INCS) -s -o $@ $< res.o $(LIBS)
+        $(LD) $(INCS) -o $@ $< res.o $(LIBS)
 
 new-ozwrapper.bin: ozwrapper.o libstartup.a
-        $(CXX) $(INCS) -s -o $(SRCDIR)/ozwrapper.bin $< $(LIBS)
+        $(LD) $(INCS) -o $(SRCDIR)/ozwrapper.bin $< $(LIBS)
 
 $(WINDOWS_EXES): %.exe: %.o res.o libstartup.a
-        $(CXX) $(INCS) -s -o $@ $< res.o $(LIBS) -mwindows
+        $(LD) $(INCS) -o $@ $< res.o $(LIBS) -mwindows
 
 new-ozwrapperw.bin: ozwrapperw.o libstartup.a
-        $(CXX) $(INCS) -s -o $(SRCDIR)/ozwrapperw.bin $< $(LIBS) -mwindows
+        $(LD) $(INCS) -o $(SRCDIR)/ozwrapperw.bin $< $(LIBS) -mwindows
 
 res.o: res.rc
         $(WINDRES) -i $< -o $@
