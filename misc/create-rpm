@@ -35,8 +35,8 @@ then
    exit 1;
 fi
 BUILDDIR=$1
-SRCTAR=`ls ${BUILDDIR}/mozart-*-*-src.tar.gz`
-DOCTAR=`ls ${BUILDDIR}/mozart-*-*-doc.tar.gz`
+SRCTAR=`ls ${BUILDDIR}/mozart-*.*-src.tar.gz`
+DOCTAR=`ls ${BUILDDIR}/mozart-*.*-doc.tar.gz`
 DSTDIR=$2
 OZHOME=/usr/lib/mozart
 
@@ -66,6 +66,91 @@ chmod a+x oz.sh oz.csh
 tar cf - oz.csh oz.sh | gzip -9 -c > ${RPMSRC}/mozart-profiles.tar.gz
 rm -f oz.sh oz.csh
 
+
+#
+# Build xpm
+#
+
+cat > ${RPMSRC}/mozart.xpm <<EOF
+/* XPM */
+static char * mozart_xpm[] = {
+"80 34 40 1",
+" 	c None",
+".	c #FFFFFF",
+"+	c #FFFFCC",
+"@	c #FFFF99",
+"#	c #FFCCFF",
+"$	c #FFCCCC",
+"%	c #FFCC99",
+"&	c #FFCC66",
+"*	c #FFCC33",
+"=	c #FF9999",
+"-	c #FF9966",
+";	c #FF9933",
+">	c #CCCCFF",
+",	c #CCCCCC",
+"'	c #CCCC99",
+")	c #CC9933",
+"!	c #CC6633",
+"~	c #99CCCC",
+"{	c #9999CC",
+"]	c #999999",
+"^	c #999966",
+"/	c #999933",
+"(	c #996633",
+"_	c #993333",
+":	c #669999",
+"<	c #666699",
+"[	c #666666",
+"}	c #666633",
+"|	c #666600",
+"1	c #663333",
+"2	c #663300",
+"3	c #333366",
+"4	c #333333",
+"5	c #333300",
+"6	c #330033",
+"7	c #330000",
+"8	c #003333",
+"9	c #003300",
+"0	c #000033",
+"a	c #000000",
+"                                                                                ",
+"                                     ;;;                                        ",
+"                                   =;&-;                                        ",
+"                                  ;;  ;;;                                       ",
+"                                ;;    %-;                                       ",
+"                              ;;      ;;;-                                      ",
+"                            $;%       ;;;;$                                     ",
+"                           ;;;-  ;;   ;;;;;                                     ",
+"                         ---;;;+;;;   ;;;;;;                                    ",
+"                       -;7a1;;;;;-;   ;;;;;-                                 ,  ",
+"                     -;aaaaaa4-;-;;   ;-- &;;                              aaa  ",
+"                    ;;aaaaaaaa5;-;-   ;+   -;$                             aaa  ",
+"                  --;aaa;;;aaaa;;;;       %;;;                             aaa  ",
+"aaa4>aaaa  aaaa  &;;;aaa;;;;aaaa;;-      ;aa;;;        aaaaaa,   ]aa4aa4 aaaaaaa",
+"aaa4aaaaaaaaaaaa  ;-;aaa-;--aaaa;;%    ;)aaa4;;       aaaaaaaa[  ]aa4aa4 aaaaaaa",
+"aaaaa,aaaaa]aaaa,  ;;aaaa;;;-aaa;;-  ;-aaaaa(;-;     aaa4  aaaa  ]aaaaa4 aaaaaaa",
+"aaaa   aaa   aaa[  -;aaaa;-;;aaa-;;;;aaaaaaa;---      [a    aaa  ]aaaa    ,aaa  ",
+"aaaa   aaa   aaa]   --aaaa;;;aaa;-;;-aaa;aaa;;;-;       ,aaaaaa  [aaa     ]aaa  ",
+"aaaa   aaa   aaa]   ;;7aaaa5aaa;--;;-a;-;aaa;;;;;-    aaaaaaaaa  [aaa     ]aaa  ",
+"aaaa   aaa   aaa]    ;;aaaaaaa!-;;--;;;-;aaa;;-;;;   aaaa   aaa  <aaa     {aaa  ",
+"aaaa   aaa   aaa]    +;;;aaaa%     -;-;;-aaa;;;;;;;  aaa    aaa  <aaa     {aaa  ",
+"aaaa   aaa   aaa]     ;;--;-        ;;;;-aaa;;aaa-;  aaa   aaaa  <aaa     ,aaa  ",
+"aaaa   aaa   aaa]      ;;-;&  -;-    ;;--aaaaaaaa;;  aaaaaaaaaa  <aaa      aaaaa",
+"aaaa   aaa   aaa]      ;;;-   ;;--    ;;-aaaaaa;;    ]aaaaa aaa  <aaa      aaaaa",
+"                        ;;;   ;;;-    -;}aaaa5;+                                ",
+"                        &--   --;;;   ;;;aaa;*                                  ",
+"                         --    ;-;-   ;;;;;;                                    ",
+"                          -;    ;-;   --;;                                      ",
+"                          ;;     -%  +;;                                        ",
+"                           -;        ;%                                         ",
+"                           ;;;     &;                                           ",
+"                            ;;;;;;-                                             ",
+"                            +;;-;                                               ",
+"                             ;;&                                                "};
+EOF
+
 cp ${SRCTAR} ${DOCTAR} ${RPMSRC}
 
 # Generate redhat spec file
@@ -91,28 +176,58 @@ Source2: mozart-profiles.tar.gz
 BuildRoot: /var/tmp/mozart-${VERSION}
 
 %description
-Mozart is an efficient and distributed implementation of Oz.
+The Mozart platform implements Oz, a concurrent object-oriented
+language with dataflow synchronization. Oz combines concurrent and
+distributed programming with logical inference, making it a unique
+choice for developing multi-agent systems. It is an ideal platform for
+both general-purpose distributed application development as well as for
+problems requiring sophisticated optimization and inferencing
+abilities.  We have developed applications in scheduling, placement,
+configuration, in natural language and knowledge representation, as
+well as sophisticated collaborative tools.
 
-Mozart is jointly developed by DFKI and SICS.
+Mozart has been jointly developed by DFKI, SICS, and Université de Louvain. 
 
+This package contains all you need to run and develop Oz programs with
+Mozart.
 %package doc
 Summary: Mozart documentation
 Group: Development/Languages
 requires: mozart
 %description doc
-Mozart is an efficient and distributed implementation of Oz.
+The Mozart platform implements Oz, a concurrent object-oriented
+language with dataflow synchronization. Oz combines concurrent and
+distributed programming with logical inference, making it a unique
+choice for developing multi-agent systems. It is an ideal platform for
+both general-purpose distributed application development as well as for
+problems requiring sophisticated optimization and inferencing
+abilities.  We have developed applications in scheduling, placement,
+configuration, in natural language and knowledge representation, as
+well as sophisticated collaborative tools.
 
-Documentation
+Mozart has been jointly developed by DFKI, SICS, and Université de Louvain. 
 
+This package contains the extensive online documentation as a set of
+HTML pages. It also contains demo applications that can directly be
+started the pages.
 %package contrib
 Summary: Mozart contributions
 Group: Development/Languages
 requires: mozart
 %description contrib
-Mozart is an efficient and distributed implementation of Oz.
+The Mozart platform implements Oz, a concurrent object-oriented
+language with dataflow synchronization. Oz combines concurrent and
+distributed programming with logical inference, making it a unique
+choice for developing multi-agent systems. It is an ideal platform for
+both general-purpose distributed application development as well as for
+problems requiring sophisticated optimization and inferencing
+abilities.  We have developed applications in scheduling, placement,
+configuration, in natural language and knowledge representation, as
+well as sophisticated collaborative tools.
 
-Contributed stuff (gdbm, regex, ...)
+Mozart has been jointly developed by DFKI, SICS, and Université de Louvain. 
 
+This package contains a collection of contributed software packages that might come in handy for applications like a regular expression package, data base interfaces, and so on.
 %prep
 rm -rf \$RPM_BUILD_DIR/mozart-${VERSION} 
 %setup -c -D -T -a 0
