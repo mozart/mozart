@@ -83,7 +83,7 @@ OZ_BI_define(yy_lexer_getString, 1, 1)
   OZ_declareForeignPointerIN(0, p);
   yyFlexLexer *obj = (yyFlexLexer *) p;
   int i = obj->YYLeng();
-  const char *yytext = obj->YYText();
+  const unsigned char *yytext = (unsigned char*) obj->YYText();
   OZ_Term str = OZ_nil();
   for (i--; i >= 0; i--)
     str = OZ_cons(OZ_int(yytext[i]), str);
