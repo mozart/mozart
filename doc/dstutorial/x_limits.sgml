@@ -66,14 +66,14 @@ are related to the <<Remote>> module and virtual sites
 Only a single option is possible for <<fork>>, namely <<sh>>.
 Future releases will add more options.
 
-<item>On Solaris, the <<Remote>> module can only create
-a limited number of virtual sites.
+<item>On some platforms (in particular, Solaris),
+the operating system in its
+default configuration does not support virtual sites efficiently.
 This is due to a system-wide limit
 on the number of shared memory pages.
 The default is six shared pages per process and 100 system-wide.
-This limit can be changed, but this requires rebooting the machine.
-Since at least two pages are needed for efficient
-communications,
+Changing this limit requires rebooting the machine.
+Since at least two pages are needed for efficient communication,
 the default value results in poor
 performance if a site connects to more than three virtual sites.
 
