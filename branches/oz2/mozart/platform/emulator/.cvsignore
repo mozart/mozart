@@ -7,3 +7,6 @@ ozlib.lnk
 scanner.cc
 parser.hh
 parser.cc
+oz.c
+initffuns.cc
+
