@@ -6,9 +6,11 @@
 ;;;
 ;;; Contributor:
 ;;;   Benjamin Lorenz <lorenz@ps.uni-sb.de>
+;;;   Denys Duchier <duchier@ps.uni-sb.de>
 ;;;
 ;;; Copyright:
 ;;;   Leif Kornstaedt, Michael Mehl, and Ralf Scheidhauer, 1993-1998
+;;;   Denys Duchier, 1998
 ;;;
 ;;; Last change:
 ;;;   $Date$ by $Author$
@@ -519,7 +521,7 @@ If FORCE is non-nil, kill it immediately."
     (setq oz-emulator-filter-hook filter)
     (set-process-filter proc 'oz-emulator-filter))
   (if show
-      (oz-show-buffer (get-buffer oz-emulator-buffer)))
+      (oz-buffer-show (get-buffer oz-emulator-buffer)))
   (bury-buffer oz-emulator-buffer))
 
 (defun oz-socket (host port)
@@ -541,7 +543,7 @@ If FORCE is non-nil, kill it immediately."
     (let ((proc (get-buffer-process buffer)))
       (process-kill-without-query proc nil)
       (set-process-filter proc 'oz-compiler-filter))
-    (oz-show-buffer buffer)
+    (oz-buffer-show buffer)
     (bury-buffer buffer)
     (let ((xs oz-buffered-send-string))
       (setq oz-buffered-send-string nil)
@@ -576,7 +578,7 @@ If FORCE is non-nil, kill it immediately."
 	(save-excursion
 	  (let ((buf (or (get-buffer oz-temp-buffer)
 			 (generate-new-buffer oz-temp-buffer))))
-	    (oz-show-buffer buf)
+	    (oz-buffer-show buf)
 	    (set-buffer buf))
 	  (insert-file-contents filename t nil nil t)
 	  (delete-file filename)
@@ -627,7 +629,7 @@ If FORCE is non-nil, kill it immediately."
 
 	  (if errs-found
 	      (progn
-		(oz-show-buffer (current-buffer))
+		(oz-buffer-show (current-buffer))
 		(set-window-start (get-buffer-window (current-buffer))
 				  errs-found)
 		(set-window-point (get-buffer-window (current-buffer))
@@ -639,7 +641,7 @@ If FORCE is non-nil, kill it immediately."
 ;;}}}
 ;;{{{ Buffers
 
-(defun oz-show-buffer (buffer)
+(defun oz-buffer-show (buffer)
   (if (and buffer (not (get-buffer-window buffer)))
       (let ((win (or (get-buffer-window oz-emulator-buffer)
 		     (let ((bs oz-compiler-buffers) com)
@@ -688,7 +690,7 @@ If it is, then delete the corresponding window."
 		(if (= (window-point win) (point-max))
 		    (delete-windows-on buffername)
 		  (set-window-point win (point-max))))
-	    (oz-show-buffer (get-buffer buffername)))))))
+	    (oz-buffer-show (get-buffer buffername)))))))
 
 ;;}}}
 ;;{{{ Feeding to the Compiler
@@ -858,6 +860,43 @@ feed that many preceding paragraphs as well as the current paragraph."
   (interactive "p")
   (let ((region (oz-paragraph-region arg)))
     (oz-browse-region (car region) (cdr region))))
+
+(defun oz-show-buffer ()
+  "Feed the current buffer to the Oz Compiler.
+Assuming it to contain an expression, enclose it by an application
+of the procedure Show."
+  (interactive)
+  (oz-show-region (point-min) (point-max)))
+
+(defun oz-show-region (start end)
+  "Feed the current region to the Oz Compiler.
+Assuming it to contain an expression, enclose it by an application
+of the procedure Show."
+  (interactive "r")
+  (let ((contents (oz-get-region start end)))
+    (oz-send-string (concat "{Show\n" contents "}")))
+  (oz-zmacs-stuff))
+
+(defun oz-show-line (arg)
+  "Feed the current line to the Oz Compiler.
+Assuming it to contain an expression, enclose it by an application
+of the procedure Show.
+With ARG, feed that many lines.  If ARG is negative, feed that many
+preceding lines as well as the current line."
+  (interactive "p")
+  (let ((region (oz-line-region arg)))
+    (oz-show-region (car region) (cdr region))))
+
+(defun oz-show-paragraph (arg)
+  "Feed the current paragraph to the Oz Compiler.
+Assuming it to contain an expression, enclose it by an application
+of the procedure Show.
+If the point is exactly between two paragraphs, feed the preceding
+paragraph.  With ARG, feed that many paragraphs.  If ARG is negative,
+feed that many preceding paragraphs as well as the current paragraph."
+  (interactive "p")
+  (let ((region (oz-paragraph-region arg)))
+    (oz-show-region (car region) (cdr region))))
 
 ;; (defun oz-inspect-buffer ()
 ;;  "Feed the current buffer to the Oz Compiler.
