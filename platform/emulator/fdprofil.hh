@@ -128,15 +128,21 @@ class ProfileList : public ProfileData {
 private:
   ProfileList * next;
   int id;
+  Board * board;
 public:
-  ProfileList(int ident) : next(NULL), id(ident) {}
+  ProfileList(Board * b, int ident) : board(b), next(NULL), id(ident) {}
   void set_next(ProfileList * n) { next = n; }
   ProfileList * get_next(void) { return next; }
   void print(void) {
-    cout << "Distribution " << id << " :" << endl;
+    cout << "Distribution " << id << " Board (" << board << "):" << endl;
     ProfileData::print();
   }
   int get_id(void) { return id; }
+
+  Board * getBoard(void) { return board; } 
+  void setBoard(Board * b) { board = b; } 
+
+  void gc(void) { if (board) board = board->gcBoard(); }
 };
 
 class ProfileHost {
@@ -164,13 +170,15 @@ public:
       cout << "curr == NULL" << endl;
   }
 
-  void add(void) {
+  void setBoard(Board * b) { tail->setBoard(b); }
+
+  void add(Board * bb = NULL) {
     if (head) {
-      ProfileList * aux = new ProfileList(tail->get_id() + 1);
+      ProfileList * aux = new ProfileList(bb, tail->get_id() + 1);
       tail->set_next(aux);
       tail = aux;
     } else {
-      head = tail = new ProfileList(0);
+      head = tail = new ProfileList(NULL, 0);
     }
   }
   void discard(void) {
@@ -183,13 +191,21 @@ public:
     head = tail = curr = NULL;
     add();
   }
+  void gc(void) {
+    ProfileList * aux = head;
+    while (aux) {
+      aux->gc();
+      aux = aux->get_next();
+    }
+  }
   void print_total_average(void);
+  void printBoardStat(Board * b);
 };
 
 
 #if PROFILE_FD 
 # define _PROFILE_CODE1(CODE) CODE
-# define PROFILE_CODE1(CODE) {_PROFILE_CODE1(CODE) }
+# define PROFILE_CODE1(CODE) {_PROFILE_CODE1(CODE); }
 #else
 # define _PROFILE_CODE1(CODE)
 # define PROFILE_CODE1(CODE)
