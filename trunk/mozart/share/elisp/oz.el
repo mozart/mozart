@@ -966,7 +966,6 @@ buffer."
   (oz-define-key `[,@prefix ?r] 'run-oz)
   (oz-define-key `[,@prefix ?h] 'oz-halt)
   (oz-define-key `[,@prefix ?n] 'oz-new-buffer)
-  (oz-define-key `[,@prefix ?d] 'oz-gdb)
   (oz-define-key `[,@prefix ?o] 'oz-other)
   (oz-define-key `[,@prefix ?m] 'oz-set-other)
   ;;
