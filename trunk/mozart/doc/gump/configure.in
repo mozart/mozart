@@ -24,7 +24,15 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(gump.sgml)
 OZ_INIT
+BUILDTOP=`cd ../..; pwd`
+SRCTOP=`cd $srcdir/../..; pwd`
 AC_PROG_INSTALL
+OZ_PATH_PROG(OZENGINE,ozengine)
+OZ_PATH_PROG(OZDOC,ozdoc,OZDOC=$BUILDTOP/doc/utilities/ozdoc)
+AC_SUBST(BUILDTOP)
+AC_SUBST(SRCTOP)
+AC_SUBST(OZENGINE)
+AC_SUBST(OZDOC)
 AC_OUTPUT(Makefile)
 errprint(ifdef([OZ_INIT],
  [],
