@@ -37,6 +37,8 @@ local
       Applet
 
    body
+      Applet.spec = single(title(type:string default:"Oz Lifts"))
+
       %%
       %% Lift Simulation -- Randomised and Interactive Lift Requests
       %%
@@ -690,12 +692,6 @@ local
 
 in
 
-   {Application.applet
-    'lift.oza'
-
     MakeLift
-
-    single(title(type:string default:"Oz Lifts"))
-   }
 
 end % local

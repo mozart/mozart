@@ -36,11 +36,13 @@ local
       TkTools
 
       Applet.{Argv   = args
-              toplevel}
+              toplevel spec}
 
       Search
 
    body
+      Applet.spec = single(example(type:atom default:no)
+                           title(type:string default:"Job Shop Scheduler"))
 
       \insert 'job-shop/main.oz'
 
@@ -48,13 +50,6 @@ local
 
 in
 
-   {Application.applet
-    'job-shop.oza'
-
     MakeJobShop
-
-    single(example(type:atom default:no)
-           title(type:string default:"Job Shop Scheduler"))
-   }
 
 end

@@ -63,10 +63,12 @@ local
 
    import
       Open
-      Syslet.{args exit}
+      Syslet
       Pickle
 
    body
+
+      Syslet.spec = single(ozp(type:string optional:false))
 
       class HtmlOut
          from Open.html Open.file
@@ -132,14 +134,6 @@ local
 
 in
 
-   {Application.syslet
-
-    'ozp2html'
-
     MakeOzp2Html
-
-    single(ozp(type:string optional:false))
-
-   }
 
 end

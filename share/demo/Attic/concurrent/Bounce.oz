@@ -37,6 +37,8 @@ local
 
    body
 
+      Applet.spec = single(title(type:string default:"Oz Bouncer"))
+
       CanvasWidth  = 400.0
       CanvasHeight = 400.0
       BallRadius   = 50.0
@@ -153,13 +155,6 @@ local
 
 in
 
-   {Application.applet
-    'bounce.oza'
-
     MakeBounce
-
-    single(title(type:string default:"Oz Bouncer"))
-   }
-
 
 end
