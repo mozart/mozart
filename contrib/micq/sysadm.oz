@@ -170,12 +170,13 @@ define
       GO
       proc{Start2}
          A=S_addUser(id:{V1 tkReturnAtom($)}
-                   passwd:{V2 tkReturnAtom($)}
-                   firstname:{V3 tkReturnString($)}
-                   lastname:{V4 tkReturnString($)}
-                   organization:{V5 tkReturnString($)}
-                   email:{V6 tkReturnString($)}
-                   userlevel: {V7 tkReturnAtom($)})
+                     passwd:{V2 tkReturnAtom($)}
+                     firstname:{V3 tkReturnString($)}
+                     lastname:{V4 tkReturnString($)}
+                     organization:{V5 tkReturnString($)}
+                     email:{V6 tkReturnString($)}
+                     extra:nil
+                     userlevel: {V7 tkReturnAtom($)})
       in
          {Wait A.id} {Wait A.passwd} {Wait A.firstname} {Wait A.firstname}
          {Wait A.organization} {Wait A.email} {Wait A.userlevel}
@@ -294,7 +295,7 @@ define
       Id={GetUser}
 
       T={New Tk.toplevel tkInit(title:"Edit Account")}
-      V2 V3 V4 V5 V6 V7
+      V2 V3 V4 V5 V6 V7 V8
       Index={NewCell 0}
       GO
       proc{Start2}
@@ -304,7 +305,8 @@ define
                            lastname:{V4 tkReturnString($)}
                            organization:{V5 tkReturnString($)}
                            email:{V6 tkReturnString($)}
-                           userlevel:{V7 tkReturnAtom($)})
+                           extra:{V7 tkReturnString($)}
+                           userlevel:{V8 tkReturnAtom($)})
       in
          {Wait A.passwd} {Wait A.firstname} {Wait A.firstname} {Wait A.organization}
          {Wait A.email} {Wait A.userlevel}
@@ -333,13 +335,14 @@ define
          V4={NewEntry "Lastname:" {CondSelect Info lastname ""}}
          V5={NewEntry "Organization:" {CondSelect Info organization ""}}
          V6={NewEntry "Email:" {CondSelect Info email ""}}
+         V7={NewEntry "Extra:" {CondSelect Info extra ""}}
 
          %% User level
-         V7={New Tk.variable tkInit({CondSelect Info userlevel user})}
+         V8={New Tk.variable tkInit({CondSelect Info userlevel user})}
          L1={New Tk.label tkInit(parent:T text:"User-level:")}
          F1={New Tk.frame tkInit(parent:T relief:sunken bd:2)}
-         R1={New Tk.radiobutton tkInit(parent:F1 text:"User" value:user variable:V7)}
-         R2={New Tk.radiobutton tkInit(parent:F1 text:"Superuser" value:sysadm variable:V7)}
+         R1={New Tk.radiobutton tkInit(parent:F1 text:"User" value:user variable:V8)}
+         R2={New Tk.radiobutton tkInit(parent:F1 text:"Superuser" value:sysadm variable:V8)}
          {Tk.batch [grid(L1 row:10 column:0 sticky:e)
                     grid(F1 row:10 column:1 sticky:we)
                     grid(R1 row:0 column:0 sticky:we)
