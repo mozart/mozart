@@ -3977,7 +3977,9 @@ OZ_BI_define(BIconstraints,1,1)
    */
 OZ_Return printInline(TaggedRef term)
 {
+  osBlockSignals(NO);
   oz_printStream(term,cout,ozconf.printDepth,ozconf.printWidth);
+  osUnblockSignals();
   return PROCEED;
 }
 
