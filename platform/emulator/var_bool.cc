@@ -1,25 +1,25 @@
 /*
  *  Authors:
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
- * 
+ *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
- * 
+ *
  *  Copyright:
  *    Organization or Person (Year(s))
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
+ *
+ *  This file is part of Mozart, an implementation
  *  of Oz 3:
  *     http://www.mozart-oz.org
- * 
+ *
  *  See the file "LICENSE" or
  *     http://www.mozart-oz.org/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -58,7 +58,7 @@ OZ_Return OzBoolVariable::bind(TaggedRef * vPtr, TaggedRef term)
   } else {
     DoBindAndTrail(vPtr, term);
   }
-      
+
   return PROCEED;
 }
 
@@ -110,7 +110,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr)
 	  }
 	  break;
 	}
-	    
+
       case TRUE + 2 * FALSE: // var is local and term is global
 	{
 #ifdef SCRIPTDEBUG
@@ -151,7 +151,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr)
 	  OzBoolVariable * bool_var
 	    = new OzBoolVariable(oz_currentBoard());
 	  TaggedRef * var_val = newTaggedCVar(bool_var);
-	  
+
 	  if (!am.inEqEq()) {
 	    propagate(pc_cv_unif);
 	    termvar->propagate(pc_cv_unif);
@@ -172,21 +172,21 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr)
   case OZ_VAR_FD:
     {
       OzFDVariable * termvar = (OzFDVariable *)cv;
-      
+
       int intsct = termvar->intersectWithBool();
-	  
+
       if (intsct == -2) return FAILED;
 
       Bool isNotInstallingScript = ! am.isInstallingScript();
       Bool isConstrainedVar = isNotInstallingScript || (intsct != -1);
-      Bool isConstrainedTerm = isNotInstallingScript; 
+      Bool isConstrainedTerm = isNotInstallingScript;
 
       Bool varIsLocal =  oz_isLocalVar(this);
       Bool termIsLocal = oz_isLocalVar(termvar);
-       
+
       switch (varIsLocal + 2 * termIsLocal) {
       case TRUE + 2 * TRUE: // var and term are local
-	{ 
+	{
 #ifdef SCRIPTDEBUG
 	  printf("bool-fd local local\n"); fflush(stdout);
 #endif
@@ -222,14 +222,14 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr)
 #endif
 	  if (intsct != -1) {
 	    TaggedRef int_var = newSmallInt(intsct);
-	    if (isNotInstallingScript) 
+	    if (isNotInstallingScript)
 	      termvar->propagate(fd_prop_singl, pc_cv_unif);
 	    if (isConstrainedVar) propagate(pc_cv_unif);
 	    DoBind(vPtr, int_var);
 	    DoBindAndTrail(tPtr, int_var);
 	    dispose();
 	  } else {
-	    if (isNotInstallingScript) 
+	    if (isNotInstallingScript)
 	      termvar->propagate(fd_prop_bounds, pc_cv_unif);
 	    if (isConstrainedVar) propagate(pc_cv_unif);
 	    DoBindAndTrailAndIP(tPtr, makeTaggedRef(vPtr),
@@ -247,13 +247,13 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr)
 	  if(intsct != -1) {
 	    TaggedRef int_term = newSmallInt(intsct);
 	    if (isNotInstallingScript) propagate(pc_cv_unif);
-	    if (isConstrainedTerm) 
+	    if (isConstrainedTerm)
 	      termvar->propagate(fd_prop_singl, pc_cv_unif);
 	    DoBind(tPtr, int_term);
 	    DoBindAndTrail(vPtr, int_term);
 	    termvar->dispose();
 	  } else {
-	    if (isConstrainedTerm) 
+	    if (isConstrainedTerm)
 	      termvar->propagate(fd_prop_bounds, pc_cv_unif);
 	    if (isNotInstallingScript) propagate(pc_cv_unif);
 	    termvar->relinkSuspListTo(this, TRUE);
@@ -290,8 +290,8 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr)
 	    DoBindAndTrailAndIP(tPtr, makeTaggedRef(var_val),
 				bool_var, termvar);
 	  }
-	  break; 
-	} 
+	  break;
+	}
       default:
 	OZ_error("unexpected case in unifyBool Bool <--> FD");
 	break;
@@ -301,10 +301,10 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr)
   default:
     break;
   }
-  
+
   return FALSE;
 } // OzBoolVariable::unify
-  
+
 
 
 Bool OzBoolVariable::valid(TaggedRef val)
@@ -317,13 +317,13 @@ Bool OzBoolVariable::valid(TaggedRef val)
   return FALSE;
 }
 
-OZ_Return tellBasicBoolConstraint(OZ_Term t) 
+OZ_Return tellBasicBoolConstraint(OZ_Term t)
 {
   OZ_FiniteDomain bool_dom(fd_bool);
   return tellBasicConstraint(t, &bool_dom);
 }
 
-#ifdef OUTLINE 
+#ifdef OUTLINE
 #define inline
 #include "var_bool.icc"
 #undef inline
