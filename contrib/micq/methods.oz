@@ -46,6 +46,8 @@ local
    S_removeMessage={NewName}
    S_getUserName={NewName}
    S_removeApplication={NewName}
+   S_getHistory={NewName}
+   S_clearHistory={NewName}
 in
    functor
    export
@@ -72,6 +74,8 @@ in
       removeMessage:S_removeMessage
       getUserName:S_getUserName
       removeApplication:S_removeApplication
+      getHistory:S_getHistory
+      clearHistory:S_clearHistory
    define
       skip
    end

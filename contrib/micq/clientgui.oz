@@ -77,7 +77,6 @@ export
    setInfo:SetInfo
    errorBox:ErrorBox
    updateUser:UpdateUser
-   getAllMessages:GetAllMessages
    invite:InviteClient
    insertMess:InsertOldMessages
    removeApp:RemoveApp
@@ -296,8 +295,12 @@ define
          O=sentmessages<-N
          N={Append O [message(lid:{self getLID($)} date: D mid: Mid type:sent reply_to: R message: M)]}
       end
-      meth ClearOldAndSentMessages  oldmessages<-nil  sentmessages<-nil end
+      meth ClearOldAndSentMessages
+         oldmessages<-nil  sentmessages<-nil
+         {Client clearHistory(friend: self.id)}
+      end
       meth viewDialog E={Dictionary.get DB self.id} in
+         {System.show {Append @oldmessages @sentmessages}}
          {Dialog.view E self {Append @oldmessages @sentmessages} DB proc{$} {self ClearOldAndSentMessages} end}
       end
       meth haveUnreadMail(X)
@@ -558,13 +561,14 @@ define
 
    proc{Shutdown} if {IsDet GUIisStarted} then {T tkClose} end end
 
-   fun {GetAllMessages} E in
-      {Dictionary.items DB E}
-      {Map E fun{$ X} O S in
-                {X.widget getMessages(new: _ old: O sent: S)}
-                messages(id : X.id old: O sent: S)
-             end}
-   end
+ %   fun {GetAllMessages} E Tmp in
+%       {Dictionary.items DB E}
+%       Tmp = {Map E fun{$ X} O S in
+%                     {X.widget getMessages(new: _ old: O sent: S)}
+%                     messages(id : X.id old: O sent: S)
+%                  end}
+%       Tmp
+%    end
 
    proc{RemoveFriend Friend}
       lock CLock then

@@ -29,37 +29,32 @@ import
    Tk
    System
    Property(get put)
-   OS(getEnv uName)
+   OS(getEnv)
    Application(getCmdArgs exit)
-   Client(start:StartClient save:Save) at 'client.ozf'
+   Client(start:StartClient) at 'client.ozf'
 define
    DefaultHome=case {OS.getEnv 'HOME'} of false then "" elseof X then X#"/" end
    DefaultLogin=case {OS.getEnv 'USER'} of false then "" elseof X then X end
-   DefaultSave=if {OS.uName}.sysname == "WIN32" then DefaultHome#"micq" else
-                  DefaultHome#".micq" end
-   Spec=record('file'(single char:&f type:string default:DefaultSave)
-               'url'(single char:&u type:string default:DefaultURL)
+   Spec=record('url'(single char:&u type:string default:DefaultURL)
                'home'(single char:&h type:string default:DefaultHome)
                'login'(single char:&l type:string default:DefaultLogin)
                'passwd'(single char:&p type:string default:"" ))
 
    proc{StartICQ Args}
       T={New Tk.toplevel tkInit(title:"Settings for Client...")}
-      V1 V2 V3 V4
+      V1 V2 V3
       B1 B2 BF={New Tk.frame tkInit(parent:T)}
       Index={NewCell 0}
       GO
       proc{Start2}
-         A=start(file:{V4 tkReturnAtom($)}
-                 login:{V1 tkReturnAtom($)}
+         A=start(login:{V1 tkReturnAtom($)}
                  ticketURL:{V2 tkReturnString($)}
                  passwd:{V3 tkReturnAtom($)}
                  newuser:GO==newuser)
       in
-         {Wait A.file} {Wait A.login} {Wait A.ticketURL} {Wait A.passwd}
+         {Wait A.login} {Wait A.ticketURL} {Wait A.passwd}
          {T tkClose}
          {StartClient A}
-         {Save A.file}
          raise quit end
       end
 
@@ -78,7 +73,6 @@ define
       V2={NewEntry "URL:" Args.url}
       V1={NewEntry "Login:" Args.login}
       V3={NewEntry "Password:" Args.passwd}
-      V4={NewEntry "Init file:" Args.file}
       B1={New Tk.button tkInit(parent:BF text:"New User" action:proc{$} GO=newuser end)}
       B2={New Tk.button tkInit(parent:BF text:"Login" action:proc{$} GO=unit end)}
       {Tk.batch [grid(BF row:20 column:0 columnspan:2 sticky:we)
@@ -104,7 +98,6 @@ in
           'Command line option error: '#M#'\n'#
           'Usage: '#{Property.get 'application.url'}#' [options]\n'#
           '   --login=<Name>       Alias: -l <Name>\n'#
-          '   --file=<Name>       Alias: -f <Initfile>\n'#
           '   --passwd=<Password>  Alias: -p <Password>\n'#
           '   --url=<URL>          URL to the ICQ server. Alias: -u <Url>\n'}
          {Application.exit 2}
