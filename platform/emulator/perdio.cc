@@ -5242,35 +5242,6 @@ void msgNotSent(int ret,MsgBuffer *bs,MessageType mt,Site *s,int i){
 
 
 /**********************************************************************/
-/*   SECTION 31:: COMPONENTS                                          */
-/**********************************************************************/
-
-int makeOwnerRef(TaggedRef in){
-  OwnerEntry *oe;
-  int OTI=OT->newOwner(oe);
-  oe->mkRef(in);
-  oe->makePersistentOwner();
-  return OTI;}
-
-OZ_Term makeBorrowRef(Site *sd,int OTI){
-  NetAddress na = NetAddress(sd,OTI);
-  BorrowEntry *b = borrowTable->find(&na);
-  if (b!=NULL) {
-    b->makePersistentBorrow();
-    return b->getValue();}
-  int bi=borrowTable->newBorrow(INFINITE_CREDIT,sd,OTI);
-  b=borrowTable->getBorrow(bi);
-  PerdioVar *pvar = new PerdioVar(bi);
-  TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
-  b->mkVar(val);
-  sendRegister(b);
-  return val;
-}
-
-
-
-
-/**********************************************************************/
 /*   SECTION 31::ERROR-HANDELING                                      */
 /**********************************************************************/
 
