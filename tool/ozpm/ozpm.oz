@@ -1,6 +1,8 @@
 functor
 
-import Archive QTk
+import
+   Archive
+   QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
    System(show:Show
 	  showInfo:ShowInfo)
    Application
@@ -10,6 +12,7 @@ import Archive QTk
    Open
    Browser(browse:Browse)
    FileUtils(expand:Expand)
+   Resolve
    
 define
 
@@ -17,7 +20,9 @@ define
    
    OZPMINFO={Expand "~/.oz/ozpm/ozpm.info"}
    OZPMMANIFEST='OZPM-MANIFEST'
-   OZPMPKG={Expand "~/.oz/bin/"}
+   OZPMPKG={Expand "~/.oz/"}
+   MOGUL = "http://www.mozart-oz.org/mogul/" %"./"
+   INFO  = "ozpm.info"
    
    fun{ExtractPath P}
       {Reverse
@@ -68,14 +73,24 @@ define
    
    class ArchiveManagerClass
 
-      meth init skip end
+      feat mogul
+      
+      meth init
+	 try
+	    self.mogul={Pickle.load MOGUL#INFO}
+	 catch _ then self.mogul=nil end
+	    
+			
+	 skip
+      end
 
       meth list(L)
 	 L={List.map OzpmInfo fun{$ R} R.name end}
       end
 
       meth install(Package switch:Switch<=none result:Result<=_)
-	 A = {New Archive.'class' init(Package)}
+	 PackageFile={Resolve.localize Package}.1
+	 A = {New Archive.'class' init(PackageFile)}
 	 PLS={A lsla($)}
 	 PInfo
       in
