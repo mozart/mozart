@@ -5686,10 +5686,11 @@ OZ_Return showInline(TaggedRef term)
 
 DECLAREBI_USEINLINEREL1(BIshow,showInline)
 
-OZ_C_proc_begin(BIprintLong,1)
+OZ_C_proc_begin(BIprintLong,2)
 {
   oz_declareArg(0,t);
-  taggedPrintLong(t);
+  oz_declareIntArg(1,d);
+  taggedPrintLong(t,d,0);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -7266,7 +7267,7 @@ BIspec allSpec[] = {
   {"Thread.isSuspended",2,BIthreadIsSuspended},
   {"Thread.state",2,BIthreadState},
 
-  {"printLong",1,BIprintLong},
+  {"printLong",2,BIprintLong},
 
   {"statisticsReset",0,BIstatisticsReset},
   {"statisticsPrint",0,BIstatisticsPrint},

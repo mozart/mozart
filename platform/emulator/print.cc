@@ -1521,10 +1521,11 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
   while (depth-- > 0) {
     PopFrame(auxtos,PC,Y,G);
     if (PC==C_EMPTY_STACK)
-      break;
+      return;
     CodeArea::printDef(PC);
     if (verbose) { message("\t\tPC=0x%x, Y=0x%x, G=0x%x\n",PC, Y, G); }
   }
+  message("\t ...\n");
 }
 
 TaggedRef TaskStack::dbgFrameVariables(int frameId)
