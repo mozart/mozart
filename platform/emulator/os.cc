@@ -1180,7 +1180,11 @@ int osDlopen(char *filename, OZ_Term& ret)
     // are linked against symbols coming from already
     // liked objects (example: libfd and libschedule)
 
+#ifdef RTLD_GLOBAL
     void *handle=dlopen(filename, RTLD_NOW | RTLD_GLOBAL);
+#else
+    void *handle=dlopen(filename, RTLD_NOW);
+#endif
 
     if (!handle) {
       err=oz_atom(dlerror());
