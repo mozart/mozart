@@ -1,0 +1,17 @@
+-*-outline-*-
+
+* version 0.71
+** ozmake --extract: default directory changed from current directory
+   to subdirectory with name derived from the package mogul id
+** makefiles are now textually included in packages
+   the preprocessed makefile is now called MAKEPKG.oz and is
+   only used when installing from a package file when not explitly
+   disabled by the user with --nousemakepkg
+
+* version 0.7n
+** start recording changes between versions
+** OZLOAD properly passed to sub ozc processes
+** fixed date handling: unfortunately, this is an incompatible change
+   all recorded package dates prior to this fix, where incorrect
+
+* previous history not recorded
