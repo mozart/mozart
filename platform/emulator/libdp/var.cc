@@ -179,10 +179,17 @@ Bool dealWithInjectors(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Boo
 inline EntityCond injectorPart(EntityCond ec){
   return ec & (PERM_BLOCKED|TEMP_BLOCKED);}
 
+
 Bool varFailurePreemption(TaggedRef t,EntityInfo* info,Bool &hit){
   EntityCond ec=injectorPart(info->getEntityCond());
   if(ec==ENTITY_NORMAL) return FALSE;
-  return dealWithInjectors(t,info,ec,oz_currentThread(),hit);}
+  Bool ret=dealWithInjectors(t,info,ec,oz_currentThread(),hit);
+  if(hit) return ret;
+  if(globalWatcher==NULL) return FALSE;
+  if(!(globalWatcher->watchcond & ec)) return FALSE;
+  globalWatcher->varInvokeInjector(t,ec);
+  hit=TRUE;
+  return FALSE;}
 
 Bool ProxyVar::failurePreemption(){
   Assert(info!=NULL);
