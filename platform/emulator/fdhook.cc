@@ -53,17 +53,6 @@ SuspList * addSuspToList(SuspList * list, Thread * elem, Board * hoome)
   return sl_elem;
 }
 
-Thread * createPropagator (OZ_CFun func, int arity, RefsArray xregs)
-{
-  Assert(!(am.currentThread->isPropagator () || 
-	   am.currentThread->isNewPropagator ()));
-  
-  Thread *thr = makeHeadThread (func, xregs, arity);
-  thr->headInit();
-
-  return (thr);
-}
-
 Thread * createNewPropagator (OZ_Propagator * p, int prio)
 {
   Assert(!(am.currentThread->isNewPropagator ()));
