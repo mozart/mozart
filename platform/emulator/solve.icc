@@ -52,33 +52,37 @@ void SolveActor::inject(int prio, TaggedRef proc) {
 }
 
 inline
-TaggedRef SolveActor::merge(Board *bb) {
+TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
   solveBoard->setCommitted(bb);
   bb->incSuspCount(solveBoard->getSuspCount());
 
   if (!am.installScriptOutline(solveBoard->getScriptRef())) {
     return makeTaggedNULL();
   }
-
+  
   Assert(bb==am.currentBoard);
-
+  
   // adjoin the list of or-actors to the list in actual solve actor!
-
+  
   if (bb->isWait()) {
     WaitActor::Cast(bb->getActor())->mergeChoices(cpb);
   } else if (bb->isSolve()) {
-    SolveActor::Cast(bb->getActor())->mergeChoices(cpb);
-    threads += SolveActor::Cast(bb->getActor())->getThreads();
-  }
+    SolveActor *sa = SolveActor::Cast(bb->getActor());
 
+    sa->mergeChoices(cpb);
+    
+    if (isSibling) 
+      sa->incThreads(threads);
+  }
+  
   // merge local thread queue
   if (localThreadQueue) {
     // Merge in current solve board but not elsewhere
     bb = am.currentSolveBoard;
     
     if (bb && bb->isSolve()) {
-    // merge local thread queue to another solve space
-
+      // merge local thread queue to another solve space
+      
       SolveActor * sa = SolveActor::Cast(bb->getActor());
       
       if (sa->getLocalThreadQueue()) {
@@ -89,7 +93,7 @@ TaggedRef SolveActor::merge(Board *bb) {
       }
       
     } else {
-    // merge ltq (local thread queue) to a non-solve space
+      // merge ltq (local thread queue) to a non-solve space
       
       DebugCode(OZ_warning("Merging solve space with non-solve space."));
       
@@ -100,7 +104,7 @@ TaggedRef SolveActor::merge(Board *bb) {
 	thr->propagatorToRunnable ();
 	am.scheduleThreadInline (thr, thr->getPriority());
       }
-    
+      
       // empty taskstack of ltq thread and dispose ltq
       localThreadQueue->getLTQThread()->getTaskStackRef()->makeEmpty();
       localThreadQueue->dispose ();
