@@ -40,7 +40,7 @@
 #include "network.hh"
 #include "os.hh"
 #include "comObj.hh"
-
+#include "bucketHashTable.hh"
 /**********************************************************************/
 /*   SECTION :: Site                                                  */
 /**********************************************************************/
@@ -79,9 +79,13 @@
   MY_SITE			// 
 */
 
+enum FindType{
+  SAME,
+  NONE,
+  I_AM_YOUNGER,
+  I_AM_OLDER};
+
 //
-// Managing free list: cutoff on 
-#define DSITE_FREE_LIST_CUTOFF  16
 
 //
 // There is one perdio-wide known "distribition" site object.  
@@ -106,7 +110,12 @@ public:
 };
 
 
-class DSite: public BaseSite {
+class DSite: public BaseSite,     // TO get the address, port and ts
+	     public BucketHashNode // function together with HT
+
+	     
+{
+  
 friend class DSiteHashTable;
 private:
   unsigned short flags;
@@ -187,40 +196,24 @@ private:
 
 public:
   //
-  void* operator new(size_t size) {
-    Assert(sizeof(DSite)<=sizeof(Construct_6));
-    return ((DSite *) genFreeListManager->getOne_6());}
 
-  void freeSite() {
-    genFreeListManager->putOne_6((FreeListEntry*) this);}   
-
-  //
   DSite() {}			// 'unmarshalDSite()';
   DSite(ip_address a, port_t p, TimeStamp *t)
-    : BaseSite(a, p, t) {
+    : BaseSite(a, p, t),BucketHashNode((unsigned int)a ,(unsigned int)p) {
     DebugCode(flags = (unsigned short) -1);
   }
   DSite(ip_address a, port_t p, TimeStamp* t, unsigned short ty)
-    : BaseSite(a, p, t) {
+    : BaseSite(a, p, t),BucketHashNode((unsigned int)a ,(unsigned int)p) {
     flags=ty;}
 
   DSite(ip_address a, port_t p, TimeStamp &t)
-    : BaseSite(a, p, t) {
+    : BaseSite(a, p, t),BucketHashNode((unsigned int)a ,(unsigned int)p) {
     DebugCode(flags = (unsigned short) -1);
   }
   DSite(ip_address a, port_t p, TimeStamp& t, unsigned short ty)
-    : BaseSite(a, p, t) {
+    : BaseSite(a, p, t),BucketHashNode((unsigned int)a ,(unsigned int)p) {
     flags=ty;}
 
-  int compareSitesNoTimestamp(DSite *s){
-    if(address<s->address) return 0-1;
-    if(s->address<address) return 1;    
-    if(port< s->port) return 0-1;
-    if(s->port< port) return 1;
-    return 0;}
-
-  int hashPrimary() {return hashWOTimestamp();}
-  int hashSecondary() {return hash();}
   void setMyDSite() { setType(MY_SITE); }
 
   void makeGCMarkSite(){flags |= GC_MARK;}
@@ -311,7 +304,6 @@ public:
   int send(MsgContainer *msgC) {
     if(connect()){
       Assert(getType() & REMOTE_SITE);
-	
       getComObj()->send(msgC);
       return ACCEPTED;
     }
@@ -338,29 +330,9 @@ public:
     return SITE_OK;
   }
 
-  /*
-  // AN! monitors??? Not in use!
-  MonitorReturn demonitorQueue(){
-    unsigned short t=getType();
-    if(!(t & CONNECTED)) {
-      return NO_MONITOR_EXISTS;}
-    Assert(t & REMOTE_SITE);
-//        demonitorQueue_RemoteSite(getComObj());
-    return MONITOR_OK;
-  };
-
-  MonitorReturn monitorQueue(int size,int noMsgs,void *storePtr){
-    if(connect()){
-      if(getType() & REMOTE_SITE){
-	//monitorQueue_RemoteSite(getComObj(),size); 
-	  return MONITOR_OK;}
-    };
-    return MONITOR_PERM;}
-  */
-
   void marshalDSite(MarshalerBuffer *); 
 
-// PERM case 2) discovered in unmarshaling or 3) in network
+  // PERM case 2) discovered in unmarshaling or 3) in network
   void discoveryPerm(){ 
     PD((TCP_INTERFACE,"discoveryPerm of %d type %d",
   	this->getTimeStamp()->pid,flags));
@@ -368,7 +340,7 @@ public:
     if(t==0) {
       flags |= PERM_SITE; 
       return;}    
-//      Assert(!(t & SECONDARY_TABLE_SITE));
+    //      Assert(!(t & SECONDARY_TABLE_SITE));
     if(t & PERM_SITE) return;
     if(t & CONNECTED){
       Assert(t & REMOTE_SITE);
@@ -387,34 +359,21 @@ public:
 
   void probeFault(ProbeReturn pr);
 
-  /* AN!
-     void monitorInvoke(MonitorReturn mt,int size,int noMsgs){
-     Assert(0);
-     OZ_error("not implemented");
-     return;}
-  */
-  /*
-  Bool isMySite(){
-    return flags & MY_SITE;}
-  */
-
   // misc - statistics;
 //    unsigned short getTypeStatistics() { return (getType()); }
   OZ_Term getStateStatistics();
 
   char* stringrep();
   char* stringrep_notype();
+
+  OZ_Term getOzRep();
 };
 
 char *oz_site2String(DSite *s);
 
 //
 // Marshaller uses that;
-#ifdef USE_FAST_UNMARSHALER   
-DSite* unmarshalDSite(MarshalerBuffer *mb);
-#else
 DSite* unmarshalDSiteRobust(MarshalerBuffer *mb, int *error);
-#endif
 
 //
 // Faking a port from a ticket;
@@ -427,10 +386,87 @@ DSite *findDSite(ip_address a,int port, TimeStamp &stamp);
 DSite* makeMyDSite(ip_address a, port_t p, TimeStamp &t);
 
 //
-GenHashNode *getPrimaryNode(GenHashNode* node, int &i);
-GenHashNode *getSecondaryNode(GenHashNode* node, int &i);
-
 //
 void gcDSiteTable();
 
+class DSiteHT:public BucketHashTable{
+  
+public: 
+  DSiteHT(int size):BucketHashTable(size){}
+  
+  
+  FindType find(DSite *target,DSite* &found)
+  {
+
+    unsigned int pk = (unsigned int)target->getAddress();
+    unsigned int sk = (unsigned int)target->getPort();
+    found=(DSite *)htFindPkSk(pk,sk);
+
+    if(found)
+      {
+	TimeStamp *t1 = target->getTimeStamp();
+	TimeStamp *t2 = found->getTimeStamp();
+	if (t1->pid == t2->pid && t1->start == t2->start)
+	  return SAME;
+	if(target->compareSites(found) < 0) return I_AM_YOUNGER;
+	return I_AM_OLDER;
+      }
+    else{
+      return NONE;
+    }
+  }
+  
+  void insert(DSite* s)
+  {
+    htAdd((unsigned int)s->getAddress(),s);
+  }
+  
+  void remove(DSite *s)
+  {
+    htSubPkSk((unsigned int)s->getAddress(),(unsigned int)s->getPort());
+  }
+  
+  void cleanup()
+  {
+    int limit = getSize();
+    for(int ctr = 0; ctr<limit;ctr++)
+      {
+        BucketHashNode **s = getBucketPtr(ctr);
+	DSite *t =  (DSite *)getBucket(ctr);
+	while(*s)
+	  {
+	    t = (DSite*) t->getNext();
+	    DSite *site = (DSite *)(*s);
+	    if(!site->isGCMarkedSite() && site->canBeFreed())
+	      {
+		(*s) = (*s)->getNext();
+		delete site;
+	      }
+	    else
+	      {
+		(site)->removeGCMarkSite();
+		s= ((*s)->getNextPtr());
+	      }
+	  }
+      }
+  }
+
+  void print_contents(){
+    int limit = getSize();
+    for(int ctr = 0; ctr<limit;ctr++)
+      {
+	printf("Entry %d:",ctr);
+	DSite *s = (DSite *)getBucket(ctr);
+	while(s)
+	  {
+	    printf("\t%d:%d=>%s\n",s->getPrimKey(), s->getSecKey(),s->stringrep());
+	    s=(DSite *)s->getNext();
+	  }
+	printf("\n");
+      }
+  }
+};
+
+extern DSiteHT* primarySiteTable;
+extern DSiteHT* secondarySiteTable;
 #endif // __DSITE_HH
