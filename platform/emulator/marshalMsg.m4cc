@@ -153,8 +153,8 @@ define(arg,`ifelse($1,Index,,
                    $1,Credit,`,Credit &c',
                    $1,Object,,
                    $1,ObjectAndClass,,
-                   $1,Site,`,Site* s1',
-                   $1,Site2,`,Site* s2')')
+                   $1,Site,`,Site* &s1',
+                   $1,Site2,`,Site* &s2')')
 
 define(argEnc,`ifelse($1,Index,unmarshalUnsentNumber(buf);,
                    $1,Index2,unmarshalUnsentNumber(buf);,
