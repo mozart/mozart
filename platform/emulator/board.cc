@@ -59,7 +59,7 @@ Bool Board::_ignoreWakeUp = NO;
 
 Board::Board()
   : suspCount(0), bag(0),
-    threads(0), suspList(0), nonMonoSuspList(0),
+    crt(0), suspList(0), nonMonoSuspList(0),
     status(taggedVoidValue), rootVar(taggedVoidValue),
     script(taggedVoidValue)
 {
@@ -70,7 +70,7 @@ Board::Board()
 
 Board::Board(Board * p)
   : suspCount(0), bag(0),
-    threads(0), suspList(0), nonMonoSuspList(0),
+    crt(0), suspList(0), nonMonoSuspList(0),
     script(taggedVoidValue)
 {
   Assert(!p->isCommitted());
@@ -363,49 +363,55 @@ void Board::checkStability(void) {
   Assert(!isRoot() && !isFailed() && !isCommitted());
   Assert(this == oz_currentBoard());
 
-  Board * pb = getParent();
-  Distributor * d;
+  crt--;
 
-  if (decThreads() == 0 && isStable()) {
+  Board * pb = getParent();
+
+  if (isStable()) {
+
+    pb->decRunnableThreads();
 
     if (getNonMono()) {
       scheduleNonMono();
-    } else if ((d = getDistributor()) != 0) {
-      int n = d->getAlternatives();
+    } else {
+      Distributor * d = getDistributor();
 
-      if (n == 1) {
-        d->commit(this,1,1);
+      if (d) {
+        int n = d->getAlternatives();
+
+        if (n == 1) {
+          d->commit(this,1,1);
+        } else {
+          trail.popMark();
+          am.setCurrent(pb);
+          bindStatus(genAlt(n));
+        }
+
       } else {
+        // succeeded
         trail.popMark();
         am.setCurrent(pb);
-        bindStatus(genAlt(n));
+
+        bindStatus(genSucceeded(getSuspCount() == 0));
       }
-
-    } else {
-      // succeeded
-      trail.popMark();
-      am.setCurrent(pb);
-
-      bindStatus(genSucceeded(getSuspCount() == 0));
     }
 
   } else {
-    int t = getThreads();
+    int n = crt;
 
     setScript(trail.unwind(this));
     am.setCurrent(pb);
 
-    if (t == 0) {
+    if (n == 0) {
       // No runnable threads: blocked
       TaggedRef newVar = oz_newFuture(pb);
 
       bindStatus(genBlocked(newVar));
       setStatus(newVar);
+      pb->decRunnableThreads();
     }
 
   }
-
-  pb->decSolveThreads();
 
 }
 
@@ -416,13 +422,14 @@ void Board::fail(void) {
 
   setFailed();
 
+  pb->decRunnableThreads();
+
   trail.unwindFailed();
 
   am.setCurrent(pb);
 
   bindStatus(genFailed());
 
-  pb->decSolveThreads();
 }
 
 /*
@@ -535,11 +542,8 @@ Bool Board::install(void) {
   if (frm == this)
     return OK;
 
-  if (!isAlive()) {
-    if (!isRoot())
-      getParent()->decSolveThreads();
+  if (!isAlive())
     return NO;
-  }
 
   // Step 1: Mark all spaces including root as installed
   {

@@ -50,7 +50,7 @@ Thread * oz_newThread(int prio) {
   tt->setRunnable();
 
   if (!bb->isRoot())
-    bb->incSolveThreads();
+    bb->incRunnableThreads();
 
   am.threadsPool.scheduleThread(tt);
   return tt;
@@ -70,7 +70,7 @@ Thread * oz_newThreadInject(Board *bb) {
   tt->setRunnable();
 
   if (!bb->isRoot())
-    bb->incSolveThreads();
+    bb->incRunnableThreads();
 
   am.threadsPool.scheduleThread(tt);
   return tt;
@@ -111,7 +111,7 @@ void oz_wakeupThread(Thread *tt) {
 
   if (!bb->isRoot()) {
 
-    bb->incSolveThreads();
+    bb->incRunnableThreads();
 
     if (tt->isExternal()) {
       do {
