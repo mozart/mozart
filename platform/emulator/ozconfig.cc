@@ -107,6 +107,8 @@ void ConfigData::init() {
 
   runningUnderEmacs     = 0;
 
+  copyallways           = 0;
+
   debugPerdio  = 0;
   perdiod0Compatiblity = 0;
   debugIP = 0;
