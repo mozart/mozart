@@ -289,9 +289,8 @@ starts the emulator under gdb")
      ("Modules File"            . oz-find-modules-file)
      )
     ("Print"
-     ("Region"                  . oz-print-region)
-     ("Buffer (Portrait)"	. oz-print-buffer)
-     ("Buffer (Landscape)"	. oz-print-buffer-landscape)
+     ("Region"                  . ps-print-region-with-faces)
+     ("Buffer"			. ps-print-buffer-with-faces)
      )
     ("Core Syntax"
      ("Buffer"      . oz-to-coresyntax-buffer)
@@ -1401,32 +1400,6 @@ OZ compiler, emulator and error window")
 (defun oz-un-comment-region (beg end arg)
   (interactive "r\np")
   (comment-region beg end (if (= arg 0) -1 (- 0 arg))))
-
-(defvar oz-lpr "oz2lpr -"
-  "pretty printer for oz code")
-
-(defvar oz-lpr-landscape "oz2lpr -landscape -"
-  "pretty printer in landscape for oz code")
-
-(defun oz-print-buffer ()
-  "Print buffer."
-  (interactive)
-  (oz-print-region (point-min) (point-max)))
-
-(defun oz-print-buffer-landscape ()
-  "Print buffer."
-  (interactive)
-  (oz-print-region-landscape (point-min) (point-max)))
-
-(defun oz-print-region (start end)
-  "Print region."
-  (interactive "r")
-  (shell-command-on-region start end oz-lpr))
-
-(defun oz-print-region-landscape (start end)
-  "Print region."
-  (interactive "r")
-  (shell-command-on-region start end oz-lpr-landscape))
 
 (defvar oz-temp-file (oz-make-temp-name "/tmp/ozemacs") "")
 
