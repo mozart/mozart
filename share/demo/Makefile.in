@@ -13,9 +13,13 @@ INSTALL		= @INSTALL@
 INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_DIR	= @INSTALL_DIR@
 
-OZC		= @OZC@
-OZCA		= $(OZC) #-l Application,Open
+COMPRESSLEVEL   = @oz_picklecompression@
+COMPRESSFLAGS   = --compress=$(COMPRESSLEVEL)
 
+OZCFLAGS        = $(COMPRESSFLAGS)
+OZC		= @OZC@
+
+COMPILE         = $(OZC) $(OZCFLAGS)
 
 #
 # The list of demos
@@ -68,7 +72,7 @@ WEBC = \
 all:: $(WEBPAGES) $(WEBC)
 
 ozp2html: make-ozp2html.oz
-	$(OZCA) -x $< -o $@
+	$(COMPILE) -x $< -o $@
 
 $(WEBPAGES): ozp2html
 
@@ -83,11 +87,11 @@ distributed/%.html: distributed/%-html.ozp
 	$(OZP2HTML) --ozp=$< > $@
 
 constraints/%-html.ozp: constraints/%-html.oz
-	$(OZCA) -c $< -o $@
+	$(COMPILE) -c $< -o $@
 concurrent/%-html.ozp: concurrent/%-html.oz
-	$(OZCA) -c $< -o $@
+	$(COMPILE) -c $< -o $@
 distributed/%-html.ozp: distributed/%-html.oz
-	$(OZCA) -c $< -o $@
+	$(COMPILE) -c $< -o $@
 
 clean:: 
 	-rm -f $(WEBC) ozp2html
@@ -136,11 +140,11 @@ APPLETS = \
 all:: $(APPLETS)
 
 constraints/%.oza: constraints/%.oz
-	$(OZCA) -c $< -o $@
+	$(COMPILE) -c $< -o $@
 concurrent/%.oza: concurrent/%.oz
-	$(OZCA) -c $< -o $@
+	$(COMPILE) -c $< -o $@
 distributed/%.oza: distributed/%.oz
-	$(OZCA) -c $< -o $@
+	$(COMPILE) -c $< -o $@
 
 JOBSHOP = \
 	compiler configure duration-tool examples job \
