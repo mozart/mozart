@@ -1,6 +1,6 @@
 @echo off 
 
-set OZHOME=y:\oz-devel
+set OZHOME=y:\oz-2
 
 set PATH=%PATH%;%OZHOME%\platform\win32-i486;C:\WINDOWS;C:\WINDOWS\COMMAND;C:\BIN;C:\DOS;C:\MWW\DLL;e:\WATCOM\BINNT;e:\WATCOM\BINW
 
