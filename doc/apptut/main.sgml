@@ -31,6 +31,9 @@
 <!entity native.counter.object system "native-counter-obj.sgml">
 <!entity native.celloid system "native-celloid.sgml">
 
+<!entity chapter.client.server.intro system "cs-intro.sgml">
+<!entity chapter.client.server.db system "cs-db.sgml">
+
 <!ENTITY chapter.hello       SYSTEM "hello.sgml">
 <!ENTITY chapter.development SYSTEM "devel.sgml">
 <!ENTITY chapter.deployment  SYSTEM "deploy.sgml">
@@ -56,6 +59,9 @@
 <meta name="html.split" value="chapter.counter.object">
 <meta name="html.split" value="part.managing.modules">
 <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
+<meta name="html.split" value="part.client.server">
+<meta name="html.split" value="chapter.client.server.intro">
+<meta name="html.split" value="chapter.client.server.db">
 <Title/Application Programming/
 <Author.Extern to="author.db" key="Denys.Duchier">
 <Author.Extern to="author.db" key="Leif.Kornstaedt">
@@ -67,6 +73,11 @@
   &chapter.deployment;
 </PART>
 &part.native;
+    <part id=part.client.server proglang=oz>
+      <title>Client/Server Applications</title>
+      &chapter.client.server.intro;
+      &chapter.client.server.db;
+</part>
 <PART id=part.managing.modules>
   <Title/Managing Modules/
   &chapter.linking;
