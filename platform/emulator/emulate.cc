@@ -647,10 +647,12 @@ void engine() {
   LBLTaskEmpty:
     if (e->currentThread->isSolve () == OK) {
       if (e->currentThread->isSolveReduce () == OK) {
-        if (boardForNotification->isCommitted () == NO) {
-          e->decSolveThreads (boardForNotification->getParentBoard ());
-        } else {
-          e->decSolveThreads (boardForNotification->getBoard ());
+        if (boardForNotification != e->rootBoard) {
+          if (boardForNotification->isCommitted () == NO) {
+            e->decSolveThreads (boardForNotification->getParentBoard ());
+          } else {
+            e->decSolveThreads (boardForNotification->getBoard ());
+          }
         }
       } else {
         e->decSolveThreads (boardForNotification);

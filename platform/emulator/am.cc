@@ -449,10 +449,8 @@ Bool AM::setExtSuspension (Board *varHome, Suspension *susp)
   while (bb != (Board *) NULL && bb != varHome) {
     DebugCheck ((bb == rootBoard),
                 error ("the root board is reached in AM::setExtSuspensions"));
-    if (bb->isSolve () == OK) {
-      bb->addSuspension (susp);
-      wasFound = OK;
-    }
+    bb->addSuspension (susp);
+    wasFound = OK;
     bb = (bb->getParentBoard ())->getSolveBoard ();
   }
   return (wasFound);
@@ -464,8 +462,7 @@ Bool AM::checkExtSuspension (Suspension *susp)
     Board *sb = susp->getNode ();
     DebugCheck ((sb == (Board *) NULL),
                 error ("no board is found in AM::checkExtSuspension"));
-    if (sb->isSolve () == NO)
-      sb = sb->getSolveBoard ();
+    sb = sb->getSolveBoard ();
 
     Bool wasFound = (sb == (Board *) NULL) ? NO : OK;
     while (sb != (Board *) NULL) {
@@ -473,13 +470,16 @@ Bool AM::checkExtSuspension (Suspension *susp)
                   error ("no solve board is found in AM::checkExtSuspension"));
 
       SolveActor *sa = CastSolveActor (sb->getActor ());
-      if (sa->areNoExtSuspensions () == OK) {
+      if (sa->isStable () == OK) {
         Thread::ScheduleSolve (sb);
         // Note:
         //  The observation is that some actors which have imposed instability
         // could be discarded by reduction of other such actors. It means,
         // that the stability condition can not be COMPLETELY controlled by the
         // absence of active threads;
+        // Note too:
+        //  If the note is not yet stable, it means that there are other
+        // external suspension(s) and/or threads. Therefore it need not be waked.
       }
       sb = (sb->getParentBoard ())->getSolveBoard ();
     }
