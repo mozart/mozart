@@ -48,13 +48,20 @@ void GTIndexTable::gCollectGTIT()
     // 
     if (!isGCTaggedInt(t)) {
 #ifdef DEBUG_CHECK
+      Bool isVar;
       if (oz_isRef(t)) {
+	isVar = OK;
 	Assert(oz_isVariable(*tagged2Ref(t)));
       } else {
+	isVar = NO;
 	Assert(!oz_isVariable(t));
       }
 #endif
       oz_gCollectTerm(t, t);
+#ifdef DEBUG_CHECK
+      Assert((isVar && oz_isRef(t) && !oz_isRef(*tagged2Ref(t))) ||
+	     (!isVar && !oz_isRef(t)));
+#endif
     }
     //
     n = getNext(n);
