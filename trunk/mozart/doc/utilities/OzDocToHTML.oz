@@ -251,7 +251,7 @@ define
 	    [] down(Node) then
 	       {DoThreading Rest unit Node#Prev|Ups}
 	    [] up then
-	       case Rest of down(Node)|Rest2 then
+	       case Rest of down(_)|Rest2 then
 		  {DoThreading Rest2 Prev Ups}
 	       else _#OldPrev|Upr = Ups in
 		  {DoThreading Rest OldPrev Upr}
@@ -960,8 +960,12 @@ define
 	    [] entry then HTML1 ClassName HTML2 in
 	       OzDocToHTML, Batch(M.1 1 ?HTML1)
 	       ClassName = {FoldLTail
-			    {FoldR EntryClasses
-			     fun {$ C#T In}
+			    {FoldR {Dictionary.condGet @Meta 'entry.category'
+				    EntryClasses}
+			     fun {$ Cat In} C T in
+				C#T = case Cat of _#_ then Cat
+				      else Cat#Cat
+				      end
 				if {SGML.isOfClass M C} then T|In else In end
 			     end nil}
 			    fun {$ In T|Tr}
@@ -969,8 +973,9 @@ define
 			    end ""}
 	       HTML2 = case ClassName of "" then EMPTY
 		       else
-			  SEQ([VERBATIM('&nbsp;')
-			       PCDATA('[') i(PCDATA(ClassName)) PCDATA(']')])
+			  span('class': [entrycategory]
+			       VERBATIM('&nbsp;') PCDATA('[')
+			       i(PCDATA(ClassName)) PCDATA(']'))
 		       end
 	       dt(COMMON: @Common HTML1 HTML2)
 	    [] synopsis then
