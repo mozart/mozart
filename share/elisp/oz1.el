@@ -1,3 +1,5 @@
+(load "gdb")
+
 (defun set-machine()
   (interactive)
   (setenv "OZMACHINE" 

@@ -19,8 +19,6 @@
 
 ;(byte-compiler-options (optimize t) (warnings (- free-vars))
 ;  (file-format emacs18))
-(setq debug-on-error nil)
-;(setq debug-on-error t)
 
 (require 'comint)
 
@@ -33,7 +31,7 @@
 (defvar oz-machine-state  "???")
 
 (defvar oz-old-screen-title
-  (if  lucid-emacs
+  (if lucid-emacs
       screen-title-format
     (cdr (assoc 'name (frame-parameters)))))
 
@@ -294,54 +292,52 @@ For example
 ;;; OZ MODE
 (if lucid-emacs
     (defvar oz-menubar 
-      ;;(setq oz-menubar 
-      (append default-menubar
-	  '(("Oz"     
-	     ["Feed buffer"            oz-feed-buffer t]
-	     ["Feed region"            oz-feed-region t]
-	     ["Feed line"              oz-feed-line t]
-              "-----"
-	     ["Include file"           oz-include-file t]
-	     ["Compile file"           oz-precompile-file t]
-	     ("Find "
-	     ["Demo file"              oz-find-demo-file t]
-	     ["Library file"           oz-find-lib-file t]
-	     ["Documentation"          oz-find-docu-file t]
-	     )
-              "-----"
-	     ["New Oz buffer"          oz-new-buffer t]
-	     ["Refresh buffer"         oz-prettyprint t]
-	     ("Print"
-	      ["buffer"      oz-print-buffer t]
-	      ["region"      oz-print-region t]
-	      )
-	     ("Core Syntax"
-	      ["buffer"      oz-ks-buffer t]
-	      ["region"      oz-ks-region t]
-	      ["line"        oz-ks-line   t]
-	      )
-	     ("Indent"
-	      ["line" oz-indent-line t]
-	      ["region" oz-indent-region t]
-	      ["buffer" oz-indent-buffer t]
-	      )
-	     ("Show/hide"
-	      ["errors"       oz-toggle-errors t]
-	      ["compiler"     oz-toggle-compiler-window t]
-	      ["machine"      oz-toggle-machine-window t]
-	      )
-	     ["Browse"   oz-feed-region-browse t]
-	     "-----"
-	     ["Start Oz" run-oz t]
-	     ["Halt Oz"  halt-oz t]
-	     )
-	    ("Font"
-	     ["Small"      oz-small-font      t]
-	     ["Default"    oz-default-font     t]
-	     ["Large"      oz-large-font      t]
-	     ["Very Large" oz-very-large-font t]
-	     )
-	     )))
+      '(("Oz"     
+	 ["Feed buffer"            oz-feed-buffer t]
+	 ["Feed region"            oz-feed-region t]
+	 ["Feed line"              oz-feed-line t]
+	 "-----"
+	 ["Include file"           oz-include-file t]
+	 ["Compile file"           oz-precompile-file t]
+	 ("Find "
+	  ["Demo file"              oz-find-demo-file t]
+	  ["Library file"           oz-find-lib-file t]
+	  ["Documentation"          oz-find-docu-file t]
+	  )
+	 "-----"
+	 ["New Oz buffer"          oz-new-buffer t]
+	 ["Refresh buffer"         oz-prettyprint t]
+	 ("Print"
+	  ["buffer"      oz-print-buffer t]
+	  ["region"      oz-print-region t]
+	  )
+	 ("Core Syntax"
+	  ["buffer"      oz-ks-buffer t]
+	  ["region"      oz-ks-region t]
+	  ["line"        oz-ks-line   t]
+	  )
+	 ("Indent"
+	  ["line" oz-indent-line t]
+	  ["region" oz-indent-region t]
+	  ["buffer" oz-indent-buffer t]
+	  )
+	 ("Show/hide"
+	  ["errors"       oz-toggle-errors t]
+	  ["compiler"     oz-toggle-compiler-window t]
+	  ["machine"      oz-toggle-machine-window t]
+	  )
+	 ["Browse"   oz-feed-region-browse t]
+	 "-----"
+	 ["Start Oz" run-oz t]
+	 ["Halt Oz"  halt-oz t]
+	 )
+	("Font"
+	 ["Small"      oz-small-font      t]
+	 ["Default"    oz-default-font     t]
+	 ["Large"      oz-large-font      t]
+	 ["Very Large" oz-very-large-font t]
+	 )
+	))
 
   ;; else FSF Emacs 19
   (oz-make-menu 'Oz
@@ -384,7 +380,7 @@ if that value is non-nil."
   (setq mode-name "Oz")
   (oz-mode-variables)
   (if lucid-emacs
-      (set-menubar oz-menubar))
+      (set-buffer-menubar (append current-menubar oz-menubar)))
   (run-hooks 'oz-mode-hook))
 
 (defun run-oz ()
@@ -438,7 +434,6 @@ if that value is non-nil."
 	  (save-excursion
 	    (set-buffer (get-buffer "*Oz Machine*"))
 	    (delete-region (point-min) (point-max))
-	    (comint-mode)
 	    )
 	  )
 
@@ -459,7 +454,6 @@ if that value is non-nil."
 The directory containing FILE becomes the initial working directory
 and source-file directory for GDB.  If you wish to change this, use
 the GDB commands `cd DIR' and `directory'."
-  (require 'gdb)
   (oz-set-state 'oz-machine-state "running under gdb")
   (let* ((path (expand-file-name gdb-oz-machine))
 	(file (file-name-nondirectory path)))
@@ -484,7 +478,7 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-create-buffer (buf)
   (save-excursion
     (set-buffer (get-buffer-create buf))
-    (use-local-map oz-mode-map)
+    (oz-mode)
     (delete-region (point-min) (point-max))))
 
 (defun oz-doc ()
@@ -711,6 +705,9 @@ the GDB commands `cd DIR' and `directory'."
   (process-send-string "Oz Compiler" string)
   (process-send-eof "Oz Compiler"))
 
+(defun oz-continue ()
+  (interactive)
+  (process-send-string "Oz Machine" "c\n"))
 
 (defvar oz-other-buffer-percent 35 
   "
@@ -779,6 +776,7 @@ the GDB commands `cd DIR' and `directory'."
 (defconst oz-begin-pattern
       (oz-make-keywords-for-match 
 	         '("local" "class" "meth" "create" "or" "if" "pred" "proc"
+		   "fun"
 		   "handle" "seq" "exists" "case" "begin" "process" "not"
 		   )))
 
@@ -795,6 +793,9 @@ the GDB commands `cd DIR' and `directory'."
 
 (defconst oz-left-pattern "[[({]")
 (defconst oz-right-pattern "[])}]")
+
+(defvar oz-abstr-pattern "\\<proc\\>\\|\\<pred\\>\\|\\<fun\\>")
+(defvar oz-meth-pattern "\\<meth\\>\\|\\<class\\>\\|\\<create\\>")
 
 (defun oz-indent-buffer()
   (interactive)
@@ -851,7 +852,6 @@ the GDB commands `cd DIR' and `directory'."
 
 
 (defun oz-calc-indent1 ()
-;  (debug)
   ;; the heavy case
   ;; backward search for
   ;;    the next oz-key-pattern
@@ -877,11 +877,11 @@ the GDB commands `cd DIR' and `directory'."
 		     (+ (current-column) oz-indent-chars)))
 	       (re-search-forward "[^ \t]")
 	       (1- (current-column))))
-	    ((looking-at "\\<proc\\>\\|\\<pred\\>")
+	    ((looking-at oz-abstr-pattern)
 	     (beginning-of-line)
 	     (skip-chars-forward " \t")
 	     (+ (current-column) oz-indent-chars))
-	    ((looking-at "\\<meth\\>\\|\\<class\\>\\|\\<create\\>")
+	    ((looking-at oz-meth-pattern)
 	     ;; the arguments of pred are behind
 	     ;; so indent the body to the start of 'pred'
 	     (+ (current-column) oz-indent-chars)
@@ -995,7 +995,7 @@ the GDB commands `cd DIR' and `directory'."
 		     (setq s nil)
 		   )
 		 )
-		((and (looking-at "\\<proc\\>\\|\\<pred\\>") (= n 0))
+		((and (looking-at oz-abstr-pattern) (= n 0))
 		 (setq s nil)
 		 (beginning-of-line)
 		 (skip-chars-forward " \t")
@@ -1079,7 +1079,7 @@ the GDB commands `cd DIR' and `directory'."
    (concat
     (oz-make-keywords-for-match
      '(
-       "pred" "proc" "true" "false" "local" "begin" "end"
+       "pred" "proc" "fun" "true" "false" "local" "begin" "end"
        "in" "not" "process" "det" "if" "then" "else" "elseif" 
        "fi" "or" "ro" "meth" "create" "class" "from" "with" 
        "exists" "case" "of"
