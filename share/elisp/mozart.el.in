@@ -836,6 +836,11 @@ feed that many preceding paragraphs as well as the current paragraph."
   (let ((region (oz-paragraph-region arg)))
     (oz-feed-region (car region) (cdr region))))
 
+(if (memq system-type '(ms-dos windows-nt))
+    (defun oz-encode-string (s)
+      (encode-code-string string buffer-file-coding-system))
+  (defun oz-encode-string (s) s))
+
 (defun oz-send-string (string &optional system)
   "Feed STRING to the Oz Compiler, restarting Mozart if it died.
 If SYSTEM is non-nil, it is a command for the system and is to be
@@ -860,8 +865,8 @@ compiled using a default set of switches."
 	   (concat "\\localSwitches\n"
 		   "\\switch +threadedqueries -verbose "
 		   "-expression -runwithdebugger\n"
-		   string))
-	(comint-send-string proc string))
+		   (oz-encode-string string)))
+	(comint-send-string proc (oz-encode-string string)))
       (comint-send-string proc "\n")
       (comint-send-string proc eof))))
 
