@@ -329,31 +329,33 @@ define
 
 	 %% process provides feature
 
-	 local Stack={Utils.newStack} PRO={CondSelect R provides nil} in
-	    if {Not {IsList PRO}} then
-	       raise ozmake(makefile:badsectionvalue(provides PRO)) end
+	 if {HasFeature R provides} then
+	    local Stack={Utils.newStack} PRO={CondSelect R provides nil} in
+	       if {Not {IsList PRO}} then
+		  raise ozmake(makefile:badsectionvalue(provides PRO)) end
+	       end
+	       for F in PRO do U A in
+		  if {Not {IsVirtualString F}} then
+		     raise ozmake(makefile:badsectionentry(provides F)) end
+		  end
+		  %% must be a relative pathname
+		  U={Path.toURL F}
+		  if {Path.isAbsolute U} then
+		     raise ozmake(makefile:badsectiontarget(lib F)) end
+		  end
+		  %% check that it is actually a bin or lib target
+		  A={Path.toAtom U}
+		  case {CondSelect @Target2Section A unit}
+		  of unit then
+		     raise ozmake(makefile:unknownprovides(A)) end
+		  [] bin  then {Stack.push A}
+		  [] lib  then {Stack.push A}
+		  [] S    then
+		     raise ozmake(makefile:badprovides(S A)) end
+		  end
+	       end
+	       {self set_provides_targets({Reverse {Stack.toList}})}
 	    end
-	    for F in PRO do U A in
-	       if {Not {IsVirtualString F}} then
-		  raise ozmake(makefile:badsectionentry(provides F)) end
-	       end
-	       %% must be a relative pathname
-	       U={Path.toURL F}
-	       if {Path.isAbsolute U} then
-		  raise ozmake(makefile:badsectiontarget(lib F)) end
-	       end
-	       %% check that it is actually a bin or lib target
-	       A={Path.toAtom U}
-	       case {CondSelect @Target2Section A unit}
-	       of unit then
-		  raise ozmake(makefile:unknownprovides(A)) end
-	       [] bin  then {Stack.push A}
-	       [] lib  then {Stack.push A}
-	       [] S    then
-		  raise ozmake(makefile:badprovides(S A)) end
-	       end
-	    end
-	    {self set_provides_targets({Reverse {Stack.toList}})}
 	 end
 
 	 %% process doc feature
