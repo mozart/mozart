@@ -335,7 +335,7 @@
         </Tr>
         <Tr>
           <Td/<<threshold>>/
-          <Td/no/
+          <Td/yes/
           <Td/<<Int>>/
           <Td/Integer when internal domain representation switches from
         bit sets to interval lists./
