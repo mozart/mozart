@@ -134,6 +134,7 @@ define
 	    DSTBase = {Path.basename DST}
 	    SRCBase = {Path.basename SRC}
 	 end
+	 {self subresolver_push(DST SRC)}
 	 try
 	    Executor,exec_mkdir(DIR)
 	    if {Not HaveGumpdir} andthen DIR\=nil then {OS.chDir DIR} end
@@ -157,6 +158,7 @@ define
 	    if {Not HaveGumpdir} andthen DIR\=nil then
 	       try {OS.chDir CUR} catch _ then skip end
 	    end
+	    {self subresolver_pop()}
 	 end
       end
 
