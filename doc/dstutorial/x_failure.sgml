@@ -725,9 +725,9 @@ The fact that it completes on the sender site
 does not imply that it will complete on the owner site.
 This is because the owner site may fail.
 
-<P><ptr to="safesend"> shows how to build a <<SafeSend>> abstraction
-that only completes on the sender site if it completes
-on the owner site.
+<!--  <P><ptr to="safesend"> shows how to build a <<SafeSend>> abstraction -->
+<!--  that only completes on the sender site if it completes -->
+<!--  on the owner site. -->
 
 <SUBSECTION><TITLE>Logic variables</TITLE>
 
