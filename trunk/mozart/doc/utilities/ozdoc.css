@@ -7,7 +7,6 @@ BODY {
   position: absolute;
   left: 10px;
   width: 130px;
-  color: white;
 }
 
 DIV.maxi {
@@ -107,7 +106,6 @@ SPAN.chunktitle A:link    { color: slateblue; }
 SPAN.chunktitle A:visited { color: slateblue; }
 
 SPAN.entrycategory {
-  color:white;
   position:absolute;
   font-weight:bold;
   left:10px;
@@ -118,8 +116,6 @@ SPAN.entrycategory {
 SPAN.entrycategorybracket {
   display:none;
 }
-
-.margin A { color: white; }
 
 .PAPERYEAR,.PAPERAUTHOR {
   font-weight:bold;
