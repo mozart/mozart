@@ -38,6 +38,7 @@
 #include "board.hh"
 #include "debug.hh"
 #include "dpInterface.hh"
+#include "boot-manager.hh"
 
 unsigned invoc_counter = 0;
 

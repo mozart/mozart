@@ -33,18 +33,17 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-// print  name -> builtin	(for unmarshalling)
-// module name -> module
+// module name -> module (used also for umarshalling)
 
 #include "dictionary.hh"
-TaggedRef dictionary_of_builtins;
-TaggedRef dictionary_of_modules;
+static TaggedRef dictionary_of_modules;
 
 
 /*
  * Modules that are always in the emulator: Extensions
  */
 
+#include "modINTERNAL-if.cc"
 #include "modProperty-if.cc"
 #include "modOS-if.cc"
 #include "modPickle-if.cc"
@@ -188,6 +187,7 @@ static ModuleEntry ext_module_table[] = {
   {"FDB",             mod_int_FDB},
   {"FSB",             mod_int_FSB},
   {"WeakDictionary",  mod_int_WeakDictionary},
+  {"INTERNAL",        mod_int_INTERNAL},
 #ifdef DENYS_EVENTS
   {"Event",	      mod_int_Event},
   {"Timer",	      mod_int_Timer},
@@ -263,41 +263,15 @@ static ModuleEntry base_module_table[] = {
 };
 
 
-OZ_BI_proto(BIcontrolVarHandler);
-OZ_BI_proto(BIatRedo);
-OZ_BI_proto(BIfail);
-OZ_BI_proto(BIskip);
-OZ_BI_proto(BIurl_load);
-OZ_BI_proto(BIload);
-OZ_BI_proto(BI_prop_lpq);
-
-
-
-static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I, 
-				     const char * mod_name,
-				     Bool isSited) {
+static 
+TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I, 
+			      const char * mod_name,
+			      Bool isSited) {
   OZ_Term l = oz_nil();
 
-  Builtin *bi;
-  char buffer[256];
-  int mod_len;
-  int nam_len;
-
-  mod_len = (mod_name)?strlen(mod_name):0;
-  if (mod_len>=255) OZ_error("module name too long: %s\n",mod_name);
-  if (mod_len > 0) {
-    memcpy((void*)buffer,(const void*)mod_name,mod_len);
-    buffer[mod_len] = '.';
-    mod_len += 1;
-  }
-
   while (I && I->name) {
-    nam_len = strlen(I->name);
-    if ((mod_len+nam_len)>=255)
-      OZ_error("builtin name too long: %s.%s\n",mod_name,I->name);
-    memcpy((void*)(buffer+mod_len),(const void*)I->name,nam_len);
-    buffer[mod_len+nam_len] = '\0';
-    bi = new Builtin(buffer,I->inArity,I->outArity,I->func,isSited);
+    Builtin * bi = new Builtin(mod_name,I->name,
+			       I->inArity,I->outArity,I->func,isSited);
  
     l = oz_cons(oz_pair2(oz_atomNoDup(I->name),makeTaggedConst(bi)),l);
     I++;
@@ -307,82 +281,122 @@ static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I,
 }
 
 
-OZ_Term getBuiltin_oz(const char*Name)
-{
-  TaggedRef val;
-  return
-    (tagged2Dictionary(dictionary_of_builtins)
-     ->getArg(oz_atom(Name),val) == PROCEED)
-    ? val :
-    (OZ_warning("[builtin not found: %s]\n",Name),0);
-}
+Builtin * cfunc2Builtin(void * f) {
+  
+  OzDictionary * d = tagged2Dictionary(dictionary_of_modules);
 
+  for (int i = d->getNext(d->getFirst()); i>=0; i=d->getNext(i)) {
 
-Builtin* getBuiltin_c(const char*Name)
-{
-  OZ_Term val = getBuiltin_oz(Name);
-  Assert(val!=0);
-  return tagged2Builtin(val);
-}
-
-
-Builtin* atom2Builtin(TaggedRef a) {
-  TaggedRef val;
-  return (tagged2Dictionary(dictionary_of_builtins)
-	  ->getArg(a,val) == PROCEED)
-    ? tagged2Builtin(val) :
-    (OZ_warning("[builtin not found: %s]\n",OZ_atomToC(a)),
-     ((Builtin*) 0));
-}
-
-#include <ctype.h>
-
-void link_base_modules() {
-  char buffer[256];
-  for (ModuleEntry * E = base_module_table;(E && E->name);E++) {
-    int mod_len = strlen(E->name);
-    memcpy((void*)buffer,(const void*)E->name,mod_len);
-    buffer[mod_len] = '.';
-    mod_len += 1;
-    OZ_Term list = oz_nil();
-    for (OZ_C_proc_interface* I = (E->init_function)();
-	 (I && I->name);I++) {
-      int nam_len = strlen(I->name);
-      // put quotes around non-alpha names
-      int need_quote = (isalpha(I->name[0]))?0:1;;
-      if (need_quote) buffer[mod_len] = '\'';
-      memcpy((void*)(buffer+mod_len+need_quote),(const void*)I->name,nam_len);
-      if (need_quote) {
-	int n = mod_len+1+nam_len;
-	buffer[n] = '\'';
-	buffer[n+1] = '\0';
+    TaggedRef v = d->getValue(i);
+      
+    if (oz_isSRecord(v)) {
+	
+      TaggedRef as = tagged2SRecord(v)->getArityList();
+	
+      while (oz_isCons(as)) {
+	TaggedRef bt = tagged2SRecord(v)->getFeature(oz_head(as));
+	  
+	if (bt && oz_isBuiltin(bt) && 
+	    (tagged2Builtin(bt)->getFun() == (OZ_CFun) f)) 
+	  return tagged2Builtin(bt);
+	  
+	as = oz_tail(as);
+	
       }
-      else buffer[mod_len+nam_len] = '\0';
-      //cerr << "[Builtin: " << buffer << "]" << endl;
-      Builtin* bi = new Builtin(buffer,I->inArity,I->outArity,I->func,NO);
-      OZ_Term oz_bi  = makeTaggedConst(bi);
-      list = oz_cons(oz_pair2(oz_atomNoDup(I->name),oz_bi),list);
-      tagged2Dictionary(dictionary_of_builtins)
-	->setArg(oz_atom(buffer),oz_bi);
+	
     }
-    tagged2Dictionary(dictionary_of_modules)
-      ->setArg(oz_atom(E->name),OZ_recordInit(AtomExport,list));
-  }
-}
-
-void link_ext_modules() {
-  ModuleEntry * me = ext_module_table;
-
-  while (me && me->name) {
-    TaggedRef module = ozInterfaceToRecord((* me->init_function)(),
-					   me->name,OK);
-    tagged2Dictionary(dictionary_of_modules)
-      ->setArg(oz_atom(me->name),module);
-
-    me++;
   }
 
+  return tagged2Builtin(BI_unknown);
 }
+
+
+
+
+TaggedRef string2Builtin(const char * mn, const char * bn) {
+  OzDictionary * d = tagged2Dictionary(dictionary_of_modules);
+
+  TaggedRef mod; 
+  
+  if (d->getArg(oz_atom(mn), mod) != PROCEED) {
+    OZ_warning("[BUILTIN NOT FOUND: Unknown module %s]\n", mn);
+    return BI_unknown;
+  }
+
+  mod = oz_deref(mod);
+  
+  Assert(oz_isSRecord(mod));
+
+  TaggedRef bi = tagged2SRecord(mod)->getFeature(oz_atom(bn));
+	  
+  if (!bi || !oz_isBuiltin(bi)) { 
+    OZ_warning("[BUILTIN NOT FOUND: Unknown builtin %s in module %s]\n", 
+	       bn, mn);
+    return BI_unknown;
+  }
+
+  return bi;
+}
+
+
+#define S2B_BUF_LEN 128
+
+static char _s2b_buf[S2B_BUF_LEN + 16];
+
+TaggedRef string2Builtin(const char * cs) {
+  // NEVER USE IT FOR SOMETHING DIFFERENT THAN UNSITED BUILTINS!!!!!
+  int sl = strlen(cs);
+
+  char * s = (sl > S2B_BUF_LEN) ? new char[sl] : _s2b_buf;
+
+  memcpy((void *) s, (const void *) cs, sl+1);
+  
+  char * mn = s;
+  char * bn = s;
+
+  // find seperating '.'
+  while ((*bn != '\0') && (*bn != '.')) bn++;
+
+  if (*bn == '\0') {
+    OZ_warning("[BUILTIN NOT FOUND: Confused spec %s]\n", cs);
+    return BI_unknown;
+  }
+
+  *bn++ = '\0';
+
+  if (*bn == '\'') {
+    bn++;
+    *(s+sl-1) = '\0';
+  }
+
+  TaggedRef bi = string2Builtin(mn,bn);
+
+  if (sl > S2B_BUF_LEN) 
+    delete s;
+  
+  return bi;
+
+}
+
+#undef S2B_BUF_LEN
+
+Builtin * string2CBuiltin(const char * Name) {
+  return tagged2Builtin(string2Builtin(Name));
+}
+
+void link_module(ModuleEntry * mt, Bool isSited) {
+
+  for (ModuleEntry * E = mt; (E && E->name); E++) {
+
+    tagged2Dictionary(dictionary_of_modules)
+      ->setArg(oz_atom(E->name), 
+	       ozInterfaceToRecord((E->init_function)(),
+				   E->name,
+				   isSited));
+  }
+  
+}
+
 
 #ifdef DLOPEN_UNDERSCORE
 #define USC "_"
@@ -407,7 +421,7 @@ OZ_BI_define(BIObtainNative, 2, 1) {
     TaggedRef module;
 
     if (tagged2Dictionary(dictionary_of_modules)
-	->getArg(oz_atom(name),module) == PROCEED)
+	->getArg(oz_atom(name), module) == PROCEED)
       OZ_RETURN(module);
 
     // Okay, later we will need a filename!
@@ -471,7 +485,7 @@ OZ_BI_define(BIObtainNative, 2, 1) {
     char * name_sym = USC "oz_module_name";
     mod_name = (char *)  osDlsym(handle,name_sym);
   }
-    
+  
   OZ_RETURN(ozInterfaceToRecord((*init_function)(), mod_name, OK));
 
 } OZ_BI_end
@@ -479,98 +493,53 @@ OZ_BI_define(BIObtainNative, 2, 1) {
 
 
 void initBuiltins() {
+
   //
-  // create dictionaries for builtins and builtin modules
+  // create dictionaries for builtin modules
   //
-  dictionary_of_builtins =
-    makeTaggedConst(new OzDictionary(oz_rootBoard()));
-  OZ_protect(&dictionary_of_builtins);
   dictionary_of_modules =
     makeTaggedConst(new OzDictionary(oz_rootBoard()));
   OZ_protect(&dictionary_of_modules);
+
   //
   // populate it
   //
-  link_base_modules();
-  link_ext_modules();
-
-#if 0
-  //
-  // When renaming builtins: also enter the old names of builtins
-  // so that unmarshalling still works. turns this off once a new
-  // ozc.ozm has been created.
-  //
-  static struct { char* oldName; char* newName; }
-  *help_ptr, help_table[] = {
-
-    {"IsArray",		"Array.is"},
-
-    {0,0}
-  };
-
-  for (help_ptr = help_table; help_ptr->oldName; help_ptr++) {
-    OZ_Term oz_old = oz_atom(help_ptr->oldName);
-    OZ_Term oz_new = oz_atom(help_ptr->newName);
-    if (oz_old != oz_new) {
-      TaggedRef val;
-      if (tagged2Dictionary(dictionary_of_builtins)
-	  ->getArg(oz_new,val) != PROCEED)
-	OZ_error("new builtin not found: [old: %s] [new: %s]\n",
-		 help_ptr->oldName,help_ptr->newName);
-      TaggedRef ignore;
-      if (tagged2Dictionary(dictionary_of_builtins)
-	  ->getArg(oz_old,ignore) == PROCEED)
-	OZ_error("old builtin exists already: [old: %s] [new: %s]\n",
-		 help_ptr->oldName,help_ptr->newName);
-      tagged2Dictionary(dictionary_of_builtins)
-	->setArg(oz_old,val);
-    }
-  }
-
-#endif
+  link_module(base_module_table, NO);
+  link_module(ext_module_table,  OK);
 
   // General stuff
-  BI_send         = getBuiltin_oz("Port.send"		);
-  BI_exchangeCell = getBuiltin_oz("Cell.exchangeFun"	);
-  BI_assign       = getBuiltin_oz("Object.'<-'"		);
-  BI_Unify        = getBuiltin_oz("Value.'='"		);
+  BI_send         = string2Builtin("Port","send");
+  BI_exchangeCell = string2Builtin("Cell","exchangeFun");
+  BI_assign       = string2Builtin("Object","<-");
+  BI_Unify        = string2Builtin("Value","=");
 
-  // Exclusively used (not in builtin table)
-  BI_controlVarHandler = 
-    makeTaggedConst(new Builtin("controlVarHandler", 
-				1, 0, BIcontrolVarHandler, OK));
+  // MISC INTERNAL STUFF
+  BI_controlVarHandler = string2Builtin("INTERNAL", "controlVarHandler"); 
+  BI_atRedo            = string2Builtin("INTERNAL", "atRedo");
+  BI_fail              = string2Builtin("INTERNAL", "fail");
+  BI_skip              = string2Builtin("INTERNAL", "skip");
+  BI_unknown           = string2Builtin("INTERNAL", "UNKNOWN");
+  BI_PROP_LPQ          = string2Builtin("INTERNAL", "propagate");  
+  BI_ByNeedAssign      = string2Builtin("INTERNAL", "byNeedAssign");
+  BI_waitStatus        = string2Builtin("INTERNAL", "waitStatus");
 
-  // Exclusively used (not in builtin table)
-  BI_atRedo    =
-    makeTaggedConst(new Builtin("atRedo", 
-				2, 0, BIatRedo, OK));
-  BI_fail      =
-    makeTaggedConst(new Builtin("fail", 
-				0, 0, BIfail, OK));
-
-  BI_skip      =
-    makeTaggedConst(new Builtin("skip", 
-				0, 0, BIskip, OK));
-
-  // if mapping from cfun to builtin fails
-  BI_unknown =
-    makeTaggedConst(new Builtin("UNKNOWN", 0, 0, BIfail,     OK));
-    
   // to execute boot functor in am.cc
-  BI_dot      = getBuiltin_oz("Value.'.'");
-  // not in builtin table...
-  BI_load     = 
-    makeTaggedConst(new Builtin("load",     2, 0, BIload,     OK));
-  BI_url_load = 
-    makeTaggedConst(new Builtin("URL.load", 1, 1, BIurl_load, OK));
-  // this actually _is_ in the builtin table
-  BI_obtain_native =
-    makeTaggedConst(new Builtin("OBTAIN_NATIVE", 2, 1, BIObtainNative, OK));
+  BI_dot           = string2Builtin("Value", ".");
+  BI_load          = string2Builtin("INTERNAL", "load"); 
+  BI_url_load      = string2Builtin("URL", "load"); 
+  BI_obtain_native = string2Builtin("INTERNAL", "native");
 
-  // The main propagator scheduler is implemented by this guy
-  BI_PROP_LPQ = 
-    makeTaggedConst(new Builtin("PROP_LPQ", 0, 0, BI_prop_lpq, OK));
-  
-  bi_raise      = getBuiltin_c("Exception.raise");
-  bi_raiseError = getBuiltin_c("Exception.raiseError");
+  // Exception stuff
+  bi_raise      = string2CBuiltin("Exception.raise");
+  bi_raiseError = string2CBuiltin("Exception.raiseError");
 }
+
+
+
+
+
+
+
+
+
+
