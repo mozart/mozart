@@ -195,7 +195,7 @@ Bool needsNoCollection(TaggedRef t)
 
   TypeOfTerm tag = tagTypeOf(t);
   return (tag == SMALLINT ||
-	  (tag == ATOM && (tagged2Atom(t)->isNonTopXName ()) == NO))
+	  (tag == ATOM && (tagged2Atom(t)->isDynXName ()) == NO))
          ? OK
 	 : NO;
 }
@@ -227,6 +227,7 @@ enum TypeOfPtr {
   PTR_LTUPLE,
   PTR_SRECORD,
   PTR_STUPLE,
+  PTR_NAME,
   PTR_BOARD,
   PTR_ACTOR,
   PTR_THREAD,
@@ -431,19 +432,31 @@ Bool isLocalBoard (Board* b)
 inline 
 Atom *Atom::gc()
 {
-  if (!isNonTopXName()) {
-    return this;
+  if (isDynXName() == NO) {
+    return (this);
   }
 
-  if (opMode == IN_GC) {
-    home = home->gcBoard();
-    return this;
-  }
-  if (isLocalBoard(home)) {
+  if (opMode == IN_GC || isLocalBoard (home) == OK) {
+    GCMETHMSG("Atom::gc");
+    CHECKCOLLECTED (printName, Atom *);
     varCount++;
-    return new Atom(home->gcBoard(), printName);
+    Name *aux = (Name *) gcRealloc (this,sizeof (*this));
+    GCNEWADDRMSG (aux);
+    ptrStack.push (aux, PTR_NAME);
+    setHeapCell((int*) &printName, GCMARK(aux));
+    return (aux);
+  } else {
+    return (this);
   }
-  return this;
+}
+
+inline 
+void Atom::gcRecurse ()
+{
+  GCMETHMSG("Atom::gcRecurse");
+  DebugGC((isDynXName () == NO),
+	  error ("non-dynamic name is found in gcRecurse"));
+  home = home->gcBoard ();
 }
 
 // WARNING: the value field of floats has no bit left for a gc mark
@@ -1818,7 +1831,11 @@ void performCopying(void){
       
     case PTR_SRECORD:
       ((SRecord *) ptr)->gcRecurse();
-      break;      
+      break;
+
+    case PTR_NAME:
+      ((Atom *) ptr)->gcRecurse ();
+      break;
       
     case PTR_CONT:
       ((Continuation*) ptr)->gcRecurse();
