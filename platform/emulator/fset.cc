@@ -214,12 +214,12 @@ OZ_Term getAsList(const int * bv, int neg = 0, int other = 0)
 static
 void setBits(OZ_Term t, int high, int * bv, int neg = 0)
 {
-  DEREF(t, tptr, ttag);
+  DEREF(t, tptr);
 
   if (oz_isSTuple(t) && tagged2SRecord(t)->getWidth() == 1) {
     setBits((*tagged2SRecord(t))[0], high, bv, !neg);
   } else {
-    if (isSmallIntTag(ttag)) {
+    if (oz_isSmallInt(t)) {
       int v = OZ_intToC(t);
       if (0 <= v && v < 32 * high)
         bv[div32(v)] |= (1 << mod32(v));
@@ -239,9 +239,9 @@ void setBits(OZ_Term t, int high, int * bv, int neg = 0)
     } else if (OZ_isCons(t)) {
       for (; OZ_isCons(t); t = OZ_tail(t)) {
         OZ_Term vt = OZ_head(t);
-        DEREF(vt, vtptr, vttag);
+        DEREF(vt, vtptr);
 
-        if (isSmallIntTag(vttag)) {
+        if (oz_isSmallInt(vt)) {
           int v = OZ_intToC(vt);
           if (0 <= v && v < 32 * high)
             bv[div32(v)] |= (1 << mod32(v));
@@ -813,7 +813,7 @@ OZ_Boolean FSetValue::operator <= (const FSetValue &s) const
 
 OZ_Boolean FSetValue::unify(OZ_Term t)
 {
-  DEREF(t, tptr, ttag);
+  DEREF(t, tptr);
   return oz_isFSetValue(t) ? (*((FSetValue *) tagged2FSetValue(t)) == *this) : FALSE;
 }
 

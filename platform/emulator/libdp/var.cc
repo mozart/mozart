@@ -935,7 +935,7 @@ void recDeregister(TaggedRef tr,DSite* s)
   while (!oz_isNil(vars)) {
     OZ_Term t = oz_head(vars);
     OZ_Term *tp = tagged2Ref(t);
-    Assert(oz_isVariable(*tp));
+    Assert(oz_isVar(*tp));
     if (classifyVar(tp) == VAR_MANAGER)
       oz_getManagerVar(*tp)->deAutoSite(s);
     vars = oz_tail(vars);

@@ -299,13 +299,6 @@ void AM::init(int argc,char **argv)
 
   initVirtualProperties();
 
-#ifdef DEBUG_CHECK
-
-  extern void initTagged();
-  initTagged();
-
-#endif
-
   emptySuspendVarList(); // must be after initLiterals
 
 #ifndef DENYS_EVENTS
@@ -1068,7 +1061,7 @@ OZ_Return AM::suspendOnVarList(Thread *thr)
   thr->pushDelSusps(_suspendVarList);
   while (oz_isCons(_suspendVarList)) {
     OZ_Term v=oz_head(_suspendVarList);
-    Assert(oz_isVariable(*tagged2Ref(v)));
+    Assert(oz_isVar(*tagged2Ref(v)));
     OZ_Return ret = oz_var_addSusp(tagged2Ref(v),thr);
     if (ret != SUSPEND) {
       am.emptySuspendVarList();

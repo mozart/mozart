@@ -144,8 +144,8 @@ public:
 
 #define declareSpace                            \
   OZ_Term tagged_space = OZ_in(0);                      \
-  DEREF(tagged_space, space_ptr, space_tag);            \
-  if (isVariableTag(space_tag))                         \
+  DEREF(tagged_space, space_ptr);                       \
+  if (oz_isVar(tagged_space))                           \
     oz_suspendOn(makeTaggedRef(space_ptr));             \
   if (!oz_isSpace(tagged_space))                        \
     oz_typeError(0, "Space");                           \
@@ -158,8 +158,8 @@ public:
 OZ_BI_define(BInewSpace, 1,1) {
   OZ_Term proc = OZ_in(0);
 
-  DEREF(proc, proc_ptr, proc_tag);
-  if (isVariableTag(proc_tag))
+  DEREF(proc, proc_ptr);
+  if (oz_isVar(proc))
     oz_suspendOn(makeTaggedRef(proc_ptr));
 
   if (!oz_isProcedure(proc))
@@ -184,9 +184,9 @@ OZ_BI_define(BInewSpace, 1,1) {
 OZ_BI_define(BIisSpace, 1,1) {
   OZ_Term tagged_space = OZ_in(0);
 
-  DEREF(tagged_space, space_ptr, space_tag);
+  DEREF(tagged_space, space_ptr);
 
-  if (isVariableTag(space_tag))
+  if (oz_isVar(tagged_space))
     oz_suspendOn(makeTaggedRef(space_ptr));
 
   OZ_RETURN(oz_bool(oz_isSpace(tagged_space)));
@@ -207,9 +207,9 @@ OZ_BI_define(BIaskSpace, 1,1) {
 
   TaggedRef answer = space->getSpace()->getStatus();
 
-  DEREF(answer, answer_ptr, answer_tag);
+  DEREF(answer, answer_ptr);
 
-  if (isVariableTag(answer_tag))
+  if (oz_isVar(answer))
     oz_suspendOn(makeTaggedRef(answer_ptr));
 
   OZ_RETURN((oz_isSTuple(answer) &&
@@ -308,9 +308,9 @@ OZ_BI_define(BIcloneSpace, 1,1) {
 
   TaggedRef status = space->getSpace()->getStatus();
 
-  DEREF(status, status_ptr, status_tag);
+  DEREF(status, status_ptr);
 
-  if (isVariableTag(status_tag))
+  if (oz_isVar(status))
     oz_suspendOn(makeTaggedRef(status_ptr));
 
   ozstat.incSolveCloned();
@@ -346,8 +346,8 @@ OZ_BI_define(BIcommit1Space, 2, 0) {
 
   TaggedRef status = space->getSpace()->getStatus();
 
-  DEREF(status, status_ptr, status_tag);
-  if (isVariableTag(status_tag))
+  DEREF(status, status_ptr);
+  if (oz_isVar(status))
     oz_suspendOn(makeTaggedRef(status_ptr));
 
   if (!sb->getDistributor())
@@ -375,8 +375,8 @@ OZ_BI_define(BIcommit2Space, 3,0) {
 
   TaggedRef status = space->getSpace()->getStatus();
 
-  DEREF(status, status_ptr, status_tag);
-  if (isVariableTag(status_tag))
+  DEREF(status, status_ptr);
+  if (oz_isVar(status))
     oz_suspendOn(makeTaggedRef(status_ptr));
 
   if (!sb->getDistributor())
@@ -403,18 +403,18 @@ OZ_BI_define(BIcommitSpace, 2,0) {
 
   TaggedRef status = space->getSpace()->getStatus();
 
-  DEREF(status, status_ptr, status_tag);
-  if (isVariableTag(status_tag))
+  DEREF(status, status_ptr);
+  if (oz_isVar(status))
     oz_suspendOn(makeTaggedRef(status_ptr));
 
-  DEREF(choice, choice_ptr, choice_tag);
+  DEREF(choice, choice_ptr);
 
-  if (isVariableTag(choice_tag))
+  if (oz_isVar(choice))
     oz_suspendOn(makeTaggedRef(choice_ptr));
 
   TaggedRef left, right;
 
-  if (isSmallIntTag(choice_tag)) {
+  if (oz_isSmallInt(choice)) {
     left  = choice;
     right = choice;
   } else if (oz_isSTuple(choice) &&
@@ -422,16 +422,16 @@ OZ_BI_define(BIcommitSpace, 2,0) {
                    tagged2SRecord(choice)->getLabel()) &&
              tagged2SRecord(choice)->getWidth() == 2) {
     left  = tagged2SRecord(choice)->getArg(0);
-    DEREF(left, left_ptr, left_tag);
+    DEREF(left, left_ptr);
 
-    if (isVariableTag(left_tag))
+    if (oz_isVar(left))
       oz_suspendOn(makeTaggedRef(left_ptr));
 
     right = tagged2SRecord(choice)->getArg(1);
 
-    DEREF(right, right_ptr, right_tag);
+    DEREF(right, right_ptr);
 
-    if (isVariableTag(right_tag))
+    if (oz_isVar(right))
       oz_suspendOn(makeTaggedRef(right_ptr));
   } else {
     oz_typeError(1, "Integer or pair of integers");
@@ -463,9 +463,9 @@ OZ_BI_define(BIinjectSpace, 2,0)
   if (!sb->isAdmissible())
     return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
 
-  DEREF(proc, proc_ptr, proc_tag);
+  DEREF(proc, proc_ptr);
 
-  if (isVariableTag(proc_tag))
+  if (oz_isVar(proc))
     oz_suspendOn(makeTaggedRef(proc_ptr));
 
   if (!oz_isProcedure(proc))

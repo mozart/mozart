@@ -107,10 +107,6 @@ void OZ_hfreeChars(char * is, int n)
   if (n) OZDISPOSE(char, n, is);
 }
 
-#define FDTAG               TAG_GCMARK
-#define MAKETAGGEDINDEX(I)  makeTaggedRef2i(FDTAG,(int32) (I<<2))
-#define GETINDEX(T)         (ToInt32(tagValueOfVerbatim(T))>>2);
-
 static EnlargeableArray<int> is(1024);
 
 int * OZ_findEqualVars(int sz, OZ_Term * ts)
@@ -128,18 +124,18 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
 
   for (i = 0; i < sz; i += 1) {
     OZ_Term t = ts[i];
-    DEREF(t, tptr, ttag);
-    if (isSmallIntTag(ttag) || isLiteralTag(ttag) || oz_isFSetValue(t)) {
+    DEREF(t, tptr);
+    if (oz_isSmallInt(t) || oz_isLiteral(t) || oz_isFSetValue(t)) {
       is[i] = -1;
     } else {
-      if (ttag == FDTAG) {
-        is[i] = GETINDEX(*tptr);
+      if (oz_isGcMark(t)) {
+        is[i] = tagged2UnmarkedInt(*tptr);
       } else {
-        Assert(isVariableTag(ttag));
+        Assert(oz_isVar(t));
         _ts_ptr[i] = tptr;
         _ts[i] = t;
         is[i] = i;
-        *tptr = MAKETAGGEDINDEX(i);
+        *tptr = makeTaggedMarkInt(i);
       }
     }
   }
@@ -168,8 +164,8 @@ int * OZ_findSingletons(int sz, OZ_Term * ts)
 
   for (i = 0; i < sz; i += 1) {
     OZ_Term t = ts[i];
-    DEREF(t, tptr, ttag);
-    if (isSmallIntTag(ttag) || isLiteralTag(ttag)) { // mm2
+    DEREF(t, tptr);
+    if (oz_isSmallInt(t) || oz_isLiteral(t)) { // mm2
       sgl[i] = tagged2SmallInt(t);
     } else {
       sgl[i] = -1;
@@ -181,9 +177,9 @@ int * OZ_findSingletons(int sz, OZ_Term * ts)
 
 OZ_Boolean OZ_isEqualVars(OZ_Term v1, OZ_Term v2)
 {
-  DEREF(v1, vptr1, vtag1);
-  DEREF(v2, vptr2, vtag2);
-  return isVariableTag(vtag1) && (vptr1 == vptr2);
+  DEREF(v1, vptr1);
+  DEREF(v2, vptr2);
+  return oz_isVar(v1) && (vptr1 == vptr2);
 }
 
 OZ_Return OZ_typeErrorCPI(char * typeString, int pos, char * comment)

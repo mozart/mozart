@@ -38,14 +38,12 @@
 inline
 OzFSVariable * tagged2GenFSetVar(OZ_Term term)
 {
-  GCDEBUG(term);
   return (OzFSVariable *) tagged2Var(term);
 }
 
 inline
 Bool isGenFSetVar(TaggedRef term)
 {
-  GCDEBUG(term);
   return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_FS);
 }
 

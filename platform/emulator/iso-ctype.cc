@@ -118,12 +118,12 @@ const unsigned char iso_conv_tab[]
 #define OZ_FirstCharArg \
  TaggedRef tc = OZ_in(0);           \
  int i;                             \
- { DEREF(tc, tc_ptr, tc_tag);       \
- if (isVariableTag(tc_tag)) {            \
+ { DEREF(tc, tc_ptr);               \
+ if (oz_isVar(tc)) {                \
    am.addSuspendVarList(tc_ptr);    \
    return SUSPEND;                  \
  }                                  \
- if (!oz_isSmallInt(tc)) {             \
+ if (!oz_isSmallInt(tc)) {          \
    oz_typeError(1,"Char");          \
  } else {                           \
    i = tagged2SmallInt(tc);         \
@@ -182,12 +182,12 @@ OZ_BI_define(BIcharToAtom,1,1) {
 #define FirstCharIN                 \
  TaggedRef tc = OZ_in(0);           \
  int i;                             \
- { DEREF(tc, tc_ptr, tc_tag);       \
- if (isVariableTag(tc_tag)) {            \
+ { DEREF(tc, tc_ptr);               \
+ if (oz_isVar(tc)) {                \
    am.addSuspendVarList(tc_ptr);    \
    return SUSPEND;                  \
  }                                  \
- if (!oz_isSmallInt(tc)) {             \
+ if (!oz_isSmallInt(tc)) {          \
    oz_typeError(1,"Char");          \
  } else {                           \
    i = tagged2SmallInt(tc);         \

@@ -525,7 +525,7 @@ void OwnerTable::gcOwnerTableFinal()
       o->removeGCMark();
       if (o->isVar()){
         TaggedRef *ptr = o->getPtr();
-        DEREFPTR(v,ptr,_tag);
+        DEREFPTR(v,ptr);
         Assert(oz_isManagerVar(v));
         o->mkVar(makeTaggedRef(ptr),o->getFlags());
       }

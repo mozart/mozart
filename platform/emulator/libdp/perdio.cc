@@ -693,7 +693,7 @@ void msgReceived(MsgContainer* msgC)
           Assert(oz_isClass(t));
           Assert(!ov->isObjectClassAvail());
           OZ_Term cvt = ov->getClassProxy();
-          DEREF(cvt, cvtp, _cptt);
+          DEREF(cvt, cvtp);
           Assert(cvtp);
           ClassVar *cv = (ClassVar *) tagged2Var(cvt);
           Assert(cv->getType() == OZ_VAR_EXT);

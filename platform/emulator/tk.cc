@@ -105,13 +105,13 @@ static OZ_Return raise_toplevel(void) {
  */
 
 #define ENTER_TK_LOCK { \
-  TaggedRef t = tk.getLock();     \
-  DEREF(t, t_ptr, t_tag);          \
-  if (isVariableTag(t_tag)) {      \
+  TaggedRef t = tk.getLock();      \
+  DEREF(t, t_ptr);                 \
+  if (oz_isVar(t)) {               \
     am.addSuspendVarList(t_ptr);   \
     return SUSPEND;                \
   } else {                         \
-    tk.setLock(oz_newVariable()); \
+    tk.setLock(oz_newVariable());  \
   }                                \
 }
 
@@ -392,13 +392,13 @@ public:
   OZ_Return put_string_quote(TaggedRef list) {
     while (1) {
       TaggedRef h = oz_head(list);
-      DEREF(h, h_ptr, h_tag);
+      DEREF(h, h_ptr);
 
-      if (isVariableTag(h_tag)) {
+      if (oz_isVar(h)) {
         am.addSuspendVarList(h_ptr);
         return SUSPEND;
       }
-      if (!isSmallIntTag(h_tag))
+      if (!oz_isSmallInt(h))
         return raise_type_error(list);
       int i = tagged2SmallInt(h);
       if (i<0 || i>255)
@@ -408,19 +408,19 @@ public:
       ensure(0);
 
       TaggedRef t = oz_tail(list);
-      DEREF(t, t_ptr, t_tag);
+      DEREF(t, t_ptr);
 
-      if (isVariableTag(t_tag)) {
+      if (oz_isVar(t)) {
         am.addSuspendVarList(t_ptr);
         return SUSPEND;
       }
 
-      if (isLTupleTag(t_tag)) {
+      if (oz_isLTuple(t)) {
         list = t;
         continue;
       }
 
-      if (isLiteralTag(t_tag) && oz_isNil(t))
+      if (oz_isLiteral(t) && oz_isNil(t))
         return PROCEED;
 
       return raise_type_error(list);
@@ -430,13 +430,13 @@ public:
   OZ_Return put_string(TaggedRef list) {
     while (1) {
       TaggedRef h = oz_head(list);
-      DEREF(h, h_ptr, h_tag);
+      DEREF(h, h_ptr);
 
-      if (isVariableTag(h_tag)) {
+      if (oz_isVar(h)) {
         am.addSuspendVarList(h_ptr);
         return SUSPEND;
       }
-      if (!isSmallIntTag(h_tag))
+      if (!oz_isSmallInt(h))
         return raise_type_error(list);
       int i = tagged2SmallInt(h);
       if (i<0 || i>255)
@@ -445,19 +445,19 @@ public:
       put((char) i);
 
       TaggedRef t = oz_tail(list);
-      DEREF(t, t_ptr, t_tag);
+      DEREF(t, t_ptr);
 
-      if (isVariableTag(t_tag)) {
+      if (oz_isVar(t)) {
         am.addSuspendVarList(t_ptr);
         return SUSPEND;
       }
 
-      if (isLTupleTag(t_tag)) {
+      if (oz_isLTuple(t)) {
         list = t;
         continue;
       }
 
-      if (isLiteralTag(t_tag) && oz_isNil(t))
+      if (oz_isLiteral(t) && oz_isNil(t))
         return PROCEED;
 
       return raise_type_error(list);
@@ -526,8 +526,8 @@ wait_select:
   TaggedRef var = oz_newVariable();
 
   (void) oz_io_select(tk_fd, SEL_WRITE, NameUnit, var);
-  DEREF(var, var_ptr, var_tag);
-  if (isVariableTag(var_tag)) {
+  DEREF(var, var_ptr);
+  if (oz_isVar(var)) {
     am.addSuspendVarList(var_ptr);
     return SUSPEND;
   } else {
@@ -581,31 +581,31 @@ OZ_Return TK::put_record(SRecord * sr, TaggedRef as) {
 
 OZ_Return TK::put_batch(TaggedRef batch, char delim) {
 
-  DEREF(batch, batch_ptr, batch_tag);
+  DEREF(batch, batch_ptr);
 
-  if (isVariableTag(batch_tag)) {
+  if (oz_isVar(batch)) {
     am.addSuspendVarList(batch_ptr);
     return SUSPEND;
-  } else if (isLTupleTag(batch_tag)) {
+  } else if (oz_isLTuple(batch)) {
     OZ_Return batch_state = put_tcl(oz_head(batch));
 
     if (batch_state!=PROCEED)
       return batch_state;
 
     batch = oz_tail(batch);
-  } else if (isLiteralTag(batch_tag) && oz_eq(batch,AtomNil)) {
+  } else if (oz_isLiteral(batch) && oz_eq(batch,AtomNil)) {
     return PROCEED;
   } else {
     return raise_type_error(batch);
   }
 
   while (1) {
-    DEREF(batch, batch_ptr, batch_tag);
+    DEREF(batch, batch_ptr);
 
-    if (isVariableTag(batch_tag)) {
+    if (oz_isVar(batch)) {
       am.addSuspendVarList(batch_ptr);
       return SUSPEND;
-    } else if (isLTupleTag(batch_tag)) {
+    } else if (oz_isLTuple(batch)) {
       put(delim);
       OZ_Return batch_state = put_tcl(oz_head(batch));
 
@@ -613,7 +613,7 @@ OZ_Return TK::put_batch(TaggedRef batch, char delim) {
         return batch_state;
 
       batch = oz_tail(batch);
-    } else if (isLiteralTag(batch_tag) && oz_eq(batch,AtomNil)) {
+    } else if (oz_isLiteral(batch) && oz_eq(batch,AtomNil)) {
       return PROCEED;
     } else {
       return raise_type_error(batch);
@@ -659,15 +659,15 @@ OZ_Return TK::put_record_or_tuple(TaggedRef tcl, int start = 0) {
 }
 
 OZ_Return TK::put_vs(TaggedRef vs) {
-  DEREF(vs, vs_ptr, vs_tag);
+  DEREF(vs, vs_ptr);
 
-  if (isVariableTag(vs_tag)) {
+  if (oz_isVar(vs)) {
     am.addSuspendVarList(vs_ptr);
     return SUSPEND;
-  } else if (isSmallIntTag(vs_tag) || oz_isBigInt(vs)) {
+  } else if (oz_isSmallInt(vs) || oz_isBigInt(vs)) {
     put_int(vs);
     return PROCEED;
-  } else if (isLiteralTag(vs_tag)) {
+  } else if (oz_isLiteral(vs)) {
 
     if (!tagged2Literal(vs)->isAtom())
       return raise_type_error(vs);
@@ -684,7 +684,7 @@ OZ_Return TK::put_vs(TaggedRef vs) {
       StateReturn(put_vs(sr->getArg(i)));
     }
     return PROCEED;
-  } else if (isLTupleTag(vs_tag)) {
+  } else if (oz_isLTuple(vs)) {
     return put_string(vs);
   } else if (oz_isFloat(vs)) {
     put_float(vs);
@@ -699,15 +699,15 @@ OZ_Return TK::put_vs(TaggedRef vs) {
 
 
 OZ_Return TK::put_vs_quote(TaggedRef vs) {
-  DEREF(vs, vs_ptr, vs_tag);
+  DEREF(vs, vs_ptr);
 
-  if (isVariableTag(vs_tag)) {
+  if (oz_isVar(vs)) {
     am.addSuspendVarList(vs_ptr);
     return SUSPEND;
-  } else if (isSmallIntTag(vs_tag) || oz_isBigInt(vs)) {
+  } else if (oz_isSmallInt(vs) || oz_isBigInt(vs)) {
     put_int(vs);
     return PROCEED;
-  } else if (isLiteralTag(vs_tag)) {
+  } else if (oz_isLiteral(vs)) {
 
     if (!tagged2Literal(vs)->isAtom())
       return raise_type_error(vs);
@@ -724,7 +724,7 @@ OZ_Return TK::put_vs_quote(TaggedRef vs) {
       StateReturn(put_vs_quote(sr->getArg(i)));
     }
     return PROCEED;
-  } else if (isLTupleTag(vs_tag)) {
+  } else if (oz_isLTuple(vs)) {
     return put_string_quote(vs);
   } else if (oz_isFloat(vs)) {
     put_float(vs);
@@ -739,15 +739,15 @@ OZ_Return TK::put_vs_quote(TaggedRef vs) {
 
 
 OZ_Return TK::put_tcl(TaggedRef tcl) {
-  DEREF(tcl, tcl_ptr, tcl_tag);
+  DEREF(tcl, tcl_ptr);
 
-  if (isVariableTag(tcl_tag)) {
+  if (oz_isVar(tcl)) {
     am.addSuspendVarList(tcl_ptr);
     return SUSPEND;
-  } else if (isSmallIntTag(tcl_tag) || oz_isBigInt(tcl)) {
+  } else if (oz_isSmallInt(tcl) || oz_isBigInt(tcl)) {
     put_int(tcl);
     return PROCEED;
-  } else if (isLiteralTag(tcl_tag)) {
+  } else if (oz_isLiteral(tcl)) {
     if (tagged2Literal(tcl)->isAtom()) {
       start_protect();
       put_atom_quote(tcl);
@@ -771,12 +771,12 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
     TaggedRef v = tagged2Object(tcl)->getFeature(TkNameTclName);
 
     if (v!=makeTaggedNULL()) {
-      DEREF(v, v_ptr, v_tag);
+      DEREF(v, v_ptr);
 
-      if (isVariableTag(v_tag)) {
+      if (oz_isVar(v)) {
         am.addSuspendVarList(v_ptr);
         return SUSPEND;
-      } else if (isLiteralTag(v_tag) && oz_eq(v,TkNameTclClosed)) {
+      } else if (oz_isLiteral(v) && oz_eq(v,TkNameTclClosed)) {
         return raise_closed(tcl);
       } else {
         return put_vs(v);
@@ -803,9 +803,9 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
         if (st->getWidth() != 1)
           return raise_type_error(tcl);
 
-        DEREF(arg, arg_ptr, arg_tag);
+        DEREF(arg, arg_ptr);
 
-        if (isVariableTag(arg_tag)) {
+        if (oz_isVar(arg)) {
           am.addSuspendVarList(arg_ptr);
           return SUSPEND;
         }
@@ -825,14 +825,14 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
         for (int i=0; i < 3; i++) {
           TaggedRef arg = st->getArg(i);
 
-          DEREF(arg, arg_ptr, arg_tag);
+          DEREF(arg, arg_ptr);
 
-          if (oz_isVariable(arg)) {
+          if (oz_isVar(arg)) {
             am.addSuspendVarList(arg_ptr);
             return SUSPEND;
           }
 
-          if (!isSmallIntTag(arg_tag))
+          if (!oz_isSmallInt(arg))
             return raise_type_error(tcl);
 
           int j = tagged2SmallInt(arg);
@@ -851,8 +851,8 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
         if (st->getWidth() != 1)
           return raise_type_error(tcl);
         TaggedRef rt = st->getArg(0);
-        DEREF(rt, rt_ptr, rt_tag);
-        if (oz_isVariable(rt)) {
+        DEREF(rt, rt_ptr);
+        if (oz_isVar(rt)) {
           am.addSuspendVarList(rt_ptr);
           return SUSPEND;
         }
@@ -887,7 +887,7 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
     } else {
       return raise_type_error(tcl);
     }
-  } else if (isSRecordTag(tcl_tag)) {
+  } else if (oz_isSRecord(tcl)) {
     SRecord * sr = tagged2SRecord(tcl);
     TaggedRef l  = sr->getLabel();
     TaggedRef as = sr->getArityList(); /* arity list is already deref'ed */
@@ -934,7 +934,7 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
       return raise_type_error(tcl);
     }
 
-  } else if (isLTupleTag(tcl_tag)) {
+  } else if (oz_isLTuple(tcl)) {
     start_protect();
     StateReturn(put_string_quote(tcl));
     stop_protect();
@@ -952,11 +952,11 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
 
 
 OZ_Return TK::put_tcl_filter(TaggedRef tcl, TaggedRef fs) {
-  DEREF(tcl, tcl_ptr, tcl_tag);
+  DEREF(tcl, tcl_ptr);
 
-  if (isLiteralTag(tcl_tag)) {
+  if (oz_isLiteral(tcl)) {
     return PROCEED;
-  } else if (isSRecordTag(tcl_tag)) {
+  } else if (oz_isSRecord(tcl)) {
     SRecord * sr = tagged2SRecord(tcl);
     TaggedRef as = sr->getArityList(); /* arity list is already deref'ed */
     fs = oz_deref(fs);
@@ -998,7 +998,7 @@ OZ_Return TK::put_tcl_filter(TaggedRef tcl, TaggedRef fs) {
 
 OZ_Return TK::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
   *ret = makeTaggedNULL();
-  DEREF(tcl, tcl_ptr, tcl_tag);
+  DEREF(tcl, tcl_ptr);
 
   if (oz_isSTuple(tcl)) {
     SRecord * sr = tagged2SRecord(tcl);
@@ -1015,7 +1015,7 @@ OZ_Return TK::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
     *ret = sr->getArg(w-1);
     return PROCEED;
 
-  } else if (isSRecordTag(tcl_tag)) {
+  } else if (oz_isSRecord(tcl)) {
     SRecord * sr = tagged2SRecord(tcl);
     TaggedRef as = oz_tail(sr->getArityList()); /* arity list is already deref'ed */
 
@@ -1161,7 +1161,7 @@ OZ_BI_define(BItk_writeReturnMess,4,0) {
     TaggedRef mess = oz_deref(OZ_in(1));
     TaggedRef frst;
 
-    Assert(!oz_isVariable(mess));
+    Assert(!oz_isVar(mess));
 
     if (!oz_isSRecord(mess)) {
       s = raise_type_error(mess);
@@ -1249,7 +1249,7 @@ OZ_BI_define(BItk_writeTuple,2,0) {
       goto exit;
     }
 
-    Assert(!oz_isVariable(mess));
+    Assert(!oz_isVar(mess));
 
     frst = tagged2SRecord(mess)->getFeature(makeTaggedSmallInt(1));
 
@@ -1291,7 +1291,7 @@ OZ_BI_define(BItk_writeTagTuple,3,0) {
     TaggedRef tuple = oz_deref(OZ_in(2));
     TaggedRef fst;
 
-    Assert(!oz_isVariable(tuple));
+    Assert(!oz_isVar(tuple));
 
     if (!oz_isSRecord(tuple)) {
       s = raise_type_error(tuple);
@@ -1369,12 +1369,12 @@ OZ_Return TK::close_hierarchy(Object * o) {
     return raise_type_error(makeTaggedConst(o));;
   }
 
-  DEREF(v, v_ptr, v_tag);
+  DEREF(v, v_ptr);
 
-  Assert(!isVariableTag(v_tag));
+  Assert(!oz_isVar(v));
   // since the message has been assembled for closing already!
 
-  if (isLiteralTag(v_tag) && oz_eq(v,TkNameTclClosed)) {
+  if (oz_isLiteral(v) && oz_eq(v,TkNameTclClosed)) {
     // okay, has been closed already
     return PROCEED;
   } else {
@@ -1437,7 +1437,7 @@ OZ_BI_define(BItk_close,2,0) {
 
     // Perform closing of objects
     TaggedRef to = OZ_in(1);
-    DEREF(to, to_ptr, to_tag);
+    DEREF(to, to_ptr);
 
     Assert(oz_isObject(to));
 
@@ -1451,13 +1451,13 @@ OZ_BI_define(BItk_close,2,0) {
     }
 
     {
-      DEREF(v, v_ptr, v_tag);
+      DEREF(v, v_ptr);
 
-      if (isVariableTag(v_tag)) {
+      if (oz_isVar(v)) {
         am.addSuspendVarList(v_ptr);
         s = SUSPEND;
         goto exit;
-      } else if (isLiteralTag(v_tag) && oz_eq(v,TkNameTclClosed)) {
+      } else if (oz_isLiteral(v) && oz_eq(v,TkNameTclClosed)) {
         LEAVE_TK_LOCK;
         return PROCEED;
       }
@@ -1510,9 +1510,9 @@ OZ_BI_define(BItk_genTopName,0,1) {
 OZ_BI_define(BItk_genWidgetName,1,1) {
   TaggedRef parent = OZ_in(0);
 
-  DEREF(parent, p_ptr, p_tag);
+  DEREF(parent, p_ptr);
 
-  if (isVariableTag(p_tag))
+  if (oz_isVar(parent))
     OZ_suspendOn(makeTaggedRef(p_ptr));
 
   OZ_RETURN(tk.genWidgetName(parent));

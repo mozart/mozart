@@ -313,7 +313,7 @@ void exitCheckSpace() {
 #define STOREFWDMARK(fromPtr, newValue)   \
   Assert(isDWAligned(newValue));                  \
   CPTRAIL(fromPtr);                       \
-  *((int32 *) fromPtr) = makeTaggedGcMark(newValue);
+  *((int32 *) fromPtr) = makeTaggedMarkPtr(newValue);
 
 #define STOREPSEUDOFWDMARK(fromPtr, newValue)   \
   CPTRAIL(fromPtr);                       \
@@ -419,7 +419,6 @@ Board * Board::_cacBoardDo(void) {
   // needed when collecting OptVar"s;
   ret->optVar = makeTaggedVar(new OptVar(ret));
 #ifdef G_COLLECT
-  DebugCode(optVar = taggedInvalidVar);
   ret->nextGCStep();
   // an alive board must be copied at every GC step exactly once:
   Assert(ret->isEqGCStep(oz_getGCStep()));
@@ -791,7 +790,7 @@ void WeakStack::recurse(void)
   OZ_Term fut,val;
   while (!isEmpty()) {
     pop(fut,val);
-    DEREF(fut,ptr,_);
+    DEREF(fut,ptr);
     oz_bindFuture(ptr,val);
   }
 }
@@ -943,7 +942,7 @@ void VarFix::_cacFix(void)
       // already there (either due to another "var fix" entry, or was
       // reached directly);
       if (tagTypeOf(aux) == TAG_GCMARK) {
-        to_ptr = (TaggedRef *) tagged2GcUnmarked(aux);
+        to_ptr = (TaggedRef *) tagged2UnmarkedPtr(aux);
       } else {
         Assert(oz_isRef(aux) && isSWAligned(tagged2Ref(aux)));
         to_ptr = tagged2Ref(aux);
@@ -1507,7 +1506,7 @@ TaskStack * TaskStack::_cac(void) {
 #endif
     } else if (PC == C_CALL_CONT_Ptr) {
       oz_cacTerm(*((TaggedRef *) Y), *((TaggedRef *) Y));
-      *CAP = makeTaggedMiscp((void *)
+      *CAP = makeTaggedVerbatim((void *)
                              _cacRefsArray((RefsArray)
                                            tagValueOf(*CAP)));
     } else { // usual continuation
@@ -1894,7 +1893,7 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
     }
 
   DO_GCMARK:
-    *t = makeTaggedRef((TaggedRef*) tagged2GcUnmarked(aux));
+    *t = makeTaggedRef((TaggedRef*) tagged2UnmarkedPtr(aux));
     continue;
 
   DO_SMALLINT:
@@ -1986,7 +1985,6 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
          // collected (but not necessarily scanned);
          Assert(bb);
          *t = bb->getOptVar();
-         Assert(*t != taggedInvalidVar);
          if (isDWAligned(f)) {
            STOREFWDMARK(f, t);
          } else {

@@ -71,23 +71,23 @@ void GTIndexTable::gCollectGTIT()
     // special pseudo-snapshot of a value before gc step begins).
     // Observe that variables are NOT stored directly in hash nodes!
     //
-    if (!isGCTaggedInt(t)) {
+    if (!oz_isGcMark(t)) {
 #ifdef DEBUG_CHECK
       Bool isVar;
       if (oz_isRef(t)) {
         isVar = OK;
-        Assert(oz_isVariable(*tagged2Ref(t)));
+        Assert(oz_isVar(*tagged2Ref(t)));
       } else {
         isVar = NO;
-        Assert(!oz_isVariable(t));
+        Assert(!oz_isVar(t));
       }
 #endif
       oz_gCollectTerm(t, t);
 
       //
       // Now, the GC occasionaly adds (is free to!) references, so:
-      DEREF(t, tp, _tagt);
-      if (oz_isVariable(t))
+      DEREF(t, tp);
+      if (oz_isVar(t))
         t = makeTaggedRef(tp);
       // ... otherwise just leave it dereferenced;
 #ifdef DEBUG_CHECK
@@ -118,10 +118,10 @@ void GenTraverser::gCollect()
   while (ptr > bottom) {
     OZ_Term& t = (OZ_Term&) *(--ptr);
     OZ_Term tc = t;
-    DEREF(tc, tPtr, tTag);
+    DEREF(tc, tPtr);
 
     //
-    switch (tTag) {
+    switch (tagTypeOf(tc)) {
     case TAG_GCMARK:
       //
       switch (tc) {
@@ -162,10 +162,10 @@ void GenTraverser::doit()
     // a push-pop pair for the topmost entry is saved:
   bypass:
     CrazyDebug(incDebugNODES(););
-    DEREF(t, tPtr, tTag);
+    DEREF(t, tPtr);
 
     //
-    switch (tTag) {
+    switch (tagTypeOf(t)) {
 
     case TAG_SMALLINT:
       processSmallInt(t);

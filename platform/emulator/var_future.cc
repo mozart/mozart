@@ -41,7 +41,7 @@
 OZ_BI_define(BIbindFuture,2,0)
 {
   OZ_Term var = OZ_in(0);
-  DEREF(var,varPtr,_);
+  DEREF(var,varPtr);
   OZ_Term val = OZ_in(1);
 
   oz_bindFuture(varPtr,val);
@@ -174,7 +174,7 @@ OZ_BI_define(BIvarToFuture,2,0)
     oz_suspendOnVar(v);
   }
   OZ_Term f = OZ_in(1);
-  DEREF(f,fPtr,_);
+  DEREF(f,fPtr);
   oz_bindFuture(fPtr,v);
   return PROCEED;
 } OZ_BI_end
@@ -209,7 +209,7 @@ OZ_BI_define(BIfuture,1,1)
 OZ_BI_define(BIwaitQuiet,1,0)
 {
   oz_declareDerefIN(0,fut);
-  if (oz_isVariable(fut)) {
+  if (oz_isVar(fut)) {
     if (oz_isFuture(fut)) {
       ((Future*)tagged2Var(fut))->addSuspSVar(oz_currentThread());
       return (SUSPEND);

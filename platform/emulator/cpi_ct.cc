@@ -41,13 +41,13 @@ void OZ_Ct::operator delete(void * p, size_t s)
 
 void OZ_CtVar::ask(OZ_Term v)
 {
-  Assert(oz_isRef(v) || !oz_isVariable(v));
+  Assert(oz_isRef(v) || !oz_isVar(v));
   //
-  DEREF(v, _vptr, vtag);
+  DEREF(v, _vptr);
   var = v;
   varPtr = _vptr;
   //
-  if (oz_isVariable(vtag)) {
+  if (oz_isVar(v)) {
     //
     // found constrained variable
     //
@@ -68,17 +68,17 @@ void OZ_CtVar::ask(OZ_Term v)
 
 void OZ_CtVar::read(OZ_Term v)
 {
-  Assert(oz_isRef(v) || !oz_isVariable(v));
+  Assert(oz_isRef(v) || !oz_isVar(v));
   //
-  DEREF(v, _vptr, vtag);
+  DEREF(v, _vptr);
   var = v;
   varPtr = _vptr;
   //
-  if (oz_isVariable(vtag)) {
+  if (oz_isVar(v)) {
     //
     // found constrained variable
     //
-    Assert(isVarTag(vtag));
+    Assert(oz_isVar(v));
     //
     setSort(var_e);
     //
@@ -165,17 +165,17 @@ void OZ_CtVar::read(OZ_Term v)
 
 void OZ_CtVar::readEncap(OZ_Term v)
 {
-  Assert(oz_isRef(v) || !oz_isVariable(v));
+  Assert(oz_isRef(v) || !oz_isVar(v));
   //
-  DEREF(v, _vptr, vtag);
+  DEREF(v, _vptr);
   var = v;
   varPtr = _vptr;
   //
-  if (oz_isVariable(v)) {
+  if (oz_isVar(v)) {
     //
     // found variable
     //
-    Assert(isVarTag(vtag));
+    Assert(oz_isVar(v));
     //
     setState(encap_e);
     setSort(var_e);
@@ -229,7 +229,7 @@ OZ_Boolean OZ_CtVar::tell(void)
   //
   // this parameter has become an integer by a previous tell
   //
-  if (!oz_isVariable(*varPtr)) {
+  if (!oz_isVar(*varPtr)) {
     //
     goto oz_false;
     //

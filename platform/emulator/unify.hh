@@ -71,7 +71,6 @@ Bool oz_isLocalVar(OzVariable *var) {
 inline
 Bool oz_isLocalVariable(TaggedRef var)
 {
-  CHECK_ISVAR(var);
   return (oz_isOptVar(var) ? !am.inEqEq() : oz_isLocalVar(tagged2Var(var)));
 }
 
@@ -100,11 +99,11 @@ void oz_checkLocalSuspensionList(SuspList ** suspList,
 inline
 void doBind(TaggedRef *p, TaggedRef t)
 {
-  CHECK_NONVAR(t);
+  Assert(!oz_isVar(t));
 #ifdef DEBUG_CHECK
   {
     TaggedRef tt = t;
-    DEREF(tt,ttPtr,_1);
+    DEREF(tt,ttPtr);
     Assert(p != ttPtr);
   }
 #endif

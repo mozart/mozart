@@ -133,7 +133,7 @@ OzVariable* oz_getNonOptVar(TaggedRef *v)
 }
 
 OZ_Return oz_var_addSusp(TaggedRef *v, Suspendable * susp) {
-  Assert(oz_isVariable(*v));
+  Assert(oz_isVar(*v));
   OzVariable *ov = tagged2Var(*v);
   switch (ov->getType()) {
   case OZ_VAR_FUTURE:

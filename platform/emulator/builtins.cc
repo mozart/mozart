@@ -73,19 +73,19 @@ OZ_BI_define(BIwaitOr,2,0)
   oz_declareDerefIN(0,a);
   oz_declareDerefIN(1,b);
 
-  if (!oz_isVariable(a)) {
-    if (oz_isVariable(b))
+  if (!oz_isVar(a)) {
+    if (oz_isVar(b))
       tagged2Var(b)->removeFromSuspList(oz_currentThread());
     return PROCEED;
   }
 
-  if (!oz_isVariable(b)) {
-    if (oz_isVariable(a))
+  if (!oz_isVar(b)) {
+    if (oz_isVar(a))
       tagged2Var(a)->removeFromSuspList(oz_currentThread());
     return PROCEED;
   }
 
-  Assert(oz_isVariable(a) && oz_isVariable(b));
+  Assert(oz_isVar(a) && oz_isVar(b));
 
   if (!tagged2Var(a)->isInSuspList(oz_currentThread()))
     am.addSuspendVarList(aPtr);
@@ -108,8 +108,8 @@ OZ_BI_define(BIwaitOrF,1,1)
 
   while (!OZ_isNil(arity)) {
     TaggedRef v=OZ_subtree(a,OZ_head(arity));
-    DEREF(v,vPtr,_);
-    if (!oz_isVariable(v)) {
+    DEREF(v,vPtr);
+    if (!oz_isVar(v)) {
       am.emptySuspendVarList();
       OZ_RETURN(OZ_head(arity));
     }
@@ -296,8 +296,8 @@ OZ_BI_define(BIlabel, 1, 1)
  if (oz_isSRecord(rec)) OZ_RETURN(tagged2SRecord(rec)->getLabel());
  if (isGenOFSVar(rec)) {
    TaggedRef thelabel=tagged2GenOFSVar(rec)->getLabel();
-   DEREF(thelabel,lPtr,_2);
-   if (oz_isVariable(thelabel)) oz_suspendOnPtr(lPtr);
+   DEREF(thelabel,lPtr);
+   if (oz_isVar(thelabel)) oz_suspendOnPtr(lPtr);
    OZ_RETURN(thelabel);
  }
  oz_typeError(0,"Record");
@@ -309,12 +309,12 @@ OZ_BI_define(BIlabel, 1, 1)
  */
 inline
 OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
-  DEREF(fea, _1,feaTag);
+  DEREF(fea, _1);
 
-  DEREF(term, _2, termTag);
+  DEREF(term, _2);
 
-  if (isVariableTag(feaTag)) {
-    switch (termTag) {
+  if (oz_isVar(fea)) {
+    switch (tagTypeOf(term)) {
     case TAG_LTUPLE:
     case TAG_SRECORD:
       return SUSPEND;
@@ -337,7 +337,7 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
 
   if (!oz_isFeature(fea)) goto typeError1;
 
-  switch (termTag) {
+  switch (tagTypeOf(term)) {
   case TAG_LTUPLE:
     {
       if (!oz_isSmallInt(fea)) {
@@ -502,9 +502,9 @@ OZ_BI_define(BImatchDefault,3,1) {
 } OZ_BI_end
 
 OZ_Return widthInline(TaggedRef term, TaggedRef &out) {
-  DEREF(term,_,tag);
+  DEREF(term,_);
 
-  switch (tag) {
+  switch (tagTypeOf(term)) {
   case TAG_LTUPLE:
     out = makeTaggedSmallInt(2);
     return PROCEED;
@@ -535,11 +535,11 @@ OZ_Return widthInline(TaggedRef term, TaggedRef &out) {
 OZ_DECLAREBI_USEINLINEFUN1(BIwidth,widthInline)
 
 OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
-  DEREF(fea, _1,feaTag);
-  DEREF(term, _2, termTag);
+  DEREF(fea,  _1);
+  DEREF(term, _2);
 
-  if (isVariableTag(feaTag)) {
-    switch (termTag) {
+  if (oz_isVar(fea)) {
+    switch (tagTypeOf(term)) {
     case TAG_LTUPLE:
     case TAG_SRECORD:
       return SUSPEND;
@@ -562,7 +562,7 @@ OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
 
   if (!oz_isFeature(fea)) goto typeError1;
 
-  switch (termTag) {
+  switch (tagTypeOf(term)) {
   case TAG_LTUPLE:
   case TAG_SRECORD:
     goto raise;
@@ -708,44 +708,44 @@ TaggedRef vs_suspend(SRecord *vs, int i, TaggedRef arg_rest) {
 }
 
 static OZ_Return vs_check(OZ_Term vs, OZ_Term *rest) {
-  DEREF(vs, vs_ptr, vs_tag);
+  DEREF(vs, vs_ptr);
 
-  if (isVariableTag(vs_tag)) {
+  if (oz_isVar(vs)) {
     *rest = makeTaggedRef(vs_ptr);
     oz_suspendOn(*rest);
-  } else if (isSmallIntTag(vs_tag)) {
+  } else if (oz_isSmallInt(vs)) {
     return PROCEED;
   } else if (oz_isBigInt(vs)) {
     return PROCEED;
   } else if (oz_isFloat(vs)) {
     return PROCEED;
-  } else if (isLiteralTag(vs_tag) && tagged2Literal(vs)->isAtom()) {
+  } else if (oz_isAtom(vs)) {
     return PROCEED;
-  } else if (isLTupleTag(vs_tag)) {
+  } else if (oz_isLTuple(vs)) {
     TaggedRef cdr  = vs;
     TaggedRef prev = vs;
 
     while (1) {
-      DEREF(cdr, cdr_ptr, cdr_tag);
+      DEREF(cdr, cdr_ptr);
 
       if (oz_isNil(cdr))
         return PROCEED;
 
-      if (isVariableTag(cdr_tag)) {
+      if (oz_isVar(cdr)) {
         *rest = prev;
         oz_suspendOn(makeTaggedRef(cdr_ptr));
       }
 
-      if (!isLTupleTag(cdr_tag))
+      if (!oz_isLTuple(cdr))
         return FAILED;
 
       TaggedRef car = tagged2LTuple(cdr)->getHead();
-      DEREF(car, car_ptr, car_tag);
+      DEREF(car, car_ptr);
 
-      if (isVariableTag(car_tag)) {
+      if (oz_isVar(car)) {
         *rest = cdr;
         oz_suspendOn(makeTaggedRef(car_ptr));
-      } else if (!isSmallIntTag(car_tag) ||
+      } else if (!oz_isSmallInt(car) ||
                  (tagged2SmallInt(car) <= 0) ||
                  (tagged2SmallInt(car) > 255)) {
         return FAILED;
@@ -782,50 +782,50 @@ static OZ_Return vs_check(OZ_Term vs, OZ_Term *rest) {
 
 // mm2: cycle check needed
 static OZ_Return vs_length(OZ_Term vs, OZ_Term *rest, int *len) {
-  DEREF(vs, vs_ptr, vs_tag);
+  DEREF(vs, vs_ptr);
 
-  if (isVariableTag(vs_tag)) {
+  if (oz_isVar(vs)) {
     *rest = makeTaggedRef(vs_ptr);
     oz_suspendOn(*rest);
-  } else if (isSmallIntTag(vs_tag) || oz_isBigInt(vs)) {
+  } else if (oz_isSmallInt(vs) || oz_isBigInt(vs)) {
     *len = *len + strlen(toC(vs));
     return PROCEED;
   } else if (oz_isFloat(vs)) {
     *len = *len + strlen(toC(vs));
     return PROCEED;
-  } else if (isLiteralTag(vs_tag) && tagged2Literal(vs)->isAtom()) {
+  } else if (oz_isAtom(vs)) {
     if (oz_eq(vs,AtomPair) ||
         oz_eq(vs,AtomNil))
       return PROCEED;
     *len = *len + ((Atom*)tagged2Literal(vs))->getSize();
     return PROCEED;
-  } else if (isLTupleTag(vs_tag)) {
+  } else if (oz_isLTuple(vs)) {
     TaggedRef cdr  = vs;
     TaggedRef prev = vs;
 
     while (1) {
-      DEREF(cdr, cdr_ptr, cdr_tag);
+      DEREF(cdr, cdr_ptr);
 
       if (oz_isNil(cdr))
         return PROCEED;
 
-      if (isVariableTag(cdr_tag)) {
+      if (oz_isVar(cdr)) {
         *rest = prev;
         Assert((*len)>0);
         *len = *len - 1;
         oz_suspendOn(makeTaggedRef(cdr_ptr));
       }
 
-      if (!isLTupleTag(cdr_tag))
+      if (!oz_isLTuple(cdr))
         return FAILED;
 
       TaggedRef car = tagged2LTuple(cdr)->getHead();
-      DEREF(car, car_ptr, car_tag);
+      DEREF(car, car_ptr);
 
-      if (isVariableTag(car_tag)) {
+      if (oz_isVar(car)) {
         *rest = cdr;
         oz_suspendOn(makeTaggedRef(car_ptr));
-      } else if (!isSmallIntTag(car_tag) ||
+      } else if (!oz_isSmallInt(car) ||
                  (tagged2SmallInt(car) < 0) ||
                  (tagged2SmallInt(car) > 255)) {
         return FAILED;
@@ -1195,9 +1195,9 @@ OZ_BI_define(BItermType,1,1)
 
 OZ_Term oz_status(OZ_Term term)
 {
-  DEREF(term, _1, tag);
+  DEREF(term, _1);
 
-  switch (tag) {
+  switch (tagTypeOf(term)) {
   case TAG_VAR:
     {
       OzVariable *cv = tagged2Var(term);
@@ -1278,24 +1278,18 @@ inline
 OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
 {
   TaggedRef A = Ain, B = Bin;
-  DEREF(A,aPtr,tagA); DEREF(B,bPtr,tagB);
+  DEREF(A,aPtr); DEREF(B,bPtr);
 
-  /* Really fast test for equality */
-  if (tagA != tagB) {
-    if (oz_isVariable(A) || oz_isVariable(B)) goto dontknow;
-    return FAILED;
-  }
+  if (oz_isSmallInt(A) || oz_isLiteral(A))
+    return oz_eq(A,B) ? PROCEED : FAILED;
 
-  if (isSmallIntTag(tagA)) return smallIntEq(A,B) ? PROCEED : FAILED;
-
-  if (isLiteralTag(tagA))  return oz_eq(A,B)  ? PROCEED : FAILED;
-
-  if (A == B && !oz_isVariable(A)) return PROCEED;
+  if (A == B && !oz_isVar(A))
+    return PROCEED;
 
   if (oz_isExtension(A))
     return tagged2Extension(A)->eqV(B);
 
-  if (isConstTag(tagA)) {
+  if (oz_isConst(A) && oz_isConst(B)) {
     switch (tagged2Const(A)->getType()) {
     case Co_Float:
       return floatEq(A,B)  ? PROCEED : FAILED;
@@ -1306,7 +1300,6 @@ OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
     }
   }
 
- dontknow:
   return oz_eqeq(Ain,Bin);
 }
 
@@ -1432,23 +1425,32 @@ TaggedRef getArityFromList(TaggedRef list, Bool isPair) {
   TaggedRef arity;
   TaggedRef *next=&arity;
   Bool updateFlag=NO;
-  DerefIfVarReturnIt(list);
+  list = oz_safeDeref(list);
   TaggedRef old = list;
+
+  if (oz_isRef(list))
+    return list;
+
 loop:
   if (oz_isLTuple(list)) {
     TaggedRef fea;
 
     if (isPair) {
-      TaggedRef pair = oz_head(list);
-      DerefIfVarReturnIt(pair);
+      TaggedRef pair = oz_safeDeref(oz_head(list));
+
+      if (oz_isRef(pair))
+        return pair;
+
       if (!oz_isPair2(pair)) return 0;
 
       fea = tagged2SRecord(pair)->getArg(0);
     } else {
       fea = oz_head(list);
     }
+    fea = oz_safeDeref(fea);
 
-    DerefIfVarReturnIt(fea);
+    if (oz_isRef(fea))
+      return fea;
 
     if (!oz_isFeature(fea)) return 0;
 
@@ -1457,8 +1459,11 @@ loop:
     lt->setHead(fea);
     next=lt->getRefTail();
 
-    list = oz_tail(list);
-    DerefIfVarReturnIt(list);
+    list = oz_safeDeref(oz_tail(list));
+
+    if (oz_isRef(list))
+      return list;
+
     if (list==old) return 0;
     if (updateFlag) {
       old=oz_deref(oz_tail(old));
@@ -1486,10 +1491,10 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   if (!arity) {
     oz_typeError(1,"finite list(Feature#Value)");
   }
-  DEREF(t0,t0Ptr,tag0);
+  DEREF(t0,t0Ptr);
   if (oz_isRef(arity)) { // must suspend
     out=arity;
-    switch (tag0) {
+    switch (tagTypeOf(t0)) {
     case TAG_LITERAL:
       return SUSPEND;
     case TAG_SRECORD:
@@ -1511,7 +1516,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   }
 
   if (oz_isNil(arity)) { // adjoin nothing
-    switch (tag0) {
+    switch (tagTypeOf(t0)) {
     case TAG_SRECORD:
     case TAG_LTUPLE:
       if (recordFlag) {
@@ -1532,7 +1537,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
     }
   }
 
-  switch (tag0) {
+  switch (tagTypeOf(t0)) {
   case TAG_LITERAL:
     {
       int len1 = oz_fastlength(arity);
@@ -1615,9 +1620,9 @@ OZ_BI_define(BIrealMakeRecord,2,1) {
     oz_typeError(1,"finite list(Feature)");
   }
 
-  DEREF(t0,t0Ptr,tag0);
+  DEREF(t0,t0Ptr);
   if (oz_isRef(arity)) { // must suspend
-    switch (tag0) {
+    switch (tagTypeOf(t0)) {
     case TAG_VAR:
       if (oz_isKinded(t0))
         goto typeError0;
@@ -1629,7 +1634,7 @@ OZ_BI_define(BIrealMakeRecord,2,1) {
   }
 
   if (oz_isNil(arity)) { // adjoin nothing
-    switch (tag0) {
+    switch (tagTypeOf(t0)) {
     case TAG_LITERAL:
       OZ_RETURN(t0);
     case TAG_VAR:
@@ -1640,7 +1645,7 @@ OZ_BI_define(BIrealMakeRecord,2,1) {
     }
   }
 
-  switch (tag0) {
+  switch (tagTypeOf(t0)) {
   case TAG_LITERAL:
     {
       int len1 = oz_fastlength(arity);
@@ -1736,9 +1741,9 @@ OZ_BI_define(BIrecordToDictionary,1,1) {
 
 OZ_Return BIarityInline(TaggedRef term, TaggedRef &out)
 {
-  DEREF(term,termPtr,tag);
+  DEREF(term,termPtr);
 
-  if (oz_isVariable(term)) {
+  if (oz_isVar(term)) {
     if (oz_isKinded(term) && !isGenOFSVar(term)) {
       oz_typeError(0,"Record");
     }
@@ -1779,7 +1784,7 @@ OZ_BI_define(BItestRecord,3,1)
   Arity *patArity = aritytable.find(sortedPatArityList);
 
   // is the input a proper record (or can it still become one)?
-  if (oz_isVariable(val) && oz_isKinded(val) && isGenOFSVar(val)) {
+  if (oz_isVar(val) && oz_isKinded(val) && isGenOFSVar(val)) {
     OzOFVariable *ofsvar = tagged2GenOFSVar(val);
     if (patArity->isTuple()) {
       if (ofsvar->disentailed(tagged2Literal(patLabel),patArity->getWidth())) {
@@ -1914,11 +1919,11 @@ static OZ_Return bombArith(char *type)
 }
 
 #define suspendTest(A,B,test,type)                      \
-  if (oz_isVariable(A)) {                                       \
-    if (oz_isVariable(B) || test(B)) { return SUSPEND; }        \
+  if (oz_isVar(A)) {                                    \
+    if (oz_isVar(B) || test(B)) { return SUSPEND; }     \
     return bombArith(type);                             \
   }                                                     \
-  if (oz_isVariable(B)) {                                       \
+  if (oz_isVar(B)) {                                    \
     if (oz_isNumber(A)) { return SUSPEND; }             \
   }                                                     \
   return bombArith(type);
@@ -1963,8 +1968,8 @@ static OZ_Return suspendOnInts(TaggedRef A, TaggedRef B)
 // Float x Float -> Float
 OZ_Return BIfdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+  DEREF(A,_1);
+  DEREF(B,_2);
   if (oz_isFloat(A) && oz_isFloat(B)) {
     out = oz_float(floatValue(A) / floatValue(B));
     return PROCEED;
@@ -1976,20 +1981,20 @@ OZ_Return BIfdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 // Int x Int -> Int
 #define BIGOP(op)                                       \
   if (oz_isBigInt(A)) {                                 \
-    if (oz_isBigInt(B)) {                                       \
+    if (oz_isBigInt(B)) {                               \
       out = tagged2BigInt(A)->op(tagged2BigInt(B));     \
       return PROCEED;                                   \
     }                                                   \
-    if (isSmallIntTag(tagB)) {                          \
-      BigInt *b = new BigInt(tagged2SmallInt(B));               \
+    if (oz_isSmallInt(B)) {                             \
+      BigInt *b = new BigInt(tagged2SmallInt(B));       \
       out = tagged2BigInt(A)->op(b);                    \
       b->dispose();                                     \
       return PROCEED;                                   \
     }                                                   \
   }                                                     \
   if (oz_isBigInt(B)) {                                 \
-    if (isSmallIntTag(tagA)) {                          \
-      BigInt *a = new BigInt(tagged2SmallInt(A));               \
+    if (oz_isSmallInt(A)) {                             \
+      BigInt *a = new BigInt(tagged2SmallInt(A));       \
       out = a->op(tagged2BigInt(B));                    \
       a->dispose();                                     \
       return PROCEED;                                   \
@@ -1999,18 +2004,18 @@ OZ_Return BIfdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 // Integer x Integer -> Integer
 OZ_Return BIdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+  DEREF(A,_1);
+  DEREF(B,_2);
 
-  if (isSmallIntTag(tagB) && tagged2SmallInt(B) == 0) {
-    if (isSmallIntTag(tagA) || oz_isBigInt(A)) {
+  if (oz_isSmallInt(B) && tagged2SmallInt(B) == 0) {
+    if (oz_isSmallInt(A) || oz_isBigInt(A)) {
       return oz_raise(E_ERROR,E_KERNEL,"div0",1,A);
     } else {
       return bombArith("Int");
     }
   }
 
-  if (isSmallIntTag(tagA) && isSmallIntTag(tagB)) {
+  if (oz_isSmallInt(A) && oz_isSmallInt(B)) {
     out = makeTaggedSmallInt(tagged2SmallInt(A) / tagged2SmallInt(B));
     return PROCEED;
   }
@@ -2021,18 +2026,18 @@ OZ_Return BIdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 // Integer x Integer -> Integer
 OZ_Return BImodInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+  DEREF(A,_1);
+  DEREF(B,_2);
 
-  if (isSmallIntTag(tagB) && (tagged2SmallInt(B) == 0)) {
-    if (isSmallIntTag(tagA) || oz_isBigInt(A)) {
+  if (oz_isSmallInt(B) && (tagged2SmallInt(B) == 0)) {
+    if (oz_isSmallInt(A) || oz_isBigInt(A)) {
       return oz_raise(E_ERROR,E_KERNEL,"mod0",1,A);
     } else {
       return bombArith("Int");
     }
   }
 
-  if (isSmallIntTag(tagA) && isSmallIntTag(tagB)) {
+  if (oz_isSmallInt(A) && oz_isSmallInt(B)) {
     out = makeTaggedSmallInt(tagged2SmallInt(A) % tagged2SmallInt(B));
     return PROCEED;
   }
@@ -2060,10 +2065,10 @@ int multOverflow(int a, int b)
 
 OZ_Return BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+  DEREF(A,_1);
+  DEREF(B,_2);
 
-  if (isSmallIntTag(tagA) && isSmallIntTag(tagB)) {
+  if (oz_isSmallInt(A) && oz_isSmallInt(B)) {
     int valA = tagged2SmallInt(A);
     int valB = tagged2SmallInt(B);
     if ( multOverflow(valA,valB) ) {
@@ -2090,10 +2095,10 @@ OZ_Return BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 
 OZ_Return BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  DEREF(A,_1,_11);
-  DEREF(B,_2,_22);
+  DEREF(A,_1);
+  DEREF(B,_2);
 
-  if ( oz_isSmallInt(A) && oz_isSmallInt(B) ) {
+  if (oz_isSmallInt(A) && oz_isSmallInt(B)) {
     out = oz_int(tagged2SmallInt(A) - tagged2SmallInt(B));
     return PROCEED;
   }
@@ -2104,18 +2109,16 @@ OZ_Return BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
 
 
-  TypeOfTerm tagA = tagTypeOf(A);
-  TypeOfTerm tagB = tagTypeOf(B);
   BIGOP(sub);
   return suspendOnNumbers(A,B);
 }
 
 OZ_Return BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  DEREF(A,_1,_11);
-  DEREF(B,_2,_22);
+  DEREF(A,_1);
+  DEREF(B,_2);
 
-  if ( oz_isSmallInt(A) && oz_isSmallInt(B) ) {
+  if (oz_isSmallInt(A) && oz_isSmallInt(B)) {
     out = oz_int(tagged2SmallInt(A) + tagged2SmallInt(B));
     return PROCEED;
   }
@@ -2125,8 +2128,6 @@ OZ_Return BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
     return PROCEED;
   }
 
-  TypeOfTerm tagA = tagTypeOf(A);
-  TypeOfTerm tagB = tagTypeOf(B);
   BIGOP(add);
   return suspendOnNumbers(A,B);
 }
@@ -2140,9 +2141,9 @@ OZ_Return BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 // unary minus: Number -> Number
 OZ_Return BIuminusInline(TaggedRef A, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
+  A = oz_deref(A);
 
-  if (isSmallIntTag(tagA)) {
+  if (oz_isSmallInt(A)) {
     out = makeTaggedSmallInt(-tagged2SmallInt(A));
     return PROCEED;
   }
@@ -2157,7 +2158,7 @@ OZ_Return BIuminusInline(TaggedRef A, TaggedRef &out)
     return PROCEED;
   }
 
-  if (isVariableTag(tagA)){
+  if (oz_isVar(A)){
     return SUSPEND;
   }
 
@@ -2167,9 +2168,9 @@ OZ_Return BIuminusInline(TaggedRef A, TaggedRef &out)
 
 OZ_Return BIabsInline(TaggedRef A, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
+  DEREF(A,_1);
 
-  if (isSmallIntTag(tagA)) {
+  if (oz_isSmallInt(A)) {
     int i = tagged2SmallInt(A);
     out = (i >= 0) ? A : makeTaggedSmallInt(-i);
     return PROCEED;
@@ -2187,7 +2188,7 @@ OZ_Return BIabsInline(TaggedRef A, TaggedRef &out)
     return PROCEED;
   }
 
-  if (isVariableTag(tagA)){
+  if (oz_isVar(A)){
     return SUSPEND;
   }
 
@@ -2197,9 +2198,9 @@ OZ_Return BIabsInline(TaggedRef A, TaggedRef &out)
 // add1(X) --> X+1
 OZ_Return BIadd1Inline(TaggedRef A, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
+  DEREF(A,_1);
 
-  if (isSmallIntTag(tagA)) {
+  if (oz_isSmallInt(A)) {
     /* INTDEP */
     int res = (int)A + (1<<TAG_SIZE);
     if ((int)A < res) {
@@ -2214,9 +2215,9 @@ OZ_Return BIadd1Inline(TaggedRef A, TaggedRef &out)
 // sub1(X) --> X-1
 OZ_Return BIsub1Inline(TaggedRef A, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
+  DEREF(A,_1);
 
-  if (isSmallIntTag(tagA)) {
+  if (oz_isSmallInt(A)) {
     /* INTDEP */
     int res = (int)A - (1<<TAG_SIZE);
     if ((int)A > res) {
@@ -2267,7 +2268,7 @@ OZ_Return bigtest(TaggedRef A, TaggedRef B,
       return res;
     }
   }
-  if (oz_isVariable(A) || oz_isVariable(B))
+  if (oz_isVar(A) || oz_isVar(B))
     return SUSPEND;
 
   oz_typeError(-1,"int, float or atom\nuniformly for all arguments");
@@ -2278,117 +2279,96 @@ OZ_Return bigtest(TaggedRef A, TaggedRef B,
 
 OZ_Return BIminInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+  DEREF(A,_1);
+  DEREF(B,_2);
 
-  if (tagA == tagB) {
-    switch(tagA) {
-    case TAG_SMALLINT:
-      out = (smallIntLess(A,B) ? A : B);
-      return PROCEED;
-    case TAG_LITERAL:
-      if (oz_isAtom(A) && oz_isAtom(B)) {
-        out = (strcmp(tagged2Literal(A)->getPrintName(),
-                      tagged2Literal(B)->getPrintName()) < 0)
-          ? A : B;
-        return PROCEED;
-      }
-      oz_typeError(-1,"Comparable");
-    case TAG_CONST:
-      if (oz_isFloat(A) && oz_isFloat(B)) {
-        out = (floatValue(A) < floatValue(B)) ? A : B;
-        return PROCEED;
-      }
-      break;
-    default:
-      break;
+  if (oz_isSmallInt(A) && oz_isSmallInt(B)) {
+    out = (smallIntLess(A,B) ? A : B);
+    return PROCEED;
+  }
+  if (oz_isAtom(A) && oz_isAtom(B)) {
+    out = (strcmp(tagged2Literal(A)->getPrintName(),
+                  tagged2Literal(B)->getPrintName()) < 0)
+      ? A : B;
+    return PROCEED;
+  }
+  if (oz_isFloat(A) && oz_isFloat(B)) {
+    out = (floatValue(A) < floatValue(B)) ? A : B;
+    return PROCEED;
+  }
+  if (oz_isInt(A) && oz_isInt(B)) {
+    OZ_Return ret = bigtest(A,B,bigintLess);
+    switch (ret) {
+    case PROCEED: out = A; return PROCEED;
+    case FAILED:  out = B; return PROCEED;
+    case RAISE:   return RAISE;
+    default:      break;
     }
   }
+  if (oz_isVar(A) || oz_isVar(B))
+    return suspendOnNumbersAndAtoms(A,B);
 
-
-  OZ_Return ret = bigtest(A,B,bigintLess);
-  switch (ret) {
-  case PROCEED: out = A; return PROCEED;
-  case FAILED:  out = B; return PROCEED;
-  case RAISE:   return RAISE;
-  default:      break;
-  }
-
-  return suspendOnNumbersAndAtoms(A,B);
+  oz_typeError(-1,"Comparable");
 }
 
 
 /* code adapted from min */
 OZ_Return BImaxInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+  DEREF(A,_1);
+  DEREF(B,_2);
 
-  if (tagA == tagB) {
-    switch(tagA) {
-    case TAG_SMALLINT:
-      out = (smallIntLess(A,B) ? B : A);
-      return PROCEED;
-    case TAG_CONST:
-      if (oz_isFloat(A) && oz_isFloat(B)) {
-        out = (floatValue(A) < floatValue(B)) ? B : A;
-        return PROCEED;
-      }
-      break;
-    case TAG_LITERAL:
-      if (oz_isAtom(A) && oz_isAtom(B)) {
-        out = (strcmp(tagged2Literal(A)->getPrintName(),
-                      tagged2Literal(B)->getPrintName()) < 0)
-          ? B : A;
-        return PROCEED;
-      }
-      oz_typeError(-1,"Comparable");
-
-    default: break;
+  if (oz_isSmallInt(A) && oz_isSmallInt(B)) {
+    out = (smallIntLess(A,B) ? B : A);
+    return PROCEED;
+  }
+  if (oz_isAtom(A) && oz_isAtom(B)) {
+    out = (strcmp(tagged2Literal(A)->getPrintName(),
+                  tagged2Literal(B)->getPrintName()) < 0)
+      ? B : A;
+    return PROCEED;
+  }
+  if (oz_isFloat(A) && oz_isFloat(B)) {
+    out = (floatValue(A) < floatValue(B)) ? B : A;
+    return PROCEED;
+  }
+  if (oz_isInt(A) && oz_isInt(B)) {
+    OZ_Return ret = bigtest(A,B,bigintLess);
+    switch (ret) {
+    case PROCEED: out = B; return PROCEED;
+    case FAILED:  out = A; return PROCEED;
+    case RAISE:   return RAISE;
+    default:      break;
     }
   }
+  if (oz_isVar(A) || oz_isVar(B))
+    return suspendOnNumbersAndAtoms(A,B);
 
-  OZ_Return ret = bigtest(A,B,bigintLess);
-  switch (ret) {
-  case PROCEED: out = B; return PROCEED;
-  case FAILED:  out = A; return PROCEED;
-  case RAISE:   return RAISE;
-  default:      break;
-  }
-
-  return suspendOnNumbersAndAtoms(A,B);
+  oz_typeError(-1,"Comparable");
 }
 
 
 OZ_Return BIlessInline(TaggedRef A, TaggedRef B)
 {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+  DEREF(A,_1);
+  DEREF(B,_2);
 
-  if (tagA == tagB) {
-    if (isSmallIntTag(tagA)) {
-      return (smallIntLess(A,B) ? PROCEED : FAILED);
-    }
-
-    if (oz_isFloat(A) && oz_isFloat(B)) {
-      return (floatValue(A) < floatValue(B)) ? PROCEED : FAILED;
-    }
-
-    if (isLiteralTag(tagA)) {
-      if (oz_isAtom(A) && oz_isAtom(B)) {
-        return (strcmp(tagged2Literal(A)->getPrintName(),
-                       tagged2Literal(B)->getPrintName()) < 0)
-          ? PROCEED : FAILED;
-      }
-      oz_typeError(-1,"Comparable");
-    }
+  if (oz_isSmallInt(A) && oz_isSmallInt(B))
+    return (smallIntLess(A,B) ? PROCEED : FAILED);
+  if (oz_isAtom(A) && oz_isAtom(B))
+    return (strcmp(tagged2Literal(A)->getPrintName(),
+                   tagged2Literal(B)->getPrintName()) < 0)
+      ? PROCEED : FAILED;
+  if (oz_isFloat(A) && oz_isFloat(B))
+    return (floatValue(A) < floatValue(B)) ? PROCEED : FAILED;
+  if (oz_isInt(A) && oz_isInt(B)) {
+    OZ_Return ret = bigtest(A,B,bigintLess);
+    if (ret!=SUSPEND)
+      return ret;
   }
-
-  OZ_Return ret = bigtest(A,B,bigintLess);
-  if (ret!=SUSPEND)
-    return ret;
-
-  return suspendOnNumbersAndAtoms(A,B);
+  if (oz_isVar(A) || oz_isVar(B))
+    return suspendOnNumbersAndAtoms(A,B);
+  oz_typeError(-1,"Comparable");
 }
 
 
@@ -2415,35 +2395,25 @@ OZ_Return BIgreatInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 
 OZ_Return BIleInline(TaggedRef A, TaggedRef B)
 {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+  DEREF(A,_1);
+  DEREF(B,_2);
 
-  if (tagA == tagB) {
-
-    if (isSmallIntTag(tagA)) {
-      return (smallIntLE(A,B) ? PROCEED : FAILED);
-    }
-
-    if (oz_isFloat(A) && oz_isFloat(B)) {
-      return (floatValue(A) <= floatValue(B)) ? PROCEED : FAILED;
-    }
-
-    if (isLiteralTag(tagA)) {
-      if (oz_isAtom(A) && oz_isAtom(B)) {
-        return (strcmp(tagged2Literal(A)->getPrintName(),
-                       tagged2Literal(B)->getPrintName()) <= 0)
-          ? PROCEED : FAILED;
-      }
-      oz_typeError(-1,"Comparable");
-    }
-
+  if (oz_isSmallInt(A) && oz_isSmallInt(B))
+    return (smallIntLE(A,B) ? PROCEED : FAILED);
+  if (oz_isAtom(A) && oz_isAtom(B))
+    return (strcmp(tagged2Literal(A)->getPrintName(),
+                   tagged2Literal(B)->getPrintName()) <= 0)
+      ? PROCEED : FAILED;
+  if (oz_isFloat(A) && oz_isFloat(B))
+    return (floatValue(A) <= floatValue(B)) ? PROCEED : FAILED;
+  if (oz_isInt(A) && oz_isInt(B)) {
+    OZ_Return ret = bigtest(A,B,bigintLe);
+    if (ret!=SUSPEND)
+      return ret;
   }
-
-  OZ_Return ret = bigtest(A,B,bigintLe);
-  if (ret!=SUSPEND)
-    return ret;
-
-  return suspendOnNumbersAndAtoms(A,B);
+  if (oz_isVar(A) || oz_isVar(B))
+    return suspendOnNumbersAndAtoms(A,B);
+  oz_typeError(-1,"Comparable");
 }
 
 
@@ -2483,7 +2453,7 @@ OZ_Return BILessOrLessEq(Bool callLess, TaggedRef A, TaggedRef B)
 
 OZ_Return BIintToFloatInline(TaggedRef A, TaggedRef &out)
 {
-  DEREF(A,_1,_2);
+  DEREF(A,_1);
   if (oz_isSmallInt(A)) {
     out = oz_float((double)tagged2SmallInt(A));
     return PROCEED;
@@ -2494,7 +2464,7 @@ OZ_Return BIintToFloatInline(TaggedRef A, TaggedRef &out)
     return PROCEED;
   }
 
-  if (oz_isVariable(A)) {
+  if (oz_isVar(A)) {
     return SUSPEND;
   }
 
@@ -2524,7 +2494,7 @@ double ozround(double in) {
 OZ_Return BIfloatToIntInline(TaggedRef A, TaggedRef &out) {
   A=oz_deref(A);
 
-  if (oz_isVariable(A))
+  if (oz_isVar(A))
     return SUSPEND;
 
   if (oz_isFloat(A)) {
@@ -2591,9 +2561,9 @@ OZ_BI_define(BIintToString, 1,1)
 
 OZ_Return BIisFloatInline(TaggedRef num)
 {
-  DEREF(num,_,tag);
+  DEREF(num,_);
 
-  if (isVariableTag(tag)) {
+  if (oz_isVar(num)) {
     return SUSPEND;
   }
 
@@ -2604,9 +2574,9 @@ OZ_DECLAREBOOLFUN1(BIisFloatB,BIisFloatInline)
 
 OZ_Return BIisIntInline(TaggedRef num)
 {
-  DEREF(num,_,tag);
+  DEREF(num,_);
 
-  if (isVariableTag(tag)) {
+  if (oz_isVar(num)) {
     return SUSPEND;
   }
 
@@ -2619,9 +2589,9 @@ OZ_DECLAREBOOLFUN1(BIisIntB,BIisIntInline)
 
 OZ_Return BIisNumberInline(TaggedRef num)
 {
-  DEREF(num,_,tag);
+  DEREF(num,_);
 
-  if (isVariableTag(tag)) {
+  if (oz_isVar(num)) {
     return SUSPEND;
   }
 
@@ -2639,9 +2609,9 @@ OZ_DECLAREBOOLFUN1(BIisNumberB,BIisNumberInline)
 #define FLOATFUN(Fun,BIName,InlineName)                 \
 OZ_Return InlineName(TaggedRef AA, TaggedRef &out)      \
 {                                                       \
-  DEREF(AA,_,tag);                                      \
+  DEREF(AA,_);                                          \
                                                         \
-  if (isVariableTag(tag)) {                             \
+  if (oz_isVar(AA)) {                                   \
     return SUSPEND;                                     \
   }                                                     \
                                                         \
@@ -2698,8 +2668,8 @@ FLOATFUN(atanh, BIatanh, BIinlineAtanh)
 
 OZ_Return BIfPowInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+  DEREF(A,_1);
+  DEREF(B,_2);
 
   if (oz_isFloat(A) && oz_isFloat(B)) {
     out = oz_float(pow(floatValue(A),floatValue(B)));
@@ -2710,8 +2680,8 @@ OZ_Return BIfPowInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 
 OZ_Return BIfModInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+  DEREF(A,_1);
+  DEREF(B,_2);
 
   if (oz_isFloat(A) && oz_isFloat(B)) {
     out = oz_float(fmod(floatValue(A),floatValue(B)));
@@ -2722,8 +2692,8 @@ OZ_Return BIfModInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 
 OZ_Return BIatan2Inline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+  DEREF(A,_1);
+  DEREF(B,_2);
 
   if (oz_isFloat(A) && oz_isFloat(B)) {
     out = oz_float(atan2(floatValue(A),floatValue(B)));
@@ -2830,7 +2800,7 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
     OZ_Term lt     = oz_cons(am.getCurrentOptVar(), newFut);
     OZ_Term oldFut = port->exchangeStream(newFut);
 
-    DEREF(oldFut,ptr,_);
+    DEREF(oldFut,ptr);
     oz_bindFuture(ptr,lt);
 
     // might raise exception if val is non exportable
@@ -2956,7 +2926,7 @@ OZ_Return accessCell(OZ_Term cell,OZ_Term &out)
 
 OZ_Return exchangeCell(OZ_Term cell, OZ_Term newVal, OZ_Term &oldVal)
 {
-  CHECK_NONVAR(newVal);
+  Assert(!oz_isVar(newVal));
   Tertiary *tert = (Tertiary *) tagged2Const(cell);
   if(tert->isLocal()){
     CellLocal *cellLocal=(CellLocal*)tert;
@@ -3146,7 +3116,7 @@ OZ_BI_define(BIcontrolVarHandler,1,0)
     TaggedRef aux = varlist;
     while (oz_isCons(aux)) {
       TaggedRef car = oz_head(aux);
-      if (oz_isVariable(oz_deref(car))) {
+      if (oz_isVar(oz_deref(car))) {
         am.addSuspendVarList(car);
         aux = oz_tail(aux);
       } else {
@@ -3161,7 +3131,7 @@ OZ_BI_define(BIcontrolVarHandler,1,0)
 no_suspend:
   for ( ; oz_isCons(varlist); varlist = oz_deref(oz_tail(varlist))) {
     TaggedRef car = oz_deref(oz_head(varlist));
-    if (oz_isVariable(car))
+    if (oz_isVar(car))
       continue;
     if (oz_isLiteral(car) && oz_eq(car,NameUnit))
       return PROCEED;
@@ -3424,7 +3394,7 @@ OZ_BI_define(BIcopyRecord,1,1)
 {
   oz_declareNonvarIN(0,rec);
 
-  switch (recTag) {
+  switch (tagTypeOf(rec)) {
   case TAG_SRECORD:
     {
       SRecord *rec0 = tagged2SRecord(rec);
@@ -3461,7 +3431,7 @@ SRecord *getRecordFromState(RecOrCell state)
     }
     if(sec->getState()==Cell_Lock_Valid) {
       TaggedRef old=oz_deref(sec->getContents());
-      if (!oz_isVariable(old))
+      if (!oz_isVar(old))
         return tagged2SRecord(old);
     }
   }
@@ -3476,7 +3446,7 @@ SRecord *getRecordFromState(RecOrCell state)
 
 inline
 OZ_Return stateAt(RecOrCell state, OZ_Term fea, OZ_Term &old){
-  Assert(!oz_isVariable(fea));
+  Assert(!oz_isVar(fea));
   SRecord *aux = getRecordFromState(state);
   if (aux){
     TaggedRef t;
@@ -3501,7 +3471,7 @@ OZ_Return stateLevelError(TaggedRef fea,TaggedRef newVal){
 
 inline
 OZ_Return stateAssign(RecOrCell state, OZ_Term fea, OZ_Term neW){
-  Assert(!oz_isVariable(fea));
+  Assert(!oz_isVar(fea));
   SRecord *aux = getRecordFromState(state);
   if (aux){
     TaggedRef t;
@@ -3518,7 +3488,7 @@ OZ_Return stateAssign(RecOrCell state, OZ_Term fea, OZ_Term neW){
 
 inline
 OZ_Return stateExch(RecOrCell state, OZ_Term fea, OZ_Term &old, OZ_Term neW){
-  Assert(!oz_isVariable(fea));
+  Assert(!oz_isVar(fea));
   SRecord *aux = getRecordFromState(state);
   if (aux){
     TaggedRef t=aux->getFeature(fea);
@@ -3538,7 +3508,7 @@ OZ_Return stateExch(RecOrCell state, OZ_Term fea, OZ_Term &old, OZ_Term neW){
 //perdio interface to engine inline object functions
 SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea,OZ_Term &val)
 {
-  Assert(!oz_isVariable(fea));
+  Assert(!oz_isVar(fea));
   SRecord *aux=getRecordFromState(state);
   if(aux){
     return aux;}
@@ -3566,9 +3536,9 @@ SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea,OZ_Term &val)
 //perdio
 OZ_Return atInlineRedo(TaggedRef fea, TaggedRef out)
 {
-  DEREF(fea, feaPtr, feaTag);
+  DEREF(fea, feaPtr);
   if (!oz_isFeature(fea)) {
-    if (oz_isVariable(fea)) {
+    if (oz_isVar(fea)) {
       oz_suspendOnPtr(feaPtr);
     }
     oz_typeError(0,"Feature");
@@ -3584,9 +3554,9 @@ OZ_BI_define(BIat,1,1)
 {
   oz_declareIN(0,fea);
 
-  DEREF(fea, feaPtr, feaTag);
+  DEREF(fea, feaPtr);
   if (!oz_isFeature(fea)) {
-    if (oz_isVariable(fea)) {
+    if (oz_isVar(fea)) {
       oz_suspendOnPtr(feaPtr);
     }
     oz_typeError(0,"Feature");
@@ -3608,9 +3578,9 @@ OZ_BI_define(BIassign,2,0)
   oz_declareIN(0,fea);
   oz_declareIN(1,value);
 
-  DEREF(fea, feaPtr, feaTag);
+  DEREF(fea, feaPtr);
   if (!oz_isFeature(fea)) {
-    if (oz_isVariable(fea)) {
+    if (oz_isVar(fea)) {
       oz_suspendOnPtr(feaPtr);
     }
     oz_typeError(0,"Feature");
@@ -3629,10 +3599,10 @@ OZ_BI_define(BIexchange,2,1)
   oz_declareIN(0,fea);
   oz_declareIN(1,newVal);
 
-  DEREF(fea, feaPtr, feaTag);
+  DEREF(fea, feaPtr);
 
   if (!oz_isFeature(fea)) {
-    if (oz_isVariable(fea)) {
+    if (oz_isVar(fea)) {
       oz_suspendOnPtr(feaPtr);
       return SUSPEND;
     }
@@ -3672,18 +3642,18 @@ Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, Board *b)
 
 
 OZ_BI_define(BInewClass,3,1) {
-  OZ_Term features   = OZ_in(0); { DEREF(features,_1,_2); }
-  OZ_Term locking    = OZ_in(1); { DEREF(locking,_1,_2); }
-  OZ_Term sited      = OZ_in(2); { DEREF(sited,_1,_2); }
+  OZ_Term features   = OZ_in(0); { DEREF(features,_1); }
+  OZ_Term locking    = OZ_in(1); { DEREF(locking,_1); }
+  OZ_Term sited      = OZ_in(2); { DEREF(sited,_1); }
 
   SRecord * fr = tagged2SRecord(features);
 
   OZ_Term fastmeth   = fr->getFeature(NameOoFastMeth);
-  { DEREF(fastmeth,_1,_2); }
+  { DEREF(fastmeth,_1); }
   OZ_Term ufeatures  = fr->getFeature(NameOoFeat);
-  { DEREF(ufeatures,_1,_2); }
+  { DEREF(ufeatures,_1); }
   OZ_Term defmethods = fr->getFeature(NameOoDefaults);
-  { DEREF(defmethods,_1,_2); }
+  { DEREF(defmethods,_1); }
 
   TaggedRef uf = oz_isSRecord(ufeatures) ? ufeatures : makeTaggedNULL();
 
@@ -3743,8 +3713,8 @@ OZ_BI_define(BIsend,3,0)
 
 OZ_Return BIisObjectInline(TaggedRef t)
 {
-  DEREF(t,_1,_2);
-  if (oz_isVariable(t)) return SUSPEND;
+  DEREF(t,_1);
+  if (oz_isVar(t)) return SUSPEND;
   return oz_isObject(t) ?  PROCEED : FAILED;
 }
 
@@ -3753,8 +3723,8 @@ OZ_DECLAREBOOLFUN1(BIisObjectB,BIisObjectInline)
 
 OZ_Return getClassInline(TaggedRef t, TaggedRef &out)
 {
-  DEREF(t,_,tag);
-  if (isVariableTag(tag)) return SUSPEND;
+  DEREF(t,_);
+  if (oz_isVar(t)) return SUSPEND;
   if (!oz_isObject(t)) {
     oz_typeError(0,"Object");
   }
@@ -3818,22 +3788,22 @@ OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
 
 OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
 {
-  { DEREF(cla,_1,_2); }
-  if (oz_isVariable(cla)) return SUSPEND;
+  { DEREF(cla,_1); }
+  if (oz_isVar(cla)) return SUSPEND;
   if (!oz_isClass(cla)) {
     oz_typeError(0,"Class");
   }
 
   ObjectClass *realclass = tagged2ObjectClass(cla);
   TaggedRef attr = realclass->classGetFeature(NameOoAttr);
-  { DEREF(attr,_1,_2); }
-  if (oz_isVariable(attr)) return SUSPEND;
+  { DEREF(attr,_1); }
+  if (oz_isVar(attr)) return SUSPEND;
 
   TaggedRef attrclone = cloneObjectRecord(attr,NO);
 
   TaggedRef freefeat = realclass->classGetFeature(NameOoFreeFeat);
-  { DEREF(freefeat,_1,_2); }
-  Assert(!oz_isVariable(freefeat));
+  { DEREF(freefeat,_1); }
+  Assert(!oz_isVar(freefeat));
   TaggedRef freefeatclone = cloneObjectRecord(freefeat,OK);
 
   out = makeObject(attrclone, freefeatclone, realclass);

@@ -36,18 +36,16 @@
  * Macros
  ******************************************************************** */
 
-#define NONVAR(X,term)                          \
-TaggedRef term = X;                             \
-{ DEREF(term,_myTermPtr,_myTag);                \
-  if (isVariableTag(_myTag)) return SUSPEND;    \
+#define NONVAR(X,term)                  \
+TaggedRef term = X;                     \
+{ DEREF(term,_myTermPtr);               \
+  if (oz_isVar(term)) return SUSPEND;   \
 }
 
 // Suspend on free variables
-#define SUSPEND_ON_NONKINDED_VAR(X,term,tag)    \
+#define SUSPEND_ON_NONKINDED_VAR(X,term)        \
 TaggedRef term = X;                             \
-TypeOfTerm tag;                                 \
-{ DEREF(term,_myTermPtr,myTag);                 \
-  tag = myTag;                                  \
+{ DEREF(term,_myTermPtr);                       \
   if (oz_isNonKinded(term)) return SUSPEND;     \
 }
 
@@ -160,7 +158,7 @@ register OZ_Term VAR = OZ_in(ARG);              \
 
 #define oz_declareDerefIN(ARG,VAR)              \
 oz_declareIN(ARG,VAR);                          \
-DEREF(VAR,VAR ## Ptr,VAR ## Tag);
+DEREF(VAR,VAR ## Ptr);
 
 #define oz_declareSafeDerefIN(ARG,VAR)          \
 oz_declareIN(ARG,VAR);                          \
@@ -169,7 +167,7 @@ VAR=oz_safeDeref(VAR);
 #define oz_declareNonvarIN(ARG,VAR)             \
 oz_declareDerefIN(ARG,VAR);                     \
 {                                               \
-  if (oz_isVariable(VAR)) {                     \
+  if (oz_isVar(VAR)) {                          \
     oz_suspendOnPtr(VAR ## Ptr);                \
   }                                             \
 }
@@ -251,9 +249,9 @@ char *VAR;                                      \
   }
 
 
-#define OZ_getINDeref(N, V, VPTR, VTAG)         \
+#define OZ_getINDeref(N, V, VPTR)               \
   OZ_Term V = OZ_in(N);                         \
-  DEREF(V, VPTR, VTAG);
+  DEREF(V, VPTR);
 
 /* -----------------------------------------------------------------------
  * suspend
@@ -266,8 +264,8 @@ char *VAR;                                      \
 
 #define oz_suspendOn(vin) {                     \
   OZ_Term v=vin;                                \
-  DEREF(v,vPtr,___1);                           \
-  Assert(oz_isVariable(v));                     \
+  DEREF(v,vPtr);                                \
+  Assert(oz_isVar(v));                          \
   am.addSuspendVarList(vPtr);                   \
   return SUSPEND;                               \
 }
@@ -279,13 +277,13 @@ char *VAR;                                      \
 
 #define oz_suspendOn2(v1in,v2in) {              \
   OZ_Term v1=v1in;                              \
-  DEREF(v1,v1Ptr,___1);                         \
-  if (oz_isVariable(v1)) {                              \
+  DEREF(v1,v1Ptr);                              \
+  if (oz_isVar(v1)) {                           \
     am.addSuspendVarList(v1Ptr);                \
   }                                             \
   OZ_Term v2=v2in;                              \
-  DEREF(v2,v2Ptr,___2);                         \
-  if (oz_isVariable(v2)) {                              \
+  DEREF(v2,v2Ptr);                              \
+  if (oz_isVar(v2)) {                           \
     am.addSuspendVarList(v2Ptr);                \
   }                                             \
   return SUSPEND;                               \
@@ -293,18 +291,18 @@ char *VAR;                                      \
 
 #define oz_suspendOn3(v1in,v2in,v3in) {         \
   OZ_Term v1=v1in;                              \
-  DEREF(v1,v1Ptr,___1);                         \
-  if (oz_isVariable(v1)) {                              \
+  DEREF(v1,v1Ptr);                              \
+  if (oz_isVar(v1)) {                           \
     am.addSuspendVarList(v1Ptr);                \
   }                                             \
   OZ_Term v2=v2in;                              \
-  DEREF(v2,v2Ptr,___2);                         \
-  if (oz_isVariable(v2)) {                              \
+  DEREF(v2,v2Ptr);                              \
+  if (oz_isVar(v2)) {                           \
     am.addSuspendVarList(v2Ptr);                \
   }                                             \
   OZ_Term v3=v3in;                              \
-  DEREF(v3,v3Ptr,___3);                         \
-  if (oz_isVariable(v3)) {                              \
+  DEREF(v3,v3Ptr);                              \
+  if (oz_isVar(v3)) {                           \
     am.addSuspendVarList(v3Ptr);                \
   }                                             \
   return SUSPEND;                               \

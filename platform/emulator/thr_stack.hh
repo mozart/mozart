@@ -168,7 +168,7 @@ public:
                 TaggedRef arg2, TaggedRef arg3, TaggedRef arg4);
 
   void pushCallNoCopy(TaggedRef pred, RefsArray  x) {
-    pushFrame(C_CALL_CONT_Ptr, (void *) pred, makeTaggedMiscp(x));
+    pushFrame(C_CALL_CONT_Ptr, (void *) pred, makeTaggedVerbatim(x));
   }
 
   void pushCall(TaggedRef pred, RefsArray  x, int i) {

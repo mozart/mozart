@@ -246,14 +246,12 @@ Bool varIsOFSvar(TaggedRef term)
 inline
 Bool isGenOFSVar(TaggedRef term)
 {
-    GCDEBUG(term);
     return oz_isVar(term) && varIsOFSvar(term);
 }
 
 inline
 OzOFVariable* tagged2GenOFSVar(TaggedRef term)
 {
-    GCDEBUG(term);
 #ifdef DEBUG_OFS
     if(isGenOFSVar(term) == NO)
         OZ_error("ofs variable expected");

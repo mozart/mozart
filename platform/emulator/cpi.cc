@@ -53,7 +53,7 @@ int staticSuspendVarsNumber = 0;
 
 void OZ_CPIVar::dropParameter(void)
 {
-  if (oz_isVariable(var)) {
+  if (oz_isVar(var)) {
     OzVariable *ov    = tagged2Var(var);
     int isNonEncapTagged = ov->isParamNonEncapTagged();
     int isEncapTagged    = ov->isParamEncapTagged();

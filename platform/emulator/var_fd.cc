@@ -296,7 +296,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 {
   DEBUG_CONSTRAIN_VAR(("tellBasicConstraintFD "));
 
-  DEREF(v, vptr, vtag);
+  DEREF(v, vptr);
 
   if (fd && (*fd == fd_empty)) {
     goto failed;
@@ -413,7 +413,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       bindGlobalVarToValue(vptr, makeTaggedSmallInt(dom));
     }
     goto proceed;
-  } else if (isSmallIntTag(vtag)) {
+  } else if (oz_isSmallInt(v)) {
     //
     // tell finite domain constraint to a integer
     //
@@ -421,7 +421,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 
     if (fd->isIn(tagged2SmallInt(v)))
       goto proceed;
-  } else if (oz_isVariable(v)) {
+  } else if (oz_isVar(v)) {
     //
     // future stuff, no idea what is going on here
     TaggedRef newVar = oz_newVariable();

@@ -79,8 +79,8 @@ public:
   //
   void add(OZ_Term entity, int oti) {
     // kost@ : this is what we can deal with:
-    Assert((!oz_isRef(entity) && !oz_isVariable(entity)) ||
-           (oz_isRef(entity) && oz_isVariable(*tagged2Ref(entity))));
+    Assert((!oz_isRef(entity) && !oz_isVar(entity)) ||
+           (oz_isRef(entity) && oz_isVar(*tagged2Ref(entity))));
     Assert(find(entity) == RESOURCE_NOT_IN_TABLE);
     int hvalue;
     GenHashBaseKey *ghbk;
@@ -96,8 +96,8 @@ public:
   //
   int find(TaggedRef entity) {
     // kost@ : this is what we can deal with:
-    Assert((!oz_isRef(entity) && !oz_isVariable(entity)) ||
-           (oz_isRef(entity) && oz_isVariable(*tagged2Ref(entity))));
+    Assert((!oz_isRef(entity) && !oz_isVar(entity)) ||
+           (oz_isRef(entity) && oz_isVar(*tagged2Ref(entity))));
     int hvalue = hash(entity);
     GenHashNode *aux;
 
@@ -138,7 +138,7 @@ public:
         Assert(0);
 
         //
-      } if (oz_isRef(te) && !oz_isVariable(*tagged2Ref(te))) {
+      } if (oz_isRef(te) && !oz_isVar(*tagged2Ref(te))) {
         // bound variables can be (and should be) discarded as well;
         (void) htSub(hvalue, aux);
         goto repeat;

@@ -44,9 +44,9 @@ const char * oz_varGetName(OZ_Term v)
 
 void oz_varAddName(OZ_Term v, const char *nm)
 {
-  DEREF(v, vptr, vtag);
+  DEREF(v, vptr);
 
-  if (! oz_isVariable(vtag))
+  if (!oz_isVar(v))
     return;
   varNamer.addName(makeTaggedRef(vptr), nm);
 }
@@ -69,7 +69,7 @@ OZ_Term getCacForward(OZ_Term t)
   OZ_Term t_deref = oz_deref(t);
   return (oz_isVar(t_deref)
           ? makeTaggedRef(tagged2Var(t_deref)->cacGetFwd())
-          : (OZ_Term) tagged2GcUnmarked(t));
+          : (OZ_Term) tagged2UnmarkedPtr(t));
 }
 
 void GCollectDataNamer(const char * &)

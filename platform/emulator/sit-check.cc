@@ -87,7 +87,7 @@ static ScStack scStack;
  *
  */
 #define MARKVAR(u) \
-  scTrail.save((int *) u); *u=makeTaggedGcMark(NULL);
+  scTrail.save((int *) u); *u=makeTaggedMarkInt(0);
 
 #define MARKFIELD(d) \
   scTrail.save((int *) d->cacGetMarkField()); d->cacMark(NULL);

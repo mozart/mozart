@@ -78,14 +78,12 @@ void OzBoolVariable::installPropagators(OzBoolVariable * glob_var)
 inline
 Bool isGenBoolVar(TaggedRef term)
 {
-  GCDEBUG(term);
   return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_BOOL);
 }
 
 inline
 OzBoolVariable * tagged2GenBoolVar(TaggedRef term)
 {
-  GCDEBUG(term);
   return (OzBoolVariable *) tagged2Var(term);
 }
 

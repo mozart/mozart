@@ -70,15 +70,15 @@ void addFeatOFSSuspensionList(TaggedRef var,
 
       // Only add features if var and fvar are the same:
       TaggedRef fvar=prop->X;
-      DEREF(fvar,_1,_2);
+      DEREF(fvar,_1);
       if (var!=fvar) {
         suspList=suspList->getNext();
         continue;
       }
       // Only add features if the 'kill' variable is undetermined:
       TaggedRef killl=prop->K;
-      DEREF(killl,_,killTag);
-      if (!isVariableTag(killTag)) {
+      DEREF(killl,_);
+      if (!oz_isVar(killl)) {
         suspList=suspList->getNext();
         continue;
       }
@@ -101,20 +101,12 @@ void addFeatOFSSuspensionList(TaggedRef var,
         // FS is det.: tail of list must be bound to nil: (always succeeds)
         // Do *not* use unification to do this binding!
         TaggedRef tl=prop->FT;
-        DEREF(tl,tailPtr,tailTag);
-        switch (tailTag) {
-        case TAG_LITERAL:
+        DEREF(tl,tailPtr);
+        if (oz_isVar(tl)) {
+          OzVariable *ov = tagged2Var(tl);
+          oz_bindVar(ov, tailPtr, AtomNil);
+        } else {
           Assert(tl==AtomNil);
-          break;
-        case TAG_VAR:
-          {
-            // kost@ : there used to be a "case TAG_UVAR: DoBind(...);"
-            OzVariable *ov = tagged2Var(tl);
-            oz_bindVar(ov, tailPtr, AtomNil);
-            break;
-          }
-        default:
-          Assert(FALSE);
         }
       }
     }
@@ -459,8 +451,8 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   }
   // Must be literal or variable:
   TaggedRef tmp=label;
-  DEREF(tmp,_1,_2);
-  if (!oz_isLiteral(tmp) && !oz_isVariable(tmp)) {
+  DEREF(tmp,_1);
+  if (!oz_isLiteral(tmp) && !oz_isVar(tmp)) {
     pairs->free();
     return FALSE;
   }
@@ -526,7 +518,7 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
 // Return TRUE if OFS can't be constrained to l+tupleArity
 Bool OzOFVariable::disentailed(Literal *l, int tupleArity) {
     TaggedRef tmp=label;
-    DEREF(tmp,_1,_2);
+    DEREF(tmp,_1);
     if (oz_isLiteral(tmp) && !oz_eq(makeTaggedLiteral(l),tmp)) return TRUE;
     return (dynamictable->hasExtraFeatures(tupleArity));
 }
@@ -535,7 +527,7 @@ Bool OzOFVariable::disentailed(Literal *l, int tupleArity) {
 // Return TRUE if OFS can't be constrained to l+recordArity
 Bool OzOFVariable::disentailed(Literal *l, Arity *recordArity) {
     TaggedRef tmp=label;
-    DEREF(tmp,_1,_2);
+    DEREF(tmp,_1);
     if (oz_isLiteral(tmp) && !oz_eq(makeTaggedLiteral(l),tmp)) return TRUE;
     return (dynamictable->hasExtraFeatures(recordArity));
 }
@@ -546,7 +538,7 @@ Bool OzOFVariable::valid(TaggedRef val)
     if (!oz_isLiteral(val)) return FALSE;
     if (getWidth()>0) return FALSE;
     TaggedRef tmp=label;
-    DEREF(tmp,_1,_2);
+    DEREF(tmp,_1);
     if (oz_isLiteral(tmp) && !oz_eq(tmp,val)) return FALSE;
     return TRUE;
 }

@@ -32,13 +32,13 @@
 
 void OZ_FDIntVar::ask(OZ_Term v)
 {
-  Assert(oz_isRef(v) || !oz_isVariable(v));
+  Assert(oz_isRef(v) || !oz_isVar(v));
   //
-  DEREF(v, _vptr, vtag);
+  DEREF(v, _vptr);
   var = v;
   varPtr = _vptr;
   //
-  if (isSmallIntTag(vtag)) {
+  if (oz_isSmallInt(v)) {
     //
     // found integer
     //
@@ -77,13 +77,13 @@ void OZ_FDIntVar::ask(OZ_Term v)
 
 int OZ_FDIntVar::read(OZ_Term v)
 {
-  Assert(oz_isRef(v) || !oz_isVariable(v));
+  Assert(oz_isRef(v) || !oz_isVar(v));
   //
-  DEREF(v, _vptr, vtag);
+  DEREF(v, _vptr);
   var    = v;
   varPtr = _vptr;
   //
-  if (isSmallIntTag(vtag)) {
+  if (oz_isSmallInt(v)) {
     //
     // found integer
     //
@@ -247,13 +247,13 @@ int OZ_FDIntVar::read(OZ_Term v)
 
 int OZ_FDIntVar::readEncap(OZ_Term v)
 {
-  Assert(oz_isRef(v) || !oz_isVariable(v));
+  Assert(oz_isRef(v) || !oz_isVar(v));
   //
-  DEREF(v, _vptr, vtag);
+  DEREF(v, _vptr);
   var    = v;
   varPtr = _vptr;
   //
-  if (isSmallIntTag(vtag)) {
+  if (oz_isSmallInt(v)) {
     //
     // found integer
     //
@@ -340,7 +340,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
   //
   // this parameter has become an integer by a previous tell
   //
-  if (!oz_isVariable(*varPtr)) {
+  if (!oz_isVar(*varPtr)) {
     //
     goto oz_false;
     //

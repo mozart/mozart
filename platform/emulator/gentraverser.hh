@@ -321,7 +321,7 @@ public:
 
   //
   int rememberTerm(OZ_Term l) {
-    Assert(!oz_isVariable(l));
+    Assert(!oz_isVar(l));
     Assert(!oz_isRef(l));
     Assert(findTerm(l) == -1);
     int index = getSize();      // meets our needs...
@@ -329,7 +329,7 @@ public:
     return (index);
   }
   int findTerm(OZ_Term l) {
-    Assert(!oz_isVariable(l));
+    Assert(!oz_isVar(l));
     Assert(!oz_isRef(l));
     void *ret = htFind((intlong) l);
     return ((ret == htEmpty) ? -1 : (int) ToInt32(ret));
@@ -337,14 +337,14 @@ public:
 
   //
   int rememberVarLocation(OZ_Term *p) {
-    Assert(oz_isVariable(*p));
+    Assert(oz_isVar(*p));
     Assert(findVarLocation(p) == -1);
     int index = getSize();
     htAdd((intlong) p, ToPointer(index));
     return (index);
   }
   int findVarLocation(OZ_Term *p) {
-    Assert(oz_isVariable(*p));
+    Assert(oz_isVar(*p));
     void *ret = htFind((intlong) p);
     return ((ret == htEmpty) ? -1 : (int) ToInt32(ret));
   }
@@ -357,14 +357,15 @@ public:
   // entity!!!)
   int rememberLocation(void *p) {
     Assert(findLocation(p) == -1);
-    OZ_Term aux = makeGCTaggedInt(ToInt32(p));
+    OZ_Term aux = makeTaggedMarkInt(ToInt32(p));
     int index = getSize();
     htAdd((intlong) aux, ToPointer(index));
     return (index);
   }
   int findLocation(void *p) {
-    Assert(ToInt32(p) == getGCTaggedInt(makeGCTaggedInt(ToInt32(p))));
-    OZ_Term aux = makeGCTaggedInt(ToInt32(p));
+    // KOSTJA: GIVE ME A BREAK
+    Assert(ToInt32(p) == tagged2UnmarkedInt(makeTaggedMarkInt(ToInt32(p))));
+    OZ_Term aux = makeTaggedMarkInt(ToInt32(p));
     void *ret = htFind((intlong) aux);
     return ((ret == htEmpty) ? -1 : (int) ToInt32(ret));
   }
@@ -413,13 +414,13 @@ protected:
 //
 
 //
-#define MAKETRAVERSERTASK(task)  makeGCTaggedInt((int32) task)
+#define MAKETRAVERSERTASK(task)  makeTaggedMarkInt((int32) task)
 //
 inline
 int32 getTraverserTaskArg(OZ_Term taggedTraverserTask)
 {
-  Assert(tagTypeOf(taggedTraverserTask) == TAG_GCMARK);
-  return (getGCTaggedInt(taggedTraverserTask));
+  Assert(oz_isGcMark(taggedTraverserTask));
+  return tagged2UnmarkedInt(taggedTraverserTask);
 }
 //
 const OZ_Term taggedBATask   = MAKETRAVERSERTASK(0);
@@ -1447,7 +1448,7 @@ public:
     Assert(pos >= 0);
     if (pos >= size)
       resize(pos);
-    array[pos] = makeGCTaggedInt(pos);
+    array[pos] = makeTaggedMarkInt(pos);
   }
 #endif
 

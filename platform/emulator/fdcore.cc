@@ -51,7 +51,7 @@ OZ_BI_define(BIgetFDLimits, 0,2)
 
 OZ_BI_define(BIfdIs, 1, 1)
 {
-  OZ_getINDeref(0, fd, fdptr, fdtag);
+  OZ_getINDeref(0, fd, fdptr);
 
   if (oz_isNonKinded(fd))
     oz_suspendOnPtr(fdptr);
@@ -69,9 +69,9 @@ OZ_BI_define(BIfdMin, 1, 1)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
 
-  OZ_getINDeref(0, var, varptr, vartag);
+  OZ_getINDeref(0, var, varptr);
 
-  if(isSmallIntTag(vartag)) {
+  if(oz_isSmallInt(var)) {
     OZ_RETURN(var);
   } else if (isGenFDVar(var)) {
     OZ_RETURN(makeTaggedSmallInt(tagged2GenFDVar(var)->getDom().getMinElem()));
@@ -88,9 +88,9 @@ OZ_BI_define(BIfdMax, 1, 1)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
 
-  OZ_getINDeref(0, var, varptr, vartag);
+  OZ_getINDeref(0, var, varptr);
 
-  if(isSmallIntTag(vartag)) {
+  if(oz_isSmallInt(var)) {
     OZ_RETURN(var);
   } else if (isGenFDVar(var)) {
     OZ_RETURN(makeTaggedSmallInt(tagged2GenFDVar(var)->getDom().getMaxElem()));
@@ -108,9 +108,9 @@ OZ_BI_define(BIfdMid, 1, 1)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
 
-  OZ_getINDeref(0, var, varptr, vartag);
+  OZ_getINDeref(0, var, varptr);
 
-  if(isSmallIntTag(vartag)) {
+  if(oz_isSmallInt(var)) {
     OZ_RETURN(var);
   } else if (isGenFDVar(var)) {
     OZ_RETURN(makeTaggedSmallInt(tagged2GenFDVar(var)->getDom().getMidElem()));
@@ -128,20 +128,20 @@ OZ_BI_define(BIfdNextSmaller, 2, 1)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_INT);
 
-  OZ_getINDeref(1, val, valptr, valtag);
+  OZ_getINDeref(1, val, valptr);
 
   int value = -1;
-  if (isVariableTag(valtag)) {
+  if (oz_isVar(val)) {
     oz_suspendOnPtr(valptr);
-  } else if (isSmallIntTag(valtag)) {
+  } else if (oz_isSmallInt(val)) {
     value = tagged2SmallInt(val);
   } else {
     TypeError(1, "");
   }
 
-  OZ_getINDeref(0, var, varptr, vartag);
+  OZ_getINDeref(0, var, varptr);
 
-  if(isSmallIntTag(vartag)) {
+  if(oz_isSmallInt(var)) {
     if (value > tagged2SmallInt(var))
       OZ_RETURN(var);
   } else if (isGenFDVar(var)) {
@@ -166,20 +166,20 @@ OZ_BI_define(BIfdNextLarger, 2, 1)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_INT);
 
-  OZ_getINDeref(1, val, valptr, valtag);
+  OZ_getINDeref(1, val, valptr);
 
   int value = -1;
-  if (oz_isVariable(valtag)) {
+  if (oz_isVar(val)) {
     oz_suspendOnPtr(valptr);
-  } else if (isSmallIntTag(valtag)) {
+  } else if (oz_isSmallInt(val)) {
     value = tagged2SmallInt(val);
   } else {
     TypeError(1, "");
   }
 
-  OZ_getINDeref(0, var, varptr, vartag);
+  OZ_getINDeref(0, var, varptr);
 
-  if(isSmallIntTag(vartag)) {
+  if(oz_isSmallInt(var)) {
     if (value < tagged2SmallInt(var))
       OZ_RETURN(var);
   } else if (isGenFDVar(var)) {
@@ -204,9 +204,9 @@ OZ_BI_define(BIfdGetAsList, 1, 1)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_FDDESCR);
 
-  OZ_getINDeref(0, var, varptr, vartag);
+  OZ_getINDeref(0, var, varptr);
 
-  if(isSmallIntTag(vartag)) {
+  if(oz_isSmallInt(var)) {
     OZ_RETURN(makeTaggedLTuple(new LTuple(var, AtomNil)));
   } else if (isGenFDVar(var)) {
     OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
@@ -227,9 +227,9 @@ OZ_BI_define(BIfdGetCardinality, 1, 1)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
 
-  OZ_getINDeref(0, var, varptr, vartag);
+  OZ_getINDeref(0, var, varptr);
 
-  if(isSmallIntTag(vartag)) {
+  if(oz_isSmallInt(var)) {
     OZ_RETURN(makeTaggedSmallInt(1));
   } else if (isGenFDVar(var)) {
     OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
@@ -285,18 +285,18 @@ OZ_BI_define(BIfdWatchSize, 3, 0)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
 
-  OZ_getINDeref(2, t, tptr, ttag);
-  if (!isVariableTag(ttag)) {
+  OZ_getINDeref(2, t, tptr);
+  if (!oz_isVar(t)) {
     if (oz_isBool(t))
       return PROCEED;
     return FAILED;
   }
 
-  OZ_getINDeref(0, v, vptr, vtag);
+  OZ_getINDeref(0, v, vptr);
   int vsize = 0;
 
 // get the current size of the domain
-  if(isSmallIntTag(vtag)) {
+  if(oz_isSmallInt(v)) {
     vsize = 1;
   } else if (isGenFDVar(v)) {
     vsize = tagged2GenFDVar(v)->getDom().getSize();
@@ -309,12 +309,12 @@ OZ_BI_define(BIfdWatchSize, 3, 0)
   }
 
 // get the value to compare with
-  OZ_getINDeref(1, vs, vsptr, vstag);
+  OZ_getINDeref(1, vs, vsptr);
   int size = 0;
 
-  if (isVariableTag(vstag)) {
+  if (oz_isVar(vs)) {
     oz_suspendOnPtr(vsptr);
-  } else if (isSmallIntTag(vstag)) {
+  } else if (oz_isSmallInt(vs)) {
     size = tagged2SmallInt(vs);
   } else {
     TypeError(1, "");
@@ -324,9 +324,9 @@ OZ_BI_define(BIfdWatchSize, 3, 0)
   if (vsize < size) return OZ_unify (OZ_in(2), oz_true());
   if (size < 1) return (OZ_unify (OZ_in(2), oz_false()));
 
-  if (isVariableTag(vtag)){
+  if (oz_isVar(v)){
     //  must return SUSPEND;
-    if (isVariableTag(ttag))
+    if (oz_isVar(t))
       oz_suspendOn2(makeTaggedRef(vptr), makeTaggedRef(tptr));
     oz_suspendOnPtr(vptr);
   }
@@ -339,18 +339,18 @@ OZ_BI_define(BIfdWatchMin, 3, 0)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
 
-  OZ_getINDeref(2, t, tptr, ttag);
-  if (!isVariableTag(ttag)) {
+  OZ_getINDeref(2, t, tptr);
+  if (!oz_isVar(t)) {
     if (oz_isBool(t))
       return PROCEED;
     return FAILED;
   }
 
-  OZ_getINDeref(0, v, vptr, vtag);
+  OZ_getINDeref(0, v, vptr);
   int vmin = -1, vmax = -1;
 
 // get the current lower bound of the domain
-  if(isSmallIntTag(vtag)) {
+  if(oz_isSmallInt(v)) {
     vmin = vmax = tagged2SmallInt(v);
   } else if (isGenFDVar(v)) {
     vmin = tagged2GenFDVar(v)->getDom().getMinElem();
@@ -365,12 +365,12 @@ OZ_BI_define(BIfdWatchMin, 3, 0)
   }
 
 // get the value to compare with
-  OZ_getINDeref(1, vm, vmptr, vmtag);
+  OZ_getINDeref(1, vm, vmptr);
   int min = -1;
 
-  if (isVariableTag(vmtag)) {
+  if (oz_isVar(vm)) {
     oz_suspendOnPtr(vmptr);
-  } else if (isSmallIntTag(vmtag)) {
+  } else if (oz_isSmallInt(vm)) {
     min = tagged2SmallInt(vm);
   } else {
     TypeError(1, "");
@@ -379,9 +379,9 @@ OZ_BI_define(BIfdWatchMin, 3, 0)
   if (min < 0) return (OZ_unify (OZ_in(2), oz_false()));
   if (vmin > min) return OZ_unify (OZ_in(2), oz_true());
 
-  if (isVariableTag(vtag) && min < vmax){
+  if (oz_isVar(v) && min < vmax){
     //  must return SUSPEND;
-    if (isVariableTag(ttag))
+    if (oz_isVar(t))
       oz_suspendOn2(makeTaggedRef(vptr), makeTaggedRef(tptr));
     oz_suspendOnPtr(vptr);
   }
@@ -393,18 +393,18 @@ OZ_BI_define(BIfdWatchMax, 3, 0)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
 
-  OZ_getINDeref(2, t, tptr, ttag);
-  if (!isVariableTag(ttag)) {
+  OZ_getINDeref(2, t, tptr);
+  if (!oz_isVar(t)) {
     if (oz_isBool(t))
       return PROCEED;
     return FAILED;
   }
 
-  OZ_getINDeref(0, v, vptr, vtag);
+  OZ_getINDeref(0, v, vptr);
   int vmin = -1, vmax = -1;
 
 // get the current lower bound of the domain
-  if(isSmallIntTag(vtag)) {
+  if(oz_isSmallInt(v)) {
     vmin = vmax = tagged2SmallInt(v);
   } else if (isGenFDVar(v)) {
     vmin = tagged2GenFDVar(v)->getDom().getMinElem();
@@ -419,12 +419,12 @@ OZ_BI_define(BIfdWatchMax, 3, 0)
   }
 
 // get the value to compare with
-  OZ_getINDeref(1, vm, vmptr, vmtag);
+  OZ_getINDeref(1, vm, vmptr);
   int max = -1;
 
-  if (isVariableTag(vmtag)) {
+  if (oz_isVar(vm)) {
     oz_suspendOnPtr(vmptr);
-  } else if (isSmallIntTag(vmtag)) {
+  } else if (oz_isSmallInt(vm)) {
     max = tagged2SmallInt(vm);
   } else {
     TypeError(1, "");
@@ -433,9 +433,9 @@ OZ_BI_define(BIfdWatchMax, 3, 0)
   if (vmax < max) return OZ_unify (OZ_in(2), oz_true());
   if (max < 0) return (OZ_unify (OZ_in(2), oz_false()));
 
-  if (isVariableTag(vtag) && vmin < max){
+  if (oz_isVar(v) && vmin < max){
     //  must return SUSPEND;
-    if (isVariableTag(ttag))
+    if (oz_isVar(t))
       oz_suspendOn2(makeTaggedRef(vptr), makeTaggedRef(tptr));
     oz_suspendOnPtr(vptr);
   }

@@ -543,7 +543,7 @@ else oz_typeError(1,"Bool");
 // Check that the value is a non-negative small integer
 
 #define CHECK_NAT                               \
-if (!isSmallIntTag(val_tag) ||                  \
+if (!oz_isSmallInt(val) ||                      \
     (INT__=tagged2SmallInt(val))<0)             \
   oz_typeError(1,"Int>=0");
 
@@ -555,7 +555,7 @@ if (!isSmallIntTag(val_tag) ||                  \
 // Check that the value is an integer in [1..100], i.e. a percentage
 
 #define CHECK_PERCENT                           \
-if (!isSmallIntTag(val_tag) ||                  \
+if (!oz_isSmallInt(val) ||                      \
     (INT__=tagged2SmallInt(val))<1 ||           \
     (INT__>100))                                \
   oz_typeError(1,"Int[1..100]");
@@ -568,7 +568,7 @@ if (!isSmallIntTag(val_tag) ||                  \
 // Check that the value is a record, if so untag it into REC__
 
 #define CHECK_REC                               \
-if (!isSRecordTag(val_tag))                     \
+if (!oz_isSRecord(val))                         \
 {oz_typeError(1,"SRecord")}                     \
 else REC__=tagged2SRecord(val);
 
@@ -594,10 +594,10 @@ return oz_raise(E_ERROR,E_SYSTEM,"putProperty",2,F,oz_atom(T));
 #define DO_INT(F,DO)                            \
 INT__ = REC__->getFeature(F);                   \
 if (INT__) {                                    \
-  DEREF(INT__,PTR__,TAG__);                     \
-  if (oz_isVariable(TAG__)) oz_suspendOnPtr(PTR__); \
-  if (oz_isSmallInt(TAG__)) {                   \
-    INT__=tagged2SmallInt(INT__);                       \
+  DEREF(INT__,PTR__);                           \
+  if (oz_isVar(INT__))  oz_suspendOnPtr(PTR__); \
+  if (oz_isSmallInt(INT__)) {                   \
+    INT__=tagged2SmallInt(INT__);               \
   } else if (oz_isBigInt(INT__)) {              \
     INT__=tagged2BigInt(INT__)->getInt();       \
   } else {                                      \
@@ -613,9 +613,9 @@ if (INT__) {                                    \
 #define DO_BOOL(F,DO)                                   \
 INT__ = REC__->getFeature(F);                           \
 if(INT__) {                                             \
-  DEREF(INT__,PTR__,TAG__);                             \
-  if (oz_isVariable(TAG__)) oz_suspendOnPtr(PTR__);     \
-  if (!isLiteralTag(TAG__)) BAD_FEAT(F,"Bool");         \
+  DEREF(INT__,PTR__);                                   \
+  if (oz_isVar(INT__)) oz_suspendOnPtr(PTR__);          \
+  if (!oz_isLiteral(INT__)) BAD_FEAT(F,"Bool");         \
   if      (oz_isTrue(INT__)) INT__=1;                   \
   else if (oz_isFalse(INT__)) INT__=0;                  \
   else BAD_FEAT(F,"Bool");                              \
@@ -641,7 +641,7 @@ DO_INT(F,if (INT__<1||INT__>100) {oz_typeError(1,"Int[1..100]");}; DO);
 
 // val is guaranteed to be determined and derefed
 OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
-  DEREF(val,val_ptr,val_tag);
+  DEREF(val,val_ptr);
   int      INT__;
   SRecord* REC__;
   switch (prop) {
@@ -687,7 +687,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
              DO_NAT(AtomThreshold,reInitFDs(INT__)););
     // ERRORS
   case PROP_ERRORS_HANDLER: {
-    if (oz_isVariable(val))
+    if (oz_isVar(val))
       return SUSPEND;
 
     if (!oz_isProcedure(val) || tagged2Const(val)->getArity()!=1) {
@@ -844,8 +844,8 @@ void VirtualProperty::add(const char * s, const int p) {
 OZ_Return GetProperty(TaggedRef k,TaggedRef& val)
 {
   TaggedRef key = k;
-  DEREF(key,key_ptr,key_tag);
-  if (oz_isVariable(key_tag)) oz_suspendOnPtr(key_ptr);
+  DEREF(key,key_ptr);
+  if (oz_isVar(key)) oz_suspendOnPtr(key_ptr);
   if (!oz_isAtom(key)) oz_typeError(0,"Atom");
   OzDictionary* dict;
   TaggedRef entry;
@@ -875,8 +875,8 @@ OZ_Return PutProperty(TaggedRef k,TaggedRef v)
 {
   if (!oz_onToplevel()) return PROP__NOT__GLOBAL;
   TaggedRef key = k;
-  DEREF(key,key_ptr,key_tag);
-  if (oz_isVariable(key_tag)) oz_suspendOnPtr(key_ptr);
+  DEREF(key,key_ptr);
+  if (oz_isVar(key)) oz_suspendOnPtr(key_ptr);
   if (!oz_isAtom(key)) oz_typeError(0,"Atom");
   OzDictionary* dict;
   TaggedRef entry;

@@ -1424,13 +1424,13 @@ OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator ~ (void) const
 
 int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
 {
-  DEREF(d, d_ptr, d_tag);
+  DEREF(d, d_ptr);
 
   if (oz_isSTuple(d) && tagged2SRecord(d)->getWidth() == 1) {
     initDescr((*tagged2SRecord(d))[0]);
     *this = ~ *this;
     return size;
-  } else if (isSmallIntTag(d_tag)) {
+  } else if (oz_isSmallInt(d)) {
     return initSingleton(tagged2SmallInt(d));
   } else if (AtomSup == d) {
     return initSingleton(fd_sup);
@@ -1443,7 +1443,7 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
     return initRange(0, 1);
   } else if (oz_isNil(d)) {
     return initEmpty();
-  } else if (isLTupleTag(d_tag)) {
+  } else if (oz_isLTuple(d)) {
     EnlargeableArray<int> left_arr(FDOMNINITSIZE), right_arr(FDOMNINITSIZE);
 
     int min_arr = fd_sup, max_arr = 0;
@@ -1453,9 +1453,9 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
       LTuple &list = *tagged2LTuple(d);
       OZ_Term val = list.getHead();
 
-      DEREF(val, valptr, valtag);
+      DEREF(val, valptr);
 
-      if (isSmallIntTag(valtag)) {
+      if (oz_isSmallInt(val)) {
         int v = tagged2SmallInt(val);
         if (v < fd_inf || fd_sup < v) goto for_loop;
 

@@ -149,14 +149,14 @@ public:
     return oz_isGcMark(homeOrGName);
   }
   void cacMark(Name * fwd) {
-    homeOrGName = makeTaggedGcMark(fwd);
+    homeOrGName = makeTaggedMarkPtr(fwd);
   }
   int32 ** cacGetMarkField(void) {
     return (int32**) &homeOrGName;
   }
   Name * cacGetFwd(void) {
     Assert(cacIsMarked());
-    return (Name *) tagged2GcUnmarked(homeOrGName);
+    return (Name *) tagged2UnmarkedPtr(homeOrGName);
   }
 
   Name * gCollectName(void);
@@ -175,12 +175,10 @@ inline
 Bool needsNoCollection(TaggedRef t) {
   Assert(t != makeTaggedNULL());
 
-  TypeOfTerm tag = tagTypeOf(t);
-
-  if (isSmallIntTag(tag))
+  if (oz_isSmallInt(t))
     return OK;
 
-  if (!isLiteralTag(tag))
+  if (!oz_isLiteral(t))
     return NO;
 
   if (tagged2Literal(t)->isAtom())
@@ -354,10 +352,10 @@ public:
     return oz_isGcMark(args[0]);
   }
   void cacMark(LTuple * fwd) {
-    args[0] = makeTaggedGcMark(fwd);
+    args[0] = makeTaggedMarkPtr(fwd);
   }
   LTuple * cacGetFwd(void) {
-    return (LTuple *) tagged2GcUnmarked(args[0]);
+    return (LTuple *) tagged2UnmarkedPtr(args[0]);
   }
   int32 ** cacGetMarkField(void) {
     return (int32**) &args[0];
@@ -671,9 +669,6 @@ TaggedRef oz_float(double f) {
   return makeTaggedFloat(new Float(f));
 }
 
-#define CHECK_LITERAL(lab) \
-Assert(!oz_isRef(lab) && !oz_isVariable(lab) && oz_isLiteral(lab));
-
 
 
 /*===================================================================
@@ -818,7 +813,6 @@ Bool oz_isBigInt(TaggedRef term) {
 
 inline
 Bool oz_isInt(TaggedRef term) {
-  GCDEBUG(term);
   return oz_isSmallInt(term) || oz_isBigInt(term);
 }
 
@@ -1066,17 +1060,11 @@ void * oz_getForeignPointer(TaggedRef t) {
 inline
 Bool oz_isFeature(TaggedRef lab) { return oz_isLiteral(lab) || oz_isInt(lab); }
 
-#define CHECK_FEATURE(lab) \
-Assert(!oz_isRef(lab) && !oz_isVariable(lab) && oz_isFeature(lab));
-
-
 int featureEqOutline(TaggedRef a, TaggedRef b);
 
 inline
-int featureEq(TaggedRef a,TaggedRef b)
-{
-  CHECK_FEATURE(a);
-  CHECK_FEATURE(b);
+int featureEq(TaggedRef a,TaggedRef b) {
+  Assert(oz_isFeature(a) && oz_isFeature(b));
   return a == b || featureEqOutline(a,b);
 }
 
@@ -1090,25 +1078,24 @@ int featureEq(TaggedRef a,TaggedRef b)
  */
 inline
 int featureCmp(TaggedRef a, TaggedRef b) {
-  CHECK_FEATURE(a);
-  CHECK_FEATURE(b);
+  Assert(oz_isFeature(a) && oz_isFeature(b));
   TypeOfTerm tagA = tagTypeOf(a);
   TypeOfTerm tagB = tagTypeOf(b);
   if (tagA != tagB) {
-    if (isSmallIntTag(tagA)) {
-      if (isLiteralTag(tagB))
+    if (oz_isSmallInt(a)) {
+      if (oz_isLiteral(b))
         return -1;
 
-      Assert(isConstTag(tagB));
+      Assert(oz_isConst(b));
       return -tagged2BigInt(b)->cmp(tagged2SmallInt(a));
     }
-    if (isConstTag(tagA)) {
-      if (isSmallIntTag(tagB))
+    if (oz_isConst(a)) {
+      if (oz_isSmallInt(b))
         return tagged2BigInt(a)->cmp(tagged2SmallInt(b));
-      Assert(isLiteralTag(tagB));
+      Assert(oz_isLiteral(b));
       return -1;
     }
-    Assert(isLiteralTag(tagA));
+    Assert(oz_isLiteral(a));
     return 1;
   }
   switch (tagA) {
@@ -1131,11 +1118,10 @@ int featureCmp(TaggedRef a, TaggedRef b) {
  */
 inline
 unsigned int featureHash(TaggedRef a) {
-  CHECK_FEATURE(a);
-  const TypeOfTerm tag = tagTypeOf(a);
-  if (isLiteralTag(tag)) {
+  Assert(oz_isFeature(a));
+  if (oz_isLiteral(a)) {
     return tagged2Literal(a)->hash();
-  } else if (isSmallIntTag(tag)) {
+  } else if (oz_isSmallInt(a)) {
     return smallIntHash(a);
   } else {
     return tagged2BigInt(a)->hash();
@@ -1327,7 +1313,7 @@ public:
 
   static SRecord *newSRecord(TaggedRef lab, SRecordArity arity, int width)
   {
-    CHECK_LITERAL(lab);
+    Assert(oz_isLiteral(lab));
     Assert(width > 0);
     int memSize = sizeof(SRecord) + sizeof(TaggedRef) * (width - 1);
     SRecord *ret = (SRecord *) oz_heapMalloc(memSize);
@@ -1374,12 +1360,12 @@ public:
 
   TaggedRef getLabel() { return label; }
   void setLabelInternal(TaggedRef l) {
-    CHECK_LITERAL(l);
+    Assert(oz_isLiteral(l));
     label=l;
   }
   Literal *getLabelLiteral() { return tagged2Literal(label); }
   void setLabelForAdjoinOpt(TaggedRef newLabel) {
-    CHECK_LITERAL(newLabel);
+    Assert(oz_isLiteral(newLabel));
     label = newLabel;
   }
 
@@ -1393,7 +1379,7 @@ public:
 
   int getIndex(TaggedRef feature)
   {
-    CHECK_FEATURE(feature);
+    Assert(oz_isFeature(feature));
     if (isTuple()) {
       if (!oz_isSmallInt(feature)) return -1;
       int f=tagged2SmallInt(feature);
@@ -1438,10 +1424,8 @@ TaggedRef sortlist(TaggedRef list,int len);
 TaggedRef packsort(TaggedRef list);
 
 inline
-Bool oz_isRecord(TaggedRef term) {
-  GCDEBUG(term);
-  TypeOfTerm tag = tagTypeOf(term);
-  return isSRecordTag(tag) || isLTupleTag(tag) || isLiteralTag(tag);
+Bool oz_isRecord(TaggedRef t) {
+  return oz_isSRecord(t) || oz_isLTuple(t) || oz_isLiteral(t);
 }
 
 
@@ -1570,17 +1554,19 @@ enum OzCheckList {
 };
 
 inline
-OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY)
-{
-  DerefIfVarReturnIt(l);
+OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY) {
+  l = oz_safeDeref(l);
+  if (oz_isRef(l))
+    return l;
   OZ_Term old = l;
   Bool updateF = 0;
   int len = 0;
   while (oz_isCons(l)) {
     len++;
     if (check != OZ_CHECK_ANY) {
-      OZ_Term h = oz_head(l);
-      DerefIfVarReturnIt(h);
+      OZ_Term h = oz_safeDeref(oz_head(l));
+      if (oz_isRef(h))
+        return h;
       if (check == OZ_CHECK_FEATURE) {
         if (!oz_isFeature(h)) return oz_false();
       } else {
@@ -1591,8 +1577,9 @@ OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY)
         if (check == OZ_CHECK_CHAR_NONZERO && i==0) return oz_false();
       }
     }
-    l = oz_tail(l);
-    DerefIfVarReturnIt(l);
+    l = oz_safeDeref(oz_tail(l));
+    if (oz_isRef(l))
+      return l;
     if (l==old) return oz_false(); // cyclic
     if (updateF) {
       old=oz_deref(oz_tail(old));
@@ -2005,7 +1992,7 @@ public:
   OzArray(Board *b, int low, int high, TaggedRef initvalue)
     : ConstTermWithHome(b,Co_Array)
   {
-    Assert(oz_isRef(initvalue) || !oz_isVariable(initvalue));
+    Assert(oz_isRef(initvalue) || !oz_isVar(initvalue));
 
     offset = low;
     width = high-low+1;
@@ -2029,14 +2016,14 @@ public:
       return 0;
 
     OZ_Term out = getArgs()[n];
-    Assert(oz_isRef(out) || !oz_isVariable(out));
+    Assert(oz_isRef(out) || !oz_isVar(out));
 
     return out;
   }
 
   int setArg(int n,TaggedRef val)
   {
-    Assert(oz_isRef(val) || !oz_isVariable(val));
+    Assert(oz_isRef(val) || !oz_isVar(val));
 
     n -= offset;
     if (n>=getWidth() || n<0) return FALSE;

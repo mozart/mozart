@@ -426,7 +426,7 @@ void DPMarshaler::processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber)
   } else {
     Assert(t);                  // we should not get here without 't'!
     marshalDIFcounted(bs, DIF_SUSPEND);
-    if (oz_isVariable(t))
+    if (oz_isVar(t))
       suspend(makeTaggedRef(tPtr));
     else
       suspend(t);
@@ -688,7 +688,7 @@ Bool VariableExcavator::processObject(OZ_Term objTerm, ConstTerm *objConst)
 }
 void VariableExcavator::processNoGood(OZ_Term resTerm, Bool trail)
 {
-  Assert(!oz_isVariable(resTerm));
+  Assert(!oz_isVar(resTerm));
 }
 void VariableExcavator::processLock(OZ_Term lockTerm, Tertiary *tert)
 {
@@ -711,7 +711,7 @@ void VariableExcavator::processResource(OZ_Term rTerm, Tertiary *tert)
 //
 void VariableExcavator::processVar(OZ_Term cv, OZ_Term *varTerm)
 {
-  Assert(oz_isVariable(cv));
+  Assert(oz_isVar(cv));
   rememberVarLocation(varTerm);
   addVar(makeTaggedRef(varTerm));
 }
@@ -2412,7 +2412,7 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
     OZ_Term vr = oz_head(vars);
     Assert(oz_isRef(vr));
     OZ_Term *vp = tagged2Ref(vr);
-    Assert(oz_isVariable(*vp));
+    Assert(oz_isVar(*vp));
     OZ_Term v = *vp;
 
     //
@@ -2425,8 +2425,8 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
           // if it's a future, let's kick it now:
           if (triggerVariable(vp)) {
             v = makeTaggedRef(vp);
-            DEREF(v, vp, _tag);
-            if (oz_isVariable(v)) {
+            DEREF(v, vp);
+            if (oz_isVar(v)) {
               goto repeat;      // 'v' can be a var again;
             } else {
               break;            // var is gone;
@@ -2477,8 +2477,8 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
       // if it's a future, let's kick it now:
       if (triggerVariable(vp)) {
         v = makeTaggedRef(vp);
-        DEREF(v, vp, _tag);
-        if (oz_isVariable(v)) {
+        DEREF(v, vp);
+        if (oz_isVar(v)) {
           goto repeat;          // 'v' can be a var again;
         } else {
           break;                // var is gone;
@@ -2569,7 +2569,7 @@ void MsgTermSnapshotImpl::gcStart()
     // Keep locations of former variables. Note that a single
     // 'GCStubVar' can be shared between different snapshots during
     // GC.
-    if (oz_isRef(hv) || !oz_isVariable(hv)) {
+    if (oz_isRef(hv) || !oz_isVar(hv)) {
       GCStubVar *svp = new GCStubVar(hv);
       *hvp = makeTaggedVar(svp);
     }
@@ -2590,8 +2590,8 @@ void MsgTermSnapshotImpl::gcFinish()
 
     //
     if (oz_isRef(hv)) {
-      _DEREF(hv, hvp, _tag);
-      Assert(oz_isVariable(hv));
+      _DEREF(hv, hvp);
+      Assert(oz_isVar(hv));
       l->gcSetLoc(makeTaggedRef(hvp));
     }
 

@@ -86,7 +86,7 @@ OZ_BI_define(BIbreakpointAt, 3,1)
   OZ_declareInt(1,line);
   OZ_declareTerm(2,what);
 
-  DEREF(file,_1,_2);
+  DEREF(file,_1);
 
   DbgInfo *info = allDbgInfos;
   Bool    ok    = NO;
