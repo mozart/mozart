@@ -301,8 +301,8 @@ starts the emulator under gdb")
      ("Compiler"      . oz-toggle-compiler)
      ("Emulator"      . oz-toggle-emulator)
      )
-    ("-----")
-    ("Connect Oz to Emacs" . oz-emacs-connect)
+;    ("-----")
+;    ("Connect Oz to Emacs" . oz-emacs-connect)
     ("---")    
     ("Start Oz" . run-oz)
     ("Halt Oz"  . oz-halt)
@@ -315,6 +315,7 @@ starts the emulator under gdb")
   "Load the definitions for communication from Oz to Emacs" t)
 
 (oz-make-menu oz-menu)
+
 
 ;;------------------------------------------------------------
 ;; Start/Stop oz
