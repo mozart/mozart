@@ -22,6 +22,7 @@
 <!ENTITY eg PI "eg">
 <!ENTITY ie PI "ie">
 <!ENTITY nbsp PI "nbsp">
+<!ENTITY resp PI "resp">
 
 ]>
 
@@ -45,7 +46,8 @@
     <Abstract>
       This document describes how to use the Oz Compiler in Mozart.
       This includes the descriptions of the batch compiler and compiler
-      panel as well as of the application programmer's interface.
+      panel as well as of the application programmer's interface to the
+      compiler.
     </Abstract>
   <Body>
     <Chapter id="chapter.intro">
