@@ -52,7 +52,7 @@ EXPLORERSRC1 = \
 	layout-nodes.oz manager.oz \
 	menu-manager.oz move-nodes.oz tk-nodes.oz \
 	configure.oz nodes.oz toplevel-manager.oz \
-	default-actions.oz search-nodes.oz stat-nodes.oz \
+	default-actions.oz search-nodes.oz stat-nodes.oz statistics-balloon.oz \
 	dialog-manager.oz shapes-and-images.oz status-manager.oz
 EXPLORERSRC = $(EXPLORERSRC1:%=explorer/%) Explorer.oz
 
