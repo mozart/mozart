@@ -2,22 +2,32 @@ declare [FCP_FD] = {Module.link ['x-oz://contrib/modFDP.fcp.ozf']}
 declare [FCP_FS] = {Module.link ['x-oz://contrib/modFSP.fcp.ozf']}
 declare [FCP_RI] = {Module.link ['x-oz://contrib/modRI.fcp.ozf']}
 declare [Propagator] = {Module.link ['x-oz://contrib/Propagator.ozf']}
+declare [Reflect] = {Module.link ['x-oz://contrib/Reflect.ozf']}
+declare [RI] = {Module.link ['x-oz://contrib/RI.ozf']}
+declare [LP] = {Module.link ['x-oz://contrib/LP.ozf']}
 
 {Wait FCP_FD}
 {Wait FCP_FS}
 {Wait FCP_RI}
 {Wait Propagator}
+{Wait Reflect}
+{Wait RI}
+{Wait LP}
 
 {Show FCP_FD}
 {Show FCP_FS}
 {Show FCP_RI}
 {Show Propagator}
+{Show Reflect}
+{Show LP}
+{Show RI}
 
 
 declare X Y P in [X Y]:::0#10
 {FCP_FD.'`LessEqOff`' X Y 5 P}
 
 /*
+
 cond X Y P in
    [X Y]:::0#10
    {FCP_FD.'`LessEqOff`' X Y 5 P}
@@ -26,6 +36,7 @@ cond X Y P in
 then {Show show(yes)}
 else {Show show(no)}
 end
+
 */
 {Show show(P)}
 
@@ -87,4 +98,5 @@ B = 1
 {Propagator.activate P}
 {Propagator.deactivate P}
 {Show [X Y B P]}
+
 */
