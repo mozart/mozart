@@ -192,6 +192,11 @@ ozmake --config=put --archive=http://www.mozart-oz.org/mogul/pkg/1.2.5/source
         <title/Unification/
 	<p>Failure in the unification of OFS (open feature structures)
 	did not always untrail properly (bug 1314)
+      <subsection id="sec.m131.distribution">
+        <title/Distribution Subsystem/
+	<p>Distributed resources (distributed entities without a consistency
+        protocol represented by a special resource token on remote sites)
+        handled inproperly during local garbage collection (bug 1304)
 
     <section id="section.m131.internal">
       <title/Changes in the implementation that affect maintainability and portability/
