@@ -130,7 +130,7 @@ OZ_Return Future::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   return bind(vPtr,makeTaggedRef(tPtr));
 }
 
-OZ_Return Future::addSusp(TaggedRef *tPtr, Suspension susp, int unstable)
+OZ_Return Future::addSusp(TaggedRef *tPtr, Suspendable * susp, int unstable)
 {
   if (kick(tPtr)) {
     return PROCEED;

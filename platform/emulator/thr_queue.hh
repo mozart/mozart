@@ -113,12 +113,9 @@ public:
 };
 
 class LocalPropagatorQueue : public ThreadQueueImpl {
-private:
-  // needed when merging spaces to unpack threads in local thread queue
-  Thread * lpq_thr;
 public:
-  LocalPropagatorQueue(Thread * lthr, Propagator * p)
-    : lpq_thr(lthr), ThreadQueueImpl()
+  LocalPropagatorQueue(Propagator * p)
+    : ThreadQueueImpl()
   {
     allocate(QUEUEMINSIZE);
     enqueue(p);
@@ -142,8 +139,6 @@ public:
     ThreadQueueImpl::disposePool();
     freeListDispose (this, sizeof(LocalPropagatorQueue));
   }
-
-  Thread * getLPQThread(void) { return lpq_thr; }
 
   LocalPropagatorQueue * merge(LocalPropagatorQueue * tq) {
     if (this == NULL) {

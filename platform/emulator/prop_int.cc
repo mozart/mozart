@@ -31,19 +31,20 @@
 #include "value.hh"
 
 inline
-void oz_resetLocalPropagatorQueue(Board *bb) {
+void oz_resetLocalPropagatorQueue(Board * bb) {
   LocalPropagatorQueue *lpq = bb->getLocalPropagatorQueue();
   if (!lpq)
     return;
 
-  lpq->getLPQThread()->getTaskStackRef()->makeEmpty();
+  oz_currentThread()->getTaskStackRef()->makeEmpty();
   lpq->dispose();
   bb->setLocalPropagatorQueue(NULL);
 }
 
 #define WAKEUP_PROPAGATOR(CALL_WAKEUP_FUN)      \
 {                                               \
-  switch (oz_isBetween(prop->getBoardInternal(), home)) { \
+  Board * pb = prop->getBoardInternal();        \
+  switch (oz_isBetween(pb, home)) {             \
   case B_BETWEEN:                               \
                                                 \
     if (calledBy)                               \
@@ -57,7 +58,8 @@ void oz_resetLocalPropagatorQueue(Board *bb) {
                                                 \
   case B_DEAD:                                  \
     prop->setDead();                            \
-    CheckExtSuspension(prop);                   \
+    if (prop->isExternal())                     \
+      pb->derefBoard()->checkSolveThreads();    \
     prop->dispose();                            \
     return TRUE;                                \
                                                 \
@@ -88,7 +90,7 @@ Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy)
   }
 
   WAKEUP_PROPAGATOR(prop->setRunnable();
-                    oz_pushToLPQ(GETBOARD(prop),prop));
+                    oz_pushToLPQ(prop));
 }
 
 
@@ -103,21 +105,21 @@ SuspList * oz_installPropagators(SuspList * local_list, SuspList * glob_list,
 
   // mark up local suspensions to avoid copying them
   while (aux) {
-    aux->getSuspension().setTagged();
+    aux->getSuspendable()->setTagged();
     aux = aux->getNext();
   }
 
   // create references to suspensions of global variable
   aux = glob_list;
   while (aux) {
-    Suspension susp = aux->getSuspension();
+    Suspendable * susp = aux->getSuspendable();
 
     /* NOTE: a possible optimization isTaggedAndUntag (TMUELLER) */
 
-    if (!susp.isDead() &&
-        susp.isPropagator() &&
-        !susp.isTagged() &&
-        oz_isBetween(susp.getBoardInternal(), glob_home) == B_BETWEEN) {
+    if (!susp->isDead() &&
+        susp->isPropagator() &&
+        !susp->isTagged() &&
+        oz_isBetween(susp->getBoardInternal(), glob_home) == B_BETWEEN) {
       ret_list = new SuspList(susp, ret_list);
     }
 
@@ -127,7 +129,7 @@ SuspList * oz_installPropagators(SuspList * local_list, SuspList * glob_list,
   // unmark local suspensions
   aux = local_list;
   while (aux) {
-    aux->getSuspension().unsetTagged();
+    aux->getSuspendable()->unsetTagged();
     aux = aux->getNext();
   }
 
@@ -224,7 +226,10 @@ OZ_BI_define(BI_prop_lpq, 0, 0) {
 
 } OZ_BI_end
 
-void oz_pushToLPQ(Board *bb, Propagator * prop) {
+void oz_pushToLPQ(Propagator * prop) {
+
+  Board * bb = prop->getBoardInternal()->derefBoard();
+
   LocalPropagatorQueue *lpq = bb->getLocalPropagatorQueue();
 
   if (lpq) {
@@ -235,7 +240,7 @@ void oz_pushToLPQ(Board *bb, Propagator * prop) {
     // Push run lpq builtin
     thr->pushCall(BI_PROP_LPQ, 0, 0);
 
-    bb->setLocalPropagatorQueue(new LocalPropagatorQueue(thr, prop));
+    bb->setLocalPropagatorQueue(new LocalPropagatorQueue(prop));
 
   }
 }

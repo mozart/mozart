@@ -34,6 +34,8 @@
 #include "var_all.hh"
 #include "space.hh"
 #include "thr_int.hh"
+#include "thr_class.hh"
+#include "prop_class.hh"
 
 // imports
 Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy);
@@ -44,11 +46,12 @@ Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy);
 
 inline
 static
-Bool wakeup_Thread(Thread * tt, Board *home, PropCaller calledBy)
-{
+Bool wakeup_Thread(Thread * tt, Board *home, PropCaller calledBy) {
   Assert (tt->isSuspended());
 
-  switch (oz_isBetween(tt->getBoardInternal(), home)) {
+  Board * tb = tt->getBoardInternal();
+
+  switch (oz_isBetween(tb, home)) {
   case B_BETWEEN:
     oz_wakeupThread(tt);
     return TRUE;
@@ -65,7 +68,10 @@ Bool wakeup_Thread(Thread * tt, Board *home, PropCaller calledBy)
     //  The whole thread is eliminated - because of the invariant
     // stated just before 'disposeThread ()' in thread.hh;
     tt->setDead();
-    CheckExtSuspension(tt);
+
+    if (tt->isExternal())
+      tb->derefBoard()->checkSolveThreads();
+
     tt->disposeStack();
     return TRUE;
 
@@ -80,17 +86,12 @@ Bool wakeup_Thread(Thread * tt, Board *home, PropCaller calledBy)
 //  Since this method is used at the only one place, it's inlined;
 inline
 static
-Bool wakeup_Suspension(Suspension susp, Board * home, PropCaller calledBy)
+Bool wakeup_Suspension(Suspendable * susp, Board * home, PropCaller calledBy)
 {
-  if (susp.isThread()) {
-    Thread * tt = susp.getThread();
-
-    return wakeup_Thread(tt,home,calledBy);
-
+  if (susp->isThread()) {
+    return wakeup_Thread(SuspToThread(susp), home, calledBy);
   } else {
-    Assert(susp.isPropagator());
-
-    return oz_wakeup_Propagator(susp.getPropagator(), home, calledBy);
+    return oz_wakeup_Propagator(SuspToPropagator(susp), home, calledBy);
   }
 }
 
@@ -103,27 +104,25 @@ SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
   SuspList * retSuspList = NULL;
 
   while (suspList) {
-    Suspension susp = suspList->getSuspension();
+    Suspendable * susp = suspList->getSuspendable();
 
-    if (susp.isDead()) {
+    if (susp->isDead()) {
       suspList = suspList->dispose();
       continue;
     }
 
  // already runnable susps remain in suspList
-    if (susp.isRunnable()) {
-      if (susp.isPropagator()) {
-        Propagator * prop = susp.getPropagator();
-
-        if (calledBy && !prop->isUnify()) {
-          switch (oz_isBetween(prop->getBoardInternal(), home)) {
+    if (susp->isRunnable()) {
+      if (susp->isPropagator()) {
+        if (calledBy && !susp->isUnify()) {
+          switch (oz_isBetween(susp->getBoardInternal(), home)) {
           case B_BETWEEN:
-            prop->setUnify();
+            susp->setUnify();
             break;
           case B_DEAD:
             //  keep the thread itself alive - it will be discarded
             // *properly* in the emulator;
-            suspList = suspList->dispose ();
+            suspList = suspList->dispose();
             continue;
           case B_NOT_BETWEEN:
             break;
@@ -136,7 +135,7 @@ SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
       }
     } else {
       if (wakeup_Suspension(susp, home, calledBy)) {
-        Assert (susp.isDead() || susp.isRunnable());
+        Assert (susp->isDead() || susp->isRunnable());
         suspList = suspList->dispose ();
         continue;
       }

@@ -74,11 +74,11 @@ extern const int varSizes[];
 
 #define AddSuspToList(List, Susp, Home)         \
 {                                                       \
-  if ((List) && ((List)->getElem() == Susp)) {          \
+  if ((List) && ((List)->getSuspendable() == Susp)) {   \
   } else {                                              \
     List = new SuspList(Susp, List);                    \
     if (Home && !oz_onToplevel())                       \
-      oz_checkExtSuspension(Susp,Home);                 \
+      (Home)->checkExtSuspension(Susp);                 \
   }                                                     \
 }
 
@@ -203,7 +203,7 @@ public:
     return r;
   }
 
-  void addSuspSVar(Suspension susp, int unstable)
+  void addSuspSVar(Suspendable * susp, int unstable)
   {
     AddSuspToList(suspList, susp, unstable ? getHome1() : 0);
   }
@@ -251,7 +251,7 @@ Bool oz_var_valid(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_unify(OzVariable*,TaggedRef*,TaggedRef*);
 OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_forceBind(OzVariable*,TaggedRef*,TaggedRef);
-OZ_Return oz_var_addSusp(TaggedRef*, Suspension, int = TRUE);
+OZ_Return oz_var_addSusp(TaggedRef*, Suspendable *, int = TRUE);
 void oz_var_dispose(OzVariable*);
 void oz_var_printStream(ostream&, const char*, OzVariable*, int = 10);
 int oz_var_getSuspListLength(OzVariable*);

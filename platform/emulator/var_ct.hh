@@ -41,7 +41,7 @@ class OzCtVariable : public OzVariable {
                                        OZ_CtDefinition *);
   friend OZ_Boolean OZ_CtVar::tell(void);
 
-  friend void addSuspCtVar(OZ_Term , Suspension , OZ_CtWakeUp);
+  friend void addSuspCtVar(OZ_Term , Suspendable * , OZ_CtWakeUp);
 
 private:
   // --------------------
@@ -164,7 +164,7 @@ OZ_Return tellBasicConstraint(OZ_Term, OZ_Ct *, OZ_CtDefinition *);
 OzCtVariable * tagged2GenCtVar(OZ_Term);
 Bool isGenCtVar(OZ_Term term, TypeOfTerm tag);
 OZ_Ct * unpatchReifiedCt(OZ_Term t);
-void addSuspCtVar(OZ_Term, Suspension, OZ_CtWakeUp);
+void addSuspCtVar(OZ_Term, Suspendable *, OZ_CtWakeUp);
 
 #endif
 

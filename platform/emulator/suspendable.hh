@@ -66,6 +66,9 @@ enum SuspendableFlags {
   SF_Stop     = 0x004000,
   SF_NoBlock  = 0x008000,
 
+  // Experimental
+  SF_VeryDead = 0x010000,
+
 };
 
 #define FLAGTESTS(FLAG) \
@@ -109,6 +112,7 @@ public:
     return &board;
   };
 
+  Suspendable * gcSuspendable(void);
 
   /*
    * Board handling
@@ -164,6 +168,11 @@ public:
   FLAGTESTS(Unify)
 
   /*
+   * Experimental
+   */
+  FLAGTESTS(VeryDead)
+
+  /*
    * Threads
    */
   int getPriority(void) {
@@ -176,8 +185,35 @@ public:
   }
 
 
+  /*
+   * Misc nonsense
+   */
+
+  OZPRINTLONG;
+
 };
 
 #undef FLAGTESTS
+
+#ifdef DEBUG_CHECK
+
+inline
+Propagator * SuspToPropagator(Suspendable * s) {
+  Assert(s->isPropagator());
+  return (Propagator *) s;
+}
+
+inline
+Thread * SuspToThread(Suspendable * s) {
+  Assert(s->isThread());
+  return (Thread *) s;
+}
+
+#else
+
+#define SuspToPropagator(s) ((Propagator *) s)
+#define SuspToThread(s)     ((Thread *) s)
+
+#endif
 
 #endif

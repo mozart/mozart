@@ -45,7 +45,7 @@
 #endif
 
 inline
-void Board::addSuspension(Suspension susp) {
+void Board::addSuspension(Suspendable * susp) {
   suspList = new SuspList(susp, suspList);
 }
 

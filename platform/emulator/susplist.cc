@@ -40,28 +40,22 @@
 //-----------------------------------------------------------------------------
 //                          class SuspList
 
-int SuspList::length(void)
-{
+int SuspList::length(void) {
   int i=0;
-  for(SuspList * aux = this; aux != NULL; aux = aux->getNext()) {
-    if (!aux->getElem().isDead() &&
-        !aux->getElem().isRunnable() &&
-        GETBOARDOBJ(aux->getElem())) {
+  for (SuspList * aux = this; aux != NULL; aux = aux->getNext()) {
+    if (!aux->getSuspendable()->isDead() &&
+        !aux->getSuspendable()->isRunnable())
       i++;
-    }
   }
   return i;
 }
 
-int SuspList::lengthProp(void)
-{
+int SuspList::lengthProp(void) {
   int i=0;
-  for(SuspList * aux = this; aux != NULL; aux = aux->getNext()) {
-    if (!aux->getElem().isDead() &&
-        aux->getElem().isRunnable() &&
-        GETBOARDOBJ(aux->getElem())) {
+  for (SuspList * aux = this; aux != NULL; aux = aux->getNext()) {
+    if (!aux->getSuspendable()->isDead() &&
+        aux->getSuspendable()->isRunnable())
       i++;
-    }
   }
   return i;
 }

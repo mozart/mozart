@@ -78,7 +78,7 @@ public:
   int getIdV() { return OZ_EVAR_OBJECT; }
   OZ_Term statusV();
   VarStatus checkStatusV();
-  OZ_Return addSuspV(TaggedRef *v, Suspension susp, int unstable);
+  OZ_Return addSuspV(TaggedRef *v, Suspendable * susp, int unstable);
   Bool validV(TaggedRef v) { return FALSE; }
   OzVariable *gcV() { return new ObjectVar(*this); }
   void gcRecurseV(void);

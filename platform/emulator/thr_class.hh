@@ -75,8 +75,7 @@ public:
 
   OZPRINTLONG;
 
-  Thread *gcThread();
-  Thread *gcDead();
+  Thread * gcThread(void);
   void gcRecurse();
 
   unsigned int getID() {

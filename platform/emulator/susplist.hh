@@ -33,9 +33,9 @@
 #pragma interface
 #endif
 
-#include "base.hh"
-#include "mem.hh"
-#include "suspension.hh"
+#include "suspendable.hh"
+#include "prop_class.hh"
+#include "thr_class.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -47,27 +47,25 @@
  */
 class SuspList {
 private:
-  Suspension  _susp;
-  SuspList * _next;
+  Suspendable * _susp;
+  SuspList    * _next;
 public:
   USEFREELISTMEMORY;
-  SuspList * gc(int);
-  OZPRINTLONG;
-
   NO_DEFAULT_CONSTRUCTORS(SuspList);
-  SuspList(Suspension s, SuspList * n = NULL)
-    : _susp(s), _next(n)
-  {
-    Assert(!s.isNull());
+
+  SuspList(Suspendable * s, SuspList * n = NULL)
+    : _susp(s), _next(n) {}
+
+
+  SuspList * getNext(void)   {
+    return _next;
   }
-
-
-  SuspList * getNext(void)   { return _next; }
-  void setNext(SuspList * n) { _next = n; }
-  Suspension getSuspension(void)   { return _susp; }
-
-  // TMUELLER: will have to go
-  Suspension getElem(void)   { return _susp; }
+  void setNext(SuspList * n) {
+    _next = n;
+  }
+  Suspendable * getSuspendable(void) {
+    return _susp;
+  }
 
   SuspList * appendToAndUnlink(SuspList * &, Bool reset_local);
 
@@ -79,6 +77,10 @@ public:
 
   int length(void);
   int lengthProp(void);
+
+  SuspList * gc(void);
+  OZPRINTLONG;
+
 
 }; // SuspList
 

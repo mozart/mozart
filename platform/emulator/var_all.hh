@@ -150,7 +150,7 @@ static
 #else
 inline
 #endif
-OZ_Return oz_var_addSuspINLINE(TaggedRef *v, Suspension susp,
+OZ_Return oz_var_addSuspINLINE(TaggedRef *v, Suspendable * susp,
                                int unstable = TRUE)
 {
   OzVariable *ov=oz_getVar(v);
@@ -160,8 +160,7 @@ OZ_Return oz_var_addSuspINLINE(TaggedRef *v, Suspension susp,
   case OZ_VAR_EXT:
     return ((ExtVar *) ov)->addSuspV(v, susp, unstable);
   case OZ_VAR_SIMPLE:
-    if (ozconf.useFutures ||
-        (susp.isThread() && susp.getThread()->isNoBlock())) {
+    if (ozconf.useFutures || susp->isNoBlock()) {
       return oz_raise(E_ERROR, E_KERNEL, "block", 1, makeTaggedRef(v));
     }
     // fall through

@@ -39,7 +39,7 @@
 class OzFSVariable: public OzVariable {
 
 friend class OzVariable;
-friend void addSuspFSetVar(OZ_Term, Suspension, OZ_FSetPropState);
+friend void addSuspFSetVar(OZ_Term, Suspendable *, OZ_FSetPropState);
 
 private:
   OZ_FSetConstraint _fset;
@@ -112,7 +112,7 @@ public:
 };
 
 void addSuspFSetVar(OZ_Term, SuspList *, OZ_FSetPropState = fs_prop_any);
-void addSuspFSetVar(OZ_Term, Suspension, OZ_FSetPropState = fs_prop_any);
+void addSuspFSetVar(OZ_Term, Suspendable *, OZ_FSetPropState = fs_prop_any);
 OZ_Return tellBasicConstraint(OZ_Term, OZ_FSetConstraint *);
 
 #if !defined(OUTLINE)

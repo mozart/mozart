@@ -50,7 +50,7 @@ public:
   virtual VarStatus     checkStatusV() = 0;
   virtual void          disposeV() = 0;
 
-  virtual OZ_Return addSuspV(TaggedRef *, Suspension susp,
+  virtual OZ_Return addSuspV(TaggedRef *, Suspendable * susp,
                              int unstable = TRUE) {
     addSuspSVar(susp, unstable);
     return PROCEED;
