@@ -284,9 +284,9 @@ public:
       break;
     default:
       if ((uc<33) || (uc>127)) {
-	unsigned char c1 = (((unsigned char) c & '\300') >> 6) + '0';
-	unsigned char c2 = (((unsigned char) c & '\070') >> 3) + '0';
-	unsigned char c3 = ((unsigned char) c & '\007') + '0';
+	unsigned char c1 = ((uc & '\300') >> 6) + '0';
+	unsigned char c2 = ((uc & '\070') >> 3) + '0';
+	unsigned char c3 = (uc & '\007') + '0';
 	*buffer++ = '\\';
 	*buffer++ = c1;
 	*buffer++ = c2;
