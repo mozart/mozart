@@ -613,8 +613,8 @@ int OZ_vectorSize(OZ_Term);
 OZ_Term * OZ_getOzTermVector(OZ_Term, OZ_Term *);
 int * OZ_getCIntVector(OZ_Term, int *);
 
-OZ_Term OZ_setValue(OZ_FSetValue *);
-OZ_FSetValue * OZ_setValueToC(OZ_Term);
+OZ_Term OZ_fsetValue(OZ_FSetValue *);
+OZ_FSetValue * OZ_fsetValueToC(OZ_Term);
 
 //-----------------------------------------------------------------------------
 // Interface to Generic Constraint Systems
