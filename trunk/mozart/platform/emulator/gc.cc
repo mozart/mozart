@@ -423,10 +423,15 @@ void *getPtr(TypedPtr tp)
 
 class TypedPtrStack: public Stack {
 public:
-  TypedPtrStack() : Stack(1000,Stack_WithMalloc) {}
+  Bool locked;
+  TypedPtrStack() : Stack(1000,Stack_WithMalloc), locked(NO) {}
   ~TypedPtrStack() {}
+  
+  void lock()   { locked = OK; }
+  void unlock() { locked = NO; }
 
   void push(void *ptr, TypeOfPtr type) {
+    Assert(!locked);
     Stack::push((StackEntry)makeTypedPtr(ptr,type));
   }
 
@@ -1531,6 +1536,8 @@ void AM::gc(int msgLevel)
 
   ozstat.initGcMsg(msgLevel);
   
+  ptrStack.unlock();
+
   MemChunks *oldChain = MemChunks::list;
 
   VariableNamer::cleanup();  /* drop bound variables */
@@ -1556,16 +1563,15 @@ void AM::gc(int msgLevel)
   Assert(updateStack.isEmpty());
   Assert(trail.isEmpty());
   Assert(rebindTrail.isEmpty());
-
-  rootBoard = rootBoard->gcBoard();   // must go first!
   Assert(cachedSelf==0);
   Assert(ozstat.currAbstr==NULL);
   Assert(shallowHeapTop==0);
   Assert(rootBoard);
+
+  rootBoard = rootBoard->gcBoard();   // must go first!
   setCurrent(currentBoard->gcBoard(),NO);
 
   GCPROCMSG("Predicate table");
-
   CodeArea::gc();
 
   aritytable.gc ();
@@ -1577,10 +1583,6 @@ void AM::gc(int msgLevel)
 #endif
   
   suspendVarList=makeTaggedNULL(); /* no valid data */
-
-#ifdef PERDIO
-  gcOwnerTable();  
-#endif
 
   gcTagged(aVarUnifyHandler,aVarUnifyHandler);
   gcTagged(aVarBindHandler,aVarBindHandler);
@@ -1594,23 +1596,23 @@ void AM::gc(int msgLevel)
 
   gc_tcl_sessions();
 
-  gcBorrowTable1();
+  toplevelVars = gcRefsArray(toplevelVars);
 
-  performCopying();
-
-  GCPROCMSG("toplevelVars");
-  am.toplevelVars = gcRefsArray(am.toplevelVars);
-
-  GCPROCMSG("updating external references to terms into heap");
   ExtRefNode::gc();
   
   PROFILE_CODE1(FDProfiles.gc());
 
-#ifdef PERDIO
-  performCopying();  /* perb - this should not be necessary */
+  gcOwnerTable();  
+  gcBorrowTable1();
+  performCopying();
   gcBorrowTable2();
+
+
+  performCopying();
+
+  ptrStack.lock();
+
   gcGNameTable();
-#endif
   performCopying();
 
 // -----------------------------------------------------------------------
@@ -1631,8 +1633,6 @@ void AM::gc(int msgLevel)
 
   Assert(currentThread==NULL);
   cachedStack = NULL;
-
-  // HERE !!!!!!!!!!!!!!
 
   ozstat.printGcMsg(msgLevel);
   
@@ -1724,6 +1724,8 @@ Board* AM::copyTree(Board* bb, Bool *isGround)
   varCopied = NO;
 #endif
   unsigned int starttime = osUserTime();
+
+  ptrStack.unlock();
 
   Assert(!bb->isCommitted());
   fromCopyBoard = bb;
