@@ -241,18 +241,29 @@ if test "${GXX}" = yes; then
     DEPEND="$CXX -MM"
 
     # no (yet) used
-    oz_warn_more="-Wall -pedantic-errors -W -Wtraditional -Wshadow \
-	-Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
-	-Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes \
-	-Wmissing-prototypes -Wmissing-declarations -Wredundant-decls \
-	-Wnested-externs -Winline -Woverloaded-virtual -Wsynth"
-    : ${oz_warn="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
-	-Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
-	-Wnested-externs -Wsynth \
-	-Wno-unused -Wno-reorder -Wno-uninitialized -Wno-sign-compare"}
-    : ${oz_warn_error="-Werror"}
+    AC_MSG_CHECKING(for --enable-warnings)
+    AC_ARG_ENABLE(warnings,
+	[--enable-warnings       print c warnings (default=yes)])
 
-    oz_opt="-O3 -frisc"
+    oz_warn_more="-Wall -pedantic-errors -W -Wtraditional -Wshadow \
+		-Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
+		-Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes \
+		-Wmissing-prototypes -Wmissing-declarations -Wredundant-decls \
+		-Wnested-externs -Winline -Woverloaded-virtual -Wsynth"
+
+    if test -n "${enable_warnings}"
+    then
+      $oz_warn="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
+	    -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
+	    -Wnested-externs -Wsynth \
+	    -Wno-unused -Wno-reorder -Wno-uninitialized -Wno-sign-compare"
+      $oz_warn_error="-Werror"
+    fi
+
+    : ${oz_warn=""}
+    : ${oz_warn_error=""}
+
+    oz_opt="-O3 -frisc -pipe"
     oz_om=
     if test "${platform}" = linux-i486
     then
