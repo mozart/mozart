@@ -4,3 +4,4 @@ Makefile
 *.ozf
 *~
 dirs
+LambdaScanner.* LambdaParser.*
