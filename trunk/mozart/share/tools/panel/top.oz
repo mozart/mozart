@@ -739,7 +739,7 @@ in
 		 errors(depth:unit hints:unit location:unit 'thread':unit)]
 		proc {$ SS}
 		   {F write(vs:('{Property.put ' # {Label SS} # ' ' #
-				  {System.valueToVirtualString
+				  {Value.toVirtualString
 				   {Record.zip SS {Property.get {Label SS}}
 				    ProjectSnd} 100 100} #
 				  '}\n'))}
