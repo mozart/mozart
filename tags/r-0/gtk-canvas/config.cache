@@ -1,0 +1,74 @@
+# This file is a shell script that caches the results of configure
+# tests run on this system so they can be shared between configure
+# scripts and configure runs.  It is not useful on other systems.
+# If it contains results you don't want to keep, you may remove or edit it.
+#
+# By default, configure uses ./config.cache as the cache file,
+# creating it if it does not exist already.  You can give configure
+# the --cache-file=FILE option to use a different cache file; that is
+# what configure does when it calls configure scripts in
+# subdirectories, so they share the cache.
+# Giving --cache-file=/dev/null disables caching, for debugging configure.
+# config.status only pays attention to the cache file if you give it the
+# --recheck option to rerun configure.
+#
+ac_cv_c_bigendian=${ac_cv_c_bigendian=no}
+ac_cv_func_dlerror=${ac_cv_func_dlerror=yes}
+ac_cv_func_dlopen=${ac_cv_func_dlopen=no}
+ac_cv_func_gethostbyname=${ac_cv_func_gethostbyname=yes}
+ac_cv_func_getpagesize=${ac_cv_func_getpagesize=yes}
+ac_cv_func_gtk_signal_handler_pending=${ac_cv_func_gtk_signal_handler_pending=yes}
+ac_cv_func_inet_aton=${ac_cv_func_inet_aton=yes}
+ac_cv_func_mmap_fixed_mapped=${ac_cv_func_mmap_fixed_mapped=yes}
+ac_cv_func_putenv=${ac_cv_func_putenv=yes}
+ac_cv_func_setenv=${ac_cv_func_setenv=yes}
+ac_cv_func_setfsgid=${ac_cv_func_setfsgid=yes}
+ac_cv_func_strdup=${ac_cv_func_strdup=yes}
+ac_cv_func_strerror=${ac_cv_func_strerror=yes}
+ac_cv_header_dl_h=${ac_cv_header_dl_h=no}
+ac_cv_header_dlfcn_h=${ac_cv_header_dlfcn_h=yes}
+ac_cv_header_gif_lib_h=${ac_cv_header_gif_lib_h=yes}
+ac_cv_header_locale_h=${ac_cv_header_locale_h=yes}
+ac_cv_header_png_h=${ac_cv_header_png_h=yes}
+ac_cv_header_stdc=${ac_cv_header_stdc=yes}
+ac_cv_header_stropts_h=${ac_cv_header_stropts_h=yes}
+ac_cv_header_tiffio_h=${ac_cv_header_tiffio_h=yes}
+ac_cv_header_unistd_h=${ac_cv_header_unistd_h=yes}
+ac_cv_header_utime_h=${ac_cv_header_utime_h=yes}
+ac_cv_header_zlib_h=${ac_cv_header_zlib_h=yes}
+ac_cv_lib_Xpm_XpmFreeXpmImage=${ac_cv_lib_Xpm_XpmFreeXpmImage=yes}
+ac_cv_lib_dl_dlopen=${ac_cv_lib_dl_dlopen=yes}
+ac_cv_lib_gif_DGifOpenFileName=${ac_cv_lib_gif_DGifOpenFileName=yes}
+ac_cv_lib_jpeg_jpeg_destroy_decompress=${ac_cv_lib_jpeg_jpeg_destroy_decompress=yes}
+ac_cv_lib_m_floor=${ac_cv_lib_m_floor=yes}
+ac_cv_lib_png_png_get_IHDR=${ac_cv_lib_png_png_get_IHDR=yes}
+ac_cv_lib_png_png_read_info=${ac_cv_lib_png_png_read_info=yes}
+ac_cv_lib_pt_grantpt=${ac_cv_lib_pt_grantpt=no}
+ac_cv_lib_tiff_TIFFReadScanline=${ac_cv_lib_tiff_TIFFReadScanline=yes}
+ac_cv_lib_ungif_DGifOpenFileName=${ac_cv_lib_ungif_DGifOpenFileName=yes}
+ac_cv_lib_z_compress=${ac_cv_lib_z_compress=yes}
+ac_cv_lib_z_inflate=${ac_cv_lib_z_inflate=yes}
+ac_cv_path_GTK_CONFIG=${ac_cv_path_GTK_CONFIG=/usr/bin/gtk-config}
+ac_cv_path_IMLIB_CONFIG=${ac_cv_path_IMLIB_CONFIG=/usr/bin/imlib-config}
+ac_cv_path_LD=${ac_cv_path_LD=/usr/i686-pc-linux-gnu/bin/ld}
+ac_cv_path_NM=${ac_cv_path_NM='/usr/bin/nm -B'}
+ac_cv_path_install=${ac_cv_path_install='/bin/install -c'}
+ac_cv_prog_AWK=${ac_cv_prog_AWK=gawk}
+ac_cv_prog_CC=${ac_cv_prog_CC=gcc}
+ac_cv_prog_CPP=${ac_cv_prog_CPP='gcc -E'}
+ac_cv_prog_GTKDOC=${ac_cv_prog_GTKDOC=false}
+ac_cv_prog_INDENT=${ac_cv_prog_INDENT=indent}
+ac_cv_prog_LN_S=${ac_cv_prog_LN_S='ln -s'}
+ac_cv_prog_PERL=${ac_cv_prog_PERL=perl}
+ac_cv_prog_RANLIB=${ac_cv_prog_RANLIB=ranlib}
+ac_cv_prog_cc_cross=${ac_cv_prog_cc_cross=no}
+ac_cv_prog_cc_g=${ac_cv_prog_cc_g=yes}
+ac_cv_prog_cc_works=${ac_cv_prog_cc_works=yes}
+ac_cv_prog_gcc=${ac_cv_prog_gcc=yes}
+ac_cv_prog_gnu_ld=${ac_cv_prog_gnu_ld=yes}
+ac_cv_prog_make_make_set=${ac_cv_prog_make_make_set=yes}
+ac_cv_type_umode_t=${ac_cv_type_umode_t=no}
+gnome_cv_passdown_GTK_LIBS=${gnome_cv_passdown_GTK_LIBS='-L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lglib -ldl -lXi -lXext -lX11 -lm'}
+gnome_cv_passdown_X_CFLAGS=${gnome_cv_passdown_X_CFLAGS='-I/usr/include/gtk-1.2 -I/usr/include/glib-1.2 -I/usr/lib/glib/include -I/usr/X11R6/include'}
+gnome_cv_passdown_X_LIBS=${gnome_cv_passdown_X_LIBS='-L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lglib -ldl -lXi -lXext -lX11 -lm'}
+gnome_cv_passdown_x_libs=${gnome_cv_passdown_x_libs='-L/usr/lib -L/usr/X11R6/lib -lgtk -lgdk -rdynamic -lgmodule -lglib -ldl -lXi -lXext -lX11 -lm'}

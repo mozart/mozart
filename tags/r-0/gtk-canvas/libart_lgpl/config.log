@@ -1,0 +1,64 @@
+This file contains any messages produced by compilers while
+running configure, to aid debugging if configure makes a mistake.
+
+configure:589: checking for a BSD compatible install
+configure:642: checking whether build environment is sane
+configure:699: checking whether make sets ${MAKE}
+configure:745: checking for working aclocal
+configure:758: checking for working autoconf
+configure:771: checking for working automake
+configure:784: checking for working autoheader
+configure:797: checking for working makeinfo
+configure:823: checking for gcc
+configure:936: checking whether the C compiler (gcc  ) works
+configure:952: gcc -o conftest    conftest.c  1>&5
+configure:978: checking whether the C compiler (gcc  ) is a cross-compiler
+configure:983: checking whether we are using GNU C
+configure:1011: checking whether gcc accepts -g
+configure:1043: checking how to run the C preprocessor
+configure:1198: checking host system type
+configure:1219: checking build system type
+configure:1239: checking for ranlib
+configure:1278: checking for ld used by GCC
+configure:1340: checking if the linker (/usr/i686-pc-linux-gnu/bin/ld) is GNU ld
+configure:1356: checking for BSD-compatible nm
+configure:1392: checking whether ln -s works
+ltconfig:603: checking for object suffix
+ltconfig:604: gcc -c -g -O2  conftest.c 1>&5
+ltconfig:629: checking for executable suffix
+ltconfig:630: gcc -o conftest -g -O2   conftest.c  1>&5
+ltconfig:776: checking if gcc PIC flag -fPIC works
+ltconfig:777: gcc -c -g -O2 -fPIC -DPIC  conftest.c 1>&5
+ltconfig:829: checking if gcc supports -c -o file.o
+ltconfig:830: gcc -c -g -O2 -o out/conftest2.o  conftest.c 1>&5
+ltconfig:862: checking if gcc supports -c -o file.lo
+ltconfig:863: gcc -c -g -O2 -c -o conftest.lo  conftest.c 1>&5
+ltconfig:914: checking if gcc supports -fno-rtti -fno-exceptions
+ltconfig:915: gcc -c -g -O2 -fno-rtti -fno-exceptions -c conftest.c  conftest.c 1>&5
+ltconfig:958: checking if gcc static flag -static works
+ltconfig:959: gcc -o conftest -g -O2   -static conftest.c  1>&5
+GNU ld version 2.13.90.0.16 20021126
+ltconfig:1653: checking if global_symbol_pipe works
+ltconfig:1654: gcc -c -g -O2  conftest.c 1>&5
+ltconfig:1657: eval "/usr/bin/nm -B conftest.o | sed -n -e 's/^.*[ 	]\([ABCDGISTW]\)[ 	][ 	]*\(\)\([_A-Za-z][_A-Za-z0-9]*\)$/\1 \2\3 \3/p' > conftest.nm"
+ltconfig:1709: gcc -o conftest -g -O2 -fno-builtin -fno-rtti -fno-exceptions   conftest.c conftstm.o 1>&5
+configure:1583: checking whether to enable maintainer-specific portions of Makefiles
+configure:1634: checking whether byte ordering is bigendian
+configure:1652: gcc -c -g -O2 -Wall  conftest.c 1>&5
+configure:1667: gcc -c -g -O2 -Wall  conftest.c 1>&5
+configure: In function `main':
+configure:1662: `not' undeclared (first use in this function)
+configure:1662: (Each undeclared identifier is reported only once
+configure:1662: for each function it appears in.)
+configure:1662: parse error before "big"
+configure: failed program was:
+#line 1656 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#include <sys/param.h>
+int main() {
+
+#if BYTE_ORDER != BIG_ENDIAN
+ not big endian
+#endif
+; return 0; }

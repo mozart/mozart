@@ -1,0 +1,79 @@
+BODY {
+	background-color:ivory;
+}
+BODY,H1,P,TD,TH,H1,H2,H3,INPUT,DT,DD,DL {
+	font-family:sans-serif;
+}
+H1 {
+	font-size:24pt;
+	font-weight:bold;
+        color: darkred;
+	text-align : center;
+}
+H2 {
+	font-size:18pt;
+	font-weight:bold;
+        color: darkorange;
+}
+p.h2a {
+	font-size:14pt;
+	font-weight:bold;
+        color: darkorange;
+}
+P {
+	text-align:left;
+}
+P.hint {
+	font-size: 18pt; color: darkorange; text-align:center;
+}
+A {
+	color:#A77;
+	font-weight:bold;
+}
+table.PKG th A {
+	color : black;
+}
+dl { margin-left: 20pt; }
+table.platform { background:#e0e0d0; }
+table.package  { background:#e0e0d0; }
+th.main        { background:#F0F0E0; }
+strong.warning { color:#D02090; }
+pre, code      { font-family: monospace; }
+SPAN.BIG {
+	color:darkorange;
+	font-size: 16pt;
+}
+
+/*
+body {
+  background-color : white;
+}
+h1 {
+  color : darkred;
+}*/
+
+div.OFF {
+  margin-left : 2cm;
+  margin-right: 2cm;
+}
+table.PKG td {
+  text-align : right;
+  padding-left : 5pt;
+  padding-right : 5pt;
+}
+table.PKG th {
+  background:#e0c0c0;
+}
+table.PKG tr.EVEN {
+  background:e0e0d0;
+}
+table.PKG tr.EVEN td {
+  background:e0e0d0;
+}
+dt {
+  margin-top : 10pt;
+  font-weight : bold;
+}
+span.RIGHT {
+  float : right;
+}

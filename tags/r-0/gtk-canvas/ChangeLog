@@ -1,0 +1,1886 @@
+2000-07-22: Andy Tai (atai@atai.org)
+
+        * split the canvas from gnome-libs into a standalone gtk widget,
+	renaming all GNOME* to GTK*, creating GtkCanvas 0.1
+
+2000-06-20  Iain Holmes  <terrorist@gegl.org>
+
+	* gnome-config.in: Changed usage of tr to be more compatible
+	with non-GNU versions of tr.
+	Closes Bugs #13340, #12343, #11186, #12533
+
+2000-06-20  Kjartan Maraas  <kmaraas@gnome.org>
+
+	* libgnorba/loadshlib.c (main): Fix a compiler warning.
+	* 
+2000-06-18  Pablo Saratxaga <pablo@mandrakesoft.com>
+
+	* configure.in,po/sp.po,po/sr.po: Added Serbian language files
+	(Cyrillic (sp) and Latin2 (sr))
+
+2000-06-15  Jonathan Blandford  <jrb@redhat.com>
+
+	* idl/gnome-factory.idl: put libgnorba/gnome-factory.h in quotes,
+	so the idl compiler can #include <libgnorba/gnome-factory.h>
+	instead of #include <libgnorba>
+
+2000-06-08  Matthias Warkus  <mawa@iname.com>
+
+	* gnome-data/gnome.mime: Updated to add MIME type for SLP
+	packages.
+
+2000-06-01  Fatih Demir	<kabalak@gmx.net>
+	
+	* configure.in: [ I love branches .. ] added tr to ALL_LINGUAS.
+
+Wed May 31  Martijn van Beers  <martijn@earthling.net>
+
+	* gnome-config.in: change the idl 'module' to check in every
+	  $prefix/share/idl in $GNOME_PATH
+
+2000-05-30 Pablo Saratxaga <pablo@mandrakesoft.com>
+
+	* gnome-data/mime-magic: added mime names for various formats; so
+	they can be used in Gnome mime types handling
+
+2000-05-10  Dan Damian  <dand@dnttm.ro>
+
+	* configure.in (ALL_LINGUAS): Added ro (Romanian).
+
+2000-05-1  John Sullivan <sullivan@eazel.com>
+
+	* gnome-data/gnome.mime: Added big obvious disclaimer
+	at the beginning about how this file is the past and
+	gnome-vfs.mime is the future.
+
+2000-04-30  Karl Eichwalder  <ke@suse.de>
+
+	* gnome-data/gnome.soundlist: Add de.  Sort entries alphabetically.
+	* gnome-data/gtk-events.soundlist: Ditto.
+
+2000-04-06  Ramiro Estrugo  <ramiro@eazel.com>
+
+	* libgnorba/goad.c (goad_server_activate_exe): instead of simply
+	closing stdin, open /dev/null and dup2 it to stdin so that code in
+	the executable that depends on a live and kicking stdin continues
+	to work.
+	
+2000-03-25  Jaka Mocnik  <jaka.mocnik@kiss.uni-lj.si>
+
+	* configure.in (ALL_LINGUAS): added sl (Slovene).
+
+2000-02-22  Elliot Lee  <sopwith@redhat.com>
+	* gnome.h: Check to make sure this file isn't being included
+	accidentally by a program that wants a different
+	(future) interface version.
+	* libgnomeui/gnome_segv.c: Set GNOME_DISABLE_CRASH_DIALOG so
+	a crashing gnome_segv doesn't keep spawning new gnome_segv's.
+
+2000-02-20  Jacob Berkman  <jacob@helixcode.com>
+
+	* libgnorba/goad.c (goad_server_list_get): don't use
+	gnome_unconditional_config_file(), becuase on SuSE GNOMEDIR is set
+	and things break
+
+2000-02-14  Iain Holmes  <ih@csd.abdn.ac.uk>
+
+	* gnome-data/gnome.mime: Removed all "doubles" (ie if IFF and iff were 
+	the same mimetype, removed IFF)
+
+2000-02-14  Timur I. Bakeyev  <timur@gnu.org>
+
+	* acconfig.h, acinclude.m4, configure.in: Add test against presence
+	struct lastlog, setreuid(). 
+	
+	* acinclude.m4: Applied fix from Owen Taylor <otaylor@redhat.com>
+	for inproper struct initialization in ut.ut_tv check.
+
+2000-01-30  Timur I. Bakeyev  <timur@gnu.org>
+
+	* configure.in: AM_GNU_GETTEXT changed to AM_GNOME_GETTEXT - that
+	makes proper substitution for INTLLIBS variable.
+
+2000-01-13  Joe Shaw  <joe@helixcode.com>
+	
+	* libgnome/gnome-util.c (g_concat_dir_And_file): Check for a NULL
+	dir string and return only the filename if so.
+	
+1999-12-28  Matthias Warkus  <mawa@iname.com>
+
+	* gnome-data/gnome.mime: Added new MIME type declarations to
+	accommodate new GMC icons.
+
+1999-12-11  Elliot Lee  <sopwith@redhat.com>
+
+	* libgnomeui/gnome-icon-list.c (icon_new_from_imlib): Check for a
+	  NULL GdkImlibImage and don't try to use it if it is.
+
+1999-11-14  Martin Baulig  <martin@home-of-linux.org>
+
+	* libgnorba/goad.c (goad_server_activate_shlib): Pass the
+	`params' parameter to the `activate' function of the server.
+
+1999-11-01  Jacob Berkman  <jberkman@andrew.cmu.edu>
+
+	* gnome-bug.in (DISTRO): detect Slackware
+
+1999-10-05  Jesus Bravo Alvarez  <jba@pobox.com>
+
+        * configure.in (ALL_LINGUAS): Added Galician (gl)
+        * gnome-data/*.soundlist: Added Galician translations
+
+Tue Oct  5 02:28:30 1999  Owen Taylor  <otaylor@redhat.com>
+
+	* gnome-i18n.c (read_aliases): Fix a memory leak by not
+	overwriting old entries in the alias hash table.
+
+	* gnome-dentry.c (gnome_desktop_entry_save): Fix a mem-leak
+	when saving desktop entries with comments.
+	
+1999-09-29  Rodrigo Stulzer Lopes <rodrigo@conectiva.com.br>
+
+	* po/pt_BR.po:  added translations.
+
+1999-09-28  Lauris Kaplinski  <lauris@ariman.ee>
+
+	* gnome-data/*.soundlist: Added Estonian tranlations
+
+1999-09-24  Elliot Lee  <sopwith@redhat.com>
+	* Makefile.am: 'dist-hook: gnome-libs.spec'
+
+1999-09-22  Elliot Lee  <sopwith@redhat.com>
+
+	* libgnome/gnome-i18n.c: gnome_i18n_init() - revert the patch of contention
+	* libgnomeui/gnome-init.c: Perform the equivalent here - wrap $LC_CTYPE manipulation
+	around the gtk_set_locale() call.
+
+Sat Sep 18 12:42:46 1999  George Lebl  <jirka@5z.com>
+
+	* configure.in,devel-docs/Makefile.am,
+	  devel-docs/gnome-libs-tutorial/Makefile.am: add the tutorial to
+	  the build so that it gets properly distributed
+
+1999-09-16  Michael Meeks  <michael@nuclecu.unam.mx>
+
+	* libgnorba/goad.c (real_server_activate_with_id, goad_server_activate_with_id),
+	(goad_server_activate_with_repo_id, goad_server_activate), 
+	(real_goad_server_activate, goad_server_activate_shlib),
+	(goad_server_activate_factory, goad_server_activate_exe): Added time to die to
+	catch circular references safely.
+
+1999-09-14  Havoc Pennington  <hp@pobox.com>
+
+	* libgnorba/orbitgtk.c (_gnorba_get_cookie_reliably): Add all
+	kinds of error checking/messages.
+
+1999-09-11 Pablo Saratxaga <pablo@mandrakesoft.com>
+
+	* configure.in,po/et.po: added Estonian language file
+
+1999-09-01 Elliot Lee <sopwith@redhat.com>
+	* configure.in, acconfig.h, libgnome/gnome-{dump,metadata}.c:
+	  Add a --enable-prefer-db1 option to make life easier
+	* gnome-config.in: Properly handle $GNOME_LIBCONFIG_PATH and $GNOME_PATH
+	  (don't barf on paths with more than one directory, don't barf on GNOME_PATH
+	   with no GNOME_LIBCONFIG_PATH).
+
+1999-09-03 Augusto Cesar Radtke <bishop@sekure.org>
+	* configure.in: (ALL_LINGUAS): Added brazilian portuguese translations.
+
+1999-09-03  Zbigniew Chyla  <chyla@alice.ci.pwr.wroc.pl>
+
+	* gnome-data/*.soundlist: Added Polish translations.
+
+1999-09-01  Jacob Berkman  <jberkman@andrew.cmu.edu>
+
+	* configure.in: added --with-kde-datadir flag for specifying
+	where kde dentry icons can be found (stolen from gnome-core)
+
+	* acconfig.h: added KDE_ICONDIR and KDE_MINI_ICONDIR
+
+1999-09-01 Elliot Lee <sopwith@redhat.com>
+	* libgnome/gnome-exec.c: Open stdin to be /dev/null if close_fd's
+	  is specified - we don't want programs reading from our tty and
+	  hanging all the programs in the process group. BUGFIX #1548.
+
+1999-09-01  Havoc Pennington  <hp@pobox.com>
+
+	* configure.in: Apparently some old libpng's exist, and they don't 
+	have png_get_IHDR, so we check for png_get_IHDR. Closes bug
+	2049
+
+1999-09-01  Havoc Pennington  <hp@pobox.com>
+
+	* README: Remove false statement that --with-included-gettext works
+
+1999-08-31  Federico Mena Quintero  <federico@redhat.com>
+
+	* configure.in: Give preference to db2, then db1.85, then db1.
+
+1999-08-31  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in (dbopen): Clean up after gnome-libs-db1.patch.
+	(enable_gtk_doc): Agree on the same spelling all over.
+
+1999-08-30 Elliot Lee <sopwith@redhat.com>
+
+	* Apply gnome-libs-1.0.8-nullfont.patch from RHL 6.0.
+	* Fix up .spec file
+	* gnome-bug script now uses mkdir instead of mktemp - portable.
+
+1999-08-30 Elliot Lee <sopwith@redhat.com>
+
+	* Apply gnome-libs-db1.patch from RHL 6.0.
+
+1999-08-29  Karl Eichwalder  <ke@suse.de>
+
+	* configure.in (AC_OUTPUT): Add
+	devel-docs/gnome-dev-info/Makefile.
+
+1999-08-27  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* gnome-config.in (Usage): 
+	`echo -n' is not portable.  Steal trick	from configure.  
+	Run `sed' just once (minor optimization).
+
+1999-08-27  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* man/gnome.1 (http): Updated the GNOME manual page. 
+
+	* gnome-config.in (Usage): Add support for GNOME_PATH and list the
+	existing modules separated by commas and format the resulting output.
+
+	* libgnorba/goad.c (goad_server_list_get): Use correct string
+	format.  Otherwise we could have never loaded user-defined GOAD
+	services. 
+	(goad_server_list_get): Add support for loading servers from
+	$GNOME_PATH/CORBA/servers and from $GNOME_GNORBA_PATH.
+
+1999-08-26  Karl Eichwalder  <ke@suse.de>
+
+	* README: Fix typos.
+	* gnome-libs.spec.in: Define and use `sysconfdir'.
+
+1999-08-25  Havoc Pennington  <hp@pobox.com>
+
+	* Makefile.am: Don't build gnome-hello
+	* configure.in: No gnome-hello or libvfs
+
+1999-08-25 Elliot Lee <sopwith@redhat.com>
+
+	* libgnomeui/gnome_segv.c: Include a GnomeHref to point to the
+	GNOME appcrash page. 
+	* libgnomeui/gnome-init.c: Clean up fatal signal handling, add env
+	variable, etc. 
+	Don't copy arguments unnecessarily for gnome_client's purposes.
+	Remove POPT_AUTOHELP (it's already in libgnome) and move --version
+	to libgnome 
+	* libgnome/gnomelib-init.c: Move --version option handling here.
+
+1999-08-19 Elliot Lee <sopwith@redhat.com>
+
+	* libgnorba/orbitgnome.c: Fix brain-dead cookie setup logic
+	  (s/&/|/) and don't enable cookies if app asked for them to be
+	  turned off. 
+	* libgnomeui/gnome-app-helper.h: Cast the 'callback' arguments to
+	  (gpointer) to avoid ANSI warnings.
+
+1999-08-20  Federico Mena Quintero  <federico@redhat.com>
+
+	* configure.in: Bumped version number to 1.0.14.
+
+1999-08-19 Elliot Lee <sopwith@redhat.com>
+
+	* configure.in: Check for utmp.h
+	* zvt/*.[ch]: Patch included in bug #1641.
+
+1999-08-19 Elliot Lee <sopwith@redhat.com>
+
+	* libgnome/gnome-score.c, libgnomeui/gnome-stock.c,
+	  libgnomeui/gnome-animator.c:
+	  Warning fixes from patch in bug #1594
+
+1999-08-19 Elliot Lee <sopwith@redhat.com>
+
+	* Makefile.am: Fix bug #1460 - put gnomeConf.sh in CLEANFILES.
+
+1999-08-16 Elliot Lee <sopwith@redhat.com>
+
+	* gnome-libs.spec.in: Use sysconfdir=/etc instead of $prefix/etc
+	* libgnome/gnome-config.c: Ignore lines that begin with a '#'
+	* libgnomeui/gnome-dentry-edit.c: Attempt to remove the memory
+	  leak from not destroy the icon entry window.
+	* test-gnome/testgnome.c: A GnomeDentryEdit is not a widget.
+	
+1999-08-16  Pablo Saratxaga <srtxg@chanae.alphanet.ch>
+	* libgnomeui/gnome-scores.c: use strftime() to allow showing
+	the dates in a localized way.
+
+1999-08-15  Pablo Saratxaga <srtxg@chanae.alphanet.ch>
+
+	* libgnomeui/gnome-app-helper.c: changed "Create _New Window" to
+	"Create New _Window" to avoid conflicts with menus that also use
+	"_New" (it is the case of gmc)
+	* po/*.po: modified to reflect that change
+
+1999-07-26  Miguel de Icaza  <miguel@gnu.org>
+
+	* libgnorba/orbitgtk.c (gnorba_CORBA_init): Add new flag to
+	control the priority of the CORBA loop.
+
+1999-07-28 Elliot Lee <sopwith@redhat.com>
+	* */*.[ch]: Fix all warnings.
+
+1999-07-26  Dave Camp  <campd@oit.edu>
+
+	* idl/gnome-factory.idl: #include guard.
+
+1999-07-26  Tristan Tarrant  <ttarrant@etnoteam.it>
+
+	* gnome-data/gnome.mime: Midi files also end in .mid
+
+1999-07-23  Martin Baulig  <martin@home-of-linux.org>
+
+	* libgnorba/goad.c (goad_server_activate_exe): Only pass the
+	`--activate-goad-server' argument to the server if `server_id'
+	is not NULL.
+	(goad_server_activate_exe): Add `params' as command line arguments
+	to the server if it's not NULL.
+
+1999-07-16  Dave Camp  <campd@oit.edu>
+
+	* idl/desktop-textviewer.idl: Replace libgnorba/GnomeObject.h with
+	libgnorba/gnome-unknown.h.
+	Also, #include gnome-unknown.idl instead of GnomeObject.idl.
+
+1999-07-11  Martin Baulig  <martin@home-of-linux.org>
+
+	* idl/desktop-textviewer.idl: Reflect latest GNOME::obj to
+ 	GNOME::Unknown renaming.
+
+1999-07-08  Jacob Berkman  <jberkman@andrew.cmu.edu>
+
+	* gnome-bug.in (CATEGORIES): added 'gnome-applets' category
+
+1999-07-05  Miguel de Icaza  <miguel@gnu.org>
+
+	* libgnorba/Makefile.am (gnome_object_built): Added gnome-unknown
+	to the compilation process.
+
+	* idl/Makefile.am (idl_DATA): Added gnome-unknown interface.
+
+1999-06-22  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* acconfig.h: Removed the hypot() hack.
+
+	* configure.in: Removed the hypot() hack.
+
+Tue Jun 15 16:34:28 1999 Timur Bakeyev <mc@bat.ru>
+
+	* configure.in: When we chech against perl version, we should use
+	obtained $PERL, as perl can be perl5 (and is :).
+
+1999-06-13  Nuno Ferreira  <nmrf@rnl.ist.utl.pt>
+
+	* gnome-data/*.soundlist: Added Portuguese translations.
+
+1999-06-09  Matt Loper  <matt@gnome-support.com>
+
+	* libgnorba/goad.c (goad_server_register): If `name' is passed in
+	as NULL, an object keeps from registering in the name service,
+	although it still exposes its IOR as before. If `name' isn't NULL
+	but `kind' is NULL, `kind' is set to "server", and the object is
+	placed in the naming service.
+
+1999-06-07  Matt Loper  <matt@gnome-support.com>
+
+	* idl/GnomeObject.idl: Removed `oneway' from ref and unref; when
+	such network optimizations are necessary, they should be done by
+	caching the refcount in the client.
+
+1999-05-28  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* gnome-config.in (Usage): Cleanups.
+	(*Conf.sh): Source only the first Conf.sh file found in
+	$module_dirs.
+
+1999-05-28  Jacob Berkman  <jberkman@andrew.cmu.edu>
+
+	* configure.in (Z_LIBS): fix a typo
+
+1999-05-26  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* gnome-config.in (modversion): Move the modversion test here.
+
+1999-05-26  Michael Zucchi <zucchi@zedzone.mmc.com.au>
+
+	* configure.in: Added target for devel-docs/zvt/Makefile
+
+1999-05-24  David KAELBLING <drk@sgi.com>
+
+	* libgnorba/orbitns.c (get_name_server_ior_from_root_window):
+	Compare nitems to 1, do not assing to it.  Typo fix.
+
+1999-05-24  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+	
+	* man/gnome-config.1 (program): Added man page for gnome-config
+
+	* gnome-config.in (modversion): Add support for outputing a module
+	version number.  Default to gnome-libs' version.
+
+	Add support for scanning all directories found in GNOME_MOD_PATH
+	
+1999-05-16  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* idl/GnomeObject.idl: rename GObject to obj.
+
+1999-05-15  Martijn van Beers  <martijn@earthling.net>
+
+	* idl/desktop-textviewer: derive from GObject instead of object
+
+Fri May 14 13:12:28 1999  George Lebl  <jirka@5z.com>
+
+	* configure.in,po/sk.po: added slovak translations by Bobo Rajec
+	  <bobo@bspc.sk>
+
+1999-05-13  Martijn van Beers  <martijn@earthling.net>
+
+	* idl/gnome-file.idl:
+	* idl/gnome-editor.idl: Removed files
+	* idl/desktop-textviewer.idl:
+	* idl/desktop-editor.idl: Added new versions with better name
+	* idl/Makefile.am: reflect above changes here
+
+1999-04-25  Kjartan Maraas  <kmaraas@online.no>
+
+	* gnome-data/*.soundlist: Added Norwegian translations.
+	
+1999-04-23  Andrew T. Veliath  <andrewtv@usa.net>
+
+	* libgnorba/gnome-name-server.c (main): Change to root directory.
+
+	* libgnorba/orbitns.c (name_server_by_forking): Set close-on-exec
+	flag for any open file descriptors.
+
+1999-04-15  Matthias Warkus  <mawa@iname.com>
+
+	* gnome-bug.in: Hacked it so it recognises SuSE systems and
+	extracts the version number from /etc/SuSE-release.
+
+1999-04-13  Jonathan Blandford  <jrb@redhat.com>
+
+	* gnome-data/gnome.mime: minor reordering fixes to the tons of
+	updates below.  (-:
+
+1999-04-12  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* gnome-data/gnome.mime: Tons of updates to the MIME-types
+	database.
+
+1999-04-12  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* libgnorba/goad.c (goad_server_activate_shlib): Do not define
+	SHLIB_DEPENDENCIES here.  This should be conditionally defined. 
+
+1999-04-10  Martin Baulig  <martin@home-of-linux.org>
+
+	Moved the GNOME FAQ from devel-docs to gnome-faq.
+
+	* devel-docs/gnome-faq.sgml: Moved to `gnome-faq/gnome-faq.sgml'.
+	* gnome-faq/gnome-faq.sgml: Moved here from devel-docs.
+
+1999-04-08  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* configure.in (LIBS): Test for existance of dlfcn.h header.  Make
+	libgnorba/goad.c only use shared lib deps if the system has
+	dlfcn.h.
+
+	I am suprised that nobody ever fixed this.
+
+	Add a test for seteuid, it is not available on HP-UX.
+
+	* libgnorba/goad.c: Do include dlfcn.h only if available on this
+	system
+	
+1999-04-07  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* README.cvs-commits: s/GTK+/gnome-libs (this file was initially
+	taken from GTK+).
+
+1999-04-07  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* NEWS: Added the announcements for gnome-libs-1.0.4 and 1.0.5.
+
+1999-04-01  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* configure.in (LIBS): Check for stropts.h, as in systems that use
+	the new gnu libc 2.1 + Linux 2.2 we end up having Unix98 pty
+	support but not stropts.h header file (this is the streams support
+	for SVR4 systems).
+
+1999-03-28  Timur Bakeyev <mc@bat.ru>
+
+	* libgnorba/Makefile.am: Add clean-local hook for BUILT_SOURCES -
+	with idl_compiler, changing resulting code twice a day it should be
+	reasonable to remove old code.
+
+1999-03-25  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Bumped version number to 1.0.5.
+
+1999-03-23  Martin Baulig  <martin@home-of-linux.org>
+
+	* configure.in: Added `--disable-gtk-doc' parameter to disable
+	use of gtk-doc even when compiling from CVS. Defines
+	`ENABLE_GTK_DOC' automake conditional.
+
+1999-03-19  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* libgnorba/gnome-name-server.c
+	(setup_atomically_name_server_ior): The Stale reference to the
+	GNOME name server message was missplaced.
+
+1999-03-18  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Bumped version number to 1.0.4.
+
+1999-03-11  Jonathan Blandford  <jrb@redhat.com>
+
+	* gnome-data/gnome.mime: removed some duplicate entries.
+
+1999-03-11  Martijn van Beers <martijn@earthling.net>
+
+	* idl/GnomeObject.idl
+	* idl/gnome-editor.idl: new files
+
+1999-03-03  Tuomas Kuosmanen  <tigert@gimp.org>
+
+	* libgnomeui/gnome-stock.h
+	* libgnomeui/gnome-stock.c
+	* libgnomeui/pixmaps/stock_midi.png: Added a stock icon for MIDI
+	device - I'll stick this to gmix..
+
+1999-03-01  Changwoo Ryu  <cwryu@adam.kaist.ac.kr>
+
+	* gnome-data/{gnome.soundlist, gtk-events.soundlist}: Added Korean
+	translations.
+
+Thu Feb 25 03:41:23 1999  Timur Bakeyev <mc@bat.ru>
+
+	* configere.in: Added several more checks for functions, used by
+	gnome-utmp.c.
+	
+	* acconfig.h, acinclude.m4: Added check against ut.ut_syslen menmber
+	of struct utmpx.
+
+1999-02-24  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* gnome-data/Makefile.am (convert_SCRIPTS): Add this script that
+	generates postscript.convert
+
+1999-02-16  Ulrich Drepper  <drepper@cygnus.com>
+
+	* libgnorba/goad.c (get_cmd): Use strtok_r instead
+	of strtok.
+
+1999-02-21  Nuno Ferreira  <nmrf@rnl.ist.utl.pt>
+
+	* libgnorba/Makefile.am (loadshlib_LDADD): Use libgnorba.la
+	without the path from the topdir so that AM_MAKEFLAGS=-j4 works.
+	(goad_browser_LDADD): Likewise.
+	(gnome_name_service_LDADD): Likewise for libgnorbagtk.la.
+
+Sat Feb 20 16:53:37 1999  Timur Bakeyev <mc@bat.ru>
+
+	* acconfig.h, acinclude.m4: Add defenition of UTMP macro during
+	configure. This allows to check exactly what we'll use, not plain
+	struct utmp.
+
+Thu Feb 18 12:34:37 1999  Maciej Stachowiak  <mstachow@alum.mit.edu>
+
+	* libgnorba/Makefile.am (install-data-hook): Use `$(LN_S)' instead
+ 	of `ln -sf'; -f is unnecessary as the line above rm -f's the link
+	target, and `ln -sf' is not portable.
+
+Thu Feb 18 03:40:04 1999  Timur Bakeyev <mc@bat.ru>
+
+	* configure.in: Added checks for various utmp members (AC_CHECK_UTMP),
+	some changes around libutil handling, removed check against login().
+	
+	* acconfig.h: Added set of macro, that corresponds to different members
+	of utmp structure (HAVE_UT_UT_member).
+	
+	* acinclude.m4: Added macro, that determines available utmp members
+	(AC_CHECK_UTMP).
+
+1999-02-17  Elliot Lee  <sopwith@redhat.com>
+
+	* gnome-libs.spec.in: Turn off debugging macro usage for .rpm's.
+
+1999-02-15  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* configure.in (ZVT_LIBS): On systems with -lutil, add this to the
+	required libraries for zvt in gnome-config.
+
+1999-02-15  Jeff Garzik  <jgarzik@pobox.com>
+
+	* gnome-bug.in:
+	Fix for sites with /usr/lib/sendmail.
+	Fix to X-Gnome-CC comment stripping (it wasn't occurring).
+	Added FIXME to indicate that mail should be determined in
+		configure.in, not here.
+
+1999-02-15  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* gnome-data/gnome.mime: Added "htm" as an extension for html
+	files, too (this is annoyingly common) :-)
+
+1999-02-15  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Bumped version number to 0.99.8.1.
+
+1999-02-13  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* gnome-config.in (usage): Print out the names of the *Conf.sh
+	files currently installed.
+
+1999-02-12  Tuomas Kuosmanen  <tigert@gimp.org>
+
+	* libgnomeui/pixmaps/stock_cdrom.png: Changed the cdrom-icon 
+	to one that looks better with the rest of gmix icons
+
+1999-02-11  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Bumped the version number to 0.99.8.
+
+1999-02-11  Owen Taylor  <otaylor@redhat.com>
+
+	* libgnorba/orbitgtk.c (_gnome_gnorba_cookie_setup):
+	Avoid ungrabbing twice, and (more importantly)
+	XFlush() after calling XUngrabServer(), so that
+	we release the server grab as quickly as possible.
+
+1999-02-10  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* libgnorba/goad.c (goad_server_list_get): Only load files that
+	match *.goad and *.gnorba.
+
+1999-02-09  Elliot Lee  <sopwith@redhat.com>
+
+	* libgnome/gnome-exec.c: Default to not closing the fd's.
+
+1999-02-09  Chris Lahey  <clahey@umich.edu>
+
+	* gnome-data/paper.config: Made some of these values a bit more
+	accurate.
+
+	* configure.in, .cvsignore: Added gnome-libs.spec.
+
+	* gnome-libs.spec.in, gnome-libs.spec: Replaced gnome-libs.spec
+	with gnome-libs.spec.in, so gnome-libs.spec is now a generated
+	file.
+
+1999-02-07  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Bumped version number to 0.99.7.
+
+1999-02-04  Jeff Garzik  <jgarzik@pobox.com>
+
+	* configure.in, Makefile.am, gnome-bug.in:
+	Add gnome-bug script.
+
+1999-02-04  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Bumped version number to 0.99.6.
+
+	* images/Makefile.am (EXTRA_DIST): Added $(pixmap_DATA) to the list
+	of files to be distributed.
+
+	* Makefile.am (SUBDIRS): Added images to the subdirs.
+
+1999-02-01  Elliot Lee  <sopwith@bogus.cuc.ml.org>
+
+	* libgnorba/{gnome-name-service.c,goad.c,orbitgnome.c,orbitgtk.c}
+	  - rename variables to make sure nobody is using internal global
+	  vars.
+	  - Set the cookie on the $DISPLAY, and coordinate that with
+	  /tmp/orbit-username/cookie file.
+
+1999-02-01  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Added devel-docs/{gnome,gnomeui}/Makefile to the
+	list of files to generate.
+
+1999-01-31  Jeff Garzik  <jgarzik@pobox.com>
+
+	* libgnorba/gnome-name-server.c, libgnorba/goad.c:
+	Fixes for sun cc.
+
+1999-01-28  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* libgnome/gnome-paper.c (gnome_paper_convert_to_points): Fix
+	inline docs. 
+
+1999-01-27  Jeff Garzik  <jgarzik@pobox.com>
+
+	* ChangeLog, libgnome/ChangeLog:
+	New ChangeLog for libgnome directory.
+1999-01-27  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* libgnome/Makefile.am (INCLUDES): Use a G_LOG_DOMAIN of `Gnome'.
+	Suggested by Tim Janik <timj@gtk.org>.
+
+1999-01-25  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* libgnome/gnome-util.c: Make the indentation be consistent.
+
+1999-01-25  Ulrich Drepper (drepper@cygnus.com)
+
+	* libgnome/gnome-config.c, libgnome/gnome-metadata.c,
+	libgnome/gnome-mime-info.c: On systems that define getc_unlocked
+	stdio is thread safe.  With locally opened files it is not
+	necessary to use the locking.  Therefore POSIX (and gnu libc
+	includes this feature) defines some _unlocked functions and they
+	always should be used in these cases.
+
+1999-01-22  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* libgnorba/Makefile.am (gnome_name_service_LDADD): Change the
+	link order.  -lname-server uses the definitions from
+	$(ORBIT_LIBS). 
+
+1999-01-21  Sebastian Wilhelmi  <wilhelmi@ira.uka.de>
+
+	* configure.in (gnomelocaledir): set to the place, where the
+	message catalogs go to.
+
+1999-01-19  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* gnome-data/gnome.mime: Add x-url/* mime types for url
+	mime-types. 
+
+1999-01-19  Sebastian Wilhelmi  <wilhelmi@ira.uka.de>
+
+	* libgnorba/orbitgtk.c: Make it work for an ORBit version using
+	the glib main loop as well; toggled by ORBIT_USES_GLIB_MAIN_LOOP.
+
+1999-01-18  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Bumped version number to 0.99.4.
+
+1999-01-18  Jeff Garzik  <jgarzik@pobox.com>
+
+	* configure.in:
+	Remove redundant AC_SUBST calls for CFLAGS, CPPFLAGS, LDFLAGS
+
+1999-01-17  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in (AC_OUTPUT): Emit test-suite/tests/Makefile.
+
+Thu Jan 14 23:03:47 PST 1999 Manish Singh <yosh@gimp.org>
+
+	* tools/convertrgb/Makefile.am: don't install convertrgb
+
+1999-01-13  Mark Galassi  <rosalia@cygnus.com>
+
+	* libgnorba/Makefile.am (install-data-hook): replaced rm with rm
+	-f so as not to cause "make install" to stop dead when the
+	new-object file was not previously installed.
+
+Wed Jan  6 16:23:06 1999  Maciej Stachowiak  <mstachow@alum.mit.edu>
+
+	* gnome-data/gnome.mime, gnome-data/mime-magic: Corrected
+ 	misspellings of `application'.
+
+1999-01-05  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* libgnorba/orbitgnome.c: Added documentation to the entry points.
+	New file.  Move the GNOME specific code here.
+
+	* libgnorba/goad.c: Complete the documentation and convert it to
+	the gnome-inline doc format.
+
+	* libgnorba/Makefile.am (gnome_name_service_SOURCES): Make the
+	gnome name server link only against the libgnorbagtk library.
+
+	* libgnorba/orbitgtk.c: Added in-line documentation for the entry
+	points. 
+
+	* libgnorba/gnome-name-server.c (main): Why are we disabling
+	cookies, this is a huge problem.  If someone needs to disable
+	cookies they need to invent a method for making this secure, not
+	by weakening the code.
+
+	The gnome-name-server no longer links with the gnome libraries, it
+	only uses the GTK+ libraries.  And if we can go X-only it would be
+	so much better.
+
+1999-01-03  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* libgnorba/Makefile.am (install-data-hook): Fixed syntax error in
+	install-data-hook.
+
+Sat Jan  2 22:44:37 PST 1999 Manish Singh <yosh@gimp.org>
+
+	* configure.in
+	* libgnomeui/Makefile.am: ok, I dunno how this was working before,
+	but it was broken. Use the perl and awk checks and a REBUILD rule
+	like gtk+ for the autogened files.
+
+1999-01-02  Jeff Garzik  <jgarzik@pobox.com>
+
+	* libgnorba/gnome-name-server.c, libgnorba/goad.c,
+	  libgnorba/orbitns.c:
+	Wrap _xxx_SOURCE defines in libgnome,
+	add _xxx_SOURCE defines in libgnorba.
+	
+1999-01-01  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* libgnorba/orbitns.c (gnome_name_service_get): Fix to deal with
+	the startup race condition.  Basically, we need to retry the
+	get_name_server_ior_from_root_window operation if the
+	name_server_by_forking fails.
+
+1999-01-01  Jeff Garzik  <jgarzik@pobox.com>
+
+	* libgnomeui/gnome-calculator.c, libgnomeui/gnome-canvas-util.c,
+	  libgnomeui/gnome-client.c, libgnomeui/gnome-dock.c,
+	  libgnomeui/gnome_segv.c, libgnomeui/gtkdial.c:
+	Added a few _xxx_SOURCE defines where necessary to get the code
+	to compile under 'gcc -ansi -pedantic'.
+
+1999-01-01  Christopher Blizzard  <blizzard@appliedtheory.com>
+
+	* libgnorba/goad-browser.c (gb_create_server_list): s/patch/path/
+	(gb_create_main_window): Reactivate the drop down menu so there is
+ 	a way to exit the application.
+
+	* configure.in (ALL_LINGUAS): Remove nl because it apparently
+ 	doesn't exist.
+
+1998-12-30  Jeff Garzik  <jgarzik@pobox.com>
+
+	* libgnomeui/*.c, zvt/*.c, etc.:
+	s/g_copy_strings/g_strconcat/
+
+Wed Dec 30 01:01:58 1998  George Lebl  <jirka@5z.com>
+
+        * libgnorba/goad.c: use fclose to
+          close the files we open, we were leaking file descriptors all
+          over the damn place!
+
+1998-12-17  Christopher Blizzard  <blizzard@appliedtheory.com>
+
+	* libgnorba/goad-browser.c (gb_create_server_list): If the browser
+ 	can't find any installed services ( gnome-core isn't installed -
+ 	it could happen ) pop up a pleasant dialog saying that it's a good
+ 	idea to check your installation and, more importantly, don't
+ 	crash.  Also, before refreshing the services list make sure that
+ 	the servlist and the servlist->list aren't null.
+
+1998-12-17  Ettore Perazzoli  <ettore@comm2000.it>
+
+	* libgnorba/goad-browser.c (gb_create_main_window): Show the main
+	window *after* setting up the dock.
+
+1998-12-16  Sven Neumanns  <sven@gimp.org>
+
+	* replaced all occurences of gtk_label_set() with
+	gtk_label_set_text() 
+
+Sun Dec 27 22:13:53 1998  George Lebl  <jirka@5z.com>
+
+	* libgnorba/goad.c: (goad_server_list_read) fix memory leak by
+	  freeing the dummy GString, and drop the config file that we read
+	  to conserve memory
+
+1998-12-25  Jeff Garzik  <jgarzik@pobox.com>
+
+	* configure.in:
+	removed 'ru' from ALL_LINGUAS, so that make distcheck works again
+
+1998-12-17  Christopher Blizzard  <blizzard@appliedtheory.com>
+
+	* libgnorba/goad-browser.c (gb_create_server_list): If the browser
+ 	can't find any installed services ( gnome-core isn't installed -
+ 	it could happen ) pop up a pleasant dialog saying that it's a good
+ 	idea to check your installation and, more importantly, don't
+ 	crash.  Also, before refreshing the services list make sure that
+ 	the servlist and the servlist->list aren't null.
+
+1998-12-17  Ettore Perazzoli  <ettore@comm2000.it>
+
+	* libgnorba/goad-browser.c (gb_create_main_window): Show the main
+	window *after* setting up the dock.
+
+1998-12-16  Sven Neumanns  <sven@gimp.org>
+
+	* replaced all occurences of gtk_label_set() with
+	gtk_label_set_text() 
+
+1998-12-15  Martin Baulig  <martin@home-of-linux.org>
+
+	* configure.in: Use AM_GNOME_GETTEXT from the macros directory.
+
+1998-12-14  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* gnome-data/mime.types: New format for the mime.type file.
+
+	* libgnome/gnome-mime-info.c (main): Moved the query information
+	here. Renamed the gnome_mime_type_* routines to gnome_mime_*.
+
+	* libgnome/gnome-mime.c: New implementation.  We now use the GNOME
+	provided mime type information instead of the system provided one
+	(This is for several reasons, first is that the mime.types file
+	format is lame; the second one is that mismatches in the mime-type
+	database will produce mistakes; the third one is: most non GNU
+	systems lack mime.types, and if they have one, it is basically
+	old, so we would have to provide ours anyways).
+
+	This file has full API docs.
+
+1998-12-14  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* libgnome/Makefile.am (EXTRA_DIST): Removed lib_date.README from
+	EXTRA_DIST.
+
+1998-12-14  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Bumped the version number to 0.99.0.  Wheeee!
+
+	* TODO.shtml: Updates from Dave Camp regarding the popup calendar
+	in Gnome-dateedit.
+
+1998-12-13  Christopher Blizzard  <blizzard@appliedtheory.com>
+
+	* libgnorba/goad.c (goad_server_activate_exe): Make sure that
+ 	stdout and stderr aren't closed across the exec().  This will
+ 	cause a SIGPIPE the first time that the client writes somwthing to
+ 	stdout.  This gets applets launching from the panel again on my
+ 	system.
+	
+1998-12-10  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* libgnorba/orbitns.c (gnome_name_service_get): We do not register
+	the /GNOME/server stuff here, we do that on the name server now.
+
+	* libgnorba/gnome-name-server.c: Now we register the stuff here. 
+
+1998-12-07  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* libgnorba/orbitgtk.c (gnome_name_service_get): Use a reliable
+	scheme for fetching the name server IOR.  We use the proxy window
+	scheme to find the name service IOR. 
+	
+1998-12-10  James Henstridge  <james@daa.com.au>
+
+	* gnome-libs.spec: took %{prefix}/share/mime-magic* out of the %files
+	list.  Those files are installed in %{prefix}/etc, which is already
+	included in the %files list.
+
+	* gnome-data/Makefile.am: added an EXTRA_DIST section that contains
+	all the data files.  Data files are not automatically distributed,
+	since they may be generated.
+
+1998-12-09  Andrew T. Veliath  <andrewtv@usa.net>
+
+	* libgnorba/goad.c (goad_server_list_get): Load user CORBA servers
+	from gnome_user_dir/CORBA/servers/*, in preference to system
+	servers.
+
+1998-12-09  Michael Lausch  <mla@gams.at>
+
+        * corrected CVS trioubles with gnome-regex and gnome-metadata
+	
+1998-12-08  Herbert Valerio Riedel  <hvr@hvrlab.ml.org>
+
+	* libgnorba/orbitgtk.c (orb_remove_connection): added proper cast
+
+1998-12-08  Christopher Blizzard  <blizzard@appliedtheory.com>
+
+	* libgnorba/Makefile.am (libgnorba_la_SOURCES): Change the
+ 	individual file dependencies to $(gnorba_built).  This makes sure
+ 	that the generated files are actually generated before trying to
+ 	build libgnorba.
+
+1998-12-02  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* gnome-config.in (libs_l): Fix for the "idl" gnome-config
+	target. 
+	
+1998-11-05  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* libgnorba/goad.c: Include ctype.h
+
+1998-12-03  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in (TEST_INTERNAL): Remove.
+	* acconfig.h (TEST_INTERNAL): Remove.
+
+	* Makefile.am (SUBDIRS): Distribute, but don't build, `libvfs'.
+
+1998-12-03  Changwoo Ryu  <cwryu@adam.kaist.ac.kr>
+
+	* HACKING: Raised required gettext version to 0.10.35.
+
+1998-12-01  Raja R Harinath  <harinath@cs.umn.edu>
+
+	Ready for removal of intl/ + changes for gettext 0.10.35.
+	* acinclude.m4: Remove AM_GNU_GETTEXT and related macros.
+	* configure.in (AC_OUTPUT): Remove 'sed .. POTFILES' expression.
+
+Tue Dec  1 02:43:15 PST 1998 Manish Singh <yosh@gimp.org>
+
+	* configure.in
+	* libgnome/Makefile.am: sed magic to extract glib stuff from
+	GTK_CFLAGS and GTK_LIBS
+
+Tue Dec  1 02:22:27 EST 1998 Nick Fetchak <nuke@bayside.net>
+
+	* libgnomeui/gnome-client.c: removed a g_free() of a pointer to
+	a getpwuid(). (this shouldn't point to static memory, but trying
+	to free it causes consistant segfaults on my system)
+
+Sat Nov 28 21:18:54 EST 1998 Gregory McLean <gregm@comstar.net>
+
+	* gnome-hello/*.c : gtk_container_border_width -> 
+ 	gtk_container_set_border_width.
+	* test-gnome/*.c : gtk_container_border_width ->
+	gtk_container_set_border_width. (I thought gtkcompat.h was supposed
+	to deal with this? *sigh* ah well its fixed now)
+
+1998-11-27  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* gnome-config.in (libs_l): Provide a way to report the location
+	for the gnome-libs-installed IDL files (flag --idl).
+
+1998-11-25  Jeff Garzik  <jgarzik@pobox.com>
+
+	* install-sh, missing, mkinstalldirs, INSTALL:
+	Removed these auto-generated files from CVS.  automake will
+	install them for us if necessary.
+
+1998-11-23  Jeff Garzik  <jgarzik@pobox.com>
+
+	* tools/gnome-doc/mkstub:
+	New script to create doc stubs from cproto output.
+
+	* tools/gnome-doc/gnome-doc:
+	Added hack to allow documentation of macros defined in .h files.
+	See the butt end of gnome-calculator.c for an example.
+
+1998-11-20  James Henstridge  <james@daa.com.au>
+
+	* gnome-libs.spec: added %{prefix}/etc/paper.config to the %files
+	section.
+
+Thu Nov 19 19:07:45 1998  Jeff Garzik <jgarzik@pobox.com>
+
+	* tools/gnome-doc/gnome-doc:
+
+	Fixed 'perl -cw gnome-doc' warnings.
+	Fixed verbose mode.
+	Fixed bug where 2d+ array pointers weren't scanned correctly
+
+Thu Nov 19 11:09:15 1998  Raph Levien  <raph@gimp.org>
+
+	* libgnorba/Makefile.am (LDADD): added libart_lgpl
+
+Wed Nov 18 16:30:22 1998  Raph Levien  <raph@gimp.org>
+
+	* Integrating libart_lgpl
+
+	* libart_lgpl/ : This file is now a virtual module
+	* Makefile.am: SUBDIRS includes libart_lgpl
+	* configure.in: AC_CONFIG_SUBDIRS(libart_lgpl)
+	* libgnomeui/Makefile.am: added links to libart_lgpl
+	* libgnomeui/gnome-canvas.c: minimal dependency on libart
+
+	Please look in libart_lgpl/ChangeLog for libart-specific change
+	entries.
+	
+Tue Nov 17 19:27:50 PST 1998 Manish Singh <yosh@gimp.org>
+
+	* libgnorba/goad.c
+	* libgnome/gnome-sound.c: some #includes to cleanup declarations
+
+1998-11-17  Tuomas Lukka <lukka@iki.fi>
+
+	* README: remove redundant paragraph
+
+1998-11-12  Andrew T. Veliath  <andrewtv@usa.net>
+
+	* acconfig.h: Remove HAVE_ORBIT.
+
+	* Makefile.am: Remove HAVE_ORBIT conditional, build libgnorba by
+	default.
+
+	* configure.in (ORBit checks): Replace entire check with
+	GNOME_ORBIT_CHECK.
+
+1998-11-09  Jeff Garzik  <jgarzik@pobox.com>
+
+	* acconfig.h, configure.in,
+	  devel-docs/libgnome.sgml,
+	  libgnome/libgnomeP.h, libgnomeui/Makefile.am,
+	  libgnomeui/gnome-dateedit.c, libgnomeui/gtkcalendar.c,
+	  libgnomeui/gtkcalendar.h, libgnomeui/libgnomeui.h,
+	  test-gnome/testgnome.c:
+
+	  	Removed gnome-dl and gtkcalendar modules.
+
+1998-11-09  Martin Baulig  <baulig@merkur.uni-trier.de>
+
+	* configure.in (zvt): Added check for <sys/un.h>.
+
+1998-11-08  Jay Cox  <jaycox@earthlink.net>
+
+	* libgnomeui/*almost-every*.h: gint foo:1; => guint foo:1;
+	
+	* gnome-hello/gnome-hello-3-parse-args.c, gtk-xmhtml/images.c,
+	* libgnomeui/*lots-of-files*.c, gtk-xmhtml/images.c,
+	* gnome-hello/gnome-hello-3-parse-args.c, support/*somefiles*.c,
+	* support/gnome-argp.h, zvt/update.c, zvt/zterm.c:
+ 	Included alloca where necesary.  Fixed some void pointer
+ 	arithmetic.  Fixed some variable used as initializer errors.
+
+1998-11-09  Michael Zucchi  <zucchi@zzedzone.fsi.com.au>
+
+	* acconfig.h: Added HAVE_PTY_H, HAVE_UTIL_H define.
+
+	* configure.in (gnome-pty-support): Added check for pty.h, util.h.
+
+1998-11-09  Martin Baulig  <martin@home-of-linux.org>
+
+	* configure.in (AC_CHECK_HEADERS): Add `utmpx.h pty.h libutil.h'.
+	(AC_CHECK_FUNCS): Check for `login' if `openpty' was already found.
+
+1998-11-06  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in (AC_CHECK_HEADERS): Add paths.h.  
+	From "Brandon S. Allbery" <allbery@ece.cmu.edu>.
+
+1998-11-05  Jonathan Blandford  <jrb@aware-of-vacuity.labs.redhat.com>
+
+	* AUTHORS: Fixed the spelling of my name.
+
+1998-11-04  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in: Don't check $need_gnome_support.  Always use
+	gnomesupport.
+	(popt): Remove check.  It is in `gnomesupport' now.
+	* gnome.h: Include `gnomesupport.h' unconditionally.
+	* libgnome/libgnome.h: Reorder headers.
+	* libgnome/libgnomeP.h: Sync to libgnome.h.
+
+1998-10-24  Martin Baulig  <martin@home-of-linux.org>
+
+	* configure.in (GNOME_ORBIT_HOOK): Print a warning on failure.
+	(ALL_LINGUAS): Added `da'.
+
+1998-10-24  Tom Tromey  <tromey@cygnus.com>
+
+	* configure.in: Check for strdup, utime.h.  Call AC_FUNC_MMAP.
+	Check for umode_t type.  Call GNOME_VFS_CHECKS,
+	GNOME_UNDELFS_CHECKS.
+
+1998-10-22  Sebastian Wilhelmi  <wilhelmi@ira.uka.de>
+
+	* libgnorba/orbitgtk.c (gnome_name_service_get): changed
+	orbit-naming-server to orbit-name-server, as it has changed in
+	ORBit.
+
+1998-10-18  James Henstridge  <james@daa.com.au>
+
+	* gnome-libs.spec (%files section): Added %{prefix}/share/gtkrc
+	to the files list.  Made it a %config file, so users can change
+	it without it getting deleted in an upgrade.
+
+1998-10-16  Martin Baulig  <martin@home-of-linux.org>
+
+	* configure.in (--enable-test-internals): New parameter. Define
+	`TEST_INTERNALS' if enabled and add new `TEST_INTERNALS' automake
+	conditional. This is used to add wrapper functions for some
+	static functions so they can be used in the test suite.
+
+	* acconfig.h (TEST_INTERNALS): Define this if configured with
+	`--enable-test-internals'.
+
+1998-10-15  Michael Lausch  <mla@gams.at>
+
+	* libgnorba/orbitgtk.c (gnome_name_service_get): change g_error to
+	g_warning if no orbit-naming-server can be found.
+
+1998-10-15  Sebastian Wilhelmi  <wilhelmi@ira.uka.de>
+
+	* libgnorba/Makefile.am (loadshlib_LDADD): changed to make it
+	compile before gnome-libs is installed (which is the usual order,
+	isn't it?)
+
+1998-10-14  Christopher Blizzard  <blizzard@appliedtheory.com>
+
+	* libgnorba/loadshlib.c (Exception): Use g_warning, not gwarning
+ 	so this will link again.
+
+1998-10-14  Michael Lausch  <mla@gams.at>
+
+	* ligbnorba/ Removed all debug messages.
+
+1998-10-13  Michael Lausch  <mla@gams.at>
+
+	* libgnorba/goad.c: Added structur to hold a command string and
+	it's argv vector, so CORBA servers can be called with cmdline
+	parameters. 
+	(goad_server_activate): If we found a shlib server, but the client 
+	requests an EXE server, Call the wrapper program to execute the
+	shared library server.
+	(goad_server_activate_shlib): Don't forget the register shared
+	library server deregistration.
+	(get_cmd): new function. parses a string into the command and the
+	argv. this one is a quick and dirty implementation.
+	(goad_server_activate_exe): Use execvp to execute the server, so
+	that the argv can be passed.
+
+1998-10-12  Michael Lausch  <mla@gams.at>
+
+	* libgnorba/goad.c: Changed g_warning to g_message for debugging
+	purpose. 
+	(goad_server_activate_shlib): Change error detection for the
+	activate function of a shlib type server.
+
+	* libgnorba/orbitgtk.c (gnome_name_service_get): Corrected type
+	for subcontext when probing for naming-server.
+
+	* libgnorba/gnome-plugins.c (gnome_plugin_use): If the plugin_id
+	starts with a '/' assume it's an absolute pathname already.
+
+1998-10-11  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Added devel-docs/templates/Makefile to the list of
+	files to generate.
+
+1998-10-11  Michael Lausch  <mla@gams.at>
+
+	* libgnorba/orbitgtk.c (gnome_name_service_get): Detect a dead
+	orbit-name-server and restart it. 
+	(gnome_register_corba_server): new function. Used by the server to 
+	register with the orbit-naming-server.
+	(gnome_unregister_corba_server): new function. Used by the server
+	to deregister from the orbit-naming-server.
+
+	* libgnorba/goad.c (goad_server_activate): The server has to pass
+	it's IOR string to us, so that we can pass an object reference
+	back to the caller. don't loop here, polling the naming server.
+	(goad_server_activate_shlib): Disable the flag
+	GOAD_ACTIVATE_NO_NS_REGISTER. It's not used any more.
+	(goad_server_activate_exe): Daemonize the server using
+	setsid. Wait until the server is ready and printed it's IOR
+	string. 
+
+Fri Oct  9 15:16:34 PDT 1998 Manish Singh <yosh@gimp.org>
+
+	* acinclude.m4: fixed ESD check
+
+1998-10-09  Michael Lausch  <mla@gams.at>
+
+	* libgnorba/goad.c (goad_server_list_get): change the key strings
+	for the resource reading stuff.
+	(goad_server_list_read): use second temp string, otherwise this
+	doesn't work. Consider it a workaround, because i'm not sure if
+	the bug isn't in the config functions.
+	(goad_server_activate): Becuase now the server register themself
+	with the naming server, loop until the name got registered and
+	make lookups if the object is already available. <comment> All
+	Gnome servers should accept a flag which tell them which name to
+	use, e.g.: --ns-name=help-browser
+	(goad_server_activate_exe): The actual server execution function
+	gets very simple with this cahnges. Just ignore SIGPIPE and
+	execute the server. It is now the task of the server to register
+	with the orbit-nameing-server
+
+	* libgnorba/orbitgtk.c (gnome_name_service_get): Close all
+	unneeded filedescriptors and ignore SIGPIPE before starting the
+	orbit-naming-server daemon.
+
+1998-10-08  Tom Tromey  <tromey@cygnus.com>
+
+	* libgnorba/Makefile.am (CLEANFILES): New macro.
+
+1998-10-05  Michael Lausch  <mla@gams.at>
+
+	* libgnorba/orbitgtk.c (gnome_name_service_get): Added setisd()
+	call, so that the orbit-name-server runs as a daemon. Maybe this
+	isn't portable to other OSes than Linux.
+
+1998-10-03  Martin Baulig  <martin@home-of-linux.org>
+
+	* configure.in (--disable-gnome-hello, --disable-test-gnome):
+	New parameters to configure.in to disable building of gnome-hello,
+	test-gnome and test-suite, it's enabled by default.
+	(COMPILE_GNOME_HELLO, COMPILE_TEST_GNOME): New automake conditionals.
+
+1998-10-02  Michael Lausch  <mla@gams.at>
+
+	* libgnorba/orbitgtk.c (gnome_name_service_get): If the
+	CORBA_NAME_SERVICE property is set, do a lookup for id='/GNOME',
+	kind='subcontext' to check that the naming-server is still running 
+	and it is correctly configured.
+	Strip newline from the string we get back from the naming-server.
+	Also store the terminating '\0' character in the X property.
+	XFlush() the display after changing the X property.
+	Create the '/GNOME' and '/GNOME/Servers' contexts in the newly
+	created naming server.
+
+	* libgnorba/goad.c Added verbose exception handling all over the
+	file. Useful for debugging. 
+	(goad_server_list_get): append "/CORBA/servers"
+ 	to GNOMESYSCONFDIR. Use terminating '/' for parameter to
+ 	goad_server_list_read. Otherwise the config file stuff doesn't
+ 	work correctly.
+	(goad_server_list_read): Pass the filename to
+	gnome_config_init_iterator_sections. [I'm not sure this is the
+	right thing to do, but if you pass only "", the config files
+	aren't found].
+	Use '=' for section and key string in config file iteration, if
+	FILENAME starts with '=', so that we use absolute pathnames. 
+		
+
+1998-10-01  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	(free_keys): I am a dork.  Revert last change.
+
+	* Makefile.am: Use '?' to separate the sed
+	commands as ',' is used when people pass -Wl,something.
+
+Wed Sep 30 21:55:30 PDT 1998 Manish Singh <yosh@gimp.org>
+
+	* acinclude.m4
+	* configure.in: use AM_PATH_ESD
+
+1998-09-30  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in (ESD_LIBS): 
+	Check for libs that `esound' depends on.
+
+1998-09-28  Elliot Lee  <sopwith@redhat.com>
+
+	* configure.in:
+	  Add some convenience wrappers for using sound in gnome programs.
+	  The configure.in hack needs improvement - perhaps esound needs an
+	  esound-config?
+
+1998-09-27  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* configure.in: Autodetect gtkcalendar widget in Gtk+
+
+1998-09-24  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* acinclude.m4 (AM_PATH_GLIB): Remove, since gnome-libs now
+	depends on glib 1.1.x.  (Xref change log dated 1998-07-29).
+
+Thu Sep 24 17:41:44 1998  John Ellis  <johne@bellatlantic.net>
+
+	* tools/convertrgb/convertrgb.[ch]: Revert last change.
+
+Thu Sep 24 17:11:39 1998  John Ellis  <johne@bellatlantic.net>
+
+	* tools/convertrgb/convertrgb.[ch]: Removed dependecy on gdk_imlib
+	functions. Now all that is needed is ImageMagick's convert.
+
+1998-09-23  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* idl/Makefile.am (EXTRA_DIST): Added a stupid Makefile.am.
+	PLEASE REMEMBER TO UPDATE YOUR MAKEFILE.AMs WHEN YOU ADD STUFF TO
+	THE TREE!!!
+
+	* Makefile.am (SUBDIRS): Added the stupid idl directory to the list.
+
+	* configure.in: Added the stupid idl directory to the list.
+
+1998-09-23  Sebastian Wilhelmi  <wilhelmi@ira.uka.de>
+
+	* configure.in: -ldb only needed once ;-) 
+
+1998-09-14  Mandrake         <mandrake@mandrake.net>
+
+	* incremented library versions to 0.30 for libgnome and libgnomeui
+
+1998-09-20  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* gnome-config.in: Add the rest of the `configure' directory
+	options, while we are at it (exec-prefix, bindir, libdir, datadir,
+	mandir, infodir, &c.). 
+
+1998-09-20  Martin Baulig  <martin@home-of-linux.org>
+
+	* tools/convertrgb/convertrgb.c (convert): Make it work if source
+	files are specified with full pathnames.
+
+Sun Sep 20 09:48:39 1998  John Ellis  <johne@bellatlantic.net>
+
+	* gnome-config.in: Add --prefix option to output install path.
+
+Sat Sep 19 12:43:16 1998  John Ellis  <johne@bellatlantic.net>
+
+	* Makefile.am(SUBDIRS): Added tools, note that this must be before
+	libgnomeui, because that requires convertrgb, which is in tools.
+
+1998-09-18  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* libgnorba/orbitgtk.c (get_exclusive_lock): Replace `flock' with
+	`fcntl' lock.
+	(release_lock): Likewise.
+
+1998-09-18  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Removed generation of list of canvas files.
+
+Fri Sep 18 15:01:28 1998  John Ellis  <johne@bellatlantic.net>
+
+	* configure.in: added tools/Makefile & tools/convertrgb/Makefile
+
+1998-09-18  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* libgnorba/orbitgtk.c (get_cookie_reliably): A new method to get
+	a cookie reliably (using locking and the /tmp/orbit-$username
+	directory to store the cookie).
+
+1998-09-13  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in: Look for `db_185.h' compatibility header.
+
+Thu Sep 10 01:59:25 1998  Tom Tromey  <tromey@cygnus.com>
+
+	* configure.in: Use AC_CHECK_FUNC (not AC_CHECK_FUNCS) to look for
+	dbopen.  Correctly set DB_LIBS to `-ldb', not `-ldl'.
+
+Thu Sep 10 01:51:02 1998  Ted Lemon <mellon@hoffman.vix.com>
+
+	* configure.in: First look for dbopen in libc; NetBSD puts it
+	there.
+
+Tue Sep  8 14:09:22 1998  Tom Tromey  <tromey@cygnus.com>
+
+	* configure.in: Add -ldb to GNOME_LIBS and LIBGNOME_LIBS.  If db
+	checks fail, then configure fails.
+
+Tue Sep  1 00:48:02 CDT 1998  Frank Belew <frb@umr.edu>
+	
+	* configure.in: Use imlib.m4 instead of kludge.
+	* libgnome/Makefile.am, libgnomeui/Makefile.am,
+	test-gnome/Makefile.am, gnome-hello/Makefile.am: Use new
+	GDK_IMLIB_CFLAGS instead of GTK_CFLAGS.
+	
+1998-08-20  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in (GNOME_COMPILE_WARNINGS): New check.
+
+Sun Aug 16 19:42:41 1998  Tom Tromey  <tromey@cygnus.com>
+
+	A couple of -Wall -Wmissing-prototypes fixes:
+	* libgnome/gnomelib-init.c: Include libgnomeP.h.
+	* libgnome/gnome-i18nP.h: Add prototypes for
+	gnome_i18n_set_preferred_language and
+	gnome_i18n_get_preferred_language.
+
+	* libgnome/libgnomeP.h: Include gnome-remote.h.
+	* libgnome/libgnome.h: Include gnome-remote.h.
+	* libgnome/Makefile.am (libgnome_la_SOURCES): Added
+	gnome-remote.c.
+	(libgnomeinclude_HEADERS): Added gnome-remote.h.
+	* libgnome/gnome-remote.c: New file.
+	* libgnome/gnome-remote.h: New file.
+
+1998-08-16 Mandrake (Geoff Harrison) <mandrake@mandrake.net>
+
+	* Changed version numbers to 0.27.0 in lib dirs.  I will likely
+	automate these changes a little later to use versions in the
+	configure.in file
+
+1998-08-13  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Bumped version number to 0.27.
+
+1998-08-08  Mandrake (Geoff Harrison) <mandrake@mandrake.net>
+
+	* changed version numbers of 0.0.0 stuff to 0.26.0
+	(-version-info x:y:z, where x is the major rev+the minor rev, z is the
+	minor rev, y is the patchlevel.  -- thus the library would come out as
+	libxxx.so.x-z.z.y)
+
+1998-08-07  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Added devel-docs/ui-guide/Makefile to the list of
+	generated files.
+
+1998-08-06  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in (GLIB_LIBS): Use the "sed from GTK_LIBS" approach
+	if AM_PATH_GLIB fails.
+	(AC_OUTPUT): Generate `libvfs/Makefile'.
+	* Makefile.am (libvfs): New variable, defined if FALSE.
+	(SUBDIRS): Add $(libvfs).
+	With this change, `libvfs' is not built, but it is distributed.
+
+1998-08-06  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Bumped version number to 0.26.
+
+1998-08-04  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Added gnome-canvas-widget to the sources.
+
+1998-08-02  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* Makefile.am (SUBDIRS): Remove extraneous `built_SUBDIRS'.
+
+	* gnome-config.in: Added new options `--libs-only-L' and
+	`--libs-only-l'.
+
+Sat Aug  1 16:45:59 EDT 1998  Stuart Parmenter <pavlov@innerx.net>
+	
+	* libgnomeui/gnome-mdi.c:
+	added #ifdef GNOME_ENABLE_DEBUG's around the 2 g_message() calls
+
+Sat Aug  1 15:53:14 EDT 1998  Stuart Parmenter <pavlov@innerx.net>
+	
+	* gtk-xmhtml/gtk-xmhtml.c:
+	Commented out the "Die boy boy die" line and exit line so that Balsa
+	wouldn't exit if this was called.
+
+1998-07-31  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in (ALL_LINGUAS): Added Japanese translation.
+
+1998-07-29  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* acinclude.m4: Include definition of `AM_PATH_GLIB' for people
+	who haven't installed glib 1.1.x.  This is a temporary measure, as
+	long as `gnome-libs' claims to support gtk+ 1.0.x.
+
+1998-07-17  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Added gnome-canvas-line and gnome-canvas-util to
+	the sources.
+
+1998-07-15  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* acconfig.h (NEED_DECLARATION_GETHOSTNAME): New tag.
+
+	* configure.in (jpeglib.h): Undef a few more symbols to prevent
+	preprocessor symbol clashes.  In this case, jpeglib.h defines
+	HAVE_STDDEF_H and HAVE_STDLIB_H.
+
+1998-07-14  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in (AM_PATH_GLIB): New test.
+	(LIBGNOME_LIBS): List `-lglib' too.
+	Based on suggestion from 
+	Manish Vachharajani <mvachhar@vger.rutgers.edu>.
+
+	* gnome-config.in: Make sure library ordering is preserved, when
+	removing duplicates.
+
+	* Makefile.am (AUTOMAKE_OPTIONS): Require automake 1.3.
+
+1998-07-13  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* Makefile.am (built_SUBDIRS): Add `test-suite'.
+
+1998-07-12  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in (dlopen): Test directly for the function.
+	(dlerror): Include $DL_LIB in $LIBS before testing.
+	From James Michael Mastros <spare@jennifer-unix.dyn.ml.org>.
+
+mar jul  7 10:13:44 ART 1998  Horacio J. Peña <horape@compendium.com.ar>
+
+	* libgnomeui/gnome-client.h: Added gnome_client_save &
+		gnome_client_restart_session.
+	* libgnomeui/gnome-client.c: Added gnome_client_save &
+		gnome_client_restart_session.
+
+1998-07-06  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Added gnome-canvas-image files.
+
+1998-07-05  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* configure.in: Added gnome-canvas-text.[ch].
+
+1998-07-04  Stuart Parmenter <pavlov@pavlov.net>
+
+	* libgnomeui/gnome-mdi.c
+	  (child_list_menu_remove_item): added a check
+	    to see if the menu existed... this may not be a good idea, but since
+	    gnome-mdi's documentation isn't all that, it made sense:)
+	  (child_list_menu_add_item): same thing
+
+1998-06-28  Raja R Harinath  <harinath@cs.umn.edu>
+
+	New, improved, gnome-config script. (Not related to
+	libgnome/gnome-config.[ch]).
+	* Makefile.am (gnome-config): Move generation to ...
+	* configure.in (AC_SUBST): ... here.
+	(GNOME_LIBDIR,GNOME_INCLUDEDIR): Use ${..}, not $(..) for variable
+	substitution. 
+	* gnome-config.in: Rehaul.
+
+1998-06-26  Nuno Ferreira  <nmrf@rnl.ist.utl.pt>
+
+	* configure.in (ALL_LINGUAS): Added Poruguese translation.
+
+Sun Jun 14 09:34:36 1998  Dick Porter  <dick@cymru.net>
+
+	* configure.in tweak for libgif
+
+1998-06-11  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in: Remove stuff relating to `build_CC'. 
+
+Wed Jun 10 19:24:07 PDT 1998 Manish Singh <yosh@gimp.org>
+
+	* changed things to use GTK_HAVE_ACCEL_GROUP instead of
+	HAVE_DEVGTK... installed headers depending on config.h
+	stuff is bad.
+
+Wed Jun 10 14:19:39 EDT 1998 Gregory McLean <gregm@comstar.net>
+
+	* YES! gnome-libs as a whole now compiles against gtk 1.0.x (on my
+	  machine atleast) Now I hope I can get back to work.
+
+Tue Jun  9 22:55:20 EDT 1998 Gregory McLean <gregm@comstar.net>
+
+	* macros/gnome-x-checks.m4: quick and dirty check for devel gtk and
+	  define HAVE_DEVGTK if its found. This should save us a bunch of
+	  work next time we go to do a release we won't have to chase
+	  around code that only works on the devel version of gtk.
+	* libgnomeui/* bracketed all code that requires the devel branch of
+	  gtk.. I think I got it all.
+	* acconfig.h : new tag HAVE_DEVGTK, use this to mark your changes that
+	  require the dev branch of gtk.
+
+1998-06-09  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* Makefile.am (built_SUBDIRS): Added test-gnome to the list of directories.
+
+Tue Jun  9 02:30:36 PDT 1998 Manish Singh <yosh@gimp.org>
+
+	* configure.in: redid graphics lib checks
+
+1998-06-08  Jim Pick  <jim@jimpick.com>
+
+	* Added debian packaging dir.
+
+Mon Jun  8 20:46:40 EDT 1998 Gregory McLean <gregm@comstar.net>
+
+	* libgnomeui/gtkdial.c: removed some dead code bloat :)
+
+1998-06-08  Martin Baulig  <martin@home-of-linux.org>
+
+	* configure.in: Added some stuff for cross-compiling.
+
+	* gnomeConf.sh.in (need_gnome_support): New tag.
+
+1998-06-07  Stuart Parmenter <pavlov@innerx.net>
+
+	* libgnomeui/gnome-dialog.[ch]: changes to make it use GtkAccelGroup
+	  functions, i.e. making it compile :)
+	* libgnomeui/gnome-stock.c: same thing
+	* libgnomeui/stock-demo.c: same thing
+	* libgnomeui/*: same thing :)
+
+1998-05-19  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* acconfig.h (HAVE_SYS_ERRLIST): New tag.
+
+1998-05-19  Miguel de Icaza  <miguel@nuclecu.unam.mx>
+
+	* configure.in (GLIB_LIBS): use the correct glib depending on what
+	is installed.  Bug reported by Mark Galassi.  Thanks to Owen for
+	suggesting the proper approach to this. 
+
+1998-05-13  Jaka Mocnik  <jaka.mocnik@kiss.uni-lj.si>
+
+	* configure.in: When checking for libtiff link conftest against
+	Z_LIBS and JPEG_LIBS. Check failed for me otherwise.
+	
+Wed May  6 13:16:14 1998  Tom Tromey  <tromey@cygnus.com>
+
+	* configure.in: Check for sys/select.h.
+
+1998-04-29  Tristan Tarrant  <ttarrant@etnoteam.it>
+
+	* configure.in: add checks for forkpty
+
+1998-04-27  Michael Fulbright  <msf@redhat.com>
+
+	* libgnomeui/gnome-app-helper.c (gnome_app_add_help_menu_entries):
+	  use gnome_help_file_find_file() function to find topic.dat
+
+Sun Apr 19 09:38:36 EDT 1998 Gregory McLean <gregm@comstar.net>
+
+        * rasterapi/.cvsignore: added to ignore generated files.
+
+Mon Apr 13 22:14:11 1998  George Lebl  <jirka@5z.com>
+
+	* configure.in: make Makefile in libgnomeui/pixmaps
+
+1998-04-12  Raja R Harinath  <harinath@cs.umn.edu>
+
+	Introduce `gnomesupport.h'.
+	* configure.in (SUPPORTINCS): Define NEED_GNOMESUPPORT_H if
+	`libgnomesupport' is built.
+	(GNOME_INCLUDEDIR): Likewise.  Also, use $(pkglibdir)/include
+	instead of $(includedir)/libgnomesupport.  (See support/ChangeLog.)
+
+	* gnome.h: Include `gnomesupport.h' if NEED_GNOMESUPPORT_H is
+	defined.  This should make `gnomesupport.h' pretty transparent.
+
+Tue Mar 24 00:39:36 1998  Tom Tromey  <tromey@cygnus.com>
+
+	* Makefile.am (DISTCLEANFILES): Removed.
+
+Tue Mar 17 21:34:35 1998  George Lebl  <jirka@5z.com>
+
+	* libgnomeui/gtk-{plug,socket}.[ch]: added Owen's plugsocket
+	  code to libgnomeui
+
+Sun Mar 15 15:24:41 1998  Owen Taylor  <owt1@cornell.edu>
+
+	* Makefile.am configure.in gnomeConf.sh.in: 
+	Add GTK_CFLAGS to GNOME_INCLUDEDIR, and GTK_LIBS to the
+	approriate *LIBS variables.
+
+Sun Mar  8 17:15:17 1998  Tom Tromey  <tromey@cygnus.com>
+
+	* version.h.in: Removed.
+	* configure.in: Don't create version.h.
+
+	* configure.in (SUPPORTINCS, LIBSUPPORT): New defines.
+	(GNOME_LIBS): Include -lgnomesupport if required.
+	(GNOME_INCLUDEDIR): Include -I for libgnomesupport if required.
+
+	* gnomeConf.sh.in (GNOME_INCLUDEDIR, GNOMELIBDIR): Quote values.
+
+Wed Mar  4 01:06:58 1998  Tom Tromey  <tromey@cygnus.com>
+
+	* acconfig.h (HAVE_PROGRAM_INVOCATION_SHORT_NAME,
+	HAVE_PROGRAM_INVOCATION_NAME): Added.
+
+1998-02-26  Mark Galassi  <rosalia@cygnus.com>
+
+	* devel-docs/libgnomeui.sgml, devel-docs/libgnome.sgml:
+	added PSGML file option comments with a "parent document".  This
+	makes it easier for emacs to load the subdocuments.
+
+1998-02-25  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in: Clean up the handling of {Z,PNG,JPEG,TIFF,GIF}_LIBS,
+	and their interaction with {GDK_IMLIB,GNOMEUI,GTKXMHTML}_LIBS.
+	(AC_SUBST): Remove {Z,PNG,JPEG}_LIBS.
+
+Tue Feb 24 20:01:42 1998  Maciej Stachowiak  <mstachow@mit.edu>
+
+	* configure.in: Added checks for libraries that gdk_imlib depends
+ 	on, since libgnomeui now depends on libgdk_imlib. This is needed
+ 	for the libraries and demos (and probably other apps) to build
+ 	properly.
+
+1998-02-23  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* gnome.h: Added #include <gdk_imlib.h>, as it is now required for
+	all of Gnome.
+
+1998-02-23  Mark Galassi  <rosalia@nis.lanl.gov>
+
+	* configure.in (LIBGNOMEUI_LIBS):
+	(GNOMEUI_LIBS): added $Z_LIBS to both of these, sine gdk_imlib
+	might require them, and gdk_imlib is now always linked in
+	libgnomeui.
+
+1998-02-23  Marc Ewing  <marc@redhat.com>
+
+	* libgnomeui/gnome-app-helper.{c,h}: added radio and check/toggle
+	button support, for both menus and toolbars.  Also added two
+	new fields to the struct _GnomeUIInfo: user_data - is used as the
+	data parameter to the gtk_signal_connect() call for each item,
+	and unsed_data which should always be NULL.  Previously the
+	data paramenter to gtk_signal_connect() came from the data
+	parameters to the *_interp() and *_with_data(), which was less
+	than optimal.
+
+	* libgnomeui/gnome-font-selector.c: Changes to support above.
+
+1998-02-20  Carsten Schaar  <nhadcasc@fs-maphy.uni-hannover.de>
+
+	* devel-docs/.cvsignore: Added 'Makefile' and 'Makefile.in'.
+
+	* configure.in (ALL_LINGUAS): Added german translations.
+
+Wed Feb 18 09:25:38 ART 1998  Horacio J. Peña  <horape@compendium.com.ar>
+
+	* devel-docs/Makefile.am: new.
+	* devel-docs/libgnome*.sgml: new.
+	* devel-docs/gdoc/: new dir.
+	* README: added licensing info for gtk-xmhtml and libgtktty.
+	* devel-docs/gnome-dev-info.sgml: splited. (now the libgnome(ui)? 
+	  chapters are independant files.
+	* libgnomeui/gnome-about.h: Documented.
+	* libgnomeui/{almost_all}.h: Added #include <libgnome/gnome-defs.h>
+
+Sat Feb 14 00:35:54 1998  Tom Tromey  <tromey@cygnus.com>
+
+	* Makefile.am (confexecdir): Renamed.
+	(confexec_DATA): Likewise.
+
+	* configure.in (GNOME_LIBDIR, GNOME_INCLUDEDIR): Define to be
+	expanded in make.
+	(AC_OUTPUT): Don't create gnomeConf.sh.
+	* Makefile.am (release): Fixed typo.
+	(gnomeConf.sh): New target.
+
+1998-02-13  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in (GNOME_INCLUDEDIR): Include `-I'.
+	(GNOME_LIBDIR): Include `-L'.
+
+	* autogen.sh: Moved most of the stuff to `macros/autogen.sh'.
+
+	* Makefile.am (SUBDIRS): Add macros.
+	(macros/macros.dep): New maintainer rule for handling automatic
+	rebuilding of aclocal.m4 if any of the macros in `macros/' change.
+
+	* configure.in (AC_OUTPUT): Generate macros/Makefile too.
+
+1998-02-12  Federico Mena Quintero  <federico@nuclecu.unam.mx>
+
+	* libgnomeui/gnome-app.c (gnome_app_configure_positions): Fixed
+	bug where it would sigsegv if the app had a toolbar but no menubar.
+	(gnome_app_new): Removed unused variable prefix.
+	Removed unused prototype for gnome_app_rightclick_event.
+	(gnome_app_rightclick_menubar): Removed unused variable i.
+	(gnome_app_rightclick_toolbar): Likewise.
+	(gnome_app_set_menus): Fixed uninitialized variable warnings.
+	(gnome_app_rightclick_menubar): gtk_menu_popup time parameter set
+	to event->time.  This makes the popup timer work correctly.
+	(gnome_app_rightclick_toolbar): Likewise.
+
+1998-02-12  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* configure.in (GNOME_LIBDIR,GNOME_INCLUDEDIR): New configuration
+	variables used in `gnomeConf.sh'.
+	* gnomeConf.sh.in (GNOME_LIBDIR,GNOME_INCLUDEDIR): Moved here from
+	the `install-data-local' rule.
+
+	* Makefile.am (SUBDIRS): Add `support'.
+	(install-data-local): Remove.
+
+1998-02-10  Raja R Harinath  <harinath@cs.umn.edu>
+
+	* HACKING: Added a note about `aclocal' and the `macros' subdir. 
+
+	* autogen.sh: Run `aclocal -I macros' if macros subdir exists.
+
+	* configure.in: Moved AC_GNOME_CHECK and AC_GNOME_X_CHECKS to
+	macros subdir (as gnome.m4 and gnome-x-checks.m4 resp.).
