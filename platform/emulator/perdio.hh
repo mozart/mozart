@@ -376,16 +376,18 @@ void SendTo(Site *toS,MsgBuffer *bs,MessageType mt,Site *sS,int sI);
 
 #define NOT_IMPLEMENTED   {warning("not implemented - perdio");Assert(0);}
 
+OZ_Return raiseGeneric(char *msg, OZ_Term arg);
+
+
 /* RS: have to GC the byte stream again !!!!!!!!!*/
-#define CheckNogoods(val,bs,msg,Cleanup)		\
-  { OZ_Term nogoods = bs->getNoGoods();			\
-    if (!oz_isNil(nogoods)) {				\
-       Cleanup;						\
-       return oz_raise(E_ERROR,OZ_atom("dp"),msg,3,	\
-	  	       oz_atom("nogoods"),		\
-		       val,				\
-		       nogoods);			\
-    }							\
+#define CheckNogoods(val,bs,msg,Cleanup)				\
+  { OZ_Term nogoods = bs->getNoGoods();					\
+    if (!oz_isNil(nogoods)) {						\
+       Cleanup;								\
+       return raiseGeneric(msg,						\
+			   mklist(OZ_pairA("Resources",nogoods),	\
+				  OZ_pairA("Contained in",val)));	\
+    }									\
   }
 
 
