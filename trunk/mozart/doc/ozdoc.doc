@@ -195,7 +195,7 @@ elements reresented by non-terminal <INDEXING> are allowed to occur
 anywhere within the scope of element BOOK.
 
 BOOK		::= FRONT BODY BACK?			+<INDEXING>
-FRONT		::= TITLE AUTHOR* META* ABSTRACT?
+FRONT		::= TITLE <AUTHOR>* META* ABSTRACT?
 BODY		::= CHAPTER* PART* APPENDIX*
 CHAPTER		::= TITLE? <P>* SECTION*
 SECTION		::= TITLE? <P>* SUBSECTION*
@@ -284,6 +284,8 @@ TD		::= <...P>
 TR		::= <...P>
 BACK		::= (META | BIB.EXTERN)*
 BIB.EXTERN	::= <EMPTY>
+AUTHOR		::= <TEXT>
+AUTHOR.EXTERN	::= <EMPTY>
 
 * General Principles of the DTD
 
@@ -382,8 +384,13 @@ This is used by FRONT, sectioning elements such as CHAPTER, FIGURE,
 TABLE.
 
 ** AUTHOR
-Currently does not have internal structure.  It simly contains the
-name of an author of the current document.
+** AUTHOR.EXTERN
+AUTHOR currently does not have internal structure.  It simply contains
+the name of an author of the current document.  It is recommended to
+use AUTHOR.EXTERN instead, which allows to refer to an entry in an
+external author database:
+*** TO			denotes the external author database
+*** KEY			denotes the entry in that database
 
 ** META
 Makes a (property) statement about the document.
