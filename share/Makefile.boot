@@ -92,7 +92,7 @@ boot-%:
 	OZC="$(BOOTCOM)" \
 	OZINIT=$(BUILDLIB)/Init.ozf \
 	OZPATH=.:$(BUILDLIB):$(BUILDTOOLS):$(SOURCELIB):$(SOURCETOOLS) \
-	OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=$(BUILDLIB)/:prefix=$(HOMEURL)/share/=$(BUILDTOOLS)/:prefix=$(HOMEURL)/contrib/=$(BUILDCONTRIB)/:prefix=$(HOMEURL)/contrib/=$(BUILDGDBM)/:prefix=$(HOMEURL)/contrib/os/=$(BUILDOS)/:prefix=$(HOMEURL)/share/Bison.so-$(PLATFORM)=$(BUILDBISON)/Bison.so:prefix=x-oz://system/=$(BUILDLIB)/:prefix=x-oz://system/=$(BUILDTOOLS)/:prefix=x-oz://contrib/=$(BUILDCONTRIB):prefix=x-oz://contrib/=$(BUILDGDBM):prefix=x-oz://contrib/os/=$(BUILDOS)/:pattern=x-oz://boot/?{x}.so-$(PLATFORM)=$(BUILDTOP)/platform/emulator/?{x}.so:= \
+	OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=$(BUILDLIB)/:prefix=$(HOMEURL)/share/=$(BUILDTOOLS)/:prefix=$(HOMEURL)/contrib/=$(BUILDCONTRIB)/:prefix=$(HOMEURL)/contrib/=$(BUILDGDBM)/:prefix=$(HOMEURL)/contrib/os/=$(BUILDOS)/:prefix=$(HOMEURL)/share/Bison.so-$(PLATFORM)=$(BUILDBISON)/Bison.so:prefix=x-oz://system/=$(BUILDLIB)/:prefix=x-oz://system/=$(BUILDTOOLS)/:prefix=x-oz://contrib/=$(BUILDCONTRIB)/:prefix=x-oz://contrib/=$(BUILDGDBM)/:prefix=x-oz://contrib/os/=$(BUILDOS)/:pattern=x-oz://boot/?{x}.so-$(PLATFORM)=$(BUILDTOP)/platform/emulator/?{x}.so:= \
 	OZL="$(BOOTOZL)" \
 	OZDOC_HOME="$(SRCTOP)/doc/utilities" \
 	OZDOC_AUTHOR_PATH="$(SRCDIR):$(SRCTOP)/doc" \
