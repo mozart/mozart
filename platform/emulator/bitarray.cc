@@ -397,3 +397,58 @@ OZ_BI_define(BIbitArray_complementToList,1,1)
   oz_declareBitArrayIN(0,b);
   OZ_RETURN(b->complementToList());
 } OZ_BI_end
+
+OZ_BI_define(BIbitArray_fromList,1,1)
+{
+  TaggedRef is_t  = OZ_in(0);
+  TaggedRef is_td = oz_deref(is_t);
+
+  int n  = 0;
+  int mi = OzMaxInt;
+  int ma = OzMinInt;
+
+  BitArray * b; 
+
+  while (oz_isLTuple(is_td)) {
+    LTuple * is = tagged2LTuple(is_td);
+    TaggedRef i_t = oz_deref(is->getHead());
+    if (oz_isVar(i_t)) {
+      oz_suspendOn(is->getHead());
+    }
+    if (!oz_isSmallInt(i_t))
+      goto type_error;
+    const int i = tagged2SmallInt(i_t);
+    if (i<mi)
+      mi = i;
+    if (i>ma)
+      ma = i;
+    n++;
+    is_t  = is->getTail();
+    is_td = oz_deref(is_t);
+  }
+
+  if (oz_isVar(is_td)) {
+    oz_suspendOn(is_t);
+  }
+
+  if (!oz_isNil(is_td) || (n==0))
+    goto type_error;
+
+  b = new BitArray(mi,ma);
+
+  is_t = OZ_in(0);
+
+  while (n--) {
+    LTuple * is = tagged2LTuple(oz_deref(is_t));
+    const int i = tagged2SmallInt(oz_deref(is->getHead()));
+    b->set(i);
+    is_t = is->getTail();
+  }
+  
+  OZ_RETURN(makeTaggedExtension(b));
+
+ type_error:
+  oz_typeError(0,"Non-empty list of small integers");
+  
+} OZ_BI_end
+
