@@ -42,6 +42,19 @@ public:
 };
 
 //-----------------------------------------------------------------------------
+/*
+class CPIteratePropagatorCap : public Propagator_VD_VI_VI_I {
+private:
+  int reg_flag;
+  static OZ_CFun spawner;
+public:
+  CPIteratePropagatorCap(OZ_Term, OZ_Term, OZ_Term, OZ_Term, int) ;
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Term getParameters(void) const;
+  virtual size_t sizeOf(void) { return sizeof(CPIteratePropagatorCap); }
+};
+*/
 
 class CPIteratePropagatorCap : public Propagator_VD_VI_VI_I {
 private:
@@ -53,6 +66,7 @@ public:
   virtual OZ_Return propagate(void);
   virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
+
 //-----------------------------------------------------------------------------
 
 class CPIteratePropagatorCapUp : public Propagator_VD_VI_VI_I {
@@ -65,6 +79,7 @@ public:
   virtual OZ_Return propagate(void);
   virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
 };
+
 
 //-----------------------------------------------------------------------------
 
