@@ -39,10 +39,10 @@ FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
 all: $(FSETTARGETS)
 
-../FSP.so: $(FSETLIBOBJS) $(SRCDIR)
+../FSP.so: $(FSETLIBOBJS) $(SRCDIR) .
 	$(DYNLD) -o $@ $(FSETLIBOBJS)
 
-../libFSP.a: $(FSETLIBOBJS) $(SRCDIR)
+../libFSP.a: $(FSETLIBOBJS) $(SRCDIR) .
 	$(AR) -rc $@ $(FSETLIBOBJS) && $(RANLIB) $@
 
 depend:: Makefile $(FSETLIBSRCS) 
