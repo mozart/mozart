@@ -62,10 +62,13 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
   }
 }
 
+
+#define DORAISE(T) { X[0] = (T); goto LBLraise; }
+
+
 #define HF_FAIL(R)					\
    if (!e->isToplevelFailure()) { goto LBLfailure; }	\
-   X[0]=mkTuple("toplevelFailure",1,(R));		\
-   goto LBLraise;
+   DORAISE(mkTuple("toplevelFailure",1,(R)));		\
 
 #define HF_PROC					\
  HF_FAIL1(mkTupleX("proc",			\
@@ -77,7 +80,7 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 	  builtinTab.getName((void *) biFun), 	\
 	  X,predArity)
 
-#define RAISE_BI(val) { X[0]=adjoinT(am.exception,val); goto LBLraise; }
+#define RAISE_BI(val) { DORAISE(adjoinT(am.exception,val)); }
 
 #define NOFLATGUARD   (shallowCP==NULL)
 
@@ -85,8 +88,7 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 
 #define CheckArity(arityExp,proc)					\
 if (predArity != arityExp && VarArity != arityExp) {			\
-  X[0]=mkTuple("arityCheck",1,mkTupleX("proc",proc,X,predArity));	\
-  goto LBLraise;							\
+  DORAISE(mkTuple("arityCheck",1,mkTupleX("proc",proc,X,predArity)));	\
 }
 
 
@@ -631,10 +633,10 @@ void AM::defaultExceptionHandler(OZ_Term val, ProgramCounter PC,
   if (ozconf.errorVerbosity > 0) {
     errorHeader();
     if (OZ_isVariable(val) || !OZ_isNoNumber(val)) {
-      message("Exception %s raised.\n",OZ_toC(val));
+      message("Exception '%s' caught.\n",OZ_toC(val));
     } else {
       OZ_Term lab=OZ_label(val);
-      message("Exception '%s' raised.\n",OZ_toC(lab));
+      message("Exception '%s' caught.\n",OZ_toC(lab));
       if (lab == OZ_CToAtom("no_else")) {
 	message("Conditional without else failed.\n");
       } else if (ozconf.errorVerbosity > 1) {
@@ -998,11 +1000,9 @@ void engine()
     break;
 
   case SEGVIO:
-    X[0]=OZ_CToAtom("segv");
-    goto LBLraise;
+    DORAISE(OZ_CToAtom("segv"));
   case BUSERROR:
-    X[0]=OZ_CToAtom("bus");
-    goto LBLraise;
+    DORAISE(OZ_CToAtom("bus"));
   }
 #endif
   
@@ -2117,7 +2117,7 @@ LBLsuspendThread:
 	  }
 
 	case RAISE:
-	  RAISE_BI(mkTuple("proc",4,OZ_CToAtom("`.`"),feature,XPC(3),AtomVoid));
+	  RAISE_BI(mkTuple("proc",4,OZ_CToAtom("`.`"),XPC(1),feature,AtomVoid));
 
 	case SLEEP:
 	default:
@@ -2126,7 +2126,9 @@ LBLsuspendThread:
       }
     dotFailed:
       SHALLOWFAIL;
-      HF_FAIL(mkTuple("proc",4,OZ_CToAtom("`.`"),feature,XPC(3),AtomVoid));
+      DORAISE(mkTuple("typeError",1,
+		      mkTuple("proc",4,
+			      OZ_CToAtom("`.`"),XPC(1),feature,AtomVoid)));
     }
 
 
@@ -2495,10 +2497,9 @@ LBLsuspendThread:
 	goto bombSend;
 
 
-      X[0]=mkTuple("applyFailure",1,
-		   mkTuple("proc",2,object,
-			   makeMethod(arity,label,X)));
-      goto LBLraise;
+      DORAISE(mkTuple("applyFailure",1,
+		      mkTuple("proc",2,object,
+			      makeMethod(arity,label,X))));
     }
 
     {
@@ -2603,9 +2604,8 @@ LBLsuspendThread:
 	   Assert(HelpReg!=X || predArity==regToInt(getRegArg(PC+1)));
 	   SUSP_PC(predPtr,predArity+1,PC);
 	 }
-	 X[0]=mkTuple("applyFailure", 1,
-		      mkTupleX("proc",taggedPredicate, X,predArity));
-	 goto LBLraise;
+	 DORAISE(mkTuple("applyFailure", 1,
+			 mkTupleX("proc",taggedPredicate, X,predArity)));
        }
 
        PC = isTailCall ? PC : PC+3;
@@ -2635,10 +2635,9 @@ LBLsuspendThread:
 	     /* {Obj Msg} --> {Obj Msg Methods Self} */
 	     Object *o = (Object*) predicate;
 	     if (o->isClass()) {
-	       X[0]=mkTuple("applyFailure",1,
-			    mkTupleX("proc",makeTaggedConst(predicate),
-				     X,predArity));
-	       goto LBLraise;
+	       DORAISE(mkTuple("applyFailure",1,
+			       mkTupleX("proc",makeTaggedConst(predicate),
+					X,predArity)));
 	     }
 	     CheckArity(1,o->getPrintName());
 	     def = o->getAbstraction();
@@ -2800,8 +2799,7 @@ LBLsuspendThread:
        if (!isConst(x0) ||
 	   !(tagged2Const(x0)->getType () == Co_Abstraction ||
 	     tagged2Const(x0)->getType () == Co_Builtin)) {
-	 X[0]=mkTuple("solve",1,mkTuple("noProcedure",1,X[0]));
-	 goto LBLraise;
+	 DORAISE(mkTuple("solve",1,mkTuple("noProcedure",1,X[0])));
        }
 
        TaggedRef x1 = deref(X[1]);
@@ -2872,8 +2870,7 @@ LBLsuspendThread:
      {
        DebugTrace(trace("solve cont",CBB));
        if (((OneCallBuiltin *)bi)->isSeen () == OK) {
-	 X[0]=mkTuple("solve",1,OZ_CToAtom("onceOnlyCalledTwice"));
-	 goto LBLraise;
+	 DORAISE(mkTuple("solve",1,OZ_CToAtom("onceOnlyCalledTwice")));
        }
 
        Board *solveBB =
