@@ -572,18 +572,27 @@ echo "$ac_t""$host" 1>&6
 
     if test -z "$TOPDIR"
     then
-        TOPDIR=$srcdir
-        if test ! -r $TOPDIR/OZVERSION
-        then
-            TOPDIR=$srcdir/..
-        fi
+        for TOPDIR in   $srcdir \
+                        $srcdir/.. \
+                        $srcdir/../.. \
+                        $srcdir/../../.. \
+                        $srcdir/../../../..; do
+          if test -r $TOPDIR/OZVERSION
+          then
+                break
+          fi
+        done
     fi
     if test ! -r $TOPDIR/OZVERSION
     then
-        { echo "configure: error: can't find TOPDIR" 1>&2; exit 1; }
+        { echo "configure: error: can't find TOPDIR in $TOPDIR" 1>&2; exit 1; }
     fi
 
     oz_topdira=`cd $TOPDIR; pwd`
+    TOPDIR=$oz_topdira
+
+
+BUILDTOP=`cd ../.. && pwd`
 
 
 
@@ -598,7 +607,7 @@ echo "$ac_t""$host" 1>&6
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:602: checking for a BSD compatible install" >&5
+echo "configure:611: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -648,7 +657,7 @@ test -z "$INSTALL_PROGRAM" && INSTALL_PROGRAM='${INSTALL}'
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
 echo $ac_n "checking whether ln -s works""... $ac_c" 1>&6
-echo "configure:652: checking whether ln -s works" >&5
+echo "configure:661: checking whether ln -s works" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_LN_S'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -674,7 +683,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:678: checking for $ac_word" >&5
+echo "configure:687: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_RM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -705,10 +714,12 @@ test -n "$RM" || RM="rm"
 
 
 
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e "s/\(^\|:\)\.\(\$\|:\|\/\)/\1$dummy_PWD\2/g"`
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:712: checking for $ac_word" >&5
+echo "configure:723: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_MKINSTALLDIRS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -718,7 +729,7 @@ else
   ;;
   *)
   IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH:$oz_topdira/bin:$oz_topdira$ac_dummy; do
+  for ac_dir in $dummy_PATH:$oz_topdira/share/bin:$oz_topdira$ac_dummy; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
       ac_cv_path_MKINSTALLDIRS="$ac_dir/$ac_word"
@@ -893,6 +904,7 @@ s%@host_cpu@%$host_cpu%g
 s%@host_vendor@%$host_vendor%g
 s%@host_os@%$host_os%g
 s%@TOPDIR@%$TOPDIR%g
+s%@BUILDTOP@%$BUILDTOP%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
 s%@LN_S@%$LN_S%g

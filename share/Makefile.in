@@ -1,22 +1,26 @@
+BUILDTOP=@BUILDTOP@
+TOPDIR = @TOPDIR@
 PREFIX = @prefix@
 RM     = @RM@ -rf
 
 SUBDIRS = \
-        lib demo test bin elisp examples
+        bin lib tools test demo elisp examples
 
 
-.PHONY: all install clean distclean realclean veryclean World files
+.PHONY: bootstrap all install clean distclean realclean veryclean World files check
 
-all::
+bootstrap::
 
-all install clean realclean depend distclean::
+bootstrap all install clean realclean veryclean depend distclean::
         dirs="$(SUBDIRS)"; for i in $$dirs; do (cd $$i && $(MAKE) $@); done
 
-clean::
-        $(RM) *~
-
-veryclean: realclean
+clean realclean veryclean distclean::
+        -$(RM) *~
 
 distclean::
-        $(RM) Makefile
-        $(RM) config.log config.status config.cache
+        -$(RM) Makefile
+        -$(RM) config.log config.status config.cache
+
+# need to put ozdynld in the PATH for the link test
+check:
+        PATH="$$PATH:$(TOPDIR)/share/bin" && cd test && $(MAKE) boot-check
