@@ -409,7 +409,7 @@ OwnerTable::OwnerTable(int sizeIn)
 OwnerTable::~OwnerTable()
 {
   DebugCode(tableSize = counter = localized = nextfree = -1;);
-  delete [] table;
+  delete table;
   DebugCode(table = (OwnerTableSlot *) -1;);
 }
 
