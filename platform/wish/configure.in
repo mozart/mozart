@@ -302,6 +302,8 @@ dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************
 
+AC_CONFIG_HEADER(conf.h)
+
 AC_OUTPUT(Makefile)
 
 errprint(ifdef([OZ_INIT],

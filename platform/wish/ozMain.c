@@ -34,6 +34,8 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
+#include "conf.h"
+
 #include <stdio.h>
 #ifdef HAVE_TCL8_0_H
 #include <tcl8.0.h>
