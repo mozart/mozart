@@ -195,6 +195,7 @@ public:
 
     // Return a difference list of all the features currently in the dynamic table.
     // The head is the return value and the tail is returned through an argument.
+    TaggedRef getOpenArityList(TaggedRef*,Board*);
     TaggedRef getOpenArityList(TaggedRef*);
 
     // Return list of features in current table that are not in dt:
@@ -279,6 +280,7 @@ public:
 	return dynamictable;
     }
 
+    TaggedRef getOpenArityList(TaggedRef*,Board*);
     TaggedRef getOpenArityList(TaggedRef*);
 
     Bool unifyOFS(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);

@@ -179,7 +179,12 @@ Bool DynamicTable::srecordcheck(SRecord &sr, PairList* &pairs) {
 // The head is the return value and the tail is returned through an argument.
 TaggedRef DynamicTable::getOpenArityList(TaggedRef* ftail)
 {
-    TaggedRef thehead=makeTaggedRef(newTaggedUVar(am.currentBoard));
+    return getOpenArityList(ftail,am.currentBoard);
+}
+
+TaggedRef DynamicTable::getOpenArityList(TaggedRef* ftail, Board* home)
+{
+    TaggedRef thehead=makeTaggedRef(newTaggedUVar(home));
     TaggedRef thetail=thehead;
 
     for (dt_index i=0; i<size; i++) {
@@ -551,6 +556,11 @@ Bool GenOFSVariable::valid(TaggedRef val)
 TaggedRef GenOFSVariable::getOpenArityList(TaggedRef* ftail)
 {
     return dynamictable->getOpenArityList(ftail);
+}
+
+TaggedRef GenOFSVariable::getOpenArityList(TaggedRef* ftail, Board* home)
+{
+    return dynamictable->getOpenArityList(ftail,home);
 }
 
 
