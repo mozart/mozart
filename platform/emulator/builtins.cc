@@ -5676,7 +5676,7 @@ FARPROC winLink(HMODULE handle, const char *name)
 OZ_C_proc_begin(BIfindFunction,3)
 {
 #if defined(DLOPEN) || defined(HPUX_700) || defined(WINDOWS)
-  oz_declareAtomArg(0,functionName);
+  oz_declareVirtualStringArg(0,functionName);
   oz_declareIntArg(1,functionArity);
   oz_declareIntArg(2,handle);
 
