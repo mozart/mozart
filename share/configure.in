@@ -43,33 +43,6 @@ srcdira=`(cd $srcdir; pwd)`
 AC_SUBST(srcdira)
 
 dnl *****************************************************************
-dnl windows cross compilation
-dnl *****************************************************************
-
-case "$target" in
-   NONE) 
-	MSWIN=no
-   ;;
-   i386-mingw32) 
-        AC_MSG_RESULT(cross compiling for windows)
-
-	CXX=${target}-gcc
-	CC=${CXX}
-	platform="win32-i486"
-	MSWIN=yes
-
-	AC_SUBST(CC)
-	AC_SUBST(CXX)
-   ;;
-
-   *)
-	AC_MSG_ERROR("can only cross-compile for target i386-mingw32 not for $target")
-    ;;
-esac
-
-AC_SUBST(MSWIN)
-
-dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
 
@@ -115,7 +88,7 @@ AC_OUTPUT(lib/Makefile lib/support/DefaultURL.oz \
     tools/Makefile tools/ProductionTemplates.oz \
     demo/Makefile test/Makefile \
     examples/Makefile elisp/Makefile elisp/mozart.el \
-    bin/Makefile bin/ozc.bat \
+    bin/Makefile \
     Makefile)
 
 
