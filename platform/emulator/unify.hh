@@ -46,25 +46,53 @@
    if (am.inEqEq())				\
       return FALSE;
 
-Bool _isLocalUVar(TaggedRef *varPtr);
-
 inline
-Bool oz_isLocalUVar(TaggedRef *varPtr)
-{
+Bool oz_isLocalUVar(TaggedRef *varPtr) {
   // variables are usually bound 
   // in the node where they are created
   ShallowCheckLocal();
-  if (am.currentUVarPrototypeEq(*varPtr)) return OK;
-  return _isLocalUVar(varPtr);
+
+  if (am.currentUVarPrototypeEq(*varPtr)) 
+    return OK;
+
+  Board * bb = tagged2VarHome(*varPtr);
+
+  if (!bb->isCommitted())
+    return NO;
+
+  Board * c  = oz_currentBoard();
+
+  Assert(bb->isCommitted() && bb != oz_currentBoard());
+
+  do {
+    bb = bb->getParentInternal();
+    
+    if (bb==c) 
+      return OK;
+  } while (!bb->isCommitted());
+
+  return NO;
 }
-
-
-Bool _isLocalVar(OzVariable *var);
 
 inline
 Bool oz_isLocalVar(OzVariable *var) {
   ShallowCheckLocal();
-  return (oz_isCurrentBoard(var->getHome1())) || _isLocalVar(var);
+
+  Board * bb = var->getHome1();
+
+  Board * c  = oz_currentBoard();
+
+  if (bb == c)
+    return OK;
+
+  while (bb->isCommitted()) {
+    bb = bb->getParentInternal();
+
+    if (bb == c)
+      return OK;
+  }
+
+  return NO;
 }
 
 #undef ShallowCheckLocal
