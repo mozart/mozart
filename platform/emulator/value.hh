@@ -118,7 +118,9 @@ public:
   Name *gcName();
   void gcRecurse();
 
-  GName *getGName() { Assert(hasGName()); return (GName*) ToPointer(homeOrGName); }
+  GName *getGName() {
+    return hasGName() ? (GName*) ToPointer(homeOrGName) : globalize();
+  }
   GName *globalize();
   void import(GName *);
 };
@@ -640,6 +642,9 @@ public:
   void setPtr(void *p)  { setTagged(getType(),p); }
   TaggedRef *getRef()   { return &ctu.tagged; }
 
+  void setGName(GName *gn) { setPtr(gn); }
+  GName *getGName1() { return (GName *) getPtr(); }
+
   void setPrimIndex(int i){
     int j=i+1;
     DebugIndexCheck(j);    
@@ -706,7 +711,7 @@ public:
   Bool isManager() { return (getTertType() == Te_Manager); }
   Bool isProxy()   { return (getTertType() == Te_Proxy); }
 
-  void globalize();
+  void globalizeTert();
   void localize();
   void import();
 
@@ -1258,11 +1263,10 @@ RecOrCell makeRecCell(SRecord *r) { return ToInt32(r); }
 class Object: public Tertiary {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
-  // features are in getPtr()
   RecOrCell state;  // was: SRecord *state, but saves memory on the Alpha
   int32 aclass;     // was: ObjectClass *aclass
   int32 flagsAndLock;
-  GName *gname;
+  SRecord *freeFeatures;
 public:
   Object();
   ~Object();
@@ -1283,7 +1287,7 @@ public:
     if (iscl) setClass();
     setState(s);
     flagsAndLock = ToInt32(lck);
-    gname = NULL;
+    setGName(0);
   }
 
   Object(int i, GName *gn) : Tertiary(i,Co_Object,Te_Proxy)
@@ -1292,7 +1296,7 @@ public:
     setClass(NULL);
     setState((Tertiary*)NULL);
     flagsAndLock = 0;
-    gname = gn;
+    setGName(gn);
   }
 
   void setClass(ObjectClass *c) { aclass = ToInt32(c); }
@@ -1313,11 +1317,11 @@ public:
   OzDictionary *getDefMethods() { return getClass()->getDefMethods(); }
   Object *getOzClass()          { return getClass()->getOzClass(); }
 
-  SRecord *getFreeRecord()          { return (SRecord *) getPtr(); }
+  SRecord *getFreeRecord()          { return freeFeatures; }
   SRecord *getUnfreeRecord() { 
     return isClass() ? (SRecord*) NULL : getClass()->getUnfreeRecord(); 
   }
-  void setFreeRecord(SRecord *aRec) { setPtr(aRec); }
+  void setFreeRecord(SRecord *aRec) { freeFeatures = aRec; }
 
   /* same functionality is also in instruction inlineDot */
   TaggedRef getFeature(TaggedRef lit) 
@@ -1363,8 +1367,11 @@ public:
 
   Object *gcObject();
 
-  GName *getGName()        { return gname; }
-  void setGName(GName *gn) { gname = gn; }
+  GName *getGName() {
+    GName *gn = getGName1();
+    return gn ? gn : globalize();
+  }
+  GName *globalize();
   void import();
 
   OZPRINT;
@@ -1401,8 +1408,10 @@ friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef value;
 public:
-  SChunk(Board *b,TaggedRef v) : Tertiary(b,Co_Chunk,Te_Local), value(v) {
-    Assert(isRecord(v));
+  SChunk(Board *b,TaggedRef v)
+    : Tertiary(b,Co_Chunk,Te_Local), value(v)
+  {
+    Assert(v==0||isRecord(v));
     Assert(b);
     setGName(0);
   };
@@ -1423,8 +1432,11 @@ public:
 
   void import(TaggedRef val);
 
-  GName *getGName() { return (GName*) getPtr(); }
-  void setGName(GName *gn) { setPtr(gn); }
+  GName *globalize();
+  GName *getGName() {
+    GName *gn = getGName1();
+    return gn ? gn : globalize();
+  }
 };
 
 
@@ -1475,7 +1487,7 @@ public:
     width = high-low+1;
     if (width <= 0) {
       width = 0;
-      setPtr(NULL);
+      setPtr(NULL); // mm2: attention if globalize gname!
     } else {
       TaggedRef *args = (TaggedRef*) int32Malloc(sizeof(TaggedRef)*width);
       for(int i=0; i<width; i++) {
@@ -1632,7 +1644,7 @@ public:
   void gcPrTabEntry();
 
   void globalize();
-  GName *getGName() { return gname; }
+  GName *getGName()        { Assert(gname); return gname; }
   void setGName(GName *gn) { Assert(gname==NULL); gname = gn; }
 };
 
@@ -1666,9 +1678,17 @@ public:
 
   TaggedRef DBGgetGlobals();
 
-  GName *getGName() { return (GName*) getPtr(); }
-  void setGName(GName *gn) { setPtr(gn); }
-  void globalize();
+  GName *getGName() {
+    GName *gn = getGName1();
+    return gn ? gn : globalize();
+  }
+  GName *globalize();
+  void import(RefsArray g, ProgramCounter pc) {
+    gRegs = g;
+    if (pc!=NOCODE) {
+      pred->PC = pc;
+    }
+  }
 };
 
 inline
