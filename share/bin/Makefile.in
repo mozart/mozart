@@ -34,7 +34,7 @@ INSTALL=        @INSTALL@
 INSTALL_DIR=    @INSTALL_DIR@
 INSTALL_BIN=    $(INSTALL) -m 555
 
-SCRIPTS=        oz ozplatform send-pr ozdynld
+SCRIPTS=        oz ozplatform ozdynld
 LINKS=          ozengine text2pickle pickle2text oldpickle2text oztool
 LIB_SCRIPTS=    $(addprefix $(BINDIR)/,$(SCRIPTS))
 LIB_LINKS=      $(addprefix $(BINDIR)/,$(LINKS))
