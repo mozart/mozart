@@ -43,16 +43,20 @@ extern void printSuspension(ProgramCounter pc);
 
 
 #define HF_BODY(MSG_SHORT,MSG_LONG)                                           \
-  if (e->conf.errorVerbosity > 0) {                                           \
-    toplevelErrorHeader();                                                    \
-    {MSG_SHORT;}                                                              \
-    if (e->conf.errorVerbosity > 1) {                                         \
-      message("\n");                                                          \
-      {MSG_LONG;}                                                             \
+  if (allowTopLevelFailureMsg) {                                              \
+    if (e->conf.errorVerbosity > 0) {                                         \
+      toplevelErrorHeader();                                                  \
+      {MSG_SHORT;}                                                            \
+      if (e->conf.errorVerbosity > 1) {                                       \
+        message("\n");                                                        \
+        {MSG_LONG;}                                                           \
+      }                                                                       \
+      errorTrailer();                                                         \
+    } else {                                                                  \
+      message("Toplevel Failure\n");                                          \
     }                                                                         \
-    errorTrailer();                                                           \
   } else {                                                                    \
-    message("Toplevel Failure\n");                                            \
+    allowTopLevelFailureMsg = TRUE;                                           \
   }                                                                           \
   if (e->conf.stopOnToplevelFailure) {                                        \
     tracerOn(); trace("toplevel failed");                                     \
