@@ -30,6 +30,12 @@
 #include "mbuffer.hh"
 #include "dsite.hh"
 
+#define BYTE_MODE_MARSHALING 0
+#define BYTE_MODE_UNMARSHALING 1
+#define BYTE_MODE_NONE 2
+#define BYTE_MODE_WRITING 3
+#define BYTE_MODE_READING 4
+
 // Default values
 #define BYTE_ByteBuffer_CUTOFF 200
 
@@ -66,14 +72,26 @@ public:
 
 // For marshaler
   void putBegin();
-  int availableSpace();
+  inline int availableSpace() {
+    Assert(mode == BYTE_MODE_MARSHALING || mode == BYTE_MODE_NONE);
+    // used does not contain ongoing usage
+    // leave one byte for trailer
+    if (mode==BYTE_MODE_NONE)
+      return size-used-1;
+    else if (putptr<=posMB) 
+      return size-used-(posMB-putptr)-1;
+    else
+      return size-used-(posMB-buf+endMB+1-putptr)-1;
+  }
   void putInt(int i);
   void putNext(BYTE);
   void putEnd();
 
 // For unmarshaler
   void getBegin();
-  Bool canGet(int size);
+  inline Bool canGet(int size) {
+    return (used>=size);
+  }
   int getInt();
   BYTE getNext();
   void getCommit();
