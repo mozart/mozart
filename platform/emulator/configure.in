@@ -219,9 +219,9 @@ if test "${GXX}" = yes; then
 
     AC_MSG_CHECKING(for --enable-warnings)
     AC_ARG_ENABLE(warnings,
-        [--enable-warnings  print c warnings (default=no)])
+        [--enable-warnings  print c warnings (default=yes)])
 
-    if test "${enable_warnings}" = yes
+    if test "${enable_warnings}" != no
     then
         AC_MSG_RESULT(yes)
         oz_warn="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \

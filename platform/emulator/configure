@@ -21,7 +21,7 @@ ac_help="$ac_help
 ac_help="$ac_help
 --enable-gccld  link with gcc (default=no)"
 ac_help="$ac_help
---enable-warnings  print c warnings (default=no)"
+--enable-warnings  print c warnings (default=yes)"
 ac_help="$ac_help
 --with-gmp=<dir>   search gmp library and header in <dir> (default: yes)"
 ac_help="$ac_help
@@ -2210,7 +2210,7 @@ if test "${enable_warnings+set}" = set; then
 fi
 
 
-    if test "${enable_warnings}" = yes
+    if test "${enable_warnings}" != no
     then
         echo "$ac_t""yes" 1>&6
         oz_warn="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
