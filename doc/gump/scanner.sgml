@@ -349,8 +349,11 @@
             <Item>
               For some input (in some mode), no true prefix is matched by
               any rule.  Due to the underlying implementation using &flex;,
-              this will result in the error message
+              this will result in the warning message
               <Code display/"-s option given but default rule can be matched"/
+              If at run-time some such input is encountered, this will
+              result in an error exception
+              <Code display/"flex scanner jammed"/
             <Entry>Completely covered rules.
             <Item>
               A rule&nbsp;<Math.Choice><Math type=html><I>r&lt;/I></Math>
