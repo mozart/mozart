@@ -20,15 +20,11 @@
 %%% WARRANTIES.
 %%%
 
-declare
-   NewOzcar
-in
-
 fun
 \ifdef NEWCOMPILER
    instantiate
 \endif
-   {NewOzcar IMPORT}
+   {$ IMPORT}
    \insert 'SP.env'
       = IMPORT.'SP'
    \insert 'WP.env'
