@@ -102,7 +102,8 @@ inline Bool isEffectiveList(SuspList* sl) {
 // ----------------------------------------------------------------
 
 static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
-			  int depth = 10,int offset = 0) {
+			  int depth = 10,int offset = 0) 
+{
   CHECKDEPTH;
   if (ref == makeTaggedNULL()) {
     stream << "*** NULL TERM ***";

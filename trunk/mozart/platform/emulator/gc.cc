@@ -826,11 +826,16 @@ void SuspContinuation::gcRecurse(){
 
 /* collect STuple, LTuple, SRecord */
 
+inline Bool isDirectVar(TaggedRef t)
+{
+  return (!isRef(t) && isAnyVar(t));
+}
+
 inline
 void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int sz)
 {
   for(int i = sz-1; i>=0; i--) {
-    if (!isRef(oldBlock[i]) && isAnyVar(oldBlock[i])) {
+    if (isDirectVar(oldBlock[i])) {
       gcTagged(oldBlock[i],newBlock[i]);
     }
   }
@@ -1236,39 +1241,19 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
 
   switch (auxTermTag) {
 
-  case SMALLINT:
-    toTerm = auxTerm;
-    break;
-
-  case LITERAL:
-    toTerm = makeTaggedLiteral(tagged2Literal(auxTerm)->gc());
-    break;
-  
-  case LTUPLE:
-    toTerm = makeTaggedLTuple(tagged2LTuple(auxTerm)->gc());
-    break;
-
-  case STUPLE:
-    toTerm = makeTaggedSTuple(tagged2STuple(auxTerm)->gc());
-    break;
-   
-  case SRECORD:
-    toTerm = makeTaggedSRecord(tagged2SRecord(auxTerm)->gcSRecord());
-    break;
+  case SMALLINT: toTerm = auxTerm; break;
+  case LITERAL:  toTerm = makeTaggedLiteral(tagged2Literal(auxTerm)->gc()); break;
+  case LTUPLE:   toTerm = makeTaggedLTuple(tagged2LTuple(auxTerm)->gc()); break;
+  case STUPLE:   toTerm = makeTaggedSTuple(tagged2STuple(auxTerm)->gc()); break;
+  case SRECORD:  toTerm = makeTaggedSRecord(tagged2SRecord(auxTerm)->gcSRecord()); break;
+  case BIGINT:   toTerm = makeTaggedBigInt(tagged2BigInt(auxTerm)->gc()); break;
+  case FLOAT:    toTerm = makeTaggedFloat(tagged2Float(auxTerm)->gc());   break;
 
   case CONST:
     {
       ConstTerm *con=tagged2Const(auxTerm)->gcConstTerm();
       toTerm = con ? makeTaggedConst(con) : nil();
     }
-    break;
-
-  case BIGINT:
-    toTerm = makeTaggedBigInt(tagged2BigInt(auxTerm)->gc());
-    break;
-
-  case FLOAT:
-    toTerm = makeTaggedFloat(tagged2Float(auxTerm)->gc());
     break;
 
   case SVAR:
@@ -2147,7 +2132,7 @@ inline
 void gcTaggedBlockRecurse(TaggedRef *block,int sz)
 {
   for(int i = sz-1; i>=0; i--) {
-    if (isRef(block[i]) || !isAnyVar(block[i])) {
+    if (!isDirectVar(block[i])) {
       gcTagged(block[i],block[i]);
     }
   }
@@ -2189,18 +2174,18 @@ void performCopying(void)
     
     switch(ptrType) {
       
-    case PTR_LTUPLE:    ((LTuple *) ptr)->gcRecurse(); break;      
-    case PTR_STUPLE:    ((STuple *) ptr)->gcRecurse(); break;      
-    case PTR_SRECORD:   ((SRecord *) ptr)->gcRecurse(); break;
-    case PTR_DYNTAB:    ((DynamicTable *) ptr)->gcRecurse(); break;
-    case PTR_NAME:      ((Literal *) ptr)->gcRecurse (); break;
-    case PTR_CONT:      ((Continuation*) ptr)->gcRecurse(); break;
-    case PTR_SUSPCONT:  ((SuspContinuation*) ptr)->gcRecurse(); break;
-    case PTR_CFUNCONT:  ((CFuncContinuation*) ptr)->gcRecurse(); break;      
-    case PTR_ACTOR:     ((Actor *) ptr)->gcRecurse(); break;
-    case PTR_THREAD:    ((Thread *) ptr)->gcThreadRecurse(); break;
-    case PTR_BOARD:     ((Board *) ptr)->gcRecurse(); break;
-    case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcConstRecurse(); break;
+    case PTR_LTUPLE:    ((LTuple *) ptr)->gcRecurse();           break;
+    case PTR_STUPLE:    ((STuple *) ptr)->gcRecurse();           break;
+    case PTR_SRECORD:   ((SRecord *) ptr)->gcRecurse();          break;
+    case PTR_DYNTAB:    ((DynamicTable *) ptr)->gcRecurse();     break;
+    case PTR_NAME:      ((Literal *) ptr)->gcRecurse ();         break;
+    case PTR_CONT:      ((Continuation*) ptr)->gcRecurse();      break;
+    case PTR_SUSPCONT:  ((SuspContinuation*) ptr)->gcRecurse();  break;
+    case PTR_CFUNCONT:  ((CFuncContinuation*) ptr)->gcRecurse(); break;
+    case PTR_ACTOR:     ((Actor *) ptr)->gcRecurse();            break;
+    case PTR_THREAD:    ((Thread *) ptr)->gcThreadRecurse();     break;
+    case PTR_BOARD:     ((Board *) ptr)->gcRecurse();            break;
+    case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcConstRecurse();   break;
        
     default:
       Assert(NO);
