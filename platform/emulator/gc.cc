@@ -882,6 +882,7 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
   storeForward ((int *) &taskStack, ret);
 
   ret->self = ret->self->gcObject();
+  gcTagged(ret->debugVar,ret->debugVar);
 
   return (ret);
 }
@@ -1989,7 +1990,6 @@ ConstTerm *ConstTerm::gcConstTerm()
   switch (typeOf()) {
   case Co_Board:     return ((Board *) this)->gcBoard();
   case Co_Actor:     return ((Actor *) this)->gcActor();
-  case Co_Class:     return ((ObjectClass *) this)->gcClass();
   case Co_HeapChunk: return ((HeapChunk *) this)->gc();
   case Co_Abstraction: 
     CheckLocal((Abstraction *) this);
@@ -2167,13 +2167,14 @@ ObjectClass *ObjectClass::gcClass()
   if (this==0) return 0;
 
   GCMETHMSG("ObjectClass::gcClass");
-  CHECKCOLLECTED(*getGCField(), ObjectClass *);
+  CHECKCOLLECTED(ToInt32(fastMethods), ObjectClass *);
 
   COUNT(objectClass);
   ObjectClass *ret = (ObjectClass *) gcRealloc(this,sizeof(*this));
   GCNEWADDRMSG(ret);
-  storeForward(getGCField(), ret);
-  ret->fastMethods = fastMethods->gcSRecord();
+  SRecord *fastm = fastMethods;
+  storeForward(&fastMethods, ret);
+  ret->fastMethods = fastm->gcSRecord();
   ret->printName = printName->gc();
   gcTagged(slowMethods,ret->slowMethods);
   ret->send = (Abstraction *) send->gcConstTerm();
