@@ -479,9 +479,9 @@ protected:
  public:
   USEHEAPMEMORY;
 
-  LTuple(void) {;} // called by putlist and the like
+  LTuple(void) {COUNT1(sizeLists,sizeof(LTuple));} // called by putlist and the like
   LTuple(TaggedRef head, TaggedRef tail) 
-  { args[0] = head; args[1] = tail; }
+  { COUNT1(sizeLists,sizeof(LTuple)); args[0] = head; args[1] = tail; }
 
   TaggedRef getHead() { return tagged2NonVariable(args); }
   TaggedRef getTail() { return tagged2NonVariable(args+1); }
@@ -639,7 +639,7 @@ public:
   }
   ConstTerm(TypeOfConst t)  { setTagged(t,NULL); }
   TypeOfConst getType()     { return (TypeOfConst) tagTypeOf(ctu.tagged); }
-  //  TypeOfConst typeOf()  { return getType(); }
+
   char *getPrintName();
   int getArity();
   void *getPtr() {
@@ -647,22 +647,6 @@ public:
   }
   void setPtr(void *p)  { setTagged(getType(),p); }
   TaggedRef *getRef()   { return &ctu.tagged; }
-
-  void setGName(GName *gn) { setPtr(gn); }
-  GName *getGName1() { return (GName *) getPtr(); }
-
-  void setPrimIndex(int i){
-    int j=i+1;
-    DebugIndexCheck(j);    
-    unsigned int k= (unsigned int)j;
-    k= (k<<2);
-    ctu.tagged=makeTaggedRef((TypeOfTerm)getType(),(void *)k);}
-    
-  int getPrimIndex(){
-    unsigned int tmp= (unsigned int)tagValueOf(ctu.tagged);
-    tmp=tmp>>2;
-    int tmp2= (int)tmp;
-    return (tmp2-1);}
 
   OZPRINT;
   OZPRINTLONG;
@@ -676,14 +660,35 @@ public:
 };
 
 
+#define CWH_Board 0
+#define CWH_GName 1
+
+
 class ConstTermWithHome: public ConstTerm {
 private:
-  Board *board;
+  TaggedPtr boardOrGName;
+  void setBoard(Board *b)
+  {
+    boardOrGName.setPtr(b);
+    boardOrGName.setType(CWH_Board);
+  }
+  Board *getBoardInternal()
+  {
+    return (Board*)boardOrGName.getPtr();
+  }
 public:
-  ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t), board(b) {}
-  Board *getBoardInternal() { return board; }
+  ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t) { setBoard(b);  }
+
   Board *getBoard();
-  void setBoard(Board *bb) { board = bb; }
+
+  void gcConstTermWithHome();
+  void setGName(GName *gn) { 
+    Assert(gn);
+    boardOrGName.setPtr(gn);
+    boardOrGName.setType(CWH_GName);
+  }
+  Bool hasGName() { return (boardOrGName.getType()&CWH_GName); }
+  GName *getGName1() { return hasGName()?(GName *)boardOrGName.getPtr():(GName *)NULL; }
 };
 
 
@@ -1033,10 +1038,16 @@ public:
     CHECK_LITERAL(lab);
     Assert(width > 0);
     int memSize = sizeof(SRecord) + sizeof(TaggedRef) * (width - 1);
+    COUNT1(sizeRecords,memSize);
     SRecord *ret = (SRecord *) int32Malloc(memSize);
     ret->label = lab;
     ret->recordArity = arity;
     return ret;
+  }
+
+  int sizeOf()
+  {
+    return sizeof(SRecord) + sizeof(TaggedRef) * (getWidth() - 1);
   }
 
   static SRecord *newSRecord(TaggedRef lab, int i)
@@ -1129,8 +1140,8 @@ public:
   }
 
   TaggedRef *getCycleAddr() { return &label; }
-
 };
+
 
 TaggedRef sortlist(TaggedRef list,int len);
 TaggedRef mkRecord(TaggedRef label,SRecordArity ff);
@@ -1281,8 +1292,8 @@ RecOrCell makeRecCell(SRecord *r) { return ToInt32(r); }
 class Object: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
-  RecOrCell state;  // was: SRecord *state, but saves memory on the Alpha
-  int32 aclass;     // was: ObjectClass *aclass
+  // ObjectClass *cl is in ptr field of ConstTerm
+  RecOrCell state;
   int32 flagsAndLock;
   SRecord *freeFeatures;
 public:
@@ -1306,7 +1317,6 @@ public:
     if (iscl) setClass();
     setState(s);
     flagsAndLock = ToInt32(lck);
-    setGName(0);
   }
 
   Object(Board *bb, GName *gn):
@@ -1319,12 +1329,12 @@ public:
     setGName(gn);
   }
 
-  void setClass(ObjectClass *c) { aclass = ToInt32(c); }
+  void setClass(ObjectClass *c) { setPtr(c); }
 
   OzLock *getLock() { return (OzLock*)ToPointer(flagsAndLock&ObjFlagMask); }
   void setLock(OzLock *l) { flagsAndLock |= ToInt32(l); }
 
-  ObjectClass *getClass() { return (ObjectClass*) ToPointer(aclass); }
+  ObjectClass *getClass() { return (ObjectClass*) getPtr(); }
 
   OzDictionary *getMethods()    { return getClass()->getfastMethods(); }
   Abstraction *getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
@@ -1447,7 +1457,6 @@ public:
   {
     Assert(v==0||isRecord(v));
     Assert(b);
-    setGName(0);
   };
 
   OZPRINT;
@@ -1680,18 +1689,20 @@ public:
 class Abstraction: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
+  // PrTabEntry *pred is in ptr field of ConstTerm
   RefsArray gRegs;
-  PrTabEntry *pred;
 public:
   Abstraction(Abstraction&);
   Abstraction(PrTabEntry *prd, RefsArray gregs, Board *b)
-    : ConstTermWithHome(b,Co_Abstraction), gRegs(gregs), pred(prd)
-  { }
+    : ConstTermWithHome(b,Co_Abstraction), gRegs(gregs)
+  { 
+    setPtr(prd);
+  }
 
   OZPRINT;
   OZPRINTLONG;
 
-  PrTabEntry *getPred()  { return pred; }
+  PrTabEntry *getPred()  { return (PrTabEntry *) getPtr(); }
   RefsArray &getGRegs()  { return gRegs; }
   ProgramCounter getPC() { return getPred()->getPC(); }
   int getArity()         { return getPred()->getArity(); }

@@ -224,6 +224,8 @@ Board *Name::getBoard()
 
 inline
 Board *ConstTermWithHome::getBoard() { 
+  if (hasGName())
+    return am.rootBoard;
   return getBoardInternal()->derefBoard();
 }
 

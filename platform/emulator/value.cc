@@ -263,14 +263,14 @@ void Name::import(GName *name)
 
 GName *Abstraction::globalize()
 {
-  if (!getPtr()) {
+  if (!hasGName()) {
     setGName(newGName(makeTaggedConst(this),GNT_PROC));
   }
   return getGName();
 }
 
 GName *SChunk::globalize() {
-  if (!getPtr()) {
+  if (!hasGName()) {
     setGName(newGName(makeTaggedConst(this),GNT_CHUNK));
   }
   return getGName();
