@@ -26,7 +26,7 @@ local
 
    class FailedNode
       from
-	 UrObject
+	 BaseObject
 	 LayoutNodes.failed
 	 HideNodes.failed
 	 MoveNodes.failed
@@ -51,7 +51,7 @@ local
    in
       class BlockedNode
 	 from
-	    UrObject
+	    BaseObject
 	    LayoutNodes.blocked
 	    HideNodes.blocked
 	    MoveNodes.blocked
@@ -86,7 +86,7 @@ local
    local
       class SucceededNode
 	 from
-	    UrObject
+	    BaseObject
 	    LayoutNodes.succeeded
 	    MoveNodes.succeeded
 	    SearchNodes.succeeded
@@ -136,7 +136,7 @@ local
    
    class ChooseNode
       from
-	 UrObject
+	 BaseObject
 	 HideNodes.choose
 	 MoveNodes.choose
 	 SearchNodes.choose
@@ -177,7 +177,7 @@ in
 
    create Sentinel
       from
-	 UrObject
+	 BaseObject
 	 LayoutNodes.sentinel
 	 HideNodes.sentinel
 	 MoveNodes.sentinel
@@ -196,11 +196,21 @@ in
 	    status:   Manager.status
 	    manager:  Manager
       end
-      Classes = c(failed:    class $ from FailedNode    Features end
-		  blocked:   class $ from BlockedNode   Features end
-		  entailed:  class $ from EntailedNode  Features end
-		  suspended: class $ from SuspendedNode Features end
-		  choose:    class $ from ChooseNode    Features end)
+      Classes = c(failed:    class $ from FailedNode Features
+				prop final
+			     end
+		  blocked:   class $ from BlockedNode Features
+				prop final
+			     end
+		  entailed:  class $ from EntailedNode Features
+				prop final
+			     end
+		  suspended: class $ from SuspendedNode Features
+				prop final
+			     end
+		  choose:    class $ from ChooseNode Features
+				prop final
+			     end)
       S = {Space.new Query}
    in   
       case thread {Space.askVerbose S} end
