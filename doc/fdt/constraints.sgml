@@ -529,7 +529,7 @@ disequations <math/X\neq7/ and <math/Z\neq2/ realize domain
 propagation.
 
 <p>
-The propagators for the disequations immediatedly
+The propagators for the disequations immediately
 write all their information into the store and
 disappear.  The store then knows the domains
 <math display/
