@@ -2,7 +2,7 @@
  * Hydra Project, DFKI Saarbruecken,
  * Stuhlsatzenhausweg 3, W-66123 Saarbruecken, Phone (+49) 681 302-5312
  * $Id$
- * Author: scheidhr & mehl & lorenz
+ * Author: scheidhr & mehl & lorenz & kornstae
  */
 
 /*
@@ -20,385 +20,187 @@
 
 #include "runtime.hh"
 #include "debug.hh"
+#include "codearea.hh"
 
-static Board* gotoRootBoard() {
-  Board *b = am.currentBoard;
-  am.currentBoard = am.rootBoard;
-  return b;
-}
-
-static void gotoBoard(Board *b) {
-  am.currentBoard = b;
-}
-
-void debugStreamSuspend(ProgramCounter PC, Thread *tt,
-			TaggedRef name, TaggedRef args, Bool builtin) {
-  Board *bb = gotoRootBoard();
-
-  TaggedRef tail    = am.threadStreamTail;
-  TaggedRef newTail = OZ_newVariable();
-
-  ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
-
-  TaggedRef file, comment;
-  int line, column;
-  time_t feedtime;
-
-  if (debugPC == NOCODE) {
-
-    //if (!builtin) return;  // else
-
-    file    = OZ_atom("noDebugInfo");
-    comment = OZ_atom("");
-    line    = 1;
-    column  = 1;
+TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
+  TaggedRef pairlist = nil();
+  if (data != makeTaggedNULL()) {
+    pairlist = cons(OZ_pairA("data",data),pairlist);
   }
-  else
-    CodeArea::getDebugInfoArgs(debugPC,file,line,column,comment);
+  if (arguments != (RefsArray) NULL) {
+    TaggedRef arglist = nil();
+    for(int i = getRefsArraySize(arguments) - 2; i >= 0; i--)
+      arglist = cons(arguments[i],arglist);
+    pairlist = cons(OZ_pairA("args",arglist),pairlist);
+  }
+  if (frameId == -1) {
+    pairlist = cons(OZ_pairA("vars",getFrameVariables()),pairlist);
+  } else {
+    pairlist = cons(OZ_pairAI("frameID",frameId),pairlist);
+  }
+  int iline = smallIntValue(getNumberArg(PC+2));
+  pairlist =
+    cons(OZ_pairAI("time",CodeArea::findTimeStamp(PC)),
+	 cons(OZ_pairA("thr",makeTaggedConst(thread)),
+	      cons(OZ_pairA("file",getTaggedArg(PC+1)),
+		   cons(OZ_pairAI("line",iline < 0? -iline: iline),
+			cons(OZ_pairA("column",getTaggedArg(PC+3)),
+			     cons(OZ_pairA("origin",
+					   OZ_atom("OzDebug::toRecord")),
+				  cons(OZ_pairAI("PC",(int)PC),
+				       cons(OZ_pairA("kind",
+						     getTaggedArg(PC+4)),
+					    pairlist))))))));
 
-  feedtime = CodeArea::findTimeStamp(debugPC);
-  
+  return OZ_recordInit(OZ_atom(label), pairlist);
+}
+
+TaggedRef OzDebug::getFrameVariables() {
+  return CodeArea::getFrameVariables(PC,Y,G);
+}
+
+// ------------------ debug stream messages ---------------------------
+
+void debugStreamThread(Thread *thread, Thread *parent) {
+  TaggedRef pairlist =
+    cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
+  if (parent != NULL)
+    pairlist = cons(OZ_pairA("par",makeTaggedConst(parent)),pairlist);
+  am.debugStreamMessage(OZ_recordInit(OZ_atom("thr"), pairlist));
+}
+
+void debugStreamBlocked(Thread *thread) {
   TaggedRef pairlist = 
-    cons(OZ_pairA("thr",
-		  OZ_mkTupleC("#",2,makeTaggedConst(tt),
-			      OZ_int(tt->getID()))),
-	 cons(OZ_pairA("file", file),
-	      cons(OZ_pairAI("line", line),
-		   cons(OZ_pairA("name", name),
-			cons(OZ_pairA("args",args),
-			     cons(OZ_pairA("builtin", 
-					   builtin ? OZ_true() : OZ_false()),
-				  cons(OZ_pairAI("time", feedtime),
-			     nil())))))));
-  
-  TaggedRef entry = OZ_recordInit(OZ_atom("block"), pairlist);
-  OZ_unify(tail, OZ_cons(entry, newTail));
-  am.threadStreamTail = newTail;
-  gotoBoard(bb);
+    cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
+  am.debugStreamMessage(OZ_recordInit(OZ_atom("blocked"), pairlist));
 }
 
-void debugStreamCont(Thread *tt) {
-  Board *bb = gotoRootBoard();
-
-  TaggedRef tail    = am.threadStreamTail;
-  TaggedRef newTail = OZ_newVariable();
-
-  //tt->stop();
-
+void debugStreamReady(Thread *thread) {
   TaggedRef pairlist = 
-    cons(OZ_pairA("thr",
-		  OZ_mkTupleC("#",2,makeTaggedConst(tt),
-			      OZ_int(tt->getID()))),
-	 nil());
-  
-  TaggedRef entry = OZ_recordInit(OZ_atom("cont"), pairlist);
-  OZ_unify(tail, OZ_cons(entry, newTail));
-  am.threadStreamTail = newTail;
-  gotoBoard(bb);
+    cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
+  am.debugStreamMessage(OZ_recordInit(OZ_atom("ready"), pairlist));
 }
 
-void debugStreamThread(Thread *tt, Thread *p) {
-  Board *bb = gotoRootBoard();
-
-  TaggedRef tail    = am.threadStreamTail;
-  TaggedRef newTail = OZ_newVariable();
-  TaggedRef pairlist;
-
-  if (p)
-    pairlist = 
-      cons(OZ_pairA("thr",
-		    OZ_mkTupleC("#",2,makeTaggedConst(tt),
-				OZ_int(tt->getID()))),
-	   cons(OZ_pairA("par", OZ_mkTupleC("#",2,makeTaggedConst(p),
-					    OZ_int(p->getID()))),
-		nil()));
-  else
-    pairlist = 
-      cons(OZ_pairA("thr",
-		    OZ_mkTupleC("#",2,makeTaggedConst(tt),
-				OZ_int(tt->getID()))),
-	   nil());
-  
-  TaggedRef entry = OZ_recordInit(OZ_atom("thr"), pairlist);
-
-  OZ_unify(tail, OZ_cons(entry, newTail));
-  am.threadStreamTail = newTail;
-
-  gotoBoard(bb);
-}
-
-void debugStreamTerm(Thread *tt) {
-  Board *bb = gotoRootBoard();
-
-  TaggedRef tail    = am.threadStreamTail;
-  TaggedRef newTail = OZ_newVariable();
-
+void debugStreamTerm(Thread *thread) {
   TaggedRef pairlist = 
-    cons(OZ_pairA("thr",
-		  OZ_mkTupleC("#",2,makeTaggedConst(tt),
-			      OZ_int(tt->getID()))),
-	 nil());
-  
-  TaggedRef entry = OZ_recordInit(OZ_atom("term"), pairlist);
-  OZ_unify(tail, OZ_cons(entry, newTail));
-  am.threadStreamTail = newTail;
-
-  gotoBoard(bb);
+    cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
+  am.debugStreamMessage(OZ_recordInit(OZ_atom("term"), pairlist));
 }
 
-void debugStreamExit(TaggedRef frameId) {
-  Board *bb = gotoRootBoard();
+void debugStreamException(Thread *thread, TaggedRef exc) {
+  am.currentThread->setStop(OK);
 
-  TaggedRef tail    = am.threadStreamTail;
-  TaggedRef newTail = OZ_newVariable();
-  
+  TaggedRef pairlist =
+    cons(OZ_pairA("thr",makeTaggedConst(thread)),
+	 cons(OZ_pairA("exc",exc),nil()));
+  am.debugStreamMessage(OZ_recordInit(OZ_atom("exception"), pairlist));
+}
+
+void debugStreamEntry(OzDebug *dbg, int frameId) {
+  am.currentThread->setStop(OK);
+  am.debugStreamMessage(dbg->toRecord("entry",am.currentThread,frameId));
+}
+
+void debugStreamExit(OzDebug *dbg, int frameId) {
   am.currentThread->setStep(OK);
   am.currentThread->setStop(OK);
-  
-  TaggedRef pairlist =
-    cons(OZ_pairA("thr",
-		  OZ_mkTupleC("#",2,makeTaggedConst(am.currentThread),
-			      OZ_int(am.currentThread->getID()))),
-	 cons(OZ_pairA("frame",frameId),
-	      nil()));
-
-  TaggedRef entry = OZ_recordInit(OZ_atom("exit"), pairlist);
-  OZ_unify(tail, OZ_cons(entry, newTail));
-  am.threadStreamTail = newTail;
-  
-  gotoBoard(bb);
+  am.debugStreamMessage(dbg->toRecord("exit",am.currentThread,frameId));
 }
 
-void debugStreamRaise(Thread *tt, TaggedRef exc) {
-  Board *bb = gotoRootBoard();
-
-  TaggedRef tail    = am.threadStreamTail;
-  TaggedRef newTail = OZ_newVariable();
- 
-  am.currentThread->setStop(OK);
-
-  TaggedRef pairlist =
-    cons(OZ_pairA("thr",
-		  OZ_mkTupleC("#",2,makeTaggedConst(tt),
-			      OZ_int(tt->getID()))),
-	 cons(OZ_pairA("exc", exc),
-	      nil()));
- 
-  TaggedRef entry = OZ_recordInit(OZ_atom("exception"), pairlist);
-  OZ_unify(tail, OZ_cons(entry, newTail));
-  am.threadStreamTail = newTail;
-  gotoBoard(bb);
-}
-
-void debugStreamCall(ProgramCounter debugPC, const char *name, int arity,
-		     TaggedRef *arguments, Bool builtin, int frameId) {
-  Board *bb = gotoRootBoard();
-  
-  TaggedRef tail    = am.threadStreamTail;
-  TaggedRef newTail = OZ_newVariable();
-  
-  TaggedRef file, comment;
-  int line, column;
-  time_t feedtime;
-  
-  am.currentThread->setStop(OK);
-  
-  CodeArea::getDebugInfoArgs(debugPC,file,line,column,comment);
-  TaggedRef arglist = CodeArea::argumentList(arguments, arity);
-  
-  feedtime = CodeArea::findTimeStamp(debugPC);
-  
-  TaggedRef pairlist =
-    cons(OZ_pairA("thr",
-		  OZ_mkTupleC("#",2,makeTaggedConst(am.currentThread),
-			      OZ_int(am.currentThread->getID()))),
-	 cons(OZ_pairA("file", file),
-	      cons(OZ_pairAI("line", line),
-		   cons(OZ_pairAA("name", name),
-			cons(OZ_pairA("args", arglist),
-			     cons(OZ_pairA("builtin", 
-					   builtin ? OZ_true() : OZ_false()),
-				  cons(OZ_pairAI("time", feedtime),
-				       cons(OZ_pairAI("frame",frameId),
-					    nil()))))))));
-  
-  TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
-  OZ_unify(tail, OZ_cons(entry, newTail));
-  am.threadStreamTail = newTail;
-  gotoBoard(bb);
-}
-
-// ------------------ explore a thread's taskstack ---------------------------
-
-OZ_C_proc_begin(BItaskStack,3)
-{
-  OZ_declareNonvarArg(0,in);
-  OZ_declareIntArg(1,depth);
-  OZ_declareArg(2,out);
-
-  in = OZ_deref(in);
-  if (!isThread(in)) { oz_typeError(0,"Thread"); }
-
-  ConstTerm *rec = tagged2Const(in);
-  Thread *thread = (Thread*) rec;
-
-  if (thread->isDeadThread() || !thread->hasStack())
-    return OZ_unify(out, nil());
-
-  TaskStack *taskstack = thread->getTaskStackRef();
-  return OZ_unify(out, taskstack->dbgGetTaskStack(NOCODE, depth+1, thread));
-}
-OZ_C_proc_end
-
-// ------------------
-
-OZ_C_proc_begin(BIcheckStopped,2)
-{
-  oz_declareThreadArg(0,th);
-  oz_declareArg(1,out);
-  return OZ_unify(out, th->getStop() ? NameTrue : NameFalse);
-}
-OZ_C_proc_end
+// ------------------ Debugging Builtins ---------------------------
 
 OZ_C_proc_begin(BIdebugmode,1)
 {
-  return OZ_unify(OZ_getCArg(0), am.debugmode() ? NameTrue : NameFalse);
+  return OZ_unify(OZ_getCArg(0),am.debugmode()? NameTrue: NameFalse);
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIdebugEmacsThreads,1)
+OZ_C_proc_begin(BIaddEmacsThreads,1)
 {
-  OZ_declareNonvarArg(0,in);
-  in = OZ_deref(in);
-  am.addEmacsThreads = OZ_isTrue(in) ? OK : NO;
+  OZ_declareNonvarArg(0,yesno);
+  if (OZ_isTrue(yesno))
+    ozconf.addEmacsThreads = OK;
+  else if (OZ_isFalse(yesno))
+    ozconf.addEmacsThreads = NO;
+  else
+    oz_typeError(0,"Bool");
   return PROCEED;
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIdebugSubThreads,1)
+OZ_C_proc_begin(BIaddSubThreads,1)
 {
-  OZ_declareNonvarArg(0,in);
-  in = OZ_deref(in);
-  am.addSubThreads = OZ_isTrue(in) ? OK : NO;
+  OZ_declareNonvarArg(0,yesno);
+  if (OZ_isTrue(yesno))
+    ozconf.addSubThreads = OK;
+  else if (OZ_isFalse(yesno))
+    ozconf.addSubThreads = NO;
+  else
+    oz_typeError(0,"Bool");
   return PROCEED;
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIframeVariables,3)
+OZ_C_proc_begin(BIgetDebugStream,1)
 {
-  OZ_declareNonvarArg(0,in);
-  OZ_declareIntArg(1,frameId);
-  OZ_declareArg(2,out);
-  
-  in = OZ_deref(in);
-  if (!isThread(in)) { oz_typeError(0,"Thread"); }
-
-  ConstTerm *rec = tagged2Const(in);
-  Thread *thread = (Thread*) rec;
-
-  if (thread->isDeadThread() || !thread->hasStack())
-    return OZ_unify(out, nil());
-  
-  TaskStack *taskstack = thread->getTaskStackRef();
-  return OZ_unify(out, taskstack->dbgFrameVariables(frameId));
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIlocation,2)
-{
-  OZ_declareNonvarArg(0,in);
-  OZ_declareArg(1,out);
-
-  in = OZ_deref(in);
-  if (!isThread(in)) { oz_typeError(0,"Thread"); }
-
-  ConstTerm *rec = tagged2Const(in);
-  Thread *thread = (Thread*) rec;
-
-  if (thread->isDeadThread()) {
-    return OZ_unify(out, nil());
-  }
-
-  return OZ_unify(out, am.dbgGetLoc(GETBOARD(thread)));
+  return OZ_unify(OZ_getCArg(0),am.getDebugStreamTail());
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIsetContFlag,2)
 {
-  OZ_Term chunk = deref(OZ_getCArg(0));
-  OZ_declareNonvarArg(1, yesno);
-  
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
+  oz_declareThreadArg(0,thread);
+  oz_declareNonvarArg(1,yesno);
   
   if (OZ_isTrue(yesno))
     thread->setCont(OK);
   else if (OZ_isFalse(yesno))
     thread->setCont(NO);
-  else warning("BIsetContFlag: invalid argument");
+  else
+    oz_typeError(1,"Bool");
   return PROCEED;
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIsetStepMode,2)
+OZ_C_proc_begin(BIsetStepFlag,2)
 {
-  OZ_Term chunk = deref(OZ_getCArg(0));
-  OZ_declareNonvarArg(1, yesno);
-  
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
-  
+  oz_declareThreadArg(0,thread);
+  oz_declareNonvarArg(1,yesno);
+
   if (OZ_isTrue(yesno))
     thread->setStep(OK);
   else if (OZ_isFalse(yesno))
     thread->setStep(NO);
-  else warning("BIsetStepMode: invalid argument");
+  else
+    oz_typeError(1,"Bool");
   return PROCEED;
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BItraceThread,2)
+OZ_C_proc_begin(BIsetTraceFlag,2)
 {
-  OZ_Term chunk = deref(OZ_getCArg(0));
-  OZ_declareNonvarArg(1, yesno);
-  
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
-  
+  oz_declareThreadArg(0,thread);
+  oz_declareNonvarArg(1,yesno);
+
   if (OZ_isTrue(yesno))
     thread->setTrace(OK);
   else if (OZ_isFalse(yesno))
     thread->setTrace(NO);
-  else warning("traceThread: invalid argument");
+  else
+    oz_typeError(1,"Bool");
   return PROCEED;
 }
 OZ_C_proc_end
 
-
-OZ_C_proc_begin(BIspy, 1)
+OZ_C_proc_begin(BIcheckStopped,2)
 {
-  OZ_nonvarArg(0);
-  OZ_declareArg(0,predd);
-  DEREF(predd,_1,_2);
-  if (!isAbstraction(predd)) {
-    OZ_warning("spy: abstraction expected, got: %s",toC(predd));
-    return FAILED;
-  }
-
-  tagged2Abstraction(predd)->getPred()->setSpyFlag();
-  return PROCEED;
+  oz_declareThreadArg(0,thread);
+  oz_declareArg(1,out);
+  return OZ_unify(out, thread->getStop() ? NameTrue : NameFalse);
 }
 OZ_C_proc_end
 
-
-OZ_C_proc_begin(BIdisplayCode, 2)
-{
-  OZ_declareIntArg(0,pc);
-  OZ_declareIntArg(1,size);
-  displayCode((ProgramCounter)ToPointer(pc),size);
-  return PROCEED;
-}
-OZ_C_proc_end
+// ------------------
 
 OZ_C_proc_begin(BIbreakpointAt, 4)
 {
@@ -413,10 +215,11 @@ OZ_C_proc_begin(BIbreakpointAt, 4)
   Bool    ok    = NO;
 
   while(info) {
-    //Assert(!isRef(info->file));
     if (!atomcmp(file,info->file))
       if (line == info->line) {
 	ok = OK;
+	// the PC+2 in the next lines is due to the format of the
+	// DEBUGENTRY instruction:
 	if (OZ_isTrue(what))
 	  CodeArea::writeTagged(OZ_int(-line),info->PC+2);
 	else
@@ -426,20 +229,19 @@ OZ_C_proc_begin(BIbreakpointAt, 4)
   }
   
   if (ok)
-    OZ_unify(out,OZ_true());
+    return OZ_unify(out,OZ_true());
   else
-    OZ_unify(out,OZ_false());
-
-  return PROCEED;
+    return OZ_unify(out,OZ_false());
 }
 OZ_C_proc_end
 
-void execBreakpoint(Thread *t, Bool message) {
-  t->setTrace(OK);
-  t->setStep(OK);
-  t->setCont(NO);
-  if (message)
+void execBreakpoint(Thread *t) {
+  if (!t->getTrace() || !t->getStep() || t->getCont()) {
+    t->setTrace(OK);
+    t->setStep(OK);
+    t->setCont(NO);
     debugStreamThread(t);
+  }
 }
 
 OZ_C_proc_begin(BIbreakpoint, 0)
@@ -450,96 +252,29 @@ OZ_C_proc_begin(BIbreakpoint, 0)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BInospy, 1)
+OZ_C_proc_begin(BIdisplayCode, 2)
 {
-  OZ_nonvarArg(0);
-  OZ_declareArg(0,predd);
-  DEREF(predd,_1,_2);
-  if (!isAbstraction(predd)) {
-    OZ_warning("nospy: abstraction expected, got: %s",toC(predd));
-    return FAILED;
-  }
-
-  tagged2Abstraction(predd)->getPred()->unsetSpyFlag();
+  OZ_declareIntArg(0,pc);
+  OZ_declareIntArg(1,size);
+  displayCode((ProgramCounter)ToPointer(pc),size);
   return PROCEED;
 }
 OZ_C_proc_end
 
 
-
-static Bool isSpied(TaggedRef def)
-{
-  if (isAbstraction(def)) {
-    return tagged2Abstraction(def)->getPred()->getSpyFlag();
-  }
-  return NO;
-}
-
-static const char *getPrintName(TaggedRef def)
-{
-  if (isAbstraction(def)) {
-    return tagged2Abstraction(def)->getPrintName();
-  } else if (isBuiltin(def)) {
-    return tagged2Builtin(def)->getPrintName();
-  } else {
-    return NULL;
-  }
-}
-
-
-static void setSpyFlag(TaggedRef def)
-{
-  if (isAbstraction(def)) {
-    tagged2Abstraction(def)->getPred()->setSpyFlag();
-  } else {
-    fprintf(stderr,"Cannot set spy flag for builtins\n");
-  }
-}
-
-static void unsetSpyFlag(TaggedRef def)
-{
-  if (isAbstraction(def)) {
-    tagged2Abstraction(def)->getPred()->unsetSpyFlag();
-  }
-}
-
-
-char *ternaryInfixes [] = {
-  "+", "-", "*", "mod", "div", ".", "/",
-  NULL
-  };
-
-char *binaryInfixes [] = {
-  "<", "=<", ">", ">=", "=",
-  NULL
-  };
-
-
-Bool isInTable(TaggedRef def, char **table)
-{
-  const char *pn = getPrintName(def);
-  for (char **i=table; *i; i++) {
-    if (strcmp(*i,pn) == 0) {
-      return OK;
-    }
-  }
-
-  return NO;
-}
-
-
-#ifdef DEBUG_TRACE
-/*
+/*----------------------------------------------------------------------
  * the machine level debugger starts here
  */
 
+#ifdef DEBUG_TRACE
+
 #define MaxLine 100
 
-inline	void printLong(TaggedRef term, int depth) {
+inline void printLong(TaggedRef term, int depth) {
   taggedPrintLong(term, depth ? depth : ozconf.printDepth);
 }
 
-inline	void printShort(TaggedRef term) {
+inline void printShort(TaggedRef term) {
   taggedPrint(term);
 }
 

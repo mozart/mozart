@@ -69,6 +69,13 @@ public:
     CountMax(maxStackDepth,(tos-array)*sizeof(StackEntry));
   }
 
+  int getFrameId() {
+    return getFrameId(tos);
+  }
+
+  int getFrameId(Frame *frame) {
+    return frame - array;
+  }
 
   USEFREELISTMEMORY;
 
@@ -103,11 +110,10 @@ public:
   TaskStack(int s): Stack(s,Stack_WithFreelist) { pushEmpty(); }
   ~TaskStack() { Assert(0); }
 
-  void printTaskStack(ProgramCounter pc = NOCODE,
-		      Bool verbose = NO, int depth = 1000);
-  TaggedRef dbgGetTaskStack(ProgramCounter pc = NOCODE, int depth = 1000,
-			    Thread *tt = NULL);
-  TaggedRef dbgFrameVariables(int frameId);
+  void printTaskStack(Bool verbose = NO, int depth = 1000);
+  TaggedRef getTaskStack(Thread *tt = NULL,
+			 Bool verbose = NO, int depth = 1000);
+  TaggedRef getFrameVariables(int frameId);
 
   Bool isEmpty() { return ::isEmpty(tos); }
 
@@ -118,8 +124,10 @@ public:
 
   void gc(TaskStack *newstack);
 
-  Bool findCatch(TaggedRef *traceBack=0, Bool verbose=0);
+  TaggedRef frameToRecord(Frame *&frame, Thread *thread, Bool verbose);
 
+  Bool findCatch(ProgramCounter PC=NOCODE, TaggedRef *traceBack=0,
+		 Bool verbose=NO);
 
   void pushX(RefsArray X) {
     Assert(X);
@@ -170,7 +178,9 @@ public:
   void pushLock(OzLock *lck)     { pushFrame(C_LOCK_Ptr,lck,0); }
   void pushCatch()               { pushFrame(C_CATCH_Ptr,0,0); }
   void discardCatch()            { discardFrame(C_CATCH_Ptr); }
-  void pushDebug(OzDebug *deb)   { pushFrame(C_DEBUG_CONT_Ptr,deb,0); }
+  void pushDebug(OzDebug *dbg, OzDebugDoit dothis)
+				 { pushFrame(C_DEBUG_CONT_Ptr,dbg,
+					     (void *)dothis); }
   void pushSelf(Object *o)       { pushFrame(C_SET_SELF_Ptr,o,NULL); }
   void pushAbstr(PrTabEntry  *a) { pushFrame(C_SET_ABSTR_Ptr,a,NULL); }
   void pushActor(Actor *ac, ProgramCounter PC)
