@@ -37,11 +37,16 @@ straightforwardly chosen to <<naive>>. Experimenting with first fail
 (<<ff>>) produced even worse results.
 
 <P>
-Solving the problem by calling <<<{ExploreBest {KnapsackFD Problem}
-proc {$ O N} O.maxprofit <: N.maxprofit end}>>> produces the following
-search tree.
+Solving the problem by calling
 
-<PICTURE.extern display class=left to="mks_fd_explorer.gif"  type=GIF>
+<<<
+{ExploreBest {KnapsackFD Problem}
+             proc {$ O N} O.maxprofit <: N.maxprofit end}
+>>>
+
+produces the following search tree.
+
+<PICTURE.extern display class=left to="mks_fd_explorer.gif" id="mks_fd_explorer.pic" type=GIF>
 
 </Section>
 
@@ -51,7 +56,7 @@ search tree.
 
 <P>
 Tackling a multi-knapsack problem with a LP solver amounts to
-implementing a branch&amp;bound solver to obtain integral
+implementing a branch &amp; bound solver to obtain integral
 solutions. The idea is to compute a continuous solution and to branch
 over the problem variables with continuous solutions. This is done
 until only integral problem variables are left. This is what the
@@ -88,11 +93,19 @@ appropriate parameters for the LP solver and eventually calls
 <Code.Extern display to="mks_lp_d.oz" class=linenumbers>
 
 <P>
-Feeding <<<{ExploreBest {KnapsackLP Problem} proc {$ O N} {RI.lessEq
-O.maxprofit+1.0 N.maxprofit} end}>>> produces the following search
+Feeding
+
+<<<
+{ExploreBest {KnapsackLP Problem}
+             proc {$ O N}
+                {RI.lessEq O.maxprofit+1.0 N.maxprofit}
+             end}
+>>>
+
+produces the following search
 tree.
 
-<PICTURE.extern display to="mks_lp_explorer.gif" type=GIF>
+<PICTURE.extern display to="mks_lp_explorer.gif" id="mks_lp_explorer.pic" type=GIF>
 
 </Section>
 
@@ -111,10 +124,12 @@ denote the same integer either as float or as integer, respectively.
 
 <P>
 The Oz Explorer produces the following search tree by calling
-<<<{ExploreBest {KnapsackFDLP Problem} proc {$ O N} O.maxprofit <:
-N.maxprofit end}>>>.
+<<<
+{ExploreBest {KnapsackFDLP Problem}
+             proc {$ O N} O.maxprofit <: N.maxprofit end}
+>>>.
 
-<PICTURE.extern display to="mks_fdlp_explorer.gif" type=GIF>
+<PICTURE.extern display to="mks_fdlp_explorer.gif" id="mks_fdlp_explorer.pic" type=GIF>
 
 </Section>
 
@@ -125,23 +140,27 @@ N.maxprofit end}>>>.
 <P>
 The following table shows impressively the benefits of combining
 propagation-based and linear programming solvers for this kind of
-problem. We used <EM/LP_SOLVE 2.0/ as LP solver. By combining both
+problem. We used <EM/LP_SOLVE 2.0/ as LP solver. Note using a
+different LP solver may produce different results. By combining both
 constraint models the number of nodes in the search tree could be
 reduced by two &resp; one to orders of magnitudes. This results in a
 speed-up of one order of magnitude and memory saving by the same
 amount.
 
 <Table>
-<Tr><Th/Constraints Model/ <Th/Nodes/ <Th/Solutions/ <Th/Failure/
-<Th/Depth/ <Th/runtime [sec]/ <Th/heap [MB]/
+<Tr><Th/Model/ <Th/Nodes/ <Th/Sols/ <Th/Failures/
+<Th/Depth/ <Th/runtime / <Th/heap/
 
-<Tr><Td/Finite Domain Model/ <Td/5270/ <Td/44/ <Td/5227/ <Td/18/
+<Tr><Th/<P.silent>/ <Th/<P.silent>/ <Th/<P.silent>/ <Th/<P.silent>/
+<Th/<P.silent>/ <Th/[sec]/ <Th/[MB]/
+
+<Tr><Td/FD Model/ <Td/5270/ <Td/44/ <Td/5227/ <Td/18/
 <Td/4.980/ <Td/10.4/
 
-<Tr><Td/Linear Programming Model/ <Td/490/ <Td/12/ <Td/479/ <Td/26/
+<Tr><Td/LP Model/ <Td/490/ <Td/12/ <Td/479/ <Td/26/
 <Td/3.390/ <Td/3.3/
 
-<Tr><Td/Combined Model/ <Td/52/ <Td/8/ <Td/45/ <Td/12/ <Td/0.390/
+<Tr><Td/FD+LP Model/ <Td/52/ <Td/8/ <Td/45/ <Td/12/ <Td/0.390/
 <Td/0.6/
 </Table>
 

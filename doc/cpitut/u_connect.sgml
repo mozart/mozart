@@ -84,7 +84,7 @@ The predefined macro <<OZ_EM_FSET>> is used to produce an appropriate error mess
 <SubSection><Title/Testing the Propagator/
 
 <P>
-To make the propagator available on Oz side feed the follwong code:
+To make the propagator available on Oz side feed the following code:
 
 <Code.Extern display proglang=oz to="programs/connect.1.oz" class=linenumbers>
 

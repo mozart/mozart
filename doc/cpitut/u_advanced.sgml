@@ -193,8 +193,8 @@ The implementation of a reified constraint is explained for <Math/(x
 \leq y) \leftrightarrow r/, which will be implemented by the class
 <<ReifiedLessEqProp>>. We assume that the constraints <Math/x \leq y/
 and <Math/x > y/ are implemented by the classes <<LessEqProp>> &resp
-<<GreaterProp>>. This section focuses on the implementation of the
-function <<ReifiedLessEqProp::propagate()>>.
+<<GreaterProp>>. This section focuses on implementing
+<<ReifiedLessEqProp::propagate()>>.
 
 <p>
 There are basically two cases to be regarded. The first case is that the
@@ -230,8 +230,8 @@ propagation, the function <<readEncap()>> has to be used instead. Such
 an instance is used in the same way as in the non-encapsulated case.
 
 <p>
-The code below implements the <<propagate()>> member function for the
-class <<ReifiedLessEq>>. It is implemented in such a way that it utilises
+The code below implements member function <<propagate()>> of class
+<<ReifiedLessEq>>. It is implemented in such a way that it utilises
 encapsulated propagation
 <note foot>
 Of course, an alternative would have

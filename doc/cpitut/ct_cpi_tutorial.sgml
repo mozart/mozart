@@ -241,10 +241,10 @@ propagator(see <Ptr to="ct.casestudy.impl.expect">).
 
 <P>
 An instance of <<RIWakeUp>> is computed from an instance of <<RI>> and
-a profile (stored before the constraint has be modified) by the
-function <<OZ_CtWakeUp RI::getWakeUpDescriptor(OZ_CtProfile * p)>>
-(see <Ptr to="ct.casestudy.impl.constraint">). The definition of the
-profile class <<RIProfile>> for real-intervals is given below.
+a profile (stored before the constraint has be modified) by
+<<<OZ_CtWakeUp RI::getWakeUpDescriptor(OZ_CtProfile * p)>>> (see <Ptr
+to="ct.casestudy.impl.constraint">). The definition of the profile
+class <<RIProfile>> for real-intervals is given below.
 
 <Code.Extern display proglang=cc to="ri_class_riprofile.hh" class=linenumbers>
 
@@ -270,7 +270,7 @@ couple of general functions are defined.
 <Code.Extern display proglang=cc to="ri_class_ri.hh" class=linenumbers>
 
 <P> The member functions <<leastConstraint()>> and <<isValidValue()>>
-are used by <<RIDefinition>> and their definition is
+are used by class <<RIDefinition>> and their definition is
 self-explanatory. Note that <<ri_float>> values have to be compatible
 with &oz; float such that <<OZ_float()>> is used for testing
 compatibility.
@@ -358,17 +358,20 @@ Propagators are imposed on their parameters by foreign functions which
 are invoked by the &oz; runtime system. Such foreign functions use the
 &cpi; class <<OZ_Expect>> to check that the parameters are
 appropriately kinded (&resp; constrained) or represent compatible
-values. The class <<OZ_Expect>> provides the member function <<<
-OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t, OZ_CtDefinition * d,
-OZ_CtWakeUp w); >>> for that purpose.
+values. The class <<OZ_Expect>> provides the member function
 
-<P>
-The costumization of <<OZ_Expect>> for real-interval constraints uses
-<<OZ_Expect::expectGenCtVar()>> and defines member functions that
-check for real-intervals and determine the wake-up event. To do that,
-the static members functions of <<RIWakeUp>> (see <Ptr
-to="ct.casestudy.impl.profilewakeup">) are used and the global variable
-<<RIDefinition ri_definition>> is assumed.
+<<<
+OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t,
+                                      OZ_CtDefinition * d,
+                                      OZ_CtWakeUp w);
+>>>
+
+to define appropriate expect-functions, e.g., for real-interval
+constraints. The customized class defines member functions that check
+for real-intervals and determine the wake-up event. To do that, the
+static members functions of <<RIWakeUp>> (see <Ptr
+to="ct.casestudy.impl.profilewakeup">) are used and the global
+variable <<RIDefinition ri_definition>> is assumed.
 
 <Code.Extern display proglang=cc to="ri_class_ri_expect.hh" class=linenumbers>
 
@@ -424,11 +427,11 @@ The propagation proceeds in three steps.
 constraint store, &ie;, <Math>\overline{x} \le \underline{y}</Math>.
 
 <Item> Constrain the upper bound of <Math>x</Math>: <Math>x \le
-\overline{y}</Math>. That is implemented by <<ri_float RI::operator
+\overline{y}</Math>. <P> That is implemented by <<ri_float RI::operator
 <= (ri_float)>>.
 
 <Item> Constrain the lower bound of <Math>y</Math>: <Math>y \ge
-\underline{x}</Math>. That is implemented by <<ri_float RI::operator
+\underline{x}</Math>. <P> That is implemented by <<ri_float RI::operator
 >= (ri_float)>>.
 
 </List>

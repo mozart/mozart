@@ -116,7 +116,7 @@ propagator's return value.
 <!-- destination. -->
 <figure id="propagatorstates">
 <caption/Propagator states and the transitions between them/
-<PICTURE.extern display to="propagatorstates.gif" type=GIF>
+<PICTURE.extern display to="propagatorstates.gif" id="propagatorstates.pic" type=GIF>
 </figure>
 
 The value <<OZ_FAILED>> is returned if the propagator

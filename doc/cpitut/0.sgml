@@ -66,6 +66,20 @@
 
     <!-- Splitting the document into different HTML nodes -->
 
+    <Meta name="latex.picture.width" arg1="propagatorstates.pic"
+                                     arg2="1.0\linewidth">
+
+    <Meta name="latex.picture.width" arg1="mks_fd_explorer.pic"
+                                     arg2="1.0\linewidth">
+
+    <Meta name="latex.picture.width" arg1="mks_lp_explorer.pic"
+                                     arg2="1.0\linewidth">
+
+    <Meta name="latex.picture.width" arg1="mks_fdlp_explorer.pic"
+                                     arg2="1.0\linewidth">
+
+    <!-- Splitting the document into different HTML nodes -->
+
     <Meta name="html.split" value="chapter.ip">
     <Meta name="html.split" value="cpi.introduction">
 
