@@ -3092,6 +3092,12 @@ Case(GETVOID)
       goto LBLpopTaskNoPreempt;
     }
 
+  Case(TASKDELSUSPS)
+    {
+      CTT->removeSuspensions((TaggedRef)Y);
+      goto LBLpopTaskNoPreempt;
+    }
+
   Case(TASKXCONT)
     {
       RefsArray tmpX = Y;

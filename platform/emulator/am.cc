@@ -1042,13 +1042,33 @@ void AM::emptyPreparedCalls()
   }
 }
 
+// suspension support is ill-designed and has been causing
+// space leaks.  The suspension list should be a _set_ that
+// contains only threads (or propagators) currently suspended
+// on this variable.  We enforce this invariant as follows:
+// whenever a thread is woken, it removes itself from the
+// suspension lists of the variables on which it was suspended
+// (assuming they still are variables -- they could, and
+// usually would, have become bound; but there are many cases
+// when that is not the case: e.g. WaitOr, unification,
+// injection ...).
+//
+// To achieve this, we push a new kind of task on a thread
+// when it suspends.  The type of this task is TASKDELSUSPS
+// and it has one parameter which is the list of variables
+// on which the thread is suspending. Thus, when the thread
+// wakes up, it can deregister itself from these variables.
 
 OZ_Return AM::suspendOnVarList(Thread *thr)
 {
+  Assert(_suspendVarList);
+  Assert(oz_isCons(_suspendVarList));
+  // push a task to remove the suspensions when the
+  // thread is woken
+  thr->pushDelSusps(_suspendVarList);
   while (oz_isCons(_suspendVarList)) {
     OZ_Term v=oz_head(_suspendVarList);
     Assert(oz_isVariable(*tagged2Ref(v)));
-
     OZ_Return ret = oz_var_addSusp(tagged2Ref(v),thr);
     if (ret != SUSPEND) {
       am.emptySuspendVarList();
