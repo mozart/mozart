@@ -80,6 +80,7 @@ public:
 };
 
 void execBreakpoint(Thread*);
+void debugStreamBreakpoint(Thread*);
 void debugStreamBlocked(Thread*);
 void debugStreamReady(Thread*);
 void debugStreamTerm(Thread*);
