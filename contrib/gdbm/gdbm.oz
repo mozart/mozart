@@ -106,20 +106,9 @@ in
    end
 end
 
-in skip
+in
 
-/*
+{Save NewGdbm 'gdbm.ozc'
+ x(components:unit resources:nil)}
 
-{Save NewGdbm '/home/ps-home2/duchier/Oz/tools/gdbm/gdbm.ozc'
- x(url:'file:/home/ps-home2/duchier/Oz/tools/gdbm/gdbm.ozc'
-   include:['file:/home/ps-home2/duchier/Oz/tools/gdbm/gdbm.ozc']
-   components:['file:/project/ps/soft/oz-devel/oz/lib/Base.ozc']
-   resources:nil)}
-
-{SmartSave NewGdbm
- '/tmp/gdbm.ozc'
- 'file:/tmp/gdbm.ozc'
- ['file:/tmp/gdbm.ozc']
- nil nil}}
-
-*/
+{Exit 0}
