@@ -119,12 +119,10 @@ public:
 
   void print() {
     printf("byte stream\n");
-    printf("refCounter: %d",refCounter);
   }
-  int refCounter;
   ByteStream():first(NULL),last(NULL),pos(NULL),type(BS_None){}
 
-  void init(){type=BS_None;first=NULL;last=NULL;refCounter=0;}
+  void init(){type=BS_None;first=NULL;last=NULL;}
 
   /* basic */
 
