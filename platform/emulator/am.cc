@@ -573,7 +573,7 @@ void AM::decSolveThreads (Board *bb)
 SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
 				   SuspList * suspList,
 				   TaggedRef term, SVariable * rightVar,
-				   PropCaller calledByUnify)
+				   PropCaller calledBy)
 {
   SuspList * retSuspList = NULL;
 
@@ -601,16 +601,16 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
     // already propagated susps remain in suspList
     if (! susp->isPropagated()) {      
       if ((suspList->checkCondition(taggedvar, term)) &&
-	  (susp->wakeUp(var->getHome(), rightVar, calledByUnify))) {
+	  (susp->wakeUp(var->getHome(), rightVar, calledBy))) {
         // dispose only non-resistant susps
 	if (! susp->isResistant()) {
 	  suspList = suspList->dispose();
 	  continue;
-	} else if (calledByUnify) {
+	} else if (calledBy) {
 	  susp->markUnifySusp();
 	}
       }
-    } else if (calledByUnify && susp->isResistant() && ! susp->isUnifySusp())
+    } else if (calledBy && susp->isResistant() && ! susp->isUnifySusp())
       if (isBetween(susp->getBoard(), var->getHome()))
 	susp->markUnifySusp();
     
