@@ -518,6 +518,32 @@ typeError:
 
 DECLAREBI_USEINLINEFUN1(BIprocedureArity,procedureArityInline)
 
+OZ_C_proc_begin(BIprocedureEnvironment,2)
+{
+  oz_declareNonvarArg(0,p);
+  oz_declareArg(1,out);
+
+  if (!isAbstraction(p)) {
+    oz_typeError(0,"Procedure (no builtin)");
+  }
+
+  Abstraction *a=tagged2Abstraction(p);
+
+  OZ_Term t;
+  RefsArray &g=a->getGRegs();
+  if (g) {
+    int len=a->getGSize();
+    t = OZ_tuple(OZ_atom("environment"),len);
+    for (int i=0; i<len; i++)
+      OZ_putArg(t,i,g[i]);
+  } else {
+    t = OZ_atom("environment");
+  }
+  return oz_unify(out,t);
+}
+OZ_C_proc_end
+
+
 OZ_Return isCellInline(TaggedRef cell)
 {
   NONVAR( cell, term);
@@ -7084,6 +7110,7 @@ BIspec allSpec[] = {
   {"Value.status", 2, BIstatus,          (IFOR) BIstatusInline},
 
   {"ProcedureArity",2,BIprocedureArity,  (IFOR)procedureArityInline},
+  {"procedureEnvironment",2,BIprocedureEnvironment,0},
   {"MakeTuple",3,BItuple,              (IFOR) tupleInline},
   {"Label",2,BIlabel,                  (IFOR) labelInline},
   {"hasLabel",2,BIhasLabel,            (IFOR) hasLabelInline},
