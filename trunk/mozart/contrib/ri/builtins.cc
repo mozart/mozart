@@ -38,7 +38,7 @@ OZ_BI_define(ri_newVar, 3, 0)
 
   RI ri(l, u);
 
-  return OZ_mkOZ_VAR_CT(OZ_in(2), &ri, ri_definition);
+  return OZ_mkCtVar(OZ_in(2), &ri, ri_definition);
 }
 OZ_BI_end
 
@@ -46,7 +46,7 @@ OZ_BI_define(ri_declVar, 1, 0)
 {
   RI ri(RI_FLOAT_MIN, RI_FLOAT_MAX);
 
-  return OZ_mkOZ_VAR_CT(OZ_in(0), &ri, ri_definition);
+  return OZ_mkCtVar(OZ_in(0), &ri, ri_definition);
 }
 OZ_BI_end
 
