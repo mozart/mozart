@@ -112,7 +112,7 @@ GUMPEXAMPLEFILES = \
 	OzParser.ozg OzScanner.ozg OzFrontend.oz
 
 INSPECTORTOPSRC = \
-	InspectorOptions InspectorMain TreeWidget
+	InspectorOptions Reflection InspectorMain TreeWidget
 INSPECTORTREEWIDGETSRC = \
 	CreateObjects LayoutObjects DrawObjects \
         TreeNodes StoreListener GraphicSupport \

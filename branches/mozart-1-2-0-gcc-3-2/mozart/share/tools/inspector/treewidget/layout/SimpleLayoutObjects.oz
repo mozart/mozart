@@ -32,7 +32,10 @@ local
 	    LengthStr
 	 in
 	    {self createRep(String LengthStr)}
-	    XDim = case String of 39|_ then 2 else 0 end +
+	    XDim =
+\ifndef INSPECTOR_GTK_GUI
+	    case String of 39|_ then 2 else 0 end +
+\endif
 	    {VirtualString.length LengthStr}
 	 end
       end
@@ -247,11 +250,10 @@ in
       meth createRep(PrintStr LengthStr)
 	 Val    = @value
 	 Type   = {Value.status Val}.1
-	 ValStr = {String.toAtom {Value.toVirtualString Val 1 1}} 
 	 MaxLen = {@visual get(widgetInternalAtomSize $)}
       in
 	 type <- Type
-	 {Helper.convert MaxLen ValStr PrintStr LengthStr}
+	 {Helper.convert MaxLen Val PrintStr LengthStr}
       end
    end
 
