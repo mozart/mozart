@@ -42,11 +42,15 @@
 // 
 enum VSMsgType {
   VS_M_INVALID = 0,
-  VS_M_PERDIO,			// perdio messages - passed up;
+  VS_M_PERDIO,			// perdio messages - passed over;
   VS_M_INIT_VS,			// initializing a slave;
-  VS_M_SITE_IS_ALIVE,		// "ping" probing;
-  VS_M_SITE_ALIVE,		// 
-  VS_M_UNUSED_SHMID		// GCing of messages' shm segments;
+  VS_M_SITE_IS_ALIVE,		// "ping" probing - request;
+  VS_M_SITE_ALIVE,		// "is OK", the first answer, another -
+  VS_M_SITE_DEAD,		// "the guy supposed to be here is dead!";
+  VS_M_YOUR_INDEX_HERE,         // local index of a destination's VSite;
+  VS_M_UNUSED_SHMID,		// GCing of messages' shm segments;
+  //
+  VS_M_LAST			// don't move it out here!
 };
 
 //
@@ -108,13 +112,13 @@ monitorQueue_VirtualSiteImpl(VirtualSite *vs,
 MonitorReturn demonitorQueue_VirtualSiteImpl(VirtualSite* vs);
 
 //
-ProbeReturn
-installProbe_VirtualSiteImpl(VirtualSite *vs, ProbeType pt, int frequency);
-ProbeReturn
-deinstallProbe_VirtualSiteImpl(VirtualSite *vs, ProbeType pt);
-ProbeReturn
-probeStatus_VirtualSiteImpl(VirtualSite *vs,
-			    ProbeType &pt, int &frequncey, void* &storePtr);
+// ProbeReturn
+// installProbe_VirtualSiteImpl(VirtualSite *vs, ProbeType pt, int frequency);
+// ProbeReturn
+// deinstallProbe_VirtualSiteImpl(VirtualSite *vs, ProbeType pt);
+// ProbeReturn
+// probeStatus_VirtualSiteImpl(VirtualSite *vs,
+// 			    ProbeType &pt, int &frequncey, void* &storePtr);
 
 //
 GiveUpReturn giveUp_VirtualSiteImpl(VirtualSite* vs);
@@ -136,23 +140,6 @@ void siteAlive_VirtualSiteImpl(VirtualSite *vs);
 /// In fact, this declaration cannot be used since 'virtaulSite.hh' 
 /// should not be included into 'am.cc';
 void virtualSitesExitImpl();
-
-//
-// There are also (local) methods of (virtual site) module ...
-//
-VSMsgBufferOwned* composeVSInitMsg();
-VSMsgBufferOwned* composeVSSiteIsAliveMsg(DSite *s);
-VSMsgBufferOwned* composeVSSiteAliveMsg(DSite *s, VirtualSite *vs);
-VSMsgBufferOwned* composeVSUnusedShmIdMsg(DSite *s, key_t shmid);
-
-//
-VSMsgType getVSMsgType(VSMsgBufferImported *mb);
-
-//
-void decomposeVSInitMsg(VSMsgBuffer *mb, DSite* &s);
-void decomposeVSSiteIsAliveMsg(VSMsgBuffer *mb, DSite* &s);
-void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, DSite* &s, VirtualSite* &vs);
-void decomposeVSUnusedShmIdMsg(VSMsgBuffer *mb, DSite* &s, key_t &shmid);
 
 //
 // special stuff:

@@ -43,7 +43,7 @@
 #include <sys/shm.h>
 
 //
-#define VS_MAILBOX_KEY       0x2
+#define VS_MAILBOX_KEY       0x0
 
 //
 // The mailbox for Virutal Sites in the Distributed Oz.
@@ -85,8 +85,8 @@ class VSMailbox : protected LockObj {
 protected:
   //
   int memSize;			// in bytes;
-  int pid;			// of the owner; 0 says "not yet known";
-  // pid is used also for terminating 
+  int pid;			// of the owner; 0 means "not yet known";
+  // pid is used also for terminating slave virtual sites upon shutdown;
   //
   // queue (unfortunately, it cannot be moved out since then we cannot
   // inherit from such a 'queue' class (because of the var-size 'msgs'
@@ -203,8 +203,9 @@ public:
 	//
 	// The 'USR2' must be sent at least after increasing the size - 
 	// since 'checkVSMessages' does not lock the mailbox;
-	if (pid)
+	if (pid) {
 	  oskill(pid, SIGUSR2);
+	}
 
 	//
 	return (TRUE);
@@ -267,26 +268,35 @@ protected:
   int shmid;			// 
   //
   void *mem;			// just a pointer;
+  //
+  int lERRNO;			// last error occured;
 
   //
 public:
   // 
-  VSMailboxManager() {}
+  VSMailboxManager(key_t shmkeyIn) : shmkey(shmkeyIn), lERRNO(0) {}
+  VSMailboxManager() : shmkey((key_t) 0), lERRNO(0) {}
   ~VSMailboxManager() {}
 
   //
   key_t getSHMKey() { return (shmkey); }
+  //
+  Bool isVoid() { return (!mem); }
+  int getErrno() { return (lERRNO); }
 };
 
 // 
 // The 'VSMailboxManager' structure keeps the per-procees
 // identification (number) of the mailbox's semaphore. Objects of this
 // class are allocated in a private site's memory;
+class VSResourceManager;
 class VSMailboxManagerOwned : public VSMailboxManager {
 private:
   //
   // A virtual site knows its VSMailboxManager only;
   VSMailboxOwned *mbox;
+  //
+  VSResourceManager *vsRM;
 
   //
 private:
@@ -297,7 +307,7 @@ public:
   // 
   // The 'owned' mailbox is created at the peer site, so here a key
   // of its shared memory page is passed;
-  VSMailboxManagerOwned(key_t shmkeyIn);
+  VSMailboxManagerOwned(key_t shmkeyIn, VSResourceManager *vsRMin);
   // Should at least unmap it before deleting;
   ~VSMailboxManagerOwned() {
     Assert(mbox == (VSMailboxOwned *) 0);
@@ -325,13 +335,15 @@ private:
   //
   // A virtual site knows its VSMailboxManager only;
   VSMailboxImported *mbox;
+  //
+  VSResourceManager *vsRM;
 
   //
 public:
   // 
   // 'Imported' mailboxes are initialized by supplying their shared
   // memory key;
-  VSMailboxManagerImported(key_t shmkeyIn);
+  VSMailboxManagerImported(key_t shmkeyIn, VSResourceManager *vsRMin);
   ~VSMailboxManagerImported() {
     Assert(mbox == (VSMailboxImported *) 0);
     Assert(mem == (void *) 0);
@@ -406,6 +418,7 @@ public:
     aux = find(key);
     if (!aux) { 
       aux = new VSMailboxManagerImported(key);
+      Assert(0);		// handling of resource problems! 
       add(key, aux);
     }
 
