@@ -43,7 +43,7 @@
 #include "fdbuilti.hh"
 #include "fdhook.hh"
 #include "solve.hh"
-#include "fdinterface.hh"
+#include "oz_cpi.hh"
 
 /*===================================================================
  * Macros
