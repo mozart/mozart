@@ -67,9 +67,9 @@ void usage(char *msg)
   fprintf(stderr,
 	  "%s"
 	  "\nUsage:\n"
-	  "\toztool [-gnu|-watcom|-msvc] ld -o TargetLib FileList \n"
-	  "\toztool [-gnu|-watcom|-msvc] c++ SourceFile\n"
-	  "\toztool [-gnu|-watcom|-msvc] c   SourceFile\n"
+	  "\toztool [-verbose] [-gnu|-watcom|-msvc] ld -o TargetLib FileList\n"
+	  "\toztool [-verbose] [-gnu|-watcom|-msvc] c++ SourceFile\n"
+	  "\toztool [-verbose] [-gnu|-watcom|-msvc] c   SourceFile\n"
 	  "\toztool platform\n",
 	  msg);
   exit(2);
@@ -108,18 +108,22 @@ char *ostmpnam()
 void doexit(int n)
 {
   if (n!=0)
-    fprintf(stderr,"*** error\n");
+    fprintf(stderr,"*** error: oztool aborted\n");
   exit(n);
 }
+
+int verbose = 0;
 
 int execute(char **argv)
 {
   char **aux = argv;
-  while(*aux) {
-    printf("%s ",*aux);
-    aux++;
+  if (verbose) {
+    while(*aux) {
+      printf("%s ",*aux);
+      aux++;
+    }
+    printf("\n",argv);
   }
-  printf("\n",argv);
   return spawnvp(P_WAIT,argv[0],argv);
 }
 
@@ -138,6 +142,13 @@ int main(int argc, char** argv)
     printf("%s\n",ozplatform);
     exit(0);
   }
+
+  if (!strcmp(argv[1],"-verbose")) {
+    verbose = 1;
+    argv++;
+    argc--;
+  }
+
 
   if (argc<3)
     usage("");
@@ -263,7 +274,7 @@ int main(int argc, char** argv)
 	wuergs[r++]="--output-lib";
 	wuergs[r++]=aname;
 	wuergs[r++]=tempfile;
-	for (int i=5; i<argc; i++) wuergs[r++]=argv[i];
+	for (int i=4; i<argc; i++) wuergs[r++]=argv[i];
 	wuergs[r]=NULL;
        
 	r=0;
@@ -276,7 +287,7 @@ int main(int argc, char** argv)
 	links[r++]="--dllname";
 	links[r++]=libname;
 	links[r++]=tempfile;
-	for (int i=5; i<argc; i++) links[r++]=argv[i];
+	for (int i=4; i<argc; i++) links[r++]=argv[i];
 	links[r]=NULL;
 
 	if ((r=execute(moz)) ||
