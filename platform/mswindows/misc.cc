@@ -39,25 +39,42 @@
 #define X_OK 0
 #endif
 
-void
-OzPanic(int quit, char *format,...)
+const char *ozplatform = "win32-i486";
+
+char *reg_path = "SOFTWARE\\Mozart Consortium\\Mozart\\" OZVERSION;
+
+void panic(int system, char *format, ...)
 {
   va_list argList;
   char buf[1024];
-  
+
   va_start(argList, format);
   vsprintf(buf, format, argList);
-  
+
+  if (system) {
+    LPVOID lpMsgBuf;
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		  FORMAT_MESSAGE_FROM_SYSTEM |
+		  FORMAT_MESSAGE_IGNORE_INSERTS,
+		  NULL,
+		  GetLastError(),
+		  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		  (LPTSTR) &lpMsgBuf,
+		  0,
+		  NULL);
+    strcat(buf, (LPTSTR) lpMsgBuf);
+    LocalFree(lpMsgBuf);
+  }
+
 #ifdef OZENGINE
-  fprintf(stderr,"Fatal Error: ");
-  fprintf(stderr,buf);
+  fprintf(stderr,"Fatal Error: %s\n",buf);
 #else
   MessageBeep(MB_ICONEXCLAMATION);
-  MessageBox(NULL, buf, "Fatal Error in Oz",
+  MessageBox(NULL, buf, "Mozart Fatal Error",
 	     MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
 #endif
-  if (quit)
-    ExitProcess(1);
+
+  ExitProcess(1);
 }
 
 void normalizePath(char *path)
@@ -67,6 +84,44 @@ void normalizePath(char *path)
       *aux = '/';
     }
   }
+}
+
+void ozSetenv(const char *var, const char *value)
+{
+  if (SetEnvironmentVariable(var,value) == FALSE) {
+    panic(1,"Adding %s=%s to environment failed.\n",var,value);
+  }
+}
+
+char *getRegistry(char *path, char *var)
+{
+  DWORD value_type;
+  DWORD buf_size = MAX_PATH;
+  char buf[MAX_PATH];
+  int rc = 0;
+
+  HKEY hk;
+  if (RegOpenKey(HKEY_LOCAL_MACHINE, path, &hk) != ERROR_SUCCESS)
+    return NULL;
+
+  if (RegQueryValueEx(hk,
+		      var,
+		      0,
+		      &value_type,
+		      (LPBYTE)buf,
+		      &buf_size) == ERROR_SUCCESS)
+    {
+      rc = 1;
+    }
+
+  RegCloseKey(hk);
+
+  return rc==1 && value_type == REG_SZ? strdup(buf): NULL;
+}
+
+char *getRegistry(char *var)
+{
+  return getRegistry(reg_path,var);
 }
 
 char *getParent(char *path, int levelsup)
@@ -81,91 +136,14 @@ char *getParent(char *path, int levelsup)
   }
   return ret;
 }
-
-char *getProgname(char *path)
-{
-  char *aux = path+strlen(path)-1;
-  while(*aux != '\\' && *aux!='/') {
-    if (aux == path)
-      return strdup(path);
-    aux--;
-  }
-  return strdup(aux+1);
-}
-
-void ozSetenv(const char *var, const char *value)
-{
-  if (SetEnvironmentVariable(var,value) == FALSE) {
-    OzPanic(1,"setenv %s=%s failed",var,value);
-  }
-}
-
-char *reg_path = "SOFTWARE\\DFKI\\Oz\\" OZVERSION;
-
-char *getRegistry(char *path, char *var)
-{
-  DWORD value_type = REG_SZ;
-  DWORD buf_size = MAX_PATH;
-  char buf[MAX_PATH];
-  int rc = 0;
-
-  HKEY hk;
-  if (RegOpenKey(HKEY_LOCAL_MACHINE, path, &hk) != ERROR_SUCCESS)
-    goto end;
-
-  if (RegQueryValueEx(hk,
-		      var,
-		      0,
-		      &value_type,
-		      (LPBYTE)buf,
-		      &buf_size) == ERROR_SUCCESS)
-    {
-      rc = 1;
-    }
-
- end:
-  RegCloseKey(hk);
-  
-  return rc==1 ? strdup(buf) : NULL;
-}
-
-char *getRegistry(char *var)
-{
-  return getRegistry(reg_path,var);
-}
-
-int setRegistry(char *var, const char *value)
-{
-  HKEY hk;
-
-  int ret = RegCreateKey(HKEY_LOCAL_MACHINE, reg_path, &hk);
-  if (ret != ERROR_SUCCESS)
-    return 0;
-
-  if (RegSetValueEx(hk,
-		    var,
-		    0,
-		    REG_SZ,
-		    (CONST BYTE *) value,
-		    strlen(value)+1) == ERROR_SUCCESS) {
-    RegCloseKey(hk);
-    return 1;
-  }
-  
-  RegCloseKey(hk);
-  return 0;
-}
-
-const char *ozplatform = "win32-i486";
-
 char *getOzHome(char *path, int depth)
 {
   char *ret = getenv("OZHOME");
   if (ret==NULL) {
     ret = getParent(path,depth);
     if (ret == NULL) {
-      OzPanic(1,"Cannot determine Oz installation directory.\n"
-	        "Try setting OZHOME environment variable.");
+      panic(0,"Cannot determine Mozart installation directory.\n"
+	    "Try setting OZHOME environment variable.");
     }
   }
   normalizePath(ret);
@@ -176,18 +154,14 @@ char *getEmacsHome()
 {
   char *ehome = getRegistry("SOFTWARE\\GNU\\Emacs","emacs_dir");
   if (ehome==NULL) {
-    OzPanic(1,"Cannot find Emacs: did you correctly install GNU Emacs?");
-    return NULL;
+    panic(1,"Cannot find GNU Emacs.\n");
   }
 
   char buffer[1000];
   normalizePath(ehome);
   sprintf(buffer,"%s/bin/runemacs.exe",ehome);
   if (access(buffer,X_OK)) {
-    OzPanic(1,"Emacs binary '%s' does not exist.",buffer);
-    return NULL;
+    panic(0,"Emacs binary '%s' does not exist.",buffer);
   }
   return ehome;
 }
-
-
