@@ -53,6 +53,104 @@
   (string-match "\\<XEmacs\\>\\|\\<Lucid\\>" emacs-version)
   "Non-nil iff we're running under XEmacs.")
 
+(defvar oz-old-frame-title
+  (cond (oz-gnu-emacs
+	 (cdr (assoc 'name (frame-parameters (car (visible-frame-list))))))
+	(oz-lucid-emacs
+	 frame-title-format))
+  "Saved Emacs window title.")
+
+
+;;------------------------------------------------------------
+;; Customization
+;;------------------------------------------------------------
+
+(eval-when-compile
+  (if (featurep 'custom)
+      (defgroup oz nil
+	"DFKI Oz Programming Interface.")
+    (defmacro defcustom (symbol value doc &rest args)
+      (` (defvar (, symbol) (, value) (, doc))))))
+
+(defcustom oz-want-font-lock t
+  "*If non-nil, automatically enter font-lock-mode for oz-mode."
+  :type 'boolean
+  :group 'oz)
+
+(defcustom oz-auto-indent t
+  "*If non-nil, automatically indent lines."
+  :type 'boolean
+  :group 'oz)
+
+(defcustom oz-indent-chars 3
+  "*Number of spaces Oz statements are indented wrt. containing block."
+  :type 'integer
+  :group 'oz)
+
+(defcustom oz-change-title t
+  "*If non-nil, change the title of the Emacs window while Oz is running."
+  :type 'boolean
+  :group 'oz)
+
+(defcustom oz-frame-title
+  (concat "Oz Programming Interface (" oz-old-frame-title ")")
+  "*String to be used as Emacs window title while Oz is running."
+  :type 'string
+  :group 'oz)
+
+(defcustom oz-emulator
+  (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin")
+  "*Path to the Oz Emulator for gdb mode and for \\[oz-other]."
+  :type 'string
+  :group 'oz)
+
+(defcustom oz-compiler-boot-file
+  (concat (getenv "HOME") "/Oz/Compiler/backend/ozboot.ql")
+  "*Path to the old Oz Compiler's boot file for \\[oz-other]."
+  :type 'string
+  :group 'oz)
+
+(defcustom oz-use-new-compiler
+  (not (null (getenv "OZUSENEWCOMPILER")))
+  "*If non-nil, use the new Oz Compiler.
+This has the effect of not opening the *Oz Compiler* buffer and feeding
+everything into the *Oz Emulator* buffer."
+  :type 'boolean
+  :group 'oz)
+
+(defcustom oz-new-compiler-url
+  (concat "file:" (getenv "HOME") "/Oz/tools/compiler/Compiler.ozc")
+  "*URL of the new Oz Compiler for gdb mode."
+  :type 'string
+  :group 'oz)
+
+(defcustom oz-gdb-autostart t
+  "*If non-nil, start emulator immediately in gdb mode.
+If nil, you have the possibility to first set breakpoints and only
+run the emulator when you issue the command `run' to gdb."
+  :type 'boolean
+  :group 'oz)
+
+(defcustom oz-other-buffer-size 35
+  "*Percentage of screen to use for Oz Compiler and Emulator windows."
+  :type 'integer
+  :group 'oz)
+
+(defcustom oz-popup-on-error t
+  "*If non-nil, pop up Compiler resp. Emulator buffer upon error."
+  :type 'boolean
+  :group 'oz)
+
+(defcustom oz-halt-timeout 30
+  "*Number of seconds to wait for shutdown in oz-halt."
+  :type 'integer
+  :group 'oz)
+
+(defcustom oz-previewer "xdvi"
+  "*Viewer command for Oz documentation files."
+  :type 'string
+  :group 'oz)
+
 
 ;;------------------------------------------------------------
 ;; win32 Support
@@ -67,11 +165,6 @@
 ;; Variables/Initialization
 ;;------------------------------------------------------------
 
-(defvar oz-use-new-compiler (getenv "OZUSENEWCOMPILER")
-  "*If non-nil, use the new Oz Compiler.
-This has the effect of not opening the *Oz Compiler* buffer and feeding
-everything into the *Oz Emulator* buffer.")
-
 (defvar oz-using-new-compiler nil
   "If non-nil, indicates that the new Oz Compiler is currently running.
 This variable should not be changed by the user.")
@@ -80,35 +173,12 @@ This variable should not be changed by the user.")
   "Non-nil iff output currently comes from the emulator.
 This variable should not be changed by the user.")
 
-(defvar oz-gdb-autostart t
-  "*If non-nil, start emulator immediately in gdb mode.
-If nil, you have the possibility to first set breakpoints and only
-run the emulator when you issue the command `run' to gdb.")
-
-(defvar oz-auto-indent t
-  "*If non-nil, automatically indent lines.")
-
-(defvar oz-indent-chars 3
-  "*Number of spaces Oz statements are indented wrt. containing block.")
-
 (defvar oz-mode-map (make-sparse-keymap)
   "Keymap used in oz-mode buffers.")
 (defvar oz-compiler-buffer-map nil
   "Keymap used in the *Oz Compiler* buffer.")
 (defvar oz-emulator-buffer-map nil
   "Keymap used in the *Oz Emulator* buffer.")
-
-(defvar oz-emulator
-  (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin")
-  "*Path to the Oz Emulator for gdb mode and for \\[oz-other].")
-
-(defvar oz-new-compiler-url
-  (concat "file:" (getenv "HOME") "/Oz/tools/compiler/Compiler.ozc")
-  "*URL of the new Oz Compiler for gdb mode.")
-
-(defvar oz-boot
-  (concat (getenv "HOME") "/Oz/Compiler/backend/ozboot.ql")
-  "*Path to the Oz Compiler boot file for \\[oz-other].")
 
 (defvar oz-emulator-buffer "*Oz Emulator*"
   "Name of the Oz Emulator buffer.")
@@ -139,12 +209,6 @@ Only used as fallback if the environment variable OZHOME is not set.")
 (defvar oz-doc-dir (concat (oz-home) "/doc/")
   "Directory containing the Oz documentation.")
 
-(defvar oz-preview "xdvi"
-  "*Viewer for Oz documentation files.")
-
-(defvar oz-popup-on-error t
-  "*If non-nil, pop up Compiler resp. Emulator buffer upon error.")
-
 (defconst oz-error-string (char-to-string 17)
   "Regex to recognize error messages from Oz Compiler and Emulator.
 Used for popping up the corresponding buffer.")
@@ -169,9 +233,6 @@ All strings matching this regular expression are removed.")
 (defconst oz-show-temp-pattern
   "\'oz-show-temp \\([^ ]*\\)\'"
   "Regex for reading messages from the Oz compiler.")
-
-(defvar oz-want-font-lock t
-  "*If non-nil, automatically enter font-lock-mode for oz-mode.")
 
 (defvar oz-gump-indentation nil
   "Non-nil iff Gump syntax is to be used for indentation.")
@@ -205,20 +266,6 @@ All strings matching this regular expression are removed.")
 ;; Setting the Frame Title
 ;;------------------------------------------------------------
 
-(defvar oz-change-title t
-  "*If non-nil, change the title of the Emacs window while Oz is running.")
-
-(defvar oz-old-frame-title
-  (cond (oz-gnu-emacs
-	 (cdr (assoc 'name (frame-parameters (car (visible-frame-list))))))
-	(oz-lucid-emacs
-	 frame-title-format))
-  "Saved Emacs window title.")
-
-(defvar oz-frame-title
-  (concat "Oz Programming Interface (" oz-old-frame-title ")")
-  "*String to be used as Emacs window title while Oz is running.")
-
 (defun oz-set-title (frame-title)
   "Set the title of the Emacs window."
   (cond ((not oz-change-title) t)
@@ -226,8 +273,8 @@ All strings matching this regular expression are removed.")
 	 (mapcar (function (lambda (scr)
 			     (modify-frame-parameters
 			      scr
-			      (list (cons 'name frame-title))))
-			   (visible-frame-list))))
+			      (list (cons 'name frame-title)))))
+		 (visible-frame-list)))
 	(oz-lucid-emacs
 	 (setq frame-title-format frame-title))))
 
@@ -579,9 +626,6 @@ variables oz-compiler-buffer and oz-emulator-buffer."
       (oz-new-buffer))
   (oz-show-buffer (get-buffer oz-compiler-buffer)))
 
-(defvar oz-halt-timeout 30
-  "Number of seconds to wait in oz-halt after sending the directive `\\halt'.")
-
 (defun oz-halt (force)
   "Halt Oz Compiler and Emulator.
 If FORCE is nil, send the `\\halt' directive and wait for the processes
@@ -730,11 +774,11 @@ Can be selected by \\[oz-other-emulator]."
 This is to specify an alternative Oz Compiler boot file.
 Can be selected by \\[oz-other-compiler]."
   (interactive)
-  (setq oz-boot
+  (setq oz-compiler-boot-file
 	(expand-file-name
 	 (read-file-name "Choose Compiler boot file: " nil nil t nil)))
   (if (getenv "OZBOOT")
-      (setenv "OZBOOT" oz-boot)))
+      (setenv "OZBOOT" oz-compiler-boot-file)))
 
 (defun oz-other (set-compiler)
   "Switch between global and local Oz Emulator or Oz Compiler boot file.
@@ -767,8 +811,8 @@ or can be set by \\[oz-set-compiler]."
 	 (setenv "OZBOOT" nil)
 	 (message "Oz Compiler: global"))
 	(t
-	 (setenv "OZBOOT" oz-boot)
-	 (message "Oz Compiler: %s" oz-boot))))
+	 (setenv "OZBOOT" oz-compiler-boot-file)
+	 (message "Oz Compiler: %s" oz-compiler-boot-file))))
 
 (defun oz-gdb ()
   "Toggle debugging of the Oz Emulator with gdb.
@@ -1206,9 +1250,9 @@ to handle lines like 'attr a:'."
 If variable `oz-auto-indent' is non-nil, indent the terminated line
 and the following line."
   (interactive)
+  (delete-horizontal-space) ; Removes trailing whitespace
   (open-line 1)
   (cond (oz-auto-indent (oz-indent-line)))
-  (delete-horizontal-space) ; Removes trailing whitespace
   (forward-line 1)
   (cond (oz-auto-indent (oz-indent-line))))
 
@@ -1520,7 +1564,7 @@ Negative arg -N means kill N Oz expressions after the cursor."
   (set (make-local-variable 'words-include-escapes)
        t)
   (set (make-local-variable 'compilation-last-buffer)
-       (get-buffer-create oz-compiler-buffer)))
+       nil))
 
 (defun oz-mode-commands (map)
   (define-key map "\t" 'oz-indent-line)
@@ -1591,10 +1635,7 @@ if that value is non-nil."
   (oz-mode-variables)
   (if (and oz-lucid-emacs (not (assoc "Oz" current-menubar)))
       (set-buffer-menubar (oz-insert-menu oz-menubar current-menubar)))
-
   (set (make-local-variable 'oz-gump-indentation) nil)
-
-  ;; font lock stuff
   (oz-set-font-lock-defaults)
   (if (and oz-want-font-lock window-system)
       (font-lock-mode 1))
@@ -1611,8 +1652,6 @@ Commands:
   (setq major-mode 'ozm-mode)
   (setq mode-name "Oz-Machine")
   (oz-mode-variables)
-
-  ;; font lock stuff
   (ozm-set-font-lock-defaults)
   (if (and oz-want-font-lock window-system)
       (font-lock-mode 1)))
@@ -1632,10 +1671,7 @@ if that value is non-nil."
   (oz-mode-variables)
   (if (and oz-lucid-emacs (not (assoc "Oz" current-menubar)))
       (set-buffer-menubar (oz-insert-menu oz-menubar current-menubar)))
-
   (set (make-local-variable 'oz-gump-indentation) t)
-
-  ;; font lock stuff
   (oz-gump-set-font-lock-defaults)
   (if (and oz-want-font-lock window-system)
       (font-lock-mode 1))
@@ -2066,82 +2102,86 @@ splitting, the outputs are passed to the common oz-filter."
     (oz-filter proc string (oz-current-outbuffer))))
 
 (defun oz-filter (proc string buffer)
-  (let (errs-found start-of-output end-of-output)
-    (set-buffer buffer)
-    (save-excursion
-      ;; insert the text:
-      (goto-char (point-max))
-      (setq start-of-output (point))
-      (insert string)
+  (let ((old-buffer (current-buffer)))
+    (unwind-protect
+	(let (errs-found start-of-output end-of-output)
+	  (set-buffer buffer)
+	  (save-excursion
+	    ;; insert the text:
+	    (goto-char (point-max))
+	    (setq start-of-output (point))
+	    (insert string)
 
-      ;; look for error messages in output:
-      (goto-char start-of-output)
-      (setq errs-found (and oz-popup-on-error
-			    (search-forward-regexp oz-error-string nil t)))
+	    ;; look for error messages in output:
+	    (goto-char start-of-output)
+	    (setq errs-found
+		  (and oz-popup-on-error
+		       (re-search-forward oz-error-string nil t)
+		       (match-beginning 0)))
 
-      ;; remove escape characters:
-      (goto-char start-of-output)
-      (while (search-forward-regexp oz-remove-pattern nil t)
-	(replace-match "" nil t))
+	    ;; remove escape characters:
+	    (goto-char start-of-output)
+	    (while (re-search-forward oz-remove-pattern nil t)
+	      (replace-match "" nil t))
 
-      ;; look for oz-show-temp:
-      (goto-char start-of-output)
-      (while (search-forward-regexp oz-show-temp-pattern nil t)
-	(let ((file (match-string 1)) buf)
-	  (replace-match "" nil t)
-	  (setq buf (get-buffer oz-temp-buffer))
-	  (if (null buf)
-	      (setq buf (generate-new-buffer oz-temp-buffer)))
-	  (oz-show-buffer buf)
-	  (set-buffer buf)
-	  (erase-buffer)
-	  (insert-file-contents file)
-	  (delete-file file)
-	  (cond ((string-match "\\.ozc$" file)
-		 (oz-mode))
-		((string-match "\\.ozm$" file)
-		 (ozm-mode)))))
+	    ;; look for oz-show-temp:
+	    (goto-char start-of-output)
+	    (while (re-search-forward oz-show-temp-pattern nil t)
+	      (let ((file (match-string 1)) buf)
+		(replace-match "" nil t)
+		(setq buf (get-buffer oz-temp-buffer))
+		(if (null buf)
+		    (setq buf (generate-new-buffer oz-temp-buffer)))
+		(oz-show-buffer buf)
+		(set-buffer buf)
+		(erase-buffer)
+		(insert-file-contents file)
+		(delete-file file)
+		(cond ((string-match "\\.ozc$" file)
+		       (oz-mode))
+		      ((string-match "\\.ozm$" file)
+		       (ozm-mode)))))
 
-      ;; look for oz-bar information:
-      (goto-char start-of-output)
-      (while (search-forward-regexp oz-bar-pattern nil t)
-	(let ((file  (match-string 1))
-	      (line  (string-to-number (match-string 2)))
-	      (state (match-string 3)))
-	  (replace-match "" nil t)
-	  (if (string-equal file "undef")
-	      (cond (oz-bar-overlay
-		     (cond (oz-gnu-emacs
-			    (delete-overlay oz-bar-overlay))
-			   (oz-lucid-emacs
-			    (delete-extent oz-bar-overlay)))
-		     (setq oz-bar-overlay nil)))
-	    (oz-bar file line state))))
+	    ;; look for oz-bar information:
+	    (goto-char start-of-output)
+	    (while (re-search-forward oz-bar-pattern nil t)
+	      (let ((file  (match-string 1))
+		    (line  (string-to-number (match-string 2)))
+		    (state (match-string 3)))
+		(replace-match "" nil t)
+		(if (string-equal file "undef")
+		    (cond (oz-bar-overlay
+			   (cond (oz-gnu-emacs
+				  (delete-overlay oz-bar-overlay))
+				 (oz-lucid-emacs
+				  (delete-extent oz-bar-overlay)))
+			   (setq oz-bar-overlay nil)))
+		  (oz-bar file line state))))
 
-      (setq end-of-output (point-max)))
+	    (setq end-of-output (point-max)))
 
-    (cond (errs-found
-	   (goto-char errs-found)
-	   (oz-show-buffer buffer))
-	  ((equal (point) start-of-output)
-	   (goto-char end-of-output)))
+	  (cond (errs-found
+		 (goto-char errs-found)
+		 (oz-show-buffer buffer))
+		((equal (point) start-of-output)
+		 (goto-char end-of-output)))
 
-    (save-selected-window
-      (walk-windows
-       (function (lambda (window)
-		   (if (eq (window-buffer window) buffer)
-		       (cond (errs-found
-			      (set-window-point window errs-found))
-			     ((>= (window-point window) start-of-output)
-			      (set-window-point window end-of-output))))))))))
+	  (save-selected-window
+	    (walk-windows
+	     (function
+	      (lambda (window)
+		(if (eq (window-buffer window) buffer)
+		    (cond (errs-found
+			   ;; (set-window-point window errs-found)
+			   (set-window-point window end-of-output))
+			  ((>= (window-point window) start-of-output)
+			   (set-window-point window end-of-output)))))))))
+      (set-buffer old-buffer))))
 
 
 ;;------------------------------------------------------------
 ;; Buffers
 ;;------------------------------------------------------------
-
-(defvar oz-other-buffer-percent 35
-  "*Percentage of screen to use for Oz Compiler and Emulator windows.")
 
 (defun oz-show-buffer (buffer)
   (if (not (get-buffer-window buffer))
@@ -2150,7 +2190,7 @@ splitting, the outputs are passed to the common oz-filter."
 		     (get-buffer-window oz-temp-buffer)
 		     (split-window (get-largest-window)
 				   (/ (* (window-height (get-largest-window))
-					 (- 100 oz-other-buffer-percent))
+					 (- 100 oz-other-buffer-size))
 				      100)))))
 	(set-window-buffer win buffer)
 	(set-buffer buffer)
@@ -2379,7 +2419,7 @@ of the procedure Browse."
   (interactive)
   (let ((name (read-file-name "View documentation file: " oz-doc-dir nil t)))
     (if (file-exists-p name)
-	(start-process "Oz Doc" "*Preview*" oz-preview name)
+	(start-process "Oz Doc" "*Preview*" oz-previewer name)
       (error "File %s does not exist" name))))
 
 (defun oz-find-docu-file ()
