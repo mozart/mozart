@@ -2911,12 +2911,13 @@ fi
         oz_enable_virtualsites=$enable_virtualsites
     fi
     if test "${oz_enable_virtualsites}" != yes; then
-        echo "$ac_t""yes" 1>&6
-
+        echo "$ac_t""no" 1>&6
     else
         cat >> confdefs.h <<\EOF
 #define VIRTUALSITES 1
 EOF
+
+        echo "$ac_t""yes" 1>&6
 
     fi
 
