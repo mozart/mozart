@@ -311,7 +311,7 @@ define
 	 CTable = {NewDictionary}
 	 PTable = {NewDictionary}
       in
-	 for ID in Database,condGet('*author list*' nil $) do
+	 for ID in {Arity Database,condGet('*author list*' nil $)} do
 	    case Database,condGet(ID unit $)
 	    of unit then skip
 	    [] E then CTable.ID := {self OzmakeContact(E $)} end
