@@ -384,6 +384,14 @@ OZ_C_proc_begin(BImetaIsVar, 1)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BImetaIsVarB, 2)
+{ 
+  return (OZ_unify 
+	  (OZ_getCArg(1), 
+	   isGenMetaVar(deref(OZ_getCArg(0))) ? NameTrue : NameFalse));
+}
+OZ_C_proc_end
+
 
 OZ_C_proc_begin(BImetaGetDataAsAtom, 2)
 { 
@@ -478,6 +486,7 @@ OZ_C_proc_end
 static
 BIspec metaSpec[] = {
   {"metaIsVar", 1, BImetaIsVar},
+  {"metaIsVarB", 2, BImetaIsVarB},
   {"metaWatchVar", 2, BImetaWatchVar},
   {"metaGetDataAsAtom", 2, BImetaGetDataAsAtom},
   {"metaGetNameAsAtom", 2, BImetaGetNameAsAtom},
