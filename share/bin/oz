@@ -22,7 +22,7 @@ cmd=`basename $howcalled`
 
 # keep quiet on emacs and standalone systems
 case "$cmd" in
-   ozdo|ozcs|ozengine|ozapplet) doecho=true ;;
+   ozdo|ozengine|ozapplet) doecho=true ;;
    *)                 doecho=echo ;;
 esac
 
@@ -115,7 +115,7 @@ case "$cmd" in
 	exec  $OZEMACS -l $OZHOME/lib/elisp/oz.elc -f run-oz $EMACSARGV
    ;;
 
-   ozcs|ozengine)  # that is the real thing
+   ozengine)  # that is the real thing
 	if [ $# -lt 1 ]
 	then
 	    echo "usage: ozengine <url> <args>" 1>&2;
