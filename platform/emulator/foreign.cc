@@ -269,8 +269,7 @@ OZ_Term OZ_termType(OZ_Term term)
     return OZ_atom("space");
   }
 
-  OZ_warning("OZ_termType: %s unknown type\n",toC(term));
-  Assert(0);
+  OZ_warning("OZ_termType: unknown type\n");
   return 0;
 }
 
@@ -349,7 +348,10 @@ int OZ_intToC(OZ_Term term)
  */
 OZ_Term OZ_CStringToInt(char *str)
 {
-  Assert(str != NULL && str[0] != '\0');
+  if (!str || str[0] == '\0') {
+    OZ_warning("OZ_CStringToInt: empty string");
+    return 0;
+  }
 
   {
     char *aux = str;
@@ -357,7 +359,10 @@ OZ_Term OZ_CStringToInt(char *str)
     if (aux[0] == '~') { aux++; sign = -1; }
     int i = 0;
     while(*aux) {
-      Assert(isdigit(*aux));
+      if (!isdigit(*aux)) {
+        OZ_warning("OZ_CStringToInt: no digit in %s",str);
+        return 0;
+      }
       i = i*10 + (*aux - '0');
       if (i > OzMaxInt)
         goto bigInt;
@@ -871,7 +876,7 @@ void cvar2buffer(ostream &out, char *s,GenCVariable *cv,int depth)
       break;
     }
   default:
-    Assert(0);
+    OZ_warning("OZ_toC: Unknown variable type\n");
     break;
   }
 }
@@ -932,7 +937,7 @@ void value2buffer(ostream &out, OZ_Term term, int depth)
       int2buffer(out,term);
       break;
     default:
-      Assert(0);
+      OZ_warning("OZ_toC: unknown type");
       break;
     }
   }
@@ -1031,14 +1036,21 @@ char *OZ_stringToC(OZ_Term list)
   return tmpStr;
 }
 
-void OZ_printString(OZ_Term t)
+void OZ_printString(OZ_Term term)
 {
-  t=deref(t);
+  OZ_Term t=deref(term);
   while (isCons(t)) {
     OZ_Term hd=deref(head(t));
+    if (!isSmallInt(hd)) {
+      OZ_warning("OZ_printString: no string: %s",toC(term));
+      return;
+    }
     int c=smallIntValue(hd);
     printf("%c",c);
     t=deref(tail(t));
+  }
+  if (!isNil(t)) {
+    OZ_warning("OZ_printString: no string: %s",toC(term));
   }
 }
 
@@ -1065,9 +1077,9 @@ void OZ_printFloat(OZ_Term t)
   printf("%s",s);
 }
 
-void OZ_printVirtualString(OZ_Term t)
+void OZ_printVirtualString(OZ_Term term)
 {
-  t=deref(t);
+  OZ_Term t=deref(term);
   if (isCons(t)) {
     OZ_printString(t);
   } else if (isAtom(t)) {
@@ -1080,11 +1092,14 @@ void OZ_printVirtualString(OZ_Term t)
   } else if (isFloat(t)) {
     OZ_printFloat(t);
   } else {
-    Assert(isPair(t));
+    if (!isPair(t)) {
+      OZ_warning("OZ_printVirtualString: no virtual string: %s",toC(term));
+      return;
+    }
     SRecord *sr=tagged2SRecord(t);
     int len=sr->getWidth();
     for (int i=0; i < len; i++) {
-      OZ_printVS(sr->getArg(i));
+      OZ_printVirtualString(sr->getArg(i));
     }
   }
 }
@@ -1127,7 +1142,7 @@ OZ_Term OZ_label(OZ_Term term)
   case SRECORD:
     return tagged2SRecord(term)->getLabel();
   default:
-    Assert(0);
+    OZ_warning("OZ_label: no record");
     return 0;
   }
 }
@@ -1144,7 +1159,7 @@ int OZ_width(OZ_Term term)
   case LITERAL:
     return 0;
   default:
-    Assert(0);
+    OZ_warning("OZ_width: no record");
     return 0;
   }
 }
@@ -1152,7 +1167,10 @@ int OZ_width(OZ_Term term)
 OZ_Term OZ_tuple(OZ_Term label, int width)
 {
   label = deref(label);
-  Assert(isLiteral(label));
+  if (!isLiteral(label)) {
+    OZ_warning("OZ_tuple: label is no literal");
+    return 0;
+  }
 
   if (width == 2 && literalEq(label,AtomCons)) {
     // have to make a list
@@ -1207,7 +1225,10 @@ void OZ_putArg(OZ_Term term, int pos, OZ_Term newTerm)
       return;
     }
   }
-  Assert(isSTuple(term));
+  if (!isSTuple(term)) {
+    OZ_warning("OZ_putArg: no record");
+    return;
+  }
   tagged2SRecord(term)->setArg(pos,newTerm);
 }
 
@@ -1222,8 +1243,14 @@ OZ_Term OZ_getArg(OZ_Term term, int pos)
       return tagged2LTuple(term)->getTail();
     }
   }
-  Assert(pos >= 0 &&
-         pos < tagged2SRecord(term)->getWidth());
+  if (!isSRecord(term)) {
+    OZ_warning("OZ_getArg: no record");
+    return 0;
+  }
+  if (pos < 0 || pos >= tagged2SRecord(term)->getWidth()) {
+    OZ_warning("OZ_getArg: invalid index: %d",pos);
+    return 0;
+  }
   return tagged2SRecord(term)->getArg(pos);
 }
 
@@ -1240,12 +1267,20 @@ OZ_Term OZ_cons(OZ_Term hd,OZ_Term tl)
 OZ_Term OZ_head(OZ_Term term)
 {
   term=deref(term);
+  if (!isLTuple(term)) {
+    OZ_warning("OZ_head: no cons");
+    return 0;
+  }
   return head(term);
 }
 
 OZ_Term OZ_tail(OZ_Term term)
 {
   term=deref(term);
+  if (!isLTuple(term)) {
+    OZ_warning("OZ_tail: no cons");
+    return 0;
+  }
   return tail(term);
 }
 
@@ -1319,7 +1354,8 @@ void OZ_putSubtree(OZ_Term term, OZ_Term feature, OZ_Term value)
       tagged2LTuple(term)->setTail(value);
       return;
     }
-    Assert(0);
+    OZ_warning("OZ_putSubtree: invalid feature");
+    return;
   }
   (void) tagged2SRecord(term)->replaceFeature(feature,value);
 }
@@ -1621,9 +1657,7 @@ char *OZ_unixError(int aErrno) {
 
 OZ_Return OZ_typeError(int pos,char *type)
 {
-  return OZ_raise(OZ_mkTupleC("typeError",1,
-                              OZ_mkTupleC("pos",2,OZ_int(pos+1),
-                                          OZ_atom(type))));
+  TypeErrorT(pos,type);
 }
 
 void OZ_main(int argc,char **argv)

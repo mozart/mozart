@@ -158,8 +158,7 @@ int ConstTerm::getArity()
  * append two *det* lists
  *  NO ERROR CHECK!
  */
-static
-TaggedRef append(TaggedRef x,TaggedRef y)
+TaggedRef appendI(TaggedRef x,TaggedRef y)
 {
   TaggedRef ret;
   TaggedRef *out=&ret;
@@ -202,7 +201,7 @@ TaggedRef Object::getArityList()
 
   if (!isClass()) {
     SRecord *rec=getClass()->getUnfreeRecord();
-    if (rec) ret=append(ret,rec->getArityList());
+    if (rec) ret=appendI(ret,rec->getArityList());
   }
   return ret;
 }

@@ -1507,7 +1507,6 @@ OZ_C_proc_begin(BIlabelC,2)
       } else {
           // Label argument is not a literal:
           TypeErrorT(1,"Literal");
-          // TypeErrorMessage2("labelC","Labels must be literals",thelabel,lbl);
       }
       // return OZ_suspendOnVar2(thelabel,lbl);
   }
@@ -2386,6 +2385,7 @@ static OZ_Return vs_check(OZ_Term vs, OZ_Term *rest) {
 
       if (status == SUSPEND) {
         *rest = vs_suspend(tagged2SRecord(vs), i, arg_rest);
+
         return SUSPEND;
       } else if (status==FAILED) {
         return FAILED;
@@ -2938,7 +2938,9 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
         switch (tagged2CVar(t0)->getType()) {
         case FDVariable:
         case BoolVariable:
-            TypeErrorT(0,"Record");
+          TypeErrorT(0,"Record");
+        default:
+          break;
         }
     }
     switch (tag1) {
@@ -2953,8 +2955,9 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
       case FDVariable:
       case BoolVariable:
           TypeErrorT(1,"Record");
+      default:
+        return SUSPEND;
       }
-      return SUSPEND;
     default:
       TypeErrorT(1,"Record");
     }
@@ -3073,7 +3076,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
 {
   TaggedRef arity=getArity(list);
   if (arity == makeTaggedNULL()) {
-    TypeErrorM("incorrect pairlist found");
+    TypeErrorT(1,"list(Feature#Value)");
   }
   DEREF(t0,t0Ptr,tag0);
   if (isRef(arity)) { // must suspend
@@ -3305,8 +3308,7 @@ DECLAREBI_USEINLINEREL2(BIassign,assignInline)
 
 static OZ_Return bombBuiltin(char *type)
 {
-  return OZ_raise(OZ_mkTupleC("typeError",1,
-                              OZ_mkTupleC("type",1,OZ_atom(type))));
+  TypeErrorT(-1,type);
 }
 
 #define suspendTest(A,B,test,type)                      \
@@ -3670,7 +3672,7 @@ OZ_Return bigtest(TaggedRef A, TaggedRef B,
   if (isAnyVar(A) || isAnyVar(B))
     return SUSPEND;
 
-  TypeErrorM("Not comparable");
+  TypeErrorT(-1,"Comparable");
 }
 
 
@@ -3692,7 +3694,7 @@ OZ_Return BIminInline(TaggedRef A, TaggedRef B, TaggedRef &out)
           ? A : B;
         return PROCEED;
       }
-      TypeErrorM("Number or Atom");
+      TypeErrorT(-1,"Comparable");
 
     default: break;
     }
@@ -3727,7 +3729,7 @@ OZ_Return BImaxInline(TaggedRef A, TaggedRef B, TaggedRef &out)
           ? B : A;
         return PROCEED;
       }
-      TypeErrorM("Names are not ordered");
+      TypeErrorT(-1,"Comparable");
 
     default: break;
     }
@@ -3765,7 +3767,7 @@ OZ_Return BIlessInline(TaggedRef A, TaggedRef B)
                        tagged2Literal(B)->getPrintName()) < 0)
           ? PROCEED : FAILED;
       }
-      TypeErrorM("Names are not ordered");
+      TypeErrorT(-1,"Comparable");
     }
   }
 
@@ -3887,7 +3889,7 @@ OZ_Return BIleInline(TaggedRef A, TaggedRef B)
                        tagged2Literal(B)->getPrintName()) <= 0)
           ? PROCEED : FAILED;
       }
-      TypeErrorM("Names are not ordered");
+      TypeErrorT(-1,"Comparable");
     }
 
   }
@@ -5389,8 +5391,11 @@ OZ_C_proc_begin(BIatomHash, 3)
 
   OZ_Term ret = OZ_getCArg(2);
 
-  if (!OZ_isAtom(atom) || !OZ_isInt(modulo)) {
-    TypeErrorM("Arguments must be Atom and (small) Int");
+  if (!OZ_isAtom(atom)) {
+    TypeErrorT(0,"Atom");
+  }
+  if (!OZ_isInt(modulo)) {
+    TypeErrorT(1,"SmallInt");
   }
   char *nm = OZ_atomToC(atom);
   int mod = OZ_intToC(modulo);
@@ -6592,6 +6597,38 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
 }
 OZ_C_proc_end
 
+static
+void printAppl(OZ_Term f,OZ_Term args)
+{
+  if (!isNil(f)) {
+    message("In Expression: {%s",
+            OZ_isAtom(f) ?
+            tagged2Literal(deref(f))->getPrintName():toC(f));
+    while (OZ_isCons(args)) {
+      printf(" %s",toC(OZ_head(args)));
+      args = OZ_tail(args);
+    }
+    printf("}\n");
+  }
+  if (ozconf.errorVerbosity > 1 && !isNil(args)) {
+    message("Ups: %s\n",toC(args));
+  }
+}
+
+static
+void printX(char *what, OZ_Term vs)
+{
+  if (!OZ_isNil(vs)) {
+    if (OZ_isVirtualString(vs,0)) {
+      message("%s",what);
+      OZ_printVirtualString(vs);
+      printf("\n");
+    } else {
+      message("Ups: %s: %s\n",what,toC(vs));
+    }
+  }
+}
+
 OZ_C_proc_begin(BIbiExceptionHandler,3)
 {
   OZ_Term val=OZ_getCArg(0);
@@ -6601,7 +6638,7 @@ OZ_C_proc_begin(BIbiExceptionHandler,3)
   if (ozconf.errorVerbosity > 0) {
     errorHeader();
     if (OZ_isVariable(val) || !OZ_isRecord(val)) {
-      message("Exception '%s' caught\n",toC(val));
+      message("EXCEPTION: %s\n",toC(val));
     } else {
       OZ_Term lab=OZ_label(val);
       if (literalEq(lab,OZ_atom("noElse"))) {
@@ -6612,7 +6649,7 @@ OZ_C_proc_begin(BIbiExceptionHandler,3)
             message("Store: %s\n",toC(OZ_getArg(val,1)));
             // fall through
           case 1:
-            message("In line: %s\n",toC(OZ_getArg(val,0)));
+            message("Line: %s\n",toC(OZ_getArg(val,0)));
           default:
             break;
           }
@@ -6624,72 +6661,70 @@ OZ_C_proc_begin(BIbiExceptionHandler,3)
         if (OZ_width(val) < 2) {
           message("Ups: %s\n",toC(val));
         } else {
-          message("In Expression: {%s",toC(OZ_getArg(val,0)));
-          OZ_Term args = OZ_getArg(val,1);
-          while (OZ_isCons(args)) {
-            printf(" %s",toC(OZ_head(args)));
-            args = OZ_tail(args);
-          }
-          printf("}\n");
+          printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
         }
-      } else if (literalEq(lab,OZ_atom("tell"))) {
-        message("ERROR: Failure\n");
-        message("Tell:  %s\n",toC(OZ_getArg(val,1)));
-        message("Store: %s\n",toC(OZ_getArg(val,0)));
-      } else if (literalEq(lab,OZ_atom("eq"))) {
-        message("ERROR: Failure\n");
-        message("Constraint:  %s",toC(OZ_getArg(val,0)));
-        printf(" = %s\n",toC(OZ_getArg(val,1)));
-      } else if (literalEq(lab,OZ_atom("fail"))) {
-        message("ERROR: Failure\n");
-        if (ozconf.errorVerbosity > 1) {
-          if (OZ_width(val)>0) {
-            for (int i=0; i < OZ_width(val); i++) {
-              message("[ Hint: %s ]\n",toC(OZ_getArg(val,i)));
-            }
-          }
-        }
-      } else if (literalEq(lab,OZ_atom("hf"))) {
-        message("ERROR: Failure\n");
-        OZ_Term arg0 = OZ_getArg(val,0);
-        message("In Expression: {%s",
-                OZ_isAtom(arg0) ?
-                tagged2Literal(deref(arg0))->getPrintName():toC(arg0));
-        OZ_Term args = OZ_getArg(val,1);
-        while (OZ_isCons(args)) {
-          printf(" %s",toC(OZ_head(args)));
-          args = OZ_tail(args);
-        }
-        printf("}\n");
-      } else if (literalEq(lab,OZ_atom("type")) ||
-                 literalEq(lab,OZ_atom("ftype"))) {
+      } else if (literalEq(lab,OZ_atom("arity"))) {
         message("ERROR: Illtyped application\n");
         if (OZ_width(val) < 2) {
           message("Ups: %s\n",toC(val));
         } else {
-          OZ_Term arg0 = OZ_getArg(val,0);
-          message("In Expression: %s{%s",
-                  literalEq(lab,OZ_atom("ftype")) ? "_ = " : "",
-                  OZ_isAtom(arg0) ?
-                  tagged2Literal(deref(arg0))->getPrintName():toC(arg0));
-          OZ_Term args = OZ_getArg(val,1);
-          while (OZ_isCons(args)) {
-            printf(" %s",toC(OZ_head(args)));
-            args = OZ_tail(args);
-          }
-          printf("}\n");
+          printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
+        }
+        message("Hint: number of arguments mismatch\n");
+      } else if (literalEq(lab,OZ_atom("tell"))) {
+        message("ERROR: Failure\n");
+        if (OZ_width(val) < 2) {
+          message("Ups: %s\n",toC(val));
+        } else {
+          message("Tell:  %s\n",toC(OZ_getArg(val,1)));
+          message("Store: %s\n",toC(OZ_getArg(val,0)));
+        }
+      } else if (literalEq(lab,OZ_atom("eq"))) {
+        message("ERROR: Failure\n");
+        if (OZ_width(val) < 2) {
+          message("Ups: %s\n",toC(val));
+        } else {
+          message("Constraint:  %s",toC(OZ_getArg(val,0)));
+          printf(" = %s\n",toC(OZ_getArg(val,1)));
+        }
+      } else if (literalEq(lab,OZ_atom("fail"))) {
+        message("ERROR: Failure\n");
+        if (OZ_width(val) < 3) {
+          message("Ups: %s\n",toC(val));
+        } else {
+          printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
 
           if (ozconf.errorVerbosity > 1) {
-            if (!OZ_isNil(args)) message("[ UPS: %s ]\n",toC(args));
-            if (OZ_width(val)>2) {
-              for (int i=2; i < OZ_width(val); i++) {
-                message("[ Hint: %s ]\n",toC(OZ_getArg(val,i)));
-              }
-            }
+            printX("Hint: ",OZ_getArg(val,2));
           }
         }
-      } else if (ozconf.errorVerbosity > 1) {
-        message("???: %s\n",toC(val));
+      } else if (literalEq(lab,OZ_atom("type"))) {
+        message("ERROR: Illtyped application\n");
+        if (OZ_width(val) < 5) {
+          message("Ups: %s\n",toC(val));
+        } else {
+          printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
+          if (ozconf.errorVerbosity > 1) {
+            printX("Expected type: ",OZ_getArg(val,2));
+            printX("Argument number: ",OZ_getArg(val,3));
+            printX("Hint: ",OZ_getArg(val,4));
+          }
+        }
+      } else if (literalEq(lab,OZ_atom("raise"))) {
+        message("EXCEPTION");
+        if (OZ_width(val) < 3) {
+          message("Ups: %s\n",toC(val));
+        } else {
+          printAppl(OZ_getArg(val,0),OZ_getArg(val,1));
+          if (ozconf.errorVerbosity > 1) {
+            printX("Value: ",OZ_getArg(val,2));
+          }
+        }
+      } else {
+        message("EXCEPTION: %s\n",toC(OZ_label(val)));
+        if (ozconf.errorVerbosity > 1) {
+          message("Value: %s\n",toC(val));
+        }
       }
     }
     if (ozconf.errorVerbosity > 1) {
@@ -6705,7 +6740,7 @@ OZ_C_proc_begin(BIbiExceptionHandler,3)
           printf(", Line %s",toC(OZ_getArg(tt,2)));
           printf(", PC = %s)\n",toC(OZ_getArg(tt,3)));
         } else {
-          message("[  %s ]\n",toC(tt));
+          message(" %s\n",toC(tt));
         }
         traceBack=OZ_tail(traceBack);
       }
@@ -7049,7 +7084,7 @@ BIspec allSpec2[] = {
   {"ozhome",         1, BIozhome},
 
   {"makeClass",        9,BImakeClass,          0},
-  {"setModeToDeep",    0,BIsetModeToDeep,  0},
+  {"setModeToDeep",    0,BIsetModeToDeep,      0},
   {"setMethApplHdl",   1,BIsetMethApplHdl,     0},
   {"getClass",         2,BIgetClass,           (IFOR) getClassInline},
   {"new",              3,BInew,                0},
