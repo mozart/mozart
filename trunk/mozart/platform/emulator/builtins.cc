@@ -6712,8 +6712,10 @@ static int finalizable(OZ_Term& x)
       switch (xp->getType()) {
       case Co_Foreign_Pointer:
 	return 1;
-      case Co_UNUSED:
-	return 2;
+      case Co_Extended:
+	switch (((ExtendedConst*)xp)->getXType()) {
+	default: return 2;
+	}
 	// Tertiary Consts
       case Co_Thread:
 	b = ((Thread*)xp)->getBoardInternal(); break;
