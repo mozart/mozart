@@ -26,10 +26,10 @@ ac_help="$ac_help
 --with-documents='DIR1 ... DIRN' (or all)
        document subdirectories (default=none)"
 ac_help="$ac_help
+--enable-qtk QTk QUI Builder (default=no)"
+ac_help="$ac_help
 --enable-chm
        construct CHM table of contents files (default=no)"
-ac_help="$ac_help
---enable-qtk QTk QUI Builder (default=no)"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -1326,33 +1326,9 @@ fi
 : ${oz_doc_dirs=}
 echo "$ac_t""$oz_doc_dirs" 1>&6
 
-test "${oz_doc_dirs}" = "all" && oz_doc_dirs="apptut base bugs compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer browser notation dstutorial changes tcltk howtoread faq limitations macro loop qtk dpanel"
-
-DOC_DIRS=$oz_doc_dirs
-
-
-echo $ac_n "checking for --enable-chm""... $ac_c" 1>&6
-echo "configure:1336: checking for --enable-chm" >&5
-# Check whether --enable-chm or --disable-chm was given.
-if test "${enable_chm+set}" = set; then
-  enableval="$enable_chm"
-  oz_enable_chm=$enable_chm
-else
-  oz_enable_chm=no
-fi
-
-echo "$ac_t""$oz_enable_chm" 1>&6
-
-if test "${oz_enable_chm}" != no
-then
-   SUBDIRS="utilities ${oz_doc_dirs} chm"
-else
-   SUBDIRS="utilities ${oz_doc_dirs}"
-fi
-
 
     echo $ac_n "checking for --enable-qtk""... $ac_c" 1>&6
-echo "configure:1356: checking for --enable-qtk" >&5
+echo "configure:1332: checking for --enable-qtk" >&5
     # Check whether --enable-qtk or --disable-qtk was given.
 if test "${enable_qtk+set}" = set; then
   enableval="$enable_qtk"
@@ -1371,9 +1347,34 @@ fi
 
 
 
+if test "${oz_doc_dirs}" = "all"; then
+  oz_doc_dirs="apptut base bugs compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer browser notation dstutorial changes tcltk howtoread faq limitations macro loop dpanel"
 if test "$QTK_ENABLED" = yes;
 then
-  SUBDIRS="$SUBDIRS qtk"
+  oz_doc_dirs="$oz_doc_dirs qtk"
+fi
+fi
+
+DOC_DIRS=$oz_doc_dirs
+
+
+echo $ac_n "checking for --enable-chm""... $ac_c" 1>&6
+echo "configure:1363: checking for --enable-chm" >&5
+# Check whether --enable-chm or --disable-chm was given.
+if test "${enable_chm+set}" = set; then
+  enableval="$enable_chm"
+  oz_enable_chm=$enable_chm
+else
+  oz_enable_chm=no
+fi
+
+echo "$ac_t""$oz_enable_chm" 1>&6
+
+if test "${oz_enable_chm}" != no
+then
+   SUBDIRS="utilities ${oz_doc_dirs} chm"
+else
+   SUBDIRS="utilities ${oz_doc_dirs}"
 fi
 
 
@@ -1551,8 +1552,8 @@ s%@OZENGINE@%$OZENGINE%g
 s%@OZDOC@%$OZDOC%g
 s%@JAVA_BIN@%$JAVA_BIN%g
 s%@JAVA_THREADS@%$JAVA_THREADS%g
-s%@DOC_DIRS@%$DOC_DIRS%g
 s%@QTK_ENABLED@%$QTK_ENABLED%g
+s%@DOC_DIRS@%$DOC_DIRS%g
 s%@SUBDIRS@%$SUBDIRS%g
 s%@subdirs@%$subdirs%g
 
