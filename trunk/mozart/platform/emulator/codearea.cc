@@ -102,38 +102,6 @@ TaggedRef oz_uniqueName(const char *str)
 }
 
 
-/*
-  we store the absolute adress of the indices in the 
-  instruction tables
-  */
-
-#ifdef THREADED
-AdressOpcode CodeArea::opcodeToAdress(Opcode oc)
-{
-  return ToInt32(globalInstrTable[oc]);
-}
-
-
-Opcode CodeArea::adressToOpcode(AdressOpcode adr)
-{
-  void *ret = opcodeTable->htFind(adr);
-  if (ret == htEmpty) return OZERROR;
-  return (Opcode) ToInt32(ret);
-
-  /*
-    for(int i = 0; i < (int) OZERROR; i++)
-      if (ToInt32(globalInstrTable[i]) == adr)
-        return (Opcode)i;
-    return OZERROR;
-  */
-}
-
-#else /* THREADED */
-AdressOpcode CodeArea::opcodeToAdress(Opcode oc)  { return  oc; }
-Opcode CodeArea::adressToOpcode(AdressOpcode adr) { return adr; }
-#endif /* THREADED */
-
-
 AbstractionEntry *AbstractionEntry::allEntries = NULL;
 
 //

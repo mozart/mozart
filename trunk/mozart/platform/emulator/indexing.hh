@@ -76,49 +76,51 @@ class HTEntry {
   }
 
   void setFunctor(Literal *l, SRecordArity a) {u.functor.fname=l; u.functor.arity=a; }
-  /* look up a literal */
-  int lookup(Literal *name, int elseLabel) 
-  {
-    int  ret = elseLabel;
-    
-    for (HTEntry *help = this; help != NULL; help = help->next) {
-      if (help->u.literal == name) {
-	ret = help->label;
-	break;
-      }
-    }
-    return ret;
+
+
+  int lookupLiteral(Literal * l, int elseLabel) {
+    for (HTEntry * help = this; help != NULL; help = help->next)
+      if (help->u.literal == l)
+	return help->label;
+    return elseLabel;
   }
 
-  /* look up functor/arity */
-  int lookup(Literal *name, SRecordArity arity, int elseLabel) 
-  {
-    int ret = elseLabel;
-
-    for (HTEntry *help = this; help != NULL; help = help->next) {
-      if ( (help->u.functor.fname == name) &&
-	   sameSRecordArity(help->u.functor.arity,arity) ) {
-	ret = help->label;
-	break;
-      }
-    }
-    return ret;
+  int lookupSRecord(Literal * l, SRecordArity sra, int elseLabel) {
+    for (HTEntry *help = this; help != NULL; help = help->next)
+      if ((help->u.functor.fname == l) &&
+	  sameSRecordArity(help->u.functor.arity,sra))
+	return help->label;
+    return elseLabel;
   }
 
-  /* look a number */
-  int lookup(TaggedRef term, int elseLabel) 
-  {
-    Assert(oz_isNumber(term));
-    int ret = elseLabel;
-    
-    for (HTEntry *help = this; help != NULL; help = help->next) {
-      if (oz_numberEq(help->u.number,term)) {
-	ret = help->label;
-	break;
+  int lookupSmallInt(TaggedRef term, int elseLabel) {
+    Assert(oz_isSmallInt(term));
+    for (HTEntry * help = this; help != NULL; help = help->next)
+      if (oz_eq(help->u.number,term)) {
+	Assert(oz_isSmallInt(help->u.number));
+	return help->label;
       }
-    }
-    return ret;
+    return elseLabel;
   }
+
+  int lookupBigInt(BigInt * i, int elseLabel) {
+    for (HTEntry * help = this; help != NULL; help = help->next)
+      if (oz_isConst(help->u.number) &&
+	  (tagged2BigInt(help->u.number)->equal(i))) {
+	Assert(oz_isBigInt(help->u.number));
+	return help->label;
+      }
+    return elseLabel;
+  }
+
+  int lookupFloat(double f, int elseLabel) {
+    for (HTEntry * help = this; help != NULL; help = help->next)
+      if (oz_isFloat(help->u.number) && 
+	  (tagged2Float(help->u.number)->getValue() == f))
+	return help->label;
+    return elseLabel;
+  }
+  
 };
 
 
@@ -154,13 +156,65 @@ class IHashTable {
   void addList(int label) { listLabel = label; }
 
   int hash(int n) { return (n & hashMask); }  // return a value n with 0 <= n < size
-  int getElse() { return elseLabel; }
+  int getElse() { 
+    return elseLabel; 
+  }
 
-  int switchOnTerm(TaggedRef term, TaggedRef *&sP);
+  int lookupLTuple(void) {
+    /* If there is no alternative list, listLabel equals elseLabel */
+    return listLabel;
+  }
+  
+  int lookupLiteral(TaggedRef term) {
+    if (literalTable) {
+      Literal * l = tagged2Literal(term);
+      return literalTable[hash(l->hash())]->lookupLiteral(l,elseLabel);
+    } else {
+      return elseLabel;
+    }
+  }
+  
+  int lookupSRecord(TaggedRef term) {
+    if (functorTable) {
+      SRecord * r = tagged2SRecord(term);
+      Literal * l = r->getLabelLiteral();
+      Assert(l!=NULL);
+      return functorTable[hash(l->hash())]->
+	lookupSRecord(l,r->getSRecordArity(),elseLabel);
+    } else {
+      return elseLabel;
+    }
+  }
+  
+  int lookupSmallInt(TaggedRef term) {
+    if (numberTable) {
+      return numberTable[hash(smallIntHash(term))]->lookupSmallInt(term,elseLabel);
+    } else {
+      return elseLabel;
+    }
+  }
+  
+  int lookupConst(TaggedRef term) {
+    if (numberTable && tagged2Const(term)->getType() == Co_BigInt) {
+      BigInt * b = tagged2BigInt(term);
+      return numberTable[hash(b->hash())]->lookupBigInt(b,elseLabel);
+    } else {
+      return elseLabel;
+    }
+  }
+  
+  int lookupFloat(TaggedRef term) {
+    if (numberTable) {
+      Float * f = tagged2Float(term);
+      return numberTable[hash(f->hash())]->lookupFloat(f->getValue(),elseLabel);
+    } else {
+      return elseLabel;
+    }
+  }
 
   Bool disentailed(OzVariable * var);
+  
 };
 
 
 #endif
-
