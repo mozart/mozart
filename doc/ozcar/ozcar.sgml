@@ -3,8 +3,7 @@
 
 <!-- Extension to the DTD -->
 <!ENTITY % input.local.2 SYSTEM "ozcar.extra">
-<!ENTITY % p.mix.local "|Em|note.gui|menu">
-<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY % p.mix.local "|note.gui|menu">
 <!-- Abbreviations -->
 <!-- Processing Instructions -->
 <!ENTITY emdash   PI "emdash">

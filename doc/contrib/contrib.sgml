@@ -3,8 +3,6 @@
 <!entity gdbm system "gdbm.sgml">
 <!entity EG PI "PI:EG">
 <!ENTITY % proglang.values.local "|sh|makefile">
-<!ENTITY % p.mix.local "|em">
-<!ELEMENT em - - (#PCDATA)>
 
 ]>
 <book proglang=oz>
