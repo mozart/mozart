@@ -300,7 +300,6 @@ const char *ObjectClass::getPrintName()
   return aux ? tagged2Literal(aux)->getPrintName() : "???";
 }
 
-
 const char *ConstTerm::getPrintName()
 {
   switch (getType()) {
@@ -544,6 +543,55 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
 
   return OK;
 }
+
+TaggedRef ObjectClass::getFallbackNew() {
+  TaggedRef fbs = deref(classGetFeature(NameOoFallback));
+
+  if (!isSRecord(fbs))
+    return 0;
+
+  SRecord * sr = tagged2SRecord(fbs);
+
+  TaggedRef fbn = deref(sr->getFeature(AtomNew));
+
+  if (!isAbstraction(fbn) || tagged2Const(fbn)->getArity() != 3)
+    return 0;
+
+  return fbn;
+}
+
+TaggedRef ObjectClass::getFallbackSend() {
+  TaggedRef fbs = deref(classGetFeature(NameOoFallback));
+
+  if (!isSRecord(fbs))
+    return 0;
+
+  SRecord * sr = tagged2SRecord(fbs);
+
+  TaggedRef fbss = deref(sr->getFeature(AtomSend));
+
+  if (!isAbstraction(fbss) || tagged2Const(fbss)->getArity() != 3)
+    return 0;
+
+  return fbss;
+}
+
+TaggedRef ObjectClass::getFallbackApply() {
+  TaggedRef fbs = deref(classGetFeature(NameOoFallback));
+
+  if (!isSRecord(fbs))
+    return 0;
+
+  SRecord * sr = tagged2SRecord(fbs);
+
+  TaggedRef fba = deref(sr->getFeature(AtomApply));
+
+  if (!isAbstraction(fba) || tagged2Const(fba)->getArity() != 2)
+    return 0;
+
+  return fba;
+}
+
 
 /*===================================================================
  * Bigint memory management

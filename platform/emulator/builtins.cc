@@ -6869,14 +6869,23 @@ OZ_C_proc_begin(BIsetMethApplHdl,1)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIcomma,2)
-{
-  if (!am.getMethApplHdl()) {
-    return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
-                    oz_atom("setMethApplHdl"));
+OZ_C_proc_begin(BIcomma,2) {
+  TaggedRef cl = deref(OZ_getCArg(0));
+
+  if (isAnyVar(cl))
+    return SUSPEND;
+
+  if (!isClass(cl)) {
+    oz_typeError(0,"Class");
   }
 
-  am.currentThread()->pushCall(am.getMethApplHdl(),OZ_args,2);
+  ObjectClass * oc = tagged2ObjectClass(cl);
+
+  TaggedRef fb = oc->getFallbackApply();
+
+  Assert(fb);
+
+  am.currentThread()->pushCall(fb,OZ_args,2);
   am.emptySuspendVarList();
   return BI_REPLACEBICALL;
 }
@@ -6901,14 +6910,23 @@ OZ_C_proc_begin(BIsetSendHdl,1)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIsend,3)
-{
-  if (!am.getSendHdl()) {
-    return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
-                    oz_atom("methSendHdl"));
+OZ_C_proc_begin(BIsend,3) {
+  TaggedRef cl = deref(OZ_getCArg(1));
+
+  if (isAnyVar(cl))
+    return SUSPEND;
+
+  if (!isClass(cl)) {
+    oz_typeError(0,"Class");
   }
 
-  am.currentThread()->pushCall(am.getSendHdl(),OZ_args,3);
+  ObjectClass * oc = tagged2ObjectClass(cl);
+
+  TaggedRef fb = oc->getFallbackSend();
+
+  Assert(fb);
+
+  am.currentThread()->pushCall(fb,OZ_args,3);
 
   am.emptySuspendVarList();
   return BI_REPLACEBICALL;
@@ -7038,14 +7056,23 @@ OZ_C_proc_begin(BIsetNewHdl,1)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BINew,3)
-{
-  if (!am.getNewHdl()) {
-    return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
-                    oz_atom("setNewHdl"));
+OZ_C_proc_begin(BINew,3) {
+  TaggedRef cl = deref(OZ_getCArg(0));
+
+  if (isAnyVar(cl))
+    return SUSPEND;
+
+  if (!isClass(cl)) {
+    oz_typeError(0,"Class");
   }
 
-  am.currentThread()->pushCall(am.getNewHdl(),OZ_args,3);
+  ObjectClass * oc = tagged2ObjectClass(cl);
+
+  TaggedRef fb = oc->getFallbackNew();
+
+  Assert(fb);
+
+  am.currentThread()->pushCall(fb,OZ_args,3);
   am.emptySuspendVarList();
   return BI_REPLACEBICALL;
 }
