@@ -602,7 +602,11 @@ class FBrowserClass
 	    %%
 	    %% state is free already;
 	    {self Undraw(1)}
-	 else {BrowserError 'FBrowserClass::UndrawWait: no terms??!'}
+	 else
+	    %% No errors since it could happen when e.g. user issues
+	    %% "clear" and new browse requests, so that "clear" has
+	    %% not become processed before browse requests;
+	    skip
 	 end
 	 
 	 %%
