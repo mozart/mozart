@@ -34,7 +34,6 @@
 
 OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
 {
-  Assert(!oz_isRef(t));
   oz_bind(vPtr, t);
   return PROCEED;
 }
