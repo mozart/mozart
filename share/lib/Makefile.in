@@ -1,5 +1,39 @@
-include Makefile.vars
-include $(TOPDIR)/Makefile.rules
+OZHOME		= @prefix@
+SRCDIR		= @srcdir@
+SRCDIRA		= @srcdira@
+TOPDIR		= @TOPDIR@
+
+OZBIN		= $(OZHOME)/bin
+OZLIB		= $(OZHOME)/lib
+BITMAPDIR	= $(OZLIB)/bitmaps
+
+SHELL		= @SH@
+SED		= @SED@
+RM		= @RM@ -f
+EGREP		= @EGREP@
+M4		= @M4@
+GZIP		= @GZIP@
+
+INSTALL		= @INSTALL@
+INSTALLFILE	= $(INSTALL) -m 444
+INSTALLPRG	= $(INSTALL) -m 555
+INSTALLSRC	= @INSTALLSRC@
+INSTALLDIR	= $(INSTALL) -m 775 -d
+
+TOUCH		= @TOUCH@
+
+ENV2TYPE	= @ENV2TYPE@
+
+OZFLAGS		=
+OZBATCH		= OZPATH=.:compiler:ozcar:$(SRCDIR) OZ_PI=1 @OZBATCH@
+COMPILE		= $(OZBATCH) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz -c
+EXEC		= $(OZBATCH) $(OZFLAGS)
+EXECWITHSTD	= $(OZBATCH) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz
+OZMA		= $(OZBATCH) $(OZFLAGS) --ozma
+
+OZVERSION	= $(TOPDIR)/OZVERSION
+
+ECHO		= @ECHO@
 
 OZLIBDIRS = \
 	$(OZLIB)/Standard $(OZLIB)/SP $(OZLIB)/OP $(OZLIB)/CP $(OZLIB)/WP \
@@ -130,7 +164,9 @@ OZCARBITMAPS1 = \
 	step.xbm stop.xbm term.xbm unleash.xbm
 OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
 
-all:: Makefile $(COMPONENTS) ozbatch
+.PHONY: all install clean realclean veryclean
+
+all: Makefile $(COMPONENTS) ozbatch
 
 ozbatch.ozm.gz: ozbatch.ozm
 	$(GZIP) --best < $< > $@
@@ -153,19 +189,24 @@ Base.ozc: Standard.ozc
 Standard.ozc: $(STANDARDSRC) $(SRCDIR)/Base.env $(SRCDIR)/Standard.env
 	$(EXEC) $(SRCDIR)/DumpInitial.oz
 
-install:: \
+install: all \
 	$(OZLIB) $(OZLIBDIRS) $(LIBFILES) $(LIBCOMPONENTS) \
 	$(BITMAPDIR) $(BITMAPS) $(OZCARBITMAPDIR) $(OZCARBITMAPS) \
 	$(OZBIN) $(BINFILES)
 
-clean::
+clean:
+	$(RM) *~ *.bak
 	$(RM) compiler/Version.oz compiler/Opcodes.oz ozcar/version.oz
 	$(RM) $(TYPS) $(HELPCOMPONENTS) $(COMPONENTS) ozbatch
-	$(RM) TAGS $(SRCDIR)/Makefile.bak
+	$(RM) TAGS
 
-distclean::
+realclean: clean
+
+veryclean: clean
+
+distclean:
 	$(RM) confdefs.h config.cache config.status config.log
-	$(RM) Makefile Makefile.vars
+	$(RM) Makefile
 
 $(OZLIB) $(OZLIBDIRS) $(BITMAPDIR) $(OZCARBITMAPDIR) $(OZBIN):
 	$(INSTALLDIR) $@
@@ -216,7 +257,7 @@ Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) $(SRCDIR)/SP.env \
 	$(SRCDIR)/CP.env $(SRCDIR)/Compiler.env
 
 compiler:
-	$(MKDIR) compiler
+	$(INSTALLDIR) compiler
 
 compiler/Version.oz: compiler $(COMPILERSRCNOVER) $(OZVERSION) \
 	$(SRCDIR)/compiler/Opcodes.m4oz
@@ -224,8 +265,8 @@ compiler/Version.oz: compiler $(COMPILERSRCNOVER) $(OZVERSION) \
 	$(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\') > $@
 
 compiler/Opcodes.oz: compiler $(SRCDIR)/compiler/Opcodes.m4oz \
-	$(TOPDIR)/include/instrDefs.m4
-	$(M4) -DOZINCDIR=$(TOPDIR)/include \
+	$(TOPDIR)/Emulator/instrDefs.m4
+	$(M4) -DEMUDIR=$(TOPDIR)/Emulator \
 	< $(SRCDIR)/compiler/Opcodes.m4oz > $@
 
 CompilerPanel.ozc: $(DUMPINTRO) $(COMPILERPANELSRC) $(SRCDIR)/SP.env \
@@ -252,19 +293,19 @@ ozcar:
 	$(INSTALLDIR) ozcar
 
 ozcar/version.oz: ozcar $(OZCARSRCNOVER)
-	cd ozcar && $(SRCDIR)/ozcar/version.sh
+	cd ozcar && $(SRCDIRA)/ozcar/version.sh
 
 Profiler.ozc: $(DUMPINTRO) $(PROFILERSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
 	$(SRCDIR)/WP.env $(SRCDIR)/Browser.env $(SRCDIR)/Emacs.env \
 	$(SRCDIR)/Compiler.env $(SRCDIR)/Profiler.env
 
-Makefile: $(SRCDIR)/Makefile.in config.status
+Makefile: Makefile.in config.status
 	./config.status
 
-config.status: $(SRCDIR)/configure
+config.status: configure
 	./config.status --recheck
 
-tags::
+tags:
 	etags --language=none \
 	--regex='/[ \t]*proc\>[^{\n]*{!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
 	--regex='/[ \t]*fun\>[^{\n]*{!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
