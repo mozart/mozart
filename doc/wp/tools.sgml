@@ -30,17 +30,21 @@
 
 <Chapter id="chapter.tools">
   <Title/Tools for Tk/
+
   <P>
     This chapter presents some common graphical abstractions you might
     find useful when building graphical user interfaces in &Oz;.  The
     graphical abstractions are provided by the module <<TkTools>> and are
     built on top of the functionality provided by the <<Tk>> module.
+
   <Section id="section.tools.dialogs">
     <Title/Dialogs/
+
     <P>
       A dialog displays some graphical information and several buttons.
       The class <<TkTools.dialog>> provides a simple abstraction to build
       dialogs.
+
     <P>
       <Ptr to="figure.tools.dialog"> shows an example dialog for deleting
       a file.  The class <<TkTools.dialog>> is a subclass of <<Tk.frame>>.
@@ -49,73 +53,89 @@
       widget.  The instance itself serves as container for user-defined
       widgets that are displayed at the top of the dialog (as the label and
       the entry widget in our example).
+
+    <p>
       <Figure id="figure.tools.dialog">
 	<Caption/A dialog to remove files./
 	<P>
 	  <Picture.Extern to="dialog.gif" type=gif>
-<<<D={New TkTools.dialog
+<chunk class=anonymous><title/dialog/
+D={New TkTools.dialog
    tkInit(title:   'Remove File'
 	  buttons: ['Okay' #
 		    proc {$}
 		       try
 		          {OS.unlink {E tkReturn(get $)}}
                           {D tkClose}
-                       catch system(os(_ _ S) ...) then skip
+                       catch _ then skip
                        end
 		    end
 		    'Cancel' # tkClose]
-	  default:  1)}
+	  default: 1)}
 L={New Tk.label tkInit(parent:D text:'File name:')}
 E={New Tk.entry tkInit(parent:D bg:wheat width:20)}
-{Tk.batch [pack(L E side:left pady:2#m) focus(E)]}>>>
+{Tk.batch [pack(L E side:left pady:2#m) focus(E)]}
+</chunk>
       </Figure>
+
     <P>
       The initialization message for a dialog must contain the <<title>>
       option, which gives the title of the dialog.  The buttons to be
       displayed are specified by a list of pairs, where the first pair in
       the list describes the leftmost button.  The pair consists of the label
       of the button and the action for the button.  The action can be also
-      the atom <<close>>, which means that the action of the button sends a
-      <<close>> message to the dialog.  In a similar manner, the action can
-      be a unary tuple with label <<close>>, which means that first the action
+      the atom <<tkClose>>, which means that the action of the button
+      sends a <<tkClose>> message to the dialog.  In a similar manner,
+      the action can 
+      be a unary tuple with label <<tkClose>>, which means that first
+      the action 
       specified by the tuple's argument is executed and then the dialog is
       closed.  The <<default>> option specifies which button should be the
       default one.  The default button  is marked by a sunken frame drawn
       around the button.
+
     <P>
       In the above example, pressing the <<'Okay'>> button executes an
       <Code proglang=sh/rm/ command to remove the file with the name as given
       by the entry widget&nbsp;<<E>>.  Only if execution of this command
       returns&nbsp;<<0>>, the dialog is closed.
+
     <P>
-      The class <<TkTools.dialog>> is a subclass of <<Tk.frame>> and
-      <<Object.closed>>.  This allows to wait until the dialog object gets
+      The class <<TkTools.dialog>> is a subclass of <<Tk.frame>>. In
+      particular it allows to wait until the dialog object gets
       closed.  For example, the execution of
       <<<{Wait D.tkClosed}>>>
       blocks until the dialog in the above example is closed.
+
   <Section id="section.tools.error">
     <Title/Error Dialogs/
+
     <P>
       A dialog to display error messages is provided by the class
       <<TkTools.error>>, which is a sub class of <<TkTools.dialog>>.
       <Ptr to="figure.tools.error"> shows an example of how to use
       <<TkTools.error>>.
+    <p>
       <Figure id="figure.tools.error">
 	<Caption/A transient error dialog./
 	<P>
 	  <Picture.Extern to="error.gif" type=gif>
-<<<T={New Tk.toplevel tkInit}
+<chunk class=anonymous><title/error/
 E={New TkTools.error
    tkInit(master:T
           text: 'Error in system configuration: '#
-	        'too much memory.')}>>>
+	        'too much memory.')}
+</chunk>
       </Figure>
+
     <P>
-      All dialogs provide for the option <<master>>.  By giving as value for
-      this option a toplevel widget, the dialog appears as a <Def/transient/
-      widget: depending on the window manager the widget appears with less
+      All dialogs provide for the option <<master>>.  By giving a
+      toplevel widget as value for <<master>>, the dialog appears as a
+      <Def/transient/ widget: depending on the window manager the
+      widget appears with less 
       decoration, &eg;, no title, on the screen.  Moreover, when the master
       widget is closed, the dialog is closed as well.
+
 
   <Section id="section.tools.menubars">
     <Title/Menubars/
@@ -130,6 +150,7 @@ E={New TkTools.error
       used to invoke the action of the menu entry.  A keyboard accelerator
       must be added to the menu entry and the right event binding needs to be
       created.
+
     <P>
       Creating a menubar by hand has to follow this structure and is
       inconvenient due to the large numbers of different kinds of widgets and
@@ -139,6 +160,7 @@ E={New TkTools.error
       accelerators with the right event bindings.  The specification of a
       menubar consists of messages used to initialize the necessary widgets
       and entries, where the label determines the kind of entry to be created.
+
     <P>
       <Ptr to="figure.tools.menubar"> shows an example for the creation of
       a menubar.  The procedure <<TkTools.menubar>> takes two widgets and
@@ -148,11 +170,14 @@ E={New TkTools.error
       second argument receives the key bindings for the accelerators.
       The specification given as third (fourth) argument describe the
       left (right) part of the menubar.
+
+    <p>
       <Figure id="figure.tools.menubar">
-	<Caption/A listbox together with a vertical scrollbar./
+	<Caption/A menubar./
 	<P>
-	  <Picture.Extern to="tools-menubar.gif" type=gif>
-<<<SizeVar = {New Tk.variable tkInit(0)}
+	  <Picture.Extern to="menubar.gif" type=gif>
+<chunk class=anonymous><title/menubar/
+SizeVar = {New Tk.variable tkInit(0)}
 Bar =
 {TkTools.menubar T T
  [menubutton(text:'Test' underline:0
@@ -163,7 +188,7 @@ Bar =
 			 feature: about)
 		 separator
 		 command(label:   'Quit'
-			 action:  T # close
+			 action:  T # tkClose
 			 key:     ctrl(c)
 			 feature: quit)]
 	     feature: test)
@@ -184,17 +209,20 @@ Bar =
 					 var:   SizeVar
 					 value: 2)])])]
  nil}
-Dummy = {New Tk.frame tkInit(parent:T width:10#c height:4#c)}
-{Tk.send pack(Bar Dummy fill:x)}>>>
+Dummy = {New Tk.frame tkInit(parent:T width:10#c height:5#c bg:ivory)}
+{Tk.send pack(Bar Dummy fill:x)}
+</chunk>
       </Figure>
+
     <P>
       A menubar specification consists of a list of <<menubutton>> messages.
-      The valid options are those for the <<TkInit>> method of a menubutton
+      The valid options are those for the <<tkInit>> method of a menubutton
       widget object, where the parent field is not necessary, and the
       additional options <<menu>> and <<feature>>.  The value for the <<menu>>
       option must be a list of specifications for the menu entries.  The menu
       entries are specified similar to the menubuttons, the allow for the
       additional options <<feature>>, <<key>>, and <<event>>.
+
     <P>
       The value for the <<key>> describes the keyboard accelerator and event
       binding to be created.  They can be used as follows:
@@ -224,16 +252,21 @@ Dummy = {New Tk.frame tkInit(parent:T width:10#c height:4#c)}
 	  <TD/<Key/C-A-a//
 	  <TD/<Samp/&lt;Control-Alt-a&gt;//
       </Table>
+
     <p>
       In case one wants to use different event bindings than those generated
       from the <<key>> option value, one can specify the event pattern as
       value for the option <<event>>.
+
     <P>
       The <<feature>> options for menubuttons and menu entries attach features
       to the created objects such that the object get accesible by these
       features.  For instance, to disable the <Q class=menu/About test/ entry
       is possible with
-      <<<{Bar.test.about tk(entryconfigure state:disabled)}>>>
+<chunk class=anonymous><title/entryconfigure/
+{Bar.test.about tk(entryconfigure state:disabled)}
+</chunk>
+
     <P>
       The menus attached to menubuttons or to cascade entries can be acessed
       under the feature <<menu>>.  For instance the first tear off entry from
@@ -243,47 +276,97 @@ Dummy = {New Tk.frame tkInit(parent:T width:10#c height:4#c)}
       It is possible to extend a menubar created with <<TkTools.menubar>> with
       further entries.  The following statement adds a menu entry just before
       the <<Quit>> entry:
-<<<Added={New Tk.menuentry.command 
+<chunk class=anonymous><title/add menuentry/
+Added={New Tk.menuentry.command 
        tkInit(parent:Bar.test.menu
               before:Bar.test.quit
-              label: 'Exit')}>>>
+              label: 'Exit')}
+</chunk>
       which can be deleted and removed from the menu again by:
-      <<<{Added tkClose}>>>
+<chunk class=anonymous><title/close menuentry/
+{Added tkClose}
+</chunk>
 
   <section id="section.tools.images">
     <title/Handling Images/
+
+    <p>
+      A convenient way to create images is given by
+      <<TkTools.images>>. It takes a list of URLs as input and returns
+      a record of images, where the fields are atoms derived naturally
+      from the URLs. The type and format of images is handled
+      according to the extension of the URL.
+
+    <p>
+      For example,
+<chunk class=anonymous><title/TkTools.images/
+U='http://mozart.ps.uni-sb.de/home/doc/wp/'
+I={TkTools.images [U#'wp.gif' U#'queen.xbm' U#'truck-left.ppm']}
+</chunk>
+      binds <<I>> to a record with features <<wp>>, <<queen>>, and
+      <<'truck-left'>>, where the fields are the corresponding images.
+
+    <p>
+      First the basename of the URL is computed by taking the last
+      fragment of the URL (that is, 'wp.gif' for example). The
+      extension (the part following the period, 'gif' for example),
+      determines the type and format of the image. The part of the
+      basename that precedes the period yields the feature.
 
 <![ %EXTRA; [
 <section><title/Examples/
 <p>
 <chunk><title/EXAMPLES/
 %%%
-%%% Chapter: Geometry Managers
-%%%
-
-
-
-%%%
-%%% Chapter: More Widgets
-%%%
-
-
-
-%%%
-%%% Chapter: Canvas Widgets
-%%%
-
-
-
-%%%
-%%% Chapter: Text Widgets
-%%%
-
-
-
-%%%
 %%% Chapter: Tools for Tk
 %%%
+
+%%
+%% Dialogs
+%%
+
+declare
+<chunk.ref/dialog/
+
+
+
+%%
+%% Error Dialogs
+%%
+
+declare
+T={New Tk.toplevel tkInit}
+<chunk.ref/error/
+
+
+
+%%
+%% Menubars
+%%
+
+declare
+T={New Tk.toplevel tkInit}
+<chunk.ref/menubar/
+
+<chunk.ref/entryconfigure/
+
+declare
+<chunk.ref/add menuentry/
+
+<chunk.ref/close menuentry/
+
+
+
+%%
+%% Images
+%%
+
+declare
+<chunk.ref/TkTools.images/
+
+
+
+
 </chunk>
 ]]>
 
