@@ -142,17 +142,17 @@ PRINT(SVariable)
 }
 
 PRINT(GenCVariable){
-  stream << indent(offset)
-	 << "<CV: "
-	 << getPrintName()
-	 << " @"
-	 << this;
-  if (isEffectiveList(suspList) == OK)
-    stream << " a" << suspList->length();
-  
   switch(getType()){
   case FDVariable:
     {
+      stream << indent(offset)
+	     << "<CV: "
+	     << getPrintName()
+	     << " @"
+	     << this;
+      if (isEffectiveList(suspList) == OK)
+        stream << " a" << suspList->length();
+  
       GenFDVariable * me = (GenFDVariable *) this;
       if (isEffectiveList(me->fdSuspList[fd_det]) == OK)
 	stream << " d("
@@ -167,14 +167,15 @@ PRINT(GenCVariable){
 	       << ')';
       stream << ' ';
       me->getDom().print(stream, 0);
+  
+      stream << ">";
       break;
     }
 
   case OFSVariable:
     {
-      stream << ' ';
       if (depth<=1) {
-          stream << "ofs(...)";
+          stream << "...(...)";
       } else {
           GenOFSVariable* me = (GenOFSVariable *) this;
           tagged2Stream(me->getLabel(),stream,depth-1,offset);
@@ -189,25 +190,26 @@ PRINT(GenCVariable){
 	  __FILE__, __LINE__);
     break;
   }
-  
-  stream << ">";
 } // PRINT(GenCVariable)
 
 
 PRINT(DynamicTable)
 {
     stream << '(';
+    int nonempty=FALSE;
     for (dt_index i=0; i<size; i++) {
         if (table[i].ident) {
-            stream << ' ';
+            nonempty=TRUE;
             CHECK_DEREF(table[i].ident);
+            stream << ' ';
             tagged2Stream(table[i].ident,stream,depth);
             stream << ':';
             stream << ' ';
             tagged2Stream(table[i].value,stream,depth);
         }
     }
-    stream << ' ' << ')';
+    if (nonempty) stream << ' ';
+    stream << "...)" ;
 }
 
 PRINTLONG(DynamicTable)
@@ -823,7 +825,7 @@ PRINTLONG(GenCVariable){
     {
       stream << ' ';
       if (depth<=1) {
-          stream << "ofs(...)";
+          stream << "...(...)";
       } else {
           GenOFSVariable* me = (GenOFSVariable *) this;
           tagged2Stream(me->getLabel(),stream,depth-1,offset);
