@@ -1036,7 +1036,7 @@ void initMarshaler()
   /* do some consistency checks: whenever one of the
    * following tests fails: increase PERDIOMINOR
    */
-  Assert(OZERROR == 225);  /* new instruction(s) added? */
+  Assert(OZERROR == 224);  /* new instruction(s) added? */
   Assert(DIF_LAST == 43);  /* new dif(s) added? */
 }
 

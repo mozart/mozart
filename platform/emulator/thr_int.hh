@@ -173,8 +173,7 @@ void oz_wakeupThreadOPT(Thread *tt)
   _wakeupThread(tt);
 
   Assert(oz_isCurrentBoard(GETBOARD(tt)) || tt->isExtThread() ||
-         (oz_isCurrentBoard(GETBOARD(tt)->getParent())
-          && !GETBOARD(tt)->isSolve()));
+         oz_isCurrentBoard(GETBOARD(tt)->getParent()));
 
   if (am.isBelowSolveBoard() || tt->isExtThread()) {
     Assert(oz_isInSolveDebug(GETBOARD(tt)));

@@ -566,16 +566,6 @@ Abstraction *gcAbstraction(Abstraction *a) {
   return (Abstraction *) a->gcConstTerm();
 }
 
-//
-//  ... Continuation;
-
-inline
-void Continuation::gc() {
-  yRegs = gcRefsArray(yRegs);
-  cap = gcAbstraction(cap);
-  xRegs = gcRefsArray(xRegs);
-}
-
 inline
 Bool Board::gcIsMarked(void) {
   return (Bool) gcField;
@@ -2383,17 +2373,7 @@ Actor * Actor::gcActor() {
   if (gcIsMarked())
     return gcGetFwd();
 
-  size_t sz;
-
-  if (isWait()) {
-    sz = sizeof(WaitActor);
-  } else if (isAsk()) {
-    sz = sizeof(AskActor);
-  } else {
-    sz = sizeof(SolveActor);
-  }
-
-  Actor * ret = (Actor *) oz_hrealloc(this, sz);
+  Actor * ret = (Actor *) oz_hrealloc(this, sizeof(SolveActor));
 
   gcStack.push(ret, PTR_ACTOR);
 
@@ -2436,8 +2416,6 @@ void TaskStack::gc(TaskStack *newstack) {
       Y = (RefsArray) ((OzLock *) Y)->gcConstTerm();
     } else if (PC == C_LPQ_Ptr) {
       Y = (RefsArray) ((Board *) Y)->gcBoard();
-    } else if (PC == C_ACTOR_Ptr) {
-      Y = (RefsArray) ((Actor *) Y)->gcActor();
     } else if (PC == C_SET_SELF_Ptr) {
       Y = (RefsArray) ((Object*)Y)->gcConstTerm();
     } else if (PC == C_SET_ABSTR_Ptr) {
@@ -2539,38 +2517,11 @@ Bool Board::gcIsAlive() {
 inline
 void Board::gcRecurse() {
   Assert(!isCommitted() && !isFailed());
-  body.gc();
   u.actor = u.actor ? u.actor->gcActor() : 0;
 
   localPropagatorQueue = localPropagatorQueue->gc();
 
   script.Script::gc();
-}
-
-inline
-void AWActor::gcRecurse() {
-  thread = thread->gcThread();
-  board  = board->gcBoard();
-  Assert(board);
-  next.gc();
-}
-
-inline
-void WaitActor::gcRecurse() {
-  int32 num = ToInt32(children[-1]);
-  Board **newChildren=(Board **) heapMalloc((num+1)*sizeof(Board *));
-
-  *newChildren++ = (Board *) num;
-  for (int i=num; i--; ) {
-    if (children[i]) {
-      newChildren[i] = children[i]->gcBoard();
-      Assert(newChildren[i]);
-    } else {
-      newChildren[i] = (Board *) NULL;
-    }
-  }
-  children = newChildren;
-  cpb      = cpb->gc();
 }
 
 Distributor * BaseDistributor::gc(void) {
@@ -2614,7 +2565,6 @@ void SolveActor::gcRecurse () {
   OZ_collectHeapTerm(result,result);
   suspList         = suspList->gc();
   bag              = bag->gc();
-  cpb              = cpb->gc();
   nonMonoSuspList  = nonMonoSuspList->gc();
 #ifdef CS_PROFILE
   if((copy_size>0) && copy_start && isInGc) {
@@ -2628,37 +2578,8 @@ void SolveActor::gcRecurse () {
 
 inline
 void Actor::gcRecurse() {
-  if (isAskWait()) {
-    ((AWActor *)this)->gcRecurse();
-    if (isWait())
-      ((WaitActor *)this)->gcRecurse();
-  } else {
-    ((SolveActor *)this)->gcRecurse();
-  }
+  ((SolveActor *) this)->gcRecurse();
 }
-
-CpBag * CpBag::gc(void) {
-  CpBag *  copy = (CpBag *) 0;
-  CpBag ** cur  = &copy;
-  CpBag *  old  = this;
-
-  while (old) {
-    WaitActor * wa = old->choice;
-
-    if (wa && wa->isAliveUpToSolve() && GETBOARD(wa)->gcIsAlive()) {
-      Assert(isInGc || (GETBOARD(wa))->isInTree());
-
-      CpBag * one = new CpBag((WaitActor *) wa->gcActor());
-      *cur = one;
-      cur  = &(one->next);
-    }
-    old = old->next;
-  }
-
-  return copy;
-}
-
-
 
 //*****************************************************************************
 //                           collectGarbage

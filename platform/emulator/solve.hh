@@ -36,7 +36,6 @@
 #endif
 
 #include "actor.hh"
-#include "cpbag.hh"
 #include "distributor.hh"
 #include "value.hh"
 
@@ -54,7 +53,6 @@ public:
 private:
   Board     *solveBoard;
   DistBag   *bag;
-  CpBag     *cpb;
   TaggedRef solveVar;
   TaggedRef result;
   SuspList  *suspList;
@@ -102,18 +100,15 @@ public:
     suspList=0;
     return sl;
   }
-  int commit(int left, int right);
-  WaitActor * select(int left, int right);
 
-  void mergeCPB(Board *bb, int siblings);
+  int commit(int left, int right);
+
   void mergeNonMono(Board *bb);
 
   void clearResult(Board *bb);
   void patchChoiceResult(int i) {
     SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
-
     stuple->setArg(0, makeTaggedSmallInt(i));
-
     result = makeTaggedSRecord(stuple);
   }
 
@@ -132,23 +127,6 @@ public:
 
   void cleanDistributors(void);
   Distributor * getDistributor(void);
-
-  void addChoice(WaitActor *wa) {
-    cpb = cpb->add(wa);
-  }
-  void mergeChoices(CpBag *pcpb) {
-    cpb = cpb->merge(pcpb);
-  }
-  CpBag *getCpb() { return cpb; }
-
-  WaitActor *getChoice() {
-    WaitActor * wa;
-    cpb = cpb->get(&wa);
-    return wa;
-  }
-  void removeChoice() {
-    cpb = cpb->remove();
-  }
 
   void setBoard(Board *bb) { board = bb; }
 

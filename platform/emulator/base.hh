@@ -259,24 +259,18 @@ class FiniteDomain;
 
 class OZ_FSetValue;
 
-class Continuation;
-
 class SuspList;
 class OrderedSuspList;
 class Suspension;
 class Propagator;
 class OZ_Propagator;
 
-class CpStack;
 class Thread;
 class ThreadsPool;
 class ThreadQueue;
 class Group;
 class Toplevel;
 class Actor;
-class AWActor;
-class WaitActor;
-class AskActor;
 class SolveActor;
 class Board;
 class RunnableThreadBody;

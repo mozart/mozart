@@ -205,37 +205,6 @@ void oz_reduceTrailOnFail()
   am.trail.popMark();
 }
 
-void oz_reduceTrailOnShallow()
-{
-  am.emptySuspendVarList();
-
-  while(!am.trail.isEmptyChunk()) {
-    TaggedRef *refPtr;
-    TaggedRef value;
-    am.trail.popRef(refPtr,value);
-
-    Assert(oz_isVariable(value));
-
-    TaggedRef oldVal = makeTaggedRef(refPtr);
-    DEREF(oldVal,ptrOldVal,_1);
-
-    unBind(refPtr,value);
-
-    /*
-     * shallow guards don't bind variables always.
-     *  in INLINEREL/FUNs they are only pushed (pushIfVar) onto the trail
-     */
-    if (refPtr!=ptrOldVal) {
-      if (oz_isVariable(oldVal)) {
-        oz_var_addSusp(ptrOldVal,oz_currentThread());
-      }
-    }
-
-    oz_var_addSusp(refPtr,oz_currentThread());
-  }
-  am.trail.popMark();
-}
-
 void oz_reduceTrailOnEqEq()
 {
   am.emptySuspendVarList();
@@ -280,24 +249,27 @@ void oz_reduceTrailOnEqEq()
  * RETURNS: OK if solveSpace found, else NO
  */
 
-int oz_incSolveThreads(Board *bb)
-{
+int oz_incSolveThreads(Board *bb) {
+
+  bb = bb->derefBoard();
+
   int ret = NO;
+
   while (!oz_isRootBoard(bb)) {
-    Assert(!bb->isCommitted());
+
     if (bb->isSolve()) {
       ret = OK;
       SolveActor *sa = SolveActor::Cast(bb->getActor());
-      //
-      Assert (!sa->isCommitted());
+      // WRONG ASSERTION CS-SPECIAL
+      // Assert (!sa->isCommitted());
 
       //
-      sa->incThreads ();
+      sa->incThreads();
 
       //
       Assert (!(oz_isStableSolve (sa)));
     }
-    bb = bb->getParent();
+    bb = bb->getParent()->derefBoard();
   }
   return ret;
 }
@@ -548,60 +520,6 @@ Bool oz_isStableSolve(SolveActor *sa)
   return solve_areNoExtSuspensions(sa);
 }
 
-
-int oz_commit(Board *bb, Thread *tt)
-{
-  Assert(!oz_currentBoard()->isCommitted());
-  Assert(oz_isCurrentBoard(bb->getParent()));
-
-  AWActor *aw = AWActor::Cast(bb->getActor());
-
-  Assert(!tt || tt==aw->getThread());
-
-  Continuation *cont=bb->getBodyPtr();
-
-  oz_merge(bb,oz_currentBoard(),bb->getSuspCount()-1);
-
-  if (bb->isWait()) {
-    Assert(bb->isWaiting());
-
-    WaitActor *wa = WaitActor::Cast(aw);
-
-    if (oz_currentBoard()->isWait()) {
-      WaitActor::Cast(oz_currentBoard()->getActor())->mergeChoices(wa->getCpb());
-    } else if (oz_currentBoard()->isSolve()) {
-      SolveActor::Cast(oz_currentBoard()->getActor())->mergeChoices(wa->getCpb());
-    } else {
-      // forget the choice stack when committing to a conditional
-    }
-
-    if (!oz_installScript(bb->getScriptRef())) {
-      return 0;
-    }
-  }
-
-  if (!tt) {
-    tt=aw->getThread();
-    Assert(tt->isSuspended());
-    oz_wakeupThreadOPT(tt);
-    DebugCheckT(aw->setThread(0));
-  }
-
-  TaskStack *ts = tt->getTaskStackRef();
-  ts->discardActor();
-  if (aw->isAsk()) {
-    AskActor::Cast(aw)->disposeAsk();
-  } else {
-    WaitActor::Cast(aw)->disposeWait();
-  }
-
-  ts->pushCont(cont->getPC(),cont->getY(),cont->getCAP());
-  if (cont->getX()) ts->pushX(cont->getX());
-
-  return 1;
-}
-
-
 /*
  * when failure occurs
  *  mark the actor
@@ -615,11 +533,6 @@ void oz_failBoard()
   Assert(bb->isInstalled());
 
   Actor *aa=bb->getActor();
-  if (aa->isAsk()) {
-    (AskActor::Cast(aa))->failAskChild();
-  } else if (aa->isWait()) {
-    (WaitActor::Cast(aa))->failWaitChild(bb);
-  }
 
   Assert(!bb->isFailed());
   bb->setFailed();

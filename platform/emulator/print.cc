@@ -888,10 +888,6 @@ void Board::printStream(ostream &stream, int depth)
 
   if (_isRoot()) {
     stream << "Root";
-  } else if (isWait()) {
-    stream << "Wait";
-  } else if (isAsk()) {
-    stream << "Ask";
   } else if (isSolve ()) {
     stream << "Solve";
   }
@@ -899,12 +895,9 @@ void Board::printStream(ostream &stream, int depth)
   stream << "Board @" << this << " [";
 
   if (isInstalled())    stream << " Installed";
-  if (isNervous())      stream << " Nervous";
-  if (isWaitTop())      stream << " WaitTop";
   if (isMarkedGlobal()) stream << " MarkedGlobal";
   if (isFailed())       stream << " Failed";
   if (isCommitted())    stream << " Committed";
-  if (isWaiting())      stream << " Waiting";
 
   stream << " Suspensions: #" << suspCount;
   stream << " ]";
@@ -966,11 +959,7 @@ void Actor::printStream(ostream &stream, int depth)
     return;
   }
 
-  if (isAsk()) {
-    stream << "Ask";
-  } else if (isWait()) {
-    stream << "Wait";
-  } else if (isSolve()) {
+  if (isSolve()) {
     stream << "Solve";
   } else {
     stream << "Unknown";

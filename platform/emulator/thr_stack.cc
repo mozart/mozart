@@ -94,7 +94,6 @@ static Bool isUninterestingTask(ProgramCounter PC) {
     PC == C_SET_SELF_Ptr ||
     PC == C_SET_ABSTR_Ptr ||
     PC == C_LPQ_Ptr ||
-    PC == C_ACTOR_Ptr ||
     PC == C_CATCH_Ptr;
 }
 
@@ -247,10 +246,6 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
     } else if (PC==C_DEBUG_CONT_Ptr) {
       OzDebug *dbg = (OzDebug *) Y;
       dbg->dispose();
-    } else if (PC==C_ACTOR_Ptr) {
-      Actor *ac = (Actor *) Y;
-      ac->discardActor();
-      oz_currentBoard()->decSuspCount();
     } else if (PC==C_LOCK_Ptr) {
       OzLock *lck = (OzLock *) Y;
       switch(lck->getTertType()){

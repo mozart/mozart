@@ -52,19 +52,6 @@ void SolveActor::addSuspension (Suspension susp)
 }
 
 inline
-void SolveActor::mergeCPB(Board *bb, int sibling) {
-  // adjoin the list of or-actors to the list in actual solve actor!
-  if (bb->isWait()) {
-    WaitActor::Cast(bb->getActor())->mergeChoices(cpb);
-  } else if (bb->isSolve()) {
-    SolveActor *sa = SolveActor::Cast(bb->getActor());
-    sa->mergeChoices(cpb);
-    if (sibling)
-      sa->incThreads(threads);
-  }
-}
-
-inline
 void SolveActor::mergeNonMono(Board *bb) {
   // merge nonmonotonic susp lists
   if (nonMonoSuspList) {
@@ -95,24 +82,6 @@ int SolveActor::commit(int left, int right) {
   return bag->getDist()->commit(solveBoard,left,right);
 
 }
-
-inline
-WaitActor *SolveActor::select(int left, int right)
-{
-
-  if (cpb==0)
-    return 0;
-
-  WaitActor * wa = cpb->access();
-
-  if (!wa)
-    return 0;
-
-  wa->selectOrFailChildren(left, right);
-
-  return wa;
-}
-
 
 inline
 void SolveActor::clearResult(Board* bb) {

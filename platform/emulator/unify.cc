@@ -124,7 +124,7 @@ Bool wakeup_Board(Thread *tt, Board *home, PropCaller calledBy)
   // Note that we don't need to schedule the wakeup for the board
   // because in both cases there is a thread which will check
   // entailment for us;
-  if (oz_isCurrentBoard(bb) || bb->isNervous ()) {
+  if (oz_isCurrentBoard(bb)) {
 #ifdef DEBUG_CHECK
     // because of assertions in decSuspCount and getSuspCount
     if (bb->isFailed()) {

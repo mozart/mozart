@@ -103,7 +103,7 @@ TaggedRef SolveActor::genUnstable(TaggedRef arg) {
 }
 
 SolveActor::SolveActor(Board *bb)
- : Actor (Ac_Solve, bb), cpb(NULL), bag(NULL), suspList (NULL), threads (0),
+ : Actor (bb), bag(NULL), suspList (NULL), threads (0),
    nonMonoSuspList(NULL) {
   result     = oz_newVar(bb);
   solveBoard = new Board(this, Bo_Solve);
@@ -244,9 +244,13 @@ OZ_Term oz_solve_merge(SolveActor *solveActor, Board *bb, int sibling)
   if (bb->isSolve()) {
     SolveActor *sa = SolveActor::Cast(bb->getActor());
     sa->mergeDistributors(solveActor->getBag());
+
+    if (sibling)
+      sa->incThreads(solveActor->getThreads());
   }
-  solveActor->mergeCPB(bb,sibling);
+
   solveActor->mergeNonMono(am.currentSolveBoard());
+
   return solveActor->getSolveVar();
 }
 
@@ -553,28 +557,12 @@ OZ_BI_define(BIcommitSpace, 2,0) {
 
   Distributor * d = sa->getDistributor();
 
-  if (d) {
-    int n = d->commit(sa->getSolveBoard(),
-                      smallIntValue(left),
-                      smallIntValue(right));
-
-    if (n>1) {
-      sa->patchChoiceResult(n);
-
-      return PROCEED;
-    }
-
-    sa->clearResult(GETBOARD(space));
-
-    return BI_PREEMPT;
-  }
-
-  WaitActor *wa = sa->select(smallIntValue(left)-1,smallIntValue(right)-1);
-
-  if (!wa)
+  if (!d)
     return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
 
-  int n = wa->getChildCount();
+  int n = d->commit(sa->getSolveBoard(),
+                    smallIntValue(left),
+                    smallIntValue(right));
 
   if (n>1) {
     sa->patchChoiceResult(n);
@@ -582,14 +570,7 @@ OZ_BI_define(BIcommitSpace, 2,0) {
     return PROCEED;
   }
 
-  if (n==1)
-    sa->removeChoice();
-
-  Thread *tt = wa->getThread();
-
   sa->clearResult(GETBOARD(space));
-
-  oz_wakeupThread(tt);
 
   return BI_PREEMPT;
 } OZ_BI_end

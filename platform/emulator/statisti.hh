@@ -141,7 +141,6 @@ public:
   long scriptLen; // length of all scripts
   long refsArray;
   long refsArrayLen; // length of all refsArrays
-  long continuation;
   long suspCFun;
   long suspCont;
   long sTuple;
@@ -160,7 +159,6 @@ public:
   long abstraction,flatObject,cell,space,chunk;
   long heapChunk,thread;
   long board,objectClass;
-  long askActor,waitActor,solveActor,waitChild;
 
 
   // RS

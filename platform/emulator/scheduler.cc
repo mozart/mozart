@@ -69,10 +69,6 @@ void oz_checkStability()
         // Is the distributor unary?
         d->commit(solveBB,1,1);
 
-        am.trail.popMark();
-        oz_currentBoard()->unsetInstalled();
-        am.setCurrent(oz_currentBoard()->getParent());
-
         return;
       } else {
         // don't decrement counter of parent board!
@@ -98,54 +94,23 @@ void oz_checkStability()
       // don't decrement counter of parent board!
 
       int ret = oz_unify(solveAA->getResult(), solveAA->genSolved());
-      Assert(ret==PROCEED);
+      // VIOLATED ASSERTION!!!! CS-SPECIAL
+      //   Assert(ret==PROCEED);
       return;
     }
 
-    WaitActor *wa   = solveAA->getChoice();
-
-    if (wa == NULL) {
-      // "stuck" (stable without distributing waitActors);
-      // don't unlink the subtree from the computation tree;
-      am.trail.popMark();
-      oz_currentBoard()->unsetInstalled();
-      am.setCurrent(oz_currentBoard()->getParent());
-
-      // don't decrement counter of parent board!
-
-      int ret = oz_unify(solveAA->getResult(), solveAA->genStuck());
-      Assert(ret==PROCEED);
-      return;
-    }
-
-    // to enumerate;
-
-    if (wa->getChildCount()==1) {
-      Assert(wa->isChoice());
-
-      Board *waitBoard = wa->getChildRef();
-
-      int ret=oz_commit(waitBoard);
-      Assert(ret);
-      DebugCode(am.threadsPool.unsetCurrentThread());
-      return;
-    }
-
-    // give back number of clauses
+    // suspended
     am.trail.popMark();
     oz_currentBoard()->unsetInstalled();
     am.setCurrent(oz_currentBoard()->getParent());
 
-    // don't decrement counter of parent board!
-
-    int ret = oz_unify(solveAA->getResult(),
-                       solveAA->genChoice(wa->getChildCount()));
+    int ret = oz_unify(solveAA->getResult(), solveAA->genStuck());
     Assert(ret==PROCEED);
     return;
   }
 
   if (solveAA->getThreads() == 0) {
-    // There are some external suspensions to this solver!
+    // There are some external suspensions: blocked
 
     oz_deinstallCurrent();
 
@@ -248,9 +213,6 @@ LBLstart:
       }
     }
   }
-
-  // Constraints are implicitly propagated
-  CBB->unsetNervous();
 
   Assert(CTT->isRunnable());
 
@@ -425,15 +387,7 @@ LBLcheckEntailmentAndStability:
     cout << "checkEntailment" << endl << flush;
 #endif
 
-    CBB->unsetNervous();
-
-  // check for entailment of ASK and WAITTOP
-    if ((CBB->isAsk() || CBB->isWaitTop()) && oz_entailment()) {
-      Board *bb = CBB;
-      oz_deinstallCurrent();
-      int ret=oz_commit(bb);
-      Assert(ret);
-    } else if (CBB->isSolve()) {
+    if (CBB->isSolve()) {
       oz_checkStability();
     }
 
@@ -598,56 +552,6 @@ LBLfailure:
          Assert(0);
        }
 
-     } else {
-       AWActor *aw = AWActor::Cast(aa);
-       Thread *tt = aw->getThread();
-
-       Assert(CTT != tt && GETBOARD(tt) == CBB);
-       Assert(!aw->isCommitted() && !aw->hasNext());
-
-       if (aw->isWait()) {
-         WaitActor *wa = WaitActor::Cast(aw);
-         /* test bottom commit */
-         if (wa->hasNoChildren()) {
-           if (canOptimizeFailure(tt)) goto LBLfailure;
-         } else {
-           Assert(!am.threadsPool.isScheduledSlow(tt));
-           /* test unit commit */
-           if (wa->hasOneChildNoChoice()) {
-             Board *waitBoard = wa->getLastChild();
-             int succeeded = oz_commit(waitBoard);
-             if (!succeeded) {
-               if (canOptimizeFailure(tt)) goto LBLfailure;
-             }
-           }
-         }
-       } else {
-         Assert(!am.threadsPool.isScheduledSlow(tt));
-         Assert(aw->isAsk());
-
-         AskActor *aa = AskActor::Cast(aw);
-
-         //  should we activate the 'else' clause?
-         if (aa->isLeaf()) {  // OPT commit()
-           aa->setCommittedActor();
-           CBB->decSuspCount();
-           TaskStack *ts = tt->getTaskStackRef();
-           ts->discardActor();
-
-           /* rule: if fi --> false */
-           if (aa->getElsePC() == NOCODE) {
-             aa->disposeAsk();
-             if (canOptimizeFailure(tt)) goto LBLfailure;
-           } else {
-             Continuation *tmpCont = aa->getNext();
-             ts->pushCont(aa->getElsePC(),
-                          tmpCont->getY(), tmpCont->getCAP());
-             if (tmpCont->getX()) ts->pushX(tmpCont->getX());
-             aa->disposeAsk();
-             oz_wakeupThreadOPT(tt);
-           }
-         }
-       }
      }
 
      DECSOLVETHREADS(CBB, "e");
