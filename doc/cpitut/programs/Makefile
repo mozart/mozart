@@ -1,15 +1,25 @@
-CXX = oztool c++
+PLATFORM    = $(shell ozplatform)
 
-OZDYNLD = oztool ld
+M4          = m4
 
-CFLAGS = -I/home/ps-home/loeckelt/mozart/platform/emulator
-LIBS = -lc -lm 
+CXX         = oztool c++
 
-CPPSRCS = ex_a.cc ex_b.cc ex_c.cc reified_less.cc constdata.cc
+OZDYNLD     = oztool ld
 
-OBJS = $(CPPSRCS:.cc=.o)
+#CFLAGS      = -I/usr/local/oz/include/
+#LIBS        = -lc -lm 
 
-CCSNIPPETS =    ex_a.1.cc ex_a.1a.cc \
+EXAMPLESM4  = 	constdata.m4cc \
+		ex_b.m4cc \
+		reified_less.m4cc \
+		ex_a.m4cc \
+		ex_c.m4cc
+
+EXAMPLES    = $(EXAMPLESM4:.m4cc=.cc) sync.cc
+
+NATIVEFNCTS = $(EXAMPLES:.cc=.so-$(PLATFORM))
+
+CCSNIPPETS  =   ex_a.1.cc ex_a.1a.cc \
                 ex_a.2.cc \
                 ex_a.3.cc ex_a.3a.cc ex_a.3b.cc \
                 ex_a.4.cc \
@@ -33,31 +43,12 @@ CCSNIPPETS =    ex_a.1.cc ex_a.1a.cc \
                 constData.5.cc \
                 reifiedLess.1.cc
 
-M4 = m4
+all: $(NATIVEFNCTS)
 
-PLATFORM = $(shell ozplatform)
+programs: ex_a.cc ex_b.cc ex_c.cc constdata.cc reified_less.cc sync.cc
 
-all: ex_a.so-$(PLATFORM) ex_b.so-$(PLATFORM) \
-ex_c.so-$(PLATFORM) constdata.so-$(PLATFORM) \
-reified_less.so-$(PLATFORM)
-
-programs: ex_a.cc ex_b.cc ex_c.cc constdata.cc reified_less.cc
-
-ex_a.so-$(PLATFORM): ex_a.o
-	$(OZDYNLD) -o $@ ex_a.o $(LDFLAGS) $(LIBS)
-
-ex_b.so-$(PLATFORM): ex_b.o
-	$(OZDYNLD) -o $@ ex_b.o $(LDFLAGS) $(LIBS)
-
-ex_c.so-$(PLATFORM): ex_c.o
-	$(OZDYNLD) -o $@ ex_c.o $(LDFLAGS) $(LIBS)
-
-constdata.so-$(PLATFORM): constdata.o
-	$(OZDYNLD) -o $@ constdata.o $(LDFLAGS) $(LIBS)
-
-reified_less.so-$(PLATFORM): reified_less.o
-	$(OZDYNLD) -o $@ reified_less.o $(LDFLAGS) $(LIBS)
-
+%.so-$(PLATFORM): %.o
+	$(OZDYNLD) -o $@ $< $(LDFLAGS) $(LIBS)
 
 %.cc: %.m4cc $(CCSNIPPETS)
 	$(M4) $< > $@
@@ -70,3 +61,4 @@ clean:
 	-rm *.so-$(PLATFORM)
 	-rm *.s
 	-rm *~
+	-rm $(EXAMPLESM4:.m4cc=.cc) 

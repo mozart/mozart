@@ -163,9 +163,10 @@ redefining the embedded data structure
 <Title/Reified Constraints/
 
 <p>
-This section sketches the implementation of reified constraints (see the
-section on reified constraints in <ptr to="primer">) and goes into more
-details concerning the particularities of the class <<OZ_FDIntVar>>.
+This section sketches the implementation of reified constraints (see
+the section on reified constraints in <Ptr.Extern to="ozdoc:fdt"
+key="chapter.reified">) and goes into more details concerning the
+particularities of the class <<OZ_FDIntVar>>.
 
 <p>
 The idea of reification is as follows: A <Math>0/1</Math>-variable 

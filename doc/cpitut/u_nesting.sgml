@@ -24,14 +24,10 @@ single variables.
 <Title/Basic Concepts/
 
 <p>
-A propagator is imposed by a &ccpp; function, a so-called 
-<Em/header function/, which is implemented using the &sci of DFKI Oz. 
-Such a  
-&ccpp; function can be connected via the <<manager>> function of
-Module <<Module>> (see
-<ptr to="u_getting_started.connect"> to an Oz abstraction. The application of
-such an abstraction results in calling the corresponding header function
-and finally in imposing the propagator.
+A propagator is imposed by a &ccpp; function, a so-called <Em/header
+function/, that is connected to an Oz abstraction. The application of
+such an abstraction results in calling the corresponding header
+function and finally in imposing the propagator.
 
 <!--
 <para class=apropos><title/Tasks of a header function/
@@ -213,9 +209,8 @@ Therefore the header function has to suspend in case more than one
 parameter is insufficiently constrained. The class <<OZ_Expect>>
 therefore provides the member function <<suspend()>> which expects a
 value of type <<OZ_Thread>>. Details on how to create a thread for a
-&ccpp; function can be found in
-Section 10.4
-of the <ptr to="system">.
+&ccpp; function can be found in <Ptr.Extern to="ozdoc:foreign"
+key="section.threads">.
 
 <p>
 <Code.Extern display proglang=cc to="programs/ex_b.5.cc" class=linenumbers>
