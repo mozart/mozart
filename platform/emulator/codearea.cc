@@ -385,7 +385,7 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
     colum    = pred->getColumn();
     predName = OZ_atom(pred->getPrintName());
   } else {
-    file     = OZ_atom("nofile");
+    file     = OZ_atom("");
     line     = colum = 0;
     predName = OZ_atom("");
   }
