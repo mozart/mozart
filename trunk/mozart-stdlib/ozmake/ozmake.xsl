@@ -1,6 +1,6 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns="http://www.w3.org/TR/REC-html40"
-		result-ns="">
+		result-ns="" version="1.0">
 
 <xsl:output method="html"/>
 <xsl:strip-space elements="
