@@ -207,7 +207,7 @@
 	<Entry><Span class=index/<<StringToFloat>>/
 	  <Index class=tails/<<String>><And><<toFloat>>/
 	<Synopsis>
-	  <<{StringToFloat ?+{S} ??{F}}>>
+	  <<{String.toFloat ?+{S} ??{F}}>>
 	<Item>
 	  converts a string&nbsp;<<S>> to a float&nbsp;<<F>>, according to
 	  &Oz; concrete syntax.  See also <<FloatToString>>.

@@ -755,7 +755,7 @@
 	<Entry><Span class=index/<<FoldRTail>>/
 	  <Index/<<List>><And><<foldRTail>>/
 	<Synopsis>
-	  <<{FoldRTail ?+{Xs} ?+{P} X ??{Y}}>>
+	  <<{List.foldRTail ?+{Xs} ?+{P} X ??{Y}}>>
 	<Item>
 	  Used for folding all non-<<nil>> tails of&nbsp;<<Xs>> by applying a
 	  ternary procedure&nbsp;<<P>>, &ie;, application of the left folding
