@@ -167,10 +167,10 @@ Compiler.ozf: $(COMPILERSRC)
 ozc: Standard.ozf MakeBatch.oz BatchCompile.oz
 	$(EXECWITHSTD) MakeBatch.oz
 
-ozserver: Standard.ozf MakeOzServer.oz dp/RemoteServer.oz
+ozserver: Standard.ozf MakeOzServer.oz
 	$(EXECWITHSTD) MakeOzServer.oz
 
-ozvsserver: Standard.ozf MakeOzVSServer.oz dp/RemoteServer
+ozvsserver: Standard.ozf MakeOzVSServer.oz
 	$(EXECWITHSTD) MakeOzVSServer.oz
 
 #---------------------------------------------------------------------
