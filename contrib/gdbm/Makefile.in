@@ -60,10 +60,10 @@ gdbm.ozf: gdbm.oz
 	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 gdbm.so-$(PLATFORM): gdbm.o
-	$(OZTOOL) ld -o $@ $< $(LDFLAGS) $(LIBS)
+	$(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
 
 gdbm.o: gdbm.cc
-	$(OZTOOL) c++ $(CPPFLAGS) $(CXXFLAGS) -c $<
+	$(OZTOOL) c++ $(WINOZTOOLCXXFLAGS) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 clean veryclean:
 	-$(RM) *~ *.bak *.o *.so-* *.ozf
