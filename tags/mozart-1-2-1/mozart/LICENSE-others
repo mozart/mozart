@@ -1,0 +1,29 @@
+This file contains a list of files that are not covered by the
+Mozart LICENSE (see the file LICENSE). Note that the Mozart
+system itself is independent of these packages which are provided
+as convenient tools:
+
+mozart/platform/tools/gump/ozflex/*
+
+	See the file mozart/platform/tools/gump/ozflex/COPYING
+
+	(SLIGHTLY MODIFIED VERSION OF BSD LICENSE)
+
+mozart/platform/tools/gump/ozbison/*
+
+	See the file mozart/platform/tools/gump/ozbison/COPYING
+
+	(GNU GENERAL PUBLIC LICENSE)
+
+mozart/platform/wish/unixMain.cc
+
+	See there
+
+	(MODIFIED BSD LICENSE)
+
+mozart/doc/tcltk/tcl8.0-tk8.0-man-html.tar.gz
+
+	See the included file copyright.htm
+
+	(MODIFIED BSD LICENSE)
+

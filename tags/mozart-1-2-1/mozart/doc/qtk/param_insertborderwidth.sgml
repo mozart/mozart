@@ -1,0 +1,2 @@
+<ITEM> <<insertborderwidth:P>> : Specifies a non-negative value indicating the width of the 3-D border to draw around the insertion
+    cursor. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">).

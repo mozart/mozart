@@ -1,0 +1,197 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter id="chapter.pickle">
+  <title/Pickles for Persistent Data Structures/
+
+  <p>
+    Applications often require to store their state on file and load
+    the saved data later. Oz supports this by <def/pickling/ of data
+    structures: Data structures are made persistent by writing them to
+    files.
+
+  <section id="section.pickle.values">
+    <title/Stateless, Stateful, and Sited Nodes/
+
+    <p>
+      Values, or more precisely nodes,<note foot/A node may also be an
+      unbound variable, &ie; a value that is not yet determined/ in Oz
+      are either stateless or stateful:
+      <list>
+        <entry>Stateful
+        <item>
+          Basic data structures that are <def/stateful/ include cells,
+          variables, and ports. Since objects, arrays and dictionaries
+          are conceptually composed of cells, they are stateful as
+          well. 
+        <entry>Stateless
+        <item> 
+          <def/Stateless/ data structures are literals, numbers, records,
+          classes, chunks, and procedures.
+      </list>
+      
+    <p>
+      In addition, nodes in the store can be <def/sited/: the node is
+      specific to a particular site; it is a site-bound resource. For
+      example, classes for files
+      (<<Open.file>>) and widget classes for graphics (for example,
+      <<Tk.toplevel>>) are sited.
+
+    <p>
+      Only stateless and un-sited nodes can be made persistent by
+      pickling.
+      
+  <section id="section.pickle.operations">
+    <title/Loading and Saving Values/
+
+    <p>
+      After executing the following statement
+      <<<X=a(proc {$ Y} Y=X end 1 2 f:X)>>>
+      <<X>> refers to a record node. The node can be <def/saved/ or
+      <def/pickled/ to the
+      file <file/test.ozp/ by executing
+      <<<{Pickle.save X 'test.ozp'}>>>
+      
+    <p>
+      Pickling traverses the entire graph reachable from the root node
+      (which is referred to by <<X>> in our example), creates a
+      portable description of the graph and writes the description to
+      a file.
+
+    <p>
+      The pickled data structure can be loaded by
+      <<<Z={Pickle.load 'test.ozp'}>>>
+      Now <<Z>> refers to a graph which is an isomorphic clone of the
+      graph that has been saved. For our example this means: what can be
+      reached from <<X>> and <<Z>> is equal. For example
+      <<<X.1==Z.1>>>
+      evaluates to <<true>>.  In fact, <code/X/ and <code/Z/ cannot be
+      distinguished.
+
+    <p>
+      Loading of pickles works across the internet: it is possible to
+      give a url rather than just a filename. For example, if you have
+      a public html directory <file>~/public_html</file> and you
+      move the pickle file <file/test.ozp/ there, everybody can load
+      the pickle across the internet. Suppose that the url of your
+      public html directory is
+      <file>http://www.ps.uni-sb.de/~schulte/</file>, then the pickle
+      can be loaded by
+      <<<Z={Pickle.load 'http://www.ps.uni-sb.de/~schulte/test.ozp'}>>>
+    
+  <section id="section.pickle.db">
+    <title/Example: The Data Base Revisited/
+
+    <p>
+      To extend the data base we developed in <ptr
+      to="section.development.db"> with persistence, we just add two
+      procedures to load and save a data base and extend the export
+      specification accordingly. The toplevel structure of the functor
+      definition is as follows:
+
+    <p>
+<chunk><title/PDB.oz/
+functor
+  import Pickle
+  <chunk.ref/Export specification for PDB.oz/
+  <chunk.ref/Body for PDB.oz/
+end
+</chunk>
+
+    <p>
+      The functor imports the system module <<Pickle>>. The export
+      specification is just extended by the fields <<load>> and <<save>>.
+
+    <p>
+<chunk><title/Export specification for PDB.oz/
+<chunk.ref/Export specification for DB.oz/
+   load: Load
+   save: Save
+</chunk>
+
+    <p>
+      The body for <file/PDB.oz/ is as follows:
+<chunk><title/Body for PDB.oz/
+<chunk.ref/Body for DB.oz/ 
+   proc {Save File}
+      {Pickle.save {Ctr get($)}#
+                   {Dictionary.toRecord db Data} 
+       File}
+   end
+   proc {Load File}
+      I#D={Pickle.load File}
+   in
+      {Dictionary.removeAll Data}
+      {Ctr init(I)}
+      {Record.forAllInd D
+       proc {$ K#E}
+          {Dictionary.put Data K E}
+       end}
+   end
+</chunk>
+
+    <p>
+      <<Save>> takes as input the filename of the pickle, whereas
+      <<Load>> takes the url from which the pickle can be loaded.
+
+    <p>
+      When using the persistent data base, it has to be kept in mind
+      that it does not offer concurrency control: Simultaneous add and
+      remove, as well as load and save operations performed by several
+      threads might leave the data base in a inconsistent state. In
+      ??? we will develop the data base in a data base server that
+      also allows for concurrency control.
+
+    <p>
+      Note that since we only extended the functionality the functor
+      provides, all programs that used the non-persistent data base
+      could, in principle, still use the persistent data base with out being
+      recompiled.   We say <em/could/ because the implementaion of the
+      persistent database is named <file/PDB.ozf/ rather than
+      <file/DB.ozf/.  However, you can give it a try and simply rename
+      <file/PDB.ozf/ to <file/DB.ozf/: all applications based on the
+      the non-persistent implementation will continue to work as before
+      but now using the persistent implementation (though without actually
+      taking advantage of the persistency).
+
+
+  <section id="section.pickle.compression">
+    <title/Pickle Compression/
+   
+    <p>
+      Pickles can also be compressed so that they occupy less space
+      on disk. For example, a compressed pickle for <<X>> can be
+      written to file <file/testz.ozp/ by 
+      <<<{Pickle.saveCompressed X 'testz.ozp' ?_{LevelI}}>>>
+      ?_{LevelI} is an integer between <<0>> and <<9>> specifying the
+      compression level: the higher the value the better the
+      compression, but the longer pickling takes. A value of
+      <<0>> gives no compression.
+   
+    <p>
+      Compression time and ratio depend on the data being
+      pickled. The compression ratio might vary between 20 and 80
+      percent, while compression at level 9 is usually less than 2
+      times slower than using no compression.
+
+</chapter>
