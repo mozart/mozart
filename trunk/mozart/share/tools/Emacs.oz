@@ -116,16 +116,47 @@ fun instantiate {$ IMPORT}
 
    local
       MSG_ERROR = [17]
+
+      class TextSocket from Open.socket Open.text
+	 prop final
+	 meth readQuery($) S in
+	    Open.text, getS(?S)
+	    case S of false then ""
+	    elseof [4] then ""   % ^D
+	    elseof [4 13] then ""   % ^D^M
+	    else S#'\n'#TextSocket, readQuery($)
+	    end
+	 end
+      end
    in
       class CompilerInterfaceEmacs from Compiler.genericInterface
 	 prop final
-	 attr Socket: unit BarSync: _ BarLock: {NewLock} Trace: false
-	 meth init(CompilerObject Sock)
-	    lock
-	       Socket <- Sock
+	 attr Socket BarSync: _ BarLock: {NewLock} Trace: false
+	 meth init(CompilerObject)
+	    lock Port NodeName in
 	       Compiler.genericInterface, init(CompilerObject Serve)
-	       {{`Builtin` setOPICompiler 1} self}
+	       thread
+		  @Socket = {New TextSocket server(port: ?Port)}
+	       end
+\define NODENAME_USE_ADDR
+\ifdef NODENAME_USE_ADDR
+	       NodeName = {OS.getHostByName {OS.uName}.nodename}.addrList.1
+\else
+\ifdef NODENAME_USE_UNAME
+	       NodeName = {OS.uName}.nodename
+\else
+\ifdef NODENAME_USE_HOSTENV
+	       NodeName = {OS.getEnv 'HOST'}
+\else
+	       NodeName = 'localhost'
+\endif
+\endif
+\endif
+	       {Print {VirtualString.toAtom 'oz-socket "'#NodeName#'" '#Port}}
 	    end
+	 end
+	 meth getSocket($)
+	    @Socket
 	 end
 	 meth Serve(Ms)
 	    case Ms of M|Mr then
