@@ -55,50 +55,8 @@ in
        = IMPORT.'Emacs'
        \insert Compiler.env
        = IMPORT.'Compiler'
-
-       class TextSocket from Open.socket Open.text
-	  prop final
-	  meth readQuery($) S in
-	     Open.text, getS(?S)
-	     case S of false then ""
-	     elseof [4] then ""   % ^D
-	     elseof [4 13] then ""   % ^D^M
-	     else S#'\n'#TextSocket, readQuery($)
-	     end
-	  end
-       end
     in
-       proc {StartOPI _ _} Sock OPICompiler CompilerReadEvalLoop in
-	  local Port NodeName in
-	     thread
-		Sock = {New TextSocket server(port: ?Port)}
-	     end
-\define NODENAME_USE_ADDR
-\ifdef NODENAME_USE_ADDR
-	     NodeName = {OS.getHostByName {OS.uName}.nodename}.addrList.1
-\else
-\ifdef NODENAME_USE_UNAME
-	     NodeName = {OS.uName}.nodename
-\else
-\ifdef NODENAME_USE_HOSTENV
-	     NodeName = {OS.getEnv 'HOST'}
-\else
-	     NodeName = 'localhost'
-\endif
-\endif
-\endif
-	     {Print {VirtualString.toAtom 'oz-socket "'#NodeName#'" '#Port}}
-	  end
-
-	  OPICompiler = {New Compiler.compilerClass init()}
-	  local
-	     Env = {Record.foldL IMPORT Adjoin BaseAndStandard}
-	  in
-	     {OPICompiler enqueue(mergeEnv(Env))}
-	  end
-
-	  {New Emacs.interface init(OPICompiler Sock) _}
-
+       proc {StartOPI _ _} OPICompiler CompilerUI Sock CompilerReadEvalLoop in
 	  local
 	     OZVERSION = {System.property.get 'oz.version'}
 	     DATE = {System.property.get 'oz.date'}
@@ -116,6 +74,16 @@ in
 	   '\n'#
 	   '---------------------------------------------\n\n'}
 	  {System.property.put 'oz.standalone' false}
+
+	  OPICompiler = {New Compiler.compilerClass init()}
+	  local
+	     Env = {Record.foldL IMPORT Adjoin BaseAndStandard}
+	  in
+	     {OPICompiler enqueue(mergeEnv(Env))}
+	  end
+	  CompilerUI = {New Emacs.interface init(OPICompiler)}
+	  {CompilerUI getSocket(?Sock)}
+	  {{`Builtin` setOPICompiler 1} CompilerUI}
 
 	  % Try to load some ozrc file:
 	  local
