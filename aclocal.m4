@@ -960,7 +960,8 @@ changequote([,])
 
 AC_DEFUN(OZ_CONTRIB_INIT,[
     OZ_INIT
-    OZ_PATH_PROG(OZC,ozc,OZC=$SRCTOP/share/lib/ozc.sh)
+    OZ_PATH_PROG(OZC,ozc)
+    OZ_PATH_PROG(OZL,ozl)
     OZ_PATH_PROG(OZPLATFORM,ozplatform)
     PLATFORM=`$OZPLATFORM`
     AC_SUBST(PLATFORM)
