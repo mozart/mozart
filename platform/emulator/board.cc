@@ -89,19 +89,19 @@ enum BoardFlags {
   Bo_Waiting    = 1<<10
 };
 
-Board *Board::Root;
-Board *Board::Current;
-
-void Board::Init() {
-  Root = new Board(NULL,Bo_Root);
-  Root->setInstalled();
-  SetCurrent(Root,NO);
+Board *Board::NewRoot()
+{
+  Board *bb = new Board(NULL,Bo_Root);
+  bb->setInstalled();
+  SetCurrent(bb,OK);
+  return bb;
 }
+
 void Board::NewCurrentAsk(Actor *a)
 {
-  Board *b=new Board(a,Bo_Ask);
-  b->setInstalled();
-  SetCurrent(b,OK);
+  Board *bb=new Board(a,Bo_Ask);
+  bb->setInstalled();
+  SetCurrent(bb,OK);
 }
 
 void Board::NewCurrentWait(Actor *a)
@@ -112,28 +112,16 @@ void Board::NewCurrentWait(Actor *a)
 }
 
 #ifdef DEBUG_CHECK
-static Board *oldBoard = Board::GetRoot();
+static Board *oldBoard = (Board *) NULL;
 #endif
 void Board::SetCurrent(Board *c, Bool checkNotGC)
 {
   DebugCheck(!c,error("Board::SetCurrent"));
-  DebugCheck(checkNotGC &&
-             (!oldBoard
-              || oldBoard != Current),
-             error("someone has changed 'Board::Current'"));
-  Current = c;
+  DebugCheck(checkNotGC && oldBoard != am.currentBoard,
+             error("someone has changed 'currentBoard'"));
+  am.currentBoard = c;
   am.currentUVarPrototype = makeTaggedUVar(c);
   DebugCheckT(oldBoard=c);
-}
-
-Board *Board::GetCurrent()
-{
-  return Current;
-}
-
-Board *Board::GetRoot()
-{
-  return Root;
 }
 
 Board::Board(Actor *a,int typ)
@@ -222,7 +210,8 @@ inline Bool Board::isCommitted()
 }
 
 /* are we a sibling of a committed board ?
-   caution: handle root node correctly */
+   NOTE: handle root node correctly
+         only looks at immediate parent */
 inline Bool Board::isDiscarded()
 {
   Bool ret=NO;
@@ -298,12 +287,13 @@ inline void Board::setBody(ProgramCounter p,RefsArray y,
 
 Actor *Board::FailCurrent()
 {
-  DebugCheck(!Current->isInstalled(),error("Board::FailCurrent"));
-  Actor *ret=Current->getActor();
-  ret->failChild(Current);
-  Current->flags |= Bo_Failed;
+  Board *bb = am.currentBoard;
+  DebugCheck(!bb->isInstalled(),error("Board::FailCurrent"));
+  Actor *ret=bb->getActor();
+  ret->failChild(bb);
+  bb->flags |= Bo_Failed;
   am.reduceTrailOnFail();
-  Current->unsetInstalled();
+  bb->unsetInstalled();
   SetCurrent(ret->getBoard()->getBoardDeref());
   return ret;
 }

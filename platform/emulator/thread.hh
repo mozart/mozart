@@ -28,36 +28,19 @@ friend void engine();
 private:
   static Thread *Head;
   static Thread *Tail;
-  static Thread *Current;
-  static Thread *Root;
-  static int TimeSlice;
-  static int DefaultPriority;
-  static int SystemPriority;
 
 public:
   static void Init();
   static void GC();
   static void Print();
   static Bool CheckSwitch();
-  static Thread *GetCurrent();
   static Thread *GetHead();
-  static Thread *GetRoot();
-  static int GetSystemPriority();
   static Thread *GetTail();
-  static int GetTimeSlice();
-  static int GetDefaultPriority();
   static Bool QueueIsEmpty();
   static void Start();
-  static void MakeTaskStack();
-  static void ScheduleCurrent();
-  static void FinishCurrent();
-  static int GetCurrentPriority();
   static void NewCurrent(int prio);
-  static void Schedule(Suspension *s);
-  static void ScheduleRoot(ProgramCounter PC,RefsArray y);
-  static void Schedule(Board *n);
-private:
-  static Thread *UnlinkHead();
+  static void ScheduleSuspension(Suspension *s);
+  static void ScheduleWakeup(Board *n);
 
 private:
   Thread *next;
@@ -70,25 +53,29 @@ private:
   } u;
   int priority;
 public:
+  Thread(int prio);
+
   USEFREELISTMEMORY;
-  Thread *gc();
-  void gcRecurse(void);
   OZPRINT;
   OZPRINTLONG;
+  Thread *gc();
+  void gcRecurse(void);
 
+public:
   int getPriority();
-  void setPriority(int prio);
+  TaskStack *getTaskStack();
   Bool isNormal();
   Bool isWarm();
   Bool isNervous();
-  void schedule();
-
+  TaskStack *makeTaskStack();
   Board *popBoard();
   Suspension *popSuspension();
   void pushTask(Board *n,ProgramCounter pc,
                        RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
+  void queueCont(Board *bb,ProgramCounter PC,RefsArray y);
+  void schedule();
+  void setPriority(int prio);
 
-  Thread(int prio);
 private:
   Thread() : ConstTerm(Co_Thread) { init(); }
   void init();

@@ -34,13 +34,13 @@
 
 #include "../include/config.h"
 
-#include "dldwrapper.h"
 #include "sun-proto.h"
 
 #include "am.hh"
 #include "bignum.hh"
 #include "builtins.hh"
 #include "genvar.hh"
+#include "io.hh"
 #include "misc.hh"
 #include "records.hh"
 #include "thread.hh"
@@ -50,11 +50,26 @@
 #define inline
 #endif
 
-FILE *openCompiler(int port, char *compiler);
-FILE *connectCompiler(char *path);
+AM am;
+ConfigData conf;
 
-extern "C" int runningUnderEmacs;
-extern void version();
+ConfigData::ConfigData() {
+  ozPath                = OZ_PATH;
+  linkPath              = OZ_PATH;
+  printDepth            = PRINT_DEPTH;
+  showFastLoad          = SHOW_FAST_LOAD;
+  showForeignLoad       = SHOW_FOREIGN_LOAD;
+  showIdleMessage       = SHOW_IDLE_MESSAGE;
+  gcFlag                = GC_FLAG;
+  gcVerbosity           = GC_VERBOSITY;
+  timeSlice             = TIME_SLICE;
+  defaultPriority       = DEFAULT_PRIORITY;
+  systemPriority        = SYSTEM_PRIORITY;
+  clockTick             = CLOCK_TICK;
+  taskStackSize         = TASK_STACK_SIZE;
+}
+extern "C" int runningUnderEmacs; // mm2
+extern void version(); // mm2
 
 
 void usage(int /* argc */,char **argv) {
@@ -63,9 +78,6 @@ void usage(int /* argc */,char **argv) {
           argv[0]);
   exit(1);
 }
-
-AM am;
-
 
 void AM::init(int argc,char **argv)
 {
@@ -127,20 +139,23 @@ void AM::init(int argc,char **argv)
 
   int port = -1; // read from Compiler
 
+  char *compilerFile;
   if (!(compilerFile = getenv("OZCOMPILER"))) {
     compilerFile = OzCompiler;
   }
 
-  if (!(ozPath = getenv("OZPATH"))) {
-    ozPath = OzPath;
+  char *tmp;
+  if ((tmp = getenv("OZPATH"))) {
+    conf.ozPath = tmp;
+    conf.linkPath = tmp;
   }
 
-  if (!(linkPath = getenv("OZLINKPATH"))) {
-    linkPath = ozPath;
+  if ((tmp = getenv("OZLINKPATH"))) {
+    conf.linkPath = tmp;
   }
-
 
   char *comPath = NULL;  // path name where to create AF_UNIX socket
+  char *queryFileName = NULL;
 
   while ((c = getopt(argc, argv, "Eds:S:f:Pc:i:I:")) != -1)
     switch (c) {
@@ -161,7 +176,7 @@ void AM::init(int argc,char **argv)
       comPath = optarg;
       break;
     case 'f':
-      QueryFileName = optarg;
+      queryFileName = optarg;
       break;
 
     default:
@@ -175,70 +190,19 @@ void AM::init(int argc,char **argv)
   int moreThanOne = 0;
   moreThanOne += (comPath != NULL);
   moreThanOne += (port != -1);
-  moreThanOne += (QueryFileName != NULL);
+  moreThanOne += (queryFileName != NULL);
   if (moreThanOne > 1) {
      fprintf(stderr,"Specify only one of '-s' and '-f' and '-S'.\n");
      usage(argc,argv);
    }
 
-  if (comPath != NULL) {
-    QueryFILE = connectCompiler(comPath);
-  } else if (QueryFileName != NULL) {
-    QueryFILE = fopen(QueryFileName,"r");
-    if (QueryFILE == NULL) {
-      char buf [1000];
-      sprintf(buf, "Cannot open query file '%s'",QueryFileName);
-      perror(buf);
-      exit(1);
-    }
-    int skipLines = 2;
-    int c;
-    while ((c = getc(QueryFILE)) != EOF) {
-      if ((c == '\n') && --skipLines == 0)
-        break;
-    }
-  } else {
-    QueryFILE = openCompiler(port,compilerFile);
-  }
+  IO::initQuery(comPath,queryFileName,port,compilerFile);
 
-  if (QueryFILE == NULL) {
-    fprintf(stderr,"Cannot open code input\n");
-    exit(1);
-  }
-
-#ifdef DLD
-  if (dld_init (dld_find_executable (argv[0])) != 0) {
-    dld_perror("Failed to initialize DLD");
-    exit(1);
-  }
-#endif
-
-#ifdef XDL
-  /* argv[0] should be a full pathname */
-  if (xdl_init(argv[0]) != 0) {
-    error("Failed to initialize XDL");
-    exit(1);
-  }
-#endif
-
+  extern void DLinit(char *name);
+  DLinit(argv[0]);
 
   initMemoryManagement();
 
-// user configurable parameters
-  printDepthVal = 10;
-  fastLoad      = NO;
-  foreignLoad   = NO;
-  idleMessage   = NO;
-
-  gcFlag = OK;
-  gcVerbosity = 1;
-
-  timeSinceLastIdle = usertime();
-  timeForGC = timeForCopy = timeForLoading = 0;
-  heapAllocated = 0;
-
-  clockTick = InitialClockTick;
-  DebugCheck(clockTick < 1000, error("clockTick must be greater than 1 ms"));
 // not changeable
   // SizeOfWorkingArea,NumberOfXRegisters,NumberOfYRegisters
 
@@ -246,12 +210,15 @@ void AM::init(int argc,char **argv)
 // internal registers
   statusReg   = (StatusBit)0;
   xRegs       = allocateStaticRefsArray(NumberOfXRegisters);
-  globalStore = allocateStaticRefsArray(NumberOfYRegisters);
 
-  Board::Init();
+  currentBoard = (Board *) NULL;
+  rootBoard = Board::NewRoot();
+
   Thread::Init();
 
-  currentTaskSusp = NULL;
+  currentThread = (Thread *) NULL;
+  rootThread = new Thread(conf.systemPriority);
+
   currentTaskStack = NULL;
 
   // builtins
@@ -260,43 +227,16 @@ void AM::init(int argc,char **argv)
     error("BIinit failed");
     exit(1);
   }
-  Builtin *bi = new Builtin(entry,makeTaggedNULL());
-  globalStore[0] = makeTaggedSRecord(bi);
-  SVariable *svar = new SVariable(Board::GetRoot(),OZ_stringToTerm("TopLevelFailed"));
-  globalStore[1] =  makeTaggedRef(newTaggedSVar(svar));
-
 
   initAtoms();
 
-  initSignal();
+  globalStore = allocateStaticRefsArray(NumberOfYRegisters);
 
-  initIO();
+  Builtin *bi = new Builtin(entry,makeTaggedNULL());
+  globalStore[0] = makeTaggedSRecord(bi);
 
-  acknowledgeCompiler(OK);
-
-  // --> make sure that we check input from compiler
-  setSFlag(IOReady);
+  IO::init();
 }
-
-
-
-void AM::exitOz(int status) {
-
-  fclose(QueryFILE);
-
-  waitCompiler();
-
-  statusMessage("halted");
-
-  // terminate all our children
-  ozSignal(SIGTERM,(Sigfunc*)SIG_IGN);
-  if (kill(-getpid(),SIGTERM) < 0) {
-    perror("kill");
-  }
-
-  exit(status);
-}
-
 
 // ----------------------- unification
 
@@ -510,7 +450,7 @@ Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2)
 Bool AM::isBetween(Board *to, Board *varHome)
 {
   for (Board *tmp = to->getBoardDeref();
-       tmp != Board::GetCurrent();
+       tmp != AM::currentBoard;
        tmp = tmp->getParentBoard()->getBoardDeref()) {
     if (tmp == varHome) {
       return NO;
@@ -591,7 +531,7 @@ void AM::awakeNode(Board *node)
     return;
 
   node->removeSuspension();
-  Thread::Schedule(node);
+  Thread::ScheduleWakeup(node);
 }
 
 // exception from general rule that arguments are never variables!
@@ -633,7 +573,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
 
 // check if term is also a variable
     // bug fixed by mm 25.08.92
-    // we must add Board::Current to suspension list of second variable if
+    // we must add AM::currentBoard to suspension list of second variable if
     // both variables are global
     // term must be deref\'ed because isAnyVar() should really check
     // is unbound variable
@@ -658,11 +598,11 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
 
 
 /*
-  install every board from the Board::Current to 'n'
+  install every board from the AM::currentBoard to 'n'
   and move cursor to 'n'
 
   algm
-    find common parent board of 'to' and 'Board::Current'
+    find common parent board of 'to' and 'AM::currentBoard'
     deinstall until common parent (go upward)
     install (go downward)
   pre:
@@ -685,7 +625,7 @@ InstType AM::installPath(Board *to)
     return INST_OK;
   }
 
-  DebugCheck(to == Board::GetRoot(),
+  DebugCheck(to == AM::rootBoard,
              error("AM::installPath: root node reached");
              );
 
@@ -712,10 +652,10 @@ inline void AM::deinstallPath(Board *top)
              error("AM::deinstallPath: top already commited");
              return;);
 
-  while (Board::GetCurrent() != top) {
+  while (AM::currentBoard != top) {
     deinstallCurrent();
-    DebugCheck(Board::GetCurrent() == Board::GetRoot()
-               && top != Board::GetRoot(),
+    DebugCheck(AM::currentBoard == AM::rootBoard
+               && top != AM::rootBoard,
                error("AM::deinstallPath: root node reached"));
   }
 }
@@ -723,15 +663,15 @@ inline void AM::deinstallPath(Board *top)
 inline void AM::deinstallCurrent()
 {
   reduceTrailOnSuspend();
-  Board::GetCurrent()->unsetInstalled();
-  Board::SetCurrent(Board::GetCurrent()->getParentBoard()->getBoardDeref());
+  AM::currentBoard->unsetInstalled();
+  Board::SetCurrent(AM::currentBoard->getParentBoard()->getBoardDeref());
 }
 
 void AM::reduceTrailOnUnitCommit()
 {
   int numbOfCons = trail.chunkSize();
 
-  Board *bb = Board::GetCurrent();
+  Board *bb = AM::currentBoard;
 
   bb->newScript(numbOfCons);
 
@@ -756,7 +696,7 @@ void AM::reduceTrailOnSuspend()
   int numbOfCons = trail.chunkSize();
 
   Suspension *susp;
-  Board *bb = Board::GetCurrent();
+  Board *bb = AM::currentBoard;
 
   bb->newScript(numbOfCons);
   if (numbOfCons > 0) {
@@ -906,7 +846,7 @@ inline void AM::pushTask(Board *n,ProgramCounter pc,
 {
   n->addSuspension();
   if (!currentTaskStack) {
-    Thread::MakeTaskStack();
+    currentTaskStack = am.currentThread->makeTaskStack();
   }
   currentTaskStack->pushCont(n,pc,y,g,x,i);
 }
@@ -917,7 +857,7 @@ inline void AM::pushTask(Board *n,ProgramCounter pc,
  *
  */
 inline Bool AM::isInScope (Board *above, Board* node) {
-  while (node != Board::GetRoot()) {
+  while (node != AM::rootBoard) {
     if (node == above)
       return (OK);
     node = node->getParentBoard()->getBoardDeref();
@@ -931,23 +871,23 @@ inline Bool AM::isLocalUVar(TaggedRef var)
   return (var == currentUVarPrototype ||
           // variables are usually bound
           // in the node where they are created
-          tagged2VarHome(var)->getBoardDeref() == Board::GetCurrent() )
+          tagged2VarHome(var)->getBoardDeref() == AM::currentBoard )
     ? OK : NO;
 }
 
 inline Bool AM::isLocalSVar(TaggedRef var) {
   Board *home = tagged2SVar(var)->getHome1();
 
-  return (home == Board::GetCurrent() ||
-          home->getBoardDeref() == Board::GetCurrent() )
+  return (home == AM::currentBoard ||
+          home->getBoardDeref() == AM::currentBoard )
     ? OK : NO;
 }
 
 inline Bool AM::isLocalCVar(TaggedRef var) {
   Board *home = tagged2CVar(var)->getHome1();
 
-  return (home == Board::GetCurrent() ||
-          home->getBoardDeref() == Board::GetCurrent() )
+  return (home == AM::currentBoard ||
+          home->getBoardDeref() == AM::currentBoard )
     ? OK : NO;
 }
 
@@ -972,37 +912,9 @@ inline void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
                                         term, rightVar));
 }
 
-
-inline void AM::reviveCurrentTaskSusp(void)
-{
-  DebugCheck(currentTaskSusp == NULL,
-             error("currentTaskSusp is NULL in AM::reviveCurrentTaskSusp."));
-  DebugCheck(currentTaskSusp->isResistant() == NO,
-             error("Cannot revive non-resistant suspension."));
-  DebugCheck(currentTaskSusp->isDead() == OK,
-             error("Cannot revive non-resistant suspension."));
-  currentTaskSusp->unmarkPropagated();
-  currentTaskSusp->setNode(Board::GetCurrent());
-  Board::GetCurrent()->addSuspension();
-}
-
-inline void AM::killPropagatedCurrentTaskSusp(void) {
-  if (currentTaskSusp == NULL) return;
-  if (currentTaskSusp->isPropagated() == NO) return;
-
-  DebugCheck(currentTaskSusp->isResistant() == NO,
-             error("Cannot kill non-resistant suspension."));
-  currentTaskSusp->markDead();
-}
-
-void AM::dismissCurrentTaskSusp(void) {
-  currentTaskSusp->cContToNode(Board::GetCurrent());
-  currentTaskSusp = NULL;
-}
-
 inline Bool AM::entailment ()
 {
-  return (!Board::GetCurrent()->hasSuspension()
+  return (!AM::currentBoard->hasSuspension()
           // First test: no subtrees;
           && trail.isEmptyChunk()
           // second test: is this node stable?
@@ -1015,7 +927,7 @@ inline Bool AM::isEmptyTrailChunk ()
 }
 
 inline Bool AM::isToplevel() {
-  return Board::GetCurrent() == Board::GetRoot() ? OK : NO;
+  return AM::currentBoard == AM::rootBoard ? OK : NO;
 }
 
 inline void AM::bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr)
@@ -1026,21 +938,12 @@ inline void AM::bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr)
 inline void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef a)
 {
   // most probable case first: local UVar
-  // if (isUVar(var) && Board::GetCurrent() == tagged2VarHome(var)) {
+  // if (isUVar(var) && AM::currentBoard == tagged2VarHome(var)) {
   // more efficient:
   if (var == currentUVarPrototype) {
     doBind(varPtr,a);
   } else {
     genericBind(varPtr,var,NULL,a);
-  }
-}
-
-void AM::undoTrailing(int n) {
-  while(n--) {
-    TrailEntry *eq = trail.popRef();
-    TaggedRef *refPtr = eq->getRefPtr();
-    TaggedRef value = eq->getValue();
-    *refPtr = value;
   }
 }
 

@@ -40,6 +40,7 @@
 #include "builtins.hh"
 #include "genvar.hh"
 #include "indexing.hh"
+#include "io.hh"
 #include "objects.hh"
 #include "board.hh"
 #include "thread.hh"
@@ -79,15 +80,6 @@
 // TOPLEVEL END
 // -----------------------------------------------------------------------
 
-// profiling
-
-#ifdef AM_PROFILE
-#   define IncfProfCounter(C,N) am.stat.C += N
-#else
-#   define IncfProfCounter(C,N)
-#endif
-
-// -----------------------------------------------------------------------
 
 #define DoSwitchOnTerm(indexTerm,table)                                       \
       TaggedRef term = indexTerm;                                             \
@@ -164,6 +156,8 @@
 #define inline
 #endif
 
+#define GET_CURRENT_PRIORITY() e->currentThread->getPriority()
+
 inline HookValue emulateHook(Abstraction *def, int arity, TaggedRef *args)
 {
 #ifdef DEBUG_DET
@@ -172,11 +166,16 @@ inline HookValue emulateHook(Abstraction *def, int arity, TaggedRef *args)
 
   if (am.isSetSFlag()) {
     // without signal blocking;
-    if (Thread::CheckSwitch()) {
-      return (HOOK_SCHEDULE);
+    if (am.isSetSFlag(ThreadSwitch)) {
+      if (Thread::QueueIsEmpty()
+          || Thread::GetHead()->getPriority() < am.currentThread->getPriority()) {
+        Alarm::RestartProcess();
+      } else {
+        return HOOK_SCHEDULE;
+      }
     }
     if (am.isSetSFlag(StartGC)) {
-      return (HOOK_SCHEDULE);
+      return HOOK_SCHEDULE;
     }
 
     blockSignals();
@@ -185,21 +184,20 @@ inline HookValue emulateHook(Abstraction *def, int arity, TaggedRef *args)
       Alarm::HandleUser();
     }
     if (am.isSetSFlag(IOReady)) {
-      am.handleIO();
+      IO::handleIO();
     }
 
     unblockSignals();
 
     if (def && am.isSetSFlag(DebugMode)) {
-      enterCall(Board::GetCurrent(),def,arity,args);
+      enterCall(am.currentBoard,def,arity,args);
     }
 
-    return (HOOK_OK);
+    return HOOK_OK;
   } else {
-    return (HOOK_OK);
+    return HOOK_OK;
   }
 }
-
 
 inline TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
 {
@@ -328,7 +326,6 @@ inline TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
     }                                                                         \
   }
 
-
 void engine() {
 
 // ------------------------------------------------------------------------
@@ -362,10 +359,11 @@ void engine() {
   Bool isExecutePlus = NO;
   RefsArray GPlus, YPlus;
 #endif
-  Suspension* &currentTaskSusp = am.currentTaskSusp;
+  extern Suspension* FDcurrentTaskSusp; // see fdAddOn
+  Suspension* &currentTaskSusp = FDcurrentTaskSusp;
   Actor *CAA = NULL;
   Board *tmpBB = NULL;
-  Board *&CBB = Board::Current;
+  Board *&CBB = am.currentBoard;
 
   RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
 
@@ -391,7 +389,7 @@ void engine() {
 
 #endif THREADED
 
-  switch (setjmp(engineEnvironment)) {
+  switch (setjmp(IO::engineEnvironment)) {
 
   case NOEXCEPTION:
     break;
@@ -413,7 +411,8 @@ void engine() {
 // ------------------------------------------------------------------------
  LBLschedule:
 
-  Thread::ScheduleCurrent();
+  e->currentThread->schedule();
+  e->currentThread=(Thread *) NULL;
 
  LBLerror:
  LBLstart:
@@ -452,7 +451,7 @@ void engine() {
     // POPTASK
     if (!e->currentTaskStack) {
       {
-        Thread *c = Thread::GetCurrent();
+        Thread *c = am.currentThread;
         if (c->isNervous()) {
           tmpBB = c->popBoard();
           goto LBLTaskNervous;
@@ -570,7 +569,8 @@ void engine() {
     }
 
   LBLTaskEmpty:
-    Thread::FinishCurrent();
+    e->currentThread->dispose();
+    e->currentThread=(Thread *) NULL;
     goto LBLstart;
 
   LBLTaskNervous:
@@ -1060,7 +1060,7 @@ void engine() {
             int argsToSave   = getPosIntArg(PC+4);
             Suspension *susp =
               new Suspension(new SuspContinuation(CBB,
-                                                  Thread::GetCurrentPriority(),
+                                                  GET_CURRENT_PRIORITY(),
                                                   PC, Y, G, X, argsToSave));
             SVariable *cvar = taggedBecomesSuspVar(APtr);
             CBB->addSuspension();
@@ -1095,7 +1095,7 @@ void engine() {
           int argsToSave    = getPosIntArg(PC+5);
           Suspension *susp  =
             new Suspension(new SuspContinuation(CBB,
-                                                Thread::GetCurrentPriority(),
+                                                GET_CURRENT_PRIORITY(),
                                                 PC,Y,G,X,argsToSave));
           SVariable *acvar;
           SVariable *bcvar;
@@ -1133,8 +1133,8 @@ void engine() {
 
       Suspension *susp =
         new Suspension(new SuspContinuation(CBB,
-                                            Thread::GetCurrentPriority(),
-                                            shallowCP,Y,G,X,argsToSave));
+                                            GET_CURRENT_PRIORITY(),
+                                            shallowCP, Y, G, X, argsToSave));
 
       CBB->addSuspension();
       e->reduceTrailOnShallow(susp,numbOfCons);
@@ -1292,7 +1292,7 @@ void engine() {
       SVariable *cvar = taggedBecomesSuspVar(termPtr);
       Suspension *susp =
         new Suspension(new SuspContinuation(CBB,
-                                            Thread::GetCurrentPriority(),
+                                            GET_CURRENT_PRIORITY(),
                                             PC, Y, G, X, argsToSave));
       cvar->addSuspension (susp);
       CBB->addSuspension();
@@ -1564,7 +1564,7 @@ void engine() {
         case BIDefault:
           {
             if (am.isSetSFlag(DebugMode)) {
-              enterCall(Board::GetCurrent(),bi,predArity,X);
+              enterCall(am.currentBoard,bi,predArity,X);
             }
             OZ_Bool res = bi->getFun()(predArity, X);
             if (am.isSetSFlag(DebugMode)) {
@@ -1719,14 +1719,14 @@ void engine() {
                          message("call: loadFile: cannot open file '%s'",file));
        }
 
-       if (e->fastLoad) {
+       if (conf.showFastLoad) {
          message("Fast loading file '%s'\n",file);
        }
 
        // begin critical region
        blockSignals();
 
-       (void) e->loadQuery(fd,OK);      /* "NO" means: do not acknowledge */
+       IO::loadQuery(fd,OK);    /* "NO" means: do not acknowledge */
 
        fclose(fd);
 
@@ -1862,7 +1862,7 @@ void engine() {
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
 
-      CAA = new AskActor(CBB,Thread::GetCurrentPriority(),
+      CAA = new AskActor(CBB, GET_CURRENT_PRIORITY(),
                          elsePC ? elsePC : NOCODE,
                          NOCODE, Y, G, X, argsToSave);
 
@@ -1874,7 +1874,7 @@ void engine() {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
 
-      CAA = new WaitActor(CBB,Thread::GetCurrentPriority(),
+      CAA = new WaitActor(CBB, GET_CURRENT_PRIORITY(),
                           NOCODE, Y, G, X, argsToSave);
 
       DISPATCH(3);
@@ -1885,7 +1885,7 @@ void engine() {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
 
-      CAA = new WaitActor(CBB,Thread::GetCurrentPriority(),
+      CAA = new WaitActor(CBB, GET_CURRENT_PRIORITY(),
                           NOCODE, Y, G, X, argsToSave);
       CAA->setDisWait();
       DISPATCH(3);
@@ -1920,8 +1920,8 @@ void engine() {
       ProgramCounter newPC = PC+2;
       ProgramCounter contPC = getLabelArg(PC+1);
 
-      int prio = Thread::GetCurrentPriority();
-      int defPrio = Thread::GetDefaultPriority();
+      int prio = GET_CURRENT_PRIORITY();
+      int defPrio = conf.defaultPriority;
       if (prio > defPrio) {
         prio = defPrio;
       }

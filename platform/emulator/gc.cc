@@ -24,6 +24,7 @@
 #include "dllist.hh"
 #include "fdgenvar.hh"
 #include "gc.hh"
+#include "io.hh"
 #include "misc.hh"
 #include "objects.hh"
 #include "stack.hh"
@@ -73,8 +74,8 @@ void performCopying(void);
                           printChunkChain(from = heapGetStart());
 #   define INFROMSPACE(P)                                                     \
       if (opMode == IN_GC && P != NULL && !inChunkChain(from, (void*)P))      \
-         if ((void*)P < (void*)am.globalStore ||                              \
-         ((void*)(am.globalStore + NumberOfYRegisters)) < (void*)P)           \
+         if ((void*)P < (void*)am.globalStore ||                             \
+         ((void*)(am.globalStore + NumberOfYRegisters)) < (void*)P)          \
            error("NOT taken from heap.");
 #   define INTOSPACE(P)                                                       \
       if (opMode == IN_GC && P != NULL && inChunkChain(heapGetStart(), (void*)P)) \
@@ -515,8 +516,8 @@ inline SuspContinuation *SuspContinuation::gcCont()
   return ret;
 }
 
-// AM::globalStore is the only RefsArray which is not allocated on heap but
-// has to be garbage collected. There may be references to AM::globalStore
+// am.globalStore is the only RefsArray which is not allocated on heap but
+// has to be garbage collected. There may be references to am.globalStore
 // from within the tree and that's why there is an if-statement at the
 // beginning of gcRefsArray necessary.
 
@@ -1020,8 +1021,7 @@ void AM::gc(int msgLevel) {
   // print initial message
   if (msgLevel>0) {
     message("\nHeap garbage collection in progress.\n");
-
-  } // if (msgLevel>0)
+  }
 
   char *oldChain = heapGetStart();
   unsigned int usedMem = getUsedMemory();
@@ -1049,22 +1049,33 @@ void AM::gc(int msgLevel) {
   GCPROCMSG("Predicate table");
   CodeArea::gc();
 
-  Board::GC();
+  rootBoard=rootBoard->gcBoard();
+  Board::SetCurrent(currentBoard->gcBoard(),NO);
+
+  GCREF(currentThread);
+  GCREF(rootThread);
+
+  if (currentThread && currentThread->isNormal()) {
+    am.currentTaskStack = currentThread->getTaskStack();
+  } else {
+    am.currentTaskStack = (TaskStack *) NULL;
+  }
+
   Thread::GC();
 
   GCPROCMSG("ioNodes");
   for(i = 0; i < FD_SETSIZE; i++)
-    if(FD_ISSET(i,&globalReadFDs)) {
-      if (i != fileno(QueryFILE)) {
-        ioNodes[i] = ioNodes[i]->gcBoard();
+    if(FD_ISSET(i,&IO::globalReadFDs)) {
+      if (i != fileno(IO::QueryFILE)) {
+        IO::ioNodes[i] = IO::ioNodes[i]->gcBoard();
       }
     }
   performCopying();
 
   // collect only the entry points into heap (don't copy 'globalStore')
   GCPROCMSG("globalStore");
-  for(i = 0; i < getRefsArraySize(globalStore); i++)
-    gcTagged(globalStore[i],globalStore[i]);
+  for(i = 0; i < getRefsArraySize(am.globalStore); i++)
+    gcTagged(am.globalStore[i],am.globalStore[i]);
 
   GCPROCMSG("updating external references to terms into heap");
   ExtRefNode::gc();
@@ -1090,8 +1101,8 @@ void AM::gc(int msgLevel) {
 // print final message
   gcSoFar += (usedMem - getUsedMemory())/1048576;
   utime = usertime() - utime;
-  timeForGC += utime;
-  heapAllocated += (usedMem - getUsedMemory());
+  IO::timeForGC += utime;
+  IO::heapAllocated += (usedMem - getUsedMemory());
 
   if (msgLevel > 0) {
     fprintf(stdout,"Done (Disposed %d bytes in %d msec).\n",
@@ -1194,7 +1205,7 @@ Board* AM::copyTree (Board* bb,Bool *isGround)
   opMode = IN_TC;
   gcing = 0;
   varCount=0;
-  timeForCopy -= usertime();
+  IO::timeForCopy -= usertime();
 
   DebugGCT(updateStackCount = 0);
 
@@ -1219,7 +1230,7 @@ Board* AM::copyTree (Board* bb,Bool *isGround)
   fromCopyBoard = NULL;
   gcing = 1;
 
-  timeForCopy += usertime();
+  IO::timeForCopy += usertime();
   // Note that parent, right&leftSibling must be set in this subtree -
   // for instance, with "setParent"
 
@@ -1458,14 +1469,6 @@ void Thread::GC()
 {
   GCREF(Head);
   GCREF(Tail);
-  GCREF(Current);
-  GCREF(Root);
-
-  if (Current && Current->isNormal()) {
-    am.currentTaskStack = Current->u.taskStack;
-  } else {
-    am.currentTaskStack = (TaskStack *) NULL;
-  }
 }
 
 Thread *Thread::gc()
@@ -1500,12 +1503,6 @@ void Thread::gcRecurse()
   } else {
     error("Thread::gcRecurse");
   }
-}
-
-void Board::GC()
-{
-  Root=Root->gcBoard();
-  Board::SetCurrent(Current->gcBoard(),NO);
 }
 
 
@@ -1744,13 +1741,19 @@ void performCopying(void){
 int bigGCLimit   = InitialBigGCLimit;
 int smallGCLimit = InitialSmallGCLimit;
 
+void checkGC() {
+  if (getUsedMemory() > bigGCLimit && conf.gcFlag) {
+    am.setSFlag(StartGC);
+  }
+}
+
 void AM::doGC()
 {
   //  --> empty trail
-  deinstallPath(Board::GetRoot());
+  deinstallPath(AM::rootBoard);
 
   // do gc
-  gc(gcVerbosity);
+  gc(conf.gcVerbosity);
 
   // calc upper limits for next gc
   smallGCLimit  = getUsedMemory();
@@ -1764,15 +1767,15 @@ void AM::doGC()
 Bool AM::smallGC()
 {
   // if machine is idle
-  if (getUsedMemory() > smallGCLimit && gcFlag) {
-    if (idleMessage)
+  if (getUsedMemory() > smallGCLimit && conf.gcFlag) {
+    if (conf.showIdleMessage)
       {
         statusMessage("doing gc during idle ");
       }
-    int save = gcVerbosity;
-    gcVerbosity = 0;
+    int save = conf.gcVerbosity;
+    conf.gcVerbosity = 0;
     doGC();
-    gcVerbosity = save;
+    conf.gcVerbosity = save;
     return OK;
   }
   return NO;

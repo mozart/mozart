@@ -15,6 +15,8 @@
 
 #include "fdomn.hh"
 
+#include "misc.hh"
+
 #ifdef OUTLINE
 #define inline
 #include "fdomn.icc"
