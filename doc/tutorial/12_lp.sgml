@@ -485,7 +485,7 @@ of <<Append>> will create a choice-point with two alternatives:
     X = 1|Xr Zr = [2 3 a b c] then
     {Append Xr Y Zr}
 >>>
-</item>
+</list>
 
 <<<
 or
