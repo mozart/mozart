@@ -33,7 +33,7 @@
           ( AtomSucceeded,  "succeeded"),
           ( AtomAlt,        "alternatives"),
           ( AtomEntailed,   "entailed"),
-          ( AtomSuspended,  "suspended"),
+          ( AtomStuck,      "stuck"),
           ( AtomBlocked,    "blocked"),
           ( AtomMerged,     "merged"),
           ( AtomFailed,     "failed"),
