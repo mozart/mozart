@@ -174,7 +174,6 @@
     &infix;
     &misc;
   <Back>
-    <Bib.Extern id="mozart-opi" to="mozart.bib" key="Mozart-OPI">
     <Bib.Extern id="kernighan88" to="base.bib" key="kernighan88">
     <Bib.Extern id="ISO_8859_1" to="base.bib" key="ISO_8859_1">
 </Book>
