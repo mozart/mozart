@@ -185,7 +185,7 @@ define
 	       catch X then
 		  case X of noSuchEntry(...) then
 		     {WriteLog "Autologout failed for "#ID}
-		  else {Browse autologout(X)} end 
+		  else {Browse autologoutException(X)} end 
 	       end
 	    end
 	 end
