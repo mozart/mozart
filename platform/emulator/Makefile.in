@@ -33,7 +33,7 @@ SRCDIR= @srcdir@
 include Makefile.vars
 
 DYN_MODULE_NAMES =                                                      \
-        dp PID Fault DPMisc VirtualSite Wif Schedule FDP FSP Parser     \
+        DPB PID Fault DPMisc VirtualSite Wif Schedule FDP FSP Parser    \
         CompilerSupport Browser Debug
 
 STATIC_MODULELIBS=      -L. ${DYN_MODULE_NAMES:%=-l%}
@@ -184,8 +184,8 @@ bootstrap:: all
 
 $(MODINTERS): bidecl.perl
 
-.PHONY: libdp.a dp.so
-libdp.a dp.so:
+.PHONY: libDPB.a DPB.so
+libDPB.a DPB.so:
         cd libdp; $(MAKE) ../$@
 
 .PHONY: libPID.a PID.so
