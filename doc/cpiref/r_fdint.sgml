@@ -165,4 +165,14 @@ was initialised with <<ask()>>). This member function returns
 <<OZ_Propagator>> and inconsistency <em/was/ detected (except it was
 initialised with <<ask()>>).
 
+<Entry class="member function"><<dropParameter>>
+<Index class=proglang><<OZ_CtVar>><And><<dropParameter>></Index>
+<Synopsis><<void dropParameter(void);>>
+
+<Item> This member function removes the parameter associated with
+<<*this>> from the parameter set of the current propagator. This
+function takes care of multiple occurrences of a single variable as
+parameter, i.e., a parameter is removed if there is only one
+occurrence of the corresponding variable in the set of parameter left.
+
 </List>
