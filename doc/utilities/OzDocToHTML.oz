@@ -1811,9 +1811,10 @@ define
                      end
                      OzDocToHTML, Batch(Mr2 1 $)
                      case Caption of unit then
-                        p(strong(VERBATIM(Number#'.')))
+                        p('class':[caption] strong(VERBATIM(Number#'.')))
                      else
-                        p(strong(VERBATIM(Number#':')) PCDATA(' ')
+                        p('class':[caption] strong(VERBATIM(Number#':'))
+                          PCDATA(' ')
                           OzDocToHTML, Batch(Caption.1 1 $))
                      end
                      hr()])
