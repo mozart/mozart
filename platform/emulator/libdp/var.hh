@@ -51,7 +51,7 @@ public:
   virtual int getIdV() = 0;
   virtual OzVariable *gCollectV(void) = 0;
   virtual void gCollectRecurseV(void) = 0;
-  virtual OzVariable *sCloneV(void) { Assert(0); }
+  virtual OzVariable *sCloneV(void) { Assert(0); return NULL; }
   virtual void sCloneRecurseV(void) { Assert(0); }
   virtual void disposeV(void) = 0;
   virtual void printStreamV(ostream &out,int depth = 10) = 0;
