@@ -1945,6 +1945,10 @@ ConstTerm *ConstTerm::gcConstTerm()
 	  sz = sizeof(Builtin);
 	}
 	break;
+      default:
+	error("ConstTerm::gcConstTerm: unexpected case");
+	sz=0;
+	break;
       }
       Chunk *ret = (Chunk*) gcRealloc(this,sz);
       GCNEWADDRMSG(ret);
