@@ -218,6 +218,7 @@ in
 	 MouseInside:   true
 	 DelayStamp:    0
 	 InfoVisible:   false
+	 IsClosed:      false
       
       meth init(manager:Manager)
 	 Tk.toplevel,tkInit(title:              TitleName
@@ -566,7 +567,7 @@ in
       end
 
       meth update(Stamp)
-	 case self,isClosed($) then skip else
+	 case @IsClosed then skip else
 	    case Stamp==@DelayStamp then
 	       TopNote = {self.notebook getTop($)}
 	       Threads = self.threads
@@ -629,7 +630,7 @@ in
       end
       
       meth enter
-	 case self,isClosed($) then skip else
+	 case @IsClosed then skip else
 	    MouseInside <- true
 	    case @RequireMouse then
 	       PanelTop,stop
@@ -640,7 +641,7 @@ in
       end
 
       meth leave
-	 case self,isClosed($) then skip else
+	 case @IsClosed then skip else
 	    MouseInside <- false
 	    case @RequireMouse then
 	       PanelTop,stop
@@ -722,8 +723,9 @@ in
       end
       
       meth close
-	 Tk.toplevel,close
 	 {self.manager PanelTopClosed}
+	 IsClosed <- true
+	 Tk.toplevel, close
       end
       
    end

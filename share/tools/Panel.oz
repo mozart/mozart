@@ -13,9 +13,7 @@ local
    
 in
 
-   create Panel
-      from PanelManager
-   end
+   Panel = {New PanelManager noop}
 
 end
 
