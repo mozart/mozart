@@ -386,7 +386,7 @@ compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
         $(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\' > $@
 
 compiler-Builtins.oz: $(TOPDIR)/Emulator/bidecl.perl
-        $(PERL) $< -oztable -style 2 > $@
+        $(PERL) $< -oztable > $@
 
 compiler-Opcodes.oz: compiler/Opcodes.m4oz $(TOPDIR)/Emulator/instrDefs.m4
         $(M4) -DEMUDIR=$(TOPDIR)/Emulator < $< > $@
