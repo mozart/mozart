@@ -973,7 +973,7 @@ Suspension *Suspension::gcSuspension()
 
   Board *bb=getBoardFast();
   if (!bb->gcIsAlive()) {
-    DebugCheckT(warning("gcSuspension: dead\n"));
+    // DebugCheckT(warning("gcSuspension [0x%x]: dead\n",flag)); // mm2
     return 0;
   }
 
