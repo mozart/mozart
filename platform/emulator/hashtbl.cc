@@ -100,17 +100,10 @@ unsigned HashTable::memRequired(int valSize)
   unsigned mem = tableSize * sizeof(HashNode);
   for(int i = 0; i < tableSize; i++){
     HashNode *lnp = &table[i];
-    if (type == CHARTYPE) {
-      if (! lnp->isEmpty()) {
-        mem += sizeof(HashNode);
+    if (! lnp->isEmpty()) {
+      mem += valSize;
+      if (type == CHARTYPE) {
         mem += strlen(lnp->key.fstr);
-        mem += valSize;
-      } else {
-        if (! lnp->isEmpty()) {
-          mem += sizeof(HashNode);
-          mem += sizeof(lnp->key.fint);
-          mem += valSize;
-        }
       }
     }
   }
