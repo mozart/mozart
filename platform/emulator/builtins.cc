@@ -4093,8 +4093,10 @@ OZ_BI_define(BIprintInfo,1,0)
 OZ_BI_define(BIshowInfo,1,0)
 {
   oz_declareIN(0,t);
-  char * s = OZ_virtualStringToC(t);
-  fprintf(stdout, "%s\n", s);
+  int n;
+  char * s = OZ_virtualStringToC(t,&n);
+  for (;n > 0;n--,s++) putc(*s,stdout);
+  putc('\n',stdout);
   fflush(stdout);
   return PROCEED;
 } OZ_BI_end
@@ -4103,8 +4105,9 @@ OZ_BI_define(BIprintError,1,0)
 {
   oz_declareIN(0,t);
   prefixError(); // print popup code for opi
-  char * s = OZ_virtualStringToC(t);
-  fprintf(stderr, "%s", s);
+  int n;
+  char * s = OZ_virtualStringToC(t,&n);
+  for (;n > 0;n--,s++) putc(*s,stderr);
   fflush(stderr);
   return PROCEED;
 } OZ_BI_end
@@ -4113,8 +4116,10 @@ OZ_BI_define(BIshowError,1,0)
 {
   oz_declareIN(0,t);
   prefixError(); // print popup code for opi
-  char * s = OZ_virtualStringToC(t);
-  fprintf(stderr, "%s\n", s);
+  int n;
+  char * s = OZ_virtualStringToC(t,&n);
+  for (;n > 0;n--,s++) putc(*s,stderr);
+  putc('\n',stderr);
   fflush(stderr);
   return PROCEED;
 } OZ_BI_end

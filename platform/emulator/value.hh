@@ -320,6 +320,12 @@ Bool literalEq(TaggedRef a, TaggedRef b)
   return (a==b);
 }
 
+inline
+Bool oz_isBool(TaggedRef term) {
+  term = oz_deref(term);
+  return literalEq(term,NameTrue) || literalEq(term,NameFalse);
+}
+
 /*
  * atomcmp(a,b) is used to construct the arity lists of records.
  * It returns: 0   if   a == b
