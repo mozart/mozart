@@ -65,7 +65,7 @@ BIMODSPECS = \
         Dictionary Exception Float ForeignPointer Int List Literal \
         Lock Name Number Object Port Procedure Record Space \
         String Thread Time Tuple Unit Value VirtualString \
-        BitString ByteString InterFault
+        BitString ByteString InterFault Combinators
 
 MODSPECS= \
         FDP FSP Schedule Tk Parser OS Property Pickle \
