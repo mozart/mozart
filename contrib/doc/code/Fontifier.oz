@@ -158,7 +158,7 @@ define
       {IO.run
        process(
           {Access EMACS}
-          '--batch' | '--unibyte'
+          '--batch'
           |{FoldR {Access EPATH}
             fun {$ DIR L}
                %% skip empty directories
