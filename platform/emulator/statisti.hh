@@ -147,6 +147,7 @@ public:
   long sizeClosures, numClosures, sizeGs;
   long sizeObjects,sizeRecords,sizeLists;
   long sizeStackVars;
+  long sizeHeapChunks;
   long sizeEnvs, numEnvAllocs, maxEnvSize;
 
   long fastcalls,bicalls,nonoptcalls,inlinecalls,inlinedots,
