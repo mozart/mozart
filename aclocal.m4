@@ -712,7 +712,7 @@ AC_ARG_WITH(gmp,
 
 if test "$with_gmp" != no
 then
-    AC_MSG_RESULT(yes)
+    AC_MSG_RESULT($with_gmp)
 
     if test "${with_gmp}" != yes
     then
@@ -786,6 +786,60 @@ You may find a mirror archive closer to you by consulting:
         http://www.gnu.org/order/ftp.html
 ])
 fi])
+
+dnl ------------------------------------------------------------------
+dnl OZ_LIB_ZLIB
+dnl
+dnl locates libz and zlib.h
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_LIB_ZLIB,[
+  AC_MSG_CHECKING(for --with-zlib)
+  AC_ARG_WITH(zlib,
+        [--with-zlib=<dir>  search zlib library and header in <dir> (default: yes)],
+        with_zlib=$withval,
+        with_zlib=yes)
+if test "$with_zlib" != no
+then
+    AC_MSG_RESULT($with_zlib)
+
+    if test "${with_zlib}" != yes
+    then
+        oz_zlib_lib_dir=$with_zlib
+        oz_zlib_inc_dir=$with_zlib
+    fi
+
+    oz_inc_path="$oz_zlib_inc_dir $oz_inc_path"
+    oz_lib_path="$oz_zlib_lib_dir $oz_lib_path"
+
+else
+    AC_MSG_RESULT(no)
+fi
+
+OZ_CHECK_HEADER_PATH(zlib.h,oz_zlib_inc_found=yes,oz_zlib_inc_found=no)
+
+if test "$oz_zlib_inc_found" = yes; then
+  OZ_CHECK_LIB_PATH(z, zlibVersion, oz_zlib_lib_found=yes,
+    OZ_CHECK_LIB_PATH(gz, zlibVersion, oz_zlib_lib_found=yes,
+        oz_zlib_lib_found=no))
+fi
+
+if test "$oz_zlib_inc_found" = no; then
+  AC_MSG_WARN([required ZLIB include file zlib.h not found])
+elif test "$oz_zlib_lib_found" = no; then
+  AC_MSG_WARN([required ZLIB library libz not found])
+fi
+
+if test "$oz_zlib_inc_found" = no || \
+   test "$oz_zlib_lib_found" = no; then
+  AC_MSG_ERROR([
+The ZLIB general purpose compression library is required to
+build the system.  It can be retrieved from:
+
+        http://www.cdrom.com/pub/infozip/zlib/
+])
+fi
+])
 
 dnl ------------------------------------------------------------------
 dnl OZ_NEEDS_FUNC(FUNCTION)
