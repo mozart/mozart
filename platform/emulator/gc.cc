@@ -674,12 +674,16 @@ Thread *Thread::gcThread() {
   if (!this)
     return (Thread *) NULL;
 
-  if (gcIsMarked())
+  if (isGcMarked())
     return (Thread *) gcGetFwd();
 
   if (isDead()) 
     return (Thread *) NULL;
 
+  
+  if (isSuspended() && !getBoardInternal()->gcIsAlive())
+    return (Thread *) NULL;
+  
   //  Some invariants:
   // nothing can be copied (IN_TC) until stability;
 
@@ -692,9 +696,6 @@ Thread *Thread::gcThread() {
   // Note that runnable threads can be also counted 
   // somewhere, and, therefore, 
   // might not just dissappear!
-  if (isSuspended() && !getBoardInternal()->gcIsAlive())
-    return (Thread *) NULL;
-  
   Thread * newThread = (Thread *) gcReallocStatic(this, sizeof(Thread));
 
   gcStack.push(newThread, PTR_THREAD);
@@ -707,56 +708,15 @@ Thread *Thread::gcThread() {
 //-----------------------------------------------------------------------------
 // gc routines of `Propagator'
 
-inline
-Bool Propagator::gcIsMarked(void)
-{
-  return ISMARKEDFLAG(P_gcmark);
-}
-
-Bool Propagator::gcIsMarkedOutlined(void)
-{
-  return gcIsMarked();
-}
-
 inline 
-void Propagator::gcMark(Propagator * fwd)
-{
-  Assert(!gcIsMarked());
-
-  if (!isInGc)
-    cpTrail.save((int32 *) &_flags);
-
-  _flags = (int32) fwd;
-  MARKFLAG(P_gcmark);
-}
-
-inline
-void ** Propagator::gcGetMarkField(void)
-{
-  return (void **) (void *) &_flags;
-}
-
-inline 
-Propagator * Propagator::gcGetFwd(void)
-{
-  return UNMARKFLAGTO(Propagator *, P_gcmark);
-}
-
-Propagator * Propagator::gcGetFwdOutlined(void)
-{
-  return gcGetFwd();
-}
-
-inline 
-Propagator * Propagator::gcPropagator(void)
-{
-  if (gcIsMarked())
+Propagator * Propagator::gcPropagator(void) {
+  if (isGcMarked())
     return (Propagator *) gcGetFwd();
 
   if (isDead())
     return NULL;
 
-  Board * bb = _b;
+  Board * bb = getBoardInternal();
 
   Assert(bb);
   
@@ -770,31 +730,30 @@ Propagator * Propagator::gcPropagator(void)
     
     gcStack.push(newPropagator, PTR_PROPAGATOR);
     
-    newPropagator->_b     = bb;
-    newPropagator->_p     = this->_p;
-    newPropagator->_flags = this->_flags;
+    newPropagator->setBoardInternal(bb);
+    newPropagator->_p    = _p;
+    newPropagator->flags = flags;
 
-    this->gcMark(newPropagator);
+    if (!isInGc)
+      cpTrail.save((int32 *) &board);
+
+    gcMark(newPropagator);
     
     return newPropagator;
   } 
   return NULL;
 }
 
-Propagator * Propagator::gcPropagatorOutlined(void)
-{
+Propagator * Propagator::gcPropagatorOutlined(void) {
   return gcPropagator();
 }
 
 inline 
-void Propagator::gcRecurse(void)
-{
+void Propagator::gcRecurse(void) {
 
-  Assert(_b);
+  setBoardInternal(getBoardInternal()->gcBoard());
 
-  _b = _b->gcBoard();
-
-  Assert(_b);
+  Assert(getBoardInternal());
 
   _p = _p->gc();
 
@@ -835,31 +794,12 @@ SuspList * SuspList::gc(int thread) {
   return (ret);
 }
 
-inline  
-Bool OzVariable::gcIsMarked(void) {
-  return IsMarkedPointer(suspList,1);
-}
-
-Bool OzVariable::gcIsMarkedOutlined(void) {
-  return gcIsMarked();
-}
-
 inline
 void OzVariable::gcMark(Bool isInGc, TaggedRef * fwd) {
   Assert(!gcIsMarked());
   if (!isInGc)
     cpTrail.save((int32 *) &suspList);
   suspList = (SuspList *) MarkPointer(fwd,1);
-}
-
-inline
-TaggedRef * OzVariable::gcGetFwd(void) {
-  Assert(gcIsMarked());
-  return (TaggedRef *) UnMarkPointer(suspList,1);
-}
-
-TaggedRef * OzVariable::gcGetFwdOutlined(void) {
-  return gcGetFwd();
 }
 
 inline

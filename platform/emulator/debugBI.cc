@@ -193,7 +193,7 @@ OZ_BI_define(BIthreadGetRaiseOnBlock,1,1)
 {
   oz_declareThread(0,thread);
 
-  OZ_RETURN(oz_bool(thread->getNoBlock()));
+  OZ_RETURN(oz_bool(thread->isNoBlock()));
 } OZ_BI_end
 
 
