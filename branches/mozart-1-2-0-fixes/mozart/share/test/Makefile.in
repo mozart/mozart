@@ -129,17 +129,6 @@ oztest: dirs $(TESTSRCS:%=./lib/%.oz) $(TESTCOMPONENTS) $(OTHERS) make-test
 	$(OZENGINE) ./make-test --verbose $(TESTCOMPONENTS)
 	chmod +x oztest
 
-make-test: lib/make-test.oz
-	$(OZC) $(OZFLAGS) -x $< -o $@
-
-BENCHSRCS=make-bench engine compute-tests help-bench
-ozbench: dirs $(BENCHSRCS:%=./lib/%.oz) $(BENCHCOMPONENTS) $(OTHERS)
-	$(OZC) $(OZFLAGS) -x $(SRCDIR)/lib/make-bench.oz -o make-bench
-	$(OZENGINE) ./make-bench --verbose $(BENCHCOMPONENTS)
-	chmod +x ozbench
-	-rm -f ./make-bench
-
-
 clean:
 	-rm -f *~ ./*/*~ ./*/*/*~
 	-rm -f $(TESTCOMPONENTS) $(BENCHCOMPONENTS) $(OTHERS)
@@ -165,6 +154,16 @@ distclean: veryclean
 	$(OZC) --expression -S $< -o $@
 
 include $(BUILDTOP)/share/Makefile.boot
+
+make-test: lib/make-test.oz
+	$(OZC) $(OZFLAGS) -x $(OZEXECFILE) $< -o $@
+
+BENCHSRCS=make-bench engine compute-tests help-bench
+ozbench: dirs $(BENCHSRCS:%=./lib/%.oz) $(BENCHCOMPONENTS) $(OTHERS)
+	$(OZC) $(OZFLAGS) -x $(OZEXECFILE) $(SRCDIR)/lib/make-bench.oz -o make-bench
+	$(OZENGINE) ./make-bench --verbose $(BENCHCOMPONENTS)
+	chmod +x ozbench
+	-rm -f ./make-bench
 
 Makefile: Makefile.in ../config.status
 	cd .. && ./config.status

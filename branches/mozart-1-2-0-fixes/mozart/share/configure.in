@@ -52,6 +52,14 @@ dnl *****************************************************************
 # PLATFORM is defined by OZ_INIT
 : ${platform=$PLATFORM}
 
+case $platform in
+win32*)
+    oztmp=`$(SRCTOP)/share/lib/cypath.sh "$(SRCTOP)/platform/mswindows/ozwrapper.bin"`
+    OZEXECFILE="--execfile=\"$oztmp\""
+    ;;
+esac
+AC_SUBST(OZEXECFILE)
+
 dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************

@@ -70,7 +70,7 @@ Makefile: Makefile.in config.status
 	./config.status
 
 ozdoc: $(FUNCTORS)
-	$(OZL) -z 9 -x Main.ozf -o $@
+	$(OZL) -z 9 -x $(OZEXECFILE) Main.ozf -o $@
 
 %.ozf: %.oz
 	$(OZC) $(OZCFLAGS) -c $< -o $@
