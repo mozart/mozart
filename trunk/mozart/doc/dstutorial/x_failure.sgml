@@ -510,7 +510,7 @@ to the client that the server has
 finished the object call.
 The variable passes an exception
 back to the client if there was one.
-<P>If there is a permanent failure of
+If there is a permanent failure of
 the send, then raise <<remoteObjectError>>.
 If there is a temporary failure of the
 send, then wait 100 ms and try again.

@@ -13,7 +13,7 @@ procedure code.
 In the case of objects, the developer can
 specify the desired distribution behavior, e.g.,
 mobile (cached) objects, stationary objects,
-stationary single-threaded objects.
+and stationary single-threaded objects.
 
 <SUBSECTION><TITLE>Objects</TITLE>
 
