@@ -1919,6 +1919,18 @@ OZ_Return OZ_raise(OZ_Term exc) {
   return RAISE;
 }
 
+// OZ_raiseDebug(E) raises exception E, but adds debuging information
+// if E is a record with feature `debug' and either (1) has label `error'
+// or (2) ozconf.errorDebug is true
+
+OZ_Return OZ_raiseDebug(OZ_Term exc) {
+  int debug =
+    OZ_isRecord(exc) && OZ_subtree(exc,AtomDebug) &&
+    (literalEq(OZ_label(exc),E_ERROR) || ozconf.errorDebug);
+  am.setException(exc,NameUnit,debug);
+  return RAISE;
+}
+
 OZ_Return OZ_raiseC(char *label,int arity,...)
 {
   if (arity == 0) {
@@ -1965,6 +1977,29 @@ OZ_Return OZ_raiseErrorC(char *label,int arity,...)
 
   va_end(ap);
   return OZ_raiseError(tt);
+}
+ 
+OZ_Term OZ_makeException(OZ_Term cat,OZ_Term key,char*label,int arity,...)
+{
+  OZ_Term exc=OZ_tuple(key,arity+1);
+  OZ_putArg(exc,0,OZ_atom(label));
+
+  va_list ap;
+  va_start(ap,arity);
+
+  for (int i = 0; i < arity; i++) {
+    OZ_putArg(exc,i+1,va_arg(ap,OZ_Term));
+  }
+
+  va_end(ap);
+
+
+  OZ_Term ret = OZ_record(cat,
+			  cons(OZ_int(1),
+			       cons(OZ_atom("debug"),OZ_nil())));
+  OZ_putSubtree(ret,OZ_int(1),exc);
+  OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
+  return ret;
 }
 
 /* -----------------------------------------------------------------
