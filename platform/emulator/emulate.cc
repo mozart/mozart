@@ -3527,8 +3527,10 @@ ThreadReturn debugExit(ProgramCounter PC, RefsArray * Y, Abstraction * CAP) {
 	if (dbg->arguments[iarity] != NameVoidRegister)
 	  for (int i = oarity; i--; ) {
 	    TaggedRef x = loc->getOutValue(bi,i);
-	    if (OZ_unify(dbg->arguments[iarity + i], x) == FAILED)
+	    if (OZ_unify(dbg->arguments[iarity + i], x) == FAILED) {
+	      //--** should be a HF_TELL(dbg->arguments[iarity + i], x);
 	      return T_FAILURE;
+	    }
 	  }
 	else
 	  for (int i = oarity; i--; )
