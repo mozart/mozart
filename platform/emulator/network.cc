@@ -3422,7 +3422,7 @@ void initNetwork(){
   time_t timestamp=time(0);
   mySiteInfo.tcpFD=tcpFD;
   mySiteInfo.maxNrAck = 100;
-  mySiteInfo.maxSizeAck = 1000;
+  mySiteInfo.maxSizeAck = 10000;
   Assert(mySite==NULL);
   mySite=initMySite(ip,p,timestamp);
   Assert(mySite!=NULL);  
