@@ -45,7 +45,7 @@ This is done lazily, i.e., the class is only
 copied when the object is called for the first time.
 Once the class is on the site, no further copies are done.
 
-<ITEM> <EM>Stationary object (full server)</EM>:
+<ITEM> <EM>Stationary object (server)</EM>:
 A stationary object remains on the site at which it was created.
 Each method invocation uses one message to start the method
 and one message to synchronize with the caller
@@ -57,10 +57,9 @@ This is reasonable
 since threads in Mozart are extremely lightweight
 (millions can be created on one machine).
 
-<ITEM> <EM>Sequential asynchronous stationary object (basic server)</EM>:
-A basic server is a stripped-down stationary object
-that provides
-Each method invocation uses one message only and does not
+<ITEM> <EM>Sequential asynchronous stationary object</EM>:
+In this object,
+each method invocation uses one message only and does not
 wait until the method is finished.
 All method invocations execute in the same thread,
 so the object is executed in a completely sequential way.
@@ -70,9 +69,15 @@ Non-caught exceptions in a method are ignored by the caller.
 when the object is created from its class.
 A cached object is created with <<New>>,
 a stationary object is created with <<NewStat>>,
-and a server is created with <<NewServer>>.
+and an sequential asynchronous stationary object
+is created with <<NewSASO>>.
+A stationary object is a good abstraction to
+build servers--this is explained later in
+the tutorial.
 It is easy to program other distribution
 behaviors in Oz.
+We give examples of some of them
+later in the tutorial.
 
 <SUBSECTION><TITLE>Other stateful entities</TITLE>
 
@@ -86,6 +91,8 @@ Threads communicate through shared data and
 block when the data is unavailable, i.e.,
 when trying to access unbound logic variables.
 This makes Oz a dataflow language.
+Threads are <EM>sited</EM> entities,
+as is explained later in the tutorial.
 
 <ITEM> <EM>Port</EM>:
 A port is an asynchronous many-to-one channel
@@ -115,6 +122,8 @@ The locks can be created dynamically
 and nested recursively.
 The locks have the same distribution behavior
 as cached objects and cells.
+This implements a standard distributed mutual
+exclusion algorithm.
 </LIST>
 
 <SUBSECTION><TITLE>Single-assignment entities</TITLE>
@@ -468,7 +477,74 @@ you have to specify the base URL for the resources.
 
 <SECTION><TITLE>Servers</TITLE>
 
-<P> A server is a computation that provides a service to clients.
+<P> A server is a long-lived computation that provides a service to clients.
+We will show progressively how to build different kinds of servers.
+
+<SUBSECTION><TITLE>The <<"Hello world">> server</TITLE>
+
+<P> Let's build a basic server that returns the string <<"Hello world">>
+to clients.
+The first step is to create the server.
+Let's do this and make the server available through a URL:
+<<<
+% Create server
+declare Str Prt Srv in
+{NewPort Str Prt}
+thread
+   {ForAll Str proc {$ S} S="Hello world" end}
+end
+proc {Srv X}
+   {Send Prt X}
+end
+
+% Make server available through given URL:
+{Pickle.save
+   {Connection.offer Srv}
+   "http://www.sics.se/~pvr/hw"}
+>>>
+
+<P> Now any client that knows the URL can access the server:
+<<<
+declare Srv in
+Srv={Connection.take {Pickle.load "http://www.sics.se/~pvr/hw"}}
+
+local X in
+   {Srv X}
+   {Browse X}
+end
+>>>
+<P> This will show <<"Hello world">> in the browser window.
+
+<SUBSECTION><TITLE>The <<"Hello world">> server with stationary objects</TITLE>
+
+<P> The previous section showed how to build a basic server
+using a port to collect messages.
+There is in fact a much cleaner way, namely by using
+stationary objects.
+Here's how to create the server:
+<<<
+declare
+class HelloWorld
+   meth hw(X) X="Hello world" end
+end
+
+Srv={NewStat HelloWorld hw(_)} % Requires an initial method
+>>>
+The client calls the server
+by doing <<{Srv hw(X)}>>.
+The class <<HelloWorld>> can be replaced by any class.
+The only difference between this and creating
+a centralized object is that <<New>> is replaced by <<NewStat>>.
+This specifies the distributed behavior of the object.
+
+<SUBSECTION><TITLE>A compute server</TITLE>
+
+<P> One of the promises of distributed computing is making
+computations go faster by exploiting the parallelism
+inherent in networks of computers.
+A first step is to create a compute server, that is,
+a server that accepts any computation and uses
+its computational resources to do the computation.
 
 
 </CHAPTER>
