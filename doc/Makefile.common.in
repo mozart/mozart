@@ -144,9 +144,7 @@ $(WHAT).dvi: $(WHAT).tex $(WHAT).pics
            egrep -s '\\citation{' $*.aux ; \
         then make $*.bbl; fi
         if test -r $*.idx; then $(MAKE) $*.ind; fi
-        if egrep -s $(WARN_LTX) $*.log || \
-           egrep -s "AGAIN" $*.ind-log; \
-        then latex $< || { rm $@; exit -1; } fi
+        latex $< || { rm $@; exit -1; }
         if egrep -s $(WARN_REF) $*.log; then echo > $*.stamp; fi
         if egrep -s '\\bibdata{' $*.aux && \
            egrep -s '\\citation{' $*.aux ; \
