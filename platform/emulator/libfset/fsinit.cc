@@ -36,7 +36,7 @@ void fsp_init(void)
 {
 #ifdef OZ_DEBUG
   oz_fsetdebugprint("*** DEBUG-FSETLIB ***");
-#elif OZ_PROFILE
+#elif defined(OZ_PROFILE)
   oz_fsetdebugprint("*** PROFILE-FSETLIB ***");
 #endif
 
