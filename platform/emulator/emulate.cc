@@ -517,11 +517,7 @@ Bool oz_emulateHookOutline()
       return TRUE;
     }
   }
-  if (am.isSetSFlag((StatusBit)(StartGC|UserAlarm|IOReady|TasksReady))) {
-    return TRUE;
-  }
-
-  return FALSE;
+  return am.isSetSFlag();
 }
 
 /* macros are faster ! */
