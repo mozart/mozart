@@ -32,28 +32,28 @@ import
    OzDocToHTML(translate)
    OS(getEnv putEnv)
    URL
+prepare
+   Spec = record('in'(single char: &i type: string optional: false)
+                 'type'(single char: &t type: string optional: false)
+                 'html'(alias: 'type'#"html-stylesheets")
+                 'out'(single char: &o type: string optional: false)
+                 'autoindex'(single type: bool default: false)
+                 %% HTML options
+                 'stylesheet'(single type: string default: unit)
+                 'latextogif'(rightmost type: bool default: true)
+                 'split'(rightmost type: bool default: true)
+                 'abstract'(rightmost type: bool default: false)
+                 %% Path names
+                 'ozdoc-home'(single type: string default: unit)
+                 'author-path'(single type: string default: unit)
+                 'bib-path'(single type: string default: unit)
+                 'bst-path'(single type: string default: unit)
+                 'elisp-path'(single type: string default: unit)
+                 'sbin-path'(single type: string default: unit)
+                 'catalog'(single type: string default: unit))
 define
    try
-      Args = {Application.getCmdArgs
-              record('in'(single char: &i type: string optional: false)
-                     'type'(single char: &t type: string optional: false)
-                     'html'(alias: 'type'#"html-stylesheets")
-                     'out'(single char: &o type: string optional: false)
-                     'autoindex'(single type: bool default: false)
-                     %% HTML options
-                     'stylesheet'(single type: string default: unit)
-                     'latextogif'(rightmost type: bool default: true)
-                     'split'(rightmost type: bool default: true)
-                     'abstract'(rightmost type: bool default: false)
-                     %% Path names
-                     'ozdoc-home'(single type: string default: unit)
-                     'author-path'(single type: string default: unit)
-                     'bib-path'(single type: string default: unit)
-                     'bst-path'(single type: string default: unit)
-                     'elisp-path'(single type: string default: unit)
-                     'sbin-path'(single type: string default: unit)
-                     'catalog'(single type: string default: unit)
-                    )}
+      Args = {Application.getCmdArgs Spec}
    in
       %% Process path name options and store results in ozdoc.* properties
       local

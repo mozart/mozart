@@ -26,30 +26,7 @@ import
    Open(text file)
 export
    'class': BibliographyDBClass
-define
-   BIBTEX    = 'bibtex'
-   BIBINPUTS = {ByNeed fun {$} {Property.get 'ozdoc.bib.path'} end}
-   BSTINPUTS = {ByNeed fun {$} {Property.get 'ozdoc.bst.path'} end}
-
-   class TextFile from Open.text Open.file
-      prop final
-   end
-
-   fun {DotExpand S}
-      case S of &.|&/|L then
-         {VirtualString.toString {Property.get 'ozdoc.src.dir'}#'/'#L}
-      elseof &.|&.|&/|L then
-         {VirtualString.toString {Property.get 'ozdoc.src.dir'}#'/'#S}
-      else S end
-   end
-
-   fun {RemoveExtension S}
-      case S of ".bib" then ""
-      elsecase S of C|Cr then C|{RemoveExtension Cr}
-      [] nil then ""
-      end
-   end
-
+prepare
    CommandsMap = f('AA': &Å 'aa': &å
                    'AE': &Æ 'ae': &æ
                    'O': &Ø 'o': &ø
@@ -90,6 +67,29 @@ define
                     fun {$ C1 D1}
                        {Dictionary.toRecord {String.toAtom [C1]} D1}
                     end}
+   end
+define
+   BIBTEX    = 'bibtex'
+   BIBINPUTS = {ByNeed fun {$} {Property.get 'ozdoc.bib.path'} end}
+   BSTINPUTS = {ByNeed fun {$} {Property.get 'ozdoc.bst.path'} end}
+
+   class TextFile from Open.text Open.file
+      prop final
+   end
+
+   fun {DotExpand S}
+      case S of &.|&/|L then
+         {VirtualString.toString {Property.get 'ozdoc.src.dir'}#'/'#L}
+      elseof &.|&.|&/|L then
+         {VirtualString.toString {Property.get 'ozdoc.src.dir'}#'/'#S}
+      else S end
+   end
+
+   fun {RemoveExtension S}
+      case S of ".bib" then ""
+      elsecase S of C|Cr then C|{RemoveExtension Cr}
+      [] nil then ""
+      end
    end
 
    fun {CopyBraceLevel S I}
