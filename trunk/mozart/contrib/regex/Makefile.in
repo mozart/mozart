@@ -25,11 +25,13 @@ INSTALL_DLL	= $(INSTALL) -m 555
 
 TARGETS		= regex.ozf regex.so-$(PLATFORM)
 LIB_TARGETS	= $(LIB_DIR)/regex.ozf $(LIB_DIR)/regex.so-$(PLATFORM)
+NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib
+NEW_TARGETS	= $(addprefix $(NEWCACHEDIR)/,$(TARGETS))
 
 .PHONY: all install clean veryclean distclean bootstrap depend
 
 all:		$(TARGETS)
-install:	$(LIB_DIR) $(LIB_TARGETS)
+install:	$(NEWCACHEDIR) $(NEW_TARGETS)
 
 $(LIB_DIR):
 	$(INSTALL_DIR) $@
@@ -38,6 +40,12 @@ $(LIB_DIR)/regex.ozf: regex.ozf
 	$(INSTALL_LIB) $< $@
 
 $(LIB_DIR)/regex.so-$(PLATFORM): regex.so-$(PLATFORM)
+	$(INSTALL_DLL) $< $@
+
+$(NEWCACHEDIR)/regex.ozf: regex.ozf
+	$(INSTALL_LIB) $< $@
+
+$(NEWCACHEDIR)/regex.so-$(PLATFORM): regex.so-$(PLATFORM)
 	$(INSTALL_DLL) $< $@
 
 regex.ozf: regex.oz

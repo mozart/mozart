@@ -25,6 +25,7 @@ VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 SRCTOP		= @SRCTOP@
 HOMEURL         = @HOMEURL@
+PLATFORM	= @PLATFORM@
 
 PREFIX		= @prefix@
 OZDEMO		= $(PREFIX)/doc/demo/applets

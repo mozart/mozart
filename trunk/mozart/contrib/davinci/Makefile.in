@@ -5,7 +5,7 @@ SRCDIR		= @srcdir@
 VPATH		= @srcdir@
 PREFIX		= @prefix@
 PLATFORM	= @PLATFORM@
-LIB_DIR		= $(PREFIX)/contrib
+LIB_DIR		= $(PREFIX)/cache/x-oz/contrib
 HOMEURL         = @HOMEURL@
 
 OZC		= @OZC@
@@ -51,7 +51,10 @@ LIB_TARGETS	= $(TARGETS:%=$(LIB_DIR)/%)
 .PHONY: depend clean distclean bootstrap
 
 all:     $(TARGETS)
-install: $(LIB_TARGETS)
+install: $(LIB_DIR) $(LIB_TARGETS)
+
+$(LIB_DIR):
+	$(INSTALL_DIR) $@
 
 DaVinci.ozf: $(OZFNCTS)
 	$(OZL) -z 9 DaVinciObject.ozf -o $@

@@ -33,19 +33,26 @@ INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
 EMACS		= @THEEMACS@
 HOMEURL         = @HOMEURL@
+PLATFORM	= @PLATFORM@
 
 TARGETS		= Fontifier.ozf
 ETARGETS	= Fontifier.elc
 LIB_TARGETS	= $(addprefix $(LIB_DIR)/,$(TARGETS))
 ELIB_TARGETS	= $(addprefix $(ELIB_DIR)/,$(ETARGETS))
+NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib/doc/code
+NEW_TARGETS	= $(addprefix $(NEWCACHEDIR)/,$(TARGETS))
 
 all:		$(TARGETS) $(ETARGETS)
-install:	$(LIB_DIR) $(LIB_TARGETS) $(ELIB_DIR) $(ELIB_TARGETS)
+install:	$(ELIB_DIR) $(ELIB_TARGETS) \
+	$(NEWCACHEDIR) $(NEW_TARGETS)
 
-$(LIB_DIR) $(ELIB_DIR):
+$(LIB_DIR) $(ELIB_DIR) $(NEWCACHEDIR):
 	$(INSTALL_DIR) $@
 
 $(LIB_TARGETS): $(LIB_DIR)/% : %
+	$(INSTALL_LIB) $< $@
+
+$(NEW_TARGETS): $(NEWCACHEDIR)/% : %
 	$(INSTALL_LIB) $< $@
 
 $(ELIB_TARGETS): $(ELIB_DIR)/% : %
@@ -61,10 +68,10 @@ $(ELIB_TARGETS): $(ELIB_DIR)/% : %
 	@cp -f $< $@
 
 clean veryclean:
-	-rm *~ *.ozf *.elc
+	-rm -f *~ *.ozf *.elc
 
 distclean: veryclean
-	-rm Makefile config.*
+	-rm -f Makefile config.*
 
 include $(SRCDIR)/../../../share/Makefile.boot
 

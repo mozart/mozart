@@ -5,7 +5,7 @@ SRCDIR		= @srcdir@
 VPATH		= @srcdir@
 PREFIX		= @prefix@
 PLATFORM	= @PLATFORM@
-LIB_DIR		= $(PREFIX)/contrib
+LIB_DIR		= $(PREFIX)/cache/x-oz/contrib
 HOMEURL         = @HOMEURL@
 
 OZC		= @OZC@
