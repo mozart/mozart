@@ -3613,7 +3613,7 @@ LBLfailure:
          // ignore system(kernel(terminate)) exception:
          if (OZ_isRecord(exc) &&
              OZ_eq(OZ_label(exc),OZ_atom("system")) &&
-             tagged2SRecord(exc)->getFeature(OZ_int(1)) != makeTaggedNULL() &&
+             OZ_subtree(exc,OZ_int(1)) != makeTaggedNULL() &&
              OZ_eq(OZ_label(OZ_subtree(exc,OZ_int(1))),OZ_atom("kernel")) &&
              OZ_eq(OZ_subtree(OZ_subtree(exc,OZ_int(1)),OZ_int(1)),
                    OZ_atom("terminate")))
