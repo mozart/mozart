@@ -252,10 +252,11 @@ Bool AM::hookCheckNeeded()
 }
 
 /* macros are faster ! */
-#define emulateHook(e,def,arity,arguments) \
+#define emulateHookCall(e,def,arity,arguments) \
  (e->hookCheckNeeded() && e->emulateHookOutline(def, arity, arguments))
 
-#define emulateHook0(e) emulateHook(e,NULL,0,NULL)
+#define emulateHookPopTask(e) \
+ (e->hookCheckNeeded() && e->emulateHookOutline(0,0,0))
 
 
 #define CallPushCont(ContAdr) e->pushTask(ContAdr,Y,G)
@@ -264,10 +265,9 @@ Bool AM::hookCheckNeeded()
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,gRegs,Arity,CheckMode)                      \
+#define CallDoChecks(Pred,gRegs,Arity)                        \
      G = gRegs;                                                               \
-     if (CheckMode) e->currentThread->checkCompMode(Pred->getCompMode()); \
-     if (emulateHook(e,Pred,Arity,X)) {                                       \
+     if (emulateHookCall(e,Pred,Arity,X)) {                                   \
         e->pushTaskOutline(Pred->getPC(),NULL,G,X,Arity);                     \
         goto LBLschedule;                                                     \
      }
@@ -427,7 +427,7 @@ void ThreadsPool::disposeThread(Thread *th)
 {
   Verbose((VERB_THREAD,"Thread::dispose = 0x%x\n",this));
   if (th == rootThread) {
-    rootThread->init(th->getPriority(),am.rootBoard,PARMODE);
+    rootThread->init(th->getPriority(),am.rootBoard);
     am.checkToplevel();
   } else {
     /* dispose thread: */
@@ -436,27 +436,10 @@ void ThreadsPool::disposeThread(Thread *th)
   }
 }
 
-void AM::handleToplevelBlocking()
-{
-  prefixError();
-  message("******************************************\n");
-  message("The toplevel thread is blocked.\n");
-  message("\n");
-  message("(Hint: don't forget to use task ... end)\n");
-  message("\n");
-  currentThread->printTaskStack(NOCODE);
-  message("******************************************\n");
-  rootThread=newThread(currentThread->getPriority(),rootBoard,PARMODE);
-  checkToplevel();
-  currentThread=0;
-}
-
-#define CHECKSEQ                                \
-if (e->currentThread->compMode == ALLSEQMODE) { \
+#define CHECK_CURRENT_THREAD                    \
+if (e->currentThread->isSuspended()) {          \
   e->currentThread->board=CBB;                  \
-  if (e->currentThread==e->rootThread) {        \
-    e->handleToplevelBlocking();                \
-  }                                             \
+  Assert(e->currentThread!=e->rootThread);      \
   goto LBLkillThread;                           \
 }                                               \
 goto LBLpopTask;
@@ -496,78 +479,42 @@ void AM::suspendOnVarList(Suspension *susp)
   suspendVarList=makeTaggedNULL();
 }
 
-Suspension *AM::mkSuspension(int prio, ProgramCounter PC,
-                             RefsArray Y, RefsArray G,
-                             RefsArray X, int argsToSave)
+
+Thread *AM::getJob()
 {
-  switch (currentThread->getCompMode()) {
-  case ALLSEQMODE:
-    pushTask(PC,Y,G,X,argsToSave);
-    return new Suspension(currentThread);
-  case SEQMODE:
-    {
-      pushTask(PC,Y,G,X,argsToSave);
-      Thread *th=newThread(currentThread->getPriority(),currentBoard,SEQMODE);
-      currentBoard->incSuspCount();
-      th->getSeqFrom(currentThread);
-      return new Suspension(th);
+  int size=currentThread->TaskStack::getSeqSize();
+  if (size == 0) {
+    if (currentThread == rootThread) {
+      rootThread=newThread(currentThread->getPriority(),rootBoard);
+      checkToplevel();
     }
-  case PARMODE:
-    return new Suspension(currentBoard,prio,PC,Y,G,X,argsToSave);
-  default:
-    error("invalid comp mode");
-    return 0;
+    return currentThread;
+  } else {
+    Thread *th = newThread(currentThread->getPriority(),currentBoard);
+    currentBoard->incSuspCount();
+    th->TaskStack::copySeq((TaskStack *) currentThread,size);
+    return th;
   }
 }
 
-Suspension *AM::mkSuspension(int prio, OZ_CFun bi,
-                             RefsArray X, int argsToSave)
+Suspension *AM::mkSuspension()
 {
-  switch (currentThread->getCompMode()) {
-  case ALLSEQMODE:
-    pushCFun(bi,X,argsToSave);
-    return new Suspension(currentThread);
-  case SEQMODE:
-    {
-      pushCFun(bi,X,argsToSave);
-      Thread *th=newThread(currentThread->getPriority(),currentBoard,SEQMODE);
-      currentBoard->incSuspCount();
-      th->getSeqFrom(currentThread);
-      return new Suspension(th);
-    }
-  case PARMODE:
-    return new Suspension(currentBoard,prio,bi,X,argsToSave);
-  default:
-    error("invalid comp mode");
-    return 0;
-  }
+  Thread *th=getJob();
+  Assert(th!=rootThread);
+  return new Suspension(th);
 }
 
 
 void AM::suspendCond(AskActor *aa)
 {
-  switch (currentThread->getCompMode()) {
-  case ALLSEQMODE:
-    currentThread->setSuspended();
-    break;
-  case SEQMODE:
-    {
-      Thread *th=newThread(currentThread->getPriority(),currentBoard,SEQMODE);
-      currentBoard->incSuspCount();
-      th->getSeqFrom(currentThread);
-      th->setSuspended();
-      aa->setThread(th);
-      break;
-    }
-  case PARMODE:
-    aa->setThread(0);
-    break;
-  default:
-    error("invalid comp mode");
-  }
+  Thread *th=getJob();
+  Assert(th!=rootThread);
+  Assert(!th->isSuspended());
+  th->setSuspended();
+  aa->setThread(th);
 }
 
-void AM::suspendInline(int prio,OZ_CFun fun,int n,
+void AM::suspendInline(OZ_CFun fun,int n,
                        OZ_Term A,OZ_Term B,OZ_Term C,OZ_Term D)
 {
   static RefsArray X = allocateStaticRefsArray(4);
@@ -576,7 +523,8 @@ void AM::suspendInline(int prio,OZ_CFun fun,int n,
   X[2]=C;
   X[3]=D;
 
-  Suspension *susp=mkSuspension(prio,fun,X,n);
+  pushCFun(fun,X,n);
+  Suspension *susp=mkSuspension();
   while (--n>=0) {
     DEREF(X[n],ptr,_1);
     if (isAnyVar(X[n])) addSusp(ptr,susp);
@@ -1057,10 +1005,11 @@ void engine()
 // ------------------------------------------------------------------------
  LBLpopTask:
   {
+    Assert(!e->currentThread->isSuspended());
     Assert(CBB==currentDebugBoard);
     asmLbl(popTask);
     DebugCheckT(Board *fsb);
-    if (emulateHook0(e)) {
+    if (emulateHookPopTask(e)) {
       goto LBLschedule;
     }
 
@@ -1092,10 +1041,11 @@ void engine()
 
     topCache--;
     switch (cFlag){
-    case C_COMP_MODE:
-      taskstack->setTop(topCache);
-      e->currentThread->compMode=TaskStack::getCompMode(topElem);
-      goto LBLpopTask;
+    case C_JOB:
+      {
+        taskstack->setTop(topCache);
+        goto LBLpopTask;
+      }
     case C_XCONT:
       PC = getPC(C_CONT,ToInt32(topElem));
       Y  = (RefsArray) TaskStackPop(--topCache);
@@ -1149,52 +1099,7 @@ void engine()
 
     case C_SOLVE:
       {
-        taskstack->setTop(topCache);
-        DebugTrace(trace("solve task",CBB));
-        Assert(e->currentThread->getCompMode()==PARMODE);
-        Assert(CBB->isSolve());
-        Assert(!CBB->isCommitted() && !CBB->isFailed());
-        SolveActor *sa = SolveActor::Cast(CBB->getActor());
-
-        DebugCheckT(currentDebugBoard=sa->getBoardFast());
-
-        Assert(!CBB->isReflected());
-
-        sa->decThreads ();      // get rid of threads - '1' in creator;
-        CBB->decSuspCount();
-
-        Continuation *cont;
-        Actor *aa;
-        DebugCode (Thread *savedCT = e->currentThread);
-        DebugCode (e->currentThread = (Thread *) KOSTJA_MAGIC);
-        switch (e->checkEntailment(cont,aa)) {
-        case CE_FAIL:
-          DebugCode (e->currentThread = savedCT);
-          e->pushLocal(); // so discard local tasks works
-          HF_NOMSG;
-
-        case CE_SOLVE_CONT:
-          DebugCode (e->currentThread = savedCT);
-          Assert(currentDebugBoard==CBB->getParentFast());
-          DebugCheckT(currentDebugBoard=CBB);
-          Assert(CBB->isSolve());
-          // do disposal of aa (which must be a wait actor!)
-          Assert(aa->isWait());
-          ((WaitActor*) aa)->dispose();
-          e->pushSolve();
-          sa->incThreads();
-          CBB->incSuspCount();
-          LOADCONT(cont);
-          goto LBLemulate;
-
-        case CE_CONT:
-          error ("CE_CONT after a C_SOLVE task???\n");
-          goto LBLfailure;
-
-        case CE_NOTHING:
-          DebugCode (e->currentThread = savedCT);
-          goto LBLpopTask;
-        }
+        error("C_SOLVE task");
       }
     case C_NERVOUS:
       {
@@ -1254,9 +1159,10 @@ void engine()
             killPropagatedCurrentTaskSusp();
             LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
                               goto localhack0;);
-            Suspension *susp = e->mkSuspension(CPP,biFun,X,XSize);
+            e->pushCFun(biFun,X,XSize);
+            Suspension *susp = e->mkSuspension();
             e->suspendOnVarList(susp);
-            CHECKSEQ;
+            CHECK_CURRENT_THREAD;
           }
         default:
           warning("invalid return value from builtin");
@@ -1325,8 +1231,7 @@ LBLkillThread:
         DebugCode (e->currentThread = (Thread *) NULL);
         {
           Assert(aa->isWait());
-          Thread *tt = e->createThread(aa->getPriority(),
-                                       aa->getCompMode());
+          Thread *tt = e->createThread(aa->getPriority());
           ((WaitActor*) aa)->dispose();
           tt->pushCont(cont);
           if (nb) e->decSolveThreads(nb->getBoardFast());
@@ -1341,12 +1246,10 @@ LBLkillThread:
             if (tt) {
               e->cleanUpThread(tt);
             } else {
-              tt = e->createThread(aa->getPriority(),
-                                   aa->getCompMode());
+              tt = e->createThread(aa->getPriority());
             }
           } else {
-            tt = e->createThread(aa->getPriority(),
-                                 aa->getCompMode());
+            tt = e->createThread(aa->getPriority());
           }
           tt->pushCont(cont);
           if (nb) e->decSolveThreads(nb->getBoardFast());
@@ -1363,17 +1266,6 @@ LBLkillThread:
   }
 
 // ----------------- end killThread----------------------------------------
-
-// ------------------------------------------------------------------------
-// *** Emulate if no task
-// ------------------------------------------------------------------------
-
- LBLemulateHook:
-  if (emulateHook0(e)) {
-    e->pushTaskOutline(PC,Y,G,X,XSize);
-    goto LBLschedule;
-  }
-  goto LBLemulate;
 
 // ------------------------------------------------------------------------
 // *** Emulate: execute continuation
@@ -1440,8 +1332,8 @@ LBLkillThread:
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
 
-      Assert((e->currentThread->compMode&1) == entry->getAbstr()->getCompMode());
-      CallDoChecks(entry->getAbstr(),entry->getGRegs(),entry->getAbstr()->getArity(),NO);
+      CallDoChecks(entry->getAbstr(),entry->getGRegs(),
+                   entry->getAbstr()->getArity());
 
       Y = NULL; // allocateL(0);
       // set pc
@@ -1469,9 +1361,10 @@ LBLkillThread:
       case SUSPEND:
         {
           e->pushTaskOutline(PC+3,Y,G,0,0);
-          Suspension *susp = e->mkSuspension(CPP,fun,X,arity);
+          e->pushCFun(fun,X,arity);
+          Suspension *susp = e->mkSuspension();
           e->suspendOnVarList(susp);
-          CHECKSEQ;
+          CHECK_CURRENT_THREAD;
         }
       case FAILED:
         killPropagatedCurrentTaskSusp();
@@ -1509,8 +1402,8 @@ LBLkillThread:
           DISPATCH(4);
         }
         e->pushTaskOutline(PC+4,Y,G,X,getPosIntArg(PC+3));
-        e->suspendInline(CPP,entry->getFun(),1,XPC(2));
-        CHECKSEQ;
+        e->suspendInline(entry->getFun(),1,XPC(2));
+        CHECK_CURRENT_THREAD;
       case FAILED:
         SHALLOWFAIL;
         HF_FAIL(applFailure(entry), printArgs(1,XPC(2)));
@@ -1539,8 +1432,8 @@ LBLkillThread:
           }
 
           e->pushTaskOutline(PC+5,Y,G,X,getPosIntArg(PC+4));
-          e->suspendInline(CPP,entry->getFun(),2,XPC(2),XPC(3));
-          CHECKSEQ;
+          e->suspendInline(entry->getFun(),2,XPC(2),XPC(3));
+          CHECK_CURRENT_THREAD;
         }
       case FAILED:
         SHALLOWFAIL;
@@ -1571,8 +1464,8 @@ LBLkillThread:
             DISPATCH(5);
           }
           e->pushTaskOutline(PC+5,Y,G,X,getPosIntArg(PC+4));
-          e->suspendInline(CPP,entry->getFun(),2,A,B);
-          CHECKSEQ;
+          e->suspendInline(entry->getFun(),2,A,B);
+          CHECK_CURRENT_THREAD;
         }
 
       case FAILED:
@@ -1609,8 +1502,8 @@ LBLkillThread:
             DISPATCH(6);
           }
           e->pushTaskOutline(PC+6,Y,G,X,getPosIntArg(PC+5));
-          e->suspendInline(CPP,entry->getFun(),3,A,B,C);
-          CHECKSEQ;
+          e->suspendInline(entry->getFun(),3,A,B,C);
+          CHECK_CURRENT_THREAD;
         }
 
       case FAILED:
@@ -1647,8 +1540,8 @@ LBLkillThread:
             DISPATCH(7);
           }
           e->pushTaskOutline(PC+7,Y,G,X,getPosIntArg(PC+6));
-          e->suspendInline(CPP,entry->getFun(),4,A,B,C,D);
-          CHECKSEQ;
+          e->suspendInline(entry->getFun(),4,A,B,C,D);
+          CHECK_CURRENT_THREAD;
         }
 
       case FAILED:
@@ -1675,8 +1568,8 @@ LBLkillThread:
           TaggedRef B=XPC(3);
           TaggedRef C=XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
           e->pushTaskOutline(PC+6,Y,G,X,getPosIntArg(PC+5));
-          e->suspendInline(CPP,entry->getFun(),3,A,B,C);
-          CHECKSEQ;
+          e->suspendInline(entry->getFun(),3,A,B,C);
+          CHECK_CURRENT_THREAD;
         }
       case FAILED:
       case SLEEP:
@@ -1709,11 +1602,11 @@ LBLkillThread:
       case FAILED:  JUMP( getLabelArg(PC+3) );
       case SUSPEND:
         {
-          Suspension *susp = e->mkSuspension(CPP,
-                                             PC,Y,G,X,getPosIntArg(PC+4));
+          e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
+          Suspension *susp = e->mkSuspension();
           addSusp(XPC(2),susp);
         }
-        CHECKSEQ;
+        CHECK_CURRENT_THREAD;
 
       case SLEEP:
       default:
@@ -1733,15 +1626,15 @@ LBLkillThread:
 
       case SUSPEND:
         {
-          Suspension *susp=e->mkSuspension(CPP,
-                                           PC,Y,G,X,getPosIntArg(PC+5));
+          e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
+          Suspension *susp=e->mkSuspension();
           OZ_Term A=XPC(2);
           OZ_Term B=XPC(3);
           DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
           Assert(isAnyVar(ATag) || isAnyVar(BTag));
           if (isAnyVar(A)) addSusp(APtr,susp);
           if (isAnyVar(B)) addSusp(BPtr,susp);
-          CHECKSEQ;
+          CHECK_CURRENT_THREAD;
         }
 
       case SLEEP:
@@ -1759,12 +1652,12 @@ LBLkillThread:
       }
 
       int argsToSave = getPosIntArg(shallowCP+2);
-      Suspension *susp = e->mkSuspension(CPP,
-                                         shallowCP,Y,G,X,argsToSave);
+      e->pushTask(shallowCP,Y,G,X,argsToSave);
+      Suspension *susp = e->mkSuspension();
       shallowCP = NULL;
       e->reduceTrailOnShallow();
       e->suspendOnVarList(susp);
-      CHECKSEQ;
+      CHECK_CURRENT_THREAD;
     }
 
 
@@ -1882,9 +1775,10 @@ LBLkillThread:
                   woken up always, even if variable is bound to another var */
 
     int argsToSave = getPosIntArg(PC+2);
-    Suspension *susp = e->mkSuspension(CPP,PC,Y,G,X,argsToSave);
+    e->pushTask(PC,Y,G,X,argsToSave);
+    Suspension *susp = e->mkSuspension();
     addSusp(makeTaggedRef(termPtr),susp);
-    CHECKSEQ;
+    CHECK_CURRENT_THREAD;
   };
 
 
@@ -1902,13 +1796,14 @@ LBLkillThread:
     }
     /* INCFPC(3): dont do it */
     int argsToSave = getPosIntArg(PC+2);
-    Suspension *susp = e->mkSuspension(CPP,PC,Y,G,X,argsToSave);
+    e->pushTask(PC,Y,G,X,argsToSave);
+    Suspension *susp = e->mkSuspension();
     if (isCVar(tag)) {
       tagged2CVar(term)->addDetSusp(susp);
     } else {
       addSusp(makeTaggedRef(termPtr),susp);
     }
-    CHECKSEQ;
+    CHECK_CURRENT_THREAD;
   }
 
   Case(TAILSENDMSGX) isTailCall = OK; ONREG(SendMethod,X);
@@ -1953,7 +1848,7 @@ LBLkillThread:
       }
 
       if (!isTailCall) { CallPushCont(PC); }
-      CallDoChecks(def,def->getGRegs(),arity+3,OK);
+      CallDoChecks(def,def->getGRegs(),arity+3);
       Y = NULL; // allocateL(0);
       JUMP(def->getPC());
     }
@@ -1991,7 +1886,7 @@ LBLkillThread:
     }
 
     if (!isTailCall) { CallPushCont(PC); }
-    CallDoChecks(def,def->getGRegs(),arity,OK);
+    CallDoChecks(def,def->getGRegs(),arity);
     Y = NULL; // allocateL(0);
     JUMP(def->getPC());
 
@@ -2080,7 +1975,7 @@ LBLkillThread:
         }
         CheckArity(predArity, def->getArity(), def, PC);
         if (!isTailCall) { CallPushCont(PC); }
-        CallDoChecks(def,def->getGRegs(),def->getArity(),OK);
+        CallDoChecks(def,def->getGRegs(),def->getArity());
         Y = NULL; // allocateL(0);
 
         JUMP(def->getPC());
@@ -2156,10 +2051,10 @@ LBLkillThread:
               predicate = bi->getSuspHandler();
               if (!predicate) {
                 if (!isTailCall) e->pushTaskOutline(PC,Y,G);
-                Suspension *susp=e->mkSuspension(CPP,
-                                                 bi->getFun(),X,predArity);
+                e->pushCFun(bi->getFun(),X,predArity);
+                Suspension *susp=e->mkSuspension();
                 e->suspendOnVarList(susp);
-                CHECKSEQ;
+                CHECK_CURRENT_THREAD;
               }
               goto LBLcall;
             case FAILED:
@@ -2174,12 +2069,6 @@ LBLkillThread:
               killPropagatedCurrentTaskSusp();
               LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
                                    goto localHack0;);
-              if (emulateHook0(e)) {
-                if (!isTailCall) {
-                  e->pushTaskOutline(PC,Y,G);
-                }
-                goto LBLschedule;
-              }
               if (isTailCall) {
                 goto LBLpopTask;
               }
@@ -2269,7 +2158,6 @@ LBLkillThread:
 
        // Note: don't perform any derefencing on X[2];
        SolveActor *sa = new SolveActor (CBB,CPP,
-                                        e->currentThread->getCompMode(),
                                         X[2], x1);
 
        if (isEatWaits)    sa->setEatWaits();
@@ -2283,28 +2171,13 @@ LBLkillThread:
        predicate = (Abstraction *) tagValueOf (x0);
        X[0] = makeTaggedRef (sa->getSolveVarRef ());
        isTailCall = OK;
-       if (e->currentThread->getCompMode()==PARMODE) {
-         e->setCurrent(sb);
-         e->trail.pushMark();
-         CBB->setInstalled();
-         DebugCheckT(currentDebugBoard=CBB);
-
-         // put ~'solve actor';
-         // Note that CBB is already the 'solve' board;
-         e->pushSolve();
-
-         goto LBLcall;   // spare a task - call the predicate directly;
+       Thread *tt = e->newThread(CPP,sb);
+       tt->pushCall(predicate,X,1);
+       if (e->currentSolveBoard) {
+         e->incSolveThreads(e->currentSolveBoard);
        }
-
-       {
-         Thread *tt = e->newThread(CPP,sb,SEQMODE);
-         tt->pushCall(predicate,X,1);
-         if (e->currentSolveBoard) {
-           e->incSolveThreads(e->currentSolveBoard);
-         }
-         e->scheduleThread(tt);
-         goto LBLpopTask;
-       }
+       e->scheduleThread(tt);
+       goto LBLpopTask;
      }
 
 // ------------------------------------------------------------------------
@@ -2559,7 +2432,7 @@ LBLkillThread:
 
       if (CAA->isAsk()) {
         e->suspendCond(AskActor::Cast(CAA));
-        CHECKSEQ;
+        CHECK_CURRENT_THREAD;
       }
       DebugTrace(trace("suspend actor",CBB,CAA));
 
@@ -2576,7 +2449,7 @@ LBLkillThread:
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
 
-      CAA = new AskActor(CBB,CPP,e->currentThread->getCompMode(),
+      CAA = new AskActor(CBB,CPP,
                          elsePC ? elsePC : NOCODE,
                          NOCODE, Y, G, X, argsToSave,
                          e->currentThread);
@@ -2587,7 +2460,7 @@ LBLkillThread:
     {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
-      CAA = new WaitActor(CBB,CPP,e->currentThread->getCompMode(),
+      CAA = new WaitActor(CBB,CPP,
                           NOCODE,Y,G,X,argsToSave);
       DISPATCH(3);
     }
@@ -2597,7 +2470,7 @@ LBLkillThread:
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
 
-      CAA = new WaitActor(CBB,CPP,e->currentThread->getCompMode(),
+      CAA = new WaitActor(CBB,CPP,
                           NOCODE, Y, G, X, argsToSave);
       if (e->currentSolveBoard != (Board *) NULL) {
         SolveActor *sa= SolveActor::Cast (e->currentSolveBoard->getActor ());
@@ -2643,17 +2516,12 @@ LBLkillThread:
 
       int prio = CPP;
       int defPrio = ozconf.defaultPriority;
-      //
-      //  kost@ 1.1.96  bug fix(?)
-      // in sequential mode, new threads are created for every deep
-      // guard in a parallel conditional. Actually, they should have
-      // the same priority. I think so, at least --
-      //  Michael, what do you think about this?
-      // if (prio > defPrio) {
-      //   prio = defPrio;
-      // }
 
-      Thread *tt = e->createThread(prio,e->currentThread->getCompMode());
+      if (prio > defPrio) {
+        prio = defPrio;
+      }
+
+      Thread *tt = e->createThread(prio);
 
       tt->pushCont(newPC,Y,G,NULL,0,OK);
       JUMP(contPC);
@@ -2699,20 +2567,18 @@ LBLkillThread:
     }
 
   Case(SWITCHCOMPMODE)
-    /* brute force: don't know exactly, when to mark Y as dirty (RS) */
-    markDirtyRefsArray(Y);
-    e->currentThread->switchCompMode();
-    /*
-     * quick bug fix to handle toplevel blocking (mm2)
-     *  problem: optimization in setCompMode removes all mode switches from
-     *  task stack, so that the detection of toplevel blocking doesn't work.
-     */
-    if (e->currentThread==e->rootThread &&
-        e->currentThread->getCompMode() == PARMODE &&
-        e->currentThread->TaskStack::isEmpty()) {
-      e->currentThread->TaskStack::pushCompMode(ALLSEQMODE);
-    }
+    error("switch compmode");
     DISPATCH(1);
+
+  Case(JOB)
+    {
+      ProgramCounter contPC = getLabelArg(PC+1);
+
+      markDirtyRefsArray(Y);
+      e->currentThread->pushCont(contPC,Y,G,NULL,0,OK);
+      e->currentThread->pushJob();
+      DISPATCH(2);
+    }
 
   Case(TESTLABEL1)
   Case(TESTLABEL2)
@@ -2724,7 +2590,6 @@ LBLkillThread:
   Case(TEST3)
   Case(TEST4)
 
-  Case(JOB)
   Case(CONC)
   Case(GENCALL)
   Case(TESTBOOLX)
@@ -2777,8 +2642,11 @@ LBLkillThread:
     case CE_CONT:
       DebugCheckT(currentDebugBoard=e->currentBoard);
       if (!e->currentThread) {
-        e->currentThread = e->newThread(aa->getPriority(),CBB,
-                                        aa->getCompMode());
+        /*
+         * NOTE: thread must started immediately because of CAA
+         *  this is very bad !
+         */
+        e->currentThread = e->newThread(aa->getPriority(),CBB);
         CBB->incSuspCount();
         if (e->currentSolveBoard) {
           e->incSolveThreads(e->currentSolveBoard);
@@ -2801,7 +2669,7 @@ LBLkillThread:
       if (e->currentThread) {
         DebugCheckT(currentDebugBoard=e->currentBoard);
         e->suspendCond(AskActor::Cast(aa));
-        CHECKSEQ;
+        CHECK_CURRENT_THREAD;
       } else {
         goto LBLstart;
       }
@@ -2939,8 +2807,7 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
         if (waitBoard->isWaitTop()) {
           if (!currentThread) {
             // mm2: entailment check ???
-            createThread(waa->getPriority(),
-                         waa->getCompMode());
+            createThread(waa->getPriority());
           }
           return CE_NOTHING;
         }
@@ -2966,8 +2833,7 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
   }
   if (!currentThread) {
     // mm2: entailment check ???
-    createThread(saa->getPriority(),
-                 saa->getCompMode());
+    createThread(saa->getPriority());
   }
   return CE_NOTHING;
 }

@@ -1032,17 +1032,6 @@ PRINT(Thread)
     << "Thread @" << this
     << " [ prio: " << priority;
   stream << ", #" << TaskStack::getUsed()-1;
-  switch (getCompMode()) {
-  case PARMODE:
-    stream << ", PARMODE";
-    break;
-  case SEQMODE:
-    stream << ", SEQMODE";
-    break;
-  case ALLSEQMODE:
-    stream << ", ALLSEQMODE";
-    break;
-  }
   stream << " ]";
 }
 
@@ -1340,18 +1329,8 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
     TaggedPC topElem = ToInt32(pop());
     ContFlag flag = getContFlag(topElem);
     switch (flag){
-    case C_COMP_MODE:
-      switch (((int) topElem)>>4) {
-      case PARMODE:
-        message("\tPARMODE\n");
-        break;
-      case SEQMODE:
-        message("\tSEQMODE\n");
-        break;
-      case ALLSEQMODE:
-        message("\tSEQMODE (all)\n");
-        break;
-      }
+    case C_JOB:
+      message("\tJOB\n");
       break;
     case C_CONT:
       {

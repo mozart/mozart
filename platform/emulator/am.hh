@@ -132,7 +132,7 @@ public:
   void addSuspendVarList(TaggedRef * t);
   void suspendOnVarList(Suspension *susp);
 
-  void suspendInline(int prio,OZ_CFun fun,int n,
+  void suspendInline(OZ_CFun fun,int n,
                      OZ_Term A,OZ_Term B=makeTaggedNULL(),
                      OZ_Term C=makeTaggedNULL(),OZ_Term D=makeTaggedNULL());
 
@@ -159,8 +159,9 @@ public:
   void checkToplevel();
   void addToplevel(ProgramCounter pc);
 
-  Thread *createThread(int prio,int compMode);
+  Thread *createThread(int prio);
   void cleanUpThread(Thread *tt);
+  Thread *getJob();
 
   int catchError() { return setjmp(engineEnvironment); }
 public:
@@ -209,11 +210,7 @@ public:
   Bool emulateHookOutline(Abstraction *def=NULL,
                           int arity=0, TaggedRef *arguments=NULL);
   Bool hookCheckNeeded();
-  Suspension *mkSuspension(int prio, ProgramCounter PC,
-                           RefsArray Y, RefsArray G,
-                           RefsArray X, int argsToSave);
-  Suspension *mkSuspension(int prio, OZ_CFun bi,
-                           RefsArray X, int argsToSave);
+  Suspension *mkSuspension();
   void suspendCond(AskActor *aa);
 
   TaggedRef createNamedVariable(int regIndex, TaggedRef name);

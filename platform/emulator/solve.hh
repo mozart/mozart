@@ -51,7 +51,7 @@ private:
   SuspList * stable_sl;
   int threads;
 public:
-  SolveActor (Board *bb, int prio, int compMode,
+  SolveActor (Board *bb, int prio,
               TaggedRef resTR, TaggedRef guiTR=0);
 
   void setSolveBoard(Board *bb);

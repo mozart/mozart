@@ -20,10 +20,8 @@
 #pragma interface
 #endif
 
-const int ALLSEQMODE=3;
-
 enum TFlags {
-  T_Suspended=0x0001
+  T_Suspended   =0x0001,
 };
 
 class Thread : public ConstTerm, public TaskStack
@@ -33,8 +31,7 @@ friend class ThreadsPool;
 private:
   int priority;
   Board *board;
-  short compMode;
-  short flags;
+  int flags;
 
 public:
   USEFREELISTMEMORY;
@@ -44,7 +41,7 @@ public:
   void gcThreadRecurse();
 
   Thread(int size);
-  void init(int prio,Board *home,int compMode);
+  void init(int prio,Board *home);
   int getPriority();
   void setBoard(Board *bb) {
     board=bb;
@@ -56,11 +53,6 @@ public:
 
   void setPriority(int prio);
   Board *getBoardFast() { return board->getBoardFast(); }
-  int getCompMode() { return compMode; }
-  void checkCompMode(int newMode);
-  void setCompMode(int newMode);
-  void switchCompMode();
-  void getSeqFrom(Thread *th);
   Bool discardLocalTasks();
 };
 
