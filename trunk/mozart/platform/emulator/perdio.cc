@@ -6,17 +6,19 @@
   Last modified: $Date$ from $Author$
   Version: $Revision$
   State: $State$
-  Log: $Log$
-  Log: Revision 1.3  1996/07/29 15:37:45  mehl
-  Log: more perdio work
-  Log:
-  Log: Revision 1.2  1996/07/26 15:17:43  mehl
-  Log: perdio communication: see ~mehl/perdio.oz
-  Log:
+
+  $Log$
+  Revision 1.4  1996/08/02 11:14:17  mehl
+  perdio uses tcp now
+
+  Revision 1.2  1996/07/26 15:17:43  mehl
+  perdio communication: see ~mehl/perdio.oz
 
   network layer
   ------------------------------------------------------------------------
 */
+
+#ifdef PERDIO
 
 #include <time.h>
 #include <unistd.h>
@@ -29,82 +31,34 @@
 #include "am.hh"
 
 
-extern OZ_Term unmarshal(char *buf, int len);
+OZ_Term unmarshal(char *buf, int len);
 
-/*
- * a site is defined by a
- *   name: hostname.domainname
- *   port: udp/tcp port number
- *   time_stamp: creation time of the site
- *
- */
-class Site {
-public:
-  char *hostname;
-  int port;
-  time_t time_stamp;
-public:
-  Site() {};
-};
-
-int mySocket;
-Site *mySite;
-
-int siteInit(int p)
+OZ_Term ozport=0;
+void siteReceive(char *msg,int len)
 {
-  udpInit();
-  mySocket=createUdpPort(p);
-
-  mySite             = new Site();
-  mySite->hostname   = hostName();
-  mySite->port       = p;
-  mySite->time_stamp = time(0);
-  return mySocket;
-}
-
-int siteReceive(int fd,OZ_Term ozport)
-{
-  while (osTestSelect(fd,SEL_READ)==1) {
-    char *msg;
-    int len;
-    if (udpReceive(mySocket,msg,len) < 0) {
-      error("siteReceive: error\n");
-      break;
-    }
-    if (len==0) {
-      error("siteReceive: zero message\n");
-      break;
-    }
-
-    printf("siteReceive: %d bytes\n",len);
-
-    switch (msg[0]) {
-    case GSEND:
-      {
-	OZ_Term t = unmarshal(msg+1,len-1);
-	printf("siteReceive: GSEND '%s'\n",OZ_toC(t,10,10));
-	ozport = deref(ozport);
-	Assert(isPort(ozport));
-	OZ_Term newTail = OZ_newVariable();
-	OZ_Term old=tagged2Port(ozport)->exchangeStream(newTail);
-	if (OZ_unify(OZ_cons(t,newTail),old)!=PROCEED) {
-	  printf("siteReceive: Port.send failed\n");
+  switch (msg[0]) {
+  case GSEND:
+    {
+      OZ_Term t = unmarshal(msg+1,len-1);
+      if (!t) {
+	if (ozconf.debugPerdio) {
+	  printf("siteReceive: message GSEND:");
+	  printBytes(msg,len);
 	}
-	break;
+	OZ_fail("siteReceive: GSEND unmarshal failed\n");
       }
-    default:
-      printf("siteReceive: data\n");
-      printf("\n--\n%s\n--\n",msg);
+
+      if (ozconf.debugPerdio) {
+	printf("siteReceive: GSEND '%s'\n",OZ_toC(t,10,10));
+      }
+      OZ_send(ozport,t);
       break;
     }
+  default:
+    OZ_fail("siteReceive: unknown message %d\n",msg[0]);
+    printf("\n--\n%s\n--\n",msg);
+    break;
   }
-  return 0;
-}
-
-int sendToPort(char *msg, int len, char *hostname, int port)
-{
-  printf("sendToPort: %d bytes\n",len);
-  return udpSend(mySocket,msg,len,hostname,port);
 }
 
 /*
@@ -119,12 +73,12 @@ class ByteStream {
   char *pos;
   int len;
 public:
-  ByteStream() : len(0)
+  ByteStream()
   {
-    len = 0;
+    len = ipHeaderSize;
     size = 1000;
     array = new char[size];
-    pos = array;
+    pos = array+len;
   }
   ByteStream(char *buf,int len) : len(len)
   {
@@ -139,8 +93,8 @@ public:
   void reset()  { pos = array; }
 
   unsigned int get() 
-  { 
-    return pos>=array+len ? BSEOF : *pos++;
+  {
+    return pos>=array+len ? BSEOF : (unsigned int) (unsigned char) *pos++;
   }
   void put(char c)
   {
@@ -501,30 +455,51 @@ OZ_Term unmarshal(char *buf, int len)
 }
 
 /*
- * TEST BUILTINS
+ * -------------------------------------------------------------------------
+ * BUILTINS
+ * -------------------------------------------------------------------------
  */
 
-OZ_C_proc_begin(BIgSend,3)
+ByteStream *gsend(OZ_Term t)
 {
-  OZ_declareArg(0,value);
-  OZ_declareAtomArg(1,host);
-  OZ_declareIntArg(2,port);
-
   ByteStream *bs = new ByteStream();
 
   bs->put(GSEND);
   refCounter = 0;
-  marshalTerm(value,bs);
+  marshalTerm(t,bs);
   refTrail->unwind();
+  return bs;
+}
+
+OZ_C_proc_begin(BIreliableSend,2)
+{
+  OZ_declareIntArg(0,sd);
+  OZ_declareArg(1,value);
+
+  ByteStream *bs=gsend(value);
+  int len = bs->getLen();
+  int ret = reliableSend(sd,bs->getPtr(),len);
+  delete bs;
+  if (ret == 0) return PROCEED;
+
+  return OZ_raise(OZ_mkTupleC("reliableSend",1,OZ_int(lastError())));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIunreliableSend,2)
+{
+  OZ_declareIntArg(0,sd);
+  OZ_declareArg(1,value);
+
+  ByteStream *bs=gsend(value);
 
   int len = bs->getLen();
-  int ret = sendToPort(bs->getPtr(),len,host,port);
+
+  int ret = unreliableSend(sd,bs->getPtr(),len);
   delete bs;
-  if (ret == len) return PROCEED;
-  if (ret < 0) {
-    return FAILED;
-  }
-  return OZ_raise(OZ_atom("gSend"));
+  if (ret == 0) return PROCEED;
+
+  return OZ_raise(OZ_mkTupleC("unreliableSend",1,OZ_int(lastError())));
 }
 OZ_C_proc_end
 
@@ -534,38 +509,34 @@ OZ_C_proc_begin(BIstartSite,2)
   OZ_declareIntArg(0,p);
   OZ_declareArg(1,stream);
 
-  int fd = siteInit(p);
-  if (fd<0) { return OZ_raise(OZ_atom("startSite")); }
-  OZ_Term ozport = makeTaggedConst(new Port(am.rootBoard, stream));
-  am.select(fd,SEL_READ,siteReceive,ozport);
+  if (ozport!=0) {
+    return OZ_raise(OZ_mkTupleC("startSite",1,OZ_atom("twice")));
+  }
+
+  ozport = makeTaggedConst(new Port(am.rootBoard, stream));
+
+  ipInit(p,siteReceive);
+
   return PROCEED;
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIeximportTerm,2)
+OZ_C_proc_begin(BIlookupSite,4)
 {
-  OZ_Term out = OZ_getCArg(0);
-  ByteStream *bs = new ByteStream();
+  OZ_declareVirtualStringArg(0,host);
+  OZ_declareIntArg(1,port);
+  OZ_declareIntArg(2,timestamp);
+  OZ_declareArg(3,out);
 
-  refCounter = 0;
-  marshalTerm(out,bs);
-  bs->reset();
-  refTrail->unwind();
-
-  OZ_Term ret;
-  refCounter = 0;
-  unmarshalTerm(bs,&ret);
-
-  delete bs;
-  return OZ_unify(ret,OZ_getCArg(1));
+  return OZ_unifyInt(out,lookupSite(host,port,timestamp));
 }
 OZ_C_proc_end
 
-
 BIspec perdioSpec[] = {
-  {"gSend",    3, BIgSend, 0},
-  {"startSite", 2, BIstartSite, 0},
-  {"eximportTerm", 2, BIeximportTerm, 0},
+  {"reliableSend",   2, BIreliableSend, 0},
+  {"unreliableSend", 2, BIunreliableSend, 0},
+  {"startSite",      2, BIstartSite, 0},
+  {"lookupSite",     4, BIlookupSite, 0},
   {0,0,0,0}
 };
 
@@ -578,3 +549,4 @@ void BIinitPerdio()
   refTrail = new RefTrail();
 }
 
+#endif
