@@ -132,7 +132,7 @@ loop:
     if (n_in_l) {
       // in case 'n_var' occurs in `reg_l' constraining n_var might
       // have removed v from `reg_l'
-      if (n_var->isIn(v) != oldIn) {
+      if (oldIn && !n_var->isIn(v)) {
         reg_tnn++;
         tnn = reg_tnn;
         goto loop;
