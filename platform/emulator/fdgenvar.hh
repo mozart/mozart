@@ -63,7 +63,7 @@ public:
   void setDom(FiniteDomain &fd) {finiteDomain = fd;}
   FiniteDomain &getDom(void) {return finiteDomain;}
 
-  void relinkSuspListTo(GenFDVariable * lv);
+  void relinkSuspListTo(GenFDVariable * lv, Bool reset_local = FALSE);
 
   void propagate(TaggedRef var, FDPropState state,
                  TaggedRef term, PropCaller prop_eq = pc_propagator);

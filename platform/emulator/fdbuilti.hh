@@ -25,16 +25,18 @@
 // Debug Macros
 //-----------------------------------------------------------------------------
 
-#ifdef DEBUG_CHECK
+#if defined(DEBUG_CHECK) || 1
+#define FORCE_ALL 0
+
 #define FD_DEBUG_T(TEXT, SIZE, T, COND) \
-if (COND) { \
+if (FORCE_ALL || COND) { \
   cout << TEXT << endl; \
   for (int _i = 0; _i < SIZE; _i += 1) \
     cout << "x[" << _i << "]=", taggedPrint(T[_i]), cout << endl; \
   cout.flush(); \
 }
 #define FD_DEBUG_TTI(TEXT, SIZE, T1, T2, I, COND) \
-if (COND) { \
+if (FORCE_ALL || COND) { \
   cout << TEXT << endl; \
   for (int _i = 0; _i < SIZE; _i += 1) \
     cout << "a[" << _i << "]=", taggedPrint(T1[_i]), cout << endl; \
@@ -44,7 +46,7 @@ if (COND) { \
   cout.flush(); \
 }
 #define FD_DEBUG_ITI(TEXT, SIZE, I1, T, I2, COND) \
-if (COND) { \
+if (FORCE_ALL || COND) { \
   cout << TEXT << endl; \
   cout << "n=" << I1  << endl; \
   for (int _i = 0; _i < SIZE; _i += 1) \
@@ -53,7 +55,7 @@ if (COND) { \
   cout.flush(); \
 }
 #define FD_DEBUG_XYZ(TEXT, X, Y, Z, COND) \
-if (COND) { \
+if (FORCE_ALL || COND) { \
   cout << TEXT << endl; \
   cout << "x="; taggedPrint(X); cout << endl; \
   cout << "y="; taggedPrint(Y); cout << endl; \
@@ -61,7 +63,7 @@ if (COND) { \
   cout.flush(); \
 }
 #define FD_DEBUG_XYC(TEXT, X, Y, C, COND) \
-if (COND) { \
+if (FORCE_ALL || COND) { \
   cout << TEXT << endl; \
   cout << "x="; taggedPrint(X); cout << endl; \
   cout << "y="; taggedPrint(Y); cout << endl; \
@@ -69,7 +71,7 @@ if (COND) { \
   cout.flush(); \
 }
 #define FD_DEBUG_XY(TEXT, X, Y, COND) \
-if (COND) { \
+if (FORCE_ALL || COND) { \
   cout << TEXT << endl; \
   cout << "x="; taggedPrint(X); cout << endl; \
   cout << "y="; taggedPrint(Y); cout << endl; \
@@ -166,10 +168,12 @@ OZ_C_proc_proto(BIfdImpl);
 // fdgeneric.cc
 OZ_C_proc_proto(BIfdGenLinEq);
 OZ_C_proc_proto(BIfdGenNonLinEq);
+OZ_C_proc_proto(BIfdGenNonLinEq1);
 OZ_C_proc_proto(BIfdGenLinNotEq);
 OZ_C_proc_proto(BIfdGenNonLinNotEq);
 OZ_C_proc_proto(BIfdGenLinLessEq);
 OZ_C_proc_proto(BIfdGenNonLinLessEq);
+OZ_C_proc_proto(BIfdGenNonLinLessEq1);
 OZ_C_proc_proto(BIfdGenLinAbs);
 
 // fdcard.cc
@@ -207,10 +211,14 @@ OZ_C_proc_proto(BIfdLepcBool);
 OZ_C_proc_proto(BIfdLepcBool1);
 OZ_C_proc_proto(BIfdJoergCard);
 OZ_C_proc_proto(BIfdGenLinEqB);
+OZ_C_proc_proto(BIfdGenNonLinEqB);
 OZ_C_proc_proto(BIfdGenLinNotEqB);
-OZ_C_proc_proto(BIfdGenLessEqB);
+OZ_C_proc_proto(BIfdGenNonLinNotEqB);
+OZ_C_proc_proto(BIfdGenLinLessEqB);
+OZ_C_proc_proto(BIfdGenNonLinLessEqB);
 OZ_C_proc_proto(BIfdCardBI);
 OZ_C_proc_proto(BIfdInB);
+OZ_C_proc_proto(BIfdNotInB);
 OZ_C_proc_proto(BIfdIsIntB);
 OZ_C_proc_proto(BIfdCardBIBin);
 
@@ -275,11 +283,15 @@ OZ_C_proc_proto(BIfdLepcBool_body)
 OZ_C_proc_proto(BIfdLepcBool1_body);
 OZ_C_proc_proto(BIfdJoergCard_body);
 OZ_C_proc_proto(BIfdGenLinEqB_body);
+OZ_C_proc_proto(BIfdGenNonLinEqB_body);
 OZ_C_proc_proto(BIfdGenLinNotEqB_body);
-OZ_C_proc_proto(BIfdGenLessEqB_body);
+OZ_C_proc_proto(BIfdGenNonLinNotEqB_body);
+OZ_C_proc_proto(BIfdGenLinLessEqB_body);
+OZ_C_proc_proto(BIfdGenNonLinLessEqB_body);
 OZ_C_proc_proto(BIfdCardBI_body);
 OZ_C_proc_proto(BIfdCardBIBin_body);
 OZ_C_proc_proto(BIfdInB_body);
+OZ_C_proc_proto(BIfdNotInB_body);
 OZ_C_proc_proto(BIfdIsIntB_body);
 
 //-----------------------------------------------------------------------------
@@ -294,6 +306,8 @@ OZ_Bool genericHead_a_x_c_y(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
 
 OZ_Bool genericHead_a_x_c_nl(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
                              OZ_CFun BI_body, FDPropState target_list);
+OZ_Bool genericHead_a_x_c_nl1(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
+                              OZ_CFun BI_body, FDPropState target_list);
 
 OZ_Bool genericHead_x_y_z(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
                           OZ_CFun BI_body, Bool nestable,
@@ -601,6 +615,9 @@ private:
   static int bifdbm_init_dom_size[MAXFDBIARGS];
   static Bool bifdbm_is_local[MAXFDBIARGS];
 
+  static int cache_from[MAXFDBIARGS];
+  static int cache_to[MAXFDBIARGS];
+
   static int curr_num_of_vars;
   static Bool vars_left;
   static Bool glob_vars_touched;
@@ -621,6 +638,8 @@ private:
   int simplifyBody(int ts, STuple &a, STuple &x,
                    Bool sign_bits[], float coeffs[]);
   Bool only_local_vars;
+
+  enum {cache_slot_size = 4};
 public:
   BIfdBodyManager(int s) {
     DebugCheck(s < 0 || s > MAXFDBIARGS, error("too many variables."));
@@ -638,6 +657,10 @@ public:
   }
 
   int getCurrNumOfVars(void) {return curr_num_of_vars;}
+
+  int initCache(void);
+  int getCacheSlotFrom(int i) {return cache_from[i];}
+  int getCacheSlotTo(int i) {return cache_to[i];}
 
   static
   void initStaticData(void);

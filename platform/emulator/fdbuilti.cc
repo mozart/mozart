@@ -54,7 +54,6 @@ TypeOfTerm * BIfdHeadManager::bifdhm_vartag;
 int * BIfdHeadManager::bifdhm_coeff;
 int BIfdHeadManager::curr_num_of_items;
 
-
 void BIfdHeadManager::initStaticData(void) {
   bifdhm_var = static_var;
   bifdhm_varptr = static_varptr;
@@ -76,8 +75,8 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
 
   STuple &xtc = *tagged2STuple(tagged_xtc);
   const int ts = xtc.getSize();
-  TaggedRef prev_fdvar;
-  TaggedRefPtr prev_fdvarptr = NULL;
+  TaggedRef prev_fdvar, last_fdvar;
+  TaggedRefPtr last_fdvarptr = NULL;
   TaggedRef var;
   TaggedRefPtr varptr;
   TypeOfTerm vartag;
@@ -93,8 +92,10 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
       if (prod < OzMinInt || OzMaxInt < prod) return FALSE;
     } else if (isGenFDVar(var,vartag)) {
       fds_found += 1;
-      prev_fdvar = var;
-      prev_fdvarptr = varptr;
+      if (last_fdvarptr != NULL)
+        prev_fdvar = last_fdvar;
+      last_fdvar = var;
+      last_fdvarptr = varptr;
     } else if (isUVar(vartag)) {
       fds_found = 3;
     } else if (isSVar(vartag)) {
@@ -105,17 +106,17 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
   }
 
   switch (fds_found) {
-  case 0:
+  case 0: // no variables left
     bifdhm_vartag[i] = SMALLINT;
     xt[i] = bifdhm_var[i] = newSmallInt(1);
     bifdhm_coeff[i] *= prod;
     if (bifdhm_coeff[i] < OzMinInt || OzMaxInt < bifdhm_coeff[i]) return FALSE;
     at[i] = newSmallInt(bifdhm_coeff[i]);
     return TRUE;
-  case 1:
+  case 1: // exactly one variable left
     bifdhm_vartag[i] = CVAR;
-    bifdhm_var[i] = prev_fdvar;
-    xt[i] = TaggedRef(bifdhm_varptr[i] = prev_fdvarptr);
+    bifdhm_var[i] = last_fdvar;
+    xt[i] = TaggedRef(bifdhm_varptr[i] = last_fdvarptr);
     bifdhm_coeff[i] *= prod;
     if (bifdhm_coeff[i] < OzMinInt || OzMaxInt < bifdhm_coeff[i]) return FALSE;
     at[i] = newSmallInt(bifdhm_coeff[i]);
@@ -123,8 +124,8 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
   case 2:
     s += 1;
     susp = createNonResSusp(func, xregs, arity);
-    addSuspFDVar(var, new SuspList(susp, NULL), fd_det);
     addSuspFDVar(prev_fdvar, new SuspList(susp, NULL), fd_det);
+    addSuspFDVar(last_fdvar, new SuspList(susp, NULL), fd_det);
     return TRUE;
   case 3:
     s += 1;
@@ -293,6 +294,9 @@ FiniteDomainPtr BIfdBodyManager::bifdbm_dom[MAXFDBIARGS];
 FiniteDomain BIfdBodyManager::bifdbm_domain[MAXFDBIARGS];
 int BIfdBodyManager::bifdbm_init_dom_size[MAXFDBIARGS];
 Bool BIfdBodyManager::bifdbm_is_local[MAXFDBIARGS];
+int BIfdBodyManager::cache_from[MAXFDBIARGS];
+int BIfdBodyManager::cache_to[MAXFDBIARGS];
+
 int BIfdBodyManager::curr_num_of_vars;
 Bool BIfdBodyManager::vars_left;
 Bool BIfdBodyManager::glob_vars_touched;
@@ -694,6 +698,7 @@ void BIinitFD()
   BIadd("fdGenLinEq", 3, BIfdGenLinEq);
   BIadd("fdGenLinEq_body", 3, BIfdGenLinEq_body);
   BIadd("fdGenNonLinEq", 3, BIfdGenNonLinEq);
+  BIadd("fdGenNonLinEq1", 3, BIfdGenNonLinEq1);
   BIadd("fdGenNonLinEq_body", 3, BIfdGenNonLinEq_body);
   BIadd("fdGenLinNotEq", 3, BIfdGenLinNotEq);
   BIadd("fdGenLinNotEq_body", 3, BIfdGenLinNotEq_body);
@@ -702,6 +707,7 @@ void BIinitFD()
   BIadd("fdGenLinLessEq", 3, BIfdGenLinLessEq);
   BIadd("fdGenLinLessEq_body", 3, BIfdGenLinLessEq_body);
   BIadd("fdGenNonLinLessEq", 3, BIfdGenNonLinLessEq);
+  BIadd("fdGenNonLinLessEq1", 3, BIfdGenNonLinLessEq1);
   BIadd("fdGenNonLinLessEq_body", 3, BIfdGenNonLinLessEq_body);
   BIadd("fdGenLinAbs", 4, BIfdGenLinAbs);
   BIadd("fdGenLinAbs_body", 4, BIfdGenLinAbs_body);
@@ -749,15 +755,20 @@ void BIinitFD()
   BIadd("fdJoergCard", 4, BIfdJoergCard);
   BIadd("fdJoergCard_body", 4, BIfdJoergCard_body);
   BIadd("fdGenLinEqB", 4, BIfdGenLinEqB);
+  BIadd("fdGenNonLinEqB", 4, BIfdGenNonLinEqB);
   BIadd("fdGenLinEqB_body", 4, BIfdGenLinEqB_body);
   BIadd("fdGenLinNotEqB", 4, BIfdGenLinNotEqB);
+  BIadd("fdGenNonLinNotEqB", 4, BIfdGenNonLinNotEqB);
   BIadd("fdGenLinNotEqB_body", 4, BIfdGenLinNotEqB_body);
-  BIadd("fdGenLessEqB", 4, BIfdGenLessEqB);
-  BIadd("fdGenLessEqB_body", 4, BIfdGenLessEqB_body);
+  BIadd("fdGenLinLessEqB", 4, BIfdGenLinLessEqB);
+  BIadd("fdGenNonLinLessEqB", 4, BIfdGenNonLinLessEqB);
+  BIadd("fdGenLinLessEqB_body", 4, BIfdGenLinLessEqB_body);
   BIadd("fdCardBI", 3, BIfdCardBI);
   BIadd("fdCardBI_body", 3, BIfdCardBI_body);
   BIadd("fdInB", 3, BIfdInB);
   BIadd("fdInB_body", 3, BIfdInB_body);
+  BIadd("fdNotInB", 3, BIfdNotInB);
+  BIadd("fdNotInB_body", 3, BIfdNotInB_body);
   BIadd("fdIsIntB", 2, BIfdIsIntB);
   BIadd("fdIsIntB_body", 2, BIfdIsIntB_body);
   BIadd("fdCardBIBin", 2, BIfdCardBIBin);
