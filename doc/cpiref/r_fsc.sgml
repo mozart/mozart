@@ -303,7 +303,7 @@ allowed cardinality.
 <!-- ********************************************************************** -->
 
 <subsection id="r_fsc.op">
-<title/Operator Member Functions/
+<title/Imposing Constraints/
 <p>
 Where an operator member Function returns an <<OZ_Boolean>>, it is
 to indicate whether constraint becomes unsatisfiable in the operation.
@@ -405,16 +405,16 @@ included (in <<IN>>) that are included by <<fsc>>.
 <Item> Returns <<OZ_True>> if <<*this>> is equivalent to <<fsc>>.
 
 
-<Entry class="operator member function"><<operator &lt;=>>
-<Index class=proglang><<OZ_FSetConstraint>><And><<operator &lt;=>></Index>
-<Synopsis><<OZ_Boolean operator <= (const int i);>>
+<Entry class="member function"><<le>>
+<Index class=proglang><<OZ_FSetConstraint>><And><<le>></Index>
+<Synopsis><<OZ_Boolean le(const int i);>>
 
 <Item> All values above <<i>> are excluded from <<*this>>.
 
 
-<Entry class="operator member function"><<operator &gt;=>>
-<Index class=proglang><<OZ_FSetConstraint>><And><<operator &gt;=>></Index>
-<Synopsis><<OZ_Boolean operator >= (const int);>>
+<Entry class="operator member function"><<ge>>
+<Index class=proglang><<OZ_FSetConstraint>><And><<ge>></Index>
+<Synopsis><<OZ_Boolean ge(const int);>>
 
 <Item> All values below <<i>> are excluded from <<*this>>.
 

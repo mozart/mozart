@@ -3159,9 +3159,9 @@ int FSetConstraint::getUnknownCard(void) const
 }
 
 inline
-OZ_Boolean FSetConstraint::operator >= (const int ii)
+OZ_Boolean FSetConstraint::ge(const int ii)
 {
-  FSDEBUG(printf("fsc::op>=(%d) ", ii); DP());
+  FSDEBUG(printf("fsc::ge(%d) ", ii); DP());
 
 #ifdef BIGFSET
   if (ii == 0) {
@@ -3192,14 +3192,14 @@ OZ_Boolean FSetConstraint::operator >= (const int ii)
   _not_in[lower_word] |= ~toTheUpperEnd[lower_bit];
 #endif
   OZ_Boolean retval = normalize();
-  FSDEBUG(printf("fsc::op>= : normalize returns %d\n", retval));
+  FSDEBUG(printf("fsc::ge : normalize returns %d\n", retval));
   return retval;
 }
 
 inline
-OZ_Boolean FSetConstraint::operator <= (const int ii)
+OZ_Boolean FSetConstraint::le(const int ii)
 {
-  FSDEBUG(printf("fsc::op<=(%d) ", ii); DP());
+  FSDEBUG(printf("fsc::le(%d) ", ii); DP());
 
 #ifdef BIGFSET
   if (ii == fs_sup) {
@@ -3234,7 +3234,7 @@ OZ_Boolean FSetConstraint::operator <= (const int ii)
   _not_in[upper_word] |= ~toTheLowerEnd[upper_bit];
 #endif
   OZ_Boolean retval = normalize();
-  FSDEBUG(printf("fsc::op<= : normalize returns %d\n", retval));
+  FSDEBUG(printf("fsc::le : normalize returns %d\n", retval));
   return retval;
 }
 
@@ -3864,14 +3864,14 @@ char * OZ_FSetConstraint::toString() const
 #endif
 }
 
-OZ_Boolean OZ_FSetConstraint::operator <= (const int i)
+OZ_Boolean OZ_FSetConstraint::le (const int i)
 {
-  return CASTTHIS->operator <= (i);
+  return CASTTHIS->le(i);
 }
 
-OZ_Boolean OZ_FSetConstraint::operator >= (const int i)
+OZ_Boolean OZ_FSetConstraint::ge (const int i)
 {
-  return CASTTHIS->operator >= (i);
+  return CASTTHIS->ge(i);
 }
 
 void OZ_FSetConstraint::copyExtension() {
