@@ -32,9 +32,14 @@ $boot_module_name     = "FDP";
  #
  # Distribution stuff
  #
+ 'assign'        => { in =>  ['+atom','+value'],
+                      out => ['value'],
+                      bi =>  fdd_assign },
+
  'distribute'    => { in =>  ['+int','+int','+value'],
                       out => ['value'],
                       bi =>  fdd_distribute },
+
  #
  # Propagators
  #
