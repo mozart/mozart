@@ -173,7 +173,6 @@ public:
   // Debugging stuff
   TaggedRef threadStream;
   TaggedRef threadStreamTail;
-  Bool breakflag;
   Toplevel *toplevelQueue;
 
 

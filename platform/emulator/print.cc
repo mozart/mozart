@@ -1457,7 +1457,7 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
       break;
 
     if (PC==C_CFUNC_CONT_Ptr) {
-      OZ_CFun biFun    = (OZ_CFun) Y;
+      OZ_CFun biFun    = (OZ_CFun) (void*) Y;
       RefsArray X      = (RefsArray) G;
       TaggedRef args = nil();
 

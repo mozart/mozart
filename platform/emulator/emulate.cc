@@ -250,9 +250,6 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
     return TRUE;
   }
 
-  if (breakflag)
-    setBreakpoint(currentThread);
-
   if (def && debugmode() && currentThread->isTraced()) {
     OzDebug *dbg;
     OZ_Term dinfo = nil();
@@ -1333,7 +1330,7 @@ LBLsuspendThread:
       // For now, only suspending on builtins gives correct name & args
 
       if (debugPC==C_CFUNC_CONT_Ptr) {
-        OZ_CFun biFun    = (OZ_CFun) Y;
+        OZ_CFun biFun    = (OZ_CFun) (void*) Y;
         RefsArray X      = (RefsArray) G;
 
         if (X)
@@ -1758,7 +1755,7 @@ LBLdispatcher:
       Object *self = e->getSelf();
       SRecord *rec = self->getState();
 
-      if (e->currentBoard != self->getBoard()) {
+      if (!e->isToplevel() && e->currentBoard != self->getBoard()) {
         (void) e->raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("object"));
         goto LBLraise;
       }
@@ -2059,7 +2056,7 @@ LBLdispatcher:
       OzLock *lck = tagged2Lock(aux);
       if (!e->isToplevel()) {
         if (e->currentBoard != lck->getBoard()) {
-          (void) e->raise(E_ERROR,E_OBJECT,"attempt to lock object in guard",0);
+          (void) e->raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
           goto LBLraise;
         }
       }
@@ -2373,11 +2370,7 @@ LBLdispatcher:
 
        CheckArity(bi->getArity(),makeTaggedConst(bi));
 
-       if (e->breakflag)
-         setBreakpoint(e->currentThread);
-
        if (e->debugmode() && e->currentThread->stepMode()) {
-
          char *name = builtinTab.getName((void *) bi->getFun());
          debugStreamCall(PC, name, predArity, X, 1);
 
@@ -2900,14 +2893,18 @@ LBLdispatcher:
 
   Case(DEBUGINFO)
     {
+      int line = smallIntValue(getNumberArg(PC+2));
+      if (line<0) {
+        execBreakpoint(e->currentThread);
+      }
       DISPATCH(6);
 
-      TaggedRef filename = getLiteralArg(PC+1);
-      int line           = smallIntValue(getNumberArg(PC+2));
-      int absPos         = smallIntValue(getNumberArg(PC+3));
-      TaggedRef comment  = getLiteralArg(PC+4);
-      int noArgs         = smallIntValue(getNumberArg(PC+5));
-      TaggedRef globals  = OZ_nil(); // CodeArea::globalVarNames(PC);
+      /*
+        TaggedRef filename = getLiteralArg(PC+1);
+        int absPos         = smallIntValue(getNumberArg(PC+3));
+        TaggedRef comment  = getLiteralArg(PC+4);
+        int noArgs         = smallIntValue(getNumberArg(PC+5));
+       */
     }
 
   Case(MARSHALLEDFASTCALL)

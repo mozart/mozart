@@ -26,7 +26,7 @@ public:
   void printCall();
 };
 
-void setBreakpoint(Thread*);
+void execBreakpoint(Thread*);
 void debugStreamSuspend(ProgramCounter, Thread*, TaggedRef, TaggedRef, bool);
 void debugStreamCont(Thread*);
 void debugStreamThread(Thread*,Thread* parent=NULL);
@@ -34,6 +34,7 @@ void debugStreamTerm(Thread*);
 void debugStreamCall(ProgramCounter, char*, int, TaggedRef*, bool);
 
 OZ_C_proc_proto(BItaskStack)
+OZ_C_proc_proto(BIbreakpointAt)
 OZ_C_proc_proto(BIbreakpoint)
 OZ_C_proc_proto(BIsetContFlag)
 OZ_C_proc_proto(BIsetStepMode)

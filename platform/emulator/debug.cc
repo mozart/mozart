@@ -32,11 +32,10 @@ void dbgPrint(TaggedRef t)
   taggedPrint(t,ozconf.printDepth);
 }
 
-void setBreakpoint(Thread *t) {
+void execBreakpoint(Thread *t) {
   t->startStepMode();
   t->deleteContFlag();
   t->traced();
-  am.breakflag = NO;
   debugStreamThread(t);
 }
 
@@ -350,9 +349,33 @@ OZ_C_proc_begin(BIdisplayCode, 2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIbreakpointAt, 4)
+{
+  OZ_declareArg    (0,file)
+  OZ_declareIntArg (1,line);
+  OZ_declareArg    (2,what);
+  OZ_declareArg    (3,out);
+
+  ProgramCounter PC = allDbgInfos->find(file,line);
+
+  if (PC != NOCODE) {
+    if (OZ_isTrue(what))
+      CodeArea::writeTagged(OZ_int(-line),PC+2);
+    else
+      CodeArea::writeTagged(OZ_int(line),PC+2);
+    OZ_unify(out,OZ_true());
+  }
+  else
+    OZ_unify(out,OZ_false());
+
+  return PROCEED;
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIbreakpoint, 0)
 {
-  am.breakflag = OK;
+  if (am.debugmode())
+    execBreakpoint(am.currentThread);
   return PROCEED;
 }
 OZ_C_proc_end

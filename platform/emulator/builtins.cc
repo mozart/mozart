@@ -7026,6 +7026,7 @@ BIspec allSpec[] = {
   {"contThread",1,BIcontThread},
   {"traceThread",2,BItraceThread},
   {"queryDebugState",2,BIqueryDebugState},
+  {"Debug.breakpointAt",4,BIbreakpointAt},
   {"Debug.breakpoint",0,BIbreakpoint},
 
   {"topVarInfo",2,BItopVarInfo},

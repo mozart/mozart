@@ -1519,6 +1519,42 @@ private:
 };
 
 
+// Debugger ---------------------------------------------
+
+class DbgInfo {
+public:
+  ProgramCounter PC;
+  TaggedRef file;
+  int line;
+  DbgInfo(ProgramCounter pc, TaggedRef f, int l) : PC(pc), file(f), line(l) {};
+};
+
+const int dbgcount = 100;
+
+class DbgInfoList {
+  DbgInfo *elems[dbgcount];
+  DbgInfoList *next;
+  int nextfree;
+public:
+  DbgInfoList(DbgInfoList *nxt) : next(nxt), nextfree(0) {};
+  DbgInfoList *add(DbgInfo *elem)
+  {
+    if (this==NULL || nextfree>=dbgcount) {
+      DbgInfoList *aux = new DbgInfoList(this);
+      return aux->add(elem);
+    }
+    elems[nextfree++] = elem;
+    return this;
+  }
+
+  ProgramCounter find(TaggedRef file, int line);
+};
+
+extern DbgInfoList *allDbgInfos;
+
+// ---------------------------------------------
+
+
 class PrTabEntry {
 private:
   TaggedRef printname;
