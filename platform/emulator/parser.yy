@@ -911,6 +911,8 @@ FOR_decl	: atom ':' phrase
 		  { $$ = newCTerm(oz_atom("forFeature"),$1,$3); }
 		| phrase T_in FOR_gen
 		  { $$ = newCTerm(oz_atom("forPattern"),$1,$3); }
+		| phrase T_from phrase
+		  { $$ = newCTerm(oz_atom("forFrom"),$1,$3); }
 		;
 
 FOR_gen		: phrase
