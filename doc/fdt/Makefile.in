@@ -11,7 +11,9 @@ SGMLSRCS0 = \
 
 SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
 
-HTMLEXTRAFILES =
+PICTURES = explorer-a explorer-b queen
+
+HTMLEXTRAFILES = $(PICTURES:%=pictures/%.gif)
 
 OZDOCHTMLFLAGS = --autoindex
 

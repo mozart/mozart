@@ -30,6 +30,7 @@
   -->
 
 <chapter id=chapter.scheduling><title/Scheduling/
+
 <p>
 In this section we will consider examples of scheduling
 problems. Scheduling in this tutorial means to compute a timetable for
@@ -37,6 +38,7 @@ tasks competing for a given set of resources. We assume that no task can
 be interrupted (no preemption is allowed).
 
 <section><title/Building a House/
+
 <p>
 We first consider the problem to build a house (in a simplified way). We
 will successively refine the problem specification, the model and the
@@ -245,7 +247,7 @@ given in <ptr to=fig.data.hausbau>. A field under a certain feature
 contains all tasks handled by the corresponding company.
 The script returned by the modified scheduling compiler will use
 <<<
-{FD.schedule.serializedDisj TasksOnRes Start Dur}
+{Schedule.serializedDisj TasksOnRes Start Dur}
 >>>
 This statement creates for each resource a single propagator for the
 capacity constraints as described in the model above  (note that the full
@@ -497,7 +499,7 @@ common resource (see also <ptr to=page.tasksOnRes>).
 The optimal solution can be found by
 <<<
 {ExploreBest {CompileBridge Bridge
-              FD.schedule.serializedDisj
+              Schedule.serializedDisj
                  DistributeResSort} Order}
 >>>
 The full search tree consists of 1&nbsp;268 choice nodes and 8 solution
@@ -672,7 +674,7 @@ First we show the weakness of the propagators we have introduced so
 far. We consider three tasks ?{A}, ?{B} and ?{C}, each with duration 8 and
 with the domain <math/1\#10/. If we state for the pairs <math>(A,B)</math>, <math>(A,C)</math> and
 <math>(B,C)</math> that the contained tasks must not overlap in time by using reified
-constraints or by applying <<FD.schedule.serializedDisj>>, no further
+constraints or by applying <<Schedule.serializedDisj>>, no further
 propagation will take place. This is due to the local reasoning on task
 pairs. For each pair no value in the corresponding domains can be
 discarded.  On the other hand, the tasks must be scheduled between time
@@ -689,14 +691,17 @@ as the first or last task of ?{S} (and analogously if ?{T} is not in
 ?{S}).
 We introduce the following abbreviations for a task ?{T}.
 <table class=dyptic>
-<tr/<td/ <math/~$~\newcommand{\Est}[1]{{\mbox{est}(#1)}}~$~
-\Est{T}/ /<td/ least possible start time for for ?{T}//
-<tr/<td/<math/~$~\newcommand{\Lst}[1]{{\mbox{lst}(#1)}}~$~
-\Lst{T}/ /<td/ largest possible start time for ?{T}//
-<tr/<td/<math/~$\newcommand{\Ect}[1]{{\mbox{ect}(#1)}}~$~
-\Ect{T}/ /<td/ earliest completion time for ?{T}, &ie; <math/\Ect{T} = \Est{T} + \Dur{T}///
-<tr/<td/<math/~$~ \newcommand{\Lct}[1]{{\mbox{lct}(#1)}} ~$~
-\Lct{T}/ /<td/ latest possible completion time for ?{T}, &ie;, <math/\Lct{T} =\Lst{T} + \Dur{T}///
+<tr/ <td/ <math/$\newcommand{\Est}[1]{{\mbox{est}(#1)}}$\Est{T}//
+     <td/ least possible start time for for <math/T///
+<tr/ <td/<math/~$~\newcommand{\Lst}[1]{{\mbox{lst}(#1)}}~$~
+\Lst{T}/ /
+     <td/ largest possible start time for ?{T}//
+<tr/ <td/<math/~$\newcommand{\Ect}[1]{{\mbox{ect}(#1)}}~$~
+\Ect{T}/ /
+     <td/ earliest completion time for ?{T}, &ie; <math/\Ect{T} = \Est{T} + \Dur{T}///
+<tr/ <td/<math/~$~ \newcommand{\Lct}[1]{{\mbox{lct}(#1)}} ~$~
+\Lct{T}/ /
+     <td/ latest possible completion time for ?{T}, &ie;, <math/\Lct{T} =\Lst{T} + \Dur{T}///
 </table>
 <p>
 For a set ?{S} of tasks we define
@@ -756,7 +761,7 @@ the problem, one has to choose an appropriate propagator.
 <p>
 For unary resources Oz provides two propagators employing edge-finding
 to implement capacity constraints. The propagator
-<<FD.schedule.serialize>> is an improved version of an algorithm
+<<Schedule.serialize>> is an improved version of an algorithm
 described in <ptr to=martin.96>. A single propagation step has complexity
 <math/O(n^2)/ where ?{n} is the number of tasks the propagator is reasoning
 on, &ie; the number of tasks on the resource considered by the
@@ -766,9 +771,9 @@ is the size of the largest domain of a task's start time (at most <math/k
 \cdot n/ values can be deleted from the domains of task variables).
 <p>
 The propagator
-<<FD.schedule.taskIntervals>> provides a slightly weaker
+<<Schedule.taskIntervals>> provides a slightly weaker
 propagation than the propagator described in&nbsp;<ptr to=caseau.94a> but
-provides stronger propagation than <<FD.schedule.serialize>>. While a
+provides stronger propagation than <<Schedule.serialize>>. While a
 single propagation step has complexity <math/O(n^3)/, the overall complexity
 is <math/O(k \cdot n^4)/.
 <p>
@@ -776,7 +781,7 @@ Now we can solve the bridge construction problem with a propagator using
 edge-finding. By the statement
 <<<
 {ExploreBest {CompileBridge Bridge
-              FD.schedule.serialized
+              Schedule.serialized
               DistributeResSort} Order}
 >>>
 we compute the optimal solution in a full search tree with 508
@@ -801,12 +806,12 @@ bridge(taskSpec: Bridge.taskSpec
 Solving the modified problem with the simple propagator by
 <<<
 {ExploreBest {CompileBridge ModifiedBridge
-              FD.schedule.serializedDisj
+              Schedule.serializedDisj
               DistributeResSort} Order}
 >>>
 we obtain a search tree with 342 choice nodes. Using  the edge-finding
-propagator <<FD.schedule.serialized>> instead we obtain a search tree
-with only 22 choice nodes.  By using <<FD.schedule.taskIntervals>> the
+propagator <<Schedule.serialized>> instead we obtain a search tree
+with only 22 choice nodes.  By using <<Schedule.taskIntervals>> the
 search tree shrinks further to the size of 17 choice nodes.
 <p>
 Note that for the proof of optimality the domains of the start times are
@@ -919,13 +924,13 @@ all resources are serialized.
 <p>
 The described serializer follows the ideas of&nbsp;<ptr to=baptiste.95a> which in turn
 adopts ideas of&nbsp;<ptr to=carlier.89>.  The serializer is available
-through <<FD.schedule.firstsDist>>.
+through <<Schedule.firstsDist>>.
 <p>
 We immediately apply our new distributor to the bridge problem.
 <<<
 {ExploreBest {CompileBridge Bridge
-              FD.schedule.serialized
-              FD.schedule.firstsDist} Order}
+              Schedule.serialized
+              Schedule.firstsDist} Order}
 >>>
 The optimal solution can be found and its optimality can be proven with
 only 90 choice nodes. Now the proof of optimality (problem
@@ -938,9 +943,9 @@ tried first to be scheduled after all the others is the one which is
 maximal according to the lexicographic order <math/(\Lct{T},\Ect{T})/. A
 further serializer computes both ?{F} and ?{L}. Then it selects the set
 which has the smallest cardinality. This serializer is available
-through <<FD.schedule.firstsLastsDist>>.
+through <<Schedule.firstsLastsDist>>.
 <p>
-Using <<FD.schedule.firstsLastsDist>> we can find the optimal solution
+Using <<Schedule.firstsLastsDist>> we can find the optimal solution
 and  prove its optimality with only 30 choice nodes (see
 <Ptr to="fig.scheduling.bridgStronge2">). Note that in contrast to
 <Ptr to="fig.scheduling.bridge"> where we have needed 8 solutions to
@@ -995,8 +1000,8 @@ resources. We first search for the optimal solution and prove its
 optimality:
 <<<
 {ExploreBest {CompileBridge ABZ6
-              FD.schedule.serialized
-              FD.schedule.firstsLastsDist} Order}
+              Schedule.serialized
+              Schedule.firstsLastsDist} Order}
 >>>
 The resulting search tree contains 2&nbsp;424 choice nodes. The optimal
 makespan is 943.
@@ -1102,7 +1107,7 @@ can be applied. As we have seen before, this is the case when the
 domains are rather narrow, &ie; for example when we want to prove
 optimality.
 <p>
-Oz provides the serializer <<FD.schedule.taskIntervalsDistP>> which has
+Oz provides the serializer <<Schedule.taskIntervalsDistP>> which has
 the described behavior. To prove optimality for ABZ6 we now only need
 145 choice nodes.
 <p>
@@ -1115,7 +1120,7 @@ than 47&nbsp;000 choice nodes.
 <p>
 A variant of this task-oriented serializer is especially designed to
 find good solutions.  To this aim Oz provides
-<<FD.schedule.taskIntervalsDistO>> (see also <ptr to=caseau.95>). To find
+<<Schedule.taskIntervalsDistO>> (see also <ptr to=caseau.95>). To find
 the optimal solution and to prove its optimality with this
 strategy we need 2&nbsp;979 choice nodes. But be aware that the use of this strategy may also lead to deep
 search trees which result in high memory consumption. This
@@ -1178,8 +1183,8 @@ can be used for proving optimality. The proof of optimality can be done with 1&n
 nodes (see also the shipped demo file):
 <<<
 {ExploreBest {CompileBridge ModifiedMT10
-              FD.schedule.serialized
-              FD.schedule.taskIntervalsDistP} Order}
+              Schedule.serialized
+              Schedule.taskIntervalsDistP} Order}
 >>>
 
 Note that the depth of the search
@@ -1188,11 +1193,11 @@ determined by edge-finding which is employed by the task-oriented
 serializer.
 
 To find the optimal solution we better use the serializer
-<<FD.schedule.firstsLastsDist>>:
+<<Schedule.firstsLastsDist>>:
 <<<
 {ExploreBest {CompileBridge MT10
-              FD.schedule.serialized
-              FD.schedule.firstsLastsDist} Order}
+              Schedule.serialized
+              Schedule.firstsLastsDist} Order}
 >>>
 The full search tree to find the optimal solution and to prove its
 optimality is shown in <Ptr to="fig.scheduling.mt10Solve">. It
@@ -1216,6 +1221,6 @@ techniques to solve many different problems (MT10 is included). It also
 employs a special technique (based on iterative improvement) to find
 good solutions for job-shop problems very quickly (see also
 <ptr to=caseau.95>).  This technique uses the serializer
-<<FD.schedule.taskIntervalsDistO>> presented in the previous section.
+<<Schedule.taskIntervalsDistO>> presented in the previous section.
 </section>
 </chapter>

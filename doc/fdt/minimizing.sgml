@@ -45,7 +45,11 @@ parameterized script.
 
 <section><title/Example: Coloring a Map/
 
-<para><title/Problem Specification./
+<subsection class=unnumbered>
+  <title/Problem Specification/
+
+
+<p>
 Given a map showing the West European countries
 Netherlands, Belgium, France, Spain, Portugal,
 Germany, Luxemburg, Switzerland, Austria, and
@@ -53,7 +57,11 @@ Italy, find a coloring such that neighboring
 countries have different color and a minimal
 number of colors is used.
 
-<para><title/Model./
+<subsection class=unnumbered>
+  <title/Model/
+
+
+<p>
 We have a variable ?{NbColors} saying how may
 different colors we can use.  Moreover, we have a
 variable for every country.  For every pair ?{A},
@@ -63,7 +71,11 @@ colors as numbers.  Hence we constrain all
 variables for countries to integers in
 <math/0\#{NbColors}/.
 
-<para><title/Distribution Strategy./
+<subsection class=unnumbered>
+  <title/Distribution Strategy/
+
+
+<p>
 We first distribute on ?{NbColors}, trying the
 numbers <math/0,1,2,\ldots/ in ascending order.  After
 ?{NbColors} is determined, we distribute on the
@@ -104,7 +116,10 @@ Data = [ austria     # [italy switzerland germany]
 >>>
 </figure>
 
-<para><title/Script./
+<subsection class=unnumbered>
+  <title/Script/
+
+<p>
 The script appears in
 <Ptr to="ProgMapColoring">.  It is parameterized
 with the specification of the map to be colored.
@@ -160,7 +175,11 @@ not matter.
 This example will employ the constraint provided
 by ?{FD.atMost}.
 
-<para><title/Problem Specification./
+<subsection class=unnumbered>
+  <title/Problem Specification/
+
+
+<p>
 We want to construct the time table of a
 conference.  The conference will consist of 11
 sessions of equal length.  The time table is to
@@ -202,7 +221,10 @@ Session <math/{10}/.
 The time table should minimize the number of
 slots.
 
-<para><title/Model./
+<subsection class=unnumbered>
+  <title/Model/
+
+<p>
 The model has a variable <math/{\it NbSlots}/ saying
 how many slots the conference has.  For the given
 data, <math/{\it NbSlots}/ can be constrained to the
@@ -215,7 +237,10 @@ finite domain <math/1\#{\it NbSlots}/.  The remaining
 constraints are obvious from the problem
 description.
 
-<para><title/Distribution Strategy./
+<subsection class=unnumbered>
+  <title/Distribution Strategy/
+
+<p>
 We use a two-dimensional distribution strategy.
 We first distribute on <math/{\it NbSlots}/, trying
 smaller values first.  Once <math/{\it NbSlots}/ is
@@ -269,7 +294,10 @@ Data = data( nbSessions:11  nbParSessions:3
 
 </figure>
 
-<para><title/Script./
+<subsection class=unnumbered>
+  <title/Script/
+
+<p>
 The script in <Ptr to="ProgConference"> is
 parameterized with an argument ?{Data} specifying
 the conference to be organized.  The figure also
