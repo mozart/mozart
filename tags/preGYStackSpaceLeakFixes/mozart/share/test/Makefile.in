@@ -1,0 +1,193 @@
+####################################################
+@SET_MAKE@
+VPATH=		@srcdir@
+SRCDIR=		@srcdir@
+BUILDTOP=	@BUILDTOP@
+SRCTOP=		@SRCTOP@
+HOMEURL=        @HOMEURL@
+OZPLATFORM=	@PLATFORM@
+PLATFORM=	@PLATFORM@
+
+INSTALL_DIR	= @INSTALL_DIR@
+CPPFLAGS	= @CPPFLAGS@
+LDFLAGS		= @LDFLAGS@
+
+OZLOADSEP	= @OZLOADSEP@
+CYG_SRCDIR	= $(shell $(SRCTOP)/share/lib/cygpath.sh "$(SRCDIR)")
+
+export OZPATH = .$(OZLOADSEP)$(CYG_SRCDIR)
+export SRCDIR
+export OZPLATFORM
+
+# Test for spaces
+SPACELOCAL = \
+	basic queens lp sit-check
+SPACEOZF = $(SPACELOCAL:%=./space/%.ozf)
+
+# Tests for finite domains
+FDLOCAL = \
+	distribute alpha money misc1 misc2 \
+	watlasm dsum sumabs binpacking \
+	bridge buildhouse cars change color \
+	conference configuration diagnosis divmod \
+	donald equations family fraction guards \
+	zebra grocery pythagoras safe schur multiply \
+	srat students hubert pigeon permutation \
+	kalotan knights houses warehouse bridge_noterm \
+	queens mapcoloring magicsquare magicsequence \
+	photo coins train pel college boundsdistinct \
+	filter
+
+# tiling removed
+
+FDOZF = $(FDLOCAL:%=./fd/%.ozf)
+
+# Tests for finite sets
+FSLOCAL = \
+	golf-reified crew hamming steiner knapsack misc denys manuel
+
+FSOZF = $(FSLOCAL:%=./fs/%.ozf)
+
+# Tests for scheduling
+SCHEDLOCAL = \
+	abz6 product
+
+SCHEDOZF = $(SCHEDLOCAL:%=./scheduling/%.ozf)
+
+FBASE = \
+	conversion float int record type exception guards future misc \
+	instruction compiler except dictionary ofs pickles \
+	thread unix weakdictionary weakdictionaryGC finalize gc
+
+BASE = $(FBASE:%=./base/%.ozf)
+
+FBENCH = \
+	nrev tak fd compiler diff knights bridge port rec
+
+BENCH = $(FBENCH:%=./bench/%.ozf)
+
+DP1= \
+	url mini maxi equality port cell cellAndLock variable object \
+        objectAndLock injectors watchers basicfault fault_state \
+	parallel-search variable2 huge object_proc_port caching credit_circle \
+	init_settings table
+
+DP2=
+DP=	$(DP1:%=./dp/%.ozf) $(DP2:%=./dp/%.ozf)
+
+FTOOLS = \
+	gump
+
+TOOLS = $(FTOOLS:%=./tools/%.ozf)
+
+FNATIVES = \
+	base/smallbuf base/gcsusplist
+
+.PRECIOUS: $(FNATIVES:%=%.o)
+
+SONATIVES = $(FNATIVES:%=%.so-$(OZPLATFORM))
+
+DIRS = base space fd fs scheduling dp tools bench dp-bench
+
+# All tests
+TESTCOMPONENTS = \
+	$(BASE) $(SPACEOZF) $(FDOZF) $(SCHEDOZF) $(FSOZF) $(DP) $(TOOLS)
+BENCHCOMPONENTS = \
+	$(BENCH)
+OTHERS= dp/TestMisc.ozf
+
+####################################################
+
+COMPRESSLEVEL   = @oz_picklecompression@
+COMPRESSFLAGS   = --compress=$(COMPRESSLEVEL)
+
+OZENGINE = @OZENGINE@
+OZC = @OZC@
+OZFLAGS = $(COMPRESSFLAGS)
+OZTOOL = @OZTOOL@
+
+OZEE = $(OZC) $(OZFLAGS)
+OZCC = $(OZEE) -c
+
+.PHONY: all bootstrap install check dirs clean veryclean distclean depend
+
+all: dirs oztest ozbench
+
+PREFIX    = @prefix@
+export OZTESTOPTS = --verbose
+
+boot-check:
+	$(MAKE) boot-zcheck OZTESTOPTS="$(OZTESTOPTS) --ignores=dp"
+
+bootstrap:
+
+install:
+
+#oztest
+check zcheck:
+	$(OZENGINE) ./oztest $(OZTESTOPTS)
+
+dirs:
+	@ds="$(DIRS)"; for d in $$ds; do if test ! -d $$d; then $(INSTALL_DIR) $$d; fi; done && touch $@
+
+# what is this bullshit
+# $(COMPONENTS): dirs
+
+TESTSRCS=make-test engine passed failed help-string compute-tests
+oztest: dirs $(TESTSRCS:%=./lib/%.oz) $(TESTCOMPONENTS) $(OTHERS) $(SONATIVES) make-test
+	$(OZENGINE) ./make-test --verbose $(TESTCOMPONENTS)
+	chmod +x oztest
+
+clean:
+	-rm -f *~ ./*/*~ ./*/*/*~
+	-rm -f $(TESTCOMPONENTS) $(BENCHCOMPONENTS) $(OTHERS)
+	-rm -f $(SONATIVES)
+	-rm -f LambdaScanner.* LambdaParser.*
+	-rm -f make-test
+	-rm -f te.ozf
+
+veryclean: clean
+	-rm -f oztest
+
+distclean: veryclean
+	-rmdir $(DIRS)
+	-rm -f Makefile dirs
+
+.SUFFIXES:
+.SUFFIXES: $SUFFIXES .ozf .oz
+
+.oz.ozf:
+	$(OZCC) $< -o $@
+
+%.ozm: %.oz
+	$(OZC) --expression -S $< -o $@
+
+include $(BUILDTOP)/share/Makefile.boot
+
+make-test: lib/make-test.oz
+	$(OZC) $(OZFLAGS) -x $(OZEXECFILE) $< -o $@
+
+BENCHSRCS=make-bench engine compute-tests help-bench
+ozbench: dirs $(BENCHSRCS:%=./lib/%.oz) $(BENCHCOMPONENTS) $(OTHERS)
+	$(OZC) $(OZFLAGS) -x $(OZEXECFILE) $(CYG_SRCDIR)/lib/make-bench.oz -o make-bench
+	$(OZENGINE) ./make-bench --verbose $(BENCHCOMPONENTS)
+	chmod +x ozbench
+	-rm -f ./make-bench
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+
+depend:
+
+base/smallbuf.so-$(OZPLATFORM): base/smallbuf.o
+	$(OZTOOL) ld $(LDFLAGS) $< @OZWSOCKLIB@ -o $@
+
+%.so-$(OZPLATFORM): %.o
+	$(OZTOOL) ld $(LDFLAGS) $< -o $@
+
+%.o: %.cc
+	$(OZTOOL) c++ -I$(SRCTOP)/platform/emulator \
+	-I$(BUILDTOP)/platform/emulator $(CPPFLAGS) -c $< -o $@

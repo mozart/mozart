@@ -1,0 +1,107 @@
+<!--
+  - Authors:
+  -   Denys Duchier <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, Leif Kornstaedt, and Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter id=chapter.misc>
+  <title/Miscellaneous/
+  <section id="section.misc.bitstrings">
+    <title/Bit Strings/
+    <p>Module <span class=index/<<BitString>>/ provides an interface
+to a fast and economical representation for immutable bit sequences.
+<list>
+	<entry/<span class=index/<code/IsBitString//
+<index class=tails/<code/BitString/<and><code/is///
+	<synopsis/<code/{BitString.is ?+{X} ??{B}}//
+	<item/tests whether ?_{X} is a bit string./
+	<entry/<code/make/
+<index class=tails/<code/BitString/<and><code/make///
+	<synopsis/<code/{BitString.make ?+{I} ?+{L} ??{BitString}}//
+	<item/creates a bit string of width&nbsp;?_{I} with precisely those
+bits set that are specified in&nbsp;?_{L}, a list of indices./
+	<entry/<code/conj/
+<index class=tails/<code/BitString/<and><code/conj///
+	<synopsis/<code/{BitString.conj ?+{BitString1} ?+{BitString2} ??{BitString3}}//
+	<item/returns the bitwise <q/and/ of its first and second
+arguments, which must be of indentical widths./
+	<entry/<code/disj/
+<index class=tails/<code/BitString/<and><code/disj///
+	<synopsis/<code/{BitString.disj ?+{BitString1} ?+{BitString2} ??{BitString3}}//
+	<item/returns the bitwise <q/or/ of its first and second
+arguments, which must be of indentical widths./
+	<entry/<code/nega/
+<index class=tails/<code/BitString/<and><code/nega///
+	<synopsis/<code/{BitString.nega ?+{BitString1} ??{BitString2}}//
+	<item/returns the bitwise negation of its first argument./
+	<entry/<code/get/
+<index class=tails/<code/BitString/<and><code/get///
+	<synopsis/<code/{BitString.get ?+{BitString} ?+{I} ??{B}}//
+	<item/tests whether bit&nbsp;?_{I} of ?_{BitString} is
+set./
+	<entry/<code/put/
+<index class=tails/<code/BitString/<and><code/put///
+	<synopsis/<code/{BitString.put ?+{BitString1} ?+{I} ?+{B} ??{BitString2}}//
+	<item/returns a new bit string which is identical to
+?_{BitString1} except that bit&nbsp;?_{I} is set iff ?_{B} is <<true>>./
+	<entry/<code/width/
+<index class=tails/<code/BitString/<and><code/width///
+	<synopsis/<code/{BitString.width ?+{BitString} ??{I}}//
+	<item/returns the width of the ?_{BitString}./
+	<entry/<code/toList/
+<index class=tails/<code/BitString/<and><code/toList///
+	<synopsis/<code/{BitString.toList ?+{BitString} ??{L}}//
+	<item/returns the list of indices of all set bits in
+?_{BitString}./
+      </list></p>
+  </section>
+  <section id="section.misc.foreignpointers">
+    <title/Foreign Pointers/
+    <p>Module <span class=index/<<ForeignPointer>>/ provides an
+    interface to encapsulated <em/raw/ pointers to foreign data.  This
+    is useful for implementors of foreign libraries: any C pointer can
+    be encapsulated as a ForeignPointer and passed around as an Oz
+    value.  However, you should consider subclassing the <code
+    proglang=cc/Oz_Extension/ class instead, to encapsulate your C++ data
+    structures into new Oz (abstract) datatypes.
+    <list>
+    <entry/<span class=index/<code/IsForeignPointer//
+<index class=tails/<code/ForeignPointer/<and><code/is///
+    <synopsis/<code/{ForeignPointer.is ?+{X} ??{B}}//
+    <item/tests whether ?_{X} is a foreign pointer/
+    <entry/<span class=index/<code/toInt/
+<index class=tails/<code/ForeignPointer/<and><code/toInt////
+    <synopsis/<code/{ForeignPointer.toInt ?+{X} ??{I}}//
+    <item/converts a foreign pointer to an integer.  Two foreign
+    pointers convert to the same integer iff they point to the same
+    location./
+</list></p></section>
+</chapter>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

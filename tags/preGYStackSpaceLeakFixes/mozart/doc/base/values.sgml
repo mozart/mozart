@@ -1,0 +1,193 @@
+<!--
+  - Authors:
+  -   Denys Duchier <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de> (SGML Translation)
+  -
+  - Copyright:
+  -   Denys Duchier, Leif Kornstaedt, and Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.values">
+  <Title/Values/
+  <Section id="section.values.general">
+    <Title/Values in General/
+    <P>
+      The module <Span class=index/<<Value>>/ contains procedures that can
+      operate on many kinds of values.
+      <List>
+	<Entry><Span class=index/<<=>>/
+	  <Index/<<Value>><And><<'='>>/
+	<Synopsis>
+	  <<{Value.'=' ?_{X} ?_{Y}}>>
+	<Item>
+	  unifies the values of the variables ?_{X} and&nbsp;?_{Y}.
+
+	<Entry><Span class=index/<<==>>/
+	  <Index/<<Value>><And><<'=='>>/
+	<Synopsis>
+	  <<{Value.'==' ?_{X} ?_{Y} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is equal to&nbsp;?_{Y}.
+	  The test may suspend.
+
+	<Entry><Span class=index/<<\=>>/
+	  <Index/<<Value>><And><<'\\='>>/
+	<Synopsis>
+	  <<{Value.'\\=' ?_{X} ?_{Y} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is not equal to&nbsp;?_{Y}.
+	  The test may suspend.
+
+	<Entry><<toVirtualString>>
+	  <Index class=tails/<<Value>><And><<toVirtualString>>/
+	<Synopsis>
+	  <<{Value.toVirtualString ?_{X} ?+{DepthI} ?+{WidthI} ??{VS}}>>
+	<Item>
+	  returns a virtual string describing the value of&nbsp;?_{X}.
+	  Note that this does not block on&nbsp;?_{X}.  The values of
+	  ?_{DepthI} and ?_{WidthI} are used to limit output of records
+	  in depth and width respectively.
+      </List>
+  <Section id="section.values.status">
+    <Title/Variable Status/
+    <P>
+      The following procedures allow to inspect a variable's status.
+      <List>
+	<Entry><Span class=index/<<IsFree>>/
+	  <Index/<<Value>><And><<isFree>>/
+	<Synopsis>
+	  <<{Value.isFree ?_{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is currently free.
+
+	<Entry><Span class=index/<<IsDet>>/
+	  <Index/<<Value>><And><<isDet>>/
+	<Synopsis>
+	  <<{Value.isDet ?_{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is determined.
+
+	<Entry><Span class=index/<<IsFuture>>/
+	  <Index/<<Value>><And><<isFuture>>/
+	<Synopsis>
+	  <<{Value.isFuture ?_{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a future.
+
+	<Entry><Span class=index/<<IsFailed>>/
+	  <Index/<<Value>><And><<isFailed>>/
+	<Synopsis>
+	  <<{Value.isFailed ?_{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a failed future.
+
+	<Entry><Span class=index/<<IsKinded>>/
+	  <Index/<<Value>><And><<isKinded>>/
+	<Synopsis>
+	  <<{Value.isKinded ?_{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is currently kinded, &ie;, is constrained but
+	  not yet determined.  For example, <code/foo(a:12 ...)/ is kinded
+	  because it is constrained to be a record, yet its arity is not yet
+	  known.  Also, a non-determined finite domain variable is kinded:
+	  its type is known to be integer, but its value is not yet
+	  determined.  Similarly for finite set variables.
+
+	<Entry><<status>>
+	  <Index class=tails/<<Value>><And><<status>>/
+	<Synopsis>
+	  <<{Value.status ?_{X} ??{T}}>>
+	<Item>
+	  returns status and type information on&nbsp;?_{X}.  If ?_{X} is
+	  a future, the atom <<future>> is returned.  If ?_{X} is free,
+	  the atom <<free>> is returned.  If ?_{X} is kinded, the tuple
+	  <<kinded(?{Y})>> is returned, where ?{Y} is bound to either the
+	  atoms <<int>>, <<fset>> or <<record>>, depending on the type of&nbsp;?_{X}. 
+	  If ?_{X} is determined, the tuple <<det(?{Y})>> is returned, where
+	  ?{Y} is bound to the atom as returned by <<{Value.type ?_{X}}>>.
+
+	<Entry><<type>>
+	  <Index class=tails/<<Value>><And><<type>>/
+	<Synopsis>
+	  <<{Value.type ?+{X} ??{A}}>>
+	<Item>
+	  returns an atom describing the type of&nbsp;?_{X}.  If ?_{X}
+	  is of one of the standard primary types depicted in <Ptr
+	  to="figure.types"> (except <Q/value/), then ?_{A} is constrained
+	  to the most specific of <<int>>, <<float>>, <<record>>, <<tuple>>,
+	  <<atom>>, <<name>>, <<procedure>>, <<cell>>, <<byteString>>,
+	  <<bitString>>, <<chunk>>, <<array>>, <<dictionary>>, <<bitArray>>,
+	  <<'class'>>, <<object>>, <<'lock'>>, <<port>>, <<space>>, or
+	  <<'thread'>>.  If any other atom is returned, this means that ?_{X}
+	  is of no standard primary type, but an implementation-dependent
+	  <Index/extensions/extension.
+      </List>
+  <Section id="section.values.comparison">
+    <Title/Comparisons/
+    <P>
+      This section collects procedures to compare integers with integers,
+      floats with floats, and atoms with atoms. Atoms are compared lexically.
+      Comparison between values of different types is not allowed and an
+      attempt to do so will raise a run-time error.
+      <List>
+	<Entry><Span class=index/<<=&lt;>>/
+	  <Index/<<Value>><And><<'=&lt;'>>/
+	<Synopsis>
+	  <<{Value.'=&lt;' ?+{AFI1} ?+{AFI2} ??{B}}>>
+	<Item>
+	  tests whether ?_{AFI1} is less than or equal to ?_{AFI2}.
+
+	<Entry><Span class=index/<<&lt;>>/
+	  <Index/<<Value>><And><<'&lt;'>>/
+	<Synopsis>
+	  <<{Value.'&lt;' ?+{AFI1} ?+{AFI2} ??{B}}>>
+	<Item>
+	  tests whether ?_{AFI1} is less than ?_{AFI2}.
+
+	<Entry><Span class=index/<<&gt;=>>/
+	  <Index/<<Value>><And><<'&gt;='>>/
+	<Synopsis>
+	  <<{Value.'&gt;=' ?+{AFI1} ?+{AFI2} ??{B}}>>
+	<Item>
+	  tests whether ?_{AFI1} is greater than or equal to ?_{AFI2}.
+
+	<Entry><Span class=index/<<&gt;>>/
+	  <Index/<<Value>><And><<'&gt;'>>/
+	<Synopsis>
+	  <<{Value.'&gt;' ?+{AFI1} ?+{AFI2} ??{B}}>>
+	<Item>
+	  tests whether ?_{AFI1} is greater than ?_{AFI2}.
+
+	<Entry><Span class=index/<<Max>>/
+	  <Index/<<Value>><And><<max>>/
+	<Synopsis>
+	  <<{Value.max ?+{AFI1} ?+{AFI2} ??{AFI3}}>>
+	<Item>
+	  returns the maximum of ?_{AFI1} and ?_{AFI2}.
+
+	<Entry><Span class=index/<<Min>>/
+	  <Index/<<Value>><And><<min>>/
+	<Synopsis>
+	  <<{Value.min ?+{AFI1} ?+{AFI2} ??{AFI3}}>>
+	<Item>
+	  returns the minimum of ?_{AFI1} and ?_{AFI2}.
+      </List>
+</Chapter>

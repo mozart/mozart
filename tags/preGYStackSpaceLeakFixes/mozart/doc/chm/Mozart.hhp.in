@@ -1,0 +1,22 @@
+[OPTIONS]
+Compatibility=1.1 or later
+Compiled file=Mozart.chm
+Contents file=Mozart.hhc
+Default Window=Help Viewer
+Default topic=index.html
+Display compile progress=No
+Full-text search=Yes
+Language=0x409 English (United States)
+Title=Mozart Documentation
+
+[WINDOWS]
+Help Viewer=,"Mozart.hhc",,"index.html","index.html",,,,,0x63520,,0x384e,[64,64,864,576],,,,,,,0
+
+[INFOTYPES]
+
+[FILES]
+index.html
+page.gif
+idx/page.gif
+mozart-stdlib/page.gif
+mozart-stdlib/wp/qtk/html/page.gif

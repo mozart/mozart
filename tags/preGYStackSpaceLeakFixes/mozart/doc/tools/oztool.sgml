@@ -1,0 +1,71 @@
+<chapter id=chapter.oztool proglang=sh>
+  <title/The Oz DLL Builder: <code/oztool//
+  <p><code/oztool/ facilitates the creation of native functors (see
+<ptr.extern to="ozdoc:apptut" key="part.foreign.extensions"> and
+<ptr.extern to="ozdoc:foreign">).  A
+native functor is a DLL, &ie; a library that is dynamically loaded by
+the Oz emulator and interfaces with it.  Creating a native functor
+often involves complicated compilation and linking technicalities
+(&eg; options).  <code/oztool/ takes care of these details for you.
+<list>
+      <entry/<code/oztool c++ ...//
+      <item>Instead of calling the C++ compiler directly, you should
+invoke it through <code/oztool/.  The advantages are: it calls the
+right compiler, with the right options, and also extends the include
+search path to find the Mozart specific includes such as
+<file/mozart.h/.  Normally, you would compile a native functor
+implemented in <file/foo.cc/ using:
+<code display/oztool c++ -c foo.cc/
+      <entry/<code/oztool cc ...//
+      <item>Same idea, but for the C compiler
+      <entry/<code/oztool ld ...//
+      <item>Instead of calling the linker directly, you should also
+invoke it through <code/oztool/.  Again, the advantages are that it
+calls the right linker, with the right options.  Normally, you would
+create a DLL from <file/foo.o/ as follows:
+<code display/oztool ld -o foo.so foo.o/
+      <entry/<code/oztool platform//
+      <item>The default <ref.extern to="ozdoc:system" key="chapter.resolve"
+/Resolution/ mechanism locates architecture specific DLLs as follows:
+If the system needs a native functor called (abstractly)
+<code/foo.so/, then it will look for a DLL called
+<code/foo.so-linux-i486/ on a Linux machine,
+<code/foo.so-solaris-sparc/ on a Solaris machine, or
+<code/foo.so-win32/ on a Windows machine, etc&ellipsis;  Thus,
+when you create a DLL, you should install it with a name where the
+machine's architecture is appended.  Invoking <code/oztool platform/
+simply prints out the appropriate architecture name for your machine.
+In this respect, <code/oztool/ helps you write portable Makefiles: to
+create a DLL from file <file/foo.cc/ you would normally invoke:
+<code display>
+oztool c++ -c foo.cc
+oztool ld -o foo.so-`oztool platform` foo.o
+</code>
+</list>
+<section id=section.oztool-env proglang=sh>
+  <title/Windows Environment Variables/
+  <p>Under Windows, <code/oztool/ supports the use of several compilers
+    as described in <ptr.extern to="ozdoc:foreign" key="chapter.windll">.
+    Furthermore, when using the GNU compiler suite, the exact name of the
+    compilers and linker to invoke can be set by the environment variables
+    shown in the following table with their default values.
+  <table class=dyptic>
+    <tr/<th/Environment Variable/<th/Default Value//
+    <tr/<td/<Var type=env/OZTOOL_CC//<td/<<gcc-2 -mno-cygwin>>//
+    <tr/<td/<Var type=env/OZTOOL_CXX//<td/<<g++-2 -mno-cygwin>>//
+    <tr/<td/<Var type=env/OZTOOL_LD//<td/<<g++-2 -mno-cygwin>>//
+  </table>
+  <p>These values correspond to the compilers used to build Mozart.
+    The above binaries are provided by the Cygwin <<gcc2>> package.  Note
+    that using a different compiler can lead to problems, as described in
+    <ptr.extern to="ozdoc:foreign" key="section.compilerproblems">.
+</chapter>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "../apptut/chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

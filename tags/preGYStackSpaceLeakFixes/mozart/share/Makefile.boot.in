@@ -1,0 +1,144 @@
+# -*- Makefile -*-
+#---------------------------------------------------------------------
+# Bootstraping
+#	use the local emulator and local libraries
+#---------------------------------------------------------------------
+
+OZLOADSEP=@OZLOADSEP@
+OZLOADWIN=@OZLOADWIN@
+OZEXECFILE=@OZEXECFILE@
+
+BUILDSHARE=$(BUILDTOP)/share
+BUILDLIB=$(BUILDSHARE)/lib
+BUILDTOOLS=$(BUILDSHARE)/tools
+BUILDCONTRIB=$(BUILDTOP)/contrib
+BUILDGDBM=$(BUILDCONTRIB)/gdbm
+BUILDOS=$(BUILDCONTRIB)/os
+BUILDGUMP=$(BUILDTOP)/platform/tools/gump
+BUILDBISON=$(BUILDGUMP)/ozbison
+BUILDEMU=$(BUILDTOP)/platform/emulator
+
+CYG_PATH=$(SRCTOP)/share/lib/cygpath.sh
+
+CYG_BUILDSHARE	=$(shell $(CYG_PATH) "$(BUILDSHARE)")
+CYG_BUILDLIB	=$(shell $(CYG_PATH) "$(BUILDLIB)")
+CYG_BUILDTOOLS	=$(shell $(CYG_PATH) "$(BUILDTOOLS)")
+CYG_BUILDCONTRIB=$(shell $(CYG_PATH) "$(BUILDCONTRIB)")
+CYG_BUILDGDBM	=$(shell $(CYG_PATH) "$(BUILDGDBM)")
+CYG_BUILDOS	=$(shell $(CYG_PATH) "$(BUILDOS)")
+CYG_BUILDGUMP	=$(shell $(CYG_PATH) "$(BUILDGUMP)")
+CYG_BUILDBISON	=$(shell $(CYG_PATH) "$(BUILDBISON)")
+CYG_BUILDEMU	=$(shell $(CYG_PATH) "$(BUILDEMU)")
+
+SOURCELIB=$(SRCTOP)/share/lib
+SOURCETOOLS=$(SRCTOP)/share/tools
+
+CYG_SOURCELIB	=$(shell $(CYG_PATH) "$(SOURCELIB)")
+CYG_SOURCETOOLS =$(shell $(CYG_PATH) "$(SOURCETOOLS)")
+
+EXE_EXT=@EXE_EXT@
+
+BOOTEMU=$(BUILDTOP)/platform/emulator/@EMULATOR_EXE@
+BOOTENG=$(BUILDTOP)/share/ozengine.sh
+BOOTCOM=$(BOOTENG) $(BUILDTOP)/share/lib/ozc$(EXE_EXT)
+BOOTOZL=$(BOOTENG) $(BUILDTOP)/share/lib/ozl$(EXE_EXT)
+BOOTOZTOOL=@BOOTOZTOOL@
+BOOTOZTOOLINC="-I$(BUILDTOP)/platform/emulator -I$(SRCTOP)/platform/emulator -I$(SRCTOP)/platform/tools/gump"
+BOOTOZFLEX=$(CYG_BUILDGUMP)/ozflex/flex.exe
+
+BOOTWINOZTOOLCXXFLAGS=@WINOZTOOLCXXFLAGS@
+BOOTWINOZTOOLLDFLAGS="@WINOZTOOLLDFLAGS@"
+
+ifdef OZC
+export OZC
+endif
+
+ifdef OZL
+export OZL
+endif
+
+ifdef OZINIT
+export OZINIT
+endif
+
+ifdef OZ_LOAD
+export OZ_LOAD
+endif
+
+ifdef OZEMULATOR
+export OZEMULATOR
+endif
+
+ifdef OZPATH
+export OZPATH
+endif
+
+ifdef OZDOC_HOME
+export OZDOC_HOME
+endif
+
+ifdef OZDOC_AUTHOR_PATH
+export OZDOC_AUTHOR_PATH
+endif
+
+ifdef OZDOC_BIB_PATH
+export OZDOC_BIB_PATH
+endif
+
+ifdef OZDOC_BST_PATH
+export OZDOC_BST_PATH
+endif
+
+ifdef OZDOC_ELISP_PATH
+export OZDOC_ELISP_PATH
+endif
+
+ifdef OZDOC_SBIN_PATH
+export OZDOC_SBIN_PATH
+endif
+
+ifdef OZTOOL
+export OZTOOL
+endif
+
+ifdef OZTOOL_INCLUDES
+export OZTOOL_INCLUDES
+endif
+
+ifdef OZFLEX
+ifneq (OZFLEX,)
+export OZFLEX
+endif
+endif
+
+boot-%:
+	$(MAKE) $* \
+	OZEMULATOR=$(BOOTEMU) \
+	OZENGINE=$(BOOTENG) \
+	OZC="$(BOOTCOM)" \
+	OZINIT=$(BUILDLIB)/Init.ozf \
+	OZPATH="$(subst %,$(OZLOADSEP),.%$(CYG_BUILDLIB)%$(CYG_BUILDTOOLS)%$(CYG_SOURCELIB)%$(CYG_SOURCETOOLS))" \
+	OZ_LOAD=root="$(subst %,$(OZLOADSEP),.%prefix=/=/%prefix=./=./$(OZLOADWIN)%prefix=x-oz://system/=$(CYG_BUILDLIB)/%prefix=x-oz://system/=$(CYG_BUILDTOOLS)/%prefix=x-oz://contrib/=$(CYG_BUILDCONTRIB)/%prefix=x-oz://contrib/=$(CYG_BUILDGDBM)/%prefix=x-oz://contrib/os/=$(CYG_BUILDOS)/%prefix=x-oz://boot/=$(CYG_BUILDEMU)/%prefix=x-oz://system/=$(CYG_BUILDGUMP)/%prefix=x-oz://system/=$(CYG_BUILDBISON)/%=)" \
+	OZL="$(BOOTOZL)" \
+	OZDOC_HOME="$(SRCTOP)/doc/utilities" \
+	OZDOC_AUTHOR_PATH="$(SRCDIR):$(SRCTOP)/doc" \
+	OZDOC_BIB_PATH="$(SRCDIR)" \
+	OZDOC_BST_PATH="$(SRCDIR):$(SRCTOP)/doc/utilities" \
+	OZDOC_ELISP_PATH=".:$(SRCDIR):$(BUILDTOP)/doc:$(BUILDTOP)/doc/utilities:$(BUILDTOP)/share/elisp:$(SRCTOP)/share/elisp:$(BUILDTOP)/contrib/doc/code" \
+	OZDOC_SBIN_PATH="$(SRCTOP)/doc/utilities" \
+	OZDOC_CATALOG="$(BUILDTOP)/doc/bootcatalog" \
+	OZTOOL=$(BOOTOZTOOL) \
+	OZTOOL_INCLUDES=$(BOOTOZTOOLINC) \
+	WINOZTOOLCXXFLAGS=$(BOOTWINOZTOOLCXXFLAGS) \
+	WINOZTOOLLDFLAGS=$(BOOTWINOZTOOLLDFLAGS) \
+	OZFLEX=$(BOOTOZFLEX)
+
+cboot-%:
+	$(MAKE) $* \
+	OZTOOL=$(BOOTOZTOOL) \
+	OZTOOL_INCLUDES=$(BOOTOZTOOLINC) \
+	WINOZTOOLCXXFLAGS=$(BOOTWINOZTOOLCXXFLAGS) \
+	WINOZTOOLLDFLAGS=$(BOOTWINOZTOOLLDFLAGS)
+
+Makefile.boot: Makefile.boot.in $(BUILDTOP)/share/config.status
+	cd $(BUILDTOP)/share && ./config.status

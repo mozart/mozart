@@ -1,0 +1,225 @@
+<!--
+  - Author:
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Leif Kornstaedt, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Section id="section.api.engines">
+  <Title/Compiler Engines/
+  <P>
+    Instances of the <<Compiler.engine>> class are active objects called
+    <Def/compiler engines/.  Each object's thread processes all <Def/queries/
+    inside its <Def/query queue/ sequentially.
+  <P>
+    The final class <<Compiler.engine>> inherits from <<Narrator.'class'>>,
+    described in <Ptr to="appendix.narrator">.
+  <SubSection>
+    <Title/Methods of the <<Compiler.engine>> Class/
+    <P>
+      <List>
+	<Entry><<enqueue>>
+	<Synopsis>
+	  <<enqueue(?+{T} ??{I} &lt;= _)>>
+	<Synopsis>
+	  <<enqueue(?+{Ts} ??{Is} &lt;= _)>>
+	<Item>
+	  appends a new query&nbsp;?_{T} to the query queue.  If ?_{T} is
+	  an unknown query, an exception is raised immediately.  All of
+	  the query's input arguments (the subtrees of&nbsp;?_{T}) are
+	  type-checked before it is enqueued.
+	<P>
+	  Internally, each enqueued query is assigned a unique identification
+	  number&nbsp;?_{I}.  This may be used later to remove the query from
+	  the queue (unless its execution has already begun or terminated).
+	<P>
+	  The argument to enqueue may also be a <Em/list/ of queries:
+	  These are guaranteed to be executed in sequence without other
+	  queries interleaving.  The second argument then returns a list
+	  of identification numbers.
+
+	<Entry><<dequeue>>
+	<Synopsis>
+	  <<dequeue(?+{I})>>
+	<Item>
+	  dequeues the query with identification number&nbsp;?_{I}, if that
+	  query is still waiting in the query queue for execution, else does
+	  nothing.
+
+	<Entry><<interrupt>>
+	<Synopsis>
+	  <<interrupt()>>
+	<Item>
+	  interrupts execution of the current query.  Does not affect the
+	  remaining queue.
+
+	<Entry><<clearQueue>>
+	<Synopsis>
+	  <<clearQueue()>>
+	<Item>
+	  flushes the whole remaining queue.  Does not affect the currently
+	  processed query (if any).
+      </List>
+  <SubSection>
+    <Title/Queries/
+    <P>
+      This chapter documents the queries understood by the Mozart Compiler.
+    <P>
+      Some queries request state information from the compiler engine.
+      The following description annotates the corresponding output variables
+      with a question mark, although they only become bound when the query
+      is actually executed.  If binding an output variable raises an
+      exception, an error is reported through the registered listeners
+      (see <Ptr to="appendix.narrator">).
+    <Para class=apropos><Title/Macro Definitions/
+      <List>
+	<Entry><<macroDefine(?+{V})>>
+	<Item>
+	  Add ?_{V} to the set of defined macro names.
+	<Entry><<macroUndef(?+{V})>>
+	<Item>
+	  Remove ?_{V} from the set of defined macro names.
+	<Entry><<getDefines(??{PrintNames})>>
+	<Item>
+	  Return all currently defined macro names as a list, in no
+	  particular order.
+      </List>
+    <Para class=apropos><Title/Compiler Switches/
+      <List>
+	<Entry><<setSwitch(?+{SwitchName} ?+{B})>>
+	<Item>
+	  Set the state of the given switch to either <Q class=quasi
+	  /on/, if <<?_{B} == true>>, or to <Q class=quasi/off/, if
+	  <<?_{B} == false>>.
+	<Entry><<getSwitch(?+{SwitchName} ??{B})>>
+	<Item>
+	  Return the state of the given switch.
+	<Entry><<pushSwitches()>>
+	<Item>
+	  Save the current settings of all switches onto the internal switch
+	  state stack.
+	<Entry><<popSwitches()>>
+	<Item>
+	  Restore all switch settings from the topmost element of the
+	  internal switch state stack, provided it is not empty, else do
+	  nothing.
+      </List>
+    <Para class=apropos><Title/Compiler Options/
+      <List>
+	<Entry><<setMaxNumberOfErrors(?+{I})>>
+	<Item>
+	  Set the maximal number of errors to report for any one compilation
+	  before aborting it to&nbsp;?_{I}.  A negative value means never to
+	  abort.
+	<Entry><<getMaxNumberOfErrors(??{I})>>
+	<Item>
+	  Return the maximal number of errors to report for any one
+	  compilation before aborting it.
+	<Entry><<setBaseURL(?+{VU})>>
+	<Item>
+	  Set the base URL relative to which the <<require>> clause of
+	  computed functors is resolved.  A value of <<unit>> means to
+	  resolve the imports relative to the location of the file in
+	  which the <<functor>> keyword appeared.
+	<Entry><<getBaseURL(??{AU})>>
+	<Item>
+	  Return the base URL relative to which the <<require>> clause of
+	  computed functors is resolved.
+	<Entry><<setGumpDirectory(?+{VU})>>
+	<Item>
+	  Set the directory in which Gump output files are created.
+	  Can be relative.  <<unit>> means the current working directory.
+	<Entry><<getGumpDirectory(??{VU})>>
+	<Item>
+	  Return the directory in which Gump output files are created.
+      </List>
+    <Para class=apropos><Title/The Environment/
+      <List>
+	<Entry><<addToEnv(?+{PrintName} ?_{X})>>
+	<Item>
+	  Add a binding for a variable with the given print name, and
+	  bound to&nbsp;?_{X}, to the environment.
+	<Entry><<lookupInEnv(?+{PrintName} ?_{X})>>
+	<Item>
+	  Look up the binding for the variable with the given print name
+	  in the environment and bind ?_{X} to its value.  If it does not
+	  exist, report an error.
+	<Entry><<removeFromEnv(?+{PrintName})>>
+	<Item>
+	  Remove the binding for the variable with the given print name
+	  from the environment if it exists.
+	<Entry><<putEnv(?+{Env})>>
+	<Item>
+	  Replace the current environment by the one given by ?_{Env}.
+	<Entry><<mergeEnv(?+{Env})>>
+	<Item>
+	  Adjoin ?_{Env} to the current environment, overwriting already
+	  existing bindings.
+	<Entry><<getEnv(??{Env})>>
+	<Item>
+	  Return the current environment.
+      </List>
+    <Para class=apropos><Title/Feeding Source Text/
+      <List>
+	<Entry><<feedVirtualString(?+{V})>>
+	<Item>
+	  Evaluate the Oz source code given by the virtual string&nbsp;?_{V}.
+	<Entry><<feedVirtualString(?+{V} ?+{R})>>
+	<Item>
+	  Evaluate the Oz source code given by the virtual string&nbsp;?_{V},
+	  returning the resulting value in <<?_{R}.result>> (if the
+	  <Code><Span class=ignore>\switch +</Span>expression</Code>
+	  switch is set and ?_{R} has the feature <<result>>).
+	<Entry><<feedFile(?+{V})>>
+	<Item>
+	  Evaluate the Oz source code contained in the file with
+	  name&nbsp;?_{V}.
+	<Entry><<feedFile(?+{V} ?+{R})>>
+	<Item>
+	  Evaluate the Oz source code contained in the file with
+	  name&nbsp;?_{V}, returning the resulting value in
+	  <<?_{R}.result>> (if the <Code><Span class=ignore
+	  /\switch +/expression</Code> switch is set and ?_{R}
+	  has the feature <<result>>).
+      </List>
+    <Para class=apropos><Title/Synchronization/
+      <List>
+	<Entry><<ping(??{U})>>
+	<Item>
+	  Bind the variable ?_{U} to <<unit>> on execution of this
+	  query.  This allows to synchronize on the work of the compiler,
+	  &eg;, to be informed when a compilation is finished.
+	<Entry><<ping(??{U} ?_{X})>>
+	<Item>
+	  Works like the <<ping(_)>> query, except gives a value which
+	  will reappear in the response notification sent to interfaces.
+	  This allows to identify the <<ping>> query with its <<pong>>
+	  notification.
+      </List>
+    <Para class=apropos><Title/Custom Front-Ends/
+      <List>
+	<Entry><<setFrontEnd(?+{ParseFileP} ?+{ParseVirtualStringP})>>
+	<Item>
+	  Replace the front-end used by the compiler by a custom
+	  front-end implemented by procedures ?_{ParseFileP} and
+	  ?_{ParseVirtualStringP}.  These procedures have the
+	  same signature as <<Compiler.parseOzFile>> and
+	  <<Compiler.parseOzVirtualString>>, documented above.
+	  Indeed, these procedures implement the default Oz front-end.
+      </List>
+</Section>

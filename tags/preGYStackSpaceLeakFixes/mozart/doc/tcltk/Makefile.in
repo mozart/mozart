@@ -1,0 +1,77 @@
+#
+#  Author:
+#    Christian Schulte <schulte@ps.uni-sb.de>
+#
+#  Copyright:
+#    Christian Schulte, 1998
+#
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+#
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+#
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+#
+
+PREFIX		= @prefix@
+VPATH		= @srcdir@
+DOCDIR		= $(PREFIX)/doc
+TKDOCBASE       = tcl8.0-tk8.0-man-html
+TKDOC           = $(VPATH)/$(TKDOCBASE).tar.gz
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_DIR	= @INSTALL_DIR@
+HOMEURL         = @HOMEURL@
+
+
+.PHONY: all quick bootstrap bootquick check install clean veryclean distclean depend
+
+all quick bootstrap:: $(TKDOCBASE)
+
+installps:
+bootquick:
+
+install:: all $(DOCDIR)/tcltk
+
+check depend:
+
+$(TKDOCBASE): $(TKDOC)
+	gzip -dc < $(TKDOC) | tar xf -
+	touch $(TKDOCBASE)
+
+Makefile: $(VPATH)/Makefile.in ../config.status
+	cd .. && ./config.status
+
+$(DOCDIR)/tcltk: $(DOCDIR)
+	for i in Keywords TclCmd TclLib TkCmd TkLib UserCmd; do \
+	  $(INSTALL_DIR) $(DOCDIR)/tcltk/$$i; \
+	  for j in $(TKDOCBASE)/$$i/*; do \
+	    $(INSTALL_FILE) $$j $(DOCDIR)/tcltk/$$i; \
+	  done; \
+	done; \
+	cd $(TKDOCBASE) && for i in *.htm; do \
+	  $(INSTALL_FILE) $$i $(DOCDIR)/tcltk/$$i; \
+	done;
+
+
+$(DOCDIR):
+	$(INSTALL_DIR) $@
+
+clean:
+	-rm -f *~
+
+veryclean: clean
+	-rm -f $(TKDOCBASE)
+
+distclean: veryclean
+	-rm -f Makefile
+
+clean-xref:
