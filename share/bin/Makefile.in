@@ -28,6 +28,9 @@ SRCDIR=         @srcdir@
 VPATH=          @srcdir@
 BINDIR=         $(PREFIX)/bin
 
+CC=             @CC@
+CXX=            @CXX@
+
 @SET_MAKE@
 LN_S=           @LN_S@
 INSTALL=        @INSTALL@
@@ -39,13 +42,28 @@ LINKS=          ozengine text2pickle pickle2text oldpickle2text
 LIB_SCRIPTS=    $(addprefix $(BINDIR)/,$(SCRIPTS))
 LIB_LINKS=      $(addprefix $(BINDIR)/,$(LINKS))
 
+WINEXES=        setup.exe oz.exe ozengine.exe
+MSWIN=          @MSWIN@
+
 .PHONY: bootstrap all install clean veryclean distclean depend check
 
 all:
 
 bootstrap:
 
+ifeq ($(MSWIN),yes)
+
+install: $(WINEXES)
+        $(INSTALL_BIN) $(WINEXES) oz.ico setup.ico $(PREFIX)
+
+all: $(WINEXES)
+
+else
+
 install: $(BINDIR) $(LIB_SCRIPTS) $(LIB_LINKS)
+
+endif
+
 
 $(LIB_SCRIPTS): $(BINDIR)/% : %
         $(INSTALL_BIN) $< $(BINDIR)
@@ -56,31 +74,14 @@ $(LIB_LINKS): $(BINDIR)/oz
 $(BINDIR):
         $(INSTALL_DIR) $@
 
-clean:
-
 veryclean: clean
 
 distclean: clean
         rm -f Makefile
 
 
-# Windows
-.PHONY: win-install
-
-all:  version.h
-
 clean:
-        rm -f *.exe *.obj *.sym *.map *.mk* *.lk* *.err oz.res setup.res version.h
-
-win-install: setup.exe oz.exe ozengine.exe
-        $(INSTALL_BIN) setup.exe oz.exe ozengine.exe $(PREFIX)
-
-
-ozengine.exe: oz.exe
-        cp oz.exe $@
-
-version.h: $(SRCTOP)/OZVERSION
-        echo "#define OZVERSION \"`$<`\"" > $@
+        rm -f *.o *.exe *.obj *.sym *.map *.mk* *.lk* *.err oz.res setup.res version.h
 
 Makefile: Makefile.in ../config.status
         cd .. && ./config.status
@@ -91,3 +92,24 @@ Makefile: Makefile.in ../config.status
 check:
 
 depend:
+
+
+
+#
+# Windows
+#
+
+setup.cc oz.cc ozengine.cc: version.h
+
+ozengine.exe: ozengine.o
+        $(CC) -s -o $@ $<
+
+oz.exe: oz.o
+        $(CC) -s -o $@ $< -mwindows
+
+setup.exe: setup.o
+        $(CC) -s -o $@ $< -mwindows
+
+
+version.h: $(SRCTOP)/OZVERSION
+        echo "#define OZVERSION \"`$<`\"" > $@

@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <process.h>
 #include <io.h>
+#include <string.h>
+#include <errno.h>
 
 #include "version.h"
 
@@ -20,9 +22,14 @@ OzPanic(int quit, char *format,...)
   va_start(argList, format);
   vsprintf(buf, format, argList);
 
+#ifdef CONSOLEAPP
+  fprintf(stderr,"Fatal Error in Oz: ");
+  fprintf(stderr,buf);
+#else
   MessageBeep(MB_ICONEXCLAMATION);
   MessageBox(NULL, buf, "Fatal Error in Oz",
              MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+#endif
   if (quit)
     ExitProcess(1);
 }

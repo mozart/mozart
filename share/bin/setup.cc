@@ -1,5 +1,19 @@
 #include "misc.cpp"
 
+#ifdef __MINGW32__
+
+#define     APPCMD_CLIENTONLY            0x00000010L
+
+extern "C" WINBOOL WINAPI DdeFreeStringHandle(DWORD idInst, HSZ hsz);
+
+extern "C" HDDEDATA WINAPI DdeClientTransaction(LPBYTE pData, DWORD cbData,
+        HCONV hConv, HSZ hszItem, UINT wFmt, UINT wType,
+        DWORD dwTimeout, LPDWORD pdwResult);
+
+
+#endif
+
+
 HDDEDATA CALLBACK
 DdeCallback (UINT uType, UINT uFmt, HCONV hconv,
              HSZ hsz1, HSZ hsz2, HDDEDATA hdata,
@@ -55,26 +69,34 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
 
   ProgMan = DdeCreateStringHandle (idDde, "PROGMAN", CP_WINANSI);
 
-  if (HConversation = DdeConnect (idDde, ProgMan, ProgMan, NULL))
-    {
-      DdeCommand ( "[DeleteGroup (Mozart 3)]", HConversation);
-      DdeCommand ( "[CreateGroup (Mozart 3)]", HConversation);
-      DdeCommand ( "[ReplaceItem (Mozart 3)]", HConversation);
-      sprintf(buffer, "[AddItem (%s\\platform\\%s\\tcldoc\\tcl80.hlp, Tcl_Tk Manual)]", ozhome,ozplatform);
-      DdeCommand(buffer, HConversation);
-      sprintf(buffer, "[AddItem (%s\\oz.exe, Mozart)]", ozhome);
-      DdeCommand(buffer, HConversation);
-      sprintf(buffer, "[AddItem (%s\\setup.exe, Mozart Setup)]", ozhome);
-      DdeCommand(buffer, HConversation);
+  if (HConversation = DdeConnect (idDde, ProgMan, ProgMan, NULL)) {
+    DdeCommand ( "[DeleteGroup (Mozart 3)]", HConversation);
+    DdeCommand ( "[CreateGroup (Mozart 3)]", HConversation);
+    DdeCommand ( "[ReplaceItem (Mozart 3)]", HConversation);
 
-      DdeDisconnect (HConversation);
-    }
+    sprintf(buffer,
+            "[AddItem (%s\\platform\\%s\\tcldoc\\tcl80.hlp, Tcl_Tk Manual)]",
+            ozhome,ozplatform);
+    DdeCommand(buffer, HConversation);
+
+    sprintf(buffer,
+            "[AddItem (%s\\oz.exe, Mozart, %s\\oz.ico)]",
+            ozhome, ozhome);
+    DdeCommand(buffer, HConversation);
+
+    sprintf(buffer,
+            "[AddItem (%s\\setup.exe, Mozart Setup, %s\\setup.ico)]",
+            ozhome, ozhome);
+    DdeCommand(buffer, HConversation);
+
+    DdeDisconnect (HConversation);
+  }
 
   DdeFreeStringHandle (idDde, ProgMan);
 
   DdeUninitialize (idDde);
 
-  Sleep(2000);
+  Sleep(1000);
 
   if (!quiet) {
     MessageBeep(MB_ICONEXCLAMATION);

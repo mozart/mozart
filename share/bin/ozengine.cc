@@ -1,3 +1,3 @@
 #define CONSOLEAPP
 
-#include "oz.cpp"
+#include "oz.cc"
