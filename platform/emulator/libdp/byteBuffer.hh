@@ -46,6 +46,7 @@ class ByteBuffer :public MarshalerBuffer {
 protected:
   BYTE *buf;
   virtual Bool putDebug();
+  virtual Bool getDebug();
 private:
   BYTE *putptr;
   BYTE *getptr;
@@ -90,7 +91,11 @@ public:
 // For unmarshaler
   void getBegin();
   inline Bool canGet(int size) {
-    return (used>=size);
+    Assert(mode == BYTE_MODE_UNMARSHALING);
+    if (posMB>=getptr)
+      return (used-(posMB-getptr))>=size;
+    else
+      return (used-(endMB-getptr)+(posMB-buf) +1)>=size;
   }
   int getInt();
   BYTE getNext();
