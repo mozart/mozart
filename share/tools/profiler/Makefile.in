@@ -1,0 +1,33 @@
+# $Id$
+# Benjamin Lorenz <lorenz@ps.uni-sb.de>
+
+include ../Makefile.vars
+include $(TOPDIR)/Makefile.rules
+
+PROFILER  = $(OZLIB)/profiler
+
+LOCALFILES = \
+	prof-gui.oz prof-prelude.oz prof-tk.oz \
+	prof-config.oz prof-help.oz profiler.oz \
+	prof-dialog.oz prof-menu.oz prof-string.oz
+
+
+LIBFILES = ${LOCALFILES:%.oz=$(PROFILER)/%.oz}
+SRCS = ${LOCALFILES:%.oz=$(SRCDIR)/profiler/%.oz}
+
+all:: touch
+
+touch: $(SRCS)
+	$(TOUCH) $@
+
+install:: $(PROFILER) $(LIBFILES)
+
+realclean::
+	$(RM) touch
+
+$(PROFILER):
+	$(INSTALLDIR) $@
+
+$(PROFILER)/%.oz: %.oz
+	$(INSTALLSRC) '$<' '$@'
+
