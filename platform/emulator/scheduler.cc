@@ -37,7 +37,6 @@
 #include "debug.hh"
 #include "space.hh"
 
-# define CBB (oz_currentBoard())
 
 inline
 TaggedRef formatError(TaggedRef info, TaggedRef val, TaggedRef traceBack) {
@@ -49,6 +48,34 @@ TaggedRef formatError(TaggedRef info, TaggedRef val, TaggedRef traceBack) {
   
   return OZ_adjoinAt(val, AtomDebug, d);
 }
+
+
+/*
+ * Checking stability
+ *
+ */
+
+inline
+void checkStability(Thread * ct, Board * cb) {
+  if (cb->isRoot()) 
+    return;
+
+  Assert(!cb->isFailed() && !cb->isCommitted());
+
+  Board * pb = cb->getParent();
+
+  if (cb->decThreads() != 0) {
+    pb->decSolveThreads();
+    return;
+  }
+    
+  cb->checkStability();
+    
+  Assert(!pb->isCommitted());
+
+  pb->decSolveThreads();
+}
+
 
 
 void scheduler() {
@@ -99,6 +126,9 @@ void scheduler() {
 
     cb = ct->getBoardInternal()->derefBoard();
 
+    // Normalize the current thread's board
+    ct->setBoardInternal(cb);
+
     if (!cb->isAlive()) {
       // Some space superordinated to ct's home is dead
       
@@ -110,8 +140,12 @@ void scheduler() {
 
     }
 
-    if (!oz_installPath(cb))
+    if (!oz_installPath(cb)) {
+      cb = oz_currentBoard();
       goto LBLfailure;
+    }
+
+    Assert(oz_currentBoard() == cb);
 
     e->restartThread(); // start a new time slice
     // fall through
@@ -142,131 +176,46 @@ void scheduler() {
       }
       
       switch (ret) {
+
       case T_PREEMPT:
-	goto LBLpreemption;
+	am.threadsPool.scheduleThread(ct);
+	break;
+
       case T_SUSPEND:
-	goto LBLsuspend;
+	Assert(!cb->isFailed());
+	ct->unmarkRunnable();
+	  
+	if (cb->isRoot()) {
+	  if (e->debugmode() && ct->getTrace())
+	    debugStreamBlocked(ct);
+	} else {
+	  checkStability(ct,cb);
+	}
+	
+	break;
+
+      case T_TERMINATE:
+	Assert(!ct->isDeadThread() && ct->isRunnable() && ct->isEmpty());
+	cb->decSuspCount();
+	oz_disposeThread(ct);
+	checkStability(ct,cb);
+	break;
+	
       case T_RAISE:
 	goto LBLraise;
-      case T_TERMINATE:
-	goto LBLterminate;
+
       case T_FAILURE:
 	goto LBLfailure;
+
       case T_ERROR:
       default:
-	goto LBLerror;
+	Assert(0);
       }
-    }
-    
-    
-    /*
-     * preemption
-     *
-     */
 
-  LBLpreemption: 
-    {
-      am.threadsPool.scheduleThread(ct);
-      
       continue;
     }
     
     
-    /*
-     * An error occured
-     *
-     */
-    
-  LBLerror: 
-    {
-      Assert(0);
-      continue;
-    }
-
-    
-    
-    /*
-     * Thread is terminated
-     *
-     */
-
-  LBLterminate:
-    {
-      Assert(!ct->isDeadThread() && ct->isRunnable() && ct->isEmpty());
-      
-      CBB->decSuspCount();
-      
-      oz_disposeThread(ct);
-      
-      // fall through to checkEntailmentAndStability
-    }
-    
-
-    /*
-     * Check stability
-     *
-     */
-    
-  LBLcheckEntailmentAndStability:
-    {
-
-      if (oz_onToplevel()) 
-	continue;
-
-      Assert(!CBB->isRoot() && !CBB->isFailed() && !CBB->isCommitted());
-
-      //  'nb' points to some board above the current one,
-      Board * nb = CBB->getParent();
-
-      //  kost@ : optimize the most probable case!
-
-      if (CBB->decThreads () != 0) {
-	nb->decSolveThreads();
-	continue;
-      }
-    
-      Assert(!CBB->isRoot());
-
-      CBB->checkStability();
-    
-      //  deref nb, because it maybe just committed!
-
-      Assert(nb);
-    
-      if (nb) 
-	nb->derefBoard()->decSolveThreads();
-
-      continue;
-    }
-
-    /*
-     * Suspend Thread
-     *
-     */
-
-  LBLsuspend:
-    {
-
-      if (e->debugmode() && ct->getTrace()) {
-	debugStreamBlocked(ct);
-      }
-    
-      ct->unmarkRunnable();
-
-      Assert(CBB);
-      Assert(!CBB->isFailed());
-
-      //  First, set the board and self, and perform special action for 
-      // the case of blocking the root thread;
-      Assert(GETBOARD(ct)==CBB);
-
-      if (oz_onToplevel())
-	continue;
-      else
-	goto LBLcheckEntailmentAndStability;
-
-    }
-
     /*
      * Fail Thread
      *
@@ -276,25 +225,25 @@ void scheduler() {
 
   LBLfailure:
     {
+      // Note that cb might be different from the thread's home:
+      // this can happen while trying to install the space!
       Assert(ct->isRunnable());
-
-      Board * b = CBB;
-      Board * p = b->getParent();
-
-      Assert(!b->isRoot());
       
-      b->setFailed();
+      Board * pb = cb->getParent();
+
+      Assert(!cb->isRoot());
+      
+      cb->setFailed();
       
       oz_reduceTrailOnFail();
       
-      am.setCurrent(p);
+      am.setCurrent(pb);
       
-      if (!oz_unify(b->getStatus(),b->genFailed())) {
-	// this should never happen?
+      if (!oz_unify(cb->getStatus(),cb->genFailed())) {
 	Assert(0);
       }
      
-      p->decSolveThreads();
+      pb->decSolveThreads();
 
       // tmueller: this experimental
 #ifdef NAME_PROPAGATORS
@@ -341,7 +290,7 @@ void scheduler() {
 	goto LBLrunThread;  // execute task with no preemption!
       }
       
-      if (!oz_onToplevel() &&
+      if (!cb->isRoot() &&
 	  OZ_eq(OZ_label(e->exception.value),AtomFailure)) {
 	goto LBLfailure;
       }
@@ -350,7 +299,9 @@ void scheduler() {
 	ct->setTrace(OK);
 	ct->setStep(OK);
 	debugStreamException(ct,e->exception.value);
-	goto LBLpreemption;
+	// Preempt thread
+	am.threadsPool.scheduleThread(ct);
+	continue;
       }
 
       if (e->defaultExceptionHdl) {
