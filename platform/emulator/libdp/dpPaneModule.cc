@@ -41,17 +41,25 @@ OZ_BI_define(BItablesExtract,0,1)
 {
   initDP();
 
-  OZ_Term borrowlist = oz_nil();
+  OZ_Term borrowlist;
+  OZ_Term ownerlist;
+  OZ_Term ret;
+
+  borrowlist = oz_nil();
   int bt_size=BT->getSize();
   for(int ctr=0; ctr<bt_size; ctr++){
     BorrowEntry *be = BT->getEntry(ctr);
     if(be==NULL){continue;}
     Assert(be!=NULL);
     borrowlist = oz_cons(be->extract_info(ctr), borrowlist);}
-  OZ_RETURN(oz_cons(OZ_recordInit(oz_atom("bt"),
-                oz_cons(oz_pairAI("size", bt_size),
-                oz_cons(oz_pairA("list", borrowlist), oz_nil()))),
-              oz_cons(OT->extract_info(), oz_nil())));
+  ownerlist =OT->extract_info();
+  ret=oz_cons(OZ_recordInit(oz_atom("bt"),
+			    oz_cons(oz_pairAI("size", bt_size),
+				    oz_cons(oz_pairA("list", borrowlist),
+					    oz_nil()))),
+	      oz_cons(ownerlist, 
+		      oz_nil()));
+  OZ_RETURN(ret);
 } OZ_BI_end
 
 OZ_BI_define(BIsiteStatistics,0,1)
