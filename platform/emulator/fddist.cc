@@ -272,7 +272,7 @@ OZ_C_proc_begin(BIfdDistributeMinPairs, 5) {
   int     width  = pair_vector->getWidth();
   int     cur    = 0;
   int     new_cur = 0;
-  TaggedRef tagged_best_pair;
+  TaggedRef tagged_best_pair = NULL;
   SRecord *best_pair = NULL;
   double     best_costs = (double) OZ_getFDSup();
   TaggedRef tagged_pair;
@@ -466,6 +466,8 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
   SRecord *start_record = tagged2SRecord(tagged_start_record);
   SRecord *dur_record = tagged2SRecord(tagged_dur_record);
   int number_of_resources = tasks_vector->getWidth();
+  Assert(number_of_resources > 0);
+  Assert(number_of_resources <= MAXRESOURCES);
   int number_of_jobs[MAXRESOURCES];
 
   TaggedRef all_tasks[MAXRESOURCES];
@@ -480,10 +482,18 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
     all_tasks[i]           = tagged_tasks;
     SRecord *tasks         = tagged2SRecord(tagged_tasks);
     number_of_jobs[i]      = tasks->getWidth();
+    Assert(number_of_jobs[i] > 0);
+    Assert(number_of_jobs[i] <= MAXJOBS);
     for (j=0; j < number_of_jobs[i]; j++) {
       TaggedRef task1      = deref(tasks->getArg(j));
-      TaggedRef fd_var     = deref(start_record->getFeature(task1));
-      int current_dur      = OZ_intToC(deref(dur_record->getFeature(task1)));
+      TaggedRef tmp1       = start_record->getFeature(task1);
+      Assert(tmp1 != makeTaggedNULL());
+      TaggedRef fd_var     = deref(tmp1);
+      Assert(isGenFDVar(fd_var));
+      TaggedRef tmp2       = dur_record->getFeature(task1);
+      Assert(tmp2 != makeTaggedNULL());
+      Assert(isSmallInt(deref(tmp2)));
+      int current_dur      = OZ_intToC(tmp2);
       all_vars[i][j].min   = getMin1(fd_var);
       all_vars[i][j].max   = getMax1(fd_var);
       all_durs[i][j]       = current_dur;
@@ -491,7 +501,8 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
     }
   }
 
-  upper = getMin1(deref(start_record->getFeature(makeTaggedAtom("pe"))));
+  TaggedRef tmp1 = start_record->getFeature(makeTaggedAtom("pe"));
+  upper = getMin1(deref(tmp1));
 
   // Initialize task intervals and ordering arrays
   SRecord *ordered_record = tagged2SRecord(tagged_ordered_record);
@@ -542,19 +553,19 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
   }
 
 
-  int best_resource;
+  int best_resource   = 0;
   struct Set best_set;
-  int best_cost = OZ_getFDSup();
-  int best_left;
-  int best_right;
+  int best_cost       = OZ_getFDSup();
+  int best_left       = 0;
+  int best_right      = 0;
   int constraintsSize = 0;
 
   for (i=0; i < number_of_resources; i++) {
-    struct Set *loc_best_set;
-    int loc_best_nc;
-    int loc_best_slack;
-    int loc_best_left;
-    int loc_best_right;
+    struct Set *loc_best_set = NULL;
+    int loc_best_nc    = 0;
+    int loc_best_slack = 0;
+    int loc_best_left  = 0;
+    int loc_best_right = 0;
     int loc_best_slack_nc  = OZ_getFDSup();
     int loc_resource_slack = OZ_getFDSup();
     for (left=0; left < number_of_jobs[i]; left++) 
@@ -749,7 +760,8 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
 
     int bonus = funcF(slackS, deltaS, upper);
 
-    int p1, p2;
+    int p1 = 0;
+    int p2 = 0;
     int g_costs  = OZ_getFDSup();
     int side, v;
     int min_left = low;
@@ -825,7 +837,8 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
 
     int bonus = funcF(slackS, deltaS, upper);
 
-    int p1, p2;
+    int p1 = 0;
+    int p2 = 0;
     int g_costs  = OZ_getFDSup();
     int side, v;
     int min_right = all_vars[best_resource][best_right].min;
@@ -957,6 +970,8 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervalsOpt, 7) {
   SRecord *start_record = tagged2SRecord(tagged_start_record);
   SRecord *dur_record = tagged2SRecord(tagged_dur_record);
   int number_of_resources = tasks_vector->getWidth();
+  Assert(number_of_resources > 0);
+  Assert(number_of_resources <= MAXRESOURCES);
   int number_of_jobs[MAXRESOURCES];
 
   TaggedRef all_tasks[MAXRESOURCES];
@@ -965,24 +980,32 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervalsOpt, 7) {
   struct Set taskints[MAXRESOURCES][MAXJOBS][MAXJOBS];
   // to store orders
   int ordered[MAXRESOURCES][MAXJOBS][MAXJOBS];
-  
+
   for (i=0; i < number_of_resources; i++) {
     TaggedRef tagged_tasks = deref(tasks_vector->getArg(i));
     all_tasks[i]           = tagged_tasks;
     SRecord *tasks         = tagged2SRecord(tagged_tasks);
     number_of_jobs[i]      = tasks->getWidth();
+    Assert(number_of_jobs[i] > 0);
+    Assert(number_of_jobs[i] <= MAXJOBS);
     for (j=0; j < number_of_jobs[i]; j++) {
       TaggedRef task1      = deref(tasks->getArg(j));
-      TaggedRef fd_var     = deref(start_record->getFeature(task1));
-      int current_dur      = OZ_intToC(deref(dur_record->getFeature(task1)));
+      TaggedRef tmp1       = start_record->getFeature(task1);
+      Assert(tmp1 != makeTaggedNULL());
+      TaggedRef fd_var     = deref(tmp1);
+      Assert(isGenFDVar(fd_var));
+      TaggedRef tmp2       = dur_record->getFeature(task1);
+      Assert(tmp2 != makeTaggedNULL());
+      Assert(isSmallInt(deref(tmp2)));
+      int current_dur      = OZ_intToC(tmp2);
       all_vars[i][j].min   = getMin1(fd_var);
       all_vars[i][j].max   = getMax1(fd_var);
       all_durs[i][j]       = current_dur;
-
     }
   }
 
-  upper = getMin1(deref(start_record->getFeature(makeTaggedAtom("pe"))));
+  TaggedRef tmp1 = start_record->getFeature(makeTaggedAtom("pe"));
+  upper = getMin1(deref(tmp1));
 
   // Initialize task intervals and ordering arrays
   SRecord *ordered_record = tagged2SRecord(tagged_ordered_record);
@@ -1033,19 +1056,19 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervalsOpt, 7) {
   }
 
 
-  int best_resource;
+  int best_resource   = 0;
   struct Set best_set;
-  int best_cost = OZ_getFDSup();
-  int best_left;
-  int best_right;
+  int best_cost       = OZ_getFDSup();
+  int best_left       = 0;
+  int best_right      = 0;
   int constraintsSize = 0;
 
   for (i=0; i < number_of_resources; i++) {
-    struct Set *loc_best_set;
-    int loc_best_nc;
-    int loc_best_slack;
-    int loc_best_left;
-    int loc_best_right;
+    struct Set *loc_best_set = NULL;
+    int loc_best_nc    = 0;
+    int loc_best_slack = 0;
+    int loc_best_left  = 0;
+    int loc_best_right = 0;
     int loc_best_slack_nc  = OZ_getFDSup();
     int loc_resource_slack = OZ_getFDSup();
     for (left=0; left < number_of_jobs[i]; left++) 
@@ -1240,7 +1263,8 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervalsOpt, 7) {
 
     int bonus = funcFOpt(slackS, deltaS, upper);
 
-    int p1, p2;
+    int p1 = 0;
+    int p2 = 0;
     int g_costs  = OZ_getFDSup();
     int side, v;
     int min_left = low;
@@ -1316,7 +1340,8 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervalsOpt, 7) {
 
     int bonus = funcFOpt(slackS, deltaS, upper);
 
-    int p1, p2;
+    int p1 = 0;
+    int p2 = 0;
     int g_costs  = OZ_getFDSup();
     int side, v;
     int min_right = all_vars[best_resource][best_right].min;
