@@ -527,6 +527,109 @@ char *OZ_stringToC(OZ_Term list)
   return s;
 }
 
+void OZ_printString(OZ_Term t) {
+  t=deref(t);
+  while (isLTuple(t)) {
+    OZ_Term hd=headDeref(t);
+    if (isSmallInt(hd)) {
+      int c=smallIntValue(hd);
+      if (c >= 0 && c <=255) {
+	printf("%c",c);
+      } else {
+	printf("\n*** OZ_printString: bad char: %d ***\n",c);
+      }
+    } else {
+      printf("\n*** OZ_printString: no char: %s***\n",OZ_toC(t));
+    }
+    t=tailDeref(t);
+  }
+  if (!isNil(t)) {
+    printf("\n*** OZ_printString: bad string: %s ***\n",OZ_toC(t));
+  }
+}
+
+void OZ_printAtom(OZ_Term t) {
+  t=deref(t);
+  if (isAtom(t)) {
+    Literal *a = tagged2Literal(t);
+    printf("%s",a->getPrintName());
+  } else {
+    printf("\n*** OZ_printAtom: no atom: %s ***\n",OZ_toC(t));
+  }
+}
+
+void OZ_printInt(OZ_Term t)
+{
+  t=deref(t);
+  if (isInt(t)) {
+    char *xx=OZ_intToCString(t);
+    printf("%s",xx);
+    OZ_free(xx);
+  } else {
+    printf("\n*** OZ_printInt: no int: %s ***\n",OZ_toC(t));
+  }
+}
+
+void OZ_printFloat(OZ_Term t)
+{
+  t=deref(t);
+  if (isFloat(t)) {
+    char *xx=OZ_floatToCStringPretty(t);
+    printf("%s",xx);
+    OZ_free(xx);
+  } else {
+    printf("\n*** OZ_printFloat: no float: %s ***\n",OZ_toC(t));
+  }
+}
+
+void OZ_printVS(OZ_Term t)
+{
+  t=deref(t);
+  if (isLTuple(t)) {
+    OZ_printString(t);
+  } else if (isAtom(t)) {
+    OZ_printAtom(t);
+  } else if (isInt(t)) {
+    OZ_printInt(t);
+  } else if (isFloat(t)) {
+    OZ_printFloat(t);
+  } else if (isPair(t)) {
+    STuple *p=tagged2STuple(t);
+    for (int i=0; i < p->getSize(); i++) {
+      OZ_printVS(p->getArg(i));
+    }
+  } else {
+    printf("\n*** OZ_printVS: no VS: %s ***\n",OZ_toC(t));
+  }
+}
+
+OZ_Term OZ_termToVS(OZ_Term t)
+{
+  t=deref(t);
+  switch (tagTypeOf(t)) {
+  case SMALLINT:
+  case BIGINT:
+  case FLOAT:
+    return t;
+  case UVAR:
+  case SVAR:
+  case CVAR:
+    return OZ_CToAtom(OZ_toC(t));
+  case LITERAL:
+    if (isAtom(t)) return t;
+    return OZ_CToAtom(OZ_toC(t));
+  case LTUPLE:
+  case STUPLE:
+    return OZ_CToAtom(OZ_toC(t));
+  case SRECORD:
+    return OZ_CToAtom(OZ_toC(t));
+  case CONST:
+    return OZ_CToAtom(OZ_toC(t));
+  default:
+    return OZ_CToAtom("OZ_termToVS: unknown Tag");
+  }
+}
+
 /* -----------------------------------------------------------------
  * tuple
  * -----------------------------------------------------------------*/
