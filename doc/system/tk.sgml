@@ -438,7 +438,7 @@ end
       <p>
         Legal action argument values are lists whose elements are
         drawn from the following set:
-        <table class=dyptic>
+        <table>
           <tr/<td/<<string>>/ <td/<<atom>>/
               <td/<<int>>/ <td/<<float>>//
           <tr/<td/<<list(string)>>/ <td/<<list(atom)>>/
@@ -464,7 +464,7 @@ end
       <p>
         Legal action argument values are lists whose elements are
         drawn from the following set:
-        <table class=dyptic>
+        <table>
           <tr/<td/<<string(?_{V})>>/ <td/<<atom(?_{V})>>/
               <td/<<int(?_{V})>>/ <td/<<float(?_{V})>>//
           <tr/<td/<<list(string(?_{V}))>>/ <td/<<list(atom(?_{V}))>>/
@@ -527,7 +527,7 @@ end
       </table>
 
      <p>
-       All classes provide the following methods:
+       All above mentioned classes provide the following methods:
 
      <list>
        <entry><<tkInit>>
@@ -543,7 +543,11 @@ end
        <synopsis>
          <<<tkInit(parent:?+{WidgetO} ...)>>>
        <item>
-         Creates.
+         Initializes the widget object and creates the widget.
+       <p>
+         The field ?_{WidgetO} for the special feature <<parent>> must
+         be a tickle object. <<self>> becomes a slave of
+         ?_{WidgetO}.
 
        <entry><<tk>>
          <index class=module/Tk<and>canvas<and>tk/
@@ -558,7 +562,7 @@ end
        <synopsis>
          <<<tk(...)>>>
        <item>
-         Sends.
+         Sends a command for <<self>> to the graphics engine.
 
        <entry><<tkReturn>>
          <index class=module/Tk<and>canvas<and>tkReturn/
@@ -663,7 +667,9 @@ tkReturnListAtom(... ??{As})
 tkReturnListInt(... ??{IBs})
 tkReturnListFloat(... ??{FBs})>>>
        <item>
-         Sends.
+         Sends a command for <<self>> to the graphics engine and
+         returns the result in the field with the highest integer
+         feature.
 
        <entry><<tkBind>>
          <index class=module/Tk<and>canvas<and>tkBind/
@@ -682,7 +688,10 @@ tkReturnListFloat(... ??{FBs})>>>
        append: ?_{AppendB} <= false
        break:  ?_{BreakB}  <= false)>>>
        <item>
-         Sends.
+         Defines an event binding for <<self>>. Events are described
+         in <ptr.extern to="ozdoc:wp"
+         key="section.widgets-2.events"> and <ptr
+         to="section.tk.action-event-arguments">.
 
        <entry><<tkClose>>
          <index class=module/Tk<and>canvas<and>tkClose/
@@ -698,7 +707,7 @@ tkReturnListFloat(... ??{FBs})>>>
          <<<tkClose()>>>
        <item>
          Closes the widget object and destroys the widgets and all
-         slave widgets. Further object application will raise an
+         slave widgets. Further object application of <<self>> raises an
          exception.
 
      </list>
@@ -751,18 +760,24 @@ tkReturnListFloat(... ??{FBs})>>>
        args:   ?+{Args}   <= nil
        ...)>>>
        <item>
-         Creates.
+         Initializes the widget object and creates the widget.
+       <p>
+         The field ?_{WidgetO} for the special feature <<parent>> must
+         be a tickle object. <<self>> becomes a slave of
+         ?_{WidgetO}. ?_{Action} and ?_{Args} are described in <ptr
+         to="section.tk.action-values"> and <ptr
+         to="section.tk.action-arguments">.
 
        <entry><<tk>>
-         <index class=module/Tk<and>button<and>tkInit/
-         <index class=module/Tk<and>checkbutton<and>tkInit/
-         <index class=module/Tk<and>radiobutton<and>tkInit/
-         <index class=module/Tk<and>scale<and>tkInit/
-         <index class=module/Tk<and>scrollbar<and>tkInit/
+         <index class=module/Tk<and>button<and>tk/
+         <index class=module/Tk<and>checkbutton<and>tk/
+         <index class=module/Tk<and>radiobutton<and>tk/
+         <index class=module/Tk<and>scale<and>tk/
+         <index class=module/Tk<and>scrollbar<and>tk/
        <synopsis>
          <<<tk(...)>>>
        <item>
-         Sends.
+         Sends a command for <<self>> to the graphics engine.
 
        <entry><<tkReturn>>
          <index class=module/Tk<and>button<and>tkReturn/
@@ -827,7 +842,9 @@ tkReturnListAtom(... ??{As})
 tkReturnListInt(... ??{IBs})
 tkReturnListFloat(... ??{FBs})>>>
        <item>
-         Sends.
+         Sends a command for <<self>> to the graphics engine and
+         returns the result in the field with the highest integer
+         feature.
 
        <entry><<tkAction>>
          <index class=module/Tk<and>button<and>tkAction/
@@ -839,7 +856,10 @@ tkReturnListFloat(... ??{FBs})>>>
 <<<tkAction(action: ?+{Action} <= unit
          args:   ?+{Args})>>>
        <item>
-         Sends.
+         Redefines or deletes an action. ?_{Action} and ?_{Args} are
+         described in <ptr
+         to="section.tk.action-values"> and <ptr
+         to="section.tk.action-arguments">.
 
        <entry><<tkBind>>
          <index class=module/Tk<and>button<and>tkBind/
@@ -854,7 +874,10 @@ tkReturnListFloat(... ??{FBs})>>>
        append: ?_{AppendB} <= false
        break:  ?_{BreakB}  <= false)>>>
        <item>
-         Sends.
+         Defines an event binding for <<self>>. Events are described
+         in <ptr.extern to="ozdoc:wp"
+         key="section.widgets-2.events"> and <ptr
+         to="section.tk.action-event-arguments">.
 
        <entry><<tkClose>>
          <index class=module/Tk<and>button<and>tkClose/
@@ -866,7 +889,7 @@ tkReturnListFloat(... ??{FBs})>>>
          <<<tkClose()>>>
        <item>
          Closes the widget object and destroys the widgets and all
-         slave widgets. Further object application will raise an
+         slave widgets. Further object application of <<self>> raises an
          exception.
 
      </list>
@@ -891,21 +914,28 @@ tkReturnListFloat(... ??{FBs})>>>
        withdraw: ?+{WithdrawB}
        ...)>>>
        <item>
-         Creates.
+         Initializes the widget object and creates a new toplevel widget.
+       <p>
+         For more information see <ptr.extern to="ozdoc:wp"
+         key="section.widgets-1.toplevel"> and <ptr.extern to="ozdoc:wp"
+         key="section.widgets-2.wm">
 
        <entry><<tk>>
          <index class=module/Tk<and>toplevel<and>tk/
        <synopsis>
          <<<tk(...)>>>
        <item>
-         Sends.
+         Sends a command for <<self>> to the graphics engine.
 
+<!--
        <entry><<tkWM>>
          <index class=module/Tk<and>toplevel<and>tkWM/
        <synopsis>
          <<<tkWM(...)>>>
        <item>
-         Sends.
+         Sends am window manager command for <<self>> to the graphics
+         engine. See also <ptr.extern to="ozdoc:wp" key="
+-->
 
        <entry><<tkReturn>>
          <index class=module/Tk<and>toplevel<and>tkReturn/
@@ -930,7 +960,9 @@ tkReturnListAtom(... ??{As})
 tkReturnListInt(... ??{IBs})
 tkReturnListFloat(... ??{FBs})>>>
        <item>
-         Sends.
+         Sends a command for <<self>> to the graphics engine and
+         returns the result in the field with the highest integer
+         feature.
 
        <entry><<tkBind>>
          <index class=module/Tk<and>toplevel<and>tkBind/
@@ -941,7 +973,10 @@ tkReturnListFloat(... ??{FBs})>>>
        append: ?_{AppendB} <= false
        break:  ?_{BreakB}  <= false)>>>
        <item>
-         Sends.
+         Defines an event binding for <<self>>. Events are described
+         in <ptr.extern to="ozdoc:wp"
+         key="section.widgets-2.events"> and <ptr
+         to="section.tk.action-event-arguments">.
 
        <entry><<tkClose>>
          <index class=module/Tk<and>toplevel<and>tkClose/
@@ -949,7 +984,7 @@ tkReturnListFloat(... ??{FBs})>>>
          <<<tkClose()>>>
        <item>
          Closes the widget object and destroys the widgets and all
-         slave widgets. Further object application will raise an
+         slave widgets. Further object application raises an
          exception.
 
      </list>
@@ -1002,7 +1037,13 @@ tkInit(parent: ?+{WidgetO}
        args:   ?+{Args}   <= nil
        ...)>>>
        <item>
-         Creates.
+         Initializes and creates a menu entry.
+       <p>
+         The field ?_{WidgetO} for the special feature <<parent>> must
+         be an instance of <<Tk.menu>>. <<self>> becomes a slave of
+         ?_{WidgetO}. ?_{Action} and ?_{Args} are described in <ptr
+         to="section.tk.action-values"> and <ptr
+         to="section.tk.action-arguments">.
 
        <entry><<tk>>
          <index class=module/Tk<and>menuentry<and>cascade<and>tk/
@@ -1013,7 +1054,7 @@ tkInit(parent: ?+{WidgetO}
        <synopsis>
          <<<tk(...)>>>
        <item>
-         Sends.
+         Sends a command for <<self>> to the graphics engine.
 
        <entry><<tkClose>>
          <index class=module/Tk<and>menuentry<and>cascade<and>tkClose/
@@ -1024,9 +1065,8 @@ tkInit(parent: ?+{WidgetO}
        <synopsis>
          <<<tkClose()>>>
        <item>
-         Closes the widget object and destroys the widgets and all
-         slave widgets. Further object application will raise an
-         exception.
+         Closes the object and destroys the menu entry. Further object
+         application raises an exception.
 
      </list>
 
@@ -1082,8 +1122,7 @@ tkReturnListAtom(... ??{As})
 tkReturnListInt(... ??{IBs})
 tkReturnListFloat(... ??{FBs})>>>
        <item>
-         Returns the current value of the variable. See <ptr
-         to="section.tk.objects"> for more details.
+         Returns the current value of the variable.
 
      </list>
 
@@ -1095,6 +1134,129 @@ tkReturnListFloat(... ??{FBs})>>>
     <title/Tags And Marks/
 
     <p>
+      <index  class=module/Tk<and>canvasTag/
+      <index  class=module/Tk<and>textTag/
+      <index  class=module/Tk<and>textMark/
+      The following table lists the widgets that do not accept actions:
+      <table>
+        <tr/ <th/Class/ <th/Example/ <th/Reference//
+        <tr/ <td/<<Tk.canvasTag>>/
+             <td/<ptr.extern to="ozdoc:wp" key="section.canvas.tags"/
+             <td/<ref.extern to="&tkcmd;/canvas.htm"/<file/canvas////
+        <tr/ <td/<<Tk.textTag>>/
+             <td/<ptr.extern to="ozdoc:wp" key="section.text.tags"/
+             <td/<ref.extern to="&tkcmd;/text.htm"/<file/text////
+        <tr/ <td/<<Tk.textMark>>/
+             <td/<ptr.extern to="ozdoc:wp" key="section.text.tags"/
+             <td/<ref.extern to="&tkcmd;/text.htm"/<file/text////
+      </table>
+
+     <p>
+       The above mentioned classes provide the following methods:
+
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>canvasTag<and>tkInit/
+         <index class=module/Tk<and>textTag<and>tkInit/
+         <index class=module/Tk<and>textMark<and>tkInit/
+       <synopsis>
+         <<<tkInit(parent:?+{WidgetO} ...)>>>
+       <item>
+         Initializes the widget object and creates the widget.
+       <p>
+         The field ?_{WidgetO} for the special feature <<parent>> must
+         be a tickle object. If <<self>> is an instance of
+<<Tk.canvasTag>>, ?_{WidgetO} must be an instance of
+<<Tk.canvas>>. Otherwise, ?_{WidgetO} must be an instance of
+<<Tk.text>>. <<self>> becomes a slave of
+         ?_{WidgetO}.
+
+       <entry><<tk>>
+         <index class=module/Tk<and>canvasTag<and>tk/
+         <index class=module/Tk<and>textTag<and>tk/
+         <index class=module/Tk<and>textMark<and>tk/
+       <synopsis>
+         <<<tk(...)>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine.
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>canvasTag<and>tkReturn/
+         <index class=module/Tk<and>textTag<and>tkReturn/
+         <index class=module/Tk<and>textMark<and>tkReturn/
+         <index class=module/Tk<and>canvasTag<and>tkReturnString/
+         <index class=module/Tk<and>textTag<and>tkReturnString/
+         <index class=module/Tk<and>textMark<and>tkReturnString/
+         <index class=module/Tk<and>canvasTag<and>tkReturnAtom/
+         <index class=module/Tk<and>textTag<and>tkReturnAtom/
+         <index class=module/Tk<and>textMark<and>tkReturnAtom/
+         <index class=module/Tk<and>canvasTag<and>tkReturnInt/
+         <index class=module/Tk<and>textTag<and>tkReturnInt/
+         <index class=module/Tk<and>textMark<and>tkReturnInt/
+         <index class=module/Tk<and>canvasTag<and>tkReturnFloat/
+         <index class=module/Tk<and>textTag<and>tkReturnFloat/
+         <index class=module/Tk<and>textMark<and>tkReturnFloat/
+         <index class=module/Tk<and>canvasTag<and>tkReturnList/
+         <index class=module/Tk<and>textTag<and>tkReturnList/
+         <index class=module/Tk<and>textMark<and>tkReturnList/
+         <index class=module/Tk<and>canvasTag<and>tkReturnListString/
+         <index class=module/Tk<and>textTag<and>tkReturnListString/
+         <index class=module/Tk<and>textMark<and>tkReturnListString/
+         <index class=module/Tk<and>canvasTag<and>tkReturnListAtom/
+         <index class=module/Tk<and>textTag<and>tkReturnListAtom/
+         <index class=module/Tk<and>textMark<and>tkReturnListAtom/
+         <index class=module/Tk<and>canvasTag<and>tkReturnListInt/
+         <index class=module/Tk<and>textTag<and>tkReturnListInt/
+         <index class=module/Tk<and>textMark<and>tkReturnListInt/
+         <index class=module/Tk<and>canvasTag<and>tkReturnListFloat/
+         <index class=module/Tk<and>textTag<and>tkReturnListFloat/
+         <index class=module/Tk<and>textMark<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine and
+         returns the result in the field with the highest integer
+         feature.
+
+       <entry><<tkBind>>
+         <index class=module/Tk<and>canvasTag<and>tkBind/
+         <index class=module/Tk<and>textTag<and>tkBind/
+         <index class=module/Tk<and>textMark<and>tkBind/
+       <synopsis>
+         <<<tkBind(event:  ?_{EventV}
+       action: ?_{Action}  <= _
+       args:   ?_{Args}    <= nil
+       append: ?_{AppendB} <= false
+       break:  ?_{BreakB}  <= false)>>>
+       <item>
+         Defines an event binding for <<self>>. Events are described
+         in <ptr.extern to="ozdoc:wp"
+         key="section.widgets-2.events">,
+         <ptr.extern to="ozdoc:wp" key="section.canvas.tags">,
+         <ptr.extern to="ozdoc:wp" key="section.text.toy">,
+ and <ptr
+         to="section.tk.action-event-arguments">.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>canvasTag<and>tkClose/
+         <index class=module/Tk<and>textTag<and>tkClose/
+         <index class=module/Tk<and>textMark<and>tkClose/
+       <synopsis>
+         <<<tkClose()>>>
+       <item>
+         Closes the object and performs a <<delete>> command on all
+         entities that are currently referred to by <<self>>.
+
+     </list>
 
   </section>
 
@@ -1127,7 +1289,7 @@ tkReturnListFloat(... ??{FBs})>>>
        <synopsis>
          <<<tk(...)>>>
        <item>
-         Sends.
+         Sends a command for <<self>> to the graphics engine.
 
        <entry><<tkReturn>>
          <index class=module/Tk<and>image<and>tkReturn/
@@ -1152,8 +1314,9 @@ tkReturnListAtom(... ??{As})
 tkReturnListInt(... ??{IBs})
 tkReturnListFloat(... ??{FBs})>>>
        <item>
-         Returns the result of executing the message. See <ptr
-         to="section.tk.objects"> for more details.
+         Sends a command for <<self>> to the graphics engine and
+         returns the result in the field with the highest integer
+         feature.
 
        <entry><<tkClose>>
          <index class=module/Tk<and>image<and>tkClose/
@@ -1185,10 +1348,7 @@ tkReturnListFloat(... ??{FBs})>>>
        <entry><<tkInit>>
          <index class=module/Tk<and>font<and>tkInit/
        <synopsis>
-<<<tkInit(type:    ?+{TypeTcl}
-       url:     ?+{UrlV} <= unit
-       maskurl: ?+{MarkUrlV} <= unit
-       ...)>>>
+<<<tkInit(...)>>>
        <item>
          Creates a new font.
 
@@ -1197,7 +1357,7 @@ tkReturnListFloat(... ??{FBs})>>>
        <synopsis>
          <<<tk(...)>>>
        <item>
-         Sends.
+         Sends a command for <<self>> to the graphics engine.
 
        <entry><<tkReturn>>
          <index class=module/Tk<and>font<and>tkReturn/
@@ -1222,8 +1382,9 @@ tkReturnListAtom(... ??{As})
 tkReturnListInt(... ??{IBs})
 tkReturnListFloat(... ??{FBs})>>>
        <item>
-         Returns the result of executing the message. See <ptr
-         to="section.tk.objects"> for more details.
+         Sends a command for <<self>> to the graphics engine and
+         returns the result in the field with the highest integer
+         feature.
 
        <entry><<tkClose>>
          <index class=module/Tk<and>font<and>tkClose/
