@@ -40,26 +40,26 @@
     <p>
       A module manager maintains a <def/module table/. The module
       table maps urls (or to be more precise, full module urls) to
-      modules.
+      modules or futures to modules.
 
     <p>
-      A module manager <def/links/ a functor at url ?{U} as follows:
+      A module manager <def/links/ a module at url ?{U} as follows:
       <list enum>
         <item>
           If ?{U} is already in the module table, the module manager
           returns the entry in the module table.
         <item>
           If ?{U} is not yet in the module table, the module manager
-          creates a new future ?{M} and stores value ?{M} under key ?{U} in the
+          creates a new future ?{M} and stores ?{M} under key ?{U} in the
           module table. As soon as the value of future ?{M} gets
-          requested, the module manager <def/installs/ the functor at
-          ?{U}.
+          requested, the module manager <def/installs/ a module from
+          the url ?{U}.  
       </list>
 
     <p>
-      Linking of a functor is done lazily: only when the value of the
+      Linking is done lazily: only when the value of the
       module is requested (usually implicitly, when the application 
-      attempts to access an export feature), is the module installed.
+      attempts to access an exported feature), the module gets installed.
       A module with full
       module url ?{U} is installed as follows, where the installation
       procedure returns a module ?{M}:

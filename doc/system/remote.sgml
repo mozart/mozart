@@ -1,12 +1,8 @@
 <!--
   - Authors:
-  -   Denys Duchier     <duchier@ps.uni-sb.de>
-  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
   -   Christian Schulte <schulte@ps.uni-sb.de>
   -
   - Copyright:
-  -   Denys Duchier, 1998
-  -   Leif Kornstaedt, 1998
   -   Christian Schulte, 1998
   -
   - Last change:
@@ -30,14 +26,15 @@
 
     <P>
       The module <<Remote>> provides the class <<Remote.manager>> by
-      which new Oz processes can be created. Creating an instance of
+      which new Oz processes on arbitrary networked computers that 
+      also have Mozart installed can be created. Creating an instance of
       that class does the following two things:
       <List>
         <Item> A new Oz process with a module manager ?_{M} is
-               created. 
+               created on a networked computer. 
         <Item> The newly created object ?_{O} serves as a proxy to
-               ?_{M}, where ?_{O} can be seen as a remote module
-               manager. This allows to start applications remotely
+               ?_{M}. ?_{O} is called a <def/remote module
+               manager/. This allows to start applications remotely
                that access remote resources by local system modules.
       </List>
     </P>
@@ -55,14 +52,16 @@
      fork:   ?+{ForkA}   <= automatic
      detach: ?+{DetachB} <= false)/
         <Item>
-          Creates a new Oz process at ?_{HostV} (specified by a virtual
+          Creates a new Oz process at the computer with host name
+	  ?_{HostV} (specified by a virtual
           string), where <<localhost>> is the computer running the
           current Oz process.
 
         <P>
           ?_{ForkA} (an atom) determines the operating system method
           to fork the remote Oz process. Currently, <<'automatic'>>,
-          <<'sh'>>, and <<'rsh'>> are supported.  
+          <<'sh'>>, and <<'rsh'>> are supported. <<'automatic'>> is
+	  the default method.  
 
         <p>
           <<'rsh'>> creates
@@ -70,9 +69,9 @@
           proglang=sh>rsh</code> command, which in turn creates the
           new Oz engine.  
 
-        <para class=apropos proglang=sh><title/<<rsh>> configuration/
+        <para class=apropos proglang=sh><title/rsh configuration/
           Remote managers with method <<rsh>> only work properly, if
-          the <<rsh>> command is set up properly. You can test it for
+          the <<rsh>> command has been set up properly. You can test it for
           the host ?{Host} by executing the following command in the
           operating system shell: 
           <<<rsh ?{Host} ozengine x-oz://system/RemoteServer.ozf --test>>> 
@@ -95,9 +94,9 @@
 godzilla.ps.uni-sb.de
 bamse.sics.se
 </code>
-               If the <<rsh>> command is now executed on
+               If the <<rsh>> command is executed on
                <<bamse.sics.se>> or <<godzilla.ps.uni-sb.de>>, then
-               <<rsh>> does not prompt for a pass word.
+               <<rsh>> does not prompt for a password.
 
               <p>
                With other words, all host names that you ever want to
@@ -127,7 +126,7 @@ bamse.sics.se
 
         <P>
           If ?_{HostV} is <<'localhost'>> and ?_{ForkA} is
-          <<'automatic'>> a possibly more efficient way of
+          <<'automatic'>> (the default) a more efficient way of
           communication between forked and forking process is used. It
           takes advantage of shared memory rather than network
           communication. 
@@ -139,7 +138,7 @@ bamse.sics.se
           If ?_{DetachB} is <<false>>, a non-detached process is
           created. A non-detached process terminates as soon as 
           the creating process does (think of crashes, there will be
-          no orphaned processes). A lifetime of a detached process
+          no orphaned processes). The lifetime of a detached process
           (that is, ?_{DetachB} is <<true>>) is independent of the
           creating process.
 
@@ -151,11 +150,10 @@ bamse.sics.se
         <Item>
             Links the module identified either by a url ?_{UrlV} (a
             virtual string) or a module name ?_{NameV} (a virtual
-            string). Returns the module ?_{ModuleR}, if it has been
-            already linked or a future to it.
-          <P>
-            The argument for the module is optional, if it is omitted
-            the module is requested immediately.
+            string). Returns a module ?_{ModuleR}.
+          <p>
+            For explanation see <ptr
+	    to="chapter.module">.
 
           <Entry><Span class=index/<<apply>>/
 	    <Index/<<Remote>><And><<manager>><And><<apply>>/
@@ -168,12 +166,9 @@ bamse.sics.se
             virtual string) or the module name ?_{NameV} (a virtual
             string) serve as base url for resolving the functor's
             import.
-          <P>
-            The argument for the module is optional.
-          <P>
-            Please note that the resulting module is <Em/not/ added to
-            the module table, the URL argument only serves as base URL
-            for the functor's import.
+          <p>
+            For explanation see <ptr
+	    to="chapter.module">.
 
           <Entry><Span class=index/<<enter>>/
 	    <Index/<<Remote>><And><<manager>><And><<enter>>/
@@ -184,9 +179,9 @@ bamse.sics.se
             Installs the module ?_{ModuleR} under the url ?_{UrlV} (a
             virtual string) or the module name ?_{NameV} (a virtual
             string).
-          <P>
-            Raises an exception if the module manager already has a
-            module under that particular url installed.
+          <p>
+            For explanation see <ptr
+	    to="chapter.module">.
 
           <Entry><Span class=index/<<ping>>/
 	    <Index/<<Remote>><And><<manager>><And><<ping>>/
