@@ -40,6 +40,8 @@
 #include <setjmp.h>
 */
 
+Bool pbDebug=FALSE;
+
 TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
   TaggedRef pairlist = oz_nil();
   if (data != makeTaggedNULL()) {
