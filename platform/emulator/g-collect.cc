@@ -67,8 +67,6 @@
 
 #define _cacFix                  gCollectFix
 
-#define _cac_varSizes            gCollectVarsizes
-
 #define _cacReallocStatic        gCollectReallocStatic
 #define _cacStoreFwd             gCollectStoreFwd
 
