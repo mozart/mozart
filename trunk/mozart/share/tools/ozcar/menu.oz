@@ -132,12 +132,13 @@ in
 	      feature: options)]
 	  [MB(text: 'Help'
 	      menu:
-		 [C(label:   'Thread Tree'
-		    action:  self # help(ThreadTreeHelp))
-		  C(label:   'Stack'
-		    action:  self # help(StackHelp))
-		  C(label:   'Environment'
-		    action:  self # help(EnvHelp))
+		 [C(label:   'Help on Help'
+		    action:  self # help(nil))
+		  separator
+		   C(label:   'Thread Tree'
+		    action:  self # help(TreeTitle))
+		  C(label:   'Stack Control'
+		    action:  self # help(StackTitle))
 		  CC(label:  'Breakpoints'
 		     menu:
 			[C(label:  'static'

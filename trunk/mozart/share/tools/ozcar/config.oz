@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '3.0.0-2 (Apr 97)'
+Version                = '3.0.0-4 (Apr 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -28,6 +28,9 @@ SourceWindowIcon       = 'Ozcar Source'
 
 InitStatus             = TitleName # ' initialized'
 ResetStatus            = 'Resetting Ozcar...'
+
+IgnoreFeeds            = 'Ignore Queries'
+StartNewThreads        = 'Start Threads'
 
 TreeTitle              = 'Thread Tree'
 StackTitle             = 'Stack'
@@ -204,6 +207,8 @@ TimeoutToRedraw        = 180
 TimeoutToBlock         = 470
 TimeoutToUpdateEnv     = 430
 TimeoutToUpdateScroll  = TimeoutToUpdateEnv
+
+HelpEvent              = '<3>'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Colors and colormodel related stuff

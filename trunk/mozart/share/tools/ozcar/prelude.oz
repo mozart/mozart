@@ -50,9 +50,7 @@ Dmember  = Dictionary.member
 
 BreakpointStaticHelp   = {NewName}
 BreakpointDynamicHelp  = {NewName}
-ThreadTreeHelp         = {NewName}
-StackHelp              = {NewName}
-EnvHelp                = {NewName}
+StatusHelp             = {NewName}
 
 local
    fun {MakeSpace N}
