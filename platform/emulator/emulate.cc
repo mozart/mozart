@@ -2566,10 +2566,6 @@ LBLkillThread:
       DISPATCH(6);
     }
 
-  Case(SWITCHCOMPMODE)
-    error("switch compmode");
-    DISPATCH(1);
-
   Case(JOB)
     {
       ProgramCounter contPC = getLabelArg(PC+1);
@@ -2590,7 +2586,6 @@ LBLkillThread:
   Case(TEST3)
   Case(TEST4)
 
-  Case(CONC)
   Case(GENCALL)
   Case(TESTBOOLX)
   Case(TESTBOOLY)
