@@ -330,6 +330,26 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
 
     buildGraph(g, reg, A, B);
 
+    // overlapping test:
+    // propagator is entailed iff a node in the B list (variable values)
+    // has more than one incoming edge. (linear in remaining domain size)
+
+    bool overlap = false;
+    DEBUG(("complalldist: doing overlap test .... \n"));
+    dlink<node> *n;
+    forall(n, B) {
+      if (g.indeg(n->e) > 1) {
+        overlap = true;
+        exit;
+      }
+    }
+
+    if (!overlap) {
+      DEBUG(("complalldist: no overlapping - returning proceed\n"));
+      PC.leave();
+      return PROCEED;
+    }
+
     matching = g.MAX_CARD_BIPARTITE_MATCHING(A, B);
 
     if (matching.size() < size)
