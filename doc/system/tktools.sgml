@@ -25,6 +25,6 @@
   -
   -->
 
-  <Chapter id="Chapter.System">
-    <Title/Miscelleanous System Support: <<System>>/
-  </Chapter>
+<Chapter id="Chapter.TkTools">
+  <Title/Graphical Tools: <<TkTools>>/
+</Chapter>
