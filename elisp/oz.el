@@ -45,13 +45,6 @@
 ;;         7
 ;;   The 7 should be underneath the 5.  You can circumvent this problem
 ;;   by using parentheses around the expression.
-;; - f(bla:
-;;        proc {$} ... end
-;;        fasel:
-;;   is indented incorrectly.
-;; - {Show [bla fasel
-;;              droehn
-;;   is indented incorrectly.
 ;; - {Tk.batch [tk(self.CurrentQuery configure state: normal)
 ;;              tk(self.CurrentQuery delete '0' 'end')
 ;;              tk(self.CurrentQuery configure state:
@@ -1479,7 +1472,9 @@ else return the column up to where the line should be indented."
 			(oz-backward-begin)
 			(if (oz-is-left)
 			    ;; this is an approximation made for efficiency
-			    (setq ret (current-column))))
+			    (setq ret (if (oz-is-field-value)
+					  (oz-calc-indent)
+					(current-column)))))
 		       ((looking-at oz-left-pattern)
 			(forward-char)
 			(setq ret (oz-get-column-of-next-nonwhite)))
