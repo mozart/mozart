@@ -371,11 +371,11 @@ PredicateRef    : INTEGER
                   }
                 ;
 
-PredId          : PID '(' Atom INTEGER Atom INTEGER INTEGER ')'
+PredId          : PID '(' Atom INTEGER Atom INTEGER Bool ')'
                   {
                     SRecordArity arity = mkTupleWidth(OZ_intToC($4));
                     PrTabEntry *pte =
-                      new PrTabEntry($3,arity,$5,OZ_intToC($6),OZ_intToC($7));
+                      new PrTabEntry($3,arity,$5,OZ_intToC($6),OZ_isTrue($7));
                     codeArea->writeAddress(pte);
                   }
                 ;
