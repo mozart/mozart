@@ -111,7 +111,7 @@ void Thread::ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp)
   Thread *t=new Thread;
   t->flags = T_SuspCont;
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
-    Board *nb = c->getNode ();
+    Board *nb = c->getBoard ();
     am.incSolveThreads (nb);
     t->setNotificationBoard (nb);
   }
@@ -127,7 +127,7 @@ void Thread::ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
   t->resSusp = s;
   t->flags = T_SuspCCont;
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
-    Board *nb = c->getNode ();
+    Board *nb = c->getBoard ();
     am.incSolveThreads (nb);
     t->setNotificationBoard (nb);
   }

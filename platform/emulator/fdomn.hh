@@ -56,12 +56,15 @@ public:
  
   const FDIntervals &operator = (const FDIntervals &);
 
-  void * operator new (size_t s) {return heapMalloc(s);}
+  void * operator new (size_t s) {return freeListMalloc(s);}
   void * operator new (size_t s, int hi) {
     return heapMalloc(s + 2 * (hi - fd_iv_max_high) * sizeof(int));
   }
   void operator delete(void *, size_t) {
     error("Unexpected call of FDIntervals::delete.");
+  }
+  void dispose(void) {
+    if (high <= fd_iv_max_high) freeListDispose(this, sizeof(FDIntervals));
   }
   void print(ostream & = cout, int = 0) const;
   void printLong(ostream & = cout, int = 0) const;
@@ -112,11 +115,12 @@ private:
   int b_arr[fd_bv_max_high];
 #endif
 public:
-  void * operator new (size_t s) {return heapMalloc(s);}
+  void * operator new (size_t s) {return freeListMalloc(s);}
   void operator delete(void *, size_t) {
     error("Unexpected call of FDBitVector::delete.");
   }
-
+  void dispose(void) {freeListDispose(this, sizeof(FDBitVector));}
+  
   FDBitVector(void){}
   void print(ostream & = cout, int = 0) const;
   void printLong(ostream & = cout, int = 0) const;
@@ -180,11 +184,13 @@ private:
   FDBitVector * asBitVector(void) const;
   FDIntervals * asIntervals(void) const;
 public:
-  void * operator new (size_t s) {return heapMalloc(s);}
-  void operator delete(void *, size_t) {
-    error("Unexpected call of FiniteDomain::delete.");
+  void dispose(void) {
+    switch (getType()) {
+    case iv_descr: return get_iv()->dispose();
+    case bv_descr: return get_bv()->dispose();
+    default: return;
+    }
   }
-
   void FiniteDomainInit(void * d = NULL) {setType(fd_descr, d);};
 
   FiniteDomain(void * d = NULL) {FiniteDomainInit(d);}
