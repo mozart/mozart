@@ -664,7 +664,6 @@ struct  linger {
 #define EPFNOSUPPORT            WSAEPFNOSUPPORT
 #define EAFNOSUPPORT            WSAEAFNOSUPPORT
 #define EADDRINUSE              WSAEADDRINUSE
-#define EADDRNOTAVAIL           WSAEADDRNOTAVAIL
 #define ENETDOWN                WSAENETDOWN
 #define ENETUNREACH             WSAENETUNREACH
 #define ENETRESET               WSAENETRESET
@@ -688,6 +687,11 @@ struct  linger {
 #define ESTALE                  WSAESTALE
 #define EREMOTE                 WSAEREMOTE
 #endif
+
+/* activated by RS */
+#define EADDRNOTAVAIL           WSAEADDRNOTAVAIL
+#define EINPROGRESS             WSAEINPROGRESS
+
 
 /* Socket function prototypes */
 
