@@ -347,7 +347,7 @@ local
 	   pack(Left   side:left  anchor:nw) |
 	   pack(Right  side:right anchor:se) |
 	   case {CondSelect F pack True} then
-	      pack(Border fill:x side:top) | {MakeFrames Fr P R TclT}
+	      pack(Border fill:x side:top padx:3) | {MakeFrames Fr P R TclT}
 	   else {MakeFrames Fr P R TclT}
 	   end}}
      end
