@@ -3621,6 +3621,12 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
         DISPATCH(2,-1);
       }
 
+    case PUTCONSTANTX:
+      {
+        XPC(2) = getTaggedArg(PC+1);
+        DISPATCH(3,0);
+      }
+
     default:
 #ifdef DEBUG_CHECK
       displayCode(PC,1);
