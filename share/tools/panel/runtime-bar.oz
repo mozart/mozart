@@ -22,21 +22,20 @@
 
 
 local
-   BackColor    = white
-   OutlineColor = black
-   Width        = 240
-   Height       = 20
-   Gap          = 2
-   Border       = 2
-   Y0           = Gap + 1
-   Y1           = Height
-   Home         = ~10
+   BackColor = white
+   Width     = 240
+   Height    = 20
+   Gap       = 2
+   Border    = 2
+   Y0        = Gap + 1
+   Y1        = Height
+   Home      = ~10
 in
 
    class RuntimeBar
       from Tk.canvas
       prop final
-	 
+
       feat
 	 RunTag
 	 GcTag
@@ -94,14 +93,14 @@ in
 	 RuntimeBar, displayZero
       end
 
-      meth displayZero	       
+      meth displayZero
 	 RuntimeBar,tk(coords self.RunTag  Home Y0 Home Y1)
 	 RuntimeBar,tk(coords self.GcTag   Home Y0 Home Y1)
 	 RuntimeBar,tk(coords self.CopyTag Home Y0 Home Y1)
 	 RuntimeBar,tk(coords self.PropTag Home Y0 Home Y1)
 	 RuntimeBar,tk(coords self.LoadTag Home Y0 Home Y1)
       end
-      
+
       meth display(T)
 	 case T==@Saved then skip else
 	    C           = @Clear

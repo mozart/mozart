@@ -209,7 +209,6 @@ local
 					    width: LinkWidth) $)}
 	       case @isHidden then
 		  ScaledVerSpace = Scale * VerSpaceF
-		  BottomY        = ScaledMyY + ScaledVerSpace
 		  ScaledHorSpace = Scale * HalfHorSpaceF
 	       in
 		  {Canvas

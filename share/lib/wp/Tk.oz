@@ -324,10 +324,9 @@ in
 	    Applet = unit
 	 end
       end
-      
+
       ActionIdServer = {New Counter get(_)}
       TkDict         = {Dictionary.new}
-      SessionId      = {NewName}
       AppletClosed   = {NewName}
 
       local
@@ -805,9 +804,9 @@ in
 	    TkToplevel, tkClose
 	    {System.exit 0}
 	 end
-	 
+
       end
-      
+
       class BrowserAppletToplevel from Widget
 	 prop final
 	 attr Action
@@ -895,7 +894,6 @@ in
 
 
       local
-	 TkEntries   = {NewName}
 	 TkType      = {NewName}
 	 EntryVar    = {NewName}
 	 EntryLock   = {NewName}

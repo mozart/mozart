@@ -26,7 +26,6 @@ local
    C  = command
    MB = menubutton
    CB = checkbutton
-   CC = cascade
 
 in
 

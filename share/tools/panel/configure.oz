@@ -28,15 +28,15 @@ MegaByteI      = KiloByteI * KiloByteI
 
 BitMapDir      = '@' # {System.get home} # '/lib/bitmaps/'
 
-EnterColor       # LineColor        #
+LineColor        #
 RunnableColor    # RunnableStipple  #
 ThresholdColor   # ThresholdStipple #
 SizeColor        # SizeStipple      #
 ActiveColor      # ActiveStipple    #
-TimeColors       # TimeStipple      # 
+TimeColors       # TimeStipple      #
 AboutColor       # CurLoadColor     =
 case Tk.isColor then
-   wheat # gray80 #
+   gray80 #
    lightslateblue   # '' #
    lightslateblue   # '' #
    mediumvioletred  # '' #
@@ -52,9 +52,9 @@ case Tk.isColor then
 	   gc:     ''
 	   load:   '') #
    blue #
-   lightslateblue 
+   lightslateblue
 else
-   white # black # 
+   black #
    black # (BitMapDir # 'grid-50.xbm')  #
    black # (BitMapDir # 'grid-25.xbm')  #
    black # (BitMapDir # 'grid-50.xbm') #
@@ -99,15 +99,12 @@ MediumFontFamily = '-*-helvetica-medium-r-normal--*-'
 FontMatch        = '-*-*-*-*-*-*'
 BoldFont         = BoldFontFamily   # 120 # FontMatch
 MediumFont       = MediumFontFamily # 120 # FontMatch
-ScaleFont        = BoldFontFamily   # 100 # FontMatch
 
-ZeroTime     = time(copy:      0 
-		    gc:        0 
+ZeroTime     = time(copy:      0
+		    gc:        0
 		    load:      0
-		    propagate: 0 
+		    propagate: 0
 		    run:       0
 		    system:    0
 		    user:      0
 		    total:     0)
-
-

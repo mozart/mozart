@@ -27,16 +27,6 @@ Profile = profile(mode:    {`Builtin` setProfileMode 1}
 		  getInfo: {`Builtin` statisticsGetProcs 1}
 		  reset:   {`Builtin` statisticsReset 0} )
 
-%% send a warning/error message
-proc {ProfilerMessage M}
-   %% disabled...
-   %{System.showInfo {ProfilerMessagePrefix} # M}
-   skip
-end
-proc {ProfilerError M}
-   {System.showError ProfilerErrorPrefix # M}
-end
-
 StatusHelp = {NewName}
 
 proc {EnqueueCompilerQuery M}

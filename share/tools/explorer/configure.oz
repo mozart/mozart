@@ -41,7 +41,6 @@ DefOptions = o(drawing:    o(hide:   true
 			     size:        '6.5ix9i'
 			     orientation: false))
 
-ErrorAspect     = 250
 StatusUpdateCnt = 50
 
 TitleName    = 'Oz Explorer'
@@ -74,10 +73,8 @@ BoldStatusFont  = BoldFontFamily # 100 # FontMatch
 
 %% Width of the scroller, applies also to the width of the scale
 ScrollerWidth   = 13
-ScaleWidth      = 13
 
 %% Some parameters used in packing the canvas
-Border          = 3
 Pad             = 2
 BigPad          = 4
 HugePad         = 6
@@ -87,7 +84,6 @@ SmallEntryWidth = 6
 %% Distance between nodes
 HorSpaceI        = 32 * IntScaleBase
 VerSpaceI        = 38 * IntScaleBase
-HorSpaceF        = {IntToFloat HorSpaceI}
 VerSpaceF        = {IntToFloat VerSpaceI}
 
 HalfHorSpaceI    = HorSpaceI div 2
@@ -104,8 +100,6 @@ SentinelY        = RootY - VerSpaceI
 %% Sizes for the nodes and links
 CircleWidthI         = 10 * IntScaleBase
 CircleWidthF         = {IntToFloat CircleWidthI}
-TriangleWidthI       =  8 * IntScaleBase
-TriangleWidthF       = {IntToFloat TriangleWidthI}
 RectangleWidthI      =  8 * IntScaleBase
 RectangleWidthF      = {IntToFloat RectangleWidthI}
 SmallRectangleWidthI =  6 * IntScaleBase
@@ -116,7 +110,6 @@ RhombeWidthF         = {IntToFloat RhombeWidthI}
 ImageSize           = 16.0
 ImageCenter         = ImageSize / 2.0
 ImageScale          = 0.6 / FloatScaleBase
-ImageBorder         = 1
 MaxExtent           = 12.0 * FloatScaleBase
 
 NodeBorderWidth      #
@@ -137,7 +130,6 @@ BlockedColor         #
 PartialFailedColor   #
 LineColor            #
 BackColor            #
-DepthColor           #
 CursorColor          = case Tk.isColor then
 			  'lightskyblue3'   # % ChooseColor
 			  'LightSlateBlue'  # % ChooseTermColor
@@ -148,7 +140,6 @@ CursorColor          = case Tk.isColor then
 			  'purple1'         # % PartialFailedColor
 			  black             # % LineColor
 			  white             # % BackColor
-			  wheat             # % DepthColor
 			  gray60              % CursorColor
 		       else
 			  white # % ChooseColor
@@ -160,9 +151,5 @@ CursorColor          = case Tk.isColor then
 			  white # % PartialFailedColor
 			  black # % LineColor
 			  white # % BackColor
-			  black # % DepthColor
 			  black   % CursorColor 
 		       end
-
-
-	    

@@ -33,7 +33,7 @@
 %%%
 %%%
 
-%% 
+%%
 %\define    DEBUG_OPEN
 \undef     DEBUG_OPEN
 
@@ -53,16 +53,16 @@ in
 
 %%
 \ifdef DEBUG_OPEN
-declare 
+declare
 
-\else 
+\else
 local
 \endif
 
    BrowserClass Browser Browse
-   
+
    %%
-   %% 
+   %%
    %%  Local initial constants;
 \insert 'browser/constants.oz'
 
@@ -74,12 +74,12 @@ local
    %%
    %%  from 'core.oz';
    IntToAtom      %
-   IsVar	  %  
-   IsFdVar        % is a finite domain variable? 
+   IsVar          %
+   IsFdVar        % is a finite domain variable?
    IsFSetVar      % is a finite set variable?
    IsRecordCVar   % is an OFS?
    IsMetaVar      % is a Meta variable?
-   WatchMetaVar   % 
+   WatchMetaVar   %
    MetaGetDataAsAtom % get the constraint data of the meta variable
    MetaGetNameAsAtom % get the name of the constraint system of a meta var
    MetaGetStrength   % get some measure of the informartion of meta var
@@ -95,10 +95,10 @@ local
 
    %% TMUELLER
    %% reflectives for finite sets
-   FSetGetGlb 
+   FSetGetGlb
    FSetGetLub
    FSetGetCard
-   
+
    %%
    %%  'XResources.oz';
    X11ResourceCacheClass
@@ -224,7 +224,7 @@ in
    %% functionality;
 \insert 'browser/core.oz'
 
-   %% 
+   %%
 \insert 'browser/errors.oz'
 
    %%
@@ -257,7 +257,6 @@ in
       UpdateSize = {NewName}
       ButtonsHandler = {NewName}
       DButtonsHandler = {NewName}
-      ShowInOPI = {NewName}
       Rebrowse = {NewName}
       Shrink = {NewName}
       Expand = {NewName}
@@ -329,8 +328,8 @@ in
 \insert 'browser/termsStore.oz'
 \insert 'browser/controlObject.oz'
 
-      %% 
-      %%  Tcl/Tk interface; 
+      %%
+      %%  Tcl/Tk interface;
 \insert 'browser/tcl-interface.oz'
 
       %%
@@ -349,7 +348,7 @@ in
 \insert 'browser/reflect.oz'
    end
 
-   %% 
+   %%
    %% Term objects - on the top of that;
 \insert 'browser/termObject.oz'
 
@@ -378,9 +377,9 @@ in
 
    %%
    %% Applies the 'Browser' to the 'Cmd' in a (slightly) more robust
-   %% way; 
+   %% way;
    proc {ApplyBrowser Browser Cmd}
-      local HasCrashed CrashProc in 
+      local HasCrashed CrashProc in
 	 %%
 	 proc {CrashProc E T D}
 	    {Show '*********************************************'}
@@ -403,11 +402,11 @@ in
 	 %% this way: a browser object has an internal
 	 %% asynchronous worker which does the actual job ...
 	 case {IsVar HasCrashed} then skip
-	 else Pl Hl in
+	 else
 	    %%
 	    try
 	       %%
-	       %% try to give up gracefully ... 
+	       %% try to give up gracefully ...
 	       %% Note that this can block forever;
 	       {JobEnd proc {$} {Browser close} end}
 
@@ -432,8 +431,8 @@ in
       attr
 	 BrowserStream: InitValue % used for "deep" browsing;
 	 BrowserCell:   InitValue % ...
-	 InitMeth:      InitValue % 
-	 RealBrowser:   InitValue % 
+	 InitMeth:      InitValue %
+	 RealBrowser:   InitValue %
 
       %%
       %% A real make which does the work;
@@ -455,7 +454,7 @@ in
 	       else {BrowserError 'Browser channel is closed???'}
 	       end
 	    end
-	    thread 
+	    thread
 	       {InternalBrowserLoop BS}
 	    end
 
@@ -512,12 +511,11 @@ in
 
    %%
    %%
-\ifndef DEBUG_OPEN 
-end 
+\ifndef DEBUG_OPEN
+end
 \endif
 
 end
 
 
 \insert 'browser/undefs.oz'
-
