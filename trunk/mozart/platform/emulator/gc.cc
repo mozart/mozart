@@ -474,18 +474,8 @@ void storeFwdMode(Bool isInGc, int32* fromPtr, void *newValue,
 }
 
 inline
-void storeFwdMode(Bool isInGc, void* fromPtr, void *newValue) {
-  storeFwdMode(isInGc, (int32*) fromPtr, newValue);
-}
-
-inline
 void storeFwd(int32* fromPtr, void *newValue, Bool domark=OK) {
   storeFwdMode(isInGc, fromPtr, newValue, domark);
-}
-
-inline
-void storeFwd(void* fromPtr, void *newValue) {
-  storeFwd((int32*) fromPtr, newValue);
 }
 
 
@@ -950,7 +940,7 @@ Thread *Thread::gcThreadInline() {
 
   gcStack.push(newThread, PTR_THREAD);
 
-  storeFwd(&item.threadBody, newThread);
+  storeFwd((int32 *)&item.threadBody, newThread);
 
   return newThread;
 }
@@ -1367,7 +1357,7 @@ Thread *Thread::gcDeadThread() {
   //  newThread->state.flags=0;
   Assert(newThread->item.threadBody==NULL);
 
-  storeFwd (&item.threadBody, newThread);
+  storeFwd ((int32 *)&item.threadBody, newThread);
   setSelf(getSelf()->gcObject());
   getAbstr()->gcPrTabEntry();
 
@@ -1689,13 +1679,13 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 	  Assert(!isInGc);
 	  frm = makeTaggedRef(&to);
 	  to  = aux;
-	  storeFwdMode(NO, &frm, &to);
+	  storeFwdMode(NO, (int32*) &frm, &to);
 	  return;
 	}
       }
 	
       to = makeTaggedSVar(sv->gcGetFwd());
-      storeFwdMode(isInGc, &frm, &to);
+      storeFwdMode(isInGc, (int32 *)&frm, &to);
     }
     return;
     
@@ -1715,7 +1705,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 	frm = makeTaggedRef(&to);
 	to  = aux;
       }
-      storeFwdMode(isInGc, &frm, &to);
+      storeFwdMode(isInGc, (int32 *)&frm, &to);
     }
     return;
 
@@ -1732,13 +1722,13 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 	  Assert(!isInGc);
 	  frm = makeTaggedRef(&to);
 	  to  = aux;
-	  storeFwdMode(NO, &frm, &to);
+	  storeFwdMode(NO, (int32 *)&frm, &to);
 	  return;
 	}
       }
       
       to = makeTaggedCVar(cv->gcGetFwd());
-      storeFwdMode(isInGc, &frm, &to);
+      storeFwdMode(isInGc, (int32 *)&frm, &to);
     }
     return;
     
@@ -2862,7 +2852,7 @@ void LTuple::gcRecurse() {
     
     // Store forward, order is important, since collection might already 
     // have done a storeFwd, which means that this one will be overwritten
-    storeFwd(frm->args, to->args);
+    storeFwd((int32 *)frm->args, to->args);
     
     TaggedRef t = deref(frm->args[1]);
 
