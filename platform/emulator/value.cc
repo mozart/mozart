@@ -22,7 +22,9 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomEntailed, AtomSuspended, AtomBlocked, 
   AtomEmpty, AtomUpper, AtomLower, AtomDigit, 
   AtomCharSpace, AtomPunct, AtomOther,
-  NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown;
+  NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown,
+  AtomMin, AtomMax, AtomMid,
+  AtomNaive, AtomSize, AtomConstraints;
 
 
 // Some often used constants
@@ -55,6 +57,13 @@ void initLiterals()
 
   NameTrue         = makeTaggedName(NAMETRUE);
   NameFalse        = makeTaggedName(NAMEFALSE);
+
+  AtomMin          = makeTaggedAtom("min");
+  AtomMax          = makeTaggedAtom("max");
+  AtomMid          = makeTaggedAtom("mid");
+  AtomNaive        = makeTaggedAtom("naive");
+  AtomSize         = makeTaggedAtom("size");
+  AtomConstraints   = makeTaggedAtom("constraints");
 }
 
 
