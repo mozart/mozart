@@ -299,6 +299,10 @@ class CallList;
 
 class LocalPropagatorQueue;
 
+class PerdioVar;
+class MsgBuffer;
+typedef long Credit;  /* TODO: full credit,long credit? */
+
 // source level debugger
 enum OzDebugDoit {DBG_STEP, DBG_NOSTEP, DBG_EXIT};
 class OzDebug;
@@ -414,8 +418,6 @@ char *delChar(char *s,char c);
 
 // see perdio.cc
 int perdioInit();
-int loadURL(TaggedRef url, OZ_Term out, Thread *th);
-int loadURL(const char *,OZ_Term,Thread *th);
 
 // see term.cc
 void initLiterals();

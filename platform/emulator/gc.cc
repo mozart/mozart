@@ -33,7 +33,6 @@
 
 
 #include "gc.hh"
-#include "perdio.hh"
 #include "genvar.hh"
 #include "fdhook.hh"
 #include "fdomn.hh"
@@ -54,10 +53,20 @@
 #include "threadInterface.hh"
 #include "pointer-marks.hh"
 
+// hack alert: usage #pragma interface requires this
 #ifdef OUTLINE
 #define inline
 #endif
 
+// perdio
+void gcPendThread(PendThread**);
+void gcGName(GName *);
+void gcPerdioFinal();
+void gcPerdioRoots();
+void gcBorrowTableUnusedFrames();
+void gcFrameToProxy();
+void gcGName(GName*);
+Bool checkMySite();
 
 /*
  * isCollecting: collection is running
