@@ -32,6 +32,8 @@ INSTALL		= @INSTALL@
 INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_DIR	= @INSTALL_DIR@
 CED		= @CED@
+HOMEURL         = @HOMEURL@
+
 
 FILES		= ozdoc.dcl ozdoc.dtd ozdoc.doc catalog $(CED) author.db \
 		  mozart.bib
@@ -43,18 +45,29 @@ SUBDIRS		= @SUBDIRS@
 
 .PHONY: all bootstrap check install clean veryclean distclean depend
 
-all: $(CED)
 
-bootstrap: all
+bootstrap clean veryclean depend distclean check install::
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do \
+	  if (cd $$i && $(MAKE) $@); \
+          then true; \
+          else exit 1; \
+          fi; \
+        done
 
-check:
 
-depend:
+all:: $(CED)
+
+bootstrap:: all
+
+check::
+
+depend::
 
 Makefile: Makefile.in config.status
 	./config.status
 
-install: all $(SHDOCDIR) $(DOCDIR) $(DOCDIR)/index.html $(LIBFILES)
+install:: all $(SHDOCDIR) $(DOCDIR) $(DOCDIR)/index.html $(LIBFILES)
 
 $(SHDOCDIR) $(DOCDIR):
 	$(INSTALL_DIR) $@
@@ -67,11 +80,11 @@ $(LIBFILES): $(SHDOCDIR)/% : %
 
 ozdoc.ced: ozdoc.dtd ozdoc.dcl ced.cat ced.el
 	$(EMACS) -q -batch -l ced.el
-clean:
+clean::
 	-rm -f *~
 
-veryclean: clean
+veryclean:: clean
 	-rm -f $(CED) xref.db
 
-distclean: veryclean
+distclean:: veryclean
 	-rm -f Makefile ced.el catalog config.log config.status config.cache
