@@ -45,6 +45,7 @@ UnknownTermThread      = 'Unknown terminating thread' /* end */
 
 ID                     = fun {$ I} ' (id ' # I # ')' end
 OzcarMessagePrefix     = 'Ozcar: '
+OzcarErrorPrefix       = 'Ozcar ERROR: '
 FileLineSeparator      = ' '
 
 BraceLeft              = '{'  /* } */

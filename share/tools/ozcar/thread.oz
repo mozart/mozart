@@ -84,9 +84,13 @@ in
 	    I       = M.thr.2
 	    FrameId = M.frame
 	    Stack   = {Dget self.ThreadDic I}
+	    F L
 	 in
-	    {Stack exit(FrameId)}
-	    
+	    {ForAll [exit(FrameId) printTop getPos(file:F line:L)] Stack}
+	    SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
+	    SourceManager,scrollbar(file:F line:L
+				    color:ScrollbarApplColor what:appl)
+
 	 [] thr then
 	    T = M.thr.1
 	    I = M.thr.2
@@ -98,7 +102,10 @@ in
 	    E = {Ozcar exists(I $)}
 	 in
 	    case E then
+	       Stack = {Dget self.ThreadDic I}
+	    in
 	       {OzcarMessage KnownThread # {ID I}}
+	       {Stack rebuild(true)}
 	    else
 	       {OzcarMessage NewThread   # {ID I}}
 	       case Q == 1 then      %% toplevel query?
@@ -181,17 +188,22 @@ in
       end
 
       meth remove(T I Mode)
-	 {OzcarMessage 'removing thread #' # I}
-	 {Dremove self.ThreadDic I}
-	 SourceManager,scrollbar(file:'' line:undef color:undef what:both)
 	 case Mode == kill then
-	    currentThread <- undef
 	    Gui,killNode(I)
-	    Gui,status(0)
+	    {Dremove self.ThreadDic I}
 	 else
 	    Gui,removeNode(I)
-	    Gui,status(I terminated)
 	 end
+	 case T == @currentThread then
+	    SourceManager,scrollbar(file:'' line:undef color:undef what:both)
+	    case Mode == kill then
+	       currentThread <- undef
+	       Gui,status(0)
+	    else
+	       Gui,status(I terminated)
+	    end
+	    Gui,printStack(id:0 frames:nil depth:0)
+	 else skip end
 	 case {Dkeys self.ThreadDic} == nil then
 	    {OzcarMessage 'no more threads to debug.'}
 	    currentThread <- undef
@@ -214,10 +226,7 @@ in
       in
 	 {Stack step(name:N args:A builtin:B file:F line:L
 		     time:Time frame:FrameId)}
-	 
-	 case T == @currentThread then
-	    Ack
-	 in
+	 case T == @currentThread then Ack in
 	    case {UnknownFile F} then
 	       {OzcarMessage NoFileInfo # I}
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
@@ -229,6 +238,7 @@ in
 					  color:ScrollbarApplColor what:appl)
 	       end
 	       thread Gui,loadStatus(F Ack) end
+	       thread {Stack printTop} end
 	    end
 	 else skip end
       end
@@ -236,10 +246,9 @@ in
       meth block(thr:T id:I file:F line:L name:N args:A builtin:B time:Time)
 	 Stack = {Dget self.ThreadDic I}
       in
-	 {Stack step(name:N args:A builtin:B file:F line:L time:Time)}
 	 Gui,markNode(I blocked)
-
 	 case T == @currentThread then
+	    Gui,status(I blocked)
 	    case {UnknownFile F} then
 	       {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
@@ -248,7 +257,7 @@ in
 				       color:ScrollbarBlockedColor what:appl)
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
 	    end
-	    Gui,status(I blocked)
+	    {ForAll [rebuild(true) printTop] Stack}
 	 else skip end
       end
       
@@ -258,7 +267,6 @@ in
 	 case I == 1 then
 	    Gui,status(0)
 	 else
-	    
 	    Stack = {Dget self.ThreadDic I}
 	    T     = {Stack getThread($)}
 	    S     = {Thread.state T}
@@ -272,17 +280,21 @@ in
 	    
 	    case S == terminated then
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:appl)
-	    else
-	       SourceManager,
-	       scrollbar(file:F line:L
-			 color:
-			    case S
-			    of runnable then ScrollbarApplColor
-			    [] blocked  then ScrollbarBlockedColor
-			    end
-			 what:appl)
+	       Gui,printStack(id:0 frames:nil depth:0)
+	    else Ack in
+	       thread
+		  SourceManager,
+		  scrollbar(file:F line:L ack:Ack
+			    color:
+			       case S
+			       of runnable then ScrollbarApplColor
+			       [] blocked  then ScrollbarBlockedColor
+			       end
+			    what:appl)
+	       end
+	       thread Gui,loadStatus(F Ack) end
+	       thread {Stack print} end
 	    end
-	    
 	    SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
 	 end
       end

@@ -144,6 +144,8 @@ in
 	 WindowList    : nil
 	 CurrentWindow : window(appl:undef stack:undef)
 	 WithDrawn     : true
+      prop
+	 locking
       
       meth init
 	 Tk.toplevel,tkInit(parent:self.toplevel
@@ -194,12 +196,14 @@ in
 	    RealF = {LookupPath F}
 	    E     = {self lookup(file:RealF entry:$)}
 	 in
-	    case {IsDet E} then
-	       {self ToTop(entry:E line:L color:C what:What)}
-	    else
-	       {self NewFile(file:RealF line:L color:C what:What)}
+	    lock
+	       case {IsDet E} then
+		  {self ToTop(entry:E line:L color:C what:What)}
+	       else
+		  {self NewFile(file:RealF line:L color:C what:What)}
+	       end
+	       case {IsDet Ack} then skip else Ack = unit end
 	    end
-	    case {IsDet Ack} then skip else Ack = unit end
 	    case @WithDrawn then
 	       {Tk.batch [wm(geometry  self SourceWindowGeometry)
 			  wm(resizable self false false)
