@@ -41,27 +41,37 @@ extern TaggedRef getSuspHandlerBool(InlineFun2);
 // -----------------------------------------------------------------------
 // TOPLEVEL FAILURE
 
-#define HANDLE_FAILURE(pc,MSG)                                                \
+#define HANDLE_FAILURE(pc,MSG_SHORT,MSG_LONG)                                 \
+  HANDLE_FAILUREX(pc,,MSG_SHORT,MSG_LONG)
+
+#define HANDLE_FAILUREX(pc,X,MSG_SHORT,MSG_LONG)                              \
 {                                                                             \
   if (e->isToplevel()) {                                                      \
     if (e->conf.errorVerbosity > 0) {                                         \
       toplevelErrorHeader();                                                  \
-      if (e->conf.errorVerbosity > 1) { MSG; }                                \
+      { MSG_SHORT; }                                                          \
+      if (e->conf.errorVerbosity > 1) {                                       \
+        { MSG_LONG; }                                                         \
+        message("\n");                                                        \
+      }                                                                       \
       toplevelErrorTrailer();                                                 \
+    } else {                                                                  \
+      message("Toplevel Failure\n");                                          \
     }                                                                         \
     if (e->conf.stopOnToplevelFailure) {                                      \
       tracerOn(); trace("toplevel failed");                                   \
     }                                                                         \
+    {X;}                                                                      \
     if (pc) { JUMP(pc); } else { goto LBLpopTask; }                           \
   } else { goto LBLfailure; }                                                 \
 }
 
 // always issue the message
-#define HANDLE_FAILURE1(pc,MSG)                                               \
+#define HANDLE_FAILURE1(pc,MSG_SHORT,MSG_LONG)                                \
 if (e->isToplevel()) {                                                        \
-  HANDLE_FAILURE(pc,MSG);                                                     \
+  HANDLE_FAILURE(pc,MSG_SHORT,MSG_LONG);                                      \
 } else {                                                                      \
-  { MSG; }                                                                    \
+  { MSG_SHORT; }                                                              \
   goto LBLfailure;                                                            \
 }
 
@@ -77,7 +87,7 @@ if (e->isToplevel()) {                                                        \
 #define CheckArity(arity,arityExp,pred,cont)                                  \
 if (arity != arityExp && VarArity != arity) {                                 \
   HANDLE_FAILURE1(cont,                                                       \
-                  applFailure(pred);                                          \
+                  applFailure(pred),                                          \
                   message("Wrong number of arguments: expected %d got %d\n",arityExp,arity)); \
 }
 
@@ -805,7 +815,8 @@ void engine() {
       killPropagatedCurrentTaskSusp();
     localhack0:
       HANDLE_FAILURE(0,
-                     applFailure(biFun);printArgs(X,XSize));
+                     applFailure(biFun),
+                     printArgs(X,XSize));
     case PROCEED:
       LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
                         goto localhack0;);
@@ -948,7 +959,8 @@ void engine() {
         killPropagatedCurrentTaskSusp();
       localhack1:
         HANDLE_FAILURE(PC+3,
-                       applFailure(fun); printArgs(X,arity));
+                       applFailure(fun),
+                       printArgs(X,arity));
       case PROCEED:
         LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
                           goto localhack1;);
@@ -983,7 +995,8 @@ void engine() {
         {
           SHALLOWFAIL;
           HANDLE_FAILURE(PC+3,
-                         applFailure(entry); printArgs(1,XPC(2)));
+                         applFailure(entry),
+                         printArgs(1,XPC(2)));
         }
       }
     }
@@ -1009,7 +1022,8 @@ void engine() {
         {
           SHALLOWFAIL;
           HANDLE_FAILURE(PC+4,
-                         applFailure(entry);printArgs(2,XPC(2),XPC(3)));
+                         applFailure(entry),
+                         printArgs(2,XPC(2),XPC(3)));
         }
       }
     }
@@ -1039,11 +1053,10 @@ void engine() {
       case FAILED:
         {
           SHALLOWFAIL;
-          // mm2 the following initialization is necessary to
-          // continue on toplevel failure
-          XPC(3) = makeTaggedRef(newTaggedUVar(CBB));
-          HANDLE_FAILURE(PC+4,
-                         applFailure(entry);printArgs(1,XPC(2)));
+          HANDLE_FAILUREX(PC+4,
+                          XPC(3) = makeTaggedRef(newTaggedUVar(CBB)),
+                          applFailure(entry),
+                          printArgs(1,XPC(2)));
         }
       }
     }
@@ -1067,10 +1080,10 @@ void engine() {
       case FAILED:
         {
           SHALLOWFAIL;
-          /* mm2 s.o. */
-          XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
-          HANDLE_FAILURE(PC+5,
-                         applFailure(entry);printArgs(2,XPC(2),XPC(3)));
+          HANDLE_FAILUREX(PC+5,
+                          XPC(4) = makeTaggedRef(newTaggedUVar(CBB)),
+                          applFailure(entry),
+                          printArgs(2,XPC(2),XPC(3)));
         }
       }
     }
@@ -1096,10 +1109,10 @@ void engine() {
       case FAILED:
         {
           SHALLOWFAIL;
-          /* mm2 s.o. */
-          XPC(5) = makeTaggedRef(newTaggedUVar(CBB));
-          HANDLE_FAILURE(PC+6,
-                         applFailure(entry);printArgs(3,XPC(2),XPC(3),XPC(4)));
+          HANDLE_FAILUREX(PC+6,
+                          XPC(5) = makeTaggedRef(newTaggedUVar(CBB)),
+                          applFailure(entry),
+                          printArgs(3,XPC(2),XPC(3),XPC(4)));
         }
       }
     }
@@ -1141,7 +1154,9 @@ void engine() {
           }
 
           HANDLE_FAILURE(PC+6,
-                         message("susp handler for ==B, \\=B not set\n"));
+                         message("System inconsisteny\n"),
+                         message("susp handler for ==B, \\=B not set\n")
+                         );
         }
 
 #ifdef DEBUG_CHECK
@@ -1299,7 +1314,7 @@ void engine() {
   INSTRUCTION(FAILURE)
     {
       HANDLE_FAILURE(PC+1,
-                     message("Executing 'false'\n"));
+                     message("Executing 'false'\n"),);
     }
 
 
@@ -1348,7 +1363,7 @@ void engine() {
       if (!e->fastUnify(term,makeTaggedSRecord(p))) {
         HANDLE_FAILURE(nxt,
                        message("definition %s/%d = %s\n",
-                               p->getPrintName(),p->getArity(),OZ_toC(term)););
+                               p->getPrintName(),p->getArity(),OZ_toC(term)),);
       }
 
       if (predEntry) {
@@ -1451,7 +1466,9 @@ void engine() {
       }
 
       HANDLE_FAILURE1(PC,
-                      applFailure(object);)
+                      applFailure(object),
+                      message("send method application\n");
+                      printArgs(X+3,arity));
     }
 
     Abstraction *def = getSendMethod(object,label,arity,X);
@@ -1519,7 +1536,8 @@ void engine() {
   bombApply:
     if (methApplHdl == makeTaggedNULL()) {
       HANDLE_FAILURE1(PC,
-                      message("Application handler not set (apply method)\n"));
+                      message("Application handler not set (apply method)\n"),
+                      );
     }
 
     TaggedRef method = makeMethod(arity-3,label,X);
@@ -1577,7 +1595,8 @@ void engine() {
            goto LBLcall;
          }
          HANDLE_FAILURE1(PC,
-                         applFailure(taggedPredicate));
+                         applFailure(taggedPredicate),
+                         printArgs(X,predArity));
        }
 
        predicate = tagged2SRecord(taggedPredicate);
@@ -1653,15 +1672,17 @@ void engine() {
               predicate = bi->getSuspHandler();
               if (!predicate) {
                 HANDLE_FAILURE1(PC,
-                                applFailure(bi);
-                                message("No suspension handler\n"));
+                                applFailure(bi),
+                                message("No suspension handler\n");
+                                printArgs(X,predArity));
               }
               goto LBLcall;
             case FAILED:
               LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
 
               HANDLE_FAILURE(PC,
-                             applFailure(bi); printArgs(X,predArity));
+                             applFailure(bi),
+                             printArgs(X,predArity));
             case PROCEED:
               LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
                                    goto LBLfailure);
@@ -1689,7 +1710,8 @@ void engine() {
       } // end builtin
     default:
       HANDLE_FAILURE1(PC,
-                      applFailure(makeTaggedSRecord(predicate)));
+                      applFailure(makeTaggedSRecord(predicate)),
+                      );
     } // end switch on type of predicate
 
 // ------------------------------------------------------------------------
@@ -1705,7 +1727,7 @@ void engine() {
          predicate = bi->getSuspHandler();
          if (!predicate) {
            HANDLE_FAILURE1(PC,
-                           applFailure(bi);
+                           applFailure(bi),
                            message("No suspension handler\n"));
          }
          goto LBLcall;
@@ -1715,7 +1737,8 @@ void engine() {
            !(tagged2SRecord (x0)->getType () == R_ABSTRACTION ||
              tagged2SRecord (x0)->getType () == R_BUILTIN)) {
          HANDLE_FAILURE (PC,
-                         message("Application failed: no abstraction or builtin in solve\n"));
+                         message("Application failed: no abstraction or builtin in solve\n"),
+                         );
 
        }
 
@@ -1751,7 +1774,9 @@ void engine() {
    LBLBIsolveCont:
      {
        if (((OneCallBuiltin *)bi)->isSeen () == OK) {
-         HANDLE_FAILURE(PC, message("not first call of solve continuation\n"));
+         HANDLE_FAILURE(PC,
+                        message("not first call of solve continuation\n"),
+                        );
        }
 
        Board *solveBB =
@@ -1791,7 +1816,7 @@ void engine() {
          boardToInstall->setCommitted (CBB);
 #ifdef DEBUG_CHECK
          if ( !e->installScript (boardToInstall->getScriptRef ()) ) {
-           LOCAL_PROPAGATION(HANDLE_FAILURE(NULL, ;));
+           LOCAL_PROPAGATION(HANDLE_FAILURE(NULL, ,));
            // error ("installScript has failed in solveCont");
            message ("installScript has failed in solveCont (0x%x to 0x%x)\n",
                     (void *) boardToInstall, (void *) solveBB);
@@ -1800,7 +1825,7 @@ void engine() {
 
          LOCAL_PROPAGATION(
            if (!e->installScript (boardToInstall->getScriptRef ()))
-             HANDLE_FAILURE(NULL, ;)
+             HANDLE_FAILURE(NULL, ,)
          )
 
          NO_LOCAL_PROPAGATION(
@@ -1829,7 +1854,7 @@ void engine() {
        //    since its childCount can not become smaller.
        if ( !e->fastUnify (solveAA->getSolveVar (), X[0]) ) {
          warning ("unification of variable in solveCont failed");
-         HANDLE_FAILURE (NULL, ;);
+         HANDLE_FAILURE (NULL, ,);
        }
 
        if (isExecute) {
@@ -1881,12 +1906,12 @@ void engine() {
 
          if ( !e->fastUnify (solveAA->getSolveVar (), X[0]) ) {
            warning ("unification of variable in solved failed");
-           HANDLE_FAILURE (NULL, ;);
+           HANDLE_FAILURE (NULL, ,);
          }
        } else {
          if ( !e->fastUnify (valueIn, X[0]) ) {
            warning ("unification of variable in solved failed");
-           HANDLE_FAILURE (NULL, ;);
+           HANDLE_FAILURE (NULL, ,);
          }
        }
 
@@ -2233,7 +2258,7 @@ void engine() {
         DebugCheckT (solveBB->setReflected ());
         if ( !e->fastUnify (solveAA->getResult (), solveAA->genSolved ()) ) {
           warning ("unification of solved tuple with variable has failed");
-          HANDLE_FAILURE (NULL, ;);
+          HANDLE_FAILURE (NULL, ,);
         }
       } else {
         // 'stabe' (stuck) or enumeration;
@@ -2244,7 +2269,7 @@ void engine() {
           DebugCheckT (solveBB->setReflected ());
           if ( !e->fastUnify (solveAA->getResult (), solveAA->genStuck ()) ) {
             warning ("unification of solved tuple with variable has failed");
-            HANDLE_FAILURE (NULL, ;);
+            HANDLE_FAILURE (NULL, ,);
           }
         } else {
           // to enumerate;
@@ -2269,7 +2294,7 @@ void engine() {
             DebugCheckT (solveBB->setReflected ());
             if ( !e->fastUnify (solveAA->getResult (), solveAA->genEnumedFail () )) {
               warning ("unification of distributed tuple with variable has failed");
-              HANDLE_FAILURE (NULL, ;);
+              HANDLE_FAILURE (NULL, ,);
             }
           } else {
             // 'proper' enumeration;
@@ -2328,7 +2353,7 @@ void engine() {
             if ( !e->fastUnify (solveAA->getResult (),
                                 solveAA->genEnumed (newSolveBB) )) {
               warning ("unification of distributed tuple with variable has failed");
-              HANDLE_FAILURE (NULL, ;);
+              HANDLE_FAILURE (NULL, ,);
             }
           }
         }
@@ -2382,7 +2407,7 @@ void engine() {
         }
 
 /* rule: if fi --> false */
-        HANDLE_FAILURE(NULL,message("reducing 'if fi' to 'false'\n"));
+        HANDLE_FAILURE(NULL,message("reducing 'if fi' to 'false'\n"),);
       }
     } else if (aa->isWait ()) {
       if ((WaitActor::Cast (aa))->hasNext () == OK) {
@@ -2392,11 +2417,11 @@ void engine() {
 /* rule: or ro (bottom commit) */
       if ((WaitActor::Cast (aa))->hasNoChilds()) {
         aa->setCommitted();
-        HANDLE_FAILURE(NULL,
-                       message("bottom commit\n");
-                       CBB->removeSuspension();
-                       goto LBLcheckEntailment;
-                       );
+        HANDLE_FAILUREX(NULL,
+                        CBB->removeSuspension();
+                        goto LBLcheckEntailment,
+                        message("bottom commit\n"),
+                        );
       }
 /* rule: or <sigma> ro (unit commit rule) */
       if ((WaitActor::Cast (aa))->hasOneChild()) {
@@ -2405,11 +2430,11 @@ void engine() {
         if (waitBoard->isWaiting()) {
           waitBoard->setCommitted(CBB); // do this first !!!
           if (!e->installScript(waitBoard->getScriptRef())) {
-            HANDLE_FAILURE(NULL,
-                           message("unit commit failed\n");
-                           CBB->removeSuspension();
-                           goto LBLcheckEntailment;
-                           );
+            HANDLE_FAILUREX(NULL,
+                            CBB->removeSuspension();
+                            goto LBLcheckEntailment,
+                            message("unit commit failed\n"),
+                            );
           }
 
           /* add the suspension from the committed board
@@ -2442,7 +2467,7 @@ void engine() {
       if ( !e->fastUnify (SolveActor::Cast (aa)->getResult (),
                           SolveActor::Cast (aa)->genFailed ()) ) {
         warning ("unification of atom 'failed' with variable has failed");
-        HANDLE_FAILURE (NULL, ;);
+        HANDLE_FAILURE (NULL, ,);
       }
     }
 
