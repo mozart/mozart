@@ -6,6 +6,8 @@ import
 define
    class Builder
 
+      attr AvoidCircularities:nil
+
       meth build(Targets)
 	 {self makefile_read}
 	 if Targets==nil then Builder,build_all
@@ -39,10 +41,16 @@ define
       end
 
       meth build_target(T)
+	 CIRC = @AvoidCircularities
+      in
 	 {self extend_resolver}
 	 {self trace('target '#T)}
+	 if {Member T CIRC} then
+	    raise ozmake(build:circularity(T)) end
+	 end
 	 {self incr}
 	 try
+	    AvoidCircularities <- T|CIRC
 	    if {Not {self get_fullbuild($)}} andthen {self target_is_src(T $)} then
 	       {self make_src(T _)}
 	    else
@@ -59,7 +67,10 @@ define
 		  end
 	       else {self trace(T#' is up to date')} end
 	    end
-	 finally {self decr} end
+	 finally
+	    AvoidCircularities <- CIRC
+	    {self decr}
+	 end
       end
 
       meth Outdated(Target Deps $)

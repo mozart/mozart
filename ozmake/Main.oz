@@ -19,8 +19,8 @@ prepare
       
       prefix(    single type:string)
       dir(       single type:string)
-      builddir(  single type:string)
-      srcdir(    single type:string)
+      builddir(  single type:string default:'.')
+      srcdir(    single type:string default:'.')
       bindir(    single type:string)
       libdir(    single type:string)
       docdir(    single type:string)
