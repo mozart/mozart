@@ -133,6 +133,10 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 
 }
 
+Bool Suspendable::_wakeup_outline(Board * home, PropCaller calledBy) {
+  return _wakeup(home, calledBy);
+}
+
 void oz_checkAnySuspensionList(SuspList ** suspList,
                                Board * home,
                                PropCaller calledBy) {
