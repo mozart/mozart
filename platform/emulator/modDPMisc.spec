@@ -85,7 +85,11 @@
 
      'printDPTables'	     => { in  => [],
 				  out => [],
-				  BI  => BIprintDPTables}
+				  BI  => BIprintDPTables},
+
+     'createLogFile'         => { in  => ['+string'],
+				  out => [],
+				  BI  => BIcreateLogFile}
 );
 
 

@@ -36,6 +36,7 @@ export
    GetConnectWstream
    SetListenPort
    ConnFailed
+   CreateLogFile
 define
    %%
    %% Force linking of base library
@@ -67,6 +68,7 @@ define
    GetConnectWstream = Misc.getConnectWstream
    SetListenPort = Misc.setListenPort
    ConnFailed = Misc.connFailed
+   CreateLogFile = Misc.createLogFile
 end
 
 

@@ -38,8 +38,8 @@
 
 //#define COMOBJ_LOG
 //#define COMOBJ_CONNECT_LOG
-#define DO_CONNECT_LOG ozconf.dpLog && ozconf.dpConnectLog
-#define DO_MESSAGE_LOG ozconf.dpLog && ozconf.dpMessageLog
+#define DO_CONNECT_LOG ozconf.dpLogConnectLog
+#define DO_MESSAGE_LOG ozconf.dpLogMessageLog
 
 ComObj::ComObj(DSite *site) {
   init(site);
@@ -77,12 +77,12 @@ void ComObj::init(DSite *site) {
 // should allways be used.
 void ComObj::send(MsgContainer *msgC,int priority) {
   if(DO_MESSAGE_LOG) {
-    printf("send(%s %d %d %d %d)\n",
-	   mess_names[msgC->getMessageType()],
-	   myDSite->getTimeStamp()->pid,
-	   site!=NULL?site->getTimeStamp()->pid:0,
-	   msgC->getMsgNum(),
-	   (int) am.getEmulatorClock());
+    fprintf(logfile,"send(%s %d %d %d %d)\n",
+	    mess_names[msgC->getMessageType()],
+	    myDSite->getTimeStamp()->pid,
+	    site!=NULL?site->getTimeStamp()->pid:0,
+	    msgC->getMsgNum(),
+	    (int) am.getEmulatorClock());
   }
 
   PD((TCP_INTERFACE,"---send: %s fr %d to %d",
@@ -180,9 +180,9 @@ Bool ComObj::handover(TransObj *transObj) {
   PD((TCP_INTERFACE,"Connection handover (from %d to %d (%x))",
       myDSite->getTimeStamp()->pid,site->getTimeStamp()->pid,this));
   if(DO_CONNECT_LOG) {
-    printf("handover(%s ",
+    fprintf(logfile,"handover(%s ",
 	   myDSite->stringrep_notype());
-    printf("%s %d)\n",
+    fprintf(logfile,"%s %d)\n",
 	   site!=NULL?site->stringrep_notype():"-",
 	   (int) am.getEmulatorClock());
   }
@@ -276,12 +276,12 @@ void ComObj::close(CState statetobe,Bool merging) {
 
   if(transObj!=NULL) {
     if(DO_CONNECT_LOG) {
-      printf("close(%s ",
-	     myDSite->stringrep_notype());
-      printf("%s %d %d %d)\n",
-	     site!=NULL?site->stringrep_notype():"-",
-	     (int) am.getEmulatorClock(),
-	     state,statetobe);
+      fprintf(logfile,"close(%s ",
+	      myDSite->stringrep_notype());
+      fprintf(logfile,"%s %d %d %d)\n",
+	      site!=NULL?site->stringrep_notype():"-",
+	      (int) am.getEmulatorClock(),
+	      state,statetobe);
     }
     handback(this,transObj);
     transObj=NULL;
@@ -438,12 +438,12 @@ inline void ComObj::extractCI(OZ_Term channelinfo,int &bufferSize) {
 Bool ComObj::msgReceived(MsgContainer *msgC) {
   mess_counter[msgC->getMessageType()].recv();
   if(DO_MESSAGE_LOG) {
-    printf("received(%s %d %d %d %d)\n",
-	   mess_names[msgC->getMessageType()],
-	   myDSite->getTimeStamp()->pid,
-	   site!=NULL?site->getTimeStamp()->pid:0,
-	   msgC->getMessageType()<C_FIRST?lastReceived+1:0,
-	   (int) am.getEmulatorClock());
+    fprintf(logfile,"received(%s %d %d %d %d)\n",
+	    mess_names[msgC->getMessageType()],
+	    myDSite->getTimeStamp()->pid,
+	    site!=NULL?site->getTimeStamp()->pid:0,
+	    msgC->getMessageType()<C_FIRST?lastReceived+1:0,
+	    (int) am.getEmulatorClock());
   }
   PD((TCP_INTERFACE,"---msgReceived: %s nr:%d from %d",
       mess_names[msgC->getMessageType()],lastReceived+1,
@@ -487,11 +487,11 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
       transObj->setSite(site);
 
       if(DO_CONNECT_LOG) {
-	printf("accept(%s ",
-	       myDSite->stringrep_notype());
-	printf("%s %d)\n",
-	       site!=NULL?site->stringrep_notype():"-",
-	       (int) am.getEmulatorClock());
+	fprintf(logfile,"accept(%s ",
+		myDSite->stringrep_notype());
+	fprintf(logfile,"%s %d)\n",
+		site!=NULL?site->stringrep_notype():"-",
+		(int) am.getEmulatorClock());
       }
 
       if(strcmp(version,PERDIOVERSION)!=0) {
@@ -829,12 +829,12 @@ MsgContainer *ComObj::getNextMsgContainer(int &acknum) {
   }
   if(DO_MESSAGE_LOG) {
     if(msgC!=NULL) 
-      printf("transmit(%s %d %d %d %d)\n",
-	     mess_names[msgC->getMessageType()],
-	     myDSite->getTimeStamp()->pid,
-	     site!=NULL?site->getTimeStamp()->pid:0,
-	     msgC->getMsgNum()==-1?0:msgC->getMsgNum(),
-	     (int) am.getEmulatorClock());
+      fprintf(logfile,"transmit(%s %d %d %d %d)\n",
+	      mess_names[msgC->getMessageType()],
+	      myDSite->getTimeStamp()->pid,
+	      site!=NULL?site->getTimeStamp()->pid:0,
+	      msgC->getMsgNum()==-1?0:msgC->getMsgNum(),
+	      (int) am.getEmulatorClock());
   }
 
   if(probing && msgC!=NULL && msgC->getMessageType()<C_FIRST) {
