@@ -672,7 +672,7 @@ void osClrWatchedFD(int fd, int mode)
   FD_CLR(fd,&globalFDs[mode]); 
 #ifdef WINDOWS
   // Assert(mode==SEL_READ);
-  // deleteReader(fd);
+  deleteReader(fd);
 #endif
 }
 
