@@ -41,10 +41,11 @@
 typedef unsigned int FaultInfo;
 
 enum WatcherKind{
-  RETRY      = 1,
-  PERSISTENT = 2,
-  W_CELL     = 4,
-  SITE_BASED = 8
+  WATCHER_RETRY      = 1,
+  WATCHER_PERSISTENT = 2,
+  WATCHER_CELL       = 4,
+  WATCHER_SITE_BASED = 8,
+  WATCHER_INJECTOR   = 16
 };
 
 enum EntityCondFlags{
@@ -61,15 +62,6 @@ enum EntityCondFlags{
 };
 
 typedef unsigned int EntityCond;
-
-inline EntityCond evalTrueEntityCond(EntityCond c){
-  return ((c & (~TEMP_FLOW)) | ((c & (TEMP_FLOW))<<1));}
-
-inline Bool isHandlerCondition(EntityCond ec){
-  if(ec & (PERM_BLOCKED|TEMP_BLOCKED)) {
-    Assert((ec & (PERM_BLOCKED|TEMP_BLOCKED))==ec);
-    return TRUE;}
-  return FALSE;}
 
 class EntityInfo{
   friend class Tertiary;
@@ -93,7 +85,7 @@ public:
     watchers=NULL;}
 
   EntityCond getEntityCond(){
-    return evalTrueEntityCond(entityCond);}
+    return entityCond;}
 
   Bool addEntityCond(EntityCond ec){
     if((entityCond | ec) ==entityCond) return FALSE;
@@ -161,7 +153,7 @@ friend class EntityInfo;
 public:
   TaggedRef proc;
   Watcher *next;
-  Thread *thread; // thread of handler
+  Thread *thread; // thread of injector
   short kind;
   unsigned short watchcond;
   Twin* twin;
@@ -186,7 +178,7 @@ public:
     return TRUE;}
 
   Twin* cellTwin(){
-    kind |= W_CELL;
+    kind |= WATCHER_CELL;
     Assert(twin==NULL);
     twin = new Twin();
     return twin;}
@@ -196,7 +188,7 @@ public:
     twin=tw;}
 
   Bool fire(){
-    if(kind & W_CELL){
+    if(kind & WATCHER_CELL){
       if(twin->lockCtr>twin->cellCtr) return FALSE;
       twin->cellCtr++;
       return TRUE;}
@@ -211,20 +203,18 @@ public:
     if(twin->lockCtr>0) return TRUE;
     return FALSE;}
 
-  Bool isRetry(){return kind & RETRY;}
-  Bool isPersistent(){return kind & PERSISTENT;}
-  Bool isSiteBased(){
-    Assert(isHandler());
-    return thread==NULL;}
-  Bool isHandler(){return isHandlerCondition(watchcond);}
-  Bool isCellPartObject(){return kind & W_CELL;}
+  Bool isRetry(){return kind & WATCHER_RETRY;}
+  Bool isPersistent(){return kind & WATCHER_PERSISTENT;}
+  Bool isSiteBased(){return kind & WATCHER_SITE_BASED;}
+  Bool isInjector(){return kind & WATCHER_INJECTOR;}
+  Bool isCellPartObject(){return kind & WATCHER_CELL;}
 
   void setNext(Watcher* w){next=w;}
 
   Watcher* getNext(){return next;}
 
-  void varInvokeHandler(TaggedRef t,EntityCond,Bool &);
-  void invokeHandler(TaggedRef t,EntityCond,TaggedRef, Bool &);
+  void varInvokeInjector(TaggedRef t,EntityCond,Bool &);
+  void invokeInjector(TaggedRef t,EntityCond,TaggedRef, Bool &);
   void invokeWatcher(TaggedRef t,EntityCond);
 
   Thread* getThread(){Assert(thread!=NULL);return thread;}
@@ -266,6 +256,9 @@ void insertWatcherAtManager(Tertiary *t, Watcher* w);
 inline Bool someTempCondition(EntityCond ec){
   return ec & (TEMP_SOME|TEMP_BLOCKED|TEMP_ME|TEMP_ALL);}
 
+inline Bool isInjectorCondition(EntityCond ec){
+  return ec & (TEMP_BLOCKED|PERM_BLOCKED);}
+
 inline Bool somePermCondition(EntityCond ec){
   return ec & (PERM_SOME|PERM_BLOCKED|PERM_ME|PERM_ALL);}
 
@@ -292,8 +285,6 @@ inline EntityCond getSummaryWatchCond(Tertiary* t){
   if(t->getInfo()==NULL) return ENTITY_NORMAL;
   return t->getInfo()->getSummaryWatchCond();}
 
-Bool installWatcher(Tertiary *t, EntityCond,TaggedRef,Thread*,unsigned int);
-Bool deinstallWatcher(Tertiary *t, EntityCond,TaggedRef,Thread*,unsigned int);
 void entityProblem(Tertiary *t);
 void deferEntityProblem(Tertiary *t);
 void managerProbeFault(Tertiary *t, DSite*, int);
@@ -308,10 +299,10 @@ void gcTwins();
 
 void initProxyForFailure(Tertiary*);
 
-OZ_Return WatcherInstall(Tertiary*, SRecord*, TaggedRef);
-OZ_Return WatcherDeInstall(Tertiary*, SRecord*, TaggedRef);
-OZ_Return VarWatcherInstall(TaggedRef*,SRecord*,TaggedRef);
-OZ_Return VarWatcherDeinstall(TaggedRef*,SRecord*,TaggedRef);
+OZ_Return DistHandlerInstall(SRecord*, TaggedRef);
+OZ_Return DistHandlerDeInstall(SRecord*, TaggedRef);
+Bool isWatcherEligible(Tertiary*);
+OZ_Return installGlobalWatcher(EntityCond,TaggedRef,int);
 
 
 /**********************   DeferEvents   ******************/
@@ -344,7 +335,6 @@ extern DeferElement* DeferdEvents;
 extern TaggedRef BI_defer;
 void gcDeferEvents();
 void deferProxyProbeFault(Tertiary*,int);
-
 #define IncorrectFaultSpecification oz_raise(E_ERROR,E_SYSTEM,"incorrect fault specification",0)
 
 void maybeUnask(Tertiary*);

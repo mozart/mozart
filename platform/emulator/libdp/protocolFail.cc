@@ -65,7 +65,7 @@ void Chain::receiveAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){
   newInform(toS,ec); // PER-LOOK can be reclaimed
   PD((NET_HANDLER,"Adding Inform Element"));}
 
-// caused by installing remote watcher/handler
+// caused by installing remote watcher/injector
 void receiveAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){
   PD((NET_HANDLER,"Ask Error Received"));
   if(oe->isTertiary()){
