@@ -26,7 +26,7 @@ enum TFlags {
   T_Suspended=0x0001
 };
 
-class Thread : public ConstTerm
+class Thread : public ConstTerm, public TaskStack
 {
 friend void engine();
 friend class ThreadsPool;
@@ -35,7 +35,6 @@ private:
   Board *board;
   short compMode;
   short flags;
-  TaskStack taskStack;
 
 public:
   USEFREELISTMEMORY;
@@ -47,70 +46,14 @@ public:
   Thread(int size);
   void init(int prio,Board *home,int compMode);
   int getPriority();
-  void pushDebug(OzDebug *d)
-  {
-    taskStack.pushDebug(d);
-  }
-  void pushExceptionHandler(Chunk *pred)
-  {
-    taskStack.pushExceptionHandler(pred);
-  }
   void setBoard(Board *bb) {
     board=bb;
-  }
-  Bool discardLocalTasks() {
-    return taskStack.discardLocalTasks();
-  }
-  Chunk *findExceptionHandler() {
-    return taskStack.findExceptionHandler();
   }
   void setSuspended() { flags |= T_Suspended; }
   void unsetSuspended() { flags &= ~T_Suspended; }
   int  isSuspended() { return (flags & T_Suspended); }
   Bool isBelowFailed(Board *top);
 
-  void pushCall(Chunk *pred, RefsArray  x, int n)
-  {
-    taskStack.pushCall(pred,x,n);
-  }
-
-  void pushNervous()
-  {
-    taskStack.pushNervous();
-  }
-  void pushSolve()
-  {
-    taskStack.pushSolve();
-  }
-  void pushLocal()
-  {
-    taskStack.pushLocal();
-  }
-
-  void pushCFunCont(OZ_CFun f, Suspension* s,
-		    RefsArray  x, int n, Bool copyF)
-  {
-    taskStack.pushCFunCont(f,s,x,n,copyF);
-  }
-
-  void pushCont(Continuation *cont) {
-    pushCont(cont->getPC(),cont->getY(),cont->getG(),
-	     cont->getX(),cont->getXSize(),NO);
-  }
-  void pushCont(ProgramCounter pc,
-		RefsArray y,RefsArray g,RefsArray x,int n,
-		Bool copyF)
-  {
-    Assert(pc!=0)
-    taskStack.pushCont(pc,y,g,x,n,copyF);
-  }
-  Bool isEmpty()
-  {
-    return taskStack.isEmpty();
-  }
-  void printDebug(ProgramCounter pc, Bool verbose=NO, int depth = 10000) {
-    taskStack.printDebug(pc,verbose,depth);
-  }
   void setPriority(int prio);
   Board *getBoardFast() { return board->getBoardFast(); }
   int getCompMode() { return compMode; }
@@ -118,6 +61,7 @@ public:
   void setCompMode(int newMode);
   void switchCompMode();
   void getSeqFrom(Thread *th);
+  Bool discardLocalTasks();
 };
 
 
