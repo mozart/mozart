@@ -17,6 +17,7 @@
 #endif
 
 #include "thread.hh"
+#include "unify.hh"
 
 // optimize: inline ....
 inline
