@@ -31,20 +31,6 @@
 <Chapter id="chapter.widgets-1">
   <Title/Widgets/
 
-<![ %EXTRA; [
-<p>
-<chunk><title/DefaultBegin/
-declare
-T = {New Tk.toplevel tkInit}
-</chunk>
-<chunk><title/DefaultEnd/
-{T tkClose}
-
-
-
-</chunk>
-]]>
-
   <P>
     This chapter introduces some of the widget objects the Tcl/Tk
     interface provides.  Examples illustrate the most common options and
@@ -103,24 +89,6 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
       these messages share a common structure.  The following section
       explains this structure and shows how to build messages such that they
       are understood by widgets.
-
-<![ %EXTRA; [
-<chunk><title/ROOT/
-%%
-%% Toplevel widgets
-%%
-
-%% Creating a toplevel widget
-declare
-<chunk.ref/{Tk.toplevel tkInit}/
-
-%% Changing its backgound
-<chunk.ref/{Tk.toplevel tk(configure)}/
-
-%% Closing the toplevel widget
-<chunk.ref/DefaultEnd/
-</chunk>
-]]>
 
   <Section id="section.widgets-1.tickles">
     <Title/The GUI Agent, Tickles and Widget Messages/
@@ -309,20 +277,6 @@ Fs={Map [groove ridge flat sunken raised]
 	The exact meaning of the <<pack>> command used in this example will be
 	explained in <Ptr to="section.geometry.pack">.
 
-<![ %EXTRA; [
-<chunk><title/ROOT/
-%%
-%% Frames
-%%
-
-<chunk.ref/DefaultBegin/
-<chunk.ref/Tk.frame/
-
-<chunk.ref/DefaultEnd/
-</chunk>
-]]>
-
-
     <SubSection id="section.widgets-1.distances">
       <Title/Screen Distance Options/
       <P>
@@ -450,20 +404,6 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
       bitmap to an exclamation mark:
       <<<{L1 tk(configure bitmap:warning)}>>>
 
-
-
-<![ %EXTRA; [
-<chunk><title/ROOT/
-%%
-%% Label Widgets
-%%
-
-<chunk.ref/DefaultBegin/
-<chunk.ref/Tk.label/
-
-</chunk>
-]]>
-
     <SubSection id="section.widgets-1.bitmap">
       <Title/Bitmap Options/
 
@@ -482,18 +422,6 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
 	displays a bitmap stored in a file.  Here the file name is given
 	relative to where Mozart system has been installed, that is relative
 	to <<{Property.get 'oz.home'}>>.
-
-<![ %EXTRA; [
-<chunk><title/ROOT/
-%%
-%% Bitmap options
-%%
-
-<chunk.ref/Bitmap Options/
-
-<chunk.ref/DefaultEnd/
-</chunk>
-]]>
 
       <P>
 	If the first character is different from <File/@/, it is interpreted
@@ -632,6 +560,7 @@ L3 = {New Tk.label tkInit(parent:T image:I)}
     <P>
       In case the value for the <<type>> option is <<bitmap>>, the value given
       for the <<file>> option must be a valid bitmap file.
+
   <Section id="section.widgets-1.messages">
     <Title/Messages/
     <P>
@@ -664,4 +593,79 @@ Ms={Map [left#200 center#100 right#50]
       For example a value of <<100>> means that the text is as high
       as wide, a value of <<200>> means that the text is twice as wide
       as high.
+
+<![ %EXTRA; [
+<chunk><title/DefaultBegin/
+declare
+T = {New Tk.toplevel tkInit}
+</chunk>
+<chunk><title/DefaultEnd/
+{T tkClose}
+</chunk>
+<chunk><title/Widgets/
+%%
+%% Toplevel widgets
+%%
+
+%% Creating a toplevel widget
+declare
+<chunk.ref/{Tk.toplevel tkInit}/
+
+%% Changing its backgound
+<chunk.ref/{Tk.toplevel tk(configure)}/
+
+%% Closing the toplevel widget
+<chunk.ref/DefaultEnd/
+
+
+%%
+%% Frames
+%%
+
+<chunk.ref/DefaultBegin/
+
+<chunk.ref/Tk.frame/
+
+
+<chunk.ref/DefaultEnd/
+
+
+%%
+%% Label Widgets
+%%
+
+<chunk.ref/DefaultBegin/
+
+<chunk.ref/Tk.label/
+
+
+%%
+%% Bitmap options
+%%
+
+<chunk.ref/Bitmap Options/
+
+
+<chunk.ref/DefaultEnd/
+
+
+%%
+%% Font options
+%%
+
+<chunk.ref/DefaultBegin/
+
+<chunk.ref/Tk.font/
+
+
+<chunk.ref/DefaultEnd/
+
+
+</chunk>
+]]>
+
+
+
 </Chapter>
+
+

@@ -105,9 +105,50 @@
     &widgets-1; 
     &geometry;  
     &widgets-2;  
-    &tools;
 <!-- &canvas;  -->
     &text;
+    &tools;
+
+<![ %EXTRA; [
+<chapter><title/Examples/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Widgets
+%%%
+<chunk.ref/Widgets/
+
+
+%%%
+%%% Chapter: Geometry Managers
+%%%
+
+
+
+%%%
+%%% Chapter: More Widgets
+%%%
+
+
+
+%%%
+%%% Chapter: Canvas Widgets
+%%%
+
+
+
+%%%
+%%% Chapter: Text Widgets
+%%%
+
+
+
+%%%
+%%% Chapter: Tools for Tk
+%%%
+</chunk>
+]]>
+
   <Back>
     <Bib.Extern id="Ousterhout.94"  to="wp.bib" key="Ousterhout.94"> 
     <Bib.Extern id="HarrisonMcLennan.98"  to="wp.bib" key="HarrisonMcLennan.98"> 
