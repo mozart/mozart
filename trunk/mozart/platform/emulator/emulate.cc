@@ -2507,7 +2507,7 @@ LBLdispatcher:
 	   if (e->debugmode()) {
 	     time_t feedtime = CodeArea::findTimeStamp(PC);
 	     OZ_Term dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));
-	     OzDebug *dbg  = new OzDebug(DBG_STEP,dinfo);
+	     OzDebug *dbg  = new OzDebug(DBG_NEXT,dinfo);
 	     e->currentThread->pushDebug(dbg);
 	   }
 	   
