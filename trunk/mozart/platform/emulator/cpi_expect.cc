@@ -1,13 +1,13 @@
 /*
  *  Authors:
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
- * 
+ *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
- * 
+ *
  *  Copyright:
  *    Organization or Person (Year(s))
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
@@ -15,11 +15,11 @@
  *  This file is part of Mozart, an implementation 
  *  of Oz 3:
  *     http://www.mozart-oz.org
- * 
+ *
  *  See the file "LICENSE" or
  *     http://www.mozart-oz.org/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -50,9 +50,9 @@ void splitfname(const char * fname, char * &dirname, char * &basename)
     basename = dirname = empty;
   } else {
     strcpy(split, fname);
-    
+
     char * delim = strrchr(split, delim_char);
-    
+
     if (delim == NULL) { // '/' not found
     dirname = empty;
     basename = split;
@@ -76,7 +76,7 @@ OZ_expect_t expectProceed(int s, int a) {
 }
 
 inline
-OZ_expect_t expectSuspend(int s, int a) 
+OZ_expect_t expectSuspend(int s, int a)
 {
   Assert(s > a);
   return OZ_expect_t(s, a);
@@ -95,20 +95,20 @@ OZ_expect_t expectExceptional(void) {
 
 //-----------------------------------------------------------------------------
 
-OZ_Expect::OZ_Expect(void) 
+OZ_Expect::OZ_Expect(void)
 {
   staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
   collect = TRUE;
 }
 
-OZ_Expect::~OZ_Expect(void) 
+OZ_Expect::~OZ_Expect(void)
 {
 }
 
-void OZ_Expect::collectVarsOn(void) 
+void OZ_Expect::collectVarsOn(void)
 {
   collect = TRUE;
-} 
+}
 
 void OZ_Expect::collectVarsOff(void)
 {
@@ -149,7 +149,7 @@ void OZ_Expect::addSpawn(OZ_CtDefinition * def, OZ_CtWakeUp w, OZ_Term * v)
 inline
 void OZ_Expect::addSuspend(OZ_Term * v)
 {
-  if (collect) { 
+  if (collect) {
     staticSuspendVars[staticSuspendVarsNumber].var = v;
     DebugCode(staticSuspendVars[staticSuspendVarsNumber].expected_type = OZ_VAR_INVALID);
     staticSuspendVarsNumber++;
@@ -192,7 +192,7 @@ void OZ_Expect::addSuspend(OZ_FSetPropState ps, OZ_Term * v)
     staticSuspendVars[staticSuspendVarsNumber].var = v;
     staticSuspendVars[staticSuspendVarsNumber].expected_type = OZ_VAR_FS;
     staticSuspendVars[staticSuspendVarsNumber++].state.fs = ps;
-    
+
     staticSuspendVars.request(staticSuspendVarsNumber);
   }
 }
@@ -206,7 +206,7 @@ void OZ_Expect::addSuspend(OZ_CtDefinition * def, OZ_CtWakeUp w, OZ_Term * v)
     staticSuspendVars[staticSuspendVarsNumber].expected_type = OZ_VAR_CT;
     staticSuspendVars[staticSuspendVarsNumber].state.ct.def = def;
     staticSuspendVars[staticSuspendVarsNumber++].state.ct.w = w;
-    
+
     staticSuspendVars.request(staticSuspendVarsNumber);
   }
 }
@@ -214,21 +214,21 @@ void OZ_Expect::addSuspend(OZ_CtDefinition * def, OZ_CtWakeUp w, OZ_Term * v)
 //-----------------------------------------------------------------------------
 // generic constraint variable
 
-OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t, 
-				      OZ_CtDefinition * def, 
+OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t,
+				      OZ_CtDefinition * def,
 				      OZ_CtWakeUp w)
 {
   DEREF(t, tptr, ttag);
-  
+
   if (def->isValidValue(t)) {
     return expectProceed(1, 1);
   } else if (isGenCtVar(t, ttag)) {
     OzCtVariable * ctvar = tagged2GenCtVar(t);
-    
+
     // check the kind
     if (ctvar->getDefinition()->getKind() != def->getKind())
       goto fail;
-    
+
     addSpawn(def, w, tptr);
     return expectProceed(1, 1);
   } else if (oz_isFree(t)) {
@@ -240,7 +240,7 @@ OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t,
   }
 
 fail:
-  return expectFail();  
+  return expectFail();
 }
 
 
@@ -252,15 +252,15 @@ fail:
 //-----------------------------------------------------------------------------
 // An OZ term describing a finite domain is either:
 // (1) a positive small integer <= FD.sup
-// (2) a 2 tuple of (1) 
+// (2) a 2 tuple of (1)
 // (3) a non-empty list of (1) and/or (2) or (1) or (2)
 // (4) a tuple compl() of 4
 
 OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
 {
   DEREF(descr, descr_ptr, descr_tag);
-  
-  if (level >= 4) { 
+
+  if (level >= 4) {
     if (oz_isFree(descr)||oz_isKinded(descr)) {
       addSuspend(descr_ptr);
       return expectSuspend(1, 0);
@@ -285,8 +285,8 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
     return expectSuspend(1, 0);
   } else if (oz_isSTuple(descr) && (level >= 2)) {
     SRecord &tuple = *tagged2SRecord(descr);
-    if (tuple.getWidth() != 2) 
-      return expectFail();  
+    if (tuple.getWidth() != 2)
+      return expectFail();
     for (int i = 0; i < 2; i++) {
       //mm2: use tagged2Ref
       OZ_expect_t r = expectDomDescr(makeTaggedRef(&tuple[i]), 1);
@@ -297,7 +297,7 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
   } else if (oz_isNil(descr) && (level == 3)) {
     return expectProceed(1, 1);
   } else if (isLTupleTag(descr_tag) && (level == 3)) {
-    
+
     do {
       LTuple &list = *tagged2LTuple(descr);
       //mm2: use tagged2Ref
@@ -306,10 +306,10 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
 	return r;
       //mm2: use tagged2Ref
       descr = makeTaggedRef(list.getRefTail());
-      
+
       __DEREF(descr, descr_ptr, descr_tag);
     } while (isLTupleTag(descr_tag));
-    
+
     if (oz_isNil(descr)) return expectProceed(1, 1);
     return expectDomDescr(makeTaggedRef(descr_ptr), 0);
   } else if (oz_isFree(descr)||oz_isKinded(descr)) {
@@ -319,14 +319,14 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
     addSuspend(descr_ptr);
     return expectExceptional();
   }
-  return expectFail();  
+  return expectFail();
 }
 
 // tmueller: not ready yet!
 OZ_expect_t OZ_Expect::expectBoolVar(OZ_Term t)
 {
   DEREF(t, tptr, ttag);
-  
+
   if (isPosSmallBoolInt(t)) {
     return expectProceed(1, 1);
   } else if (isGenBoolVar(t, ttag)) {
@@ -344,13 +344,13 @@ OZ_expect_t OZ_Expect::expectBoolVar(OZ_Term t)
     addSuspendBool(tptr);
     return expectExceptional();
   }
-  return expectFail();  
+  return expectFail();
 }
 
 OZ_expect_t OZ_Expect::expectIntVar(OZ_Term t, OZ_FDPropState ps)
 {
   DEREF(t, tptr, ttag);
-  
+
   if (isPosSmallFDInt(t)) {
     return expectProceed(1, 1);
   } else if (isGenBoolVar(t, ttag) || isGenFDVar(t, ttag)) {
@@ -363,7 +363,7 @@ OZ_expect_t OZ_Expect::expectIntVar(OZ_Term t, OZ_FDPropState ps)
     addSuspend(ps, tptr);
     return expectExceptional();
   }
-  return expectFail();  
+  return expectFail();
 }
 
 OZ_expect_t OZ_Expect::expectInt(OZ_Term t)
@@ -371,7 +371,7 @@ OZ_expect_t OZ_Expect::expectInt(OZ_Term t)
   Assert(oz_isRef(t) || !oz_isVariable(t));
 
   DEREF(t, tptr, ttag);
-  
+
   if (isSmallIntTag(ttag)) {
     return expectProceed(1, 1);
   } else if (oz_isFree(t)|| oz_isKinded(t)) {
@@ -381,7 +381,7 @@ OZ_expect_t OZ_Expect::expectInt(OZ_Term t)
     addSuspend(fd_prop_singl, tptr);
     return expectExceptional();
   }
-  return expectFail();  
+  return expectFail();
 }
 
 OZ_expect_t OZ_Expect::expectFloat(OZ_Term t)
@@ -389,7 +389,7 @@ OZ_expect_t OZ_Expect::expectFloat(OZ_Term t)
   Assert(oz_isRef(t) || !oz_isVariable(t));
 
   DEREF(t, tptr, ttag);
-  
+
   if (isFloatTag(ttag)) {
     return expectProceed(1, 1);
   } else if (oz_isFree(t)|| oz_isKinded(t)) {
@@ -399,7 +399,7 @@ OZ_expect_t OZ_Expect::expectFloat(OZ_Term t)
     addSuspend(tptr);
     return expectExceptional();
   }
-  return expectFail();  
+  return expectFail();
 }
 
 //*****************************************************************************
@@ -417,7 +417,7 @@ OZ_expect_t OZ_Expect::expectFSetDescr(OZ_Term descr, int level)
 OZ_expect_t OZ_Expect::expectFSetVar(OZ_Term t, OZ_FSetPropState ps)
 {
   DEREF(t, tptr, ttag);
-  
+
   if (isFSetValueTag(ttag)) {
     return expectProceed(1, 1);
   } else if (isGenFSetVar(t, ttag)) {
@@ -430,7 +430,7 @@ OZ_expect_t OZ_Expect::expectFSetVar(OZ_Term t, OZ_FSetPropState ps)
     addSuspend(ps, tptr);
     return expectExceptional();
   }
-  return expectFail();  
+  return expectFail();
 }
 
 OZ_expect_t OZ_Expect::expectFSetValue(OZ_Term t)
@@ -438,7 +438,7 @@ OZ_expect_t OZ_Expect::expectFSetValue(OZ_Term t)
   Assert(oz_isRef(t) || !oz_isVariable(t));
 
   DEREF(t, tptr, ttag);
-  
+
   if (isFSetValueTag(ttag)) {
     return expectProceed(1, 1);
   } else if (oz_isFree(t)||oz_isKinded(t)) {
@@ -448,7 +448,7 @@ OZ_expect_t OZ_Expect::expectFSetValue(OZ_Term t)
     addSuspend(fs_prop_val, tptr);
     return expectExceptional();
   }
-  return expectFail();  
+  return expectFail();
 }
 
 //*****************************************************************************
@@ -456,7 +456,7 @@ OZ_expect_t OZ_Expect::expectFSetValue(OZ_Term t)
 OZ_expect_t OZ_Expect::expectVar(OZ_Term t)
 {
   DEREF(t, tptr, ttag);
-  
+
   if (oz_isFree(t)) {
     addSpawn(fd_prop_any, tptr);
     return expectProceed(1, 1);
@@ -464,13 +464,13 @@ OZ_expect_t OZ_Expect::expectVar(OZ_Term t)
     addSuspend(tptr);
     return expectExceptional();
   }
-  return expectFail();  
+  return expectFail();
 }
 
 OZ_expect_t OZ_Expect::expectRecordVar(OZ_Term t)
 {
   DEREF(t, tptr, ttag);
-  
+
   if (oz_isRecord(t)) {
     return expectProceed(1, 1);
   } else if (isGenOFSVar(t, ttag)) {
@@ -483,7 +483,7 @@ OZ_expect_t OZ_Expect::expectRecordVar(OZ_Term t)
     addSuspend(tptr);
     return expectExceptional();
   }
-  return expectFail();  
+  return expectFail();
 }
 
 OZ_expect_t OZ_Expect::expectLiteral(OZ_Term t)
@@ -491,7 +491,7 @@ OZ_expect_t OZ_Expect::expectLiteral(OZ_Term t)
   Assert(oz_isRef(t) || !oz_isVariable(t));
 
   DEREF(t, tptr, ttag);
-  
+
   if (isLiteralTag(ttag)) {
     return expectProceed(1, 1);
   } else if (oz_isFree(t) || oz_isKinded(t)) {
@@ -501,7 +501,7 @@ OZ_expect_t OZ_Expect::expectLiteral(OZ_Term t)
     addSuspend(tptr);
     return expectExceptional();
   }
-  return expectFail();  
+  return expectFail();
 }
 
 OZ_expect_t OZ_Expect::expectLiteralOutOf(OZ_Term t, OZ_Term * one_of)
@@ -509,17 +509,17 @@ OZ_expect_t OZ_Expect::expectLiteralOutOf(OZ_Term t, OZ_Term * one_of)
   OZ_expect_t r = expectLiteral(t);
 
   if (r.accepted == 1 && r.size == 1) {
-    OZ_Term td = oz_deref(t); 
+    OZ_Term td = oz_deref(t);
     for (int i = 0; one_of[i] != (OZ_Term) 0; i += 1) {
       if (td == one_of[i])
 	return expectProceed(1, 1);
     }
-    return expectFail();      
+    return expectFail();
   }
   return r;
 }
 
-OZ_expect_t OZ_Expect::expectProperRecord(OZ_Term t, 
+OZ_expect_t OZ_Expect::expectProperRecord(OZ_Term t,
 					  OZ_expect_t(OZ_Expect::* expectf)(OZ_Term))
 {
   Assert(oz_isRef(t) || !oz_isVariable(t));
@@ -542,7 +542,7 @@ OZ_expect_t OZ_Expect::expectProperRecord(OZ_Term t,
 	acc += 1;
       }
     }
-    return expectProceed(width + 1, acc); 
+    return expectProceed(width + 1, acc);
 
   } else if (oz_isFree(t) || oz_isKinded(t)) {
     addSuspend(tptr);
@@ -567,8 +567,8 @@ OZ_expect_t OZ_Expect::expectProperRecord(OZ_Term t, OZ_Term * ar)
     for (i = 0; ar[i] != (OZ_Term) 0; i += 1)
       if (OZ_subtree(t, ar[i]) == (OZ_Term) 0)
 	return expectFail();
-    
-    return expectProceed(i + 1, i + 1); 
+
+    return expectProceed(i + 1, i + 1);
   } else if (oz_isFree(t) || oz_isKinded(t)) {
     addSuspend(tptr);
     return expectSuspend(1, 0);
@@ -579,7 +579,7 @@ OZ_expect_t OZ_Expect::expectProperRecord(OZ_Term t, OZ_Term * ar)
   return expectFail();
 }
 
-OZ_expect_t OZ_Expect::expectProperTuple(OZ_Term t, 
+OZ_expect_t OZ_Expect::expectProperTuple(OZ_Term t,
 					 OZ_expect_t(OZ_Expect::* expectf)(OZ_Term))
 {
   Assert(oz_isRef(t) || !oz_isVariable(t));
@@ -602,7 +602,7 @@ OZ_expect_t OZ_Expect::expectProperTuple(OZ_Term t,
 	acc += 1;
       }
     }
-    return expectProceed(width + 1, acc); 
+    return expectProceed(width + 1, acc);
 
   } else if (oz_isFree(t) || oz_isKinded(t)) {
     addSuspend(tptr);
@@ -614,27 +614,27 @@ OZ_expect_t OZ_Expect::expectProperTuple(OZ_Term t,
   return expectFail();
 }
 
-OZ_expect_t OZ_Expect::expectList(OZ_Term t, 
-				    OZ_expect_t(OZ_Expect::* expectf)(OZ_Term))
+OZ_expect_t OZ_Expect::expectList(OZ_Term t,
+				  OZ_expect_t(OZ_Expect::* expectf)(OZ_Term))
 {
   Assert(oz_isRef(t) || !oz_isVariable(t));
 
   DEREF(t, tptr, ttag);
 
   if (oz_isCons(ttag)) {
-    
+
     int len = 0, acc = 0;
 
     do {
       len += 1;
       //mm2: use tagged2Ref
       OZ_expect_t r = (this->*expectf)(makeTaggedRef(tagged2LTuple(t)->getRefHead()));
-      
+
       if (r.accepted == -1) {
 	return r;
       } else if (r.accepted == r.size) {
 	acc += 1;
-      } 
+      }
 
       t = oz_tail(t);
       __DEREF(t, tptr, ttag);
@@ -648,7 +648,9 @@ OZ_expect_t OZ_Expect::expectList(OZ_Term t,
     } else if (oz_isNonKinded(t)) {
       addSuspend(tptr);
       return expectExceptional();
-    } 
+    }
+  } else if (oz_isNil(t)) {
+    return expectProceed(1, 1);
   } else if (oz_isFree(t) || oz_isKinded(t)) {
     addSuspend(tptr);
     return expectSuspend(1, 0);
@@ -659,7 +661,7 @@ OZ_expect_t OZ_Expect::expectList(OZ_Term t,
   return expectFail();
 }
 
-OZ_expect_t OZ_Expect::expectVector(OZ_Term t, 
+OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
 				    OZ_expect_t(OZ_Expect::* expectf)(OZ_Term))
 {
   Assert(oz_isRef(t) || !oz_isVariable(t));
@@ -681,21 +683,21 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
 	acc += 1;
       }
     }
-    return expectProceed(width + 1, acc); 
+    return expectProceed(width + 1, acc);
 
   } else if (oz_isCons(ttag)) {
 
     int len = 0, acc = 0;
-    
+
     do {
       len += 1;
       OZ_expect_t r = (this->*expectf)(makeTaggedRef(tagged2LTuple(t)->getRefHead()));
-      
+
       if (r.accepted == -1) {
 	return r;
       } else if (r.accepted == r.size) {
 	acc += 1;
-      } 
+      }
 
       t = oz_tail(t);
       __DEREF(t, tptr, ttag);
@@ -709,7 +711,7 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
     } else if (oz_isNonKinded(t)) {
       addSuspend(tptr);
       return expectExceptional();
-    } 
+    }
 
   } else if (oz_isFree(t) || oz_isKinded(t)) {
     addSuspend(tptr);
@@ -727,18 +729,18 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
 
   DEREF(st, stptr, sttag);
 
-  if (oz_isNil(st)) { 
+  if (oz_isNil(st)) {
     return expectProceed(1, 1);
   } else if (oz_isCons(sttag)) {
-    
+
     int len = 0;
-    
+
     do {
       len += 1;
       st = oz_tail(st);
       __DEREF(st, stptr, sttag);
     } while (oz_isCons(sttag));
-    
+
     if (oz_isNil(st)) {
       return expectProceed(len, len);
     } else if (oz_isFree(st) || oz_isKinded(st)) {
@@ -747,7 +749,7 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
     } else if (oz_isNonKinded(st)) {
       addSuspend(stptr);
       return expectExceptional();
-    } 
+    }
   } else if (oz_isFree(st) || oz_isKinded(st)) {
     addSpawn(fd_prop_any, stptr);
     return expectProceed(1, 1);
@@ -797,7 +799,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     DEREF(v, vptr, vtag);
     TypeOfVariable type = staticSuspendVars[i].expected_type;
 
-    Assert(type == OZ_VAR_FD || type == OZ_VAR_FS || 
+    Assert(type == OZ_VAR_FD || type == OZ_VAR_FS ||
 	   type == OZ_VAR_CT || type == OZ_VAR_BOOL);
 
     if (oz_isFree(v)) {
@@ -810,12 +812,12 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
       } else {
 	Assert(type == OZ_VAR_CT);
 
-	tellBasicConstraint(makeTaggedRef(vptr), 
-			    (OZ_Ct *) NULL, 
+	tellBasicConstraint(makeTaggedRef(vptr),
+			    (OZ_Ct *) NULL,
 			    staticSuspendVars[i].state.ct.def);
 
       }
-    } else { 
+    } else {
       Assert(oz_isKinded(v));
     }
   }
@@ -823,28 +825,28 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
   Propagator * prop = imposed_propagator = oz_newPropagator(p);
 
   ozstat.propagatorsCreated.incf();
-  
+
 #ifdef NAME_PROPAGATORS
   if (am.isPropagatorLocation()) {
     Thread * thr = oz_currentThread();
-    OZ_Term debug_frame_raw = 
+    OZ_Term debug_frame_raw =
       thr->getTaskStackRef()->getTaskStack(thr, TRUE, 1);
 
-    OZ_Term abstr_stack_entry = 
+    OZ_Term abstr_stack_entry =
       thr->getTaskStackRef()->findAbstrRecord();
 
     if (debug_frame_raw != OZ_nil()) {
       OZ_Term debug_frame = OZ_head(debug_frame_raw);
-      
+
       const char * fname = OZ_atomToC(OZ_subtree(debug_frame, AtomFile));
       char * dirname, * basename;
-      
+
       splitfname(fname, dirname, basename);
-      
-      OZ_Term prop_loc 
-	= OZ_record(AtomPropLocation, 
-		    OZ_cons(AtomPropInvoc, 
-			    OZ_cons(AtomFile, 
+
+      OZ_Term prop_loc
+	= OZ_record(AtomPropLocation,
+		    OZ_cons(AtomPropInvoc,
+			    OZ_cons(AtomFile,
 				    OZ_cons(AtomLine,
 					    OZ_cons(AtomColumn,
 						    OZ_cons(AtomPath,
@@ -854,27 +856,27 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
       OZ_putSubtree(prop_loc, AtomLine, OZ_subtree(debug_frame, AtomLine));
       OZ_putSubtree(prop_loc, AtomColumn, OZ_subtree(debug_frame, AtomColumn));
       OZ_putSubtree(prop_loc, AtomPropInvoc, abstr_stack_entry);
-      
-      oz_propAddName(prop, prop_loc); 
-      
-      NEW_NAMER_DEBUG_PRINT(("added propLoc for = %p (%s)\n", 
+
+      oz_propAddName(prop, prop_loc);
+
+      NEW_NAMER_DEBUG_PRINT(("added propLoc for = %p (%s)\n",
 			     imposed_propagator, OZ_toC(prop_loc, 100, 100)));
     }
   }
 #endif
 
-  // only monotonic propagator are run on imposition 
+  // only monotonic propagator are run on imposition
   if (is_monotonic) {
     ozstat.propagatorsInvoked.incf();
-    
+
     Propagator::setRunningPropagator(prop);
 
     switch (oz_runPropagator(prop)) {
-    case OZ_FAILED:						
+    case OZ_FAILED:
 
 #ifdef NAME_PROPAGATORS
       // this is experimental: a top-level failure with set
-      // property 'internal.propLocation',  
+      // property 'internal.propLocation',
       if (am.isPropagatorLocation()) {
 	if (!am.hf_raise_failure()) {
 	  oz_sleepPropagator(prop);
@@ -887,28 +889,28 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 
       oz_closeDonePropagator(prop);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
-      return FAILED;					        
-    case OZ_SLEEP:		
+      return FAILED;
+    case OZ_SLEEP:
       oz_sleepPropagator(prop);
-      break;						
-    case SCHEDULED:					
+      break;
+    case SCHEDULED:
       oz_preemptedPropagator(prop);
-      break;						
-    case OZ_ENTAILED:						
+      break;
+    case OZ_ENTAILED:
       oz_closeDonePropagator(prop);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
-      return PROCEED;                                     
-    default:						
-      DebugCode(OZ_error("Unexpected return value from propagator."));
       return PROCEED;
-    }							
+    default:
+      DebugCode(OZ_error("Unexpected return value."));
+      return PROCEED;
+    }
   }
-  
+
 // only if a propagator survives its first run proper suspension are created
   OZ_Boolean all_local = OZ_TRUE;
 
-  // caused by the first run of the run method variables may have 
-  // become determined 
+  // caused by the first run of the run method variables may have
+  // become determined
   for (i = staticSpawnVarsNumber; i--; ) {
     OZ_Term v = makeTaggedRef(staticSpawnVars[i].var);
     DEREF(v, vptr, vtag);
@@ -928,19 +930,19 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 	  }
 	} else if (isGenBoolVar(v, vtag)) {
 	  if (oz_isLocalVar(tagged2CVar(v))) {
-	    addSuspBoolVar(v, prop);  
+	    addSuspBoolVar(v, prop);
 	    continue;
 	  }
 	} else if (isGenCtVar(v, vtag)) {
 	  if (oz_isLocalVar(tagged2CVar(v))) {
-	    addSuspCtVar(v, prop, staticSpawnVars[i].state.ct.w);  
+	    addSuspCtVar(v, prop, staticSpawnVars[i].state.ct.w);
 	    continue;
 	  }
 	}
-	 
+
 	oz_var_addSusp(vptr, prop);
 	all_local &= oz_isLocalVar(tagged2CVar(*vptr));
-	
+
     }
 
   }
@@ -952,18 +954,18 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 
     if (isVariableTag(vtag)) {
       Assert(isCVar(vtag));
-      
+
       oz_var_addSusp(vptr, prop);
       all_local &= oz_isLocalVar(tagged2CVar(v));
     }
   }
-  
-  if (all_local) 
+
+  if (all_local)
     prop->setLocal();
-  
+
   staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
 
-  // only nonmonotonic propagator are set runnable on imposition 
+  // only nonmonotonic propagator are set runnable on imposition
   if (! is_monotonic) {
 #ifdef DEBUG_NONMONOTONIC
     printf("Setting nonmono prop runnable.\n"); fflush(stdout);
