@@ -296,7 +296,9 @@ public:
     return writeWord(p, ptr);
   }
 
-  void writeCache();
+  void CodeArea::writeCache() { wPtr = writeCache(wPtr); }
+  static ProgramCounter CodeArea::writeCache(ProgramCounter PC);
+
   void writeInt(int i)                   { CheckWPtr; wPtr=writeInt(i,wPtr); }
   void writeTagged(TaggedRef t)          { CheckWPtr; wPtr=writeTagged(t,wPtr); }
   void writeBuiltin(BuiltinTabEntry *bi) { CheckWPtr; wPtr=writeBuiltin(bi,wPtr); }
