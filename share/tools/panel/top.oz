@@ -270,7 +270,7 @@ in
 		      menubutton(text:    ' Options '
 				 feature: options
 				 menu:
-		         [checkbutton(label: 'Configurable'
+		         [checkbutton(label: 'Configure'
 				      variable: {New Tk.variable
 						 tkInit(Config)}
 				      action: self # toggleInfo)
