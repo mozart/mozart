@@ -29,12 +29,12 @@ int TaskStack::tasks()
 void TaskStack::checkMax(int n)
 {
   int maxSize = getMaxSize();
-  if (maxSize >= ozconf.stackMaxSize) {
+  if (maxSize >= ozconf.stackMaxSize && ozconf.stackMaxSize!=-1) {
     int newMaxSize = (maxSize*3)/2;
 
 loop:
     prefixError();
-    printf("\n\n*** Task stack maxsize exceeded. Increase from %d to %d? (y/n/b) ",
+    printf("\n*** Task stack maxsize exceeded. Increase from %d to %d? (y/n/b/u/?) ",
 	   ozconf.stackMaxSize,newMaxSize);
     fflush(stdout);
     char buf[1000];
@@ -45,15 +45,30 @@ loop:
     switch (buf[0]) {
     case 'n':
       am.exitOz(1);
-    case 'y':
+    case 'u':
+      ozconf.stackMaxSize = -1;
       break;
+    case 'y':
+      ozconf.stackMaxSize = newMaxSize;
+      break;
+
+    case '?':
+    case 'h':
+      printf("\nOptions:\n");
+      printf(  "=======\n");
+      printf("y = yes, increase stack maxsize\n");
+      printf("n = no (will exit Oz !!)\n");
+      printf("b = print a stack dump\n");
+      printf("u = unlimited stack size (no further questions)\n");
+
+      goto loop;
+
     case 'b':
       printTaskStack();
       goto loop;
     default:
       goto loop;
     }
-    ozconf.stackMaxSize = newMaxSize;
   }
 
   resize(n);
