@@ -503,7 +503,11 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
   refTable->reset();
   Assert(refTrail->isEmpty());
   char c = buf->get(); // second PERDIOMAGICSTART
-  vers = unmarshalString(buf);    
+  vers = unmarshalVersionString(buf);
+
+  if (vers==0)
+    return NO;
+
   int major,minor;
   if (sscanf(vers,"%d#%d",&major,&minor) != 2) {
     if (strcmp(vers,"3.0.10#15")!=0) { // hard coded old version format
