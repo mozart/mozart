@@ -25,54 +25,93 @@
   <Chapter id="Chapter.Module">
     <Title/Module Managers: <<Module>>/
 
-    <P>
-      Module managers load pickled functors, link the obtained
-      functors, and execute them and return modules obtained by
-      functor execution. The Mozart virtual machine starts with a
-      single module manager that executes the functor to which the
-      virtual machine is applied. The module <<Module>> provides a
-      class from which new module managers can be created.
-    </P>
+    <p>
+      Module managers grant access to modules identified by
+      urls. Examples and more information on module managers can be
+      found in <ptr.extern to="ozdoc:apptut">.
 
     <Section id="Section.Module.Basic">
-      <Title/Module Tables/
+      <Title/Basics/
 
-      <P>
-        A module manager maintains a module table, that maps URLs to
-        modules or futures. The URL identifies the functor that has
-        been used (or that will be used, in case of a future) to
-        compute the module.
-      </P>
- 
-      <P>
-        Linking a functor takes a URL ?_{U} as input and returns a
-        module ?_{M} (or a future to the module) as output. If the
-        module manager already has an entry for 
-        ?_{U} in its module table, it just returns this
-        entry. Otherwise, it creates a future ?_{MF}, stores this
-        future in the module table, and returns that future.
-      </P>
+      <p>
+        A module manager maintains a <def/module table/, that maps
+        urls to modules. To be more precise, the table maps a url to a
+        module or to a future for a module (this is explained later).
 
-      <P>
-        As soon as the future's value gets requested, the module
-        identified by ?_{U} is <Em/installed/ as follows. The pickled
-        functor stored at URL ?_{U} gets loaded and applied to its
-        argument modules. The future then is bound to the computed
-        modules. 
-      </P> 
+      <p>
+        A module manager supports the following operations:
+        <list>
+          <entry><def/link/
+          <item>
+            Linking takes a url ?{U} as input and returns a module
+            ?{M} or a future ?{F} for a module. 
+          <p>
+            We say that ?{M} or ?{F} is <def/linked from ?{U}/. Most
+            of the time we will not distinguish between ?{M} and
+            ?{F}.
+          <p>
+            Depending on whether the module
+            table already contains an entry for ?{M}, the following
+            happens: 
+            <list enum>
+              <item>
+                If the module table already contains an entry ?{M} for
+                the url ?{U}, linking just returns ?{M}.
+              <item>
+                If no entry for ?{U} is available, a new future ?{F}
+                is created and stored under ?{U} in the module
+                table. ?{F} is returned.
+              <p>
+                As soon as the value for the future ?{F} is requested,
+                a new thread is created that <def/installs/ a module
+                from the url ?{U}. This is called <def/dynamic
+                linking/ or <def/linking on demand/.
+              <p>
+                If under the url ?{U} a pickled functor is stored, the
+                module is computed by first loading the functor ?{G}.
+                Then ?{G} is <def/applied/ with respect to
+                the url ?{U} (this is explained later) which yields a
+                module to which the future ?{F} is bound. This also
+                explains why it is okay to not make a distinction
+                between module and future for a module, since the
+                distinction does not has any consequences as it comes
+                to module access.
+              <p>
+                If the url ?{U} refers to a system module (see
+                also <ptr.extern to="ozdoc:apptut"
+                key="chapter.modman">) the system module is returned.
+              <p>
+                The url ?{U} can also refer to a native functor, this
+                is described in detail in <ptr.extern to="ozdoc:apptut"
+                key="part.foreign.extensions">. 
+            </list>
+          <entry><def/apply/
+          <item>
+            Application takes a functor ?{F} and a <def/base url/
+            ?{U} and returns a module ?{M}.
+          <p>
+            First the import urls of ?{F} are resolved with
+            respect to the base url ?{U}. Then the resolved urls are
+            used for linking. The returned modules are called
+            <def/argument modules/. Then the body of the functor is
+            applied to the argument modules.
+          <entry><def/enter/
+          <item>
+            Entering takes a url ?{U} and a module ?{M} as input.
+          <p>
+            The module ?{M} is added to the module table under
+            ?{U}. If the module table already contains an entry for
+            ?{U}, an exception is raised.
+        
+            Application takes a functor ?{F} and a <def/base url/
+            ?{U} and returns a module ?{M}.
+        </list> 
        
       <P> 
         A module manager is implemented as an instance of the class
         <<Module.manager>>. The class provides methods to link and
-        apply functors and to enter first class modules into the
+        apply functors and to enter modules into the
         module manager's module table.
-      </P>
-
-      <P>
-        The behaviour of a module manager as it comes to loading
-        pickled functors can be refined and customized by creating
-        classes by inheritance that refine particular methods.
-      </P>
 
     </Section>
 
@@ -81,14 +120,14 @@
 
       <P>
         As has been explained above, each module is refered to by a
-        URL, some of which are Oz specific in that they refer to
-        system modules. We just say that the module <Em/has the URL/. 
-      </P>
+        url ?{U}, some of which are Oz specific in that they refer to 
+        system modules. We just say that the module <Em/has the url/
+        ?{U}.  
 
       <P>
-        A <Em/module name/ is a shortcut
-        for a module URL. System module or extension appended.
-      </P>
+        A <Em/module name/ is a shortcut for a module url. The mapping
+        of module names to full urls is explained in detail in
+        <ptr.extern to="ozdoc:apptut" key="chapter.modman">.
 
     </Section>
 
@@ -98,7 +137,7 @@
       <P>
         Module managers are created as instances of the class
         <<Module.manager>>. For predefined abstractions that are build
-        on top of module managers see <Ptr
+        on top of module managers see <ptr
         to="section.modules.abstractions">.
       </P>
 
@@ -119,8 +158,8 @@
           <Item>
             Links the module identified either by a url ?_{UrlV} (a
             virtual string) or a module name ?_{NameV} (a virtual
-            string). Returns the module ?_{ModuleR}, if it has been
-            already linked or a future to it.
+            string). Returns the module ?_{ModuleR} (which might be a
+            future to a module).
           <P>
             The argument for the module is optional, if it is omitted
             the module is requested immediately.
@@ -134,14 +173,14 @@
           <Item>
             Applies the functor ?_{Functor}, where the url ?_{UrlV} (a
             virtual string) or the module name ?_{NameV} (a virtual
-            string) serve as base URL for linking the functor's
-            import. If neither a module name nor a URL is given, the 
-            current working directory is taken as base URL.
+            string) serve as base url for linking the functor's
+            import. If neither a module name nor a url is given, the 
+            current working directory is taken as base url.
           <P>
             The argument for the module is optional.
           <P>
             Please note that the resulting module is <Em/not/ added to
-            the module table, the URL argument only serves as base URL
+            the module table, the URL argument only serves as base url
             for the functor's import.
 
           <Entry><Span class=index/<<enter>>/
@@ -155,7 +194,7 @@
             string).
           <P>
             Raises an exception if the module manager already has a
-            module under that particular URL installed.
+            module under that particular url installed.
         </List>
        </P>         
     </Section>
@@ -170,15 +209,12 @@
           <Synopsis>
 	    <<<{Module.link ?+{UrlVs} ?_{Rs}}>>>
           <Item>
-             Takes a list ?_{UrlVs} of urls (as virtual strings) at
-             which pickled functors must reside.
-          <P>
-            Returns a list of modules computed by linking the
-            functors.
+             Takes a list ?_{UrlVs} of urls (as virtual strings) and
+             and returns the list of modules  created by linking.
           <P>
             All functors are linked by the same module manager,
-            however each application of Module.link employs a new and
-            private module manager. This has the following
+            however each application of <<Module.link>> employs a new
+            module manager. This has the following
             consequences:
             <List>
               <Item> 
@@ -187,7 +223,7 @@
                 Each application of <<Module.link>> links required
                 functors anew. That is, after replacing a functor on
                 the file system, an application of <<Module.link>>
-                considers the new functor.
+                considers the new functor for linking.
             </List>
           <P>
             <<Module.link>> is defined as follows:
@@ -207,8 +243,8 @@ end>>>
             Takes a list of functors or pairs of urls (as virtual
             strings) as input. The url in a pair of url and functor
             describes the base url with which the import urls of the
-            functor gets resolved. If it is missing the base url './'
-            is used for url resolution. 
+            functor gets resolved. If it is missing the current
+            working directory is used for url resolution. 
           <P>
             Returns a list of modules computed by functor application.
           <P>
@@ -229,22 +265,6 @@ end>>>
       
     </Section>
 
-<!--
-
-    <Section id="Section.Modules.Example">
-      <Title/An Example/
-    </Section>
-
-    <Section id="Section.Modules.Inherit">
-      <Title/Customizing Module Managers/
-
-      <P>
-        This still stinks completely.
-      </P>
-
-    </Section>
-
--->
 
   </Chapter>
 
