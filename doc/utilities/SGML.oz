@@ -31,7 +31,7 @@ export
    namePI: PI
    GetSubtree
    IsOfClass
-body
+define
    PI = {NewName}
 
    class TextPipe from Open.pipe Open.text
