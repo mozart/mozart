@@ -6816,6 +6816,7 @@ Builtin *BIinit()
 
   BI_load=makeTaggedConst(builtinTab.find("load"));
   BI_fail=makeTaggedConst(builtinTab.find("fail"));
+  BI_url_load=makeTaggedConst(builtinTab.find("URL.load"));
 
   // BIinitLazy();
 

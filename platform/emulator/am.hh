@@ -233,12 +233,12 @@ public:
 
   Bool isStandalone() { return isStandaloneF; }
 
-  void emptySuspendVarList(void) { suspendVarList = makeTaggedNULL(); }
+  void emptySuspendVarList(void) { suspendVarList = 0; }
   void addSuspendVarList(TaggedRef * t)
   {
     Assert(isAnyVar(*t));
 
-    if (suspendVarList==makeTaggedNULL()) {
+    if (!suspendVarList) {
       suspendVarList=makeTaggedRef(t);
     } else {
       suspendVarList=cons(makeTaggedRef(t),suspendVarList);
