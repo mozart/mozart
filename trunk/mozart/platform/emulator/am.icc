@@ -250,58 +250,6 @@ Thread *AM::mkSuspendedThread(Board *bb, int prio)
   return th;
 }
 
-
-inline
-int AM::commit(Board *bb, Thread *tt)
-{
-  Assert(!currentBoard->isCommitted());
-  Assert(bb->getParent()==currentBoard);
-
-  AWActor *aw = AWActor::Cast(bb->getActor());
-
-  Assert(!tt || tt==aw->getThread());
-
-  if (!tt) {
-    tt=aw->getThread();
-    DebugCheckT(aw->setThread(0));
-    if (tt->isSuspended()) {
-      tt->suspThreadToRunnable();
-      scheduleThread(tt);
-    }
-
-    tt->getTaskStackRef()->discardFrame(C_ACTOR_Ptr);
-  }
-
-  {
-    Continuation *cont=bb->getBodyPtr();
-    tt->getTaskStackRef()->pushCont(cont->getPC(),cont->getY(),cont->getG());
-    RefsArray X = cont->getX();
-    if (X) tt->getTaskStackRef()->pushX(X);
-  }
-
-  bb->setCommitted(currentBoard);
-  currentBoard->incSuspCount(bb->getSuspCount()-1);
-
-  if (bb->isWait()) {
-    Assert(bb->isWaiting());
-
-    WaitActor *wa = WaitActor::Cast(aw);
-
-    if (currentBoard->isWait()) {
-      WaitActor::Cast(currentBoard->getActor())->mergeChoices(wa->getCpb());
-    } else if (currentBoard->isSolve()) {
-      SolveActor::Cast(currentBoard->getActor())->mergeChoices(wa->getCpb());
-    } else {
-      // forget the choice stack when committing to a conditional
-    }
-
-    if (!installScriptOutline(bb->getScriptRef())) {
-      return 0;
-    }
-  }
-  return 1;
-}
-
 /* ------------------------------------------------------------------------
  * OO stuff
  * ------------------------------------------------------------------------ */
