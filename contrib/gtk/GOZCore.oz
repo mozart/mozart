@@ -218,11 +218,28 @@ define
 	 {PointerToObject none Pointer}
       end
       %% GList Import/Export
-      fun {ImportList Ls}
-	 {Map Ls TranslatePointer}
+      proc {ImportList Ls ?Rs}
+	 case Ls
+	 of Item|Lr then
+	    NewLr
+	 in
+	    Rs = {TranslatePointer Item}|NewLr
+	    {ImportList Lr NewLr}
+	 [] nil then Rs = nil
+	 end
       end
-      fun {ExportList Ls}
-	 {Map Ls ObjectToPointer}
+      proc {ExportList Ls ?Rs}
+	 case Ls
+	 of Item|Lr then
+	    NewLr
+	 in
+	    Rs = if {VirtualString.is Item}
+		 then {GOZSignal.makeNativeString Item}
+		 else {ObjectToPointer Item}
+		 end|NewLr
+	    {ExportList Lr NewLr}
+	 [] nil then Rs = nil
+	 end
       end
    end
    
@@ -264,31 +281,13 @@ define
    %% Gtk Oz Base Class (used for Oz Class Wrapper)
    %%
 
-   %% It is necessary to separate the finalisation of the
-   %% object and its connected handlers since handlers
-   %% might be executed as long as the c side object lives.
-   %% In contrast, the oz object might have been finalized already.
+   GtkObject  = {NewName}
+   GtkSignals = {NewName}
 
    class OzBase from BaseObject
       attr
-	 object  : unit %% Native Object Ptr
-	 signals : unit %% Cell containing Connected Signals List
-      meth wrapperNew
-	 Signals = {Cell.new nil#nil}
-      in
-	 signals <- Signals
-	 %% The delete event is manually connected.
-	 %% This special event automatically calls all other
-	 %% connected delete events in order of connection.
-	 if {self isGtkObject($)}
-	 then
-	    {Dispatcher signalConnect(
-			   proc {$ Event}
-			      {Dispatcher killSignals(Event Signals)}
-			   end
-			   @object 'delete-event' _)}
-	 end
-      end
+	 !GtkObject  : unit %% Native Object Ptr
+	 !GtkSignals : nil  %% Connected Signals List
       meth signalConnect(Signal ProcOrMeth $)
 	 SigHandler = if {IsProcedure ProcOrMeth}
 		      then ProcOrMeth
@@ -297,56 +296,32 @@ define
 			    {self ProcOrMeth(Event)}
 			 end
 		      end
-	 CurSignals NewSignals
+	 SignalId   = {Dispatcher signalConnect(SigHandler @GtkObject Signal $)}
+	 CurSignals = @GtkSignals
       in
-	 {Cell.exchange @signals CurSignals NewSignals}
-	 case CurSignals
-	 of DelHs#SigHs then
-	    case Signal
-	    of 'delete-event' then
-	       NewSignals = {Append DelHs [SigHandler]}#SigHs
-	       unit
-	    [] Signal then
-	       SignalId = {Dispatcher
-			   signalConnect(SigHandler @object Signal $)}
-	    in
-	       NewSignals = DelHs#(SignalId|SigHs)
-	       SignalId
-	    end
-	 end
+	 GtkSignals <- SignalId|CurSignals
       end
       meth signalDisconnect(SignalId)
-	 CurSignals NewSignals
-      in
-	 {Cell.exchange @signals CurSignals NewSignals}
-	 case CurSignals
-	 of DelHs|SigHs then
-	    NewHs = {Filter SigHs fun {$ Id}
-				     SignalId \= Id
-				  end}
-	 in
-	    {Dispatcher signalDisconnect(@object SignalId)}
-	    NewSignals = DelHs#NewHs
-	 end
+	 {Dispatcher signalDisconnect(@GtkObject SignalId)}
+	 GtkSignals <- {Filter @GtkSignals fun {$ Id} SignalId \= Id end}
       end
       meth signalBlock(SignalId)
-	 {GOZSignal.signalBlock @object SignalId}
+	 {GOZSignal.signalBlock @GtkObject SignalId}
       end
       meth signalUnblock(SignalId)
-	 {GOZSignal.signalUnblock @object SignalId}
+	 {GOZSignal.signalUnblock @GtkObject SignalId}
       end
       meth signalEmit(Signal)
-	 {GOZSignal.signalEmit @object Signal}
+	 {GOZSignal.signalEmit @GtkObject Signal}
       end
       meth !WrapPointer(Ptr)
-	 object <- Ptr
-	 {self wrapperNew}
+	 GtkObject <- Ptr
       end
       meth !UnwrapPointer($)
-	 @object
+	 @GtkObject
       end
       meth addToObjectTable
-	 {RegisterObject @object self}
+	 {RegisterObject @GtkObject self}
       end
       meth ref
 	 %% Presume unmanaged Object
@@ -361,6 +336,10 @@ define
       end
       meth isGtkObject($)
 	 false
+      end
+      meth gtkClose
+	 {Dispatcher killSignals(@GtkSignals)}
+	 {self destroy}
       end
    end
 
@@ -428,6 +407,33 @@ define
 	 [] Name                    then Name
 	 end
       end
+   end
+
+   %%
+   %% GDK Color Handling
+   %%
+
+   local
+      ColorDict = {Dictionary.new}
+   in
+      MakeColor = {Value.byNeed
+		   fun {$}
+		      ParseObj  = {New GDK.color noop}
+		      Map       = {New GDK.colormap getSystem}
+		   in
+		      fun {$ Str}
+			 case {Dictionary.condGet ColorDict Str nil}
+			 of nil then
+			    Color = {New GDK.color new(0 0 0)}
+			 in
+			    {ParseObj parse(Str Color _)}
+			    {Map allocColor(Color 0 1 _)}
+			    {Dictionary.put ColorDict Str Color}
+			    Color
+			 [] Color then Color
+			 end
+		      end
+		   end}
    end
    
    %%
@@ -589,30 +595,22 @@ define
 	    end
 	    meth signalConnect(Handler Object Signal $)
 	       SignalId = DispatcherObject, NewSignalId($)
+	       IsNormal = if Signal == 'delete-event' then 0 else 1 end
 	    in
 	       {Dictionary.put @handlerDict SignalId Handler}
-	       {GOZSignal.signalConnect Object Signal SignalId}
+	       {GOZSignal.signalConnect Object Signal SignalId IsNormal}
 	       SignalId
 	    end
 	    meth signalDisconnect(Object SignalId)
 	       {GOZSignal.signalDisconnect Object SignalId}
 	       {Dictionary.remove @handlerDict SignalId}
 	    end
-	    meth killSignals(Event Signals)
-	       HandlerDict = @handlerDict
-	    in
-	       case {Cell.access Signals}
-	       of DelHs#SigHs then
-		  %% Execute any delete Event Handler connected
-		  {ForAll DelHs
-		   proc {$ Handler}
-		      {Handler Event}
-		   end}
-		  %% Disconnect any Handlers
-		  {ForAll SigHs
-		   proc {$ SignalId}
-		      {Dictionary.remove HandlerDict SignalId}
-		   end}
+	    meth killSignals(Signals)
+	       case Signals
+	       of SignalId|Sr then
+		  {Dictionary.remove @handlerDict SignalId}
+		  DispatcherObject, killSignals(Sr)
+	       [] nil         then skip
 	       end
 	    end
 	    meth !Start
@@ -684,6 +682,8 @@ define
 			  allocStrArr          : GOZSignal.allocStrArr
 			  makeStrArr           : GOZSignal.makeStrArr
 			  getStrArr            : GOZSignal.getStrArr
+			  %% GDK Color Handling
+			  makeColor            : MakeColor
 			  %% Color Array Handling
 			  makeColorArr         : GOZSignal.makeColorArr
 			  getColorList         : GOZSignal.getColorList
@@ -692,6 +692,7 @@ define
 			  canvasItemSet        : CanvasItemSet
 			  %% OzBase Class
 			  ozBase               : OzBase
+			  ozObject             : GtkObject
 			  %% Set Dispatcher Mode
 			  setMode              : SetMode
 			  %% Termination Function

@@ -34,12 +34,10 @@ define
 	 {self signalConnect('delete-event' deleteEvent _)}
       end
       meth deleteEvent(Args)
-	 %% CAUTION: At this time, the underlying objects has been destroyed.
-	 %% CAUTION: This event is solely intended for oz side cleanup code.
-	 %% CAUTION: If you want eager finalisation of object wrappers then
-	 %% CAUTION: connect the delete event handler using a procedure
-	 %% CAUTION: rather than a object method.
+	 %% This handler must decide whether to keep the object alive or not
+	 %% Calling gtkClose terminates the object for sure
 	 {System.show 'deleteEvent occured'}
+	 {self gtkClose}
 	 {Application.exit 0}
       end
    end
