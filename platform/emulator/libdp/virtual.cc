@@ -693,9 +693,11 @@ static Bool processMessageQueue(unsigned long clock, void *sqi)
     vs = sq->getNext();
   }
 
+#ifndef DENYS_EVENTS
   //
   if (sq->isEmpty())
     am.setMinimalTaskInterval(sqi, 0);
+#endif
 
   //
   return (ready);
@@ -753,14 +755,18 @@ void siteAlive_VirtualSiteImpl(VirtualSite *vs)
 ///
 void virtualSitesExitImpl()
 {
+#ifndef DENYS_EVENTS
   //
   // fprintf(stdout, "cleaning up VSs...\n"); fflush(stdout);
   am.removeTask(&vsSiteQueue, checkMessageQueue);
   am.removeTask(&vsProbingObject, checkProbes);
+#endif
 
   //  
   if (myVSMailboxManager) {
+#ifndef DENYS_EVENTS
     am.removeTask(myVSMailboxManager->getMailbox(), checkVSMessages);
+#endif
     myVSMailboxManager->destroy();
     delete myVSMailboxManager;
     myVSMailboxManager = (VSMailboxManagerOwned *) 0;
@@ -768,7 +774,9 @@ void virtualSitesExitImpl()
 
   //
   if (myVSChunksPoolManager) {
+#ifndef DENYS_EVENTS
     am.removeTask(myVSChunksPoolManager, checkGCMsgChunks);
+#endif
     delete myVSChunksPoolManager;
     myVSChunksPoolManager = (VSMsgChunkPoolManagerOwned *) 0;
   }
