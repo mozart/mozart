@@ -7,15 +7,6 @@
   State: $State$
   */
 
-#ifndef WINDOWS
-#define BUILTINS1
-#define BUILTINS2
-#endif
-
-#if defined(INTERFACE) && !defined(PEANUTS)
-#pragma implementation "builtins.hh"
-#endif
-
 #include "wsock.hh"
 
 #include <ctype.h>
@@ -327,6 +318,7 @@ OZ_C_proc_end
 /*===================================================================
  * All builtins
  *=================================================================== */
+
 
 OZ_Return isValueInline(TaggedRef val)
 { 
@@ -2385,7 +2377,7 @@ OZ_C_proc_begin(BIsetThreadPriority,1)
 {
   OZ_declareIntArg(0,prio);
 
-  if (prio > MAX_PRIORITY || prio < MIN_PRIORITY) {
+  if (prio > OZMAX_PRIORITY || prio < OZMIN_PRIORITY) {
     TypeErrorT(0,"Int [0 ... 100]");
   }
   Thread *tt = am.currentThread;
@@ -2471,7 +2463,7 @@ inline OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
     return PROCEED;
   }
 
-  am.reduceTrailOnShallow();
+  am.reduceTrailOnShallow(NULL);
 
   return SUSPEND;
 }
@@ -3905,22 +3897,12 @@ OZ_C_proc_begin(BIintToString, 2)
   return FAILED;
 }
 OZ_C_proc_end
+#endif
 
 /* -----------------------------------
    type X
    ----------------------------------- */
-
-OZ_Return BIisNumberInline(TaggedRef num)
-{
-  DEREF(num,_,tag);
-
-  if (isAnyVar(tag)) {
-    return SUSPEND;
-  }
-
-  return isNumber(tag) ? PROCEED : FAILED;
-}
-
+#ifdef BUILTINS2
 
 OZ_Return BIisFloatInline(TaggedRef num)
 {
@@ -3933,6 +3915,8 @@ OZ_Return BIisFloatInline(TaggedRef num)
   return isFloat(tag) ? PROCEED : FAILED;
 }
 
+DECLAREBI_USEINLINEREL1(BIisFloat,BIisFloatInline)
+DECLAREBOOLFUN1(BIisFloatB,BIisFloatBInline,BIisFloatInline)
 
 OZ_Return BIisIntInline(TaggedRef num)
 {
@@ -3945,7 +3929,30 @@ OZ_Return BIisIntInline(TaggedRef num)
   return isInt(tag) ? PROCEED : FAILED;
 }
 
+DECLAREBI_USEINLINEREL1(BIisInt,BIisIntInline)
+DECLAREBOOLFUN1(BIisIntB,BIisIntBInline,BIisIntInline)
 
+
+
+OZ_Return BIisNumberInline(TaggedRef num)
+{
+  DEREF(num,_,tag);
+
+  if (isAnyVar(tag)) {
+    return SUSPEND;
+  }
+
+  return isNumber(tag) ? PROCEED : FAILED;
+}
+
+DECLAREBI_USEINLINEREL1(BIisNumber,BIisNumberInline)
+DECLAREBOOLFUN1(BIisNumberB,BIisNumberBInline,BIisNumberInline)
+
+
+#endif
+
+
+#ifdef BUILTINS1
 
 /* -----------------------------------------------------------------------
    misc. floating point functions
@@ -4075,13 +4082,6 @@ DECLAREBI_USEINLINEREL2(BIge,BIgeInline)
 DECLAREBI_USEINLINEREL2(BInumeq,BInumeqInline)
 DECLAREBI_USEINLINEREL2(BInumneq,BInumneqInline)
 
-DECLAREBI_USEINLINEREL1(BIisNumber,BIisNumberInline)
-DECLAREBOOLFUN1(BIisNumberB,BIisNumberBInline,BIisNumberInline)
-DECLAREBI_USEINLINEREL1(BIisFloat,BIisFloatInline)
-DECLAREBOOLFUN1(BIisFloatB,BIisFloatBInline,BIisFloatInline)
-DECLAREBI_USEINLINEREL1(BIisInt,BIisIntInline)
-DECLAREBOOLFUN1(BIisIntB,BIisIntBInline,BIisIntInline)
-
 DECLAREBI_USEINLINEFUN2(BIplus,BIplusInline)
 DECLAREBI_USEINLINEFUN2(BIminus,BIminusInline)
 
@@ -4135,6 +4135,7 @@ OZ_C_proc_begin(BInewCell,2)
   return OZ_unify(out,OZ_newCell(val));
 }
 OZ_C_proc_end
+
 
 OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef inState, TaggedRef &outState)
 {
@@ -6319,8 +6320,8 @@ BIspec allSpec1[] = {
   {"Dictionary.member", 3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
   {"Dictionary.keys",   2, BIdictionaryKeys,    0},
 
-  {"NewCell",	    2,BInewCell,	0},
-  {"Exchange",	    3,BIexchangeCell, (IFOR) BIexchangeCellInline},
+  {"NewCell",	      2,BInewCell,	 0},
+  {"Exchange",        3,BIexchangeCell, (IFOR) BIexchangeCellInline},
 
   {"IsChar",        2, BIcharIs,	0},
   {"Char.isAlNum",  2, BIcharIsAlNum,	0},
@@ -6541,8 +6542,8 @@ BIspec allSpec2[] = {
   {"listThreads",1,BIlistThreads},
 
   {"foreignFDProps", 1, BIforeignFDProps},
-  {"platform",1,BIplatform},
-  {"ozhome",1,BIozhome},
+  {"platform",       1, BIplatform},
+  {"ozhome",         1, BIozhome},
 
   {"makeClass",        8,BImakeClass,	       0},
   {"makeObject",       4,BImakeObject,	       0},
@@ -6581,6 +6582,7 @@ BIspec allSpec2[] = {
 extern void BIinitFD(void);
 extern void BIinitMeta(void);
 extern void BIinitAVar(void);
+extern void BIinitDVar(void);
 extern void BIinitUnix();
 extern void BIinitAssembler();
 extern void BIinitTclTk();
@@ -6606,6 +6608,7 @@ BuiltinTabEntry *BIinit()
   BIinitMeta();
 
   BIinitAVar();
+  BIinitDVar();
   BIinitUnix();
   BIinitTclTk();
 
