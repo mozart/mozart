@@ -73,6 +73,7 @@ AC_SUBST(CPPFLAGS)
 AC_SUBST(SRCS)
 AC_SUBST(WINDLLDIR)
 AC_SUBST(INSTALLWINDLLS)
+AC_SUBST(PROJECTBUILD)
 
 dnl ****************************************************************
 dnl   For MacOS X: maybe build with AquaTk
