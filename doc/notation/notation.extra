@@ -1,4 +1,4 @@
-<!ELEMENT Rewrite - - (Var*,Rewrite.From,Rewrite.To,Rewrite.Condition?)>
+<!ELEMENT Rewrite - - (Var+,Rewrite.From,Rewrite.To,Rewrite.Condition?)>
 
 <!ELEMENT Rewrite.From - - (%p.chars.model;)>
 
