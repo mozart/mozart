@@ -92,11 +92,6 @@ private:
 public:
   USEFREELISTMEMORY;
 
-  TaskStack() {
-    tos=0;
-    pushEmpty();
-  }
-
   ~TaskStack() { Assert(0); }
 
   Frame *getTop() { return tos; }
@@ -128,6 +123,12 @@ public:
     Assert(!tos);
     pushFrame(C_EMPTY_STACK,0,0);
   }
+
+  TaskStack() {
+    tos=0;
+    pushEmpty();
+  }
+
   void makeEmpty()
   {
     if (tos) {
