@@ -500,6 +500,7 @@ char *newTempFile()
   return ozstrdup(tn);
 }
 
+enum URLAction { URL_LOCALIZE , URL_OPEN , URL_LOAD };
 
 class PipeInfo {
 public:
@@ -508,10 +509,11 @@ public:
   char *file;
   char *url;
   TaggedRef thread, out;
-  Bool load;
+  URLAction action;
 
-  PipeInfo(int f, int p, char *tmpf, char *u, TaggedRef o, Thread *t, Bool ld):
-    fd(f), pid(p), file(tmpf), out(o), load(ld)
+  PipeInfo(int f, int p, char *tmpf, char *u, TaggedRef o, Thread *t,
+           URLAction act):
+    fd(f), pid(p), file(tmpf), out(o), action(act)
   {
     Assert(t);
     thread = makeTaggedConst(t);
@@ -527,17 +529,21 @@ public:
 };
 
 
-void doRaise(Thread *th, char *msg, char *url)
+void doRaise(Thread *th, char *msg, char *url,URLAction act)
 {
   threadRaise(th,
               OZ_mkTuple(E_ERROR,
                          1,
-                         OZ_mkTupleC("perdio",
+                         OZ_mkTupleC("url",
                                      3,
-                                     oz_atom("load"),
+                                     oz_atom((act==URL_LOCALIZE)?"localize":
+                                             (act==URL_OPEN    )?"open"    :
+                                             (act==URL_LOAD    )?"load"    :
+                                             "<unknown action>"),
                                      oz_atom(msg),
                                      oz_atom(url))));
 }
+
 
 int pipeHandler(int, PipeInfo *pi)
 {
@@ -550,36 +556,50 @@ int pipeHandler(int, PipeInfo *pi)
 #ifndef WINDOWS
   int u = waitpid(pi->pid,NULL,0);
   if (u!=pi->pid) {
-    doRaise(th,OZ_unixError(errno),pi->url);
+    doRaise(th,OZ_unixError(errno),pi->url,pi->action);
     return NO;
   }
 #endif
 
   if (retloc!=URLC_OK) {
-    doRaise(th,urlcStrerror(retloc),pi->url);
+    doRaise(th,urlcStrerror(retloc),pi->url,pi->action);
     goto exit;
   }
 
-  {
-    OZ_Term other = oz_atom(pi->file);
-    if (pi->load) {
-      int fd = osopen(pi->file, O_RDONLY,0);
+  switch (pi->action) {
+  case URL_LOCALIZE:
+    pushUnify(th,pi->out,oz_atom(pi->file));
+    break;
+  case URL_OPEN:
+    {
+      int fd = osopen(pi->file,O_RDONLY,0);
       if (fd < 0) {
-        doRaise(th,OZ_unixError(errno),pi->url);
-        goto exit;
-      }
-
-      other = oz_newVariable();
-      OZ_Return aux = loadFD(fd,other);
-      if (aux==RAISE) {
-        threadRaise(th, am.getExceptionValue());
+        doRaise(th,OZ_unixError(errno),pi->url,pi->action);
         goto exit;
       }
       unlink(pi->file);
+      pushUnify(th,pi->out,OZ_int(fd));
+      break;
     }
-    pushUnify(th,pi->out,other);
-    oz_resumeFromNet(th);
+  case URL_LOAD:
+    {
+      int fd = osopen(pi->file, O_RDONLY,0);
+      if (fd < 0) {
+        doRaise(th,OZ_unixError(errno),pi->url,pi->action);
+        goto exit;
+      }
+      OZ_Term other = oz_newVariable();
+      OZ_Return aux = loadFD(fd,other);
+      if (aux==RAISE) {
+        threadRaise(th,am.getExceptionValue());
+        goto exit;
+      }
+      unlink(pi->file);
+      pushUnify(th,pi->out,other);
+      break;
+    }
   }
+  oz_resumeFromNet(th);
 
 exit:
   delete pi->file;
@@ -620,7 +640,7 @@ unsigned __stdcall fetchThread(void *p)
 
 
 
-void getURL(char *url, TaggedRef out, Bool load, Thread *th)
+void getURL(char *url, TaggedRef out, URLAction act, Thread *th)
 {
   char *tmpfile = newTempFile();
 
@@ -671,7 +691,7 @@ void getURL(char *url, TaggedRef out, Bool load, Thread *th)
   int rfd = fds[0];
 #endif
 
-  PipeInfo *pi = new PipeInfo(rfd,pid,tmpfile,url,out,th,load);
+  PipeInfo *pi = new PipeInfo(rfd,pid,tmpfile,url,out,th,act);
   oz_suspendOnNet(th);
   OZ_registerReadHandler(rfd,pipeHandler,pi);
 }
@@ -786,7 +806,7 @@ int loadURL(const char *url0, OZ_Term out, Thread *th)
   }
 
 bomb:
-  getURL(url,out,OK,th);
+  getURL(url,out,URL_LOAD,th);
   return BI_PREEMPT;
 }
 
@@ -806,7 +826,7 @@ OZ_C_proc_begin(BIWget,2)
   OZ_declareVirtualStringArg(0,url);
   OZ_declareArg(1,out);
 
-  getURL(url,out,NO,am.currentThread());
+  getURL(url,out,URL_LOCALIZE,am.currentThread());
 
   return BI_PREEMPT;
 }
