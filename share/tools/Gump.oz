@@ -26,7 +26,7 @@
 functor
 import
    Open(file pipe text)
-   OS(system getEnv)
+   OS(system getEnv tmpnam unlink)
    Property(get condGet)
    Error(printException)
    Debug at 'x-oz://boot/Debug'
