@@ -1123,9 +1123,15 @@ Point is left at the first character of the keyword."
 	  oz-variable-pattern "\\|" oz-char-pattern "\\|"
 	  oz-comment-pattern))
 
+(defconst oz-atom-or-variable-char
+  "A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_")
+
+(defconst oz-atom-or-variable-or-quote-pattern
+  (concat "[" oz-atom-or-variable-char "']"))
+
 (defconst oz-gump-regex-matcher
   (concat
-   "\\<lex[^A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_<\n][^<\n]*"
+   "\\<lex[^" oz-atom-or-variable-char "<\n][^<\n]*"
    "\\(<\\("
    "\\[\\([^]\\]\\|\\\\.\\)+\\]" "\\|"
    "\"[^\"\n]+\"" "\\|"
@@ -1540,12 +1546,9 @@ else return the column up to where the line should be indented."
 	((looking-at "%[^%]")
 	 -1)
 	((oz-is-field-value)
-	 (oz-backward-begin t)
-	 (cond ((looking-at oz-left-pattern)   ; e.g., 'f(x:'
-		(forward-char)
-		(+ (oz-get-column-of-next-nonwhite) oz-indent-chars))
-	       (t   ; e.g., 'attr x:'
-		(+ (current-column) (* oz-indent-chars 2)))))
+	 (+ (current-column) oz-indent-chars))
+	((oz-is-record-start)
+	 (+ (current-column) oz-indent-chars))
 	((or (looking-at oz-middle-pattern)
 	     (looking-at oz-end-pattern)
 	     (and oz-gump-indentation
@@ -1601,19 +1604,48 @@ else return the column up to where the line should be indented."
 	       (setq ret 0)))
 	   ret))))
 
+(defun oz-is-record-start ()
+  "Return non-nil iff the token preceding the point is a record label.
+This serves for the following indentation rule: in records with the
+label at the end of the line, the subtrees should be indented relative
+to the label.
+If this is the case, move the point to the start of the label."
+  (let ((old (point)))
+    (if (and (progn
+	       (oz-backward-begin)
+	       (looking-at "([ \t]*$"))
+	     (not (oz-is-quoted))
+	     (/= (point) (point-min))
+	     (progn
+	       (backward-char)
+	       (looking-at oz-atom-or-variable-or-quote-pattern)))
+	(or (oz-is-quoted)
+	    (skip-chars-backward oz-atom-or-variable-char)
+	    t)
+      (goto-char old)
+      nil)))
+
 (defun oz-is-field-value ()
   "Return non-nil iff the token preceding the point is a colon.
-This is to realize the indentation rule that in records with a feature
+This serves for the following indentation rule: in records with a feature
 on one line and the corresponding subtree expression on another, the
-expression has to be indented relative to the feature.  If this is the
-case, move the point to the colon character."
+subtree should be indented relative to the feature.
+If this is the case, move the point to the beginning of the feature."
   (let ((old (point)))
-    (skip-chars-backward "? \n\t\r\v\f")
-    (if (= (point) (point-min))
-	t
-      (backward-char))
-    (if (and (looking-at ":") (not (oz-is-quoted)))
-	t
+    (if (and (progn
+	       (skip-chars-backward "? \n\t\r\v\f")
+	       (/= (point) (point-min)))
+	     (progn
+	       (backward-char)
+	       (looking-at ":"))
+	     (not (oz-is-quoted))
+	     (/= (point) (point-min))
+	     (progn
+	       (backward-char)
+	       (looking-at oz-atom-or-variable-or-quote-pattern)))
+	(or (oz-is-quoted)
+	    (skip-chars-backward oz-atom-or-variable-char)
+	    t)
       (goto-char old)
       nil)))
 
@@ -2035,7 +2067,7 @@ Used only for fontification.")
   "Regular expression matching any keyword at the beginning of a line.")
 
 (defconst oz-keywords-matcher-2
-  (concat "[^\\A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]\\("
+  (concat "[^\\" oz-atom-or-variable-char "]\\("
 	  (mapconcat 'identity oz-keywords "\\|") "\\)\\>")
   "Regular expression matching any keyword not preceded by a backslash.
 This serves to distinguish between the directive `\\else' and the keyword
@@ -2049,7 +2081,7 @@ The first subexpression matches the keyword proper (for fontification).")
 (defconst oz-proc-fun-matcher
   (concat "\\<\\(proc\\|fun\\)\\>\\([^{\n]*\\){!?"
 	  "\\([A-Z\300-\326\330-\336]"
-	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_.]*\\|\\$"
+	  "[" oz-atom-or-variable-char ".]*\\|\\$"
 	  "\\|`[^`\n]*`\\)")
   "Regular expression matching proc or fun definitions.
 The second subexpression matches optional flags, the third subexpression
@@ -2059,7 +2091,7 @@ fontification.")
 (defconst oz-functor-matcher
   (concat "\\<functor\\([ \t]+\\|[ \t]*!\\)"
 	  "\\([A-Z\300-\326\330-\336]"
-	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_.]*\\|\\$"
+	  "[" oz-atom-or-variable-char ".]*\\|\\$"
 	  "\\|`[^`\n]*`\\)")
   "Regular expression matching functor definitions.
 The second subexpression matches the definition's identifier (if it is a
@@ -2068,7 +2100,7 @@ variable) and is used for fontification.")
 (defconst oz-class-matcher
   (concat "\\<class\\([ \t]+\\|[ \t]*!\\)"
 	  "\\([A-Z\300-\326\330-\336]"
-	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_.]*\\|\\$"
+	  "[" oz-atom-or-variable-char ".]*\\|\\$"
 	  "\\|`[^`\n]*`\\)")
   "Regular expression matching class definitions.
 The second subexpression matches the definition's identifier
@@ -2077,7 +2109,7 @@ The second subexpression matches the definition's identifier
 (defconst oz-meth-matcher
   (concat "\\<meth\\([ \t]+\\|[ \t]*!\\)"
 	  "\\([A-Z\300-\326\330-\336a-z\337-\366\370-\377]"
-	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]*\\|"
+	  "[" oz-atom-or-variable-char "_]*\\|"
 	  "`[^`\n]*`\\|'[^'\n]*'\\)")
   "Regular expression matching method definitions.
 The second subexpression matches the definition's identifier
@@ -2249,7 +2281,7 @@ and is used for fontification.")
   "Regular expression matching any keyword at the beginning of a line.")
 
 (defconst oz-gump-keywords-matcher-2
-  (concat "[^\\A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]\\("
+  (concat "[^\\" oz-atom-or-variable-char "]\\("
 	  (mapconcat 'identity oz-gump-keywords "\\|") "\\)\\>")
   "Regular expression matching any keyword not preceded by a backslash.
 This serves to distinguish between the directive `\\else' and the keyword
@@ -2263,7 +2295,7 @@ The first subexpression matches the keyword proper (for fontification).")
 (defconst oz-gump-scanner-parser-matcher
   (concat "\\<\\(parser\\|scanner\\)[ \t]+"
 	  "\\([A-Z\300-\326\330-\336]"
-	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]*\\|`[^`\n]*`\\)")
+	  "[" oz-atom-or-variable-char "]*\\|`[^`\n]*`\\)")
   "Regular expression matching parser or scanner definitions.
 The second subexpression matches the definition's identifier
 \(if it is a variable) and is used for fontification.")
@@ -2271,7 +2303,7 @@ The second subexpression matches the definition's identifier
 (defconst oz-gump-lex-matcher
   (concat "\\<lex[ \t]+"
 	  "\\([a-z\337-\366\370-\377]"
-	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]*\\|"
+	  "[" oz-atom-or-variable-char "]*\\|"
 	  "'[^'\n]*'\\)[ \t]*=")
   "Regular expression matching lexical abbreviation definitions.
 The first subexpression matches the definition's identifier
@@ -2280,7 +2312,7 @@ The first subexpression matches the definition's identifier
 (defconst oz-gump-syn-matcher
   (concat "\\<syn[ \t]+"
 	  "\\([A-Z\300-\326\330-\336a-z\337-\366\370-\377]"
-	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]*\\|"
+	  "[" oz-atom-or-variable-char "]*\\|"
 	  "`[^`\n]*`\\|'[^'\n]*'\\)")
   "Regular expression matching syntax rule definitions.
 The first subexpression matches the definition's identifier
