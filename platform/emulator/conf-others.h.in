@@ -136,3 +136,6 @@ typedef int socklen_t;
 #endif
 
 #undef HAVE_STDINT_H
+
+/* whether gmp.h needs c++ */
+#undef GMP_NEEDS_CPLUSPLUS

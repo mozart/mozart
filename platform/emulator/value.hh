@@ -270,9 +270,13 @@ extern TaggedRef oz_uniqueName(const char *s);
 // #include <math.h>
 #include <limits.h>
 
+#ifndef GMP_NEEDS_CPLUSPLUS
 extern "C" {
+#endif
 #include <gmp.h>
+#ifndef GMP_NEEDS_CPLUSPLUS
 }
+#endif
 
 
 /*===================================================================
