@@ -279,4 +279,11 @@ Bool AM::isToplevel() {
   return currentBoard == rootBoard ? OK : NO;
 }
 
+// unset the ThreadSwitch flag and reset the processCounter
+void AM::RestartProcess()
+{
+  unsetSFlag(ThreadSwitch);
+  ProcessCounter=msToClockTick(conf.timeSlice);
+}
+
 #endif  // __AM_ICC
