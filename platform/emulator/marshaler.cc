@@ -1040,9 +1040,9 @@ loop:
         TaggedRef aux = duplist(arity,len);
         sortedarity = sortlist(aux,len);
       }
-      PD((UNMARSHAL,"record no:%d",length(arity)));
+      PD((UNMARSHAL,"record no:%d",fastlength(arity)));
       TaggedRef label = unmarshalTerm(bs);
-      SRecord *rec    = SRecord::newSRecord(label,mkArity(sortedarity));
+      SRecord *rec    = SRecord::newSRecord(label,aritytable.find(sortedarity));
       *ret = makeTaggedSRecord(rec);
       gotRef(bs,*ret);
 

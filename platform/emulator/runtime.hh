@@ -77,6 +77,50 @@ void oz_resumeFromNet(Thread *th);
 #define oz_cons(a,b) cons(a,b)
 #define oz_nil()  nil()
 
+/*
+ * list checking
+ *   checkChar:
+ *     0 = any list
+ *     1 = list of char
+ *     2 = list of char != 0
+ * return
+ *     OZ_true
+ *     OZ_false
+ *     var
+ */
+
+inline
+OZ_Term oz_isList(OZ_Term l, int checkChar=0)
+{
+  DerefReturnVar(l);
+  OZ_Term old = l;
+  Bool updateF = 0;
+  int len = 0;
+  while (isCons(l)) {
+    len++;
+    if (checkChar) {
+      OZ_Term h = head(l);
+      DerefReturnVar(h);
+      if (!isSmallInt(h)) return NameFalse;
+      int i=smallIntValue(h);
+      if (i<0 || i>255) return NameFalse;
+      if (checkChar>1 && i==0) return NameFalse;
+    }
+    l = tail(l);
+    DerefReturnVar(l);
+    if (l==old) return NameFalse; // cyclic
+    if (updateF) {
+      old=deref(tail(old));
+    }
+    updateF=1-updateF;
+  }
+  if (isNil(l)) {
+    return oz_int(len);
+  } else {
+    return NameFalse;
+  }
+}
+
 inline
 int oz_isPair(OZ_Term term)
 {
@@ -124,10 +168,22 @@ OZ_Term oz_pair2(OZ_Term t1,OZ_Term t2) {
 #define oz_pairAA(s1,s2)    oz_pair2(oz_atom(s1),oz_atom(s2))
 #define oz_pairAS(s1,s2)    oz_pair2(oz_atom(s1),oz_string(s2))
 
+inline
+Arity *oz_makeArity(OZ_Term list)
+{
+  list=packsort(list);
+  if (!list) return 0;
+  return aritytable.find(list);
+}
 
 /* -----------------------------------------------------------------------
  * suspend
  * -----------------------------------------------------------------------*/
+
+#define oz_suspendOnVar(vin) {                  \
+  am.addSuspendVarList(vin);                    \
+  return SUSPEND;                               \
+}
 
 #define oz_suspendOn(vin) {                     \
   OZ_Term v=vin;                                \

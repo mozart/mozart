@@ -215,6 +215,16 @@ public:
       suspendVarList=cons(makeTaggedRef(t),suspendVarList);
     }
   }
+  void addSuspendVarList(TaggedRef t)
+  {
+    Assert(isAnyVar(deref(t)));
+
+    if (!suspendVarList) {
+      suspendVarList=t;
+    } else {
+      suspendVarList=cons(t,suspendVarList);
+    }
+  }
 
   void pushToplevel(ProgramCounter pc);
   void checkToplevel();

@@ -757,6 +757,7 @@ Bool isSorted(TaggedRef list)
 }
 
 
+// mm2: optimize for already sorted list! (see isSorted)
 // sort list using quicksort and duplicants
 TaggedRef sortlist(TaggedRef list,int len)
 {
@@ -793,17 +794,15 @@ TaggedRef sortlist(TaggedRef list,int len)
   return list;
 }
 
-
-static
+// mm2: cycle test
 TaggedRef packsort(TaggedRef list)
 {
+  list=deref(list);
   if (isNil(list)) {
-    return AtomNil;
+    return nil();
   }
   int len=0;
-  list=deref(list);
 
-  TaggedRef prevEntry = makeTaggedNULL();
   TaggedRef tmp = list;
 
   while (isCons(tmp)) {
@@ -814,15 +813,9 @@ TaggedRef packsort(TaggedRef list)
     lt->setTail(tmp);
   }
 
-  if (!isNil(tmp)) return makeTaggedNULL();
-  return sortlist(list,len);
-}
+ if (!isNil(tmp)) return 0;
 
-Arity *mkArity(TaggedRef list)
-{
-  list=packsort(list);
-  if (list == makeTaggedNULL()) return 0;
-  return aritytable.find(list);
+ return sortlist(list,len);
 }
 
 /************************************************************************/
@@ -858,7 +851,7 @@ unsigned int intlog(unsigned int i)
 
 Arity *Arity::newArity(TaggedRef entrylist , Bool itf)
 {
-  int w = length(entrylist);
+  int w = fastlength(entrylist);
 
   if (itf) {
     Arity *ar=(Arity *) new char[sizeof(Arity)];
@@ -1160,7 +1153,7 @@ TaggedRef oz_adjoinList(SRecord *lrec,TaggedRef arityList,TaggedRef proplist)
   Arity *newArity = aritytable.find(newArityList);
 
   SRecord *newrec = SRecord::newSRecord(lrec->getLabel(),newArity);
-  Assert(length(newArityList) == newrec->getWidth());
+  Assert(fastlength(newArityList) == newrec->getWidth());
 
   TaggedRef ar = lrec->getArityList();
   CHECK_DEREF(ar);
@@ -1348,7 +1341,7 @@ TaggedRef PrTabEntry::getProfileStats()
                                        cons(heap,
                                             cons(calls,
                                                  cons(closures,nil())))))));
-  Arity *arity = aritytable.find(sortlist(list,length(list)));
+  Arity *arity = aritytable.find(sortlist(list,fastlength(list)));
 
   {
     PrTabEntry *aux = allPrTabEntries;

@@ -2410,6 +2410,7 @@ static OZ_Return vs_check(OZ_Term vs, OZ_Term *rest) {
 }
 
 
+// mm2: cycle check needed
 static OZ_Return vs_length(OZ_Term vs, OZ_Term *rest, int *len) {
   DEREF(vs, vs_ptr, vs_tag);
 
@@ -3140,6 +3141,18 @@ OZ_Return neqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
 }
 
+OZ_C_proc_begin(BIlength,2)
+{
+  OZ_Term in=OZ_getCArg(0);
+  OZ_Term out=OZ_getCArg(1);
+
+  OZ_Term ret = oz_isList(in);
+  if (isRef(ret)) oz_suspendOnVar(ret);
+  if (ret==NameFalse) oz_typeError(0,"finite list");
+  return oz_unify(out,ret);
+}
+OZ_C_proc_end
+
 // ---------------------------------------------------------------------
 // String
 // ---------------------------------------------------------------------
@@ -3412,23 +3425,23 @@ OZ_C_proc_begin(BIadjoinAt,4)
 }
 OZ_C_proc_end
 
-TaggedRef getArity(TaggedRef list)
+TaggedRef getArityFromPairList(TaggedRef list)
 {
   TaggedRef arity;
   TaggedRef *next=&arity;
+  Bool updateFlag=NO;
+  DerefReturnVar(list);
+  TaggedRef old = list;
 loop:
-  DEREF(list,listPtr,_l1);
   if (isLTuple(list)) {
     TaggedRef pair = head(list);
-    DEREF(pair,pairPtr,_e1);
-    if (isAnyVar(pair)) return makeTaggedRef(pairPtr);
-    if (!oz_isPair2(pair)) goto bomb;
+    DerefReturnVar(pair);
+    if (!oz_isPair2(pair)) return 0;
 
     TaggedRef fea = tagged2SRecord(pair)->getArg(0);
-    DEREF(fea,feaPtr,_f1);
+    DerefReturnVar(fea);
 
-    if (isAnyVar(fea)) return makeTaggedRef(feaPtr);
-    if (!isFeature(fea)) goto bomb;
+    if (!isFeature(fea)) return 0;
 
     LTuple *lt=new LTuple();
     *next=makeTaggedLTuple(lt);
@@ -3436,17 +3449,21 @@ loop:
     next=lt->getRefTail();
 
     list = tail(list);
+    DerefReturnVar(list);
+    if (list==old) return 0;
+    if (updateFlag) {
+      old=deref(tail(old));
+    }
+    updateFlag=1-updateFlag;
     goto loop;
   }
 
-  if (isAnyVar(list)) return makeTaggedRef(listPtr);
   if (isNil(list)) {
     *next=nil();
     return arity;
   }
 
-bomb:
-  return makeTaggedNULL(); // FAIL
+  return 0;
 }
 
 /* common subroutine for builtins adjoinList and record:
@@ -3456,9 +3473,9 @@ bomb:
 OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
                            Bool recordFlag)
 {
-  TaggedRef arity=getArity(list);
-  if (arity == makeTaggedNULL()) {
-    oz_typeError(1,"list(Feature#Value)");
+  TaggedRef arity=getArityFromPairList(list);
+  if (!arity) {
+    oz_typeError(1,"finite list(Feature#Value)");
   }
   DEREF(t0,t0Ptr,tag0);
   if (isRef(arity)) { // must suspend
@@ -3515,9 +3532,9 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   switch (tag0) {
   case LITERAL:
     {
-      int len1 = length(arity);
+      int len1 = fastlength(arity);
       arity = sortlist(arity,len1);
-      int len = length(arity); // NOTE: duplicates may be removed
+      int len = fastlength(arity); // NOTE: duplicates may be removed
       if (!recordFlag && len!=len1) {  // handles case f(a:_ a:_)
         return oz_raise(E_ERROR,E_KERNEL,"recordConstruction",2,
                         t0,list
@@ -5751,7 +5768,7 @@ OZ_C_proc_begin(BIapply,2)
 
   OZ_Term var;
   if (!OZ_isList(args,&var)) {
-    if (var == 0) oz_typeError(1,"List");
+    if (var == 0) oz_typeError(1,"finite List");
     oz_suspendOn(var);
   }
 
@@ -7685,8 +7702,8 @@ BIspec allSpec[] = {
   {"Wait",   1, BIisValue,            (IFOR) isValueInline},
   {"WaitOr", 2, BIwaitOr,             (IFOR) 0},
 
-
   {"virtualStringLength",  3, BIvsLength, 0},
+  {"Length",  2, BIlength, 0},
 
   {"Not",     2,BInot,             (IFOR) notInline},
   {"And",     3,BIand,             (IFOR) andInline},
