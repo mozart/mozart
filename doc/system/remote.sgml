@@ -127,23 +127,23 @@ bamse.sics.se
         <P>
           If ?_{HostV} is <<'localhost'>> and ?_{ForkA} is
           <<'automatic'>> (which is the default), then on some
-          platforms the forked and forking processes communicate over
-          shared memory instead of Unix sockets, which is more
+          platforms the forked and forking processes communicate through 
+          shared memory rather than sockets, which is more
           efficient. The system property
           <<'distribution.virtualsites'>> carries a boolean telling
           whether this facility, called <def/virtual sites/, is
-          supported in the runnung Mozart process; the <<'sh'>> fork
+          supported in the running Mozart process; the <<'sh'>> fork
           method is used as a fall-back.
 
 <p class=danger>
-          On some platforms (notably on <<solaris-sparc>>) the
-	  operating system in its default configuration does not allow
-          to exploit the virtual sites facility efficiently. Namely,
+          On some platforms (in particular on <<solaris-sparc>>) the
+	  operating system in its default configuration does not support
+          virtual sites efficiently. Namely,
 	  the Solaris OS limits the total number of shared memory
-	  pages per process to 6 and the number of shared memory pages
-	  system-wide to 100, while each of connected Mozart processes
-	  requires at least 2 of them for efficient communication.
-	  Please ask the system administrator to increase those limits
+	  pages per process to six and the number of shared memory pages
+	  system-wide to 100, while each connected Mozart process
+	  requires at least two shared memory pages for efficient communication. 
+	  Please ask your system administrator to increase those limits
 	  with respect to your needs.
 
 <p class=danger>
