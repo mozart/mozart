@@ -124,7 +124,7 @@ Bool AM::hf_raise_failure()
 //  when needed, so don't pass it as argument to functions.
 #define HF_RAISE_FAILURE(T)				\
    if (e->hf_raise_failure())				\
-     goto LBLfailure;					\
+     return T_FAILURE;				        \
    if (ozconf.errorDebug) e->setExceptionInfo(T);	\
    RAISE_THREAD;
 
@@ -548,17 +548,6 @@ void pushContX(TaskStack *stk,
      CAP = Pred;							    \
      emulateHookCall(e,PushContX(Pred->getPC()));
 
-// load a continuation into the machine registers PC,Y,CAP,X
-#define LOADCONT(cont)				\
-  {						\
-      Continuation *tmpCont = cont;		\
-      PC = tmpCont->getPC();			\
-      Y = tmpCont->getY();			\
-      CAP = tmpCont->getCAP();			\
-      predArity = tmpCont->getXSize();		\
-      tmpCont->getX(X);				\
-  }
-
 /* Must save output register too !!! (RS) */
 #define MaxToSave(OutReg,LivingRegs) \
 	max(getRegArg(PC+OutReg)+1,getPosIntArg(PC+LivingRegs));
@@ -840,7 +829,6 @@ int engine(Bool init)
   register Abstraction * CAP   Reg6 = NULL;
 
   Bool isTailCall              = NO;                NoReg(isTailCall);
-  AWActor *CAA                 = NULL;
   DebugCheckT(Board *currentDebugBoard=CBB);
 
   // handling perdio unification
@@ -880,24 +868,6 @@ int engine(Bool init)
   goto LBLpopTaskNoPreempt;
 
 // ------------------------------------------------------------------------
-// *** leaving emulation mode returning to scheduler
-// ------------------------------------------------------------------------
-
-LBLfailure: // mm2: eventually merge with raise?
-  {
-    // check for 'pseudo flat guard'
-    Actor *aa=CBB->getActor();
-    if (aa->isAskWait() && CTT == AWActor::Cast(aa)->getThread()) {
-      Assert(CAA==aa);
-      oz_failBoard();
-      DebugCheckT(currentDebugBoard=CBB);
-      goto LBLcheckFlat2;
-    }
-
-    return T_FAILURE;
-  }
-
-// ------------------------------------------------------------------------
 // *** Emulator: execute instructions
 // ------------------------------------------------------------------------
 
@@ -917,8 +887,8 @@ LBLdispatcher:
 #endif
 
   DebugTrace( if (!ozd_trace("emulate",PC,Y,CAP)) {
-		goto LBLfailure;
-	      });
+    return T_FAILURE;
+  });
 
   op = CodeArea::getOP(PC);
   // displayCode(PC,1);
@@ -1184,11 +1154,6 @@ LBLdispatcher:
 
       case SUSPEND:
 	{
-	  if (shallowCP) {
-	    e->trail.pushIfVar(auxTaggedA);
-	    e->trail.pushIfVar(auxTaggedB);
-	    goto LBLsuspendShallow;
-	  }
 	  CheckLiveness(PC);
 	  PushContX(PC);
 	  tmpRet = suspendInline(CTT,auxTaggedA,auxTaggedB);
@@ -1223,10 +1188,6 @@ LBLdispatcher:
 	case SUSPEND:
 	  {
 	    TaggedRef A=XPC(1);
-	    if (shallowCP) {
-	      e->trail.pushIfVar(A);
-	      goto LBLsuspendShallow;
-	    }
 	    CheckLiveness(PC);
 	    PushContX(PC);
 	    tmpRet = suspendInline(CTT,A);
@@ -1347,10 +1308,8 @@ LBLdispatcher:
 
   Case(SHALLOWGUARD)
     {
-      shallowCP = PC;
-      e->setShallowHeapTop(heapTop);
-      e->trail.pushMark();
-      DISPATCH(2);
+      OZ_error("Emulate: SHALLOWGUARD instruction executed");
+      return T_ERROR;
     }
 
 #define LT_IF(T) if (T) THEN_CASE else ELSE_CASE
@@ -1445,23 +1404,8 @@ LBLdispatcher:
 
   Case(SHALLOWTHEN)
     {
-      if (e->trail.isEmptyChunk()) {
-	shallowCP = NULL;
-	e->setShallowHeapTop(NULL);
-	e->trail.popMark();
-	DISPATCH(1);
-      }
-
-    LBLsuspendShallow:
-      {
-	e->emptySuspendVarList(); // mm2: done twice
-	CheckLiveness(shallowCP);
-	PushContX(shallowCP);
-	shallowCP = NULL;
-	e->setShallowHeapTop(NULL);
-	oz_reduceTrailOnShallow();
-	return T_SUSPEND;
-      }
+      OZ_error("Emulate: SHALLOWTHEN instruction executed");
+      return T_ERROR;
     }
 
 // -------------------------------------------------------------------------
@@ -1621,7 +1565,6 @@ LBLdispatcher:
 
 	Assert(!CTT->isSuspended());
 	Assert(CBB==currentDebugBoard);
-	DebugCheckT(CAA = NULL);
 
       LBLpopTaskNoPreempt:
 	Assert(CTS==CTT->getTaskStackRef());
@@ -1970,225 +1913,74 @@ LBLdispatcher:
 
   Case(WAIT)
     {
-      CBB->setWaiting();
-      CBB->decSuspCount();
-      goto LBLsuspendBoard;
+      OZ_error("Emulate: WAIT instruction executed");
+      return T_ERROR;
     }
 
   Case(WAITTOP)
     {
-      CBB->decSuspCount();
-
-      if ( oz_entailment() ) { // OPT commit()
-	e->trail.popMark();
-	Board *tmpBB = CBB;
-	e->setCurrent(CBB->getParent());
-	DebugCheckT(currentDebugBoard=CBB);
-	tmpBB->unsetInstalled();
-	oz_merge(tmpBB,CBB,-1);
-	CTS->discardActor();
-	WaitActor::Cast(CAA)->disposeWait();
-	CAA = NULL;
-	DISPATCH(1);
-      }
-      CBB->setWaiting();
-      CBB->setWaitTop();
-      goto LBLsuspendBoard;
+      OZ_error("Emulate: WAITTOP instruction executed");
+      return T_ERROR;
     }
 
   Case(ASK)
     {
-      CBB->decSuspCount();
-
-      // entailment ?
-      if (oz_entailment()) { // OPT commit()
-	e->trail.popMark();
-	Board *tmpBB = CBB;
-	e->setCurrent(CBB->getParent());
-	DebugCheckT(currentDebugBoard=CBB);
-	tmpBB->unsetInstalled();
-	oz_merge(tmpBB,CBB,-1);
-	CTS->discardActor();
-	AskActor::Cast(CAA)->disposeAsk();
-	CAA = NULL;
-	DISPATCH(1);
-      }
-
-    LBLsuspendBoard:
-      CBB->setBody(PC+1, Y, CAP,NULL,0);
-      Assert(CAA == AWActor::Cast(CBB->getActor()));
-
-      oz_deinstallCurrent();
-      DebugCode(currentDebugBoard=CBB);
-
-    LBLcheckFlat2:
-      Assert(!CAA->isCommitted());
-      Assert(CAA->getThread()==CTT);
-
-      if (CAA->hasNext()) {
-	LOADCONT(CAA->getNext());
-	goto LBLemulate; // no thread switch allowed here (CAA)
-      }
-
-      if (CAA->isWait()) {
-	WaitActor *wa = WaitActor::Cast(CAA);
-	/* test bottom commit */
-	if (wa->hasNoChildren()) {
-	  HF_DIS;
-	}
-
-	/* test unit commit */
-	if (wa->hasOneChildNoChoice()) {
-	  Board *waitBoard = wa->getLastChild();
-	  if (!oz_commit(waitBoard,CTT)) {
-	    HF_DIS;
-	  }
-	  goto LBLpopTask;
-	}
-
-	// suspend wait actor
-	return T_SUSPEND_ACTOR;
-      }
-
-      Assert(CAA->isAsk());
-      {
-	AskActor *aa = AskActor::Cast(CAA);
-
-	//  should we activate the 'else' clause?
-	if (aa->isLeaf()) { // OPT commit()
-	  CTS->discardActor();
-	  aa->setCommittedActor();
-	  CBB->decSuspCount();
-
-	  LOADCONT(aa->getNext());
-	  PC = aa->getElsePC();
-
-	  aa->disposeAsk();
-
-	  goto LBLemulate;
-	}
-
-	return T_SUSPEND_ACTOR;
-      }
+      OZ_error("Emulate: ASK instruction executed");
+      return T_ERROR;
     }
 
   Case(CREATECOND)
     {
-      ProgramCounter elsePC = PC+getLabelArg(PC+1);
-
-      CAA = new AskActor(CBB,CTT,
-			 elsePC ? elsePC : NOCODE,
-			 NOCODE, Y, CAP, X, CAP->getPred()->getMaxX());
-      CTS->pushActor(CAA,PC);
-      CBB->incSuspCount(); 
-      DISPATCH(2);
+      OZ_error("Emulate: CREATECOND instruction executed");
+      return T_ERROR;
     }
 
   Case(CREATEOR)
     {
-      CAA = new WaitActor(CBB, CTT, NOCODE, Y, CAP, NO);
-      CTS->pushActor(CAA,PC);
-      CBB->incSuspCount(); 
-
-      DISPATCH(1);
+      OZ_error("Emulate: CREATEOR instruction executed");
+      return T_ERROR;
     }
 
   Case(CREATEENUMOR)
     {
-      Board *bb = CBB;
-
-      CAA = new WaitActor(bb, CTT, NOCODE, Y, CAP, NO);
-      CTS->pushActor(CAA,PC);
-      CBB->incSuspCount(); 
-
-      if (bb->isWait()) {
-	WaitActor::Cast(bb->getActor())->addChoice((WaitActor *) CAA);
-      } else if (bb->isSolve()) {
-	SolveActor::Cast(bb->getActor())->addChoice((WaitActor *) CAA);
-      }
-
-      DISPATCH(1);
+      OZ_error("Emulate: CREATEENUMOR instruction executed");
+      return T_ERROR;
     }
 
   Case(CREATECHOICE)
     {
-      Board *bb = CBB;
-
-      CAA = new WaitActor(bb, CTT, NOCODE, Y, CAP, OK);
-      CTS->pushActor(CAA,PC);
-      CBB->incSuspCount(); 
-
-      Assert(CAA->isChoice());
-
-      if (bb->isWait()) {
-	WaitActor::Cast(bb->getActor())->addChoice((WaitActor *) CAA);
-      } else if (bb->isSolve()) {
-	SolveActor::Cast(bb->getActor())->addChoice((WaitActor *) CAA);
-      }
-
-      DISPATCH(1);
+      OZ_error("Emulate: CREATECHOICE instruction executed");
+      return T_ERROR;
     }
 
   Case(CLAUSE)
     {
-      Board *bb;
-      if (CAA->isAsk()) {
-	bb = new Board(CAA,Bo_Ask);
-	AskActor::Cast(CAA)->addAskChild();
-      } else {
-	bb = new Board(CAA,Bo_Wait);
-	WaitActor::Cast(CAA)->addWaitChild(bb);
-      }
-      e->setCurrent(bb,OK);
-      CBB->incSuspCount();
-      DebugCode(currentDebugBoard=CBB);
-      CBB->setInstalled();
-      e->trail.pushMark();
-      Assert(CAA->getThread()==CTT);
-      DISPATCH(1);
+      OZ_error("Emulate: CLAUSE instruction executed");
+      return T_ERROR;
     }
 
-  // == CLAUSE, WAIT
   Case(EMPTYCLAUSE)
     {
-      Assert(CAA->isWait());
-      Board *bb = new Board(CAA, Bo_Wait | Bo_Waiting);
-      WaitActor::Cast(CAA)->addWaitChild(bb);
-
-      bb->setBody(PC+1, Y, CAP, NULL,0);
-
-      goto LBLcheckFlat2;
+      OZ_error("Emulate: EMPTYCLAUSE instruction executed");
+      return T_ERROR;
     }
 
   Case(NEXTCLAUSE)
-      CAA->nextClause(PC+getLabelArg(PC+1));
-      DISPATCH(2);
+    {
+      OZ_error("Emulate: NEXTCLAUSE instruction executed");
+      return T_ERROR;
+    }
 
   Case(LASTCLAUSE)
-      CAA->lastClause();
-      DISPATCH(1);
+    {
+      OZ_error("Emulate: LASTCLAUSE instruction executed");
+      return T_ERROR;
+    }
 
   Case(THREAD)
     {
-      ProgramCounter newPC = PC+2;
-      int contPC = getLabelArg(PC+1);
-
-      int prio = CPP;
-
-      if (prio > DEFAULT_PRIORITY) {
-	prio = DEFAULT_PRIORITY;
-      }
-
-      Thread *tt = oz_newThread(prio);
-
-      COUNT(numThreads);
-      RefsArray newY = Y==NULL ? (RefsArray) NULL : copyRefsArray(Y);
-
-      tt->getTaskStackRef()->pushCont(newPC,newY,CAP);
-      tt->setSelf(e->getSelf());
-      tt->setAbstr(ozstat.currAbstr);
-
-      JUMPRELATIVE(contPC);
+      OZ_error("Emulate: THREAD instruction executed");
+      return T_ERROR;
     }
 
 // -------------------------------------------------------------------------
@@ -2201,23 +1993,6 @@ LBLdispatcher:
       CTS->pushEmpty();   // mm2: is this really needed?
       DebugCode(e->cachedSelf=0);
       return T_TERMINATE;
-    }
-
-  Case(TASKACTOR)  
-    {
-      // this is the second part of Space.choose (see builtin.cc)
-      WaitActor *wa = WaitActor::Cast((Actor *) Y);
-      CTS->restoreFrame();
-      if (wa->getChildCount() != 1) {
-	return T_SUSPEND;
-      }
-      Board *bb = wa->getChildRef();
-      Assert(bb->isWait());
-
-      if (!oz_commit(bb,CTT)) {
-	goto LBLfailure; // ???
-      }
-      goto LBLpopTask;
     }
 
   Case(TASKPROFILECALL)
@@ -2310,8 +2085,6 @@ LBLdispatcher:
 
   Case(TASKCFUNCONT)
      {
-       // 
-       // by kost@ : 'solve actors' are represented via a c-function; 
        OZ_CFun biFun = (OZ_CFun) (void*) Y;
        RefsArray tmpX = (RefsArray) CAP;
        CAP = 0;
@@ -2425,7 +2198,7 @@ LBLdispatcher:
 	     // exception (`hf_raise_failure()')
 	     if (e->hf_raise_failure()) {
 	       oz_closeDonePropagator(prop);
-	       goto LBLfailure;
+	       return T_FAILURE;
 	     }
 	     
 	     if (ozconf.errorDebug) 
@@ -2635,7 +2408,7 @@ LBLdispatcher:
 	      for (int i = 0; i < oarity; i++) {
 		TaggedRef x = X[map == OZ_ID_MAP? iarity + i: map[iarity + i]];
 		if (OZ_unify(dbg->arguments[iarity + i], x) == FAILED)
-		  goto LBLfailure;
+		  return T_FAILURE;
 	      }
 	    else
 	      for (int i = 0; i < oarity; i++)
@@ -2822,27 +2595,6 @@ LBLdispatcher:
       PC=shallowCP;
       shallowCP=0;
       e->setShallowHeapTop(NULL);
-    }
-
-    // mm2: must also handle pseudo shallow guards ala 'or X=1 [] ... end',
-    //  e.g. when X is a future.
-    Actor *aa=CBB->getActor();
-    if (aa && aa->isAskWait() && CTT == AWActor::Cast(aa)->getThread()) {
-      OZ_warning("unifySpecial in pseudo shallow guard not impl. Failing.");
-      switch (tmpRet) {
-      case BI_REPLACEBICALL:
-	e->emptyPreparedCalls();
-	// fall through
-      case SUSPEND:
-	e->emptySuspendVarList();
-	// fall through
-      case RAISE:
-	oz_failBoard();
-	DebugCheckT(currentDebugBoard=CBB);
-	goto LBLcheckFlat2;
-      default:
-	Assert(0);
-      }
     }
 
     switch (tmpRet) {

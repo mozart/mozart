@@ -4200,13 +4200,7 @@ OZ_Term oz_getLocation(Board *bb)
   while (!oz_isRootBoard(bb)) {
     if (bb->isSolve()) {
       out = oz_cons(OZ_atom("space"),out);
-    } else if (bb->isAsk()) {
-      out = oz_cons(OZ_atom("cond"),out);
-    } else if (bb->isWait()) {
-      out = oz_cons(OZ_atom("dis"),out);
-    } else {
-      out = oz_cons(OZ_atom("???"),out);
-    }
+    } 
     bb=bb->getParent();
   }
   return out;
