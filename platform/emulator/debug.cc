@@ -51,8 +51,11 @@ TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
   }
   if (arguments != (RefsArray) NULL) {
     TaggedRef arglist = nil();
-    for(int i = getRefsArraySize(arguments) - 2; i >= 0; i--)
+    for(int i = getRefsArraySize(arguments) - 2; i >= 0; i--) {
+      if (arguments[i] == makeTaggedNULL())
+        arguments[i] = OZ_newVariable();
       arglist = cons(arguments[i],arglist);
+    }
     pairlist = cons(OZ_pairA("args",arglist),pairlist);
   }
   if (frameId == -1) {

@@ -3013,6 +3013,22 @@ LBLdispatcher:
           // save abstraction and arguments:
           int arity = -1;
           switch (CodeArea::getOpcode(PC+6)) {
+          case CALLBI:
+            {
+              Builtin *bi = GetBI(PC+7);
+              dbg->data = makeTaggedConst(bi);
+              int iarity = bi->getInArity(), oarity = bi->getOutArity();
+              int *map = GetLoc(PC+8)->mapping();
+              dbg->arguments = allocateRefsArray(iarity+oarity+1,NO);
+              int i;
+              for (i = 0; i < iarity; i++)
+                dbg->arguments[i] = X[map == OZ_ID_MAP? i: map[i]];
+              for (i = 0; i < oarity; i++)
+                dbg->arguments[iarity + i] =
+                  CTT->getStep()? OZ_newVariable(): makeTaggedNULL();
+              dbg->arguments[iarity + oarity] = makeTaggedNULL();
+            }
+            break;
           case CALLX:
             dbg->data = Xreg(getRegArg(PC+7));
             arity = getPosIntArg(PC+8);
@@ -3025,13 +3041,8 @@ LBLdispatcher:
             dbg->data = Greg(getRegArg(PC+7));
             arity = getPosIntArg(PC+8);
             break;
-          case CALLBUILTIN:
-            dbg->data = makeTaggedConst(GetBI(PC+7));
-            arity = getPosIntArg(PC+8);
-            break;
           case GENFASTCALL:
           case FASTCALL:
-          case FASTTAILCALL:
             {
               Abstraction *abstr =
                 ((AbstractionEntry *) getAdressArg(PC+7))->getAbstr();
@@ -3042,24 +3053,6 @@ LBLdispatcher:
           case MARSHALLEDFASTCALL:
             dbg->data = getTaggedArg(PC+7);
             arity = getPosIntArg(PC+8) >> 1;
-            break;
-          case WEAKDETX:
-            dbg->data = OZ_atom("weakDet");
-            dbg->arguments = allocateRefsArray(2,NO);
-            dbg->arguments[0] = Xreg(getRegArg(PC+7));
-            dbg->arguments[1] = makeTaggedNULL();
-            break;
-          case WEAKDETY:
-            dbg->data = OZ_atom("weakDet");
-            dbg->arguments = allocateRefsArray(2,NO);
-            dbg->arguments[0] = Yreg(getRegArg(PC+7));
-            dbg->arguments[1] = makeTaggedNULL();
-            break;
-          case WEAKDETG:
-            dbg->data = OZ_atom("weakDet");
-            dbg->arguments = allocateRefsArray(2,NO);
-            dbg->arguments[0] = Greg(getRegArg(PC+7));
-            dbg->arguments[1] = makeTaggedNULL();
             break;
           default:
             break;
@@ -3131,19 +3124,29 @@ LBLdispatcher:
         Assert(literalEq(getLiteralArg(dbg->PC+4),getLiteralArg(PC+4)));
         Assert(dbg->Y == Y && dbg->G == G);
 
-        switch (dothis) {
-        case DBG_STEP:
-          if (CTT->getTrace()) {
-            dbg->PC = PC;
-            CTT->pushDebug(dbg,DBG_EXIT);
-            debugStreamExit(dbg,CTT->getTaskStackRef()->getFrameId());
-            PushContX(PC,Y,G,X,getPosIntArg(PC+5));
-            return T_PREEMPT;
-          }
-          break;
-        case DBG_NOSTEP:
-        case DBG_EXIT:
-          break;
+        if (dothis != DBG_EXIT && CodeArea::getOpcode(dbg->PC+6) == CALLBI) {
+          Builtin *bi = GetBI(dbg->PC+7);
+          int iarity = bi->getInArity(), oarity = bi->getOutArity();
+          int *map = GetLoc(dbg->PC+8)->mapping();
+          if (oarity)
+            if (dbg->arguments[iarity] != makeTaggedNULL())
+              for (int i = 0; i < oarity; i++) {
+                TaggedRef x = X[map == OZ_ID_MAP? iarity + i: map[iarity + i]];
+                if (OZ_unify(dbg->arguments[iarity + i], x) == FAILED)
+                  goto LBLfailure;
+              }
+            else
+              for (int i = 0; i < oarity; i++)
+                dbg->arguments[iarity + i] =
+                  X[map == OZ_ID_MAP? iarity + i: map[iarity + i]];
+        }
+
+        if (dothis == DBG_STEP && CTT->getTrace()) {
+          dbg->PC = PC;
+          CTT->pushDebug(dbg,DBG_EXIT);
+          debugStreamExit(dbg,CTT->getTaskStackRef()->getFrameId());
+          PushContX(PC,Y,G,X,getPosIntArg(PC+5));
+          return T_PREEMPT;
         }
 
         dbg->dispose();
