@@ -75,7 +75,7 @@ possible to find out something about what the
 problem is, depending on the type of the entity.
 
 <P> A fault state <<F>> different from <<ok>> will
-cause the distribution exception <<system(dp(F))>>
+cause the distribution exception <<system(dp(F) ...)>>
 to be raised when an operation is attempted on the entity.
 
 <SUBSECTION><TITLE>Temporary fault states</TITLE>
@@ -211,31 +211,61 @@ The variable exists only on the client and server sites.
 In this case, if the client detects a <<remoteProblem>>
 then it knows that the variable binding will be delayed.
 
-<SUBSECTION><TITLE>Objects and cells</TITLE>
+<SUBSECTION><TITLE>Cells and locks</TITLE>
 
-<P> Objects and cells have the same failure behavior.
-An object has one owner site and a set of proxy sites.
+<P> Cells and locks have almost the same failure behavior.
+A cell or lock has one owner site and a set of proxy sites.
 At any given time instant,
-the object's state pointer is at one proxy
-or in the network.
+the cell's state pointer or the lock's token
+is at one proxy or in the network.
 The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
 <ITEM> Owner site down and state pointer not present
-(<<permFail(type:CO info:owner)>>).
+(<<permFail(type:CL info:owner)>>).
 <ITEM> Owner site unreachable and state pointer not present
-(<<tempFail(type:CO info:owner)>>).
+(<<tempFail(type:CL info:owner)>>).
 <ITEM> State pointer lost (owner site up)
-(<<permFail(type:CO info:state)>>).
+(<<permFail(type:CL info:state)>>).
+This failure mode is only for cells.
+If a lock token is lost then the owner recreates it.
 <ITEM> State pointer unreachable (owner site up)
-(<<tempFail(type:CO info:state)>>).
+(<<tempFail(type:CL info:state)>>).
 </LIST>
-<P> (The <<CO>> is <<cell>> or <<object>>.)
+<P> (The <<CL>> is <<cell>> or <<lock>>.)
 Objects and cells have one primitive operation,
 namely a state update.
 For a cell this operation is called <<Exchange>>.
 The exchange operation can complete if the
 fault state is <<ok>>.
+
+<SUBSECTION><TITLE>Objects</TITLE>
+
+<P> An object consists of
+an object-record that is a lazy chunk
+and that references
+the object's features,
+a cell, a class, and optionally a lock.
+The object-record and the class are
+copied simultaneously.
+This introduces one new failure mode, namely
+if the object-record cannot be fetched.
+The following failure modes are possible:
+<LIST>
+<ITEM> Normal operation (<<ok>>).
+<ITEM> Owner site down and
+object-record or state pointer not present
+(<<permFail(type:CL info:owner)>>).
+<ITEM> Owner site unreachable and
+object-record or state pointer not present
+(<<tempFail(type:CL info:owner)>>).
+<ITEM> State pointer lost (owner site up)
+(<<permFail(type:CL info:state)>>).
+This failure mode is only for cells.
+If a lock token is lost then the owner recreates it.
+<ITEM> State pointer unreachable (owner site up)
+(<<tempFail(type:CL info:state)>>).
+</LIST>
 
 <SECTION><TITLE>Fault-tolerant examples</TITLE>
 
@@ -255,16 +285,17 @@ by means of a new exception, <<server_error>>.
 when it tries to do operations
 on entities that have problems.
 All distributed exceptions are of the
-form <<system(dp(C))>> where <<C>> is any fault state
+form <<system(dp(C) ...)>> where <<C>> is any fault state
 as defined before except <<ok>>.
 
 <P> Assume that we have two new abstractions.
 <<{SafeSend Prt X}>> sends to a port
 and raises the exception <<server_error>>
 if this is permanently impossible.
-<<{SafeWait X}>> waits until <<X>> is
-instantiated and raises the exception
-<<server_error>> if this is permanently impossible.
+<<{SafeWait X T}>> waits until <<X>> is
+instantiated, raises the exception
+<<server_error>> if this is permanently impossible
+or if the time <<T>> is exceeded.
 We first show how to use these abstractions
 before defining them in our failure model.
 
@@ -280,7 +311,7 @@ thread
     proc {$ S}
        try
           S="Hello world"
-       catch system(dp(C)) then skip end
+       catch system(dp(C) ...) then skip end
     end}
 end
 
@@ -319,8 +350,8 @@ end
 >>>
 
 <P> This client does two distributed operations,
-namely a send (inside <<Srv>>) which is replaced with <<SafeSend>>
-and a wait which is replaced with <<{SafeWait}>>.
+namely a send (inside <<Srv>>), which is replaced by <<SafeSend>>,
+and a wait, which is replaced by <<SafeWait>>.
 If there is a problem sending the
 message or receiving the reply,
 then the exception <<server_error>> is raised.
@@ -333,7 +364,7 @@ Note that we also catch exceptions during the
 proc {SafeSend Prt X}
    try
       {Send Prt X}
-   catch system(dp(C)) then
+   catch system(dp(C) ...) then
       case C
       of permFail then
          raise server_error end
@@ -360,7 +391,7 @@ local
       try
          {WaitOr X Time}
          if {IsDet Time} then raise server_error end end
-      catch system(dp(C)) then
+      catch system(dp(C) ...) then
          case C
          of permFail(...) then
             raise server_error end

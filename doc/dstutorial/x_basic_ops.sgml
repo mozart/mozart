@@ -258,25 +258,31 @@ entity depends on its type, not on
 the fact of its being inside a record
 or a list.
 
-<ITEM> <EM>Procedures, functions, classes, functors, chunks,
-atoms, and names</EM>:
+<ITEM> <EM>Procedures, functions, classes, functors,
+chunks, atoms, and names</EM>:
 These entities are copied eagerly across the
 network, but can only exist once on a given site.
 For example, an object's class contains the code
 of all the object's methods.
 If many objects of a given class
-exist on a site, then the class only exists once.
+exist on a site,
+then the class only exists there once.
 
-<P> It's important to distinguish the distribution
-behaviors of objects and classes.
-Classes are copied eagerly,
-whereas objects are lazy.
+<ITEM> <EM>Object-records</EM>:
+An object is a composite entity consisting
+of an object-record that references
+the object's features,
+a cell, a class, and optionally a lock.
+It's important to distinguish the distribution
+behaviors of an object and a class.
+An object-record is a chunk that is copied lazily.
 I.e., if an object is passed to a site,
-then the object's class is not requested
-until the object is called.
+then when the object is called,
+the object-record is requested if it is missing
+and the class is requested if it is missing.
 If the object's class already exists
 on the site, then it is not requested at all.
-However, a class that is explicitly passed
+A class that is explicitly passed
 to a site is copied eagerly.
 
 </LIST>
