@@ -712,7 +712,7 @@ OZ_BI_iodefine(unix_chDir,2,0)
     return PROCEED;
 } OZ_BI_ioend
 
-OZ_BI_define(unix_mkDir,1,0)
+OZ_BI_define(unix_mkDir,2,0)
 {
   OZ_declareVsIN(0, path);
   DeclareAtomListIN(1, OzMode);
