@@ -231,6 +231,7 @@ public:
     perdioMinor = minor;
   }
 
+  virtual int getMinor() { return perdioMinor; }
   virtual void getVersion(int *major, int *minor) {
     *major = perdioMajor; *minor = perdioMinor; }
 

@@ -503,6 +503,9 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
     minor = 0;
   }
 
+  if (major!=PERDIOMAJOR || minor > PERDIOMINOR)
+    return NO;
+
   buf->setVersion(major,minor);
 
   t = unmarshalTerm(buf);
