@@ -233,3 +233,27 @@ $(WHAT)-ready.xml: $(WHAT)-with-db.xml
 clean::
         -rm -f $(WHAT).xml $(WHAT)-annotated.xml $(WHAT)-hilite.el
         -rm -f $(WHAT)-hilite.xml $(WHAT)-prefaced.xml $(WHAT)-defaced.xml
+
+NEWCLASSPATH    = $(SRCTOP)/doc/xsl/oz-new.jar
+FILES_ONE       = $(WHAT)-new.pics $(WHAT)-new.el $(WHAT)-new.xml
+
+$(FILES_ONE): $(WHAT).xml
+        $(JAVA) -cp $(NEWCLASSPATH) com.jclark.xsl.sax.Driver \
+                $< $(SRCTOP)/doc/xsl/ozdoc-one.xsl $(WHAT)-new.xml basename=$(WHAT)-new \
+        || { rm -f $(FILES_ONE); exit -1 }
+
+clean::
+        -rm -f $(FILES_ONE)
+
+$(WHAT)-new-hilite.xml: $(WHAT)-new.el
+        emacs --batch \
+                --eval $(EMACSDIR1) \
+                --eval $(EMACSDIR2) \
+                --eval $(EMACSDIR3) \
+                --eval $(EMACSDO1) \
+                --eval $(EMACSDO2) \
+                --eval $(EMACSDO2b) \
+                --eval $(EMACSDO3) \
+                --eval $(EMACSDO4) \
+                --eval $(EMACSDO5) \
+                --load $(WHAT)-new.el > $@ || { rm -f $@; exit -1 }
