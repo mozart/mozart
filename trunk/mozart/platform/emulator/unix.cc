@@ -540,9 +540,8 @@ OZ_C_proc_begin(unix_stat,2)
   else if (S_ISBLK(buf.st_mode))  fileType = "blk";
   else if (S_ISFIFO(buf.st_mode)) fileType = "fifo";
   else 
-#else
-    fileType = "unknown";
 #endif
+    fileType = "unknown";
 
   fileSize = buf.st_size;
 
