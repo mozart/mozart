@@ -39,6 +39,16 @@ void OZ_hfreeCInts(int * is, int n)
   if (n) OZDISPOSE(int, n, is);
 }
 
+char * OZ_hallocChars(int n)
+{
+  return n == 0 ? (int *) NULL : OZMALLOC(char, n);
+}
+
+void OZ_hfreeChars(char * is, int n)
+{
+  if (n) OZDISPOSE(char, n, is);
+}
+
 #define FDTAG 		    OZCONST
 #define MAKETAGGEDINDEX(I)  makeTaggedRef(FDTAG,(int32) (I<<2))
 #define GETINDEX(T)         (ToInt32(tagValueOfVerbatim(T))>>2);
