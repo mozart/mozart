@@ -423,7 +423,7 @@ Bool AM::hookCheckNeeded()
 #else /* THREADED */
 
 #define Case(INSTR)   case INSTR :
-#define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
+#define DISPATCH(INC) {INCFPC(INC); goto LBLdispatcher;}
 
 #endif
 
