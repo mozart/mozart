@@ -828,7 +828,7 @@ in
 
       meth DoAction(A)
 	 case {IsName A} then skip else
-	    {OzcarMessage 'action:' # A}
+	    {OzcarMessage 'action(' # A # ')'}
 	 end
 
 	 case A == TermAllAction then
