@@ -205,7 +205,7 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
       if (Y) {
 	TaggedRef aux1 = getLiteralArg(aux+1);
 	if (!oz_eq(aux1, AtomEmpty) && Y->getArg(i) != NameVoidRegister) {
-	  locals = oz_cons(OZ_mkTupleC("#", 2, aux1, Y[i]), locals);
+	  locals = oz_cons(OZ_mkTupleC("#", 2, aux1, Y->getArg(i)), locals);
 	}
       }
       aux += sizeOf(getOpcode(aux));
