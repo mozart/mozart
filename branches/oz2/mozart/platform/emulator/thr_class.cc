@@ -120,10 +120,9 @@ Bool Thread::isBelowFailed (Board *top)
 /*
  * terminate a thread
  *  if not in deep guard: discard all tasks, return NO
- *  if in deep guard: don't discard any task, return OK
  */
 
-Bool Thread::terminate()
+void Thread::terminate()
 {
   Assert(hasStack());
 
@@ -133,11 +132,8 @@ Bool Thread::terminate()
     PopFrame(tos,PC,Y,G);
     if (PC==C_EMPTY_STACK) {
       ts->makeEmpty();
-      return NO;
+      return;
     }
-
-    if (PC==C_ACTOR_Ptr)
-      return OK;
   }
 }
 
