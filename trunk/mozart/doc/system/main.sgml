@@ -35,6 +35,7 @@
 <!-- Abbreviations -->
 <!ENTITY amp "&">
 <!ENTITY Oz "Oz">
+<!ENTITY qmrk "?">
 
 <!-- Processing Instructions -->
 <!ENTITY emdash PI "emdash">
