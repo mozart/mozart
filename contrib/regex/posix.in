@@ -1,9 +1,18 @@
 %%% -*-oz-*-
 %%% Copyright © by Denys Duchier, Dec 1997, Universität des Saarlandes
 
-fun {$ IMPORT}
-   Fload    = IMPORT.'SP'.'Foreign'.load
-   Register = IMPORT.'SP'.'Finalize'.register
+functor
+import
+   Foreign.{Fload=load}
+   Finalize.{Register=register}
+export
+   'class'      : Regex
+   'is'         : Regex_Is
+   'compile'    : Regex_Compile
+   'execute'    : Regex_Execute
+   'match'      : Regex_Match
+   'flag'       : Flags
+body
    foreign(compile:COMPILE
            execute:EXECUTE
            free:FREE
@@ -38,12 +47,4 @@ fun {$ IMPORT}
       {Regex_Execute
        case {Regex_Is PAT} then PAT else {Regex_Compile PAT} end TXT}
    end
-in
-   regex('class'        : Regex
-         'is'           : Regex_Is
-         'compile'      : Regex_Compile
-         'execute'      : Regex_Execute
-         'match'        : Regex_Match
-         'flag'         : Flags
-        )
 end

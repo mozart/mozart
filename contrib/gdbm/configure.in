@@ -7,7 +7,7 @@ AC_PROG_CXX
 AC_PROG_CXXCPP
 AC_LANG_CPLUSPLUS
 AC_PROG_INSTALL
-AC_PATH_PROG(OZBATCH,ozbatch,ozbatch,../../share/lib $prefix/bin $path)
+AC_PATH_PROG(OZC,ozc,ozc,../../share/lib $prefix/bin $path)
 AC_PATH_PROG(OZDYNLD,ozdynld,ozdynld,../../share/bin $prefix/bin $path)
 AC_PATH_PROG(OZPLATFORM,ozplatform,ozplatform,../../share/bin $prefix/bin $path)
 AC_PATH_PROG(MKINSTALLDIRS,mkinstalldirs,mkinstalldirs,../.. $path)

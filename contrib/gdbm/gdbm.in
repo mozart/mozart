@@ -4,10 +4,15 @@
 %%%
 %%%
 
-proc {$ IMPORTS GDBM}
-   FLoad    = IMPORTS.'SP'.'Foreign'.load
-   Register = IMPORTS.'SP'.'Finalize'.register
-in
+functor $ prop once
+import
+   Foreign
+   Finalize
+export
+   gdbm: GDBM
+body
+   FLoad    = Foreign.load
+   Register = Finalize.register
    %% open a new `local' to protect redefinitions of
    %% variables already in Base
    local

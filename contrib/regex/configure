@@ -770,34 +770,34 @@ test -z "$INSTALL_PROGRAM" && INSTALL_PROGRAM='${INSTALL}'
 
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
-# Extract the first word of "ozbatch", so it can be a program name with args.
-set dummy ozbatch; ac_word=$2
+# Extract the first word of "ozc", so it can be a program name with args.
+set dummy ozc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
 echo "configure:777: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_OZBATCH'+set}'`\" = set"; then
+if eval "test \"`echo '$''{'ac_cv_path_OZC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  case "$OZBATCH" in
+  case "$OZC" in
   /*)
-  ac_cv_path_OZBATCH="$OZBATCH" # Let the user override the test with a path.
+  ac_cv_path_OZC="$OZC" # Let the user override the test with a path.
   ;;
   *)
   IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
   for ac_dir in ../../share/lib $prefix/bin $path$ac_dummy; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
-      ac_cv_path_OZBATCH="$ac_dir/$ac_word"
+      ac_cv_path_OZC="$ac_dir/$ac_word"
       break
     fi
   done
   IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_OZBATCH" && ac_cv_path_OZBATCH="ozbatch"
+  test -z "$ac_cv_path_OZC" && ac_cv_path_OZC="ozc"
   ;;
 esac
 fi
-OZBATCH="$ac_cv_path_OZBATCH"
-if test -n "$OZBATCH"; then
-  echo "$ac_t""$OZBATCH" 1>&6
+OZC="$ac_cv_path_OZC"
+if test -n "$OZC"; then
+  echo "$ac_t""$OZC" 1>&6
 else
   echo "$ac_t""no" 1>&6
 fi
@@ -1083,7 +1083,7 @@ s%@host_os@%$host_os%g
 s%@CXX@%$CXX%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
-s%@OZBATCH@%$OZBATCH%g
+s%@OZC@%$OZC%g
 s%@OZDYNLD@%$OZDYNLD%g
 s%@OZPLATFORM@%$OZPLATFORM%g
 s%@MKINSTALLDIRS@%$MKINSTALLDIRS%g
