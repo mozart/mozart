@@ -47,7 +47,8 @@ import
    MessageInfo 
    Browser
 export
-   open:Start
+   Open
+   OpenManualUpdate
    openNetInfo:OpenNetInfo
    server:Server
 define
@@ -208,7 +209,18 @@ define
    end
 
    
-   proc {Start} O N 
+   proc {Open}
+      Updater
+   in
+      {Start Updater}
+      thread {UpdateLoop Updater} end
+   end
+
+   proc {OpenManualUpdate ?Updater}
+      {Start Updater}
+   end
+   
+   proc{Start ?UpdateObj} O N 
       proc{GCLineDraw}
 	 {Finalize.everyGC proc{$}
 			      lock MainLock then
@@ -285,8 +297,8 @@ define
 				       {ClientControler open(site(ip:S.info.ip port:S.info.port pid:S.info.pid))}
 				    end)}
 	 ClientControler = {New ClientCntrler init(SD)}
-	 
-	 thread {Updater ST OT BT NI MI} end
+
+	 UpdateObj={New Updater init(ST OT BT NI MI)}
 	 thread
 	    {ForAll {NewPort $ ServerPort} proc{$ M}
 					      try 
@@ -298,19 +310,53 @@ define
 	 end
       end
    end 
-   
-   proc {Updater ST OT BT NI MI}
-      {Wait {Access RunSync}}
-      lock MainLock then
-	 {ST display}
-	 {TableInfo.fetchInfo OT BT}
-	 {MI display}
-	 {OT display}
-	 {BT display}
-	 {NI display}
+
+   class Updater
+      feat
+	 SiteTable
+	 OwnerTable
+	 BorrowTable
+	 NetInfo
+	 MessageInfo
+      meth init(ST OT BT NI MI)
+	 self.SiteTable=ST
+	 self.OwnerTable=OT
+	 self.BorrowTable=BT
+	 self.NetInfo=NI
+	 self.MessageInfo=MI
       end
+
+      meth update(communication:ST<=true
+		  exportedEntities:OT<=true
+		  importedEntities:BT<=true
+		  netInfo:NI<=true
+		  messageInfo:MI<=true)
+	 {Wait {Access RunSync}}
+	 lock MainLock then
+	    if ST then
+	       {self.SiteTable display}
+	    end
+	    {TableInfo.fetchInfo self.OwnerTable self.BorrowTable}
+	    if OT then
+	       {self.OwnerTable display}
+	    end
+	    if BT then
+	       {self.BorrowTable display}
+	    end
+	    if NI then
+	       {self.NetInfo display}
+	    end
+	    if MI then
+	       {self.MessageInfo display}
+	    end
+	 end
+      end
+   end
+   
+   proc {UpdateLoop Updater}
+      {Updater update}
       {Delay 2000}   
-      {Updater ST OT BT NI MI}
+      {UpdateLoop Updater}
    end
 
    fun{Server}
