@@ -183,7 +183,7 @@ OZ_Return OZ_Propagator::postpone(void)
 OZ_Boolean OZ_Propagator::imposeOn(OZ_Term t)
 {
   DEREF(t, tptr, ttag);
-  if (isAnyVar(ttag)) {
+  if (isVariableTag(ttag)) {
     addSuspAnyVar(tptr, am.currentThread());
     return OZ_TRUE;
   } 
@@ -193,7 +193,7 @@ OZ_Boolean OZ_Propagator::imposeOn(OZ_Term t)
 OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
 {
   DEREF(v, vptr, vtag);
-  if (!isAnyVar(vtag))
+  if (!isVariableTag(vtag))
     return FALSE;
   Assert(vptr);
 
@@ -216,7 +216,7 @@ void OZ_Propagator::impose(OZ_Propagator * p, int prio)
     OZ_Term v = makeTaggedRef(staticSpawnVarsProp[i].var);
     DEREF(v, vptr, vtag);
 
-    Assert(isAnyVar(vtag));
+    Assert(isVariableTag(vtag));
 
     Bool isStorePatched = 0, isReifiedPatched = 0, isBoolPatched = 0;
     OZ_FiniteDomain * tmp_fd = NULL;

@@ -146,7 +146,7 @@ void ozd_printStream(OZ_Term val, ostream &stream, int depth)
     return;
   }
 
-  OZ_Term ref=deref(val);
+  OZ_Term ref=oz_deref(val);
 
   switch(tagTypeOf(ref)) {
   case UVAR:
@@ -173,9 +173,6 @@ void ozd_printStream(OZ_Term val, ostream &stream, int depth)
     break;
   case OZFLOAT:
     tagged2Float(ref)->printStream(stream,depth);
-    break;
-  case BIGINT:
-    tagged2BigInt(ref)->printStream(stream,depth);
     break;
   case SMALLINT:
     stream << "<SmallInt @" << &ref << ": " << toC(ref) << ">";
@@ -211,9 +208,9 @@ void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
   }
 
   OZ_Term ref=val;
-  if (isRef(ref)) {
+  if (oz_isRef(ref)) {
     stream << indent(offset) << "Reference chain: ";
-    while (isRef(ref)) {
+    while (oz_isRef(ref)) {
       stream << '@'
 	     << (void *) tagged2Ref(ref);
       ref = *tagged2Ref(ref);
@@ -250,9 +247,6 @@ void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
     break;
   case OZFLOAT:
     tagged2Float(ref)->printLongStream(stream,depth,offset);
-    break;
-  case BIGINT:
-    tagged2BigInt(ref)->printLongStream(stream,depth,offset);
     break;
   case SMALLINT:
     stream << indent(offset);
@@ -478,7 +472,7 @@ void DynamicTable::printStream(ostream &stream, int depth)
 	if (tmpval) { 
 	    nonempty=TRUE;
             CHECK_DEREF(tmplit);
-	    if (isAtom(tmplit)||isInt(tmplit)) nAtomOrInt++; else nName++;
+	    if (oz_isAtom(tmplit)||oz_isInt(tmplit)) nAtomOrInt++; else nName++;
 	}
     }
     // Allocate array on heap, put Atoms in array:
@@ -489,7 +483,7 @@ void DynamicTable::printStream(ostream &stream, int depth)
     for (ai=0,di=0; di<size; di++) {
 	tmplit=table[di].ident;
         tmpval=table[di].value;
-	if (tmpval!=makeTaggedNULL() && (isAtom(tmplit)||isInt(tmplit)))
+	if (tmpval!=makeTaggedNULL() && (oz_isAtom(tmplit)||oz_isInt(tmplit)))
             arr[ai++]=tmplit;
     }
     // Sort the Atoms according to printName:
@@ -505,7 +499,7 @@ void DynamicTable::printStream(ostream &stream, int depth)
     for (di=0; di<size; di++) {
 	tmplit=table[di].ident;
         tmpval=table[di].value;
-	if (tmpval!=makeTaggedNULL() && !(isAtom(tmplit)||isInt(tmplit))) {
+	if (tmpval!=makeTaggedNULL() && !(oz_isAtom(tmplit)||oz_isInt(tmplit))) {
 	  stream << " ";
 	  ozd_printStream(tmplit,stream,depth);
 	  stream << ": ";
@@ -531,8 +525,8 @@ void SRecord::printStream(ostream &stream, int depth)
     }
   } else {
     OZ_Term as = getArityList();
-    Assert(isCons(as));
-    while (isCons(as)) {
+    Assert(oz_isCons(as));
+    while (oz_isCons(as)) {
       stream << ' ';
       ozd_printStream(head(as), stream, PRINT_DEPTH_DEC(depth));
       stream << ": ";
@@ -752,6 +746,9 @@ void SuspList::printLongStream(ostream &stream, int depth, int offset)
 void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
 {
   switch (getType()) {
+  case Co_BigInt:
+    ((BigInt *) this)->printLongStream(stream, depth, offset);
+    break;
   case Co_HeapChunk:
     ((HeapChunk *) this)->printLongStream(stream, depth, offset);
     break;
@@ -843,6 +840,8 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
 void ConstTerm::printStream(ostream &stream, int depth)
 {
   switch (getType()) {
+  case Co_BigInt:      ((BigInt *) this)->printStream(stream, depth);
+    break;
   case Co_HeapChunk:   ((HeapChunk *) this)->printStream(stream, depth);
     break;
   case Co_Abstraction: ((Abstraction *) this)->printStream(stream,depth);
@@ -1375,7 +1374,7 @@ void SRecord::printLongStream(ostream &stream, int depth, int offset)
   stream << indent(offset) << "Args:\n";
   TaggedRef ar = getArityList();
   CHECK_DEREF(ar);
-  while (isCons(ar)) {
+  while (oz_isCons(ar)) {
     stream << indent(offset+2);
     TaggedRef feat = head(ar);
     CHECK_DEREF(feat);
@@ -1399,7 +1398,7 @@ void Float::printLongStream(ostream &stream, int depth, int offset)
 
 void BigInt::printStream(ostream &stream, int depth)
 {
-  stream << "<BigInt @" << this << ": " << toC(makeTaggedBigInt(this)) << ">";
+  stream << "<BigInt @" << this << ": " << toC(makeTaggedConst(this)) << ">";
 }
 
 

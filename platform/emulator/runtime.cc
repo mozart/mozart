@@ -32,7 +32,7 @@
 
 int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...)
 {
-  Assert(!isRef(cat));
+  Assert(!oz_isRef(cat));
   OZ_Term exc=OZ_tuple(key,arity+1);
   OZ_putArg(exc,0,OZ_atom(label));
 

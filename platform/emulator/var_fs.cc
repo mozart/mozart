@@ -35,8 +35,8 @@
 
 Bool GenFSetVariable::valid(TaggedRef val)
 {
-  Assert(!isRef(val));
-  return (isFSetValue(val) && ((FSetConstraint *) &_fset)->valid(*(FSetValue *)tagged2FSetValue(val)));
+  Assert(!oz_isRef(val));
+  return (oz_isFSetValue(val) && ((FSetConstraint *) &_fset)->valid(*(FSetValue *)tagged2FSetValue(val)));
 }
 
 void GenFSetVariable::dispose(void) {
@@ -338,7 +338,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
       }
     }
     goto proceed;
-  } else if (isFSetValue(vtag)) {
+  } else if (isFSetValueTag(vtag)) {
     if (!fs) goto proceed;
     
     if (((FSetConstraint *) fs)->valid(*(FSetValue *) tagged2FSetValue(v)))

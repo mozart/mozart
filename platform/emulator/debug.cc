@@ -254,10 +254,10 @@ OZ_BI_define(BIdisplayCode, 2,0)
 OZ_BI_define(BIprocedureCode, 1,1)
 {
   oz_declareNonvarIN(0,proc);
-  if (!isProcedure(proc)) {
+  if (!oz_isProcedure(proc)) {
     oz_typeError(0,"Procedure");
   }
-  if (isBuiltin(proc)) {
+  if (oz_isBuiltin(proc)) {
     oz_typeError(0,"Procedure (no builtin)");
   }
 
@@ -268,10 +268,10 @@ OZ_BI_define(BIprocedureCode, 1,1)
 OZ_BI_define(BIprocedureCoord, 1,1)
 {
   oz_declareNonvarIN(0,proc);
-  if (!isProcedure(proc)) {
+  if (!oz_isProcedure(proc)) {
     oz_typeError(0,"Procedure");
   }
-  if (isBuiltin(proc)) {
+  if (oz_isBuiltin(proc)) {
     oz_typeError(0,"Procedure (no builtin)");
   }
   Abstraction *a=tagged2Abstraction(proc);
