@@ -790,7 +790,7 @@ void engine() {
 			     builtinTab.getName((void *) biFun));
 		     biFun = NULL;
 		     for (int i = 0; i < XSize; i++)
-		        message("\nArg %d: %s",i+1,tagged2String(X[i]));
+		        message("\nArg %d: %s",i+1,OZ_toC(X[i]));
 		     );
     case PROCEED:
       LOCAL_PROPAGATION(if (localPropStore.isEnabled())
@@ -936,7 +936,7 @@ void engine() {
 			       entry->getPrintName(),
 			       arity);
 		       for (int i = 0; i < arity; i++)
-		       { message("\nArg %d: %s",i+1,tagged2String(X[i])); }
+		       { message("\nArg %d: %s",i+1,OZ_toC(X[i])); }
 		       );
       case PROCEED:
 	LOCAL_PROPAGATION(if (localPropStore.isEnabled())
@@ -973,7 +973,7 @@ void engine() {
 	  SHALLOWFAIL;
 	  HANDLE_FAILURE(PC+3,
 			 message("INLINEREL = {`%s` %s}",
-				 entry->getPrintName(),tagged2String(XPC(2))));
+				 entry->getPrintName(),OZ_toC(XPC(2))));
 	}
       }
     }
@@ -1001,7 +1001,7 @@ void engine() {
 	  HANDLE_FAILURE(PC+4,
 			 message("INLINEREL = {`%s` %s %s}",
 				 entry->getPrintName(),
-				 tagged2String(XPC(2)),tagged2String(XPC(3))));
+				 OZ_toC(XPC(2)),OZ_toC(XPC(3))));
 	}
       }
     }
@@ -1034,7 +1034,7 @@ void engine() {
 	  HANDLE_FAILURE(PC+4,
 			 XPC(3) = makeTaggedRef(newTaggedUVar(CBB));
 			 message("INLINEFUN = {`%s` %s}",
-				 entry->getPrintName(),tagged2String(XPC(2))));
+				 entry->getPrintName(),OZ_toC(XPC(2))));
 	}
       }
     }
@@ -1062,8 +1062,8 @@ void engine() {
 			 XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
 			 message("INLINEFUN = {`%s` %s %s}",
 				 entry->getPrintName(),
-				 tagged2String(XPC(2)),
-				 tagged2String(XPC(3))));
+				 OZ_toC(XPC(2)),
+				 OZ_toC(XPC(3))));
 
 
 	}
@@ -1095,9 +1095,9 @@ void engine() {
 			 XPC(5) = makeTaggedRef(newTaggedUVar(CBB));
 			 message("INLINEFUN = {`%s` %s %s %s}",
 				 entry->getPrintName(),
-				 tagged2String(XPC(2)),
-				 tagged2String(XPC(3)),
-				 tagged2String(XPC(4))));
+				 OZ_toC(XPC(2)),
+				 OZ_toC(XPC(3)),
+				 OZ_toC(XPC(4))));
 	}
       }
     }
@@ -1144,7 +1144,7 @@ void engine() {
 #ifdef DEBUG_CHECK
       case FAILED:
 	error("{`%s` %s %s} unexpectedly failed",
-	      entry->getPrintName(), tagged2String(XPC(2)), tagged2String(XPC(3)));
+	      entry->getPrintName(), OZ_toC(XPC(2)), OZ_toC(XPC(3)));
 	break;
 #endif
       }
@@ -1344,7 +1344,7 @@ void engine() {
       if (!e->fastUnify(term,makeTaggedSRecord(p))) {
 	HANDLE_FAILURE(nxt,
 		       message("definition %s/%d = %s",
-			       p->getPrintName(),p->getArity(),tagged2String(term)););
+			       p->getPrintName(),p->getArity(),OZ_toC(term)););
       }
 
       if (predEntry) {
@@ -1446,7 +1446,7 @@ void engine() {
 	goto LBLcall;
       }
 
-      warning("send method: no abstraction or builtin: %s",tagged2String(object));
+      warning("send method: no abstraction or builtin: %s",OZ_toC(object));
       HANDLE_FAILURE(PC,;)
     }
 
@@ -1572,7 +1572,7 @@ void engine() {
 	   goto LBLcall;
 	 }
 	 HANDLE_FAILURE1(PC,("call: no abstraction or builtin: %s",
-				  tagged2String(taggedPredicate)));
+				  OZ_toC(taggedPredicate)));
        }
 
        predicate = tagged2SRecord(taggedPredicate);
@@ -1654,7 +1654,7 @@ void engine() {
 			     message("call: builtin %s/%d failed",
 				     bi->getPrintName(),bi->getArity());
 			     for (int i = 0; i < predArity; i++)
-			     { message("\nArg %d: %s",i+1,tagged2String(X[i])); }
+			     { message("\nArg %d: %s",i+1,OZ_toC(X[i])); }
 			     );
 	    case PROCEED:
 	      LOCAL_PROPAGATION(if (localPropStore.isEnabled())
@@ -1684,7 +1684,7 @@ void engine() {
       } // end builtin
     default:
       HANDLE_FAILURE1(PC,("call: no abstraction or builtin: %s",
-			       tagged2String(makeTaggedSRecord(predicate))));
+			       OZ_toC(makeTaggedSRecord(predicate))));
     } // end switch on type of predicate
 
 // ------------------------------------------------------------------------
