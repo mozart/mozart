@@ -66,6 +66,10 @@ $module_init_fun_name = "fsp_init";
 			     out => [],
 			     bi  => fsp_monitorIn},
 
+    'monitorOut'	=> { in  => ['fset','value'],
+			     out => [],
+			     bi  => fsp_monitorOut},
+
     'min'		=> { in  => ['fset','int'],
 			     out => [],
 			     bi  => fsp_min},
