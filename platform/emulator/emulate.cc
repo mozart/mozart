@@ -371,7 +371,7 @@ void engine() {
   Suspension* &currentTaskSusp = FDcurrentTaskSusp;
   AWActor *CAA = NULL;
   Board *tmpBB = NULL;
-  Board *board = NULL;
+  Board *boardForNotification = NULL;
   Board *&CBB = am.currentBoard;
 
   RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
@@ -476,8 +476,8 @@ void engine() {
       {
         Thread *c = am.currentThread;
         if (c->isNervous()) {
-          board = c->popBoard();
-          tmpBB = board->getBoardDeref();
+          boardForNotification = c->popBoard();
+          tmpBB = boardForNotification->getBoardDeref();
           if (!tmpBB) {
             goto LBLTaskEmpty;
           }
@@ -485,8 +485,8 @@ void engine() {
         }
         if (c->isSuspCont()) {
           SuspContinuation *cont = c->popSuspCont();
-          board = cont->getNode();
-          tmpBB = board->getBoardDeref();
+          boardForNotification = cont->getNode();
+          tmpBB = boardForNotification->getBoardDeref();
           if (!tmpBB) {
             goto LBLTaskEmpty;
           }
@@ -499,8 +499,8 @@ void engine() {
         }
         if (c->isSuspCCont()) {
           CFuncContinuation *ccont = c->popSuspCCont();
-          board = ccont->getNode();
-          tmpBB = board->getBoardDeref();
+          boardForNotification = ccont->getNode();
+          tmpBB = boardForNotification->getBoardDeref();
           if (!tmpBB) {
             goto LBLTaskEmpty;
           }
@@ -523,8 +523,8 @@ void engine() {
         goto LBLTaskEmpty;
       }
       ContFlag cFlag = getContFlag(tb);
-      board = getBoard(tb,cFlag);
-      tmpBB = board->getBoardDeref();
+      boardForNotification = getBoard(tb,cFlag);
+      tmpBB = boardForNotification->getBoardDeref();
 
       switch (cFlag){
       case C_CONT:
@@ -614,7 +614,7 @@ void engine() {
 
   LBLTaskEmpty:
     if (e->currentThread->isSolve () == OK) {
-      e->decSolveThreads (board);
+      e->decSolveThreads (boardForNotification);
     }
     e->currentThread->dispose();
     e->currentThread=(Thread *) NULL;
