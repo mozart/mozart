@@ -148,7 +148,7 @@ in
 	    Stack = X.debug.stack
 	    F#L#C#Time = case Stack of Frame|_ then
 			    {CondSelect Frame file nofile}#
-			    case X of error(kernel(noElse Line) ...) then
+			    case X of error(kernel(noElse Line ...) ...) then
 			       %% correct the line number
 			       Line
 			    else
@@ -212,7 +212,6 @@ in
 	       TopFrame = {Dget self.D S}
 	    in
 	       {Ozcar printStackFrame(frame:TopFrame delete:true)}
-	       %{Ozcar printEnv(frame:0)}
 	    end
 	 end
       end
