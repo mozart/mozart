@@ -747,7 +747,7 @@ void name2buffer(ostream &out, Literal *a) {
   } else if (literalEq(makeTaggedLiteral(a),NameUnit)) {
     out << "unit";
   } else if (!*s) {
-    out << "<N: " << a->hash() << '>';
+    out << "<N>";
   } else {
     out << "<N: " << s << '>';
   }
