@@ -1,4 +1,6 @@
+@SET_MAKE@
 BUILDTOP	= @BUILDTOP@
+SRCDIR		= @srcdira@
 prefix		= @prefix@
 PLATFORM	= @PLATFORM@
 PACKAGE		= @PACKAGE@
@@ -33,7 +35,6 @@ LIB_FILES_DLOAD	= $(addprefix $(DIR_DLOAD)/,$(FILES_DLOAD))
 	clean veryclean distclean bootstrap
 
 all: gdbm.so gdbm.ozf
-bootstrap: all
 
 install: install-load install-dload
 install-load:	$(DIR_LOAD)  $(LIB_FILES_LOAD)
@@ -64,3 +65,5 @@ distclean: clean
 	-$(RM) config.* Makefile gdbm.oz
 
 include ../../share/Makefile.boot
+
+bootstrap: boot-all

@@ -4,10 +4,12 @@
 %%%
 %%% Contributor:
 %%%   Christian Schulte <schulte@dfki.de>
+%%%   Denys Duchier, <duchier@ps.uni-sb.de>
 %%%
 %%% Copyright:
 %%%   Leif Kornstaedt, 1997
 %%%   Christian Schulte, 1998
+%%%   Denys Duchier, 1998
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -52,7 +54,7 @@ local
     fun {$ PNs Dir}
        {FoldL FuncDefaults.Dir
 	fun {$ PNs A}
-	   Ns={GetPrintNames {Load MozartUrl#Dir#'/'#A#FunExt}.'export'}
+	   Ns={GetPrintNames {Pickle.load MozartUrl#Dir#'/'#A#FunExt}.'export'}
 	in
 	   case Ns==nil then PNs else A#Ns|PNs end
 	end PNs}
@@ -74,8 +76,8 @@ local
 	 {ForAll Fs proc {$ F} M1.F=M2.F end}
       end
    end
-   
-   functor OPI
+in
+   functor $
 
    import
       Module.{load}
@@ -168,10 +170,4 @@ local
       
       {CompilerReadEvalLoop}
    end
-
-in
-   {Application.syslet
-    'opi'
-    OPI
-    plain}
 end
