@@ -29,7 +29,12 @@
 #include "connection.hh"
 #include "timers.hh"
 
+#ifdef _MSC_VER
+#include <io.h>
+#include <time.h>
+#else
 #include <sys/time.h>
+#endif
 
 #define OPEN_TIMEOUT		ozconf.dpOpenTimeout
 #define CLOSE_TIMEOUT		ozconf.dpCloseTimeout
