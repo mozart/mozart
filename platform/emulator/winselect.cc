@@ -146,7 +146,7 @@ unsigned __stdcall readerThread(void *arg)
     ResetEvent(sr->char_consumed);
   }
   sr->thrd = 0;
-  _endthreadex(0);
+  ExitThread(0);
   return 0;
 }
 
@@ -171,7 +171,7 @@ Bool createReader(int fd)
   ResetEvent(sr->char_consumed);
 
   unsigned thrid;
-  sr->thrd = (HANDLE) _beginthreadex(0,10000,&readerThread,sr,0,&thrid);
+  sr->thrd = CreateThread(0,10000,&readerThread,sr,0,&thrid);
   if (sr->thrd != 0) {
     maxfd = max(fd+1,maxfd);
     return OK;
@@ -304,7 +304,7 @@ unsigned __stdcall selectThread(void *arg)
     SetEvent(si->event);
   }
 
-  _endthreadex(1);
+  ExitThread(1);
   return 1;
 }
 
@@ -336,7 +336,7 @@ int win32Select(fd_set *rfds, fd_set *wfds, unsigned int *timeout)
     wait_hnd[nh++] = si->event;
     si->timeout = wait;
     unsigned tid;
-    HANDLE ret = _beginthreadex(NULL,10000,&selectThread,si,0,&tid);
+    HANDLE ret = CreateThread(NULL,10000,&selectThread,si,0,&tid);
     Assert(ret!=0);
   }
 

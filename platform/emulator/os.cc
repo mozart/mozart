@@ -96,9 +96,10 @@ extern "C" void setmode(int,mode_t);
 #include <sys/times.h>
 #include <sys/wait.h>
 #include <sys/time.h>
-#include <fcntl.h>
 #include <sys/utsname.h>
 #endif
+
+#include <fcntl.h>
 
 #if !defined(ultrix) && !defined(WINDOWS)
 # include <sys/socket.h>
@@ -558,7 +559,7 @@ unsigned __stdcall timerFun(void *p)
     handlerALRM();
   }
   delete ti;
-  _endthreadex(1);
+  ExitThread(1);
   return 1;
 }
 
@@ -567,7 +568,7 @@ TimerThread::TimerThread(int w)
   wait = w;
   die = NO;
   unsigned tid;
-  thrd = (HANDLE) _beginthreadex(NULL,10000,&timerFun,this,0,&tid);
+  thrd = CreateThread(NULL,10000,&timerFun,this,0,&tid);
   if (thrd==NULL) {
     ozpwarning("osSetAlarmTimer(start thread)");
   }

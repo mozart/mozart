@@ -24,11 +24,6 @@
  *
  */
 
-/* "windows.h" defines some constants, that are also used in Oz,
- * so this file MUST BE INCLUDED BEFORE ANY OTHER FILE
- */
-
-
 #ifndef __WSOCK_H__
 #define __WSOCK_H__
 
@@ -37,6 +32,10 @@
 #endif
 
 #ifdef WINDOWS
+
+/* "windows.h" defines some constants, that are also used in Oz,
+ * so this file MUST BE INCLUDED BEFORE ANY OTHER FILE
+ */
 
 #define NOMINMAX
 #define Bool WinBool
@@ -47,37 +46,21 @@
 
 #undef min
 #undef max
-
 #undef FAILED /* used in oz.h as well */
 #undef Bool
 
-#ifdef GNUWIN32
 
-/* The headers of gnu win32 are incomplete: */
+/* sockets: */
+#include <winsock.h>
 
-/* do not redefine FD_* macros, have to use win32 versions */
-#define _POSIX_SOURCE
-#include <sys/types.h>
-#undef _POSIX_SOURCE
-
-#include <fcntl.h>
-
-extern "C" {
-
-#include "winsock.h"
-
-  inline void _endthreadex( unsigned __retval )
-  {
-    ExitThread(__retval);
-  }
-
-#define _beginthreadex(security, stack_size,fun,args,initflag,thrdaddr) \
-  CreateThread(security,stack_size,fun,args,initflag,thrdaddr);
-
-}
-
-
-#endif
+/* these errors were not defined */
+#define EINPROGRESS            WSAEINPROGRESS
+#define EADDRINUSE             WSAEADDRINUSE
+#define ECONNRESET             WSAECONNRESET
+#define ENOBUFS                WSAENOBUFS
+#define EADDRNOTAVAIL          WSAEADDRNOTAVAIL
+#define EWOULDBLOCK            WSAEWOULDBLOCK
+#define ECONNREFUSED           WSAECONNREFUSED
 
 #endif
 

@@ -678,7 +678,7 @@ unsigned __stdcall fetchThread(void *p)
   oswrite(ui->fd,buf,2);
   osclose(ui->fd);
   delete ui;
-  _endthreadex(1);
+  ExitThread(1);
   return 1;
 }
 
@@ -702,7 +702,7 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
   URLInfo *ui = new URLInfo(tmpfile,url,wfd);
 
   unsigned tid;
-  HANDLE thrd = (HANDLE) _beginthreadex(NULL,0,&fetchThread,ui,0,&tid);
+  HANDLE thrd = CreateThread(NULL,0,&fetchThread,ui,0,&tid);
   if (thrd==NULL)
     return raiseGeneric("getURL: start thread failed",
                         oz_cons(OZ_pairA("URL",oz_atom(url)),oz_nil()));

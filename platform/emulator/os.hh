@@ -168,17 +168,9 @@ extern int _hdopen(int, int flags);
 #endif
 
 #ifdef __MINGW32__
-#define SIGUSR1 SIGQUIT
-#define h_errno errno
+#define SIGUSR1 SIGINT
 #define O_NONBLOCK 0
 #define O_NOCTTY   0
-
-struct timeval {
-    long tv_sec;
-    long tv_usec;
-};
-
-
 #endif
 
 
