@@ -9,7 +9,7 @@
   ------------------------------------------------------------------------
 */
 
-#if defined(INTERFACE) && !defined(PEANUTS)
+#if defined(INTERFACE)
 #pragma implementation "trail.hh"
 #endif
 

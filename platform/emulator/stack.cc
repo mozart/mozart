@@ -7,7 +7,7 @@
   State: $State$
 */
 
-#if defined(INTERFACE) && !defined(PEANUTS)
+#if defined(INTERFACE)
 #pragma implementation "stack.hh"
 #endif
 
