@@ -226,26 +226,6 @@ Bool VirtualSite::tryToSendToAgain(VSMessage *vsm,
 }
 
 //
-// Throw away the "virtual info" object representation from a message
-// buffer;
-void unmarshalUselessVirtualInfoImpl(MsgBuffer *mb)
-{
-  Assert(sizeof(ip_address) <= sizeof(unsigned int));
-  Assert(sizeof(port_t) <= sizeof(unsigned short));
-  Assert(sizeof(time_t) <= sizeof(unsigned int));
-  Assert(sizeof(int) <= sizeof(unsigned int));
-  Assert(sizeof(key_t) <= sizeof(unsigned int));
-
-  //
-  (void) unmarshalNumber(mb);
-  (void) unmarshalShort(mb);  
-  (void) unmarshalNumber(mb);
-  (void) unmarshalNumber(mb);
-  //
-  (void) unmarshalNumber(mb);
-}
-
-//
 void VirtualSite::marshalLocalResources(MsgBuffer *mb,
 					VSMailboxManagerOwned *mbm,
 					VSMsgChunkPoolManagerOwned *cpm)

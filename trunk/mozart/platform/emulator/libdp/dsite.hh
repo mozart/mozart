@@ -40,6 +40,9 @@
 #include "network.hh"
 #include "vs_interface.hh"
 
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
 /**********************************************************************/
 /*   SECTION :: Site                                                  */
 /**********************************************************************/
@@ -85,6 +88,12 @@
   MY_SITE			// 
   MY_SITE | VIRTUAL_INFO	// 
 */
+
+//
+void marshalVirtualInfo(VirtualInfo *vi, MsgBuffer *mb);
+VirtualInfo* unmarshalVirtualInfo(MsgBuffer *mb); 
+void unmarshalUselessVirtualInfo(MsgBuffer *);
+void dumpVirtualInfo(VirtualInfo* vi);
 
 //
 // Managing free list: cutoff on 
@@ -373,14 +382,12 @@ public:
     u.readCtr = 0;
   }
 
-#ifdef VIRTUALSITES
   //
   // Compare "virtual info"s of two sites.
   // Note that this is a metod of the 'Site' class since 
   // (a) it contains that virtual info, and (b) address/port/timestamp 
   // fields are private members of 'VirtualInfo' objects;
   Bool isInMyVSGroup(VirtualInfo *vi);
-#endif
 
   // for use by the network-comm and virtual-comm
   // ASSUMPTION: network-comm has reclaimed RemoteSite 
@@ -513,20 +520,20 @@ public:
     if(t & CONNECTED){
       if(t & REMOTE_SITE){
 	if(t & VIRTUAL_INFO) {
-	  (*dumpVirtualInfo)(info);
+	  dumpVirtualInfo(info);
 	  info=NULL;}
 	discoveryPerm_RemoteSite(getRemoteSite());
 	makePermConnected();
 	return;}
       Assert(t & VIRTUAL_SITE);
-      (*dumpVirtualInfo)(info);      
+      dumpVirtualInfo(info);      
       info=NULL;
       (*discoveryPerm_VirtualSite)(getVirtualSite());
       makePermConnected();
       return;}
     makePerm();
     if(t & VIRTUAL_INFO){
-      (*dumpVirtualInfo)(info);}}
+      dumpVirtualInfo(info);}}
 
   //
   // kost@ : applied whenever an "alive acknowledgement"
@@ -572,6 +579,137 @@ public:
   // Debug stuff;
   char* stringrep();
   char* stringrep_notype();
+};
+
+//
+// The 'VirtualInfo' is a supporting service for virtual sites.  DP
+// library must be able at least to unmarshal, discard and marshal
+// virtual info - a non-virtual site could get virtual info and must
+// be able to keep&resend it. The only not used here service are
+// constructors from a site ('VirtualInfo(DSite *bs, key_t mboxkIn)');
+//
+// The 'VirtualInfo' serves two purposes:
+// (a) identifies the virtual sites group (the id of the master 
+//     in this implementation).
+// (b) contains information for receiving/sending messages to 
+//     the site.
+class VirtualInfo {
+#ifdef VIRTUALSITES
+  friend DSite::initVirtualInfoArg(VirtualInfo *vi);
+#endif
+private:
+  // The "street address" of the master virtual site
+  // ("virtual site group id");
+  ip_address address;
+  port_t port;
+  TimeStamp timestamp;
+
+  // "box" of the site itself;
+  key_t mailboxKey;
+
+  //
+private:
+  //
+  // used by 'DSite::initVirtualInfoArg(VirtualInfo *vi)';
+  void setAddress(ip_address aIn) { address = aIn; }
+  void setPort(port_t pIn) { port = pIn; }
+  void setTimeStamp(TimeStamp &tsIn) { 
+    timestamp.start = tsIn.start;
+    timestamp.pid = tsIn.pid;
+  }
+
+  //
+public:
+  //
+  void* operator new(size_t size) { return (malloc(size)); }
+  void* operator new(size_t, void *place) { return (place); }
+
+#ifdef VIRTUALSITES
+  //
+  // When a "plain" site declares itself as a virtual one (when it
+  // creates a first slave site), copy the virtual site group id
+  // from the site's 'Site' object, and put the mailbox key:
+  VirtualInfo(DSite *bs, key_t mboxkIn)
+    : mailboxKey(mboxkIn)
+  {
+    bs->initVirtualInfoArg(this);
+  }
+
+  //
+  // When the 'myDSite' of a slave site is extended for the virtual
+  // info (by 'BIVSinitServer'), then the mailbox key is given (the
+  // only 'BIVSInitServer's argument), and the "virtual site group id"
+  // is taken from the mailbox'es virtual info:
+  VirtualInfo(VirtualInfo *mvi, key_t mboxkIn)
+    : address(mvi->address), port(mvi->port), timestamp(mvi->timestamp),
+      mailboxKey(mboxkIn)
+  {}
+#endif
+
+  //
+  // There is free list management of virtual info"s;
+  ~VirtualInfo() { error("VirtualInfo is destroyed?"); }
+  // There is nothing to be done when disposed;
+  void destroy() {
+    DebugCode(address = (ip_address) 0);
+    DebugCode(port = (port_t) 0);
+    DebugCode(timestamp.start = (time_t) 0);
+    DebugCode(timestamp.pid = (int) 0);
+    DebugCode(mailboxKey = (key_t) 0);
+  }
+
+  //
+  // Another type of initialization - unmarshaliing:
+  VirtualInfo(MsgBuffer *mb) {
+    Assert(sizeof(ip_address) <= sizeof(unsigned int));
+    Assert(sizeof(port_t) <= sizeof(unsigned short));
+    Assert(sizeof(time_t) <= sizeof(unsigned int));
+    Assert(sizeof(int) <= sizeof(unsigned int));
+    Assert(sizeof(key_t) <= sizeof(unsigned int));
+
+    //
+    address = (ip_address) unmarshalNumber(mb);
+    port = (port_t) unmarshalShort(mb);  
+    timestamp.start = (time_t) unmarshalNumber(mb);
+    timestamp.pid = (int) unmarshalNumber(mb);
+    //
+    mailboxKey = (key_t) unmarshalNumber(mb);
+  }
+
+  // 
+  // NOTE: marshaling must be complaint with
+  // '::unmarshalUselessVirtualInfo()';
+  void marshal(MsgBuffer *mb) {
+    Assert(sizeof(ip_address) <= sizeof(unsigned int));
+    Assert(sizeof(port_t) <= sizeof(unsigned short));
+    Assert(sizeof(time_t) <= sizeof(unsigned int));
+    Assert(sizeof(int) <= sizeof(unsigned int));
+    Assert(sizeof(key_t) <= sizeof(unsigned int));
+
+    //
+    marshalNumber(address, mb);
+    marshalShort(port, mb);  
+    marshalNumber(timestamp.start, mb);
+    marshalNumber(timestamp.pid, mb);
+    //
+    marshalNumber(mailboxKey, mb);
+  }
+
+  //
+  // Returns 'TRUE' if they are the same;
+  Bool cmpVirtualInfos(VirtualInfo *vi) {
+    if (address == vi->address && port == vi->port &&
+	timestamp.start == vi->timestamp.start &&
+	timestamp.pid == vi->timestamp.pid) 
+      return (TRUE);
+    else 
+      return (FALSE);
+  }
+
+  //
+  // There are NO public 'get' methods for address/port/timestamp!
+  key_t getMailboxKey() { return (mailboxKey); }
+  void setMailboxKey(key_t mbkIn) { mailboxKey = mbkIn; }
 };
 
 //

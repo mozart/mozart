@@ -58,11 +58,6 @@ class VSMsgBufferImported;
 VirtualSite* createVirtualSiteImpl(DSite* s);
 
 //
-void marshalVirtualInfoImpl(VirtualInfo *vi, MsgBuffer *mb);
-VirtualInfo* unmarshalVirtualInfoImpl(MsgBuffer *mb); 
-void unmarshalUselessVirtualInfoImpl(MsgBuffer *);
-
-//
 void zeroRefsToVirtualImpl(VirtualSite *vs);
 
 //
@@ -101,9 +96,6 @@ GiveUpReturn giveUp_VirtualSiteImpl(VirtualSite* vs);
 
 //
 void discoveryPerm_VirtualSiteImpl(VirtualSite *vs);
-
-//
-void dumpVirtualInfoImpl(VirtualInfo* vi);
 
 //
 MsgBuffer* getVirtualMsgBufferImpl(DSite* site);
