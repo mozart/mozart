@@ -29,7 +29,7 @@
  * Compile it with
  *
  *   make michael.o
- *   ozdynld -o michael.so-linux-i486 michael.o
+ *   oztool ld -o michael.so-linux-i486 michael.o
  *
 declare
 fun {Declare URL} MM in
