@@ -36,7 +36,7 @@ int PropagatorReference::_id;
 
 OZ_Term prop_name(char * name)
 {
-  struct prop_names_tab_t {
+  static struct prop_names_tab_t {
     char * internal_name;
     char * external_name;
   } prop_names_tab[] = {
