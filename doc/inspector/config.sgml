@@ -63,12 +63,15 @@
         closes the Inspector window, if any.
       <ENTRY><<'class'>>
       <SYNOPSIS>
-        <<Inspector.new>>
+        <<Inspector.new ?+{OptionRecord}>>
       <ITEM>
         creates are new Inspector instance. This function replaces
         the old class field for safety reasons. Extensions are still
         possible by using adapter construction. This object is concurrency
-        safe and can be used in any space.
+        safe and can be used in any space.&nbsp?+{OptionRecord}
+        denotes a record containing user options,
+        with <<unit>> the empty case.
+        Of course, all features must denote a valid option.
       <ENTRY><<object>>
       <SYNOPSIS>
         <<Inspector.object>>
