@@ -259,7 +259,7 @@ define
 	 Common: unit BodyCommon: unit
 	 ProgLang: unit
 	 % front matter:
-	 TopLink: unit
+	 TopLinks: unit
 	 TopTitle: unit
 	 MyAuthorDB: unit
 	 Authors: unit
@@ -325,7 +325,18 @@ define
 	    if {@Reporter hasSeenError($)} then skip
 	    else N in
 	       FontifyMode <- Mode
-	       TopLink <- Args.'top'
+	       TopLinks <- {Map Args.'link'
+			    fun {$ S} Text Rest in
+			       {List.takeDropWhile S
+				fun {$ C} C \= &, end ?Text ?Rest}
+			       case Rest of &,|URL then URL#Text
+			       else
+				  {Exception.raiseError
+				   ap(usage
+				      'comma expected in argument to `link\'')}
+				  unit
+			       end
+			    end}
 	       StyleSheet <- {Property.get 'ozdoc.stylesheet'}
 	       MyFontifier <- {New Fontifier.'class' init(@Meta)}
 	       OutputDirectory <- Args.'out'
@@ -698,10 +709,10 @@ define
 		  ToWrite <- ''#Node#'abstract.html'|@ToWrite
 	       end
 	       'div'(COMMON: @Common
-		     case @TopLink of unit then EMPTY
-		     elseof URL then
-			p('class': [margin] a(href: URL PCDATA('Top')))
-		     end
+		     SEQ({Map @TopLinks
+			  fun {$ URL#Text}
+			     p('class': [margin] a(href: URL PCDATA(Text)))
+			  end})
 		     case @TopTitle of unit then EMPTY
 		     elseof T then h1(align: center 'class': [title] T)
 		     end
