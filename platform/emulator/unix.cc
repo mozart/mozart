@@ -1948,7 +1948,7 @@ OZ_BIspec spec[] = {
   {"OS.getSockName",     2, unix_getSockName},
   {"OS.getHostByName",   2, unix_getHostByName},
   {"OS.pipe",            4, unix_pipe},
-  {"OS.tmpnam",          3, unix_tmpnam},
+  {"OS.tmpnam",          1, unix_tmpnam},
   {"OS.wait",            2, unix_wait},
   {"OS.getServByName",   3, unix_getServByName},
   {"OS.uName",           1, unix_uName},
