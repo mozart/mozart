@@ -210,6 +210,24 @@ Bool Board::isFailureInBody ()
   return (op == FAILURE);
 }
 
+
+inline
+void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var,
+		      TaggedRef a, Bool prop) 
+{
+  // most probable case first: local UVar
+  // if (isUVar(var) && currentBoard == tagged2VarHome(var)) {
+  // more efficient:
+  if (var == currentUVarPrototype && prop) {
+    doBind(varPtr,a);
+  } else {
+    genericBind(varPtr,var,NULL,a,prop);
+  }
+  LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
+			   localPropStore.isInLocalPropagation()););
+
+}
+
 // -----------------------------------------------------------------------
 // genCallInfo: self modifying code!
 

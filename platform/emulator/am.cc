@@ -459,15 +459,16 @@ start:
 	 (!isLocalVariable(term1) ||
 	  (isUVar(term2) && !isUVar(term1)) ||
 	   heapNewer(termPtr2,termPtr1))) {
-      bind(termPtr2, term2, termPtr1, prop); /* prefer binding of newer to older variables */
+      genericBind(termPtr2, term2, termPtr1, *termPtr1, prop);
+      /* prefer binding of newer to older variables */
     } else {
-      bind(termPtr1, term1, termPtr2, prop);
+      genericBind(termPtr1, term1, termPtr2, *termPtr2, prop);
     }
     return OK;
   }
   
   if (isNotCVar(tag2)) {
-    bind(termPtr2, term2, termPtr1, prop);
+    genericBind(termPtr2, term2, termPtr1, *termPtr1, prop);
     return OK;
   }
 
@@ -643,7 +644,7 @@ PROFILE_CODE1
     first->setNext(retSuspList);
     retSuspList = first;
   } // while
-  
+
   return retSuspList;
 }
 
