@@ -698,20 +698,6 @@ void handlerUSR1(int)
   message("Error handler exit ****\n");
 }
 
-void handlerINT(int)
-{
-  // prefixError();
-  //message("SIG INT ****\n");
-  am.exitOz(1);
-}
-
-void handlerTERM(int)
-{
-  //prefixError();
-  //message("SIG TERM ****\n");
-  am.exitOz(0);
-}
-
 void handlerSEGV(int)
 {
   CodeArea::writeInstr();
