@@ -5,6 +5,7 @@
 local
 
    MessageWidth = 380
+   HelpTitle    = 'Ozcar Help'
    OkButtonText = 'Aha'
    NoTopic      = 'No Help Available'
    NoHelp       = 'Feel free to ask the author.\n' #
@@ -99,7 +100,7 @@ local
       meth init(master:Master)
 	 TkTools.dialog,tkInit(master:  Master
 			       root:    pointer
-			       title:   self.topic
+			       title:   HelpTitle % self.topic
 			       buttons: [OkButtonText # tkClose]
 			       focus:   1
 			       bg:      DefaultBackground

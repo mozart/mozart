@@ -7,21 +7,24 @@ local
       meth init(master:Master)
          TkTools.dialog,tkInit(master:  Master
 			       root:    pointer
-                               title:   IconName#': About'
+                               title:   'About'
                                buttons: ['Ok'#tkClose]
                                focus:   1
                                pack:    false
                                default: 1)
-	 Title = {New Tk.label tkInit(parent: self
-                                      text:
-					 'This is ' # IconName #
-				         ' V' # Version)}
+	 T = {New Tk.label tkInit(parent: self
+				  fg:     ScrollbarStackColor
+				  font:   HelpTitleFont
+				  text:   'This is ' # IconName)}
 
-         Author = {New Tk.label tkInit(parent: self
-                                       text:   NameOfBenni # '\n' #
-				               '(' # EmailOfBenni # ')')}
+	 V = {New Tk.label tkInit(parent: self
+				  text:   'Last updated on ' # Version)}
+
+	 A = {New Tk.label tkInit(parent: self
+				  text:   NameOfBenni # '\n' #
+				          '(' # EmailOfBenni # ')')}
       in
-         {Tk.send pack(Title Author side:top expand:1)}
+         {Tk.send pack(T V A side:top expand:1)}
          AboutDialog,tkPack
       end
 
