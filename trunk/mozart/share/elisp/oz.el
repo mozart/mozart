@@ -295,6 +295,11 @@ For example
      ("region"      . oz-to-coresyntax-region)
      ("line"        . oz-to-coresyntax-line  )
      )
+    ("Machine Code"
+     ("buffer"      . oz-to-machinecode-buffer)
+     ("region"      . oz-to-machinecode-region)
+     ("line"        . oz-to-machinecode-line  )
+     )
     ("Indent"
      ("line"   . oz-indent-line)
      ("region" . oz-indent-region)
@@ -379,13 +384,21 @@ For example
   (define-key map "\M-p"   'oz-previous-buffer)
   (define-key map "\C-c\C-e"    'oz-toggle-errors)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
-  (define-key map "\C-c\C-m"    'oz-toggle-machine)
   (if oz-lucid
    (define-key map [(control button1)]       'oz-feed-region-browse))
   (if oz-gnu19
    (define-key map [C-down-mouse-1]        'oz-feed-region-browse))
-  (define-key map "\C-c\C-h"    'oz-halt)
-  (define-key map "\C-c\C-i"    'oz-feed-file)
+  
+  (if oz-lucid
+      (progn
+	;; otherwise this looks in the menubar like "C-TAB" "C-BS" "C_RET"
+	(define-key map [(control c) (control i)] 'oz-feed-file)
+	(define-key map [(control c) (control h)] 'oz-halt)
+	(define-key map [(control c) (control m)]   'oz-toggle-machine))
+    (define-key map "\C-c\C-h"    'oz-halt)
+    (define-key map "\C-c\C-i"    'oz-feed-file)
+    (define-key map "\C-c\C-m"    'oz-toggle-machine))
+
   (define-key map "\C-c\C-f"    'oz-feed-file)
   (define-key map "\C-c\C-n"    'oz-new-buffer)
   (define-key map "\C-c\C-l"    'oz-fontify)
@@ -1126,13 +1139,13 @@ OZ compiler, machine and error window")
   (interactive)
   (setq oz-errors-found nil)
   (let ((show-machine (or (get-buffer-window "*Oz Machine*")
-			  (get-buffer-window "*Oz Core Syntax*")
+			  (get-buffer-window "*Oz Temp*")
 			  (get-buffer-window "*Oz Compiler*")
 			  (get-buffer-window "*Oz Errors*"))))
     (if (get-buffer "*Oz Errors*") 
 	(delete-windows-on "*Oz Errors*"))
-    (if (get-buffer "*Oz Core Syntax*") 
-	(delete-windows-on "*Oz Core Syntax*"))
+    (if (get-buffer "*Oz Temp*") 
+	(delete-windows-on "*Oz Temp*"))
     (if (and oz-machine-visible show-machine)
 	(oz-show-buffer "*Oz Machine*"))))
 
@@ -1257,11 +1270,8 @@ OZ compiler, machine and error window")
   (setq oz-lpr "oz2lpr -"))
 
 
-(defvar oz-pretty-file (oz-make-temp-name "/tmp/ozpretty") "")
+(defvar oz-temp-file (oz-make-temp-name "/tmp/oztemp") "")
 
-(defun oz-to-coresyntax-file(file)
-  (oz-hide-errors)
-  (oz-send-string (concat "!pi '" file "'\n")))
 
 (defun oz-to-coresyntax-buffer()
   (interactive)
@@ -1273,21 +1283,43 @@ OZ compiler, machine and error window")
     (oz-to-coresyntax-region (car line) (cdr line))))
 
 (defun oz-to-coresyntax-region (start end)
-  "Consults the region."
    (interactive "r")
+   (oz-directive-on-region start end "!pi" ".i" t))
+
+
+(defun oz-to-machinecode-buffer()
+  (interactive)
+  (oz-to-machinecode-region (point-min) (point-max)))
+
+(defun oz-to-machinecode-line()
+  (interactive)
+  (let ((line (oz-line-pos)))
+    (oz-to-machinecode-region (car line) (cdr line))))
+
+(defun oz-to-machinecode-region (start end)
+   (interactive "r")
+   (oz-directive-on-region start end "!compile" ".ham" nil))
+
+
+
+
+(defun oz-directive-on-region (start end directive suffix mode)
+  "Applies a directive to the region."
    (oz-hide-errors)
-   (shell-command-on-region start end (concat "/bin/sh -c 'cat > " oz-pretty-file "'"))
+   (shell-command-on-region start end (concat "/bin/sh -c 'cat > " oz-temp-file "'"))
    (message "")
-   (oz-to-coresyntax-file oz-pretty-file)
+   (oz-hide-errors)
+   (oz-send-string (concat directive " '" oz-temp-file "'\n"))
    (sleep-for 2)
-   (let ((buf (get-buffer-create "*Oz Core Syntax*")))
+   (let ((buf (get-buffer-create "*Oz Temp*")))
      (save-excursion
        (set-buffer buf)
        (delete-region (point-min) (point-max))
-       (insert-file-contents (concat oz-pretty-file ".i"))
+       (insert-file-contents (concat oz-temp-file suffix))
        (display-buffer buf t)
        (oz-mode)
-       (oz-fontify-buffer))))
+       (if mode (oz-fontify-buffer)))))
+
 
 
 
