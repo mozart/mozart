@@ -31,6 +31,7 @@
 <!ENTITY gt ">">
 <!entity amp "&">
 <!entity etc PI "ellipsis">
+<!ENTITY % proglang.values.local "|sh">
 
 <!ENTITY chap.macro SYSTEM "macro.sgml">
 <!ENTITY chap.loop  SYSTEM "loop.sgml">
