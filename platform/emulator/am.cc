@@ -422,7 +422,7 @@ void AM::exitOz(int status)
 Bool AM::isLocalUVarOutline(TaggedRef var, TaggedRef *varPtr)
 {
   Board *bb=tagged2VarHome(var);
-  if (bb->isCommitted()) {
+  if (bb->isCommitted()) { // mm2: is this needed?
     bb=bb->derefBoard();
     *varPtr=makeTaggedUVar(bb);
   }
@@ -533,9 +533,10 @@ loop:
 
   if (isCVar(tag1)) {
     // mm2: use GenCVar::bind here
-    result = tagged2CVar(term1)->unifyV(termPtr1, term2, scp);
-    if (result == PROCEED)
+    int res = tagged2CVar(term1)->unifyV(termPtr1, term2, scp);
+    if (res == PROCEED)
       goto next;
+    result = res;
     goto fail;
   }
   
@@ -598,10 +599,14 @@ loop:
 
 
 cvar:
-  result = tagged2CVar(term1)->unifyV(termPtr1, makeTaggedRef(termPtr2), scp);
-  if (result == PROCEED)
-    goto next;
-  goto fail;
+  {
+    int res
+      = tagged2CVar(term1)->unifyV(termPtr1, makeTaggedRef(termPtr2), scp);
+    if (res == PROCEED)
+      goto next;
+    result = res;
+    goto fail;
+  }
 
 
  /*************/
@@ -682,9 +687,6 @@ next:
   termPtr2 = (TaggedRef*) unifyStack.pop();
   termPtr1 = (TaggedRef*) unifyStack.pop();
   argSize  = ToInt32(unifyStack.pop());
-#ifdef DEBUG_CHECK
-  result   = FAILED;
-#endif
   // fall through
 
 push:
