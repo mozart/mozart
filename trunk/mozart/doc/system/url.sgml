@@ -95,7 +95,8 @@ feature.
       </list>
     <section><title/Interface/
       <p><list>
-	  <entry/<code/URL.make//
+	  <entry/<code/URL.make/
+<index/<code/URL/<and><code/make///
 	<synopsis/<code/{URL.make ?+{VS} ??{Url}}//
 	<item>Parses virtual string ?_{VS} as a url, according to the
 proposed uri syntax modulo Windows-motivated derigations (see above).
@@ -108,18 +109,21 @@ distinguish it from the url vstring consisting of the atom
 <code/url/.  The empty url record can be written &eg;
 <code/url(unit)/.  ?_{VS} may also be a url record, in which case it
 is simply returned.</item>
-      <entry/<code/URL.is//
+      <entry/<code/URL.is/
+<index/<code/URL/<and><code/is///
       <synopsis/<code/{URL.is ?+{X}}//
       <item>Returns <code/true/ iff ?_{X} is a non-empty record
 labeled with <code/url/.</item>
-      <entry/<code/URL.toVs//
+      <entry/<code/URL.toVs/
+<index/<code/URL/<and><code/toVs///
       <synopsis/<code/{URL.toVs ?+{X} ??{VS}}//
       <item>?_{X} may be a url record or vstring.  The corresponding
 normalied vstring representation is returned. #?_{FRAGMENT} and
 {?_{INFO}} segments are not included (see below).  This is appropriate
 for retrieval since fragment and info sections are meant for
 client-side usage.</item>
-      <entry/<code/URL.toVsExtended//
+      <entry/<code/URL.toVsExtended/
+<index/<code/URL/<and><code/toVsExtended///
       <synopsis/<code/{URL.toVsExtended ?+{X} ?+{HOW} ??{VS}}//
       <item>Similar to the above, but ?_{HOW} is a record with
 optional boolean features code/full/ and <code/cache/.
@@ -128,20 +132,24 @@ should be included if present.  <code/cache:true/ requests that
 cache-style syntax be used (see <ptr to="Chapter.Resolve">): the
 <samp/:/ following the scheme and the <samp>//</samp> preceding the
 authority are both replaced by single <samp>/</samp>.</item>
-      <entry/<code/URL.toString//
+      <entry/<code/URL.toString/
+<index/<code/URL/<and><code/toString///
       <synopsis/<code/{URL.toString ?+{X} ??{STR}}//
       <item>Calls <code/URL.toVs/ and converts the result to a
 string.
-      <entry/<code/URL.toAtom//
+      <entry/<code/URL.toAtom/
+<index/<code/URL/<and><code/toAtom///
       <synopsis/<code/{URL.toAtom ?+{X} ??{Atom}}//
       <item>Calls <code/URL.toVs/ and converts the result to a
 atom.
-      <entry/<code/URL.resolve//
+      <entry/<code/URL.resolve/
+<index/<code/URL/<and><code/resolve///
       <synopsis/<code/{URL.resolve ?+{BASE} ?+{REL} ??{Url}}//
-      <item>?_{BASE} and {_{REL} are url records or vstrings.  ?_{REL}
+      <item>?_{BASE} and ?_{REL} are url records or vstrings.  ?_{REL}
 is resolved relative to ?_{BASE} and a new url record is returned with
 the appropriate fileds filled in.
-	  <entry/<code/URL.normalizePath//
+	  <entry/<code/URL.normalizePath/
+<index/<code/URL/<and><code/normalizePath///
 	  <synopsis/<code/{URL.normalizePath ?+{L1} ??{L2}}//
 	  <item>Given a list ?_{L1} of pairs of the form
 <code/?{STRING}#?{BOOLEAN}/ (see <code/path/ feature of a url record),
@@ -152,8 +160,10 @@ stack of path components.  A leading <file/./ is preserved because
 <file>./foo</file> and <file/foo/ should be treated differently: the
 first one is an absolute path anchored in the current directory,
 whereas the second one is relative.
-	  <entry/<code/URL.isAbsolute//
-	  <entry/<code/URL.isRelative//
+	  <entry/<code/URL.isAbsolute/
+<index/<code/URL/<and><code/isAbsolute///
+	  <entry/<code/URL.isRelative/
+<index/<code/URL/<and><code/isRelative///
 	  <synopsis/<code/{URL.isAbsolute ?+{X} ??{B}}//
 	  <synopsis/<code/{URL.isRelative ?+{X} ??{B}}//
 	  <item>A url is considered absolute if (1) it has a
@@ -161,7 +171,8 @@ whereas the second one is relative.
 started with <samp>/</samp>, <samp/~/ (user home directory notation),
 <samp/./ (current directory), or <samp/../ (parent directory).  For
 example, <file>~rob/foo/baz</file> is abolute.
-	  <entry/<code/URL.toBase//
+	  <entry/<code/URL.toBase/
+<index/<code/URL/<and><code/toBase///
 	  <synopsis/<code/{URL.toBase ?+{X} ??{Url}}//
 	  <item>Turns a url vstring or record into a url record that
 can safely be used as a base for <code/URL.resolve/ without loosing
