@@ -17,21 +17,20 @@ local
    
    local
       fun {LastDebug F}
-	 case F == nil then nil else
-	    case {Label F.1} == debug then
-	       case {Label F.2.1} == debug then
-		  {LastDebug F.2}
-	       else
-		  F
-	       end
+	 case {Label F.1} == debug then
+	    case {Label F.2.1} == debug then
+	       {LastDebug F.2}
 	    else
-	       nodebug | F
+	       F
 	    end
+	 else
+	    nodebug | F
 	 end
       end
       proc {DoStackForAllInd Xs I P}
 	 case Xs
 	 of _|nil   then skip
+	 [] _|_|nil then skip
 	 [] X|D|A|B then
 	    Y|Z|T = {LastDebug D|A|B}
 	 in
@@ -160,6 +159,7 @@ in
 	 CurrentStack = StackManager,GetStack($)
       in
 	 {OzcarMessage 're-calculating stack of thread #' # self.I}
+	 {Ozcar removeSkippedProcs(self.I)}
 	 StackManager,rebuild(false)
 	 StackManager,RemoveAllFrames
 	 {StackForAllInd CurrentStack
@@ -177,6 +177,10 @@ in
 	 self.T
       end
 
+      meth getId($)
+	 self.I
+      end
+      
       meth getPos(file:?F line:?L)
 	 S = @Size
       in

@@ -23,7 +23,7 @@ in
 
       attr
 	 currentThread : undef
-	 SkippedProc   : nil
+	 SkippedProcs  : nil
 	 SkippedThread : nil
       
       meth init
@@ -84,8 +84,9 @@ in
 				     name:Name args:Args frame:FrameId
 				     builtin:IsBuiltin time:Time)
 	       else
+		  SkippedProcs <- FrameId # I | @SkippedProcs
 		  {OzcarMessage 'Skipping procedure \'' # Name # '\''}
-		  SkippedProc <- T
+		  {OzcarShow @SkippedProcs}
 		  {Thread.resume T}
 	       end
 	    else
@@ -95,18 +96,21 @@ in
 	 [] exit then
 	    T       = M.thr.1
 	    I       = M.thr.2
-	    FrameId = M.frame
+	    Frame   = M.frame
+	    Found   = {Member Frame.1 # I @SkippedProcs}
 	 in
-	    case @SkippedProc == T orelse @SkippedThread == T then
+	    {OzcarShow @SkippedProcs # (Frame.1 # I) # Found}
+	    case Found orelse @SkippedThread == T then
 	       {OzcarMessage 'ignoring exit message'}
-	       SkippedProc   <- nil
+	       SkippedProcs  <- {Filter @SkippedProcs
+				 fun {$ F} F \= Frame.1 # I end}
 	       SkippedThread <- nil
 	       {Thread.resume T}
 	    else
 	       Ack F L
 	       Stack   = {Dget self.ThreadDic I}
 	    in
-	       {ForAll [exit(FrameId) getPos(file:F line:L)] Stack}
+	       {ForAll [exit(Frame) getPos(file:F line:L)] Stack}
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
 	       thread
 		  SourceManager,scrollbar(file:F line:L ack:Ack
@@ -133,7 +137,9 @@ in
 	       {Stack rebuild(true)}
 	    else
 	       {OzcarMessage NewThread   # {ID I}}
-	       case Q == 1 then      %% toplevel query?
+	       case Q == 1 andthen      %% toplevel query?
+		  {self.tkRunChildren tkReturnInt($)} == 0 then
+		  {OzcarMessage 'child of root thread will do one step'}
 		  thread
 		     SkippedThread <- T %% yes, so we want T to make
 		     {Thread.resume T}  %% the first step automatically
@@ -188,7 +194,8 @@ in
 	    E = {Ozcar exists(I $)}
 	 in
 	    case E then
-	       case T == @currentThread then
+	       case T == @currentThread andthen
+		  {self.tkRunChildren tkReturnInt($)} == 0 then
 		  Gui,status(I runnable)
 	       else skip end
 	       Gui,markNode(I runnable)
@@ -206,6 +213,14 @@ in
       meth exists(I $)
 	 {Dmember self.ThreadDic I}
       end
+
+      meth removeSkippedProcs(I)
+	 %{OzcarMessage 'removing all skipped procedures for thread #' # I}
+	 %{OzcarShow 'before:' # @SkippedProcs}
+	 SkippedProcs <- {Filter @SkippedProcs
+			  fun {$ F} F.2 \= I end}
+	 %{OzcarShow 'after :' # @SkippedProcs}
+      end
       
       meth add(T I Q)
 	 {Dput self.ThreadDic I {New StackManager init(thr:T id:I)}}
@@ -219,6 +234,7 @@ in
 
       meth remove(T I Mode)
 	 {OzcarMessage 'removing thread #' # I # ' with mode ' # Mode}
+	 ThreadManager,removeSkippedProcs(I)
 	 case Mode == kill then
 	    Gui,killNode(I)
 	    {Dremove self.ThreadDic I}
@@ -248,6 +264,18 @@ in
 	 {Dbg.trace T false}
 	 {Thread.terminate T}
 	 ThreadManager,remove(T I kill)
+      end
+
+      meth killAll
+	 E = {Ditems self.ThreadDic}
+      in
+	 {ForAll E
+	  proc {$ S}
+	     I = {S getId($)}
+	     T = {S getThread($)}
+	  in
+	     ThreadManager,kill(T I)
+	  end}
       end
       
       meth forget(T I)
@@ -291,7 +319,8 @@ in
 	 Stack = {Dget self.ThreadDic I}
       in
 	 Gui,markNode(I blocked)
-	 case T == @currentThread then
+	 case T == @currentThread andthen
+	    {self.tkRunChildren tkReturnInt($)} == 0 then
 	    Gui,status(I blocked)
 	    case {UnknownFile F} then
 	       {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
@@ -347,12 +376,20 @@ in
 	 end
       end
 
-      meth suspend(TkSusp)
-	 Value = {TkSusp tkReturnInt($)}
+      meth suspend(TkV)
+	 Value = {TkV tkReturnInt($)}
 	 Arg   = case Value == 0 then false else true end
       in
 	 {OzcarMessage 'Dbg.suspend called with argument ' # Value}
 	 {Dbg.suspend Arg}
+      end
+
+      meth runChildren(TkV)
+	 Value = {TkV tkReturnInt($)}
+	 Arg   = case Value == 0 then false else true end
+      in
+	 {OzcarMessage 'Dbg.runChildren called with argument ' # Value}
+	 {Dbg.runChildren Arg}
       end
       
       meth close
