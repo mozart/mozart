@@ -142,6 +142,7 @@ SiteStatus siteStatus_RemoteSite(RemoteSite*);
 void monitorQueue_RemoteSite(RemoteSite*,int size);
 void demonitorQueue_RemoteSite(RemoteSite*);
 void *getMonitorQueue_RemoteSite(RemoteSite*);
+// frequency is in seconds (but remote sites do not use it);
 ProbeReturn installProbe_RemoteSite(RemoteSite*,ProbeType,int frequency);
 ProbeReturn deinstallProbe_RemoteSite(RemoteSite*,ProbeType);
 ProbeReturn probeStatus_RemoteSite(RemoteSite*,ProbeType &pt,int &frequncey,void* &storePtr);
@@ -172,6 +173,7 @@ int getQueueStatus_VirtualSite(VirtualSite*,int &noMsgs);  // return size in byt
 SiteStatus siteStatus_VirtualSite(VirtualSite*); 
 MonitorReturn monitorQueue_VirtualSite(VirtualSite*,int size,int no_msgs,void*);
 MonitorReturn demonitorQueue_VirtualSite(VirtualSite*);
+// frequency is in seconds;
 ProbeReturn installProbe_VirtualSite(VirtualSite*,ProbeType,int frequency,void*);
 ProbeReturn deinstallProbe_VirtualSite(VirtualSite*,ProbeType);
 ProbeReturn probeStatus_VirtualSite(VirtualSite*,ProbeType &pt,int &frequncey,void* &storePtr);

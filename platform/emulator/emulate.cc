@@ -450,7 +450,7 @@ Bool AM::hookCheckNeeded()
 #if defined(DEBUG_DET)
   static int counter = DET_COUNTER;
   if (--counter < 0) {
-    handleAlarm();   // simulate an alarm
+    handleAlarm(CLOCK_TICK/1000);   // simulate an alarm
     counter = DET_COUNTER;
   }
 #endif
