@@ -45,6 +45,8 @@
 //-----------------------------------------------------------------------------
 // misc macros
 
+#define OZ_FAIL OZ_FAILED
+#define OZ_ENTAIL OZ_ENTAILED
 
 #define OZ_EXPECTED_TYPE(S) char * expectedType = S
 
@@ -651,6 +653,16 @@ public:
   }
   OZ_Boolean addImpose(OZ_FSetPropState s, OZ_Term v);
   OZ_Boolean addImpose(OZ_CtWakeUp e, OZ_CtDefinition * d, OZ_Term v);
+
+  OZ_Boolean expectFSetVar(OZ_FSetPropState s, OZ_Term v) {
+    return addImpose(s, v);
+  }
+  OZ_Boolean expectFDIntVar(OZ_FDPropState s, OZ_Term v) {
+    return addImpose(s, v);
+  }
+  OZ_Boolean expectCtVar(OZ_CtWakeUp e, OZ_CtDefinition * d, OZ_Term v) {
+    return addImpose(e, d, v);
+  }
   int impose(OZ_Propagator *);
   virtual size_t sizeOf(void) = 0;
   virtual void sClone(void) = 0;
