@@ -909,8 +909,8 @@ fi
 	
     fi
     
-  HOMEURL="http://mozart.ps.uni-sb.de/home"
-  HOMECACHE="http/mozart.ps.uni-sb.de/home"
+  HOMEURL="http://www.mozart-oz.org/home"
+  HOMECACHE="http/www.mozart-oz.org/home"
   
   
   

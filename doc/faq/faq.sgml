@@ -15,10 +15,10 @@
   -
   - This file is part of Mozart, an implementation
   - of Oz 3
-  -    http://mozart.ps.uni-sb.de
+  -    http://www.mozart-oz.org
   -
   - See the file "LICENSE" or
-  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  -    http://www.mozart-oz.org/LICENSE.html
   - for information on usage and redistribution
   - of this file, and for a DISCLAIMER OF ALL
   - WARRANTIES.
@@ -80,7 +80,7 @@ paradigm.  Aarghh! I don't want to write this entry...</p>
 Programming Systems Lab of the the university of the Saarland in
 Germany:
 <ref.extern
-to="http://mozart.ps.uni-sb.de/">http://mozart.ps.uni-sb.de/</ref.extern>
+to="http://www.mozart-oz.org/">http://www.mozart-oz.org/</ref.extern>
 Another site is located at SICS, the Swedish Institute of COmputer
 Science:
 <ref.extern
@@ -92,11 +92,11 @@ to="http://www.sics.se/mozart/">http://www.sics.se/mozart/</ref.extern></p>
 	<p>There is a lot of documentation for Mozart: tutorials,
 demos, and reference manuals.  This documentation is available on-line
 from the Mozart sites, see &eg; <ref.extern to
-="http://mozart.ps.uni-sb.de/documentation/"
->http://mozart.ps.uni-sb.de/documentation/</ref.extern>.</p>
+="http://www.mozart-oz.org/documentation/"
+>http://www.mozart-oz.org/documentation/</ref.extern>.</p>
 	<p>You can also download the full documentation package and
 install it on your computer.  See the on-line
-<ref.extern to="http://mozart.ps.uni-sb.de/download/index.html"
+<ref.extern to="http://www.mozart-oz.org/download/index.html"
 >Dowload Instructions</ref.extern> for details.</p>
       </section>
 
@@ -112,7 +112,7 @@ various Unix platforms, (2) as a self-extracting archive for Windows
 95/98/NT, (3) as RPM packages for Linux, (4) as source tarballs, (5)
 as source obtained directly from our anonymous CVS server. Please
 consult the on-line
-<ref.extern to="http://mozart.ps.uni-sb.de/download/index.html"
+<ref.extern to="http://www.mozart-oz.org/download/index.html"
 >Dowload Instructions</ref.extern> for details.</p>
       </section>
 
@@ -159,7 +159,7 @@ Mozart?/
 	<p>No, Mozart is released with a very liberal license.  You
 can basically do anything you want with it and, as usual, we decline
 any responsibility.  Please consult the <ref.extern
-to="http://mozart.ps.uni-sb.de/LICENSE.html">License
+to="http://www.mozart-oz.org/LICENSE.html">License
 Statemen</ref.extern> for precise wording.</p>
       </section>
 

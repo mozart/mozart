@@ -10,10 +10,10 @@
 %%%   $Revision$
 %%%
 %%% This file is part of Mozart, an implementation of Oz 3:
-%%%    http://mozart.ps.uni-sb.de
+%%%    http://www.mozart-oz.org
 %%%
 %%% See the file "LICENSE" or
-%%%    http://mozart.ps.uni-sb.de/LICENSE.html
+%%%    http://www.mozart-oz.org/LICENSE.html
 %%% for information on usage and redistribution
 %%% of this file, and for a DISCLAIMER OF ALL
 %%% WARRANTIES.
@@ -44,7 +44,7 @@ prepare
    DEFAULT_PORT = 2628
 
    %% String sent by the client to identify itself
-   CLIENT_TEXT = 'Mozart client, http://mozart.ps.uni-sb.de/'
+   CLIENT_TEXT = 'Mozart client, http://www.mozart-oz.org/'
 
    fun {DropCR S}
       %% Discard the final return character of a line.
