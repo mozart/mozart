@@ -81,6 +81,7 @@ in
       Args = {Application.getCmdArgs Spec}
    in
       if Args.quickstart then
+         {Tk.send tk_bisque}
          {StartServer start(dbdir: Args.dir ticketSave: Args.ticket
                             url: Args.url)}
          raise quit end
