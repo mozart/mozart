@@ -18,13 +18,21 @@ Ozcar =
 	   {Debug.off}
 	   {Tk.send wm(withdraw self.toplevel)}
 	   SourceManager,removeBar
+\ifndef NEWCOMPILER
 	   {Compile "\\sw -debuginfo"}
+\else
+	   {`Compiler` feedVirtualString('\\switch -debuginfo\n')}
+\endif
 	end
 	
 	meth on
 	   {Tk.batch [update(idletasks)
 		      wm(deiconify self.toplevel)]}
+\ifndef NEWCOMPILER
 	   {Compile "\\sw +debuginfo"}
+\else
+	   {`Compiler` feedVirtualString('\\switch +debuginfo\n')}
+\endif
 	   {Debug.on}
 	   case @currentThread == undef then
 	      Gui,status(InitStatus)
