@@ -142,10 +142,10 @@ else
    '7x13' # '7x13bold'
 end
 
-ButtonFont    = {New Tk.font tkInit(family:helvetica size:8)}
-TitleFont     = {New Tk.font tkInit(family:helvetica size:8 weight:bold)}
-HelpTitleFont = {New Tk.font tkInit(family:helvetica size:14 weight:bold)}
-HelpFont      = {New Tk.font tkInit(family:helvetica size:10)}
+ButtonFont    = {New Tk.font tkInit(family:helvetica size:10)}
+TitleFont     = {New Tk.font tkInit(family:helvetica size:11 weight:bold)}
+HelpTitleFont = {New Tk.font tkInit(family:helvetica size:18 weight:bold)}
+HelpFont      = {New Tk.font tkInit(family:helvetica size:12)}
 
 ThreadTreeFont     = DefaultFont
 ThreadTreeBoldFont = BoldFont
