@@ -12,11 +12,11 @@ SGMLSRCS0 = \
     # Constraint programming \
     search fd schedule fs types_modes_constr \
     # Distributed programming \
-    connection remote fault url resolve discovery \
+    connection remote fault url resolve discovery dpinit\
     # Open programming \
     os open \
     # System programming \
-    pickle property error errorformatters finalize system \
+    pickle property error errorfomatters finalize system \
     # Window programming \
     tk tktools
 

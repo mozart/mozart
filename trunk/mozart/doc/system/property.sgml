@@ -206,11 +206,35 @@
     </P>
 
   </Subsection>
-
+  
+  <Subsection class=unnumbered id="section.property.dpLog">
+  <Title/Loging of distributed events:<<dpLog>>/
+  
+  <P>
+    <Table id="table.prop.dpLog">
+     <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+      <Tr>
+        <Td/<<connectLog>>/
+	<Td/yes/
+        <Td/<<Bool>>/
+        <Td/Wheter messages and events having to do with keeping the state of the connections used by the distribution layer should be writen to the log./
+       </Tr>
+      <Tr>
+        <Td/<<messageLog>>/
+	<Td/yes/
+        <Td/<<Bool>>/
+        <Td/Wheter messages having to do with keeping the state of the entity protocols of distributed mozart should be writen to the log./
+       </Tr>
+    </Table>
+    </P>
+  <P> The events are writen to standard out by default. They can be redirected to file by <<DPStatistics.createLogFile>>.
+  </P>
+  </Subsection>
+    
+  
   <Subsection class=unnumbered id="section.property.errors">  
     <Title/Printing Errors: <<errors>>/
-
-    <P>
+    <P> 
       <Table id="table.prop.errors">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
