@@ -26,7 +26,6 @@ fi
 
 : ${OZPLATFORM=`$OZHOME/bin/ozplatform`}
 : ${OZEMULATOR=$OZHOME/platform/$OZPLATFORM/emulator.exe}
-: ${OZ_LD_RUN_PATH=$OZHOME/platform/$OZPLATFORM}
 
 # set OZPATH & PATH
 if test -z "${OZ_PI}"
@@ -45,13 +44,7 @@ then
   export OZ_PI
 fi
 
-#
-LD_RUN_PATH=${OZ_LD_RUN_PATH}:${LD_RUN_PATH}
-export LD_RUN_PATH
-LD_LIBRARY_PATH=${OZ_LD_RUN_PATH}:${LD_LIBRARY_PATH}
-export LD_LIBRARY_PATH
 
-#
 case "$cmd" in
 
    oz)
