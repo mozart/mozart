@@ -144,7 +144,7 @@ public:
   void put(BYTE b){
     Assert(type==BS_Marshal);
     if(pos==NULL){
-      PD(BUFFER,"bytebuffer alloc Marshal: %d",no_bufs());
+      PD((BUFFER,"bytebuffer alloc Marshal: %d",no_bufs()));
       ByteBuffer *bb=getAnother();
       last->next=bb;
       last=bb;
@@ -163,7 +163,7 @@ public:
 
   void marshalEnd(){
     Assert(type==BS_Marshal);
-    PD(MARSHALL_BE,"marshal end");
+    PD((MARSHALL_BE,"marshal end"));
     endpos=pos;
     pos=first->head();
     if(endpos==NULL) {totlen +=BYTEBUFFER_SIZE;}
@@ -178,7 +178,7 @@ public:
 
   void sentFirst(){
     Assert(type==BS_Write);
-    PD(BUFFER,"bytebuffer dumped sent: %d",no_bufs());
+    PD((BUFFER,"bytebuffer dumped sent: %d",no_bufs()));
     if(first==last){
       removeSingle();
       return;}
@@ -245,7 +245,7 @@ public:
 
   void unmarshalBegin(){
     type=BS_Unmarshal;
-    PD(MARSHALL_BE,"unmarshal begin");
+    PD((MARSHALL_BE,"unmarshal begin"));
     Assert(within(pos,first));
     if(first==last) {
       Assert(within(curpos,first));
@@ -264,14 +264,14 @@ public:
       Assert(first!=last);
       ch=*pos;
       removeFirst();
-      PD(BUFFER,"bytebuffer dumped UnMarshall: %d",no_bufs());
+      PD((BUFFER,"bytebuffer dumped UnMarshall: %d",no_bufs()));
       pos=first->head();
       return ch;}
     return *pos++;}
 
   void unmarshalEnd(){
     Assert(type==BS_Unmarshal);    
-    PD(MARSHALL_BE,"unmarshal end");
+    PD((MARSHALL_BE,"unmarshal end"));
     type=BS_None;
     Assert(pos==NULL);}
   

@@ -128,7 +128,7 @@ extern TaggedRef BI_Show;
 void SiteUnify(TaggedRef val1,TaggedRef val2){
 Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,am.rootBoard);
 #ifdef PERDIO_DEBUG
-  PD(SITE_OP,"SITE_OP: site unify called");
+  PD((SITE_OP,"SITE_OP: site unify called"));
   if(DV->on(SITE_OP)){
     RefsArray args0=allocateRefsArray(1,NO);
     TaggedRef tr=oz_atom("SITE_OP: site unify complete";
@@ -259,12 +259,12 @@ public:
   }
   void gcPO() {
     if (isTertiary()) {
-      PD(GC,"OT tertiary found");
+      PD((GC,"OT tertiary found"));
       Assert(!isDummyTertiary());
       u.tert=(Tertiary *)(u.tert->gcConstTermSpec()); /* ATTENTION */
     } else {
       Assert(isRef() || isVar());
-      PD(GC,"OT var/ref");
+      PD((GC,"OT var/ref"));
       gcTagged(u.ref,u.ref);
     }
   }
@@ -361,7 +361,7 @@ ByteBuffer *ByteStream::getAnother(){
   return(bufferManager->getByteBuffer());}
 
 void ByteStream::marshalBegin(){
-  PD(MARSHALL_BE,"marshal begin");
+  PD((MARSHALL_BE,"marshal begin"));
   Assert(type==BS_None);
   Assert(first==NULL);
   Assert(last==NULL);
@@ -870,7 +870,7 @@ void OwnerTable::returnCreditAndCheck(int OTI,Credit c)
       Assert(te->getTertType()==Te_Manager);
       te->localize();
     } else {
-      PD(PD_VAR,"localize var o:%d",OTI);
+      PD((PD_VAR,"localize var o:%d",OTI));
       // localize a variable
       if (oe->isVar()) {
 	PerdioVar *pvar = oe->getVar();
@@ -901,8 +901,8 @@ void OwnerTable::compactify()  /* TODO - not tested */
   Assert(size>=DEFAULT_OWNER_TABLE_SIZE);
   if(size==DEFAULT_OWNER_TABLE_SIZE) return;
   if(no_used/size< TABLE_LOW_LIMIT) return;
-  PD(TABLE,"TABLE:owner compactify enter: size:%d no_used:%d",
-	       size,no_used);
+  PD((TABLE,"TABLE:owner compactify enter: size:%d no_used:%d",
+	       size,no_used));
   PERDIO_DEBUG_DO1(TABLE2,printTables());
   int i=0;
   int used_slot= -1;
@@ -919,7 +919,7 @@ void OwnerTable::compactify()  /* TODO - not tested */
   int newsize= first_free-no_used < TABLE_BUFFER ? 
     first_free-no_used+TABLE_BUFFER : used_slot+1;
   if(first_free < size - TABLE_WORTHWHILE_REALLOC){
-    PD(TABLE,"TABLE:owner compactify free slots: new%d",newsize);
+    PD((TABLE,"TABLE:owner compactify free slots: new%d",newsize));
     OwnerEntry *oldarray=array; 
     array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
     Assert(array!=NULL);
@@ -929,14 +929,14 @@ void OwnerTable::compactify()  /* TODO - not tested */
       return;}
     array=oldarray;}
   init(first_free,size);      
-  PD(TABLE,"TABLE:owner compactify no realloc");
+  PD((TABLE,"TABLE:owner compactify no realloc"));
   PERDIO_DEBUG_DO1(TABLE2,printTables());
   return;}
 
 void OwnerTable::resize(){
   int newsize = ((int) (TABLE_EXPAND_FACTOR *size));
-  PD(TABLE,"TABLE:resize owner old:%d no_used:%d new:%d",
-		size,no_used,newsize);
+  PD((TABLE,"TABLE:resize owner old:%d no_used:%d new:%d",
+		size,no_used,newsize));
   PERDIO_DEBUG_DO1(TABLE2,printTables());
   array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
   Assert(array!=NULL);
@@ -944,7 +944,7 @@ void OwnerTable::resize(){
     error("Memory allocation: Owner Table growth not possible");}
   init(size, newsize);  
   size=newsize;
-  PD(TABLE2,"TABLE:resize owner complete");
+  PD((TABLE2,"TABLE:resize owner complete"));
   PERDIO_DEBUG_DO1(TABLE2,printTables());
   return;}
 
@@ -954,7 +954,7 @@ int OwnerTable::newOwner(OwnerEntry *&oe){
   nextfree = array[index].u.nextfree;
   oe = (OwnerEntry *)&(array[index]);
   oe->setCredit(START_CREDIT_SIZE);
-  PD(TABLE,"owner insert: o:%d",index);
+  PD((TABLE,"owner insert: o:%d",index));
   no_used++;
   return index;}
 
@@ -973,7 +973,7 @@ void OwnerTable::freeOwnerEntry(int i){
   array[i].u.nextfree=nextfree;
   nextfree=i;
   no_used--;
-  PD(TABLE,"owner delete o:%d",i);
+  PD((TABLE,"owner delete o:%d",i));
   return;}
 
 #ifdef DEBUG_PERDIO
@@ -1080,11 +1080,11 @@ public:
 #endif
 
   void addCredit(Credit cin){ 
-    PD(CREDIT,"borrow add s:%s o:%d add:%d to:%d",
+    PD((CREDIT,"borrow add s:%s o:%d add:%d to:%d",
        pSite(getNetAddress()->site),
        getNetAddress()->index,
        cin,
-       getCredit());
+       getCredit()));
     if(pendLink!=NULL){
       cin=pendLinkCredit(cin);      
       pendLinkHandle();
@@ -1100,10 +1100,10 @@ public:
   Bool getOneAskCredit() {
     Credit c=getCredit();
     if(c==1) {
-      PD(CREDIT,"getOneAskCredit failed");
+      PD((CREDIT,"getOneAskCredit failed"));
       return FALSE;
     }
-    PD(CREDIT,"getOneAskCredit OK");
+    PD((CREDIT,"getOneAskCredit OK"));
     subFromCredit(1);
     return TRUE;}
 
@@ -1111,9 +1111,9 @@ public:
     Credit c=getCredit();
     Assert(c>0);
     if(c <= MIN_BORROW_CREDIT_SIZE) {
-      PD(CREDIT,"getOneCredit failed");      
+      PD((CREDIT,"getOneCredit failed"));      
       return FALSE;}
-    PD(CREDIT,"getOneCredit OK");
+    PD((CREDIT,"getOneCredit OK"));
     subFromCredit(1);
     return TRUE; }
 
@@ -1123,7 +1123,7 @@ public:
     if(cur >  2 * BORROW_GIVE_CREDIT_SIZE) c=BORROW_GIVE_CREDIT_SIZE;
     else{
       if(cur >= 2 * MIN_BORROW_CREDIT_SIZE) c=MIN_BORROW_CREDIT_SIZE;}
-    PD(CREDIT,"give small credit c:%d",c);
+    PD((CREDIT,"give small credit c:%d",c));
     subFromCredit(c);
     return TRUE;}
   
@@ -1158,10 +1158,10 @@ void BorrowEntry::inDebtSec(Credit c,PendEntry *pe){
 void BorrowEntry::inDebtInternal(PendLink *pl){
   moreCredit();
   if(pendLink==NULL) {
-    PD(PENDLINK,"new- none so far");
+    PD((PENDLINK,"new- none so far"));
     pendLink=pl;
     return;}
-  PD(PENDLINK,"new- others around far");
+  PD((PENDLINK,"new- others around far"));
   PendLink* aux=pendLink;
   while(aux->next!=NULL) aux=aux->next;
   aux->next=pl;
@@ -1174,7 +1174,7 @@ Credit BorrowEntry::pendLinkCredit(Credit c){
     if(d>c) {
       pl->setDebt(d-c);
       return 0;}
-    PD(PENDLINK,"one entry = 0");
+    PD((PENDLINK,"one entry = 0"));
     pl->setDebt(0);
     c = c-d;
     (pl->getPend())->dec();
@@ -1188,7 +1188,7 @@ Bool BorrowEntry::fifoCanSend(PendLink *cur,PendEntry *pe,Bool flag){
   BorrowEntry *bb=pe->getBack();
   if(bb==this){
     if((cur->isTagged())&& (!flag)) {
-      PD(PENDLINK,"cannot send due to FIFO");
+      PD((PENDLINK,"cannot send due to FIFO"));
       return FALSE;}
     return TRUE;}
   PendLink *pl=pendLink;
@@ -1206,37 +1206,37 @@ void BorrowEntry::pendLinkHandle(){
   Bool flag=TRUE; /* can send */
   Bool msgsent;
 
-  PD(PENDLINK,"entering debt handler");
+  PD((PENDLINK,"entering debt handler"));
   while(TRUE){
     if(cur==NULL) {
       *base=cur;
       return;}
     if(cur->getDebt()!=0){
-      PD(PENDLINK,"ran into non-zero debt");
+      PD((PENDLINK,"ran into non-zero debt"));
       *base=cur;
       moreCredit();
       return;}
     pe=cur->getPend();
     if((pe->getrefCount()==0)){
       if(fifoCanSend(cur,pe,flag)){
-	PD(DELAYED_MSG_SENT,"pendLinkHandle");
+	PD((DELAYED_MSG_SENT,"pendLinkHandle"));
 	pe->send();
 	msgsent=TRUE;
 	pendEntryManager->deletePendEntry(pe);}
       else{
-	PD(PENDLINK,"ran into fifo cannot send");
+	PD((PENDLINK,"ran into fifo cannot send"));
 	msgsent=FALSE;}}
     else{
-      PD(PENDLINK,"ran into non-zero ref ct");
+      PD((PENDLINK,"ran into non-zero ref ct"));
       msgsent=FALSE;}
     if(cur->isTagged() && ((!flag) || (!msgsent))){
-      PD(PENDLINK,"fifo restriction cannot remove");      
+      PD((PENDLINK,"fifo restriction cannot remove"));      
       flag=FALSE;
       base= &(cur->next);
       cur=cur->next;}
     else{
       aux=cur->next;
-      PD(PENDLINK,"removal");
+      PD((PENDLINK,"removal"));
       pendLinkManager->deletePendLink(cur);
       cur=aux;}}
 }
@@ -1255,7 +1255,7 @@ void BorrowEntry::moreCredit(){
   marshallNumber(index,bs);
   marshallMySite(bs);
   bs->marshalEnd();
-  PD(MSG_SENT,"ASK_FOR_CREDIT s:%s o:%d",pSite(site),index);
+  PD((MSG_SENT,"ASK_FOR_CREDIT s:%s o:%d",pSite(site),index));
   reliableSendFail(site,bs,TRUE,2);
 }
 
@@ -1268,14 +1268,14 @@ void sendRegister(BorrowEntry *be) {
   marshallNumber(index,bs);
   marshallMySite(bs);
   bs->marshalEnd();
-  PD(MSG_SENT,"REGISTER s:%s o:%d",pSite(site),index);
+  PD((MSG_SENT,"REGISTER s:%s o:%d",pSite(site),index));
 
   if (be->getOneCredit()) {  /* priority */
     reliableSendFail(site,bs,FALSE,30);
     return;
   }
 
-  PD(DEBT_MAIN,"register");
+  PD((DEBT_MAIN,"register"));
   PendEntry *pe= pendEntryManager->newPendEntry(bs,site);
   be->inDebtMain(pe);
 }
@@ -1330,10 +1330,10 @@ public:
   BorrowEntry* find(NetAddress *na)  {
     int i = hshtbl->findNA(na);
     if(i<0) {
-      PD(LOOKUP,"borrow not found");
+      PD((LOOKUP,"borrow not found"));
       return 0;
     } else {
-      PD(LOOKUP,"borrow found b:%d",i);
+      PD((LOOKUP,"borrow found b:%d",i));
       return borrowTable->getBorrow(i);
     }
   }
@@ -1377,27 +1377,27 @@ void BorrowTable::compactify(){
   if(size==DEFAULT_BORROW_TABLE_SIZE) return;
   int newsize= no_used+TABLE_BUFFER;
   if(newsize<DEFAULT_BORROW_TABLE_SIZE) newsize=DEFAULT_BORROW_TABLE_SIZE;
-  PD(TABLE,"compactify borrow old:%d no_used:%d new:%d",
-		size,no_used,newsize);
+  PD((TABLE,"compactify borrow old:%d no_used:%d new:%d",
+		size,no_used,newsize));
   PERDIO_DEBUG_DO1(TABLE2,printTables());
   BorrowEntry *oldarray=array;
   array = (BorrowEntry*) malloc(newsize*sizeof(BorrowEntry));
   if(array==NULL){
-    PD(TABLE,"compactify borrow NOT POSSIBLE");
+    PD((TABLE,"compactify borrow NOT POSSIBLE"));
     array=oldarray;
     return;}
   int oldsize=size;
   size=newsize;
   copyBorrowTable(oldarray,oldsize);
-  PD(TABLE,"compactify borrow complete");
+  PD((TABLE,"compactify borrow complete"));
   PERDIO_DEBUG_DO1(TABLE2,printTables());
   return;}
 
 void BorrowTable::resize(){
   Assert(no_used==size);
   int newsize = int (TABLE_EXPAND_FACTOR*size);
-  PD(TABLE,"resize borrow old:%d no_used:%d new:%d",
-		size,no_used,newsize);
+  PD((TABLE,"resize borrow old:%d no_used:%d new:%d",
+		size,no_used,newsize));
   PERDIO_DEBUG_DO1(TABLE2,printTables());
   BorrowEntry *oldarray=array;
   array = (BorrowEntry*) malloc(newsize*sizeof(BorrowEntry));
@@ -1407,7 +1407,7 @@ void BorrowTable::resize(){
   int oldsize=size;
   size=newsize;
   copyBorrowTable(oldarray,oldsize);
-  PD(TABLE,"resize borrow complete");
+  PD((TABLE,"resize borrow complete"));
   PERDIO_DEBUG_DO1(TABLE2,printTables());
   return;}
 
@@ -1417,12 +1417,12 @@ int BorrowTable::newBorrow(Credit c,Site * sd,int off){
   nextfree= array[index].u.nextfree;
   BorrowEntry* oe = &(array[index]);
   oe->initBorrow(c,sd,off);
-  PD(HASH2,"<SPECIAL>:net=%x borrow=%x owner=%x hash=%x",
+  PD((HASH2,"<SPECIAL>:net=%x borrow=%x owner=%x hash=%x",
 		oe->getNetAddress(),array,ownerTable->array,
-		hshtbl->table);
+		hshtbl->table));
   hshtbl->add(oe->getNetAddress(),index);
   no_used++;
-  PD(TABLE,"borrow insert: b:%d",index);
+  PD((TABLE,"borrow insert: b:%d",index));
   return index;}
 
 void BorrowTable::maybeFreeBorrowEntry(int index){
@@ -1434,7 +1434,7 @@ void BorrowTable::maybeFreeBorrowEntry(int index){
   array[index].u.nextfree=nextfree;
   nextfree=index;
   no_used--;
-  PD(TABLE,"borrow delete: b:%d",index);
+  PD((TABLE,"borrow delete: b:%d",index));
   return;}
 
 void BorrowTable::freeSecBorrow(int index){}  /* just a reminder not used */
@@ -1531,18 +1531,18 @@ inline int GenHashNode2BorrowIndex(GenHashNode *ghn){
   return i;}
 
 inline Bool NetHashTable::findPlace(int hvalue,NetAddress *na,GenHashNode *&ghn){
-  PD(HASH,"find Place hvalue=%d, net%d:%d",hvalue,
-	       na->site,na->index);
+  PD((HASH,"find Place hvalue=%d, net%d:%d",hvalue,
+	       na->site,na->index));
   ghn=htFindFirst(hvalue);
   NetAddress *na2;
   while(ghn!=NULL){
     na2=GenHashNode2NetAddr(ghn);
     if(na->same(na2)){
-      PD(HASH,"compare success hvalue=%d bk=%x net%d:%d",
-		    ghn->getKey(),ghn->getBaseKey,na2->site,na2->index);
+      PD((HASH,"compare success hvalue=%d bk=%x net%d:%d",
+		    ghn->getKey(),ghn->getBaseKey,na2->site,na2->index));
       return TRUE;}
-    PD(HASH,"compare fail hvalue=%d bk=%x net%d:%d",
-		  ghn->getKey(),ghn->getBaseKey,na2->site,na2->index);
+    PD((HASH,"compare fail hvalue=%d bk=%x net%d:%d",
+		  ghn->getKey(),ghn->getBaseKey,na2->site,na2->index));
     ghn=htFindNext(ghn,hvalue);}
   return FALSE;}
 
@@ -1564,7 +1564,7 @@ int NetHashTable::findNA(NetAddress *na){
   int hvalue=hashFunc(na);
   if(findPlace(hvalue,na,ghn)){
     int bindex= GenHashNode2BorrowIndex(ghn);
-    PD(HASH,"borrow index b:%d",bindex);
+    PD((HASH,"borrow index b:%d",bindex));
     return bindex;}
   return -1;}
 
@@ -1572,8 +1572,8 @@ void NetHashTable::add(NetAddress *na,int bindex){
   int hvalue=hashFunc(na);
   GenHashNode *ghn;
   Assert(!findPlace(hvalue,na,ghn));
-  PD(HASH,"adding hvalue=%d net=%d:%d bindex=%d",
-	       hvalue,na->site,na->index,bindex);
+  PD((HASH,"adding hvalue=%d net=%d:%d bindex=%d",
+	       hvalue,na->site,na->index,bindex));
   GenHashBaseKey* ghn_bk;
   GenHashEntry* ghn_e;
   GenCast(na,NetAddress*,ghn_bk,GenHashBaseKey*);
@@ -1584,8 +1584,8 @@ void NetHashTable::sub(NetAddress *na){
   int hvalue=hashFunc(na);
   GenHashNode *ghn;
   findPlace(hvalue,na,ghn);
-  PD(HASH,"deleting hvalue=%d net=%d:%d bindex=%d",
-	       hvalue,na->site,na->index);
+  PD((HASH,"deleting hvalue=%d net=%d:%d bindex=%d",
+	       hvalue,na->site,na->index));
   htSub(hvalue,ghn);}
 
 #ifdef DEBUG_PERDIO
@@ -1629,7 +1629,7 @@ void gcGNameTable()  { gnameTable->gcGNameTable();}
 void gcGName(GName* name) { if (name) name->setGCMark(); }
 
 void Tertiary::gcBorrowSec(int i){
-  PD(GC,"GC-relocate borrow sec:%d",i);
+  PD((GC,"GC-relocate borrow sec:%d",i));
   Assert(BT->getBorrow(i)->isDummyTertiary());
   (BT->getBorrow(i))->makeMark();}
 
@@ -1637,23 +1637,23 @@ void Tertiary::gcProxy(){
   int i=getIndex();
   BorrowEntry *be=BT->getBorrow(i);
   if(be->isMarked()){
-    PD(GC,"relocate borrow unnecessary:%d",i);
+    PD((GC,"relocate borrow unnecessary:%d",i));
     return;}
   be->makeMark();
-  PD(GC,"GC-relocate borrow:%d old%x new %x",i,be,this);
+  PD((GC,"GC-relocate borrow:%d old%x new %x",i,be,this));
   Assert(be->isDummyTertiary()==FALSE);
   be->mkTertiary(this);}
 
 void Tertiary::gcManager(){
   Assert(getTertType()!=Te_Frame);
   int i=getIndex();
-  PD(GC,"relocate owner:%d old%x new %x",
-     i,ownerTable->getOwner(i),this);
+  PD((GC,"relocate owner:%d old%x new %x",
+     i,ownerTable->getOwner(i),this));
   ownerTable->getOwner(i)->mkTertiary(this);}
 
 void CellFrame::gcCellFrameSec(){
   int state=getState();
-  PD(GC,"relocate Cell in state %d",state);
+  PD((GC,"relocate Cell in state %d",state));
   if(state & Cell_Next){gcBorrowSec(sec->nextIndex);}
   if(state & Cell_Requested){
     gcTagged(sec->contents,sec->contents);
@@ -1672,13 +1672,13 @@ void CellFrame::gcCellFrameSec(){
 void CellFrame::gcCellFrame(){
   gcBorrowSec(getManagerIndex());
   int i=getOwnerIndex();
-  PD(GC,"relocate cellFrame:%d",i);
+  PD((GC,"relocate cellFrame:%d",i));
   ownerTable->getOwner(i)->mkTertiary(this);  
   gcCellFrameSec();}
   
 void CellManager::gcCellManager(){
   int i=getOwnerIndex();
-  PD(GC,"relocate cellManager",i);
+  PD((GC,"relocate cellManager",i));
   ownerTable->getOwner(i)->mkTertiary(this);
   if(!isOwnCurrent()){gcBorrowSec(getCurrent());}
   CellFrame *cf=(CellFrame*)this;
@@ -1702,7 +1702,7 @@ void Tertiary::gcTertiary() /* TODO -remove use */
 	  int i=getIndex();
 	  BorrowEntry *be = borrowTable->getBorrow(i);
 	  be->makeMark();
-	  PD(GC,"relocate borrow:%d old %x new %x",i,be,this);
+	  PD((GC,"relocate borrow:%d old %x new %x",i,be,this));
 	  be->mkTertiary(this);
 	  return;
 	}
@@ -1712,7 +1712,7 @@ void Tertiary::gcTertiary() /* TODO -remove use */
   case Te_Manager:
     {
       int i=getIndex();
-      PD(GC,"relocate owner:%d old%x new %x",i,ownerTable->getOwner(i),this);
+      PD((GC,"relocate owner:%d old%x new %x",i,ownerTable->getOwner(i),this));
       ownerTable->getOwner(i)->mkTertiary(this);
       return;
     }
@@ -1725,12 +1725,12 @@ void Tertiary::gcTertiary() /* TODO -remove use */
 
 void OwnerTable::gcOwnerTable()
 {
-  PD(GC,"owner gc");
+  PD((GC,"owner gc"));
   int i;
   for(i=0;i<size;i++){
       OwnerEntry* o = ownerTable->getOwner(i);
       if(!o->isFree()) {
-	PD(GC,"OT o:%d",i);
+	PD((GC,"OT o:%d",i));
 	o->gcPO();
       }
   }
@@ -1740,7 +1740,7 @@ void OwnerTable::gcOwnerTable()
 
 void OwnerTable::gcPostOwnerTable()
 {
-  PD(GC,"owner post gc");
+  PD((GC,"owner post gc"));
   int i;
   Tertiary *t;
   for(i=1;i<size;i++){
@@ -1764,10 +1764,10 @@ void BorrowEntry::gcBorrow(int i) {
   if (!isFree() &&
       !isMarked() &&
       isVar()) {
-    PD(GC,"BT b:%d variable found",i);
+    PD((GC,"BT b:%d variable found",i));
     PerdioVar *pv=getVar();
     if (pv->hasVal()) {
-      PD(WEIRD,"BT b:%d pending unmarked var found",i);
+      PD((WEIRD,"BT b:%d pending unmarked var found",i));
       gcPO();
     }
   }
@@ -1775,7 +1775,7 @@ void BorrowEntry::gcBorrow(int i) {
 
 void BorrowTable::gcBorrowTableRoots()
 {
-  PD(GC,"borrow gc roots");
+  PD((GC,"borrow gc roots"));
   int i;
   for(i=0;i<size;i++) {
     BorrowEntry *b=getBorrow(i);
@@ -1788,22 +1788,22 @@ extern TaggedRef gcTagged1(TaggedRef in);
 /* OBSERVE - this must done at the end of other gc */
 void BorrowTable::gcBorrowTable()
 {
-  PD(GC,"borrow gc");
+  PD((GC,"borrow gc"));
   int i;
   for(i=0;i<size;i++) {
     BorrowEntry *b=getBorrow(i);
     if (!b->isFree()) {
       if(b->isMarked()) {
 	b->removeMark();
-	PD(GC,"BT b:%d mark found",i);
+	PD((GC,"BT b:%d mark found",i));
 	if (b->isVar()) {
-	  PD(GC,"BT b:%d variable found",i);
+	  PD((GC,"BT b:%d variable found",i));
 	} else {
-	  PD(GC,"BT b:%d tertiary found",i);
+	  PD((GC,"BT b:%d tertiary found",i));
 	  Assert(b->isTertiary());
 	}
       } else {
-	PD(GC,"BT b:%d no mark found",i);
+	PD((GC,"BT b:%d no mark found",i));
 	borrowTable->maybeFreeBorrowEntry(i);
       }
     }
@@ -1815,7 +1815,7 @@ void BorrowTable::gcBorrowTable()
 /* OBSERVE - this must be done at the end of other gc */
 void GNameTable::gcGNameTable()
 {
-  PD(GC,"gname gc");
+  PD((GC,"gname gc"));
   int index;
   GenHashNode *aux = getFirst(index);
   while(aux) {
@@ -1841,7 +1841,7 @@ void PerdioVar::gcPerdioVar(void)
 { 
   int i = getIndex();
   if (isProxy() || isTertProxy()) {
-    PD(GC,"PerdioVar b:%d",i);
+    PD((GC,"PerdioVar b:%d",i));
     BorrowEntry *be=borrowTable->getBorrow(i);
     be->gcPO();
     be->makeMark();
@@ -1860,7 +1860,7 @@ void PerdioVar::gcPerdioVar(void)
       u.tert = (Tertiary*) u.tert->gcConstTerm();
     }
   } else {
-    PD(GC,"PerdioVar o:%d",i);
+    PD((GC,"PerdioVar o:%d",i));
     ProxyList **last=&u.proxies;
     for (ProxyList *pl = u.proxies; pl; pl = pl->next) {
       ProxyList *newPL = new ProxyList(pl->sd,0);
@@ -1922,7 +1922,7 @@ void CellLocal::globalize(int myIndex){
     
   CellFrame *cf=(CellFrame*)this;
   TaggedRef v=val;
-  PD(CELL,"val:%x v:%x",val,v);
+  PD((CELL,"val:%x v:%x",val,v));
   cf->initFromGlobalize(v);}
 
 void CellManager::localize(){
@@ -1963,7 +1963,7 @@ void Tertiary::globalize()
     break;
   case Co_Cell:
     {
-      PD(GLOBALIZING,"GLOBALIZING cell");
+      PD((GLOBALIZING,"GLOBALIZING cell"));
       OwnerEntry *oe_manager;
       int manI=ownerTable->newOwner(oe_manager);
       oe_manager->mkTertiary(this);
@@ -1975,7 +1975,7 @@ void Tertiary::globalize()
     Assert(0);
   }
 
-  PD(GLOBALIZING,"GLOBALIZING port/chunk");
+  PD((GLOBALIZING,"GLOBALIZING port/chunk"));
   setTertType(Te_Manager);
   OwnerEntry *oe;
   int i = ownerTable->newOwner(oe);
@@ -1997,13 +1997,13 @@ void Tertiary::localize()
   case Co_Port:
   case Co_Abstraction:
     Assert(getTertType()==Te_Manager);
-    PD(GLOBALIZING,"GLOBALIZING: localizing tertiary manager");
+    PD((GLOBALIZING,"GLOBALIZING: localizing tertiary manager"));
     setTertType(Te_Local);
     setBoard(am.rootBoard);
     return;}
   case Co_Cell:{
     if(getTertType()==Te_Manager){
-      PD(GLOBALIZING,"GLOBALIZING: localizing cell manager");
+      PD((GLOBALIZING,"GLOBALIZING: localizing cell manager"));
       CellManager *cm=(CellManager*)this;
       cm->localize();
       return;}
@@ -2025,7 +2025,7 @@ void Tertiary::import()
   case Co_Abstraction:
     {
       Assert(getTertType()==Te_Proxy);
-      PD(GLOBALIZING,"GLOBALIZING: localizing tertiary manager");
+      PD((GLOBALIZING,"GLOBALIZING: localizing tertiary manager"));
       setTertType(Te_Local);
       setBoard(am.rootBoard);
       return;
@@ -2051,7 +2051,7 @@ void SChunk::import(TaggedRef val)
 {
   Assert(getTertType()==Te_Proxy);
   Tertiary::import();
-  PD(GLOBALIZING,"GLOBALIZING: importing chunk proxy");
+  PD((GLOBALIZING,"GLOBALIZING: importing chunk proxy"));
   value = val;
 }
 
@@ -2059,7 +2059,7 @@ void Object::import()
 {
   Assert(getTertType()==Te_Proxy);
   Tertiary::import();
-  PD(GLOBALIZING,"GLOBALIZING: importing object");
+  PD((GLOBALIZING,"GLOBALIZING: importing object"));
 }
 
 void CellProxy::convertToFrame(int myIndex){
@@ -2161,7 +2161,7 @@ public:
     return;}
   
   void debtPush(int debt,int i){ 
-    PD(DEBT,"push %d",i);
+    PD((DEBT,"push %d",i));
     push((void *)debt);
     push((void *)i);
   }
@@ -2206,7 +2206,7 @@ int unmarshallNumber(ByteStream *bs)
 const int shortSize = 2;    /* TODO */
 
 void marshallShort(unsigned short i, ByteStream *bs){
-  PD(MARSHALL_CT,"Short %d BYTES:2",i);  
+  PD((MARSHALL_CT,"Short %d BYTES:2",i));  
   for (int k=0; k<shortSize; k++) {
     bs->put(i&0xFF);
     i = i>>8;}}
@@ -2217,7 +2217,7 @@ inline int unmarshallShort(ByteStream *bs){
   unsigned int i1 = bs->get();
   unsigned int i2 = bs->get();
   sh= (i1 + (i2<<8));
-  PD(UNMARSHALL_CT,"Short %d BYTES:2",sh);  
+  PD((UNMARSHALL_CT,"Short %d BYTES:2",sh));  
   return sh;}
 
 class DoubleConv {
@@ -2256,7 +2256,7 @@ char *unmarshallString(ByteStream *bs)
   for (; k<i; k++) {
     ret[k] = bs->get();
   }
-  PD(UNMARSHALL_CT,"String BYTES:%d",k);  
+  PD((UNMARSHALL_CT,"String BYTES:%d",k));  
   ret[i] = '\0';
   return ret;
 }
@@ -2265,7 +2265,7 @@ inline
 void marshallString(char *s, ByteStream *bs)
 {
   marshallNumber(strlen(s),bs);
-  PD(MARSHALL_CT,"String BYTES:%d",strlen(s));  
+  PD((MARSHALL_CT,"String BYTES:%d",strlen(s)));  
   while(*s) {
     bs->put(*s);
     s++;  }
@@ -2314,14 +2314,14 @@ Bool unmarshallGName(GName **gn, TaggedRef *ret, ByteStream *bs)
 inline
 void marshallCredit(Credit credit,ByteStream *bs){
   Assert(sizeof(Credit)==sizeof(long));
-  PD(MARSHALL,"credit c:%d",credit);
+  PD((MARSHALL,"credit c:%d",credit));
   marshallNumber(credit,bs);}
 
 inline
 Credit unmarshallCredit(ByteStream *bs){
   Assert(sizeof(Credit)==sizeof(long));
   Credit c=unmarshallNumber(bs);
-  PD(UNMARSHALL,"credit c:%d",c);
+  PD((UNMARSHALL,"credit c:%d",c));
   return c;}
 
 inline
@@ -2329,7 +2329,7 @@ void marshallSite(Site *sd,ByteStream *bs){
   ip_address ip;
   port_t port;
   time_t timestamp;
-  PD(MARSHALL,"site (10) s:%s", pSite(sd));
+  PD((MARSHALL,"site (10) s:%s", pSite(sd)));
   getSiteFields(sd,ip,port,timestamp);
   marshallNumber(ip,bs);
   marshallShort(port,bs);
@@ -2342,7 +2342,7 @@ void marshallMySite(ByteStream *bs){
 inline
 void marshallNetAddress2(Site* site,int index,ByteStream *bs){
   marshallSite(site,bs);
-  PD(MARSHALL,"index (4) o:%d",index);
+  PD((MARSHALL,"index (4) o:%d",index));
   marshallNumber(index,bs);}
 
 inline
@@ -2356,7 +2356,7 @@ Site * unmarshallSiteId(ByteStream *bs){
   time_t timestamp = unmarshallNumber(bs);
   Site *sd;
   if(importSite(ip,port,timestamp,sd)==NET_OK){
-    PD(UNMARSHALL,"site (10) s:%s", pSite(sd));
+    PD((UNMARSHALL,"site (10) s:%s", pSite(sd)));
     return sd;}
   OZ_warning("timeStamp exception\n");
   return sd;}
@@ -2371,7 +2371,7 @@ void marshallOwnHead(int tag,int i,ByteStream *bs){
   OwnerEntry *o=ownerTable->getOwner(i);
   marshallNetAddress2(mySite,i,bs);
   marshallNumber(o->getSendCredit(),bs);
-  PD(MARSHALL,"ownHead o:%d rest-c:%d ",i,o->getCredit());
+  PD((MARSHALL,"ownHead o:%d rest-c:%d ",i,o->getCredit()));
 }
 
 /*
@@ -2382,12 +2382,12 @@ void marshallToOwner(int bi,ByteStream *bs,DebtRec *dr){
   marshallNumber(borrowTable->getOriginIndex(bi),bs);
   BorrowEntry *b=borrowTable->getBorrow(bi); /* implicit 1 credit */
   if(b->getOneCredit()) {  
-    PD(MARSHALL,"toOwner Borrow b:%d Owner o:%d",
-		  bi,borrowTable->getOriginIndex(bi));
+    PD((MARSHALL,"toOwner Borrow b:%d Owner o:%d",
+		  bi,borrowTable->getOriginIndex(bi)));
     return;}
   dr->debtPush(1,bi);
-  PD(MARSHALL,"toOwner Borrow b:%d Owner o:%d debt=1",
-		bi,borrowTable->getOriginIndex(bi));
+  PD((MARSHALL,"toOwner Borrow b:%d Owner o:%d debt=1",
+		bi,borrowTable->getOriginIndex(bi)));
   return;}
 
 /*
@@ -2400,12 +2400,12 @@ void marshallBorrowHead(int tag, int bi,ByteStream *bs,DebtRec *dr){
   marshallNetAddress(b->getNetAddress(),bs);
   Credit cred;
   if(b->getSmallCredit(cred)) {
-    PD(MARSHALL,"borrowed b:%d remCredit c:%d give c:%d",
-		bi,b->getCredit(),cred);
+    PD((MARSHALL,"borrowed b:%d remCredit c:%d give c:%d",
+		bi,b->getCredit(),cred));
     marshallCredit(cred,bs);
     return;  }
-  PD(MARSHALL,"borrowed b:%d remCredit c:%d debt c:%d",
-		bi,b->getCredit(),MIN_BORROW_CREDIT_SIZE);
+  PD((MARSHALL,"borrowed b:%d remCredit c:%d debt c:%d",
+		bi,b->getCredit(),MIN_BORROW_CREDIT_SIZE));
   marshallCredit(MIN_BORROW_CREDIT_SIZE,bs);
   dr->debtPush(MIN_BORROW_CREDIT_SIZE,bi);
   return;}
@@ -2413,7 +2413,7 @@ void marshallBorrowHead(int tag, int bi,ByteStream *bs,DebtRec *dr){
 OZ_Term unmarshallBorrow(ByteStream *bs,OB_Entry *&ob,int &bi){
   Site * sd=unmarshallSiteId(bs);
   int si=unmarshallNumber(bs);
-  PD(UNMARSHALL,"borrow o:%d",si);
+  PD((UNMARSHALL,"borrow o:%d",si));
   Credit cred = unmarshallCredit(bs);
   if (sd==mySite){
     OZ_Term ret = ownerTable->getOwner(si)->getValue();;
@@ -2424,13 +2424,13 @@ OZ_Term unmarshallBorrow(ByteStream *bs,OB_Entry *&ob,int &bi){
   NetAddress na = NetAddress(sd,si); 
   BorrowEntry *b = borrowTable->find(&na);
   if (b!=NULL) {
-    PD(UNMARSHALL,"borrow found");
+    PD((UNMARSHALL,"borrow found"));
     b->addCredit(cred);
     return b->getValue();
   }
   bi=borrowTable->newBorrow(cred,sd,si);
   b=borrowTable->getBorrow(bi);
-  PD(UNMARSHALL,"borrowed miss");
+  PD((UNMARSHALL,"borrowed miss"));
   ob=b;
   return 0;}  
 
@@ -2456,7 +2456,7 @@ inline
 Bool checkCycle(OZ_Term t, ByteStream *bs)
 {
   if (!isRef(t) && tagTypeOf(t)==GCTAG) {
-    PD(MARSHALL,"circular: %d",t>>tagSize);
+    PD((MARSHALL,"circular: %d",t>>tagSize));
     bs->put(M_REF);
     marshallNumber(t>>tagSize,bs);
     return OK;
@@ -2489,17 +2489,17 @@ Bool marshallTertiary(Site* sd, Tertiary *t, ByteStream *bs, DebtRec *dr)
     t->globalize();
     // no break here!
   case Te_Manager:
-    PD(MARSHALL,"manager");
+    PD((MARSHALL,"manager"));
     marshallOwnHead((int)tag,t->getIndex(),bs);
     break;
   case Te_Frame:{
-    PD(MARSHALL,"frame");
+    PD((MARSHALL,"frame"));
     Assert(t->getType()==Co_Cell);
     CellFrame *cf=(CellFrame *)t;
     marshallOwnHead((int)tag,cf->getOwnerIndex(),bs);
     break;}
   case Te_Proxy:
-    PD(MARSHALL,"proxy");    
+    PD((MARSHALL,"proxy"));    
     if (sd && borrowTable->getOriginSite(t->getIndex())==sd) {
       marshallToOwner(t->getIndex(),bs,dr);
       return OK;}
@@ -2543,12 +2543,12 @@ void unmarshallTertiary(ByteStream *bs, TaggedRef *ret, MarshallTag tag, char *c
   int bi;
   OZ_Term val = unmarshallBorrow(bs,ob,bi);
   if (val) {
-    PD(UNMARSHALL,"%s hit b:%d",bi,comment);
+    PD((UNMARSHALL,"%s hit b:%d",bi,comment));
     gotRef(bs,val);
     *ret=val;
     return;
   }
-  PD(UNMARSHALL,"%s miss b:%d",bi,comment);
+  PD((UNMARSHALL,"%s miss b:%d",bi,comment));
 
   Tertiary *tert = NULL;
   switch (tag) {
@@ -2567,7 +2567,7 @@ void marshallVariable(Site *sd, PerdioVar *pvar, ByteStream *bs, DebtRec *dr)
 {
   int i=pvar->getIndex();
   if (pvar->isProxy()) {
-    PD(MARSHALL,"var proxy o:%d",i);
+    PD((MARSHALL,"var proxy o:%d",i));
     if(sd && borrowTable->getOriginSite(i)==sd) {
       marshallToOwner(i,bs,dr);
       return;
@@ -2577,13 +2577,13 @@ void marshallVariable(Site *sd, PerdioVar *pvar, ByteStream *bs, DebtRec *dr)
   } 
 
   if (pvar->isTertProxy()) {
-    PD(MARSHALL,"var tertproxy o:%d",i);
+    PD((MARSHALL,"var tertproxy o:%d",i));
     marshallTertiary(sd,pvar->getTertiary(),bs,dr);
     return;
   } 
 
   // owner
-  PD(MARSHALL,"var manager o:%d",i);
+  PD((MARSHALL,"var manager o:%d",i));
   Assert(pvar->isManager());
   marshallOwnHead(M_VAR,i,bs);
 }
@@ -2670,19 +2670,19 @@ loop:
   case SMALLINT:
     bs->put(M_SMALLINT);
     marshallNumber(smallIntValue(t),bs);
-    PD(MARSHALL,"small int: %d",smallIntValue(t));
+    PD((MARSHALL,"small int: %d",smallIntValue(t)));
     break;
 
   case OZFLOAT:
     bs->put(M_FLOAT);
     marshallFloat(tagged2Float(t)->getValue(),bs);
-    PD(MARSHALL,"float");
+    PD((MARSHALL,"float"));
     break;
 
   case BIGINT:
     bs->put(M_BIGINT);
     marshallString(toC(t),bs);
-    PD(MARSHALL,"big int");
+    PD((MARSHALL,"big int"));
     break;
 
   case LITERAL:
@@ -2690,9 +2690,9 @@ loop:
       Literal *lit = tagged2Literal(t);
       if (lit->isAtom()) {
 	bs->put(M_ATOM);
-	PD(MARSHALL_CT,"tag M_ATOM  BYTES:1");
+	PD((MARSHALL_CT,"tag M_ATOM  BYTES:1"));
 	marshallString(lit->getPrintName(),bs);
-	PD(MARSHALL,"atom: %s",lit->getPrintName());
+	PD((MARSHALL,"atom: %s",lit->getPrintName()));
       	break;
       }
 
@@ -2714,10 +2714,10 @@ loop:
       LTuple *l = tagged2LTuple(t);
       if (checkCycle(*l->getRef(),bs)) return;
       bs->put(M_LIST);
-      PD(MARSHALL_CT,"tag M_LIST BYTES:1");
+      PD((MARSHALL_CT,"tag M_LIST BYTES:1"));
       argno = 2;
       args  = l->getRef();
-      PD(MARSHALL,"list");
+      PD((MARSHALL,"list"));
       goto processArgs;
     }
 
@@ -2727,29 +2727,29 @@ loop:
       if (checkCycle(*rec->getRef(),bs)) return; /* TODO mark instead of getRef ??*/
       if (rec->isTuple()) {
 	bs->put(M_TUPLE);
-	PD(MARSHALL_CT,"tag M_TUPLE BYTES:1");
+	PD((MARSHALL_CT,"tag M_TUPLE BYTES:1"));
 	marshallNumber(rec->getTupleWidth(),bs);
       } else {
 	bs->put(M_RECORD);
-	PD(MARSHALL_CT,"tag M_RECORD BYTES:1");
+	PD((MARSHALL_CT,"tag M_RECORD BYTES:1"));
 	marshallTerm(sd,rec->getArityList(),bs,dr);
       }
       marshallTerm(sd,rec->getLabel(),bs,dr);
       argno = rec->getWidth();
       args  = rec->getRef();
-      PD(MARSHALL,"record-tuple no:%d",argno);
+      PD((MARSHALL,"record-tuple no:%d",argno));
       goto processArgs;
     }
 
   case OZCONST:
     {
-      PD(MARSHALL,"constterm");
+      PD((MARSHALL,"constterm"));
       if (checkCycle(*(tagged2Const(t)->getRef()),bs))
 	break;
 
       if (isBuiltin(t)) {
 	bs->put(M_BUILTIN);
-	PD(MARSHALL_CT,"tag M_BUILTIN BYTES:1");
+	PD((MARSHALL_CT,"tag M_BUILTIN BYTES:1"));
 	marshallString(tagged2Builtin(t)->getPrintName(),bs);
 	break;
       }
@@ -2865,18 +2865,18 @@ void unmarshallTerm(ByteStream *bs, OZ_Term *ret)
   int argno;
 loop:
   MarshallTag tag = (MarshallTag) bs->get();
-  PD(UNMARSHALL_CT,"tag %c BYTES:1",tag);
+  PD((UNMARSHALL_CT,"tag %c BYTES:1",tag));
 
   switch(tag) {
 
   case M_SMALLINT: 
     *ret = OZ_int(unmarshallNumber(bs)); 
-    PD(UNMARSHALL,"small int");
+    PD((UNMARSHALL,"small int"));
     return;
 
   case M_FLOAT:    
     *ret = OZ_float(unmarshallFloat(bs)); 
-    PD(UNMARSHALL,"float");
+    PD((UNMARSHALL,"float"));
     return;
 
   case M_NAME:
@@ -2913,7 +2913,7 @@ loop:
   case M_ATOM:
     {
       char *aux = unmarshallString(bs);
-      PD(UNMARSHALL,"atom %s",aux);
+      PD((UNMARSHALL,"atom %s",aux));
       *ret = OZ_atom(aux);
       delete aux;
       return;
@@ -2922,7 +2922,7 @@ loop:
   case M_BIGINT:
     {
       char *aux = unmarshallString(bs);
-      PD(UNMARSHALL,"big int %s",aux);
+      PD((UNMARSHALL,"big int %s",aux));
       *ret = OZ_CStringToNumber(aux);
       delete aux;
       return;
@@ -2936,7 +2936,7 @@ loop:
       *ret = makeTaggedLTuple(l);
       gotRef(bs,*ret);
       ret = l->getRef();
-      PD(UNMARSHALL,"list");
+      PD((UNMARSHALL,"list"));
       goto processArgs;
     }
   case M_TUPLE:
@@ -2947,7 +2947,7 @@ loop:
       *ret = makeTaggedSRecord(rec);
       gotRef(bs,*ret);
       ret = rec->getRef();
-      PD(UNMARSHALL,"tuple no_args:%d",argno);
+      PD((UNMARSHALL,"tuple no_args:%d",argno));
       goto processArgs;      
     }
 
@@ -2960,13 +2960,13 @@ loop:
       *ret = makeTaggedSRecord(rec);
       gotRef(bs,*ret);
       ret = rec->getRef();
-      PD(UNMARSHALL,"record no:%d",argno);
+      PD((UNMARSHALL,"record no:%d",argno));
       goto processArgs;      
     }
 
   case M_REF:
     {
-      PD(UNMARSHALL,"ref");
+      PD((UNMARSHALL,"ref"));
       int i = unmarshallNumber(bs);
       *ret = refTable->get(i);
       return;
@@ -2975,7 +2975,7 @@ loop:
   case M_OWNER:
     {
       int OTI=unmarshallNumber(bs);
-      PD(UNMARSHALL,"OWNER o:%d",OTI);
+      PD((UNMARSHALL,"OWNER o:%d",OTI));
       *ret = OT->getOwner(OTI)->getValue();
       OT->returnCreditAndCheck(OTI,1);
       return;
@@ -2991,7 +2991,7 @@ loop:
       int bi;
       OZ_Term val = unmarshallBorrow(bs,ob,bi);
       if (val) {
-	PD(UNMARSHALL,"cell hit b:%d",bi);
+	PD((UNMARSHALL,"cell hit b:%d",bi));
 	gotRef(bs,val);
 	Tertiary *t=BT->getBorrow(bi)->getTertiary();
 	if((t->getType()==Co_Cell) && (t->getTertType()==Te_Frame)){
@@ -3001,7 +3001,7 @@ loop:
 	*ret=val;
 	return;
       }
-      PD(UNMARSHALL,"cell miss b:%d",bi);
+      PD((UNMARSHALL,"cell miss b:%d",bi));
       Tertiary *tert = new CellProxy(bi);
       *ret= makeTaggedConst(tert);
       gotRef(bs,*ret);
@@ -3022,11 +3022,11 @@ loop:
       }
 
       if (val1) {
-	PD(UNMARSHALL,"var/chunk hit: b:%d",bi);
+	PD((UNMARSHALL,"var/chunk hit: b:%d",bi));
 	*ret=val1;
 	return;
       }
-      PD(UNMARSHALL,"var miss: b:%d",bi);
+      PD((UNMARSHALL,"var miss: b:%d",bi));
       PerdioVar *pvar = new PerdioVar(new SChunk(bi,gname),bi);
       TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
       *ret = val;
@@ -3054,12 +3054,12 @@ loop:
       }
 
       if (val1) {
-	PD(UNMARSHALL,"object hit: b:%d",bi);
+	PD((UNMARSHALL,"object hit: b:%d",bi));
 	*ret=val1;
 	return;
       }
 
-      PD(UNMARSHALL,"object miss: b:%d",bi);
+      PD((UNMARSHALL,"object miss: b:%d",bi));
       Object *obj = new Object(bi,gname);
       if (tag==DIF_OBJECT) {
 	obj->setClass(getClassFromProxy(clas));
@@ -3085,11 +3085,11 @@ loop:
       OZ_Term val1 = unmarshallBorrow(bs,ob,bi);
 
       if (val1) {
-	PD(UNMARSHALL,"var/chunk hit: b:%d",bi);
+	PD((UNMARSHALL,"var/chunk hit: b:%d",bi));
 	*ret=val1;
 	return;
       }
-      PD(UNMARSHALL,"var miss: b:%d",bi);
+      PD((UNMARSHALL,"var miss: b:%d",bi));
       PerdioVar *pvar = new PerdioVar(bi);
       TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
       *ret = val;
@@ -3199,7 +3199,7 @@ void siteReceive(ByteStream* bs)
       unmarshallTerm(bs,&t);
       Assert(t);
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"PORTSEND: o:%d v:%s",portIndex,toC(t));
+      PD((MSG_RECEIVED,"PORTSEND: o:%d v:%s",portIndex,toC(t)));
 
       Tertiary *tert= ownerTable->getOwner(portIndex)->getTertiary();
       ownerTable->returnCreditAndCheck(portIndex,1);
@@ -3208,7 +3208,7 @@ void siteReceive(ByteStream* bs)
 
       LTuple *lt = new LTuple(t,am.currentUVarPrototype());
       OZ_Term old = pm->exchangeStream(lt->getTail());
-      PD(SPECIAL,"just after send port");
+      PD((SPECIAL,"just after send port"));
       SiteUnify(makeTaggedLTuple(lt),old);
       break;
       }
@@ -3221,7 +3221,7 @@ void siteReceive(ByteStream* bs)
       unmarshallTerm(bs,&t);
       Assert(t);
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"REMOTE_SEND: o:%d bi:%s v:%s",i,biName,toC(t));
+      PD((MSG_RECEIVED,"REMOTE_SEND: o:%d bi:%s v:%s",i,biName,toC(t)));
 
       Tertiary *tert= ownerTable->getOwner(i)->getTertiary();
       ownerTable->returnCreditAndCheck(i,1);
@@ -3229,7 +3229,7 @@ void siteReceive(ByteStream* bs)
       BuiltinTabEntry *found = builtinTab.find(biName);
 
       if (!found) {
-	PD(WEIRD,"builtin %s not found",biName);
+	PD((WEIRD,"builtin %s not found",biName));
 	break;
       }
 
@@ -3240,7 +3240,7 @@ void siteReceive(ByteStream* bs)
       Assert(arity<=2);
       OZ_Return ret = found->getFun()(arity,args);
       if (ret != PROCEED) {
-	PD(SPECIAL,"REMOTE_SEND failed: %d\n",ret);
+	PD((SPECIAL,"REMOTE_SEND failed: %d\n",ret));
       }
       break;
     }
@@ -3249,8 +3249,8 @@ void siteReceive(ByteStream* bs)
       int na_index=unmarshallNumber(bs);
       Site* rsite=unmarshallSiteId(bs);      
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"ASK_FOR_CREDIT o:%d s:%s",
-	 na_index,pSite(rsite));
+      PD((MSG_RECEIVED,"ASK_FOR_CREDIT o:%d s:%s",
+	 na_index,pSite(rsite)));
       OwnerEntry *o=ownerTable->getOwner(na_index);
       o->returnCredit(1); // don't delete entry
       Credit c= o->giveMoreCredit();
@@ -3260,7 +3260,7 @@ void siteReceive(ByteStream* bs)
       marshallNetAddress(&na,bs1);
       marshallCredit(c,bs1);
       bs1->marshalEnd();
-      PD(MSG_SENT,"BORROW_CREDIT s:%s o:%d c:%d", pSite(rsite),na_index,c);
+      PD((MSG_SENT,"BORROW_CREDIT s:%s o:%d c:%d", pSite(rsite),na_index,c));
       reliableSendFail(rsite,bs1,TRUE,4);
       break;
     }
@@ -3269,7 +3269,7 @@ void siteReceive(ByteStream* bs)
       int index=unmarshallNumber(bs);
       Credit c=unmarshallCredit(bs);
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"OWNER_CREDIT o:%d c:%d",index,c);
+      PD((MSG_RECEIVED,"OWNER_CREDIT o:%d c:%d",index,c));
 
       ownerTable->returnCreditAndCheck(index,c);
       break;
@@ -3281,7 +3281,7 @@ void siteReceive(ByteStream* bs)
       int si=unmarshallNumber(bs);
       Credit c=unmarshallCredit(bs);
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"BORROW_CREDIT s:%s o:%d c:%d",pSite(sd),si,c);
+      PD((MSG_RECEIVED,"BORROW_CREDIT s:%s o:%d c:%d",pSite(sd),si,c));
 
       NetAddress na=NetAddress(sd,si);
 
@@ -3300,7 +3300,7 @@ void siteReceive(ByteStream* bs)
       int na_index=unmarshallNumber(bs);
       Site* rsite=unmarshallSiteId(bs);
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"GET_SOMETHING o:%d s:%s",na_index,pSite(rsite));
+      PD((MSG_RECEIVED,"GET_SOMETHING o:%d s:%s",na_index,pSite(rsite)));
       
       ByteStream *bs1= bufferManager->getByteStreamMarshal();
 
@@ -3351,12 +3351,12 @@ void siteReceive(ByteStream* bs)
       }
 
       bs1->marshalEnd();
-      PD(MSG_SENT,"SEND_CLOSURE[ANDCODE],CHUNK s:%s o:%d",pSite(rsite),na_index);
+      PD((MSG_SENT,"SEND_CLOSURE[ANDCODE],CHUNK s:%s o:%d",pSite(rsite),na_index));
       refTrail->unwind();
       if(debtRec->isEmpty()) {
 	reliableSendFail(rsite,bs1,FALSE,5);
       } else {
-	PD(DEBT_SEC,"remoteSend");
+	PD((DEBT_SEC,"remoteSend"));
 	PendEntry * pe = pendEntryManager->newPendEntry(bs1,rsite);
 	debtRec->handler(pe);
       }
@@ -3421,7 +3421,7 @@ void siteReceive(ByteStream* bs)
       ProgramCounter PC = (mt==M_SEND_CLOSURE) ? NOCODE : unmarshallCode(bs);
       pp->import(globals,PC);
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"SEND_CLOSURE[ANDCODE]");
+      PD((MSG_RECEIVED,"SEND_CLOSURE[ANDCODE]"));
       break;
     }
 
@@ -3430,7 +3430,7 @@ void siteReceive(ByteStream* bs)
       int OTI=unmarshallNumber(bs);
       Site* rsite=unmarshallSiteId(bs);
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"REGISTER o:%d s:%s",OTI,pSite(rsite));
+      PD((MSG_RECEIVED,"REGISTER o:%d s:%s",OTI,pSite(rsite)));
       
 
       OwnerEntry *oe = OT->getOwner(OTI);
@@ -3439,7 +3439,7 @@ void siteReceive(ByteStream* bs)
 	if (!pv->isRegistered(rsite)) {
 	  pv->registerSite(rsite);
 	} else {
-	  PD(WEIRD,"REGISTER o:%d s:%s already registered",OTI,pSite(rsite));
+	  PD((WEIRD,"REGISTER o:%d s:%s already registered",OTI,pSite(rsite)));
 	}
 
       } else {
@@ -3456,13 +3456,13 @@ void siteReceive(ByteStream* bs)
 
       TaggedRef val = unmarshallTerm(bs);
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"REDIRECT s:%s o:%d v:%s",pSite(sd),si,toC(val));
+      PD((MSG_RECEIVED,"REDIRECT s:%s o:%d v:%s",pSite(sd),si,toC(val)));
 
       NetAddress na=NetAddress(sd,si);
       BorrowEntry *be=BT->find(&na);
 
       if (!be) { // if not found, then forget the redirect message
-	PD(WEIRD,"REDIRECT: no borrow entry found");
+	PD((WEIRD,"REDIRECT: no borrow entry found"));
 	sendCreditBack(na.site,na.index,1);
 	return;
       }
@@ -3470,13 +3470,13 @@ void siteReceive(ByteStream* bs)
 
       Assert(be->isVar());
       PerdioVar *pv = be->getVar();
-      PD(TABLE,"REDIRECT - borrow entry hit b:%d",pv->getIndex());
+      PD((TABLE,"REDIRECT - borrow entry hit b:%d",pv->getIndex()));
       Assert(pv->isProxy());
       pv->primBind(be->getPtr(),val);
       be->mkRef();
 
       if (pv->hasVal()) {
-	PD(PD_VAR,"REDIRECT while pending");
+	PD((PD_VAR,"REDIRECT while pending"));
 	pv->redirect(val);
       }
 
@@ -3492,24 +3492,24 @@ void siteReceive(ByteStream* bs)
       Site* rsite=unmarshallSiteId(bs);
       TaggedRef v = unmarshallTerm(bs);
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"SURRENDER s:%s o:%d v:%s", pSite(rsite), OTI, toC(v));
+      PD((MSG_RECEIVED,"SURRENDER s:%s o:%d v:%s", pSite(rsite), OTI, toC(v)));
 
       OwnerEntry *oe = ownerTable->getOwner(OTI);
 
       if (oe->isVar()) {
-	PD(PD_VAR,"SURRENDER do it");
+	PD((PD_VAR,"SURRENDER do it"));
 	PerdioVar *pv = oe->getVar();
 	// bug fixed: may be bound to a different perdio var
 	pv->primBind(oe->getPtr(),v);
 	oe->mkRef();
 	oe->returnCredit(1); // don't delete!
 	if (oe->hasFullCredit()) {
-	  PD(WEIRD,"SURRENDER: full credit");
+	  PD((WEIRD,"SURRENDER: full credit"));
 	}
 	sendRedirect(pv->getProxies(),v,rsite,OTI);
       } else {
-	PD(PD_VAR,"SURRENDER discard");
-	PD(WEIRD,"SURRENDER discard");
+	PD((PD_VAR,"SURRENDER discard"));
+	PD((WEIRD,"SURRENDER discard"));
 	// ignore redirect: NOTE: v is handled by the usual garbage collection
 	ownerTable->returnCreditAndCheck(OTI,1);
       }
@@ -3521,7 +3521,7 @@ void siteReceive(ByteStream* bs)
       Site *sd=unmarshallSiteId(bs);
       int si=unmarshallNumber(bs);  
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"ACKNOWLEDGE s:%s o:%d",pSite(sd),si);
+      PD((MSG_RECEIVED,"ACKNOWLEDGE s:%s o:%d",pSite(sd),si));
 
       NetAddress na=NetAddress(sd,si);
       BorrowEntry *be=BT->find(&na);
@@ -3639,27 +3639,27 @@ OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
   marshallString(biName,bs);
   domarshallTerm(site,msg,bs);
   bs->marshalEnd();
-  PD(MSG_SENT,"PORTSEND s:%s o:%d v:%s",pSite(site),index,toC(msg));
+  PD((MSG_SENT,"PORTSEND s:%s o:%d v:%s",pSite(site),index,toC(msg)));
 
-  PD(MSG_SENT,"REMOTE_SEND s:%s o:%d bi:%s v:%s",
-     pSite(site),index,biName,toC(msg));
+  PD((MSG_SENT,"REMOTE_SEND s:%s o:%d bi:%s v:%s",
+     pSite(site),index,biName,toC(msg)));
 
   if (b->getOneCredit()) {
     if(debtRec->isEmpty()) {
       reliableSendFail(site,bs,FALSE,11);
     } else {
-      PD(DEBT_SEC,"remoteSend");
+      PD((DEBT_SEC,"remoteSend"));
       PendEntry *pe=pendEntryManager->newPendEntry(bs,site,b);
       b->inDebtFIFO(0,pe);
       debtRec->handler(pe);
     }
   } else {
-    PD(DEBT_MAIN,"remoteSend");
+    PD((DEBT_MAIN,"remoteSend"));
     PendEntry *pe=pendEntryManager->newPendEntry(bs,site,b);
     pe= pendEntryManager->newPendEntry(bs,site,b);
     b->inDebtFIFO(1,pe);
     if(!debtRec->isEmpty()){
-      PD(DEBT_SEC,"remoteSend");
+      PD((DEBT_SEC,"remoteSend"));
       debtRec->handler(pe);  
     }
   }
@@ -3680,25 +3680,25 @@ void portSend(Tertiary *p, TaggedRef msg) {
   domarshallTerm(site,msg,bs);
   bs->marshalEnd();
 
-  PD(MSG_SENT,"PORT_SEND s:%s o:%d v:%s",
-     pSite(site),index,toC(msg));
+  PD((MSG_SENT,"PORT_SEND s:%s o:%d v:%s",
+     pSite(site),index,toC(msg)));
 
   if (b->getOneCredit()) {
     if(debtRec->isEmpty()) {
       reliableSendFail(site,bs,FALSE,11);
     } else {
-      PD(DEBT_SEC,"portSend");
+      PD((DEBT_SEC,"portSend"));
       PendEntry *pe=pendEntryManager->newPendEntry(bs,site,b);
       b->inDebtFIFO(0,pe);
       debtRec->handler(pe);
     }
   } else {
-    PD(DEBT_MAIN,"portSend");
+    PD((DEBT_MAIN,"portSend"));
     PendEntry *pe=pendEntryManager->newPendEntry(bs,site,b);
     pe= pendEntryManager->newPendEntry(bs,site,b);
     b->inDebtFIFO(1,pe);
     if(!debtRec->isEmpty()){
-      PD(DEBT_SEC,"portSend");
+      PD((DEBT_SEC,"portSend"));
       debtRec->handler(pe);  
     }
   }
@@ -3716,7 +3716,7 @@ void sendMessage(int bi, MessageType msg)
   marshallMySite(bs);
   bs->marshalEnd();
 
-  PD(MSG_SENT,"MSG_SENT m:%d s:%s o:%d", msg,pSite(site),index);
+  PD((MSG_SENT,"MSG_SENT m:%d s:%s o:%d", msg,pSite(site),index));
   reliableSendFail(site,bs,FALSE,6);
 }
 
@@ -3731,19 +3731,19 @@ void sendSurrender(BorrowEntry *be,OZ_Term val)
   marshallMySite(bs);
   domarshallTerm(site,val,bs);
   bs->marshalEnd();
-  PD(MSG_SENT,"SURRENDER s:%s o:%d v:%s", pSite(site),index,toC(val));
+  PD((MSG_SENT,"SURRENDER s:%s o:%d v:%s", pSite(site),index,toC(val)));
 
   if (be->getOneCredit()) {
     if (debtRec->isEmpty()) {
       reliableSendFail(site,bs,FALSE,7);
       return;
     }
-    PD(DEBT_SEC,"surrender");
+    PD((DEBT_SEC,"surrender"));
     PendEntry *pe=pendEntryManager->newPendEntry(bs,site);
     debtRec->handler(pe);
     return;
   }
-  PD(DEBT_MAIN,"surrender");
+  PD((DEBT_MAIN,"surrender"));
   PendEntry *pe= pendEntryManager->newPendEntry(bs,site);
   be->inDebtMain(pe);
   if(!debtRec->isEmpty()){
@@ -3758,7 +3758,7 @@ void sendRedirect(Site* sd,int OTI,TaggedRef val)
   marshallNetAddress2(mySite,OTI,bs);
   domarshallTerm(sd,val,bs);
   bs->marshalEnd();
-  PD(MSG_SENT,"REDIRECT s:%s o:%d v:%s",pSite(sd),OTI,toC(val));
+  PD((MSG_SENT,"REDIRECT s:%s o:%d v:%s",pSite(sd),OTI,toC(val)));
   OwnerEntry *oe = OT->getOwner(OTI);
   oe->getOneCredit();
 
@@ -3767,7 +3767,7 @@ void sendRedirect(Site* sd,int OTI,TaggedRef val)
     return;
   }
 
-  PD(DEBT_SEC,"sendRedirect");
+  PD((DEBT_SEC,"sendRedirect"));
   PendEntry *pe=pendEntryManager->newPendEntry(bs,sd);
   debtRec->handler(pe);
 }
@@ -3778,7 +3778,7 @@ void sendAcknowledge(Site* sd,int OTI)
   bs->put(M_ACKNOWLEDGE);
   marshallNetAddress2(mySite,OTI,bs);
   bs->marshalEnd();
-  PD(MSG_SENT,"ACKNOWLEDGE s:%s o:%d",pSite(sd),OTI);
+  PD((MSG_SENT,"ACKNOWLEDGE s:%s o:%d",pSite(sd),OTI));
 
   OwnerEntry *oe = OT->getOwner(OTI);
   oe->getOneCredit();
@@ -3789,7 +3789,7 @@ void sendAcknowledge(Site* sd,int OTI)
 
 void PerdioVar::acknowledge(OZ_Term *ptr)
 {
-  PD(PD_VAR,"acknowledge");
+  PD((PD_VAR,"acknowledge"));
   OZ_Term val=u.bindings->val;
   primBind(ptr,val);
   oz_resume(u.bindings->thread);
@@ -3803,14 +3803,14 @@ void PerdioVar::acknowledge(OZ_Term *ptr)
 
 
 void PerdioVar::redirect(OZ_Term val) {
-  PD(PD_VAR,"redirect v:%s",toC(val));
+  PD((PD_VAR,"redirect v:%s",toC(val)));
   while (u.bindings) {
 
     RefsArray args = allocateRefsArray(2,NO);
     args[0]=val;
     args[1]=u.bindings->val;
     u.bindings->thread->pushCall(BI_Unify,args,2);
-    PD(PD_VAR,"redirect pending unify =%s",toC(u.bindings->val));
+    PD((PD_VAR,"redirect pending unify =%s",toC(u.bindings->val)));
     oz_resume(u.bindings->thread);
 
     PendBinding *tmp=u.bindings->next;
@@ -3839,12 +3839,12 @@ void sendRedirect(ProxyList *pl,OZ_Term val, Site* ackSite, int OTI)
 void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
 {
   if (pv->isManager()) {
-    PD(PD_VAR,"bind manager o:%d v:%s",pv->getIndex(),toC(v));
+    PD((PD_VAR,"bind manager o:%d v:%s",pv->getIndex(),toC(v)));
     pv->primBind(lPtr,v);
     OT->getOwner(pv->getIndex())->mkRef();
     sendRedirect(pv->getProxies(),v,mySite,pv->getIndex());
   } else {
-    PD(PD_VAR,"bind proxy b:%d v:%s",pv->getIndex(),toC(v));
+    PD((PD_VAR,"bind proxy b:%d v:%s",pv->getIndex(),toC(v)));
     Assert(pv->isProxy());
     if (pv->hasVal()) {
       pv->pushVal(v); // save binding for ack message, ...
@@ -3858,13 +3858,13 @@ void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
 
 void sendCreditBack(Site* sd,int OTI,Credit c)
 {
-  PD(CREDIT,"give back - %d",c);
+  PD((CREDIT,"give back - %d",c));
   ByteStream *bs= bufferManager->getByteStreamMarshal();
   bs->put(M_OWNER_CREDIT);
   marshallNumber(OTI,bs);
   marshallCredit(c,bs);
   bs->marshalEnd();
-  PD(MSG_SENT,"OWNER_CREDIT s:%s o:%d c:%d",pSite(sd),OTI,c);
+  PD((MSG_SENT,"OWNER_CREDIT s:%s o:%d c:%d",pSite(sd),OTI,c));
   reliableSendFail(sd,bs,TRUE,10);
 }
 
@@ -3909,8 +3909,8 @@ inline int secBorrowInit(Site *site,int index,Credit c){
                    
 inline void cellSendForward(BorrowEntry *be,Site *dS,int dI,int ctr,
 			    Site *mS,int mI){
-  PD(MSG_SENT,"MSG_SENT:CELL_FORWARD to s:%s,o:%d ctr:%d msg s:%s o:%d",
-     pSite(dS),dI,ctr,pSite(mS),mI);
+  PD((MSG_SENT,"MSG_SENT:CELL_FORWARD to s:%s,o:%d ctr:%d msg s:%s o:%d",
+     pSite(dS),dI,ctr,pSite(mS),mI));
 
   ByteStream* bs=bufferManager->getByteStreamMarshal();  // marshal
   bs->put(M_CELL_FORWARD);
@@ -3928,7 +3928,7 @@ inline void cellSendForward(BorrowEntry *be,Site *dS,int dI,int ctr,
   return;}
 
 inline void cellSendRemoteRead(BorrowEntry *be,Site *cs,int si,TaggedRef val){
-  PD(MSG_SENT,"MSG_SENT:CELL_REMOTEREAD to s:%s o:%d",pSite(cs),si);
+  PD((MSG_SENT,"MSG_SENT:CELL_REMOTEREAD to s:%s o:%d",pSite(cs),si));
 	       
   ByteStream* bs=bufferManager->getByteStreamMarshal();   // marshal
   bs->put(M_CELL_REMOTEREAD);
@@ -3946,7 +3946,7 @@ inline void cellSendRemoteRead(BorrowEntry *be,Site *cs,int si,TaggedRef val){
 /* --------------------- at Manager  MAIN ------------------------------------- */
 
 void cellReceiveGet(OwnerEntry* oe,Site* rsite,int OTI){  
-  PD(MSG_RECEIVED,"MSG_RECEIVED:CELL_GET from s:%s o:%d",pSite(rsite),OTI);
+  PD((MSG_RECEIVED,"MSG_RECEIVED:CELL_GET from s:%s o:%d",pSite(rsite),OTI));
 
   CellManager* cm=(CellManager*) oe->getTertiary();
   Assert(cm->getType()==Co_Cell);
@@ -3957,7 +3957,7 @@ void cellReceiveGet(OwnerEntry* oe,Site* rsite,int OTI){
   cm->setCurrent(bi);                             
 
   if(current==NO_INDEX){                             // shortcut
-    PD(CELL,"CELL - shortcut in cellReceiveGet");
+    PD((CELL,"CELL - shortcut in cellReceiveGet"));
     cellReceiveForward(oe,0,rsite,OTI);
     return;}
 
@@ -3968,7 +3968,7 @@ void cellReceiveGet(OwnerEntry* oe,Site* rsite,int OTI){
 }
 
 void cellReceiveRead(OwnerEntry* oe,TaggedRef val){ 
-  PD(MSG_RECEIVED,"MSG_RECEIVED:CELL_READ");
+  PD((MSG_RECEIVED,"MSG_RECEIVED:CELL_READ"));
   CellManager *cm=(CellManager*) oe->getTertiary();       
   Assert(cm->getType()==Co_Cell);                         
   Assert(cm->getTertType()==Te_Manager);
@@ -3976,7 +3976,7 @@ void cellReceiveRead(OwnerEntry* oe,TaggedRef val){
   int current=cm->getCurrent();
   if(current==NO_INDEX){            // shortcut
     cellReceiveRemoteRead(oe,val);
-    PD(CELL,"CELL- shortcut cellReceiveRead");
+    PD((CELL,"CELL- shortcut cellReceiveRead"));
     return;}
   cm->incCtr();
   BorrowEntry *be=borrowTable->getBorrow(current);
@@ -3985,7 +3985,7 @@ void cellReceiveRead(OwnerEntry* oe,TaggedRef val){
 }
 
 void cellReceiveDump(OwnerEntry *oe,Site *rsite,int OTI){
-  PD(MSG_RECEIVED,"MSG_RECEIVED:CELL_DUMP");
+  PD((MSG_RECEIVED,"MSG_RECEIVED:CELL_DUMP"));
   CellManager *cm=(CellManager*) oe->getTertiary();
   Assert(cm->getType()==Co_Cell);
   Assert(cm->getTertType()==Te_Manager);
@@ -3994,13 +3994,13 @@ void cellReceiveDump(OwnerEntry *oe,Site *rsite,int OTI){
   
   NetAddress *na=borrowTable->getBorrow(current)->getNetAddress();
   if((na->site!=rsite)|| (na->index!=OTI)){
-    PD(WEIRD,"WEIRD- CELL dump out of synch");
+    PD((WEIRD,"WEIRD- CELL dump out of synch"));
     sendCreditBack(rsite,OTI,1);
     return;}
 
   CellFrame* cf=(CellFrame *)cm;
   if(cf->getState()!=Cell_Invalid){
-    PD(WEIRD,"WEIRD- CELL dump not needed");
+    PD((WEIRD,"WEIRD- CELL dump not needed"));
     sendCreditBack(rsite,OTI,1);
     return;}
   Assert(cf->getState()==Cell_Invalid);
@@ -4012,8 +4012,8 @@ void cellReceiveDump(OwnerEntry *oe,Site *rsite,int OTI){
 /* --------------------- at Frame ------------------------------------- */
 
 inline void cellSendContents(TaggedRef tr,Site* rsite,int OTI){
-  PD(MSG_SENT,"CELL_CONTENTS to s:%s,o:%d from s:%d",pSite(rsite),
-     OTI,pSite(mySite));
+  PD((MSG_SENT,"CELL_CONTENTS to s:%s,o:%d from s:%d",pSite(rsite),
+     OTI,pSite(mySite)));
 
   ByteStream *bs=bufferManager->getByteStreamMarshal();    // marshal
   bs->put(M_CELL_CONTENTS);
@@ -4031,8 +4031,8 @@ inline void placeNext(CellFrame *cf,Site *rsite,int OTI){
 /* --------------------- at Frame ------------------------------------- */
 
 void cellReceiveForward(OwnerEntry *oe,int ctr,Site *rsite,int OTI){
-  PD(MSG_RECEIVED,"CELL_FORWARD to ctr:%d s:%s o:%d",
-     ctr,pSite(rsite),OTI);
+  PD((MSG_RECEIVED,"CELL_FORWARD to ctr:%d s:%s o:%d",
+     ctr,pSite(rsite),OTI));
   CellFrame *cf=(CellFrame*) oe->getTertiary();
   Assert((cf->getTertType()==Te_Frame) || (cf->getTertType()==Te_Manager));
   Assert(cf->getType()==Co_Cell);
@@ -4054,7 +4054,7 @@ void cellReceiveForward(OwnerEntry *oe,int ctr,Site *rsite,int OTI){
 
 void cellReceiveRemoteRead(OwnerEntry *oe,TaggedRef val){
   CellFrame *cf=(CellFrame*) oe->getTertiary();
-  PD(MSG_RECEIVED,"CELL_REMOTEREAD o:%d",cf->getOwnerIndex());
+  PD((MSG_RECEIVED,"CELL_REMOTEREAD o:%d",cf->getOwnerIndex()));
   Assert(cf->getTertType()==Te_Frame);
   Assert(cf->getType()==Co_Cell);
   cf->incCtr();
@@ -4065,7 +4065,7 @@ void cellReceiveRemoteRead(OwnerEntry *oe,TaggedRef val){
 void cellReceiveContents(OwnerEntry *oe,TaggedRef val){
   CellFrame *cf=(CellFrame*)oe->getTertiary();
   Assert(cf->getType()==Co_Cell);
-  PD(MSG_RECEIVED,"CELL_CONTENTS o:%d",cf->getOwnerIndex());
+  PD((MSG_RECEIVED,"CELL_CONTENTS o:%d",cf->getOwnerIndex()));
   Assert((cf->getTertType()==Te_Frame) || (cf->getTertType()==Te_Manager));
   short  state=cf->getState();
   Assert(state & Cell_Requested);
@@ -4074,7 +4074,7 @@ void cellReceiveContents(OwnerEntry *oe,TaggedRef val){
   PendThread *tmp;
   while(pt!=NULL){
     if(pt->thread!=NULL) {
-      PD(CELL,"CELL thread activated");      
+      PD((CELL,"CELL thread activated"));      
       oz_resume(pt->thread);}
     tmp=pt;
     pt=pt->next;
@@ -4111,10 +4111,10 @@ inline void cellSendGet(BorrowEntry *be,Site *manS,int manI,CellFrame *cf){
   bs->marshalEnd();
   
   if(be->getOneCredit()){
-    PD(MSG_SENT,"CELL_GET to s:%s,o:%d,from o:%d",pSite(manS),manI,myI);
+    PD((MSG_SENT,"CELL_GET to s:%s,o:%d,from o:%d",pSite(manS),manI,myI));
     reliableSendFail(manS,bs,FALSE,27);
     return;}
-  PD(MSG_QUEUED,"CELL GET to s:%s,o:%d,from o:%d",pSite(manS),manI,myI);
+  PD((MSG_QUEUED,"CELL GET to s:%s,o:%d,from o:%d",pSite(manS),manI,myI));
   PendEntry *pe=pendEntryManager->newPendEntry(bs,manS);
   be->inDebtMain(pe);
   return;}
@@ -4126,10 +4126,10 @@ inline void cellSendRead(BorrowEntry *be,Site *manS,int manI,TaggedRef val){
   domarshallTerm(manS,val,bs);
   bs->marshalEnd();
   if(be->getOneCredit()){
-    PD(MSG_SENT,"CELL_READ to site:%s,o:%d",pSite(manS),manI);
+    PD((MSG_SENT,"CELL_READ to site:%s,o:%d",pSite(manS),manI));
     reliableSendFail(manS,bs,FALSE,28);
     return;}
-  PD(MSG_QUEUED,"CELL_READ to site:%s,o:%d",pSite(manS),manI);
+  PD((MSG_QUEUED,"CELL_READ to site:%s,o:%d",pSite(manS),manI));
   PendEntry *pe=pendEntryManager->newPendEntry(bs,manS);
   be->inDebtMain(pe);
   return;}
@@ -4147,10 +4147,10 @@ void cellSendDump(CellFrame *cf){
   cf->setState(Cell_Valid | Cell_Dump_Asked);
   OT->getOwner(cf->getOwnerIndex())->getOneCredit();
   if(be->getOneCredit()){
-    PD(MSG_SENT,"CELL_DUMP to site:%s,o:%d",pSite(na->site),na->index);
+    PD((MSG_SENT,"CELL_DUMP to site:%s,o:%d",pSite(na->site),na->index));
     reliableSendFail(na->site,bs,FALSE,22);	
     return;}
-  PD(MSG_QUEUED,"CELL_DUMP to site:%s,o:%d",pSite(na->site),na->index);
+  PD((MSG_QUEUED,"CELL_DUMP to site:%s,o:%d",pSite(na->site),na->index));
   PendEntry *pe=pendEntryManager->newPendEntry(bs,na->site);
   be->inDebtMain(pe);
   return;
@@ -4162,7 +4162,7 @@ inline void e_valid(CellFrame *cf,TaggedRef old,TaggedRef nw,Thread* th){
   Assert(cf->getState() & Cell_Valid);
   TaggedRef c=cf->getContents();
   cf->setContents(nw);
-  PD(CELL,"CELL: exchange on VALID o:%d",cf->getOwnerIndex());
+  PD((CELL,"CELL: exchange on VALID o:%d",cf->getOwnerIndex()));
   SiteUnify(c,old);}
 
 inline void e_invalid(CellFrame *cf,TaggedRef old,TaggedRef nw,Thread* th){
@@ -4171,7 +4171,7 @@ inline void e_invalid(CellFrame *cf,TaggedRef old,TaggedRef nw,Thread* th){
   cf->setContents(nw);
   oz_stop(th);
   PendThread* pt=new PendThread(th,(PendThread*)NULL);
-  PD(CELL,"CELL: exchange on INVALID o:%d",cf->getOwnerIndex());
+  PD((CELL,"CELL: exchange on INVALID o:%d",cf->getOwnerIndex()));
   cf->setPending(pt);}
 
 inline void e_req(CellFrame *cf,TaggedRef old,TaggedRef nw,Thread* th){
@@ -4179,7 +4179,7 @@ inline void e_req(CellFrame *cf,TaggedRef old,TaggedRef nw,Thread* th){
   cf->setContents(nw);
   oz_stop(th);
   PendThread* pt=new PendThread(th,cf->getPending());
-  PD(CELL,"CELL: exchange on REQUESTED o:%d",cf->getOwnerIndex());
+  PD((CELL,"CELL: exchange on REQUESTED o:%d",cf->getOwnerIndex()));
   cf->setPending(pt);
   SiteUnify(tr,old);}
 
@@ -4191,7 +4191,7 @@ void cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
     OwnerEntry *oe;
     int index=ownerTable->newOwner(oe);
     oe->mkTertiary(c);
-    PD(CELL,"CELL: convertToFrame o:%d",index);
+    PD((CELL,"CELL: convertToFrame o:%d",index));
     cp->convertToFrame(index);
     tt=Te_Frame;}
 
@@ -4201,22 +4201,22 @@ void cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
     CellFrame *cf=(CellFrame *)c; 
     if(cm->isOwnCurrent()){       
       if(cf->getState() & Cell_Valid){
-	PD(CELL,"Exchange: manager own current- valid");
+	PD((CELL,"Exchange: manager own current- valid"));
 	Assert(cf->getState() & Cell_Valid);
 	e_valid(cf,old,nw,th);
 	return;}
       Assert(cf->getState() & Cell_Requested);
-      PD(CELL,"Exchange: manager own current -requested");
+      PD((CELL,"Exchange: manager own current -requested"));
       e_req(cf,old,nw,th);
       return;}
 
     short state=cf->getState();
     Assert(!(state & Cell_Valid));
     if(state & Cell_Requested){
-      PD(CELL,"Exchange: manager has requested");
+      PD((CELL,"Exchange: manager has requested"));
       e_req(cf,old,nw,th);
       return;}
-    PD(CELL,"Exchange: manager invalid");
+    PD((CELL,"Exchange: manager invalid"));
     Assert(state == Cell_Invalid);      // shortcut
     int current=cm->getCurrent();
     cm->setOwnCurrent();
@@ -4245,11 +4245,11 @@ void cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
 }
 
 inline void a_valid(CellFrame *cf,TaggedRef val){
-  PD(CELL,"CELL: access on VALID o:%d",cf->getOwnerIndex());
+  PD((CELL,"CELL: access on VALID o:%d",cf->getOwnerIndex()));
   SiteUnify(val,cf->getContents());}
 
 inline void a_req(CellFrame *cf,TaggedRef val){
-  PD(CELL,"CELL: access on REQUESTED o:%d",cf->getOwnerIndex());
+  PD((CELL,"CELL: access on REQUESTED o:%d",cf->getOwnerIndex()));
   SiteUnify(val,cf->getContents());}
 
 
@@ -4257,7 +4257,7 @@ void cellDoAccess(Tertiary *c,TaggedRef val){
   TertType tt=c->getTertType();
 
   if(tt==Te_Proxy){
-    PD(CELL,"CELL: access on PROXY index");
+    PD((CELL,"CELL: access on PROXY index"));
     CellProxy *cp=(CellProxy*)c;
     BorrowEntry *be=borrowTable->getBorrow(cp->getManagerIndex());
     NetAddress *na=be->getNetAddress();
@@ -4287,7 +4287,7 @@ void cellDoAccess(Tertiary *c,TaggedRef val){
   if(state & Cell_Requested){a_req(cf,val);return;}
   Assert(state == Cell_Invalid);
   
-  PD(CELL,"CELL: access on INVALID o:%d",cf->getOwnerIndex());
+  PD((CELL,"CELL: access on INVALID o:%d",cf->getOwnerIndex()));
   BorrowEntry *be=BT->getBorrow(cf->getManagerIndex());
   NetAddress *na=be->getNetAddress();
   cellSendRead(be,na->site,na->index,val);
@@ -4313,7 +4313,7 @@ OZ_C_proc_begin(BIStartSite,2)
 {
   OZ_declareIntArg(0,vport);
   OZ_declareArg(1,stream);
-  PD(USER,"startSite called vp:%d",vport);
+  PD((USER,"startSite called vp:%d",vport));
   if (ozport!=0) {
     return OZ_raise(OZ_mkTupleC("perdio",1,OZ_atom("site already started")));
   }
@@ -4324,7 +4324,7 @@ OZ_C_proc_begin(BIStartSite,2)
    if(ret==NET_RAN_OUT_OF_TRIES){
     ozport=0;
     return OZ_raiseC("startSite",1,OZ_string("ran out of tries"));}
-  PD(USER,"startSite succeeded");
+  PD((USER,"startSite succeeded"));
   Tertiary *tert;
   ozport = makeTaggedConst(new PortWithStream(am.rootBoard, stream));  
   tert=tagged2Tert(ozport); 
@@ -4339,7 +4339,7 @@ OZ_C_proc_end
     InterfaceCode ret=ipInit(port,siteReceive);				  \
     if(ret==NET_RAN_OUT_OF_TRIES){					  \
       return OZ_raiseC("startSite",1,OZ_string("ran out of tries"));}	  \
-    PD(USER,"startSite succeeded");					  \
+    PD((USER,"startSite succeeded"));					  \
   }
 
 OZ_C_proc_begin(BIstartServer,2)
@@ -4352,7 +4352,7 @@ OZ_C_proc_begin(BIstartServer,2)
     oz_typeError(0,"Port");
   }
 
-  PD(USER,"startServer called p:%d",port);
+  PD((USER,"startServer called p:%d",port));
 
   if (ipIsInit()) {
     return OZ_raiseC("startServer",1,OZ_string("already running"));
@@ -4386,14 +4386,14 @@ OZ_C_proc_begin(BIConnectSite,3){
   OZ_declareIntArg(1,vport);
   OZ_declareArg(2,out);
 
-  PD(USER,"connectSite started vp:%d ho:%s",vport,host);
+  PD((USER,"connectSite started vp:%d ho:%s",vport,host));
   if(ozport==0){
     return OZ_raiseC("connectSite",1,OZ_string("startSite first"));}
 
   Site * sd;    
   InterfaceCode ret=connectSiteV(host,vport,sd,FALSE);
   if(ret==NET_OK){
-    PD(USER,"connectSite success");
+    PD((USER,"connectSite success"));
     OZ_Term x=connect_site_aux(sd); 
     return OZ_unify(out,x);} /* TODO */
   if(ret==NET_RAN_OUT_OF_TRIES){
@@ -4413,7 +4413,7 @@ OZ_C_proc_begin(BIstartClient,3){
   Site * sd;    
   InterfaceCode ret=connectSite(host,port,sd,FALSE);
   if(ret==NET_OK){
-    PD(USER,"connectSite success");
+    PD((USER,"connectSite success"));
     OZ_Term x=connect_site_aux(sd); 
     return OZ_unify(out,x);} /* TODO */
   return OZ_raiseC("connectSite",2,OZ_int(ret),
@@ -4426,14 +4426,14 @@ OZ_C_proc_begin(BIConnectSiteWait,3){
   OZ_declareVirtualStringArg(0,host);
   OZ_declareIntArg(1,vport);   
   OZ_declareArg(2,out);
-  PD(USER,"connectSiteWait started vp:%d h:%s",vport,host);
+  PD((USER,"connectSiteWait started vp:%d h:%s",vport,host));
   if(ozport==0){
     return OZ_raiseC("connectSiteWait",1,OZ_string("startSite first"));}
 
   Site * sd;    
   InterfaceCode ret=connectSiteV(host,vport,sd,TRUE);  
   if(ret==NET_OK){
-    PD(USER,"connectSiteWait success");
+    PD((USER,"connectSiteWait success"));
     OZ_Term x=connect_site_aux(sd);
     return OZ_unify(out,x);} /* TODO */
   if(ret==NET_RAN_OUT_OF_TRIES){
