@@ -19,9 +19,9 @@ SGMLSRCS = \
 	compiler.sgml \
 	intro.sgml directives.sgml ozbatch.sgml panel.sgml \
 	api.sgml engines.sgml interfaces.sgml \
-	switches.sgml narrator.sgml
+	switches.sgml narrator.sgml syntax.sgml
 OZSRCS = \
-	QuietInterface.oz CompilerPanel.oz
+	EvalExpression.oz VirtualStringToValue.oz
 
 .PHONY: all validate install clean veryclean distclean
 

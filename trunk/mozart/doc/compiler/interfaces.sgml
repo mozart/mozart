@@ -1,43 +1,32 @@
 <Section id="section.api.interfaces">
   <Title/Compiler Interfaces/
   <P>
-    A compiler engine by itself may suffice to instruct a compiler to do
-    something, but the possibilities to react to its output are very limited.
-    This is the purpose of <Def/compiler interfaces/.
+    As said above, compiler engines are narrators.  The term <Q/compiler
+    interface/ simply denotes a standard listener attached to a compiler
+    engine.  This section presents what is required to implement a compiler
+    interface.
   <P>
-    With each compiler engine&nbsp;?_{E} an arbitrary number of interfaces
-    can be registered.  All of ?_{E}'s registered interfaces are notified of
-    its output or changes of its state.
-  <SubSection>
-    <Title/The Generic Interface/
-    <P>
-      The class <<Compiler.genericInterface>> is an abstraction
-      simplifying the creation of new interfaces.  The generic
-      interface takes over the registering and the unregistering,
-      automatically handling the creation and termination of the
-      interface's server thread.  New interfaces should be written
-      by subclassing the generic interface.
-      <List>
-	<Entry><<enqueue(?+{T})>>
-	<Item>
-	  forwards the enqueue request to the compiler engine with
-	  which the interface is currently registered.
-      </List>
+    First the notifications sent by compiler engines are documented.  These
+    include normal compiler output and information about compiler state
+    changes.  Then a specific compiler interface is described that makes
+    many compilation tasks easy to control.
   <SubSection>
     <Title/Sent Notifications/
     <Para class=apropos><Title/Query Queue/
       <List>
 	<Entry><<newQuery(?_{I} ?_{T})>>
 	<Item>
-	  A new query ?_{T} with identification ?_{I} has been enqueued.
+	  A new query&nbsp;?_{T} with identification&nbsp;?_{I} has been
+	  enqueued.
 	<Entry><<runQuery(?_{I} ?_{T})>>
 	<Item>
-	  The query ?_{T} with identification ?_{I} is now being executed.
+	  The query&nbsp;?_{T} with identification&nbsp?_{I} is now being
+	  executed.
 	<Entry><<removeQuery(?_{I})>>
 	<Item>
-	  The query with identification ?_{I} has been removed from the query
-	  queue, either because it finished executing or because it was
-	  dequeued by a user program.
+	  The query with identification&nbsp;?_{I} has been removed from
+	  the query queue, either because it finished executing or because
+	  it was dequeued by a user program.
       </List>
     <Para class=apropos><Title/Compiler Activity/
       <List>
@@ -61,7 +50,7 @@
 	<Entry><<maxNumberOfErrors(?_{I})>>
 	<Item>
 	  The maximum number of errors after which to abort compilation
-	  has been set to ?_{I}.
+	  has been set to&nbsp;?_{I}.
 	<Entry><<env(?_{Env})>>
 	<Item>
 	  The environment has been set to ?_{Env}.
@@ -80,7 +69,7 @@
 	  An error or warning message&nbsp;?_{R}, related to the source
 	  coordinates ?_{Coord}, is to be output.  ?_{R}&nbsp;has the
 	  standard error message format, described in
-	  <File>mozart/share/lib/sp/Error.oz</File>.
+	  <File>mozart/share/lib/sp/Error.oz</File>.<!--**-->
 	<Entry><<insert(?_{V} ?_{Coord})>>
 	<Item>
 	  During parsing, the file named&nbsp;?_{V} has been read.
@@ -99,15 +88,31 @@
       </List>
     <Para class=apropos><Title/Synchronization/
       <List>
-	<Entry><<pong()>>
+	<Entry><<pong(?_{X})>>
 	<Item>
-	  This is sent in response to a <<ping(_)>> query
-	  (see <Ptr to="section.api.engines">).
+	  This is sent in response to a <<ping(_)>> or <<ping(_ ?_{X})>> query
+	  (see <Ptr to="section.api.engines">).  In the first case, <<unit>>
+	  is returned in&nbsp;?_{X}.
       </List>
   <SubSection>
-    <Title/Interfaces defined in the Mozart Library and Tools/
-    <Para class=apropos><Title/The <Q/Quiet/ Interface/
-      <Code.Extern display to="QuietInterface.oz">
-    <Para class=apropos><Title/The Compiler Panel/
-      <Code.Extern display to="CompilerPanel.oz">
+    <Title/The <<Compiler.interface>> Class/
+    <P>
+      <!--**-->
+      <List>
+	<Entry><<init(?+{EngineO} ?+{L} &lt;= false)>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<reset()>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<sync()>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<getInsertedFiles(??{Vs})>>
+	<Item>
+	  <P.silent><!--**-->
+	<Entry><<getSource(??{V})>>
+	<Item>
+	  <P.silent><!--**-->
+      </List>
 </Section>
