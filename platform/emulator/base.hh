@@ -106,7 +106,6 @@ const Bool FALSE = 0;
 #define BI_PREEMPT       1024
 #define BI_REPLACEBICALL 1025
 #define BI_TYPE_ERROR    1026
-#define BI_CONTROL_VAR   1027
 
 
 typedef unsigned char BYTE;
