@@ -1,0 +1,239 @@
+<section ID="chapter.widgets.listbox">
+  <TITLE>Listbox widget</title>
+<p>
+<picture.extern to="listbox.gif" type=gif>
+
+<<<local
+   L R
+   Desc=listbox(init:[a b c d e f g h i j k l m n o p]
+		handle:L
+		return:R
+		action:proc{$}
+			  {Show {L get(firstselection:$)}}
+			  {Show {L get(selection:$)}}
+		       in
+			  {L set({List.filterInd {L get($)}
+				  fun{$ J _}
+				     J\={L get(firstselection:$)}
+				  end})}
+		       end
+		tdscrollbar:true)
+in
+   {{QTk.build td(Desc)} show}
+   {Wait R}
+   {Show R}
+end
+>>>
+
+
+<subsection> <TITLE>Description</TITLE>
+
+<P>
+A listbox is a widget that displays a list of strings, one per line. When first created, a new listbox has no elements. Elements may be added or deleted using widget commands described below. In addition, one or more elements may be selected as described below. If a listbox is exporting its selection (see <<exportselection>> option), then it will observe the standard X11 protocols for handling the selection. 
+</P>
+<P>
+It is not necessary for all the elements to be displayed in the listbox window at once; commands
+described below may be used to change the view in the window. Listboxes allow scrolling in both
+directions using the standard <<lrscrollbar>> and <<tdscrollbar>> options. They also support
+scanning, as described below. 
+</P>
+<P>
+<EM>Indices</EM>
+</P>
+<P>
+Many of the widget methods for listboxes take one or more indices as arguments. An index specifies a particular element of the listbox, in any of the following ways: 
+<LIST>
+
+<ITEM> integer: Specifies the element as a numerical index, where 0 corresponds to the first element in the listbox.
+
+<ITEM> <<active>>: Indicates the element that has the location cursor. This element will be displayed with an underline when the listbox has the keyboard focus, and it is specified with the activate widget method. 
+
+<ITEM> <<anchor>>: Indicates the anchor point for the selection, which is set with the selection <<anchor>> method.
+
+<ITEM> <<end>>:  Indicates the end of the listbox. For some commands this means just after the last element; for other commands it means the last element. 
+
+<ITEM> <<'@'#X#','#Y>>:  Indicates the element that covers the point in the listbox window specified by X and Y (in pixel coordinates). If no element covers that point, then the closest element to that point is used. 
+</LIST>
+
+</P>
+
+<subsection> <title>Parameter List</title><p>
+
+<subsubsection><title>Specific Parameters</title><p>
+<ref to="chapter.widgets.listbox.1">1</ref>
+<ref to="chapter.widgets.listbox.action">action</ref>
+<ref to="chapter.widgets.listbox.actionh">actionh</ref>
+<ref to="chapter.widgets.listbox.firstselection">firstselection</ref>
+<ref to="chapter.widgets.listbox.height">height</ref>
+<ref to="chapter.widgets.listbox.init">init</ref>
+<ref to="chapter.widgets.listbox.reload">reload</ref>
+<ref to="chapter.widgets.listbox.return">return</ref>
+<ref to="chapter.widgets.listbox.selection">selection</ref>
+<ref to="chapter.widgets.listbox.selectmode">selectmode</ref>
+<ref to="chapter.widgets.listbox.width">width</ref>
+
+<subsubsection><title>Non Specific Parameters</title><p>
+<ref to="chapter.widgets.listbox.param_background">background</ref>
+<ref to="chapter.widgets.listbox.param_borderwidth">borderwidth</ref>
+<ref to="chapter.widgets.listbox.param_cursor">cursor</ref>
+<ref to="chapter.widgets.listbox.param_exportselection">exportselection</ref>
+<ref to="chapter.widgets.listbox.param_feature">feature</ref>
+<ref to="chapter.widgets.listbox.param_font">font</ref>
+<ref to="chapter.widgets.listbox.param_glue">glue</ref>
+<ref to="chapter.widgets.listbox.param_handle">handle</ref>
+<ref to="chapter.widgets.listbox.param_highlightbackground">highlightbackground</ref>
+<ref to="chapter.widgets.listbox.param_highlightcolor">highlightcolor</ref>
+<ref to="chapter.widgets.listbox.param_highlightthickness">highlightthickness</ref>
+<ref to="chapter.widgets.listbox.param_look">look</ref>
+<ref to="chapter.widgets.listbox.param_lrscrollbar">lrscrollbar</ref>
+<ref to="chapter.widgets.listbox.param_padx">padx</ref>
+<ref to="chapter.widgets.listbox.param_pady">pady</ref>
+<ref to="chapter.widgets.listbox.param_relief">relief</ref>
+<ref to="chapter.widgets.listbox.param_scrollwidth">scrollwidth</ref>
+<ref to="chapter.widgets.listbox.param_selectbackground">selectbackground</ref>
+<ref to="chapter.widgets.listbox.param_selectborderwidth">selectborderwidth</ref>
+<ref to="chapter.widgets.listbox.param_selectforeground">selectforeground</ref>
+<ref to="chapter.widgets.listbox.param_setgrid">setgrid</ref>
+<ref to="chapter.widgets.listbox.param_takefocus">takefocus</ref>
+<ref to="chapter.widgets.listbox.param_tdscrollbar">tdscrollbar</ref>
+<ref to="chapter.widgets.listbox.param_tooltips">tooltips</ref>
+
+<subsection><title>Method List</title><p>
+
+<para><title>'raise'</title><p><<'raise'(1:W)>>: If the <<W>> argument is omitted then the command raises the widget so that it is above all of its siblings in the stacking order (it will not be obscured by any siblings and will obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<'raise'>> command will insert this widget into the stacking order just above <<W>>; this could end up either raising
+or lowering the widget.
+
+<para><title>activate</title><p><<activate(I)>>: Sets the active element to the one indicated by <<I>>. The active element is drawn with an underline when the widget has the input focus.
+
+<para><title>bbox</title><p><<bbox(I V)>>: Binds <<V>> to a list of four numbers describing the bounding box of the text in the element given by <<I>>. The first two elements of the list give the x and y coordinates of the upper-left corner of the screen area covered by the text (specified in pixels relative to the widget) and the last two elements give the width and height of the area, in pixels. If no part of the element given by index is visible on the screen then the result is an empty list; if the element is partially visible, the result gives the full area of the element, including any parts that are not visible. 
+
+<para><title>bind</title><p><<bind(event:E action:A args:LA append:AP)>>: Specifies an action <<LA>> to execute when the event <<E>> is triggered.
+<list>
+<item> Actions can be specified either as a procedure, a pair <<Port#Message>> or a pair <<Object#Method>> (see <ptr to="basics.otherevents">). 
+<item> Events are strings (see <ptr to="misc.events.names">). 
+<item> The list of arguments <<LA>> specifies supplementary information to pass to the action, like the key code of a keypress, or the mouse coordinates of a mouse button click (see <ptr to="misc.events.args">). If <<LA>> if not specified, <<nil>> is assumed.
+<item> The boolean <<append>> parameter specifies if the binding overrides the previous binding for this event, or adds a supplementary action. If not specified, <<false>> is assumed.
+</LIST>
+
+<para><title>delete</title><p><<delete(I ?J)>>: Deletes one or more elements of the listbox. <<I>> and <<J>> are indices specifying the first and last elements in the range to delete. If <<J>> isn't specified it defaults to <<I>>, i.e. a single element is deleted. 
+
+<para><title>get</title><p><<get(parameter1:Variable1 ... parameterX:VariableX)>>: Obtains the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<VariableX>> must be free variables that will receive the current value of the parameters.
+
+<para><title>getFocus</title><p><<getFocus(force:B)>>: if <<B>> is <<false>> (or by default):  if the application currently has the input focus on the widget's display, this command resets the input focus for the widget's display to the widget. If the application doesn't currently have the input focus on the widget's display, the widget will be remembered as the focus for its top-level; the next time the focus arrives at the top-level, it will be redirected it to the widget. If <<B>> is <<true>>: sets the focus of the widget's display to the widget, even if the application doesn't currently have the input focus for the display. This command should be used sparingly, if at all. In normal usage, an application should not claim the focus for itself; instead, it should wait for the window manager to give it the focus. <<B>> must be a boolean.
+
+<para><title>getGrabStatus</title><p><<getGrabStatus(1:V)>>: Binds <<V>> to the atom <<none>> if there is no grab on the widget, to the atom <<local>> if there is a local grab and to <<global>> if there is a global grab. <<V>> must be a free variable.
+
+<para><title>index</title><p><<index(A I)>>: Binds I to an integer giving index value that corresponds to <<A>>.
+
+<para><title>insert</title><p><<insert(I LVS)>>: Inserts the list of virtual strings <<LVS>> just before the element at position <<I>>. If <<I>> is the atom <<end>>, the list is inserted after all elements.
+
+<para><title>lower</title><p><<lower(1:W)>>: If the <<W>> argument is omitted then the command lowers the widget so that it is below all of its siblings in the stacking order (it will be obscured by any siblings and will not obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<lower>> command will insert this widget into the stacking order just below <<W>>; this could end up either raising
+or lowering the widget. 
+
+<para><title>nearest</title><p><<nearest(I V)>>: Given <<I>>, a y-coordinate within the listbox window, this command binds <<V>> to the index of the (visible) listbox element nearest to that y-coordinate. 
+
+<para><title>releaseGrab</title><p><<releaseGrab>>: Releases the grab on the widget if there is one, otherwise does nothing.
+
+<para><title>scan</title><p><<scan(...)>>: This command is used to implement scanning on listboxes. It has two forms, depending on option: 
+<LIST>
+<ITEM> <<scan(mark X Y)>>: Records X and Y and the listbox's current view; used in conjunction with later <<scan(dragto ...)>> commands. Typically this command is associated with a mouse button press in the widget and <<X>> and <<Y>> are the coordinates of the mouse. <<X>> and <<Y>> must be valid distances (see <ptr to="misc.distance">).
+
+<ITEM> <<scan(dragto X Y)>>: This command computes the difference between its <<X>> and <<Y>> arguments (which are
+        typically mouse coordinates) and the <<X>> and <<Y>> arguments to the last <<scan(mark ...)>>
+        command for the widget. It then adjusts the view by 10 times the difference in
+        coordinates. This command is typically associated with mouse motion events in the
+        widget, to produce the effect of dragging the listbox at high speed through its
+        window.
+
+</LIST>
+
+<para><title>see</title><p><<see(I)>>: Adjust the view in the listbox so that the element given by <<I>> is visible. If the element is already visible then the command has no effect; if the element is near one edge of the window then the listbox scrolls to bring the element into view at the edge; otherwise the listbox scrolls to center the element. 
+
+<para><title>set</title><p><<set(parameter1:value1 ... parameterX:valueX)>>: Changes the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<valueX>> must be a valid value for the parameter.
+
+<para><title>setGrab</title><p><<setGrab(global:B)>>: Sets a grab on the widget. If <<B>> is <<true>> then the grab is global, otherwise it is local (<<B>> false by default). If a grab was already in effect for this application then it is automatically released. If there is already a grab on the widget and it has the same global/local form as the requested grab, then the command does nothing. Local grab affects only the grabbing application: events will be reported to other applications as if the grab had never occurred. A global grab locks out all applications on the screen, so that only the given subtree of the grabbing application will be sensitive to pointer events (mouse button presses, mouse button releases, pointer motions, window entries, and window exits). During global grabs the window manager will not receive pointer events either. Warning: whe a grab is set, it is define for the whole Oz process so that it will prevent the user to do input to other windows as well. Moreover a grab is still effective even if the window that contains the grabbed widgets is hidden. <<B>> must be a boolean.
+
+<para><title>size</title><p><<size(V)>>: Binds <<V>> to an integer indicating the total number of elements in the listbox. 
+
+<para><title>winfo</title><p><<winfo(parameter1:value1 ... parameterX:valueX)>>: This commands works like the <<get>> method, but for window-related information. For more details, see <ptr to="misc.winfo">.
+
+<subsection><title>Detailed Parameters List</title><p>
+
+<para id="chapter.widgets.listbox.1"><title>1</title><p><<1:LVS>>: Specifies a list of virtual strings that represents the items in the listbox.  This parameter can be only used with the <<set()>> and <<get()>> methods. <<LVS>> must be a list of virtual strings.
+
+<para id="chapter.widgets.listbox.action"><title>action</title><p><<action:C>>: Specifies an action to execute right after the user changed the selection. <<C>> can take several different forms (see <ptr to="basics.events">).
+
+<para id="chapter.widgets.listbox.actionh"><title>actionh</title><p><<actionh:C>>: Similar to the <<action>> parameter where then handle of the widget is given as a parameter to the <<action>> to be executed. This parameter overrides the <<action>> parameter when present.
+
+<para id="chapter.widgets.listbox.firstselection"><title>firstselection</title><p><<firstselection:V>>: Can be used with the <<get()>> method only. Binds V to the number of the first selected item.
+
+<para id="chapter.widgets.listbox.height"><title>height</title><p><<height:I>>: Specifies the desired height for the window, in lines. If zero or less, then the desired height for the window is made just large enough to hold all the elements in the listbox. <<I>> must be an integer.
+
+<para id="chapter.widgets.listbox.init"><title>init</title><p><<init:LVS>>: Specifies a list of virtual strings that represents the items in the listbox.  This parameter can be only used at creation time. <<LVS>> must be a list of virtual strings.
+
+<para id="chapter.widgets.listbox.param_background"><title>background</title><p><<background:C>>: or <<bg:C>>: Specifies the normal background color to use when displaying the widget. <<C>> must be a valid color (see <ptr to="misc.color">).
+
+<para id="chapter.widgets.listbox.param_borderwidth"><title>borderwidth</title><p><<borderwidth:P>>: Specifies a non-negative value indicating the width of the 3-D border to draw around the outside of the widget (if such a border is
+    being drawn; the <<relief>> option typically determines this). The value may also be used when drawing 3-D effects in the interior of
+    the widget. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">).
+
+<para id="chapter.widgets.listbox.param_cursor"><title>cursor</title><p><<cursor:A>>: Specifies the mouse cursor to be used for the widget. <<A>> must be a valid cursor (see  <ptr to="misc.cursor">)
+
+<para id="chapter.widgets.listbox.param_exportselection"><title>exportselection</title><p><<exportselection:B>>: Specifies whether or not a selection in the widget should also be the X selection. If the selection is exported, then selecting in the widget deselects the current X selection, selecting outside the widget deselects any widget selection, and the widget will respond to selection retrieval requests when it has a selection. The default is usually for widgets to export selections. <<B>> must be a boolean.
+
+<para id="chapter.widgets.listbox.param_feature"><title>feature</title><p><<feature:A>>: Specifies a feature name for the container object to reference the object controlling this widget. For more details, see <ptr to="basics.interaction">. <<A>> must be an atom.
+
+<para id="chapter.widgets.listbox.param_font"><title>font</title><p><<font:F>>: Specifies the font to use when drawing text inside the widget. This parameter can't be get at runtime, however it can be set. <<F>> must be a valid font (see  <ptr to="misc.font">)
+
+<para id="chapter.widgets.listbox.param_glue"><title>glue</title><p><<glue:A>>: Specifies how a widget must fit in its own available place. <<A>> must be an atom that is any combination of <<n>>, <<s>>, <<w>> and <<e>>. If a direction is specified, the corresponding border is glued to its neighbor or border of the frame if there is no neighbor. If a direction is not specified, the corresponding border if such that the widget takes just the width or height it needs to draw itself. If none of opposite directions is specified, the widget is centered. For more details, see <ptr to="basics.geometry">.
+
+<para id="chapter.widgets.listbox.param_handle"><title>handle</title><p><<handle:V>>: Specifies a variable to reference the object controlling this widget. This variable is bound when the window is built. For more details, see <ptr to="basics.interaction">. <<V>> must be a free variable.
+
+<para id="chapter.widgets.listbox.param_highlightbackground"><title>highlightbackground</title><p><<highlightbackground:C>>: Specifies the color to display in the traversal highlight region when the widget does not have the input focus.  <<C>> must be a valid color (see <ptr to="misc.color">)
+
+<para id="chapter.widgets.listbox.param_highlightcolor"><title>highlightcolor</title><p><<highlightcolor:C>>: Specifies the color to use for the traversal highlight rectangle that is drawn around the widget when it has the input focus. <<C>> must be a valid color (see <ptr to="misc.color">)
+
+<para id="chapter.widgets.listbox.param_highlightthickness"><title>highlightthickness</title><p><<highlightthickness:P>>: Specifies a non-negative value indicating the width of the highlight rectangle to draw around the outside of the widget when it has
+    the input focus. If the value is zero, no focus highlight is drawn
+    around the widget. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">).
+
+<para id="chapter.widgets.listbox.param_look"><title>look</title><p><<look:L>>: Specifies a look to use for the widget. A look specifies default values for the parameters of widgets. This parameter can be specified at creation time only. Moreover changing a look will not change the appearance of widgets that are already displayed with that look. See <ptr to="misc.look"> for more details.
+
+<para id="chapter.widgets.listbox.param_lrscrollbar"><title>lrscrollbar</title><p><<lrscrollbar:B>>: Determines whether the widget has got a horizontal bar below. This option can be specified at creation time only. <<B>> must be a boolean.
+
+<para id="chapter.widgets.listbox.param_padx"><title>padx</title><p><<padx:P>>: Specifies how much horizontal external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
+
+<para id="chapter.widgets.listbox.param_pady"><title>pady</title><p><<pady:P>>: Specifies how much vertical external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
+
+<para id="chapter.widgets.listbox.param_relief"><title>relief</title><p><<relief:A>>: Specifies the 3-D effect desired for the widget.  Must be one of these atoms: <<raised>>, <<sunken>>, <<flat>>, <<ridge>>, <<solid>> or <<groove>>. The value
+    indicates how the interior of the widget should appear relative to its exterior; for example, <<raised>> means the interior of the widget
+    should appear to protrude from the screen, relative to the exterior of the widget. 
+
+<para id="chapter.widgets.listbox.param_scrollwidth"><title>scrollwidth</title><p><<scrollwidth:P>>: Specifies the width of the vertical and horizontal scrollbars. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
+
+<para id="chapter.widgets.listbox.param_selectbackground"><title>selectbackground</title><p><<selectbackground:C>>: Specifies the background color to use when displaying selected items. <<C>> must be a valid color (see <ptr to="misc.color">).
+
+<para id="chapter.widgets.listbox.param_selectborderwidth"><title>selectborderwidth</title><p><<selectborderwidth:P>>: pecifies a non-negative value indicating the width of the 3-D border to draw around selected items. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">).
+
+<para id="chapter.widgets.listbox.param_selectforeground"><title>selectforeground</title><p><<selectforeground:C>>: Specifies the foreground color to use when displaying selected items. <<C>> must be a valid color (see <ptr to="misc.color">).
+
+<para id="chapter.widgets.listbox.param_setgrid"><title>setgrid</title><p><<setgrid:B>>: Determines whether this widget controls the resizing grid for its top-level window. This option is typically used in text widgets, where the information in the widget has a natural size (the size of a character) and it makes sense for the window's dimensions to be integral numbers of these units. These natural window sizes form a grid. If the <<setgrid>> option is set to <<true>> then the widget will communicate with the window manager so that when the user interactively resizes the top-level window that contains the widget, the dimensions of the window will be displayed to the user in grid units and the window size will be constrained to integral numbers of grid units. <<B>> must be a boolean.
+
+<para id="chapter.widgets.listbox.param_takefocus"><title>takefocus</title><p><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanism consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
+
+<para id="chapter.widgets.listbox.param_tdscrollbar"><title>tdscrollbar</title><p><<tdscrollbar:B>>: Determines whether the widget has got a vertical bar at the right. This option can be specified at creation time only. <<B>> must be a boolean.
+
+<para id="chapter.widgets.listbox.param_tooltips"><title>tooltips</title><p><<tooltips:VS>>: Specifies a tooltip for the widget. A tooltip is a small message that appears when the mouse cursor if left still over the widget for a while. If <<VS>> is set to <<nil>>, no tooltip will appear at all. <<VS>> must be a virtual string.
+
+<para id="chapter.widgets.listbox.reload"><title>reload</title><p><<reload:V>>: This parameter can be only used with the <<get()>> method and returns a list of virtual strings that represents the contents of the listbox. This is the same as the <<1>> option except that it is slower. However if you use weird methods for modifying the contents of the list (using the <<tk>> method for example) and bypassing the methods described here, you may find cases where you need to use the <<reload>> parameter to resynchronize the states of Tk and QTk.
+
+<para id="chapter.widgets.listbox.return"><title>return</title><p><<return:V>>: When the window is closed, <<V>> is bound to a list of virtual strings representing the items in the listbox. <<V>> must be a free variable.
+
+<para id="chapter.widgets.listbox.selection"><title>selection</title><p><<selection:LB>>: Specifies a list of booleans. This list contains as many booleans as there are items in the listbox. For each item, the corresponding boolean in the list is true if the item is selected, false otherwise. <<LB>> must be a list of booleans.
+
+<para id="chapter.widgets.listbox.selectmode"><title>selectmode</title><p><<selectmode:A>>: Specifies one of several styles for manipulating the selection. The value of <<A>> may be arbitrary, but the default bindings expect it to be either one of the following atoms: <<single>>, <<browse>>, <<multiple>>, or <<extended>>; the default value is <<browse>>. 
+
+<para id="chapter.widgets.listbox.width"><title>width</title><p><<width:I>>: Specifies the desired width for the window in characters. If the font doesn't have a uniform width then the width of the character ``0'' is used in translating from character units to screen units. If zero or less, then the desired width for the window is made just large enough to hold all the elements in the listbox.  <<I>> must be an integer.
+
+
+</section>

@@ -1,0 +1,149 @@
+<CHAPTER ID="chapter.example">
+  <TITLE>Tutorial example: a notepad application</TITLE>
+<p>
+This chapter describes by an example how a GUI (graphical user interface) is built using the QTk module. The creation of widgets, their geometry inside the window and their interaction with Mozart are described.
+
+<figure id="figure.picture3">
+<caption>Notepad application</caption>
+<picture.extern to="picture3.gif" type=gif>
+
+<section> <TITLE>Geometry management</TITLE>
+
+<P>
+The example application consists of a window composed by
+
+<LIST>
+<ITEM> A toolbar with the following buttons: Save, Load and Quit.
+<ITEM> A main area where the user can type the text.
+</LIST>
+
+The construction of the window is completely described by a record. This record defines the widgets that compose the window, how these widgets must be placed and what is their behavior upon window resizing. The label of the record defines the widget type while the features define its parameters. Some widgets act as containers for other widgets. The two main containers are:
+
+<LIST>
+<ITEM> <<td>>: all widgets contained in this one are placed top to down
+<ITEM> <<lr>>: all widgets contained in this one are placed left to right
+</LIST>
+
+In this application, the toolbar is composed of <<button>> widgets. The <<text>> parameter defines the text inside the button. 
+
+<figure id="figure.picture1">
+<picture.extern to="picture1.gif" type=gif>
+
+The toolbar is described by:
+<CODE DISPLAY>Toolbar=lr(button(text:"Save")
+           button(text:"Load")
+           button(text:"Quit"))</CODE>
+
+which means: place these three buttons respectively from left to right, each button taking the size it needs to display itself.
+
+Combining with the text widget, we obtain:
+<CODE DISPLAY>Description=td(Toolbar
+               text)</CODE>
+which means: place the toolbar and the text respectively from top to bottom, each widget taking the size it needs to display itself.
+</P>
+<P>
+Now we can build a window from this description by the command:
+<CODE DISPLAY>Window={QTk.build Description}</CODE>
+This window is hidden by default and must be explicitly shown:
+<CODE DISPLAY>{Window show}</CODE>
+This is already a first version of the application UI, but it still requires more work. Something that is easily noticeable by resizing the window, is that the widgets don't resize in a very clever way inside the window.
+
+<figure id="figure.picture2">
+<picture.extern to="picture2.gif" type=gif>
+
+
+One expects the toolbar to stick itself to the top left of the window, and the text widget to take all remaining available size below. All widgets have a glue parameter that specifies constraints to their geometry management. Valid values for the glue parameters are atoms that are combinations of <<n>>, <<s>>, <<w>> and <<e>>. By default a widget takes as much place as it needs to draw itself, and if it receives more space than needed, the widget is centered inside that space. By specifying <<n>> (resp. <<s>>, <<w>>, <<e>>) you enforce the north (resp. south, west and east) border of the widget to glue to its top (resp. down, left, right) neighbor. If you specify both <<ns>> (resp. <<we>>) you enforce both opposite border to stick to their respective neighbors, resulting in the widget taking all the vertical (resp. horizontal) space available.
+</P>
+<P>
+Using the glue parameter we define:
+<CODE DISPLAY>Toolbar=lr(glue:nw                     % the toolbar glues itself to the top left of the window
+           button(text:"Save" glue:w)  % the button glues itself to the left of the lr widget
+           button(text:"Load" glue:w)  % idem
+           button(text:"Quit" glue:w)) % idem
+
+Description=td(Toolbar
+               text(glue:nswe))</CODE>
+Note that the very first <<td>> or <<lr>> widget is always implicitly <<glue:nswe>>.
+Building and showing the window again, we obtain an application that has a complete graphical user interface, except that it is an empty shell: there is no interaction defined between the application and the user.
+</P>
+
+<section> <TITLE>Interaction with the user</TITLE>
+
+<P>
+An action can be associated to buttons. It is executed when the user clicks the button:
+<CODE DISPLAY>button(text:"Quit" glue:w action:proc{$} {Application.exit 0} end)}</CODE>
+This definition makes the oz application terminate when the user clicks the Quit button. Another possibility is to just close the window using this particular parameter:
+<CODE DISPLAY>button(text:"Quit" glue:w action:toplevel#close)</CODE>
+Let's make procedures for the Save and Load buttons. The new definitions for these buttons are:
+<CODE DISPLAY>button(text:"Save" glue:w action:SaveText)
+button(text:"Load" glue:w action:LoadText)</CODE>
+Where <<LoadText>> and <<SaveText>> do these:
+
+<LIST>
+<ITEM> Ask a filename. Standard dialog boxes are provided in QTk: <<{QTk.dialogbox load(...)}>> and <<{QTk.dialogbox save(...)}>>
+<ITEM> Get the contents of the text widget and save it to the file or get the contents of the file and change the contents of the text widget accordingly.
+</LIST>
+
+We need a way to dynamically change or get the state of the text widget, i.e. interact with it. This is what handles are used for:
+<CODE DISPLAY>TextHandle
+Description=td(Toolbar
+               text(glue:nswe handle:TextHandle))</CODE>
+After the window is built, the (unbound) variable TextHandle is bound to an object that controls the text widget. The current text can be obtained by:
+<CODE DISPLAY>{TextHandle get($)}</CODE>
+and set by:
+<CODE DISPLAY>{TextHandle set(SomeValue)}</CODE>
+We can now write the <<SaveText>> and <<LoadText>> procedures:
+<CODE DISPLAY>proc{SaveText}
+  Name={QTk.dialogbox save($)}
+in
+  try
+    File={New Open.file init(name:Name flags:[write create])}
+    Contents={TextHandle get($)}
+  in
+    {File write(vs:Contents)}
+    {File close}
+  catch _ then skip end
+end
+
+proc{LoadText}
+  Name={QTk.dialogbox load($)}
+  Contents={TextHandle get($)}
+in
+  try
+    File={New Open.file init(name:Name)}
+    Contents={File read(list:$ size:all)}
+  in
+    {TextHandle set(Contents)}
+    {File close}
+  catch _ then skip end
+end</CODE>
+And the application is now complete.
+</P>
+
+<section> <TITLE>Enhancements</TITLE>
+
+<P>
+Instead of using standard buttons, we might want to use a toolbar look and feel. A QTk widget exists for that purpose: <<tbbutton>>. As its interface is the same as standard buttons, we just have to change the label of this record:
+<CODE DISPLAY>Toolbar=lr(glue:we
+           tbbutton(text:"Save" glue:w)
+           tbbutton(text:"Load" glue:w)
+           tbbutton(text:"Quit" glue:w))</CODE>
+If there is a lot of text, scrollbars are required for easy mouse navigation. A vertical scrollbar can be added with this parameter:
+<CODE DISPLAY>text(glue:nswe handle:TextHandle tdscrollbar:true)</CODE>
+
+Also one may prefer the white color as background color for the text:
+<CODE DISPLAY>text(glue:nswe handle:TextHandle tdscrollbar:true bg:white)</CODE>
+
+As you can see, widgets are highly configurable by parameters. Most of these parameters can be dynamically changed:
+
+<CODE DISPLAY>{TextHandle set(bg:white)}</CODE>
+
+Sets the background to <<white>>, at any time as long as the window containing that particular widget exists (ie is created and not yet closed). Interfaces to widgets were made as uniform as possible and similar widgets have similar parameters name and use.
+
+<section> <TITLE>The complete code</TITLE>
+
+ <para><title><ref.extern to="notepad.oz">Source
+File</ref.extern></title>
+<code.extern display to="notepad.oz" proglang=oz></para>
+
+</CHAPTER>

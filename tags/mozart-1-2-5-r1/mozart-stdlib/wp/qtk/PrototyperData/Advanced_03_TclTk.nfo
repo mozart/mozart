@@ -1,0 +1,9 @@
+This example shows how widgets can be used at the lowest level.
+
+The graphical engine that displays the window is Tcl/Tk. You may sometimes find situations where you want to make things that isn't directly possible with QTk, even if it is possible in TclTk.
+
+The example below shows how a Tcl/Tk command is sent to the text widget (exec method), and also how this widget is asked some information (return method with a type specification by means of the type parameter).
+
+All QTk objects controlling a widget have the exec and return methods.
+
+Warning : use these methods iff you can't do otherwise. Using these methods can hamper with the built in functionalities of QTk so that the behaviour may become unpredictable if both are mixed.

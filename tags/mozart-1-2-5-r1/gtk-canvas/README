@@ -1,0 +1,44 @@
+This is a straight port of the GNOME Cavnas from the stable gnome-libs 1.2.4
+back to gtk+.  Thw widget is called GtkCanvas. To compile and to install it,
+follow the standard GNU tool convention:
+
+./configure --prefix=(destin dir path)
+make 
+make install
+
+This widget behaves identically to the GnomeCanvas widget, with the same APIs, 
+except the names are changed from gnome_canvas to gtk_canvas.  Thus you can use
+the GNOME documentation on this widget.  The test-gtkcanvas program in the test
+directory can serve as a starting point on learning to use the widget.
+
+Currently the widget still depends on GdkImLib, which is available from 
+
+ftp://ftp.gnome.org/pub/GNOME/stable/sources/imlib/
+
+Modern GNU/Linux distributions like Red Hat should come with it already.  Since
+the next version of gtk+ will drop GdkImLib and intgrate with gdk-pixbuf, it
+is expected that future versions of this widget will depend upon gtk+ only.
+
+This distribution contains libart_lgpl.
+
+I intend to have GtkCanvas follows GnomeCanvas closely and merges new code
+whenever a stable release of the latter is made.  Thus this is not really a
+fork but rather a "re-packaging" of the same code.  I recommend that you
+consider using the GNOME libraries first before using this widget, as the GNOME
+framework provides many services, much more than a canvas widget.  
+
+If the gtk+ maintainers decide someday to place this widget into gtk+, then I
+shall turn this to them and stop distribute this widget separately.
+
+This software is licensed under the GNU Lesser General Public License version
+2.1, or any later version. Please refers to the file COPYING.LIB for details. 
+The test-gtkcanvas program is  licensed under the GNU GPL (please see the file
+COPYING).
+
+Again, I basically did a re-packing.  The main authors of this software were
+Federico Mena <quartic@gimp.org> (GnomeCanvas) and Raph Levien <raph@acm.org>
+(libart_lgpl).
+
+Please send bug fixes, suggestions and comments to Andy Tai, atai@atai.org.
+
+Andy Tai

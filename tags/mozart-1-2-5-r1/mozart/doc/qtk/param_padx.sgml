@@ -1,0 +1,1 @@
+<ITEM> <<padx:P>> : Specifies how much horizontal external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)

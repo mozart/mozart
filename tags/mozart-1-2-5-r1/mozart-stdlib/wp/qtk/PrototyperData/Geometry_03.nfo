@@ -1,0 +1,10 @@
+This examples shows combinations of glue parameters.
+
+Run the example below and resize the window.
+
+- The first label isn't specified any glue parameter : it is centered, taking only the width and height it requires to draw itself.
+- The second label is specified both north and south : it takes all the vertically available space, while taking only the neccessary width.
+- The third label is specified both east and west : it takes all the available width, while taking only the necessary height (note it is vertically centered).
+- The fourth label is specified all directions and take as much space as available.
+
+Exercice : try different combinations of n,s,w and e and rerun to see the differences. For example try to glue the third label nwe. Note that all different possible combinations of n, s, w and e are valid and give different results.

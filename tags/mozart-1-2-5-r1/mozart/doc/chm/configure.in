@@ -1,0 +1,45 @@
+dnl -*- sh -*-
+dnl
+dnl  Author:
+dnl    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+dnl
+dnl  Copyright:
+dnl    Leif Kornstaedt, 1998
+dnl
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl
+dnl  This file is part of Mozart, an implementation of Oz 3:
+dnl    http://www.mozart-oz.org
+dnl
+dnl  See the file "LICENSE" or
+dnl    http://www.mozart-oz.org/LICENSE.html
+dnl  for information on usage and redistribution
+dnl  of this file, and for a DISCLAIMER OF ALL
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(Mozart.hhc.in)
+OZ_INIT
+OZ_PATH_PROG(AWK,gawk awk)
+AC_SUBST(AWK)
+
+AC_MSG_CHECKING(for --with-stdlib)
+AC_ARG_WITH(stdlib,
+    [--with-stdlib=DIR
+         directory where mozart standard library is checked out (default=NONE)],
+    oz_stdlib=${with_stdlib})
+: ${oz_stdlib=}
+AC_MSG_RESULT($oz_stdlib)
+OZSTDLIB="$oz_stdlib"
+AC_SUBST(OZSTDLIB)
+
+AC_OUTPUT(Makefile preprocess.awk)
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../../aclocal.m4.
+]))

@@ -1,0 +1,2 @@
+<ITEM> <<anchor:A>> : Specifies how the information in a widget (e.g. text or a bitmap) is to be displayed in the widget. <<A>> must be one of these atoms : <<n>>, <<ne>>, <<e>>, <<se>>, <<s>>, <<sw>>, <<w>>, <<nw>>, or <<center>>. For example, <<nw>> means display the information such that its top-left corner is at the top-left corner of
+    the widget. 

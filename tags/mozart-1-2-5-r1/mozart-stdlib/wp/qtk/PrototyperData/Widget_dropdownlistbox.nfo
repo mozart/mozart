@@ -1,0 +1,5 @@
+This example shows the dropdownlistbox widget.
+
+A dropdownlistbox is a button with a down arrow. When the user clicks on the arrow, a listbox appears below, asking the user to select one of the displayed item, or to click elesewhere to close the listbox.
+
+The parameters are the same as for the usual listbox widget.

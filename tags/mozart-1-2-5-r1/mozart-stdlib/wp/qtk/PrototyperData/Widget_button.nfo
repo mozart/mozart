@@ -1,0 +1,9 @@
+This example shows the button widget.
+
+A button widget is the standard push button that triggers an action when clicked.
+
+See the Interaction examples for details about the format of the action parameter.
+
+The return parameter allows to define a variable that will be binded when the window is closed :
+- binded to true iff it is the execution of the action of the button that closed the window.
+- binded to false otherwise.

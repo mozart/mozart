@@ -1,0 +1,414 @@
+<!--
+  - Authors:
+  -   Thorsten Brunklaus  <brunklaus@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Thorsten Brunklaus, 2001
+  -   Leif Kornstaedt, 2001
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.builder">
+  <Title/Declarative Specifications Using the GBuilder/
+  <P>
+    When implementing a user interface, and in particular when refining it
+    for visual effect, you'll find that a significant number of parameters
+    need to be set on its component widgets.  The API then requires you to
+    invoke a large number of functions, which is cumbersome and yields code
+    that is hard to maintain.
+  <Para class=apropos><Title/Declarative Specification/
+    The GBuilder is an abstraction providing for declarative specification
+    of user interfaces.  It allows to create widget hierarchies, configure
+    them, and attach signal handlers.  A <Def/widget description/ is a
+    record whose label names the widget class and whose features configure
+    its arguments, signal handlers, and children.
+  <Para class=apropos><Title/Robustness/
+    Using the GBuilder also provides for more robust programs than programs
+    implemented using the binding API directly:  You get more checking, in
+    particular type-checking of arguments, and many errors are reported by
+    Oz exceptions.
+  <Para class=apropos><Title/Related Work/
+    The design of the GBuilder has been inspired by QTk, a description-based
+    user interface builder for Tk, available in the Mozart Standard Library.
+  <Section>
+    <Title/<Q/Hello, World/ Revisited/
+    <P>
+      The following is an example of a specification.  It is a formulation of
+      the <Q/hello world/ application from <Ptr to="chapter.intro"> using the
+      GBuilder.
+<<<functor
+import
+   Application(exit)
+   System(showInfo)
+   GBuilder(create)
+define
+   proc {DeleteEventCallback Args}
+      {System.showInfo 'handling deleteEvent'}
+      {Application.exit 0}
+   end
+   proc {ClickedCallback Args}
+      {System.showInfo 'handling clicked'}
+   end
+   Spec = window(type: toplevel
+		 borderWidth: 10
+		 title: 'Hello, World!'
+		 deleteEvent: DeleteEventCallback
+		 add(button(label: 'Hello, World!'
+			    clicked: ClickedCallback)))
+   {{GBuilder.create Spec} showAll()}
+end>>>
+    <Para class=apropos><Title/A Closer Look/
+      When we look at the core of the program, namely the definition of
+      <<Spec>>, we notice a number of things.  The record's label tells that
+      it specifies a <<window>> widget.  Some features, namely <<type>>,
+      <<borderWidth>> and <<title>>, set some of the window's arguments.
+      Other features are used to connect handlers to signals, such as
+      <<deleteEvent>>.  Children can be specified under integer features:
+      These name the method used to add the child as a record label and
+      give the child's specification under feature&nbsp;<<1>>.  The
+      <<GBuilder.create>> method takes a specification, creates the
+      corresponding widget tree, and returns the root widget.
+  <Section>
+    <Title/Specifications/
+    <P>
+      This section describes specifications in more detail, and explains
+      how the GTK+ reference documentation maps to GBuilder specifications.
+    <Para class=apropos><Title/Verbatim Objects/
+      A specification is either a verbatim object, which is an already
+      instantiated widget, or it is a record describing a widget that is to be
+      constructed and configured.  This allows to freely mix widgets created
+      through the binding API and through the GBuilder.  When a specification
+      is a widget description, it is interpreted as described in the following
+      sections.
+    <SubSection>
+      <Title/Widget Classes/
+      <P>
+	The widget class is given by the label of the specification record.
+	The different API namespaces are not distinguished.  Currently, the
+	following widget classes are supported by the GBuilder:
+	<List>
+	  <Entry>GDK classes.
+	  <Item>
+	    Only <<color>> and <<font>> are provided as GBuilder classes.
+	  <Entry>GTK classes.
+	  <Item>
+	    All GTK widget classes except <<cTree>>, <<image>>, and <<pixmap>>
+	    should be implemented.
+	  <Entry>GTK Canvas classes.
+	  <Item>
+	    Only the <<canvas>> class is provided.
+	</List>
+	Note that you can freely mix widgets created with the GBuilder and
+	with the binding API, so you can easily work around these limitations.
+    <SubSection>
+      <Title/Handles/
+      <P>
+	When you need to work with GBuilder-created widgets using the
+	binding API, you need a reference to the widget object proper:
+	When a specification record contains a <<handle>> feature, the
+	corresponding subtree is expected to be a logic variable which
+	will be bound to the widget when it is created.
+    <SubSection>
+      <Title/Arguments/
+      <P>
+	Arguments are configured by atom features.  Argument names always
+	adhere to the camel-casing scheme, with the first letter downcased.
+	In general, argument values are type-checked before they are passed
+	to the binding API, so that you get a meaningful Oz exception in
+	the case of an ill-typed argument.
+      <Para class=apropos><Title/Argument Kinds/
+	The GBuilder distinguishes arguments of several kinds:
+	<List>
+	  <Entry>Generic GTK+ arguments.
+	  <Item>
+	    All arguments listed by the GTK+ reference documentation are
+	    available as GBuilder arguments.
+	  <Entry>Accessors.
+	  <Item>
+	    The GTK+ API provides a number of accessor methods (&ie;,
+	    functions containing <Code proglang=c/_get_/ or <Code
+	    proglang=c/_set_/ in their name).  Not all of these are
+	    available as generic GTK+ arguments.  The GBuilder provides
+	    arguments for all accessor methods, where the argument's
+	    name is derived from the accessor method names.
+	  <Entry>Constructor parameters.
+	  <Item>
+	    Some constructors in the GTK+ API reference documentation accept
+	    parameters, and not all of these are defined as generic GTK+
+	    arguments, or are gettable and settable using accessors.  These
+	    parameters are also available through GBuilder arguments; their
+	    name is then usually derived from the formal parameter name given
+	    in the reference documentation.
+	</List>
+    <SubSection>
+      <Title/Types/
+      <P>
+	For increased convenience, types are mapping differently in GBuilder
+	than they are by the binding API.  Integers, floats, and (virtual)
+	strings are handled identically.  Booleans are represented as Oz
+	booleans (<<true>> and <<false>>) instead of integers.  String arrays
+	are converted implicitly from and to lists of virtual strings instead
+	of requiring <<GTK.makeStrArr>> and <<GTK.getStrArr>>.  (Due to a
+	current limitation, however, this may create a memory leak, since
+	they are not freed automatically.)
+      <Para class=apropos><Title/Enumerations/
+	Values of enumeration types are represented as atoms instead
+	of integers, &ie;, you can write <<toplevel>> instead of
+	<<GTK.'WINDOW_TOPLEVEL'>> in GBuilder specifications:  The
+	type name prefix is cut off from the constant's name and it
+	is camel-cased, with the first letter downcased.
+      <Para class=apropos><Title/Flags/
+	Flag types are represented as lists of atoms instead of integers.
+	Individual flag names are represented similarly to enumeration
+	values.  In GBuilder, you'd use <<[expand fillX fillY]>> instead
+	of <<GTK.'PACK_EXPAND' + GTK.'FILL_X' + GTK.'FILL_Y'>>.
+    <SubSection>
+      <Title/Signal Handlers/
+      <P>
+	Signal handlers are configured by atom features that carry the
+	signal's name.  Dash-separated signal names from the reference
+	documentation are converted to atoms by camel-casing, removing the
+	dashes, and downcasing the first letter.  The GBuilder will check
+	that the signal is actually defined for the corresponding widget
+	class.
+      <Para class=apropos><Title/Callbacks/
+	The following values are supported for callbacks:
+	<List>
+	  <Entry>Procedures.
+	  <Item>
+	    A standard unary procedure accepting the signal's arguments can
+	    be provided as a callback.
+	  <Entry>Port sends.
+	  <Item>
+	    A pair of a port and a message can be given as a callback.  When
+	    the callback is invoked, the message is sent on the port.  The
+	    signal's arguments are ignored.
+	  <Entry>Object messages.
+	  <Item>
+	    A pair of an object and a message can be given as a callback.
+	    When the callback is invoked, the objects is applied to the
+	    message.  The signal's arguments are ignored.
+	</List>
+    <SubSection>
+      <Title/Children/
+      <P>
+	For container widgets, a number of children can be specified.
+	These are either defined by consecutive integer features starting
+	with&nbsp;<<1>>, or given as a list under feature <<children>>.
+      <Para class=apropos><Title/Adding Children/
+	Different container widgets provide different ways of adding children,
+	and some container widgets support several ways.  For this reason,
+	the child is not direcly given as a specification, but within an
+	<Def/attacher specification/.  Furthermore, attachers support
+	different parameters configuring how to lay out the child.
+      <Para class=apropos><Title/Attachers/
+	Therefore, an attacher is also a record.  The label gives the method
+	used to attach the child (&eg;, containers have a generic <<add>>;
+	boxes provide <<packStart>> and <<packEnd>> methods, tables use
+	<<attach>>).  The attacher record must give the child widget's
+	specification under feature&nbsp;<<1>>.  Other atom features can
+	parameterize the attacher.  <Ptr to="section.attachers"> gives
+	a list of all currently defined attachers.
+  <Section>
+    <Title/Configuration and Access/
+    <P>
+      In addition to specifications for creating widgets, the GBuilder
+      provides new widget methods to reconfigure widgets and to access
+      arguments.  Note that these methods are not available to objects
+      created using the binding API, only to those created using the
+      GBuilder's <<create>> function.
+      <List>
+	<Entry><<conf(...)>>
+	<Item>
+	  reconfigures the widget.  Any mutable arguments can be set by
+	  including atom features with the argument names in the message.
+	  Any signal handlers can be added (in addition to existing ones)
+	  by including atom features with the signal names in the message.
+	  New children can be added (to those already present) by including
+	  integer features or the atom feature <<children>> in the message.
+	<Entry><<return(...)>>
+	<Item>
+	  accesses argument values.  Only atom features representing
+	  argument names can be given in the message.  If the argument is
+	  readable, then the corresponding subtree will be bound to the
+	  argument's current value, else an exception is raised.
+      </List>
+  <Section>
+    <Title/Reference/
+    <P>
+      This section provides a reference to the GBuilder functionality as
+      far as it is not defined by the generic mapping described before.
+    <SubSection id="section.attachers">
+      <Title/Attachers/
+      <P>
+	The following lists all attachers supported by the GBuilder.
+	<List>
+	  <Entry>All subclasses of <<container>>
+	  <Item>
+	    provide a generic <<add>> method to add a child.  <<add>> cannot
+	    be parameterized; its default behaviour depends on the container.
+	  <Entry>Classes <<hBox>>, <<vBox>>, <<hButtonBox>>, <<vButtonBox>>
+	  <Item>
+	    <List>
+	      <Entry><<packStart>>
+	      <Entry><<packEnd>>
+	      <Item>
+		packs a new child with reference to the start (<<packStart>>)
+		or the end (<<packEnd>>) of the box, adding later children
+		away from the reference.  Both support the same set of
+		parameters:
+		<Table>
+		  <Tr><Th>Parameter<Th>Type<Th>Default
+		  <Tr><Td><<expand>><Td>boolean<Td><<true>>
+		  <Tr><Td><<fill>><Td>boolean<Td><<true>>
+		  <Tr><Td><<padding>><Td>int<Td><<0>>
+		</Table>
+	      <Entry><<pack>>
+	      <Item>
+		packs a new child, with the reference point specified as a
+		parameter (in addition to the above parameters):
+		<Table>
+		  <Tr><Th>Parameter<Th>Type<Th>Default
+		  <Tr><Td><<atEnd>><Td>boolean<Td><<false>>
+		</Table>
+	    </List>
+	  <Entry>Class <<table>>
+	  <Item>
+	    <List>
+	      <Entry><<attach>>
+	      <Item>
+		<Table>
+		  <Tr><Th>Parameter<Th>Type<Th>Default
+		  <Tr><Td><<side>><Td>sideType<Td>N/A
+		  <Tr><Td><<anchor>><Td>anchorType<Td><<center>>
+		  <Tr><Td><<options>><Td>packerOptions
+		    <Td><<[expand fillX fillY]>>
+		  <Tr><Td><<borderWidth>><Td>int<Td><<0>>
+		  <Tr><Td><<padX>><Td>int<Td><<0>>
+		  <Tr><Td><<padY>><Td>int<Td><<0>>
+		  <Tr><Td><<iPadX>><Td>int<Td><<0>>
+		  <Tr><Td><<iPadY>><Td>int<Td><<0>>
+		</Table>
+	    </List>
+	  <Entry>Class <<packer>>
+	  <Item>
+	    <List>
+	      <Entry><<add>>
+	      <Item>
+		packs a new child.
+		<Table>
+		  <Tr><Th>Parameter<Th>Type<Th>Default
+		  <Tr><Td><<side>><Td>sideType<Td>N/A
+		  <Tr><Td><<anchor>><Td>anchorType<Td><<center>>
+		  <Tr><Td><<options>><Td>packerOptions
+		    <Td><<[expand fillX fillY]>>
+		  <Tr><Td><<borderWidth>><Td>int<Td><<0>>
+		  <Tr><Td><<padX>><Td>int<Td><<0>>
+		  <Tr><Td><<padY>><Td>int<Td><<0>>
+		  <Tr><Td><<iPadX>><Td>int<Td><<0>>
+		  <Tr><Td><<iPadY>><Td>int<Td><<0>>
+		</Table>
+	    </List>
+	  <Entry>Classes <<menuBar>>, <<menu>>
+	  <Item>
+	    <List>
+	      <Entry><<append>>
+	      <Item>
+		adds a menu to a menu bar or a menu item to a menu.
+	    </List>
+	  <Entry>Classes <<hPaned>>, <<vPaned>>
+	  <Item>
+	    <List>
+	      <Entry><<add1>>
+	      <Entry><<add2>>
+	      <Item>
+		uses the <<add>> attacher of pane 1 or 2, respectively.
+	      <Entry><<pack1>>
+	      <Entry><<pack2>>
+	      <Item>
+		uses the <<pack>> attacher of pane 1 or 2, respectively,
+		with the following parameters:
+		<Table>
+		  <Tr><Th>Parameter<Th>Type<Th>Default
+		  <Tr><Td><<resize>><Td>boolean<Td><<true>>
+		  <Tr><Td><<shrink>><Td>boolean<Td><<false>>
+		</Table>
+	    </List>
+	  <Entry>Class <<menuItem>>
+	  <Item>
+	    <List>
+	      <Entry><<submenu>>
+	      <Item>
+		attaches a submenu to a menu item.  The child must be
+		a <<menu>> widget.
+	    </List>
+	  <Entry>Class <<scrolledWindow>>
+	  <Item>
+	    <List>
+	      <Entry><<addWithViewport>>
+	      <Item>
+		adds a child without native scrolling capacities.  If a child
+		has native scrolling, use the generic <<add>> attacher instead.
+	    </List>
+	  <Entry>Class <<notebook>>
+	  <Item>
+	    <List>
+	      <Entry><<appendPage>>
+	      <Item>
+		appends a widget as a new page to a notebook.
+		<Table>
+		  <Tr><Th>Parameter<Th>Type<Th>Default
+		  <Tr><Td><<tabLabel>><Td>widget<Td>N/A
+		  <Tr><Td><<menuLabel>><Td>widget<Td><<unit>>
+		</Table>
+	    </List>
+	  <Entry>Class <<tree>>
+	  <Item>
+	    <List>
+	      <Entry><<append>>
+	      <Item>
+		adds a <<treeItem>> child to the end of the items in the
+		tree list.
+	    </List>
+	  <Entry>Class <<dialog>>
+	  <Item>
+	    is a compound widget containing a vertical box and an action area.
+	    Attachers are provided that use either of these.
+	    <List>
+	      <Entry><<vBox>>
+	      <Item>
+		packs a child into the vertical box.  This supports the
+		same parameters as the <<pack>> attacher from <<vBox>>.
+	      <Entry><<actionArea>>
+	      <Item>
+		packs a child into the action area.  This supports the
+		same parameters as the <<pack>> attacher from <<hBox>>.
+	    </List>
+	  <Entry>Classes <<fixed>>, <<layout>>
+	  <Item>
+	    <List>
+	      <Entry><<put>>
+	      <Item>
+		adds a child at a fixed position:
+		<Table>
+		  <Tr><Th>Parameter<Th>Type<Th>Default
+		  <Tr><Td><<x>><Td>int<Td>N/A
+		  <Tr><Td><<y>><Td>int<Td>N/A
+		</Table>
+	    </List>
+	</List>
+</Chapter>

@@ -1,0 +1,116 @@
+#  Authors:
+#    Ralf Scheidhauer <scheidhr@dfki.de>
+#    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+# 
+#  Copyright:
+#    Ralf Scheidhauer, 1999
+#    Leif Kornstaedt, 1999
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation of Oz 3:
+#    http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#    http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL
+#  WARRANTIES.
+
+SRCTOP=		@SRCTOP@
+BUILDTOP=	@BUILDTOP@
+PREFIX=		@prefix@
+SRCDIR= 	@srcdir@
+VPATH=	 	@srcdir@
+BINDIR=		$(PREFIX)/@BINDIRNAME@
+
+CXX=		@CXX@ @CXXFLAGS@
+LD=		$(CXX) @LDFLAGS@
+AR=		@AR@
+WINDRES=	@WINDRES@ --preprocessor "$(CXX) -E -xc-header -DRC_INVOKED"
+
+INCS=		-I. -I$(SRCDIR)
+LIBS=		-L. -lstartup -luser32
+
+INSTALL=	@INSTALL@
+INSTALL_DIR=	@INSTALL_DIR@
+INSTALL_FILE=	$(INSTALL) -m 444
+INSTALL_BIN=	$(INSTALL) -m 555
+
+CONSOLE_EXES = oztool.exe ozengine.exe
+WINDOWS_EXES = oz.exe ozenginew.exe
+EXES = $(CONSOLE_EXES) ozwrapper.bin $(WINDOWS_EXES) ozwrapperw.bin
+
+LIBOBJS = \
+	panic.o getenv.o path.o initenv.o makecmd.o \
+	ppid.o process.o registry.o
+
+.PHONY: all bootstrap install clean veryclean distclean depend check
+
+.SUFFIXES: .cc .o .exe .bin
+
+%.o: %.cc
+	$(CXX) $(INCS) -c -o $@ $<
+
+all: $(EXES)
+
+bootstrap: all
+
+libstartup.a: $(LIBOBJS)
+	$(AR) rcs $@ $(LIBOBJS)
+
+$(CONSOLE_EXES): %.exe: %.o res.o libstartup.a
+	$(LD) $(INCS) -o $@ $< res.o $(LIBS)
+
+new-ozwrapper.bin: ozwrapper.o libstartup.a
+	$(LD) $(INCS) -o $(SRCDIR)/ozwrapper.bin $< $(LIBS)
+
+$(WINDOWS_EXES): %.exe: %.o res.o libstartup.a
+	$(LD) $(INCS) -o $@ $< res.o $(LIBS) -mwindows
+
+new-ozwrapperw.bin: ozwrapperw.o libstartup.a
+	$(LD) $(INCS) -o $(SRCDIR)/ozwrapperw.bin $< $(LIBS) -mwindows
+
+res.o: res.rc
+	$(WINDRES) -i $< -o $@
+
+version.h: $(SRCTOP)/OZVERSION
+	echo "#define OZVERSION \"`$<`\"" > $@
+
+oz.o ozengine.o ozenginew.o ozwrapper.o ozwrapperw.o oztool.o: startup.hh
+
+$(LIBOBJS): startup.hh
+
+registry.o: version.h
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
+install: $(BINDIR) $(EXES:%=$(BINDIR)/%)
+
+$(BINDIR):
+	$(INSTALL_DIR) $@
+
+$(BINDIR)/%.exe: %.exe
+	$(INSTALL_BIN) $< $@
+
+$(BINDIR)/%.bin: %.bin
+	$(INSTALL_FILE) $< $@
+
+clean:
+	rm -f *.o *.a version.h
+
+veryclean: clean
+	rm -f $(EXES)
+
+distclean: veryclean
+	rm -f Makefile version.h config.cache config.log config.status
+
+depend:
+
+check:

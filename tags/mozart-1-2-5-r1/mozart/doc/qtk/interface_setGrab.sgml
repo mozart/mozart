@@ -1,0 +1,5 @@
+<ITEM> <<setGrab(global:B)>> : Sets a grab on the widget. If <<B>> is <<true>> then the grab is global, otherwise it is local (<<B>> false by default). If a grab was already in effect for this application then it is automatically released. If there is already a grab on the widget and it has the same global/local form as the requested grab, then the command does nothing. Local grab affects only the grabbing application: events will
+be reported to other applications as if the grab had never occurred. A global grab
+locks out all applications on the screen, so that only the given subtree of the grabbing application will be
+sensitive to pointer events (mouse button presses, mouse button releases, pointer motions, window entries, and
+window exits). During global grabs the window manager will not receive pointer events either. Warning : whe a grab is set, it is define for the whole Oz process so that it will prevent the user to do input to other windows as well. Moreover a grab is still effective even if the window that contains the grabbed widgets is hidden. <<B>> must be a boolean.
