@@ -82,7 +82,7 @@ define
 	       nil
 	    end
 	    
-	    fun {FindCut2 [I1 I2] X0 X1 Y0 Y1}
+	    proc {FindCut2 [I1 I2] X0 X1 Y0 Y1 ?Info}
 	       S1X0=SqsX0.I1 S1X1=SqsX1.I1 S1Y0=SqsY0.I1 S1Y1=SqsY1.I1
 	       S2X0=SqsX0.I2 S2X1=SqsX1.I2 S2Y0=SqsY0.I2 S2Y1=SqsY1.I2
 	    in
@@ -90,11 +90,11 @@ define
 	       dis
 		  S2X0=X0   S2Y0=S1Y1 X1>=:S1X1 Y1>=:S2Y1
 	       then
-		  info(cut:S1Y1 dir:x nil nil)
+		  Info=info(cut:S1Y1 dir:x nil nil)
 	       []
 		  S2X0=S1X1 S2Y0=Y0   X1>=:S2X1 Y1>=:S1Y1
 	       then
-		  info(cut:S1X1 dir:y nil nil)
+		  Info=info(cut:S1X1 dir:y nil nil)
 	       end
 	    end
 
@@ -196,7 +196,7 @@ define
 		  Cut >=: X0+SqsSize.I1
 		  Cut + MinSize =<: X1
 		  Info = info(dir:y cut:Cut InfoL InfoR)
-		  {FD.distribute mid [Cut]}
+		  {FD.distribute generic(value:mid) [Cut]}
 		  {Arrange Gs SqsX0 SqsX1 Cut ?Ls ?Rs}
 		  InfoL={FindCut I1|Ls X0 Cut Y0 Y1}
 		  InfoR={FindCut Rs    Cut X1 Y0 Y1}
@@ -207,7 +207,7 @@ define
 		  Cut >=: Y0+SqsSize.I1
 		  Cut + MinSize =<: Y1
 		  Info = info(dir:x cut:Cut InfoL InfoR)
-		  {FD.distribute mid [Cut]}
+		  {FD.distribute generic(value:mid) [Cut]}
 		  {Arrange Gs SqsY0 SqsY1 Cut ?Ls ?Rs}
 		  InfoL = {FindCut I1|Ls X0 X1 Y0 Cut}
 		  InfoR = {FindCut Rs    X0 X1 Cut Y1}
@@ -278,8 +278,7 @@ define
 	 {For 1 N-1 1 proc {$ I}
 			 if SqsSize.I==SqsSize.(I+1) then
 			    %% This is respected by the no overlap
-			    SqsX0.I * DY + SqsY1.I =<:
-			    SqsX0.(I+1) * DY + SqsY1.(I+1)
+			    SqsX0.I =<: SqsX0.(I+1)
 			 end
 		      end}
 
