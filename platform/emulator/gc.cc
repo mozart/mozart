@@ -933,34 +933,41 @@ OzVariable * OzVariable::gcVar(void) {
 
   TypeOfVariable t = getType();
 
-  OzVariable * to = (OzVariable *) oz_hrealloc(this,varSizes[t]);
+  OzVariable * to;
 
-  to->suspList = to->suspList->gc(OK);
-  to->setHome(to->getHome1()->gcBoard());
+  if (t != OZ_VAR_EXT) {
 
-  switch (t){
-  case OZ_VAR_FD:
-    ((OzFDVariable *) to)->gc();
-    return to;
-  case OZ_VAR_FS:
-    ((OzFSVariable *) to)->gc();
-    return to;
-  case OZ_VAR_BOOL:
-    return to;
-  case OZ_VAR_CT:
-    ((OzCtVariable*) to)->gc();
-    break;
-  case OZ_VAR_EXT:
-    ((ExtVar *) to)->gcV();
-    break;
+    to = (OzVariable *) oz_hrealloc(this,varSizes[t]);
 
-  default:
-    break;
+    switch (t){
+    case OZ_VAR_FD:
+      ((OzFDVariable *) to)->gc();
+      goto nopush;
+    case OZ_VAR_FS:
+      ((OzFSVariable *) to)->gc();
+      goto nopush;
+    case OZ_VAR_BOOL:
+      goto nopush;
+    case OZ_VAR_CT:
+      ((OzCtVariable*) to)->gc();
+      break;
+    default:
+      break;
+    }
+
+  } else {
+    to = ((ExtVar *) this)->gcV();
   }
 
   gcStack.push(to, PTR_CVAR);
 
+ nopush:
+
+  to->suspList = to->suspList->gc(OK);
+  to->setHome(to->getHome1()->gcBoard());
+
   return to;
+
 }
 
 inline
