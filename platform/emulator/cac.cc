@@ -447,8 +447,8 @@ Name *Name::_cacName(void) {
   if (!getBoardInternal()->hasMark()) {
 #endif
 
-    Name * aux;
-    cacReallocStatic(Name,this,aux,sizeof(Name));
+    Name * aux = (Name *) memcpy(oz_heapDoubleMalloc(sizeof(Name)),
+                                 this, sizeof(Name));
 
     STOREFWDFIELD(this, aux);
 

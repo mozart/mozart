@@ -81,10 +81,18 @@ const char *Literal::getPrintName()
   return "";
 }
 
+inline
+void * doubleMalloc(size_t s) {
+  char * c = (char *) malloc(s + OZ_HEAPALIGNMENT);
+  if (ToInt32(c) & OZ_HEAPALIGNMENT)
+    return c+OZ_HEAPALIGNMENT;
+  else
+    return c;
+}
 
 Atom *Atom::newAtom(const char *str)
 {
-  Atom *ret = (Atom*) malloc(sizeof(Atom));
+  Atom *ret = (Atom*) doubleMalloc(sizeof(Atom));
   ret->init();
   ret->printName = str;
   ret->setOthers(strlen(str));
@@ -93,7 +101,7 @@ Atom *Atom::newAtom(const char *str)
 
 Name *Name::newName(Board *home)
 {
-  Name *ret = (Name*) oz_heapMalloc(sizeof(Name));
+  Name *ret = (Name*) oz_heapDoubleMalloc(sizeof(Name));
   ret->init();
   ret->homeOrGName = ToInt32(home);
   ret->setOthers(NameCurrentNumber += 1 << sizeOfCopyCount);
@@ -103,7 +111,7 @@ Name *Name::newName(Board *home)
 
 NamedName *NamedName::newNamedName(const char *pn)
 {
-  NamedName *ret = (NamedName*) malloc(sizeof(NamedName));
+  NamedName *ret = (NamedName*) doubleMalloc(sizeof(NamedName));
   ret->init();
   Assert(oz_onToplevel());
   ret->homeOrGName = ToInt32(am.currentBoard());
@@ -123,7 +131,7 @@ NamedName *NamedName::newCopyableName(const char *pn)
 
 NamedName *NamedName::generateCopy()
 {
-  NamedName *ret = (NamedName*) malloc(sizeof(NamedName));
+  NamedName *ret = (NamedName*) doubleMalloc(sizeof(NamedName));
   ret->init();
   Assert(oz_onToplevel() && isCopyableName());
   ret->homeOrGName = ToInt32(am.currentBoard());

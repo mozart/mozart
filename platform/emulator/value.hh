@@ -122,7 +122,7 @@ public:
   static Atom *newAtom(const char *str);
   const char* getPrintName() { return printName; }
   int getSize() { return getOthers(); }
-  unsigned int hash() { return ToInt32(this)>>3; }
+  unsigned int hash() { return ToInt32(this)>>4; }
 };
 
 /* This one goes onto the heap */
