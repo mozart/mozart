@@ -116,7 +116,25 @@ char *getRegistry(char *path, char *var)
 
   RegCloseKey(hk);
 
-  return rc==1 && value_type == REG_SZ? strdup(buf): NULL;
+  if (rc == 1) {
+    switch (value_type) {
+    case REG_SZ:
+      return strdup(buf);
+    case REG_EXPAND_SZ:
+      {
+        char buf2[MAX_PATH];
+        DWORD n = ExpandEnvironmentStrings(buf, buf2, MAX_PATH);
+        if (n != 0 && n != MAX_PATH) {
+          return strdup(buf2);
+        }
+      }
+      break;
+    default:
+      break;
+    }
+  }
+
+  return NULL;
 }
 
 char *getRegistry(char *var)
