@@ -77,12 +77,6 @@ int OZ_isNil(OZ_Term term)
   return (isNil(term) == OK) ? 1 : 0;
 }
 
-int OZ_isNoNumber(OZ_Term term)
-{
-  DEREF(term,_1,_2);
-  return isRecord(term) || isTuple(term);
-}
-
 int OZ_isRecord(OZ_Term term)
 {
   DEREF(term,_1,_2);
@@ -127,7 +121,7 @@ OZ_Term OZ_termType(OZ_Term term)
     return (tagged2Literal(term)->isAtom() ? AtomAtom : AtomName);
   }
 
-  if (isSTuple(tag) || isLTuple(tag)) {
+  if (isTuple(term)) {
     return AtomTuple;
   }
     
@@ -477,7 +471,6 @@ char *OZ_toC1(OZ_Term term, int depth)
   case UVAR:
   case SVAR:
   case CVAR:
-  case STUPLE:
   case SRECORD:
   case LTUPLE:
   case OZCONST:
@@ -619,8 +612,8 @@ void OZ_printVS(OZ_Term t)
   } else if (isFloat(t)) {
     OZ_printFloat(t);
   } else if (isPair(t)) {
-    STuple *p=tagged2STuple(t);
-    for (int i=0; i < p->getSize(); i++) {
+    SRecord *p=tagged2SRecord(t);
+    for (int i=0; i < p->getWidth(); i++) {
       OZ_printVS(p->getArg(i));
     }
   } else {
@@ -640,7 +633,6 @@ OZ_Term OZ_termToVS(OZ_Term t)
   case SVAR:
   case CVAR:
   case LTUPLE:
-  case STUPLE:
   case SRECORD:
   case OZCONST:
     return OZ_CToAtom(OZ_toC(t));
@@ -662,9 +654,7 @@ OZ_Term OZ_label(OZ_Term term)
 
   switch (tag) {
   case LTUPLE:
-    return tagged2LTuple(term)->getLabel();
-  case STUPLE:
-    return tagged2STuple(term)->getLabel();
+    return AtomCons;
   case LITERAL:
     return term;
   case SRECORD:
@@ -688,8 +678,6 @@ int OZ_width(OZ_Term term)
   switch (tag) {
   case LTUPLE:
     return 2;
-  case STUPLE:
-    return tagged2STuple(term)->getSize ();
   case SRECORD:
     return tagged2SRecord(term)->getWidth();
   case LITERAL:
@@ -720,7 +708,8 @@ OZ_Term OZ_tuple(OZ_Term label, int width)
     return label;
   }
   
-  return makeTaggedSTuple(STuple::newSTuple(label,width));
+  Arity *ar = aritytable.find(makeTupleArityList(width));
+  return makeTaggedSRecord(SRecord::newSRecord(label,ar));
 }
 
 #include <stdarg.h>
@@ -729,13 +718,13 @@ OZ_Term OZ_mkTupleC(char *label,int arity,...)
   va_list ap;
   va_start(ap,arity);
 
-  STuple *st=STuple::newSTuple(OZ_CToAtom(label),arity);
+  OZ_Term tt=OZ_tuple(OZ_CToAtom(label),arity);
   for (int i = 0; i < arity; i++) {
-    st->setArg(i,va_arg(ap,OZ_Term));
+    OZ_putArg(tt,i+1,va_arg(ap,OZ_Term));
   }
 
   va_end(ap);
-  return makeTaggedSTuple(st);
+  return tt;
 }
 
 OZ_Term OZ_mkTuple(OZ_Term label,int arity,...)
@@ -743,13 +732,13 @@ OZ_Term OZ_mkTuple(OZ_Term label,int arity,...)
   va_list ap;
   va_start(ap,arity);
 
-  STuple *st=STuple::newSTuple(label,arity);
+  OZ_Term tt=OZ_tuple(label,arity);
   for (int i = 0; i < arity; i++) {
-    st->setArg(i,va_arg(ap,OZ_Term));
+    OZ_putArg(tt,i+1,va_arg(ap,OZ_Term));
   }
 
   va_end(ap);
-  return makeTaggedSTuple(st);
+  return tt;
 }
 
 int OZ_putArg(OZ_Term term, int pos, OZ_Term newTerm)
@@ -770,8 +759,9 @@ int OZ_putArg(OZ_Term term, int pos, OZ_Term newTerm)
       return 0;
     }
   }
-  if (isSTuple(term) && (pos >= 1) && pos <= tagged2STuple(term)->getSize ()) {
-    tagged2STuple(term)->setArg(pos-1,newTerm);
+  if (isSTuple(term) && (pos >= 1)
+      && pos <= tagged2SRecord(term)->getWidth()) {
+    tagged2SRecord(term)->setArg(pos-1,newTerm);
     return 1;
   }
 
@@ -795,8 +785,8 @@ OZ_Term OZ_getArg(OZ_Term term, int pos)
       return nil();
     }
   }
-  if (isSTuple(term) && (pos >= 1) && pos <= tagged2STuple(term)->getSize())
-    return tagged2STuple(term)->getArg(pos-1);
+  if (isSTuple(term) && (pos >= 1) && pos <= tagged2SRecord(term)->getWidth())
+    return tagged2SRecord(term)->getArg(pos-1);
 
   OZ_warning("OZ_getArg(%s,%d): bad arg",OZ_toC(term),pos);
   return nil();
@@ -881,8 +871,8 @@ void OZ_putRecordArg(OZ_Term record, OZ_Term feature, OZ_Term value)
 
   if (isLiteral(feaTag) ) {
     if ( isSRecord(recTag) ) {
-      SRecord *recOut = tagged2SRecord(record)->replaceFeature(feature,value);
-      if (recOut) {
+      TaggedRef recOut = tagged2SRecord(record)->replaceFeature(feature,value);
+      if (recOut != makeTaggedNULL()) {
 	return;
       }
     }

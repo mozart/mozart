@@ -1323,8 +1323,8 @@ int OZ_FiniteDomain::init(OZ_Term d)
     return initSingleton(OZ_intToC(d));
   } else if (AtomSup == d) {
     return initSingleton(fd_sup);
-  } else if (isSTuple(d_tag)) {
-    STuple &t = *tagged2STuple(d);
+  } else if (isSTuple(d)) {
+    SRecord &t = *tagged2SRecord(d);
     OZ_Term t0 = deref(t[0]), t1 = deref(t[1]);
     return initI(AtomSup == t0 ? fd_sup : OZ_intToC(t0),
 		AtomSup == t1 ? fd_sup : OZ_intToC(t1));
@@ -1364,8 +1364,8 @@ int OZ_FiniteDomain::init(OZ_Term d)
 	max_arr = max(max_arr, right_arr[len_arr]);
 
 	len_arr ++;
-      } else if (isSTuple(valtag)) {
-	STuple &t = *tagged2STuple(val);
+      } else if (isSTuple(val)) {
+	SRecord &t = *tagged2SRecord(val);
 	OZ_Term t0 = deref(t[0]), t1 = deref(t[1]);
 
 	int l = max(0, AtomSup == t0 ? fd_sup : OZ_intToC(t0));

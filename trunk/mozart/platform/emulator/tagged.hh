@@ -46,7 +46,7 @@ enum TypeOfTerm {
   GCTAG            =  13,  // 1101
 	    
   LTUPLE           =  2,   // 0010
-  STUPLE           =  3,   // 0011
+  FREEE            =  3,   // 0011
   SRECORD          = 14,   // 1110
 		  
   LITERAL          = 15,   // 1111
@@ -293,28 +293,6 @@ Bool isSRecord(TaggedRef term) {
 }
 
 inline
-Bool isSTuple(TypeOfTerm tag) {
-  return (tag == STUPLE);
-}
-
-inline
-Bool isSTuple(TaggedRef term) {
-  GCDEBUG(term);
-  return isSTuple(tagTypeOf(term));
-}
-
-inline
-Bool isTuple(TypeOfTerm tag) {
-  return isSTuple(tag) || isLTuple(tag) || isLiteral(tag);
-}
-
-inline
-Bool isTuple(TaggedRef term) {
-  GCDEBUG(term);
-  return isTuple(tagTypeOf(term));
-}
-
-inline
 Bool isFloat(TypeOfTerm tag) {
   return (tag == OZFLOAT);
 }
@@ -432,13 +410,6 @@ inline
 TaggedRef makeTaggedCVar(GenCVariable *s) {
   CHECK_POINTER(s);
   return makeTaggedRef(CVAR, s);
-}
-
-inline
-TaggedRef makeTaggedSTuple(STuple *s)
-{
-  CHECK_POINTER(s);
-  return makeTaggedRef(STUPLE,s);
 }
 
 inline
@@ -600,14 +571,6 @@ Board *tagged2VarHome(TaggedRef ref)
   GCDEBUG(ref);
   CHECKTAG(UVAR);
   return (Board *) tagValueOf(UVAR,ref);
-}
-
-inline
-STuple *tagged2STuple(TaggedRef ref)
-{
-  GCDEBUG(ref);
-  CHECKTAG(STUPLE);
-  return (STuple *) tagValueOf(STUPLE,ref);
 }
 
 inline

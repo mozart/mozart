@@ -37,32 +37,32 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
   OZ_getCArgDeref(2, v_tuple, v_tupleptr, v_tupletag);
   OZ_getCArgDeref(3, vp_tuple, vp_tupleptr, vp_tupletag);
 
-  if (! isSTuple(p_tupletag)) TypeError(0, "");
-  if (! isSTuple(b_tupletag)) TypeError(1, "");
+  if (! isSTuple(p_tuple)) TypeError(0, "");
+  if (! isSTuple(b_tuple)) TypeError(1, "");
 
-  STuple &p = *tagged2STuple(p_tuple);
-  STuple &b = *tagged2STuple(b_tuple);
+  SRecord &p = *tagged2SRecord(p_tuple);
+  SRecord &b = *tagged2SRecord(b_tuple);
 
   if (isLiteral(v_tupletag)) {
     // reduce to sum(b) >= 1
-    int p_size = p.getSize();
+    int p_size = p.getWidth();
     TaggedRef tone = OZ_CToInt(1), tmone = OZ_CToInt(-1);
-    STuple * st = STuple::newSTuple(p.getLabel(), p_size);
+    SRecord * st = SRecord::newSRecord(p.getLabel(), p_size);
     
     for (int i = 0; i < p_size; i++) (*st)[i] = tmone;
 
-    TaggedRefPtr new_args = allocateRegs(makeTaggedSTuple(st), b_tuple, tone);
+    TaggedRefPtr new_args = allocateRegs(makeTaggedSRecord(st), b_tuple, tone);
     return BIfdGenLinLessEq(3, new_args);
   }
   
-  if (! isSTuple(v_tupletag)) TypeError(2, "");
-  if (! isSTuple(vp_tupletag)) TypeError(3, "");
+  if (! isSTuple(v_tuple)) TypeError(2, "");
+  if (! isSTuple(vp_tuple)) TypeError(3, "");
 
-  STuple &v = *tagged2STuple(v_tuple);
-  STuple &vp = *tagged2STuple(vp_tuple);
+  SRecord &v = *tagged2SRecord(v_tuple);
+  SRecord &vp = *tagged2SRecord(vp_tuple);
 
-  const int clauses = p.getSize();
-  if (clauses != b.getSize()) {
+  const int clauses = p.getWidth();
+  if (clauses != b.getWidth()) {
     warning("Tuples clauses and b differ in size.");
     return FAILED;
   }
@@ -81,15 +81,15 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
     }
   } 
 
-  const int variables = v.getSize();
+  const int variables = v.getWidth();
 
   // constrain Vpij to {fd_inf..fd_sup} if Vpij is an uvar
   for (i = clauses; i--; ) {
     DEREF(vp[i], vp_i_ptr, vp_i_tag);
-    if (! isSTuple(vp_i_tag)) TypeError(3, "2-dim-array expected");
-    STuple &vp_i = *tagged2STuple(vp[i]);
+    if (! isSTuple(vp[i])) TypeError(3, "2-dim-array expected");
+    SRecord &vp_i = *tagged2SRecord(vp[i]);
     
-    if (vp_i.getSize() != variables) {
+    if (vp_i.getWidth() != variables) {
       warning("2-dim-array index incorrect in BIfdConstrDisjSetUp");
       return FAILED;
     }
@@ -120,13 +120,13 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
   if (isLiteral(v_tupletag)) return PROCEED;
 
 
-  if (! isSTuple(b_tupletag)) TypeError(0, "");
-  if (! isSTuple(v_tupletag)) TypeError(1, "");
-  if (! isSTuple(vp_tupletag)) TypeError(2, "");
+  if (! isSTuple(b_tuple)) TypeError(0, "");
+  if (! isSTuple(v_tuple)) TypeError(1, "");
+  if (! isSTuple(vp_tuple)) TypeError(2, "");
 
-  STuple &v = *tagged2STuple(v_tuple);
+  SRecord &v = *tagged2SRecord(v_tuple);
 
-  const int variables = v.getSize();
+  const int variables = v.getWidth();
 
   // suspend until global variables are constrained to finite domains
   BIfdHeadManager x_items(variables);
@@ -184,12 +184,12 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
   OZ_getCArgDeref(1, v_tuple, v_tupleptr, v_tupletag);
   OZ_getCArgDeref(2, vp_tuple, vp_tupleptr, vp_tupletag);
   
-  STuple &_b = *tagged2STuple(b_tuple);
-  STuple &_v = *tagged2STuple(v_tuple);
-  STuple &_vp = *tagged2STuple(vp_tuple);
+  SRecord &_b = *tagged2SRecord(b_tuple);
+  SRecord &_v = *tagged2SRecord(v_tuple);
+  SRecord &_vp = *tagged2SRecord(vp_tuple);
 
-  const int clauses = _b.getSize(); // number of clauses
-  const int variables = _v.getSize(); // number ob variables
+  const int clauses = _b.getWidth(); // number of clauses
+  const int variables = _v.getWidth(); // number ob variables
   int failed_clauses = 0, not_failed_clause = -1, entailed_clause = -1;
   
   BIfdBodyManager x(0);
@@ -216,7 +216,7 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
       for (v = variables; v--; ) 
 	x.introduceDummy(idx_vp(c, v));
     } else {
-      STuple &vp_c = *tagged2STuple(deref(_vp[c]));
+      SRecord &vp_c = *tagged2SRecord(deref(_vp[c]));
       for (v = variables; v--; ) 
 	x.introduce(idx_vp(c, v), makeTaggedRef(&vp_c[v]));
     }
@@ -287,7 +287,7 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
   // reintroduce Vps
   for (c = 0; c < clauses; c += 1) {  // acendingly counting ('cause of x.add)
     if (x[idx_b(c)] != 0) {
-      STuple &vp_c = *tagged2STuple(deref(_vp[c]));
+      SRecord &vp_c = *tagged2SRecord(deref(_vp[c]));
       for (v = variables; v--; ) { 
 	x.reintroduce(idx_vp(c, v), makeTaggedRef(&vp_c[v]));
       }

@@ -127,8 +127,8 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
     OZ_putArg(tmp,1,arg);
     return tmp;
   } else {
-    STuple *st=tagged2STuple(tuple);
-    int len=st->getSize();
+    SRecord *st=tagged2SRecord(tuple);
+    int len=st->getWidth();
     OZ_Term tmp=OZ_tuple(st->getLabel(),len+1);
     OZ_putArg(tmp,1,arg);
     for (int i=0; i < len; i++) OZ_putArg(tmp,i+2,st->getArg(i));
@@ -207,11 +207,11 @@ ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
   ProgramCounter offset = table->getElse();
   if (isSTuple(term)) {
     if (table->functorTable) {
-      Literal *lname = tagged2STuple(term)->getLabelLiteral();
+      Literal *lname = tagged2SRecord(term)->getLabelLiteral();
       int hsh = lname ? table->hash(lname->hash()) : 0;
       offset = table->functorTable[hsh]
-	    ->lookup(lname,tagged2STuple(term)->getSize(),offset);
-      sP = tagged2STuple(term)->getRef();
+	    ->lookup(lname,tagged2SRecord(term)->getWidth(),offset);
+      sP = tagged2SRecord(term)->getRef();
     }
     return offset;
   }
@@ -635,11 +635,11 @@ TaggedRef makeMethod(int arity, TaggedRef label, TaggedRef *X)
     if (arity == 2 && sameLiteral(label,AtomCons)) {
       return makeTaggedLTuple(new LTuple(X[3],X[4]));
     } else {
-      STuple *tuple = STuple::newSTuple(label,arity);
+      OZ_Term tt = OZ_tuple(label,arity);
       for (int i = arity-1;i >= 0; i--) {
-	tuple->setArg(i,X[i+3]);
+	OZ_putArg(tt,i+1,X[i+3]);
       }
-      return makeTaggedSTuple(tuple);
+      return tt;
     }
   }
 }
@@ -665,8 +665,8 @@ void printArg(OZ_Term arg)
 {
   arg=deref(arg);
   if (isSTuple(arg)) {
-    STuple *st=tagged2STuple(arg);
-    int len=st->getSize();
+    SRecord *st=tagged2SRecord(arg);
+    int len=st->getWidth();
     TaggedRef lab=st->getLabel();
     if (lab==OZ_CToAtom("proc")) {
       message("In application { %s ",OZ_toC(st->getArg(0)));
@@ -706,7 +706,7 @@ void AM::defaultExceptionHandler(OZ_Term val, ProgramCounter PC,
 {
   if (ozconf.errorVerbosity > 0) {
     errorHeader();
-    if (OZ_isVariable(val) || !OZ_isNoNumber(val)) {
+    if (OZ_isVariable(val) || !OZ_isRecord(val)) {
       message("Exception '%s' caught.\n",OZ_toC(val));
     } else {
       OZ_Term lab=OZ_label(val);
@@ -716,8 +716,8 @@ void AM::defaultExceptionHandler(OZ_Term val, ProgramCounter PC,
       } else if (ozconf.errorVerbosity > 1) {
 	val=deref(val);
 	if (isSTuple(val)) {
-	  STuple *st=tagged2STuple(val);
-	  int len=st->getSize();
+	  SRecord *st=tagged2SRecord(val);
+	  int len=st->getWidth();
 	  DebugCheckT(message("Arguments: %s.\n",OZ_toC(val)));
 	  for (int i=0; i<len; i++) {
 	    printArg(st->getArg(i));
@@ -925,9 +925,9 @@ loop:
 	      noOfClauses = 
 		wa->selectOrFailChildren(
 		    smallIntValue(deref(
-                      tagged2STuple(guideHead)->getArg(0)))-1,
+                      tagged2SRecord(guideHead)->getArg(0)))-1,
 		    smallIntValue(deref(
-                      tagged2STuple(guideHead)->getArg(1)))-1);
+                      tagged2SRecord(guideHead)->getArg(1)))-1);
 	    }
 
 	    if (noOfClauses == 0) {
@@ -2174,11 +2174,11 @@ LBLsuspendThread:
       DEREF(rec,_1,_2);
       if (isSRecord(rec)) {
 	SRecord *srec = tagged2SRecord(rec);
-	Arity *ar = srec->getTheArity();
+	Arity *ar = srec->getArity();
 	if (ar==getAdressArg(PC+5)) {
 	  XPC(3)=srec->getArg(getPosIntArg(PC+6));
 	} else {
-	  int i = srec->getTheArity()->find(feature);
+	  int i = srec->getIndex(feature);
 	  if (i<0) {
 	    goto dotFailed;
 	  }
@@ -2906,11 +2906,11 @@ LBLsuspendThread:
 	 if (isSmallInt(headTag))
 	   continue;
 	 
-	 if (isSTuple(headTag) && 
+	 if (isSTuple(head) && 
 	     tagged2Literal(AtomPair)
-	     == tagged2STuple(head)->getLabelLiteral()) {
-	   TaggedRef left  = tagged2STuple(head)->getArg(0);
-	   TaggedRef right = tagged2STuple(head)->getArg(1);
+	     == tagged2SRecord(head)->getLabelLiteral()) {
+	   TaggedRef left  = tagged2SRecord(head)->getArg(0);
+	   TaggedRef right = tagged2SRecord(head)->getArg(1);
 	   DEREF(left, _l, leftTag);
 	   DEREF(right, _r, rightTag);
 	   if (isSmallInt(leftTag) && isSmallInt(rightTag))

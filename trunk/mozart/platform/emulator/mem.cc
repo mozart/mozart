@@ -306,7 +306,6 @@ Bool MemChunks::isInHeap(TaggedRef term)
     case UVAR:
     case SVAR:
     case LTUPLE:
-    case STUPLE:
     case OZCONST:
     case SRECORD:
       if (!list->inChunkChain(tagValueOf(term))) {
