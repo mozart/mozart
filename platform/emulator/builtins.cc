@@ -2710,7 +2710,7 @@ OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
     }
   }
   doPortSend((PortWithStream*)port,val,
-             sc_required ? prt_home : NULL);
+             sc_required ? prt_home : (Board *) NULL);
   return PROCEED;
 }
 

@@ -38,9 +38,11 @@
 #define ERR 123
 //
 // Constants needed for to check that no overflow occurs in unmarshalNumber()
-extern int RobustMarshaler_Max_Shift;// Biggest number dividable with 7 and less
-                                   // then sizeof(int)
-extern int RobustMarshaler_Max_Hi_Byte;//(sizeof(int)-RobustMarshaler_Max_Shift)^2
+
+// Biggest number dividable with 7 and less then sizeof(int)
+extern unsigned int RobustMarshaler_Max_Shift;
+// (sizeof(int)-RobustMarshaler_Max_Shift)^2
+extern unsigned int RobustMarshaler_Max_Hi_Byte;
 
 inline int unmarshalRefTag(MsgBuffer *bs)
 {

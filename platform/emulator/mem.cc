@@ -134,7 +134,7 @@ void scanFreeList(void) {
 
 void freeListRefill(FreeListMem ** fl) {
   int sz = fl - FreeList;
-  Assert(sz >= sizeof(FreeListMem) && sz <= freeListMaxSize);
+  Assert(sz >= (int) sizeof(FreeListMem) && sz <= (int) freeListMaxSize);
 
   /*
    * With how much entries should be the guy refilled?

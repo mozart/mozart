@@ -78,7 +78,8 @@ void unmarshalGName1Robust(GName *gname, MsgBuffer *bs, int *error)
   int e1,e2;
   gname->site=unmarshalSiteRobust(bs, &e1);
   for (int i=0; (i<fatIntDigits && !e1); i++) {
-    int num, e;
+    int e;
+    unsigned int num;
     num = unmarshalNumberRobust(bs, &e);
     e1 = e || (num > maxDigit);
     gname->id.number[i] = num;
@@ -117,14 +118,14 @@ GName *unmarshalGNameRobust(TaggedRef *ret, MsgBuffer *bs, int *error)
 //
 int32* NMMemoryManager::freelist[NMMM_SIZE];
 
-int RobustMarshaler_Max_Shift;
-int RobustMarshaler_Max_Hi_Byte;
+unsigned int RobustMarshaler_Max_Shift;
+unsigned int RobustMarshaler_Max_Hi_Byte;
 //
 // Stuff needed for to check that no overflow is done in unmarshalNumber()
 void initRobustMarshaler()
 {
-  int intsize = sizeof(int);
-  int shft = intsize*7;
+  unsigned int intsize = sizeof(int);
+  unsigned int shft = intsize*7;
   while(shft <= (intsize*8)-7) shft += 7;
   RobustMarshaler_Max_Shift = shft;
   RobustMarshaler_Max_Hi_Byte =
