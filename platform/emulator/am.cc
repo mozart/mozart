@@ -36,6 +36,7 @@
 #include "board.hh"
 #include "thr_int.hh"
 #include "var_base.hh"
+#include "var_readonly.hh"
 #include "codearea.hh"
 #include "fdomn.hh"
 #include "pickle.hh"
@@ -285,7 +286,7 @@ void AM::init(int argc,char **argv)
 
   lastThreadID    = 0;
   debugMode       = NO;
-  debugStreamTail = OZ_newVariable();
+  debugPort       = oz_newPort(oz_newReadOnly(_rootBoard));
 
   propLocation    = NO;
 
