@@ -30,7 +30,9 @@
     The simplest usage of the Inspector is to execute the statement
     <<{Inspect ?_{X}}>>, where ?_{X} can be any Oz value.  Unless the
     Inspector window is already open, this will create a new window
-    (see <PTR to="figure.usage">) displaying the given value.
+    displaying the given value.  For instance, the window in
+    <PTR to="figure.usage"> was created using the statement
+    <<<{Inspect label(i am a sample tuple)}>>>
     It is possible to inspect more than one value at the same time.
     By default, new values are appended to the current window.
     <FIGURE id="figure.usage">
@@ -39,9 +41,9 @@
     </FIGURE>
   <SECTION><TITLE/Inspecting within Multiple Widgets/
   <P>
-    In addition, the Inspector can handle arbitrarily many viewing windows
-    (<EM/widgets/) which can be accessed and configured independently.
-  <SUBSECTION><TITLE/Handling Widgets/
+    The Inspector can handle an arbitrarily number of viewing windows
+    (called <EM/widgets/) which can be accessed and configured independently.
+  <SUBSECTION><TITLE/Adding and Deleting Widgets/
   <P>
     To open a new display widget, click <Q/Add new Widget/ from the Inspector
     menu as shown in <PTR to="figure.panes">.
@@ -53,19 +55,20 @@
       </TABLE>
     </FIGURE>
   <P>
-    With more than one widget open, the notion of the <EM/active widget/
-    matters.  The active widget receives all work caused by applications
-    of <<Inspect>>.  By default, the initial widget is the active widget.
-    This can be changed using the <KEY/TAB/ key. The active widget is
-    marked with an extra black box around its viewing area.
+    When more than one widget is used, the notion of the <EM/active widget/
+    becomes important.  The active widget receives all work caused by
+    applications of <<Inspect>>.  By default, the initial widget is the
+    active widget. This can be changed using the <KEY/TAB/ key.  The active
+    widget is indicated by a box with extra-thick line width around its
+    viewing area.
   <P>
     To show the value ?_{X} in the ?_{I}-th window, execute the statement
-    <<{InspectN ?_{I} ?_{X}}>>.  The widgets are numbered starting at zero.
+    <<{InspectN ?_{I} ?_{X}}>>.  The widgets are numbered starting from zero.
   <P>
-    The active widget can be removed by clicking <Q/Delete active Widget/
-    from the Inspector menu (see <PTR to="figure.panes">).  The widget below
-    the active widget becomes the new active widget.  If only a single widget
-    is left, this action is ignored.
+    The currently active widget can be removed by clicking <Q/Delete active
+    Widget/ from the Inspector menu (see <PTR to="figure.panes">).  The widget
+    below the active widget becomes the new active widget.  If only a single
+    widget is left, this action is ignored.
   <SECTION><TITLE/Value Representation/
   <P>
     The Inspector can be configured to display values using either a
