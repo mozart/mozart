@@ -487,7 +487,7 @@ void Thread::makeRunning ()
 
 #endif
 
-#define JUMP(absAdr) Assert(absAdr!=0); PC=absAdr; DISPATCH(0)
+#define JUMP(absAdr) Assert(absAdr!=0 && absAdr!=NOCODE); PC=absAdr; DISPATCH(0)
 
 #define ONREG(Label,R)      HelpReg = (R); goto Label
 #define ONREG2(Label,R1,R2) HelpReg1 = (R1); HelpReg2 = (R2); goto Label
