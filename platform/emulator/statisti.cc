@@ -421,18 +421,26 @@ void Statistics::printCount(char *file) {
   PrintVarPercent(applmeth,totCalls);
   PrintVarPercent(optbicalls,totCalls);
 
+  int nonoptusercalls = nonoptcalls-nonoptbicalls-nonoptsendmsg;
   PrintVarPercent(nonoptcalls,totCalls);
   fprintf(out,"   "); PrintVarPercent(nonoptbicalls,nonoptcalls);
   fprintf(out,"   "); PrintVarPercent(nonoptsendmsg,nonoptcalls);
+  fprintf(out,"   "); PrintVarPercent(nonoptusercalls,nonoptcalls);
 
   PrintVar(inlinecalls);
   PrintVar(inlinedots);
 
-  int userCalls = totCalls-optbicalls-nonoptbicalls;
+  int biCalls = optbicalls+nonoptbicalls;
+  int userCalls = totCalls-biCalls;
   int envsPerUserCall = numEnvAllocs;
+  fprintf(out,"\n");
+  PrintVar(biCalls);
+  PrintVarPercent(optbicalls,biCalls);
+
   fprintf(out,"\n");
   PrintVar(userCalls);
   PrintVarPercent(nonoptcalls,userCalls);
+  PrintVarPercent(fastcalls,userCalls);
   PrintVarPercent(envsPerUserCall,userCalls);
 
   if (out != stdout)

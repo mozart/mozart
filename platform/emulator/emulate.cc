@@ -257,16 +257,13 @@ OZ_Return fastUnify(OZ_Term A, OZ_Term B, ByteCode *scp=0)
 
     if (!oz_isVariable(term2)) {
       if (am.currentUVarPrototypeEq(term1)) {
-        COUNT(varOptUnify);
         doBind(term1Ptr,term2);
         goto exit;
       }
       if (term1==term2) {
-        COUNT(varOptUnify);
         goto exit;
       }
     } else if (!oz_isVariable(term1) && am.currentUVarPrototypeEq(term2)) {
-        COUNT(varOptUnify);
         doBind(term2Ptr,term1);
         goto exit;
     }
@@ -276,6 +273,7 @@ fallback:
   return oz_unify(A,B,scp);
 
  exit:
+  COUNT(varOptUnify);
   return PROCEED;
 }
 
