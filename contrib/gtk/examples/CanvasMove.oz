@@ -30,8 +30,8 @@ define
    class CanvasToplevel from GTK.window
       meth new
 	 GTK.window, new(GTK.wINDOW_TOPLEVEL)
-	 GTK.window, setBorderWidth(10)}
-	 GTK.window, setTitle("Canvas Move")}
+	 GTK.window, setBorderWidth(10)
+	 GTK.window, setTitle("Canvas Move")
       end
       meth connectEvents
 	 {self signalConnect('destroy' destroyEvent _)}
