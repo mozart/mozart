@@ -586,7 +586,7 @@ Propagator_VI_VVD_I::Propagator_VI_VVD_I(OZ_Term a, OZ_Term x, OZ_Term d)
   reg_x[reg_x_sz-1] = d;
   OZ_FDIntVar xv; // no initialising constructor 'cause it uses method ask
   xv.ask(reg_x[reg_x_sz-1]);
-  check_inexact += abs(reg_a[reg_x_sz-1]) * xv->getMaxElem();
+  check_inexact += abs(reg_a[reg_sz-1]) * xv->getMaxElem();
 
   
   warn_inexact(check_inexact);
