@@ -9,13 +9,13 @@
 #include "oz.h"
 #include "sunproto.h"
 
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <netdb.h>
 
 #include "misc.hh"
@@ -474,6 +474,71 @@ OZ_C_ioproc_begin(unix_fileDesc,2)
   }
 
   return OZ_unifyInt(out, desc);
+}
+OZ_C_proc_end
+
+
+static OZ_Term readEntries(DIR *dp) {
+  static struct dirent *dirp;
+  OZ_Term dirEntry;
+  if ((dirp = readdir(dp)) != NULL) {
+    dirEntry = OZ_CToString(dirp->d_name);
+    return OZ_cons(dirEntry, readEntries(dp));
+  }
+  else 
+    return OZ_nil();
+}
+
+OZ_C_proc_begin(unix_getDir,2)
+{
+  DIR *dp;
+  OZ_Term dirValue;
+  OZ_declareVsArg("getDir", 0, path);
+  OZ_declareArg(1, out);
+
+  if ((dp = opendir(path)) == NULL)
+    RETURN_UNIX_ERROR(out);
+
+  dirValue = readEntries(dp);
+
+  if (closedir(dp) < 0)
+    RETURN_UNIX_ERROR(out);
+
+  return OZ_unify(out, dirValue);
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(unix_stat,2)
+{
+  struct stat buf;
+  char *fileType;
+  off_t fileSize;
+  OZ_declareVsArg("stat", 0, filename);
+  OZ_declareArg(1, out);
+
+  if (lstat(filename, &buf) < 0)
+    RETURN_UNIX_ERROR(out);
+
+  if      (S_ISREG(buf.st_mode))  fileType = "reg";
+  else if (S_ISDIR(buf.st_mode))  fileType = "dir";
+  else if (S_ISCHR(buf.st_mode))  fileType = "chr";
+  else if (S_ISBLK(buf.st_mode))  fileType = "blk";
+  else if (S_ISFIFO(buf.st_mode)) fileType = "fifo";
+#ifdef S_ISLNK
+  else if (S_ISLNK(buf.st_mode))  fileType = "lnk";
+#endif
+#ifdef S_ISSOCK
+  else if (S_ISSOCK(buf.st_mode)) fileType = "sock";
+#endif
+  else fileType = "unknown";
+
+  fileSize = buf.st_size;
+
+  OZ_unifyString(OZ_getRecordArgC(out, "type"), fileType);
+  OZ_unifyInt(OZ_getRecordArgC(out, "size"), fileSize);
+
+  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -1647,6 +1712,8 @@ OZ_C_proc_end
 
 void MyinitUnix()
 {
+  OZ_addBuiltin("unix_getDir",2,unix_getDir);
+  OZ_addBuiltin("unix_stat",2,unix_stat);
   OZ_addBuiltin("unix_open",4,unix_open);
   OZ_addBuiltin("unix_fileDesc",2,unix_fileDesc);
   OZ_addBuiltin("unix_close",2,unix_close);
