@@ -29,6 +29,7 @@
     <Meta name="html.split" value="chapter.gdb">
     <Meta name="html.split" value="chapter.api">
     <Meta name="html.split.bib" value="">
+    <Meta name="html.split.index" value="">
 
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
@@ -181,14 +182,16 @@
 	    All of the &OPI;'s functions are accessible in the following two
 	    major modes:
 	    <List>
-	      <Entry class=command><<oz-mode>>
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-mode>>/<<oz-mode>>
 	      <Item>
 		<P.silent><!--**-->
 		  This is the major mode for editing Oz code.  Loading a file
 		  with extension <File/.oz/ automatically puts a buffer into
 		  Oz mode.  You can tell a buffer is in Oz mode by the string
 		  <Samp/Oz/ in its mode line.
-	      <Entry class=command><<oz-gump-mode>>
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-gump-mode>>/<<oz-gump-mode>>
 	      <Item>
 		<P.silent><!--**-->
 		  This is the major mode for editing Oz code with embedded
@@ -200,7 +203,8 @@
 	  <Para class=apropos><Title/Oz Mode Hook/
 	    To both of these, the following hook applies.
 	    <List>
-	      <Entry class=useroption><<oz-mode-hook>>
+	      <Entry class=useroption><P.silent><!--**-->
+		<Index/<<oz-mode-hook>>/<<oz-mode-hook>>
 	      <Item>
 		<P.silent><!--**-->
 		  A list of functions to be run when one of the Oz modes is
@@ -266,7 +270,8 @@
 	    the command name.  The following user option affects which key
 	    bindings are installed by default.
 	    <List>
-	      <Entry class=useroption><<oz-pc-keys>> (default: <<nil>>)
+	      <Entry class=useroption><P.silent><!--**-->
+		<Index/<<oz-pc-keys>>/<<oz-pc-keys>> (default: <<nil>>)
 	      <Item>
 		<P.silent><!--**-->
 		  If non-<<nil>>, use only <Q class=quasi/politically correct/
@@ -275,7 +280,8 @@
 		  be bound to <Key/C-c/ followed by a letter.  Note that this
 		  user option must be set before the <File/oz/ library is
 		  loaded.
-	      <Entry class=useroption><<oz-mode-map>>
+	      <Entry class=useroption><P.silent><!--**-->
+		<Index/<<oz-mode-map>>/<<oz-mode-map>>
 	      <Item>
 		<P.silent><!--**-->
 		  Keymap used in the Oz modes.
@@ -291,14 +297,19 @@
 	    The Oz modes offer commands for creating new interactive buffers
 	    and quickly switching between Oz buffers:
 	    <List>
-	      <Entry class=command><<oz-new-buffer>> (<Key/C-c C-n/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-new-buffer>>/<<oz-new-buffer>> (<Key/C-c C-n/)
 	      <Item>
 		<P.silent><!--**-->
 		  Create a new buffer using the Oz major mode.
 		  Note that this buffer has no associated file name,
 		  so quitting Emacs will kill it without warning.
-	      <Entry class=command><<oz-previous-buffer>> (<Key/M-p/)
-	      <Entry class=command><<oz-next-buffer>> (<Key/M-n/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-previous-buffer>>/
+		<<oz-previous-buffer>> (<Key/M-p/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-next-buffer>>/
+		<<oz-next-buffer>> (<Key/M-n/)
 	      <Item>
 		<P.silent><!--**-->
 		  Switch to the previous &resp; next buffer in the buffer list
@@ -311,7 +322,9 @@
 	    The preferred indentation style can currently be customized
 	    through the following user option:
 	    <List>
-	      <Entry class=useroption><<oz-indent-chars>> (default: <<3>>)
+	      <Entry class=useroption><P.silent><!--**-->
+		<Index/<<oz-indent-chars>>/
+		<<oz-indent-chars>> (default: <<3>>)
 	      <Item>
 		<P.silent><!--**-->
 		  Number of columns that statements are indented &wrt;
@@ -319,22 +332,26 @@
 	    </List>
 	    Several commands assist in formatting existing Oz code.
 	    <List>
-	      <Entry class=command><<oz-indent-line &amp;optional COUNT>>
-		(<Key/TAB/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-indent-line>>/
+		<<oz-indent-line &amp;optional COUNT>> (<Key/TAB/)
 	      <Item>
 		<P.silent><!--**-->
 		  Reindent the current line.  If <<COUNT>> is given, reindent
 		  that many lines above and below point as well.
-	      <Entry class=command><<oz-indent-region>>
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-indent-region>>/<<oz-indent-region>>
 	      <Item>
 		<P.silent><!--**-->
 		  Reindent all lines at least partly covered by the current
 		  region.
-	      <Entry class=command><<oz-indent-buffer>>
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-indent-buffer>>/<<oz-indent-buffer>>
 	      <Item>
 		<P.silent><!--**-->
 		  Reindent every line in the buffer.
-	      <Entry class=command><<indent-oz-expr>> (<Key/M-C-q/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<indent-oz-expr>>/<<indent-oz-expr>> (<Key/M-C-q/)
 	      <Item>
 		<P.silent><!--**-->
 		  Reindent all lines at least partly covered by the Oz
@@ -344,13 +361,16 @@
 	    </List>
 	    The following command assists in authoring Oz code.
 	    <List>
-	      <Entry class=command><<oz-electric-terminate-line>> (<Key/RET/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-electric-terminate-line>>/
+		<<oz-electric-terminate-line>> (<Key/RET/)
 	      <Item>
 		<P.silent><!--**-->
 		  Terminate the current line, &ie;, delete all whitespace
 		  around point and break the line.  If the user option
 		  <<oz-auto-indent>> is non-<<nil>>, indent both lines.
-	      <Entry class=useroption><<oz-auto-indent>> (default: <<t>>)
+	      <Entry class=useroption><P.silent><!--**-->
+		<Index/<<oz-auto-indent>>/<<oz-auto-indent>> (default: <<t>>)
 	      <Item>
 		<P.silent><!--**-->
 		  See <<oz-electric-terminate-line>>.
@@ -376,15 +396,18 @@
 	    The following user option and command control automatic
 	    fontification in the &OPI;.
 	    <List>
-	      <Entry class=useroption><<oz-want-font-lock>> (default: <<t>>)
+	      <Entry class=useroption><P.silent><!--**-->
+		<Index/<<oz-want-font-lock>>/
+		<<oz-want-font-lock>> (default: <<t>>)
 	      <Item>
 		<P.silent><!--**-->
 		  If non-<<nil>>, automatically invoke <<font-lock-mode>> when
 		  any of the Oz modes is activated.  If you prefer to control
 		  this via <<global-font-lock-mode>>, you can set this to
 		  <<nil>>.
-	      <Entry class=command><<oz-fontify-buffer &amp;optional ARG>>
-		(<Key/M-l/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-fontify-buffer>>/
+		<<oz-fontify-buffer &amp;optional ARG>> (<Key/M-l/)
 	      <Item>
 		<P.silent><!--**-->
 		  Center point in window, redisplay frame and re-fontify
@@ -394,18 +417,22 @@
 	    You might like the following user option and command if you care
 	    about superfluous (usually invisible) spaces:
 	    <List>
-	      <Entry class=useroption><<oz-pedantic-spaces>>
-		(default: <<nil>>)
+	      <Entry class=useroption><P.silent><!--**-->
+		<Index/<<oz-pedantic-spaces>>/
+		<<oz-pedantic-spaces>> (default: <<nil>>)
 	      <Item>
 		<P.silent><!--**-->
 		  If non-nil, highlight ill-placed whitespace.  Note that this
 		  user option must be set before the <File/oz/ library is
 		  loaded.
-	      <Entry class=face><<oz-space-face>>
+	      <Entry class=face><P.silent><!--**-->
+		<Index/<<oz-space-face>>/<<oz-space-face>>
 	      <Item>
 		<P.silent><!--**-->
 		  The face in which ill-placed whitespace is highlighted.
-	      <Entry class=command><<oz-remove-annoying-spaces>>
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-remove-annoying-spaces>>/
+		<<oz-remove-annoying-spaces>>
 	      <Item>
 		<P.silent><!--**-->
 		  Remove all ill-placed whitespace from the current buffer.
@@ -416,7 +443,9 @@
 	<Title/Comments/
 	  <P>
 	    <List>
-	      <Entry class=command><<oz-fill-paragraph &amp;optional JUSTIFY>>
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-fill-paragraph>>/
+		<<oz-fill-paragraph &amp;optional JUSTIFY>>
 	      <Item>
 		<P.silent><!--**-->
 		  Like the <<fill-paragraph>> command, but handles Oz comments.
@@ -426,7 +455,8 @@
 		  buffer-local variable <<fill-paragraph-function>> is
 		  bound to this command, so it will also be invoked by
 		  <Key/M-x fill-paragraph/ (<Key/M-q/).
-	      <Entry class=command>
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-comment-region>>/
 		<<oz-comment-region START END &amp;optional ARG>>
 	      <Item>
 		<P.silent><!--**-->
@@ -436,7 +466,8 @@
 		  characters.  If <<ARG>> is negative, delete that many
 		  comment characters instead.  Blank lines do not get
 		  comments.
-	      <Entry class=command>
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-uncomment-region>>/
 		<<oz-uncomment-region START END &amp;optional ARG>>
 	      <Item>
 		<P.silent><!--**-->
@@ -454,41 +485,50 @@
 	    either a bracketed Oz construct (such as <<proc &ellipsis; end>>
 	    or <<local &ellipsis end>>) or a single word.
 	    <List>
-	      <Entry class=command><<forward-oz-expr &amp;optional COUNT>>
-		(<Key/M-C-f/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<forward-oz-expr>>/
+		<<forward-oz-expr &amp;optional COUNT>> (<Key/M-C-f/)
 	      <Item>
 		<P.silent><!--**-->
 		  Move point forward by one balanced Oz expression.  With
 		  <<COUNT>>, do it that many times.  Negative <<COUNT>> means
 		  backwards.
-	      <Entry class=command><<backward-oz-expr &amp;optional COUNT>>
-		(<Key/M-C-b/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<backward-oz-expr>>/
+		<<backward-oz-expr &amp;optional COUNT>> (<Key/M-C-b/)
 	      <Item>
 		<P.silent><!--**-->
 		  Move point backward by one balanced Oz expression.  With
 		  <<COUNT>>, do it that many times.  <<COUNT>> must be
 		  positive.
-	      <Entry class=command><<mark-oz-expr COUNT>>
-		(<Key/M-C-@/, <Key/M-C-SPC/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<mark-oz-expr>>/
+		<<mark-oz-expr COUNT>> (<Key/M-C-@/, <Key/M-C-SPC/)
 	      <Item>
 		<P.silent><!--**-->
 		  Set mark <<COUNT>> balanced Oz expressions from point.  The
 		  place mark goes to is the same place the <<forward-oz-expr>>
 		  command would move to with the same argument.
-	      <Entry class=command><<transpose-oz-exprs ARG>> (<Key/M-C-t/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<transpose-oz-exprs>>/
+		<<transpose-oz-exprs ARG>> (<Key/M-C-t/)
 	      <Item>
 		<P.silent><!--**-->
 		  Like the <<transpose-words>> command (<Key/M-t/) but applies
 		  to balanced Oz expressions.  Caveat:  This might not produce
 		  nice results in all cases.
-	      <Entry class=command><<kill-oz-expr COUNT>> (<Key/M-C-k/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<kill-oz-expr>>/
+		<<kill-oz-expr COUNT>> (<Key/M-C-k/)
 	      <Item>
 		<P.silent><!--**-->
 		  Kill the balanced Oz expression following point.  With
 		  <<COUNT>>, kill that many Oz expressions after point.
 		  Negative <<COUNT>> means kill <<-COUNT>> Oz expressions
 		  before point.
-	      <Entry class=command><<backward-kill-oz-expr COUNT>>
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<backward-kill-oz-expr>>/
+		<<backward-kill-oz-expr COUNT>>
 		(<Key/M-C-DEL/<Note foot>Note that under some configurations,
 		this key combination kills the X server.</Note>)
 	      <Item>
@@ -497,14 +537,18 @@
 		  <<COUNT>>, kill that many Oz expressions before point.
 		  Negative <<COUNT>> means kill <<-COUNT>> Oz expressions
 		  after point.
-	      <Entry class=command><<oz-beginning-of-defun>> (<Key/M-C-a/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-beginning-of-defun>>/
+		<<oz-beginning-of-defun>> (<Key/M-C-a/)
 	      <Item>
 		<P.silent><!--**-->
 		  Move point to the start of the Oz definition it is in.
 		  If point is not inside an Oz definition, move to start of
 		  buffer.  Returns <<t>> unless search stops due to beginning
 		  or end of buffer.
-	      <Entry class=command><<oz-end-of-defun>> (<Key/M-C-e/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-end-of-defun>>/
+		<<oz-end-of-defun>> (<Key/M-C-e/)
 	      <Item>
 		<P.silent><!--**-->
 		  Move point to the end of the Oz definition it is in.
@@ -539,7 +583,8 @@
 	If it is not set, the value of the following variable will be used
 	instead.
 	<List>
-	  <Entry class=useroption><<OZ-HOME>>
+	  <Entry class=useroption><P.silent><!--**-->
+	    <Index/<<OZ-HOME>>/<<OZ-HOME>>
 	    (default: <File>/usr/local/oz</File><Note foot>This default is
 	    actually fixed at the time the Mozart system is configured and
 	    built, so it might vary on your system.</Note>)
@@ -554,26 +599,31 @@
 	  The following commands are used to start and halt the Mozart
 	  sub-process.
 	  <List>
-	    <Entry class=command><<run-oz>> (<Key/C-c C-r/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<run-oz>>/<<run-oz>> (<Key/C-c C-r/)
 	    <Item>
 	      <P.silent><!--**-->
 		Start Mozart as a sub-process if it is not already running.
 		Handle input and output via the Oz Emulator buffer.  If the
 		current buffer is not running in an Oz mode, create a new
 		buffer in Oz mode.
-	    <Entry class=useroption><<oz-change-title>> (default: <<nil>>)
+	    <Entry class=useroption><P.silent><!--**-->
+	      <Index/<<oz-change-title>>/
+	      <<oz-change-title>> (default: <<nil>>)
 	    <Item>
 	      <P.silent><!--**-->
 		If non-<<nil>>, change the Emacs frame's title while a Mozart
 		sub-process is running.
-	    <Entry class=useroption><<oz-frame-title>>
+	    <Entry class=useroption><P.silent><!--**-->
+	      <Index/<<oz-frame-title>>/<<oz-frame-title>>
 	      (default: <<"Oz Programming Interface (&ellipsis;)">>)
 	    <Item>
 	      <P.silent><!--**-->
 		String to use as Emacs frame title while a Mozart sub-process
 		is running.  In the default shown above, the old frame title
 		will be inserted in place of the ellipsis.
-	    <Entry class=command><<oz-halt FORCE>> (<Key/C-c C-h/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-halt>>/<<oz-halt FORCE>> (<Key/C-c C-h/)
 	    <Item>
 	      <P.silent><!--**-->
 		Halt the Mozart sub-process.  If <<FORCE>> is <<nil>>, send a
@@ -582,7 +632,9 @@
 		user option <<oz-halt-timeout>>; after this delay, the process
 		is simply killed if still living.  If <<FORCE>> is non-<<nil>>,
 		kill it immediately.
-	    <Entry class=useroption><<oz-halt-timeout>> (default: <<30>>)
+	    <Entry class=useroption><P.silent><!--**-->
+	      <Index/<<oz-halt-timeout>>/
+	      <<oz-halt-timeout>> (default: <<30>>)
 	    <Item>
 	      <P.silent><!--**-->
 		Number of seconds to wait for shutdown in command <<oz-halt>>.
@@ -593,16 +645,24 @@
 	  Several commands make inspecting the Oz Emulator and Oz Compiler
 	  buffers easier.
 	  <List>
-	    <Entry class=command><<oz-toggle-emulator>> (<Key/C-c C-e/)
-	    <Entry class=command><<oz-toggle-compiler>> (<Key/C-c C-c/)
-	    <Entry class=command><<oz-toggle-temp>> (<Key/C-c C-t/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-toggle-emulator>>/
+	      <<oz-toggle-emulator>> (<Key/C-c C-e/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-toggle-compiler>>/
+	      <<oz-toggle-compiler>> (<Key/C-c C-c/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-toggle-temp>>/
+	      <<oz-toggle-temp>> (<Key/C-c C-t/)
 	    <Item>
 	      <P.silent><!--**-->
 		Toggle visibility of the Oz Emulator, Compiler or Temporary
 		window respectively.  If the buffer is not visible in any
 		window, then display it.  If it is, then delete the
 		corresponding window.
-	    <Entry class=useroption><<oz-other-buffer-size>> (default: <<35>>)
+	    <Entry class=useroption><P.silent><!--**-->
+	      <Index/<<oz-other-buffer-size>>/
+	      <<oz-other-buffer-size>> (default: <<35>>)
 	    <Item>
 	      <P.silent><!--**-->
 		Percentage of screen to use for Oz Compiler, Emulator or
@@ -639,22 +699,35 @@
 		paragraph are fed.
 	  </List>
 	  <List>
-	    <Entry class=command><<oz-feed-buffer>> (<Key/M-RET/)
-	    <Entry class=command><<oz-feed-region START END>>
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-feed-buffer>>/<<oz-feed-buffer>> (<Key/M-RET/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-feed-region>>/<<oz-feed-region START END>>
 	      (<Key/M-r/<Note foot>This key binding is only available if the
 	      <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
-	    <Entry class=command><<oz-feed-line COUNT>>
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-feed-line>>/<<oz-feed-line COUNT>>
 	      (<Key/M-l/<Note foot>This key binding is only available if the
 	      <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
-	    <Entry class=command><<oz-feed-paragraph COUNT>> (<Key/C-c C-p/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-feed-paragraph>>/
+	      <<oz-feed-paragraph COUNT>> (<Key/C-c C-p/)
 	    <Item>
 	      <P.silent><!--**-->
 		The corresponding text region is fed to the compiler and
 		processed with its currently active switches.
-	    <Entry class=command><<oz-to-coresyntax-buffer>>
-	    <Entry class=command><<oz-to-coresyntax-region START END>>
-	    <Entry class=command><<oz-to-coresyntax-line COUNT>>
-	    <Entry class=command><<oz-to-coresyntax-paragraph COUNT>>
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-to-coresyntax-buffer>>/
+	      <<oz-to-coresyntax-buffer>>
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-to-coresyntax-region>>/
+	      <<oz-to-coresyntax-region START END>>
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-to-coresyntax-line>>/
+	      <<oz-to-coresyntax-line COUNT>>
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-to-coresyntax-paragraph>>/
+	      <<oz-to-coresyntax-paragraph COUNT>>
 	    <Item>
 	      <P.silent><!--**-->
 		The corresponding text region is prefixed by
@@ -662,10 +735,18 @@
 		and fed to the Oz Compiler.  If compilation succeeds, the
 		resulting source file will be displayed in the Oz Temporary
 		buffer.
-	    <Entry class=command><<oz-to-emulatorcode-buffer>>
-	    <Entry class=command><<oz-to-emulatorcode-region START END>>
-	    <Entry class=command><<oz-to-emulatorcode-line COUNT>>
-	    <Entry class=command><<oz-to-emulatorcode-paragraph COUNT>>
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-to-emulatorcode-buffer>>/
+	      <<oz-to-emulatorcode-buffer>>
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-to-emulatorcode-region>>/
+	      <<oz-to-emulatorcode-region START END>>
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-to-emulatorcode-line>>/
+	      <<oz-to-emulatorcode-line COUNT>>
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-to-emulatorcode-paragraph>>/
+	      <<oz-to-emulatorcode-paragraph COUNT>>
 	    <Item>
 	      <P.silent><!--**-->
 		The corresponding text region is prefixed by
@@ -673,14 +754,18 @@
 		and fed to the Oz Compiler.  If compilation succeeds, the
 		resulting source file will be displayed in the Oz Temporary
 		buffer.
-	    <Entry class=command><<oz-send-string STRING &amp;optional SYSTEM>>
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-send-string>>/
+	      <<oz-send-string STRING &amp;optional SYSTEM>>
 	    <Item>
 	      <P.silent><!--**-->
 		Feed <<STRING>> to the Oz Compiler, restarting it if it died.
 		If <<SYSTEM>> is non-<<nil>>, it is a command for the system
 		and is prefixed by
 		<Code.Extern display proglang=oz to="system.oz">
-	    <Entry class=useroption><<oz-prepend-line>> (default: <<t>>)
+	    <Entry class=useroption><P.silent><!--**-->
+	      <Index/<<oz-prepend-line>>/
+	      <<oz-prepend-line>> (default: <<t>>)
 	    <Item>
 	      <P.silent><!--**-->
 		If non-<<nil>>, prepend a <Code proglang=oz>\line</Code>
@@ -701,12 +786,16 @@
 	    error messages, consisting of the file name (or buffer name)
 	    and line number of the corresponding Oz source code.
 	    <List>
-	      <Entry class=useroption><<oz-popup-on-error>> (default: <<t>>)
+	      <Entry class=useroption><P.silent><!--**-->
+		<Index/<<oz-popup-on-error>>/
+		<<oz-popup-on-error>> (default: <<t>>)
 	      <Item>
 		<P.silent><!--**-->
 		  If non-nil, pop up Compiler &resp; Emulator buffer upon an
 		  error message.
-	      <Entry class=command><<oz-goto-next-error>> (<Key/C-x `/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-goto-next-error>>/
+		<<oz-goto-next-error>> (<Key/C-x `/)
 	      <Item>
 		<P.silent><!--**-->
 		  If in an Oz mode buffer, visit next compilation error
@@ -718,8 +807,9 @@
 		<P>
 		  When in Compiler buffer, visit error message surrounding
 		  point.
-	      <Entry class=command><<oz-mouse-goto-error EVENT>>
-		(<Key/S-&lt;button-2>/)
+	      <Entry class=command><P.silent><!--**-->
+		<Index/<<oz-mouse-goto-error>>/
+		<<oz-mouse-goto-error EVENT>> (<Key/S-&lt;button-2>/)
 	      <Item>
 		<P.silent>
 		  Visit the error coordinates associated with the error message
@@ -737,7 +827,8 @@
       <P>
 	The following command is useful for several of the tools.
 	<List>
-	  <Entry class=command><<oz-bar-remove>>
+	  <Entry class=command><P.silent><!--**-->
+	    <Index/<<oz-bar-remove>>/<<oz-bar-remove>>
 	  <Item>
 	    <P.silent><!--**-->
 	      Remove any coloured bar marking an Oz source line.  Such bars are
@@ -745,12 +836,20 @@
 	</List>
       <Para class=apropos><Title/Browser/
 	<List>
-	  <Entry class=command><<oz-browse-buffer>>
-	  <Entry class=command><<oz-browse-region START END>> (<Key/C-c C-b/)
-	  <Entry class=command><<oz-browse-line COUNT>>
+	  <Entry class=command><P.silent><!--**-->
+	    <Index/<<oz-browse-buffer>>/
+	    <<oz-browse-buffer>>
+	  <Entry class=command><P.silent><!--**-->
+	    <Index/<<oz-browse-region>>/
+	    <<oz-browse-region START END>> (<Key/C-c C-b/)
+	  <Entry class=command><P.silent><!--**-->
+	    <Index/<<oz-browse-line>>/
+	    <<oz-browse-line COUNT>>
 	    (<Key/C-c b/<Note foot>This key binding is only available if the
 	    <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
-	  <Entry class=command><<oz-browse-paragraph COUNT>>
+	  <Entry class=command><P.silent><!--**-->
+	    <Index/<<oz-browse-paragraph>>/
+	    <<oz-browse-paragraph COUNT>>
 	  <Item>
 	    <P.silent><!--**-->
 	      Feed the corresponding text region to the Oz Compiler.
@@ -759,7 +858,8 @@
 	</List>
       <Para class=apropos><Title/Panel/
 	<List>
-	  <Entry class=command><<oz-open-panel>>
+	  <Entry class=command><P.silent><!--**-->
+	    <Index/<<oz-open-panel>>/<<oz-open-panel>>
 	    (<Key/C-c p/<Note foot>This key binding is only available if the
 	    <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
 	  <Item>
@@ -769,7 +869,9 @@
 	</List>
       <Para class=apropos><Title/Compiler Panel/
 	<List>
-	  <Entry class=command><<oz-open-compiler-panel>>
+	  <Entry class=command><P.silent><!--**-->
+	    <Index/<<oz-open-compiler-panel>>/
+	    <<oz-open-compiler-panel>>
 	    (<Key/C-c c/<Note foot>This key binding is only available if the
 	    <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
 	  <Item>
@@ -780,23 +882,28 @@
 	</List>
       <Para class=apropos><Title/Debugger/
 	<List>
-	  <Entry class=command><<oz-debugger ARG>> (<Key/C-c C-d/)
+	  <Entry class=command><P.silent><!--**-->
+	    <Index/<<oz-debugger>>/<<oz-debugger ARG>> (<Key/C-c C-d/)
 	  <Item>
 	    <P.silent><!--**-->
 	      Open the Oz Debugger by feeding the statement <Code proglang=oz
 	      >{Ozcar.open}</Code> to the Oz Compiler.  With <<ARG>>, close
 	      it instead by <Code proglang=oz>{Ozcar.close}</Code>.
-	  <Entry class=command><<oz-breakpoint-at-point ARG>> (<Key/C-x SPC/)
+	  <Entry class=command><P.silent><!--**-->
+	    <Index/<<oz-breakpoint-at-point>>/
+	    <<oz-breakpoint-at-point ARG>> (<Key/C-x SPC/)
 	  <Item>
 	    <P.silent><!--**-->
 	      Set a dynamic breakpoint for the Oz Debugger in any code
 	      carrying the current source file name (or buffer name) and line
 	      number as debugging information.  With <<ARG>>, delete any
 	      breakpoints at these coordinates instead.
-	  <Entry class=command><<oz-breakpoint-mouse-set>>
-	    (<Key/M-S-&lt;button-1>/)
-	  <Entry class=command><<oz-breakpoint-mouse-delete>>
-	    (<Key/M-S-&lt;button-3>/)
+	  <Entry class=command><P.silent><!--**-->
+	    <Index/<<oz-breakpoint-mouse-set>>/
+	    <<oz-breakpoint-mouse-set>> (<Key/M-S-&lt;button-1>/)
+	  <Entry class=command><P.silent><!--**-->
+	    <Index/<<oz-breakpoint-mouse-delete>>/
+	    <<oz-breakpoint-mouse-delete>> (<Key/M-S-&lt;button-3>/)
 	  <Item>
 	    <P.silent><!--**-->
 	      Set &resp; delete a dynamic breakpoint at the point clicked with
@@ -804,7 +911,8 @@
 	</List>
       <Para class=apropos><Title/Profiler/
 	<List>
-	  <Entry class=command><<oz-profiler ARG>> (<Key/C-c C-f/)
+	  <Entry class=command><P.silent><!--**-->
+	    <Index/<<oz-profiler>>/<<oz-profiler ARG>> (<Key/C-c C-f/)
 	  <Item>
 	    <P.silent><!--**-->
 	      Open the Oz Profiler by feeding the statement <Code proglang=oz
@@ -828,7 +936,8 @@
 	  One part of the support is concerned with testing system components
 	  locally.
 	  <List>
-	    <Entry class=useroption><<oz-emulator>> (default: see below)
+	    <Entry class=useroption><P.silent><!--**-->
+	      <Index/<<oz-emulator>>/<<oz-emulator>> (default: see below)
 	    <Item>
 	      <P.silent><!--**-->
 		File name of the Oz Emulator binary.  This is used when running
@@ -840,7 +949,9 @@
 		<<<$HOME/mozart/platform/emulator/oz.emulator.bin>>>
 		where <<$HOME>> stands for the value of the environment
 		variable <Var type=env/HOME/.
-	    <Entry class=useroption><<oz-components-path>> (default: see below)
+	    <Entry class=useroption><P.silent><!--**-->
+	      <Index/<<oz-components-path>>/
+	      <<oz-components-path>> (default: see below)
 	    <Item>
 	      <P.silent><!--**-->
 		Search path for the Oz Components.  This is used by the
@@ -858,41 +969,51 @@ prefix=http\\://www.ps.uni-sb.de/ozhome/=~/mozart/share/tools/stage1/:
 cache=~/.oz/cache:cache=$OZHOME/cache>>>
 		where <<$OZHOME>> stands for the value of the environment
 		variable <Var type=env/OZHOME/.
-	    <Entry class=useroption><<oz-root-functor>>
+	    <Entry class=useroption><P.silent><!--**-->
+	      <Index/<<oz-root-functor>>/<<oz-root-functor>>
 	      (default: <<"http://www.ps.uni-sb.de/ozhome/share/OPI.ozf">>)
 	    <Item>
 	      <P.silent><!--**-->
 		Name of the root functor to load on startup.
-	    <Entry class=command><<oz-set-other SET-COMPONENTS>>
-	      (<Key/C-c C-m/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-set-other>>/
+	      <<oz-set-other SET-COMPONENTS>> (<Key/C-c C-m/)
 	    <Item>
 	      <P.silent><!--**-->
 		If <<SET-COMPONENTS>> is <<nil>>, call <<oz-set-emulator>>,
 		else call <<oz-set-components>>.
-	    <Entry class=command><<oz-set-emulator>> (<Key/C-c C-m/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-set-emulator>>/<<oz-set-emulator>> (<Key/C-c C-m/)
 	    <Item>
 	      <P.silent><!--**-->
 		Interactively set the value of the variable <<oz-emulator>>.
 		Also, if the environment variable <Var type=env/OZEMULATOR/ is
 		set, replace its value by this one.
-	    <Entry class=command><<oz-set-components>> (<Key/C-u C-c C-m/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-set-components>>/
+	      <<oz-set-components>> (<Key/C-u C-c C-m/)
 	    <Item>
 	      <P.silent><!--**-->
 		Interactively set the value of the variable
 		<<oz-components-path>>.  Also, if the environment variable
 		<Var type=env/OZ_LOAD/ is set, replace its value by this one.
-	    <Entry class=command><<oz-other SET-COMPONENTS>> (<Key/C-c C-o/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-other>>/<<oz-other SET-COMPONENTS>> (<Key/C-c C-o/)
 	    <Item>
 	      <P.silent><!--**-->
 		If <<SET-COMPONENTS>> is <<nil>>, call <<oz-other-emulator>>,
 		else call <<oz-other-components>>.
-	    <Entry class=command><<oz-other-emulator>> (<Key/C-c C-o/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-other-emulator>>/
+	      <<oz-other-emulator>> (<Key/C-c C-o/)
 	    <Item>
 	      <P.silent><!--**-->
 		Toggle between global and local Oz Emulator.  The local
 		emulator is given by the user option <<oz-emulator>>; see
 		<<oz-set-emulator>>.
-	    <Entry class=command><<oz-other-components>> (<Key/C-u C-c C-o/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-other-components>>/
+	      <<oz-other-components>> (<Key/C-u C-c C-o/)
 	    <Item>
 	      <P.silent><!--**-->
 		Toggle between global and local Oz Components search path.
@@ -904,14 +1025,16 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
 	<P>
 	  The last command is for starting the Mozart Emulator under gdb.
 	  <List>
-	    <Entry class=command><<oz-gdb>> (<Key/C-c C-g/)
+	    <Entry class=command><P.silent><!--**-->
+	      <Index/<<oz-gdb>>/<<oz-gdb>> (<Key/C-c C-g/)
 	    <Item>
 	      <P.silent><!--**-->
 		Toggle debugging of the Oz Emulator with gdb.  This sets
 		some additional environment variables since the <File/oz/
 		script has to be bypassed, and starts <<gud-mode>> with the
 		emulator binary specified by the user option <<oz-emulator>>.
-	    <Entry class=useroption><<oz-gdb-autostart>> (default: <<t>>)
+	    <Entry class=useroption><P.silent><!--**-->
+	      <Index/<<oz-gdb-autostart>>/<<oz-gdb-autostart>> (default: <<t>>)
 	    <Item>
 	      <P.silent><!--**-->
 		If non-<<nil>>, start emulator immediately when in gdb mode.
@@ -925,36 +1048,43 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
 	wanting to write their own Oz-syntax-aware commands.  All of these
 	commands respect Oz syntax &wrt; quoted elements.
 	<List>
-	  <Entry class=function><<oz-is-quoted>>
+	  <Entry class=function><P.silent><!--**-->
+	    <Index/<<oz-is-quoted>>/<<oz-is-quoted>>
 	  <Item>
 	    <P.silent><!--**-->
 	      Return non-<<nil>> iff point is inside a string, quoted atom,
 	      backquote variable, ampersand-denoted character or one-line
 	      comment.  In this case, move the point to the beginning of the
 	      corresponding token.  Else point is not moved.
-	  <Entry class=function><<oz-backward-keyword>>
-	  <Entry class=function><<oz-forward-keyword>>
+	  <Entry class=function><P.silent><!--**-->
+	    <Index/<<oz-backward-keyword>>/<<oz-backward-keyword>>
+	  <Entry class=function><P.silent><!--**-->
+	    <Index/<<oz-forward-keyword>>/<<oz-forward-keyword>>
 	  <Item>
 	    <P.silent><!--**-->
 	      Search backward &resp; forward for the last &resp; next keyword
 	      or parenthesis preceding &resp; following point.  Return
 	      non-<<nil>> iff such was found.  Ignore quoted keywords.
 	      Point is left at the first character of the keyword.
-	  <Entry class=function><<oz-backward-begin>>
+	  <Entry class=function><P.silent><!--**-->
+	    <Index/<<oz-backward-begin>>/<<oz-backward-begin>>
 	  <Item>
 	    <P.silent><!--**-->
 	      Move to the last unmatched start of a bracketed Oz construct and
 	      return column of point.
-	  <Entry class=function><<oz-forward-end>>
+	  <Entry class=function><P.silent><!--**-->
+	    <Index/<<oz-forward-end>>/<<oz-forward-end>>
 	  <Item>
 	    <P.silent><!--**-->
 	      Move point to the next unmatched <Code proglang=oz>end</Code>.
-	  <Entry class=function><<oz-backward-paren>>
+	  <Entry class=function><P.silent><!--**-->
+	    <Index/<<oz-backward-paren>>/<<oz-backward-paren>>
 	  <Item>
 	    <P.silent><!--**-->
 	      Move to the last unmatched opening parenthesis and return column
 	      of point.
-	  <Entry class=function><<oz-forward-paren>>
+	  <Entry class=function><P.silent><!--**-->
+	    <Index/<<oz-forward-paren>>/<<oz-forward-paren>>
 	  <Item>
 	    <P.silent><!--**-->
 	      Move to the next unmatched closing parenthesis.
