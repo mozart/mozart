@@ -1,4 +1,5 @@
 *mozart-1.2.5-r2 (10 Apr 2003)
 
   10 Apr 2003; Denys Duchier (denys.duchier@loria.fr)
-  also install mozart-ozmake
+  also install mozart-ozmake, and make dependencies more
+  specific to ensure timely updates
