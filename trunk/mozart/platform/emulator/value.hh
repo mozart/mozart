@@ -1495,8 +1495,6 @@ class AssRegArray  {
   friend void restore (int fileDesc, AssRegArray *array);
   /* we restore at the address ptr number of AssRegs;           */
 public:
-  AssRegArray () { numbOfGRegs = 0; first = (AssReg *)NULL; }
-
   AssRegArray (int sizeInit) : numbOfGRegs (sizeInit) 
   {
     first = (sizeInit==0 ? (AssReg*) NULL : allocAssRegBlock(sizeInit));
@@ -1519,25 +1517,27 @@ private:
   unsigned short arity;
   unsigned short spyFlag;
   SRecordArity methodArity;
+  TaggedRef fileName;
+  int lineno;
 
 public:
-  AssRegArray gRegs;
   ProgramCounter PC;
 
-  PrTabEntry (TaggedRef name, SRecordArity arityInit, int numbOfGRegs)
-  : printname(name), spyFlag(NO), gRegs (numbOfGRegs)
+  PrTabEntry (TaggedRef name, SRecordArity arityInit,TaggedRef file, int line)
+  : printname(name), spyFlag(NO), fileName(file), lineno(line)
   {
       Assert(isLiteral(name));
       methodArity = arityInit;
       arity =  (unsigned short) getWidth(arityInit);
-      Assert((int)arity == getWidth(arityInit));
+      Assert((int)arity == getWidth(arityInit)); /* check for overflow */
   }
 
   OZPRINTLONG;
   
   int getArity () { return (int) arity; }
+  TaggedRef getFileName() { return fileName; }
+  int getLine() { return lineno; }
   SRecordArity getMethodArity() { return methodArity; }
-  int getGSize () { return gRegs.getSize(); }
   char *getPrintName () { return tagged2Literal(printname)->getPrintName(); }
   TaggedRef getName () { return printname; }
   ProgramCounter getPC() { return PC; }
@@ -1567,7 +1567,7 @@ public:
   ProgramCounter getPC() { return pred->getPC(); }
   int getArity()         { return pred->getArity(); }
   SRecordArity getMethodArity()   { return pred->getMethodArity(); }
-  int getGSize()         { return pred->getGSize(); }
+  int getGSize()         { return getRefsArraySize(gRegs); }
   char *getPrintName()   { return pred->getPrintName(); }
   PrTabEntry *getPred()  { return pred; }
   TaggedRef getName()    { return pred->getName(); }
