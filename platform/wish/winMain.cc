@@ -25,7 +25,7 @@
 #define cdecl __cdecl
 #endif
 
-static void cdecl WishPanic(char *x,...);
+static void cdecl WishPanic(const char *x,...);
 static void cdecl WishInfo(char *x,...);
 
 extern "C" int close(int);
@@ -232,7 +232,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
     interp = Tcl_CreateInterp();
 
     int argc;
-    char **argv;
+    const char **argv;
     int code = Tcl_SplitList(interp, lpszCmdLine, &argc, &argv);
     if (code!=TCL_OK)
       WishPanic("Tcl_SplitList(%s) failed", lpszCmdLine);
@@ -310,10 +310,10 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
 
 
 void cdecl
-WishPanic TCL_VARARGS_DEF(char *,arg1)
+WishPanic TCL_VARARGS_DEF(const char *,arg1)
 {
   va_list argList;
-  char *format = TCL_VARARGS_START(char *,arg1,argList);
+  const char *format = TCL_VARARGS_START(const char *,arg1,argList);
   char buf[1024];
   vsprintf(buf, format, argList);
 
