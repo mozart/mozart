@@ -210,6 +210,106 @@ OZ_expect_t OZ_Expect::expectLiteral(OZ_Term t)
   return expectFail();  
 }
 
+OZ_expect_t OZ_Expect::expectProperRecord(OZ_Term t, 
+					  OZ_expect_t(OZ_Expect::* expectf)(OZ_Term))
+{
+  Assert(isRef(t) || !isAnyVar(t));
+
+  DEREF(t, tptr, ttag);
+
+  if (isLiteral(ttag)) { // subsumes nil
+    return expectProceed(1, 1);
+  } else if (isSRecord(t) && !tagged2SRecord(t)->isTuple()) {
+
+    SRecord & tuple = *tagged2SRecord(t);
+    int width = tuple.getWidth(), acc = 1;
+
+    for (int i = width; i--; ) {
+      OZ_expect_t r = (this->*expectf)(makeTaggedRef(&tuple[i]));
+      if (r.accepted == -1) {
+	return r;
+      } else if (r.accepted == r.size) {
+	acc += 1;
+      }
+    }
+    return expectProceed(width + 1, acc); 
+
+  } else if (isAnyVar(ttag)) {
+    addSuspend(tptr);
+    return expectSuspend(1, 0);
+  }
+  return expectFail();
+}
+
+OZ_expect_t OZ_Expect::expectProperTuple(OZ_Term t, 
+					 OZ_expect_t(OZ_Expect::* expectf)(OZ_Term))
+{
+  Assert(isRef(t) || !isAnyVar(t));
+
+  DEREF(t, tptr, ttag);
+
+  if (isLiteral(ttag)) { // subsumes nil
+    return expectProceed(1, 1);
+  } else if (isSRecord(t) && tagged2SRecord(t)->isTuple()) {
+
+    SRecord & tuple = *tagged2SRecord(t);
+    int width = tuple.getWidth(), acc = 1;
+
+    for (int i = width; i--; ) {
+      OZ_expect_t r = (this->*expectf)(makeTaggedRef(&tuple[i]));
+      if (r.accepted == -1) {
+	return r;
+      } else if (r.accepted == r.size) {
+	acc += 1;
+      }
+    }
+    return expectProceed(width + 1, acc); 
+
+  } else if (isAnyVar(ttag)) {
+    addSuspend(tptr);
+    return expectSuspend(1, 0);
+  }
+  return expectFail();
+}
+
+OZ_expect_t OZ_Expect::expectList(OZ_Term t, 
+				    OZ_expect_t(OZ_Expect::* expectf)(OZ_Term))
+{
+  Assert(isRef(t) || !isAnyVar(t));
+
+  DEREF(t, tptr, ttag);
+
+  if (isCons(ttag)) {
+    
+    int len = 0, acc = 0;
+    
+    do {
+      len += 1;
+      OZ_expect_t r = (this->*expectf)(makeTaggedRef(headRef(t)));
+      
+      if (r.accepted == -1) {
+	return r;
+      } else if (r.accepted == r.size) {
+	acc += 1;
+      } 
+
+      t = tail(t);
+      __DEREF(t, tptr, ttag);
+    } while (isCons(ttag));
+
+    if (isNil(t)) {
+      return expectProceed(len, acc);
+    } else if (isAnyVar(ttag)) {
+      addSuspend(tptr);
+      return expectSuspend(len+1, acc);
+    } 
+  } else if (isAnyVar(ttag)) {
+    addSuspend(tptr);
+    return expectSuspend(1, 0);
+  }
+  return expectFail();
+}
+
 OZ_expect_t OZ_Expect::expectVector(OZ_Term t, 
 				    OZ_expect_t(OZ_Expect::* expectf)(OZ_Term))
 {
@@ -246,10 +346,7 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
 	return r;
       } else if (r.accepted == r.size) {
 	acc += 1;
-      } /* else {
-	Assert(r.accepted < r.size);
-	return expectSuspend(len, acc);
-      } */
+      } 
 
       t = tail(t);
       __DEREF(t, tptr, ttag);
@@ -260,9 +357,7 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
     } else if (isAnyVar(ttag)) {
       addSuspend(tptr);
       return expectSuspend(len+1, acc);
-    } else {
-      return expectFail();
-    }
+    } 
 
   } else if (isAnyVar(ttag)) {
     addSuspend(tptr);
