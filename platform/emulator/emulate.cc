@@ -294,7 +294,7 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
        DISPLAY_CODE;\
        DODISPATCH; }
 
-#else THREADED == 0
+#else // THREADED == 0
 
 #   define DISPATCH(INC) \
          INCFPC(INC);\
@@ -382,7 +382,7 @@ void engine() {
 
   RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
 
-  BIFun biFun = NULL;
+  OZ_CFun biFun = NULL;
 
 // shallow choice pointer
   ByteCode *shallowCP = NULL;
@@ -403,7 +403,7 @@ void engine() {
 
   Opcode op = (Opcode) -1;
 
-#endif THREADED
+#endif // THREADED
 
   switch (setjmp(IO::engineEnvironment)) {
 
@@ -609,7 +609,7 @@ void engine() {
         goto LBLTaskNervous;
       case C_CFUNC_CONT:
         // by kost@ : 'solve actors' are represented via the c-function;
-        biFun = (BIFun) TaskStackPop(--topCache);
+        biFun = (OZ_CFun) TaskStackPop(--topCache);
         currentTaskSusp = (Suspension*) TaskStackPop(--topCache);
         {
           RefsArray tmpX = (RefsArray) TaskStackPop(--topCache);
@@ -729,7 +729,7 @@ void engine() {
 
   switch (op) {
 
-#endif THREADED
+#endif // THREADED
 
 // the instructions are classified into groups
 // to find a certain class of instructions search for the String "CLASS:"
@@ -784,7 +784,7 @@ void engine() {
   INSTRUCTION(CALLBUILTIN)
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
-      BIFun fun = entry->getFun();
+      OZ_CFun fun = entry->getFun();
       int arityExp = getPosIntArg(PC+2);
       int arity = entry->getArity();
 
@@ -836,7 +836,7 @@ void engine() {
           X[0] = A;
 
           DEREF(A,APtr,_1);
-          OZ_Suspension *susp = OZ_makeSuspension(entry->getFun(), X, 1);
+          OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 1);
           OZ_addSuspension(APtr,susp);
 
           X[0] = saveX0;
@@ -883,7 +883,7 @@ void engine() {
           X[1] = B;
 
           DEREF(A,APtr,_1); DEREF(B,BPtr,_2);
-          OZ_Suspension *susp = OZ_makeSuspension(entry->getFun(), X, 2);
+          OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 2);
           if (isAnyVar(A)) OZ_addSuspension(APtr,susp);
           if (isAnyVar(B)) OZ_addSuspension(BPtr,susp);
 
@@ -940,7 +940,7 @@ void engine() {
           X[1] = newVar;
 
           DEREF(A,APtr,_1);
-          OZ_Suspension *susp = OZ_makeSuspension(entry->getFun(), X, 2);
+          OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 2);
           OZ_addSuspension(APtr,susp);
 
           X[0] = saveX0;
@@ -997,9 +997,11 @@ void engine() {
           X[2] = newVar;
 
           DEREF(A,APtr,_1); DEREF(B,BPtr,_2);
-          OZ_Suspension *susp = OZ_makeSuspension(entry->getFun(), X, 3);
+          OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 3);
           if (isAnyVar(A))
             OZ_addSuspension(APtr,susp);
+          extern State BIexchangeCellInline(TaggedRef c, TaggedRef out,
+                                            TaggedRef &in);
           // special hack for exchangeCell: suspends only on the first argument
           if (isAnyVar(B) && fun != BIexchangeCellInline)
             OZ_addSuspension(BPtr,susp);
@@ -1062,7 +1064,7 @@ void engine() {
           X[0] = A; X[1] = B; X[2] = C; X[3] = newVar;
 
           DEREF(A,APtr,_1); DEREF(B,BPtr,_2); DEREF(C,CPtr,_3);
-          OZ_Suspension *susp = OZ_makeSuspension(entry->getFun(), X, 4);
+          OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, 4);
           if (isAnyVar(A)) OZ_addSuspension(APtr,susp);
           if (isAnyVar(B)) OZ_addSuspension(BPtr,susp);
           if (isAnyVar(C)) OZ_addSuspension(CPtr,susp);
@@ -1407,6 +1409,7 @@ void engine() {
         X[0] = makeMethod(arity,label,X);
         X[1] = origObj;
         predArity = 2;
+        extern TaggedRef suspCallHandler; // mm2
         predicate = tagged2SRecord(suspCallHandler);
         goto LBLcall;
       }
@@ -1553,6 +1556,7 @@ void engine() {
        if (!isSRecord(functorTag)) {
          if (isAnyVar(functorTag)) {
            X[predArity++] = (TaggedRef) functorPtr;
+           extern TaggedRef suspCallHandler; // mm2
            predicate = tagged2SRecord(suspCallHandler);
            goto LBLcall;
          }
@@ -1711,7 +1715,7 @@ void engine() {
 
        // put ~'solve actor';
        // Note that CBB is already the 'solve' board;
-       e->pushTask(CBB, (BIFun) solveActorWaker);    // no args;
+       e->pushTask(CBB, solveActorWaker);    // no args;
        e->trail.pushMark ();
 
        // apply the predicate;

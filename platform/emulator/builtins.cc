@@ -13,24 +13,13 @@
 #endif
 
 #include "builtins.hh"
-#include "am.hh"
-#include "bignum.hh"
-#include "objects.hh"
 
 // BuiltinTab
 
-static BuiltinTab builtinTab(1193);  // size should be prime number
-
-// access to builtin table:
-BuiltinTab &getBuiltinTab()
-{
-  return builtinTab;
-}
+BuiltinTab builtinTab(1193);  // size should be prime number
 
 
-
-
-BuiltinTabEntry *BIadd(char *name,int arity,BIFun fun, Bool replace,
+BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun, Bool replace,
                        InlineFunOrRel infun)
 {
   BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,fun,infun);
@@ -53,12 +42,6 @@ BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t, Bool replace)
     return((BuiltinTabEntry *) NULL);
   }
   return(builtin);
-}
-
-BuiltinTabEntry *BIreplace(char *name,int arity,BIFun fun)
-{
-  // remove it whether it is already in or not
-  return(BIadd(name,arity,fun,OK));
 }
 
 OZ_C_proc_begin(BIbuiltin,3)
@@ -96,44 +79,32 @@ OZ_C_proc_begin(BIbuiltin,3)
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIprintBuiltins,0)
-{
-  builtinTab.print();
-  return(PROCEED);
-}
-OZ_C_proc_end
-
+extern void BIinitCore();
+extern void BIinitSpecial();
+extern void BIinitSystem();
+extern void BIinitFD(void);
 
 #ifndef OZDYNLINKING
 extern void MyinitUnix();
-extern void initWMBuiltins();
 #endif
 
 
 BuiltinTabEntry *BIinit()
 {
-  BuiltinTabEntry *init;
+  BuiltinTabEntry *init = BIadd("builtin",3,BIbuiltin);
 
-  if ( (init = BIadd("builtin",3,BIbuiltin)) == (BuiltinTabEntry *) NULL )
-    return(init);
-
-  BIadd("printBuiltins",0,BIprintBuiltins);
+  if (!init)
+    return init;
 
   BIinitCore();
-  BIinitArith();
   BIinitSpecial();
-  BIinitDebug();
-  BIinitFeatures();
-  BIinitFD();
+  BIinitSystem();
 
-  BIinitObjects();
+  BIinitFD();
 
 #ifndef OZDYNLINKING
   MyinitUnix();
-#ifdef WANT_OLD_IV
-  initWMBuiltins();
-#endif
 #endif
 
-  return(init);
+  return init;
 }

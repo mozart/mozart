@@ -77,7 +77,7 @@ public:
   CFuncContinuation *popSuspCCont();
   void pushTask(Board *n,ProgramCounter pc,
                        RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
-  void pushTask (Board *n, BIFun f, RefsArray x=NULL, int i=0);
+  void pushTask (Board *n, OZ_CFun f, RefsArray x=NULL, int i=0);
   void queueCont(Board *bb,ProgramCounter PC,RefsArray y);
   void schedule();
   void setPriority(int prio);

@@ -26,12 +26,12 @@
 
 enum ActorFlags {
   Ac_None       = 0,
-  Ac_Ask        = 1<<0,
-  Ac_Wait       = 1<<1,
-  Ac_Solve      = 1<<2,
-  Ac_Committed  = 1<<3,
-  Ac_WaitTop    = 1<<4,
-  Ac_DisWait    = 1<<5,
+  Ac_Ask        = 0x01,
+  Ac_Wait       = 0x02,
+  Ac_Solve      = 0x04,
+  Ac_Committed  = 0x08,
+  Ac_WaitTop    = 0x10,
+  Ac_DisWait    = 0x20
 };
 
 class Actor : public ConstTerm {
@@ -191,7 +191,7 @@ DLLStackEntry actorStackEntryGC (DLLStackEntry entry);
 
 //  This is 'de facto' the "solve actor";
 //  If BIsolve is applied, CFuncCont is generated containing request to call
-// this procedure (type BIFun!);
+// this procedure (type OZ_CFun!);
 OZ_Bool solveActorWaker (int n, TaggedRef *args);
 
 // ------------------------------------------------------------------------

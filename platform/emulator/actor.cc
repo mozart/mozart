@@ -316,8 +316,8 @@ Bool SolveActor::checkExtSuspList ()
   return ((suspList == NULL) ? OK : NO);
 }
 
-//  'BIFun' solveActorWaker;
-// No arguments actually, but the type 'BIFun' is fixed;
+//  'OZ_CFun' solveActorWaker;
+// No arguments actually, but the type 'OZ_CFun' is fixed;
 OZ_Bool solveActorWaker (int n, TaggedRef *args)
 {
   DebugCheck ((n != 0), error ("arguments in solveActorWaker?"));
