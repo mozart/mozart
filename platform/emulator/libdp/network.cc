@@ -2294,31 +2294,31 @@ inline Bool createTcpPort_RETRY(){
   return FALSE;}
   
 
-static ipReturn createTcpPort(int port,ip_address &ip,port_t &oport,int &fd) 
+static ipReturn createTcpPort(int port,ip_address &ip,port_t &oport,int &fd, Bool takeIp) 
 {
-  PD((TCP,"Start createTcpPort: p:%d",port));
+  
   int smalltries=OZConnectTries;
   int bigtries=OZStartUpTries;
-
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  
-  char *nodename = oslocalhostname();
-  if(nodename==0) {NETWORK_ERROR(("createTcpPort"));}
-  struct hostent *hostaddr;
-  hostaddr=gethostbyname(nodename);
-  free(nodename);
-  if (hostaddr==NULL) {
-    nodename = "localhost";
+    
+  if(takeIp){
+    char *nodename = oslocalhostname();
+    if(nodename==0) {NETWORK_ERROR(("createTcpPort"));}
+    struct hostent *hostaddr;
     hostaddr=gethostbyname(nodename);
-    OZ_warning("Unable to reach the net, using localhost instead\n");
-  }
+    free(nodename);
+    if (hostaddr==NULL) {
+      nodename = "localhost";
+      hostaddr=gethostbyname(nodename);
+      OZ_warning("Unable to reach the net, using localhost instead\n");
+    }
     
     
-  struct in_addr tmp;
-  memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
-  ip=ntohl(tmp.s_addr);
+    struct in_addr tmp;
+    memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
+    ip=ntohl(tmp.s_addr);}
  retry:
   if(bigtries<0){
     PD((WEIRD,"bind - ran out of tries"));
@@ -2427,7 +2427,7 @@ public:
           tcpSend
    ***************************************************************** */
 
-ipReturn tcpSend(int fd,Message *m, Bool flag) 
+ ipReturn tcpSend(int fd,Message *m, Bool flag) 
 {
   int total,len,ret;
   NetMsgBuffer *bs = m->getMsgBuffer();
@@ -3958,7 +3958,7 @@ void initNetwork()
    */
   int portno = ipPortNumber;
   if (ipPortNumber == OZReadPortNumber) portno += (osgetpid()%1000);
-  ipReturn ret=createTcpPort(portno,ip,p,tcpFD);
+  ipReturn ret=createTcpPort(portno,ip,p,tcpFD,ipIpNumber==0);
   if (ret<0){
     NETWORK_ERROR(("Unable to bind port started at %d and ended at %d.",portno,p));
     return;}
