@@ -1814,15 +1814,14 @@ void AM::gc(int msgLevel)
 #endif
 
   gcOwnerTable();  
-  gcBorrowTable1();
+  gcBorrowTableRoots();
   gcStack.recurse();
-  gcBorrowTable2();
 
-
+  gcBorrowTableUnusedFrames();
   gcStack.recurse();
 
   gcGNameTable();
-  gcStack.recurse();
+  Assert(gcStack.isEmpty());
 
 
 // -----------------------------------------------------------------------
@@ -1831,7 +1830,7 @@ void AM::gc(int msgLevel)
   
   Assert(gcStack.isEmpty());
 
-  gcBorrowTable3();
+  gcBorrowTableFinal();
   gcSiteTable();
 
   exitCheckSpace();
@@ -2145,7 +2144,14 @@ void ConstTerm::gcConstRecurse()
       o->setFreeRecord(o->getFreeRecord()->gcSRecord());
       RecOrCell state = o->getState();
       if (stateIsCell(state)) {
-	o->setState((Tertiary*) getCell(state)->gcConstTerm());
+	if (o->isLocal()) {
+	  Assert(getCell(state)->isLocal());
+	  TaggedRef newstate = ((CellLocal*) getCell(state))->getValue();
+	  message("GC: localizing object\n");
+	  o->setState(tagged2SRecord(deref(newstate))->gcSRecord());
+	} else {
+	  o->setState((Tertiary*) getCell(state)->gcConstTerm());
+	}
       } else {
 	o->setState(getRecord(state)->gcSRecord());
       }
