@@ -738,6 +738,16 @@ OZ_ENABLE(miscbuiltins,[   include misc builtins],no,
 	,
 	)
 
+dnl *****************************************************************
+dnl Include new (non-recursive) marshaler
+dnl *****************************************************************
+
+OZ_ENABLE(newmarshaler,[   include new marshaler],no,
+	AC_DEFINE(NEWMARSHALER)
+        AC_MSG_RESULT(yes)
+	,
+	)
+
 dnl ------------------------------------------------------------------
 dnl Configure oztool.sh
 dnl ------------------------------------------------------------------

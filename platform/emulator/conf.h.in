@@ -82,6 +82,9 @@
 /* Define if you want to include misc builtins */
 #undef MISC_BUILTINS
 
+/* new (non-recursive) marshaler */
+#undef NEWMARSHALER
+
 
 /* Define if you have the sbrk function.  */
 #undef HAVE_SBRK
