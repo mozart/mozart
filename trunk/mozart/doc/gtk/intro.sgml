@@ -34,7 +34,56 @@
     <!--**-->
     What is provided by the binding?  Version numbers, &ellipsis;
   <Section><Title/Example/
-    <!--**-->
+  <P>
+    We now answer the most interesting question: How to
+    to a hello world using the OZ GTK binding? Here we go:
+  <P>
+<<<
+functor $
+import
+   Application
+   System(show)
+   GTK at 'x-oz://system/gtk/GTK.ozf'
+define
+   %% Create Toplevel window class
+   class MyToplevel from GTK.window
+      meth new
+	 GTK.window, new(GTK.'WINDOW_TOPLEVEL')
+	 GTK.window, setBorderWidth(10)
+	 GTK.window, setTitle("Hello, World!")
+	 {self signalConnect('delete-event' deleteEvent _)}
+      end
+      meth deleteEvent(Args)
+         %% Do cleanup stuff herein
+	 {System.show 'deleteEvent occured'}
+	 {Application.exit 0}
+      end
+   end
+   %% Create Button class
+   class MyButton from GTK.button
+      meth new
+	 GTK.button, newWithLabel("Hello, World!")
+	 GTK.button, signalConnect('clicked' clickedEvent _)
+      end
+      meth clickedEvent(Args)
+	 {System.show 'ClickedEvent occured'}
+      end
+   end
+   %% Create Class Instances
+   Toplevel = {New MyToplevel new}
+   Button   = {New MyButton new}
+   %% Make Butten child of Toplevel Container
+   {Toplevel add(Button)}
+   %% Make it all visible
+   {Toplevel showAll}
+end
+>>>
+  <P>
+    If you are familiar with other GUI sets, you will be able to recognize
+    a few things suchs as creating windows, filling it with childs and making
+    them reactive to some kind of events.
+  <P>
+    The explanation of those things is left to the next chapter.
   <Section><Title/Structure of the Manual/
     <!--**-->
 </Chapter>
