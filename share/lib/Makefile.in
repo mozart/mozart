@@ -201,7 +201,7 @@ FunAssembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz $(STANDARD)
 FunCompiler.ozf: compiler-Env.oz compiler/FormatStrings.oz \
 	compiler/Reporter.oz compiler/ParseOz.oz compiler/CompilerClass.oz \
 	compiler/GenericInterface.oz compiler/QuietInterface.oz \
-	compiler-Version.oz $(STANDARD)
+	compiler/Abstractions.oz compiler-Version.oz $(STANDARD)
 
 Compiler.ozf: FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCode.ozf \
 	FunCore.ozf FunRT.ozf FunUnnest.ozf FunAssembler.ozf FunCompiler.ozf \
