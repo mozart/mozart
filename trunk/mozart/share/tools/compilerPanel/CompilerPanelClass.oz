@@ -43,7 +43,11 @@ local
    local
       Resources =
       resources(compilerTextFont:
-		   return#'Font'#'9x15'
+		   (return#'Font'#
+		    case {Property.get 'platform.os'} of win32 then
+		       {New Tk.font tkInit(family: courier size: ~15)}
+		    else '9x15'
+		    end)
 		compilerTextForeground:
 		   return#'Foreground'#black
 		compilerTextBackground:
@@ -66,11 +70,12 @@ local
 		compilerURLEntryWidth:
 		   returnInt#'Width'#60
 		compilerSwitchGroupFont:
-		   (return#'Font'#
-		    '-*-helvetica-bold-r-normal--*-120-*-*-*-*-*-*')
+		   return#'Font'#{New Tk.font tkInit(family: helvetica
+						     size: ~12
+						     weight: bold)}
 		compilerSwitchFont:
-		   (return#'Font'#
-		    '-*-helvetica-medium-r-normal--*-120-*-*-*-*-*-*')
+		   return#'Font'#{New Tk.font tkInit(family: helvetica
+						     size: ~12)}
 		compilerEnvCols:
 		   returnInt#'EnvCols'#4
 		compilerSourceWidth:
@@ -1010,22 +1015,21 @@ in
 	 WarnRedecl = {New Tk.variable tkInit(false)}
 	 WarnRedeclSw = {New Tk.checkbutton
 			 tkInit(parent: WarningsFrame
-				text: 'Warn about top-level redeclarations'
+				text: 'Top-level redeclarations'
 				font: SwitchFont
 				variable: WarnRedecl
 				action: {MkAction Switch(warnredecl)})}
 	 WarnUnused = {New Tk.variable tkInit(false)}
 	 WarnUnusedSw = {New Tk.checkbutton
 			 tkInit(parent: WarningsFrame
-				text: 'Warn about unused variables'
+				text: 'Unused variables'
 				font: SwitchFont
 				variable: WarnUnused
 				action: {MkAction Switch(warnunused)})}
 	 WarnUnusedFormals = {New Tk.variable tkInit(false)}
 	 WarnUnusedFormalsSw = {New Tk.checkbutton
 				tkInit(parent: WarningsFrame
-				       text: ('Warn about unused variables '#
-					      'and formals')
+				       text: 'Unused variables and formals'
 				       font: SwitchFont
 				       variable: WarnUnusedFormals
 				       action: {MkAction
@@ -1033,7 +1037,7 @@ in
 	 WarnForward = {New Tk.variable tkInit(false)}
 	 WarnForwardSw = {New Tk.checkbutton
 			  tkInit(parent: WarningsFrame
-				 text: 'Warn about oo forward declarations'
+				 text: 'Oo forward declarations'
 				 font: SwitchFont
 				 variable: WarnForward
 				 action: {MkAction Switch(warnforward)})}
