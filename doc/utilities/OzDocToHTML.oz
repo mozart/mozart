@@ -1015,7 +1015,8 @@ define
                      HTML = code(PCDATA(M.1))
                   else
                      {@MyLaTeXToGIF convertMath(M.1 Display ?FileName)}
-                     HTML = img(src: FileName alt: M.1)
+                     HTML = img(src: FileName
+                                alt: {CondSelect M info M.1})
                   end
                [] 'HTML' then
                   HTML = VERBATIM(M.1)
@@ -1503,17 +1504,16 @@ define
             %-----------------------------------------------------------
             %--** notation.sgml Specials
             %-----------------------------------------------------------
-            [] 'rewrite' then Vars N in
+            [] rewrite then Vars N in
                Vars = {Map {Filter {Record.toListInd M}
-                            fun {$ _#N} {Label N} == 'var' end}
+                            fun {$ _#N} {Label N} == var end}
                        fun {$ _#N} N end}
                N = {Length Vars}
                BLOCK(table(COMMON: @Common border: 1
                            case Vars of nil then EMPTY
                            else
                               tr(valign: top
-                                 td(colspan: 2
-                                    {FoldRTail Vars
+                                 td({FoldRTail Vars
                                      fun {$ V|Vr In}
                                         SEQ([OzDocToHTML, Process(V $)
                                              case Vr of nil then EMPTY
@@ -1522,9 +1522,17 @@ define
                                      end EMPTY}
                                     PCDATA(' ::=')))
                            end
-                           tr(valign: top
-                              OzDocToHTML, Process(M.(N + 1) $)
-                              OzDocToHTML, Process(M.(N + 2) $))
+                           local
+                              Row = tr(OzDocToHTML, Process(M.(N + 1) $)
+                                       td(OzDocToHTML,
+                                          Process(math(info: '==>'
+                                                       display: inline
+                                                       type: 'LATEX'
+                                                       "\\Longrightarrow") $))
+                                       OzDocToHTML, Process(M.(N + 2) $))
+                           in
+                              tr(td(table(width: '100%' Row)))
+                           end
                            OzDocToHTML, Batch(M N + 3 $)))
             [] 'rewrite.from' then
                td(COMMON: @Common OzDocToHTML, Batch(M 1 $))
@@ -1532,8 +1540,7 @@ define
                td(COMMON: @Common OzDocToHTML, Batch(M 1 $))
             [] 'rewrite.condition' then
                tr(COMMON: @Common valign: top
-                  td(colspan: 2
-                     OzDocToHTML, Batch(M 1 $)))
+                  td(OzDocToHTML, Batch(M 1 $)))
             else
                {@Reporter error(kind: OzDocError
                                 msg: 'unknown element'   %--**
