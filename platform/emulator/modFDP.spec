@@ -24,7 +24,7 @@
 
 $module_init_fun_name = "fdp_init";
 
-$boot_module_name     = "FD";
+$boot_module_name     = "FDP";
 
 %builtins_all =
 (

@@ -24,7 +24,7 @@
 
 $module_init_fun_name = "fsp_init";
 
-$boot_module_name     = "FS";
+$boot_module_name     = "FSP";
 
 %builtins_all =
 (
