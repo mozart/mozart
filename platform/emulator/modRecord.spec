@@ -66,7 +66,7 @@
                        out => [],
                        BI  => BIwidthC},
 
-     'monitorArity'=> { in  => ['*recordC','value','[feature]'],
+     'monitorArity' => { in  => ['*recordC','value','[feature]'],
                         out => [],
                         BI  => BImonitorArity},
 
@@ -81,5 +81,10 @@
      'width'      => { in  => ['+record'],
                        out => ['+int'],
                        bi  => BIwidth},
+
+     'waitOr'     => { in  => ['+record'],
+                       out => ['value'],
+                       BI  => BIwaitOrF},
+
      );
 1;;

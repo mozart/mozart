@@ -38,10 +38,6 @@
                              out => [],
                              BI  => BIwaitOr},
 
-     'waitOrF'          => { in  => ['+record'],
-                             out => ['value'],
-                             BI  => BIwaitOrF},
-
      'isFree'           => { in  => ['value'],
                              out => ['+bool'],
                              bi  => BIisFree},
