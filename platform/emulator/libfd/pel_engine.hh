@@ -119,7 +119,7 @@ public:
   void setFailed(void) { _failed = 1; }
   int isFailed(void) { return _failed; }
   //
-  int isBasic(void) { return _alive_prop_fncts == 0; }
+  int hasNoPropsLeft(void) { return _alive_prop_fncts == 0; }
   // APF = alive propagation function
   void incAPF(void) { _alive_prop_fncts += 1; }
   void decAPF(void) { _alive_prop_fncts -= 1; }
@@ -173,7 +173,7 @@ public:
   void setFailed(void) { _pe->setFailed(); }
   int isFailed(void) { return _pe->isFailed(); }
   //
-  int isBasic(void) { return _pe->isBasic(); }
+  int hasNoPropsLeft(void) { return _pe->hasNoPropsLeft(); }
   // APF = alive propagation function
   void incAPF(void) { _pe->incAPF(); }
   void decAPF(void) { _pe->decAPF(); }
