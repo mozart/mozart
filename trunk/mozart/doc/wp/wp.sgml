@@ -51,7 +51,6 @@
 
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
-    <Meta name=latex.package value="oz">
     <Meta name=latex.package value="pstricks">
     <Meta name=latex.package value="rotating">
     <Meta name=latex.package value="pifont">
