@@ -206,7 +206,8 @@ compiler-Opcodes.oz: compiler/Opcodes.m4oz $(EMUSRCDIR)/instrDefs.m4
 	|| (rm -f $@; exit 1)
 
 FUNFUNCTORS = PrintName.ozf Builtins.ozf Unnester.ozf Core.ozf \
-	StaticAnalysis.ozf CodeGen.ozf Assembler.ozf Main.ozf RunTime.ozf
+	StaticAnalysis.ozf CodeGen.ozf Assembler.ozf \
+	Main.ozf RunTime.ozf Annotate.ozf
 
 PrintName.ozf: compiler/PrintName.oz
 
