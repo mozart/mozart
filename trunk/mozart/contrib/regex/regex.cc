@@ -13,25 +13,25 @@
 #define MAXMATCH 50
 #endif
 
-#include "oz_api.h"
+#include "mozart.h"
 #include <sys/types.h>
 #include <regex.h>
+#include <assert.h>
+#include <string.h>
 
-#include "extension.hh"
-
-class REGEX: public Extension {
+class REGEX: public OZ_Extension {
 public:
   char*    src;
   regex_t* re;
-  REGEX(char*s,regex_t*r):Extension(),src(s),re(r){}
+  REGEX(char*s,regex_t*r):OZ_Extension(),src(s),re(r){}
   //
   // Extension
   //
   static int id;
   virtual int getIdV() { return id; }
   virtual OZ_Term typeV() { return OZ_atom("regex"); }
-  virtual void printStreamV(ostream &out,int depth = 10);
-  virtual Extension* gcV();
+  virtual OZ_Term printV(int depth = 10);
+  virtual OZ_Extension* gcV();
   //
   void release() {
     delete src;
@@ -45,25 +45,25 @@ public:
 
 int REGEX::id;
 
-inline Bool oz_isRegex(OZ_Term t)
+inline int oz_isRegex(OZ_Term t)
 {
   t = OZ_deref(t);
-  return oz_isExtension(t) &&
-    oz_tagged2Extension(t)->getIdV()==REGEX::id;
+  return OZ_isExtension(t) &&
+    OZ_getExtension(t)->getIdV()==REGEX::id;
 }
 
 inline REGEX* tagged2Regex(OZ_Term t)
 {
-  Assert(oz_isRegex(t));
-  return (REGEX*) oz_tagged2Extension(OZ_deref(t));
+  assert(oz_isRegex(t));
+  return (REGEX*) OZ_getExtension(OZ_deref(t));
 }
 
-void REGEX::printStreamV(ostream &out,int depth = 10)
+OZ_Term REGEX::printV(int depth = 10)
 {
-  out << "<regex " << src << ">";
+  return OZ_pair2(typeV(), OZ_atom(src));
 }
 
-Extension* REGEX::gcV()
+OZ_Extension* REGEX::gcV()
 {
   return new REGEX(src,re);
 }
@@ -95,7 +95,7 @@ OZ_BI_define(regex_compile,2,1)
   regex_t *preg = new regex_t;
   errcode = regcomp(preg,RE,CFLAGS);
   if (errcode) return RegexError("compile",errcode,preg,1);
-  OZ_RETURN(oz_makeTaggedExtension(new REGEX(strdup(RE),preg)));
+  OZ_RETURN(OZ_extension(new REGEX(strdup(RE),preg)));
 }
 OZ_BI_end
 
