@@ -41,7 +41,8 @@ AC_PROG_INSTALL
 #OZ_PATH_PROG(DYNLD,          ozdynld)
 OZ_PATH_PROG(MKINSTALLDIRS,  mkinstalldirs)
 
-AC_CONFIG_SUBDIRS(bin elisp ozwish Emulator lib)
+#AC_CONFIG_SUBDIRS(bin elisp ozwish Emulator lib)
+AC_CONFIG_SUBDIRS(platform/emulator platform/tools/gump platform/wish share)
 
 AC_OUTPUT(Makefile contrib/conf.all:contrib/conf.in)
 
