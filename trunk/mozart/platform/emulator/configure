@@ -2742,7 +2742,7 @@ fi
 
 case $platform in
     linux*)
-	if ! test -f /lib/libc.so.6
+	if ! test -f /usr/include/xopen_lim.h
 	then
 	    
     echo $ac_n "checking for --enable-lstatic""... $ac_c" 1>&6
