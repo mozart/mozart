@@ -38,6 +38,7 @@ void buildValue_ROBUST(OZ_Term value) {
     GetBTTaskPtr1(frame, OZ_Term*, spointer);
     DiscardBTFrame(frame);
     SetBTFrame(frame);
+    Assert(value);
     *spointer = value;
   } else {
     buildValueOutline_ROBUST(value, frame, type);
