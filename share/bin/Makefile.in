@@ -32,7 +32,7 @@ MKINSTALLDIRS   = @MKINSTALLDIRS@
 INSTALL_BIN     = $(INSTALL) -m 555
 
 SCRIPTS = oz ozplatform oz.wish ozdynld
-LINKS   = oz- ozc ozsa ozcs ozsac oz.compiler oz.emulator ozdo \
+LINKS   = ozc ozsa ozcs ozsac oz.compiler oz.emulator ozdo \
           ozemacs ozdemo oze oznc ozapplet
 
 .PHONY: all install clean distclean win-install
