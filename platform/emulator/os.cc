@@ -1403,7 +1403,7 @@ int osaccept(int s, struct sockaddr *addr, int *addrlen)
 #if __GLIBC__ == 2
   int ret = accept(s,addr,(unsigned int*)addrlen);
 #else
-  socklen_t ret = accept(s,addr,(socklen_t*) addrlen);
+  int ret = accept(s,addr,(socklen_t*) addrlen);
 #endif
   if (ret >= 0) 
     registerSocket(ret);

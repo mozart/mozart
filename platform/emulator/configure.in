@@ -564,36 +564,37 @@ main()
   void *loc1, *loc2;
 
 #ifdef MAP_ANONYMOUS
-  loc1 = mmap((void *) 0x0, BLOCKSIZE, (PROT_READ|PROT_WRITE),
-	      (MAP_PRIVATE|MAP_ANONYMOUS), -1, (off_t) 0);
-  loc2 = mmap((void *) 0x0, BLOCKSIZE, (PROT_READ|PROT_WRITE),
-	      (MAP_PRIVATE|MAP_ANONYMOUS), -1, (off_t) 0);
+  loc1 = mmap((void *) 0x0, (size_t) BLOCKSIZE, (PROT_READ|PROT_WRITE),
+	      (MAP_PRIVATE|MAP_ANONYMOUS), -1, (off_t) 0x0);
+  loc2 = mmap((void *) 0x0, (size_t) BLOCKSIZE, (PROT_READ|PROT_WRITE),
+	      (MAP_PRIVATE|MAP_ANONYMOUS), -1, (off_t) 0x0);
 #else
   int zeroFD = open("/dev/zero", O_RDWR);
   if (zeroFD < 0)
     return (-2);
-  loc1 = mmap((void *) 0x0, BLOCKSIZE, (PROT_READ|PROT_WRITE),
-	      (MAP_PRIVATE), zeroFD, (off_t) 0);
-  loc2 = mmap((void *) 0x0, BLOCKSIZE, (PROT_READ|PROT_WRITE),
-	      (MAP_PRIVATE), zeroFD, (off_t) 0);
+  loc1 = mmap((caddr_t) 0x0, (size_t) BLOCKSIZE, (PROT_READ|PROT_WRITE),
+	      (MAP_PRIVATE), zeroFD, 0x0);
+  loc2 = mmap((caddr_t) 0x0, (size_t) BLOCKSIZE, (PROT_READ|PROT_WRITE),
+	      (MAP_PRIVATE), zeroFD, (off_t) 0x0);
 #endif
 
   if (loc1 == MAP_FAILED || loc2 == MAP_FAILED)
     return (-3);
-  if (loc2 > loc1) {
-    if ((char *) loc2 != ((char *) loc1) + BLOCKSIZE)
-      return (-4);
-  } else {
-    // conceivable possible..
-    if ((char *) loc1 != ((char *) loc2) + BLOCKSIZE)
-      return (-4);
-  }      
+  // On Solaris, regions are NOT adjacent - but so what?
+  //    if (loc2 > loc1) {
+  //      if ((char *) loc2 != ((char *) loc1) + BLOCKSIZE)
+  //        return (-4);
+  //    } else {
+  //      // conceivable possible..
+  //      if ((char *) loc1 != ((char *) loc2) + BLOCKSIZE)
+  //        return (-4);
+  //    }      
 
   if (setjmp(env) != 0)
     return (0);
   (void) signal(SIGSEGV, sh);
 
-  if (munmap(loc1, BLOCKSIZE))
+  if (munmap((caddr_t) loc1, BLOCKSIZE))
     return (-5);
   *((int *) loc1) = 0;
   return (-6);
