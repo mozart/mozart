@@ -63,7 +63,7 @@ void banner() {
 #define FLUSHECHOIDENT { FLUSH; ECHOIDENT(yytext); }
 %}
 IDENT		[a-zA-Z0-9_]+
-KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of|elseof|elsecase|end|"class"|meth|from|with|attr|feat|self|true|false|touch|div|mod|andthen|orelse|thread|in|condis|not|try|catch|finally|raise|lock|skip|fail|unit|prop)
+KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of|elseof|elsecase|end|"class"|from|prop|attr|feat|meth|self|true|false|unit|div|mod|andthen|orelse|thread|in|condis|not|try|catch|finally|raise|with|lock|skip|fail|functor|import|export|body)
 CKEYWORD	("TaggedRef"|"RefsArray"|"ProgramCounter"|"Thread"|"bool"|"asm"|"auto"|"break"|"char"|"case"|"const"|"continue"|"default"|"do"|"double"|"else"|"enum"|"extern"|"float"|"for"|"goto"|"if"|"inline"|"int"|"long"|"register"|"return"|"short"|"signed"|"sizeof"|"static"|"struct"|"switch"|"typedef"|"typeof"|"union"|"unsigned"|"void"|"volatile"|"while"|"all"|"except"|"exception"|"raise"|"raises"|"reraise"|"throw"|"try"|"catch"|"class"|"classof"|"delete"|"dynamic"|"friend"|"headof"|"new"|"operator"|"overload"|"private"|"protected"|"public"|"this"|"template"|"virtual")
 PSEUDOCKEYWORD	({CKEYWORD}|"repeat"|"until"|"end"|"then"|"type"|"record"|"fun"|"elseif"|"and"|"or")
 COPERATOR	("->"|"<<"|">>"|"<="|">="|"!="|"||"|"..."|"*="|"<<="|">>="|"^="|"|="|"~"|"*"|"^"|"|"|"->*"|"/"|"<"|">"|"&&"|"%="|"&="|"{"|"}"|"&"|"%"|"--"|".*"|"?"|":"|"="|","|"."|";"|"!"|"-"|"+"|"/="|"=="|"++"|"+="|"-="|"("|")"|"["|"]"|"::")
