@@ -580,7 +580,7 @@ in
 	    {OzcarMessage 'action:' # A}
 	    
 	    case A
-	    of ' reset' then
+	    of !ResetAction then
 	       N in
 	       Gui,doStatus('Resetting...')
 	       ThreadManager,killAll(N)
@@ -591,7 +591,7 @@ in
 			       ' ' # N # ' threads killed'
 			    end append)
 	       
-	    [] ' step' then
+	    [] !StepButtonText then
 	       T = @currentThread
 	    in
 	       case T == undef then
@@ -610,7 +610,7 @@ in
 		  end
 	       end
 	       
-	    [] ' next' then
+	    [] !NextButtonText then
 	       T = @currentThread
 	    in
 	       case T == undef then
@@ -647,11 +647,7 @@ in
 		  end
 	       end
 	       
-	    [] ' finish' then
-	       {Show '\'finish\' not yet implemented'}
-	       skip
-		  
-	    [] ' cont' then
+	    [] !ContButtonText then
 	       T = @currentThread
 	    in
 	       case T == undef then
@@ -672,7 +668,7 @@ in
 		  end
 	       end
 	       
-	    [] ' forget' then
+	    [] !ForgetButtonText then
 	       T = @currentThread
 	    in
 	       case T == undef then skip else
@@ -681,7 +677,7 @@ in
 		  ThreadManager,forget(T I)
 	       end
 	       
-	    [] ' term' then
+	    [] !TermButtonText then
 	       T = @currentThread
 	    in
 	       case T == undef then skip else
@@ -690,7 +686,7 @@ in
 		  ThreadManager,kill(T I)
 	       end
 	       
-	    [] ' stack' then
+	    [] !StackAction then
 	       T = @currentThread
 	    in
 	       case T == undef then
