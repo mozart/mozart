@@ -142,6 +142,7 @@ See <file /link(2)/.
 <title/Directories/
 <p>
 <list>
+
 <Entry> <<getDir>> <Synopsis>
 <<{OS.getDir ?+{PathV} ??{FileNameSs}}>>
 <Index class=module/OS<and>getDir/
@@ -151,7 +152,6 @@ the directory ?_{PathV}.
 <p>
 See <file /opendir(3)/ and <file /readdir(3)/.
 
-
 <Entry> <<getCWD>> <Synopsis>
 <<{OS.getCWD ??{FileNameS}}>>
 <Index class=module/OS<and>getCWD/
@@ -159,7 +159,6 @@ See <file /opendir(3)/ and <file /readdir(3)/.
 Returns in ?_{FileNameS} the path of the current working directory.
 <p>
 See <file /getcwd(3)/.
-
 
 <Entry> <<stat>> <Synopsis>
 <<{OS.stat ?+{PathV} ??{StatR}}>>
@@ -177,6 +176,24 @@ time of last modification measured in seconds since the dawn of the
 world, which, as we all know, was January 1, 1970.
 <p>
 See <file /stat(2)/.
+
+<Entry> <<chDir>> <Synopsis>
+<<{OS.chDir ?+{PathV}}>>
+<Index class=module/OS<and>chDir/
+<item>
+Changes the current working directory to ?_{PathV}.
+<p>
+See <file /chdir(2)/.
+
+<Entry> <<mkDir>> <Synopsis>
+<<{OS.mkDir ?+{PathV} ?+{ModeAs}}>>
+<Index class=module/OS<and>mkDir/
+<item>
+Creates a directory ?_{PathV}. Access modes are specified by
+?_{ModeAs}, similar to <<OS.open>>.
+<p>
+See <file /mkdir(2)/.
+
 </list>
 </section>
 
