@@ -131,6 +131,7 @@ define
 		       if {Dictionary.member self.entryDict K} then
 			  E = self.entryDict.K in
 			  {E.fgtag tk(delete)}
+			  {E.bgtag tk(delete)}
 			  {self putEntry(E.line)}
 			  {Dictionary.remove self.entryDict K} 
 		       end

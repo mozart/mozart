@@ -164,9 +164,11 @@ define
 	       else
 		  Used = self.usedCounter.Key
 	       end
-	    else
+	    else %% Entry not present in DPpanel yet. 
 	       Used = 1
 	       try
+		  %% Get the color for the orgin site,
+		  %% if not present raise notFound
 		  {self.colorAlloc get(Site Col Index)}
 	       catch _ then
 		  raise notFound end
@@ -280,7 +282,9 @@ define
    class BorrowTable from Table
       meth init(SD)
 	 proc {GetCol S C}
-	    {{SD getSite(S $)} getCol(C)}
+	    Site = {SD getSite(S $)}
+	 in
+	    {Site getColor(C)}
 	 end
       in
 	 Table, initialize
