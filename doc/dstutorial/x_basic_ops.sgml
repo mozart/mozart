@@ -465,5 +465,10 @@ F=functor define X={Fact 30} end
 <P> If the remote computation needs resources,
 you have to specify the base URL for the resources.
 
+<SECTION><TITLE>Servers</TITLE>
+
+A server is a computation that provides a service to clients.
+In
+
 
 </CHAPTER>
