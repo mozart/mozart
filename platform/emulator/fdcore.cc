@@ -247,7 +247,11 @@ OZ_C_proc_begin(BIfdTellConstraint, 2)
   ExpectOnly pe;
   OZ_expect_t r = pe.expectDomDescr(OZ_getCArg(1));
   if (pe.isFailing(r)) {
-    TypeError(1, "");
+    TypeError(1, "The syntax of a " OZ_EM_FDDESCR " is:\n"
+              "dom_descr   ::= simpl_descr | compl(simpl_descr)\n"
+              "simpl_descr ::= range_descr | [range_descr+]\n"
+              "range_descr ::= integer | integer#integer\n"
+              "integer     ::= {" _OZ_EM_FDINF ",...," _OZ_EM_FDSUP "}");
   } else if (pe.isSuspending(r)) {
     for (OZ_Term * v = pe.getSuspVar(); v != NULL; v = pe.getSuspVar())
       am.addSuspendVarList(v);

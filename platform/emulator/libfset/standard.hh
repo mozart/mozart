@@ -72,6 +72,20 @@ public:
   }
 };
 
+class FSetDistinctPropagator : public Propagator_S_S {
+private:
+  static OZ_CFun spawner;
+public:
+  FSetDistinctPropagator(OZ_Term x, OZ_Term y)
+    : Propagator_S_S(x, y) {}
+
+  virtual OZ_Return propagate(void);
+
+  virtual OZ_CFun getHeaderFunc(void) const {
+    return spawner;
+  }
+};
+
 class FSetDiffPropagator : public Propagator_S_S_S {
 private:
   static OZ_CFun header;

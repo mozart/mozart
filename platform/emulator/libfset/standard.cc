@@ -96,6 +96,48 @@ OZ_C_proc_end
 
 OZ_CFun FSetDisjointPropagator::spawner = fsp_disjoint;
 
+OZ_C_proc_begin(fsp_distinct, 2)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET);
+
+  PropagatorExpect pe;
+
+  int susp_count = 0;
+
+  OZ_EXPECT_SUSPEND(pe, 0, expectFSetVarBounds, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, susp_count);
+
+  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+
+  return pe.impose(new FSetDistinctPropagator(OZ_args[0],
+                                              OZ_args[1]));
+}
+OZ_C_proc_end
+
+OZ_CFun FSetDistinctPropagator::spawner = fsp_distinct;
+
+OZ_C_proc_begin(fsp_diff, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FSET","OZ_EM_FSET","OZ_EM_FSET);
+
+  PropagatorExpect pe;
+   int susp_count = 0;
+
+  OZ_EXPECT_SUSPEND(pe, 0, expectFSetVarBounds, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 2, expectFSetVarBounds, susp_count);
+
+  if (susp_count > 1)
+    return pe.suspend(OZ_makeSelfSuspendedThread());
+
+  return pe.impose(new FSetDiffPropagator(OZ_args[0],
+                                          OZ_args[1],
+                                          OZ_args[2]));
+}
+OZ_C_proc_end
+
+OZ_CFun FSetDiffPropagator::header = fsp_diff;
+
 //*****************************************************************************
 
 OZ_Return FSetIntersectionPropagator::propagate(void)
@@ -231,23 +273,15 @@ failure:
   return P.fail();
 }
 
+OZ_Return FSetDistinctPropagator::propagate(void)
+{
+  cout << "FSetDistinctPropagator::propagate not implemented yet."
+       << endl << flush;
+  return FAILED;
+}
+
 //--------------------------------------------------------------------
 // Set Difference Propagator (DENYS)
-
-OZ_C_proc_begin(fsp_diff, 3)
-{
-  OZ_EXPECTED_TYPE(OZ_EM_FSET","OZ_EM_FSET","OZ_EM_FSET);
-  PropagatorExpect pe;
-  int susp_count=0;
-  OZ_EXPECT_SUSPEND(pe,0,expectFSetVarBounds,susp_count);
-  OZ_EXPECT_SUSPEND(pe,1,expectFSetVarBounds,susp_count);
-  OZ_EXPECT_SUSPEND(pe,2,expectFSetVarBounds,susp_count);
-  if (susp_count>1) return pe.suspend(OZ_makeSelfSuspendedThread());
-  return pe.impose(new FSetDiffPropagator(OZ_args[0],OZ_args[1],OZ_args[2]));
-}
-OZ_C_proc_end
-
-OZ_CFun FSetDiffPropagator::header = fsp_diff;
 
 OZ_Return FSetDiffPropagator::propagate(void)
 {
