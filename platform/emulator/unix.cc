@@ -89,39 +89,12 @@ extern "C" char *inet_ntoa(struct in_addr in);
 // Argument handling
 //
 
-
-#define OZ_C_ioproc_begin(Name,Arity)					\
-OZ_C_proc_begin(Name,Arity)						\
-  if (!OZ_onToplevel()) {						\
-    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));	\
-  }
-
-#define OZ_C_ioproc_end }
-
-// FUCK!!! THIS MUST INSERT A STATEMENT INTO THE BODY
 #define OZ_BI_iodefine(Name,InArity,OutArity)				\
-OZ_BI_define(Name,InArity,OutArity) {					\
+OZ_BI_define(Name,InArity,OutArity)					\
   if (!OZ_onToplevel()) {						\
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));	\
   }
-#define OZ_BI_ioend } OZ_BI_end
-
-#define OZ_declareVsArg(ARG,VAR)					\
- vs_buff(VAR); OZ_nonvarArg(ARG);					\
- { int len; OZ_Return status; OZ_Term rest, susp;			\
-   status = buffer_vs(OZ_getCArg(ARG), VAR, &len, &rest, &susp);	\
-   if (status == SUSPEND) {						\
-     if (OZ_isVariable(susp)) {						\
-       OZ_suspendOn(susp);						\
-     } else {								\
-       return oz_raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,		\
-			OZ_string("virtual string too long"));		\
-     }									\
-   } else if (status != PROCEED) {					\
-     return status;							\
-   }									\
-   *(VAR+len) = '\0';							\
- }
+#define OZ_BI_ioend OZ_BI_end
 
 #define OZ_declareVsIN(ARG,VAR)						\
  vs_buff(VAR); OZ_nonvarIN(ARG);					\
@@ -165,10 +138,6 @@ OZ_Term VAR = OZ_in(ARG);						\
   if (OZ_isVariable(arg)) OZ_suspendOn(arg);				\
   if (!OZ_isNil(arg))     return OZ_typeError(ARG,"list(Atom)");	\
 }
-
-#define DeclareNonvarArg(ARG,VAR) \
-  OZ_Term VAR = OZ_getCArg(ARG);    \
-  OZ_nonvarArg(ARG);
 
 #define DeclareNonvarIN(ARG,VAR) \
   OZ_Term VAR = OZ_in(ARG);    \
@@ -631,6 +600,72 @@ OZ_BI_iodefine(unix_uName,0,1)
 #endif
 
   OZ_RETURN(OZ_recordInit(OZ_atom("utsname"),pairlist));
+
+} OZ_BI_ioend
+#endif
+
+#if !defined(WINDOWS) || defined(GNUWIN32)
+inline
+static
+OZ_Term timeval2Oz(struct timeval tv)
+{
+  OZ_Term pl=nil();
+  pl=cons(OZ_pairA("sec",oz_long(tv.tv_sec)),pl);
+  pl=cons(OZ_pairA("usec",oz_long(tv.tv_usec)),pl);
+  return OZ_recordInit(OZ_atom("timeval"),pl);
+}
+
+OZ_BI_iodefine(unix_getRUsage,1,1)
+{
+  OZ_declareVsIN(0,whoS);
+  int who;
+  if (whoS[0]=='c') { // children
+    who=RUSAGE_CHILDREN;
+  } else { // self
+    who=RUSAGE_SELF;
+  }  
+  struct rusage buf;
+  if (getrusage(who,&buf) < 0)
+    RETURN_UNIX_ERROR;
+
+  OZ_Term pl=nil();
+
+  /* user time used */
+  pl=cons(OZ_pairA("utime",timeval2Oz(buf.ru_utime)),pl);
+  /* system time used */
+  pl=cons(OZ_pairA("stime",timeval2Oz(buf.ru_stime)),pl);
+  /* maximum resident set size */
+  pl=cons(OZ_pairA("maxrss",oz_long(buf.ru_maxrss)),pl);
+#ifdef LINUX
+  /* integral shared memory size */
+  pl=cons(OZ_pairA("ixrss",oz_long(buf.ru_ixrss)),pl);
+  /* integral unshared stack size */
+  pl=cons(OZ_pairA("isrss",oz_long(buf.ru_isrss)),pl);
+#endif
+  /* integral unshared data size */
+  pl=cons(OZ_pairA("idrss",oz_long(buf.ru_idrss)),pl);
+  /* page reclaims */
+  pl=cons(OZ_pairA("minflt",oz_long(buf.ru_minflt)),pl);
+  /* page faults */
+  pl=cons(OZ_pairA("majflt",oz_long(buf.ru_majflt)),pl);
+  /* swaps */
+  pl=cons(OZ_pairA("nswap",oz_long(buf.ru_nswap)),pl);
+  /* block input operations */
+  pl=cons(OZ_pairA("inblock",oz_long(buf.ru_inblock)),pl);
+  /* block output operations */
+  pl=cons(OZ_pairA("oublock",oz_long(buf.ru_oublock)),pl);
+  /* messages sent */
+  pl=cons(OZ_pairA("msgsnd",oz_long(buf.ru_msgsnd)),pl);
+  /* messages received */
+  pl=cons(OZ_pairA("msgrcv",oz_long(buf.ru_msgrcv)),pl);
+  /* signals received */
+  pl=cons(OZ_pairA("nsignals",oz_long(buf.ru_nsignals)),pl);
+  /* voluntary context switches */
+  pl=cons(OZ_pairA("nvcsw",oz_long(buf.ru_nvcsw)),pl);
+  /* involuntary context switches */
+  pl=cons(OZ_pairA("nivcsw",oz_long(buf.ru_nivcsw)),pl);
+
+  OZ_RETURN(OZ_recordInit(OZ_atom("rusage"),pl));
 
 } OZ_BI_ioend
 #endif
@@ -1755,6 +1790,7 @@ OZ_BI_iodefine(Fun,Arity)				\
 NotAvail("OS.getServByName",   3, unix_getServByName);
 NotAvail("OS.wait",            2, unix_wait);
 NotAvail("OS.uName",           1, unix_uName);
+NotAvail("OS.getRUsage",       2, unix_getRUsage);
 #endif
 
 #ifdef _MSC_VER
