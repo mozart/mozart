@@ -68,7 +68,6 @@ class ByteStream: public MsgBuffer {
   MarshalInfo *info;
 
 public:  
-
   Site *getSite(){return (Site*) NULL;}
   char *siteStringrep() {return "toFile";}
   void skipHeader();
@@ -339,6 +338,7 @@ inline ByteStream* ByteStreamManager::newByteStream(){
   ByteStream *bs;
   if(f==NULL) { return new ByteStream();}
   GenCast(f,FreeListEntry*,bs,ByteStream*);
+  bs->ByteStream();
   return bs;}
 
 inline  void ByteStreamManager::deleteByteStream(ByteStream* bs){

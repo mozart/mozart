@@ -312,14 +312,18 @@ private:
 
   Bool connect(){
     unsigned int t=getType();
+    PD((SITE,"connect, the type of this site: %d",t));
     if(t & CONNECTED) return OK;
     if(t & (PERM_SITE)) return NO;
     if(t & REMOTE_SITE){
       RemoteSite *rs=createRemoteSite(this,getSiteExtension()->getReadCtrSE());
-      getSiteExtension()->putRemoteSiteSE(rs);}
+      Assert(rs!=NULL);
+      getSiteExtension()->putRemoteSiteSE(rs);
+      PD((SITE,"connect; not connected yet, connecting to remote %d",rs));}
     else{
       VirtualSite *vs=createVirtualSite(this,getSiteExtension()->getReadCtrSE());
-      getSiteExtension()->putVirtualSiteSE(vs);}
+      getSiteExtension()->putVirtualSiteSE(vs);
+      PD((SITE,"connect; not connected yet, connecting to virtual %d",vs));}
     flags |= CONNECTED;    
     return OK;}    
 
@@ -464,10 +468,13 @@ public:
 // provided to network-comm
   
   RemoteSite* getRemoteSite() {   
-    if(!connect()) {return NULL;}
+    if(!connect()) {PD((SITE,"getRemoteSite not connected"));return NULL;}
     Assert(getType() & CONNECTED);
     Assert(getType() & REMOTE_SITE);
-    return getSiteExtension()->getRemoteSiteSE();}
+    RemoteSite *rs = getSiteExtension()->getRemoteSiteSE(); 
+    PD((SITE,"getRemoteSite returning the remote %d",rs));
+    Assert(rs!=NULL);
+    return  rs;}
   
   void dumpRemoteSite(int readCtr){
     Assert(getType() & CONNECTED);
@@ -607,8 +614,10 @@ public:
 // provided for network and virtual site comm-layers
 
   void communicationProblem(MessageType mt,Site* storeSite,int storeIndex,FaultCode fc,FaultInfo fi){
-    Assert(0);
-    error("not implemented");
+    //ATTENTION not implemented
+    //EK
+    // Assert(0) removed due to dbging of the system
+    OZ_warning("not implemented");
     return;}
 
   void probeFault(void* Ptr,ProbeReturn pr){
