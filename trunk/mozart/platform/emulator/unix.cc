@@ -52,7 +52,7 @@ extern int h_errno;
 #include <sys/utsname.h>
 #endif
 
-#ifdef GNUWIN32
+#if defined(GNUWIN32) || defined(LINUX)
 #define CHARCAST (char *)
 #else
 #define CHARCAST
