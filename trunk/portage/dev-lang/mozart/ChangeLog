@@ -1,5 +1,10 @@
+*mozart-1.2.5-r3 (28 Apr 2003)
+
+  28 Apr 2003; Denys Duchier (denys.duchier@loria.fr):
+  new ebuild for mozart-gtk fixing CPPFLAGS issues.
+
 *mozart-1.2.5-r2 (10 Apr 2003)
 
-  10 Apr 2003; Denys Duchier (denys.duchier@loria.fr)
+  10 Apr 2003; Denys Duchier (denys.duchier@loria.fr):
   also install mozart-ozmake, and make dependencies more
   specific to ensure timely updates
