@@ -76,7 +76,7 @@ public:
   OZPRINTLONG;
 
   Thread * gcThread(void);
-  void gcRecurse();
+  void gcRecurse(Thread *);
 
   unsigned int getID() { 
     return id; 
@@ -146,6 +146,10 @@ public:
 
   TaskStack *getTaskStackRef() {
     return taskStack;
+  }
+
+  void setTaskStack(TaskStack * ts) {
+    taskStack = ts;
   }
 
   void disposeStack(void) {

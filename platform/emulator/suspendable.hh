@@ -199,13 +199,13 @@ public:
 
 inline
 Propagator * SuspToPropagator(Suspendable * s) {
-  Assert(s->isPropagator());
+  Assert(!s || s->isPropagator());
   return (Propagator *) s;
 }
 
 inline
 Thread * SuspToThread(Suspendable * s) {
-  Assert(s->isThread());
+  Assert(!s || s->isThread());
   return (Thread *) s;
 }
 
