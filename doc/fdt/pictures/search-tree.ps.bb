@@ -1,2 +1,2 @@
-%%BoundingBox: 71 118 541 674
+%%BoundingBox: 213 271 399 490
 
