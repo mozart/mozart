@@ -47,6 +47,7 @@
 #include "copycode.hh"
 #include "trace.hh"
 #include "os.hh"
+#include "refsarray.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -165,27 +166,11 @@ TaggedRef mkRecord(TaggedRef label,SRecordArity ff)
   return makeTaggedSRecord(srecord);
 }
 
-#define allocateY(n) \
-{                                         \
-  int _sz = (n+1) * sizeof(TaggedRef);    \
-  Y = (RefsArray) oz_freeListMalloc(_sz); \
-  Y += 1;                                 \
-  initRefsArray(Y,n,OK);                  \
-}
-
-#define deallocateYN(sz) \
-{                                                      \
-  Assert(getRefsArraySize(Y)==sz);                     \
-  oz_freeListDispose(Y-1,(sz+1) * sizeof(TaggedRef));  \
-  Y=NULL;                                              \
-}
-
-#define deallocateY() deallocateYN(getRefsArraySize(Y))
 
 
-static void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP);
-static ThreadReturn debugEntry(ProgramCounter PC, RefsArray Y, Abstraction *CAP);
-static ThreadReturn debugExit(ProgramCounter PC, RefsArray Y, Abstraction *CAP);
+static void buildRecord(ProgramCounter PC, RefsArray * Y, Abstraction *CAP);
+static ThreadReturn debugEntry(ProgramCounter PC, RefsArray * Y, Abstraction *CAP);
+static ThreadReturn debugExit(ProgramCounter PC, RefsArray * Y, Abstraction *CAP);
 
 
 /* specially optimized unify: test two most probable cases first:
@@ -383,7 +368,7 @@ Bool hookCheckNeeded()
 #define PushContX(_PC) pushContX(CTS,_PC,Y,CAP);
 
 void pushContX(TaskStack *stk,
-               ProgramCounter pc,RefsArray y,Abstraction *cap);
+               ProgramCounter pc,RefsArray * y,Abstraction *cap);
 
 /* NOTE:
  * in case we have call(x-N) and we have to switch process or do GC
@@ -659,7 +644,7 @@ int engine(Bool init)
    * if -DREGOPT is set
    */
   register ProgramCounter PC   Reg1 = 0;
-  register RefsArray Y         Reg2 = NULL;
+  register RefsArray * Y       Reg2 = NULL;
   register TaggedRef *sPointer Reg3 = NULL;
   register AM * const e        Reg4 = &am;
   register Abstraction * CAP   Reg5 = NULL;
@@ -2436,36 +2421,37 @@ Case(GETVOID)
     {
       int posInt = getPosIntArg(PC+1);
       Assert(posInt > 0);
-      allocateY(posInt);
+      Y = RefsArray::allocate(posInt);
       DISPATCH(2);
     }
 
-  Case(ALLOCATEL1)  { allocateY(1);  DISPATCH(1); }
-  Case(ALLOCATEL2)  { allocateY(2);  DISPATCH(1); }
-  Case(ALLOCATEL3)  { allocateY(3);  DISPATCH(1); }
-  Case(ALLOCATEL4)  { allocateY(4);  DISPATCH(1); }
-  Case(ALLOCATEL5)  { allocateY(5);  DISPATCH(1); }
-  Case(ALLOCATEL6)  { allocateY(6);  DISPATCH(1); }
-  Case(ALLOCATEL7)  { allocateY(7);  DISPATCH(1); }
-  Case(ALLOCATEL8)  { allocateY(8);  DISPATCH(1); }
-  Case(ALLOCATEL9)  { allocateY(9);  DISPATCH(1); }
-  Case(ALLOCATEL10) { allocateY(10); DISPATCH(1); }
+  Case(ALLOCATEL1)  { Y = RefsArray::allocate(1);  DISPATCH(1); }
+  Case(ALLOCATEL2)  { Y = RefsArray::allocate(2);  DISPATCH(1); }
+  Case(ALLOCATEL3)  { Y = RefsArray::allocate(3);  DISPATCH(1); }
+  Case(ALLOCATEL4)  { Y = RefsArray::allocate(4);  DISPATCH(1); }
+  Case(ALLOCATEL5)  { Y = RefsArray::allocate(5);  DISPATCH(1); }
+  Case(ALLOCATEL6)  { Y = RefsArray::allocate(6);  DISPATCH(1); }
+  Case(ALLOCATEL7)  { Y = RefsArray::allocate(7);  DISPATCH(1); }
+  Case(ALLOCATEL8)  { Y = RefsArray::allocate(8);  DISPATCH(1); }
+  Case(ALLOCATEL9)  { Y = RefsArray::allocate(9);  DISPATCH(1); }
+  Case(ALLOCATEL10) { Y = RefsArray::allocate(10); DISPATCH(1); }
 
-  Case(DEALLOCATEL1)  { deallocateYN(1);  DISPATCH(1); }
-  Case(DEALLOCATEL2)  { deallocateYN(2);  DISPATCH(1); }
-  Case(DEALLOCATEL3)  { deallocateYN(3);  DISPATCH(1); }
-  Case(DEALLOCATEL4)  { deallocateYN(4);  DISPATCH(1); }
-  Case(DEALLOCATEL5)  { deallocateYN(5);  DISPATCH(1); }
-  Case(DEALLOCATEL6)  { deallocateYN(6);  DISPATCH(1); }
-  Case(DEALLOCATEL7)  { deallocateYN(7);  DISPATCH(1); }
-  Case(DEALLOCATEL8)  { deallocateYN(8);  DISPATCH(1); }
-  Case(DEALLOCATEL9)  { deallocateYN(9);  DISPATCH(1); }
-  Case(DEALLOCATEL10) { deallocateYN(10); DISPATCH(1); }
+  Case(DEALLOCATEL1)  { Y->dispose(1);  Y=NULL; DISPATCH(1); }
+  Case(DEALLOCATEL2)  { Y->dispose(2);  Y=NULL; DISPATCH(1); }
+  Case(DEALLOCATEL3)  { Y->dispose(3);  Y=NULL; DISPATCH(1); }
+  Case(DEALLOCATEL4)  { Y->dispose(4);  Y=NULL; DISPATCH(1); }
+  Case(DEALLOCATEL5)  { Y->dispose(5);  Y=NULL; DISPATCH(1); }
+  Case(DEALLOCATEL6)  { Y->dispose(6);  Y=NULL; DISPATCH(1); }
+  Case(DEALLOCATEL7)  { Y->dispose(7);  Y=NULL; DISPATCH(1); }
+  Case(DEALLOCATEL8)  { Y->dispose(8);  Y=NULL; DISPATCH(1); }
+  Case(DEALLOCATEL9)  { Y->dispose(9);  Y=NULL; DISPATCH(1); }
+  Case(DEALLOCATEL10) { Y->dispose(10); Y=NULL; DISPATCH(1); }
 
   Case(DEALLOCATEL)
     {
-      if (Y)
-        deallocateY();
+      if (Y) {
+        Y->dispose(); Y=NULL;
+      }
       DISPATCH(1);
     }
 // -------------------------------------------------------------------------
@@ -2645,7 +2631,7 @@ Case(GETVOID)
       for (int i = 0; i < size; i++) {
         switch ((*list)[i].getKind()) {
         case K_XReg: p->initG(i, XREGS[(*list)[i].getIndex()]); break;
-        case K_YReg: p->initG(i, Y[(*list)[i].getIndex()]); break;
+        case K_YReg: p->initG(i, Y->getArg((*list)[i].getIndex())); break;
         case K_GReg: p->initG(i, CAP->getG((*list)[i].getIndex())); break;
         }
       }
@@ -3043,13 +3029,13 @@ Case(GETVOID)
   Case(TASKCALLCONT)
     {
       TaggedRef taggedPredicate = (TaggedRef)ToInt32(Y);
-      RefsArray args = (RefsArray) CAP;
+      RefsArray * args = (RefsArray *) CAP;
       Y = 0;
       CAP = 0;
 
       DebugTrace(ozd_trace(toC(taggedPredicate)));
 
-      predArity = args ? getRefsArraySize(args) : 0;
+      predArity = args ? args->getLen() : 0;
 
       DEREF(taggedPredicate,predPtr);
       if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
@@ -3058,14 +3044,13 @@ Case(GETVOID)
           tmpRet = oz_var_addSusp(predPtr,CTT);
           MAGIC_RET;
         }
-        RAISE_APPLY(taggedPredicate,OZ_toList(predArity,args));
+        RAISE_APPLY(taggedPredicate,OZ_toList(predArity,args->getArgsRef()));
       }
 
-      int i = predArity;
-      while (--i >= 0) {
-        XREGS[i] = args[i];
-      }
-      disposeRefsArray(args);
+      for (int i = predArity; i--; )
+        XREGS[i] = args->getArg(i);
+      if (args)
+        args->dispose();
       isTailCall = OK;
 
       predicate=tagged2Const(taggedPredicate);
@@ -3100,13 +3085,11 @@ Case(GETVOID)
 
   Case(TASKXCONT)
     {
-      RefsArray tmpX = Y;
+      RefsArray * tmpX = Y;
       Y = NULL;
-      int i = getRefsArraySize(tmpX);
-      while (--i >= 0) {
-        XREGS[i] = tmpX[i];
-      }
-      disposeRefsArray(tmpX);
+      for (int i = tmpX->getLen(); i--; )
+        XREGS[i] = tmpX->getArg(i);
+      tmpX->dispose();
       goto LBLpopTaskNoPreempt;
     }
 
@@ -3408,7 +3391,7 @@ Case(GETVOID)
 
 
 static
-ThreadReturn debugEntry(ProgramCounter PC, RefsArray Y, Abstraction * CAP) {
+ThreadReturn debugEntry(ProgramCounter PC, RefsArray * Y, Abstraction * CAP) {
   register AM * const e        Reg4 = &am;
 
   if ((e->debugmode() || CTT->isTrace()) && oz_onToplevel()) {
@@ -3560,7 +3543,7 @@ ThreadReturn debugEntry(ProgramCounter PC, RefsArray Y, Abstraction * CAP) {
 
 
 static
-ThreadReturn debugExit(ProgramCounter PC, RefsArray Y, Abstraction * CAP) {
+ThreadReturn debugExit(ProgramCounter PC, RefsArray * Y, Abstraction * CAP) {
   register AM * const e        Reg4 = &am;
 
   OzDebug *dbg;
@@ -3614,7 +3597,7 @@ ThreadReturn debugExit(ProgramCounter PC, RefsArray Y, Abstraction * CAP) {
    break;
 
 static
-void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
+void buildRecord(ProgramCounter PC, RefsArray * Y, Abstraction *CAP) {
   Assert(oz_onToplevel());
 
   TaggedRef *sPointer, *TMPA, *TMPB;
@@ -3622,7 +3605,7 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
   int argsToHandle = 0;
 
   int maxX = (CAP->getPred()->getMaxX()) * sizeof(TaggedRef);
-  int maxY = (Y ? getRefsArraySize(Y) : 0) * sizeof(TaggedRef);
+  int maxY = (Y ? Y->getLen() : 0) * sizeof(TaggedRef);
 
   void * savedY;
 
@@ -3778,7 +3761,7 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
 
 // outlined:
 void pushContX(TaskStack *stk,
-               ProgramCounter pc,RefsArray y,Abstraction *cap) {
+               ProgramCounter pc,RefsArray * y,Abstraction *cap) {
   stk->pushCont(pc,y,cap);
   stk->pushX(cap->getPred()->getMaxX());
 }

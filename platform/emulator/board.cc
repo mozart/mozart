@@ -217,7 +217,7 @@ OZ_Return Board::scheduleLPQ(void) {
     return PROCEED;
   } else {
     board_served = NULL;
-    am.prepareCall(BI_PROP_LPQ, (RefsArray) NULL);
+    am.prepareCall(BI_PROP_LPQ, (RefsArray *) NULL);
     return BI_REPLACEBICALL;
   }
 

@@ -43,22 +43,22 @@
 
 inline
 void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
-  RefsArray args = allocateRefsArray(2, NO);
-  args[0] = a;
-  args[1] = b;
+  RefsArray * args = RefsArray::allocate(2, NO);
+  args->setArg(0,a);
+  args->setArg(1,b);
 
   Thread * t = oz_newThreadInject(bb);
-  t->pushCall(BI_Unify,args,2);
+  t->pushCall(BI_Unify,args);
 }
 
 inline
 void bindfut(Board * bb, const TaggedRef a, const TaggedRef b) {
-  RefsArray args = allocateRefsArray(2, NO);
-  args[0] = a;
-  args[1] = b;
+  RefsArray * args = RefsArray::allocate(2, NO);
+  args->setArg(0,a);
+  args->setArg(1,b);
 
   Thread * t = oz_newThreadInject(bb);
-  t->pushCall(BI_bindFuture,args,2);
+  t->pushCall(BI_bindFuture,args);
 }
 
 
@@ -499,8 +499,8 @@ OZ_BI_define(BIchooseSpace, 1, 1) {
     OZ_out(0) = bd->getVar();
   }
 
-  RefsArray args = allocateRefsArray(1);
-  args[0] = OZ_out(0);
+  RefsArray * args = RefsArray::allocate(1,NO);
+  args->setArg(0,OZ_out(0));
 
   am.prepareCall(BI_wait, args);
 
@@ -511,11 +511,11 @@ OZ_BI_define(BIchooseSpace, 1, 1) {
 OZ_BI_define(BIwaitStableSpace, 0, 0) {
   Board * bb = oz_currentBoard();
 
-  RefsArray args = allocateRefsArray(1);
-  args[0] = OZ_out(0);
+  RefsArray * args = RefsArray::allocate(1,NO);
+  args->setArg(0,OZ_out(0));
 
   if (bb->isRoot()) {
-    args[0] = oz_newVariable(bb);
+    args->setArg(0,oz_newVariable(bb));
   } else if (bb->getDistributor()) {
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   } else {
@@ -523,7 +523,7 @@ OZ_BI_define(BIwaitStableSpace, 0, 0) {
 
     bb->setDistributor(bd);
 
-    args[0] = bd->getVar();
+    args->setArg(0,bd->getVar());
   }
 
   am.prepareCall(BI_wait, args);

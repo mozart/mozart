@@ -51,9 +51,7 @@ int TaskStack::tasks()
 void TaskStack::pushCall(TaggedRef pred, TaggedRef arg0, TaggedRef arg1,
                          TaggedRef arg2, TaggedRef arg3, TaggedRef arg4)
 {
-  static RefsArray a = NULL;
-  if (a==NULL)
-    a = allocateStaticRefsArray(5);
+  TaggedRef a[5];
   int argno = 0;
   if (arg0) argno++;
   if (arg1) argno++;
@@ -193,7 +191,7 @@ TaggedRef TaskStack::findAbstrRecord(void)
 
 Bool TaskStack::findCatch(Thread *thr,
                           ProgramCounter PC,
-                          RefsArray Y, Abstraction *G,
+                          RefsArray *Y, Abstraction *G,
                           TaggedRef *out,
                           Bool verbose)
 {
@@ -374,7 +372,7 @@ void TaskStack::unleash(int frameId) {
 
 #ifdef DEBUG_LIVENESS
 // set unused values in X to zero
-void TaskStack::checkLiveness(RefsArray X) {
+void TaskStack::checkLiveness(RefsArray * X) {
   PopFrame(this,auxPC,auxY,auxG);
   pushFrame(auxPC,auxY,auxG);
   int n=getRefsArraySize(X);

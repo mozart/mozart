@@ -34,6 +34,7 @@
 #define __DEBUGH
 
 #include "base.hh"
+#include "refsarray.hh"
 #include "value.hh"
 
 /* The Oz source level debugger */
@@ -43,12 +44,12 @@ public:
   USEFREELISTMEMORY;
 
   ProgramCounter PC;
-  RefsArray Y;
+  RefsArray * Y;
   TaggedRef CAP, data; // Never change the order!
   int arity;
   TaggedRef * arguments;
 
-  OzDebug(ProgramCounter pc, RefsArray y, Abstraction *cap) {
+  OzDebug(ProgramCounter pc, RefsArray *y, Abstraction *cap) {
     PC        = pc;
     Y         = y;
     CAP       = makeTaggedConst(cap);

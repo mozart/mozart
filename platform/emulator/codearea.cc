@@ -157,7 +157,7 @@ ProgramCounter CodeArea::printDef(ProgramCounter PC,FILE *out)
 #endif
 
 TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
-                              int frameId, RefsArray Y, Abstraction *CAP)
+                              int frameId, RefsArray *Y, Abstraction *CAP)
 {
   XReg reg;
   int next, line, colum;
@@ -192,7 +192,7 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
 }
 
 TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
-                                      RefsArray Y, Abstraction *CAP) {
+                                      RefsArray *Y, Abstraction *CAP) {
   TaggedRef locals = oz_nil();
   TaggedRef globals = oz_nil();
 
@@ -204,7 +204,7 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
     for (int i=0; getOpcode(aux) == LOCALVARNAME; i++) {
       if (Y) {
         TaggedRef aux1 = getLiteralArg(aux+1);
-        if (!oz_eq(aux1, AtomEmpty) && Y[i] != NameVoidRegister) {
+        if (!oz_eq(aux1, AtomEmpty) && Y->getArg(i) != NameVoidRegister) {
           locals = oz_cons(OZ_mkTupleC("#", 2, aux1, Y[i]), locals);
         }
       }

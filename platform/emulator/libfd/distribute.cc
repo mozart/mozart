@@ -78,22 +78,22 @@ void fd_dist_init(void) {
 
 inline
 void tell_dom(Board * bb, const TaggedRef a, const TaggedRef b) {
-  RefsArray args = allocateRefsArray(2, NO);
-  args[0] = b;
-  args[1] = a;
+  RefsArray * args = RefsArray::allocate(2, NO);
+  args->setArg(0,b);
+  args->setArg(1,a);
 
   Thread * t = oz_newThreadInject(bb);
-  t->pushCall(BI_DistributeTell,args,2);
+  t->pushCall(BI_DistributeTell,args);
 }
 
 inline
 void tell_eq(Board * bb, const TaggedRef a, const TaggedRef b) {
-  RefsArray args = allocateRefsArray(2, NO);
-  args[0] = a;
-  args[1] = b;
+  RefsArray * args = RefsArray::allocate(2, NO);
+  args->setArg(0,a);
+  args->setArg(1,b);
 
   Thread * t = oz_newThreadInject(bb);
-  t->pushCall(BI_Unify,args,2);
+  t->pushCall(BI_Unify,args);
 }
 
 

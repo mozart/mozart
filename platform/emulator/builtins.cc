@@ -1032,10 +1032,10 @@ OZ_BI_define(BIthreadIs,1,1)
 static void threadRaise(Thread *th,OZ_Term E) {
   Assert(oz_currentThread() != th);
 
-  RefsArray args=allocateRefsArray(1, NO);
-  args[0]=E;
+  RefsArray * args = RefsArray::allocate(1, NO);
+  args->setArg(0,E);
 
-  th->pushCall(BI_raise, args, 1);
+  th->pushCall(BI_raise, args);
 
   th->unsetStop();
 
@@ -2788,14 +2788,14 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
     OZ_Term oldFut = port->exchangeStream(newFut);
 
     Thread * t = oz_newThreadInject(home);
-    RefsArray args2 = allocateRefsArray(2, NO);
-    args2[0] = val;
-    args2[1] = oz_head(lt);
-    t->pushCall(BI_Unify,args2,2);
-    RefsArray args1 = allocateRefsArray(2, NO);
-    args1[0] = oldFut;
-    args1[1] = lt;
-    t->pushCall(BI_bindFuture,args1,2);
+    RefsArray * args2 = RefsArray::allocate(2, NO);
+    args2->setArg(0,val);
+    args2->setArg(1,oz_head(lt));
+    t->pushCall(BI_Unify,args2);
+    RefsArray * args1 = RefsArray::allocate(2, NO);
+    args1->setArg(0,oldFut);
+    args1->setArg(1,lt);
+    t->pushCall(BI_bindFuture,args1);
   } else {
     OZ_Term newFut = oz_newFuture(oz_currentBoard());
     OZ_Term lt     = oz_cons(am.getCurrentOptVar(), newFut);
@@ -2836,12 +2836,12 @@ OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
   if (port->isProxy()) {
     if (sc_required) {
       // Fork a thread to redo the send
-      RefsArray args = allocateRefsArray(2, NO);
-      args[0] = prt;
-      args[1] = val;
+      RefsArray * args = RefsArray::allocate(2, NO);
+      args->setArg(0,prt);
+      args->setArg(1,val);
 
       Thread * t = oz_newThreadInject(prt_home);
-      t->pushCall(BI_send,args,2);
+      t->pushCall(BI_send,args);
       return PROCEED;
     } else {
       return (*portSend)(port,val);
@@ -3093,9 +3093,9 @@ OZ_Return applyProc(TaggedRef proc, TaggedRef args)
   }
 
   int len = OZ_length(args);
-  RefsArray argsArray = allocateRefsArray(len);
+  RefsArray * argsArray = RefsArray::allocate(len,NO);
   for (int i=0; i < len; i++) {
-    argsArray[i] = OZ_head(args);
+    argsArray->setArg(i,OZ_head(args));
     args=OZ_tail(args);
   }
   Assert(OZ_isNil(args));

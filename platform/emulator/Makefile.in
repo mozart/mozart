@@ -98,7 +98,7 @@ OSSRCS=\
         os.cc unix.cc urlc.cc ioHandler.cc $(DENYS_SRCS)
 
 STORESRCS=\
-        tagged.cc value.cc atoms.cc \
+        refsarray.cc tagged.cc value.cc atoms.cc \
         dictionary.cc extension.cc bitarray.cc word.cc \
         ozthread.cc heapchunk.cc bytedata.cc bits.cc \
         susplist.cc \

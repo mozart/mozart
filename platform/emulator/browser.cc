@@ -114,11 +114,11 @@ OZ_BI_define(BIgetsBoundB, 2, 0)
   oz_declareDerefIN(0,v);
 
   if (oz_isVar(v)){
-    RefsArray args = allocateRefsArray(1, NO);
-    args[0] = OZ_in(1);
+    RefsArray * args = RefsArray::allocate(1, NO);
+    args->setArg(0,OZ_in(1));
 
     Thread *thr =
-      (Thread *) OZ_makeSuspendedThread(BI_GetsBoundDummy, args, 1);
+      (Thread *) OZ_makeSuspendedThread(BI_GetsBoundDummy, args->getArgsRef(),1);
     OZ_Return ret = oz_var_addSusp(vPtr, thr);
     if (ret == PROCEED) oz_wakeupThread(thr);
     if (ret != SUSPEND) return ret;

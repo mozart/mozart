@@ -38,6 +38,7 @@
 #include "ozconfig.hh"
 #include "stack.hh"
 #include "tagged.hh"
+#include "refsarray.hh"
 #include "value.hh"
 
 extern ProgramCounter
@@ -122,12 +123,12 @@ public:
   TaggedRef findAbstrRecord(void);
 
   Bool findCatch(Thread *thr,
-                 ProgramCounter PC=NOCODE, RefsArray Y=NULL,
+                 ProgramCounter PC=NOCODE, RefsArray * Y=NULL,
                  Abstraction *G=NULL,
                  TaggedRef *traceBack=0, Bool verbose=NO);
 
 
-  void checkLiveness(RefsArray X);
+  void checkLiveness(RefsArray * X);
 
   void pushFrame(ProgramCounter pc, void *y, TaggedRef cap) {
     Frame *newTop = ensureFree(frameSz);
@@ -149,7 +150,7 @@ public:
   void pushX(int i) {
     Assert(i>=0);
     if (i>0) {
-      RefsArray x=copyRefsArray(XREGS,i);
+      RefsArray * x = RefsArray::copy(XREGS,i);
 #ifdef DEBUG_LIVENESS
       checkLiveness(x);
 #endif
@@ -157,9 +158,9 @@ public:
     }
   }
 
-  void pushCont(ProgramCounter pc,RefsArray y,Abstraction *cap) {
+  void pushCont(ProgramCounter pc,RefsArray *y,Abstraction *cap) {
 #ifdef DEBUG_MEM
-    Assert(!y || MemChunks::areRegsInHeap(y,getRefsArraySize(y)));
+    Assert(!y || MemChunks::areRegsInHeap(y,y->getLen()));
 #endif
     pushFrame(pc, y, makeTaggedConst((ConstTerm *) cap));
   }
@@ -167,13 +168,18 @@ public:
   void pushCall(TaggedRef pred, TaggedRef arg0, TaggedRef arg1,
                 TaggedRef arg2, TaggedRef arg3, TaggedRef arg4);
 
-  void pushCallNoCopy(TaggedRef pred, RefsArray  x) {
+  void pushCallNoCopy(TaggedRef pred, RefsArray * x) {
     pushFrame(C_CALL_CONT_Ptr, (void *) pred, makeTaggedVerbatim(x));
   }
 
-  void pushCall(TaggedRef pred, RefsArray  x, int i) {
+  void pushCall(TaggedRef pred, TaggedRef * x, int i) {
     Assert(i>=0);
-    pushCallNoCopy(pred, i>0 ? copyRefsArray(x, i) : (RefsArray) NULL);
+    pushCallNoCopy(pred, i>0 ? RefsArray::copy(x,i) : (RefsArray *) NULL);
+  }
+
+  void pushCall(TaggedRef pred, RefsArray * x) {
+    Assert(x->getLen()>0);
+    pushCallNoCopy(pred,RefsArray::copy(x,x->getLen()));
   }
 
   void pushLock(OzLock *lck)     {
@@ -220,7 +226,7 @@ public:
 #define GetFrameNoDecl(top,pc,y,cap)                             \
 {                                                                \
   pc   = (ProgramCounter) *(top-1);                              \
-  y    = (RefsArray)      *(top-2);                              \
+  y    = (RefsArray *)    *(top-2);                              \
   cap  = (Abstraction *)  tagged2Verbatim((TaggedRef) *(top-3)); \
   top -= frameSz;                                                \
 }
@@ -242,13 +248,13 @@ public:
 
 #define PopFrame(ts,pc,y,cap)                   \
     ProgramCounter pc;                          \
-    RefsArray y;                                \
+    RefsArray * y;                              \
     Abstraction *cap;                           \
     PopFrameNoDecl(ts,pc,y,cap)
 
 #define GetFrame(top,pc,y,cap)                  \
     ProgramCounter pc;                          \
-    RefsArray y;                                \
+    RefsArray * y;                              \
     Abstraction *cap;                           \
     GetFrameNoDecl(top,pc,y,cap)
 
