@@ -1270,7 +1270,7 @@ AC_DEFUN(OZ_ARG_WITH_INC_DIR,[
   done
   # add them to CPPFLAGS and oz_inc_path
   IFS=$oz_tmp_IFS
-  : ${oz_inc_path="/usr/local/include"}
+  : ${oz_inc_path=""}
   for oz_tmp1 in $oz_tmp_dirs DONE; do
     if test "$oz_tmp1" != DONE; then
       OZ_ADDTO_CPPFLAGS(-I$oz_tmp1)
