@@ -534,9 +534,9 @@ local
 	 'define macro '#{PrintNameToVirtualString X}
       [] macroUndef(X) then
 	 'undefine macro '#{PrintNameToVirtualString X}
-      [] getDefines(?Xs) then
+      [] getDefines(_) then
 	 'get defines'
-      [] getSwitch(SwitchName ?B) then
+      [] getSwitch(SwitchName _) then
 	 'get switch '#{Value.toVirtualString SwitchName 0 0}
       [] setSwitch(SwitchName B) then
 	 'set switch '#{Value.toVirtualString SwitchName 0 0}#
@@ -545,41 +545,41 @@ local
 	 'push switches'
       [] popSwitches() then
 	 'pop switches'
-      [] getMaxNumberOfErrors(?N) then
+      [] getMaxNumberOfErrors(_) then
 	 'get maximal number of errors'
       [] setMaxNumberOfErrors(N) then
 	 'set maximal number of errors to '#N
-      [] getBaseURL(?A) then
+      [] getBaseURL(_) then
 	 'get base URL for computed functors'
       [] setBaseURL(X) then
 	 'set base URL for computed functors to '#
 	 case X of unit then 'unit' else '"'#X#'"' end
-      [] addToEnv(PrintName Value) then
+      [] addToEnv(PrintName _) then
 	 'add variable '#{PrintNameToVirtualString PrintName}#
 	 ' to environment'
-      [] lookupInEnv(PrintName ?Value) then
+      [] lookupInEnv(PrintName _) then
 	 'look up variable '#{PrintNameToVirtualString PrintName}#
 	 ' in environment'
       [] removeFromEnv(PrintName) then
 	 'remove variable '#{PrintNameToVirtualString PrintName}#
 	 ' from environment'
-      [] putEnv(Env) then
+      [] putEnv(_) then
 	 'set new environment'
-      [] mergeEnv(Env) then
+      [] mergeEnv(_) then
 	 'add bindings to environment'
-      [] getEnv(?Env) then
+      [] getEnv(_) then
 	 'get environment'
-      [] feedVirtualString(VS) then
+      [] feedVirtualString(_) then
 	 'feed virtual string'
-      [] feedVirtualString(VS ?RequiredInterfaces) then
+      [] feedVirtualString(_ _) then
 	 'feed virtual string'
       [] feedFile(VS) then
 	 'feed file "'#VS#'"'
-      [] feedFile(VS ?RequiredInterfaces) then
+      [] feedFile(VS _) then
 	 'feed file "'#VS#'"'
-      [] ping(?HereIAm) then
+      [] ping(_) then
 	 'ping'
-      [] ping(?HereIAm X) then
+      [] ping(_ X) then
 	 'ping, returning "'#{Value.toVirtualString X 1 1}#'"'
       else
 	 'unknown query ('#{Value.toVirtualString {Label M} 0 0}#')'
