@@ -40,7 +40,6 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
 
   GetModuleFileName(NULL, buffer, sizeof(buffer));
   char *ozhome = getOzHome(buffer);
-  //  ozhome = "F:\\oz-devel";
   normalizePath(ozhome);
 
   sprintf(buffer,"%s/platform/%s/ozemulator.exe",ozhome,ozplatform);
@@ -48,7 +47,6 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
     OzPanic(1,"Oz installation incorrect.\n"
               "Cannot find '%s'!",buffer);
   }
-
 
   int quiet = strncmp(lpszCmdLine,"-q",2)==0 ? 1 : 0;
 
@@ -58,7 +56,7 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
             "\t %s",
             OZVERSION,ozhome);
     MessageBeep(MB_ICONEXCLAMATION);
-    MessageBox(NULL, buffer, "DFKI Oz Installation",
+    MessageBox(NULL, buffer, "Mozart Installation",
                MB_ICONINFORMATION | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
   }
 
@@ -71,16 +69,14 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
 
   if (HConversation = DdeConnect (idDde, ProgMan, ProgMan, NULL))
     {
-      DdeCommand ( "[DeleteGroup (DFKI Oz 3)]", HConversation);
-      DdeCommand ( "[CreateGroup (DFKI Oz 3)]", HConversation);
-      DdeCommand ("[ReplaceItem (DFKI Oz 3)]", HConversation);
-      sprintf(buffer, "[AddItem (%s\\platform\\%s\\tcldoc\\tcl76.hlp, Tcl_Tk Manual)]", ozhome,ozplatform);
+      DdeCommand ( "[DeleteGroup (Mozart 3)]", HConversation);
+      DdeCommand ( "[CreateGroup (Mozart 3)]", HConversation);
+      DdeCommand ( "[ReplaceItem (Mozart 3)]", HConversation);
+      sprintf(buffer, "[AddItem (%s\\platform\\%s\\tcldoc\\tcl80.hlp, Tcl_Tk Manual)]", ozhome,ozplatform);
       DdeCommand(buffer, HConversation);
-      sprintf(buffer, "[AddItem (%s\\oz.exe, DFKI Oz 3)]", ozhome);
+      sprintf(buffer, "[AddItem (%s\\oz.exe, Mozart)]", ozhome);
       DdeCommand(buffer, HConversation);
-      sprintf(buffer, "[AddItem (%s\\ozdemo.exe, Oz 3 Demo)]", ozhome);
-      DdeCommand(buffer, HConversation);
-      sprintf(buffer, "[AddItem (%s\\setup.exe, Oz 3 Setup)]", ozhome);
+      sprintf(buffer, "[AddItem (%s\\setup.exe, Mozart Setup)]", ozhome);
       DdeCommand(buffer, HConversation);
 
       DdeDisconnect (HConversation);
@@ -97,8 +93,8 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   if (!quiet) {
     MessageBeep(MB_ICONEXCLAMATION);
     MessageBox(NULL,
-               "Finished installation of DFKI Oz.",
-               "DFKI Oz Installation",
+               "Finished installation of Mozart.",
+               "Mozart Installation",
                MB_ICONINFORMATION | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
   }
 
