@@ -43,8 +43,7 @@ CFLAGS   	+= -Wall -Wno-unused -Wno-reorder -Wno-uninitialized
 ifdef USECPLEX
 CFLAGS   	+= -DINCLUDE_CPLEX -DALLWAYS_CLOSE_CPLEX
 CFLAGS   	+= -I/linux/CPLEX
-#LDFLAGS  	+= -L/home/tmueller/Programming/CPLEX
-LDFLAGS  	+= -L/linux/CPLEX.6
+LDFLAGS  	+= -L/linux/CPLEX
 LIBS     	+=  -lcplex 
 endif
 
