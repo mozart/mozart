@@ -544,20 +544,9 @@ PRINT(SuspList)
   } // for
 }
 
-PRINT(CFuncContinuation)
-{
-  CHECKDEPTH;
-  stream  << "ccont = "
-          << builtinTab.getName((void *)getCFunc())
-          << '(' << getXSize() << ", "
-          << (void *) getX() << "[]), ";
-}
-
-
 // ----------------------------------------------------------------
 // PRINT LONG
 // ----------------------------------------------------------------
-
 
 static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
                               int depth = 1,int offset = 0)
@@ -970,22 +959,8 @@ PRINT(Thread)
     stream << " 'board'";
     break;
 
-  case S_CFUN:
-    stream << " 'ccont', fun="
-           << builtinTab.getName(((void *) getCCont ()->getCFunc ()))
-             << '(' << getCCont()->getXSize() << ", "
-             << (void *) getCCont()->getX() << "[])";
-    break;
-
   case S_PR_THR:
-      stream << " 'prop', fun="
-             << builtinTab.getName(((void *) getCCont ()->getCFunc ()))
-               << '(' << getCCont()->getXSize() << ", "
-               << (void *) getCCont()->getX() << "[])";
-      break;
-
-  case S_NEW_PR_THR:
-    stream << " 'new prop'" << *getNewPropagator();
+    stream << " 'new prop'" << *getPropagator();
     break;
 
   default:
@@ -993,13 +968,13 @@ PRINT(Thread)
   }
 
   stream << ", flags: <";
-  if ((getFlags ()) & T_T_solve)     stream << 'S';
-  if ((getFlags ()) & T_S_ext)       stream << 'E';
-  if ((getFlags ()) & T_S_loca)      stream << 'L';
-  if ((getFlags ()) & T_S_unif)      stream << 'U';
-  if ((getFlags ()) & T_S_ofs)       stream << 'O';
-  if ((getFlags ()) & T_S_tag)       stream << 'T';
-  if ((getFlags ()) & T_S_ltq)       stream << 'Q';
+  if ((getFlags ()) & T_solve)     stream << 'S';
+  if ((getFlags ()) & T_ext)       stream << 'E';
+  if ((getFlags ()) & T_loca)      stream << 'L';
+  if ((getFlags ()) & T_unif)      stream << 'U';
+  if ((getFlags ()) & T_ofs)       stream << 'O';
+  if ((getFlags ()) & T_tag)       stream << 'T';
+  if ((getFlags ()) & T_ltq)       stream << 'Q';
   stream << ">]" << endl;
 
   if (board) {

@@ -880,36 +880,6 @@ void OZ_gcTerm(OZ_Term &t)
 }
 
 //
-//  CFuncContinuation;
-inline
-void CFuncContinuation::gcRecurse ()
-{
-  GCMETHMSG ("CFuncContinuation::gcRecurse");
-
-  DebugCheck (isFreedRefsArray (xRegs),
-              error ("freed refs array in CFunContinuation::gcRecurse ()"));
-
-  xRegs = gcRefsArray(xRegs);
-}
-
-CFuncContinuation *CFuncContinuation::gcCFuncCont ()
-{
-  GCMETHMSG ("CFuncContinuation::gcCont");
-  CHECKCOLLECTED (ToInt32 (cFunc), CFuncContinuation *);
-
-  COUNT(suspCFun);
-  CFuncContinuation *ret =
-    (CFuncContinuation*) gcRealloc (this, sizeof (*this));
-  GCNEWADDRMSG (ret);
-  ptrStack.push (ret, PTR_CFUNCONT);
-  storeForward (&cFunc, ret);
-
-  FDPROFILE_GC(cp_size_cfunccont, sizeof(*this));
-
-  return (ret);
-}
-
-//
 //  ... Continuation;
 inline
 void Continuation::gcRecurse (){
@@ -1112,11 +1082,6 @@ void Thread::gcRecurse ()
     break;
 
   case S_PR_THR:
-  case S_CFUN:
-    item.ccont = item.ccont->gcCFuncCont ();
-    break;
-
-  case S_NEW_PR_THR:
     item.propagator = item.propagator->gc();
     Assert (item.propagator);
     break;
@@ -2422,7 +2387,6 @@ void performCopying(void)
     case PTR_ACTOR:     ((Actor *) ptr)->gcRecurse();            break;
     case PTR_THREAD:    ((Thread *) ptr)->gcRecurse();           break;
     case PTR_CONT:      ((Continuation*) ptr)->gcRecurse();      break;
-    case PTR_CFUNCONT:  ((CFuncContinuation*) ptr)->gcRecurse(); break;
     case PTR_PROPAGATOR:((OZ_Propagator *) ptr)->gcRecurse();    break;
     case PTR_DYNTAB:    ((DynamicTable *) ptr)->gcRecurse();     break;
     case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcConstRecurse();   break;

@@ -48,7 +48,6 @@ char * ProfileData::print_msg2[no_high2] = {
   "SCRIPTs            ",
   "SUSPCONTINUATIONs  ",
   "REFSARRAYs         ",
-  "CFUNCCONTINUATIONs ",
   "CONTINUATIONs      ",
   "STUPLEs            ",
   "LTUPLEs            ",

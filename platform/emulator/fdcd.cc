@@ -459,7 +459,7 @@ void CDSuppl::gcRecurse(void) {
 
 ostream& CDSuppl::print(ostream& o) const
 {
-  return o << '(' << *((Thread *)thr)->getNewPropagator()
+  return o << '(' << *((Thread *)thr)->getPropagator()
     << ") ><" <<OZ_toStream(reg_b);
 }
 
@@ -474,14 +474,14 @@ OZ_Return CDSuppl::run(void)
   }
 
   if (*b == 1) {
-    OZ_Propagator * p = ((Thread *) thr)->swapNewPropagator(this);
+    OZ_Propagator * p = ((Thread *) thr)->swapPropagator(this);
     ((Thread *) thr)->closeDonePropagatorThreadCD();
     return replaceBy(p);
   }
 
   Thread * backup_currentThread = am.currentThread;
   am.currentThread = (Thread *) thr;
-  OZ_Return ret_val = ((Thread *) thr)->runNewPropagator();
+  OZ_Return ret_val = ((Thread *) thr)->runPropagator();
   am.currentThread = backup_currentThread;
 
   OZ_ASSERT(b->maxElem() >= 2);

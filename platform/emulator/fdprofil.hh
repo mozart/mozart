@@ -53,7 +53,6 @@ enum ProfileDataIndex2 {
   cp_size_script,
   cp_size_suspcont,
   cp_size_refsarray,
-  cp_size_cfunccont,
   cp_size_cont,
   cp_size_stuple,
   cp_size_ltuple,

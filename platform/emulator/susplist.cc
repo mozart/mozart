@@ -72,7 +72,7 @@ SuspList * installPropagators(SuspList * local_list, SuspList * glob_list,
     Thread *thr = aux->getElem();
 
     if (!(thr->isDeadThread ()) &&
-        (thr->isPropagator () || thr->isNewPropagator()) &&
+        (thr->isPropagator()) &&
         !(thr->isTagged ()) &&
         am.isBetween (thr->getBoardFast (), glob_home ) == B_BETWEEN) {
       ret_list = new SuspList (thr, ret_list);

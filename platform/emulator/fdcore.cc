@@ -170,7 +170,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutLe, 2)
 {
-  Assert (!(am.currentThread->isPropagator () || am.currentThread->isNewPropagator ()));
+  Assert (!(am.currentThread->isPropagator ()));
 
   ExpectedTypes("FiniteDomain,SmallInt");
 
@@ -209,7 +209,7 @@ OZ_C_proc_end // BIfdPutLe
 
 OZ_C_proc_begin(BIfdPutGe, 2)
 {
-  Assert (!(am.currentThread->isPropagator () || am.currentThread->isNewPropagator ()));
+  Assert (!(am.currentThread->isPropagator ()));
 
   ExpectedTypes("FiniteDomain,SmallInt");
 
@@ -248,7 +248,7 @@ OZ_C_proc_end // BIfdPutGe
 
 OZ_C_proc_begin(BIfdPutList, 3) // TMUELLER; 3rd arg is redundant soon
 {
-  Assert (!(am.currentThread->isPropagator () || am.currentThread->isNewPropagator ()));
+  Assert (!(am.currentThread->isPropagator ()));
 
   ExpectedTypes("FiniteDomain,List of SmallInts or Tuples,SmallInt");
 
@@ -285,7 +285,7 @@ OZ_C_proc_end // BIfdPutList
 
 OZ_C_proc_begin(BIfdPutInterval, 3)
 {
-  Assert (!(am.currentThread->isPropagator () || am.currentThread->isNewPropagator ()));
+  Assert (!(am.currentThread->isPropagator ()));
 
   ExpectedTypes("FiniteDomain,SmallInt,SmallInt");
 
@@ -328,7 +328,7 @@ OZ_C_proc_end // BIfdPutInterval
 
 OZ_C_proc_begin(BIfdPutNot, 2)
 {
-  Assert (!(am.currentThread->isPropagator () || am.currentThread->isNewPropagator ()));
+  Assert (!(am.currentThread->isPropagator ()));
 
   ExpectedTypes("FiniteDomain,SmallInt");
 

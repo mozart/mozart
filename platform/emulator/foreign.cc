@@ -1507,6 +1507,7 @@ OZ_Return OZ_raise(OZ_Term exc)
 
 OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
 {
+  Thread *thr;
 #ifdef SHOW_SUSPENSIONS
   static int xxx=0;
   printf("Suspension(%d):",xxx++);
@@ -1516,19 +1517,17 @@ OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
   printf("\n");
 #endif
 
-  /* create a CFuncContinuation */
-  return (OZ_Thread)
-    new Thread (am.currentBoard,
-                ozconf.defaultPriority,
-                fun, args, arity);
+  thr = new Thread (am.currentBoard, ozconf.defaultPriority);
+  thr->pushCFunCont (fun, args, arity, OK);
+
+  return ((OZ_Thread) thr);
 }
 
 void OZ_makeRunableThread(OZ_CFun fun, OZ_Term *args,int arity)
 {
-  Thread *tt = new Thread (am.currentBoard,
-                           ozconf.defaultPriority,
-                           fun, args, arity);
-  am.scheduleThread(tt);
+  Thread *tt = new Thread (ozconf.defaultPriority, am.currentBoard);
+  tt->pushCFunCont (fun, args, arity, OK);
+  am.scheduleThread (tt);
 }
 
 void OZ_addThread(OZ_Term var, OZ_Thread thr)

@@ -107,7 +107,7 @@ void LocalPropagationQueue::printDebugLong () {
 #ifdef DEBUG_CHECK
 Bool LocalPropagationStore::checkIsPropagator (Thread *thr)
 {
-  return (thr->isPropagator () || thr->isNewPropagator());
+  return (thr->isPropagator());
 }
 #endif
 
@@ -115,7 +115,6 @@ Bool LocalPropagationStore::propagate_locally () {
   in_local_propagation = TRUE;
   Board *currentBoard = am.currentBoard;
   Thread *savedCurrentThread = am.currentThread;
-  CFuncContinuation * c;
   RefsArray args;
 
   /*
@@ -137,38 +136,23 @@ Bool LocalPropagationStore::propagate_locally () {
     //  No 'propagated' threads are allowed here,
     // because only true propagators are in the LPS;
     Assert (!(am.currentThread->isDeadThread ()));
-    Assert (am.currentThread->isPropagator () ||
-            am.currentThread->isNewPropagator ());
+    Assert (am.currentThread->isPropagator ());
 
-    OZ_Boolean isNewPropagator = thr->isNewPropagator();
     OZ_Return ret_val;
 
-    if (isNewPropagator) {
-      ret_val = thr->runNewPropagator();
-    } else {
-      c = thr->getCCont ();
-      args = c->getX ();
-      Assert (args != (RefsArray) NULL);
-      ret_val = (c->getCFunc())(getRefsArraySize (args), args);
-    }
+    ret_val = thr->runPropagator();
 
     switch (ret_val) {
     case FAILED:
       if (am.currentBoard->isRoot ()) {
         if (ozconf.errorVerbosity > 0) {
           errorHeader();
-          if (isNewPropagator) {
-            ostrstream buf;
-            buf << * thr->getNewPropagator() << '\0';
-            char *str = buf.str();
-            message("Propagator %s failed\n", str);
-            delete str;
-          } else {
-            message("Propagator %s failed.\n",
-                    builtinTab.getName((void *)(c->getCFunc())));
-            errorTrailer ();
-            allowTopLevelFailureMsg = FALSE;
-          }
+
+          ostrstream buf;
+          buf << * thr->getPropagator() << '\0';
+          char *str = buf.str();
+          message("Propagator %s failed\n", str);
+          delete str;
         }
       }
       am.currentThread->closeDonePropagator ();
