@@ -160,7 +160,7 @@ define
       ERR = {IO.pipe}
       OUT = {IO.run read(Cmd Args stderr:ERR.write)}
       {IO.close ERR.write}
-      TEXT= {NewCell {IO.readAsString OUT}}
+      TEXT= {NewCell {IO.readSLazy OUT}}
       fun {NextLine}
          if {Access TEXT}==nil then false else
             Prefix Suffix
