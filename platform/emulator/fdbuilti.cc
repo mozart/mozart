@@ -617,6 +617,7 @@ void BIinitFD()
 {
 // fdcore.C
   BIadd("fdIsVar", 1, BIisFdVar);
+  BIadd("fdIs", 1, BIfdIs);
   BIadd("fdGetLimits", 2, BIgetFDLimits);
   BIadd("fdGetMin", 2, BIfdMin);
   BIadd("fdGetMax", 2, BIfdMax);
