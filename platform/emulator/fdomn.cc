@@ -24,11 +24,11 @@ extern unsigned char numOfBitsInByte[];
 extern int toTheLowerEnd[];
 extern int toTheUpperEnd[];
 
-int * fd_bv_left_conv = new int[fd_bv_conv_max_high];
-int * fd_bv_right_conv = new int[fd_bv_conv_max_high];
+int fd_bv_left_conv[fd_bv_conv_max_high];
+int fd_bv_right_conv[fd_bv_conv_max_high];
 
-intptr * fd_iv_left_sort = new intptr[MAXFDBIARGS];
-intptr * fd_iv_right_sort = new intptr[MAXFDBIARGS];
+intptr fd_iv_left_sort[MAXFDBIARGS];
+intptr fd_iv_right_sort[MAXFDBIARGS];
 
 // FDInterval -----------------------------------------------------------------
 
