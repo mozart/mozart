@@ -1391,7 +1391,7 @@ OZ_BI_define(BIthreadSuspend,1,0)
 void threadResume(Thread *th) {
   th->setStop(NO);
 
-  if (th->isRunnable() && !am.threadsPool.isScheduledSlow(th)) {
+  if (!th->isRunnable() && !am.threadsPool.isScheduledSlow(th)) {
     am.threadsPool.scheduleThread(th);
   }
 }
