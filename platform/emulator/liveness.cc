@@ -60,6 +60,8 @@ static int yMarker = makeTaggedNULL();
 
 #define ISREAD_TO(args) { for (int _j=args; _j--;) { ISREAD(_j); } }
 
+#define ISREAD_FORCE { for (int _j=xMax; _j--; ) xUsage[_j]=1; }
+
 #define ISWRITE(i)                                      \
 {                                                       \
   int _i = (i);                                         \
@@ -81,6 +83,8 @@ static int yMarker = makeTaggedNULL();
 
 #define ISREADG(i) { int _i=(i); if (_i<gMax && gUsage[_i]==0) gUsage[_i]=1; }
 
+#define ISREADG_FORCE { for (int _j=gMax; _j--; ) gUsage[_j]=1; }
+
     // for g registers store Writer with -ve values: G_0..G_n == -1..-(n+1)
 #define ISWRITEG(i)                                     \
 {                                                       \
@@ -94,6 +98,8 @@ static int yMarker = makeTaggedNULL();
 #define GETREGARGY(pc) YRegToInt(getYRegArg(pc))
 
 #define ISREADY(i) { int _i=(i); if (_i<yMax && yUsage[_i]==0) yUsage[_i]=1; }
+
+#define ISREADY_FORCE { for (int _j=yMax; _j--; ) yUsage[_j]=1; }
 
 #define ISWRITEY(i)                                     \
 {                                                       \
@@ -670,6 +676,29 @@ outerLoop2:
           BREAK;
         }
 
+      case DEBUGENTRY:
+      case DEBUGEXIT:
+        {
+          // mark all registers as alive, discard "todo" list, and
+          // discard currently accumulated "writer" set so that no
+          // register is reverted to the "don't know" state at the
+          // 'outerLoop' label. Bail out of the current segment (and
+          // the liveness analysis terminates);
+          ISREAD_FORCE;
+          while (todo) {
+            Segment *n = todo->next;
+            delete todo;
+            todo = n;
+          }
+          for (Writer *w = current->writer; w; ) {
+            Writer *n = w->next;
+            delete w;
+            w = n;
+          }
+          current->writer = (Writer *) 0;
+          BREAK;
+        }
+
       default:
         // no usage of X registers
         break;
@@ -1243,6 +1272,25 @@ outerLoop2:
           CallMethodInfo *cmi = (CallMethodInfo*)getAdressArg(PC+1);
           ISREADG(cmi->regIndex);
           break;
+        }
+
+      case DEBUGENTRY:
+      case DEBUGEXIT:
+        {
+          ISREADY_FORCE;
+          ISREADG_FORCE;
+          while (todo) {
+            Segment *n = todo->next;
+            delete todo;
+            todo = n;
+          }
+          for (Writer *w = current->writer; w; ) {
+            Writer *n = w->next;
+            delete w;
+            w = n;
+          }
+          current->writer = (Writer *) 0;
+          BREAK;
         }
 
       default:
