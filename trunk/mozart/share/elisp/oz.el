@@ -768,7 +768,9 @@ If ARG is given, reindent that many lines above and below point as well."
 	       (backward-char)
 	       (looking-at ":"))
 	     (not (oz-is-quoted))
-	     (/= (point) (point-min))
+	     (progn
+	       (skip-chars-backward "? \n\t\r\v\f")
+	       (/= (point) (point-min)))
 	     (progn
 	       (backward-char)
 	       (looking-at oz-atom-or-variable-or-quote-pattern)))
