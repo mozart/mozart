@@ -32,6 +32,11 @@ import
    OS(getEnv putEnv)
    URL
    Chunk(getChunk)
+   %% for html-global-index
+   Indexer(makeIndex)
+   Gdbm at 'x-oz://contrib/gdbm'
+   File(write)
+   HTML(seq: SEQ pcdata: PCDATA toVirtualString)
 prepare
    Spec = record('in'(single char: &i type: string optional: false)
 		 'type'(single char: &t type: string optional: false)
@@ -176,6 +181,31 @@ define
 	 {OzDocToHTML.translate mono Args}
       elseof "html-stylesheets" then
 	 {OzDocToHTML.translate stylesheets Args}
+      elseof "html-global-index" then DB Xs HTML1 HTML2 in
+	 DB = {Gdbm.new read(Args.'in')}
+	 Xs = {Gdbm.entries DB}
+	 HTML1 = {Indexer.makeIndex
+		  {FoldR Xs
+		   fun {$ Prefix#(DocumentTitle#Entries) Rest}
+		      {FoldR Entries
+		       fun {$ Ands#(RURL#SectionTitle)#_ Rest}
+			  Ands#a(href: Prefix#'/'#RURL
+				 SEQ([DocumentTitle PCDATA(', ')
+				      SectionTitle]))|Rest
+		       end Rest}
+		   end nil}}
+	 {Gdbm.close DB}
+	 HTML2 = html(head(title(PCDATA('Global Index'))
+			   link(rel: stylesheet
+				type: 'text/css'
+				href: {Property.get 'ozdoc.stylesheet'}))
+		      'body'(h1(PCDATA('Global Index')) HTML1 hr()
+			     address(span('class':[version]
+					  PCDATA('Version '#
+						 {Property.get 'oz.version'}#
+						 ' ('#{Property.get 'oz.date'}#
+						 ')')))))
+	 {File.write {HTML.toVirtualString HTML2}#'\n' Args.'out'}
       elseof "chunk" then
 	 {System.showInfo
 	  {Chunk.getChunk Args.'in' Args.'out'}}
@@ -189,9 +219,10 @@ define
 	  'Command line option error: '#M#'\n'#
 	  'Usage: '#{Property.get 'application.url'}#' [options]\n'#
 	  '--in=<File>         The input SGML file.\n'#
-	  '--type=<Type>       What format to generate\n'#
+	  '--type=<Type>       What output to generate\n'#
 	  '                    (supported: '#
-	  'html-color html-mono html-stylesheets chunk).\n'#
+	  'html-color html-mono html-stylesheets\n'#
+	  '                    html-global-index chunk).\n'#
 	  '--out=<Dir>         The output directory.\n'#
 	  '--(no)autoindex     Automatically generate index entries.\n'#
 	  '--include=A1,...,An Assume `<!ENTITY & Ai "INCLUDE">\'.\n'#
