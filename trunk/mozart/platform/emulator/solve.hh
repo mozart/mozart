@@ -20,6 +20,9 @@
 // ------------------------------------------------------------------------
 //  'solve' actors; 
 
+extern BuiltinTabEntry *solveContBITabEntry;
+extern BuiltinTabEntry *solvedBITabEntry;
+
 class SolveActor : public Actor {
 public:
   OZPRINT;
