@@ -993,6 +993,37 @@ AC_DEFUN(OZ_CXX_OPTIONS, [
         $2="$ozm_out"
         ])
 
+AC_DEFUN(OZ_CXX_FIRST_OPTION, [
+        ozm_out=
+        if test -n "$1"
+        then
+            echo 'void f(){}' > oz_conftest.c
+            oz_for="$1"
+            for ozm_opt in $oz_for
+            do
+                AC_MSG_CHECKING(c++ compiler option $ozm_opt)
+                ozm_ropt=`echo $ozm_opt | sed -e 's/[[^a-zA-Z0-9_]]/_/g'`
+                AC_CACHE_VAL(oz_cv_gxxopt_$ozm_ropt,
+                    if test -z "`${CXX} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
+                        eval "oz_cv_gxxopt_$ozm_ropt=yes"
+                    else
+                        eval "oz_cv_gxxopt_$ozm_ropt=no"
+                    fi)
+                if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'}'`\" = yes"; then
+                    ozm_out="$ozm_out $ozm_opt"
+                    AC_MSG_RESULT(yes)
+                else
+                    AC_MSG_RESULT(no)
+                fi
+                if test -n "$ozm_out"; then
+                  break;
+                fi
+            done
+            rm -f oz_conftest*
+        fi
+        $2="$ozm_out"
+        ])
+
 AC_DEFUN(OZ_CC_OPTIONS, [
         ozm_out=
         if test -n "$1"
@@ -1014,6 +1045,37 @@ AC_DEFUN(OZ_CC_OPTIONS, [
                     AC_MSG_RESULT(yes)
                 else
                     AC_MSG_RESULT(no)
+                fi
+            done
+            rm -f oz_conftest*
+        fi
+        $2="$ozm_out"
+        ])
+
+AC_DEFUN(OZ_CC_FIRST_OPTION, [
+        ozm_out=
+        if test -n "$1"
+        then
+            echo 'void f(){}' > oz_conftest.c
+            oz_for="$1"
+            for ozm_opt in $oz_for
+            do
+                AC_MSG_CHECKING(cc compiler option $ozm_opt)
+                ozm_ropt=`echo $ozm_opt | sed -e 's/[[^a-zA-Z0-9_]]/_/g'`
+                AC_CACHE_VAL(oz_cv_gccopt_$ozm_ropt,
+                    if test -z "`${CC} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
+                        eval "oz_cv_gccopt_$ozm_ropt=yes"
+                    else
+                        eval "oz_cv_gccopt_$ozm_ropt=no"
+                    fi)
+                if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'}'`\" = yes"; then
+                    ozm_out="$ozm_out $ozm_opt"
+                    AC_MSG_RESULT(yes)
+                else
+                    AC_MSG_RESULT(no)
+                fi
+                if test -n "$ozm_out"; then
+                  break;
                 fi
             done
             rm -f oz_conftest*
