@@ -1794,6 +1794,9 @@ LocalThreadQueue * LocalThreadQueue::gc()
   // create neq queue queue
   LocalThreadQueue * new_ltq = new LocalThreadQueue (new_size);
 
+  // gc local thread queue thread
+  new_ltq->ltq_thr = ltq_thr->gcThread();
+
   // gc and copy entries
   for ( ; !isEmpty(); new_ltq->enqueue(dequeue()->gcThread()));
 
