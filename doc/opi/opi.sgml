@@ -620,10 +620,10 @@
 	      <<FORCE>> (<Key id="key.oz-halt"/C-. h/)
 	    <Item>
 	      Halt the Mozart sub-process.  With no prefix argument, feed
-	      an <Index/<Code proglang=oz/Application.exit//<Code proglang=oz
-	      >{Application.exit 0}</Code> statement and wait for the process
-	      to terminate.  Waiting time is limited by the user option
-	      <<oz-halt-timeout>>; after this delay, the process is sent
+	      an <Index proglang=oz class=module/Application<And>exit//<Code
+	      proglang=oz>{Application.exit 0}</Code> statement and wait for
+	      the process to terminate.  Waiting time is limited by the user
+	      option <<oz-halt-timeout>>; after this delay, the process is sent
 	      a SIGHUP if still living.
 	    <P>
 	      With <Key/C-u/ as prefix argument, send the process a SIGHUP
