@@ -131,30 +131,26 @@ ScrollbarWidth         = 10
 %% Fonts
 %%
 
-SmallFont
-SmallBoldFont
-DefaultFont
-BoldFont
-
+SmallFont # SmallBoldFont #
+DefaultFont # BoldFont =
 if Platform == WindowsPlatform then
-   SmallFont           = '-*-courier new-medium-r-*-*-12-*-*-*-*-*-*-*'
-   SmallBoldFont       = '-*-courier new-bold-r-*-*-12-*-*-*-*-*-*-*'
-   DefaultFont         = SmallFont
-   BoldFont            = SmallBoldFont
+   {New Tk.font tkInit(family:courier size:12)} #
+   {New Tk.font tkInit(family:courier weight:bold size:12)} #
+   SmallFont #
+   SmallBoldFont
 else
-   SmallFont           = '6x13'
-   SmallBoldFont       = '6x13bold'
-   DefaultFont         = '7x13'
-   BoldFont            = '7x13bold'
+   '6x13' # '6x13bold' # '7x13' # '7x13bold'
 end
 
 ThreadTreeFont         = DefaultFont
 ThreadTreeBoldFont     = BoldFont
-ButtonFont             = '-adobe-helvetica-medium-r-normal-*-10-*-*-*-*-*-*-*'
-TitleFont              = '-adobe-helvetica-bold-r-normal-*-10-*-*-*-*-*-*-*'
+ButtonFont             = {New Tk.font tkInit(family:helvetica size:10)}
+TitleFont              = {New Tk.font tkInit(family:helvetica size:10
+					     weight:bold)}
 StatusFont             = TitleFont
-HelpTitleFont          = '-adobe-helvetica-bold-r-*-*-18-*-*-*-*-*-*-*'
-HelpFont               = '-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*'
+HelpTitleFont          = {New Tk.font tkInit(family:helvetica size:18
+					     weight:bold)}
+HelpFont               = {New Tk.font tkInit(family:helvetica size:12)}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
