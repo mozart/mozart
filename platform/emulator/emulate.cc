@@ -1099,9 +1099,10 @@ void engine()
     case FAILED:
       //ozstat.timeForPropagation.incf(osUserTime()-starttime);
       HF_FAIL(OZ_mkTupleC("fail",2,
-                          builtinTab.getName((void *)
-                                             e->currentThread->getPropagator()
-                                             ->getSpawner()),
+                          OZ_atom(builtinTab.getName((void *)
+                                                     e->currentThread
+                                                     ->getPropagator()
+                                                     ->getSpawner())),
                           e->currentThread->getPropagator()->getArguments()));
 
 
