@@ -41,6 +41,7 @@ define
 	 Blurb      : unit
 	 InfoText   : unit
 	 InfoHtml   : unit
+	 Requires   : unit
 	 Verbose    : false
 	 VeryVerbose: false
 	 Quiet      : false
@@ -87,8 +88,12 @@ define
 	 MogulDatabaseGiven : false
 	 MogulPkgURL : unit
 	 MogulDocURL : unit
-	 MogulSecURL : unit
+	 MogulDBURL  : unit
 	 ConfigFile  : unit
+	 MogulPkgDir : unit
+	 MogulDocDir : unit
+	 MogulDBDir  : unit
+	 Topics      : nil
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -411,6 +416,9 @@ define
       meth set_info_html(S) InfoHtml<-S end
       meth get_info_html($) @InfoHtml end
 
+      meth get_requires($) @Requires end
+      meth set_requires(L) Requires<-L end
+
       meth set_verbose(L)
 	 case {Reverse L}
 	 of true|true|_ then VeryVerbose<-true Verbose<-true
@@ -526,17 +534,11 @@ define
 	 else @PackageGiven end
       end
 
-      meth set_publishdir(D) PublishDir<-{Path.expand D} end
+      meth set_publishdir(D)
+	 {self set_mogulpkgdir(D)}
+      end
       meth get_publishdir($)
-	 if @PublishDir==unit then
-	    if @Superman\=unit then
-	       PublishDir<-{@Superman get_publishdir($)}
-	    else
-	       PublishDir<-{Path.expand
-			    {Path.resolve {self get_prefix($)} 'pkg'}}
-	    end
-	 end
-	 @PublishDir
+	 {self get_mogulpkgdir($)}
       end
 
       meth set_archive(U) Archive<-U end
@@ -742,18 +744,64 @@ define
       end
 
       meth set_mogulpkgurl(U)
-	 MogulPkgURL <- {URL.toBase U}
+	 MogulPkgURL <- {URL.toAtom {URL.toBase U}}
       end
       meth set_moguldocurl(U)
-	 MogulDocURL <- {URL.toBase U}
+	 MogulDocURL <- {URL.toAtom {URL.toBase U}}
       end
-      meth set_mogulsecurl(U)
-	 MogulSecURL <- {URL.toBase U}
+      meth set_moguldburl(U)
+	 MogulDBURL <- {URL.toAtom {URL.toBase U}}
       end
 
-      meth get_mogulpkgurl($) @MogulPkgURL end
-      meth get_moguldocurl($) @MogulDocURL end
-      meth get_mogulsecurl($) @MogulSecURL end
-      
+      meth get_mogulpkgurl($)
+	 if @MogulPkgURL==unit then
+	    raise ozmake(mogul:nopkgurl) end
+	 else
+	    @MogulPkgURL
+	 end
+      end
+      meth get_moguldocurl($)
+	 if @MogulDocURL==unit then
+	    raise ozmake(mogul:nodocurl) end
+	 else
+	    @MogulDocURL
+	 end
+      end
+      meth get_moguldburl($)
+	 if @MogulDBURL==unit then
+	    raise ozmake(mogul:nodburl) end
+	 else
+	    @MogulDBURL
+	 end
+      end
+
+      meth set_mogulpkgdir(D) MogulPkgDir<-{Path.expand D} end
+      meth set_moguldocdir(D) MogulDocDir<-{Path.expand D} end
+      meth set_moguldbdir(D) MogulDBDir<-{Path.expand D} end
+
+      meth get_mogulpkgdir($)
+	 if @MogulPkgDir==unit then
+	    MogulPkgDir<-{Path.expand
+			  {Path.resolve {self get_prefix($)} 'pkg'}}
+	 end
+	 @MogulPkgDir
+      end
+      meth get_moguldocdir($)
+	 if @MogulDocDir==unit then
+	    MogulDocDir<-{Path.expand
+			  {Path.resolve {self get_prefix($)} 'doc'}}
+	 end
+	 @MogulDocDir
+      end
+      meth get_moguldbdir($)
+	 if @MogulDBDir==unit then
+	    MogulDBDir<-{Path.expand
+			 {Path.resolve {self get_prefix($)} 'mogul'}}
+	 end
+	 @MogulDBDir
+      end
+
+      meth set_topics(L) Topics<-L end
+      meth get_topics($) @Topics end
    end
 end

@@ -9,6 +9,7 @@ prepare
    TITLE_INSTALL   = 'ozmake [install] error'
    TITLE_MAKEFILE  = 'ozmake [makefile] error'
    TITLE_UNINSTALL = 'ozmake [uninstall] error'
+   TITLE_MOGUL     = 'ozmake [mogul] error'
    fun {OzMakeErrorFormatter E}
       case E
       of ozmake(get_uri) then
@@ -206,6 +207,10 @@ prepare
 	 error(kind : TITLE_MAKEFILE
 	       msg  : 'expected a virtual string on feature `info_html\''
 	       items: [hint(l:'Value' m:oz(V))])
+      [] ozmake(makefile:badrequires(V)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'expected a virtual string or a list of virtual strings on feature \'requires\''
+	       items: [hint(l:'Value' m:oz(V))])
       [] ozmake(makefile:badsectionvalue(F V)) then
 	 error(kind : TITLE_MAKEFILE
 	       msg  : 'expected a list of targets on feature `'#F#'\''
@@ -301,6 +306,10 @@ prepare
       [] ozmake(makefile:submakefilesnotallowed) then
 	 error(kind : TITLE_MAKEFILE
 	       msg  : 'feature `submakefiles\' not allowed in user makefile')
+      [] ozmake(makefile:badtopics(V)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'expected a virtual string or a list of virtual string on feature \'topics\''
+	       items: [hint('Value' m:oz(V))])
       [] ozmake(uninstall:missingpackageormogul) then
 	 error(kind : TITLE_UNINSTALL
 	       msg  : 'no package or makefile'
@@ -318,6 +327,39 @@ prepare
 	 error(kind : TITLE
 	       msg  : 'error while compiling Oz file '#F#VS
 	       footer:false)
+      [] ozmake(mogul:nopkgurl) then
+	 error(kind : TITLE_MOGUL
+	       msg  : 'your MOGUL url for packages is not known'
+	       items: [line('either supply it with --mogulpkgurl=URL')
+		       line('or setup a default using:')
+		       line('')
+		       line('    ozmake --config=set --mogulpkgurl=URL')
+		       line('')
+		       line('this is the URL corresponding to the directory')
+		       line('specified by --mogulpkgdir=DIR and for which')
+		       line('you can also setup a default')])
+      [] ozmake(mogul:nodocurl) then
+	 error(kind : TITLE_MOGUL
+	       msg  : 'your MOGUL url for documentation is not known'
+	       items: [line('either supply it with --moguldocurl=URL')
+		       line('or setup a default using:')
+		       line('')
+		       line('    ozmake --config=set --moguldocurl=URL')
+		       line('')
+		       line('this is the URL corresponding to the directory')
+		       line('specified by --moguldocdir=DIR and for which')
+		       line('you can also setup a default')])
+      [] ozmake(mogul:nodburl) then
+	 error(kind : TITLE_MOGUL
+	       msg  : 'your MOGUL base url for your part of the MOGUL database is not known'
+	       items: [line('either supply it with --moguldburl=URL')
+		       line('or setup a default using:')
+		       line('')
+		       line('    ozmake --config=set --moguldburl=URL')
+		       line('')
+		       line('this is the URL corresponding to the directory')
+		       line('specified by --moguldbdir=DIR and for which')
+		       line('you can also setup a default')])
       end
    end
 define

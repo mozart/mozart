@@ -16,6 +16,7 @@ import
    Uninstaller at 'Uninstaller.ozf'
    MakeGUI     at 'MakeGUI.ozf'
    Config      at 'Config.ozf'
+   Mogul       at 'Mogul.ozf'
 define
    class Manager
       from
@@ -33,6 +34,7 @@ define
 	 Uninstaller.'class'
 	 MakeGUI    .'class'
 	 Config     .'class'
+	 Mogul      .'class'
 
       meth init
 	 {self exec_init}

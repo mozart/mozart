@@ -13,7 +13,7 @@ prepare
    RULE_EXISTS = rule(tool:unit file:unit options:nil)
 
    VALID_MAKEFILE_FEATURES = [bin lib doc src depends rules uri mogul author released clean veryclean
-			      blurb info_text info_html subdirs submakefiles]
+			      blurb info_text info_html subdirs submakefiles requires topics]
 
 define
 
@@ -156,6 +156,28 @@ define
 	       raise ozmake(makefile:badinfohtml(R.info_html)) end
 	    else
 	       {self set_info_html({MakeByteString R.info_html})}
+	    end
+	 end
+
+	 %% process requires feature
+	 if {HasFeature R requires} then
+	    if {IsVirtualString R.requires} then
+	       {self set_requires([R.requires])}
+	    elseif {IsList R.requires} andthen {All R.requires IsVirtualString} then
+	       {self set_requires(R.requires)}
+	    else
+	       raise ozmake(makefile:badrequires(R.requires)) end
+	    end
+	 end
+
+	 %% process topics feature
+	 if {HasFeature R topics} then
+	    if {IsVirtualString R.topics} then
+	       {self set_topics([R.topics])}
+	    elseif {IsList R.topics} andthen {All R.topics IsVirtualString} then
+	       {self set_topics(R.topics)}
+	    else
+	       raise ozmake(makefile:badtopics(R.topics)) end
 	    end
 	 end
 
@@ -470,6 +492,8 @@ define
 	 Blurb     = {self get_blurb($)}
 	 InfoText  = {self get_info_text($)}
 	 InfoHtml  = {self get_info_html($)}
+	 Requires  = {self get_requires($)}
+	 Topics    = {self get_topics($)}
       in
 	 MAK.bin     := {self get_bin_targets($)}
 	 MAK.lib     := {self get_lib_targets($)}
@@ -482,12 +506,14 @@ define
 			 end}
 	 MAK.uri     := {self get_uri($)}
 	 MAK.mogul   := {self get_mogul($)}
-	 if Clean    \=unit then MAK.clean     := Clean end
+	 if Clean    \=unit then MAK.clean     := Clean     end
 	 if Veryclean\=unit then MAK.veryclean := Veryclean end
-	 if Author   \=unit then MAK.author    := Author end
-	 if Blurb    \=unit then MAK.blurb     := Blurb end
-	 if InfoText \=unit then MAK.info_text := InfoText end
-	 if InfoHtml \=unit then MAK.info_html := InfoHtml end
+	 if Author   \=unit then MAK.author    := Author    end
+	 if Blurb    \=unit then MAK.blurb     := Blurb     end
+	 if InfoText \=unit then MAK.info_text := InfoText  end
+	 if InfoHtml \=unit then MAK.info_html := InfoHtml  end
+	 if Requires \=unit then MAK.requires  := Requires  end
+	 if Topics   \=nil  then MAK.topics    := Topics    end
 	 MAK.released:= {Utils.dateCurrentToAtom}
 	 %% grab also all the recursive makefiles
 	 MAK.subdirs := {self get_subdirs($)}
