@@ -899,7 +899,7 @@ public:
       i = hashfold(i+step);
     }
   }
-public:
+
   TaggedRef getList() { return list; }
   int getWidth() { return width; }
 
@@ -1143,6 +1143,8 @@ public:
   TaggedRef *getCycleAddr() { return &label; }
 };
 
+
+Bool isSorted(TaggedRef list);
 
 TaggedRef sortlist(TaggedRef list,int len);
 TaggedRef mkRecord(TaggedRef label,SRecordArity ff);

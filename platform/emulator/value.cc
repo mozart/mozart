@@ -731,6 +731,21 @@ void quicksort(TaggedRef** first, TaggedRef** last)
   quicksort(i+1, last);
 }
 
+Bool isSorted(TaggedRef list)
+{
+  list = deref(list);
+  if (isNil(list)) return OK;
+
+  while(1) {
+    TaggedRef cdr = deref(tail(list));
+    if (isNil(cdr)) return OK;
+    if (featureCmp(head(list),head(cdr))!=-1) return NO;
+    list = cdr;
+  }
+  return OK;
+
+}
+
 
 // sort list using quicksort and duplicants
 TaggedRef sortlist(TaggedRef list,int len)
