@@ -119,7 +119,7 @@ FUNCTION {output.bibitem}
   label write$
   "]</A>" write$
   newline$
-  "<DD><P align=justify>" write$
+  "<DD><P>" write$
   ""
   before.all 'output.state :=
 }
