@@ -43,7 +43,8 @@ static int ninstrs = 0;
 
 static OzDictionary *labelDict = NULL;
 static OzDictionary *abstrEntryDict = NULL;
-static OzDictionary *nameDict = NULL;
+static OzDictionary *nameDict1 = NULL;
+static OzDictionary *nameDict2 = NULL;
 
 static IHashTable *ht = NULL;
 
@@ -140,7 +141,8 @@ CodeSize	: INTEGER
 		    codeArea = new CodeArea(size);
 		    labelDict = new OzDictionary(am.currentBoard());
 		    abstrEntryDict = new OzDictionary(am.currentBoard());
-		    nameDict = new OzDictionary(am.currentBoard());
+		    nameDict1 = new OzDictionary(am.currentBoard());
+		    nameDict2 = new OzDictionary(am.currentBoard());
 		  }
 		;
 
@@ -259,11 +261,11 @@ Name		: Bool
 		  {
 		    TaggedRef key = $1;
 		    TaggedRef theName;
-		    if (nameDict->getArg(key,theName) != PROCEED) {
+		    if (nameDict1->getArg(key,theName) != PROCEED) {
 		      const char *s = tagged2Literal(key)->getPrintName();
 		      NamedName *lit = NamedName::newNamedName(s);
 		      theName = makeTaggedLiteral(lit);
-		      nameDict->setArg(key,theName);
+		      nameDict1->setArg(key,theName);
 		    }
 		    $$ = theName;
 		  }
@@ -271,12 +273,12 @@ Name		: Bool
 		  {
 		    TaggedRef key = $1;
 		    TaggedRef theName;
-		    if (nameDict->getArg(key,theName) != PROCEED) {
+		    if (nameDict2->getArg(key,theName) != PROCEED) {
 		      const char *s = tagged2Literal(key)->getPrintName();
 		      NamedName *lit = NamedName::newNamedName(s);
 		      lit->setFlag(Lit_isCopyableName);
 		      theName = makeTaggedLiteral(lit);
-		      nameDict->setArg(key,theName);
+		      nameDict2->setArg(key,theName);
 		    }
 		    $$ = theName;
 		  }
@@ -368,51 +370,33 @@ Dummy		: Integer
 
 PredicateRef	: UNIT
 		  { codeArea->writeAddress(NULL); }
-		| INTEGER
-		  {
-		    AbstractionEntry *predId = NULL;
-		    TaggedRef key = $1;
-		    if (OZ_intToC(key) != 0) {
-		      TaggedRef abstrEntry;
-		      if (abstrEntryDict->getArg(key,abstrEntry) == PROCEED) {
-			int id = OZ_intToC(abstrEntry);
-			predId = (AbstractionEntry *) ToPointer(id);
-		      } else {
-			predId = new AbstractionEntry(NO);
-			abstrEntryDict->setArg(key,OZ_int(ToInt32(predId)));
-		      }
-		    }
-		    codeArea->writeAddress(predId);
-		  }
 		| PREDICATEREF
 		  {
-		    AbstractionEntry *predId = NULL;
 		    TaggedRef key = $1;
-		    if (OZ_intToC(key) != 0) {
-		      TaggedRef abstrEntry;
-		      if (abstrEntryDict->getArg(key,abstrEntry) == PROCEED) {
-			int id = OZ_intToC(abstrEntry);
-			predId = (AbstractionEntry *) ToPointer(id);
-		      } else {
-			predId = new AbstractionEntry(NO);
-			abstrEntryDict->setArg(key,OZ_int(ToInt32(predId)));
-		      }
+		    AbstractionEntry *predId;
+		    TaggedRef abstrEntry;
+		    if (abstrEntryDict->getArg(key,abstrEntry) == PROCEED) {
+		      void *p = OZ_getForeignPointer(abstrEntry);
+		      predId = (AbstractionEntry *) p;
+		    } else {
+		      predId = new AbstractionEntry(NO);
+		      abstrEntry = OZ_makeForeignPointer(predId);
+		      abstrEntryDict->setArg(key,abstrEntry);
 		    }
 		    codeArea->writeAddress(predId);
 		  }
 		| COPYABLEPREDICATEREF
 		  {
-		    AbstractionEntry *predId = NULL;
 		    TaggedRef key = $1;
-		    if (OZ_intToC(key) != 0) {
-		      TaggedRef abstrEntry;
-		      if (abstrEntryDict->getArg(key,abstrEntry) == PROCEED) {
-			int id = OZ_intToC(abstrEntry);
-			predId = (AbstractionEntry *) ToPointer(id);
-		      } else {
-			predId = new AbstractionEntry(OK);
-			abstrEntryDict->setArg(key,OZ_int(ToInt32(predId)));
-		      }
+		    AbstractionEntry *predId;
+		    TaggedRef abstrEntry;
+		    if (abstrEntryDict->getArg(key,abstrEntry) == PROCEED) {
+		      void *p = OZ_getForeignPointer(abstrEntry);
+		      predId = (AbstractionEntry *) p;
+		    } else {
+		      predId = new AbstractionEntry(OK);
+		      abstrEntry = OZ_makeForeignPointer(predId);
+		      abstrEntryDict->setArg(key,abstrEntry);
 		    }
 		    codeArea->writeAddress(predId);
 		  }
