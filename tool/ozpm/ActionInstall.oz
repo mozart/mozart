@@ -10,7 +10,7 @@ import
 	  dirPrefix     : DirPrefix
 	  pathLocalDB   : PATHLOCALDB)
    Application(exit)
-   System(showInfo:Print)
+   System(showInfo:Print show:Show)
    Pickle(load save)
 define
    fun {Install Package Force}
@@ -58,14 +58,30 @@ define
 	    {A extract(File {F toString($)})}
 	 end
 	 %% update ozpminfo
-	 {Pickle.save {Record.adjoin
+	 local
+	    ToSave={Record.adjoin
 		       {Record.adjoinAt PInfo lsla PLS}
 		       ipackage}
-	  |{List.filter LOCALDB
-	    fun{$ Entry}
-	       Entry.id\=PInfo.id %% forcing an install keeps only one version
-	    end}
-	  PATHLOCALDB}
+	    |{List.filter LOCALDB
+	      fun{$ Entry}
+		 Entry.id\=PInfo.id %% forcing an install keeps only one version
+	      end}
+	    {Show ToSave}
+	    File={PATHLOCALDB toString($)}
+	    {Show {String.toAtom File}}
+	 in
+	    {Pickle.save ToSave File}
+	 end
+
+	 
+%	 {Pickle.save {Record.adjoin
+%		       {Record.adjoinAt PInfo lsla PLS}
+%		       ipackage}
+%	  |{List.filter LOCALDB
+%	    fun{$ Entry}
+%	       Entry.id\=PInfo.id %% forcing an install keeps only one version
+%	   end}
+%	  {PATHLOCALDB toString($)}}
 	 %% result
 	 success(pkg:PInfo)
       catch ok(E) then E
