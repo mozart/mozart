@@ -847,13 +847,12 @@ inline Bool refsArrayIsMarked(RefsArray r)
 
 inline void refsArrayMark(RefsArray r, void *ptr)
 {
-  Assert((ToInt32(ptr)&RAGCTag)==0);
   storeForward((int32*)&r[-1],ToPointer(ToInt32(ptr)|RAGCTag),NO);
 }
 
 inline RefsArray refsArrayUnmark(RefsArray r)
 {
-  return (RefsArray) ToPointer(r[-1]&~(RAGCTag));
+  return (RefsArray) ToPointer(r[-1]&(~(RAGCTag)|mallocBase));
 }
 
 

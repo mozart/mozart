@@ -80,7 +80,7 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  inline int hash();  
+  inline unsigned int hash();  
 };
 
 class Atom: public Literal {
@@ -90,7 +90,7 @@ public:
   static Atom *newAtom(char *str);
   char* getPrintName() { return printName; }
   int getSize() { return getOthers(); }
-  int hash() { return ToInt32(getPrintName()); }
+  unsigned int hash() { return ToInt32(getPrintName()); }
 };
 
 
@@ -106,7 +106,7 @@ public:
   Board *getBoard(); // see am.icc
 
   int getSeqNumber() { return getOthers(); }
-  int hash() { return getSeqNumber(); }
+  unsigned int hash() { return getSeqNumber(); }
 
   Bool isOnHeap() { return (getFlags()&Lit_isNamedName)==0; }
   Bool hasGName() { return (getFlags()&Lit_hasGName); }
@@ -129,7 +129,7 @@ public:
 };
 
 
-int Literal::hash()
+unsigned int Literal::hash()
 {
   if (isAtom()) return ((Atom*)this)->hash();
   return ((Name*)this)->hash();
@@ -799,7 +799,7 @@ int featureCmp(TaggedRef a,TaggedRef b)
  * NOTE: all bigints are hashed to the same value
  */
 inline
-int featureHash(TaggedRef a)
+unsigned int featureHash(TaggedRef a)
 {
   CHECK_FEATURE(a);
   TypeOfTerm tag = tagTypeOf(a);
@@ -807,7 +807,7 @@ int featureHash(TaggedRef a)
   case LITERAL:
     return tagged2Literal(a)->hash();
   case SMALLINT:
-    return (int) a;
+    return (unsigned int) a;
   case BIGINT:
     return 75;
   default:

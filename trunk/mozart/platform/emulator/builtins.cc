@@ -5072,7 +5072,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
 #ifdef HPUX_700
   strCat(command, commandUsed, "ld -b -o ");
 #endif
-#ifdef LINUX_I486
+#ifdef LINUX
   strCat(command, commandUsed, "ld -shared -o ");
 #endif
   strCat(command, commandUsed, tempfile);
