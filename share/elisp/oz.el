@@ -870,18 +870,11 @@ the GDB commands `cd DIR' and `directory'."
   (define-key map "\M-\C-m" 'oz-feed-buffer)
   (define-key map "\M-r"    'oz-feed-region)
   (define-key map "\M-l"    'oz-feed-line)
+  (define-key map "\C-cb" 'oz-feed-line-browse)
+  (define-key map "\C-c\C-b"    'oz-feed-region-browse)
   (define-key map "\M-n"   'oz-next-buffer)
   (define-key map "\M-p"   'oz-previous-buffer)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
-;  (if oz-lucid
-;      (progn
-;	(define-key map [(control button1)]       'oz-feed-region-browse)
-;	(define-key map [(control button3)]       'oz-feed-region-browse-memory)))
-;  (if oz-gnu19
-;      (progn
-;	(define-key map [C-down-mouse-1]        'oz-feed-region-browse)
-;	(define-key map [C-down-mouse-3]        'oz-feed-region-browse-memory)))
-  
   (if oz-lucid
       (progn
 	;; otherwise this looks in the menubar like "C-TAB" "C-BS" "C_RET"
@@ -1207,6 +1200,13 @@ OZ compiler, emulator and error window")
   (interactive "r")
   (let ((contents (buffer-substring start end)))
     (oz-send-string (concat "{Browse " contents "}"))))
+
+
+(defun oz-feed-line-browse()
+  "Feed the current line into the Oz Compiler"
+  (interactive)
+   (let ((line (oz-line-pos)))
+     (oz-feed-region-browse (car line) (cdr line))))
 
 
 (defun oz-view-panel ()
