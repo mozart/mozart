@@ -380,7 +380,7 @@ public:
 
   // these member functions support automatically generated set
   // propagators
-  int card(void) const { return getCard(); }
+  int card(void) const;
 };
 
 inline OZ_FSetValue::OZ_FSetValue(void) {}
@@ -388,6 +388,10 @@ inline int OZ_FSetValue::getCard(void) const { return _card; }
 inline int OZ_FSetValue::getKnownNotIn(void) const {
   return fsethigh32 - _card;
 }
+inline int OZ_FSetValue::card(void) const {
+  return getCard();
+}
+
 
 //-----------------------------------------------------------------------------
 // OZ_FSetConstraint
@@ -508,8 +512,8 @@ public:
   OZ_Boolean operator >= (const int);
   OZ_Boolean operator |= (const OZ_FSetValue &);
   OZ_Boolean operator &= (const OZ_FSetValue &);
-  int lbc(void) const { return getCardMin(); }
-  int ubc(void) const { return getCardMax(); };
+  int lbc(void) const;
+  int ubc(void) const;
   OZ_FSetValue lb(void) const { return getGlbSet(); }
   OZ_FSetValue ub(void) const { return getLubSet(); }
 
@@ -533,6 +537,8 @@ inline int OZ_FSetConstraint::getCardSize(void) const {
 }
 inline int OZ_FSetConstraint::getCardMin(void) const { return _card_min; }
 inline int OZ_FSetConstraint::getCardMax(void) const { return _card_max; }
+inline int OZ_FSetConstraint::lbc(void) const { return getCardMin(); }
+inline int OZ_FSetConstraint::ubc(void) const { return getCardMax(); };
 
 //-----------------------------------------------------------------------------
 // class OZ_Propagator
@@ -753,7 +759,7 @@ protected:
 public:
   //
   OZ_CPIVar(void)
-    : _nb_refs(0), _state(empty_e) {}
+    : _state(empty_e), _nb_refs(0) {}
   void dropParameter(void);
   int is_dropped(void) {  return isState(drop_e); }
   int is_value(void) {  return isState(val_e); }
