@@ -37,7 +37,7 @@
     Your actual environment may be a superset of the one described by this
     document, depending on the &Oz; implementation you are running.  For
     instance, the Mozart system defines more procedures when working in the
-    interactive development system as described in <Ptr to="mozart-opi"
+    interactive development system as described in <Ptr.Extern to="ozdoc:opi"
     info="Section 4.5">.
   <Section class=unnumbered>
     <Title/Acknowledgements/

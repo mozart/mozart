@@ -98,10 +98,10 @@
       be replaced by other environments at will.
     <P>
       An environment is a mapping from variable print names to arbitrary
-      Oz values.  Initially, the environment consists of the variables defined
-      by the Oz Base Environment&nbsp;<Ptr to="mozart-base">.  Additionally,
-      the backquote variable <<`Compiler`>> provides a reference to the
-      compiler itself as described in <Ptr to="section.api.engines">.
+      Oz values.  Initially, the environment consists of the variables
+      defined by the Oz Base Environment&nbsp;<Ptr.Extern to="ozdoc:base">.
+      Additionally, the backquote variable <<`Compiler`>> provides a reference
+      to the compiler itself as described in <Ptr to="section.api.engines">.
     <Para class=apropos><Title/The Query Queue/
       Since the Oz compiler has internal state, it is not implemented
       as a function as described above, but as an active object that
