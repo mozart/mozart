@@ -24,7 +24,7 @@
  */
 
 #if defined(INTERFACE)
-#pragma implementation "marshalerDict.cc"
+#pragma implementation "marshalerDict.hh"
 #endif
 
 #include "base.hh"
