@@ -39,6 +39,26 @@
 
 //-----------------------------------------------------------------------------
 
+#ifdef DEBUG
+
+#define DEBUG_ASSERT(Cond)                                              \
+  if (! (Cond)) {                                                       \
+    OZ_error("%s:%d assertion '%s' failed",__FILE__,__LINE__,#Cond);    \
+  }
+
+#define DEBUGPRINT(A)                           \
+printf("(%s:%d) ", __FILE__, __LINE__);         \
+printf A;                                       \
+printf("\n");                                   \
+fflush(stdout)
+
+#else
+#define DEBUGPRINT(A)
+#define DEBUG_ASSERT(EXPR)
+#endif
+
+//-----------------------------------------------------------------------------
+
 #define INIT_FUNC(F_NAME) OZ_C_proc_interface * F_NAME(void)
 
 extern "C" INIT_FUNC(oz_init_module);
@@ -65,18 +85,22 @@ public:
   virtual int getIdV(void) { return _id; }
 
   virtual OZ_SituatedExtension * sCloneV(void) {
+    DEBUGPRINT("sCloneV\n");
     return new PropagatorReference(_p);
   }
 
-  virtual void sCloneRecursiveV(void) {
+  virtual void sCloneRecurseV(void) {
+    DEBUGPRINT("sCloneRecursiveV\n");
     _p = (Propagator *) ((Suspendable *) _p)->sCloneSuspendable();
   }
 
   virtual OZ_SituatedExtension * gCollectV(void) {
+    DEBUGPRINT("gCollectV\n");
     return new PropagatorReference(_p);
   }
 
-  virtual void gCollectRecursiveV(void) {
+  virtual void gCollectRecurseV(void) {
+    DEBUGPRINT("gCollectRecursiveV\n");
     _p = (Propagator *) ((Suspendable *) _p)->gCollectSuspendable();
   }
 
@@ -102,6 +126,22 @@ public:
     oz_closeDonePropagator(_p);
 
     _p = (Propagator *) NULL;
+  }
+
+  void activate(void) {
+    Suspendable * susp = (Suspendable *) _p;
+    (void) susp->wakeup(oz_currentBoard(), pc_propagator);
+    susp->setActive();
+  }
+
+  void deactivate(void) {
+    Suspendable * susp = (Suspendable *) _p;
+    susp->unsetActive();
+  }
+
+  OZ_Boolean isActive(void) {
+    Suspendable * susp = (Suspendable *) _p;
+    return (_p == (Propagator *) NULL) || susp->isActive();
   }
 };
 
@@ -175,25 +215,5 @@ public:
     return expectList(t, (PropagatorExpectMeth) &expectAny);
   }
 };
-
-//-----------------------------------------------------------------------------
-
-#ifdef DEBUG
-
-#define DEBUG_ASSERT(Cond)                                              \
-  if (! (Cond)) {                                                       \
-    OZ_error("%s:%d assertion '%s' failed",__FILE__,__LINE__,#Cond);    \
-  }
-
-#define DEBUGPRINT(A)                           \
-printf("(%s:%d) ", __FILE__, __LINE__);         \
-printf A;                                       \
-printf("\n");                                   \
-fflush(stdout)
-
-#else
-#define DEBUGPRINT(A)
-#define DEBUG_ASSERT(EXPR)
-#endif
 
 #endif /* __REFLECT__HH__ */
