@@ -11,6 +11,8 @@ local
 
    \insert configure.oz
 
+   \insert discrete-scale.oz
+
    \insert notebook.oz
 
    \insert labelframe.oz
@@ -18,6 +20,8 @@ local
    \insert pie.oz
 
    \insert load.oz
+
+   \insert dialogs.oz
 
    \insert make-notes.oz
 
