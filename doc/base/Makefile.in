@@ -7,7 +7,7 @@ SGMLSRCS = \
 	introduction.sgml typestruct.sgml values.sgml numbers.sgml \
 	literals.sgml records.sgml text.sgml proccells.sgml \
 	chunks.sgml control.sgml infix.sgml \
-	base.bib primary-types.tex
+	base.bib primary-types.tex misc.sgml
 HTMLEXTRAFILES = \
 	base.gif
 
