@@ -352,7 +352,6 @@ void inplace_quicksort(TaggedRef* first, TaggedRef* last);
 #define DictDefaultSize 4
 
 #define DictSafeFlag  1
-#define DictCacheFlag 2
 
 class OzDictionary: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
@@ -360,13 +359,14 @@ private:
   DynamicTable *table;
   int dictFlags;
   // Perdio: safe dictionaries (i.e. those used
-  // within objects) can be marshalled. Contents of
-  // cache dictionaries are not marshalled at all.
+  // within objects) can be marshalled.
 
 public:
   NO_DEFAULT_CONSTRUCTORS(OzDictionary)
-  void init(int sz = DictDefaultSize)
+  void init(int sz)
   {
+    if (sz<0)
+      sz = DictDefaultSize;
     table = DynamicTable::newDynamicTable(sz);
     dictFlags = 0;
   }
@@ -437,7 +437,7 @@ public:
       table = aux;
     }
   }
-  void removeAll()           { table->dispose(); init(); }
+  void removeAll()           { table->dispose(); init(-1); }
 
   TaggedRef keys()  { return table->getKeys(); }
   TaggedRef pairs() { return table->getPairs(); }
@@ -445,10 +445,6 @@ public:
 
   Bool isSafeDict() { return (dictFlags & DictSafeFlag); }
   void markSafe()   { dictFlags=DictSafeFlag; }
-
-  Bool isCacheDict() { return (dictFlags & DictCacheFlag); }
-  void markCache()   { dictFlags=DictCacheFlag; }
-
 
   int getSize()     { return table->numelem; }
 
