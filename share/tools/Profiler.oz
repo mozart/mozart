@@ -11,7 +11,11 @@ NewProfiler
 in
 
 \ifdef SAVE
-proc {NewProfiler
+proc
+\ifdef NEWCOMPILER
+   instantiate
+\endif
+   {NewProfiler
 \ifdef NEWSAVE
       Standard
 \endif
