@@ -450,16 +450,19 @@ outerLoop2:
 	ISREAD(GETREGARG(PC+3));
 	break;
       case TESTBOOLX:
-	PUSH(getLabelArg(PC+2));
+	ISREAD(GETREGARG(PC+1));
 	// fall through
+      case TESTBOOLY:
+      case TESTBOOLG:
+	PUSH(getLabelArg(PC+2));
+	PUSH(getLabelArg(PC+3));
+	break;
       case TESTLITERALX:
       case TESTNUMBERX:
 	ISREAD(GETREGARG(PC+1));
 	// fall through
       case TESTLITERALY:
       case TESTLITERALG:
-      case TESTBOOLY:
-      case TESTBOOLG:
       case TESTNUMBERY:
       case TESTNUMBERG:
 	PUSH(getLabelArg(PC+3));
