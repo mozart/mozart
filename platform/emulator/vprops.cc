@@ -361,7 +361,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_MEMORY_CODE,CodeArea::totalSize);
     CASE_INT(PROP_MEMORY_HEAP,ozstat.heapUsed.total+getUsedMemory());
     CASE_REC(PROP_MEMORY,"memory",
-             (6,AtomAtoms,AtomNames,AtomBuiltins,AtomFreelist,
+             (5,AtomAtoms,AtomNames,AtomFreelist,
               AtomCode,AtomHeap),
              SET_INT(AtomAtoms,ozstat.getAtomMemory());
              SET_INT(AtomNames,ozstat.getNameMemory());
