@@ -8,7 +8,7 @@ export
 import
 
    FS(value intersect reflect)
-   Tables(getVarId makeVarTable getPropId getProp makePropTable)
+   Tables(getVarId getPropId getProp)
    Aux(propName mergeSuspLists1 variableToVirtualString varReflect
        propLocation)
    Config(paramColour edgeColour)
@@ -66,7 +66,7 @@ define
                  #"\")"
               end ""}
 
-            #"])], r(\"n<"#T.1.id#">\")))"
+            #"])], r(\"vn<"#T.1.id#">\")))"
             #if T.2 == nil then "" else ","end
          end
          #{MakeEdges Hist PropTable H T.2}
@@ -76,10 +76,13 @@ define
    fun {MakeNode Hist PropTable H T}
       VarStr = {Aux.variableToVirtualString H.r}
    in
-      "l(\"n<"#H.id#">\",n(\"\",[a(\"OBJECT\",\""#VarStr
-      #"\"),a(\"COLOR\",\""#Config.paramColour#"\"),"
+      "l(\"vn<"#H.id#">\",n(\"\",["
+      #"a(\"OBJECT\",\""#VarStr#"\"),"
+      #"a(\"COLOR\",\""#Config.paramColour#"\"),"
+      #{Hist get_param_node_attr(H.id $)}
       #"m(["
       #{Hist insert_menu($)}
+      #{Hist insert_menu_mark_param(H.id VarStr $)}
       #"menu_entry(\"vg<all>\",\"Variabale graph of all variables\")"
       #",menu_entry(\"svg<"#H.id#">\",\"Single variable graph of "
       #VarStr#"\")"
@@ -92,10 +95,9 @@ define
       #if T == nil then "" else {MakeNodes Hist PropTable T.1 T.2} end
    end
 
-   fun {Make Hist Vs}
-      VarTable = {Tables.makeVarTable}
-      PropTable = {Tables.makePropTable}
-   in
+   fun {Make VarTable PropTable Hist Vs}
+      {Hist reset_mark}
+
       vg(graph:
             case {List.map Vs
                   fun {$ V}
@@ -108,10 +110,6 @@ define
                   end}
             of H|T then "["#{MakeNodes Hist PropTable H T}#"]"
             else "" end
-         varTable:
-            VarTable
-         propTable:
-            PropTable
         )
    end
 end

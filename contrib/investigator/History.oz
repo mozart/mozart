@@ -1,5 +1,15 @@
 functor
 
+import
+
+   Config(propColour:             PropColour
+          failedPropColour:       FailedPropColour
+          markedPropNodeAttr:     MarkedPropNodeAttr
+          markedParamNodeAttr:    MarkedParamNodeAttr
+          unMarkedPropNodeAttr:   UnMarkedPropNodeAttr
+          unMarkedParamNodeAttr:  UnMarkedParamNodeAttr
+         )
+
 export
 
    HistoryClass
@@ -14,9 +24,97 @@ define
          curr: ~1
          hist: {Dictionary.new}
 
+         markedProp: unit
+         markedParam: unit
+         failedProp: unit
+
+         updateMarkedProp:  false
+         updateMarkedParam: false
+
       meth init
          skip
       end
+
+%%%
+%%% Markup mechanism
+%%%
+
+      meth reset_mark
+         updateMarkedProp  <-  false
+         updateMarkedParam <- false
+      end
+
+      meth markup_prop(DaVin I)
+         markedProp <- I
+         updateMarkedProp <- true
+         {DaVin sendVS("graph(change_attr([node(\"cn<"#I#">\",[a(\"BORDER\",\""#MarkedPropNodeAttr#"\")])]))")}
+      end
+
+      meth get_mark_prop(I)
+         I = if @updateMarkedProp then @markedProp else unit end
+      end
+
+      meth unmark_prop
+         markedProp <- unit
+      end
+
+      meth get_prop_node_attr(I C)
+         C = "a(\"BORDER\",\""#if @markedProp == I
+                               then updateMarkedProp <-  true
+                                  MarkedPropNodeAttr
+                               else UnMarkedPropNodeAttr end#"\"),"
+      end
+
+      meth insert_menu_mark_prop(Id Str M)
+         M = "menu_entry(\"markprop<"#Id#">\",\"Mark "#Str#"\"),"
+         #"menu_entry(\"unmarkprop<"#Id#">\",\"Unmark\"),"
+         #"blank,"
+      end
+
+      meth mark_failed_prop(I)
+         failedProp <- I
+      end
+
+      meth unmark_failed_prop
+         failedProp <- unit
+      end
+
+      meth get_prop_node_failed(I C)
+         C = if @failedProp == I then FailedPropColour
+             else PropColour end
+      end
+
+      meth markup_param(DaVin I)
+         markedParam <- I
+         updateMarkedParam <- true
+         {DaVin sendVS("graph(change_attr([node(\"vn<"#I#">\",[a(\"BORDER\",\""#MarkedParamNodeAttr#"\")])]))")}
+      end
+
+      meth get_mark_param(I)
+         I = if @updateMarkedParam then @markedParam else unit end
+      end
+
+      meth unmark_param
+         markedParam <- unit
+      end
+
+      meth get_param_node_attr(I C)
+         C = "a(\"BORDER\",\""#if @markedParam == I
+                               then updateMarkedParam <-  true
+                                  MarkedParamNodeAttr
+                               else UnMarkedParamNodeAttr end#"\"),"
+      end
+
+
+      meth insert_menu_mark_param(Id Str M)
+         M = "menu_entry(\"markparam<"#Id#">\",\"Mark "#Str#"\"),"
+         #"menu_entry(\"unmarkparam<"#Id#">\",\"Unmark\"),"
+         #"blank,"
+      end
+
+%%%
+%%% History mechnism
+%%%
 
       meth is_prev(B)
          B = (@curr > 0)

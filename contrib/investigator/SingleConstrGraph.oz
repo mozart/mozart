@@ -5,10 +5,10 @@ export
 
 import
 
-   Tables(getVarId makeVarTable getPropId makePropTable)
+   Tables(getVarId getPropId)
    Aux(propReflect variableToVirtualString propLocation
        varReflect counterClass vectorToList memberEqProp)
-   Config(paramColour propColour edgeColour eventColour)
+   Config(paramColour edgeColour eventColour)
 
 define
 
@@ -16,14 +16,18 @@ define
 
    fun {MakeParameterEdge Hist VarTable Event P EventPs}
       VarStr = {Aux.variableToVirtualString P}
+      VarId = {Tables.getVarId VarTable P}
    in
-      "l(\"e<"#{IdCounter next($)}#">\",e(\"\", [a(\"_DIR\",\"none\"),"
+      "l(\"e<"#{IdCounter next($)}#">\",e(\"\", ["
+      #"a(\"_DIR\",\"none\"),"
       #"a(\"EDGECOLOR\",\""#Config.edgeColour#"\")],l(\"vn<"
-      #{Tables.getVarId VarTable P}#">\",n(\"\",[a(\"OBJECT\",\""
-      #VarStr#"\"), a(\"COLOR\",\""#Config.paramColour#"\"),"
-
+      #VarId#">\",n(\"\",["
+      #"a(\"OBJECT\",\""#VarStr#"\"),"
+      #"a(\"COLOR\",\""#Config.paramColour#"\"),"
+      #{Hist get_param_node_attr(VarId $)}
       #"m(["
       #{Hist insert_menu($)}
+      #{Hist insert_menu_mark_param(VarId VarStr $)}
       #"menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
       #",menu_entry(\"vg<sub>\",\"Variable graph of all variables reachable by that constraint\")"
 
@@ -105,7 +109,7 @@ define
       else skip end
    end
 
-   fun {Make Hist [C]}
+   fun {Make VarTable PropTable Hist [C]}
       ReflC = {Aux.propReflect C}
       LocC  = {Aux.propLocation C}
       ReflParams = {Map {Filter {Aux.vectorToList ReflC.params}
@@ -113,33 +117,31 @@ define
       Dict = {NewDictionary}
       ParamEvents
 
-      VarTable = {Tables.makeVarTable}
-      PropTable = {Tables.makePropTable}
+      PropId = {Tables.getPropId PropTable C}
+      Location = if LocC == unit then "" else LocC.file#":"#LocC.line end
+
    in
       {ConstraintEvents Dict ReflC ReflParams}
       ParamEvents = {Dictionary.entries Dict}
+      {Hist reset_mark}
 
       scg(graph:
-             ("[l(\"cn<"#{Tables.getPropId PropTable C}
-              #">\",n(\"\",[a(\"OBJECT\",\""
-              #ReflC.name
-              #if LocC == unit then ""
-               else "\\n"#LocC.file#":"#LocC.line
-               end
-              #"\"),a(\"COLOR\",\""#Config.propColour#"\"),"
+             ("[l(\"cn<"#PropId
+              #">\",n(\"\",["
+              #"a(\"OBJECT\",\""#ReflC.name#"\\n"#Location#"\"),"
+              #"a(\"COLOR\",\""#{Hist get_prop_node_failed(PropId $)}#"\"),"
+              #{Hist get_prop_node_attr(PropId $)}
 
               #"m(["
               #{Hist insert_menu($)}
+              #{Hist insert_menu_mark_prop(PropId
+                                           ReflC.name#" ("#Location#")" $)}
               #"menu_entry(\"cg<all>\",\"Constraint graph of all constraints\")"
               #",menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
               #",menu_entry(\"vg<sub>\",\"Variable graph of all variables reachable by that constraint\")])"
 
               #"],["
               #{MakeEventEdges Hist VarTable ReflC ParamEvents}#"]))]")
-          varTable:
-             VarTable
-          propTable:
-             PropTable
          )
    end
 end

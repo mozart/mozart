@@ -5,9 +5,9 @@ export
 
 import
 
-   Tables(getVarId makeVarTable getPropId makePropTable)
+   Tables(getVarId getPropId)
    Aux(variableToVirtualString varReflect counterClass propLocation)
-   Config(propColour paramColour edgeColour eventColour)
+   Config(paramColour edgeColour eventColour)
 
 define
 
@@ -15,19 +15,22 @@ define
 
    fun {MakePropagatorEdge Hist PropTable Event P AllPs}
       LocP = {Aux.propLocation P.reference}
+      PropId = {Tables.getPropId PropTable P.reference}
+      Location = if LocP == unit then ""
+                 else LocP.file#":"#LocP.line
+                 end
    in
       "l(\"e<"#{IdCounter next($)}
       #">\",e(\"\", [a(\"_DIR\",\"none\"), a(\"EDGECOLOR\",\""
       #Config.edgeColour
-      #"\")],l(\"cn<"#{Tables.getPropId PropTable P.reference}
-      #">\",n(\"\",[a(\"OBJECT\",\""
-      #P.name
-      #if LocP == unit then ""
-       else "\\n"#LocP.file#":"#LocP.line
-       end
-      #"\"), a(\"COLOR\",\""#Config.propColour#"\"),"
+      #"\")],l(\"cn<"#PropId
+      #">\",n(\"\",["
+      #"a(\"OBJECT\",\""#P.name#"\\n"#Location#"\"),"
+      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(PropId $)}#"\"),"
+      #{Hist get_prop_node_attr(PropId $)}
       #"m(["
       #{Hist insert_menu($)}
+      #{Hist insert_menu_mark_prop(PropId P.name#" ("#Location#")" $)}
       #"menu_entry(\"cg<all>\",\"Constraint graph of all constraints\")"
       #",menu_entry(\"cg<sub>\",\"Constraint graph of constraints reachable by that variable\")"
 
@@ -103,26 +106,25 @@ define
       end
    end
 
-   fun {Make Hist [V]}
+   fun {Make VarTable PropTable Hist [V]}
       ReflV = {Aux.varReflect V}
-      VarTable = {Tables.makeVarTable}
-      PropTable = {Tables.makePropTable}
+      VarId = {Tables.getVarId VarTable V}
+      VarStr = {Aux.variableToVirtualString ReflV.var}
    in
+      {Hist reset_mark}
+
       svg(graph:
-             ("[l(\"vn<"#{Tables.getVarId VarTable V}#">\",n(\"\",[a(\"OBJECT\",\""
-              #{Aux.variableToVirtualString ReflV.var}#"\"),"
+             ("[l(\"vn<"#VarId#">\",n(\"\",[a(\"OBJECT\",\""#VarStr#"\"),"
               #"a(\"COLOR\",\""#Config.paramColour#"\"),"
+              #{Hist get_param_node_attr(VarId $)}
               #"m(["
               #{Hist insert_menu($)}
+              #{Hist insert_menu_mark_param(VarId VarStr $)}
               #"menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
               #",menu_entry(\"cg<all>\",\"Constraint graph of all constraints\")"
               #",menu_entry(\"cg<sub>\",\"Constraint graph of constraints reachable by that variable\")])"
               #"],["
               #{MakeEventEdges Hist PropTable ReflV {Arity ReflV.susplists}}#"]))]")
-          varTable:
-             VarTable
-          propTable:
-             PropTable
           )
    end
 end
