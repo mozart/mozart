@@ -1,9 +1,33 @@
+%%%
+%%% Authors:
+%%%   Gert Smolka <smolka@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Gert Smolka, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
 
 %%
 %% Load graphical plugin for Explorer
 %%
 
-\feed 'examples/fd/knights/graphics.oz'
+declare
+[Graphics]={Module.link [{Property.get 'oz.home'}#'/examples/Knights.ozf']}
+{Graphics.add}
 
 declare
 fun {Knights N}
@@ -26,8 +50,10 @@ fun {Knights N}
 	  A = X+U
 	  B = Y+V
        in
-	  case A>=1 andthen A=<N andthen B>=1 andthen B=<N
-	  then A + (B-1)*N | In else In end
+	  if A>=1 andthen A=<N andthen B>=1 andthen B=<N then
+	     A + (B-1)*N | In
+	  else In
+	  end
        end
        nil}
    end
@@ -68,7 +94,11 @@ end
 {ExploreOne {Knights 8}}
 
 /*
+
 {Search.one.depth {Knights 18} 10 _ _}
 
 {ExploreOne {Knights 16}}  % recomputation needed to save memory
+
+{Graphics.delete}
+
 */
