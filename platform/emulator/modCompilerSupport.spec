@@ -68,6 +68,10 @@
                                      out => ['+bool'],
                                      BI  => BIisCopyablePredicateRef},
 
+    'isLocalDet'                => { in  => ['+value'],
+                                     out => ['+bool'],
+                                     BI  => BIisLocalDet},
+
     ##* Assembler support
 
     'allocateCodeBlock'         => { in  => ['+int','+[value]'],
