@@ -91,8 +91,7 @@ OTHERSRCS= \
 	statisti.cc trace.cc \
 	print.cc base.cc ozconfig.cc \
 	foreign.cc dpInterface.cc boot-manager.cc \
-	builtins.cc vprops.cc debug.cc interFault.cc \
-	scanner.cc parser.cc
+	builtins.cc vprops.cc debug.cc interFault.cc
 
 SUPPORTSRCS=\
 	stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
