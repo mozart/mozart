@@ -1,7 +1,7 @@
 OZHOME=/usr/share/gs/soft/oz
 
 SHELL=/bin/sh
-SCRIPTS = oz oz2lpr oz+
+SCRIPTS = oz oz2lpr oz+ oz2declare
 LINKS = oz- oz.compiler oz.machine
 
 help:

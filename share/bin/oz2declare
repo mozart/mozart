@@ -1,0 +1,4 @@
+#!/usr/share/gs/bin/perl -pi.bak
+
+s/\bexists\b/declare/g
+
