@@ -67,8 +67,6 @@
 
 #define _cacFix sCloneFix
 
-#define _cac_varSizes sCloneVarsizes
-
 #define _cacReallocStatic        sCloneReallocStatic
 #define _cacStoreFwd             sCloneStoreFwd
 

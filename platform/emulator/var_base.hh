@@ -75,9 +75,6 @@ enum TypeOfVariable {
 };
 
 
-extern const int varSizes[];
-
-
 #ifdef DEBUG_CHECK
 #define OZ_VAR_INVALID ((TypeOfVariable) -1)
 #endif
