@@ -1634,11 +1634,10 @@ OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 DECLAREBI_USEINLINEFUN2(BIdot,dotInline)
 
 
-// !!! second assertion deactivated because of bug in state threading
 #define CheckSelf                               \
      Assert(am.getSelf() != NULL);              \
      { Object *o = am.getSelf();                \
-       Assert(1 || o->getDeepness()>=1);        \
+       Assert(o->getDeepness()>=1);             \
      }
 
 
@@ -5916,10 +5915,13 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BImakeObject,4)
 {
-  OZ_Term initState = OZ_getCArg(0); { DEREF(initState,_1,_2); }
-  OZ_Term ffeatures = OZ_getCArg(1); { DEREF(ffeatures,_1,_2); }
-  OZ_Term clas      = OZ_getCArg(2); { DEREF(clas,_1,_2); }
-  OZ_Term obj       = OZ_getCArg(3);
+  OZ_declareArg(0,initState);
+  OZ_declareArg(1,ffeatures);
+  OZ_declareArg(2,clas);
+  OZ_declareArg(3,obj);
+  { DEREF(initState,_1,_2); }
+  { DEREF(ffeatures,_1,_2); }
+  { DEREF(clas,_1,_2); }
 
   if (!isRecord(initState)) {
     warning("makeObject: record expected: %s", toC(initState));

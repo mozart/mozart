@@ -1138,7 +1138,7 @@ public:
 inline
 void Object::release()
 {
-  if (getDeepness()==0) return; // !!!!!!!!
+  Assert(getDeepness()>0);
   if (decDeepness()==0) {
     /* wake threads */
     Assert(!isRef(threads));
