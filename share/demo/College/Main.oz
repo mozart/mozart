@@ -32,33 +32,11 @@
 
 functor
 
-require
-   DemoUrls(image)
-
-
-prepare
-   ImageNames = [DemoUrls.image#'college/title.xbm']
-
 import
-   Tk
-   TkTools
-   Application
-   FD
-   Search
-   OS
-   Open
-   Compiler
-   Browser(browse: Browse)
 
+   Controller(controller: TheController)
+   
 define
-   
-   Images = {TkTools.images ImageNames}
 
-   TopWindow
-   ControllerLabel
-   
-   \insert 'College/Schedule.oz'
-   
-   
-   {Controller}
+   {TheController}
 end
