@@ -40,6 +40,9 @@ OZL		= @OZL@
 EMACS		= emacs
 OZENGINE	= @OZENGINE@
 
+# make it possible to configure and build just the doc
+-include $(BUILDTOP)/share/Makefile.boot
+
 CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
 
 FUNCTORS = \
@@ -62,9 +65,6 @@ quick:
 depend:
 bootquick: boot-all
 boot-quick: boot-all
-
-# make it possible to configuree and build just the doc
--include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 
