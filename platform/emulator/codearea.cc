@@ -202,13 +202,17 @@ void CodeArea::printDef(ProgramCounter PC)
 {
   TaggedRef file, comment;
   int line, abspos;
-  ProgramCounter pc = nextDebugInfo(PC);
+  ProgramCounter pc;
+
+#ifdef DEBUG
+  pc = nextDebugInfo(PC);
   if (pc != NOCODE) {
     getDebugInfoArgs(pc,file,line,abspos,comment);
     message("\tnext application: file '%s', line %d, offset: %d, comment: %s, PC=%ld)\n",
             toC(file),line,abspos,toC(comment),PC);
     return;
   }
+#endif
 
   pc = definitionStart(PC);
   if (pc == NOCODE) {
