@@ -641,6 +641,8 @@ unsigned __stdcall fetchThread(void *p)
 
 void getURL(const char *url, TaggedRef out, URLAction act, Thread *th)
 {
+  //  warning("getURL: %s\n",url);
+
   char *tmpfile = newTempFile();
 
 #ifdef WINDOWS
@@ -902,7 +904,7 @@ OZ_BI_define(BISendGate,2,0)
   marshal_M_SEND_GATE(bs,val);
   int ret;
   ret = site->sendTo(bs,M_SEND_GATE,0,0);
-  // ignore ret;
+  Assert(ret == ACCEPTED);
   return PROCEED;
 
 bomb:
@@ -1002,7 +1004,8 @@ OZ_BI_define(BISendPID,4,0)
   MsgBuffer *bs;
   bs = msgBufferManager->getMsgBuffer(site);
   marshal_M_SEND_GATE(bs,val);
-  (void) site->sendTo(bs,M_SEND_GATE,0,0);
+  int ret = site->sendTo(bs,M_SEND_GATE,0,0);
+  Assert(ret == ACCEPTED);
   return PROCEED;
 } OZ_BI_end
 #endif
