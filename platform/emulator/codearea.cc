@@ -858,8 +858,12 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
         AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
         AssRegArray *list = (AssRegArray*) getAdressArg(PC+5);
         fprintf(ofile,"(x(%d) %d pid(%s ",reg,next,toC(predName));
-        fprintf(ofile,"_ %s ",toC(file));
-        fprintf(ofile,"%s %d) %p ",toC(line),predd->copyOnce,predEntry);
+        fprintf(ofile,"%d %s ",predd->getArity(),toC(file));
+        fprintf(ofile,"%s %s) ",toC(line),predd->copyOnce?"true":"false");
+        if (predEntry)
+          fprintf(ofile,"%p ",predEntry);
+        else
+          fprintf(ofile,"unit ");
 
         int size = list->getSize();
         if (size == 0)
