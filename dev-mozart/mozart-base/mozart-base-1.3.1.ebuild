@@ -1,9 +1,8 @@
 DESCRIPTION="Mozart/Oz: a multiparadigm concurrent constraint programming language"
-#SRC_URI="http://www.mozart-oz.org/download/mozart-ftp/store/1.3.0-2004-04-15/mozart-1.3.0.20040413-src.tar.gz"
-SRC_URI="http://www.sics.se/~kost/release-1-3-1/TARs/mozart-1.3.0.20040609-src.tar.gz"
+SRC_URI="http://www.mozart-oz.org/download/mozart-ftp/store/1.3.1-2004-06-09/mozart-1.3.1.20040609-src.tar.gz"
 HOMEPAGE="http://www.mozart-oz.org/"
-#KEYWORDS="x86 ppc sparc hppa"
-KEYWORDS="-*"
+KEYWORDS="x86 ppc sparc hppa"
+
 DEPEND="virtual/glibc
         virtual/emacs
         app-shells/bash
@@ -35,7 +34,7 @@ RDEPEND="virtual/glibc
         dev-lang/tk
 "
 
-S="${WORKDIR}/mozart-1.3.0.20040609"
+S="${WORKDIR}/mozart-1.3.1.20040609"
 
 src_compile() {
     
