@@ -508,50 +508,36 @@ OZ_Term OZ_CToString(char *s)
   return ret;
 }
 
-/*
- * convert an Oz string to a C string
- * return length
- *  -1 when variable
- *  -2 when error
- */
-int stringToC(OZ_Term list,char **out)
-{
-  int len = lengthOfList(list);
-  if (len < 0) {
-    return len;
-  }
 
+/*
+ * convert Oz string to C string
+ * PRE: list is a proper string
+ */
+char *stringToC(OZ_Term list, int len)
+{
   char *s = new char[len+1];
   char *p = s;
 
   for (OZ_Term tmp = list; OZ_isCons(tmp); tmp=OZ_tail(tmp)) {
     OZ_Term hh = OZ_head(tmp);
-    int i;
-    if (!OZ_isInt(hh)) {
-      delete [] s;
-      if (OZ_isVariable(hh)){
-	return -1; // SUSPENDED
-      }
-      return -2; // FAILED
-    }
-    i = OZ_intToC(hh);
-    if (i < 0 || i > 255) {
-      delete [] s;
-      return -2; // FAILED
-    }
+    Assert(OZ_isInt(hh));
+    int i = OZ_intToC(hh);
+    Assert(i >= 0 && i <= 255);
     *p++ = i;
   }
   *p = 0;
-  *out=s;
-  return len;
+  return s;
 }
 
 /* convert an Oz string to a C string */
 char *OZ_stringToC(OZ_Term list)
 {
-  char *s;
-  int i = stringToC(list,&s);
-  return i<0?0:s;
+  int len = isList(list,OK,NO);
+  if (len < 0) {
+    return 0;
+  }
+
+  return stringToC(list,len);
 }
 
 void OZ_printString(OZ_Term t) {
