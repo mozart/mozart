@@ -274,7 +274,7 @@ extern OZ_Return _FUNDECL(OZ_raiseC,(char *label,int arity,...));
 
 /* Suspending builtins */
 
-void      _FUNDECL(OZ_makeRunableThread,(OZ_CFun, OZ_Term *, int));
+void      _FUNDECL(OZ_makeRunnableThread,(OZ_CFun, OZ_Term *, int));
 OZ_Thread _FUNDECL(OZ_makeSuspendedThread,(OZ_CFun, OZ_Term *, int));
 void      _FUNDECL(OZ_addThread,(OZ_Term, OZ_Thread));
 

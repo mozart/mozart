@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.350  1996/07/26 15:17:33  mehl
+  perdio communication: see ~mehl/perdio.oz
+
   Revision 1.349  1996/07/26 14:28:39  schulte
   bug fix in exception handling of inlined functions
 
@@ -636,7 +639,7 @@ void addSusp(TaggedRef var, Thread *thr)
  */
 void AM::suspendOnVarList(Thread *thr)
 {
-  Assert(suspendVarList!=makeTaggedNULL());
+  // mm2 Assert(suspendVarList!=makeTaggedNULL());
 
   TaggedRef varList=suspendVarList;
   while (!isRef(varList)) {

@@ -1,47 +1,162 @@
+/*
+  Perdio Project, DFKI & SICS,
+  Universit"at des Saarlandes
+  Postfach 15 11 59, D-66041 Saarbruecken, Phone (+49) 681 302-5312
+  Author: scheidhr, mehl
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+  Log: $Log$
+  Log: Revision 1.2  1996/07/26 15:17:43  mehl
+  Log: perdio communication: see ~mehl/perdio.oz
+  Log:
+
+  network layer
+  ------------------------------------------------------------------------
+*/
+
+#include <time.h>
+#include <unistd.h>
+#include <stdio.h>
+
+#include "ip.hh"
+#include "perdio.hh"
+
 #include "oz.h"
 #include "am.hh"
+
+
+extern OZ_Term unmarshal(char *buf, int len);
+
+/*
+ * a site is defined by a
+ *   name: hostname.domainname
+ *   port: udp/tcp port number
+ *   time_stamp: creation time of the site
+ *
+ */
+class Site {
+public:
+  char *hostname;
+  int port;
+  time_t time_stamp;
+public:
+  Site() {};
+};
+
+int mySocket;
+Site *mySite;
+
+int siteInit()
+{
+  udpInit();
+  mySocket=createUdpPort();
+
+  mySite             = new Site();
+  mySite->hostname   = hostName();
+  mySite->port       = portNumber(mySocket);
+  mySite->time_stamp = time(0);
+  return mySocket;
+}
+
+void siteReceive()
+{
+  char *msg;
+  int len;
+  if (!udpReceive(mySocket,msg,len)) {
+    error("siteReceive: error\n");
+    return;
+  }
+  if (len==0) {
+    error("siteReceive: zero message\n");
+    return;
+  }
+
+  switch (msg[0]) {
+  case GSEND:
+    {
+      OZ_Term t = unmarshal(msg+1,len-1);
+      printf("siteReceive: GSEND '%s'\n",OZ_toC(t,10,10));
+    }
+    break;
+  default:
+    printf("siteReceive: %d bytes\n",len);
+    printf("\n--\n%s\n--\n",msg);
+  }
+}
+
+int sendToSite(char *msg, int len, Site *site)
+{
+  return sendToPort(msg,len,site->hostname,site->port);
+}
+
+int sendToPort(char *msg, int len, char *hostname, int port)
+{
+  return udpSend(mySocket,msg,len,hostname,port);
+}
+
+int myPort() { return mySite->port; }
+
+
+/*
+ * Marshal
+ */
 
 #define BSEOF -1
 
 class ByteStream {
-  unsigned char *array;
+  char *array;
   int size;
-  int pos;
+  char *pos;
+  int len;
 public:
-  ByteStream()
+  ByteStream() : len(0)
   {
+    len = 0;
     size = 1000;
-    array = new unsigned char[size];
-    pos = 0;
+    array = new char[size];
+    pos = array;
   }
-  ~ByteStream() { delete array; }
+  ByteStream(char *buf,int len) : len(len)
+  {
+    size=-1;
+    array = buf;
+    pos = buf;
+  }
+  ~ByteStream() { if (size>0) delete array; }
 
   void resize();
 
-  void reset()  { pos = 0; }
+  void reset()  { pos = array; }
 
   unsigned int get()
   {
-    return pos>=size ? BSEOF : array[pos++];
+    return pos>=array+len ? BSEOF : *pos++;
   }
-  void put(unsigned char c)
+  void put(char c)
   {
-    if (pos>=size)
+    Assert(size>0);
+    if (pos>=array+size)
       resize();
-    array[pos++] = c;
+    *pos++ = c;
+    len++;
   }
-
+  char *getPtr() { return array; }
+  int getLen() { return len; }
 };
 
 
 void ByteStream::resize()
 {
+  Assert(size>0);
   int oldsize = size;
-  unsigned char *oldarray = array;
+  char *oldarray = array;
+  char *oldpos = pos;
   size = (size*3)/2;
-  array = new unsigned char[size];
-  for (int i=0; i<pos; i++) {
-    array[i] = oldarray[i];
+  array = new char[size];
+  pos = array;
+  for (char *s=oldarray; s<pos;) {
+    *pos++ = *s++;
   }
   delete oldarray;
 }
@@ -272,6 +387,7 @@ processArgs:
   trailCycle(args);
   marshalTerm(arg0,bs);
   args++;
+  if (argno == 1) return;
   for(int i=1; i<argno-1; i++) {
     marshalTerm(*args,bs);
     args++;
@@ -365,19 +481,49 @@ processArgs:
   goto loop;
 }
 
-OZ_C_proc_begin(BIexportTerm,2)
+OZ_Term unmarshal(char *buf, int len)
 {
-  OZ_declareAtomArg(0,fileName);
+  ByteStream *bs = new ByteStream(buf,len);
+  OZ_Term ret;
+  refCounter = 0;
+  unmarshalTerm(bs,&ret);
+  delete bs;
+  return ret;
+}
 
-  return PROCEED;
+/*
+ * TEST BUILTINS
+ */
+
+OZ_C_proc_begin(BImyPort,1)
+{
+  OZ_declareArg(0,out);
+
+  return OZ_unifyInt(out,myPort());
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIimportTerm,2)
+OZ_C_proc_begin(BIgSend,3)
 {
-  OZ_declareAtomArg(0,fileName);
+  OZ_declareArg(0,value);
+  OZ_declareAtomArg(1,host);
+  OZ_declareIntArg(2,port);
 
-  return PROCEED;
+  ByteStream *bs = new ByteStream();
+
+  bs->put(GSEND);
+  refCounter = 0;
+  marshalTerm(value,bs);
+  refTrail->unwind();
+
+  int len = bs->getLen();
+  int ret = sendToPort(bs->getPtr(),len,host,port);
+  delete bs;
+  if (ret == len) return PROCEED;
+  if (ret < 0) {
+    return FAILED;
+  }
+  return OZ_raise(OZ_atom("gSend"));
 }
 OZ_C_proc_end
 
@@ -402,8 +548,8 @@ OZ_C_proc_end
 
 
 BIspec perdioSpec[] = {
-  {"exportTerm",   2, BIexportTerm, 0},
-  {"importTerm",   2, BIimportTerm, 0},
+  {"myPort",   1, BImyPort, 0},
+  {"gSend",    3, BIgSend, 0},
   {"eximportTerm", 2, BIeximportTerm, 0},
   {0,0,0,0}
 };

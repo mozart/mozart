@@ -264,6 +264,9 @@ void AM::init(int argc,char **argv)
     osWatchFD(compStream->csfileno(),SEL_READ);
   }
 
+  siteFD = siteInit();
+  osWatchFD(siteFD,SEL_READ);
+
   osInitSignals();
   osSetAlarmTimer(CLOCK_TICK/1000);
 
@@ -1117,6 +1120,11 @@ void AM::handleIO()
     do {
       loadQuery(compStream);
     } while(!compStream->bufEmpty());
+    numbOfFDs--;
+  }
+
+  if (osNextSelect(siteFD,SEL_READ)) {
+    siteReceive();
     numbOfFDs--;
   }
 
