@@ -67,6 +67,8 @@ public:
   void setSuspended() { flags |= T_Suspended; }
   void unsetSuspended() { flags &= ~T_Suspended; }
   int  isSuspended() { return (flags & T_Suspended); }
+  Bool isBelowFailed(Board *top);
+
   void pushCall(Chunk *pred, RefsArray  x, int n)
   {
     taskStack.pushCall(pred,x,n);
