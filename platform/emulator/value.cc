@@ -242,6 +242,41 @@ void Name::import(GName *name)
   setFlag(Lit_hasGName);
 }
 
+
+GName *Abstraction::globalize()
+{
+  GName *ret = getGName();
+  if (ret==NULL) {
+    ret = newGName(makeTaggedConst(this));
+    setGName(ret);
+  }
+  return ret;
+}
+
+GName *PrTabEntry::globalize()
+{
+  GName *ret = getGName();
+  if (ret==NULL) {
+    ret = newGName(this);
+    setGName(ret);
+  }
+  return ret;
+}
+
+
+Abstraction::Abstraction(TaggedRef name, int arity, GName *gn)
+  : Tertiary(0,Co_Abstraction,Te_Proxy)
+{
+  PrTabEntry *aux = findCodeGName(gn);
+  if (aux==NULL) {
+    aux = new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
+    GName *gnret = addGName(gn,aux);
+    aux->setGName(gnret);
+  }
+  pred = aux;
+  gRegs = NULL;
+}
+
 /*===================================================================
  * ConstTerm
  *=================================================================== */
@@ -287,7 +322,8 @@ TaggedRef ProcProxy::getSuspvar()
 {
   if (suspVar==makeTaggedNULL()) {
     suspVar = makeTaggedRef(newTaggedUVar(am.currentBoard));
-    getCode(this);
+    Bool getCode = (getPC()==NOCODE);
+    getClosure(this,getCode);
   }
   return suspVar;
 }

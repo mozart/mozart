@@ -64,8 +64,10 @@ enum MessageType {
   M_ASK_FOR_CREDIT,     // OTI SITE (implicit 1 credit)
   M_OWNER_CREDIT,       // OTI CREDIT
   M_BORROW_CREDIT,      // NA  CREDIT
-  M_GET_CODE,           // OTI SITE (mm2: TODO implicit 1 credit)
-  M_SEND_CODE,          // NA  N DIFs CODE
+  M_GET_CLOSUREANDCODE, // OTI SITE (mm2: TODO implicit 1 credit)
+  M_GET_CLOSURE,        // same as above
+  M_SEND_CLOSUREANDCODE,// NA  N DIFs CODE
+  M_SEND_CLOSURE,       // same as above
   M_REGISTER,           // OTI SITE (implicit 1 credit)
   M_REDIRECT,           // NA  DIF
   M_ACKNOWLEDGE,        // NA (implicit 1 credit)
@@ -425,7 +427,6 @@ public:
 /*                  GNAME TABLE
 /* ********************************************************************** */
 
-#define GNAME_GC_MARK 1
 
 const int fatIntDigits = 2;
 const unsigned int maxDigit = ~0;
@@ -475,6 +476,9 @@ int lookupSite(char *h, int p, int t);       // return sd
 int getSite(int sd,char *&h, int &p, int &t);
 
 
+#define GNAME_GC_MARK   1
+#define GNAME_PRED_MARK 2
+
 class GName {
 public:
   int32 flags;
@@ -495,22 +499,27 @@ public:
     id = *idCounter;
   }
 
+  void setPredMark() { flags |= GNAME_PRED_MARK; }
+  Bool getPredMark() { return (flags&GNAME_PRED_MARK); }
+
   void setGCMark()   { flags |= GNAME_GC_MARK; }
   Bool getGCMark()   { return (flags&GNAME_GC_MARK); }
   void resetGCMark() { flags &= ~GNAME_GC_MARK; }
+
 };
 
 class GNameTable: public GenHashTable{
   int hashFunc(GName *);
-  Bool findPlace(int ,GName *, GenHashNode *&);
 public:
   GNameTable():GenHashTable(GNAME_HASH_TABLE_DEFAULT_SIZE) {}
   void gnameAdd(GName *name, TaggedRef t);
+  void gnameAdd(GName *name, PrTabEntry *pr);
   TaggedRef gnameFind(GName *name);
 
   void gcGNameTable();
 };
 
+static GNameTable *gnameTable = NULL;
 
 int GNameTable::hashFunc(GName *gname)
 {
@@ -522,13 +531,25 @@ int GNameTable::hashFunc(GName *gname)
 }
 
 
+inline
 void GNameTable::gnameAdd(GName *name, TaggedRef t)
 {
   int hvalue=hashFunc(name);
-  GenHashNode *ghn;
   GenHashTable::htAdd(hvalue,(GenHashBaseKey*)name, (GenHashEntry *) ToPointer(t));
 }
 
+
+inline
+void GNameTable::gnameAdd(GName *name, PrTabEntry *pr)
+{
+  gnameAdd(name,ToInt32(pr));
+  name->setPredMark();
+}
+
+GName *addGName(GName *name, PrTabEntry *pr)
+{
+  gnameTable->gnameAdd(name,pr);
+}
 
 TaggedRef GNameTable::gnameFind(GName *name)
 {
@@ -545,7 +566,6 @@ TaggedRef GNameTable::gnameFind(GName *name)
 }
 
 
-static GNameTable *gnameTable = NULL;
 
 GName *newGName(TaggedRef t)
 {
@@ -557,6 +577,22 @@ GName *newGName(TaggedRef t)
   return ret;
 }
 
+GName *newGName(PrTabEntry *pr)
+{
+  GName *ret = newGName(ToInt32(pr));
+  ret->setPredMark();
+  return ret;
+}
+
+
+PrTabEntry *findCodeGName(GName *gn)
+{
+  TaggedRef aux = gnameTable->gnameFind(gn);
+  if (aux) {
+    return (PrTabEntry*) ToPointer(aux);
+  }
+  return NULL;
+}
 
 
 /* ********************************************************************** */
@@ -1427,7 +1463,7 @@ void gcOwnerTable()  { ownerTable->gcOwnerTable();}
 void gcBorrowTable() { borrowTable->gcBorrowTable();}
 void gcGNameTable()  { gnameTable->gcGNameTable();}
 
-void gcGName(GName* name) { name->setGCMark(); }
+void gcGName(GName* name) { if (name) name->setGCMark(); }
 
 void Tertiary::gcTertiary()
 {
@@ -1474,7 +1510,6 @@ void OwnerTable::gcOwnerTable()
         if (po.isTertiary()) {
           po.setTertiary((Tertiary *) (po.getTertiary()->gcConstTerm()));
         } else {
-          Assert(po.isPVariable());
           // special hack
           TaggedRef *var=(TaggedRef *) po.getRef();
           gcTagged(*var,*var);
@@ -1507,10 +1542,12 @@ void GNameTable::gcGNameTable()
   while(aux) {
     GName *gn = (GName*) aux->getBaseKey();
     if (gn->getGCMark()) {
-      TaggedRef t = (TaggedRef) ToInt32(aux->getEntry());
-      gcTagged(t,t);
+      if (!gn->getPredMark()) {
+        TaggedRef t = (TaggedRef) ToInt32(aux->getEntry());
+        gcTagged(t,t);
+        aux->setEntry((GenHashEntry*)ToPointer(t));
+      }
       gn->resetGCMark();
-      aux->setEntry((GenHashEntry*)ToPointer(t));
       aux = getNext(aux,index);
     } else {
       GenHashNode *aux1 = aux;
@@ -1556,7 +1593,9 @@ void ProcProxy::localize(RefsArray g, ProgramCounter pc)
 {
   Tertiary::localize();
   gRegs = g;
-  pred->PC = pc;
+  if (pc!=NOCODE) {
+    pred->PC = pc;
+  }
   if (OZ_unify(suspVar,NameUnit) != PROCEED) {
     warning("ProcProxy::localize: unify failed");
   }
@@ -1678,6 +1717,42 @@ public:
 /*                 MARSHALLING/UNMARSHALLING  GROUND STRUCTURES       */
 /**********************************************************************/
 
+
+#define COMPRESSEDNUMBERS
+#ifdef COMPRESSEDNUMBERS
+
+#define SBit (1<<7)
+
+inline
+void marshallNumber(unsigned int i, ByteStream *bs)
+{
+  while(i >= SBit) {
+    bs->put((i%SBit)|SBit);
+    i /= SBit;
+  }
+  bs->put(i);
+}
+
+
+
+inline
+int unmarshallNumber(ByteStream *bs)
+{
+  unsigned int ret = 0, shft = 0;
+  unsigned int c = bs->get();
+  while (c >= SBit) {
+    ret += ((c-SBit) << shft);
+    c = bs->get();
+    shft += 7;
+  }
+  ret |= (c<<shft);
+  return (int) ret;
+}
+
+#undef SBit
+
+#else
+
 const int intSize = sizeof(int32);
 
 inline
@@ -1697,6 +1772,8 @@ int unmarshallNumber(ByteStream *bs)
   unsigned int i4 = bs->get();
   return (int) (i1 + (i2<<8) + (i3<<16) + (i4<<24));
 }
+
+#endif
 
 class DoubleConv {
 public:
@@ -1743,6 +1820,16 @@ void marshallString(char *s, ByteStream *bs)
   while(*s) {
     bs->put(*s);
     s++;  }
+}
+
+void marshallGName(GName *gname, ByteStream *bs)
+{
+  marshallString(gname->site.ip,bs);
+  marshallNumber(gname->site.port,bs);
+  marshallNumber(gname->site.timestamp,bs);
+  for (int i=0; i<fatIntDigits; i++) {
+    marshallNumber(gname->id.number[i],bs);
+  }
 }
 
 void unmarshallGName(GName *gname, ByteStream *bs)
@@ -1968,9 +2055,13 @@ void marshallTertiary(int sd,Tertiary *t, ByteStream *bs, DebtRec *dr)
   }
 
   if (t->getType() == Co_Abstraction) {
-    Abstraction *pp = (Abstraction *) t;
-    marshallTerm(sd,pp->getName(),bs,dr);
-    marshallNumber(pp->getArity(),bs);
+    Abstraction *a = (Abstraction *) t;
+    GName *gname = a->globalize();
+    marshallGName(gname,bs);
+    GName *gnamecode = a->getPred()->globalize();
+    marshallGName(gnamecode,bs);
+    marshallTerm(sd,a->getName(),bs,dr);
+    marshallNumber(a->getArity(),bs);
   }
 
   trailCycle(t->getRef());
@@ -1988,16 +2079,6 @@ void marshallVariable(int sd, PerdioVar *pvar, ByteStream *bs,DebtRec *dr)
   } else {  // owner
     Assert(pvar->isManager());
     marshallOwnHead(M_VAR,i,bs);
-  }
-}
-
-void marshallGName(GName *gname, ByteStream *bs)
-{
-  marshallString(gname->site.ip,bs);
-  marshallNumber(gname->site.port,bs);
-  marshallNumber(gname->site.timestamp,bs);
-  for (int i=0; i<fatIntDigits; i++) {
-    marshallNumber(gname->id.number[i],bs);
   }
 }
 
@@ -2152,8 +2233,13 @@ loop:
 
 processArgs:
   OZ_Term arg0 = tagged2NonVariable(args);
-  trailCycle(args);
-  marshallTerm(sd,arg0,bs,dr);
+  if (!isRef(*args) && isAnyVar(*args)) {
+    marshallTerm(sd,arg0,bs,dr);
+    trailCycle(args);
+  } else {
+    trailCycle(args);
+    marshallTerm(sd,arg0,bs,dr);
+  }
   args++;
   if (argno == 1) return;
   for(int i=1; i<argno-1; i++) {
@@ -2203,9 +2289,9 @@ loop:
     {
       GName gname;
       unmarshallGName(&gname,bs);
-      TaggedRef aux = gnameTable->gnameFind(&gname);
       char *printname = unmarshallString(bs);
 
+      TaggedRef aux = gnameTable->gnameFind(&gname);
       if (aux) {
         *ret = aux;
       } else {
@@ -2336,20 +2422,33 @@ loop:
       OB_Entry *ob;
       int bi;
       int skip=unmarshallBorrow(bs,ob,bi);
-      OZ_Term name;
-      unmarshallTerm(bs,&name);
-      int arity = unmarshallNumber(bs);
+
+      GName gname;     unmarshallGName(&gname,bs);
+      GName gnamecode; unmarshallGName(&gnamecode,bs);
+      OZ_Term name = unmarshallTerm(bs);
+      int arity    = unmarshallNumber(bs);
 
       if (skip) {
-        PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:port hit");
         *ret=ob->getObject().getValue();
         return;
       }
-      PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:port miss");
-      Tertiary *tert = new ProcProxy(bi,name,arity);
-      *ret= makeTaggedConst(tert);
-      refTable->set(refCounter++,*ret);
-      ProtocolObject po(tert);
+
+      TaggedRef aux = gnameTable->gnameFind(&gname);
+      if (aux) {
+        *ret = aux;
+        return;
+      }
+
+      ProcProxy *pp = new ProcProxy(bi,name,arity,&gnamecode);
+      TaggedRef taggedPP = makeTaggedConst(pp);
+      *ret = taggedPP;
+
+      GName *copy = new GName(gname);
+      gnameTable->gnameAdd(copy,taggedPP);
+      pp->setGName(copy);
+
+      refTable->set(refCounter++,taggedPP);
+      ProtocolObject po(pp);
       ((BorrowEntry *)ob)->setBorrowObject(po);
       return;
     }
@@ -2400,7 +2499,8 @@ void siteReceive(BYTE *msg,int len)
 {
   OZ_Term recvPort;
 
-  switch (msg[0]) {
+  MessageType mt = (MessageType) msg[0];
+  switch (mt) {
   case M_SITESEND:
     {
       PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:SITE");
@@ -2493,9 +2593,11 @@ void siteReceive(BYTE *msg,int len)
       b->addAskCredit(c);
       break;
     }
-  case M_GET_CODE:
+  case M_GET_CLOSURE:
+  case M_GET_CLOSUREANDCODE:
     {
-      PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:GET_CODE");
+      Bool sendCode = (mt==M_GET_CLOSUREANDCODE);
+      PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:GET_CLOSUREANDCODE");
       ByteStream *bs=new ByteStream(msg+1,len-1);
       int na_index=unmarshallNumber(bs);
       int rsite=unmarshallSiteId(bs);
@@ -2508,7 +2610,7 @@ void siteReceive(BYTE *msg,int len)
       ProcProxy *pp = (ProcProxy*) tert;
 
       ByteStream *bs1=new ByteStream();
-      bs1->put(M_SEND_CODE);
+      bs1->put(sendCode ? M_SEND_CLOSUREANDCODE : M_SEND_CLOSURE);
       NetAddress na = NetAddress(lookupLocalSite(),na_index);
       marshallNetAddress(&na,bs1);
 
@@ -2522,7 +2624,9 @@ void siteReceive(BYTE *msg,int len)
         marshallTerm(rsite,globals[i],bs1,debtRec);
       }
 
-      marshallCode(rsite,pp->getPC(),bs1,debtRec);
+      if (sendCode) {
+        marshallCode(rsite,pp->getPC(),bs1,debtRec);
+      }
 
       refTrail->unwind();
       if(debtRec->isEmpty()) {
@@ -2536,14 +2640,16 @@ void siteReceive(BYTE *msg,int len)
       break;
     }
 
-  case M_SEND_CODE:
+  case M_SEND_CLOSURE:
+  case M_SEND_CLOSUREANDCODE:
     {
+      Bool sendCode = (mt==M_SEND_CLOSUREANDCODE);
       ByteStream *bs=new ByteStream(msg+1,len-1);
       int sd=unmarshallSiteId(bs);
       Assert(sd>=0);
       int si=unmarshallNumber(bs);
       NetAddress na=NetAddress(sd,si);
-      PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:SEND_CODE");
+      PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:SEND_CLOSUREANDCODE");
       bs->endCheck();
       BorrowEntry *b=borrowTable->find(&na);
       Assert(b!=NULL);
@@ -2558,8 +2664,7 @@ void siteReceive(BYTE *msg,int len)
         globals[i] = unmarshallTerm(bs);
       }
 
-      ProgramCounter PC = unmarshallCode(bs);
-
+      ProgramCounter PC = sendCode ? unmarshallCode(bs) : NOCODE;
       pp->localize(globals,PC);
       break;
     }
@@ -2769,16 +2874,16 @@ int sendSite(int sd,OZ_Term t){
   return PROCEED;
 }
 
-void getCode(ProcProxy *pp)
+void getClosure(ProcProxy *pp, Bool getCode)
 {
   ByteStream *bs= new ByteStream();
-  bs->put(M_GET_CODE);
+  bs->put(getCode ? M_GET_CLOSUREANDCODE : M_GET_CLOSURE);
   int bi = pp->getIndex();
   int site  =  borrowTable->getOriginSite(bi);
   int index =  borrowTable->getOriginIndex(bi);
   marshallNumber(index,bs);
   marshallMySite(bs);
-  PERDIO_DEBUG2(MSG_SENT,"MSG_SENT: GET_CODE sd:%d,index:%d",
+  PERDIO_DEBUG2(MSG_SENT,"MSG_SENT: GET_CLOSUREANDCODE sd:%d,index:%d",
                 site,index);
   int ret= reliableSend0(site,bs);
   Assert(ret==PROCEED); // TODO
@@ -2927,7 +3032,6 @@ int sendCreditBack(int sd,int OTI,Credit c)
     return am.raise(E_ERROR,OZ_atom("ip"),"uninitialized",0);   \
   }
 
-
 OZ_C_proc_begin(BIstartClient,3)
 {
   OZ_declareVirtualStringArg(0,host);
@@ -2976,6 +3080,7 @@ OZ_C_proc_begin(BIstartServer,2)
   return PROCEED;
 }
 OZ_C_proc_end
+
 
 BIspec perdioSpec[] = {
   {"startServer",    2, BIstartServer, 0},

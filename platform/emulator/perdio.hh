@@ -29,7 +29,7 @@ void networkSiteDec(int sd);
 #define tert2PortLocal(t)     ((PortLocal*) t)
 #define tert2PortProxy(t)     ((PortProxy*) t)
 
-void getCode(ProcProxy *);
+void getClosure(ProcProxy *, Bool getCode);
 
 
 void gcOwnerTable();
@@ -40,5 +40,8 @@ void gcGName(GName*);
 
 
 GName *newGName(TaggedRef t);
+GName *newGName(PrTabEntry *);
+GName *addGName(GName *, PrTabEntry *);
+PrTabEntry *findCodeGName(GName *);
 
 #endif /* __PERDIOHH */
