@@ -16,7 +16,10 @@
 #pragma interface
 #endif
 
-#include "oz_cpi.hh"
+#include "types.hh"
+#include "mem.hh"
+
+// #include "oz_cpi.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -60,17 +63,10 @@ public:
     for (SuspList * l = this; l; l = l->dispose());
   }
 
-  
-  TaggedRef DBGmakeList(void);
-
   int length(void);
   int lengthProp(void);
   
 }; // SuspList
-
-
-SuspList * installPropagators(SuspList * local_list, SuspList * glob_list,
-			      Board * glob_home);
 
 
 //-----------------------------------------------------------------------------

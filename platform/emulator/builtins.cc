@@ -2718,7 +2718,7 @@ void threadRaise(Thread *th,OZ_Term E) {
   th->cont();
 
   if (th->isSuspended())
-    th->suspThreadToRunnable();
+    am.suspThreadToRunnable(th);
   
   if (!am.isScheduledSlow(th))
     am.scheduleThread(th);
@@ -5953,7 +5953,8 @@ OZ_C_proc_begin(BIgetPrintName,2)
   default:      break;
   }
 
-  return oz_unifyAtom(out, tagged2String(t,ozconf.printDepth));
+  return oz_unifyAtom(out, "");
+  // mm2: memory leak! was: tagged2String(t,ozconf.printDepth));
 }
 OZ_C_proc_end
 

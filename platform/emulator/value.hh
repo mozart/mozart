@@ -12,6 +12,8 @@
 #pragma interface
 #endif
 
+#include "tagged.hh"
+
 #if defined(OUTLINE)
 #define INLINE
 #else
@@ -587,8 +589,8 @@ int length(OZ_Term l)
 
 /* must not match GCTAG (ie <> 13 (1101) !!!! */
 enum TypeOfConst {
-  Co_Board,
-  Co_Actor,
+  Co_UNUSED1,
+  Co_UNUSED2,
   Co_Thread,
   Co_Abstraction,
 
@@ -607,7 +609,7 @@ enum TypeOfConst {
   Co_HeapChunk,
   Co_Array,
   Co_Dictionary,    /* 12 */
-  Dummy,           // GCTAG  
+  Dummy = GCTAG,
   Co_Lock,
   Co_Class
 };

@@ -17,6 +17,9 @@
 #pragma interface
 #endif
 
+#include "types.hh"
+#include "stack.hh"
+#include "tagged.hh"
 
 extern ProgramCounter
   C_XCONT_Ptr          , // a continuation with    X registers

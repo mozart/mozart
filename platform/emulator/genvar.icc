@@ -146,8 +146,8 @@ void GenCVariable::installPropagators(GenCVariable * glob_var)
   Assert(am.shallowHeapTop || am.isLocalSVar(this) && ! am.isLocalSVar(glob_var));
   
   Board * glob_home = GETBOARD(glob_var);
-  suspList = ::installPropagators(suspList, glob_var->getSuspList(),
-				  glob_home);
+  suspList = am.installPropagators(suspList, glob_var->getSuspList(),
+				   glob_home);
 			
   switch (glob_var->getType()) {
   case FDVariable:

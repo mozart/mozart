@@ -344,7 +344,7 @@ void AM::init(int argc,char **argv)
     }
     Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, am.rootBoard);
     tt->pushCall(v, 0, 0);
-    am.scheduleThread (tt);
+    am.scheduleThread(tt);
   }
 
 #ifdef DEBUG_CHECK
@@ -420,7 +420,7 @@ Bool AM::installScript(Script &script)
   script.dealloc();
 #else
   if (ret == OK) 
-    script.dealloc ();
+    script.dealloc();
 #endif
   return ret;
 }
@@ -569,11 +569,11 @@ loop:
    */
   COUNT(varVarUnify);
   if (isNotCVar(tag1)) {
-    if ( isNotCVar(tag2) && 
-	 isMoreLocal(term2,term1) &&
-	 (!isLocalVariable(term1,termPtr1) ||
-	  (isUVar(term2) && !isUVar(term1)) ||
-	   heapNewer(termPtr2,termPtr1))) {
+    if (isNotCVar(tag2) && 
+	isMoreLocal(term2,term1) &&
+	(!isLocalVariable(term1,termPtr1) ||
+	 (isUVar(term2) && !isUVar(term1)) ||
+	 heapNewer(termPtr2,termPtr1))) {
       genericBind(termPtr2, term2, termPtr1, *termPtr1);
     } else {
       genericBind(termPtr1, term1, termPtr2, *termPtr2);
@@ -722,6 +722,139 @@ Bool AM::isBelow(Board *below, Board *above)
   }
 }
 
+
+
+inline
+Bool AM::wakeUpThread(Thread *tt, Board *home)
+{
+  Assert (tt->isSuspended());
+  Assert (tt->isRThread());
+
+  switch (isBetween(GETBOARD(tt), home)) {
+  case B_BETWEEN:
+    suspThreadToRunnable(tt);
+    scheduleThread(tt);
+    return TRUE;
+
+  case B_NOT_BETWEEN:
+    return FALSE;
+
+  case B_DEAD:
+    //  
+    //  The whole thread is eliminated - because of the invariant
+    // stated just before 'disposeSuspendedThread ()' in thread.hh;
+    tt->markDeadThread();
+    checkExtThread(tt);
+    freeThreadBody(tt);
+    return TRUE;
+
+  default:
+    Assert(0);
+    return FALSE;
+  }
+}
+
+
+inline 
+Bool AM::wakeUpBoard(Thread *tt, Board *home)
+{
+  Assert(tt->isSuspended());
+  Assert(tt->getThrType() == S_WAKEUP);
+
+  //
+  //  Note:
+  //  We use here the dereferenced board pointer, because:
+  // - normally, there should be a *single* "wakeup" suspension
+  //   per guard (TODO);
+  // - when "unit commit" takes place, the rest of (suspended?) threads
+  //   from that guard belong to the guard just above 
+  //   (or toplevel, of course) - we have to update 
+  //   the threads counter there;
+  // - garbage collector moves the pointer anyway.
+  // 
+  //  It's relevant (should be) for unit commits *only*;
+  //  Implicitly move the thread upstairs - the threads counter 
+  // should be already updated before (during unit committing);
+  Board *bb=GETBOARD(tt);
+
+  //
+  //  Do not propagate to the current board, but discard it;
+  //  Do not propagate to the board which has a runnable 
+  // "wakeup" thread;
+  // 
+  // Note that we don't need to schedule the wakeup for the board
+  // because in both cases there is a thread which will check 
+  // entailment for us;
+  if (bb == currentBoard || bb->isNervous ()) {
+#ifdef DEBUG_CHECK
+    // because of assertions in decSuspCount and getSuspCount
+    if (bb->isFailed()) {
+      tt->markDeadThread();
+      checkExtThread(tt);
+      return OK;
+    }
+#endif
+    bb->decSuspCount();
+
+    Assert(bb->getSuspCount() > 0);
+    tt->markDeadThread();
+    // checkExtThread(); // don't check here !
+    return OK;
+  }
+
+  // 
+  //  Don't propagate to the variable's home board (again, 
+  // this can happen only in the case of unit commit), but we have 
+  // to schedule a wakeup for the new thread's home board, 
+  // because it could be the last thread in it - check entailment!
+  if (bb == home && bb->getSuspCount() == 1) {
+    wakeupToRunnable(tt);
+    scheduleThread(tt);
+    return OK;
+  }
+
+  // 
+  //  General case;
+  switch (isBetween(bb, home)) {
+  case B_BETWEEN:
+    Assert(!currentBoard->isSolve() || currentSolveBoard);
+    wakeupToRunnable(tt);
+    scheduleThread(tt);
+    return OK;
+
+  case B_NOT_BETWEEN:
+    return NO;
+
+  case B_DEAD:
+    tt->markDeadThread();
+    checkExtThread(tt);
+    return OK;
+
+  default:
+    Assert(0);
+    return NO;
+  }
+}
+
+//
+//  Generic 'wakeUp';
+//  Since this method is used at the only one place, it's inlined;
+inline 
+Bool AM::wakeUp(Thread *tt, Board *home, PropCaller calledBy) {
+  switch (tt->getThrType()) {
+  case S_RTHREAD: 
+    return wakeUpThread(tt,home);
+  case S_WAKEUP:
+    return wakeUpBoard(tt,home);
+  case S_PR_THR:
+    return wakeUpPropagator(tt, home, calledBy);
+  default:
+    Assert(0);
+    return FALSE;
+  }
+  return FALSE;		// just to keep gcc happy;
+}
+
 // val is used because it may be a variable which must suspend.
 //  if det X then ... fi
 //  X = Y 
@@ -753,8 +886,8 @@ SuspList * AM::checkSuspensionList(SVariable * var,
 
 PROFILE_CODE1
   (
-   if (GETBOARD(var) == am.currentBoard) {
-     if (GETBOARD(thr) == am.currentBoard)
+   if (GETBOARD(var) == currentBoard) {
+     if (GETBOARD(thr) == currentBoard)
        FDProfiles.inc_item(from_home_to_home_hits); 
      else
        FDProfiles.inc_item(from_home_to_deep_hits);
@@ -762,7 +895,7 @@ PROFILE_CODE1
      Board * b = GETBOARD(thr);
      if (b == GETBOARD(var))
        FDProfiles.inc_item(from_deep_to_home_misses);
-     else if (am.isBetween(b, GETBOARD(var))==B_BETWEEN)
+     else if (isBetween(b, GETBOARD(var))==B_BETWEEN)
        FDProfiles.inc_item(from_deep_to_deep_hits);
      else
        FDProfiles.inc_item(from_deep_to_deep_misses);
@@ -770,9 +903,9 @@ PROFILE_CODE1
    )
   
  // already runnable susps remain in suspList
-    if (thr->isRunnable ()) {
-      if (thr->isPropagator ()) {
-	if (calledBy && !(thr->isUnifyThread ())) {
+    if (thr->isRunnable()) {
+      if (thr->isPropagator()) {
+	if (calledBy && !thr->isUnifyThread()) {
 	  switch (isBetween(GETBOARD(thr), GETBOARD(var))) {
 	  case B_BETWEEN:
 	    thr->markUnifyThread ();
@@ -792,7 +925,7 @@ PROFILE_CODE1
 	continue;
       }
     } else {
-      if (thr->wakeUp(GETBOARD(var), calledBy)) {
+      if (wakeUp(thr, GETBOARD(var), calledBy)) {
 	Assert (thr->isDeadThread () || thr->isRunnable ());
 	suspList = suspList->dispose ();
 	continue;
@@ -1041,7 +1174,7 @@ inline void mkSusp(TaggedRef *ptr, Thread *t)
  */
 void AM::reduceTrailOnShallow(Thread *thread)
 {
-  am.suspendVarList = makeTaggedNULL();
+  suspendVarList = makeTaggedNULL();
 
   while(!trail.isEmptyChunk()) {
     TaggedRef *refPtr;
@@ -1729,15 +1862,31 @@ OZ_Term AM::dbgGetLoc(Board *bb) {
 }
 
 
+void AM::checkDebugOutline(Thread *tt)
+{
+  Assert(debugmode());
+  if (currentThread && tt->getThrType() == S_RTHREAD)
+    if (currentThread == rootThread && !suspendDebug ||
+	currentThread->isTraced() && !runChildren) {
+
+      debugStreamThread(tt,currentThread);
+
+      tt->traced();
+      tt->startStepMode();
+      tt->stop();
+    }
+}
+
 //
 //  Make a runnable thread with a single task stack entry <local trhread queue>
 Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
 {
-  Thread *th = new Thread(S_RTHREAD | T_runnable | T_ltq,prio,bb);
+  Thread *th = new Thread(S_RTHREAD | T_runnable | T_ltq,prio,bb,newId());
   th->setBody(allocateBody());
-
+  bb->incSuspCount();
+  checkDebug(th);
   Assert(bb == currentBoard);
-  Assert (isInSolveDebug(bb));
+  Assert(isInSolveDebug(bb));
 
   incSolveThreads(bb);
   th->setInSolve();
@@ -1767,7 +1916,7 @@ void AM::resumeThread(Thread *th) {
 	Assert(isSetSFlag(StopThread));
 	unsetSFlag(StopThread);
       } else {
-	th->suspThreadToRunnable();
+	suspThreadToRunnable(th);
 	if (!isScheduledSlow(th))
 	  scheduleThread(th);
       }
@@ -1816,7 +1965,7 @@ int AM::commit(Board *bb, Thread *tt)
   if (!tt) {
     tt=aw->getThread();
     Assert(tt->isSuspended());
-    tt->suspThreadToRunnable();
+    suspThreadToRunnable(tt);
     scheduleThread(tt);
     DebugCheckT(aw->setThread(0));
   }
@@ -1829,12 +1978,113 @@ int AM::commit(Board *bb, Thread *tt)
   return 1;
 }
 
+// see variable.hh
+void checkExtThread(Thread *elem, Board *home)
+{
+  if (am.currentSolveBoard) {
+    am.setExtThreadOutlined(elem,home->derefBoard());
+  }
+}
+
+void AM::setExtThreadOutlined(Thread *tt, Board *varHome)
+{
+  Board *bb = currentBoard;
+  Bool wasFound = NO;
+  Assert (!varHome->isCommitted());
+
+  while (bb != varHome) {
+    Assert (!bb->isRoot());
+    Assert (!bb->isCommitted() && !bb->isFailed());
+    if (bb->isSolve()) {
+      SolveActor *sa = SolveActor::Cast(bb->getActor());
+      sa->addSuspension(tt);
+      wasFound = OK;
+    }
+    bb = bb->getParent();
+  }
+  
+  if (wasFound) tt->setExtThread();
+}
+
+//
+void AM::checkExtThreadOutlined(Thread *tt)
+{
+  Assert(tt->wasExtThread());
+
+  Board *sb = GETBOARD(tt)->getSolveBoard();
+
+  while (sb) {
+    Assert(sb->isSolve());
+    
+    SolveActor *sa = SolveActor::Cast(sb->getActor());
+    if (isStableSolve(sa)) {
+      scheduleThread(mkRunnableThreadOPT(DEFAULT_PRIORITY,sb));
+    }
+    sb = GETBOARD(sa)->getSolveBoard();
+  }
+}
+
+//
+void AM::removeExtThreadOutlined(Thread *tt)
+{
+  Assert(tt->wasExtThread());
+  
+  Board *sb = GETBOARD(tt)->getSolveBoard ();
+  
+  while (sb) {
+    Assert (sb->isSolve());
+    
+    SolveActor *sa = SolveActor::Cast(sb->getActor());
+    sa->clearSuspList(tt);
+    sb = GETBOARD(sa)->getSolveBoard();
+  }
+}
+
+
+SuspList *AM::installPropagators(SuspList * local_list, SuspList * glob_list,
+				 Board * glob_home)
+{
+  Assert((local_list && glob_list && (local_list != glob_list)) || 
+	 !local_list || !glob_list);
+
+  SuspList * aux = local_list, * ret_list = local_list;
+
+  
+  // mark up local suspensions to avoid copying them
+  while (aux) {
+    aux->getElem()->markTagged();
+    aux = aux->getNext();
+  }
+
+  // create references to suspensions of global variable
+  aux = glob_list;
+  while (aux) {
+    Thread *thr = aux->getElem();
+    
+    if (!thr->isDeadThread() && 
+	thr->isPropagator() &&
+	!thr->isTagged() && /* TMUELLER possible optimization 
+				  isTaggedAndUntag */
+	isBetween(GETBOARD(thr), glob_home) == B_BETWEEN) {
+      ret_list = new SuspList (thr, ret_list);
+    }
+    
+    aux = aux->getNext();
+  }
+
+  // unmark local suspensions 
+  aux = local_list;
+  while (aux) {
+    aux->getElem()->unmarkTagged();
+    aux = aux->getNext();
+  }
+  
+  return ret_list;
+}
+
 #ifdef OUTLINE
 #define inline
 #include "am.icc"
 #undef inline
 #endif
 
-
-
-// ---------------------------------------------------------------------
