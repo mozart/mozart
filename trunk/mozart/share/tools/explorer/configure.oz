@@ -5,10 +5,6 @@
 %%%  Last modified: $Date$ by $Author$
 %%%  Version: $Revision$
 
-%% Get our colormodel
-IsColor          = ({Tk.depth} > 1)
-
-
 %% Global default settings
 
 DefLayoutOptions = o(hide:   !False
@@ -33,7 +29,7 @@ FactorsToCm      =cTo(i: 2.54
 DefPostscriptOptions = o(width:  6.5 * FactorsToCm.i
 			 height: 9.5 * FactorsToCm.i
 			 size:   '6.5ix9i'
-			 color:  case IsColor then color else mono end
+			 color:  case Tk.isColor then color else mono end
 			 orient: 0)
 
 ErrorAspect     = 250
@@ -94,11 +90,6 @@ HalfVerSpaceF    = {IntToFloat HalfVerSpaceI}
 RootX            = 0
 RootY            = HalfVerSpaceI
 
-
-%% Get our colormodel
-IsColor          = ({Tk.depth} > 1)
-
-
 %% Sizes for the nodes and links
 CircleWidthI         = 10 * IntScaleBase
 CircleWidthF         = {IntToFloat CircleWidthI}
@@ -118,12 +109,12 @@ ImageBorder         = 1
 MaxExtent           = 12.0 * FloatScaleBase
 
 NodeBorderWidth     #
-TermNodeBorderWidth = case IsColor then 1#1 else 1#2 end
+TermNodeBorderWidth = case Tk.isColor then 1#1 else 1#2 end
 LinkWidth           = 1
 
 %% How big and how far removed should the cursor shade be?
-ShadeWidth          = case IsColor then 4 else 5 end * IntScaleBase
-ShadeScale          = case IsColor then 1.05 else 1.10 end
+ShadeWidth          = case Tk.isColor then 4 else 5 end * IntScaleBase
+ShadeScale          = case Tk.isColor then 1.05 else 1.10 end
 
 %% Set up some colors
 ChoiceColor          #
@@ -136,7 +127,7 @@ PartialFailedColor   #
 LineColor            #
 BackColor            #
 EntryColor           #
-CursorColor          = case IsColor then
+CursorColor          = case Tk.isColor then
 			  'LightSlateBlue' # % ChoiceColor
 			  'DarkSlateBlue'  # % ChoiceTermColor
 			  'MediumSeaGreen' # % EntailedColor
