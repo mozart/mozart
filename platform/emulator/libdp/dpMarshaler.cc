@@ -189,11 +189,19 @@ void unmarshalFullObject(ObjectFields *o, MsgBuffer *bs)
 }
 void unmarshalFullObjectRobust(ObjectFields *o, MsgBuffer *bs, int *error)
 {
-  TaggedRef t = newUnmarshalTermRobust(bs);
+  newUnmarshalerStartBatch();
+  unmarshalFullObjectRobustInternal(o, bs, error);
+}
+void unmarshalFullObjectRobustInternal(ObjectFields *o, MsgBuffer *bs, 
+				       int *error)
+{
+  TaggedRef t = newUnmarshalTermRobustInternal(bs);
+  if(t == 0) { *error = OK; return; }
   o->feat  =  oz_isNil(t) ? (SRecord*)NULL : tagged2SRecord(t);
-  o->state = newUnmarshalTermRobust(bs);
-  o->lock  = newUnmarshalTermRobust(bs);
-  *error = (o->feat == 0) || (o->state == 0) || (o->lock == 0);
+  o->state = newUnmarshalTermRobustInternal(bs);
+  if(o->state == 0) { *error = false; return; }
+  o->lock  = newUnmarshalTermRobustInternal(bs);
+  *error = (o->lock == 0);
 }
 
 void fillInObject(ObjectFields *of, Object *o){
@@ -206,11 +214,18 @@ void unmarshalFullObjectAndClass(ObjectFields *o, MsgBuffer *bs)
   unmarshalFullObject(o,bs);
   o->clas = newUnmarshalTerm(bs);
 }
-void unmarshalFullObjectAndClassRobust(ObjectFields *o,MsgBuffer *bs,int *error)
+void unmarshalFullObjectAndClassRobust(ObjectFields *o,MsgBuffer *bs,
+				       int *error)
+{
+  newUnmarshalerStartBatch();
+  unmarshalFullObjectAndClassRobustInternal(o,bs,error);
+}  
+void unmarshalFullObjectAndClassRobustInternal(ObjectFields *o,MsgBuffer *bs,
+					       int *error)
 {
   int e;
-  unmarshalFullObjectRobust(o,bs,&e);
-  o->clas = newUnmarshalTermRobust(bs);
+  unmarshalFullObjectRobustInternal(o,bs,&e);
+  o->clas = newUnmarshalTermRobustInternal(bs);
   *error = (e || (o->clas == 0));
 }
 

@@ -39,9 +39,10 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
 #endif
   PD((UNMARSHAL,"Borrow"));
 #ifdef ROBUST_UNMARSHALER
-  int e1,e2,e3,e4;
-  DSite*  sd=unmarshalDSiteRobust(bs,&e1);
-  int si=unmarshalNumberRobust(bs,&e2);
+  DSite*  sd=unmarshalDSiteRobust(bs,error);
+  if(*error) return 0;
+  int si=unmarshalNumberRobust(bs,error);
+  if(*error) return 0;
 #else
   DSite*  sd=unmarshalDSite(bs);
   int si=unmarshalNumber(bs);
@@ -73,7 +74,8 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
   if (b!=NULL) {
     PD((UNMARSHAL,"borrow found"));
 #ifdef ROBUST_UNMARSHALER
-    cred = unmarshalCreditRobust(bs,&e3);    
+    cred = unmarshalCreditRobust(bs,error);    
+    if(*error) return 0;
 #else
     cred = unmarshalCredit(bs);    
 #endif
@@ -84,7 +86,8 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
     else{
       Assert(mt==DIF_SECONDARY);
 #ifdef ROBUST_UNMARSHALER
-      DSite* s=unmarshalDSiteRobust(bs,&e4);
+      DSite* s=unmarshalDSiteRobust(bs,error);
+      if(*error) return 0;
 #else
       DSite* s=unmarshalDSite(bs);
 #endif
@@ -92,7 +95,8 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
     ob = b;
     return b->getValue();}
 #ifdef ROBUST_UNMARSHALER
-  cred = unmarshalCreditRobust(bs,&e3);    		
+  cred = unmarshalCreditRobust(bs,error);    		
+  if(*error) return 0;
 #else
   cred = unmarshalCredit(bs);    		
 #endif
@@ -106,7 +110,8 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
     return 0;}
   Assert(mt==DIF_SECONDARY);
 #ifdef ROBUST_UNMARSHALER
-  DSite* site = unmarshalDSiteRobust(bs,&e3);    		  
+  DSite* site = unmarshalDSiteRobust(bs,error);    		  
+  if(*error) return 0;
 #else
   DSite* site = unmarshalDSite(bs);    		  
 #endif
@@ -115,9 +120,6 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
   PD((UNMARSHAL,"borrowed miss"));
   b->moreCredit(); // The Borrow needs some of the real McCoys
   ob=b;
-#ifdef ROBUST_UNMARSHALER
-  *error = e1 || e2 || e3;
-#endif
   return 0;
 }
 

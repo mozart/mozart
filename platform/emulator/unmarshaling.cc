@@ -46,9 +46,9 @@ extern void makeFSetValue(OZ_Term,OZ_Term*);
 //
 //
 #ifdef ROBUST_UNMARSHALER
-OZ_Term newUnmarshalTermRobust(MsgBuffer *bs)
+OZ_Term newUnmarshalTermRobustInternal(MsgBuffer *bs)
 #else
-OZ_Term newUnmarshalTerm(MsgBuffer *bs)
+OZ_Term newUnmarshalTermInternal(MsgBuffer *bs)
 #endif
 {
   Assert(isInitialized);
@@ -64,6 +64,7 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
       MarshalTag tag = (MarshalTag) bs->get();
       dif_counter[tag].recv();	// kost@ : TODO: needed?
       //      printf("tag: %d\n", tag);
+
       switch(tag) {
 
       case DIF_SMALLINT: 
@@ -409,10 +410,14 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
       case DIF_VAR: 
 	{
 #ifdef ROBUST_UNMARSHALER
-	  int e1,e2;
-	  OZ_Term v = (*unmarshalVarRobust)(bs, FALSE, FALSE, &e1);
-	  int refTag = unmarshalRefTagRobust(bs, b, &e2);
-	  if(e1 || e2) {
+	  int e;
+	  OZ_Term v = (*unmarshalVarRobust)(bs, FALSE, FALSE, &e);
+	  if(e) {
+	    (void) b->finish();
+	    return 0;
+	  }
+	  int refTag = unmarshalRefTagRobust(bs, b, &e);
+	  if(e) {
 	    (void) b->finish();
 	    return 0;
 	  }
@@ -687,7 +692,7 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
 #endif
 	}
 
-      case DIF_EOF:
+      case DIF_EOF: 
 	return (b->finish());
 
       default:
