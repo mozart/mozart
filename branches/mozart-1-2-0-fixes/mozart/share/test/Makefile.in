@@ -122,7 +122,8 @@ bootstrap:
 
 install:
 
-check zcheck: oztest
+#oztest
+check zcheck:
 	$(OZENGINE) ./oztest $(OZTESTOPTS)
 
 dirs:
@@ -179,11 +180,6 @@ Makefile: Makefile.in ../config.status
 	cd .. && ./config.status --recheck
 
 depend:
-
-tools/gump.ozf: gump-examples
-
-gump-examples:
-	ln -s $(SRCDIR)/../tools/gump/examples $@
 
 %.so-$(OZPLATFORM): %.o
 	$(OZTOOL) ld $(LDFLAGS) $< -o $@
