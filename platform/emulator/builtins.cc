@@ -5659,7 +5659,8 @@ OZ_BI_define(BIdelAllFastGroup,1,1)
  ******************************************************************** */
 
 /*
- * This function should subsume various other hacks, e.g. BIprintname,
+ * This function should subsume various other hacks,
+ * e.g. BIprintname, BIstatus, BItermtype, ...
  * Inspect the toplevel of an Oz value
  *
  * returns:
