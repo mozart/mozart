@@ -14,6 +14,7 @@
 <!ENTITY compiler           SYSTEM "compiler.sgml">
 <!ENTITY debugger           SYSTEM "debugger.sgml">
 <!ENTITY profiler           SYSTEM "profiler.sgml">
+<!ENTITY oztool             SYSTEM "oztool.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY lt "<">
@@ -54,6 +55,8 @@
     <Meta name="html.split"       value="section.linker.pickling">
     <Meta name="html.split"       value="section.linker.misc">
 
+    <Meta name="html.split"       value="chapter.oztool">
+
     <Meta name="html.split.bib"   value="">
     <Meta name="html.split.index" value="">
     <Meta name="html.split.toc"   value="">
@@ -61,7 +64,7 @@
 
     <Meta name=ozversion value="3.0">
     <Meta name=status value=revised>
-    <Title/Tools/
+    <Title/Oz Shell Utilities/
     <Author.Extern to="author.db" key="Denys.Duchier">
     <Author.Extern to="author.db" key="Christian.Schulte">
     <Abstract>
@@ -73,7 +76,16 @@
       &linker;
       &debugger;
       &profiler;
-
+    &oztool;
 
   <Back>
 </Book>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "book.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
