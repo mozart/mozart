@@ -547,18 +547,18 @@ void AM::decSolveThreads (Board *bb)
 // --> if det Y then ... fi
 
 SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
-				  SuspList * suspList,
-				  TaggedRef term, SVariable * rightVar)
+				   SuspList * suspList,
+				   TaggedRef term, SVariable * rightVar,
+				   Bool unifyingVar)
 {
   SuspList * retSuspList = NULL;
-#ifdef DEBUG_CHECK
+
   // see the reduction of solve actor by the enumeration; 
-  if (dontPropagate == OK)
-    return (suspList);
-#endif
+  DebugCheck(dontPropagate == OK, return (suspList));
+
   
   while (suspList) {
-    Suspension* susp = suspList->getElem();
+    Suspension * susp = suspList->getElem();
 
     // suspension has already been marked 'dead' 
     if (susp->isDead()) {
@@ -577,14 +577,18 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
     // already propagated susps remain in suspList
     if (! susp->isPropagated()) {      
       if ((suspList->checkCondition(taggedvar, term)) &&
-	  (susp->wakeUp(var, rightVar))) {
+	  (susp->wakeUp(var->getHome(), rightVar))) {
         // dispose only non-resistant susps
 	if (! susp->isResistant()) {
 	  suspList = suspList->dispose();
 	  continue;
+	} else if (unifyingVar) {
+	  susp->setEqvSusp();
 	}
       }
-    }
+    } else if (unifyingVar && ! susp->isEqvSusp())
+      if (isBetween(susp->getNode(), var->getHome()))
+	susp->setEqvSusp();
     
     // susp cannot be woken up therefore relink it
     SuspList * first = suspList;
@@ -633,7 +637,8 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
     SVariable *svar = (termPtr && isNotCVar(tag)) ? 
       (taggedBecomesSuspVar(termPtr)) : NULL;
     // variables are passed as references
-    checkSuspensionList(var, svar ? makeTaggedRef(termPtr) : term, svar);
+    checkSuspensionList(var, svar ? makeTaggedRef(termPtr) : term,
+			svar, svar != NULL);
 #ifdef DEBUG_CHECK
     Board *hb = (tagged2SuspVar(var)->getHome ())->getBoardDeref ();
     if (hb->isReflected () == OK)

@@ -258,13 +258,13 @@ void updateExtSuspension(Board *varHome, Suspension *susp)
 
 inline
 void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
-			     SVariable *rightVar)
+			     SVariable * rightVar, Bool unifyingVar)
 {
   SVariable* var = tagged2SuspVar(taggedvar);
   SuspList *from = var->getSuspList();
   var->unlinkSuspList();
   SuspList *suspList =
-    checkSuspensionList(var, taggedvar, from, term, rightVar);
+    checkSuspensionList(var, taggedvar, from, term, rightVar, unifyingVar);
   var->appendSuspList(suspList);
 }
 
