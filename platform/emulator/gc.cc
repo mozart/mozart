@@ -2010,8 +2010,6 @@ Bool Board::gcIsAlive()
   Actor *aa=bb->getActor();
   if (aa->isCommitted()) return NO;
   if (GCISMARKED(*(aa->getGCField()))) return OK;
-  if (opMode == IN_TC && aa->isWait() && WaitActor::Cast(aa)->hasUnsetBoard())
-    return NO;
   bb=aa->getBoardFast();
   goto loop;
 }

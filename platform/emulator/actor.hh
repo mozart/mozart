@@ -140,22 +140,16 @@ public:
 
   void addChildInternal(Board *n);
   void failChildInternal(Board *n);
-  Board *getChild();
+  Board *getLastChild() { Board* b=childs[0]; childs[0] = NULL; return b; }
   // returns the first created child; this child is unlinked from the actor;
-  Board *getChildRef ();
+  Board *getChildRef() { return childs[0]; }
   // the same, but a child is not unlinked from the actor; 
   Board *getChildRefAt(int i) { return childs[i]; }
-  void decChilds () { childCount--; }    // for search; 
   /* see also: isLeaf() */
   int getChildCount() { return childCount; };
   Bool hasOneChild() { return ((childCount == 1 && !hasNext()) ? OK : NO); }
   Bool hasNoChilds() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
   int selectChildren(int l, int r);
-
-  // during copying: unlink the distributed actor
-  void unsetBoard() { board = 0; }
-  Bool hasUnsetBoard() { return board == 0; }
-  void setBoard(Board *bb) {  board = bb; }
 };
 
 // ------------------------------------------------------------------------
