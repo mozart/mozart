@@ -113,7 +113,7 @@ local
       %% can be updated lateron. If an already dirty node is found, the
       %% invariant holds that the entire path to the root node is dirty
       meth dirtyUp
-	 case @isDirty then skip else
+	 if @isDirty then skip else
 	    isDirty <- true
 	    {self.mom dirtyUp}
 	 end
@@ -129,7 +129,7 @@ local
       meth hide
 	 {self deleteTree}
 	 Inner,dirtyUp
-	 case @isHidden then
+	 if @isHidden then
 	    isHidden <- false
 	 else
 	    isHidden <- true
@@ -142,7 +142,7 @@ local
 	 shape    <- nil
 	 %% The invariant guarantees that we do not have to take care
 	 %% of still hidden subtrees
-	 case @isHidden then skip else {HideKids @kids} end
+	 if @isHidden then skip else {HideKids @kids} end
       end
 
       %%
@@ -159,10 +159,9 @@ local
 
       meth !UnhideTree
 	 isDirty  <- true
-	 case @isHidden then
+	 if @isHidden then
 	    isHidden <- false
 	    {self deleteTree}
-	 else skip
 	 end
 	 {UnhideTreeKids @kids}
       end
@@ -171,23 +170,21 @@ local
       %% Hide failed subtree
       %%
       meth isFailedHidable($)
-	 case @isHidden then false
-	 elsecase @choices>0 orelse @isSolBelow then
+	 if @isHidden then false
+	 elseif @choices>0 orelse @isSolBelow then
 	    {IsFailedHidableKids @kids}
 	 else true
 	 end
       end
 
       meth hideFailed
-	 case Inner,HideFailed($) then {self.mom dirtyUp}
-	 else skip
-	 end
+	 if Inner,HideFailed($) then {self.mom dirtyUp} end
       end
 
       meth !HideFailed($)
-	 case @isHidden then false
-	 elsecase @choices>0 orelse @isSolBelow then
-	    case {HideFailedKids @kids} then isDirty <- true  true
+	 if @isHidden then false
+	 elseif @choices>0 orelse @isSolBelow then
+	    if {HideFailedKids @kids} then isDirty <- true  true
 	    else false
 	    end
 	 else
@@ -203,7 +200,7 @@ local
       %% Unhide all but failed subtrees
       %%
       meth isButFailedUnhidable($)
-	 case @isHidden then
+	 if @isHidden then
 	    @choices>0 orelse @isSolBelow
 	 else {IsButFailedUnhidableKids @kids}
 	 end
@@ -215,7 +212,7 @@ local
       end
       
       meth !UnhideButFailed
-	 case @isHidden then
+	 if @isHidden then
 	    %% Since we know (from the testing routines above) that there is
 	    %% indeed something to unhide we do not have to analyse this node
 	    %% further!
@@ -229,7 +226,7 @@ local
 
       meth !UnhideButFailedBelowHidden
 	 isDirty <- true
-	 case @choices>0 orelse @isSolBelow then
+	 if @choices>0 orelse @isSolBelow then
 	    isHidden <- false
 	    {UnhideButFailedBelowHiddenKids @kids}
 	 else isHidden <- true
@@ -240,18 +237,17 @@ local
       %% Hide all not yet drawn nodes
       %%
       meth hideUndrawn
-	 case @isDirty then
-	    case @isHidden then skip else
-	       case @item>0 then {HideUndrawn @kids}
+	 if @isDirty then
+	    if @isHidden then skip else
+	       if @item>0 then {HideUndrawn @kids}
 	       else isHidden <- true Inner,Hide
 	       end
 	    end
-	 else skip
 	 end
       end
 
       meth getOverHidden(Cursor $)
-	 {self.mom getOverHidden(case @isHidden then self else Cursor end $)}
+	 {self.mom getOverHidden(if @isHidden then self else Cursor end $)}
       end
 	    
       meth isHidden($)

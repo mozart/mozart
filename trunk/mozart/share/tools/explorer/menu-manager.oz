@@ -24,15 +24,15 @@ local
 
    local
       fun {FindKey K|Kr D V}
-	 case {Dictionary.get D K}.3==V then K else {FindKey Kr D V} end
+	 if {Dictionary.get D K}.3==V then K else {FindKey Kr D V} end
       end
       fun {FindNext I D}
-	 case {Dictionary.member D I} then I else {FindNext I-1 D} end
+	 if {Dictionary.member D I} then I else {FindNext I-1 D} end
       end
       proc {DeleteAll Ks D}
 	 case Ks of nil then skip
 	 [] K|Kr then
-	    case K<2 then skip else
+	    if K>=2 then
 	       {{Dictionary.get D K}.2 tkClose}
 	       {Dictionary.remove D K}
 	    end
@@ -80,10 +80,10 @@ local
 	 in
 	    {Dictionary.remove self.dict Num}
 	    {Entry tkClose}
-	    case Num==@cur then
+	    if Num==@cur then
 	       cur <- {FindNext Num-1 self.dict}
 	       Actions,tkSet(@cur)
-	    else skip end
+	    end
 	 end
 
 	 meth deleteAll
@@ -103,8 +103,10 @@ local
    proc {DoEntries M Es W}
       case Es of nil then skip
       [] E|Er then {DoEntries M E W} {DoEntries M Er W}
-      elsecase {IsAtom Es} then {M.Es W}
-      else {DoEntries M.{Label Es} Es.1 W}
+      else
+	 if {IsAtom Es} then {M.Es W}
+	 else {DoEntries M.{Label Es} Es.1 W}
+	 end
       end
    end
 
@@ -341,7 +343,7 @@ in
       end
       
       meth state(B Es)
-	 case B then {DoEntries self.menu Es tk(entryconf state:normal)}
+	 if B then {DoEntries self.menu Es tk(entryconf state:normal)}
 	 else {DoEntries self.menu Es tk(entryconf state:disabled)}
 	 end
       end

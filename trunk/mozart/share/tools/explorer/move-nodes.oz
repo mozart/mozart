@@ -31,13 +31,13 @@ local
    
    fun {GetRight Ns M}
       case Ns of nil then nil
-      [] N|Nr then case N==M then Nr else {GetRight Nr M} end
+      [] N|Nr then if N==M then Nr else {GetRight Nr M} end
       end
    end
    
    fun {GetLeft Ns M}
       case Ns of nil then nil
-      [] N|Nr then case N==M then nil else N|{GetLeft Nr M} end
+      [] N|Nr then if N==M then nil else N|{GetLeft Nr M} end
       end
    end
       
@@ -72,9 +72,11 @@ local
    fun {FindBackBelow Ns}
       case Ns of nil then false
       [] N|Nr then
-	 case N.kind\=choose then {FindBackBelow Nr}
-	 elsecase {N BackBelow($)} of false then {FindBackBelow Nr}
-	 elseof B then B
+	 if N.kind\=choose then {FindBackBelow Nr}
+	 else
+	    case {N BackBelow($)} of false then {FindBackBelow Nr}
+	    elseof B then B
+	    end
 	 end
       end
    end
@@ -84,13 +86,13 @@ local
       
       meth !NextSolBelow($)
 	 @isSolBelow andthen
-	 case @isHidden then self else {FindNextSolBelow @kids} end
+	 if @isHidden then self else {FindNextSolBelow @kids} end
       end
       
       meth !NextSol(N $)
 	 case
-	    case @isSolBelow then
-	       case @isHidden then self
+	    if @isSolBelow then
+	       if @isHidden then self
 	       else {FindNextSolBelow {GetRight @kids N}}
 	       end
 	    else false
@@ -101,8 +103,8 @@ local
       end
       
       meth nextSol($)
-	 case @isSolBelow then
-	    case @isHidden then self
+	 if @isSolBelow then
+	    if @isHidden then self
 	    else ChooseNode,NextSolBelow($)
 	    end
 	 else {self.mom NextSol(self $)}
@@ -111,15 +113,15 @@ local
       
       meth !PrevSolBelow($)
 	 @isSolBelow andthen
-	 case @isHidden then self
+	 if @isHidden then self
 	 else {FindPrevSolBelow {Reverse @kids}}
 	 end
       end
       
       meth !PrevSol(N $)
 	 case
-	    case @isSolBelow then
-	       case @isHidden then self
+	    if @isSolBelow then
+	       if @isHidden then self
 	       else {FindPrevSolBelow {Reverse {GetLeft @kids N}}}
 	       end
 	    else false
@@ -136,7 +138,7 @@ local
       meth leftMost($)
 	 Ks = @kids
       in
-	 case Ks==nil orelse @isHidden then self
+	 if Ks==nil orelse @isHidden then self
 	 else {Ks.1 leftMost($)}
 	 end
       end
@@ -144,29 +146,31 @@ local
       meth rightMost($)
 	 Ks = @kids
       in
-	 case Ks==nil orelse @isHidden then self
+	 if Ks==nil orelse @isHidden then self
 	 else {{List.last Ks} rightMost($)}
 	 end
       end
       
       meth !BackBelow($)
-	 case @isHidden then false
-	 elsecase @choices==0 then false
-	 elsecase {FindBackBelow {Reverse @kids}}
-	 of false then
-	    case @toDo\=nil then self else false end
-	 elseof N then N
+	 if @isHidden then false
+	 elseif @choices==0 then false
+	 else
+	    case {FindBackBelow {Reverse @kids}}
+	    of false then
+	       if @toDo\=nil then self else false end
+	    elseof N then N
+	    end
 	 end
       end
       
       meth !Back(Son $)
 	 case
-	    case @isHidden then false
-	    elsecase @choices==0 then false
+	    if @isHidden then false
+	    elseif @choices==0 then false
 	    else {FindBackBelow {Reverse {GetLeft @kids Son}}}
 	    end
 	 of false then
-	    case @toDo\=nil then self
+	    if @toDo\=nil then self
 	    else {self back($)}
 	    end
 	 elseof N then N

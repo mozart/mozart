@@ -87,7 +87,7 @@ local
 	 from Tk.canvas
 	 
 	 meth init(parent:Parent tcl:Tcl bg:Bg)
-	    case Bg==NoArg then
+	    if Bg==NoArg then
 	       Image,tkInit(parent:Parent width:ImageSize height:ImageSize
 			    highlightthickness:0)
 	    else

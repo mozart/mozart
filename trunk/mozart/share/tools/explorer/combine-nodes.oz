@@ -80,9 +80,8 @@ local
 	    {Status getKill(?KillFlag ?KillId)}
 	    thread
 	       {WaitOr UnwrapControl KillFlag}
-	       case {IsDet UnwrapControl} then
+	       if {IsDet UnwrapControl} then
 		  {self.manager wake(self KillId)}
-	       else skip
 	       end
 	    end
 	    {Status addBlocked(Depth)}
@@ -105,7 +104,7 @@ local
       meth init(Mom Depth S AllocateCopy)
 	 self.mom = Mom
 	 copy <- case
-		    case self.order==false then AllocateCopy
+		    if self.order==false then AllocateCopy
 		    else persistent
 		    end
 		 of transient  then transient(S)

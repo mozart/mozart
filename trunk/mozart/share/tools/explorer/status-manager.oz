@@ -23,7 +23,7 @@
 local
 
    fun {AddZero N}
-      case N<10 then '0'#N else N end
+      if N<10 then '0'#N else N end
    end
    
    fun {FormatTime Totaltime}
@@ -31,9 +31,9 @@ local
       Minutes    = Totaltime div 60000
       Seconds    = Totaltime div 1000
    in
-      case Hours==0 then
-	 case Minutes==0 then
-	    case Seconds==0 then Totaltime # 'ms'
+      if Hours==0 then
+	 if Minutes==0 then
+	    if Seconds==0 then Totaltime # 'ms'
 	    else Seconds # '.' # {AddZero (Totaltime - 1000 * Seconds ) div 10}
 	       # 's'
 	    end
@@ -132,7 +132,7 @@ local
       end
 
       meth setBAB(IsBAB)
-	 {self.Bab tk(conf text: case IsBAB then 'BAB' else '' end)}
+	 {self.Bab tk(conf text: if IsBAB then 'BAB' else '' end)}
       end
 
       meth setTime(T)
@@ -148,10 +148,10 @@ local
 	 @KillFlag     = true
 	 KillFlag      <- _
 	 KillId        <- @KillId + 1
-	 case @IsPackedBlocked then
+	 if @IsPackedBlocked then
 	    {Tk.send pack(forget self.Blocked self.BlockedImage)}
 	    IsPackedBlocked <- false 
-	 else skip end
+	 end
 	 Status,update
 	 Status,start
 	 Status,setBAB(false)
@@ -222,15 +222,15 @@ local
 	 GetFailures  = @CurFailures
 	 GetBlocked   = @CurBlocked
       in
-	 case (GetBlocked==0) == (@IsPackedBlocked) then
-	    case @IsPackedBlocked then
+	 if (GetBlocked==0) == (@IsPackedBlocked) then
+	    if @IsPackedBlocked then
 	       IsPackedBlocked <- false
 	       {Tk.send pack(forget self.Blocked self.BlockedImage)}
 	    else
 	       IsPackedBlocked <- true
 	       {Tk.send pack(self.BlockedImage self.Blocked side:left)}
 	    end
-	 else skip end
+	 end
 	 {self.Depth    tk(conf text:GetDepth)}
 	 {self.Choose   tk(conf
 			   text:GetNodes-(GetSolutions+GetFailures+GetBlocked))}
@@ -245,9 +245,7 @@ local
 	 MaxDepth     <- {Max @MaxDepth Depth}
 	 CurSolutions <- @CurSolutions + 1
 	 CurNodes     <- IncNodes
-	 case IncNodes mod StatusUpdateCnt==0 then Status,update
-	 else skip
-	 end
+	 if IncNodes mod StatusUpdateCnt==0 then Status,update end
       end
 
       meth addBlocked(Depth)
@@ -256,8 +254,7 @@ local
 	 MaxDepth    <- {Max @MaxDepth Depth}
 	 CurBlocked  <- @CurBlocked + 1
 	 CurNodes    <- IncNodes
-	 case IncNodes mod StatusUpdateCnt==0 then Status,update
-	 else skip end
+	 if IncNodes mod StatusUpdateCnt==0 then Status,update end
       end
 
       meth removeBlocked
@@ -271,8 +268,7 @@ local
 	 MaxDepth    <- {Max @MaxDepth Depth}
 	 CurFailures <- @CurFailures + 1
 	 CurNodes    <- IncNodes
-	 case IncNodes mod StatusUpdateCnt==0 then Status,update
-	 else skip end
+	 if IncNodes mod StatusUpdateCnt==0 then Status,update end
       end
 
       meth addChoose(Depth)
@@ -280,8 +276,7 @@ local
       in
 	 CurNodes <- IncNodes
 	 MaxDepth <- {Max @MaxDepth Depth}
-	 case IncNodes mod StatusUpdateCnt==0 then Status,update
-	 else skip end
+	 if IncNodes mod StatusUpdateCnt==0 then Status,update end
       end
 
       meth getKill(?Flag ?Id)

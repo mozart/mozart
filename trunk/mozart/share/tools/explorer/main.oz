@@ -58,7 +58,7 @@ in
       end
       
       meth Init()
-	 case @MyManager\=unit then skip else
+	 if @MyManager==unit then
 	    MyManager <- {New Manager init(self self.Options)}
 	    %% Include the standard actions
                \insert default-actions.oz
@@ -110,24 +110,24 @@ in
 	       label: Label <=NoLabel
 	       type:  Type  <=root) = Add
 	 lock
-	    case @MyManager==unit then Stacked <- Add|@Stacked
-	    elsecase
-	       case {Member Kind ActionKinds} then
+	    if @MyManager==unit then Stacked <- Add|@Stacked
+	    elseif
+	       if {Member Kind ActionKinds} then
 		  ActionMenu = @MyManager.case Kind
 					  of information then infoAction
 					  [] compare then cmpAction
 					  [] statistics then statAction
 					  end
 	       in
-		  case What==separator then
+		  if What==separator then
 		     {ActionMenu addSeparator} true
-		  elsecase
+		  elseif
 		     {IsProcedure What} andthen
 		     {Member {ProcedureArity What} ActionArities.Kind} andthen
 		     {Member Type ActionTypes} andthen
 		     (Label==NoLabel orelse {IsVirtualString Label}) 
 		  then
-		     MenuLabel   = case Label==NoLabel then
+		     MenuLabel   = if Label==NoLabel then
 				      {System.printName What}
 				   else Label
 				   end
@@ -154,9 +154,9 @@ in
 
       meth delete(Kind What) = Del
 	 lock
-	    case @MyManager==unit then Stacked <- Del|@Stacked
-	    elsecase
-	       case {Member Kind ActionKinds} then
+	    if @MyManager==unit then Stacked <- Del|@Stacked
+	    elseif
+	       if {Member Kind ActionKinds} then
 		  ActionMenu = @MyManager.case Kind
 					  of information then infoAction
 					  [] compare then cmpAction
@@ -165,8 +165,10 @@ in
 	       in
 		  case What
 		  of all then {ActionMenu deleteAll} true
-		  elsecase {IsProcedure What} then {ActionMenu delete(What)} true
-		  else false
+		  else
+		     if {IsProcedure What} then {ActionMenu delete(What)} true
+		     else false
+		     end
 		  end
 	       else false
 	       end
@@ -179,12 +181,12 @@ in
 
       meth option(What ...) = OM
 	 lock
-	    case
-	       case
+	    if
+	       if
 		  What==postscript andthen
 		  {List.sub {Arity OM} [1 color orientation size]}
 	       then O=self.Options.postscript in
-		  case {HasFeature OM size} then
+		  if {HasFeature OM size} then
 		     case {CheckSize {VirtualString.toString OM.size}}
 		     of false then false
 		     elseof S then
@@ -195,7 +197,7 @@ in
 		     end
 		  else true end
 		  andthen
-		  case {HasFeature OM color} then
+		  if {HasFeature OM color} then
 		     case OM.color
 		     of full      then {Dictionary.put O color color} true
 		     [] grayscale then {Dictionary.put O color gray}  true
@@ -204,59 +206,63 @@ in
 		     end
 		  else true end
 		  andthen
-		  case {HasFeature OM orientation} then
+		  if {HasFeature OM orientation} then
 		     case OM.orientation
 		     of portrait  then {Dictionary.put O orientation false} true
 		     [] landscape then {Dictionary.put O orientation true} true
 		     else false
 		     end
 		  else true end
-	       elsecase
+	       elseif
 		  What==search andthen
 		  {List.sub {Arity OM} [1 failed information search]}
 	       then O=self.Options.search in
-		  case {HasFeature OM search} then S=OM.search in
+		  if {HasFeature OM search} then S=OM.search in
 		     case S
 		     of none then {Dictionary.put O search 1} true
 		     [] full then {Dictionary.put O search ~1} true
-		     elsecase {IsInt S} then {Dictionary.put O search S} true
-		     else false
+		     else
+			if {IsInt S} then {Dictionary.put O search S} true
+			else false
+			end
 		     end
 		  else true end
 		  andthen
-		  case {HasFeature OM information} then I=OM.information in
+		  if {HasFeature OM information} then I=OM.information in
 		     case I
 		     of none then {Dictionary.put O information 1} true
 		     [] full then {Dictionary.put O information ~1} true
-		     elsecase {IsInt I} then {Dictionary.put O information I} true
-		     else false
+		     else
+			if {IsInt I} then {Dictionary.put O information I} true
+			else false
+			end
 		     end
 		  else true end
 		  andthen
-		  case {HasFeature OM failed} then F=OM.failed in
-		     case {IsBool F} then {Dictionary.put O failed F} true
+		  if {HasFeature OM failed} then F=OM.failed in
+		     if {IsBool F} then {Dictionary.put O failed F} true
 		     else false
 		     end
 		  else true
 		  end
-	       elsecase
+	       elseif
 		  What==drawing andthen
 		  {List.sub {Arity OM} [1 hide scale update]}
 	       then O=self.Options.drawing in
-		  case {HasFeature OM hide} then H=OM.hide in
-		     case {IsBool H} then {Dictionary.put O hide H} true
+		  if {HasFeature OM hide} then H=OM.hide in
+		     if {IsBool H} then {Dictionary.put O hide H} true
 		     else false
 		     end
 		  else true end
 		  andthen
-		  case {HasFeature OM scale} then S=OM.scale in
-		     case {IsBool S} then {Dictionary.put O scale S} true
+		  if {HasFeature OM scale} then S=OM.scale in
+		     if {IsBool S} then {Dictionary.put O scale S} true
 		     else false
 		     end
 		  else true end
 		  andthen
-		  case {HasFeature OM update} then U=OM.update in
-		     case {IsInt U} andthen {IsNat U} then
+		  if {HasFeature OM update} then U=OM.update in
+		     if {IsInt U} andthen {IsNat U} then
 			{Dictionary.put O update U} true
 		     else false
 		     end
