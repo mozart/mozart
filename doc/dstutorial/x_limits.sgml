@@ -3,7 +3,8 @@
   <TITLE>Limitations and Modifications</TITLE>
 
 <P>The current release has the following limitations
-and modifications with respect to the specification.
+and modifications with respect to the specifications
+of the distribution model and the failure model.
 A <EM>limitation</EM> is an operation that is specified
 but not possible in the current release.
 A <EM>modification</EM> is an operation that is specified
@@ -38,8 +39,8 @@ based on adaptive observation of actual network behavior.
 is invoked for an <EM>object</EM>,
 then the <<Entity>> argument is undefined.
 For handlers and watchers, this limitation can
-be circumvented by letting the handler or watcher
-reference the object.
+be bypassed by giving the handler and watcher procedures
+a reference to the object.
 
 <item>If an exception is raised or a handler is invoked
 for an <EM>object</EM>,
