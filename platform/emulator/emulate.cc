@@ -2925,7 +2925,7 @@ LBLdispatcher:
         break;
       }
       case DBG_NEXT : {
-        if (CTT->stepMode()) {
+        if (CTT->isTraced() && CTT->stepMode()) {
           debugStreamExit(info);
           goto LBLpreemption;
         }
