@@ -107,11 +107,15 @@ OZ_Return IncludePropagator::propagate(void)
     if (*d == fd_singl) 
       FailOnInvalid(*s += d->getSingleElem());
   }
-
-  OZ_DEBUGPRINTTHIS("out: ");
-
-  return P.leave1();
-
+  
+  {
+    OZ_FSetValue d_set(*d);
+    OZ_Boolean ent = (d_set <= s->getGlbSet());
+    
+    OZ_DEBUGPRINTTHIS("out: ");
+    
+    return ent ? P.vanish() : P.leave1();
+  }
 failure:
   OZ_DEBUGPRINTTHIS("fail: ");
   return P.fail();
@@ -143,10 +147,21 @@ OZ_Return ExcludePropagator::propagate(void)
       FailOnInvalid(*s -= d->getSingleElem());
   }
 
-  OZ_DEBUGPRINTTHIS("out: ");
+  { 
+    OZ_Boolean ent; 
 
-  return P.leave1();
+    if (d->getMaxElem() >= fsethigh32) // TMUELLER: remove when new impl
+      ent = OZ_FALSE;
+    else {
+      OZ_FSetValue d_set(*d);
+      ent = (d_set <= s->getNotInSet()); 
+    }
+    //    printf("ent=%d\n", ent); fflush(stdout);
 
+    OZ_DEBUGPRINTTHIS("out: ");
+    
+    return ent ? P.vanish() : P.leave1();
+  }
 failure:
   OZ_DEBUGPRINTTHIS("fail: ");
   return P.fail();
