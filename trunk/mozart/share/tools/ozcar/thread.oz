@@ -342,6 +342,7 @@ in
 	    case Mode == kill then
 	       case ThreadManager,EmptyTree($) then skip else
 		  case Select then
+		     currentThread <- undef % to ignore Gui actions temporarily
 		     ThreadManager,switch(Next)
 		     Gui,status(', new selected thread is #' # Next append)
 		  else skip end
@@ -412,11 +413,8 @@ in
       meth block(thr:T id:I file:F line:L name:N args:A builtin:B time:Time)
 	 Stack
       in
-	 lock
-	    try Stack = {Dget self.ThreadDic I}
-	    catch system(kernel(dict ...) ...) then
-	       {Thread.terminate {Thread.this}}
-	    end
+	 try
+	    Stack = {Dget self.ThreadDic I}
 	    {Stack rebuild(true)}
 	    Gui,markNode(I blocked)
 	    case T == @currentThread andthen
@@ -434,7 +432,7 @@ in
 	       Gui,status('Thread #' # I # ' is blocked')
 	       {Stack printTop} 
 	    else skip end
-	 end
+	 catch system(kernel(dict ...) ...) then skip end
       end
       
       meth rebuildCurrentStack
@@ -456,9 +454,11 @@ in
 	 Gui,selectNode(I)
 	 
 	 thread
-	    {WaitOr New {Alarm TimeoutToSwitch}}
-	    case {IsDet New} then skip else
-	       ThreadManager,DoSwitch(I)
+	    lock
+	       {WaitOr New {Alarm TimeoutToSwitch}}
+	       case {IsDet New} then skip else
+		  ThreadManager,DoSwitch(I)
+	       end
 	    end
 	 end
       end

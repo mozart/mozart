@@ -207,13 +207,12 @@ in
       end
 
       meth syncCalc
-	 Old New in
-	 Old = SyncCalc <- New
-	 Old = _ | New
+	 New in
+	 SyncCalc <- New = unit
 	 thread
-	    {WaitOr New {Alarm TimeoutToCalcTree}}
-	    case {IsDet New} then skip else
-	       lock
+	    lock
+	       {WaitOr New {Alarm TimeoutToCalcTree}}
+	       case {IsDet New} then skip else
 		  BaseTree,calculatePositions
 		  Tree,display
 	       end
