@@ -63,9 +63,13 @@ define
 		      handle:self.handle)
       end
       meth display(Info)
-	 info<-Info
+	 info<-{Record.adjoinAt
+		Info
+		info
+		{List.sort Info.info
+		 fun{$ A B} {VirtualString.toAtom A.id}<{VirtualString.toAtom B.id} end}}
 	 {self.setTitle Info.title}
-	 {self.handle set({List.map Info.info fun{$ I} I.id end})}
+	 {self.handle set({List.map @info.info fun{$ I} I.id end})}
      end
       meth get(Info)
 	 Info=@info
@@ -355,6 +359,7 @@ define
 	    local
 	       Desc={CondSelect Info body
 		     {CondSelect Info blurb unit}}
+	       Handle
 	    in
 	       if Desc\=unit then
 		  {self.handle.blurb.desc set("Description : ")}
@@ -362,10 +367,11 @@ define
 		   set(text(glue:nswe
 			    look:DescLook
 			    bg:white
-%			    state:disabled
+			    handle:Handle
 			    wrap:word
 			    tdscrollbar:true
 			    init:{ListToString Desc}))}
+		  {Handle set(state:disabled)}
 	       else
 		  {self.handle.blurb.desc set("No description available.")}
 	       end
@@ -389,6 +395,7 @@ define
 	 infoPlace
 	 infoLabel
 	 installButton
+	 installTbButton
 	 desinstallButton
 	 toplevel
 
@@ -451,6 +458,7 @@ define
 			tbradiobutton(text:'Installed'
 				      init:true
 				      action:self#displayInstalled
+				      handle:self.installTbButton
 				      group:viewmode)
 			tbradiobutton(text:'Mogul'
 				      action:self#displayMogul
@@ -489,7 +497,7 @@ define
 			     label(look:TitleLook
 				   handle:self.dataLabel)
 			     tbbutton(text:"Detach"
-				      action:self#detach(@data)
+				      action:self#detach(data)
 				      glue:e))
 			  placeholder(handle:self.dataPlace glue:nswe
 				      DataMain
@@ -499,7 +507,7 @@ define
 			     label(look:TitleLook
 				   handle:self.infoLabel)
 			     tbbutton(text:"Detach"
-				      action:self#detach(@info)
+				      action:self#detach(info)
 				      glue:e))
 			  placeholder(handle:self.infoPlace glue:nswe
 				      InfoMain
@@ -544,7 +552,8 @@ define
 	 {Application.exit 0}
       end
 
-      meth detach(What)
+      meth detach(W)
+	 What=if W==data then @data else @info end
 	 Class={What getClass($)}
 	 Window
 	 Desc
@@ -580,6 +589,7 @@ define
       end
       
       meth displayInstalled
+	 {self.installTbButton set(true)}
 	 {@data display(r(info:{Global.localDB items($)} title:"Installed package"))}
       end
 
