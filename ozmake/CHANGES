@@ -1,5 +1,15 @@
 -*-outline-*-
 
+* version 0.75
+** ozmake --create will now automatically pick a package filename if none
+   is given: it will be formed using the mogul id and the version number
+   if any.
+** ozmake --mogul=export now checks that there is no section entry that
+   has the same mogul id as a package or contact.
+** more checks are applied to the `author' feature to make sure that
+   they don't contain a stupid mistake
+** order is now preserved in `requires'
+
 * version 0.74
 ** `requires' field now properly saved in mogul.db and is properly exported
 ** pkg files are now compressed and much smaller

@@ -25,7 +25,7 @@ makefile(
 	     'Shell.ozf' 'HELP.txt'])
    blurb : "a tool for project building and package management"
    categories : [tool]
-   version: "0.74"
+   version: "0.75"
    info_html:
       '<P>
 <SPAN CLASS="TOOL">ozmake</SPAN> is a tool for building Mozart-based projects

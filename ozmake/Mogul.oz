@@ -25,6 +25,19 @@ prepare
    in
       queue(put:Put toList:ToList)
    end
+   fun {NewUniqQueue}
+      Q={NewQueue}
+      T={NewDictionary}
+      proc {Put K}
+	 if {HasFeature T K} then skip else
+	    T.K := unit
+	    {Q.put K}
+	 end
+      end
+      fun {ToList} {Q.toList} end
+   in
+      uniqQueue(put:Put toList:ToList)
+   end
 import
    Path at 'Path.ozf'
    Utils at 'Utils.ozf'
@@ -82,28 +95,28 @@ define
 	 @RootID
       end
 
-      meth ToProvides(R Uri Table)
+      meth ToProvides(R Uri Uniq)
 	 if {HasFeature R provides} then
 	    for E in R.provides do A={VS2A E} in
 	       %% this sucks!!! it needs to be resolved
 	       %% by the makefile object, not approximated here
 	       %% in this fashion.
 	       if {Member A {CondSelect R bin nil}} then
-		  Table.A := unit
+		  {Uniq.put A}
 	       else
-		  Table.{Path.resolveAtom Uri A} := unit
+		  {Uniq.put {Path.resolveAtom Uri A}}
 	       end
 	    end
 	 else
 	    for E in {CondSelect R bin nil} do
-	       Table.{VS2A E} := unit
+	       {Uniq.put {VS2A E}}
 	    end
 	    for E in {CondSelect R lib nil} do
-	       Table.{Path.resolveAtom Uri E} := unit
+	       {Uniq.put {Path.resolveAtom Uri E}}
 	    end
 	 end
 	 for D#M in {Record.toListInd {CondSelect R submakefiles o}} do
-	    {self ToProvides(M {Path.resolve Uri D} Table)}
+	    {self ToProvides(M {Path.resolve Uri D} Uniq)}
 	 end
       end
 
@@ -150,9 +163,9 @@ define
 	     {Path.resolve {self get_moguldocurl($)}
 	      {Utils.mogulToFilename R.mogul}#'/'#F}#'\n'}
 	 else skip end
-	 local Table={NewDictionary} in
-	    {self ToProvides(R {CondSelect R uri nil} Table)}
-	    for T in {Sort {Dictionary.keys Table} Value.'<'} do
+	 local Uniq={NewUniqQueue} in
+	    {self ToProvides(R {CondSelect R uri nil} Uniq)}
+	    for T in {Uniq.toList} do
 	       {Q.put 'provides:       '#T#'\n'}
 	    end
 	 end
@@ -388,6 +401,7 @@ define
 	    if ID\=ROOT andthen {Not {Utils.isMogulRootID ID}} then
 	       PID = {Path.dirnameAtom ID}
 	       KEY = {Path.basenameAtom ID}
+	       if {HasFeature @DB PID} then raise oops(PID) end end
 	       {Enter PID}
 	       L = {CondSelect Table PID nil}
 	    in
@@ -396,7 +410,12 @@ define
 	       end
 	    end
 	 end
-	 for K in IDS do {Enter K} end
+	 for K in IDS do
+	    try {Enter K}
+	    catch oops(ID) then
+	       raise ozmake(mogul:secclash(K ID)) end
+	    end
+	 end
 	 Entries = {Sort {Dictionary.items @DB}
 		    fun {$ E1 E2} E1.mogul < E2.mogul end}
       in
