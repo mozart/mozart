@@ -534,7 +534,6 @@ OZ_C_proc_begin(unix_stat,2)
 {
   struct stat buf;
   char *fileType;
-  off_t fileSize;
   OZ_declareVsArg(0, filename);
   OZ_declareArg(1, out);
 
@@ -551,12 +550,11 @@ OZ_C_proc_begin(unix_stat,2)
 #endif
     fileType = "unknown";
 
-  fileSize = buf.st_size;
-
   OZ_Term pairlist=
     cons(OZ_pairAA("type",fileType),
-            cons(OZ_pairAI("size",fileSize),
-                    nil()));
+            cons(OZ_pairAI("size",buf.st_size),
+		 cons(OZ_pairAI("mtime",buf.st_mtime),
+                    nil())));
   return OZ_unify(out,OZ_recordInit(OZ_atom("stat"),pairlist));
 }
 OZ_C_proc_end
