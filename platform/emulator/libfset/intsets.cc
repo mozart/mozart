@@ -63,7 +63,7 @@ OZ_Return FSetsMinPropagator::propagate(void)
     // i < min(d) ==> i not in s
     // remove all elements from `s' that are less than the minimal
     // element of `d'
-    FailOnInvalid(*s >= d->getMinElem());
+    FailOnInvalid(s->ge(d->getMinElem()));
 
     // i in s ==> min(d) <= i
     // `d' is less or equal to the smallest element of `glb(s)'
@@ -133,7 +133,7 @@ OZ_Return FSetsMaxPropagator::propagate(void)
     // i > max(d) ==> i not in s
     // remove all elements from `s' that are greater than the maximal
     // element of `d'
-    FailOnInvalid(*s <= d->getMaxElem());
+    FailOnInvalid(s->le(d->getMaxElem()));
 
     // i in s ==> max(d) >= i
     // `d' is greater or equal to the largest element of `glb(s)'
@@ -205,7 +205,7 @@ OZ_Return FSetsConvexPropagator::propagate(void)
       // and remove all elements starting from this element to `inf'
       {
         int next_smaller = s->getNotInNextSmallerElem(min_in);
-        if (next_smaller>=0) FailOnInvalid(*s >= next_smaller);
+        if (next_smaller>=0) FailOnInvalid(s->ge(next_smaller));
       }
 
       OZ_DEBUGPRINT(("c"));
@@ -214,7 +214,7 @@ OZ_Return FSetsConvexPropagator::propagate(void)
       // and remove all elements starting from this element to `sup'
       {
         int next_larger = s->getNotInNextLargerElem(max_in);
-        if (next_larger>=0) FailOnInvalid(*s <= next_larger);
+        if (next_larger>=0) FailOnInvalid(s->le(next_larger));
       }
     }
 
@@ -773,7 +773,7 @@ OZ_Return FSetSeqPropagator::propagate(void)
       if (lb_max == -1)
         continue;
 
-      FailOnInvalid(*vs[i+1] >= (lb_max + 1));
+      FailOnInvalid(vs[i+1]->ge(lb_max + 1));
 
       OZ_DEBUGPRINT(("%d %s > %d\n", i, vs[i]->toString(), lb_max));
     }
@@ -795,7 +795,7 @@ OZ_Return FSetSeqPropagator::propagate(void)
       if (lb_min == sup1)
         continue;
 
-      FailOnInvalid(*vs[i-1] <= (lb_min - 1));
+      FailOnInvalid(vs[i-1]->le(lb_min - 1));
 
      OZ_DEBUGPRINT(("#2 %d %s < %d\n", i, vs[i]->toString(), lb_min));
     }
