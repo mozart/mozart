@@ -26,12 +26,12 @@
 
 // mm2: this file is not yet used anywhere and not tested at all
 
-#include "genvar.hh"
+#include "var_base.hh"
 
-class ExtentedVar : public GenCVariable {
+class ExtentedVar : public OzVariable {
 public:
   // gc: copying
-  virtual GenCVariable* gcV() = 0;
+  virtual OzVariable* gcV() = 0;
   // gc: collect entry points
   virtual void          gcRecurseV() = 0;
   // tell

@@ -25,9 +25,8 @@
  */
 
 #include "cpi.hh"
-#include "genvar.hh"
-#include "fdgenvar.hh"
-#include "fdbvar.hh"
+#include "var_fd.hh"
+#include "var_bool.hh"
 
 //-----------------------------------------------------------------------------
 // fd built-ins don't cause stuck threads, but may cause their minds, therefore

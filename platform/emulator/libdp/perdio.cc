@@ -34,12 +34,7 @@
 #include "base.hh"
 #include "value.hh"
 
-#include "codearea.hh"
-#include "indexing.hh"
-#include "genvar.hh"
-#include "gc.hh"
 #include "gname.hh"
-#include "dictionary.hh"
 #include "urlc.hh"
 #include "marshaler.hh"
 #include "comm.hh"

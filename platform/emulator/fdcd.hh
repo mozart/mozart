@@ -37,11 +37,10 @@
 #include "thr_int.hh"
 #include "prop_int.hh"
 
-#include "fdgenvar.hh"
-#include "fdbvar.hh"
+#include "var_fd.hh"
+#include "var_bool.hh"
 #include "fdomn.hh"
 #include "builtins.hh"
-#include "genvar.hh"
 
 enum Recalc_e {lower, upper};
 

@@ -232,17 +232,7 @@ TaggedRef *tagged2Ref(TaggedRef ref)
 #endif
 
 // ---------------------------------------------------------------------------
-// --- TaggedRef: BASIC TYPE TESTS
-
-// if you want to test a term:
-//   1. if you have the tag: is<Type>(tag)
-//   2. if you have the term: oz_is<Type>(term)
-//   3. if you need many tests:
-//        switch(typeOf(term)) { ... }
-//    or  switch(tag) { ... }
-
-
-// REFs
+// --- Variables
 
 // ---------------------------------------------------------------------------
 // Tests for variables and their semantics:
@@ -275,20 +265,8 @@ Bool isCVar(TaggedRef term) {
 
 #define _oz_isVariable(val) (((TaggedRef) val&2)==0)       /* mask = 0010 */
 #define _isUVar(val)        (((TaggedRef) val&14)==0)      /* mask = 1110 */
-#define _isLTuple(val)      (((TaggedRef) val&13)==0)      /* mask = 1101 */
 
 #ifdef DEBUG_CHECK
-
-inline
-Bool isLTupleTag(TypeOfTerm tag) { return _isLTuple(tag);}
-
-inline
-Bool oz_isLTuple(TaggedRef term) {
-  GCDEBUG(term);
-  Assert(!oz_isRef(term));
-  return _isLTuple(term);
-}
-
 
 inline Bool isUVar(TypeOfTerm tag) { return _isUVar(tag);}
 
@@ -308,17 +286,111 @@ Bool oz_isVariable(TaggedRef term) {
   Assert(!oz_isRef(term));
   return _oz_isVariable(term);
 }
-
+inline
+TaggedRef makeTaggedUVar(Board *s)
+{
+  CHECK_POINTER_N(s);
+  return makeTaggedRef2p(UVAR,s);
+}
+inline
+TaggedRef makeTaggedCVar(OzVariable *s) {
+  CHECK_POINTER_N(s);
+  return makeTaggedRef2p(CVAR, s);
+}
 #else
-
 #define isVariableTag(term)    _oz_isVariable(term)
 #define oz_isVariable(term)    _oz_isVariable(term)
 #define isUVar(term)           _isUVar(term)
+#define makeTaggedUVar(s)      makeTaggedRef2p(UVAR,s)
+#define makeTaggedCVar(s)      makeTaggedRef2p(CVAR,s)
+#endif
+
+// mm2: obsolete
+inline
+OzVariable *tagged2SVarPlus(TaggedRef ref) {
+  GCDEBUG(ref);
+  Assert(isCVar(ref));
+  return (OzVariable *) tagValueOf(ref);
+}
+
+inline
+OzVariable *tagged2CVar(TaggedRef ref) {
+  GCDEBUG(ref);
+  CHECKTAG(CVAR);
+  return (OzVariable *) tagValueOf2(CVAR,ref);
+}
+
+inline
+TaggedRef *newTaggedUVar(TaggedRef proto)
+{
+  TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
+  *ref = proto;
+  return ref;
+}
+
+inline
+TaggedRef *newTaggedUVar(Board *c)
+{
+  return newTaggedUVar(makeTaggedUVar(c));
+}
+
+#define oz_newVar(bb)            makeTaggedRef(newTaggedUVar(bb))
+
+inline
+TaggedRef *newTaggedCVar(OzVariable *c) {
+  TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
+  *ref = makeTaggedCVar(c);
+  return ref;
+}
+
+/* does not deref home pointer! */
+inline
+Board *tagged2VarHome(TaggedRef ref)
+{
+  GCDEBUG(ref);
+  CHECKTAG(UVAR);
+  return (Board *) tagValueOf2(UVAR,ref);
+}
+
+// ---------------------------------------------------------------------------
+// --- TaggedRef: BASIC TYPE TESTS
+
+// if you want to test a term:
+//   1. if you have the tag: is<Type>(tag)
+//   2. if you have the term: oz_is<Type>(term)
+//   3. if you need many tests:
+//        switch(typeOf(term)) { ... }
+//    or  switch(tag) { ... }
+
+
+// REFs
+
+/*
+ * Optimized tests for some most often used types: no untagging needed
+ * for type tests!
+ * Use macros if not DEBUG_CHECK, since gcc creates awful code
+ * for inline function version
+ */
+#define _isLTuple(val)      (((TaggedRef) val&13)==0)      /* mask = 1101 */
+
+#ifdef DEBUG_CHECK
+
+inline
+Bool isLTupleTag(TypeOfTerm tag) { return _isLTuple(tag);}
+
+inline
+Bool oz_isLTuple(TaggedRef term) {
+  GCDEBUG(term);
+  Assert(!oz_isRef(term));
+  return _isLTuple(term);
+}
+
+#else
+
 #define isLTupleTag(term)      _isLTuple(term)
 #define oz_isLTuple(term)      _isLTuple(term)
 
 #endif
-
 
 
 inline
@@ -398,19 +470,6 @@ TaggedRef makeTaggedNULL()
 }
 
 inline
-TaggedRef makeTaggedUVar(Board *s)
-{
-  CHECK_POINTER_N(s);
-  return makeTaggedRef2p(UVAR,s);
-}
-
-inline
-TaggedRef makeTaggedCVar(GenCVariable *s) {
-  CHECK_POINTER_N(s);
-  return makeTaggedRef2p(CVAR, s);
-}
-
-inline
 TaggedRef makeTaggedFSetValue(OZ_FSetValue * s)
 {
   CHECK_POINTER_N(s);
@@ -476,8 +535,6 @@ TaggedRef makeTaggedTert(Tertiary *s)
 #else
 
 #define makeTaggedNULL()       ((TaggedRef) 0)
-#define makeTaggedUVar(s)      makeTaggedRef2p(UVAR,s)
-#define makeTaggedCVar(s)      makeTaggedRef2p(CVAR,s)
 #define makeTaggedFSetValue(s) makeTaggedRef2p(FSETVALUE,s)
 #define makeTaggedLTuple(s)    makeTaggedRef2p(LTUPLE,s)
 #define makeTaggedSRecord(s)   makeTaggedRef2p(SRECORD,s)
@@ -532,42 +589,8 @@ TaggedRef *newTaggedRef(TaggedRef *t)
   return ref;
 }
 
-inline
-TaggedRef *newTaggedUVar(TaggedRef proto)
-{
-  TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
-  *ref = proto;
-  return ref;
-}
-
-inline
-TaggedRef *newTaggedUVar(Board *c)
-{
-  return newTaggedUVar(makeTaggedUVar(c));
-}
-
-#define oz_newVar(bb)            makeTaggedRef(newTaggedUVar(bb))
-
-inline
-TaggedRef *newTaggedCVar(GenCVariable *c) {
-  TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
-  *ref = makeTaggedCVar(c);
-  return ref;
-}
-
-
 // ---------------------------------------------------------------------------
 // --- TaggedRef: conversion: tagged2<Type>
-
-
-/* does not deref home pointer! */
-inline
-Board *tagged2VarHome(TaggedRef ref)
-{
-  GCDEBUG(ref);
-  CHECKTAG(UVAR);
-  return (Board *) tagValueOf2(UVAR,ref);
-}
 
 inline
 OZ_FSetValue *tagged2FSetValue(TaggedRef ref)
@@ -624,21 +647,6 @@ Tertiary *tagged2Tert(TaggedRef ref)
   CHECKTAG(OZCONST);
   return (Tertiary*) tagValueOf2(OZCONST,ref);
 }
-
-inline
-SVariable *tagged2SVarPlus(TaggedRef ref) {
-  GCDEBUG(ref);
-  Assert(isCVar(ref));
-  return (SVariable *) tagValueOf(ref);
-}
-
-inline
-GenCVariable *tagged2CVar(TaggedRef ref) {
-  GCDEBUG(ref);
-  CHECKTAG(CVAR);
-  return (GenCVariable *) tagValueOf2(CVAR,ref);
-}
-
 
 // ---------------------------------------------------------------------------
 // --- TaggedRef: DEREF
@@ -723,6 +731,12 @@ TaggedRef *_derefPtr(TaggedRef t) {
 }
 #endif
 
+inline int32  GCMARK(void *S)    { return makeTaggedRef2p(GCTAG,S); }
+inline int32  GCMARK(int32 S)    { return makeTaggedRef2i(GCTAG,S); }
+
+inline void *GCUNMARK(int32 S)   { return tagValueOf2(GCTAG,S); }
+inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
+
 inline
 void doBind(TaggedRef *p, TaggedRef t)
 {
@@ -730,6 +744,8 @@ void doBind(TaggedRef *p, TaggedRef t)
   Assert(p!=_derefPtr(t));
   *p = t;
 }
+
+/* ------------------------------------------------------------------- */
 
 inline
 void doUnbind(TaggedRef *p, TaggedRef t)
@@ -740,16 +756,10 @@ void doUnbind(TaggedRef *p, TaggedRef t)
 
 // mm2: no assertions???
 inline
-void doBindCVar(TaggedRef *p, GenCVariable *cvar)
+void doBindCVar(TaggedRef *p, OzVariable *cvar)
 {
   *p = makeTaggedCVar(cvar);
 }
-
-inline int32  GCMARK(void *S)    { return makeTaggedRef2p(GCTAG,S); }
-inline int32  GCMARK(int32 S)    { return makeTaggedRef2i(GCTAG,S); }
-
-inline void *GCUNMARK(int32 S)   { return tagValueOf2(GCTAG,S); }
-inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
 
 /*===================================================================
  * RefsArray

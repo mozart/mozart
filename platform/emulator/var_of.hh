@@ -32,14 +32,14 @@
 #endif
 
 #include "am.hh"
-#include "genvar.hh"
+#include "var_base.hh"
 #include "tagged.hh"
 #include "value.hh"
 #include "mem.hh"
 #include "dictionary.hh"
 
 //-------------------------------------------------------------------------
-//                           class GenOFSVariable
+//                           class OzOFVariable
 //-------------------------------------------------------------------------
 
 
@@ -49,9 +49,9 @@ void addFeatOFSSuspensionList(TaggedRef var, SuspList * suspList,
 			      TaggedRef flist, Bool determ);
 
 
-class GenOFSVariable: public GenCVariable {
+class OzOFVariable: public OzVariable {
 
-    friend class GenCVariable;
+    friend class OzVariable;
     friend inline void addSuspOFSVar(TaggedRef, Suspension);
 
 private:
@@ -59,34 +59,34 @@ private:
     DynamicTable* dynamictable;
 
 public:
-    GenOFSVariable(DynamicTable &dt,Board *bb)
-    : GenCVariable(OFSVariable,bb) {
+    OzOFVariable(DynamicTable &dt,Board *bb)
+    : OzVariable(OZ_VAR_OF,bb) {
         label=oz_newVariable();
         dynamictable= &dt;
     }
 
-    GenOFSVariable(Board *bb)
-    : GenCVariable(OFSVariable,bb) {
+    OzOFVariable(Board *bb)
+    : OzVariable(OZ_VAR_OF,bb) {
         label=oz_newVariable();
         dynamictable=DynamicTable::newDynamicTable();
     }
 
     // With new table of given size (must be pwr. of 2):
-    GenOFSVariable(dt_index size,Board *bb)
-    : GenCVariable(OFSVariable,bb) {
+    OzOFVariable(dt_index size,Board *bb)
+    : OzVariable(OZ_VAR_OF,bb) {
         label=oz_newVariable();
         dynamictable=DynamicTable::newDynamicTable(size);
     }
 
-    GenOFSVariable(TaggedRef lbl,Board *bb)
-    : GenCVariable(OFSVariable,bb) {
+    OzOFVariable(TaggedRef lbl,Board *bb)
+    : OzVariable(OZ_VAR_OF,bb) {
         Assert(oz_isLiteral(lbl));
         label=lbl;
         dynamictable=DynamicTable::newDynamicTable();
     }
 
-    GenOFSVariable(TaggedRef lbl, dt_index size,Board *bb)
-    : GenCVariable(OFSVariable,bb) {
+    OzOFVariable(TaggedRef lbl, dt_index size,Board *bb)
+    : OzVariable(OZ_VAR_OF,bb) {
         Assert(oz_isLiteral(lbl));
         label=lbl;
         dynamictable=DynamicTable::newDynamicTable(size);
@@ -120,7 +120,7 @@ public:
         return dynamictable->lookup(feature);
     }
 
-  void installPropagators(GenOFSVariable * glob_var) {
+  void installPropagators(OzOFVariable * glob_var) {
     installPropagatorsG(glob_var);
   }
 
@@ -176,7 +176,7 @@ public:
         return (int) dynamictable->numelem;
     }
 
-    // Is X=val still valid, i.e., is val a feature and is width(ofs)==0 (see GenFDVariable::valid)
+    // Is X=val still valid, i.e., is val a feature and is width(ofs)==0 (see OzFDVariable::valid)
   Bool valid(TaggedRef val);
   OZ_Return unify(TaggedRef *vPtr, TaggedRef term, ByteCode *scp);
 
@@ -194,17 +194,17 @@ public:
     Bool disentailed(Literal *l, int tupleArity);
     Bool disentailed(Literal *l, Arity *recordArity);
 
-    // These procedures exist as well in the class GenFDVariable,
-    // but they are not needed in GenOFSVariable:
+    // These procedures exist as well in the class OzFDVariable,
+    // but they are not needed in OzOFVariable:
 
-    // void propagate (needs no redefinition from GenCVariable version)
-    // void relinkSuspList (needs no redefinition from GenCVariable version)
+    // void propagate (needs no redefinition from OzVariable version)
+    // void relinkSuspList (needs no redefinition from OzVariable version)
     // void becomesSmallIntAndPropagate (meaningless for ofs)
     // void setDom (meaningless for ofs)
     // FiniteDomain &getDom (meaningless for ofs)
 
 
-  void dispose(void) { freeListDispose(this, sizeof(GenOFSVariable)); }
+  void dispose(void) { freeListDispose(this, sizeof(OzOFVariable)); }
   void printStream(ostream &out,int depth = 10) {
     oz_printStream(getLabel(),out,0,0);
     out << '(';
@@ -227,7 +227,7 @@ public:
 inline
 Bool cvarIsOFSvar(TaggedRef term)
 {
-    return (tagged2CVar(term)->getType() == OFSVariable);
+    return (tagged2CVar(term)->getType() == OZ_VAR_OF);
 }
   
 inline
@@ -245,20 +245,20 @@ Bool isGenOFSVar(TaggedRef term, TypeOfTerm tag)
 }
 
 inline
-GenOFSVariable* tagged2GenOFSVar(TaggedRef term)
+OzOFVariable* tagged2GenOFSVar(TaggedRef term)
 {
     GCDEBUG(term);
 #ifdef DEBUG_OFS
     if(isGenOFSVar(term) == NO)
         error("ofs variable expected");
 #endif
-    return (GenOFSVariable*) tagged2CVar(term);
+    return (OzOFVariable*) tagged2CVar(term);
 }
 
 inline
 void addSuspOFSVar(TaggedRef v, Suspension susp)
 {
-  GenOFSVariable * ofs = tagged2GenOFSVar(v);
+  OzOFVariable * ofs = tagged2GenOFSVar(v);
   AddSuspToList(ofs->suspList, susp, ofs->getHome1());
 }
 

@@ -43,7 +43,7 @@ declare M={Declare
 
 #include "builtins.hh"
 #include "value.hh"
-#include "genvar.hh"
+#include "var_base.hh"
 #include "os.hh"
 #include "codearea.hh"
 #include "trace.hh"

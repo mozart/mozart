@@ -32,10 +32,10 @@
 #endif
 
 inline
-GenCtVariable * tagged2GenCtVar(OZ_Term t)
+OzCtVariable * tagged2GenCtVar(OZ_Term t)
 {
   GCDEBUG(t);
-  return (GenCtVariable *) tagged2CVar(t);
+  return (OzCtVariable *) tagged2CVar(t);
 }
 
 inline
@@ -43,7 +43,7 @@ Bool isGenCtVar(TaggedRef term, TypeOfTerm tag)
 {
   GCDEBUG(term);
   Assert(tag == tagTypeOf(term));
-  return isCVar(tag) && (tagged2CVar(term)->getType() == CtVariable);
+  return isCVar(tag) && (tagged2CVar(term)->getType() == OZ_VAR_CT);
 }
 
 
@@ -51,7 +51,7 @@ inline
 OZ_Ct * unpatchReifiedCt(OZ_Term t) 
 {
   Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
-  GenCtVariable * ctv = ((GenCtVariable *) tagValueOf(t));;
+  OzCtVariable * ctv = ((OzCtVariable *) tagValueOf(t));;
   
   ctv->unpatchReified();
   return ctv->getReifiedPatch();
@@ -60,7 +60,7 @@ OZ_Ct * unpatchReifiedCt(OZ_Term t)
 inline
 void addSuspCtVar(OZ_Term v, Suspension susp, OZ_CtWakeUp w)
 {
-  GenCtVariable * ctv = tagged2GenCtVar(v);
+  OzCtVariable * ctv = tagged2GenCtVar(v);
 
   int noOfSuspLists = ctv->getNoOfSuspLists();
 

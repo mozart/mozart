@@ -291,7 +291,7 @@ void Statistics::leaveCall(PrTabEntry  *newp)
 
 #ifdef HEAP_PROFILE
 
-#include "genvar.hh"
+#include "var_base.hh"
 
 #define PrintVar(Var) \
   fprintf(out,"%20s:          %8d\n",OZStringify(Var),(int)Var)
@@ -329,8 +329,8 @@ void Statistics::printCount(char *file) {
 
   fprintf(out,"\nVariables:\n");
   fprintf(out,"uvar            %ld (%dB)\n",uvar,sizeof(TaggedRef));
-  fprintf(out,"svar            %ld (%dB)\n",svar,sizeof(SVariable));
-  fprintf(out,"cvar            %ld (%dB)\n",cvar,sizeof(GenCVariable));
+  fprintf(out,"svar            %ld (%dB)\n",svar,sizeof(OzVariable)); // mm2
+  fprintf(out,"cvar            %ld (%dB)\n",cvar,sizeof(OzVariable));
 
   fprintf(out,"\nLocal spaces\n");
   fprintf(out,"scriptLen       %ld (%dB)\n",scriptLen,sizeof(Equation));

@@ -214,12 +214,11 @@ typedef OZ_Return (*InlineFun3)(TaggedRef In1, TaggedRef In2,
 
 struct Equation;
 
-class SVariable;
-class GenCVariable;
-class GenFDVariable;
-class GenBoolVariable;
-class GenFSetVariable;
-class GenCtVariable;
+class OzVariable;
+class OzFDVariable;
+class OzBoolVariable;
+class OzFSVariable;
+class OzCtVariable;
 class DynamicTable;
 class SRecord;
 class Arity;

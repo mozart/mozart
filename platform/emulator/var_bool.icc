@@ -31,17 +31,17 @@
 #pragma interface
 #endif
 
-#include "fdgenvar.hh"
+#include "var_fd.hh"
 
 inline
-void GenBoolVariable::dispose(void) {
+void OzBoolVariable::dispose(void) {
   suspList->disposeList();
-  freeListDispose(this, sizeof(GenBoolVariable));
+  freeListDispose(this, sizeof(OzBoolVariable));
 }
 
 
 inline
-void GenBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr, int e)
+void OzBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr, int e)
 {
   if (oz_isSmallInt(*trPtr)) return;
   propagate();
@@ -50,7 +50,7 @@ void GenBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr, int e)
 }
 
 inline
-void GenBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr,
+void OzBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr,
 						  OZ_FiniteDomain & fd)
 {
   becomesSmallIntAndPropagate(trPtr, fd.getSingleElem());
@@ -58,7 +58,7 @@ void GenBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr,
 
 
 inline
-void GenBoolVariable::installPropagators(GenFDVariable * glob_var)
+void OzBoolVariable::installPropagators(OzFDVariable * glob_var)
 {
   installPropagatorsG(glob_var);
   for (int i = 0; i < fd_prop_any; i += 1)
@@ -68,7 +68,7 @@ void GenBoolVariable::installPropagators(GenFDVariable * glob_var)
 }
 
 inline
-void GenBoolVariable::installPropagators(GenBoolVariable * glob_var)
+void OzBoolVariable::installPropagators(OzBoolVariable * glob_var)
 {
   installPropagatorsG(glob_var);
 }
@@ -78,7 +78,7 @@ inline
 Bool isGenBoolVar(TaggedRef term)
 {
   GCDEBUG(term);
-  return isCVar(term) && (tagged2CVar(term)->getType() == BoolVariable);
+  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_BOOL);
 }
 
 inline
@@ -86,20 +86,20 @@ Bool isGenBoolVar(TaggedRef term, TypeOfTerm tag)
 {
   GCDEBUG(term);
   Assert(tag == tagTypeOf(term));
-  return isCVar(tag) && (tagged2CVar(term)->getType() == BoolVariable);
+  return isCVar(tag) && (tagged2CVar(term)->getType() == OZ_VAR_BOOL);
 }
 
 inline
-GenBoolVariable * tagged2GenBoolVar(TaggedRef term)
+OzBoolVariable * tagged2GenBoolVar(TaggedRef term)
 {
   GCDEBUG(term);
-  return (GenBoolVariable *) tagged2CVar(term);
+  return (OzBoolVariable *) tagged2CVar(term);
 }
 
 inline
 void addSuspBoolVar(TaggedRef v, Suspension susp)
 {
-  GenBoolVariable * bv = tagged2GenBoolVar(v);
+  OzBoolVariable * bv = tagged2GenBoolVar(v);
 
   AddSuspToList(bv->suspList, susp, bv->getHome1());
 }

@@ -156,7 +156,7 @@ class IHashTable {
   int hash(int n) { return (n & hashMask); }  // return a value n with 0 <= n < size
   int getElse() { return elseLabel; }
 
-  Bool disentailed(GenCVariable *var, TaggedRef *varPtr);
+  Bool disentailed(OzVariable *var, TaggedRef *varPtr);
 };
 
 int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
