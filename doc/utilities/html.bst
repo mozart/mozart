@@ -1,3 +1,27 @@
+%
+% Author:
+%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+%
+% Copyright:
+%   Leif Kornstaedt, 1998
+%
+% Last change:
+%   $Date$ by $Author$
+%   $Revision$
+%
+% This file is part of Mozart, an implementation of Oz 3:
+%   $MOZARTURL$
+%
+% See the file "LICENSE" or
+%   $LICENSEURL$
+% for information on usage and redistribution
+% of this file, and for a DISCLAIMER OF ALL
+% WARRANTIES.
+%
+%
+% This file was modified from alpha.bst.  The original copyright
+% is included here:
+%
 % BibTeX standard bibliography style `alpha'
         % version 0.99a for BibTeX versions 0.99a or later, LaTeX version 2.09.
         % Copyright (C) 1985, all rights reserved.
