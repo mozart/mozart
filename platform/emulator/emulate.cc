@@ -2625,7 +2625,11 @@ LBLdispatcher:
        // else
        RefsArray argsArray = allocateRefsArray(1,NO);
        argsArray[0] = e->exception.value;
-       CTT->pushCall(e->defaultExceptionHandler,argsArray,1);
+       if (e->defaultExceptionHandler) {
+	 CTT->pushCall(e->defaultExceptionHandler,argsArray,1);
+       } else {
+	 error("Missing default exception handler: %s\n",toC(argsArray[0]));
+       }
        goto LBLpopTask; // changed from LBLpopTaskNoPreempt; -BL 26.3.97
      }
    }
