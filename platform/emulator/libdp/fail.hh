@@ -340,8 +340,8 @@ Bool isVariableSpec(SRecord*);
 
 void varAdjustPOForFailure(int,EntityCond,EntityCond);
 
-void triggerInforms(InformElem**,OwnerEntry*,int,EntityCond);
-void triggerInformsOK(InformElem**,OwnerEntry*,int,EntityCond);
+void triggerInforms(InformElem**,OwnerEntry*,EntityCond);
+void triggerInformsOK(InformElem**,OwnerEntry*,EntityCond);
 
 void maybeHandOver(EntityInfo*, TaggedRef);
 void transferWatchers(Object *o);

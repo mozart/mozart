@@ -50,7 +50,7 @@
 
 OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
   Assert(p->getTertType()==Te_Proxy);
-  BorrowEntry* b = BT->getBorrow(p->getIndex());
+  BorrowEntry* b = BT->bi2borrow(p->getIndex());
   NetAddress *na = b->getNetAddress();
   DSite* site     = na->site;
   int index      = na->index;
@@ -113,7 +113,7 @@ Bool  PortProxy::canSend(){
   */
   return TRUE; 
   
-  BorrowEntry* b = BT->getBorrow(this->getIndex());
+  BorrowEntry* b = BT->bi2borrow(this->getIndex());
    NetAddress *na = b->getNetAddress();
    DSite* site     = na->site;
    return(site->getQueueStatus() < 
