@@ -28,6 +28,11 @@
 <!ENTITY % p.mix.local "|Em|note.gui|menu">
 <!ELEMENT Em - - (#PCDATA)>
 <!ENTITY % proglang.values.local "|sh">
+<!ENTITY lambda "LAMBDA">
+<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
 
 <!-- Abbreviations -->
 <!ENTITY amp "&">
@@ -95,6 +100,7 @@
     <Meta name="html.split"       value="appendix.enable">
 
     <Meta name="html.split.toc"   value="">
+    <Meta name="html.split.bib"     value="">
 
     <Author.Extern to="author.db" key="Denys.Duchier">
     <Author.Extern to="author.db" key="Leif.Kornstaedt">
@@ -105,6 +111,10 @@
     <Author.Extern to="author.db" key="Joerg.Wuertz">
     <Author.Extern to="author.db" key="Tobias.Mueller">
 
+    <Comic>
+      <Picture.Choice>
+        <Picture.Extern to="demo.gif" type=gif>
+      </Picture.Choice>
     <Abstract>
       This document offers a number of demo applets that can be run
       directly from within their documentation. In order to execute

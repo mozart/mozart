@@ -13,7 +13,7 @@ SGMLSRCS = \
         college.sgml flowers.sgml dict-client.sgml
 
 HTMLEXTRAFILES = \
-        note-gui-l1.gif note-gui-lm1.gif netscape.gif
+        note-gui-l1.gif note-gui-lm1.gif netscape.gif demo.gif
 
 OZDOCHTMLFLAGS = --autoindex
 
