@@ -38,29 +38,32 @@ private:
   Abstraction *abstr;
   ProgramCounter pc;
   int arity;
+  AbstractionEntry *next;
+  Bool collected;
 
-  /* all entries are linked for GC */
-  AbstractionEntry *next;               
-  static AbstractionEntry* allEntries;
+  static AbstractionEntry *allEntries;
 
 public:
-  IHashTable *indexTable;
+
   Bool copyable;  // true iff may be copied with definitionCopy
+  IHashTable *indexTable;
 
   AbstractionEntry(Bool fc) { 
     abstr      = 0;
     pc         = NOCODE;
-    next       = allEntries; 
     copyable   = fc;
-    allEntries = this; 
+    collected  = NO;
     indexTable = 0;
+    next       = allEntries;
+    allEntries = this;
   }
   Abstraction *getAbstr() { return abstr; };
   ProgramCounter getPC()  { return pc; };
   int getArity()          { return arity; };
   void setPred(Abstraction *abs);
 
-  static void gcAbstractionEntries();
+  void gcAbstractionEntry();
+  static void freeUnusedEntries();
 };
 
 
@@ -74,6 +77,83 @@ public:
 #else
   typedef Opcode AdressOpcode; 
 #endif
+
+
+class TaggedList {
+public:
+  TaggedRef *t;
+  TaggedList *next;
+
+  TaggedList(TaggedRef *tptr, TaggedList *nxt): t(tptr), next(nxt) {}
+  TaggedList *dispose() { 
+    TaggedList *ret = next;
+    delete this;
+    return ret;
+  }
+};
+
+/**************************************************
+ *  Invalidating of inline caches
+ **************************************************/
+
+typedef enum {C_TAGGED, C_INLINECACHE, C_ABSTRENTRY, C_FREE} GCListTag;
+
+const int codeGCListBlockSize = 10;
+
+class GCListEntry {
+public:
+  GCListTag tag;
+  union {
+    InlineCache *cache;
+    TaggedRef *tagged;
+    AbstractionEntry **entry;
+  } u;
+};
+
+class CodeGCList {
+  CodeGCList *next;
+  int nextFree;
+  GCListEntry block[codeGCListBlockSize];
+
+public:
+  CodeGCList(CodeGCList *nxt) { nextFree=0; next=nxt; }
+
+  void dispose() { 
+    CodeGCList *aux = this;
+    while(aux) {
+      CodeGCList *aux1 = aux->next;
+      delete aux;;
+      aux = aux1;
+    }
+  }
+    
+
+  CodeGCList *add(void *ptr, GCListTag tag)
+  {
+    if (this==NULL) {
+      CodeGCList *aux = new CodeGCList(NULL);
+      return aux->add(ptr,tag);
+    }
+
+    if (nextFree < codeGCListBlockSize) {
+      block[nextFree].tag     = tag;
+      block[nextFree].u.cache = (InlineCache*) ptr;
+      nextFree++;
+      return this;
+    } else {
+      CodeGCList *aux = new CodeGCList(this);
+      return aux->add(ptr,tag);
+    }
+  }
+
+  CodeGCList *add(InlineCache *ptr)       { return add(ptr,C_INLINECACHE); }
+  CodeGCList *add(TaggedRef *ptr)         { return add(ptr,C_TAGGED); }
+  CodeGCList *add(AbstractionEntry **ptr) { return add(ptr,C_ABSTRENTRY); }
+
+  void remove(TaggedRef *t);
+
+  void collectGClist();
+};
 
 
 class CodeArea {
@@ -99,6 +179,9 @@ protected:
   ProgramCounter wPtr;    /* write pointer for the code block */
   ProgramCounter curInstr;/* start of current instruction */
   time_t timeStamp;       /* feed time */
+  Bool referenced;        /* for GC */
+  CodeGCList *gclist;
+
 #define CheckWPtr Assert(wPtr < codeBlock+size)
 
   static CodeArea *allBlocks;
@@ -122,9 +205,16 @@ public:
   ByteCode *getStart() { return codeBlock; }
   static int totalSize; /* total size of code allocated in bytes */
 
-  /* read from file and return start in "pc" */
-  CodeArea(CompStream *fd, int size, ProgramCounter &pc);
   CodeArea(int sz);
+  ~CodeArea();
+
+  void checkPtr(void *ptr) {
+      Assert(getStart()<=ptr && ptr<getStart()+size);
+  }
+
+  void protectInlineCache(InlineCache *cache) {
+    gclist = gclist->add(cache);
+  }
 
   static ProgramCounter printDef(ProgramCounter PC,FILE *out=stderr);
   static TaggedRef dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
@@ -158,7 +248,8 @@ public:
   static Opcode getOpcode(ProgramCounter PC) { 
     return adressToOpcode(getOP(PC)); }
 
-  static void gc();
+  static void gcReferenced(ProgramCounter PC);
+  static void gcCollectCodeBlocks();
 
 #ifdef RECINSTRFETCH  
   static void writeInstr(void);
@@ -198,18 +289,11 @@ public:
     return writeWord(literal,ptr);    
   }
 
-  static ProgramCounter writeTagged(TaggedRef t, ProgramCounter ptr)
-  {
-    ProgramCounter ret = writeWord(t,ptr);
-    oz_staticProtect((TaggedRef *)ptr);
-    return ret;
-  }
+  ProgramCounter writeTagged(TaggedRef t, ProgramCounter ptr);
 
-  static ProgramCounter writeTaggedNoProtect(TaggedRef t, ProgramCounter ptr)
-  {
-    ProgramCounter ret = writeWord(t,ptr);
-    return ret;
-  }
+  static CodeArea *findBlock(ProgramCounter PC);
+
+  static void unprotect(TaggedRef* t);
 
   static ProgramCounter writeInt(TaggedRef i, ProgramCounter ptr)
   {
@@ -260,13 +344,20 @@ public:
   }
 
 
+  ProgramCounter writeAbstractionEntry(AbstractionEntry *p, ProgramCounter ptr);
+  void writeAbstractionEntry(AbstractionEntry *p)
+  {
+    wPtr = writeAbstractionEntry(p,wPtr);
+  }
+
+
   static ProgramCounter writeAddress(void *p, ProgramCounter ptr)
   {
     return writeWord(p, ptr);
   }
 
   void writeCache() { wPtr = writeCache(wPtr); }  
-  static ProgramCounter writeCache(ProgramCounter PC);
+  ProgramCounter writeCache(ProgramCounter PC);
 
   void writeInt(int i)                   { CheckWPtr; wPtr=writeInt(i,wPtr); }
   void writeTagged(TaggedRef t)          { CheckWPtr; wPtr=writeTagged(t,wPtr); }
@@ -384,12 +475,12 @@ public:
   SRecordArity arity;
   InlineCache methCache;
 
-  ApplMethInfoClass(TaggedRef mn, SRecordArity i)
+  ApplMethInfoClass(TaggedRef mn, SRecordArity i, CodeArea *code)
   {
     arity = i;
     methName = mn;
     oz_staticProtect(&methName);
-    protectInlineCache(&methCache);
+    code->protectInlineCache(&methCache);
   }
 };
 

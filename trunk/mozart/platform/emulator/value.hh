@@ -2062,8 +2062,7 @@ extern DbgInfo *allDbgInfos;
 // ---------------------------------------------
 
 
-#define PR_COPYONCE 0x1
-#define PR_NATIVE   0x2
+#define PR_NATIVE   0x1
 
 class PrTabEntry {
 private:
@@ -2102,8 +2101,7 @@ public:
     fl = oz_deref(fl);
     while (oz_isCons(fl)) {
       OZ_Term ff=oz_deref(oz_head(fl));
-      if (oz_eq(ff,OZ_atom("once"))) { flags |= PR_COPYONCE; }
-      else if (oz_eq(ff,OZ_atom("native"))) { flags |= PR_NATIVE; }
+      if (oz_eq(ff,OZ_atom("native"))) { flags |= PR_NATIVE; }
       fl = oz_deref(oz_tail(fl));
     }
     Assert(oz_isNil(fl));
@@ -2157,12 +2155,10 @@ public:
   TaggedRef getInfo()       { return info; }
 
   int isNative()   { return flags&PR_NATIVE; }
-  int isCopyOnce() { return flags&PR_COPYONCE; }
   int getFlags()   { return flags; }
   OZ_Term getFlagsList() {
     OZ_Term ret = oz_nil();
     if (isNative()) ret = oz_cons(OZ_atom("native"),ret);
-    if (isCopyOnce()) ret = oz_cons(OZ_atom("once"),ret);
     return ret;
   }
 
