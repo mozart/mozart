@@ -46,7 +46,7 @@ export OZMAFILE = $(SRCDIR)/ozbatch.ozm
 export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
-export OZ_LOAD = root=.:root=compiler:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/
+export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/
 
 OZLIBDIRS1 = \
 	Standard Init SP OP AP CP WP DP \
@@ -260,7 +260,7 @@ $(PREFIX)/cache/http/www.ps.uni-sb.de:
 	$(MKINSTALLDIRS) $(PREFIX)/cache/http/www.ps.uni-sb.de
 
 install-main: all \
-	$(OZLIB) $(OZLIBDIRS) $(LIBFILES) $(LIBCOMPONENTS) \
+	$(OZLIB) $(OZLIB)/gump/examples $(LIBFILES) $(LIBCOMPONENTS) \
 	$(OZBIN) $(BINFILES)
 
 install-ozma: $(LIBOZM)
@@ -268,14 +268,14 @@ install-ozma: $(LIBOZM)
 install-bitmaps: \
 	$(BITMAPDIR) $(BITMAPS) $(OZCARBITMAPDIR) $(OZCARBITMAPS)
 
-install-src: $(ALLSRCS:%=$(OZLIB)/%)
+install-src: $(OZLIB) $(OZLIBDIRS) $(ALLSRCS:%=$(OZLIB)/%)
 
 clean:
 	$(RM) *~ *.bak
 	$(RM) compiler-Version.oz compiler-Builtins.oz compiler-Opcodes.oz
 	$(RM) ozcar-version.oz
 	$(RM) -r $(TYPS) tyc
-	$(RM) $(COMPONENTS) compiler/Fun*.ozc
+	$(RM) $(COMPONENTS) Fun*.ozc
 	$(RM) ozbatch ozserver
 
 realclean: clean
@@ -329,11 +329,11 @@ tyc/%.tyc: %.typ $(DUMPINTRO) Init.ozc
 	@$(MKDIR) tyc 2>/dev/null || $(TRUE)
 	$(COMPILE) $< -o $@
 
-%.ozc:
-	$(COMPILE) $*
+%.ozc: %.oz
+	$(COMPILE) $< -o $@
 
-%.ozm:
-	$(OZMA) -o $@ $*
+%.ozc: compiler/%.oz
+	$(COMPILE) $< -o $@
 
 Init.ozc: $(DUMPINTRO) $(INITSRC)
 	OZMAINIT="" $(COMPILE) Init.oz
@@ -356,35 +356,31 @@ Misc.ozc: $(DUMPINTRO) $(MISCSRC) Misc.env Init.ozc
 # COMPILER
 #---------------------------------------------------------------------
 
-compiler/FunMisc.ozc: compiler/FunMisc.oz compiler/Misc.oz $(STANDARD)
+FunMisc.ozc: compiler/Misc.oz $(STANDARD)
 
-compiler/FunBuiltins.ozc: compiler/FunBuiltins.oz compiler/Builtins.oz \
-	compiler-Builtins.oz $(STANDARD)
+FunBuiltins.ozc: compiler/Builtins.oz compiler-Builtins.oz $(STANDARD)
 
-compiler/FunSA.ozc: compiler/FunSA.oz SP-new.env CP-new.env \
-	compiler/Misc-new.env compiler/POTypes.oz compiler/StaticAnalysis.oz \
+FunSA.ozc: SP-new.env CP-new.env compiler/Misc-new.env \
+	compiler/POTypes.oz compiler/StaticAnalysis.oz $(STANDARD)
+
+FunCode.ozc: SP-new.env compiler/Misc-new.env compiler/RegSet.oz \
+	compiler/CodeStore.oz compiler/CodeEmitter.oz compiler/CodeGen.oz \
 	$(STANDARD)
 
-compiler/FunCode.ozc: compiler/FunCode.oz SP-new.env compiler/Misc-new.env \
-	compiler/RegSet.oz compiler/CodeStore.oz compiler/CodeEmitter.oz \
-	compiler/CodeGen.oz $(STANDARD)
+FunCore.ozc: SP-new.env compiler/Misc-new.env compiler/Annotate.oz \
+	compiler/CoreLanguage.oz $(STANDARD)
 
-compiler/FunCore.ozc: compiler/FunCore.oz SP-new.env compiler/Misc-new.env \
-	compiler/Annotate.oz compiler/CoreLanguage.oz $(STANDARD)
-
-compiler/FunUnnest.ozc: compiler/FunUnnest.oz CP-new.env \
-	compiler/Misc-new.env compiler/TupleSyntax.oz \
+FunUnnest.ozc: CP-new.env compiler/Misc-new.env compiler/TupleSyntax.oz \
 	compiler/BindingAnalysis.oz compiler/UnnestFD.oz compiler/Unnester.oz \
 	$(STANDARD)
 
-compiler/FunAssembler.ozc: compiler/FunAssembler.oz SP-new.env \
-	compiler/Assembler.oz compiler-Opcodes.oz $(STANDARD)
+FunAssembler.ozc: SP-new.env compiler/Assembler.oz compiler-Opcodes.oz \
+	$(STANDARD)
 
-compiler/FunCompiler.ozc: compiler/FunCompiler.oz SP-new.env \
-	compiler/Misc-new.env compiler/FormatStrings.oz compiler/Reporter.oz \
-	compiler/ParseOz.oz compiler/Interface.oz compiler/CompilerClass.oz \
-	compiler/GenericInterface.oz compiler/QuietInterface.oz \
-	compiler-Version.oz $(STANDARD)
+FunCompiler.ozc: SP-new.env compiler/Misc-new.env compiler/FormatStrings.oz \
+	compiler/Reporter.oz compiler/ParseOz.oz compiler/Interface.oz \
+	compiler/CompilerClass.oz compiler/GenericInterface.oz \
+	compiler/QuietInterface.oz compiler-Version.oz $(STANDARD)
 
 COMPILER_BIG = @COMPILER_BIG@
 COMPILER_FUN = @COMPILER_FUN@
@@ -393,10 +389,8 @@ $(COMPILER_BIG): $(DUMPINTRO) $(COMPILERSRC) SP.env \
 	CP.env Gump.env Compiler.env Init.ozc
 
 $(COMPILER_FUN): $(DUMPINTRO) SP.env CP.env Gump.env Compiler.env Init.ozc \
-	compiler/FunMisc.ozc compiler/FunBuiltins.ozc \
-	compiler/FunSA.ozc compiler/FunCode.ozc compiler/FunCore.ozc \
-	compiler/FunUnnest.ozc compiler/FunAssembler.ozc \
-	compiler/FunCompiler.ozc compiler/FunMake.oz
+	FunMisc.ozc FunBuiltins.ozc FunSA.ozc FunCode.ozc FunCore.ozc \
+	FunUnnest.ozc FunAssembler.ozc FunCompiler.ozc compiler/FunMake.oz
 	$(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -l OP \
 	-c compiler/FunMake.oz -o Compiler.ozc
 
