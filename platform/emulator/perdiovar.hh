@@ -154,26 +154,26 @@ public:
   }
 
   void primBind(TaggedRef *lPtr,TaggedRef v);
-  Bool unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, ByteCode *);
+  OZ_Return unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, ByteCode *);
 
   int hasVal() { Assert(isProxy()); return u.bindings!=0; }
-  void setVal(OZ_Term t) {
+  OZ_Return setVal(OZ_Term t) {
     Assert(isProxy());
     Assert(u.bindings==0);
     ControlVarNew(controlvar,oz_rootBoard());
     PD((THREAD_D,"stop thread setVal %x",am.currentThread()));
     u.bindings=new PendBinding(t,controlvar,0);
-    am.setSFlag(StopThread); // should be SuspendOnControlVar
-    (void) suspendOnControlVar();
+    am.setSFlag(StopThread); // should go away
+    SuspendOnControlVar;
   }
-  void pushVal(OZ_Term t) {
+  OZ_Return pushVal(OZ_Term t) {
     Assert(isProxy());
     Assert(u.bindings!=0);
     ControlVarNew(controlvar,oz_rootBoard());
     PD((THREAD_D,"stop thread pushVal %x",am.currentThread()));
     u.bindings->next=new PendBinding(t,controlvar,u.bindings->next);
-    am.setSFlag(StopThread); // should be SuspendOnControlVar
-    (void) suspendOnControlVar();
+    am.setSFlag(StopThread); // should go away
+    SuspendOnControlVar;
   }
   void redirect(OZ_Term val);
   void acknowledge(OZ_Term *ptr);

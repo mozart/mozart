@@ -32,12 +32,11 @@
 #endif
 
 
-// mm_u
 inline
-OZ_Return GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
-			      TaggedRef * tptr2, TaggedRef term2,
-			      ByteCode *scp)
+OZ_Return GenCVariable::unify(TaggedRef * tptr1, TaggedRef *tptr2, TaggedRef term2, ByteCode *scp)
 {
+  TaggedRef term1 = *tptr1;
+
   switch (getType()){
   case FDVariable:
     {
@@ -64,23 +63,24 @@ OZ_Return GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
     break;
   case BoolVariable:
     {
-      if (! ((GenBoolVariable *)this)->unifyBool(tptr1, term1, tptr2, term2, scp))
+      if (! ((GenBoolVariable *)this)->unifyBool(tptr1, term1, tptr2, term2,
+						 scp))
 	return FAILED;
     }
     break;
   case PerdioVariable:
-    // mm_u
     return ((PerdioVar *)this)->unifyPerdioVar(tptr1, tptr2==0?&term2:tptr2,
 					       scp);
+
   case LazyVariable:
-    if (! ((GenLazyVariable*)this)->unifyLazy(tptr1, tptr2==0?term2:makeTaggedRef(tptr2),scp))
+    if (! ((GenLazyVariable*)this)->unifyLazy(tptr1, term2,scp))
       return FAILED;
     break;
   case PROMISE:
-    return ((Promise*)this)->unifyPromise(tptr1,tptr2==0?&term2:tptr2,scp);
+    return ((Promise*)this)->unifyPromise(tptr1);
+
   default:
     Assert(0);
-    return FAILED;
   }
       
   return PROCEED;
