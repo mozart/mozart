@@ -14,7 +14,7 @@ SGMLSRCS0 = \
     # Open programming \
     os open \
     # System programming \
-    pickle property error errorregistry finalize system \
+    pickle property error errorformatters finalize system \
     # Window programming \
     tk tktools
 
