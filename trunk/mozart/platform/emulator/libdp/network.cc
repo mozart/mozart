@@ -332,6 +332,15 @@ public:
     msgNum = n;}
   void resend();
   
+  int getMsgType(){
+    return (int)msgType;}
+  
+  DSite* getSite(){
+    return site;}
+  
+  int getMsgIndex(){
+    return storeIndx;
+  }
 #ifdef SLOWNET
   int getTime(){
     return time;}
@@ -2343,11 +2352,17 @@ static ipReturn createTcpPort(int port,ip_address &ip,port_t &oport,int &fd)
   struct hostent *hostaddr;
   hostaddr=gethostbyname(nodename);
   free(nodename);
+  if (hostaddr==NULL) {
+    nodename = "localhost";
+    hostaddr=gethostbyname(nodename);
+    OZ_warning("Unable to reach the net, using localhost instead\n");
+  }
+    
+    
   struct in_addr tmp;
   memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
   ip=ntohl(tmp.s_addr);
-
-retry:
+ retry:
   if(bigtries<0){
     PD((WEIRD,"bind - ran out of tries"));
     return IP_TIMER;} // ATTENTION - major fault
@@ -2464,9 +2479,16 @@ ipReturn tcpSend(int fd,Message *m, Bool flag)
     PD((TCP,"tcpSend invoked rem:%d",total));}
   else{
     total=bs->getTotLen();
-    PD((CONTENTS,"tot:%d",total));
-    PD((TCP,"tcpSend invoked tot:%d",total));
-    bs->PiggyBack(m);}
+    bs->PiggyBack(m);
+#ifdef PERDIOLOGLOW
+    printf("#!!!sendingnet(to:'%s' type:%d site:'%s' index:%d size:%d nr:%d)#&&&\n",
+	   bs->getSite()->stringrep(),
+	   m->getMsgType(),m->getSite()->stringrep(),
+	   m->getMsgIndex(),total, m->getMsgNum());
+    
+#endif
+    
+}
       
   while(total){
     Assert(total>0);
@@ -2970,6 +2992,11 @@ start:
     bs->beforeInterpret(rem);
     PD((CONTENTS,"interpret rem:%d len:%d",
 		 rem,bs->interLen()));
+#ifdef PERDIOLOGLOW
+    printf("#!!!readingnet(sender:'%s' type:%d size:%d nr:%d)#&&&\n",
+	   r->remoteSite->site->stringrep(),
+	   type,totLen, msgNr);
+#endif
     // EK this might be done in a nicer way...
     ip=interpret(bs,type,r->informSiteAck(msgNr,totLen));
     
@@ -4007,8 +4034,11 @@ void initNetwork()
   TSC = new TSCQueue();
   if(!am.registerTask(NULL, checkIncTimeSlice, incTimeSlice))
     OZ_error("Unable to register TSC task");
-  TSC_LATENCY = 300;
+  TSC_LATENCY = 300; 
   TSC_TOTAL_A = 4000;
+#endif
+#ifdef PERDIOLOGLOW
+  printf("#!!!mySite('%s')#&&&\n",myDSite->stringrep());
 #endif
 }
   
