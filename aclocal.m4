@@ -666,7 +666,7 @@ AC_DEFUN(OZ_PROG_PERL,[
       oz_tmp_ok=no;
     else
 changequote(<,>)
-      oz_tmp_version=`$PERL -e 'print "[$]";' | sed 's|^.||'`
+      oz_tmp_version=`$PERL -e 'print "[$]\n";' | sed 's|^.||'`
 changequote([,])
       OZ_CHECK_VERSION(oz_tmp_ok,$oz_tmp_version,OZ_VERSION_PERL)
     fi
@@ -677,7 +677,7 @@ changequote([,])
         PERL=perl_not_found
         AC_MSG_WARN(perl not found)
       else
-        AC_MSG_WARN([
+        AC_MSG_ERROR([
 Perl version] OZ_VERSION_PERL [or higher is needed to build the system.
 It can be retrieved from:
 
