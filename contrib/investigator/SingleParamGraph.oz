@@ -5,27 +5,31 @@ export
 
 import
 
-   Tables(getVarId getPropId)
-   Aux(variableToVirtualString varReflect counterClass propLocation)
+   Aux(variableToVirtualString counterClass)
    Config(paramColour edgeColour eventColour)
-   
+   FS
+
 define   
 
    IdCounter = {New Aux.counterClass init}
    
-   fun {MakePropagatorEdge Hist PropTable Event P AllPs}
-      LocP = {Aux.propLocation P.reference}
-      PropId = {Tables.getPropId PropTable P.reference}
+   fun {MakePropagatorEdge Hist PropTable Event PropId AllPs}
+      P = PropTable.PropId
+      LocP = P.location
       Location = if LocP == unit then ""
 		 else LocP.file#":"#LocP.line
 		 end
+      Name = P.name
+\ifdef SHOW_ID
+      #" ["#PropId#"]"
+\endif            
    in
       "l(\"e<"#{IdCounter next($)}
       #">\",e(\"\", [a(\"_DIR\",\"none\"), a(\"EDGECOLOR\",\""
       #Config.edgeColour
       #"\")],l(\"cn<"#PropId
       #">\",n(\"\",["
-      #"a(\"OBJECT\",\""#P.name#"\\n"#Location#"\"),"
+      #"a(\"OBJECT\",\""#Name#"\\n"#Location#"\"),"
       #"a(\"COLOR\",\""#{Hist get_prop_node_failed(P.reference $)}#"\"),"
       #{Hist get_prop_node_attr(PropId $)}
       #"m(["
@@ -36,17 +40,17 @@ define
       
       #if AllPs == nil then ""
        else
-	  ",menu_entry(\"cg<"#{Tables.getPropId PropTable AllPs.1.reference}
+	  ",menu_entry(\"cg<"#AllPs.1
 	  #{FoldL AllPs.2
 	    fun {$ L R} if R == nil then L
-			else L#'|'#{Tables.getPropId PropTable R.reference}
+			else L#'|'#R
 			end
 	    end ""}
 	  #">\",\"Constraint graph of constraints reachable by that variable at event ["#Event#"]\")"
 	  
        end
 
-      #",menu_entry(\"scg<"#{Tables.getPropId PropTable P.reference}
+      #",menu_entry(\"scg<"#P.id
       #">\",\"Single Constraint graph of "#P.name
       #if LocP == unit then ""
        else " ("#LocP.file#":"#LocP.line#")"
@@ -67,8 +71,7 @@ define
    end
    
    fun {MakeEventEdge Hist PropTable V Event}
-      Filtered = {Filter V.susplists.Event
-		       fun {$ S} S.type == propagator end}
+      Filtered = {FS.reflect.lowerBoundList V.susplists.Event}
       PropsOnEvent = {MakePropagatorEdges Hist PropTable Event Filtered Filtered}
    in
       "l(\"e<"#{IdCounter next($)}#">\",e(\"\",[a(\"_DIR\",\"none\"),"
@@ -83,10 +86,10 @@ define
 
       #if Filtered == nil then ""
        else
-	  ",menu_entry(\"cg<"#{Tables.getPropId PropTable Filtered.1.reference}
+	  ",menu_entry(\"cg<"#Filtered.1
 	  #{FoldL Filtered.2
 	    fun {$ L R} if R == nil then L
-			else L#'|'#{Tables.getPropId PropTable R.reference}
+			else L#'|'#R
 			end
 	    end ""}
 	  #">\",\"Constraint graph of constraints reachable by that variable at event ["#Event#"]\")"
@@ -106,10 +109,13 @@ define
       end
    end
 
-   fun {Make VarTable PropTable Hist [V]}
-      ReflV = {Aux.varReflect V}
-      VarId = {Tables.getVarId VarTable V}
-      VarStr = {Aux.variableToVirtualString ReflV.var}
+   fun {Make VarTable PropTable Hist V}
+      [VarId] = {FS.reflect.lowerBoundList V}
+      ReflV = VarTable.VarId
+      VarStr = {Aux.variableToVirtualString ReflV.reference}
+\ifdef SHOW_ID
+      #" ["#VarId#"]"
+\endif            
    in
       {Hist reset_mark}
 
@@ -121,6 +127,7 @@ define
 	      #{Hist insert_menu($)}
 	      #{Hist insert_menu_mark_param(VarId VarStr $)}
 	      #"menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
+	      #",menu_entry(\"vg<solvar>\",\"Variable graph of solution variables\")"
 	      #",menu_entry(\"cg<all>\",\"Constraint graph of all constraints\")"
 	      #",menu_entry(\"cg<sub>\",\"Constraint graph of constraints reachable by that variable\")])"
 	      #"],["
