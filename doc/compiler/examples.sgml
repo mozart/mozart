@@ -37,7 +37,7 @@
       The implementation of the <<Compiler.evalExpression>> procedure
       is a good example of how to use compiler engines and interfaces.
       <<evalExpression>> causes compilation of an expression within
-      a speciied environment.  It is synchronous, &ie;, only returns
+      a specified environment.  It is synchronous, &ie;, only returns
       after the compilation has finished.  Compiler error messages are
       raised as exceptions, and the compilation may be interrupted using
       the nullary procedure returned in <<Kill>>.
