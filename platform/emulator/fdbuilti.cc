@@ -1169,6 +1169,7 @@ BIspec fdSpec[] = {
   {"fdp_minus", 3, fdp_minus},
   {"fdp_times", 3, fdp_times},
   {"fdp_times_rel", 3, fdp_times_rel},
+  {"fdp_power", 3, fdp_power},
   {"fdp_divD", 3, fdp_divD},
   {"fdp_divI", 3, fdp_divI},
   {"fdp_modD", 3, fdp_modD},
@@ -1207,6 +1208,12 @@ BIspec fdSpec[] = {
   {"fdp_twice", 2, fdp_twice},
   {"fdp_square", 2, fdp_square},
   {"fdp_subset", 2, fdp_subset},
+
+  //
+  {"fdp_dsum", 3, fdp_dsum},
+  {"fdp_dsumC", 4, fdp_dsumC},
+  {"fdp_sumAC", 4, fdp_sumAC},
+
 
   {"counter", 2, fdtest_counter},
   {"firstFail", 2, fdtest_firstFail},

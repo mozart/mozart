@@ -65,6 +65,7 @@ OZ_C_proc_proto(fdp_plus)
 OZ_C_proc_proto(fdp_minus)
 OZ_C_proc_proto(fdp_times)
 OZ_C_proc_proto(fdp_times_rel)
+OZ_C_proc_proto(fdp_power)
 OZ_C_proc_proto(fdp_divD)
 OZ_C_proc_proto(fdp_divI)
 OZ_C_proc_proto(fdp_modD)
@@ -101,6 +102,10 @@ OZ_C_proc_proto(sched_disjunctive)
 OZ_C_proc_proto(sched_disjunctiveStream)
 OZ_C_proc_proto(sched_taskIntervalsProof)
 OZ_C_proc_proto(sched_firstsLasts)
+
+OZ_C_proc_proto(fdp_dsum)
+OZ_C_proc_proto(fdp_dsumC)
+OZ_C_proc_proto(fdp_sumAC)
 
 // dummies
 OZ_C_proc_proto(fdp_twice)

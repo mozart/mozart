@@ -77,6 +77,7 @@ void OZ_FDIntVar::read(OZ_Term v)
   if (isSmallInt(vtag)) {
 
     initial_size = dom.initSingleton(smallIntValue(v));
+    initial_width = 0;
     domPtr = &dom;
     setSort(sgl_e);
 
@@ -107,6 +108,7 @@ void OZ_FDIntVar::read(OZ_Term v)
           domPtr = &dom;
           ((GenBoolVariable *) cvar)->patchStoreBool(domPtr);
         }
+        initial_width = 1;
       } else {
       local_fd:
 
@@ -116,6 +118,7 @@ void OZ_FDIntVar::read(OZ_Term v)
           dom = ((GenFDVariable *) cvar)->getDom();
         domPtr = &((GenFDVariable *) cvar)->getDom();
         initial_size = domPtr->getSize();
+        initial_width = ((OZ_FiniteDomainImpl * )domPtr)->getWidth();
 
         Assert(initial_size > 1 && *domPtr != fd_bool);
       }
@@ -143,6 +146,7 @@ void OZ_FDIntVar::read(OZ_Term v)
           ((GenBoolVariable *) cvar)->patchStoreBool(domPtr);
           initial_size = dom.initBool();
         }
+        initial_width = 1;
 
       } else {
       global_fd:
@@ -151,6 +155,7 @@ void OZ_FDIntVar::read(OZ_Term v)
           dom = ((GenFDVariable *) cvar)->getDom();
         domPtr = &((GenFDVariable *) cvar)->getDom();
         initial_size = domPtr->getSize();
+        initial_width = ((OZ_FiniteDomainImpl *)domPtr)->getWidth();
         setSort(int_e);
 
         Assert(initial_size > 1 && *domPtr != fd_bool);
@@ -170,6 +175,7 @@ void OZ_FDIntVar::readEncap(OZ_Term v)
 
   if (isSmallInt(vtag)) {
     initial_size = dom.initSingleton(smallIntValue(v));
+    initial_width = 0;
     domPtr = &dom;
     setState(loc_e);
     setSort(sgl_e);
@@ -184,9 +190,11 @@ void OZ_FDIntVar::readEncap(OZ_Term v)
       setSort(cvar->isBoolPatched() ? bool_e : int_e);
       domPtr = cvar->getReifiedPatch();
       initial_size = domPtr->getSize();
+      initial_width = ((OZ_FiniteDomainImpl *)domPtr)->getWidth();
     } else if (cvar->getType() == BoolVariable) {
     // bool var entered first time
       initial_size = dom.initBool();
+      initial_width = 1;
       domPtr = &dom;
       setSort(bool_e);
       cvar->patchReified(domPtr, TRUE);
@@ -199,6 +207,8 @@ void OZ_FDIntVar::readEncap(OZ_Term v)
       dom = ((GenFDVariable *) cvar)->getDom();
       domPtr = &dom;
       initial_size = domPtr->getSize();
+      initial_width = ((OZ_FiniteDomainImpl *)domPtr)->getWidth();
+
       cvar->patchReified(domPtr, FALSE);
 
       Assert(initial_size > 1 && *domPtr != fd_bool);
@@ -206,6 +216,10 @@ void OZ_FDIntVar::readEncap(OZ_Term v)
     setReifiedFlag(v);
   }
 }
+
+#define CHECK_BOUNDS                                                    \
+   (initial_width > ((OZ_FiniteDomainImpl *)domPtr)->getWidth()         \
+     ? fd_prop_bounds : fd_prop_any)
 
 OZ_Boolean OZ_FDIntVar::tell(void)
 {
@@ -231,7 +245,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
         tagged2GenFDVar(var)->becomesBoolVarAndPropagate(varPtr);
       } else {
         *domPtr = dom;
-        tagged2GenFDVar(var)->propagate(var, fd_prop_bounds);
+        tagged2GenFDVar(var)->propagate(var, CHECK_BOUNDS);
         GenBoolVariable * newboolvar = new GenBoolVariable();
         OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
         am.doBindAndTrailAndIP(var, varPtr,
@@ -241,7 +255,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       }
       return OZ_TRUE;
     } else {
-      tagged2GenFDVar(var)->propagate(var, fd_prop_bounds);
+      tagged2GenFDVar(var)->propagate(var, CHECK_BOUNDS);
       if (isState(glob_e)) {
         GenFDVariable * locfdvar = new GenFDVariable(*domPtr);
         OZ_Term * loctaggedfdvar = newTaggedCVar(locfdvar);

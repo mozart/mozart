@@ -89,7 +89,7 @@ OZ_CFun FSetDisjointPropagator::spawner = fsp_disjoint;
 
 OZ_Return FSetIntersectionPropagator::propagate(void)
 {
-  _OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINT("in " << *this);
 
   OZ_FSetVar x(_x), y(_y), z(_z);
   PropagatorController_S_S_S P(x, y, z);
@@ -99,19 +99,19 @@ loop:
   xt = x;  yt = y;  zt = z;
 
   if (z->isEmpty()) {
-    _OZ_DEBUGPRINT("replace: (z empty)" << *this);
+    OZ_DEBUGPRINT("replace: (z empty)" << *this);
     P.vanish();
     return replaceBy(new FSetDisjointPropagator(_x, _y));
   }
   if (x->isSubsumedBy(*y)) {
-    _OZ_DEBUGPRINT("replace: (x subsumbed by y)" << *this);
+    OZ_DEBUGPRINT("replace: (x subsumbed by y)" << *this);
     P.vanish();
-    return replaceBy(_x, _z);
+    return OZ_DEBUGRETURNPRINT(replaceBy(_x, _z));
   }
   if (y->isSubsumedBy(*x)) {
-    _OZ_DEBUGPRINT("replace: (y subsumbed by xy)" << *this);
+    OZ_DEBUGPRINT("replace: (y subsumbed by xy)" << *this);
     P.vanish();
-    return replaceBy(_y, _z);
+    return OZ_DEBUGRETURNPRINT(replaceBy(_y, _z));
   }
 
   FailOnInvalid(*x <= -(- *z & *y)); // lub
@@ -129,17 +129,16 @@ loop:
   if (xt <= x || yt <= y || zt <= z)
     goto loop;
 
-  _OZ_DEBUGPRINT("leave " << *this);
-  return P.leave1();
+  return OZ_DEBUGRETURNPRINT(P.leave1());
 
 failure:
-  _OZ_DEBUGPRINT("failed " << *this);
+  OZ_DEBUGPRINT("failed " << *this);
   return P.fail();
 }
 
 OZ_Return FSetUnionPropagator::propagate(void)
 {
-  _OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINT("in " << *this);
 
   OZ_FSetVar x(_x), y(_y), z(_z);
   PropagatorController_S_S_S P(x, y, z);
@@ -179,11 +178,11 @@ loop:
   if (xt <= x || yt <= y || zt <= z)
     goto loop;
 
-  _OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINT("out " << *this);
   return P.leave1();
 
 failure:
-  _OZ_DEBUGPRINT("failed " << *this);
+  OZ_DEBUGPRINT("failed " << *this);
   return P.fail();
 }
 

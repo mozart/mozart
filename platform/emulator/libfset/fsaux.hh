@@ -1,5 +1,8 @@
 #include "../oz_cpi.hh" // TMUELLER
 
+//#define OZ_DEBUG
+//#define FSET_FILE_PRINT
+
 #ifdef FSET_FILE_PRINT
 #include <fstream.h>
 #endif
@@ -26,13 +29,38 @@ extern ostream * fscout;
     cerr << "OZ_ASSERT " << #C << " failed (" __FILE__ << ':'   \
          << __LINE__ << ")." << endl << flush;                  \
   }
+#define _OZ_DEBUGRETURNPRINT(X) __debugReturnPrint(X)
+#define OZ_DEBUGRETURNPRINT(X) X /* _OZ_DEBUGRETURNPRINT(X) */
 #else
 #define OZ_DEBUGCODE(C)
 #define _OZ_DEBUGPRINT(C)
 #define OZ_DEBUGPRINT(C)
 #define OZ_ASSERT(C)
+#define OZ_DEBUGRETURNPRINT(X) X
+#define _OZ_DEBUGRETURNPRINT(X) X
 #endif
 
+inline
+OZ_Return __debugReturnPrint(OZ_Return r)
+{
+  *fscout << "returning: ";
+  switch (r) {
+  case FAILED:
+    *fscout << "FAILED";
+    break;
+  case ENTAILED:
+    *fscout << "ENTAILED";
+    break;
+  case SLEEP:
+    *fscout <<"SLEEP";
+    break;
+  default:
+    *fscout << "??? (" << r << ")";
+    break;
+  }
+  *fscout << endl << flush;
+  return r;
+}
 //-----------------------------------------------------------------------------
 
 #define FailOnEmpty(X) if((X) == 0) goto failure;
@@ -82,7 +110,7 @@ public:
   OZ_Return leave1(void) {
     int r1 = v1.leave() ? 1 : 0;
     int r2 = v2.leave() ? 1 : 0;
-    return (r1 + r2 <= 1) ? ENTAILED : SLEEP;
+    return (r1 + r2 <= 0) ? ENTAILED : SLEEP; // TMUELLER
   }
   OZ_Return vanish(void) {
     v1.leave();
@@ -110,7 +138,7 @@ public:
     int r1 = v1.leave() ? 1 : 0;
     int r2 = v2.leave() ? 1 : 0;
     int r3 = v3.leave() ? 1 : 0;
-    return (r1 + r2 + r3 <= 1) ? ENTAILED : SLEEP;
+    return (r1 + r2 + r3 <= 0) ? ENTAILED : SLEEP; // TMUELLER
   }
   OZ_Return vanish(void) {
     v1.leave();

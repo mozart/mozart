@@ -370,5 +370,21 @@ public:
   virtual OZ_Term getParameters(void) const;
 };
 
+//-----------------------------------------------------------------------------
+
+class Propagator_VI_VD_D : public OZ_Propagator {
+protected:
+  int *reg_a,reg_sz,reg_c,dpos;
+  OZ_Term reg_d;
+  OZ_Term *_a,*reg_x;
+public:
+  Propagator_VI_VD_D(OZ_Term, OZ_Term, OZ_Term);
+  virtual ~Propagator_VI_VD_D(void);
+  virtual void updateHeapRefs(OZ_Boolean);
+  virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VD_D); }
+  virtual OZ_Term getParameters(char *) const;
+  void simplify(void);
+};
+
 
 #endif // __STD_HH__
