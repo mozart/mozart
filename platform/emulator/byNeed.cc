@@ -3,9 +3,10 @@
  *    Michael Mehl (mehl@dfki.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    derived from lazyvar.cc by Denys Duchier (duchier@ps.uni-sb.de)
  * 
  *  Copyright:
+ *    Denys Duchier (1998)
  *    Michael Mehl (1998)
  * 
  *  Last change:
