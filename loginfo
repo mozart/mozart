@@ -3,6 +3,5 @@ Oz/Compiler	mail -s "I have changed %s" henz,scheidhr
 Oz/Compiler/frontend	mail -s "I have changed %s" mmueller
 Oz/include	mail -s "I have changed %s" mehl,scheidhr,tmueller,popow,henz
 Oz/lib		mail -s "I have changed %s" henz,wuertz,popow
-Oz/lib/browser	mail -s "I have changed %s" popow
 Oz/elisp	mail -s "I have changed %s" scheidhr
 Oz		/usr/share/gs/etc/cvs2news %s
