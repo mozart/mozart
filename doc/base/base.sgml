@@ -26,6 +26,7 @@
 <!ENTITY chunks SYSTEM "chunks.sgml">
 <!ENTITY control SYSTEM "control.sgml">
 <!ENTITY infix SYSTEM "infix.sgml">
+<!entity misc system "misc.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY lt "<">
@@ -60,6 +61,7 @@
     <Meta name="html.split" value="chapter.chunks">
     <Meta name="html.split" value="chapter.control">
     <Meta name="html.split" value="chapter.infix">
+    <Meta name="html.split" value="chapter.misc">
     <Meta name="html.split.bib" value="">
     <Meta name="html.split.index" value="">
 
@@ -71,6 +73,7 @@
     <Author.Extern to="author.db" key="Martin.Mueller">
     <Author.Extern to="author.db" key="Christian.Schulte">
     <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Author.Extern to="author.db" key="Denys.Duchier">
     <Comic>
       <Picture.Choice>
 	<Picture.Extern to="base.gif" type=gif>
@@ -99,6 +102,7 @@
     &text;
     &proccells;
     &chunks;
+    &misc;
     &control;
     &infix;
   <Back>
