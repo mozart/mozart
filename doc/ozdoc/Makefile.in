@@ -38,7 +38,7 @@ validate: ozdoc-html
         nsgmls -cHTML4.soc -sB ozdoc-html/*.html
 
 install: ozdoc-html $(DOCDIR)
-        cd ozdoc-html && for i in *; do $(INSTALL_FILE) $$i $(DOCDIR)/$$i; done
+        for i in *; do $(INSTALL_FILE) $$i $(DOCDIR); done
 
 $(DOCDIR):
         $(INSTALL_DIR) $@
