@@ -45,7 +45,7 @@ DEMOAPPLETS = \
 	$(APPLETS:%=$(OZDEMO)/%)
 
 DIRS = \
-	JobShop Cutting Transport DictClient LMF Chat
+	JobShop Cutting Transport DictClient LMF Chat College
 
 all: dirs $(APPLETS)
 
@@ -129,6 +129,20 @@ DICTCLIENTFUN = $(DICTCLIENT:%=DictClient/%.ozf)
 
 DictClient.oza: $(DICTCLIENTFUN)
 	$(LINK) DictClient/Main.ozf -o $@
+
+
+# JobShop application
+College/%.ozf: College/%.oz
+	$(COMPILE) -DALONEDEMO -b $(BUILDDIR)/College/ $< -o $@
+
+COLLEGE = \
+	Main Common Controller Graphics Latex Scheduler
+
+COLLEGEFUN = $(COLLEGE:%=College/%.ozf)
+
+College.oza: $(COLLEGEFUN)
+	$(LINK) College/Main.ozf -o $@
+
 
 
 DemoUrls.ozf: DemoUrls.oz
