@@ -147,7 +147,9 @@ public:
 class AddressHashTable {
 protected:
   int tableSize;                //
-  int incStepMod;               // an integer slightly < tableSize;
+  int bits;                     // pkey & skey;
+  int rsBits;                   // right shifht;
+  int slsBits;                  // skey left shift;
   AHT_HashNode* table;          //
   int counter;      // number of entries
   int percent;      // if more than percent is used, we reallocate
@@ -160,7 +162,6 @@ protected:
   unsigned int incHashFunc(intlong);
   unsigned int getStepN(unsigned int pkey, unsigned int ikey, int i);
 
-  unsigned int findIndex(intlong);
   void resize();
 
 public:
@@ -243,7 +244,6 @@ private:
   unsigned int primeHashFunc(intlong);
   unsigned int incHashFunc(intlong);
 
-  unsigned int findIndex(intlong i);
   void mkTable();
   void resize();
 
