@@ -137,6 +137,7 @@ OZ_Term unmarshallTerm(ByteStream *bs);
 inline void marshallNumber(unsigned int,ByteStream *);
 inline void marshallMySite(ByteStream* );
 inline void marshallCredit(Credit,ByteStream *);
+inline int unmarshallNumber(ByteStream *bs);
 
 void sendSurrender(BorrowEntry *be,OZ_Term val);
 void sendRedirect(Site* sd,int OTI,TaggedRef val);
@@ -1164,13 +1165,13 @@ public:
 
   void freeBorrowEntry();
 
-  void addAskCredit(Credit c){
+  void addCredit(Credit c){
     if (!isPersistent()) {
       if (c==INFINITE_CREDIT) {
 	makePersistent();
       } else {
-	addToCredit(1); // at least one credit to request more
-	addCredit(c-1); // rest may be use for pending messages
+	if (getCredit()==1) addToCredit(1); // at least one credit to request more
+	addCredit1(c-1); // rest may be use for pending messages
       }
     }
   }
@@ -1182,9 +1183,9 @@ public:
 #endif
 
   void makePersistent();
-  void addCredit(Credit cin){ 
+  void addCredit1(Credit cin){ 
     Credit cur=getCredit();
-    if (cur==INFINITE_CREDIT) return;
+    Assert(cur!=INFINITE_CREDIT);
     Assert(cin!=INFINITE_CREDIT);
     PD((CREDIT,"borrow add s:%s o:%d add:%d to:%d",
        pSite(getNetAddress()->site),
@@ -2184,14 +2185,18 @@ inline
 void gotRef(ByteStream *bs, TaggedRef val)
 {
   PD((REF_COUNTER,"got: %d",bs->refCounter));
+  int n = unmarshallNumber(bs);
+  Assert(n==bs->refCounter);
   refTable->set(bs->refCounter++,val);
 }
 
 class RefTrail: public Stack {
 public:
-  RefTrail() : Stack(200,Stack_WithMalloc) { }
+  Bool init;
+  RefTrail() : Stack(200,Stack_WithMalloc) { init = NO; }
   void trail(OZ_Term *t)
   {
+    Assert(init);
     push(t);
     push(ToPointer(*t));
   }
@@ -2532,11 +2537,13 @@ Bool checkCycle(OZ_Term t, ByteStream *bs)
 }
 
 inline
-void trailCycle(OZ_Term *t,int r)
+void trailCycle(OZ_Term *t, ByteStream *bs)
 {
-  PD((REF_COUNTER,"trail: %d",r));
+  PD((REF_COUNTER,"trail: %d",bs->refCounter));
   refTrail->trail(t);
-  *t = (r<<tagSize)|GCTAG;
+  *t = ((bs->refCounter)<<tagSize)|GCTAG;
+  marshallNumber(bs->refCounter,bs);
+  bs->refCounter++;
 }
 
 void marshallClosure(Site *sd,Abstraction *a,ByteStream *bs) {
@@ -2615,20 +2622,20 @@ Bool checkURL(GName *gname, ByteStream *bs) {
 
 void marshallSRecord(Site *sd, SRecord *sr, ByteStream *bs)
 {
-  if (!sr) {
-    bs->put(0);
-  } else {
-    bs->put(1);
-    marshallTerm(sd,makeTaggedSRecord(sr),bs);
+  TaggedRef t = nil();
+  if (sr) {
+    t = makeTaggedSRecord(sr);
   }
+  marshallTerm(sd,t,bs);
 }
 
 void marshallObject(Site *sd, Object *o, ByteStream *bs)
 {
+  Object *oc = o->getOzClass();
   bs->put(DIF_OBJECT);
   marshallGName(o->getGName(),bs);
-  marshallTerm(sd,makeTaggedConst(o->getOzClass()),bs);
-  trailCycle(o->getRef(),bs->refCounter++);
+  marshallTerm(sd,makeTaggedConst(oc),bs);
+  trailCycle(o->getRef(),bs);
   marshallSRecord(sd,o->getFreeRecord(),bs);
   marshallTerm(sd,makeTaggedConst(getCell(o->getState())),bs);
   if (o->getLock()) {
@@ -2644,7 +2651,7 @@ void marshallClass(Site *sd, Object *o, ByteStream *bs)
 {
   bs->put(DIF_CLASS);
   marshallGName(o->getGName(),bs);
-  trailCycle(o->getRef(),bs->refCounter++);
+  trailCycle(o->getRef(),bs);
   marshallSRecord(sd,o->getFreeRecord(),bs);
 }
 
@@ -2652,6 +2659,7 @@ void marshallDict(Site *sd, OzDictionary *d, ByteStream *bs)
 {
   int size = d->getSize();
   marshallNumber(size,bs);
+  trailCycle(d->getRef(),bs);
   
   int i = d->getFirst();
   i = d->getNext(i);
@@ -2672,7 +2680,7 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
       PD((MARSHALL,"dictionary"));
       bs->put(DIF_DICT);
       marshallDict(sd,(OzDictionary *) t,bs);
-      break;
+      return;
     }
   case Co_Builtin:
     {
@@ -2692,7 +2700,7 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
       bs->put(DIF_CHUNK);
       marshallGName(gname,bs);
 
-      trailCycle(t->getRef(),bs->refCounter++);
+      trailCycle(t->getRef(),bs);
 
       marshallTerm(sd,ch->getValue(),bs);
       return;
@@ -2722,7 +2730,7 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
       marshallTerm(sd,pp->getName(),bs);
       marshallNumber(pp->getArity(),bs);
 
-      trailCycle(t->getRef(),bs->refCounter++);
+      trailCycle(t->getRef(),bs);
 
       marshallClosure(sd,pp,bs);
       marshallCode(sd,pp->getPC(),bs);
@@ -2752,7 +2760,7 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
     error("marshallConst(%d) not impl",t->getType());
   }
 
-  trailCycle(t->getRef(),bs->refCounter++);
+  trailCycle(t->getRef(),bs);
 }
 
 void marshallVariable(Site *sd, PerdioVar *pvar, ByteStream *bs)
@@ -2798,21 +2806,48 @@ void marshallVariable(Site *sd, PerdioVar *pvar, ByteStream *bs)
 
 SRecord *unmarshallSRecord(ByteStream *bs)
 {
-  if (bs->get()==0)
-    return NULL;
-
-  return tagged2SRecord(unmarshallTerm(bs));
+  TaggedRef t = unmarshallTerm(bs);
+  return isNil(t) ? (SRecord*)NULL : tagged2SRecord(t);
 }
+
+PerdioVar *var2PerdioVar(TaggedRef *tPtr)
+{
+  TypeOfTerm tag = tagTypeOf(*tPtr);
+  if (tag==CVAR) {
+    switch (tagged2CVar(*tPtr)->getType()) {
+    case PerdioVariable:
+      return tagged2PerdioVar(*tPtr);
+    default:
+      return NULL;
+    }
+  }
+
+  OwnerEntry *oe;
+  int i = ownerTable->newOwner(oe);
+  oe->mkVar(makeTaggedRef(tPtr));
+
+  PerdioVar *pvar=new PerdioVar();
+  if (tag==SVAR) {
+    pvar->setSuspList(tagged2SVar(*tPtr)->getSuspList());
+  }
+  pvar->setIndex(i);
+  doBindCVar(tPtr,pvar);
+  return pvar;
+}
+
+
 
 void marshallTerm(Site *sd, OZ_Term t, ByteStream *bs)
 {
-  OZ_Term *args;
-  int argno;
-
 loop:
   DEREF(t,tPtr,tTag);
   switch(tTag) {
 
+  case GCTAG: {
+    Bool b = checkCycle(t,bs);
+    Assert(b);
+    break;
+  }
   case SMALLINT:
     bs->put(DIF_SMALLINT);
     marshallNumber(smallIntValue(t),bs);
@@ -2844,13 +2879,15 @@ loop:
       } else if (lit->getFlags()&Lit_isUniqueName) {
 	bs->put(DIF_UNIQUENAME);
 	marshallString(lit->getPrintName(),bs);	
+	PD((MARSHALL,"unique name: %s",lit->getPrintName()));
       } else {
 	bs->put(DIF_NAME);
 	GName *gname = ((Name*)lit)->globalize();
 	marshallGName(gname,bs);
 	marshallString(lit->getPrintName(),bs);
+	PD((MARSHALL,"name: %s",lit->getPrintName()));
       }
-      trailCycle(lit->getRef(),bs->refCounter++);
+      trailCycle(lit->getRef(),bs);
       break;
     }
 
@@ -2860,16 +2897,29 @@ loop:
       if (checkCycle(*l->getRef(),bs)) return;
       bs->put(DIF_LIST);
       PD((MARSHALL_CT,"tag DIF_LIST BYTES:1"));
-      argno = 2;
-      args  = l->getRef();
       PD((MARSHALL,"list"));
-      goto processArgs;
+
+      TaggedRef *args = l->getRef();
+      if (!isRef(*args) && isAnyVar(*args)) {
+	PerdioVar *pvar = var2PerdioVar(args);
+	trailCycle(args,bs);
+	marshallVariable(sd,pvar,bs);
+      } else {
+	OZ_Term head = l->getHead();
+	trailCycle(args,bs);
+	marshallTerm(sd,head,bs);
+      }
+      // tail recursion optimization
+      t = l->getTail();
+      goto loop;
     }
 
   case SRECORD:
     {
       SRecord *rec = tagged2SRecord(t);
-      if (checkCycle(*rec->getRef(),bs)) return; /* TODO mark instead of getRef ??*/
+      if (checkCycle(*rec->getCycleAddr(),bs)) return;
+      TaggedRef label = rec->getLabel();
+
       if (rec->isTuple()) {
 	bs->put(DIF_TUPLE);
 	PD((MARSHALL_CT,"tag DIF_TUPLE BYTES:1"));
@@ -2879,11 +2929,17 @@ loop:
 	PD((MARSHALL_CT,"tag DIF_RECORD BYTES:1"));
 	marshallTerm(sd,rec->getArityList(),bs);
       }
-      marshallTerm(sd,rec->getLabel(),bs);
-      argno = rec->getWidth();
-      args  = rec->getRef();
+      marshallTerm(sd,label,bs);
+      trailCycle(rec->getCycleAddr(),bs);
+      int argno = rec->getWidth();
       PD((MARSHALL,"record-tuple no:%d",argno));
-      goto processArgs;
+
+      for(int i=0; i<argno-1; i++) {
+	marshallTerm(sd,rec->getArg(i),bs);
+      }
+      // tail recursion optimization
+      t = rec->getArg(argno-1);
+      goto loop;
     }
 
   case OZCONST:
@@ -2898,46 +2954,18 @@ loop:
     }
 
   case UVAR:
-    {
-      OwnerEntry *oe;
-      int i = ownerTable->newOwner(oe);
-      oe->mkVar(makeTaggedRef(tPtr));
-
-      PerdioVar *pvar=new PerdioVar();
-      pvar->setIndex(i);
-      doBindCVar(tPtr,pvar);
-
-      marshallVariable(sd,pvar,bs);
-      break;
-    }
   case SVAR:
+  case CVAR:
     {
-      OwnerEntry *oe;
-      int i = ownerTable->newOwner(oe);
-      oe->mkVar(makeTaggedRef(tPtr));
-
-      SVariable *svar = tagged2SVar(t);
-      PerdioVar *pvar=new PerdioVar();
-      pvar->setSuspList(svar->getSuspList());
-      pvar->setIndex(i);
-      doBindCVar(tPtr,pvar);
-
+      PerdioVar *pvar = var2PerdioVar(tPtr);
+      if (pvar==NULL) {
+	t = makeTaggedRef(tPtr);
+	goto bomb;
+      }
       marshallVariable(sd,pvar,bs);
       break;
     }
-  case CVAR:
-    switch (tagged2CVar(t)->getType()) {
-    case PerdioVariable:
-      {
-	PerdioVar *pvar = (PerdioVar *) tagged2CVar(t);
-	marshallVariable(sd,pvar,bs);
-	break;
-      }
-    default:
-      t=makeTaggedRef(tPtr);
-      goto bomb;
-    }
-    break;
+
   default:
   bomb:
     warning("Cannot marshall %s",toC(t));
@@ -2946,26 +2974,6 @@ loop:
   }
 
   return;
-
-processArgs:
-  OZ_Term arg0 = tagged2NonVariable(args);
-  if (!isRef(*args) && isAnyVar(*args)) {
-    int r=bs->refCounter++;
-    marshallTerm(sd,arg0,bs);
-    trailCycle(args,r);
-  } else {
-    trailCycle(args,bs->refCounter++);
-    marshallTerm(sd,arg0,bs);
-  }
-  args++;
-  if (argno == 1) return;
-  for(int i=1; i<argno-1; i++) {
-    marshallTerm(sd,tagged2NonVariable(args),bs);
-    args++;
-  }
-  // tail recursion optimization
-  t = tagged2NonVariable(args);
-  goto loop;
 }
 
 /**********************************************************************/
@@ -2979,12 +2987,12 @@ void unmarshallTert(ByteStream *bs, TaggedRef *ret, MarshallTag tag,
   int bi;
   OZ_Term val = unmarshallBorrow(bs,ob,bi);
   if (val) {
-    PD((UNMARSHALL,"%s hit b:%d",bi,comment));
+    PD((UNMARSHALL,"%s hit b:%d",comment,bi));
     gotRef(bs,val);
     *ret=val;
     return;
   }
-  PD((UNMARSHALL,"%s miss b:%d",bi,comment));
+  PD((UNMARSHALL,"%s miss b:%d",comment,bi));
 
   Tertiary *tert = NULL;
   switch (tag) {
@@ -2999,17 +3007,18 @@ void unmarshallTert(ByteStream *bs, TaggedRef *ret, MarshallTag tag,
   ob->mkTertiary(tert);
 }
 
-OzDictionary *unmarshallDict(ByteStream *bs)
+void unmarshallDict(ByteStream *bs, TaggedRef *ret)
 {
   int size = unmarshallNumber(bs);
-  OzDictionary *ret = new OzDictionary(am.currentBoard,size);
+  OzDictionary *aux = new OzDictionary(am.currentBoard,size);
+  *ret = makeTaggedConst(aux);
+  gotRef(bs,*ret);
 
   while(size-- > 0) {
     TaggedRef key = unmarshallTerm(bs);
     TaggedRef val = unmarshallTerm(bs);
-    ret->setArg(key,val);
+    aux->setArg(key,val);
   }
-  return ret;
 }
 
 void unmarshallObject(Object *o, ByteStream *bs)
@@ -3024,7 +3033,7 @@ void unmarshallObject(Object *o, ByteStream *bs)
   o->setState(tagged2Tert(t));
 
   // TODO: make locks work
-  o->setLock(isNil(lock) ? (OzLock*)NULL : new OzLock(am.rootBoard));
+  o->setLock(isNil(lock) ? (OzLock*)NULL : tagged2Lock(lock));
 }
 
 void unmarshallClass(Object *o, ByteStream *bs)
@@ -3073,7 +3082,6 @@ Object *newClass(Board *bb,GName *gname) {
 
 void unmarshallTerm(ByteStream *bs, OZ_Term *ret)
 {
-  int argno;
 loop:
   MarshallTag tag = (MarshallTag) bs->get();
   PD((UNMARSHALL_CT,"tag %c BYTES:1",tag));
@@ -3146,38 +3154,48 @@ loop:
 
   case DIF_LIST:
     {
-      OZ_Term head, tail;
-      argno = 2;
+      PD((UNMARSHALL,"list"));
       LTuple *l = new LTuple();
       *ret = makeTaggedLTuple(l);
       gotRef(bs,*ret);
-      ret = l->getRef();
-      PD((UNMARSHALL,"list"));
-      goto processArgs;
+      unmarshallTerm(bs,l->getRefHead());
+      // tail recursion optimization
+      ret = l->getRefTail();
+      goto loop;
     }
   case DIF_TUPLE:
     {
-      argno = unmarshallNumber(bs);
+      int argno = unmarshallNumber(bs);
+      PD((UNMARSHALL,"tuple no_args:%d",argno));
       TaggedRef label = unmarshallTerm(bs);
       SRecord *rec = SRecord::newSRecord(label,argno);
       *ret = makeTaggedSRecord(rec);
       gotRef(bs,*ret);
-      ret = rec->getRef();
-      PD((UNMARSHALL,"tuple no_args:%d",argno));
-      goto processArgs;      
+
+      for(int i=0; i<argno-1; i++) {
+	unmarshallTerm(bs,rec->getRef(i));
+      }
+      // tail recursion optimization
+      ret = rec->getRef(argno-1);
+      goto loop;
     }
 
   case DIF_RECORD:
     {
       TaggedRef arity = unmarshallTerm(bs);
-      argno = length(arity);
+      int argno       = length(arity);
+      PD((UNMARSHALL,"record no:%d",argno));
       TaggedRef label = unmarshallTerm(bs);
-      SRecord *rec = SRecord::newSRecord(label,mkArity(arity));
+      SRecord *rec    = SRecord::newSRecord(label,mkArity(arity));
       *ret = makeTaggedSRecord(rec);
       gotRef(bs,*ret);
-      ret = rec->getRef();
-      PD((UNMARSHALL,"record no:%d",argno));
-      goto processArgs;      
+
+      for(int i=0; i<argno-1; i++) {
+	unmarshallTerm(bs,rec->getRef(i));
+      }
+      // tail recursion optimization
+      ret = rec->getRef(argno-1);
+      goto loop;
     }
 
   case DIF_REF:
@@ -3240,7 +3258,7 @@ loop:
       } else {
 	PD((UNMARSHALL,"url found"));
       }
-      gotRef(bs,*ret);
+
       return;
     }
 
@@ -3280,10 +3298,10 @@ loop:
 
   case DIF_OBJECT: 
     {
+      PD((UNMARSHALL,"object"));
+
       GName *gname    = unmarshallGName(ret,bs);
       TaggedRef clas  = unmarshallTerm(bs);
-
-      PD((UNMARSHALL,"object"));
 
       if (!gname) {
 	PD((UNMARSHALL,"object found"));
@@ -3395,6 +3413,9 @@ loop:
       gotRef(bs,*ret);
 
       RefsArray globals = unmarshallClosure(bs);
+      static int xx=0;
+      xx++;
+      message("xx=%d\n",xx);
       ProgramCounter PC = unmarshallCode(bs);
       if (pp) {
 	pp->import(globals,PC);
@@ -3405,7 +3426,7 @@ loop:
   case DIF_DICT:
     {
       PD((UNMARSHALL,"dict"));
-      *ret = makeTaggedConst(unmarshallDict(bs));
+      unmarshallDict(bs,ret);
       return;
     }
   case DIF_LOCK:
@@ -3413,6 +3434,7 @@ loop:
       // TODO: make locks work
       PD((UNMARSHALL,"lock"));
       *ret = makeTaggedConst(new OzLock(am.rootBoard));
+      gotRef(bs,*ret);
       return;
     }
   case DIF_BUILTIN:
@@ -3438,12 +3460,6 @@ loop:
   }
 
   Assert(0);
-processArgs:
-  for(int i=0; i<argno-1; i++) {
-    unmarshallTerm(bs,ret++);
-  }
-  // tail recursion optimization
-  goto loop;
 }
 
 
@@ -3558,7 +3574,7 @@ void siteReceive(ByteStream* bs)
 
       BorrowEntry *b=borrowTable->find(&na);
       Assert(b!=NULL);
-      b->addAskCredit(c);
+      b->addCredit(c);
       break;
     }
 
@@ -3753,15 +3769,16 @@ void siteReceive(ByteStream* bs)
 
 void domarshallTerm(Site * sd,OZ_Term t, ByteStream *bs)
 {
+  refTrail->init = OK;
   marshallTerm(sd,t,bs);
   refTrail->unwind();
+  refTrail->init = NO;
 }
 
 void domarshallTerm(TaggedRef url,OZ_Term t, ByteStream *bs)
 {
   currentURL=url;
-  marshallTerm(0,t,bs);
-  refTrail->unwind();
+  domarshallTerm((Site*)0,t,bs);
   currentURL=0;
 }
 
@@ -4700,7 +4717,6 @@ OZ_C_proc_begin(BIsave,2)
   ByteStream *bs = bufferManager->getByteStreamMarshal();
 
   domarshallTerm(OZ_atom(url),in,bs);
-  refTrail->unwind();
 
   bs->marshalEnd();
 
@@ -4782,7 +4798,6 @@ int loadURL(char *url, OZ_Term out)
       }
 
       bs->beforeInterpret(0);
-
       bs->unmarshalBegin();
 
       OZ_Term val = unmarshallTerm(bs);
@@ -4799,14 +4814,12 @@ int loadURL(char *url, OZ_Term out)
     {
       if (strncmp(url,"ozp://",6)!=0) goto bomb;
       url+=6;
-
       char *host;
       port_t port;
       time_t timestamp;
       int OTI;
       {
 	char *last = index(url,':');
-
 	if (!last) goto bomb;
 
 	int len=last-url;
