@@ -92,6 +92,7 @@ EXAMPLES = \
 SAMPLER0 = \
 	constraints/animate-bridge constraints/bridge \
 	constraints/draw-photo constraints/abz6 \
+	constraints/crew constraints/hamming \
 	constraints/scheduling-compiler constraints oz
 SAMPLER = $(SAMPLER0:%=$(OZEX)/sampler/%.oz)
 
