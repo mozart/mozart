@@ -950,26 +950,6 @@ With ARG, delete it instead."
   (interactive "P")
   (oz-breakpoint arg))
 
-(defun oz-breakpoint-mouse-set (event)
-  "Set breakpoint at line where mouse points to."
-  (interactive "e")
-  (oz-breakpoint-mouse event nil))
-
-(defun oz-breakpoint-mouse-delete (event)
-  "Delete breakpoint at line where mouse points to."
-  (interactive "e")
-  (oz-breakpoint-mouse event t))
-
-(defun oz-breakpoint-mouse (event flag)
-  (save-excursion
-    (cond (oz-gnu-emacs
-	   (set-buffer (window-buffer (posn-window (event-end event))))
-	   (goto-char (posn-point (event-end event))))
-	  (oz-lucid-emacs
-	   (set-buffer (event-buffer event))
-	   (goto-char (event-closest-point event))))
-    (oz-breakpoint flag)))
-
 (defun oz-breakpoint (flag)
   (save-excursion
     (beginning-of-line)

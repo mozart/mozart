@@ -92,14 +92,14 @@
   "Feed the current line to the Oz Compiler." t)
 (autoload 'oz-show-paragraph "mozart"
   "Feed the current paragraph to the Oz Compiler." t)
-;; (autoload 'oz-inspect-buffer "mozart"
-;;   "Feed the current buffer to the Oz Compiler." t)
-;; (autoload 'oz-inspect-region "mozart"
-;;   "Feed the current region to the Oz Compiler." t)
-;; (autoload 'oz-inspect-line "mozart"
-;;   "Feed the current line to the Oz Compiler." t)
-;; (autoload 'oz-inspect-paragraph "mozart"
-;;   "Feed the current paragraph to the Oz Compiler." t)
+;;(autoload 'oz-inspect-buffer "mozart"
+;;  "Feed the current buffer to the Oz Compiler." t)
+;;(autoload 'oz-inspect-region "mozart"
+;;  "Feed the current region to the Oz Compiler." t)
+;;(autoload 'oz-inspect-line "mozart"
+;;  "Feed the current line to the Oz Compiler." t)
+;;(autoload 'oz-inspect-paragraph "mozart"
+;;  "Feed the current paragraph to the Oz Compiler." t)
 (autoload 'oz-open-panel "mozart"
   "Feed `{Panel.open}' to the Oz Compiler." t)
 (autoload 'oz-open-compiler-panel "mozart"
@@ -122,10 +122,6 @@
   "Halt the Mozart sub-process." t)
 (autoload 'oz-breakpoint-at-point "mozart"
   "Set breakpoint at current line." t)
-(autoload 'oz-breakpoint-mouse-set "mozart"
-  "Set breakpoint at line where mouse points to." t)
-(autoload 'oz-breakpoint-mouse-delete "mozart"
-  "Delete breakpoint at line where mouse points to." t)
 (autoload 'oz-set-other "mozart"
   "Set the value of environment variables OZEMULATOR resp. OZ_LOAD." t)
 (autoload 'oz-other "mozart"
@@ -204,16 +200,6 @@ Note that this variable is only checked once when oz.el is loaded."
 	   :group 'oz)))
 (put 'oz-pedantic-spaces 'variable-interactive
      "XHighlight ill-spaced whitespace? (t or nil): ")
-
-(eval-and-compile
-  (eval '(defcustom oz-pc-keys nil
-	   "*If non-nil, use only `politically correct' key bindings.
-This means that M-l and M-r are not locally rebound in Oz buffers,
-and that no command will be bound to C-c followed by a letter."
-	   :type 'boolean
-	   :group 'oz)))
-(put 'oz-pc-keys 'variable-interactive
-     "XUse only politically-correct key bindings? (t or nil): ")
 
 
 ;;}}}
@@ -813,7 +799,7 @@ If ARG is given, reindent that many lines above and below point as well."
   "Move forward one balanced Oz expression.
 With argument, do it that many times.  Negative ARG means backwards."
   (interactive "p")
-  (let ((case-fold-search nil) pos)
+  (let ((case-fold-search nil))
     (or arg (setq arg 1))
     (if (< arg 0)
 	(backward-oz-expr (- arg))
@@ -954,173 +940,66 @@ buffer."
 ;;}}}
 ;;{{{ Keymap Definitions
 
-(defmacro oz-kbd (keys)
-  (read-kbd-macro keys))
-
-(defvar mozart-bindings nil)
+(defun oz-define-prefixed-keys (map prefix)
+  (define-key map `[,@prefix ?e] 'oz-toggle-emulator)
+  (define-key map `[,@prefix ?c] 'oz-toggle-compiler)
+  (define-key map `[,@prefix ?t] 'oz-toggle-temp)
+  (define-key map `[,@prefix ?r] 'run-oz)
+  (define-key map `[,@prefix ?h] 'oz-halt)
+  (define-key map `[,@prefix ?n] 'oz-new-buffer)
+  (define-key map `[,@prefix ?d] 'oz-gdb)
+  (define-key map `[,@prefix ?o] 'oz-other)
+  (define-key map `[,@prefix ?m] 'oz-set-other)
+  ;;
+  (define-key map `[,@prefix (control ?b)] 'oz-feed-buffer)
+  (define-key map `[,@prefix (control ?r)] 'oz-feed-region)
+  (define-key map `[,@prefix (control ?l)] 'oz-feed-line)
+  (define-key map `[,@prefix (control ?p)] 'oz-feed-paragraph)
+  ;;
+  (define-key map `[,@prefix ?s (control ?b)] 'oz-show-buffer)
+  (define-key map `[,@prefix ?s (control ?r)] 'oz-show-region)
+  (define-key map `[,@prefix ?s (control ?l)] 'oz-show-line)
+  (define-key map `[,@prefix ?s (control ?p)] 'oz-show-paragraph)
+  ;;
+  (define-key map `[,@prefix ?b (control ?b)] 'oz-browse-buffer)
+  (define-key map `[,@prefix ?b (control ?r)] 'oz-browse-region)
+  (define-key map `[,@prefix ?b (control ?l)] 'oz-browse-line)
+  (define-key map `[,@prefix ?b (control ?p)] 'oz-browse-paragraph)
+  ;;
+  ;;(define-key map `[,@prefix ?i (control ?b)] 'oz-inspect-buffer)
+  ;;(define-key map `[,@prefix ?i (control ?r)] 'oz-inspect-region)
+  ;;(define-key map `[,@prefix ?i (control ?l)] 'oz-inspect-line)
+  ;;(define-key map `[,@prefix ?i (control ?p)] 'oz-inspect-paragraph)
+  ;;
+  (define-key map `[,@prefix (control ?.) ?s] 'oz-open-panel)
+  (define-key map `[,@prefix (control ?.) ?c] 'oz-open-compiler-panel)
+  (define-key map `[,@prefix (control ?.) ?p] 'oz-profiler)
+  (define-key map `[,@prefix (control ?.) ?d] 'oz-debugger))
 
 (defvar oz-mode-map
   (let ((map (make-sparse-keymap)))
-    (cond
-     (oz-gnu-emacs
-      (cond (mozart-bindings
-	     (define-key map (oz-kbd "TAB") 'oz-indent-line)
-	     (define-key map (oz-kbd "DEL") 'backward-delete-char-untabify)
-	     (define-key map (oz-kbd "RET") 'oz-electric-terminate-line)
-	     ;;
-	     (define-key map (oz-kbd "C-. e") 'oz-toggle-emulator)
-	     (define-key map (oz-kbd "C-. c") 'oz-toggle-compiler)
-	     (define-key map (oz-kbd "C-. t") 'oz-toggle-temp)
-	     (define-key map (oz-kbd "C-. r") 'run-oz)
-	     (define-key map (oz-kbd "C-. h") 'oz-halt)
-	     (define-key map (oz-kbd "C-. n") 'oz-new-buffer)
-	     (define-key map (oz-kbd "C-. d") 'oz-gdb)
-	     (define-key map (oz-kbd "C-. o") 'oz-other)
-	     (define-key map (oz-kbd "C-. m") 'oz-set-other)
-	     ;;
-	     (define-key map (oz-kbd "C-. C-l") 'oz-feed-line)
-	     (define-key map (oz-kbd "C-. C-r") 'oz-feed-region)
-	     (define-key map (oz-kbd "C-. C-b") 'oz-feed-buffer)
-	     (define-key map (oz-kbd "C-. C-p") 'oz-feed-paragraph)
-	     (define-key map (oz-kbd "M-C-x"  ) 'oz-feed-paragraph)
-	     ;;
-	     (define-key map (oz-kbd "C-. b C-l") 'oz-browse-line)
-	     (define-key map (oz-kbd "C-. b C-r") 'oz-browse-region)
-	     (define-key map (oz-kbd "C-. b C-b") 'oz-browse-buffer)
-	     (define-key map (oz-kbd "C-. b C-p") 'oz-browse-paragraph)
-	     ;;
-	     (define-key map (oz-kbd "C-. s C-l") 'oz-show-line)
-	     (define-key map (oz-kbd "C-. s C-r") 'oz-show-region)
-	     (define-key map (oz-kbd "C-. s C-b") 'oz-show-buffer)
-	     (define-key map (oz-kbd "C-. s C-p") 'oz-show-paragraph)
-	     ;;
-	     (define-key map (oz-kbd "C-. C-. s") 'oz-open-panel)
-	     (define-key map (oz-kbd "C-. C-. c") 'oz-open-compiler-panel)
-	     (define-key map (oz-kbd "C-. C-. p") 'oz-profiler)
-	     (define-key map (oz-kbd "C-. C-. d") 'oz-debugger)
-	     ;;
-	     (define-key map (oz-kbd "C-x SPC") 'oz-breakpoint-at-point)
-	     (define-key map (oz-kbd "M-C-f"  ) 'forward-oz-expr)
-	     (define-key map (oz-kbd "M-C-b"  ) 'backward-oz-expr)
-	     (define-key map (oz-kbd "M-C-k"  ) 'kill-oz-expr)
-	     (define-key map (oz-kbd "M-C-@"  ) 'mark-oz-expr)
-	     (define-key map (oz-kbd "M-C-SPC") 'mark-oz-expr)
-	     (define-key map (oz-kbd "M-C-DEL") 'backward-kill-oz-expr)
-	     (define-key map (oz-kbd "M-C-q"  ) 'indent-oz-expr)
-	     (define-key map (oz-kbd "M-C-a"  ) 'oz-beginning-of-defun)
-	     (define-key map (oz-kbd "M-C-e"  ) 'oz-end-of-defun)
-	     (define-key map (oz-kbd "M-C-t"  ) 'transpose-oz-exprs))
-	    (t
-      (define-key map (oz-kbd "TAB")         'oz-indent-line)
-      (define-key map (oz-kbd "DEL")         'backward-delete-char-untabify)
-
-      (define-key map (oz-kbd "M-RET")       'oz-feed-buffer)
-      (define-key map (oz-kbd "M-C-x")       'oz-feed-paragraph)
-      (define-key map (oz-kbd "C-c C-p")     'oz-feed-paragraph)
-      (define-key map (oz-kbd "C-c C-b")     'oz-feed-buffer)
-;;    (define-key map (oz-kbd "C-c C-i")     'oz-inspect-region)
-
-      (define-key map (oz-kbd "M-n")         'oz-next-buffer)
-      (define-key map (oz-kbd "M-p")         'oz-previous-buffer)
-
-      (define-key map (oz-kbd "C-x SPC")     'oz-breakpoint-at-point)
-      (define-key map [(meta shift mouse-1)] 'oz-breakpoint-mouse-set)
-      (define-key map [(meta shift mouse-3)] 'oz-breakpoint-mouse-delete)
-
-      (define-key map (oz-kbd "C-c C-c")     'oz-toggle-compiler)
-      (define-key map (oz-kbd "C-c C-e")     'oz-toggle-emulator)
-      (define-key map (oz-kbd "C-c C-t")     'oz-toggle-temp)
-      (define-key map (oz-kbd "C-c C-n")     'oz-new-buffer)
-      (define-key map (oz-kbd "C-c C-l")     'oz-fontify-buffer)
-      (define-key map (oz-kbd "C-c C-r")     'run-oz)
-      (define-key map (oz-kbd "C-c C-h")     'oz-halt)
-      (define-key map (oz-kbd "RET")         'oz-electric-terminate-line)
-
-      (define-key map (oz-kbd "M-C-f")       'forward-oz-expr)
-      (define-key map (oz-kbd "M-C-b")       'backward-oz-expr)
-      (define-key map (oz-kbd "M-C-k")       'kill-oz-expr)
-      (define-key map (oz-kbd "M-C-@")       'mark-oz-expr)
-      (define-key map (oz-kbd "M-C-SPC")     'mark-oz-expr)
-      (define-key map (oz-kbd "M-C-DEL")     'backward-kill-oz-expr)
-      (define-key map (oz-kbd "M-C-q")       'indent-oz-expr)
-      (define-key map (oz-kbd "M-C-a")       'oz-beginning-of-defun)
-      (define-key map (oz-kbd "M-C-e")       'oz-end-of-defun)
-      (define-key map (oz-kbd "M-C-t")       'transpose-oz-exprs)
-
-      (define-key map (oz-kbd "C-c C-d")     'oz-debugger)
-      (define-key map (oz-kbd "C-c C-f")     'oz-profiler)
-
-      (define-key map (oz-kbd "C-c C-m")     'oz-set-other)
-      (define-key map (oz-kbd "C-c C-o")     'oz-other)
-
-      (if (not oz-pc-keys)
-	  (progn
-	    (define-key map (oz-kbd "M-r")   'oz-feed-region)
-	    (define-key map (oz-kbd "M-l")   'oz-feed-line)
-
-	    (define-key map (oz-kbd "C-c p") 'oz-open-panel)
-	    (define-key map (oz-kbd "C-c b") 'oz-browse-line)
-	    (define-key map (oz-kbd "C-c c") 'oz-open-compiler-panel)
-
-	    (define-key map (oz-kbd "C-c m") 'oz-set-other)
-	    (define-key map (oz-kbd "C-c o") 'oz-other)
-	    (define-key map (oz-kbd "C-c d") 'oz-gdb))))))
-
-     (oz-lucid-emacs
-      (define-key map [tab]                       'oz-indent-line)
-      (define-key map [del]                       'backward-delete-char-untabify)
-
-      (define-key map [(meta return)]             'oz-feed-buffer)
-      (define-key map [(control ?c) (control ?p)] 'oz-feed-paragraph)
-      (define-key map [(meta control ?x)]         'oz-feed-paragraph)
-      (define-key map [(control ?c) (control ?b)] 'oz-browse-region)
-;;    (define-key map [(control ?c) (control ?i)] 'oz-inspect-region)
-
-      (define-key map [(meta ?n)]                 'oz-next-buffer)
-      (define-key map [(meta ?p)]                 'oz-previous-buffer)
-
-      (define-key map [(control ?x) space]        'oz-breakpoint-at-point)
-      (define-key map [(meta shift button1)]      'oz-breakpoint-mouse-set)
-      (define-key map [(meta shift button3)]      'oz-breakpoint-mouse-delete)
-
-      (define-key map [(control ?c) (control ?c)] 'oz-toggle-compiler)
-      (define-key map [(control ?c) (control ?e)] 'oz-toggle-emulator)
-      (define-key map [(control ?c) (control ?t)] 'oz-toggle-temp)
-      (define-key map [(control ?c) (control ?n)] 'oz-new-buffer)
-      (define-key map [(control ?c) (control ?l)] 'oz-fontify-buffer)
-      (define-key map [(control ?c) (control ?r)] 'run-oz)
-      (define-key map [(control ?c) (control ?h)] 'oz-halt)
-      (define-key map [return]                    'oz-electric-terminate-line)
-
-      (define-key map [(meta control ?f)]         'forward-oz-expr)
-      (define-key map [(meta control ?b)]         'backward-oz-expr)
-      (define-key map [(meta control ?k)]         'kill-oz-expr)
-      (define-key map [(meta control ?\@)]        'mark-oz-expr)
-      (define-key map [(meta control space)]      'mark-oz-expr)
-      (define-key map [(meta control del)]        'backward-kill-oz-expr)
-      (define-key map [(meta control ?q)]         'indent-oz-expr)
-      (define-key map [(meta control ?a)]         'oz-beginning-of-defun)
-      (define-key map [(meta control ?e)]         'oz-end-of-defun)
-      (define-key map [(meta control ?t)]         'transpose-oz-exprs)
-
-      (define-key map [(control ?c) (control ?d)] 'oz-debugger)
-      (define-key map [(control ?c) (control ?f)] 'oz-profiler)
-
-      (define-key map [(control ?c) (control ?m)] 'oz-set-other)
-      (define-key map [(control ?c) (control ?o)] 'oz-other)
-
-      (if (not oz-pc-keys)
-	  (progn
-	    (define-key map [(meta ?r)]           'oz-feed-region)
-	    (define-key map [(meta ?l)]           'oz-feed-line)
-
-	    (define-key map [(control ?c) ?p]     'oz-open-panel)
-	    (define-key map [(control ?c) ?b]     'oz-browse-line)
-	    (define-key map [(control ?c) ?c]     'oz-open-compiler-panel)
-
-	    (define-key map [(control ?c) ?m]     'oz-set-other)
-	    (define-key map [(control ?c) ?o]     'oz-other)
-	    (define-key map [(control ?c) ?d]     'oz-gdb)))))
+    (define-key map [tab]    'oz-indent-line)
+    (define-key map [del]    'backward-delete-char-untabify)
+    (define-key map [return] 'oz-electric-terminate-line)
+    ;;
+    (define-key map [(control ?x) space]   'oz-breakpoint-at-point)
+    (define-key map [(meta control ?x)]    'oz-feed-paragraph)
+    (define-key map [(meta control ?f)]    'forward-oz-expr)
+    (define-key map [(meta control ?b)]    'backward-oz-expr)
+    (define-key map [(meta control ?k)]    'kill-oz-expr)
+    (define-key map [(meta control ?\@)]   'mark-oz-expr)
+    (define-key map [(meta control space)] 'mark-oz-expr)
+    (define-key map [(meta control del)]   'backward-kill-oz-expr)
+    (define-key map [(meta control ?q)]    'indent-oz-expr)
+    (define-key map [(meta control ?a)]    'oz-beginning-of-defun)
+    (define-key map [(meta control ?e)]    'oz-end-of-defun)
+    (define-key map [(meta control ?t)]    'transpose-oz-exprs)
+    ;;
+    (define-key map [(meta ?n)] 'oz-next-buffer)
+    (define-key map [(meta ?p)] 'oz-previous-buffer)
+    ;;
+    (oz-define-prefixed-keys map '[(control ?.)])
+    (oz-define-prefixed-keys map '[(control ?c) ?.])
     map)
   "Keymap used in the Oz modes.")
 
@@ -1200,7 +1079,6 @@ buffer."
     ("Next Oz Buffer"      oz-next-buffer t)
     ("Previous Oz Buffer"  oz-previous-buffer t)
     ("New Oz Buffer"       oz-new-buffer t)
-    ("Fontify Buffer"      oz-fontify-buffer t)
     ("-----")
     ("Feed Buffer"         oz-feed-buffer t)
     ("Feed Region"         oz-feed-region (mark t))
@@ -1671,14 +1549,6 @@ and is used for fontification.")
 	 nil nil ((?& . "/")) beginning-of-line)))
 
 ;;}}}
-
-(defun oz-fontify-buffer (&optional arg)
-  "Center point in window, redisplay frame and re-fontify buffer.
-The ARG is interpreted just as with \\[recenter]."
-  (interactive "P")
-  (recenter arg)
-  (if window-system (font-lock-fontify-buffer)))
-
 ;;}}}
 ;;{{{ Buffers
 
