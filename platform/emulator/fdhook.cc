@@ -91,7 +91,7 @@ Suspension * makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
 
 
 
-SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home)
+SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * hoome)
 {
 #ifdef DEBUG_STABLE
   static Suspension * board_constraints_susp = NULL;
@@ -101,7 +101,7 @@ SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home)
   }
 #endif
   
-  updateExtSuspension (home->getBoardDeref(), elem->getSusp());
+  updateExtSuspension (hoome->getBoardDeref(), elem->getSusp());
   elem->setNext(list);
   return elem;
 }

@@ -626,7 +626,7 @@ void engine() {
   register RefsArray X         Reg2 = am.xRegs;
   register RefsArray Y         Reg3 = NULL;
   register TaggedRef *sPointer Reg4 = NULL;
-  register AMModus mode        Reg5;
+  register AMModus mode        Reg5 = READ;
   register AM *e               Reg6 = &am;
   register RefsArray G         Reg7 = NULL;
 
@@ -719,8 +719,8 @@ void engine() {
 
     DebugCheckT(CAA = NULL);
 
-    TaskStack *taskStack = &e->currentThread->taskStack;
-    TaskStackEntry *topCache = taskStack->getTop();
+    TaskStack *taskstack = &e->currentThread->taskStack;
+    TaskStackEntry *topCache = taskstack->getTop();
     TaggedBoard tb = (TaggedBoard) ToInt32(TaskStackPop(topCache-1));
 
     ContFlag cFlag = getContFlag(tb);
@@ -733,11 +733,11 @@ void engine() {
      *  - topCache maintained more efficiently
      */
     if (cFlag == C_CONT) {  
-      Assert(!taskStack->isEmpty((TaskStackEntry) tb));
+      Assert(!taskstack->isEmpty((TaskStackEntry) tb));
       PC = (ProgramCounter) TaskStackPop(topCache-2);
       Y = (RefsArray) TaskStackPop(topCache-3);
       G = (RefsArray) TaskStackPop(topCache-4);
-      taskStack->setTop(topCache-4);
+      taskstack->setTop(topCache-4);
       Board *auxBoard = getBoard(tb,cFlag);
       if (!auxBoard->isRoot()) {
 	auxBoard = auxBoard->getBoardDeref();
@@ -757,7 +757,7 @@ void engine() {
       goto LBLemulate;
     }
       
-    if (taskStack->isEmpty((TaskStackEntry) tb)) {
+    if (taskstack->isEmpty((TaskStackEntry) tb)) { // 
       if (e->currentThread->isSolve () == OK) {
 	Board *nb = e->currentThread->getNotificationBoard ();
 	e->decSolveThreads (nb);
@@ -782,7 +782,7 @@ void engine() {
 	}
 	disposeRefsArray(tmpX);
       }
-      taskStack->setTop(topCache);
+      taskstack->setTop(topCache);
       if (!tmpBB) {
 	goto LBLpopTask;
       }
@@ -799,7 +799,7 @@ void engine() {
     case C_DEBUG_CONT:
       {
 	OzDebug *ozdeb = (OzDebug *) TaskStackPop(--topCache);
-	taskStack->setTop(topCache);
+	taskstack->setTop(topCache);
 	if (!tmpBB) {
 	  goto LBLpopTask;
 	}
@@ -827,7 +827,7 @@ void engine() {
 	  X[i] = tmpX[i];
 	}
 	disposeRefsArray(tmpX);
-	taskStack->setTop(topCache);
+	taskstack->setTop(topCache);
 	if (!tmpBB) {
 	  goto LBLpopTask;
 	}
@@ -840,7 +840,7 @@ void engine() {
       {
         // by kost@ : 'SolveActor::Waker' can produce such task
         // (if the search problem is stable by its execution); 
-        taskStack->setTop(topCache);
+        taskstack->setTop(topCache);
 	if (!tmpBB) {
 	  goto LBLpopTask;
 	}
@@ -877,7 +877,7 @@ void engine() {
 	if (currentTaskSusp == NULL) {
 	  disposeRefsArray(tmpX);
 	}
-	taskStack->setTop(topCache);
+	taskstack->setTop(topCache);
 	if (!tmpBB) {
 	  currentTaskSusp = NULL;
 	  goto LBLpopTask;
