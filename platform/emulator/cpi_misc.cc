@@ -284,10 +284,10 @@ int * OZ_getCIntVector(OZ_Term t, int * v)
   }
   return v + i;
 }
-/*
+
 void * OZ_FSetValue::operator new(size_t s)
 {
-  return CpiHeap.alloc(s);
+  return freeListMalloc(s); 
 }
 
 void OZ_FSetValue::operator delete(void * p, size_t s)
@@ -298,7 +298,7 @@ void OZ_FSetValue::operator delete(void * p, size_t s)
 #ifdef __GNUC__
 void * OZ_FSetValue::operator new[](size_t s)
 {
-  return CpiHeap.alloc(s);
+  return freeListMalloc(s);
 }
 
 void OZ_FSetValue::operator delete[](void * p, size_t s)
@@ -307,7 +307,6 @@ void OZ_FSetValue::operator delete[](void * p, size_t s)
 }
 #endif
 
-*/
 
 OZ_Term OZ_fsetValue(OZ_FSetValue * s)
 {
