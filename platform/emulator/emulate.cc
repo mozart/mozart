@@ -903,11 +903,11 @@ void engine(Bool init)
    * if -DREGOPT is set
    */
   register ProgramCounter PC   Reg1 = 0;
-  register RefsArray X         Reg2 = am.xRegs;
-  register RefsArray Y         Reg3 = NULL;
-  register TaggedRef *sPointer Reg4 = NULL;
-  register AM *e               Reg5 = &am;
-  register RefsArray G         Reg6 = NULL;
+  register TaggedRef *X             = am.xRegs;
+  register RefsArray Y         Reg2 = NULL;
+  register TaggedRef *sPointer Reg3 = NULL;
+  register AM *e               Reg4 = &am;
+  register RefsArray G         Reg5 = NULL;
 
   Bool isTailCall              = NO;                NoReg(isTailCall);
   AWActor *CAA                 = NULL;
@@ -927,24 +927,7 @@ void engine(Bool init)
 # define CTT (e->currentThread)
 # define CPP (CTT->getPriority())
 # define CTS (e->cachedStack)
-
-#ifdef CATCH_SEGV
-  //
-  //  In the case of an error, the control is passed either to 
-  // LBLfailure; Note that both require
-  // the presence of a runnable thread;
-  switch (e->catchError()) {
-  case 0:
-    //  the environment is setted;
-    break;
-
-  case SEGVIO:
-    error("segv");
-  case BUSERROR:
-    error("bus");
-  }
-#endif
-  
+ 
 
 #ifdef THREADED
 # include "instrtab.hh"
