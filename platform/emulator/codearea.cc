@@ -77,7 +77,7 @@ Literal *addToLiteralTab(const char *str, StringHashTable *table,
     found = Atom::newAtom(str);
   }
 
-  table->htAdd(str,found);
+  table->htAdd(str, found);
   return found;
 }
 
@@ -1450,7 +1450,7 @@ void CodeArea::init(void **instrTable)
 #ifndef INLINEOPCODEMAP
   opcodeTable = new AddressHashTable((int) (OZERROR*1.5));
   for (int i=0; i<=OZERROR; i++) {
-    opcodeTable->htAdd(ToInt32(globalInstrTable[i]),ToPointer(i));
+    opcodeTable->htAdd(globalInstrTable[i], ToPointer(i));
   }
 #endif
 #endif

@@ -25,6 +25,7 @@
  */
 
 //
+// Just want to inline these methods..
 inline
 void TRAVERSERCLASS::traverse(OZ_Term t)
 {
@@ -39,6 +40,22 @@ void TRAVERSERCLASS::traverse(OZ_Term t)
   Assert(tosNotRunning == (StackEntry *) 0);
   // CrazyDebug(fprintf(stdout, " --- %d nodes.\n", debugNODES););
   // CrazyDebug(fflush(stdout););
+}
+
+//
+inline
+void TRAVERSERCLASS::resume()
+{
+  Assert(proc == (ProcessNodeProc) -1); // not used;
+  Assert(tosNotRunning == (StackEntry *) 0);
+  Assert(opaque != (Opaque *) -1);
+  //
+  doit();
+  if (tosNotRunning) {
+    setTop(tosNotRunning);
+    tosNotRunning = (StackEntry *) 0;
+  }
+  Assert(tosNotRunning == (StackEntry *) 0);
 }
 
 //

@@ -57,7 +57,7 @@ define(opAction,
          $1,Count,marshalNumber(bs,(unsigned int)getPosIntArg(PC++));,
          $1,ArityAndIsTail,marshalNumber(bs,(unsigned int)getPosIntArg(PC++));,
          $1,Dummy,marshalNumber(bs,(unsigned int)getPosIntArg(PC++));,
-         $1,ProcedureRef,marshalProcedureRef(gt,(AbstractionEntry*)getAdressArg(PC++),bs);,
+         $1,ProcedureRef,marshalProcedureRef(lIT,(AbstractionEntry*)getAdressArg(PC++),bs);,
          $1,PredId,marshalPredId(gt,(PrTabEntry*)getAdressArg(PC++),bs);ozValuesCnt--;,
          $1,HashTableRef,marshalHashTableRef(gt,instrstart-start,(IHashTable *)getAdressArg(PC++),bs);ozValuesCnt--;,
          $1,RecordArity,marshalRecordArity(gt,(SRecordArity) getAdressArg(PC++),bs);ozValuesCnt--;,
@@ -75,6 +75,7 @@ Bool pickleCode(GenTraverser *gt, GTAbstractEntity *arg)
   // ('bs' could be also saved in the argument;)
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) gt->getOpaque();
   Assert(bs);
+  AddressHashTableO1Reset *lIT = desc->getLocationsIT();
   ProgramCounter start = desc->getStart(), end = desc->getEnd();
   ProgramCounter PC = desc->getCurrent();
   // when 'ozValuesCnt' hits zero, then the code area must be broken
@@ -227,39 +228,37 @@ Bool traverseCode(GenTraverser *gt, GTAbstractEntity *arg)
 
 
 //
-#ifdef USE_FAST_UNMARSHALER   
-//
 undefine([[opAction]])
 
 define(opAction,
 [[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code DebugArg(mIsNumber));ozValuesCnt--;,
-        $1,Literal,PC=unmarshalOzValue(b,PC,code DebugArg(mIsLiteral));ozValuesCnt--;,
-        $1,Feature,PC=unmarshalOzValue(b,PC,code DebugArg(mIsFeature));ozValuesCnt--;,
-        $1,Constant,PC=unmarshalOzValue(b,PC,code DebugArg(mIsConstant));ozValuesCnt--;,
-        $1,Builtinname,PC=unmarshalBuiltin(b,PC);ozValuesCnt--;,
-        $1,XRegisterIndex,PC=unmarshalXReg(PC,bs);,
-        $1,YRegisterIndex,PC=unmarshalYReg(PC,bs);,
-        $1,GRegisterIndex,PC=unmarshalGReg(PC,bs);,
-        $1,Arity,PC=unmarshalNum(PC,bs);,
-        $1,Label,PC=unmarshalLabel(PC,bs);,
-        $1,Count,PC=unmarshalNum(PC,bs);,
-        $1,ArityAndIsTail,PC=unmarshalNum(PC,bs);,
-        $1,Dummy,PC=unmarshalNum(PC,bs);,
-        $1,ProcedureRef,PC=unmarshalProcedureRef(b,PC,bs,code);,
-        $1,PredId,PC=unmarshalPredId(b,PC,instPC,bs);ozValuesCnt--;,
-        $1,HashTableRef,PC=unmarshalHashTableRef(b,PC,bs);ozValuesCnt--;,
-        $1,RecordArity,PC=unmarshalRecordArity(b,PC,bs);ozValuesCnt--;,
-        $1,CallMethodInfo,PC=unmarshalCallMethodInfo(b,PC,bs);ozValuesCnt--;,
-        $1,GRegRef,PC=unmarshalGRegRef(PC,bs);,
-        $1,Location,PC=unmarshalLocation(PC,bs);,
-        $1,Cache,PC=unmarshalCache(PC,code);)]])
+         $1,Literal,PC=unmarshalOzValue(b,PC,code DebugArg(mIsLiteral));ozValuesCnt--;,
+         $1,Feature,PC=unmarshalOzValue(b,PC,code DebugArg(mIsFeature));ozValuesCnt--;,
+         $1,Constant,PC=unmarshalOzValue(b,PC,code DebugArg(mIsConstant));ozValuesCnt--;,
+         $1,Builtinname,PC=unmarshalBuiltin(b,PC);ozValuesCnt--;,
+         $1,XRegisterIndex,PC=unmarshalXReg(PC,bs);,
+         $1,YRegisterIndex,PC=unmarshalYReg(PC,bs);,
+         $1,GRegisterIndex,PC=unmarshalGReg(PC,bs);,
+         $1,Arity,PC=unmarshalNum(PC,bs);,
+         $1,Label,PC=unmarshalLabel(PC,bs);,
+         $1,Count,PC=unmarshalNum(PC,bs);,
+         $1,ArityAndIsTail,PC=unmarshalNum(PC,bs);,
+         $1,Dummy,PC=unmarshalNum(PC,bs);,
+         $1,ProcedureRef,PC=unmarshalProcedureRef(b,PC,bs,code);,
+         $1,PredId,PC=unmarshalPredId(b,PC,instPC,bs);ozValuesCnt--;,
+         $1,HashTableRef,PC=unmarshalHashTableRef(b,PC,bs);ozValuesCnt--;,
+         $1,RecordArity,PC=unmarshalRecordArity(b,PC,bs);ozValuesCnt--;,
+         $1,CallMethodInfo,PC=unmarshalCallMethodInfo(b,PC,bs);ozValuesCnt--;,
+         $1,GRegRef,PC=unmarshalGRegRef(PC,bs);,
+         $1,Location,PC=unmarshalLocation(PC,bs);,
+         $1,Cache,PC=unmarshalCache(PC,code);)]])
 
 //
 // Returning 'OK' means we are done (with the code area); 
 // 'pc' can be zero meaning "discard the code". If it is non-zero,
 // then it is supposed to be large enough to hold the whole code;
-Bool unpickleCode(PickleMarshalerBuffer *bs, Builder *b, 
-		   BuilderCodeAreaDescriptor *desc)
+Bool unpickleCode(PickleMarshalerBuffer *bs, Builder *b,
+                  BuilderCodeAreaDescriptor *desc)
 {
   int ozValuesCnt = ozValuesBAPickles;
   ProgramCounter PC = desc->getCurrent();
@@ -306,93 +305,3 @@ Bool unpickleCode(PickleMarshalerBuffer *bs, Builder *b,
     desc->setCurrent(PC);
   return (done);
 }
-
-#else
-
-// Robust unmarshaling
-undefine([[opAction]])
-
-#define ONERR(e)	\
-  if (e) { delete desc; return (UCR_ERROR); }
-
-define(opAction,
-[[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code DebugArg(mIsNumber));ozValuesCnt--;,
-         $1,Literal,PC=unmarshalOzValue(b,PC,code DebugArg(mIsLiteral));ozValuesCnt--;,
-         $1,Feature,PC=unmarshalOzValue(b,PC,code DebugArg(mIsFeature));ozValuesCnt--;,
-         $1,Constant,PC=unmarshalOzValue(b,PC,code DebugArg(mIsConstant));ozValuesCnt--;,
-         $1,Builtinname,PC=unmarshalBuiltin(b,PC);ozValuesCnt--;,
-         $1,XRegisterIndex,PC=unmarshalXRegRobust(PC,bs,&e);ONERR(e);,
-         $1,YRegisterIndex,PC=unmarshalYRegRobust(PC,bs,&e);ONERR(e);,
-         $1,GRegisterIndex,PC=unmarshalGRegRobust(PC,bs,&e);ONERR(e);,
-         $1,Arity,PC=unmarshalNumRobust(PC,bs,&e);ONERR(e);,
-         $1,Label,PC=unmarshalLabelRobust(PC,bs,&e);ONERR(e);,
-         $1,Count,PC=unmarshalNumRobust(PC,bs,&e);ONERR(e);,
-         $1,ArityAndIsTail,PC=unmarshalNumRobust(PC,bs,&e);ONERR(e);,
-         $1,Dummy,PC=unmarshalNumRobust(PC,bs,&e);ONERR(e);,
-         $1,ProcedureRef,PC=unmarshalProcedureRefRobust(b,PC,bs,code,&e);ONERR(e);,
-         $1,PredId,PC=unmarshalPredIdRobust(b,PC,instPC,bs,&e);ozValuesCnt--;ONERR(e);,
-         $1,HashTableRef,PC=unmarshalHashTableRefRobust(b,PC,bs,&e);ozValuesCnt--;ONERR(e);,
-         $1,RecordArity,PC=unmarshalRecordArityRobust(b,PC,bs,&e);ozValuesCnt--;ONERR(e);,
-         $1,CallMethodInfo,PC=unmarshalCallMethodInfoRobust(b,PC,bs,&e);ozValuesCnt--;ONERR(e);,
-         $1,GRegRef,PC=unmarshalGRegRefRobust(PC,bs,&e);ONERR(e);,
-         $1,Location,PC=unmarshalLocationRobust(PC,bs,&e);ONERR(e);,
-         $1,Cache,PC=unmarshalCache(PC,code);)]])
-
-//
-// Returning 'OK' means we are done (with the code area); 
-// 'pc' can be zero meaning "discard the code". If it is non-zero,
-// then it is supposed to be large enough to hold the whole code;
-// Returning 'ERR' means that the buffer can not be marshalled.
-UCRReturn unpickleCodeRobust(PickleMarshalerBuffer *bs, Builder *b,
-                             BuilderCodeAreaDescriptor *desc)
-{
-  int ozValuesCnt = ozValuesBAPickles;
-  ProgramCounter PC = desc->getCurrent();
-  ProgramCounter instPC;
-  DebugCode(instPC = (ProgramCounter) -1);
-  // 'CodeArea*' is passed in it itself:
-  CodeArea *code = desc->getCodeArea();
-  Bool done = NO;
-  int e;
-
-  //
-  while (ozValuesCnt > 0) {
-    Opcode op = (Opcode) bs->get();
-    if (op == ENDOFFILE) {
-      done = OK;
-      break;
-    }
-
-    //
-    if (op == DEBUGENTRY && PC)
-      b->schedGenAction(handleDEBUGENTRY, PC);
-
-    //
-    Assert(op != CALLPROCEDUREREF);
-    if (PC) {
-      instPC = PC;
-      PC = CodeArea::writeOpcode(op, PC);
-    }
-
-    //
-    switch(op) {
-
-      changequote(`,') dnl '
-      include(EMUDIR/instrDefs.m4)
-      changequote([[,]])
-
-    default:
-      delete desc;
-      return (UCR_ERROR);
-    }
-  }
-
-  //
-  if (done)
-    delete desc;
-  else
-    desc->setCurrent(PC);
-  return ((done == OK) ? UCR_DONE : UCR_SUSPEND);
-}
-
-#endif

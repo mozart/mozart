@@ -34,7 +34,7 @@
 
 #include "base.hh"
 
-#define htEmpty ((void*) -1L)
+#define htEmpty ((void *) -1L)
 
 class SHT_HashNode;
 
@@ -49,7 +49,7 @@ class SHT_HashNode;
 class SHT_HashNode {
 private:
   const char *key;
-  void* value;
+  void *value;
   SHT_HashNode *next;
 
 public:
@@ -64,8 +64,7 @@ public:
   //
   SHT_HashNode() { setEmpty(); }
   SHT_HashNode(const char *s, void *valueIn, SHT_HashNode *nextIn)
-    : value(valueIn), next(nextIn)
-  {
+    : value(valueIn), next(nextIn) {
     setKey(s);
     Assert(!isEmpty());
   }
@@ -79,8 +78,8 @@ public:
 //
 class StringHashTable {
 protected:
+  SHT_HashNode *table;		// 
   int tableSize;		// 
-  SHT_HashNode* table;		// 
   int counter;      // number of entries
   int percent;      // if more than percent is used, we reallocate
 
@@ -120,47 +119,46 @@ protected:
 // Compact one (does not allocate additional memory outside the table:
 // "open addressing"). "delete" is not supported. Find/insert are
 // supposed to be still reasonably fast..
-
 //
 class AHT_HashNode {
 private:
-  intlong key;
-  void* value;
+  void *key;
+  void *value;
 
 public:
-  void setEmpty() { key = (intlong) htEmpty; }
-  Bool isEmpty()  { return (key == (intlong) htEmpty); }
+  void setEmpty() { key = (void *) htEmpty; }
+  Bool isEmpty()  { return (key == (void *) htEmpty); }
 
   //
   AHT_HashNode() { setEmpty(); }
 
   //
-  void setKey(intlong iIn) { key = iIn; }
+  void setKey(void *iIn) { key = iIn; }
   void setValue(void *vIn) { value = vIn; }
 
   //
-  intlong getKey() { return (key); }
+  void* getKey() { return (key); }
   void* getValue() { return (value); }
 };
 
 //
 class AddressHashTable {
 protected:
+  AHT_HashNode* table;		// 
   int tableSize;		// 
+  int counter;			// number of entries
+  int percent;			// reallocate when percent > counter;
+  //
   int bits;			// pkey & skey;
   int rsBits;			// right shifht;
   int slsBits;			// skey left shift;
-  AHT_HashNode* table;		// 
-  int counter;      // number of entries
-  int percent;      // if more than percent is used, we reallocate
   DebugCode(int nsearch;);	// number of searches;
   DebugCode(int tries;);	// accumulated;
   DebugCode(int maxtries;);
 
 protected:
-  unsigned int primeHashFunc(intlong);
-  unsigned int incHashFunc(intlong);
-  unsigned int getStepN(unsigned int pkey, unsigned int ikey, int i);
+  unsigned int primeHashFunc(void*);
+  unsigned int incHashFunc(void*);
 
   void resize();
 
@@ -173,8 +171,8 @@ public:
   void mkEmpty();
 
   //
-  void htAdd(intlong k, void *val);
-  void *htFind(intlong);
+  void htAdd(void *k, void *val);
+  void *htFind(void *k);
 
   //
   DebugCode(void print(););
@@ -196,10 +194,14 @@ protected:
 
 
 //
+// The 'AddressHashTableO1Reset' hash table performs the 'mkEmpty()'
+// operation in constant time. This is supported by the 'cnt' field,
+// which holds the current pass if the node is in use, and some
+// smaller number otherwise:
 class AHT_HashNodeCnt {
 private:
-  intlong key;
-  void* value;
+  void *key;
+  void *value;
   unsigned int cnt;
 
   //
@@ -210,29 +212,29 @@ public:
   void setCnt(unsigned int cntIn) { cnt = cntIn; }
 
   //
-  void setKey(intlong iIn) { key = iIn; }
+  void setKey(void *kIn) { key = kIn; }
   void setValue(void *vIn) { value = vIn; }
 
   //
-  intlong getKey() { return (key); }
+  void* getKey() { return (key); }
   void* getValue() { return (value); }
 };
 
 //
-// Only 'intlong' keys are supported by now;
-class AddressHashTableFastReset {
+class AddressHashTableO1Reset {
 private:
+  AHT_HashNodeCnt *table;
   int tableSize;
-  int bits;			// pkey & skey;
+  int counter;			// number of entries;
+  int percent;			// reallocate when percent > counter;
+  //
+  int bits;			// ipkey & skey;
   int rsBits;			// right shifht;
   int slsBits;			// skey left shift;
-  int counter;      // number of entries
-  int percent;      // if more than percent is used, we reallocate
-  unsigned int pass;		// current pass
+  unsigned int pass;		// current pass;
   // (inits to 1 since AHT_HashNodeCnt inits it to 0);
-  AHT_HashNodeCnt *table;
-  int lastKey;
-  DebugCode(intlong lastK;);
+  int lastIndex;
+  DebugCode(void *lastKey;);
   DebugCode(int nsearch;);	// number of searches since last 'mkEmpty()';
   DebugCode(int tries;);	// accumulated over 'nsearch';
   DebugCode(int maxtries;);
@@ -241,22 +243,22 @@ private:
 
   //
 private:
-  unsigned int primeHashFunc(intlong);
-  unsigned int incHashFunc(intlong);
+  unsigned int primeHashFunc(void*);
+  unsigned int incHashFunc(void*);
 
   void mkTable();
   void resize();
 
   //
 public:
-  AddressHashTableFastReset(int sz);
-  ~AddressHashTableFastReset();
+  AddressHashTableO1Reset(int sz);
+  ~AddressHashTableO1Reset();
 
   //
   int getSize() { return (counter); }
-  void htAdd(intlong k, void *val);
-  void htAddLastNotFound(intlong k, void *val);
-  void *htFind(intlong k);
+  void htAdd(void *k, void *v);
+  void htAddLastNotFound(void *k, void *v);
+  void* htFind(void *k);
   void mkEmpty();
 
   //
@@ -276,5 +278,3 @@ public:
 };
 
 #endif
-
-

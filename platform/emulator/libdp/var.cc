@@ -34,8 +34,6 @@
 #include "var.hh"
 #include "var_ext.hh"
 #include "var_obj.hh"
-#include "var_emanager.hh"
-#include "var_eproxy.hh"
 #include "msgContainer.hh"
 #include "dpMarshaler.hh"
 #include "unify.hh"
@@ -444,27 +442,9 @@ void ManagerVar::surrender(TaggedRef *vPtr, TaggedRef val,DSite *ackSite)
 
 void requested(TaggedRef*);
 
-/* --- Marshal --- */
-
-void ManagerVar::marshal(ByteBuffer *bs)
-{
-  int i=getIndex();
-  PD((MARSHAL,"var manager o:%d",i));
-  if((USE_ALT_VAR_PROTOCOL) && globalRedirectFlag==AUT_REG){
-    if(isFuture()){ 
-      marshalOwnHead(bs, DIF_FUTURE_AUTO, i);}
-    else{
-      marshalOwnHead(bs, DIF_VAR_AUTO, i);}  
-    registerSite(bs->getSite());
-    return;}
-  if(isFuture()){ 
-    marshalOwnHead(bs, DIF_FUTURE, i);}
-  else{
-    marshalOwnHead(bs, DIF_VAR, i);}  
-}
-
 //
-ManagerVar* globalizeFreeVariable(TaggedRef *tPtr){
+ManagerVar* globalizeFreeVariable(TaggedRef *tPtr)
+{
   OwnerEntry *oe;
   int i = OT->newOwner(oe);
   PD((GLOBALIZING,"globalize var index:%d",i));
@@ -476,48 +456,9 @@ ManagerVar* globalizeFreeVariable(TaggedRef *tPtr){
   return (mv);
 }
 
-// Returning 'NO' means we are going to proceed with 'marshal bomb';
-Bool marshalVariable(TaggedRef *tPtr, ByteBuffer *bs)
-{
-  const TaggedRef var = *tPtr;
-  if (oz_isExtVar(var)) {
-    ExtVarType evt = oz_getExtVar(var)->getIdV();
-    switch (evt) {
-    case OZ_EVAR_MANAGER:
-      oz_getManagerVar(var)->marshal(bs);
-      break;
-    case OZ_EVAR_PROXY:
-      oz_getProxyVar(var)->marshal(bs);
-      break;
-    case OZ_EVAR_LAZY:
-      oz_getLazyVar(var)->marshal(bs);
-      break;
-    case OZ_EVAR_EMANAGER:
-      oz_getEManagerVar(var)->marshal(bs);
-      break;
-    case OZ_EVAR_EPROXY:
-      oz_getEProxyVar(var)->marshal(bs);
-      break;
-    case OZ_EVAR_GCSTUB:
-      Assert(0);
-      break;
-    default:
-      Assert(0);
-      break;
-    }
-    return (TRUE);
-  } else if (oz_isFree(var) || oz_isFuture(var)) {
-    Assert(perdioInitialized);
-    globalizeFreeVariable(tPtr)->marshal(bs);
-    return (TRUE);
-  } else { 
-    return (FALSE);
-  }
-  Assert(0);
-}
-
 // Return 'TRUE' if successful (that is, the variable is bound)
-Bool triggerVariable(TaggedRef *tPtr){
+Bool triggerVariable(TaggedRef *tPtr)
+{
   Assert(tPtr!=NULL);
   const TaggedRef var = *tPtr;
   if (oz_isFuture(var)) {
@@ -570,16 +511,16 @@ void ProxyVar::nowGarbage(BorrowEntry* be){
   PD((PD_VAR,"nowGarbage"));  
   sendDeRegister(be);}
 
+//
+// Marshaling code is in dpMarshaler.cc;
 
-OZ_Term unmarshalVarRobust(MarshalerBuffer* bs, Bool isFuture, 
-			     Bool isAuto, int *error)
+//
+OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isFuture, Bool isAuto)
 {
-
   OB_Entry *ob;
   int bi;
   BYTE ec;
-  OZ_Term val1 = unmarshalBorrowRobust(bs, ob, bi, ec, error);
-  if (*error) return ((OZ_Term) 0);
+  OZ_Term val1 = unmarshalBorrow(bs, ob, bi, ec);
   
   if (val1) {
     PD((UNMARSHAL,"var/chunk hit: b:%d",bi));
@@ -688,15 +629,6 @@ VarKind classifyVar(TaggedRef* tPtr)
       return (VAR_PROXY);
     case OZ_EVAR_LAZY:
       return (VAR_LAZY);
-    case OZ_EVAR_EMANAGER:
-      Assert(0);
-      return (VAR_MANAGER);
-    case OZ_EVAR_EPROXY:
-      Assert(0);
-      return (VAR_PROXY);
-    case OZ_EVAR_GCSTUB:
-      Assert(0);
-      return (VAR_PROXY);
     default:
       Assert(0);
       return (VAR_PROXY);
@@ -901,6 +833,163 @@ void ManagerVar::wakeAll(){
 }
 
 //
+//
+inline 
+void VariableExcavator::processSmallInt(OZ_Term siTerm) {}
+inline 
+void VariableExcavator::processFloat(OZ_Term floatTerm) {}
+inline 
+void VariableExcavator::processLiteral(OZ_Term litTerm) {}
+inline 
+void VariableExcavator::processExtension(OZ_Term t) {}
+inline 
+void VariableExcavator::processBigInt(OZ_Term biTerm) {}
+inline 
+void VariableExcavator::processBuiltin(OZ_Term biTerm, ConstTerm *biConst) {}
+
+inline 
+Bool VariableExcavator::processObject(OZ_Term objTerm, ConstTerm *objConst)
+{
+  VisitNodeTrav(objTerm, vIT, return(TRUE));
+  return (TRUE);
+}
+
+inline 
+void VariableExcavator::processNoGood(OZ_Term resTerm)
+{
+  Assert(!oz_isVar(resTerm));
+}
+
+inline 
+void VariableExcavator::processLock(OZ_Term lockTerm, Tertiary *tert) {}
+
+inline 
+Bool VariableExcavator::processCell(OZ_Term cellTerm, Tertiary *tert)
+{
+  VisitNodeTrav(cellTerm, vIT, return(TRUE));
+  return (TRUE);
+}
+
+inline 
+void VariableExcavator::processPort(OZ_Term portTerm, Tertiary *tert) {}
+inline 
+void VariableExcavator::processResource(OZ_Term rTerm, Tertiary *tert) {}
+
+//
+inline 
+void VariableExcavator::processVar(OZ_Term v, OZ_Term *vRef)
+{
+  Assert(oz_isVar(v));
+  OZ_Term vrt = makeTaggedRef(vRef);
+  VisitNodeTrav(vrt, vIT, return);
+  addVar(vrt);
+}
+
+//
+inline 
+Bool VariableExcavator::processLTuple(OZ_Term ltupleTerm)
+{
+  VisitNodeTrav(ltupleTerm, vIT, return(TRUE));
+  return (NO);
+}
+inline 
+Bool VariableExcavator::processSRecord(OZ_Term srecordTerm)
+{
+  VisitNodeTrav(srecordTerm, vIT, return(TRUE));
+  return (NO);
+}
+inline Bool
+VariableExcavator::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
+{
+  VisitNodeTrav(chunkTerm, vIT, return(TRUE));
+  return (NO);
+}
+
+//
+inline Bool VariableExcavator::processFSETValue(OZ_Term fsetvalueTerm)
+{
+  return (NO);
+}
+
+//
+inline Bool
+VariableExcavator::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
+{
+  VisitNodeTrav(dictTerm, vIT, return(TRUE));
+  //
+  OzDictionary *d = (OzDictionary *) dictConst;
+  return (d->isSafeDict() ? NO : OK);
+}
+
+//
+inline Bool
+VariableExcavator::processArray(OZ_Term arrayTerm, ConstTerm *arrayConst)
+{
+  VisitNodeTrav(arrayTerm, vIT, return(TRUE));
+  return (OK);
+}
+
+//
+inline Bool
+VariableExcavator::processClass(OZ_Term classTerm, ConstTerm *classConst)
+{ 
+  VisitNodeTrav(classTerm, vIT, return(TRUE));
+  //
+  ObjectClass *cl = (ObjectClass *) classConst;
+  return (cl->isSited());
+}
+
+//
+inline Bool
+VariableExcavator::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
+{
+  VisitNodeTrav(absTerm, vIT, return(TRUE));
+
+  //
+  Abstraction *pp = (Abstraction *) absConst;
+  PrTabEntry *pred = pp->getPred();
+  if (pred->isSited()) {
+    return (OK);		// done - a leaf;
+  } else {
+    ProgramCounter start = pp->getPC() - sizeOf(DEFINITION);
+    XReg reg;
+    int nxt, line, colum;
+    TaggedRef file, predName;
+    CodeArea::getDefinitionArgs(start, reg, nxt, file,
+				line, colum, predName);
+
+    //
+    DPMarshalerCodeAreaDescriptor *desc = 
+      new DPMarshalerCodeAreaDescriptor(start, start + nxt,
+					(AddressHashTableO1Reset *) 0);
+    traverseBinary(traverseCode, desc);
+    return (NO);
+  }
+}
+
+//
+inline 
+void VariableExcavator::processSync() {}
+
+//
+#define	TRAVERSERCLASS	VariableExcavator
+#include "gentraverserLoop.cc"
+#undef	TRAVERSERCLASS
+
+static VariableExcavator ve;
+
+//
+static inline
+OZ_Term extractVars(OZ_Term in)
+{
+  ve.init();
+  ve.prepareTraversing((Opaque *) 0);
+  ve.traverse(in);
+  ve.finishTraversing();
+  return (ve.getVars());
+}
+
+//
 // kost@ : "deautosite"ing relies on the fact that when a variable
 // manager is bound, its value - including all variables! - is
 // immediately exported, thus, local variables become variable
@@ -909,9 +998,9 @@ void ManagerVar::wakeAll(){
 // Should that exportation happen some time later, it can also happen
 // after the arrival of the 'deregister' message, so the effect of the
 // message will be lost.
-void recDeregister(TaggedRef tr,DSite* s)
+void recDeregister(TaggedRef tr, DSite* s)
 {
-  OZ_Term vars = extractVars(tr, NO);
+  OZ_Term vars = extractVars(tr);
   while (!oz_isNil(vars)) {
     OZ_Term t = oz_head(vars);
     OZ_Term *tp = tagged2Ref(t);

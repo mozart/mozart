@@ -35,16 +35,14 @@
 // could well be supplied...
 void TRAVERSERCLASS::doit()
 {
-  while (!isEmpty()) {
-    OZ_Term t = get();
-    // a push-pop pair for the topmost entry is saved:
-  bypass:
-    register TaggedRef *tPtr;
-    DebugCode(tPtr = (TaggedRef *) -1;);
-    CrazyDebug(incDebugNODES(););
+  Assert(!isEmpty());
+  register OZ_Term t = get();
+  register OZ_Term *tPtr;
+  DebugCode(tPtr = (OZ_Term *) -1;);
 
+  while (1) {
+    CrazyDebug(incDebugNODES(););
     //
-  deref:
     switch (tagged2ltag(t)) {
 
     case LTAG_REF00:
@@ -53,92 +51,55 @@ void TRAVERSERCLASS::doit()
     case LTAG_REF11:
       tPtr = tagged2Ref(t);
       t = *tPtr;
-      goto deref;
+      continue;
 
     case LTAG_SMALLINT:
       processSmallInt(t);
       break;
 
     case LTAG_LITERAL:
-      {
-	int ind = findTerm(t);
-	if (ind >= 0) {
-	  processRepetition(t, tPtr, ind);
-	} else {
-	  processLiteral(t);
-	}
-	break;
-      }
+      processLiteral(t);
+      break;
 
     case LTAG_LTUPLE0:
     case LTAG_LTUPLE1:
-      {
-	int ind = findTerm(t);
-	if (ind >= 0) {
-	  processRepetition(t, tPtr, ind);
-	  break;
-	}
-
-	//
-	if (!processLTuple(t)) {
-	  LTuple *l = tagged2LTuple(t);
-	  ensureFree(1);
-	  put(l->getTail());
-	  if (!isEmpty()) {
-	    t = l->getHead();
-	    goto bypass;
-	  } else {
-	    put(l->getHead());
-	  }
-	}
-	break;
+      if (!processLTuple(t)) {
+	// if we did the node, we have not suspended:
+	Assert(tosNotRunning == (StackEntry *) 0);
+	LTuple *l = tagged2LTuple(t);
+	ensureFree(1);
+	put(l->getTail());
+	t = l->getHead();
+	continue;
       }
+      break;
 
     case LTAG_SRECORD0:
     case LTAG_SRECORD1:
-      {
-	int ind = findTerm(t);
-	if (ind >= 0) {
-	  processRepetition(t, tPtr, ind);
-	  break;
-	}
+      if (!processSRecord(t)) {
+	Assert(tosNotRunning == (StackEntry *) 0);
+	SRecord *rec = tagged2SRecord(t);
+	TaggedRef label = rec->getLabel();
+	int argno = rec->getWidth();
 
-	//
-	if (!processSRecord(t)) {
-	  SRecord *rec = tagged2SRecord(t);
-	  TaggedRef label = rec->getLabel();
-	  int argno = rec->getWidth();
-
-	  // 
-	  // The order is: label, [arity], subtrees...
-	  // Both tuple and record args appear in a reverse order;
-	  ensureFree(argno+2);	// pessimistic approximation;
-	  for(int i = 0; i < argno; i++)
-	    put(rec->getArg(i));
-	  if (!rec->isTuple()) {
-	    putSync();		// will appear after the arity list;
-	    put(rec->getArityList());
-	  }
-	  if (!isEmpty()) {
-	    t = rec->getLabel();
-	    goto bypass;
-	  } else {
-	    put(rec->getLabel());
-	  }
+	// 
+	// The order is: label, [arity], subtrees...
+	// Both tuple and record args appear in a reverse order;
+	ensureFree(argno+2);	// pessimistic approximation;
+	for(int i = 0; i < argno; i++)
+	  put(rec->getArg(i));
+	if (!rec->isTuple()) {
+	  putSync();		// will appear after the arity list;
+	  put(rec->getArityList());
 	}
-	break;
+	t = rec->getLabel();
+	continue;
       }
+      break;
 
     case LTAG_CONST0:
     case LTAG_CONST1:
       {
-	int ind = findTerm(t);
-	if (ind >= 0) {
-	  processRepetition(t, tPtr, ind);
-	  break;
-	}
-
-	//
 	ConstTerm *ct = tagged2Const(t);
 	switch (ct->getType()) {
 
@@ -151,19 +112,16 @@ void TRAVERSERCLASS::doit()
 	  break;
 
 	case Co_BigInt:
-	  processBigInt(t, ct);
+	  processBigInt(t);
 	  break;
 
 	case Co_FSetValue:
 	  if (!processFSETValue(t)) {
+	    Assert(tosNotRunning == (StackEntry *) 0);
 	    ensureFree(1);
 	    putSync();		// will appear after the list;
-	    if (!isEmpty()) {
-	      t = tagged2FSetValue(t)->getKnownInList();
-	      goto bypass;
-	    } else {
-	      put(tagged2FSetValue(t)->getKnownInList());
-	    }
+	    t = tagged2FSetValue(t)->getKnownInList();
+	    continue;
 	  }
 	  break;
 
@@ -184,14 +142,13 @@ void TRAVERSERCLASS::doit()
 	  break;
 
 	case Co_Array:
-	if (!processArray(t, ct)) {
-	  OzArray *array = (OzArray *) ct;
-	  ensureFree(array->getWidth());
-	  for (int i = array->getHigh(); i >= array->getLow(); i--) {
-	    put(array->getArg(i));
+	  if (!processArray(t, ct)) {
+	    OzArray *array = (OzArray *) ct;
+	    ensureFree(array->getWidth());
+	    for (int i = array->getHigh(); i >= array->getLow(); i--)
+	      put(array->getArg(i));
 	  }
-	}
-	break;
+	  break;
 
 	case Co_Builtin:
 	  processBuiltin(t, ct);
@@ -199,43 +156,40 @@ void TRAVERSERCLASS::doit()
 
 	case Co_Chunk:
 	  if (!processChunk(t, ct)) {
+	    Assert(tosNotRunning == (StackEntry *) 0);
 	    SChunk *ch = (SChunk *) ct;
-	    if (!isEmpty()) {
-	      t = ch->getValue();
-	      goto bypass;
-	    } else {
-	      put(ch->getValue());
-	    }
+	    t = ch->getValue();
+	    continue;
 	  }
 	  break;
 
 	case Co_Class:
 	  if (!processClass(t, ct)) {
+	    Assert(tosNotRunning == (StackEntry *) 0);
 	    ObjectClass *cl = (ObjectClass *) ct;
 	    SRecord *fs = cl->getFeatures();
-	    if (!isEmpty()) {
-	      t = fs ? makeTaggedSRecord(fs) : oz_nil();
-	      goto bypass;
-	    } else {
-	      put(fs ? makeTaggedSRecord(fs) : oz_nil());
-	    }
+	    t = fs ? makeTaggedSRecord(fs) : oz_nil();
+	    continue;
 	  }
 	  break;
 
 	case Co_Abstraction:
-	  {
-	    if (!processAbstraction(t, ct)) {
-	      Abstraction *pp = (Abstraction *) ct;
-	      int gs = pp->getPred()->getGSize();
-	      //
-	      // in the stream: file, name, registers, code area:
-	      ensureFree(gs+2);
-	      for (int i=0; i < gs; i++)
-		put(pp->getG(i));
-	      //
-	      put(pp->getName());
-	      put(pp->getPred()->getFile());
-	    }
+	  if (!processAbstraction(t, ct)) {
+	    Abstraction *pp = (Abstraction *) ct;
+	    int gs = pp->getPred()->getGSize();
+	    //
+	    // in the stream: file, name, registers, code area:
+	    ensureFree(gs+2);
+	    for (int i=0; i < gs; i++)
+	      put(pp->getG(i));
+	    //
+	    // OPTIMIZATION: does not need a 'sync' because the print
+	    // name is a primitive value. And actually,
+	    // PrTabEntry::PrTabEntry does not analyze that name
+	    // either, but just needs a value OZ_Term.
+	    put(pp->getName());
+	    t = pp->getPred()->getFile();
+	    continue;
 	  }
 	  break;
 
@@ -251,18 +205,22 @@ void TRAVERSERCLASS::doit()
 	      tsr = makeTaggedSRecord(sr);
 	    else
 	      tsr = oz_nil();
+	    // OPTIMIZATION: does not need a 'sync' because the free
+	    // list is taken "as is" during object construction. That
+	    // is, its content is not analyzed: all what is needed is
+	    // a valid OZ_Term (in this case that's an STAG_LTUPLE
+	    // one).
 	    put(tsr);
 
 	    //
 	    put(makeTaggedConst(getCell(o->getState())));
 
 	    //
-	    OZ_Term tlck;
 	    if (o->getLock())
-	      tlck = makeTaggedConst(o->getLock());
+	      t = makeTaggedConst(o->getLock());
 	    else
-	      tlck = oz_nil();
-	    put(tlck);
+	      t = oz_nil();
+	    continue;
 	  }
 	  break;
 
@@ -274,7 +232,7 @@ void TRAVERSERCLASS::doit()
 	  if (!processCell(t, (Tertiary *) ct) && 
 	      ((Tertiary *) ct)->isLocal()) {
 	    t = ((CellLocal *) ct)->getValue();
-	    goto bypass;
+	    continue;
 	  }
 	  break;
 
@@ -286,7 +244,7 @@ void TRAVERSERCLASS::doit()
 	  break;
 
 	default:
-	  (void) processNoGood(t,OK);
+	  processNoGood(t);
 	  break;
 	}
 	break;
@@ -294,19 +252,8 @@ void TRAVERSERCLASS::doit()
 
     case LTAG_VAR0:
     case LTAG_VAR1:
-      {
-	// Note: we remember locations of variables, - not the
-	// variables themselves! This works, since values and
-	// variables cannot co-reference.
-	int ind = findVarLocation(tPtr);
-	if (ind >= 0) {
-	  processRepetition(t, tPtr, ind);
-	  break;
-	} else {
-	  processVar(t, tPtr);
-	  break;
-	}
-      }
+      processVar(t, tPtr);
+      break;
 
     case LTAG_MARK0:
     case LTAG_MARK1:
@@ -360,8 +307,15 @@ void TRAVERSERCLASS::doit()
       break;
 
     default:
-      (void) processNoGood(t,NO);
+      processNoGood(t);
       break;
+    }
+
+    //
+    if (isEmpty()) {
+      break;
+    } else {
+      t = get();
     }
   }
 }

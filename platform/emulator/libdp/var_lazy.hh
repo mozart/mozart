@@ -75,7 +75,7 @@ public:
 
   //
 public:
-  virtual void marshal(ByteBuffer *);
+  virtual void marshal(ByteBuffer *bs, Bool hasIndex);
 
   //
   GName *getGName() { return (gname); }

@@ -41,12 +41,7 @@
 
 
 //
-void ObjectVar::marshal(ByteBuffer *bs)
-{
-  PD((MARSHAL,"var objectproxy"));
-  GName *classgn = getGNameClass();
-  marshalVarObject(bs, index, gname, classgn);
-}
+// Marshaling code is in dpMarshaler.cc;
 
 //
 TaggedRef newObjectProxy(int bi, GName *gnobj, TaggedRef cl)
