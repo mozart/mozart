@@ -389,7 +389,7 @@ void link_module(ModuleEntry * mt, Bool isSited) {
   for (ModuleEntry * E = mt; (E && E->name); E++) {
 
     tagged2Dictionary(dictionary_of_modules)
-      ->setArg(oz_atom(E->name),
+      ->setArg(oz_atomNoDup(E->name),
                ozInterfaceToRecord((E->init_function)(),
                                    E->name,
                                    isSited));
@@ -487,7 +487,7 @@ OZ_BI_define(BIObtainNative, 2, 1) {
     mod_name = (char *)  osDlsym(handle,name_sym);
   }
 
-  OZ_RETURN(ozInterfaceToRecord((*init_function)(), mod_name, OK));
+  OZ_RETURN(ozInterfaceToRecord((*init_function)(), ozstrdup(mod_name), OK));
 
 } OZ_BI_end
 
