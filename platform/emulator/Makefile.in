@@ -131,11 +131,12 @@ TEXT2PICKLESRCS= text2pickle.cc opcodes.cc
 TEXT2PICKLEOBJS= $(TEXT2PICKLESRCS:.cc=.o)
 
 SRCS= \
-	$(SUPPORTSRCS) $(OSSRCS) $(STORESRCS) $(RUNSRCS) \
-	$(SPACESRCS) $(MEMSRCS) $(PERDIOSRCS) $(OFSRCS) $(FDSRCS) \
-	$(FSETSRCS) $(CPISRCS)
+	$(SUPPORTSRCS) $(MEMSRCS) $(STORESRCS) \
+	$(SPACESRCS) $(RUNSRCS) $(OSSRCS) \
+	$(CPISRCS) $(FDSRCS) $(FSETSRCS) $(OFSRCS) \
+	$(PERDIOSRCS)
 
-OBJS=   $(OTHERSRCS:%.cc=%.o) $(SRCS:%.cc=%.o)
+OBJS=   $(SRCS:%.cc=%.o) $(OTHERSRCS:%.cc=%.o)
 
 WIFSRCS=	wif.cc
 COMPILERSUPPORTSRCS=	compiler.cc
@@ -281,6 +282,7 @@ version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
 	     $(SRCDIR)/version.sed > version.cc
 
 depend:: version.cc initffuns.cc $(CREATEDSRCS) $(ALLSRCS)
+	$(MAKE) first
 	$(DEPEND) $^ > Makefile.deps
 
 tags:	$(CREATEDFILES) version.cc
