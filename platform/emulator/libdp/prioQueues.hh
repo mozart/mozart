@@ -46,6 +46,8 @@ private:
 
   int prio_val_4;
   int prio_val_3;
+
+  int noMsgs;
 public:
   void init();
 
@@ -62,6 +64,8 @@ public:
 
   Bool hasNeed();
   Bool hasQueued();
+  int getQueueStatus();
+
   void clear5();  // Clears prio 5 (+ recList no Unmarshalcont)
   void clearAll();
   void startGCMsgCs();

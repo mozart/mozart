@@ -39,7 +39,7 @@
 #endif
 
 class ComObj;
-ComObj* createComObj(DSite*, int recCtr);
+ComObj* createComObj(DSite*);
 void comController_startGCComObjs();
 void comController_gcComObjs();
 void comController_finishGCComObjs();

@@ -779,8 +779,7 @@ void marshalSPP(MarshalerBuffer *bs, TaggedRef entity, Bool trail);
 // aux:
 #define MCreditMaxSize MNumberMaxSize
 #define MBaseSiteMaxSize (3*MNumberMaxSize + MShortMaxSize)
-#define MVirtualInfoMaxSize (4*MNumberMaxSize + MShortMaxSize)
-#define MDSiteMaxSize (DIFMaxSize + MBaseSiteMaxSize + MVirtualInfoMaxSize)
+#define MDSiteMaxSize (DIFMaxSize + MBaseSiteMaxSize)
 #define MBorrowHeadMaxSize (2*DIFMaxSize + 2*MDSiteMaxSize + MNumberMaxSize + MCreditMaxSize)
 #define MOwnHeadMaxSize (2*DIFMaxSize + MDSiteMaxSize + MNumberMaxSize + MCreditMaxSize)
 #define MObjectVarMaxSize (MBorrowHeadMaxSize + 2*MGNameMaxSize)

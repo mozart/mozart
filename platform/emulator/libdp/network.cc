@@ -85,8 +85,8 @@ void setFirewallStatus(Bool fw){
 
 Bool getFireWallStatus(){return ipIsbehindFW;}
 
-ComObj *createComObj(DSite *site,int recCtr) {
-  ComObj *comObj = comController->newComObj(site,recCtr);
+ComObj *createComObj(DSite *site) {
+  ComObj *comObj = comController->newComObj(site);
   return comObj;
 }
 

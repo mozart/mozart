@@ -55,7 +55,7 @@ OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
   DSite* site     = na->site;
   int index      = na->index;
 
-// AN What should be done about this?
+// AN! What should be done about this?
 //  OZ_Term nogoods = bs->getNoGoods();
 //    if (!oz_eq(oz_nil(),nogoods)) {
 //    /*
@@ -127,15 +127,14 @@ Bool  PortProxy::canSend(){
    BorrowEntry* b = BT->getBorrow(this->getIndex());
    NetAddress *na = b->getNetAddress();
    DSite* site     = na->site;
-   int dummy;
    /*
-     if(!(site->getQueueStatus(dummy) <
+     if(!(site->getQueueStatus() <
      ozconf.perdioFlowBufferSize))
         printf("ps c:%d max: %d\n",
         site->getQueueStatus(dummy),
         ozconf.perdioFlowBufferSize);
    */
-   return(site->getQueueStatus(dummy) <
+   return(site->getQueueStatus() <
           ozconf.perdioFlowBufferSize);}
 
 

@@ -1309,8 +1309,6 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
   //  printf("times left %d\n", timeUntilClose);
   //  printf("proxies left %d\n", proxiesLeft);
 
-  (*virtualSitesExit)();
-
   if((int) timeUntilClose > 0)
     connectionsLeft =  startNiceClose();
   while ((int) timeUntilClose > 0 && connectionsLeft) {

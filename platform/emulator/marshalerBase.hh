@@ -97,7 +97,7 @@ typedef enum {
   DIF_PRIMARY,
   DIF_SECONDARY,
   DIF_SITE,
-  DIF_SITE_VI,
+  DIF_SITE_VI,          // no longer in use (referred to VirtualInfo)
   DIF_SITE_PERM,
   DIF_PASSIVE,
   DIF_COPYABLENAME,

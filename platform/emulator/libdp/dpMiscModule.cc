@@ -55,14 +55,6 @@
 #include    <sys/ioctl.h>
 #endif
 #endif
-#ifdef VIRTUALSITES
-#define USE_VS_MSGBUFFERS
-#endif
-
-//
-#ifdef USE_VS_MSGBUFFERS
-#include "virtual.hh"
-#endif
 
 extern OZ_Term defaultAcceptProcedure;
 extern OZ_Term defaultConnectionProcedure;
