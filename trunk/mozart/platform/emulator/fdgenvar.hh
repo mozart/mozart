@@ -106,6 +106,8 @@ public:
     return len;
   }
 
+  SuspList * getSuspList(int i) { return fdSuspList[i]; }
+
   void installPropagators(GenFDVariable *, Board *);
 
 

@@ -839,7 +839,7 @@ OZ_C_proc_begin(BIwidthC, 2)
     return pe.impose(new WidthPropagator(rawrec, rawwid)); // oz_args[0], oz_args[1]));
 } OZ_C_proc_end
 
-OZ_CFunHeader WidthPropagator::spawner = BIwidthC;
+OZ_PropagatorProfile WidthPropagator::profile = "BIwidthC";
 
 // Used by BIwidthC built-in
 // {PropWidth X W} where X is OFS and W is FD width.
@@ -1041,7 +1041,7 @@ OZ_C_proc_begin(BImonitorArity, 3)
     return PROCEED;
 } OZ_C_proc_end
 
-OZ_CFunHeader MonitorArityPropagator::spawner = BImonitorArity;
+OZ_PropagatorProfile MonitorArityPropagator::profile = "BImonitorArity";
 
 // The propagator for the built-in RecordC.monitorArity 
 // {PropFeat X K L FH FT} -- propagate features from X to the list L, and go

@@ -31,29 +31,29 @@
 
 class FSetsMinPropagator : public Propagator_S_D {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 public:
   FSetsMinPropagator(OZ_Term v, OZ_Term i)
     : Propagator_S_D(v, i) {}
   
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
 };
 
 class FSetsMaxPropagator : public Propagator_S_D {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 public:
   FSetsMaxPropagator(OZ_Term v, OZ_Term i)
     : Propagator_S_D(v, i) {}
   
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
 };
 
@@ -76,20 +76,20 @@ public:
 
 class FSetsConvexPropagator : public Propagator_S {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 public:
   FSetsConvexPropagator(OZ_Term v)
     : Propagator_S(v) {}
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
 };
 
 
 class FSetMatchPropagator : public Propagator_S_VD {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
   
   int _firsttime, _last_min, _last_max, _l, _k;
 
@@ -97,8 +97,8 @@ public:
   FSetMatchPropagator(OZ_Term s, OZ_Term vd)
     : _firsttime(1), Propagator_S_VD(s, vd) { }
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }  
   virtual size_t sizeOf(void) {
     return sizeof(FSetMatchPropagator);
@@ -107,7 +107,7 @@ public:
 
 class FSetMinNPropagator : public Propagator_S_VD {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
   
   int _firsttime, _last_min, _last_max, _l, _k;
 
@@ -115,8 +115,8 @@ public:
   FSetMinNPropagator(OZ_Term s, OZ_Term vd)
     : _firsttime(1), Propagator_S_VD(s, vd) { }
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }  
   virtual size_t sizeOf(void) {
     return sizeof(FSetMinNPropagator);
@@ -125,7 +125,7 @@ public:
 
 class FSetMaxNPropagator : public Propagator_S_VD {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
   
   int _firsttime, _last_min, _last_max, _l, _k;
 
@@ -133,8 +133,8 @@ public:
   FSetMaxNPropagator(OZ_Term s, OZ_Term vd)
     : _firsttime(1), Propagator_S_VD(s, vd) { }
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }  
   virtual size_t sizeOf(void) {
     return sizeof(FSetMaxNPropagator);
@@ -143,14 +143,14 @@ public:
 
 class FSetSeqPropagator : public Propagator_VS {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
   
 public:
   FSetSeqPropagator(OZ_Term s)
     : Propagator_VS(s) { }
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }  
 };
 

@@ -45,7 +45,7 @@ private:
     for (int i = reg_l_sz; i--; ) 
       reg_oldDomSizes[i] = fds1;
   }
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   ExactlyPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
     //    : Propagator_D_VD_I(n, l, v) {}
@@ -58,7 +58,7 @@ public:
 
   virtual ~ExactlyPropagator(void);
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual size_t sizeOf(void) { return sizeof(*this); }
 };
 
@@ -78,7 +78,7 @@ private:
     for (int i = reg_l_sz; i--; ) 
       reg_oldDomSizes[i] = fds1;
   }
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   AtLeastPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
    //    : Propagator_D_VD_I(n, l, v) {}
@@ -91,7 +91,7 @@ public:
   virtual ~AtLeastPropagator(void);
   virtual size_t sizeOf(void) { return sizeof(*this); }
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 //-----------------------------------------------------------------------------
@@ -110,7 +110,7 @@ private:
     for (int i = reg_l_sz; i--; ) 
       reg_oldDomSizes[i] = fds1;
   }
-static OZ_CFunHeader spawner;
+static OZ_PropagatorProfile profile;
 public:
   AtMostPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
     : Propagator_D_VD_I(n, l, v) {init_l_u();}
@@ -123,20 +123,20 @@ public:
   virtual size_t sizeOf(void) { return sizeof(*this); }
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 //-----------------------------------------------------------------------------
 
 class ElementPropagator : public Propagator_D_VI_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   ElementPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
     : Propagator_D_VI_D(n, l, v) {}
   
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 #endif // __COUNT_HH__

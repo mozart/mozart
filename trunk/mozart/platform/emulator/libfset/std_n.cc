@@ -45,8 +45,6 @@ OZ_C_proc_begin(fsp_disjointN, 1)
 } 
 OZ_C_proc_end
 
-OZ_CFunHeader FSetDisjointNPropagator::header = fsp_disjointN;
-
 OZ_Return FSetDisjointNPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in ");
@@ -135,7 +133,6 @@ OZ_C_proc_begin(fsp_unionN, 2)
 } 
 OZ_C_proc_end
 
-OZ_CFunHeader FSetUnionNPropagator::header = fsp_unionN;
 
 inline
 OZ_FSetConstraint unionN(OZ_FSetVar x[], int high, int except)
@@ -291,7 +288,6 @@ OZ_C_proc_begin(fsp_partition, 2)
 } 
 OZ_C_proc_end
 
-OZ_CFunHeader FSetPartitionPropagator::header = fsp_partition;
 
 OZ_Return FSetPartitionPropagator::propagate(void)
 {
@@ -435,6 +431,10 @@ failure:
   return P.fail();  
 
 }
+
+OZ_PropagatorProfile FSetUnionNPropagator::profile    = "fsp_unionN";
+OZ_PropagatorProfile FSetDisjointNPropagator::profile = "fsp_disjointN";
+OZ_PropagatorProfile FSetPartitionPropagator::profile = "fsp_partition";
 
 // eof 
 //-----------------------------------------------------------------------------

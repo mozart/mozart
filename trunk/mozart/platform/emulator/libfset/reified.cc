@@ -26,10 +26,86 @@
 
 #include <limits.h>
 #include "reified.hh"
+#include "standard.hh"
 
 #ifdef PROFILE
 #define inline
 #endif
+
+//-----------------------------------------------------------------------------
+OZ_C_proc_begin(fsp_equalR, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET "," OZ_EM_FD);
+
+  PropagatorExpect pe;
+
+  OZ_EXPECT(pe, 0, expectFSetVarBounds);
+  OZ_EXPECT(pe, 1, expectFSetVarBounds);
+  OZ_EXPECT(pe, 2, expectIntVarAny);
+  
+  return pe.impose(new EqualRPropagator(OZ_args[1],
+					OZ_args[0],
+					OZ_args[2]));
+} 
+OZ_C_proc_end
+
+
+//*****************************************************************************
+
+OZ_Return EqualRPropagator::propagate(void)
+{
+  OZ_DEBUGPRINTTHIS("in: ");
+  
+  OZ_FDIntVar r(_b);
+
+  if (*r == fd_singl) {
+    r.leave();
+    
+    if (r->getSingleElem() == 1)
+      return replaceBy(_v1, _v2);
+    else
+      return replaceBy((OZ_Propagator *) new FSetDistinctPropagator(_v1, _v2));
+  }
+
+  int r_val = 0;
+  OZ_FSetVar x;
+  OZ_FSetVar y;
+
+  x.readEncap(_v1);
+  y.readEncap(_v2);
+  
+  {
+    if (x->isValue() && y->isValue() && *x == *y) {
+      r_val = 1;
+      goto entailment;
+    }
+
+    if (*x % *y) { 
+      goto failure;
+    }
+  }
+    
+  r.leave(); 
+  x.leave(); 
+  y.leave();
+  return SLEEP;
+
+
+failure:
+entailment:
+
+  if (0 == (*r &= r_val)) {
+    r.fail(); 
+    x.fail(); 
+    y.fail();
+    return FAILED;
+  } 
+
+  r.leave(); 
+  x.leave(); 
+  y.leave();
+  return OZ_ENTAILED;
+}
 
 //-----------------------------------------------------------------------------
 OZ_C_proc_begin(fsp_includeR, 3)
@@ -48,7 +124,6 @@ OZ_C_proc_begin(fsp_includeR, 3)
 } 
 OZ_C_proc_end
 
-OZ_CFunHeader IncludeRPropagator::header = fsp_includeR;
 
 //*****************************************************************************
 
@@ -128,8 +203,6 @@ OZ_C_proc_begin(fsp_isInR, 3)
 } 
 OZ_C_proc_end
 
-OZ_CFunHeader IsInRPropagator::spawner = fsp_isInR;
-
 OZ_Return IsInRPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in: ");
@@ -200,8 +273,6 @@ OZ_C_proc_begin(fsp_bounds, 5)
 					OZ_args[4]));
 } 
 OZ_C_proc_end
-
-OZ_CFunHeader BoundsPropagator::header = fsp_bounds;
 
 OZ_Return BoundsPropagator::propagate(void)
 {
@@ -285,8 +356,6 @@ OZ_C_proc_begin(fsp_boundsN, 5)
 					 OZ_args[4]));
 } 
 OZ_C_proc_end
-
-OZ_CFunHeader BoundsNPropagator::header = fsp_boundsN;
 
 OZ_Return BoundsNPropagator::propagate(void)
 {
@@ -382,7 +451,6 @@ OZ_C_proc_begin(fsp_partitionReified, 3)
 } 
 OZ_C_proc_end
 
-OZ_CFunHeader PartitionReifiedPropagator::header = fsp_partitionReified;
 
 OZ_Return PartitionReifiedPropagator::propagate(void)
 {
@@ -540,7 +608,6 @@ OZ_C_proc_begin(fsp_partitionReified1, 4)
 } 
 OZ_C_proc_end
 
-OZ_CFunHeader PartitionReified1Propagator::header = fsp_partitionReified1;
 
 OZ_Return PartitionReified1Propagator::propagate(void)
 {
@@ -752,7 +819,6 @@ OZ_C_proc_begin(fsp_partitionProbing, 3)
 } 
 OZ_C_proc_end
 
-OZ_CFunHeader PartitionProbingPropagator::header = fsp_partitionProbing;
 
 OZ_Return PartitionProbingPropagator::propagate(void)
 {
@@ -856,5 +922,13 @@ PartitionProbingPropagator::PartitionProbingPropagator(OZ_Term vs, OZ_Term s, OZ
   
 }
 
+OZ_PropagatorProfile IsInRPropagator::profile = "fsp_isInR";
+OZ_PropagatorProfile BoundsPropagator::profile = "fsp_bounds";
+OZ_PropagatorProfile BoundsNPropagator::profile = "fsp_boundsN";
+OZ_PropagatorProfile PartitionReifiedPropagator::profile = "fsp_partitionReified";
+OZ_PropagatorProfile PartitionReified1Propagator::profile = "fsp_partitionReified1";
+OZ_PropagatorProfile PartitionProbingPropagator::profile = "fsp_partitionProbing";
+OZ_PropagatorProfile EqualRPropagator::profile = "fsp_equalR";
+OZ_PropagatorProfile IncludeRPropagator::profile = "fsp_includeR";
 //-----------------------------------------------------------------------------
 // eof

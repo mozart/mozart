@@ -48,8 +48,6 @@ OZ_C_proc_begin(fsp_isIn, 3)
 } 
 OZ_C_proc_end
 
-OZ_CFunHeader IsInPropagator::spawner = fsp_isIn;
-
 OZ_Return IsInPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in: ");
@@ -79,3 +77,6 @@ failure:
   v.fail();
   return FAILED;
 }
+
+OZ_PropagatorProfile IsInPropagator::profile = "fsp_isIn";
+

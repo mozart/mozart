@@ -75,6 +75,8 @@ public:
     return len;
   }
 
+  SuspList * getSuspList(int i) { return fsSuspList[i]; }
+
   void relinkSuspListTo(GenFSetVariable * lv, Bool reset_local = FALSE);
 
   void propagate(OZ_FSetPropState state,

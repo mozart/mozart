@@ -31,43 +31,43 @@
 
 class IncludePropagator : public Propagator_S_D {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 public:
   IncludePropagator(OZ_Term s, OZ_Term d)
     : Propagator_S_D(s, d) {}
   
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
 };
 
 class ExcludePropagator : public Propagator_S_D {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 public:
   ExcludePropagator(OZ_Term s, OZ_Term d)
     : Propagator_S_D(s, d) {}
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
 };
 
 class FSetCardPropagator : public Propagator_S_D {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 public:
   FSetCardPropagator(OZ_Term s, OZ_Term d)
     : Propagator_S_D(s, d) {}
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
 };
 
