@@ -89,13 +89,13 @@ public:
 
   Site* allocSite(Site* s){
     Site *newS=newSite();
-    newS->init(s->address,s->port,s->timestamp);
+    newS->init(s->address,s->port,&s->timestamp);
     PD((SITE,"allocated site:%s ",newS->stringrep()));
     return newS;}
 
   Site* allocSite(Site* s,unsigned int type){
     Site *newS=newSite();
-    newS->init(s->address,s->port,s->timestamp,type);
+    newS->init(s->address,s->port,&s->timestamp,type);
     PD((SITE,"allocated site:%s ",newS->stringrep()));
     return newS;}
 }siteManager;
@@ -367,7 +367,7 @@ Site* unmarshalSiteInternal(MsgBuffer *buf, Site *tryS, MarshalTag mt)
   return s;
 }
 
-Site *findSite(ip_address a,int port,time_t stamp)
+Site *findSite(ip_address a,int port,TimeStamp &stamp)
 {
   Site tryS(a,port,stamp);
   return unmarshalSiteInternal(NULL, &tryS, DIF_SITE);
@@ -392,13 +392,13 @@ char *BaseSite::stringrep()
 {
   static char buf[100];
   ip_address a=getAddress();
-  sprintf(buf,"type:%d %ld.%ld.%ld.%ld:%d:%ld",
+  sprintf(buf,"type:%d %ld.%ld.%ld.%ld:%d:%ld/%d",
 	  getType(),
 	  (a/(256*256*256))%256,
 	  (a/(256*256))%256,
 	  (a/256)%256,
 	  a%256,
-	  getPort(), getTimeStamp());
+	  getPort(), getTimeStamp()->start,getTimeStamp()->pid);
   return buf;
 }
 
@@ -461,7 +461,7 @@ void Site :: marshalPSite(MsgBuffer *buf){
 void Site::initVirtualInfoArg(VirtualInfo *vi)
 {
   vi->setAddress(getAddress());
-  vi->setTimeStamp(getTimeStamp());
+  vi->setTimeStamp(*getTimeStamp());
   vi->setPort(getPort());
 }
 
@@ -505,7 +505,7 @@ void Site::marshalSite(MsgBuffer *buf){
 
 //
 // kost@ : that's a part of the boot-up procedure ('perdioInit()');
-Site* makeMySite(ip_address a, port_t p, time_t t) {
+Site* makeMySite(ip_address a, port_t p, TimeStamp &t) {
   Site *s = new Site(a,p,t);
   int hvalue = s->hashPrimary();
   primarySiteTable->insertPrimary(s,hvalue);

@@ -59,7 +59,9 @@ private:
   //
   void setAddress(ip_address aIn) { address = aIn; }
   void setPort(port_t pIn) { port = pIn; }
-  void setTimeStamp(time_t tsIn) { timestamp = tsIn; }
+  void setTimeStamp(TimeStamp &tsIn) { 
+    Assert(0); // timestamp should be of type "class TimeStamp"
+    timestamp = tsIn.start; }
 
   //
   ip_address getAddress() { return (address); }
