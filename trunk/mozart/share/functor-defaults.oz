@@ -43,5 +43,5 @@ defaults(dirs:
 	     'GumpParser']
 
 	 volatile:
-	    ['Module' 'URL' 'OS' 'Property']
+	    ['Module' 'URL' 'OS' 'Property' 'Pickle']
 	)
