@@ -34,11 +34,6 @@
  * 0. intro
  * ------------------------------------------------------------------------ */
 
-#ifndef NOFINALIZATION
-#define FINALIZATION
-#endif
-
-
 #define ozdeclspec
 
 /* calling convention "cdecl" under win32 */
