@@ -624,7 +624,7 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
       char *vs = mv2ov(versiongot);
       OZ_Term ozvergot = oz_atom(vs);
       char s1[80];
-      sprintf(s1, "Pickle version %s correspnds Oz version", versiongot);
+      sprintf(s1, "Pickle version %s corresponds to Oz version", versiongot);
       delete [] versiongot;
       delete vs;
       return raiseGeneric("load:versionmismatch",
