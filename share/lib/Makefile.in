@@ -585,11 +585,11 @@ BOOTINITTXTFROM = $(BOOTINITTXT)
 BOOTOZCTXTFROM  = $(BOOTOZCTXT)
 
 boot-ozc: $(BOOTOZCTXTFROM)
-        $(T2P) < $< > $@ \
+        $(T2P) -o $@ < $< \
         || (rm -f $@; exit 1)
 
 boot-init: $(BOOTINITTXTFROM)
-        $(T2P) < $< > $@ \
+        $(T2P) -o $@ < $< \
         || (rm -f $@; exit 1)
 
 boot-ozc.linked: ozc ozl Compiler.ozf $(SUPPSRC:%=%.ozf)
