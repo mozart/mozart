@@ -37,9 +37,6 @@
 \RequirePackage{pst-node}
 \RequirePackage{latexsym}
 \RequirePackage{epsf}
-\if@pdf
-\RequirePackage{ozhyperref}
-\fi
 
 % Main Code
 %
@@ -546,11 +543,7 @@ referenced is defined on this page.}
    \protect\addcontentsline{toc}{chapter}{Index}}
 % \proofmodetrue
 \indexproofstyle{\sc}
-\if@pdf
-  \renewcommand{\id}{\textbf}
-\else
-  \newcommand{\id}{\textbf}
-\fi
+\newcommand{\id}{\textbf}
 
 % redefine \see so that it looks like a subitem inside an item, like
 % a subsubitem inside a subitem, etc... This is done by letting the
@@ -564,6 +557,11 @@ referenced is defined on this page.}
 \renewcommand{\@idxitem}{\let\@see\old@subitem\old@idxitem}
 \renewcommand{\subitem}{\let\@see\old@subsubitem\old@subitem}
 \renewcommand{\subsubitem}{\let\@see\@subsubsubitem\old@subsubitem}
+
+% OZHYPERREF STUFF MUST COME AFTER OZBOOK'S OWN DEFS
+\if@pdf
+\RequirePackage{ozhyperref}
+\fi
 
 % REFERENCES
 
