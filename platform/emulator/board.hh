@@ -4,7 +4,7 @@
  *    Michael Mehl (mehl@dfki.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -33,6 +33,11 @@
 #endif
 
 #include "actor.hh"
+
+#ifdef PROP_MERGING
+#include "thrqueue.hh"
+#endif
+
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
 
@@ -101,6 +106,10 @@ private:
     Board *ref;
   } u;
   Script script;
+#ifdef PROP_MERGING
+  PropagatorQueue * pq;
+#endif
+
 public:
   NO_DEFAULT_CONSTRUCTORS(Board);
   Board(Actor *a,int type);
@@ -129,6 +138,12 @@ public:
   void unsetInstalled()  { flags &= ~Bo_Installed;  }
   void unsetNervous()    { flags &= ~Bo_Nervous;    }
   void unsetGlobalMark() { flags &= ~Bo_GlobalMark; }
+
+#ifdef PROP_MERGING
+  PropagatorQueue * getPropQueue() {
+    return pq;
+  }
+#endif
 
   Bool gcIsMarked(void);
   void gcMark(Board *);
@@ -207,6 +222,9 @@ public:
 
   void setCommitted(Board *s) {
     Assert(!isInstalled() && !isCommitted());
+#ifdef PROP_MERGING
+    pq->merge(s->getPropQueue());
+#endif
     flags |= Bo_Committed;
     u.actor->setCommitted();
     u.ref = s;
