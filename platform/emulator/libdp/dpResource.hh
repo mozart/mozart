@@ -76,66 +76,79 @@ class ResourceHashTable: public GenHashTable {
 public:
   ResourceHashTable(int i):GenHashTable(i){}
 
-  void add(TaggedRef entity, int index){
+  //
+  void add(OZ_Term entity, int oti) {
     // kost@ : this is what we can deal with:
     Assert((!oz_isRef(entity) && !oz_isVariable(entity)) ||
            (oz_isRef(entity) && oz_isVariable(*tagged2Ref(entity))));
-    Assert(find(entity)==RESOURCE_NOT_IN_TABLE);
-    int hvalue = hash(entity);
-    GenHashTable::htAdd(hvalue,(GenHashBaseKey*)entity,
-                        (GenHashEntry*)index);}
+    Assert(find(entity) == RESOURCE_NOT_IN_TABLE);
+    int hvalue;
+    GenHashBaseKey *ghbk;
+    GenHashEntry *ghe;
 
-  int find(TaggedRef entity){
-    Assert((!oz_isRef(entity) && !oz_isVariable(entity)) ||
-           (oz_isRef(entity) && oz_isVariable(*tagged2Ref(entity))));
-    int hvalue = hash(entity);
-    GenHashNode *aux = htFindFirst(hvalue);
-    while(aux){
-      int OTI = (int) aux->getEntry();
-      OwnerEntry *oe=OT->getEntry(OTI);
-      //
-      // kost@ : that's how it was looking before:
-      /* if(oe && (!oe->isTertiary()) && oe->getRef()==entity) { */
-      // kost@: i've introduced now this assertion:
-      // 'ref' owner entries are deallocated explicitly, so:
-      Assert(oe);
-      if(oe->isRef() && oe->getRef() == entity) {
-        return OTI;
-      } else {
-        // kost@ : what??! why remove!?! It cann't be removed since
-        // there can be multiple entries with the same hash value.
-        // So, i've uncommented it:
-        // if(htSub(hvalue,aux));
-        ;
-        // I feel i know the motive for that: it was a sort of GC,
-        // wasn't it? Outdated RHT entries (that is, those that did
-        // not correspond to an alive&corrent OT entry anymore) were
-        // eventually purged;
-      }
-      aux = htFindNext(aux, hvalue);
-    }
-    return RESOURCE_NOT_IN_TABLE;
+    //
+    hvalue = hash(entity);
+    GenCast(entity, OZ_Term, ghbk, GenHashBaseKey*);
+    GenCast(oti, int, ghe, GenHashEntry*);
+    GenHashTable::htAdd(hvalue, ghbk, ghe);
   }
 
-  // kost@ : explicit destruction of entries;
-  void deleteFound(OZ_Term entity) {
+  //
+  int find(TaggedRef entity) {
+    // kost@ : this is what we can deal with:
     Assert((!oz_isRef(entity) && !oz_isVariable(entity)) ||
            (oz_isRef(entity) && oz_isVariable(*tagged2Ref(entity))));
     int hvalue = hash(entity);
-    GenHashNode *aux = htFindFirst(hvalue);
-    while (aux) {
+    GenHashNode *aux;
+
+    //
+  repeat:
+    aux = htFindFirst(hvalue);
+    while (aux){
       OZ_Term te;
+
+      //
       GenCast(aux->getBaseKey(), GenHashBaseKey*, te, OZ_Term);
-      // Additionally, (all) bound variables can be discarded as well:
-      // nobody will ever try to find them;
-      if ((te == entity) ||
-          (oz_isRef(te) && !oz_isVariable(*tagged2Ref(te)))) {
-        htSub(hvalue, aux);
-        break;
+
+      //
+      // Now, there are three cases: found, not found, and found a
+      // dead entry;
+      if (te == entity) {
+        // that's the entry we're talking about: let's check whether
+        // the corresponding oe entry is still alive:
+        int oti;
+        OwnerEntry *oe;
+
+        //
+        GenCast(aux->getEntry(), GenHashEntry*, oti, int);
+        oe = OT->getEntry(oti);
+
+        //
+        if (oe && oe->isRef() && oe->getRef() == entity) {
+          return (oti);         // found!
+        } else {
+          // The wrong one: that is, the current entry is outdated
+          // and should be removed;
+          (void) htSub(hvalue, aux);
+
+          // must start from scratch since 'htSub()' is NOT compatible
+          // with 'htFindFirst()' & Co.;
+          goto repeat;
+        }
+        Assert(0);
+
+        //
+      } if (oz_isRef(te) && !oz_isVariable(*tagged2Ref(te))) {
+        // bound variables can be (and should be) discarded as well;
+        (void) htSub(hvalue, aux);
+        goto repeat;
       } else {
         aux = htFindNext(aux, hvalue);
       }
     }
+
+    //
+    return (RESOURCE_NOT_IN_TABLE);
   }
 
   //

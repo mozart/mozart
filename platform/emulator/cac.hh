@@ -120,3 +120,10 @@ public:
 };
 
 extern CacStack cacStack;
+
+//
+// isGCMarkedTerm(t) returns true iff
+//      t is a marked name, extension, const, var
+// the logic is adapted from gcTagged(TaggedRef&,TaggedRef&)
+// and simplified according to a suggestion by Christian.
+Bool isGCMarkedTerm(OZ_Term t);
