@@ -6114,14 +6114,26 @@ OZ_C_proc_begin(BISystemGetTime,1) {
   GetRecord;
   unsigned int timeNow = osUserTime();
 
-  SetIntArg(AtomCopy,      ozstat.timeForCopy.total);
-  SetIntArg(AtomGC,        ozstat.timeForGC.total);
-  SetIntArg(AtomLoad,      ozstat.timeForLoading.total);
-  SetIntArg(AtomPropagate, ozstat.timeForPropagation.total);
-  SetIntArg(AtomRun,       timeNow-(ozstat.timeForGC.total +
-				    ozstat.timeForLoading.total +
-				    ozstat.timeForPropagation.total +
-				    ozstat.timeForCopy.total));
+  unsigned int copy = 0;
+  unsigned int gc   = 0;
+  unsigned int load = 0;
+  unsigned int prop = 0;
+  unsigned int run  = 0;
+
+  if (ozconf.timeDetailed) {
+    copy = ozstat.timeForCopy.total;
+    gc   = ozstat.timeForGC.total;
+    load = ozstat.timeForLoading.total;
+    prop = ozstat.timeForPropagation.total;
+    run  = timeNow-(copy + gc + load + prop);
+  }
+
+  SetIntArg(AtomCopy,      copy);
+  SetIntArg(AtomGC,        gc);
+  SetIntArg(AtomLoad,      load);
+  SetIntArg(AtomPropagate, prop);
+  SetIntArg(AtomRun,       run);
+
   SetIntArg(AtomSystem,    osSystemTime());
   SetIntArg(AtomTotal,     osTotalTime());
   SetIntArg(AtomUser,      timeNow);
