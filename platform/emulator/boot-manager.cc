@@ -91,48 +91,48 @@ TaggedRef builtinRecord;
 #include "modVirtualSite-if.cc"
 #endif
 
-
+typedef OZ_C_proc_interface * (* init_fun_t) (void);
 
 struct ModuleEntry {
-  const char *          name;
-  OZ_C_proc_interface * interface;
+  const char * name;
+  init_fun_t   init_function; //OZ_C_proc_interface * interface;
 };
 
 
 static ModuleEntry module_table[] = {
   // Most important stuff
-  {"Property",        (*mod_int_Property)()},
-  {"OS",              (*mod_int_OS)()},
-  {"URL",             (*mod_int_URL)()},
-  {"Pickle",          (*mod_int_Pickle)()},
-  {"System",          (*mod_int_System)()},
-  {"Finalize",        (*mod_int_Finalize)()},
-  {"Profile",         (*mod_int_Profile)()},
-  {"Foreign",         (*mod_int_Foreign)()},
-  {"Fault",           (*mod_int_Fault)()},
-  {"Distribution",    (*mod_int_Distribution)()},
-  {"CTB",             (*mod_int_CTB)()},
-  {"PID",             (*mod_int_PID)()},
-  {"FDB",             (*mod_int_FDB)()},
-  {"FSB",             (*mod_int_FSB)()},
+  {"Property",        mod_int_Property},
+  {"OS",              mod_int_OS},
+  {"URL",             mod_int_URL},
+  {"Pickle",          mod_int_Pickle},
+  {"System",          mod_int_System},
+  {"Finalize",        mod_int_Finalize},
+  {"Profile",         mod_int_Profile},
+  {"Foreign",         mod_int_Foreign},
+  {"Fault",           mod_int_Fault},
+  {"Distribution",    mod_int_Distribution},
+  {"CTB",             mod_int_CTB},
+  {"PID",             mod_int_PID},
+  {"FDB",             mod_int_FDB},
+  {"FSB",             mod_int_FSB},
 
 #ifdef MODULES_LINK_STATIC
-  {"FSP",             (*mod_int_FSP)()},
-  {"FDP",             (*mod_int_FDP)()},
-  {"CompilerSupport", (*mod_int_CompilerSupport)()},
-  {"Parser",          (*mod_int_Parser)()},
-  {"Browser",         (*mod_int_Browser)()},
-  {"Wif",             (*mod_int_Wif)()},
-  {"Schedule",        (*mod_int_Schedule)()},
-  {"Debug",           (*mod_int_Debug)()},
+  {"FSP",             mod_int_FSP},
+  {"FDP",             mod_int_FDP},
+  {"CompilerSupport", mod_int_CompilerSupport},
+  {"Parser",          mod_int_Parser},
+  {"Browser",         mod_int_Browser},
+  {"Wif",             mod_int_Wif},
+  {"Schedule",        mod_int_Schedule},
+  {"Debug",           mod_int_Debug},
 #endif
 
 #ifdef MISC_BUILTINS
-  {"Misc",         (*mod_int_Misc)()},
+  {"Misc",         mod_int_Misc},
 #endif
 
 #ifdef VIRTUALSITES
-  {"VirtualSite",  (*mod_int_VirtualSite)()},
+  {"VirtualSite",  mod_int_VirtualSite},
 #endif
 
   {0, 0},
@@ -156,8 +156,6 @@ static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I,
   return OZ_recordInit(AtomExport,l);
 }
 
-typedef OZ_C_proc_interface * (* init_fun_t) (void);
-
 OZ_BI_define(BIBootManager, 1, 1) {
   oz_declareVirtualStringIN(0, mod_name);
 
@@ -176,9 +174,9 @@ OZ_BI_define(BIBootManager, 1, 1) {
 
   OZ_C_proc_interface * I = 0;
 
-  if (me && me->interface) {
+  if (me && me->init_function) {
     // Thats easy, is linked statically
-    I = me->interface;
+    I = (* me->init_function)();
   } else {
 
 #ifndef MODULES_LINK_STATIC
@@ -208,8 +206,14 @@ OZ_BI_define(BIBootManager, 1, 1) {
     strcpy(if_name,     "mod_int_");
     strcpy(if_name + 8, mod_name);
 
-    // that's cool code; I love it!
-    I = (* ((init_fun_t) osDlsym(handle, if_name)) )();
+    init_fun_t init_function = (init_fun_t) osDlsym(handle, if_name);
+
+    // oops, there is no `init_function()'
+    if (init_function == 0)
+      goto bomb;
+
+    // retrieve table
+    I = (* init_function)();
 
     delete[] libfile;
     delete[] if_name;
@@ -240,15 +244,16 @@ OZ_BI_define(BIdlLoad,1,1)
 
   void* handle = OZ_getForeignPointer(hdl);
 
-  init_fun_t init_fun = (init_fun_t) osDlsym(handle,"oz_init_module");
-  // oops, there is no `init_fun()'
-  if (init_fun == 0) {
+  init_fun_t init_function = (init_fun_t) osDlsym(handle,"oz_init_module");
+
+  // oops, there is no `init_function()'
+  if (init_function == 0) {
     return oz_raise(E_ERROR,AtomForeign, "cannotFindOzInitModule", 1,
                     OZ_in(0));
   }
 
-  // `init_fun()' returns the interface table
-  OZ_C_proc_interface * i_table = (*init_fun)();
+  // `init_function()' returns the interface table
+  OZ_C_proc_interface * i_table = (*init_function)();
 
   OZ_RETURN(oz_pair2(hdl, ozInterfaceToRecord(i_table, 0, OK)));
 } OZ_BI_end
