@@ -9914,11 +9914,13 @@ echo "configure:9914: checking whether .align N means multiple or power_of_2" >&
 if eval "test \"`echo '$''{'oz_cv_meaning_of_align'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  if test "$cross_compiling" = yes; then
+  oz_saved="$CPPFLAGS"
+   CPPFLAGS="$CPPFLAGS -D$ARCH"
+   if test "$cross_compiling" = yes; then
   oz_cv_meaning_of_align=unknown
 else
   cat > conftest.$ac_ext <<EOF
-#line 9922 "configure"
+#line 9924 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -9953,13 +9955,19 @@ int check(void*label)
  zat:
   {
     void* two;
+#if defined(ARCH_I486)
     asm("movl $TWO,%0" : "=m" (two));
+#elif defined(ARCH_SPARC)
+    asm("set TWO,%0" : "=m" (two));
+#else
+#error platform not supported
+#endif
     return ((((long) two) && 017) == 0) ? 0 : 1;
   }
 }
 
 EOF
-if { (eval echo configure:9963: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:9971: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   oz_cv_meaning_of_align=power_of_2
 else
@@ -9970,6 +9978,8 @@ else
 fi
 rm -fr conftest*
 fi
+
+ CPPFLAGS="$oz_saved"
 
 fi
 
@@ -9992,7 +10002,7 @@ fi
 
 
 echo $ac_n "checking whether the opcode map can be inlined""... $ac_c" 1>&6
-echo "configure:9996: checking whether the opcode map can be inlined" >&5
+echo "configure:10006: checking whether the opcode map can be inlined" >&5
 if eval "test \"`echo '$''{'oz_cv_can_inline_opcode_map'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -10019,7 +10029,7 @@ if test "$cross_compiling" = yes; then
   oz_cv_can_inline_opcode_map=no
 else
   cat > conftest.$ac_ext <<EOF
-#line 10023 "configure"
+#line 10033 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -10085,9 +10095,18 @@ asm("LABEL" OP##N##_STRING":");
  * but really store ASM label
  */
 
+#if defined(ARCH_I486)
+#define LOAD_LABEL(N) \
+asm("movl \$LABEL"OP##N##_STRING",%0" : "=m" (*ptr))
+#elif defined(ARCH_SPARC)
+#define LOAD_LABEL(N) \
+asm("set LABEL"OP##N##_STRING",%0" : "=m" (*ptr))
+#else
+#error platform not supported
+#endif
+
 #define LOAD(N) \
-*ptr = && FAKE_##N; \
-asm("movl \$LABEL"OP##N##_STRING",%0" : "=m" (*ptr)); ++ptr;
+*ptr = && FAKE_##N; LOAD_LABEL(N); ++ptr;
 
 #define DO(N) \
 if (N!=n-- || !equal(OP##N##_VALUE,((char*)*(bytecode-1))[-1])) return 1
@@ -10125,7 +10144,7 @@ bool equal(int want,int have)
 }
 
 EOF
-if { (eval echo configure:10129: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10148: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   oz_cv_can_inline_opcode_map=yes
 else
@@ -10155,12 +10174,12 @@ fi
 
 
 echo $ac_n "checking alignment of secondary tag for const terms""... $ac_c" 1>&6
-echo "configure:10159: checking alignment of secondary tag for const terms" >&5
+echo "configure:10178: checking alignment of secondary tag for const terms" >&5
 if test "$cross_compiling" = yes; then
   echo "$ac_t""assume optimistic ok for cross compilation" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 10164 "configure"
+#line 10183 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -10180,7 +10199,7 @@ int main()
   return (((void*)&c)==((void*)(Tag*)&c))?0:-1;
 }
 EOF
-if { (eval echo configure:10184: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10203: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""ok" 1>&6
 else
@@ -10195,13 +10214,13 @@ fi
 
 
 echo $ac_n "checking if alignment of secondary tags for extensions needs padding""... $ac_c" 1>&6
-echo "configure:10199: checking if alignment of secondary tags for extensions needs padding" >&5
+echo "configure:10218: checking if alignment of secondary tags for extensions needs padding" >&5
 if test "$cross_compiling" = yes; then
   echo "$ac_t""assume optimistic no for cross compilation" 1>&6
   needs_padding=no
 else
   cat > conftest.$ac_ext <<EOF
-#line 10205 "configure"
+#line 10224 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -10228,7 +10247,7 @@ int main()
   return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
 }
 EOF
-if { (eval echo configure:10232: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10251: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""no" 1>&6
   needs_padding=no
@@ -10247,12 +10266,12 @@ NEEDS_PADDING=0
 
 if test "$needs_padding" = "yes"; then
 echo $ac_n "checking if padding works""... $ac_c" 1>&6
-echo "configure:10251: checking if padding works" >&5
+echo "configure:10270: checking if padding works" >&5
 if test "$cross_compiling" = yes; then
   { echo "configure: error: we should not get here when cross compiling" 1>&2; exit 1; }
 else
   cat > conftest.$ac_ext <<EOF
-#line 10256 "configure"
+#line 10275 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -10283,7 +10302,7 @@ int main()
   return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
 }
 EOF
-if { (eval echo configure:10287: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10306: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""yes" 1>&6
   NEEDS_PADDING=1

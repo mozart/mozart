@@ -36,11 +36,21 @@ define(instruction,
 
 #ifdef AS_CAN_INLINE_OPCODE_MAP
 
+#if defined(ARCH_I486)
+#define LOAD_LABEL(instr) \
+asm("movl $TRUE_"#instr",%0" : "=m" (*ptr))
+#elif defined(ARCH_SPARC)
+#define LOAD_LABEL(instr) \
+asm("set TRUE_"#instr",%0" : "=m" (*ptr))
+#else
+#error platform not supported
+#endif
+
 /* trick GCC into believing that we actually need the FAKE_... labels */
 
 #define INSTR(instr) \
   *ptr = && FAKE_##instr; \
-  asm("movl $TRUE_"#instr",%0" : "=m" (*ptr)); \
+  LOAD_LABEL(instr); \
   ++ptr;
 
 #define INSTR_FINISH }
