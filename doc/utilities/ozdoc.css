@@ -19,7 +19,7 @@ BODY, P, H1, H2, H3, H4, TH, TD, A {
 }
 
 PRE, CODE, KBD, SPAN.key, SPAN.buffer {
-  font-family: "lucida console",courier,monospace;
+  font-family: "Andale Mono","lucida console",courier,monospace;
 }
 
 P {
