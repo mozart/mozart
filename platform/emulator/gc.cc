@@ -1592,7 +1592,8 @@ void AM::gc(int msgLevel) {
   // mm2: Assert(isEmptySuspendVarList());
   emptySuspendVarList();
 
-  OZ_collectHeapTerm(defaultExceptionHdl,defaultExceptionHdl);
+  if (defaultExceptionHdl)
+    OZ_collectHeapTerm(defaultExceptionHdl,defaultExceptionHdl);
   OZ_collectHeapTerm(debugStreamTail,debugStreamTail);
 
   CodeArea::gcCodeAreaStart();
