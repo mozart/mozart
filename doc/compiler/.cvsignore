@@ -1,3 +1,4 @@
 Makefile
 compiler-html
 compiler-tex
+latex.db
