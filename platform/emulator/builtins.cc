@@ -4997,6 +4997,9 @@ static int finalizable(OZ_Term& x)
         b = ((Tertiary*)xp)->getBoardInternal(); break;
       case Co_Class:
         b = ((ObjectClass*)xp)->getBoardInternal(); break;
+      case Co_Unused2:
+        Assert(0);
+        return 1;
       }
       return oz_isRootBoard(b)?1:2;
     }
