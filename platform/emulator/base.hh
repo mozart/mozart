@@ -278,8 +278,6 @@ class Toplevel;
 class Board;
 class RunnableThreadBody;
 
-class Script;
-
 class Trail;
 
 class TaskStack;

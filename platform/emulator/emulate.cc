@@ -34,11 +34,9 @@
 #include <stdarg.h>
 
 #include "am.hh"
-#include "space.hh"
 #include "thr_int.hh"
 #include "debug.hh"
 #include "prop_int.hh"
-#include "space.hh"
 #include "var_of.hh"
 #include "codearea.hh"
 #include "builtins.hh"

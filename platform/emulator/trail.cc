@@ -32,26 +32,6 @@
 #include "thr_int.hh"
 
 /*
- * Tests
- *
- */
-
-int Trail::chunkSize(void) {
-  int ret = 0;
-
-  StackEntry * top = tos-1;
-
-  while (((TeType) ((int) *top)) != Te_Mark) {
-    top -= 3;
-    ret++;
-    Assert(top>=array);  /* there MUST be a mark on the trail! */
-  }
-
-  return ret;
-}
-
-
-/*
  * Pushing
  *
  */
@@ -169,24 +149,15 @@ void unBind(TaggedRef *p, TaggedRef t) {
 }
 
 
-void Trail::unwind(void) {
+TaggedRef Trail::unwind(Board * b) {
 
-  Board * cb = oz_currentBoard();
-
-  Script & s = cb->getScript();
+  TaggedRef s = AtomNil;
 
   if (!isEmptyChunk()) {
 
-    int n = chunkSize();
+    Thread * t = oz_newThreadPropagate(b);
 
-    Assert(n > 0);
-
-    s.allocate(n);
-
-    // one single suspended thread for all;
-    Thread *thr = oz_newThreadPropagate(cb);
-
-    for (int i = 0; i < n; i++) {
+    do {
 
       switch (getTeType()) {
 
@@ -198,19 +169,17 @@ void Trail::unwind(void) {
         Assert(oz_isRef(*refPtr) || !oz_isVariable(*refPtr));
         Assert(oz_isVariable(value));
 
-        s[i].left  = makeTaggedRef(refPtr);
-        s[i].right = *refPtr;
+        s = oz_cons(oz_cons(makeTaggedRef(refPtr),*refPtr),s);
 
         TaggedRef vv= *refPtr;
         DEREF(vv,vvPtr,_vvTag);
-        if (oz_isVariable(vv)) {
-          oz_var_addSusp(vvPtr,thr,NO);  // !!! Makes space *not* unstable !!!
-        }
+        if (oz_isVariable(vv))
+          oz_var_addSusp(vvPtr,t,NO);  // !!! Makes space *not* unstable !!!
 
         unBind(refPtr, value);
 
         // value is always global variable, so add always a thread;
-        if (oz_var_addSusp(refPtr,thr)!=SUSPEND) {
+        if (oz_var_addSusp(refPtr,t)!=SUSPEND) {
           Assert(0);
         }
 
@@ -230,10 +199,11 @@ void Trail::unwind(void) {
 
         tagged2CVar(*varPtr)->unsetTrailed();
 
-        oz_var_addSusp(varPtr, thr);
+        oz_var_addSusp(varPtr, t);
 
-        s[i].left  = makeTaggedRef(varPtr);
-        s[i].right = makeTaggedRef(newTaggedCVar(copy));
+        s = oz_cons(oz_cons(makeTaggedRef(varPtr),
+                            makeTaggedRef(newTaggedCVar(copy))),
+                    s);
 
         break;
       }
@@ -241,13 +211,12 @@ void Trail::unwind(void) {
       default:
         break;
       }
-    }
-
-  } else {
-    s.setEmpty();
+    } while (!isEmptyChunk());
   }
 
   popMark();
+
+  return s;
 }
 
 

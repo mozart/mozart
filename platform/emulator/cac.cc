@@ -796,23 +796,6 @@ BigInt * BigInt::gCollect(void) {
 #endif
 
 
-inline
-void Script::_cac(void) {
-
-  Assert(sizeof(Equation) == 2 * sizeof(TaggedRef));
-
-  if (size > 0) {
-
-    Equation * to = (Equation *) heapMalloc(size * sizeof(Equation));
-
-    OZ_cacBlock((TaggedRef *) eqs, (TaggedRef *) to, size * 2);
-    eqs = to;
-
-  }
-
-}
-
-
 /*
  *  Thread items methods;
  *
@@ -2360,8 +2343,7 @@ void Board::_cacRecurse() {
 
   lpq._cac();
 
-  script.Script::_cac();
-
+  oz_cacTerm(script,script);
   oz_cacTerm(rootVar,rootVar);
   oz_cacTerm(status,status);
 

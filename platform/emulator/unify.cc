@@ -31,7 +31,6 @@
 #endif
 
 #include "unify.hh"
-#include "space.hh"
 #include "fset.hh"
 #include "thr_int.hh"
 

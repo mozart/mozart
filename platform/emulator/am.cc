@@ -39,7 +39,6 @@
 #include "codearea.hh"
 #include "fdomn.hh"
 #include "trace.hh"
-#include "space.hh"
 #include "newmarshaler.hh"
 
 AM am;
@@ -150,8 +149,6 @@ void AM::init(int argc,char **argv)
   osInit();
   bigIntInit();
   initffuns();
-
-  installingScript = FALSE;
 
   defaultExceptionHdl = makeTaggedNULL();
 
@@ -473,9 +470,9 @@ sigjmp_buf wake_jmp;
 #endif
 volatile int use_wake_jmp = 0;
 
-void AM::suspendEngine()
-{
-  oz_installPath(_rootBoard);
+void AM::suspendEngine(void) {
+
+  _rootBoard->install();
 
   ozstat.printIdle(stdout);
 
@@ -588,7 +585,7 @@ void AM::checkStatus(Bool block)
     return;
 
   if (block) {
-    oz_installPath(oz_rootBoard());
+    _rootBoard->install();
     osBlockSignals();
   }
 

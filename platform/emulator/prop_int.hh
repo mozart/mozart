@@ -34,7 +34,6 @@
 #include "prop_class.hh"
 #include "thr_int.hh"
 #include "am.hh"
-#include "space.hh"
 #include "debug.hh"
 #include "cpi_heap.hh"
 #include "var_base.hh"

@@ -35,7 +35,6 @@
 #include "base.hh"
 #include "builtins.hh"
 #include "var_base.hh"
-#include "space.hh"
 #include "thr_int.hh"
 
 
