@@ -317,6 +317,101 @@ class ozdeclspec OZ_FSetConstraint;
 class OZ_FiniteDomainImpl;
 class FSetValue;
 
+#if defined(__GNUC__) && (defined(__CYGWIN32__) || defined(__MINGW32__))
+// This patch was contributed by Jan van der Vorst <j.v.d.vorst@chello.nl>
+//
+// Patch for win32 gcc 3.3 and probably 3.4
+// The gcc bug results in not exporting member functions of classes that are 
+// refered to as a friend of another class.
+//
+// This patch results in an emulator.dll with which the Select package 
+// builds.
+// NO OTHER TESTS HAVE BEEN PERFORMED !
+// I DO NOT EVEN KNOW IF MOZART STILL RUNS AFTER THIS PATCH ! 
+//
+// This function calls all non-const functions. Somehow all const functions
+// were not affected by the gcc bug.
+// Limitations: I have not been able to make the 'new' and 'delete' operators
+// to show up in the exports of emulator.def
+
+inline static void
+gcc_bug_11005(void)
+{
+  OZ_FDState fds;
+  OZ_Term ozt;
+  void * ozfsv;
+  OZ_FiniteDomain d, d1(fds), d2(d), d3(ozt), d4(*((OZ_FSetValue*)ozfsv));
+
+  //   OZ_FiniteDomain(void);
+  //   OZ_FiniteDomain(OZ_FDState state);
+  //   OZ_FiniteDomain(const OZ_FiniteDomain &);
+  //   OZ_FiniteDomain(OZ_Term);
+  //   OZ_FiniteDomain(const OZ_FSetValue &);
+
+  d.initRange(0, 0);
+  d.initSingleton(0);
+  d.initDescr((OZ_Term)NULL);
+  d.initFull();
+  d.initEmpty();
+  d.initBool();
+
+  //   int getMidElem(void) const;
+  //   int getNextSmallerElem(int v) const;
+  //   int getNextLargerElem(int v) const;
+  //   int getLowerIntervalBd(int v) const;
+  //   int getUpperIntervalBd(int v) const;
+  //   int getSize(void) const;
+  //   int getWidth(void) const;
+  //   int getMinElem(void) const;
+  //   int getMaxElem(void) const;
+  //   int getSingleElem(void) const;
+  //   OZ_Term getDescr(void) const;
+
+  //  const OZ_FiniteDomain &operator = (const OZ_FiniteDomain &fd);
+  d = d;
+  //  OZ_Boolean operator == (const OZ_FDState) const;
+  //   OZ_Boolean operator == (const int) const;
+  //   OZ_Boolean operator != (const OZ_FDState) const;
+  //   OZ_Boolean operator != (const int) const;
+  //
+  //   OZ_FiniteDomain operator & (const OZ_FiniteDomain &) const;
+  //   OZ_FiniteDomain operator | (const OZ_FiniteDomain &) const;
+  //   OZ_FiniteDomain operator ~ (void) const;
+
+  //   int operator &= (const OZ_FiniteDomain &);
+  d &= d;
+  //   int operator &= (const int);
+  d &= 0;
+  //   int operator += (const int);
+  d += 0;
+  //   int operator -= (const int);
+  d -= 0;
+  //   int operator -= (const OZ_FiniteDomain &);
+  d -= d;
+  //   int operator <= (const int);
+  d <= 0;
+  //   int operator >= (const int);
+  d >= 0;
+
+
+  d.constrainBool();
+  d.intersectWithBool();
+  //   OZ_Boolean isIn(int i) const;
+  d.copyExtension();
+  d.disposeExtension();
+
+  //   static void * operator new(size_t);
+  //   static void operator delete(void *, size_t);
+  //
+  // #ifdef __GNUC__
+  //   static void * operator new[](size_t);
+  //   static void operator delete[](void *, size_t);
+  // #endif
+
+  //  char * toString(void) const;
+}
+#endif
+
 class ozdeclspec OZ_FSetValue {
 
   friend class OZ_FiniteDomainImpl;
