@@ -2780,12 +2780,7 @@ static int acceptHandler(int fd,void *unused)
   Assert(auxbuf-accHbuf == accHbufSize);
   // EK!!
   // fcntl(newFD,F_SETFL,O_NONBLOCK);
-#ifdef __MINGW32__
-  unsigned long p = 1;
-  if (0 && ioctlsocket(newFD,FIONBIO,&p) != 0) {
-    message("ioctlsocket failed: %d\n",WSAGetLastError());
-  }
-#else
+#ifndef __MINGW32__
   fcntl(newFD,F_SETFL,O_NDELAY);
 #endif
   int written = 0;
@@ -3091,14 +3086,7 @@ retry:
     goto  ipOpenNoAnswer;}
 
   // EK!!
-#ifdef __MINGW32__
-  {
-    unsigned long p = 1;
-    if (0 && ioctlsocket(fd,FIONBIO,&p) != 0) {
-      message("ioctlsocket failed: %d\n",WSAGetLastError());
-    }
-  }
-#else
+#ifndef __MINGW32__
   fcntl(fd,F_SETFL,O_NDELAY);
 #endif
   if(osconnect(fd,(struct sockaddr *) &addr,sizeof(addr))==0
