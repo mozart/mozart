@@ -185,7 +185,7 @@ Note that this variable is only checked once when oz.el is loaded."
 	   :type 'boolean
 	   :group 'oz)))
 (put 'oz-prepend-line 'variable-interactive
-     "nPrepend a \\line directive to all Oz queries: ")
+     "XPrepend a \\line directive to all Oz queries? (t or nil): ")
 
 (eval-and-compile
   (eval '(defcustom oz-emulator
