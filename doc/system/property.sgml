@@ -516,27 +516,99 @@
       <Table>
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
-          <Td/width/
-          <Td/yes/
+          <Td/<<int.min>>/
+          <Td/no/
           <Td/<<Int>>/
-          <Td/Maximal width used for <<System.show>> and
-          <<System.print>> (see <Ptr to="chapter.system">)./
+          <Td/The smallest integer that can be represented efficiently
+          (that is, by a single word in memory)
+          by the engine./
         </Tr>
         <Tr>
-          <Td/depth/
+          <Td/<<int.max>>/
           <Td/yes/
           <Td/<<Int>>/
-          <Td/Maximal depth used for <<System.show>> and
-          <<System.print>> (see <Ptr to="chapter.system">)./
+          <Td/The largest integer that can be represented efficiently
+          (that is, by a single word in memory)
+          by the engine./
         </Tr>
       </Table>
     </P>
 
   </Subsection>
 
-  <Subsection class=unnumbered id="section.property.misc">  
-    <Title/Miscellaneous: <<misc>>/
+  <Subsection class=unnumbered id="section.property.platform">  
+    <Title/Platform Information: <<platform>>/
+
+    <P>
+      <Table>
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<name>>/
+          <Td/no/
+          <Td/<<Atom>>/
+          <Td>
+              The name of the platform as atom of the form
+              <<?_{OS}-?_{ARCH}>> where the following combinations are
+              currently supported:
+              <Table>
+                <Tr><Th/Name/              <Th/OS/   <Th/ARCH/</Tr>
+                <Tr><Th/<<'aix3-rs6000'>>/   <Th/<<'aix3'>>/    <Th/<<'rs6000'>>/</Tr>
+                <Tr><Th/<<'freebsd-i486'>>/  <Th/<<'freebsd'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'irix5-mips'>>/    <Th/<<'irix'>>/    <Th/<<'mips'>>/</Tr>
+                <Tr><Th/<<'linux-i486'>>/    <Th/<<'linux'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'linux-m68k'>>/    <Th/<<'linux'>>/ <Th/<<'m68k'>>/</Tr>
+                <Tr><Th/<<'netbsd-i486'>>/   <Th/<<'netbsd'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'netbsd-m68k'>>/   <Th/<<'netbsd'>>/ <Th/<<'m68k'>>/</Tr>
+                <Tr><Th/<<'netbsd-sparc'>>/  <Th/<<'netbsd'>>/ <Th/<<'sparc'>>/</Tr>
+                <Tr><Th/<<'osf1-alpha'>>/    <Th/<<'osf1'>>/ <Th/<<'alpha'>>/</Tr>
+                <Tr><Th/<<'solaris-i486'>>/  <Th/<<'solaris'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'solaris-sparc'>>/ <Th/<<'solaris'>>/ <Th/<<'sparc'>>/</Tr>
+                <Tr><Th/<<'sunos-sparc'>>/   <Th/<<'sunos'>>/   <Th/<<'sparc'>>/</Tr>
+                <Tr><Th/<<'ultrix-mips'>>/   <Th/<<'ultrix'>>/  <Th/<<'mips'>>/</Tr>
+                <Tr><Th/<<'win32-i486'>>/    <Th/<<'win32'>>/   <Th/<<'i486'>>/</Tr>
+              </Table>
+          </Td>
+        </Tr>
+        <Tr>
+          <Td/<<os>>/
+          <Td/no/
+          <Td/<<Atom>>/
+          <Td/The operating system part of the platform name./
+        </Tr>
+        <Tr>
+          <Td/<<arch>>/
+          <Td/no/
+          <Td/<<Atom>>/
+          <Td/The architecture part of the platform name./
+        </Tr>
+      </Table>
+    </P>
+
   </Subsection>
+
+  <Subsection class=unnumbered id="section.property.application">  
+    <Title/Application Support: <<application>>/
+
+    <P>
+      <Table>
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<args>>/
+          <Td/no/
+          <Td/list of atoms/
+          <Td/The arguments passed to an application./
+        </Tr>
+        <Tr>
+          <Td/<<url>>/
+          <Td/no/
+          <Td/<<Atom>>/
+          <Td/The url of the root functor of an application./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
 
   </Section>
 
