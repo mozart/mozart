@@ -518,7 +518,7 @@ OZ_BI_define(BIstoreCache,2,0)
  * builtins for the compiler
  ******************************************************************** */
 
-OZ_BI_define(BIchunkArity,1,1)
+OZ_BI_define(BIchunkArityCompiler,1,1)
 {
   oz_declareNonvarIN(0,ch);
   if (!oz_isChunk(ch)) {

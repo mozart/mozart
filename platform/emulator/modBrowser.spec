@@ -45,7 +45,7 @@
 
     'chunkArity'        => { in  => ['+chunk'],
                              out => ['+[feature]'],
-                             BI  => BIchunkArity},
+                             BI  => BIchunkArityBrowser},
 
     'getTermSize'       => { in  => ['value','+int','+int'],
                              out => ['+int'],
