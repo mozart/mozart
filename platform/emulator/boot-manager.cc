@@ -256,6 +256,7 @@ static ModuleEntry base_module_table[] = {
 OZ_BI_proto(BIcontrolVarHandler);
 OZ_BI_proto(BIatRedo);
 OZ_BI_proto(BIfail);
+OZ_BI_proto(BIskip);
 OZ_BI_proto(BIurl_load);
 OZ_BI_proto(BIload);
 
@@ -536,6 +537,10 @@ void initBuiltins() {
   BI_fail      =
     makeTaggedConst(new Builtin("fail",
                                 0, 0, BIfail, OK));
+
+  BI_skip      =
+    makeTaggedConst(new Builtin("skip",
+                                0, 0, BIskip, OK));
 
   // if mapping from cfun to builtin fails
   BI_unknown =

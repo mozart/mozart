@@ -3273,6 +3273,10 @@ OZ_BI_define(BIfail,0,0)
   return FAILED;
 } OZ_BI_end
 
+OZ_BI_define(BIskip,0,0) {
+  return PROCEED;
+} OZ_BI_end
+
 
 // ------------------------------------------------------------------------
 // --- Apply

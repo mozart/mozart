@@ -27,6 +27,7 @@
 #include "builtins.hh"
 #include "am.hh"
 #include "board.hh"
+#include "thr_class.hh"
 
 #include <string.h>
 #include <signal.h>
@@ -42,7 +43,7 @@ OZ_BI_define(BIthreadUnleash,2,0)
   oz_declareThread(0,thread);
   OZ_declareInt(1,frameId);
 
-  if (thread->hasStack())
+  if (!thread->isDeadThread())
     thread->getTaskStackRef()->unleash(frameId);
 
   return PROCEED;
@@ -202,7 +203,7 @@ OZ_BI_define(BIthreadTaskStack,3,1)
   oz_declareIntIN(1,depth);
   oz_declareNonvarIN(2,verbose);
 
-  if (thread->isDeadThread() || !thread->hasStack())
+  if (thread->isDeadThread())
     OZ_RETURN(oz_nil());
 
   Bool doverbose;
@@ -222,7 +223,7 @@ OZ_BI_define(BIthreadFrameVariables,2,1)
   oz_declareThread(0,thread);
   oz_declareIntIN(1,frameId);
 
-  if (!thread->hasStack())
+  if (thread->isDeadThread())
     OZ_RETURN(NameUnit);
 
   TaskStack *taskstack = thread->getTaskStackRef();

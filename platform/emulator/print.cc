@@ -1050,18 +1050,7 @@ void Thread::printStream(ostream &stream, int depth)
 
   stream << (isSuspended() ? " (susp)" : " (run)");
 
-  switch (getThrType ()) {
-  case S_RTHREAD:
-    stream << " Tasks #" << item.threadBody->taskStack.tasks();
-    break;
-
-  case S_WAKEUP:
-    stream << " Wakeup";
-    break;
-
-  default:
-    stream << "(unknown type " << getThrType() << ")";
-  }
+  stream << " Tasks #" << item.threadBody->taskStack.tasks();
 
   if ((getFlags ()) & T_ext)       stream << " ext";
   if ((getFlags ()) & T_tag)       stream << " tag";
@@ -1075,8 +1064,7 @@ void Thread::printLongStream(ostream &stream, int depth, int offset)
 {
   this->printStream(stream,depth);
   stream << endl;
-  if (hasStack())
-    item.threadBody->taskStack.printTaskStack(depth); //mm2: prints to stderr!
+  item.threadBody->taskStack.printTaskStack(depth); //mm2: prints to stderr!
 }
 
 void Propagator::printStream(ostream &stream, int depth)
