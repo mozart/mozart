@@ -67,7 +67,7 @@ protected:
   int next;                     // next chunk if any (and -1 otherwise);
   key_t shmKey;                 // ... of that (next) chunk;
   volatile Bool busy;           // set by owner and dropped by receiver;
-  BYTE buffer[1];               // actually more - fills up the chunk;
+  BYTE buffer[0];               // actually more - fills up the chunk;
 
   //
 public:
@@ -79,6 +79,20 @@ public:
   BYTE *getDataAddr() { return (&buffer[0]); }
   int getNext() { return (next); }
   key_t getSHMKey() { return (shmKey); }
+
+  //
+#ifdef DEBUG_CHECK
+  void freeDebug(int size) {
+    int bs = (size - sizeof(VSMsgChunk))/sizeof(BYTE);
+    for (int i = 0; i < bs; i++)
+      buffer[i] = 0xe7;
+  }
+  void checkFreedDebug(int size) {
+    int bs = (size - sizeof(VSMsgChunk))/sizeof(BYTE);
+    for (int i = 0; i < bs; i++)
+      Assert(buffer[i] == 0xe7);
+  }
+#endif
 };
 
 //
@@ -86,7 +100,7 @@ class VSMsgChunkOwned : public VSMsgChunk {
 public:
   // The body of the chunk contains garbage initially.
   // (Chunks are initialized lazily - prior usage;)
-  void init() {
+  void init(DebugCode(int chunkSize)) {
     next = -1;
     busy = TRUE;
   }
@@ -295,7 +309,7 @@ public:
 
     //
     int chunkNum = fs.pop();
-    getChunkAddr(chunkNum)->init();
+    getChunkAddr(chunkNum)->init(DebugCode(chunkSize));
     importersRegister.put(vs);
 
     //
@@ -489,11 +503,13 @@ public:
   //
   // (sender site release - when e.g. the message cannot be sent);
   // (actually, this 'releaseChunk' just calls 'markFree' of a chunk)
-  void releaseChunk(VSMsgChunkOwned *chunk) {
+  void releaseChunk(VSMsgChunkOwned *chunk DebugArg(int chunkSize)) {
+    DebugCode(chunk->freeDebug(chunkSize););
     chunk->markFree();
   }
 
   //
+  int getChunkSize() { return (chunkSize); }
   int getChunkDataSize() {
     Assert(sizeof(VSMsgChunk) == sizeof(VSMsgChunkOwned));
     return (chunkSize - sizeof(VSMsgChunk));
@@ -606,7 +622,8 @@ public:
   }
 
   //
-  void releaseChunk(VSMsgChunkImported *chunk) {
+  void releaseChunk(VSMsgChunkImported *chunk DebugArg(int chunkSize)) {
+    DebugCode(chunk->freeDebug(chunkSize););
     chunk->markFree();
   }
 };
@@ -782,7 +799,7 @@ public:
         cpm->getMsgChunk(currentKey, currentNum);
       currentNum = chunkAddr->getNext();
       currentKey = chunkAddr->getSHMKey();
-      cpm->releaseChunk(chunkAddr);
+      cpm->releaseChunk(chunkAddr DebugArg(cpm->getChunkSize()));
     } while (currentNum >= 0);
     Assert(currentNum == -1);
 
@@ -944,7 +961,7 @@ public:
       currentKey = chunkAddr->getSHMKey();
 
       //
-      cpm->releaseChunk(chunkAddr);
+      cpm->releaseChunk(chunkAddr DebugArg(fsm->getChunkSize()));
     } while (currentNum >= 0);
     Assert(currentNum == -1);
 

@@ -381,6 +381,8 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
       myVSMsgBufferImported = new (myVSMsgBufferImported)
         VSMsgBufferImported(importedVSChunksPoolManager,
                             msgChunkPoolKey, chunkNumber);
+      //
+      myVSMsgBufferImported->unmarshalBegin();
 
       //
       if (myVSMsgBufferImported->isVoid()) {
@@ -389,9 +391,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
         // next message (if any could be processed??)
         continue;
       }
-
       //
-      myVSMsgBufferImported->unmarshalBegin();
       msgType = getVSMsgType(myVSMsgBufferImported);
 
       //
@@ -818,6 +818,8 @@ OZ_BI_define(BIVSinitServer,1,0)
   myVSMsgBufferImported = new (myVSMsgBufferImported)
     VSMsgBufferImported(importedVSChunksPoolManager,
                         msgChunkPoolKey, chunkNumber);
+  // (we must read-in the type field);
+  myVSMsgBufferImported->unmarshalBegin();
 
   //
   // Check if something went wrong just from scratch:
@@ -828,10 +830,7 @@ OZ_BI_define(BIVSinitServer,1,0)
     return oz_raise(E_ERROR,E_SYSTEM,"noInitMessage",1,
                     oz_atom(mbKeyChars));
   }
-
   //
-  // (we must read-in the type field);
-  myVSMsgBufferImported->unmarshalBegin();
   msgType = getVSMsgType(myVSMsgBufferImported);
   Assert(msgType == VS_M_INIT_VS);
 

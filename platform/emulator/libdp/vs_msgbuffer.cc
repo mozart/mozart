@@ -77,7 +77,7 @@ void VSMsgChunkPoolSegmentOwned::init(key_t shmkeyIn,
   shmkey = shmkeyIn;
   chunkSize = chunkSizeIn;
   chunksNum = chunksNumIn;
-  Assert(sizeof(this) <= (unsigned int) chunkSizeIn);
+  Assert(sizeof(VSMsgChunkPoolSegmentOwned) <= (unsigned int) chunkSizeIn);
   initReservedChunk();
 }
 
@@ -120,8 +120,10 @@ VSMsgChunkPoolSegmentManagerOwned(int chunkSizeIn, int chunksNumIn,
   // Chunks are initialized lazily - prior usage;
 
   //
-  for (int i = 1; i < chunksNum; i++)
+  for (int i = 1; i < chunksNum; i++) {
+    DebugCode(getChunkAddr(i)->freeDebug(chunkSize););
     fs.push(i);
+  }
 }
 
 //
@@ -197,10 +199,12 @@ int VSMsgChunkPoolSegmentManagerOwned::scavenge()
   //
   purgeMap();
   for (int i = 1; i < chunksNum; i++) // the first one is busy anyway;
-    if (!(getChunkAddr(i)->isBusy()))
+    if (!(getChunkAddr(i)->isBusy())) {
       markFreeInMap(i);
-    else
+      DebugCode(getChunkAddr(i)->checkFreedDebug(chunkSize));
+    } else {
       busy++;
+    }
 
   //
   return (busy);
