@@ -285,7 +285,7 @@ F=functor
   end
 >>>
 
-<P>It may seem overkill to create a functor that just creates
+<P>It may seem overkill to use a functor just to create
 a single object.
 But the idea of functors goes much beyond this.
 Functors have an optional <<import>> clause that specifies
