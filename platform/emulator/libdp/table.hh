@@ -435,6 +435,7 @@ public:
 #define END_FREE -1
 
 class OwnerTable {
+  OwnerEntry* array;
   int size;
   int no_used;
   int nextfree;
@@ -443,7 +444,6 @@ class OwnerTable {
   void compactify();
 
 public:
-  OwnerEntry* array;
   void print();
 
   OZ_Term extract_info();
