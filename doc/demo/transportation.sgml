@@ -35,7 +35,7 @@
 
   <P>  
     This demo is an implementation of a multi agent scenario that was
-    developed in the AKA-MOD project at DFKI~\cite{FischerKuhn:93}.
+    developed in the AKA-MOD project at DFKI <ptr to="FischerKuhn.93">.
   </P>
 
   <Section>
