@@ -18,18 +18,18 @@ INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_DIR	= @INSTALL_DIR@
 
 COMPRESSLEVEL   = @oz_picklecompression@
-COMPRESSFLAGS   = --compress=$(COMPRESSLEVEL)
+COMPRESSFLAGS   = -z $(COMPRESSLEVEL)
 
-OZFLAGS		= $(COMPRESSFLAGS)
+OZCFLAGS	= $(COMPRESSFLAGS)
 OZC		= @OZC@
 
-OZARFLAGS       = $(COMPRESSFLAGS) --verbose --nosequential 
-OZAR		= @OZAR@
+OZLFLAGS        = $(COMPRESSFLAGS)
+OZL		= @OZL@
 
 LN_S		= @LN_S@
 
-COMPILE		= $(OZC) $(OZFLAGS) -c
-ARCHIVE         = $(OZAR) $(OZARFLAGS)
+COMPILE		= $(OZC) $(OZCFLAGS) -c
+LINK            = $(OZL) $(OZLFLAGS)
 
 COMPILERPANELSRC1 = \
 	CompilerPanelClass.oz
@@ -182,7 +182,7 @@ ProductionTemplates.ozf: $(PRODUCTIONTEMPLATESSRC)
 	$(COMPILE) -l Compiler $(SRCDIR)/ProductionTemplates.oz -o $@
 
 Inspector.ozf: $(INSPECTOROBJS)
-	$(ARCHIVE) --in=InspectorMain.ozf --out=$@
+	$(LINK) InspectorMain.ozf -o $@
 
 %.ozf: inspector/%.oz
 	$(COMPILE) $< -o $@

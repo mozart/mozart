@@ -23,18 +23,16 @@ INSTALL_DIR	= @INSTALL_DIR@
 OZENGINE        = @OZENGINE@
 
 COMPRESSLEVEL   = @oz_picklecompression@
-COMPRESSFLAGS   = --compress=$(COMPRESSLEVEL)
+COMPRESSFLAGS   = -z $(COMPRESSLEVEL)
 
-OZFLAGS		= $(COMPRESSFLAGS)
+OZCFLAGS	= $(COMPRESSFLAGS)
 OZC		= @OZC@
 
-OZARFLAGS       = $(COMPRESSFLAGS)
-OZAR		= @OZAR@
+COMPILE		= $(OZC) $(OZCFLAGS) -l Base -c
+COMPILEEXEC	= $(OZC) $(OZCFLAGS) -l Base -x
 
-COMPILE		= $(OZC) $(OZFLAGS) -l Base -c
-EXEC		= $(OZC) $(OZFLAGS)
-COMPILEEXEC	= $(OZC) $(OZFLAGS) -l Base -x
-ARCHIVE         = $(OZAR) $(OZARFLAGS)
+OZLFLAGS        = $(COMPRESSFLAGS)
+OZL		= @OZL@
 
 P2T		= $(SRCDIR)/p2t.sh
 T2P		= $(SRCDIR)/t2p.sh
@@ -76,7 +74,7 @@ FUNCTORS = \
 	$(MISCSRC:%=%.ozf) \
 	Compiler.ozf
 
-SYSLETS = ozc ozar
+SYSLETS = ozc ozl
 
 .PHONY: all
 
@@ -233,8 +231,8 @@ Main.ozf: compiler/Main.oz compiler/FormatStrings.oz \
 RunTime.ozf: compiler/RunTime.oz Base.ozf
 	$(COMPILE) $< -o $@
 
-Compiler.ozf: $(FUNFUNCTORS) ozar
-	$(OZENGINE) ozar $(COMPRESSFLAGS) --in=Main.ozf --out=Compiler.ozf
+Compiler.ozf: $(FUNFUNCTORS) ozl
+	$(OZENGINE) ozl $(COMPRESSFLAGS) Main.ozf -o Compiler.ozf
 
 #---------------------------------------------------------------------
 # Syslets
@@ -245,9 +243,9 @@ $(SYSLETS): $(RUNFUNCTORS)
 ozc: Base.ozf ozbatch/Compile.oz
 	$(COMPILEEXEC) ozbatch/Compile.oz -o $@
 
-ozar: URL.ozf ar/Print.oz ar/Main.oz ar/Archiver.oz ../functor-defaults.oz \
-	../url-defaults.oz
-	$(COMPILEEXEC) ar/Main.oz -o $@
+ozl: Base.ozf linker/Print.oz linker/Main.oz linker/Link.oz \
+	../functor-defaults.oz ../url-defaults.oz
+	$(COMPILEEXEC) linker/Main.oz -o $@
 
 #---------------------------------------------------------------------
 # Installation
@@ -369,7 +367,7 @@ stage2:
 		OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:prefix=./=./:.:= \
 		OZC="$(SRCDIR)/oze.sh $(STAGE1)/bin/ozc" \
 		OZINIT=$(STAGE1)/share/Init.ozf \
-		OZAR=$(STAGE1)/bin/ozar
+		OZL=$(STAGE1)/bin/ozl
 
 # stage3: recreate the functors and boot compiler using the stage2
 # boot compiler -- we should compare the generated boot-*.txt files
@@ -383,7 +381,7 @@ stage3:
 		OZ_LOAD=prefix=$(URL)/share/=./:prefix=./=./:.:prefix=/=/:= \
 		OZC=$(SRCDIR)/boot-ozc.sh \
 		OZINIT=Init.ozf \
-		OZAR=ozar
+		OZL=ozl
 
 SAVE=./save
 
@@ -404,7 +402,7 @@ check:
 # Boot compiler
 #---------------------------------------------------------------------
 # The boot compiler is simply the ordinary compiler with all functors
-# packaged together using the archiver.  There is also a a boot init
+# packaged together using the linker.  There is also a a boot init
 # file which is just the ordinary Init functor.  Both are provided in
 # the text-pickle format from which the boot functors are obtained
 # using text2pickle.
@@ -413,14 +411,14 @@ check:
 .PHONY: new-boot
 
 $(BOOTINITTXT):
-	$(MAKE) boot-init.ar && \
-	$(P2T) < boot-init.ar > $@ && \
-	rm -f boot-init.ar
+	$(MAKE) boot-init.linked && \
+	$(P2T) < boot-init.linked > $@ && \
+	rm -f boot-init.linked
 
 $(BOOTOZCTXT):
-	$(MAKE) boot-ozc.ar && \
-	$(P2T) < boot-ozc.ar > $@ && \
-	rm -f boot-ozc.ar
+	$(MAKE) boot-ozc.linked && \
+	$(P2T) < boot-ozc.linked > $@ && \
+	rm -f boot-ozc.linked
 
 new-boot:
 	$(MAKE) $(BOOTINITTXT) $(BOOTOZCTXT)
@@ -449,10 +447,10 @@ boot-init: $(BOOTINITTXTFROM)
 # currently linked in the system: else the bytecode of these functors
 # may have been side-effected and may contains stateful stuff
 
-boot-ozc.ar: ozc ozar Compiler.ozf $(SUPPSRC:%=%.ozf)
-	OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=./=./:prefix=http\\://www.ps.uni-sb.de/ozhome/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh ozar --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates --in=$< --out=$@
+boot-ozc.linked: ozc ozl Compiler.ozf $(SUPPSRC:%=%.ozf)
+	OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=./=./:prefix=http\\://www.ps.uni-sb.de/ozhome/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
 
-boot-init.ar: Init.ozf
+boot-init.linked: Init.ozf
 	cp $< $@
 
 # no suffixes needed
