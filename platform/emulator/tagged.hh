@@ -37,6 +37,7 @@
 #include "base.hh"
 #include "mem.hh"
 #include "gc.hh"
+#include "atoms.hh"
 
 // ---------------------------------------------------------------------------
 // ---------- TAGGED REF -----------------------------------------------------
@@ -804,7 +805,6 @@ static
 inline
 #endif
 Bool initRefsArray(RefsArray a, int size, Bool init) {
-  extern TaggedRef NameVoidRegister;
 
   setRefsArraySize(a,size);
   register nvr = NameVoidRegister;
