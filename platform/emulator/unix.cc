@@ -1570,7 +1570,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
   case 0: // child
     {
 
-#ifdef DEBUG_CHECK
+#ifdef DEBUG_FORK_GROUP
       /*
        * create a new process group for child
        *   this allows to press Control-C when debugging the emulator
