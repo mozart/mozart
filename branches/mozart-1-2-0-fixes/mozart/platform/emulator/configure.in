@@ -317,6 +317,10 @@ case $platform in
         TOOLLDCMD="ld -Bshareable"
 	oz_enable_modules_static=yes
         ;;
+    openbsd*)
+	TOOLLDCMD="ld -Bshareable"
+	: ${oz_enable_modules_static=no}
+	;;
     win32*)
 	AC_DEFINE(WINDOWS)
 	oz_enable_modules_static=yes
