@@ -28,7 +28,7 @@ local
       meth init(parent:P file:F
 		width: Width <=SourceWindowTextSize.1
 		height:Height<=SourceWindowTextSize.2)
-	 Tk.text,tkInit(parent: P         bg: SourceTextBackground
+	 Tk.text,tkInit(parent: P         bg: SourceTextBackground wrap: none
 			font:   SmallFont bd: BorderSize cursor: TextCursor
 			width:  Width     height:Height)
 	 self.filename = F
