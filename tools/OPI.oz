@@ -180,14 +180,12 @@ define
       elseof HOME then
 	 OZRC = {OS.getEnv 'OZRC'}
       in
-	 case OZRC \= false andthen {FileExists OZRC} then
+	 if OZRC \= false andthen {FileExists OZRC} then
 	    {OPICompiler enqueue(feedFile(OZRC))}
-	 elsecase {FileExists HOME#'/.oz/ozrc'} then
+	 elseif {FileExists HOME#'/.oz/ozrc'} then
 	    {OPICompiler enqueue(feedFile(HOME#'/.oz/ozrc'))}
-	 elsecase {FileExists HOME#'/.ozrc'} then   % note: deprecated
+	 elseif {FileExists HOME#'/.ozrc'} then   % note: deprecated
 	    {OPICompiler enqueue(feedFile(HOME#'/.ozrc'))}
-	 else
-	    skip
 	 end
       end
    end
