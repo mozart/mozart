@@ -159,9 +159,9 @@ $(WHAT).pics: $(WHAT).xml
 	$(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-picture.xsl $@
 	for f in `cat $(WHAT).pics`; do $(MAKE) $$f.ps; done
 %.gif.ps: %.gif
-	giftopnm $< | pnmtops -noturn > $@
+	giftopnm $< | pnmtops -rle -noturn > $@
 %.gif.ps: pictures/%.gif
-	giftopnm $< | pnmtops -noturn > $@
+	giftopnm $< | pnmtops -rle -noturn > $@
 
 $(WHAT).code: $(WHAT).xml
 	$(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/codereq.xsl $@
