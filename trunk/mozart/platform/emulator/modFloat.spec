@@ -32,6 +32,10 @@
 		      out => ['+bool'],
 		      bi  => BIisFloatB},
 
+     '/'	 => { in  => ['+float','+float'],
+		      out => ['+float'],
+		      bi  => BIfdiv},
+
      'exp'	 => { in  => ['+float'],
 		      out => ['+float'],
 		      bi  => BIexp},
