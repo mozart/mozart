@@ -3,6 +3,13 @@
 <Section id="lp.reference">
     <Title/The Module <<LP>>/
 
+<P> The module <<LP>> is provided as contribution (being part of the
+&moz3; distribution) and can be accessed either by 
+<<<declare [LP] = {Module.link ['x-oz://contrib/LP']}>> 
+or by 
+<<<import RI @ 'x-oz://contrib/LP'>>> 
+as part of a functor definition.
+
 <P>
 <List>
 
