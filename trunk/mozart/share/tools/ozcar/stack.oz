@@ -51,7 +51,9 @@ local
       end
    in
       proc {StackForAllInd Xs P}
-	 {DoStackForAllInd {LastDebug Xs}.2 1 P}
+	 case Xs == nil then skip else
+	    {DoStackForAllInd {LastDebug Xs}.2 1 P}
+	 end
       end
    end
    
@@ -107,24 +109,34 @@ in
 	 Rebuild <- Flag
       end
 
-      meth printException(Q)
-	 %{Browse Q.2}
-	 Exc#Stack = Q
-	 H|T = case Stack.1 == nil then Stack.2.2 else Stack end
-	 C = case Exc.1.1 == noElse then %% correct the line number
-		{Record.adjoinAt H line Exc.1.2}
-	     else H end
-	 S = builtin(name:'Raise' args:[Exc]) | debug([0 999999999]) | C | T
-	 Status
-      in
-	 {Error.debug.doOzError Exc}
-	 {Error.debug.last Status}
-
-	 {Ozcar rawStatus('Exception: ' # Status.1 # {Lines Status.2})}
-	 
-	 StackManager,ReCalculate({Reverse S})
-	 {Ozcar scrollbar(file:C.file line:C.line
-			  color:ScrollbarBlockedColor what:appl)}
+      meth printException(X)
+	 case {HasFeature X debug} then
+	    Stack = X.debug.stack
+	    H|T   = case Stack.1 == nil then Stack.2.2 else Stack end
+	    C     = case X.1.1 == noElse then %% correct the line number
+		       {Record.adjoinAt H line X.1.2}
+		    else H end
+	    S = builtin(name:'Raise' args:[X]) | debug([0 999999999]) | C | T
+	    Status
+	 in
+	    {Error.debug.doOzError X}
+	    {Error.debug.last Status}
+	    
+	    {Ozcar rawStatus(ErrorExcText # Status.1 # {Lines Status.2}
+			     clear BlockedThreadColor)}
+	    
+	    StackManager,ReCalculate({Reverse S})
+	    {Ozcar scrollbar(file:C.file line:C.line
+			     color:ScrollbarBlockedColor what:appl)}
+	    
+	 else              % user exception
+	    E = {T2VS X}
+	 in
+	    {Ozcar rawStatus(UserExcText # E # NoStackText
+			     clear BlockedThreadColor)}
+	    StackManager,ReCalculate(nil)
+	    {Ozcar scrollbar(file:'' line:0 color:undef what:both)}
+	 end
       end
       
       meth print
