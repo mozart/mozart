@@ -87,16 +87,6 @@ local
 
    StackTag
 
-   fun {IsSpecialFrameName Name}
-      case Name of 'lock' then true
-      [] 'exception handler' then true
-      [] 'conditional' then true
-      [] 'exception' then true
-      [] 'unknown' then true
-      else false
-      end
-   end
-
 in
 
    class Gui from Menu Dialog Help
@@ -139,6 +129,7 @@ in
       in
 	 %% create the main window, but delay showing it
 	 self.toplevel = {New Tk.toplevel tkInit(title:    TitleName
+						 'class':  'OzTools'
 						 delete:   self # off
 						 withdraw: true)}
 	 {Tk.batch [wm(iconname   self.toplevel IconName)
@@ -151,7 +142,7 @@ in
 	 {ForAll [self.ButtonFrame self.StatusFrame]
 	  proc{$ F}
 	     F = {New Tk.frame tkInit(parent: self.toplevel
-				      bd:     SmallBorderSize
+				      bd:     1
 				      relief: ridge)}
 	  end}
 
@@ -185,7 +176,6 @@ in
 				 padx:             PadXButton
 				 pady:             PadYButton
 				 relief:           raised
-				 borderwidth:      SmallBorderSize
 				 action:           self # action(Bitmap))}
 		  in
 		     {B tkBind(event:  HelpEvent
@@ -223,7 +213,6 @@ in
 			    relief:           flat %raised
 			    width:            CheckButtonWidth
 			    height:           CheckButtonHeight
-			    borderwidth:      SmallBorderSize
 			    action:           self # Action(V))}
 		{C tkBind(event:  HelpEvent
 			  action: self # help(Xbm))}
@@ -236,8 +225,8 @@ in
 	 %% border line
 	 local
 	    F = {New Tk.frame tkInit(parent: self.toplevel
-				     height: SmallBorderSize
-				     bd:     NoBorderSize
+				     height: 1
+				     bd:     0
 				     relief: flat)}
 	 in
 	    {Tk.send grid(F row:2 column:0 sticky:we columnspan:3)}
@@ -248,7 +237,7 @@ in
 			     state:  disabled
 			     height: 1
 			     width:  0
-			     bd:     NoBorderSize
+			     bd:     0
 			     cursor: TextCursor
 			     font:   StatusFont)}
 	 {self.StatusText tkBind(event:  HelpEvent
@@ -259,8 +248,8 @@ in
 	 self.ThreadTree =
 	 {New Tree tkInit(parent: self.toplevel
 			  title:  TreeTitle
-			  bd:     SmallBorderSize
 			  relief: sunken
+			  bd:     1
 			  width:  ThreadTreeWidth
 			  bg:     DefaultBackground)}
 	 {self.ThreadTree tkBind(event:  HelpEvent
@@ -276,7 +265,6 @@ in
 						 wrap:   none
 						 state:  disabled
 						 width:  T.3
-						 bd:     SmallBorderSize
 						 cursor: TextCursor
 						 font:   DefaultFont
 						 bg:     DefaultBackground)}
