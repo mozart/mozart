@@ -135,6 +135,7 @@ local
    PrimChunkTermObject
    DictionaryTermObject
    ArrayTermObject
+   PortTermObject
    ThreadTermObject
    SpaceTermObject
    PrimObjectTermObject
