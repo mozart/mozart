@@ -1,3 +1,60 @@
+-*-outline-*-
+
 we need to distinguish between compile-time and run-time
 dependencies.  We only need to rebuild a target if a compile time
 dependency changed.  However, we need to build all run-time dependencies.
+
+* BUILD TARGET (TOOL!=OZL)
+** build build-time dependencies (requires) -- this is a recursive process
+** build target if outdated
+   with respect to (1) source (2) requires
+
+* BUILD TARGET (TOOL==OZL)
+
+** build "source" which is an ozf file
+   build its build-time dependencies -- this is a recursive process
+
+** build the ozf run-time dependencies (imports) -- i.e. the files which will be linked
+   this is also a recursive process
+
+** build target if outdated
+
+* BUILD ALL
+** build "install" targets
+** build all their run-time dependencies (not just ozf) -- this can be
+   a recursive process provided we guard against loops
+
+we also need to guard against loops in the build-time dependencies
+and signal an error when such a loop is found.
+
+======================================================================
+
+get_depends_ozl(T $)
+get_depends_build(T $)
+get_depends_install(T $)
+
+* get_depends_ozl(T $)
+
+T is ozf file to be created by the ozl tool, i.e. from another ozf
+file.  Here we want to gather all recursive ozf run-time dependencies.
+Then we will want to build them which will take care of the build-time
+dependencies.
+
+Note that if a run-time dependency is an ozl linked ozf file, then we
+don't want to recursively gather its deps - that's all taken care of
+by the recursive build.
+
+Note also that the build system should be made more robust to signal
+an error when we recursively attempt to build the same target.
+
+* get_depends_build(T $)
+
+these are computed from the requires and may well include .so for
+example.  This is not recursive.
+
+* get_depends_install(T $)
+
+This is computed from the imports for normal ozf files and is
+recursive.  For ozl-linked ozf files, the imports are recursively
+inspected for .so files, but ozf files are not recorded since they are
+already linked in.

@@ -623,6 +623,7 @@ define
       %%    and the implicit one induced by the rule for the target
 
       meth get_depends(T $)
+	 {self makefile_read}
 	 %% note that we assume that T is an atom
 	 if Makefile,target_is_src(T $) andthen {Not {self get_fullbuild($)}} then nil
 	 else
