@@ -46,8 +46,6 @@ OZ_C_proc_begin(fsp_intersection, 3)
 } 
 OZ_C_proc_end
 
-OZ_CFunHeader FSetIntersectionPropagator::spawner = fsp_intersection;
-
 OZ_C_proc_begin(fsp_union, 3)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET "," OZ_EM_FSET);
@@ -68,7 +66,6 @@ OZ_C_proc_begin(fsp_union, 3)
 } 
 OZ_C_proc_end
 
-OZ_CFunHeader FSetUnionPropagator::spawner = fsp_union;
 
 OZ_C_proc_begin(fsp_subsume, 2)
 {
@@ -87,8 +84,6 @@ OZ_C_proc_begin(fsp_subsume, 2)
 					     OZ_args[1]));
 } 
 OZ_C_proc_end
-
-OZ_CFunHeader FSetSubsumePropagator::spawner = fsp_subsume;
 
 
 OZ_C_proc_begin(fsp_disjoint, 2)
@@ -109,7 +104,6 @@ OZ_C_proc_begin(fsp_disjoint, 2)
 } 
 OZ_C_proc_end
 
-OZ_CFunHeader FSetDisjointPropagator::spawner = fsp_disjoint;
 
 OZ_C_proc_begin(fsp_distinct, 2)
 {
@@ -128,8 +122,6 @@ OZ_C_proc_begin(fsp_distinct, 2)
 					      OZ_args[1]));
 } 
 OZ_C_proc_end
-
-OZ_CFunHeader FSetDistinctPropagator::spawner = fsp_distinct;
 
 OZ_C_proc_begin(fsp_diff, 3)
 {
@@ -151,7 +143,6 @@ OZ_C_proc_begin(fsp_diff, 3)
 }
 OZ_C_proc_end
 
-OZ_CFunHeader FSetDiffPropagator::header = fsp_diff;
 
 //*****************************************************************************
 
@@ -357,3 +348,11 @@ OZ_Return FSetDiffPropagator::propagate(void)
 failure:
   return P.fail();
 }
+
+OZ_PropagatorProfile FSetIntersectionPropagator::profile = "fsp_intersection";
+OZ_PropagatorProfile FSetUnionPropagator::profile = "fsp_union";
+OZ_PropagatorProfile FSetSubsumePropagator::profile = "fsp_subsume";
+OZ_PropagatorProfile FSetDisjointPropagator::profile = "fsp_disjoint";
+OZ_PropagatorProfile FSetDistinctPropagator::profile = "fsp_distinct";
+OZ_PropagatorProfile FSetDiffPropagator::profile = "fsp_diff";
+

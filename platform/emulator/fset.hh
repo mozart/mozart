@@ -154,7 +154,7 @@ public:
   OZ_Boolean operator += (int i); // assert i is in *this
   OZ_Boolean operator -= (int i); // assert i is in _not_ *this
   OZ_Boolean operator <<= (const FSetConstraint &);
-  OZ_Boolean operator %= (const FSetConstraint &);
+  OZ_Boolean operator % (const FSetConstraint &);
   FSetConstraint operator & (const FSetConstraint &) const;
   FSetConstraint operator | (const FSetConstraint &) const;
   FSetConstraint operator - (const FSetConstraint &) const;

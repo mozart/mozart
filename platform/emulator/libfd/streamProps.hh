@@ -39,7 +39,7 @@ private:
 
   OZ_Term stream;
 
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   DisjunctivePropagatorStream(OZ_Term, OZ_Term, OZ_Term);
   ~DisjunctivePropagatorStream();
@@ -47,7 +47,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean);
   virtual OZ_Return propagate(void); 
   virtual OZ_Term getParameters(void) const { RETURN_LIST1(stream); }
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 //-----------------------------------------------------------------------------
@@ -60,7 +60,7 @@ private:
 
   OZ_Term stream;
 
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   DistinctPropagatorStream(OZ_Term, OZ_Term);
   ~DistinctPropagatorStream();
@@ -68,6 +68,6 @@ public:
   virtual void updateHeapRefs(OZ_Boolean);
   virtual OZ_Return propagate(void); 
   virtual OZ_Term getParameters(void) const { RETURN_LIST1(stream); }
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 

@@ -15,7 +15,7 @@
 
 class DiffnPropagator : public OZ_Propagator {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
   int reg_size;
   OZ_Term * reg_x;
   OZ_Term * reg_y;
@@ -29,5 +29,5 @@ public:
   virtual void updateHeapRefs(OZ_Boolean);
   virtual OZ_Return propagate(void); 
   virtual OZ_Term getParameters(void) const;
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
