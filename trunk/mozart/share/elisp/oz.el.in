@@ -752,8 +752,9 @@ If FORCE is non-nil, kill it immediately."
       (set-buffer oz-emulator-buffer)
       (comint-mode))
     (setq oz-emulator-filter-hook 'oz-filter)
-    (set-process-filter (get-buffer-process oz-emulator-buffer)
-			'oz-emulator-filter)
+    (let ((proc (get-buffer-process oz-emulator-buffer)))
+      (process-kill-without-query proc)
+      (set-process-filter proc 'oz-emulator-filter))
     (bury-buffer oz-emulator-buffer)
     (oz-create-oz-buffer)))
 
@@ -772,7 +773,9 @@ If FORCE is non-nil, kill it immediately."
       (set-buffer buffer)
       (comint-mode))
     (comint-exec buffer (buffer-name buffer) (cons host port) nil nil)
-    (set-process-filter (get-buffer-process buffer) 'oz-compiler-filter)
+    (let ((proc (get-buffer-process buffer)))
+      (process-kill-without-query proc nil)
+      (set-process-filter proc 'oz-compiler-filter))
     (oz-show-buffer buffer)
     (bury-buffer buffer)
     (let ((xs oz-buffered-send-string))
@@ -1348,62 +1351,66 @@ to handle lines like 'attr a:'."
 
 (defun oz-bar (file line column state)
   ;; Display bar at given line, load file if necessary.
-  (if (string-equal file "")
-      (oz-bar-remove)
-    (let* ((buffer (oz-find-buffer-or-file file))
-	   (window (display-buffer buffer))
-	   start1 end1 start2 end2)
-      (save-excursion
-	(set-buffer buffer)
-	(save-restriction
-	  (widen)
-	  (goto-line line)
-	  (setq start1 (point))
-	  (save-excursion
-	    (forward-line 1)
-	    (setq end1 (point)))
-	  (if (> column 0)
-	      (forward-char column))
-	  (if (and (>= column 0) (looking-at oz-token-pattern))
-	      (setq start2 (match-beginning 0) end2 (match-end 0))
-	    (setq start2 start1 end2 start1))
-	  (or oz-bar-overlay
-	      (cond (oz-gnu-emacs
-		     (setq oz-bar-overlay (make-overlay start1 end1)
-			   oz-bar-overlay-here (make-overlay start2 end2))
-		     (overlay-put oz-bar-overlay 'priority 17)
-		     (overlay-put oz-bar-overlay-here 'priority 18))
-		    (oz-lucid-emacs
-		     (setq oz-bar-overlay (make-extent start1 end1)
-			   oz-bar-overlay-here (make-extent start2 end2))
-		     (set-extent-priority oz-bar-overlay 17)
-		     (set-extent-priority oz-bar-overlay-here 18))))
-	  (cond (oz-gnu-emacs
-		 (move-overlay
-		  oz-bar-overlay start1 end1 (current-buffer))
-		 (move-overlay
-		  oz-bar-overlay-here start2 end2 (current-buffer)))
-		(oz-lucid-emacs
-		 (set-extent-endpoints
-		  oz-bar-overlay start1 end1 (current-buffer))
-		 (set-extent-endpoints
-		  oz-bar-overlay-here start2 end2 (current-buffer))))
-	  (or (string-equal state "unchanged")
-	      (oz-bar-configure state))))
-      (save-selected-window
-	(let ((old-buffer (current-buffer)) old-pos)
-	  (select-window window)
+  (if (string-equal state "exit")
+      (progn
+	(oz-bar-remove)
+	(call-interactively 'save-buffers-kill-emacs))
+    (if (string-equal file "")
+	(oz-bar-remove)
+      (let* ((buffer (oz-find-buffer-or-file file))
+	     (window (display-buffer buffer))
+	     start1 end1 start2 end2)
+	(save-excursion
 	  (set-buffer buffer)
-	  (setq old-pos (point))
-	  (if (or (< start1 (point-min)) (> start1 (point-max)))
-	      (widen))
-	  (if (not (pos-visible-in-window-p start1))
-	      (progn
-		(goto-char start1)
-		(recenter (/ (1- (window-height)) 2))))
-	  (if (pos-visible-in-window-p old-pos)
-	      (goto-char old-pos))
-	  (set-buffer old-buffer))))))
+	  (save-restriction
+	    (widen)
+	    (goto-line line)
+	    (setq start1 (point))
+	    (save-excursion
+	      (forward-line 1)
+	      (setq end1 (point)))
+	    (if (> column 0)
+		(forward-char column))
+	    (if (and (>= column 0) (looking-at oz-token-pattern))
+		(setq start2 (match-beginning 0) end2 (match-end 0))
+	      (setq start2 start1 end2 start1))
+	    (or oz-bar-overlay
+		(cond (oz-gnu-emacs
+		       (setq oz-bar-overlay (make-overlay start1 end1)
+			     oz-bar-overlay-here (make-overlay start2 end2))
+		       (overlay-put oz-bar-overlay 'priority 17)
+		       (overlay-put oz-bar-overlay-here 'priority 18))
+		      (oz-lucid-emacs
+		       (setq oz-bar-overlay (make-extent start1 end1)
+			     oz-bar-overlay-here (make-extent start2 end2))
+		       (set-extent-priority oz-bar-overlay 17)
+		       (set-extent-priority oz-bar-overlay-here 18))))
+	    (cond (oz-gnu-emacs
+		   (move-overlay
+		    oz-bar-overlay start1 end1 (current-buffer))
+		   (move-overlay
+		    oz-bar-overlay-here start2 end2 (current-buffer)))
+		  (oz-lucid-emacs
+		   (set-extent-endpoints
+		    oz-bar-overlay start1 end1 (current-buffer))
+		   (set-extent-endpoints
+		    oz-bar-overlay-here start2 end2 (current-buffer))))
+	    (or (string-equal state "unchanged")
+		(oz-bar-configure state))))
+	(save-selected-window
+	  (let ((old-buffer (current-buffer)) old-pos)
+	    (select-window window)
+	    (set-buffer buffer)
+	    (setq old-pos (point))
+	    (if (or (< start1 (point-min)) (> start1 (point-max)))
+		(widen))
+	    (if (not (pos-visible-in-window-p start1))
+		(progn
+		  (goto-char start1)
+		  (recenter (/ (1- (window-height)) 2))))
+	    (if (pos-visible-in-window-p old-pos)
+		(goto-char old-pos))
+	    (set-buffer old-buffer)))))))
 
 (defun oz-bar-configure (state)
   ;; Change color of bar while not moving it.
