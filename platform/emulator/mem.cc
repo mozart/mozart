@@ -430,14 +430,17 @@ char *getMemFromOS(size_t sz) {
                          (unsigned long) ozconf.heapMaxSize) / 100) :
        (heapTotalSize > (unsigned) ozconf.heapMaxSize))) {
     int newSize = (heapTotalSize * 3) / 2;
-    printf("\n\n*** Heap maxsize exceeded. Increase from %d to %d? (y/n) ",
-           ozconf.heapMaxSize,newSize);
-    prefixError();
-    fflush(stdout);
-    char buf[1000];
 
-    if (osfgets(buf, 1000, stdin) == 0 || buf[0] == 'n')
-      am.exitOz(1);
+    if (ozconf.runningUnderEmacs) {
+      printf("\n\n*** Heap maxsize exceeded. Increase from %d to %d? (y/n) ",
+             ozconf.heapMaxSize,newSize);
+      prefixError();
+      fflush(stdout);
+      char buf[1000];
+
+      if (osfgets(buf, 1000, stdin) == 0 || buf[0] == 'n')
+        am.exitOz(1);
+    }
 
     ozconf.heapMaxSize = newSize;
   }
