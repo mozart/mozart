@@ -119,11 +119,10 @@ Bool Thread::isBelowFailed (Board *top)
 
 /*
  * terminate a thread
- *  if not in deep guard: discard all tasks, return NO
- *  if in deep guard: don't discard any task, return OK
+ *  discard all tasks
  */
 
-Bool Thread::terminate()
+void Thread::terminate()
 {
   Assert(hasStack());
 
@@ -135,9 +134,6 @@ Bool Thread::terminate()
       ts->makeEmpty();
       return NO;
     }
-
-    if (PC==C_ACTOR_Ptr)
-      return OK;
   }
 }
 
