@@ -335,7 +335,7 @@ int _hdopen(int handle, int flags)
 #else
 
 #define lowread(fd,buf,sz) read(fd,buf,sz)
-#define lowwrite(fd,buf,sz) read(fd,buf,sz)
+#define lowwrite(fd,buf,sz) write(fd,buf,sz)
 
 #endif
 
