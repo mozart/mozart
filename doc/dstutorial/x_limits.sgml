@@ -21,6 +21,32 @@ language semantics.
 They can safely be ignored if performance is not an issue.
 
 <list>
+<item>The following problems
+are related to the <<Remote>> module and virtual sites
+(see also <ptr.extern to="ozdoc:system" key="chapter.remote">).
+<list>
+<item>On some platforms (in particular, Solaris),
+the operating system in its default configuration
+does not support virtual sites efficiently
+(see also <ptr.extern to="ozdoc:system" key="chapter.remote">).
+This is due to a system-wide limit
+on the number of shared memory pages.
+The default is six shared pages per process and 100 system-wide.
+Changing this limit requires rebooting the machine.
+Since at least two pages are needed for efficient communication,
+the default value results in poor
+performance if a site connects to more than three virtual sites.
+
+<item>The Mozart system does its best to reclaim shared
+memory identifiers, even upon process crashes, but it is
+still possible that some shared memory pages become
+unaccounted for and thus stay forever in the operating system.
+If this happens please use Unix utilities
+to get rid of them.
+On Solaris and Linux there are two,
+namely <<ipcs>> and <<ipcrm>>.
+</list>
+
 <item>The distributed garbage collection
 algorithm reclaims all unused entities
 except those forming a reference cycle
@@ -61,34 +87,9 @@ They document where
 the full language specification is not implemented.
 
 <list>
-<item>The following problems
-are related to the <<Remote>> module and virtual sites
-(see also <ptr.extern to="ozdoc:system" key="chapter.remote">).
-<list>
 <item>On Windows, the <<Remote>> module has limited functionality.
 Only a single option is possible for <<fork>>, namely <<sh>>.
 Future releases will add more options.
-
-<item>On some platforms (in particular, Solaris),
-the operating system in its
-default configuration does not support virtual sites efficiently.
-This is due to a system-wide limit
-on the number of shared memory pages.
-The default is six shared pages per process and 100 system-wide.
-Changing this limit requires rebooting the machine.
-Since at least two pages are needed for efficient communication,
-the default value results in poor
-performance if a site connects to more than three virtual sites.
-
-<item>The Mozart system does its best to reclaim shared
-memory identifiers, even upon process crashes, but it is
-still possible that some shared memory pages become
-unaccounted for and thus stay forever in the operating system.
-If this happens please use Unix utilities
-to get rid of them.
-On Solaris and Linux there are two,
-namely <<ipcs>> and <<ipcrm>>.
-</list>
 
 <item>Threads, dictionaries, arrays, and spaces are sited,
 even though they are in base modules.
