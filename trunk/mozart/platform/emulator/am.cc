@@ -486,7 +486,7 @@ start:
 
   switch ( tag1 ) {
 
-  case CONST:
+  case OZCONST:
     return tagged2Const(term1)->unify(term2,prop);
 
   case LTUPLE:
@@ -533,7 +533,7 @@ start:
     /* literals unify if their pointers are equal */
     return NO;
 
-  case FLOAT:
+  case OZFLOAT:
   case BIGINT:
   case SMALLINT:
     return numberEq(term1,term2);
@@ -1450,17 +1450,17 @@ int AM::setUserAlarmTimer(int ms)
   return ret;
 }
 
-class Sleep {
+class OzSleep {
 public:
-  Sleep *next;
+  OzSleep *next;
   int time;
   TaggedRef node;
 public:
-  Sleep(int t, TaggedRef n,Sleep *a)
+  OzSleep(int t, TaggedRef n,OzSleep *a)
   : time(t), node(n), next(a) {
     OZ_protect(&node);
   }
-  ~Sleep() {
+  ~OzSleep() {
     OZ_unprotect(&node);
   }
 };
@@ -1484,15 +1484,15 @@ void AM::insertUser(int t,TaggedRef node)
     t = 0;
   }
 
-  Sleep **prev = &sleepQueue;
-  for (Sleep *a = *prev; a; prev = &a->next, a=a->next) {
+  OzSleep **prev = &sleepQueue;
+  for (OzSleep *a = *prev; a; prev = &a->next, a=a->next) {
     if (t <= a->time) {
       a->time = a->time - t;
-      *prev = new Sleep(t,node,a);
+      *prev = new OzSleep(t,node,a);
       return;
     }
   }
-  *prev = new Sleep(t,node,NULL);
+  *prev = new OzSleep(t,node,NULL);
 }
 
 int AM::wakeUser()
@@ -1503,7 +1503,7 @@ int AM::wakeUser()
   }
   while (sleepQueue && sleepQueue->time==0) {
     awakeIOVar(sleepQueue->node);
-    Sleep *tmp = sleepQueue->next;
+    OzSleep *tmp = sleepQueue->next;
     delete sleepQueue;
     sleepQueue = tmp;
   }

@@ -304,7 +304,7 @@ public:
   void handleUser();
   int setUserAlarmTimer(int ms);
 
-  Sleep *sleepQueue;
+  OzSleep *sleepQueue;
   void insertUser(int t,TaggedRef node);
   int wakeUser();
 
