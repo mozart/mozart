@@ -467,15 +467,17 @@ void engine() {
         Thread *c = am.currentThread;
         if (c->isNervous()) {
           tmpBB = c->popBoard()->getBoardDeref();
+          if (!tmpBB) {
+            goto LBLfindWork;
+          }
           goto LBLTaskNervous;
         }
         if (c->isWarm()) {
           Suspension *susp = c->popSuspension();
-          tmpBB = susp->getNode();
+          tmpBB = susp->getNode()->getBoardDeref();
           if (!tmpBB) {
             goto LBLfindWork;
           }
-          tmpBB = tmpBB->getBoardDeref();
           SuspContinuation *cont = susp->getCont();
           if (cont) {
             PC = cont->getPC();
@@ -517,6 +519,9 @@ void engine() {
         Y = (RefsArray) TaskStackPop(--topCache);
         G = (RefsArray) TaskStackPop(--topCache);
         taskStack->setTop(topCache);
+        if (!tmpBB) {
+          goto LBLfindWork;
+        }
         goto LBLTaskCont;
       case C_XCONT:
         PC = (ProgramCounter) TaskStackPop(--topCache);
@@ -531,12 +536,18 @@ void engine() {
           }
         }
         taskStack->setTop(topCache);
+        if (!tmpBB) {
+          goto LBLfindWork;
+        }
         goto LBLTaskCont;
 
       case C_DEBUG_CONT:
         {
           OzDebug *ozdeb = (OzDebug *) TaskStackPop(--topCache);
           taskStack->setTop(topCache);
+          if (!tmpBB) {
+            goto LBLfindWork;
+          }
           tmpBB->removeSuspension();
 
           if (CBB != tmpBB) {
@@ -557,6 +568,9 @@ void engine() {
       case C_NERVOUS:
         error("mm2: never here");
         taskStack->setTop(topCache);
+        if (!tmpBB) {
+          goto LBLfindWork;
+        }
         goto LBLTaskNervous;
       case C_CFUNC_CONT:
         error("mm2: never here");
@@ -576,6 +590,9 @@ void engine() {
           }
         }
         taskStack->setTop(topCache);
+        if (!tmpBB) {
+          goto LBLfindWork;
+        }
         goto LBLTaskCFuncCont;
       default:
         error("engine: POPTASK: unexpected task found.");
