@@ -378,8 +378,17 @@ public:
 	Assert(isLiteral(feature));
         TaggedRef prev=dynamictable.insert(feature,term);
         // (a future optimization: a second suspList only waiting on features)
+        if (prev==makeTaggedNULL()) {
+            // propagate(makeTaggedCVar(this), suspList, makeTaggedCVar(this), pc_propagator);
+	    return TRUE;
+        } else {
+	    return FALSE;
+	}
+    }
+
+    // Used in conjunction with addFeatureValue to propagate suspensions:
+    void propagateFeature(void) {
         propagate(makeTaggedCVar(this), suspList, makeTaggedCVar(this), pc_propagator);
-	return (prev==makeTaggedNULL());
     }
 
     int getSuspListLength(void) {
