@@ -996,7 +996,7 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
 	      where <<$OZHOME>> stands for the value of the environment
 	      variable <Var type=env/OZHOME/.
 	    <Entry class=useroption><Span class=index/<<oz-root-functor>>/
-	      (default: <<"http://mozart.ps.uni-sb.de/home/share/OPI.ozf">>)
+	      (default: <<"x-oz://system/OPI.ozf">>)
 	    <Item>
 	      Name of the <Index/functor<And>root/<Span class=index
 	      /root functor/ to load on startup.
