@@ -48,7 +48,7 @@ export
    QTkText
    
 define
-
+   
    WidgetType=text
    Feature=scroll
    NoArgs={NewName}
@@ -125,6 +125,7 @@ define
 			   selectforeground:color
 			   setgrid:boolean
 			   takefocus:boolean
+			   text:vs
 			   height:pixel
 			   spacing1:pixel
 			   spacing2:pixel
@@ -201,7 +202,7 @@ define
 	    {Record.forAllInd B
 	     proc{$ I V}
 		case I
-		of 1 then {self getText("1.0" "end" V)}
+		of 1 then {self getText("1.0" "end - 1 chars" V)}
 		[] ipadx then {ReturnTk self cget("-padx" V) natural}
 		[] ipady then {ReturnTk self cget("-pady" V) natural}
 		end

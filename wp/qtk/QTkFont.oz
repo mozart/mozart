@@ -33,7 +33,7 @@ class QTkFont
    feat
       widgetType:font
       typeInfo:r(all:r(family:vs
-		       size:integer
+		       size:int
 		       weight:[normal bold]
 		       slant:[roman italic]
 		       underline:boolean
@@ -86,7 +86,31 @@ class QTkFont
    end
    meth families(F)
       lock
-	 {ReturnTk font families(F) list}
+	 fun{Loop Str}
+	    case Str
+	    of &{|Xs then
+	       L R
+	    in
+	       {List.takeDropWhile Str fun{$ C} C\=&} end L R}
+	       if R\=nil then
+		  {List.drop L 1}|{Loop {List.drop R 2}}
+	       else
+		  {List.drop L 1}|nil
+	       end
+	    [] nil then nil
+	    else
+	       L R
+	    in
+	       {List.takeDropWhile Str fun{$ C} C\=&  end L R}
+	       if R\=nil then
+		  L|{Loop {List.drop R 1}}
+	       else
+		  L|nil
+	       end
+	    end
+	 end
+      in
+	 F={Loop {ReturnTk font families($) no}}
       end
    end
    meth measure(Text Ret displayof:D<=NoArgs)
