@@ -3,7 +3,7 @@ SRCDIR		= @srcdir@
 PREFIX		= @prefix@
 CYGPATH		= $(SRCDIR)/cygpath.sh
 CYG_PREFIX	= $(shell $(CYGPATH) $(PREFIX))
-OZENGINE	= @OZENGINE@
+OZENGINE	= @VAR_OZE@
 BUILDDIR	= @BUILDDIR@
 
 all: build.ozmake
