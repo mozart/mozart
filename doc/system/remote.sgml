@@ -65,9 +65,11 @@
           <<'rsh'>> (remote shell command) and <<'ssh'>> (secure shell
           command).
 
+can only be used, if ?_{HostV} is <<localhost>>. It
+
         <para class=apropos proglang=sh><title/<<sh>> configuration/
-          <<'sh'>> can only be used, if ?_{HostV} is <<localhost>>. It
-          creates a new Oz engine by using the Unix <code
+          If <<'sh'>> is used as fork method,
+          a new Oz engine is created on the current host by using the Unix <code
           proglang=sh>sh</code> command. You can test whether this
           method works on your computer by:
           <<<sh -c 'ozengine x-oz://system/RemoteServer.ozf --test'>>>
@@ -76,6 +78,11 @@
           particular requires that <<$OZHOME/bin>> is in your path of
           executables (<<$OZHOME>> refers to the directory where
           Mozart has been installed).
+
+        <p>
+          Note that the value of ?_{HostV} is ignored (the hostname
+          is assumed to be <<localhost>>), if <<'sh'>> is used as fork
+          method.
 
         <P>
           If ?_{HostV} is <<'localhost'>> and ?_{ForkA} is
