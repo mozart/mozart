@@ -864,7 +864,7 @@ OZ_C_proc_begin(BImergeSpace, 2) {
   declareUnmergedSpace();
 
   if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
-    TypeErrorT(0, "current space is subordinated");
+    TypeErrorM("current space is subordinated");
 
   if (space->isFailed())
     return FAILED;
@@ -1439,13 +1439,11 @@ OZ_C_proc_begin(BImonitorArity, 3)
     case CVAR:
         if (tagged2CVar(tmprec)->getType()!=OFSVariable) {
             TypeErrorT(0,"Record");
-            return FAILED;
         }
         // *** arity is calculated from the OFS; see below
         break;
     default:
         TypeErrorT(0,"Record");
-        return FAILED;
     }
     tmprec=OZ_getCArg(0);
     DEREF(tmprec,_3,_4);
@@ -2093,7 +2091,7 @@ OZ_Return notInline(TaggedRef A, TaggedRef &out)
     }
   }
 
-  return FAILED;
+  TypeErrorT(0,"Bool");
 }
 
 DECLAREBI_USEINLINEFUN1(BInot,notInline)
@@ -6257,11 +6255,7 @@ OZ_Return objectIsFreeInline(TaggedRef tobj, TaggedRef &out)
   Object *obj = (Object *) tagged2Const(tobj);
 
   if (am.currentBoard != obj->getBoardFast()) {
-    warning("object application(%s): in local computation space not allowed",
-            toC(tobj));
-    am.currentBoard->incSuspCount();
-    am.currentThread->printTaskStack(NOCODE);
-    return FAILED;
+    TypeErrorM("object application in local computation space not allowed");
   }
 
   if (obj->isClosed()) {
