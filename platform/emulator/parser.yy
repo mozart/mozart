@@ -1451,68 +1451,61 @@ static OZ_Term parse() {
   return yyoutput? yyoutput: OZ_atom("parseError");
 }
 
-OZ_C_proc_begin(ozparser_parseFile, 3)
+OZ_BI_define(ozparser_parseFile, 2, 1)
 {
   // {ParseFile FileName OptRec ?AST}
-  OZ_declareVirtualStringArg(0, file);
-  OZ_declareNonvarArg(1, optRec);
+  OZ_declareVirtualStringIN(0, file);
+  OZ_declareNonvarIN(1, optRec);
   if (!OZ_isRecord(optRec))
     return OZ_typeError(1, "Record");
   OZ_Term defines = init_options(optRec);
   OZ_Return res;
   if (!xy_init_from_file(file, defines))
-    res = OZ_unifyAtom(OZ_getCArg(2), "fileNotFound");
+    OZ_result(OZ_atom("fileNotFound"));
   else
-    res = OZ_unify(OZ_getCArg(2), parse());
-  if (res == PROCEED) {
-    OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
-    if (x == 0) {
-      if (!OZ_isNil(xy_errorMessages)) {
-        prefixError();
-        printf("%s", OZ_virtualStringToC(xy_errorMessages));
-      }
-      return PROCEED;
-    } else
-      return OZ_unify(x, xy_errorMessages);
+    OZ_result(parse());
+  OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
+  if (x == 0) {
+    if (!OZ_isNil(xy_errorMessages)) {
+      prefixError();
+      fprintf(stderr, "%s", OZ_virtualStringToC(xy_errorMessages));
+    }
+    return PROCEED;
   } else
-    return res;
+    return OZ_unify(x, xy_errorMessages);
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(ozparser_parseVirtualString, 3)
+OZ_BI_define(ozparser_parseVirtualString, 2, 1)
 {
   // {ParseVirtualString VS OptRec ?AST}
-  OZ_declareVirtualStringArg(0, str);
-  OZ_declareNonvarArg(1, optRec);
+  OZ_declareVirtualStringIN(0, str);
+  OZ_declareNonvarIN(1, optRec);
   if (!OZ_isRecord(optRec))
     return OZ_typeError(1, "Record");
   OZ_Term defines = init_options(optRec);
   xy_init_from_string(str, defines);
-  OZ_Return res = OZ_unify(OZ_getCArg(2), parse());
-  if (res == PROCEED) {
-    OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
-    if (x == 0) {
-      if (!OZ_isNil(xy_errorMessages)) {
-        prefixError();
-        printf("%s", OZ_virtualStringToC(xy_errorMessages));
-      }
-      return PROCEED;
-    } else
-      return OZ_unify(x, xy_errorMessages);
+  OZ_result(parse());
+  OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
+  if (x == 0) {
+    if (!OZ_isNil(xy_errorMessages)) {
+      prefixError();
+      printf("%s", OZ_virtualStringToC(xy_errorMessages));
+    }
+    return PROCEED;
   } else
-    return res;
+    return OZ_unify(x, xy_errorMessages);
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(ozparser_fileExists, 2)
+OZ_BI_define(ozparser_fileExists, 1, 1)
 {
-  OZ_declareVirtualStringArg(0, str);
-  OZ_declareArg(1, res);
+  OZ_declareVirtualStringIN(0, str);
   char *fullname = xy_expand_file_name(str);
   if (fullname != NULL) {
     delete[] fullname;
-    return OZ_unify(res, OZ_true());
+    OZ_RETURN(OZ_true());
   } else
-    return OZ_unify(res, OZ_false());
+    OZ_RETURN(OZ_false());
 }
-OZ_C_proc_end
+OZ_BI_end
