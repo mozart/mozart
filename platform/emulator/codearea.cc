@@ -251,6 +251,7 @@ ProgramCounter CodeArea::nextDebugInfo(ProgramCounter from)
       return NOCODE;
     Opcode op = adressToOpcode(getOP(PC));
     switch (op) {
+    case OZERROR:   return NOCODE;
     case DEBUGINFO: return PC;
     default: DISPATCH();
     }
