@@ -4,7 +4,7 @@ SRCDIR		= @srcdir@
 WHAT = compiler
 MAIN = compiler.sgml
 SGMLSRCS = \
-	intro.sgml directives.sgml ozbatch.sgml panel.sgml \
+	intro.sgml directives.sgml applications.sgml \
 	api.sgml engines.sgml interfaces.sgml \
 	switches.sgml narrator.sgml syntax.sgml \
 	EvalExpression.oz VirtualStringToValue.oz
