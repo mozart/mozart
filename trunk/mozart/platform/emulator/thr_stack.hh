@@ -226,11 +226,10 @@ private:
 
   StackEntry *ensureFree(int n)
   {
-    StackEntry *ret = tos;
-    if (stackEnd <= tos+n) {
-      checkMax();
-      resize(n);
-      ret = tos;
+    StackEntry *ret=tos;
+    if (stackEnd <= ret+n) {
+      checkMax(n);
+      ret=tos;
     }
     return ret;
   }
@@ -288,7 +287,7 @@ public:
 
   Bool isEmpty() { return ::isEmpty(tos); }
 
-  void checkMax();
+  void checkMax(int n);
 
   Frame *getTop()            { return tos; }
   void setTop(Frame *newTos) { tos = newTos; }
