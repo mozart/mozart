@@ -462,10 +462,12 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 
   CASE_BOOL(PROP_PERDIO_USEALTVARPROTOCOL,ozconf.perdioUseAltVarProtocol);
   CASE_REC(PROP_PERDIO,"perdio",
-	   (7,oz_atomNoDup("useAltVarProtocol"),oz_atomNoDup("minimal"),
+	   (12,oz_atomNoDup("useAltVarProtocol"),oz_atomNoDup("minimal"),
 	    oz_atomNoDup("seifHandler"),oz_atomNoDup("debug"),
 	    oz_atomNoDup("flowbuffersize"),oz_atomNoDup("flowbuffertime"),
-	    oz_atomNoDup("version")),
+	    oz_atomNoDup("version"),oz_atomNoDup("tempRetryCeiling"),
+	    oz_atomNoDup("tempRetryFloor"),oz_atomNoDup("tempRetryFactor"),
+	    oz_atomNoDup("maxTCPCache"),oz_atomNoDup("checkAliveInterval")),
 	   SET_BOOL(oz_atomNoDup("useAltVarProtocol"),
 		    ozconf.perdioUseAltVarProtocol);
 	   SET_BOOL(oz_atomNoDup("minimal"), ozconf.perdioMinimal);
