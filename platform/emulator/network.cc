@@ -87,12 +87,6 @@ int tempTimeCtr=0;
 
 
 
-//EK
-// When I understand how to instruct dependensies
-// uncoment this.
-//#include <net_errors.cc>
-
-
 static const int netIntSize=4;
 static const int msgNrSize =4;
 static const int ansNrSize =4;
@@ -1741,7 +1735,9 @@ void WriteConnection::tmpDwn(){
       remoteSite->site->communicationProblem(m->msgType, m->site, m->storeIndx,
 				 COMM_FAULT_TEMP_MAYBE_SENT,(FaultInfo)m->msgNum);
       m = m->next;
-    }}
+    }
+    
+}
     
 
 /********************************************************
@@ -1987,7 +1983,7 @@ void NetMsgBuffer::unmarshalReset(){
   if(endpos==NULL) curpos=last->tail();
   else curpos= endpos-1;
 }
-  
+
 void NetMsgBuffer::PiggyBack(Message* m)
 {
   int msgCtr = remotesite->getWriteConnection()->incMsgCtr();
@@ -3151,15 +3147,15 @@ void RemoteSite::siteLost(){
   remoteSiteManager->freeRemoteSite(this);}
   
 
-  void RemoteSite::siteTmpDwn(){
-    status = SITE_TEMP; 
-    writeConnection->tmpDwn();
-    //Ek
-    //release Connection
-      Message* m;
-    while((m = writeQueue.removeFirst()) && m != NULL) {
-      site->communicationProblem(m->msgType, m->site, m->storeIndx,
-				 COMM_FAULT_TEMP_NOT_SENT,(int) m->bs);}}
+void RemoteSite::siteTmpDwn(){
+  status = SITE_TEMP; 
+  writeConnection->tmpDwn();
+  //Ek
+  //release Connection
+  Message* m;
+  while((m = writeQueue.removeFirst()) && m != NULL) {
+    site->communicationProblem(m->msgType, m->site, m->storeIndx,
+			       COMM_FAULT_TEMP_NOT_SENT,(int) m->bs);}}
 
 void RemoteSite::init(Site* s, int msgCtr){
     writeConnection=NULL;
@@ -3497,6 +3493,8 @@ GiveUpReturn giveUp_RemoteSite(RemoteSite* site){
   Assert(0);return GIVES_UP;}
 void discoveryPerm_RemoteSite(RemoteSite* site){
   site->siteLost();} 
+void discoveryTmp_RemoteSite(RemoteSite* site){
+  site->siteTmpDwn();} 
 
 void initNetwork(){
   ip_address ip;
@@ -3534,6 +3532,12 @@ MsgBuffer* getRemoteMsgBuffer(Site* s){
 
 void dumpRemoteMsgBuffer(MsgBuffer *m){
   netMsgBufferManager->dumpNetMsgBuffer((NetMsgBuffer*) m);}
+
+/*
+void makeMeTemp(){
+*/
+  
+
 
 /**********************************************************************/
 /*   SECTION :: exported for debugging                                */
