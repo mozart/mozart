@@ -41,6 +41,7 @@
 
 BuiltinTabEntry *solveContBITabEntry = NULL;
 BuiltinTabEntry *solvedBITabEntry    = NULL;
+
 Arity *SolveContArity                = NULL;
 
 TaggedRef solvedAtom;
