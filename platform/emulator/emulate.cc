@@ -1950,6 +1950,7 @@ LBLsuspendThread:
 	{
 	  TaggedRef A=XPC(2);
 	  if (shallowCP) {
+	    XPC(3) = makeTaggedRef(newTaggedUVar(CBB));
 	    e->emptySuspendVarList();
 	    e->trail.pushIfVar(A);
 	    DISPATCH(5);
@@ -1988,6 +1989,7 @@ LBLsuspendThread:
 	  TaggedRef A=XPC(2);
 	  TaggedRef B=XPC(3);
 	  if (shallowCP) {
+	    XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
 	    e->emptySuspendVarList();
 	    e->trail.pushIfVar(A);
 	    e->trail.pushIfVar(B);
@@ -2011,7 +2013,7 @@ LBLsuspendThread:
   Case(INLINEDOT)
     {
       TaggedRef feature = getLiteralArg(PC+2);
-      OZ_Bool ret = dotInline(XPC(1),feature,XPC(3));
+      State ret = dotInline(XPC(1),feature,XPC(3));
       LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
       switch(ret) {
       case PROCEED:
@@ -2021,6 +2023,7 @@ LBLsuspendThread:
 	{
 	  TaggedRef A=XPC(1);
 	  if (shallowCP) {
+	    XPC(3) = makeTaggedRef(newTaggedUVar(CBB));
 	    e->emptySuspendVarList();
 	    e->trail.pushIfVar(A);
 	    DISPATCH(7);
@@ -2033,6 +2036,36 @@ LBLsuspendThread:
       case FAILED:
 	SHALLOWFAIL;
 	HF_FAIL2("bi",OZ_CToAtom("."), mkTuple("args",2,feature,XPC(3)));
+      case SLEEP:
+      default:
+	Assert(0);
+      }
+     }
+
+
+  Case(INLINEUPARROW)
+    {
+      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
+
+      State ret = uparrowInline(XPC(1),XPC(2),XPC(3));
+
+      switch(ret) {
+      case PROCEED:
+	LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
+			  goto localhack4;);
+	DISPATCH(5);
+
+      case SUSPEND:
+	  Assert(!shallowCP);
+	  OZ_suspendOnVar2(XPC(1),XPC(2));
+	  e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+4));
+	  e->suspendOnVarList(e->mkSuspThread());
+	  CHECK_CURRENT_THREAD;
+
+      case FAILED:
+        LOCAL_PROPAGATION(localPropStore.reset());
+      localhack4:
+	HF_FAIL2("bi",OZ_CToAtom("^"), mkTuple("args",2,XPC(1),XPC(2)));
       case SLEEP:
       default:
 	Assert(0);
@@ -2056,6 +2089,7 @@ LBLsuspendThread:
 	  TaggedRef B=XPC(3);
 	  TaggedRef C=XPC(4);
 	  if (shallowCP) {
+	    XPC(5) = makeTaggedRef(newTaggedUVar(CBB));
 	    e->emptySuspendVarList();
 	    e->trail.pushIfVar(A);
 	    e->trail.pushIfVar(B);
@@ -3131,8 +3165,6 @@ LBLsuspendThread:
   Case(TEST2)
   Case(TEST3)
   Case(TEST4)
-
-  Case(INLINEUPARROW)
 
   Case(ENDOFFILE)
   Case(ENDDEFINITION)
