@@ -147,13 +147,13 @@ char *OZ_atomToC(OZ_Term term)
 {
   DEREF(term,_1,tag);
   if (isXAtom(term)) {
-    return tagged2Atom(term)->getPrintName();
+    return ozstrdup(tagged2Atom(term)->getPrintName());
   }
   OZ_warning("atomToC(%s): atom arg expected",tagged2String(term));
   return NULL;
 }
 
-OZ_Float OZ_floatToC(OZ_Term term)
+float OZ_floatToC(OZ_Term term)
 {
   DEREF(term,_1,tag);
 
@@ -186,7 +186,7 @@ char *OZ_toC(OZ_Term term)
 }
 
 
-OZ_Term OZ_CToFloat (OZ_Float i)
+OZ_Term OZ_CToFloat (float i)
 {
   return floatToTerm(i);
 }
@@ -427,12 +427,6 @@ int OZ_closeIO(int fd) {
   return 1;
 }
 
-void OZ_print(OZ_Term t)
-{
-  taggedPrint(t,am.conf.printDepth);
-  fflush(stdout);
-}
-
 /* -----------------------------------------------------------------
  * garbage collection
  * -----------------------------------------------------------------*/
@@ -451,6 +445,14 @@ int OZ_unprotect(OZ_Term *t) {
     return 0;
   }
   return 1;
+}
+
+/* -----------------------------------------------------------------
+ * free strings
+ * -----------------------------------------------------------------*/
+
+void OZ_free(char *s) {
+  delete [] s;
 }
 
 /* -----------------------------------------------------------------
@@ -517,7 +519,7 @@ int OZ_termToInt(OZ_Term term, int* n) {
   return 0;
 }
 
-int OZ_termToFloat(OZ_Term term, OZ_Float *n)
+int OZ_termToFloat(OZ_Term term, float *n)
 {
   if (OZ_isFloat(term)) {
     *n = OZ_floatToC(term);
@@ -546,7 +548,7 @@ char *OZ_intTermToString(OZ_Term term)
 }
 
 
-OZ_Term OZ_floatToTermXX (OZ_Float i)
+OZ_Term OZ_floatToTermXX (float i)
 {
   return floatToTerm(i);
 }
