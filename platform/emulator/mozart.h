@@ -371,10 +371,7 @@ extern void OZ_putMetaTermType        _PROTOTYPE((OZ_Term v, OZ_MetaType t));
 extern OZ_Term OZ_getMetaTermValue     _PROTOTYPE((OZ_Term v));
 
 extern OZ_Term OZ_makeHeapChunk      _PROTOTYPE((int s));
-extern char * OZ_getHeapChunk        _PROTOTYPE((OZ_Term t,
-                                                 char * buf));
-extern OZ_Term OZ_putHeapChunk       _PROTOTYPE((OZ_Term t,
-                                                 char * buf));
+extern char * OZ_getHeapChunkData    _PROTOTYPE((OZ_Term t));
 extern int OZ_getHeapChunkSize       _PROTOTYPE((OZ_Term t));
 extern int OZ_isHeapChunk            _PROTOTYPE((OZ_Term t));
 extern int OZ_isMetaTerm              _PROTOTYPE((OZ_Term t));
