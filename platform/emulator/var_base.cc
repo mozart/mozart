@@ -92,7 +92,7 @@ OZ_Return oz_var_forceBind(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
   return oz_var_forceBindINLINE(cv,ptr,val,scp);
 }
 
-OZ_Return oz_var_addSusp(TaggedRef *v, Suspension susp, int unstable = TRUE)
+OZ_Return oz_var_addSusp(TaggedRef *v, Suspension susp, int unstable)
 {
   return oz_var_addSuspINLINE(v, susp, unstable);
 }

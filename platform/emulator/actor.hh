@@ -57,7 +57,7 @@ protected:
   Board *board;
   Actor * gcField;// mm2: hack: flags and board seem to be needed for copying?
 public:
-  NO_DEFAULT_CONSTRUCTORS(Actor);
+  NO_DEFAULT_CONSTRUCTORS(Actor)
 
 protected:
   Actor(int typ,Board *bb)
@@ -91,7 +91,7 @@ public:
 
   Actor * gcActor();
   void gcRecurse(void);
-  OZPRINTLONG;
+  OZPRINTLONG
 
   Board *getBoardInternal() { return board; }
 };
@@ -110,7 +110,7 @@ protected:
   Continuation next;
   int childCount;
 public:
-  NO_DEFAULT_CONSTRUCTORS(AWActor);
+  NO_DEFAULT_CONSTRUCTORS(AWActor)
   AWActor(int typ,Board *bb,Thread *tt,
 	  ProgramCounter p=NOCODE,RefsArray y=0,Abstraction *cap=0,
 	  RefsArray x=0,int i=0)
@@ -154,7 +154,7 @@ public:
 private:
   ProgramCounter elsePC;
 public:
-  NO_DEFAULT_CONSTRUCTORS(AskActor);
+  NO_DEFAULT_CONSTRUCTORS(AskActor)
   AskActor(Board *s,Thread *tt,
 	   ProgramCounter elsepc,
 	   ProgramCounter p, RefsArray y,Abstraction *cap, RefsArray x, int i)
@@ -190,7 +190,7 @@ private:
   Board **children;
   CpBag *cpb;
 public:
-  NO_DEFAULT_CONSTRUCTORS(WaitActor);
+  NO_DEFAULT_CONSTRUCTORS(WaitActor)
 
   WaitActor(Board *s,Thread *tt,
 	    ProgramCounter p,RefsArray y,Abstraction *cap,

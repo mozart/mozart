@@ -139,7 +139,7 @@ OZ_Return Future::addSusp(TaggedRef *tPtr, Suspension susp, int unstable)
   return SUSPEND;
 }
 
-void Future::printStream(ostream &out,int depth = 10)
+void Future::printStream(ostream &out,int depth)
 {
   if (function) {
       out << "<future byNeed: ";

@@ -48,9 +48,8 @@
 
 #define ISLOC(bi,loc)							\
 {									\
-  for (int _j=0;_j<bi->getInArity(); _j++) { ISREAD(loc->in(_j)); }	\
-  for (int _j=0;_j<bi->getOutArity(); _j++) { ISWRITE(loc->out(_j));	\
-  }									\
+  {for (int _j=0;_j<bi->getInArity(); _j++) { ISREAD(loc->in(_j)); }}	\
+  {for (int _j=0;_j<bi->getOutArity(); _j++) { ISWRITE(loc->out(_j));}}	\
 }
 
 #define BREAK           current->pcEnd = PC; goto outerLoop;

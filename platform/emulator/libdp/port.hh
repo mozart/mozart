@@ -41,7 +41,7 @@ extern TaggedRef BI_portWait;
 class PortManager : public PortWithStream {
   friend void ConstTerm::gcConstRecurse(void);
 public:
-  NO_DEFAULT_CONSTRUCTORS2(PortManager);
+  NO_DEFAULT_CONSTRUCTORS2(PortManager)
   PortManager() : PortWithStream(0,0) {} // hack
 };
 
