@@ -743,7 +743,7 @@ int fastlength(OZ_Term l)
 /* must not match GCTAG (ie <> 13 (1101) !!!! */
 enum TypeOfConst {
   Co_Foreign_Pointer,
-  Co_UNUSED,
+  Co_Extended,
   Co_Thread,
   Co_Abstraction,
 
@@ -1051,6 +1051,47 @@ public:
   ForeignPointer(void*p):ConstTerm(Co_Foreign_Pointer),ptr(p){}
   void*getPointer(){ return ptr; }
   ForeignPointer* gc(void);
+};
+
+/*===================================================================
+ * Extended Const
+ *
+ * to create a new constant:
+ * (1) add a new tag to TypeOfExtendedConst below
+ * (2) add a class derived from ConstTerm
+ * (3) add a clause in ExtendedConst.gc() (see gc.cc)
+ *     if your constant is not situated, then it should probably
+ *     check isInGc and return itself if it is false (i.e. no duplication
+ *     when cloning)
+ * (4) add a clause in ExtendedConst::printStream(...) (see print.cc)
+ * (5) add a clause in finalizable() (see builtins.cc)
+ *=================================================================== */
+
+enum TypeOfExtendedConst {
+  // all entries should be of the form
+  // X_Co_Foo = (n<<4),
+  // we offset by 4 because that is the width of TypeOfConst
+  // we perform this offset at the point of definition so
+  // that it won't be necessary at the point of use, which
+  // should speed things up a little
+};
+
+class ExtendedConst: public ConstTerm {
+protected:
+  void * allocate(int size) {
+    return (void*) alignedMalloc(size,sizeof(double));
+  }
+public:
+  OZPRINT;
+  NO_DEFAULT_CONSTRUCTORS2(ExtendedConst);
+  ExtendedConst():ConstTerm(Co_Extended){}
+  ExtendedConst(TypeOfExtendedConst t):ConstTerm(Co_Extended) {
+    setTagged(Co_Extended,(void*)t);
+  }
+  TypeOfExtendedConst getXType() {
+    return (TypeOfExtendedConst) ToInt32(getPtr());
+  }
+  ExtendedConst* gc(void);
 };
 
 /*===================================================================

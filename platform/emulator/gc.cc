@@ -1404,6 +1404,14 @@ ForeignPointer * ForeignPointer::gc(void) {
   return ret;
 }
 
+ExtendedConst * ExtendedConst::gc(void) {
+  switch (getXType()) {
+  default:
+    Assert(0);
+  }
+  return 0;
+}
+
 // ===================================================================
 // Finalization
 
@@ -2504,6 +2512,9 @@ ConstTerm *ConstTerm::gcConstTerm() {
 
   case Co_Foreign_Pointer:
     return ((ForeignPointer*)this)->gc();
+
+  case Co_Extended:
+    return ((ExtendedConst*)this)->gc();
 
   default:
     Assert(0);
