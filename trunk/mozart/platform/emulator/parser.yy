@@ -70,7 +70,7 @@ static inline int xycharno() {
     return 0;
 }
 
-void checkDeprecation(OZ_Term coord, Bool isBooleanCase);
+void checkDeprecation(OZ_Term coord);
 void xyreportWarning(char *kind, char *msg, OZ_Term coord);
 void xyreportError(char *kind, char *msg, OZ_Term coord);
 void xyreportError(char *kind, char *msg,
@@ -771,10 +771,8 @@ ifMain		: coord sequence then inSequence ifRest coord
 
 ifRest		: elseif ifMain
 		  { $$ = $2; }
-		| elsecase coord caseMain
-		  { checkDeprecation($2,NO);
-		    $$ = $3;
-		  }
+		| elsecase caseMain
+		  { $$ = $2; }
 		| _else_ inSequence end
 		  { $$ = $2; }
 		| end
@@ -782,17 +780,15 @@ ifRest		: elseif ifMain
 		;
 
 caseMain	: coord sequence then coord inSequence caseRest coord
-		  { checkDeprecation($4,OK);
+		  { checkDeprecation($4);
 		    $$ = newCTerm("fBoolCase",$2,$5,$6,makeLongPos($1,$7));
 		  }
 		| coord sequence of elseOfList caseRest coord
 		  { $$ = newCTerm("fCase",$2,$4,$5,makeLongPos($1,$6)); }
 		;
 
-caseRest	: elseif coord ifMain
-		  { checkDeprecation($2,NO);
-		    $$ = $3;
-		  }
+caseRest	: elseif ifMain
+		  { $$ = $2; }
 		| elsecase caseMain
 		  { $$ = $2; }
 		| _else_ inSequence end
@@ -1453,13 +1449,8 @@ synProdCallParams
 
 %%
 
-void checkDeprecation(OZ_Term coord, Bool isBooleanCase) {
-  char *msg;
-  if (isBooleanCase) {
-    msg = "use `if' instead of `case' for boolean conditionals";
-  } else {
-    msg = "do not mix `case' and `if' conditionals";
-  }
+void checkDeprecation(OZ_Term coord) {
+  char *msg = "use `if' instead of `case' for boolean conditionals";
   if (xy_allowDeprecated) {
     xyreportWarning("deprecation warning",msg,coord);
   } else {
