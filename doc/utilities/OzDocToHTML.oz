@@ -571,6 +571,7 @@ define
                           OzDocToHTML, FinishNode(Title X HTML $)
                        end
                        IndexHTML]
+               OzDocToHTML, MakeNode(@TopTitle SEQ(HTML))
                {@Reporter startSubPhase('fontifying code')}
                {@MyFontifier process(case @FontifyMode
                                      of color then 'html-color'
@@ -594,7 +595,6 @@ define
                               WhereNow <- WhereBefore
                               OzDocToHTML, FinishNode(Title X HTML $)
                            end
-               OzDocToHTML, MakeNode(@TopTitle SEQ(HTML))
                TopTOC = if @SomeSplit then EMPTY
                         else SEQ([hr() {FormatTOC @TOC ~1} hr()])
                         end
@@ -1832,9 +1832,9 @@ define
          end
       end
       meth FlushFootNotes(Count $) HTML in
-         case @FootNotes of F|Fr then M#T = F OldCommon in
+         case @FootNotes of M#T|Fr then OldCommon in
             OzDocToHTML, PushCommon(M ?OldCommon)
-            OzDocToHTML, OutputFootNote(Count M T ?HTML)
+            OzDocToHTML, OutputFootNote(Count M ?T ?HTML)
             OzDocToHTML, PopCommon(OldCommon)
             FootNotes <- Fr
             SEQ([if Count == 1 then hr(align: left width: '30%')
@@ -1844,7 +1844,7 @@ define
          [] nil then EMPTY
          end
       end
-      meth OutputFootNote(N M T ?HTML) Label in
+      meth OutputFootNote(N M ?T ?HTML) Label in
          ToGenerate <- Label|@ToGenerate
          T = a(href: @CurrentNode#"#"#Label sup(PCDATA(N)))   %--** use [1]
          HTML = 'div'(COMMON: @Common 'class': [footnote]
