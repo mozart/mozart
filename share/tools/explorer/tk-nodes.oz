@@ -355,13 +355,13 @@ local
 				       ScaledMyX
 				       ScaledMyY - ScaledWidth
 				       wi: LinkWidth) $)}
-	    {Canvas tkCreate(re(ScaledMyX - ScaledWidth
-				ScaledMyY - ScaledWidth
-				ScaledMyX + ScaledWidth
-				ScaledMyY + ScaledWidth      
-				fi: FailedColor
-				wi: NodeBorderWidth
-				ou: LineColor))}
+	    {Canvas tkCreate(rectangle(ScaledMyX - ScaledWidth
+				       ScaledMyY - ScaledWidth
+				       ScaledMyX + ScaledWidth
+				       ScaledMyY + ScaledWidth      
+				       fill: FailedColor
+				       width: NodeBorderWidth
+				       outline: LineColor))}
 	 end
 	 
 	 meth moveNode(MomX MyX MyByX MyY Scale)
@@ -373,7 +373,7 @@ local
 		       Scale*{IntToFloat (MyY - UpperSpaceI)}
 		       Scale*{IntToFloat MyX}
 		       Scale*{IntToFloat (MyY - RectangleWidthI)})}
-	    {Canvas tk(mo Item+1 Scale*{IntToFloat MyByX} 0)}
+	    {Canvas tk(move Item+1 Scale*{IntToFloat MyByX} 0)}
 	 end
       
 	 meth getMoveIds(Is $)
