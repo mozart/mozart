@@ -75,7 +75,7 @@ inline REGEX* tagged2Regex(OZ_Term t)
   return (REGEX*) OZ_getExtension(OZ_deref(t));
 }
 
-OZ_Term REGEX::printV(int depth = 10)
+OZ_Term REGEX::printV(int)
 {
   return OZ_mkTupleC("#",5,
 		     OZ_atom("<"),
