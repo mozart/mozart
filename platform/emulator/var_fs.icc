@@ -96,8 +96,8 @@ Bool isGenFSetVar(TaggedRef term, TypeOfTerm tag)
 inline
 OZ_FSetConstraint * unpatchReified(OZ_Term t)
 {
-  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t) && isGenFSetVar(t));
-  GenFSetVariable * fsv = tagged2GenFSetVar(t);
+  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+  GenFSetVariable * fsv = ((GenFSetVariable *) tagValueOf(t));;
 
   fsv->unpatchReified();
   return fsv->getReifiedPatch();

@@ -49,6 +49,7 @@ public:
   void init(const OZ_Term);
   void init(OZ_FSetState);
   void init(int, int);
+  void init(const OZ_FiniteDomain &fd);
 
   ostream &print2stream(ostream &) const;
 
@@ -59,6 +60,7 @@ public:
 
   OZ_Boolean unify(OZ_Term t);
   Bool operator == (const FSetValue&) const;
+  Bool operator <= (const FSetValue&) const;
   OZ_Term getKnownInList(void) const;
   OZ_Term getKnownNotInList(void) const;
 

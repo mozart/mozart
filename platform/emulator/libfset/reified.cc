@@ -75,41 +75,38 @@ OZ_Return IncludeRPropagator::propagate(void)
   {
     FailOnEmpty(*d <= (fsethigh32 - 1));
 
-    if (*d == fd_singl) {
-      FailOnInvalid(*s += d->getSingleElem());
-    } else {
-
-      // all elements which are known _not_ to be in `s' are not in `d'
-#ifdef FSET_HIGH
-      for (int i = fsethigh32; i --; )
-        if (s->isNotIn(i))
-          FailOnEmpty(*d -= i);
-#else
-      OZ_FiniteDomain not_in(s->getNotInSet());
-      FailOnEmpty(*d -= not_in);
-#endif
-
-      if (*d == fd_singl)
-        FailOnInvalid(*s += d->getSingleElem());
+    // if `d' is subsumed by `notin(s)' then failure
+    OZ_FSetValue d_set(*d);
+    if (d_set <= s->getNotInSet()) {
+      r_val = 0;
+      goto failure;
     }
-    if (!s.isTouched() && !d.isTouched()) {
+
+    // if `d' is subsumed by `glb(s)' then entailment
+    if (d_set <= s->getGlbSet()) {
       r_val = 1;
       goto entailment;
     }
   }
 
-  r.leave(); s.leave(); d.leave();
+  r.leave();
+  s.leave();
+  d.leave();
   return SLEEP;
 
 failure:
 entailment:
 
   if (0 == (*r &= r_val)) {
-    r.fail(); s.fail(); d.fail();
+    r.fail();
+    s.fail();
+    d.fail();
     return FAILED;
   }
 
-  r.leave(); s.leave(); d.leave();
+  r.leave();
+  s.leave();
+  d.leave();
   return OZ_ENTAILED;
 }
 

@@ -310,9 +310,23 @@ inline
 void FSetValue::init(int min_elem, int max_elem)
 {
   _card = setFromTo(_in, min_elem, max_elem);
+}
 
-  // TMUELLER
-  //  printf("from=%d to=%d s=%s\n" , min_elem, max_elem, toString()); fflush(stdout);
+inline
+void FSetValue::init(const OZ_FiniteDomain &fd)
+{
+  if (fd.getMaxElem() >= fsethigh32) // TMUELLER
+    OZ_warning("Max elem of `fd' is to big (%s:%s)", __FILE__, __LINE__);
+
+  for (int i = fset_high; i--; )
+    _in[i] = 0;
+  _card = 0;
+
+  for (int next_elem = fd.getMinElem(); next_elem > -1;
+       next_elem = fd.getNextLargerElem(next_elem)) {
+    _card += 1;
+    setBit(_in, next_elem);
+  }
 }
 
 FSetValue::FSetValue(OZ_Term t)
@@ -350,6 +364,21 @@ OZ_Boolean FSetValue::operator == (const FSetValue &fs) const
 
   for (int i = fset_high; i--; ) {
     if (_in[i] != fs._in[i])
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+inline
+OZ_Boolean FSetValue::operator <= (const FSetValue &fs) const
+{
+  if (_card > fs._card)
+    return FALSE;
+
+  // all elements in `*this' must be in `fs'
+  for (int i = fset_high; i--; ) {
+    if (_in[i] & fs._in[i] != _in[i])
       return FALSE;
   }
 
@@ -1317,6 +1346,11 @@ OZ_FSetValue::OZ_FSetValue(int min_elem, int max_elem)
   CASTTHIS->init(min_elem, max_elem);
 }
 
+OZ_FSetValue::OZ_FSetValue(const OZ_FiniteDomain &fd)
+{
+  CASTTHIS->init(fd);
+}
+
 OZ_Term OZ_FSetValue::getKnownInList(void) const
 {
   return CASTCONSTTHIS->getKnownInList();
@@ -1360,6 +1394,11 @@ int OZ_FSetValue::getNextSmallerElem(int i) const
 OZ_Boolean OZ_FSetValue::operator == (const OZ_FSetValue &y) const
 {
   return CASTCONSTTHIS->operator == (CASTREF y);
+}
+
+OZ_Boolean OZ_FSetValue::operator <= (const OZ_FSetValue &y) const
+{
+  return CASTCONSTTHIS->operator <= (CASTREF y);
 }
 
 OZ_FSetValue OZ_FSetValue::operator & (const OZ_FSetValue &y) const
