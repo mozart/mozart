@@ -198,23 +198,23 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class PropagatorController_VV {
+class PropagatorController_VV : public OZ_ParamIterator {
 protected:
   OZ_FDIntVar * vv;
   int size;
 public:
   PropagatorController_VV(int s, OZ_FDIntVar i[]) : size(s), vv(i) {}
 
-  OZ_Return leave(void) {
-    OZ_Boolean vars_left = OZ_FALSE;
-    for (int i = size; i--; vars_left |= vv[i].leave());
-    return vars_left ? SLEEP : PROCEED;
+  OZ_Return leave(int j = 0) {
+    int vars_left = 0;
+    for (int i = size; i--; vars_left += vv[i].leave() ? 1 : 0);
+    return (vars_left <= j)  ? OZ_ENTAILED : OZ_SLEEP;
   }
   OZ_Return vanish(void) {
     for (int i = size; i--; vv[i].leave());
     return PROCEED;
   }
-   OZ_Return fail(void) {
+  OZ_Return fail(void) {
     for (int i = size; i--; vv[i].fail());
     return FAILED;
   }
