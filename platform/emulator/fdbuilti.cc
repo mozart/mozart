@@ -798,7 +798,7 @@ Bool BIfdBodyManager::_unifiedVars(void)
 //-----------------------------------------------------------------------------
 // Introduce FD Built-ins to the Emulator
 
-void BIinitFD()
+void BIinitFD(void)
 {
 // fdprofil.cc
   BIadd("fdReset", 0, BIfdReset);
