@@ -94,6 +94,7 @@ public:
   Propagator * gcPropagatorOutlined(void);
   void gcRecurse(void);
   Bool gcIsMarked(void);
+  Bool gcIsMarkedOutlined(void);
   void gcMark(Propagator *);
   void ** gcGetMarkField(void);
   Propagator * gcGetFwd(void);

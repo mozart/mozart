@@ -214,10 +214,12 @@ error include resources.hh before mozart.h
 //#define DEBUG_VERBOSE
 #define RECINSTRFETCH 500
 
-#define DEBUG_FD
 //#define DEBUG_FD_CONSTRREP
 //#define DEBUG_FSET
 //#define DEBUG_FSET_CONSTRREP
+
+//#define NEW_NAMER_DEBUG
+
 //#define DEBUG_FDCD
 
 #define DEBUG_DET       // use counter instead of alarm timer for scheduling

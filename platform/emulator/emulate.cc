@@ -984,6 +984,7 @@ LBLdispatcher:
 #ifdef PROFILE_BI
       bi->incCounter();
 #endif
+
       int res = bi->getFun()(X,loc->mapping());
       if (res == PROCEED) { DISPATCH(3); }
       switch (res) {

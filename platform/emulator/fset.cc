@@ -2620,6 +2620,7 @@ OZ_Boolean FSetConstraint::operator >= (const FSetConstraint &y)
   FSDEBUG(printf("fsc::>= "); DP(); y.DP("y"));
 
 #ifdef BIGFSET
+
   if (_normal) {
     if (y._normal) {
       _otherin |= y._otherin;
@@ -2647,6 +2648,7 @@ OZ_Boolean FSetConstraint::operator >= (const FSetConstraint &y)
 
   _card_min = max(_card_min, y._card_min);
   FSDEBUG(DP());
+
   return normalize();
 }
 
@@ -3739,7 +3741,7 @@ char * OZ_FSetConstraint::toString()
 {
   static ozstrstream str;
   str.reset();
-  CASTTHIS->print(str);
+//  CASTTHIS->print(str);
   return str.str();
 }
 

@@ -478,6 +478,18 @@ Bool oz_unprotect(TaggedRef *ref)
   return OK;
 }
 
+/*
+ * Garbage collection needs to be aware of certain objects, e.g.,
+ * since these objects store references into the heap. The gc-routine
+ * of `GCMeManager' is called after all collection has been done, such
+ * that the individual gc routines of the objects can avoid copying
+ * references that are only established by themselves (in other words,
+ * memory leaks can be avoided).
+ */
+
+#ifdef NEW_NAMER
+GCMeManager * GCMeManager::_head;
+#endif
 
 /*
  * The variable copying stack: VarFix
@@ -796,6 +808,11 @@ Bool Propagator::gcIsMarked(void)
   return ISMARKEDFLAG(P_gcmark);
 }
 
+Bool Propagator::gcIsMarkedOutlined(void)
+{
+  return gcIsMarked();
+}
+
 inline
 void Propagator::gcMark(Propagator * fwd)
 {
@@ -912,6 +929,11 @@ SuspList * SuspList::gc(void) {
 inline
 Bool OzVariable::gcIsMarked(void) {
   return IsMarkedPointer(suspList);
+}
+
+
+Bool OzVariable::gcIsMarkedOutlined(void) {
+  return gcIsMarked();
 }
 
 inline
@@ -1684,7 +1706,9 @@ void AM::gc(int msgLevel) {
 
   MemChunks * oldChain = MemChunks::list;
 
+#ifndef NEW_NAMER
   oz_varCleanup();  /* drop bound variables */
+#endif
 
   GCDBG_INITSPACE;
 
@@ -1733,6 +1757,10 @@ void AM::gc(int msgLevel) {
 // ** second phase: the reference update stack has to checked now
   varFix.fix();
   Assert(gcStack.isEmpty());
+
+#ifdef NEW_NAMER
+  GCMeManager::gc();
+#endif
 
   GT.gcGNameTable();
   //   MERGECON gcPerdioFinal();
@@ -1820,7 +1848,7 @@ Board* AM::copyTree(Board* bb, Bool *getIsGround) {
 #ifdef CS_PROFILE
 redo:
   if (across_redid)
-    OZ_error("Redoing cloning twice acress chunk boundarys. Fuck!\n");
+    OZ_error("Redoing cloning across chunk boundaries. Fuck!\n");
 
   if (across_chunks)
     across_redid = OK;

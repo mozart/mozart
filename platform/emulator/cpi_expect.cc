@@ -752,6 +752,8 @@ OZ_Return OZ_Expect::fail(void)
 // member function to spawn a propagator
 //*****************************************************************************
 
+Propagator * imposed_propagator;
+
 OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
                             OZ_PropagatorFlags flags)
 {
@@ -790,8 +792,18 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     }
   }
 
-  Propagator * prop = oz_newPropagator(prio, p);
+  Propagator * prop = imposed_propagator = oz_newPropagator(prio, p);
+
   ozstat.propagatorsCreated.incf();
+
+#ifdef NAME_PROPAGATORS
+  NEW_NAMER_DEBUG_PRINT(("imposed_propagator = %p\n", imposed_propagator));
+
+  if (am.debugmode()) {
+    Thread * thr = oz_currentThread();
+    oz_propAddName(prop, thr->getTaskStackRef()->getTaskStack(thr, TRUE, 1));
+  }
+#endif
 
   // only monotonic propagator are run on imposition
   if (is_monotonic) {
