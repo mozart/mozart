@@ -54,17 +54,11 @@ enum BFlag {
   B_DEAD
 };
 
-enum JumpReturns {
-  SEGVIO = 1,
-  BUSERROR = 2
-};
-
 enum InstType {
   INST_OK,
   INST_FAILED,
   INST_REJECTED
 };
-
 
 class IONode {
 public:
@@ -92,30 +86,142 @@ ChachedOORegs setObject(ChachedOORegs regs, Object *o)
 // this class contains the central global data
 class AM : public ThreadsPool {
 friend void engine(Bool init);
-public:
-  int threadSwitchCounter;
-  int userCounter;
 
+public:
+  Board *currentBoard;
+  Board *rootBoard;
+  Board *currentSolveBoard;       // current 'solve' board or NULL if none;
+
+  // debugger
+  TaggedRef threadStreamTail;     
+  Bool suspendDebug, runChildren;
+
+private:
   int statusReg;
   Trail trail;
   TaggedRef xRegs[NumberOfXRegisters];  
-  
+  TaskStack *cachedStack;
+  Object *cachedSelf;
+  char *shallowHeapTop;
+  TaggedRef _currentUVarPrototype; // opt: cache
+
+  TaggedRef suspendVarList;
+
+  int threadSwitchCounter;
+  int userCounter;
+
   RefsArray toplevelVars;
   int toplevelVarsCount;
 
-  Board *currentBoard;
-  TaskStack *cachedStack;
-  Object *cachedSelf;
-  
-  char *shallowHeapTop;
-  
+  Bool wasSolveSet; 
+
+  CompStream *compStream;
+  Bool isStandaloneF;
+
+  IONode *ioNodes;		// node that must be waked up on io
+
+#ifdef DEBUG_CHECK
+  Bool dontPropagate;
+  // is used by consistency checking of a copy of a search tree; 
+#endif
+
+  struct {
+    int debug;
+    TaggedRef value;
+    TaggedRef info;
+  } exception;
+
+  Bool criticalFlag;  // if this is true we will NOT set Sflags
+                      // from within signal handlers
+
+  TaggedRef aVarUnifyHandler;
+  TaggedRef aVarBindHandler;
+  TaggedRef methApplHdl;
+  TaggedRef sendHdl;
+  TaggedRef newHdl;
+  TaggedRef defaultExceptionHdl;
+
+  TaggedRef opiCompiler;
+
+  // debugger
+  unsigned int lastThreadID;
+  unsigned int lastFrameID;
+  Toplevel *toplevelQueue;
+
+  Bool installingScript;  // ask TM
+
+  OzSleep *sleepQueue;
+
+  Bool profileMode;
 public:
+
+  AM() {};
+
+  Bool inShallowGuard() { return shallowHeapTop!=0; }
+  TaggedRef getOpiCompiler() { return opiCompiler; }
+  void setOpiCompiler(TaggedRef o) { opiCompiler = o; }
+
+  TaggedRef getAVarBindHandler() { return aVarBindHandler; }
+  TaggedRef getAVarUnifyHandler() { return aVarUnifyHandler; }
+  void setAVarHandler(TaggedRef u, TaggedRef b) {
+    aVarUnifyHandler = u;
+    aVarBindHandler = b;
+  }
+  TaggedRef getX(int i) { return xRegs[i]; }
+  TaggedRef getSendHdl() { return sendHdl; }
+  Bool setSendHdl(TaggedRef pred) {
+    if (sendHdl && sendHdl!=pred) {
+      return NO;
+    }
+    sendHdl = pred;
+    return OK;
+  }
+  TaggedRef getNewHdl() { return newHdl; }
+  Bool setNewHdl(TaggedRef pred) {
+    if (newHdl && newHdl!=pred) {
+      return NO;
+    }
+    newHdl = pred;
+    return OK;
+  }
+  TaggedRef getDefaultExceptionHdl() { return defaultExceptionHdl; }
+  Bool setDefaultExceptionHdl(TaggedRef pred) {
+    if (defaultExceptionHdl && defaultExceptionHdl!=pred) {
+      return NO;
+    }
+    defaultExceptionHdl = pred;
+    return OK;
+  }
+  TaggedRef getMethApplHdl() { return methApplHdl; }
+  Bool setMethApplHdl(TaggedRef pred) {
+    if (methApplHdl && methApplHdl!=pred) {
+      return NO;
+    }
+    methApplHdl = pred;
+    return OK;
+  }
+
+  TaggedRef getThreadStreamTail() { return threadStreamTail; }
+
+  void setException(TaggedRef val, TaggedRef inf, Bool d) {
+    exception.value = val;
+    exception.info = inf;
+    exception.debug = d;
+  }
+  TaggedRef getExceptionValue() { return exception.value; }
+  Bool hf_raise_failure(TaggedRef t);
+
+  // see builtins.cc
+  inline OZ_Return eqeq(TaggedRef Ain,TaggedRef Bin);
+
   void changeSelf(Object *o);
   void saveSelf();
   void setSelf(Object *o) { cachedSelf = o; }
   Object *getSelf() { return cachedSelf; }
 
-  TaggedRef _currentUVarPrototype; // opt: cache
+  CompStream *getCompStream() { return compStream; }
+
+  void setProfileMode(Bool p) { profileMode = p; }
 
   int currentUVarPrototypeEq(TaggedRef t) {
     return _currentUVarPrototype == t;
@@ -129,25 +235,19 @@ public:
 #endif
   }
 
-  Board *rootBoard;
-
-  Board *currentSolveBoard;       // current 'solve' board or NULL if none;
-  Bool wasSolveSet; 
-
-  CompStream *compStream;
-  Bool isStandaloneF;
   Bool isStandalone() { return isStandaloneF; }
 
-  IONode *ioNodes;		// node that must be waked up on io
-
-#ifdef DEBUG_CHECK
-  Bool dontPropagate;
-  // is used by consistency checking of a copy of a search tree; 
-#endif
-
-  TaggedRef suspendVarList;
   void emptySuspendVarList(void) { suspendVarList = makeTaggedNULL(); }
-  void addSuspendVarList(TaggedRef * t);
+  void addSuspendVarList(TaggedRef * t)
+  {
+    Assert(isAnyVar(*t));
+
+    if (suspendVarList==makeTaggedNULL()) {
+      suspendVarList=makeTaggedRef(t);
+    } else {
+      suspendVarList=cons(makeTaggedRef(t),suspendVarList);
+    }
+  }
   void suspendOnVarList(Thread *thr);
 
   void stopThread(Thread *th);
@@ -156,72 +256,23 @@ public:
   void formatError(OZ_Term traceBack,OZ_Term loc);
   void formatFailure(OZ_Term traceBack,OZ_Term loc);
   int raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...);
-  struct {
-    int debug;
-    TaggedRef value;
-    TaggedRef info;
-  } exception;
   void enrichTypeException(char *fun, OZ_Term args);
 
   void suspendInline(int n,
 		     OZ_Term A,OZ_Term B=makeTaggedNULL(),
 		     OZ_Term C=makeTaggedNULL());
 
-  TaggedRef aVarUnifyHandler;
-  TaggedRef aVarBindHandler;
-
-  TaggedRef methApplHdl;
-  TaggedRef sendHdl;
-  TaggedRef newHdl;
-
-  TaggedRef defaultExceptionHandler;
-
-  TaggedRef opiCompiler;
-
-  unsigned int lastThreadID;
-  unsigned int lastFrameID;
-
-  // Debugging stuff
-  Bool suspendDebug, runChildren;
-  TaggedRef threadStreamTail;
-  Toplevel *toplevelQueue;
-
-  void printBoards();
-
   void pushToplevel(ProgramCounter pc);
   void checkToplevel();
   void addToplevel(ProgramCounter pc);
 
-public:
-  AM() {};
   void init(int argc,char **argv);
   void checkVersion();
   void exitOz(int status);
   void suspendEngine();
 
-  Bool criticalFlag;  // if this is true we will NOT set Sflags
-                      // from within signal handlers
-
   Bool isCritical() { return criticalFlag; }
 
-// #define DEBUG_STATUS
-#ifdef DEBUG_STATUS
-  /*
-   * Print capital letter, when flag is set and
-   * lower case letter when unset.
-   */ 
-  char flagChar(StatusBit flag)
-  {
-    switch (flag) {
-    case ThreadSwitch: return 'T';
-    case IOReady:      return 'I';
-    case UserAlarm:    return 'U';
-    case StartGC:      return 'G';
-    case DebugMode:    return 'D';
-    default:           return 'X';
-    }
-  }
-#endif
   void setSFlag(StatusBit flag)
   {
 #ifdef DEBUG_STATUS
@@ -256,12 +307,6 @@ public:
 
   void checkStatus(); // in emulate.cc
 
-  void print();
-
-private:
-  Bool installingScript;
-
-public:
   void setCurrent(Board *c, Bool checkNotGC=OK);
   InstType installPath(Board *to); // ###
   Bool installScript(Script &script);
@@ -443,15 +488,12 @@ public:
   void setUserAlarmTimer(int ticks) { userCounter=ticks; }
   int getUserAlarmTimer() { return userCounter; } 
 
-  OzSleep *sleepQueue;
   void insertUser(int t,TaggedRef node);
   int wakeUser();
 
   Bool isStableSolve(SolveActor *sa);
 
   OZ_Term dbgGetLoc(Board*);
-
-  Bool profileMode;
 };
 
 extern AM am;

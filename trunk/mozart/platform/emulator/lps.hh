@@ -60,7 +60,7 @@ public:
   }
 
   LocalPropagationQueue ()
-  : maxsize (initmaxsize), head (0), tail (initmaxsize - 1), size (0)
+  : head (0), tail (initmaxsize - 1), size (0), maxsize (initmaxsize)
   {
     queue = new queue_t[maxsize];
   }

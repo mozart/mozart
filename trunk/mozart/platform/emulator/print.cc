@@ -839,18 +839,6 @@ PRINTLONG(ObjectClass)
 }
 
 
-void AM::print()
-{
-  cout << "class AM" << endl
-       << "  currentBoard: ";
-  currentBoard->print(cout,~1,0);
-  cout << endl
-       << "  rootBoard:    ";
-  rootBoard->print(cout,~1,0);
-  cout << endl;
-  ThreadsPool::printThreads();
-}
-
 PRINT(Board)
 {
   CHECKDEPTH;
@@ -899,17 +887,6 @@ PRINTLONG(Board)
     stream << indent(offset) << "Actor:" << endl;
     u.actor->printLong(stream,DEC(depth),offset+2);
   }
-}
-
-void AM::printBoards()
-{
-  cout << "class Board" << endl
-       << "  currentBoard: ";
-  currentBoard->print(cout,-1,0);
-  cout << endl
-       << "  rootBoard:    ";
-  rootBoard->print(cout,-1,0);
-  cout << endl;
 }
 
 PRINT(Script)
@@ -1044,6 +1021,29 @@ void ThreadQueue::printThreads()
     cout << endl;
     enqueue(th);
   }
+}
+
+void ozd_printBoards()
+{
+  cout << "class Board" << endl
+       << "  currentBoard: ";
+  am.currentBoard->print(cout,-1,0);
+  cout << endl
+       << "  rootBoard:    ";
+  am.rootBoard->print(cout,-1,0);
+  cout << endl;
+}
+
+void ozd_printThreads()
+{
+  am.printThreads();
+}
+
+void ozd_printAM()
+{
+  cout << "class AM" << endl;
+  ozd_printBoards();
+  ozd_printThreads();
 }
 
 PRINT(Thread)
@@ -1715,5 +1715,24 @@ void LocalPropagationQueue::printDebugLong () {
     phead = (phead + 1) & (maxsize - 1);
   }
 }
+
+// #define DEBUG_STATUS
+#ifdef DEBUG_STATUS
+  /*
+   * Print capital letter, when flag is set and
+   * lower case letter when unset.
+   */ 
+  char flagChar(StatusBit flag)
+  {
+    switch (flag) {
+    case ThreadSwitch: return 'T';
+    case IOReady:      return 'I';
+    case UserAlarm:    return 'U';
+    case StartGC:      return 'G';
+    case DebugMode:    return 'D';
+    default:           return 'X';
+    }
+  }
+#endif
 
 #endif

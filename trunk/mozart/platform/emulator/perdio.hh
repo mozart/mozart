@@ -324,7 +324,7 @@ class PendThread{
 public:
   PendThread *next;
   Thread *thread;
-  PendThread(Thread *th,PendThread *pt):thread(th),next(pt){}
+  PendThread(Thread *th,PendThread *pt):next(pt), thread(th) {}
   USEFREELISTMEMORY;
   void dispose(){freeListDispose(this,sizeof(PendThread));}
 };
@@ -373,7 +373,7 @@ private:
   Bool del;
 public:
   ByteSourceFD(int i,Bool d=FALSE):fd(i),del(d){}
-  ~ByteSourceFD(){ if (del) close(fd); }
+  virtual ~ByteSourceFD(){ if (del) close(fd); }
   char* emptyMsg();
   OZ_Return maybeSkipHeader();
   OZ_Return getBytes(BYTE*,int&,int&);
@@ -387,7 +387,7 @@ private:
 public:
   ByteSourceDatum():del(FALSE),idx(0){}
   ByteSourceDatum(OZ_Datum d,Bool b):dat(d),del(b),idx(0){}
-  ~ByteSourceDatum() {
+  virtual ~ByteSourceDatum() {
     if (del) free(dat.data);
   }
   char* emptyMsg();
@@ -413,7 +413,7 @@ private:
 public:
   ByteSinkFD(int f,Bool b=FALSE):fd(f),del(b){}
   ByteSinkFD():fd(0),del(FALSE){}
-  ~ByteSinkFD() { if (del) close(fd); }
+  virtual ~ByteSinkFD() { if (del) close(fd); }
   OZ_Return allocateBytes(int);
   OZ_Return putBytes(BYTE*,int);
 };
@@ -425,7 +425,7 @@ private:
 public:
   ByteSinkFile(char*s):filename(s),fd(-1){};
   ByteSinkFile():filename(0),fd(-1){};
-  ~ByteSinkFile() { if (fd>=0) close(fd); }
+  virtual ~ByteSinkFile() { if (fd>=0) close(fd); }
   OZ_Return allocateBytes(int);
   OZ_Return putBytes(BYTE*,int);
 };
