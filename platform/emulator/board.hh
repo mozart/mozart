@@ -111,6 +111,8 @@ public:
 
   USEHEAPMEMORY;
   Board *gcBoard();
+  Board *gcDerefedBoard();
+  Board *gcDerefedBoardOutline();
   void gcRecurse(void);
   Bool gcIsAlive();
   Bool checkAlive();
