@@ -152,7 +152,7 @@ OZ_Return sendSurrender(BorrowEntry *be,OZ_Term val){
   return PROCEED;
 }
 
-Bool dealWithHandlers(EntityInfo *info,EntityCond ec,Thread* th,Bool &hit){
+Bool dealWithHandlers(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Bool &hit){
   Assert(isHandlerCondition(ec));
   info->meToBlocked();
 
@@ -165,7 +165,7 @@ Bool dealWithHandlers(EntityInfo *info,EntityCond ec,Thread* th,Bool &hit){
       else{
 	if(th==(*base)->thread) break;}}
     base = &((*base)->next);}
-  (*base)->varInvokeHandler(ec,hit);
+  (*base)->varInvokeHandler(t,ec,hit);
   hit=TRUE;
   if(!(*base)->isPersistent()){
     return TRUE;
@@ -176,16 +176,16 @@ Bool dealWithHandlers(EntityInfo *info,EntityCond ec,Thread* th,Bool &hit){
 inline EntityCond handlerPart(EntityCond ec){
   return ec & (PERM_ME|TEMP_ME);}
 
-Bool varFailurePreemption(EntityInfo* info,Bool &hit){
+Bool varFailurePreemption(TaggedRef t,EntityInfo* info,Bool &hit){
   EntityCond ec=handlerPart(info->getEntityCond());
   if(ec==ENTITY_NORMAL) return FALSE;
-  return dealWithHandlers(info,ec,oz_currentThread(),hit);}
+  return dealWithHandlers(t,info,ec,oz_currentThread(),hit);}
 
 Bool ProxyVar::failurePreemption(){
   Assert(info!=NULL);
   Bool hit=FALSE;
   EntityCond oldC=info->getSummaryWatchCond();  
-  if(varFailurePreemption(info,hit)){
+  if(varFailurePreemption(oz_makeExtVar(this),info,hit)){
     EntityCond newC=info->getSummaryWatchCond();
     varAdjustPOForFailure(getIndex(),oldC,newC);}
   return hit;
@@ -623,13 +623,13 @@ void ProxyVar::addEntityCond(EntityCond ec){
   if(isHandlerCondition(ec)) {
     wakeAll();
     return;}
-  info->dealWithWatchers(ec);}
+  info->dealWithWatchers(oz_makeExtVar(this),ec);}
 
 void ProxyVar::newWatcher(Bool b){
   if(b){
     wakeAll();
     return;}
-  info->dealWithWatchers(info->getEntityCond());
+  info->dealWithWatchers(oz_makeExtVar(this),info->getEntityCond());
 }
 
 void ProxyVar::subEntityCond(EntityCond ec){
@@ -639,7 +639,7 @@ void ProxyVar::subEntityCond(EntityCond ec){
   
 void ManagerVar::newWatcher(Bool b){
   if(b) return;
-  info->dealWithWatchers(info->getEntityCond());
+  info->dealWithWatchers(oz_makeExtVar(this),info->getEntityCond());
 }
   
 void ManagerVar::addEntityCond(EntityCond ec){
@@ -650,7 +650,7 @@ void ManagerVar::addEntityCond(EntityCond ec){
   int i=getIndex();
   OwnerEntry* oe=OT->getOwner(i);
   triggerInforms(&inform,oe,i,ec);
-  info->dealWithWatchers(ec);
+  info->dealWithWatchers(oz_makeExtVar(this),ec);
 }
 
 void ManagerVar::subEntityCond(EntityCond ec){
