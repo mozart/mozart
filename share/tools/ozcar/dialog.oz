@@ -40,7 +40,7 @@ local
 
 	 V = {New Tk.label tkInit(parent: self
 				  bg:     DefaultBackground
-				  text:   ('Last updated on ' # Version #
+				  text:   ('Version of ' # Version #
 					   '\n' #
 					   'Current platform is ' # Platform))}
 
