@@ -40,8 +40,8 @@ Before starting to describe how to use them, we explain some basic
 concepts. The explanation is short; for more detailed information see
 for example <Ptr to="Stevens.90">.
 
-<section>
-<title/Sockets in a Nutshell/
+<section id="section.sockets.nutshell">
+  <title/Sockets in a Nutshell/
 
 <p>
 A socket is a data structure which can be used for communication between
@@ -114,7 +114,7 @@ Control Protocol) for stream sockets and UDP<index /protocol <and> UDP/
 </subsection>
 </section>
 
-<section>
+<section id="section.sockets.stream">
 <title/Stream Sockets/
 <p>
 Instead of giving detailed explanations, we will follow an example
@@ -369,7 +369,7 @@ format as already described for the class <<Open.file>>, see
 </subsection>
 </section>
 
-<section>
+<section  id="section.sockets.accept">
 <title/Accepting Multiple Connections/
 
 <p>
@@ -448,7 +448,7 @@ As soon as the socket object created by the procedure <<Accept>> receives
 the data sent from a client, the data appears in the Browser.
 </section>
 
-<section>
+<section  id="section.sockets.datagram">
 <title/Datagram Sockets/
 
 <p>
@@ -538,7 +538,7 @@ Disconnecting is the same as for stream sockets.
 </subsection>
 </section>
 
-<section>
+<section  id="section.sockets.finger">
 <title/Example: Are We Working Right Now?/
 
 <p>

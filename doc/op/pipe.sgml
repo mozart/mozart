@@ -35,7 +35,7 @@ information from the running process.
 <p>
 For this purpose we provide a class <<Open.pipe>>.
 
-<section><title/Example: A Shell in Oz/
+<section id="section.pipe.shell"><title/Example: A Shell in Oz/
 <p>
 Suppose, we want to start and control a Unix Bourne shell <file/sh/
 (see <file/sh(n)/) by an Oz program.  We first have to start a

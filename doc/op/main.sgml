@@ -64,12 +64,29 @@
 
 <Book proglang=oz>
   <Front>
+
     <Meta name="html.split" value="chapter.intro">
+
     <Meta name="html.split" value="chapter.data">
+    <Meta name="html.split" value="section.data.strings">
+    <Meta name="html.split" value="section.data.virtualstrings">
+
     <Meta name="html.split" value="chapter.files">
+    <Meta name="html.split" value="section.files.basic">
+    <Meta name="html.split" value="section.files.expand-a">
+
     <Meta name="html.split" value="chapter.text">
+    <Meta name="html.split" value="section.text.expand">
+
     <Meta name="html.split" value="chapter.sockets">
+    <Meta name="html.split" value="section.sockets.nutshell">
+    <Meta name="html.split" value="section.sockets.stream">
+    <Meta name="html.split" value="section.sockets.accept">
+    <Meta name="html.split" value="section.sockets.datagram">
+    <Meta name="html.split" value="section.sockets.finger">
+
     <Meta name="html.split" value="chapter.pipe">
+    <Meta name="html.split" value="section.pipe.shell">
 
     <Meta name="html.split.toc"   value="">
     <Meta name="html.split.bib"   value="">
