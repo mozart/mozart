@@ -1533,7 +1533,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 
           // mm: fix pb. with variables from guard optimizations
           // should be replaced by Assert(bb);
-          if (bb) {
+          if (!bb) {
             to = 0;
             return;
           }
