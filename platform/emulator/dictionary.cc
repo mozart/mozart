@@ -393,7 +393,7 @@ OZ_Term DictHashTable::getItems()
 class Order_TaggedRef_By_Feat {
 public:
   Bool operator()(const TaggedRef& a, const TaggedRef& b) {
-    return featureCmp(a, b) <= 0;
+    return featureCmp(a, b) < 0;
   }
 };
 
