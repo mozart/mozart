@@ -93,9 +93,10 @@ enum TypeOfTerm {
 /* small ints are the only TaggedRefs that do not
  * contain a pointer in the value part */
 #define _makeTaggedSmallInt(s) ((s << tagSize) | SMALLINT)
-// kost@ : generic traverser expoits 'GCTAG':
+// kost@ : both generic traverser and builder exploit 'GCTAG':
 #define makeGCTaggedInt(i) ((i << tagSize) | GCTAG)
 #define getGCTaggedInt(t)  ((int32) (t >> tagSize))
+#define isGCTaggedInt(t)   (_tagTypeOf(t) == GCTAG)
 
 /* new tagging unused so far */
 #define OLD_TAGGING
