@@ -227,7 +227,7 @@ define
 				 miny:1.0
 				 maxy:11.0
 				 dim:''
-				 fill:true)}
+				 fill:false)}
    NIByte={New TitleGraph tkInit(parent:NetInfoF
 				 title:"Byte"
 				 miny:1.0
