@@ -78,7 +78,7 @@ define
    in
       "l(\"cn<"#H.id#">\",n(\"\",["
       #"a(\"OBJECT\",\""#H.n#"\\n"#Location#"\"),"
-      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(H.id $)}#"\"),"
+      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(H.ref $)}#"\"),"
       #{Hist get_prop_node_attr(H.id $)}
       #"m(["
       #{Hist insert_menu($)}
@@ -144,6 +144,7 @@ define
 				     line:   LocationProp.line
 				     column: LocationProp.column)
 			    end
+		       ref: P
 		      )
 		  end}
 	    of nil then ""
