@@ -1458,11 +1458,12 @@ void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
 
 static void xyerror(char *s) {
   char *news;
-  if (strlen(s) > 13)
-    news = s + 13;
+  if (!strncmp(s, "parse error", 11) && strlen(s) > 13)
+    xyreportError("parse error", s + 13, xyFileName, xylino, xycharno());
+  else if (!strncmp(s, "syntax error: ", 14))
+    xyreportError("syntax error", s + 14, xyFileName, xylino, xycharno());
   else
-    news = "";
-  xyreportError("parse error", news, xyFileName, xylino, xycharno());
+    xyreportError("parse error", s, xyFileName, xylino, xycharno());
 }
 
 
