@@ -2854,7 +2854,7 @@ LBLsuspendThread:
 
        /* exception is already in X[0],
           but should somehow be reflected !!! */
-       RefsArray argsArray = allocateY(3);
+       RefsArray argsArray = allocateRefsArray(3,NO);
        argsArray[0]=X[0];
        argsArray[1]=e->dbgGetSpaces();
        argsArray[2]=traceBack;

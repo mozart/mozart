@@ -1490,6 +1490,9 @@ void AM::gc(int msgLevel)
   gcTagged(aVarBindHandler,aVarBindHandler);
   gcTagged(dVarHandler,dVarHandler);
 
+  gcTagged(biExceptionHandler,biExceptionHandler);
+  gcTagged(defaultExceptionHandler,defaultExceptionHandler);
+
   GCPROCMSG("ioNodes");
   for(int i = 0; i < osOpenMax(); i++) {
     for(int mode=SEL_READ; mode <= SEL_WRITE; mode++) {
