@@ -703,7 +703,6 @@ Bool isInTree (Board *b)
  *   only dynamic names need to be copied
  */
 
-inline
 void dogcGName(GName *gn)
 {
   if (opMode == IN_GC) {
