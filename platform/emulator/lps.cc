@@ -143,10 +143,3 @@ Bool LocalPropagationStore::propagate_locally () {
   am.setCurrentThread(savedCurrentThread);
   return (TRUE);
 }
-
-
-#ifdef OUTLINE
-#define inline
-#include "lps.icc"
-#undef inline
-#endif
