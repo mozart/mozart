@@ -43,7 +43,7 @@ extern int32 * cs_orig_start;
 extern int     cs_copy_size;
 #endif
 
-extern Bool gc_is_running;
+extern Bool isCollecting;
 Bool gcStaticProtect(TaggedRef *);
 Bool gcProtect(TaggedRef *);
 Bool gcUnprotect(TaggedRef *);

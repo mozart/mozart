@@ -87,13 +87,11 @@ typedef TaggedRef *TaggedRefPtr;
 // ------------------------------------------------------
 // Debug macros for debugging outside of gc
 
-extern int gcing;
-
 #define _tagTypeOf(ref) ((TypeOfTerm)(ref&tagMask))
 
 #ifdef DEBUG_GC
 #define GCDEBUG(X)                            \
-  if ( gcing && (_tagTypeOf(X)==GCTAG ) )     \
+  if (!isCollecting && (_tagTypeOf(X)==GCTAG ) )     \
     error("GcTag unexpectedly found.");
 #else
 #define GCDEBUG(X)
@@ -269,8 +267,6 @@ inline
 TaggedRef makeTaggedRef(TaggedRef *s)
 {
   CHECK_POINTER_N(s);
-  DebugGC(gcing == 0 && !MemChunks::list->inChunkChain ((void *)s),
-          error ("making TaggedRef pointing to 'from' space"));
   return _makeTaggedRef(s);
 }
 
