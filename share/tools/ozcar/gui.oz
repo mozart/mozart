@@ -226,7 +226,7 @@ in
 		  in
 		     {B tkBind(event:  HelpEvent
 			       action: self # help(Bitmap))}
-		     {Tk.send balloonhelp(B BalloonHelpText)}
+%		     {Tk.send balloonhelp(B BalloonHelpText)}
 		     B
 		  end}
 	 in
@@ -263,7 +263,7 @@ in
 			    action:           self # Action)}
 		{C tkBind(event:  HelpEvent
 			  action: self # help(Xbm))}
-		{Tk.send balloonhelp(C BalloonHelpText)}
+%		{Tk.send balloonhelp(C BalloonHelpText)}
 	     end}
 	    {Tk.batch [pack(b(Bs) side:left padx:1 pady:1)
 		       pack(self.emacsThreadsButton self.subThreadsButton
