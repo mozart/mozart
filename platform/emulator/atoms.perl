@@ -12,6 +12,9 @@
 	  ( AtomPair,      "#"),
 	  ( AtomVoid,      "_"),
 	  ( AtomDot,       "."),
+	  ( AtomHat,       "^"),
+	  ( AtomTilde,     "~"),
+	  ( AtomDExcl,     "!!"),
  
 	  ( AtomSup,	   "sup"),
 	  ( AtomCompl,	   "compl"),
@@ -218,6 +221,8 @@
 
 
 %names = (
+	  ( NameTrue,          "true"),
+	  ( NameFalse,         "false"),
 	  ( NameUnit,          "unit"),
 	  ( NameGroupVoid,     "group(void)"),
 	  ( NameNonExportable, "nonExportable"),
