@@ -259,10 +259,12 @@ define
       end
 
       meth database_get_package(MOG $)
+	 Database,database_read
 	 {CondSelect @Mogul2Package MOG unit}
       end
 
       meth database_remove_package(MOG)
+	 Database,database_read
 	 {Dictionary.remove @Mogul2Package MOG}
       end
    end
