@@ -5700,7 +5700,7 @@ OZ_C_proc_begin(BIfindFunction,3)
 		    OZ_getCArg(2));
   }
   
-  OZ_addBuiltin(functionName,functionArity,*func);
+  OZ_addBuiltin(ozstrdup(functionName),functionArity,*func);
   return PROCEED;
 #else
   not ported
