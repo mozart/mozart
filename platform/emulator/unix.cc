@@ -1558,14 +1558,10 @@ OZ_BI_define(unix_exec,3,1){
   char buf[10000];
   buf[0] = '\0';
   for (k=0 ; k<argno; k++) {
+    strcat(buf,"\"");
     strcat(buf,argv[k]);
-    strcat(buf," ");
+    strcat(buf,"\" ");
   }
-
-  SECURITY_ATTRIBUTES sa;
-  sa.nLength = sizeof(sa);
-  sa.lpSecurityDescriptor = NULL;
-  sa.bInheritHandle = FALSE;
 
   STARTUPINFO si;
   memset(&si,0,sizeof(si));
@@ -1577,13 +1573,13 @@ OZ_BI_define(unix_exec,3,1){
 
   PROCESS_INFORMATION pinf;
 
-  if (!CreateProcess(NULL,buf,&sa,NULL,TRUE,
+  if (!CreateProcess(NULL,buf,NULL,NULL,TRUE,
                      0,NULL,NULL,&si,&pinf)) {
     return raiseUnixError("exec",0, "Cannot exec process.",
                           "os");
   }
 
-  int pid = (int) pinf.hProcess;
+  int pid = pinf.dwProcessId;
 
 #else  /* !WINDOWS */
 
