@@ -14,6 +14,14 @@
 ;;            Z)
 ;;   trying to indent the line with the `in' raises an error.
 ;; - 10thread is not recognized as a keyword as it should be.
+;; - an ampersand as the last character in a string or before a
+;;   backslash escaped quote in a string messes up fontification
+;; - case is not respected when doing expression-hopping: variables like
+;;   `Thread' confuse it
+;; - hitting return after `attr x:' or `token x:' (in Oz-Gump mode) causes an
+;;   error: "no matching open parenthesis"
+;; - recognition of regular expressions `<...>' in Oz-Gump mode is far from
+;;   perfect
 ;;
 ;; TODO
 ;; - should we use the mode-line?
@@ -34,9 +42,11 @@
 ;; automatically switch into Oz-Mode when loading
 ;; files ending in ".oz"
 (or (assoc "\\.oz$" auto-mode-alist)
-    (setq auto-mode-alist (cons '("/\\.ozrc$" . oz-mode)
-				(cons '("\\.oz$" . oz-mode)
-				      auto-mode-alist))))
+    (setq auto-mode-alist
+	  (append '(("/\\.ozrc$" . oz-mode)
+		    ("\\.oz$" . oz-mode)
+		    ("\\.ozg$" . oz-gump-mode))
+		  auto-mode-alist)))
 
 
 ;;------------------------------------------------------------
@@ -155,6 +165,9 @@ All strings matching this regular expression are removed.")
 
 (defvar oz-temp-counter 0
   "Internal counter for gensym.")
+
+(defvar oz-gump-indentation nil
+  "Non-nil iff Gump syntax is to be used for indentation.")
 
 
 ;;------------------------------------------------------------
@@ -822,8 +835,15 @@ paragraph."
      "if" "or" "dis" "choice" "condis" "not"
      "thread" "try" "raise" "lock")))
 
+(defconst oz-gump-begin-pattern
+  (oz-make-keywords-for-match
+   '("scanner" "parser" "lex" "syn" "prod" "mode")))
+
 (defconst oz-between-pattern
   (oz-make-keywords-for-match '("from" "prop" "attr" "feat")))
+
+(defconst oz-gump-between-pattern
+  (concat (oz-make-keywords-for-match '("token")) "\\|" "=>"))
 
 (defconst oz-middle-pattern
   (concat (oz-make-keywords-for-match
@@ -846,6 +866,12 @@ paragraph."
 (defconst oz-key-pattern
   (concat oz-declare-pattern "\\|" oz-begin-pattern "\\|"
 	  oz-between-pattern "\\|" oz-middle-pattern "\\|"
+	  oz-end-pattern "\\|" oz-left-or-right-pattern))
+
+(defconst oz-gump-key-pattern
+  (concat oz-declare-pattern "\\|" oz-begin-pattern "\\|"
+	  oz-gump-begin-pattern "\\|" oz-between-pattern "\\|"
+	  oz-gump-between-pattern "\\|" oz-middle-pattern "\\|"
 	  oz-end-pattern "\\|" oz-left-or-right-pattern))
 
 ;; Note: The following do not allow for newlines inside quoted tokens
@@ -946,12 +972,14 @@ If DONT-CHANGE-EMPTY-LINES is non-nil, empty lines are not indented."
 	 (oz-search-matching-begin nil))
 	((looking-at oz-right-pattern)
 	 (oz-search-matching-paren))
-	((looking-at oz-between-pattern)
+	((or (looking-at oz-between-pattern)
+	     (and oz-gump-indentation (looking-at oz-gump-between-pattern)))
 	 (let ((col (oz-search-matching-begin nil)))
 	   (if (< col 0)
 	       -1
 	     (+ col oz-indent-chars))))
 	((or (looking-at oz-begin-pattern)
+	     (and oz-gump-indentation (looking-at oz-gump-begin-pattern))
 	     (looking-at oz-left-pattern)
 	     (looking-at "$")
 	     (looking-at "%"))
@@ -980,6 +1008,9 @@ If DONT-CHANGE-EMPTY-LINES is non-nil, empty lines are not indented."
 		      (setq ret (oz-indent-after-paren)))
 		     ((looking-at oz-begin-pattern)
 		      (setq ret (+ (current-column) oz-indent-chars)))
+		     ((and oz-gump-indentation
+			   (looking-at oz-gump-begin-pattern))
+		      (setq ret (+ (current-column) oz-indent-chars)))
 		     ((= (point) (point-min))
 		      (setq ret 0))
 		     (t
@@ -988,13 +1019,17 @@ If DONT-CHANGE-EMPTY-LINES is non-nil, empty lines are not indented."
 	   ret))
 	(t (oz-calc-indent1))))
 
+(defun oz-search-backward-keyword ()
+  (re-search-backward
+   (if oz-gump-indentation oz-gump-key-pattern oz-key-pattern) nil t))
+
 (defun oz-calc-indent1 ()
   "Subroutine for oz-calc-indent.
 Search backward for Oz keywords to determine the start of the construct
 that encloses the current line.  From its column and its kind derive
 the exact indentation and return it.  Return a negative value if the
 syntax we find does not correspond to what we expect."
-  (if (re-search-backward oz-key-pattern nil t)
+  (if (oz-search-backward-keyword)
       (cond ((or (oz-is-quoted) (oz-is-directive))
 	     (oz-calc-indent1))
 	    ((looking-at oz-declare-pattern)
@@ -1007,6 +1042,9 @@ syntax we find does not correspond to what we expect."
 	       (+ (current-column) oz-indent-chars)))
 	    ((looking-at oz-begin-pattern)
 	     ;; we are the first token after 'if' 'proc' ...
+	     (+ (current-column) oz-indent-chars))
+	    ((and oz-gump-indentation (looking-at oz-gump-begin-pattern))
+	     ;; we are the first token after 'scanner' 'parser' ...
 	     (+ (current-column) oz-indent-chars))
 	    ((looking-at oz-left-pattern)
 	     ;; we are the first token after '(' '{' ...
@@ -1024,6 +1062,9 @@ syntax we find does not correspond to what we expect."
 		 (+ col oz-indent-chars))))
 	    ((looking-at oz-between-pattern)
 	     ;; we are the first token after 'attr' 'feat' ...
+	     (+ (current-column) oz-indent-chars))
+	    ((and oz-gump-indentation (looking-at oz-gump-between-pattern))
+	     ;; we are the first token after 'token' '=>'
 	     (+ (current-column) oz-indent-chars))
 	    ((looking-at oz-end-pattern)
 	     ;; we are the first token after an 'end'
@@ -1129,12 +1170,14 @@ backslash.  If yes, the point is moved to the backslash."
 	(nesting 0)
 	(second-nesting nil))
     (while (not ret)
-      (if (re-search-backward oz-key-pattern nil t)
+      (if (oz-search-backward-keyword)
 	  (cond ((or (oz-is-quoted) (oz-is-directive))
 		 t)
 		((looking-at oz-declare-pattern)
 		 (setq ret (current-column)))
-		((looking-at oz-begin-pattern)
+		((or (looking-at oz-begin-pattern)
+		     (and oz-gump-indentation
+			  (looking-at oz-gump-begin-pattern)))
 		 ;; 'if'
 		 (if (= nesting 0)
 		     (setq ret (current-column))
@@ -1151,6 +1194,9 @@ backslash.  If yes, the point is moved to the backslash."
 		 t)
 		((looking-at oz-between-pattern)
 		 ;; 'attr' 'feat'
+		 t)
+		((and oz-gump-indentation (looking-at oz-gump-between-pattern))
+		 ;; 'token' '=>'
 		 t)
 		((looking-at oz-end-pattern)
 		 ;; 'end'
@@ -1320,8 +1366,34 @@ if that value is non-nil."
   (if (and oz-lucid (not (assoc "Oz" current-menubar)))
       (set-buffer-menubar (oz-insert-menu oz-menubar current-menubar)))
 
+  (set (make-local-variable 'oz-gump-indentation) nil)
+
   ;; font lock stuff
   (oz-set-font-lock-defaults)
+  (if (and oz-want-font-lock (oz-window-system))
+      (font-lock-mode 1))
+  (run-hooks 'oz-mode-hook))
+
+(defun oz-gump-mode ()
+  "Major mode for editing Oz code with embedded Gump specifications.
+
+Commands:
+\\{oz-mode-map}
+Entry to this mode calls the value of `oz-mode-hook'
+if that value is non-nil."
+  (interactive)
+  (kill-all-local-variables)
+  (use-local-map oz-mode-map)
+  (setq major-mode 'oz-mode)
+  (setq mode-name "Oz-Gump")
+  (oz-mode-variables)
+  (if (and oz-lucid (not (assoc "Oz" current-menubar)))
+      (set-buffer-menubar (oz-insert-menu oz-menubar current-menubar)))
+
+  (set (make-local-variable 'oz-gump-indentation) t)
+
+  ;; font lock stuff
+  (oz-gump-set-font-lock-defaults)
   (if (and oz-want-font-lock (oz-window-system))
       (font-lock-mode 1))
   (run-hooks 'oz-mode-hook))
@@ -1501,11 +1573,104 @@ and is used for fontification.")
   "Gaudy level highlighting for Oz mode.")
 
 (defun oz-set-font-lock-defaults ()
-  (make-variable-buffer-local 'font-lock-defaults)
-  (setq font-lock-defaults
-	'((oz-font-lock-keywords oz-font-lock-keywords-1
-	   oz-font-lock-keywords-2 oz-font-lock-keywords-3)
-	  nil nil (("&" . "/")) beginning-of-line)))
+  (set (make-local-variable 'font-lock-defaults)
+       '((oz-font-lock-keywords oz-font-lock-keywords-1
+	  oz-font-lock-keywords-2 oz-font-lock-keywords-3)
+	 nil nil (("&" . "/")) beginning-of-line)))
+
+;;------------------------------------------------------------
+;; Gump Fontification
+
+(defconst oz-gump-keywords
+  '("lex" "mode" "parser" "prod" "scanner" "syn" "token"))
+
+(defconst oz-gump-regex-matcher
+  (concat
+   "\\<lex[^A-Za-z0-9_<\n][^<\n]*\\(<" "\\("
+   "\\[\\([^]\\]\\|\\\\.\\)+\\]" "\\|"
+   "\"[^\"\n]+\"" "\\|"
+   "\\\\." "\\|"
+   "[^]<>\"[\\\n]" "\\)+"
+   ">\\|<<EOF>>\\)"))
+
+(defconst oz-gump-keywords-matcher-1
+  (concat "^\\(" (mapconcat 'identity oz-gump-keywords "\\|") "\\)\\>")
+  "Regular expression matching any keyword at the beginning of a line.")
+
+(defconst oz-gump-keywords-matcher-2
+  (concat "[^\\A-Za-z0-9_]\\("
+	  (mapconcat 'identity oz-gump-keywords "\\|") "\\)\\>")
+  "Regular expression matching any keyword not preceded by a backslash.
+This serves to distinguish between the directive `\\else' and the keyword
+`else'.  Keywords at the beginning of a line are not matched.
+The first subexpression matches the keyword proper (for fontification).")
+
+(defconst oz-gump-keywords-matcher-3
+  "=>"
+  "Regular expression matching non-identifier keywords.")
+
+(defconst oz-gump-scanner-parser-matcher
+  (concat "\\<\\(parser\\|scanner\\)[ \t]+"
+	  "\\([A-Z][A-Za-z0-9_]*\\|`[^`\n]*`\\)")
+  "Regular expression matching parser or scanner definitions.
+The second subexpression matches the definition's identifier
+(if it is a variable) and is used for fontification.")
+
+(defconst oz-gump-lex-matcher
+  (concat "\\<lex[ \t]+"
+	  "\\([a-z][A-Za-z0-9_]*\\|'[^'\n]*'\\)[ \t]*=")
+  "Regular expression matching lexical abbreviation definitions.
+The first subexpression matches the definition's identifier
+(if it is an atom) and is used for fontification.")
+
+(defconst oz-gump-syn-matcher
+  (concat "\\<syn[ \t]+"
+	  "\\([A-Za-z][A-Za-z0-9_]*\\|`[^`\n]*`\\|'[^'\n]*'\\)")
+  "Regular expression matching syntax rule definitions.
+The first subexpression matches the definition's identifier
+and is used for fontification.")
+
+(defconst oz-gump-font-lock-keywords-1
+  (append (list (list oz-gump-regex-matcher
+		      '(1 font-lock-string-face))
+		oz-gump-keywords-matcher-1
+		(cons oz-gump-keywords-matcher-2 1)
+		oz-gump-keywords-matcher-3)
+	  oz-font-lock-keywords-1)
+  "Subdued level highlighting for Oz-Gump mode.")
+
+(defconst oz-gump-font-lock-keywords oz-gump-font-lock-keywords-1
+  "Default expressions to highlight in Oz-Gump mode.")
+
+(defconst oz-gump-font-lock-keywords-2
+  (append (list (list oz-gump-regex-matcher
+		      '(1 font-lock-string-face))
+		oz-gump-keywords-matcher-1
+		(cons oz-gump-keywords-matcher-2 1)
+		oz-gump-keywords-matcher-3)
+	  oz-font-lock-keywords-2)
+  "Medium level highlighting for Oz-Gump mode.")
+
+(defconst oz-gump-font-lock-keywords-3
+  (append (list (list oz-gump-regex-matcher
+		      '(1 font-lock-string-face))
+		oz-gump-keywords-matcher-1
+		(cons oz-gump-keywords-matcher-2 1)
+		oz-gump-keywords-matcher-3
+		(list oz-gump-scanner-parser-matcher
+		      '(2 font-lock-type-face))
+		(list oz-gump-lex-matcher
+		      '(1 font-lock-type-face))
+		(list oz-gump-syn-matcher
+		      '(1 font-lock-function-name-face)))
+	  oz-font-lock-keywords-3)
+  "Gaudy level highlighting for Oz-Gump mode.")
+
+(defun oz-gump-set-font-lock-defaults ()
+  (set (make-local-variable 'font-lock-defaults)
+       '((oz-gump-font-lock-keywords oz-gump-font-lock-keywords-1
+	  oz-gump-font-lock-keywords-2 oz-gump-font-lock-keywords-3)
+	 nil nil (("&" . "/")) beginning-of-line)))
 
 ;;------------------------------------------------------------
 
@@ -1898,7 +2063,13 @@ With argument, do it that many times. Negative ARG means backwards."
 		 (forward-word -1)
 		 (cond ((looking-at oz-begin-pattern)
 			(setq keyword-kind 'begin))
+		       ((and oz-gump-indentation
+			     (looking-at oz-gump-begin-pattern))
+			(setq keyword-kind 'begin))
 		       ((looking-at oz-expr-between-pattern)
+			(setq keyword-kind 'between))
+		       ((and oz-gump-indentation
+			     (looking-at oz-gump-between-pattern))
 			(setq keyword-kind 'between))
 		       ((looking-at oz-end-pattern)
 			(setq keyword-kind 'end))))
@@ -1927,6 +2098,9 @@ With argument, do it that many times. Negative ARG means backwards."
 			(setq nest-level (1- nest-level)))
 		       ((looking-at oz-begin-pattern)
 			(setq nest-level (1+ nest-level)))
+		       ((and oz-gump-indentation
+			     (looking-at oz-gump-begin-pattern))
+			(setq nest-level (1+ nest-level)))
 		       (t t))
 		 (goto-char pos)))
 	(if (< nest-level 1)
@@ -1951,7 +2125,11 @@ With argument, do it that many times. Argument must be positive."
 	       (oz-goto-matching-begin 1))
 	      ((looking-at oz-expr-between-pattern)
 	       (setq arg (1+ arg)))
+	      ((and oz-gump-indentation (looking-at oz-gump-between-pattern))
+	       (setq arg (1+ arg)))
 	      ((looking-at oz-begin-pattern)
+	       (error "Containing expression ends"))
+	      ((and oz-gump-indentation (looking-at oz-gump-begin-pattern))
 	       (error "Containing expression ends")))
 	(setq arg (1- arg))))))
 
@@ -1970,6 +2148,8 @@ With argument, do it that many times. Argument must be positive."
 	    (cond ((looking-at oz-end-pattern)
 		   (setq nest-level (1+ nest-level)))
 		  ((looking-at oz-begin-pattern)
+		   (setq nest-level (1- nest-level)))
+		  ((and oz-gump-indentation (looking-at oz-begin-pattern))
 		   (setq nest-level (1- nest-level)))
 		  (t t)))
 	(if (< nest-level 1)
