@@ -161,8 +161,10 @@ public:
   void pushDebug(Board *n, SRecord *def, int arity, RefsArray args);
   void pushTask(Board *n,ProgramCounter pc,
 		RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
-  void pushNervous (Board *n); 
+  void pushTaskOutline(Board *n,ProgramCounter pc,
+		       RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
   void pushTask (Board *n, OZ_CFun f, RefsArray x=NULL, int i=0);
+  void pushNervous (Board *n); 
   void genericBind(TaggedRef *varPtr, TaggedRef var,
 		   TaggedRef *termPtr, TaggedRef term);
   void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr);
