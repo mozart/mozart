@@ -4,33 +4,27 @@ import
    Global(background       : Background
 	  fileMftPkl       : FILEMFTPKL
 	  fileMftTxt       : FILEMFTTXT)
-   QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
-   System(show:Show)
-   Browser(browse:Browse)
-
+   Text(strip : Strip) at 'x-ozlib://duchier/lib/String.ozf'
+   Look
 export infoView:InfoView
 
 define
 
-   KeyLook={QTk.newLook}
-   {KeyLook.set label(ipadx:2 ipady:2
-		      glue:news
-		      anchor:ne
-		      bg:lightblue
-		      borderwidth:1
-		      relief:raised
-		     )}
-   Font={QTk.newFont font(family:"Helvetica")}
-   ValueLook={QTk.newLook}
-   {ValueLook.set label(borderwidth:1
-			font:Font
-			ipadx:2
-			ipady:2
-			relief:raised
-			glue:nswe
-			anchor:nw
-			background:Background
-			justify:left)}
+   KeyLook=Look.key
+   ValueLook=Look.value
+
+   fun {NormalizeWS L}
+      case L of nil then nil
+      [] H|T then Hs Ts in
+	 if {Char.isSpace H} then
+	    {List.takeDropWhile L Char.isSpace Hs Ts}
+	    if {Member &\n Hs} then &\n else &  end
+	    |{NormalizeWS Ts}
+	 else
+	    H|{NormalizeWS T}
+	 end
+      end
+   end
    
    class InfoView
       feat
@@ -82,12 +76,12 @@ define
 			      {Loop1 Xs I}
 			   end
 			elseif {VirtualString.is V} then
-			   Vs={VirtualString.toString V}
+			   Vs0 = {VirtualString.toString {Strip V}}
+			   Vs=if {Member D [body]} then Vs0 else {NormalizeWS Vs0} end
 			in
-			   if Vs\="" andthen Vs\="/n" then
+			   if Vs\="" then
 			      I#label(text:D look:KeyLook)|
-			      I+1#label(text:""#V
-					look:ValueLook)|
+			      I+1#label(text:Vs look:ValueLook)|
 			      I+2#newline|
 			      {Loop1 Xs I+3}
 			   else
@@ -105,17 +99,8 @@ define
 			      if X.path==FILEMFTPKL orelse X.path==FILEMFTTXT then 
 				 {Loop Xs I}
 			      else
-				 I#label(text:X.size
-					 ipadx:2
-					 font:Font
-					 background:Background
-					 anchor:ne
-					 glue:nwe)|
-				 I+1#label(text:X.path
-					   font:Font
-					   background:Background
-					   anchor:nw
-					   glue:nwe)|
+				 I#label(text:X.size look:Look.mysterious anchor:ne)|
+				 I+1#label(text:X.path look:Look.mysterious anchor:nw)|
 				 I+2#newline|{Loop Xs I+3}
 			      end
 			   else

@@ -3,6 +3,7 @@ export 'class' : InteractiveManager
 import
    Application
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
+   Look
    Global(localDB
 	  packageMogulDB
 	  authorMogulDB
@@ -53,11 +54,8 @@ define
       end
 	 
       meth init%(OI AM)
-	 Look={QTk.newLook}
-	 TitleLook={QTk.newLook}
 	 InfoMain
 	 DataMain
-	 {TitleLook.set label(text:"" glue:nwes bg:darkblue fg:white relief:sunken borderwidth:2 justify:left anchor:w)}
 	 %%
 	 info<-{New NiceInfoView init(self
 				      proc{$ Title} {self.infoLabel set(text:Title)} end
@@ -137,15 +135,7 @@ define
 					    show(modal:true wait:true)}
 					end))))
 	 %%
-	 ToolbarLook={QTk.newLook}
-	 {ToolbarLook.set tbradiobutton(glue:sw pady:2 padx:2
-					highlightborderwidth:1
-					selectedborderwidth:1
-					borderwidth:1
-					disabledborderwidth:1
-				       )}
-	 {ToolbarLook.set tdline(glue:nsw)}
-	 {ToolbarLook.set tdspace(glue:nsw)}
+	 ToolbarLook=Look.toolbar
 	 ToolbarDesc=lr(glue:nwe relief:sunken borderwidth:1
 			look:ToolbarLook
 			tbradiobutton(%text:'Installed'
@@ -208,9 +198,9 @@ define
 %		       continue:true
 		       td(glue:nwe
 			  lr(glue:we
-			     label(look:TitleLook
+			     label(look:Look.title
 				   handle:self.dataLabel)
-			     tbbutton(text:"Detach"
+			     tbbutton(text:"Detach" look:Look.button
 				      action:self#detach(data)
 				      glue:e))
 			  placeholder(handle:self.dataPlace glue:nswe
@@ -218,9 +208,9 @@ define
 				     ))
 		       td(glue:nwe
 			  lr(glue:we
-			     label(look:TitleLook
+			     label(look:Look.title
 				   handle:self.infoLabel)
-			     tbbutton(text:"Detach"
+			     tbbutton(text:"Detach" look:Look.button
 				      action:self#detach(info)
 				      glue:e))
 			  placeholder(handle:self.infoPlace glue:nswe
@@ -228,10 +218,7 @@ define
 				     )
 			 ))
 	 %%
-	 ActionButtonLook={QTk.newLook}
-	 {ActionButtonLook.set button(glue:w
-				      padx:5
-				      state:disabled)}
+	 ActionButtonLook=Look.actionButton
 	 ActionBarDesc=
 	 lr(glue:swe
 	    look:ActionButtonLook
@@ -252,7 +239,7 @@ define
 		     handle:StatusBar
 		     label(glue:nswe text:'Mozart Package installer'))
 	 %%
-	 Desc=td(look:Look
+	 Desc=td(look:Look.main
 		 title:'Mozart Package Installer'
 		 action:toplevel#close
 		 MenuDesc
@@ -320,13 +307,13 @@ define
       meth displayInstalled
 	 {self.installTbButton set(true)}
 	 {@data display(r(info:{Global.localDB items($)}
-			  title:"Installed package"))}
+			  title:"Local Installation"))}
       end
 
       meth displayMogul
 	 {self.mogulTbButton set(true)}
 	 {@data display(r(info:{Global.packageMogulDB items($)}
-			  title:"Available packages from MOGUL"))}
+			  title:"MOGUL Archive"))}
       end
 
       meth displayFile
