@@ -48,7 +48,7 @@ struct yy_buffer_state {
 };
 
 #define OZ_declareBufferIN(ARG,VAR)			\
- OZ_declareForeignPointerIN(ARG,_Tmp);			\
+ OZ_declareForeignPointer(ARG,_Tmp);			\
  yy_buffer_state *VAR = (yy_buffer_state *) _Tmp;
 
 static void init_buffer(yy_buffer_state *p) {
@@ -61,7 +61,7 @@ static void init_buffer(yy_buffer_state *p) {
 
 OZ_BI_define(gump_createFromFile, 1,1)
 {
-  OZ_declareVirtualStringIN(0, file);
+  OZ_declareVirtualString(0, file);
 
   FILE *f = fopen(file, "rb");
   if (f == NULL) OZ_RETURN_INT(0);
@@ -82,7 +82,7 @@ OZ_BI_end
 
 OZ_BI_define(gump_createFromVirtualString, 1,1)
 {
-  OZ_declareVirtualStringIN(0, s);
+  OZ_declareVirtualString(0, s);
 
   yy_size_t size = strlen(s);
 
@@ -104,7 +104,7 @@ OZ_BI_end
 OZ_BI_define(gump_setInteractive, 2,0)
 {
   OZ_declareBufferIN(0, p);
-  OZ_declareIntIN(1, b);
+  OZ_declareInt(1, b);
   p->yy_is_interactive = b;
   return PROCEED;
 }
@@ -120,7 +120,7 @@ OZ_BI_end
 OZ_BI_define(gump_setBOL, 2,0)
 {
   OZ_declareBufferIN(0, p);
-  OZ_declareIntIN(1, b);
+  OZ_declareInt(1, b);
   p->yy_at_bol = b;
   return PROCEED;
 }
