@@ -48,7 +48,6 @@
 (setq debug-on-error nil)
 ;(setq debug-on-error t)
 
-
 (require 'comint)
 
 
@@ -247,10 +246,10 @@
 ;; Fonts
 ;;------------------------------------------------------------
 
-(defvar oz-small-font    '("-*-courier-" . "-*-*-*-100-*-*-*-*-iso8859-*"))
-(defvar oz-default-font   '("-*-courier-" . "-*-*-*-120-*-*-*-*-iso8859-*"))
-(defvar oz-large-font    '("-*-courier-" . "-*-*-*-140-*-*-*-*-iso8859-*"))
-(defvar oz-very-large-font '("-*-courier-" . "-*-*-*-180-*-*-*-*-iso8859-*"))
+(defvar oz-small-font      '("-adobe-courier-" . "-*-*-*-100-*-*-*-*-*-*"))
+(defvar oz-default-font    '("-adobe-courier-" . "-*-*-*-120-*-*-*-*-*-*"))
+(defvar oz-large-font      '("-adobe-courier-" . "-*-*-*-140-*-*-*-*-*-*"))
+(defvar oz-very-large-font '("-adobe-courier-" . "-*-*-*-180-*-*-*-*-*-*"))
 
 (defun oz-small-font()
   (interactive)
@@ -871,9 +870,10 @@ if that value is non-nil."
 
 
 (defun oz-delete-extents (from to)
-  (map-extents '(lambda(ext unused)
-		  (delete-extent ext))
-	       nil from to))
+  (if (< from to)
+      (map-extents '(lambda(ext unused)
+		      (delete-extent ext))
+		   nil from to)))
 
 
 (defun oz-change-match-face (face beg end)
@@ -954,7 +954,8 @@ if that value is non-nil."
 
 (defun oz-after-change-function(beg end len)
   (interactive)
-  (oz-fontify-line))
+  (save-match-data
+    (oz-fontify-line)))
 
 
 (defun oz-fontify-line()
