@@ -72,7 +72,8 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
     if (isObject() || isURL()) {
       if (rVar->isObject() || rVar->isURL()) {
         if (getGName() != rVar->getGName()) {
-          warning("mm2:gname mismatch (var-var)");
+          // the following is completely legal
+          // warning("mm2:gname mismatch (var-var)");
           return FALSE;
         }
       }
