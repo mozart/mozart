@@ -505,6 +505,7 @@ Suspension *AM::mkSuspension(int prio, ProgramCounter PC,
     {
       pushTask(PC,Y,G,X,argsToSave);
       Thread *th=newThread(currentThread->getPriority(),currentBoard,SEQMODE);
+      currentBoard->incSuspCount();
       th->getSeqFrom(currentThread);
       return new Suspension(th);
     }
@@ -527,6 +528,7 @@ Suspension *AM::mkSuspension(int prio, OZ_CFun bi,
     {
       pushCFun(bi,X,argsToSave);
       Thread *th=newThread(currentThread->getPriority(),currentBoard,SEQMODE);
+      currentBoard->incSuspCount();
       th->getSeqFrom(currentThread);
       return new Suspension(th);
     }
@@ -549,6 +551,7 @@ void AM::suspendCond(AskActor *aa)
   case SEQMODE:
     {
       Thread *th=newThread(currentThread->getPriority(),currentBoard,SEQMODE);
+      currentBoard->incSuspCount();
       th->getSeqFrom(currentThread);
       th->setSuspended();
       aa->setThread(th);
