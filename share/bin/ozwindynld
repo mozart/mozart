@@ -39,7 +39,7 @@ def=$$.def
 entry=_dll_entry@12
 fixup=fixup$$.c
 initc=initc$$.cc
-extraobjs="fixup$$.o initc$$.o oz.o"
+extraobjs="fixup$$.o initc$$.o mozart.o"
 objs="$objs $extraobjs"
 
 trap "rm -f $base $exp $def $fixup $initc $extraobjs" 0 1 15
@@ -72,7 +72,7 @@ EOF
 
 
 # Compile source files:
-${CC} -I$OZHOME/include -o oz.o -c $OZHOME/include/oz.c
+${CC} -I$OZHOME/include -o mozart.o -c $OZHOME/include/mozart.c
 ${CC} -c $fixup
 ${CC} -c $initc
 
