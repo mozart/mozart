@@ -438,7 +438,7 @@ returns the list of all solutions of the script ?+{ScriptP} (a unary
 procedure) obtained by depth-first search.
 <p>
 The output is a list of solutions (<<Search.all>>), a list of succeeded
-spaces (<<Search.allS>>), or a list of procedures (<<Space.allP>>).
+spaces (<<Search.allS>>), or a list of procedures (<<Search.allP>>).
 </list>
 </subsection>
 
