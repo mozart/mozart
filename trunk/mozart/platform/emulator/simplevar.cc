@@ -29,15 +29,23 @@
 #endif
 
 #include "simplevar.hh"
+#include "am.hh"
 
-OZ_Return SimpleVar::unifyV(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
+OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
+{
+  Assert(!oz_isRef(t));
+  oz_bindToNonvar(vPtr, *vPtr, t);
+  return PROCEED;
+}
+
+OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
 {
   TaggedRef v = *vPtr;
   Assert(!oz_isRef(t)||oz_isVariable(*tagged2Ref(t)));
   if (oz_isRef(t)) {
     TaggedRef *tPtr=tagged2Ref(t);
     GenCVariable *tv=tagged2CVar(*tPtr);
-    if (tv->getType()==SimpleVarType
+    if (tv->getType()==OZ_VAR_SIMPLE
 	&& oz_isBelow(GETBOARD(tv),GETBOARD(this))
 #ifdef VAR_BIND_NEWER
 	// if both are local, then check heap

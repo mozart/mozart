@@ -298,7 +298,7 @@ void Statistics::leaveCall(PrTabEntry  *newp)
 
 #ifdef HEAP_PROFILE
 
-#include "ofgenvar.hh"
+#include "genvar.hh"
 
 #define PrintVar(Var) \
   fprintf(out,"%20s:          %8d\n",OZStringify(Var),(int)Var)

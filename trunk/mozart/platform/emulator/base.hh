@@ -427,9 +427,12 @@ OZ_Term oz_getLocation(Board *bb);
 
 OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X);
 
-// see am.cc
+// see ??
 SuspList *oz_installPropagators(SuspList *local_list, SuspList *glob_list,
 				Board *glob_home);
+
+SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
+				     PropCaller calledBy);
 
 // see ioHandler.cc
 void oz_io_select(int fd, int mode, OZ_IOHandler fun, void *val);

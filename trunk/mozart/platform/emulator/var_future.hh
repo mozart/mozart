@@ -40,28 +40,29 @@ private:
 
   void kick(TaggedRef *);
 public:
-  Future(OZ_Term function=0)
-    : GenCVariable(OZ_VAR_FUTURE), function(function) {}
-  virtual OZ_Return unifyV(TaggedRef* vPtr,TaggedRef t,ByteCode* scp);
-  virtual OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef /* val */) {
+  Future(Board *bb) : GenCVariable(OZ_VAR_FUTURE,bb), function(0) {}
+  Future(OZ_Term function,Board *bb)
+    : GenCVariable(OZ_VAR_FUTURE,bb), function(function) {}
+  OZ_Return unify(TaggedRef* vPtr,TaggedRef t,ByteCode* scp);
+  OZ_Return valid(TaggedRef /* val */) {
     return TRUE;
   }
-  virtual GenCVariable* gcV() { return new Future(*this); }
-  virtual void gcRecurseV()   {
+  GenCVariable* gc() { return new Future(*this); }
+  void gcRecurse()   {
     if (function) {
       OZ_collectHeapTerm(function,function);
     }
   }
-  virtual void addSuspV(Suspension, TaggedRef*, int);
-  virtual void disposeV(void) {
+  void addSusp(TaggedRef*, Suspension, int);
+  void dispose(void) {
     freeListDispose(this, sizeof(Future));
   }
-  virtual void printStreamV(ostream &out,int depth = 10);
-  virtual void printLongStreamV(ostream &out,int depth = 10,
+  void printStream(ostream &out,int depth = 10);
+  void printLongStream(ostream &out,int depth = 10,
 				int offset = 0) {
-    printStreamV(out,depth); out << endl;
+    printStream(out,depth); out << endl;
   }
-  virtual OZ_Term inspectV();
+  OZ_Term inspect();
 };
 
 #endif /* __BYNEED__HH__ */

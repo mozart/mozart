@@ -31,6 +31,7 @@
 
 #include "future.hh"
 #include "builtins.hh"
+#include "threadInterface.hh"
 
 inline
 Bool isFuture(TaggedRef term)
@@ -76,7 +77,7 @@ void Future::kick(TaggedRef *ptr)
   function=0;
 }
 
-OZ_Return Future::unifyV(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
+OZ_Return Future::unify(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
 {
   if (function) kick(vPtr);
 
@@ -84,14 +85,14 @@ OZ_Return Future::unifyV(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
   return SUSPEND;
 }
 
-void Future::addSuspV(Suspension susp, TaggedRef *tPtr, int unstable)
+void Future::addSusp(TaggedRef *tPtr, Suspension susp, int unstable)
 {
   if (function) kick(tPtr);
 
   addSuspSVar(susp, unstable);
 }
 
-void Future::printStreamV(ostream &out,int depth = 10)
+void Future::printStream(ostream &out,int depth = 10)
 {
   if (function) {
       out << "<future byNeed: ";
@@ -102,7 +103,7 @@ void Future::printStreamV(ostream &out,int depth = 10)
   }
 }
 
-OZ_Term Future::inspectV()
+OZ_Term Future::inspect()
 {
   OZ_Term k=function ? OZ_mkTupleC("byNeed",1,function) : oz_atom("simple");
   return OZ_mkTupleC("future", 1, k);
@@ -128,7 +129,7 @@ OZ_BI_define(BIfuture,1,1)
   OZ_Term v = OZ_in(0);
   v = oz_safeDeref(v);
   if (oz_isRef(v)) {
-    OZ_Term f = makeTaggedRef(newTaggedCVar(new Future()));
+    OZ_Term f = makeTaggedRef(newTaggedCVar(new Future(oz_currentBoard())));
     RefsArray args = allocateRefsArray(2, NO);
     args[0]=v;
     args[1]=f;
@@ -146,5 +147,5 @@ OZ_BI_define(BIbyNeed,1,1)
   if (!OZ_isProcedure(p) && !OZ_isObject(p)) {
     oz_typeError(0,"Unary Procedure|Object");
   }
-  OZ_RETURN(makeTaggedRef(newTaggedCVar(new Future(p))));
+  OZ_RETURN(makeTaggedRef(newTaggedCVar(new Future(p,oz_currentBoard()))));
 } OZ_BI_end

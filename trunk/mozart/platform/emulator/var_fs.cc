@@ -28,10 +28,12 @@
 #pragma implementation "fsgenvar.hh"
 #endif
 
+#include "genvar.hh"
+#include "fsgenvar.hh"
 #include "ozostream.hh"
 #include "fddebug.hh"
 #include "am.hh"
-#include "genvar.hh"
+#include "threadInterface.hh"
 
 Bool GenFSetVariable::valid(TaggedRef val)
 {
@@ -50,7 +52,7 @@ void GenFSetVariable::dispose(void) {
 #endif
 
 
-OZ_Return GenFSetVariable::unifyV(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
+OZ_Return GenFSetVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
 {
   if (oz_isFSetValue(term)) {
 #ifdef DEBUG_FSUNIFY 
@@ -211,7 +213,8 @@ OZ_Return GenFSetVariable::unifyV(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
 	    am.doBindAndTrail(vptr, new_fset_var);
 	    am.doBindAndTrail(tptr, new_fset_var);
 	  } else {
-	    GenCVariable *c_var = new GenFSetVariable(new_fset);
+	    GenFSetVariable *c_var
+	      = new GenFSetVariable(new_fset,oz_currentBoard());
 	    TaggedRef * var_val = newTaggedCVar(c_var);
 	    if (scp==0) {
 	      if (var_is_constrained) propagateUnify();
@@ -284,7 +287,8 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
     // create finite set variable
   fsvariable:
     GenFSetVariable * fsv = 
-      fs ? new GenFSetVariable(*fs) : new GenFSetVariable();
+      fs ? new GenFSetVariable(*fs,oz_currentBoard())
+      : new GenFSetVariable(oz_currentBoard());
 
     OZ_Term *  tfsv = newTaggedCVar(fsv);
 
@@ -325,7 +329,8 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
       if (am.isLocalSVar(v)) {
 	fsvar->getSet() = set;
       } else {
-	GenFSetVariable * locfsvar = new GenFSetVariable(set);
+	GenFSetVariable * locfsvar
+	  = new GenFSetVariable(set,oz_currentBoard());
 	OZ_Term * loctaggedfsvar = newTaggedCVar(locfsvar);
 	DoBindAndTrailAndIP(vptr, makeTaggedRef(loctaggedfsvar),
 			    locfsvar, tagged2GenFSetVar(v));

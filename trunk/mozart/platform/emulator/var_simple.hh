@@ -37,22 +37,23 @@ class SimpleVar: public GenCVariable {
 private:
   // OZ_Term future;
 public:
-  SimpleVar(Board *bb) : GenCVariable(SimpleVarType,bb) {}
+  SimpleVar(Board *bb) : GenCVariable(OZ_VAR_SIMPLE,bb) {}
 
-  OZ_Return unifyV(TaggedRef* vPtr, TaggedRef t, ByteCode* scp);
+  OZ_Return bind(TaggedRef* vPtr, TaggedRef t, ByteCode* scp);
+  OZ_Return unify(TaggedRef* vPtr, TaggedRef t, ByteCode* scp);
 
-  OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef /* val */) { return OK; }
-  GenCVariable* gcV() { return new SimpleVar(*this); }
-  void gcRecurseV() {}
+  OZ_Return valid(TaggedRef /* val */) { return OK; }
+  GenCVariable* gc() { return new SimpleVar(*this); }
+  void gcRecurse() {}
 
-  void disposeV(void) { freeListDispose(this, sizeof(SimpleVar)); }
+  void dispose(void) { freeListDispose(this, sizeof(SimpleVar)); }
 
-  void printStreamV(ostream &out,int depth = 10) {
+  void printStream(ostream &out,int depth = 10) {
     out << "<simple>";
   }
-  void printLongStreamV(ostream &out,int depth = 10,
+  void printLongStream(ostream &out,int depth = 10,
 			int offset = 0) {
-    printStreamV(out,depth); out << endl;
+    printStream(out,depth); out << endl;
   }
 };
 
@@ -61,7 +62,7 @@ inline
 Bool isSimpleVar(TaggedRef term)
 {
   GCDEBUG(term);
-  return isCVar(term) && (tagged2CVar(term)->getType() == SimpleVarType);
+  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_SIMPLE);
 }
 
 inline
@@ -69,7 +70,5 @@ SimpleVar *tagged2SimpleVar(TaggedRef t) {
   Assert(isSimpleVar(t));
   return (SimpleVar *) tagged2CVar(t);
 }
-
-
 
 #endif /* __SIMPLEVAR__H__ */

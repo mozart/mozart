@@ -31,8 +31,7 @@
 
 #include "am.hh"
 #include "indexing.hh"
-#include "genvar.hh"
-
+#include "allgenvar.hh"
 
 EntryTable newEntryTable(int sz)
 {
@@ -122,7 +121,7 @@ Bool IHashTable::disentailed(GenCVariable *cvar, TaggedRef *ptr)
       // if there is at least one integer member of the domain then goto varLabel
       for (int i = 0; i < size; i++) {
 	for (HTEntry* aux = numberTable[i]; aux!=NULL; aux=aux->getNext()) {
-	  if (cvar->valid(ptr,aux->getNumber()))
+	  if (oz_cv_validINLINE(cvar,ptr,aux->getNumber()))
 	    return NO;
 	}
       }
@@ -164,7 +163,7 @@ Bool IHashTable::disentailed(GenCVariable *cvar, TaggedRef *ptr)
 
   // mm2: hack: an arbitrary number is check for validity
   case PerdioVariable:
-    return !((GenCVariable *)cvar)->valid(ptr,OZ_int(4711));
+    return !oz_cv_validINLINE((GenCVariable *)cvar,ptr,OZ_int(4711));
 
   default:    
     return NO;

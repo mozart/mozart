@@ -59,41 +59,34 @@ private:
     DynamicTable* dynamictable;
 
 public:
-    GenOFSVariable(DynamicTable &dt)
-    : GenCVariable(OFSVariable) {
+    GenOFSVariable(DynamicTable &dt,Board *bb)
+    : GenCVariable(OFSVariable,bb) {
         label=oz_newVariable();
         dynamictable= &dt;
     }
 
-    GenOFSVariable()
-    : GenCVariable(OFSVariable) {
+    GenOFSVariable(Board *bb)
+    : GenCVariable(OFSVariable,bb) {
         label=oz_newVariable();
         dynamictable=DynamicTable::newDynamicTable();
     }
 
-    // With new table of given size (must be pwr. of 2) in given space:
-    GenOFSVariable(Board* hm, dt_index size)
-    : GenCVariable(OFSVariable,hm) {
-        label=oz_newVar(hm);
-        dynamictable=DynamicTable::newDynamicTable(size);
-    }
-
     // With new table of given size (must be pwr. of 2):
-    GenOFSVariable(dt_index size)
-    : GenCVariable(OFSVariable) {
+    GenOFSVariable(dt_index size,Board *bb)
+    : GenCVariable(OFSVariable,bb) {
         label=oz_newVariable();
         dynamictable=DynamicTable::newDynamicTable(size);
     }
 
-    GenOFSVariable(TaggedRef lbl)
-    : GenCVariable(OFSVariable) {
+    GenOFSVariable(TaggedRef lbl,Board *bb)
+    : GenCVariable(OFSVariable,bb) {
         Assert(oz_isLiteral(lbl));
         label=lbl;
         dynamictable=DynamicTable::newDynamicTable();
     }
 
-    GenOFSVariable(TaggedRef lbl, dt_index size)
-    : GenCVariable(OFSVariable) {
+    GenOFSVariable(TaggedRef lbl, dt_index size,Board *bb)
+    : GenCVariable(OFSVariable,bb) {
         Assert(oz_isLiteral(lbl));
         label=lbl;
         dynamictable=DynamicTable::newDynamicTable(size);
@@ -126,6 +119,10 @@ public:
 	Assert(oz_isFeature(feature));
         return dynamictable->lookup(feature);
     }
+
+  void installPropagators(GenOFSVariable * glob_var) {
+    installPropagatorsG(glob_var);
+  }
 
     // Add the feature and its value
     // If the feature already exists, do not insert anything
@@ -180,7 +177,8 @@ public:
     }
 
     // Is X=val still valid, i.e., is val a feature and is width(ofs)==0 (see GenFDVariable::valid)
-    Bool valid(TaggedRef val);
+  Bool valid(TaggedRef val);
+  OZ_Return unify(TaggedRef *vPtr, TaggedRef term, ByteCode *scp);
 
   int hasFeature(TaggedRef fea,TaggedRef *out) {
     TaggedRef t = getFeatureValue(fea);
@@ -206,19 +204,8 @@ public:
     // FiniteDomain &getDom (meaningless for ofs)
 
 
-  OZ_Return unifyV(TaggedRef *vPtr,TaggedRef t, ByteCode*scp);
-
-  OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
-    return valid(val);
-  }
-  GenCVariable* gcV() { error("not impl"); return 0; }
-  void gcRecurseV() { error("not impl"); }
-  void addSuspV(Suspension susp, TaggedRef* ptr, int state) {
-    // mm2: addSuspFDVar(makeTaggedRef(ptr),susp,state);
-  }
-  void disposeV(void) { freeListDispose(this, sizeof(GenOFSVariable)); }
-  int getSuspListLengthV() { return getSuspListLength(); }
-  void printStreamV(ostream &out,int depth = 10) {
+  void dispose(void) { freeListDispose(this, sizeof(GenOFSVariable)); }
+  void printStream(ostream &out,int depth = 10) {
     oz_printStream(getLabel(),out,0,0);
     out << '(';
     if (depth > 0) {
@@ -229,9 +216,9 @@ public:
     }
     out << "...)";
   }
-  void printLongStreamV(ostream &out,int depth = 10,
+  void printLongStream(ostream &out,int depth = 10,
 			int offset = 0) {
-    printStreamV(out,depth); out << endl;
+    printStream(out,depth); out << endl;
   }
 };
 

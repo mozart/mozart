@@ -32,8 +32,6 @@
 #endif
 
 #include "genvar.hh"
-#include "fdomn.hh"
-#include "fdhook.hh"
 
 #ifdef OUTLINE 
 #define inline
@@ -57,7 +55,7 @@ private:
 
   GenBoolVariable * becomesBool(void);
 public:  
-  GenFDVariable(OZ_FiniteDomain &fd) : GenCVariable(FDVariable) {
+  GenFDVariable(OZ_FiniteDomain &fd,Board *bb) : GenCVariable(FDVariable,bb) {
     ozstat.fdvarsCreated.incf();
     finiteDomain = fd;
     fdSuspList[fd_prop_singl] = fdSuspList[fd_prop_bounds] = NULL;
@@ -65,7 +63,7 @@ public:
 
   GenFDVariable(DummyClass *) : GenCVariable(FDVariable,(DummyClass*)0) {}
 
-  GenFDVariable() : GenCVariable(FDVariable) {
+  GenFDVariable(Board *bb) : GenCVariable(FDVariable,bb) {
     ozstat.fdvarsCreated.incf();
     finiteDomain.initFull();
     fdSuspList[fd_prop_singl] = fdSuspList[fd_prop_bounds] = NULL;
@@ -108,28 +106,15 @@ public:
 
   SuspList * getSuspList(int i) { return fdSuspList[i]; }
 
-  void installPropagators(GenFDVariable *, Board *);
+  void installPropagators(GenFDVariable *);
 
+  OZ_Return unify(TaggedRef *, TaggedRef, ByteCode *);
 
-
-  OZ_Return unifyV(TaggedRef *, TaggedRef, ByteCode *);
-
-  OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
-    return valid(val);
-  }
-  GenCVariable* gcV() { error("not impl"); return 0; }
-  void gcRecurseV() { error("not impl"); }
-  void addSuspV(Suspension susp, TaggedRef* ptr, int state) {
-    // mm2: addSuspFDVar(makeTaggedRef(ptr),susp,state);
-  }
-  void disposeV(void) { dispose(); }
-  int getSuspListLengthV() { return getSuspListLength(); }
-  void printStreamV(ostream &out,int depth = 10) {
+  void printStream(ostream &out,int depth = 10) {
     out << getDom().toString();
   }
-  void printLongStreamV(ostream &out,int depth = 10,
-			int offset = 0) {
-    printStreamV(out,depth); out << endl;
+  void printLongStream(ostream &out, int depth = 10, int offset = 0) {
+    printStream(out,depth); out << endl;
   }
 };
 

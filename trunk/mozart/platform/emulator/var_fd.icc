@@ -55,13 +55,13 @@ void GenFDVariable::relinkSuspListTo(GenFDVariable * lv, Bool reset_local)
 }
 
 inline
-void GenFDVariable::installPropagators(GenFDVariable * glob_var,
-				       Board * glob_home)
+void GenFDVariable::installPropagators(GenFDVariable * glob_var)
 {
+  installPropagatorsG(glob_var);
   for (int i = 0; i < fd_prop_any; i += 1)
     fdSuspList[i] = oz_installPropagators(fdSuspList[i],
 					  glob_var->fdSuspList[i],
-					  glob_home);
+					  GETBOARD(glob_var));
 }
 
 inline

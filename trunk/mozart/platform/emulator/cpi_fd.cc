@@ -25,6 +25,8 @@
  */
 
 #include "cpi.hh"
+#include "fdgenvar.hh"
+#include "fdbvar.hh"
 
 //-----------------------------------------------------------------------------
 
@@ -263,7 +265,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       } else {
 	*domPtr = dom;
 	tagged2GenFDVar(var)->propagate(CHECK_BOUNDS);
-	GenBoolVariable * newboolvar = new GenBoolVariable();
+	GenBoolVariable * newboolvar = new GenBoolVariable(oz_currentBoard());
 	OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
 	DoBindAndTrailAndIP(varPtr, makeTaggedRef(newtaggedboolvar),
 			    newboolvar, tagged2GenBoolVar(var));
@@ -272,7 +274,8 @@ OZ_Boolean OZ_FDIntVar::tell(void)
     } else {
       tagged2GenFDVar(var)->propagate(CHECK_BOUNDS);
       if (isState(glob_e)) {
-	GenFDVariable * locfdvar = new GenFDVariable(*domPtr);
+	GenFDVariable * locfdvar
+	  = new GenFDVariable(*domPtr,oz_currentBoard());
 	OZ_Term * loctaggedfdvar = newTaggedCVar(locfdvar);
 	*domPtr = dom;
 	DoBindAndTrailAndIP(varPtr, makeTaggedRef(loctaggedfdvar),
