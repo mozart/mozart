@@ -10,6 +10,7 @@ import
    Browser(browse:Browse)
    FileUtils(isExtension:IsExtension)
    Tree(treeNode:TreeNode)
+   String(capitalize:Capitalize) at 'x-ozlib://duchier/lib/String.ozf'
 define
 
    ArchiveManager
@@ -269,6 +270,8 @@ define
    {TitleLook.set label(font:{QTk.newFont font(family:'Times' size:16)}
 			
 		       )}
+   AuthorLook={QTk.newLook}
+   {AuthorLook.set label(font:{QTk.newFont font(family:'Times' size:12)})}
    
    class NiceInfoView
       feat
@@ -289,65 +292,60 @@ define
 				   look:TitleLook
 				   feature:title)
 			     lr(glue:nwe
-				feature:f1
+				feature:author
 				label(glue:w
-				      text:"Author : ")
+				      feature:desc)
 				label(glue:nw
 				      look:AuthorLook
-				      feature:author))
+				      feature:data))
 			     lr(glue:nwe
-				feature:f2
+				feature:blurb
 				label(glue:nw
-				      text:"Description : ")
+				      feature:desc)
 				label(glue:nswe
 				      anchor:nw
 				      justify:left
-				      feature:description))
-			     
-			     ))
+				      feature:data))
+			    ))
       end
       meth display(Inf)
 	 info<-Inf
-	 {self.handle set(nil)}
+	 {self.handle.title set("")}
+	 {self.handle.author.desc set("")}
+	 {self.handle.author.data set("")}
+	 {self.handle.blurb.desc set("")}
+	 {self.handle.blurb.data set("")}
 	 if Inf==unit then
 	    {self.setTitle ""}
 	 else
 	    Info=Inf.info
+	    fun{ListToString L}
+	       if {List.is L} then
+		  {List.drop
+		   {VirtualString.toString
+		    {List.foldL L fun{$ S X} S#"\n"#X end ""}
+		   } 1}
+	       else
+		  {VirtualString.toString L}
+	       end
+	    end
 	 in
 	    {self.setTitle {VirtualString.toString Info.id}}
-	    local
-	       L1={List.filter
-		   {List.map
-		    {Record.toListInd Info}
-		    fun{$ En}
-		       I#V=En
-		    in
-		       case I
-		       of lsla then unit
-		       [] filelist then unit
-		       [] id then unit
-		       else
-			  if {List.is V} then
-			     I#":"#{List.drop
-				    {VirtualString.toString
-				     {List.foldL V fun{$ S X} S#","#X end ""}}
-				    1}
-			  elseif {VirtualString.is V} then
-			     I#":"#{VirtualString.toString V}
-			  else
-			     unit
-			  end
-		       end
-		    end}
-		   fun{$ L} L\=unit end}
-	       L2=if {HasFeature Info filelist} then
-		     ""|"Contains the following files :"|""|{List.map Info.filelist fun{$ R} R end}
-		  else
-		     nil
-		  end
-	       L={List.append L1 L2}
-	    in
-	       {ForAll L proc{$ Line} {self.handle insert('end' Line#"\n")} end}
+	    {self.title set({Capitalize {GetLabel Info.id}})}
+	    if {CondSelect Info author unit}\=unit then 
+	       {self.handle.author.desc set("Author : ")}
+	       {self.handle.author.data set({ListToString Info.author})}
+	    else
+	       {self.handle.author.desc set("No author defined.")}
+	    end
+	    if {CondSelect Info body unit}\=unit then
+	       {self.handle.blurb.desc set("Description : ")}
+	       {self.handle.blurb.data set({ListToString Info.body})}
+	    elseif {CondSelect Info blurb unit}\=unit then
+	       {self.handle.blurb.desc set("Description : ")}
+	       {self.handle.blurb.data set({ListToString Info.blurb})}
+	    else
+	       {self.handle.blurb.desc set("No description availabel.")}
 	    end
 	 end
       end
