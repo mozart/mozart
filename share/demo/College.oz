@@ -48,11 +48,10 @@ import
    OS
    Open
    Compiler
-   Show
-   Browse
-   
-define
+   Browser(browse: Browse)
 
+define
+   
    Images = {TkTools.images ImageNames}
 
    TopWindow
