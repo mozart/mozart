@@ -61,7 +61,6 @@ local
 		[] off(X _) then ' -'#X
 		end
 	  end '\\switch'}
-      [] dirShowSwitches then '\\showSwitches'
       [] dirLocalSwitches then '\\localSwitches'
       [] dirPushSwitches then '\\pushSwitches'
       [] dirPopSwitches then '\\popSwitches'
