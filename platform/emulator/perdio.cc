@@ -2930,7 +2930,7 @@ void marshallSRecord(Site *sd, SRecord *sr, ByteStream *bs)
 void marshallObject(Site *sd, Object *o, TaggedRef oc, ByteStream *bs)
 {
   if (oc==makeTaggedNULL())
-    oc = makeTaggedConst(o->getOzClass());
+    oc = makeTaggedConst(o->getClass());
   marshallDIF(bs,DIF_OBJECT);
   marshallGName(o->getGName(),bs);
   trailCycle(o->getRef(),bs,1);
@@ -2945,12 +2945,12 @@ void marshallObject(Site *sd, Object *o, TaggedRef oc, ByteStream *bs)
   }
 }
 
-void marshallClass(Site *sd, Object *o, ByteStream *bs)
+void marshallClass(Site *sd, ObjectClass *cl, ByteStream *bs)
 {
   marshallDIF(bs,DIF_CLASS);
-  marshallGName(o->getGName(),bs);
-  trailCycle(o->getRef(),bs,2);
-  marshallSRecord(sd,o->getFreeRecord(),bs);
+  marshallGName(cl->getGName(),bs);
+  trailCycle(cl->getRef(),bs,2);
+  marshallSRecord(sd,cl->getFeatures(),bs);
 }
 
 void marshallDict(Site *sd, OzDictionary *d, ByteStream *bs)
@@ -3013,12 +3013,16 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
   case Co_Object:
     {
       Object *o = (Object*) t;
-      if (o->isClass()) {
-        if (checkURL(o->getGName(),bs)) return;
-        marshallClass(sd,o,bs);
-      } else {
-        marshallObject(sd,o,0,bs);
-      }
+      marshallObject(sd,o,0,bs);
+      return;
+    }
+
+  case Co_Class:
+    {
+      ObjectClass *cl = (ObjectClass*) t;
+      cl->globalize();
+      if (checkURL(cl->getGName(),bs)) return;
+      marshallClass(sd,cl,bs);
       return;
     }
 
@@ -3336,21 +3340,20 @@ void unmarshallObject(Object *o, ByteStream *bs)
   o->setLock(isNil(lock) ? (LockProxy*)NULL : (LockProxy*)tagged2Tert(lock));
 }
 
-void unmarshallClass(Object *o, ByteStream *bs)
+void unmarshallClass(ObjectClass *cl, ByteStream *bs)
 {
   SRecord *feat = unmarshallSRecord(bs);
 
-  if (o==NULL)  return;
-
-  o->setFreeRecord(feat);
+  if (cl==NULL)  return;
 
   TaggedRef ff = feat->getFeature(NameOoUnFreeFeat);
   Bool locking = literalEq(NameTrue,deref(feat->getFeature(NameOoLocking)));
 
-  o->getClass()->import(tagged2Dictionary(feat->getFeature(NameOoFastMeth)),
-                        isSRecord(ff) ? tagged2SRecord(ff) : (SRecord*)NULL,
-                        tagged2Dictionary(feat->getFeature(NameOoDefaults)),
-                        locking);
+  cl->import(feat,
+             tagged2Dictionary(feat->getFeature(NameOoFastMeth)),
+             isSRecord(ff) ? tagged2SRecord(ff) : (SRecord*)NULL,
+             tagged2Dictionary(feat->getFeature(NameOoDefaults)),
+             locking);
 }
 
 RefsArray unmarshallClosure(ByteStream *bs) {
@@ -3371,13 +3374,10 @@ OZ_Term unmarshallTerm(ByteStream *bs)
 }
 
 inline
-Object *newClass(Board *bb,GName *gname) {
-  ObjectClass *ocl = new ObjectClass(NULL,NULL,NULL,NO);
-  Object *obj = new Object(am.rootBoard,0,ocl,0,OK,0);
-  obj->setClass();
-  ocl->setOzClass(obj);
-  obj->setGName(gname);
-  return obj;
+ObjectClass *newClass(GName *gname) {
+  ObjectClass *ret = new ObjectClass(NULL,NULL,NULL,NULL,NO,am.rootBoard);
+  ret->setGName(gname);
+  return ret;
 }
 
 void unmarshallTerm(ByteStream *bs, OZ_Term *ret)
@@ -3664,10 +3664,10 @@ loop:
 
       GName *gname=unmarshallGName(ret,bs);
 
-      Object *obj;
+      ObjectClass *cl;
       if (gname) {
-        obj = newClass(am.rootBoard,gname);
-        *ret = makeTaggedConst(obj);
+        cl = newClass(gname);
+        *ret = makeTaggedConst(cl);
         addGName(gname,*ret);
       } else if (!isClass(deref(*ret))) {
         DEREF(*ret,chPtr,_1);
@@ -3676,15 +3676,15 @@ loop:
           warning("mm2: class gname mismatch");
           return;
         }
-        obj = newClass(am.rootBoard,pv->getGName());
-        *ret = makeTaggedConst(obj);
+        cl = newClass(pv->getGName());
+        *ret = makeTaggedConst(cl);
         SiteUnify(makeTaggedRef(chPtr),*ret);
         // pv->primBind(chPtr,*ret);
       } else {
-        obj = 0;
+        cl = 0;
       }
       gotRef(bs,*ret);
-      unmarshallClass(obj,bs);
+      unmarshallClass(cl,bs);
       return;
     }
 

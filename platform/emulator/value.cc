@@ -283,7 +283,7 @@ GName *SChunk::globalize() {
 
 char *ObjectClass::getPrintName()
 {
-  TaggedRef aux = ozclass->getFeature(NameOoPrintName);
+  TaggedRef aux = classGetFeature(NameOoPrintName);
   return aux ? tagged2Literal(aux)->getPrintName() : "???";
 }
 
@@ -295,6 +295,8 @@ char *ConstTerm::getPrintName()
     return ((Abstraction *) this)->getPrintName();
   case Co_Object:
     return ((Object *) this)->getPrintName();
+  case Co_Class:
+    return ((ObjectClass *) this)->getPrintName();
   case Co_Builtin:
     return ((BuiltinTabEntry *)this)->getPrintName();
   default:
@@ -305,14 +307,10 @@ char *ConstTerm::getPrintName()
 int ConstTerm::getArity()
 {
   switch (getType()) {
-  case Co_Abstraction:
-    return ((Abstraction *) this)->getArity();
-  case Co_Object:
-    return 1;
-  case Co_Builtin:
-    return ((BuiltinTabEntry *)this)->getArity();
-  default:
-    return -1;
+  case Co_Abstraction: return ((Abstraction *) this)->getArity();
+  case Co_Object:      return 1;
+  case Co_Builtin:     return ((BuiltinTabEntry *)this)->getArity();
+  default:             return -1;
   }
 }
 
@@ -372,19 +370,21 @@ TaggedRef reverseC(TaggedRef l)
 GName *Object::globalize() {
   if (!getGName1()) {
     setGName(newGName(makeTaggedConst(this),GNT_OBJECT));
-    if (!isClass()) {
-      RecOrCell state = getState();
-      Assert(!stateIsCell(state));
-      SRecord *r = getRecord(state);
-      Assert(r!=NULL);
-      Tertiary *cell = tagged2Tert(OZ_newCell(makeTaggedSRecord(r)));
-      cell->globalizeTert(); // getStateInline uses cellDoExchange --> must be globalized
-      setState(cell);
-      // Object *cl = getOzClass();
-      // cl->globalizeTert();   // mm2: ask ralf
-    }
+    RecOrCell state = getState();
+    Assert(!stateIsCell(state));
+    SRecord *r = getRecord(state);
+    Assert(r!=NULL);
+    Tertiary *cell = tagged2Tert(OZ_newCell(makeTaggedSRecord(r)));
+    cell->globalizeTert(); // getStateInline uses cellDoExchange --> must be globalized
+    setState(cell);
   }
   return getGName();
+}
+
+void ObjectClass::globalize() {
+  if (!hasGName()) {
+    setGName(newGName(makeTaggedConst(this),GNT_CLASS));
+  }
 }
 
 TaggedRef Object::getArityList()
@@ -394,24 +394,31 @@ TaggedRef Object::getArityList()
   SRecord *feat=getFreeRecord();
   if (feat) ret = feat->getArityList();
 
-  if (!isClass()) {
-    SRecord *rec=getClass()->getUnfreeRecord();
-    if (rec) ret=appendI(ret,rec->getArityList());
-  }
+  SRecord *rec=getClass()->getUnfreeRecord();
+  if (rec) ret=appendI(ret,rec->getArityList());
   return ret;
 }
 
-int Object::getWidth ()
+TaggedRef ObjectClass::getArityList()
+{
+  return features->getArityList();
+}
+
+int Object::getWidth()
 {
   int ret = 0;
   SRecord *feat=getFreeRecord();
   if (feat) ret = feat->getWidth ();
 
-  if (!isClass()) {
-    SRecord *rec=getClass()->getUnfreeRecord();
-    if (rec) ret += rec->getWidth ();
-  }
+  SRecord *rec=getClass()->getUnfreeRecord();
+  if (rec) ret += rec->getWidth ();
   return ret;
+}
+
+
+int ObjectClass::getWidth()
+{
+  return features->getWidth();
 }
 
 

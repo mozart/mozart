@@ -335,7 +335,8 @@ enum GNameType {
   GNT_PROC,
   GNT_CODE,
   GNT_CHUNK,
-  GNT_OBJECT
+  GNT_OBJECT,
+  GNT_CLASS
 };
 
 GName *newGName(TaggedRef t, GNameType gt);

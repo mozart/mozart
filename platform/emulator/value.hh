@@ -606,7 +606,8 @@ enum TypeOfConst {
   Co_Array,
   Co_Dictionary,    /* 12 */
   Dummy,           // GCTAG
-  Co_Lock
+  Co_Lock,
+  Co_Class
 };
 
 enum TertType {
@@ -1198,27 +1199,30 @@ int getWidth(OZ_Term term)
 
 
 /*===================================================================
- * ObjectOrClass incl. ObjectClass, DeepObjectOrClass
+ * ObjectClass
  *=================================================================== */
 
 /* Internal representation of Oz classes */
 
-class ObjectClass {
+class ObjectClass: public ConstTermWithHome {
+  friend void ConstTerm::gcConstRecurse(void);
 private:
+  SRecord *features;
+  SRecord *unfreeFeatures;
   OzDictionary *fastMethods;
   OzDictionary *defaultMethods;
-  SRecord *unfreeFeatures;
-  Object *ozclass;    /* the class as seen by the Oz user */
   Bool locking;
 public:
   USEHEAPMEMORY;
 
-  ObjectClass(OzDictionary *fm, SRecord *uf, OzDictionary *dm, Bool lck)
+  ObjectClass(SRecord *feat,OzDictionary *fm,SRecord *uf,OzDictionary *dm,
+              Bool lck, Board *b)
+    : ConstTermWithHome(b,Co_Class)
   {
+    features       = feat;
     fastMethods    = fm;
     unfreeFeatures = uf;
     defaultMethods = dm;
-    ozclass        = NULL;
     locking        = lck;
   }
 
@@ -1226,29 +1230,34 @@ public:
 
   OzDictionary *getDefMethods()  { return defaultMethods; }
   OzDictionary *getfastMethods() { return fastMethods; }
-  Object *getOzClass()           { return ozclass; }
-  void setOzClass(Object *cl)    { ozclass = cl; }
 
-  TaggedRef getFeature(TaggedRef lit)
-  {
-    return unfreeFeatures
-      ? unfreeFeatures->getFeature(lit)
-      : makeTaggedNULL();
-  }
+  TaggedRef classGetFeature(TaggedRef lit) { return features->getFeature(lit); }
 
   SRecord *getUnfreeRecord() { return unfreeFeatures; }
+  SRecord *getFeatures()     { return features; }
 
   char *getPrintName();
 
   ObjectClass *gcClass();
 
-  void import(OzDictionary *fm, SRecord *uf, OzDictionary *dm, Bool l)
+  void import(SRecord *feat,OzDictionary *fm, SRecord *uf, OzDictionary *dm, Bool l)
   {
+    features       = feat;
     fastMethods    = fm;
     unfreeFeatures = uf;
     defaultMethods = dm;
     locking        = l;
   }
+
+  TaggedRef getArityList();
+  int getWidth();
+
+  GName *getGName() {
+    GName *gn = getGName1();
+    Assert(gn);
+    return gn;
+  }
+  void globalize();
 
   OZPRINT;
   OZPRINTLONG;
@@ -1305,16 +1314,11 @@ public:
   void unsetFlag(OFlag f) { flagsAndLock &= ~((int) f); }
   int  getFlag(OFlag f)   { return (flagsAndLock & ((int) f)); }
 
-  Bool isClass()        { return getFlag(OFlagClass); }
-  void setClass()       { setFlag(OFlagClass); }
-
-  Object(Board *bb,SRecord *s,ObjectClass *ac,SRecord *feat,Bool iscl,
-         OzLock *lck):
+  Object(Board *bb,SRecord *s,ObjectClass *ac,SRecord *feat, OzLock *lck):
     ConstTermWithHome(bb,Co_Object)
   {
     setFreeRecord(feat);
     setClass(ac);
-    if (iscl) setClass();
     setState(s);
     flagsAndLock = ToInt32(lck);
   }
@@ -1344,16 +1348,13 @@ public:
   Bool lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X);
   RecOrCell getState()          { return state; }
   void setState(SRecord *s) {
-    Assert(s!=0 || isClass()); state=makeRecCell(s);
+    Assert(s!=0); state=makeRecCell(s);
   }
   void setState(Tertiary *c)    { state = makeRecCell(c); }
   OzDictionary *getDefMethods() { return getClass()->getDefMethods(); }
-  Object *getOzClass()          { return getClass()->getOzClass(); }
 
   SRecord *getFreeRecord()          { return freeFeatures; }
-  SRecord *getUnfreeRecord() {
-    return isClass() ? (SRecord*) NULL : getClass()->getUnfreeRecord();
-  }
+  SRecord *getUnfreeRecord() { return getClass()->getUnfreeRecord(); }
   void setFreeRecord(SRecord *aRec) { freeFeatures = aRec; }
 
   /* same functionality is also in instruction inlineDot */
@@ -1432,15 +1433,28 @@ Object *tagged2Object(TaggedRef term)
 }
 
 inline
-Bool isClass(TaggedRef term)
+Bool isObjectClass(ConstTerm *t)
 {
-  return isObject(term) && tagged2Object(term)->isClass();
+  return (t->getType()==Co_Class);
 }
 
 inline
-Bool isObjectTrue(TaggedRef term)
+Bool isObjectClass(TaggedRef term)
 {
-  return isObject(term) && !tagged2Object(term)->isClass();
+  return isConst(term) && isObjectClass(tagged2Const(term));
+}
+
+inline
+ObjectClass *tagged2ObjectClass(TaggedRef term)
+{
+  Assert(isObjectClass(term));
+  return (ObjectClass *)tagged2Const(term);
+}
+
+inline
+Bool isClass(TaggedRef term)
+{
+  return isObjectClass(term);
 }
 
 /*===================================================================

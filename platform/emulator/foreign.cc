@@ -761,17 +761,18 @@ void const2buffer(ostream &out, ConstTerm *c)
   case Co_Space:
     out << "<Space>";
     break;
+
+  case Co_Class:
   case Co_Object:
     {
-      Object *o = (Object *) c;
       if (*s == '_' && *(s+1) == 0) {
-        if (o->isClass()) {
+        if (c->getType()==Co_Class) {
           out << "<C>";
         } else {
           out << "<O>";
         }
       } else {
-        if (o->isClass()) {
+        if (c->getType()==Co_Class) {
           out << "<C: " << s << '>';
         } else {
           out << "<O: " << s << '>';

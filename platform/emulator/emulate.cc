@@ -26,10 +26,6 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
                            InlineCache *cache, RefsArray X)
 {
   Assert(isFeature(label));
-
-  if (obj->isClass())
-      return NULL;
-
   return cache->lookup(obj,label,arity,X);
 }
 
@@ -37,9 +33,6 @@ inline
 Abstraction *getApplyMethod(Object *obj, ApplMethInfoClass *ami,
                             SRecordArity arity, RefsArray X)
 {
-  if (!obj->isClass())
-      return NULL;
-
   Assert(isFeature(ami->methName));
   return ami->methCache.lookup(obj,ami->methName,arity,X);
 }
@@ -2319,7 +2312,7 @@ LBLdispatcher:
 
     DEREF(object,objectPtr,_2);
     if (isObject(object)) {
-      Object *obj      = (Object *) tagged2Const(object);
+      Object *obj      = tagged2Object(object);
       Abstraction *def = getSendMethod(obj,label,arity,(InlineCache*)(PC+4),X);
       if (def == NULL) {
         goto bombSend;
@@ -2373,7 +2366,7 @@ LBLdispatcher:
     if (!isObject(object)) {
       goto bombApply;
     }
-    def = getApplyMethod((Object *) tagged2Const(object),ami,arity,X);
+    def = getApplyMethod(tagged2Object(object),ami,arity,X);
     if (def==NULL) {
       goto bombApply;
     }
@@ -2446,14 +2439,10 @@ LBLdispatcher:
          if (typ==Co_Object) {
            COUNT(nonoptsendmsg);
            Object *o = (Object*) predicate;
-           if (o->isClass()) {
-             RAISE_APPLY(makeTaggedConst(predicate),
-                         OZ_toList(predArity,X));
-           }
            Assert(e->sendHdl != makeTaggedNULL());
            def = tagged2Abstraction(e->sendHdl);
            /* {Obj Msg} --> {Send Msg Class Obj} */
-           X[predArity++] = makeTaggedConst(o->getOzClass());
+           X[predArity++] = makeTaggedConst(o->getClass());
            X[predArity++] = makeTaggedConst(o);
          } else {
            def = (Abstraction *) predicate;
@@ -2555,7 +2544,7 @@ LBLdispatcher:
          PopFrame(CTS,auxPC,auxY,auxG);
 
          e->pushContX(PC,Y,G,X,predArity);
-         PushCont(auxPC,auxY,auxG);
+         CTS->pushFrame(auxPC,auxY,auxG);
        }
        if (e->suspendVarList) {
          e->suspendOnVarList(CTT);

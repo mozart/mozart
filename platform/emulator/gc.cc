@@ -1995,6 +1995,17 @@ void ConstTerm::gcConstRecurse()
       break;
     }
 
+  case Co_Class:
+    {
+      ObjectClass *cl = (ObjectClass *) this;
+      cl->gcConstTermWithHome();
+      cl->fastMethods    = (OzDictionary*) cl->fastMethods->gcConstTerm();
+      cl->defaultMethods = (OzDictionary*) cl->defaultMethods->gcConstTerm();
+      cl->features       = cl->features->gcSRecord();
+      cl->unfreeFeatures = cl->unfreeFeatures->gcSRecord();
+      break;
+    }
+
   case Co_Abstraction:
     {
       Abstraction *a = (Abstraction *) this;
@@ -2182,6 +2193,14 @@ ConstTerm *ConstTerm::gcConstTerm()
       CheckLocal(o);
       sz = sizeof(Object);
       gn = o->getGName1();
+      break;
+    }
+  case Co_Class:
+    {
+      ObjectClass *cl = (ObjectClass *) this;
+      CheckLocal(cl);
+      sz = sizeof(ObjectClass);
+      gn = cl->getGName1();
       break;
     }
   case Co_Cell:
@@ -2449,23 +2468,10 @@ void Board::gcRecurse()
   script.Script::gc();
 }
 
+
 ObjectClass *ObjectClass::gcClass()
 {
-  if (this==0) return 0;
-
-  GCMETHMSG("ObjectClass::gcClass");
-  CHECKCOLLECTED(ToInt32(fastMethods), ObjectClass *);
-
-  COUNT(objectClass);
-  ObjectClass *ret = (ObjectClass *) gcRealloc(this,sizeof(*this));
-  GCNEWADDRMSG(ret);
-  OzDictionary *fastm = fastMethods;
-  storeForward(&fastMethods, ret);
-  ret->fastMethods    = (OzDictionary*) fastm->gcConstTerm();
-  ret->defaultMethods = (OzDictionary*) defaultMethods->gcConstTerm();
-  ret->unfreeFeatures = ret->unfreeFeatures->gcSRecord();
-  ret->ozclass        = ozclass->gcObject();
-  return ret;
+  return (ObjectClass *) gcConstTerm();
 }
 
 
