@@ -46,6 +46,34 @@ srcdira=`(cd $srcdir; pwd)`
 AC_SUBST(srcdira)
 
 dnl *****************************************************************
+dnl windows cross compilation
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --enable-wincross)
+AC_ARG_ENABLE(wincross,
+  [--enable-wincross  Windows cross compilation (default=no)])
+if test "${enable_wincross}" = yes; then
+    if test -n "$oz_wincross_dir" && test -n "$oz_wincross_prefix"
+    then
+        AC_MSG_RESULT(yes)
+        CC=$oz_wincross_dir/$oz_wincross_prefix-gcc
+        CXX=$CC
+        platform="win32-i486"
+        MSWIN=yes
+        AC_SUBST(CC)
+        AC_SUBST(CXX)
+    else
+        AC_MSG_RESULT(no)
+        AC_MSG_ERROR("oz_wincross_dir and oz_wincross_prefix must be set")
+    fi
+else
+    AC_MSG_RESULT(no)
+    MSWIN=no
+fi
+
+AC_SUBST(MSWIN)
+
+dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
 
