@@ -42,6 +42,7 @@
 #include "marshaler.hh"
 #include "site.hh"
 #include "pickle.hh"
+#include "boot-manager.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -978,7 +979,7 @@ loop:
     {
       int refTag = unmarshalRefTag(bs);
       char *name = unmarshalString(bs);
-      Builtin * found = string2Builtin(name);
+      Builtin * found = string2CBuiltin(name);
 
       if (!found) {
         OZ_warning("Builtin '%s' not in table.", name);

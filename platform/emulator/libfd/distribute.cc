@@ -72,7 +72,7 @@ TaggedRef BI_DistributeTell;
 
 void fd_dist_init(void) {
   BI_DistributeTell = makeTaggedConst(new
-                                      Builtin("FD.distribute (tell)",2,0,
+                                      Builtin("FD", "distribute (tell)",2,0,
                                               BIfdTellConstraint, OK));
 }
 

@@ -43,6 +43,7 @@
 #include "builtins.hh"
 #include "indexing.hh"
 
+#include "boot-manager.hh"
 #include "var_all.hh"
 #include "dictionary.hh"
 #include "marshaler.hh"

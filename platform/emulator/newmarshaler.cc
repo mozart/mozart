@@ -31,6 +31,7 @@
 #endif
 
 #include "newmarshaler.hh"
+#include "boot-manager.hh"
 
 
 //
@@ -517,7 +518,7 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
       {
         int refTag = unmarshalRefTag(bs);
         char *name = unmarshalString(bs);
-        Builtin * found = string2Builtin(name);
+        Builtin * found = string2CBuiltin(name);
 
         OZ_Term value;
         if (!found) {

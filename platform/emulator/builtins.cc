@@ -147,8 +147,7 @@ OZ_BI_define(BIwaitStatus,2,1)
       OZ_Term status = _var_status(cv);                                                 \
       OZ_Term out = oz_newVariable();                                                   \
       OZ_out(0) = out;                                                                  \
-      OZ_Term wait = makeTaggedConst(new Builtin("waitStatus", 2,1,BIwaitStatus,OK));   \
-      am.prepareCall(wait,status,statusAtom,out);                                       \
+      am.prepareCall(BI_waitStatus,status,statusAtom,out);                                      \
       return BI_REPLACEBICALL;                                                          \
     }                                                                                   \
   default:                                                                              \
