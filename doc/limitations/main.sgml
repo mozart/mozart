@@ -127,16 +127,6 @@ This memory use is temporary.
 After the compiler completes,
 the memory is eventually returned to the operating system.
 
-<section class=unnumbered><title/Graphics Interface/
-
-<p>The graphics interface
-(see <ptr.extern to="ozdoc:system" key="chapter.tk">)
-is much slower under Windows than
-under Unix, although it is still usable. In particular, it is
-especially slow for a Mozart process to request information from a
-tk process. This should be done infrequently.
-We recommend that information from a tk process be cached whenever possible.
-
 <section class=unnumbered><title/Distribution/
 
 <p>
