@@ -1,0 +1,58 @@
+TOOL            = regex
+
+prefix          = @prefix@
+OZHOME          = $(prefix)/oz
+BINDIR          = $(OZHOME)/bin
+DYNLDIR         = $(OZHOME)/platform/@platform@/tools/$(TOOL)
+COMPDIR         = $(OZHOME)/tools/$(TOOL)
+
+DYNLD           = @DYNLD@
+CXX             = @CXX@
+CXXFLAGS        = @CXXFLAGS@
+CPPBASE         = -DFOREIGN_POINTER -I../../Emulator -I$(OZHOME)/include
+CPPFLAGS        = @CPPFLAGS@ $(CPPBASE)
+LDFLAGS         = @LDFLAGS@
+LIBS            = @LIBS@ -lc
+
+INSTALL         = @INSTALL@
+INSTALL_DIR     = $(INSTALL) -m 775 -d
+INSTALL_BIN     = $(INSTALL) -m 555
+INSTALL_LIB     = $(INSTALL) -m 444
+
+OZBATCH         = $(OZHOME)/bin/ozbatch
+
+### TARGETS
+
+all:    simple.dl simple.ozc posix.dl posix.ozc
+
+simple.o:       simple.cc $(OZHOME)/include/oz.h
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c simple.cc
+
+posix.o:        posix.cc $(OZHOME)/include/oz.h
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c posix.cc
+
+simple.dl:      simple.o
+        $(DYNLD) -o simple.dl simple.o $(LDFLAGS) $(LIBS)
+
+posix.dl:       posix.o
+        $(DYNLD) -o posix.dl posix.o $(LDFLAGS) $(LIBS)
+
+install:        simple.dl simple.ozc posix.dl posix.ozc
+        $(INSTALL_DIR)                  $(COMPDIR)
+        $(INSTALL_LIB) simple.ozc       $(COMPDIR)
+        $(INSTALL_LIB) posix.ozc        $(COMPDIR)
+        $(INSTALL_DIR)                  $(DYNLDIR)
+        $(INSTALL_LIB) simple.dl        $(DYNLDIR)
+        $(INSTALL_LIB) posix.dl         $(DYNLDIR)
+
+simple.ozc:     simple.oz
+        $(OZBATCH) -c simple.oz
+
+posix.ozc:      posix.oz
+        $(OZBATCH) -c posix.oz
+
+clean:
+        -rm *~ *.ozc *.o *.dl
+
+veryclean: clean
+        -rm config.*
