@@ -103,7 +103,8 @@ in
       feat
 	 toplevel
 	 menuBar
-	 tkRunChildren
+	 emacsThreadsButton
+	 subThreadsButton
       
 	 ButtonFrame
 
@@ -184,15 +185,15 @@ in
 			       action: self # help(Bitmap))}
 		     B
 		  end}
-	    TkSusp TkRunChildren Susp RunChildren
 	 in
 	    {ForAll
-	     [TkSusp       #Susp       #IgnoreFeedsBitmap  #suspend    #1
-	      TkRunChildren#RunChildren#IgnoreThreadsBitmap#runChildren#1]
+	     [{Cget emacsThreads} # self.emacsThreadsButton #
+	      IgnoreFeedsBitmap   # toggleEmacsThreads # ConfigEmacsThreads
+	      {Cget subThreads}   # self.subThreadsButton   #
+	      IgnoreThreadsBitmap # toggleSubThreads   # ConfigSubThreads]
 	     proc {$ B}
 		V # C # Xbm # Action # Default = B
 	     in
-		V = {New Tk.variable tkInit(Default)}
 		C = {New Tk.checkbutton
 		     tkInit(parent:           self.ButtonFrame
 			    %indicatoron:      false
@@ -213,12 +214,9 @@ in
 		{C tkBind(event:  HelpEvent
 			  action: self # help(Xbm))}
 	     end}
-	     /*
-	    {RunChildren tk(conf state:disabled)}
-	     */
-	    self.tkRunChildren = TkRunChildren
 	    {Tk.batch [pack(b(Bs) side:left  padx:1)
-		       pack(Susp RunChildren side:right padx:0)]}
+		       pack(self.emacsThreadsButton self.subThreadsButton
+			    side:right padx:0)]}
 	 end
 
 	 %% border line

@@ -481,15 +481,23 @@ in
 	 end
       end
 
-      meth suspend(TkV)
+      meth toggleEmacsThreads(TkV)
 	 Value = {TkV tkReturnInt($)}
 	 Arg   = case Value == 0 then true else false end
       in
 	 {OzcarMessage 'Dbg.suspend called with argument ' # Value}
-	 {Dbg.suspend Arg}
+	 case {NewCompiler} then
+	    case Arg then
+	       {Compile '\\sw -runwithdebugger'}
+	    else
+	       {Compile '\\sw +runwithdebugger'}
+	    end
+	 else
+	    {Dbg.suspend Arg}
+	 end
       end
 
-      meth runChildren(TkV)
+      meth toggleSubThreads(TkV)
 	 Value = {TkV tkReturnInt($)}
 	 Arg   = case Value == 0 then true else false end
       in

@@ -374,6 +374,9 @@ ConfigStepWaitForArbiterBuiltin = false  %% step on builtin 'waitForArbiter'?
 ConfigEnvSystemVariables   = true   %% filter system variables in Env Window?
 ConfigEnvProcedures        = false  %% filter procedures in Env Window?
 
+ConfigEmacsThreads         = true   %% default value of Emulator
+ConfigSubThreads           = true   %% dito
+
 Config =
 {New
  class
@@ -391,8 +394,10 @@ Config =
     
        envSystemVariables :        ConfigEnvSystemVariables
        envProcedures :             ConfigEnvProcedures
-
-
+       
+       emacsThreads :              {New Tk.variable tkInit(ConfigEmacsThreads)}
+       subThreads :                {New Tk.variable tkInit(ConfigSubThreads)}
+       
     meth init
        skip
     end
@@ -404,11 +409,21 @@ Config =
     meth get(What $)
        @What
     end
+
+    meth getTk(What $)
+       Value = {@What tkReturnInt($)}
+    in
+       case Value == 0 then false else true end
+    end
     
  end init}
 
 fun {Cget What}
    {Config get(What $)}
+end
+
+fun {CgetTk What}
+   {Config getTk(What $)}
 end
 
 %%
