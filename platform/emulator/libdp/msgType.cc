@@ -75,7 +75,8 @@ char *mess_names[M_LAST] = {
   "deregister",
   "send_ping",
   "ping",
-
+  "pong_term",
+  "pong_pl",
   "conn_first_NOT_A_VALID_MESSAGETYPE",
 
   "conn_present",
@@ -90,7 +91,8 @@ char *mess_names[M_LAST] = {
   "conn_close_accept",
   "conn_close_reject",
 
-  "conn_clearreference"
+  "conn_clearreference",
+  "conn_ping"
 };
 
 int default_mess_priority[M_LAST] = {
@@ -135,7 +137,9 @@ int default_mess_priority[M_LAST] = {
   MSG_PRIO_MEDIUM, //requested
   MSG_PRIO_MEDIUM, //deregister
   MSG_PRIO_MEDIUM, //send_ping
-  MSG_PRIO_HIGH, //ping
+  MSG_PRIO_HIGH,  //ping
+  MSG_PRIO_MEDIUM,//pong 
+  MSG_PRIO_MEDIUM,//pong
 
   MSG_PRIO_EAGER, //conn_first_NOT_A_VALID_MESSAGETYPE
 
@@ -152,4 +156,5 @@ int default_mess_priority[M_LAST] = {
   MSG_PRIO_EAGER, //conn_close_reject
   
   MSG_PRIO_EAGER, //conn_clearreference
+  MSG_PRIO_EAGER
 };
