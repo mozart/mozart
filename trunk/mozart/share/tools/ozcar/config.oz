@@ -74,27 +74,76 @@ BitMap                 = '@' # BitMapDir # 'debugger.xbm'
 TextCursor             = left_ptr
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Colors
-%% TODO: distinguish between color & monochrome scheme
+%% Colors and colormodel related stuff
+%%
+/* hi, emacs! end*/
 
-DefaultBackground      = '#f0f0f0'
-SourceTextForeground   = '#000000'
-SourceTextInvForeground= '#ffffff'
-SourceTextBackground   = '#ffffff'
+DefaultBackground
+ScrollbarApplColor
+ScrollbarStackColor
+RunningThreadColor
+BlockedThreadColor
+DeadThreadColor
+ZombieThreadColor
+TrunkColor
+RunningThreadText
+BlockedThreadText
+DeadThreadText
+ProcColor
+BuiltinColor
 
-ScrollbarApplColor     = '#f07070'
-ScrollbarStackColor    = '#7070f0'
-ScrollbarColors        = colors(appl  : ScrollbarApplColor
-				stack : ScrollbarStackColor)
-				
-RunningThreadColor     = '#00b000'  % some nice green
-BlockedThreadColor     = '#e07070'  %  ~    ~   red
-DeadThreadColor        = '#505050'  %  ~    ~   black
-ZombieThreadColor      = '#f000f0'  % debugging purposes...
-TrunkColor             = '#a00000'  % brown...
-/* hello emacs: end */
-ProcColor              = '#0000c0'
-BuiltinColor           = '#c00000'
+case Tk.isColor then
+   %% main window
+   DefaultBackground       = '#f0f0f0'
+
+   %% source window
+   ScrollbarApplColor      = '#f07070'
+   ScrollbarStackColor     = '#7070f0'
+
+   %% thread forest window
+   RunningThreadColor      = '#00b000'
+   BlockedThreadColor      = '#e07070'
+   DeadThreadColor         = '#505050'
+   ZombieThreadColor       = '#f000f0'
+   TrunkColor              = '#a00000'
+
+   RunningThreadText       = nil
+   BlockedThreadText       = nil
+   DeadThreadText          = nil
+
+   %% application trace window
+   ProcColor               = '#0000c0'
+   BuiltinColor            = '#c00000'
+else
+   %% main window
+   DefaultBackground       = white
+
+   %% source window
+   ScrollbarApplColor      = black
+   ScrollbarStackColor     = black
+
+   %% thread forest window
+   RunningThreadColor      = black
+   BlockedThreadColor      = black
+   DeadThreadColor         = black
+   ZombieThreadColor       = black
+   TrunkColor              = black
+
+   RunningThreadText       = nil
+   BlockedThreadText       = '(b)'
+   DeadThreadText          = '(t)'
+   
+   %% application trace window
+   ProcColor               = black
+   BuiltinColor            = black
+end
+
+SourceTextForeground    = black
+SourceTextInvForeground = white
+SourceTextBackground    = white
+
+ScrollbarColors         = colors(appl  : ScrollbarApplColor
+				 stack : ScrollbarStackColor)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
