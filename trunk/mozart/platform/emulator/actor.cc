@@ -98,10 +98,11 @@ void WaitActor::failChildInternal(Board *bb)
 
 int WaitActor::selectOrFailChildren(int l, int r) {
   if (l<=r && l>=0 && r<childCount) {
-    for (int i = l; i <= r; i++) {
-      childs[i-l]->setFailed();
+
+    for (int i = 0; i < l; i++)
+      childs[i]->setFailed();
+    for (int i = l; i <= r; i++)
       childs[i-l] = childs[i];
-    }
     for (int j = r+1; j < childCount; j++) {
       childs[j]->setFailed();
       childs[j] = NULL;
@@ -111,7 +112,6 @@ int WaitActor::selectOrFailChildren(int l, int r) {
   } else {
     return 0;
   }
-
 }
 
 int WaitActor::selectOrFailChild(int i) {
