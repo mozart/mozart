@@ -932,7 +932,6 @@ in
       lex <choice>      C in OzScanner, getCoordinates(?C) OzScanner, pt('choice' C 6)   end
       lex <class>       C in OzScanner, getCoordinates(?C) OzScanner, pt('class' C 5)    end
       lex <cond>        C in OzScanner, getCoordinates(?C) OzScanner, pt('cond' C 4)     end
-      lex <condis>      C in OzScanner, getCoordinates(?C) OzScanner, pt('condis' C 6)   end
       lex <declare>     C in OzScanner, getCoordinates(?C) OzScanner, pt('declare' C 7)  end
       lex <define>      C in OzScanner, getCoordinates(?C) OzScanner, pt('define' C 6)   end
       lex <dis>         C in OzScanner, getCoordinates(?C) OzScanner, pt('dis' C 3)      end
@@ -974,7 +973,6 @@ in
       lex <choice/\(>   C in OzScanner, getCoordinates(?C) OzScanner, pt('choice' C 6)   end
       lex <class/\(>    C in OzScanner, getCoordinates(?C) OzScanner, pt('class' C 5)    end
       lex <cond/\(>     C in OzScanner, getCoordinates(?C) OzScanner, pt('cond' C 4)     end
-      lex <condis/\(>   C in OzScanner, getCoordinates(?C) OzScanner, pt('condis' C 6)   end
       lex <declare/\(>  C in OzScanner, getCoordinates(?C) OzScanner, pt('declare' C 7)  end
       lex <define/\(>   C in OzScanner, getCoordinates(?C) OzScanner, pt('define' C 6)   end
       lex <dis/\(>      C in OzScanner, getCoordinates(?C) OzScanner, pt('dis' C 3)      end
