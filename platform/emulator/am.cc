@@ -233,6 +233,8 @@ void AM::init(int argc,char **argv)
   initThreads();
   toplevelQueue = (Toplevel *) NULL;
 
+  threadStreamTail = OZ_newVariable();
+
   // builtins
   BuiltinTabEntry *entry = BIinit();
   if (!entry) {
