@@ -737,17 +737,9 @@ With ARG, start it instead."
 	      (forward-line 1)
 	      (setq end1 (point)))
 	    (forward-char column)
-	    (setq start2 (point))
-	    (let ((cs (char-syntax (following-char))))
-	      (if (string-match "[w(\"\\$</]" (char-to-string cs))
-		  (forward-sexp 1)
-		(while (equal (char-syntax (following-char)) cs)
-		  (forward-char)))
-	      (setq end2 (point)))
-	    (if (> start2 end1)
-		(setq start2 start1 end2 end1))
-	    (if (> end2 end1)
-		(setq end2 end1))
+	    (if (looking-at oz-token-pattern)
+		(setq start2 (match-beginning 0) end2 (match-end 0))
+	      (setq start2 start1 end2 start1))
 	    (or oz-bar-overlay
 		(cond (oz-gnu-emacs
 		       (setq oz-bar-overlay (make-overlay start1 end1)
@@ -1235,6 +1227,20 @@ Point is left at the first character of the keyword."
   (concat oz-string-pattern "\\|" oz-atom-pattern "\\|"
 	  oz-variable-pattern "\\|" oz-char-pattern "\\|"
 	  oz-comment-pattern))
+
+(defconst oz-number-pattern
+  (concat "~?\\(0[Xx][0-9A-Fa-f]+\\|0[bB][01]+\\|"
+	  "[0-9]+\\(\\.[0-9]*\\([eE]~?[0-9]+\\)?\\)?\\)")
+  "Regular expression matching an Oz number.")
+(defconst oz-token-pattern
+  (concat oz-atom-pattern "\\|" oz-string-pattern "\\|"
+	  oz-variable-pattern "\\|" oz-char-pattern "\\|"
+	  oz-number-pattern "\\|"
+	  "[A-Za-z][A-Za-z0-9_]*\\|"
+	  "\\[\\]\\|\\.\\.\\.\\|<-\\|:=\\|!!\\|=<\\|>=\\|\\\\=\\|"
+	  ":::?\\|==\\|[<>]:\\|=<:\\|>=:\\|=:\\|"
+	  "[+<>*/{}()|#:=.^@$!~_,]\\|\\[\\|\\]\\|\\-")
+  "Matches a single Oz token; used by oz-bar.")
 
 (defconst oz-directive-pattern
   "\\\\[a-zA-Z]+")
