@@ -76,7 +76,7 @@ fun {LecturesToLaTeX Lectures}
        N+1
        #
        (In
-	#case N mod LinesOnPage == 0
+	#if N mod LinesOnPage == 0
 	 then EndTab # "\\newpage\n" # BeginTab
 	 else ""
 	 end
