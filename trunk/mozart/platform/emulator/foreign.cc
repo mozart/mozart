@@ -1115,6 +1115,7 @@ void oz_printStream(OZ_Term term, ostream &out, int depth, int width)
   }
 
   term2Buffer(out,term,depth);
+  flush(out);
 
   if (width>=0) {
     ozconf.printWidth=old;
