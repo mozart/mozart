@@ -1073,7 +1073,17 @@ void cvar2buffer(ostream &out, const char *s, GenCVariable *cv, int depth)
     }
   case PerdioVariable:
     {
-      out << s;
+      PerdioVar *pv = (PerdioVar *) cv;
+      out << s << "<dist:";
+      char *type = "";
+      if (pv->isManager()) {
+        type = "mgr";
+      } else if (pv->isProxy()) {
+        type = "pxy";
+      } else {
+        type = "oprxy";
+      }
+      out << type << ">";
       break;
     }
   case AVAR:
