@@ -30,7 +30,6 @@ enum ActorFlags {
   Ac_Wait       = 0x02,
   Ac_Solve      = 0x04,
   Ac_Committed  = 0x08,
-  Ac_WaitTop    = 0x10,
   Ac_DisWait    = 0x20
 };
 
@@ -148,11 +147,14 @@ public:
 
 class SolveActor : public Actor {
 public:
+  OZPRINT;
+  OZPRINTLONG;
+
   static SolveActor *Cast(Actor *a)
-{
-  DebugCheck ((a->isSolve () == NO), error ("SolveActor::Cast"));
-  return ((SolveActor *) a);
-}
+  {
+    Assert(a->isSolve());
+    return ((SolveActor *) a);
+  }
   static void Init();
 //  This is 'de facto' the "solve actor";
 //  If BIsolve is applied, CFuncCont is generated containing request to call
@@ -177,12 +179,13 @@ public:
 
   void gcRecurse();
 
-  void incThreads () { threads++; }
-  void decThreads () {
-    DebugCheck ((threads == 0), error ("0-- in SolveActor::decThreads ()"));
-    threads--;
+  void incThreads (int n=1) {
+    Assert(threads+n >= 0);
+    threads+=n;
   }
+  void decThreads () { incThreads(-1); }
   Bool isStable ();  // so simple!
+  void setUnStable() { threads=-1; }
   void addSuspension (Suspension *susp);
   void addSuspension (SuspList *l);
   Bool areNoExtSuspensions ();
@@ -201,7 +204,7 @@ public:
   TaggedRef genEnumed (Board *newSolveBB);
   TaggedRef genEnumedFail ();
   TaggedRef genFailed ();
-  void printDebug();
+  void printDebugKP();
 
 private:
   WaitActor* getTopWaitActor ();
