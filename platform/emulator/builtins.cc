@@ -2118,12 +2118,6 @@ DECLAREBI_USEINLINEFUN1(BIwidth,widthInline)
 // Unit
 // ---------------------------------------------------------------------
 
-OZ_C_proc_begin(BIgetUnit,1)
-{
-  return oz_unify(NameUnit,OZ_getCArg(0));
-}
-OZ_C_proc_end
-
 OZ_Return isUnitInline(TaggedRef t)
 {
   NONSUVAR( t, term, tag);
@@ -2166,20 +2160,6 @@ DECLAREBOOLFUN1(BIisUnitB,isUnitBInline,isUnitInline)
 // ---------------------------------------------------------------------
 // Bool things
 // ---------------------------------------------------------------------
-
-OZ_C_proc_begin(BIgetTrue,1)
-{
-  return oz_unify(NameTrue,OZ_getCArg(0));
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIgetFalse,1)
-{
-  return oz_unify(NameFalse,OZ_getCArg(0));
-}
-OZ_C_proc_end
-
 
 OZ_Return isBoolInline(TaggedRef t)
 {
@@ -7699,10 +7679,6 @@ BIspec allSpec[] = {
 
   {"virtualStringLength",  3, BIvsLength, 0},
 
-  {"getUnit", 1,BIgetUnit,  	   0},
-
-  {"getTrue", 1,BIgetTrue,  	   0},
-  {"getFalse",1,BIgetFalse,  	   0},
   {"Not",     2,BInot,             (IFOR) notInline},
   {"And",     3,BIand,             (IFOR) andInline},
   {"Or",      3,BIor,              (IFOR) orInline},
