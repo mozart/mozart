@@ -11,6 +11,7 @@ import
    MogulID(normalizeID:NormalizeID)
    HTML_ByAuthor(updatePage)
    Pickle(save)
+   Regex(make compile search) at 'x-oz://contrib/regex'
 export
    Manager Trace Indent Dedent RelativeTo Admin
 define
@@ -23,6 +24,7 @@ define
       attr db rootID rootURL reports verbose nerrors
 	 indent wget css mogulDIR mogulURL provided
 	 categories categoriesURL packages Authors mogulTOP
+	 ignoreID ignoreURL
       meth init
 	 db      <- unit
 	 rootID  <- {NormalizeID 'mogul' 'mogul:/'}
@@ -41,6 +43,8 @@ define
 	 packages<-unit
 	 Authors<-unit
 	 mogulTOP<- '/~'#{OS.getEnv 'USER'}#'/mogul'
+	 ignoreID<-nil
+	 ignoreURL<-nil
       end
       meth indent indent<-'  '#@indent end
       meth dedent
@@ -349,6 +353,24 @@ define
 	 link(rel : 'stylesheet'
 	      type: 'text/css'
 	      href: @mogulTOP#'/mogul.css')
+      end
+      %%
+      meth 'ignore-id'(L)
+	 for S in L do RE={Regex.make S} in
+	    ignoreID <- RE|@ignoreID
+	 end
+      end
+      meth ignoreID(ID $)
+	 {Some @ignoreID fun {$ RE} {Regex.search RE ID}\=false end}
+      end
+      %%
+      meth 'ignore-url'(L)
+	 for S in L do RE={Regex.compile S [extended newline icase]} in
+	    ignoreURL <- RE|@ignoreID
+	 end
+      end
+      meth ignoreURL(URL $)
+	 {Some @ignoreURL fun {$ RE} {Regex.search RE URL}\=false end}
       end
    end
 

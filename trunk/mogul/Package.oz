@@ -65,8 +65,11 @@ define
 	 {Manager id_to_relurl(@id $)}
       end
       meth UpdatePkg(U DB)
-	 {Manager trace('Downloading pkg '#U)}
-	 try {Wget.wgetPkg U
+	 M = {Regex.search RE_PROVIDES U}
+	 U2 = {Regex.group 2 M U}
+      in
+	 {Manager trace('Downloading pkg '#U2)}
+	 try {Wget.wgetPkg U2
 	      {URL.toString
 	       {URL.resolve
 		{URL.toBase {Manager get_pkgdir($)}}

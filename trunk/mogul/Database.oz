@@ -76,34 +76,40 @@ define
       %%
       meth updateInfo(Id Url Pid)=M
 	 {Manager incTrace('--> updateInfo '#Id)}
-	 try
-	    {Manager trace('Fetching info from '#Url)}
-	    Msg   = try {Parse {Slurp Url}}
-		    catch _ then {Raise mogul(notFound(Url))} unit end
-	    {Msg check_id_expected(Id Pid)}
-	    {Msg check_keys(['type'])}
-	    Type  = {VirtualString.toAtom {ToLower {Msg get1('type' $)}}}
-	    Class = case Type
-		    of 'contact' then Contact.'class'
-		    [] 'package' then Package.'class'
-		    [] 'section' then Section.'class'
-		    [] T         then {Raise mogul(wrong_type(T))} unit
-		    end
-	    Prev  = Database,condGet(Id unit $)
-	    Entry = {New Class init(Msg Id Url Pid Prev)}
-	 in
-	    Database,put({Entry getSlot('id' $)} Entry)
-	    if Type=='section' then
-	       {Manager trace('Processing entries')}
-	       {Record.forAllInd {Entry getSlot('toc' $)}
-		proc {$ K V}
-		   Database,updateInfo(K V Id)
-		end}
+	 if {Manager ignoreID(Id $)} then
+	    {Manager trace('Ignoring ID='#Id)}
+	 elseif {Manager ignoreURL(Url $)} then
+	    {Manager trace('Ignoring URL='#Url)}
+	 else
+	    try
+	       {Manager trace('Fetching info from '#Url)}
+	       Msg   = try {Parse {Slurp Url}}
+		       catch _ then {Raise mogul(notFound(Url))} unit end
+	       {Msg check_id_expected(Id Pid)}
+	       {Msg check_keys(['type'])}
+	       Type  = {VirtualString.toAtom {ToLower {Msg get1('type' $)}}}
+	       Class = case Type
+		       of 'contact' then Contact.'class'
+		       [] 'package' then Package.'class'
+		       [] 'section' then Section.'class'
+		       [] T         then {Raise mogul(wrong_type(T))} unit
+		       end
+	       Prev  = Database,condGet(Id unit $)
+	       Entry = {New Class init(Msg Id Url Pid Prev)}
+	    in
+	       Database,put({Entry getSlot('id' $)} Entry)
+	       if Type=='section' then
+		  {Manager trace('Processing entries')}
+		  {Record.forAllInd {Entry getSlot('toc' $)}
+		   proc {$ K V}
+		      Database,updateInfo(K V Id)
+		   end}
+	       end
+	    catch mogul(...)=E then
+	       {Manager addReport(M E)}
+	    finally
+	       {Manager decTrace('<-- updateInfo '#Id)}
 	    end
-	 catch mogul(...)=E then
-	    {Manager addReport(M E)}
-	 finally
-	    {Manager decTrace('<-- updateInfo '#Id)}
 	 end
       end
       %%
@@ -117,13 +123,17 @@ define
       end
       %%
       meth updatePub(Id)=M
-	 try
-	    case Database,condGet(Id unit $)
-	    of unit then
-	       {Raise mogul(entry_not_found(Id))}
-	    [] E then {E updatePub(self)} end
-	 catch mogul(...)=E then
-	    {Manager addReport(M E)}
+	 if {Manager ignoreID(Id $)} then
+	    {Manager trace('Ignoring ID='#Id)}
+	 else
+	    try
+	       case Database,condGet(Id unit $)
+	       of unit then
+		  {Raise mogul(entry_not_found(Id))}
+	       [] E then {E updatePub(self)} end
+	    catch mogul(...)=E then
+	       {Manager addReport(M E)}
+	    end
 	 end
       end
       %%
