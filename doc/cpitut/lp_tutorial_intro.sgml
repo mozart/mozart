@@ -19,7 +19,7 @@ downloaded via:
 
 <list>
 <item><ref.extern
-to="ftp://ftp.mozart-oz.org/pub/mozart/extras/lp_solve_2.3_mozart.tar.gz">ftp://ftp.mozart-oz.org/pub/mozart/extras/lp_solve_2.3_mozart.tar.gz</ref.extern>.
+to="http://www.mozart-oz.org/download/mozart-ftp/extras/lp_solve_2.3_mozart.tar.gz">http://www.mozart-oz.org/download/mozart-ftp/extras/lp_solve_2.3_mozart.tar.gz</ref.extern>.
 </list>
 
 Unpack the archive and make it. You will be told what else has to be
