@@ -87,6 +87,8 @@ public:
 
   int errorVerbosity;
 
+  int dumpCore;
+
   /* command line arguments visible from Oz */
   char **argV;
   int argC;

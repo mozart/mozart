@@ -88,6 +88,7 @@ void ConfigData::init() {
   systemPriority        = SYSTEM_PRIORITY;
   taskStackSize         = TASK_STACK_SIZE;
   errorVerbosity        = ERROR_VERBOSITY;
+  dumpCore              = 0;
 }
 
 extern "C" int runningUnderEmacs; // mm2
