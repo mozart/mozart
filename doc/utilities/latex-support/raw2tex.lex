@@ -53,29 +53,50 @@ void banner() {
     printf("\\OzChar\\%c",yytext[1]);        \
   else                                       \
     putchar(yytext[1]); }
-#define FLUSHECHOIDENT {                     \
-  char* s=yytext;                            \
-  FLUSH;                                     \
-  while (*s) {                               \
-    if (*s=='_') printf("\\OzChar\\_");      \
-    else putchar(*s);                        \
-    s++; }                                   \
+#define ECHOIDENT(s) {                       \
+  char* s__ = s;                             \
+  while(*s__) {                              \
+    if (*s__ == '_') printf("\\OzChar\\_");  \
+    else putchar(*s__);                      \
+    s__ ++; }                                \
 }
+#define FLUSHECHOIDENT { FLUSH; ECHOIDENT(yytext); }
 %}
 IDENT		[a-zA-Z0-9_]+
 KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of|elseof|elsecase|end|"class"|create|meth|"extern"|from|with|attr|feat|self|true|false|touch|div|mod|andthen|orelse|thread|job|conc|in|condis|not)
+CKEYWORD	("asm"|"auto"|"break"|"char"|"case"|"const"|"continue"|"default"|"do"|"double"|"else"|"enum"|"extern"|"float"|"for"|"goto"|"if"|"inline"|"int"|"long"|"register"|"return"|"short"|"signed"|"sizeof"|"static"|"struct"|"switch"|"typedef"|"typeof"|"union"|"unsigned"|"void"|"volatile"|"while"|"all"|"except"|"exception"|"raise"|"raises"|"reraise"|"throw"|"try"|"catch"|"class"|"classof"|"delete"|"dynamic"|"friend"|"headof"|"new"|"operator"|"overload"|"private"|"protected"|"public"|"this"|"template"|"virtual")
+COPERATOR	("->"|"<<"|">>"|"<="|">="|"!="|"||"|"..."|"*="|"<<="|">>="|"^="|"|="|"~"|"*"|"^"|"|"|"->*"|"/"|"<"|">"|"&&"|"%="|"&="|"{"|"}"|"&"|"%"|"--"|".*"|"?"|":"|"="|","|"."|";"|"!"|"-"|"+"|"/="|"=="|"++"|"+="|"-="|"("|")"|"["|"]"|"::")
+BLANKLINES	([ \t]*\n)*
 %option stack
 %option main
 %option yylineno
-%x TEX DISPLAY QUOTED STRING COMMENT EOLCOMMENT INLINE INDEX ENTRY SEE SKIP
+%x TEX DISPLAY CDISPLAY QUOTED STRING COMMENT EOLCOMMENT INLINE INDEX ENTRY SEE SKIP INL CINL
 %%
 	banner(); BEGIN(TEX);
 
-<TEX>"\\begin{ozdisplay""*"?"}"([ \t]*\n)*	{
+<TEX>"\\begin{ozdisplay""*"?"}"{BLANKLINES}	{
   printf("\\begin{oz2texdisplay}");
   RESET; START; BEGIN(DISPLAY); }
+<TEX>"\\begin{cdisplay}"{BLANKLINES}		{
+  printf("\\begin{c2texdisplay}");
+  RESET; START; BEGIN(CDISPLAY); }
+<TEX>"\\begin{codedisplay}"[ \t\n]*"{oz}"{BLANKLINES}	{
+  printf("\\begin{oz2texdisplay}");
+  RESET;START;BEGIN(DISPLAY); }
+<TEX>"\\begin{codedisplay}"[ \t\n]*"{c}"{BLANKLINES}	{
+  printf("\\begin{c2texdisplay}");
+  RESET;START;BEGIN(CDISPLAY); }
+<TEX>"\\begin{codedisplay}"[ \t\n]*"{c++}"{BLANKLINES}	{
+  printf("\\begin{c2texdisplay}");
+  RESET;START;BEGIN(CDISPLAY); }
 <TEX>"\\?"		{
   printf("\\OzInline{"); RESET; START; PUSH(INLINE); }
+<TEX>"\\codeinline"[ \t\n]*"{oz}"[ \t\n]*"{"	{
+  printf("\\OzInline{");RESET;START;PUSH(INL);level=1;}
+<TEX>"\\codeinline"[ \t\n]*"{c}"[ \t\n]*"{"		{
+  printf("\\CInline{");RESET;START;PUSH(CINL);level=1;}
+<TEX>"\\codeinline"[ \t\n]*"{c++}"[ \t\n]*"{"		{
+  printf("\\CInline{");RESET;START;PUSH(CINL);level=1;}
 <TEX>"\\ozindex{"	{
   printf("\\index{");    RESET; START; PUSH(INDEX);  }
 <TEX>%.*\n		ECHO;
@@ -88,19 +109,54 @@ KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of
 <DISPLAY>[ \t\n]*"\\end{ozdisplay""*"?"}"	{
   printf("\\end{oz2texdisplay}");
   BEGIN(TEX); }
-<DISPLAY>	ESCAPE;
-<DISPLAY>"/*"	{ FLUSH; printf("\\OzComment{"); PUSH(COMMENT); }
+<CDISPLAY>[ \t\n]*"\\end{cdisplay}"	{
+  printf("\\end{c2texdisplay}");
+  BEGIN(TEX); }
+<DISPLAY>[ \t\n]*"\\end{codedisplay}"	{
+  printf("\\end{oz2texdisplay}");
+  BEGIN(TEX); }
+<CDISPLAY>[ \t\n]*"\\end{codedisplay}"	{
+  printf("\\end{c2texdisplay}");
+  BEGIN(TEX); }
+<CDISPLAY>^"#"[ \t]*{IDENT}	{
+  char* s=yytext;
+  space=1;
+loop:
+  switch (*++s) {
+  case ' ' : SPACE; goto loop;
+  case '\t': TAB;   goto loop;
+  default: break;
+  }
+  space--;
+  printf("\\OzMacro{%d}{",space);
+  ECHOIDENT(s);
+  printf("}");
+  RESET;
+}
+<DISPLAY,CDISPLAY>	ESCAPE;
+<DISPLAY,CDISPLAY>"/*"	{ FLUSH; printf("\\OzComment{"); PUSH(COMMENT); }
+<CDISPLAY>"//"	{ FLUSH; printf("\\OzEolComment{"); PUSH(EOLCOMMENT); }
 <DISPLAY>"%"	{ FLUSH; printf("\\OzEolComment{"); PUSH(EOLCOMMENT); }
-<DISPLAY>" "	SPACE;
-<DISPLAY>\t	TAB;
-<DISPLAY>\n	{ RESET; printf("\\OzEol\n"); }
-<DISPLAY>[\\{}$&#^_%~]	OZCHAR;
+<DISPLAY,CDISPLAY>" "	SPACE;
+<DISPLAY,CDISPLAY>\t	TAB;
+<DISPLAY,CDISPLAY>\n	{ RESET; printf("\\OzEol\n"); }
+<CDISPLAY>{COPERATOR}	{
+  char *s = yytext;
+  FLUSH;
+  printf("\\OzOp{");
+  while (*s) {
+    if (*s=='%' || *s=='{' || *s=='}' || *s=='^' || *s=='&' || *s=='~') putchar('\\');
+    putchar(*s++); }
+  putchar('}');
+}
+<DISPLAY,CDISPLAY>[\\{}$&#^_%~]	OZCHAR;
 <DISPLAY>{KEYWORD}		OZKEYWORD;
-<DISPLAY>{IDENT}		FLUSHECHOIDENT;
-<DISPLAY>\'	STARTFWD;
-<DISPLAY>\`	STARTBWD;
-<DISPLAY>\"	STARTSTRING;
-<DISPLAY>.	FLUSHECHO;
+<CDISPLAY>{CKEYWORD}		OZKEYWORD;
+<DISPLAY,CDISPLAY>{IDENT}	FLUSHECHOIDENT;
+<DISPLAY,CDISPLAY>\'	STARTFWD;
+<DISPLAY>\`		STARTBWD;
+<DISPLAY,CDISPLAY>\"	STARTSTRING;
+<DISPLAY,CDISPLAY>.	FLUSHECHO;
 
 <QUOTED>\\.		OZECHAR;
 <QUOTED>[{}$&#^_%~]	OZCHAR;
@@ -126,7 +182,7 @@ KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of
 <COMMENT>\n	{ RESET; printf("\\OzEol\n"); }
 <COMMENT>.	FLUSHECHO;
 
-<EOLCOMMENT>\n	ENDPOP;
+<EOLCOMMENT>\n	ENDPOP;RESET;
 <EOLCOMMENT>[\\{}$&#^_%~]	OZCHAR;
 <EOLCOMMENT>" "	SPACE;
 <EOLCOMMENT>\t	TAB;
@@ -147,6 +203,34 @@ KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of
 <INLINE>\`	STARTBWD;
 <INLINE>\"	STARTSTRING;
 <INLINE>.	FLUSHECHO;
+
+<INL,CINL>"}"	if (--level<=0) {ENDPOP;} else {FLUSH;printf("\\OzChar\\}");};
+<INL,CINL>"{"	{level++;FLUSH;printf("\\OzChar\\{");}
+<INL,CINL>"/*"	{FLUSH;printf("\\OzComment{");PUSH(COMMENT);}
+<INL>"%"	{FLUSH;printf("OzEolComment{");PUSH(EOLCOMMENT);}
+<CINL>"//"	{FLUSH;printf("OzEolComment{");PUSH(EOLCOMMENT);}
+<INL,CINL>" "	SPACE;
+<INL,CINL>\t	TAB;
+<INL,CINL>\n	{
+  SPACE;warning("newinline in inlined code (ignored)"); }
+<CINL>{COPERATOR}	{
+  char *s = yytext;
+  FLUSH;
+  printf("\\OzOp{");
+  while (*s) {
+    if (*s=='%' || *s=='{' || *s=='}' || *s=='^' || *s=='&' || *s=='~') putchar('\\');
+    putchar(*s++); }
+  putchar('}');
+}
+<INL,CINL>[\\{}$&#^_%~]	OZCHAR;
+<INL>{KEYWORD}		OZKEYWORD;
+<CINL>{CKEYWORD}	OZKEYWORD;
+<INL,CINL>{IDENT}	FLUSHECHOIDENT;
+<INL,CINL>\'	STARTFWD;
+<INL>\`		STARTBWD;
+<INL,CINL>\"	STARTSTRING;
+<INL,CINL>.	FLUSHECHO;
+
 
 <INDEX>[^!|\}]*[!|\}]	{
   int n=yyleng-1; char*s=yytext;
