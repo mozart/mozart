@@ -235,7 +235,7 @@ extern OZ_Term _FUNDECL(OZ_newPort,(OZ_Term));
 extern void _FUNDECL(OZ_send,(OZ_Term,OZ_Term));
 
 /* name */
-extern OZ_Term OZ_newName ();
+extern OZ_Term _FUNDECL(OZ_newName,());
 
 /* print warning */
 extern void _FUNDECL(OZ_warning,(char * ...));
@@ -245,7 +245,7 @@ extern void _FUNDECL(OZ_fail,(char * ...));
 char * _FUNDECL(OZ_unixError,(int err));
 
 /* check for toplevel */
-extern int OZ_onToplevel ();
+extern int _FUNDECL(OZ_onToplevel,());
 
 extern int _FUNDECL(OZ_addBuiltin,(char *, int, OZ_CFun));
 
