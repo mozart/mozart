@@ -477,7 +477,7 @@ The statement
 <<<
 {FD.distance X Y '=:' 1}
 >>>
-creates a propagator for <math/|?{X}-?{Y}|=1/.
+creates a propagator for <math/|X-Y|=1/.
 <p>
 The script defines a search tree with 33 nodes.
 The unique solution is the record
