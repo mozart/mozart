@@ -1561,7 +1561,6 @@ void AM::gc(int msgLevel)
 
   Assert(updateStack.isEmpty());
   Assert(trail.isEmpty());
-  Assert(rebindTrail.isEmpty());
   Assert(cachedSelf==0);
   Assert(ozstat.currAbstr==NULL);
   Assert(shallowHeapTop==0);

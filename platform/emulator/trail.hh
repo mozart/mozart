@@ -73,25 +73,4 @@ public:
 
 };
 
-
-
-
-class RebindTrail: public Trail {
-public:
-  RebindTrail(int sizeInit = 5000): Trail(sizeInit) {};
-
-  void gc();
-
-  void pushCouple(TaggedRef *reference, TaggedRef oldValue)
-  {
-    Trail::pushRef(reference,oldValue);
-  }
-
-  void popCouple(TaggedRef * &reference, TaggedRef &value)
-  {
-    Trail::popRef(reference,value);
-  }
-};
-
-
 #endif
