@@ -97,33 +97,50 @@ void deleteGName(GName *gn)
   delete gn;
 }
 
+
+static
+Bool checkGName(GName *gn)
+{
+  if (gn->getGCMark()) {
+    gn->resetGCMark();
+    gn->site->setGCFlag();
+    return OK;
+  }
+  if (gn->getGNameType()==GNT_NAME &&
+      tagged2Literal(gn->getValue())->isNamedName()) {
+    return OK;
+  }
+  delete gn;
+  return NO;
+}
+
 /* OBSERVE - this must be done at the end of other gc */
 void GNameTable::gcGNameTable()
 {
-  int index;
-  GenHashNode *aux = getFirst(index);
-  DebugCode(int used = getUsed());
-  while (aux!=NULL) {
-    GName *gn = (GName*) aux->getBaseKey();
-
-    DebugCode(used--);
-
-    if (gn->getGCMark()) {
-      gn->resetGCMark();
-      gn->site->setGCFlag();
-    } else {
-      if (gn->getGNameType()==GNT_NAME &&
-          tagged2Literal(gn->getValue())->isNamedName()) {
-        goto next_one;
+  int i=0;
+  GenHashNode *ghn1,*ghn=getFirst(i);
+  while(ghn!=NULL){
+    GName *gn;
+    GenCast(ghn->getBaseKey(),GenHashBaseKey*,gn,GName*);
+    if (checkGName(gn)==NO) {
+      deleteFirst(ghn);
+      ghn=getByIndex(i);
+      continue;
+    }
+    ghn1=ghn->getNext();
+    while(ghn1!=NULL) {
+      GenCast(ghn1->getBaseKey(),GenHashBaseKey*,gn,GName*);
+      if (checkGName(gn)==NO) {
+        deleteNonFirst(ghn,ghn1);
+        ghn1=ghn->getNext();
+        continue;
       }
-      delete gn;
-      if (!htSub(index,aux))
-        continue;}
-  next_one:
-    aux = getNext(aux,index);
+      ghn=ghn1;
+      ghn1=ghn1->getNext();
+    }
+    i++;
+    ghn=getByIndex(i);
   }
-
-  Assert(used==0);
   compactify();
 }
 
