@@ -23,6 +23,11 @@
 #include "error.hh"
 
 
+#ifdef DEBUG_MEM
+#define DebugMem(Code) Code
+#else
+#define DebugMem(Code)
+#endif
 
 class MemChunks {
 public:
@@ -85,56 +90,70 @@ void getMemFromOS(size_t size);
 // return free used kilo bytes on the heap
 inline unsigned int getUsedMemory() {
   return heapTotalSize - 
-    (heapEnd - heapTop)/KB;
+    (heapTop - heapEnd)/KB;
 }
 
 inline unsigned int getAllocatedMemory() {
   return heapTotalSize;
 }
 
+
+/* Allocation functions.
+ * Assertion heapTop is alway aligned to int32 boundaries
+ */
+
+
 void *heapMallocOutline(size_t chunk_size);
 
-/* align X to word boundaries */
-#define WordAlign(X) 							      \
-  { int _help = (long) X % WordSize;					      \
-    if (_help != 0) { X += WordSize - _help; }				      \
-  }
 
-inline
-void *heapMalloc(size_t chunk_size)
+inline void *mallocBody(int chunk_size)
 {
-  WordAlign(chunk_size);
-  
-  char *oldTop = heapTop;
-  heapTop += chunk_size;
-  if (heapTop > heapEnd) {
+  Assert(ToInt32(heapTop)%sizeof(int32) == 0);
+
+  heapTop -= chunk_size;
+  if (heapEnd > heapTop) {
     getMemFromOS(chunk_size);
-    oldTop = heapTop;
-    heapTop += chunk_size;
+    return heapMallocOutline(chunk_size);
   }
 
-#ifdef DEBUG_MEM
-  memset((char *)oldTop, 0x5A, chunk_size);
-#endif
-  return oldTop;
-} // heapMalloc
-
-
-/* allocate memory from heap aligned to OZ_Float boundary */
-inline void *floatMalloc()
-{
- loop:
-  while((int) heapTop % sizeof(OZ_Float)) {
-    heapTop++;
-  }
-  void *ret=heapMalloc(sizeof(OZ_Float));
-  /* we may have allocated a new block, so check again */
-  if ((int) ret % sizeof(OZ_Float)) {
-    goto loop;
-  }
-  return ret;
+  return heapTop;
 }
-  
+
+
+/* Assert: heapTop grows to LOWER address */
+#define HeapTopAlign(align) heapTop = (char *)((long)heapTop & (-align));
+
+/* like malloc(3): return pointer aligned to void* */
+inline void *heapMalloc(int chunk_size)
+{
+  if (sizeof(int32) != WordSize) {
+    HeapTopAlign(WordSize);
+  }
+  return mallocBody(chunk_size);
+}
+
+/* return pointer aligned to sizeof(int32) */
+inline int32 *int32Malloc(int chunk_size)
+{
+  return (int32 *) mallocBody(chunk_size);
+}
+
+
+/* return "chunk_size" aligned to "align" */
+inline void *alignedMalloc(int chunk_size, int align)
+{
+  HeapTopAlign(align);
+  return (int32 *) mallocBody(chunk_size);
+}
+
+
+/* ptr1 is newer than ptr2 on the heap */
+inline Bool heapNewer(void *ptr1, void *ptr2)
+{
+  return (ptr1 < ptr2);
+}
+
+
 // free list management
 const int freeListMaxSize = 500;
 

@@ -21,8 +21,8 @@
 // ----------------------------------------------------------------
 // heap memory
 
-// allocate 2000 kilo byte chuncks of memory
-const heapBlockSize = 2 * MB;
+// allocate 1000 kilo byte chuncks of memory
+const heapBlockSize = 1 * MB;
 
 MemChunks *MemChunks::list = NULL;
 
@@ -82,7 +82,7 @@ unsigned int getMemoryInFreeList()
 
 
 // ----------------------------------------------------------------
-// mem from os with 2 alternative
+// mem from os with 2 alternatives
 //   USESBRK
 //   USEMALLOC
 
@@ -110,7 +110,6 @@ void *ozMalloc(size_t size) {
 extern "C" void *sbrk(int incr);
 
 /* have to define this, that gcc is quiet */
-
 extern "C"  int brk(void *incr);
 
 
@@ -261,7 +260,7 @@ void ozFree(void *p)
 
  ERROR ERROR
  
- non valid OSMEM in memory.C 
+ non valid OSMEM in mem.cc
 
  ERROR ERROR
 
@@ -365,26 +364,29 @@ void getMemFromOS(size_t sz)
 
   heapTotalSize += heapBlockSize/KB;
 
-  heapTop = (char *) ozMalloc(heapBlockSize);
+  heapEnd = (char *) ozMalloc(heapBlockSize);
   
-  if (heapTop == NULL) {
+  if (heapEnd == NULL) {
     error("heapMalloc: Virtual memory exceeded"); 
   }
 
-  WordAlign(heapTop);
+  /* align heapEnd to word boundaries */
+  while(ToInt32(heapEnd)%WordSize != 0) {
+    heapEnd++;
+  }
   
   /* initialize with zeros */
-  DebugCheckT(memset(heapTop,0,heapBlockSize));
+  DebugCheckT(memset(heapEnd,0,heapBlockSize));
 
-  heapEnd = &heapTop[heapBlockSize];
+  heapTop = &heapEnd[heapBlockSize];
 
 //  message("heapEnd: 0x%lx\n maxPointer: 0x%lx\n",heapEnd,maxPointer+1);
-  if (heapEnd > (char*)maxPointer) {
+  if (heapTop > (char*)maxPointer) {
     error("Oz adress space exhausted");
     IO::exitOz(1);
   }
   
-  MemChunks::list = new MemChunks(heapTop,MemChunks::list,heapBlockSize);
+  MemChunks::list = new MemChunks(heapEnd,MemChunks::list,heapBlockSize);
   
   DebugCheck(heapTotalSize > heapBlockSize/KB,
 	     message("Increasing heap memory to %d kilo bytes\n", 
