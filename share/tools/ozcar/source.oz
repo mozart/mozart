@@ -31,7 +31,7 @@ in
    class SourceManager
 
       meth bpAt(File Line YesNo)
-	 Succeeded   = {Debug.breakpointAt File Line YesNo}
+	 Succeeded   = {DebugSupport.breakpointAt File Line YesNo}
 	 P           = case {UnknownFile File} then ""
 		       else 'file ' # {StripPath File} # ', '
 		       end # 'line ' # Line
