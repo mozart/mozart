@@ -470,7 +470,7 @@ static
 ProgramCounter unmarshalGRegRef(ProgramCounter PC,MsgBuffer *bs) 
 { 
   int nGRegs = unmarshalNumber(bs);
-  AssRegArray *gregs = PC ? new AssRegArray(nGRegs) : 0;
+  AssRegArray *gregs = PC ? AssRegArray::allocate(nGRegs) : 0;
 
   for (int i = 0; i < nGRegs; i++) {
     unsigned int reg = unmarshalNumber(bs);
@@ -1105,13 +1105,12 @@ ProgramCounter unmarshalLabelRobust(ProgramCounter pc, MsgBuffer *bs, int *error
   return ((pc && !(*error)) ? CodeArea::writeLabel(offset,0,pc) : (ProgramCounter) 0);
 }
 
-//
 static
 ProgramCounter unmarshalGRegRefRobust(ProgramCounter PC,MsgBuffer *bs,int *error)
 { 
   int e1,e2;
   int nGRegs = unmarshalNumberRobust(bs, &e1);
-  AssRegArray *gregs = PC ? new AssRegArray(nGRegs) : 0;
+  AssRegArray *gregs = PC ? AssRegArray::allocate(nGRegs) : 0;
 
   for (int i = 0; i < nGRegs; i++) {
     unsigned int reg = unmarshalNumberRobust(bs, &e2);
@@ -1121,6 +1120,7 @@ ProgramCounter unmarshalGRegRefRobust(ProgramCounter PC,MsgBuffer *bs,int *error
     }
   }
   *error = e1;
+
   return (writeAddress(gregs, PC));
 }
 

@@ -2008,27 +2008,37 @@ public:
   }
 };
 
-inline
-AssReg* allocAssRegBlock (int numb)
-{
-  return new AssReg[numb];
-}
-
 class AssRegArray  {
+private:
+  int    numbOfGRegs;
+  AssReg ar[1]; // maybe less or more
+
+  static AssRegArray * nullArray;
+
+  static AssRegArray * _allocate(int n) {
+    AssRegArray * a = (AssRegArray *) malloc(sizeof(AssRegArray) + 
+					     (n-1) * sizeof(AssReg));
+    a->numbOfGRegs = n;
+    return a;
+  }
 public:
+
+  static void init(void) {
+    nullArray = _allocate(0);
+  }
+
   NO_DEFAULT_CONSTRUCTORS(AssRegArray)
-  AssRegArray (int sizeInit) : numbOfGRegs (sizeInit) 
-  {
-    first = (sizeInit==0 ? (AssReg*) NULL : allocAssRegBlock(sizeInit));
+
+  static AssRegArray * allocate(int n) {
+    if (n == 0)
+      return nullArray;
+    else
+      return _allocate(n);
   }
 
   int getSize () { return (numbOfGRegs); }
-  AssReg &operator[] (int elem) { return ( *(first + elem) ); }
+  AssReg &operator[] (int elem) { return ar[elem]; }
   /* no bounds checking;    */
-
-private:
-  int numbOfGRegs;
-  AssReg* first;
 };
 
 

@@ -426,7 +426,7 @@ OZ_BI_define(BIstoreGRegRef,2,0)
     oz_typeError(1,"RegisterList");
   }
 
-  AssRegArray *gregs = new AssRegArray(numGlobals);
+  AssRegArray *gregs = AssRegArray::allocate(numGlobals);
   globals = oz_deref(globals);
   for (int i = 0; i < numGlobals; i++) {
     OZ_Term reg = oz_deref(oz_head(globals));
