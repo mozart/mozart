@@ -167,6 +167,54 @@ define
 				 parameters:      PS
 				 connected_props: CP)
 		   end}
+
+\ifdef VERBOSE
+      {System.showInfo '\t preparing procedures ...'}      
+\endif
+      local 
+	 PropList = {Record.toList PropTable}
+      in
+	 ProcTable = {MakeRecord procTable
+		      {FS.reflect.lowerBoundList
+		       {FS.value.make
+			{Map PropList fun {$ P}
+					 P.location.propInvoc.invoc
+				      end}}
+		      }
+		     }
+	 {ForAll PropList
+	  proc {$ P}
+	     Proc = P.location.propInvoc
+	     Id = Proc.invoc
+	  in
+	     ProcTable.Id
+	     = procedure(id:
+			    Proc.invoc
+			 name:
+			    Proc.name
+			 location:
+			    location(file:   Proc.file
+				     line:   Proc.line
+				     column: Proc.column
+				     path:   Proc.path)
+			 parameters:
+			    {FS.var.lowerBound
+			     {FS.reflect.lowerBound
+			      P.parameters}}
+			 connected_props: 
+			    {FS.var.lowerBound
+			     {FS.reflect.lowerBound
+			      P.connected_props}}
+			)
+	  end}
+	 {Record.forAll ProcTable
+	  proc {$ Proc}
+	     Proc.parameters
+	     = {FS.value.make {FS.reflect.lowerBound Proc.parameters}}
+	     Proc.connected_props
+	     = {FS.value.make {FS.reflect.lowerBound Proc.connected_props}}
+	  end}
+      end
    in
 \ifdef VERBOSE
       {System.showInfo '\t done.'}      
@@ -174,6 +222,7 @@ define
       
       reflect_space(varsTable:  VarTable
 		    propTable:  PropTable
+		    procTable:  ProcTable
 		    failedProp: {Record.foldL PropTable
 				 fun {$ L propagator(reference: Ref
 						     id: Id
