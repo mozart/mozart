@@ -21,27 +21,19 @@ export
    ExecuteCommand
    QuoteUsing
    ToUserVS
-import
+import System
    Property(get)     at 'x-oz://system/Property.ozf'
    OS(system getEnv) at 'x-oz://system/OS.ozf'
    Open(pipe)        at 'x-oz://system/Open.ozf'
+   Windows at 'Windows.ozf'
 define
-   %% on Windows we use the shell specified by environment
-   %% variable COMSPEC, on other platforms we specify
-   %% nothing which means we get `sh'.
-
-   IsWindows=({Property.get 'platform.os'}=='win32')
-   
-   SHELL = if IsWindows then
-	      {OS.getEnv 'COMSPEC'}#' /c '
-	   else nil end
 
    %% the arguments on the command given to the shell for
    %% execution need to be quoted to avoid problems with
    %% embeded spaces in filenames and special shell
    %% characters
    
-   QUOTE = if IsWindows then '"' else '\'' end
+   QUOTE = if Windows.isWin then '"' else '\'' end
 
    fun {QuoteUsing CMD Quote}
       %% CMD is a list: we are going to quote each element of
@@ -65,13 +57,26 @@ define
 
    %% for execution, use the platform specific quote
 
-   fun {ToProgramVS CMD} {QuoteUsing CMD QUOTE} end
-   fun {ToCommandVS CMD} SHELL#{QuoteUsing CMD QUOTE} end
+   %% On Win95/98 (aka old Windows), we need to invoke
+   %% COMMAND.COM, i.e. the shell specified by environment
+   %% variable COMSPEC.  On other systems OS.system already
+   %% does the right thing.
+
+   ToProgramVS
+   if Windows.isOldWin then
+      fun {!ToProgramVS CMD}
+	 'COMMAND.COM /C'#{QuoteUsing CMD QUOTE}
+      end
+   else
+      fun {!ToProgramVS CMD}
+	 {QuoteUsing CMD QUOTE}
+      end
+   end
+   ToCommandVS=ToProgramVS
 
    proc {Execute VS}
-      if {OS.system VS}\=0
-%	  if IsWindows then '"'#VS#'"' else VS end}\=0
-      then raise shell(VS) end end
+      %{System.showInfo 'EXECUTING: '#VS}
+      if {OS.system VS}\=0 then raise shell(VS) end end
    end
 
    proc {ExecuteProgram CMD} {Execute {ToProgramVS CMD}} end
