@@ -16,17 +16,12 @@
       <Title/Primary Types/
       <P>
 	<Index/primary types/<Index/types<And>primary/
-	<!--** figure: Primary Types in Oz -->
-	<!-- \begin{maxifigure} -->
-	<!-- \begin{center} -->
-	<!-- \newgray{lightgray}{0.95} -->
-	<!-- \newgray{gray}{0.75} -->
-	<!-- \input ../common/primary-types.tex -->
-	<!-- \end{center} -->
-	<!-- \hrule -->
-	<!-- \caption{\label{prelude:fig-primary-types}Primary Types in Oz} -->
-	<!-- \end{maxifigure} -->
-	The primary types of &Oz; are depicted in <!--** <Ptr to=...> -->.
+	<Figure float id="figure.types">
+	  <Caption>Primary Types in Oz.</Caption>
+	  <P>
+	    <Picture.extern latex to="primary-types.tex">
+	</Figure>
+	The primary types of &Oz; are depicted in <Ptr to="figure.types">.
 	Primary types provide a classification of values in the &Oz; Universe
 	such that any two different subtypes of some primary type are disjoint.
 	To check for a value to belong to a primary type, only its top-level
