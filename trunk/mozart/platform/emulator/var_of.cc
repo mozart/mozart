@@ -65,11 +65,11 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
       if (getWidth()>0) return FALSE;
 
       // Get local/global flag:
-      Bool vLoc=am.isLocalSVar(this);
+      Bool vLoc=oz_isLocalVar(this);
 
       // Bind OFSVar to the Literal:
       if (vLoc) doBind(vPtr, term);
-      else am.doBindAndTrail(vPtr, term);
+      else doBindAndTrail(vPtr, term);
 
       // Unify the labels:
       if (!oz_unify(term,label,scp)) return FALSE; // mm_u
@@ -97,7 +97,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
       LTuple* termLTup=tagged2LTuple(term);
 
       // Get local/global flag:
-      Bool vLoc=am.isLocalSVar(this);
+      Bool vLoc=oz_isLocalVar(this);
 
       // Check that var features are subset of {1,2}
       TaggedRef arg1=getFeatureValue(makeTaggedSmallInt(1));
@@ -122,7 +122,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
 
       // Bind OFSVar to the LTuple:
       if (vLoc) doBind(vPtr, bindInRecordCaseHack);
-      else am.doBindAndTrail(vPtr, bindInRecordCaseHack);
+      else doBindAndTrail(vPtr, bindInRecordCaseHack);
 
       // Unify the labels:
       if (!oz_unify(AtomCons,label,scp)) return FALSE; // mm_u
@@ -149,7 +149,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
     Assert(termSRec!=NULL);
 
     // Get local/global flag:
-    Bool vLoc=am.isLocalSVar(this);
+    Bool vLoc=oz_isLocalVar(this);
   
     // Check that all features of the OFSVar exist in the SRecord:
     // (During the check, calculate the list of feature pairs that correspond.)
@@ -172,7 +172,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
 
     // Bind OFSVar to the SRecord:
     if (vLoc) doBind(vPtr, bindInRecordCaseHack);
-    else am.doBindAndTrail(vPtr, bindInRecordCaseHack);
+    else doBindAndTrail(vPtr, bindInRecordCaseHack);
   
     // Unify the labels:
     if (!oz_unify(termSRec->getLabel(),label,scp))  // mm_u
@@ -233,8 +233,8 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode *scp)
   Assert(termVar!=NULL);
 
   // Get local/global flags:
-  Bool vLoc=am.isLocalSVar(this);
-  Bool tLoc=am.isLocalSVar(termVar);
+  Bool vLoc=oz_isLocalVar(this);
+  Bool tLoc=oz_isLocalVar(termVar);
   
   OzOFVariable* newVar=NULL;
   OzOFVariable* otherVar=NULL;

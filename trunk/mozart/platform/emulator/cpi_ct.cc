@@ -112,10 +112,10 @@ void OZ_CtVar::read(OZ_Term v)
       // don't know before hand if local or global
       
       // set flags
-      setState(am.isLocalSVar(v) ? loc_e : glob_e);
+      OzCtVariable * ctvar = tagged2GenCtVar(v);
+      setState(oz_isLocalVar(ctvar) ? loc_e : glob_e);
       setSort(var_e);
       
-      OzCtVariable * ctvar = tagged2GenCtVar(v);
       OZ_Ct * constr = ctvar->getConstraint();
 
       if (isState(glob_e) || oz_onToplevel()) {
@@ -223,7 +223,7 @@ OZ_Boolean OZ_CtVar::tell(void)
 	// a _global_ variable becomes a value
 
 	ctvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
-	am.doBindAndTrail(varPtr, constr->toValue());
+	doBindAndTrail(varPtr, constr->toValue());
 
 	ctRestoreConstraint();
       }

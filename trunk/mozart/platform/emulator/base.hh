@@ -389,6 +389,10 @@ void handlerUSR2();
 
 void oz_checkExtSuspension(Suspension susp, Board * home);
 
+OZ_Return oz_unify(OZ_Term t1, OZ_Term t2, ByteCode *scp=0);
+void oz_bind(OZ_Term *varPtr, OZ_Term term);
+void oz_bind_global(OZ_Term var, OZ_Term term);
+
 #ifdef DEBUG_STABLE
 extern SuspList * board_constraints;
 void printBC(ostream &, Board *);
