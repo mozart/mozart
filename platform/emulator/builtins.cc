@@ -5425,6 +5425,39 @@ OZ_C_proc_begin(BItermToVS,2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIgetTermSize,4)
+{
+  int depth, width;
+  OZ_Term t = OZ_getCArg (0);
+  OZ_Term dt = OZ_getCArg (1);
+  OZ_Term wt = OZ_getCArg (2);
+  OZ_Term out = OZ_getCArg (3);
+
+  DEREF(dt, _1, dtTag);
+  DEREF(wt, _2, wtTag);
+
+  if (isAnyVar(dtTag)) {
+    return (SUSPEND);
+  } else if (!isSmallInt(dt)) {
+    TypeErrorT(1,"(valid) Int)");
+    TypeErrorT(1,"Int");
+  } else {
+    depth = smallIntValue(dt);
+  }
+
+  if (isAnyVar(wtTag)) {
+    return (SUSPEND);
+  } else if (!isSmallInt(wt)) {
+    TypeErrorT(2,"(valid) Int)");
+    TypeErrorT(2,"Int");
+  } else {
+    width = smallIntValue(wt);
+  }
+
+  return OZ_unify(out, OZ_int(OZ_termGetSize(t, depth, width)));
+}
+OZ_C_proc_end
+
 OZ_Return showInline(TaggedRef term)
 {
   printInline(term);
@@ -6858,6 +6891,7 @@ BIspec allSpec2[] = {
 
   {"printVS",1,BIprintVS},
   {"termToVS",2,BItermToVS},
+  {"getTermSize",4,BIgetTermSize},
 
   {"dumpThreads",0,BIdumpThreads},
   {"listThreads",1,BIlistThreads},

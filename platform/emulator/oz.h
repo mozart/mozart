@@ -163,6 +163,7 @@ extern char *  _FUNDECL(OZ_parseFloat,(char *s));
 extern OZ_Term _FUNDECL(OZ_CStringToNumber,(char *));
 
 extern char *  _FUNDECL(OZ_toC,(OZ_Term, int, int));
+extern int     _FUNDECL(OZ_termGetSize,(OZ_Term, int, int));
 
 extern OZ_Term _FUNDECL(OZ_string,(char *));
 extern char *  _FUNDECL(OZ_stringToC,(OZ_Term t));
