@@ -450,7 +450,7 @@ in
 	 Gui,ClearQueue(env)
       end
 
-      meth frameClick(frame:F highlight:Highlight<=true)
+      meth FrameClick(frame:F highlight:Highlight<=true)
 	 case @currentThread == unit then skip
 	 elsecase {Dbg.checkStopped @currentThread} then
 	    %% allow switching of stack frames only if thread is stopped
@@ -460,7 +460,8 @@ in
 	    case Highlight then
 	       L = case F.line == unit then unit else {Abs F.line} end
 	    in
-	       {SendEmacs delayedBar(file:F.file line:L column:F.column)}
+	       {SendEmacs bar(file:F.file line:L column:F.column
+			      state:unchanged)}
 	       Gui,SelectStackFrame(F.nr)
 	    else
 	       Gui,SelectStackFrame(0)
@@ -494,7 +495,7 @@ in
 	    F   = {Stack getFrame(N $)}
 	 in
 	    case F == unit then skip else
-	       Gui,frameClick(frame:F highlight:true)
+	       Gui,FrameClick(frame:F)
 	    end
 	 end
       end
@@ -535,7 +536,7 @@ in
 	 LineActTag = act # FrameNr %% dito
 	 LineAction = {New Tk.action
 		       tkInit(parent: W
-			      action: self # frameClick(frame:Frame))}
+			      action: self # FrameClick(frame:Frame))}
 	 LineEnd     = p(FrameNr 'end')
 	 UpToDate    = 1 > 0 %{Emacs isUpToDate(Frame.time $)}
       in
@@ -599,7 +600,7 @@ in
 	    Gui,Disable(stack W)
 	    Gui,Enqueue(stack o(W yview 'end'))
 	    Gui,ClearQueue(stack)
-	    Gui,frameClick(frame:Frame highlight:false)
+	    Gui,FrameClick(frame:Frame highlight:false)
 	 else skip end
       end
 
@@ -633,7 +634,7 @@ in
 	       case LastFrame == nil then
 		  {OzcarError 'printStack: LastFrame == nil ?!'}
 	       else
-		  Gui,frameClick(frame:LastFrame highlight:false)
+		  Gui,FrameClick(frame:LastFrame highlight:false)
 	       end
 	    end
 	 end
