@@ -3076,6 +3076,30 @@ LBLdispatcher:
 	  default:
 	    break;
 	  }
+	} else if (literalEq(kind, AtomDebugCond)) {
+	  // look whether we can determine the arbiter:
+	  switch (CodeArea::getOpcode(PC+6)) {
+	  case TESTLITERALX:
+	  case TESTNUMBERX:
+	  case TESTBOOLX:
+	  case SWITCHONTERMX:
+	    dbg->data = Xreg(getRegArg(PC+7));
+	    break;
+	  case TESTLITERALY:
+	  case TESTNUMBERY:
+	  case TESTBOOLY:
+	  case SWITCHONTERMY:
+	    dbg->data = Yreg(getRegArg(PC+7));
+	    break;
+	  case TESTLITERALG:
+	  case TESTNUMBERG:
+	  case TESTBOOLG:
+	  case SWITCHONTERMG:
+	    dbg->data = Greg(getRegArg(PC+7));
+	    break;
+	  default:
+	    break;
+	  }
 	}
 
 	if (CTT->getStep()) {
