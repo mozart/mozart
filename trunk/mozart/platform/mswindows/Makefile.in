@@ -28,7 +28,7 @@ SRCDIR= 	@srcdir@
 VPATH=	 	@srcdir@
 BINDIR=		$(PREFIX)/winbin
 
-CXX=		@CXX@
+CXX=		@CXX@ @CXXFLAGS@
 INCS=		-I. -I$(SRCDIR)
 
 INSTALL=	@INSTALL@
