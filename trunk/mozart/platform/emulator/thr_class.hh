@@ -452,7 +452,7 @@ public:
   void reInit (int prio, Board *home);  // for the root thread only;
 
   //  Second - get/set the home board;
-  Board *getBoardFast ();
+  Board *getBoard();
   Board *getBoardInternal() { return (Board *) getPtr(); }
   void setBoardInternal(Board *bp) { setPtr(bp); }
 

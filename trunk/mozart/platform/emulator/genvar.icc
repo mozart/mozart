@@ -125,7 +125,7 @@ void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
 	 (getType() == BoolVariable && glob_var->getType() == FDVariable));
   Assert(!prop || am.isLocalSVar(this) && ! am.isLocalSVar(glob_var));
   
-  Board * glob_home = glob_var->getBoardFast();
+  Board * glob_home = glob_var->getBoard();
   suspList = ::installPropagators(suspList, glob_var->getSuspList(),
 				  glob_home);
 			

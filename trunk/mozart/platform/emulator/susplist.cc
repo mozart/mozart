@@ -32,7 +32,7 @@ int SuspList::length(void)
   for(SuspList * aux = this; aux != NULL; aux = aux->next) {
     if (!aux->getElem()->isDeadThread () &&
 	!aux->getElem()->isPropagated () &&
-	aux->getElem()->getBoardFast ()) {
+	aux->getElem()->getBoard()) {
       i++;
     }
   }
@@ -45,7 +45,7 @@ int SuspList::lengthProp(void)
   for(SuspList * aux = this; aux != NULL; aux = aux->next) {
     if (!aux->getElem()->isDeadThread () &&
 	aux->getElem()->isPropagated () &&
-	aux->getElem()->getBoardFast ()) {
+	aux->getElem()->getBoard()) {
       i++;
     }
   }
@@ -74,7 +74,7 @@ SuspList * installPropagators(SuspList * local_list, SuspList * glob_list,
     if (!(thr->isDeadThread ()) && 
 	(thr->isPropagator()) &&
 	!(thr->isTagged ()) && 
-	am.isBetween (thr->getBoardFast (), glob_home ) == B_BETWEEN) {
+	am.isBetween (thr->getBoard(), glob_home ) == B_BETWEEN) {
       ret_list = new SuspList (thr, ret_list);
     }
     

@@ -105,7 +105,7 @@ void SolveActor::clearSuspList(Thread *killThr = NULL) {
       continue;
     }
 
-    Board *bb = thr->getBoardFast ();
+    Board *bb = thr->getBoard();
 
     while (1) {
       bb = bb->getSolveBoard();
