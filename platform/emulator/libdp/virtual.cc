@@ -211,7 +211,7 @@ probeStatus_VirtualSiteImpl(VirtualSite *vs,
 // temporary problems for virtual sites;
 GiveUpReturn giveUp_VirtualSiteImpl(VirtualSite* vs)
 {
-  error("Virtual Site is given up!??");
+  OZ_error("Virtual Site is given up!??");
   return (SITE_NOW_NORMAL);
 }
 
@@ -391,11 +391,11 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
 	//
 	switch (msgType) {
 	case VS_M_INVALID:
-	  error("readVSMessages: M_INVALID message???");
+	  OZ_error("readVSMessages: M_INVALID message???");
 	  break;
 
 	case VS_M_INIT_VS:
-	  error("readVSMessages: VS_M_INIT_VS is not expected here.");
+	  OZ_error("readVSMessages: VS_M_INIT_VS is not expected here.");
 	  break;
 
 	case VS_M_SITE_IS_ALIVE:
@@ -413,7 +413,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
 	    if (sendTo_VirtualSite(vs, bs, /* messageType */ M_NONE,
 				   /* storeSite */ (DSite *) 0,
 				   /* storeIndex */ 0) != ACCEPTED)
-	      error("readVSMessages: unable to send 'site_alive' message?");
+	      OZ_error("readVSMessages: unable to send 'site_alive' message?");
 	    break;
 	  }
 
@@ -436,7 +436,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
 	  }
 
 	default:
-	  error("readVSMessages: unknown 'vs' message type!");
+	  OZ_error("readVSMessages: unknown 'vs' message type!");
 	  break;
 	}
       }
@@ -697,7 +697,7 @@ OZ_BI_define(BIVSnewMailbox,0,1)
   //
   if (!mbm->getMailbox()->enqueue(buf->getFirstChunkSHMKey(),
 				  buf->getFirstChunkNum()))
-    error("Virtual sites: unable to put the M_INIT_VS message");
+    OZ_error("Virtual sites: unable to put the M_INIT_VS message");
   buf->passChunks();
   buf->cleanup();
   freeMsgBufferPool.dispose(buf);
@@ -769,7 +769,7 @@ OZ_BI_define(BIVSinitServer,1,0)
   // new process group - otherwise failed virtual sites will kill
   // the whole virtual site group ;-)
   if (setpgid(0, 0))
-    error("failed to form a new process group");
+    OZ_error("failed to form a new process group");
 
   //
   if (myVSMailboxManager)

@@ -113,7 +113,7 @@ enum TypeOfTerm {
 #ifdef DEBUG_GC  
 #define GCDEBUG(X)					\
   if (!isCollecting && (_tagTypeOf(X)==GCTAG ) )	\
-    error("GcTag unexpectedly found.");
+   OZ_error("GcTag unexpectedly found.");
 #else
 #define GCDEBUG(X)
 #endif
