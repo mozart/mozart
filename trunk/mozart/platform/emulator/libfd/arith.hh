@@ -71,20 +71,6 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class MinusPropagator : public Propagator_D_D_D {
-  friend INIT_FUNC(fdp_init);
-private:
-  static OZ_PropagatorProfile profile;
-public:
-  MinusPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
-    : Propagator_D_D_D(x, y, z) { };
-
-  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
-  virtual OZ_Return propagate(void);
-};
-
-//-----------------------------------------------------------------------------
-
 class TimesPropagator : public Propagator_D_D_D {
   friend INIT_FUNC(fdp_init);
 private:
@@ -160,6 +146,62 @@ public:
   virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
+
+//=============================================================================
+// domain consistent constraints
+
+class TwiceDPropagator : public Propagator_D_D {
+  friend INIT_FUNC(fdp_init);
+private:
+  static OZ_PropagatorProfile profile;
+public:
+  TwiceDPropagator(OZ_Term x, OZ_Term y) : Propagator_D_D(x, y) {}
+  
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
+  virtual OZ_Return propagate(void);
+};
+
+//-----------------------------------------------------------------------------
+
+class SquareDPropagator : public Propagator_D_D {
+  friend INIT_FUNC(fdp_init);
+private:
+  static OZ_PropagatorProfile profile;
+public:
+  SquareDPropagator(OZ_Term x, OZ_Term y) : Propagator_D_D(x, y) {}
+  
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
+  virtual OZ_Return propagate(void);
+};
+
+//-----------------------------------------------------------------------------
+
+class PlusDPropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
+private:
+  static OZ_PropagatorProfile profile;
+public:
+  PlusDPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
+    : Propagator_D_D_D(x, y, z) {}
+
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
+  virtual OZ_Return propagate(void);
+};
+
+//-----------------------------------------------------------------------------
+
+class TimesDPropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
+private:
+  static OZ_PropagatorProfile profile;
+public:
+  TimesDPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
+    : Propagator_D_D_D(x, y, z) { };
+  
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
+  virtual OZ_Return propagate(void);
+};
+
 
 #endif
 //-----------------------------------------------------------------------------

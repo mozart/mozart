@@ -49,8 +49,11 @@ void fdp_init(void)
   TwicePropagator::profile =             "fdp_twice";
   SquarePropagator::profile =            "fdp_square";
   PlusPropagator::profile =              "fdp_plus";
-  MinusPropagator::profile =             "fdp_minus";
   TimesPropagator::profile =             "fdp_times";
+  TwiceDPropagator::profile =            "fdp_twiceD";
+  SquareDPropagator::profile =           "fdp_squareD";
+  PlusDPropagator::profile =             "fdp_plusD";
+  TimesDPropagator::profile =            "fdp_timesD";
   DivPropagator::profile =               "fdp_divD";
   DivIPropagator::profile =              "fdp_divI";
   ModPropagator::profile =               "fdp_modD";

@@ -217,12 +217,10 @@ protected:
     Assert(size>0);
     // skips null entries, i.e. holes
     register void* x;
-    do
-      {
-	if (tail_index==0) drop_tail();
-	x = tail->array[--tail_index];
-      }
-    while (x==0);
+    do {
+      if (tail_index==0) drop_tail();
+      x = tail->array[--tail_index];
+    } while (x==0);
     size--;
     return x;
   }
