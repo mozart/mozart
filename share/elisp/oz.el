@@ -54,6 +54,13 @@
 ;; Variables/Initialization
 ;;------------------------------------------------------------
 
+(defvar oz-other-map nil
+  "choose alternate keybinding
+
+t:   avoids redefinition of already used keys
+nil: use gerts key bindings
+")
+
 (defvar oz-gdb-autostart t
   "*In gdb mode: start emulator immediately or not.
 
@@ -424,8 +431,10 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 	(set-buffer oz-compiler-buffer)
 	(set (make-local-variable 
 	      'compilation-error-regexp-alist)
-	     '(("at line \\([0-9]+\\) in file \"\\([^ \n]+[^. \n]\\)\\.?\""
-		2 1)))
+	     '(
+	       ("at line \\([0-9]+\\) in file \"\\([^ \n]+[^. \n]\\)\\.?\""
+		2 1)
+	       ("at line \\([0-9]+\\)" 1 1)))
 	(set (make-local-variable 'compilation-parsing-end)
 	     (point))
 	(set (make-local-variable 'compilation-error-list)
@@ -1053,28 +1062,30 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-mode-commands (map)
   (define-key map "\t"       'oz-indent-line)
 
-;   (define-key map "\C-c\C-f\C-b" 	'oz-feed-buffer)
-;   (define-key map "\C-c\C-f\C-r"	'oz-feed-region)
-;   (define-key map "\C-c\C-f\C-l"	'oz-feed-line)
-;   (define-key map "\C-c\C-f\C-f"	'oz-feed-file)
-;   (define-key map "\C-c\C-i"          'oz-feed-file)
-;   (define-key map "\C-c\C-f\C-p"	'oz-feed-paragraph)
+  (if oz-other-map
+      (progn
+		   
+	(define-key map "\C-c\C-f\C-b" 	'oz-feed-buffer)
+	(define-key map "\C-c\C-f\C-r"	'oz-feed-region)
+	(define-key map "\C-c\C-f\C-l"	'oz-feed-line)
+	(define-key map "\C-c\C-f\C-f"	'oz-feed-file)
+	(define-key map "\C-c\C-i"      'oz-feed-file)
+	(define-key map "\C-c\C-f\C-p"	'oz-feed-paragraph)
+	
+	(define-key map "\C-c\C-p\C-f"	'oz-precompile-file)
 
-;   (define-key map "\C-c\C-p\C-f"	'oz-precompile-file)
+	(define-key map "\C-c\C-b\C-l"	'oz-feed-line-browse)
+	(define-key map "\C-c\C-b\C-r"  'oz-feed-region-browse)
+	)
+    (define-key map "\M-\C-m"  'oz-feed-buffer)
+    (define-key map "\M-r"     'oz-feed-region)
+    (define-key map "\M-l"     'oz-feed-line)
+    (define-key map "\C-c\C-p" 'oz-feed-paragraph)
+    (define-key map "\C-cb"    'oz-feed-line-browse)
+    (define-key map "\C-c\C-b" 'oz-feed-region-browse)
+    (define-key map "\M-n"     'oz-next-buffer)
+    (define-key map "\M-p"     'oz-previous-buffer))
 
-;   (define-key map "\C-c\C-b\C-l"	'oz-feed-line-browse)
-;   (define-key map "\C-c\C-b\C-r"    	'oz-feed-region-browse)
-;   (define-key map "\C-c\C-c"    	'oz-toggle-compiler)
-
-  (define-key map "\M-\C-m"  'oz-feed-buffer)
-  (define-key map "\M-r"     'oz-feed-region)
-  (define-key map "\M-l"     'oz-feed-line)
-  (define-key map "\C-c\C-p" 'oz-feed-paragraph)
-
-  (define-key map "\C-cb"       'oz-feed-line-browse)
-  (define-key map "\C-c\C-b"    'oz-feed-region-browse)
-  (define-key map "\M-n"        'oz-next-buffer)
-  (define-key map "\M-p"        'oz-previous-buffer)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
   (if oz-lucid
       (progn
