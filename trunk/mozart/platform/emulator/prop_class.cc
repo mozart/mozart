@@ -26,4 +26,9 @@
 
 #include "prop_class.hh"
 
+#ifndef WINDOWS
+int __OZ_rp_isUnify = 0;
+#endif
+
 Propagator * Propagator::_runningPropagator = NULL;
+

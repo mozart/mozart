@@ -663,7 +663,14 @@ public:
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
+#ifdef WINDOWS
   OZ_Boolean mayBeEqualVars(void);
+#else
+  OZ_Boolean mayBeEqualVars(void) {
+    extern int __OZ_rp_isUnify;
+    return __OZ_rp_isUnify;
+  }
+#endif
   OZ_Return replaceBy(OZ_Propagator *);
   OZ_Return replaceBy(OZ_Term, OZ_Term);
   OZ_Return replaceByInt(OZ_Term, int);
@@ -958,12 +965,46 @@ _FUNDECL(void,OZ_hfreeChars,(char *, int));
 _FUNDECL(int *,OZ_findEqualVars,(int, OZ_Term *)); // static return value
 _FUNDECL(int *,OZ_findSingletons,(int, OZ_Term *)); // static return value
 
-_FUNDECL(OZ_Boolean,OZ_isEqualVars,(OZ_Term, OZ_Term));
+#define __OZ_CPI_isRef(v)           !((v) & 3)
+#define __OZ_CPI_tagged2Ref(v)      ((OZ_Term *) (v))
+#define __OZ_CPI_unstag_ptr(c,t,st) ((c) (((OZ_Term)(t))-(st)))
+#define __OZ_CPI_hasStag(t,st)      !(__OZ_CPI_unstag_ptr(int,t,st) & 7)
+#define __OZ_CPI_isVar(t)           __OZ_CPI_hasStag(t,1)
+
+inline 
+OZ_Boolean OZ_isEqualVars(OZ_Term v1, OZ_Term v2)
+{
+  OZ_Term * v1_ptr;
+  if (__OZ_CPI_isRef(v1)) {
+    do {
+      v1_ptr = __OZ_CPI_tagged2Ref(v1);
+      v1     = *v1_ptr;
+    } while (__OZ_CPI_isRef(v1));
+    if (!__OZ_CPI_isVar(v1))
+      return OZ_FALSE;
+    OZ_Term * v2_ptr;
+    if (__OZ_CPI_isRef(v2)) {
+      do {
+	v2_ptr = __OZ_CPI_tagged2Ref(v2);
+	v2     = *v2_ptr;
+      } while (__OZ_CPI_isRef(v2));
+      return v1_ptr == v2_ptr;
+    }
+  }
+  return OZ_FALSE;
+}
+
+#undef __OZ_CPI_isRef
+#undef __OZ_CPI_tagged2Ref
+#undef __OZ_CPI_unstag_ptr
+#undef __OZ_CPI_hasStag
+#undef __OZ_CPI_isVar
 
 _FUNDECL(OZ_Return,OZ_typeErrorCPI,(char *, int, char *));
 
-_FUNDECL(int,OZ_getFDInf,(void));
-_FUNDECL(int,OZ_getFDSup,(void));
+#define OZ_getFDInf() (0)
+#define OZ_getFDSup() (134217727-1)
+
 _FUNDECL(int,OZ_getFSetInf,(void));
 _FUNDECL(int,OZ_getFSetSup,(void));
 
