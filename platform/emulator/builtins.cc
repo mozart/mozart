@@ -889,9 +889,6 @@ OZ_C_proc_begin(BIcloneSpace, 2) {
 
   Board* CBB = am.currentBoard;
 
-  if (CBB != space->getSolveBoard()->getParentFast())
-    TypeErrorT(0, "current space must be directly subordinated");
-
   if (space->isFailed())
     return OZ_unify(OZ_getCArg(1),
                     makeTaggedConst(new Space(CBB, (Board *) 0)));
