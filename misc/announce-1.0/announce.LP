@@ -1,7 +1,7 @@
-Release of Mozart 1.0
----------------------
+Release of Mozart 1.0.0
+-----------------------
 
-Available at: http://mozart.ps.uni-sb.de
+Available at: http://www.mozart-oz.org
 
 Systems supported: Many Unix-based platforms, Windows 95/98/NT
 
