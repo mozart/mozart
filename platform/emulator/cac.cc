@@ -758,6 +758,43 @@ TaggedRef _cacExtension(TaggedRef term) {
 
 #ifdef G_COLLECT
 
+// this stack is used to revive the pairs scheduled for
+// finalization.  we should not copy them while gc-ing the
+// weak dictionaries because we depend on the absence of
+// gc marks to tell us that entries need to be finalized.
+// thus we must postpone copying the entries to be finalized
+// until after all weak dictionaries have been processed.
+// it would not be incorrect to copy while processing the
+// weak dictionaries, but an unreachable chain of things
+// would require several gc in order to be fully finalized.
+
+class WeakReviveStack : public Stack {
+public:
+  WeakReviveStack() : Stack(64,Stack_WithMalloc) {}
+  ~WeakReviveStack() {}
+  // we push the pair whose 2 elements are still uncollected
+  // actually, it may be that the 1st element (i.e. the key)
+  // is already collected.
+  void push(OZ_Term pair) {
+    Assert(oz_isSRecord(pair));
+    Stack::push((StackEntry) pair);
+  }
+  SRecord* pop() { return tagged2SRecord((OZ_Term) Stack::pop()); }
+  void recurse(void);
+};
+
+static WeakReviveStack weakReviveStack;
+
+void WeakReviveStack::recurse(void)
+{
+  SRecord* sr;
+  while (!isEmpty()) {
+    sr = pop();
+    // collect the args of this 2-ary tuple
+    OZ_cacBlock(sr->getRef(),sr->getRef(),2);
+  }
+}
+
 class WeakStack : public Stack {
 public:
   WeakStack() : Stack(64,Stack_WithMalloc) {}
@@ -853,17 +890,18 @@ void WeakDictionary::weakGC()
       numelem--;
       if (stream) {
 	if (!list) newstream=list=oz_newFuture(oz_rootBoard());
-	OZ_Term k = table->getKey(i);
-	// collect key and value
-	oz_cacTerm(t,t);
-	oz_cacTerm(k,k);
-	list = oz_cons(oz_pair2(k,t),list);
+	// schedule key and value for later collection
+	OZ_Term p = oz_pair2(table->getKey(i),t);
+	weakReviveStack.push(p);
+	list = oz_cons(p,list);
 	count++;
       }
+      // set entry to 0 -- it will be skipped when we
+      // actually collect the table below
       table->clearValue(i);
     }
   }
-  // then update the stream
+  // then schedule the stream for update
   if (stream && list) {
     weakStack.push(stream,list);
     stream=newstream;
