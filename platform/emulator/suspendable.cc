@@ -224,6 +224,8 @@ Bool Suspendable::_wakeupAll(void) {
 
 void oz_forceWakeUp(SuspList **suspList)
 {
+  Assert(!am.inEqEq());
+
   SuspList ** p  = suspList;
   SuspList * sl = *suspList;
 
