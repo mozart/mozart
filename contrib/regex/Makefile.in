@@ -24,7 +24,7 @@ INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
 
-TARGETS		= regex.ozf regex.so
+TARGETS		= regex.ozf regex.so-$(PLATFORM)
 LIB_TARGETS	= $(LIB_DIR)/regex.ozf $(LIB_DIR)/regex.so-$(PLATFORM)
 
 .PHONY: all install clean veryclean distclean bootstrap depend
@@ -38,20 +38,20 @@ $(LIB_DIR):
 $(LIB_DIR)/regex.ozf: regex.ozf
 	$(INSTALL_LIB) $< $@
 
-$(LIB_DIR)/regex.so-$(PLATFORM): regex.so
+$(LIB_DIR)/regex.so-$(PLATFORM): regex.so-$(PLATFORM)
 	$(INSTALL_LIB) $< $@
 
 regex.ozf: regex.oz
 	$(COMPILE) $< -o $@
 
-regex.so: regex.o
+regex.so-$(PLATFORM): regex.o
 	$(OZDYNLD) -o $@ $< $(LDFLAGS) $(LIBS)
 
 regex.o: regex.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 clean veryclean:
-	-$(RM) *~ *.ozf *.o *.so
+	-$(RM) *~ *.ozf *.o *.so-*
 
 distclean: clean
 	-$(RM) config.* Makefile

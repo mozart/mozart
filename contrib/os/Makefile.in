@@ -24,11 +24,10 @@ INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
 
 FUNCTORS	= mode.ozf io.ozf process.ozf open.ozf
-NATIVES		= io.so process.so
+NATIVES		= io.so-$(PLATFORM) process.so-$(PLATFORM)
 
 LIB_FUNCTORS	= $(addprefix $(LIB_DIR)/,$(FUNCTORS))
-PNATIVES	= $(addsuffix -$(PLATFORM),$(NATIVES))
-LIB_NATIVES	= $(addprefix $(LIB_DIR)/,$(PNATIVES))
+LIB_NATIVES	= $(addprefix $(LIB_DIR)/,$(NATIVES))
 
 .PHONY: all install clean veryclean distclean bootstrap depend
 
@@ -41,20 +40,20 @@ $(LIB_DIR):
 $(LIB_FUNCTORS): $(LIB_DIR)/% : %
 	$(INSTALL_LIB) $< $@
 
-$(LIB_NATIVES): $(LIB_DIR)/%.so-$(PLATFORM): %.so
+$(LIB_NATIVES): $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
 	$(INSTALL_LIB) $< $@
 
 %.ozf: %.oz
 	$(OZC) -c $< -o $@
 
-%.so: %.o
+%.so-$(PLATFORM): %.o
 	$(OZDYNLD) $< -o $@ $(LDFLAGS) $(LIBS)
 
 %.o: %.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 clean veryclean:
-	-$(RM) *~ *.ozf *.so *.o
+	-$(RM) *~ *.ozf *.so-* *.o
 
 distclean: veryclean
 	-$(RM) config.* Makefile
