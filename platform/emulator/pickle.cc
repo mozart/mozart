@@ -344,7 +344,6 @@ void marshalTermRef(int lbl, MsgBuffer *bs)
 char *makeHeader(crc_t crc, int *headerSize)
 {
   static char buf[20];
-  unsigned int crc32 = (unsigned int) crc;
   sprintf(buf,"%c%c%c%c%c%c%c",
 	  SYSLETHEADER,SYSLETHEADER,SYSLETHEADER,
 	  (char) (crc>> 0)&0xff,
