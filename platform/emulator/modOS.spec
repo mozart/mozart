@@ -193,9 +193,13 @@
                              out => ['+record'],
                              BI  => unix_getpwnam},
 
-    'signal'            => { in  => ['+int','+procedure'],
+    'signal'            => { in  => ['+atom','+procedure'],
                              out => [],
                              BI  => unix_signalHandler},
+
+    'kill'              => { in  => ['+int','+atom'],
+                             out => ['+int'],
+                             BI  => unix_kill},
 
     'getPID'            => { in  => [],
                              out => ['+int'],
