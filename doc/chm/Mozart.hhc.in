@@ -192,6 +192,12 @@
 		    </OBJECT>
 		    <!--#include "browser/browser.hhc"-->
 		  <LI><OBJECT type="text/sitemap">
+		      <PARAM name="Name" value="Inspector">
+		      <PARAM name="Local" value="inspector/index.html">
+		      <PARAM name="ImageNumber" value="11">
+		    </OBJECT>
+		    <!--#include "inspector/inspector.hhc"-->
+		  <LI><OBJECT type="text/sitemap">
 		      <PARAM name="Name" value="Profiler">
 		      <PARAM name="Local" value="profiler/index.html">
 		      <PARAM name="ImageNumber" value="11">
