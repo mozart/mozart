@@ -70,8 +70,8 @@
 #include "componentBuffer.cc"
 
 
-static OZ_Term url_map=0;
-static OZ_Term OZ_Cache_Path = 0;
+// static OZ_Term url_map=0;
+// static OZ_Term OZ_Cache_Path = 0;
 
 /* ********************************************************************** */
 /*                                                                        */
@@ -326,13 +326,13 @@ OZ_C_proc_begin(BIsmartSave,3)
 }
 OZ_C_proc_end
 
-int loadURL(TaggedRef url, OZ_Term out, Thread *th)
-{
-  Literal *lit = tagged2Literal(url);
-  Assert(lit->isAtom());
-  const char *s=lit->getPrintName();
-  return loadURL(s,out,th);
-}
+// int loadURL(TaggedRef url, OZ_Term out, Thread *th)
+// {
+//   Literal *lit = tagged2Literal(url);
+//   Assert(lit->isAtom());
+//   const char *s=lit->getPrintName();
+//   return loadURL(s,out,th);
+// }
 
 
 // ===================================================================
@@ -704,117 +704,117 @@ void getURL(const char *url, TaggedRef out, URLAction act, Thread *th)
 
 
 
-OZ_C_proc_begin(BIgetCachePath,1)
-{
-  return OZ_unify(OZ_getCArg(0),(OZ_Cache_Path==0)?OZ_unit():OZ_Cache_Path);
-}
-OZ_C_proc_end
+// OZ_C_proc_begin(BIgetCachePath,1)
+// {
+//   return OZ_unify(OZ_getCArg(0),(OZ_Cache_Path==0)?OZ_unit():OZ_Cache_Path);
+// }
+// OZ_C_proc_end
+// 
+// OZ_C_proc_begin(BIsetCachePath,1)
+// {
+//   OZ_declareNonvarArg(0,cache);
+//   if (!OZ_onToplevel())
+//     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("setCachePath"));
+//   if (!OZ_isTuple(cache))
+//     return OZ_typeError(0,"Tuple");
+//   for(int i=OZ_width(cache);i>0;i--)
+//     if (!OZ_isVirtualString(OZ_getArg(cache,i-1),0))
+//       return OZ_typeError(0,"TupleOfVirtualStrings");
+//   OZ_Cache_Path = cache;
+//   return PROCEED;
+// }
+// OZ_C_proc_end
 
-OZ_C_proc_begin(BIsetCachePath,1)
-{
-  OZ_declareNonvarArg(0,cache);
-  if (!OZ_onToplevel())
-    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("setCachePath"));
-  if (!OZ_isTuple(cache))
-    return OZ_typeError(0,"Tuple");
-  for(int i=OZ_width(cache);i>0;i--)
-    if (!OZ_isVirtualString(OZ_getArg(cache,i-1),0))
-      return OZ_typeError(0,"TupleOfVirtualStrings");
-  OZ_Cache_Path = cache;
-  return PROCEED;
-}
-OZ_C_proc_end
-
-static void
-init_cache_path()
-{
-  if (OZ_Cache_Path!=0) return;
-  extern int env_to_tuple(char*,OZ_Term*);
-  if (env_to_tuple("OZ_CACHE_PATH",&OZ_Cache_Path)==0) return;
-#define NAMESIZE 256
-  char buffer[NAMESIZE];
-  strcpy(buffer,ozconf.ozHome);
-  strcpy(buffer+strlen(ozconf.ozHome),"/cache");
-  OZ_Cache_Path = OZ_mkTuple(OZ_atom("cache"),1,OZ_atom(buffer));
-}
+// static void
+// init_cache_path()
+// {
+//   if (OZ_Cache_Path!=0) return;
+//   extern int env_to_tuple(char*,OZ_Term*);
+//   if (env_to_tuple("OZ_CACHE_PATH",&OZ_Cache_Path)==0) return;
+// #define NAMESIZE 256
+//   char buffer[NAMESIZE];
+//   strcpy(buffer,ozconf.ozHome);
+//   strcpy(buffer+strlen(ozconf.ozHome),"/cache");
+//   OZ_Cache_Path = OZ_mkTuple(OZ_atom("cache"),1,OZ_atom(buffer));
+// }
     
-int loadURL(const char *url0, OZ_Term out, Thread *th)
-{
-  if (ozconf.showLoad)
-    message("Loading %s\n",url0);
-  // we need to locally copy the url arg because it may point
-  // to the static area used the ...ToC interface.
-
-  char urlbuf[NAMESIZE];
-  if (strlen(url0)>=NAMESIZE)
-    return OZ_raiseC("loadURL",2,OZ_atom("bufferOverflow"),
-		     OZ_atom(url0));
-  strcpy(urlbuf,url0);
-  char* url = urlbuf;
-
-  // perform translation through url_map:
-  // note that we leave currentURL untranslated in order to
-  // record the original symbolic dependency.  Only url is
-  // translated to obtain the actual location.
-
-  if (url_map!=0) {
-    OZ_Term oldURL=oz_atom(url);
-    OZ_Term newURL;
-    int notTooMany = 100;
-    while ((newURL=OZ_subtree(url_map,oldURL))) {
-      if (!OZ_isAtom(newURL))
-	return OZ_raiseC("loadURL",2,OZ_atom("badUrlInMap"),newURL);
-      oldURL=newURL;
-      if (!(notTooMany--))
-	return OZ_raiseC("loadURL",1,OZ_atom("tooManyRemaps"));
-    }
-    const char *urlin = OZ_atomToC(oldURL);
-    if (strlen(urlin)>=NAMESIZE)
-      return OZ_raiseC("loadURL",2,OZ_atom("bufferOverflow"),oldURL);
-    strcpy(url,urlin);
-  }
-
-  if (strchr(url,':')==NULL) { // no prefix --> local file name
-    return loadFile(url,out);
-  }
-
-  // check local caches
-  if (OZ_Cache_Path==0) init_cache_path();
-  {
-    char buffer[NAMESIZE];
-    int idx = 0;
-    char *s = url;
-    if (strlen(s)>=NAMESIZE) goto fall_through;
-    while (*s!='\0' && *s!=':') buffer[idx++]=*s++;
-    if (s[0]!=':' || s[1]!='/' || s[2]!='/') goto fall_through;
-    s += 3;
-    buffer[idx++] = '/';
-    strcpy(buffer+idx,s);
-    extern int find_file(OZ_Term,char*,char*);
-    char path[NAMESIZE];
-    if (find_file(OZ_Cache_Path,buffer,path)==0) {
-      if (ozconf.showCacheLoad)
-	message("Loading %s\n*** from cache %s\n",url,path);
-      return loadFile(path,out);
-    }
-  fall_through:;
-  }
-
-  switch (url[0]) {
-  case 'f':
-    {
-      const char *prefix = "file:";
-      if (strncmp(url,prefix,strlen(prefix))!=0) goto bomb;
-
-      char *filename = url+strlen(prefix);
-      return loadFile(filename,out);
-    }
-  }
-
-bomb:
-  getURL(url,out,URL_LOAD,th);
-  return BI_PREEMPT;
-}
+// int loadURL(const char *url0, OZ_Term out, Thread *th)
+// {
+//   if (ozconf.showLoad)
+//     message("Loading %s\n",url0);
+//   // we need to locally copy the url arg because it may point
+//   // to the static area used the ...ToC interface.
+// 
+//   char urlbuf[NAMESIZE];
+//   if (strlen(url0)>=NAMESIZE)
+//     return OZ_raiseC("loadURL",2,OZ_atom("bufferOverflow"),
+// 		     OZ_atom(url0));
+//   strcpy(urlbuf,url0);
+//   char* url = urlbuf;
+// 
+//   // perform translation through url_map:
+//   // note that we leave currentURL untranslated in order to
+//   // record the original symbolic dependency.  Only url is
+//   // translated to obtain the actual location.
+// 
+//   if (url_map!=0) {
+//     OZ_Term oldURL=oz_atom(url);
+//     OZ_Term newURL;
+//     int notTooMany = 100;
+//     while ((newURL=OZ_subtree(url_map,oldURL))) {
+//       if (!OZ_isAtom(newURL))
+// 	return OZ_raiseC("loadURL",2,OZ_atom("badUrlInMap"),newURL);
+//       oldURL=newURL;
+//       if (!(notTooMany--))
+// 	return OZ_raiseC("loadURL",1,OZ_atom("tooManyRemaps"));
+//     }
+//     const char *urlin = OZ_atomToC(oldURL);
+//     if (strlen(urlin)>=NAMESIZE)
+//       return OZ_raiseC("loadURL",2,OZ_atom("bufferOverflow"),oldURL);
+//     strcpy(url,urlin);
+//   }
+// 
+//   if (strchr(url,':')==NULL) { // no prefix --> local file name
+//     return loadFile(url,out);
+//   }
+// 
+//   // check local caches
+//   if (OZ_Cache_Path==0) init_cache_path();
+//   {
+//     char buffer[NAMESIZE];
+//     int idx = 0;
+//     char *s = url;
+//     if (strlen(s)>=NAMESIZE) goto fall_through;
+//     while (*s!='\0' && *s!=':') buffer[idx++]=*s++;
+//     if (s[0]!=':' || s[1]!='/' || s[2]!='/') goto fall_through;
+//     s += 3;
+//     buffer[idx++] = '/';
+//     strcpy(buffer+idx,s);
+//     extern int find_file(OZ_Term,char*,char*);
+//     char path[NAMESIZE];
+//     if (find_file(OZ_Cache_Path,buffer,path)==0) {
+//       if (ozconf.showCacheLoad)
+// 	message("Loading %s\n*** from cache %s\n",url,path);
+//       return loadFile(path,out);
+//     }
+//   fall_through:;
+//   }
+// 
+//   switch (url[0]) {
+//   case 'f':
+//     {
+//       const char *prefix = "file:";
+//       if (strncmp(url,prefix,strlen(prefix))!=0) goto bomb;
+// 
+//       char *filename = url+strlen(prefix);
+//       return loadFile(filename,out);
+//     }
+//   }
+// 
+// bomb:
+//   getURL(url,out,URL_LOAD,th);
+//   return BI_PREEMPT;
+// }
 
 // URL_get is a primitive that performs an action on a url.
 // the action maybe URL_LOCALIZE, URL_OPEN, or URL_LOAD.
@@ -895,15 +895,29 @@ OZ_C_proc_begin(BIurl_load,2)
 }
 OZ_C_proc_end
 
-
 OZ_C_proc_begin(BIload,2)
 {
-  OZ_declareVirtualStringArg(0,url);
-  OZ_declareArg(1,out);
-
-  return loadURL(url,out,am.currentThread());
+  RefsArray args = allocateY(2);
+  OZ_Term loader = service_get(AtomLoad);
+  args[0] = OZ_getCArg(0);
+  args[1] = OZ_getCArg(1);
+  Thread*tt=am.currentThread();
+  if (loader) tt->pushCall(loader,args,2);
+  else        tt->pushCFun(BIurl_load,args,2,OK);
+  deallocateY(args);
+  return BI_REPLACEBICALL;
 }
 OZ_C_proc_end
+
+
+// OZ_C_proc_begin(BIload,2)
+// {
+//   OZ_declareVirtualStringArg(0,url);
+//   OZ_declareArg(1,out);
+// 
+//   return loadURL(url,out,am.currentThread());
+// }
+// OZ_C_proc_end
 
 OZ_C_proc_begin(BIWget,2)
 {
@@ -1050,8 +1064,8 @@ BIspec componentsSpec[] = {
   {"smartSave",    3, BIsmartSave, 0},
   {"load",         2, BIload, 0},
 
-  {"getCachePath",1,BIgetCachePath,0},
-  {"setCachePath",1,BIsetCachePath,0},
+  //  {"getCachePath",1,BIgetCachePath,0},
+  //  {"setCachePath",1,BIsetCachePath,0},
 
   {"Wget",         2, BIWget, 0},    
 
@@ -1067,8 +1081,8 @@ BIspec componentsSpec[] = {
 };
 
 void initComponents() {
-  OZ_protect(&url_map);
-  OZ_protect(&OZ_Cache_Path);
+  //  OZ_protect(&url_map);
+  //  OZ_protect(&OZ_Cache_Path);
   BIaddSpec(componentsSpec);
 }
 
