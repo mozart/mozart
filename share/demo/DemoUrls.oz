@@ -22,16 +22,10 @@
 
 functor
 
-import
-   Property
-
 export
    Image
 
-define
-   Image =
-   'http://www.mozart-oz.org/home-' #
-   {Property.get 'oz.version'} #
-   '/doc/demo/applets/images/'
+prepare
+   Image = 'x-oz://doc/demo/applets/images/'
 
 end
