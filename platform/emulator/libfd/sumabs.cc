@@ -475,7 +475,7 @@ OZ_Return LinGreaterEqAbsPropagator::propagate(void)
       if (reg_a[j] < 0) {
         summax += axmin;
       }
-      if (reg_a[j] < 0) {
+      if (reg_a[j] > 0) {
         summax += axmax;
       }
     }

@@ -439,6 +439,8 @@ void      OZ_hfreeCInts(int *, int);
 void      OZ_hfreeChars(char *, int);
 
 int * OZ_findEqualVars(int, OZ_Term *); // static return value
+int * OZ_findSingletons(int, OZ_Term *); // static return value
+
 OZ_Boolean OZ_isEqualVars(OZ_Term, OZ_Term);
 
 OZ_Return OZ_typeError(char *, int, char *);

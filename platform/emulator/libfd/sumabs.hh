@@ -103,7 +103,7 @@ public:
 class SumACGreaterPropagator : public LinGreaterEqAbsPropagator {
 public:
   SumACGreaterPropagator(OZ_Term a, OZ_Term x, OZ_Term d)
-    : LinGreaterEqAbsPropagator(a, x, d) { reg_c -= 1; }
+    : LinGreaterEqAbsPropagator(a, x, d) { reg_c += 1; }
 };
 
 #endif

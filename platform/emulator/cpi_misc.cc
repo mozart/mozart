@@ -98,6 +98,28 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
   return is;
 }
 
+static int _sgl_size = 1024;
+static int * sgl = (int *) malloc(_sgl_size * sizeof(int));
+
+int * OZ_findSingletons(int sz, OZ_Term * ts)
+{
+  int i;
+
+  if (sz > _sgl_size)
+    sgl = (int *) realloc(is, sizeof(int) * (_sgl_size = sz));
+  for (i = 0; i < sz; i += 1) {
+    OZ_Term t = ts[i];
+    DEREF(t, tptr, ttag);
+    if (isSmallInt(ttag) || isLiteral(ttag)) {
+      sgl[i] = smallIntValue(t);
+    } else {
+      sgl[i] = -1;
+    }
+  }
+
+  return sgl;
+}
+
 OZ_Boolean OZ_isEqualVars(OZ_Term v1, OZ_Term v2)
 {
   DEREF(v1, vptr1, vtag1);
