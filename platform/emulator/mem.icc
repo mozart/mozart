@@ -21,11 +21,15 @@ void * freeListMalloc(size_t chunk_size)
 {
   Assert(((chunk_size & 3) == 0) && (chunk_size > 0));
 
+  while (chunk_size%WordSize) {
+    chunk_size++;
+  }
+
   void **freeListCache = FreeList;
   void *aux = chunk_size < freeListMaxSize ? freeListCache[chunk_size] : NULL;
 
   if (aux == NULL) {
-    aux = heapMallocOutline(chunk_size);
+    aux = heapMalloc(chunk_size);
   } else {
     freeListCache[chunk_size] = *(void **)aux;
   }
@@ -37,6 +41,10 @@ inline
 void freeListDispose(void * addr, size_t chunk_size)
 {
   Assert((chunk_size & 3) == 0);
+
+  while (chunk_size%WordSize) {
+    chunk_size++;
+  }
 
 #ifdef DEBUG_MEM
 
