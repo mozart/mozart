@@ -105,6 +105,7 @@
 #include "marshaler.hh"
 #include "comm.hh"
 #include "msgbuffer.hh"
+#include "vs_comm.hh"
 #include "chain.hh"
 
 /* *********************************************************************/
@@ -3323,12 +3324,14 @@ inline void sendPrepOwner(int index){
   OwnerEntry *oe=OT->getOwner(index);
   oe->getOneCreditOwner();}
 
-void Site::msgReceived(MsgBuffer* bs)
+//
+// kost@ 26.3.98 : 'msgReceived()' is NOT a method of a site object.
+void msgReceived(MsgBuffer* bs)
 {
   Assert(am.onToplevel());
   MessageType mt = (MessageType) unmarshalHeader(bs);
   PD((MSG_RECEIVED,"msg type %d",mt));
-    
+
   switch (mt) {
   case M_PORT_SEND:   
     {
@@ -3336,7 +3339,7 @@ void Site::msgReceived(MsgBuffer* bs)
       OZ_Term t;
       unmarshal_M_PORT_SEND(bs,portIndex,t);
       PD((MSG_RECEIVED,"PORTSEND: o:%d v:%s",portIndex,toC(t)));
-      
+
       OwnerEntry *oe=receiveAtOwner(portIndex);
       Assert(oe);
       PortManager *pm=(PortManager*)(oe->getTertiary());
@@ -3691,12 +3694,12 @@ void Site::msgReceived(MsgBuffer* bs)
     }
   case M_CELL_CANTPUT:
     {
-      Site *rsite;
+      Site *rsite, *ssite;
       int OTI;
       TaggedRef val;
-      unmarshal_M_CELL_CANTPUT(bs,OTI,rsite,val);
+      unmarshal_M_CELL_CANTPUT(bs, OTI, rsite, val, ssite);
       PD((MSG_RECEIVED,"M_CELL_CANTPUT index:%d site:%s val:%s",OTI,rsite->stringrep(),toC(val)));
-      cellReceiveCantPut(receiveAtOwner(OTI),val,OTI,this,rsite);
+      cellReceiveCantPut(receiveAtOwner(OTI),val,OTI,ssite,rsite);
       break;
     }  
   case M_LOCK_TOKEN:
@@ -3723,12 +3726,12 @@ void Site::msgReceived(MsgBuffer* bs)
     }
   case M_LOCK_CANTPUT:
     {
-      Site *rsite;
+      Site *rsite, *ssite;
       int OTI;
       TaggedRef val;
-      unmarshal_M_LOCK_CANTPUT(bs,OTI,rsite);
+      unmarshal_M_LOCK_CANTPUT(bs, OTI, rsite, ssite);
       PD((MSG_RECEIVED,"M_LOCK_CANTPUT index:%d site:%s val:%s",OTI,rsite->stringrep()));
-      lockReceiveCantPut(receiveAtOwner(OTI),OTI,this,rsite);
+      lockReceiveCantPut(receiveAtOwner(OTI),OTI,ssite,rsite);
       break;
     }
   case M_CHAIN_QUESTION:
@@ -3786,6 +3789,33 @@ void Site::msgReceived(MsgBuffer* bs)
       receiveUnAskError(receiveAtOwner(OTI),toS,ec);
       break; 
     }
+
+  case M_INIT_VS:
+    {
+      Site *ms;
+      VirtualInfo *vi;
+
+      //
+      // The father's virtual site is registered during unmarshaling,
+      // but it is NOT recognized as a virtual one (since 'mySite' has
+      // not been yet initialized - a bootstrapping problem! :-))
+      unmarshal_M_INIT_VS(bs, ms);
+
+      //
+      Assert(!mySite->getVirtualInfo());
+      // The 'mySite' and 'ms' share the same master (which might be
+      // 'ms' itself), so virtual infos differ in the mailbox key
+      // only, which is to be set later:
+      vi = ms->getVirtualInfo();
+      mySite->getVirtualInfo()->setMailboxKey((key_t) 0);
+      mySite->makeMySiteVirtual(vi);
+
+      //
+      // Change the type of 'ms': this is a virtual site (per
+      // definition);
+      ms->setVirtual();
+    }
+
   default:
     error("siteReceive: unknown message %d\n",mt);
     break;
@@ -5087,7 +5117,7 @@ void lockManagerIsDown(Site* mS,int mI){
 void cellSendCantPut(TaggedRef tr,Site* toS, Site *mS, int mI){
   PD((ERROR_DET,"Proxy cant put to %s site: %s:%d",toS->stringrep(),mS->stringrep(),mI));
   MsgBuffer* bs=msgBufferManager->getMsgBuffer(mS);
-  marshal_M_CELL_CANTPUT(bs,mI, toS, tr);
+  marshal_M_CELL_CANTPUT(bs, mI, toS, tr, mySite);
   SendTo(mS,bs,M_CELL_CANTPUT,mS,mI);}
 
 void cellSendContentsFailure(TaggedRef tr,Site* toS,Site *mS, int mI){ 
@@ -5103,7 +5133,7 @@ void cellSendContentsFailure(TaggedRef tr,Site* toS,Site *mS, int mI){
 void lockSendCantPut(Site* toS, Site *mS, int mI){
   PD((ERROR_DET,"Proxy cant put - to %s site: %s:%d Nr %d",toS->stringrep(),mS->stringrep(),mI));
   MsgBuffer* bs=msgBufferManager->getMsgBuffer(mS);
-  marshal_M_LOCK_CANTPUT(bs,mI, toS);
+  marshal_M_LOCK_CANTPUT(bs, mI, toS, mySite);
   SendTo(mS,bs,M_LOCK_CANTPUT,mS,mI);
   return;}
 
@@ -6082,10 +6112,13 @@ void Site::communicationProblem(MessageType mt,Site*
     case M_SEND_GATE:{
       return;}
 
-    default:{
-      warning("communication problem - impossible");
-      Assert(0);}
-    }
+  case M_INIT_VS:
+    return;
+
+  default:
+    warning("communication problem - impossible");
+    Assert(0);
+  }
 
   switch(flag){
   case USUAL_OWNER_CASE:{
@@ -6275,11 +6308,14 @@ OZ_BI_define(BIsiteStatistics,0,1)
 /**********************************************************************/
 /*   SECTION 42:: Initialization                                      */
 /**********************************************************************/
-Bool perdioInit(){
-  if(mySite!=NULL) return OK;
+//
+Bool perdioInit()
+{
+  Assert(mySite == (Site *) 0);
   initNetwork();
-  if(mySite==NULL) return NO;
-  return OK;}
+  Assert(mySite != (Site *) 0);
+  return (OK);
+}
 
 void BIinitPerdio()
 {

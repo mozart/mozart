@@ -44,7 +44,6 @@ AM am;
  * IONodes
  * -------------------------------------------------------------------------*/
 
-
 class IONode {
 public:
   int fd;
@@ -63,7 +62,6 @@ IONode *ioNodes = NULL;
 static
 IONode *findIONode(int fd)
 {
-
   IONode *aux = ioNodes;
   while(aux) {
     if (aux->fd == fd) return aux;
@@ -86,7 +84,6 @@ int hasPendingSelect()
 }
 
 
-
 /* -------------------------------------------------------------------------
  * Init and exit AM
  * -------------------------------------------------------------------------*/
@@ -100,6 +97,7 @@ void usage(int /* argc */,char **argv) {
   fprintf(stderr, " -l <lib>     : load native library\n");
   fprintf(stderr, " -init <file> : load and execute init procedure\n");
   fprintf(stderr, " -u <url>     : start a compute server\n");
+  fprintf(stderr, " -x <hex>     : start as a virtual site\n");
   fprintf(stderr, " -b <file>    : boot from assembly code\n");
   fprintf(stderr, " -- <args> ...: application arguments\n");
   osExit(1);
@@ -221,6 +219,7 @@ void AM::init(int argc,char **argv)
       url = getOptArg(i,argc,argv);
       continue;
     }
+
     if (strcmp(argv[i],"-b")==0) {
       assemblyCodeFile = getOptArg(i,argc,argv);
       continue;
@@ -244,6 +243,7 @@ void AM::init(int argc,char **argv)
       (void) ozInterfaceToRecord(I);
       continue;
     }
+
     if (strcmp(argv[i],"-init")==0) {
       initFile = getOptArg(i,argc,argv);
       continue;
@@ -327,9 +327,16 @@ void AM::init(int argc,char **argv)
 
   emptySuspendVarList(); // must be after initLiterals
 
+  //
+  taskNodes = new TaskNode[MAXTASKS];
+  for (int i = 0; i < MAXTASKS; i++)
+    taskNodes[i].TaskNode::TaskNode();
+
+  //
   osInitSignals();
   osSetAlarmTimer(CLOCK_TICK/1000);
 
+  //
   if (!perdioInit()) {
     warning("Perdio initialization failed");
   }
@@ -367,8 +374,13 @@ void AM::init(int argc,char **argv)
   profileMode = NO;
 }
 
+//
+// We have to reclaim the shared memory somehow;
+extern void virtualSitesExit();
+
 void AM::exitOz(int status)
 {
+  virtualSitesExit();
   osExit(status);
 }
 
@@ -1536,15 +1548,27 @@ void AM::handleIO()
   }
 }
 
-void checkIO(){
-  AM &e=am;
-  if(e.isSetSFlag(IOReady)){
-    osBlockSignals();
-    e.handleIO();
-    osUnblockSignals();}
+//
+Bool NeverDo_CheckProc(void *va)
+{
+  return (NO);
 }
 
+//
+void AM::handleTasks()
+{
+  for (int i = 0; i < MAXTASKS; i++) {
+    TaskNode *tn = &taskNodes[i];
+    //
+    // Apply 'checkProc' from a task with the corresponding argument;
+    if (tn->isReady()) {
+      tn->dropReady();
+      (tn->getProcessProc())(tn->getArg());
+    }
+  }
+}
 
+//
 // called from signal handler
 void AM::checkIO()
 {
@@ -1622,6 +1646,62 @@ void AM::checkStatus()
   }
 }
 
+
+//
+// Returns 'TRUE' if the task has been successfully registered;
+Bool AM::registerTask(void *arg, TaskCheckProc cIn, TaskProcessProc pIn)
+{
+  for (int i = 0; i < MAXTASKS; i++) {
+    TaskNode *tn = &taskNodes[i];
+
+    //
+    if (tn->isFree()) {
+      tn->setTask(arg, cIn, pIn);
+      return (TRUE);
+    }
+  }
+
+  //
+  return (FALSE);
+}
+
+//
+// Returns 'TRUE' if the task has been successfully removed;;
+Bool AM::removeTask(void *arg, TaskCheckProc cIn)
+{
+  //
+  for (int i = 0; i < MAXTASKS; i++) {
+    TaskNode *tn = &taskNodes[i];
+
+    //
+    if (!tn->isFree() &&
+	tn->getArg() == arg &&
+	tn->getCheckProc() == cIn) {
+      tn->dropTask();
+      return (TRUE);
+    }
+  }
+
+  //
+  return (FALSE);
+}
+  
+
+//
+// and another one;
+void AM::checkTasks()
+{
+  for (int i = 0; i < MAXTASKS; i++) {
+    TaskNode *tn = &taskNodes[i];
+
+    //
+    // Apply 'checkProc' from a task with the corresponding argument;
+    if ((*(tn->getCheckProc()))(tn->getArg())) {
+      tn->setReady();
+      setSFlag(TasksReady);
+    }
+  }
+}
 
 /* -------------------------------------------------------------------------
  * Search
@@ -1820,6 +1900,8 @@ void AM::handleAlarm()
   checkGC();
 
   checkIO();
+
+  checkTasks();
 }
 
 /* handleUserAlarm:
