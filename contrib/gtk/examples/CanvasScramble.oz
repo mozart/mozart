@@ -139,17 +139,17 @@ define
 	    Y  = I div 4
 	    X1 = {Int.toFloat (X * PieceSize)}
 	    Y1 = {Int.toFloat (Y * PieceSize)}
-	    Group = {self itemNew(Root {{New Canvas.canvasGroup noop}
+	    Group = {self newItem(Root {{New Canvas.canvasGroup noop}
 					getType($)}
 				  ["x"#X1 "y"#Y1] $)}
-	    _     = {self itemNew(Group {self rectGetType($)}
+	    _     = {self newItem(Group {self rectGetType($)}
 				  ["x1"#0.0 "y1"#0.0
 				   "x2"#{Int.toFloat PieceSize}
 				   "y2"#{Int.toFloat PieceSize}
 				   "fill_color_gdk"#{self getPieceColor(I $)}
 				   "outline_color_gdk"#Black
 				   "width_pixels"#0] $)}
-	    Text = {self itemNew(Group {self textGetType($)}
+	    Text = {self newItem(Group {self textGetType($)}
 				 ["text"#{Int.toString (I + 1)}
 				  "x"#25.0 "y"#25.0 "font"#Font
 				  "anchor"#GTK.'ANCHOR_CENTER'
