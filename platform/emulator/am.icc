@@ -229,22 +229,26 @@ Bool AM::isEmptyTrailChunk ()
   return (trail.isEmptyChunk ());
 }
 
+inline
 void AM::pushCall(Board *b, Chunk *def, int arity, RefsArray args)
 {
   currentThread->pushCall(b,def,args,arity);
 }
 
+inline
 void AM::pushTask(Board *n,ProgramCounter pc,
                   RefsArray y,RefsArray g,RefsArray x,int i)
 {
   currentThread->pushCont(n,pc,y,g,x,i);
 }
 
+inline
 void AM::pushCFun(Board *n, OZ_CFun f, RefsArray x, int i)
 {
   currentThread->pushCFunCont(n, f, (Suspension *) NULL, x, i);
 }
 
+inline
 void AM::pushNervous(Board *n)
 {
   currentThread->pushNervous(n);
