@@ -2,13 +2,12 @@
 /* first we count the number of instructions */
 
 define(`OPCODE',0) dnl
+
 define(instruction,
-	`ifelse(eval(numOfRegs($2)+numOfRegs($3)+numOfRegs($4)),1,`define(`OPCODE',eval(OPCODE+3))',
-		eval(numOfRegs($2)+numOfRegs($3)+numOfRegs($4)),2,`define(`OPCODE',eval(OPCODE+9))',
-      		`define(`OPCODE',eval(OPCODE+1))') dnl
+	`ifelse(numOfRegs($2,$3,$4),1,`incrop(3)',
+		numOfRegs($2,$3,$4),2,`incrop(9)',
+      		`incrop(1)') dnl
 ') dnl
-define(numOfRegs,
-	`ifelse($1,Register,1,0)') dnl
 
 include(`../include/instrDefs.m4')
 include(`opcodes.hh')
@@ -20,27 +19,27 @@ char **help = new char*[OPCODE];
 
 undefine(`instruction')
 define(instruction,
-	`ifelse(eval(numOfRegs($2)+numOfRegs($3)+numOfRegs($4)),1,oneReg($1),
-		eval(numOfRegs($2)+numOfRegs($3)+numOfRegs($4)),2,twoRegs($1),
+	`ifelse(numOfRegs($2,$3,$4),1,oneReg(TOUPPER($1),$1),
+		numOfRegs($2,$3,$4),2,twoRegs(TOUPPER($1),$1),
 		help[TOUPPER($1)] = "$1";) dnl
 ')
 
 define(oneReg,
-        `help[TOUPPER($1)X] = "$1X";
-         help[TOUPPER($1)Y] = "$1Y";
-         help[TOUPPER($1)G] = "$1G";
+        `help[$1X] = "$2X";
+         help[$1Y] = "$2Y";
+         help[$1G] = "$2G";
 ')
 
 define(twoRegs,
-        `help[TOUPPER($1)XX] = "$1XX";
-         help[TOUPPER($1)XY] = "$1XY";
-         help[TOUPPER($1)XG] = "$1XG";
-         help[TOUPPER($1)YX] = "$1YX";
-         help[TOUPPER($1)YY] = "$1YY";
-         help[TOUPPER($1)YG] = "$1YG";
-         help[TOUPPER($1)GX] = "$1GX";
-         help[TOUPPER($1)GY] = "$1GY";
-         help[TOUPPER($1)GG] = "$1GG";
+        `help[$1XX] = "$2XX";
+         help[$1XY] = "$2XY";
+         help[$1XG] = "$2XG";
+         help[$1YX] = "$2YX";
+         help[$1YY] = "$2YY";
+         help[$1YG] = "$2YG";
+         help[$1GX] = "$2GX";
+         help[$1GY] = "$2GY";
+         help[$1GG] = "$2GG";
 ')
 
 
