@@ -86,6 +86,12 @@ struct ModuleEntry {
 #include "modPID.dcl"
 #include "modFDB.dcl"
 #include "modFSB.dcl"
+#include "modSystem.dcl"
+#include "modCTB.dcl"
+#include "modFinalize.dcl"
+#include "modAssemblerSupport.dcl"
+#include "modCompilerSupport.dcl"
+#include "modProfile.dcl"
 
 static OZ_C_proc_interface mod_int_Property[] = {
 #include "modProperty.tbl"
@@ -115,6 +121,30 @@ static OZ_C_proc_interface mod_int_FSB[] = {
 #include "modFSB.tbl"
  {0,0,0,0}
 };
+static OZ_C_proc_interface mod_int_System[] = {
+#include "modSystem.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_CTB[] = {
+#include "modCTB.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_Finalize[] = {
+#include "modFinalize.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_AssemblerSupport[] = {
+#include "modAssemblerSupport.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_CompilerSupport[] = {
+#include "modCompilerSupport.tbl"
+ {0,0,0,0}
+};
+static OZ_C_proc_interface mod_int_Profile[] = {
+#include "modProfile.tbl"
+ {0,0,0,0}
+};
 
 
 static ModuleEntry module_table[] = {
@@ -122,9 +152,17 @@ static ModuleEntry module_table[] = {
   {"OS",       mod_int_OS},
   {"URL",      mod_int_URL},
   {"Pickle",   mod_int_Pickle},
+  {"System",   mod_int_System},
+  {"Finalize", mod_int_Finalize},
+  {"Profile",  mod_int_Profile},
+
+  {"AssemblerSupport", mod_int_AssemblerSupport},
+  {"Assembler",        mod_int_AssemblerSupport},
+  {"CompilerSupport",  mod_int_CompilerSupport},
 
   {"FDB",      mod_int_FDB},
   {"FSB",      mod_int_FSB},
+  {"CTB",      mod_int_CTB},
   {"PID",      mod_int_PID},
 
   {"Wif",      DYNAMIC_MODULE(mod_int_Wif) },
@@ -164,7 +202,7 @@ OZ_BI_define(BIBootManager, 1, 1) {
     me++;
   }
 
-  if (!me) {
+  if (!me || !me->name) {
     fprintf(stderr, "Unknown boot module: %s.\n",mod_name);
     osExit(1);
   }

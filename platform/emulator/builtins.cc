@@ -4590,12 +4590,31 @@ OZ_BI_define(BIprintInfo,1,0)
   return PROCEED;
 } OZ_BI_end
 
+OZ_BI_define(BIshowInfo,1,0)
+{
+  oz_declareIN(0,t);
+  char * s = OZ_virtualStringToC(t);
+  fprintf(stdout, "%s\n", s);
+  fflush(stdout);
+  return PROCEED;
+} OZ_BI_end
+
 OZ_BI_define(BIprintError,1,0)
 {
   oz_declareIN(0,t);
   prefixError(); // print popup code for opi
   char * s = OZ_virtualStringToC(t);
   fprintf(stderr, "%s", s);
+  fflush(stderr);
+  return PROCEED;
+} OZ_BI_end
+
+OZ_BI_define(BIshowError,1,0)
+{
+  oz_declareIN(0,t);
+  prefixError(); // print popup code for opi
+  char * s = OZ_virtualStringToC(t);
+  fprintf(stderr, "%s\n", s);
   fflush(stderr);
   return PROCEED;
 } OZ_BI_end
@@ -4688,16 +4707,6 @@ OZ_BI_define(BIaddr,1,1)
                 ToInt32(valPtr) :
                 ToInt32(tagValueOf2(valTag,val)));
 } OZ_BI_end
-
-// ---------------------------------------------------------------------------
-
-
-OZ_BI_define(BIshowBuiltins,0,0)
-{
-  builtinTab.print();
-  return(PROCEED);
-} OZ_BI_end
-
 
 // ---------------------------------------------------------------------
 // OO Stuff
@@ -5385,7 +5394,6 @@ OZ_BI_define(BIisCopyablePredicateRef,1,1)
 /********************************************************************
  * Finalization
  ******************************************************************** */
-#ifdef FINALIZATION
 
 // Copyright © by Denys Duchier, Nov 1997, Universität des Saarlandes
 //
@@ -5541,7 +5549,6 @@ OZ_BI_define(BIfinalize_setHandler,1,0)
   return PROCEED;
 } OZ_BI_end
 
-#endif
 
 /*
  * Groups

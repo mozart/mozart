@@ -634,18 +634,7 @@ case $platform in
 esac
 
 dnl *****************************************************************
-dnl FINALIZATION SUPPORT
-dnl *****************************************************************
-
-OZ_ENABLE_YES(finalization,[
-                   provide support for finalization],
-        ,
-        AC_MSG_RESULT(no)
-        AC_DEFINE(NOFINALIZATION)
-        )
-
-dnl *****************************************************************
-dnl FINALIZATION SUPPORT
+dnl virtual site SUPPORT
 dnl *****************************************************************
 
 OZ_ENABLE_NO(virtualsites,[
