@@ -28,11 +28,43 @@
 <Chapter id="Chapter.Hello">
   <Title/Getting Started/
 
+  <p>      
+    The purpose of programming languages is of course to program
+    applications. Besides of constructs of the programming language
+    proper application programs need support 
+
+
   <section id="section.">
-    <title/Our first Application: <kbd/websuck//
+    <title/Our First Application: <kbd/webget//
+
+<chunk><title/Webget/
+functor
+   import Application Open
+define
+   Args = {Application.getArgs record}
+   
+   I = {New Open.file init(url:  Args.'in')}
+   O = {New Open.file init(name: Args.'out' 
+                           flags:[write create truncate])}
+
+   proc {Copy}
+      S={I read(list:$)}
+      if S\=nil then
+         {O write(vs:S)} 
+         {Copy}
+      end
+   end
+
+   {Copy}
+
+   {Application.exit 0}
+
+end
+</chunk>
+
 
     <p>
-      <kbd/websuck/: downloading files from the www.
+      <kbd/webget/: downloading files from the www.
   </section>
 
   <section id="section.hello.functor">
