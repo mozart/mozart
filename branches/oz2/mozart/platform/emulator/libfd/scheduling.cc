@@ -12,8 +12,6 @@
 #define HOLES
 //#define BOUNDS_OLD
 //#define BOUNDS_NEW
-#define CUM_EDGE_FINDING
-//#define TASK_INTERVALS
 
 #include "scheduling.hh"
 #include "rel.hh"
@@ -209,7 +207,6 @@ OZ_C_proc_begin(sched_cpIterate, 3)
 	return OZ_typeError(expectedType, 0, "Scheduling applications expect that all task symbols are features of the records denoting the start times and durations.");
       pe.expectIntVarMinMax(OZ_subtree(starts, task));
     }
-
     OZ_Return r = pe.impose(new CPIteratePropagator(tasks, starts, durs),
 			    OZ_getLowPrio());
 
@@ -360,7 +357,8 @@ cploop:
     set0Size = 0;
     compSet0Size = 0;
     outSideSize = 0;
-    int maxEst = 0;
+    int maxEct = 0;
+    int overlap = 0;
 
     //////////  
     // compute set S0 
@@ -372,14 +370,18 @@ cploop:
       int xlMaxDL = MinMax[l].max + dl;
       if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
 	dur0 = dur0 + dl;
-	maxEst = max(maxEst,xlMin+dl); 
-	mSi = min( mSi, xlMin+dl );
-	maxSi = max( maxSi, MinMax[l].max );
+	maxEct = intMax(maxEct,xlMin+dl); 
+	mSi = intMin( mSi, xlMin+dl );
+	maxSi = intMax( maxSi, MinMax[l].max );
 	set0[set0Size++] = l;
       }
       else {
+	outSide[outSideSize++] = l;
+	int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
+				intMin(intMax(0,kUp-xlMaxDL+dl),
+				       intMin(dl,kUp-kDown)));
+	overlap += overlapTmp;
 	if (xlMaxDL > kUp) {
-	  outSide[outSideSize++] = l;
 	}
       }
     }
@@ -390,11 +392,10 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
 
-    if (kUp-kDown < dur0) goto failure;
+    if (kUp-kDown < dur0+overlap) goto failure;
     
     struct Set *oset = &Sets[0];	
-//    oset ->cSi = kDown +dur0;
-    oset ->cSi = max(kDown +dur0, maxEst);
+    oset ->cSi = intMax(kDown +dur0, maxEct);
     oset->dSi = dur0;
     oset->mSi = mSi;
     oset->min = mSi;
@@ -415,22 +416,24 @@ cploop:
     //////////  
     for (l=0; l<compSet0Size; l++) {
       int realL = compSet0[l];
-      if (MinMax[realL].max+dur[realL] <= kUp) {
+      int dl    = dur[realL];
+      if (MinMax[realL].max+dl <= kUp) {
 	int setSizeBefore = setSize;	
 	struct Set *bset = &Sets[setSizeBefore];	
 	setSize++;
-	int dSi = bset->dSi + dur[realL];
+	int dSi = bset->dSi + dl;
 	int minL = MinMax[realL].min;
-	int newCSi = max( bset->cSi, minL+dSi);
+	maxEct = intMax(maxEct, minL+dl);
+	int newCSi = intMax(bset->cSi, intMax(minL+dSi, maxEct));
 	if (newCSi > kUp) 
 	  goto failure;
 	else {
 	  struct Set *cset = &Sets[setSize];	
 	  cset->cSi = newCSi;
 	  cset->dSi = dSi;
-	  cset->mSi = min(bset->mSi, minL+dur[realL]);
+	  cset->mSi = intMin(bset->mSi, minL+dl);
 	  cset->min = cset->mSi;
-	  cset->max = max(bset->max, MinMax[realL].max);
+	  cset->max = intMax(bset->max, MinMax[realL].max);
 	  cset->sUp = kUp;
 	  cset->sLow = minL;
 	  cset->extSize = bset->extSize+1;
@@ -444,7 +447,7 @@ cploop:
     // edgepushUp
     //////////  
 
-    for (int t1=setSize; t1>=0; t1--) {
+    for (int t1=setSize; t1>=0; t1--) { 
       for (int t2=0; t2<ts; t2++) {
 	struct Set *s = &Sets[t1];	
 	if (MinMax[t2].min > s->sLow) {
@@ -548,7 +551,7 @@ cploop:
 
   
   //////////  
-  // sort by ascending due date; ie. max(s1)+dur(s1) < max(s2)+dur(s2)
+  // sort by ascending due date; ie. intMax(s1)+dur(s1) < max(s2)+dur(s2)
   //////////  
   myqsort(forCompSet0Down, 0, ts-1, compareAscDue);
 
@@ -565,29 +568,34 @@ cploop:
     compSet0Size = 0;
     outSideSize = 0;
     int minLst =  mysup;
+    int overlap = 0;
     
     //////////  
     // compute set S0 
     //////////  
     int l;
-	 for (l=0; l<ts; l++) {
-	   int dl = dur[l];
-	   int xlMin = MinMax[l].min;
-	   int xlMax = MinMax[l].max;
-	   int xlMaxDL = xlMax + dl;
-	   if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
-	     dur0 = dur0 + dl;
-	     mSi = max( mSi, xlMax );
-	     minSi = min( minSi, xlMin+dl );
-	     minLst = min(minLst,xlMax);
-	     set0[set0Size++] = l;
-	   }
-	   else {
-	     if (xlMin < kDown) {
-	       outSide[outSideSize++] = l;
-	     }
-	   }
-	 }
+    for (l=0; l<ts; l++) {
+      int dl = dur[l];
+      int xlMin = MinMax[l].min;
+      int xlMax = MinMax[l].max;
+      int xlMaxDL = xlMax + dl;
+      if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
+	dur0 = dur0 + dl;
+	mSi = intMax( mSi, xlMax );
+	minSi = intMin( minSi, xlMin+dl );
+	minLst = intMin(minLst,xlMax);
+	set0[set0Size++] = l;
+      }
+      else {
+	int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
+				intMin(intMax(0,kUp-xlMaxDL+dl),
+				       intMin(dl,kUp-kDown)));
+	overlap += overlapTmp;
+	if (xlMin < kDown) {
+	  outSide[outSideSize++] = l;
+	}
+      }
+    }
     
     for (l=0; l<ts; l++) {
       int realL = forCompSet0Down[l];
@@ -596,11 +604,10 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
 
-    if (kUp-kDown < dur0) goto failure;
+    if (kUp-kDown < dur0+overlap) goto failure;
 
     struct Set *oset = &Sets[0];
-    oset->cSi = min(kUp - dur0,minLst);
-//    oset->cSi = kUp - dur0;
+    oset->cSi = intMin(kUp - dur0, minLst);
     oset->dSi = dur0;
     oset->mSi = mSi;
     oset->max = mSi;
@@ -630,15 +637,16 @@ cploop:
 	  setSize++;
 	  int dSi = bset->dSi + durL;
 	  int maxL = MinMax[realL].max+durL;
-	  int newCSi = min( bset->cSi, maxL-dSi);
+	  minLst = intMin(minLst, maxL-durL);
+	  int newCSi = intMin(bset->cSi, intMin(maxL-dSi, minLst));
 	  if (newCSi < kDown) 
 	    goto failure;
 	  else {
 	    struct Set *cset = &Sets[setSize];	
 	    cset->cSi = newCSi;
 	    cset->dSi = dSi;
-	    cset->mSi = max(bset->mSi, maxL-durL);
-	    cset->min = min(bset->min, MinMax[realL].min+dur[realL]);
+	    cset->mSi = intMax(bset->mSi, maxL-durL);
+	    cset->min = intMin(bset->min, MinMax[realL].min+dur[realL]);
 	    cset->max = cset->mSi;
 	    cset->sUp = maxL;
 	    cset->sLow = kDown;
@@ -732,6 +740,7 @@ cploop:
 		if (MinMax[element].min < minDL) {
 		  FailOnEmpty(*x[element] >= minDL);
 		}
+
 	      }
 
 	      lCount++; 
@@ -964,10 +973,10 @@ int ozcdecl CompareIntervals(const Interval &Int1, const Interval &Int2)
 
 inline int EnergyFunct(int t1, int t2, int dura, int usea, int ra, int da)
 {
-  return max(0,
-	     usea*min(dura, 
-		      min(t2 - t1,
-			  min(ra + dura - t1,
+  return intMax(0,
+	     usea*intMin(dura, 
+		      intMin(t2 - t1,
+			  intMin(ra + dura - t1,
 			      t2 - da + dura))));
 }
 
@@ -1133,21 +1142,6 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
   for (i = ts; i--; )
     Sets[i].ext = (int *) OZ_FDIntVar::operator new(sizeof(int) * ts);
 
-#ifdef TASK_INTERVALS
-
-  struct TISet {
-    int low, up, dur, size, min, max, empty, ect, lst, overlap;
-    // extension for tasks inside task intervals
-  };
-
-  struct TISet ** taskints;
-  taskints = ((TISet **)::new TISet*[ts]);
-  for (i=0; i<ts; i++) {
-    taskints[i] = ::new TISet[ts];
-  }
-  
-  int left,right,tiFlag;
-#endif
 
   // memory is automatically disposed when propagator is left
 
@@ -1203,7 +1197,7 @@ for (i=0; i<ts; i++) {
 				  x[k]->getMinElem(),
 				  x[k]->getMaxElem() + dur[k]);
     }
-    int sum2 = sum1 + use[i] * min(dur[i], val - ra);
+    int sum2 = sum1 + use[i] * intMin(dur[i], val - ra);
     if ( capacity*(val - ra) < sum2) {
       int up = (int) ceil( (double) sum1 / (double) capacity);
       if (ra + up > x[i]->getMinElem()) {
@@ -1218,7 +1212,7 @@ for (i=0; i<ts; i++) {
 				  x[k]->getMinElem(),
 				  x[k]->getMaxElem() + dur[k]);
     }
-    sum2 = sum1 + use[i] * min(dur[i], val - ra);
+    sum2 = sum1 + use[i] * intMin(dur[i], val - ra);
     if ( capacity*(val - ra) < sum2) {
       int up = (int) ceil( (double) sum1 / (double) capacity);
       if (ra + up > x[i]->getMinElem()) {
@@ -1248,293 +1242,6 @@ for (i=0; i<ts; i++) {
   }
 }
 */
-
-#ifdef TASK_INTERVALS
-tiloop:
-
-
-
-  /////////
-  // Initialize task intervals, cubic complexity
-  ////////
-  for (left = 0; left < ts; left++) 
-    for (right = 0; right < ts; right++) {
-      struct TISet *cset = &taskints[left][right];
-      cset->low        = MinMax[left].min;
-      cset->up         = MinMax[right].max + dur[right];
-      
-      cset->max        = MinMax[left].max + dur[left];
-      cset->min        = MinMax[right].min;
-
-      int cdur = 0;
-      int csize = 0;
-      int empty = 1;
-      int clst = 0;
-      int cect = OZ_getFDSup();
-      int overlap=0;
-      if ( (cset->low <= MinMax[right].min)
-	   && (MinMax[left].max + dur[left] <= cset->up)
-	   ) 
-	{
-	  // otherwise the task interval is trivially empty
-          for (int l=0; l < ts; l++) {
-	    int durL     = dur[l];
-	    int dueL     = MinMax[l].max + durL;
-	    int releaseL = MinMax[l].min;
-	    if ( (cset->low <= releaseL)
-		 && (dueL <= cset->up) ) {
-	      empty = 0;
-	      cdur += durL;
-	      csize += use[l]*durL;
-	      clst = intMax(clst, dueL-durL);
-	      cect = intMin(cect, releaseL+durL);
-
-	      if ( (l!=left) && (l!=right) ) {
-		cset->max = intMax(cset->max, dueL);
-		cset->min = intMin(cset->min, releaseL);
-	      }
-
-	    }
-	    else {
-	      // add the overlapping amount of tasks
-	      int overlapTmp = intMin(intMax(0,releaseL+durL-cset->low),
-				      intMin(intMax(0,cset->up-dueL+durL),
-					     intMin(durL,cset->up-cset->low)));
-	      overlap += overlapTmp*use[l];
-	    }
-	  }
-	}
-      cset->dur   = cdur;
-      cset->size  = csize;
-      cset->empty = empty;
-      cset->ect   = cect;
-      cset->lst   = clst;
-      cset->overlap = overlap;
-
-      if ( (empty == 0) && ( (cset->up - cset->low) * capacity < csize+overlap) ) {
-	goto failure;
-      }
-
-    }
-
-
-  //////////  
-  // Do the edge-finding
-  //////////  
-
-  for (left = 0; left < ts; left++) 
-    for (right = 0; right < ts; right++) {
-      struct TISet *cset = &taskints[left][right];
-      if (cset->empty == 0) {
-	int releaseTI = cset->low;
-	int dueTI     = cset->up;
-	int durTI     = cset->dur;
-	int sizeTI    = cset->size;
-	for (i = 0; i < ts; i++) {
-	  int maxI     = MinMax[i].max;
-	  int durI     = dur[i];
-	  int useI     = use[i];
-	  int releaseI = MinMax[i].min;
-	  int dueI     = maxI + durI;
-	  int sizeAll, tsizeTI, treleaseTI, tdueTI;
-	  int contained = 0;
-	  if ( (releaseI >= releaseTI) && (dueI <= dueTI) ) {
-	    // I is in TI
-	    contained = 1;
- 	    sizeAll = sizeTI;
-	    tsizeTI = sizeTI - durI*useI; 
-	    if (i==left) {
-	      treleaseTI = cset->min;
-	      tdueTI = dueTI;
-	    }
-	    else {
-	      if (i==right) {
-		tdueTI = cset->max;
-		treleaseTI = releaseTI;
-	      }
-	      else {
-		treleaseTI = releaseTI;
-		tdueTI = dueTI;
-	      }
-	    }
-	  }
-	  else {
-	    // I is not in TI
-	    treleaseTI = releaseTI;
-	    tdueTI     = dueTI;
-	    tsizeTI     = sizeTI;
-	    sizeAll     = durI*useI + sizeTI;
-	  }
-	  /*
-	  if (contained == 0) {
-	    // due to Mats email
-	    if (sizeAll > capacity*(tdueTI - releaseI)) {
-	      int delta = sizeAll - capacity*(tdueTI - releaseI);
-	      DECL_DYN_ARRAY(int, s1, ts);
-	      DECL_DYN_ARRAY(int, s2, ts);
-	      int s1_count=0, s2_count=0;
-	      for (j=0;j<ts;j++) {
-		if (use[j]+useI > capacity) 
-		  s2[s2_count++] = j;
-		else s1[s1_count++] = j;
-	      }
-	      for (j=0;j<s1_count;j++) {
-		delta -= use[s1[j]]*dur[s1[j]];
-	      }
-	      if (delta > 0) {
-		for (j=0;j<s2_count;j++) {
-		  if (MinMax[s2[j]].min + dur[s2[j]] <= releaseI)
-		    delta -= use[s2[j]]*dur[s2[j]];
-		}
-		if (delta > 0 )
-		  printf("habuakakdasd\n");
-	      }
-	    }
-	  }
-	  */
-	  /*
-	    //due to nuijten p.62 -- 65
-	  if ( (releaseI < releaseTI) || (dueI > dueTI) ) {
-	    if ( (treleaseTI < releaseI) && (releaseI < cset->ect) &&
-		 (tsizeTI + (intMin(releaseI+durI,tdueTI) -treleaseTI)*use[i] > (tdueTI - treleaseTI) * capacity) ) {
-	      if (MinMax[i].min < cset->ect){
-		FailOnEmpty(*x[i] >= cset->ect);
-		tiFlag = 1;
-	      }
-	    }
-	    if ( (cset->lst < dueI) && (dueI < tdueTI) &&
-		 (tsizeTI + (dueTI - intMax(dueI-durI,treleaseTI) )*use[i] > (tdueTI - treleaseTI) * capacity) ) {
-	      if (MinMax[i].max > cset->lst - durI) {
-		FailOnEmpty(*x[i] <= cset->lst - durI);
-		tiFlag = 1;
-	      }
-	    }
-	    if ( (releaseI < treleaseTI) && (treleaseTI < releaseI+durI) &&
-		 (tsizeTI + (releaseI+durI- treleaseTI)*use[i] > (tdueTI - treleaseTI) * capacity) ) {
-	      int delta = tsizeTI - (tdueTI - treleaseTI) * (capacity - useI);
-	      if (delta > 0) {
-		int val = treleaseTI + (int) ceil((double) delta / (double) useI);
-		for (int m = 0; m<ts; m++) {
-		  if ((m != i) && (MinMax[m].min >= releaseTI) && 
-		      (MinMax[m].max+dur[m] <= dueTI) ) {
-		    if (use[m]+use[i] > capacity) {
-		    FailOnEmpty(*x[m] <= MinMax[i].max - dur[m]);
-		    FailOnEmpty(*x[i] >= MinMax[m].min + dur[m]);
-		    }
-		  }
-		}
-		if (releaseI < val) {
-		  tiFlag = 1;
-		  FailOnEmpty(*x[i] >= val);
-		}
-	      }
-	    }
-	    if  ( (dueI-durI < tdueTI) && (tdueTI < dueI) &&
-		  (tsizeTI + (tdueTI- (dueI-durI))*use[i] > (tdueTI - treleaseTI) * capacity) ) {
-	      int delta = tsizeTI - (tdueTI - treleaseTI) * (capacity - useI);
-	      if (delta > 0) {
-		int val = tdueTI + (int) floor((double) delta / (double) useI);
-		if (dueI > val) {
-		  tiFlag = 1;
-		  FailOnEmpty(*x[i] <= val - durI);
-		}
-	      }
-	    }
-	  }
-
-
-	  if (contained == 0) {
-	    //  Caseau on cumulative scheduling, ICLP96
-	    int slack = (tdueTI - treleaseTI)*capacity - tsizeTI;
-	    if ( (useI*durI - intMax(0,treleaseTI-releaseI)*useI > slack)
-		 && (useI*(tdueTI - treleaseTI) > slack)
-		 && (releaseI < tdueTI - (int) floor( (double) slack / (double) useI))) {
-	      FailOnEmpty(*x[i] >= tdueTI - (int) floor( (double) slack / (double) useI));
-	      tiFlag = 1;
-	    }
-	    if ( (useI*durI - intMax(0,dueI-tdueTI)*useI > slack)
-		 && (useI*(tdueTI - treleaseTI) > slack)
-		 && (dueI > treleaseTI + (int) ceil( (double) slack / (double) useI) )) {
-	      FailOnEmpty(*x[i] <= treleaseTI + (int) ceil( (double) slack / (double) useI) - durI);
-	      tiFlag = 1;
-	    }
-	  }
-	  */
-
-	  // if task i is contained, this does not work!
-	  int OS = sizeAll;
-	  int OT = tsizeTI;
-	  if (contained == 0) {
-	    int overlap = intMin(intMax(0,releaseI+durI-treleaseTI),
-				 intMin(intMax(0,tdueTI-dueI+durI),
-					intMin(durI,tdueTI-treleaseTI))) * use[i];
-	    sizeAll = sizeAll + cset->overlap - overlap;
-	    tsizeTI = tsizeTI + cset->overlap - overlap;
-	  }
-
-	  if ( ((tdueTI - treleaseTI) * capacity < sizeAll) &&
-	       ((dueI - treleaseTI) * capacity < sizeAll) ) {
-	    int delta = tsizeTI - (tdueTI - treleaseTI) * (capacity - useI);
-	    if (delta > 0) {
-	      // l must be first
-	      int val = tdueTI - (int) ceil((double) delta / (double) useI);
-	      if (dueI > val) {
-		tiFlag = 1;
-		FailOnEmpty(*x[i] <= val - durI);
-	      }
-	    }
-	  }
-
-
-	  sizeAll = OS;
-	  tsizeTI = OT;
-	  
-	  // if task i is contained, this does not work!
-	  if (contained == 0) {
-	   int overlap = intMin(intMax(0,releaseI+durI-treleaseTI),
-			     intMin(intMax(0,tdueTI-dueI+durI),
-				    intMin(durI,tdueTI-treleaseTI))) * use[i];
-	    sizeAll = sizeAll + cset->overlap - overlap;
-	    tsizeTI = tsizeTI + cset->overlap - overlap;
-	  }
-
-	  if ( ((tdueTI - treleaseTI) * capacity < sizeAll) &&
-	       ((tdueTI - releaseI) * capacity < sizeAll) ) {
-	    int delta = tsizeTI - (tdueTI - treleaseTI) * (capacity - useI);
-	    if (delta > 0) {
-	      // l must be last
-	      int val = treleaseTI + (int) ceil((double) delta / (double) useI);
-	      if (releaseI < val) {
-		tiFlag = 1;
-		FailOnEmpty(*x[i] >= val);
-	      }
-	    }
-	  }
-
-
-	}
-      }
-    }
-	  
-
-  for (i=0; i<ts; i++) {
-    MinMax[i].min = x[i]->getMinElem();	
-    MinMax[i].max = x[i]->getMaxElem();	
-  }
-
-
-  if (tiFlag == 1) {
-    tiFlag = 0;
-    goto tiloop;
-  }
-
-
-
-#endif
-
-
-#ifdef CUM_EDGE_FINDING
-
 cploop:
 
   //////////  
@@ -1554,6 +1261,7 @@ cploop:
     set0Size = 0;
     compSet0Size = 0;
     outSideSize = 0;
+    int overlap = 0;
 
     // compute set S0 
     int l;
@@ -1566,6 +1274,10 @@ cploop:
 	set0[set0Size++] = l;
       }
       else {
+	int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
+				intMin(intMax(0,kUp-xlMaxDL+dl),
+				       intMin(dl,kUp-kDown)));
+	overlap += overlapTmp*use[l];
 	if (xlMaxDL > kUp) {
 	  outSide[outSideSize++] = l;
 	}
@@ -1579,7 +1291,7 @@ cploop:
     }
 
 
-    if ((kUp-kDown)*capacity < use0) {
+    if ((kUp-kDown)*capacity < use0+overlap) {
       goto failure;
     }
 
@@ -1633,11 +1345,11 @@ cploop:
       int maxL = MinMax[l].max;
       int durL = dur[l];
       int useL = use[l];
-
+      int sizeAll = s->dSi + durL*useL;
       if (maxL+durL > s->sUp) {
-	if ( (s->sUp - s->sLow)*capacity >= s->dSi + durL*useL) {
+	if ( (s->sUp - s->sLow)*capacity >= sizeAll) {
 	  // case 4: l may be inside
-          if ( (s->sUp - minL)*capacity >= s->dSi + durL*useL) {
+          if ( (s->sUp - minL)*capacity >= sizeAll) {
 	    // case 5: L may be first
 	    lCount++; 
 	    setCount--;
@@ -1648,7 +1360,7 @@ cploop:
 	  }
 	}
 	else {
-	  if ( (s->sUp - minL)*capacity >= s->dSi + durL*useL) {
+	  if ( (s->sUp - minL)*capacity >= sizeAll) {
 	    // case 5: L may be first
 	    lCount++;
 	  }
@@ -1698,7 +1410,8 @@ cploop:
     set0Size = 0;
     compSet0Size = 0;
     outSideSize = 0;
-    
+    int overlap=0;
+
     //////////
     // compute set S0 
     //////////
@@ -1712,6 +1425,10 @@ cploop:
 	set0[set0Size++] = l;
       }
       else {
+	int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
+				intMin(intMax(0,kUp-xlMaxDL+dl),
+				       intMin(dl,kUp-kDown)));
+	overlap += overlapTmp*use[l];
 	if (xlMin < kDown) {
 	  outSide[outSideSize++] = l;
 	}
@@ -1725,7 +1442,7 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
     
-    if ( (kUp-kDown)*capacity < use0) {
+    if ( (kUp-kDown)*capacity < use0+overlap) {
       goto failure;
     }
 
@@ -1783,12 +1500,12 @@ cploop:
       int maxL = MinMax[l].max;
       int durL = dur[l];
       int useL = use[l];
-
-
+      int sizeAll = s->dSi + durL*useL;
+      
       if (minL < s->sLow) {
-	if ( (s->sUp - s->sLow)*capacity >= s->dSi + durL*useL) {
+	if ( (s->sUp - s->sLow)*capacity >= sizeAll) {
 	  // case 4: l may be inside
-	    if ( (maxL + durL - s->sLow)*capacity >= s->dSi + durL*useL) {
+	    if ( (maxL + durL - s->sLow)*capacity >= sizeAll) {
 	    // case 5: L may be last
 	    lCount++; 
 	    setCount--;
@@ -1799,7 +1516,7 @@ cploop:
 	  }
 	}
 	else {
-	  if ((maxL + durL - s->sLow) * capacity >= s->dSi + durL*useL) {
+	  if ((maxL + durL - s->sLow) * capacity >= sizeAll) {
 	    // case 5: L may be last
 	    lCount++;
 	  }
@@ -1836,8 +1553,6 @@ cploop:
     downFlag = 0;
     goto cploop;
   }
-
-#endif
 
 reifiedloop:
 
@@ -2120,9 +1835,9 @@ capLoop:
 	  int lst = MinMax[j].max;
 	  int ect = lb + durJ;
 	  int rb = lst + durJ;
-	  int add = max(0, min(durJ, 
-			       min(right - left,
-				   min(ect - left, right - lst))));
+	  int add = intMax(0, intMin(durJ, 
+			       intMin(right - left,
+				   intMin(ect - left, right - lst))));
 	  cumL = cumL + add;
 	}
 	if  (cumL > (right - left) * capacity) {
@@ -2136,11 +1851,11 @@ capLoop:
 	  int ect  = lb + durJ;
 	  int rb   = lst + durJ;
 	  int useJ = use[j];
-	  int add = max(0, min(durJ, 
-			       min(right - left,
-				   min(ect - left, right - lst))));
+	  int add = intMax(0, intMin(durJ, 
+			       intMin(right - left,
+				   intMin(ect - left, right - lst))));
 	  if (add == 0) {
-	    int mdur = min(durJ, right-left);
+	    int mdur = intMin(durJ, right-left);
 	    if (cumL + useJ * mdur > (right - left) * capacity) {
 	      int delta = (int) floor( (double) ((right - left) * capacity - cumL) / (double) useJ);
 	      OZ_FiniteDomain la;

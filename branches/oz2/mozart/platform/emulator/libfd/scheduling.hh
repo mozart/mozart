@@ -48,7 +48,7 @@ public:
   virtual OZ_NonMonotonic::order_t getOrder(void) const {
     return _nm.getOrder();
   }
-  virtual size_t sizeOf(void) { return sizeof(*this); }
+  virtual size_t sizeOf(void) { return sizeof(*this); } 
 };
 
 //-----------------------------------------------------------------------------
