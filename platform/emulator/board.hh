@@ -22,6 +22,20 @@
 #include "constr.hh"
 #include "suspension.hh"
 
+enum BoardFlags {
+  Bo_Ask        = 1<<0,
+  Bo_Wait       = 1<<1,
+  Bo_Root       = 1<<2,
+  Bo_Installed  = 1<<3,
+  Bo_Nervous    = 1<<4,
+  Bo_WaitTop    = 1<<5,
+  Bo_PathMark   = 1<<6,
+  Bo_Failed     = 1<<7,
+  Bo_Committed  = 1<<8,
+  Bo_Discarded  = 1<<9,
+  Bo_Waiting    = 1<<10
+};
+
 class Board : public ConstTerm {
 friend void engine();
 public:
@@ -56,38 +70,40 @@ public:
   void addSuspension(int n=1) { suspCount += n; }
   Board *gcGetBoardDeref();
   Actor *getActor();
-  Board *getBoard();
-  inline Board *getBoardDeref();
-  Continuation *getBodyPtr();
+  Board *getBoard() { return u.board; }
+  Board *getBoardDeref();
+  Continuation *getBodyPtr() { return &body; }
   Board *getParentBoard();
-  ConsList &getScriptRef();
-  int getSuspCount() {return suspCount; }
-  Bool hasSuspension();
-  Bool isAsk();
-  Bool isCommitted();
+  ConsList &getScriptRef() { return script; }
+  int getSuspCount() { return suspCount; }
+  Bool hasSuspension() { return suspCount == 0 ? NO : OK; }
+  Bool isAsk() { return flags & Bo_Ask ? OK : NO; }
+  Bool isCommitted() { return flags & Bo_Committed ? OK : NO; }
   Bool isDiscarded();
-  Bool isFailed();
-  Bool isInstalled();
-  Bool isNervous();
-  Bool isPathMark();
-  Bool isWaitTop();
-  Bool isWait();
-  Bool isWaiting();
-  Bool isRoot();
-  void newScript(int size);
-  inline void removeSuspension();
+  Bool isFailed() { return flags & Bo_Failed ? OK : NO; }
+  Bool isInstalled() { return flags & Bo_Installed ? OK : NO; }
+  Bool isNervous() { return flags & Bo_Nervous ? OK : NO; }
+  Bool isPathMark() { return flags & Bo_PathMark ? OK : NO; }
+  Bool isWaitTop() { return flags & Bo_WaitTop ? OK : NO; }
+  Bool isWait() { return flags & Bo_Wait ? OK : NO; }
+  Bool isWaiting() { return flags & Bo_Waiting ? OK : NO; }
+  Bool isRoot() { return flags & Bo_Root ? OK : NO; }
+
+  void newScript(int size) { script.allocate(size); }
+  void removeSuspension();
   void setBody(ProgramCounter p,RefsArray y,
                        RefsArray g,RefsArray x,int i);
-  void setInstalled();
-  void setNervous();
-  void setPathMark();
+  void setInstalled() { flags |= Bo_Installed; }
+  void setNervous() { flags |= Bo_Nervous; }
+  void setPathMark() { flags |= Bo_PathMark; }
+
   void setScript(int i,TaggedRef *v,TaggedRef r);
   void setCommitted(Board *s);
-  void setWaitTop();
-  void setWaiting();
-  void unsetInstalled();
-  void unsetNervous();
-  void unsetPathMark();
+  void setWaitTop() { flags |= Bo_WaitTop; }
+  void setWaiting() { flags |= Bo_Waiting; }
+  void unsetInstalled() { flags &= ~Bo_Installed; }
+  void unsetNervous() { flags &= ~Bo_Nervous; }
+  void unsetPathMark() { flags &= ~Bo_PathMark; }
 };
 
 #ifndef OUTLINE

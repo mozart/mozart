@@ -88,4 +88,9 @@ private:
   void dispose();
 };
 
+
+#ifndef OUTLINE
+#include "thread.icc"
+#endif
+
 #endif

@@ -8,10 +8,6 @@
 #include "genvar.hh"
 #include "fdomn.hh"
 
-#ifdef OUTLINE
-#define inline
-#endif
-
 //-----------------------------------------------------------------------------
 //                           class GenFDVariable
 //-----------------------------------------------------------------------------
@@ -86,9 +82,7 @@ OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef* &varPtr,
 
 
 
-#ifdef OUTLINE
-#undef inline
-#else
+#ifndef OUTLINE
 #include "fdgenvar.icc"
 #endif
 
