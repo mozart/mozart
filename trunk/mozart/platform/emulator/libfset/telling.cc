@@ -88,15 +88,21 @@ OZ_Return IncludePropagator::propagate(void)
   OZ_FDIntVar d(_d);
   PropagatorController_S_D P(s, d);
 
-  FailOnEmpty(*d <= (32 * fset_high - 1));
+  FailOnEmpty(*d <= (fsethigh32 - 1));
   
   if (*d == fd_singl) {
     FailOnInvalid(*s += d->getSingleElem());
   } else {
 
-    for (int i = 32 * fset_high; i --; )
+    // all elements which are known _not_ to be in `s' are not in `d' 
+#ifdef FSET_HIGH
+    for (int i = fsethigh32; i --; )
       if (s->isNotIn(i))
 	FailOnEmpty(*d -= i);
+#else
+    OZ_FiniteDomain not_in(s->getNotInSet());
+    FailOnEmpty(*d -= not_in);
+#endif
 
     if (*d == fd_singl) 
       FailOnInvalid(*s += d->getSingleElem());
@@ -123,9 +129,15 @@ OZ_Return ExcludePropagator::propagate(void)
     FailOnInvalid(*s -= d->getSingleElem());
   } else {
 
-    for (int i = 32 * fset_high; i --; )
+    // all elements which are known to be in `s' are not in `d' 
+#ifdef FSET_HIGH
+    for (int i = fsethigh32; i --; )
       if (s->isIn(i))
 	FailOnEmpty(*d -= i);
+#else
+    OZ_FiniteDomain lb(s->getGlbSet());
+    FailOnEmpty(*d -= lb);
+#endif
 
     if (*d == fd_singl) 
       FailOnInvalid(*s -= d->getSingleElem());
