@@ -247,8 +247,8 @@ public:
   Bool isLocalVariable(TaggedRef var);
   Bool isInScope (Board *above, Board* node);
 
-  void pushCall(Board *b, SRecord *def, int arity, RefsArray args);
-  void pushDebug(Board *n, SRecord *def, int arity, RefsArray args);
+  void pushCall(Board *b, Chunk *def, int arity, RefsArray args);
+  void pushDebug(Board *n, Chunk *def, int arity, RefsArray args);
   void pushTask(Board *n,ProgramCounter pc,
 		RefsArray y,RefsArray g,RefsArray x=0,int i=0);
   void pushCFun(Board *n, OZ_CFun f, RefsArray x=0, int i=0);
