@@ -416,3 +416,9 @@ int inTospace(void *p)
 
   return 0;
 }
+
+#ifdef OUTLINE
+#define inline
+#include "mem.icc"
+#undef inline
+#endif

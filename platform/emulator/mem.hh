@@ -107,55 +107,18 @@ extern void *FreeList[freeListMaxSize];
 unsigned int getMemoryInFreeList();
 
 
-inline
-void *freeListMalloc(size_t chunk_size)
-{
-  Assert(chunk_size % 4 == 0);
-
-  void **freeListCache = FreeList;
-  void *aux = chunk_size < freeListMaxSize ? freeListCache[chunk_size] : (void *)NULL;
-
-  if (aux == (void *) NULL)
-    aux = heapMallocOutline(chunk_size);
-  else {
-    freeListCache[chunk_size] = *(void **)aux;
-  }
-#ifdef DEBUG_MEM
-  memset((char *)aux,0x5A,chunk_size);
-#endif
-  return aux;
-}
-
-
 extern "C" void* memset(void*, int, size_t);
 
-
-inline void freeListDispose(void *addr, size_t chunk_size)
-{
-#ifdef DEBUG_CHECK
-  if (chunk_size % 4 != 0) {
-    error("freeListDispose: not aligned to word boundaries");
-  }
-#endif
-#ifdef DEBUG_MEM
-
-// clear mem, so every reference leads to strange errors
-// and turn off free list memory, do not reuse the memory
-  memset((char *)addr,0x5A,chunk_size);
-  return;
-
-#else
-
-  if (chunk_size < freeListMaxSize && chunk_size > 0) {
-    *(void **)addr =  FreeList[chunk_size];
-    FreeList[chunk_size] = addr;
-  }
-#endif
-}
+void * freeListMalloc(size_t chunk_size);
+void freeListDispose(void *addr, size_t chunk_size);
 
 int initMemoryManagement(void);
 void deleteChunkChain(char *);
 int inChunkChain(void *, void *);
 void printChunkChain(void *);
+
+#ifndef OUTLINE
+#include "mem.icc"
+#endif
 
 #endif
