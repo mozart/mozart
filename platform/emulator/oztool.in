@@ -5,20 +5,20 @@
 # oztool ld  ...        creates DLLs
 # oztool platform       echoes the oz platform
 
-: ${oztool_cxx="@OZTOOL_CXX@"}
-: ${oztool_cc="cc"}
-: ${oztool_ld="$oztool_cxx @TOOLLDFLAGS@"}
+: ${oztool_includes="-I@prefix@/include"}
+
+: ${oztool_cxx="@OZTOOL_CXX@ @CDYNOPT@ $oztool_includes"}
+: ${oztool_cc="cc @CDYNOPT@ $oztool_includes"}
+: ${oztool_ld="ld @TOOLLDFLAGS@"}
 : ${oztool_platform="@platform@"}
+
 cmd=$1
 shift
 
 case "$cmd" in
   c++) cmd=$oztool_cxx;;
   cc ) cmd=$oztool_cc;;
-  ld ) case $oztool_platform in
-	 netbsd*) cmd="ld -Bshareable";;
-	       *) cmd=$oztool_ld
-       esac;;
+  ld ) cmd=$oztool_ld;;
   platform )
     echo "$oztool_platform"
     exit 0;;
