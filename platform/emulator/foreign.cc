@@ -1885,6 +1885,38 @@ OZ_Return OZ_raiseC(char *label,int arity,...)
   return OZ_raise(tt);
 }
 
+OZ_Return OZ_raiseError(OZ_Term exc)
+{
+  OZ_Term ret = OZ_record(OZ_atom("error"),
+			  cons(OZ_int(1),
+			       cons(OZ_atom("debug"),nil())));
+  OZ_putSubtree(ret,OZ_int(1),exc);
+  OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
+
+  am.exception.info = NameUnit;
+  am.exception.value = ret;
+  am.exception.debug = TRUE;
+  return RAISE;
+}
+
+OZ_Return OZ_raiseErrorC(char *label,int arity,...)
+{
+  if (arity == 0) {
+    return OZ_raiseError(OZ_atom(label));
+  }
+
+  va_list ap;
+  va_start(ap,arity);
+
+  OZ_Term tt=OZ_tuple(OZ_atom(label),arity);
+  for (int i = 0; i < arity; i++) {
+    OZ_putArg(tt,i,va_arg(ap,OZ_Term));
+  }
+
+  va_end(ap);
+  return OZ_raiseError(tt);
+}
+
 /* -----------------------------------------------------------------
  * Suspending builtins
  * -----------------------------------------------------------------*/
