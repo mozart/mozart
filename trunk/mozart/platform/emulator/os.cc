@@ -149,7 +149,7 @@ static verylong fileTimeToMS(FILETIME *ft)
   return ret;
 }
 
-
+// WINDOWS: start time in milliseconds
 static verylong emulatorStartTime;
 
 /* return time since start in milli seconds */
@@ -164,6 +164,8 @@ static unsigned int getTotalTime()
 
 #else
 
+// SUNOS_SPARC: start time in milliseconds
+// others: start time in ticks
 static long emulatorStartTime = 0;
 
 #endif
@@ -220,8 +222,7 @@ unsigned int osTotalTime()
 
   (void) gettimeofday(&tp, NULL);
 
-  return (unsigned int) ((tp.tv_sec - emulatorStartTime) * 1000 +
-			 tp.tv_usec / 1000);
+  return (unsigned int) (tp.tv_sec*1000 + tp.tv_usec/1000 - emulatorStartTime);
 
 #else
 
@@ -1137,7 +1138,7 @@ void osInit()
 
   (void) gettimeofday(&tp, NULL);
 
-  emulatorStartTime = tp.tv_sec;
+  emulatorStartTime = tp.tv_sec*1000 + tp.tv_usec/1000;
 
 #elif defined(WINDOWS)
 
@@ -1514,43 +1515,91 @@ int osgetpid()
   return pid>0 ? pid : -pid;  // fucking Windows 95 returns negative pids
 }
 
-// "Enhanced" PID: pid mixed with timer (for site ID construction);
+// "Enhanced" PID: pid mixed with tick count for site ID construction.
+//
+// A site global id used to be a triple (ip_address,time,pid)
+// unfortunately, if the operating system reused pids quickly,
+// since time only has 1s resolution, two consecutive processes
+// could be assigned the same global id (this happened regularly on
+// Windows).
+//
+// In order to fix this problem, the idea is to extend a site global
+// id with a `tick count'.  I.e. a site global is is now a quadruple
+// (ip_address,time,pid,ticks).  We only need to keep track of ticks
+// within the last whole second because that is the resolution of the
+// time component.  In order to guarantee that two processes never get
+// the same global site id (gsid), we only need to worry about processes
+// that are given the same pid: we need to ensure that they either
+// differ in time or in ticks.  In order to achieve this, it is sufficient
+// to guarantee that each process consumes at least 1 tick before
+// site init.
+//
+// PROOF:
+//
+// if start time and site init time are more than 1s apart, then we
+// are done because the gsid is made different by its time component
+// from any gsid with same pid created before.
+//
+// if start time and site init time are less than 1s apart, then making
+// sure that the process consumes at least 1 tick since start up means
+// that its gsid will be at least 1 tick apart from any gsid with the
+// same pid and same time created before.
+// 
+// WHAT ARE TICKS?
+//
+// For Windows and SUNOS_SPARC, we define a tick as happening
+// every 10ms.  On other platforms, we can directly obtain a tick
+// count.
+//
+// WHERE TO PUT THE TICK COUNT?
+//
+// The next problem is where to put the tick count without changing
+// the marshaled representation of site ids.  The idea is to use the
+// high bits of the pid to store this tick count.  Since there are 100
+// ticks per second, we need 6 bits for the tick count.  Hopefully,
+// these bits are not significant for the pid: i.e. the 6 highest bits
+// should merely sign extend the 7th highest bit (they should normally
+// be all 0 on Unix but possibly all 1 on Windows were pids are negative).
+
 int osgetEpid()
 {
-  unsigned int ms;
+  unsigned long ticks;
 #ifdef WINDOWS
-  // use GetSystemTime ?
   SYSTEMTIME st;
-  GetSystemTime(&st);
-  // know nothing about granularity, so take it "as is":
-  ms = (unsigned int) st.wMilliseconds;
+  FILETIME ft;
+  verylong ms;
+  do {
+    GetSystemTime(&st);
+    SystemTimeToFileTime(&st,&ft);
+    ms = fileTimeToMS(&ft);
+  } while ((ms-emulatorStartTime)<10);
+  // number of ticks since the last whole second:
+  // first get the number of milliseconds since the
+  // last whole second, then divide by the ticking
+  // wavelength
+  ticks = (ms % 1000)/10;
 #elif defined(SUNOS_SPARC)
   struct timeval tp;
-  (void) gettimeofday(&tp, NULL);
-  // use the number of ticks instead:
-  ms = (unsigned int) ((tp.tv_usec / 1000) / sysconf(_SC_CLK_TCK));
-#else  // POSIX;
-  struct tms buffer;
-  clock_t b = times(&buffer);
-  // interested only in ticks within the last second:
-  ms = (unsigned int) (b % sysconf(_SC_CLK_TCK));
-#endif
-
-  // Now, transpose 'ms':
-  unsigned int bitM = 0x1;
-  int bitN = 0;
-  const int bits = sizeof(unsigned int) * 8;
-  unsigned int mix = 0;
+  int ms;
   do {
-    if (ms & bitM)
-      mix |= 1 << (bits-bitN-1);
-    bitM = bitM << 1;
-    bitN++;
-  } while (bitN < bits);
-
-  //
+      (void) gettimeofday(&tp,NULL);
+      ms = tp.tv_sec*1000 + tp.tv_usec/1000;
+  } while ((ms-emulatorStartTime)<10);
+  ticks = (ms % 1000)/10;
+#else
+  struct tms buffer;
+  do {
+    ticks = times(&buffer);
+  } while (ticks==emulatorStartTime);
+  ticks = ticks % sysconf(_SC_CLK_TCK);
+#endif
+  Assert(ticks>=0);
+  Assert(ticks<100);
   unsigned int pid = (unsigned int) osgetpid();
-  return (pid ^ mix);
+  // check that the 6 highest bits only sign-extend the 7th highest bit
+#define HIGH7BITS (((unsigned int) 0x07F) << (sizeof(unsigned int)*8 - 7))
+  Assert((pid & HIGH7BITS)==HIGH7BITS || (pid & HIGH7BITS)==0);
+  return pid ^ (((unsigned int) ticks) << (sizeof(unsigned int)*8 - 6));
 }
 
 /* fgets may return NULL under Solaris if 
