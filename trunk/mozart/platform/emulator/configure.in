@@ -223,7 +223,7 @@ if test "${GXX}" = yes; then
       if test -n "${PGXX}"
       then
 	CFLAGS="$CFLAGS -fno-exceptions -fno-rtti -Wno-sign-compare"
-	O_OPT="$O_OPT -frisc"
+	O_OPT="$O_OPT -mpentium -frisc"
       else
 	O_OPT="$O_OPT -m486"
 	O_OPT="$O_OPT -malign-loops=4 -malign-jumps=4 -malign-functions=4"
