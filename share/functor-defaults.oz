@@ -32,7 +32,7 @@ defaults(lib:
 	     'Open'
 	     'Tk' 'TkTools'
 	     'Compiler'
-	     'Type'
+	     'Type' 'Narrator' 'Listener' 'ErrorListener'
 	     'Misc']
 
 	 volatile:
