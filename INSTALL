@@ -16,6 +16,8 @@ cvs get Oz/include
 cvs get Oz/Emulator
 cvs get Oz/Compiler
 cvs get Oz/demo
+cvs get Oz/Tools
+cvs get Oz/ozwish
 
 - install bin/ozplatform in your PATH
 
@@ -25,6 +27,8 @@ cvs get Oz/demo
 
 - edit Compiler/Imake.tmpl
     SPLIB : sicstus prolog
+
+- edit Compiler/backend/Imakefile
 
 - edit ozwish/Imakefile
     OZWISHHOME
