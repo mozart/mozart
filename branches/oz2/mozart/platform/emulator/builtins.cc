@@ -4256,7 +4256,7 @@ OZ_C_proc_begin(BIstringToInt, 2)
   if (res == 0)
     return am.raise(E_ERROR,E_KERNEL,"stringNoInt",1,OZ_getCArg(0));
   else
-    return oz_unify(out,res);
+    return OZ_unify(out,res);
 }
 OZ_C_proc_end
 
