@@ -39,9 +39,9 @@ class ozstrstream: public ozostream {
   int size;
   int cur;
 public:
-  ~ozstrstream() { free(string); }
+  virtual ~ozstrstream() { free(string); }
 
-  ozstrstream() : ozostream(0), cur(0), size(100) { 
+  ozstrstream() : ozostream(0), size(100), cur(0) { 
     string = (char*) malloc(size*sizeof(char)); 
   }
 

@@ -142,23 +142,12 @@ void AM::checkSuspensionList(TaggedRef taggedvar, PropCaller calledBy)
  * ------------------------------------------------------------------------ */
 
 // unset the ThreadSwitch flag and reset the counter
+// only in emulate.cc (problem with INTERFACE declaration!)
 inline
 void AM::restartThread()
 {
   unsetSFlag(ThreadSwitch);
   threadSwitchCounter=osMsToClockTick(TIME_SLICE);
-}
-
-inline
-void AM::addSuspendVarList(TaggedRef * t)
-{
-  Assert(isAnyVar(*t));
-
-  if (suspendVarList==makeTaggedNULL()) {
-    suspendVarList=makeTaggedRef(t);
-  } else {
-    suspendVarList=cons(makeTaggedRef(t),suspendVarList);
-  }
 }
 
 /*
@@ -180,6 +169,14 @@ RunnableThreadBody* AM::allocateBody()
   body->taskStack.init();
 
   return body;
+}
+
+inline
+void AM::freeThreadBody(Thread *tt) {
+  RunnableThreadBody *it = tt->getBody();
+  it->next = threadBodyFreeList;
+  threadBodyFreeList = it;
+  tt->freeThreadBodyInternal();
 }
 
 
@@ -621,14 +618,6 @@ void AM::saveSelf()
     currentThread->setSelf(cachedSelf);
     cachedSelf = 0;
   }
-}
-
-inline
-void AM::freeThreadBody(Thread *tt) {
-  RunnableThreadBody *it = tt->getBody();
-  it->next = threadBodyFreeList;
-  threadBodyFreeList = it;
-  tt->freeThreadBodyInternal();
 }
 
 #endif  // __AM_ICC
