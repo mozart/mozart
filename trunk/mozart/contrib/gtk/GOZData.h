@@ -32,8 +32,13 @@
  * Basic Types
  */
 
+//#define GOZ_declareBool(i, val) \
+//  OZ_declareInt(i, GOZ_(val)); gboolean val = (gboolean) GOZ_(val)
 #define GOZ_declareBool(i, val) \
-  OZ_declareInt(i, GOZ_(val)); gboolean val = (gboolean) GOZ_(val)
+  OZ_declareBool(i, GOZ_(val)); gboolean val = (gboolean) GOZ_(val)
+
+#define GOZ_bool(val) \
+  ((val) ? OZ_true() : OZ_false())
 
 #define GOZ_declareChar(i, val) \
   OZ_declareInt(i, GOZ_(val)); gchar val = (gchar) GOZ_(val)
@@ -208,6 +213,9 @@ static inline GList *goz_export_glist(OZ_Term cons) {
 /*
  * Generic Handler Argument Handling
 */
+#define GOZ_ARG_bool(val) \
+  OZ_mkTuple(OZ_atom("bool"), 1, GOZ_bool(val));
+
 #define GOZ_ARG_int(val) \
   OZ_mkTuple(OZ_atom("int"), 1, OZ_int(val));
 
