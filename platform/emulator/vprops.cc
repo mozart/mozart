@@ -298,9 +298,9 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_REC(PROP_ERRORS,"errors",
              (6,AtomLocation,AtomDebug,AtomHints,AtomThread,
               AtomDepth,AtomWidth),
-             SET_INT(AtomLocation,ozconf.errorLocation);
-             SET_INT(AtomDebug,ozconf.errorDebug);
-             SET_INT(AtomHints,ozconf.errorHints);
+             SET_BOOL(AtomLocation,ozconf.errorLocation);
+             SET_BOOL(AtomDebug,ozconf.errorDebug);
+             SET_BOOL(AtomHints,ozconf.errorHints);
              SET_INT(AtomThread,ozconf.errorThreadDepth);
              SET_INT(AtomDepth,ozconf.errorPrintDepth);
              SET_INT(AtomWidth,ozconf.errorPrintWidth););
