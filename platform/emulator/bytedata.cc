@@ -121,14 +121,16 @@ OZ_Return BitString::eqV(OZ_Term t) {
     ? PROCEED : FAILED;
 }
 
-int BitString::marshalV(MsgBuffer*bs) {
+int BitString::marshalV(void* bs1) {
+  MsgBuffer*bs=(MsgBuffer*)bs1;
   marshalNumber(getWidth(),bs);
   int size = getSize();
   for (int i=0; i<size; i++) marshalByte(data[i],bs);
   return OK;
 }
 
-OZ_Term unmarshalBitString(MsgBuffer*bs) {
+OZ_Term unmarshalBitString(void*bs1) {
+  MsgBuffer*bs=(MsgBuffer*)bs1;
   int width = unmarshalNumber(bs);
   BitString*s = new BitString(width);
   int size = s->getSize();
@@ -316,14 +318,16 @@ OZ_Return ByteString::eqV(OZ_Term t) {
     ? PROCEED : FAILED;
 }
 
-int ByteString::marshalV(MsgBuffer*bs) {
+int ByteString::marshalV(void*bs1) {
+  MsgBuffer*bs=(MsgBuffer*)bs1;
   int size = getWidth();
   marshalNumber(size,bs);
   for (int i=0; i<size; i++) marshalByte(data[i],bs);
   return OK;
 }
 
-OZ_Term unmarshalByteString(MsgBuffer*bs) {
+OZ_Term unmarshalByteString(void*bs1) {
+  MsgBuffer*bs=(MsgBuffer*)bs1;
   int width = unmarshalNumber(bs);
   ByteString*s = new ByteString(width);
   for (int i=0; i<width; i++)
