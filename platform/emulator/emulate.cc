@@ -1161,13 +1161,15 @@ void engine()
         }
         disposeRefsArray(tmpX);
         taskstack->setTop(topCache);
-        DebugTrace(trace("call cont",CBB));
+        DebugTrace(trace("call cont task",CBB));
         isTailCall = OK;
         goto LBLcall;
       }
     case C_LOCAL:
       {
+        Assert(0);
         taskstack->setTop(topCache);
+        DebugTrace(trace("local task",CBB));
         CAA = AWActor::Cast (CBB->getActor());
         e->deinstallCurrent();
         if (CAA->hasNext()) {
@@ -1180,6 +1182,7 @@ void engine()
     case C_SOLVE:
       {
         taskstack->setTop(topCache);
+        DebugTrace(trace("solve task",CBB));
         Assert(CBB->isSolve());
         Assert(!CBB->isCommitted() && !CBB->isFailed());
         SolveActor *sa = SolveActor::Cast(CBB->getActor());
@@ -1220,7 +1223,7 @@ void engine()
         // (if the search problem is stable by its execution);
         taskstack->setTop(topCache);
 
-        DebugTrace(trace("nervous",CBB));
+        DebugTrace(trace("nervous task",CBB));
         goto LBLpopTask;
       }
 
@@ -1250,7 +1253,7 @@ void engine()
           goto LBLpopTask;
         }
 
-        DebugTrace(trace("cfunc cont",CBB));
+        DebugTrace(trace("cfunc cont task",CBB));
 
         LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
 
@@ -2608,11 +2611,7 @@ LBLkillThread:
     {
       // create a node
       e->setCurrent(new Board(CAA,Bo_Wait),OK);
-      if (e->currentThread->compMode == ALLSEQMODE) {
-        e->currentThread->compMode = SEQMODE;
-      }
       e->pushLocal();
-      markDirtyRefsArray(Y);
       CBB->setInstalled();
       e->trail.pushMark();
       DebugCheckT(CAA=NULL);
@@ -2623,11 +2622,7 @@ LBLkillThread:
   Case(ASKCLAUSE)
     {
       e->setCurrent(new Board(CAA,Bo_Ask),OK);
-      if (e->currentThread->compMode == ALLSEQMODE) {
-        e->currentThread->compMode = SEQMODE;
-      }
       e->pushLocal();
-      markDirtyRefsArray(Y);
       CBB->setInstalled();
       e->trail.pushMark();
       DebugCheckT(CAA=NULL);
