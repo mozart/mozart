@@ -1782,21 +1782,22 @@ Case(GETVOID)
 	  B ^= LTAG_SMALLINT;
 	  if (!(B & LTAG_MASK)) {
 
-	    asm volatile("   subl %2,%1
+	    asm volatile("   subl %3,%2
                              jo   0f
-                             movl 12(%3),%2
-                             addl $16,%3
-                             orl  %0,%1
-                             movl %1,(%2)
-                             jmp *(%3)
+                             movl 12(%0),%3
+                             addl $16,%0
+                             orl  %1,%2
+                             movl %2,(%3)
+                             jmp *(%0)
                           0:
                        "
-                       :  /* OUTPUT */
-                       :  /* INPUT  */
-                          "i" (LTAG_SMALLINT),
-                          "r" (A),
-                          "r" (B),
-		          "r" (PC)
+			 : /* OUTPUT */
+			   "+&r" (PC) // read-write and early-clobber
+			 :  /* INPUT  */
+			   "i" (LTAG_SMALLINT),
+                           "r" (A),
+                           "r" (B),
+			 : "cc"
                        );
 
 	  } else {
@@ -1895,21 +1896,22 @@ Case(GETVOID)
 	  if (!(B & LTAG_MASK)) {
 
 	    asm volatile("   
-                             addl %2,%1
+                             addl %3,%2
                              jo   0f
-                             movl 12(%3),%2
-                             addl $16,%3
-                             orl  %0,%1
-                             movl %1,(%2)
-                             jmp *(%3)
+                             movl 12(%0),%3
+                             addl $16,%0
+                             orl  %1,%2
+                             movl %2,(%3)
+                             jmp *(%0)
                           0:
                        "
                        :  /* OUTPUT */
+			 "+&r" (PC) // read-write and early-clobber
                        :  /* INPUT  */
                           "i" (LTAG_SMALLINT),
                           "r" (A),
                           "r" (B),
-		          "r" (PC)
+		       : "cc"
                        );
 
 	  } else {
@@ -1996,22 +1998,22 @@ Case(GETVOID)
       retryINLINEMINUS1:
 	A ^= LTAG_SMALLINT;
 	if (!(A & LTAG_MASK)) {
-	  asm volatile("   addl $12,%3
-                           movl -4(%3),%2
-                           addl %0,%1
+	  asm volatile("   addl $12,%0
+                           movl -4(%0),%3
+                           addl %1,%2
                            jo   0f
-                           movl %1,(%2)
-                           jmp *(%3)
-                        0: movl %4,%1
-                           movl %1,(%2)
-                           jmp *(%3)
+                           movl %2,(%3)
+                           jmp *(%0)
+                        0: movl %4,%2
+                           movl %2,(%3)
+                           jmp *(%0)
                        "
-                       :  
+                       :  "+r" (PC) // read-write
                        : "i" (LTAG_SMALLINT - (1 << LTAG_BITS)),
 		         "r" (A),
                          "r" (T),
-		         "r" (PC),
 		         "m" (TaggedOzOverMinInt)
+		       : "cc"
                        );
 	} else {
 	  A ^= LTAG_SMALLINT;
@@ -2071,21 +2073,20 @@ Case(GETVOID)
       retryINLINEPLUS1:
 	A ^= LTAG_SMALLINT;
 	if (!(A & LTAG_MASK)) {
-	  asm volatile("   addl $12,%3
-                           movl -4(%3),%2
-                           addl %0,%1
+	  asm volatile("   addl $12,%0
+                           movl -4(%0),%3
+                           addl %1,%2
                            jo   0f
-                           movl %1,(%2)
-                           jmp *(%3)
-                        0: movl %4,%1
-                           movl %1,(%2)
-                           jmp *(%3)
+                           movl %2,(%3)
+                           jmp *(%0)
+                        0: movl %4,%2
+                           movl %2,(%3)
+                           jmp *(%0)
                        "
-                       :  
+                       :  "+r" (PC) // read-write
                        : "i" (LTAG_SMALLINT + (1 << LTAG_BITS)),
 		         "r" (A),
                          "r" (T),
-		         "r" (PC),
 		         "m" (TaggedOzOverMaxInt)
                        );
 	} else {
