@@ -26,20 +26,25 @@ local
 	 TkTools.dialog,tkInit(master:  Master
 			       root:    pointer
 			       title:   'About'
+			       bg:      DefaultBackground
 			       buttons: ['Ok' # tkClose]
 			       default: 1
 			       pack:    false)
 	 T = {New Tk.label tkInit(parent: self
 				  fg:     SelectedBackground
+				  bg:     DefaultBackground
 				  font:   HelpTitleFont
 				  text:   'Oz ' # IconName)}
 
 	 V = {New Tk.label tkInit(parent: self
+				  bg:     DefaultBackground
 				  text:   'Last updated on ' # Version)}
 
 	 A = {New Tk.label
 	      tkInit(parent: self
-		     text:  NameOfRalf #' & '# NameOfBenni #'\n'# EmailOfBoth)}
+		     bg:     DefaultBackground
+		     text:   (NameOfRalf #' & '#
+			      NameOfBenni #'\n'# EmailOfBoth))}
       in
 	 {Tk.send pack(T V A side:top expand:1)}
 	 AboutDialog,tkPack
