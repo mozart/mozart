@@ -152,9 +152,9 @@ void ProxyVar::gCollectRecurseV(void)
 static
 void sendSurrender(BorrowEntry *be,OZ_Term val){
   NetAddress *na = be->getNetAddress();  
-  MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site, am.currentThread()->getPriority());
   msgC->put_M_SURRENDER(na->index,myDSite,val);
-  send(msgC,-1);
+  send(msgC);
 }
 
 Bool dealWithInjectors(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Bool &hit,TaggedRef term){
@@ -309,7 +309,7 @@ static void sendAcknowledge(DSite* sd,int OTI){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
   msgC->put_M_ACKNOWLEDGE(myDSite,OTI);
 
-  send(msgC,-1);
+  send(msgC);
 }
 
 // extern
@@ -319,7 +319,7 @@ void sendRedirect(DSite* sd,int OTI,TaggedRef val)
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
   msgC->put_M_REDIRECT(myDSite,OTI,val);
 
-  send(msgC,-1);
+  send(msgC);
 }
 
 inline Bool queueTrigger(DSite* s){
@@ -400,7 +400,7 @@ void varGetStatus(DSite* site,int OTI, TaggedRef tr){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
   msgC->put_M_SENDSTATUS(myDSite,OTI,tr);
 
-  send(msgC,-1);
+  send(msgC);
 }
 
 void ProxyVar::receiveStatus(TaggedRef tr)
@@ -557,7 +557,7 @@ static void sendRegister(BorrowEntry *be) {
   NetAddress *na = be->getNetAddress();  
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_REGISTER(na->index,myDSite);
-  send(msgC,-1);
+  send(msgC);
 }
 
 static void sendDeRegister(BorrowEntry *be) {
@@ -566,7 +566,7 @@ static void sendDeRegister(BorrowEntry *be) {
   NetAddress *na = be->getNetAddress();  
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_DEREGISTER(na->index,myDSite);
-  send(msgC,-1);
+  send(msgC);
 }
 
 void ProxyVar::nowGarbage(BorrowEntry* be){
@@ -634,7 +634,7 @@ void sendGetStatus(BorrowEntry *be){
   NetAddress *na = be->getNetAddress();  
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_GETSTATUS(myDSite,na->index);
-  send(msgC,-1);
+  send(msgC);
 }
  
 OZ_Term ProxyVar::statusV()
