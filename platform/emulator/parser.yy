@@ -919,6 +919,8 @@ FOR_gen		: phrase
 		  { $$ = newCTerm(oz_atom("forGeneratorInt"),$1,$3,$4); }
 		| phrase ';' FOR_genOptC
 		  { $$ = newCTerm(oz_atom("forGeneratorC"),$1,oz_head($3),oz_tail($3)); }
+		| '(' phrase ';' FOR_genOptC ')'
+		  { $$ = newCTerm(oz_atom("forGeneratorC"),$2,oz_head($4),oz_tail($4)); }
 		;
 
 FOR_genOptInt	: /* empty */
