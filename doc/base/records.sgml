@@ -540,7 +540,10 @@
           <<{List.append ?+{Xs} ?_{Y} ??{Zs}}>>
         <Item>
           binds ?_{Zs} to the result of appending ?_{Y} to&nbsp;?_{Xs}.
-          ?_{Y}&nbsp;needs not be a list.
+          ?_{Y}&nbsp;needs not be a list. However,
+          ?_{Zs} is only a proper list, if also
+          ?_{Y} is a proper list.
+
 
         <Entry><Span class=index/<<Member>>/
           <Index/<<List>><And><<member>>/
