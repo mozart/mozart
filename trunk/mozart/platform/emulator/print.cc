@@ -1291,7 +1291,7 @@ PRINTLONG(Abstraction)
   stream << indent(offset)
 	 << "Abstraction @id"
 	 << this << endl;
-  pred->printLong(stream,depth,offset);
+  getPred()->printLong(stream,depth,offset);
   int n = gRegs ? getRefsArraySize(gRegs) : 0;
   if (offset == 0) {
     if (n > 0) {
