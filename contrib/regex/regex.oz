@@ -40,12 +40,14 @@ in
       flag(EXTENDED ICASE NEWLINE NOSUB NOTBOL NOTEOL)={FLAGS}
 
       fun {CFlagToInt Spec}
-         B = {EncodeCFlag Spec}
-      in
-         if {BitString.get B 0} then EXTENDED else 0 end +
-         if {BitString.get B 1} then ICASE    else 0 end +
-         if {BitString.get B 2} then NEWLINE  else 0 end +
-         if {BitString.get B 3} then NOSUB    else 0 end
+         if {IsInt Spec} then Spec else
+            B = {EncodeCFlag Spec}
+         in
+            if {BitString.get B 0} then EXTENDED else 0 end +
+            if {BitString.get B 1} then ICASE    else 0 end +
+            if {BitString.get B 2} then NEWLINE  else 0 end +
+            if {BitString.get B 3} then NOSUB    else 0 end
+         end
       end
 
       CFlagsInt  = {NewCell EXTENDED+NEWLINE}
@@ -60,10 +62,12 @@ in
       CFlags = cflags(get:GetCFlags set:SetCFlags)
 
       fun {EFlagToInt Spec}
-         B = {EncodeEFlag Spec}
-      in
-         if {BitString.get B 0} then NOTBOL else 0 end +
-         if {BitString.get B 1} then NOTEOL else 0 end
+         if {IsInt Spec} then Spec else
+            B = {EncodeEFlag Spec}
+         in
+            if {BitString.get B 0} then NOTBOL else 0 end +
+            if {BitString.get B 1} then NOTEOL else 0 end
+         end
       end
 
       EFlagsInt  = {NewCell 0}
