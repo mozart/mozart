@@ -27,7 +27,7 @@
 #ifndef __LP_HH__
 #define __LP_HH__
 
-#include "aux.hh"
+#include "misc.hh"
 #include "ri.hh"
 
 //-----------------------------------------------------------------------------

@@ -24,7 +24,7 @@
  *
  */
 
-#include "aux.hh"
+#include "misc.hh"
 
 double * getDoubleVector(OZ_Term t, double * v)
 {
@@ -59,7 +59,6 @@ double * getDoubleVector(OZ_Term t, double * v)
 }
 
 #ifdef LINUX_IEEE
-
 void exception_handler(int i, siginfo_t * info, ucontext_t * fpu_state)
 {
   static char *msg[6] = {"invalid operation", "denormal", "divide by zero",
@@ -67,5 +66,10 @@ void exception_handler(int i, siginfo_t * info, ucontext_t * fpu_state)
 
         fprintf(stderr, "Floating point error: %s\n", msg[info->si_code]);
 }
-
 #endif
+
+OZ_Term atom_row, atom_opt, atom_type, atom_rhs, atom_min, atom_max,
+  atom_optimal, atom_infeasible, atom_unbounded,  atom_failure, atom_le,
+  atom_ge, atom_eq, atom_oops, atom_solver, atom_mode, atom_avail, atom_config,
+  atom_lpsolve, atom_cplex_primopt, atom_cplex_dualopt, atom_put, atom_get,
+  atom_quiet, atom_verbose;
