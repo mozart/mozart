@@ -66,11 +66,21 @@ enum MessageType {
   M_LOCK_TOKEN,          // NA*
   M_LOCK_FORWARD,       // NA* SITE
   M_LOCK_DUMP,          // OTI* SITE
+  M_LOCK_ACK,           // OTI* SITE
+  M_LOCK_CANTPUT,
+  M_LOCK_DIDSEND,
+  M_LOCK_ANS_DIDSEND,
+  M_FILE,
+
+  M_LOCK_DIDGET,
+  M_LOCK_ANS_DIDGET,
+  M_LOCK_PERMBLOCKED,
+
+
   M_GET_OBJECT,         // OTI* SITE
   M_GET_OBJECTANDCLASS, // OTI* SITE
   M_SEND_OBJECT,        //
   M_SEND_OBJECTANDCLASS,//
-  M_FILE,
   M_REGISTER_VS,
   M_INIT_VS,
   M_LAST
@@ -153,6 +163,7 @@ OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg);
 void portSend(Tertiary *p, TaggedRef msg);
 void cellDoExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
 void cellDoAccess(Tertiary*,TaggedRef);
+void lockInstallHandler(Tertiary*,TaggedRef,TaggedRef,Thread*);
 TaggedRef cellGetContentsFast(Tertiary *c);
 int perdioInit();
 

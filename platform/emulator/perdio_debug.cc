@@ -49,7 +49,9 @@ char *debugTypeStr[LAST] = {
   "WRITE_QUEUE",
   "ACK_QUEUE",    //40
   "CELL_MGR",      //41
-  "PROBES"
+  "PROBES",
+  "NET_HANDLER",
+  "LOCK_MGR"
 };
 
 #endif
