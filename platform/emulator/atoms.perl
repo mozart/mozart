@@ -154,6 +154,10 @@
 	  ( AtomInfo,	        "info"),
 	  ( AtomWait,	        "wait"),
 	  ( AtomObjectFetch,	"objectFetch"),
+	  ( AtomDp,	        "dp"),
+	  ( AtomEntity,	        "entity"),
+	  ( AtomConditions,	"conditions"),
+	  ( AtomOp,	        "op"),
 	  ( AtomOwner,	        "owner"),
 
 	# Types
