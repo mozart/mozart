@@ -125,12 +125,12 @@ public:
     pushFrame(C_XCONT_Ptr,X,0);
   }
 
-  void pushX(RefsArray X, int I) {
-    int i=I;
-    RefsArray x=i>0?copyRefsArray(X,i):0;
-    Assert(!x || MemChunks::areRegsInHeap(x,getRefsArraySize(x)));
-    if (x)
+  void pushX(RefsArray X, int i) {
+    if (i>0) {
+      RefsArray x=copyRefsArray(X,i);
+      Assert(MemChunks::areRegsInHeap(x,getRefsArraySize(x)));
       pushX(x);
+    }
   }
 
   void pushCFun(OZ_CFun f, RefsArray  x, int i, Bool copy)

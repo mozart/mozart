@@ -2831,6 +2831,44 @@ LBLdispatcher:
       JUMP(contPC);
     }
 
+  Case(THREADX)
+    {
+      ProgramCounter newPC = PC+2;
+      int n = getPosIntArg(PC+1);
+      ProgramCounter contPC = getLabelArg(PC+2);
+
+      int prio = CPP;
+
+      if (prio > DEFAULT_PRIORITY) {
+	prio = DEFAULT_PRIORITY;
+      }
+
+      Thread *tt = e->mkRunnableThreadOPT(prio, CBB);
+
+      COUNT(numThreads);
+      ozstat.createdThreads.incf();
+
+      if (e->debugmode()) {
+	Frame *aux = CTT->getTaskStackRef()->getTop();
+	GetFrame(aux,ozdebugPC,Y,G);
+	
+	if (ozdebugPC==C_DEBUG_CONT_Ptr) {
+	  // inherit ozdebug from parent thread
+	  OzDebug *dbg = (OzDebug*) Y;
+	  tt->pushDebug(dbg->copy());
+	}
+      }
+
+      tt->getTaskStackRef()->pushCont(newPC,0,G);
+      tt->getTaskStackRef()->pushX(X,n);
+      tt->setSelf(e->getSelf());
+      tt->setAbstr(ozstat.currAbstr);
+
+      e->scheduleThread(tt);
+      
+      JUMP(contPC);
+    }
+
 // -------------------------------------------------------------------------
 // INSTRUCTIONS: MISC: ERROR/NOOP/default
 // -------------------------------------------------------------------------
