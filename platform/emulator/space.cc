@@ -111,10 +111,12 @@ void oz_reduceTrailOnSuspend() {
     Thread *thr = oz_newThreadPropagate(bb);
   
     for (int index = 0; index < numbOfCons; index++) {
-      TaggedRef * refPtr, value;
 
       switch (am.trail.getTeType()) {
       case Te_Bind: {
+
+	TaggedRef * refPtr, value;
+
 	am.trail.popBind(refPtr, value);
 	Assert(oz_isRef(*refPtr) || !oz_isVariable(*refPtr));
 	Assert(oz_isVariable(value));
@@ -136,9 +138,22 @@ void oz_reduceTrailOnSuspend() {
 
 	break;
       }
-      case Te_Variable: 
-	am.trail.popVariable();
+      case Te_Variable: { 
+	TaggedRef * varPtr;
+	OzVariable * copy;
+	am.trail.popVariable(varPtr, copy);
+
+	Assert(isCVar(*varPtr));
+
+	oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
+	
+	oz_var_addSusp(varPtr, thr);
+
+	bb->setScript(index, varPtr,
+		      makeTaggedRef(newTaggedCVar(copy)));
+	
 	break;
+      }
       case Te_Cast:
 	am.trail.popCast();
 	break;
@@ -165,9 +180,17 @@ void oz_reduceTrailOnFail(void) {
       unBind(refPtr,value);
       break;
     }
-    case Te_Variable: 
-      am.trail.popVariable();
+    case Te_Variable: {
+      TaggedRef * varPtr;
+      OzVariable * copy;
+      am.trail.popVariable(varPtr, copy);
+
+      Assert(isCVar(*varPtr));
+
+      oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
+	
       break;
+    }
     case Te_Cast:
       am.trail.popCast();
       break;
@@ -205,10 +228,22 @@ void oz_reduceTrailOnEqEq(void) {
 	am.addSuspendVarList(ptrOldVal);
 
       am.addSuspendVarList(refPtr);
-    }
-    case Te_Variable: 
-      am.trail.popVariable();
+
       break;
+    }
+    case Te_Variable: {
+      TaggedRef * varPtr;
+      OzVariable * copy;
+      am.trail.popVariable(varPtr, copy);
+
+      Assert(isCVar(*varPtr));
+
+      oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
+	
+      am.addSuspendVarList(varPtr);
+
+      break;
+    }
     case Te_Cast:
       am.trail.popCast();
       break;
