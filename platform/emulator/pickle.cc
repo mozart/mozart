@@ -572,7 +572,7 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
 
 	  //
 	  b->set(value, refTag);
-	  delete printname;
+	  delete [] printname;
 	  break;
 	}
 
@@ -594,7 +594,7 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
 	  value = makeTaggedLiteral(aux);
 	  b->buildValue(value);
 	  b->set(value, refTag);
-	  delete printname;
+	  delete [] printname;
 	  break;
 	}
 
@@ -615,7 +615,7 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
 	  value = oz_uniqueName(printname);
 	  b->buildValue(value);
 	  b->set(value, refTag);
-	  delete printname;
+	  delete [] printname;
 	  break;
 	}
 
@@ -634,7 +634,7 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
 	  OZ_Term value = OZ_atom(aux);
 	  b->buildValue(value);
 	  b->set(value, refTag);
-	  delete aux;
+	  delete [] aux;
 	  break;
 	}
 
@@ -648,7 +648,7 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
 	  char *aux  = unmarshalString(bs);
 #endif
 	  b->buildValue(OZ_CStringToNumber(aux));
-	  delete aux;
+	  delete [] aux;
 	  break;
 	}
 
@@ -1027,13 +1027,13 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
 	  if (!found) {
 	    OZ_warning("Builtin '%s' not in table.", name);
 	    value = oz_nil();
-	    delete name;
+	    delete [] name;
 	  } else {
 	    if (found->isSited()) {
 	      OZ_warning("Unpickling sited builtin: '%s'", name);
 	    }
 	
-	    delete name;
+	    delete [] name;
 	    value = makeTaggedConst(found);
 	  }
 	  b->buildValue(value);

@@ -23,7 +23,6 @@
  */
 
 #include "byteBuffer.hh"
-#include "dsite.hh"
 
 #define BYTE_MODE_MARSHALING 0
 #define BYTE_MODE_UNMARSHALING 1
@@ -259,27 +258,28 @@ Bool ByteBuffer::putDebug() {
 // Glue and fixes during development.
 // To be REMOVED!
 void ByteBuffer::marshalBegin() {
-  PD((TCP_INTERFACE,"byteBuffer: OLD marshalBegin USED"));
+  OZ_error("byteBuffer: OLD marshalBegin USED");
 }
 
 void ByteBuffer::marshalEnd() {
-  PD((TCP_INTERFACE,"byteBuffer: OLD marshalEnd USED"));
+  OZ_error("byteBuffer: OLD marshalEnd USED");
 }
 
 void ByteBuffer::unmarshalBegin() {
-  PD((TCP_INTERFACE,"byteBuffer: OLD unmarshalBegin USED"));
+  OZ_error("byteBuffer: OLD unmarshalBegin USED");
   getBegin ();
 }
 
 void ByteBuffer::unmarshalEnd() {
-  PD((TCP_INTERFACE,"byteBuffer: OLD unmarshalEnd USED"));
+  OZ_error("byteBuffer: OLD unmarshalEnd USED");
   getCommit ();
   getEnd ();
 }
 
-// kost@:  still needed for marshaling tertiaries and variables?
-DSite* ByteBuffer::getSite() {
-  PD((TCP_INTERFACE,"byteBuffer: OLD getSite USED"));
+//
+// kost@:  still needed for marshaling tertiaries and variables..
+DSite* ByteBuffer::getSite()
+{
   return fixsite;
 }
 
@@ -323,8 +323,8 @@ BYTE *ByteBufferManager::deleteByteBuffer(ByteBuffer* bb){
   FreeListEntry *f;
   --wc;
   GenCast(bb,ByteBuffer*,f,FreeListEntry*);
-  if(!putOne(f))
-    delete bb;
+  if(putOne(f)) return ret;
+  delete bb;
   return ret;
 }
 
