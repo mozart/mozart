@@ -70,7 +70,14 @@
 
 #define oz_float(f)       newTaggedFloat((f))
 #define oz_int(i)         makeInt((i))
-#define oz_unsignedint(i) makeUnsignedInt((i))
+
+  // see value.hh
+// OZ_Term oz_unsignedInt(unsigned int i);
+  // see value.cc
+OZ_Term oz_long(long i);
+OZ_Term oz_unsignedLong(unsigned long i);
+
+#define oz_string(s)      OZ_string(s)
 
 inline
 OZ_Term oz_newChunk(OZ_Term val)
