@@ -26,32 +26,26 @@ local
 
    class FailedNode
       from CombineNodes.failed TkNodes.failed
-      prop final
    end
 
    class BlockedNode
       from CombineNodes.blocked TkNodes.blocked
-      prop final
    end
 
    class EntailedNode
       from CombineNodes.succeeded TkNodes.entailed
-      prop final
    end
 
    class SuspendedNode
       from CombineNodes.succeeded TkNodes.suspended
-      prop final
    end
    
    class ChooseNode
       from CombineNodes.choose TkNodes.choose
-      prop final
    end
 
    class SentinelNode
       from CombineNodes.sentinel TkNodes.sentinel
-      prop final
    end
 
 in
@@ -63,11 +57,11 @@ in
 		 order:     Order
 		 status:    Manager.status
 		 manager:   Manager)
-      Classes =c(failed:    {Class.extendFeatures FailedNode Features}
-		 blocked:   {Class.extendFeatures BlockedNode Features}
-		 entailed:  {Class.extendFeatures EntailedNode Features}
-		 suspended: {Class.extendFeatures SuspendedNode Features}
-		 choose:    {Class.extendFeatures ChooseNode Features})
+      Classes =c(failed:    {Class.new [FailedNode] a Features [final]}
+		 blocked:   {Class.new [BlockedNode] a Features [final]}
+		 entailed:  {Class.new [EntailedNode] a Features [final]}
+		 suspended: {Class.new [SuspendedNode] a Features [final]}
+		 choose:    {Class.new [ChooseNode] a Features [final]})
       S = {Space.new Query}
    in   
       case thread {Space.askVerbose S} end

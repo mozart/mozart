@@ -1641,7 +1641,7 @@ LBLdispatcher:
 	ProgramCounter preddPC = predd->PC;
 	predd = new PrTabEntry(predd->getName(), predd->getMethodArity(),
 			       predd->getFile(), predd->getLine(), predd->getColumn(),
-			       oz_nil(), // mm2: inherit native?
+			       oz_nil(), // mm2: inherit sited?
 			       predd->getMaxX());
 	predd->PC = copyCode(preddPC,list);
 	predd->setGSize(size);
