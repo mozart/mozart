@@ -1868,9 +1868,8 @@ OZ_BI_define(BIadjoinAt,3,1)
   oz_typeError(0,"Record");
 } OZ_BI_end
 
-static
-TaggedRef getArityFromPairList(TaggedRef list)
-{
+inline
+TaggedRef getArityFromList(TaggedRef list, Bool isPair) {
   TaggedRef arity;
   TaggedRef *next=&arity;
   Bool updateFlag=NO;
@@ -1878,11 +1877,18 @@ TaggedRef getArityFromPairList(TaggedRef list)
   TaggedRef old = list;
 loop:
   if (oz_isLTuple(list)) {
-    TaggedRef pair = oz_head(list);
-    DerefIfVarReturnIt(pair);
-    if (!oz_isPair2(pair)) return 0;
+    TaggedRef fea;
 
-    TaggedRef fea = tagged2SRecord(pair)->getArg(0);
+    if (isPair == OK) {
+      TaggedRef pair = oz_head(list);
+      DerefIfVarReturnIt(pair);
+      if (!oz_isPair2(pair)) return 0;
+
+      fea = tagged2SRecord(pair)->getArg(0);
+    } else {
+      fea = oz_head(list);
+    }
+
     DerefIfVarReturnIt(fea);
 
     if (!oz_isFeature(fea)) return 0;
@@ -1917,7 +1923,7 @@ static
 OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
                            Bool recordFlag)
 {
-  TaggedRef arity=getArityFromPairList(list);
+  TaggedRef arity=getArityFromList(list,OK);
   if (!arity) {
     oz_typeError(1,"finite list(Feature#Value)");
   }
@@ -2027,34 +2033,115 @@ OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
 
 OZ_BI_define(BIadjoinList,2,1)
 {
-  //OZ_Term help;
-
   OZ_Return state = adjoinPropListInline(OZ_in(0),OZ_in(1),OZ_out(0),OK);
   switch (state) {
   case SUSPEND:
     oz_suspendOn(OZ_out(0));
-    //case PROCEED:
-    //OZ_RETURN(help);
   default:
     return state;
   }
 } OZ_BI_end
 
 
-OZ_BI_define(BImakeRecord,2,1)
-{
-  //OZ_Term help;
+OZ_BI_define(BImakeRecord,2,1) {
 
   OZ_Return state = adjoinPropListInline(OZ_in(0),OZ_in(1),OZ_out(0),NO);
   switch (state) {
   case SUSPEND:
     oz_suspendOn(OZ_out(0));
     return PROCEED;
-    //case PROCEED:
-    //OZ_RETURN(help);
   default:
     return state;
   }
+} OZ_BI_end
+
+
+OZ_BI_define(BIrealMakeRecord,2,1) {
+  TaggedRef t0   = OZ_in(0);
+  TaggedRef list = OZ_in(1);
+
+  TaggedRef arity = getArityFromList(list,NO);
+
+  if (!arity) {
+    oz_typeError(1,"finite list(Feature)");
+  }
+
+  DEREF(t0,t0Ptr,tag0);
+  if (oz_isRef(arity)) { // must suspend
+    switch (tag0) {
+    case UVAR:
+    case LITERAL:
+      oz_suspendOn(arity);
+    default:
+      goto typeError0;
+    }
+  }
+
+  if (oz_isNil(arity)) { // adjoin nothing
+    switch (tag0) {
+    case LITERAL:
+      OZ_RETURN(t0);
+    case UVAR:
+      oz_suspendOnPtr(t0Ptr);
+    default:
+      goto typeError0;
+    }
+  }
+
+  switch (tag0) {
+  case LITERAL:
+    {
+      int len1 = oz_fastlength(arity);
+      arity = sortlist(arity,len1);
+      int len = oz_fastlength(arity); // NOTE: duplicates may be removed
+      if (len!=len1) {  // handles case f(a:_ a:_)
+        return oz_raise(E_ERROR,E_KERNEL,"recordConstruction",2,
+                        t0,list
+                        );
+      }
+      SRecord *newrec = SRecord::newSRecord(t0,aritytable.find(arity));
+
+      for (int i=newrec->getWidth(); i--; ) {
+        newrec->setArg(i,oz_newVariable());
+      }
+
+      OZ_RETURN(newrec->normalize());
+    }
+  case UVAR:
+    oz_suspendOnPtr(t0Ptr);
+  default:
+    goto typeError0;
+  }
+
+ typeError0:
+  oz_typeError(0,"Literal");
+
+} OZ_BI_end
+
+
+OZ_BI_define(BIcloneRecord,1,1) {
+  oz_declareNonvarIN(0,rec);
+
+  if (oz_isLiteral(rec)) {
+    OZ_RETURN(rec);
+  }
+
+  if (oz_isSRecord(rec)) {
+    SRecord *in  = tagged2SRecord(rec);
+    SRecord *out = SRecord::newSRecord(in->getLabel(),in->getArity());
+
+    for (int i=in->getWidth(); i--; ) {
+      out->setArg(i,oz_newVariable());
+    }
+    OZ_RETURN(makeTaggedSRecord(out));
+  }
+
+  if (oz_isLTuple(rec)) {
+    OZ_RETURN(oz_cons(oz_newVariable(),oz_newVariable()));
+  }
+
+  oz_typeError(0,"Record");
+
 } OZ_BI_end
 
 
