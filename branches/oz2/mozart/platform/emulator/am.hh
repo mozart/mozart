@@ -257,8 +257,7 @@ public:
   void reduceTrailOnShallow(Thread *);
 
   // in emulate.cc
-  Bool emulateHookOutline(ProgramCounter PC, Abstraction *def=NULL,
-			  int arity=0, TaggedRef *arguments=NULL);
+  Bool emulateHookOutline(ProgramCounter PC, Abstraction *def,TaggedRef *arguments);
   Bool hookCheckNeeded();
   Bool isNotPreemtiveScheduling(void);
 
