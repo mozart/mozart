@@ -1006,9 +1006,6 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
     return NULL;
   }
 
-//  Assert(!tcFlag || !isPropagated()); // TM check what is wrong!!!
-//  if (tcFlag && isPropagated()) printDebug();
-    
   Board *el = getBoard()->gcGetBoardDeref();
 
   if (el == NULL) {
@@ -1020,6 +1017,8 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
     return ((Suspension *) NULL);
   }
   
+  Assert(!tcFlag || !isPropagated());
+
   Suspension *newSusp = (Suspension *) gcRealloc(this, sizeof(*this));
   GCNEWADDRMSG(newSusp);
 
