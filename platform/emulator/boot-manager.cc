@@ -92,6 +92,9 @@ static TaggedRef dictionary_of_modules;
 #include "modBitString-if.cc"
 #include "modByteString-if.cc"
 #include "modInterFault-if.cc"
+#ifdef SITE_PROPERTY
+#include "modSiteProperty-if.cc"
+#endif
 
 /*
  * Modules that are possibly dynamically loaded
@@ -263,6 +266,9 @@ static ModuleEntry base_module_table[] = {
   {"BitString",         mod_int_BitString},
   {"ByteString",        mod_int_ByteString},
   {"InterFault",        mod_int_InterFault},
+#ifdef SITE_PROPERTY
+  {"SiteProperty",      mod_int_SiteProperty},
+#endif
   {0,0}
 };
 

@@ -35,6 +35,7 @@ AC_INIT(lib)
 
 OZ_INIT
 OZ_DENYS_EVENTS
+OZ_SITE_PROPERTY
 
 dnl *****************************************************************
 dnl locations
