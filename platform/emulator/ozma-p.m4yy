@@ -25,7 +25,6 @@ dnl
 
 #undef OZMA_DEBUG
 
-#include "am.hh"
 #include "runtime.hh"
 #include "indexing.hh"
 #include "dictionary.hh"
@@ -604,21 +603,21 @@ Cache		: Atom
 
 %%
 
-extern "C" TaggedRef ozma_readProc(const char *filename);
-
-TaggedRef ozma_readProc(const char *filename)
+OZ_BI_define(ozma_readProc,1,1)
 {
+  oz_declareVirtualStringIN(0,filename);
+
   FILE *file = fopen(filename,"r");
   if (file == NULL) {
     ozmaerror("could not open input file");
-    return makeTaggedNULL();
+    return FAILED;
   }
   ozmarestart(file);
   int res = ozmaparse();
   fclose(file);
 
   if (res)
-    return makeTaggedNULL();
+    return FAILED;
 
   const int maxX=-1; // should never suspend
   PrTabEntry *pte
@@ -628,5 +627,6 @@ TaggedRef ozma_readProc(const char *filename)
                 nil(),maxX);
   pte->PC = codeArea->getStart();
   pte->setGSize(0);
-  return makeTaggedConst(Abstraction::newAbstraction(pte,am.currentBoard()));
-}
+  Abstraction *ab=Abstraction::newAbstraction(pte,am.currentBoard());
+  OZ_RETURN(makeTaggedConst(ab));
+} OZ_BI_end
