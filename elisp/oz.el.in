@@ -166,7 +166,8 @@ Note that this variable is only checked once when oz.el is loaded."
 (eval-and-compile
   (eval '(defcustom oz-emulator
 	   (or (getenv "OZEMULATOR")
-	       (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin"))
+	       (concat (getenv "HOME")
+		       "/mozart/platform/emulator/oz.emulator.bin"))
 	   "*Path to the Oz Emulator for gdb mode and for \\[oz-other]."
 	   :type 'string
 	   :group 'oz)))
@@ -176,7 +177,10 @@ Note that this variable is only checked once when oz.el is loaded."
 (eval-and-compile
   (eval '(defcustom oz-components-path
 	   (or (getenv "OZ_LOAD")
-	       "prefix=http\\://www.ps.uni-sb.de/ozhome/lib/=~/Oz/lib/")
+	       (concat "prefix=http\\://www.ps.uni-sb.de/ozhome/="
+		       "~/mozart/share/lib/stage1/:"
+		       "prefix=http\\://www.ps.uni-sb.de/ozhome/="
+		       "~/mozart/share/tools/stage1/"))
 	   "*Search path for the Oz Components (used by \\[oz-other])."
 	   :type 'string
 	   :group 'oz)))
@@ -866,6 +870,7 @@ The emulator to use for debugging is set via \\[oz-set-emulator]."
 	    (concat (or (getenv "OZPATH") ".") ":"
 		    (oz-home) ":"
 		    (oz-home) "/lib" ":"
+		    (oz-home) "/tools" ":"
 		    (oz-home) "/platform/" (getenv "OZPLATFORM") ":"
 		    (oz-home) "/demo"))
     (setenv "PATH"
