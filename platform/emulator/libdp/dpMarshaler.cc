@@ -1071,16 +1071,6 @@ OZ_Term unmarshalBorrow(MarshalerBuffer *bs,OB_Entry *&ob,int &bi)
   return 0;
 }
 
-/**********************************************************************/
-/*  header */
-/**********************************************************************/
-
-MessageType unmarshalHeader(MarshalerBuffer *bs)
-{
-  MessageType mt= (MessageType) bs->get();
-  mess_counter[mt].recv();
-  return (mt);
-}
 
 /**********************************************************************/
 /*   lazy objects                                                     */
