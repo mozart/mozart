@@ -29,9 +29,9 @@ int ThreadsPool::getRunnableNumber()
 void ThreadsPool::initThreads ()
 {
   // private;
-  hiQueue.allocate(THREAD_QUEUE_SIZE);
-  midQueue.allocate(THREAD_QUEUE_SIZE);
-  lowQueue.allocate(THREAD_QUEUE_SIZE);
+  hiQueue.allocate(QUEUEMINSIZE);
+  midQueue.allocate(QUEUEMINSIZE);
+  lowQueue.allocate(QUEUEMINSIZE);
 
   hiCounter = -1;
   lowCounter = -1;

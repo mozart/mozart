@@ -21,24 +21,31 @@ typedef Thread* ThreadPtr;
 //
 //  A queue a'la 'LocalPropagationQueue' by Tobias;
 
-#define INC(a)  ((a) = ((a) + 1) & (maxsize - 1))
+#define INC(a)  { (a) = ((a) + 1); if ((a)==maxsize) (a)=0; }
 
 class ThreadQueueImpl {
 protected:
   int head, tail, size, maxsize;
-  //  maxsize is required to be a power of 2;
   Thread ** queue;
 
-  void resize (void);
+  void resize();
 
 public:
-  //
+  USEFREELISTMEMORY;
+
+  void allocate(int initsize) {
+    maxsize = initsize;
+    head    = size = 0;
+    tail    = initsize - 1;
+    // in the Oz heap;
+    queue =
+      (Thread **) heapMalloc ((size_t) (sizeof(Thread *) * initsize));
+  }
+
   ThreadQueueImpl(void)
     : maxsize(0), size(0), head(0), tail(-1), queue (NULL)  {}
 
   ~ThreadQueueImpl (void) {
-    if (queue) delete queue;
-    maxsize = size = head = tail = -1;
   }
 
   Bool isEmpty () { return (size == 0); }
@@ -46,18 +53,7 @@ public:
   Bool isAllocated () { return (maxsize); }
 
   int suggestNewSize() {
-    // find smallest power of 2 greater than size
-    int new_size = 1;
-    for (int aux_size = size; aux_size; aux_size >>= 1, new_size <<= 1);
-    Assert(new_size >= size);
-    return new_size;
-  }
-
-  void allocate (int initsize) {
-    maxsize = initsize;
-    head = size = 0;
-    tail = initsize - 1;
-    queue = ::new Thread*[initsize];
+    return max(min(size * 2,(maxsize + size) >> 1), QUEUEMINSIZE);
   }
 
   void enqueue (Thread * th) {
@@ -86,7 +82,7 @@ public:
   ThreadQueue(void) : ThreadQueueImpl() {}
 
   Bool isScheduled (Thread * thr);
-  void doGC ();
+  void gc();
   void printThreads(void);
 };
 
@@ -95,21 +91,10 @@ private:
   // needed when merging spaces to unpack threads in local thread queue
   Thread * ltq_thr;
 public:
-  USEFREELISTMEMORY;
-
-  void allocate (int initsize) {
-    maxsize = initsize;
-    head = size = 0;
-    tail = initsize - 1;
-    // in the Oz heap;
-    queue =
-      (Thread **) heapMalloc ((size_t) (sizeof(Thread *) * initsize));
-  }
-
   LocalThreadQueue(Thread * lthr, Thread * thr)
     : ltq_thr(lthr), ThreadQueueImpl()
   {
-    allocate(0x20);
+    allocate(QUEUEMINSIZE);
     enqueue(thr);
   }
   LocalThreadQueue(int sz) : ThreadQueueImpl(){
@@ -118,19 +103,10 @@ public:
   ~LocalThreadQueue() { error("never destroy LTQ"); }
 
   LocalThreadQueue * gc(void);
+
   void dispose () {
     freeListDispose (queue, (size_t) (maxsize * sizeof (Thread *)));
     freeListDispose (this, sizeof(LocalThreadQueue));
-  }
-
-  void resize();
-
-  // because of resize;
-  void enqueue (Thread * th) {
-    if (size == maxsize) resize ();
-    tail = (tail + 1) & (maxsize - 1);
-    queue[tail] = th;
-    size++;
   }
 
   Thread * getLTQThread(void) { return ltq_thr; }

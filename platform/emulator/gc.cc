@@ -1813,22 +1813,31 @@ void ThreadsPool::doGC ()
   rootThread         = rootThread->gcThread();
   threadBodyFreeList = (RunnableThreadBody *) NULL;
 
-  hiQueue.doGC();
-  midQueue.doGC();
-  lowQueue.doGC();
+  hiQueue.gc();
+  midQueue.gc();
+  lowQueue.gc();
 }
 
-void ThreadQueue::doGC ()
-{
-  int asize = size;
-  int ahead = head;
-  int mod = maxsize - 1;
+void ThreadQueue::gc() {
+  int newsize = suggestNewSize();
+  Thread ** newqueue =
+    (Thread **) heapMalloc ((size_t) (sizeof(Thread *) * newsize));
 
-  while (asize) {
-    queue[ahead] = queue[ahead]->gcThread ();
-    ahead = (ahead + 1) & mod;
-    asize--;
+  int asize   = size;
+  int ahead   = head;
+  int newhead = 0;
+
+  while (asize--) {
+    newqueue[newhead++] = queue[ahead]->gcThread();
+    ahead = ahead + 1;
+    if (ahead==maxsize)
+      ahead = 0;
   }
+
+   maxsize = newsize;
+   queue   = newqueue;
+   head    = 0;
+   tail    = size - 1;
 }
 
 LocalThreadQueue * LocalThreadQueue::gc()
@@ -1838,11 +1847,7 @@ LocalThreadQueue * LocalThreadQueue::gc()
   Assert(opMode == IN_GC);
   Assert(!isEmpty());
 
-  // find smallest power of 2 greater than size
-  int new_size = suggestNewSize();
-
-  // create neq queue queue
-  LocalThreadQueue * new_ltq = new LocalThreadQueue (new_size);
+  LocalThreadQueue * new_ltq = new LocalThreadQueue (suggestNewSize());
 
   // gc local thread queue thread
   new_ltq->ltq_thr = ltq_thr->gcThread();

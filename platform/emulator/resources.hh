@@ -44,7 +44,7 @@
 #define RESIZESTACKMINSIZE 64 /* used for resizing a stack */
 
 #define STACKMAXSIZE  8192 /* tasks */
-#define STACKMINSIZE    3    /* tasks */
+#define STACKMINSIZE    4    /* tasks */
 
 #define HEAPMAXSIZE          1048576 /* kByte   */
 #define HEAPMINSIZE             1024 /* kByte   */
@@ -53,9 +53,8 @@
 #define INITIALHEAPTHRESHOLD    2048 /* kByte   */
 #define HEAPBLOCKSIZE        1048576 /* byte    */
 
+#define QUEUEMINSIZE            32
 
-
-#define THREAD_QUEUE_SIZE       256
 #define NUM_TOPLEVEL_VARS       10000
 
 #define NumberOfXRegisters      10000
