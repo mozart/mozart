@@ -308,7 +308,7 @@ public:
     return raw;
   }
   void putRawTag(void * raw_tag) {
-    u.cpi_raw = raw_tag;
+    u.cpi_raw = (void *) ToPointer(ToInt32(raw_tag) | getTypeMasked());
   }
   //
   // end of tagging ...
