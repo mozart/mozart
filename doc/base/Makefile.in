@@ -2,6 +2,8 @@ VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 
 WHAT = base
+WHATCLASS=reference
+PRINTNAME=BaseEnvironment
 MAIN = base.sgml
 SGMLSRCS = \
 	introduction.sgml typestruct.sgml values.sgml numbers.sgml \

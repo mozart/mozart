@@ -25,6 +25,7 @@ distclean:
 bootstrap:
 bootquick:
 boot-quick:
+installps:
 
 install: $(DOCDIR) $(addprefix $(DOCDIR)/,$(FILES))
 $(DOCDIR):
