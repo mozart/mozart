@@ -15,21 +15,30 @@ define
       meth build_all
 	 if {self get_includelibs($)} then
 	    for T in {self get_lib_targets($)} do
-	       Builder,build_target(T runtime:true)
+	       Builder,build_target(T)
+	       Builder,build_runtime_dependencies(T)
 	    end
 	 end
 	 if {self get_includebins($)} then
 	    for T in {self get_bin_targets($)} do
-	       Builder,build_target(T runtime:true)
+	       Builder,build_target(T)
+	       Builder,build_runtime_dependencies(T)
 	    end
 	 end
 	 {self recurse(build_all)}
       end
 
-      %% input arg runtime indicates whether we should also build the
-      %% runtime dependencies.
-      
-      meth build_target(T runtime:RunTime<=false)
+      meth build_runtime_dependencies(T)
+	 {self trace('Runtime dependencies of '#T)}
+	 try
+	    {self incr}
+	    for D in {self get_depends_install(T $)} do
+	       Builder,build_target(D)
+	    end
+	 finally {self decr} end
+      end
+
+      meth build_target(T)
 	 {self extend_resolver}
 	 {self trace('target '#T)}
 	 {self incr}
@@ -37,13 +46,11 @@ define
 	    if {Not {self get_fullbuild($)}} andthen {self target_is_src(T $)} then
 	       {self make_src(T _)}
 	    else
-	       R={self get_rule(   T $)}
-	       L=if R.tool==ozl
-		 then {self get_depends_rec(T $)}
-		 else {self get_depends(    T $)} end
+	       R={self get_rule(T $)}
+	       L={self get_depends_build(T $)}
 	    in
 	       for D in L do
-		  Builder,build_target(D runtime:RunTime)
+		  Builder,build_target(D)
 	       end
 	       if Builder,Outdated(T L $) then
 		  {self exec_rule(T R)}
@@ -51,11 +58,6 @@ define
 		     raise ozmake(build:outdated(T)) end
 		  end
 	       else {self trace(T#' is up to date')} end
-	    end
-	    if RunTime then
-	       for D in {self get_autodepend_install(T $)} do
-		  Builder,build_target(D runtime:true)
-	       end
 	    end
 	 finally {self decr} end
       end

@@ -8,6 +8,7 @@ import
    Utils at 'Utils.ozf'
 prepare
    VS2A = VirtualString.toAtom
+   DictRemove = Dictionary.remove
    DictKeys = Dictionary.keys
    NODEPS = o(build:nil install:nil)
 export
@@ -31,27 +32,27 @@ define
 	 if {self get_autodepend($)} then
 	    case {CondSelect @Target2Depends Target unit}
 	    of unit then
+	       Rule = {self get_rule(Target $)}
 	       Deps =
-	       case {Path.extensionAtom Target}
-	       of 'ozf' then
-		  A1 = {Path.replaceExtension Target 'oz'}
-		  DIR  = {Path.dirname A1}
-		  A2 = {Path.resolve {self get_srcdir($)} A1}
+	       case Rule.tool
+	       of 'ozc' then
+		  A1  = Rule.file
+		  DIR = {Path.dirname A1}
+		  A2  = {Path.resolve {self get_srcdir($)} A1}
 	       in
 		  if {Path.exists A2} then
 		     {self vtrace('scanning '#A1#' for dependencies')}
+		     X = Depends,GetOzDeps(A2 DIR $)
 		  in
-		     local X=Depends,GetOzDeps(A2 DIR $) in
-			if {self get_veryVerbose($)} then
-			   for U in X.build do
-			      {self vtrace('... '#U#' (when building)')}
-			   end
-			   for U in X.install do
-			      {self vtrace('... '#U#' (when installing)')}
-			   end
+		     if {self get_veryVerbose($)} then
+			for U in X.build do
+			   {self vtrace('... '#U#' (when building)')}
 			end
-			X
+			for U in X.install do
+			   {self vtrace('... '#U#' (when installing)')}
+			end
 		     end
+		     X
 		  else NODEPS end
 	       else NODEPS end
 	    in
@@ -64,6 +65,7 @@ define
 	    end
 	 else NODEPS end
       end
+      
       meth get_autodepend_build(SRC $)
 	 (Depends,Get(SRC $)).build
       end
@@ -78,13 +80,16 @@ define
 	 ITable = {NewDictionary}
 	 RTable = {NewDictionary}
       in
-	 try E={self ParseOzFile(SRC $)} in
-	    case E of [fFunctor(_ L _)] then
-	       for X in L do
-		  case X
-		  of fImport(L _)  then {self Process(L ITable)}
-		  [] fRequire(L _) then {self Process(L RTable)}
-		  else skip end
+	 try
+	    for E in {self ParseOzFile(SRC $)} do
+	       case E of fFunctor(_ L _) then
+		  for X in L do
+		     case X
+		     of fImport(L _)  then {self Process(L ITable)}
+		     [] fRequire(L _) then {self Process(L RTable)}
+		     else skip end
+		  end
+	       [] dirSwitch(_) then skip
 	       end
 	    end
 	 catch parseOzFile(Msg) then
@@ -120,27 +125,165 @@ define
 	 end
       end
 
-      meth get_depends_rec(T $)
-	 Table = {NewDictionary}
-	 Stack = {Utils.newStack}
+      %% get_depends_build(T $)
+      %%
+      %% return the build-time dependencies of target T.  If T is an
+      %% ozl-linked ozf file, then we want to compute the recursive
+      %% run-time ozf imports.  If one of the recursive imports is
+      %% again an ozl-linked ozf file, then we don't recurse through
+      %% it since it already contains all its recursive imports.
+
+      meth get_depends_build(T $)
+	 if {self get_rule(T $)}.tool==ozl
+	 then {self get_depends_ozl(T $)}
+	 else {self get_depends(T $)} end
+      end
+
+      %% get_depends_install_just_so(T $)
+      %%
+      %% return the recursive run-time .so{native} imports.  All
+      %% other (ozf) imports are already included in T, an ozl-linked
+      %% ozf file.
+
+      meth get_depends_install_just_so(T $)
+	 Done = {NewDictionary}
+	 Todo = {Utils.newStack}
+	 Accu = {NewDictionary}
       in
-	 for X in {self get_depends(T $)} do
-	    {Stack.push X}
-	 end
-	 for while:{Not {Stack.isEmpty}} do
-	    T = {Stack.pop}
+	 {Todo.push T}
+	 for while:{Not {Todo.isEmpty}} do
+	    D = {Todo.pop}
 	 in
-	    if {HasFeature Table T} then skip else
-	       Table.T := unit
-	       for X in {self get_depends(T $)} do
-		  {Stack.push X}
+	    if {HasFeature Done D} then skip else
+	       Done.D := unit
+	       %% recurse with install dependencies
+	       for X in {self get_autodepend_install(D $)} do
+		  {Todo.push X}
 	       end
-	       for X in {self get_autodepend_install(T $)} do
-		  {Stack.push X}
+	       %% take note if this is a .so{native} file
+	       %% i.e. if it is built using the ld tool
+	       if {self get_rule(D $)}.tool=='ld' then
+		  Accu.D := unit
 	       end
 	    end
 	 end
-	 {DictKeys Table}
+	 {DictKeys Accu}
+      end
+
+      %% get_depends_install(T $)
+      %%
+      %% return the run-time dependencies of target T, i.e. all
+      %% additional files which need to be installed in order for
+      %% T to be usable at run-time.
+
+      meth get_depends_install(T $)
+	 Done = {NewDictionary}
+	 Todo = {Utils.newStack}
+	 Accu = {NewDictionary}
+      in
+	 {Todo.push T}
+	 for while:{Not {Todo.isEmpty}} do
+	    D = {Todo.pop}
+	 in
+	    if {HasFeature Done D} then skip else
+	       Done.D := unit
+	       Rule = {self get_rule(D $)}
+	    in
+	       case Rule.tool
+	       of 'ozc' then
+		  %% for a regular ozf file, take note of it and
+		  %% recurse with its imports
+		  Accu.D := unit
+		  for X in {self get_autodepend_install(D $)} do
+		     {Todo.push X}
+		  end
+	       [] 'ozl' then
+		  %% for a ozl-linked ozf file, take note of it
+		  %% and of its (recursive) .so imports which are
+		  %% the only recursive imports not already included
+		  Accu.D := unit
+		  for X in {self get_depends_install_just_so(D $)} do
+		     Accu.X := unit
+		  end
+	       [] 'ozg' then
+		  %% for an ozg created file, i.e. created as a
+		  %% side-effect of building another file, just
+		  %% take note of it - this might not be entirely
+		  %% accurate, but we would have to examine the
+		  %% created file itself rather than the source
+		  %% to determine the run-time dependencies if
+		  %% any and we would need to know more about the
+		  %% side-effecting mechanism which created the
+		  %% file in the first place
+		  Accu.D := unit
+	       [] 'ld' then
+		  %% for a .so{native} functor, just take note of it
+		  Accu.D := unit
+	       [] 'cc' then skip
+	       [] unit then skip
+	       end
+	    end
+	 end
+	 %% due to the way the loop is started, the argument target T
+	 %% normally ends up being recorded.  we remove it now, since
+	 %% it does not count as a run-time dependency of itself.
+	 {DictRemove Accu T}
+	 {DictKeys Accu}
+      end
+
+      %% get_depends_ozl(T $)
+      %%
+      %% given an ozl-linked target T, return its build-time
+      %% dependencies, i.e. mostly its ozf source and its the
+      %% recursive ozf imports.  If a recursive ozf import is an
+      %% ozl-linked file we do not recurse through it since it already
+      %% contains all its recursive ozf imports.
+
+      meth get_depends_ozl(T $)
+	 Done = {NewDictionary}
+	 Todo = {Utils.newStack}
+	 Accu = {NewDictionary}
+	 Rule = {self get_rule(T $)}
+      in
+	 %% this method is supposed to be called only for a target
+	 %% which is created by tool ozl
+	 if Rule.tool==ozl then
+	    %% start with all normal build dependencies
+	    for X in {self get_depends(T $)} do
+	       %% take note anyway since they may not be ozf files
+	       Accu.X := unit
+	       {Todo.push X}
+	    end
+	    %% add run-time dependencies of source ozf file
+	    for X in {self get_autodepend_install(Rule.file $)} do
+	       {Todo.push X}
+	    end
+	 else
+	    raise ozmake(get_depends_ozl:T) end
+	 end
+	 for while:{Not {Todo.isEmpty}} do
+	    D = {Todo.pop}
+	 in
+	    if {HasFeature Done D} then skip else
+	       Rule = {self get_rule(D $)}
+	    in
+	       Done.D := unit
+	       case Rule.tool
+	       of 'ozc' then
+		  Accu.D := unit
+		  %% recurse with the imports, i.e. run-time
+		  %% dependencies
+		  for X in {self get_autodepend_install(D $)} do
+		     {Todo.push X}
+		  end
+	       [] 'ozl' then
+		  Accu.D := unit
+	       [] 'ozg' then
+		  Accu.D := unit
+	       else skip end
+	    end
+	 end
+	 {DictKeys Accu}
       end
    end
 end

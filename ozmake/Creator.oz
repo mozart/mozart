@@ -69,6 +69,8 @@ define
 		     else
 			%% else look at all the sources needed to build it
 			for D in {self get_depends(F $)} do {Stack.push D} end
+			%% and whatever is needed for runtime dependencies
+			for D in {self get_autodepend_install(F $)} do {Stack.push D} end
 		     end
 		  end
 	       end
