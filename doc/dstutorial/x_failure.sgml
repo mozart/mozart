@@ -249,7 +249,7 @@ where <<T>> is what the variable was attempted to be bound with.
 <<cellAccess(Old)>>,
 where <<Old>> is the cell content before the attempted operation
 and <<New>> is the cell content after the attempted operation.
-<ITEM> For locks: <<lock>>.
+<ITEM> For locks: <<'lock'>>.
 <ITEM> For ports: <<send(Msg)>>,
 where <<Msg>> is the message attempted to be sent to the port.
 <ITEM> For objects: 
@@ -379,6 +379,8 @@ watcher from the current site.
 </LIST>
 <P>A watcher <<WatcherProc>> is a two-argument
 procedure that is called as <<{WatcherProc E FS}>>.
+Any number of watchers may be installed on a given
+entity and deinstalled selectively.
 The arguments <<E>> and <<FS>>
 are exactly the same arguments are
 in a distribution exception or in a handler call.
@@ -574,17 +576,18 @@ across the network only
 if they are not present on the destination site.
 In both current and future releases, at most a single copy
 of such an entity can exist per site.
-<ITEM>If an exception is raised or a handler or a watcher is invoked
-due to a distribution fault of an object,
-then the entity argument <<E>> is undefined.
-<ITEM>When an exception is raised or a handler is invoked
-on an object, then the attempted object operation
-cannot be retried.
-<ITEM>The <<global>> level is not implemented for handler installation,
-i.e., the call <<{Fault.install global _ _}>> is not implemented.
+<item>If an exception is raised or a handler or watcher
+is invoked for an object, then the entity argument <<E>>
+is undefined.
+<item>If an exception is raised or a handler is invoked
+for an object, then the attempted object operation cannot
+be retried.
+<item>Handlers cannot be installed at the <<global>> level,
+i.e., the call <<{Fault.install _ global _ _}>> is undefined.
 If an attempt is made to install a <<global>> handler,
 then a <<notImplemented>> exception is given.
 <ITEM>The operation <<Probe>> is not available to users.
+
 </LIST>
 
 </CHAPTER>
