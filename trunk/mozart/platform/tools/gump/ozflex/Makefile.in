@@ -33,7 +33,7 @@ YACC = @YACC@
 
 CC = @CC@
 
-STRIP = strip
+STRIP = @STRIP@
 
 # You normally do not need to modify anything below this point.
 # ------------------------------------------------------------
