@@ -363,13 +363,27 @@ extern int tempTimeCtr;
 /*  SECTION ::  misc                                                        */
 /* ************************************************************************ */
 
+
+
+void SendTo(Site *toS,MsgBuffer *bs,MessageType mt,Site *sS,int sI);
+
 #define NOT_IMPLEMENTED   {warning("not implemented - perdio");Assert(0);}
 
+/* RS: have to GC the byte stream again !!!!!!!!!*/
+#define CheckNogoods(bs,msg)				\
+  { OZ_Term nogoods = bs->getNoGoods();			\
+    if (!literalEq(nil(),nogoods)) {			\
+       return oz_raise(E_ERROR,OZ_atom("dp"),msg,2,	\
+	  	       oz_atom("nogoods"),		\
+		       nogoods);			\
+    }							\
+  }
+
+
 /* ************************************************************************ */
-/*  SECTION ::  provided to builtins                                                        */
+/*  SECTION ::  provided to builtins                                        */
 /* ************************************************************************ */
 
-void startDangelingProbe();
 TaggedRef listifyWatcherCond(EntityCond);
 Thread *getDefaultThread();
 

@@ -3805,17 +3805,6 @@ void Site::msgReceived(MsgBuffer* bs)
 /**********************************************************************/
 
 
-/* RS: have to GC the byte stream again !!!!!!!!!*/
-#define CheckNogoods(bs,msg)				\
-  { OZ_Term nogoods = bs->getNoGoods();			\
-    if (!literalEq(nil(),nogoods)) {			\
-       return oz_raise(E_ERROR,OZ_atom("dp"),msg,2,	\
-	  	       oz_atom("nogoods"),		\
-		       nogoods);			\
-    }							\
-  }
-
-
 /* engine-interface */
 OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
   BorrowEntry *b= borrowTable->getBorrow(p->getIndex());
