@@ -38,7 +38,8 @@ http://www.cs.washington.edu/homes/voelker/ntemacs.html</Ref.Extern>
 <item> Afterwards you install Mozart. (If you upgrade to
 a newer version of Mozart you only have to perform the second step).
 <p>
-Get the self-extracting executable from the<Ref.Extern to="http://www.mozart-oz.org/download/winarchive.shtml">download page</Ref.Extern>,
+Get the self-extracting executable from the
+<Ref.Extern to="http://www.mozart-oz.org/download/winarchive.shtml">download page</Ref.Extern>,
 execute it, and follow the instructions.
 </list>
 
@@ -85,9 +86,9 @@ to="http://www.mozart-oz.org/download/bintar.shtml"><file>http://www.mozart-oz.o
         Unpack the tarballs by executing
 <code display>
 % cd /usr/local
-% gzip -cd mozart-?{version}-?{platform}.tar.gz         | tar xvf -
+% gzip -cd mozart-?{version}-?{platform}.tar.gz | tar xvf -
 % gzip -cd mozart-?{version}-?{platform}-contrib.tar.gz | tar xvf -
-% gzip -cd mozart-?{version}-doc.tar.gz                 | tar xvf -
+% gzip -cd mozart-?{version}-doc.tar.gz | tar xvf -
 </code>
       <p>
         Replace ?{version} and ?{platform} appropriately. Depending on

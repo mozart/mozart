@@ -37,7 +37,7 @@
     <p>
       Mozart is split up in three binary rpm packages:
 
-      <table>
+      <table id="table.rpm.bin">
         <tr/<th/Package Name/ <th/Content//
         <tr/<td/<file/mozart// <td/The base system. Contains all you need to
         run demos and develop Oz programs with Mozart.//
