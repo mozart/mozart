@@ -1910,9 +1910,6 @@ inline
 char *unmarshallString(ByteStream *bs)
 {
   int i = unmarshallNumber(bs);
-  if(i>100){ // mm2
-    int dummy=0;
-    dummy=1;}
 
   char *ret = new char[i+1];  /* TODO: ask Ralph */
   int k=0;
@@ -1928,8 +1925,6 @@ inline
 void marshallString(char *s, ByteStream *bs)
 {
   marshallNumber(strlen(s),bs);
-  // mm2 \/?
-  if(strlen(s)>100) {PD(SPECIAL,"string:%d",strlen(s));}
   PD(MARSHALL_CT,"String BYTES:%d",strlen(s));  
   while(*s) {
     bs->put(*s);
@@ -3232,10 +3227,8 @@ OZ_C_proc_begin(BIstartClient,3){
     PD(USER,"connectSite success");
     OZ_Term x=connect_site_aux(sd); 
     return OZ_unify(out,x);}
-  if(ret==NET_RAN_OUT_OF_TRIES){
-    return OZ_raiseC("connectSite",1,OZ_string("ran out of tries"));}
-  error("never here");
-  return PROCEED;
+  return OZ_raiseC("connectSite",2,OZ_int(ret),
+		   OZ_string(ret==NET_RAN_OUT_OF_TRIES?"ran out of tries":"unknown"));
 }
 OZ_C_proc_end
 
@@ -3368,7 +3361,8 @@ OZ_C_proc_begin(BIunmarshall,2)
   bs->unmarshalEnd();
 
   bs->afterInterpret();    
-  // mm2 free bs???
+
+  bufferManager->freeByteStream(bs);
 
   return OZ_unify(out,v);
 }
