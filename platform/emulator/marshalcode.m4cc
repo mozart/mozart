@@ -206,6 +206,12 @@ void marshalApplMethInfo(ApplMethInfoClass *ami,MsgBuffer *bs)
 
 
 
+void marshalOpCode(Opcode op, MsgBuffer *bs)
+{	
+  bs->put(op);
+}
+
+
 void marshalCode(ProgramCounter start, MsgBuffer *bs)
 {
   start -= sizeOf(DEFINITION);
@@ -237,7 +243,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC);
       if (!entry->copyable) {
 	PD((MARSHAL,"marshalledfastcall"));
-	bs->put(MARSHALLEDFASTCALL);
+	marshalOpCode(MARSHALLEDFASTCALL,bs);
 	Abstraction *abstr = entry->getAbstr();
 	marshalTerm(makeTaggedConst(abstr),bs);
 	Bool istailcall = (op==FASTTAILCALL);
@@ -248,7 +254,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
       }
     }
 
-    bs->put(op);
+    marshalOpCode(op,bs);
     PD((MARSHAL,"op put %d",op));    
     switch(op) {
       
@@ -260,7 +266,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
     }
   }
 
-  bs->put(ENDOFFILE);
+  marshalOpCode(ENDOFFILE,bs);
   PD((MARSHAL,"end of file put %d"));    
 }
 
