@@ -227,9 +227,18 @@ int ConstTerm::getArity()
  * Ports
  *=================================================================== */
 
-Port::Port(NetAddress *na) : ConstTermWithHome(am.rootBoard, Co_Port), 
-  strm(makeTaggedNULL()), addr(na) 
-{}
+Board *Port::getBoard()
+{
+  switch(getTertType()) {
+  case Te_Local:
+    return ((PortLocal*)this)->getBoard();
+  case Te_Manager:  
+  case Te_Proxy:
+  default:
+    return am.rootBoard;
+  }
+}
+
 
 /*===================================================================
  * Object

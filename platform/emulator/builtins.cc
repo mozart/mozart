@@ -4633,6 +4633,30 @@ OZ_C_proc_begin(BInewPort,2)
 }
 OZ_C_proc_end
 
+OZ_Return sendPort(OZ_Term prt, OZ_Term val)
+{
+  Assert(isPort(prt));
+
+  Port *port  = tagged2Port(prt);
+  TertType tt = port->getTertType();
+
+  CheckLocalBoard(port,"port");
+
+  if(tt==Te_Proxy) {
+    int ret=remoteSend((PortProxy*) port,val);  
+    if(ret==0) return PROCEED;
+    return OZ_raiseC("sending to PortProxy",1);
+  } 
+  LTuple *lt = new LTuple(val,am.currentUVarPrototype);
+    
+  OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
+    
+  if (OZ_unify(makeTaggedLTuple(lt),old)!=PROCEED) {
+    OZ_fail("OZ_send failed\n");
+  }
+  return PROCEED;
+}
+
 OZ_C_proc_begin(BIsendPort,2)
 {
   OZ_declareNonvarArg(0,prt);
@@ -4644,25 +4668,7 @@ OZ_C_proc_begin(BIsendPort,2)
     TypeErrorT(0,"Port");
   }
 
-  Port *port = tagged2Port(prt);
-  CheckLocalBoard(port,"port");
-
-  NetAddress *na=port->getAddress();
-  if (na==0) {
-    OZ_send(prt,msg);
-  } else {
-#ifdef PERDIO
-    if (isLocalAddress(na)) {
-      OZ_send(prt,msg);
-    } else {
-      remoteSend(port,msg);
-    }
-#else
-    error("no perdio");
-#endif
-  }
-
-  return PROCEED;  
+  return sendPort(prt,msg);
 }
 OZ_C_proc_end
 

@@ -15,16 +15,32 @@
 
 #include "tagged.hh"
 
-/*
- * Format of messages:
- *   GSEND DIF    ; Send a message to the global port of the site
- */
+#define DummyClassConstruction(X) \
+X();  \
+~X(); \
+(X&); 
+
 enum MessageType {
-  GSEND           // global send
+  SITESEND,          // send to site
+  PORTSEND,           // send to port
+  ASK_FOR_CREDIT,
+  OWNER_CREDIT,
+  BORROW_CREDIT
 };
 
-void remoteSend(Port *p, TaggedRef msg);
-Bool isLocalAddress(NetAddress *na);
+int remoteSend(PortProxy *p, TaggedRef msg);
+void networkSiteDec(int sd);
+
+#define tert2PortManager(t)   ((PortManager*) t)
+#define tert2PortLocal(t)     ((PortLocal*) t)
+#define tert2PortProxy(t)     ((PortProxy*) t)
+
+void gcOwnerTable();
+void gcBorrowTable();
 
 #endif /* __PERDIOHH */
+
+
+
+
 

@@ -15,10 +15,10 @@
  *****************************************************************************/
 
 extern Bool gc_is_running;
-
 Bool gcStaticProtect(TaggedRef *);
 Bool gcProtect(TaggedRef *);
 Bool gcUnprotect(TaggedRef *);
+void gcTagged(TaggedRef&,TaggedRef&);
 
 void protectInlineCache(InlineCache *);
 
@@ -26,4 +26,7 @@ OZ_C_proc_proto(BIdumpThreads)
 OZ_C_proc_proto(BIlistThreads)
 
 #endif //__GC_H__
+
+
+
 
