@@ -63,6 +63,8 @@ int fd_bv_right_conv[fd_bv_conv_max_high];
 intptr fd_iv_left_sort[MAXFDBIARGS];
 intptr fd_iv_right_sort[MAXFDBIARGS];
 
+#define RANGESTR "#"
+
 // FDInterval -----------------------------------------------------------------
 
 void printFromTo(ostream &ofile, int f, int t)
@@ -72,7 +74,7 @@ void printFromTo(ostream &ofile, int f, int t)
   else if ((t - f) == 1)
     ofile << ' ' << f << ' ' << t;
   else
-    ofile << ' ' << f << ".." << t;
+    ofile << ' ' << f << RANGESTR << t;
 }
 
 void FDIntervals::print(ostream &ofile, int idnt) const
@@ -513,7 +515,7 @@ void FDBitVector::print(ostream &ofile, int idnt) const
       if (fd_bv_left_conv[i] + 1 == fd_bv_right_conv[i])
         ofile << ' ' << fd_bv_right_conv[i];
       else
-        ofile << ".." << fd_bv_right_conv[i];
+        ofile << RANGESTR << fd_bv_right_conv[i];
   }
   ofile << " }";
 }
@@ -922,7 +924,7 @@ int FiniteDomain::simplify(int list_len, int * list_left, int * list_right)
       *fd_iv_left_sort[len] = *fd_iv_left_sort[p];
       *fd_iv_right_sort[len] = *fd_iv_right_sort[p];
     }
-    while (++p < list_len && *fd_iv_right_sort[len] >= *fd_iv_left_sort[p])
+    while (++p < list_len && *fd_iv_right_sort[len] >= *fd_iv_left_sort[p]-1)
       if (*fd_iv_right_sort[p] > *fd_iv_right_sort[len])
         *fd_iv_right_sort[len] = *fd_iv_right_sort[p];
   }
