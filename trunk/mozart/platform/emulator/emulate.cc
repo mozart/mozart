@@ -1032,6 +1032,7 @@ void engine() {
 	    int argsToSave   = getPosIntArg(PC+4);
 	    Suspension *susp =
 	      new Suspension(new SuspContinuation(CBB,
+						  Thread::GetCurrentPriority(),
 						  PC, Y, G, X, argsToSave));
 	    SVariable *cvar = taggedBecomesSuspVar(APtr);
 	    CBB->addSuspension();
@@ -1065,7 +1066,9 @@ void engine() {
 	  DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
 	  int argsToSave    = getPosIntArg(PC+5);
 	  Suspension *susp  =
-	    new Suspension(new SuspContinuation(CBB,PC,Y,G,X,argsToSave));
+	    new Suspension(new SuspContinuation(CBB,
+						Thread::GetCurrentPriority(),
+						PC,Y,G,X,argsToSave));
 	  SVariable *acvar;
 	  SVariable *bcvar;
 	  CBB->addSuspension();
@@ -1101,7 +1104,9 @@ void engine() {
       }
 
       Suspension *susp = 
-	new Suspension(new SuspContinuation(CBB,shallowCP,Y,G,X,argsToSave));
+	new Suspension(new SuspContinuation(CBB,
+					    Thread::GetCurrentPriority(),
+					    shallowCP,Y,G,X,argsToSave));
 
       CBB->addSuspension();
       e->reduceTrailOnShallow(susp,numbOfCons);
@@ -1259,6 +1264,7 @@ void engine() {
       SVariable *cvar = taggedBecomesSuspVar(termPtr);
       Suspension *susp =
 	new Suspension(new SuspContinuation(CBB,
+					    Thread::GetCurrentPriority(),
 					    PC, Y, G, X, argsToSave));
       cvar->addSuspension (susp);
       CBB->addSuspension();
@@ -1876,10 +1882,11 @@ void engine() {
       ProgramCounter newPC = PC+2;
       ProgramCounter contPC = getLabelArg(PC+1);
 
-      int prio =
-	Thread::GetCurrentPriority() > Thread::GetUserPriority()
-	? Thread::GetUserPriority()
-	: Thread::GetCurrentPriority();
+      int prio = Thread::GetCurrentPriority();
+      int defPrio = Thread::GetDefaultPriority();
+      if (prio > defPrio) {
+	prio = defPrio;
+      }
 
       Thread *tt = new Thread(prio);
       IncfProfCounter(procCounter,sizeof(Thread)+TaskStack::DefaultSize*4);
