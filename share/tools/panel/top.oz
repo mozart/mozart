@@ -566,25 +566,27 @@ in
       end
 
       meth update(Stamp)
-	 case Stamp==@DelayStamp then
-	    TopNote = {self.notebook getTop($)}
-	    Threads = self.threads
-	    Memory  = self.memory
-	 in
-	    case TopNote
-	    of !Threads then
-	       {Threads update(both)}
-	       {Memory  update(sample)}
-	    [] !Memory  then
-	       {Threads update(sample)}
-	       {Memory  update(both)}
-	    else
-	       {Threads update(sample)}
-	       {Memory  update(sample)}
-	       {TopNote update}
+	 case self,isClosed($) then skip else
+	    case Stamp==@DelayStamp then
+	       TopNote = {self.notebook getTop($)}
+	       Threads = self.threads
+	       Memory  = self.memory
+	    in
+	       case TopNote
+	       of !Threads then
+		  {Threads update(both)}
+		  {Memory  update(sample)}
+	       [] !Memory  then
+		  {Threads update(sample)}
+		  {Memory  update(both)}
+	       else
+		  {Threads update(sample)}
+		  {Memory  update(sample)}
+		  {TopNote update}
+	       end
+	       PanelTop,delay
+	    else skip
 	    end
-	    PanelTop,delay
-	 else skip
 	 end
       end
 
