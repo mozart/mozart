@@ -384,8 +384,8 @@ local
       end
    end
 in
-   fun {TransformScanner T From Prop Attr Feat Ms Rules P Flags Rep}
-      Globals
+   fun {TransformScanner T From Prop Attr Feat Ms Rules P Flags ImportFV Rep}
+      Globals FS
    in
       {Rep logPhase('processing scanner "'#{SymbolToVirtualString T}#'" ...')}
       Globals = {New ScannerSpecification init()}
@@ -411,42 +411,12 @@ in
 	    else LexerLoad Locals2 Descrs Meths in
 	       {Rep logSubPhase('building class definition ...')}
 	       case MakeLexer of continue then
-% {List.toRecord lexer
-%  {List.zip
-%   [create currentMode delete getAtom getLength getNextMatch getString
-%    input setMode switchToBuffer unput]
-%   {Record.toList
-%    {Foreign.load {Class.getFeature T filenameprefix}#"MyScanner.so"}}
-%   fun {$ F X} F#X end}}
-LexerO = fRecord(fAtom('#' unit)
-		 [fApply(fOpApply('.' [fVar('Class' unit)
-				       fAtom('getFeature' unit)] unit)
-			 [T fAtom('filenameprefix' unit)] unit)
-		  fAtom({MakeFileName T ".so"} unit)])
-	       in
-LexerLoad =
-fEq(fVar('`lexer`' unit)
-fApply(fOpApply('.' [fVar('List' unit) fAtom('toRecord' unit)] unit)
-       [fAtom(lexer unit)
-	fApply(fOpApply('.' [fVar('List' unit) fAtom('zip' unit)] unit)
-	       [fRecord(fAtom('|' unit) [fAtom(create unit)
-		fRecord(fAtom('|' unit) [fAtom(currentMode unit)
-		fRecord(fAtom('|' unit) [fAtom(delete unit)
-		fRecord(fAtom('|' unit) [fAtom(getAtom unit)
-		fRecord(fAtom('|' unit) [fAtom(getLength unit)
-		fRecord(fAtom('|' unit) [fAtom(getNextMatch unit)
-		fRecord(fAtom('|' unit) [fAtom(getString unit)
-		fRecord(fAtom('|' unit) [fAtom(input unit)
-		fRecord(fAtom('|' unit) [fAtom(setMode unit)
-		fRecord(fAtom('|' unit) [fAtom(switchToBuffer unit)
-		fRecord(fAtom('|' unit) [fAtom(unput unit)
-		fAtom(nil unit)])])])])])])])])])])])
-		fApply(fOpApply('.' [fVar('Record' unit) fAtom('toList' unit)] unit)
-		       [fApply(fOpApply('.' [fVar('Foreign' unit) fAtom('load' unit)] unit)
-			       [LexerO] unit)] unit)
-		fFun(fDollar(unit) [fVar('F' unit) fVar('X' unit)]
-		     fRecord(fAtom('#' unit) [fVar('F' unit) fVar('X' unit)])
-		     nil unit)] unit)] unit) unit)
+		  LexerLoad = fEq(fVar('`lexer`' unit)
+				  fApply(fOpApply('.' [fVar('Foreign' unit)
+						       fAtom('load' unit)]
+						  unit)
+					 [fAtom({MakeFileName T ".so"} unit)]
+					 unit) unit)
 		  {Globals enterFeat([fAtom(lexer unit)#fVar('`lexer`' unit)])}
 		  Locals2 = fVar('`lexer`' unit)|Locals
 	       [] noLexer then
@@ -460,6 +430,7 @@ fApply(fOpApply('.' [fVar('List' unit) fAtom('toRecord' unit)] unit)
 		      fAnd(fClass(T Descrs Meths P) LexerLoad) unit)
 	    end
 	 end
-      end
+      end = FS
+      FS#nil
    end
 end
