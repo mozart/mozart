@@ -408,7 +408,6 @@ parser OzParser from GP
    [] 'unit'(C) => fEscape(fVar('`unit`' C) C)
    [] 'true'(C) => fEscape(fVar('`true`' C) C)
    [] 'false'(C) => fEscape(fVar('`false`' C) C)
-%   [] MethHeadLabel(L) '(' Fs = ( MethFormal($) )* ')' => fRecord(L Fs)
    [] MethHeadLabel(L) '(' Fs = ( MethFormal($) )*
       Open = (  skip => false
 	     [] '...' => true
@@ -437,24 +436,13 @@ parser OzParser from GP
 					 [] skip => fNoDefault)
       => fMethColonArg(F T D)
    end
-   /*
-   syn MethFormal($)
-      MethFormalTerm(T) MethFormalOptDefault(D) => fMethArg(T D)
-   [] Feature(F) ':' MethFormalTerm(T) MethFormalOptDefault(D)
-      => fMethColonArg(F T D)
-   end
-   */
+
    syn MethFormalTerm($)
       NakedVariable($)
    [] '$'(C) => fDollar(C)
    [] '_'(C) => fWildcard(C)
    end
-   /*
-   syn MethFormalOptDefault($)
-      '<='(C) Phrase(P) => fDefault(P C)
-   [] skip => fNoDefault
-   end
-*/
+
    %--------------------------------------------------------------------
    %  Functor Extensions
    %--------------------------------------------------------------------
