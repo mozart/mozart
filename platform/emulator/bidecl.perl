@@ -2749,11 +2749,23 @@ $builtins = {
 			     BI  => BIprintOwnerTable,
 			     module=>'perdio'},
 
+
+    'portWait'         =>  { in  => ['+port','+int'],
+			     out => [],
+			     BI  => BIportWait,
+			     module=>'perdio'},
+
+
     'perdioStatistics'	=> { in  => [],
 			     out => ['+record'],
 			     BI  => BIperdioStatistics,
 			     module=>'perdio' },
 
+
+     'atRedo'		=> { in  => ['+feature', 'value'],
+			     out => [],
+			     bi  => BIatRedo,
+			     ibi => atInlineRedo},
 
     #-----------------------------------------------------------------
     # LAZY
