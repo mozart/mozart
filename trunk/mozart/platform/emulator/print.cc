@@ -93,6 +93,7 @@
 #include "var_fs.hh"
 #include "var_ct.hh"
 #include "var_of.hh"
+#include "var_ext.hh"
 #include "solve.hh"
 #include "lps.hh"
 
@@ -375,9 +376,9 @@ void OzVariable::printStream(ostream &stream, int depth)
       break;
     }
 
-  case OZ_VAR_DIST:
-    stream << " OZ_VAR_DIST";
-      break;
+  case OZ_VAR_EXT:
+    ((ExtVar*)this)->printStreamV(stream,depth);
+    break;
 
   default:
     stream << " unknown type: " << (int) getType();
@@ -455,9 +456,10 @@ void OzVariable::printLongStream(ostream &stream, int depth, int offset)
       break;
     }
 
-  case OZ_VAR_DIST:
-    stream << indent(offset) << "<OZ_VAR_DIST *" << this << ">" << endl;
-      break;
+  case OZ_VAR_EXT:
+    ((ExtVar*)this)->printLongStreamV(stream,depth,offset);
+    break;
+
   default:
     stream << indent(offset) << " unknown type: " << (int) getType() << endl;
     break;

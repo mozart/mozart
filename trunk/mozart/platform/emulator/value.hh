@@ -62,21 +62,6 @@ extern Builtin *bi_raise, *bi_raiseError, *bi_raiseDebug;
 extern Board *oz_rootBoardOutline();
 
 /*===================================================================
- *  
- *=================================================================== */
-
-class CallList {
-public:
-  USEFREELISTMEMORY;
-  TaggedRef proc;
-  RefsArray args;
-
-  CallList *next;
-  CallList(TaggedRef p, RefsArray a) : proc(p), args(a), next(NULL) {}
-  void dispose() { freeListDispose(this,sizeof(*this)); }
-};
-
-/*===================================================================
  * Literal
  *=================================================================== */
 

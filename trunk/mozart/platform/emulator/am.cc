@@ -368,9 +368,18 @@ Bool AM::isLocalUVarOutline(TaggedRef var, TaggedRef *varPtr)
   return oz_isCurrentBoard(bb);
 }
 
+// get home node without deref, for faster isLocal
+inline static
+Board *getHomeUpdate(OzVariable *var) {
+  if (var->getHome1()->isCommitted()) {
+    var->setHome(var->getHome1()->derefBoard());
+  }
+  return var->getHome1();
+}
+
 Bool AM::isLocalSVarOutline(OzVariable *var)
 {
-  Board *home = var->getHomeUpdate();
+  Board *home = getHomeUpdate(var);
   return oz_isCurrentBoard(home);
 }
 

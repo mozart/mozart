@@ -167,8 +167,7 @@ if test -z "$AR"; then
 fi
 
 OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-OZ_PATH_PROG(DYNLD, ozdynld)
-
+OZ_PATH_PROG(OZTOOL, oztool)
 AC_PATH_PROG(DEPEND, makedepend, makedepend)
 
 dnl *****************************************************************
@@ -206,19 +205,6 @@ if test "${GXX}" = yes; then
     OZ_CXX_OPTIONS(-fno-exceptions -fno-rtti,oz_a)
     CXXAVOID=$oz_a
     CXXFLAGS="$CXXFLAGS $oz_a"
-
-    # Note: use $(CC) for linking, not $(CXX): 
-    # g++ creates references to libstdc++ 
-    AC_MSG_CHECKING(for --enable-gccld)
-    AC_ARG_ENABLE(gccld,
-	[--enable-gccld  link with gcc (default=no)])
-    if test -z "${LD}" -a "$enable_gccld" = yes
-    then
-	AC_MSG_RESULT(yes)
-	LD=gcc
-    else
-	AC_MSG_RESULT(no)
-    fi
 
     : ${oz_enable_warnings=no}
     AC_MSG_CHECKING(for --enable-warnings)

@@ -26,7 +26,7 @@
  *
  */
 
-#if defined(INTERFACE)
+#if defined(INTERFACE) && !defined(VAR_ALL)
 #pragma implementation "var_base.hh"
 #endif
 
@@ -168,9 +168,6 @@ void oz_cv_printStream(ostream &out, const char *s, OzVariable *cv,
   case OZ_VAR_FUTURE:
     out << s;
     ((Future *)cv)->printStream(out,depth); return;
-  case OZ_VAR_DIST:
-    out << s;
-    perdioVarPrint(cv, out, depth); return;
   case OZ_VAR_BOOL:
     out << s;
     ((OzBoolVariable*)cv)->printStream(out,depth); return;
@@ -185,9 +182,9 @@ void oz_cv_printStream(ostream &out, const char *s, OzVariable *cv,
   case OZ_VAR_CT:
     out << s;
     ((OzCtVariable*)cv)->printStream(out,depth); return;
-  case OZ_VAR_EXTENTED:
+  case OZ_VAR_EXT:
     out << s;
-    ((ExtentedVar *)cv)->printStreamV(out,depth); return;
+    ((ExtVar *)cv)->printStreamV(out,depth); return;
   default:
     error("not impl"); return;
   }
@@ -198,11 +195,11 @@ int oz_cv_getSuspListLength(OzVariable *cv)
   Assert(cv->getType()!=OZ_VAR_INVALID);
 
   switch (cv->getType()){
-  case OZ_VAR_BOOL:    return ((OzBoolVariable*)cv)->getSuspListLength();
-  case OZ_VAR_FD:      return ((OzFDVariable*)cv)->getSuspListLength();
+  case OZ_VAR_BOOL:   return ((OzBoolVariable*)cv)->getSuspListLength();
+  case OZ_VAR_FD:     return ((OzFDVariable*)cv)->getSuspListLength();
   case OZ_VAR_OF:     return ((OzOFVariable*)cv)->getSuspListLength();
-  case OZ_VAR_FS:    return ((OzFSVariable*)cv)->getSuspListLength();
-  case OZ_VAR_EXTENTED: return ((ExtentedVar *)cv)->getSuspListLengthV();
-  default:              return cv->getSuspListLengthS();
+  case OZ_VAR_FS:     return ((OzFSVariable*)cv)->getSuspListLength();
+  case OZ_VAR_EXT:    return ((ExtVar *)cv)->getSuspListLengthV();
+  default:            return cv->getSuspListLengthS();
   }
 }

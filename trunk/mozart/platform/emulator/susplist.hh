@@ -37,8 +37,6 @@
 #include "mem.hh"
 #include "suspension.hh"
 
-// #include "oz_cpi.hh"
-
 #ifdef OUTLINE
 #define inline
 #endif

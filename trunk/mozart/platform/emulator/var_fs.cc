@@ -24,7 +24,7 @@
  *
  */
 
-#if defined(INTERFACE)
+#if defined(INTERFACE) && !defined(VAR_ALL)
 #pragma implementation "var_fs.hh"
 #endif
 

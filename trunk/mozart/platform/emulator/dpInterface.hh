@@ -65,21 +65,6 @@ OZ_Term unmarshalVar(MsgBuffer*);
 Bool marshalVariable(TaggedRef*, MsgBuffer*);
 void marshalObject(ConstTerm *t, MsgBuffer *bs);
 
-//
-// Perdio variables;
-Bool perdioVarValid(OzVariable *cv, TaggedRef val);
-OZ_Return perdioVarUnify(OzVariable *cv, TaggedRef *ptr,
-			 TaggedRef val, ByteCode *scp);
-OZ_Return perdioVarBind(OzVariable *cv, TaggedRef *ptr,
-			TaggedRef val, ByteCode *scp);
-void perdioVarAddSusp(OzVariable *cv, TaggedRef *v,
-		      Suspension susp, int unstable);
-OzVariable* gcCopyPerdioVar(OzVariable *cv);
-void gcPerdioVarRecurse(OzVariable *cv);
-void perdioVarPrint(OzVariable *cv, ostream &out, int depth);
-VariableStatus perdioVarStatus(OzVariable *cv);
-OZ_Term perdioVarIsDet(OzVariable *cv);
-
 // interface for GC;
 void gcProxyRecurse(Tertiary *t);
 void gcManagerRecurse(Tertiary *t);
