@@ -75,12 +75,10 @@
 enum OZ_FDState {fd_empty, fd_full, fd_bool, fd_singl};
 
 class OZ_FiniteDomain {
-  //friend ostream &operator << (ostream &, const OZ_FiniteDomain &);
 protected:
   int min_elem, max_elem, size;
   void * descr;
 
-  //  ostream &print(ostream &) const;
 public:
 
   OZ_FiniteDomain(void) : descr((void *) 0) {}
@@ -134,11 +132,6 @@ public:
 };
 
 
-//inline
-//ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
-//  return fd.print(ofile);
-//}
-
 //-----------------------------------------------------------------------------
 // OZ_FSetValue
 
@@ -149,13 +142,10 @@ const int fset_high = 2;
 class OZ_FSetConstraint;
 
 class OZ_FSetValue {
-//friend ostream &operator << (ostream &, const OZ_FSetValue &);
-
 protected:
   int _card;
   int _in[fset_high];
 
-//  ostream &print(ostream &) const;
 public:
   OZ_FSetValue(void) {}
   OZ_FSetValue(const OZ_FSetConstraint&);
@@ -172,11 +162,6 @@ public:
   char *toString() const;
 };
 
-//inline
-//ostream &operator << (ostream &ofile, const OZ_FSetValue &fs) {
-//  return fs.print(ofile);
-//}
-
 
 //-----------------------------------------------------------------------------
 // OZ_FSetConstraint
@@ -186,14 +171,11 @@ enum OZ_FSetPropState {fs_prop_glb = 0, fs_prop_lub, fs_prop_val,
                        fs_prop_any, fs_prop_bounds};
 
 class OZ_FSetConstraint {
-//friend ostream &operator << (ostream &, const OZ_FSetConstraint &);
-
 protected:
   int _card_min, _card_max;
   int _known_not_in, _known_in;
   int _in[fset_high], _not_in[fset_high];
 
-//  ostream &print(ostream &) const;
 public:
   OZ_FSetConstraint(void) {}
   OZ_FSetConstraint(const OZ_FSetValue &);
@@ -239,11 +221,6 @@ public:
   char *toString() const;
 };
 
-
-//inline
-//ostream &operator << (ostream &ofile, const OZ_FSetConstraint &fs) {
-//  return fs.print(ofile);
-//}
 
 //-----------------------------------------------------------------------------
 // class OZ_Propagator
@@ -296,8 +273,6 @@ public:
 
   char *toString() const;
 };
-
-//ostream& operator << (ostream& o, const OZ_Propagator &p);
 
 //-----------------------------------------------------------------------------
 // class OZ_Expect, etc.
