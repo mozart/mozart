@@ -40,7 +40,7 @@
 
 #if defined(DEBUG_CHECK) && defined(CORRECT_UNIFY)
 
-#define DEBUG_CONSTRAIN_CVAR(ARGS) printf ARGS; fflush(stdout);
+#define DEBUG_CONSTRAIN_CVAR(ARGS)// printf ARGS; fflush(stdout);
 
 #else
 
