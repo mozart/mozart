@@ -7,6 +7,10 @@ scanner.cc parser.cc parser.hh
 ozlib.lnk
 oz.c
 initffuns.cc
+components.cc
+marshalcode.cc
+marshaler.hh
+marshalMsg.cc
 config.status
 config.cache
 config.log
