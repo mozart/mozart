@@ -143,8 +143,13 @@ case "$cmd" in
 
    ozdo)    exec "$@" ;;
 
-   oznc)    : ${OZCOMPILERCOMP="$OZHOME/lib/Compiler.ozc"}
-            exec $OZEMULATOR -u $OZCOMPILERCOMP "$@" -a $OZARGV ;;
+   oznc)    if [ ${OZCOMPILERCOMP-xx} = xx ]
+            then OZCOMPILERCOMP="$OZHOME/lib/Compiler.ozc"
+            else $doecho "Using compiler component: $OZCOMPILERCOMP"
+            fi
+
+            exec $OZEMULATOR -u $OZCOMPILERCOMP "$@" -a $OZARGV
+    ;;
 
    oz)
         echo "Using emacs '${OZEMACS}'"
