@@ -123,6 +123,8 @@ public:
     buf->getVersion(&major,&minor);
     if (minor==0) {
       port=unmarshalShort(buf);  
+    } else {
+      port = 0;
     }
     timestamp.start=unmarshalNumber(buf);
     timestamp.pid=unmarshalNumber(buf);
