@@ -418,7 +418,6 @@ int WrappedHandle::nextno = wrappedHDStart;
 
 WrappedHandle *WrappedHandle::allHandles = NULL;
 
-static int wrappedStdin = -1;
 
 int rawread(int fd, void *buf, int sz)
 {
@@ -702,6 +701,8 @@ void watchParent()
 
 #ifdef WINDOWS
 
+static int wrappedStdin = -1;
+
 int osdup(int fd)
 {
   // no dup yet: conflicts with reader threads
@@ -749,6 +750,7 @@ void osInit()
   GetSystemTime(&st);
   SystemTimeToFileTime(&st,&emuStartTime);
 
+  /* allow select on stdin */
   wrappedStdin = _hdopen(STD_INPUT_HANDLE, O_RDONLY);
 
 #else
