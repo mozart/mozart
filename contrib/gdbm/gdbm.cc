@@ -1,4 +1,4 @@
-#include <oz.h>
+#include "oz_api.h"
 #include "gdbm.h"
 #include <string.h>
 #include <stdio.h>
@@ -9,101 +9,110 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include "extension.hh"
+#include "bytedata.hh"
+
+class GDBM: public SituatedExtension {
+public:
+  GDBM_FILE db;
+  char *filename;
+  GDBM(char*f,GDBM_FILE d):SituatedExtension(),filename(f),db(d){}
+  //
+  // Situated Extension
+  //
+  friend Bool oz_isGdbm(OZ_Term);
+  static int id;
+  virtual int getIdV() { return id; }
+  virtual OZ_Term typeV() { return OZ_atom("gdbm"); }
+  virtual void printStreamV(ostream &out,int depth = 10);
+  virtual Extension* gcV();
+  //
+  void release();
+  void close();
+};
+
+//
+// Situated Extension
+//
+
+int GDBM::id;
+
+inline Bool oz_isGdbm(OZ_Term t)
+{
+  return oz_isExtension(t) &&
+    tagged2Extension(t)->getIdV()==GDBM::id;
+}
+
+inline GDBM* tagged2Gdbm(OZ_Term t)
+{
+  Assert(oz_isGDBM(t));
+  return (GDBM*) tagged2Extension(t);
+}
+
+void GDBM::printStreamV(ostream &out,int depth = 10)
+{
+  out << "<gdbm ";
+  if (db==0) cout << "[closed] ";
+  out << '"' << filename << "\">";
+}
+
+Extension* GDBM::gcV()
+{
+  return(new GDBM(filename,db));
+}
+
+//
+// Member Functions
+//
+
+void GDBM::close() {
+  if (db!=0) { gdbm_close(db); db=0; }
+}
+
+void GDBM::release() {
+  close();
+  if (filename!=0) { free(filename); filename=0; }
+}
+
+//
+// Builtins
+//
+// Exceptions have the form gdbm(PROC ARGS MSG)
+// where PROC is an atom naming the operation
+// ARGS is the list of input arguments
+// MSG is an atom describing the problem
+//
+// Errors have the form error(gdbm(PROC ARGS MSG) debug:DEBUG)
+
+#define GdbmARGS OZ_toList(_OZ_arity,_OZ_ARGS)
+
+#define GdbmException(PROC,MSG) \
+OZ_raiseC("gdbm",3,OZ_atom(PROC),GdbmARGS,OZ_atom(MSG))
+
+#define GdbmError(PROC,MSG) \
+OZ_raiseErrorC("gdbm",3,OZ_atom(PROC),GdbmARGS,OZ_atom(MSG))
+
 OZ_BI_define(cgdbm_open,4,1)
 {
-  OZ_declareNonvarIN(0,name);
-  OZ_declareNonvarIN(1,flags);
-  OZ_declareNonvarIN(2,mode);
-  OZ_declareNonvarIN(3,block);
-  int t_name  = 0;
-  int t_flags = 0;
-  int t_mode  = 0;
-  int t_block = 0;
-  char* c_name  = NULL;
-  char* c_flags = NULL;
-  int   c_mode;
-  int   c_block;
-  int   z_flags = 0;
+  OZ_declareBitString(1,flags);
+  OZ_declareInt(      2,mode);
+  OZ_declareInt(      3,block);
+  OZ_declareVS(       0,name,len);
+
+  int zflags = 0;
+  if (flags->get(0)) zflags  = GDBM_READER;
+  if (flags->get(1)) zflags  = GDBM_WRITER;
+  if (flags->get(2)) zflags  = GDBM_WRCREAT;
+  if (flags->get(3)) zflags  = GDBM_NEWDB;
+  if (flags->get(4)) zflags |= GDBM_FAST;
+
   GDBM_FILE file;
-
-  /* Perform type checks before any allocation so that we
-     can return with type error and no memory leak */
-
-  if (OZ_isAtom(name))                 t_name = 1;
-  else if (OZ_isString(name,0))        t_name = 2;
-  else if (OZ_isVirtualString(name,0)) t_name = 3;
-  else return OZ_typeError(0,"Atom|String|VirtualString");
-
-  if (OZ_isAtom(flags))                 t_flags = 1;
-  else if (OZ_isString(flags,0))        t_flags = 2;
-  else if (OZ_isVirtualString(flags,0)) t_flags = 3;
-  else if (OZ_isUnit(flags))            t_flags = 4;
-  else return OZ_typeError(1,"Atom|String|VirtualString|Unit");
-
-  if (OZ_isInt(mode))       t_mode = 1;
-  else if (OZ_isUnit(mode)) t_mode = 2;
-  else return OZ_typeError(2,"Int|Unit");
-
-  if (OZ_isInt(block))       t_block = 1;
-  else if (OZ_isUnit(block)) t_block = 2;
-  else return OZ_typeError(3,"Int|Unit");
-
-  /* Perform type conversions */
-
-  switch (t_name) {
-  case 1: c_name=strdup(OZ_atomToC(name)); break;
-  case 2: c_name=strdup(OZ_stringToC(name)); break;
-  case 3: c_name=strdup(OZ_virtualStringToC(name)); break;
-  default: return OZ_raise(OZ_atom("impossible"));
-  }
-
-  switch (t_flags) {
-  case 1: c_flags = strdup(OZ_atomToC(flags)); break;
-  case 2: c_flags = strdup(OZ_stringToC(flags)); break;
-  case 3: c_flags = strdup(OZ_virtualStringToC(flags)); break;
-  case 4: c_flags = NULL; break;
-  default: return OZ_raise(OZ_atom("impossible"));
-  }
-
-  switch (t_mode) {
-  case 1: c_mode = OZ_intToC(mode); break;
-  case 2: c_mode = 0644; break;
-  default: return OZ_raise(OZ_atom("impossible"));
-  }
-
-  switch (t_block) {
-  case 1: c_block = OZ_intToC(block); break;
-  case 2: c_block = 0; break;
-  default: return OZ_raise(OZ_atom("impossible"));
-  }
-
-  if (c_flags != NULL) {
-    char* s = c_flags;
-    int fast = 0;
-    while (*s)
-      switch (*s++) {
-      case 'r': z_flags = GDBM_READER; break;
-      case 'w': z_flags = GDBM_WRITER; break;
-      case 'c': z_flags = GDBM_WRCREAT; break;
-      case 'n': z_flags = GDBM_NEWDB; break;
-      case 'f': fast = 1; break;
-      default: OZ_warning("Unknown flag `%c' to gdbm_open\n",s[-1]);
-      }
-    if (fast) z_flags |= GDBM_FAST;
-    free(c_flags);
-  }
-
-  /* Open GDBM database */
-
-  file = gdbm_open(c_name,c_block,z_flags,c_mode,NULL);
-  free(c_name);
+  file = gdbm_open(name,block,zflags,mode,NULL);
   if (file==NULL)
-    return OZ_raiseErrorC("gdbm",3,OZ_atom("open"),OZ_int(gdbm_errno),name);
+    return GdbmError("open",gdbm_strerror(gdbm_errno));
   else {
-    OZ_Term chunk = OZ_makeHeapChunk(sizeof(GDBM_FILE));
-    char* s       = (char*) OZ_getHeapChunkData(chunk);
-    memcpy(s,(char*)&file,sizeof(GDBM_FILE));
-    OZ_RETURN(chunk);
+    GDBM* db = new GDBM(strdup(name),file);
+    OZ_RETURN(makeTaggedConst(db));
   }
 } OZ_BI_end
 
@@ -130,101 +139,76 @@ term2datum(OZ_Term in,datum& dat)
   return r;
 }
 
-#define CHECK_GDBM(meth,x) {                                    \
-  if (!OZ_isChunk(x)                                            \
-      || OZ_getHeapChunkSize(x)!=sizeof(GDBM_FILE))             \
-    return OZ_typeError(0,"HeapChunk(GDBM_FILE)");              \
-  if (*(GDBM_FILE*)OZ_getHeapChunkData(x)==(GDBM_FILE)0)        \
-    return OZ_raiseErrorC("gdbm",3,OZ_atom(meth),               \
-                          OZ_atom("alreadyClosed"),x);          \
-}
+#define OZ_declareGdbm(ARG,VAR,METH,CLOSEOK)                    \
+OZ_declareType(ARG,VAR,GDBM*,"gdbm",oz_isGdbm,tagged2Gdbm);     \
+if (!CLOSEOK && VAR->db==0)                                     \
+  return GdbmError(METH,"alreadyClosed");
 
-OZ_BI_define(cgdbm_fetch,2,1)
+OZ_BI_define(cgdbm_is,1,1)
 {
-  OZ_declareNonvarIN(0,oz_db);
-  OZ_declareNonvarIN(1,oz_key);
+  OZ_declareDetTerm(0,t);
+  OZ_RETURN((oz_isGdbm(t))?OZ_true():OZ_false());
+} OZ_BI_end
+
+OZ_BI_define(cgdbm_get,2,1)
+{
+  OZ_declareGdbm(0,oz_db,"get",0);
+  OZ_declareVS(1,oz_key,oz_size);
   datum val;
+  val.dptr  = oz_key;
+  val.dsize = oz_size;
+  val = gdbm_fetch(oz_db->db,val);
+  return (val.dptr==NULL) ? GdbmException("get","keyNotFound")
+    : datum2term(val,OZ_out(0));
+} OZ_BI_end
 
-  CHECK_GDBM("fetch",oz_db);
-
-  /* the key string lives in a static area and won't need
-     to be deallocated */
-  if (OZ_isAtom(oz_key))
-    val.dptr = OZ_atomToC(oz_key);
-  else if (OZ_isString(oz_key,0))
-    val.dptr = OZ_stringToC(oz_key);
-  else if (OZ_isVirtualString(oz_key,0))
-    val.dptr = OZ_virtualStringToC(oz_key);
-  else return OZ_typeError(1,"Atom|String|VirtualString");
-
-  val.dsize = strlen(val.dptr);
-  val = gdbm_fetch(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db),val);
-  if (val.dptr==NULL) OZ_RETURN(OZ_unit());
+OZ_BI_define(cgdbm_condGet,3,1)
+{
+  OZ_declareGdbm(0,oz_db,"condGet",0);
+  OZ_declareVS(1,oz_key,oz_size);
+  OZ_declareTerm(2,oz_default);
+  datum val;
+  val.dptr  = oz_key;
+  val.dsize = oz_size;
+  val = gdbm_fetch(oz_db->db,val);
+  if (val.dptr==NULL) OZ_RETURN(oz_default);
   else return datum2term(val,OZ_out(0));
 } OZ_BI_end
 
-OZ_BI_define(cgdbm_store,4,1)
+OZ_BI_define(cgdbm_put,3,0)
 {
-  OZ_declareNonvarIN(0,oz_db);
-  OZ_declareNonvarIN(1,oz_key); int t_key = 0;
-  OZ_declareNonvarIN(2,oz_val);
-  OZ_declareNonvarIN(3,oz_rep); int rep;
+  OZ_declareGdbm(   0,oz_db,"put",0);
+  OZ_declareDetTerm(2,oz_val);
+  OZ_declareVS(     1,oz_key,oz_size);
   datum key,val;
+  key.dptr  = oz_key;
+  key.dsize = oz_size;
   int ret;
-
-  CHECK_GDBM("store",oz_db);
-
-  if (OZ_isAtom(oz_key))                 t_key = 1;
-  else if (OZ_isString(oz_key,0))        t_key = 2;
-  else if (OZ_isVirtualString(oz_key,0)) t_key = 3;
-  else return OZ_typeError(1,"Atom|String|VirtualString");
-
-
-  if (OZ_isTrue(oz_rep)) rep = 1;
-  else if (OZ_isFalse(oz_rep)) rep = 0;
-  else return OZ_typeError(3,"Bool");
-
-  switch (t_key) {
-  case 1: key.dptr = strdup(OZ_atomToC(oz_key)); break;
-  case 2: key.dptr = strdup(OZ_stringToC(oz_key)); break;
-  case 3: key.dptr = strdup(OZ_virtualStringToC(oz_key)); break;
-  default: return OZ_raise(OZ_atom("impossible"));
-  }
-
-  key.dsize = strlen(key.dptr);
-
   ret = term2datum(oz_val,val);
   if (ret!=PROCEED) {
-    free(key.dptr);
     if (val.dptr) free(val.dptr);
     return ret;
   }
-
-  ret = gdbm_store(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db),
-                   key,val,(rep)?GDBM_REPLACE:GDBM_INSERT);
-
-  free(key.dptr);
+  ret = gdbm_store(oz_db->db,key,val,GDBM_REPLACE);
   free(val.dptr);
-
-  OZ_RETURN_INT(ret);
+  return (ret==0) ? PROCEED :
+    GdbmError("put",gdbm_strerror(gdbm_errno));
 } OZ_BI_end
 
 OZ_BI_define(cgdbm_firstkey,1,1)
 {
-  OZ_declareNonvarIN(0,oz_db);
+  OZ_declareGdbm(0,oz_db,"firstkey",0);
   datum key;
 
-  CHECK_GDBM("firstkey",oz_db);
-
-  key = gdbm_firstkey(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db));
+  key = gdbm_firstkey(oz_db->db);
   if (key.dptr==NULL) OZ_RETURN(OZ_unit());
   else {
     OZ_Term res;
-    char* s = (char*) malloc(key.dsize+1);
+    char* s = new char[key.dsize+1];
     memcpy(s,key.dptr,key.dsize);
     s[key.dsize] = '\0';
     res = OZ_atom(s);
-    free(s);
+    delete s;
     free(key.dptr);
     OZ_RETURN(res);
   }
@@ -232,33 +216,20 @@ OZ_BI_define(cgdbm_firstkey,1,1)
 
 OZ_BI_define(cgdbm_nextkey,2,1)
 {
-  OZ_declareNonvarIN(0,oz_db);
-  OZ_declareNonvarIN(1,oz_key1);
-  // OZ_Term oz_key2 = OZ_getCArg(2);
+  OZ_declareGdbm(0,oz_db,"nextkey",0);
+  OZ_declareVS(  1,oz_key,oz_len);
   datum key,val;
-
-  CHECK_GDBM("nextkey",oz_db);
-
-  if (OZ_isAtom(oz_key1))
-    key.dptr = strdup(OZ_atomToC(oz_key1));
-  else if (OZ_isString(oz_key1,0))
-    key.dptr = strdup(OZ_stringToC(oz_key1));
-  else if (OZ_isVirtualString(oz_key1,0))
-    key.dptr = strdup(OZ_virtualStringToC(oz_key1));
-  else return OZ_typeError(1,"Atom|String|VirtualString");
-
-  key.dsize = strlen(key.dptr);
-
-  val = gdbm_nextkey(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db),key);
-  free(key.dptr);
+  key.dptr  = oz_key;
+  key.dsize = oz_len;
+  val = gdbm_nextkey(oz_db->db,key);
   if (val.dptr==NULL) OZ_RETURN(OZ_unit());
   else {
     OZ_Term res;
-    char *s = (char*) malloc(val.dsize+1);
+    char *s = new char[val.dsize+1];
     memcpy(s,val.dptr,val.dsize);
     s[val.dsize] = '\0';
     res = OZ_atom(s);
-    free(s);
+    delete s;
     free(val.dptr);
     OZ_RETURN(res);
   }
@@ -266,67 +237,47 @@ OZ_BI_define(cgdbm_nextkey,2,1)
 
 OZ_BI_define(cgdbm_close,1,0)
 {
-  OZ_declareNonvarIN(0,oz_db);
-
-  if (!OZ_isChunk(oz_db)
-      || OZ_getHeapChunkSize(oz_db)!=sizeof(GDBM_FILE))
-    return OZ_typeError(0,"HeapChunk(GDBM_FILE)");
-
-  if (*(GDBM_FILE*)OZ_getHeapChunkData(oz_db)==(GDBM_FILE)0)
-    return PROCEED;
-
-  gdbm_close(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db));
-  *(GDBM_FILE*)OZ_getHeapChunkData(oz_db) = (GDBM_FILE)0;
+  OZ_declareGdbm(0,oz_db,"close",1);
+  oz_db->close();
   return PROCEED;
 } OZ_BI_end
 
-OZ_BI_define(cgdbm_error,1,1)
+OZ_BI_define(cgdbm_free,1,0)
 {
-  OZ_declareIntIN(0,oz_num);
-  const char* s;
-
-  s = gdbm_strerror(oz_num);
-  OZ_RETURN_STRING(s);
+  OZ_declareGdbm(0,oz_db,"free",1);
+  oz_db->release();
+  return PROCEED;
 } OZ_BI_end
 
-OZ_BI_define(cgdbm_delete,2,1)
+OZ_BI_define(cgdbm_remove,2,0)
 {
-  OZ_declareNonvarIN(0,oz_db);
-  OZ_declareNonvarIN(1,oz_key);
+  OZ_declareGdbm(0,oz_db,"remove",0);
+  OZ_declareVS(  1,oz_key,oz_len);
   datum key; int res;
-
-  CHECK_GDBM("delete",oz_db);
-
-  if (OZ_isAtom(oz_key))
-    key.dptr = OZ_atomToC(oz_key);
-  else if (OZ_isString(oz_key,0))
-    key.dptr = OZ_stringToC(oz_key);
-  else if (OZ_isVirtualString(oz_key,0))
-    key.dptr = OZ_virtualStringToC(oz_key);
-  else return OZ_typeError(1,"Atom|String|VirtualString");
-
-  key.dsize = strlen(key.dptr);
-
-  res = gdbm_delete(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db),key);
-  OZ_RETURN_INT(res);
+  key.dptr  = oz_key;
+  key.dsize = oz_len;
+  res = gdbm_delete(oz_db->db,key);
+  return (res==0) ? PROCEED :
+    GdbmError("remove",gdbm_strerror(gdbm_errno));
 } OZ_BI_end
 
-OZ_BI_define(cgdbm_reorganize,1,1)
+OZ_BI_define(cgdbm_reorganize,1,0)
 {
-  OZ_declareNonvarIN(0,oz_db);
+  OZ_declareGdbm(0,oz_db,"reorganize",0);
   int res;
-
-  CHECK_GDBM("reorganize",oz_db);
-
-  res = gdbm_reorganize(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db));
-  OZ_RETURN_INT(res);
+  res = gdbm_reorganize(oz_db->db);
+  return (res==0) ? PROCEED :
+    GdbmError("reorganize",gdbm_strerror(gdbm_errno));
 } OZ_BI_end
 
-OZ_BI_define(cgdbm_bitor,2,1)
+OZ_BI_define(cgdbm_member,2,1)
 {
-  OZ_declareIntIN(0,n1);
-  OZ_declareIntIN(1,n2);
-  OZ_RETURN_INT(n1|n2);
+  OZ_declareGdbm(0,oz_db,"member",0);
+  OZ_declareVS(  1,oz_key,oz_len);
+  datum key;
+  key.dptr  = oz_key;
+  key.dsize = oz_len;
+  OZ_RETURN((gdbm_exists(oz_db->db,key))?OZ_true():OZ_false());
 } OZ_BI_end
 
 extern "C"
@@ -334,18 +285,21 @@ extern "C"
   OZ_C_proc_interface * oz_init_module(void)
   {
     static OZ_C_proc_interface i_table[] = {
+      {"is"             ,1,1,cgdbm_is},
       {"open"           ,4,1,cgdbm_open},
-      {"fetch"          ,2,1,cgdbm_fetch},
-      {"store"          ,4,1,cgdbm_store},
+      {"get"            ,2,1,cgdbm_get},
+      {"condGet"        ,3,1,cgdbm_condGet},
+      {"put"            ,3,0,cgdbm_put},
       {"firstkey"       ,1,1,cgdbm_firstkey},
       {"nextkey"        ,2,1,cgdbm_nextkey},
       {"close"          ,1,0,cgdbm_close},
-      {"error"          ,1,1,cgdbm_error},
-      {"delete"         ,2,1,cgdbm_delete},
-      {"reorganize"     ,1,1,cgdbm_reorganize},
-      {"bitor"          ,2,1,cgdbm_bitor},
+      {"free"           ,1,0,cgdbm_free},
+      {"remove"         ,2,0,cgdbm_remove},
+      {"reorganize"     ,1,0,cgdbm_reorganize},
+      {"member"         ,2,1,cgdbm_member},
       {0,0,0,0}
     };
+    GDBM::id = oz_newUniqueId();
     return i_table;
   }
 } /* extern "C" */
