@@ -170,6 +170,7 @@ OZ_C_proc_interface * oz_init_module(void)
 {
   static OZ_C_proc_interface table[] = {
     {"is"     ,1,1,weakdict_is     },
+    {"new"    ,0,2,weakdict_new    },
     {"put"    ,2,0,weakdict_put    },
     {"get"    ,2,1,weakdict_get    },
     {"condGet",3,1,weakdict_condGet},
