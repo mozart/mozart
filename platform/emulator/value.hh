@@ -764,18 +764,33 @@ TaggedRef makeTupleArityList(int i);
  * either an Arity* or an int
  */
 
-typedef int32 SRecordArity; /* do not want to use a pointer on the Alpha! */
+// #define TYPECHECK_SRecordArity
+#ifdef TYPECHECK_SRecordArity
 
-inline Bool sraIsTuple(SRecordArity a)      { return a&1; }
-inline SRecordArity mkTupleWidth(int w)     { return (SRecordArity) ((w<<1)|1);}
-inline int getTupleWidth(SRecordArity a)    { return a>>1; }
-inline SRecordArity mkRecordArity(Arity *a) { return ToInt32(a); }
-inline Arity *getRecordArity(SRecordArity a){ return (Arity*) ToPointer(a); }
-inline Bool sameSRecordArity(SRecordArity a, SRecordArity b) { return a==b; }
+class SRA;
+typedef SRA* SRecordArity;
+#define Body(X) ;
+#define inline
+
+#else
+
+typedef int32 SRecordArity; /* do not want to use a pointer on the Alpha! */
+#define Body(X) X
+
+#endif
+
+inline Bool sraIsTuple(SRecordArity a)      Body({ return a&1; })
+inline SRecordArity mkTupleWidth(int w)     Body({ return (SRecordArity) ((w<<1)|1);})
+inline int getTupleWidth(SRecordArity a)    Body({ return a>>1; })
+inline SRecordArity mkRecordArity(Arity *a) Body({ return ToInt32(a); })
+inline Arity *getRecordArity(SRecordArity a)Body({ return (Arity*) ToPointer(a); })
+inline Bool sameSRecordArity(SRecordArity a, SRecordArity b) Body({ return a==b; })
 inline int getWidth(SRecordArity a)
-{
+Body({
   return sraIsTuple(a) ? getTupleWidth(a) : getRecordArity(a)->getWidth();
-}
+})
+
+#undef Body
 
 class SRecord {
 private:
@@ -832,7 +847,7 @@ public:
     CHECK_LITERAL(lab);
     Assert(width > 0);
     int memSize = sizeof(SRecord) + sizeof(TaggedRef) * (width - 1);
-    SRecord *ret = (SRecord *) heapMalloc(memSize);
+    SRecord *ret = (SRecord *) int32Malloc(memSize);
     ret->label = lab;
     ret->recordArity = arity;
     return ret;
@@ -1137,16 +1152,19 @@ public:
   Board *getBoardFast();
   SRecord *getFreeRecord()          { return (SRecord *) getPtr(); }
   SRecord *getUnfreeRecord() { 
-    return isClass() ? NULL : getClass()->getUnfreeRecord(); 
+    return isClass() ? (SRecord*) NULL : getClass()->getUnfreeRecord(); 
   }
   void setFreeRecord(SRecord *aRec) { setPtr(aRec); }
 
   /* same functionality is also in instruction inlineDot */
   TaggedRef getFeature(TaggedRef lit) 
   {
-    TaggedRef ret = getFreeRecord()->getFeature(lit);
-    if (ret!=makeTaggedNULL())
-      return ret;
+    SRecord *freefeat = getFreeRecord();
+    if (freefeat) {
+      TaggedRef ret = freefeat->getFeature(lit);
+      if (ret!=makeTaggedNULL())
+	return ret;
+    }
     SRecord *fr = getUnfreeRecord();
     return fr ?  fr->getFeature(lit) : makeTaggedNULL();
   }
