@@ -1,0 +1,313 @@
+
+<CHAPTER ID="chapter.agentexamples">
+  <TITLE>Mobile Agents</TITLE>
+ 
+<index see=idx.agent/mobile agent/
+<P>This chapter shows how to program mobile agents in Mozart.
+<index id=idx.agent/agent/
+We call <EM>agent</EM> any distributed
+computation that is organized as a set of tasks.
+<index/task/
+<index/agent<and>task/
+A <EM>task</EM> is a computation that uses the
+resources of a single site.
+<index/agent<and>resource/
+By <EM>resource</EM> we mean the technical definition
+given in <ptr to="sited.entities">, for example,
+file system, peripherals, networking abilities, operating system access, etc.
+A task can initiate tasks on other sites, with well-defined
+specifications of what resources they should use.
+The distributed behavior of the agent is therefore
+in first instance decided by the agent itself.
+
+<P>Agents are therefore just
+resource-aware distributed computations,
+which can exist on one site or
+be spread out over more than one site.
+This definition of agent might seem
+unnecessarily general,
+but it is natural in Mozart, where
+it is as easy for an application to
+run on one site or a set of sites.
+<index/agent<and>barrier synchronization example/
+For example, here's an agent <<A>> that
+concurrently delegates 10 tasks to remote sites
+and waits until all are done before continuing.
+The agent servers are represented by <<AS0>> and <<AS9>> and the
+work is represented by functors containing
+the one-argument procedures <<P0>> to <<P9>>.
+Each procedure binds its argument to the result of
+its calculation.
+<<<
+declare
+A=functor
+  define
+     X0 ... X9
+     {AS0 functor define {P0 X0} end}
+     ...
+     {AS9 functor define {P9 X9} end}
+     {Wait X0} ... {Wait X9}
+     ...
+  end
+>>>
+<P>This is efficient.
+As the distribution model
+makes clear (see <ptr to="single.assignment">),
+the termination of each remote task
+is signaled to the original task
+by exactly one network message,
+which contains the result of the task's calculation.
+
+<P>The Mozart vision of a universe of agents
+is a set of fixed places, the agent servers,
+and a set of evolving computational ``webs'',
+each potentially covering many places at once.
+A web is what we call an ``agent''.
+
+<SECTION><TITLE>An example agent</TITLE>
+
+<P>Let's start with a very simple example of an agent
+that goes somewhere, interrogates the operating system,
+and then comes back.
+We show the example in two parts.
+First, we show how to install agent servers so
+that the agent has somewhere to go.
+Then, we will program the agents.
+
+<SUBSECTION><TITLE>Installing the agent servers</TITLE>
+
+<P>To go to a site, there has to be something at the site
+<index/agent server/
+<index/agent<and>agent server/
+that accepts the agent.  We call it an <EM>agent server</EM>.
+An agent server accepts functors (which represent agents or parts
+of agents) and applies them on its site.
+To install an agent server on a site, we use the functor <<AgentServer>>
+(see <ptr to="agent.server">, below).
+When <<AgentServer>> is installed on a site, then it creates
+an agent server module <<AS>> on that site
+along with the following operations:
+<LIST>
+<ITEM>The agent server is accessed by <<AS.server>>.
+A calculation is started asynchronously on the agent server by invoking <<{AS.server F}>>,
+where <<F>> is a functor that
+specifies the calculation and the resources it needs.
+<index/agent<and>publishing an agent server/
+<ITEM>The operation <<{AS.publishserver FN}>>, which when executed
+creates a file <<FN>> that contains a ticket to the site's agent server.
+<index/agent<and>getting an agent server/
+<ITEM>The operation <<{AS.getserver UFN ?AS}>>, which when inputted
+an URL or file name <<UFN>> to any agent server
+(even on other sites), gives as output a reference to that agent server <<AS>>.
+</LIST>
+
+<P>Let's say that we know an URL <<"http://www.info.ucl.ac.be/~pvr/agents.ozf">>
+that references the functor <<AgentServer>>.
+Then the following code creates a local agent server and makes
+it accessible through the URL <<"http://www.info.ucl.ac.be/~pvr/as1">>:
+<<<
+declare GetServer in
+local
+   % Get the AgentServer:
+   AgentServer={Pickle.load "http://www.info.ucl.ac.be/~pvr/agents.ozf"}
+   % Install AgentServer locally: (this creates an agent server)
+   [AS1]={Module.apply [AgentServer]}
+   % Publish the agent server:
+   {AS1.publishserver "/usr/staff/pvr/public_html/as1"}
+in
+   GetServer=AS1.getserver
+end
+>>>
+<P>This code also creates the procedure <<GetServer>>
+as defined above.
+
+<P>Let's create a second agent
+server, a remote one,
+and make it accessible through the URL
+<<"http://www.info.ucl.ac.be/~pvr/as2">>:
+<<<
+local
+   RF=functor import Pickle Module export done:D
+      define
+         AgentServer={Pickle.load "http://www.info.ucl.ac.be/~pvr/agents.ozf"}
+         [AS2]={Module.apply [AgentServer]}
+         {AS2.publishserver "/usr/staff/pvr/public_html/as2"}
+      end
+   RM={New Remote.manager init}
+   M={RM apply(RF $)}
+in
+   skip
+end
+>>>
+<P>In this case, the three lines of code that do the work
+of installing the agent server and publishing it
+are put inside the functor <<RF>>,
+and <<RF>> is installed remotely.
+
+<P>Now let's get access to both of these agent servers.
+We use the procedure <<GetServer>> that is defined in the functor <<AgentServer>>.
+This procedure can get access to <EM>any</EM> agent server,
+not just the one on its site:
+<<<
+declare
+Server1={GetServer "http://www.info.ucl.ac.be/~pvr/as1"}
+Server2={GetServer "http://www.info.ucl.ac.be/~pvr/as2"}
+>>>
+
+<SUBSECTION><TITLE>Programming agents</TITLE>
+
+<P>Now that the agent servers are installed, we're ready to 
+let the agents work.
+
+<P>A first example creates an agent on the remote site.
+The agent queries the operating system and returns
+the value of the <<OS.time>> operation.
+<index/agent<and>simple example/
+Let's first execute the agent interactively:
+<<<
+declare D1 in
+{Server2 functor import OS define D1={OS.time} end}
+{Browse D1}
+>>>
+<P>This first creates variable <<D1>> and 
+then executes an agent on the remote site.
+The agent needs only one resource, <<OS>>, a module that
+gives access to some operating system functions.
+The agent is created asynchronously,
+which means that <<D1>> will usually still
+be unbound when the <<Browse>> is called.
+In most cases this is not a problem.
+The dataflow semantics of Oz mean that most operations
+that need <<D1>> will wait before continuing.
+If the caller wants to be sure that <<D1>> is bound
+before continuing, it just needs to do a <<{Wait D1}>>.
+
+<P>Now let's slightly modify the first example to get
+a standalone agent, i.e., the agent is itself a functor
+that can be compiled and executed standalone or
+by another application.
+We assume that the functor <<AgentServer>> is available
+at a standard place.
+<<<
+functor
+import System AgentServer
+define
+   GetServer=AgentServer.getserver
+   Server2={GetServer "http://www.info.ucl.ac.be/~pvr/as2"}
+
+   D1
+   {Server2 functor import OS define D1={OS.time} end}
+   {System.show D1}
+end
+>>>
+<P>This is almost the same as the previous example;
+it just extends it with a call to <<GetServer>> to
+access the agent server.
+The agent first gets access to the remote agent server <<Server2>>
+and then starts a calculation there.
+
+<P>If the functor <<AgentServer>> is not available in
+a standard place, then the standalone agent has to 
+get it explicitly:
+<<<
+functor
+import System Pickle Module
+define
+   AgentServer={Pickle.load "http://www.info.ucl.ac.be/~pvr/agents.ozf"}
+   [AS]={Module.apply [AgentServer]}
+   GetServer=AS.getserver
+   Server2={GetServer "http://www.info.ucl.ac.be/~pvr/as2"}
+
+   D1
+   {Server2 functor import OS define D1={OS.time} end}
+   {System.show D1}
+end
+>>>
+
+<SUBSECTION><TITLE>There and back again</TITLE>
+
+<P>We give an example of an agent that goes to a remote
+site, does a calculation there, and comes back with the result.
+Surprise, surprise, the calculation takes almost no
+local CPU time.
+
+<SUBSECTION><TITLE>Round and round it goes, where it stops nobody knows</TITLE>
+
+<P>We give an example of an agent that visits a set of sites
+repeatedly.
+It chooses dynamically the next site to visit.
+In fact, during its execution it can even get access to new sites
+that it has never heard of before and visit them.
+
+<SUBSECTION><TITLE>Barrier synchronization</TITLE>
+
+<P>An agent can delegate work by creating tasks dynamically,
+and then wait until all tasks are done.
+This is easy by using logic variables to synchronize 
+on the termination.
+
+<SUBSECTION id="agent.server"><TITLE>Definition of <<AgentServer>></TITLE>
+
+<index/agent server<and>definition/
+<P>The basic tool giving agent functionality is the functor <<AgentServer>>,
+which is defined as follows.
+When installed, this functor creates an agent server,
+a procedure to publish the agent server,
+and a procedure to get access to any published agent server.
+<<<
+functor
+import Module Connection Pickle
+export 
+   server:AS
+   publishserver:PublishServer
+   getserver:GetServer
+define
+   S P={NewPort S}
+   proc {InstallFunctors S}
+      case S
+      of F|S2 then
+	 try
+	    [_] = {Module.apply [F]}
+	 catch _ then skip end
+	 {InstallFunctors S2}
+      else skip end
+   end
+   thread {InstallFunctors S} end
+   proc {AS F} {Send P F} end
+   T={Connection.offerUnlimited AS}
+
+      % Make agent server available through file FN:
+      % Note that the agent server is asynchronous.
+   proc {PublishServer FN}
+      {Pickle.save T FN}
+   end
+
+      % Get access to a server that is at file/URL UFN:
+   proc {GetServer UFN AS}
+      try
+	 T={Pickle.load UFN}
+      in
+	 AS={Connection.take T}
+      catch _ then
+	 raise serverUnavailable end
+      end
+   end
+end
+>>>
+<P>One way to use <<AgentServer>> is to compile it
+with the standalone compiler
+and make the resulting <<ozf>> file globally-accessible
+by putting it in a <<public_html>> directory.
+This can also be done in the interactive user interface:
+<<<
+declare
+AgentServer=
+   functor
+      ... (body of functor definition)
+   end
+
+{Pickle.save AgentServer "/usr/staff/pvr/public_html/agents.ozf"}
+>>>
+
+</CHAPTER>
+

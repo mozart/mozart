@@ -1,0 +1,119 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter id="chapter.mof">
+  <title/More On Functors/
+
+  <section id="section.mof.computed">
+    <title/Computed Functors/
+
+    <p>
+      We distinguish between <def/compiled functors/ and <def/computed
+      functors/.  A compiled functor is obtained by compilation of a
+      functor definition.  Computed functors are obtained by executing
+      compiled functors whose definitions contain nested functor
+      definitions. Compiled functors can only have lexical bindings to
+      the data structures of the base environment. Computed functors
+      can have lexical bindings to all data structures that the
+      creating compiled functors supply to their definitions.
+
+    <p>
+      Pickled computed functors can carry computed data structures
+      with them.  This matters since 
+      <list enum>
+        <item> 
+          a computed data structure can now be loaded together
+          with a functor rather than being computed  a new for each
+          virtual machine using it. 
+        <item>
+          the functors needed to compute the carried with data
+          structure are not needed by the virtual machine using it.
+      </list>
+
+    <p>
+      Computed functors are syntactically supported by a <<prepare>>
+      and <<require>> section. For example, the root functor
+      definition in the file <file/LMF.oz/ can be rewritten using a
+      <<prepare>> section as
+      follows:
+    <p>
+<chunk class=anonymous><title/Computed Functor/
+functor
+import
+   DB Form            % User defined
+   System Application % System
+prepare
+   Flights = <chunk.ref/Sample flights/ 
+define
+   %% Enter some flights
+   {ForAll Flights DB.add}
+   ...
+end
+</chunk>
+
+    <p>
+      Here the difference between the compiled functor and the
+      computed functor is that the compiled functor contains the code
+      to create the list of sample flights. The computed functor just
+      contains the list itself.
+
+    <p>
+      All variable identifiers that are introduced in the <<prepare>>
+      section are visible in the <<define>> section. The variables
+      introduced by the <<import>> section are of course only visible
+      in the <<define>> section.
+
+    <p>
+      The <<require>> section of a computed functors relates to the
+      <<prepare>> section as does the <<import>> section to the
+      <<define>> section: modules imported in the <<require>> section
+      are available in the <<prepare>> section.
+
+  <section id="section.mof.import">
+    <title/Imports/
+
+    <p>
+      <<import>> and <<require>> specifications support features and
+      fields. For example, in the main functor for our last minute
+      flight booking system, we could have written the import clause
+      for <<DB>> as follows:
+      <<<DB(add getAll remove)>>>
+    
+    <p>
+      Besides of the documentational advantage of explicitly listing
+      the features, the compiler tries to enforce that only listed
+      features are used for dot access. For example, given the above
+      import clause, the following access
+      <<<DB.addd>>>
+      raises an error during compilation.
+
+    <p>
+      In addition, also variables can be given as fields in the import
+      specification as follows:
+      <<<DB(add:Add getAll:GetAll remove)>>>
+      The variables introduced for the fields interact with dynamic
+      linking as follows: The module is requested as soon as the value
+      for one of the variables is requested.
+  
+  
+</chapter>

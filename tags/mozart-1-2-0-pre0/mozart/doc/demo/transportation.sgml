@@ -1,0 +1,254 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.transportation">
+  <Title/Transportation/
+  <Author.Extern to="author.db" key="Christian.Schulte">
+
+  <P>
+    <List class=linkmenu>
+      <Item><Ref.Extern to="applets/Transport.oza"/Start Applet/
+      <Item>
+	<Ref.extern to="ozdoc:install" key="applets"/How to enable Applets/
+    </List>
+  </P>
+
+  <P>  
+    This demo is an implementation of a multi agent scenario that was
+    developed in the AKA-MOD project at DFKI <ptr to="FischerKuhn.93">.
+  </P>
+
+  <Section>
+    <Title/The Idea/
+
+    <P>
+      The scenario features a set of concurrently acting agents of
+      three different kinds: a <Em/broker/, <Em/transportation
+      companies/ and <Em/drivers/.
+    </P>
+
+    <P>
+      The broker accepts a transportation order and announces it to
+      some transportation companies. Each of them passes the same
+      order to all of its drivers.
+    </P>
+
+    <P>
+      Subsequently, each driver computes its minimal cost for
+      executing this order, which is returned to the transportation
+      company. As cost the detour a driver has to make is chosen. The
+      cheapest driver is chosen, the minimal cost is passed to the
+      broker, and the remaining drivers are informed about rejection
+      of their offers.
+    </P>
+
+    <P>
+      The broker selects the minimum priced transportation company,
+      informs the selected company on acceptance, and sends rejections
+      to the others, which accordingly inform their drivers about the
+      rejection.
+    </P>
+
+    <P>
+      Finally, the minimum priced transport company passes acceptance
+      to the remaining and cheapest driver. Last but not least this
+      order is fulfilled by the chosen driver.
+    </P>
+
+   </Section>
+
+  <Section>
+    <Title/Usage/
+   
+    <P>
+      After starting the demo a windows that contains the map of
+      Germany, and some menus, and buttons for controlling the
+      scenario. 
+    </P>
+
+    <Subsection class=unnumbered>
+      <Title/The Transportation Menu/
+
+      <P>
+        <List>
+          <Entry><Menu/About&ellipsis;/
+          <Item>
+	    Displays a window containing short information on the
+	    Demo.
+          <Entry><Menu/Quit/
+          <Item>
+	    Ends the demo.
+        </List>
+      </P>
+    </Subsection>
+
+    <Subsection class=unnumbered>
+      <Title/The Configure Menu/
+
+      <P>
+        <List>
+          <Entry><Menu/Add Company&ellipsis;/
+          <Item>
+	    Displays a dialog to add new companies.
+          <Entry><Menu/Remove Company&ellipsis;/
+          <Item>
+	    Displays a dialog to remove one of the current companies.
+          <Entry><Menu/Add Driver&ellipsis;/
+          <Item>
+	    Displays a dialog to add a new driver for an already
+            existing company. 
+          <Entry><Menu/Remove Driver&ellipsis;/
+          <Item>
+	    Displays a dialog to remove a driver.
+          <Entry><Menu/Add Defaults&ellipsis;/
+          <Item>
+	    Adds a set of two default companies with two driver each.
+        </List>
+      </P>
+    </Subsection>
+
+    <Subsection class=unnumbered>
+      <Title/The Random Menu/
+
+      <P>
+        <List>
+          <Entry><Menu/Go/
+          <Item>
+	    Allows to toggle whether transportation tasks are
+	    generated randomly.
+        </List>
+        The remaining items allow to control the speed of task
+        generation.
+      </P>
+    </Subsection>
+
+    <Subsection class=unnumbered>
+      <Title/The Windows Menu/
+
+      <P>
+      <Note.gui icon="note-gui-l1.gif" info="Left mouse click"/Log
+      window/
+        By selecting an item, a log window for that agent is
+        displayed. For trucks the log window can also be displayed by
+        clicking them with the left mouse button.
+      </P>
+
+    </Subsection>
+
+    <Subsection class=unnumbered>
+      <Title/Entering Tasks Manually/
+
+      <P>
+       Besides of the automatic random generation of transportation
+       tasks, these can also be entered manually. This can be done by
+       entering the <Em/From/-city, the <Em/To/-city, the <Em/Good/,
+       and the <Em/Weight/ manually in the respective entries at the
+       bottom of the window.
+      </P>
+
+      <P>
+      <Note.gui icon="note-gui-lm1.gif" info="Left or middle mouse click"/City selection/
+        By clicking a city in the window with the left mouse button,
+        this city will be written to the <Em/From/ entry. Clicking the
+        middle button will do the same for <Em/To/. By clicking the
+        <Em/Send/ button the transportation task is sent to the
+        broker.
+      </P>
+   </Subsection>
+
+  </Section>
+
+  <section class=unnumbered id="section.transportation.implementation">
+    <title/Implementation/
+
+    <subsection class=unnumbered id=code.transportation.main>
+      <title>Root functor: <file/Main.oz/</title>
+      <para><title><ref.extern to="Transport/Main.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Main.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.AgentAbstractions>
+      <title>Programming abstractions for agents: <file/AgentAbstractions.oz/</title>
+      <para><title><ref.extern to="Transport/AgentAbstractions.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/AgentAbstractions.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Agents>
+      <title>Agent definitions: <file/Agents.oz/</title>
+      <para><title><ref.extern to="Transport/Agents.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Agents.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.country>
+      <title>Distance and route computation: <file/Country.oz/</title>
+      <para><title><ref.extern to="Transport/Country.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Country.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Configure>
+      <title>Predefined default values: <file/Configure.oz/</title>
+      <para><title><ref.extern to="Transport/Configure.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Configure.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Dialogs>
+      <title>User dialog widgets: <file/Dialogs.oz/</title>
+      <para><title><ref.extern to="Transport/Dialogs.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Dialogs.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Germany>
+      <title>Small map of Germany: <file/Germany.oz/</title>
+      <para><title><ref.extern to="Transport/Germany.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Germany.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Plan>
+      <title>Problem solver for computing plans: <file/Plan.oz/</title>
+      <para><title><ref.extern to="Transport/Plan.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Plan.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Randomizer>
+      <title>Random generation of transportation tasks: <file/Randomizer.oz/</title>
+      <para><title><ref.extern to="Transport/Randomizer.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Randomizer.oz" proglang=oz></para>
+    </subsection>
+
+    <subsection class=unnumbered id=code.transportation.Widgets>
+      <title>Support widgets: <file/Widgets.oz/</title>
+      <para><title><ref.extern to="Transport/Widgets.oz">Source
+File</ref.extern></title>
+<code.extern display to="Transport/Widgets.oz" proglang=oz></para>
+    </subsection>
+
+</Chapter>

@@ -1,0 +1,19 @@
+Release of Mozart 1.0
+---------------------
+
+Available at http://www.mozart-oz.org
+
+Systems supported: Many Unix-based platforms, Windows 95/98/NT
+
+The Mozart consortium (DFKI & UdS & SFB 378, SICS, UCL) is pleased to
+announce the release of Mozart 1.0, a major development platform for
+open fault-tolerant distributed applications, constraint programming
+applications, and logic programming applications.  The platform
+includes a full-fledged development environment with many tools and
+extensive documentation including tutorials.  Applications developed
+include a real-time bus scheduler, a configuration tool, a
+collaborative graphic editor, a corpus browser, an extended version of
+ICQ, and much more--see http://www.mozart-oz.org/archive.cgi.  The
+platform is released with a very liberal license (X11-style) that
+allows both commercial and non-commercial use.  Full source code is
+available.

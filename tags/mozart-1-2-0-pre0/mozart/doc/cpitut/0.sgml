@@ -1,0 +1,170 @@
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh|makefile">
+
+<!-- Include Files -->
+<!ENTITY u_abstract SYSTEM "u_abstract.sgml">
+<!ENTITY ip_tutorial SYSTEM "ip_tutorial.sgml">
+<!ENTITY u_basic_concepts SYSTEM "u_basic_concepts.sgml">
+<!ENTITY u_getting_started SYSTEM "u_getting_started.sgml">
+<!ENTITY u_replacing SYSTEM "u_replacing.sgml">
+<!ENTITY u_nesting SYSTEM "u_nesting.sgml">
+<!ENTITY u_vectors SYSTEM "u_vectors.sgml">
+<!ENTITY u_connect SYSTEM "u_connect.sgml">
+<!ENTITY u_advanced SYSTEM "u_advanced.sgml">
+
+<!ENTITY ct_cpi_tutorial SYSTEM "ct_cpi_tutorial.sgml">
+<!ENTITY ct_cpi_reference SYSTEM "ct_cpi_reference.sgml">
+
+<!ENTITY lp_tutorial SYSTEM "lp_tutorial.sgml">
+<!ENTITY lp_reference SYSTEM "lp_reference.sgml">
+<!ENTITY lp_tutorial_intro SYSTEM "lp_tutorial_intro.sgml">
+
+<!ENTITY r_anhang SYSTEM "r_anhang.sgml">
+
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY amp "&">
+<!ENTITY dot "." -- to distinguish it from periods -->
+<!ENTITY cpp "C++">
+<!ENTITY ccpp "C/C++">
+<!ENTITY oz "Oz">
+<!ENTITY moz3 "Mozart Oz 3">
+<!ENTITY Gump "Gump">
+<!ENTITY lex "<Name type=tool>lex</Name>">
+<!ENTITY yacc "<Name type=tool>yacc</Name>">
+<!ENTITY flex "<Name type=tool>flex</Name>">
+<!ENTITY bison "<Name type=tool>bison</Name>">
+<!ENTITY cpi "C<Span class=allcaps>PI</Span>">
+<!ENTITY sci "S<Span class=allcaps>CI</Span>">
+
+
+<!ENTITY fd_inf "0">
+<!ENTITY fs_sup "134217726">
+<!ENTITY fs_inf "0">
+<!ENTITY fs_sup "134217726">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
+<!ENTITY eg PI "eg">
+<!ENTITY resp PI "resp">
+
+]>
+
+
+<Book proglang="oz">
+  <Front>
+
+    <!-- Defining width of tables and pictures -->
+
+    <Meta name="latex.picture.width" arg1="propagatorstates.pic" 
+                                     arg2="1.0\linewidth">
+
+    <Meta name="latex.picture.width" arg1="mks_fd_explorer.pic" 
+                                     arg2="1.0\linewidth">
+    
+    <Meta name="latex.picture.width" arg1="mks_lp_explorer.pic"
+                                     arg2="1.0\linewidth">
+
+    <Meta name="latex.picture.width" arg1="mks_fdlp_explorer.pic"
+                                     arg2="1.0\linewidth">
+
+    <!-- Splitting the document into different HTML nodes -->
+
+    <Meta name="html.split" value="chapter.ip">
+    <Meta name="html.split" value="cpi.introduction">
+
+    <Meta name="html.split" value="u_basic_concepts">
+    <Meta name="html.split" value="u_getting_started">
+    <Meta name="html.split" value="u_replacing">
+    <Meta name="html.split" value="u_nesting">
+    <Meta name="html.split" value="u_vectors">
+    <Meta name="html.split" value="u_connect">
+    <Meta name="html.split" value="u_advanced">
+        
+    <Meta name="html.split" value="r_anhang">
+    <Meta name="html.split" value="anhang.ccode">
+    <Meta name="html.split" value="anhang.ozcode">
+    <Meta name="html.split" value="anhang.lesseq">
+    
+    <Meta name="html.split" arg1="chapter.ct" arg2="ct.html">
+    <Meta name="html.split" value="ct.introduction">
+    <Meta name="html.split" value="ct.intro.model">
+    <Meta name="html.split" value="ct.intro.overview">
+    <Meta name="html.split" value="ct.casestudy">
+    <Meta name="html.split" value="ct.casestudy.impl">
+    <Meta name="html.split" value="ct.casestudy.reference">
+
+    <Meta name="html.split" value="ct.casestudy.impl.ridef">
+    <Meta name="html.split" value="ct.casestudy.impl.profilewakeup">
+    <Meta name="html.split" value="ct.casestudy.impl.constraint">
+    <Meta name="html.split" value="ct.casestudy.impl.rivar">
+    <Meta name="html.split" value="ct.casestudy.impl.expect">
+    <Meta name="html.split" value="ct.casestudy.impl.propagator">
+
+    <Meta name="html.split" arg1="chapter.lp" arg2="lp.html">
+    <Meta name="html.split" value="lp.tutorial">
+    <Meta name="html.split" value="lp.tutorial.intro">
+    <Meta name="html.split" value="lp.tutorial.fd">
+    <Meta name="html.split" value="lp.tutorial.lp">
+    <Meta name="html.split" value="lp.tutorial.fdlp">
+    <Meta name="html.split" value="lp.tutorial.eval">
+
+    <Meta name="entry.category" value="static">
+    <Meta name="entry.category" arg1="purevirtual" arg2="pure virtual">
+    <Meta name="entry.category" value="constructor">
+    <Meta name="entry.category" value="destructor">
+    <Meta name="entry.category" value="operator">
+    <Meta name="entry.category" value="member">
+    <Meta name="entry.category" value="function">
+
+
+    <Meta name="html.split.bib" value="">
+    <Meta name="html.split.index" value="">
+    <Meta name="html.split.toc" value="">
+
+    <Meta name="latex.table.spec" arg1="table.mks.lp.a.b" arg2="p{0.45\linewidth}p{0.45\linewidth}">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value="revised">
+    <Title/The Mozart Constraint Extensions Tutorial/
+    <Author.Extern to="author.db" key="Tobias.Mueller">
+ 
+    &u_abstract
+
+  <Body>
+
+    &ip_tutorial
+
+    &ct_cpi_tutorial
+
+    &lp_tutorial 
+  
+
+  <Back>
+  
+  <bib.extern id="cplex"     to="cpi.bib" key="cplex">
+  <bib.extern id="lp_solve"  to="cpi.bib" key="lp_solve">
+  <Bib.Extern id="stallman91" to="cpi.bib" key="stallman91">
+
+  <bib.extern id="murray"     to="cpi.bib" key="murray">
+  <bib.extern id="absmachine" to="cpi.bib" key="absmachine">
+  <bib.extern id="gdb"        to="cpi.bib" key="gdb">
+
+  <Bib.Extern id="BeringerDeBacker:95a" to ="cpi.bib" 
+              key="BeringerDeBacker:95a">
+  <Bib.Extern id="Holzbaur:90" to="cpi.bib" key="Holzbaur:90">
+  <Bib.Extern id="Benhamou:95a" to ="cpi.bib" key="Benhamou:95a">
+  <Bib.Extern id="Chvantal:83" to ="cpi.bib" key="Chvantal:83">
+  <Bib.Extern id="Mueller:98a" to="cpi.bib" key="Mueller:98a">
+
+</Book>

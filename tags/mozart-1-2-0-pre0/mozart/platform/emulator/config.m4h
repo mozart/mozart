@@ -1,0 +1,14 @@
+#ifndef __CONFIGH
+
+#define __CONFIGH
+
+define(CONST,
+`#define' $1 $2
+)
+
+CONST(`OZVERSION',OZVERSION)
+
+define(instruction,)
+include(EMUDIR/instrDefs.m4)
+
+#endif 

@@ -1,0 +1,64 @@
+/*
+ *  Authors:
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+#ifndef __CTGENVAR_ICC__
+#define __CTGENVAR_ICC__
+
+#if defined(INTERFACE) && !defined(OUTLINE)
+#pragma interface
+#endif
+
+inline
+OzCtVariable * tagged2GenCtVar(OZ_Term t)
+{
+  return (OzCtVariable *) tagged2Var(t);
+}
+
+inline
+Bool isGenCtVar(TaggedRef term)
+{
+  return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_CT);
+}
+
+inline
+void addSuspCtVar(OZ_Term v, Suspendable * susp, OZ_CtWakeUp w)
+{
+  OzCtVariable * ctv = tagged2GenCtVar(v);
+
+  Assert(ctv->getBoardInternal()->derefBoard() ==
+	 susp->getBoardInternal()->derefBoard());
+
+  int noOfSuspLists = ctv->getNoOfSuspLists();
+  
+  for (int i = noOfSuspLists; i--; )
+    if (w.isWakeUp(i))
+      ctv->_susp_lists[i] = new SuspList(susp,ctv->_susp_lists[i]);
+}
+
+#endif /* __CTGENVAR_ICC__ */
+
+// eof
+//-----------------------------------------------------------------------------

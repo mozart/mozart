@@ -1,0 +1,348 @@
+<!--
+  - Authors:
+  -   Denys Duchier <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, Leif Kornstaedt, and Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.numbers">
+  <Title/Numbers/
+    <Section id="section.numbers.general">
+    <Title/Numbers in General/
+      <P>
+	The module <Span class=index/<<Number>>/ contains procedures operating
+	on numbers.  Numbers in &Oz; are either integers or floats.  The
+	following arithmetic procedures are defined both on integers and
+	on floats; however, there is no implicit conversion.  If one input
+	argument is a float and the other an integer, a type error is raised.
+      <List>
+	<Entry><Span class=index/<<IsNumber>>/
+	  <Index class=tails/<<Number>><And><<is>>/
+	<Synopsis>
+	  <<{Number.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a number.
+
+	<Entry><Span class=index/<<+>>/
+	  <Index/<<Number>><And><<'+'>>/
+	<Synopsis>
+	  <<{Number.'+' ?+{FI1} ?+{FI2} ??{FI3}}>>
+	<Item>
+	  returns the sum of ?_{FI1} and&nbsp;?_{FI2}.
+
+	<Entry><Span class=index/<<->>/
+	  <Index/<<Number>><And><<'-'>>/
+	<Synopsis>
+	  <<{Number.'-' ?+{FI1} ?+{FI2} ??{FI3}}>>
+	<Item>
+	  returns the difference of ?_{FI1} and&nbsp;?_{FI2}.
+
+	<ENTRY><Span class=index/<<*>>/
+	  <Index/<<Number>><And><<'*'>>/
+	<Synopsis>
+	  <<{Number.'*' ?+{FI1} ?+{FI2} ??{FI3}}>>
+	<Item>
+	  returns the product of ?_{FI1} and&nbsp;?_{FI2}.
+
+	<Entry><Span class=index/<<~>>/
+	  <Index/<<Number>><And><<'~'>>/
+	<Synopsis>
+	  <<{Number.'~' ?+{FI1} ??{FI2}}>>
+	<Item>
+	  returns the negation of&nbsp;?_{FI1}.
+
+	<Entry><Span class=index/<<Pow>>/
+	  <Index/<<Number>><And><<pow>>/
+	<Synopsis>
+	  <<{Number.pow ?+{FI1} ?+{FI2} ??{FI3}}>>
+	<Item>
+	  returns ?_{FI1} to the power of&nbsp;?_{FI2}.
+
+	<Entry><Span class=index/<<Abs>>/
+	  <Index/<<Number>><And><<abs>>/
+	<Synopsis>
+	  <<{Number.abs ?+{FI1} ??{FI2}}>>
+	<Item>
+	  returns the absolute value of&nbsp;?_{FI1}.
+      </List>
+
+  <Section id="section.numbers.integers">
+    <Title/Integers/
+    <P>
+      The module <Span class=index/<<Int>>/ contains procedures operating
+      on integers.
+      <!--** range of integers, i.e., big ints? -->
+      <List>
+	<Entry><Span class=index/<<IsInt>>/
+	  <Index class=tails/<<Int>><And><<is>>/
+	<Synopsis>
+	  <<{Int.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is an integer.
+
+	<Entry><Span class=index/<<IsNat>>/
+	  <Index/<<Int>><And><<isNat>>/
+	<Synopsis>
+	  <<{Int.isNat ?+{I} ??{B}}>>
+	<Item>
+	  tests whether ?_{I} is a natural number, &ie;, an integer greater
+	  than or equal to&nbsp;<<0>>.
+
+	<Entry><Span class=index/<<IsOdd>>/
+	  <Index/<<Int>><And><<isOdd>>/
+	<Synopsis>
+	  <<{Int.isOdd ?+{I} ??{B}}>>
+	<Item>
+	  tests whether ?_{I} is an odd integer.
+
+	<Entry><Span class=index/<<IsEven>>/
+	  <Index/<<Int>><And><<isEven>>/
+	<Synopsis>
+	  <<{Int.isEven ?+{I} ??{B}}>>
+	<Item>
+	  tests whether ?_{I} is an even integer.
+
+	<Entry><Span class=index/<<div>>/
+	  <Index/<<Int>><And><<'div'>>/
+	<Synopsis>
+	  <<{Int.'div' ?+{I1} ?+{I2} ??{I3}}>>
+	<Item>
+	  returns ?_{I1} integer-divided by&nbsp;?_{I2}, rounding
+	  towards&nbsp;<<0>>.  <<Int.'div'>> can be defined as follows:
+<<<local
+   fun {Div I1 I2}
+      case I1 < I2 then 0 else 1 + {Div I1 - I2 I2} end
+   end
+in
+   fun {Int.'div' I1 I2}
+      {Div {Abs I1} {Abs I2}} *
+      case I1 * I2 >= 0 then 1 else ~1 end
+   end
+end>>>
+
+	<Entry><Span class=index/<<mod>>/
+	  <Index/<<Int>><And><<'mod'>>/
+	<Synopsis>
+	  <<{Int.'mod' ?+{I1} ?+{I2} ??{I3}}>>
+	<Item>
+	  returns ?_{I1} modulo&nbsp;?_{I2}.  <<Int.'mod'>> can be
+	  defined as follows:
+<<<fun {Int.'mod' I1 I2}
+   I1 - I2 * (I1 div I2)
+end>>>
+
+	<Entry><Span class=index/<<IntToFloat>>/
+	  <Index class=tails/<<Int>><And><<toFloat>>/
+	<Synopsis>
+	  <<{Int.toFloat ?+{I} ??{F}}>>
+	<Item>
+	  returns the float closest to the integer&nbsp;?_{I}.
+
+	<Entry><Span class=index/<<IntToString>>/
+	  <Index class=tails/<<Int>><And><<toString>>/
+	<Synopsis>
+	  <<{Int.toString ?+{I} ??{S}}>>
+	<Item>
+	  returns the string describing the integer&nbsp;?_{I}
+	  in &Oz; concrete syntax.
+      </List>
+
+  <Section id="section.numbers.floats">
+    <Title/Floats/
+    <P>
+      The module <Span class=index/<<Float>>/ contains procedures operating
+      on floating point numbers.
+      <!--** representation limitations, i.e., bounds and precision? -->
+      <List>
+	<Entry><Span class=index/<<IsFloat>>/
+	  <Index class=tails/<<Float>><And><<is>>/
+	<Synopsis>
+	  <<{Float.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a float.
+
+	<Entry><Span class=index><</>></Span>
+	  <Index><<Float>><And><<'/'>></Index>
+	<Synopsis>
+	  <<{Float.'/' ?+{F1} ?+{F2} ??{F3}}>>
+	<Item>
+	  returns ?_{F1} divided by&nbsp;?_{F2}.
+
+	<Entry><Span class=index/<<Exp>>/
+	  <Index/<<Float>><And><<exp>>/
+	<Synopsis>
+	  <<{Float.exp ?+{F1} ??{F2}}>>
+	<Item>
+	  returns ?_{F1} to the power of <Var type=meta/e/.
+
+	<Entry><Span class=index/<<Log>>/
+	  <Index/<<Float>><And><<log>>/
+	<Synopsis>
+	  <<{Float.log ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the logarithm to the base <Var type=meta/e/ of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<Sqrt>>/
+	  <Index/<<Float>><And><<sqrt>>/
+	<Synopsis>
+	  <<{Float.sqrt ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the square root of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<Ceil>>/
+	  <Index/<<Float>><And><<ceil>>/
+	<Synopsis>
+	  <<{Float.ceil ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the ceiling of&nbsp;?_{F1} (rounding towards positive
+	  infinity).
+
+	<Entry><Span class=index/<<Floor>>/
+	  <Index/<<Float>><And><<floor>>/
+	<Synopsis>
+	  <<{Float.floor ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the floor of&nbsp;?_{F1} (rounding towards negative
+	  infinity).
+
+	<Entry><Span class=index/<<Round>>/
+	  <Index/<<Float>><And><<round>>/
+	<Synopsis>
+	  <<{Float.round ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the integral value closest to&nbsp;?_{F1}.  If there are
+	  two candidates, ?_{F1} is rounded to the closest even integral
+	  value, &eg;, <<{Float.round 1.5}>> and <<{Float.round 2.5}>> both
+	  return <<2.0>>.
+
+	<Entry><Span class=index/<<Sin>>/
+	  <Index/<<Float>><And><<sin>>/
+	<Synopsis>
+	  <<{Float.sin ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the sine of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<Cos>>/
+	  <Index/<<Float>><And><<cos>>/
+	<Synopsis>
+	  <<{Float.cos ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the cosine of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<Tan>>/
+	  <Index/<<Float>><And><<tan>>/
+	<Synopsis>
+	  <<{Float.tan ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the tangent of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<Asin>>/
+	  <Index/<<Float>><And><<asin>>/
+	<Synopsis>
+	  <<{Float.asin ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the arc sine of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<Acos>>/
+	  <Index/<<Float>><And><<acos>>/
+	<Synopsis>
+	  <<{Float.acos ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the arc cosine of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<Atan>>/
+	  <Index/<<Float>><And><<atan>>/
+	<Synopsis>
+	  <<{Float.atan ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the arc tangent of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<Atan2>>/
+	  <Index/<<Float>><And><<atan2>>/
+	<Synopsis>
+	  <<{Float.atan2 ?+{F1} ?+{F2} ??{F3}}>>
+	<Item>
+	  returns the principal value of the arc tangent of
+	  <<?_{F1} / ?_{F2}>>, using the signs of both arguments
+	  to determine the quadrant of the return value.  An error
+	  exception may (but needs not) be raised if both arguments
+	  are zero.
+
+	<Entry><Span class=index/<<Float.sinh>>/
+	  <Index/<<Float>><And><<sinh>>/
+	<Synopsis>
+	  <<{Float.sinh ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the hyperbolic sine of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<Float.cosh>>/
+	  <Index/<<Float>><And><<cosh>>/
+	<Synopsis>
+	  <<{Float.cosh ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the hyperbolic cosine of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<Float.tanh>>/
+	  <Index/<<Float>><And><<tanh>>/
+	<Synopsis>
+	  <<{Float.tanh ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the hyperbolic tangent of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<Float.asinh>>/
+	  <Index/<<Float>><And><<asinh>>/
+	<Synopsis>
+	  <<{Float.asinh ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the inverse hyperbolic sine of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<Float.acosh>>/
+	  <Index/<<Float>><And><<acosh>>/
+	<Synopsis>
+	  <<{Float.acosh ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the inverse hyperbolic cosine of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<Float.atanh>>/
+	  <Index/<<Float>><And><<atanh>>/
+	<Synopsis>
+	  <<{Float.atanh ?+{F1} ??{F2}}>>
+	<Item>
+	  returns the inverse hyperbolic tangent of&nbsp;?_{F1}.
+
+	<Entry><Span class=index/<<FloatToInt>>/
+	  <Index class=tails/<<Float>><And><<toInt>>/
+	<Synopsis>
+	  <<{Float.toInt ?+{F} ??{I}}>>
+	<Item>
+	  returns the integer closest to float&nbsp;?_{F}.  If there are
+	  two candidates, ?_{F} is rounded to the closest even integer,
+	  &eg;, <<{FloatToInt 1.5}>> and <<{FloatToInt 2.5}>> both
+	  return&nbsp;<<2>>.
+
+	<Entry><Span class=index/<<FloatToString>>/
+	  <Index class=tails/<<Float>><And><<toString>>/
+	<Synopsis>
+	  <<{Float.toString ?+{F} ??{S}}>>
+	<Item>
+	  returns the string describing the float&nbsp;?_{F} in &Oz;
+	  concrete syntax.
+      </List>
+</Chapter>

@@ -1,0 +1,178 @@
+<Chapter id="chapter.lp">
+  <Title/Employing Linear Programming Solvers/
+
+&lp_tutorial_intro 
+
+<!-- ********************************************************************** -->
+
+<Section id="lp.tutorial.fd"> <Title/The Finite Domain Model/
+
+<P>
+The finite domain model is a one-to-one translation of the LP
+model. Every problem variable of <Math>\mbox{\bf x}</Math> is
+represented by a finite domain variable. The inequalities are
+expressed by appropriate finite domain constraints.
+
+<Code.Extern display to="mks_fd.oz" class=linenumbers>
+
+The function <<KnapsackFD>> returns a procedure abstracting the
+script. The solution variable <<Sol>> of the script is constrained
+to a record. The record provides access to the individual quantities
+of the individual products (under feature <<products>>) to obtain a
+maximum profit (under feature <<maxprofit>>).
+
+<P>
+The variable <<Products>> refers to a list of finite domain problem
+variables (corresponding to <Math inline
+type=latex>\left[x_1,\ldots,x_n\right]^T</Math> in the LP model) and
+<<MaxProfit>> is constrained to be the scalar product of the
+<<Product>> variable and the profit vector for the problem
+specification (see <Ptr to="lp.tutorial.intro">).
+
+<P>
+The <<ForAll>> iterator imposes the inequality constraints <Math
+inline type=latex>a_{1,i} x_1 + \cdots + a_{n,i} x_n \le b_i</Math>
+to the problem variables. The distribution strategy is
+straightforwardly chosen to <<naive>>. Experimenting with first fail
+(<<ff>>) produced even worse results.
+
+<P>
+Solving the problem by calling 
+
+<<<
+{ExploreBest {KnapsackFD Problem}
+             proc {$ O N} O.maxprofit <: N.maxprofit end}
+>>> 
+
+produces the following search tree.
+
+<PICTURE.extern display class=left to="mks_fd_explorer.gif" id="mks_fd_explorer.pic" type=GIF>
+
+</Section>
+
+<!-- ********************************************************************** -->
+
+<Section id="lp.tutorial.lp"> <Title/The Linear Programming Model/
+
+<P>
+Tackling a multi-knapsack problem with a LP solver amounts to
+implementing a branch &amp; bound solver to obtain integral
+solutions. The idea is to compute a continuous solution and to branch
+over the problem variables with continuous solutions. This is done
+until only integral problem variables are left. This is what the
+procedure <<DistributeKnapSackLP>> does.
+
+<Code.Extern display to="mks_lp_c.oz" class=linenumbers>
+
+It first duplicates the problem variables (note this is possible due
+to stability) and invokes the LP solver on them to compute a (possibly
+continuous) solution. Then it selects the first duplicated continuous
+problem variable <<DupV>> by <<SelectVar>> (see below). If continuous
+variables are left (see the <<else>> branch of the <<case>> statement), it
+creates two choices on the corresponding original problem variable
+<<V>>: <Math inline type=latex>\lceil DupV \rceil \le V \vee V \le
+\lfloor DupV \rfloor</Math> and calls <<DistributeKnapSackLP>>
+recursively. In case no continuous variables are left, an integral
+solution is found and the original problem variables are unified with
+duplicated ones.
+
+<P>
+For completeness sake the auxiliary functions <<SelectVar>> and
+<<DuplicateRIs>> are presented here.
+
+<Table class=dyptic id="table.mks.lp.a.b">
+<Tr><Td><Code.Extern display to="mks_lp_a.oz" class=linenumbers></Td>
+<Td><Code.Extern display to="mks_lp_b.oz" class=linenumbers></Td>
+</Table>
+
+<P>
+The procedure <<KnapsackLP>> return the script which creates the
+appropriate parameters for the LP solver and eventually calls
+<<DistributeKnapSackLP>>.
+
+<Code.Extern display to="mks_lp_d.oz" class=linenumbers>
+
+<P>
+Feeding 
+
+<<<
+{ExploreBest {KnapsackLP Problem} 
+             proc {$ O N} 
+                {RI.lessEq O.maxprofit+1.0 N.maxprofit} 
+             end}
+>>> 
+
+produces the following search
+tree.
+
+<PICTURE.extern display to="mks_lp_explorer.gif" id="mks_lp_explorer.pic" type=GIF>
+
+</Section>
+
+<!-- ********************************************************************** -->
+
+<Section id="lp.tutorial.fdlp"> <Title/Combining Both Models/
+
+<P>
+Combining both models is simply done by adding the finite domain model
+without distribution to the linear programming model. The propagator
+<<{RI.intBounds F I}>> is used to connect real-interval constraints
+with finite domain constraints. It constrains <<F>> and <<I>> to
+denote the same integer either as float or as integer, respectively.
+
+<Code.Extern display to="mks_fdlp.oz" class=linenumbers>
+
+<P>
+The Oz Explorer produces the following search tree by calling
+<<<
+{ExploreBest {KnapsackFDLP Problem} 
+             proc {$ O N} O.maxprofit <: N.maxprofit end}
+>>>.
+
+<PICTURE.extern display to="mks_fdlp_explorer.gif" id="mks_fdlp_explorer.pic" type=GIF>
+
+</Section>
+
+<!-- ********************************************************************** -->
+
+<Section id="lp.tutorial.eval"> <Title/Short Evalution/
+
+<P>
+The following table shows impressively the benefits of combining
+propagation-based and linear programming solvers for this kind of
+problem. We used <EM/LP_SOLVE 2.0/ as LP solver. Note using a
+different LP solver may produce different results. By combining both
+constraint models the number of nodes in the search tree could be
+reduced by two &resp; one to orders of magnitudes. This results in a
+speed-up of one order of magnitude and memory saving by the same
+amount.
+
+<Table>
+<Tr><Th/Model/ <Th/Nodes/ <Th/Sols/ <Th/Failures/
+<Th/Depth/ <Th/runtime / <Th/heap/ 
+
+<Tr><Th/<P.silent>/ <Th/<P.silent>/ <Th/<P.silent>/ <Th/<P.silent>/
+<Th/<P.silent>/ <Th/[sec]/ <Th/[MB]/ 
+
+<Tr><Td/FD Model/ <Td/5270/ <Td/44/ <Td/5227/ <Td/18/
+<Td/4.980/ <Td/10.4/ 
+
+<Tr><Td/LP Model/ <Td/490/ <Td/12/ <Td/479/ <Td/26/
+<Td/3.390/ <Td/3.3/ 
+
+<Tr><Td/FD+LP Model/ <Td/52/ <Td/8/ <Td/45/ <Td/12/ <Td/0.390/
+<Td/0.6/
+</Table>
+
+The times were taken on a Pentium Pro 200MHz with 192 MB memory.
+
+<P>
+The described technique has been used to tackle set partitioning
+problems. In contrast to <Ptr to="Mueller:98a"> all problem could be solve in acceptable
+time (detailed benchmarks are included as they are available). 
+
+</Section>
+
+<!-- ********************************************************************** -->
+
+</Chapter>

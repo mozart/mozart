@@ -1,0 +1,5 @@
+break OZ_error
+
+# Since SIGPIPE is a sound signal in distributed mozart, leave it to the 
+# program to handle.
+handle SIGPIPE pass nostop noprint

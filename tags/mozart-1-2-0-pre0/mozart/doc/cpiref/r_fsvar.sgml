@@ -1,0 +1,177 @@
+<section id="r_fsvar">
+<title/The class <<OZ_FSetVar>>/
+<p>
+
+An instance of this class is a mapping of a finite set constraint
+variable on the heap of the emulator to a &ccpp; data structure. The
+provided functionality allows to directly manipulate the domain
+(constraint) of the heap variable.
+<p>
+
+<subsection id="r_fsetvar.constr">
+<title/Constructor Member Functions/
+<p>
+
+<List proglang=cc>
+
+<Entry class="constructor"><<OZ_FSetVar>>
+<Index class=proglang><<OZ_FSetVar>></Index>
+<Synopsis> <<OZ_FSetVar(void);>>
+
+<Item> This constructor creates an uninitialised instance of the class
+<<OZ_FSetVar>>, which can be initialised later by the member
+functions <<ask()>>, <<read()>>, or <<readEncap()>>.
+
+
+<Entry class="overloaded constructor"><<OZ_FSetVar>>
+<Index class=proglang><<OZ_FSetVar>></Index>
+<Synopsis> <<OZ_FSetVar(OZ_Term v);>>
+
+<Item>
+This constructor creates an instance of the class <<OZ_FSetVar>> and
+initialises it using <<read()>>.
+
+</List>
+
+<!-- ********************************************************************** -->
+
+<subsection id="r_fsetvar.op">
+<title/Operator Member Functions/
+<p>
+
+<List proglang=cc>
+
+<Entry class="static operator member function"><<new>>
+<Index class=proglang><<OZ_FSetVar>><And><<new>></Index>
+<Synopsis> <<static void * operator new(size_t);>>
+
+<Item> This operator allocates memory for a single instance of class
+<<OZ_FSetVar>>. This operator must only be used inside the member
+function <<propagate()>> of the class <<OZ_Propagator>>. The allocated
+memory is automatically reclaimed when <<propagate()>> is left.
+
+
+<Entry class="static operator member function"><<new[]>>
+<Index class=proglang><<OZ_FSetVar>><And><<new[]>></Index>
+<Synopsis> <<static void * operator new[](size_t);>>
+
+<Item> This operator allocates memory for an array of instances of
+<<OZ_FSetVar>>. This operator must only be used inside the member
+function <<propagate()>> of the class <<OZ_Propagator>>. The allocated
+memory is automatically reclaimed when <<propagate()>> is left.
+
+
+<Entry class="static operator member function"><<delete>>
+<Index class=proglang><<OZ_FSetVar>><And><<delete>></Index>
+<Synopsis> <<static void operator delete(void *, size_t);>>
+
+<Item> This operator is a dummy since reclaiming memory happens
+automatically.
+
+
+<Entry class="static operator member function"><<delete[]>>
+<Index class=proglang><<OZ_FSetVar>><And><<delete[]>></Index>
+<Synopsis> <<static void operator delete[](void *, size_t);>>
+
+<Item> This operator is a dummy since reclaiming memory happens
+automatically.
+
+
+<Entry class="operator member function"><<operator *>>
+<Index class=proglang><<OZ_FSetVar>><And><<operator *>></Index>
+<Synopsis> <<OZ_FSetConstraint &amp;operator * (void);>>
+
+<Item> This operator returns a finite set constraint representing the
+constraint of this variable.
+
+
+<Entry class="operator member function"><<operator -&gt;>>
+<Index class=proglang><<OZ_FSetVar>><And><<operator -&gt;>></Index>
+<Synopsis> <<OZ_FSetConstraint * operator -&gt; (void);>>
+
+<Item> This operator returns a pointer to a finite set constraint
+representing the constraint of this variable.
+
+</List>
+
+<!-- ********************************************************************** -->
+
+<subsection id="r_fsetvar.member">
+<title/Member Functions/
+<p>
+
+<List proglang=cc>
+
+<Entry class="constant member function"><<isTouched>>
+<Index class=proglang><<OZ_FSetVar>><And><<isTouched>></Index>
+<Synopsis> <<OZ_Boolean isTouched(void) const;>>
+
+<Item> This function returns <<OZ_TRUE>> if at least one element has
+been removed from or added to the set and otherwise <<OZ_FALSE>>.
+
+
+<Entry class="member function"><<ask>>
+<Index class=proglang><<OZ_FSetVar>><And><<ask>></Index>
+<Synopsis> <<void ask(OZ_Term);>>
+
+<Item> This member function initialises an instance of <<OZ_FSetVar>>
+for only reading constraints from the store and it does not require a
+call of <<leave()>> or <<fail()>>.
+
+
+<Entry class="member function"><<read>>
+<Index class=proglang><<OZ_FSetVar>><And><<read>></Index>
+<Synopsis> <<void read(OZ_Term);>>
+
+<Item> This member function initialises an instance of <<OZ_FSetVar>>
+for constraints to be read from and to be written to the constraint
+store. Using this function requires to call either <<leave()>> or
+<<fail()>> when leaving the member function <<propagate()>> of class
+<<OZ_Propagator>>.
+
+
+<Entry class="member function"><<readEncap>>
+<Index class=proglang><<OZ_FSetVar>><And><<readEncap>></Index>
+<Synopsis> <<void readEncap(OZ_Term);>>
+
+<Item> This member function initialises an instance of <<OZ_FSetVar>>
+for constraints to be read from the constraint store and to perform
+encapsulated constraint propagation as required by reified constraint
+propagators. Using this function requires to call either <<leave()>>
+or <<fail()>> when leaving the member function
+<<OZ_Propagator::propagate()>>. For further details see <Ptr.Extern
+to="ozdoc:cpitut" key="u_advanced.reified">.
+
+
+<Entry class="member function"><<leave>>
+<Index class=proglang><<OZ_FSetVar>><And><<leave>></Index>
+<Synopsis <<OZ_Boolean leave(void);>>
+
+<Item> This member function has to be applied to each object of type
+<<OZ_FSetVar>> when leaving the function <<propagate()>> of class
+<<OZ_Propagator>> and <em/no/ inconsistency was detected (except it
+was initialised with <<ask()>>). If the set constraint denotes
+a set value this member function returns <<OZ_FALSE>> and else it
+returns <<OZ_TRUE>>.
+
+
+<Entry class="member function"><<fail>>
+<Index class=proglang><<OZ_FSetVar>><And><<fail>></Index>
+<Synopsis> <<void fail(void);>>
+
+<Item> This member function has to be applied to each object of type
+<<OZ_FSetVar>> when leaving the function <<propagate()>> of class
+<<OZ_Propagator>> and inconsistency <em/was/ detected (except it was
+initialised with <<ask()>>).
+
+<Entry class="member function"><<dropParameter>>
+<Index class=proglang><<OZ_CtVar>><And><<dropParameter>></Index>
+<Synopsis><<void dropParameter(void);>>
+
+<Item> This member function removes the parameter associated with
+<<*this>> from the parameter set of the current propagator. This
+function takes care of multiple occurrences of a single variable as
+parameter, i.e., a parameter is removed if there is only one
+occurrence of the corresponding variable in the set of parameter left.
+
+</List>

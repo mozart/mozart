@@ -1,0 +1,261 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter  id="chapter.space">
+  <title/First-class Computation Spaces: <<Space>>/
+
+<p>
+First-class computation spaces can be used to program inference
+engines for problem solving.
+
+<list>
+<entry><Span class=index/<<is>>/
+<index class=tails/<<Space>><And><<is>>/
+<synopsis>
+<<{Space.is ?+{X} ??{B}}>>
+<item>
+tests whether ?_{X} is a space.
+
+<entry><<new>>
+<index class=tails/<<Space>><and><<new>>/
+<synopsis>
+<<{Space.new ?+{P} ??{Space}}>>
+<item>
+returns a newly created space, in which a thread containing an
+application of the unary procedure&nbsp;?_{P} to the root variable of
+?_{Space} is created.
+
+<entry><<ask>>
+<index class=tails/<<Space>><and><<ask>>/
+<synopsis>
+<<{Space.ask ?+{Space} ??{T}}>>
+<item>
+waits until ?_{Space} becomes stable or merged and then returns the
+status of ?_{Space}. 
+<p>
+If ?_{Space} is merged, the atom <<merged>> is returned.
+<p>
+If ?_{Space} is stable and:
+<list>
+<entry>failed
+<item>the atom <<failed>> is returned.
+<entry>succeeded
+<item>and there are no threads in ?_{Space} synchronizing on
+choices,  the atom <<succeeded>> is returned.
+<entry>succeeded
+<item>and there is at least one thread in ?_{Space} which
+synchronizes on a choice the tuple <<alternatives(?{I})>> is returned, where ?{I} gives the number of alternatives of the selected choice.
+</list>
+
+<p>
+Synchronizes on stability of ?_{Space}.
+
+<p>
+Raises a runtime error if the current space is not addmissible
+for ?_{Space}.
+
+<entry><<askVerbose>>
+<index class=tails/<<Space>><and><<askVerbose>>/
+<synopsis>
+<<{Space.askVerbose ?+{Space} ??{T}}>>
+<item>
+returns the status of ?_{Space} in verbose form. Reduces immediately, even if ?_{Space} is not yet stable.
+<p>
+If ?_{Space} becomes merged, the atom <<merged>> is returned.
+<p>
+If ?_{Space} becomes suspended (that is, blocked but not stable), ?_{T} is bound to the tuple
+<<suspended(?{T1})>>. ?{T1} is a future that is bound to the status of
+?_{Space} when ?_{Space} becomes unblocked again.
+<p>
+If ?_{Space} is stable and:
+<list>
+<entry>failed
+<item>the atom <<failed>> is returned.
+<entry>succeeded
+<item>and there are no threads in ?_{Space} synchronizing on
+choices,  the tuple <<succeeded(?{A})>> is returned.
+The atom ?{A} is either <<stuck>>, when ?_{Space} still contains threads, or <<entailed>> otherwise. 
+<entry>succeeded
+<item>and there is at least one thread in ?_{Space} which
+synchronizes on a choice the tuple <<alternatives(?{I})>> is returned,
+where ?_{I} gives the number of alternatives of the selected choice. 
+</list>
+
+<p>
+Does not synchronize on stability of ?_{Space}.
+
+<p>
+Raises a runtime error if the current space is not addmissible
+for ?_{Space}.
+
+<entry><<merge>>
+<index class=tails/<<Space>><and><<merge>>/
+<synopsis>
+<<{Space.merge ?+{Space} ?_{X}}>>
+<item>
+merges ?_{Space} with the current space and constrains ?_{X} to the
+root variable of ?_{Space}.
+
+<p>
+Does not synchronize on stability of ?_{Space}.
+
+<p>
+Raises a runtime error if ?_{Space} is already merged, or if the
+current space is not addmissible for ?_{Space}.
+
+<entry><<clone>>
+<index class=tails/<<Space>><and><<clone>>/
+<synopsis>
+<<{Space.clone ?+{Space1} ??{Space2}}>>
+<item>
+blocks until ?_{Space1} becomes stable and returns a new space
+which is a copy of ?_{Space1}.
+
+<p>
+Synchronizes on stability of ?_{Space}.
+
+<p>
+Raises a runtime error if ?_{Space} is already merged, or if the
+current space is not addmissible for ?_{Space}.
+
+
+<entry><<inject>>
+<index class=tails/<<Space>><and><<inject>>/
+<synopsis>
+<<{Space.inject ?+{Space} ?+{P}}>>
+<item>
+creates a thread in the space ?_{Space} which contains an application
+of the unary procedure&nbsp;?_{P} to the root variable of ?_{Space}.
+
+<p>
+Does not synchronize on stability of ?_{Space}.
+
+<p>
+Raises a runtime error if ?_{Space} is already merged, or if the
+current space is not addmissible for ?_{Space}.
+
+
+<entry><<kill>>
+<index class=tails/<<Space>><and><<kill>>/
+<synopsis>
+<<{Space.kill ?+{Space}}>>
+<item>
+kills a space by injecting failure into ?_{Space}. 
+
+<p>Can be defined by
+<<<
+proc {Space.kill S}
+   {Space.inject S proc {$ _} fail end}
+end
+>>>
+
+<p>
+Does not synchronize on stability of ?_{Space}.
+
+<p>
+Raises a runtime error if ?_{Space} is already merged, or if the
+current space is not addmissible for ?_{Space}.
+
+<entry><<commit>>
+<index class=tails/<<Space>><and><<commit>>/
+<synopsis>
+<<{Space.commit ?+{Space} ?+{IT}}>>
+<item>
+blocks until ?_{Space} becomes stable and then commits to alternatives
+of the selected choice of ?_{Space}.
+
+<p>
+If ?_{IT} is a pair of integers <<?{l}#?{r}>> then all but the
+?{l}, ?{l} + 1, &ellipsis;, ?{r} alternatives of the selected choice 
+of ?_{Space} are discarded. If a single
+alternative remains, the topmost choice is replaced by this alternative.
+If no alternative remains, the space is failed.
+
+<p>
+An integer value for ?_{IT} is an abbrevation for the pair
+<<?_{IT}#?_{IT}>>.
+
+<p>
+Synchronizes on stability of ?_{Space}.
+
+<p>
+Raises a runtime error, if ?_{Space} has been merged already, if
+there exists no selected choice in ?_{Space}, or if the current
+space is not addmissible for ?_{Space}.
+
+
+<entry><<waitStable>>
+<index class=tails/<<Space>><and><<waitStable>>/
+<synopsis>
+<<{Space.waitStable}>>
+<item>
+blocks until the current space (the space that
+hosts the current thread) becomes
+stable. <<Space.waitStable>> is used mainly for
+programming distribution strategies (see for
+example <ptr.extern to="ozdoc:fdt"
+key="chapter.user-defined">), where for accurate
+variable selection it is required that all
+propagation has been carried out.
+<p>
+If executed in the toplevel space, it will block
+forever. 
+
+<entry><<choose>>
+<index class=tails/<<Space>><and><<choose>>/
+<synopsis>
+<<{Space.choose ?+{I1} ??{I2}}>>
+<item>
+blocks until the current space becomes
+stable. When the current space becomes stable it
+creates a choice point with ?_{I1}
+alternatives. ?_{I2} is bound to the value
+selected by <<Space.commit>>. Reduces as soon as
+?_{I2} becomes bound.
+
+<p>
+<<Space.choose>> is a primitive intended for
+programming abstractions. For example, the
+Mozart-compiler expands the following
+<<choice>>-statement 
+<<<choice ?_{S1} [] ?_{S2} end>>>
+to the following statement
+<<<
+case {Space.choose 2}
+of 1 then ?_{S1}
+[] 2 then ?_{S2}
+end
+>>>
+
+<p>
+If executed in the toplevel space, it will block
+forever. 
+</list>
+
+</chapter>
+
+
+
+
+
+

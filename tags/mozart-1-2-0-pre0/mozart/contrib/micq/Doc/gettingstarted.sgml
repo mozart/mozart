@@ -1,0 +1,97 @@
+<!--
+  - Authors:
+  -   Nils Franzen (nilsf@sics.se)
+  -   Simon Lindblom (simon@sics.se)
+  -
+  - Copyright:
+  -   Nils Franzen, Simon Lindblom, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<CHAPTER ID="chapter.gettingstarted">
+<TITLE/Getting Started/
+<P>Before you can run &micq;, you must download and install Mozart
+
+<SECTION><TITLE/Getting Started/
+<P>We assume in this brief introduction, that it is the first time you run the client.
+<P>Click <REF.EXTERN TO="http://www.sics.se/mozart/mim/client.oza">here</REF.EXTERN> to start a client!
+
+<P>The first window you will get looks like this:
+
+<P><PICTURE.EXTERN TYPE="gif" TO="1_login.gif">
+
+<P>Fill in Login and password. If it is the first
+time you connect, select a login and a password you would like. Use
+<KEY/TAB/ to traverse between the fields. Press <KEY/RETURN/ when
+done.
+
+<P><PICTURE.EXTERN TYPE="gif" TO="2_noaccount.gif">
+
+<P>Since this is the first time you connect,
+you do not have an account. Press the button "Create
+Account" to continue.
+
+<P><PICTURE.EXTERN TYPE="gif" TO="3_newaccount.gif">
+
+<P>Fill in all the fields, press <KEY/RETURN/ when done.
+
+<P><PICTURE.EXTERN TYPE="gif" TO="4_emptyclient.gif">
+
+<P>This is your client, click on the <EM/"M"/-logotype and you will get the following popup.
+
+<P><PICTURE.EXTERN TYPE="gif" TO="5_menu.gif">
+
+<P>Press "Add Friends" to add people to your contact list.
+
+<P><PICTURE.EXTERN TYPE="gif" TO="6_searchfriends.gif">
+
+<P>Fill in the information you know about the person you are looking
+for. The search is case insensitive and we do not use exact word
+match. Our search algorithm is based on sub-strings. For example: The
+authors organization is "Swedish Institute of Computer Science", if
+you type "sics" the match will be done on the following 
+letters: "<KEY/s/wed<KEY/i/sh institute of <KEY/c/omputer <KEY/s/cience". There is
+an AND-relation between the search-fields.
+
+<P><PICTURE.EXTERN TYPE="gif" TO="7_selectfriends.gif">
+
+<P>Select the people you want to add to
+your contact list. Use <KEY/CTR/ or <KEY/SHIFT/ as modifier.
+
+<P>Press "Add Selected Friends" when done.
+
+<P>Now your client looks something like this:
+
+<P><PICTURE.EXTERN TYPE="gif" TO="8_client.gif">
+
+<P>Use <KEY>&lt;Button-3&gt;</KEY> to bring up a popup menu for each entry in your contact list. 
+
+<SECTION><TITLE/Icons/
+
+<P>In the table below, all icons we use in &micq; are listed
+<TABLE><TR><TH/Icon/ <TH/Description/ </TR>
+<TR><TD/<PICTURE.EXTERN TYPE="gif" TO="online_t.gif">/ <TD/Online/</TR>
+
+<TR><TD/<PICTURE.EXTERN TYPE="gif" TO="away_t.gif">/ <TD/Away/</TR>
+
+<TR><TD/<PICTURE.EXTERN TYPE="gif" TO="offline_t.gif">/ <TD/Offline/</TR>
+
+<TR><TD/<PICTURE.EXTERN TYPE="gif" TO="letter.gif">/ <TD/You have received a new message/</TR>
+
+<TR><TD/<PICTURE.EXTERN TYPE="gif" TO="eyes_t.gif">/ <TD/The receiver has at least one unread message (from you)/</TR>
+</TABLE>
+</CHAPTER>

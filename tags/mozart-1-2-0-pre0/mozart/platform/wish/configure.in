@@ -1,0 +1,211 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Michael Mehl (mehl@dfki.de)
+dnl
+dnl  Contributors:
+dnl    optional, Contributor's name (Contributor's email address)
+dnl
+dnl  Copyright:
+dnl    Michael Mehl (1997)
+dnl
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl
+dnl  This file is part of Mozart, an implementation
+dnl  of Oz 3:
+dnl     http://www.mozart-oz.org
+dnl
+dnl  See the file "LICENSE" or
+dnl     http://www.mozart-oz.org/LICENSE.html
+dnl  for information on usage and redistribution
+dnl  of this file, and for a DISCLAIMER OF ALL
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+dnl *****************************************************************
+dnl INITIALIZE
+dnl *****************************************************************
+
+dnl This will check that we are in the Oz directory and initiate
+AC_INIT(unixMain.cc)
+
+
+dnl *****************************************************************
+dnl windows cross compilation
+dnl *****************************************************************
+
+case "$target" in
+   NONE) 
+   ;;
+   i386-mingw32)
+	platform=win32-i486
+   ;;
+
+   *)
+	AC_MSG_ERROR("cannot cross-compile for target $target")
+    ;;
+esac
+
+AC_SUBST(EXTRALDFLAGS)
+
+dnl ******************************************************************
+OZ_INIT
+
+OZ_CC_CHOOSE
+OZ_CXX_CHOOSE
+
+AC_PROG_LN_S
+
+dnl *****************************************************************
+dnl platform
+dnl *****************************************************************
+
+OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+
+: ${platform=`$PLATFORMSCRIPT`}
+AC_SUBST(platform)
+
+case "$platform" in
+   win32-i486)
+	OZ_CXX_OPTIONS(-mno-cygwin,oz_a)
+	LDFLAGS="$oz_a $LDFLAGS"
+	CPPFLAGS="$oz_a $CPPFLAGS"
+	EXTRALDFLAGS="-mwindows -s"
+	SRCS="winMain.cc"
+	WITH_TCLTK=$with_tcl/lib
+	INSTALLWINDLLS=installwindlls
+	: ${WINDLLDIR=$windlldir}
+	for i in tcl83.dll tk83.dll msvcrt.dll; do
+	  dll=$WINDLLDIR/$i
+	  AC_MSG_CHECKING(for DLL $dll)
+	  if test -f $dll
+	  then AC_MSG_RESULT(yes)
+	  else AC_MSG_ERROR(required DLL $dll not found)
+	  fi
+	done
+   ;;
+
+   *)
+	WINDLLDIR=""
+	INSTALLWINDLLS=""
+	SRCS="unixMain.cc"
+    ;;
+esac
+
+AC_SUBST(SRCS)
+AC_SUBST(WINDLLDIR)
+AC_SUBST(INSTALLWINDLLS)
+
+dnl ****************************************************************
+dnl   Places where to look for configuration scripts...
+dnl ****************************************************************
+
+: ${oz_tcltk_search="$WITH_TCLTK $WITH_TCLTK/lib  $prefix/lib /usr/lib /usr/local/lib /usr/pkg /usr/X11R6/lib /usr/X11/lib /opt/X11R6/lib /opt/X11/lib"}
+: ${oz_tcl_search="$oz_tcltk_search /usr/local/lib/tcl8.3 /usr/local/lib/tcl8.2 /usr/local/lib/tcl8.0"}
+: ${oz_tk_search="$oz_tcltk_search /usr/local/lib/tk8.3 /usr/local/lib/tk8.2 /usr/local/lib/tk8.0"}
+
+dnl ****************************************************************
+dnl   Look for tcl configuration script...
+dnl ****************************************************************
+
+AC_MSG_CHECKING(for tclConfig.sh)
+AC_ARG_WITH(tcl,
+    [--with-tcl=<dir>
+    search tclConfig.sh in <dir> (default: $oz_tcl_search)])
+
+if test -n "${with_tcl}"
+then
+    oz_tcl_search="$with_tcl $oz_tcl_search"
+    echo kost: $oz_tcl_search
+fi
+
+TCL_LIB_DIR=""
+for d in $oz_tcl_search ; do
+    if test -r "$d/tclConfig.sh"; then
+	TCL_LIB_DIR=$d
+	break
+    fi
+done
+
+if test -z "$TCL_LIB_DIR"; then
+   AC_MSG_ERROR(Can't find tcl. Use --with-tcl to specify the directory which contains tclConfig.sh)
+fi
+
+AC_MSG_RESULT($TCL_LIB_DIR/tclConfig.sh)
+
+. $TCL_LIB_DIR/tclConfig.sh
+
+AC_SUBST(TCL_VERSION)
+AC_SUBST(TCL_PREFIX)
+AC_SUBST(TCL_LIBS)
+AC_SUBST(TCL_LIB_SPEC)
+
+dnl ****************************************************************
+dnl   Look for tk configuration script...
+dnl ****************************************************************
+
+
+AC_MSG_CHECKING(for tkConfig.sh)
+AC_ARG_WITH(tk,
+    [--with-tk=<dir>
+    search tkConfig.sh in <dir> (default: $oz_tk_search)])
+
+if test -n "${with_tk}"
+then
+    oz_tk_search="$with_tk $oz_tk_search"
+fi
+
+TK_LIB_DIR=""
+for d in $oz_tk_search ; do
+    if test -r "$d/tkConfig.sh"; then
+	TK_LIB_DIR=$d
+	break
+    fi
+done
+
+if test -z "$TK_LIB_DIR"; then
+   AC_MSG_ERROR(Can't find tk. Use --with-tk to specify the directory which contains tkConfig.sh)
+fi
+
+AC_MSG_RESULT($TK_LIB_DIR/tkConfig.sh)
+
+. $TK_LIB_DIR/tkConfig.sh
+
+AC_SUBST(TK_VERSION)
+AC_SUBST(TK_PREFIX)
+AC_SUBST(TK_LIBS)
+AC_SUBST(TK_LIB_SPEC)
+AC_SUBST(TK_XINCLUDES)
+
+
+dnl *****************************************************************
+dnl copy libs
+dnl *****************************************************************
+
+OZ_ENABLE(copy-tcl-libs,
+  [Copy tcl libraries (rather than drawing a link)],
+  [yes],
+  [AC_MSG_RESULT(yes)
+   PROVIDETCLLIBS="provide-copy"],
+  [AC_MSG_RESULT(no)
+   : ${PROVIDETCLLIBS="provide-link"}])
+
+AC_SUBST(PROVIDETCLLIBS)
+
+dnl *****************************************************************
+dnl FINALIZE
+dnl *****************************************************************
+
+AC_CONFIG_HEADER(conf.h)
+
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../aclocal.m4.
+]))

@@ -1,0 +1,153 @@
+/*
+ *  Authors:
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+#ifndef __CPI_ICC__
+#define __CPI_ICC__
+
+//-----------------------------------------------------------------------------
+// Note: the field "expected_type" can be left uninitialized
+
+// boolean finite domain constraints
+inline
+void staticAddSpawnPropBool(OZ_Term * v)
+{
+  staticSpawnVarsProp[staticSpawnVarsNumberProp].state.fd = fd_prop_any;
+  staticSpawnVarsProp[staticSpawnVarsNumberProp++].var = v;
+  
+  staticSpawnVarsProp.request(staticSpawnVarsNumberProp);
+}
+
+inline
+void staticAddSpawnBool(OZ_Term * v)
+{
+  staticSpawnVars[staticSpawnVarsNumber].state.fd = fd_prop_any;
+  staticSpawnVars[staticSpawnVarsNumber++].var = v;
+  
+  staticSpawnVars.request(staticSpawnVarsNumber);
+}
+
+// finite domain constraints
+inline
+void staticAddSpawnProp(OZ_FDPropState ps, OZ_Term * v)
+{
+  staticSpawnVarsProp[staticSpawnVarsNumberProp].state.fd = ps;
+  staticSpawnVarsProp[staticSpawnVarsNumberProp++].var = v;
+  
+  staticSpawnVarsProp.request(staticSpawnVarsNumberProp);
+}
+
+inline
+void staticAddSpawn(OZ_FDPropState ps, OZ_Term * v)
+{
+  staticSpawnVars[staticSpawnVarsNumber].state.fd = ps;
+  staticSpawnVars[staticSpawnVarsNumber++].var = v;
+  
+  staticSpawnVars.request(staticSpawnVarsNumber);
+}
+
+// finite set constraints
+inline
+void staticAddSpawnProp(OZ_FSetPropState ps, OZ_Term * v)
+{
+  staticSpawnVarsProp[staticSpawnVarsNumberProp].state.fs = ps;
+  staticSpawnVarsProp[staticSpawnVarsNumberProp++].var = v;
+  
+  staticSpawnVarsProp.request(staticSpawnVarsNumberProp);
+}
+
+inline
+void staticAddSpawn(OZ_FSetPropState ps, OZ_Term * v)
+{
+  staticSpawnVars[staticSpawnVarsNumber].state.fs = ps;
+  staticSpawnVars[staticSpawnVarsNumber++].var = v;
+  
+  staticSpawnVars.request(staticSpawnVarsNumber);
+}
+
+// generic constraints
+inline
+void staticAddSpawnProp(OZ_CtDefinition * def, 
+			OZ_CtWakeUp w,
+			OZ_Term * v)
+{
+  staticSpawnVarsProp[staticSpawnVarsNumberProp].state.ct.def = def;
+  staticSpawnVarsProp[staticSpawnVarsNumberProp].state.ct.w = w;
+  staticSpawnVarsProp[staticSpawnVarsNumberProp++].var = v;
+  
+  staticSpawnVarsProp.request(staticSpawnVarsNumberProp);
+}
+
+inline
+void staticAddSpawn(OZ_CtDefinition * def, 
+		    OZ_CtWakeUp w,
+		    OZ_Term * v)
+{
+  staticSpawnVars[staticSpawnVarsNumber].state.ct.def = def;
+  staticSpawnVars[staticSpawnVarsNumber].state.ct.w = w;
+  staticSpawnVars[staticSpawnVarsNumber++].var = v;
+  
+  staticSpawnVars.request(staticSpawnVarsNumber);
+}
+
+//-----------------------------------------------------------------------------
+
+inline 
+OZ_Boolean isPosSmallInt(OZ_Term v) 
+{
+  return oz_isSmallInt(v) && (tagged2SmallInt(v) >= 0);
+}
+
+inline 
+OZ_Boolean isPosSmallBoolInt(OZ_Term v) 
+{
+  if (oz_isSmallInt(v)) {
+    int vv = tagged2SmallInt(v);
+    return (0 <= vv) && (vv <= 1);
+  }
+  return OZ_FALSE;
+}
+
+inline 
+OZ_Boolean isPosSmallFDInt(OZ_Term v) 
+{
+  if (oz_isSmallInt(v)) {
+    int vv = tagged2SmallInt(v);
+    return (0 <= vv) && (vv <= fd_sup);
+  }
+  return OZ_FALSE;
+}
+
+inline 
+OZ_Boolean isPosSmallSetInt(OZ_Term v) 
+{
+  if (oz_isSmallInt(v)) {
+    int vv = tagged2SmallInt(v);
+    return (0 <= vv) && (vv <= fset_sup);
+  }
+  return OZ_FALSE;
+}
+
+#endif /* __CPI_ICC__ */

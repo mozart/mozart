@@ -1,0 +1,1630 @@
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh">
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY Oz "Oz">
+<!ENTITY ampersand "&">
+
+<!-- Processing Instructions -->
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY resp PI "resp">
+<!ENTITY eg PI "eg">
+<!ENTITY etc PI "etc">
+<!ENTITY LaTeX PI "LaTeX">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+    <Meta name="proglang.mode" arg1="sh" arg2="sh-mode">
+
+    <meta name="html.split" value="chapter.intro">
+    <meta name="html.split" value="sec.foreignex">
+    <meta name="html.split" value="chapter.cpart">
+    <meta name="html.split" value="chapter.unixdll">
+    <meta name="html.split" value="chapter.windll">
+    <meta name="html.split" value="chapter.tuning">
+    <meta name="html.split" value="sec.cinterfacespec">
+    <meta name="html.split" value="chapter.extension">
+
+    <meta name="html.split" value="section.extension.reference.class">
+    <meta name="html.split" value="section.extension.example">
+    <meta name="html.split" value="section.extension.reference.functions">
+
+
+    <meta name="html.split" value="section.cif.gr">
+    <meta name="html.split" value="section.cif.dt">
+    <meta name="html.split" value="section.cif.decl">
+    <meta name="html.split" value="section.cif.aa">
+    <meta name="html.split" value="section.cif.tt">
+    <meta name="html.split" value="section.cif.conv">
+    <meta name="html.split" value="section.term_access">
+    <meta name="html.split" value="section.cif.excp">
+    <meta name="html.split" value="section.cif.unif">
+    <meta name="html.split" value="section.threads">
+    <meta name="html.split" value="section.cif.print">
+    <meta name="html.split" value="section.cif.misc">
+    <meta name="html.split" value="section.cif.garb">
+    <meta name="html.split" value="section.cif.io">
+
+
+
+    <meta name="html.split.index" value="">
+
+    <Title/Interfacing to C and C++/
+     <Author.Extern to="author.db" key="Michael.Mehl"> 
+     <Author.Extern to="author.db" key="Tobias.Mueller"> 
+     <Author.Extern to="author.db" key="Christian.Schulte"> 
+     <Author.Extern to="author.db" key="Ralf.Scheidhauer"> 
+    <Abstract>
+    &Oz; provides a simple yet powerful interface to dynamically link
+native C and C++ code to &Oz;. It provides for
+access and conversion from most &Oz; values to C data structures and
+vice versa and supports mechanisms to handle suspension for C(++)
+functions.
+    </Abstract>
+  <Body proglang=cc>
+<chapter id=chapter.intro>
+<title/Introduction/
+<p>
+&Oz; provides a simple yet powerful interface to dynamically link
+native C and C++ code to &Oz;<note foot>Dynamic linking is currently
+not supported on the AIX/RS6000 platform.</note>. It provides for
+access and conversion from most &Oz; values to C data structures and
+vice versa and supports mechanisms to handle suspension for C(++)
+functions.
+<p>
+The usage of the C and C++ interface is first explained using an
+example followed by a reference part that describes the interface in
+detail.
+</chapter>
+
+<chapter id=sec.foreignEx><title/A small Example/
+<p>
+<figure class="Program" id=getenvC>
+<caption/File <file/getenv.cc/: a C++ program to provide a getenv for &Oz;/
+<code display >
+<![RCDATA[
+#include "mozart.h"                                  // 1
+                                                     // 2
+OZ_BI_define(BIgetenv,1,1)                           // 3
+{                                                    // 4
+  OZ_declareAtom(0,envVarName);                      // 5
+                                                     // 6
+  char *envValue = getenv(envVarName);               // 7
+                                                     // 8
+  if (envValue == 0) /* not defined in environment */// 9
+    return OZ_FAILED;                                //10
+                                                     //11
+  OZ_RETURN_ATOM(envValue);                          //12
+} OZ_BI_end                                          //13
+                                                     //14
+                                                     //15
+OZ_C_proc_interface oz_interface[] = {               //16
+  {"getenv",1,1,BIgetenv},                           //17
+  {0,0,0,0}                                          //18
+};                                                   //19
+                                                     //20
+OZ_C_proc_interface *oz_init_module() {              //21
+  return oz_interface;                               //22
+}                                                    //23
+]]>
+</code>
+</figure>
+
+<p>
+
+Suppose we want to provide an &Oz; native module <<Goodies>>
+containing a single procedure <<{Goodies.getenv VarA ValueA}>> as an
+interface to the C library function <code /getenv(3)/: it constrains
+<<ValueA>> to an atom, which is the value of the environment variable
+<<VarA>>, where <<VarA>> is an atom. Thus 
+<<{Goodies.getenv 'HOME' X}>> will constrain <<X>> to an atom
+representing the path to our home directory.
+
+To realize this we have to perform the following steps: 
+<LIST ENUM>
+<ITEM> Write a piece of C code.
+<ITEM> Create an object file from the C code.
+<ITEM> Create a dynamic library from the object file(s).
+<ITEM> Link the library into Oz.
+</LIST>
+These steps are explained in more detail below.
+<p>
+</chapter>
+
+<chapter id=chapter.cpart><title/The C Part/
+<p>
+<ptr to=getenvC> shows a first attempt to provide access to the
+<code /getenv/ C library function as explained above. In the following
+we will go through it in detail and successively improve it.
+<p>
+Every C program that will be linked to &Oz; must include the header file
+<file/mozart.h/  (line 1 in  <ptr to=getenvC>), which is located in
+the <file/include/ subdirectory of the &Oz; installation directory. It
+contains the definition of the data structures and functions used to
+interface C to &Oz;. All these data structures start with <<OZ_>>
+such that they will not clash with the user's name space.
+<p>
+To declare a C function that can be used from &Oz; you have to enclose
+its declaration into the macros 
+<code /OZ_BI_define(?{name},?{inarity},?{outarity})/
+<index class=module/OZ_BI_define/
+and <code /OZ_BI_end/
+<index class=module/OZ_BI_end/. The following code fragment declares a
+C-function <code /BIgetenv/ <index class=module/BIgetenv/
+for inclusion into Oz, which has one input an one output argument:
+<p>
+<code display/
+OZ_BI_define(BIgetenv,1,1)
+{
+  ...
+} OZ_BI_end
+/
+<p>
+&Oz; represents data like strings, integers, floats, etc. different
+than C. For this reason <file/mozart.h/ provides type testing
+functions and routines to convert from the C into the &Oz;
+representation and vice versa. All &Oz; values are summarized in one
+abstract C data type called <code /OZ_Term/ <index
+class=module/OZ_Term/.
+<p>
+To signal whether the call to a C function was successful or not it
+must return a value of type <code /OZ_Return/<index
+class=module/OZ_Return/, which may be <code /OZ_FAILED/<index
+class=module/OZ_FAILED/ (in which case failure will occur), <code
+/OZ_ENTAILED/<index class=module/OZ_ENTAILED/ to signal successful
+completion. <code /OZ_Return/ also contains several other values,
+which are not visible to the user. They are only used for internal
+purposes, for example to handle suspension or
+raising exceptions.
+<p class=danger>
+It is important that your C function returns one
+of the above values. Not returning a value will
+inevitably crash the executing Oz engine!
+<p>
+In line 5 we use the macro <code /OZ_declareAtom(n,name)/: it checks
+whether the <code /n/-th input argument is an atom and declares
+a new C++ variable of type <code /char*/ with name <code /name/. So
+line 5 declares <code /envVarName/ which holds the C++ string
+representation of the first and only input argument.
+<p>
+Values that can be passed as input arguments can
+of course be logic variables! Do not confuse this
+with output arguments: Output arguments are
+handled only after the C function returns! 
+<p>
+In line 7 we declare a C++ variable <code /envValue/ which will
+temporarily hold the return value of <code /BIgetenv/.
+<p>
+In lines 9--11 of <ptr to=getenvC> we check whether an environment
+variable of the requested name exists and return <code /OZ_FAILED/ 
+if not.
+<p>
+Line 19 loads the result into the output argument of <code /BIgetenv/
+using the macro <code /OZ_RETURN_ATOM/: it converts its argument to an
+&Oz; atom assigns the first output register to that value and leaves
+the function with <code /OZ_ENTAILED/ signalling that the call to
+<code /BIgetenv/ was success full.
+<p>
+Lines 16--23 in <ptr to=getenvC> are needed for the linking step and 
+will be explained in <ptr to=sec.foreignLink>.
+
+
+</chapter>
+
+    <chapter id=chapter.unixdll proglang=sh>
+      <title/Creating a DLL/
+<section id=chapter.compiling><title>Compiling the C++ program</title>
+<p>The Mozart system provides <ref.extern to="ozdoc:tools"
+key="chapter.oztool"/<code/oztool// which we recommend you invoke instead
+of calling the C/C++ compiler directly:
+<code display/oztool c++ -c getenv.cc -o getenv.o/
+<code/oztool/ takes care of many unpleasant details for you; for example,
+it supplies the compiler with the appropriate option for the generation of
+position independent code.
+</section>
+<section id=chapter.linking><title>Creating a dynamic library</title>
+<p>Now, we create a shared object from the compiled object file obtained
+above.  Again you should invoke <code/oztool/ rather than call the
+linker directly:
+<code display/oztool ld getenv.o -o getenv.so/
+This takes care of many ugly details (especially on Windows where
+they could easily drive you nuts).  Actually, you should really
+create a shared object file with, as suffix, the platform for which it
+was created.  For example:
+<code display/oztool ld getenv.o -o getenv.so-linux-i486/
+The reason is that the Oz module manager was designed to support
+platform independent module import specifications, but, of course,
+native modules
+must be resolved to platform dependent implementations.  The default
+resolution strategy achieves this by means of platform suffixes.
+<p>In order to write portable makefiles, you can use <code/oztool/
+to print out the platform name:
+<code display/oztool platform/
+Thus a portable way to create the shared object is:
+<code display/oztool ld getenv.o -o getenv.so-`oztool platform`/
+
+</section>
+<section id=sec.foreignLink><title>Linking a native module</title>
+<p>
+In the last step we make the native module available by linking
+it into &Oz;. Lines 16--23 in <ptr to=getenvC> are needed to
+declare the export signature of the native module. A function named <code
+/oz_init_module/ must be exported by every native module: this
+function will be called when the module is linked into &Oz;. It can be
+used to do some module dependent initialization and has to return an
+array whose elements are of type <code /OZ_C_proc_interface/; the end
+of the array must be terminated by an empty structure. The array describes
+the signature of the functions being exported from the module:
+<code display >
+<![RCDATA[
+typedef struct {
+  const char * name;
+  short        inArity;
+  short        outArity;
+  OZ_CFun      func;
+} OZ_C_proc_interface;
+]]>
+</code>
+
+<code /name/ is a string naming the feature under which the native
+function will be accessible from Oz (see below). <code /inArity/ and
+<code /outArity/ specify the number of input and output
+arguments. <code /func/ is a pointer to the function being exported.
+<p>
+Now we can link our module into &Oz; by executing: 
+
+<code display proglang=oz>
+declare
+[Goodies]={Module.link ['./goodies.so{native}']} 
+</code>
+
+This will lazily load the module upon first access and bind
+<<Goodies>> to a record with a single (since we exported only one
+function) feature named <<getenv>> (this is derived from the value of
+the <code /name/ field of <code /OZ_C_proc_interface/). Now we can call
+it like this: 
+
+<code display proglang=oz>
+{Browse {Goodies.getenv 'HOME'}} 
+</code>
+
+The module can also be imported by any Oz module:
+<code display proglang=oz/
+functor
+import G at 'getenv.so{native}'
+define
+   ... {G.getenv ...} ...
+end/
+
+Note that the url used in the import specification does not supply the
+platform suffix, but adds the <code/{native}/ annotation.  The module
+manager (or more precisely the resolver) will remove the annotation and
+replace it with the suffix appropriate for the current platform.
+
+<p>
+</section>
+</chapter>
+<chapter id=chapter.windll><title>Creating DLLs under Windows</title>
+<p>
+
+<code/oztool/ works under Windows as described in <ptr
+to="chapter.unixdll"/. In addition <code/oztool/ can be
+directed to call different compilers and linkers to create object
+files and DLLs. This is done by specifying one of the following
+options to <code /oztool/ (<code /-gnu/ is the default):
+
+<list>
+<item> <code /-gnu/: use  <Ref.Extern
+to="http://www.xraylith.wisc.edu/~khan/software/gnu-win32/index.html"/mingw32/
+or cygwin (&ie;, egcs)
+<item> <code /-msvc/: use Microsoft Visual C++ 5.0/6.0
+<item> <code /-watcom/: use Watcom 10.x
+</list>
+
+You can use the option <code /-verbose/ to let <code /oztool/ print
+out the commands it executes.  This will also give you an idea of
+what steps to perform if you want to use another compiler than those
+mentioned in the above list.
+
+<section><title>Known Bugs and Problems</title>
+<p>
+
+<list enum>
+<item>
+When creating DLLs with <Ref.Extern to="http://sourceware.cygnus.com/cygwin/"
+/cygwin/, make sure that <file/cygwin.dll/ is correctly initialized.
+The document <Ref.Extern
+to="http://www.xraylith.wisc.edu/~khan/software/gnu-win32/README.jni.txt"/README.jni.txt/
+might give some more help under <code /"Cygwin notes"/.
+<item>
+It is not possible to link to a C run-time library other than
+<file/msvcrt.dll/.
+<item>
+Because of incompatible name-mangling schemes of different C++ compilers,
+a library making use of the foreign function interface's C++ classes must
+be compiled with GNU C++ to link correctly.
+</list>
+
+</section>
+
+
+<chapter id=chapter.tuning><title/Tuning the Example/
+<p>
+
+<para><title/Raising Exceptions/
+In line 10 the program simply returns <code /OZ_FAILED/ if
+the environment variable is not defined, which is not good programming
+style. It should better raise an exception. This can be done using
+<code display >
+OZ_Return OZ_raise(OZ_Term t);
+</code>
+which raises the exception <code /t/. In our example we should replace
+line 10 with something like
+<code display >
+ return OZ_raise(OZ_atom("envVarNotDefined"));
+</code>
+We leave as an exercise to the reader to give more informative
+exception, &eg; adding the name of the undefined variable.
+
+<para><title/Raising type errors/
+Furthermore an extra function is provided for raising type errors. The
+macro <code /OZ_declareAtom/ used in our example makes use of this function.
+Type errors can be signaled using
+<code display >
+OZ_Return OZ_typeError(int pos, char *expectedType);
+</code>
+This is an exception signaling that the argument at position <code /pos/
+is incorrect and the name of the expected type is <code /expectedType/.
+
+<para id=sec.suspensionC><title/Suspension of C functions/
+<index/suspension of C functions/
+The macro <code /OZ_declareAtom/ internally also makes use of facilities
+that allow C functions to suspend the running thread on variables. 
+Thus <code /OZ_declareAtom/ uses some code of the following form: 
+<code display >
+if (OZ_isVariable(envVarName)) {
+  OZ_suspendOn(envVarName);
+}
+</code>
+<p>
+If <code /envVarName/ is an unconstrained variable then 
+<code /OZ_suspendOn/ is called. <code /OZ_suspendOn/ is a macro that takes
+a variable as argument and suspends the current thread. If the
+variable is determined the suspended thread becomes runnable in which
+case it will reexecute the C function <em/from the beginning/.
+<p>
+The application
+  <code display proglang=oz>
+declare X in {Browse {Goodies.getenv X}}
+>>>
+will call the C function as above. But the first argument is
+detected as variable and the executing thread suspends.
+<p>
+If we feed
+<<<
+X='HOME'
+>>>
+the C function <code /BIgetenv/ is called again from the beginning and
+the browser updates the display of the value of the environment
+variable as expected.
+<p>
+</chapter>
+
+<chapter id=sec.CInterfaceSpec><title/Specification of the C interface/
+<p>
+Below we give a reference of the functionality provided by the C and C++
+interface.
+
+<section id=section.cif.gr><title/General Remarks/
+<p>
+Before we go into more detail we start with some general remarks.
+<p>
+Several functions of the interface rely on the fact that their
+arguments are of a certain type. For example
+<code display  >
+char *OZ_atomToC(OZ_Term t)
+</code>
+expects <code /t/ to be an &Oz; atom and returns a string representing the
+print name of <code /t/. In case <code /t/ is not an atom, the behaviour
+of <code /OZ_atomToC/ is undefined and it will typically crash the
+whole system.
+<p>
+If not stated otherwise all functions that return pointers into
+memory, return a pointer to a memory area that is allocated <em/statically/. 
+This provides highest flexibility and efficiency. For
+example the string returned by <code /OZ_atomToC/ must not be
+overwritten by the user and the next call to any of the interface
+functions may modify it.  So the user should take care to make a
+copy of these memory blocks if necessary and free it again himself.
+<p>
+<section id=section.cif.dt><title/Data types/
+<p>
+The following data types are defined in the interface:
+<list>
+<entry><<OZ_Return>>
+<index class=module/OZ_Return/
+<synopsis>
+<code >typedef enum {OZ_FAILED=0, OZ_ENTAILED=1, ... } OZ_Return;</code>
+<item>Return values for C functions to be interfaced to Oz.
+<entry><<OZ_CFun>>
+<index class=module/OZ_CFun/
+<synopsis>
+<code >typedef OZ_Return (*OZ_CFun)(OZ_Term * [])</code>
+<item>Signature of an interface function.
+<entry><<OZ_Term>>
+<index class=module/OZ_Term/
+<synopsis>
+<code >typedef ... OZ_Term;</code>
+<item>This is the <em>abstract</em> data type for &Oz; values.
+<entry><<OZ_C_proc_interface>>
+<index class=module/OZ_C_proc_interface/
+<synopsis>
+<code display>
+typedef struct {
+  const char * name;
+  short        inArity;
+  short        outArity;
+  OZ_CFun      func;
+} OZ_C_proc_interface;
+</code>
+<item>This structure declares the signature of a function being
+exported from a native module.
+</list>
+</section>
+
+<section id=section.cif.decl><title/Declaration/
+<p>
+
+<list>
+<entry><<OZ_BI_define>>
+<entry><<OZ_BI_end>>
+<synopsis>
+<index class=module/OZ_BI_define/
+<index class=module/OZ_BI_end/
+<code display>
+  OZ_BI_define(Name,InArity,OutArity)
+  { ... C/C++ code ... }
+  OZ_BI_end
+</code>
+<item>Every foreign function imported to &Oz; has to be declared using this
+  pattern.  <code /Name/ is the name of the function being
+  defined. <code /InArity/ and <code /OutArity/ specify the number of
+  input and output arguments the function expects.
+
+</list></section>
+
+
+<section id=section.cif.aa><title/Accessing arguments/
+<subsection><title/Accessing input arguments/
+<p>
+
+<list>
+
+<!--  <entry/<<OZ_in(n)>>/ -->
+<!--  <synopsis> -->
+<!--  <index class=module/OZ_in/ -->
+<!--  <item> Abstract access to input argument number <code /n/ (counting -->
+<!--  starts with 0) is provided through this macro. It returns a value of -->
+<!--  type <code /OZ_Term/. The use of this macro is discouraged. You should -->
+<!--  use one of the macros below. -->
+
+<entry/<<OZ_declareTerm(n,var)>> <index class=module/OZ_declareTerm//
+<item> Declares a new variable of type <code /OZ_Term/ named <code
+/var/, which is initialized with the value of the <code /n/-th
+(counting starts from zero) input argument.
+<p>
+In case you plan to use unification for passing
+output arguments, you still have to pass the logic
+variable with which you want to unify as
+<em/input/ argument. 
+
+<entry/<<OZ_declareDetTerm(n,var)>><index class=module/OZ_declareDetTerm//
+<item> Works like <code /OZ_declareTerm/ but additionally suspends if
+the input argument is a free variable.
+
+<entry/<<OZ_declareInt(n,var)>><index class=module/OZ_declareInt//
+<item> The function expects in input argument number <code /n/ an Oz
+integer. It then declares a variable named <code /var/ of type <code
+/int/ and initializes <code /var/ with the value of this argument. The
+macro raises an exception if the argument is ill typed and suspends if
+the argument is an unbound variable.
+
+<entry/<<OZ_declareFloat(n,var)>><index class=module/OZ_declareFloat//
+<item>Works like <code /OZ_declareInt/ but expectes an Oz float and
+declares a variable of type <code /double/.
+
+<entry/<<OZ_declareAtom(n,var)>><index class=module/OZ_declareAtom//
+<item>Works like <code /OZ_declareInt/ but expectes an Oz atom and
+declares a variable of type <code /char */.
+
+<entry/<<OZ_declareVirtualString(n,var)>><index class=module/OZ_declareVirtualString//
+<item>Works like <code /OZ_declareInt/ but expectes an Oz virtual
+string and declares a variable of type <code /char */.
+
+<entry/<<OZ_declareVS(n,var,len)>><index class=module/OZ_declareVS//
+<item> Like <code /OZ_declareVirtualString/, but additionally sets
+<code /len/ to the size of the result.
+
+<entry/<<OZ_declareBool(n,var)>><index class=module/OZ_declareBool//
+<item> Declares a variable of type <code /int/ named <code /var/,
+which is non-zero iff the <code /n/-th argument is equal to <<true>>.
+
+</list>
+
+The above macros always declare a new C variable and then do some
+checks. Therefor in C (not in C++) only one of them can be used only
+at the start of a new block statement. For this reason there is also a
+second set of macros named <code /OZ_set*/ that expect that their
+second argument has already been declared. Thus in C++ you can use
+<code display>
+  OZ_declareAtom(0,mystring);
+  OZ_declareInt(1,myint);
+</code>
+whereas in plain C you have to write
+<code display>
+  char *mystring;
+  int myint;
+  OZ_setAtom(0,mystring);
+  OZ_setInt(1,myint);
+</code>
+
+
+</subsection>
+
+<subsection><title/Accessing output arguments/
+<p>
+<list>
+<entry/<<OZ_out(n)>><index class=module/OZ_out//
+<item> Abstract access to output argument number <code /n/ (counting
+starts with 0). Should only be used for writing an output argument and
+never for reading. Usage is like
+<code display>
+  OZ_out(3) = OZ_atom("myResult");
+</code>
+This macro should only be used in case a function returns more than
+one value. For returning values in the first output argument one of
+the functions below should be used.
+
+<entry/<<OZ_RETURN(V)>><index class=module/OZ_RETURN//
+<item> Returns from the C function with output value <<V>>. It is a
+macro which expands to 
+<code display>
+  return (OZ_out(0)=V,OZ_ENTAILED)
+</code>
+</list>
+
+For convenience we also provide the following macros:
+
+<list>
+<entry/<<OZ_RETURN_INT(I)>><index class=module/OZ_RETURN_INT//
+<item> Return a C integer. Expands to
+<code>OZ_RETURN(OZ_int(I))</code>
+
+<entry/<<OZ_RETURN_ATOM(A)>><index class=module/OZ_RETURN_ATOM//
+<item> Return a C integer. Expands to
+<code>OZ_RETURN(OZ_atom(A))</code>
+
+<entry/<<OZ_RETURN_STRING(S)>><index class=module/OZ_RETURN_STRING//
+<item> Return a C integer. Expands to
+<code>OZ_RETURN(OZ_string(S))</code>
+
+<entry/<<OZ_RETURN_BOOL(X)>><index class=module/OZ_RETURN_BOOL//
+<item> Returns <<false>> if  X equals to 0, <<true>>
+otherwise. Expands to 
+<code>OZ_RETURN((X)?OZ_true():OZ_false())</code>
+
+
+</list>
+
+</subsection>
+</section>
+
+<section id=section.cif.tt><title/Type testing/
+<p>
+To check whether a given <code /OZ_Term/ is a certain &Oz; value several
+functions are provided:
+<list>
+<entry><<OZ_isAtom>>
+<entry><<OZ_isBool>>
+<entry><<OZ_isCell>>
+<entry><<OZ_isThread>>
+<entry><<OZ_isPort>>
+<entry><<OZ_isChunk>>
+<entry><<OZ_isDictionary>>
+<entry><<OZ_isCons>>
+<entry><<OZ_isFalse>>
+<entry><<OZ_isFeature>>
+<entry><<OZ_isFloat>>
+<entry><<OZ_isInt>>
+<entry><<OZ_isBigInt>>
+<entry><<OZ_isSmallInt>>
+<entry><<OZ_isNumber>>
+<entry><<OZ_isLiteral>>
+<entry><<OZ_isName>>
+<entry><<OZ_isNil>>
+<entry><<OZ_isObject>>
+<entry><<OZ_isPair>>
+<entry><<OZ_isPair2>>
+<entry><<OZ_isProcedure>>
+<entry><<OZ_isRecord>>
+<entry><<OZ_isTrue>>
+<entry><<OZ_isTuple>>
+<entry><<OZ_isUnit>>
+<entry><<OZ_isValue>>
+<entry><<OZ_isVariable>>
+<entry><<OZ_isBitString>>
+<entry><<OZ_isByteString>>
+<entry><<OZ_isFSetValue>>
+
+<index class=module/OZ_isAtom/
+<index class=module/OZ_isBool/
+<index class=module/OZ_isCell/
+<index class=module/OZ_isThread/
+<index class=module/OZ_isPort/
+<index class=module/OZ_isChunk/
+<index class=module/OZ_isDictionary/
+<index class=module/OZ_isCons/
+<index class=module/OZ_isFalse/
+<index class=module/OZ_isFeature/
+<index class=module/OZ_isFloat/
+<index class=module/OZ_isInt/
+<index class=module/OZ_isBigInt/
+<index class=module/OZ_isSmallInt/
+<index class=module/OZ_isNumber/
+<index class=module/OZ_isLiteral/
+<index class=module/OZ_isName/
+<index class=module/OZ_isNil/
+<index class=module/OZ_isObject/
+<index class=module/OZ_isPair/
+<index class=module/OZ_isPair2/
+<index class=module/OZ_isProcedure/
+<index class=module/OZ_isRecord/
+<index class=module/OZ_isTrue/
+<index class=module/OZ_isTuple/
+<index class=module/OZ_isUnit/
+<index class=module/OZ_isValue/
+<index class=module/OZ_isVariable/
+<index class=module/OZ_isBitString/
+<index class=module/OZ_isByteString/
+<index class=module/OZ_isFSetValue/
+
+<synopsis>
+All these functions have the same signature. For
+example <code /OZ_isAtom/ is declared as
+<code >int OZ_isAtom(OZ_Term t)</code>
+<item>
+All type tests return nonzero iff their argument is of the respective type.
+<p>
+A few of these need some more explanation:
+<p>
+
+<code >int OZ_isBigInt(OZ_Term t)
+int OZ_isSmallInt(OZ_Term t)</code>
+<p>
+The emulator has two representations for integers: small integers
+and big integers. Small integers are implemented very efficiently.
+<p>
+<index class=module/OZ_isPair/
+<code >int OZ_isPair(OZ_Term t)</code><p>
+Returns zero iff <code /t/ is a tuple with label <<#>>.
+<p>
+<index class=module/OZ_isPair2/
+<code >int OZ_isPair2(OZ_Term t)</code><p>
+Returns nonzero iff <code /t/ is a tuple with label <<#>> and arity of 2.
+<p>
+<index class=module/OZ_isValue/
+<code >int OZ_isValue(OZ_Term t)</code><p>
+Returns nonzero iff <code /t/ is not a variable.
+<p>
+<index class=module/OZ_isVar/
+<code>int OZ_isVariable(OZ_Term t)</code><p>
+Returns nonzero iff <code /t/ is a variable.
+
+<entry><<OZ_isList>>
+<index class=module/OZ_isList/
+<synopsis>
+  <code>int OZ_isList(OZ_Term term, OZ_Term *var)</code>
+<item>Returns nonzero iff <code /term/ is a list.  If <code /term/ is no
+    list, but the tail is a variable, then <code /*var/ is set to the
+    tail of the list, else it is set to null.  <code /var/ may be null.
+    If <code /term/ is cyclic then <code /OZ_isList/ never terminates!  
+
+<entry><<OZ_isString>>
+<index class=module/OZ_isString/
+<synopsis>
+  <code>int OZ_isString(OZ_Term term, OZ_Term *var)</code>
+<item>Returns nonzero iff <code /term/ is an &Oz; string.  If <code /term/ is
+    no string, but the tail or an element of the list is a variable,
+    then <code /*var/ is set to this variable, else it is set to null.
+    <code /var/ may be null.  If <code /term/ is cyclic then 
+      <code /OZ_isString/ never terminates!  
+
+<entry><<OZ_isVirtualString>>
+<index class=module/OZ_isVirtualString/
+<synopsis>
+  <code >int OZ_isVirtualString(OZ_Term term, OZ_Term *var)</code>
+<item>Returns nonzero iff <code /term/ is a virtual string.  If
+    <code /term/ is no virtual string, but contains a variable, then
+    <code /*var/ is set to this variable, else it is set to null.
+      <code /var/ may be null.  If <code /term/ is cyclic then
+      <code /OZ_isVirtualString/ never terminates!  
+
+<entry><<OZ_termType>>
+<index class=module/OZ_termType/
+<synopsis>
+  <code>OZ_Term OZ_termType(OZ_Term t)</code>
+<item>
+Returns an atom describing the type of <code /t/. The following types
+    are returned:
+<<<
+variable, int, float, atom, name, tuple, record, fset,
+foreignPointer, procedure, cell, space, object, port,
+chunk, array, dictionary, lock class, resource
+>>>
+    (see also <<Value.type>> in 
+<ptr.extern to="ozdoc:base" key="section.values.status">).
+</list></section>
+<section id=section.cif.conv><title/Conversion/
+<p>
+The following functions are used to convert from &Oz; values to C data
+structures and vice versa.
+<list>
+
+<entry><<OZ_atom>>
+<index class=module/OZ_atom/
+<synopsis>
+<code >OZ_Term OZ_atom(char *s)</code>
+<item>Converts C string <code /s/ to an &Oz; atom.
+
+<entry><<OZ_atomToC>>
+<index class=module/OZ_atomToC/
+<synopsis>
+<code >char *OZ_atomToC(OZ_Term t)</code>
+<item>Converts &Oz; atom <code /t/ to a C string.
+
+<entry><<OZ_int>>
+<index class=module/OZ_int/
+<synopsis>
+<code >OZ_Term OZ_int(int i)</code>
+<item>Converts C integer <code /i/ to an &Oz; integer.
+
+<entry><<OZ_intToC>>
+<index class=module/OZ_intToC/
+<synopsis>
+<code >int OZ_intToC(OZ_Term t)</code>
+<item> Converts &Oz; integer <code /t/ to a C integer. If the &Oz; integer doesn't
+  fit into the C integer, the maximal resp. minimal C integer values
+  are used.
+
+<entry><<OZ_parseInt>>
+<index class=module/OZ_parseInt/
+<synopsis>
+  <code >char *OZ_parseInt(char *s)</code>
+<item>Parse <code /s/ as an &Oz; integer.  Returns a pointer to the next
+    character after the integer or null if <code /s/ does not start
+    with an integer in &Oz; syntax (see <ptr.extern to="ozdoc:notation">).
+
+<entry><<OZ_CStringToInt>>
+<index class=module/OZ_CStringToInt/
+<synopsis>
+  <code >OZ_Term OZ_CStringToInt(char *s)</code>
+<item>Converts C string <code /s/ to an &Oz; integer. <code /s/ must be a valid
+  integer in &Oz; syntax (see <ptr.extern to="ozdoc:notation">).
+
+<entry><<OZ_floatToC>>
+<index class=module/OZ_floatToC/
+<synopsis>
+<code >double OZ_floatToC(OZ_Term t)</code>
+<item>Converts &Oz; float <code /t/ to a C float.
+
+<entry><<OZ_float>>
+<index class=module/OZ_float/
+<synopsis>
+<code >OZ_Term OZ_float(double f)</code>
+<item>Converts C float <code /f/ to an &Oz; float.
+
+<entry><<OZ_boolToC>>
+<index class=module/OZ_boolToC/
+<synopsis>
+<code >int OZ_boolToC(OZ_Term t)</code>
+<item>Returns non-zero iff <code /t/ is equal to <<true>>.
+
+<entry><<OZ_parseFloat>>
+<index class=module/OZ_parseFloat/
+<synopsis>
+<code >char *OZ_parseFloat(char *s)</code>
+<item>Parse <code /s/ as an &Oz; float. Returns a pointer to the next
+  character after the float or null if <code /s/ is not an 
+  float in &Oz; syntax (see <ptr.extern to="ozdoc:notation">).
+
+<entry><<OZ_CStringToFloat>>
+<index class=module/OZ_CStringToFloat/
+<synopsis>
+<code >OZ_Term OZ_CStringToFloat(char *s)</code>
+<item>Converts C string <code /s/ to an &Oz; float. <code /s/ must be a valid
+  float in &Oz; syntax (see <ptr.extern to="ozdoc:notation">).
+
+<entry><<OZ_CStringToNumber>>
+<index class=module/OZ_CStringToNumber/
+<synopsis>
+<code >OZ_Term OZ_CStringToNumber(char *s)</code>
+<item> Converts C string <code /s/ to an &Oz; number. <code /s/ must be a valid
+  integer or float in &Oz; syntax (see <ptr.extern to="ozdoc:notation">).
+
+<entry><<OZ_toC>>
+<index class=module/OZ_toC/
+<synopsis>
+  <code >char *OZ_toC(OZ_Term t, int depth, int width)</code>
+<item>Converts any &Oz; term <code /t/ to an C string.  This functions
+    doesn't check for cycles.  A <code /depth/ of ?{n} means that trees
+    are printed to a depth limit of ?{n} only, deeper subtrees are
+    abbreviated by ,,,.  A <code /width/ of ?{n} means that for lists at
+    most ?{n} elements and for records at most ?{n} fields are printed,
+    the unprinted elements and fields are printed by ,,,.
+
+<entry><<OZ_string>>
+<index class=module/OZ_string/
+<synopsis>
+<code >OZ_Term OZ_string(char *s)</code>
+<item>Converts C string <code /s/ to an &Oz; string.
+
+<entry><<OZ_stringToC>>
+<index class=module/OZ_stringToC/
+<synopsis>
+<code >char *OZ_stringToC(OZ_Term t, int *n)</code>
+<item>Converts &Oz; string <code /t/ to a C string and returns in
+<code /n/ the length of string.
+
+<entry><<OZ_virtualStringToC>>
+<index class=module/OZ_virtualStringToC/
+<synopsis>
+<code >char *OZ_virtualStringToC(OZ_Term t, int *n)</code>
+<item>Converts &Oz; virtual string <code /t/ to a C string. The
+returned value is overridden with the next invocation of this
+function.
+</list></section> <section
+id=section.term_access><title/Term access and construction/
+<p>
+Several functions are available to access and construct terms.
+<list>
+
+<entry><<OZ_label>>
+<index class=module/OZ_label/
+<synopsis>
+<code >OZ_Term OZ_label(OZ_Term term)</code>
+<item>Returns the label of <code /term/.
+
+<entry><<OZ_width>>
+<index class=module/OZ_width/
+<synopsis>
+  <code >int OZ_width(OZ_Term term)</code> 
+<item>Returns the width of <code /term/.
+
+<entry><<OZ_tuple>>
+<index class=module/OZ_tuple/
+<synopsis>
+  <code >OZ_Term OZ_tuple(OZ_Term label, int width)</code>
+<item>Returns a new tuple with label <code /label/ and width <code /width/.
+    Note that the values of all subtrees are still undefined. Hence a
+    call to this function should be immediately followed by calls to
+    <code /OZ_putArg/.
+
+<entry><<OZ_putArg>>
+<index class=module/OZ_putArg/
+<synopsis>
+  <code >int OZ_putArg(OZ_Term tuple,int pos,OZ_Term arg)</code>
+<item>Destructively sets the subtree of tuple <code /tuple/ at <code /pos/ to
+    <code /arg/. The tuple arguments are numbered starting from 0.
+    Should be only used for tuples created with <code /OZ_tuple/.
+
+<entry><<OZ_mkTuple>>
+<index class=module/OZ_mkTuple/
+<synopsis>
+  <code >OZ_Term OZ_mkTuple(OZ_Term label, int width, ...)</code>
+<item>Returns a new tuple with label <code /label/ and width <code /width/.
+    All subtrees from 1 to <code /width/ must be given as arguments
+    after <code /width/.  Example:
+<code display >
+OZ_mkTuple(OZ_atom("f"),2,OZ_atom("a"),OZ_int(1))
+</code>
+  creates the tuple <<f(a 1)>>.
+
+<entry><<OZ_mkTupleC>>
+<index class=module/OZ_mkTupleC/
+<synopsis>
+  <code >OZ_Term OZ_mkTupleC(char *label, int width, ...)</code>
+<item>Analogously to <code /OZ_mkTuple/, but expects the label as a C
+    string.
+
+<entry><<OZ_getArg>>
+<index class=module/OZ_getArg/
+<synopsis>
+  <code >OZ_Term OZ_getArg(OZ_Term tuple, int pos)</code>
+<item>Returns the subtree of tuple <code /tuple/ at <code /pos/.  The tuple
+    arguments are numbered starting from 0.
+
+<entry><<OZ_nil>>
+<index class=module/OZ_nil/
+<synopsis>
+  <code >OZ_Term OZ_nil()</code> <item>Returns the atom <<nil>>.
+
+<entry><<OZ_cons>>
+<index class=module/OZ_cons/
+<synopsis>
+  <code >OZ_Term OZ_cons(OZ_Term head, OZ_Term tail)</code>
+<item>Returns a binary tuple with label <<'|'>>, where the first field is
+    <code /head/, the second is <code /tail/.
+
+<entry><<OZ_head>>
+<index class=module/OZ_head/
+<synopsis>
+  <code >OZ_Term OZ_head(OZ_Term t)</code>
+<item>Returns the first field of <code /t/. <code /t/ must be a tuple with
+    label <<'|'>>  and width 2.
+
+<entry><<OZ_tail>>
+<index class=module/OZ_tail/
+<synopsis>
+  <code >OZ_Term OZ_tail(OZ_Term t)</code>
+<item>Returns the second field of <code /t/. <code /t/ must be a tuple with
+    label <<'|'>>  and width 2.
+
+<entry><<OZ_length>>
+<index class=module/OZ_length/
+<synopsis>
+  <code >int OZ_length(OZ_Term t)</code>
+<item>Compute the length of the &Oz; list <code /t/.  This function returns
+    <code /-1/, if <code /t/ is not determined and <code /-2/, if <code /t/ is
+    not a list. 
+
+<entry><<OZ_toList>>
+<index class=module/OZ_toList/
+<synopsis>
+  <code >OZ_Term OZ_toList(int n, OZ_Term *t)</code>
+<item>Creates an &Oz; list out of an array <code /t/ of <code /n/
+    values.
+
+<entry><<OZ_pair>>
+<index class=module/OZ_pair/
+<synopsis>
+  <code >OZ_Term OZ_pair(int n)</code>
+<item>Returns a mixfix pair, with <code /n/ subtrees.  The subtrees are not
+    initialized and must be defined with <code /OZ_putArg/.
+
+<entry><<OZ_pair2>>
+<index class=module/OZ_pair2/
+<synopsis>
+  <code >OZ_Term OZ_pair2(OZ_Term left, OZ_Term right)</code>
+<item>Returns a mixfix pair, where the first field is <code /left/ and the
+    second is <code /right/.
+
+<entry><<OZ_pairA>>
+<index class=module/OZ_pairA/
+<synopsis>
+  <code >OZ_Term OZ_pairA(char *left, OZ_Term right)</code>
+<item>Macro for creating a mixfix pair of an atom and a value. It is
+    defined as:
+<code display >
+OZ_pair2(OZ_atom(left),right)
+</code>
+
+<entry><<OZ_pairAA>>
+<index class=module/OZ_pairAA/
+<synopsis>
+  <code >OZ_Term OZ_pairAA(char *left, char *right)</code>
+<item>Macro for creating a mixfix pair of two atoms. It is defined as:
+<code display >
+OZ_pair2(OZ_atom(left),OZ_atom(right))
+</code>
+
+<entry><<OZ_pairAI>>
+<index class=module/OZ_pairAI/
+<synopsis>
+  <code >OZ_Term OZ_pairAI(char *left, int right)</code>
+<item>Macro for creating a mixfix pair of an atom and an integer.  It is
+    defined as: 
+<code display >
+OZ_pair2(OZ_atom(left),OZ_int(right))
+</code>
+
+<entry><<OZ_pairAS>>
+<index class=module/OZ_pairAS/
+<synopsis>
+  <code >OZ_Term OZ_pairAS(char *left, char *right)</code>
+<item>Macro for creating a mixfix pair of an atom and a string. It is
+    defined as:
+<code display >
+OZ_pair2(OZ_atom(left),OZ_string(right))
+</code>
+
+<entry><<OZ_subtree>>
+<index class=module/OZ_subtree/
+<synopsis>
+  <code >OZ_Term OZ_subtree(OZ_Term record, OZ_Term feature)</code>
+<item>Returns the subtree of record <code /record/ at <code /feature/.}
+
+<entry><<OZ_record>>
+<index class=module/OZ_record/
+<synopsis>
+  <code >OZ_Term OZ_record(OZ_Term label, OZ_Term arity)</code>
+<item>Creates a new record with label <code /label/ and list of features
+    <code /arity/.  Note that the values of all subtrees are still
+    undefined.  Hence a call to this function should be immediately
+    followed by calls to <code /OZ_putSubtree/.
+
+<entry><<OZ_recordInit>>
+<index class=module/OZ_recordInit/
+<synopsis>
+  <code >OZ_Term OZ_recordInit(OZ_Term lbl,OZ_Term propList)</code>
+<item>Creates a new record with label <code /lbl/. The property list
+      <code /propList/ contains all features and their subtree as mixfixed
+    pairs.
+
+<entry><<OZ_putSubtree>>
+<index class=module/OZ_putSubtree/
+<synopsis>
+  <code >void OZ_putSubtree(OZ_Term record, OZ_Term feature,
+    OZ_Term newTerm)</code>
+<item>Destructively sets the subtree of record <code /record/ at 
+      <code /feature/ to <code /newTerm/. Should be only used for records
+    created with <code /OZ_record/ or <code /OZ_recordInit/.
+
+<entry><<OZ_arityList>>
+<index class=module/OZ_arityList/
+<synopsis>
+<code >OZ_Term OZ_arityList(OZ_Term record)</code>
+<item>Returns the arity of record <code /record/ as an &Oz; list.
+
+<entry><<OZ_adjoinAt>>
+<index class=module/OZ_adjoinAt/
+<synopsis>
+<code >OZ_Term OZ_adjoinAt
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(OZ_Term rec,OZ_Term fea,OZ_Term val)</code>
+<item>Returns a new record by adjoining subtree <code /val/ at feature <code /fea/ to record <code /rec/.
+
+<entry><<OZ_newVariable>>
+<index class=module/OZ_newVariable/
+<synopsis>
+  <code >OZ_Term OZ_newVariable()</code>
+<item>Creates a new variable.
+
+<entry><<OZ_newName>>
+<index class=module/OZ_newName/
+<synopsis>
+  <code >OZ_Term OZ_newName()</code>
+<item>Creates a new name.}
+
+<entry><<OZ_newChunk>>
+<index class=module/OZ_newChunk/
+<synopsis>
+  <code >OZ_Term OZ_newChunk(OZ_Term record)</code>
+<item>Creates a new chunk.
+
+<entry><<OZ_newCell>>
+<index class=module/OZ_newCell/
+<synopsis>
+  <code >OZ_Term OZ_newCell(OZ_Term t)</code>
+<item>Creates a new cell with initial content <code /t/.
+
+<entry><<OZ_newPort>>
+<index class=module/OZ_newPort/
+<synopsis>
+  <code >OZ_Term OZ_newPort(OZ_Term s)</code>
+<item>Creates a new port with stream <code /s/.
+
+<entry><<OZ_send>>
+<index class=module/OZ_send/
+<synopsis>
+  <code >void OZ_send(OZ_Term p, OZ_Term t)</code>
+<item>Sends value <code /t/ to port <code /p/.
+
+<entry><<OZ_onToplevel>>
+<index class=module/OZ_onToplevel/
+<synopsis>
+  <code >int OZ_onToplevel()</code>
+<item>Returns nonzero iff called on toplevel, &ie; not within a local
+    space.
+</list></section>
+<section id=section.cif.excp><title/Exceptions/
+<p>
+<list>
+
+<entry><<OZ_raise>>
+<index class=module/OZ_raise/
+<synopsis>
+  <code >OZ_Return OZ_raise(OZ_Term t)</code>
+<item>Raises exception <code /t/.
+
+<entry><<OZ_raiseC>>
+<index class=module/OZ_raiseC/
+<synopsis>
+  <code >OZ_Return OZ_raiseC(char *label,int arity,...)</code>
+<item>Raises an exception. The exception is created from the argument
+    list just the way it is done by <code /OZ_mkTupleC/.
+
+<entry><<OZ_typeError>>
+<index class=module/OZ_typeError/
+<synopsis>
+  <code >OZ_Return OZ_typeError(int pos, char *type)</code>
+<item>Raises an exception indicating that the argument at position 
+      <code /pos/ is of incorrect type. <code /type/ should be a string
+    describing the expected type.
+</list></section>
+<section id=section.cif.unif><title/Unification/
+<p>
+<list>
+
+<entry><<OZ_unify>>
+<index class=module/OZ_unify/
+<synopsis>
+  <code >OZ_Return OZ_unify(OZ_Term t1, OZ_Term t2)</code>
+<item>Unify <code /t1/ and <code /t2/. Return <code /OZ_ENTAILED/ on success
+    and <code /OZ_FAILED/ on failure.
+
+<entry><<OZ_unifyInt>>
+<index class=module/OZ_unifyInt/
+<synopsis>
+  <code >OZ_Return OZ_unifyInt(OZ_Term t1, int i)</code>
+<item>This is an abbreviation for <code /OZ_unify(t1, OZ_int(i))/
+
+<entry><<OZ_unifyFloat>>
+<index class=module/OZ_unifyFloat/
+<synopsis>
+  <code >OZ_Return OZ_unifyFloat(OZ_Term t1, float f)</code>
+<item>This is an abbreviation for <code /OZ_unify(t1, OZ_float(f))/
+
+<entry><<OZ_unifyAtom>>
+<index class=module/OZ_unifyAtom/
+<synopsis>
+  <code >OZ_Return OZ_unifyAtom(OZ_Term t1, char *s)</code>
+<item>This is an abbreviation for <code /OZ_unify(t1, OZ_atom(s))/
+
+<entry><<OZ_eq>>
+<index class=module/OZ_eq/
+<synopsis>
+  <code >OZ_Return OZ_eq(OZ_Term t1, OZ_Term t2)</code>
+<item>Return non-null, if <code /t1/ and <code /t2/ reference the same Oz
+  object in the store.
+
+<entry><<OZ_eqAtom>>
+<index class=module/OZ_eqAtom/
+<synopsis>
+  <code >OZ_Return OZ_eqAtom(OZ_Term t1, char *s)</code>
+<item>This is an abbreviation for <code /OZ_eq(t1, OZ_atom(s))/
+
+<entry><<OZ_eqInt>>
+<index class=module/OZ_eqInt/
+<synopsis>
+  <code >OZ_Return OZ_eqInt(OZ_Term t1, int i)</code>
+<item>This is an abbreviation for <code /OZ_eq(t1, OZ_int(i))/
+
+<entry><<OZ_eqFloat>>
+<index class=module/OZ_eqFloat/
+<synopsis>
+  <code >OZ_Return OZ_eqFloat(OZ_Term t1, double d)</code>
+<item>This is an abbreviation for <code /OZ_eq(t1, OZ_float(d))/
+
+
+</list></section>
+
+
+
+<section id=section.threads><title/Threads/
+<p>
+<list>
+
+<entry><<OZ_makeRunnableThread>>
+<index class=module/OZ_makeRunnableThread/
+<synopsis>
+  <code >void OZ_makeRunnableThread(OZ_Term proc, OZ_Term *args, int n) </code>
+<item>Creates a thread with one task to execute the application of <code /proc/
+    to arguments <code /args[0],&ellipsis;,args[n-1]/.
+<p>
+
+<entry><<OZ_getLowPrio>>
+<index class=module/OZ_getLowPrio/
+<entry><<OZ_getMediumPrio>>
+<index class=module/OZ_getMediumPrio/
+<entry><<OZ_getHighPrio>>
+<index class=module/OZ_getHighPrio/
+<synopsis>
+  
+<code>
+int OZ_getLowPrio()
+int OZ_getMediumPrio()
+int OZ_getHighPrio()
+</code>
+<item>Return the appropriate thread priorities.
+</list></section>
+<section id=section.cif.print><title/Printing/
+<p>
+<list>
+
+<entry><<OZ_warning>>
+<index class=module/OZ_warning/
+<synopsis>
+  <code >void OZ_warning(char *format ...)</code>
+<item>Prints a warning message to the standard error device. Can be used
+    like <code /printf(3)/.
+
+</list></section>
+
+<section id=section.cif.misc><title/Miscellaneous/
+<p>
+
+<list>
+
+<entry><<OZ_false>>
+<index class=module/OZ_false/
+<synopsis>
+  <code >OZ_term OZ_false()</code>
+<item>Returns the &Oz; name for the boolean value <code /false/.
+
+<entry><<OZ_true>>
+<index class=module/OZ_true/
+<synopsis>
+  <code >OZ_term OZ_true()</code>
+<item>Returns the &Oz; name for the boolean value <code /true/.
+
+<entry><<OZ_unit>>
+<index class=module/OZ_unit/
+<synopsis>
+  <code >OZ_term OZ_unit()</code>
+<item>Returns the &Oz; name for <code /unit/.
+
+<entry><<OZ_smallIntMin>>
+<index class=module/OZ_smallIntMin/
+<synopsis>
+  <code >int OZ_smallIntMin()</code>
+<item>Returns the minimal small integer.
+
+<entry><<OZ_smallIntMax>>
+<index class=module/OZ_smallIntMax/
+<synopsis>
+  <code >int OZ_smallIntMax()</code>
+<item>Returns the maximal small integer.
+
+<entry><<OZ_featureCmp>>
+<index class=module/OZ_featureCmp/
+<synopsis>
+  <code >int OZ_featureCmp(OZ_Term t1, OZ_Term t2)</code>
+<item>Compares the features <code /t1/ and <code /t2/.  Returns zero if they are
+    equal, -1 if <code /t1/ is less than <code /t2/ and 1 if <code /t2/ is
+    less than <code /t1/.
+
+<entry><<OZ_suspendOn>>
+<index class=module/OZ_suspendOn/
+<synopsis>
+  <code >OZ_suspendOn(OZ_Term v)</code>
+<item>Suspends the executing thread on <code /v/. <code /v/ must be a
+    variable. When <code /v/ gets bound then the thread gets woken by
+    first reexecuting the enclosing C function from the beginning.
+
+<entry><<OZ_suspendOn2>>
+<entry><<OZ_suspendOn3>>
+<index class=module/OZsuspendOn2/
+<index class=module/OZsuspendOn3/
+<synopsis>
+  <code >
+OZ_suspendOn2(OZ_Term v1, OZ_Term v2)
+OZ_suspendOn3(OZ_Term v1, OZ_Term v2, OZ_Term v3)
+</code>
+<item>Like <code /OZ_suspendOn/ , but suspends the executing thread
+    disjunctively on the argument variables.
+</list>
+</section>
+
+<section id=section.cif.garb><title/Garbage collection/
+<p>
+Care must be taken about proper interaction with the &Oz; garbage
+collector: it does not notice if you store an <code /OZ_Term/ into a
+global C variable. Therefore it will free the space on the heap
+occupied by this term, which leads to memory faults. &Oz; provides functions
+to explicitly inform the garbage collector about external references
+to the heap.
+<list>
+
+<entry><<OZ_protect>>
+<index class=module/OZ_protect/
+<synopsis>
+  <code >int OZ_protect(OZ_Term *tp)</code>
+<item>During garbage collection the term <code /tp/ points to is visited
+    and may be moved. Therefore <code /tp/ must be a <em/pointer/ to a
+    term.  The location where <code /tp/ points to is modified by the
+    garbage collector.
+
+<entry><<OZ_unprotect>>
+<index class=module/OZ_unprotect/
+<synopsis>
+  <code >int OZ_unprotect(OZ_Term *tp)</code>
+<item>This is the inverse function to <code /OZ_protect/ informing the
+    garbage collector that the reference to the heap is no longer
+    used.
+
+<entry><<OZ_gCollect>>
+<index class=module/OZ_gCollect/
+<synopsis>
+  <code >int OZ_gCollect(OZ_Term *tp)</code> 
+<item>This function causes the Oz term referred to by <<tp>> to be updated
+during garbage collection.
+
+<entry><<OZ_sClone>>
+<index class=module/OZ_sClone/
+<synopsis>
+  <code >int OZ_sClone(OZ_Term *tp)</code>
+<item>This function causes the Oz term referred to by <<tp>> to be updated
+during cloning.
+
+
+</list>
+</section>
+
+
+<section id=section.cif.io><title>Concurrent Input and Output</title>
+<p>
+Reading from or writing to a file descriptor may block, since buffers
+my be empty or resp. full. Thus calling <code /read/ or <code /write/
+might block the whole Oz process. We therefor provide abstractions that
+allow concurrent access to file descriptors from within the C level.
+
+<p>
+We first declare an abstact type <code /OZ_IOHandler/ which is a
+function expecting an integer and an arbitrary pointer:
+<p>
+<code>
+   typedef int OZ_IOHandler(int, void *);
+</code>
+<p>
+
+The user can then use the following abstractions:
+<list>
+<entry><<OZ_registerReadHandler>>
+<index class=module/OZ_registerReadHandler/
+<synopsis>
+  <code >void OZ_registerReadHandler(int fd,OZ_IOHandler fun,void *args)</code>
+<item>Registers <code /fun/ as a read handler for file descriptor
+<code /fd/. Any previously registered function will be
+overridden. When input gets available on <code /fd/ then <code
+/fun(fd,args)/ will be called by the Oz scheduler. The usage of <code
+/args/ provides a way to pass arbitrary arguments to <code /fun/.
+
+<entry><<OZ_unregisterRead>>
+<index class=module/OZ_unregisterRead/
+<synopsis>
+  <code >void OZ_unregisterRead(int fd)</code>
+<item>Unregisters a previously registered read handler for file
+descriptor <code /fd/.
+
+<entry><<OZ_registerWriteHandler>>
+<index class=module/OZ_registerWriteHandler/
+<synopsis>
+  <code >void OZ_registerWriteHandler(int fd,OZ_IOHandler fun,void *args)</code>
+<item>Analogously to <code /OZ_registerReadHandler/ for writing. <code
+/fun/ is called as soon as the output buffer for <code /fd/ gets empty.
+
+<entry><<OZ_unregisterWrite>>
+<index class=module/OZ_unregisterWrite/
+<synopsis>
+  <code >void OZ_unregisterWrite(int fd)</code>
+<item>Unregisters a previously registered write handler for file
+descriptor <code /fd/.
+</list>
+
+</section>
+
+</chapter>
+
+<!-- ********************************************************************** -->
+<Chapter id="chapter.extension">
+<Title/The Extension class/
+
+<P>The C++ class <<OZ_Extension>> allows for an easy integration of new
+ built-in data types into the Oz VM.
+
+<p>To add a new data type a native module must be implemented which contains
+(1) a subclass of <<OZ_Extension>> (see below) and (2) built-in procedures
+implementing the operation on the new type.
+
+<p>If you want to implement situated extension, i.e. data types which
+are situated in computation spaces and need to be copied you should
+subclass <<OZ_SituatedExtension>> with has the same interface as
+<<OZ_Extension>>.
+
+<p>In <Ptr to="section.extension.reference"> you find the reference
+documentation and in <Ptr to="section.extension.example"> an example.
+
+<!-- ********************************************************************** -->
+
+<Section id="section.extension.reference">
+  <Title/Reference/
+
+    <SubSection id="section.extension.reference.class">
+<Title/The class <<OZ_Extension>>/
+
+ <p>The class <<OZ_Extension>> implements the methods defined below.
+ The methods <<getIdV>>, <<gCollectV>>, and <<sCloneV>> which are marked as
+ required are pure virtual and have to be implemented in every
+ subclass.
+
+<LIST CLASS=EXPORTS>
+
+  <ENTRY><<virtual int getIdV()>> // required
+  <index class=tails/<<OZ_Extension>> <and> <<getIdV>>/
+
+  <ITEM>Allows to discriminate the different kinds of extensions. It
+      should return a unique number.  Unique numbers can be obtained
+      using <<int OZ_getUniqueId()>>.
+
+      <p>Ids can be statically assigned by extending the enumeration
+      <<OZ_Registered_Extension_Id>>.
+
+  <ENTRY><<virtual OZ_Extension* gCollectV()>> // required
+  <index class=tails/<<OZ_Extension>> <and> <<gCollectV>>/
+
+<ITEM>Needed for garbage collection.
+
+  <ENTRY><<virtual OZ_Extension* sCloneV()>> // required
+  <index class=tails/<<OZ_Extension>> <and> <<sCloneV>>/
+
+<ITEM>Needed for cloning of computation spaces
+(for <<OZ_SituatedExtension>>).
+
+
+  <ENTRY><<virtual void gCollectRecurseV()>> // required
+<index class=tails/<<OZ_Extension>> <and> <<gCollectRecurseV>>/
+<ITEM>Invoked on the copy obtained from <<gCollectV>>.  The VM has marked the data
+such that recursive updates of fields, e.g. running <<OZ_gCollect>>,
+does not run into cycles.
+
+  <ENTRY><<virtual void sCloneRecurseV()>> // required
+<index class=tails/<<OZ_Extension>> <and> <<sCloneRecurseV>>/
+<ITEM>Invoked on the copy obtained from <<sCloneV>>.  The VM has marked the data
+such that recursive updates of fields, e.g. running <<OZ_sClone>>,
+does not run into cycles.
+
+  <ENTRY><<virtual OZ_Term printV(int depth = 10)>> // default: return
+  <index class=tails/<<OZ_Extension>> <and> <<printV>>/
+  <<extension>>
+  <ITEM>printV should return a virtual string and is used for
+  printing, e.g. System.show.
+
+  <ENTRY><<virtual OZ_Term printLongV(int depth = 10, int offset = 0)>> // default: call printV
+  <index class=tails/<<OZ_Extension>> <and> <<printLongV>>/
+  <ITEM>This may help debugging, but is currently not used.
+
+  <ENTRY><<virtual OZ_Term typeV()>> // default: return <<extension>>
+  <index class=tails/<<OZ_Extension>> <and> <<typeV>>/
+  <ITEM>typeV should return an atom describing the type of the
+      extension. This value is also return in Value.status and
+      Value.type.  It should not conflict with the built-in types.
+
+<ENTRY><<virtual OZ_Term inspectV()>> // default: call typeV
+  <index class=tails/<<OZ_Extension>> <and> <<inspectV>>/
+<ITEM>Not used. Idea: hook for debugging tools to get information.
+
+  <ENTRY><<virtual Oz_Boolean isChunkV()>> // default: return true
+  <index class=tails/<<OZ_Extension>> <and> <<isChunkV>>/
+<ITEM>Define this to return false is the extension in not a subtype of
+      chunk.
+
+  <ENTRY><<virtual OZ_Term getFeatureV(OZ_Term fea)>> // default: return 0
+  <index class=tails/<<OZ_Extension>> <and> <<getFeatureV>>/
+<ITEM>If the operator <<.>> (dot) is applied to an extension this function is
+      called. If <<getFeatureV>> returns 0 an exception is raised that the
+      feature is not available.
+
+  <ENTRY><<virtual OZ_Return getFeatureV(OZ_Term,OZ_Term&amp;)>> //
+  default: return <code/OZ_FAILED/
+  <index class=tails/<<OZ_Extension>> <and> <<getFeatureV>>/
+  <ITEM>The is the more basic version of the above, where a reference
+  to the return value is passed as the 2nd argument.
+
+  <ENTRY><<virtual OZ_Return putFeatureV(OZ_Term,OZ_Term)>> //
+  default: return <code/OZ_FAILED/
+  <index class=tails/<<OZ_Extension>> <and> <<putFeatureV>>/
+  <ITEM>Feature is 1st argument, new value is 2nd argument.  This is
+  used &eg; for <code proglang=oz/:=/ support.
+
+  <ENTRY><<virtual OZ_Return eqV(OZ_Term t)>> // default: return false
+  <index class=tails/<<OZ_Extension>> <and> <<eqV>>/
+<ITEM>This function is called during unification and equality test
+      (==), if both values are extensions. Implement it if you need
+      structural equality. Note that in this case <<isChunkV>> should
+      return false.
+
+  <ENTRY><<virtual OZ_Boolean toBePickledV()>>  // default: return false
+  <index class=tails/<<OZ_Extension>> <and> <<toBePickledV>>/
+<ITEM>return true if pickling is defined.
+  
+  <ENTRY><<virtual OZ_Boolean pickleV(MarshalerBuffer *)>>  // default: return false
+  <index class=tails/<<OZ_Extension>> <and> <<pickleV>>/
+<ITEM>This is the hook to pickling. It is only called when
+      <<toBePickledV>> returned true, and must return true by itself.
+      It writes the extension's external representation into the
+      given buffer (see <<oz_registerExtension>> below).
+  
+  <ENTRY><<virtual OZ_Boolean marshalSuspV(OZ_Term te, ByteBuffer *, GenTraverser *)>>  // default: return false
+  <index class=tails/<<OZ_Extension>> <and> <<marshalSuspV>>/
+<ITEM>This is the hook to serialization for Oz distribution.  It
+      returns true if the extension has been serialized, and writes
+      its external representation/a fragment of into the given buffer
+      (see <<oz_registerExtension>> below). It returns false if the
+      extension cannot be serialized.
+
+  <ENTRY><<virtual int minNeededSpace()>>  // default: return 0
+  <index class=tails/<<OZ_Extension>> <and> <<minNeededSpace>>/
+  <ITEM>This method is used by the Oz distribution's serialization
+      routine. It must return the minimal possible size of the next
+      fragment of the extension's external representation. This number
+      must be consistent with the <<marshalSuspV>> method described
+      above.
+
+  <ENTRY><<OZ_Boolean isLocal()>>
+  <index class=tails/<<OZ_Extension>> <and> <<isLocal>>/
+<ITEM>Returns true if a situated extensions is local to the current space.
+
+</LIST>
+
+<SubSection id="section.extension.reference.functions">
+<Title/Functions/
+
+<p>
+<LIST CLASS=EXPORTS>
+<ENTRY><<Oz_Boolean OZ_isExtension(OZ_Term t)>>
+  <index class=module/OZ_isExtension/
+<ITEM>Tests if the OZ_Term is an extension (<<t>> must be dereferenced
+first).
+
+<ENTRY><<OZ_Extension * OZ_getExtension(OZ_Term t)>>
+  <index class=module/OZ_getExtension/
+<ITEM>Unbox the OZ_Term into an extension
+     (<<t>> must be dereferenced).
+	    
+<ENTRY><<OZ_Term OZ_extension(OZ_Extension *e)>>
+  <index class=module/OZ_extension/
+<ITEM>Box the Extension into an OZ_Term.
+
+<ENTRY><<typedef OZ_Term (*oz_unmarshalProcType)(MarshalerBuffer *)>>
+<ENTRY><<typedef OZ_Term (*oz_suspUnmarshalProcType)(ByteBuffer*, GTAbstractEntity* &)>>
+<ENTRY><<typedef OZ_Term (*oz_unmarshalContProcType)(ByteBuffer*, GTAbstractEntity*)>>
+<ENTRY><<void oz_registerExtension(int id, oz_unmarshalProcType, oz_suspUnmarshalProcType, oz_unmarshalContProcType)>>
+  <index class=module/oz_unmarshalProcType/
+  <index class=module/oz_suspUnmarshalProcType/
+  <index class=module/oz_unmarshalContProcType/
+  <index class=module/oz_registerExtension/
+<ITEM>Registers unmarshal procedures for the extension with the given
+id. The second and the third procedures can be 0 if marshaling for Oz
+distribution for the given id is not defined.
+
+<ENTRY><<int OZ_newUniqueId()>>
+  <index class=module/oz_newUniqueId/
+<ITEM>Returns a new unique number usable as the id of an extension.
+
+</LIST>
+
+
+<Section id="section.extension.example">
+  <Title/Example/
+
+<p>The following is a snippet from the implementation of bit arrays
+(bitarray.cc).  Look at &eg; <file>mozart/contrib/gdbm/gdbm.cc</file>
+for an exampl of a non-system extension.
+
+<Code.extern display TO="bitarray.cc">
+
+
+</chapter>
+
+  <Back>
+</Book>

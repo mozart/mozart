@@ -1,0 +1,91 @@
+Copyright (c) by Denys Duchier, June 1997, Universität des Saarlandes
+
+			    OZ GDBM MODULE
+
+GDBM is the GNU DBM database utility.  This module implements an
+interface which permits the user to save/recover Oz (stateless) values
+into/from such a database.
+
+			     INSTALLATION
+
+./configure
+make
+make install
+
+You may try to set CPPFLAGS and/or LIBS prior to invoking configure
+so that gdbm stuff may be found.
+
+			    INSTANTIATION
+
+The GDBM module looks up IMPORTS.'SP'.'Foreign'.load in its IMPORTS
+argument.  Interactively, you could instantiate it as follows:
+
+declare GDBM =
+ {{Load 'http://www.mozart-oz.org/home/tools/gdbm/gdbm.ozc'}
+  m('SP':x('Foreign':Foreign))}
+
+For use by the Application module, you can declare it as follows:
+
+{Application.register 'GDBM'
+ x(src:url('http://www.mozart-oz.org/home/tools/gdbm/gdbm.ozc')
+   args:x('SP':'SP'))}
+
+and subsequently refer to module named 'GDBM' in your application
+constructing code.
+
+			    DOCUMENTATION
+
+{New GDBM init(	name     :Name
+		flags    :Flags<=[create]
+		mode     :Mode <=mode(owner:[write] all:[read])
+		blockSize:Block<=unit )
+	  ?X}
+
+	binds X to an object that interfaces with a gdbm database.
+	The arguments to init(...) are similar to those for the Open
+	module. `flags' are taken from [read write create truncate
+	new fast]. `blockSize' is described in the gdbm: it represents
+	the size of a transfer from disk to memory; it has effect only
+	when a new database is being created.
+
+{X get(Key ?Val)}
+
+	Key must be an atom or an integer.  Val is the Oz value that
+	was saved in the database under this key.
+
+{X put(Key Val replace:R<=true)}
+
+	Saves Val under Key in the database.  The optional argument
+	`replace' indicates whether to overwrite the entry for Key
+	should it already exist.  If `replace' is not true, exception
+	keyExists may be raised.  If the put failed for some other
+	reason, exception putFailed will be raised.
+
+{X del(Key)}
+
+	deletes the entry for Key (if it exists).  If the operation
+	failes for some other reason, exception delFailed is raised.
+
+{X close}
+
+	closes the gdbm database.  It doesn't makes sense to use X
+	after this.
+
+{X firstkey(?Key)}
+
+	This operation is used to begin iterating over the keys in the
+	database: it returns the first key present in the database.
+	Which is considered first is implementation dependent and
+	should not be relied upon; it may well change as a result of
+	other operations.
+
+{X nextkey(Key ?NextKey)}
+
+	returns the next key after Key. Similar caveats apply as
+	above.
+
+{X reorganize}
+
+	After many updates (e.g. deletions), it may be profitable to
+	reorganize the database.  May raise exception
+	reorganizeFailed.

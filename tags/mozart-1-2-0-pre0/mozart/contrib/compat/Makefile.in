@@ -1,0 +1,82 @@
+@SET_MAKE@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+PREFIX		= @prefix@
+PLATFORM	= @PLATFORM@
+LIB_DIR		= $(PREFIX)/contrib/compat
+BIN_DIR		= $(PREFIX)/bin
+HOMEURL         = @HOMEURL@
+
+OZC		= @OZC@
+OZTOOL		= @OZTOOL@
+
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_LIB	= $(INSTALL) -m 444
+INSTALL_DLL	= $(INSTALL) -m 555
+INSTALL_BIN	= $(INSTALL) -m 555
+
+TARGETS		= TextPickle.ozf convertTextPickle
+LIB_TARGETS	= $(LIB_DIR)/TextPickle.ozf \
+		  $(LIB_DIR)/TextPickleScanner.so-$(PLATFORM)
+BIN_TARGETS	= $(BIN_DIR)/convertTextPickle
+NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib/compat
+NEW_TARGETS	= $(LIB_TARGETS:$(LIB_DIR)/%=$(NEWCACHEDIR)/%)
+
+.PHONY: all install clean veryclean distclean bootstrap depend
+
+%.ozf: %.ozg
+	OZTOOL="$(OZTOOL)" $(OZC) -z 9 --gump $(OZCFLAGS) -c $< -o $@
+
+all: $(TARGETS)
+
+install: $(BIN_DIR) $(BIN_TARGETS) $(NEWCACHEDIR) $(NEW_TARGETS)
+
+$(NEWCACHEDIR)/%.ozf : %.ozf
+	$(INSTALL_LIB) $< $@
+
+$(NEWCACHEDIR)/%.so-$(PLATFORM) : %.so-$(PLATFORM)
+	$(INSTALL_DLL) $< $@
+
+$(LIB_DIR) $(BIN_DIR) $(NEWCACHEDIR):
+	$(INSTALL_DIR) $@
+
+$(LIB_DIR)/%.ozf: %.ozf
+	$(INSTALL_LIB) $< $@
+
+$(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
+	$(INSTALL_DLL) $< $@
+
+$(BIN_DIR)/%: %
+	$(INSTALL_BIN) $< $@
+
+TextPickle.so-$(PLATFORM): TextPickle.ozf
+	@echo > /dev/null
+
+convertTextPickle: ConvertTextPickle.oz
+	$(OZC) $(OZCFLAGS) -x $< -o $@
+
+clean:
+	-rm -f TextPickleScanner.[Clo]
+
+veryclean: clean
+	-rm -f *.so-* *.ozf convertTextPickle
+
+distclean: clean
+	-rm -f config.* Makefile
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck

@@ -1,0 +1,1009 @@
+<CHAPTER ID="chapter.ft_examples">
+  <TITLE>Fault-Tolerant Examples</TITLE>
+
+<P>This chapter shows how to use the failure model
+to build robust distributed applications.
+We first present
+basic fault-tolerant versions of 
+common language operations.
+Then we present
+fault-tolerant versions of the server examples.
+We conclude with a bigger example:
+reliable objects with recovery.
+
+<SECTION><TITLE>A fault-tolerant hello server</TITLE>
+
+<index/example<and>client crash/
+<P>Let's take a fresh look at the hello server.
+How can we make it resistant to distribution faults?
+First we specify the client and server behavior.
+The server should
+continue working even though there is a 
+problem with a particular client.
+The client should
+be informed in finite time of a server problem
+by means of a new exception, <<serverError>>.
+
+<P>We show how to rewrite this example
+with the basic failure model.
+In this model, the system raises exceptions
+when it tries to do operations
+on entities that have problems related to distribution.
+All these exceptions are of the
+form <<system(dp(conditions:FS ...) ...)>> where
+<<FS>> is the list of actual fault states
+as defined before.
+By default, the system will raise exceptions
+only on the fault states <<tempFail>> and <<permFail>>.
+
+<P>Assume that we have two new abstractions:
+<LIST>
+<ITEM> <<{SafeSend Prt X}>> sends to a port
+and raises the exception <<serverError>>
+if this is permanently impossible.
+<ITEM> <<{SafeWait X T}>> waits until <<X>> is
+instantiated and raises the exception
+<<serverError>> if this is permanently impossible
+or if the time <<T>> is exceeded.
+</LIST>
+<P>We first show how to use these abstractions
+before defining them in the basic model.
+With these abstractions, we can
+write the client and the server almost exactly
+in the same way as in the non-fault-tolerant case.
+Let's first write the server:
+<<<
+declare Str Prt Srv in 
+{NewPort Str Prt}
+thread  
+   {ForAll Str
+    proc {$ S}
+       try
+          S="Hello world"
+       catch system(dp(...) ...) then skip end
+    end}
+end
+
+proc {Srv X}
+   {SafeSend Prt X}
+end
+                                        
+{Pickle.save {Connection.offerUnlimited Srv} 
+             "/usr/staff/pvr/public_html/hw"}
+>>>
+
+<P>This server does one distributed operation,
+namely the binding <<S="Hello world">>.
+We wrap this binding
+to catch any distributed exception that occurs.
+This allows the server to ignore clients
+with problems and to continue working.
+
+<P>Here's the client:
+<<<
+declare Srv
+
+try X in
+   try
+      Srv={Connection.take {Pickle.load "http://www.info.ucl.ac.be/~pvr/hw"}}
+   catch _ then raise serverError end
+   end
+   
+   {Srv X}
+   {SafeWait X infinity}
+   {Browse X}
+catch serverError then
+   {Browse 'Server down'}
+end
+>>>
+
+<P>This client does two distributed operations,
+namely a send (inside <<Srv>>), which is replaced by <<SafeSend>>,
+and a wait, which is replaced by <<SafeWait>>.
+If there is a problem sending the
+message or receiving the reply,
+then the exception <<serverError>> is raised.
+This example also raises an exception if
+there is any problem during the
+startup phase, that is
+during <<Connection.take>> and <<Pickle.load>>.
+
+<SUBSECTION id="safesend"><TITLE>Definition of <<SafeSend>> and <<SafeWait>></TITLE>
+
+<P>We define <<SafeSend>> and <<SafeWait>> in the basic model.
+To make things easier to read, we use the two utility
+functions <<FOneOf>> and <<FSomeOf>>, which are defined
+just afterwards.
+<<SafeSend>> is defined as follows:
+<<<
+declare
+proc {SafeSend Prt X}
+   try
+      {Send Prt X}
+   catch system(dp(conditions:FS ...) ...) then
+      if {FOneOf permFail FS} then
+         raise serverError end
+      elseif {FOneOf tempFail FS} then
+         {Delay 100} {SafeSend Prt X}
+      else skip end
+   end
+end
+>>>
+<P>This raises a <<serverError>> if there is
+a permanent server failure
+and retries indefinitely each 100 ms if there
+is a temporary failure.
+
+<P><<SafeWait>> is defined as follows:
+<<<
+declare
+local
+   proc {InnerSafeWait X Time}
+      try
+         cond {Wait X} then skip
+         [] {Wait Time} then raise serverError end
+         end
+      catch system(dp(conditions:FS ...) ...) then
+         if {FSomeOf [permFail remoteProblem(permSome)] FS} then
+            raise serverError end
+         if {FSomeOf [tempFail remoteProblem(tempSome)] FS} then
+            {Delay 100} {InnerSafeWait X Time}
+         else skip end
+      end
+   end
+in
+   proc {SafeWait X TimeOut}
+   Time in
+      if TimeOut\=infinity then
+         thread {Delay TimeOut} Time=done end
+      end
+      {Fault.enable X 'thread'(this)
+         [permFail remoteProblem(permSome) tempFail remoteProblem(tempSome)] _}
+      {InnerSafeWait X Time}
+   end
+end
+>>>
+<P>This raises a <<serverError>> if there is
+a permanent server failure
+and retries each 100 ms if there is a
+temporary failure.
+The client and the server
+are the only two sites on which <<X>> exists.
+Therefore <<remoteProblem(permFail:_ ...)>> means
+that the server has crashed.
+
+<P>To keep the client from blocking 
+indefinitely, it must time out.
+We need a time-out since otherwise a client
+will be stuck when the server drops it like a hot potato.
+The duration of the time-out is an argument to <<SafeWait>>.
+
+<SUBSECTION><TITLE>Definition of <<FOneOf>> and <<FSomeOf>></TITLE>
+
+<P>In the above example and later on in this chapter
+(e.g., in <ptr to="exception.based">),
+we use the utility functions <<FOneOf>> and <<FSomeOf>>
+to simplify checking for fault states.
+We specify these functions as follows.
+
+<P>The call <<{FOneOf permFail AFS}>> is true if the
+fault state <<permFail>> occurs in the set of actual
+fault states <<AFS>>.  Extra information in <<AFS>>
+is not taken into account in the membership check.
+The function <<FOneOf>> is defined as follows:
+<<<
+declare
+fun {FOneOf F AFS}
+   case AFS of nil then false
+   [] AF2|AFS2 then
+      case F#AF2
+      of permFail#permFail(...) then true
+      [] tempFail#tempFail(...) then true
+      [] remoteProblem(I)#remoteProblem(I ...) then true
+      else {FOneOf F AFS2}
+      end
+   end
+end
+>>>
+
+<P>The call <<{FSomeOf [permFail remoteProblem(permSome)] AFS}>> is true
+if either <<permFail>> or <<remoteProblem(permSome)>> (or both)
+occurs in the set <<AFS>>.
+Just like for <<FOneOf>>, extra information in <<AFS>> is
+not taken into account in the membership check.
+The function <<FSomeOf>> is defined as follows:
+<<<
+declare
+fun {FSomeOf FS AFS}
+   case FS of nil then false
+   [] F2|FS2 then
+      {FOneOf F2 AFS} orelse {FSomeOf FS2 AFS}
+   end
+end
+>>>
+
+<SECTION id="fault.tolerant.stationary.objects"><TITLE>Fault-tolerant stationary objects</TITLE>
+
+<P>To be useful in practice, 
+stationary objects must have well-defined behavior when
+there are faults.
+We propose the following specification for the 
+stationary object (the "server")
+and a caller (the "client"):
+<LIST>
+<ITEM> The call <<C={NewSafeStat Class Init}>>
+creates a new server <<C>>.
+<ITEM> If there is no problem in the distributed execution
+then the call <<{C Msg}>> has identical language semantics
+to a centralized execution of the object,
+including raising the same exceptions.
+<ITEM> If there is a problem in the distributed execution preventing
+its successful completion, then the call <<{C Msg}>> will raise
+the exception <<remoteObjectError>>.
+It is unspecified how much of the object's method
+was executed before the failure.
+<ITEM> If there is a problem communicating with the client,
+then the server tries to communicate
+with the client during a short time period and then gives up.
+This does not affect the continued execution of the server.
+</LIST>
+
+<P>We present two quite different ways of implementing
+this specification, one based on guards (<ptr to="guard.based">) and
+the other based on exceptions (<ptr to="exception.based">).
+The guard-based technique is the shortest and simplest to understand.
+The exception-based technique is similar to what one would
+do in standard languages such as Java.
+
+<P>But first let's see how easy it is to create and use
+a remote stationary object.
+
+<SUBSECTION><TITLE>Using fault-tolerant stationary objects</TITLE>
+
+<P>We show how to use <<Remote>> and <<NewSafeStat>> to create
+a remote stationary object.
+First, we need a class--let's define
+a simple class <<Counter>> that implements a counter.
+<<<
+declare
+class Counter
+   attr i
+   meth init i<-0 end
+   meth get(X) X=@i end
+   meth inc i<-@i+1 end
+end
+>>>
+
+<P>Then we define a functor that creates
+an instance of <<Counter>> with <<NewSafeStat>>.
+Note that the object is not created yet.
+It will be created later, when the functor is applied.
+
+<<<
+declare
+F=functor
+  import Fault
+  export statObj:StatObj
+  define
+     {Fault.defaultEnable nil _}
+     StatObj={NewSafeStat Counter init}
+  end
+>>>
+
+<P>Do not forget the "<<import Fault>>" clause!
+If it's left out, the system will try to use
+the local <<Fault>> on the remote site.
+This raises an exception since <<Fault>> is sited
+(technically, it is a <em>resource</em>,
+see <ptr to="sited.entities">).
+The <<import Fault>> clause ensures that 
+installing the functor uses the <<Fault>>
+of the installation site.
+
+<P>It may seem overkill to use a functor
+just to create a single object.
+But the idea of functors goes much beyond this.
+With <<import>>, functors can specify which
+resources to use on the remote site.
+This makes functors a basic building block for mobile computations
+(and mobile agents).
+
+<P>Now let's create a remote site and make an instance
+of <<Counter>> called <<StatObj>>.
+The class <<Remote.manager>> gives several ways
+to create a remote site; this example uses the option <<fork:sh>>,
+which just creates another process on the same machine.
+The process is accessible through the module manager <<MM>>,
+which allows to install functors
+on the remote site (with the method "<<apply>>").
+
+<<<
+declare
+MM={New Remote.manager init(fork:sh)}
+StatObj={MM apply(F $)}.statObj
+>>>
+
+<P>Finally, let's call the object.
+We've put the object calls inside a <<try>> just
+to demonstrate the fault-tolerance.
+The simplest way to see it work is to kill
+the remote process and to call the object again.
+It also works if the remote process is killed
+during an object call, of course.
+
+<<<
+try
+   {StatObj inc}
+   {StatObj inc}
+   {Show {StatObj get($)}}
+catch X then
+   {Show X}
+end
+>>>
+
+<SUBSECTION id="guard.based"><TITLE>Guard-based fault tolerance</TITLE>
+
+<P>The simplest way to implement fault-tolerant stationary objects
+is to use a <EM>guard</EM>.  A guard watches
+over a computation, and if there is a distribution fault, then it
+gracefully terminates the computation.
+To be precise, we introduce the procedure <<Guard>> with the
+following specification:
+<LIST>
+<ITEM> <<{Guard E FS S1 S2}>> guards entity <<E>> for
+fault states <<FS>> during statement <<S1>>,
+replacing <<S1>> by <<S2>> if a fault is detected during <<S1>>.
+That is, it first executes <<S1>>.
+If there is no fault, then <<S1>> completes normally.
+If there is a fault on <<E>> in <<FS>>, then it interrupts <<S1>> as
+soon as a faulty operation is attempted on any entity.
+It then executes statement <<S2>>.
+<<S1>> must not raise any distribution exceptions.
+The application is responsible
+for cleaning up from the partial work done in <<S1>>.
+Guards are defined in <ptr to="guards">.
+</LIST>
+<P>With the procedure <<Guard>>, we define <<NewSafeStat>> as follows.
+Note that this definition is almost identical to the
+definition of <<NewStat>> in <ptr to="making.stationary.objects">.
+The only difference is that all distributed operations are put
+in guards.
+
+<chunk><title/Guard-based stationary object/
+proc {MakeStat PO ?StatP}
+   S P={NewPort S}
+   N={NewName}
+in
+   % Client interface to server:
+   <chunk.ref/Client side/
+   % Server implementation:
+   <chunk.ref/Server side/
+end
+
+proc {NewSafeStat Class Init Object}
+   Object={MakeStat {New Class Init}}
+end 
+</chunk>
+
+<P>The client raises an exception if there is
+a problem with the server:
+<chunk><title/Client side/
+proc {StatP M}
+R in
+   {Fault.enable R 'thread'(this) nil _}
+   {Guard P [permFail]
+    proc {$} 
+       {Send P M#R} 
+       if R==N then skip else raise R end end
+    end
+    proc {$} raise remoteObjectError end end}
+end
+</chunk>
+   
+<P>The server terminates the client request gracefully
+if there is a problem with a client:
+<chunk><title/Server side/
+thread
+   {ForAll S
+    proc{$ M#R}
+       thread RL in
+          try {PO M} RL=N catch X then RL=X end
+          {Guard R [permFail remoteProblem(permSome)]
+           proc {$} R=RL end
+           proc {$} skip end}
+       end
+   end}
+end
+</chunk>
+
+<P>There is a minor point related to the default enabled exceptions.
+This example calls <<Fault.enable>> before <<Guard>>
+to guarantee
+that no exceptions are raised on <<R>>.
+This can be changed by using <<Fault.defaultEnable>> at
+startup time for each site.
+
+<SUBSUBSECTION id="guards"><TITLE>Definition of <<Guard>></TITLE>
+
+<P>Guards allow to replace a statement <<S1>>
+by another statement <<S2>> if there is a fault.
+See <ptr to="guard.based"> for a precise specification.
+The procedure <<{Guard E FS S1 S2}>>
+first disables all exception raising on <<E>>.
+Then it executes <<S1>>
+with a local watcher <<W>> (see <ptr to="local.watcher">).
+If the watcher is invoked during <<S1>>,
+then <<S1>> is interrupted
+and the exception <<N>> is raised.
+This causes <<S2>> to be executed.
+The unforgeable and unique name <<N>>
+occurs nowhere else in the system.
+
+<<<
+declare
+proc {Guard E FS S1 S2}
+   N={NewName}
+   T={Thread.this}
+   proc {W E FS} {Thread.injectException T N} end
+in
+   {Fault.enable E 'thread'(T) nil _}
+   try
+      {LocalWatcher E FS W S1}
+   catch X then
+      if X==N then
+         {S2}
+      else
+         raise X end
+      end
+   end
+end
+>>>
+
+<SUBSUBSECTION id="local.watcher"><TITLE>Definition of <<LocalWatcher>></TITLE>
+
+<P>A <em>local watcher</em> is a watcher that is installed
+only during the execution of a statement.
+When the statement finishes or raises an exception,
+then the watcher is removed.
+The procedure <<LocalWatcher>> defines a local watcher
+according to the following specification:
+
+<LIST>
+<ITEM><<{LocalWatcher E FS W S}>>
+watches entity <<E>> for fault states <<FS>>
+with watcher <<W>> during the execution of <<S>>.
+That is, it installs the watcher,
+then executes <<S>>, and then removes
+the watcher when execution leaves <<S>>.
+</LIST>
+
+<<<
+declare
+proc {LocalWatcher E FS W S}
+   {Fault.installWatcher E FS W _}
+   try
+      {S}
+   finally
+      {Fault.deInstallWatcher E W _}
+   end
+end
+>>>
+   
+<SUBSECTION id="exception.based"><TITLE>Exception-based fault tolerance</TITLE>
+
+<P>We show how to implement <<NewSafeStat>>
+by means of exceptions only, i.e., using the basic failure model.
+First <<New>> makes
+an instance of the object
+and then <<MakeStat>> makes it stationary.
+In <<MakeStat>>, we distinguish four parts.
+The first two implement the client interface
+to the server.
+
+<chunk><title/Exception-based stationary object/
+declare
+proc {MakeStat PO ?StatP}
+   S P={NewPort S}
+   N={NewName}
+   EndLoop TryToBind
+in
+   % Client interface to server:
+   <chunk.ref/Client call to the server/
+   <chunk.ref/Client synchronizes with the server/
+   % Server implementation:
+   <chunk.ref/Main server loop/
+   <chunk.ref/Server synchronizes with the client/
+end
+</chunk>
+
+<<<
+proc {NewSafeStat Class Init ?Object}
+   Object={MakeStat {New Class Init}}
+end
+>>>
+
+<P>First the client sends its message to the
+server together with a synchronizing variable.
+This variable is used to signal
+to the client that the server has
+finished the object call.
+The variable passes an exception
+back to the client if there was one.
+If there is a permanent failure of
+the send, then raise <<remoteObjectError>>.
+If there is a temporary failure of the
+send, then wait 100 ms and try again.
+<chunk><title/Client call to the server/
+   proc {StatP M}
+      R in
+      try
+         {Send P M#R}
+      catch system(dp(conditions:FS ...) ...) then
+         if {FOneOf permFail FS} then
+            raise remoteObjectError end
+         elseif {FOneOf tempFail FS} then
+            {Delay 100}
+            {StatP M}
+         else skip end
+      end
+      {EndLoop R}
+   end
+</chunk>
+
+<P>Then the client waits for the server
+to bind the synchronizing variable.
+If there is a permanent failure, then
+raise the exception.
+If there is a temporary failure, then
+wait 100 ms and try again.
+<chunk><title/Client synchronizes with the server/
+   proc {EndLoop R}
+      {Fault.enable R 'thread'(this) 
+         [permFail remoteProblem(permSome) tempFail remoteProblem(tempSome)] _}
+      try
+         if R==N then skip else raise R end end
+      catch system(dp(conditions:FS ...) ...) then
+         if {FSomeOf [permFail remoteProblem(permSome)] FS} then
+            raise remoteObjectError end
+         elseif {FSomeOf [tempFail remoteProblem(tempSome)] FS} then
+            {Delay 100} {EndLoop R}
+         else skip end
+      end
+   end
+</chunk>
+
+<P>The following two parts implement the server.
+The server runs in its own thread and
+creates a new thread for each client call.
+The server is less tenacious on
+temporary failures than the client:
+it tries once every 2000 ms and gives
+up after 10 tries.
+<chunk><title/Main server loop/
+   thread
+      {ForAll S
+       proc {$ M#R}
+          thread
+             try
+                {PO M}
+                {TryToBind 10 R N}
+             catch X then
+                try
+                   {TryToBind 10 R X}
+                catch Y then skip end
+             end
+          end
+       end}
+   end
+</chunk>
+
+<chunk><title/Server synchronizes with the client/
+   proc {TryToBind Count R N}
+      if Count==0 then skip
+      else
+         try
+            R=N
+         catch system(dp(conditions:FS ...) ...) then
+            if {FOneOf tempFail FS} then
+               {Delay 2000}
+               {TryToBind Count-1 R N}
+            else skip end
+         end
+      end
+   end
+</chunk>
+
+<SECTION><TITLE>A fault-tolerant broadcast channel</TITLE>
+
+<P>We can use the fault-tolerant stationary object
+(see <ptr to="fault.tolerant.stationary.objects">)
+to define a simple open fault-tolerant broadcast channel.
+This is a useful abstraction; for example it
+can be used as the heart of a chat tool such as IRC.
+The service has a client/server structure
+and is aware of permanent crashes of clients or the server.
+In case of a client crash, the system continues to work.
+In case of a server crash, the service will no longer
+be available.  Clients receive notification of this.
+
+<P>Users access the broadcast service through a local client.
+The user creates the client by using a procedure given by
+the server.
+The client is accessed as an object.
+It has a method <<sendMessage>> for broadcasting a message.
+When the client receives a message or is notified
+of a client or server crash,
+it informs the user by calling a user-defined procedure
+with one argument.
+The following events are possible:
+<LIST>
+<ITEM><<permServer>>: the broadcast channel server has crashed.
+<ITEM><<permClient(UserID)>>: the client identified by <<UserID>> has
+crashed.
+<ITEM><<message(UserID Mess)>>: receive the message <<Mess>> from client
+<<UserID>>.
+<ITEM><<registered(UserID)>>: the client identified by <<UserID>> has
+registered to the channel.
+<ITEM><<unregistered(UserID)>>: the client identified by <<UserID>>
+has unregistered from the channel.
+</LIST>
+<P>We give an example of how the broadcast channel is used,
+and we follow this by showing its implementation.
+We first show how to use
+and implement a <em>non-fault-tolerant</em> broadcast channel,
+and then we show the small extensions needed for it
+to detect client and server crashes.
+
+<SUBSECTION><TITLE>Sample use (no fault tolerance)</TITLE>
+
+<P>First we create the channel server.
+To connect with clients, the server offers a ticket
+with unlimited connection ability.
+The ticket is available through a publicly-accessible URL.
+<<<
+local 
+   S={NewStat ChannelServer init(S)}
+in
+   {Pickle.save {Connection.offerUnlimited S}
+                "/usr/staff/pvr/public_html/chat"}
+end
+>>>
+
+<P>A client can be created on another site.
+We first define on the client's site
+a procedure <<HandleIncomingMessage>>
+that will handle incoming messages from the broadcast channel.
+Then we access to the channel by its URL.
+Finally, we create a local client and give it
+our handler procedure. 
+<<<
+local 
+   proc {HandleIncomingMessage M}
+      {Show {VirtualString.toString
+         case M 
+         of message(From Content) then From#' : '#Content
+         [] registered(UserID)    then UserID#' joined us'
+         [] unregistered(UserID)  then UserID#' left us'
+         end}}
+   end
+   S={Connection.take {Pickle.load "http://www.info.ucl.ac.be/~pvr/chat"}}
+   MakeNewClient={S getMakeNewClient($)}
+   C={MakeNewClient HandleIncomingMessage 'myNameAsID'}
+in
+   {For 1 1000 1
+      proc {$ I}
+         {C sendMessage('hello'#I)}
+         {Delay 800}
+      end}
+
+   {C close}
+end
+>>>
+<P>In this example we send 1000 messages
+of the form <<'hello'#I>>, where <<I>> takes successive values from
+1 to 1000.
+Then we close the client.
+
+<P>A nice property of this channel abstraction is that
+the client site only needs to know
+the channel's URL and its interface.
+All this can be stored in Ascii form
+and transmitted to the client at any time.
+In particular, the syntax of the interfaces, i.e.,
+the messages understood by user, client, and server,
+is defined completely by a simple Ascii list of the
+message names and their number of arguments.
+The client site does not need to
+know any program code.
+When a client is created through a call
+to <<MakeNewClient>>, then at that time the client code
+is transferred from the channel server to the client site.
+
+<SUBSECTION id="channel.definition"><TITLE>Definition (no fault tolerance)</TITLE>
+
+<P>Since a fault-tolerant stationary object has well-defined
+behavior in the case of a permanent crash, we can show the
+service's implementation in two steps.
+First, we show how it is written without taking fault tolerance
+into account.
+Second, we complete the example by adding fault handling code.
+This is easy; it amounts to catching the <<remoteObjectError>>
+exception for each remote method call (client to server
+and server to client).
+
+<P>The client and server are stationary objects
+with the following structure:
+<chunk><title/Client and server classes/
+class ChannelClient
+   feat
+      server selfStatic usrMsgHandler userID
+   <chunk.ref/Client interface to user/
+   <chunk.ref/Client interface to server/
+end
+
+local
+   <chunk.ref/Concurrent ForAll procedure/
+in
+   class ChannelServer
+      prop locking
+      feat selfStatic
+      attr clientList
+      meth init(S)
+         lock
+            self.selfStatic=S
+            clientList<-nil
+         end
+      end
+      <chunk.ref/Server's getMakeClient method/
+      <chunk.ref/Server interface to client/
+   end
+end
+</chunk>
+
+<SUBSUBSECTION id="client.definition"><TITLE>Client definition</TITLE>
+
+<P>The client provides two methods to the server.
+The first, <<put>>, for receiving broadcasted
+message from registered clients.
+The second, <<init>>, for the client
+initialization (remember that a client is created using a procedure
+defined by the server).
+<chunk><title/Client interface to server/
+meth put(Msg)
+   {self.usrMsgHandler Msg}
+end
+
+meth init(Server SelfReference UsrMsgHandler UserID)
+   self.server=Server
+   self.selfStatic=SelfReference
+   self.usrMsgHandler=UsrMsgHandler
+   self.userID=UserID
+   {self.server register(self.selfStatic self.userID)}
+end
+</chunk>
+<P>The client keeps a reference to the server, to itself
+for unregistering, to the user-defined handler procedure,
+and to its user identification.
+
+<P>A user accesses the broadcast channel only through a client. 
+The client provides
+the user with a method for sending a message through the channel
+and a method for leaving the channel.
+<chunk><title/Client interface to user/
+meth sendMessage(Msg)
+   {self.server broadcast(self.userID Msg)}
+end
+
+meth close
+   {self.server unregister(self.selfStatic self.userID)}
+end
+</chunk>
+
+<SUBSUBSECTION id="server.definition"><TITLE>Server definition</TITLE>
+
+<P>The server's <<getMakeClient>> method
+returns a reference to a procedure
+that creates clients:
+<chunk><title/Server's getMakeClient method/
+meth getMakeNewClient(MakeNewClient)
+   proc {MakeNewClient UserMessageHandler UserID StaticClientObj}
+      StaticClientObj={NewStat  
+         ChannelClient 
+         init(self.selfStatic StaticClientObj
+              UserID UserMessageHandler)}
+   end
+end
+</chunk>
+
+<P>The server uses a concurrent ForAll procedure that
+starts all sends concurrently and waits until
+they are all finished.  This is important for implementing
+broadcasts.  With the concurrent ForAll, the total
+time for the broadcast is the <em>maximum</em> of
+all client round-trip times, instead of the <em>sum</em>,
+if the broadcast would sequentially send to each client
+and wait for an acknowledgement before continuing.
+Concurrent broadcast is efficient in Mozart
+due to its extremely lightweight threads.
+<chunk><title/Concurrent ForAll procedure/
+proc {ConcurrentForAll Ls P}
+   Sync
+   proc {LoopConcurrentForAll Ls PrevSync FinalSync}
+      case Ls
+      of L|Ls2 then
+      NewSync in
+         thread {P L} PrevSync=NewSync end
+         {LoopConcurrentForAll Ls2 NewSync FinalSync}
+      [] nil then
+         PrevSync=FinalSync
+      end
+   end
+in
+   {LoopConcurrentForAll Ls unit Sync}
+   {Wait Sync}
+end
+</chunk>
+
+
+<P>The server provides three methods for the client,
+namely <<register>>, <<unregister>>, and <<broadcast>>.
+A client can register to the broadcast channel by calling the
+<<register>> method and unregister by calling
+the <<unregister>> method.
+Note that clients are identified uniquely by references
+to the client object <<Client>>,
+and not by the client's user ID <<UserID>>.
+This means that the channel will work correctly
+even if there are clients with the same user ID.
+The users may get confused, but the channel will not.
+
+<P>A client can broadcast a message on the channel
+by calling the <<broadcast>> method.
+The server will concurrently forward the message
+to all registered clients.
+The broadcast call will block until the message has
+reached all the clients.
+<chunk><title/Server interface to client/
+meth register(Client UserID)
+CL in
+   lock
+      CL=@clientList
+      clientList <- c(ref:Client id:UserID)|@clientList
+   end
+   {ConcurrentForAll CL
+      proc {$ Element} {Element.ref put(registered(UserID))} end}
+end
+
+meth unregister(Client UserID)
+CL in
+   lock
+      clientList <-
+         {List.filter @clientList
+            fun {$ Element} Element.ref\=Client end}
+      CL=@clientList
+   end
+   {ConcurrentForAll CL
+      proc {$ Element} {Element.ref put(unregistered(UserID))} end}
+end
+
+meth broadcast(SenderID Msg)
+   {ConcurrentForAll @clientList
+      proc {$ Element} {Element.ref put(message(SenderID Msg))} end}
+end
+</chunk>
+
+
+
+<SUBSECTION><TITLE>Sample use (with fault tolerance)</TITLE>
+
+<P>The fault-tolerant channel can be used in exactly the same way
+as the non-fault-tolerant version.
+The only difference is that
+the user-defined handler
+procedure can receive two extra messages,
+<<permClient>> and <<permServer>>, to indicate client
+and server crashes:
+<<<
+proc {UserMessageHandler Msg}
+   {Show {VirtualString.toString
+      case Msg
+      of message(From Content) then From#' : '#Content
+      [] registered(UserID)    then UserID#' joined us'
+      [] unregistered(UserID)  then UserID#' left us'
+      [] permClient(UserID)    then UserID#' has crashed'
+      [] permServer            then 'Server has crashed'
+      end}}
+end
+>>>
+
+<SUBSECTION><TITLE>Definition (with fault tolerance)</TITLE>
+
+<P>The non-fault-tolerant version of <ptr to="channel.definition">
+is easily extended to detect client and server crashes.
+First, the server and all clients must be created
+by calling <<NewSafeStat>> instead of <<NewStat>>.
+This means creating the server as follows:
+<<<
+S={NewSafeStat ChannelServer init(S)}
+>>>
+<P>This makes the channel server a fault-tolerant stationary object.
+In addition, several small extensions to the client
+and server definitions are needed.
+This section gives these extensions.
+
+<SUBSUBSECTION><TITLE>Client definition</TITLE>
+
+<P>This definition extends the definition
+given in <ptr to="channel.definition">.
+We assume that the server has been created
+with <<NewSafeStat>>.
+Two changes are needed to the client.
+First,
+the client can detect a server crash
+by catching the <<remoteObjectError>> exception.
+Second, the server can detect a client crash
+in the same way, when it calls
+the client's <<selfStatic>> reference.
+Both of these changes can be done
+by redefining the values of
+<<self.server>> and <<self.selfStatic>>
+at the client.
+<<<
+meth init(Server SelfReference UsrMsgHandler UserID)
+   self.server =
+      proc {$ Msg}
+         try
+            {Server broadcast(self.userID Msg)}
+         catch remoteObjectError then
+            {self.usrMsgHandler permServ}
+         end
+      end
+   self.selfStatic =
+      proc {$ Msg}
+         try
+            {SelfReference Msg}
+         catch remoteObjectError then
+            {Server unregister(self.selfStatic self.userId)}
+            {Server broadcastCrashEvent(UserID)}
+         end
+      end
+   self.usrMsgHandler=UsrMsgHandler
+   self.userID=UserID
+   {self.server register(self.selfStatic self.userID)}
+end
+>>>
+
+<SUBSUBSECTION><TITLE>Server definition</TITLE>
+
+<P>The server has the new method <<broadcastCrashEvent>>.
+<<<
+meth broadcastCrashEvent(CrashID)
+   {ConcurrentForAll @clientList
+      proc {$ Element}
+         {Element.ref put(permClient(CrashID))}
+      end}
+end
+>>>
+
+<P>In the old method <<getMakeNewClient>>,
+the procedure <<MakeNewClient>> has to be changed
+to call <<NewSafeStat>> instead of <<NewStat>>:
+<<<
+meth getMakeNewClient(MakeNewClient)
+   proc {MakeNewClient UserMessageHandler UserID StaticClientObj}
+      StaticClientObj={NewSafeStat
+         ChannelClient
+         init(self.selfStatic StaticClientObj
+              UserID UserMessageHandler)}
+   end
+end
+>>>
+
+
+
+
+
+
+
+</CHAPTER>
+

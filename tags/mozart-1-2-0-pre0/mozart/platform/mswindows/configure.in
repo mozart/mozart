@@ -1,0 +1,87 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Ralf Scheidhauer (scheidhr@dfki.de)
+dnl 
+dnl  Contributors:
+dnl    optional, Contributor's name (Contributor's email address)
+dnl 
+dnl  Copyright:
+dnl    Ralf Scheidhauer (1998)
+dnl 
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl 
+dnl  This file is part of Mozart, an implementation 
+dnl  of Oz 3:
+dnl     http://www.mozart-oz.org
+dnl 
+dnl  See the file "LICENSE" or
+dnl     http://www.mozart-oz.org/LICENSE.html
+dnl  for information on usage and redistribution 
+dnl  of this file, and for a DISCLAIMER OF ALL 
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+dnl *****************************************************************
+dnl INITIALIZE
+dnl *****************************************************************
+
+dnl This will check that we are in the Oz directory and initiate
+AC_INIT(oz.cc)
+
+OZ_INIT
+
+
+OZ_CXX_CHOOSE
+
+dnl *****************************************************************
+dnl windows cross compilation
+dnl *****************************************************************
+
+case "$target" in
+   NONE)
+   ;;
+   i386-mingw32)
+	AC_MSG_RESULT(cross compiling for windows)
+	platform=win32-i486
+   ;;
+   *)
+	AC_MSG_ERROR("can only cross-compile for target i386-mingw32 not for $target")
+    ;;
+esac
+
+OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+: ${platform=`$PLATFORMSCRIPT`}
+AC_SUBST(platform)
+
+case "$platform" in
+   win32-i486)
+	OZ_CXX_OPTIONS(-mno-cygwin,oz_a)
+	CXX="$CXX $oz_a"
+   ;;
+
+   *)
+    ;;
+esac
+
+AC_SUBST(CXX)
+
+AC_CHECK_TOOL(AR, ar)
+AC_CHECK_TOOL(WINDRES, windres)
+
+dnl *****************************************************************
+dnl FINALIZE
+dnl *****************************************************************
+
+AC_OUTPUT(Makefile res.rc)
+
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded
+],
+ [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+]))

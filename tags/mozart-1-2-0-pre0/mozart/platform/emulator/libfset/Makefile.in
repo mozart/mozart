@@ -1,0 +1,80 @@
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+include ../Makefile.vars
+
+BUILDTOP	= @BUILDTOP@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+INCS		= -I$(SRCDIR) -I. -I$(SRCDIR)/.. -I..
+
+FSETLIBSRCS =	standard.cc telling.cc \
+		testing.cc fsaux.cc \
+		intsets.cc monitor.cc \
+		reified.cc fsstd.cc \
+		std_n.cc table.cc \
+		fsinit.cc
+
+FSETLIBOBJS = $(FSETLIBSRCS:.cc=.lo)
+
+all: $(FSETTARGETS)
+
+../FSP.so-$(PLATFORM): $(FSETLIBOBJS)
+	$(DYNLD) -o $@ $(FSETLIBOBJS)
+
+../libFSP.a: $(FSETLIBOBJS)
+	$(AR) -rc $@ $(FSETLIBOBJS) && $(RANLIB) $@
+
+depend:: $(FSETLIBSRCS) 
+	$(DEPEND) $(FSETLIBSRCS:%=$(SRCDIR)/%) \
+	| sed -e 's/\.o:/\.lo:/g' > Makefile.deps
+
+Makefile: Makefile.in
+	(cd ..;./config.status)
+
+-include Makefile.deps
+
+first:
+
+cleaner::
+	-rm -f *.a *.so-$(PLATFORM)
+
+veryclean::
+	-rm -f *.a *.so-$(PLATFORM) TAGS Makefile.deps
+
+include ../Makefile.rules
+
+distclean::
+	-rm -f Makefile makefile
+
+BUILDDIR=$(shell pwd)
+tags:	$(CREATEDFILES)
+	etags \
+	--regex='/OZ_BI_\(io\)?define([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_C_\(io\)?proc_begin([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_DECLARE[A-Z0-9_]*([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
+	-o $(SRCDIR)/TAGS \
+	$(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
+	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/../*c $(SRCDIR)/../*h 
+
+

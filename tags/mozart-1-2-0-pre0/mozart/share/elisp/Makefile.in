@@ -1,0 +1,88 @@
+#
+#  Authors:
+#    Michael Mehl <mehl@dfki.de>
+#    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+#
+#  Copyright:
+#    Michael Mehl, 1998
+#    Leif Kornstaedt, 1998
+#
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+#
+#  This file is part of Mozart, an implementation of Oz 3:
+#    http://www.mozart-oz.org
+#
+#  See the file "LICENSE" or
+#    http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL
+#  WARRANTIES.
+#
+
+BUILDTOP=	@BUILDTOP@
+PREFIX=		@prefix@
+
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+ELISPDIR	= $(PREFIX)/share/elisp
+
+EMACS		= @THEEMACS@
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_DIR	= @INSTALL_DIR@
+
+LIBFILES = \
+	$(ELISPDIR)/oz.el $(ELISPDIR)/oz.elc \
+	$(ELISPDIR)/mozart.el $(ELISPDIR)/mozart.elc \
+	$(ELISPDIR)/oz-extra.el $(ELISPDIR)/oz-extra.elc \
+	$(ELISPDIR)/oz-server.el $(ELISPDIR)/oz-server.elc
+
+.PHONY: bootstrap all install clean veryclean distclean tags check depend
+
+all: oz.elc mozart.elc oz-extra.elc oz-server.elc
+
+bootstrap: all
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+mozart.el: mozart.el.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+
+mozart.elc: oz.elc
+
+oz.elc mozart.elc oz-extra.elc oz-server.elc: %.elc : %.el
+	$(EMACS) --eval "(setq load-path (cons \"$(SRCDIR)\" load-path))" -q -batch -f batch-byte-compile $< && \
+	if [ $<c != $@ ]; then mv $<c $@; fi
+
+install: all $(ELISPDIR) $(LIBFILES)
+
+$(ELISPDIR):
+	$(INSTALL_DIR) $@
+
+$(ELISPDIR)/%.el: %.el
+	$(INSTALL_FILE) $< $@
+
+$(ELISPDIR)/%.elc: %.elc
+	$(INSTALL_FILE) $< $@
+
+clean:
+	-rm -f *.elc *~ TAGS
+
+veryclean: clean
+
+distclean: clean
+	-rm -f Makefile mozart.el
+
+tags:
+	etags oz.el mozart.el oz-extra.el
+
+check:
+
+depend:

@@ -1,0 +1,23 @@
+# $Id$
+
+VPATH  = @srcdir@
+SRCDIR = @srcdir@
+
+WHATCLASS=tools
+PRINTNAME=Ozcar
+WHAT = ozcar
+MAIN = ozcar.sgml
+SGMLSRCS = \
+	ozcar.bib
+HTMLEXTRAFILES = ozcar-initial.gif \
+	ozcar-hello.gif ozcar-hello-emacs.gif \
+	fac1.gif fac2.gif \
+	eval-expression.gif exec-statement.gif \
+	exception.gif exception-emacs.gif \
+	step.gif next.gif unleash.gif stop.gif detach.gif kill.gif \
+	menu-action.gif menu-options.gif menu-ozcar.gif menu-stack.gif \
+	menu-thread.gif submenu-detach.gif submenu-terminate.gif \
+	submenu-valueprinting.gif
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common

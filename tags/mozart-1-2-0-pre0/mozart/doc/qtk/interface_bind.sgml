@@ -1,0 +1,4 @@
+<ITEM> <<
+bind(event:E
+     args:LA
+     action:A)>> : Specifies an action <<LA>> to execute when the event <<E>> is triggered. The event can have parameters (like mouse coordinates for a mouse click). You must explicitly ask in the <<LA>> list the parameters you are interested for. For more details, see <ptr to="basics.otherevents">.
