@@ -78,6 +78,7 @@ CPSRC1  = Search FD FS Combinator RecordC
 CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Discovery Remote RemoteServer Fault URL DPMisc $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools
+GTKSRC  = GTK
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
 MACSRC	= Macro BackquoteMacro LoopMacro
 
@@ -93,6 +94,7 @@ FUNCTORS = \
 	$(RUNFUNCTORS) \
 	$(DPSRC:%=%.ozf) \
 	$(WPSRC:%=%.ozf) \
+        $(GTKSRC:%=%.ozf) \
 	$(SUPPSRC:%=%.ozf) \
 	$(CPSRC2:%=%.ozf) \
 	Compiler.ozf
@@ -202,6 +204,9 @@ ParSearch.ozf: ParSearchTmp.ozf ParProcess.ozf ParManager.ozf ozl
 %.ozf: wp/%.oz Base.ozf
 	$(COMPILE) $< -o $@
 
+%.ozf: gtk/%.oz
+	$(COMPILE) $< -o $@
+
 %.ozf: %.oz Base.ozf
 	$(COMPILE) $< -o $@
 
@@ -220,6 +225,16 @@ Open.ozf: op/HtmlTable.oz
 # wp dependencies
 Tk.ozf: wp/TkInit.oz wp/TkOptions.oz
 TkTools.ozf: DefaultURL.ozf
+
+# gtk dependencies
+GTK.ozf: gtk/GTK.oz \
+         gtk/constdeclarations.oz gtk/constdefinitions.oz
+
+gtk/constdeclarations.oz: gtk/genconstants.pl
+	 cd gtk; $(PERL) genconstants.pl; cd ..
+
+gtk/constdefinitions.oz: gtk/genconstants.pl
+	 cd gtk; $(PERL) genconstants.pl; cd ..
 
 # compiler dependencies
 COMPILERSRC1 = \
@@ -368,7 +383,8 @@ CLEANFILES = \
 	$(COMPILERSRCEXTRA) \
 	CpSupport.ozf ParWorkerTmp.ozf ParLoggingTmp.ozf ParSearchTmp.ozf \
 	$(FUNCTORS) $(FUNFUNCTORS) $(PARSEARCHFUNCTORS) \
-	$(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc
+	$(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc \
+	gtk/constdefinitions.oz gtk/constdeclarations.oz
 
 clean:
 	-rm -f $(CLEANFILES)
