@@ -83,7 +83,7 @@ public:
   }
 
   TaggedRef clone() {
-    return makeTaggedConst(new OzDictionary(home, table));
+    return makeTaggedConst(new OzDictionary(getBoard(), table));
   }
 
   TaggedRef toRecord(TaggedRef lbl) 
