@@ -7,7 +7,7 @@
 &moz3; distribution) and can be accessed either by 
 <<<declare [LP] = {Module.link ['x-oz://contrib/LP']}>> 
 or by 
-<<<import RI @ 'x-oz://contrib/LP'>>> 
+<<<import RI at 'x-oz://contrib/LP'>>> 
 as part of a functor definition.
 
 <P>
