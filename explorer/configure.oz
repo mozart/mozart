@@ -106,9 +106,9 @@ ImageScale          = 0.6 / FloatScaleBase
 ImageBorder         = 1
 MaxExtent           = 12.0 * FloatScaleBase
 
-NodeBorderWidth     #
-TermNodeBorderWidth = case Tk.isColor then 1#1 else 1#2 end
-LinkWidth           = 1
+NodeBorderWidth      #
+ThickNodeBorderWidth = case Tk.isColor then 1#1 else 1#2 end
+LinkWidth            = 1
 
 %% How big and how far removed should the cursor shade be?
 ShadeWidth          = case Tk.isColor then 4 else 5 end * IntScaleBase
