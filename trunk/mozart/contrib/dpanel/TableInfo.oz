@@ -156,7 +156,7 @@ define
 	 Table, resetDictionary(self.counter)
 	 Table, resetDictionary(self.diff)
 	 new <- nil
-	 {List.map Data.list proc {$ E K} OwnerTable, updateEntity(E K) end
+	 {List.map Data.list proc {$ E K} Table, updateEntity(E K) end
 	  CurrentKeys}
 	 OwnerTable, removeObsolete(CurrentKeys)
       end
