@@ -13,9 +13,7 @@ MegaByteI      = KiloByteI * KiloByteI
 
 BitMapDir      = '@' # {System.get home} # '/lib/bitmaps/'
 
-DashLine       = BitMapDir # 'dash-line.xbm'
-
-EnterColor       #
+EnterColor       # LineColor        #
 RunnableColor    # RunnableStipple  #
 ThresholdColor   # ThresholdStipple #
 SizeColor        # SizeStipple      #
@@ -23,7 +21,7 @@ ActiveColor      # ActiveStipple    #
 TimeColors       # TimeStipple      # 
 AboutColor       # CurLoadColor     =
 case Tk.isColor then
-   wheat #
+   wheat # gray80 #
    lightslateblue   # '' #
    lightslateblue   # '' #
    mediumvioletred  # '' #
@@ -41,7 +39,7 @@ case Tk.isColor then
    blue #
    lightslateblue 
 else
-   white #
+   white # black # 
    black # (BitMapDir # 'grid-50.xbm')  #
    black # (BitMapDir # 'grid-25.xbm')  #
    black # (BitMapDir # 'grid-50.xbm') #
