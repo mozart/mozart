@@ -829,6 +829,10 @@ int OZ_addBuiltin(char *name, int arity, OZ_CFun fun)
  * Suspending builtins
  * -----------------------------------------------------------------*/
 
+OZ_Suspension OZ_makeThreadSuspension() {
+  return (OZ_Suspension) new Suspension(am.currentThread);
+}
+
 OZ_Suspension OZ_makeSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
 				 OZ_Term *args,int arity)
 {

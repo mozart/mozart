@@ -173,9 +173,9 @@ extern int OZ_unprotect       _PROTOTYPE((OZ_Term *));
 
 /* Suspending builtins */
 
-OZ_Suspension OZ_makeSuspension _PROTOTYPE((OZ_CFun, OZ_Term *, int));
-
-void OZ_addSuspension _PROTOTYPE((OZ_Term, OZ_Suspension));
+OZ_Suspension OZ_makeThreadSuspension _PROTOTYPE((void));
+OZ_Suspension OZ_makeSuspension       _PROTOTYPE((OZ_CFun, OZ_Term *, int));
+void          OZ_addSuspension        _PROTOTYPE((OZ_Term, OZ_Suspension));
 
 /* for example
    OZ_Suspension s = OZ_makeSuspension(BIplus,OZ_args,OZ_arity);
