@@ -1476,6 +1476,7 @@ LBLdispatcher:
     {
       COUNT(inlinecalls);
       InlineRel1 rel         = (InlineRel1)GetBI(PC+1)->getInlineFun();
+      Assert(rel != NULL);
 
       OZ_Return res = rel(XPC(2));
       if (res==PROCEED) { DISPATCH(4); }
@@ -1511,6 +1512,7 @@ LBLdispatcher:
     {
       COUNT(inlinecalls);
       InlineRel2 rel         = (InlineRel2)GetBI(PC+1)->getInlineFun();
+      Assert(rel != NULL);
 
       OZ_Return res = rel(XPC(2),XPC(3));
       if (res==PROCEED) { DISPATCH(5); }
@@ -1556,6 +1558,7 @@ LBLdispatcher:
     {
       COUNT(inlinecalls);
       InlineRel3 rel = (InlineRel3)GetBI(PC+1)->getInlineFun();
+      Assert(rel != NULL);
 
       OZ_Return res = rel(XPC(2),XPC(3),XPC(4));
       if (res==PROCEED) { DISPATCH(6); }
@@ -1597,6 +1600,7 @@ LBLdispatcher:
     {
       COUNT(inlinecalls);
       InlineFun1 fun = (InlineFun1)GetBI(PC+1)->getInlineFun();
+      Assert(fun != NULL);
 
       // XPC(3) maybe the same register as XPC(2)
       OZ_Return res = fun(XPC(2),XPC(3));
@@ -1639,6 +1643,7 @@ LBLdispatcher:
     {
       COUNT(inlinecalls);
       InlineFun2 fun = (InlineFun2)GetBI(PC+1)->getInlineFun();
+      Assert(fun != NULL);
 
       // note: XPC(4) is maybe the same as XPC(2) or XPC(3) !!
       OZ_Return res = fun(XPC(2),XPC(3),XPC(4));
@@ -1826,6 +1831,7 @@ LBLdispatcher:
     {
       COUNT(inlinecalls);
       InlineFun3 fun = (InlineFun3)GetBI(PC+1)->getInlineFun();
+      Assert(fun != NULL);
 
       // note XPC(5) is maybe the same as XPC(2) or XPC(3) or XPC(4) !!
       OZ_Return res = fun(XPC(2),XPC(3),XPC(4),XPC(5));
@@ -1866,6 +1872,7 @@ LBLdispatcher:
   Case(INLINEEQEQ)
     {
       InlineFun2 fun = (InlineFun2)GetBI(PC+1)->getInlineFun();
+      Assert(fun != NULL);
 
       // note XPC(4) is maybe the same as XPC(2) or XPC(3) !!
       OZ_Return res = fun(XPC(2),XPC(3),XPC(4));
@@ -1894,6 +1901,7 @@ LBLdispatcher:
   Case(SHALLOWTEST1)
     {
       InlineRel1 rel = (InlineRel1)GetBI(PC+1)->getInlineFun();
+      Assert(rel != NULL);
 
       OZ_Return res = rel(XPC(2));
       if (res==PROCEED) { DISPATCH(5); }
@@ -1921,6 +1929,7 @@ LBLdispatcher:
   Case(SHALLOWTEST2)
     {
       InlineRel2 rel = (InlineRel2)GetBI(PC+1)->getInlineFun();
+      Assert(rel != NULL);
 
       OZ_Return res = rel(XPC(2),XPC(3));
       if (res==PROCEED) { DISPATCH(6); }

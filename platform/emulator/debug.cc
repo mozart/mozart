@@ -419,13 +419,6 @@ OZ_C_proc_begin(BIdisplayCode, 2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIwaitForArbiter,1)
-{
-  OZ_declareNonvarArg(0,val);
-  return PROCEED;
-}
-OZ_C_proc_end
-
 OZ_C_proc_begin(BIbreakpointAt, 4)
 {
   OZ_declareArg    (0,file)

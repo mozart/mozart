@@ -59,7 +59,6 @@ OZ_C_proc_proto(BIsetContFlag)
 OZ_C_proc_proto(BIsetStepMode)
 OZ_C_proc_proto(BItraceThread)
 OZ_C_proc_proto(BIdisplayCode)
-OZ_C_proc_proto(BIwaitForArbiter)
 OZ_C_proc_proto(BIlocation)
 
 Bool trace(char *s,Board *board=NULL,Actor *actor=NULL,
