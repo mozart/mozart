@@ -6,9 +6,8 @@
 <P>There are two kinds of global names in Oz:
 <index/global name<and>internal/
 <LIST>
-<ITEM>References that can only exist <em>within</em> an Oz computation space.
-They reference language entities.
-Any language entity can be referenced.
+<ITEM>References that can exist <em>only within</em> an Oz computation space.
+They can reference <em>any</em> language entity.
 They are globally unique,
 even for references created before
 connecting with another application.
@@ -18,23 +17,23 @@ semantics of these references.
 In most cases, you can ignore these references
 since they don't affect the language semantics.
 <index/global name<and>external/
-<ITEM>References that can exist <em>outside of</em> an Oz computation space.
+<ITEM>References that can exist <em>anywhere</em>, i.e., both
+inside and outside of an Oz computation space.
 These references are known as external global names.
+They are represented as character strings, and can
+therefore be stored and communicated through many media,
+including Web pages, Oz computation spaces, and many more.
 They are needed when a Mozart application wants to interact
 with the external world.
-These are the references that interest us in this section.
+In this section we are interested only in these references.
 </LIST>
 <P>Oz recognizes three basic kinds of external global names,
-namely tickets, URLs, and hostnames.
-All three are represented as character strings, and can
-therefore be stored and communicated through many media,
-including Web pages and Oz computation spaces.
+namely tickets, URLs, and hostnames:
 <index/ticket<and>definition/
 <index/global name<and>ticket/
 <LIST>
-<ITEM> A <EM>ticket</EM> is a string that references a language entity
+<ITEM> A <EM>ticket</EM> is a string that references any language entity
 inside a running application.
-A ticket can reference <em>any</em> language entity.
 Tickets are created within a running Oz application
 and can be used by active applications to connect together
 (see module <ref.extern to="ozdoc:system"
