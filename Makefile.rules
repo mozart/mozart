@@ -20,7 +20,7 @@ Makefile.vars mogul.css: % : %.in
 $(HTMLSUBDIR)/index.html: $(SGMLFILES) $(HTMLSUBDIR)/mogul.css
 	$(OZDOC) --in=$< --out=$(HTMLSUBDIR) \
 	--type=html-stylesheets --stylesheet=mogul.css
-$(HTMLSUBDIR)/mogul.css: mogul.css
+$(HTMLSUBDIR)/mogul.css $(HTMLSUBDIR)/page.gif: $(HTMLSUBDIR)/% : %
 	$(INSTALL_FILE) $< $@
 
 clean::
@@ -67,7 +67,7 @@ MOGUL_HTML_OPTIONS	=	\
 	--update-package-list-html \
 	--update-author-list-html
 
-mogul-doc:: $(HTMLSUBDIR)/index.html
+mogul-doc:: all.doc
 	for i in $(HTMLSUBDIR)/* ; do $(INSTALL_FILE) $$i $(MOGUL_DIRECTORY)/; done
 
 mogul-update: mogul-database mogul-archive mogul-html

@@ -1,6 +1,7 @@
 <!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
 <!ENTITY % proglang.values.local "|fundamental">
 <!ENTITY VERSION "1.0">
+<!ENTITY ozmake.home "http://www.mozart-oz.org/mogul/doc/duchier/ozmake/index.html">
 ]>
 <book proglang=fundamental>
     <meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
@@ -13,8 +14,12 @@
     <meta name="html.split" value="sec.format.section">
     <meta name="html.split" value="sec.format.package">
     <meta name="html.split" value="sec.own.section">
+    <meta name="html.split" value="sec.own.section.old">
+    <meta name="html.split" value="sec.own.section.new">
     <meta name="html.split" value="sec.choosing.uri">
     <meta name="html.split" value="sec.devel">
+    <meta name="html.split" value="sec.devel.old">
+    <meta name="html.split" value="sec.devel.new">
     <title/MOGUL: the MOzart Global User Library/
     <author.extern to="author.db" key="Denys.Duchier">
     <abstract>
@@ -100,6 +105,14 @@ completely decentralized.  Each contributor maintains his part of the
 database wherever he wants.  Each database entry is made available at
 a URL so that the <name>MOGUL Librarian</name> software can easily
 fetch them to compile a snapshot of the full database.</p>
+      <p>While in the past, contributors had to maintain their entries
+      by hand, full support is now integrated into the
+      <ref.extern to="&ozmake.home;"><name>ozmake</name>
+      tool</ref.extern> (see in particular the <code/--publish/ option).  The details of the present section are no
+      longer as important as they once were, and for the most part you
+      should instead refer to the <ref.extern
+      to="&ozmake.home;"><name>ozmake</name>
+      documentation</ref.extern>.</p>
       <section id="sec.types">
 	<title/Types of Entries/
 	<p>The database contains 3 kinds of entries:
@@ -357,11 +370,65 @@ they are still available and not objectionable./
 We will reply to the <q/administrative/ email address, telling you
 which id you have been granted.  Using this id, you can create <ref
 to="valid.id"/valid subids/ at your heart's content.</p>
+<subsection id="sec.own.section.old">
+  <title/Setting things up the old way/
 	<p>You should then write an entry for you section, see
 <ptr to="sec.format.section">, and make it available at the url you
 indicated in your email message.  Remember to create a database entry
 describing yourself, see <ptr to="sec.format.contact">, and use it
 when describing your packages, see <ptr to="sec.format.package">.</p>
+        <p>However things can be much simpler if you use <name/ozmake/
+	instead and this is described in the next section.</p>
+</subsection>
+<subsection id="sec.own.section.new">
+  <title/Setting things up using <code/ozmake//
+        <p>Since the advent of <ref.extern
+	to="&ozmake.home;"><name>ozmake</name></ref.extern> version
+	0.76
+becoming a contributor has become a lot simpler.  See
+this <ref.extern
+to="http://www.mozart-oz.org/lists/oz-users/2585.html">message on the
+users list</ref.extern> for some details.  However the gist of it
+is that you typically set things up as follows:
+<code display>
+ozmake --config=put --mogulrootid=$MOGULID
+ozmake --config=put --moguldir=$MOGULDIR
+ozmake --config=put --mogulurl=$MOGULURL
+</code>
+where <code/$MOGULID/ is the MOGUL id you were granted, <code/$MOGULDIR/
+ is the directory on
+your local file system where you want <code>ozmake</code> to put all
+the stuff related to the packages that you wish to publish in MOGUL
+(for example <file>/home/$USER/public_html/mogul/publish</file>),
+and <code/$MOGULURL/ is the URL at
+which this directory is made available on the Web (for example
+<file>http://$HOSTNAME/~$USER/mogul/publish</file>).</p>
+<p>You then need to create and publish an entry for yourself.  See the "CONTACTS"
+section in the <ref.extern
+to="&ozmake.home;"><name>ozmake</name> documentation</ref.extern>.
+Briefly this amounts to creating a file <file/makefile.oz/ that looks
+something like this:
+<code display>
+makefile(
+  contact :
+    o(
+      mogul : 'mogul:/homes/sherlock
+      name  : 'Sherlock Holmes'
+      email : 'holmes@baker-street.com'
+      www   : 'http://www.baker-street.com/~holmes/'))
+</code>
+but with your own data, of course! Then you publish it by invoking:
+<code display>
+ozmake --publish
+</code>
+that's it! now you have a section and it contains your contact entry.
+When you publish your packages (again using <code/--publish/),
+corresponding entries will be created and added to your section.  In
+order to publish a package, you will have to provide some features in
+its <file/makefile.oz/.  See the <ref.extern
+to="&ozmake.home;"><name>ozmake</name> documentation</ref.extern> for
+details.</p>
+</subsection>
       </section>
       <section id="sec.choosing.uri">
 	<title/Choosing URIs/
@@ -401,9 +468,11 @@ choose an abstract uri.</p>
 	<p>The job of developing and packaging a contribution so that
 it is easy to install anywhere is <q/in principle/ not that
 straightforward.  Fortunately, we have already done most of the work
-for you.  We provide utilities that make this task very simple.</p>
-	<subsection>
-	  <title/<code/ozskel//
+for you.  We provide utilities that make this task very simple:
+<name/ozskel/ for the old obsolete way, <name/ozmake/ for the new
+recommended way.</p>
+	<subsection id="sec.devel.old">
+	  <title/The old way using <code/ozskel//
 	  <p>The <code/ozskel/ utility makes it very easy to develop
 and distribute applications.  It is also just as useful for projects
 that you don't intend to distribute.</p>
@@ -416,6 +485,24 @@ have to fill in the blanks.  Creating a good <file/Makefile.in/ is
 hard.  We've done it for you!  For most of your projects, all you'll
 need to do is to add files names to certain variables.  All the really
 useful rules are already in there.</p>
+	</subsection>
+	<subsection id="sec.devel.new">
+	  <title/The new way using <code/ozmake//
+	  <p>The old way using <code/ozskel/ was complicated and usually
+not portable to Windows.  The new way uses the <code/ozmake/ tool, 
+and your should read <ref.extern
+to="&ozmake.home;">the <name>ozmake</name> documentation</ref.extern>
+for full details.  The short story is that you write a file
+<file/makefile.oz/ containing a record in Oz syntax that describes
+your project.  You publish you package simply by invoking:
+<code display>
+ozmake --publish
+</code>
+Others can then install your package by invoking:
+<code display>
+ozmake --install --package=$PKGID
+</code>
+where <code/$PKGID/ is your package MOGUL id.</p>
 	</subsection>
       </section>
     </chapter>
