@@ -211,9 +211,8 @@ bound to any entity, including other variables. The variable and
 procedure stores are monotonic, i.e., information can only be added to
 them, not changed or removed.
 
-<P>All Oz execution can be defined in terms of a kernel language
-called the Oz Programming Model (OPM) <PTR TO="smolka95">. <PTR TO="CoreLang">
-defines the abstract syntax of an OPM statement S. We briefly define
+<P><PTR TO="CoreLang"> defines the abstract syntax of a statement S
+in the kernel language.  We briefly define
 each possible statement. Statement sequences are reduced sequentially
 inside a thread. Values (records, numbers, etc.) are introduced
 explicitly and can be equated to variables. All variables are logic
@@ -246,7 +245,8 @@ attribute names. A class is defined through multiple inheritance, and
 any conflicts are resolved at definition time when building its method
 table.
 
-<SECTION><TITLE>Objects</TITLE> <P>An object is essentially a special
+<SECTION><TITLE>Objects</TITLE>
+<P>An object is essentially a special
 record having a number of components. One component is the object's
 class. Another component is a one-argument procedure that references a
 cell, which is hidden by lexical scoping.  The cell holds the object's
@@ -254,7 +254,6 @@ state. Applying an object <<Obj>> to message <<M>> applies the
 object's procedure to <<M>>. The argument indexes into the method
 table.  A method is a procedure that is given a reference to the state
 cell.  In general it modifies the state of the object.
-
 
 
 <SECTION><TITLE>Reentrant locks</TITLE>
