@@ -287,7 +287,8 @@ EOF
 # No we have all what we need, go and build rpms
 #
 
-rpm --clean -ba ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
+rpmpgm=`rpmbuild --usage >/dev/null 2>&1 && echo rpmbuild || echo rpm`
+$rpmpgm --clean -ba ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
 rm -f ${RPMSPEC}/${SPEC}
 rm -f ${RPMSRC}/${SRCTAR}
 rm -f ${RPMSRC}/${DOCTAR}
