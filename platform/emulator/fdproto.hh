@@ -96,10 +96,10 @@ OZ_C_proc_proto(fdp_union)
 OZ_C_proc_proto(fdp_distinct)
 OZ_C_proc_proto(fdp_distinctOffset)
 OZ_C_proc_proto(fdp_disjoint)
-OZ_C_proc_proto(fdp_disjoint_card)
+OZ_C_proc_proto(sched_disjoint_card)
 OZ_C_proc_proto(fdp_disjointC)
 OZ_C_proc_proto(fdp_distance)
-OZ_C_proc_proto(fdp_cpIterate)
-OZ_C_proc_proto(fdp_disjunctive)
+OZ_C_proc_proto(sched_cpIterate)
+OZ_C_proc_proto(sched_disjunctive)
 
 #endif
