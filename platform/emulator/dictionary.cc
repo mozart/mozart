@@ -30,7 +30,7 @@
 #endif
 
 #include "dictionary.hh"
-
+#include "am.hh"
 
 // Return true iff argument is zero or a power of two
 Bool isPwrTwo(dt_index s) {
@@ -392,7 +392,7 @@ Bool DynamicTable::srecordcheck(SRecord &sr, PairList* &pairs) {
 
 TaggedRef DynamicTable::getOpenArityList(TaggedRef* ftail, Board* home)
 {
-    TaggedRef thehead=makeTaggedRef(newTaggedUVar(home));
+    TaggedRef thehead=oz_newVar(home);
     TaggedRef thetail=thehead;
     thehead=getArityList(thetail);
     *ftail = thetail;
