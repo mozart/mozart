@@ -3,7 +3,7 @@ export 'class' : InteractiveManager
 import
    Application
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
-   Global(localDB mogulDB localDB)
+   Global(localDB mogulDB readDB)
    ActionInstall(install:Install)
    ActionInfo(view)
    System(show:Show)
@@ -80,13 +80,13 @@ define
 		     lrscrollbar:true
 		     handle:self.handle)
       end
-      meth setScrollbar
-	 {self.handle set(scrollregion:{List.toRecord q
-					{List.mapInd
-					 {self.allTag bbox($)}
-					 fun{$ I V} I#V end}
-				       })}
-      end
+%      meth setScrollbar
+%	 {self.handle set(scrollregion:{List.toRecord q
+%					{List.mapInd
+%					 {self.allTag bbox($)}
+%					 fun{$ I V} I#V end}
+%				       })}
+%      end
       meth display(Info)
 	 if {IsFree self.allTag} then
 	    self.allTag={self.handle newTag($)}
@@ -103,8 +103,6 @@ define
 				      label:"mogul")}
 	 dictNode<-{NewDictionary}
 	 {Dictionary.put @dictNode 'mogul:/' @rootNode}
-	 {@rootNode draw(x:2 y:2 height:_)}
-	 {@rootNode expand}
 	 local
 	    fun{ToKey X}
 	       {VirtualString.toAtom
@@ -157,6 +155,8 @@ define
 	       {CreateNode I X.id}
 	    end
 	 end
+	 {@rootNode draw(x:2 y:2 height:_)}
+	 {@rootNode expand}
 	 %%
 	 %% 
 	 %%
@@ -318,6 +318,16 @@ define
 			tbbutton(text:'File...'
 				 action:self#displayFile
 				 glue:w)
+			tdline(glue:nsw)
+			tbradiobutton(glue:w
+				      text:'List'
+				      group:dataview
+				      action:self#displayDataAs(ListDataView))
+			tbradiobutton(glue:w
+				      text:'Tree'
+				      init:true
+				      group:dataview
+				      action:self#displayDataAs(TreeDataView))
 		       )
 				 
 %			tbbutton(text:'Install' glue:w)
@@ -401,6 +411,17 @@ define
 	 {Window show}
       end
 
+      meth displayDataAs(Class)
+	 Desc
+	 Info={@data get($)}
+      in
+	 data<-{New Class init(self
+			       proc{$ Title} {self.dataLabel set(text:Title)} end
+			       Desc)}
+	 {self.dataPlace set(Desc)}
+	 {@data display(Info)}
+      end
+      
       meth displayInstalled
 	 {@data display(r(info:Global.localDB title:"Installed package"))}
       end
