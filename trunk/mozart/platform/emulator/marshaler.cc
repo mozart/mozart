@@ -77,7 +77,8 @@
 	    15 statistics
 	    16 initialization
 	    17 code marshaling
-	    18 message marshaling
+	    18 Exported to marshalMsg.m4cc
+	    19 message marshaling
 
 ***************************************************************************** */
 
@@ -1366,13 +1367,53 @@ Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t){
 #include "marshalcode.cc"
 
 /* *********************************************************************/
-/*   SECTION 18: message marshaling                                    */
+/*   SECTION 18: Exported to marshalMsg.m4cc                         */
+/* *********************************************************************/
+
+void marshalFullObjectRT(Object *o,MsgBuffer* bs){
+  Assert(refTrail->isEmpty());
+  marshalFullObject(o,bs);
+  refTrail->unwind();}
+
+void marshalFullObjectAndClassRT(Object *o,MsgBuffer* bs){
+  Assert(refTrail->isEmpty());
+  marshalFullObjectAndClass(o, bs);
+  refTrail->unwind();}
+
+void marshalTermRT(OZ_Term t, MsgBuffer *bs){
+  Assert(refTrail->isEmpty());
+  marshalTerm(t, bs);
+  refTrail->unwind();}
+
+OZ_Term unmarshalTermRT(MsgBuffer *bs){
+  OZ_Term ret;
+  refTable->reset();
+  Assert(refTrail->isEmpty());
+  ret =  unmarshalTerm(bs);
+  refTrail->unwind();
+  return ret;
+}
+
+void unmarshalObjectRT(ObjectFields *o, MsgBuffer *bs){
+  refTable->reset();
+  Assert(refTrail->isEmpty());
+  unmarshalObject(o,bs);
+  refTrail->unwind();
+}
+
+
+void unmarshalObjectAndClassRT(ObjectFields *o, MsgBuffer *bs){
+  refTable->reset();
+  Assert(refTrail->isEmpty());
+  unmarshalObjectAndClass(o, bs);
+  refTrail->unwind();
+}
+
+
+/* *********************************************************************/
+/*   SECTION 19: message marshaling                                    */
 /* *********************************************************************/
 
 #include "marshalMsg.cc"
-
-
-
-
 
 

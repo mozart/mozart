@@ -1357,7 +1357,7 @@ public:
     Assert(isFree());
     if(c==INFINITE_CREDIT){
       addFlags(PO_PERSISTENT);
-      setCreditOB(0);}
+      setCreditOB(c);}
     else{
       setCreditOB(c);}
     unsetFree();
@@ -1452,6 +1452,7 @@ void getOneMsgCredit(){
     Assert(creditSite==NULL);
     return;}
   creditSite=getOneSecondaryCredit();
+  Assert(creditSite);
   return;}
 };
 
@@ -1490,12 +1491,14 @@ void BorrowEntry::removeSoleExtension(Credit c){
 void BorrowEntry::createSecMaster(){
   BorrowCreditExtension *bce=newBorrowCreditExtension();
   bce->initMaster(getCreditOB());
+  Assert(!isPersistent());
   setFlags(PO_MASTER|PO_EXTENDED);
   setMaster(bce);}
 
 void BorrowEntry::createSecSlave(Credit cred,Site *s){
   BorrowCreditExtension *bce=newBorrowCreditExtension();
   bce->initSlave(getCreditOB(),cred,s);
+  Assert(!isPersistent());
   setFlags(PO_SLAVE|PO_EXTENDED);
   setSlave(bce);}
 
@@ -1758,7 +1761,7 @@ void BorrowEntry::addSecondaryCredit(Credit c,Site *s){
       return;}
     break;}
   default:
-    Assert(0);
+    break;
   }
   giveBackSecCredit(s,c);
 }
@@ -2517,7 +2520,7 @@ void OwnerTable::maybeLocalize()
     OwnerEntry* o = ownerTable->getOwner(i);
     if(!o->isFree()) {
       PD((GC,"OT o:%d",i));
-      if(o->hasFullCredit()){
+      if(o->hasFullCredit() && !o->isPersistent()){
 	ownerCheck(o,i);}}}
   compactify();
   return;
@@ -3160,8 +3163,8 @@ Bool marshalTertiary(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
     {
       PD((MARSHAL_CT,"manager"));
       int OTI=t->getIndex();
+      if (!sd) {OT->getOwner(OTI)->makePersistentOwner();} // ATTENTION     
       marshalOwnHead(tag,OTI,bs);
-      if (!sd) {OT->getOwner(OTI)->makePersistentOwner();} // ATTENTION
       break;
     }
   case Te_Frame:
@@ -3172,8 +3175,8 @@ Bool marshalTertiary(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
       if (bs->getSite() && borrowTable->getOriginSite(BTI)==sd) {
 	marshalToOwner(BTI,bs);
 	return OK;}
+      if(!sd) {BT->getBorrow(BTI)->makePersistentBorrow();}      
       marshalBorrowHead(tag,BTI,bs);
-      if(!sd) {BT->getBorrow(BTI)->makePersistentBorrow();}
       break;
     }
   default:
@@ -3251,7 +3254,7 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
     Assert(0);
   }
   val=makeTaggedConst(tert);
-  ob->mkTertiary(tert); 
+  ob->mkTertiary(tert,ob->getFlags()); 
   return val;
 }
 
