@@ -90,6 +90,13 @@
       Emacs' <File/bin/ directory before starting the Oz Programming
       Interface.
     <P>
+    When the Oz programming environment starts, it tries to invoke
+    Emacs via the command <<emacs>>.  If your version of Emacs
+    has to be invoked with a different command name, say <<runemacs>>,
+    you can achieve this by setting the environment variable <Var type=env
+    /OZEMACS/ in your <File/AUTOEXEC.BAT/, for example
+    <<<OZEMACS=F:\Programs\emacs-21.1\bin\runemacs.exe>>>
+    <P>
       More information on GNU Emacs for Windows can be found at
       <Ref.Extern to="http://www.gnu.org/software/emacs/windows/ntemacs.html"
       >http://www.gnu.org/software/emacs/windows/ntemacs.html</Ref.Extern>.
