@@ -1,0 +1,265 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __genvar_icc__
+#define __genvar_icc__
+
+#if defined(INTERFACE) && !defined(OUTLINE)
+#pragma interface
+#endif
+
+
+inline
+Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
+			 TaggedRef * tptr2, TaggedRef term2,
+			 ByteCode *scp)
+{
+  switch (getType()){
+  case FDVariable:
+    {
+      if (! ((GenFDVariable *)this)->unifyFD(tptr1, term1, tptr2, term2, scp))
+	return FALSE;
+    }
+    break;
+  case FSetVariable:
+    {
+      if (! ((GenFSetVariable *)this)->unifyFSet(tptr1, term1, tptr2, term2, scp))
+	return FALSE;
+    }
+    break;
+  case OFSVariable:
+    if (! ((GenOFSVariable *)this)->unifyOFS(tptr1, term1, tptr2, term2, scp)) {
+      return FALSE;
+    }
+    break;
+  case MetaVariable:
+    {
+      if (! ((GenMetaVariable *)this)->unifyMeta(tptr1, term1, tptr2, term2, scp))
+	return FALSE;
+    }
+    break;
+  case BoolVariable:
+    {
+      if (! ((GenBoolVariable *)this)->unifyBool(tptr1, term1, tptr2, term2, scp))
+	return FALSE;
+    }
+    break;
+  case AVAR:
+    if (! ((AVar *)this)->unifyAVar(tptr1, tptr2==0?&term2:tptr2, scp))
+      return FALSE;
+    break;
+  case PerdioVariable:
+    if (! ((PerdioVar *)this)->unifyPerdioVar(tptr1, tptr2==0?&term2:tptr2,
+					      scp))
+      return FALSE;
+    break;
+  case LazyVariable:
+    if (! ((GenLazyVariable*)this)->unifyLazy(tptr1,tptr2==0?&term2:tptr2,scp))
+      return FALSE;
+    break;
+  default:
+    Assert(0);
+    return FALSE;
+  }
+      
+  return TRUE;
+} 
+
+inline
+int GenCVariable::getSuspListLength(void)
+{
+  GenVarCheckType(getType());
+
+  switch (getType()){
+  case FDVariable:
+    return ((GenFDVariable *)this)->getSuspListLength();
+  case BoolVariable:
+    return ((GenBoolVariable *)this)->getSuspListLength();
+  case OFSVariable:
+    return ((GenOFSVariable *)this)->getSuspListLength();
+  case FSetVariable:
+    return ((GenFSetVariable *)this)->getSuspListLength();
+  default:
+    break;
+  }
+  return -1;
+}
+
+inline
+size_t GenCVariable::getSize(void)
+{
+  switch (getType()){
+  case FDVariable:   return ((GenFDVariable*)this)->getSize();
+  case OFSVariable:  return ((GenOFSVariable*)this)->getSize();
+  case MetaVariable: return ((GenMetaVariable*)this)->getSize();
+  case BoolVariable: return ((GenBoolVariable*)this)->getSize();
+  case FSetVariable: return ((GenFSetVariable*)this)->getSize();
+  case AVAR:         return ((AVar *)this)->getSize();
+  case PerdioVariable: return ((PerdioVar *)this)->getSize();
+  case LazyVariable: return ((GenLazyVariable*)this)->getSize();
+  default:           Assert(0);
+  }
+  return 0;
+} 
+
+inline
+Bool GenCVariable::valid(TaggedRef *ptr,TaggedRef val)
+{
+  switch (getType()){
+  case FDVariable:   return ((GenFDVariable*)this)->valid(val);
+  case OFSVariable:  return ((GenOFSVariable*)this)->valid(val);
+  case MetaVariable: return ((GenMetaVariable*)this)->valid(val);
+  case BoolVariable: return ((GenBoolVariable*)this)->valid(val);
+  case FSetVariable: return ((GenFSetVariable*)this)->valid(val);
+  case AVAR:         return ((AVar *)this)->valid(val);
+  case PerdioVariable: return ((PerdioVar *)this)->valid(ptr,val);
+  case LazyVariable: return ((GenLazyVariable*)this)->valid(val);
+  default: Assert(0); break;
+  }  
+  return FALSE;
+}
+
+inline
+int GenCVariable::hasFeature(TaggedRef fea,TaggedRef *out)
+{
+  switch (getType()){
+  case FDVariable:   return FAILED;
+  case OFSVariable:  return ((GenOFSVariable*)this)->hasFeature(fea,out);
+  default: return SUSPEND;
+  }
+}
+
+// this is supposed to be the local variable 
+inline
+void GenCVariable::installPropagators(GenCVariable * glob_var)
+{
+  Assert(getType() == glob_var->getType() || 
+	 (getType() == BoolVariable && glob_var->getType() == FDVariable));
+  Assert(am.inShallowGuard() || am.isLocalSVar(this) && ! am.isLocalSVar(glob_var));
+  
+  Board * glob_home = GETBOARD(glob_var);
+  suspList = am.installPropagators(suspList, glob_var->getSuspList(),
+				   glob_home);
+			
+  switch (glob_var->getType()) {
+  
+  case FDVariable:
+    {
+      switch (getType()){
+	
+      case FDVariable:
+	((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var, 
+						    glob_home);
+	break;
+	
+      case BoolVariable:     
+	((GenBoolVariable *)this)->installPropagators((GenFDVariable *) glob_var,
+						      glob_home);
+	break;
+	
+	
+      default:
+	Assert(0);
+	break; 
+      }
+      break;
+    } // case FDVariable
+
+  case BoolVariable:
+    {
+      switch (getType()){
+	
+      case FDVariable:
+	((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var, 
+						    glob_home);
+	break;
+	
+      default:
+	Assert(0);
+	break;
+      }
+      break;
+    } // case BoolVariable
+
+  case FSetVariable:
+    {
+      switch (getType()){
+	
+      case FSetVariable:
+	((GenFSetVariable *)this)->installPropagators((GenFSetVariable *) glob_var,
+						      glob_home);
+	break;
+	
+      default:
+	Assert(0);
+	break;
+      }
+    } // case FSetVariable
+
+  default:
+    Assert(0);
+    break;
+  }
+}
+
+
+inline
+void GenCVariable::addDetSusp(Thread *thr, TaggedRef *tptr) 
+{ 
+  switch (getType()){
+  case FDVariable:
+    ((GenFDVariable *)this)->addDetSusp(thr);
+    return;
+  default:
+    addSuspAnyVar(tptr,thr);
+    return;
+  }
+}
+
+inline
+void GenCVariable::dispose(void) 
+{ 
+  switch (getType()){
+  case FDVariable:
+    ((GenFDVariable *)this)->dispose();
+    break;
+  case BoolVariable:
+    ((GenBoolVariable *)this)->dispose();
+    break;
+  case FSetVariable:
+    ((GenFSetVariable *)this)->dispose();
+    break;
+  default:
+    break;
+  }
+}
+
+
+inline
+void addSuspCVar(TaggedRef v, Thread *el, int unstable=TRUE)
+{
+  GenCVariable *cv = tagged2CVar(v);
+  switch(cv->getType()) {
+  case PerdioVariable:
+    ((PerdioVar*)cv)->addSuspPerdioVar(el,unstable);
+    break;
+  case LazyVariable:
+    ((GenLazyVariable*)cv)->addSuspLazy(el,unstable);
+    break;
+  default:
+    cv->addSuspSVar(el,unstable);
+    break;
+  }
+}
+
+#endif //__genvar_icc__
+
+

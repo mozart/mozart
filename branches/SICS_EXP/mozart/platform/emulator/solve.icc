@@ -1,0 +1,209 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: popow
+
+  Solver
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __SOLVE_ICC_
+#define __SOLVE_ICC_
+
+#if !defined(OUTLINE) && defined(INTERFACE)
+#pragma interface
+#endif
+
+/* ------------------------------------------------------------------------
+   class SolveActor
+   ------------------------------------------------------------------------ */
+
+inline
+void SolveActor::addSuspension(SuspList *l)
+{
+  l->setNext(suspList);
+  suspList = l;
+}
+
+inline
+void SolveActor::addSuspension (Thread *thr)
+{
+  suspList = new SuspList (thr, suspList);
+}
+
+inline
+Bool SolveActor::areNoExtSuspensions()
+{
+  if (suspList == NULL)
+    return (OK);
+  else
+    return (checkExtSuspList ());
+}
+
+inline
+void SolveActor::inject(int prio, TaggedRef proc) {
+  // thread creation for {proc root}
+  RefsArray args = allocateRefsArray(1, NO);
+  args[0] = makeTaggedRef(&solveVar);
+
+  Thread *it = am.mkRunnableThread(prio, solveBoard);
+  it->pushCall(proc, args, 1);
+  am.scheduleThread(it);
+}
+
+inline
+TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
+  solveBoard->setCommitted(bb);
+  bb->incSuspCount(solveBoard->getSuspCount());
+
+  if (!am.installScriptOutline(solveBoard->getScriptRef())) {
+    return makeTaggedNULL();
+  }
+  
+  Assert(bb==am.currentBoard);
+  
+  // adjoin the list of or-actors to the list in actual solve actor!
+  
+  if (bb->isWait()) {
+    WaitActor::Cast(bb->getActor())->mergeChoices(cpb);
+  } else if (bb->isSolve()) {
+    SolveActor *sa = SolveActor::Cast(bb->getActor());
+
+    sa->mergeChoices(cpb);
+    
+    if (isSibling) 
+      sa->incThreads(threads);
+  }
+  
+  // merge local thread queue
+  if (localThreadQueue) {
+    // Merge in current solve board but not elsewhere
+    bb = am.currentSolveBoard;
+    
+    if (bb && bb->isSolve()) {
+      // merge local thread queue to another solve space
+      
+      SolveActor * sa = SolveActor::Cast(bb->getActor());
+      
+      if (sa->getLocalThreadQueue()) {
+	for ( ; !localThreadQueue->isEmpty(); 
+	      sa->getLocalThreadQueue()->enqueue(localThreadQueue->dequeue()));
+	resetLocalThreadQueue();
+      } else {
+	sa->setLocalThreadQueue(localThreadQueue);
+      }
+      
+    } else {
+      // merge ltq (local thread queue) to a non-solve space
+      
+      DebugCode(OZ_warning("Merging solve space with non-solve space."));
+      
+      // unpack threads of ltq, i.e. make them runnable in new space
+      while (!localThreadQueue->isEmpty()) {
+	Thread * thr = localThreadQueue->dequeue();
+	DebugCode (thr->unmarkRunnable());
+	am.propagatorToRunnable(thr);
+	am.scheduleThreadInline(thr, thr->getPriority());
+      }
+      
+      // empty taskstack of ltq thread and dispose ltq
+      resetLocalThreadQueue();
+    }
+  }
+
+  // merge nonmonotonic susp lists
+  if (nonMonoSuspList) {
+    // Merge in current solve board but not elsewhere
+    bb = am.currentSolveBoard;
+    
+    if (bb && bb->isSolve()) {
+      // merge nonmonotonic susp list to another solve space
+      
+      SolveActor * sa = SolveActor::Cast(bb->getActor());
+      
+      if (sa->nonMonoSuspList) {
+	sa->mergeNonMonoSuspListWith(nonMonoSuspList);
+	setNonMonoSuspList(NULL);
+      } else {
+	sa->setNonMonoSuspList(nonMonoSuspList);
+      }
+      
+    } else {
+      // merge nonmonotinic susp list to a non-solve space
+      
+      DebugCode(OZ_warning("Merging solve space with non-solve space."));
+      
+      scheduleNonMonoSuspList();
+    }
+  }
+  
+  return solveVar;
+}
+
+inline
+Board *SolveActor::clone(Board *bb) {
+  ozstat.incSolveCloned();
+  Bool testGround;
+  Board *copy = (Board *) am.copyTree(solveBoard, &testGround);
+  SolveActor *ca = SolveActor::Cast(copy->getActor());
+ 
+  ca->setBoard(bb);
+
+  if (testGround == OK) {
+    ca->setGround();
+    this->setGround();
+  }
+
+  return copy;
+}
+
+inline
+int SolveActor::choose(int left, int right) 
+{
+  ozstat.incSolveAlt();
+
+  if (cpb==0)
+    return -1;
+
+  WaitActor *wa = cpb->access();
+  
+  if (!wa)
+    return -1;
+
+  int n = wa->selectOrFailChildren(left, right);
+
+  if (n==0) {
+    return 0;
+  } else if (n==1) {
+    this->removeChoice();
+
+    Board *bb = wa->getChildRef();
+    Assert(bb->isWait());
+
+    Assert(am.currentBoard==solveBoard);
+    return am.commit(bb) ? 1 : 0;
+  } else {
+    return 1;
+  }
+}
+
+inline
+void SolveActor::clearResult(Board* bb) {
+  if (OZ_isVariable(result))
+    return;
+
+  result = makeTaggedRef(newTaggedUVar(bb));
+}
+
+inline
+void SolveActor::pushToLTQ(Thread * thr, Board * b) {
+  if (localThreadQueue) {
+    localThreadQueue->enqueue(thr);
+  } else {
+    Thread * ltq_thr = am.mkLTQ(b, PROPAGATOR_PRIORITY, this);
+    localThreadQueue = new LocalThreadQueue(ltq_thr, thr);
+    am.scheduleThreadInline(ltq_thr, PROPAGATOR_PRIORITY);
+  }
+}
+
+#endif  // __SOLVE_ICC_

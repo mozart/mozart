@@ -1,0 +1,49 @@
+
+/* first we count the number of instructions */
+
+define(`OPCODE',0) dnl
+
+define(instruction,
+	`ifelse(numOfRegs($2,$3,$4),1,`incrop(3)',
+		numOfRegs($2,$3,$4),2,`incrop(9)',
+      		`incrop(1)') dnl
+') dnl
+
+include(`../include/instrDefs.m4')
+include(`opcodes.hh')
+
+inline char **initOpToString(){
+char **help = new char*[OPCODE];
+
+/* now we can `define' the table */
+
+undefine(`instruction')
+define(instruction,
+	`ifelse(numOfRegs($2,$3,$4),1,oneReg(TOUPPER($1),$1),
+		numOfRegs($2,$3,$4),2,twoRegs(TOUPPER($1),$1),
+		help[TOUPPER($1)] = "$1";) dnl
+')
+
+define(oneReg,
+        `help[$1X] = "$2X";
+         help[$1Y] = "$2Y";
+         help[$1G] = "$2G";
+')
+
+define(twoRegs,
+        `help[$1XX] = "$2XX";
+         help[$1XY] = "$2XY";
+         help[$1XG] = "$2XG";
+         help[$1YX] = "$2YX";
+         help[$1YY] = "$2YY";
+         help[$1YG] = "$2YG";
+         help[$1GX] = "$2GX";
+         help[$1GY] = "$2GY";
+         help[$1GG] = "$2GG";
+')
+
+
+include(`../include/instrDefs.m4')
+return help;
+}
+

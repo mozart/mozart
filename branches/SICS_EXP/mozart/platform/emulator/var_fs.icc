@@ -1,0 +1,158 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __fsgenvar_icc__
+#define __fsgenvar_icc__
+
+#if defined(INTERFACE) && !defined(OUTLINE)
+#pragma interface
+#endif
+
+//-----------------------------------------------------------------------------
+
+inline
+GenFSetVariable * tagged2GenFSetVar(OZ_Term term)
+{
+  GCDEBUG(term);
+  return (GenFSetVariable *) tagged2CVar(term);
+}
+
+inline
+void GenFSetVariable::propagate(OZ_Term var, OZ_FSetPropState state,
+				PropCaller prop_eq)
+{
+  if (prop_eq == pc_propagator) {
+    switch (state) {
+    case fs_prop_val: { // no break
+      for (int i = fs_prop_any; i--; )
+	if (fsSuspList[i])
+	  GenCVariable::propagate(var, fsSuspList[i], prop_eq);
+    }
+ 	   case fs_prop_lub: case fs_prop_glb:
+      if (fsSuspList[state])
+	GenCVariable::propagate(var, fsSuspList[state], prop_eq);
+      break;
+    case fs_prop_bounds:
+      if (fsSuspList[fs_prop_lub])
+	GenCVariable::propagate(var, fsSuspList[fs_prop_lub], prop_eq);
+      if (fsSuspList[fs_prop_glb])
+	GenCVariable::propagate(var, fsSuspList[fs_prop_glb], prop_eq);
+      break;      
+    default:
+      break;
+    }
+  } else {
+    for (int i = fs_prop_any; i--; )
+      if (fsSuspList[i])
+	GenCVariable::propagate(var, fsSuspList[i], prop_eq);
+  }
+  if (suspList) 
+    GenCVariable::propagate(var, suspList, prop_eq);
+}
+
+inline 
+void GenFSetVariable::propagateUnify(TaggedRef var) { 
+  propagate(var, fs_prop_val, pc_cv_unif); 
+}
+
+inline
+Bool isGenFSetVar(TaggedRef term)
+{
+  GCDEBUG(term);
+  return isCVar(term) && (tagged2CVar(term)->getType() == FSetVariable);
+}
+
+inline
+Bool isGenFSetVar(TaggedRef term, TypeOfTerm tag)
+{
+  GCDEBUG(term);
+  Assert(tag == tagTypeOf(term));
+  return isCVar(tag) && (tagged2CVar(term)->getType() == FSetVariable);
+}
+
+inline
+OZ_FSetConstraint * unpatchReified(OZ_Term t) 
+{
+  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t) && isGenFSetVar(t));
+  GenFSetVariable * fsv = tagged2GenFSetVar(t);
+  
+  fsv->unpatchReified();
+  return fsv->getReifiedPatch();
+}
+
+
+inline
+void GenFSetVariable::becomesFSetValueAndPropagate(TaggedRef * trPtr)
+{
+  Assert(!isFSetValue(*trPtr));
+  if (isFSetValue(*trPtr)) return;
+
+  Assert(this == tagged2SuspVar(*trPtr));
+
+  OZ_Term set_val = makeTaggedFSetValue(new OZ_FSetValue(_fset));
+
+  propagate(*trPtr, fs_prop_val);
+  doBind(trPtr, set_val);
+  dispose();
+}
+
+inline
+void GenFSetVariable::installPropagators(GenFSetVariable * glob_var,
+					 Board * glob_home)
+{
+  for (int i = 0; i < fs_prop_any; i += 1)
+    fsSuspList[i] = am.installPropagators(fsSuspList[i],
+					  glob_var->fsSuspList[i],
+					  glob_home);
+}
+
+inline
+void GenFSetVariable::relinkSuspListTo(GenFSetVariable * lv, Bool reset_local)
+{
+  GenCVariable::relinkSuspListTo(lv, reset_local); // any
+  for (int i = 0; i < fs_prop_any; i += 1)
+    fsSuspList[i] =
+      fsSuspList[i]->appendToAndUnlink(lv->fsSuspList[i], reset_local);
+}
+
+inline
+void addSuspFSetVar(OZ_Term v, Thread * el, OZ_FSetPropState list_index)
+{
+  GenFSetVariable * fsv = tagged2GenFSetVar(v);
+
+  switch (list_index) {
+  case fs_prop_val:
+    AddSuspToList(fsv->fsSuspList[fs_prop_val], el, fsv->home);
+    break;
+  case fs_prop_bounds:
+    AddSuspToList(fsv->fsSuspList[fs_prop_glb], el, fsv->home);
+    AddSuspToList(fsv->fsSuspList[fs_prop_lub], el, fsv->home);
+    break;
+  case fs_prop_glb:
+    AddSuspToList(fsv->fsSuspList[fs_prop_glb], el, fsv->home);
+    break;
+  case fs_prop_lub:
+    AddSuspToList(fsv->fsSuspList[fs_prop_lub], el, fsv->home);
+    break;
+  case fs_prop_any:
+    AddSuspToList(fsv->suspList, el, fsv->home);
+    break;
+  default:
+    error("list index out of range.");
+    break;
+  }
+}
+
+#endif /* __fsgenvar_icc__ */
+
+// end of file
+//-----------------------------------------------------------------------------
+

@@ -1,0 +1,771 @@
+/* This may look like C code, but it is really -*- C++ -*-
+
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: popow,mehl,scheidhr
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+
+  ****** Register Instructions: use m4 to minimize duplication
+
+  */
+
+
+/* 
+ * m4 macros to simplfy defining instructions,
+ * that use registers
+ */
+
+changequote(XXX,XXX)
+
+changequote(``,'')
+
+
+define(CaseOneReg,``''
+       Case($1X)
+       ``define(``Reg1'',Xreg(``$''1))''{$2}
+
+       Case($1Y)
+       ``define(``Reg1'',Yreg(``$''1))''{$2}
+
+       Case($1G)
+       ``define(``Reg1'',Greg(``$''1))''{$2}
+
+       ``undefine(``Reg1'')''
+      )
+
+define(CaseOneRegGImpossible,``''
+       Case($1X)
+       ``define(``Reg1'',Xreg(``$''1))''{$2}
+
+       Case($1Y)
+       ``define(``Reg1'',Yreg(``$''1))''{$2}
+
+       Case($1G)
+       IMPOSSIBLE("$1G");
+
+       ``undefine(``Reg1'')''
+      )
+
+
+define(CaseTwoRegs,``''
+       Case($1XX)
+       ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Xreg(``$''1))''{$2}
+       Case($1XY)
+       ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Yreg(``$''1))''{$2}
+       Case($1XG)
+       ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Greg(``$''1))''{$2}
+
+       Case($1YX)
+       ``define(``Reg1'',Yreg(``$''1))'' ``define(``Reg2'',Xreg(``$''1))''{$2}
+       Case($1YY)
+       ``define(``Reg1'',Yreg(``$''1))'' ``define(``Reg2'',Yreg(``$''1))''{$2}
+       Case($1YG)
+       ``define(``Reg1'',Yreg(``$''1))'' ``define(``Reg2'',Greg(``$''1))''{$2}
+
+       Case($1GX)
+       ``define(``Reg1'',Greg(``$''1))'' ``define(``Reg2'',Xreg(``$''1))''{$2}
+       Case($1GY)
+       ``define(``Reg1'',Greg(``$''1))'' ``define(``Reg2'',Yreg(``$''1))''{$2}
+       Case($1GG)
+       ``define(``Reg1'',Greg(``$''1))'' ``define(``Reg2'',Greg(``$''1))''{$2}
+
+       ``undefine(``Reg1'')''
+       ``undefine(``Reg2'')''
+      )
+
+
+// -------------------------------------------------------------------------
+// CLASS: TERM: MOVE/UNIFY/CREATEVAR/...
+// -------------------------------------------------------------------------
+
+  CaseTwoRegs( MOVE,
+		``
+		  Reg2(getRegArg(PC+2)) = Reg1(getRegArg(PC+1));
+		  DISPATCH(3);
+		''
+		)
+
+
+  // move X[i] --> Y[j], X[k] --> Y[l]
+  Case(MOVEMOVEXYXY)
+    {
+      Yreg(getRegArg(PC+2)) = Xreg(getRegArg(PC+1));
+      Yreg(getRegArg(PC+4)) = Xreg(getRegArg(PC+3));
+      DISPATCH(5);
+    }
+
+  // move Y[i] --> X[j], Y[k] --> X[l]
+  Case(MOVEMOVEYXYX)
+    {
+      Xreg(getRegArg(PC+2)) = Yreg(getRegArg(PC+1));
+      Xreg(getRegArg(PC+4)) = Yreg(getRegArg(PC+3));      
+      DISPATCH(5);
+    }
+
+  // move Y[i] --> X[j], X[k] --> Y[l]
+  Case(MOVEMOVEYXXY)
+    {
+      Xreg(getRegArg(PC+2)) = Yreg(getRegArg(PC+1));
+      Yreg(getRegArg(PC+4)) = Xreg(getRegArg(PC+3));      
+      DISPATCH(5);
+    }
+
+  // move X[i] --> Y[j], Y[k] --> X[l]
+  Case(MOVEMOVEXYYX)
+    {
+      Yreg(getRegArg(PC+2)) = Xreg(getRegArg(PC+1));
+      Xreg(getRegArg(PC+4)) = Yreg(getRegArg(PC+3));      
+      DISPATCH(5);
+    }
+
+  CaseOneRegGImpossible(CREATENAMEDVARIABLE, 
+    ``
+    {
+      int regIndex = getRegArg(PC+1);
+      TaggedRef name   = getLiteralArg(PC+2);
+      Assert(&Reg1(0)== &(e->toplevelVars[0]));
+      TaggedRef newVar = e->createNamedVariable(regIndex,name);
+      Y = e->toplevelVars;
+      Reg1(regIndex) = newVar;
+    }
+    ''
+    DISPATCH(3);
+    )
+
+
+  Case(CLEARY)
+    {
+      Yreg(getRegArg(PC+1)) = makeTaggedNULL();
+      DISPATCH(2);
+    }
+
+
+Case(GETSELF)
+     {
+       XPC(1) = makeTaggedConst(e->getSelf());
+       DISPATCH(2);
+     }
+
+
+CaseOneRegGImpossible(CREATEVARIABLE,
+   ``{
+       ProfileCode(if(&(Reg1(0))==&Y[0]){COUNT1(sizeStackVars,sizeof(TaggedRef));});
+       Reg1(getRegArg(PC+1)) = fastnewTaggedUVar(e);
+       DISPATCH(2);
+     }'')
+
+CaseOneRegGImpossible(CREATEVARIABLEMOVE,
+   ``{
+       ProfileCode(if(&(Reg1(0))==&Y[0]){COUNT1(sizeStackVars,sizeof(TaggedRef));});
+       Reg1(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = fastnewTaggedUVar(e);
+       DISPATCH(3);
+     }'')
+
+  
+  Case(UNIFYXX) ONREG2(Unify,X,X);
+  Case(UNIFYXY) ONREG2(Unify,X,Y);
+  Case(UNIFYXG) ONREG2(Unify,X,G);
+  Case(UNIFYYX) ONREG2(Unify,Y,X);
+  Case(UNIFYYY) ONREG2(Unify,Y,Y);
+  Case(UNIFYYG) ONREG2(Unify,Y,G);
+  Case(UNIFYGX) ONREG2(Unify,G,X);
+  Case(UNIFYGY) ONREG2(Unify,G,Y);
+  Case(UNIFYGG) ONREG2(Unify,G,G);
+  {
+  Unify: asmLbl(UNIFY);
+      TaggedRef A = RegAccess(HelpReg1,getRegArg(PC+1));
+      TaggedRef B = RegAccess(HelpReg2,getRegArg(PC+2));
+      if ( !e->fastUnify(A,B,NOFLATGUARD) ) {
+	SHALLOWFAIL;
+	/* NOTE: macro must be in *one* line */
+	HF_EQ(A,B);
+      }
+      DISPATCH(3);
+  }
+  
+  
+  Case(PUTRECORDG) IMPOSSIBLE("PUTRECORDG");
+  Case(PUTRECORDY) ONREG(PutRecord,Y);
+  Case(PUTRECORDX) ONREG(PutRecord,X);
+  {
+  PutRecord: asmLbl(PUTRECORD);
+    TaggedRef label = getLiteralArg(PC+1);
+    SRecordArity ff = (SRecordArity) getAdressArg(PC+2);
+    SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
+    
+    RegAccess(HelpReg,getRegArg(PC+3)) = makeTaggedSRecord(srecord);
+    sPointer = srecord->getRef();
+    
+    DISPATCH(4);
+  }
+
+  Case(PUTCONSTANTX)
+  Case(PUTINTX)
+     Xreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
+
+  Case(PUTCONSTANTY)
+  Case(PUTINTY)
+     Yreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
+
+  Case(PUTCONSTANTG)
+  Case(PUTINTG)
+     IMPOSSIBLE("PUTCONSTANTG/PUTINTG");
+
+  CaseOneRegGImpossible( PUTLIST,
+	       ``{
+		 LTuple *term = new LTuple();
+		 Reg1(getRegArg(PC+1)) = makeTaggedLTuple(term);
+		 sPointer = term->getRef();
+
+	       }''
+	       DISPATCH(2);
+	       )
+
+
+  CaseOneReg( SETVARIABLE,
+	       ``{
+		 Reg reg = getRegArg(PC+1);
+		 *sPointer = e->currentUVarPrototype();
+		 Reg1(reg) = makeTaggedRef(sPointer++);
+		 DISPATCH(2);
+	       }''
+	       )
+
+  CaseOneReg( SETVALUE,
+	       ``{
+		 *sPointer++ = Reg1(getRegArg(PC+1));
+		 DISPATCH(2);
+	       }''
+	       )
+
+
+Case(SETCONSTANT)
+  Case(SETINT)
+    {
+      *sPointer++ = getTaggedArg(PC+1);
+      DISPATCH(2);
+    }
+
+
+Case(SETVOID)
+    {
+      int n = getPosIntArg(PC+1);
+      for (int i = 0; i < n; i++ ) {
+	*sPointer++ = e->currentUVarPrototype();
+      }
+      DISPATCH(2);
+    }
+
+
+  Case(GETRECORDX) ONREG(GetRecord,X);
+  Case(GETRECORDY) ONREG(GetRecord,Y);
+  Case(GETRECORDG) ONREG(GetRecord,G);
+  {
+  GetRecord: asmLbl(GETRECORD);
+    TaggedRef label = getLiteralArg(PC+1);
+    SRecordArity ff = (SRecordArity) getAdressArg(PC+2);
+
+    TaggedRef term = RegAccess(HelpReg,getRegArg(PC+3));
+    DEREF(term,termPtr,tag);
+
+    if (isAnyVar(term)) {
+      SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
+      if(isCVar(term) == OK){
+	// fill w/unb. var.
+	srecord->initArgs();
+	TaggedRef srecordRef=makeTaggedSRecord(srecord);
+	if(tagged2CVar(term)->unifyOutline(termPtr, term, 
+					   &srecordRef, srecordRef,
+					   NOFLATGUARD)) {
+	  sPointer = srecord->getRef();
+	  SetReadMode;
+	  DISPATCH(4);
+	}
+      } else {
+	e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord),
+			NOFLATGUARD);
+		     
+	sPointer = srecord->getRef();
+	SetWriteMode;
+	DISPATCH(4);
+      }
+    }
+		 
+    if (isSRecord(tag) &&
+	tagged2SRecord(term)->compareSortAndArity(label,ff)) {
+      sPointer = tagged2SRecord(term)->getRef();
+      SetReadMode;
+      DISPATCH(4);
+    }
+
+    SHALLOWFAIL;
+    HF_TELL(RegAccess(HelpReg,getRegArg(PC+3)),mkRecord(label,ff));
+  }
+
+
+  CaseOneReg(TESTCONST,
+    ``{
+        TaggedRef term = Reg1(getRegArg(PC+1));
+        TaggedRef atm  = getLiteralArg(PC+2);
+
+	DEREF(term,termPtr,tag);
+
+	if (literalEq(term,atm)) {
+	  JUMP( getLabelArg(PC+3) );
+	}
+
+        if (isNotCVar(term) ||
+	    isCVar(term) && tagged2CVar(term)->valid(termPtr,atm)) {
+	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
+	  addSusp (termPtr, CTT);
+
+	  /* Bug fix:
+	     declare Y Z
+	     {RecLabel Y Z}
+	     if Y=b then {Show yes36b} else {Show no36b} fi
+	     Z=c
+	     we must suspend on the label of OFS too!!
+	     */
+
+	  if (isCVar(term) && tagged2CVar(term)->getType() == OFSVariable) {
+	    TaggedRef lab = ((GenOFSVariable*)tagged2CVar(term))->getLabel();
+	    DEREF(lab,labPtr,labTag);
+	    if (isAnyVar(labTag)) {
+	      addSusp (labPtr, CTT);
+	    }
+	  }
+	  goto LBLsuspendThread;
+	}
+
+	JUMP( getLabelArg(PC+4) );
+    }''
+    )
+
+  CaseOneReg(TESTBOOL,
+    ``{
+        TaggedRef term = Reg1(getRegArg(PC+1));
+	DEREF(term,termPtr,tag);
+
+	if (literalEq(term,NameTrue)) {
+	  JUMP(getLabelArg(PC+2));
+	}
+
+	if (literalEq(term,NameFalse)) {
+	  JUMP(getLabelArg(PC+3));
+	}
+
+        if (isAnyVar(term)) {
+	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
+	  addSusp (termPtr, CTT);
+	  goto LBLsuspendThread;
+	}
+
+	JUMP( getLabelArg(PC+4) );
+    }''
+    )
+
+  CaseOneReg(TESTNUMBER,
+    ``{
+        TaggedRef term = Reg1(getRegArg(PC+1));
+	TaggedRef i = getNumberArg(PC+2);
+
+	DEREF(term,termPtr,tag);
+
+	/* optimized for integer case */
+	if (isSmallInt(tag)) {
+	  JUMP( getLabelArg(smallIntEq(term,i) ? PC+3 : PC+4) );
+	}
+
+	if ( tag == tagTypeOf(i) && numberEq(i,term)) {
+	  JUMP( getLabelArg(PC+3) );
+	}
+
+        if (isNotCVar(term) ||
+	    isCVar(term) && tagged2CVar(term)->valid(termPtr,i)) {
+	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
+	  addSusp (termPtr, CTT);
+	  goto LBLsuspendThread;
+	}
+
+	JUMP( getLabelArg(PC+4) );
+    }''
+    )
+
+  CaseOneReg( GETCONSTANT,
+	       ``{
+		 TaggedRef atm = getLiteralArg(PC+1);
+		 
+		 TaggedRef term = Reg1( getRegArg(PC+2) );
+		 DEREF(term,termPtr,tag);
+
+		 if (isNotCVar(tag)) {
+		   e->bindToNonvar(termPtr, term, atm, NOFLATGUARD);
+		   DISPATCH(3);
+		 }
+		 
+		 if ( isLiteral(tag) && literalEq(term,atm) ) {
+		   DISPATCH(3);
+		 }
+
+		 if (isCVar(term)) {
+		   if (tagged2CVar(term)->unifyOutline(termPtr,term,NULL,
+						       atm,NOFLATGUARD)) {
+		     DISPATCH(3);
+		   }
+		   term = *termPtr;  // Note: 'term' may be disposed
+		 }
+
+		 SHALLOWFAIL;
+		 HF_TELL(Reg1(getRegArg(PC+2)), getLiteralArg(PC+1));
+	       }''
+	       )
+
+
+  CaseOneReg( GETINT,
+	       ``{
+		 TaggedRef i = getNumberArg(PC+1);
+		 TaggedRef term = Reg1(getRegArg(PC+2));
+		 DEREF(term,termPtr,tag);
+
+		 if (isNotCVar(tag)) {
+		   e->bindToNonvar(termPtr, term, i, NOFLATGUARD);
+		   DISPATCH(3);
+		 }
+		 
+		 if ( (tag == tagTypeOf(i)) && numberEq(term,i)) {
+		   DISPATCH(3);
+		 }
+
+		 if (isCVar(term)) {
+		   if (tagged2CVar(term)->unifyOutline(termPtr,term,NULL,
+						       i,NOFLATGUARD)) {
+		     DISPATCH(3);
+		   }
+		   term = *termPtr;  // Note: 'term' may be disposed
+		 }
+
+		 SHALLOWFAIL;
+		 HF_TELL(Reg1(getRegArg(PC+2)), getNumberArg(PC+1));
+	       }''
+	       )
+
+/* getListValVar(N,R,M) == getList(X[N]) unifyVal(R), unifyVar(X[M]) */
+  CaseOneReg(GETLISTVALVAR,
+		``{
+		 TaggedRef term = Xreg(getRegArg(PC+1));
+		 DEREF(term,termPtr,tag);
+
+		 if(isAnyVar(term)) {
+		   register LTuple *ltuple = new LTuple();
+		   ltuple->setHead(Reg1(getRegArg(PC+2)));
+		   ltuple->setTail(e->currentUVarPrototype());
+
+		   if (isCVar(term)) {
+		     if (tagged2CVar(term)->unifyOutline(termPtr, term, NULL,
+							 makeTaggedLTuple(ltuple),
+							 NOFLATGUARD)) {
+		       Xreg(getRegArg(PC+3)) =
+			 makeTaggedRef(ltuple->getRef()+1);
+		       DISPATCH(4);
+		     }
+		     SHALLOWFAIL;
+		     HF_TELL(Xreg(getRegArg(PC+1)), makeTaggedLTuple(ltuple));
+
+		   } else {
+		     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),
+				     NOFLATGUARD);
+		     Xreg(getRegArg(PC+3)) =
+		       makeTaggedRef(ltuple->getRef()+1);
+
+		     DISPATCH(4);
+		   }
+		 }
+		   
+		 if (isLTuple(term)) {
+		   TaggedRef *argg = tagged2LTuple(term)->getRef();
+		   if (e->fastUnify(Reg1(getRegArg(PC+2)),makeTaggedRef(argg),
+				    NOFLATGUARD)) {
+		     Xreg(getRegArg(PC+3)) =
+		       tagged2NonVariable(argg+1);
+		     
+		     DISPATCH(4);
+		   }
+		   SHALLOWFAIL;
+		   HF_TELL(Reg1(getRegArg(PC+2)), makeTaggedRef(argg));
+
+		 }
+
+		 SHALLOWFAIL;
+		 HF_TELL(Xreg(getRegArg(PC+1)), makeTaggedLTuple(new LTuple(Reg1(getRegArg(PC+2)),e->currentUVarPrototype())));
+
+	       }''
+	       )
+  
+
+  CaseOneReg( GETLIST,
+	       ``{
+		 Reg reg = getRegArg(PC+1);
+		 
+		 register TaggedRef term = Reg1(reg);
+		 DEREF(term,termPtr,tag);
+
+		 if(isAnyVar(term)) {
+		   LTuple *ltuple = new LTuple();
+		   sPointer = ltuple->getRef();
+		   if (isCVar(term)) {
+		     ltuple->setHead(e->currentUVarPrototype());
+		     ltuple->setTail(e->currentUVarPrototype());
+		     SetReadMode;
+
+		     if(tagged2CVar(term)
+			->unifyOutline(termPtr, term, NULL,
+				       makeTaggedLTuple(ltuple),
+				       NOFLATGUARD)) {
+		       DISPATCH(2);
+		     }
+		     term = *termPtr;  // Note: 'term' may be disposed
+		   } else {
+		     SetWriteMode;
+		     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),
+				     NOFLATGUARD);
+		     DISPATCH(2);
+		   }
+		 }
+
+		 if (isLTuple(term)) {
+		   sPointer = tagged2LTuple(term)->getRef();
+		   SetReadMode;
+		   DISPATCH(2);
+		 }
+		 
+
+		 SHALLOWFAIL;
+		 HF_TELL(Reg1(getRegArg(PC+1)), makeTaggedLTuple(new LTuple(e->currentUVarPrototype(),e->currentUVarPrototype())));
+	       }''
+	       )
+
+
+  /* a unifyVariable in read mode */
+  CaseOneReg( GETVARIABLE,
+	       ``{
+		 Reg1(getRegArg(PC+1)) = tagged2NonVariable(sPointer);
+		 sPointer++;
+		 DISPATCH(2);
+	       }''
+	       )
+
+
+  CaseTwoRegs( GETVARVAR,
+	       ``{
+		 Reg1(getRegArg(PC+1)) = tagged2NonVariable(sPointer);
+		 Reg2(getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
+		 sPointer += 2;
+		 DISPATCH(3);
+	       }''
+	       )
+
+
+  /* a unify void in read case mode */
+Case(GETVOID)
+    {
+      sPointer += getPosIntArg(PC+1);
+      DISPATCH(2);
+    }
+
+
+  CaseOneReg( UNIFYVARIABLE,
+	       ``{
+		 if(InWriteMode) {
+		   Reg reg = getRegArg(PC+1);
+		   TaggedRef *sp = GetSPointerWrite(sPointer);
+		   *sp = e->currentUVarPrototype();
+		   Reg1(reg) = makeTaggedRef(sp);
+		 } else {
+		   Reg1(getRegArg(PC+1)) = tagged2NonVariable(sPointer);
+		 }
+		 sPointer++;
+		 DISPATCH(2);
+	       }''
+	       )
+
+
+  CaseOneReg( UNIFYVALUE,
+	       ``{
+		 Reg reg = getRegArg(PC+1);
+	
+		 if(InWriteMode) {
+		   TaggedRef *sp = GetSPointerWrite(sPointer);
+		   *sp = Reg1(reg);
+		   sPointer++;
+		   DISPATCH(2);
+		 } else {
+		   if (e->fastUnify(Reg1(reg), makeTaggedRef(sPointer++),NOFLATGUARD) ) {
+		     DISPATCH(2);
+		   }
+		   SHALLOWFAIL;
+		   HF_TELL(*(sPointer-1), Reg1(reg));
+		 }
+	       }''
+	       )
+  
+
+
+  Case(UNIFYVALVARXX) ONREG2(UnifyValVar,X,X);
+  Case(UNIFYVALVARXY) ONREG2(UnifyValVar,X,Y);
+  Case(UNIFYVALVARXG) ONREG2(UnifyValVar,X,G);
+  Case(UNIFYVALVARYX) ONREG2(UnifyValVar,Y,X);
+  Case(UNIFYVALVARYY) ONREG2(UnifyValVar,Y,Y);
+  Case(UNIFYVALVARYG) ONREG2(UnifyValVar,Y,G);
+  Case(UNIFYVALVARGX) ONREG2(UnifyValVar,G,X);
+  Case(UNIFYVALVARGY) ONREG2(UnifyValVar,G,Y);
+  Case(UNIFYVALVARGG) ONREG2(UnifyValVar,G,G);
+  {
+  UnifyValVar: asmLbl(UNIFYVALVAR);
+
+    Reg reg = getRegArg(PC+1);
+	
+    if (InWriteMode) {
+      TaggedRef *sp = GetSPointerWrite(sPointer);
+      *sp = RegAccess(HelpReg1,reg);
+
+      *(sp+1) = e->currentUVarPrototype();
+      RegAccess(HelpReg2,getRegArg(PC+2)) = makeTaggedRef(sp+1);
+
+      sPointer += 2;
+      DISPATCH(3);
+    }
+    if ( !e->fastUnify(RegAccess(HelpReg1,reg), makeTaggedRef(sPointer),
+		       NOFLATGUARD) ) {
+      SHALLOWFAIL;
+      HF_TELL(*sPointer, RegAccess(HelpReg1,reg));
+    }
+
+    RegAccess(HelpReg2,getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
+
+    sPointer += 2;
+    DISPATCH(3);
+  }
+  
+
+Case(UNIFYCONSTANT)
+     {
+       if (InWriteMode) {
+	 TaggedRef *sp = GetSPointerWrite(sPointer);
+	 *sp = getTaggedArg(PC+1);
+	 sPointer++;
+	 DISPATCH(2);
+       }
+
+       TaggedRef atm = getLiteralArg(PC+1);
+	 
+       /* code adapted from GETCONSTANT */
+       TaggedRef *termPtr = sPointer;
+       sPointer++;
+       DEREFPTR(term,termPtr,tag);
+
+       if (isNotCVar(tag)) {
+         e->bindToNonvar(termPtr, term, atm, NOFLATGUARD);
+         DISPATCH(2);
+       }
+		 
+       if ( isLiteral(tag) && literalEq(term,atm) ) {
+         DISPATCH(2);
+       }
+
+       if (isCVar(term)) {
+         if (tagged2CVar(term)->unifyOutline(termPtr,term,NULL,
+      				             atm,NOFLATGUARD)) {
+	   DISPATCH(2);
+	 }
+         term = *termPtr;  // Note: 'term' may be disposed
+       }
+
+       SHALLOWFAIL;
+       HF_TELL(*(sPointer-1), getTaggedArg(PC+1));
+     }
+
+  Case(UNIFYINT)
+    {
+      if (InWriteMode) {
+	TaggedRef *sp = GetSPointerWrite(sPointer);
+	*sp = getTaggedArg(PC+1);
+	sPointer++;
+	DISPATCH(2);
+      } 
+
+      TaggedRef i = getNumberArg(PC+1);
+      /* code adapted from GETCONSTANT */
+      TaggedRef *termPtr = sPointer;
+      sPointer++;
+      DEREFPTR(term,termPtr,tag);
+
+      if (isNotCVar(tag)) {
+        e->bindToNonvar(termPtr, term, i, NOFLATGUARD);
+        DISPATCH(2);
+      }
+		 
+      if ( (tag == tagTypeOf(i)) && numberEq(term,i)) {
+	DISPATCH(2);
+      }
+
+      if (isCVar(term)) {
+	if (tagged2CVar(term)->unifyOutline(termPtr,term,NULL,
+					    i,NOFLATGUARD)) {
+	  DISPATCH(2);
+	}
+	term = *termPtr;  // Note: 'term' may be disposed
+      }
+
+      SHALLOWFAIL;
+      HF_TELL(*(sPointer-1), getTaggedArg(PC+1) );
+    }
+
+
+  Case(UNIFYVOID)
+    {
+      int n = getPosIntArg(PC+1);
+      if (InWriteMode) {
+	TaggedRef *sp = GetSPointerWrite(sPointer);
+	for (int i = n-1; i >=0; i-- ) {
+	  *sp++ = e->currentUVarPrototype();
+	}
+      }
+      sPointer += n;
+      DISPATCH(2);
+    }
+
+  CaseOneReg(SWITCHONTERM,
+    {
+      TaggedRef val     = Reg1(getRegArg(PC+1));
+      IHashTable *table = (IHashTable *) getAdressArg(PC+2);
+
+      DoSwitchOnTerm(val,table);
+    })
+
+  CaseOneReg( BRANCHONVAR,
+	       ``
+	       TaggedRef term = Reg1(getRegArg(PC+1));
+	       DEREF(term,_1,_2);
+	       if (isAnyVar(term)) {
+		 JUMP( getLabelArg(PC+2) );
+	       }
+	       DISPATCH(3);
+	       ''
+	       )
+
+  CaseOneReg( BRANCHONNONVAR,
+	       ``
+	       TaggedRef term = Reg1(getRegArg(PC+1));
+	       DEREF(term,_1,_2);
+	       if (!isAnyVar(term)) {
+		 JUMP( getLabelArg(PC+2) );
+	       }
+	       DISPATCH(3);
+	       ''
+	       )
+
+

@@ -1,0 +1,145 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __FDGENVAR_ICC__
+#define __FDGENVAR_ICC__
+
+#if defined(INTERFACE) && !defined(OUTLINE)
+#pragma interface
+#endif
+
+inline
+void GenFDVariable::dispose(void) {
+  finiteDomain.disposeExtension();
+  fdSuspList[fd_prop_singl]->disposeList();
+  fdSuspList[fd_prop_bounds]->disposeList();
+  suspList->disposeList();
+  freeListDispose(this, sizeof(GenFDVariable));
+}
+
+inline
+void GenFDVariable::propagate(TaggedRef var, OZ_FDPropState state,
+			      PropCaller prop_eq)
+{
+  if (prop_eq == pc_propagator) {
+    switch (state) {
+    case fd_prop_singl: // no break
+      if (fdSuspList[fd_prop_singl])
+	GenCVariable::propagate(var, fdSuspList[fd_prop_singl], prop_eq);
+    case fd_prop_bounds: // no break
+      if (fdSuspList[fd_prop_bounds])
+	GenCVariable::propagate(var, fdSuspList[fd_prop_bounds], prop_eq);
+    default:
+      break;
+    }
+  } else {
+    GenCVariable::propagate(var, fdSuspList[fd_prop_singl], prop_eq);
+    GenCVariable::propagate(var, fdSuspList[fd_prop_bounds], prop_eq);
+  }
+  if (suspList) 
+    GenCVariable::propagate(var, suspList, prop_eq);
+}
+
+inline
+void GenFDVariable::propagateUnify(TaggedRef var) {
+  propagate(var, fd_prop_singl, pc_cv_unif);
+}  
+
+inline
+void GenFDVariable::relinkSuspListTo(GenFDVariable * lv, Bool reset_local)
+{
+  Assert(this != lv);
+
+  GenCVariable::relinkSuspListTo(lv, reset_local); // any
+  for (int i = 0; i < fd_prop_any; i += 1)
+    fdSuspList[i] =
+      fdSuspList[i]->appendToAndUnlink(lv->fdSuspList[i], reset_local);
+}
+
+inline
+void GenFDVariable::installPropagators(GenFDVariable * glob_var,
+				       Board * glob_home)
+{
+  for (int i = 0; i < fd_prop_any; i += 1)
+    fdSuspList[i] = am.installPropagators(fdSuspList[i],
+					  glob_var->fdSuspList[i],
+					  glob_home);
+}
+
+inline
+Bool isGenFDVar(TaggedRef term)
+{
+  GCDEBUG(term);
+  return isCVar(term) && (tagged2CVar(term)->getType() == FDVariable);
+}
+
+inline
+Bool isGenFDVar(TaggedRef term, TypeOfTerm tag)
+{
+  GCDEBUG(term);
+  Assert(tag == tagTypeOf(term));
+  return isCVar(tag) && (tagged2CVar(term)->getType() == FDVariable);
+}
+
+inline
+GenFDVariable * tagged2GenFDVar(TaggedRef term)
+{
+  GCDEBUG(term);
+  return (GenFDVariable *) tagged2CVar(term);
+}
+
+inline
+void addSuspFDVar(TaggedRef v, Thread * el, OZ_FDPropState list_index)
+{
+  GenFDVariable * fv = tagged2GenFDVar(v);
+
+  switch (list_index) {
+  case fd_prop_singl:
+    AddSuspToList(fv->fdSuspList[fd_prop_singl], el, fv->home);
+    break;
+  case fd_prop_bounds:
+    AddSuspToList(fv->fdSuspList[fd_prop_bounds], el, fv->home);
+    break;
+  case fd_prop_any:
+    AddSuspToList(fv->suspList, el, fv->home);
+    break;
+  default:
+    error("list index out of range.");
+    break;
+  }
+}
+
+inline 
+GenBoolVariable * GenFDVariable::becomesBool(void) { 
+  relinkSuspListToItself();
+  setType(BoolVariable); 
+  
+  finiteDomain.disposeExtension();
+    // sizeof(GenCVariable) == sizeof(GenBoolVariable) !!!
+  //    freeListDispose(((char *)this) + sizeof(GenCVariable), 
+  //		    sizeof(GenFDVariable) - sizeof(GenCVariable));
+  return (GenBoolVariable *) this;
+}
+
+inline
+void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
+{
+  if (isSmallInt(*trPtr)) return;
+
+  Assert(this == tagged2SuspVar(*trPtr));
+
+  TaggedRef si_val = OZ_int(finiteDomain.getSingleElem());
+  propagate(*trPtr, fd_prop_singl);
+  doBind(trPtr, si_val);
+  dispose();
+}
+
+#endif /* __FDGENVAR_ICC__ */

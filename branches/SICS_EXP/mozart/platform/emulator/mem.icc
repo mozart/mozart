@@ -1,0 +1,88 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __mem_icc__
+#define __mem_icc__
+
+#if defined(INTERFACE) && !defined(OUTLINE)
+#pragma interface
+#endif
+
+
+inline
+void * freeListMalloc(size_t chunk_size)
+{
+  Assert(((chunk_size & 3) == 0) && (chunk_size > 0));
+
+  int mod = chunk_size%WordSize;
+  if (mod) {
+    chunk_size += WordSize-mod;
+  }
+
+  void **freeListCache = FreeList;
+  void *aux = chunk_size < freeListMaxSize ? freeListCache[chunk_size] : NULL;
+
+  //  DebugMem(aux = NULL);
+
+  if (aux == NULL) {
+    aux = heapMalloc(chunk_size); 
+  } else {
+    COUNT1(freeListAllocated,chunk_size);
+    freeListCache[chunk_size] = *(void **)aux;
+  }
+  DebugMem(memset((char *)aux,0x5A,chunk_size));
+
+  return aux;
+}
+
+inline
+void freeListDispose(void * addr, size_t chunk_size)
+{
+  Assert((chunk_size & 3) == 0);
+
+  int mod = chunk_size%WordSize;
+  if (mod) {
+    chunk_size += WordSize-mod;
+  }
+
+  DebugCode(memset((char *)addr,0x5A,chunk_size));
+
+  Assert(chunk_size > 0);
+  if (chunk_size < freeListMaxSize) {
+#ifdef DEBUG_MEM
+    void * aux = FreeList[chunk_size];
+    while (aux) {
+      if (aux == addr) 
+	warning("Entering chunk twice.");
+      aux = * (void **) aux;
+    }
+#endif
+    *(void **)addr =  FreeList[chunk_size];
+    FreeList[chunk_size] = addr;
+    COUNT1(freeListDisposed,chunk_size);
+  }
+}
+
+// return used kilo bytes on the heap
+inline 
+unsigned int getUsedMemory(void)
+{
+  return heapTotalSize - (heapTop - heapEnd)/KB;
+}
+
+inline 
+unsigned int getUsedMemoryBytes(void)
+{
+  return heapTotalSizeBytes - (heapTop - heapEnd);
+}
+
+#endif //__mem_icc__
+

@@ -1,0 +1,44 @@
+#ifndef __OPCODESH
+#define __OPCODESH
+typedef enum {
+
+define(`OPCODE',0) dnl
+define(instruction,
+	`ifelse(numOfRegs($2,$3,$4),1,oneReg(TOUPPER($1)),
+		numOfRegs($2,$3,$4),2,twoRegs(TOUPPER($1)),
+		TOUPPER($1) = `OPCODE,') dnl
+	 incrop(1) dnl
+')
+
+define(oneReg,
+	`$1X = `OPCODE,'
+	 $1Y = `incrop(1)OPCODE,'
+	 $1G = `incrop(1)OPCODE,'
+	 `dnl'
+')
+
+define(twoRegs,
+	`$1XX = `OPCODE,'
+	 $1XY = `incrop(1)OPCODE,'
+	 $1XG = `incrop(1)OPCODE,'
+	 $1YX = `incrop(1)OPCODE,'
+	 $1YY = `incrop(1)OPCODE,'
+	 $1YG = `incrop(1)OPCODE,'
+	 $1GX = `incrop(1)OPCODE,'
+	 $1GY = `incrop(1)OPCODE,'
+	 $1GG = `incrop(1)OPCODE,'
+	 `dnl'
+')
+
+
+include(`../include/instrDefs.m4')
+
+
+
+OZERROR  /* this should always be the last one */
+} Opcode;
+
+
+int sizeOf(Opcode);
+
+#endif

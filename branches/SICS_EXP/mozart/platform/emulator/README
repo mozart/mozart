@@ -1,0 +1,95 @@
+README for Oz AM
+
+This is the Oz machine.
+
+REQUIREMENTS
+
+  GNU m4 1.0.3
+  GNU gcc 2.5.6
+  GNU dld
+  GNU gmp
+
+FILES
+   Oz/
+	ozmkmf
+	Imake.tmpl
+	Imakefile
+        include/
+        AM/
+
+BUILD
+
+edit Oz/Imake.tmpl: OZHOME
+edit Oz/AM/Imakefile: EXTRALIB, EXTRAOBJS, M4
+
+change to directory Oz
+
+% ozmkmf
+% make Makefiles SUBDIRS="include AM"
+% make all SUBDIRS="include AM"
+
+-----------------------------
+
+Debugging with Emacs:
+
+C-c C-d
+	use gdb mode
+
+C-c m
+	choose an emulator
+
+M-x set-variable oz-gdb-autostart nil
+	allows to set breakpoints before the emulator starts.
+	After setting your breakpoints type 'r' to start the emulator.
+
+C-x SPACE
+	in C files sets a breakpoint at point.
+
+-----------------------------
+
+# Debug functions (usable from gdb)
+
+# Imakefile: -DRECINSTRFETCH=500
+p CodeArea::writeInstr()
+
+
+p displayCode(PC,10,1)
+p CodeArea::printDef(PC)
+
+p am.currentThread->printTaskStack(PC,0,10)
+p am.currentThread->printTaskStack((ProgramCounter) -1,0,10)
+p printStack()
+
+p board->printDebug()
+p board->printLongDebug()
+
+-----------------------------
+
+Keywords:
+
+class Script:
+  the script stored in boards
+
+class Atom:
+  Oz literal (XAtom,XName (XDynName, XOptName)
+
+XAtom:
+  Oz atom
+
+XName:
+  Oz name
+
+XDynName:
+  dynamic name: not optimized by compiler
+
+XOptName:
+  optimized name: used like an atom
+
+garbage collection:
+  two primary phases:
+    gc: copy structure & record forward pointer & push me to the pointer stack
+    gcRecurse: update the fields of structure
+
+  after that copy left-over variables
+
+

@@ -1,0 +1,35 @@
+define(instruction,
+	`ifelse(numOfRegs($2,$3,$4),1,oneReg(TOUPPER($1)),
+		numOfRegs($2,$3,$4),2,twoRegs(TOUPPER($1)),
+		&& TOUPPER($1)LBL`,')
+')
+
+
+define(oneReg,
+	`&& $1XLBL`,'
+	 && $1YLBL`,'
+	 && $1GLBL`,'
+')
+
+define(twoRegs,
+	`&& $1XXLBL`,'
+	 && $1XYLBL`,'
+	 && $1XGLBL`,'
+	 && $1YXLBL`,'
+	 && $1YYLBL`,'
+	 && $1YGLBL`,'
+	 && $1GXLBL`,'
+	 && $1GYLBL`,'
+	 && $1GGLBL`,'
+')
+
+
+
+
+static void *instrTable[] = {
+
+  include(`../include/instrDefs.m4')
+0};
+
+
+

@@ -1,0 +1,79 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __CPI_ICC__
+#define __CPI_ICC__
+
+// Note: the field "expected_type" can be left uninitialized
+
+inline
+void staticAddSpawnProp(OZ_FDPropState ps, OZ_Term * v)
+{
+  staticSpawnVarsProp[staticSpawnVarsNumberProp].state.fd = ps;
+  staticSpawnVarsProp[staticSpawnVarsNumberProp++].var = v;
+  
+  staticSpawnVarsProp.request(staticSpawnVarsNumberProp);
+}
+
+inline
+void staticAddSpawn(OZ_FDPropState ps, OZ_Term * v)
+{
+  staticSpawnVars[staticSpawnVarsNumber].state.fd = ps;
+  staticSpawnVars[staticSpawnVarsNumber++].var = v;
+  
+  staticSpawnVars.request(staticSpawnVarsNumber);
+}
+
+inline
+void staticAddSpawnProp(OZ_FSetPropState ps, OZ_Term * v)
+{
+  staticSpawnVarsProp[staticSpawnVarsNumberProp].state.fs = ps;
+  staticSpawnVarsProp[staticSpawnVarsNumberProp++].var = v;
+  
+  staticSpawnVarsProp.request(staticSpawnVarsNumberProp);
+}
+
+inline
+void staticAddSpawn(OZ_FSetPropState ps, OZ_Term * v)
+{
+  staticSpawnVars[staticSpawnVarsNumber].state.fs = ps;
+  staticSpawnVars[staticSpawnVarsNumber++].var = v;
+  
+  staticSpawnVars.request(staticSpawnVarsNumber);
+}
+
+inline 
+OZ_Boolean isPosSmallInt(OZ_Term v) 
+{
+  return isSmallInt(v) && (smallIntValue(v) >= 0);
+}
+
+inline 
+OZ_Boolean isPosSmallFDInt(OZ_Term v) 
+{
+  if (isSmallInt(v)) {
+    int vv = smallIntValue(v);
+    return (0 <= vv) && (vv <= fd_sup);
+  }
+  return OZ_FALSE;
+}
+
+inline 
+OZ_Boolean isPosSmallSetInt(OZ_Term v) 
+{
+  if (isSmallInt(v)) {
+    int vv = smallIntValue(v);
+    return (0 <= vv) && (vv <= fset_sup);
+  }
+  return OZ_FALSE;
+}
+
+#endif /* __CPI_ICC__ */
