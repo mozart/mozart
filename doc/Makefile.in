@@ -26,12 +26,12 @@ INSTALL		= @INSTALL@
 INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_DIR	= @INSTALL_DIR@
 
-FILES		= ozdoc.dcl ozdoc.dtd ozdoc.doc catalog
+FILES		= ozdoc.dcl ozdoc.dtd ozdoc.doc catalog ozdoc.ced
 LIBFILES	= $(addprefix $(DOCDIR)/,$(FILES))
 
 .PHONY: bootstrap all install clean veryclean distclean
 
-all:
+all: ozdoc.ced
 bootstrap: all
 Makefile: Makefile.in config.status
 	./config.status
@@ -39,10 +39,12 @@ clean:
 	-rm -f *~
 veryclean: clean
 distclean: veryclean
-	-rm -f Makefile
+	-rm -f Makefile catalog
 check:
 install: all $(DOCDIR) $(LIBFILES)
 $(DOCDIR):
 	$(INSTALL_DIR) $@
 $(LIBFILES): $(DOCDIR)/% : %
 	$(INSTALL_FILE) $< $@
+ozdoc.ced: ozdoc.dtd ozdoc.dcl ced.cat ced.el
+	emacs -batch -l ced.el
