@@ -413,8 +413,8 @@ public:
       return;
     Assert(isAtom(atom));
     Atom *l = (Atom*) tagged2Literal(atom);
-    int n = l->getSize();
-    const char *s = l->getPrintName();
+    int   n = l->getSize();
+    char *s = l->getPrintName();
 
     ensure(n);
     for (int i = 0; i < n; i++) {
@@ -428,8 +428,8 @@ public:
 
     Assert(isAtom(atom));
     Atom* l = (Atom*)tagged2Literal(atom);
-    int n = l->getSize();
-    const char *s = l->getPrintName();
+    int   n = l->getSize();
+    char *s = l->getPrintName();
     char c;
     ensure(4*n);
 

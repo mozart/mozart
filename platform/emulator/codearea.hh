@@ -40,9 +40,8 @@ public:
     abstr      = 0;
     pc         = NOCODE;
     next       = allEntries; 
-    dupOnload  = fc;
+    dupOnload    = fc;
     allEntries = this; 
-    indexTable = 0;
   }
   Abstraction *getAbstr() { return abstr; };
   RefsArray getGRegs()    { return g; };
@@ -76,7 +75,7 @@ public:
 
 
 #ifdef THREADED
-  typedef uint32 AdressOpcode;
+  typedef int32 AdressOpcode;
 #else
   typedef Opcode AdressOpcode; 
 #endif
@@ -89,8 +88,8 @@ class CodeArea {
   friend class Statistics;
   static HashTable atomTab;
   static HashTable nameTab;
-  friend Literal *addToAtomTab(const char *str);
-  friend Literal *addToNameTab(const char *str);
+  friend Literal *addToAtomTab(char *str);
+  friend Literal *addToNameTab(char *str);
   friend inline void printAtomTab();
   friend inline void printNameTab();
 
@@ -161,7 +160,7 @@ public:
     return adressToOpcode(getOP(PC)); }
 
   static char **opToString;
-  static Opcode stringToOp(const char *s);
+  static Opcode stringToOp(char *s);
 
   static void gc();
 

@@ -23,7 +23,7 @@ OZ_C_proc_begin(fdp_sumAC, 4)
   OZ_EXPECT(pe, 2, expectLiteral); 
   SAMELENGTH_VECTORS(0,1);
   
-  const char * op = OZ_atomToC(OZ_args[2]);
+  char * op = OZ_atomToC(OZ_args[2]);
   
   if (!strcmp(SUM_OP_EQ, op)) {
     OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);

@@ -125,7 +125,7 @@ void addSuspUVar(TaggedRefPtr v, Thread * el, int unstable=TRUE)
 }
 
 extern
-void addSuspCVarOutline(TaggedRef *v, Thread *el, int unstable);
+void addSuspCVarOutline(TaggedRef v, Thread *el, int unstable);
 inline
 void addSuspAnyVar(TaggedRefPtr v, Thread *thr,int unstable=TRUE)
 {
@@ -133,7 +133,7 @@ void addSuspAnyVar(TaggedRefPtr v, Thread *thr,int unstable=TRUE)
   if (isSVar(t)) { 
     addSuspSVar(t,thr,unstable);
   } else if (isCVar(t)) {
-    addSuspCVarOutline(v,thr,unstable);
+    addSuspCVarOutline(t,thr,unstable);
   } else {
     addSuspUVar(v,thr,unstable);
   }
@@ -158,15 +158,15 @@ class VariableNamer {
 private:
   static VariableNamer *allnames;
   TaggedRef var;
-  const char *name;
+  char *name;
   VariableNamer *next;
   int length();
 public:
   static void cleanup();
-  static const char *getName(TaggedRef var);
-  static void addName(TaggedRef var, const char *name);
+  static char *getName(TaggedRef var);
+  static void addName(TaggedRef var, char *name);
 };
 
-const char *getVarName(TaggedRef v);
+char *getVarName(TaggedRef v);
 
 #endif

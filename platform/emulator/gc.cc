@@ -269,15 +269,9 @@ public:
   static void print()
   {
     for (ThreadList *aux = allthreads; aux; aux=aux->next) {
-      char *s;
-      if (aux->elem->isDeadThread())
-	s = "terminated";
-      else if (aux->elem->isRunnable())
-	s = "ready";
-      else
-	s = "blocked";
-      message("Thread: id = %d, state: %s\n",aux->elem->getID(),s);
-      message("----------------------------------------\n");
+      printf("\n\n");
+      message("Thread: id=%d\n",aux->elem->getID());
+      message("----------------\n",aux->elem->getID());
       aux->elem->printTaskStack(NOCODE,NO);
     }
   }

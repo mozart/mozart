@@ -37,7 +37,7 @@ VariableNamer *VariableNamer::allnames = NULL;
  * return "X=Y" as printname if X and Y have been unified
  */
 #endif
-const char *VariableNamer::getName(TaggedRef v)
+char *VariableNamer::getName(TaggedRef v)
 {
   char *ret = "_";
   int found = 0;
@@ -63,7 +63,7 @@ const char *VariableNamer::getName(TaggedRef v)
   return (found<=1) ? ret : ozstrdup(buf);
 }
 
-void VariableNamer::addName(TaggedRef v, const char *nm)
+void VariableNamer::addName(TaggedRef v, char *nm)
 {
   /* check if already in there */
   VariableNamer *aux = allnames;
@@ -123,7 +123,7 @@ void VariableNamer::cleanup()
   }
 }
 
-const char *getVarName(TaggedRef v)
+char *getVarName(TaggedRef v)
 {
   return VariableNamer::getName(v);
 }

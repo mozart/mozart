@@ -29,14 +29,6 @@
 #endif
 #endif
 
-#if defined(__GNUC__) || defined(__cplusplus)
-#define OZStringify(Name) #Name
-#define CONST const
-#else
-#define OZStringify(Name) "Name"
-#define CONST
-#endif
-
 #if defined(OZWIN) || defined(OZC)
 #define OzFun(fun) (ozcdecl *fun)
 #else
@@ -163,8 +155,8 @@ extern OZ_Term _FUNDECL(OZ_termType,(OZ_Term));
 
 /* convert: C from/to Oz datastructure */
 
-extern CONST char* _FUNDECL(OZ_atomToC,(OZ_Term));
-extern OZ_Term _FUNDECL(OZ_atom,(CONST char *));
+extern char*   _FUNDECL(OZ_atomToC,(OZ_Term));
+extern OZ_Term _FUNDECL(OZ_atom,(char *));
 extern int     _FUNDECL(OZ_featureCmp,(OZ_Term,OZ_Term));
 
 extern int     _FUNDECL(OZ_smallIntMin,(void));
@@ -191,7 +183,7 @@ extern OZ_Term _FUNDECL(OZ_CStringToNumber,(char *));
 extern char *  _FUNDECL(OZ_toC,(OZ_Term, int, int));
 extern int     _FUNDECL(OZ_termGetSize,(OZ_Term, int, int));
 
-extern OZ_Term _FUNDECL(OZ_string,(CONST char *));
+extern OZ_Term _FUNDECL(OZ_string,(char *));
 extern char *  _FUNDECL(OZ_stringToC,(OZ_Term t));
 
 extern void    _FUNDECL(OZ_printVirtualString,(OZ_Term t));
@@ -261,7 +253,7 @@ extern void _FUNDECL(OZ_send,(OZ_Term,OZ_Term));
 extern OZ_Term _FUNDECL(OZ_newName,());
 
 /* print warning */
-extern void _FUNDECL(OZ_warning,(CONST char * ...));
+extern void _FUNDECL(OZ_warning,(char * ...));
 
 /* generate the unix error string from an errno (see perror(3)) */
 extern char * _FUNDECL(OZ_unixError,(int err));
@@ -269,7 +261,7 @@ extern char * _FUNDECL(OZ_unixError,(int err));
 /* check for toplevel */
 extern int _FUNDECL(OZ_onToplevel,());
 
-extern int _FUNDECL(OZ_addBuiltin,(CONST char *, int, OZ_CFun));
+extern int _FUNDECL(OZ_addBuiltin,(char *, int, OZ_CFun));
 
 /* replace new builtins */
 struct OZ_BIspec {
@@ -354,6 +346,13 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
 #define OZ_VarArity -1
 #define VarArity OZ_VarArity
 
+#if defined(__GNUC__) || defined(__cplusplus)
+#define OZStringify(Name) #Name
+#else
+#define OZStringify(Name) "Name"
+#endif
+
+
 #ifdef __cplusplus
 
 #define OZ_C_proc_proto(Name)						      \
@@ -426,7 +425,7 @@ OZ_Term VAR = OZ_getCArg(ARG);			\
 
 
 #define OZ_declareAtomArg(ARG,VAR)		\
- CONST char *VAR;				\
+ char *VAR;					\
  OZ_nonvarArg(ARG);				\
  if (! OZ_isAtom(OZ_getCArg(ARG))) {		\
    return OZ_typeError(ARG,"Atom");		\
@@ -525,7 +524,7 @@ extern void        _FUNDECL(OZ_putMetaTermType,(OZ_Term v, OZ_MetaType t));
 extern OZ_Term _FUNDECL(OZ_getMetaTermAttr,(OZ_Term v));
 
 extern OZ_Term   _FUNDECL(OZ_makeHeapChunk,(int s));
-extern void *    _FUNDECL(OZ_getHeapChunkData,(OZ_Term t));
+extern char *    _FUNDECL(OZ_getHeapChunkData,(OZ_Term t));
 extern int       _FUNDECL(OZ_getHeapChunkSize,(OZ_Term t));
 extern int       _FUNDECL(OZ_isHeapChunk,(OZ_Term t));
 extern int       _FUNDECL(OZ_isMetaTerm,(OZ_Term t));

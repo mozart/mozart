@@ -283,7 +283,7 @@ OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len,
     return OZ_typeError(-1,"VirtualString");
   }
 
-  const char *string = OZ_atomToC(atom);
+  char *string = OZ_atomToC(atom);
 
   if (IsPair(string))
     return PROCEED;
@@ -407,7 +407,7 @@ static OZ_Return vs2buff(OZ_Term vs, char **write_buff, int *len,
     return OZ_isNil(vs) ? PROCEED : atom2buff(vs, write_buff, len, rest, susp);
   }
 
-  const char *label = NULL;
+  char *label = NULL;  
   if (OZ_isTuple(vs) && (label = OZ_atomToC(OZ_label(vs)))) {
     int width = OZ_width(vs);
     if (IsPair(label) && width > 0) {

@@ -260,7 +260,7 @@ OZ_C_proc_begin(BIstoreGRegRef,2)
     SRecord *rec = tagged2SRecord(deref(head(globals)));
     globals = deref(tail(globals));
 
-    const char *label = rec->getLabelLiteral()->getPrintName();
+    char *label = rec->getLabelLiteral()->getPrintName();
     KindOfReg regType;
     if (strcmp(label,"x")==0) {
       regType = XReg;

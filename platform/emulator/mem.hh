@@ -122,7 +122,7 @@ inline int32 *int32Malloc(size_t chunk_size)
   Assert(ToInt32(heapTop)%sizeof(int32) == 0);
 
   if (heapEnd > heapTop - chunk_size) {
-    return (int32 *) (void*) getMemFromOS(chunk_size);
+    return (int32 *) getMemFromOS(chunk_size);
   }
 
   heapTop -= chunk_size;
@@ -130,7 +130,7 @@ inline int32 *int32Malloc(size_t chunk_size)
 #ifdef DEBUG_MEM
   memset((char *)heapTop,0x5A,chunk_size);
 #endif
-  return (int32 *) (void*) heapTop;
+  return (int32 *) heapTop;
 }
 #endif
 
@@ -183,7 +183,7 @@ Bool reallyHeapNever(void *ptr1, void *ptr2)
 
 
 // free list management
-#define freeListMaxSize 1000
+const int freeListMaxSize = 1000;
 
 extern void *FreeList[freeListMaxSize];
 

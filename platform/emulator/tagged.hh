@@ -538,17 +538,17 @@ TaggedRef makeTaggedTert(Tertiary *s)
 #ifdef LARGEADRESSES
 #define makeTaggedSmallInt(s) ((s << tagSize) | SMALLINT)
 #else
-#define makeTaggedSmallInt(s) makeTaggedRef2p(SMALLINT,(void*)s)
+#define makeTaggedSmallInt(s) makeTaggedRef2p(SMALLINT,(void*)s);
 #endif
 
 
 #endif
 
 
-extern Literal *addToAtomTab(const char *str);
-extern Literal *addToNameTab(const char *str);
+extern Literal *addToAtomTab(char *str);
+extern Literal *addToNameTab(char *str);
 inline
-TaggedRef makeTaggedAtom(const char *s)
+TaggedRef makeTaggedAtom(char *s)
 {
   CHECK_STRPTR(s);
   return makeTaggedLiteral(addToAtomTab(s));

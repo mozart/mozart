@@ -660,7 +660,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     if (isAnyVar(vtag)) {
       Assert(isCVar(vtag));
       
-      addSuspCVar(vptr, thr);
+      addSuspCVar(v, thr);
       all_local &= am.isLocalCVar(v);
     }
   }

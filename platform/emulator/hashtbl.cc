@@ -80,9 +80,9 @@ inline int HashTable::hashFunc(intlong i) {
   return i % tableSize;
 }
 
-inline int HashTable::hashFunc(const char *s) {
+inline int HashTable::hashFunc(char *s) {
 // 'hashfunc' is taken from 'Aho,Sethi,Ullman: Compilers ...', page 436
-  const char *p = s;
+  char *p = s;
   unsigned h = 0, g;
   for(; *p; p++) {
     h = (h << 4) + (*p);
@@ -130,7 +130,7 @@ void HashTable::resize()
   } else {
     for (i=0;i<oldSize;i++) {
       if (! old[i].isEmpty()) {
-	htAdd(old[i].key.fstr,old[i].value);
+	htAdd(old[i].key.fstr,old[i].value,NO);
       }
     }
   }
@@ -148,7 +148,7 @@ inline int incKey(int key, int s)
 }
 
 
-inline int HashTable::findIndex(const char *s)
+inline int HashTable::findIndex(char *s)
 {
   int key = hashFunc(s);
   while (! table[key].isEmpty() && (strcmp(table[key].key.fstr,s)!=0)) {
@@ -167,7 +167,7 @@ inline int HashTable::findIndex(intlong i)
 }
 
 
-void HashTable::htAdd(const char *k, void *val)
+Bool HashTable::htAdd(char *k, void *val, Bool duplicate)
 {
   Assert(val!=htEmpty);
 
@@ -175,15 +175,19 @@ void HashTable::htAdd(const char *k, void *val)
     resize();
   
   int key = findIndex(k);
-  if (table[key].isEmpty()) {
+  if (! table[key].isEmpty()) {     // already in there
+    if (duplicate)
+      free(table[key].key.fstr);
+  } else {
     counter++;
   }
   
-  table[key].key.fstr = k;
+  table[key].key.fstr  = duplicate ? ozstrdup(k) : k;
   table[key].value = val;
+  return OK;
 }
 
-void HashTable::htAdd(intlong k, void *val)
+Bool HashTable::htAdd(intlong k, void *val)
 {
   Assert(val!=htEmpty);
 
@@ -197,10 +201,11 @@ void HashTable::htAdd(intlong k, void *val)
   
   table[key].key.fint  = k;
   table[key].value = val;
+  return OK;
 }
 
 
-void *HashTable::htFind(const char *s)
+void *HashTable::htFind(char *s)
 {
   int key = findIndex(s);
   return (table[key].isEmpty())

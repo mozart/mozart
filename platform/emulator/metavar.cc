@@ -327,7 +327,7 @@ int OZ_getHeapChunkSize(TaggedRef t)
   return ((HeapChunk *) tagged2Const(deref(t)))->getChunkSize();
 }
 
-void * OZ_getHeapChunkData(TaggedRef t)
+char * OZ_getHeapChunkData(TaggedRef t)
 {
   NotHeapChunkWarning(t, OZ_getHeapChunk, NULL);
   

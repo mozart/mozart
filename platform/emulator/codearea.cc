@@ -49,7 +49,7 @@ void **CodeArea::globalInstrTable = NULL;
 
 
 
-Opcode CodeArea::stringToOp(const char *s)
+Opcode CodeArea::stringToOp(char *s)
 {
   for (int i=0; i < (Opcode) OZERROR; i++) {
     if (strcmp(s,opToString[i]) == 0 ) {
@@ -60,7 +60,7 @@ Opcode CodeArea::stringToOp(const char *s)
   return OZERROR;
 }
 
-inline Literal *addToLiteralTab(const char *str, HashTable *table, Bool isName)
+inline Literal *addToLiteralTab(char *str, HashTable *table, Bool isName)
 {
   Literal *found = (Literal *) table->htFind(str);
 
@@ -76,17 +76,20 @@ inline Literal *addToLiteralTab(const char *str, HashTable *table, Bool isName)
     found = Atom::newAtom(str);
   }
   
-  table->htAdd(str,found);
-  return found;
+  if (table->htAdd(str,found,NO)) {
+    return found;
+  }
+  error("addToLiteralTab: failed");
+  return NULL;
 }
 
 
-Literal *addToAtomTab(const char *str)
+Literal *addToAtomTab(char *str)
 {
   return addToLiteralTab(str,&CodeArea::atomTab,NO);
 }
 
-Literal *addToNameTab(const char *str)
+Literal *addToNameTab(char *str)
 {
   return addToLiteralTab(str,&CodeArea::nameTab,OK);
 }
@@ -124,16 +127,19 @@ AbstractionEntry *AbstractionTable::add(int id)
   if (id == 0)
     return NULL;
 
-  AbstractionEntry *found =
-    (AbstractionEntry *) CodeArea::abstractionTab.htFind(id);
+  AbstractionEntry *found = (AbstractionEntry *) CodeArea::abstractionTab.htFind(id);
 
   if (found != (AbstractionEntry *) htEmpty) {
     return found;
   }
   
   found = new AbstractionEntry(NO);
-  CodeArea::abstractionTab.htAdd(id,found);
-  return found;
+  if (CodeArea::abstractionTab.htAdd(id,found)) {
+    return found;
+  }
+  
+  Assert(0);
+  return NULL;
 }
 
 
@@ -185,10 +191,11 @@ void AbstractionEntry::setPred(Abstraction *ab)
 
 
 
-const char *getBIName(ProgramCounter PC)
+char *getBIName(ProgramCounter PC)
 {
   BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC);
   return entry->getPrintName();
+
 }
 
 
@@ -202,8 +209,8 @@ void CodeArea::printDef(ProgramCounter PC)
   pc = nextDebugInfo(PC);
   if (pc != NOCODE) {
     getDebugInfoArgs(pc,file,line,abspos,comment);
-    message("\tnext application: in file \"%s\", line %d, column %d, comment: %s, PC=%ld)\n",
-	    OZ_atomToC(file),line,abspos,toC(comment),PC);
+    message("\tnext application: file '%s', line %d, offset: %d, comment: %s, PC=%ld)\n",
+	    toC(file),line,abspos,toC(comment),PC);
     return;  
   }
 #endif
@@ -220,20 +227,9 @@ void CodeArea::printDef(ProgramCounter PC)
   
   getDefinitionArgs(pc,reg,next,file,line,pred);
 
-  const char *predName;
-  if (!pred)
-    predName = "???";
-  else if (*pred->getPrintName())
-    predName = pred->getPrintName();
-  else
-    predName = 0;
-
-  if (predName)
-    message("\tprocedure '%s' in file \"%s\", line %d, PC=%ld\n",
-	    predName,OZ_atomToC(file),line,PC);
-  else
-    message("\tprocedure in file \"%s\", line %d, PC=%ld\n",
-	    predName,OZ_atomToC(file),line,PC);
+  message("\tIn procedure '%s' (File %s, line %d, PC=%ld)\n",
+	  pred ? pred->getPrintName() : "???",
+	  toC(file),line,PC);
 }
 
 TaggedRef CodeArea::dbgGetDef(ProgramCounter PC)

@@ -26,7 +26,7 @@ OZ_C_proc_begin(fdp_sum, 3)
 
   OZ_EXPECT(pe, 1, expectLiteral);
 
-  const char * op = OZ_atomToC(OZ_args[1]);
+  char * op = OZ_atomToC(OZ_args[1]);
 
   if (!strcmp(SUM_OP_NEQ, op)) {
     OZ_EXPECT(pe, 0, expectVectorIntVarSingl);
@@ -67,7 +67,7 @@ OZ_C_proc_begin(fdp_sumC, 4)
   OZ_EXPECT(pe, 0, expectVectorInt);
   SAMELENGTH_VECTORS(0, 1);
 
-  const char * op = OZ_atomToC(OZ_args[2]);
+  char * op = OZ_atomToC(OZ_args[2]);
 
   if (!strcmp(SUM_OP_NEQ, op)) {
     OZ_EXPECT(pe, 1, expectVectorIntVarSingl);
@@ -108,7 +108,7 @@ OZ_C_proc_begin(fdp_sumCN, 4)
   OZ_EXPECT(pe, 0, expectVectorInt);
   SAMELENGTH_VECTORS(0, 1);
 
-  const char * op = OZ_atomToC(OZ_args[2]);
+  char * op = OZ_atomToC(OZ_args[2]);
 
   if (!strcmp(SUM_OP_NEQ, op)) {
     OZ_EXPECT(pe, 1, expectVectorVectorIntVarSingl);

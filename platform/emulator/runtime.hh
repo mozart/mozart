@@ -216,7 +216,7 @@ TT VAR;						\
 
 #define oz_declareIntArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,int,Int)
 #define oz_declareFloatArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,double,Float)
-#define oz_declareAtomArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,const char*,Atom)
+#define oz_declareAtomArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,char*,Atom)
 #define oz_declareThreadArg(ARG,VAR) \
  oz_declareTypeArg(ARG,VAR,Thread*,Thread)
 #define oz_declareDictionaryArg(ARG,VAR) \
