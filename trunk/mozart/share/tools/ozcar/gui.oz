@@ -242,9 +242,6 @@ class Gui from Menu Dialog
 	    Gui,printEnv(frame:2 vars:S.2.1.vars)
 	 end
 	 
-	 %SourceManager,scrollbar(file:S.1.file line:S.1.line
-		%		 color:ScrollbarStackColor what:stack)
-
 	 {ForAll [tk(conf state:normal)
 		  tk(delete '0.0' 'end')] W}
 	 {List.forAllInd S
@@ -271,9 +268,10 @@ class Gui from Menu Dialog
       end
    end
    
-   meth printAppl(id:I name:N args:A builtin:B<=false
+   meth printAppl(id:I name:N args:A builtin:B<=false time:Time<=0
 		  file:F<=undef line:L<=undef)
-      W = self.ApplText
+      UpToDate = SourceManager,isUpToDate(Time $)
+      W        = self.ApplText
    in
       case N == undef orelse A == undef then
 	 Gui,Clear(W)
@@ -313,7 +311,19 @@ class Gui from Menu Dialog
       in
 	 Gui,Clear(W)
 	 case F \= undef then
-	    {W tk(insert 'end' ' ' # {StripPath F} # FileLineSeparator # L)}
+	    S = ' ' # {StripPath F} # FileLineSeparator # L
+	 in
+	    case UpToDate then
+	       {W tk(insert 'end' S)}
+	       {OzcarMessage 'mtime ok.'}
+	    else
+	       T = {TagCounter get($)}
+	    in
+	       {W tk(insert 'end' S # '(?)' T)}
+	       {W tk(tag conf T foreground:BuiltinColor)}
+	       {OzcarMessage 'mtime NOT ok.'}
+	    end 
+	    
 	 else skip end
 	 Gui,Disable(W)
       end
