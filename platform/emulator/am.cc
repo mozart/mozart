@@ -232,10 +232,14 @@ void AM::init(int argc,char **argv)
 
   initLiterals();
 
+  lastThreadID     = 0L;
+  threadStream     = OZ_newVariable();
+  threadStreamTail = threadStream;
+
+  //threadArray = new TaggedRef[200000];
+
   initThreads();
   toplevelQueue = (Toplevel *) NULL;
-
-  threadStreamTail = OZ_newVariable();
 
   // builtins
   BuiltinTabEntry *entry = BIinit();
