@@ -779,19 +779,9 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
       } else if (isGenCtVar(v, vtag)) {
         addSuspCtVar(v, prop, staticSpawnVars[i].state.ct.w);
         all_local &= am.isLocalSVar(v);
-      } else if (isGenOFSVar(v, vtag)) {
-        //mm2 else
-        // addSuspAnyVar(vptr,prop);
-        // all_local &= am.isLocalVariable(v,vptr);
-        addSuspOFSVar(v, prop);
-        all_local &= am.isLocalSVar(v);
-      } else if (isSVar(vtag)) {
-        addSuspSVar(v, prop);
-        all_local &= am.isLocalSVar(v);
       } else {
-        Assert(isUVar(vtag));
-        addSuspUVar(vptr, prop);
-        all_local &= am.isLocalUVar(v,vptr);
+        addSuspAnyVar(vptr, prop);
+        all_local &= am.isLocalVariable(v,vptr);
       }
     }
   }
