@@ -62,16 +62,12 @@ import
         errorBox:ErrorBox
         removeApp:RemoveApp
         updateApp:UpdateApp) at 'clientgui.ozf'
-\ifdef MOZART_POWER
    MozartPower(showLogo:ShowLogo)
-\endif
 export
    start: StartClient
 
 define
-\ifdef MOZART_POWER
    StopLogo StopLogoDelay
-\endif
 
    WaitQuit
 
@@ -172,11 +168,9 @@ define
          if @GUIStarted then skip
          else
             try H={self load($)} in
-\ifdef MOZART_POWER
                {Wait StopLogoDelay}
                StopLogo=1
                {Delay 500}
-\endif
                {StartGUI self.this @server @id H S}
                GUIStarted <- true
             catch X then {Browse exception(startgui X)} end
@@ -361,20 +355,16 @@ define
 
 
    proc{StartClient A}
-\ifdef MOZART_POWER
       Start
    in
       {ShowLogo Start StopLogo}
-\endif
       thread
          try
             S={Connection.take {Pickle.load A.ticketURL}}
             C={NewStationary ClientClass init(server:S args:A)}
          in
-\ifdef MOZART_POWER
             Start=500
             thread {Delay 3000} StopLogoDelay=unit end
-\endif
             if A.newuser==false then
                {C registerclient(id:A.login passwd:A.passwd)}
             else

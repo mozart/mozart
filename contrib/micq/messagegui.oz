@@ -28,7 +28,6 @@ import
    Tk
 %   Browser(browse:Browse)
    DD(dragAndDrop:DragAndDrop) at 'draganddrop.ozf'
-   OS(system uName)
 %   Pop(popup:Popup) at 'popup.ozf'
    BrowserControl
 export
