@@ -27,13 +27,14 @@
 
 #if defined(INTERFACE)
 #pragma implementation "site.hh"
-#pragma implementation "msgbuffer.hh"
+#pragma implementation "mbuffer.hh"
 #endif
 
 #include "base.hh"
-#include "site.hh"
 #include "am.hh"
+#include "pickleBase.hh"
 #include "os.hh"
+#include "site.hh"
 #include <sys/types.h>
 
 #ifndef WINDOWS
@@ -66,6 +67,74 @@ int BaseSite::hash() {
       h = h ^ (g >> 24);
       h = h ^ g;}}
   return (int) h;}
+
+//
+void BaseSite::marshalBaseSite(MarshalerBuffer* buf)
+{
+  marshalNumber(buf, address);
+  marshalShort(buf, port);  
+  marshalNumber(buf, timestamp.start);
+  marshalNumber(buf, timestamp.pid);
+}
+void BaseSite::marshalBaseSiteForGName(MarshalerBuffer* buf)
+{
+  marshalNumber(buf, address);
+  Assert(port == 0); // kost@ : otherwise hashing will be broken;
+  marshalNumber(buf, timestamp.start);
+  marshalNumber(buf, timestamp.pid);
+}
+
+#ifdef USE_FAST_UNMARSHALER   
+
+//
+void BaseSite::unmarshalBaseSite(MarshalerBuffer* buf)
+{
+  address = unmarshalNumber(buf);
+  port = unmarshalShort(buf);  
+  timestamp.start = unmarshalNumber(buf);
+  timestamp.pid = unmarshalNumber(buf);
+}
+void BaseSite::unmarshalBaseSiteGName(MarshalerBuffer* buf)
+{
+  address = unmarshalNumber(buf);
+  port = 0;
+  timestamp.start = unmarshalNumber(buf);
+  timestamp.pid = unmarshalNumber(buf);
+}
+
+#else
+
+void BaseSite::unmarshalBaseSiteRobust(MarshalerBuffer* buf, int *error)
+{
+  int o;
+  address = unmarshalNumberRobust(buf, &o);
+  if(o || (address <= NON_BROADCAST_MIN)) { // address should be of int32
+    *error = OK;
+    return;
+  }
+  port = unmarshalShort(buf);  
+  timestamp.start = unmarshalNumberRobust(buf, &o);
+  if(o || timestamp.start < 0) {
+    *error = OK;
+    return;
+  }
+  timestamp.pid=unmarshalNumberRobust(buf, &o);
+  // andreas & kost@ : Windows* return arbitrary pid_t"s, 
+  // so no MAX_PID whatsoever!
+  *error = o;
+}
+void BaseSite::unmarshalBaseSiteGNameRobust(MarshalerBuffer* buf, int *error)
+{
+  int o1, o2, o3;
+  address = unmarshalNumberRobust(buf, &o1);
+  port = 0;
+  timestamp.start = unmarshalNumberRobust(buf, &o2);
+  timestamp.pid = unmarshalNumberRobust(buf, &o3);
+  *error= o1 || o2 || o3;
+}
+
+#endif
+
 
 static ip_address getMySiteIP()
 {
@@ -150,13 +219,12 @@ void gCollectSiteTable() {
 Site *mySite;
 
 #ifdef USE_FAST_UNMARSHALER   
-Site* unmarshalSite(MsgBuffer *buf)
+Site* unmarshalSite(MarshalerBuffer *buf)
 {
   Site tryS;
 
   //
-  int minor = buf->getMinor();
-  tryS.unmarshalBaseSiteGName(buf,minor);
+  tryS.unmarshalBaseSiteGName(buf);
 
   //
   int hvalue = tryS.hash();
@@ -168,13 +236,12 @@ Site* unmarshalSite(MsgBuffer *buf)
   return (s);
 }
 #else
-Site* unmarshalSiteRobust(MsgBuffer *buf, int *overflow)
+Site* unmarshalSiteRobust(MarshalerBuffer *buf, int *overflow)
 {
   Site tryS;
 
   //
-  int minor = buf->getMinor();
-  tryS.unmarshalBaseSiteGNameRobust(buf,minor,overflow);
+  tryS.unmarshalBaseSiteGNameRobust(buf, overflow);
 
   //
   int hvalue = tryS.hash();

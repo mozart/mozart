@@ -45,6 +45,7 @@
 #include "codearea.hh"
 #include "OZCONF.h"
 #include "builtins.hh"
+#include "marshalerBase.hh"
 
 #include <stdarg.h>
 

@@ -52,6 +52,7 @@ public:
   virtual void sCloneRecurseV(void) {}
   virtual void gCollectRecurseV(void) {}
   BYTE& operator[](int i) { return data[i]; }
+  BYTE* getData() { return (data); }
   BYTE& getByte(int i) { return data[i]; }
 };
 
@@ -106,7 +107,7 @@ public:
   virtual OZ_Term typeV();
   virtual Bool isChunkV() { return NO; }
   virtual OZ_Return eqV(OZ_Term);
-  virtual int marshalV(void*);
+  virtual int marshalV(MarshalerBuffer *);
   virtual OZ_Term printV(int depth = 10);
   virtual OZ_Extension* gCollectV() { return clone(); }
   virtual OZ_Extension* sCloneV() { return clone(); }
@@ -153,7 +154,6 @@ protected:
   int width;
 public:
   int getWidth() { return width; }
-  BYTE* getData() { return data; }
   virtual int getSize() { return width; }
   ByteData operator=(const ByteData&);
   ByteData(){};
@@ -193,7 +193,7 @@ public:
   virtual OZ_Term typeV();
   virtual Bool isChunkV() { return NO; }
   virtual OZ_Return eqV(OZ_Term);
-  virtual int marshalV(void*);
+  virtual int marshalV(MarshalerBuffer *);
   virtual OZ_Term printV(int depth = 10);
   virtual OZ_Extension* gCollectV() { return clone(); }
   virtual OZ_Extension* sCloneV() { return clone(); }

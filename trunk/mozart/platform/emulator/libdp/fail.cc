@@ -154,7 +154,8 @@ void deferProxyVarProbeFault(TaggedRef v, int pr){
 }
 
 void managerInstallProbe(Tertiary* t,ProbeType pt){
-  installProbeNoRet(BT->getOriginSite(t->getIndex()),pt);}
+  //  installProbeNoRet(BT->getOriginSite(t->getIndex()),pt);
+}
 
 void watcherRemoved(Watcher* w, Tertiary* t){
   EntityCond oldC=getSummaryWatchCond(t);
@@ -525,7 +526,10 @@ void DSite::probeFault(ProbeReturn pr) {
       managerProbeFault(tr,this,pr);}
     else{
       if(oe->isVar()){
-	GET_VAR(oe,Manager)->probeFault(this,pr);}}}
+	GET_VAR(oe,Manager)->probeFault(this,pr);
+      }
+    }
+  }
 
   limit=BT->getSize();
   for(int ctr1 = 0; ctr1<limit;ctr1++){
@@ -539,8 +543,8 @@ void DSite::probeFault(ProbeReturn pr) {
 	  if(typeOfBorrowVar(be)==VAR_PROXY){
 	    GET_VAR(be,Proxy)->probeFault(pr);}
 	  else{
-	    Assert(typeOfBorrowVar(be)==VAR_OBJECT);
-	    GET_VAR(be,Object)->probeFault(pr);}}}}}
+	    Assert(typeOfBorrowVar(be)==VAR_LAZY);
+	    GET_VAR(be, Lazy)->probeFault(pr);}}}}}
 }
 
 /**********************************************************************/
@@ -579,7 +583,7 @@ void Chain::shortcutCrashLock(LockManager* lm){
   if(ce->site==myDSite){
     lockReceiveTokenManager(OT->getOwner(OTI),OTI);
     return;}
-  lockSendToken(myDSite,OTI,ce->site);}
+  lockSendToken(myDSite,OTI,ce->site,NULL);}
 
 void Chain::shortcutCrashCell(CellManager* cm,TaggedRef val){
   establish_PERM_SOME(cm);
@@ -601,7 +605,7 @@ void Chain::shortcutCrashCell(CellManager* cm,TaggedRef val){
     cellReceiveContentsManager(OT->getOwner(index),val,index);
     return;}
   OT->getOwner(index)->getOneCreditOwner();
-  cellSendContents(val,ce->site,myDSite,index);}
+  cellSendContents(val,ce->site,myDSite,index,NULL);}
 
 void Chain::handleTokenLost(Tertiary* t,OwnerEntry *oe,int OTI){
   establish_TOKEN_LOST(t);
@@ -830,11 +834,11 @@ Bool installWatcher(TaggedRef* tPtr,EntityCond wc,TaggedRef proc,
       pv->newWatcher(w->isInjector());}
     varAdjustPOForFailure(pv->getIndex(),oldC,newC);
     break;}
-  case VAR_OBJECT:{
-    ObjectVar *ov=oz_getObjectVar(*tPtr);
+  case VAR_LAZY:{
+    LazyVar *ov=oz_getLazyVar(*tPtr);
     if(ei->getEntityCond()!=ENTITY_NORMAL){
       ov->newWatcher(w->isInjector());}
-    varAdjustPOForFailure(ov->getObject()->getIndex(),oldC,newC);
+    varAdjustPOForFailure(ov->getIndex(), oldC, newC);
     break;}
   default:
     Assert(0);}
@@ -877,9 +881,9 @@ Bool deinstallWatcher(TaggedRef* tPtr,EntityCond wc,TaggedRef proc,
     ProxyVar *pv=oz_getProxyVar(*tPtr);
     varAdjustPOForFailure(pv->getIndex(),oldC,newC);
     break;}
-  case VAR_OBJECT:{
-    ObjectVar *ov=oz_getObjectVar(*tPtr);
-    varAdjustPOForFailure(ov->getObject()->getIndex(),oldC,newC);
+  case VAR_LAZY:{
+    LazyVar *ov=oz_getLazyVar(*tPtr);
+    varAdjustPOForFailure(ov->getIndex(), oldC, newC);
     break;}
   default:
     Assert(0);}

@@ -79,9 +79,9 @@ public:
 DebugVSMsgs(extern VSSendRecvCounter vsSRCounter;);
 
 //
-class VSMsgBuffer;
-class VSMsgBufferOwned;
-class VSMsgBufferImported;
+class VSMarshalerBuffer;
+class VSMarshalerBufferOwned;
+class VSMarshalerBufferImported;
 
 //
 VirtualSite* createVirtualSiteImpl(DSite* s);
@@ -93,7 +93,7 @@ void zeroRefsToVirtualImpl(VirtualSite *vs);
 // The 'mt', 'storeSite' and 'storeIndex' parameters are used whenever a 
 // communication layer reports a problem with a message which has
 // been previously accepted for delivery;
-int sendTo_VirtualSiteImpl(VirtualSite *vs, MsgBuffer *mb,
+int sendTo_VirtualSiteImpl(VirtualSite *vs, MarshalerBuffer *mb,
 			   MessageType mt, DSite *storeSite, int storeIndex);
 
 //
@@ -127,10 +127,10 @@ GiveUpReturn giveUp_VirtualSiteImpl(VirtualSite* vs);
 void discoveryPerm_VirtualSiteImpl(VirtualSite *vs);
 
 //
-MsgBuffer* getVirtualMsgBufferImpl(DSite* site);
+MarshalerBuffer* getVirtualMarshalerBufferImpl(DSite* site);
 
 //
-void dumpVirtualMsgBufferImpl(MsgBuffer* m);
+void dumpVirtualMarshalerBufferImpl(MarshalerBuffer* m);
 
 //
 void siteAlive_VirtualSiteImpl(VirtualSite *vs);
@@ -143,6 +143,6 @@ void virtualSitesExitImpl();
 
 //
 // special stuff:
-MsgBuffer* getCoreVirtualMsgBuffer(DSite* site);
+MarshalerBuffer* getCoreVirtualMarshalerBuffer(DSite* site);
 
 #endif // __VIRTUAL_HH

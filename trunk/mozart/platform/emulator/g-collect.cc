@@ -27,6 +27,7 @@
 #undef  S_CLONE
 
 #include "codearea.hh"
+#include "gentraverser.hh"
 #include "indexing.hh"
 
 
@@ -598,6 +599,369 @@ void CodeArea::gCollectCollectCodeBlocks(void) {
   }
 }
 
+//
+// 'fillNode' just fills up a gap, 'uFillNode' ("unique fillNode")
+// makes also sure that the corresponding spointer in the builder's
+// stack points exactly to it. 'fillNode' is only useful for records,
+// since records are filled not using spointer"s but dedicated tasks.
+static OZ_Term fillNode = 0;
+static OZ_Term uFillNode = 0;
+
+//
+// Step through every stack frame and (a) fill up the gaps (NB: they
+// are in the 'from' space) with a dedicated value ('fillNode',
+// 'uFillNode'), and (b) collect all the terms saved there. Since the
+// action is atomic, all the gaps are filled before the garbage
+// collector can reach them.
+void Builder::gCollect()
+{
+  //
+  GetBTFrame(frame);
+  //
+  // 'uFillNode' stays for 'unique fillNode', that is: there is one
+  // single filling for both the hole in a compound term and the
+  // corresponding spointer. One cannot just fill&GC the hole beneath
+  // an spointer with 'fillNode' because then there would be two
+  // copies of it in the 'to' space, so the spointer will be invalid.
+
+  if (!((int) fillNode)) {
+#ifdef DEBBUG_CHECK
+    // a "unique name" does not need to be collected, so it is
+    // initialized only once. Should that change, the bug will be easy
+    // to discover;
+    fillNode = oz_uniqueName("fill node");
+#else
+    fillNode = makeTaggedSmallInt(-7);
+#endif
+  }
+  Assert(uFillNode);
+
+  //
+  // frame is cached, so no 'BuilderStack::isEmpty()' here:
+  while (frame > BuilderStack::array) {
+    GetBTTaskType(frame, type);
+    switch (type) {
+
+      //
+      // Trivial case: just dump the 'fillNode' into the hole;
+    case BT_spointer:
+      // ... the same as before modulo that the next task should not
+      // refer to any gaps (in terms of builder, no 'value' is
+      // available for that next task);
+    case BT_spointer_iterate:
+      {
+	GetBTTaskPtr1(frame, OZ_Term*, spointer);
+	if (spointer == &result || spointer == &blackhole) {
+	  // in either case do nothing 'cause these cells are not
+	  // visible from the heap;
+	} else {
+	  // first phase: fill the gap;
+	  *spointer = uFillNode;	// in the term;
+	  // second phase: GC it, such that the spointer in the copy
+	  // will get eventually updated (using GC's VarFix business).
+	  OZ_Term &v = GetBTTaskArg1Ref(frame, OZ_Term);
+	  oz_gCollectTerm(v, v);
+	}
+
+	//
+	NextBTFrame(frame);
+	break;			// case;
+      }
+
+      //
+      // 'buildValue' task keeps a value that is to be used by the
+      // next task, so let's GC it:
+    case BT_buildValue:
+      {
+	OZ_Term &v = GetBTTaskArg1Ref(frame, OZ_Term);
+	oz_gCollectTerm(v, v);
+	//
+	NextBTFrame(frame);
+	break;			// case;
+      }
+
+      //
+      // 'makeTuple' does not contain any Oz values. The place where
+      // that tuple will be stored will be botched with 'fillNode';
+    case BT_makeTuple:
+    case BT_makeTupleMemo:
+      NextBTFrame(frame);
+      break;			// case;
+
+      //
+      // 'takeRecordArity(Label)' does not hold any Oz values, so just 
+      // skip them:
+    case BT_takeRecordLabel:
+    case BT_takeRecordLabelMemo:
+      NextBT2Frames(frame);
+      break;			// case;
+
+      //
+      // 'takeRecordArity(Label)' holds label:
+    case BT_takeRecordArity:
+    case BT_takeRecordArityMemo:
+      {
+	OZ_Term &l = GetBTTaskArg1Ref(frame, OZ_Term);
+	oz_gCollectTerm(l, l);
+	//
+	NextBT2Frames(frame);
+	break;			// case;
+      }
+
+      //
+      // 'makeRecordSync' holds both label and arity list:
+    case BT_makeRecordSync:
+    case BT_makeRecordMemoSync:
+      {
+	OZ_Term &l = GetBTTaskArg1Ref(frame, OZ_Term);
+	oz_gCollectTerm(l, l);
+	OZ_Term &a = GetBTTaskArg2Ref(frame, OZ_Term);
+	oz_gCollectTerm(a, a);
+	//
+	// no optimizations for following 'spointer' task, etc.
+	NextBT2Frames(frame);
+	break;
+      }
+
+      //
+      // 'recordArg' holds a reference to the corresponding record and
+      // a feature name, which both must be updated. Holes are to be
+      // filled as well:
+    case BT_recordArg:
+    case BT_recordArg_iterate:
+      {
+	GetBTTaskPtr1(frame, SRecord*, rec);
+	SRecord *nrec = rec->gCollectSRecord();
+	ReplaceBTTask1stPtrOnly(frame, nrec);
+	//
+	OZ_Term &fea = GetBTTaskArg2Ref(frame, OZ_Term);
+	oz_gCollectTerm(fea, fea);
+	//
+	nrec->setFeature(fea, fillNode);
+	//
+	NextBTFrame(frame);
+	break;			// case;
+      }
+
+      //
+      // 'dictKey' holds only the dictionary; 'dictVal' in addition -
+      // the key. The not-yet-processed dictionary entries do not need
+      // to be initialized, so the dictionary itself is left
+      // untouched;
+    case BT_dictKey:
+      {
+	OZ_Term &d = GetBTTaskArg1Ref(frame, OZ_Term);
+	oz_gCollectTerm(d, d);
+	NextBTFrame(frame);
+	break;			// case;
+      }
+
+      //
+    case BT_dictVal:
+      {
+	OZ_Term &d = GetBTTaskArg1Ref(frame, OZ_Term);
+	oz_gCollectTerm(d, d);
+	OZ_Term &k = GetBTTaskArg2Ref(frame, OZ_Term);
+	oz_gCollectTerm(k, k);
+	//
+	NextBTFrame(frame);
+	break;			// case;
+      }
+
+      //
+      // no values;
+    case BT_fsetvalue:
+    case BT_fsetvalueMemo:
+      NextBTFrame(frame);
+      break;			// case;
+
+      //
+      // ... saved head of the list. Note that by now it must be a
+      // valid Oz data structure (but not necessarily a well-formed
+      // one), with holes filled up!
+    case BT_fsetvalueSync:
+    case BT_fsetvalueMemoSync:
+      {
+	OZ_Term &l = GetBTTaskArg1Ref(frame, OZ_Term);
+	oz_gCollectTerm(l, l);
+	//
+	NextBTFrame(frame);
+	break;			// case;
+      }
+
+      //
+      // GName is hanging around:
+    case BT_chunk:
+    case BT_chunkMemo:
+      {
+	GetBTTaskPtr1(frame, GName*, gname);
+	gCollectGName(gname);
+	//
+	NextBTFrame(frame);
+	break;			// case;
+      }
+
+      //
+    case BT_takeObjectLock:
+    case BT_takeObjectLockMemo:
+      NextBT2Frames(frame);
+      break;			// case;
+
+      //
+    case BT_takeObjectState:
+    case BT_takeObjectStateMemo:
+      {
+	OZ_Term &l = GetBTTaskArg1Ref(frame, OZ_Term);
+	oz_gCollectTerm(l, l);
+	//
+	NextBT2Frames(frame);
+	break;			// case;
+      }
+
+      //
+    case BT_makeObject:
+    case BT_makeObjectMemo:
+      {
+	OZ_Term &l = GetBTTaskArg1Ref(frame, OZ_Term);
+	oz_gCollectTerm(l, l);
+	OZ_Term &s = GetBTTaskArg2Ref(frame, OZ_Term);
+	oz_gCollectTerm(s, s);
+	//
+	NextBT2Frames(frame);
+	break;
+      }
+
+      //
+      // 'ObjectClass' is already there:
+    case BT_classFeatures:
+      {
+	GetBTTaskPtr1(frame, ObjectClass*, oc);
+	ObjectClass *noc = (ObjectClass *) oc->gCollectConstTerm();
+	ReplaceBTTask1stPtrOnly(frame, noc);
+	//
+	NextBTFrame(frame);
+	break;			// case;
+      }
+
+      //
+      // yet just GName"s:
+    case BT_procFile:
+    case BT_procFileMemo:
+      {
+	NextBTFrame(frame);
+	GetBTTaskPtr1(frame, GName*, gname);
+	gCollectGName(gname);
+	//
+	NextBT3Frames(frame);
+	break;			// case;
+      }
+
+      // file name is there:
+    case BT_proc:
+    case BT_procMemo:
+      {
+	OZ_Term &fn = GetBTTaskArg1Ref(frame, OZ_Term);
+	oz_gCollectTerm(fn, fn);
+	//
+	NextBTFrame(frame);
+	GetBTTaskPtr1(frame, GName*, gname);
+	gCollectGName(gname);
+	//
+	NextBT3Frames(frame);
+	break;			// case;
+      }
+
+      //
+      // 'Abstraction*' held in 'closureElem' must be updated:
+    case BT_closureElem:
+    case BT_closureElem_iterate:
+      {
+	GetBTTaskPtr1(frame, Abstraction*, ap);
+	Abstraction *nap = (Abstraction *) ap->gCollectConstTerm();
+	ReplaceBTTask1stPtrOnly(frame, nap);
+	//
+	NextBTFrame(frame);
+	break;			// case;
+      }
+
+      //
+    case BT_abstractEntity:
+      {
+	GetBTTaskPtr1(frame, GTAbstractEntity*, bae);
+	bae->gc();
+	//
+	NextBTFrame(frame);
+	break;
+      }
+
+      //
+      // Dealing with binary areas (e.g. code areas);
+    case BT_binary:
+      NextBTFrame(frame);
+      break;
+
+      //
+      // 'binary_getValue' holds only a (stateless) binary area
+      // processor and its (again stateless) argument;
+    case BT_binary_getValue:
+      NextBT2Frames(frame);
+      break;			// case;
+
+      //
+      // ... but 'binary_getValueSync' holds a value, which at that
+      // point is already well-formed (without holes):
+    case BT_binary_getValueSync:
+      {
+	OZ_Term &v = GetBTTaskArg1Ref(frame, OZ_Term);
+	oz_gCollectTerm(v, v);
+	//
+	NextBT2Frames(frame);
+	break;			// case;
+      }
+
+      //
+      // the 'arg' cannot refer heap-based data:
+    case BT_binary_doGenAction_intermediate:
+      NextBTFrame(frame);
+      break;			// case;
+
+      //
+    case BT_nop:
+      NextBTFrame(frame);
+      break;			// case;
+
+      //
+    default:
+#ifndef USE_FAST_UNMARSHALER
+      RAISE_UNMARSHAL_ERROR;
+#else
+      OZD_error("Builder: unknown task!");
+#endif
+    }
+  }
+
+  //
+  // If a (partially instantiated) result is known already, gc it
+  // *after* filling up the holes. That's because 'oz_gCollectTerm'
+  // implicitly assumes that a term is well-formed (that is, there are
+  // no holes in it); otherwise the 'to'-space copy of the term cannot
+  // be scanned.
+  if (result) {
+    oz_gCollectTerm(result, result);
+  }
+
+  //
+  // In addition, we have to GC the BuilderIndexTable as well:
+  const int *ttsTop = getTTSTop();
+  const int *ttsBottom = getTTSBottom();
+  int *ttsI = ttsTop;
+
+  //
+  while (--ttsI >= ttsBottom) {
+    OZ_Term &tte = getRef(*ttsI);
+    oz_gCollectTerm(tte, tte);
+  }
+}
 
 /*
  * Main routines for invoking garbage collections
@@ -672,9 +1036,10 @@ void AM::gCollect(int msgLevel) {
   Assert(_inEqEq==FALSE);
   Assert(_rootBoard);
 
+  //
+  uFillNode = am.currentUVarPrototype();
   _rootBoard = _rootBoard->gCollectBoard();   // must go first!
   setCurrent(_rootBoard);
-
   aritytable.gCollect();
   threadsPool.gCollect();
 
@@ -755,7 +1120,7 @@ void AM::gCollect(int msgLevel) {
   cacStack.exit();
 
   //  malloc_stats();
-
+  DebugCode(uFillNode = 0;)
 } // AM::gc
 
 

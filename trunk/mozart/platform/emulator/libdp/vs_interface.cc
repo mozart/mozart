@@ -44,7 +44,7 @@ void zeroRefsToVirtualStub(VirtualSite *)
   OZ_error("'zeroRefsToVirtual' called without 'VIRTUALSITES'?");
 }
 //
-int sendTo_VirtualSiteStub(VirtualSite*, MsgBuffer*, MessageType, DSite*, int)
+int sendTo_VirtualSiteStub(VirtualSite*, MarshalerBuffer*, MessageType, DSite*, int)
 {
   int x= *((int *)(0x1));
   OZ_error("'sendTo_VirtualSite' called without 'VIRTUALSITES'?");
@@ -110,15 +110,15 @@ void discoveryPerm_VirtualSiteStub(VirtualSite *)
   OZ_error("'discoveryPerm_VirtualSite' called without 'VIRTUALSITES'?");
 }
 //
-MsgBuffer* getVirtualMsgBufferStub(DSite *)
+MarshalerBuffer* getVirtualMarshalerBufferStub(DSite *)
 {
-  OZ_error("'getVirtualMsgBuffer' called without 'VIRTUALSITES'?");
-  return ((MsgBuffer *) 0);
+  OZ_error("'getVirtualMarshalerBuffer' called without 'VIRTUALSITES'?");
+  return ((MarshalerBuffer *) 0);
 }
 //
-void dumpVirtualMsgBufferStub(MsgBuffer *)
+void dumpVirtualMarshalerBufferStub(MarshalerBuffer *)
 {
-  OZ_error("'dumpVirtualMsgBuffer' called without 'VIRTUALSITES'?");
+  OZ_error("'dumpVirtualMarshalerBuffer' called without 'VIRTUALSITES'?");
 }
 //
 void siteAlive_VirtualSiteStub(VirtualSite *vs)
@@ -135,7 +135,7 @@ VirtualSite* (*createVirtualSite)(DSite* s)
   = createVirtualSiteStub;
 void (*zeroRefsToVirtual)(VirtualSite *vs)
   = zeroRefsToVirtualStub;
-int (*sendTo_VirtualSite)(VirtualSite *vs, MsgBuffer *mb,
+int (*sendTo_VirtualSite)(VirtualSite *vs, MarshalerBuffer *mb,
                           MessageType mt, DSite *storeSite, int storeIndex)
   = sendTo_VirtualSiteStub;
 int (*discardUnsentMessage_VirtualSite)(VirtualSite *vs, int msgNum)
@@ -163,10 +163,10 @@ GiveUpReturn (*giveUp_VirtualSite)(VirtualSite* vs)
   = giveUp_VirtualSiteStub;
 void (*discoveryPerm_VirtualSite)(VirtualSite *vs)
   = discoveryPerm_VirtualSiteStub;
-MsgBuffer* (*getVirtualMsgBuffer)(DSite* site)
-  = getVirtualMsgBufferStub;
-void (*dumpVirtualMsgBuffer)(MsgBuffer* m)
-  = dumpVirtualMsgBufferStub;
+MarshalerBuffer* (*getVirtualMarshalerBuffer)(DSite* site)
+  = getVirtualMarshalerBufferStub;
+void (*dumpVirtualMarshalerBuffer)(MarshalerBuffer* m)
+  = dumpVirtualMarshalerBufferStub;
 void (*siteAlive_VirtualSite)(VirtualSite *vs)
   = siteAlive_VirtualSiteStub;
 void (*virtualSitesExit)()

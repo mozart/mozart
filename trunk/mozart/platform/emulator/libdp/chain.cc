@@ -203,8 +203,8 @@ void Chain::receiveAnswer(Tertiary* t,DSite* site,int ans,DSite* deadS){
 /**********************************************************************/
 
 #ifdef DEBUG_PERDIO
-
 int printChain(Chain* chain){
+#ifdef DO_ANYTHING_AN
   printf("Chain ### Flags: [");
   if(chain->hasFlag(INTERESTED_IN_OK))
     printf(" INTERESTED_IN_OK");
@@ -246,8 +246,8 @@ int printChain(Chain* chain){
   if(cp->flagIsSet( CHAIN_DUPLICATE))
     printf(" CHAIN_DUPLICATE");
   printf("] %s\n",cp->getSite()->stringrep());
+#endif
   return 8;
 }
-
 #endif
 

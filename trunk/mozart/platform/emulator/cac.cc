@@ -682,7 +682,9 @@ LTuple * LTuple::_cac(void) {
   // Save the content
   to->args[0] = args[0];
 
-  // Do not store foreward! Recurse takes care of this!
+  // Do not record the forward pointer! Recurse takes care of this!
+  // kost@ : observe that the forward pointer here handles *both* the
+  // tuple itself and its 'car' field, which can be e.g. a variable!
   cacMark(to);
 
   cacStack.push(this, PTR_LTUPLE);
@@ -1250,6 +1252,12 @@ ConstTerm *ConstTerm::gCollectConstTermInline(void) {
    return ctwh_t;
  }
 
+}
+
+//
+ConstTerm *ConstTerm::gCollectConstTerm(void)
+{
+  return (gCollectConstTermInline());
 }
 
 #else

@@ -50,7 +50,7 @@ SRCS= \
 	thr_int.cc\
 	board.cc distributor.obj \
 	g-collect.cc s-clone.cc mem.cc liveness.cc\
-	gname.cc components.cc site.cc\
+	gname.cc site.cc\
 	var_of.cc ofs-bi.cc\
 	fdomn.cc fdcore.cc \
 	var_fd.cc var_bool.cc\
@@ -59,7 +59,9 @@ SRCS= \
 	cpi_stream.cc cpi_profile.cc cpi_ct.cc \
 	var_ct.cc\
 	fset.cc fsetcore.cc var_fs.cc\
-        newmarshaler.cc gentraverser.cc \
+        gentraverser.cc \
+        marshalerBase.cc pickleBase.cc \
+        components.cc pickle.cc \
 	sit-check.cc ostime.cc \
 	libdp/chain.cc           libdp/marshalMsg.cc      libdp/table.cc\
 	libdp/dpDebug.cc         libdp/msgType.cc         libdp/var.cc\

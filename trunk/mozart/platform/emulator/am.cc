@@ -39,7 +39,7 @@
 #include "codearea.hh"
 #include "fdomn.hh"
 #include "trace.hh"
-#include "newmarshaler.hh"
+#include "pickle.hh"
 #include "cpi.hh"
 
 AM am;
@@ -321,7 +321,7 @@ void AM::init(int argc,char **argv)
 
   //
   initSite();
-  initNewMarshaler();
+  initPickleMarshaler();
 
   //
   initExtensions();

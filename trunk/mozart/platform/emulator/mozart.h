@@ -99,7 +99,7 @@ typedef void *OZ_Thread;
 typedef void *OZ_Arity;
 
 typedef _FUNTYPEDECL(OZ_Return,OZ_CFun,(OZ_Term **));
-typedef _FUNTYPEDECL(OZ_Term,oz_unmarshalProcType,(void*));
+typedef _FUNTYPEDECL(OZ_Term, oz_unmarshalProcType,(void*));
 
 typedef int OZ_Boolean;
 #define OZ_FALSE 0
