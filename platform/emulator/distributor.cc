@@ -66,7 +66,7 @@ BaseDistributor::BaseDistributor(Board * bb, const int n) {
 }
 
 
-int BaseDistributor::commit(Board * bb, const int l, const int r) {
+int BaseDistributor::commit(Board * bb, int l, int r) {
   if (l > num+1) {
     num = 0;
   } else {
