@@ -92,7 +92,7 @@ OZ_Return PerdioVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
   TaggedRef rVal = *rPtr;
 
   if (!oz_isExtVar(rVal)) {
-    // switch binding order
+    // switch order
     if (isSimpleVar(rVal) || isFuture(rVal))  {
       return oz_var_bind(tagged2CVar(rVal),rPtr,makeTaggedRef(lPtr));
     } else {
@@ -108,7 +108,7 @@ OZ_Return PerdioVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
       return this==rVar ? PROCEED : FAILED;
     }
     /*
-     * binding preferences
+     * preferences
      * bind perdiovar -> proxy
      * bind url proxy -> object proxy
      */
@@ -145,17 +145,7 @@ void ProxyVar::gcRecurseV(void)
 { 
   PD((GC,"PerdioVar b:%d",getIndex()));
   BT->getBorrow(getIndex())->gcPO();
-
-  PendBinding **last=&bindings;
-  PendBinding *bl = *last;
-  PendBinding *newBL;
-  for (; bl; bl = bl->next) {
-    newBL = new PendBinding();
-    OZ_collectHeapTerm(bl->val,newBL->val);
-    OZ_collectHeapTerm(bl->controlvar,newBL->controlvar);
-    *last = newBL;
-    last = &newBL->next;}
-  *last=NULL;
+  OZ_collectHeapTerm(binding,binding);
 } 
 
 static
@@ -175,47 +165,36 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r)
   PD((PD_VAR,"bind proxy b:%d v:%s",getIndex(),toC(r)));
   Bool isLocal = oz_isLocalVar(this);
   if (isLocal) {
-    if (hasVal()) {
-      // mm2: should return suspend: binding list can be removed
-      return pushVal(r); // save binding for ack message, ...
+    if (binding) {
+      am.addSuspendVarList(lPtr);
+      return SUSPEND;
+    } else {
+      Assert(binding==0);
+      BorrowEntry *be=BT->getBorrow(getIndex());
+      OZ_Return aux = sendSurrender(be,r);
+      if (aux!=PROCEED) return aux;
+      PD((THREAD_D,"stop thread proxy bind %x",oz_currentThread()));
+      binding=r;
+      am.addSuspendVarList(lPtr);
+      return SUSPEND;
     }
-  
-    BorrowEntry *be=BT->getBorrow(getIndex());
-    OZ_Return aux = sendSurrender(be,r);
-    if (aux!=PROCEED) return aux;
-    return setVal(r); // save binding for ack message, ...
   } else {
     // in guard: bind and trail
-    oz_checkSuspensionList(tagged2SVarPlus(*lPtr),pc_std_unif);
+    oz_checkSuspensionList(this,pc_std_unif);
     doBindAndTrail(lPtr,r);
     return PROCEED;
   }    
 }
 
-//
-// mm2: choose a better name! wakeUpAfterBind
-//   why are threads in u.bindings not simply retried?
-void ProxyVar::redirect(OZ_Term val)
-{
-  PD((PD_VAR,"redirect v:%s",toC(val)));
-  while (bindings) {
-    PD((PD_VAR,"redirect pending unify =%s",toC(bindings->val)));
-    PD((THREAD_D,"start thread redirect"));
-    ControlVarUnify(bindings->controlvar,val,bindings->val);
-    PendBinding *tmp=bindings->next;
-    bindings->dispose();
-    bindings=tmp;}
-}
-
 void ProxyVar::proxyBind(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
 {
   PD((TABLE,"REDIRECT - borrow entry hit b:%d",getIndex()));
+  if (binding) {
+    DebugCode(binding=0);
+    PD((PD_VAR,"REDIRECT while pending"));
+  }
   primBind(vPtr,val);
   be->changeToRef();
-  if (hasVal()) {
-    PD((PD_VAR,"REDIRECT while pending"));
-    redirect(val);
-  }
   // dispose();
   BT->maybeFreeBorrowEntry(getIndex());
 }
@@ -223,14 +202,10 @@ void ProxyVar::proxyBind(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
 void ProxyVar::proxyAck(TaggedRef *vPtr, BorrowEntry *be) 
 {
   PD((PD_VAR,"acknowledge"));
-  OZ_Term val=bindings->val;
-  primBind(vPtr,val);
+  Assert(binding!=0);
+  primBind(vPtr,binding);
+  DebugCode(binding=0);
   PD((THREAD_D,"start thread ackowledge"));
-  ControlVarResume(bindings->controlvar);
-  PendBinding *tmp=bindings->next;
-  bindings->dispose();
-  bindings=tmp;
-  redirect(val);
   be->changeToRef();
   BT->maybeFreeBorrowEntry(getIndex());
   // dispose();
