@@ -433,6 +433,11 @@ if that value is non-nil."
 	  (oz-create-buffer "*Oz Machine*")
 	  (set-process-filter (get-process "Oz Machine")  'oz-machine-filter)
 	  (bury-buffer "*Oz Machine*")
+	  (save-excursion
+	    (set-buffer (get-buffer "*Oz Machine*"))
+	    (delete-region (point-min) (point-max))
+	    (comint-mode)
+	    )
 	  )
 
 	;; make sure buffers exist
@@ -710,32 +715,23 @@ the GDB commands `cd DIR' and `directory'."
    OZ compiler, machine and error window")
 
 (defun oz-show-buffer (buffer)
-  (let* ((old-win (selected-window))
-	 (edges (window-edges old-win))
-	 (win (or (get-buffer-window "*Oz Machine*")
-		  (get-buffer-window "*Oz Compiler*")
-		  (get-buffer-window "*Oz Errors*")
-		  (split-window old-win
-				(/ (* (- (nth 3 edges) (nth 1 edges))
-				      (- 100 oz-other-buffer-percent))
-				   100)))))
-    (select-window win)
-    (set-window-buffer win buffer)
-    (goto-char (point-max))
-    (select-window old-win))
+  (save-excursion
+    (let* ((edges (window-edges (selected-window)))
+	   (win (or (get-buffer-window "*Oz Machine*")
+		    (get-buffer-window "*Oz Compiler*")
+		    (get-buffer-window "*Oz Errors*")
+		    (split-window (selected-window)
+				  (/ (* (- (nth 3 edges) (nth 1 edges))
+					(- 100 oz-other-buffer-percent))
+				     100)))))
+      (set-window-buffer win buffer)
+      )
+    )
 
   (bury-buffer "*Oz Machine*")
   (bury-buffer "*Oz Compiler*")
   (bury-buffer "*Oz Errors*")
   (bury-buffer buffer))
-
-(defun oz-scroll-to-end(buf)
-  (let ((win (get-buffer-window buf t)))
-    (if win
-	(save-excursion
-	  (select-window win)
-	  (goto-char (point-max))))))
-
 
 (defun oz-new-buffer()
   (interactive)
