@@ -16,7 +16,7 @@
         interrupts compilation.
         <Figure float id="program.evalExpression" class=program>
           <Caption>The <<evalExpression>> abstraction.</Caption>
-          <P><!--**-->
+          <P>
             <Code.Extern display to="EvalExpression.oz">
         </Figure>
   <SubSection>
@@ -29,7 +29,7 @@
         is illustrated in <Ptr to="program.virtualStringToValue">.
         <Figure float id="program.virtualStringToValue" class=program>
           <Caption>The <<virtualStringToValue>> abstraction.</Caption>
-          <P><!--**-->
+          <P>
             <Code.Extern display to="VirtualStringToValue.oz">
         </Figure>
       <P>

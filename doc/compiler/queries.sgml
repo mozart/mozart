@@ -9,16 +9,13 @@
         <List>
           <Entry><<macroDefine(?+{VS})>>
           <Item>
-            <P.silent><!--**-->
-              Add <<VS>> to the list of defined macro names.
+            Add <<VS>> to the list of defined macro names.
           <Entry><<macroUndef(?+{VS})>>
           <Item>
-            <P.silent><!--**-->
-              Remove <<VS>> from the list of defined macro names.
+            Remove <<VS>> from the list of defined macro names.
           <Entry><<getDefines(??{VSs})>>
           <Item>
-            <P.silent><!--**-->
-              Return the list of currently defined macro names.
+            Return the list of currently defined macro names.
         </List>
   <SubSection>
     <Title/Compiler Switches/
@@ -26,35 +23,29 @@
         <List>
           <Entry><<setSwitch(?+{SwitchName} ?+{B})>>
           <Item>
-            <P.silent><!--**-->
-              Set the state of a switch, specified by an atom <<SwitchName>>
-              to either <Q class=quasi/on/, if <<B == true>>, or to
-              <Q class=quasi/off/, if <<B == false>>.
+            Set the state of a switch, specified by an atom <<SwitchName>>
+            to either <Q class=quasi/on/, if <<B == true>>, or to
+            <Q class=quasi/off/, if <<B == false>>.
           <Entry><<getSwitch(?+{SwitchName} ??{B})>>
           <Item>
-            <P.silent><!--**-->
-              Return the state of a switch, specified by an atom
-              <<SwitchName>>.
+            Return the state of a switch, specified by an atom
+            <<SwitchName>>.
           <Entry><<pushSwitches()>>
           <Item>
-            <P.silent><!--**-->
-              Save the state of all switches.
+            Save the state of all switches.
           <Entry><<popSwitches()>>
           <Item>
-            <P.silent><!--**-->
-              Restore the last saved state of all switches; if no state is
-              saved, do nothing.
+            Restore the last saved state of all switches; if no state is
+            saved, do nothing.
           <Entry><<setMaxNumberOfErrors(?+{N})>>
           <Item>
-            <P.silent><!--**-->
-              Set the maximal number of errors to report for any one
-              compilation before aborting it to <<N>> (an integer).
-              A negative value means never to abort.
+            Set the maximal number of errors to report for any one
+            compilation before aborting it to <<N>> (an integer).
+            A negative value means never to abort.
           <Entry><<getMaxNumberOfErrors(??{N})>>
           <Item>
-            <P.silent><!--**-->
-              Return the maximal number of errors to report for any one
-              compilation before aborting it.
+            Return the maximal number of errors to report for any one
+            compilation before aborting it.
         </List>
   <SubSection>
     <Title/The Environment/
@@ -62,36 +53,30 @@
         <List>
           <Entry><<addToEnv(?+{PrintName} ?{Value})>>
           <Item>
-            <P.silent><!--**-->
-              Add a binding for a variable with the given print name
-              (specified as an atom <<PrintName>>), and bound to <<Value>>,
-              to the environment.
+            Add a binding for a variable with the given print name
+            (specified as an atom <<PrintName>>), and bound to <<Value>>,
+            to the environment.
           <Entry><<lookupInEnv(?+{PrintName} ??{Value})>>
           <Item>
-            <P.silent><!--**-->
-              Look up the binding for the variable with the given print name
-              (specified as an atom <<PrintName>>) in the environment and
-              bind <<Value>> to the value it's bound to.  If it does not exist,
-              report an error through the standard means (see below).
+            Look up the binding for the variable with the given print name
+            (specified as an atom <<PrintName>>) in the environment and
+            bind <<Value>> to the value it's bound to.  If it does not exist,
+            report an error through the standard means (see below).
           <Entry><<removeFromEnv(?+{PrintName})>>
           <Item>
-            <P.silent><!--**-->
-              Remove the binding for the variable with the given print name
-              (specified as an atom <<PrintName>>) from the environment if it
-              exists.
+            Remove the binding for the variable with the given print name
+            (specified as an atom <<PrintName>>) from the environment if it
+            exists.
           <Entry><<putEnv(?+{Env})>>
           <Item>
-            <P.silent><!--**-->
-              Replace the current environment by the one given by the record
-              <<Env>> mapping valid print names to values.
+            Replace the current environment by the one given by the record
+            <<Env>> mapping valid print names to values.
           <Entry><<mergeEnv(?+{Env})>>
           <Item>
-            <P.silent><!--**-->
-              Adjoin the given record to the current environment.
+            Adjoin the given record to the current environment.
           <Entry><<getEnv(??{Env})>>
           <Item>
-            <P.silent><!--**-->
-              Return the current environment as a record.
+            Return the current environment as a record.
         </List>
   <SubSection>
     <Title/Feeding Source Text/
@@ -99,27 +84,23 @@
         <List>
           <Entry><<feedVirtualString(?+{VS})>>
           <Item>
-            <P.silent><!--**-->
-              Evaluate the Oz source code given by the virtual string <<VS>>.
+            Evaluate the Oz source code given by the virtual string <<VS>>.
           <Entry><<feedVirtualString(?+{VS} ?+{Return})>>
           <Item>
-            <P.silent><!--**-->
-              Evaluate the Oz source code given by the virtual string <<VS>>,
-              returning the resulting value in <<Return.result>> (if the
-              <Code><Span class=ignore>\switch +</Span>expression</Code> switch
-              is set).
+            Evaluate the Oz source code given by the virtual string <<VS>>,
+            returning the resulting value in <<Return.result>> (if the
+            <Code><Span class=ignore>\switch +</Span>expression</Code> switch
+            is set).
           <Entry><<feedFile(?+{VS})>>
           <Item>
-            <P.silent><!--**-->
-              Evaluate the Oz source code contained in the file with
-              name <<VS>>.
+            Evaluate the Oz source code contained in the file with
+            name <<VS>>.
           <Entry><<feedFile(?+{VS} ?+{Return})>>
           <Item>
-            <P.silent><!--**-->
-              Evaluate the Oz source code contained in the file with
-              name <<VS>>, returning the resulting value in <<Return.result>>
-              (if the <Code><Span class=ignore>\switch +</Span>expression</Code
-              > switch is set).
+            Evaluate the Oz source code contained in the file with
+            name <<VS>>, returning the resulting value in <<Return.result>>
+            (if the <Code><Span class=ignore>\switch +</Span>expression</Code
+            > switch is set).
         </List>
   <SubSection>
     <Title/Synchronization/
@@ -127,9 +108,8 @@
         <List>
           <Entry><<ping(??{HereIAm})>>
           <Item>
-            <P.silent><!--**-->
-              Bind the variable <<HereIAm>> to <<unit>> on execution of this
-              query.  This allows to synchronize on the work of the compiler,
-              &eg;, to be informed when a compilation is finished.
+            Bind the variable <<HereIAm>> to <<unit>> on execution of this
+            query.  This allows to synchronize on the work of the compiler,
+            &eg;, to be informed when a compilation is finished.
         </List>
 </Section>

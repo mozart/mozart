@@ -40,8 +40,7 @@
       <List>
         <Entry><<`Compiler`>>
         <Item>
-          <P.silent><!--**-->
-            A reference to the Compiler Engine itself.
+          A reference to the Compiler Engine itself.
         </List>
     <P>
       Environments are first class; that is, they may be enquired,
