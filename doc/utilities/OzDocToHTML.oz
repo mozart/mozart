@@ -32,11 +32,11 @@ import
    Fontifier('class' noProgLang)
    Thumbnails('class')
    MathToGIF('class')
+   Property(get)
 export
    Translate
 define
    DOCTYPE_PUBLIC = '"-//W3C//DTD HTML 4.0 Transitional//EN"'
-   DEFAULTSTYLESHEET = 'http://www.ps.uni-sb.de/css/ozdoc.css'
 
    %%
    %% Note: order is important in the following list!
@@ -216,9 +216,7 @@ define
          BibNode: unit
       meth init(Mode SGML Args)
          FontifyMode <- Mode
-         StyleSheet <- case Args.stylesheet of "" then DEFAULTSTYLESHEET
-                       elseof SS then SS
-                       end
+         StyleSheet <- {Property.get 'ozdoc.stylesheet'}
          MyFontifier <- {New Fontifier.'class' init()}
          OutputDirectory <- Args.'out'
          {OS.system "mkdir -p "#@OutputDirectory _}   %--** OS.mkDir

@@ -22,7 +22,7 @@
 functor prop once
 import
    Property(get)
-   OS(tmpnam system unlink getEnv)
+   OS(tmpnam system unlink)
    Open(file text)
 export
    'class': FontifierClass
@@ -31,9 +31,8 @@ define
    NoProgLang = {NewName}
 
    local
-      FONTIFY = case {OS.getEnv 'OZ_DOC_PATH'} of false
-                then {Property.get 'oz.home'}#'/share/doc/fontify'
-                elseof X then X#'/utilities/fontify' end
+      %% -- PATH and OZDOC_ELISP_PATH have already been augmented
+      FONTIFY = 'fontify'
 
       fun {NotIsEOF C}
          C \= 4
@@ -68,8 +67,11 @@ define
          end
       end
 
-      proc {ReadFile FileName ?Res} File in
-         File = {New TextFile init(name: FileName flags: [read])}
+      proc {ReadFile FileName ?Res}
+         Dir = {Property.get 'ozdoc.src.dir'}
+         File
+      in
+         File = {New TextFile init(name: Dir#'/'#FileName flags: [read])}
          Res = {DoRead File}
          {File close()}
       end

@@ -22,13 +22,12 @@
 functor prop once
 import
    Property(get)
-   OS(system getEnv)
+   OS(system)
 export
    'class': ThumbnailsClass
 define
-   GIF2THUMBNAIL = case {OS.getEnv 'OZ_DOC_PATH'} of false
-                   then {Property.get 'oz.home'}#'/share/doc/gif2thumbnail'
-                   elseof X then X#'/utilities/gif2thumbnail' end
+   %% -- PATH has already been augmented
+   GIF2THUMBNAIL = 'gif2thumbnail'
 
    class ThumbnailsClass
       attr DirName: unit N: unit
