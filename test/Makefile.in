@@ -243,7 +243,7 @@ maintainer-clean-libtool:
 
 test-gtkcanvas: $(test_gtkcanvas_OBJECTS) $(test_gtkcanvas_DEPENDENCIES)
 	@rm -f test-gtkcanvas
-	$(LINK) $(test_gtkcanvas_LDFLAGS) $(test_gtkcanvas_OBJECTS) $(test_gtkcanvas_LDADD) @ART_LIBS@ $(LIBS)
+	$(LINK) $(test_gtkcanvas_LDFLAGS) $(test_gtkcanvas_OBJECTS) $(test_gtkcanvas_LDADD) @ART_LIBS_TEST@ $(LIBS)
 
 tags: TAGS
 
