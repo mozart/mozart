@@ -117,11 +117,11 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
 
   if (!valid(lPtr,rVal)) return FALSE;
 
-  if (scp==0 && am.isLocalSVar(lVar)) {
+  if (am.isLocalSVar(lVar)) {
     bindPerdioVar(lVar,lPtr,rVal);
     return TRUE;
   } else {
-    if (scp==0) am.checkSuspensionList(lVal,pc_std_unif);
+    am.checkSuspensionList(lVal,pc_std_unif);
     am.doBindAndTrail(lVal, lPtr,rVal);
     return TRUE;
   }

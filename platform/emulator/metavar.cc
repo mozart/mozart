@@ -63,8 +63,8 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 
     // start unification for meta-var and meta-var
     
-    Bool v_is_local = (scp==0 && am.isLocalSVar(this));
-    Bool t_is_local = (scp==0 && am.isLocalSVar(term));
+    Bool v_is_local = am.isLocalSVar(this);
+    Bool t_is_local = am.isLocalSVar(term);
     switch (v_is_local + 2 * t_is_local) {
     case TRUE + 2 * TRUE: // v and t are local
       if (heapNewer(vptr, tptr)) { // bind v to t
@@ -107,7 +107,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 	  setData(result);
 	  propagate(v, suspList, pc_cv_unif);
 	  term->propagate(t, term->suspList, pc_cv_unif);
-	  am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(vptr), this, term, scp);
+	  am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(vptr), this, term);
 	}
       } else {
 	propagate(v, suspList, pc_cv_unif);
@@ -129,7 +129,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 	  term->setData(result);
 	  propagate(v, suspList, pc_cv_unif);
 	  term->propagate(t, term->suspList, pc_cv_unif);
-	  am.doBindAndTrailAndIP(v, vptr, makeTaggedRef(tptr), term, this, scp);
+	  am.doBindAndTrailAndIP(v, vptr, makeTaggedRef(tptr), term, this);
 	}
       } else {
 	propagate(v, suspList, pc_cv_unif);
@@ -155,8 +155,8 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 	  propagate(v, suspList, pc_cv_unif);
 	  term->propagate(t, term->suspList, pc_cv_unif);
 	}
-	am.doBindAndTrailAndIP(v, vptr, makeTaggedRef(var_val), meta_var, this, scp);
-	am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(var_val), meta_var, term, scp);
+	am.doBindAndTrailAndIP(v, vptr, makeTaggedRef(var_val), meta_var, this);
+	am.doBindAndTrailAndIP(t, tptr, makeTaggedRef(var_val), meta_var, term);
       }
       break;
       
@@ -182,7 +182,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
     
     if (scp==0) propagate(v, suspList, pc_propagator);
 
-    if (scp==0 && am.isLocalSVar(this)) {
+    if (am.isLocalSVar(this)) {
       doBind(vptr, result);
     } else {
       am.doBindAndTrail(v, vptr, result);

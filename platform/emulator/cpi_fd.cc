@@ -250,8 +250,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
 	OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
 	am.doBindAndTrailAndIP(var, varPtr,
 			       makeTaggedRef(newtaggedboolvar),
-			       newboolvar, tagged2GenBoolVar(var),
-			       OZ_FALSE);
+			       newboolvar, tagged2GenBoolVar(var));
       }
       return OZ_TRUE;
     } else {
@@ -262,7 +261,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
 	*domPtr = dom;
 	am.doBindAndTrailAndIP(var, varPtr,
 			       makeTaggedRef(loctaggedfdvar),
-			       locfdvar, tagged2GenFDVar(var), OZ_FALSE);
+			       locfdvar, tagged2GenFDVar(var));
       } 
       return OZ_TRUE;
     }
