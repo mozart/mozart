@@ -278,6 +278,7 @@ in
       attr
 	 CurTotalTime: 0
 	 CurCopyTime:  0
+	 StartTime:    0
       feat
 	 status
 
@@ -293,16 +294,18 @@ in
       end
 
       meth start($)
-	 {System.statistics _}
+	 StartTime  <- {System.get time}
 	 {self.status start}
 	 {self.status getBreakFlag($)}
       end
 
       meth stop
-	 Statistics = {System.statistics}
+	 S = {System.get time}
+	 RunDelta  = S.run  - @StartTime.run
+	 CopyDelta = S.copy - @StartTime.copy
       in
-	 CurTotalTime <- @CurTotalTime + Statistics.r + Statistics.c
-	 CurCopyTime  <- @CurCopyTime  + Statistics.c
+	 CurTotalTime <- @CurTotalTime + RunDelta + CopyDelta
+	 CurCopyTime  <- @CurCopyTime  + CopyDelta
 	 {self.status update}
 	 {self.status setTime({FormatTime @CurTotalTime @CurCopyTime})}
       end
