@@ -47,20 +47,6 @@
 	  <<{Chunk.new ?+{R} ??{C}}>>
 	<Item>
 	  returns a new chunk with the same features and fields as&nbsp;?_{R}.
-
-	<Entry><Span class=index/<<ChunkSelectFeature>>/
-	  <Index class=tails/<<Chunk>><And><<selectFeature>>/
-	<Synopsis>
-	  <<{Chunk.selectFeature ?+{C} ?+{F} ?_{X}}>>
-	<Item>
-	  returns the field&nbsp;?_{X} of&nbsp;?_{C} at feature&nbsp;?_{F}.
-
-	<Entry><Span class=index/<<ChunkHasFeature>>/
-	  <Index class=tails/<<Chunk>><And><<hasFeature>>/
-	<Synopsis>
-	  <<{Chunk.hasFeature ?+{C} ?+{F} ??{B}}>>
-	<Item>
-	  tests whether ?_{C} has feature&nbsp;?_{F}.
       </List>
 
   <Section id="section.chunks.arrays">
