@@ -119,6 +119,9 @@ SPAN.BUILTIN      { color: #DA70D6; }
     <xsl:with-param name="VERSION" select="''"/>
   </xsl:call-template>
   <xsl:call-template name="PREBUILT">
+    <xsl:with-param name="VERSION" select="'0.7d'"/>
+  </xsl:call-template>
+  <xsl:call-template name="PREBUILT">
     <xsl:with-param name="VERSION" select="'0.7c'"/>
   </xsl:call-template>
   <xsl:call-template name="PREBUILT">
