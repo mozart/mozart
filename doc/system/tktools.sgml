@@ -487,6 +487,7 @@ tkInit(parent:       ?+{WidgetO}
     <index class=module/TkTools<and>resolveImages/
     
     <p>
+    <<TkTools.resolveImages>> is deprecated.
     Please use <<TkTools.images>> instead.
 
 </Section>
