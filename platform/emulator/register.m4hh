@@ -462,7 +462,8 @@ Case(SETVOID)
                  DEREF(term,termPtr,tag);
 
                  if(isAnyVar(term)) {
-                   LTuple *ltuple = new LTuple(Reg1(reg2),e->currentUVarPrototype);
+                   LTuple *ltuple = new LTuple(Reg1(reg2),
+                                               e->currentUVarPrototype);
 
                    if (isCVar(term) == OK) {
                      if (tagged2CVar(term)->unifyOutline(termPtr, term, NULL,
@@ -513,9 +514,9 @@ Case(SETVOID)
                  if(isAnyVar(term)) {
                    LTuple *ltuple = new LTuple();
                    sPointer = ltuple->getRef();
-                   SetWriteMode;
                    if (isCVar(term)) {
                      ltuple->initArgs(e->currentUVarPrototype);
+                     SetReadMode;
 
                      if(tagged2CVar(term)
                         ->unifyOutline(termPtr, term, NULL,
@@ -525,6 +526,7 @@ Case(SETVOID)
                      }
                      term = *termPtr;  // Note: 'term' may be disposed
                    } else {
+                     SetWriteMode;
                      e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),
                                      NOFLATGUARD);
                      DISPATCH(2);
