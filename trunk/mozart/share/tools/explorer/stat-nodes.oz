@@ -25,10 +25,6 @@ local
 	 |{GetStat Nr D MDT ?MDO DNT ?DNO SNT ?SNO FNT ?FNO UNT ?UNO}
       end
    end
-
-   fun {GetDepth O N}
-      case O==False then N else {GetDepth O.mom N+1} end
-   end
       
 in
 
@@ -39,7 +35,7 @@ in
 		       in
 			  stat(shape:     choose({GetStat @kids 1 1 ?D 1
 						  ?DN 0 ?SN 0 ?FN 0 ?UN})
-			       start:     {GetDepth self.mom 1}
+			       start:     {self.mom findDepth(1 $)}
 			       depth:     D
 			       choose:    DN
 			       succeeded: SN
@@ -51,7 +47,7 @@ in
 		    class $
 		       meth stat($)
 			  stat(shape:     failed
-			       start:     {GetDepth self.mom 1}
+			       start:     {self.mom findDepth(1 $)}
 			       depth:     1
 			       choose:    0
 			       succeeded: 0
@@ -63,7 +59,7 @@ in
 		    class $
 		       meth stat($)
 			  stat(shape:     succeeded
-			       start:     {GetDepth self.mom 1}
+			       start:     {self.mom findDepth(1 $)}
 			       depth:     1
 			       choose:    0
 			       succeeded: 1
@@ -75,13 +71,14 @@ in
 		    class $
 		       meth stat($)
 			  stat(shape:     blocked
-			       start:     {GetDepth self.mom 1}
+			       start:     {self.mom findDepth(1 $)}
 			       depth:     1
 			       choose:    0
 			       succeeded: 0
 			       failed:    0
 			       blocked:   1)
 		       end
-		    end)
+		    end
+		 sentinel: EmptyClass)
    
 end
