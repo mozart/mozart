@@ -65,15 +65,7 @@
 #include <strings.h>
 #include <netdb.h>
 
-#ifdef USE_ZLIB
 #include "zlib.h"
-#else
-#define gzFile              int
-#define gzdopen(fd,flags)   fd
-#define gzclose(fd)         close(fd)
-#define gzread(fd,buf,len)  read(fd,buf,len) 
-#define gzwrite(fd,buf,len) write(fd,buf,len) 
-#endif
 
 
 // ATTENTION
@@ -98,31 +90,47 @@ const char SYSLETHEADER = 1;
 class ByteSource {
 public:
   virtual OZ_Return getBytes(BYTE*,int&,int&) = 0;
-  virtual OZ_Return getTerm(OZ_Term, const char *compname);
+  virtual char *getHeader() = 0;
+  OZ_Return getTerm(OZ_Term, const char *compname,Bool);
   OZ_Return makeByteStream(ByteStream*&);
 };
 
 class ByteSourceFD : public ByteSource {
 private:
   gzFile fd;
-
+  char *header;
 public:
-  virtual ~ByteSourceFD() { gzclose(fd); }
+  char *getHeader() {return header; }
+  virtual ~ByteSourceFD() { free(header); gzclose(fd); }
   OZ_Return getBytes(BYTE*,int&,int&);
 
   ByteSourceFD(int i)
   { 
+    int bufsz = 10;
+    char *buf = (char *) malloc(bufsz);
+    int j = 0;
     while(1) {
-      char c;
-      int ret = read(i,&c,1);
-      if (ret<=0 || c==SYSLETHEADER) break;
+      if (j>=bufsz) {
+	bufsz *= 2;
+	buf = (char *) realloc(buf,bufsz);
+      }
+      int ret = read(i,&buf[j],1);
+      if (ret<=0 || buf[j]==SYSLETHEADER) {
+	buf[j] = 0; 
+	break; 
+      }
+
       /* for backward compatibility: */
-      if (c==PERDIOMAGICSTART) {
+      if (buf[j]==PERDIOMAGICSTART) {
 	lseek(i,-1,SEEK_CUR);
+	buf[j] = 0;
 	break;
       }
+      j++;
     }
 
+    header = ozstrdup(buf);
+    free(buf);
     fd = gzdopen(i,"rb"); 
   }
 };
@@ -133,6 +141,7 @@ private:
   OZ_Datum dat;
   int      idx;
 public:
+  char *getHeader() {return ""; }
   ByteSourceDatum(OZ_Datum d):dat(d),idx(0) {}
   virtual ~ByteSourceDatum() { free(dat.data); }
   OZ_Return getBytes(BYTE*,int&,int&);
@@ -144,9 +153,9 @@ public:
 
 class ByteSink {
 public:
-  virtual OZ_Return putTerm(OZ_Term,char*,Bool text);
+  OZ_Return putTerm(OZ_Term,char*,char*,Bool text);
   virtual OZ_Return putBytes(BYTE*,int) = 0;
-  virtual OZ_Return allocateBytes(int) = 0;
+  virtual OZ_Return allocateBytes(int,char*) = 0;
 };
 
 
@@ -162,7 +171,7 @@ public:
     if (zfd!=0) { gzclose(zfd); return; }
     if (fd!=-1) close(fd);
   }
-  OZ_Return allocateBytes(int);
+  OZ_Return allocateBytes(int,char*);
   OZ_Return putBytes(BYTE*,int);
 };
 
@@ -172,7 +181,7 @@ private:
 public:
   OZ_Datum dat;
   ByteSinkDatum():idx(0){ dat.size=0; dat.data=0; }
-  OZ_Return allocateBytes(int);
+  OZ_Return allocateBytes(int,char*);
   OZ_Return putBytes(BYTE*,int);
 };
 
@@ -194,7 +203,7 @@ OZ_Return raiseGeneric(char *msg, OZ_Term arg)
 
 
 OZ_Return
-ByteSink::putTerm(OZ_Term in, char *filename, Bool textmode)
+ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
 {
   ByteStream* bs=bufferManager->getByteStream();
   if (textmode) 
@@ -207,7 +216,7 @@ ByteSink::putTerm(OZ_Term in, char *filename, Bool textmode)
   bs->incPosAfterWrite(tcpHeaderSize);
 
   int total=bs->calcTotLen();
-  allocateBytes(total);
+  allocateBytes(total,header);
   while (total) {
     Assert(total>0);
     int len=bs->getWriteLen();
@@ -240,7 +249,7 @@ ByteSink::putTerm(OZ_Term in, char *filename, Bool textmode)
 // ===================================================================
 
 OZ_Return
-ByteSinkFile::allocateBytes(int n)
+ByteSinkFile::allocateBytes(int n,char *header)
 {
   fd = strcmp(filename,"-")==0 ? STDOUT_FILENO 
                                : open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
@@ -250,6 +259,16 @@ ByteSinkFile::allocateBytes(int n)
 				  OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
   
   /* write syslet header uncompressed */
+  int len = strlen(header);
+
+
+ loop:
+  int written = write(fd,header,len);
+  if (written < len) {
+    len -= written;
+    header += written;
+    goto loop;
+  }
   write(fd,&SYSLETHEADER,1);
 
   /* gzdopen allways spits out the gzip header */
@@ -283,7 +302,7 @@ ByteSinkFile::putBytes(BYTE*pos,int len)
 // ===================================================================
 
 OZ_Return
-ByteSinkDatum::allocateBytes(int n)
+ByteSinkDatum::allocateBytes(int n, char *ignored)
 {
   dat.size = n;
   dat.data = (char*) malloc(n);
@@ -306,7 +325,7 @@ OZ_Return
 saveDatum(OZ_Term in,OZ_Datum& dat)
 {
   ByteSinkDatum sink;
-  OZ_Return result = sink.putTerm(in,"filename unknown",NO);
+  OZ_Return result = sink.putTerm(in,"filename unknown","",NO);
   if (result==PROCEED) {
     dat=sink.dat;
   } else {
@@ -316,17 +335,18 @@ saveDatum(OZ_Term in,OZ_Datum& dat)
 }
 
 static
-OZ_Return saveIt(OZ_Term val, char *filename, int compressionlevel, Bool textmode)
+OZ_Return saveIt(OZ_Term val, char *filename, char *header,
+		 int compressionlevel, Bool textmode)
 {
-#ifndef USE_ZLIB
-  if (compressionlevel>0) {
-    return raiseGeneric("Save: emulator does not support gzipped pickles",
-			oz_cons(OZ_pairA("File",oz_atom(filename)),
-				oz_nil()));
+  if (compressionlevel < 0 || compressionlevel > 9) {
+    return raiseGeneric("Save: compression level must be between 0 and 9",
+			oz_list(OZ_pairA("File",oz_atom(filename)),
+				OZ_pairAI("Compression level",compressionlevel),
+				0));
   }
-#endif
+
   ByteSinkFile sink(filename,compressionlevel);
-  OZ_Return ret = sink.putTerm(val,filename,textmode);
+  OZ_Return ret = sink.putTerm(val,filename,header,textmode);
   if (ret!=PROCEED)
     unlink(filename);
   return ret;
@@ -336,16 +356,20 @@ OZ_BI_define(BIsave,2,0)
 {
   OZ_declareIN(0,in);
   OZ_declareVirtualStringIN(1,filename);
-  return saveIt(in,filename,0,NO);
+  return saveIt(in,filename,"",0,NO);
 } OZ_BI_end
 
 
-OZ_BI_define(BIgzsave,3,0)
+OZ_BI_define(BIsaveWithHeader,4,0)
 {
-  OZ_declareIN(0,in);
+  OZ_declareIN(0,value);
   OZ_declareVirtualStringIN(1,filename);
-  oz_declareIntIN(2,compressionlevel);
-  return saveIt(in,filename,compressionlevel,NO);
+  filename = ozstrdup(filename);
+  OZ_declareVirtualStringIN(2,header);
+  oz_declareIntIN(3,compressionlevel);
+  OZ_Return ret = saveIt(value,filename,header,compressionlevel,NO);
+  free(filename);
+  return ret;
 } OZ_BI_end
 
 
@@ -353,13 +377,14 @@ OZ_BI_define(BIgzsave,3,0)
 OZ_Return loadFD(int fd, OZ_Term out, const char *compname);
 Bool pickle2text()
 {
-  OZ_Term res =   oz_newVariable();
-  OZ_Return aux = loadFD(STDIN_FILENO,res,"-");
+  OZ_Term res    =   oz_newVariable();
+  OZ_Term header =   oz_newVariable();
+  OZ_Return aux = loadFD(STDIN_FILENO,oz_pair2(header,res),"-");
   if (aux==RAISE) {
     fprintf(stderr,"Exception: %s\n",OZ_toC(am.getExceptionValue(),10,100));
     return NO;
   } 
-  aux = saveIt(res,"-",0,OK);
+  aux = saveIt(res,"-",OZ_stringToC(header,0),0,OK);
   if (aux==RAISE) {
     fprintf(stderr,"Exception: %s\n",OZ_toC(am.getExceptionValue(),10,100));
     return NO;
@@ -389,7 +414,7 @@ OZ_BI_define(BIexport,1,0)
 // ===================================================================
 
 OZ_Return
-ByteSource::getTerm(OZ_Term out, const char *compname)
+ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
 {
   ByteStream * stream;
    
@@ -406,8 +431,10 @@ ByteSource::getTerm(OZ_Term out, const char *compname)
   if(stream->skipHeader() && unmarshal_SPEC(stream,versiongot,val)){
     stream->afterInterpret();    
     bufferManager->dumpByteStream(stream);
-    delete versiongot;    
-    return oz_unify(val,out);} // mm_u
+    delete versiongot;
+    return wantHeader ? oz_unify(out,oz_pair2(OZ_string(getHeader()),val)) // mm_u
+                      : oz_unify(out,val);
+  }
       
   bufferManager->dumpByteStream(stream);
   if (versiongot) {
@@ -485,27 +512,16 @@ ByteSourceDatum::getBytes(BYTE*pos,int&max,int&got)
   return PROCEED;
 }
 
-OZ_Return loadDatum(OZ_Datum dat,OZ_Term out, const char *compname)
+OZ_Return loadDatum(OZ_Datum dat,OZ_Term out)
 {
   ByteSourceDatum src(dat);
-  return src.getTerm(out,compname);
+  return src.getTerm(out,"filename unknown",NO);
 }
 
 OZ_Return loadFD(int fd, OZ_Term out, const char *compname)
 {
   ByteSourceFD src(fd);
-  return src.getTerm(out,compname);
-}
-
-OZ_Return loadFile(char *filename,OZ_Term out)
-{
-  int fd = strcmp(filename,"-")==0 ? STDIN_FILENO : open(filename,O_RDONLY);
-  if (fd < 0) {
-    return raiseGeneric("Open failed during load",
-			oz_mklist(OZ_pairA("File",oz_atom(filename)),
-				  OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
-  }
-  return loadFD(fd,out,filename);
+  return src.getTerm(out,compname,OK);
 }
 
 
@@ -798,6 +814,21 @@ OZ_BI_define(BIurl_open,1,1)
 OZ_BI_define(BIurl_load,1,1)
 {
   OZ_declareVirtualStringIN(0,url);
+  OZ_Term aux = 0;
+  OZ_Return ret = URL_get(url,aux,URL_LOAD);
+  if (aux != 0) {
+    OZ_Term aux2 = oz_newVariable();
+    OZ_Return unifyret = OZ_unify(oz_pair2(oz_newVariable(),aux2),aux);
+    Assert(unifyret==PROCEED);
+    OZ_result(aux2);
+  }
+
+  return ret;
+} OZ_BI_end
+
+OZ_BI_define(BIloadWithHeader,1,1)
+{
+  OZ_declareVirtualStringIN(0,url);
   return URL_get(url,OZ_out(0),URL_LOAD);
 } OZ_BI_end
 
@@ -819,7 +850,7 @@ OZ_Return OZ_valueToDatum(OZ_Term t, OZ_Datum* d)
 
 OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
 {
-  return loadDatum(d,t,"filename unknown");
+  return loadDatum(d,t);
 }
 
 
