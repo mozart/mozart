@@ -753,6 +753,11 @@ TaggedRef deref(TaggedRef &tr, TaggedRef * &ptr, TypeOfTerm &tag)
   return tr1;
 }
 
+#define OZ_getCArgDeref(N, V, VPTR, VTAG) \
+  OZ_Term V = OZ_getCArg(N); \
+  DEREF(V, VPTR, VTAG);
+
+
 // ---------------------------------------------------------------------------
 // Binding
 // ---------------------------------------------------------------------------
