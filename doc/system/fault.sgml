@@ -93,8 +93,14 @@ A watcher is invoked as soon as the site detects a fault.
 then three items of information are made available:
 <list>
 <item><<Entity>>: the entity whose operation does not succeed.
-<item><<FStates>>: the fault states that are currently active.
-This is a subset of the states that are being observed.
+<item><<ActualFStates>>: the fault states that are currently active.
+This is a subset of the states that the entity is set up to detect.
+For objects, cells, and locks,
+the fault states <<tempFail(info:I)>> and <<permFail(info:I)>>
+are possible, where <<I>> is in {<<state>>, <<owner>>}.
+This tells whether the fault is due
+to a lost state pointer (<<state>>)
+or a crashed owner (<<owner>>).
 <item><<OP>>: the operation that is attempted but does not succeed.
 </list>
 <P>The system can be configured (see below) so that this information
@@ -123,7 +129,7 @@ at that level.
 All <<disable>> and <<deInstall>>
 operations succeed if nothing was disabled or deinstalled
 at that level.
-At system startup, it is as if
+The system starts up as if
 <<{Fault.defaultEnable [tempFail permFail] _}>>
 was executed successfully.
 
@@ -153,7 +159,8 @@ The handler <<{HandlerProc Entity AFStates OP}>> is called
 if a fault is detected when an operation is attempted on the entity.
 A limitation of the current release is that handlers
 cannot be installed at the <<global>> level.
-Another limitation of the current release is that
+A modification of the current release with respect to the
+specification is that
 handlers installed on variables always retry
 the operation after they return.
 
@@ -184,24 +191,34 @@ To do another enable or install,
 first a disable or deinstall must be done.
 
 
-<section><title/Limitations of the current release/
+<section><title/Limitations and modifications/
 
-<P>The current release has the following limitations which
-will be removed in future releases:
+<P>The current release has the following limitations
+and modifications with respect to the specification.
+A <EM>limitation</EM> is an operation that is specified
+but not possible in the current release.
+A <EM>modification</EM> is an operation that is specified
+but behaves differently in the current release.
+The limitations are:
 <list>
 <item>If an exception is raised or a handler or watcher
-is invoked for an object, then the argument <<Entity>>
+is invoked for an <EM>object</EM>, then the argument <<Entity>>
 is undefined.
 <item>If an exception is raised or a handler is invoked
-for an object, then the attempted object operation cannot
-be retried.
+for an <EM>object</EM>,
+then the attempted object operation cannot be retried.
 <item>A handler cannot be installed at the <<global>> level,
 i.e., the call <<{Fault.install _ global _ _}>> is undefined.
 If an attempt is made to install a <<global>> handler,
 then a <<notImplemented>> exception is given.
-<item>A handler installed on a variable will retry
-the operation after it returns.
 </list>
+The modifications are:
+<list>
+<item>A handler installed on a <EM>variable</EM> will retry
+the operation (i.e., bind or wait) after it returns.
+</list>
+These limitations and modifications
+will be removed in future releases.
 
 
 <!--
