@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '04.27.97'
+Version                = '04.28.97'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -24,7 +24,6 @@ NameOfBenni            = 'Benjamin Lorenz'
 EmailOfBenni           = 'lorenz@ps.uni-sb.de'
 
 InitStatus             = TitleName # ' initialized'
-ResetStatus            = 'Resetting Ozcar...'
 
 IgnoreFeeds            = 'Ignore Queries'
 StartNewThreads        = 'Start Threads'
@@ -199,6 +198,7 @@ TimeoutToBlock         = 470
 TimeoutToUpdateEnv     = 430
 TimeoutToUpdateScroll  = TimeoutToUpdateEnv
 TimeoutToSwitch        = 260
+TimeoutToStatus        = 240
 
 HelpEvent              = '<3>'
 
