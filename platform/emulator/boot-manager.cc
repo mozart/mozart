@@ -44,60 +44,43 @@
 TaggedRef builtinRecord;
 
 
-
-
 #ifdef MODULES_LINK_STATIC
-// Declarations for all modules than can be loaded dynamically
 
-#include "modWif.dcl"
-#include "modFDP.dcl"
-#include "modSchedule.dcl"
-#include "modParser.dcl"
-#include "modFSP.dcl"
+#include "modWif-if.cc"
+#include "modFDP-if.cc"
+#include "modSchedule-if.cc"
+#include "modParser-if.cc"
+#include "modFSP-if.cc"
+#include "modCompilerSupport-if.cc"
+#include "modBrowser-if.cc"
+#include "modDebug-if.cc"
 
-static OZ_C_proc_interface mod_int_Wif[] = {
-#include "modWif.tbl"
- {0,0,0,0}
-};
+#endif
 
-static OZ_C_proc_interface mod_int_FDP[] = {
-#include "modFDP.tbl"
- {0,0,0,0}
-};
 
-static OZ_C_proc_interface mod_int_Schedule[] = {
-#include "modSchedule.tbl"
- {0,0,0,0}
-};
+#include "modProperty-if.cc"
+#include "modOS-if.cc"
+#include "modPickle-if.cc"
+#include "modURL-if.cc"
+#include "modPID-if.cc"
+#include "modFDB-if.cc"
+#include "modFSB-if.cc"
+#include "modSystem-if.cc"
+#include "modCTB-if.cc"
+#include "modFinalize-if.cc"
+#include "modProfile-if.cc"
+#include "modForeign-if.cc"
+#include "modFault-if.cc"
+#include "modDistribution-if.cc"
 
-static OZ_C_proc_interface mod_int_FSP[] = {
-#include "modFSP.tbl"
- {0,0,0,0}
-};
 
-static OZ_C_proc_interface mod_int_Parser[] = {
-#include "modParser.tbl"
- {0,0,0,0}
-};
+#ifdef MISC_BUILTINS
+#include "modMisc-if.cc"
+#endif
 
-#include "modCompilerSupport.dcl"
-static OZ_C_proc_interface mod_int_CompilerSupport[] = {
-#include "modCompilerSupport.tbl"
- {0,0,0,0}
-};
 
-#include "modBrowser.dcl"
-static OZ_C_proc_interface mod_int_Browser[] = {
-#include "modBrowser.tbl"
- {0,0,0,0}
-};
-
-#include "modDebug.dcl"
-static OZ_C_proc_interface mod_int_Debug[] = {
-#include "modDebug.tbl"
- {0,0,0,0}
-};
-
+#ifdef VIRTUALSITES
+#include "modVirtualSite-if.cc"
 #endif
 
 
@@ -105,95 +88,6 @@ struct ModuleEntry {
   const char *          name;
   OZ_C_proc_interface * interface;
 };
-
-
-#include "modProperty.dcl"
-#include "modOS.dcl"
-#include "modPickle.dcl"
-#include "modURL.dcl"
-#include "modPID.dcl"
-#include "modFDB.dcl"
-#include "modFSB.dcl"
-#include "modSystem.dcl"
-#include "modCTB.dcl"
-#include "modFinalize.dcl"
-#include "modProfile.dcl"
-#include "modForeign.dcl"
-#include "modFault.dcl"
-#include "modDistribution.dcl"
-
-static OZ_C_proc_interface mod_int_Property[] = {
-#include "modProperty.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_OS[] = {
-#include "modOS.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_Pickle[] = {
-#include "modPickle.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_URL[] = {
-#include "modURL.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_PID[] = {
-#include "modPID.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_FDB[] = {
-#include "modFDB.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_FSB[] = {
-#include "modFSB.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_System[] = {
-#include "modSystem.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_CTB[] = {
-#include "modCTB.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_Finalize[] = {
-#include "modFinalize.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_Profile[] = {
-#include "modProfile.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_Foreign[] = {
-#include "modForeign.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_Fault[] = {
-#include "modFault.tbl"
- {0,0,0,0}
-};
-static OZ_C_proc_interface mod_int_Distribution[] = {
-#include "modDistribution.tbl"
- {0,0,0,0}
-};
-
-#ifdef MISC_BUILTINS
-#include "modMisc.dcl"
-static OZ_C_proc_interface mod_int_Misc[] = {
-#include "modMisc.tbl"
- {0,0,0,0}
-};
-#endif
-
-#ifdef VIRTUALSITES
-#include "modVirtualSite.dcl"
-static OZ_C_proc_interface mod_int_VirtualSite[] = {
-#include "modVirtualSite.tbl"
- {0,0,0,0}
-};
-#endif
 
 
 static ModuleEntry module_table[] = {
@@ -361,13 +255,7 @@ OZ_C_proc_proto(BIstartTmp);
 OZ_C_proc_proto(BIportWait);
 
 
-#include "modBuiltins.dcl"
-
-static OZ_C_proc_interface mod_int_Builtins[] = {
-#include "modBuiltins.tbl"
- {0,0,0,0}
-};
-
+#include "modBuiltins-if.cc"
 
 void initBuiltins() {
   builtinRecord = ozInterfaceToRecord(mod_int_Builtins, NO);

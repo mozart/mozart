@@ -33,11 +33,6 @@
 
 #ifndef MODULES_LINK_STATIC
 
-#include "../modFDP.dcl"
-
-OZ_C_proc_interface mod_int_FDP[] = {
-#include "../modFDP.tbl"
- {0,0,0,0}
-};
+#include "../modFDP-if.cc"
 
 #endif

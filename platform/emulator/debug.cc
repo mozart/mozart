@@ -301,10 +301,6 @@ OZ_BI_define(BIprocedureCoord, 1,1)
 
 #ifndef MODULES_LINK_STATIC
 
-#include "modDebug.dcl"
-OZ_C_proc_interface mod_int_Debug[] = {
-#include "modDebug.tbl"
- {0,0,0,0}
-};
+#include "modDebug-if.cc"
 
 #endif

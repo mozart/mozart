@@ -33,12 +33,7 @@
 
 #ifndef MODULES_LINK_STATIC
 
-#include "modParser.dcl"
-
-OZ_C_proc_interface mod_int_Parser[] = {
-#include "modParser.tbl"
- {0,0,0,0}
-};
+#include "modParser-if.cc"
 
 #endif
 
