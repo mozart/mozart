@@ -1665,8 +1665,7 @@ void AM::gc(int msgLevel)
   //  ProfileCode(ozstat.initCount());
 
   { /* initialize X regs; this IS necessary ! */
-    int sz = getRefsArraySize(xRegs);
-    for (int j=0; j < sz; j++) {
+    for (int j=0; j < NumberOfXRegisters; j++) {
       xRegs[j] = makeTaggedNULL();
     }
   }
