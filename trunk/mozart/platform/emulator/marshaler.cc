@@ -247,61 +247,25 @@ GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
 /*   SECTION 9: term marshaling routines                               */
 /* *********************************************************************/
 
-int debugRefs = 0;
-
-void marshalRef(int n, MsgBuffer *bs, TypeOfTerm tag)
-{
-  if (debugRefs && tag!=REF) {
-    Assert(0); // not yet implemented
-    marshalDIF(bs,DIF_REF_DEBUG);
-    marshalNumber(n,bs);
-    marshalNumber(tag,bs);
-  } else {
-    marshalDIF(bs,DIF_REF);
-    marshalTermRef(n,bs);
-  }
-}
-
-inline Bool checkCycle(OZ_Term t, MsgBuffer *bs, TypeOfTerm tag)
-{
-  if ((t&tagMask)==GCTAG) {
-    marshalRef(t>>tagSize,bs,tag);
-    return OK;
-  }
-  return NO;
-}
-
-inline void trailCycle(OZ_Term *t, MsgBuffer *bs)
-{
-  int counter = refTrail->trail(t);
-  marshalTermDef(counter,bs);
-  *t = ((counter)<<tagSize)|GCTAG;
-}
-
-inline Bool checkCycle(LTuple *l, MsgBuffer *bs)
+inline Bool checkCycle(void *l, MsgBuffer *bs)
 {
   int n = refTrail->find(l);
   if (n>=0) {
-    marshalRef(n,bs,LTUPLE);
+    marshalDIF(bs,DIF_REF);
+    marshalTermRef(n,bs);
     return OK;
   }
   return NO;
 }
 
-inline void trailCycle(LTuple *l, MsgBuffer *bs)
+inline void trailCycle(void *l, MsgBuffer *bs)
 {
   int counter = refTrail->trail(l);
   marshalTermDef(counter,bs);
 }
 
-void trailCycleOutLine(LTuple *l, MsgBuffer *bs){
-  trailCycle(l, bs);}
-void trailCycleOutLine(OZ_Term *l, MsgBuffer *bs){
-  trailCycle(l, bs);}
-Bool checkCycleOutLine(LTuple *l, MsgBuffer *bs){
-  return checkCycle(l, bs);}
-Bool checkCycleOutLine(OZ_Term t, MsgBuffer *bs, TypeOfTerm tag){
-  return checkCycle(t, bs, tag);}
+void trailCycleOutLine(void *l, MsgBuffer *bs){ trailCycle(l, bs);}
+Bool checkCycleOutLine(void *l, MsgBuffer *bs){ return checkCycle(l, bs);}
 
 void marshalSRecord(SRecord *sr, MsgBuffer *bs)
 {
@@ -330,7 +294,7 @@ void marshalClass(ObjectClass *cl, MsgBuffer *bs)
 {
   marshalDIF(bs,DIF_CLASS);
   GName *gn = globalizeConst(cl,bs);
-  trailCycle(cl->getCycleRef(),bs);
+  trailCycle(cl,bs);
   marshalGName(gn,bs);
   marshalSRecord(cl->getFeatures(),bs);
 }
@@ -349,6 +313,7 @@ void marshalNoGood(TaggedRef term, MsgBuffer *bs, Bool trail)
 /*   SECTION 10: ConstTerm and Term marshaling                          */
 /* *********************************************************************/
 
+static
 void marshalConst(ConstTerm *t, MsgBuffer *bs)
 {
   switch (t->getType()) {
@@ -367,7 +332,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
 
       marshalDIF(bs,DIF_DICT);
       int size = d->getSize();
-      trailCycle(d->getCycleRef(),bs);
+      trailCycle(d,bs);
       marshalNumber(size,bs);
       
       int i = d->getFirst();
@@ -388,7 +353,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
 	goto bomb;
 
       marshalDIF(bs,DIF_BUILTIN);
-      trailCycle(t->getCycleRef(),bs);
+      trailCycle(t,bs);
 
       marshalString(bi->getPrintName(),bs);
       return;
@@ -398,7 +363,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       SChunk *ch=(SChunk *) t;
       GName *gname=globalizeConst(ch,bs);
       marshalDIF(bs,DIF_CHUNK);
-      trailCycle(t->getCycleRef(),bs);
+      trailCycle(t,bs);
       marshalGName(gname,bs);
       marshalTerm(ch->getValue(),bs);
       return;
@@ -422,7 +387,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       GName *gname = globalizeConst(pp,bs);
 
       marshalDIF(bs,DIF_PROC);
-      trailCycle(t->getCycleRef(),bs);
+      trailCycle(t,bs);
 
       marshalGName(gname,bs);
       marshalTerm(pp->getName(),bs);
@@ -454,7 +419,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     if (check) { CheckD0Compatibility; }		\
     if (!bs->globalize()) return;			\
     if (marshalTertiary((Tertiary *) t,tag,bs)) return;	\
-    trailCycle(t->getCycleRef(),bs);			\
+    trailCycle(t,bs);					\
     return;
 
   case Co_Lock: HandleTert("lock",DIF_LOCK,OK); 
@@ -471,7 +436,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
 
 bomb:
   marshalNoGood(makeTaggedConst(t),bs,true);
-  trailCycle(t->getCycleRef(),bs); 
+  trailCycle(t,bs); 
 }
 
 void marshalTerm(OZ_Term t, MsgBuffer *bs)
@@ -500,7 +465,7 @@ loop:
   case LITERAL:
     {
       Literal *lit = tagged2Literal(t);
-      if (checkCycle(*lit->getCycleRef(),bs,tTag)) goto exit;
+      if (checkCycle(lit,bs)) goto exit;
 
       if (!bs->visit(t))
 	break;
@@ -522,7 +487,7 @@ loop:
 
       marshalDIF(bs,litTag);
       const char *name = lit->getPrintName();
-      trailCycle(lit->getCycleRef(),bs);
+      trailCycle(lit,bs);
       marshalString(name,bs);
       marshalGName(gname,bs);
       break;
@@ -549,18 +514,18 @@ loop:
     {
       depth++; Comment((bs,"("));
       SRecord *rec = tagged2SRecord(t);
-      if (checkCycle(*rec->getCycleAddr(),bs,tTag)) goto exit;
+      if (checkCycle(rec,bs)) goto exit;
       if (!bs->visit(t))
 	break;
       TaggedRef label = rec->getLabel();
 
       if (rec->isTuple()) {
 	marshalDIF(bs,DIF_TUPLE);
-	trailCycle(rec->getCycleAddr(),bs);
+	trailCycle(rec,bs);
 	marshalNumber(rec->getTupleWidth(),bs);
       } else {
 	marshalDIF(bs,DIF_RECORD);
-	trailCycle(rec->getCycleAddr(),bs);
+	trailCycle(rec,bs);
 	marshalTerm(rec->getArityList(),bs);
       }
       marshalTerm(label,bs);
@@ -576,9 +541,7 @@ loop:
 
   case EXT:
     {
-      // hack alert using vtable to trail cycle
-      if (!checkCycle(*((TaggedRef*)oz_tagged2Extension(t)),bs,tTag) &&
-	  bs->visit(t)) {
+      if (!checkCycle(oz_tagged2Extension(t),bs) && bs->visit(t)) {
 	marshalDIF(bs,DIF_EXTENSION);
 	marshalNumber(oz_tagged2Extension(t)->getIdV(),bs);
 	if (!oz_tagged2Extension(t)->marshalV(bs)) {
@@ -589,8 +552,7 @@ loop:
     }
   case OZCONST:
     {
-      if (!checkCycle(*(tagged2Const(t)->getCycleRef()),bs,tTag) &&
-	  bs->visit(t)) {
+      if (!checkCycle(tagged2Const(t),bs) && bs->visit(t)) {
 	Comment((bs,"("));
 	marshalConst(tagged2Const(t),bs);
 	Comment((bs,")"));
@@ -1021,9 +983,16 @@ loop:
 /*   SECTION 16: initialization                                       */
 /* *********************************************************************/
 
-void initMarshaler(){
+void initMarshaler()
+{
   refTable = new RefTable();
   refTrail = new RefTrail();
+
+  /* do some consistency checks: whenever one of the 
+   * following tests fails: increase PERDIOMINOR
+   */
+  Assert(OZERROR == 225);  /* new instruction(s) added? */
+  Assert(DIF_LAST == 39);  /* new dif(s) added? */
 }
 
 
