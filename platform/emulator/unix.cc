@@ -655,7 +655,9 @@ OZ_BI_iodefine(unix_getCWD,0,1)
 {
   const int SIZE=256;
   char buf[SIZE];
+ again:
   if (getcwd(buf,SIZE)) OZ_RETURN_ATOM(buf);
+  if (errno == EINTR) goto again;
   if (errno != ERANGE) RETURN_UNIX_ERROR("getcwd");
 
   int size=SIZE+SIZE;
