@@ -534,7 +534,7 @@ public:
 
 
   Bool hasCatchFlag() { return (state.flags & T_catch); }
-  void setCatchFlag() { state.flags |= T_catch; }
+  void setCatchFlag() { state.flags = state.flags|T_catch; }
   void pushCatch() {
     setCatchFlag();
     item.threadBody->taskStack.pushCatch();
