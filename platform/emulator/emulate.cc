@@ -203,7 +203,7 @@ Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
     if(!isAbstraction(pred)) goto bombGenCall;
 
     abstr = tagged2Abstraction(pred);
-    if (abstr->isProxy() || abstr->getArity() != getWidth(gci->arity))
+    if (abstr->getArity() != getWidth(gci->arity))
       goto bombGenCall;
   }
 
@@ -2401,12 +2401,6 @@ LBLdispatcher:
          }
          CheckArity(def->getArity(), makeTaggedConst(def));
          if (!isTailCall) { CallPushCont(PC); }
-         if (def->isProxy()) {
-           CTS->pushCall(makeTaggedConst(def),X,def->getArity());
-           TaggedRef var = ((ProcProxy*)def)->getSuspvar();
-           addSusp(var,CTT);
-           goto LBLsuspendThread;
-         }
 
          CallDoChecks(def,def->getGRegs());
          JUMP(def->getPC());
@@ -3054,10 +3048,6 @@ LBLdispatcher:
       Bool tailcall  = getPosIntArg(PC+2);
 
       Abstraction *abstr = tagged2Abstraction(pred);
-      if (abstr->isProxy()) {
-        TaggedRef var = ((ProcProxy*)abstr)->getSuspvar();
-        SUSP_PC(var,abstr->getArity(),PC);
-      }
 
       OZ_unprotect((TaggedRef*)(PC+1));
       AbstractionEntry *entry = AbstractionTable::add(abstr);

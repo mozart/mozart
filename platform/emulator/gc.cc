@@ -1997,10 +1997,8 @@ void ConstTerm::gcConstRecurse()
       Abstraction *a = (Abstraction *) this;
       a->gRegs = gcRefsArray(a->gRegs);
       a->gcTertiary();
-      if (a->isProxy()) {
-        ProcProxy *pp = (ProcProxy*) a;
-        gcTagged(pp->suspVar,pp->suspVar);
-      } else if (a->isLocal()) {
+      Assert(!a->isProxy());
+      if (a->isLocal()) {
         a->setBoard(a->getBoard()->gcBoard());
       }
       break;
@@ -2154,7 +2152,7 @@ ConstTerm *ConstTerm::gcConstTerm()
     {
       Abstraction *a = (Abstraction *) this;
       CheckLocal(a);
-      sz = a->isProxy() ? sizeof(ProcProxy) : sizeof(Abstraction);
+      sz = sizeof(Abstraction);
       dogcGName(a->getGName1());
       a->getPred()->gcPrTabEntry();
       COUNT(abstraction);
