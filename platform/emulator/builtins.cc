@@ -3383,7 +3383,6 @@ OZ_Return BIarityInline(TaggedRef term, TaggedRef &out)
 DECLAREBI_USEINLINEFUN1(BIarity,BIarityInline)
 
 
-
 /* -----------------------------------------------------------------------
    Numbers
    ----------------------------------------------------------------------- */
@@ -4227,7 +4226,6 @@ OZ_Return BIisNumberInline(TaggedRef num)
 
 DECLAREBI_USEINLINEREL1(BIisNumber,BIisNumberInline)
 DECLAREBOOLFUN1(BIisNumberB,BIisNumberBInline,BIisNumberInline)
-
 
 
 /* -----------------------------------------------------------------------
@@ -6366,9 +6364,12 @@ OZ_Return assignInline(TaggedRef fea, TaggedRef value)
 {
   DEREF(fea, _2, feaTag);
 
-  SRecord *r = am.getSelf()->getState();
+  Object *self = am.getSelf();
+  SRecord *r = self->getState();
 
   CheckSelf;
+  CheckLocalBoard(self,"object");
+
   if (!isFeature(fea)) {
     if (isAnyVar(fea)) {
       return SUSPEND;
@@ -6849,6 +6850,7 @@ BIspec allSpec[] = {
   {"record",          3, BImakeRecord,       0},
   {"Arity",           2, BIarity,            (IFOR) BIarityInline},
   {"AdjoinAt",        4, BIadjoinAt,         0},
+
   {"IsNumber",        2, BIisNumberB,    (IFOR) BIisNumberBInline},
   {"IsInt"   ,        2, BIisIntB,       (IFOR) BIisIntBInline},
   {"IsFloat" ,        2, BIisFloatB,     (IFOR) BIisFloatBInline},
