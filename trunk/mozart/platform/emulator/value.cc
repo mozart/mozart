@@ -367,20 +367,6 @@ TaggedRef reverseC(TaggedRef l)
   return out;
 }
 
-GName *Object::globalize() {
-  if (!getGName1()) {
-    setGName(newGName(makeTaggedConst(this),GNT_OBJECT));
-    RecOrCell state = getState();
-    Assert(!stateIsCell(state));
-    SRecord *r = getRecord(state);
-    Assert(r!=NULL);
-    Tertiary *cell = tagged2Tert(OZ_newCell(makeTaggedSRecord(r)));
-    cell->globalizeTert(); // getStateInline uses cellDoExchange --> must be globalized 
-    setState(cell);
-  }
-  return getGName();
-}
-
 void ObjectClass::globalize() {
   if (!hasGName()) {
     setGName(newGName(makeTaggedConst(this),GNT_CLASS));
@@ -430,6 +416,7 @@ Abstraction *Object::getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
     return NULL;
   
   DEREF(method,_1,_2);
+  if (isAnyVar(method)) return NULL;
   Assert(isAbstraction(method));
   
   Abstraction *abstr = (Abstraction*) tagged2Const(method);

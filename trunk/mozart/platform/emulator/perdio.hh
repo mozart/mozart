@@ -329,6 +329,7 @@ void gcGNameTable();
 void gcGName(GName*);
 void getCode(ProcProxy*);
 GName *copyGName(GName*);
+void deleteGName(GName*);
 
 enum GNameType {
   GNT_NAME,
