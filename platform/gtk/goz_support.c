@@ -109,7 +109,7 @@ OZ_BI_define (ozgtk_initialize_signal_port_sml, 1, 0)
 {
   OZ_declareTerm (0, port);
   signal_port_sml = port;
-  OZ_protect(&signal_port); /* prevent GC of port anchor */
+  OZ_protect(&signal_port_sml); /* prevent GC of port anchor */
   return OZ_ENTAILED;
 } OZ_BI_end
 
