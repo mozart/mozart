@@ -28,10 +28,6 @@
 Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 			    TaggedRef * tPtr, TaggedRef term, TypeOfTerm tTag)
 {
-#ifdef PROFILE_FD
-  FiniteDomain::unifyCalled++;
-#endif
-  
   switch (tTag){
   case SMALLINT:
     if (finiteDomain.contains(smallIntValue(term)) == NO)
