@@ -1192,6 +1192,7 @@ void BorrowTable::closeFrameToProxy(unsigned int ms){
       int type = t->getType();
       int state;
       if(t->isFrame()) {
+        printf("Frame type: %d\n",t->getType());
         if(type==Co_Cell)
           state = ((CellFrame*)t)->getState();
         else if(type==Co_Lock)
@@ -1201,18 +1202,24 @@ void BorrowTable::closeFrameToProxy(unsigned int ms){
 
         switch(state){
         case Cell_Lock_Invalid:
-          if(type==Co_Lock)
-            ((CellFrame*)t)->convertToProxy();
-          else
-            ((LockFrame*)t)->convertToProxy();
+          if(type==Co_Lock){
+            printf("qLock_Invalid\n");
+            ((CellFrame*)t)->convertToProxy();}
+          else{
+            printf("qCell_Invalid\n");
+            ((LockFrame*)t)->convertToProxy();}
           break;
         case Cell_Lock_Requested:
+          printf("qCell_Lock_Requested\n");
         case Cell_Lock_Valid:
+          printf("qCell_Lock_VALIDorRequested\n");
           cellLockSendDump(be);
           break;
         case Cell_Lock_Requested|Cell_Lock_Next:
+          printf("qCell_Lock_Requested+next\n");
           break;
         case Cell_Lock_Valid|Cell_Lock_Next:
+          printf("qCell_Lock_Valid+next\n");
           if(type==Co_Lock){
             NetAddress *na=be->getNetAddress();
             LockSec* sec = ((LockFrame*)t)->getLockSec();
@@ -1254,6 +1261,7 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
           proxies++;
         }
         if(t->isFrame()) {
+          //      printf("Frame type: %d\n",t->getType());
           /*
           int type = t->getType();
           int state;
@@ -1313,7 +1321,7 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
   }
   //  printf("%d frames and %d proxies left\n", frames, proxies);
   //  printf("time left:%d\n", ms+start_time-osTotalTime());
-  return frames+proxies;
+  return proxies;
 }
 
 int OwnerTable::notGCMarked() {

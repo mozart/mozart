@@ -1316,8 +1316,8 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
   oz_deinstallPath(oz_rootBoard());
   osSetAlarmTimer(0);
 
-  if((int) timeUntilClose > 0)
-    BT->closeFrameToProxy(timeUntilClose);
+  //  if((int) timeUntilClose > 0)
+  //  BT->closeFrameToProxy(timeUntilClose);
   while ((int) timeUntilClose > 0 && proxiesLeft) {
     //    printf("times left %d\n", timeUntilClose);
     //    printf("proxies left %d\n", proxiesLeft);
@@ -1349,10 +1349,9 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
     timeUntilClose -= (osTotalTime() - idle_start);
     oz_io_handle();
   }
-  //printf("times left %d\n", timeUntilClose);
-  //printf("connections left %d\n", connectionsLeft);
-  //printf("Close done at %s\n", myDSite->stringrep());
-
+  //  printf("times left %d\n", timeUntilClose);
+  //  printf("connections left %d\n", connectionsLeft);
+  //  printf("Close done at %s\n", myDSite->stringrep());
 }
 
 void dpExitImpl() {
