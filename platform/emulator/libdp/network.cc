@@ -1034,7 +1034,8 @@ public:
   void messageSent(){recSizeAck=0;}
   
   void informSiteRemove(){
-    remoteSite->readConnectionRemoved();}
+    if(remoteSite)
+      remoteSite->readConnectionRemoved();}
   
   Bool resend();
   
@@ -2832,7 +2833,7 @@ int tcpPreReadHandler(int fd,void *r0){
     return 0;
   }
   old = si->getRemoteSite()->getReadConnection();
-  if(old!=NULL){old->close();}
+  if(old!=NULL){old->remoteSite = NULL; old->close();}
   
   // To be sure that we have a writeConnection if the other peer is
   // behind a firewall we close all open atempts from that site until
