@@ -216,7 +216,9 @@ public:
 
   static ProgramCounter writeTagged(TaggedRef t, ProgramCounter ptr)
   {
-    return writeWord(t,ptr);
+    ProgramCounter ret = writeWord(t,ptr);
+    gcStaticProtect((TaggedRef *)ptr);
+    return ret;
   }
 
   static ProgramCounter writeInt(TaggedRef i, ProgramCounter ptr)
