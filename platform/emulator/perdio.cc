@@ -79,6 +79,10 @@
    **************************************************************************
    **************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
+
 #include "wsock.hh"
 
 #include <sys/types.h>
@@ -1108,12 +1112,16 @@ void OwnerTable::print(){
   printf("-----------------------------------------------\n");
 }
 
+
+#ifdef MISC_BUILTINS
+
 OZ_BI_define(BIprintOwnerTable,0,0)
 {
   OT->print();
   return PROCEED;
 } OZ_BI_end
 
+#endif
 
 /* ********************************************************************** */
 /*   SECTION 12:: BorrowCreditExtension                                   */
@@ -1867,6 +1875,7 @@ public:
   void copyBorrowTable(BorrowEntry *,int);
 
   void print();
+
 };
 
 
@@ -2024,11 +2033,15 @@ void BorrowTable::print(){
   printf("-----------------------------------------------\n");
 }
 
+#ifdef MISC_BUILTINS
+
 OZ_BI_define(BIprintBorrowTable,0,0)
 {
   BT->print();
   return PROCEED;
 } OZ_BI_end
+
+#endif
 
 OZ_BI_define(BIsetNetBufferSize,1,0)
 {
@@ -6070,6 +6083,8 @@ void Site::communicationProblem(MessageType mt,Site*
 /*   SECTION 41:: Builtins                                            */
 /**********************************************************************/
 
+#ifdef MISC_BUILTINS
+
 #ifdef DEBUG_PERDIO
 OZ_BI_define(BIdvset,2,0)
 {
@@ -6083,6 +6098,8 @@ OZ_BI_define(BIdvset,2,0)
   }
   return PROCEED;
 } OZ_BI_end
+#endif
+
 #endif
 
 Bool openClosedConnection(int);
@@ -6126,6 +6143,8 @@ void wakeUpTmp(int i, int time){
 
 GenHashNode *getPrimaryNode(GenHashNode* node, int &i);
 GenHashNode *getSecondaryNode(GenHashNode* node, int &i);
+
+#ifdef MISC_BUILTINS
 
 OZ_BI_define(BIsiteStatistics,0,1)
 {
@@ -6220,6 +6239,7 @@ OZ_BI_define(BIsiteStatistics,0,1)
 
 } OZ_BI_end
 
+#endif
 
 
 /**********************************************************************/
@@ -6408,12 +6428,16 @@ OZ_Term getGatePort(Site *sd){
 /* Builtins */
 /**********************************************************************/
 
+#ifdef MISC_BUILTINS
+
 OZ_BI_define(BIcrash,0,0)   /* only for debugging */
 {
   exit(1);
 
   return PROCEED;
 } OZ_BI_end
+
+#endif
 
 OZ_BI_define(BIprobe,1,0)
 {

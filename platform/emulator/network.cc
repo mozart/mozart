@@ -65,7 +65,9 @@
    **************************************************************************
    **************************************************************************/
 
-
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
 
 #include "wsock.hh"
 #ifndef WINDOWS
@@ -3842,6 +3844,8 @@ Bool checkIncTimeSlice(unsigned long time, void* v){
 
 #endif
 
+#ifdef MISC_BUILTINS
+
 OZ_BI_define(BIslowNet,2,0)
 {
   oz_declareIntIN(0,arg0);
@@ -3856,3 +3860,5 @@ OZ_BI_define(BIslowNet,2,0)
   return PROCEED;
 
 } OZ_BI_end
+
+#endif
