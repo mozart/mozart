@@ -245,7 +245,7 @@ lex.yy.o: c.bison.tab.hh
 #---------------------------------------------------------------------
 
 gtkraw.c: gtkdefs.c
-	cpp-2 $(CPPFLAGS) -D__IEEE_LITTLE_ENDIAN $(CPPEXTRAFLAGS) $< > $@
+	cpp $(CPPFLAGS) -D__IEEE_LITTLE_ENDIAN $(CPPEXTRAFLAGS) $< > $@
 
 #---------------------------------------------------------------------
 # Create Binding Files
