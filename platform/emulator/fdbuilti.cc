@@ -1202,11 +1202,11 @@ BIspec fdSpec[] = {
   {"fdp_distinct", 1, fdp_distinct},
   {"fdp_distinctOffset", 2, fdp_distinctOffset},
   {"fdp_disjoint", 4, fdp_disjoint},
-  {"fdp_disjoint_card", 4, fdp_disjoint_card},
+  {"sched_disjoint_card", 4, sched_disjoint_card},
   {"fdp_disjointC", 5, fdp_disjointC},
   {"fdp_distance", 4, fdp_distance},
-  {"fdp_cpIterate", 2, fdp_cpIterate},
-  {"fdp_disjunctive", 2, fdp_disjunctive},
+  {"sched_cpIterate", 2, sched_cpIterate},
+  {"sched_disjunctive", 2, sched_disjunctive},
 #endif
 #ifdef DEBUG_STABLE
   {"debugStable", 0, debugStable},
