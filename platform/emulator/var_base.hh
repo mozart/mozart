@@ -380,27 +380,16 @@ Bool oz_var_hasSuspAt(TaggedRef v, Board * b) {
 }
 
 inline
-Bool isFuture(TaggedRef term)
-{
-  return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_FUTURE);
-}
-
-inline
 Future *tagged2Future(TaggedRef t) {
-  Assert(isFuture(t));
+  Assert(oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_FUTURE));
   return (Future *) tagged2Var(t);
 }
 
 inline
-Bool isSimpleVar(TaggedRef term)
+SimpleVar *tagged2SimpleVar(TaggedRef t)
 {
-  return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_SIMPLE);
-}
-
-inline
-SimpleVar *tagged2SimpleVar(TaggedRef t) {
-  Assert(isSimpleVar(t));
-  return (SimpleVar *) tagged2Var(t);
+  Assert(oz_isVar(t) && (tagged2Var(t)->getType() == OZ_VAR_SIMPLE));
+  return ((SimpleVar *) tagged2Var(t));
 }
 
 /* -------------------------------------------------------------------------
