@@ -33,7 +33,7 @@ SRCDIR= @srcdir@
 include Makefile.vars
 
 MODULE_NAMES = libWif libFDP libSchedule libFSP libParser \
-        libozma libCompilerSupport libBrowser
+        libozma libCompilerSupport libBrowser libDebug
 STATIC_MODULETARGETS  = $(MODULE_NAMES:%=%.a)
 DYNAMIC_MODULETARGETS = $(MODULE_NAMES:%=%.so)
 
@@ -69,7 +69,7 @@ PEANUTS= \
         am.cc genvar.cc indexing.cc fdhook.cc \
         taskstk.cc mem.cc \
         statisti.cc fdgenvar.cc \
-        codearea.cc debug.cc lps.cc solve.cc \
+        codearea.cc trace.cc lps.cc solve.cc \
         variable.cc thrqueue.cc thrspool.cc \
         perdiovar.cc \
         print.cc
@@ -82,7 +82,7 @@ CXXSRCS= \
         foreign.cc boot-manager.cc \
         ofgenvar.cc genhashtbl.cc \
         ozostream.cc runtime.cc unix.cc \
-        perdio.cc \
+        perdio.cc debug.cc \
         urlc.cc iso-ctype.cc hashtbl.cc \
         os.cc emulate.cc scheduler.cc builtins.cc \
         components.cc network.cc virtual.cc \
@@ -144,11 +144,19 @@ libCompilerSupport.so: compiler.o
 libCompilerSupport.a: compiler.o
         $(AR) -rc $@ compiler.o && $(RANLIB) $@
 
+browser.o: modBrowser.tbl modBrowser.dcl
+
 libBrowser.so: browser.o
         $(DYNLD) -o $@ browser.o
 
 libBrowser.a: browser.o
         $(AR) -rc $@ browser.o && $(RANLIB) $@
+
+libDebug.so: debug.o
+        $(DYNLD) -o $@ debug.o
+
+libDebug.a: debug.o
+        $(AR) -rc $@ debug.o && $(RANLIB) $@
 
 
 win: ozlib.lnk $(CREATEDFILES)

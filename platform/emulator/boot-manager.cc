@@ -92,6 +92,12 @@ static OZ_C_proc_interface mod_int_Browser[] = {
  {0,0,0,0}
 };
 
+#include "modDebug.dcl"
+static OZ_C_proc_interface mod_int_Debug[] = {
+#include "modDebug.tbl"
+ {0,0,0,0}
+};
+
 #endif
 
 
@@ -112,7 +118,6 @@ struct ModuleEntry {
 #include "modCTB.dcl"
 #include "modFinalize.dcl"
 #include "modProfile.dcl"
-#include "modDebug.dcl"
 #include "modForeign.dcl"
 #include "modFault.dcl"
 #include "modDistribution.dcl"
@@ -161,10 +166,6 @@ static OZ_C_proc_interface mod_int_Profile[] = {
 #include "modProfile.tbl"
  {0,0,0,0}
 };
-static OZ_C_proc_interface mod_int_Debug[] = {
-#include "modDebug.tbl"
- {0,0,0,0}
-};
 static OZ_C_proc_interface mod_int_Foreign[] = {
 #include "modForeign.tbl"
  {0,0,0,0}
@@ -203,26 +204,28 @@ static ModuleEntry module_table[] = {
   {"Pickle",   mod_int_Pickle},
   {"System",   mod_int_System},
 
+  {"FDB",      mod_int_FDB},
+  {"FSB",      mod_int_FSB},
+
+  {"FSP",              DYNAMIC_MODULE(mod_int_FSP) },
+  {"FDP",              DYNAMIC_MODULE(mod_int_FDP) },
+  {"CompilerSupport",  DYNAMIC_MODULE(mod_int_CompilerSupport)},
+  {"Parser",           DYNAMIC_MODULE(mod_int_Parser) },
+
   {"Finalize", mod_int_Finalize},
   {"Profile",  mod_int_Profile},
 
   {"Foreign",      mod_int_Foreign},
   {"Fault",        mod_int_Fault},
   {"Distribution", mod_int_Distribution},
-  {"Debug",        mod_int_Debug},
 
-  {"FDB",      mod_int_FDB},
-  {"FSB",      mod_int_FSB},
   {"CTB",      mod_int_CTB},
   {"PID",      mod_int_PID},
 
   {"Browser",          DYNAMIC_MODULE(mod_int_Browser)},
-  {"CompilerSupport",  DYNAMIC_MODULE(mod_int_CompilerSupport)},
   {"Wif",              DYNAMIC_MODULE(mod_int_Wif) },
-  {"Parser",           DYNAMIC_MODULE(mod_int_Parser) },
-  {"FDP",              DYNAMIC_MODULE(mod_int_FDP) },
   {"Schedule",         DYNAMIC_MODULE(mod_int_Schedule) },
-  {"FSP",              DYNAMIC_MODULE(mod_int_FSP) },
+  {"Debug",            DYNAMIC_MODULE(mod_int_Debug)},
 
 #ifdef MISC_BUILTINS
   {"Misc",         mod_int_Misc},

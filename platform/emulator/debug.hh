@@ -28,7 +28,7 @@
  */
 
 
-/* The Oz source and machine level debugger */
+/* The Oz source and level debugger */
 
 #ifndef __DEBUGH
 #define __DEBUGH
@@ -111,16 +111,5 @@ OZ_C_proc_proto(BIprocedureCode);
 OZ_C_proc_proto(BIprocedureCoord);
 OZ_C_proc_proto(BIlivenessX);
 
-
-/* The Oz machine level debugger */
-
-#ifdef DEBUG_TRACE
-Bool ozd_trace(char *s,
-               ProgramCounter PC=NOCODE,RefsArray Y=NULL,Abstraction *G=NULL);
-void ozd_tracerOn();
-void ozd_tracerOff();
-
-OZ_C_proc_proto(BIhalt);
-#endif
 
 #endif /* __DEBUGH */
