@@ -45,12 +45,7 @@ in
 		  separator|
 		  if {Property.get 'oz.standalone'} then
 		     [C(label:   'Close'
-			action:  proc {$}
-				    case {Cget closeAction} of unit then
-				       {self off}
-				    elseof P then {P}
-				    end
-				 end
+			action:  self # off
 			key:     ctrl(x))]
 		  else
 		     [C(label:   'Destroy'
