@@ -197,9 +197,9 @@ and that no command will be bound to C-c followed by a letter."
 (eval-and-compile
   (eval '(defcustom oz-components-path
 	   (or (getenv "OZ_LOAD")
-	       (concat "prefix=http\\://www.ps.uni-sb.de/ozhome/="
+	       (concat "prefix=http\\://mozart.ps.uni-sb.de/home/="
 		       "~/mozart/share/lib/stage1/:"
-		       "prefix=http\\://www.ps.uni-sb.de/ozhome/="
+		       "prefix=http\\://mozart.ps.uni-sb.de/home/="
 		       "~/mozart/share/tools/stage1/:"
 		       "cache=~/.oz/cache:cache=" (oz-home) "/cache"))
 	   "*Search path for the Oz Components (used by \\[oz-other])."
@@ -210,7 +210,7 @@ and that no command will be bound to C-c followed by a letter."
 
 (eval-and-compile
   (eval '(defcustom oz-root-functor
-	   "http://www.ps.uni-sb.de/ozhome/share/OPI.ozf"
+	   "http://mozart.ps.uni-sb.de/home/share/OPI.ozf"
 	   "*Name of the root functor to load on startup."
 	   :type 'string
 	   :group 'oz)))
