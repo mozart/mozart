@@ -9,7 +9,7 @@ export
    ReOpen
    ssites:SSites
    sactivity:SActive
-   snumber:SNumber
+   srtt:SRTT
    
    osites:OSites
    oactive:OActive
@@ -23,7 +23,7 @@ export
    ninumber:NINumber
    nibyte:NIByte
 define
-   SSites SActive SNumber
+   SSites SActive SRTT
    OSites OActive ONumber
    BSites BActive BNumber
    NIList NINumber NIByte
@@ -192,12 +192,12 @@ define
 					maxy:11.0
 					dim:''
 					fill:false)}
-	 SNumber={New TitleGraph tkInit(parent:SiteF
-					title:"#Sites in store/s"
-					miny:1.0
-					maxy:11.0
-					dim:''
-					fill:true)}
+	 SRTT={New TitleGraph tkInit(parent:SiteF
+				     title:"Last RTT (ms)"
+				     miny:1.0
+				     maxy:11.0
+				     dim:''
+				     fill:false)}
    
 	 %% Owner frame
 	 OwnerF={New Tk.frame tkInit(parent:CardF)}
@@ -251,7 +251,7 @@ define
 
 	 {Tk.batch [grid(SSites	row:0 column:0 sticky:news)
 		    grid(SActive	row:0 column:1 sticky:news)
-		    grid(SNumber	row:0 column:2 sticky:news) 
+		    grid(SRTT   	row:0 column:2 sticky:news) 
 
 		    grid(OSites	row:0 column:0 sticky:news)
 		    grid(OActive	 row:0 column:1 sticky:news)

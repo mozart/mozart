@@ -94,6 +94,7 @@ private:
   // Statistics
   int nosm; // Number of sent messages since getNOSM() was last called
   int norm; // Number of received messages since getNORM() was last called
+  int lastrtt;
 
   // private methods
   void open();
@@ -160,6 +161,8 @@ public:
   // Statistics
   int getNOSM();
   int getNORM();
+  int getLastRTT();
+  OZ_Term getStateStatistics();
 
   // Extras for internal use (must be public anyway)
   Bool openTimerExpired();
