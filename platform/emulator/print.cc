@@ -87,6 +87,7 @@
 #include "fdomn.hh"
 #include "dictionary.hh"
 #include "builtins.hh"
+#include "extension.hh"
 
 class Indent {
 public:
@@ -846,6 +847,15 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
     break;
   case Co_Foreign_Pointer:
     ((ForeignPointer*)this)->printLongStream(stream,depth,offset); break;
+
+  case Co_SituatedExtension:
+    ((SituatedExtension *) c)->printLongStreamV(out,depth,offset);
+    break;
+
+  case Co_ConstExtension:
+    ((ConstExtension *) c)->printLongStreamV(out,depth,offset);
+    break;
+
   default: 	      Assert(NO);
   }
 }

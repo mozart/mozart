@@ -64,10 +64,9 @@ OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
   return PROCEED;
 }
 
-#ifdef SIMPLEVAR
-SVariable *oz_newSVar(Board *bb)
+void addSuspUVar(TaggedRefPtr v, Suspension susp, int unstable)
 {
-  return new SimpleVar(bb);
+  GenCVariable *sv = new SimpleVar(tagged2VarHome(*v));
+  *v = makeTaggedCVar(sv);
+  sv->addSuspSVar(susp, unstable);
 }
-#endif
-

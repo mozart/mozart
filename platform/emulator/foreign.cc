@@ -32,6 +32,7 @@
 #include "iso-ctype.hh"
 
 #include "value.hh"
+#include "extension.hh"
 #include "genvar.hh"
 
 #include "os.hh"
@@ -806,6 +807,14 @@ void const2buffer(ostream &out, ConstTerm *c)
     out << "<ForeignPointer " << ((ForeignPointer *) c)->getPointer() << ">";
     break;
 
+  case Co_SituatedExtension:
+    ((SituatedExtension *) c)->printStreamV(out,0);
+    break;
+
+  case Co_ConstExtension:
+    ((ConstExtension *) c)->printStreamV(out,0);
+    break;
+
   default:
     out << "<Chunk>";
     break;
@@ -1003,7 +1012,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
   DEREF(term,termPtr,tag);
   switch(tag) {
   case UVAR:
-  case SVAR:
+    // FUT
   case CVAR:
     {
       if (!termPtr) {
@@ -1312,7 +1321,7 @@ OZ_Term OZ_toVirtualString(OZ_Term t,int depth, int width)
   case OZFLOAT:
     return t;
   case UVAR:
-  case SVAR:
+    // FUT
   case CVAR:
   case LTUPLE:
   case SRECORD:

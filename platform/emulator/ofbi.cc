@@ -217,7 +217,7 @@ OZ_BI_define(BIsystemTellSize,3,0)
   case LITERAL:
     break;
   case UVAR:
-  case SVAR:
+    // FUT
     oz_suspendOn (makeTaggedRef(labelPtr));
   case CVAR:
     switch (tagged2CVar(label)->getType()) {
@@ -256,7 +256,7 @@ OZ_BI_define(BIsystemTellSize,3,0)
     if (!oz_isFree(t)) oz_typeError(3,"Record");
     // else fall through to creation case
   case UVAR:
-  case SVAR:
+    // FUT
     {
       // Calculate initial size of hash table:
       DEREF(tNumFeats, nPtr, ntag);
@@ -305,7 +305,7 @@ OZ_BI_define(BIrecordTell,2,0)
   case LITERAL:
     break;
   case UVAR:
-  case SVAR:
+    // FUT
     oz_suspendOn (makeTaggedRef(labelPtr));
   case CVAR:
     switch (tagged2CVar(label)->getType()) {
@@ -343,7 +343,7 @@ OZ_BI_define(BIrecordTell,2,0)
     if (!oz_isFree(t)) oz_typeError(0,"Record");
     // else fall through to creation case
   case UVAR:
-  case SVAR:
+    // FUT
     {
       // Create newofsvar with unbound variable as label & given initial size:
       GenOFSVariable *newofsvar=new GenOFSVariable(label,oz_currentBoard());
@@ -382,7 +382,7 @@ OZ_BI_define(BIisRecordCB,1,1)
     }
     break;
   case UVAR:
-  case SVAR:
+    // FUT
     oz_suspendOnPtr(tPtr);
   default:
     OZ_RETURN(NameFalse);
@@ -411,7 +411,7 @@ OZ_C_proc_begin(BIwidthC, 2)
     // Wait until first argument is a constrained record (OFS, SRECORD, LTUPLE, LITERAL):
     switch (recTag) {
     case UVAR:
-    case SVAR:
+      // FUT
       oz_suspendOn(rawrec);
     case CVAR:
       switch (tagged2CVar(rec)->getType()) {
@@ -435,7 +435,7 @@ OZ_C_proc_begin(BIwidthC, 2)
     // Ensure that second argument wid is a FD or integer:
     switch (widTag) {
     case UVAR:
-    case SVAR:
+      // FUT
     {
         // Create new fdvar:
         GenFDVariable *fdvar=new GenFDVariable(oz_currentBoard()); // Variable with maximal domain
@@ -628,7 +628,7 @@ OZ_C_proc_begin(BImonitorArity, 3)
         // *** arity is known set of features of the SRecord
         return oz_unify(arity,tagged2SRecord(tmprec)->getArityList());
     case UVAR:
-    case SVAR:
+      // FUT
         oz_suspendOn(rec);
     case CVAR:
         switch (tagged2CVar(tmprec)->getType()) {
@@ -861,7 +861,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
       }
       // else fall through
     case UVAR:
-    case SVAR:
+      // FUT
       {
         // Create newofsvar:
         GenOFSVariable *newofsvar=new GenOFSVariable(oz_currentBoard());

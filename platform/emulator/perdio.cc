@@ -2910,9 +2910,10 @@ inline void maybeConvertCellProxyToFrame(Tertiary *t){
 
 PerdioVar *var2PerdioVar(TaggedRef *tPtr)
 {
-  if (isCVar(*tPtr)) {
-    return isPerdioVar(*tPtr) ? tagged2PerdioVar(*tPtr) : (PerdioVar*) NULL;
+  if (isPerdioVar(*tPtr) ) {
+    return tagged2PerdioVar(*tPtr);
   }
+  if (!oz_isFree(*tPtr)) return 0;
 
   OwnerEntry *oe;
   int i = ownerTable->newOwner(oe);
@@ -2923,8 +2924,8 @@ PerdioVar *var2PerdioVar(TaggedRef *tPtr)
   PerdioVar *ret = new PerdioVar(oz_currentBoard());
   ret->setIndex(i);
 
-  if (isSVar(*tPtr))
-    ret->setSuspList(tagged2SVar(*tPtr)->getSuspList());
+  if (isCVar(*tPtr))
+    ret->setSuspList(tagged2SVarPlus(*tPtr)->getSuspList());
   doBindCVar(tPtr,ret);
   return ret;
 }

@@ -584,22 +584,7 @@ loop:
     goto next;
   }
 
-  if (isSVar(tag1)) {
-    if (isSVar(tag2) && 
-	isMoreLocal(term2,term1) &&
-	(!am.isLocalVariable(term1,termPtr1) ||
-	 heapNewer(termPtr2,termPtr1))) {
-      oz_bind(termPtr2, term2, makeTaggedRef(termPtr1));
-    } else {
-      oz_bind(termPtr1, term1, makeTaggedRef(termPtr2));
-    }
-    goto next;
-  }
-  
-  if (isSVar(tag2)) {
-    oz_bind(termPtr2, term2, makeTaggedRef(termPtr1));
-    goto next;
-  }
+  // FUT
 
   Assert(isCVar(tag1) && isCVar(tag2));
   /* prefered binding of perdio vars */
@@ -752,7 +737,7 @@ Bool checkHome(TaggedRef *vPtr) {
 void oz_bind(TaggedRef *varPtr, TaggedRef var, TaggedRef term)
 {
   /* first step: do suspension */
-  if (isSVar(var) || isCVar(var)) {
+  if (isCVar(var)) {
     oz_checkSuspensionList(tagged2SVarPlus(var), pc_std_unif);
   }
 
@@ -761,9 +746,7 @@ void oz_bind(TaggedRef *varPtr, TaggedRef var, TaggedRef term)
     Assert(am.inShallowGuard() || checkHome(varPtr));
     am.doTrail(varPtr,var);
   } else  {
-    if (isSVar(var)) {
-      tagged2SVar(var)->dispose();
-    } else if (isCVar(var)) {
+    if (isCVar(var)) {
       tagged2CVar(var)->dispose();
     }
   }
@@ -779,14 +762,12 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
   Assert(oz_isVariable(var));
 
   /* first step: do suspension */
-  if (isSVar(var) || isCVar(var)) {
+  if (isCVar(var)) {
     oz_wakeupAll(tagged2SVarPlus(var));
   }
 
   /* free memory */
-  if (isSVar(var)) {
-    tagged2SVar(var)->dispose();
-  } else if (isCVar(var)) {
+  if (isCVar(var)) {
     tagged2CVar(var)->dispose();
   }
 
