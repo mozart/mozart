@@ -38,6 +38,11 @@
                              out    => [],
                              BI     => BIsaveWithHeader},
 
+    'saveWithCells'     => { in     => ['value','+virtualString',
+                                        '+virtualString','+int'],
+                             out    => [],
+                             BI     => BIsaveWithCells},
+
     'load'              => { in     => ['value','value'],
                              out    => [],
                              BI     => BIload},

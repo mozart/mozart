@@ -89,6 +89,7 @@ typedef enum {
   DIF_CODEAREA,
   DIF_VAR_OBJECT,
   DIF_SYNC,
+  DIF_CLONEDCELL,
   DIF_LAST
 } MarshalTag;
 
@@ -140,6 +141,7 @@ const struct {MarshalTag tag; char *name;} dif_names[] = {
   { DIF_CODEAREA,     "CODE_AREA_SEGMENT"},
   { DIF_VAR_OBJECT,   "VAR_OBJECT"},
   { DIF_SYNC,         "SYNC"},
+  { DIF_CLONEDCELL,   "CLONEDCELL"},
   { DIF_LAST,         "LAST"}
 };
 

@@ -187,7 +187,7 @@ public:
   virtual void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   virtual void processObject(OZ_Term objTerm, ConstTerm *objConst);
   virtual void processLock(OZ_Term lockTerm, Tertiary *lockTert);
-  virtual void processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  virtual Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
   virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
   virtual void processResource(OZ_Term resTerm, Tertiary *tert);
   virtual void processNoGood(OZ_Term resTerm, Bool trail);

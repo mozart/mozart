@@ -552,7 +552,7 @@ protected:
   virtual void processObject(OZ_Term objTerm, ConstTerm *objConst) = 0;
   // 'Tertiary' OzConst"s;
   virtual void processLock(OZ_Term lockTerm, Tertiary *lockTert) = 0;
-  virtual void processCell(OZ_Term cellTerm, Tertiary *cellTert) = 0;
+  virtual Bool processCell(OZ_Term cellTerm, Tertiary *cellTert) = 0;
   virtual void processPort(OZ_Term portTerm, Tertiary *portTert) = 0;
   virtual void processResource(OZ_Term resTerm, Tertiary *tert) = 0;
   // anything else:
@@ -1708,6 +1708,25 @@ public:
     while(size-- > 0) {
       PutBTTaskPtr(frame, BT_dictKey, aux);
     }
+    SetBTFrame(frame);
+  }
+
+  void buildClonedCell() {
+    CellLocal *c = new CellLocal(oz_currentBoard(), oz_int(0));
+    buildValue(makeTaggedConst(c));
+    GetBTFrame(frame);
+    EnsureBTSpace(frame, 1);
+    PutBTTaskPtr(frame, BT_spointer, c->getRef());
+    SetBTFrame(frame);
+  }
+  void buildClonedCellRemember(int n) {
+    CellLocal *c = new CellLocal(oz_currentBoard(), oz_int(0));
+    OZ_Term cell = makeTaggedConst(c);
+    buildValue(cell);
+    set(cell, n);
+    GetBTFrame(frame);
+    EnsureBTSpace(frame, 1);
+    PutBTTaskPtr(frame, BT_spointer, c->getRef());
     SetBTFrame(frame);
   }
 

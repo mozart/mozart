@@ -2391,6 +2391,8 @@ public:
     val = v;
     return ret;}
 
+  TaggedRef *getRef() { return &val; }
+
   void globalize(int);
 };
 
