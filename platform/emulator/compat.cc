@@ -75,14 +75,13 @@ OZ_BI_define(compat_importFloat, 2, 1)
     double d;
   } x;
 
-  x.i[0] = 1;
-  if (x.c[0] == 1) {   // little endian
+#if defined(ARCH_LITTLE_ENDIAN) && !defined(ARCH_BIG_WORDIAN)
     x.i[0] = i1;
     x.i[1] = i2;
-  } else {
+#else
     x.i[0] = i2;
     x.i[1] = i1;
-  }
+#endif
   OZ_RETURN(OZ_float(x.d));
 }
 OZ_BI_end
