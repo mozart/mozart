@@ -90,7 +90,7 @@ define
 	 fun {Draw N State ComList}
 	    state(X Y Z) = !State
 	 in
-	    case N > 0 then
+	    if N > 0 then
 	       case ComList of H|T then 
 		  case H
 		  of l then {Draw N state(X Y Z+Delta) T}
