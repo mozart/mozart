@@ -52,7 +52,7 @@
 #endif
 
 
-#if defined(__STDC__)
+#if defined(__STDC__) || defined(_MSC_VER)
 #define OZStringify(Name) #Name
 #define OZ_CONST const
 #else
@@ -92,9 +92,7 @@ typedef unsigned int OZ_Term;
 typedef unsigned int OZ_Return;
 
 #define OZ_FAILED      0
-#ifndef FAILED
 #define FAILED         OZ_FAILED
-#endif
 #define PROCEED        1
 #define OZ_ENTAILED    PROCEED
 #define SUSPEND     2
