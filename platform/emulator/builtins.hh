@@ -317,6 +317,9 @@ public:
     getRecord()->setArg(0,fea);
   }
 
+  OneCallBuiltin (BuiltinTabEntry *fn, RefsArray gregs)
+    : Builtin (fn, (TaggedRef) 0, gregs) {}
+
   inline Bool isSeen () { return (gRegs == NULL); }
   inline RefsArray &getGRegs() { return(gRegs); }
   inline void hasSeen () { gRegs = (RefsArray) NULL; }

@@ -55,9 +55,9 @@ TaggedRef failedAtom;
 void SolveActor::Init()
 {
   solveContBITabEntry
-    = new BuiltinTabEntry("*solveCont*", 1, BIsolveCont); // local Entry;
+    = new BuiltinTabEntry("*once-only*", 1, BIsolveCont); // local Entry;
   solvedBITabEntry
-    = new BuiltinTabEntry("*solved*", 1, BIsolved);       // local Entry;
+    = new BuiltinTabEntry("*reflected*", 1, BIsolved);    // local Entry;
 
   TaggedRef solveContFList = cons(makeTaggedAtom(SEARCH_STATUS),nil());
   SolveContArity = aritytable.find(solveContFList);
@@ -191,8 +191,7 @@ TaggedRef SolveActor::genChoice (int noOfClauses)
   contGRegs = allocateRefsArray (1);
   contGRegs[0] = makeTaggedConst (solveBoard);
   stuple->setArg (0, makeTaggedConst
-                  (new OneCallBuiltin (solveContBITabEntry, contGRegs,
-                                       SolveContArity, lastAtom)));
+                  (new OneCallBuiltin (solveContBITabEntry, contGRegs)));
 
   stuple->setArg (1, makeTaggedSmallInt(noOfClauses));
 
