@@ -37,10 +37,7 @@
 
 #include <stdarg.h>
 #include <errno.h>
-/*
 #include <stdio.h>
-#include <sys/types.h>
-*/
 
 void prefixError()
 {
