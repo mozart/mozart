@@ -2674,14 +2674,18 @@ LBLdispatcher:
 
   Case(EMPTYCLAUSE)
     {
-      Board *bb = new Board(CAA,CAA->isAsk()?Bo_Ask:Bo_Wait);
-      e->setCurrent(bb,OK);
-      CBB->incSuspCount();
-      DebugCode(currentDebugBoard=CBB);
-      CBB->setInstalled();
-      e->trail.pushMark();
-      Assert(CAA->getThread()==CTT);
-      goto LBLwait;
+      Assert(CAA->isWait());
+      Board *bb = new Board(CAA, Bo_Wait | Bo_Waiting);
+
+      bb->setBody(PC+1, Y, G, NULL,0);
+
+      // optimization for most usual case
+      if (CAA->hasNext()) {
+        LOADCONT(CAA->getNext());
+        goto LBLemulate; // no thread switch allowed here (CAA)
+      }
+
+      goto LBLpopTask;
     }
 
   Case(NEXTCLAUSE)

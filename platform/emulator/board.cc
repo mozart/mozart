@@ -136,7 +136,8 @@ Board::Board(Actor *a,int typ)
 {
   Assert(a!=NULL || typ==Bo_Root);
   Assert(a==NULL || !a->isCommitted());
-  Assert (typ==Bo_Root || typ==Bo_Ask || typ==Bo_Wait || typ==Bo_Solve);
+  Assert (typ==Bo_Root || typ==Bo_Ask || typ==Bo_Wait || typ==Bo_Solve
+          || typ==(Bo_Wait | Bo_Waiting));
   flags=typ;
   if (a != (Actor *) NULL && a->isAskWait () == OK) {
     (AWActor::Cast (a))->addChild(this);
