@@ -36,8 +36,8 @@ local
       from CombineNodes.succeeded TkNodes.entailed
    end
 
-   class SuspendedNode
-      from CombineNodes.succeeded TkNodes.suspended
+   class StuckNode
+      from CombineNodes.succeeded TkNodes.stuck
    end
    
    class ChooseNode
@@ -57,11 +57,11 @@ in
 		 order:     Order
 		 status:    Manager.status
 		 manager:   Manager)
-      Classes =c(failed:    {Class.new [FailedNode] a Features [final]}
-		 blocked:   {Class.new [BlockedNode] a Features [final]}
-		 entailed:  {Class.new [EntailedNode] a Features [final]}
-		 suspended: {Class.new [SuspendedNode] a Features [final]}
-		 choose:    {Class.new [ChooseNode] a Features [final]})
+      Classes =c(failed:   {Class.new [FailedNode] a Features [final]}
+		 blocked:  {Class.new [BlockedNode] a Features [final]}
+		 entailed: {Class.new [EntailedNode] a Features [final]}
+		 stuck:    {Class.new [StuckNode] a Features [final]}
+		 choose:   {Class.new [ChooseNode] a Features [final]})
       S = {Space.new Query}
    in   
       case {Space.askVerbose S}
