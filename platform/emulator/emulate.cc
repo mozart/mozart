@@ -513,7 +513,7 @@ void pushContX(TaskStack *stk,
 
 void addSusp(TaggedRef *varPtr, Thread *thr)
 {
-  /* if(!thr->isStopped()) *//* ATTENTION */
+  if(thr->getPStop()==0)
     addSuspAnyVar(varPtr,thr);
 }
 
