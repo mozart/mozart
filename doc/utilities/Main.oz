@@ -48,6 +48,7 @@ define
                         'bst-path'(   type:string optional:false default:unit)
                         'elisp-path'( type:string optional:false default:unit)
                         'sbin-path'(  type:string optional:false default:unit)
+                        'catalog'(    type:string optional:false default:unit)
                        )
    % Process path name options and store results in ozdoc.* properties
    local
@@ -124,6 +125,13 @@ define
          elseof X then X end
       elseof X then X end
       {Property.put 'ozdoc.stylesheet' CSS}
+      CATALOG =
+      case Syslet.args.'catalog' of unit then
+         case {OS.getEnv 'OZDOC_CATALOG'} of false then
+            OZDOC_HOME#'/catalog'
+         elseof X then X end
+      elseof X then X end
+      {Property.put 'ozdoc.catalog' CATALOG}
    in
       {OS.putEnv 'PATH' SBIN_PATH#':'#{OS.getEnv 'PATH'}}
       {OS.putEnv 'OZDOC_ELISP_PATH' ELISP_PATH}

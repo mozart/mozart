@@ -36,7 +36,7 @@ define
       {Transform
        {Parser.object
         process([File] $
-                catalog:{Property.get 'oz.home'}#'/share/doc/catalog'
+                catalog:{Property.get 'ozdoc.catalog'}
                 casefold:lower)}.docElem}
    end
    fun {GetSubtree M L ?Mr}
