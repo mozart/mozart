@@ -73,7 +73,7 @@ OZ_Return ProxyManagerVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
 
   if (!oz_isExtVar(rVal)) {
     // switch order
-    if (isSimpleVar(rVal) || isFuture(rVal))  {
+    if (isSimpleVar(rVal))  {
       return oz_var_bind(tagged2CVar(rVal),rPtr,makeTaggedRef(lPtr));
     } else {
       return bindV(lPtr,makeTaggedRef(rPtr));
@@ -300,6 +300,8 @@ void ManagerVar::surrender(TaggedRef *vPtr, TaggedRef val)
 {
   OZ_Return ret = bindV(vPtr,val);
   if (ret == SUSPEND) {
+    Assert(origVar->getType()==OZ_VAR_FUTURE);
+    ((Future *)origVar)->kick(vPtr);
     am.emptySuspendVarList();
     return;
   }
@@ -419,6 +421,15 @@ OZ_Term ProxyVar::isDetV()
   return sendIsDet(be);
 }
 
+OZ_Term ProxyVar::statusV()
+{
+  // mm2
+  // BorrowEntry *be=BT->getBorrow(getIndex());
+  // return sendGetStatus(be);
+
+  return oz_atom("free");
+}
+
 /* --- IsVar test --- */
 
 inline
@@ -430,9 +441,9 @@ void ManagerVar::localize(TaggedRef *vPtr)
   disposeV();
 }
 
-VariableStatus ManagerVar::statusV()
+OZ_Term ManagerVar::statusV()
 {
-  return origVar->getType()==OZ_VAR_FUTURE ? OZ_FUTURE : OZ_FREE;
+  return origVar->getType()==OZ_VAR_FUTURE ? AtomFuture : AtomFree;
 }
 
 

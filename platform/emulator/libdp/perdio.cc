@@ -52,6 +52,8 @@
 #include "protocolFail.hh"
 #include "dpMarshaler.hh"
 
+// from builtins.cc
+void doPortSend(PortWithStream *port,TaggedRef val);
 
 /* *********************************************************************/
 /*   global variables                                                  */
@@ -431,11 +433,8 @@ void msgReceived(MsgBuffer* bs)
       PortManager *pm=(PortManager*)(oe->getTertiary());
       Assert(pm->checkTertiary(Co_Port,Te_Manager));
 
-      LTuple *lt = new LTuple(t,am.currentUVarPrototype());
-      OZ_Term old = pm->exchangeStream(lt->getTail());
-      PD((SPECIAL,"just after send port"));
-      Assert(MemChunks::isInHeap(makeTaggedConst(pm)));
-      SiteUnify(makeTaggedLTuple(lt),old); // ATTENTION
+      doPortSend(pm,t);
+
       break;
       }
 

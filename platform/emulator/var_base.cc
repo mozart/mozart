@@ -211,3 +211,7 @@ int oz_var_getSuspListLength(OzVariable *cv)
   default:            return cv->getSuspListLengthS();
   }
 }
+
+OZ_Term _var_status(OzVariable *cv) {
+  return (cv->getType()==OZ_VAR_EXT) ? ((ExtVar*)cv)->statusV() : AtomUnknown;
+}

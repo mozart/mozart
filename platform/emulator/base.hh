@@ -370,13 +370,6 @@ enum ThreadReturn {
   T_ERROR               // a fatal error occured
 };
 
-//
-enum VariableStatus {
-  OZ_FREE,
-  OZ_FUTURE,
-  OZ_KINDED,
-  OZ_OTHER
-};
 
 // see ozthread.cc
 Bool oz_isThread(TaggedRef term);

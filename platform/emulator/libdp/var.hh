@@ -42,7 +42,7 @@ public:
   ProxyManagerVar(Board *bb,int i)
     : ExtVar(bb), index(i) { }
 
-  VariableStatus statusV() = 0;
+  OZ_Term statusV() = 0;
   Bool validV(TaggedRef v) { return TRUE; }
   virtual int getIdV() = 0;
   virtual OZ_Term isDetV() = 0;
@@ -65,7 +65,7 @@ public:
   ProxyVar(Board *bb, int i) : ProxyManagerVar(bb,i), binding(0) { }
 
   int getIdV() { return OZ_EVAR_PROXY; }
-  VariableStatus statusV() { Assert(0); return OZ_OTHER; }
+  OZ_Term statusV();
   OZ_Term isDetV();
   ExtVar *gcV() { return new ProxyVar(*this); }
   void gcRecurseV(void);
@@ -123,7 +123,7 @@ public:
     :  ProxyManagerVar(ov->getHome1(),index), proxies(0),origVar(ov) {}
   int getIdV() { return OZ_EVAR_MANAGER; }
   OZ_Term isDetV() { return OZ_false(); }
-  VariableStatus statusV();
+  OZ_Term statusV();
   ExtVar *gcV() { return new ManagerVar(*this); }
   void gcRecurseV(void);
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:mgr>"; }
