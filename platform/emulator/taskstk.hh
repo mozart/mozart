@@ -105,7 +105,8 @@ public:
 
   void printTaskStack(ProgramCounter pc = NOCODE,
 		      Bool verbose = NO, int depth = 1000);
-  TaggedRef dbgGetTaskStack(ProgramCounter pc = NOCODE, int depth = 1000);
+  TaggedRef dbgGetTaskStack(ProgramCounter pc = NOCODE, int depth = 1000,
+			    Thread *tt = NULL);
   TaggedRef dbgFrameVariables(int frameId);
 
   Bool isEmpty() { return ::isEmpty(tos); }
