@@ -88,38 +88,38 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
 
     PD((PD_VAR,"unify i:%d i:%d",lVar->getIndex(),rVar->getIndex()));
 
-    if (scp==0) {
-      if (am.isLocalSVar(lVar)) {
-	if (am.isLocalSVar(rVar)) {
-	  int cmp = compareNetAddress(lVar,rVar);
-	  Assert(cmp!=0);
-	  if (cmp<0) {
-	    bindPerdioVar(lVar,lPtr,makeTaggedRef(rPtr));
-	  } else {
-	    bindPerdioVar(rVar,rPtr,makeTaggedRef(lPtr));
-	  }
-	  return TRUE;
-	}
-	am.doBindAndTrail(rVal, rPtr,makeTaggedRef(lPtr));
-	return TRUE;
+    // Note: for perdio variables: am.isLocal == am.onToplevel
+    if (scp!=0 || !am.isLocalSVar(lVar)) {
+      // in any kind of guard then bind and trail
+      am.checkSuspensionList(lVal,pc_std_unif);
+      am.doBindAndTrail(lVal, lPtr,makeTaggedRef(rPtr));
+      return TRUE;
+    } else {
+      // not in guard: distributed unification
+      Assert(am.isLocalSVar(rVar));
+      int cmp = compareNetAddress(lVar,rVar);
+      Assert(cmp!=0);
+      if (cmp<0) {
+	bindPerdioVar(lVar,lPtr,makeTaggedRef(rPtr));
+      } else {
+	bindPerdioVar(rVar,rPtr,makeTaggedRef(lPtr));
       }
+      return TRUE;
     }
-    am.doBindAndTrail(lVal, lPtr,makeTaggedRef(rPtr));
-    return TRUE;
-  }
-  
+  } // both PVARs
+
+
+  // PVAR := non PVAR
   Assert(!isAnyVar(rVal));
 
   if (!valid(lPtr,rVal)) return FALSE;
 
   if (am.isLocalSVar(lVar)) {
+    // onToplevel: distributed unification
     bindPerdioVar(lVar,lPtr,rVal);
     return TRUE;
   } else {
-    if (isCVar(rVal)) {
-      warning("PerdioVAR = other CVAR: not implemented");
-      return FALSE;
-    }
+    // in guard: bind and trail
     am.checkSuspensionList(lVal,pc_std_unif);
     am.doBindAndTrail(lVal, lPtr,rVal);
     return TRUE;
