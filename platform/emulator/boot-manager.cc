@@ -33,13 +33,12 @@
 #include "os.hh"
 #include "am.hh"
 
+// print  name -> builtin	(for unmarshalling)
+// module name -> module
 
-/*
- * Record of unsited builtins (needed for pickling and compiler)
- */
-
-TaggedRef builtinRecord;
-
+#include "dictionary.hh"
+TaggedRef dictionary_of_builtins;
+TaggedRef dictionary_of_modules;
 
 /*
  * Builtins that are always in the emulator
@@ -176,12 +175,13 @@ static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I,
 
 OZ_BI_define(BIBootManager, 1, 1) {
   oz_declareVirtualStringIN(0, mod_name);
+  TaggedRef module_atom = oz_atom(mod_name);
+  TaggedRef module;
 
-
-  // Check for builtins
-  if (!strcmp("Builtins", mod_name)) 
-    OZ_RETURN(builtinRecord);
-
+  // Check for builtin module (or previously linked)
+  if (tagged2Dictionary(dictionary_of_modules)
+      ->getArg(module_atom,module) == PROCEED)
+      OZ_RETURN(module);
 
   // First: find module entry in table  
   ModuleEntry * me = module_table;
@@ -241,12 +241,18 @@ OZ_BI_define(BIBootManager, 1, 1) {
 
   if (!I)
     goto bomb;
-  
-  OZ_RETURN(ozInterfaceToRecord(I,mod_name,OK));
+
+  // enter it into the dictionary of module
+  // there can be no clash otherwise we would have found it
+  // when we looked it up
+  module = ozInterfaceToRecord(I,mod_name,OK);
+  tagged2Dictionary(dictionary_of_modules)
+    ->setArg(module_atom,module);
+  OZ_RETURN(module);
 
  bomb:
   return oz_raise(E_ERROR,E_SYSTEM,"unknownBootModule",1,
-		  oz_atom(mod_name));
+		  module_atom);
 
 } OZ_BI_end
 
@@ -354,11 +360,6 @@ static ModuleEntry bi_module_table[] = {
   {0,0}
 };
 
-TaggedRef dictionary_of_builtins;
-TaggedRef dictionary_of_builtin_modules;
-
-#include "dictionary.hh"
-
 OZ_Term getBuiltin_oz(const char*Name)
 {
   TaggedRef val;
@@ -416,7 +417,7 @@ void link_bi_modules()
       tagged2Dictionary(dictionary_of_builtins)
 	->setArg(oz_atom(buffer),oz_bi);
     }
-    tagged2Dictionary(dictionary_of_builtin_modules)
+    tagged2Dictionary(dictionary_of_modules)
       ->setArg(oz_atom(E->name),OZ_recordInit(AtomExport,list));
   }
 }
@@ -428,9 +429,9 @@ void initBuiltins() {
   dictionary_of_builtins =
     makeTaggedConst(new OzDictionary(oz_rootBoard()));
   OZ_protect(&dictionary_of_builtins);
-  dictionary_of_builtin_modules =
+  dictionary_of_modules =
     makeTaggedConst(new OzDictionary(oz_rootBoard()));
-  OZ_protect(&dictionary_of_builtin_modules);
+  OZ_protect(&dictionary_of_modules);
   //
   // populate it
   //
