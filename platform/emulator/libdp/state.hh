@@ -291,6 +291,7 @@ PendThread* getPendThreadStartFromCellLock(Tertiary *);
 //
 OZ_Return cellDoExchangeInternal(Tertiary *, TaggedRef, TaggedRef,
                                  Thread *, ExKind);
+OZ_Return objectExchangeImpl(Tertiary *c,TaggedRef fea,TaggedRef old,TaggedRef nw);
 
 //
 OZ_Return cellDoExchangeImpl(Tertiary *c,TaggedRef old,TaggedRef nw);

@@ -45,6 +45,7 @@ extern OZ_Return (*cellDoAccess)(Tertiary*,TaggedRef);
 extern OZ_Return (*cellAtAccess)(Tertiary*,TaggedRef,TaggedRef);
 extern OZ_Return (*cellAtExchange)(Tertiary*,TaggedRef,TaggedRef);
 extern OZ_Return (*cellAssignExchange)(Tertiary*,TaggedRef,TaggedRef);
+extern OZ_Return (*objectExchange) (Tertiary*,TaggedRef,TaggedRef,TaggedRef);
 
 // lock/unlock (interface) methods/their usage may be optimized
 // further, e.g. inline cases when distributed locks are currently

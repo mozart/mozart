@@ -50,6 +50,11 @@ OZ_Return cellDoExchangeStub(Tertiary*,TaggedRef,TaggedRef)
   OZ_error("'cellDoExchange' called without DP library?");
   return (PROCEED);
 }
+OZ_Return objectExchangeStub(Tertiary*,TaggedRef,TaggedRef,TaggedRef)
+{
+  OZ_error("'objectExchange' called without DP library?");
+  return (PROCEED);
+}
 OZ_Return cellDoAccessStub(Tertiary*,TaggedRef)
 {
   OZ_error("'cellDoAccess' called without DP library?");
@@ -216,6 +221,8 @@ OZ_Return (*portSend)(Tertiary *p, TaggedRef msg)
   = portSendStub;
 OZ_Return (*cellDoExchange)(Tertiary*,TaggedRef,TaggedRef)
   = cellDoExchangeStub;
+OZ_Return (*objectExchange)(Tertiary*,TaggedRef,TaggedRef,TaggedRef)
+  = objectExchangeStub;
 OZ_Return (*cellDoAccess)(Tertiary*,TaggedRef)
   = cellDoAccessStub;
 OZ_Return (*cellAtAccess)(Tertiary*,TaggedRef,TaggedRef)

@@ -2352,8 +2352,9 @@ enum ExKind{
   ACCESS      = 4,
   DEEPAT      = 5,
   REMOTEACCESS= 6,
-  MOVEEX      = 7,
-  DUMMY       = 8
+  O_EXCHANGE  = 7,
+  MOVEEX      = 8,
+  DUMMY       = 9
 };
 
 //

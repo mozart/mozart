@@ -130,13 +130,25 @@ void convertLockProxyToFrame(Tertiary *t){
 /*   basic cell routine */
 /**********************************************************************/
 
+void ooExchGetFeaOld(TaggedRef in, TaggedRef &fea, TaggedRef &old){
+  Assert(oz_isLTuple(in));
+  fea=oz_deref(tagged2LTuple(in)->getHead());
+  old=oz_deref(tagged2LTuple(oz_deref(tagged2LTuple(in)->getTail()))->getHead());
+}
+
+TaggedRef ooExchMakeFeaOld(TaggedRef fea,TaggedRef old){
+  TaggedRef cc=oz_cons(old,oz_nil());
+  return oz_cons(fea,cc);}
+
 TaggedRef CellSec::unpendCell(PendThread* pt,TaggedRef val){
   val = oz_safeDeref(val);
   if(pt==NULL) return val;
   switch(pt->exKind){
+
   case ACCESS:{
     ControlVarUnify(pt->controlvar,pt->old,val);
     return val;}
+
   case DEEPAT:{
     TaggedRef tr = tagged2SRecord(val)->getFeature(pt->nw);
     if(tr) {
@@ -145,6 +157,7 @@ TaggedRef CellSec::unpendCell(PendThread* pt,TaggedRef val){
       ControlVarRaise(pt->controlvar,
           OZ_makeException(E_ERROR,E_OBJECT,"@",2,val,pt->nw));}
     return val;}
+
   case ASSIGN:{
     if (tagged2SRecord(val)->replaceFeature(pt->old,pt->nw)) {
       ControlVarResume(pt->controlvar);
@@ -152,22 +165,42 @@ TaggedRef CellSec::unpendCell(PendThread* pt,TaggedRef val){
     ControlVarRaise(pt->controlvar,
          OZ_makeException(E_ERROR,E_OBJECT,"<-",3,val,pt->old,pt->nw));
     return val;}
+
   case AT:{
     TaggedRef tr = tagged2SRecord(val)->getFeature(pt->old);
     if(tr) {
       ControlVarUnify(pt->controlvar,tr,pt->nw);
       return val;}
     ControlVarRaise(pt->controlvar,
-                    OZ_makeException(E_ERROR,E_OBJECT,"@",2,val,pt->nw));}
+                    OZ_makeException(E_ERROR,E_OBJECT,"@",2,val,pt->nw));
+    return val;}
+
   case REMOTEACCESS:{
    cellSendReadAns(((DSite*)(pt->old)),((DSite*)(pt->nw)),
                    (int)(pt->controlvar),val);
    return val;}
+
   case EXCHANGE:{
     Assert(pt->old!=0);
     Assert(pt->nw!=0);
     ControlVarUnify(pt->controlvar,val,pt->old);
     return pt->nw;}
+
+  case O_EXCHANGE:{
+    Assert(pt->old!=0);
+    TaggedRef ow,fea;
+    ooExchGetFeaOld(pt->old,fea,ow);
+    TaggedRef tr = tagged2SRecord(val)->getFeature(fea);
+    if(!tr) {
+      ControlVarRaise(pt->controlvar,
+                    OZ_makeException(E_ERROR,E_OBJECT,"exch",3,fea,ow,pt->nw));
+      return val;}
+    if (tagged2SRecord(val)->replaceFeature(fea,pt->nw)) {
+      ControlVarUnify(pt->controlvar,tr,ow);
+      return val;}
+    ControlVarRaise(pt->controlvar,
+                    OZ_makeException(E_ERROR,E_OBJECT,"exch",3,fea,ow,pt->nw));
+    return val;}
 
   case DUMMY:
     return val;
@@ -177,6 +210,7 @@ TaggedRef CellSec::unpendCell(PendThread* pt,TaggedRef val){
 
  return 0;
 }
+
 
 
 OZ_Return CellSec::exchangeVal(TaggedRef old, TaggedRef nw, ExKind exKind){
@@ -197,6 +231,17 @@ OZ_Return CellSec::exchangeVal(TaggedRef old, TaggedRef nw, ExKind exKind){
     TaggedRef tr=contents;
     contents = nw;
     return oz_unify(tr,old);}
+
+  case O_EXCHANGE:{
+    Assert(old!=0 && nw!=0);
+    TaggedRef ow,fea;
+    ooExchGetFeaOld(old,fea,ow);
+    TaggedRef tr = tagged2SRecord(contents)->getFeature(fea);
+    if(tr){
+      TaggedRef tr2=tagged2SRecord(contents)->replaceFeature(fea,nw);
+      Assert(tr2!=0);
+      return oz_unify(tr,ow);}
+    return OZ_raise(OZ_makeException(E_ERROR,E_OBJECT,"exch",3, fea, ow,nw));}
 
   default:
     Assert(0);}
@@ -314,6 +359,12 @@ OZ_Return cellDoAccessImpl(Tertiary *c,TaggedRef val,TaggedRef fea){
 OZ_Return cellDoExchangeImpl(Tertiary *c,TaggedRef old,TaggedRef nw){
    return cellDoExchangeInternal(c,old,nw,EXCHANGE);}
 
+OZ_Return objectExchangeImpl(Tertiary* c,TaggedRef fea,TaggedRef ov, TaggedRef nv){
+  maybeConvertCellProxyToFrame(c);
+  Assert(!(oz_isVariable(fea)));
+  TaggedRef cc=ooExchMakeFeaOld(fea,ov);
+  return getCellSecFromTert(c)->exchange(c,cc,nv,O_EXCHANGE);}
+
 OZ_Return cellAssignExchangeImpl(Tertiary *c,TaggedRef fea,TaggedRef val){
    return cellDoExchangeInternal(c,fea,val,ASSIGN);}
 
@@ -428,6 +479,7 @@ void LockSec::unlockPending(Thread *t){
   *pt=(*pt)->next;}
 
 void LockSec::unlockComplex(Tertiary* tert){
+  int xxx=0;
   PD((LOCK,"unlock complex in state:%d",getState()));
   Assert(getState() & Cell_Lock_Valid);
   if(getState() & Cell_Lock_Next){
@@ -445,6 +497,7 @@ void LockSec::unlockComplex(Tertiary* tert){
       secLockGet(this,tert,NULL);
       return;}
     if(th==NULL){
+      Assert(!(th==NULL && pending->exKind==MOVEEX));
       Assert(tert->isManager());
       pendThreadRemoveFirst(getPendBase());
       unlockComplex(tert);
