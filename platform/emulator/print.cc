@@ -92,15 +92,12 @@ void printWhere(ostream &cout,ProgramCounter PC);
 // returns OK if associated suspension is alive
 inline Bool isEffectiveSusp(SuspList* sl)
 {
-  return OK;
-#if 0
   Thread *thr = sl->getElem ();
   if (thr->isDeadThread ())
     return NO;
   if (!GETBOARD(thr))
     return NO;
   return OK;
-#endif
 }
 
 // returns OK if sl contains at least one alive suspension element
