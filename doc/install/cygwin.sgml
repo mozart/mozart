@@ -102,14 +102,14 @@
       versions and the place where they can be downloaded.
       <Table>
         <TR><TH>Package<TH>Version<TH>Location
-        <TR><TD>GNU MP<TD>3.1.1
-          <TD><Ref.Extern to="ftp://ftp.gnu.org/pub/gnu/gmp/gmp-3.1.1.tar.gz"
-            ><File>ftp://ftp.gnu.org/pub/gnu/gmp/gmp-3.1.1.tar.gz</File
+        <TR><TD>GNU MP<TD>4.1.2
+          <TD><Ref.Extern to="ftp://ftp.gnu.org/pub/gnu/gmp/gmp-4.1.2.tar.gz"
+            ><File>ftp://ftp.gnu.org/pub/gnu/gmp/gmp-4.1.2.tar.gz</File
             ></Ref.Extern>
-        <TR><TD>zlib<TD>1.1.3
+        <TR><TD>zlib<TD>1.1.4
           <TD><Ref.Extern to="http://www.gzip.org/zlib.tar.gz"
             ><File>http://www.gzip.org/zlib.tar.gz</File></Ref.Extern>
-        <TR><TD>Tcl/Tk<TD>8.3.3
+        <TR><TD>Tcl/Tk<TD>8.4.6.0
           <TD><Ref.Extern
             to="http://aspn.activestate.com/ASPN/Downloads/ActiveTcl/"
             ><File>http://aspn.activestate.com/ASPN/Downloads/ActiveTcl/</File
@@ -156,8 +156,8 @@
       <P>
         Unpack it, configure it, build it, and install it thus:
 <<<cd ?{build}
-tar zxvf gmp-3.1.1.tar.gz
-cd gmp-3.1.1
+tar zxvf gmp-4.1.2.tar.gz
+cd gmp-4.1.2
 ./configure --prefix=?{packages} --disable-shared CFLAGS="?{CFLAGS}"
 make
 make install>>>
@@ -172,8 +172,8 @@ make install>>>
       <P>
         Unpack it, configure it, build it, and install it thus:
 <<<cd ?{build}
-tar zxvf zlib-1.1.3.tar.gz
-cd zlib-1.1.3
+tar zxvf zlib-1.1.4.tar.gz
+cd zlib-1.1.4
 CFLAGS="?{CFLAGS}" ./configure --prefix=?{packages}
 make
 make install>>>
@@ -192,14 +192,17 @@ make install>>>
         <Table>
           <TR><TD>?{packages}<File>/include/tcl.h</File>
           <TR><TD>?{packages}<File>/include/tclDecls.h</File>
+          <TR><TD>?{packages}<File>/include/tclPlatDecls.h</File>
           <TR><TD>?{packages}<File>/include/tk.h</File>
           <TR><TD>?{packages}<File>/include/tkDecls.h</File>
+          <TR><TD>?{packages}<File>/include/tkIntXlibDecls.h</File>
+          <TR><TD>?{packages}<File>/include/tkPlatDecls.h</File>
           <TR><TD>?{packages}<File>/include/X11/*</File>
-          <TR><TD>?{packages}<File>/lib/tk8.3/*</File>
-          <TR><TD>?{packages}<File>/lib/tcl8.3/*</File>
-          <TR><TD>?{packages}<File>/dlls/tcl83.dll</File>
-          <TR><TD>?{packages}<File>/dlls/tclpip83.dll</File>
-          <TR><TD>?{packages}<File>/dlls/tk83.dll</File>
+          <TR><TD>?{packages}<File>/lib/tk8.4/*</File>
+          <TR><TD>?{packages}<File>/lib/tcl8.4/*</File>
+          <TR><TD>?{packages}<File>/dlls/tcl84.dll</File>
+          <TR><TD>?{packages}<File>/dlls/tclpip84.dll</File>
+          <TR><TD>?{packages}<File>/dlls/tk84.dll</File>
         </Table>
         Unfortunately, Windows Tcl/Tk distributions come without the
         all-important <File/tclConfig.sh/ and <File/tkConfig.sh/ files,
@@ -207,16 +210,16 @@ make install>>>
         ?{packages} directory).  <File/tclConfig.sh/ should have the
         following contents:
 <<<# tclConfig.sh --
-TCL_VERSION='8.3'
+TCL_VERSION='8.4'
 TCL_PREFIX='?{packages}'
 TCL_LIBS=''
-TCL_LIB_SPEC='?{packages}/dlls/tcl83.dll'>>>
+TCL_LIB_SPEC='?{packages}/dlls/tcl84.dll'>>>
         Whereas <File/tkConfig.sh/ ought to look like this:
 <<<# tkConfig.sh --
-TK_VERSION='8.3'
+TK_VERSION='8.4'
 TK_PREFIX='?{packages}'
 TK_LIBS=''
-TK_LIB_SPEC='?{packages}/dlls/tk83.dll'
+TK_LIB_SPEC='?{packages}/dlls/tk84.dll'
 TK_XINCLUDES=''>>>
         (Don't forget to substitute your actual packages directory for
         ?{packages} in these files!)
