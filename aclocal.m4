@@ -142,6 +142,14 @@ AC_DEFUN(OZ_INIT, [
   AC_SUBST(CPPFLAGS)
   AC_SUBST(LDFLAGS)
   OZ_PATH_PROG(OZTOOL,oztool,[OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"])
+  case "$target" in
+    i386-mingw32) PLATFORM=win32-i486;;
+    *)
+      OZ_PATH_PROG(OZPLATFORM,ozplatform)
+      PLATFORM=`$OZPLATFORM`
+    ;;
+  esac
+  AC_SUBST(PLATFORM)
 ])
 
 dnl ==================================================================
@@ -1017,9 +1025,6 @@ AC_DEFUN(OZ_CONTRIB_INIT,[
     OZ_INIT
     OZ_PATH_PROG(OZC,ozc)
     OZ_PATH_PROG(OZL,ozl)
-    OZ_PATH_PROG(OZPLATFORM,ozplatform)
-    PLATFORM=`$OZPLATFORM`
-    AC_SUBST(PLATFORM)
 ])
 
 AC_DEFUN(OZ_CONTRIB_INIT_CXX,[
