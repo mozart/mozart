@@ -155,6 +155,10 @@ Bool oz_unprotect(TaggedRef *ref) {
   return OK;
 }
 
+void oz_unprotectAllOnExit() {
+  extRefs = (ExtRefNode *) 0;
+}
+
 /*
  * Garbage collection needs to be aware of certain objects, e.g.,
  * since these objects store references into the heap. The gc-routine

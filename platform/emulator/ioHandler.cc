@@ -31,15 +31,17 @@
 
 class IONode {
 private:
-  Bool isprotected[2];  // whether
+  Bool isprotected[2];
 public:
   int fd;
   OZ_IOHandler handler[2];
+  OZ_IOHandler hSusp[2];
   void *readwritepair[2];
   IONode *next;
   IONode(int f, IONode *nxt): fd(f), next(nxt) {
     isprotected[0] = isprotected[1] = NO;
     handler[0] = handler[1] = 0;
+    hSusp[0] = hSusp[1] = 0;
     readwritepair[0] = readwritepair[1] = 0;
   }
   void protect(int mode) {
@@ -161,6 +163,25 @@ void oz_io_deSelect(int fd)
   oz_io_deSelect(fd,SEL_WRITE);
 }
 
+//
+void oz_io_suspend(int fd, int mode)
+{
+  osClrWatchedFD(fd, mode);
+  IONode *ion = findIONode(fd);
+  Assert(ion->hSusp[mode] == 0);
+  ion->hSusp[mode] = ion->handler[mode];
+  ion->handler[mode] = 0;
+}
+
+void oz_io_resume(int fd, int mode)
+{
+  osWatchFD(fd, mode);
+  IONode *ion = findIONode(fd);
+  Assert(ion->handler[mode] == 0);
+  ion->handler[mode] = ion->hSusp[mode];
+  ion->hSusp[mode] = 0;
+}
+
 #ifdef DENYS_EVENTS
 static int io_event_sent = 0;
 #endif
@@ -223,4 +244,30 @@ void oz_io_check()
   if (!am.isCritical() && (numbOfFDs > 0)) {
     am.setSFlag(IOReady);
   }
+}
+
+//
+// kost@ : when purging borrow entries during shutdown, we want to
+// make sure that no incomming messages are processed (since they can
+// refer entries just purged);
+void oz_io_stopReadingOnShutdown()
+{
+  IONode *aux = ioNodes;
+  while (aux) {
+    oz_io_suspend(aux->fd, SEL_READ);
+    aux = aux->next;
+  }
+}
+
+//
+int oz_io_numOfSelected()
+{
+  int num = 0;
+  IONode *aux = ioNodes;
+  while (aux) {
+    if (aux->handler[SEL_READ] || aux->handler[SEL_WRITE])
+      num++;
+    aux = aux->next;
+  }
+  return (num);
 }

@@ -3305,6 +3305,7 @@ OZ_BI_define(BIshutdown,1,0)
 {
   oz_declareIntIN(0,status);
   am.exitOz(status);
+  Assert(0);
   return(PROCEED); /* not reached but anyway */
 } OZ_BI_end
 

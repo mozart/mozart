@@ -111,6 +111,7 @@ void TCPTransObj::close(Bool isrunning) {
 
 void TCPTransObj::deliver() {
   // ComObj responsible for not doing this unnecesarily, OS-call
+  // kost@ : what OS call? I see none..
   Assert(fd!=-1);
   OZ_registerWriteHandler(fd,tcpTransObj_writeHandler,(void *) this);
 }

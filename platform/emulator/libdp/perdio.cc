@@ -1248,7 +1248,10 @@ OZ_Term getGatePort(DSite* sd){
   return b->getValue();}
 
 
-void dpExitWithTimer(unsigned int timeUntilClose) {
+void dpExitWithTimer(unsigned int timeUntilClose)
+{
+  const unsigned int tuc = timeUntilClose;
+  int remaining, connectionsLeft;
   //  printf("dpExit in pid %d\n",getpid());
   //  printf("Close started at %s\n", myDSite->stringrep());
   //printf("tiden:%d\n", timeUntilClose);
@@ -1257,53 +1260,151 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
   if (!isPerdioInitialized())
     return;
 
-  int proxiesLeft = 1, connectionsLeft;
-
-  unsigned int timeToSleep;
-
   oz_rootBoard()->install();
   osSetAlarmTimer(0);
 
-  if((int) timeUntilClose > 0)
-    BT->closeFrameToProxy(timeUntilClose);
-
-  // This section was used to empty the borrowtable.
-  // This caused bugs when a cell entry was removed after
-  // having sent dump in the previous line, if the contents
-  // were requested and they refferred to some other (removed) proxy
+  //
+  // This section was used to forcefully empty the borrowtable,
+  // temporarily keeping only the cell frames and proxies that expect
+  // to become a frame. This does not work however in the following
+  // situation: imagine there is a cell frame, such that the cell's
+  // content refers an (another) proxy. Now we cannot dump that later
+  // proxy, because it is a part of the cell's state, and, thus, will
+  // be needed when sending the state back to the manager.
   //
   // Instead let it be the responsibilty of the programmer to
   // drop all references and let them be garbagecollected before
   // calling Application.exit.
-//    while ((int) timeUntilClose > 0 && proxiesLeft) {
-//      //    printf("times left %d\n", timeUntilClose);
-//      //    printf("proxies left %d\n", proxiesLeft);
-//      unsigned long idle_start = osTotalTime();
-//      proxiesLeft = BT->closeProxyToFree(timeUntilClose);
-//      osUnblockSignals();
-//      timeToSleep = 50;
-//      osBlockSelect(timeToSleep);
-//      osBlockSignals(NO);
-//      timeUntilClose -= (osTotalTime() - idle_start);
-//      oz_io_handle();
-//    }
-  //  printf("times left %d\n", timeUntilClose);
-  //  printf("proxies left %d\n", proxiesLeft);
-
+  /*
   if((int) timeUntilClose > 0)
-    connectionsLeft =  startNiceClose();
+    BT->closeFrameToProxy(timeUntilClose);
+  do {
+    //    printf("times left %d\n", timeUntilClose);
+    //    printf("proxies left %d\n", remaining);
+    unsigned long idle_start = osTotalTime();
+    remaining = BT->closeProxyToFree(timeUntilClose);
+    BT->closeFrameToProxy(timeUntilClose);
+    osUnblockSignals();
+    unsigned int ts = TIME_SLICE;
+    osBlockSelect(ts);
+    osBlockSignals(NO);
+    timeUntilClose -= (osTotalTime() - idle_start);
+    oz_io_handle();
+  } while ((int) timeUntilClose > 0 && remaining);
+  */
+  //  printf("times left %d\n", timeUntilClose);
+  //  printf("proxies left %d\n", remaining);
+
+  //
+  // kost@ : Another approach is to drop all the local refernces and
+  // iterate with the GC/processing of incoming messages. The idea is
+  // that once local references are dropped, proxies will eventually
+  // go away, which can trigger reclamation of proxies at the manager
+  // site, which, in turn, will trigger reclamation of managers here
+  // etc. The trouble: if the manager deliberately keeps a proxy, then
+  // the corresponding manager&everything reachable from it will stay
+  // alive here.
+  /*
+  // Dump all the GC roots but the owner&borrow tables.
+  //  + weak dicts
+  //  - XRegs are dumped anyway by the GC
+  //  + threads
+  //      - current thread should not be accessed anymore anyway;
+  //      + threads pool
+  //      - suspended threads are explicitly reclaimed due to variables
+  //        that are GCed away;
+  //  - debugStreamTail is a variable
+  //  - spaces
+  //    - the root board should contain nothing
+  //    - other spaces should be unreachable;
+  //  + defaultExceptionHdl
+  //  - code area is not touched here:
+  //    - not reachable code (purged threads) will be reclaimed;
+  //    - reachable code - through owner&borrow entries - must stay!!
+  //  - PrTabEntries - ditto;
+  //  + ExtRefs - must be discarded explicitly (note: C++ destructors
+  //    should not access the Oz heap data structures after that, since
+  //    that memory can be already unmapped etc.);
+  //  - perdio roots: don't touch them! Owner&borrow entries may be
+  //    needed for processing of incomming messages. Proxies will be
+  //    reclaimed when there are no local references to them. Managers
+  //    have to stay around 'cause there could be messages for them.
+  //
+  gDropWeakDictionaries();
+  DebugCode(setCurrentThread((Thread *) -1));
+  am.threadsPool.init();
+  am.setDefaultExceptionHdl(taggedVoidValue);
+  oz_unprotectAllOnExit();
+
+  // Now, do the loop with GC/IO:
+  do {
+    unsigned long idle_start = osTotalTime();
+    osUnblockSignals();
+    unsigned int ts = TIME_SLICE;
+    osBlockSelect(ts);
+    osBlockSignals(NO);
+    timeUntilClose -= (osTotalTime() - idle_start);
+    am.doGCollect();
+    oz_io_handle();
+  } while ((int) timeUntilClose > 0);
+  timeUntilClose = tuc;
+  */
+
+  if (timeUntilClose) {
+    //
+    // kost@ : Now, the version of the first approach: let's first dump
+    // all the frames we can handle, after what the input channels are
+    // closed & flushed, and finally all proxies are forcefully
+    // reclaimed;
+    do {
+      unsigned long idle_start = osTotalTime();
+      remaining = BT->dumpFrames();
+      oz_io_handle();
+      osUnblockSignals();
+      unsigned int ts = TIME_SLICE;
+      osBlockSelect(ts);
+      osBlockSignals(NO);
+      oz_io_handle();
+      timeUntilClose -= (osTotalTime() - idle_start);
+    } while ((int) timeUntilClose > 0 && remaining);
+
+    //
+    oz_io_stopReadingOnShutdown();
+    //
+    BT->dumpProxies();
+    //
+    timeUntilClose = tuc;
+    do {
+      unsigned long idle_start = osTotalTime();
+      oz_io_handle();
+      osUnblockSignals();
+      unsigned int ts = TIME_SLICE;
+      osBlockSelect(ts);
+      osBlockSignals(NO);
+      remaining = oz_io_numOfSelected();
+      timeUntilClose -= (osTotalTime() - idle_start);
+    } while ((int) timeUntilClose > 0 && remaining);
+  }
+
+  //
+  // kost@ : 'nice close' does not work in this scenario since
+  // no messages can be read;
+  /*
+  timeUntilClose = tuc;
+  connectionsLeft =  startNiceClose();
   while ((int) timeUntilClose > 0 && connectionsLeft) {
     //    printf("times left %d\n", timeUntilClose);
     //    printf("connections left %d\n", connectionsLeft);
     unsigned long idle_start = osTotalTime();
     connectionsLeft = niceCloseProgress();
     osUnblockSignals();
-    timeToSleep = 50;
-    osBlockSelect(timeToSleep);
+    unsigned int ts = TIME_SLICE;
+    osBlockSelect(ts);
     osBlockSignals(NO);
     timeUntilClose -= (osTotalTime() - idle_start);
     oz_io_handle();
   }
+  */
 
   // Close any remaining connections violently.
   comController->closeAll();
@@ -1316,7 +1417,7 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
   //  printf("connections left %d\n", connectionsLeft);
   //  printf("Close done at %s\n", myDSite->stringrep());
 
-  if(logfile!=stdout) fclose(logfile);
+ if (logfile!=stdout) fclose(logfile);
 }
 
 void dpExitImpl() {

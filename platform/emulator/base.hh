@@ -457,15 +457,17 @@ int  oz_io_select(int fd, int mode,TaggedRef l,TaggedRef r);
 void oz_io_acceptSelect(int fd,TaggedRef l,TaggedRef r);
 void oz_io_deSelect(int fd,int mode);
 void oz_io_deSelect(int fd);
+void oz_io_suspend(int fd, int mode);
+void oz_io_resume(int fd, int mode);
+void oz_io_awakeVar(TaggedRef var);
 void oz_io_handle();
 void oz_io_check();
-void oz_io_awakeVar(TaggedRef var);
-
-
-
+void oz_io_stopReadingOnShutdown();
+int oz_io_numOfSelected();
 
 Bool oz_protect(TaggedRef *);
 Bool oz_unprotect(TaggedRef *);
+void oz_unprotectAllOnExit();
 
 _FUNDECL(void,OZ_gCollectBlock,(OZ_Term *, OZ_Term *, int));
 _FUNDECL(void,OZ_sCloneBlock,(OZ_Term *, OZ_Term *, int));

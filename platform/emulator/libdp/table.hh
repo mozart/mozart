@@ -486,8 +486,9 @@ public:
 
   void copyBorrowTable(BorrowEntry *,int);
 
-  void closeFrameToProxy(unsigned int ms);
-  int closeProxyToFree(unsigned int ms);
+  // 'dumpFrames()' returns the number remaining frames;
+  int dumpFrames();
+  void dumpProxies();
 };
 
 extern BorrowTable *borrowTable;
