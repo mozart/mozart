@@ -19,22 +19,6 @@
 %%% WARRANTIES.
 %%%
 
-%% TODO - Handbook
-%%
-%% Scanner:
-%%   prop prefix(atom)     -> \gumpscannerprefix atom
-%%   prop bestfit          -> \switch +gumpscannerbestfit
-%%   prop caseless         -> \switch +gumpscannercaseless
-%%   prop nowarn           -> \switch +gumpscannernowarn
-%%   prop backup           -> \switch +gumpscannerbackup
-%%   prop perfreport       -> \switch +gumpscannerperfreport
-%%   prop statistics       -> \switch +gumpscannerstatistics
-%%
-%% Parser:
-%%   prop expect(int)      -> \gumpparserexpect int
-%%   prop outputSimplified -> \switch +gumpparseroutputsimplified
-%%   prop verbose          -> \switch +gumpparserverbose
-
 local
    local
       OZHOME = {System.get home}
