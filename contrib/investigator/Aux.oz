@@ -19,10 +19,17 @@ export
    PropEq     
    PropName   
    PropLocation
+   PropIsFailed
    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import
-   Reflect(varReflect varEq propReflect propEq propName propLocation)
+   Reflect(varReflect
+	   varEq
+	   propReflect
+	   propEq
+	   propName
+	   propLocation
+	   propIsFailed)
    at 'x-oz://contrib/Reflect.ozf'
    CTB at 'x-oz://boot/CTB'
    Error
@@ -173,4 +180,5 @@ define
    PropEq       = Reflect.propEq
    PropName     = Reflect.propName
    PropLocation = Reflect.propLocation
+   PropIsFailed = Reflect.propIsFailed
 end

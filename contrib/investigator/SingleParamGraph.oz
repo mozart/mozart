@@ -26,7 +26,7 @@ define
       #"\")],l(\"cn<"#PropId
       #">\",n(\"\",["
       #"a(\"OBJECT\",\""#P.name#"\\n"#Location#"\"),"
-      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(PropId $)}#"\"),"
+      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(P.reference $)}#"\"),"
       #{Hist get_prop_node_attr(PropId $)}
       #"m(["
       #{Hist insert_menu($)}
