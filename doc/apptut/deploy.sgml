@@ -108,25 +108,27 @@ Import:
 
   </Section>
 
-  <Section id="Section.Deployment.unix">
-    <Title/Executing Functors under Unix/
+  <Section id="Section.Deployment.execute">
+    <Title/Executing Functors/
 
     <p>
-      This section shows a convenient form to execute functor on Unix
-      platforms. It is not available under Windows platforms.
+      This section shows a convenient form to execute functors.
 
     <p>
       The option <<--exec>> (or <<-x>> as shortcut) can be supplied to
       both compiler and linker. Functors that are created with that
-      option can be directly executed. For example, the file <file/lmf/
+      option can be directly executed. For example, the file <file/lmf.exe/
       created with
-      <<<ozl -x LMF.ozf -o lmf>>>
+      <<<ozl -x LMF.ozf -o lmf.exe>>>
       can be directly executed:
-      <<<lmf>>
-      The pickled functor <file/lmf/ just features a particular header
-      that allows direct exceution. It can still be used together with
+      <<<lmf.exe>>
+      The pickled functor <file/lmf.exe/ just features a particular header
+      that allows direct execution. It can still be used together with
       the <file/ozengine/ program:
-      <<<ozengine lmf>>>
+      <<<ozengine lmf.exe>>>
+
+    <p>
+      Naturally, the extension <file/.exe/ can be omitted under Unix.
       
   </Section>
 
