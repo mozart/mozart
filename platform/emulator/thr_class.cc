@@ -159,7 +159,7 @@ void Thread::propagatorToNormal()
   state.flags &= ~S_PR_THR;
 
   setBody(am.allocateBody());
-  state.flags |= S_RTHREAD;
+  state.flags = state.flags|S_RTHREAD;
 }
 
 int Thread::getRunnableNumber()
