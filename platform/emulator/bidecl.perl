@@ -1829,56 +1829,95 @@ sub CTABLE {
     }
 }
 
+sub argspec {
+    my $spec = shift;
+    my ($mod,$det,$typ) = (0,'any','value');
+
+    # is the argument register side effected?
+
+    if ($spec =~ /^\!/) { $spec=$'; $mod=1; }
+
+    # what is the determinacy condition on the argument?
+
+    if    ($spec =~ /^\+/) { $spec=$'; $det='det'; }
+    elsif ($spec =~ /^\*/) { $spec=$'; $det='detOrKinded'; }
+
+    # now parse the type of the argument
+
+    if    ($spec =~ /^\[(.+)\#(.+)\]$/) { $typ="list(pair($1 $2))"; }
+    elsif ($spec =~ /^\[(.+)\]$/      ) { $typ="list($1)"; }
+    else                                { $typ=$spec; }
+
+    return ($mod,$det,$typ);
+}
+
+# $style==0     old style
+# $style==1     both
+# $style==2     new style
+
+my $style = 0;
+
 sub OZTABLE {
     my ($key,$info);
     while (($key,$info) = each %$builtins) {
-        my $inArity  = @{$info->{in}};
-        my $outArity = @{$info->{out}};
-        my $arity    = $inArity + $outArity;
-        my $BI       = $info->{BI};
-        my $bi       = $info->{bi};
-        my $ibi      = $info->{ibi};
-        my $eqeq     = $info->{eqeq};
-        my $shallow  = $info->{shallow};
-        my $noreturn = $info->{doesNotReturn};
-        my $isRel    = ($outArity==0)?1:0;
-        my $isFun    = ($outArity==1)?1:0;
-        my @types    = ();
-        my @dets     = ();
-        my $destroys = 0;
-        my ($arg,$type,$det);
-        my @args;
-        my $which;
+        my (@imods,@idets,@ityps,$spec,$destroys);
+        foreach $spec (@{$info->{in}}) {
+            my ($mod,$det,$typ) = &argspec($spec);
+            $destroys=1 if $mod;
+            push @imods,($mod?'true':'false');
+            push @idets,$det;
+            push @ityps,$typ;
+        }
+        my (@odets,@otyps);
+        foreach $spec (@{$info->{out}}) {
+            my ($mod,$det,$typ) = &argspec($spec);
+            $det="any(det)" if $det eq 'det';
+            push @odets,$det;
+            push @otyps,$typ;
+        }
         print "'$key':\n\tbuiltin(\n";
-        foreach $which (in,out) {
-            foreach $arg (@{$info->{$which}}) {
-                $det = 'any';
-                if ($arg =~ /^!/) { $destroys=1; $arg = $'; }
-                if ($arg =~ /^\+/){ $det = 'det';$arg = $'; }
-                if ($arg =~ /^\*/){ $det = 'detOrKinded'; $arg = $'; }
-                if    ($arg =~ /^\[(.+)\#(.+)\]$/) {
-                    $type = "list(pair($1 $2))";
-                }
-                elsif ($arg =~ /^\[(.+)\]$/) { $type="list($1)"; }
-                else { $type = $arg; }
-                $det = "any(det)" if $det eq 'det' && $which eq out;
-                push @types,$type;
-                push @dets ,$det;
+        if ($style>0) {
+            if (@ityps) {
+                print "\t\titypes:[",join(' ',@ityps),"]\n";
+            } else {
+                print "\t\titypes:nil\n";
+            }
+            if (@otyps) {
+                print "\t\totypes:[",join(' ',@otyps),"]\n";
+            } else {
+                print "\t\totypes:nil\n";
+            }
+            if (@idets) {
+                print "\t\tidets:[",join(' ',@idets),"]\n";
+            } else {
+                print "\t\tidets:nil\n";
+            }
+            if (@odets) {
+                print "\t\todets:[",join(' ',@odets),"]\n";
+            } else {
+                print "\t\todets:nil\n";
+            }
+            if (@imods) {
+                print "\t\timods:[",join(' ',@imods),"]\n";
+            } else {
+                print "\t\timods:nil\n";
             }
         }
-        if (@types) {
-            print "\t\ttypes:[",join(' ',@types),"]\n";
-        } else {
-            print "nil\n";
+        if ($style<2) {
+            if ((@ityps+@otyps)>0) {
+                print "\t\ttypes:[",join(' ',@ityps,@otyps),"]\n";
+                print "\t\tdet:[",join(' ',@idets,@odets),"]\n";
+            } else {
+                print "\t\ttypes:nil\n";
+                print "\t\tdet:nil\n";
+            }
         }
-        if (@dets) {
-            print "\t\tdet:[",join(' ',@dets),"]\n";
-        }
-        print "\t\teqeq:true\n" if ($eqeq);
+        print "\t\teqeq:true\n" if $info->{eqeq};
         print "\t\tdestroysArguments:true\n" if $destroys;
-        print "\t\tdoesNotReturn:true\n" if $noreturn;
-        print "\t\tinlineFun:true\n" if $isFun && $ibi;
-        print "\t\tinlineRel:true\n" if $isRel && $ibi;
+        print "\t\tdoesNotReturn:true\n" if $info->{doesNotReturn};
+        print "\t\tinlineFun:true\n" if $info->{ibi} && (@{$info->{out}}==1);
+        print "\t\tinlineRel:true\n" if $info->{ibi} && (@{$info->{out}}==0);
+        my $shallow = $info->{shallow};
         print "\t\trel:'$shallow'\n" if $shallow;
         print "\t)\n";
     }
