@@ -115,8 +115,9 @@ in
 
       attr
 	 LastSelectedFrame : 0
-	 EnvSync           : _
-	 ScrollSync        : _
+	 EnvSync    : _
+	 ScrollSync : _
+	 StatusSync : _
       
       meth init
 	 %% create the main window, but delay showing it
@@ -549,8 +550,19 @@ in
       meth getStackText($)
 	 self.StackText
       end
-      
+
       meth status(S M<=clear C<=DefaultForeground)
+	 New in
+         StatusSync <- New = unit
+         thread
+            {WaitOr New {Alarm TimeoutToStatus}}
+            case {IsDet New} then skip else
+	       Gui,doStatus(S M C)
+            end
+         end
+      end
+
+      meth doStatus(S M<=clear C<=DefaultForeground)
 	 W = self.StatusText
       in
 	 case M == clear then
@@ -568,16 +580,15 @@ in
 
 	    of ' reset' then
 	       N in
-	       Gui,status(ResetStatus)
+	       Gui,doStatus('Resetting...')
 	       ThreadManager,killAll(N)
-	       {self.StackText title(StackTitle)}
 	       {Delay 200} %% just to look nice... ;)
-	       Gui,status(case N == 1 then
-			     ' (1 thread has been killed)'
-			  else
-			     ' (' # N # ' threads have been killed)'
-			  end append)
-
+	       Gui,doStatus(case N == 1 then
+			       ' 1 thread killed'
+			    else
+			       ' ' # N # ' threads killed'
+			    end append)
+	       
 	    [] ' step' then
 	       T = @currentThread
 	    in

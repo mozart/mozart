@@ -246,6 +246,7 @@ in
 		     case T == @currentThread then
 			F L in
 			{StackObj getPos(file:F line:L)}
+			Gui,status('Thread #' # I # ' is runnable again')
 			SourceManager,scrollbar(file:F line:L what:appl
 						color:ScrollbarApplColor)
 		     else skip end
@@ -375,7 +376,7 @@ in
 	     T = {S getThread($)}
 	  in
 	     ThreadManager,kill(T I false)
-	     Gui,status('.' append)
+	     Gui,doStatus('.' append)
 	  end}
 	 DeleteCount
       end
