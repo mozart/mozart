@@ -236,8 +236,6 @@ void* StringHashTable::htFind(const char *s)
   }
 }
 
-
-#ifdef DEBUG_CHECK
 //
 int StringHashTable::lengthList(int i)
 {
@@ -289,8 +287,6 @@ void StringHashTable::printStatistic()
   printf("\t%d table entries have been used for %d literals (%d%%)\n",
          tableSize, counter, counter*100/tableSize);
 }
-
-#endif
 
 //
 unsigned StringHashTable::memRequired(int valSize)

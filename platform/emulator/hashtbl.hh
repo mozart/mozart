@@ -58,15 +58,6 @@ private:
   SHT_HashNode *next;
 
 public:
-  SHT_HashNode() { setEmpty(); }
-  SHT_HashNode(const char *s, void *valueIn, SHT_HashNode *nextIn)
-    : value(valueIn), next(nextIn)
-  {
-    setKey(s);
-    Assert(!isEmpty());
-  }
-
-  //
   void setEmpty() { key.fint = (intlong) htEmpty; }
   Bool isEmpty()  { return (key.fint == (intlong) htEmpty); }
 
@@ -74,6 +65,15 @@ public:
   void setKey(const char *sIn) { key.fstr = sIn; }
   void setValue(void *valueIn) { value = valueIn; }
   void setNext(SHT_HashNode *nextIn) { next = nextIn; }
+
+  //
+  SHT_HashNode() { setEmpty(); }
+  SHT_HashNode(const char *s, void *valueIn, SHT_HashNode *nextIn)
+    : value(valueIn), next(nextIn)
+  {
+    setKey(s);
+    Assert(!isEmpty());
+  }
 
   //
   HtKey getKey() { return (key); }
@@ -90,7 +90,7 @@ protected:
   int percent;      // if more than percent is used, we reallocate
 
 private:
-  DebugCode(int lengthList(int i););
+  int lengthList(int i);
 
 protected:
   unsigned int hashFunc(const char *);
@@ -109,8 +109,8 @@ public:
   void *htFind(const char *);
 
   //
-  DebugCode(void print(););
-  DebugCode(void printStatistic(););
+  void print();
+  void printStatistic();
   unsigned memRequired(int valSize = 0);
   int getTblSize() { return (tableSize); }
 
@@ -133,11 +133,11 @@ private:
   void* value;
 
 public:
-  AHT_HashNode() { setEmpty(); }
-
-  //
   void setEmpty() { key.fint = (intlong) htEmpty; }
   Bool isEmpty()  { return (key.fint == (intlong) htEmpty); }
+
+  //
+  AHT_HashNode() { setEmpty(); }
 
   //
   void setKey(intlong iIn) { key.fint = iIn; }
@@ -188,7 +188,6 @@ public:
 
   //
 protected:
-  AHT_HashNode *getFirst() { return (getNext(table-1)); }
   AHT_HashNode *getNext(AHT_HashNode *hn) {
     for (hn++; hn < table+tableSize; hn++) {
       if (!hn->isEmpty())
@@ -196,6 +195,7 @@ protected:
     }
     return ((AHT_HashNode *) 0);
   }
+  AHT_HashNode *getFirst() { return (getNext(table-1)); }
 };
 
 
@@ -217,11 +217,11 @@ private:
 
   //
 public:
-  AHT_HashNodeLinked() { setEmpty(); }
-
-  //
   void setEmpty() { key.fint = (intlong) htEmpty; }
   Bool isEmpty()  { return (key.fint == (intlong) htEmpty); }
+
+  //
+  AHT_HashNodeLinked() { setEmpty(); }
 
   //
   void setKey(intlong iIn) { key.fint = iIn; }
