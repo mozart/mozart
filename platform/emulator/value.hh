@@ -142,7 +142,7 @@ public:
       ? oz_rootBoardOutline() : (Board*)ToPointer(homeOrGName);
   }
 
-  Bool Name::cacIsMarked() {
+  Bool cacIsMarked() {
     return GCISMARKED(homeOrGName);
   }
 
@@ -2409,8 +2409,8 @@ inline Port *tagged2Port(TaggedRef term)
  *=================================================================== */
 
 class Space: public Tertiary {
-  friend ConstTerm * ConstTerm::gCollectConstRecurse(void);
-  friend ConstTerm * ConstTerm::sCloneConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 private:
   Board *solve;
   // The solve pointer can be:
