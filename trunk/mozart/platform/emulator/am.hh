@@ -174,6 +174,7 @@ public:
   unsigned int lastFrameID;
 
   // Debugging stuff
+  bool suspendDebug;
   TaggedRef threadStream;
   TaggedRef threadStreamTail;
   Toplevel *toplevelQueue;
