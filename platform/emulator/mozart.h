@@ -172,7 +172,7 @@ void OZ_addSuspension _PROTOTYPE((OZ_Term, OZ_Suspension));
 /* variable arity is marked as follows: */
 #define VarArity -1
 
-#if __GNUC__ || __cplusplus
+#if defined(__GNUC__) || defined(__cplusplus)
 #define OZStringify(Name) #Name
 #else
 #define OZStringify(Name) "Name"
