@@ -220,7 +220,7 @@ OZ_Return FSetIntersectionPropagator::propagate(void)
   //
   OZ_FSetVar x(_x), y(_y), z(_z);
   PropagatorController_S_S_S P(x, y, z);
-  OZ_Service<OZ_Propagator> s(this, &P);
+  OZ_Filter<OZ_Propagator> s(this, &P);
   //
   return filter_intersection(s, x, y, z)();
 }

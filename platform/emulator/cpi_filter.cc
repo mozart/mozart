@@ -25,29 +25,3 @@
  */
 
 #include "mozart_cpi.hh"
-
-/*
-template <class PROPAGATOR>
-OZ_Service<PROPAGATOR> &OZ_Service<PROPAGATOR>::replace_propagator(OZ_Propagator * prop,
-                                           int vars_drop = 0,
-                                           ...)
-{
-  DSP(("request replace\n"));
-  if (!_closed) {
-      _actions[_nb_actions]._what = _actions_t::_serv_replace;
-      _actions[_nb_actions]._action_params._replacement = prop;
-      _nb_actions += 1;
-      Assert(_nb_actions =< _max_actions);
-  }
-  //
-  va_list ap;
-  va_start(ap, vars_drop);
-  for (int i = vars_drop; i--; ) {
-    OZ_CPIVar * cpivar = va_arg(ap, OZ_CPIVar *);
-    cpivar->dropParameter();
-  }
-  //
-  _closed = 1;
-  return *this;
-}
-*/

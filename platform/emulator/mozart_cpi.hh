@@ -1311,7 +1311,7 @@ typedef CPIVector<OZ_FDIntVar> OZ_FDIntVarVector;
 typedef CPIVector<OZ_CtVar> OZ_CtVarVector;
 
 //-----------------------------------------------------------------------------
-// OZ_Filter
+// OZ_PersistentFilter
 
 class OZ_PersistentFilter {
 public:
@@ -1320,7 +1320,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-// OZ_Service
+// OZ_Filter
 
 #include <stdarg.h>
 
@@ -1329,7 +1329,7 @@ typedef OZ_Return (*make_prop_fn_3)(OZ_Term, OZ_Term, OZ_Term);
 typedef OZ_Return (*make_prop_fn_4)(OZ_Term, OZ_Term, OZ_Term, OZ_Term);
 
 template <class PROPAGATOR>
-class OZ_Service {
+class OZ_Filter {
 private:
   int _closed;
   PROPAGATOR * _prop;
@@ -1362,12 +1362,12 @@ private:
     }
   }
 public:  //
-  OZ_Service(PROPAGATOR * prop, OZ_ParamIterator * iter)
+  OZ_Filter(PROPAGATOR * prop, OZ_ParamIterator * iter)
     : _closed(0), _prop(prop), _iter(iter), _nb_actions(0) {}
   //
   // sleep is default, after one of these operations, the object is
   // closed
-  OZ_Service &leave(int vars_left = 0) {
+  OZ_Filter &leave(int vars_left = 0) {
     DSP(("request leave\n"));
     if (!_closed) {
       _actions[_nb_actions]._what = _actions_t::_serv_leave;
@@ -1378,7 +1378,7 @@ public:  //
     _closed = 1;
     return *this;
   }
-  OZ_Service &entail(void) {
+  OZ_Filter &entail(void) {
     DSP(("request entail\n"));
     if (!_closed) {
       _actions[_nb_actions]._what = _actions_t::_serv_entailed;
@@ -1388,7 +1388,7 @@ public:  //
     _closed = 1;
     return *this;
   }
-  OZ_Service &fail(void) {
+  OZ_Filter &fail(void) {
     DSP(("request fail\n"));
     if (!_closed) {
       _actions[_nb_actions]._what = _actions_t::_serv_failed;
@@ -1398,7 +1398,7 @@ public:  //
     _closed = 1;
     return *this;
   }
-  OZ_Service &equate(OZ_Term x, OZ_Term y) {
+  OZ_Filter &equate(OZ_Term x, OZ_Term y) {
     DSP(("request equate %x %x\n", x, y));
     if (!_closed) {
       _actions[_nb_actions]._what = _actions_t::_serv_equate;
@@ -1410,26 +1410,26 @@ public:  //
     _closed = 1;
     return *this;
   }
-  OZ_Service &add_parameter(OZ_CPIVar &, int event) {
+  OZ_Filter &add_parameter(OZ_CPIVar &, int event) {
     Assert(0);
     return *this;
   }
-  OZ_Service &drop_parameter(OZ_CPIVar &) {
+  OZ_Filter &drop_parameter(OZ_CPIVar &) {
     Assert(0);
     return *this;
   }
   // propagator is set `scheduled'
-  OZ_Service &impose_propagator(make_prop_fn_2,
+  OZ_Filter &impose_propagator(make_prop_fn_2,
                                 OZ_Term, OZ_Term);
-  OZ_Service &impose_propagator(make_prop_fn_3,
+  OZ_Filter &impose_propagator(make_prop_fn_3,
                                 OZ_Term, OZ_Term, OZ_Term);
-  OZ_Service &impose_propagator(make_prop_fn_4,
+  OZ_Filter &impose_propagator(make_prop_fn_4,
                                 OZ_Term, OZ_Term, OZ_Term, OZ_Term);
   // replacing a propagator by another one happens frequently, hence a
   // dedicated fucntion is introduced, not that ununsed parameters
   // have to be passed as arguments and the replacment react on the
   // same events at the respective parameters
-  OZ_Service &replace_propagator(PROPAGATOR * prop )
+  OZ_Filter &replace_propagator(PROPAGATOR * prop )
   {
     if (!_closed) {
       _actions[_nb_actions]._what = _actions_t::_serv_replace;
@@ -1446,7 +1446,7 @@ public:  //
   void condens_vector(OZ_FSetVarVector &);
   void condens_vector(OZ_CtVarVector &);
   OZ_Return operator ()() {
-    DSP(("OZ_Service %d\n", _nb_actions));
+    DSP(("OZ_Filter %d\n", _nb_actions));
     OZ_Return r = OZ_ENTAILED;
     int do_leave = 1;
     //

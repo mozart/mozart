@@ -601,7 +601,7 @@ OZ_Return FSetIntersectionNPropagator::propagate(void)
   //
   PropagatorController_VS_S P(_vs_size, vs, z);
   //
-  OZ_Service<FSetIntersectionNPropagator> s(this, &P);
+  OZ_Filter<FSetIntersectionNPropagator> s(this, &P);
   //
   return filter_intersectN(s, xs, z)();
 }
