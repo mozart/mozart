@@ -83,7 +83,7 @@ dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************
 
-AC_OUTPUT(lib/Makefile demo/Makefile test/Makefile)
+AC_OUTPUT(lib/Makefile demo/Makefile test/Makefile examples/Makefile)
 
 
 errprint(ifdef([OZ_INIT],
