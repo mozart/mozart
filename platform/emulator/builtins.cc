@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <ctype.h>
 
-#if defined(LINUX) || defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(IRIX5_MIPS) || defined(OSF1_ALPHA) || defined(FREEBSD_I486)
+#if defined(LINUX) || defined(SOLARIS) || defined(SUNOS_SPARC) || defined(IRIX5_MIPS) || defined(OSF1_ALPHA) || defined(FREEBSD_I486)
 #   define DLOPEN 1
 #ifdef FREEBSD_I486
 #define RTLD_NOW 1
@@ -5074,7 +5074,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
   int commandUsed = 0;
   char command[commandSize];
   char *tempfile = tmpnam(NULL);
-#ifdef SOLARIS_SPARC
+#ifdef SOLARIS
   strCat(command, commandUsed, "ld -G -lsocket -lnsl -lintl -o ");
 #endif
 #ifdef SUNOS_SPARC
