@@ -129,7 +129,7 @@ LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 CACHECOMPONENTS = $(COMPONENTS:%=$(CACHEDIR)/%)
 CACHETYCS       = $(ENVS:%.env=$(CACHEDIR)/%.tyc)
 
-SYSLETS = ozbatch ozserver
+SYSLETS = ozbatch ozserver ozvsserver
 BINFILES = $(SYSLETS:%=$(OZBIN)/%)
 
 IMAGES1 = mini-dec.xbm mini-inc.xbm
@@ -240,6 +240,10 @@ ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
         $(EXECWITHSTD) $<
 
 ozserver: MakeOzServer.oz $(DPSRC) $(DUMPINTRO) \
+        Init.ozc AP.ozc SP.ozc OP.ozc $(TYCS)
+        $(EXECWITHSTD) $<
+
+ozvsserver: MakeOzVSServer.oz $(DPSRC) $(DUMPINTRO) \
         Init.ozc AP.ozc SP.ozc OP.ozc $(TYCS)
         $(EXECWITHSTD) $<
 
@@ -359,7 +363,7 @@ clean:
         -rm -f compiler-Version.oz compiler-Builtins.oz compiler-Opcodes.oz
         -rm -f -r tyc
         -rm -f Base.ozc Standard.ozc $(COMPONENTS) Fun*.ozc ozbatch.ozc
-        -rm -f ozbatch ozserver
+        -rm -f ozbatch ozserver ozvsserver
 
 veryclean: clean
         -rm -f -r TAGS $(STAGE1) $(STAGE2) $(STAGE2B) $(STAGE3) $(STAGE3B)

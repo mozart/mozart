@@ -433,6 +433,42 @@ public:
   operator T*() { return _array; } // conversion operator
 };
 
+//
+// "free list" data manager: try to get a piece of memory from a
+// free list, and fall back with the 'fdmMalloc' function;
+typedef void* (*MallocFun)(size_t size);
+//
+template <class T>
+class FreeListDataManager {
+private:
+  MallocFun mallocFun;
+  T* freeList;
+
+  //
+public:
+  FreeListDataManager(MallocFun fun)
+    : mallocFun(fun), freeList((T *) NULL)
+  {
+    Assert(sizeof(T) >= sizeof(T*));
+  }
+  ~FreeListDataManager() {}
+
+  //
+  T *allocate() {
+    if (freeList) {
+      T *b = freeList;
+      freeList = *((T **) freeList);
+      return (b);
+    } else {
+      return ((T *) mallocFun(sizeof(T)));
+    }
+  }
+  void dispose(T *b) {
+    *((T **) b) = freeList;
+    freeList = b;
+  }
+};
+
 #ifdef __cplusplus
 
 extern "C" {

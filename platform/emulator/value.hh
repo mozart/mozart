@@ -520,7 +520,6 @@ TaggedRef newTaggedFloat(double i)
 }
 
 
-
 #define CHECK_LITERAL(lab) \
 Assert(!oz_isRef(lab) && !oz_isVariable(lab) && oz_isLiteral(lab));
 

@@ -136,9 +136,9 @@ typedef enum {
   DIF_ABSTRENTRY,       // AbstractionEntry (code instantiation)
   DIF_PRIMARY,
   DIF_SECONDARY,
-  DIF_REMOTE,
-  DIF_VIRTUAL,
-  DIF_PERM,
+  DIF_SITE,
+  DIF_SITE_VI,
+  DIF_SITE_PERM,
   DIF_PASSIVE,
   DIF_COPYABLENAME,
   DIF_LAST

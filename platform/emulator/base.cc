@@ -74,8 +74,13 @@ void error(const char *format, ...)
 
   DebugCheckT(osUnblockSignals());
 
+#ifdef DEBUG_CHECK
+  // just get a synchronous signal on the same thread;
+  *((int *) 0) = 0;
+#else
   // send a signal to all forked processes, including the emulator itself
   oskill(0,ozconf.dumpCore?SIGQUIT:SIGUSR1);
+#endif
 }
 
 void warning(const char *format, ...)

@@ -181,7 +181,7 @@ enum ConnectionFlags{
 
 };
 
-enum ByteStreamType{
+enum ByteStreamType {
   BS_None,
   BS_Marshal,
   BS_Write,
@@ -895,7 +895,6 @@ public:
 
   int sendTo(NetMsgBuffer*,MessageType,Site*, int);
   void zeroReferences();
-  void nonZeroReferences();
 
   void writeConnectionRemoved();
   void readConnectionRemoved();
@@ -1440,11 +1439,6 @@ void RemoteSite::zeroReferences(){
     writeConnection->closeConnection();
   else
     writeConnection -> setCanClose();}
-
-void RemoteSite::nonZeroReferences(){
-  PD((SITE,"Non zero references to site %s",site->stringrep()));
-  if(writeConnection == NULL && writeConnection->isCanClose())
-    writeConnection->clearCanClose();}
 
 void RemoteSite::writeConnectionRemoved(){
     writeConnection = NULL;
@@ -2492,14 +2486,15 @@ int tcpRead(int fd,BYTE *buf,int size,Bool &readAll)
 }
 
 inline
-ipReturn interpret(NetMsgBuffer *bs,tcpMessageType type, Bool
- ValidMsg){
+ipReturn interpret(NetMsgBuffer *bs,tcpMessageType type, Bool ValidMsg)
+{
   switch(type){
   case TCP_PACKET:{
-    if(ValidMsg){
+    if (ValidMsg) {
       PD((TCP,"interpret-packet"));
       PD((TCP,"received TCP_PACKET"));
-      bs->getSite()->msgReceived(bs);}
+      msgReceived(bs);
+    }
     return IP_OK;}
   case TCP_CLOSE_REQUEST_FROM_WRITER:{
     PD((TCP,"interpret - close"));
@@ -2508,6 +2503,7 @@ ipReturn interpret(NetMsgBuffer *bs,tcpMessageType type, Bool
     PD((TCP,"interpret ping"));
     return IP_OK; }
   default:{
+    // kost@ : the message is very informative ;->
     OZ_warning("Something is very wrong");
     Assert(0);
     return IP_GARBAGE;}
@@ -3281,7 +3277,7 @@ void WriteConnection::prmDwn(){
     Message *m = sentMsg;
     sentMsg = NULL;
     while(m != NULL){
-      PD((ACK_QUEUE,"Emptying ackqueu m:%x bs: %x",m, m->bs));
+      PD((ACK_QUEUE,"Emptying ackqueue m:%x bs: %x",m, m->bs));
       m->bs->resend();
       remoteSite->site->communicationProblem(m->msgType, m->site, m->storeIndx,
                                  COMM_FAULT_PERM_MAYBE_SENT,(FaultInfo) m->bs);
@@ -3640,7 +3636,6 @@ RemoteSite* createRemoteSite(Site* site, int readCtr){
   return remoteSiteManager->allocRemoteSite(site, readCtr);}
 
 void zeroRefsToRemote(RemoteSite *s){s->zeroReferences();}
-void nonZeroRefsToRemote(RemoteSite *s){s->nonZeroReferences();}
 
 int sendTo_RemoteSite(RemoteSite* rs,MsgBuffer* bs,MessageType m,Site* s, int i){
   return rs->sendTo((NetMsgBuffer*)bs,m,s,i);}
@@ -3677,7 +3672,8 @@ GiveUpReturn giveUp_RemoteSite(RemoteSite* site){
 void discoveryPerm_RemoteSite(RemoteSite* site){
   site->sitePrmDwn();}
 
-void initNetwork(){
+void initNetwork()
+{
   ip_address ip;
   port_t p;
   int tcpFD;
@@ -3703,11 +3699,12 @@ void initNetwork(){
   mySiteInfo.maxNrAck = 100;
   mySiteInfo.maxSizeAck = 10000;
   Assert(mySite==NULL);
-  mySite=initMySite(ip,p,timestamp);
+  mySite = makeMySite(ip,p,timestamp);
   Assert(mySite!=NULL);
   OZ_registerAcceptHandler(tcpFD,acceptHandler,NULL);
   PD((OS,"register ACCEPT- acceptHandler fd:%d",tcpFD));
-  tcpCache->nowAccept();}  // can be removed ??
+  tcpCache->nowAccept();  // can be removed ??
+}
 
 MsgBuffer* getRemoteMsgBuffer(Site* s){
   return netMsgBufferManager->getNetMsgBuffer(s);}

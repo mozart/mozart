@@ -50,21 +50,10 @@
 #include <stdio.h>
 #include <errno.h>
 #include <strings.h>
-#include "runtime.hh"
-#include "codearea.hh"
-#include "indexing.hh"
 
-
-#include "perdio.hh"
-#include "perdio_debug.hh"
-#include "genvar.hh"
-#include "perdiovar.hh"
-#include "gc.hh"
-#include "dictionary.hh"
-#include "urlc.hh"
-#include "marshaler.hh"
 #include "comm.hh"
 #include "msgbuffer.hh"
+#include "vs_comm.hh"
 #include "chain.hh"
 
 #define SITE_CUTOFF           100
@@ -262,7 +251,7 @@ Site *unmarshalPSite(MsgBuffer *buf){
   switch(rc) {
   case SAME:
     PD((SITE,"unmarshalPsite SAME"));
-    if((mt==DIF_PERM) && (!s->isPerm())) {
+    if((mt==DIF_SITE_PERM) && (!s->isPerm())) {
       s->discoveryPerm();}
     return s;
   case NONE:
@@ -283,8 +272,8 @@ Site *unmarshalPSite(MsgBuffer *buf){
 
   s=siteManager.allocSite(&tryS);
   primarySiteTable->insertPrimary(s,hvalue);
-  if(mt==DIF_PERM){
-    PD((SITE,"initPsite DIF_PERM"));
+  if(mt==DIF_SITE_PERM){
+    PD((SITE,"initPsite DIF_SITE_PERM"));
     s->initPerm();
     return s;}
   Assert(mt==DIF_PASSIVE);
@@ -303,17 +292,27 @@ Site* unmarshalSiteInternal(MsgBuffer *buf, Site *tryS, MarshalTag mt)
   switch(rc){
   case SAME: {
     PD((SITE,"unmarshalsite SAME"));
-    if(mt==DIF_PERM){
+    if(mt==DIF_SITE_PERM){
       if(s->isPerm()){return s;}
       s->discoveryPerm();
       return s;}
-    if(mt==DIF_VIRTUAL){
+
+    //
+    if(mt == DIF_SITE_VI) {
       unmarshalUselessVirtualInfo(buf);
-      if(!s->ActiveSite()) {
-        s->makeActiveVirtual();}
-      return s;}
-    Assert(mt==DIF_REMOTE);
-    if(!s->ActiveSite() && s != mySite ) {
+      if(!s->remoteComm()) {
+        s->makeActiveRemote();
+      } else {
+        Assert(s->virtualComm());
+        if (s != mySite)
+          s->makeActiveVirtual();
+      }
+      return s;
+    }
+
+    //
+    Assert(mt == DIF_SITE);
+    if(s != mySite && !s->ActiveSite()) {
       s->makeActiveRemote();}
     return s;}
 
@@ -323,7 +322,9 @@ Site* unmarshalSiteInternal(MsgBuffer *buf, Site *tryS, MarshalTag mt)
 
   case I_AM_YOUNGER:{
     PD((SITE,"unmarshalsite I_AM_YOUNGER"));
-    if(mt==DIF_VIRTUAL){unmarshalUselessVirtualInfo(buf);}
+    if(mt == DIF_SITE_VI) {
+      unmarshalUselessVirtualInfo(buf);
+    }
     int hvalue=tryS->hashSecondary();
     s=secondarySiteTable->findSecondary(tryS,hvalue);
     if(s){return s;}
@@ -342,20 +343,26 @@ Site* unmarshalSiteInternal(MsgBuffer *buf, Site *tryS, MarshalTag mt)
 
   s=siteManager.allocSite(tryS);
   primarySiteTable->insertPrimary(s,hvalue);
-  if(mt==DIF_PERM){
-    PD((SITE,"initsite DIF_PERM"));
+  if(mt==DIF_SITE_PERM){
+    PD((SITE,"initsite DIF_SITE_PERM"));
     s->initPerm();
     return s;}
-  if(mt==DIF_VIRTUAL){
-    PD((SITE,"initsite DIF_VIRTUAL"));
-    VirtualInfo * vi=unmarshalVirtualInfo(buf);
-    if(inMyGroup(tryS,vi)){
+  if(mt == DIF_SITE_VI) {
+    PD((SITE,"initsite DIF_SITE_VI"));
+
+    //
+    // kost@ : fetch virtual info, which (among other things)
+    // identifies the 'tryS's group of virtual sites;
+    VirtualInfo *vi = unmarshalVirtualInfo(buf);
+    if (mySite->isInMyVSGroup(vi))
       s->initVirtual(vi);
-      return s;}
-    s->initVirtualRemote(vi);
-    return s;}
-  Assert(mt==DIF_REMOTE);
-  PD((SITE,"initsite DIF_REMOTE"));
+    else
+      s->initRemoteVirtual(vi);
+    return (s);
+  }
+
+  Assert(mt == DIF_SITE);
+  PD((SITE,"initsite DIF_SITE"));
   s->initRemote();
   return s;
 }
@@ -363,14 +370,14 @@ Site* unmarshalSiteInternal(MsgBuffer *buf, Site *tryS, MarshalTag mt)
 Site *findSite(ip_address a,int port,time_t stamp)
 {
   Site tryS(a,port,stamp);
-  return unmarshalSiteInternal(NULL, &tryS, DIF_REMOTE);
+  return unmarshalSiteInternal(NULL, &tryS, DIF_SITE);
 }
 
 Site* unmarshalSite(MsgBuffer *buf)
 {
   PD((UNMARSHAL,"site"));
   MarshalTag mt = (MarshalTag) buf->get();
-  Assert((mt==DIF_REMOTE) || (mt==DIF_VIRTUAL) || (mt==DIF_PERM));
+  Assert(mt == DIF_SITE || mt == DIF_SITE_VI);
   Site tryS;
 
   tryS.unmarshalBaseSite(buf);
@@ -446,24 +453,49 @@ int BaseSite::hashPrimary(){
 
 void Site :: marshalPSite(MsgBuffer *buf){
   PD((MARSHAL,"Psite"));
-  buf->put((flags & PERM_SITE)? DIF_PERM: DIF_PASSIVE);
+  buf->put((flags & PERM_SITE)? DIF_SITE_PERM: DIF_PASSIVE);
   marshalBaseSite(buf);}
+
+//
+// Modifies the 'VirtualInfo'!
+void Site::initVirtualInfoArg(VirtualInfo *vi)
+{
+  vi->setAddress(getAddress());
+  vi->setTimeStamp(getTimeStamp());
+  vi->setPort(getPort());
+}
+
+//
+Bool Site::isInMyVSGroup(VirtualInfo *vi)
+{
+  VirtualInfo *myVI = getVirtualInfo();
+
+  //
+  if (myVI->getAddress() == vi->getAddress() &&
+      myVI->getPort() == vi->getPort() &&
+      myVI->getTimeStamp() == vi->getTimeStamp())
+    return (TRUE);
+  else
+    return (FALSE);
+}
 
 void Site::marshalSite(MsgBuffer *buf){
   PD((MARSHAL,"Site"));
   unsigned int type=getType();
   if(type & PERM_SITE){
-    buf->put(DIF_PERM);
+    buf->put(DIF_SITE_PERM);
     marshalBaseSite(buf);
     return;}
-  if(type & VIRTUAL_SITE){
-    VirtualInfo *vi=getVirtualInfo();
-    buf->put(DIF_VIRTUAL);
+  if (type & VIRTUAL_INFO) {
+    // A site with a virtual info can be also remote (in the case of a
+    // site in a remote virtual site group);
+    VirtualInfo *vi = getVirtualInfo();
+    buf->put(DIF_SITE_VI);
     marshalBaseSite(buf);
     marshalVirtualInfo(vi,buf);
     return;}
   Assert((type & REMOTE_SITE) || (this==mySite) );
-  buf->put(DIF_REMOTE);
+  buf->put(DIF_SITE);
   marshalBaseSite(buf);
   return;}
 
@@ -471,16 +503,12 @@ void Site::marshalSite(MsgBuffer *buf){
 /*   SECTION :: memory management  methods                            */
 /**********************************************************************/
 
-Site* initMySite(ip_address a,port_t p,time_t t){
-  Site *s =new Site(a,p,t);
+//
+// kost@ : that's a part of the boot-up procedure ('perdioInit()');
+Site* makeMySite(ip_address a, port_t p, time_t t) {
+  Site *s = new Site(a,p,t);
   int hvalue = s->hashPrimary();
   primarySiteTable->insertPrimary(s,hvalue);
-  s->initMySiteR();
-  return s;}
-
-Site* initMySiteVirtual(ip_address a,port_t p,time_t t,VirtualInfo *vi){
-  Site *s =new Site(a,p,t);
-  int hvalue = s->hashPrimary();
-  primarySiteTable->insertPrimary(s,hvalue);
-  s->initMySiteV(vi);
-  return s;}
+  s->initMySite();
+  return s;
+}

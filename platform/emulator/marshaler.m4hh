@@ -26,6 +26,9 @@
  *
  */
 
+#ifndef __MARSHALER_M4HH
+#define __MARSHALER_M4HH
+
 //  provided by marshaler to protocol-layer.
 
 void marshalTerm(OZ_Term,MsgBuffer*);
@@ -98,3 +101,5 @@ include(EMUDIR/msgFormat.m4)
 undefine(`message')
 define(message,`void unmarshalUnsent_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
 include(EMUDIR/msgFormat.m4)
+
+#endif // __MARSHALER_M4HH

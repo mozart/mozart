@@ -2038,6 +2038,20 @@ $builtins = {
                              module=>components,
                              native => true},
 
+    #* Virtual Sites
+
+    'VirtualSite.newMailbox' => { in     => [],
+                                  out    => ['+string'],
+                                  BI     => BIVSnewMailbox,
+                                  module => vs,
+                                  native => true},
+
+    'VirtualSite.initServer' => { in     => ['+string'],
+                                  out    => [],
+                                  BI     => BIVSinitServer,
+                                  module => vs,
+                                  native => true},
+
     #* Tools
 
     ##* WIF (Wish InterFace)

@@ -1560,6 +1560,9 @@ int featureEqOutline(TaggedRef a, TaggedRef b)
   return bigIntEq(a,b);
 }
 
+//
+//
+// Virtual sites;
 inline
 Bool oz_isForeignPointer(TaggedRef term)
 {
