@@ -183,6 +183,8 @@ OZ_C_proc_proto(BIfdDiv)
 OZ_C_proc_proto(BIfdMod)
 OZ_C_proc_proto(BIfdPlus_rel)
 OZ_C_proc_proto(BIfdMult_rel)
+OZ_C_proc_proto(BIfdSquare)
+OZ_C_proc_proto(BIfdTwice)
 
 // fdbool.cc
 OZ_C_proc_proto(BIfdAnd)
@@ -235,7 +237,6 @@ OZ_C_proc_proto(BIfdMax)
 OZ_C_proc_proto(BIfdGetAsList)
 OZ_C_proc_proto(BIfdGetCardinality)
 OZ_C_proc_proto(BIfdNextTo)
-OZ_C_proc_proto(BIfdCopyDomain)
 OZ_C_proc_proto(BIfdPutLe)
 OZ_C_proc_proto(BIfdPutGe)
 OZ_C_proc_proto(BIfdPutList)
@@ -286,7 +287,10 @@ OZ_C_proc_proto(BIfdInKillB)
 OZ_C_proc_proto(BIfdNotInKillB)
 OZ_C_proc_proto(BIfdGenLinEqKillB)
 OZ_C_proc_proto(BIfdGenLinLessEqKillB)
-
+OZ_C_proc_proto(BIfdCopyDomain)
+OZ_C_proc_proto(BIfdDivDomCons)
+OZ_C_proc_proto(BIfdDivDomCons_body)
+     
 // fdwatch.cc
 OZ_C_proc_proto(BIfdWatchDom1)
 OZ_C_proc_proto(BIfdWatchDom2)
