@@ -34,7 +34,7 @@
  * So we can either use the -T and -D option of the linker or create an
  * NMAGIC file using the -n link option, which lets start segments at
  * 0x20000000 and 0x40000000. We choose to use -T/-D since -n requires
- * static linking, which does not dlopen/dlsym dynamic linking
+ * static linking, which does not support dlopen/dlsym dynamic linking
  * See also man page of ld(1)
  */
 
