@@ -17,7 +17,7 @@
           ( AtomCompl,     "compl"),
 
           ( AtomEmpty,     ""),
-          ( AtomNewLine,   "\n"),
+          ( AtomNewLine,   "\\n"),
 
           ( AtomUpper,     "upper"),
           ( AtomLower,     "lower"),
@@ -275,11 +275,11 @@ if ("$option" eq "-body") {
 
     print <<EOF;
         void initAtomsAndNames() {
-
-            for (int i = $atoms; i--; )
+            int i;
+            for (i = $atoms; i--; )
                 _StaticAtomTable[i] = oz_atomNoDup(_StaticAtomChars[i]);
 
-            for (int i = $names; i--; )
+            for (i = $names; i--; )
                 _StaticNameTable[i] = oz_uniqueName(_StaticNameChars[i]);
 
         };

@@ -435,26 +435,26 @@ GCMeManager * GCMeManager::_head;
 #endif
 
 /*
- * The variable copying stack: VarFix
+ * The variable copying stack: OzVarFix
  *
  * When during garbage collection or during copying a variable V is
  * encountered that has not been collected so far and V is not direct,
  + that is, V has been reached by a reference chain, V cannot be copied
  * directly.
  *
- * So, push the location of the reference on VarFix and replace its content
+ * So, push the location of the reference on OzVarFix and replace its content
  * by a reference to the old variable, as to shorten the ref-chain.
  *
  * Later V might be reached directly, that fixes V's location. After
- * collection has finished, VarFix tracks this new location to
- * and fixes the occurence on VarFix.
+ * collection has finished, OzVarFix tracks this new location to
+ * and fixes the occurence on OzVarFix.
  *
  */
 
-class VarFix: public Stack {
+class OzVarFix: public Stack {
 public:
-  VarFix() : Stack(1024, Stack_WithMalloc) {}
-  ~VarFix() {}
+  OzVarFix() : Stack(1024, Stack_WithMalloc) {}
+  ~OzVarFix() {}
 
   void defer(TaggedRef * var, TaggedRef * ref) {
     Assert(var);
@@ -463,10 +463,9 @@ public:
   }
 
   void fix(void);
-
 };
 
-static VarFix varFix;
+static OzVarFix varFix;
 
 
 /****************************************************************************
@@ -1147,7 +1146,8 @@ void WeakDictionary::weakGC()
   OZ_Term newstream = 0;
   OZ_Term list = 0;
   int count = 0;
-  for (dt_index i=table->size; i--; ) {
+  dt_index i;
+  for (i=table->size; i--; ) {
     TaggedRef t = table->getValue(i);
     if (t!=0 && !isNowMarked(t)) {
       numelem--;
@@ -1171,7 +1171,7 @@ void WeakDictionary::weakGC()
   // finally collect the table
   DynamicTable * frm = table;
   table = DynamicTable::newDynamicTable(numelem);
-  for (dt_index i=frm->size;i--;) {
+  for (i=frm->size;i--;) {
     OZ_Term v = frm->getValue(i);
     if (v!=0) {
       OZ_Term k = frm->getKey(i);
@@ -1537,7 +1537,7 @@ void AM::gc(int msgLevel) {
  * After collection has finished, update variable references
  *
  */
-void VarFix::fix(void) {
+void OzVarFix::fix(void) {
 
   if (isEmpty())
     return;
@@ -2369,8 +2369,6 @@ SuspList * SuspList::gcRecurse(SuspList ** last) {
 
 inline
 SuspList * SuspList::gcLocalRecurse(Board * bb) {
-  SuspList * sl = this;
-
   SuspList * ret;
   SuspList ** p = &ret;
 
