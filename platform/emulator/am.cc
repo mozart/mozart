@@ -243,6 +243,7 @@ void AM::init(int argc,char **argv)
   }
 
   isStandaloneF=NO;
+  compStream = 0;
   if (url) {
     isStandaloneF=OK;
   } else {
