@@ -5,7 +5,7 @@ export
 
 import
 
-   Aux(variableToVirtualString counterClass)
+   Aux(counterClass)
    Config(paramColour edgeColour eventColour)
    FS
 
@@ -13,7 +13,8 @@ define
 
    IdCounter = {New Aux.counterClass init}
    
-   fun {MakePropagatorEdge Hist PropTable Event PropId AllPs}
+   fun {MakePropagatorEdge
+	Hist PropTable Event PropId AllPs MenuAllReachablePs} 
       P = PropTable.PropId
       LocP = P.location
       Location = if LocP == unit then ""
@@ -36,7 +37,7 @@ define
       #{Hist insert_menu($)}
       #{Hist insert_menu_mark_prop(PropId P.name#" ("#Location#")" $)}
       #"menu_entry(\"cg<all>\",\"Constraint graph of all constraints\")"
-      #",menu_entry(\"cg<sub>\",\"Constraint graph of constraints reachable by that variable\")"
+      #MenuAllReachablePs
       
       #if AllPs == nil then ""
        else
@@ -61,18 +62,21 @@ define
       #"])],[]))))"
    end
    
-   fun {MakePropagatorEdges Hist PropTable Event Ps AllPs}
+   fun {MakePropagatorEdges Hist PropTable Event Ps AllPs MenuAllReachablePs}
       case Ps
       of A|B|T then
-	 {MakePropagatorEdge Hist PropTable Event A AllPs}#","
-	 #{MakePropagatorEdges Hist PropTable Event B|T AllPs}
-      [] A|nil then {MakePropagatorEdge Hist PropTable Event A AllPs}
+	 {MakePropagatorEdge
+	  Hist PropTable Event A AllPs MenuAllReachablePs}#","
+	 #{MakePropagatorEdges
+	   Hist PropTable Event B|T AllPs MenuAllReachablePs}
+      [] A|nil then
+	 {MakePropagatorEdge Hist PropTable Event A AllPs MenuAllReachablePs}
       else "" end
    end
    
-   fun {MakeEventEdge Hist PropTable V Event}
+   fun {MakeEventEdge Hist PropTable V Event MenuAllReachablePs}
       Filtered = {FS.reflect.lowerBoundList V.susplists.Event}
-      PropsOnEvent = {MakePropagatorEdges Hist PropTable Event Filtered Filtered}
+      PropsOnEvent = {MakePropagatorEdges Hist PropTable Event Filtered Filtered MenuAllReachablePs}
    in
       "l(\"e<"#{IdCounter next($)}#">\",e(\"\",[a(\"_DIR\",\"none\"),"
       #"a(\"EDGECOLOR\",\""#Config.edgeColour#"\")],l(\""#Event#"\","
@@ -82,7 +86,7 @@ define
       #"m(["
       #{Hist insert_menu($)}
       #"menu_entry(\"cg<all>\",\"Constraint graph of all constraints\")"
-      #",menu_entry(\"cg<sub>\",\"Constraint graph of constraints reachable by that variable\")"
+      #MenuAllReachablePs
 
       #if Filtered == nil then ""
        else
@@ -93,29 +97,41 @@ define
 			end
 	    end ""}
 	  #">\",\"Constraint graph of constraints reachable by that variable at event ["#Event#"]\")"
-	  
        end
 
       #"])],["#PropsOnEvent#"]))))"
    end
    
-   fun {MakeEventEdges Hist PropTable V Events}
+   fun {MakeEventEdges Hist PropTable V Events MenuAllReachablePs}
       case Events
       of A|B|T then
-	 {MakeEventEdge Hist PropTable V A}#","
-	 #{MakeEventEdges Hist PropTable V B|T}
+	 {MakeEventEdge Hist PropTable V A MenuAllReachablePs}#","
+	 #{MakeEventEdges Hist PropTable V B|T MenuAllReachablePs}
       [] A|nil then
-	 {MakeEventEdge Hist PropTable V A} else ""
+	 {MakeEventEdge Hist PropTable V A MenuAllReachablePs} else ""
       end
    end
 
    fun {Make VarTable PropTable Hist V}
       [VarId] = {FS.reflect.lowerBoundList V}
       ReflV = VarTable.VarId
-      VarStr = {Aux.variableToVirtualString ReflV.reference}
+      VarStr = ReflV.nameconstraint
 \ifdef SHOW_ID
       #" ["#VarId#"]"
 \endif            
+
+      ReachablePs = {FS.reflect.lowerBoundList ReflV.propagators}
+      MenuAllReachablePs =
+      if ReachablePs == nil then ""
+      else
+	 ",menu_entry(\"cg<"#ReachablePs.1
+	 #{FoldL ReachablePs.2
+	   fun {$ L R} if R == nil then L
+		       else L#'|'#R
+		       end
+	   end ""}
+	 #">\",\"Constraint graph of constraints reachable by that variable\")"
+      end
    in
       {Hist reset_mark}
 
@@ -129,9 +145,12 @@ define
 	      #"menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
 	      #",menu_entry(\"vg<solvar>\",\"Variable graph of solution variables\")"
 	      #",menu_entry(\"cg<all>\",\"Constraint graph of all constraints\")"
-	      #",menu_entry(\"cg<sub>\",\"Constraint graph of constraints reachable by that variable\")])"
+	      #MenuAllReachablePs
+	      #"])"
 	      #"],["
-	      #{MakeEventEdges Hist PropTable ReflV {Arity ReflV.susplists}}#"]))]")
+	      #{MakeEventEdges
+		Hist PropTable ReflV {Arity ReflV.susplists} MenuAllReachablePs}
+	      #"]))]")
 	  )
    end
 end
