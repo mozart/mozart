@@ -19,10 +19,10 @@
 BuiltinTab builtinTab(500);
 
 
-BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun, Bool replace,
+BuiltinTabEntry *BIadd(char *name,int arity, OZ_CFun funn, Bool replace,
 		       InlineFunOrRel infun)
 {
-  BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,fun,infun);
+  BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,funn,infun);
 
   if (! builtinTab.add(builtin,name,replace)) {
     warning("BIadd: failed to add %s/%d\n",name,arity);

@@ -17,10 +17,10 @@
 #include "indexing.hh"
 
 
-EntryTable newEntryTable(int size)
+EntryTable newEntryTable(int sz)
 {
-  EntryTable help = new HTEntry*[size];
-  for (int i = 0; i <size; i++)
+  EntryTable help = new HTEntry*[sz];
+  for (int i = 0; i <sz; i++)
     help[i] = (HTEntry*)NULL;
 
   return help;
