@@ -41,7 +41,6 @@
 #include "marshaler.hh"
 #include "site.hh"
 #include "msgbuffer.hh"
-#include "extension.hh"
 #include "pickle.hh"
 
 #include <sys/types.h>
