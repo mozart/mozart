@@ -46,10 +46,10 @@ void done(int k) {
   longjmp(env, k);
 }
 
-OZ_C_proc_begin(bison_generate, 3)
+OZ_BI_define(bison_generate, 2, 1)
 {
   int k;
-  char *verbosefile = OZ_atomToC(OZ_getCArg(1));
+  CONST char *verbosefile = OZ_atomToC(OZ_in(1));
 
   verboseflag = verbosefile[0] != '\0';
 
@@ -67,7 +67,7 @@ OZ_C_proc_begin(bison_generate, 3)
   /* read the input.
      In file reader.c.
      The other parts are recorded in the grammar; see gram.h.  */
-  reader(OZ_getCArg(0));
+  reader(OZ_in(0));
 
   /* find useless nonterminals and productions and reduce the grammar.  In
      file reduce.c */
@@ -98,9 +98,14 @@ OZ_C_proc_begin(bison_generate, 3)
     terse();
 
   /* output the tables and the parser to ftable.  In file output. */
-  return OZ_unify(output(), OZ_getCArg(2));
+  OZ_RETURN(output());
 }
-OZ_C_proc_end
+OZ_BI_end
+
+struct OZ_C_proc_interface oz_interface[] = {
+  {"generate",2,1,bison_generate},
+  {0,0,0,0}
+};
 
 /* functions to report errors which prevent a parser from being generated */
 
