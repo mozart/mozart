@@ -16,7 +16,7 @@ LIBFILES = $(ELISPDIR)/oz.el $(ELISPDIR)/oz.elc
 
 .PHONY: all install clean veryclean realclean distclean tags
 
-all: Makefile oz.elc
+all: oz.elc
 
 oz.elc: oz.el
 	@$(ECHO) "(setq byte-compile-compatibility t) \
@@ -42,17 +42,9 @@ veryclean: clean
 
 realclean: clean
 
-distclean: clean
-	$(RM) Makefile config.*
+distclean:
+	$(RM) Makefile
 
 tags:
 	etags oz.el
 
-Makefile: Makefile.in config.status
-	./config.status
-
-oz.el: oz.in config.status
-	./config.status
-
-config.status: configure
-	./config.status --recheck
