@@ -30,6 +30,7 @@
 
 #include "ozconfig.hh"
 #include "base.hh"
+#include "os.hh"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,7 +39,7 @@ ConfigData ozconf;
 
 Bool getDefaultPropertyBool(char *p,Bool def)
 {
-  char *str=getenv(p);
+  char *str=osgetenv(p);
   if (!str) return def;
   char *rest;
   long l = strtol(str, &rest, 10);

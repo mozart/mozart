@@ -284,7 +284,7 @@ static char *scExpndFileName(char *fileName, char *curfile) {
     char *userhome;
     int len = 0;
     if (fileName[1] == '/') {
-      userhome = getenv("HOME");
+      userhome = osgetenv("HOME");
       len = 2;
     } else {
       char *rest = strchr(fileName, '/');
@@ -326,7 +326,7 @@ static char *scExpndFileName(char *fileName, char *curfile) {
   }
 
   // search in OZPATH
-  char *path = getenv("OZPATH");
+  char *path = osgetenv("OZPATH");
   if (path == NULL)
     path = ".";
 
@@ -516,7 +516,7 @@ INT          {DIGIT}+
 
 OZINT        ~?(0{OCT}*|0[xX]{HEX}+|0[bB]{BIN}+|{NONZERODIGIT}{DIGIT}*)
 
-FILENAME     ([-0-9a-zA-Z/_~]|\..)+|'["-\377]+'
+FILENAME     ([-0-9a-zA-Z/_~]|\..)+|'[^\'\n]+'
 
 REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 

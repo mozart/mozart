@@ -246,6 +246,7 @@ int ossafewrite(int fd, char *buf, unsigned int len);
 int ossaferead(int fd, char *buf, unsigned int len);
 
 char *ostmpnam(char *s);
+char *osgetenv(char *var);
 
 char *oslocalhostname();
 
