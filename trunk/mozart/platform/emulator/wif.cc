@@ -1502,10 +1502,10 @@ OZ_BI_define(BIwif_getNames,0,3) {
  * The builtin table
  */
 
-#ifndef STATIC_LIBWIF
+#ifndef MODULES_LINK_STATIC
 
 OZ_C_proc_interface oz_interface[] = {
-#include "libwif.tbl"
+#include "modWif.tbl"
  {0,0,0,0}
 };
 

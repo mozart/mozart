@@ -48,24 +48,24 @@ SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.o)
 
 all:
 
-.PHONY: libfd.so libfd.a libschedule.a libschedule.so
+.PHONY: libFDP.so libFDP.a libSchedule.a libSchedule.so
 
-libfd.so: ../libfd.so
-libschedule.so: ../libschedule.so
+libFDP.so: ../libFDP.so
+libSchedule.so: ../libSchedule.so
 
-libfd.a: ../libfd.a
-libschedule.a: ../libschedule.a
+libFDP.a: ../libFDP.a
+libSchedule.a: ../libSchedule.a
 
-../libfd.so: $(FDLIBOBJS)
+../libFDP.so: $(FDLIBOBJS)
 	$(DYNLD) -o $@ $(FDLIBOBJS)
 
-../libfd.a: $(FDLIBOBJS)
+../libFDP.a: $(FDLIBOBJS)
 	$(AR) -rc $@ $(FDLIBOBJS) && $(RANLIB) $@
 
-../libschedule.so: $(SCHEDLIBOBJS)
+../libSchedule.so: $(SCHEDLIBOBJS)
 	$(DYNLD) -o $@ $(SCHEDLIBOBJS)
 
-../libschedule.a: $(SCHEDLIBOBJS)
+../libSchedule.a: $(SCHEDLIBOBJS)
 	$(AR) -rc $@ $(SCHEDLIBOBJS) && $(RANLIB) $@
 
 depend:: Makefile $(FDLIBSRCS) $(SCHEDLIBSRCS)

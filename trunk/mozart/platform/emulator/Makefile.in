@@ -32,7 +32,7 @@ SRCDIR=	@srcdir@
 
 include Makefile.vars
 
-MODULE_NAMES = libwif libfd libschedule libfset libparser
+MODULE_NAMES = libWif libFDP libSchedule libFSP libParser libozma
 STATIC_MODULETARGETS  = $(MODULE_NAMES:%=%.a)
 DYNAMIC_MODULETARGETS = $(MODULE_NAMES:%=%.so)
 
@@ -50,12 +50,12 @@ CREATEDOTHERS= \
 	config.h builtins.tbl builtins.dcl \
 	ctgenvar.tbl ctgenvar.dcl \
 	fdbuilti.tbl fdbuilti.dcl \
-	libfd.tbl libfd.dcl \
-	libschedule.tbl libschedule.dcl \
+	modFDP.tbl modFDP.dcl \
+	modSchedule.tbl modSchedule.dcl \
 	fsetbuilti.tbl fsetbuilti.dcl \
-	libfset.tbl libfset.dcl \
-	libwif.tbl libwif.dcl \
-	libparser.tbl libparser.dcl \
+	modFSP.tbl modFSP.dcl \
+	modWif.tbl modWif.dcl \
+	modParser.tbl modParser.dcl \
 	scanner.cc parser.cc 
 
 CREATEDSRCS= \
@@ -121,31 +121,27 @@ OBJS = $(SRCS:.cc=.o)
 
 all: $(TARGETS) 
 
-$(TARGETS): $(MODULETARGETS)
-
 bootstrap:: all
 
-libfd.a libfd.so libschedule.a libschedule.so: \
-	libfd libfd.dcl libfd.tbl libschedule.tbl libschedule.dcl
+libFDP.a libFDP.so libSchedule.a libSchedule.so: \
+	libfd modFDP.dcl modFDP.tbl modSchedule.tbl modSchedule.dcl
 	cd libfd; $(MAKE) $@
 
-libfset.a libfset.so: \
-	libfset libfset.dcl libfset.tbl
+libFSP.a libFSP.so: \
+	libfset modFSP.dcl modFSP.tbl
 	cd libfset; $(MAKE) $@
 
 
-libwif.so: wif.o
+libWif.so: wif.o
 	$(DYNLD) -o $@ wif.o
 
-libwif.a: wif.o
+libWif.a: wif.o
 	$(AR) -rc $@ wif.o && $(RANLIB) $@
 
 win: ozlib.lnk $(CREATEDFILES)
 
 
-PRGDEP=$(CREATEDFILES) $(SRCS) $(OBJS) $(OZMALIB) \
-	$(FDTARGETS) $(FSETTARGETS) $(WIFTARGETS) \
-	$(PARSERTARGETS) $(OZMATARGETS) 
+PRGDEP=$(CREATEDFILES) $(SRCS) $(OBJS) $(OZMALIB) $(MODULETARGETS)
 
 first: $(CREATEDFILES) $(SRCS)
 
@@ -218,10 +214,10 @@ parser.hh: parser.yy
 	@mv y.tab.c parser.cc
 	@mv y.tab.h parser.hh
 
-libparser.so: parser.o scanner.o parsertable.o
+libParser.so: parser.o scanner.o parsertable.o
 	$(DYNLD) -o $@ parser.o scanner.o parsertable.o
 
-libparser.a: parser.o scanner.o parsertable.o
+libParser.a: parser.o scanner.o parsertable.o
 	$(AR) -rc $@ parser.o scanner.o parsertable.o && $(RANLIB) $@
 
 builtins.o: builtins.tbl builtins.dcl
@@ -232,21 +228,21 @@ fsetcore.o: fsetbuilti.tbl fsetbuilti.dcl
 
 ctgenvar.o:  ctgenvar.tbl ctgenvar.dcl
 
-wif.o: libwif.tbl libwif.dcl
+wif.o: modWif.tbl modWif.dcl
 
-parsertable.o: libparser.dcl libparser.tbl
+parsertable.o: modParser.dcl modParser.tbl
 
 builtins.o: \
-	libwif.tbl libwif.dcl \
-	libfd.tbl libfd.dcl libschedule.tbl libschedule.dcl \
-	libfset.tbl libfset.dcl \
-	libparser.tbl libparser.dcl
+	modWif.tbl modWif.dcl \
+	modFDP.tbl modFDP.dcl modSchedule.tbl modSchedule.dcl \
+	modFSP.tbl modFSP.dcl \
+	modParser.tbl modParser.dcl
 
 %.tbl: %.spec
 	perl $(SRCDIR)/bidecl.perl -file $< -ctable > $@
 
 %.dcl: %.spec
-	perl $(SRCDIR)/bidecl.perl -file $< -cdecl > $@
+	perl $(SRCDIR)/bidecl.perl -file $< -cdecl  > $@
 
 # this special rule ensures that warnings issued in bison.simple
 # are not treated as errors:

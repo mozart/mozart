@@ -31,12 +31,12 @@
  * The builtin table
  */
 
-#ifndef STATIC_LIBFD
+#ifndef MODULES_LINK_STATIC
 
-#include "../libfd.dcl"
+#include "../modFDP.dcl"
 
 OZ_C_proc_interface oz_interface[] = {
-#include "../libfd.tbl"
+#include "../modFDP.tbl"
  {0,0,0,0}
 };
 
