@@ -50,24 +50,14 @@ void addSuspAnyVar(TaggedRefPtr v, SuspList * el)
 
 VariableNamer *VariableNamer::allnames = NULL;
 
-static char *getAtomName(TaggedRef n)
-{
-  DEREF(n,_1,_2);
-  if (!OZ_isAtom(n)) {
-    return "";
-  }
-  return tagged2Literal(n)->getPrintName();
-}
-
-
 #ifdef PRETTYVARNAMES
 /* Different variables may have been unified, so we
  * return "X=Y" as printname if X and Y have been unified
  */
 #endif
-TaggedRef VariableNamer::getName(TaggedRef v)
+char *VariableNamer::getName(TaggedRef v)
 {
-  TaggedRef ret = AtomVoid;
+  char *ret = "_";
   int found = 0;
   char buf[1000];
   buf[0] = '\0';
@@ -80,7 +70,7 @@ TaggedRef VariableNamer::getName(TaggedRef v)
       if (found > 1) {
         strcat(buf,"=");
       }
-      strcat(buf,getAtomName(ret));
+      strcat(buf,ret);
     }
 #else
     if (OZ_isVariable(i->var) && termEq(i->var,v)) {
@@ -88,11 +78,22 @@ TaggedRef VariableNamer::getName(TaggedRef v)
     }
 #endif
   }
-  return (found<=1) ? ret : makeTaggedAtom(buf);
+  return (found<=1) ? ret : ozstrdup(buf);
 }
 
-void VariableNamer::addName(TaggedRef v, TaggedRef nm)
+void VariableNamer::addName(TaggedRef v, char *nm)
 {
+  /* check if already in there */
+  VariableNamer *aux = allnames;
+  while(aux) {
+    if (strcmp(aux->name,nm)==0) {
+      aux->var=v;
+      return;
+    }
+    aux = aux->next;
+  }
+
+  /* not found so add a new one */
   static int counter = 50;
   if (counter-- == 0) {
     cleanup();
@@ -104,7 +105,6 @@ void VariableNamer::addName(TaggedRef v, TaggedRef nm)
   n->name = nm;
   allnames = n;
   OZ_protect(&n->var);
-  OZ_protect(&n->name);
 }
 
 int VariableNamer::length()
@@ -132,7 +132,6 @@ void VariableNamer::cleanup()
       allnames = aux1;
     } else {
       OZ_unprotect(&aux1->var);
-      OZ_unprotect(&aux1->name);
       delete aux1;
     }
   }
@@ -140,10 +139,5 @@ void VariableNamer::cleanup()
 
 char *getVarName(TaggedRef v)
 {
-  TaggedRef n = VariableNamer::getName(v);
-  DEREF(n,_1,_2);
-  if (!OZ_isAtom(n)) {
-    n = AtomVoid;
-  }
-  return tagged2Literal(n)->getPrintName();
+  return VariableNamer::getName(v);
 }

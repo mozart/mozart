@@ -150,13 +150,13 @@ class VariableNamer {
 private:
   static VariableNamer *allnames;
   TaggedRef var;
-  TaggedRef name;
+  char *name;
   VariableNamer *next;
   int length();
 public:
   static void cleanup();
-  static TaggedRef getName(TaggedRef var);
-  static void addName(TaggedRef var, TaggedRef name);
+  static char *getName(TaggedRef var);
+  static void addName(TaggedRef var, char *name);
 };
 
 char *getVarName(TaggedRef v);
