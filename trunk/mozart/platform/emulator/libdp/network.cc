@@ -282,6 +282,14 @@ class TSCQueue;
 TSCQueue *TSC;
 #endif
 
+Bool networkNotInitiated = TRUE;
+unsigned int  ipPortNumber  = OZReadPortNumber;
+int  ipIpNumber    = 0; // Zero indicates that the default should be used.
+Bool  ipIsbehindFW  = FALSE;
+/* ************************************************************************ */
+/*  SECTION 3.1:  Messages and IOQueues                                     */
+/* ************************************************************************ */
+
 
 class Message{
   friend class IOQueue;
@@ -1369,7 +1377,7 @@ public:
     clearOpening();
     remoteSite->setSiteStatus(SITE_OK);
     remoteSite->incTmpSessionNr();
-    remoteSite->hasBeenConnected = TRUE;
+    if(!testFlag(HANDED_OVER))remoteSite->hasBeenConnected = TRUE;
     if(isProbingOK()){
       remoteSite->site->probeFault(PROBE_OK);
       clearProbingOK();}}
@@ -1537,7 +1545,7 @@ void RemoteSite::readConnectionRemoved(){
 /************************************************************/
 
 
-ipReturn tcpError()
+ipReturn tcpError(char *s)
 {
 switch(ossockerrno()){
   case EPIPE:{
@@ -1550,6 +1558,8 @@ switch(ossockerrno()){
     PD((TCP_HERROR,"Connection socket lost: EBADF"));
     return IP_PERM_BLOCK;}
  case EHOSTUNREACH:
+ case EAGAIN:
+ case EINPROGRESS: 
    return IP_TEMP_BLOCK;
 #ifndef WINDOWS
 case ETIMEDOUT:{
@@ -1559,7 +1569,7 @@ case ETIMEDOUT:{
 default:{
   PD((TCP_HERROR,"Unhandled error: %d please inform erik@sics.se",
       ossockerrno()));
-  fprintf(stderr,"default interpreted as perm:%d \n",ossockerrno());
+  fprintf(stderr,"default interpreted as perm:%d %s \n",ossockerrno(),s);
   return IP_PERM_BLOCK;}}
 return IP_TEMP_BLOCK;
 }
@@ -2125,7 +2135,10 @@ ipReturn WriteConnection::open(){
   ipReturn ret;
   PD((TCP_INTERFACE,"OpenConnection"));
   setOpening(); 
-  // debug  setFlag(HANDOVER_OPENING);
+  // When behind a firewall we tell the connection
+  // to open two connections.
+  if(ipIsbehindFW){ 
+    setFlag(HANDOVER_OPENING);}
   tcpCache->add(this);
   ret = tcpOpen(remoteSite, this);
   return ret;}
@@ -2597,7 +2610,7 @@ ipReturn tcpSend(int fd,Message *m, Bool flag)
       Assert(ret<0);
       if(ossockerrno()==EINTR) continue;
       if(!((ossockerrno()==EWOULDBLOCK) || (ossockerrno()==EAGAIN)))
-	return tcpError();
+	return tcpError("tcpSend");
       break;}
     PD((WRITE,"wr:%d try:%d error:%d",ret,len,ossockerrno()));
 #ifdef SLOWNET
@@ -2951,29 +2964,38 @@ int tcpPreReadHandler(int fd,void *r0){
   if(header==TCP_MYSITE_HANDOVER){
     // get rid of the read connection. Its not needed any longer.
     tcpCache->remove(r);
+    readConnectionManager->freeConnection(r);
     // There might be a write connection attached to the 
     // RemoteSite alredy....
     WriteConnection *w = rs->getWriteConnection();
-    if(w != NULL && (w->isProbing() || w->isMyInitiative() || w->isHisInitiative() || w->isTmpDwn())){
+    if(w != NULL && (w->isProbing() || w->isMyInitiative() || 
+		     w->isHisInitiative() || w->isTmpDwn())){
+      //Clear the cause, The writecon is gona be opened.
       tcpCache->remove(w);
-      writeConnectionManager->freeConnection(w);
-      w = NULL; 
+      if(w->isProbing())w->clearProbing();
+      if(w->isMyInitiative())w->clearMyInitiative();
+      if(w->isHisInitiative())w->clearHisInitiative();
+      if(w->isTmpDwn())w->clearTmpDwn();
+      rs->setWriteConnection(w);
+      w->setOpening();
+      w->setFlag(HANDED_OVER);
+      tcpCache->add(w);
+      OZ_registerReadHandler(fd,tcpConnectionHandler,(void *)w);
     }
     if(w ==  NULL){
       rs->handedOver = TRUE; 
-      tcpCache->remove(r);
-      readConnectionManager->freeConnection(r);
       w = writeConnectionManager->allocConnection(rs,fd);
       rs->setWriteConnection(w);
       w->setOpening();
       w->setFlag(HANDED_OVER);
       tcpCache->add(w);
       OZ_registerReadHandler(fd,tcpConnectionHandler,(void *)w);
-      return 0;}
+    }
     else{
       // We alredy got a writeconnection. The allocated fd must be closed. 
       osclose(fd);
     }
+    return 0;
   }
   old = si->getRemoteSite()->getReadConnection();
   if(old!=NULL){old->close();}
@@ -3077,7 +3099,7 @@ start:
       messageManager->freeMessage(m);}
         
     netMsgBufferManager->dumpNetMsgBuffer(bs);
-    if(tcpError() == IP_TEMP_BLOCK)
+    if(tcpError("tcpReadHandler") == IP_TEMP_BLOCK)
       r->close();
     else{
       r->connectionLost();}
@@ -3306,10 +3328,8 @@ int tcpConnectionHandler(int fd,void *r0){
   unsigned int strngLen;
   time_t timestamp;
   char msgType;
-  
   pos = buf1;
-
-  PD((TCP,"tcpConnectionHandler invoked r:%x",r));  
+  
   ret = smallMustRead(fd,pos,bufSize,CONNECTION_HANDLER_TRIES);
   if(ret == IP_PERM_BLOCK) goto tcpConPermLost;
   if(ret == IP_CLOSE) {goto tcpConClosed;}
@@ -3548,7 +3568,7 @@ static int tcpCloseHandler(int fd,void *r0){
 close_handler_read:
   if(ret!=IP_OK){ // crashed Connection site 
     PD((ERROR_DET,"crashed Connection site %s error:%d",r->remoteSite->site->stringrep(), ossockerrno()));
-    if(ret==IP_EOF || tcpError()!=IP_TEMP_BLOCK)
+    if(ret==IP_EOF || tcpError("tcpCloseHandler")!=IP_TEMP_BLOCK)
       r->connectionLost();
     else
       r->connectionBlocked();
@@ -4224,23 +4244,30 @@ void initNetwork()
   /* RS: on Windows there seems to be a bug: reusing a port too
    * quickly leads to ECONNREFUSED. So we try to use a port number
    * randomly choosen between 9000 and 1000.
+   * EK: if a fixed number is to be chosen no offset is added.
    */
-  int portno = OZReadPortNumber  + (osgetpid()%1000);
+  int portno = ipPortNumber;
+  if (ipPortNumber == OZReadPortNumber) portno += (osgetpid()%1000);
   ipReturn ret=createTcpPort(portno,ip,p,tcpFD);
   if (ret<0){
-    PD((WEIRD,"timer"));
-    Assert(ret==IP_TIMER);
+    NETWORK_ERROR(("Unable to bind port started at %d and ended at %d.",portno,p));
     return;}
   TimeStamp timestamp(time(0),osgetpid());
   mySiteInfo.tcpFD=tcpFD;
   mySiteInfo.maxNrAck = 100;
   mySiteInfo.maxSizeAck = 10000;
   Assert(myDSite==NULL);
+  if(ipIpNumber!=0) 
+    ip = ipIpNumber;
+  else
+    ipIpNumber = ip;
+  ipPortNumber = p;
   myDSite = makeMyDSite(ip, p, timestamp);
   Assert(myDSite!=NULL);  
   OZ_registerAcceptHandler(tcpFD,acceptHandler,NULL);
   PD((OS,"register ACCEPT- acceptHandler fd:%d",tcpFD));
   tcpCache->nowAccept();  // can be removed ?? 
+  networkNotInitiated = FALSE;
 #ifndef DENYS_EVENTS
   if(!am.registerTask((void*) tcpCache, checkTcpCache, wakeUpTcpCache))
     OZ_error("Unable to register TCPCACHE task");
@@ -4386,5 +4413,19 @@ int getNOSM_RemoteSite(RemoteSite* site){
 
 int getNORM_RemoteSite(RemoteSite* site){
   return site->getNORM();}
+
+void setIPAddress(int adr){
+  if(networkNotInitiated) ipIpNumber = adr;}
+  
+int  getIPAddress(){return ipIpNumber;}
+void setIPPort(int port){
+  if(networkNotInitiated) {
+    ipPortNumber = port;
+  }}
+int getIPPort(){return ipPortNumber;}
+void setFirewallStatus(Bool fw){
+  if(networkNotInitiated)ipIsbehindFW = fw;}
+Bool getFireWallStatus(){return ipIsbehindFW;}
+
 
 
