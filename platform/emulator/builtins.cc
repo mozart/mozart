@@ -1389,7 +1389,6 @@ OZ_C_proc_begin(BIlabelC,2)
           // Label argument is not a literal:
           TypeErrorT(1,"Literal");
           // TypeErrorMessage2("labelC","Labels must be literals",thelabel,lbl);
-          return FAILED;
       }
       // return OZ_suspendOnVar2(thelabel,lbl);
   }
@@ -2045,32 +2044,32 @@ OZ_Return isBoolInline(TaggedRef t)
 {
   NONSUVAR( t, term, tag);
   if (isCVar(tag)) {
-      switch (tagged2CVar(term)->getType()) {
-      case OFSVariable:
-        {
-          GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
-          if (ofsvar->getWidth()>0) return FAILED;
-          TaggedRef lbl=ofsvar->getLabel();
-          DEREF(lbl,_1,lblTag);
-          if (isLiteral(lblTag)) {
-              if (isAtom(lbl)) {
-                  if (literalEq(term,NameTrue) ||
-                      literalEq(term,NameFalse))
-                      return SUSPEND;
-                  else
-                      return FAILED;
-              } else { // isName
-                  return FAILED;
-              }
+    switch (tagged2CVar(term)->getType()) {
+    case OFSVariable:
+      {
+        GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+        if (ofsvar->getWidth()>0) return FAILED;
+        TaggedRef lbl=ofsvar->getLabel();
+        DEREF(lbl,_1,lblTag);
+        if (isLiteral(lblTag)) {
+          if (isAtom(lbl)) {
+            if (literalEq(term,NameTrue) ||
+                literalEq(term,NameFalse))
+              return SUSPEND;
+            else
+              return FAILED;
+          } else { // isName
+            return FAILED;
           }
-          return SUSPEND;
         }
-      case FDVariable:
-      case BoolVariable:
-          return FAILED;
-      default:
-          return SUSPEND;
+        return SUSPEND;
       }
+    case FDVariable:
+    case BoolVariable:
+      return FAILED;
+    default:
+      return SUSPEND;
+    }
   }
   if (literalEq(term,NameTrue) || literalEq(term,NameFalse))
     return PROCEED;
@@ -4444,7 +4443,10 @@ DECLAREBI_USEINLINEFUN2(BIdictionaryMember,dictionaryMemberInline)
 OZ_Return dictionaryGetInline(TaggedRef d, TaggedRef k, TaggedRef &out)
 {
   GetDictAndKey(d,k,dict,key);
-  return dict->getArg(key,out);
+  if (dict->getArg(key,out) != PROCEED) {
+    TypeErrorM("invalid key");
+  }
+  return PROCEED;
 }
 DECLAREBI_USEINLINEFUN2(BIdictionaryGet,dictionaryGetInline)
 
@@ -4452,7 +4454,7 @@ DECLAREBI_USEINLINEFUN2(BIdictionaryGet,dictionaryGetInline)
 OZ_Return dictionaryGetIfInline(TaggedRef d, TaggedRef k, TaggedRef deflt, TaggedRef &out)
 {
   GetDictAndKey(d,k,dict,key);
-  if (dict->getArg(key,out)!=PROCEED) {
+  if (dict->getArg(key,out) != PROCEED) {
     out = deflt;
   }
   return PROCEED;
@@ -6092,7 +6094,7 @@ Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla,
 }
 
 
-OZ_C_proc_begin(BImakeClass,8)
+OZ_C_proc_begin(BImakeClass,9)
 {
   OZ_Term fastmeth  = OZ_getCArg(0); { DEREF(fastmeth,_1,_2); }
   OZ_Term printname = OZ_getCArg(1); { DEREF(printname,_1,_2); }
@@ -6101,12 +6103,12 @@ OZ_C_proc_begin(BImakeClass,8)
   OZ_Term send      = OZ_getCArg(4); { DEREF(send,_1,_2); }
   OZ_Term features  = OZ_getCArg(5); { DEREF(features,_1,_2); }
   OZ_Term ufeatures = OZ_getCArg(6); { DEREF(ufeatures,_1,_2); }
-  OZ_Term out       = OZ_getCArg(7);
+  OZ_Term defaultMethodDescription = OZ_getCArg(7);
+  OZ_Term out       = OZ_getCArg(8);
 
   /* only isRecord, not isSRecord: fast methods may be empty */
   if (!isRecord(fastmeth)) {
-    warning("makeClass: record expected: %s", toC(fastmeth));
-    return FAILED;
+    TypeErrorT(0,"record");
   }
 
   SRecord *methods = NULL;
@@ -6128,23 +6130,19 @@ OZ_C_proc_begin(BImakeClass,8)
   }
 
   if (!isLiteral(printname)) {
-    warning("makeClass: literal expected: %s", toC(printname));
-    return FAILED;
+    TypeErrorT(1,"literal");
   }
 
   if (!isAbstraction(send)) {
-    warning("makeClass: abstraction expected: %s", toC(send));
-    return FAILED;
+    TypeErrorT(4,"abstraction");
   }
 
   if (!isRecord(features)) {
-    warning("makeClass: record expected: %s", toC(features));
-    return FAILED;
+    TypeErrorT(5,"record");
   }
 
   if (!isRecord(ufeatures)) {
-    warning("makeClass: record expected: %s", toC(ufeatures));
-    return FAILED;
+    TypeErrorT(6,"record");
   }
 
   SRecord *uf = isSRecord(ufeatures) ? tagged2SRecord(ufeatures) : (SRecord*)NULL;
@@ -6176,8 +6174,7 @@ OZ_C_proc_begin(BIsetMethApplHdl,1)
 {
   OZ_Term preed = OZ_getCArg(0); DEREF(preed,_1,_2);
   if (! isAbstraction(preed)) {
-    warning("setMethApplHdl: Abstraction expected");
-    return FAILED;
+    TypeErrorT(0,"abstraction");
   }
 
   if (methApplHdl == makeTaggedNULL()) {
@@ -6357,11 +6354,13 @@ OZ_C_proc_begin(BIsetClosed,1)
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIgetOONames,3)
+OZ_C_proc_begin(BIgetOONames,5)
 {
-  if (OZ_unify(OZ_getCArg(0),NameOoAttr) &&
-      OZ_unify(OZ_getCArg(1),NameOoFreeFeatR) &&
-      OZ_unify(OZ_getCArg(2),NameOoFreeFlag))
+  if (OZ_unify(OZ_getCArg(0),NameOoAttr)       &&
+      OZ_unify(OZ_getCArg(1),NameOoFreeFeatR)  &&
+      OZ_unify(OZ_getCArg(2),NameOoFreeFlag)   &&
+      OZ_unify(OZ_getCArg(3),NameOoDefaultVar) &&
+      OZ_unify(OZ_getCArg(4),NameOoRequiredArg))
     return PROCEED;
   return FAILED;
 }
@@ -6416,8 +6415,7 @@ OZ_C_proc_begin(BIsetSelf,1)
   TaggedRef o = OZ_getCArg(0);
   DEREF(o,_1,_2);
   if (!isObject(o)) {
-    OZ_warning("setSelf(%s): object expected",toC(OZ_getCArg(0)));
-    return FAILED;
+    TypeErrorT(0,"object");
   }
 
   Object *obj = (Object *) tagged2Const(o);
@@ -6904,7 +6902,7 @@ BIspec allSpec2[] = {
   {"platform",       1, BIplatform},
   {"ozhome",         1, BIozhome},
 
-  {"makeClass",        8,BImakeClass,          0},
+  {"makeClass",        9,BImakeClass,          0},
   {"setModeToDeep",    0,BIsetModeToDeep,  0},
   {"setMethApplHdl",   1,BIsetMethApplHdl,     0},
   {"getClass",         2,BIgetClass,           (IFOR) getClassInline},
@@ -6912,7 +6910,7 @@ BIspec allSpec2[] = {
   {"newObject",        2,BInewObject,          (IFOR) newObjectInline},
   {"hasFastBatch",     1,BIhasFastBatch,       (IFOR) hasFastBatchInline},
   {"objectIsFree",     2,BIobjectIsFree,       (IFOR) objectIsFreeInline},
-  {"getOONames",       3,BIgetOONames,         0},
+  {"getOONames",       5,BIgetOONames,         0},
   {"releaseObject",    0,BIreleaseObject,      0},
   {"getSelf",          1,BIgetSelf,            0},
   {"setSelf",          1,BIsetSelf,            0},
