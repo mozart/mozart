@@ -35,6 +35,8 @@
 // forward decl
 typedef long Credit;  /* TODO: full credit,long credit? */
 
+class BorrowTable;
+class OwnerTable;
 class ByteStream;
 class DebtRec;
 DebtRec* debtRec;
@@ -51,6 +53,13 @@ int sendAcknowledge(int sd,int OTI);
 int sendRedirect(ProxyList *pl,OZ_Term val, int ackSite,int OTI);
 int bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v);
 int sendCreditBack(int sd,int OTI,Credit c);
+inline int reliableSend0(int,ByteStream *);
+inline void marshallNumber(unsigned int,ByteStream *);
+inline void marshallMySite(ByteStream* );
+inline void marshallCredit(Credit,ByteStream *);
+
+BorrowTable *borrowTable;
+OwnerTable *ownerTable;
 
 #define OT ownerTable
 #define BT borrowTable
@@ -190,12 +199,6 @@ public:
 
   Bool isLocal() { return ipIsLocal(site); }
 };
-
-
-inline int reliableSend0(int,ByteStream *);
-inline void marshallNumber(unsigned int,ByteStream *);
-inline void marshallMySite(ByteStream* );
-inline void marshallCredit(Credit,ByteStream *);
 
 /* ********************************************************************** */
 /*                  BYTE STREAM
@@ -827,9 +830,6 @@ void OwnerTable::print(){
 }
 #endif
 
-OwnerTable *ownerTable;
-
-
 /* ********************************************************************** */
 /* ********************************************************************** */
 /*                  BORROW TABLE STUFF                                    */
@@ -1306,8 +1306,6 @@ void BorrowTable::print(){
 }
 
 #endif
-
-BorrowTable *borrowTable;
 
 int borrowEntryToIndex(BorrowEntry *b){return borrowTable->ptr2Index(b);}
 
@@ -2982,6 +2980,28 @@ int sendCreditBack(int sd,int OTI,Credit c)
   Assert(ret==PROCEED); // TODO
   delete bs;
   return ret;
+}
+
+
+// compare NAs
+#define GET_ADDR(var,SD,OTI)						\
+int SD,OTI;								\
+if (var->isProxy()) {							\
+  NetAddress *na=BT->getBorrow(var->getIndex())->getNetAddress();	\
+  SD=na->site;								\
+  OTI=na->index;							\
+} else {								\
+  SD=lookupLocalSite();							\
+  OTI=var->getIndex();							\
+}
+
+int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar)
+{
+  GET_ADDR(lVar,lSD,lOTI);
+  GET_ADDR(rVar,rSD,rOTI);
+  int ret = compareSites(lSD,rSD);
+  if (ret != 0) return ret;
+  return lOTI<rOTI ? -1 : 1;
 }
 
 /* ********************************************************************** */
