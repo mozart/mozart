@@ -257,6 +257,8 @@ public:
   void pushDebug(Board *n, Chunk *def, int arity, RefsArray args);
   void pushTask(Board *n,ProgramCounter pc,
                 RefsArray y,RefsArray g,RefsArray x=0,int i=0);
+  void pushTaskOutline(Board *n,ProgramCounter pc,
+                       RefsArray y,RefsArray g,RefsArray x=0,int i=0);
   void pushCFun(Board *n, OZ_CFun f, RefsArray x=0, int i=0);
   void pushNervous(Board *n);
 

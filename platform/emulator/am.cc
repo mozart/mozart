@@ -1299,7 +1299,7 @@ void AM::pushToplevel(ProgramCounter pc)
 {
   Assert(rootThread->isEmpty());
   rootBoard->incSuspCount();
-  rootThread->pushCont(rootBoard,pc,toplevelVars);
+  rootThread->pushCont(rootBoard,pc,toplevelVars,NULL,NULL,0,OK);
   if (rootThread!=currentThread && !isScheduled(rootThread)) {
     scheduleThread(rootThread);
   }
@@ -1514,6 +1514,12 @@ int AM::wakeUser()
   return 0;
 }
 
+
+void AM::pushTaskOutline(Board *n,ProgramCounter pc,
+                         RefsArray y,RefsArray g,RefsArray x,int i)
+{
+  pushTask(n,pc,y,g,x,i);
+}
 
 #ifdef OUTLINE
 #define inline
