@@ -8,10 +8,12 @@ OZPREFIX	= $(PREFIX)
 OZBIN		= $(PREFIX)/bin
 OZLIB		= $(PREFIX)/lib
 IMAGESDIR	= $(OZLIB)/images
+CACHEDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/lib
 
 SHELL		= @SH@
 RM		= @RM@ -f
 MV		= @MV@
+CP		= @CP@
 LN		= @LN_S@
 MKDIR		= @MKDIR@
 RMDIR		= @RMDIR@
@@ -96,9 +98,15 @@ MISCSRC1 = Agenda.oz Server.oz
 MISCSRC = $(MISCSRC1:%=misc/%) Misc.oz
 
 ENVS = SP.env OP.env AP.env CP.env WP.env DP.env Compiler.env Misc.env
+TOOLENVS = Browser.env CompilerPanel.env Emacs.env Explorer.env Gump.env \
+	GumpParser.env GumpScanner.env Ozcar.env Panel.env Profiler.env
+LOCAL_TOOLENVS = $(TOOLENVS:%.env=tyc/tools/%.env)
+LOCAL_TOOLTYPS = $(TOOLENVS:%.env=tyc/tools/%.typ)
+LOCAL_TOOLTYCS = $(TOOLENVS:%.env=tyc/tools/%.tyc)
 ENVS1 = Base.env Standard.env $(ENVS)
-TYPS = $(ENVS:%.env=tyc/%.typ)
-TYCS = $(TYPS:%.typ=%.tyc)
+LOCAL_LIBTYPS = $(ENVS:%.env=tyc/lib/%.typ)
+LOCAL_LIBTYCS = $(ENVS:%.env=tyc/lib/%.tyc)
+TYCS = $(LOCAL_LIBTYCS) $(LOCAL_TOOLTYCS)
 
 # This ensures that the $(TYCS) are not removed after, e.g., `make stage2',
 # so that we can `make install' directly afterwards.
@@ -111,7 +119,7 @@ ALLSRCS = \
 
 LIBFILES = \
 	$(ENVS1:%=$(OZLIB)/%) \
-	$(TYCS:tyc/%=$(OZLIB)/%)
+	$(LOCAL_LIBTYCS:tyc/lib/%=$(OZLIB)/%)
 
 COMPONENTS = \
 	Init.ozc SP.ozc OP.ozc AP.ozc CP.ozc WP.ozc DP.ozc \
@@ -119,6 +127,8 @@ COMPONENTS = \
 	Tools.ozc
 
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
+CACHECOMPONENTS = $(COMPONENTS:%=$(CACHEDIR)/%)
+CACHETYCS	= $(ENVS:%.env=$(CACHEDIR)/%.tyc)
 
 STAGEEXTRAFILES = $(OZLIB)/Base.ozc $(OZLIB)/Standard.ozc $(OZLIB)/ozbatch.ozm
 
@@ -145,11 +155,23 @@ Makefile: Makefile.in ../config.status
 # Components
 #---------------------------------------------------------------------
 
-tyc/%.typ: %.env
+$(LOCAL_TOOLENVS): tyc/tools/%.env : ../tools/%.env
 	@$(MKDIR) tyc 2> /dev/null || $(TRUE)
+	@$(MKDIR) tyc/tools 2> /dev/null || $(TRUE)
+	$(CP) $< $@
+
+$(LOCAL_TOOLTYPS): %.typ : %.env
 	$(ENV2TYPE) $< > $@
 
-tyc/%.tyc: tyc/%.typ $(DUMPINTRO) Init.ozc
+$(LOCAL_TOOLTYCS): %.tyc : %.typ Init.ozc
+	$(COMPILE) $< -o $@
+
+$(LOCAL_LIBTYPS): tyc/lib/%.typ : %.env
+	@$(MKDIR) tyc 2> /dev/null || $(TRUE)
+	@$(MKDIR) tyc/lib 2> /dev/null || $(TRUE)
+	$(ENV2TYPE) $< > $@
+
+$(LOCAL_LIBTYCS): %.tyc : %.typ Init.ozc
 	$(COMPILE) $< -o $@
 
 %.ozc: %.oz
@@ -268,15 +290,20 @@ install-main: all \
 install-images: \
 	$(IMAGESDIR) $(IMAGES)
 
-install-cache: \
-	$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome
+install-cache: $(CACHEDIR) $(CACHECOMPONENTS) $(CACHETYCS)
+$(CACHEDIR):
+	$(MKINSTALLDIRS) $(CACHEDIR)
+$(CACHECOMPONENTS): $(CACHEDIR)/%.ozc : %.ozc
+	$(INSTALLFILE) $< $@
+$(CACHETYCS): $(CACHEDIR)/%.tyc : tyc/lib/%.tyc
+	$(INSTALLFILE) $< $@
 
-$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome: \
-	$(PREFIX)/cache/http/www.ps.uni-sb.de
-	cd $(PREFIX)/cache/http/www.ps.uni-sb.de && $(LN) ../../.. ozhome
+#$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome: \
+#	$(PREFIX)/cache/http/www.ps.uni-sb.de
+#	cd $(PREFIX)/cache/http/www.ps.uni-sb.de && $(LN) ../../.. ozhome
 
-$(PREFIX)/cache/http/www.ps.uni-sb.de:
-	$(MKINSTALLDIRS) $(PREFIX)/cache/http/www.ps.uni-sb.de
+#$(PREFIX)/cache/http/www.ps.uni-sb.de:
+#	$(MKINSTALLDIRS) $(PREFIX)/cache/http/www.ps.uni-sb.de
 
 $(OZLIB) $(IMAGESDIR) $(OZBIN):
 	$(INSTALLDIR) $@
@@ -293,7 +320,7 @@ $(IMAGESDIR)/%: images/%
 $(OZLIB)/%.env: %.env
 	$(INSTALLSRC) $< $@
 
-$(OZLIB)/%.tyc: tyc/%.tyc
+$(OZLIB)/%.tyc: tyc/lib/%.tyc
 	$(INSTALLFILE) $< $@
 
 $(OZBIN)/%: %
@@ -346,7 +373,7 @@ bootstrap:
 	OZBATCH=$(SRCDIR)/ozbatch.sh \
 	OZINIT=Init.ozc \
 	OZ_LIB=. \
-	OZ_LOAD=root=.:prefix=$(URL)/lib/=./tyc/:prefix=$(URL)/lib/=./:=
+	OZ_LOAD=root=.:prefix=$(URL)/=./tyc/:prefix=$(URL)/lib/=./:=
 
 STAGE1=./stage1
 STAGE2=./stage2
