@@ -110,7 +110,8 @@ OZ_C_proc_end
 
 #ifdef PROPAGATOR_CD
 
-#include "../FDLib/fdaux.hh"
+//  by kost@ 9.04.96: usage of fdaux.hh in fdcd.cc is eliminated;
+// #include "../FDLib/fdaux.hh"
 
 class CDPropagator : public OZ_Propagator {
 protected:
@@ -150,7 +151,7 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
     return FAILED;
   }
 
-  PropagatorExpect pe;
+  OZ_PropagatorExpect pe;
   EXPECT(pe, 1, expectTupleIntVarAny);
 
   return pe.spawn(new CDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]),
