@@ -2,6 +2,7 @@ PREFIX          = @prefix@
 VPATH           = @srcdir@
 SHDOCDIR        = $(PREFIX)/share/doc
 DOCDIR          = $(PREFIX)/doc
+BUILDDIR        = @BUILDDIR@
 
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
@@ -13,10 +14,10 @@ HOMEURL         = @HOMEURL@
 all bootstrap:: TeX.class
 
 %.class: %.java
-        java $<
+        javac -d . $<
 
 Makefile: Makefile.in ../config.status
-        ../config.status
+        cd .. && ./config.status
 
 veryclean clean::
         -rm -f *~ TeX.class
