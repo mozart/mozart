@@ -102,6 +102,7 @@
 #define NETWORK_ERROR(Args) {OZ_error Args;}
 #define IMPLEMENT(Args) {OZ_error Args;}
 
+#define PERDIOLOGLOW
 
 /* free list sizes */
 
@@ -2031,10 +2032,12 @@ Bool WriteConnection::shouldSendFromUser(){
   return TRUE;}
 
 ipReturn WriteConnection::open(){
+  ipReturn ret;
   PD((TCP_INTERFACE,"OpenConnection"));
   setOpening();
   tcpCache->add(this);
-  return tcpOpen(remoteSite, this);}
+  ret = tcpOpen(remoteSite, this);
+  return ret;}
 /**********************************************************************/
 /*   SECTION 14: MessageManagers                                           */
 /**********************************************************************/
@@ -2481,11 +2484,11 @@ ipReturn tcpSend(int fd,Message *m, Bool flag)
     total=bs->getTotLen();
     bs->PiggyBack(m);
 #ifdef PERDIOLOGLOW
-    printf("#!!!sendingnet(to:'%s' type:%d site:'%s' index:%d size:%d nr:%d)#&&&\n",
-           bs->getSite()->stringrep(),
-           m->getMsgType(),m->getSite()->stringrep(),
-           m->getMsgIndex(),total, m->getMsgNum());
-
+    printf("!!!ts%d;%d;%d;%d;%d;%d\n",
+           bs->getSite()->getTimeStamp()->pid,
+           m->getMsgType(),
+           m->getMsgIndex(),total, m->getMsgNum(),
+           m->getSite()->getTimeStamp()->pid);
 #endif
 
 }
@@ -2794,6 +2797,9 @@ static int acceptHandler(int fd,void *unused)
   ip_address ip=from.sin_addr.s_addr;
   port_t port=from.sin_port;
   Bool accept = tcpCache->Accept();
+#ifdef PERDIOLOGLOW
+  printf("!!!oa%d;%d\n",(int)ip,(int)port);
+#endif
 
   BYTE *auxbuf = accHbuf;
 
@@ -2822,10 +2828,16 @@ static int acceptHandler(int fd,void *unused)
     if(written==accHbufSize) break;
     if(ret<=0 && ossockerrno()!=EINTR && ossockerrno()!=EWOULDBLOCK && ossockerrno()!=EAGAIN ) {
       OZ_warning("Error in OPening, we're closing");
+#ifdef PERDIOLOGLOW
+      printf("!!!oc\n");
+#endif
       osclose(newFD);
       return 0;}}
 
   ReadConnection *r=readConnectionManager->allocConnection(NULL,newFD);
+#ifdef PERDIOLOGLOW
+  printf("!!!od%d\n",newFD);
+#endif
   r->setOpening();
   tcpCache->add(r);
   PD((TCP_CONNECTIONH,"acceptHandler success r:%x",r));
@@ -2867,11 +2879,17 @@ int tcpPreReadHandler(int fd,void *r0){
 
   r->setMaxSizeAck(maxNrSize);
   r->clearOpening();
-
+#ifdef PERDIOLOGLOW
+  printf("!!!ok%d\n",si->getTimeStamp()->pid);
+#endif
   OZ_registerReadHandler(fd,tcpReadHandler,(void *)r);
   return 0;
 
 tcpPreFailure:
+#ifdef PERDIOLOGLOW
+  printf("!!!oq%d\n",fd);
+#endif
+
   if(fd!=LOST) osclose(fd);
   tcpCache->remove(r);
   readConnectionManager->freeConnection(r);
@@ -2992,8 +3010,8 @@ start:
     PD((CONTENTS,"interpret rem:%d len:%d",
                  rem,bs->interLen()));
 #ifdef PERDIOLOGLOW
-    printf("#!!!readingnet(sender:'%s' type:%d size:%d nr:%d)#&&&\n",
-           r->remoteSite->site->stringrep(),
+    printf("!!!tr%d;%d;%d;%d\n",
+           r->remoteSite->site->getTimeStamp()->pid,
            type,totLen, msgNr);
 #endif
     // EK this might be done in a nicer way...
@@ -3098,15 +3116,18 @@ static ipReturn tcpOpen(RemoteSite *remoteSite,WriteConnection *r)
 
   aport=remoteSite->getPort();
   PD((TCP,"open s:%s",remoteSite->site->stringrep()));
+#ifdef PERDIOLOGLOW
+  printf("!!!oo%d\n",remoteSite->site->getTimeStamp()->pid);
+#endif
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr=htonl(remoteSite->getAddress());
   addr.sin_port = htons(aport);
 
-  int tries=OZConnectTries;
-  int fd  = -1;
-  int one = 1;
+  int tries =OZConnectTries;
+  int fd    = -1;
+  int one   =  1;
 
   if(!tcpCache->CanOpen()){goto  ipOpenNoAnswer;}
 
@@ -3116,7 +3137,10 @@ retry:
   if (fd < 0) {
     if(ossockerrno()==ENOBUFS){goto  ipOpenNoAnswer;}
     //fprintf(stderr,"fd < 0 = %d  - interpreted as perm:%d \n",fd,ossockerrno());
-        r->connectionLost();
+#ifdef PERDIOLOGLOW
+    printf("!!!of%d\n",remoteSite->site->getTimeStamp()->pid);
+#endif
+    r->connectionLost();
     return IP_PERM_BLOCK;}
 
   if(setsockopt(fd,IPPROTO_TCP,TCP_NODELAY,(char*) &one,sizeof(one))<0){
@@ -3134,7 +3158,10 @@ retry:
     osSetNonBlocking(fd,OK);
 #endif
     PD((TCP,"open success p:%d fd:%d",aport,fd));
-    r->setFD(fd);
+#ifdef PERDIOLOGLOW
+    printf("!!!os%d\n",remoteSite->site->getTimeStamp()->pid);
+#endif
+  r->setFD(fd);
     OZ_registerReadHandler(fd,tcpConnectionHandler,(void *)r);
     PD((OS,"register READ %d - tcpConnectionHandler",fd));
     return IP_OK;}
@@ -3143,12 +3170,18 @@ retry:
   if(tries<=0){goto  ipOpenNoAnswer;}
   if((ossockerrno() == EADDRNOTAVAIL) || (ossockerrno() == ECONNREFUSED)){
     //fprintf(stderr,"cannot open - interpreted as perm:%d %d \n",EADDRNOTAVAIL,ossockerrno());
+#ifdef PERDIOLOGLOW
+    printf("!!!of%d\n",remoteSite->site->getTimeStamp()->pid);
+#endif
     r->connectionLost();
     return IP_PERM_BLOCK;}
   addr.sin_port = htons(aport);
   goto retry;
 
  ipOpenNoAnswer:
+#ifdef PERDIOLOGLOW
+  printf("!!!ou%d\n",remoteSite->site->getTimeStamp()->pid);
+#endif
   tcpCache->remove(r);
   r->clearOpening();
   if(fd >= 0) osclose(fd);
@@ -3196,7 +3229,11 @@ int tcpConnectionHandler(int fd,void *r0){
 
 
   if (strlen(PERDIOVERSION)!=strngLen ||
-      strncmp(PERDIOVERSION,(char*)pos,strngLen)!=0) goto tcpConPermLost;
+      strncmp(PERDIOVERSION,(char*)pos,strngLen)!=0){
+#ifdef PERDIOLOGLOW
+    printf("!!!ov%d\n",r->remoteSite->site->getTimeStamp()->pid);
+#endif
+    goto tcpConPermLost; }
 
   PD((TCP,"Sending My Site Message..%s",myDSite->stringrep()));
   if(r->isAcked()) msgType = TCP_MYSITE;
@@ -3235,6 +3272,10 @@ int tcpConnectionHandler(int fd,void *r0){
   ;
 #endif
   PD((TCP,"tcpConnectionHandler ord fin"));
+
+#ifdef PERDIOLOGLOW
+  printf("!!!or%d\n",r->remoteSite->site->getTimeStamp()->pid);
+#endif
   r->opened();
   delete buf1;
   if(buf2)delete buf2;
@@ -3244,6 +3285,9 @@ int tcpConnectionHandler(int fd,void *r0){
   return 0;
 
  tcpConClosed:
+#ifdef PERDIOLOGLOW
+  printf("!!!ou%d\n",r->remoteSite->site->getTimeStamp()->pid);
+#endif
   osclose(fd);
   delete buf1;
   if(buf2)delete buf2;
@@ -3251,6 +3295,9 @@ int tcpConnectionHandler(int fd,void *r0){
   return 1;
 
  tcpConFailure:
+#ifdef PERDIOLOGLOW
+  printf("!!!oy%d\n",r->remoteSite->site->getTimeStamp()->pid);
+#endif
   osclose(fd);
   delete buf1;
   if(buf2)delete buf2;
@@ -3258,6 +3305,9 @@ int tcpConnectionHandler(int fd,void *r0){
   return 1;
 
 tcpConPermLost:
+#ifdef PERDIOLOGLOW
+  printf("!!!ow%d\n",r->remoteSite->site->getTimeStamp()->pid);
+#endif
   osclose(fd);
   delete buf1;
   if(buf2)delete buf2;
@@ -3494,6 +3544,9 @@ int RemoteSite::readRecMsgCtr(){
 
 void RemoteSite::sitePrmDwn(){
   // printf("Site prm %d %d %s\n",(int)writeConnection, (int) readConnection,site->stringrep());
+#ifdef PERDIOLOGLOW
+  printf("!!!td%d\n",site->getTimeStamp()->pid);
+#endif
   status = SITE_PERM;
   if(readConnection!=NULL && readConnection->isReading()){
     readConnection->setCrashed();
@@ -3527,6 +3580,10 @@ void RemoteSite::sitePrmDwn(){
 
 
 void RemoteSite::siteTmpDwn(closeInitiator ci){
+#ifdef PERDIOLOGLOW
+  printf("!!!tt%d;%d\n",site->getTimeStamp()->pid,(int)ci);
+#endif
+
   if(status ==  SITE_OK && ci == TMP_INITIATIVE)
     status = SITE_TEMP;
   if(writeConnection!=NULL)
@@ -3592,6 +3649,10 @@ void WriteConnection::clearWantsToClose(){
 
 void WriteConnection::closeConnection(){
   PD((TCP_INTERFACE,"tcpCloseWriter r:%x site: %s",this,remoteSite->site->stringrep()));
+#ifdef PERDIOLOGLOW
+  printf("!!!cw%d\n",remoteSite->site->getTimeStamp()->pid);
+#endif
+
   int fd=getFD();
   Assert(fd!=LOST);
   if(isWantsToClose())
@@ -3626,6 +3687,9 @@ void WriteConnection::closeConnection(){
 void WriteConnection::close(closeInitiator type){
   //printf("close r:%x fd:%d type(%d:MY %d:HIS %d:TMP): %d \n",
   //   (int)this,fd, MY_INITIATIVE,HIS_INITIATIVE,TMP_INITIATIVE,type);
+#ifdef PERDIOLOGLOW
+  printf("!!!cc%d;%d\n",remoteSite->site->getTimeStamp()->pid,(int)type);
+#endif
   if(fd >0)
     {OZ_unregisterRead(fd);
     OZ_unregisterWrite(fd);
@@ -3676,6 +3740,9 @@ void WriteConnection::close(closeInitiator type){
 
 void ReadConnection::closeConnection(){
   BYTE msg;
+#ifdef PERDIOLOGLOW
+  printf("!!!cr%d\n",remoteSite->site->getTimeStamp()->pid);
+#endif
   Assert(!isClosing());
   int fd=getFD();
   Assert(fd!=LOST);
@@ -3688,6 +3755,9 @@ void ReadConnection::closeConnection(){
   return;}
 
 void ReadConnection::close(){
+#ifdef PERDIOLOGLOW
+  printf("!!!cu%d\n",remoteSite->site->getTimeStamp()->pid);
+#endif
   PD((TCP_CONNECTIONH,"close ReadConnection r:%x fd:%d",this,fd));
   if(fd!=LOST){
     OZ_unregisterRead(fd);
@@ -3941,6 +4011,9 @@ ipBlockSend:
 /**********************************************************************/
 
 RemoteSite* createRemoteSite(DSite* site, int readCtr){
+#ifdef PERDIOLOGLOW
+  printf("!!!in%s!%d\n",site->stringrep(),site->getTimeStamp()->pid);
+#endif
   RemoteSite *rSite = remoteSiteManager->allocRemoteSite(site, readCtr);
   return rSite;
 }
@@ -4040,7 +4113,7 @@ void initNetwork()
   TSC_TOTAL_A = 4000;
 #endif
 #ifdef PERDIOLOGLOW
-  printf("#!!!mySite('%s')#&&&\n",myDSite->stringrep());
+  printf("!!!im%s!%d\n",myDSite->stringrep(),myDSite->getTimeStamp()->pid);
 #endif
 }
 
