@@ -110,10 +110,10 @@ define
 			 feature}
 		       }
 	    if {HasFeature B.1 feature} then
-	       self.((B.1).feature)=self
+	       self.((B.1).feature)=self.Child
 	    end
 	    if {HasFeature B.1 handle} then
-	       (B.1).handle=self
+	       (B.1).handle=self.Child
 	    end
 	    {self tk(create window 0 0 anchor:nw window:self.Child)} % Displays the window
 	    %% update of the size of the child

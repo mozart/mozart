@@ -82,6 +82,9 @@ export
    LoadTkPI
    WInfo
    SetAssertLevel
+   SetAlias
+   UnSetAlias
+   GetAlias
 
 prepare
    NoArgs={NewName}
@@ -119,6 +122,9 @@ define
    MapLabelToObject	= QTkDevel.mapLabelToObject
    PropagateLook	= QTkDevel.propagateLook
    RegisterWidget	= QTkDevel.registerWidget
+   SetAlias	        = QTkDevel.setAlias
+   UnSetAlias	        = QTkDevel.unSetAlias
+   GetAlias	        = QTkDevel.getAlias
 
    %% create a module manager with Tk and QTkDevel
    %% so that these don't get reloaded and relinked

@@ -28,7 +28,7 @@
 functor
 
 import
-%   System(show:Show)
+   System(show:Show)
    Tk
    Error
    QTk at 'QTkBare.ozf'
@@ -68,6 +68,9 @@ export
    PropagateLook
    NewRedirector
    Redirector
+   SetAlias
+   UnSetAlias
+   GetAlias
 
    
 require
@@ -1321,6 +1324,7 @@ define
    end
 
    Obj={NewName}
+   Apply={NewName}
    
    class BlackboxClass
 
@@ -1365,7 +1369,7 @@ define
 	 end
 	 thread
 	    proc{Loop O}
-	       case O of _|Xs then
+	       case O of X|Xs then
 		  OutS<-Xs
 		  {Loop Xs}
 	       end
@@ -2012,19 +2016,42 @@ define
 	 R
       end
    end
+
+   Aliases={NewDictionary}
+
+   proc{SetAlias A R}
+      Aliases.A:=R
+   end
+
+   proc{UnSetAlias A}
+      {Dictionary.remove Aliases A}
+   end
+
+   fun{GetAlias A}
+      Aliases.A
+   end
    
    fun{MapLabelToObject R}
       Name={Label R}
-      A={Dictionary.condGet Widgets Name nil}
-      D=if A\=nil then A else
+      Al={Dictionary.condGet Aliases Name nil}
+   in
+      if Al\=nil then
+	 if {Record.is Al} then
+	    {MapLabelToObject {Record.adjoin {Record.adjoin Al R} {Label Al}}}
+	 else
+	    {MapLabelToObject {Record.adjoinAt {Al R} parent R.parent}}
+	 end
+      else
+	 A={Dictionary.condGet Widgets Name nil}
+	 D=if A\=nil then A else
 \ifndef DEBUG	     
-	 {fun{$}
-	     E
-	  in
+	      {fun{$}
+		  E
+	       in
 
-	     %%
-	     %% A flaw in the system prevents the following lines from working :-(
-	     %%
+		  %%
+		  %% A flaw in the system prevents the following lines from working :-(
+		  %%
 	     
 %	     try
 %		%%
@@ -2037,198 +2064,199 @@ define
 %		{RegisterWidget M}
 %	     catch _ then E=unit end
 	     
-	     try
-		%%
-		%% unknown widget : first tries to load it on the fly
-		%%
-		if {IsFree {QTkRegisterWidget Name $}} then E=unit end
-	     catch _ then E=unit end
-	     if {IsDet E} then
-		%%
-		%% secondly tries to build one on the fly !
-		%%
-		WidgetClass
-	     in
-		try
-		   UnknownWidget
-		in
-		   if {HasFeature R action} then
-		      class UnknownWidget
-			 feat
-			    widgetType:Name
-			    action
-			 from QTkClass
-			 meth unknownWidget(...)=M
-			    QTkClass,{Record.adjoin M init}
-			    Tk.Name,{Record.adjoin {TkInit M}
-				     tkInit(action:{self.action action($)})}
-			 end
-			 meth otherwise(M)
-			    {Tk.send M}
-			 end
-		      end		     
-		   else
-		      class UnknownWidget
-			 feat widgetType:Name
-			 from QTkClass
-			 meth unknownWidget(...)=M
-			    QTkClass,{Record.adjoin M init}
-			    Tk.Name,{TkInit M}
-			 end
-			 meth otherwise(M)
-			    {Tk.send M}
-			 end
-		      end
-		   end
-		   WidgetClass={Class.new [Tk.{Label R} UnknownWidget] nil nil [locking]}
-		catch _ then skip end
-		if {IsFree WidgetClass} then
-		   {Exception.raiseError qtk(badWidget R)}
-		end
-	     end
-	     local
-		X={Dictionary.condGet Widgets Name nil}
-	     in
-		if X==nil then
-		   {Exception.raiseError qtk(badWidget R)}
-		   nil
-		else
-		   X
-		end
-	     end
-	  end}
-\else
-	   {fun{$}
-	       {Exception.raiseError qtk(badWidget R)}
-	       nil
-	    end}
-\endif
-	end
-      Object
-%      RD={ByNeed fun{$} {NewRedirector Object} end}
-      proc{SetHandle}
-	 if {HasFeature R handle} then
-	    R.handle=Object.Redirector
-	 end
-	 if {HasFeature R feature} then
-	    (R.parent).(R.feature)=Object.Redirector
-	 end
-      end
-      case D.feature
-      of true then
-	 Object={NewFeat D.object R}
-	 {SetHandle}
-      [] menu then
-	 Object={NewFeat D.object R}
-	 if {HasFeature R handle} then
-	    R.handle=Object.Redirector
-	 end
-      [] false then
-	 Object={New D.object R}
-	 {SetHandle}
-      [] unknown then
-	 Object={New D.object {Record.adjoin R unknownWidget}}
-	 {SetHandle}
-      [] S then %% special support for scrollable widgets !
-	 if S==scroll orelse S==scrollfeat then
-	    if {CondSelect R tdscrollbar false} orelse {CondSelect R lrscrollbar false} then
-	       Type={Label R}
-	       B
-	       {SplitParams R [tdscrollbar lrscrollbar scrollwidth] _ B}
-	       class ScrollWidget
-		  from Tk.frame QTkClass
-		  meth init
-		     lock
-			QTkClass,init(parent:R.parent)
-			Tk.frame,tkInit(parent:R.parent)
-			if S==scroll then
-			   self.Type={New D.object {Record.adjoinAt R parent self}}
+		  try
+		     %%
+		     %% unknown widget : first tries to load it on the fly
+		     %%
+		     if {IsFree {QTkRegisterWidget Name $}} then E=unit end
+		  catch _ then E=unit end
+		  if {IsDet E} then
+		     %%
+		     %% secondly tries to build one on the fly !
+		     %%
+		     WidgetClass
+		  in
+		     try
+			UnknownWidget
+		     in
+			if {HasFeature R action} then
+			   class UnknownWidget
+			      feat
+				 widgetType:Name
+				 action
+			      from QTkClass
+			      meth unknownWidget(...)=M
+				 QTkClass,{Record.adjoin M init}
+				 Tk.Name,{Record.adjoin {TkInit M}
+					  tkInit(action:{self.action action($)})}
+			      end
+			      meth otherwise(M)
+				 {Tk.send M}
+			      end
+			   end		     
 			else
-			   self.Type={NewFeat D.object {Record.adjoinAt R parent self}}
+			   class UnknownWidget
+			      feat widgetType:Name
+			      from QTkClass
+			      meth unknownWidget(...)=M
+				 QTkClass,{Record.adjoin M init}
+				 Tk.Name,{TkInit M}
+			      end
+			      meth otherwise(M)
+				 {Tk.send M}
+			      end
+			   end
 			end
-			{Tk.batch [grid(self.Type row:0 column:0 sticky:nswe)
-				   grid(rowconfigure self 0 weight:1)
-				   grid(columnconfigure self 0 weight:1)]}
-			if {CondSelect B tdscrollbar false} then
-			   self.tdscrollbar={New {Dictionary.get Widgets tdscrollbar}.object
-					     {Record.adjoin
-					      if Win32 then if {HasFeature B scrollwidth} then r(width:B.scrollwidth) else r end
-					      else r(width:{CondSelect B scrollwidth 10}) end
-					      tdscrollbar(parent:self)}}
-%					     tdscrollbar(parent:self width:{CondSelect B scrollwidth 10})}
-			   {Tk.send grid(self.tdscrollbar row:0 column:1 sticky:ns)}
-			   {Tk.addYScrollbar self.Type self.tdscrollbar}
-			end
-			if {CondSelect B lrscrollbar false} then
-			   self.lrscrollbar={New {Dictionary.get Widgets lrscrollbar}.object
-					     {Record.adjoin
-					      if Win32 then if {HasFeature B scrollwidth} then r(width:B.scrollwidth) else r end
-					      else r(width:{CondSelect B scrollwidth 10}) end
-					      lrscrollbar(parent:self)}}
-%					     lrscrollbar(parent:self width:{CondSelect B scrollwidth 10})}
-			   {Tk.send grid(self.lrscrollbar row:1 column:0 sticky:we)}
-			   {Tk.addXScrollbar self.Type self.lrscrollbar}
-			end
-			if {HasFeature R handle} then
-			   R.handle={NewRedirector self.Type}
-			end
-			if {HasFeature R feature} then
-			   (R.parent).(R.feature)=self.Type
-			end			  
+			WidgetClass={Class.new [Tk.{Label R} UnknownWidget] nil nil [locking]}
+		     catch _ then skip end
+		     if {IsFree WidgetClass} then
+			{Exception.raiseError qtk(badWidget R)}
 		     end
 		  end
-		  meth set(...)=M
-		     {self.Type M}
-		  end
-		  meth get(...)=M
-		     {self.Type M}
-		  end
-		  meth destroy
-		     lock
-			{self.Type destroy}
-			if {CondSelect B tdscrollbar false} then
-			   {self.tdscrollbar destroy}
-			end
-			if {CondSelect B lrscrollbar false} then
-			   {self.lrscrollbar destroy}
-			end
+		  local
+		     X={Dictionary.condGet Widgets Name nil}
+		  in
+		     if X==nil then
+			{Exception.raiseError qtk(badWidget R)}
+			nil
+		     else
+			X
 		     end
 		  end
-		  meth otherwise(M)
-		     {self.Type M} %% passes the messages to the main object automatically
-		  end
-	       end
-	       ScrollObj={Class.new [ScrollWidget] q
-			  if {CondSelect B tdscrollbar false} then
-			     if {CondSelect B lrscrollbar false} then
-				q(Type tdscrollbar lrscrollbar)
-			     else
-				q(Type tdscrollbar)
-			     end
-			  else
-			     q(Type lrscrollbar)
-			  end
-			  [locking]}
-	    in
-	       Object={New ScrollObj init}
-	    else
-	       %% no scrollbars, use the normal widget
-	       Object=if S==scrollfeat then
-			 {NewFeat D.object R}
-		      else
-			 {New D.object R}
-		      end
-	       {SetHandle}
+	       end}
+\else
+	      {fun{$}
+		  {Exception.raiseError qtk(badWidget R)}
+		  nil
+	       end}
+\endif
+	   end
+	 Object
+%      RD={ByNeed fun{$} {NewRedirector Object} end}
+	 proc{SetHandle}
+	    if {HasFeature R handle} then
+	       R.handle=Object.Redirector
 	    end
-	 else
-	    {Exception.raiseError qtk(custom "Internal Error" "Invalid feature code" S)}
-	    Object=nil
+	    if {HasFeature R feature} then
+	       (R.parent).(R.feature)=Object.Redirector
+	    end
 	 end
+	 case D.feature
+	 of true then
+	    Object={NewFeat D.object R}
+	    {SetHandle}
+	 [] menu then
+	    Object={NewFeat D.object R}
+	    if {HasFeature R handle} then
+	       R.handle=Object.Redirector
+	    end
+	 [] false then
+	    Object={New D.object R}
+	    {SetHandle}
+	 [] unknown then
+	    Object={New D.object {Record.adjoin R unknownWidget}}
+	    {SetHandle}
+	 [] S then %% special support for scrollable widgets !
+	    if S==scroll orelse S==scrollfeat then
+	       if {CondSelect R tdscrollbar false} orelse {CondSelect R lrscrollbar false} then
+		  Type={Label R}
+		  B
+		  {SplitParams R [tdscrollbar lrscrollbar scrollwidth] _ B}
+		  class ScrollWidget
+		     from Tk.frame QTkClass
+		     meth init
+			lock
+			   QTkClass,init(parent:R.parent)
+			   Tk.frame,tkInit(parent:R.parent)
+			   if S==scroll then
+			      self.Type={New D.object {Record.adjoinAt R parent self}}
+			   else
+			      self.Type={NewFeat D.object {Record.adjoinAt R parent self}}
+			   end
+			   {Tk.batch [grid(self.Type row:0 column:0 sticky:nswe)
+				      grid(rowconfigure self 0 weight:1)
+				      grid(columnconfigure self 0 weight:1)]}
+			   if {CondSelect B tdscrollbar false} then
+			      self.tdscrollbar={New {Dictionary.get Widgets tdscrollbar}.object
+						{Record.adjoin
+						 if Win32 then if {HasFeature B scrollwidth} then r(width:B.scrollwidth) else r end
+						 else r(width:{CondSelect B scrollwidth 10}) end
+						 tdscrollbar(parent:self)}}
+%					     tdscrollbar(parent:self width:{CondSelect B scrollwidth 10})}
+			      {Tk.send grid(self.tdscrollbar row:0 column:1 sticky:ns)}
+			      {Tk.addYScrollbar self.Type self.tdscrollbar}
+			   end
+			   if {CondSelect B lrscrollbar false} then
+			      self.lrscrollbar={New {Dictionary.get Widgets lrscrollbar}.object
+						{Record.adjoin
+						 if Win32 then if {HasFeature B scrollwidth} then r(width:B.scrollwidth) else r end
+						 else r(width:{CondSelect B scrollwidth 10}) end
+						 lrscrollbar(parent:self)}}
+%					     lrscrollbar(parent:self width:{CondSelect B scrollwidth 10})}
+			      {Tk.send grid(self.lrscrollbar row:1 column:0 sticky:we)}
+			      {Tk.addXScrollbar self.Type self.lrscrollbar}
+			   end
+			   if {HasFeature R handle} then
+			      R.handle={NewRedirector self.Type}
+			   end
+			   if {HasFeature R feature} then
+			      (R.parent).(R.feature)=self.Type
+			   end
+			end
+		     end
+		     meth set(...)=M
+			{self.Type M}
+		     end
+		     meth get(...)=M
+			{self.Type M}
+		     end
+		     meth destroy
+			lock
+			   {self.Type destroy}
+			   if {CondSelect B tdscrollbar false} then
+			      {self.tdscrollbar destroy}
+			   end
+			   if {CondSelect B lrscrollbar false} then
+			      {self.lrscrollbar destroy}
+			   end
+			end
+		     end
+		     meth otherwise(M)
+			{self.Type M} %% passes the messages to the main object automatically
+		     end
+		  end
+		  ScrollObj={Class.new [ScrollWidget] q
+			     if {CondSelect B tdscrollbar false} then
+				if {CondSelect B lrscrollbar false} then
+				   q(Type tdscrollbar lrscrollbar)
+				else
+				   q(Type tdscrollbar)
+				end
+			     else
+				q(Type lrscrollbar)
+			     end
+			     [locking]}
+	       in
+		  Object={New ScrollObj init}
+	       else
+		  %% no scrollbars, use the normal widget
+		  Object=if S==scrollfeat then
+			    {NewFeat D.object R}
+			 else
+			    {New D.object R}
+			 end
+		  {SetHandle}
+	       end
+	    else
+	       {Exception.raiseError qtk(custom "Internal Error" "Invalid feature code" S)}
+	       Object=nil
+	    end
+	 end
+      in
+	 Object
       end
-   in
-      Object
    end
-
+   
    TkClass =
    {List.last
     {Arity
