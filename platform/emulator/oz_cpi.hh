@@ -36,29 +36,30 @@
 
 #define OZ_EXPECTED_TYPE(S) char * expectedType = S
 
-#define _OZ_EXPECT(O, P, F)                                               \
+#define _OZ_EXPECT(O, A, P, F)                                            \
   {                                                                       \
     OZ_expect_t r = O.F(P);                                               \
     if (O.isFailing(r)) {                                                 \
       O.fail();                                                           \
-      return OZ_typeError(expectedType, P, "");                           \
+      return OZ_typeError(expectedType, A, "");                           \
     } else if (O.isSuspending(r))                                         \
       return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity)); \
   }
 
-#define OZ_EXPECT(O, P, F)  _OZ_EXPECT(O, OZ_args[P], F)
+#define OZ_EXPECT(O, P, F)  _OZ_EXPECT(O, P, OZ_args[P], F)
 
-#define _OZ_EXPECT_SUSPEND(O, P, F, SC)         \
+#define _OZ_EXPECT_SUSPEND(O, A, P, F, SC)      \
   {                                             \
     OZ_expect_t r = O.F(P);                     \
     if (O.isFailing(r)) {                       \
       O.fail();                                 \
-      return OZ_typeError(expectedType, P, ""); \
+      return OZ_typeError(expectedType, A, ""); \
     } else if (O.isSuspending(r))               \
       SC += 1;                                  \
   }
 
-#define OZ_EXPECT_SUSPEND(O, P, F, SC) _OZ_EXPECT_SUSPEND(O, OZ_args[P], F, SC)
+#define OZ_EXPECT_SUSPEND(O, P, F, SC)          \
+_OZ_EXPECT_SUSPEND(O, P, OZ_args[P], F, SC)
 
 #define _OZ_EM_FDINF    "0"
 #define _OZ_EM_FDSUP    "134 217 726"
