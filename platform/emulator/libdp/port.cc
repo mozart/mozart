@@ -123,7 +123,9 @@ void gcDistPortRecurseImpl(Tertiary *p)
 }
 
 Bool  PortProxy::canSend(){
-   BorrowEntry* b = BT->getBorrow(this->getIndex());
+  return TRUE;
+
+  BorrowEntry* b = BT->getBorrow(this->getIndex());
    NetAddress *na = b->getNetAddress();
    DSite* site     = na->site;
    /*
