@@ -51,6 +51,8 @@ OzVariable* extVar2Var(ExtVar*p) {
   return reinterpret_cast<OzVariable*>(reinterpret_cast<OzVariable*>(p)-1);
 }
 
+#define extVarSizeof(TYP) (sizeof(OzVariable)+sizeof(TYP))
+
 class ExtVar {
 public:
   static void* operator new(size_t n)
