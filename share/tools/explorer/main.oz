@@ -115,6 +115,17 @@ in
          end
       end
 
+\define CS_SPECIAL
+
+\ifdef CS_SPECIAL
+      meth sYnc(Script Order <= false)
+         lock
+            {@MyManager query(proc {$ X} {Script X} end Order)}
+            {@MyManager next}
+            {Wait {Tk.return update(idletasks)}}
+         end
+      end
+\endif
 
       meth add(Kind What
                label: Label <=NoLabel
