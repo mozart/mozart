@@ -26,7 +26,7 @@ import
    Property(get)
    Fontifier at 'x-oz://contrib/doc/code/Fontifier'
    HTML(seq: SEQ pcdata: PCDATA verbatim: VERBATIM)
-   URL(toVs)
+   URL(toVirtualString)
    Resolve(localize)
    OS(unlink)
 export
@@ -58,7 +58,7 @@ define
             case FILE of new(PATH) then
                thread {Wait Result} {OS.unlink PATH} end
             else skip end
-            PATH = {URL.toVs FILE.1}
+            PATH = {URL.toVirtualString FILE.1}
          in
             q <- (R#Result)|@q
             FontifierBase,enqueueFile(
@@ -111,8 +111,8 @@ define
 
    fun {MakeRequest Req}
       case Req
-      of simple(In Out) then simple(In _)
-      [] complex(L)     then complex({Map L MakeRequest})
+      of simple(In _) then simple(In _)
+      [] complex(L)   then complex({Map L MakeRequest})
       end
    end
 
