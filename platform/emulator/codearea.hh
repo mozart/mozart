@@ -357,10 +357,11 @@ public:
     isTailCall = ist;
     arity = ar;
     mn = name;
-    gcProtect(&mn);
+    OZ_protect(&mn);
   }
 
-  void dispose() { delete this; }
+  ~GenCallInfoClass() { OZ_unprotect(&mn); }
+  void dispose()      { delete this; }
 };
 
 class ApplMethInfoClass {
@@ -373,7 +374,7 @@ public:
   {
     arity = i;
     methName = mn;
-    gcProtect(&methName);
+    gcStaticProtect(&methName);
     protectInlineCache(&methCache);
   }
 };

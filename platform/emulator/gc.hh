@@ -14,6 +14,7 @@
  * make external references into heap known to gc
  *****************************************************************************/
 
+Bool gcStaticProtect(TaggedRef *);
 Bool gcProtect(TaggedRef *);
 Bool gcUnprotect(TaggedRef *);
 

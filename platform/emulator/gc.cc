@@ -557,17 +557,31 @@ Bool needsNoCollection(TaggedRef t)
 
 Bool gcProtect(TaggedRef *ref)
 {
-  if (extRefs->find(ref))
+  if (extRefs->find(ref)) {
+    Assert(0);
     return NO;
+  }
 
   extRefs = (ExtRefNode*) extRefs->add(ref);
   return OK;
+}
+
+/* protect a ref, that will never change its initial value
+ *  --> no need to remember it, if it's a small int or atom
+ */
+Bool gcStaticProtect(TaggedRef *ref)
+{
+  if (needsNoCollection(*ref))
+    return OK;
+
+  return gcProtect(ref);
 }
 
 Bool gcUnprotect(TaggedRef *ref)
 {
   ExtRefNode *aux = (ExtRefNode*) extRefs->find(ref);
 
+  Assert(aux != NULL);
   if (aux == NULL)
     return NO;
 
