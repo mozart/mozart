@@ -1181,11 +1181,11 @@ OZ_Return oz_eqeq(TaggedRef Ain,TaggedRef Bin)
       return PROCEED;
     }
 
-    oz_reduceTrailOnEqEq();
+    am.trail.unwindEqEq();
     return SUSPEND;
   }
 
-  oz_reduceTrailOnFail();
+  am.trail.unwindFailed();
   return ret;
 }
 

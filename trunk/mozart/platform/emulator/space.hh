@@ -35,10 +35,6 @@
 OZ_Return oz_installScript(Script &script);
 
 Bool oz_installPath(Board *to);
-void oz_reduceTrailOnSuspend();
-void oz_reduceTrailOnFail();
-void oz_reduceTrailOnEqEq();
-
 
 /* -------------------------------------------------------------------------
  * TODO
@@ -47,7 +43,7 @@ void oz_reduceTrailOnEqEq();
 inline
 void oz_deinstallCurrent()
 {
-  oz_reduceTrailOnSuspend();
+  am.trail.unwind();
   am.setCurrent(oz_currentBoard()->getParent());
 }
 
