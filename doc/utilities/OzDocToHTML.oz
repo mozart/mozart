@@ -1468,8 +1468,13 @@ define
          [] nil then EMPTY
          end
       end
-      meth OutputFigure(M $) Class N Number Title Mr1 Caption Mr2 in
-         Class = {CondSelect M 'class' ['figure']}.1
+      meth OutputFigure(M $)
+         ClassR Class N Number Title Mr1 Caption Mr2 HTML
+      in
+         ClassR = {Filter {CondSelect M 'class' nil} fun {$ X} X \= maxi end}
+         Class = case ClassR of nil then 'figure'
+                 elseof C|_ then C
+                 end
          N = {Dictionary.condGet @FigureCounters Class 0} + 1
          {Dictionary.put @FigureCounters Class N}
          Number = ({InitialCapital {Atom.toString Class}}#'&nbsp;'#
@@ -1478,25 +1483,31 @@ define
                    end#'.'#N)
          Title = {SGML.getSubtree M title ?Mr1}
          Caption = {SGML.getSubtree Mr1 caption ?Mr2}
-         'div'(COMMON: @Common
-               hr()
-               case {CondSelect M id unit} of unit then EMPTY
-               elseof L then
-                  OzDocToHTML, ID(L @CurrentNode VERBATIM(Number))
-                  p(a(name: L))
-               end
-               case Title of unit then EMPTY
-               else
-                  p(align: center b(OzDocToHTML, Batch(Title 1 $)))
-               end
-               OzDocToHTML, Batch(Mr2 1 $)
-               case Caption of unit then
-                  p(strong(VERBATIM(Number#'.')))
-               else
-                  p(strong(VERBATIM(Number#':')) PCDATA(' ')
-                    OzDocToHTML, Batch(Caption.1 1 $))
-               end
-               hr())
+         HTML = SEQ([hr()
+                     case {CondSelect M id unit} of unit then EMPTY
+                     elseof L then
+                        OzDocToHTML, ID(L @CurrentNode VERBATIM(Number))
+                        p(a(name: L))
+                     end
+                     case Title of unit then EMPTY
+                     else
+                        p(align: center b(OzDocToHTML, Batch(Title 1 $)))
+                     end
+                     OzDocToHTML, Batch(Mr2 1 $)
+                     case Caption of unit then
+                        p(strong(VERBATIM(Number#'.')))
+                     else
+                        p(strong(VERBATIM(Number#':')) PCDATA(' ')
+                          OzDocToHTML, Batch(Caption.1 1 $))
+                     end
+                     hr()])
+         if {SGML.isOfClass M maxi} then
+            'div'(COMMON: @Common
+                  'class': [maxi]
+                  table(width: '100%' tr(td(HTML))))
+         else
+            'div'(COMMON: @Common HTML)
+         end
       end
       meth FlushFootNotes(Count $) HTML in
          case @FootNotes of F|Fr then M#T = F OldCommon in
