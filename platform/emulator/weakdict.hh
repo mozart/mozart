@@ -42,6 +42,11 @@ public:
   void remove(OZ_Term);
   void remove_all();
   bool member(OZ_Term);
+  //
+  // support for `.' and `:='
+  //
+  virtual OZ_Return getFeatureV(OZ_Term,OZ_Term&);
+  virtual OZ_Return putFeatureV(OZ_Term,OZ_Term );
 };
 
 #endif

@@ -28,6 +28,37 @@ OZ_Extension* WeakDictionary::sCloneV() {
   return NULL;
 }
 
+inline OZ_Boolean WeakDictionary::get(OZ_Term key,OZ_Term& val)
+{
+  return ((val = table->lookup(oz_deref(key)))!=0);     // 0 if not found
+}
+
+extern int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...);
+
+OZ_Return WeakDictionary::getFeatureV(OZ_Term f,OZ_Term& v)
+{
+  if (!OZ_isFeature(f)) { OZ_typeError(1,"feature"); }
+  if (get(f,v)) return PROCEED;
+  else oz_raise(E_ERROR,E_KERNEL,"WeakDictionary.get",2,
+                oz_makeTaggedExtension(this),f);
+}
+
+void WeakDictionary::put(OZ_Term key,OZ_Term val)
+{
+  if (table->fullTest()) resizeDynamicTable(table);
+  if (!table->add(key,val)) {
+    resizeDynamicTable(table);
+    table->add(key,val);
+  }
+}
+
+OZ_Return WeakDictionary::putFeatureV(OZ_Term f,OZ_Term  v)
+{
+  if (!OZ_isFeature(f)) { OZ_typeError(1,"feature"); }
+  put(f,v);
+  return PROCEED;
+}
+
 void gCollectWeakDictionaries()
 {
   // This is called after the 1st gc phase has completed.
@@ -42,8 +73,6 @@ void gCollectWeakDictionaries()
     gcLinkedList->weakGC();
   // now gcLinkedList==0 again
 }
-
-int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...);
 
 OZ_BI_define(weakdict_new,0,2)
 {
@@ -99,15 +128,6 @@ OZ_BI_define(weakdict_put,3,0)
 }
 OZ_BI_end
 
-void WeakDictionary::put(OZ_Term key,OZ_Term val)
-{
-  if (table->fullTest()) resizeDynamicTable(table);
-  if (!table->add(key,val)) {
-    resizeDynamicTable(table);
-    table->add(key,val);
-  }
-}
-
 OZ_BI_define(weakdict_get,2,1)
 {
   OZ_declareWeakDict(0,d);
@@ -132,11 +152,6 @@ OZ_BI_define(weakdict_condGet,3,1)
   OZ_RETURN(v);
 }
 OZ_BI_end
-
-OZ_Boolean WeakDictionary::get(OZ_Term key,OZ_Term& val)
-{
-  return ((val = table->lookup(oz_deref(key)))!=0);     // 0 if not found
-}
 
 OZ_BI_define(weakdict_is,1,1)
 {
