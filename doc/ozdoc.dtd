@@ -194,6 +194,9 @@
 <!ATTLIST (body|part|%sect0.class;|%sect1.class;|%sect2.class;|%sect3.class;)
         %common.attr;
 >
+<!ATTLIST appendix
+        %common.attr;
+>
 
 <!--==================== PARAGRAPHS ===============================-->
 <!--
