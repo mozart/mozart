@@ -2587,9 +2587,6 @@ LBLkillThread:
   Case(TEST4)
 
   Case(GENCALL)
-  Case(TESTBOOLX)
-  Case(TESTBOOLY)
-  Case(TESTBOOLG)
 
   Case(INLINEDOT)
 
