@@ -95,6 +95,7 @@ case "$target" in
         oz_copt_debug="-g"
 
         AC_DEFINE(WINDOWS)
+        CPPFLAGS="-DWINDOWS_EMULATOR $CPPFLAGS"
         AC_DEFINE(ARCH_I486)
    ;;
 

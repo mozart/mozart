@@ -66,7 +66,7 @@
 
 /* we use function pointers only when creating DLLs
  * STATIC_FUNCTIONS is defined when compiling the emulator */
-#if defined(OZWIN) && !defined(STATIC_FUNCTIONS)
+#if defined(OZWIN) && !defined(WINDOWS_EMULATOR)
 #define OzFun(fun) (ozcdecl *fun)
 #else
 #define OzFun(fun) (ozcdecl fun)
@@ -714,13 +714,12 @@ char* VAR = OZ_vsToC(OZ_in(ARG),&LEN);
  * ------------------------------------------------------------------------ */
 
 #ifdef DEBUG_CHECK
-#ifndef Assert
-#define Assert(Cond)                            \
-  if (! (Cond)) {                               \
-    fprintf(stderr,"%s:%d ",__FILE__,__LINE__); \
-    OZ_error(" assertion '%s' failed", #Cond);  \
+#define Assert(Cond)                                                    \
+  if (! (Cond)) {                                                       \
+    OZ_error("%s:%d assertion '%s' failed",__FILE__,__LINE__,#Cond);    \
   }
-#endif
+#else
+#define Assert(Cond)
 #endif
 
 /* ------------------------------------------------------------------------ *

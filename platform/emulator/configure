@@ -884,7 +884,6 @@ fi
 
 
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-#OZ_PATH_PROG(DYNLD,          ozdynld)
 
 
 
@@ -924,6 +923,7 @@ case "$target" in
 #define WINDOWS 1
 EOF
 
+        CPPFLAGS="-DWINDOWS_EMULATOR $CPPFLAGS"
         cat >> confdefs.h <<\EOF
 #define ARCH_I486 1
 EOF
