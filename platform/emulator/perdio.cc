@@ -4074,6 +4074,7 @@ OZ_BI_define(BItablesExtract,0,1)
                 oz_cons(oz_pairA("list", borrowlist), oz_nil()))),
               oz_cons(OT->extract_info(), oz_nil())));
 } OZ_BI_end
+
 OZ_BI_define(BIsiteStatistics,0,1)
 {
   int indx;
@@ -4093,7 +4094,7 @@ OZ_BI_define(BIsiteStatistics,0,1)
     TimeStamp *ts = found->getTimeStamp();
     sitelist=
       oz_cons(OZ_recordInit(oz_atom("site"),
-      oz_cons(oz_pairA("siteString", oz_atom(found->stringrep())),
+      oz_cons(oz_pairA("siteString", oz_atom(found->stringrep_notype())),
       oz_cons(oz_pairAI("port",(int)found->getPort()),
       oz_cons(oz_pairAI("timeint",(int)ts->start),
       oz_cons(oz_pairA("timestr",oz_atom(ctime(&ts->start))),
