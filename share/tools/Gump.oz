@@ -29,7 +29,6 @@ import
    OS(system)
    Property(get)
    Debug at 'x-oz://boot/Debug'
-   System(valueToVirtualString)
    BisonModule(generate) at 'ozbison.so{native}'
 export
    makeProductionTemplates: MakeProductionTemplates

@@ -67,7 +67,7 @@ fun {V2VS X}
    Depth = {Cget printDepth}
    Width = {Cget printWidth}
 in
-   {System.valueToVirtualString X Depth Width}
+   {Value.toVirtualString X Depth Width}
 end
 
 proc {SendEmacs M}
