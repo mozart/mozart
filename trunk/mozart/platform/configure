@@ -853,12 +853,11 @@ fi
   
   
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-#OZ_PATH_PROG(DYNLD,          ozdynld)
 
 
 : ${oz_enable_wish=yes}
 echo $ac_n "checking for --enable-wish""... $ac_c" 1>&6
-echo "configure:862: checking for --enable-wish" >&5
+echo "configure:861: checking for --enable-wish" >&5
 # Check whether --enable-wish or --disable-wish was given.
 if test "${enable_wish+set}" = set; then
   enableval="$enable_wish"
