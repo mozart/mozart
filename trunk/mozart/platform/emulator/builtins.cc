@@ -17,7 +17,7 @@
 
 // BuiltinTab
 
-BuiltinTab builtinTab(500);
+BuiltinTab builtinTab(750);
 
 
 BuiltinTabEntry *BIadd(char *name,int arity, OZ_CFun funn, Bool replace,
