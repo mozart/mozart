@@ -305,6 +305,7 @@ BIspec fdSpec[] = {
 #ifndef FOREIGNFDPROPS
   {"fsp_init",         1, fsp_init},
   {"fsp_isIn",         3, fsp_isIn},
+  {"fsp_isInR",        3, fsp_isInR},
   {"fsp_include",      2, fsp_include},
   {"fsp_exclude",      2, fsp_exclude},
   {"fsp_match",        2, fsp_match},
