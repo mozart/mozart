@@ -7,6 +7,7 @@ export
 import
    Compiler
    Windows at 'Windows.ozf'
+   Path    at 'Path.ozf'
 define
    class ExecutorFast
       meth exec_fast_ozc(FromFile ToFile
@@ -18,7 +19,9 @@ define
       in
 	 {BatchCompiler enqueue(setSwitch(showdeclares false))}
 	 {BatchCompiler enqueue(setSwitch(threadedqueries false))}
-	 if Gumpdir\=unit then
+	 if Gumpdir==unit then
+	    {BatchCompiler enqueue(setGumpDirectory({Path.dirname ToFile}))}
+	 else
 	    {BatchCompiler enqueue(setGumpDirectory(Gumpdir))}
 	 end
 	 if Debug then
