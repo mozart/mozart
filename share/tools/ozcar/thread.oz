@@ -48,8 +48,7 @@ in
    class ThreadManager
       feat
 	 ThreadDic             %% dictionary that holds various information
-			       %% about debugged threads
-
+	                       %% about debugged threads
       attr
 	 ReadLoopThread : unit
 
@@ -71,7 +70,7 @@ in
       end
 
       meth destroy
-	 Gui,doStatus('Destroying myself -- byebye...')
+	 Gui,status('Destroying myself -- byebye...')
 	 {Dbg.off}
 	 {Thread.terminate @ReadLoopThread}
 	 {EnqueueCompilerQuery setSwitch(debuginfo false)}
@@ -82,7 +81,7 @@ in
 
       meth checkMe
 	 case ThreadManager,emptyForest($) then
-	    Gui,doStatus(NoThreads)
+	    Gui,status(NoThreads)
 	 else
 	    T = @currentThread
 	    I = {Thread.id T}
@@ -90,14 +89,14 @@ in
 	    S = {Thread.state T}
 	    N = {Length {Dictionary.items self.ThreadDic}}
 	 in
-	    Gui,doStatus(N # ' attached thread' #
-			 case N > 1 then
-			    's, currently selected: #'
-			 else
-			    ': #'
-			 end #
-			 I # '/' # {Thread.parentId T} #
-			 ' (' # R # ', ' # S # ')')
+	    Gui,status(N # ' attached thread' #
+		       case N > 1 then
+			  's, currently selected: #'
+		       else
+			  ': #'
+		       end #
+		       I # '/' # {Thread.parentId T} #
+		       ' (' # R # ', ' # S # ')')
 	 end
       end
 
@@ -196,9 +195,9 @@ in
 	       in
 		  {Stack exit(M)}
 		  {SendEmacs bar(file:{CondSelect M file nofile}
-				    line:{CondSelect M line unit}
-				    column:{CondSelect M column unit}
-				    state:runnable)}
+				 line:{CondSelect M line unit}
+				 column:{CondSelect M column unit}
+				 state:runnable)}
 		  {Stack printTop}
 	       else skip end
 	    end
@@ -231,7 +230,7 @@ in
 		  Gui,markNode(I runnable)
 		  case T == @currentThread then
 		     {SendEmacs configureBar(runnable)}
-		     %Gui,doStatus('Thread #' # I # ' is runnable again')
+		     %Gui,status('Thread #' # I # ' is runnable again')
 		  else skip end
 	       else
 		  Gui,markNode(I running)
@@ -271,7 +270,7 @@ in
 	 end
       end
 
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       meth Exists(I $)
 	 {Dictionary.member self.ThreadDic I}
@@ -351,7 +350,7 @@ in
 	 {Dbg.step T false}
 	 {Thread.terminate T}
 	 case Select then
-	    Gui,doStatus('Thread #' # I # ' has been terminated')
+	    Gui,status('Thread #' # I # ' has been terminated')
 	 else skip end
 	 ThreadManager,remove(T I kill Select)
       end
@@ -363,7 +362,7 @@ in
 	     T = {S getThread($)}
 	  in
 	     ThreadManager,kill(T I false)
-	     Gui,doStatus('.' append)
+	     Gui,status('.' append)
 	  end}
       end
 
@@ -375,7 +374,7 @@ in
 	  in
 	     case T == @currentThread then skip else
 		ThreadManager,kill(T I false)
-		Gui,doStatus('.' append)
+		Gui,status('.' append)
 	     end
 	  end}
       end
@@ -388,7 +387,7 @@ in
 	  in
 	     {Detach T}
 	     ThreadManager,remove(T I kill false)
-	     Gui,doStatus('.' append)
+	     Gui,status('.' append)
 	  end}
       end
 
@@ -401,7 +400,7 @@ in
 	     case T == @currentThread then skip else
 		{Detach T}
 		ThreadManager,remove(T I kill false)
-		Gui,doStatus('.' append)
+		Gui,status('.' append)
 	     end
 	  end}
       end
@@ -414,7 +413,7 @@ in
 	  in
 	     case {Thread.state T} == terminated then
 		ThreadManager,remove(T I kill false)
-		Gui,doStatus('.' append)
+		Gui,status('.' append)
 	     else skip end
 	  end}
 	 case @currentThread \= unit andthen
@@ -428,7 +427,7 @@ in
 
       meth detach(T I)
 	 {Detach T}
-	 Gui,doStatus('Thread #' # I # ' has been detached')
+	 Gui,status('Thread #' # I # ' has been detached')
 	 ThreadManager,remove(T I kill)
       end
 
@@ -469,17 +468,16 @@ in
 	 T = @currentThread
       in
 	 case S == unit then
-	    Gui,doStatus(NoThreads)
+	    Gui,status(NoThreads)
 	 elsecase {CheckState T} == running then
-	    Gui,doStatus('Cannot recalculate stack while thread is running')
+	    Gui,status('Cannot recalculate stack while thread is running')
 	 else
-	    Gui,doStatus('Recalculating stack of thread #' #
-			 {Thread.id T} # '...')
+	    Gui,status('Recalculating stack of thread #' #
+		       {Thread.id T} # '...')
 	    {S rebuild(true)}
 	    {S print}
 	    {S emacsBarToTop}
-	    {Delay TimeoutToLookNice}
-	    Gui,doStatus(' done' append)
+	    Gui,status(' done' append)
 	 end
       end
 
@@ -535,7 +533,7 @@ in
 		  {SendEmacs bar(file:F line:L column:C state:S)}
 	       else
 		  {SendEmacs bar(file:F line:L column:C state:blocked)}
-		  Gui,doStatus(Exc clear BlockedThreadColor)
+		  Gui,status(Exc clear BlockedThreadColor)
 	       end
 	    end
 	 else skip end

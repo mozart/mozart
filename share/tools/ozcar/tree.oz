@@ -220,8 +220,6 @@ local
       end
    end
 
-   QueueLock = {NewLock}
-
 in
 
    class Tree from BaseTree ScrolledTitleCanvas
@@ -232,12 +230,7 @@ in
       attr
 	 Selected       : unit
 	 LastSelected   : unit
-
 	 CalcSync       : _
-	 QueueSync      : _
-
-	 MsgList        : nil
-	 MsgListTl      : nil
 
       meth tkInit(ozcar:O ...)=M
 	 BaseTree,init(O)
@@ -256,7 +249,7 @@ in
 	 New in
 	 CalcSync <- New = unit
 	 thread
-	    {WaitOr New {Alarm TimeoutToCalcTree}}
+	    {WaitOr New {Alarm TimeoutToUpdate*3}}
 	    case {IsDet New} then skip else
 	       lock
 		  BaseTree,calculatePositions
@@ -303,15 +296,12 @@ in
 	    case N \= nil then
 	       LastSelected <- @Selected
 	       Selected <- N.1
-
 	       case @LastSelected \= unit then
 		  node(ct:OldCT ...) = {@LastSelected get($)}
-		  ScrolledTitleCanvas,tk(itemconfigure OldCT
-					 font:ThreadTreeFont)
+		  {self tk(itemconfigure OldCT font:ThreadTreeFont)}
 	       else skip end
-
 	       node(ct:CT ...) = {@Selected get($)}
-	       ScrolledTitleCanvas,tk(itemconfigure CT font:ThreadTreeBoldFont)
+	       {self tk(itemconfigure CT font:ThreadTreeBoldFont)}
 	    else
 	       {OzcarError 'attempt to select unknown node #' # I}
 	    end
@@ -327,7 +317,7 @@ in
 	    CL = {GetColor How}
 	 in
 	    node(ct:CT ...) = {N.1 get($)}
-	    Tree,Enqueue(o({self w($)} itemconfigure CT fill:CL.1 text:I#CL.2))
+	    {self tk(itemconfigure CT fill:CL.1 text:I#CL.2)}
 	    {N.1 setState(How)}
 	 end
       end
@@ -337,46 +327,39 @@ in
 	 SFY    = ThreadTreeStretchY
 	 OS     = ThreadTreeOffset
 	 Sel    = @Selected
-	 Canvas = {self w($)}
       in
-	 Tree,Enqueue(o(Canvas delete all))
+	 {self tk(delete all)}
 	 {ForAll @nodes
 	  proc{$ N}
 	     X Y R S DY I
-	     CT = {New Tk.canvasTag tkInit(parent:Canvas)}
+	     CT = {New Tk.canvasTag tkInit(parent:self)}
 	  in
 	     node(x:X y:Y r:R s:S dy:DY i:I ...) = {N get($)}
 
 	     %% the horizontal line
-	     Tree,Enqueue(o(Canvas crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
-			    width:2 capstyle:projecting fill:TrunkColor))
+	     {self tk(crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
+		      width:2 capstyle:projecting fill:TrunkColor)}
 	     case R then
-%		case Y > 2 andthen DY == 1 then
-%		   %% the stippled line to separate thread trees
-%		   Tree,Enqueue(o(Canvas crea line SFX (Y-DY+1)*SFY-7
-%				  10*SFX (Y-DY+1)*SFY-7
-%				  stipple:OzcarBitmapDir#'line.xbm'))
-%		else skip end
-		Tree,Enqueue(o(Canvas crea line (X-1)*SFX-OS Y*SFY
-			       (X-1)*SFX-OS (Y-DY+1)*SFY-5
-			       width:2 capstyle:projecting fill:TrunkColor))
+		{self tk(crea line (X-1)*SFX-OS Y*SFY
+			 (X-1)*SFX-OS (Y-DY+1)*SFY-5
+			 width:2 capstyle:projecting fill:TrunkColor)}
 
 	     else
-		Tree,Enqueue(o(Canvas crea line (X-1)*SFX-OS Y*SFY
-			       (X-1)*SFX-OS (Y-DY+1)*SFY-SFY
-			       width:2 capstyle:projecting fill:TrunkColor))
+		{self tk(crea line (X-1)*SFX-OS Y*SFY
+			 (X-1)*SFX-OS (Y-DY+1)*SFY-SFY
+			 width:2 capstyle:projecting fill:TrunkColor)}
 	     end
 
 	     local
 		CL = {GetColor S}
 	     in
-		Tree,Enqueue(o(Canvas crea text X*SFX Y*SFY
-			       text:   I # CL.2
-			       fill:   CL.1
-			       tags:   CT
-			       anchor: w
-			       font:   case N == Sel then ThreadTreeBoldFont
-				       else               ThreadTreeFont end))
+		{self tk(crea text X*SFX Y*SFY
+			 text:   I # CL.2
+			 fill:   CL.1
+			 tags:   CT
+			 anchor: w
+			 font:   case N == Sel then ThreadTreeBoldFont
+				 else               ThreadTreeFont end)}
 		{CT tkBind(event:  '<1>'
 			   action: self # SwitchToThread(I))}
 	     end
@@ -385,8 +368,7 @@ in
 	 local
 	    Height = ThreadTreeStretchY * (@width + 3)
 	 in
-	    Tree,Enqueue(o(Canvas conf
-			   scrollregion:q(0 0 ThreadTreeWidth Height)))
+	    {self tk(conf scrollregion:q(0 0 ThreadTreeWidth Height))}
 	 end
       end
 
@@ -394,44 +376,5 @@ in
 	 {Ozcar PrivateSend(status('New selected thread is #' # I))}
 	 {Ozcar PrivateSend(switch(I))}
       end
-
-      meth Enqueue(Ticklet)
-	 lock QueueLock then
-	    case Ticklet
-	    of nil  then skip
-	    [] T|Tr then
-	       Gui,Enqueue(T)
-	       Gui,Enqueue(Tr)
-	    else NewTl in
-	       case {IsDet @MsgListTl} then
-		  MsgList <- Ticklet|NewTl
-	       else
-		  @MsgListTl = Ticklet|NewTl
-	       end
-	       MsgListTl <- NewTl
-	       Tree,ClearQueue
-	    end
-	 end
-      end
-
-      meth ClearQueue
-	 New in
-	 QueueSync <- New = unit
-	 thread
-	    {WaitOr New {Alarm TimeoutToMark}}
-	    case {IsDet New} then skip else
-	       Tree,DoClearQueue
-	    end
-	 end
-      end
-
-      meth DoClearQueue
-	 lock QueueLock then
-	    @MsgListTl = nil
-	    {Tk.batch @MsgList}
-	    MsgList <- nil
-	 end
-      end
-
    end
 end

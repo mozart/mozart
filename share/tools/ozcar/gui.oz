@@ -109,8 +109,6 @@ local
 
    StackTag
 
-   QueueLock = {NewLock}
-
 in
 
    class Gui from Menu Dialog Help
@@ -143,18 +141,6 @@ in
 
 	 LastClicked       : unit
 
-	 StackMsgList      : nil
-	 EnvMsgList        : nil
-	 StatusMsgList     : nil
-
-	 StackMsgListTl    : nil
-	 EnvMsgListTl      : nil
-	 StatusMsgListTl   : nil
-
-	 StackMsgListLn    : 0
-	 EnvMsgListLn      : 0
-	 StatusMsgListLn   : 0
-
       meth resetLastSelectedFrame
 	 LSF = @LastSelectedFrame
       in
@@ -181,7 +167,6 @@ in
 						 delete:   self # off
 						 withdraw: true)}
 	 {Tk.batch [wm(iconname   self.toplevel IconName)
-		    wm(iconbitmap self.toplevel {OzcarBitmap ozcar})
 		    wm(minsize    self.toplevel MinX MinY)
 		    wm(maxsize    self.toplevel MaxX MaxY)
 		    wm(geometry   self.toplevel ToplevelGeometry)]}
@@ -347,17 +332,17 @@ in
 	 {self.StackText tk(insert 'end' "" StackTag)}
 	 {self.StackText tk(conf state:disabled)}
 
-	 {Tk.batch [grid(self.ThreadTree    row:3 column:0
+	 {Tk.batch [grid(self.ThreadTree.frame    row:3 column:0
 			 sticky:nswe rowspan:2)
-		    grid(self.StackText     row:3 column:1 sticky:nswe
+		    grid(self.StackText.frame     row:3 column:1 sticky:nswe
 			 columnspan:2)
-		    grid(self.LocalEnvText  row:4 column:1 sticky:nswe)
-		    grid(self.GlobalEnvText row:4 column:2 sticky:nswe)
-		    grid(rowconfigure       self.toplevel 3 weight:1)
-		    grid(rowconfigure       self.toplevel 4 weight:1)
-		    grid(columnconfigure    self.toplevel 0 weight:1)
-		    grid(columnconfigure    self.toplevel 1 weight:1)
-		    grid(columnconfigure    self.toplevel 2 weight:1)
+		    grid(self.LocalEnvText.frame  row:4 column:1 sticky:nswe)
+		    grid(self.GlobalEnvText.frame row:4 column:2 sticky:nswe)
+		    grid(rowconfigure    self.toplevel 3 weight:1)
+		    grid(rowconfigure    self.toplevel 4 weight:1)
+		    grid(columnconfigure self.toplevel 0 weight:1)
+		    grid(columnconfigure self.toplevel 1 weight:1)
+		    grid(columnconfigure self.toplevel 2 weight:1)
 		   ]}
       end
 
@@ -448,16 +433,15 @@ in
 	  in
 	     case SV orelse {Atom.toString Name}.1 \= &` then
 		T  = {Widget newTag($)}
-		W  = {Widget w($)}
 		Ac = {New Tk.action
-		      tkInit(parent: W
+		      tkInit(parent: Widget
 			     action: self # ProcessClick(ClickValue))}
 	     in
-		Gui,Enqueue(env o(W insert 'end'
-				  {PrintF ' ' # PrintName {EnvVarWidth}}))
-		Gui,Enqueue(env o(W insert 'end' PrintValue # '\n' T))
-		Gui,Enqueue(env o(W tag bind T '<1>' Ac))
-		Gui,Enqueue(env o(W tag conf T font:BoldFont))
+		{Widget tk(insert 'end'
+			   {PrintF ' ' # PrintName {EnvVarWidth}})}
+		{Widget tk(insert 'end' PrintValue # '\n' T)}
+		{Widget tk(tag bind T '<1>' Ac)}
+		{Widget tk(tag conf T font:BoldFont)}
 	     else skip end
 	  end}
       end
@@ -479,8 +463,6 @@ in
       end
 
       meth PrintEnv(vars:V)
-	 WL  = {self.LocalEnvText  w($)}
-	 WG  = {self.GlobalEnvText w($)}
 	 SV  = {Cget envSystemVariables}
 	 Y#G = case V == unit then
 		  nil # nil
@@ -488,21 +470,19 @@ in
 		  V.'Y' # V.'G'
 	       end
       in
-	 Gui,Enqueue(env {self.LocalEnvText resetTags($)})
-	 Gui,Clear(env WL)
+	 {self.LocalEnvText resetTags}
+	 Gui,Clear(self.LocalEnvText)
 	 case V == unit then skip else
 	    Gui,DoPrintEnv(self.LocalEnvText Y SV)
 	 end
-	 Gui,Disable(env WL)
+	 Gui,Disable(self.LocalEnvText)
 
-	 Gui,Enqueue(env {self.GlobalEnvText resetTags($)})
-	 Gui,Clear(env WG)
+	 {self.GlobalEnvText resetTags}
+	 Gui,Clear(self.GlobalEnvText)
 	 case V == unit then skip else
 	    Gui,DoPrintEnv(self.GlobalEnvText G SV)
 	 end
-	 Gui,Disable(env WG)
-
-	 Gui,ClearQueue(env)
+	 Gui,Disable(self.GlobalEnvText)
       end
 
       meth FrameClick(frame:F highlight:Highlight<=true)
@@ -578,7 +558,7 @@ in
       end
 
       meth printStackFrame(frame:Frame delete:Delete<=true)
-	 W          = {self.StackText w($)}
+	 W          = self.StackText
 	 FrameNr    = Frame.nr
 	 FrameName  = case Frame.name
 		      of ''  then '$'
@@ -599,38 +579,34 @@ in
 	 Arrow      = case Frame.dir == entry then ' -> ' else ' <- ' end
       in
 	 case Delete then
-	    Gui,Enable(stack W)
-	    Gui,DeleteToEnd(stack W FrameNr+1)
-	    Gui,DeleteLine(stack W FrameNr)
+	    Gui,Enable(W)
+	    Gui,DeleteToEnd(W FrameNr+1)
+	    Gui,DeleteLine(W FrameNr)
 	 else skip end
 	 case Frame.kind \= 'call' then
-	    Gui,Enqueue(stack
-			o(W insert LineEnd Arrow # FrameNr # ' ' # FrameName
-			  q(StackTag LineActTag LineColTag)))
+	    {W tk(insert LineEnd Arrow # FrameNr # ' ' # FrameName
+		  q(StackTag LineActTag LineColTag))}
 	 elsecase {IsDet FrameData} andthen FrameData == unit then
-	    Gui,Enqueue(stack
-			o(W insert LineEnd Arrow # FrameNr # ' {' # FrameName
-			  q(StackTag LineActTag LineColTag)))
+	    {W tk(insert LineEnd Arrow # FrameNr # ' {' # FrameName
+		  q(StackTag LineActTag LineColTag))}
 	 else
 	    ProcTag    = {self.StackText newTag($)}
 	    ProcAction = {New Tk.action
 			  tkInit(parent: W
 				 action: self # ProcessClick(FrameData))}
 	 in
-	    Gui,Enqueue(stack
-			o(W insert LineEnd Arrow # FrameNr # ' {'
-			  q(StackTag LineActTag LineColTag)))
-	    Gui,Enqueue(stack
-			o(W insert LineEnd FrameName
-			  q(StackTag LineColTag ProcTag)))
-	    Gui,Enqueue(stack o(W tag bind ProcTag '<1>' ProcAction))
-	    Gui,Enqueue(stack o(W tag conf ProcTag font:BoldFont))
+	    {W tk(insert LineEnd Arrow # FrameNr # ' {'
+		  q(StackTag LineActTag LineColTag))}
+	    {W tk(insert LineEnd FrameName
+		  q(StackTag LineColTag ProcTag))}
+	    {W tk(tag bind ProcTag '<1>' ProcAction)}
+	    {W tk(tag conf ProcTag font:BoldFont)}
 	 end
 	 case FrameArgs of unit then
-	    case Frame.kind \= 'call' then skip
-	    else Gui,Enqueue(stack
-			     o(W insert LineEnd ' ...'
-			       q(StackTag LineActTag LineColTag)))
+	    case Frame.kind \= 'call' then
+	       skip
+	    else
+	       {W tk(insert LineEnd ' ...' q(StackTag LineActTag LineColTag))}
 	    end
 	 else
 	    {ForAll FrameArgs
@@ -641,59 +617,52 @@ in
 			     tkInit(parent: W
 				    action: self # ProcessClick(V))}
 	     in
-		Gui,Enqueue(stack o(W insert LineEnd ' '
-				    q(StackTag LineActTag LineColTag)))
-		Gui,Enqueue(stack o(W insert LineEnd P
-				    q(StackTag LineColTag ArgTag)))
-		Gui,Enqueue(stack o(W tag bind ArgTag '<1>' ArgAction))
-		Gui,Enqueue(stack o(W tag conf ArgTag font:BoldFont))
+		{W tk(insert LineEnd ' ' q(StackTag LineActTag LineColTag))}
+		{W tk(insert LineEnd P q(StackTag LineColTag ArgTag))}
+		{W tk(tag bind ArgTag '<1>' ArgAction)}
+		{W tk(tag conf ArgTag font:BoldFont)}
 	     end}
 	 end
-	 Gui,Enqueue(stack
-		     o(W insert LineEnd
-		       case Frame.kind \= 'call' then
-			  '' else '}'
-		       end # case UpToDate then nil else
-				' (source has changed)' end #
-		       case Delete then '\n' else "" end
-		       q(StackTag LineActTag LineColTag)))
-	 Gui,Enqueue(stack o(W tag add  LineActTag LineEnd))% extend tag to EOL
-	 Gui,Enqueue(stack o(W tag add  LineColTag LineEnd))% dito
-	 Gui,Enqueue(stack o(W tag bind LineActTag '<1>' LineAction))
+	 {W tk(insert LineEnd
+	       case Frame.kind \= 'call' then
+		  '' else '}'
+	       end # case UpToDate then nil else
+			' (source has changed)' end #
+	       case Delete then '\n' else "" end
+	       q(StackTag LineActTag LineColTag))}
+	 {W tk(tag add  LineActTag LineEnd)} % extend tag to EOL
+	 {W tk(tag add  LineColTag LineEnd)} % dito
+	 {W tk(tag bind LineActTag '<1>' LineAction)}
 	 case Delete then
-	    Gui,Disable(stack W)
-	    Gui,Enqueue(stack o(W yview 'end'))
-	    Gui,ClearQueue(stack)
+	    Gui,Disable(W)
+	    {W tk(yview 'end')}
 	    Gui,FrameClick(frame:Frame highlight:false)
 	 else skip end
       end
 
       meth printStack(id:I frames:Frames depth:Depth last:LastFrame<=nil)
-	 W = {self.StackText w($)}
+	 W = self.StackText
       in
-	 Gui,Enqueue(stack {self.StackText resetTags($)})
-	 Gui,Clear(stack W)
+	 {W resetTags}
+	 Gui,Clear(W)
 	 case I == 0 then   % clear stack and env windows; reset title
 	    {self.StackText title(StackTitle)}
-	    Gui,Disable(stack W)
-	    Gui,ClearQueue(stack)
+	    Gui,Disable(W)
 	    Gui,clearEnv
 	 else
 	    {self.StackText title(AltStackTitle # I)}
 	    case Depth == 0 then
-	       Gui,Append(stack W ' The stack is empty.')
-	       Gui,Disable(stack W)
-	       Gui,ClearQueue(stack)
+	       Gui,Append(W ' The stack is empty.')
+	       Gui,Disable(W)
 	       Gui,clearEnv
 	    else
-	       Gui,Append(stack W {MakeLines Depth}) % Tk is _really_ stupid...
+	       Gui,Append(W {MakeLines Depth}) % Tk is _really_ stupid...
 	       {ForAll Frames
 		proc{$ Frame}
 		   Gui,printStackFrame(frame:Frame delete:false)
 		end}
-	       Gui,Disable(stack W)
-	       Gui,Enqueue(stack o(W yview 'end'))
-	       Gui,ClearQueue(stack)
+	       Gui,Disable(W)
+	       {W tk(yview 'end')}
 	       case LastFrame == nil then
 		  {OzcarError 'printStack: LastFrame == nil ?!'}
 	       else
@@ -735,52 +704,51 @@ in
 	 New in
 	 StatusSync <- New = unit
 	 thread
-	    {WaitOr New {Alarm TimeoutToStatus}}
+	    {WaitOr New {Alarm TimeoutToUpdate}}
 	    case {IsDet New} then skip else
-	       Gui,doStatus(S M C)
+	       Gui,DoStatus(S M C)
 	    end
 	 end
       end
 
-      meth doStatus(S M<=clear C<=DefaultForeground)
+      meth DoStatus(S M<=clear C<=DefaultForeground)
 	 W = self.StatusText
       in
 	 StatusSync <- _ = unit
 	 case M == clear then
-	    Gui,Clear(status W)
+	    Gui,Clear(W)
 	 else
-	    Gui,Enable(status W)
+	    Gui,Enable(W)
 	 end
-	 Gui,Append(status W S C)
-	 Gui,Disable(status W)
-	 Gui,ClearQueue(status)
+	 Gui,Append(W S C)
+	 Gui,Disable(W)
       end
 
       meth BlockedStatus(T A)
-	 Gui,doStatus('Thread #' # {Thread.id T} # ' is blocked, ' #
-		      A # ' has no effect')
+	 Gui,status('Thread #' # {Thread.id T} # ' is blocked, ' #
+		    A # ' has no effect')
       end
 
       meth TerminatedStatus(T A)
-	 Gui,doStatus('Thread #' # {Thread.id T} # ' is dead, ' #
-		      A # ' has no effect')
+	 Gui,status('Thread #' # {Thread.id T} # ' is dead, ' #
+		    A # ' has no effect')
       end
 
       meth StoppedStatus(I A)
-	 Gui,doStatus('Thread #' # I # ' is not running, ' #
-		      A # ' has no effect')
+	 Gui,status('Thread #' # I # ' is not running, ' #
+		    A # ' has no effect')
       end
 
       meth RunningStatus(I A)
-	 Gui,doStatus('Thread #' # I # ' is already running, ' #
-		      A # ' has no effect')
+	 Gui,status('Thread #' # I # ' is already running, ' #
+		    A # ' has no effect')
       end
 
       meth markStack(How)
 	 New in
 	 MarkStackSync <- New = unit
 	 thread
-	    {WaitOr New {Alarm TimeoutToMark}}
+	    {WaitOr New {Alarm TimeoutToUpdate*5}}
 	    case {IsDet New} then skip else
 	       Gui,DoMarkStack(How)
 	    end
@@ -802,7 +770,7 @@ in
 	 New in
 	 MarkEnvSync <- New = unit
 	 thread
-	    {WaitOr New {Alarm TimeoutToMark}}
+	    {WaitOr New {Alarm TimeoutToUpdate*5}}
 	    case {IsDet New} then skip else
 	       Gui,DoMarkEnv(How)
 	    end
@@ -845,7 +813,7 @@ in
 	    {Wait @detachDone}
 	    {Wait @switchDone}
 	    case ThreadManager,emptyForest($) then
-	       Gui,doStatus(NoThreads)
+	       Gui,status(NoThreads)
 	    else
 	       Gui,DoAction(A)
 	    end
@@ -858,34 +826,29 @@ in
 	 end
 
 	 case A == TermAllAction then
-	    Gui,doStatus('Terminating all threads...')
+	    Gui,status('Terminating all threads...')
 	    ThreadManager,termAll
-	    {Delay TimeoutToLookNice}
-	    Gui,doStatus(' done' append)
+	    Gui,status(' done' append)
 
 	 elsecase A == TermAllButCurAction then
-	    Gui,doStatus('Terminating all threads but current...')
+	    Gui,status('Terminating all threads but current...')
 	    ThreadManager,termAllButCur
-	    {Delay TimeoutToLookNice}
-	    Gui,doStatus(' done' append)
+	    Gui,status(' done' append)
 
 	 elsecase A == DetachAllAction then
-	    Gui,doStatus('Detaching all threads...')
+	    Gui,status('Detaching all threads...')
 	    ThreadManager,detachAll
-	    {Delay TimeoutToLookNice}
-	    Gui,doStatus(' done' append)
+	    Gui,status(' done' append)
 
 	 elsecase A == DetachAllButCurAction then
-	    Gui,doStatus('Detaching all threads but current...')
+	    Gui,status('Detaching all threads but current...')
 	    ThreadManager,detachAllButCur
-	    {Delay TimeoutToLookNice}
-	    Gui,doStatus(' done' append)
+	    Gui,status(' done' append)
 
 	 elsecase A == DetachAllDeadAction then
-	    Gui,doStatus('Detaching all dead threads...')
+	    Gui,status('Detaching all dead threads...')
 	    ThreadManager,detachAllDead
-	    {Delay TimeoutToLookNice}
-	    Gui,doStatus(' done' append)
+	    Gui,status(' done' append)
 
 	 elsecase A == StepButtonBitmap then T I in
 	    T = @currentThread
@@ -938,7 +901,7 @@ in
 	       {Stk getFrame(LSF Frame)}
 	       case Frame == unit then skip
 %              elsecase Frame.dir == exit then
-%                 Gui,doStatus('Already at end of procedure ' #
+%                 Gui,status('Already at end of procedure ' #
 %                              'application -- unleash has no effect')
 	       else
 		  {Dbg.step T false}
@@ -952,8 +915,8 @@ in
 		  Gui,resetLastSelectedFrame
 		  Gui,MarkRunning(T)
 		  Gui,status('Unleashing thread #' # I #
-			       ' to frame ' #
-			       case LSF == 0 then 1 else LSF end)
+			     ' to frame ' #
+			     case LSF == 0 then 1 else LSF end)
 		  {Thread.resume T}
 	       end
 	    end
@@ -1001,69 +964,21 @@ in
 
       meth toggleEmacs
 	 case {Cget useEmacsBar} then
-	    Gui,doStatus('Not using Emacs Bar')
+	    Gui,status('Not using Emacs Bar')
 	    {Emacs.condSend.interface removeBar}
 	 else
-	    Gui,doStatus('Using Emacs Bar')
+	    Gui,status('Using Emacs Bar')
 	 end
 	 {Ctoggle useEmacsBar}
       end
 
       meth toggleUpdateEnv
 	 case {Cget updateEnv} then
-	    Gui,doStatus('Turning auto update off')
+	    Gui,status('Turning auto update off')
 	 else
-	    Gui,doStatus('Turning auto update on')
+	    Gui,status('Turning auto update on')
 	 end
 	 {Ctoggle updateEnv}
-      end
-
-      meth GetQueue(W $)
-	 case W
-	 of stack  then StackMsgList  # StackMsgListTl  # StackMsgListLn
-	 [] env    then EnvMsgList    # EnvMsgListTl    # EnvMsgListLn
-	 [] status then StatusMsgList # StatusMsgListTl # StatusMsgListLn
-	 end
-      end
-
-      meth Enqueue(W Ticklet)
-	 lock QueueLock then
-	    case Ticklet
-	    of nil  then skip
-	    [] T|Tr then
-	       Gui,Enqueue(W T)
-	       Gui,Enqueue(W Tr)
-	    else
-	       NewTl
-	       MsgList # MsgListTl # MsgListLn = Gui,GetQueue(W $)
-	    in
-	       case {IsDet @MsgListTl} then
-		  MsgList <- Ticklet|NewTl
-	       else
-		  @MsgListTl = Ticklet|NewTl
-	       end
-	       MsgListTl <- NewTl
-
-	       case @MsgListLn > 250 then % avoid overflow
-		  {OzcarMessage W #
-		   ' queue has become very big -- clearing...'}
-		  Gui,ClearQueue(W)
-	       else
-		  MsgListLn <- @MsgListLn + 1
-	       end
-	    end
-	 end
-      end
-
-      meth ClearQueue(W)
-	 lock QueueLock then
-	    MsgList # MsgListTl # MsgListLn = Gui,GetQueue(W $)
-	 in
-	    @MsgListTl = nil
-	    {Tk.batch @MsgList}
-	    MsgList   <- nil
-	    MsgListLn <- 0
-	 end
       end
 
       meth DeactivateLine(Tag)
@@ -1083,38 +998,32 @@ in
 	 {self.StackText tk(see p(Tag 0))}
       end
 
-      meth Enable(W Widget)
-	 Gui,Enqueue(W o(Widget conf state:normal))
+      meth Enable(W)
+	 {W tk(conf state:normal)}
       end
 
-      meth Clear(W Widget)
-	 Gui,Enqueue(W o(Widget conf state:normal))
-	 Gui,Enqueue(W o(Widget delete p(0 0) 'end'))
+      meth Clear(W)
+	 {W tk(conf state:normal)}
+	 {W tk(delete p(0 0) 'end')}
       end
 
-      meth Append(W Widget Text Color<=unit)
-	 Gui,Enqueue(W o(Widget insert 'end' Text))
+      meth Append(W Text Color<=unit)
+	 {W tk(insert 'end' Text)}
 	 case Color == unit then skip else
-	    Gui,Enqueue(W o(Widget conf fg:Color))
+	    {W tk(conf fg:Color)}
 	 end
       end
 
-      meth DeleteLine(W Widget Nr)
-	 Gui,Enqueue(W o(Widget delete p(Nr 0) p(Nr 'end')))
+      meth DeleteLine(W Nr)
+	 {W tk(delete p(Nr 0) p(Nr 'end'))}
       end
 
-      meth DeleteToEnd(W Widget Nr)
-	 Gui,Enqueue(W o(Widget delete p(Nr 0) 'end'))
+      meth DeleteToEnd(W Nr)
+	 {W tk(delete p(Nr 0) 'end')}
       end
 
-      meth Disable(W Widget)
-	 Gui,Enqueue(W o(Widget conf state:disabled))
-      end
-
-      meth toTop
-	 %% I am looking for a better method...
-	 {Tk.batch [wm(iconify   self.toplevel)
-		    wm(deiconify self.toplevel)]}
+      meth Disable(W)
+	 {W tk(conf state:disabled)}
       end
    end
 end
