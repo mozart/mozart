@@ -97,13 +97,16 @@ void _oz_getNewHeapChunk(const size_t);
 
 
 inline 
-void * _oz_amalloc(const size_t sz, const int align) {
+void * _oz_amalloc(const size_t sz, const size_t align) {
   /*
    * The following invariants are enforced:
    *  - _oz_heap_cur is always aligned to sizeof(int32)
    *  - alignment can be only 4 or 8
+   *  - if alignment == 4, then sz is multiple of 4
    *
    */
+
+  Assert((sz & 3 == 0) || (align == 8));
 
   Assert(ToInt32(_oz_heap_cur) % sizeof(int32) == 0);
 
@@ -114,7 +117,7 @@ void * _oz_amalloc(const size_t sz, const int align) {
  retry:
 
   if (align == 8)
-    _oz_heap_cur = (char *) ((long) _oz_heap_cur & ~4);
+    _oz_heap_cur = (char *) (((long) _oz_heap_cur) & (~((long) 7)));
   
   Assert(((long) _oz_heap_cur) % align == 0);
 
