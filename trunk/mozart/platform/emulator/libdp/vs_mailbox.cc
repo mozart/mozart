@@ -35,9 +35,9 @@ VSMailboxManagerOwned::VSMailboxManagerOwned(key_t shmkeyIn)
   //
   shmkey = shmkeyIn;
   if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0)
-    error("Virtual Sites: failed to get the shared memory page");
+    OZ_error("Virtual Sites: failed to get the shared memory page");
   if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1) 
-    error("Virtual Sites:: failed to attach the shared-memory page");
+    OZ_error("Virtual Sites:: failed to attach the shared-memory page");
 #ifdef TRACE_MAILBOXES
   fprintf(stdout, "*** mailbox obtained 0x%X (pid %d)\n",
 	  shmkey, getpid());
@@ -62,9 +62,9 @@ VSMailboxManagerImported::VSMailboxManagerImported(key_t shmkeyIn)
   //
   shmkey = shmkeyIn;
   if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0)
-    error("Virtual Sites: failed to get the shared memory page");
+    OZ_error("Virtual Sites: failed to get the shared memory page");
   if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1) 
-    error("Virtual Sites:: failed to attach the shared-memory page");
+    OZ_error("Virtual Sites:: failed to attach the shared-memory page");
 #ifdef TRACE_MAILBOXES
   fprintf(stdout, "*** mailbox attached 0x%X (pid %d)\n",
 	  shmkey, getpid());
@@ -94,9 +94,9 @@ VSMailboxManagerCreated::VSMailboxManagerCreated(int memSizeIn)
   shmkey = vsTypeToKey(VS_MAILBOX_KEY);
   if ((int) (shmid = shmget(shmkey, memSizeIn, 
 			    (IPC_CREAT | IPC_EXCL | S_IRWXU))) < 0)
-    error("Virtual Sites: failed to allocate a shared memory page");
+    OZ_error("Virtual Sites: failed to allocate a shared memory page");
   if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1) 
-    error("Virtual Sites:: failed to attach a shared-memory page");
+    OZ_error("Virtual Sites:: failed to attach a shared-memory page");
 
   //
   mbox = (VSMailboxCreated *) mem;
@@ -107,7 +107,7 @@ VSMailboxManagerCreated::VSMailboxManagerCreated(int memSizeIn)
 void VSMailboxManagerOwned::unmap()
 {
   if (shmdt((char *) mem) < 0) {
-    error("Virtual Sites: can't detach the shared memory.");
+    OZ_error("Virtual Sites: can't detach the shared memory.");
   }
 #ifdef TRACE_MAILBOXES
   fprintf(stdout, "*** unmap owned mailbox 0x%X (pid %d)\n",
@@ -123,7 +123,7 @@ void VSMailboxManagerOwned::unmap()
 void VSMailboxManagerImported::unmap()
 {
   if (shmdt((char *) mem) < 0) {
-    error("Virtual Sites: can't detach the shared memory.");
+    OZ_error("Virtual Sites: can't detach the shared memory.");
   }
 #ifdef TRACE_MAILBOXES
   fprintf(stdout, "*** unmap imported mailbox 0x%X (pid %d)\n",
@@ -139,7 +139,7 @@ void VSMailboxManagerImported::unmap()
 void VSMailboxManagerCreated::unmap()
 {
   if (shmdt((char *) mem) < 0) {
-    error("Virtual Sites: can't detach the shared memory.");
+    OZ_error("Virtual Sites: can't detach the shared memory.");
   }
   DebugCode(mbox = (VSMailboxCreated *) 0);
   DebugCode(mem = (void *) 0);
@@ -152,7 +152,7 @@ void VSMailboxManagerOwned::markDestroy()
   //
   if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0) {
     if (errno != EIDRM) 
-      error("Virtual Sites: cannot mark the shared memory for destroying");
+      OZ_error("Virtual Sites: cannot mark the shared memory for destroying");
   }
 #ifdef TRACE_MAILBOXES
   fprintf(stdout, "*** mailbox removed 0x%X (pid %d)\n",

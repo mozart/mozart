@@ -250,7 +250,7 @@ OzOFVariable* tagged2GenOFSVar(TaggedRef term)
     GCDEBUG(term);
 #ifdef DEBUG_OFS
     if(isGenOFSVar(term) == NO)
-        error("ofs variable expected");
+        OZ_error("ofs variable expected");
 #endif
     return (OzOFVariable*) tagged2CVar(term);
 }
