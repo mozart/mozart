@@ -104,12 +104,17 @@ public:
 };
 
 //
-// typedef union semun {
-//   int val;
-//   struct semid_ds *buf;
-//   ushort *array;
-// } SemOptArg;
+// Linux has the structure already defined, while others 
+// (e.g. Solaris) have not;
+#if defined(LINUX)
 typedef union semun SemOptArg;
+#else
+typedef union semun {
+  int val;
+  struct semid_ds *buf;
+  ushort *array;
+} SemOptArg;
+#endif
 
 //
 // The 'Manager' class, like the mailbox's one, is visible to the 
