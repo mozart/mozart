@@ -238,9 +238,14 @@ OZ_BI_define(BIbyNeedDot,2,1)
   } else {
     OZ_Term aux=0;
     OZ_Return ret=dotInline(fut,fea,aux);
-    OZ_result(aux);
+    if (ret==RAISE) {
+      Future *newFut =
+	new Future(oz_currentBoard(),
+		   OZ_mkTuple(AtomFail,1,am.getExceptionValue()));
+      OZ_RETURN(makeTaggedRef(newTaggedVar(newFut)));
+    }
     Assert(ret!=SUSPEND);
-    return ret;
+    OZ_RETURN(aux);
   }
 } OZ_BI_end
 
