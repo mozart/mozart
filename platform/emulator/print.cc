@@ -446,6 +446,18 @@ PRINTLONG(OzDictionary)
   print(stream,depth+1,offset);
 }
 
+PRINT(OzLock)
+{
+  CHECKDEPTH;
+  stream << "<Lock@" << this << ">";
+}
+
+PRINTLONG(OzLock)
+{
+  CHECKDEPTHLONG;
+  stream << "<Lock@" << this << ">";
+}
+
 PRINT(SChunk)
 {
   CHECKDEPTH;
@@ -662,6 +674,7 @@ PRINTLONG(ConstTerm)
   case Co_Chunk:      ((SChunk *) this)->printLong(stream,depth,offset);      break;
   case Co_Array:      ((OzArray *) this)->printLong(stream,depth,offset);     break;
   case Co_Dictionary: ((OzDictionary *) this)->printLong(stream,depth,offset);break;
+  case Co_Lock:       ((OzLock *) this)->printLong(stream,depth,offset);break;
   case Co_Thread:     ((Thread *) this)->printLong(stream,depth,offset);    break;
   case Co_Builtin:    ((Builtin *) this)->printLong(stream,depth,offset);     break;
   default:            Assert(NO);
@@ -683,6 +696,7 @@ PRINT(ConstTerm)
   case Co_Chunk:       ((SChunk *) this)->print(stream,depth,offset);      break;
   case Co_Array:       ((OzArray *) this)->print(stream,depth,offset);     break;
   case Co_Dictionary:  ((OzDictionary *) this)->print(stream,depth,offset);break;
+  case Co_Lock:        ((OzLock *) this)->print(stream,depth,offset);break;
   case Co_Thread:      ((Thread *) this)->print(stream,depth,offset);    break;
   case Co_Builtin:     ((Builtin *) this)->print(stream,depth,offset);     break;
   default:             Assert(NO);
@@ -1367,8 +1381,9 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
     ContFlag flag = getContFlag(topElem);
     switch (flag){
 
-    case C_SETFINAL:
-      message("\tIn setFinal\n");
+    case C_LOCK:
+      message("\tIn lock\n");
+      pop();
       break;
 
     case C_CONT:
@@ -1441,11 +1456,11 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
       message("\tCatch\n");
       break;
 
-    case C_SET_OOREGS:
+    case C_SET_SELF:
       {
         pop();
         if (verbose)
-          message("\tSET_OOREGS\n");
+          message("\tSET_SELF\n");
         break;
       }
 
@@ -1486,8 +1501,9 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
     ContFlag flag = getContFlag(topElem);
     switch (flag){
 
-    case C_SETFINAL:
-      out = cons(OZ_atom("setFinal"),out);
+    case C_LOCK:
+      out = cons(OZ_atom("lock"),out);
+      pop();
       break;
 
     case C_CONT:
@@ -1550,7 +1566,7 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
       out = cons(OZ_atom("catch"),out);
       break;
 
-    case C_SET_OOREGS:
+    case C_SET_SELF:
       {
         pop();
         out = cons(OZ_atom("setSelf"),out);

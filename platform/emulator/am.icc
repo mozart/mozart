@@ -208,12 +208,6 @@ void AM::pushCall(TaggedRef def, int arity, RefsArray args)
 }
 
 inline
-void AM::pushSetFinal()
-{
-  currentThread->pushSetFinal();
-}
-
-inline
 void AM::pushTaskInline(ProgramCounter pc,
                         RefsArray y,RefsArray g,RefsArray x,int i)
 {
@@ -288,14 +282,12 @@ RunnableThreadBody* AM::allocateBody()
 {
   RunnableThreadBody *body = threadBodyFreeList;
   if (body) {
-    threadBodyFreeList = threadBodyFreeList->u.next;
+    threadBodyFreeList = threadBodyFreeList->next;
   } else {
     body = new RunnableThreadBody(ozconf.taskStackSize);
   }
 
   body->taskStack.makeEmpty();
-
-  body->u.ooregs = 0;
 
 #ifdef LINKEDTHREADS
   body->parentThread = nil();
@@ -421,19 +413,11 @@ int AM::commit(Board *bb, Thread *tt=0)
 inline
 void AM::changeSelf(Object *o)
 {
-  int oldRegs = cachedOORegisters;
-  int newRegs = ToInt32(o)|OO_Final;
-  if(newRegs != oldRegs) {
-    currentThread->pushOORegs(oldRegs);
-    cachedOORegisters = newRegs;
+  Object *oldSelf = cachedSelf;
+  if(o != oldSelf) {
+    cachedStack->pushSelf(oldSelf);
+    cachedSelf = o;
   }
-}
-
-inline
-void AM::saveSelf()
-{
-  currentThread->saveOORegs(cachedOORegisters);
-  cachedOORegisters = 0;
 }
 
 #endif  // __AM_ICC

@@ -111,32 +111,13 @@ public:
   Board *currentBoard;
   TaskStack *cachedStack;
 private:
-#define OO_Final  0x1
-#define OO_Locked 0x2
-  ChachedOORegs cachedOORegisters;
+
+  Object *cachedSelf;
 
 public:
   void changeSelf(Object *o);
-  void saveSelf();
-  void restoreSelf(ChachedOORegs e) { cachedOORegisters = e; }
-  Object *getSelf() { return getObject(cachedOORegisters); }
-
-  int  isFinal()     { return (cachedOORegisters&OO_Final); }
-  void setFinal()    { cachedOORegisters |= OO_Final; }
-  void unsetFinal()  { cachedOORegisters &= ~OO_Final; }
-  int  isLocked()    { return (cachedOORegisters&OO_Locked); }
-  void setLocked()   { cachedOORegisters |= OO_Locked; }
-  void unsetLocked() { cachedOORegisters &= ~OO_Locked; }
-  int isFinalAndLocked() {
-    return ((cachedOORegisters&(OO_Final|OO_Locked)) == (OO_Final|OO_Locked)); }
-
-  void unlockSelf()
-  {
-    if (isFinalAndLocked()) {
-      getSelf()->unlock();
-      unsetLocked();
-    }
-  }
+  void setSelf(Object *o) { cachedSelf = o; }
+  Object *getSelf() { return cachedSelf; }
 
   TaggedRef currentUVarPrototype; // opt: cache
   Board *rootBoard;
@@ -339,7 +320,6 @@ public:
   INLINE void pushCall(TaggedRef def, int arity, RefsArray args);
 
   void pushDebug(TaggedRef def, int arity, RefsArray args);
-  INLINE void pushSetFinal();
 
   INLINE void pushTaskInline(ProgramCounter pc,
                              RefsArray y,RefsArray g,RefsArray x,int i);

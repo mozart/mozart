@@ -428,7 +428,6 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case ALLOCATEL9:
     case ALLOCATEL10:
     case SHALLOWTHEN:
-    case UNLOCKOBJECT:
     case CREATEOR:
     case CREATEENUMOR:
     case CREATECHOICE:
@@ -699,7 +698,6 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case GETVOID:
     case UNIFYVOID:
     case ALLOCATEL:
-    case LOCKOBJECT:
           /* ***type 2:    OP PosInt    */
       fprintf(ofile, "(%d)\n",getPosIntArg(PC+1));
       DISPATCH();
@@ -864,7 +862,6 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case THREAD:
     case SAVECONT:
     case EXHANDLER:
-    case UNSETFINAL:
           /* ***type 8:    OP Label */
       fprintf(ofile, "(@ 0x%x)\n", getLabelArg (PC+1));
       DISPATCH();
@@ -903,6 +900,15 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
         ProgramCounter lbl = getLabelArg(PC+1);
         int n = getPosIntArg(PC+2);
         fprintf(ofile, "(@ 0x%x, %d)\n", lbl, n);
+      }
+      DISPATCH();
+
+    case LOCKTHREAD:
+      {
+        ProgramCounter lbl = getLabelArg(PC+1);
+        int n      = regToInt(getRegArg(PC+2));
+        int toSave = getPosIntArg(PC+3);
+        fprintf(ofile, "(@ 0x%x, %d, %d)\n", lbl, n, toSave);
       }
       DISPATCH();
 

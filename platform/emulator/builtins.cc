@@ -4677,6 +4677,64 @@ OZ_C_proc_begin(BIsendPort,2)
 OZ_C_proc_end
 
 // ---------------------------------------------------------------------
+// Locks
+// ---------------------------------------------------------------------
+
+OZ_C_proc_begin(BInewLock,1)
+{
+  OZ_declareArg(0,out);
+
+  OZ_Term ret = makeTaggedConst(new OzLock(am.currentBoard));
+
+  return OZ_unify(out,ret);
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIlockLock,1)
+{
+  OZ_declareNonvarArg(0,lock);
+
+  lock = deref(lock);
+
+  if (!isLock(lock)) {
+    TypeErrorT(0,"Lock");
+  }
+
+  OzLock *lck = tagged2Lock(lock);
+  if (!am.isToplevel()) {
+    if (am.currentBoard != lck->getBoard()) {
+      OZ_raiseC("attempt to lock object in guard",0);
+    }
+  }
+
+  TaggedRef *aux = lck->lock(am.currentThread);
+  if (aux==NULL)
+    return PROCEED;
+
+  OZ_suspendOn(*aux);
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIunlockLock,1)
+{
+  OZ_declareNonvarArg(0,lock);
+
+  lock = deref(lock);
+
+  if (!isLock(lock)) {
+    TypeErrorT(0,"Lock");
+  }
+
+  tagged2Lock(lock)->unlock();
+
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+// ---------------------------------------------------------------------
 // Cell
 // ---------------------------------------------------------------------
 
@@ -6734,7 +6792,7 @@ void assignError(TaggedRef rec, TaggedRef fea, char *name)
 }
 
 
-#define CheckSelf Assert(am.getSelf()!=NULL && am.getSelf()->isLocked());
+#define CheckSelf Assert(am.getSelf()!=NULL);
 
 
 OZ_Return atInline(TaggedRef fea, TaggedRef &out)
@@ -6793,14 +6851,15 @@ Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla,
                   Bool iscl, Board *b)
 {
   Bool deep = (b!=am.rootBoard);
+  OzLock *lck = cla->supportsLocking() ? new OzLock(am.currentBoard) : (OzLock*) NULL;
   Object *ret = deep
-    ? new DeepObject(st,cla,feat,iscl,b)
-    : new Object(st,cla,feat,iscl);
+    ? new DeepObject(st,cla,feat,iscl,b,lck)
+    : new Object(st,cla,feat,iscl,lck);
   return ret;
 }
 
 
-OZ_C_proc_begin(BImakeClass,8)
+OZ_C_proc_begin(BImakeClass,9)
 {
   OZ_Term fastmeth   = OZ_getCArg(0); { DEREF(fastmeth,_1,_2); }
   OZ_Term printname  = OZ_getCArg(1); { DEREF(printname,_1,_2); }
@@ -6809,7 +6868,8 @@ OZ_C_proc_begin(BImakeClass,8)
   OZ_Term features   = OZ_getCArg(4); { DEREF(features,_1,_2); }
   OZ_Term ufeatures  = OZ_getCArg(5); { DEREF(ufeatures,_1,_2); }
   OZ_Term defmethods = OZ_getCArg(6); { DEREF(defmethods,_1,_2); }
-  OZ_Term out        = OZ_getCArg(7);
+  OZ_Term locking    = OZ_getCArg(7); { DEREF(locking,_1,_2); }
+  OZ_Term out        = OZ_getCArg(8);
 
   SRecord *methods = NULL;
 
@@ -6828,7 +6888,8 @@ OZ_C_proc_begin(BImakeClass,8)
                                     tagged2Dictionary(slowmeth),
                                     tagged2Abstraction(send),
                                     uf,
-                                    tagged2Dictionary(defmethods));
+                                    tagged2Dictionary(defmethods),
+                                    locking==NameTrue);
 
   Object *reto = newObject(tagged2SRecord(features),
                            NULL, // initState
@@ -7000,11 +7061,6 @@ OZ_C_proc_begin(BIsetClosed,1)
   if (!isObject(obj)) TypeErrorT(0,"Object");
   Object *oo = (Object *)tagged2Const(obj);
   if (oo->isClosed()) return PROCEED;
-  if (am.isLocked() || !oo->isLocked()) {
-    oo->close();
-    return PROCEED;
-  }
-
   OZ_suspendOn(oo->attachThread());
 }
 OZ_C_proc_end
@@ -7018,10 +7074,6 @@ OZ_C_proc_begin(BIisClosed,2)
   if (!isObject(tobj)) TypeErrorT(0,"Object");
 
   Object *obj = (Object *) tagged2Const(tobj);
-
-  if (obj->isLocked() && !am.isLocked()) {
-    OZ_suspendOn(obj->attachThread());
-  }
 
   return OZ_unify(OZ_getCArg(1),
                   obj->isClosed() ? NameTrue : NameFalse);
@@ -7041,15 +7093,6 @@ OZ_C_proc_begin(BIgetOONames,5)
 }
 OZ_C_proc_end
 
-
-
-/* is sometimes explicitely called within Object.oz */
-OZ_C_proc_begin(BIreleaseObject,0)
-{
-  am.unlockSelf();
-  return PROCEED;
-}
-OZ_C_proc_end
 
 
 OZ_C_proc_begin(BIgetSelf,1)
@@ -7079,6 +7122,17 @@ OZ_C_proc_begin(BIsetModeToDeep,0)
   return PROCEED;
 }
 OZ_C_proc_end
+
+
+OZ_Return ooGetLockInline(TaggedRef val)
+{
+  OzLock *lock = am.getSelf()->getLock();
+  if (lock==NULL)
+    return OZ_raiseC("locking unlockable object",0);
+
+  return am.fastUnify(val,makeTaggedConst(lock),OK) ? PROCEED : FAILED;
+}
+DECLAREBI_USEINLINEREL1(BIooGetLock,ooGetLockInline)
 
 
 /********************************************************************
@@ -7202,6 +7256,10 @@ BIspec allSpec1[] = {
   {"Dictionary.remove", 2, BIdictionaryRemove, (IFOR) dictionaryRemoveInline},
   {"Dictionary.member", 3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
   {"Dictionary.keys",   2, BIdictionaryKeys,    0},
+
+  {"NewLock",         1,BInewLock,       0},
+  {"Lock",            1,BIlockLock,      0},
+  {"Unlock",          1,BIunlockLock,    0},
 
   {"NewPort",         2,BInewPort,       0},
   {"Send",            2,BIsendPort,      0},
@@ -7482,16 +7540,16 @@ BIspec allSpec2[] = {
   {"@",               2,BIat,                  (IFOR) atInline},
   {"<-",              2,BIassign,              (IFOR) assignInline},
   {"copyRecord",      2,BIcopyRecord,          0},
-  {"makeClass",        8,BImakeClass,          0},
+  {"makeClass",        9,BImakeClass,          0},
   {"setModeToDeep",    0,BIsetModeToDeep,      0},
   {"setMethApplHdl",   1,BIsetMethApplHdl,     0},
   {"oogetCounterSelf", 1,BIoogetCounterSelf,   0},
   {"oosetCounterSelf", 1,BIoosetCounterSelf,   0},
   {"getClass",         2,BIgetClass,           (IFOR) getClassInline},
+  {"ooGetLock",        1,BIooGetLock,          (IFOR) ooGetLockInline},
   {"new",              3,BInew,                0},
   {"newObject",        2,BInewObject,          (IFOR) newObjectInline},
   {"getOONames",       5,BIgetOONames,         0},
-  {"releaseObject",    0,BIreleaseObject,      0},
   {"getSelf",          1,BIgetSelf,            0},
   {"isClosed",         2,BIisClosed,           0},
   {"setClosed",        1,BIsetClosed,          0},
