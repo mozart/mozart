@@ -79,7 +79,8 @@ all quick check install clean veryclean distclean installps depend::
 bootstrap::
 	dirs="$(SUBDIRS)"; \
 	for i in $$dirs; do (cd $$i && $(MAKE) bootstrap) || exit 1; done; \
-	for i in $$dirs; do (cd $$i && $(MAKE) bootquick) || exit 1; done
+	for i in $$dirs; do (cd $$i && $(MAKE) bootquick) || exit 1; done; \
+	make idx/index.html
 
 clean::
 	-rm -f *~
