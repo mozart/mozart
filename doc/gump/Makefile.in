@@ -8,7 +8,7 @@ OZDOC		= @OZDOC@
 OZDOCFLAGS	=
 DOCIFY		= $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
 
-DOCDIR		= /www/mozart/gump
+DOCDIR		= /www/mozart/documentation/gump
 
 INSTALL		= @INSTALL@
 INSTALL_FILE	= $(INSTALL) -m 444
