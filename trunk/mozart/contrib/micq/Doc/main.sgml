@@ -70,7 +70,8 @@
     One of &micq; main advantages over existing groupware, is the open interface to add custom 
     (platform-independent) programs written in Mozart. 
 
-    <P CLASS=WARNING> This software is not compability with the widley used 
+    <P CLASS=WARNING>This document is far from finished!
+    <P CLASS=WARNING>This software is not compability with the widley used 
     <REF.EXTERN TO="http://www.icq.com">ICQ (www.icq.com)</REF.EXTERN>
     </ABSTRACT>
   <BODY>
