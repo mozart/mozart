@@ -130,6 +130,8 @@
 functor
 import
    Open OS Property
+   IO at 'x-oz://contrib/os/io'
+   PROC at 'x-oz://contrib/os/process'
 export
    'class'	: FontifierClass
    emacs	: ApiEmacs
@@ -152,13 +154,25 @@ define
 		set :proc {$ X} {Assign ELOAD X} end
 		push:proc {$ X} L in {Exchange ELOAD L X|L} end)
 
-   fun {MakeCommand}
-      {Access EMACS}#' --batch '#
-      {FoldR {Access EPATH}
-       fun {$ DIR VS} '-L '#DIR#' '#VS end nil}#
-      {FoldR {Access ELOAD}
-       fun {$ FILE VS} '-l '#FILE#' '#VS end nil}#
-      '-f ozdoc-fontify'
+   proc {MakeProcess FileIn FileOut PID} IN={IO.devNull} in
+      {IO.run
+       process(
+	  {Access EMACS}
+	  '--batch' | '--unibyte'
+	  |{FoldR {Access EPATH}
+	    fun {$ DIR L}
+	       %% skip empty directories
+	       if DIR==nil then L else '-L'|DIR|L end
+	    end
+	    {FoldR {Access ELOAD}
+	     fun {$ FILE L}
+		%% skip empty files
+		if FILE==nil then L else '-l'|FILE|L end
+	     end
+	     ['-f' 'ozdoc-fontify' FileIn FileOut]}}
+	  stdin:IN)
+       PID}
+      {IO.close IN}
    end
 
    %% !!! TEMPORARY WORK AROUND FOR BUG WITH BYNEED VARIABLES !!!
@@ -308,15 +322,15 @@ define
       FileNameOut = {OS.tmpnam}
       FileIn      = {New Open.file init(name :FileNameIn
 					flags:[write create truncate])}
-      Specs
+      Specs Proc
    in
       try
 	 Specs =
 	 {Map Requests
 	  fun {$ R} {WriteRequest R FileIn} end}
 	 {FileIn close}
-	 case {OS.system
-	       {MakeCommand}#' '#FileNameIn#' '#FileNameOut}
+	 Proc = {MakeProcess FileNameIn FileNameOut}
+	 case {PROC.status Proc}
 	 of 0 then skip
 	 elseof I then
 	    {Exception.raiseError fontify(I)}
