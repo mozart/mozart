@@ -93,9 +93,7 @@ define
       [] elisp       then 'emacs-lisp-mode'
       [] sh          then 'sh-mode'
       [] !NoProgLang then 'fundamental-mode'
-      else
-         %%--** warn about unsupported programming language
-         'fundamental-mode'
+      else                ProgLang
       end
    end
 
