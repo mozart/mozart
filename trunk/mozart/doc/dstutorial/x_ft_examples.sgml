@@ -115,6 +115,7 @@ functions <<FOneOf>> and <<FSomeOf>>, which are defined
 just afterwards.
 <<SafeSend>> is defined as follows:
 <<<
+declare
 proc {SafeSend Prt X}
    try
       {Send Prt X}
@@ -189,6 +190,7 @@ fault states <<AFS>>.  Extra information in <<AFS>>
 is not taken into account in the membership check.
 The function <<FOneOf>> is defined as follows:
 <<<
+declare
 fun {FOneOf F AFS}
    if AFS==nil then false
    else AF2|AFS2=AFS in
@@ -209,6 +211,7 @@ Just like for <<FOneOf>>, extra information in <<AFS>> is
 not taken into account in the membership check.
 The function <<FSomeOf>> is defined as follows:
 <<<
+declare
 fun {FSomeOf FS AFS}
    if FS==nil then false
    else F2|FS2=FS in 
