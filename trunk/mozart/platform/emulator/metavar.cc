@@ -211,9 +211,10 @@ Bool GenMetaVariable::valid(TaggedRef v)
 }
 
 
-Bool GenMetaVariable::isStrongerThan(TaggedRef d)
+Bool GenMetaVariable::isStrongerThan(TaggedRef var, TaggedRef vdata)
 {
-  mur_t ret_value = tag->unify_meta_meta(0, getData(), 0, d, getTag(), NULL);
+  mur_t ret_value = tag->unify_meta_meta(makeTaggedCVar(this), getData(), 
+					 var, vdata, getTag(), NULL);
   
   if (ret_value == meta_failed) {
     warning("GenMetaVariable::isStrongerThan found inconsistency.");
@@ -243,16 +244,16 @@ OZ_Term OZ_makeMetaTerm(OZ_MetaType t, OZ_Term d)
 
 OZ_Bool OZ_constrainMetaTerm(OZ_Term v, OZ_MetaType t, OZ_Term d)
 {
-  TaggedRef v_deref = deref(v);
+  TaggedRef v_deref = deref(v), metaterm = OZ_makeMetaTerm(t, d);
   
   if (!isAnyVar(v_deref) ||
       (OZ_isMetaTerm(v_deref) &&
-       ((GenMetaVariable *) tagged2CVar(v_deref))->check(t, d)
+       ((GenMetaVariable *) tagged2CVar(v_deref))->check(metaterm, t, d)
        == meta_unconstrained)) {
     return PROCEED;
   }
 
-  return OZ_unify(v, OZ_makeMetaTerm(t, d));
+  return OZ_unify(v, metaterm);
 }  
 
 OZ_Bool OZ_suspendMetaProp(OZ_CFun OZ_self, OZ_Term * OZ_args, int OZ_arity)
@@ -416,7 +417,7 @@ OZ_C_proc_begin(BImetaGetDataAsAtom, 2)
   if(! isAnyVar(vartag)) {
     return OZ_unify(var, OZ_getCArg(1));   
   } else if (isGenMetaVar(var, vartag)) {
-    return OZ_unify(makeTaggedAtom(((GenMetaVariable *) tagged2CVar(var))->toString()),
+    return OZ_unify(makeTaggedAtom(((GenMetaVariable *) tagged2CVar(var))->toString(ozconf.printDepth)),
 		    OZ_getCArg(1));   
   } else if (isNotCVar(vartag)) {
     OZ_addThread(makeTaggedRef(varptr),
@@ -483,7 +484,8 @@ OZ_C_proc_begin(BImetaWatchVar, 2)
   if(! isAnyVar(vtag)) {
     return PROCEED;
   } else if (isGenMetaVar(v, vtag)) {
-    if (((GenMetaVariable*)tagged2CVar(v))->isStrongerThan(deref(OZ_args[1])))
+    if (((GenMetaVariable*)tagged2CVar(v))->isStrongerThan(TaggedRef(vptr), 
+							   deref(OZ_args[1])))
       return PROCEED;
     
     OZ_addThread(makeTaggedRef(vptr),
