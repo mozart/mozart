@@ -25,7 +25,7 @@ import
    OS(localTime)
    Open(file)
    Property(get)
-   GBuilder(create: Create)
+   GBuilder(create: Create) at 'x-oz://system/gtk/GBuilder.ozf'
    System(show)
 define
    local
