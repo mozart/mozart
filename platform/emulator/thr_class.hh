@@ -544,15 +544,15 @@ public:
 
   Bool hasCatchFlag() { return (state.flags & T_catch); }
   void setCatchFlag() { state.flags |= T_catch; }
-  void pushCatch(TaggedRef pred) {
+  void pushCatch() {
     setCatchFlag();
-    item.threadBody->taskStack.pushCatch(pred);
+    item.threadBody->taskStack.pushCatch();
   }
   void pushSetFinal() { item.threadBody->taskStack.pushSetFinal(); }
   void pushOORegs(ChachedOORegs);
   void saveOORegs(ChachedOORegs);
 
-  TaggedRef findCatch() {
+  Bool findCatch() {
     return item.threadBody->taskStack.findCatch();
   }
   TaggedRef reflect(TaskStackEntry *from=0,TaskStackEntry *to=0,

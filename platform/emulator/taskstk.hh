@@ -127,7 +127,7 @@ public:
 
   void gc(TaskStack *newstack);
 
-  TaggedRef findCatch();
+  Bool findCatch();
   TaggedRef reflect(TaskStackEntry *from=0,TaskStackEntry *to=0,
                     ProgramCounter pc=NOCODE);
 
@@ -136,10 +136,8 @@ public:
     push(ToPointer(C_SETFINAL));
   }
 
-  void pushCatch(TaggedRef hdl)
+  void pushCatch()
   {
-    ensureFree(2);
-    push(ToPointer(hdl),NO);
     push(ToPointer(C_CATCH),NO);
   }
 

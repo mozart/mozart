@@ -432,6 +432,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case CREATEOR:
     case CREATEENUMOR:
     case CREATECHOICE:
+    case POPEX:
           /* Commands with no args.   */
       fprintf(ofile, "\n");
       DISPATCH();
@@ -862,6 +863,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case NEXTCLAUSE:
     case THREAD:
     case SAVECONT:
+    case EXHANDLER:
     case UNSETFINAL:
           /* ***type 8:    OP Label */
       fprintf(ofile, "(@ 0x%x)\n", getLabelArg (PC+1));
