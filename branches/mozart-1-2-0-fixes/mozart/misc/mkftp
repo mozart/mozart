@@ -45,8 +45,9 @@ my $ACTION_WIN;
 my $ACTION_TAR;
 my $JUSTPRINT;
 my $VERBOSE;
+my $ACTION_HELP;
 
-my $FTPDIR = "'/home/ftp/pub/mozart";
+my $FTPDIR = "/home/ftp/pub/mozart";
 my $RELDIR;
 
 # when running on my laptop:
@@ -63,7 +64,47 @@ my $result = GetOptions
      'tar+'            => \$ACTION_TAR,
      'just-print|n+'   => \$JUSTPRINT,
      'verbose|v+'      => \$VERBOSE,
+     'help|h+'         => \$ACTION_HELP,
      );
+
+if ($ACTION_HELP) {
+    print <<EOF;
+The purpose of mkftp is to ease the process of creating and populating
+the ftp directory of a mozart release.
+
+SYNOPSIS
+	mkftp --release=RELEASE OPTIONS ACTION FILES...
+
+OPTIONS
+	--just-print, -n
+		don\'t actually perform the commands, but just show
+		which ones would be performed
+
+	--verbose, -v
+		display each command before executing it
+
+ACTIONS
+	--create
+		create the skeleton directory for a new release
+		if RELEASE does not contain a data tag, one will
+		be added using the current date.
+
+	--documentation=PREFIX
+		PREFIX/print should contain the printable documentation
+
+	--rpm=DISTRIB RPMFILES...
+		DISTRIB should be the name of a distribution such as
+		redhat-7.2
+
+	--windows EXES...
+		install some self-extracting archives for Windows
+
+	--tar TARFILES-and-READMES...
+		install tarballs
+
+EOF
+    exit 0;
+}
 
 # check that only one action was specified
 
@@ -89,27 +130,6 @@ sub nondirname {
     return $path;
 }
 
-{
-    die "illegal --release argument: $RELEASE"
-	unless $RELEASE =~ /^\d+\.\d+\.\d+(\.\d{8})?$/;
-    my $dir = glob "$FTPDIR/$RELEASE*";
-    if (-d $dir) {
-	$RELEASE = nondirname($dir);
-	$RELDIR = $dir;
-	die "release already exists: $RELEASE" if $ACTION_NEW;
-    } elsif ($ACTION_NEW) {
-	if ($RELEASE =~ /^\d+\.\d+\.\d+$/) {
-	    $RELEASE .= '.' . `date +%Y%m%d`;
-	    chop($RELEASE);
-	}
-	$RELDIR = "$FTPDIR/$RELEASE";
-	&action_create;
-	exit 0;
-    } else {
-	die "non existent release: invoke --create first";
-    }
-}
-
 my $SHOW = $VERBOSE || $JUSTPRINT;
 my $DO   = !$JUSTPRINT;
 
@@ -131,6 +151,27 @@ sub action_create {
     &do_mkdir("$RELDIR/rpm");
     &do_mkdir("$RELDIR/windows");
     &do_mkdir("$RELDIR/print");
+}
+
+{
+    die "illegal --release argument: $RELEASE"
+	unless $RELEASE =~ /^\d+\.\d+\.\d+(\.\d{8})?$/;
+    my $dir = glob "$FTPDIR/$RELEASE*";
+    if (-d $dir) {
+	$RELEASE = nondirname($dir);
+	$RELDIR = $dir;
+	die "release already exists: $RELEASE" if $ACTION_NEW;
+    } elsif ($ACTION_NEW) {
+	if ($RELEASE =~ /^\d+\.\d+\.\d+$/) {
+	    $RELEASE .= '.' . `date +%Y%m%d`;
+	    chop($RELEASE);
+	}
+	$RELDIR = "$FTPDIR/$RELEASE";
+	&action_create;
+	exit 0;
+    } else {
+	die "non existent release: invoke --create first";
+    }
 }
 
 sub do_unlink {
@@ -218,7 +259,6 @@ sub action_rpm {
     my $rpmdir = "$RELDIR/rpm/$ACTION_RPM";
     foreach $file (@ARGV) {
 	my $name = &nondirname($file);
-	print STDERR "$RELEASE_NUMBER\n";
 	if ($name =~ /^mozart-(|contrib-|doc-)(\d+\.\d+\.\d+)\.\d{8}(?:-\d+)?\.(.*)\.rpm/) {
 	    my $type = $1;
 	    my $rnum = $2;
@@ -239,3 +279,36 @@ sub action_rpm {
 
 &action_rpm if $ACTION_RPM;
 
+sub action_windows {
+    my $windir = "$RELDIR/windows";
+    foreach $file (@ARGV) {
+	my $name = &nondirname($file);
+	if ($name =~ /^mozart-(\d+\.\d+\.\d+)(?:rc\d+)?\.\d{8}\.exe$/) {
+	    my $rnum = $1;
+	    die "wrong release number on exe $name" unless $rnum eq $RELEASE_NUMBER;
+	    &do_system("cp -f $file $windir/$name");
+	} else {
+	    die "unrecognized exe $name";
+	}
+    }
+}
+
+&action_win if $ACTION_WIN;
+
+sub action_tar {
+    my $tardir = "$RELDIR/tar";
+    foreach $file (@ARGV) {
+	my $name = &nondirname($file);
+	if ($name =~ /^mozart-(\d+\.\d+\.\d+)\.\d{8}-(.*)\.tar\.gz/) {
+	    my $rnum = $1;
+	    die "wrong release number on archive $name" unless $rnum eq $RELEASE_NUMBER;
+	    &do_system("cp -f $file $tardir/$name");
+	} elsif ($name =~ /^README\./) {
+	    &do_system("cp -f $file $tardir/$name");
+	} else {
+	    die "unrecognized archive $name";
+	}
+    }
+}
+
+&action_tar if $ACTION_TAR;
