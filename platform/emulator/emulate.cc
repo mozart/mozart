@@ -432,8 +432,8 @@ void suspendInlineRel(TaggedRef A, TaggedRef B, int noArgs,
 
 static
 void suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C, TaggedRef &Out,
-                      int noArgs,
-                      BuiltinTabEntry *entry, AM *e, ByteCode *shallowCP)
+                      int noArgs, OZ_CFun fun, InlineFun2 inFun, AM *e,
+                      ByteCode *shallowCP)
 {
   static RefsArray X = allocateStaticRefsArray(4);
 
@@ -453,13 +453,12 @@ void suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C, TaggedRef &Out,
   if (noArgs>=4) X[i++] = C;
   X[i] = newVar;
 
-  OZ_Suspension susp = OZ_makeSuspension(entry->getFun(), X, noArgs);
+  OZ_Suspension susp = OZ_makeSuspension(fun, X, noArgs);
 
   if (OZ_isVariable(A)) OZ_addSuspension(A,susp);
 
   // special hack for exchangeCell: suspends only on the first argument
-  if (noArgs == 3 &&
-      OZ_isVariable(B) && (InlineFun2) entry->getInlineFun() != BIexchangeCellInline) {
+  if (noArgs == 3 && OZ_isVariable(B) && inFun != BIexchangeCellInline) {
     OZ_addSuspension(B,susp);
   } else {
     if (noArgs>=3 && OZ_isVariable(B)) OZ_addSuspension(B,susp);
@@ -1071,7 +1070,7 @@ void engine() {
       case SUSPEND:
         {
           suspendInlineFun(XPC(2),makeTaggedNULL(),makeTaggedNULL(),XPC(3),2,
-                           entry,e,shallowCP);
+                           entry->getFun(),(InlineFun2)fun,e,shallowCP);
           DISPATCH(4);
         }
       case FAILED:
@@ -1095,7 +1094,7 @@ void engine() {
         DISPATCH(5);
 
       case SUSPEND:
-        suspendInlineFun(XPC(2),XPC(3),makeTaggedNULL(),XPC(4),3,entry,e,shallowCP);
+        suspendInlineFun(XPC(2),XPC(3),makeTaggedNULL(),XPC(4),3,entry->getFun(),fun,e,shallowCP);
         DISPATCH(5);
 
       case FAILED:
@@ -1121,7 +1120,8 @@ void engine() {
 
       case SUSPEND:
         {
-          suspendInlineFun(XPC(2),XPC(3),XPC(4),XPC(5),4,entry,e,shallowCP);
+          suspendInlineFun(XPC(2),XPC(3),XPC(4),XPC(5),4,
+                           entry->getFun(),(InlineFun2)fun,e,shallowCP);
           DISPATCH(6);
         }
       case FAILED:
@@ -1315,16 +1315,7 @@ void engine() {
 // CLASS: Definition
 // ------------------------------------------------------------------------
 
-  INSTRUCTION(DEFINITIONX)
-    ONREG1(Definition,X);
-
-  INSTRUCTION(DEFINITIONY)
-    ONREG1(Definition,Y);
-
-  INSTRUCTION(DEFINITIONG)
-    ONREG1(Definition,G);
-
-   Definition:
+  INSTRUCTION(DEFINITION)
     {
       Reg reg                     = getRegArg(PC+1);
       ProgramCounter nxt          = getLabelArg(PC+2);
@@ -1336,13 +1327,6 @@ void engine() {
       RefsArray gRegs = (size == 0) ? NULL : allocateRefsArray(size);
 
       Abstraction *p = new Abstraction (predd, gRegs, new Name(e->currentBoard));
-      TaggedRef term = RegAccess(HelpReg1,reg);
-      if (!e->fastUnify(term,makeTaggedSRecord(p),OK)) {
-        HF_FAIL(,
-                message("definition %s/%d = %s\n",
-                        p->getPrintName(),p->getArity(),OZ_toC(term)));
-      }
-
       if (predEntry) {
         predEntry->setPred(p);
       }
@@ -1360,6 +1344,7 @@ void engine() {
           break;
         }
       }
+      Xreg(reg) = makeTaggedSRecord(p);
       JUMP(nxt);
     }
 
