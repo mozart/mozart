@@ -1,65 +1,13 @@
-PREFIX		= @prefix@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
-BUILDTOP	= @BUILDTOP@
-SRCTOP		= @SRCTOP@
-OZENGINE	= @OZENGINE@
-OZDOC		= @OZDOC@
-OZDOCFLAGS	=
-DOCIFY		= $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
 
-DOCDIR		= /www/mozart/documentation/compiler
-
-INSTALL		= @INSTALL@
-INSTALL_FILE	= $(INSTALL) -m 444
-INSTALL_BIN	= $(INSTALL) -m 555
-INSTALL_DIR	= @INSTALL_DIR@
-
+WHAT = compiler
+MAIN = compiler.sgml
 SGMLSRCS = \
-	compiler.sgml \
 	intro.sgml directives.sgml ozbatch.sgml panel.sgml \
 	api.sgml engines.sgml interfaces.sgml \
-	switches.sgml narrator.sgml syntax.sgml
-OZSRCS = \
+	switches.sgml narrator.sgml syntax.sgml \
 	EvalExpression.oz VirtualStringToValue.oz
-HTMLUTILFILES = \
-	ozdoc.css
+HTMLEXTRAFILES =
 
-.PHONY: all validate install clean veryclean distclean
-
-all: compiler-html
-
-include $(SRCDIR)/../../share/Makefile.boot
-
-bootstrap: boot-all
-
-Makefile: Makefile.in ../config.status
-	cd .. && ./config.status
-
-compiler-html: $(OZSRCS) $(SGMLSRCS)
-	$(DOCIFY) --in=$(SRCDIR)/compiler.sgml --out=$@ \
-	--type=html-stylesheets --stylesheet ozdoc.css && \
-	cp -p $(HTMLUTILFILES:%=$(SRCDIR)/../utilities/%) compiler-html
-
-compiler-tex: $(OZSRCS) $(SGMLSRCS)
-	$(DOCIFY) --in=$(SRCDIR)/compiler.sgml --out=compiler-tex \
-	--type=latex
-
-validate: compiler-html
-	nsgmls -cHTML4.soc -sB compiler-html/*.html
-
-install: compiler-html $(DOCDIR)
-	cp -p compiler-html/* $(DOCDIR)
-
-$(DOCDIR):
-	$(INSTALL_DIR) $@
-
-clean:
-	-rm -rf compiler-html
-	-rm -rf compiler-tex
-	-rm -f *~
-
-veryclean: clean
-
-distclean: veryclean
-	-rm -f Makefile
+include $(SRCDIR)/../Makefile.common
