@@ -443,9 +443,10 @@ public:
   Bool isPropagatorLocation(void)    { return propLocation; }
   void setPropagatorLocation(Bool x) { propLocation = x; }
 
-  
-
-  void setCurrent(Board *c, Bool checkNotGC=OK);
+  void setCurrent(Board *c) {
+    _currentBoard         = c;
+    _currentUVarPrototype = makeTaggedUVar(c);
+  }
 
   void gc(int msgLevel);  // ###
   void doGC();
