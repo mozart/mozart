@@ -5420,15 +5420,9 @@ OZ_BI_define(BIdlLoad,1,1)
     return oz_raise(E_ERROR,AtomForeign, "cannotFindInterface", 1,
 		    OZ_in(0));
   OZ_Term l = nil();
-  OZ_CFun func;
   Builtin *bi;
   while (I->name) {
-    func = (OZ_CFun) osDlsym(handle,I->name);
-    if (func==0)
-      return oz_raise(E_ERROR,AtomForeign,
-		      "cannotFindInterfaceFunction", 2,
-		      OZ_in(0), oz_atom(I->name));
-    bi = new Builtin(I->name,I->inArity,I->outArity,*func,OK);
+    bi = new Builtin(I->name,I->inArity,I->outArity,I->func,OK);
     l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
     I++;
   }
