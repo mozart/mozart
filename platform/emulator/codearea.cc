@@ -806,6 +806,8 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 
     case CALLX:
     case TAILCALLX:
+    case CONSCALLX:
+    case TAILCONSCALLX:
       {
 	XReg reg = XRegToInt(getXRegArg(PC+1));
 	fprintf(ofile, "(%d %d)\n", reg, getPosIntArg(PC+2));
@@ -813,6 +815,7 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
       DISPATCH();
 
     case CALLY:
+    case CONSCALLY:
       {
 	YReg reg = YRegToInt(getYRegArg(PC+1));
 	fprintf(ofile, "(%d %d)\n", reg, getPosIntArg(PC+2));
@@ -821,9 +824,34 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 
     case CALLG:
     case TAILCALLG:
+    case CONSCALLG:
+    case TAILCONSCALLG:
       {
 	GReg reg = GRegToInt(getGRegArg(PC+1));
 	fprintf(ofile, "(%d %d)\n", reg, getPosIntArg(PC+2));
+      }
+      DISPATCH();
+
+    case DECONSCALLX:
+    case TAILDECONSCALLX:
+      {
+	XReg reg = XRegToInt(getXRegArg(PC+1));
+	fprintf(ofile, "(%d)\n", reg);
+      }
+      DISPATCH();
+
+    case DECONSCALLY:
+      {
+	YReg reg = YRegToInt(getXRegArg(PC+1));
+	fprintf(ofile, "(%d)\n", reg);
+      }
+      DISPATCH();
+
+    case DECONSCALLG:
+    case TAILDECONSCALLG:
+      {
+	GReg reg = GRegToInt(getXRegArg(PC+1));
+	fprintf(ofile, "(%d)\n", reg);
       }
       DISPATCH();
 
