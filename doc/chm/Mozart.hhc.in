@@ -149,6 +149,12 @@
 		      <PARAM name="ImageNumber" value="11">
 		    </OBJECT>
 		    <!--#include "compiler/compiler.hhc"-->
+		  <LI><OBJECT type="text/sitemap">
+		      <PARAM name="Name" value="Standard Library">
+		      <PARAM name="Local" value="mozart-stdlib/index.html">
+		      <PARAM name="ImageNumber" value="11">
+		    </OBJECT>
+		    <!--#include "$(STDLIB)/mozart-stdlib.hhc"-->
 		</UL>
 	      <LI><OBJECT type="text/sitemap">
 		  <PARAM name="Name" value="Programming Interface and Tools">
