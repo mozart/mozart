@@ -31,7 +31,7 @@ public:
   unsigned long total;
   void reset()  { sinceIdle = total = 0; }
   StatCounter() { reset(); }
-  incf(int n=1) { total+=n; }
+  void incf(int n=1) { total+=n; }
   void idle()   { sinceIdle = total; }
   unsigned int sinceidle()   { return total-sinceIdle; }
 };
