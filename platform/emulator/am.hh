@@ -65,6 +65,7 @@ public:
   int showFastLoad;     // show message on fast load
   int showIdleMessage;  // show message on idle
 
+  int stopOnToplevelFailure;  // enter the debugger on TOPLEVEL FAILURE
 
   int gcFlag;                 // request GC to run
   int gcVerbosity;            // GC verbosity level

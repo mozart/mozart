@@ -22,6 +22,7 @@
 #include "bignum.hh"
 #include "board.hh"
 #include "cell.hh"
+#include "debug.hh"
 #include "fdgenvar.hh"
 #include "fdomn.hh"
 #include "misc.hh"
@@ -29,7 +30,6 @@
 #include "taskstack.hh"
 #include "thread.hh"
 #include "objects.hh"
-#include "ozdebug.hh"
 
 
 #define PRINT(C) \
@@ -991,7 +991,7 @@ PRINTLONG(TaskStack)
         RefsArray Y = (RefsArray) pop();
         RefsArray G = (RefsArray) pop();
         stream << "CONT\n";
-        n->print(stream,depth,offset);
+        n->print(stream,depth,offset); stream << endl;
         CodeArea::display(CodeArea::definitionStart(PC),1,stdout);
       }
       break;
@@ -1002,13 +1002,13 @@ PRINTLONG(TaskStack)
         RefsArray G = (RefsArray) pop();
         RefsArray X = (RefsArray) pop();
         stream << "XCONT\n";
-        n->print(stream,depth,offset);
+        n->print(stream,depth,offset); stream << endl;
         CodeArea::display(CodeArea::definitionStart(PC),1,stdout);
       }
       break;
     case C_NERVOUS:
       stream << "WAKEUP\n";
-      n->print(stream,depth,offset);
+      n->print(stream,depth,offset); stream << endl;
       break;
     case C_CFUNC_CONT:
       {
