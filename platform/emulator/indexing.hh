@@ -50,7 +50,9 @@ class HTEntry {
   };
 
   HTEntry* getNext(void) {return next;}
-  
+
+  TaggedRef getNumber()  {return number;}
+
   /* look up an atom */
   ProgramCounter lookup(Atom *name, ProgramCounter elseLabel) 
     {
