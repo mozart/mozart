@@ -210,19 +210,6 @@ Bool heapNewer(void * ptr1, void * ptr2)
   return (ptr1 < ptr2);
 }
 
-// free list management
-#define freeListMaxSize 64+4
-
-class FreeListMem {
-public:
-    int32 next;
-};
-
-extern FreeListMem* FreeList[freeListMaxSize];
-
-extern size_t nextChopSize;
-
-unsigned int getMemoryInFreeList();
 
 inline
 void * oz_hrealloc(const void * p, size_t sz) {
@@ -237,21 +224,133 @@ void initMemoryManagement(void);
 void deleteChunkChain(char *);
 int inChunkChain(void *, void *);
 void printChunkChain(void *);
-#ifdef DEBUG_MEM
-void scanFreeList(void);
-#endif
 
-void freeListRefill(FreeListMem ** freeListEntry);
+// return used kilo bytes on the heap
+inline
+unsigned int getUsedMemory(void) {
+  return heapTotalSize - (heapTop - heapEnd)/KB;
+}
 
-#ifndef OUTLINE
-#include "mem.icc"
+inline
+unsigned int getUsedMemoryBytes(void) {
+  return heapTotalSizeBytes - (heapTop - heapEnd);
+}
+
+
+
+/*
+ * Freelist management
+ *
+ */
+
+// Maximal size of block in free list
+#define FL_MaxSize  64
+
+// Transformations between FreeListIndex and Size
+#define FL_SizeToIndex(sz) ((sz) >> 2)
+#define FL_IndexToSize(i)  ((i) << 2)
+
+// Alignment restrictions
+#define FL_IsValidSize(sz) (!((sz) & 3))
+
+
+/*
+ * Small free memory blocks:
+ *   Used for allocation
+ */
+class FL_Small {
+private:
+  FL_Small * next;
+public:
+  FL_Small * getNext(void) {
+    return next;
+  }
+  void setNext(FL_Small * n) {
+    next = n;
+  }
+};
+
+
+/*
+ * Large free memory blocks:
+ *   Not used for allocation but to create new small blocks
+ */
+class FL_Large {
+private:
+  FL_Large * next;
+  size_t     size;
+public:
+  FL_Large * getNext(void) {
+    return next;
+  }
+  size_t getSize(void) {
+    return size;
+  }
+  void setBoth(FL_Large * n, size_t s) {
+    next = n;
+    size = s;
+  }
+};
+
+
+/*
+ * Free List Manager
+ */
+
+class FL_Manager {
+
+private:
+  FL_Small * small[FL_SizeToIndex(FL_MaxSize) + 1];
+  FL_Large * large;
+
+private:
+  void refill(const size_t s);
+
+public:
+  void init(void);
+
+  void * alloc(const size_t s) {
+    Assert(FL_IsValidSize(s));
+    if (s > FL_MaxSize) {
+      return heapMalloc(s);
+    } else {
+      FL_Small * f = small[FL_SizeToIndex(s)];
+      Assert(f);
+      FL_Small * n = f->getNext();
+      small[FL_SizeToIndex(s)] = n;
+      if (!n)
+        refill(s);
+      return f;
+    }
+  }
+
+  void free(void * p, const size_t s) {
+    Assert(FL_IsValidSize(s));
+    if (s > FL_MaxSize) {
+      FL_Large * f = (FL_Large *) p;
+      f->setBoth(large,s);
+      large = f;
+    } else {
+      FL_Small * f  = (FL_Small *) p;
+      Assert(f);
+      f->setNext(small[FL_SizeToIndex(s)]);
+      small[FL_SizeToIndex(s)] = f;
+    }
+  }
+
+  unsigned int getSize(void);
+
+};
+
+extern FL_Manager FLM;
+
+
+#define freeListMalloc(s)    (FLM.alloc((s)))
+
+#ifdef CS_PROFILE
+#define freeListDispose(p,s)
 #else
-void * freeListMalloc(size_t chunk_size);
-void freeListDispose(void *addr, size_t chunk_size);
-
-// return free used kilo bytes on the heap
-unsigned int getUsedMemory(void);
-unsigned int getUsedMemoryBytes(void);
+#define freeListDispose(p,s) FLM.free((p),(s))
 #endif
 
 #endif
