@@ -140,3 +140,61 @@ Bool IHashTable::disentailed(GenCVariable *cvar, TaggedRef *ptr)
   }
 }
 
+ProgramCounter switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
+				   IHashTable *table, TaggedRef *&sP)
+{
+  ProgramCounter offset = table->getElse();
+  if (isSRecord(term)) {
+    if (table->functorTable) {
+      SRecord *rec = tagged2SRecord(term);
+      Literal *lname = rec->getLabelLiteral();
+      Assert(lname!=NULL);
+      int hsh = table->hash(lname->hash());
+      offset = table->functorTable[hsh]->lookup(lname,rec->getSRecordArity(),offset);
+      sP = rec->getRef();
+    }
+    return offset;
+  }
+
+  if (isLiteral(term)) {
+    if (table->literalTable) {
+      int hsh = table->hash(tagged2Literal(term)->hash());
+      offset = table->literalTable[hsh]->lookup(tagged2Literal(term),offset);
+    }
+    return offset;
+  }
+
+  if (isNotCVar(term)) {
+    return table->varLabel;
+  }
+
+  if (isSmallInt(term)) {
+    if (table->numberTable) {
+      int hsh = table->hash(smallIntHash(term));
+      offset = table->numberTable[hsh]->lookup(term,offset);
+    }
+    return offset;
+  }
+
+  if (isFloat(term)) {
+    if (table->numberTable) {
+      int hsh = table->hash(tagged2Float(term)->hash());
+      offset = table->numberTable[hsh]->lookup(term,offset);
+    }
+    return offset;
+  }
+
+  if (isBigInt(term)) {
+    if (table->numberTable) {
+      int hsh = table->hash(tagged2BigInt(term)->hash());
+      offset =table->numberTable[hsh]->lookup(term,offset);
+    }
+    return offset;
+  }
+
+  if (isCVar(term) && !table->disentailed(tagged2CVar(term),termPtr)) {
+    return table->varLabel;
+  }
+
+  return offset;
+}

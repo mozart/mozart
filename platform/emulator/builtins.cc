@@ -6794,10 +6794,6 @@ OZ_C_proc_begin(BImakeClass,8)
 OZ_C_proc_end
 
 
-
-
-TaggedRef methApplHdl = makeTaggedNULL();
-
 OZ_C_proc_begin(BIsetMethApplHdl,1)
 {
   OZ_Term preed = OZ_getCArg(0); DEREF(preed,_1,_2);
@@ -6805,13 +6801,11 @@ OZ_C_proc_begin(BIsetMethApplHdl,1)
     TypeErrorT(0,"abstraction");
   }
 
-  if (methApplHdl == makeTaggedNULL()) {
-    methApplHdl = preed;
-    OZ_protect(&methApplHdl);
-  } else {
-    methApplHdl = preed;
+  if (am.methApplHdl != makeTaggedNULL()) {
     // warning("setMethApplHdl called twice (hint: prelude may not be fed twice)");
   }
+
+  am.methApplHdl = preed;
   return PROCEED;
 }
 OZ_C_proc_end

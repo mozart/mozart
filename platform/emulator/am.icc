@@ -19,12 +19,6 @@
 // optimize: inline ....
 
 inline
-Bool AM::isToplevel() {
-  return (currentBoard == rootBoard);
-}
-
-
-inline
 void AM::rebind(TaggedRef *refPtr, TaggedRef newRef)
 /* (re)bind Ref *ref to Term *ptr;                     */
 /* We need this procedure for the rational unification */
@@ -203,11 +197,9 @@ void AM::checkSuspensionList(TaggedRef taggedvar, PropCaller calledBy)
 				       calledBy));
 }
 
-inline
-Bool AM::isEmptyTrailChunk ()
-{
-  return (trail.isEmptyChunk ());
-}
+/* ------------------------------------------------------------------------
+ * Threads
+ * ------------------------------------------------------------------------ */
 
 inline
 void AM::pushCall(TaggedRef def, int arity, RefsArray args)
@@ -222,7 +214,8 @@ void AM::pushSetFinal()
 }
 
 inline
-void AM::pushTaskInline(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
+void AM::pushTaskInline(ProgramCounter pc,
+			RefsArray y,RefsArray g,RefsArray x,int i)
 {
   if (i>0) {
     x = copyRefsArray(x,i);
@@ -231,14 +224,10 @@ void AM::pushTaskInline(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,in
 }
 
 inline
-void AM::pushCFun(OZ_CFun f, RefsArray x, int i)
+void AM::pushCFun(OZ_CFun f, RefsArray x=0, int i=0)
 {
   currentThread->pushCFunCont(f, x, i, OK);
 }
-
-/* ------------------------------------------------------------------------
- * Threads
- * ------------------------------------------------------------------------ */
 
 // unset the ThreadSwitch flag and reset the counter
 inline
