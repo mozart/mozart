@@ -61,6 +61,9 @@ enum EmulatorPropertyIndex {
   PROP_PRIORITIES_HIGH,
   PROP_PRIORITIES_MEDIUM,
   PROP_PRIORITIES,
+  // PICKLES;
+  PROP_PICKLE_CELLS,
+  PROP_PICKLE,
   // TIME
   PROP_TIME_COPY,
   PROP_TIME_GC,
@@ -292,6 +295,10 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_REC(PROP_PRIORITIES,"priorities",(2,AtomHigh,AtomMedium),
 	     SET_INT(AtomHigh,ozconf.hiMidRatio);
 	     SET_INT(AtomMedium,ozconf.midLowRatio););
+    // PICKLES
+    CASE_BOOL(PROP_PICKLE_CELLS,ozconf.pickleCells);
+    CASE_REC(PROP_PICKLE,"pickle",(1,AtomCells),
+	     SET_BOOL(AtomCells,ozconf.pickleCells););
     // TIME
     CASE_INT(PROP_TIME_COPY,ozconf.timeDetailed?ozstat.timeForCopy.total:0);
     CASE_INT(PROP_TIME_GC,ozconf.timeDetailed?ozstat.timeForGC.total:0);
@@ -752,6 +759,10 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_REC(PROP_PRIORITIES,
 	     SET_PERCENT(AtomHigh,ozconf.hiMidRatio);
 	     SET_PERCENT(AtomMedium,ozconf.midLowRatio););
+    // PICKLE
+    CASE_BOOL(PROP_PICKLE_CELLS,ozconf.pickleCells);
+    CASE_REC(PROP_PICKLE,
+	     SET_BOOL(AtomCells,ozconf.pickleCells););
     // GC
     CASE_NAT_DO(PROP_GC_MIN,{
       ozconf.heapMinSize=INT__/KB;
@@ -1099,6 +1110,9 @@ static const struct prop_entry prop_entries[] = {
   {"priorities.high",PROP_PRIORITIES_HIGH},
   {"priorities.medium",PROP_PRIORITIES_MEDIUM},
   {"priorities",PROP_PRIORITIES},
+  // pickles;
+  {"pickle.cells",PROP_PICKLE_CELLS},
+  {"pickle",PROP_PICKLE},
   // TIME
   {"time.copy",PROP_TIME_COPY},
   {"time.gc",PROP_TIME_GC},

@@ -382,7 +382,8 @@ OZ_Return
 saveDatum(OZ_Term in,OZ_Datum& dat)
 {
   ByteSinkDatum sink;
-  OZ_Return result = sink.putTerm(in,"UNKNOWN FILENAME","",0,NO,NO);
+  OZ_Return result = sink.putTerm(in,"UNKNOWN FILENAME","",0,
+				  NO,ozconf.pickleCells);
   if (result==PROCEED) {
     dat=sink.dat;
   } else {
@@ -428,7 +429,7 @@ OZ_BI_define(BIsave,2,0)
 {
   OZ_declareTerm(0,in);
   OZ_declareVirtualString(1,filename);
-  return saveIt(in,filename,"",0,0,NO,NO);
+  return saveIt(in,filename,"",0,0,NO,ozconf.pickleCells);
 } OZ_BI_end
 
 
@@ -437,7 +438,7 @@ OZ_BI_define(BIsaveCompressed,3,0)
   OZ_declareTerm(0,in);
   OZ_declareVirtualString(1,filename);
   OZ_declareInt(2,complevel);
-  return saveIt(in,filename,"",0,complevel,NO,NO);
+  return saveIt(in,filename,"",0,complevel,NO,ozconf.pickleCells);
 } OZ_BI_end
 
 
@@ -452,7 +453,8 @@ OZ_BI_define(BIsaveWithHeader,4,0)
   filename = strdup(filename);
   OZ_declareVS(2,header,len);
 
-  OZ_Return ret = saveIt(value,filename,header,len,compressionlevel,NO,NO);
+  OZ_Return ret = saveIt(value,filename,header,len,compressionlevel,
+			 NO,ozconf.pickleCells);
   free(filename);
   return ret;
 } OZ_BI_end
@@ -487,7 +489,7 @@ Bool pickle2text()
     return NO;
   } 
   char * s = OZ_stringToC(header,0);
-  aux = saveIt(res,"-",s,strlen(s),0,OK,NO);
+  aux = saveIt(res,"-",s,strlen(s),0,OK,ozconf.pickleCells);
   if (aux==RAISE) {
     fprintf(stderr,"Exception: %s\n",OZ_toC(am.getExceptionValue(),10,100));
     return NO;
