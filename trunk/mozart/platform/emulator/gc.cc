@@ -588,8 +588,10 @@ inline void SuspContinuation::gcRecurse(){
 inline STuple *STuple::gc()
 {
   CHECKCOLLECTED(label, STuple *);
-  
-  STuple *ret = (STuple*) gcRealloc(this,getRealSize());
+
+  int len = (size-1)*sizeof(TaggedRef)+sizeof(STuple);
+
+  STuple *ret = (STuple*) gcRealloc(this,len);
   ptrStack.push(ret,PTR_STUPLE);
   setHeapCell((int *)&label, GCMARK(ret));
   gcTaggedBlock(getRef(),ret->getRef(),getSize());
@@ -1004,7 +1006,7 @@ void AM::gc(int msgLevel) {
   return;
 #endif
   static int gcSoFar = 0;
-  long utime = usertime();
+  unsigned int utime = usertime();
   int i;
   // print initial message
   if (msgLevel>0) {
@@ -1085,10 +1087,10 @@ void AM::gc(int msgLevel) {
 //                garbage collection is finished here
 
 // print final message
-  gcSoFar += (usedMem - getUsedMemory())/1048576;
+  gcSoFar += (usedMem - getUsedMemory())/MB;
   utime = usertime() - utime;
-  IO::timeForGC += utime;
-  IO::heapAllocated += (usedMem - getUsedMemory());
+  stat.timeForGC += utime;
+  stat.heapAllocated += (usedMem - getUsedMemory());
 
   if (msgLevel > 0) {
     fprintf(stdout,"Done (Disposed %d bytes in %d msec).\n",
@@ -1189,7 +1191,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   opMode = IN_TC;
   gcing = 0;
   varCount=0;
-  IO::timeForCopy -= usertime();
+  stat.timeForCopy -= usertime();
 
   DebugGCT(updateStackCount = 0);
 
@@ -1214,7 +1216,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   fromCopyBoard = NULL;
   gcing = 1;
 
-  IO::timeForCopy += usertime();
+  stat.timeForCopy += usertime();
   // Note that parent, right&leftSibling must be set in this subtree -
   // for instance, with "setParent"
 
@@ -1668,7 +1670,7 @@ int bigGCLimit   = InitialBigGCLimit;
 int smallGCLimit = InitialSmallGCLimit;
 
 void checkGC() {
-  if (getUsedMemory() > bigGCLimit && conf.gcFlag) {
+  if (getUsedMemory() > bigGCLimit && am.conf.gcFlag) {
     am.setSFlag(StartGC);
   }
 }
@@ -1679,7 +1681,7 @@ void AM::doGC()
   deinstallPath(rootBoard);
 
   // do gc
-  gc(conf.gcVerbosity);
+  gc(am.conf.gcVerbosity);
 
   // calc upper limits for next gc
   smallGCLimit  = getUsedMemory();
@@ -1693,15 +1695,15 @@ void AM::doGC()
 Bool AM::smallGC()
 {
   // if machine is idle
-  if (getUsedMemory() > smallGCLimit && conf.gcFlag) {
-    if (conf.showIdleMessage)
+  if (getUsedMemory() > smallGCLimit && am.conf.gcFlag) {
+    if (am.conf.showIdleMessage)
       {
-	statusMessage("doing gc during idle ");
+	message("doing gc during idle ");
       }
-    int save = conf.gcVerbosity;
-    conf.gcVerbosity = 0;
+    int save = am.conf.gcVerbosity;
+    am.conf.gcVerbosity = 0;
     doGC();
-    conf.gcVerbosity = save;
+    am.conf.gcVerbosity = save;
     return OK;
   }
   return NO;
