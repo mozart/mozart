@@ -67,18 +67,24 @@ OZ_CC_CHOOSE
 
 AC_PROG_LN_S
 
-OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-
 dnl *****************************************************************
 dnl platform
 dnl *****************************************************************
 
+OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+
 : ${platform=`$PLATFORMSCRIPT`}
 AC_SUBST(platform)
 
-PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
-AC_DEFINE_UNQUOTED($PLATFORM)
-AC_SUBST(PLATFORM)
+
+AC_MSG_CHECKING(checking for S.u.S.E. Linux)
+if test -f "/sbin/SuSEconfig"
+then
+  OZSUSE=yes
+else
+  OZSUSE=no
+fi
+AC_MSG_RESULT($OZSUSE)
 
 
 dnl *****************************************************************
@@ -209,7 +215,7 @@ fi
 
 : ${oz_tcl_lib_tcl_dir=/usr/lib/tcl8.0}
 
-if [ test "$oz_coolness" != yes && ! test -e "$oz_tcl_lib_tcl_dir/init.tcl" ]
+if test "$oz_coolness" != yes && ! test -e "$oz_tcl_lib_tcl_dir/init.tcl"
 then
     AC_MSG_ERROR("$oz_tcl_lib_tcl_dir/init.tcl" not found)
 fi
@@ -266,9 +272,15 @@ then
     oz_tk_lib_tcl_dir=$with_tk_lib_tcl
 fi
 
-: ${oz_tk_lib_tcl_dir=/usr/lib/tk8.0}
+# S.u.S.E. puts tk.tcl in a strange place
+if test "${OZSUSE}" = "yes"
+then
+    : ${oz_tk_lib_tcl_dir=/usr/X11R6/lib/tk8.0}
+else
+    : ${oz_tk_lib_tcl_dir=/usr/lib/tk8.0}
+fi
 
-if [ test "$oz_coolness" != yes && ! test -e "$oz_tk_lib_tcl_dir/tk.tcl" ]
+if test "$oz_coolness" != yes && ! test -e "$oz_tk_lib_tcl_dir/tk.tcl"
 then
     AC_MSG_ERROR("$oz_tk_lib_tcl_dir/tk.tcl" not found)
 fi
