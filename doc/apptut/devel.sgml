@@ -1,12 +1,8 @@
 <!--
   - Authors:
-  -   Denys Duchier     <duchier@ps.uni-sb.de>
-  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
   -   Christian Schulte <schulte@dfki.de>
   -
   - Copyright:
-  -   Denys Duchier, 1998
-  -   Leif Kornstaedt, 1998
   -   Christian Schulte, 1998
   -
   - Last change:
@@ -53,9 +49,9 @@
     <p>
       As we have already seen in <ptr to="section.hello.exec"> an
       application is run by executing the root functor. In
-our particular example, the root functor restricted itself by only
-importing system modules. However, larger applications will import
-modules computed by other functors.
+      our particular example, the root functor restricted itself by
+      only importing system modules. However, larger applications will
+      import modules computed by other functors.
 
     <p>
       The module names internet wide
@@ -68,31 +64,45 @@ modules computed by other functors.
 
     <p>
       In the following we will build a mickey mouse flight booking
-system. The booking system consist of three components:
+      system. The booking system features three components:
+
     <p>
       <list enum>
         <item>
           A data base server: It maintains a data base that contains
-available flights, where each flight as a unique id by which it can be
-identified. In the beginning, the data base will be not even
-persistent, but as this documents goes along, the data base evolves
-into a persistent and distributed data base server.
+          available flights, where each flight as a unique id by which
+          it can be identified. In the beginning, the data base will
+          be not even persistent, but as this documents goes along,
+          the data base evolves into a persistent and distributed data
+          base server.
 
         <item>
           A graphical flight booking form, where a travel-minded user
-can choose a flight, enter her name, her E-mail address and so
-on. Later we will show how to build a web-based interface serving the
-same purpose.
+          can choose a flight, enter her name, her E-mail address and
+          so on. Later we will show how to build a web-based interface
+          serving the same purpose.
 
         <item>
           The main component of our application that manages user
-requests to the data base and sets up the application.
+          requests to the data base and sets up the application.
+
       </list>
 
     <p>
       All components are programmed as functors.
 
 
+  <section id="section.development.db">
+    <title/The Data Base/
+
+    <p>
+      Let us start with the data base, which is the most
+      straightforward part of our application. The data will be held
+      in a dictionary that uses integers as keys, and arbitrary data
+      structures as entries. The toplevel structure of the functor is
+      as follows:
+
+    <p>
 <chunk><title/DB.oz/
 functor
   <chunk.ref/Export specification for DB.oz/
@@ -100,6 +110,11 @@ functor
 end
 </chunk>
 
+    <p>
+      The functor has no import specification, the export
+      specification of <file/DB.oz/ is as follows:
+
+    <p>
 <chunk><title/Export specification for DB.oz/
 export
    add:    Add
@@ -108,7 +123,19 @@ export
    remove: Remove
 </chunk>
 
-<chunk><title/Export specification (with syntactic sugar)/
+    <p>
+      The specification determines that the functor's module provides the
+      features <<add>>, <<get>>, <<getAll>>, and <<remove>>, where the
+      fields at that features are given by the respective variables
+      following the feature after the colons. The values for the
+      fields are then computed by the functors body.
+
+    <p>
+      Using syntactics sugar, we can write the export specification as
+      follows:
+
+    <p>
+<chunk><title/Export specification for DB.oz (with syntactic sugar)/
 export
    Add
    Get
@@ -116,57 +143,103 @@ export
    Remove
 </chunk>
 
-<chunk><title/Body for DB.oz/
+    <p>
+      The shortcut to just use an variable identifier starting with a
+      capital letter, defines both the variable identifier as well as
+      the feature. The feature is the variable identifier with its
+      first character changed to lowercase.
+
+    <p>
+      The functor body is of less importance to us here, however, you
+      can find it in <ptr to="section.code.development">. One
+      advantage of modular programs is that during design of an
+      application one is concerned first with finding the right
+      interfaces, and only then provide implementations.
+
+    <p>
+      Even though the functor does not import any module, it uses
+      predefined procedures (for example, <<Dictionary.new>> to
+      create a new dictionary). The compiler provides a set
+      of variable identifiers, that refer to the basic operations on
+      data structures Oz provides. This set of identifiers is referred
+      to as the <def/base environment/. The base environment is
+      documented in detail in <ptr.extern to="ozdoc:base">.
+
+    <p>
+      When a functor definition is compiled all free variable
+      identifiers must be bound by the base environment. Pickling the
+      functor created by compilation then includes all values referred
+      to by the free identifiers. We are going to discuss the issue of
+      pickling in more detail in ????.
+
+  <section id="section.development.form">
+    <title/The Graphical Input Form/
+
+    <p>
+      The functor that implements the graphical form to book flights
+      has the following structure:
+
+    <p>
+<chunk><title/Form.oz/
+functor
+import
+   Tk
+export
+   Book
 define
-   Data = {Dictionary.new}
-   Ctr  = {New class $
-                  prop locking
-                  attr i:0
-                  meth init
-                     lock i <- 0 end
-                  end
-                  meth inc($)
-                     lock I=@i+1 in i <- I I end
-                  end
-               end init()}
-
-   fun {Add X}
-      I={Ctr inc($)}
-   in
-      {Dictionary.put Data I X} I
+   proc {Book Fs ?Get}
+      %% Takes a list of flights and returns the booked flight
+      %% and information on the booking user
+      <chunk.ref/Implementation of Book/
    end
+end
 
-   fun {Get ID}
-      {Dictionary.get Data ID}
-   end
-
-   fun {GetAll}
-      {Dictionary.entries Data}
-   end
-
-   proc {Remove ID}
-      {Dictionary.remove Data ID}
-   end
 </chunk>
 
 
+  <section id="section.development.root">
+    <title/The Root Functor/
+
+    <p>
+      The root functor for our last minute flights application uses
+      the previously defined functors that maintain the data base and
+      that provide the user form.
+
+    <p>
+<chunk><title/LMF.oz/
+functor
+import
+   DB Form            % User defined
+   System Application % System
+define
+   %% Enter some flights
+   {ForAll <chunk.ref/Sample flights/ DB.add}
+   %% Book until all flights sold out
+   proc {Book}
+      case {DB.getAll}
+      of nil then
+         {System.showInfo 'All flights sold.'}
+      [] Fs then
+         O={Form.book Fs}
+      in
+         {System.showInfo ('Booked: '#O.key#' for: '#O.first#' '#O.last#
+                           ' ('#O.email#')')}
+         {DB.remove O.key}
+         {Book}
+      end
+   end
+   {Book}
+   {Application.exit 0}
+end
+
+</chunk>
 
   <Section id="Section.Development.OPI">
     <Title/Exploration: The Oz Programming Interface/
 
   </Section>
 
-  <Section id="section.development.application">
-    <Title/Example: Last Minute Flights/
 
-  <Section id="section.development.db">
-    <Title/The Flight Database/
-
-  <Section id="section.development.form">
-    <Title/The Entry Form/
-
-
-  </Section>
 
   <Section id="Section.Development.SystemFunctors">
     <Title/System Functors/

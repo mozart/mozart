@@ -28,13 +28,72 @@
 <Chapter id="Chapter.Deployment">
   <Title/Application Deployment/
 
-  <Section id="Section.Deployment.Computed">
-    <Title/Computed Functors/
+  <Section id="section.deployment.applets">
+    <Title/Applets/
 
-  </Section>
+    <p>
+      Application execution is controlled by MIME types. An Oz
+      application has the MIME type
+      <Kbd>application/x-oz-application</Kbd> and the
+      filename extension <Kbd/oza/.
+
+    <p>
+      To make your Web Browser Mozart Application enabled, it needs to
+      know the following bits of information:
+      <List>
+        <Entry>Mime type
+        <Item> This is <Kbd>application/x-oz-application</Kbd>.
+        <Entry>File extension
+        <Item> This is <Kbd>oza</Kbd>.
+        <Entry>Program location
+        <Item> Where the Oz engine to execute Applications resides. For
+        example, if Mozart has been installed in
+        <Kbd>/usr/local/oz</Kbd>, this is
+        <Kbd>/usr/local/oz/bin/ozengine</Kbd>.
+      </List>
+    </P>
+
+    <p>
+      HTACCESS!
+
+    <P>
+      Additionally, you have to have Mozart installed, which is
+      documented in <ptr.extern to="ozdoc:install">.
+    </P>
+
+   <Section id="section.deploy.netscape">
+     <Title/Example: Making Netscape Mozart Enabled/
+
+   <P>
+     <Figure Class=Picture Id="Figure.Install">
+      <Title/The Netscape application dialog./
+      <Picture.Choice>
+        <Picture.Extern to="netscape.gif" type=gif>
+      </PICTURE.CHOICE>
+    </Figure>
+
+     <P>
+       You have to do the following steps:
+     </P>
+
+     <P>
+       <List>
+         <Item> Open the preferences window.
+         <Item> Choose the Navigator, Applications dialog.
+         <Item> Press the <Em/New/ button.
+         <Item> Enter the information as sketched above, as you see it
+         done in <Ptr to="figure.install">
+       </List>
+     </P>
+   </Section>
 
   <Section id="Section.Deployment.Linking">
     <Title/Prelinking Functors/
+
+  </Section>
+
+  <Section id="Section.Deployment.compressed">
+    <Title/Compressed Pickled Functors/
 
   </Section>
 
@@ -42,5 +101,11 @@
     <Title/Executing Functors under Unix/
 
   </Section>
+
+  <Section id="Section.Deployment.make" proglang=sh>
+    <Title/Using <<make>>/
+
+  </Section>
+
 
 </Chapter>
