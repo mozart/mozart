@@ -4,7 +4,7 @@
  *    Postfach 15 11 59, D-66041 Saarbruecken, Phone (+49) 681 302-5312
  *  SICS
  *    Box 1263, S-16428 Sweden, Phone (+46) 8 7521500
- *  Author: brand,scheidhr, mehl
+ *  Author: brand, scheidhr, mehl
  *
  *  protocol and message layer
  * -----------------------------------------------------------------------*/
@@ -125,7 +125,7 @@ class ByteStream;
 class DebtRec;
 DebtRec* debtRec;
 
-TaggedRef currentURL=0;
+TaggedRef currentURL;
 
 
 void marshallTerm(Site* sd,OZ_Term t, ByteStream *bs);
@@ -284,7 +284,7 @@ public:
   Bool isVar()                { return type==PO_Var; }
   Bool isFree()               { return type==PO_Free; }
   void setFree()              { type = PO_Free; }
-  void unsetFree()            { DebugCode(type=PO_Tert); }
+  void unsetFree()            { DebugCode(type=(PO_TYPE)4712); }
   void mkTertiary(Tertiary *t){ type = PO_Tert; u.tert=t; }
   void mkDummyTert()          { type = PO_Tert; u.tert=NULL;}
   void mkRef(TaggedRef v)     { type=PO_Ref; u.ref=v; }
@@ -716,6 +716,7 @@ public:
     return site.same(other->site) && id.same(other->id);
   }
   GName() { gcMark = 0; url=0; }
+  // GName(GName &) // this implicit constructor is used!
   GName(ip_address ip, port_t port, time_t timestamp, GNameType gt)
   {
     gcMark = 0;
@@ -804,11 +805,6 @@ GName *newGName(TaggedRef t, GNameType gt)
   GName* ret = new GName(ip,port,ts,gt);
   addGName(ret,t);
   return ret;
-}
-
-GName *copyGName(GName *gn)
-{
-  return new GName(*gn);
 }
 
 void addGName(GName *name, PrTabEntry *pr)
@@ -2188,14 +2184,14 @@ RefTable *refTable;
 inline
 void gotRef(ByteStream *bs, TaggedRef val)
 {
-#ifdef DEBUG_CHECK
+#ifdef RS_HACK
   int n1 = unmarshallNumber(bs);
   int n2 = unmarshallNumber(bs);
   int n = unmarshallNumber(bs);
 #endif
   int counter = refTable->set(val);
   PD((REF_COUNTER,"got: %d",counter));
-#ifdef DEBUG_CHECK
+#ifdef RS_HACK
   Assert(n==counter);
 #endif
 }
@@ -2387,7 +2383,9 @@ GName *unmarshallGName(TaggedRef *ret, ByteStream *bs)
     if (ret) *ret = aux;
     return 0;
   }
-  return copyGName(&gname);
+  GName *gn=new GName(gname);
+  if (currentURL) { gn->markURL(currentURL); }
+  return gn;
 }
 
 /**********************************************************************/
@@ -2546,7 +2544,7 @@ void trailCycle(OZ_Term *t, ByteStream *bs,int n)
   int counter = refTrail->trail(t);
   PD((REF_COUNTER,"trail: %d",counter));
   *t = ((counter)<<tagSize)|GCTAG;
-#ifdef DEBUG_CHECK
+#ifdef RS_HACK
   marshallNumber(27,bs);
   marshallNumber(n,bs);
   marshallNumber(counter,bs);
@@ -3484,6 +3482,7 @@ void siteReceive(ByteStream* bs)
 
   bs->unmarshalBegin();
   refTable->reset();
+  currentURL=0;
 
   MessageType mt= (MessageType) bs->get();
   switch (mt) {
@@ -3775,6 +3774,7 @@ void siteReceive(ByteStream* bs)
 
 void domarshallTerm(Site * sd,OZ_Term t, ByteStream *bs)
 {
+  currentURL=0;
   Assert(refTrail->isEmpty());
   marshallTerm(sd,t,bs);
   refTrail->unwind();
@@ -3784,7 +3784,6 @@ void domarshallTerm(TaggedRef url,OZ_Term t, ByteStream *bs)
 {
   currentURL=url;
   domarshallTerm((Site*)0,t,bs);
-  currentURL=0;
 }
 
 inline void reliableSendFail(Site * sd, ByteStream *bs,Bool p,int i){
@@ -4824,6 +4823,7 @@ int loadURL(char *url, OZ_Term out)
       if (strncmp(url,"file:",5)!=0) goto bomb;
 
       char *filename = url+5;
+      currentURL=oz_atom(url);
       return loadFile(filename,out);
     }
   case 'o':
@@ -4909,7 +4909,7 @@ OZ_C_proc_begin(BIsetLoadHook,1)
     oz_typeError(0,"Procedure/2 (no builtin)");
   }
 
-  if (loadHook) {
+  if (0&&loadHook) {
     return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
                     oz_atom("setLoadHook"));
   }
@@ -4930,13 +4930,15 @@ OZ_C_proc_begin(BIload,2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIloadFile,2)
+OZ_C_proc_begin(BIloadFile,3)
 {
   OZ_declareVirtualStringArg(0,filename);
+  OZ_declareVirtualStringArg(0,url);
   OZ_declareArg(1,out);
 
   INIT_IP(0);
 
+  currentURL=oz_atom(url);
   return loadFile(filename,out);
 }
 OZ_C_proc_end
@@ -4951,7 +4953,7 @@ BIspec perdioSpec[] = {
 
   {"save",        2, BIsave, 0},
   {"load",        2, BIload, 0},
-  {"loadFile",    2, BIloadFile, 0},
+  {"loadFile",    3, BIloadFile, 0},
   {"setLoadHook", 1, BIsetLoadHook, 0},
   {"newGate",      2, BInewGate, 0},
 
@@ -4982,7 +4984,6 @@ void BIinitPerdio()
   Assert(sizeof(CellManager)==sizeof(CellLocal));
   Assert(sizeof(PortManager)==sizeof(PortLocal));
 
-  currentURL=0;
   loadHook=0;
 }
 
