@@ -30,7 +30,6 @@ import
    Tk
    TkTools
    Compiler.genericInterface
-   CompilerSupport.{isBuiltin} from 'x-oz://boot/CompilerSupport'
    Browser.browse
    Emacs.condSend
 export
