@@ -3,6 +3,7 @@ import
    Application Error
    Manager at 'Manager.ozf'
    Help    at 'Help.ozf'
+   Errors  at 'Errors.ozf'
 prepare
    OPTIONS =
    record(
@@ -124,6 +125,7 @@ define
       end
       {Application.exit 0}
    catch E then
+      {Wait Errors}
       {Error.printException E}
       {Application.exit 1}
    end

@@ -26,8 +26,8 @@ define
 	 %% the package file
 	 PKG = {self get_package($)}
 	 %% it should be an ordinary file, i.e. not have a scheme
-	 if {CondSelect {Path.toURL PKG} 'scheme' unit}\=unit then
-	    raise ozmake(create:hasscheme(PKG)) end
+	 local S = {CondSelect {Path.toURL PKG} 'scheme' unit} in
+	    if S\=unit then raise ozmake(create:hasscheme(PKG S)) end end
 	 end
 	 %% compute the files to be included in the package
 	 Needed = Creator,GetNeeded($)
