@@ -32,7 +32,7 @@ export
    'class': TkDictionary
 require
    DemoUrls(image) at '../DemoUrls.ozf'
-define
+prepare
    FixedFont = '8x13'
    BoldFixedFont = '8x13bold'
    BoldFont = '-*-helvetica-bold-r-normal--*-120-*-*-*-*-*-*'
@@ -50,20 +50,12 @@ define
    LogHeight = 4
    Pad = 0
 
-   Images = {TkTools.images [DemoUrls.image#'dict-client/dict.gif']}
-
+   %% The following databases and strategies are always available.
    DEFAULT_DATABASES = ['*'#'All'
 			'!'#'First with matches']
    DEFAULT_STRATEGIES = ['.'#'Default'
 			 'exact'#'Match words exactly'
 			 'prefix'#'Match prefixes']
-
-   proc {SetMinsize W}
-      {Tk.send update(idletasks)}
-      {Tk.send wm(minsize W
-		  {Tk.returnInt winfo(reqwidth W)}
-		  {Tk.returnInt winfo(reqheight W)})}
-   end
 
    fun {FormatDBs DBs DatabaseNames}
       {FoldR DBs
@@ -74,6 +66,19 @@ define
 	  end
        end unit}
    end
+define
+   Images = {TkTools.images [DemoUrls.image#'dict-client/dict.gif']}
+
+   proc {SetMinsize W}
+      {Tk.send update(idletasks)}
+      {Tk.send wm(minsize W
+		  {Tk.returnInt winfo(reqwidth W)}
+		  {Tk.returnInt winfo(reqheight W)})}
+   end
+
+   %%
+   %% Dialog to Enter a Server Address and Port
+   %%
 
    class ServerDialog
       meth init(Master Server Port Connect)
@@ -134,7 +139,7 @@ define
 					       text: 'Connect'
 					       action: DoConnect)}
 	 CloseButton = {New Tk.button tkInit(parent: Frame2
-					     text: 'Close'
+					     text: 'Cancel'
 					     action: Toplevel#tkClose())}
       in
 	 {Tk.batch [pack(Frame1 side: top expand: true fill: both
@@ -151,6 +156,10 @@ define
 	 {Tk.send wm(deiconify Toplevel)}
       end
    end
+
+   %%
+   %% A Simple Information Display Window
+   %%
 
    class InformationWindow
       feat toplevel text
@@ -226,6 +235,10 @@ define
       end
    end
 
+   %%
+   %% A Window to Display Definitions
+   %%
+
    class DefinitionWindow from InformationWindow
       meth init(Master)
 	 InformationWindow, init(Master 'Definition')
@@ -238,6 +251,10 @@ define
 	  end}
       end
    end
+
+   %%
+   %% A Window to Display Matches
+   %%
 
    class MatchWindow from InformationWindow
       feat action
@@ -264,6 +281,10 @@ define
 	  end}
       end
    end
+
+   %%
+   %% The Main Interaction Window
+   %%
 
    class TkDictionary
       feat

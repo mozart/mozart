@@ -19,6 +19,14 @@
 %%% WARRANTIES.
 %%%
 
+%%
+%% The Main Application
+%%
+%% Parse the command line, initialize the connection,
+%% wait for the graphical front-end window to be closed
+%% and exit.
+%%
+
 functor
 import
    Application(getCmdArgs exit)
