@@ -228,6 +228,38 @@ OZ_Term OwnerTable::extract_info(){
            oz_cons(oz_pairA("list", list), oz_nil())));
 }
 
+void OwnerTable::print(){
+  printf("***********************************************\n");
+  printf("********* OWNER TABLE *************************\n");
+  printf("***********************************************\n");
+  printf("Size:%d No_used:%d \n\n",size,no_used);
+  printf("OI\t OWNER\t Credit\n");
+  int i;
+  for(i=0;i<size;i++){
+    if(!(array[i].isFree())){
+      OwnerEntry *oe=getOwner(i);
+      if(oe->isExtended()) {
+ 	int ctr = 1;
+ 	OwnerCreditExtension *next;
+ 	next = oe->uOB.oExt;
+ 	printf("<%d>\t %s\t", i, toC(PO_getValue(oe)));
+ 	while(next != NULL){
+ 	  printf("ex:%d %ld#%ld ", ctr, next->getCredit(0), 
+ 		 next->getCredit(1));
+ 	  ctr ++;
+ 	  next = next->getNext();}
+ 	printf("\n");}
+      else {
+ 	if(oe->uOB.credit == -1)
+ 	  printf("%d>\t %s\t PERSISTENT\n", i, toC(PO_getValue(oe)));
+ 	else
+ 	  printf("%d>\t %s\t %ld\n", i, toC(PO_getValue(oe)), 
+ 		 oe->uOB.credit);}
+    }
+  }
+  printf("-----------------------------------------------\n");  
+}
+
 void OwnerCreditExtension::init(Credit c){
   Assert(c > 0);
   credit[0]=c;
@@ -516,6 +548,86 @@ void BorrowEntry::addPrimaryCreditExtended(Credit c){
     giveBackCredit(overflow);}
 }
 
+void BorrowEntry::print_entry(int nr) {
+  int ctr = 1;
+  char pC[1000], sC[1000];
+  char *temp;
+  char *primCred = (char *) pC,  *secCred = (char *) sC;
+  OwnerCreditExtension *next;
+  switch(getExtendFlags()){
+  case PO_PERSISTENT:
+    printf("<%d>\t %s\t %d\t PERSISTENT\n", nr, 
+	   toC(PO_getValue(this)), netaddr.index);
+    return;
+  case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:
+    sprintf(primCred, "%ld(slave)", getSlave()->getMaster()->primCredit);
+    next = getSlave()->getMaster()->uSOB.oce;
+    *secCred = '\0';
+    temp = secCred;
+    while(next != NULL){
+      temp += strlen(temp);
+      sprintf(temp, "ex:%d %ld#%ld ", ctr, next->getCredit(0), 
+	      next->getCredit(1));
+      ctr ++;
+      next = next->getNext();}
+    break;
+  case PO_EXTENDED|PO_SLAVE|PO_MASTER:
+    sprintf(primCred, "%ld(slave)", getSlave()->getMaster()->primCredit);
+    sprintf(secCred, "%ld", getSlave()->getMaster()->uSOB.secCredit);
+    break;
+  case PO_EXTENDED|PO_SLAVE:
+    sprintf(primCred, "%ld", getSlave()->primCredit);
+    sprintf(secCred, "%ld", getSlave()->uSOB.secCredit);
+    break;
+  case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:
+    sprintf(primCred, "%ld", getMaster()->primCredit);
+    next = getMaster()->uSOB.oce;
+    *secCred = '\0';
+    temp = secCred;
+    while(next != NULL){
+      temp += strlen(temp);
+      sprintf(temp, "ex:%d %ld#%ld ", ctr, next->getCredit(0), 
+	      next->getCredit(1));
+      ctr ++;
+      next = next->getNext();}
+    break;
+  case PO_EXTENDED|PO_MASTER:
+    sprintf(primCred, "%ld", getMaster()->primCredit);
+    sprintf(secCred, "%ld", getMaster()->uSOB.secCredit);
+    break;
+  case PO_NONE:
+    secCred = "0";
+    sprintf(primCred, "%ld", uOB.credit);
+    break;
+  default:
+    Assert(0);}
+  
+  printf("<%d>\t %s\t %d\t %s\t\t %s\n", nr, toC(PO_getValue(this)), 
+	 netaddr.index, primCred, secCred);
+}
+
+void BorrowTable::print(){
+  printf("***********************************************\n");
+  printf("********* BORROW TABLE *************************\n");
+  printf("***********************************************\n");
+  printf("Size:%d No_used:%d \n\n",size,no_used);
+  printf("BI\t BORROW\t OI\t PrimCredit\t SecCredit\n");
+  int i;
+  BorrowEntry *b;
+  for(i=0;i<size;i++){
+    if(!(array[i].isFree())){
+      b=getBorrow(i);
+      b->print_entry(i);
+#ifdef XXDEBUG_PERDIO
+      b->print();
+    } else {
+      printf("<%d> FREE: next:%d\n",i,array[i].uOB.nextfree);
+#endif
+    }
+  }
+  printf("-----------------------------------------------\n");  
+}
+
 OZ_Term BorrowEntry::extract_info(int index) {
   OwnerCreditExtension *next;
   OZ_Term primCred, secCred;
@@ -755,7 +867,7 @@ void BorrowEntry::copyBorrow(BorrowEntry* from,int i){
     ((ProxyManagerVar*)oz_getExtVar(*(from->getPtr())))->gcSetIndex(i);
   } else {
     Assert(from->isRef());
-    mkRef(from->getRef());
+    mkRef(from->getRef(),from->getFlags());
   }
   netaddr.set(from->netaddr.site,from->netaddr.index);
 }
@@ -945,7 +1057,7 @@ void OwnerTable::gcOwnerTableRoots()
 {
   PD((GC,"owner gc"));
   for(int i=0;i<size;i++) {
-    OwnerEntry* o = getOwner(i);
+    OwnerEntry* o = getOwner(i); // PER-LOOK
     if(!o->isFree() && !o->hasFullCredit()) {
       PD((GC,"OT o:%d",i));
       o->gcPO();
@@ -964,7 +1076,7 @@ void OwnerTable::gcOwnerTableFinal()
       if(o->hasFullCredit() && !o->isGCMarked()) {
 	 freeOwnerEntry(i);
       } else {
-	o->gcPO();
+	o->gcPO(); // PER-LOOK
 	o->removeGCMark();
       }
     }
@@ -994,7 +1106,7 @@ void BorrowTable::gcBorrowTableUnusedFrames()
   for(i=0;i<size;i++) {
     BorrowEntry *b=getBorrow(i);
     if(!b->isFree()){
-      Assert((b->isVar()) || (b->getTertiary()->isFrame()) 
+      Assert((b->isGCMarked()) || (b->isVar()) || (b->getTertiary()->isFrame()) 
 	     || (b->getTertiary()->isProxy()));
       if(!(b->isGCMarked())) {b->gcBorrowUnusedFrame(i);}}}
 }
