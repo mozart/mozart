@@ -69,7 +69,6 @@ case "$target" in
         oz_gmp_inc_dir=$oz_wincross_gmp_inc_dir
         oz_zlib_lib_dir=$oz_wincross_zlib_lib_dir
         oz_zlib_inc_dir=$oz_wincross_zlib_inc_dir
-        oz_enable_modules_static=yes
         oz_malloc_obj=
 
         # va-start makes problems under mingw32
@@ -270,7 +269,10 @@ case $platform in
         TOOLLDCMD="ld -Bshareable"
         oz_enable_modules_static=yes
         ;;
-   *)
+    win32*)
+        oz_enable_modules_static=yes
+    ;;
+    *)
         AC_MSG_WARN(Unknown platform "$platform")
         sleep 3
         TOOLLDCMD="ld"
@@ -570,6 +572,7 @@ AC_SUBST(STATIC_MODULES)
 AC_SUBST(DYNAMIC_MODULES)
 
 OZ_CXX_OPTIONS(-fpic,OZTOOLDYNOPT)
+OZ_CXX_OPTIONS(-Kpic,OZTOOLDYNOPT)
 if test "$oz_enable_modules_static" != "yes" ; then
     CDYNOPT=$OZTOOLDYNOPT
 fi
