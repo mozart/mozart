@@ -311,6 +311,8 @@ files.doc:
         \) -a \! \( -path './doc/Mozart.hh?' -o \
                     -path './doc/add-ons/*/*' \) ) > $@
 
+files.std:
+
 ######################################################################
 # standard library support
 ######################################################################
@@ -318,22 +320,17 @@ files.doc:
 STDLIB=@OZSTDLIB@
 std: $(PACKDIR)
         test -n "$(STDLIB)" || { echo "set STDLIB to source dir for mozart standard library"; exit 1; }
-        -rm -rf $(PACKDIR)/mozart-stdlib
-        mkdir $(PACKDIR)/mozart-stdlib
-        cd $(PACKDIR)/mozart-stdlib && ((cd $(STDLIB) && tar -cf - .) | tar -xf -)
         -rm -rf $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
         mkdir $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
-        cd $(PACKDIR)/mozart-stdlib && \
-          cp ozmake-$(shell $(OZVERSION)).ozf ozmake.ozf && \
-          $(PREFIX)/bin/ozengine ./ozmake.ozf --create --package=mozart-stdlib.pkg && \
-          cp README ozmake.ozf mozart-stdlib.pkg $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
+        cd $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std && \
+          ((cd $(STDLIB) && tar -cf - .) | tar -xf -)
         (cd $(PACKDIR) && $(TARTAR) -cf - mozart-$(shell $(OZVERSION)).$(OZBUILD)-std) | \
         $(COMPRESS) > mozart-$(shell $(OZVERSION)).$(OZBUILD)-std.tar.gz
-        rm -rf $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std $(PACKDIR)/mozart-stdlib
+        rm -rf $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
 
-ifneq ($(STDLIB),)
-install:: installstd
-endif
+#ifneq ($(STDLIB),)
+#install:: installstd
+#endif
 
 CYGPATH         = $(SRCDIR)/share/lib/cygpath.sh
 CYG_PREFIX      = $(shell $(CYGPATH) $(PREFIX))
