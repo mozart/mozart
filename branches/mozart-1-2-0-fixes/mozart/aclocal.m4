@@ -1306,6 +1306,22 @@ AC_DEFUN(OZ_COMPILE_ELISP,
    AC_SUBST(COMPILE_ELISP)])
 
 dnl ------------------------------------------------------------------
+dnl OZ_EMACS_OPTIONS
+dnl	check with what options to start an emacs subprocess, e.g.
+dnl	to perform highlighting when processing the documentation
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_EMACS_OPTIONS,[
+  AC_MSG_CHECKING([for --with-emacs-options])
+  AC_ARG_WITH(emacs-options,
+    [--with-emacs-options=OPTIONS command-[line] options for emacs subprocess (default: -q --no-site-init)],
+    [oz_cv_emacs_options="$with_emacs_options"],
+    [oz_cv_emacs_options="-q --no-site-init"])
+  EMACS_OPTIONS="$oz_cv_emacs_options"
+  AC_SUBST(EMACS_OPTIONS)
+  AC_MSG_RESULT($EMACS_OPTIONS)])
+
+dnl ------------------------------------------------------------------
 dnl OZ_GTK_ENABLED
 dnl	check for --enable-gtk
 dnl ------------------------------------------------------------------
