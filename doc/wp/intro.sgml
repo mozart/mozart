@@ -98,8 +98,8 @@
 
     <p>
       I am grateful to Michael Mehl, who co-authored an earlier
-      version of this document. Peter Van Roy contributed a nice paragraph
-      in <ptr to="section.widgets-2.return"> to explain why <<tkReturn>>
+      version of this document. Peter Van Roy contributed the nice paragraph
+      in <ptr to="section.widgets-2.return"> that explains why <<tkReturn>>
       is indeed asynchronous.
       
 </Chapter>
