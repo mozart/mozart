@@ -165,9 +165,8 @@ compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
 
 EMUSRCDIR=$(SRCDIR)/../../platform/emulator
 BIDECL=$(EMUSRCDIR)/bidecl.perl
-compiler-Builtins.oz: $(EMUSRCDIR)/modBuiltins.spec
-        perl $(BIDECL) -file $< -oztable > $@ \
-        || (rm -f $@; exit 1)
+compiler-Builtins.oz: $(EMUSRCDIR)/Builtins.oz
+        cp $< $@
 
 compiler-Opcodes.oz: compiler/Opcodes.m4oz $(EMUSRCDIR)/instrDefs.m4
         $(M4) -DEMUDIR=$(EMUSRCDIR) < $< > $@ \
@@ -436,7 +435,7 @@ ozc.ozp: ozc.ozm
 
 new-ozma:
         rm -f ozc.ozm
-        $(MAKE) clean $(COMPILERSRCEXTRA) ozc.ozm
+        $(MAKE) $(COMPILERSRCEXTRA) ozc.ozm
 
 # for making incompatible changes to instructions
 #  1. make incompatible-ozma       # create new ozc.ozm with old emulator
@@ -446,6 +445,12 @@ incompatible-ozma:
         $(MAKE) new-ozma \
         OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:.:=\
         OZC=$(STAGE1)/bin/ozc \
+        OZINIT=$(STAGE1)/share/Init.ozf
+
+my-ozma:
+        $(MAKE) new-ozma \
+        OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:.:=\
+        OZC="$(SRCDIR)/oze.sh $(STAGE1)/bin/ozc" \
         OZINIT=$(STAGE1)/share/Init.ozf
 
 # no suffixes needed
