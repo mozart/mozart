@@ -783,7 +783,11 @@ OZ_Return loadFD(int fd, OZ_Term out, const char *compname)
 
 char *newTempFile()
 {
+#ifdef WINDOWS
+  char tn[MAX_PATH] = ""; // Windows can return longer path names
+#else
   char tn[L_tmpnam] = ""; // I like POSIX!
+#endif
   ostmpnam(tn);
   return strdup(tn);
 }
