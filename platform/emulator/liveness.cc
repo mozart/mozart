@@ -1,3 +1,17 @@
+/*********************************************************************
+ * Author: Michael Mehl@ps.uni-sb.de
+ * Copyright: author 1997
+ *
+ * This file is part of the Mozart system:
+ *     http://www.ps.uni-sb.de/mozart/
+ *
+ * See the file "LICENSE for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
+ * Last modified: $Date$ from $Author$
+ * Version: $Revision$
+ *********************************************************************/
+
 #include "am.hh"
 #include "indexing.hh"
 
@@ -153,7 +167,7 @@ outerLoop2:
 
   innerLoop:
     {
-      Opcode op = getOpcode(PC); // this is slooooow
+      Opcode op = getOpcode(PC);
 
       switch (op) {
       case FASTCALL:

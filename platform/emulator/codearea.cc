@@ -1,23 +1,21 @@
-/*
-  Hydra Project, DFKI Saarbruecken,
-  Stuhlsatzenhausweg 3, D-W-6600 Saarbruecken 11, Phone (+49) 681 302-5312
-  Author: popow
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
-
-  ------------------------------------------------------------------------
-*/
+/*********************************************************************
+ * Authors: {Kostja.Popow,Ralf.Scheidhauer,Michael Mehl}@ps.uni-sb.de
+ * Copyright: authors 1991-1997
+ *
+ * This file is part of the Mozart system:
+ *     http://www.ps.uni-sb.de/mozart/
+ *
+ * See the file "LICENSE for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
+ * Last modified: $Date$ from $Author$
+ * Version: $Revision$
+ *********************************************************************/
 
 
 #include "am.hh"
 #include "indexing.hh"
 #include "optostr.hh"
-
-//
-// Globals
-//
-
 
 AbstractionEntry* AbstractionEntry::allEntries = NULL;
 
@@ -44,7 +42,8 @@ char **CodeArea::opToString = initOpToString();
 CodeArea *CodeArea::allBlocks = NULL;
 
 #ifdef THREADED
-void **CodeArea::globalInstrTable = NULL;
+void **CodeArea::globalInstrTable = 0;
+HashTable *CodeArea::opcodeTable = 0;
 #endif
 
 
@@ -151,10 +150,16 @@ AdressOpcode CodeArea::opcodeToAdress(Opcode oc)
 
 Opcode CodeArea::adressToOpcode(AdressOpcode adr)
 {
-  for(int i = 0; i < (int) OZERROR; i++)
-    if (ToInt32(globalInstrTable[i]) == adr)
-      return (Opcode)i;
-  return OZERROR;
+  void *ret = opcodeTable->htFind(adr);
+  if (ret == htEmpty) return OZERROR;
+  return (Opcode) ToInt32(ret);
+
+  /*
+    for(int i = 0; i < (int) OZERROR; i++)
+      if (ToInt32(globalInstrTable[i]) == adr)
+        return (Opcode)i;
+    return OZERROR;
+  */
 }
 
 #else /* THREADED */
@@ -806,6 +811,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
     case SETCONSTANT:
     case UNIFYLITERAL:
+    case SETLITERAL:
     case GLOBALVARNAME:
     case LOCALVARNAME:
       {
@@ -962,7 +968,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
     default:
       fflush(ofile);
-      warning("Illegal instruction %d in CodeArea::display", op);
+      warning("CodeArea::display: Illegal instruction");
       return;
     }
   }
@@ -995,6 +1001,10 @@ void CodeArea::init(void **instrTable)
 {
 #ifdef THREADED
   globalInstrTable = instrTable;
+  opcodeTable = new HashTable(HT_INTKEY,(int) (OZERROR*1.5));
+  for (int i=0; i<=OZERROR; i++) {
+    opcodeTable->htAdd(ToInt32(globalInstrTable[i]),ToPointer(i));
+  }
 #endif
   CodeArea *code = new CodeArea(20);
   C_XCONT_Ptr = code->getStart();
