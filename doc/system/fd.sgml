@@ -1663,4 +1663,45 @@ For the naive distribution strategy, the following may be used.
 >>>
 </list>
 </section>
+
+<!--
+**********************************************************************
+--> <section id="section.fd.assignment"><title/Assigning Values/
+<p>
+Special support is available for assigning particular values to
+vectors of variables. Assignment interleaves the assignment of a
+value proper to a variable and synchronization until stability
+after each assignment.
+</p>
+<p>The selection of variables and the selection of values is as
+with distribution <ptr to="section.fd.distribution">.
+</p>
+<p>
+<list>
+<entry>
+<index class=module/FD<and>assign/
+<<assign>>
+<synopsis>
+<<<
+{FD.assign ?+{ValA} ?+{Xv}}
+>>>
+<item>
+The vector ?_{Xv} is assigned according to the specification
+?_{ValA}.
+ ?_{ValA} may be either
+the atom <<min>>, <<mid>>, or <<max>>. That is, the smallest,
+medium, or largest element is assigned to each variable.
+<p>
+Is equivalent to (for a list of variables <<Xs>>):
+<p>
+<<<proc {FD.assign ValA Xs}
+   for X in Xs do
+      {Space.waitStable}
+      X = {FD.reflect.A X}
+   end
+end>>>
+</list>
+</p>
+</section>
+
 </chapter>
