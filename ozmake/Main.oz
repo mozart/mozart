@@ -108,6 +108,8 @@ prepare
       fast(alias:['_speed'#true])
       slow(alias:['_speed'#false])
 
+      binary(single bool)
+
       autodepend(single type:bool)
       )
 
@@ -170,6 +172,7 @@ prepare
     packageversion # set_want_version     # false		# false
     autodepend     # set_autodepend       # true		# true
     requires       # set_dorequires       # false               # true
+    binary         # set_binary           # false               # false
    ]
       
 define

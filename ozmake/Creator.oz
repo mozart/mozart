@@ -54,22 +54,28 @@ define
 	 Stack  = {Utils.newStackFromList {self get_install_targets($)}}
 	 %% avoid loops from circular imports
 	 Done = {NewDictionary}
+	 %%
+	 Binary = {self get_binary($)}
       in
 	 try
 	    for do F={Stack.pop} in
 	       if {HasFeature Done F} then skip else
 		  Done.F := unit
 		  if {Not {HasFeature Needed F}} then
-		     if {self target_is_src(F $)} then
+		     if Binary orelse {self target_is_src(F $)} then
 			%% it must be built and packed, but not the sources
 			%% needed to build it
 			Needed.F := true
+			%% and whatever is needed for runtime dependencies
+			for D in {self get_autodepend_install(F $)} do {Stack.push D} end
 		     else
 			R = {self get_rule(F $)}
 		     in
 			if R.tool==unit then
 			   %% there is no rule to build it: it must be distributed
 			   Needed.F := true
+			   %% and whatever is needed for runtime dependencies
+			   for D in {self get_autodepend_install(F $)} do {Stack.push D} end
 			else
 			   %% else look at all the sources needed to build it
 			   for D in {self get_depends(F $)} do {Stack.push D} end
