@@ -40,6 +40,9 @@ char *mess_names[M_LAST] = {
   "owner_credit",
   "owner_sec_credit",
 
+  "fw_to_owner",
+  "fw_to_borrow",
+
   "borrow_credit",
   "register",
   "redirect",
