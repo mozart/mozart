@@ -571,7 +571,6 @@ int oz_fastlength(OZ_Term l);
 /* when adding a new type update
  *   print (print.cc and foreign.cc)
  *   OZ_toVirtualString
- *   finalizable
  *   marshaling/unmarshaling
  */
 const int Co_Bits = 16;

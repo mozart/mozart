@@ -920,67 +920,6 @@ void WeakDictionary::weakGC()
   }
 }
 
-
-// ===================================================================
-// Finalization
-
-extern OZ_Term guardian_list;
-extern OZ_Term finalize_list;
-extern OZ_Term finalize_handler;
-
-void gCollect_finalize()
-{
-  // go through the old guardian list
-  OZ_Term old_guardian_list = guardian_list;
-  guardian_list = finalize_list = oz_nil();
-  if (old_guardian_list==0) return;
-  while (!oz_isNil(old_guardian_list)) {
-    OZ_Term pair = oz_head(old_guardian_list);
-    old_guardian_list = oz_tail(old_guardian_list);
-    OZ_Term obj = oz_head(pair);
-    switch (tagTypeOf(obj)) {
-    case EXT    :
-      // same check as Michael's hack in Extension
-      if ((*(int32*)oz_tagged2Extension(obj))&1)
-        // reachable through live data
-        guardian_list = oz_cons(pair,guardian_list);
-      else
-        // unreachable
-        finalize_list = oz_cons(pair,finalize_list);
-      break;
-    case OZCONST:
-      if (tagged2Const(obj)->cacIsMarked())
-        // reachable through live data
-        guardian_list = oz_cons(pair,guardian_list);
-      else
-        // unreachable
-        finalize_list = oz_cons(pair,finalize_list);
-      break;
-    default     :
-      Assert(0);
-    }
-  }
-  // gc both these list normally.
-  // since these lists have been freshly consed in the new half space
-  // this simply means to go through both and gc the pairs
-  // in the head of each cons
-  for (OZ_Term l=guardian_list;!oz_isNil(l);l=oz_tail(l)) {
-    LTuple *t = tagged2LTuple(l);
-    oz_gCollectTerm(*t->getRefHead(),*t->getRefHead());
-  }
-  for (OZ_Term l1=finalize_list;!oz_isNil(l1);l1=oz_tail(l1)) {
-    LTuple *t = tagged2LTuple(l1);
-    oz_gCollectTerm(*t->getRefHead(),*t->getRefHead());
-  }
-  // if the finalize_list is not empty, we must create a new
-  // thread (at top level) to effect the finalization phase
-  if (!oz_isNil(finalize_list)) {
-    Thread* thr = oz_newThreadInject(oz_rootBoard());
-    thr->pushCall(finalize_handler,finalize_list);
-    finalize_list = oz_nil();
-  }
-}
-
 #endif
 
 

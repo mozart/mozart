@@ -64,12 +64,12 @@ BIMODSPECS = \
 
 MODSPECS= \
         FDP FSP Schedule Tk Parser OS Property Pickle \
-        PID URL FDB FSB CTB RecordC Space System Finalize CTB \
+        PID URL FDB FSB CTB RecordC Space System CTB \
         CompilerSupport Compat Win32 Profile \
         Debug Fault Browser Misc DPMisc Distribution \
         VirtualSite Application DPPane \
         $(BIMODSPECS) \
-        WeakDictionary $(DENYS_SPECS)
+        $(DENYS_SPECS)
 
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
 

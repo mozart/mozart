@@ -438,9 +438,7 @@ void AM::gCollect(int msgLevel) {
   PrTabEntry::gCollectPrTabEntries();
   extRefs = extRefs->gCollect();
 
-  oz_gCollectTerm(finalize_handler,finalize_handler);
   cacStack.gCollectRecurse();
-  gCollect_finalize();
   gCollectDeferWatchers();
   (*gCollectPerdioRoots)();
   cacStack.gCollectRecurse();
