@@ -26,9 +26,8 @@ inline
 Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1, TypeOfTerm ttag1,
 			 TaggedRef * tptr2, TaggedRef term2, TypeOfTerm ttag2)
 {
-  Assert(getType()==FDVariable);
+  Assert(getType()==FDVariable || getType()==OFSVariable);
   switch (getType()){
-  default:
   case FDVariable:
     {
       if (! ((GenFDVariable *)this)->unifyFD(tptr1, term1, ttag1,
@@ -38,6 +37,11 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1, TypeOfTerm ttag1,
 			if (! localPropStore.do_propagation()) return FALSE;)
     }
     return TRUE;
+  case OFSVariable:
+    return ((GenOFSVariable *)this)->unifyOFS(tptr1, term1, ttag1,
+                                              tptr2, term2, ttag2);
+  default:
+    break;
   }
   return FALSE;
 } 
@@ -45,11 +49,14 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1, TypeOfTerm ttag1,
 inline
 int GenCVariable::getSuspListLength(void)
 {
-  Assert(getType() == FDVariable);
+  Assert(getType()==FDVariable || getType()==OFSVariable);
   switch (getType()){
   case FDVariable:
+    return ((GenFDVariable *)this)->getSuspListLength();
+  case OFSVariable:
+    return ((GenOFSVariable *)this)->getSuspListLength();
   default:
-    return ((GenFDVariable *) this)->getSuspListLength();
+    break;
   }
   return -1;
 }
@@ -57,11 +64,14 @@ int GenCVariable::getSuspListLength(void)
 inline
 size_t GenCVariable::getSize(void)
 {
-  Assert(getType()==FDVariable);
+  Assert(getType()==FDVariable || getType()==OFSVariable);
   switch (getType()){
   case FDVariable:
+    return ((GenFDVariable*)this)->getSize();
+  case OFSVariable:
+    return ((GenOFSVariable*)this)->getSize();
   default:
-    return ((GenFDVariable *) this)->getSize();
+    break;
   }
   return 0;
 } 
@@ -69,12 +79,16 @@ size_t GenCVariable::getSize(void)
 inline
 Bool GenCVariable::valid(TaggedRef val)
 {
-  Assert(getType()==FDVariable);
+  Assert(getType()==FDVariable || getType()==OFSVariable);
   switch (getType()){
   case FDVariable:
-  default:
     return ((GenFDVariable*)this)->valid(val);
+  case OFSVariable:
+    return NO;
+  default:
+    break;
   }  
+  return NO;
 }
 
 #endif //__genvar_icc__
