@@ -785,10 +785,6 @@ in
 	    distribute:  FSDistribute
 	   ) % set
 
-   CompileDate = {FSP.init}
-
-   case {System.get standalone} then skip
-   else {System.showError 'Loaded Finite Set Library of '#CompileDate#'.'}
-   end
+   _ = {FSP.init}
 end
 
