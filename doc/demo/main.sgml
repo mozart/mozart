@@ -81,7 +81,7 @@
 
     <Meta name="html.split"       value="appendix.enable">
 
-    <!-- Meta name="html.split.toc"   value="" -->
+    <Meta name="html.split.toc"   value="">
 
     <Author.Extern to="author.db" key="Denys.Duchier">
     <Author.Extern to="author.db" key="Martin.Mueller">
@@ -91,7 +91,10 @@
     <Author.Extern to="author.db" key="Joerg.Wuertz">
     <Abstract>
       <P.silent><!--**-->
-      Cool stuff.
+      This document offers a number of demo applets that can be run
+      directly from within their documentation. In order to execute
+      Mozart Applets, your Web Browser must be Mozart Applet
+      enabled. This is done easily, see <Ptr to="appendix.enable">.
     </Abstract>
   
     <Part id="part.constraints">
