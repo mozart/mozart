@@ -3556,7 +3556,7 @@ fi
 	3.3.*)
 	    oz_opt="-O3 -pipe -fstrict-aliasing"
 	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
-	    EMULATE_CXXFLAGS="-finline-limit=500 -fno-tracer"
+	    EMULATE_CXXFLAGS="-finline-limit=500"
 	    ;;
 	*)
 	    oz_opt="-O3 -pipe -fstrict-aliasing"
@@ -9780,177 +9780,384 @@ EOF
     
 
 
-echo $ac_n "checking whether .align is multiple""... $ac_c" 1>&6
-echo "configure:9785: checking whether .align is multiple" >&5
-if test "$cross_compiling" = yes; then
-  echo "$ac_t""no" 1>&6
+echo $ac_n "checking whether .byte V and .p2align N,V are supported""... $ac_c" 1>&6
+echo "configure:9785: checking whether .byte V and .p2align N,V are supported" >&5
+if eval "test \"`echo '$''{'oz_cv_has_byte_and_p2align'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test "$cross_compiling" = yes; then
+  oz_cv_has_byte_and_p2align=no
 else
   cat > conftest.$ac_ext <<EOF
-#line 9790 "configure"
+#line 9793 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
 #endif
 
-#ifdef __GNUC__
+void** check(void**);
 
-#include <stdio.h>
-
-static int nonsense(int);
-int main(void) {
-  int j;
-
-  goto leave;
-  
- start:
-  asm volatile(".align 16");
- la1:
-  asm volatile(".long 1");
-  asm volatile(".align 16");
- la2:
-  j=nonsense(42);
-  goto leave;
-  
-  asm volatile(".align 16");
- lb1:
-  asm volatile(".long 2");
-  asm volatile(".align 16");
- lb2:
-  j=nonsense(4711);
-  goto leave;
-
- leave:
-  static void * fake[] = {
-    && start, && la1, && la2,
-    && lb1, && lb2, && leave};
-
-  if (((((char *) && lb2) - ((char *) && lb1)) == 16) &&
-      ((((char *) && la2) - ((char *) && la1)) == 16) &&
-      (*((int *) && la1)==1) &&
-      (*((int *) && lb1)==2)) {
-    return 0;
-  } 
-  return -1;
-    
-}
-static int nonsense(int i) {
-  return i*i;
+int main()
+{
+  check((void**)0);
+  return (check((void**)1) == (void**)1) ? 0 : 1;
 }
 
-#else
+static void* table[2];
 
-BOOOOOOOM
-
-#endif
+void** check(void**label)
+{
+  table[0] = && one;
+  table[1] = && two;
+  if (label==(void**)0 || label==(void**)1) return label;
+  goto **label;
+ one:
+  asm volatile(".byte 3");
+  asm volatile(".p2align 8,3");
+  return label+1;
+ two:
+  return label+2;
+}
 
 EOF
-if { (eval echo configure:9848: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:9824: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
-  echo "$ac_t""yes" 1>&6
-  cat >> confdefs.h <<\EOF
-#define AS_HAS_MULTIPLE_ALIGN 1
-EOF
-
+  oz_cv_has_byte_and_p2align=yes
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -fr conftest*
-  echo "$ac_t""no" 1>&6
+  oz_cv_has_byte_and_p2align=no
 fi
 rm -fr conftest*
 fi
 
+fi
+
+echo "$ac_t""$oz_cv_has_byte_and_p2align" 1>&6
+
+if test "$oz_cv_has_byte_and_p2align" = "yes"; then
+  cat >> confdefs.h <<\EOF
+#define AS_HAS_BYTE_AND_P2ALIGN 1
+EOF
+
+fi
 
 
-echo $ac_n "checking whether .align is power of 2""... $ac_c" 1>&6
-echo "configure:9867: checking whether .align is power of 2" >&5
-if test "$cross_compiling" = yes; then
-  echo "$ac_t""no" 1>&6
+echo $ac_n "checking whether .byte V and .align N,V are supported""... $ac_c" 1>&6
+echo "configure:9849: checking whether .byte V and .align N,V are supported" >&5
+if eval "test \"`echo '$''{'oz_cv_has_byte_and_align'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test "$cross_compiling" = yes; then
+  oz_cv_has_byte_and_align=no
 else
   cat > conftest.$ac_ext <<EOF
-#line 9872 "configure"
+#line 9857 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
 #endif
 
-#ifdef __GNUC__
+void** check(void**);
 
-#include <stdio.h>
-
-static int nonsense(int);
-int main(void) {
-  int j;
-
-  goto leave;
-  
- start:
-  asm volatile(".align 4");
- la1:
-  asm volatile(".long 1");
-  asm volatile(".align 4");
- la2:
-  j=nonsense(42);
-  goto leave;
-  
-  asm volatile(".align 4");
- lb1:
-  asm volatile(".long 2");
-  asm volatile(".align 4");
- lb2:
-  j=nonsense(4711);
-  goto leave;
-
- leave:
-  static void * fake[] = {
-    && start, && la1, && la2,
-    && lb1, && lb2, && leave};
-
-  if (((((char *) && lb2) - ((char *) && lb1)) == 16) &&
-      ((((char *) && la2) - ((char *) && la1)) == 16) &&
-      (*((int *) && la1)==1) &&
-      (*((int *) && lb1)==2)) {
-    return 0;
-  } 
-  return -1;
-    
-}
-static int nonsense(int i) {
-  return i*i;
+int main()
+{
+  check((void**)0);
+  return (check((void**)1) == (void**)1) ? 0 : 1;
 }
 
-#else
+static void* table[2];
 
-BOOOOOOOM
-
-#endif
+void** check(void**label)
+{
+  table[0] = && one;
+  table[1] = && two;
+  if (label==(void**)0 || label==(void**)1) return label;
+  goto **label;
+ one:
+  asm volatile(".byte 3");
+  asm volatile(".align 8,3");
+  return label+1;
+ two:
+  return label+2;
+}
 
 EOF
-if { (eval echo configure:9930: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:9888: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
-  echo "$ac_t""yes" 1>&6
+  oz_cv_has_byte_and_align=yes
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -fr conftest*
+  oz_cv_has_byte_and_align=no
+fi
+rm -fr conftest*
+fi
+
+fi
+
+echo "$ac_t""$oz_cv_has_byte_and_align" 1>&6
+
+if test "$oz_cv_has_byte_and_align" = "yes"; then
+  cat >> confdefs.h <<\EOF
+#define AS_HAS_BYTE_AND_ALIGN 1
+EOF
+
+fi
+
+
+if test "$oz_cv_has_byte_and_align" = yes; then
+echo $ac_n "checking whether .align N means multiple or power_of_2""... $ac_c" 1>&6
+echo "configure:9914: checking whether .align N means multiple or power_of_2" >&5
+if eval "test \"`echo '$''{'oz_cv_meaning_of_align'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test "$cross_compiling" = yes; then
+  oz_cv_meaning_of_align=unknown
+else
+  cat > conftest.$ac_ext <<EOF
+#line 9922 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C" void exit(int);
+#endif
+
+void* ZIS;
+void* ZAT;
+
+int check(void*);
+
+int main()
+{
+  (void) check(0);
+  return check(ZAT);
+}
+
+int check(void*label)
+{
+  ZIS = && zis;
+  ZAT = && zat;
+  if (!label) return 0;
+  goto *label;
+ zis:
+  asm(
+      ".align 8\n"
+      " ONE:\n"
+      ".byte 1\n"
+      ".align 4\n"
+      " TWO:\n"
+      ".byte 1"
+      );
+ zat:
+  {
+    void* two;
+    asm("movl $TWO,%0" : "=m" (two));
+    return ((((long) two) && 017) == 0) ? 0 : 1;
+  }
+}
+
+EOF
+if { (eval echo configure:9963: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+then
+  oz_cv_meaning_of_align=power_of_2
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -fr conftest*
+  oz_cv_meaning_of_align=multiple
+fi
+rm -fr conftest*
+fi
+
+fi
+
+echo "$ac_t""$oz_cv_meaning_of_align" 1>&6
+
+if test "$oz_cv_meaning_of_align" = "power_of_2"; then
   cat >> confdefs.h <<\EOF
 #define AS_HAS_POWER_ALIGN 1
 EOF
 
+fi
+
+if test "$oz_cv_meaning_of_align" = "multiple"; then
+  cat >> confdefs.h <<\EOF
+#define AS_HAS_MULTIPLE_ALIGN 1
+EOF
+
+fi
+fi
+
+
+echo $ac_n "checking whether the opcode map can be inlined""... $ac_c" 1>&6
+echo "configure:9996: checking whether the opcode map can be inlined" >&5
+if eval "test \"`echo '$''{'oz_cv_can_inline_opcode_map'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+  oz_ok=yes;
+  oz_saved="$CPPFLAGS"
+  if test "$oz_cv_has_byte_and_p2align" = yes; then
+    CPPFLAGS="$CPPFLAGS -DAS_HAS_BYTE_AND_P2ALIGN -save-temps"
+  elif test "$oz_cv_has_byte_and_align" = yes; then
+    CPPFLAGS="$CPPFLAGS -DAS_HAS_BYTE_AND_ALIGN"
+    if test "oz_cv_meaning_of_align" = "power_of_2"; then
+      CPPFLAGS="$CPPFLAGS -DAS_HAS_POWER_ALIGN"
+    elif test "oz_cv_meaning_of_align" = "multiple"; then
+      CPPFLAGS="$CPPFLAGS -DAS_HAS_MULTIPLE_ALIGN"
+    else
+      oz_ok=no
+    fi
+  else
+    oz_ok=no
+  fi
+if test "$oz_ok" = yes; then
+if test "$cross_compiling" = yes; then
+  oz_cv_can_inline_opcode_map=no
+else
+  cat > conftest.$ac_ext <<EOF
+#line 10022 "configure"
+#include "confdefs.h"
+#ifdef __cplusplus
+extern "C" void exit(int);
+#endif
+
+int engine(void**);
+bool equal(int,int);
+
+static void* program[6];
+
+int main()
+{
+  (void) engine(0);
+  return engine(program);
+}
+
+#define OP0_VALUE 0
+#define OP1_VALUE 1
+#define OP2_VALUE 2
+#define OP3_VALUE 3
+#define OP4_VALUE 4
+#define OP5_VALUE 5
+
+#define OP0_STRING "0"
+#define OP1_STRING "1"
+#define OP2_STRING "2"
+#define OP3_STRING "3"
+#define OP4_STRING "4"
+#define OP5_STRING "5"
+
+#if   defined(AS_HAS_BYTE_AND_P2ALIGN)
+#define ALIGNED_LABEL(N) asm(".p2align 4," OP##N##_STRING)
+#elif defined(AS_HAS_BYTE_AND_ALIGN)
+#  if   defined(AS_HAS_MULTIPLE_ALIGN)
+#define ALIGNED_LABEL(N) asm(".align 4," OP##N##_STRING)
+#  elif defined(AS_HAS_POWER_ALIGN)
+#define ALIGNED_LABEL(N) asm(".align 2," OP##N##_STRING)
+#  else
+#    error unknown alignment for .align
+#  endif
+#else
+#error neither .p2align nor .align available
+#endif
+
+/*
+ * define a C++ label
+ * then also define an ASM label
+ * and fill the bytes between them with the opcode
+ * we will actually jump to the ASM label
+ * but given the ASM label, we can immediately
+ * recover the corresponding opcode by reading
+ * the preceding byte
+ */
+
+#define CASE(N) \
+FAKE_ ##N : \
+asm(".byte " OP##N##_STRING); \
+ALIGNED_LABEL(N); \
+asm(" LABEL" OP##N##_STRING":");
+
+/*
+ * appear to use the C++ label
+ * but really store ASM label
+ */
+
+#define LOAD(N) \
+*ptr = && FAKE_##N; \
+asm("movl \$LABEL"OP##N##_STRING",%0" : "=m" (*ptr)); ++ptr;
+
+#define DO(N) \
+if (!equal(OP##N##_VALUE,((char*)*(bytecode-1))[-1])) return 1
+
+#define DISPATCH goto **bytecode++
+
+int engine(void**bytecode)
+{
+  if (! bytecode)
+    {
+      void** ptr = program;
+      LOAD(5);
+      LOAD(4);
+      LOAD(3);
+      LOAD(2);
+      LOAD(1);
+      LOAD(0);
+      return 0;
+    }
+
+  DISPATCH;
+  CASE(0) { DO(0); return 0; }
+  CASE(1) { DO(1); DISPATCH; }
+  CASE(2) { DO(2); DISPATCH; }
+  CASE(3) { DO(3); DISPATCH; }
+  CASE(4) { DO(4); DISPATCH; }
+  CASE(5) { DO(5); DISPATCH; }
+}
+
+bool equal(int want,int have)
+{
+  return want==have;
+}
+
+EOF
+if { (eval echo configure:10126: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+then
+  oz_cv_can_inline_opcode_map=yes
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -fr conftest*
-  echo "$ac_t""no" 1>&6
+  oz_cv_can_inline_opcode_map=no
 fi
 rm -fr conftest*
 fi
 
+else
+  oz_cv_can_inline_opcode_map=no
+fi
+  CPPFLAGS="$oz_saved"
+
+fi
+
+echo "$ac_t""$oz_cv_can_inline_opcode_map" 1>&6
+
+if test "$oz_cv_can_inline_opcode_map" = yes; then
+  cat >> confdefs.h <<\EOF
+#define AS_CAN_INLINE_OPCODE_MAP 1
+EOF
+
+fi
 
 
 echo $ac_n "checking alignment of secondary tag for const terms""... $ac_c" 1>&6
-echo "configure:9949: checking alignment of secondary tag for const terms" >&5
+echo "configure:10156: checking alignment of secondary tag for const terms" >&5
 if test "$cross_compiling" = yes; then
   echo "$ac_t""assume optimistic ok for cross compilation" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 9954 "configure"
+#line 10161 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -9970,7 +10177,7 @@ int main()
   return (((void*)&c)==((void*)(Tag*)&c))?0:-1;
 }
 EOF
-if { (eval echo configure:9974: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10181: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""ok" 1>&6
 else
@@ -9985,13 +10192,13 @@ fi
 
 
 echo $ac_n "checking if alignment of secondary tags for extensions needs padding""... $ac_c" 1>&6
-echo "configure:9989: checking if alignment of secondary tags for extensions needs padding" >&5
+echo "configure:10196: checking if alignment of secondary tags for extensions needs padding" >&5
 if test "$cross_compiling" = yes; then
   echo "$ac_t""assume optimistic no for cross compilation" 1>&6
   needs_padding=no
 else
   cat > conftest.$ac_ext <<EOF
-#line 9995 "configure"
+#line 10202 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -10018,7 +10225,7 @@ int main()
   return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
 }
 EOF
-if { (eval echo configure:10022: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10229: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""no" 1>&6
   needs_padding=no
@@ -10037,12 +10244,12 @@ NEEDS_PADDING=0
 
 if test "$needs_padding" = "yes"; then
 echo $ac_n "checking if padding works""... $ac_c" 1>&6
-echo "configure:10041: checking if padding works" >&5
+echo "configure:10248: checking if padding works" >&5
 if test "$cross_compiling" = yes; then
   { echo "configure: error: we should not get here when cross compiling" 1>&2; exit 1; }
 else
   cat > conftest.$ac_ext <<EOF
-#line 10046 "configure"
+#line 10253 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -10073,7 +10280,7 @@ int main()
   return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
 }
 EOF
-if { (eval echo configure:10077: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10284: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""yes" 1>&6
   NEEDS_PADDING=1
