@@ -1,10 +1,7 @@
 #!/bin/sh
 
-: ${SRCDIR=.}
-: ${OZPLATFORM=`$SRCDIR/../bin/ozplatform`}
-
-case $OZPLATFORM in
-    win32*)
+case `uname -s` in
+    CYGWIN*)
         cygpath -w -s $1 | sed 's|\\|/|g'
         ;;
     *)
