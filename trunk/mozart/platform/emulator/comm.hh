@@ -98,8 +98,8 @@ int getQueueStatus_RemoteSite(RemoteSite*,int &noMsgs);  // return size in bytes
 SiteStatus siteStatus_RemoteSite(RemoteSite*); 
 MonitorReturn monitorQueue_RemoteSite(RemoteSite*,int size,int no_msgs,void*);
 MonitorReturn demonitorQueue_RemoteSite(RemoteSite*);
-ProbeReturn installProbe_RemoteSite(RemoteSite*,int frequency);
-ProbeReturn deinstallProbe_RemoteSite(RemoteSite*);
+ProbeReturn installProbe_RemoteSite(RemoteSite*,ProbeType,int frequency);
+ProbeReturn deinstallProbe_RemoteSite(RemoteSite*,ProbeType);
 ProbeReturn probeStatus_RemoteSite(RemoteSite*,ProbeType &pt,int &frequncey,void* &storePtr);
 GiveUpReturn giveUp_RemoteSite(RemoteSite*);
 void discoveryPerm_RemoteSite(RemoteSite*);
@@ -346,9 +346,6 @@ private:
     flags |= PERM_SITE;
     disconnectInPerm();}
 
-  Bool ActiveSite(){
-    if(getType() & (REMOTE_SITE|VIRTUAL_SITE)) return OK;
-    return NO;}
 
   void putPassiveRefCtr(int i){
     Assert(!(ActiveSite()));
@@ -378,6 +375,10 @@ public:
   Site(ip_address a,port_t p,time_t t):BaseSite(a,p,t){
     extension=0;	
     setType(MY_SITE);}
+
+  Bool ActiveSite(){
+    if(getType() & (REMOTE_SITE|VIRTUAL_SITE)) return OK;
+    return NO;}
 
  Bool remoteComm(){
    if(getType() & REMOTE_SITE) return OK;
@@ -481,6 +482,16 @@ public:
     extension=0;
     setType(0);}
 
+  void makeActiveRemote(SiteExtension* se){
+    refCtr=getPassiveRefCtr();
+    extension= (unsigned int) se;
+    setType(REMOTE_SITE);}
+
+  void makeActiveVirtual(SiteExtension* se){
+    refCtr=getPassiveRefCtr();
+    extension= (unsigned int) se;
+    setType(VIRTUAL_SITE);}
+
 // provided to network-comm
   
   RemoteSite* getRemoteSite() {   
@@ -572,18 +583,18 @@ public:
       return monitorQueue_VirtualSite(getVirtualSite(),size,noMsgs,storePtr);}
     return MONITOR_PERM;}
 
-  ProbeReturn installProbe(int frequency){
+  ProbeReturn installProbe(ProbeType pt, int frequency){
     if(connect()){
       if(getType() & REMOTE_SITE){
-	return installProbe_RemoteSite(getRemoteSite(),frequency);}
+	return installProbe_RemoteSite(getRemoteSite(),pt,frequency);}
       return installProbe_VirtualSite(getVirtualSite(),PROBE_TYPE_ALL,frequency,NULL);}
     return PROBE_PERM;}
     
-  ProbeReturn deinstallProbe(){
+  ProbeReturn deinstallProbe(ProbeType pt){
     unsigned short t=getType();
     if(t & CONNECTED){
       if(t & REMOTE_SITE){
-	return deinstallProbe_RemoteSite(getRemoteSite());}	
+	return deinstallProbe_RemoteSite(getRemoteSite(),pt);}	
       return deinstallProbe_VirtualSite(getVirtualSite(),PROBE_TYPE_ALL);}
     return PROBE_NONEXISTENT;}
 
