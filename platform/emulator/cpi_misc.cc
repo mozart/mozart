@@ -109,15 +109,20 @@ void OZ_hfreeChars(char * is, int n)
 
 static EnlargeableArray<int> is(1024);
 
+struct OZ_TermTrail {
+  OZ_Term   term;
+  OZ_Term * ptr;
+};
+
 int * OZ_findEqualVars(int sz, OZ_Term * ts)
 {
 #ifdef __GNUC__
   /* gcc supports dynamic array sizes */
-  OZ_Term * _ts_ptr[sz], _ts[sz];
+  OZ_TermTrail _term_trail[sz];
 #else
-  OZ_Term ** _ts_ptr = new OZ_Term*[sz];
-  OZ_Term  * _ts     = new OZ_Term[sz];
+  OZ_TermTrail * _term_trail = new OZ_TermTrail[sz];
 #endif
+  int te = 0;
   int i;
 
   is.request(sz);
@@ -125,30 +130,28 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
   for (i = 0; i < sz; i += 1) {
     OZ_Term t = ts[i];
     DEREF(t, tptr);
-    if (oz_isSmallInt(t) || oz_isLiteral(t) || oz_isFSetValue(t)) {
-      is[i] = -1;
+    if (oz_isVar(t)) {
+      Assert(oz_isVar(t));
+      _term_trail[te].ptr  = tptr;
+      _term_trail[te].term = t;
+      te++;
+      is[i] = i;
+      *tptr = makeTaggedMarkInt(i);
+    } else if (oz_isMark(t)) {
+      is[i] = tagged2UnmarkedInt(*tptr);
     } else {
-      if (oz_isMark(t)) {
-	is[i] = tagged2UnmarkedInt(*tptr);
-      } else {
-	Assert(oz_isVar(t));
-	_ts_ptr[i] = tptr;
-	_ts[i] = t;
-	is[i] = i;
-	*tptr = makeTaggedMarkInt(i);
-      }
+      Assert(oz_isSmallInt(t) || oz_isLiteral(t) || oz_isFSetValue(t));
+      is[i] = -1;
     }
   }
 
-  for (i = sz; i--; )
-    if (is[i] == i) {
-      *_ts_ptr[i] = _ts[i];
-      Assert(OZ_isVariable(makeTaggedRef(_ts_ptr[i])));
-    }
+  while (te--) {
+    *(_term_trail[te].ptr) = _term_trail[te].term;
+    Assert(OZ_isVariable(makeTaggedRef(_term_trail[te].ptr)));
+  }
 
 #ifndef __GNUC__
-  delete _ts_ptr;
-  delete _ts;
+  delete _term_trail;
 #endif
 
   return is;
@@ -158,28 +161,22 @@ static EnlargeableArray<int> sgl(1024);
 
 int * OZ_findSingletons(int sz, OZ_Term * ts)
 {
-  int i;
-
   sgl.request(sz);
 
-  for (i = 0; i < sz; i += 1) {
+  for (int i = sz; i--; ) {
     OZ_Term t = ts[i];
-    DEREF(t, tptr);
-    if (oz_isSmallInt(t) || oz_isLiteral(t)) { // mm2
+  retry:
+    if (oz_isSmallInt(t)) {
       sgl[i] = tagged2SmallInt(t);
+    } else if (oz_isRef(t)) {
+      t = *tagged2Ref(t);
+      goto retry;
     } else {
       sgl[i] = -1;
     }
   }
-
+  
   return sgl;
-}
-
-OZ_Boolean OZ_isEqualVars(OZ_Term v1, OZ_Term v2)
-{
-  DEREF(v1, vptr1);
-  DEREF(v2, vptr2);
-  return oz_isVar(v1) && (vptr1 == vptr2);
 }
 
 OZ_Return OZ_typeErrorCPI(char * typeString, int pos, char * comment)
@@ -187,98 +184,100 @@ OZ_Return OZ_typeErrorCPI(char * typeString, int pos, char * comment)
   return typeError(pos, comment, typeString);
 }
 
-int OZ_getFDInf(void)
-{
-  return fd_inf;
-}
-
-int OZ_getFDSup(void)
-{
-  return fd_sup;
-}
-
 int OZ_vectorSize(OZ_Term t) {
-  t = oz_deref(t);
+ retry:
   if (oz_isCons(t)) {
     return OZ_length(t);
   } else if (oz_isSRecord(t)) {
     return tagged2SRecord(t)->getWidth();
   } else if (oz_isLiteral(t)) {
     return 0;
+  } else if (oz_isRef(t)) {
+    t = *tagged2Ref(t);
+    goto retry;
   }
   return -1;
 }
 
 OZ_Term * OZ_getOzTermVector(OZ_Term t, OZ_Term * v)
 {
-  int i = 0;
-
-  t=oz_deref(t);
-
+ retry:
   if (oz_isLiteral(t)) {
-
-    ;
-
+    
+    return v;
+    
   } else if (oz_isCons(t)) {
-
+    
+    int i = 0;
+    
     do {
       v[i++] = oz_head(t);
       t = oz_deref(oz_tail(t));
     } while (oz_isCons(t));
+    
+    return v + i;
+    
+  } else if (oz_isSRecord(t)) {
+    SRecord * sr = tagged2SRecord(t);
+    if (sr->isTuple()) {
+      
+      int sz = sr->getWidth();
+      
+      for (int j = sz; j--; )
+	v[j] = sr->getArg(j);
 
-  } else if (oz_isTuple(t)) {
+      return v + sz;
+      
+    } else {
+      Assert(oz_isRecord(t));
 
-    for (int sz = tagged2SRecord(t)->getWidth(); i < sz; i += 1)
-      v[i] = tagged2SRecord(t)->getArg(i);
+      int i = 0;
 
-  } else if (oz_isRecord(t)) {
+      for (OZ_Term al = sr->getArityList(); oz_isCons(al); al = oz_tail(al))
+	v[i++] = sr->getFeature(oz_head(al));
 
-    OZ_Term al = OZ_arityList(t);
-
-    for (; oz_isCons(al); al = oz_tail(al))
-      v[i++] = tagged2SRecord(t)->getFeature(oz_head(al));
-
-  } else {
-    OZ_warning("OZ_getOzTermVector: Unexpected term, expected vector.");
-    return NULL;
+      return v + i;
+    }
+  } else if (oz_isRef(t)) {
+    t = *tagged2Ref(t);
+    goto retry;
   }
-  return v + i;
+  OZ_warning("OZ_getOzTermVector: Unexpected term, expected vector.");
+  return NULL;
 }
 
 int * OZ_getCIntVector(OZ_Term t, int * v)
 {
-  int i = 0;
-
-  t = oz_deref(t);
-
+ retry:
   if (oz_isLiteral(t)) {
-
-    ;
-
+    return v;
   } if (oz_isCons(t)) {
-
+    int i = 0;
     do {
       v[i++] = tagged2SmallInt(oz_deref((oz_head(t))));
       t = oz_deref(oz_tail(t));
     } while (oz_isCons(t));
-
-  } else if (oz_isTuple(t)) {
-
-    for (int sz = tagged2SRecord(t)->getWidth(); i < sz; i += 1)
-      v[i] = tagged2SmallInt(oz_deref((tagged2SRecord(t)->getArg(i))));
-
-  } else if (oz_isRecord(t)) {
-
-    OZ_Term al = OZ_arityList(t);
-
-    for (; oz_isCons(al); al = oz_tail(al))
-      v[i++] = tagged2SmallInt(oz_deref((tagged2SRecord(t)->getFeature(al))));
-
-  } else {
-    OZ_warning("OZ_getCIntVector: Unexpected term, expected vector.");
-    return NULL;
+    return v + i;
+  } else if (oz_isSRecord(t)) {
+    SRecord * sr = tagged2SRecord(t);
+    if (sr->isTuple()) {
+      int sz = sr->getWidth();
+      for (int j = sz; j--;)
+	v[j] = tagged2SmallInt(oz_deref(sr->getArg(j)));
+      return v + sz;
+    } else {
+      Assert(oz_isRecord(t));
+      int i = 0;
+      for (OZ_Term al = sr->getArityList(); oz_isCons(al); al = oz_tail(al))
+	v[i++] = tagged2SmallInt(oz_deref(sr->getFeature(al)));
+      return v + i;
+    }
+  } else if (oz_isRef(t)) {
+    t = *tagged2Ref(t);
+    goto retry;
   }
-  return v + i;
+  OZ_warning("OZ_getCIntVector: Unexpected term, expected vector.");
+  return NULL;
 }
 
 void * OZ_FSetValue::operator new(size_t s)
