@@ -2,23 +2,22 @@ functor
 import
    Celloid(new:New is:Is access:Access assign:Assign)
    at 'native-celloid.so{native}'
-   Error ErrorRegistry
+   ErrorRegistry(put)
 export
    New Is Access Assign
 define
-   fun {CelloidFormatter Exc}
-      E = {Error.dispatch Exc}
+   fun {CelloidFormatter E}
       T = 'Celloid Error'
    in
       case E of celloid(nonLocal C V) then
-	 {Error.format T
-	  'Attempted assign on non local celloid'
-	  [hint(l:'Operation' m:'Celloid.assign')
-	   hint(l:'Celloid'   m:oz(C))
-	   hint(l:'Value'     m:oz(V))]
-	  Exc}
+	 error(kind: T
+	       msg: 'Attempted assign on non local celloid'
+	       items: [hint(l:'Operation' m:'Celloid.assign')
+		       hint(l:'Celloid'   m:oz(C))
+		       hint(l:'Value'     m:oz(V))])
       else
-	 {Error.formatGeneric T Exc}
+	 error(kind: T
+	       items: [line(oz(E))])
       end
    end
    {ErrorRegistry.put celloid CelloidFormatter}
