@@ -1326,16 +1326,22 @@ OZ_Return pendThreadAddToEndEmul(PendThread **pt,Thread *t, Board *home)
   SuspendOnControlVar;
 }
 
-Thread* pendThreadResumeFirst(PendThread **pt){
-  PendThread *tmp=*pt;
-  Assert(tmp!=NULL);
-  ControlVarResume(tmp->controlvar);
-  Thread *t=tmp->thread;
-  Assert(t!=NULL);
-  Assert(t!=(Thread*) 0x1);
-  *pt=tmp->next;
-  tmp->dispose();
-  return t;}
+Thread * pendThreadResumeFirst(PendThread **pt){
+  Thread * t;
+  do {
+    PendThread * tmp = *pt;
+    Assert(tmp!=NULL);
+    ControlVarResume(tmp->controlvar);
+    t = tmp->thread;
+    Assert(t!=NULL);
+    Assert(t!=(Thread*) 0x1);
+    *pt = tmp->next;
+    tmp->dispose();
+    if (!t->isDead())
+      return t;
+  } while (pt);
+  return t;
+}
 
 
 void gCollectPendThreadEmul(PendThread **pt)
