@@ -18,18 +18,23 @@ GEOMETRY = \
 	packer-resize-both packer-resize-expand \
 	packer-resize-fill widget-anchor
 WIDGETS2 = \
-	button check-and-radio check-and-radio-action menu
+	button check-and-radio check-and-radio-action \
+	menu entry scale file listbox help
+CANVAS = \
+	barchart
+TOOLS = \
+	dialog error menubar
+	
 HTMLEXTRAFILES0 = \
 	$(STARTED:%=started/%.gif) \
 	$(WIDGETS1:%=widgets-1/%.gif) \
 	$(GEOMETRY:%=geometry/%.gif) \
 	$(WIDGETS2:%=widgets-2/%.gif) \
-	dialog.gif entry.gif error.gif file.gif help.gif \
-	listbox.gif scales.gif \
-	tools-menubar.gif \
-	queen.xbm truck-left.ppm truck-right.ppm
+	$(CANVAS:%=canvas/%.gif) \
+	$(TOOLS:%=tools/%.gif) \
+	queen.xbm truck-left.ppm truck-right.ppm \
+	wp.gif
 HTMLEXTRAFILES = \
-	wp.gif \
 	$(addprefix pictures/,$(HTMLEXTRAFILES0))
 OZDOCHTMLFLAGS = --autoindex
 
