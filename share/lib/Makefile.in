@@ -464,3 +464,6 @@ my-ozma:
 
 # no suffixes needed
 .SUFFIXES:
+
+.PHONY: depend
+depend:

@@ -228,6 +228,7 @@ $(OZIMG)/trucks/%.gif: images/trucks/%.gif
 #
 # Generic
 #
+.PHONY: check depend bootstrap clean veryclean distclean
 
 clean::
 	-rm -f *~ ./*/*~ ./*/*/*~
@@ -252,3 +253,5 @@ bootstrap:
 	$(MAKE) boot-all
 
 check:
+
+depend:
