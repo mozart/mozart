@@ -26,9 +26,6 @@
 %%%
 
 functor
-require
-   DefaultURL(functorNames: Modules)
-   
 import
    Application(getCmdArgs)
    Module(manager)
@@ -38,7 +35,12 @@ import
    Open(file)
    Compiler(engine)
    Emacs(interface)
-
+export
+   compiler: OPICompiler
+   interface: CompilerUI
+   'import': Import
+require
+   DefaultURL(functorNames: Modules)
 prepare
    Spec = record(host(single type: string default: unit))
 
@@ -72,12 +74,6 @@ prepare
       [] F|Fr then {Dots M.F Fr}
       end
    end
-
-export
-   compiler: OPICompiler
-   interface: CompilerUI
-   'import':  Import
-
 define
    Args = {Application.getCmdArgs Spec}
 
@@ -101,10 +97,9 @@ define
 	 %% the module name is the basename without filename extension
 	 Base = {Reverse {String.token
 			  {Reverse {VirtualString.toString Url}} &/ $ _}}
+	 H|R = {String.token Base &. $ _}
       in
-	 {String.toAtom local H|R={String.token Base &. $ _} in
-			   {Char.toUpper H}|R
-			end}#Url
+	 {String.toAtom {Char.toUpper H}|R}#Url
       end
    in
       proc {Import Us}
@@ -119,8 +114,8 @@ define
       in
 	 %% Make available in compiler environment
 	 {OPICompiler enqueue(mergeEnv({List.toRecord env Ms}))}
-	 %% Print message, is wrong: LEIF, CHECK THAT
-	 {System.printError ('% --- Opening functors:\n' #
+	 %%--** Print message, is wrong: LEIF, CHECK THAT
+	 {System.printError ('% --- Opening functors:\n'#
 			     {FoldL MNUs fun {$ V MN#U}
 					    V#'%   '#MN#' at '#U#'\n'
 					 end ''})}
@@ -152,15 +147,11 @@ define
        in
 	  {OPICompiler enqueue(mergeEnv(Env))}
        end}
-
    end
 
-					       
    CompilerUI = {New Emacs.interface init(OPICompiler Args.host)}
    {Property.put 'opi.compiler' CompilerUI}
 
-
-   
    %% Make the error handler non-halting
    {Property.put 'errors.toplevel'    proc {$} skip end}
    {Property.put 'errors.subordinate' proc {$} fail end}

@@ -79,7 +79,7 @@ define
 	    I = {New Emacs.interface
 		 init(E unit
 		      proc {$ V}
-			 {Socket write(vs: {Value.toVirtualString V 0 0})}
+			 {Socket write(vs: V)}
 		      end)}
 	    {Ozcar.object conf(emacsInterface: I)}
 	    thread {I readQueries()} end
