@@ -651,6 +651,7 @@ State procedureArityInline(TaggedRef procedure, TaggedRef &out)
   goto typeError;
 
 typeError:
+  out = nil();
   TypeError1("procedureArity",0,"Procedure",pterm);
 }
 
