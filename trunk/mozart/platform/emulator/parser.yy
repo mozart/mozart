@@ -98,7 +98,7 @@ static void xyerror(char *);
 // Atom definitions
 //-----------------
 
-OZ_Term _PA_AtomTab[106];
+OZ_Term _PA_AtomTab[108];
 
 #define PA_allowdeprecated			_PA_AtomTab[0]
 #define PA_coord				_PA_AtomTab[1]
@@ -874,10 +874,8 @@ phrase2		: phrase2 add coord phrase2 %prec T_ADD
 		  { $$ = $1; }
 		| parserSpecification
 		  { $$ = $1; }
-		| T_loop coord phraseList T_in sequence T_end coord
-		  { $$ = newCTerm(PA_fLoop,$3,$5,makeLongPos($2,$7)); }
-		| T_loop coord sequence T_end coord
-		  { $$ = newCTerm(PA_fLoop,AtomNil,$3,makeLongPos($2,$5)); }
+		| T_loop coord inSequence T_end coord
+		  { $$ = newCTerm(PA_fLoop,$3,makeLongPos($2,$5)); }
 		| T_LMACRO coord phraseList T_RMACRO coord
 		  { $$ = newCTerm(PA_fMacro,$3,makeLongPos($2,$5)); }
 		;
