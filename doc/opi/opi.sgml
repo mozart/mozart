@@ -1436,12 +1436,10 @@ cache=~/.oz/cache:cache=?{oz-home}/cache>>>
 	  <Index/emulator<And>debugging/
 	  The last command is for starting the Mozart Emulator under <Span
 	  class=index/gdb/.
-	  <!--** reference to gdb -->
 	  <List>
 	    <Entry class=command><Span class=index/<<oz-gdb>>/
 	      (<Key id="key.oz-gdb"/C-. d/)
 	    <Item>
-	      <!--** reference to gud-mode -->
 	      <Index/<<oz>> shell script/
 	      <Index/shell script<And><<oz>>/
 	      Toggle debugging of the Oz Emulator with gdb.  This sets
