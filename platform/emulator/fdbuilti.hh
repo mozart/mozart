@@ -35,7 +35,7 @@ enum Recalc_e {lower, upper};
 // Macros
 
 // TMUELLER: MAXFDBIARGS twice
-#define MAXFDBIARGS 100000 // maximum number of arguments of fd built-ins
+#define MAXFDBIARGS 1000 // maximum number of arguments of fd built-ins
 
 #if PROFILE_FD == 1
 #define FailFD (_PROFILE_CODE1(FDProfiles.inc_item(no_failed_props)), FAILED)
