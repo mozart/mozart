@@ -1975,8 +1975,9 @@ void ConstTerm::gcConstRecurse()
     
   case Co_Port:
     {
-      Port *p = (Port*) this;
+      PortWithStream *p = (PortWithStream *) this;
       p->setBoard(p->getBoard()->gcBoard());
+      gcTagged(p->strm,p->strm);
       break;
     }
   case Co_Space:
