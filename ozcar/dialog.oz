@@ -42,13 +42,7 @@ local
                                   bg:     DefaultBackground
                                   text:
                                      ('Platform: ' # Platform # ', ' #
-                                      if RunningWithXF86Display then
-                                         'Display: XF86'
-                                      elseif Platform \= WindowsPlatform then
-                                         'Display: X11'
-                                      else
-                                         'Display: Windows'
-                                      end))}
+                                      {Tk.return winfo(server '.')}))}
 
          A = {New Tk.label tkInit(parent: self
                                   bg:     DefaultBackground
