@@ -2187,7 +2187,7 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  LockFrame():OzLock(NULL,Te_Frame){Assert(0);}
+  LockFrame():OzLock((Board*)NULL,Te_Frame){Assert(0);}
   unsigned int getState(){
     Assert(sec!=NULL);
     return sec->state;}
@@ -2264,7 +2264,7 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  LockManager() : OzLock(NULL,Te_Manager){Assert(0);}
+  LockManager() : OzLock((Board*)NULL,Te_Manager){Assert(0);}
 
   void setOwnCurrent(){
     setPtr(NULL);}

@@ -96,13 +96,13 @@ OZ_Return DisjunctivePropagatorStream::propagate(void)
 
   int disjFlag = 0;
   int new_items = 0;
-  struct MyList
+  struct MyListA
   {
     OZ_Term fd;
     int         dur;
-    struct MyList * next;
+    struct MyListA * next;
   };
-  struct MyList * my_list = NULL;
+  struct MyListA * my_list = NULL;
   int only_stream = 1;
 
 
@@ -113,7 +113,7 @@ OZ_Return DisjunctivePropagatorStream::propagate(void)
       if (! strcmp("#", label)) {
         OZ_Term new_fd  = OZ_getArg(e, 0);
         int new_dur = OZ_intToC(OZ_getArg(e, 1));
-        MyList * newItem = new MyList;
+        MyListA * newItem = new MyListA;
         newItem->fd = new_fd;
         newItem->dur = new_dur;
         if (new_items == 0)
@@ -309,19 +309,19 @@ OZ_Return DistinctPropagatorStream::propagate(void)
   OZ_FiniteDomain u(fd_empty);
 
   int new_items = 0;
-  struct MyList
+  struct MyListB
   {
     OZ_Term fd;
-    struct MyList * next;
+    struct MyListB * next;
   };
-  struct MyList * my_list = NULL;
+  struct MyListB * my_list = NULL;
   int only_stream = 1;
 
 
   while (!st.isEostr()) {
     OZ_Term e = st.get();
     if (OZ_isVariable(e)) {
-      MyList * newItem = ::new MyList;
+      MyListB * newItem = ::new MyListB;
       newItem->fd = e;
       if (new_items == 0)
         {
@@ -356,7 +356,7 @@ OZ_Return DistinctPropagatorStream::propagate(void)
     for (i = 0; i<new_items; i++ ) {
       new_reg_fds[ts+i] = my_list->fd;
       imposeOn(my_list->fd);
-      MyList * aux = my_list;
+      MyListB * aux = my_list;
       my_list = my_list->next;
       :: delete aux;
     }

@@ -5575,7 +5575,8 @@ OZ_C_proc_begin(BIperdioStatistics,1)
 
   OZ_Term dif_send_ar=oz_nil();
   OZ_Term dif_recv_ar=oz_nil();
-  for (int i=0; i<DIF_LAST; i++) {
+  int i;
+  for (i=0; i<DIF_LAST; i++) {
     dif_send_ar=oz_cons(oz_pairAI(dif_names[i],dif_counter[i].getSend()),
                         dif_send_ar);
     dif_recv_ar=oz_cons(oz_pairAI(dif_names[i],dif_counter[i].getRecv()),
@@ -5586,7 +5587,7 @@ OZ_C_proc_begin(BIperdioStatistics,1)
 
   OZ_Term misc_send_ar=oz_nil();
   OZ_Term misc_recv_ar=oz_nil();
-  for (int i=0; i<MISC_LAST; i++) {
+  for (i=0; i<MISC_LAST; i++) {
     misc_send_ar=oz_cons(oz_pairAI(misc_names[i],misc_counter[i].getSend()),
                          misc_send_ar);
     misc_recv_ar=oz_cons(oz_pairAI(misc_names[i],misc_counter[i].getRecv()),
@@ -5597,7 +5598,7 @@ OZ_C_proc_begin(BIperdioStatistics,1)
 
   OZ_Term mess_send_ar=oz_nil();
   OZ_Term mess_recv_ar=oz_nil();
-  for (int i=0; i<M_LAST; i++) {
+  for (i=0; i<M_LAST; i++) {
     mess_send_ar=oz_cons(oz_pairAI(mess_names[i],mess_counter[i].getSend()),
                          mess_send_ar);
     mess_recv_ar=oz_cons(oz_pairAI(mess_names[i],mess_counter[i].getRecv()),

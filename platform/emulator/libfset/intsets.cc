@@ -48,18 +48,20 @@ OZ_Return FSetsMinPropagator::propagate(void)
   // card(s) > 0
   FailOnInvalid(s->putCard(1, 32*fset_high));
 
-  for (int i = 0; i < 32*fset_high; i += 1) {
-    // i < min(d) ==> i not in s
-    if (i < d->getMinElem())
-      FailOnInvalid(*s -= i);
+  {
+    for (int i = 0; i < 32*fset_high; i += 1) {
+      // i < min(d) ==> i not in s
+      if (i < d->getMinElem())
+        FailOnInvalid(*s -= i);
 
-    // i in s ==> min(d) <= i
-    if (s->isIn(i)) {
-      FailOnEmpty(*d <= i);
-    }
-    // DENYS: i not in s ==> d=/=i
-    else if (s->isNotIn(i)) {
-      FailOnEmpty(*d -= i);
+      // i in s ==> min(d) <= i
+      if (s->isIn(i)) {
+        FailOnEmpty(*d <= i);
+      }
+      // DENYS: i not in s ==> d=/=i
+      else if (s->isNotIn(i)) {
+        FailOnEmpty(*d -= i);
+      }
     }
   }
 
@@ -109,18 +111,20 @@ OZ_Return FSetsMaxPropagator::propagate(void)
   // card(s) > 0
   FailOnInvalid(s->putCard(1, 32*fset_high));
 
-  for (int i = 0; i < 32*fset_high; i += 1) {
-    // i > max(d) ==> i not in s
-    if (i > d->getMaxElem())
-      FailOnInvalid(*s -= i);
+  {
+    for (int i = 0; i < 32*fset_high; i += 1) {
+      // i > max(d) ==> i not in s
+      if (i > d->getMaxElem())
+        FailOnInvalid(*s -= i);
 
-    // i in s ==> max(d) >= i
-    if (s->isIn(i)) {
-      FailOnEmpty(*d >= i);
-    }
-    // i not in s ==> d=/=i
-    else if (s->isNotIn(i)) {
-      FailOnEmpty(*d -= i);
+      // i in s ==> max(d) >= i
+      if (s->isIn(i)) {
+        FailOnEmpty(*d >= i);
+      }
+      // i not in s ==> d=/=i
+      else if (s->isNotIn(i)) {
+        FailOnEmpty(*d -= i);
+      }
     }
   }
 
