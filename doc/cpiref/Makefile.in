@@ -9,6 +9,7 @@ SGMLSRCS = 	r_aux.sgml \
 		r_fd.sgml \
 		r_fdint.sgml \
 		r_fs.sgml \
+		r_fsvar.sgml \
 		r_fsc.sgml \
 		r_overview.sgml \
 		r_prop.sgml \
