@@ -87,9 +87,10 @@ define
          Title = OzDocToCode,Content(Node.1 $)
          Code  = OzDocToCode,BatchCode(Node.2 1 $)
          Key   = {VirtualString.toAtom Title}
+         Prev  = {Dictionary.condGet @Defs Key nil}
       in
          {Dictionary.put @Defs Key
-          {Dictionary.condGet @Defs Key nil}#Code}
+          if Prev==nil then Code else Prev#("\n"#Code) end}
       end
       meth BatchCode(Node I $)
          if {HasFeature Node I} then M=Node.I in
