@@ -41,7 +41,6 @@ protected:
   ByteBuffer *writeBuffer;
 private:
   int fd;
-  int minSend;
 
   inline void marshal(MsgContainer *msgC, int acknum);
   inline enum unmarshalReturn unmarshal();
@@ -57,6 +56,7 @@ public:
   OZ_Return setUp(DSite *site,ComObj *comObj,OZ_Term settings);
 
   Bool hasEmptyBuffers();
+  void setBufferSize(int bufSizeIn);
 
   TransController *getTransController();
 

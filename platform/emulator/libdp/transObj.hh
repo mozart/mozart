@@ -61,9 +61,11 @@ public:
 
   virtual Bool hasEmptyBuffers()=0;
 
-  int getBufferSize() {
-    return bufferSize;
-  }
+  int getBufferSize() { return (bufferSize); }
+  // 'setBufferSize' is used by a comObj if the buffer size needs to
+  // be changed;
+  virtual void setBufferSize(int bufSizeIn) = 0;
+
   virtual TransController *getTransController()=0;
 };
 

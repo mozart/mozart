@@ -40,6 +40,9 @@
 #define CLOSE_TIMEOUT           ozconf.dpCloseTimeout
 #define WF_REMOTE_TIMEOUT       ozconf.dpWFRemoteTimeout
 #define WF_REOPEN_TIMEOUT       ozconf.dpFirewallReopenTimeout
+// one size fits all - currently cannot have different max sizes
+// for different sites;
+#define MAX_BUFFER_SIZE         ozconf.dpMaxBufferSize
 
 #define MSG_ACK_TIMEOUT 1000
 #define MSG_ACK_LENGTH 200
@@ -425,20 +428,24 @@ Bool ComObj::hasNeed() {
   return localRef || queues.hasNeed();
 }
 
-inline OZ_Term ComObj::createCI(int bufferSize) {
+inline OZ_Term ComObj::createCI(int bufferSize)
+{
   int time,length;
   time=MSG_ACK_TIMEOUT;
   length=MSG_ACK_LENGTH;
   return OZ_recordInit(oz_atom("channelinfo"),
                        oz_cons(oz_pairAI("lastReceived",lastReceived),
-                         oz_cons(oz_pairAI("msgAckTimeOut",time),
-                           oz_cons(oz_pairAI("msgAckLength",length),
-                             oz_cons(oz_pairAI("bufferSize",bufferSize),
-                                oz_cons(oz_pairAI("hasNeed",hasNeed()),
-                                        oz_nil()))))));
+                       oz_cons(oz_pairAI("msgAckTimeOut",time),
+                       oz_cons(oz_pairAI("msgAckLength",length),
+                       oz_cons(oz_pairAI("bufferSize",bufferSize),
+                       oz_cons(oz_pairAI("maxBufferSize",MAX_BUFFER_SIZE),
+                       oz_cons(oz_pairAI("hasNeed",hasNeed()),
+                       oz_nil())))))));
 }
 
-inline void ComObj::extractCI(OZ_Term channelinfo,int &bufferSize) {
+inline void ComObj::extractCI(OZ_Term channelinfo,
+                              int &bufferSize, int &maxBufferSize)
+{
   int index;
   int remLastReceived;
 
@@ -462,7 +469,8 @@ inline void ComObj::extractCI(OZ_Term channelinfo,int &bufferSize) {
 
     index=srec->getIndex(oz_atom("bufferSize"));
     bufferSize=oz_intToC(srec->getArg(index));
-    Assert(bufferSize==transObj->getBufferSize());
+    index=srec->getIndex(oz_atom("maxBufferSize"));
+    maxBufferSize=oz_intToC(srec->getArg(index));
 
     index=srec->getIndex(oz_atom("hasNeed"));
     remoteRef=oz_intToC(srec->getArg(index));
@@ -490,19 +498,18 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
   MessageType mt=msgC->getMessageType();
   switch(mt) {
   case C_PRESENT:
-    if(state==OPENING_WF_PRESENT) {
+    if (state==OPENING_WF_PRESENT) {
       char *version;
       DSite *s1;
 
       msgC->get_C_PRESENT(version,s1);
 
-      if(strcmp(version,PERDIOVERSION)!=0 || s1!=site) {
+      if (strcmp(version,PERDIOVERSION)!=0 || s1!=site) {
         msgContainerManager->deleteMsgContainer(msgC);
         site->discoveryPerm();
         site->probeFault(PROBE_PERM);
         return FALSE;
-      }
-      else {
+      } else {
         state=OPENING_WF_NEGOTIATE_ANS;
         MsgContainer *newmsgC=msgContainerManager->newMsgContainer(NULL);
         OZ_Term channelinfo;
@@ -510,19 +517,22 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
         newmsgC->put_C_NEGOTIATE(PERDIOVERSION,myDSite,channelinfo);
         send(newmsgC);
       }
+    } else {
+      errorRec(mt);
     }
-    else errorRec(mt);
     break;
+
   case C_NEGOTIATE:
-    if(state==ANONYMOUS_WF_NEGOTIATE) {
+    if (state == ANONYMOUS_WF_NEGOTIATE) {
       char *version;
       DSite *s1;
       OZ_Term channelinfo;
+
       msgC->get_C_NEGOTIATE(version,s1,channelinfo);
       site=s1;
       transObj->setSite(site);
 
-      if(DO_CONNECT_LOG) {
+      if (DO_CONNECT_LOG) {
         fprintf(logfile,"accept(%d %d %s)\n",
                 myDSite->getTimeStamp()->pid,
                 site!=NULL?site->getTimeStamp()->pid:0,
@@ -530,13 +540,12 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
 
       }
 
-      if(strcmp(version,PERDIOVERSION)!=0) {
+      if (strcmp(version,PERDIOVERSION)!=0) {
         msgContainerManager->deleteMsgContainer(msgC);
         site->discoveryPerm();
         site->probeFault(PROBE_PERM);
         return FALSE;
-      }
-      else {
+      } else {
         // Tell the site about this comObj
         ComObj *other=s1->setComObj(this);
         if (other==(ComObj *) -1) {
@@ -545,10 +554,10 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
           // continue reading.
           msgContainerManager->deleteMsgContainer(msgC);
           comController->deleteComObj(this);
-
           return FALSE;
-        }
-        else if (other!=NULL) {
+
+          //
+        } else if (other!=NULL) {
           // This object is an anonymous object and the other
           // is to be used. What transObj to use needs to be
           // decided on.
@@ -559,36 +568,50 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
           comController->deleteComObj(this);
           return ret; // !This object may not do anything more, but the trO
                       // has to continue if it was adopted.
-        }
-        adoptCI(channelinfo);
-        state=WORKING;
-        // Whether the channel is ok now or not is to be decided by
-        // the future fault-model. For now it has to be for ports etc
-        // to start working after temp&resource preemption.
-        if(probing) {
-          timers->setTimer(probeFaultTimer,maxrtt,
-                           comObj_probeFault,(void *) this);
-          timers->setTimer(probeIntervalTimer,probeinterval,
-                           comObj_sendProbePing,(void *) this);
-          if(probeFired) {
-//          printf("probeOK (f %d t %d)\n",myDSite->getTimeStamp()->pid,
-//                 site!=NULL?site->getTimeStamp()->pid:0-1);
-            site->probeFault(PROBE_OK);
-            probeFired=FALSE;
+
+          //
+        } else {
+          adoptCI(channelinfo);
+          state=WORKING;
+          // Whether the channel is ok now or not is to be decided by
+          // the future fault-model. For now it has to be for ports etc
+          // to start working after temp&resource preemption.
+          if (probing) {
+            timers->setTimer(probeFaultTimer,maxrtt,
+                             comObj_probeFault,(void *) this);
+            timers->setTimer(probeIntervalTimer,probeinterval,
+                             comObj_sendProbePing,(void *) this);
+            if (probeFired) {
+//            printf("probeOK (f %d t %d)\n",myDSite->getTimeStamp()->pid,
+//                   site!=NULL?site->getTimeStamp()->pid:0-1);
+              site->probeFault(PROBE_OK);
+              probeFired=FALSE;
+            }
           }
         }
         timers->clearTimer(timer);
       }
+    } else {
+      errorRec(mt);
     }
-    else errorRec(mt);
     break;
+
   case C_NEGOTIATE_ANS:
-    if(state==OPENING_WF_NEGOTIATE_ANS) {
+    if (state==OPENING_WF_NEGOTIATE_ANS) {
       OZ_Term channelinfo;
-      int bufferSize;
+      int bufferSize, maxBufferSize;
+      int myBufferSize = transObj->getBufferSize();
       msgC->get_C_NEGOTIATE_ANS(channelinfo);
-      extractCI(channelinfo,bufferSize);
-      //      if (bufferSize<myBufferSize) // Shrink
+      extractCI(channelinfo, bufferSize, maxBufferSize);
+
+      // Handle the buffer size issue.
+      // The biggest of local and remote buffer sizes is choosen, but
+      // not exceeding either of 'maxBufferSize's;
+      bufferSize = max(bufferSize, myBufferSize);
+      bufferSize = min(bufferSize, min(MAX_BUFFER_SIZE, maxBufferSize));
+      //
+      if (bufferSize != myBufferSize)
+        transObj->setBufferSize(bufferSize);
 
       state=WORKING;
       // Whether the channel is ok now or not is to be decided by
@@ -762,14 +785,16 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
   return TRUE;
 }
 
-void ComObj::adoptCI(OZ_Term channelinfo){
-  int bufferSize;
+void ComObj::adoptCI(OZ_Term channelinfo)
+{
+  int bufferSize, maxBufferSize;
+  int myBufferSize = transObj->getBufferSize();
 
   retryTimeout=ozconf.dpRetryTimeFloor;
   // Whether the channel is ok now or not is to be decided by
   // the future fault-model. For now it has to be for ports etc
   // to start working after temp&resource preemption.
-  if(probing) {
+  if (probing) {
     timers->setTimer(probeFaultTimer,maxrtt,
                      comObj_probeFault,(void *) this);
     timers->setTimer(probeIntervalTimer,probeinterval,
@@ -782,11 +807,19 @@ void ComObj::adoptCI(OZ_Term channelinfo){
     }
   }
 
-  extractCI(channelinfo,bufferSize);
-//    if (bufferSize<myBufferSize)
-//     // shrink buffer, set myBuffersize to bufferSize, answer with bufferSize
-//    else
-//      // answer with myBufferSize
+  //
+  extractCI(channelinfo, bufferSize, maxBufferSize);
+
+  // Handle the buffer size issue.
+  // The biggest of local and remote buffer sizes is choosen, but not
+  // exceeding either of 'maxBufferSize's;
+  bufferSize = max(bufferSize, myBufferSize);
+  bufferSize = min(bufferSize, min(MAX_BUFFER_SIZE, maxBufferSize));
+  //
+  if (bufferSize != myBufferSize)
+    transObj->setBufferSize(bufferSize);
+
+  //
   MsgContainer *newmsgC=msgContainerManager->newMsgContainer(NULL);
   channelinfo=createCI(bufferSize);
   newmsgC->put_C_NEGOTIATE_ANS(channelinfo);
