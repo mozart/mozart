@@ -24,7 +24,6 @@ in=$srcdir/oz.h
 initffuns=initffuns.cc
 
 cat > $ozc << EOF
-#define OZC
 #include <string.h>
 #include <stdio.h>
 #include "oz.h"
@@ -46,7 +45,8 @@ int ozcdecl OZ_linkFF(char *version, void** funs)
   int i=0;
 
   if (strcmp(OZVERSION,version)!=0) {
-    fprintf(stderr,"*** version mismatch in 'OZ_linkFF' (%s,%s)\n",OZVERSION,version);
+    fprintf(stderr,"*** version mismatch in 'OZ_linkFF' (%s,%s)\n",
+            OZVERSION,version);
     return 0;
   }
 EOF
@@ -61,17 +61,17 @@ cat >> $ozc << EOF
 EOF
 
 cat > $initffuns << EOF
-#ifdef WINDOWS
-
 #ifdef HAVE_CONFIG_H
 #include "conf.h"
 #endif
+
+#ifdef WINDOWS
 
 #include "base.hh"
 #include "oz.h"
 
 #undef _FUNDECL
-#define _FUNDECL(fun,args) ffuns[i++] = fun
+#define _FUNDECL(fun,args) ffuns[i++] = &fun
 
 void **ffuns;
 
