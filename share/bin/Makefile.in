@@ -33,7 +33,7 @@ MKINSTALLDIRS	= @MKINSTALLDIRS@
 INSTALL_BIN	= $(INSTALL) -m 555
 
 SCRIPTS = oz ozplatform ozdynld
-LINKS   = ozdo ozapplet ozengine
+LINKS   = ozengine
 
 .PHONY: bootstrap all install clean distclean win-install
 
