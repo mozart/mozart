@@ -152,7 +152,7 @@ OZ_Bool addNonResSuspForCon(TaggedRef v, TaggedRefPtr vp, TypeOfTerm vt,
   } else if (isUVar(vt)) {
     addSuspOnlyToUVar(vp, new CondSuspList(s, NULL, isConstrained));
   } else if (isGenFDVar(v,vt)) {
-    addSuspFDVar(v, new SuspList(s, NULL), fd_size);
+    addSuspFDVar(v, new SuspList(s, NULL));
   } else {
     error("unexpected term found");
     return FAILED;

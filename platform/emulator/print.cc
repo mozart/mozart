@@ -165,11 +165,6 @@ PRINT(GenCVariable){
 	       << '/'
 	       << me->fdSuspList[fd_bounds]->lengthProp()
 	       << ')';
-      if (isEffectiveList(me->fdSuspList[fd_size]) == OK)
-	stream << " s(" << me->fdSuspList[fd_size]->length()
-	       << '/'
-	       << me->fdSuspList[fd_size]->lengthProp()
-	       << ')';
       stream << ' ';
       me->getDom().print(stream, 0);
       break;
@@ -788,9 +783,6 @@ PRINTLONG(GenCVariable){
   
     stream << indent(offset) << "Bounds SuspList:\n"; 
     ((GenFDVariable*)this)->fdSuspList[fd_bounds]->print(stream, 0, offset+3);
-  
-    stream << indent(offset) << "Size SuspList:\n"; 
-    ((GenFDVariable*)this)->fdSuspList[fd_size]->print(stream, 0, offset+3);
   }
   
   stream << indent(offset) << "HomeNode: ";
