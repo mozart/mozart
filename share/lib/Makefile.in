@@ -27,7 +27,7 @@ OZC             = @OZC@
 SCOMPILE        = $(OZC) $(OZFLAGS) -c
 COMPILE         = $(OZC) $(OZFLAGS) -l Standard -c
 EXEC            = $(OZC) $(OZFLAGS)
-EXECWITHSTD     = $(OZC) $(OZFLAGS) -l Standard -x
+COMPILESYSLET   = $(OZC) $(OZFLAGS) -l Standard -x
 OZMA            = $(OZC) $(OZFLAGS) -DOZM --ozma
 
 # exports
@@ -179,7 +179,7 @@ compiler-Opcodes.oz: compiler/Opcodes.m4oz ../../platform/emulator/instrDefs.m4
         || (rm -f $@; exit 1)
 
 functor2env: $(RUNFUNCTORS) Standard.ozf MakeFunctorToEnv.oz
-        $(EXECWITHSTD) MakeFunctorToEnv.oz -o $@
+        $(COMPILESYSLET) MakeFunctorToEnv.oz -o $@
 
 compiler-Env.oz: $(RUNFUNCTORS) Standard.ozf functor2env
         $(OZENGINE) functor2env -in=Standard.ozf -out=compiler-Env.oz
@@ -228,13 +228,13 @@ $(COMPILER_FUN): FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCode.ozf \
 $(SYSLETS): $(RUNFUNCTORS)
 
 ozc: Standard.ozf MakeBatch.oz BatchCompile.oz
-        $(EXECWITHSTD) MakeBatch.oz -o $@
+        $(COMPILESYSLET) MakeBatch.oz -o $@
 
 ozserver: Standard.ozf MakeOzServer.oz
-        $(EXECWITHSTD) MakeOzServer.oz -o $@
+        $(COMPILESYSLET) MakeOzServer.oz -o $@
 
 ozvsserver: Standard.ozf MakeOzVSServer.oz dp/VSServer.oz
-        $(EXECWITHSTD) MakeOzVSServer.oz -o $@
+        $(COMPILESYSLET) MakeOzVSServer.oz -o $@
 
 #---------------------------------------------------------------------
 # Installation
@@ -386,7 +386,7 @@ stage3:
 # stage3a: recreate only the functors using the stage2b Ozma file
 stage3a:
         $(MAKE) install-main PREFIX=$(STAGE3A) \
-        OZ_LOAD=prefix== \
+        OZ_LOAD=prefix=$(URL)/lib/=./:.:= \
         OZC=$(SRCDIR)/ozc.sh \
         OZINIT=$(STAGE2B)/lib/Init.ozp \
         OZMAINIT=$(STAGE2B)/lib/Init.ozp \
