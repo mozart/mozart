@@ -38,6 +38,7 @@
 #include "distributor.hh"
 #include "suspendable.hh"
 #include "susp_queue.hh"
+#include "pointer-marks.hh"
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
 
@@ -45,13 +46,9 @@
 enum BoardTags {
   BoTag_Root       = 1,
   BoTag_Failed     = 2,
-  BoTag_Committed  = 3,
-  BoTag_MarkOne    = 4,
-  BoTag_MarkTwo    = 8
+  BoTag_Committed  = 4,
+  BoTag_Mark       = 8,
 };
-
-#define BoTag_StatusMask 3
-#define BoTag_AllMask    15
 
 class Board {
   friend int engine(Bool init);
@@ -66,61 +63,46 @@ public:
   // Home and parent access
   //
 private:
-  Tagged4 parentAndFlags;
+  Board * parent;
+  int     flags;
 
 public:  
   //
   // State of the space
   //
   int isRoot(void) {
-    return (parentAndFlags.getTag() & BoTag_StatusMask) == BoTag_Root;
+    return (flags & BoTag_Root);
   }
   int isFailed(void) {
-    return (parentAndFlags.getTag() & BoTag_StatusMask) == BoTag_Failed;
+    return (flags & BoTag_Failed);
   }
   int isCommitted(void) {
-    return (parentAndFlags.getTag() & BoTag_StatusMask) == BoTag_Committed;
+    return (flags & BoTag_Committed);
   }
 
   void setCommitted(Board * b) {
-    Assert(parentAndFlags.getTag() == 0);
-    parentAndFlags.set((void *) b, BoTag_Committed);
+    parent = b;
+    flags |= BoTag_Committed;
   }
   void setFailed(void) {
-    Assert(parentAndFlags.getTag() == 0);
-    parentAndFlags.setTag(BoTag_Failed);
-  }
-  int getTag(void) {
-    return parentAndFlags.getTag();
+    flags |= BoTag_Failed;
   }
   void setParent(Board * p) {
-    Assert(!parentAndFlags.getTag())
-    parentAndFlags.set(p,0);
+    parent = p;
   }
+
   //
-  // Various marks needed during installation, cloning and garbage
-  // collection
+  // Mark needed during cloning
   //
 
-  int hasMarkOne(void) {
-    return parentAndFlags.getTag() & BoTag_MarkOne;
+  int hasMark(void) {
+    return flags & BoTag_Mark;
   }
-  int hasMarkTwo(void) {
-    return parentAndFlags.getTag() & BoTag_MarkTwo;
+  void setMark(void) {
+    flags |= BoTag_Mark;
   }
-
-  void setMarkOne(void) {
-    parentAndFlags.borTag(BoTag_MarkOne);
-  }
-  void setMarkTwo(void) {
-    parentAndFlags.borTag(BoTag_MarkTwo);
-  }
-
-  void unsetMarkOne(void) {
-    parentAndFlags.bandTag((~BoTag_MarkOne) & BoTag_AllMask);
-  }
-  void unsetMarkTwo(void) {
-    parentAndFlags.bandTag((~BoTag_MarkTwo) & BoTag_AllMask);
+  void unsetMark(void) {
+    flags &= ~BoTag_Mark;
   }
 
 
@@ -128,7 +110,7 @@ public:
   // Parent access
   //
   Board * getParentInternal(void) {
-    return (Board *) parentAndFlags.getPtr();
+    return parent;
   }
   Board *derefBoard(void) {
     Board *bb;
@@ -152,18 +134,18 @@ public:
   //
 public:
   Bool cacIsMarked(void) {
-    return hasMarkTwo();
+    return IsMarkedPointer(parent,1);
   }
   Board * cacGetFwd(void) {
     Assert(cacIsMarked());
-    return getParentInternal();
+    return (Board *) UnMarkPointer(parent,1);
   }
   int32 ** cacGetMarkField(void) {
-    return (int32 **) &parentAndFlags;
+    return (int32 **) &parent;
   }
   void cacMark(Board * fwd) {
     Assert(!cacIsMarked());
-    parentAndFlags.set((void *) fwd, BoTag_MarkTwo);
+    parent = (Board *) MarkPointer(fwd,1);
   }
 
   Bool    cacIsAlive(void);

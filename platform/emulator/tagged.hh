@@ -749,65 +749,6 @@ public:
 
 };
 
-/*
- * class Tagged4:
- *  32 bit word to store
- *    word aligned pointer in fixed segment + 4 tag bits or
- *    28 bit value + 4 tag bits
- */
-
-#define tagged4Mask 15
-#define tagged4Bits 4
-
-class Tagged4
-{
-private:
-  uint32 tagged;
-  void checkTag(int tag) { Assert(tag >= 0 && tag <= tagged4Mask); }
-  void checkVal(int val) { Assert((val & (tagged4Mask<<(32-tagged4Bits))) == 0); }
-  void checkPtr(void* ptr) {
-    uint32 val=(uint32) ptr;
-    Assert((val&(tagged4Mask>>2))==0);
-    Assert((val&((tagged4Mask>>2)<<(32-(tagged4Bits-2))))==mallocBase);
-  }
-public:
-  void set(void* ptr,int tag) {
-    checkPtr(ptr);
-    checkTag(tag);
-    tagged = (((uint32)ptr)<<(tagged4Bits-2)) | tag;
-  }
-  void set(uint32 val,int tag) {
-    checkTag(tag);
-    checkVal(val);
-    tagged = (val<<tagged4Bits) | tag;
-  }
-
-  void setTag(int tag) {
-    checkTag(tag);
-    tagged = (tagged & ~tagged4Mask) | tag;
-  }
-  void borTag(int tag) {
-    checkTag(tag);
-    tagged = tagged | tag;
-  }
-  void bandTag(int tag) {
-    checkTag(tag);
-    tagged = tagged & (tag | ~tagged4Mask);
-  }
-
-  uint32* getRef() { return &tagged; }
-  int     getTag() { return (tagged&tagged4Mask); }
-  uint32  getData(){ return tagged>>tagged4Bits; }
-  void*   getPtr() {
-    return (void*)(mallocBase|((tagged>>(tagged4Bits-2))&~(tagged4Mask>>2)));
-  }
-
-  Tagged4()                   { tagged = 0; }
-  Tagged4(void* ptr,int tag)  { set(ptr,tag); }
-  Tagged4(uint32 val,int tag) { set(val,tag); }
-
-};
-
 /*===================================================================
  * 
  *=================================================================== */

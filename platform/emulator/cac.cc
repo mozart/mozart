@@ -381,7 +381,7 @@ RefsArray _cacRefsArray(RefsArray r) {
 
 #else
 
-#define NEEDSCOPYING(bb) (!(bb)->hasMarkOne())
+#define NEEDSCOPYING(bb) (!(bb)->hasMark())
 
 #endif
 
@@ -391,7 +391,7 @@ Board * Board::_cacBoard(void) {
   GCDBG_INFROMSPACE(this);
 
   // Do not clone a space above or collect a space above root ;-(
-  Assert(this && !hasMarkOne());
+  Assert(this && !hasMark());
 
   return cacIsMarked() ? cacGetFwd() : _cacBoardDo();
 }
@@ -444,7 +444,7 @@ Name *Name::_cacName(void) {
 #ifdef G_COLLECT
   if (isOnHeap()) {
 #else
-  if (!getBoardInternal()->hasMarkOne()) {
+  if (!getBoardInternal()->hasMark()) {
 #endif
 
     Name * aux;
@@ -1656,8 +1656,8 @@ void Board::_cacRecurse() {
 
   // Do not recurse over root board (be it the global one or
   // the root board for cloning!)
-  if (!isRoot() && !getParentInternal()->hasMarkOne())
-    parentAndFlags.set(getParentInternal()->_cacBoard(),0);
+  if (!isRoot() && !getParentInternal()->hasMark())
+    parent = getParentInternal()->_cacBoard();
   
   lpq._cac();
 
