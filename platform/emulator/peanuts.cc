@@ -87,3 +87,4 @@
 #include "thrspool.cc"
 #include "verbose.cc"
 #include "iso-ctype.cc"
+#include "lazyvar.cc"
