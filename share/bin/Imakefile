@@ -3,7 +3,7 @@ SHELL   = /bin/sh
 VCBIN=/MSDEV/BIN
 SCRIPTS = oz oz+ ozplatform oz.wish
 LINKS   = oz- ozc ozsa ozcs ozsac oz.compiler oz.emulator ozdo \
-          ozemacs ozdemo
+          ozemacs ozdemo oze
 
 .SUFFIXES: .cpp .res .rc .obj
 
