@@ -25,7 +25,7 @@ JAVAC           = $(JAVA_BIN)javac $(JAVA_THREADS)
 JAR             = $(JAVA_BIN)jar   $(JAVA_THREADS)
 
 HTMLSUPPORTFILES0 = \
-        ozdoc.css page.gif $(HTMLEXTRASUPPORTFILES)
+        $(HTMLEXTRASUPPORTFILES)
 HTMLSUPPORTFILES = \
         $(addprefix $(SRCTOP)/doc/utilities/,$(HTMLSUPPORTFILES0))
 
@@ -48,13 +48,14 @@ Makefile: $(SRCDIR)/Makefile.in ../config.status
 $(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         rm -f latex.db && \
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
-        --type=html-stylesheets --stylesheet=ozdoc.css --top=../index.html \
+        --type=html-stylesheets --stylesheet=../ozdoc.css --top=../index.html \
         --bib-path=$(SRCDIR):$(SRCTOP)/doc \
         --bst-path=$(SRCTOP)/doc/utilities \
         --latexdb=latex.db \
         --xrefdb=../xref.db --xrefdir=$(WHAT) --indexdb=../index.db \
         --make-hhc=$(WHAT).hhc && \
-        cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
+        if [ $(HTMLSUPPORTFILES) ]; then \
+        cp -p $(HTMLSUPPORTFILES) $(WHAT)-html; fi && \
         for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)) NONE; \
         do { test $$i = NONE || cp -p $$i $(WHAT)-html; } done
 
@@ -68,12 +69,13 @@ $(WHAT)-tex/$(WHAT).ps: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
 
 quick:: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
-        --type=html-stylesheets --stylesheet=ozdoc.css --top=../ \
+        --type=html-stylesheets --stylesheet=../ozdoc.css --top=../ \
         --bib-path=$(SRCDIR):$(SRCTOP)/doc \
         --bst-path=$(SRCTOP)/doc/utilities \
         --latexdb=latex.db --keeppictures \
         --xrefdb=../xref.db --xrefdir=$(WHAT)  --indexdb=../index.db && \
-        cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
+        if [ $(HTMLSUPPORTFILES) ]; then \
+        cp -p $(HTMLSUPPORTFILES) $(WHAT)-html; fi && \
         for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)) NONE; \
         do { test $$i = NONE || cp -p $$i $(WHAT)-html; } done
 

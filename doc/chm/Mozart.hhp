@@ -12,43 +12,8 @@ Title=Mozart Documentation
 [WINDOWS]
 Help Viewer=,"Mozart.hhc",,"index.html","index.html",,,,,0x63520,,0x384e,[64,64,864,576],,,,,,,0
 
-
 [FILES]
 index.html
 page.gif
-apptut\page.gif
-base\page.gif
-browser\page.gif
-bugs\page.gif
-changes\page.gif
-compiler\page.gif
-contrib\page.gif
-cpiref\page.gif
-cpitut\page.gif
-demo\page.gif
-dstutorial\page.gif
-explorer\page.gif
-faq\page.gif
-fdt\page.gif
-foreign\page.gif
-fst\page.gif
-gump\page.gif
-howtoread\page.gif
-idx\page.gif
-install\page.gif
-limitations\page.gif
-loop\page.gif
-macro\page.gif
-notation\page.gif
-op\page.gif
-opi\page.gif
-ozcar\page.gif
-ozdoc\page.gif
-panel\page.gif
-profiler\page.gif
-system\page.gif
-tools\page.gif
-tutorial\page.gif
-wp\page.gif
 
 [INFOTYPES]
