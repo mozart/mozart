@@ -62,7 +62,7 @@
 static void processUpdateStack (void);
 void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm);
 void performCopying(void);
-Bool isInTree(Board *b);
+Bool inline isInTree(Board *b);
 
 
 /****************************************************************************
