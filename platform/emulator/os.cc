@@ -988,8 +988,14 @@ void osInit()
   WORD req_version = MAKEWORD(1,1);
 
   int ret = WSAStartup(req_version, &wsa_data);
-  if (ret != 0 && ret != WSASYSNOTREADY)
-    OZ_warning("Initialization of socket interface failed\n");
+  if (ret != 0 && ret != WSASYSNOTREADY) {
+    fprintf(stderr,
+            "*** Initialization of the Windows socket interface failed.\n"
+            "*** Most likely you have to install the Windows networking software, sorry.\n");
+    fflush(stderr);
+    Sleep(1000);
+    am.exitOz(1);
+  }
 
   //  fprintf(stderr, "szDescription = \"%s\"", wsa_data.szDescription);
   //  fprintf(stderr, "szSystemStatus = \"%s\"", wsa_data.szSystemStatus);
