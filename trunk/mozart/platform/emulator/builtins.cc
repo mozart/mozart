@@ -7578,6 +7578,7 @@ extern void BIinitUnix();
 extern void BIinitAssembler();
 extern void BIinitTclTk();
 extern void BIinitPerdio();
+extern void BIinitLazy();
 
 TaggedRef dummyState;
 
@@ -7604,6 +7605,8 @@ BuiltinTabEntry *BIinit()
 #ifdef PERDIO
   BIinitPerdio();
 #endif
+
+  BIinitLazy();
 
   dummyRecord = makeTaggedNULL();
   OZ_protect(&dummyRecord);
