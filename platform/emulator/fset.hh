@@ -80,6 +80,9 @@ public:
   FSetValue operator - (void) const;
 
   OZ_Boolean isIn(int) const;
+
+  const int * getBV(void) const { return _in; }
+
 };
 
 inline

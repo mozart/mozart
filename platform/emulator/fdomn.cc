@@ -2011,16 +2011,24 @@ int OZ_FiniteDomainImpl::operator += (const int put_in)
   return size;
 }
 
-// move down here since `OZ_FiniteDomainImpl::operator +=' is used inline
+// this is a pretty dirty hack; it will disappear when Markus' changes
+// get incorporated
 inline
 int OZ_FiniteDomainImpl::initFSetValue(const OZ_FSetValue &fs)
 {
-  FSetIterator fsi(fs);
 
-  for (int e = fsi.resetToMin(); e > -1; e = fsi.getNextLarger())
-    *this += e;
+  FDBitVector * bv = newBitVector(fset_high);
+  const int * set_bv = ((const FSetValue *) &fs)->getBV();
 
-  return size;
+  for (int i = fset_high; i--; )
+      bv->b_arr[i] = set_bv[i];
+
+  setType(bv);
+  min_elem = bv->findMinElem();
+  max_elem = bv->findMaxElem();
+
+
+  return size = fs.getCard();
 }
 
 inline
