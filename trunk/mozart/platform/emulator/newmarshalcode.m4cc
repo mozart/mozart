@@ -159,7 +159,7 @@ void marshalLocation(OZ_Location *loc,MsgBuffer *bs)
   marshalNumber(outAr,bs);
 
   for (int i = 0; i < inAr+outAr; i++) {
-    int out = loc->get(i);
+    int out = loc->getIndex(i);
     marshalNumber(out,bs);
   }
 }
