@@ -76,8 +76,8 @@ private:
   void *cont;
   TransController *transController;
 
-//  Var cntrlVar;
   int msgNum;
+  int def_priority;
   int sendTime;
 
 public:
@@ -86,49 +86,57 @@ public:
 
   void init(DSite *site);
 
-inline void setMsgNum(int msgNum) {
-  this->msgNum = msgNum;
-}
+  inline void setMsgNum(int msgNum) {
+    this->msgNum = msgNum;
+  }
 
-inline int getMsgNum() {
-  return msgNum;
-}
+  inline int getMsgNum() {
+    return msgNum;
+  }
 
-inline void setSendTime(int sendTime) {
-  this->sendTime = sendTime;
-}
+  inline void setPriority(int priority) {
+    this->def_priority = priority;
+  }
 
-inline int getSendTime() {
-  return sendTime;
-}
+  inline int getPriority() {
+    return def_priority;
+  }
 
-inline MessageType getMessageType() {
-  return mt;
-}
+  inline void setSendTime(int sendTime) {
+    this->sendTime = sendTime;
+  }
 
-inline void setMessageType(MessageType mt) {
-  this->mt=mt;
-}
+  inline int getSendTime() {
+    return sendTime;
+  }
 
-inline void setFlag(int flag) {
-  flags |= flag;
-}
+  inline MessageType getMessageType() {
+    return mt;
+  }
 
-inline int getFlags() {
-  return flags;
-}
+  inline void setMessageType(MessageType mt) {
+    this->mt=mt;
+  }
 
-inline Bool checkFlag(int flag) {
-  return flags & flag;
-}
+  inline void setFlag(int flag) {
+    flags |= flag;
+  }
 
-inline void clearFlag(int flag) {
-  flags &= ~flag;
-}
+  inline int getFlags() {
+    return flags;
+  }
 
-inline DSite* getDestination() {
-  return destination;
-}
+  inline Bool checkFlag(int flag) {
+    return flags & flag;
+  }
+
+  inline void clearFlag(int flag) {
+    flags &= ~flag;
+  }
+
+  inline DSite* getDestination() {
+    return destination;
+  }
 
   void takeSnapshot();
   void deleteSnapshot();
@@ -137,7 +145,7 @@ inline DSite* getDestination() {
   void gcFinish() { if (msgTS) mtsFinishStartGC(msgTS); }
 
   // includes MessageType-specific get_,put_,marshal,unmarshal,gcMsgC
-  #include "msgContainer_marshal.hh"
+#include "msgContainer_marshal.hh"
 };
 
 class MsgContainerManager: public FreeListManager {

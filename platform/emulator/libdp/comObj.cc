@@ -71,6 +71,8 @@ void ComObj::init(DSite *site) {
   queues.init();
 }
 
+// Specifying priority -1 means accepting the default as in msgFormat.m4 and
+// should allways be used.
 void ComObj::send(MsgContainer *msgC,int priority) {
 #ifdef COMOBJ_LOG
   printf("send(%s %d %d %d %d)\n",
@@ -106,6 +108,10 @@ void ComObj::send(MsgContainer *msgC,int priority) {
 
   //
   msgC->takeSnapshot();
+  Assert(priority==-1); // Have a good reason before removing this
+  if(priority==-1) priority=msgC->getPriority();
+  Assert(msgC->getMessageType()>C_FIRST || msgC->getMessageType()==M_PING
+         || (priority<5 && priority>=1));
   queues.enqueue(msgC,priority); // After check queues.hasQueued()
 }
 
@@ -248,7 +254,7 @@ void ComObj::accept(TransObj *transObj) {
 
   MsgContainer *msgC=msgContainerManager->newMsgContainer(NULL);
   msgC->put_C_PRESENT(PERDIOVERSION,myDSite);
-  send(msgC,5);
+  send(msgC,-1);
   transObj->readyToReceive();
 }
 
@@ -316,7 +322,7 @@ void ComObj::preemptTransObj() {
   clearTimers(); // And set a closing timer... AN
   MsgContainer *msgC=msgContainerManager->newMsgContainer(NULL);
   msgC->put_C_CLOSE_HARD();
-  send(msgC,5);
+  send(msgC,-1);
   state=CLOSING_HARD; // State change "closes" outgoing channel, do after send
   timers->setTimer(closetimer,CLOSE_TIMEOUT,
                    comObj_closeTimerExpired,(void *) this);
@@ -331,7 +337,7 @@ Bool ComObj::canBeFreed() {
     if(!sentclearref) {
       MsgContainer *msgC=msgContainerManager->newMsgContainer(NULL);
       msgC->put_C_CLEAR_REFERENCE();
-      send(msgC,4); // 4 avoids sending when not working
+      send(msgC,-1);
       sentclearref=TRUE;
     }
     if(remoteRef)
@@ -342,7 +348,7 @@ Bool ComObj::canBeFreed() {
         clearTimers();
         MsgContainer *msgC2=msgContainerManager->newMsgContainer(NULL);
         msgC2->put_C_CLOSE_WEAK();
-        send(msgC2,5);
+        send(msgC2,-1);
         state=CLOSING_WEAK; // State change "closes" outgoing channel do
                             // after send.
         timers->setTimer(closetimer,CLOSE_TIMEOUT,
@@ -425,6 +431,7 @@ inline void ComObj::extractCI(OZ_Term channelinfo,int &bufferSize) {
 }
 
 Bool ComObj::msgReceived(MsgContainer *msgC) {
+  mess_counter[msgC->getMessageType()].recv();
 #ifdef COMOBJ_LOG
   printf("received(%s %d %d %d %d)\n",
          mess_names[msgC->getMessageType()],
@@ -460,7 +467,7 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
         OZ_Term channelinfo;
         channelinfo=createCI(transObj->getBufferSize());
         newmsgC->put_C_NEGOTIATE(PERDIOVERSION,myDSite,channelinfo);
-        send(newmsgC,5);
+        send(newmsgC,-1);
       }
     }
     else errorRec(mt);
@@ -572,7 +579,7 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
     if(state==WORKING) {
       MsgContainer *newmsgC=msgContainerManager->newMsgContainer(NULL);
       newmsgC->put_C_CLOSE_ACCEPT();
-      send(newmsgC,5);
+      send(newmsgC,-1);
       state=CLOSING_WF_DISCONNECT;
     }
     else if(state==CLOSING_HARD || state==CLOSING_WEAK) {
@@ -599,7 +606,7 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
         newmsgC->put_C_CLOSE_ACCEPT();
         newstate=CLOSED;
       }
-      send(newmsgC,5);
+      send(newmsgC,-1);
       clearTimers();
       state=newstate;  // State change may "close" outgoing channel.
     }
@@ -646,12 +653,12 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
       if(state==WORKING && !hasNeed()) {
         MsgContainer *newmsgC=msgContainerManager->newMsgContainer(NULL);
         newmsgC->put_C_CLEAR_REFERENCE();
-        send(newmsgC,5);
+        send(newmsgC,-1);
 
         // remoteRef==FALSE!
         MsgContainer *newmsgC2=msgContainerManager->newMsgContainer(NULL);
         newmsgC2->put_C_CLOSE_WEAK();
-        send(newmsgC2,5);
+        send(newmsgC2,-1);
         state=CLOSING_WEAK; // State change "closes" outgoing channel
                             // after send.
         timers->setTimer(closetimer,CLOSE_TIMEOUT,
@@ -711,7 +718,7 @@ void ComObj::adoptCI(OZ_Term channelinfo){
   MsgContainer *newmsgC=msgContainerManager->newMsgContainer(NULL);
   channelinfo=createCI(bufferSize);
   newmsgC->put_C_NEGOTIATE_ANS(channelinfo);
-  send(newmsgC,5);
+  send(newmsgC,-1);
 }
 
 void ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
@@ -917,7 +924,7 @@ void ComObj::installProbe(int lowerBound, int higherBound, int interval) {
     if(!probing) {
       MsgContainer *msgC=msgContainerManager->newMsgContainer(NULL);
       msgC->put_C_SET_ACK_PROP(0,0);
-      send(msgC,5);
+      send(msgC,-1);
     }
   }
   probing=TRUE;
@@ -926,7 +933,7 @@ void ComObj::installProbe(int lowerBound, int higherBound, int interval) {
 Bool ComObj::sendProbePing() {
   MsgContainer *msgC=msgContainerManager->newMsgContainer(NULL);
   msgC->put_M_PING();
-  send(msgC,5);
+  send(msgC,-1);
   return TRUE;
 }
 
@@ -948,7 +955,7 @@ Bool ComObj::sendAck(Bool timerInvoked) {
   if(!queues.hasQueued()) { // Otherwise an ack will go anyway
     MsgContainer *msgC=msgContainerManager->newMsgContainer(NULL);
     msgC->put_C_ACK();
-    send(msgC,5);
+    send(msgC,-1);
   }
   if(timerInvoked)
     timer=NULL;

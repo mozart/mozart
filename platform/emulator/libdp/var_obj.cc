@@ -76,7 +76,7 @@ void ObjectVar::sendRequest()
 
   //
   msgC->put_M_GET_LAZY(na->index, sendClass, myDSite);
-  send(msgC, 3);
+  send(msgC, -1);
 }
 
 void ObjectVar::gCollectRecurseV(void)

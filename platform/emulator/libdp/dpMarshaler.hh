@@ -715,7 +715,6 @@ extern SendRecvCounter mess_counter[];
 void marshalDSite(MarshalerBuffer *, DSite *);
 void marshalVarObject(ByteBuffer *bs, int BTI, GName *gnobj, GName *gnclass);
 
-MessageType unmarshalHeader(MarshalerBuffer *bs);
 // '-1' means the action is suspended;
 
 // var.cc

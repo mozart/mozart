@@ -307,7 +307,6 @@ public:
   int send(MsgContainer *msgC,int priority) {
     if(connect()){
       Assert(getType() & REMOTE_SITE);
-      Assert(priority<5 && priority>1);
 
       getComObj()->send(msgC,priority);
       return ACCEPTED;

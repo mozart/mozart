@@ -523,7 +523,7 @@ void msgReceived(MsgContainer* msgC)
       Assert(c.owner==NULL);
       newmsgC->put_M_BORROW_CREDIT(myDSite,na_index,c.credit);
 
-      send(newmsgC,3);
+      send(newmsgC,-1);
       break;
     }
 
@@ -643,7 +643,7 @@ void msgReceived(MsgContainer* msgC)
           //
           msgC->put_M_SEND_LAZY(myDSite, OTI, OBJECT_AND_CLASS,
                                 o->getClassTerm());
-          send(msgC, 3);
+          send(msgC, -1);
         }
         // no break here! - proceed with the 'OBJECT' case;
 
@@ -655,7 +655,7 @@ void msgReceived(MsgContainer* msgC)
 
           //
           msgC->put_M_SEND_LAZY(myDSite, OTI, OBJECT, t);
-          send(msgC, 3);
+          send(msgC, -1);
         }
         break;
 

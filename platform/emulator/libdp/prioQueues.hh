@@ -42,10 +42,11 @@ private:
   MsgContainer *recList;     // Unsorted list of msgCs being received
 
   Queue *curq;               // Used when msg is partly delivered (only temp.)
-  MsgContainer *curm;        // Debug-check
+  DebugCode(MsgContainer *curm);
 
   int prio_val_4;
   int prio_val_3;
+  int prio_val_2;
 
   int noMsgs;
 public:

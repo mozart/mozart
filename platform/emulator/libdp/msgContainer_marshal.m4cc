@@ -124,13 +124,14 @@ undefine(`message')
 undefine(`argEnc')
 
 define(message,`
-       void MsgContainer::put_$1(mcarg($2,$3) mcarg($3,$4) mcarg($4,$5) mcarg($5,$6) mcarg($6 $7)) {
+       void MsgContainer::put_$1(mcarg($3,$4) mcarg($4,$5) mcarg($5,$6) mcarg($6,$7) mcarg($7 $8)) {
          mt=$1;
-         argEnc($2,0)
-         argEnc($3,1)
-         argEnc($4,2)
-         argEnc($5,3)
-         argEnc($6,4)
+         def_priority=$2;
+         argEnc($3,0)
+         argEnc($4,1)
+         argEnc($5,2)
+         argEnc($6,3)
+         argEnc($7,4)
        }')
 
 define(mcarg,`ifelse($1,Index,int i1,
@@ -170,11 +171,11 @@ inline void messageError(MessageType mt, char *origin)
 
 define(message,`
        case $1:
-       msgFields[0].ft=argEnc($2);
-       msgFields[1].ft=argEnc($3);
-       msgFields[2].ft=argEnc($4);
-       msgFields[3].ft=argEnc($5);
-       msgFields[4].ft=argEnc($6);
+       msgFields[0].ft=argEnc($3);
+       msgFields[1].ft=argEnc($4);
+       msgFields[2].ft=argEnc($5);
+       msgFields[3].ft=argEnc($6);
+       msgFields[4].ft=argEnc($7);
        break;')
 
 
@@ -353,12 +354,12 @@ define(argEnc,`ifelse($1,Index,i1=(int),
                       //)')
 
 define(message,`
-       void MsgContainer::get_$1(mcarg($2,$3) mcarg($3,$4) mcarg($4,$5) mcarg($5,$6) mcarg($6 $7)) {
-         argEnc($2) msgFields[0].arg;
-         argEnc($3) msgFields[1].arg;
-         argEnc($4) msgFields[2].arg;
-         argEnc($5) msgFields[3].arg;
-         argEnc($6) msgFields[4].arg;
+       void MsgContainer::get_$1(mcarg($3,$4) mcarg($4,$5) mcarg($5,$6) mcarg($6,$7) mcarg($7 $8)) {
+         argEnc($3) msgFields[0].arg;
+         argEnc($4) msgFields[1].arg;
+         argEnc($5) msgFields[2].arg;
+         argEnc($6) msgFields[3].arg;
+         argEnc($7) msgFields[4].arg;
        }')
 
 include(EMUDIR/msgFormat.m4)
@@ -368,11 +369,11 @@ undefine(`argEnc')
 
 define(message,`
        case $1: {
-         argEnc($2,msgFields[0].arg,msgFields[0].ft)
-         argEnc($3,msgFields[1].arg,msgFields[1].ft)
-         argEnc($4,msgFields[2].arg,msgFields[2].ft)
-         argEnc($5,msgFields[3].arg,msgFields[3].ft)
-         argEnc($6,msgFields[4].arg,msgFields[4].ft)
+         argEnc($3,msgFields[0].arg,msgFields[0].ft)
+         argEnc($4,msgFields[1].arg,msgFields[1].ft)
+         argEnc($5,msgFields[2].arg,msgFields[2].ft)
+         argEnc($6,msgFields[3].arg,msgFields[3].ft)
+         argEnc($7,msgFields[4].arg,msgFields[4].ft)
          break;
        }')
 

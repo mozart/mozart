@@ -45,7 +45,7 @@
 //      msgC->put_M_OWNER_SEC_CREDIT(entitysite,entityOTI,c.credit);
 //    }
 
-//    send(msgC,3);
+//    send(msgC,-1);
 //  }
 
 void sendCreditBack(DSite *entitysite,int entityOTI,Credit c) {
@@ -63,7 +63,7 @@ void sendCreditBack(DSite *entitysite,int entityOTI,Credit c) {
     msgC->put_M_OWNER_SEC_CREDIT(entitysite,entityOTI,c.credit);
   }
 
-  send(msgC,3);
+  send(msgC,-1);
 }
 
 void askForCredit(DSite *entitysite, int entityOTI) {
@@ -71,5 +71,5 @@ void askForCredit(DSite *entitysite, int entityOTI) {
 
   MsgContainer *msgC = msgContainerManager->newMsgContainer(entitysite);
   msgC->put_M_ASK_FOR_CREDIT(entityOTI,myDSite);
-  send(msgC,3);
+  send(msgC,-1);
 }
