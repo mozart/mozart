@@ -1528,6 +1528,36 @@ OZ_BI_define(BIvsIs,1,1) {
   OZ_RETURN((status == PROCEED) ? NameTrue : NameFalse);
 } OZ_BI_end
 
+OZ_BI_define(BIvsToBs,3,1)
+{
+  // OZ_in(0) is initially the argument vs
+  // OZ_in(1) is initially 0
+  // OZ_in(2) is always the initial argument vs
+  //
+  // OZ_in(0) is side effected to hold what remains so far undetermined
+  // packed up as a new virtual string
+  TaggedRef rest = makeTaggedNULL();
+  int len = smallIntValue(oz_deref(OZ_in(1)));
+  OZ_Return status = vs_length(OZ_in(0), &rest, &len);
+  if (status == SUSPEND) {
+    OZ_in(0) = rest;
+    OZ_in(1) = makeTaggedSmallInt(len);
+    return SUSPEND;
+  } else if (status == FAILED) {
+    oz_typeError(0, "Virtual String");
+  } else {
+    // the initial argument vs is in OZ_in(2)
+    // it is known to be fully determined and its
+    // size is len
+    ByteString* bs = new ByteString(len);
+    ostrstream *out = new ostrstream;
+    extern void virtualString2buffer(ostream &,OZ_Term);
+    virtualString2buffer(*out,OZ_in(2));
+    bs->copy(out->str(),len);
+    delete out;
+    OZ_RETURN(makeTaggedConst(bs));
+  }
+} OZ_BI_end
 
 // ---------------------------------------------------------------------
 // Chunk
