@@ -43,11 +43,10 @@
 
 #include "var_obj.hh"
 #include "var_class.hh"
-#include "chain.hh"
+#include "chain.hh" 
 #include "state.hh"
 #include "fail.hh"
 #include "interFault.hh"
-#include "protocolCredit.hh"
 #include "port.hh"
 #include "dpResource.hh"
 #include "protocolState.hh"
@@ -109,7 +108,6 @@ static void initGateStream()
     int ind = t->getIndex();
     Assert(ind==10000);
     OwnerEntry* oe=OT->getEntry(ind);
-    oe->setUp(ind);
     oe->makePersistent();
   }
 }
@@ -351,50 +349,39 @@ void cellifyObject(Object* o){
 void globalizeTert(Tertiary *t)
 { 
   Assert(t->isLocal());
-
+  
+  // The state and the lock of the object must 
+  // be transfered into a distributable form.
+  
+  OwnerEntry *oe_manager;
+  int manI=ownerTable->newOwner(oe_manager);
+  oe_manager->mkTertiary(t);
+  
   switch(t->getType()) {
   case Co_Cell:
     {
-      OwnerEntry *oe_manager;
-      int manI=ownerTable->newOwner(oe_manager);
-      PD((GLOBALIZING,"GLOBALIZING cell index:%d",manI));
-      oe_manager->mkTertiary(t);
       globalizeCell((CellLocal*)t,manI);
       return;
     }
   case Co_Lock:
     {
-      OwnerEntry *oe_manager;
-      int manI=ownerTable->newOwner(oe_manager);
-      PD((GLOBALIZING,"GLOBALIZING lock index:%d",manI));
-      oe_manager->mkTertiary(t);
       globalizeLock((LockLocal*)t,manI);
       return;
     }
   case Co_Object:
-    {
-      cellifyObject((Object*) t);
-      break;
-    }
+    cellifyObject((Object*) t);
   case Co_Port:
-    break;
+    {
+      t->setTertType(Te_Manager);
+      t->setIndex(manI);
+      return; 
+    }
   default:
-    Assert(0);
+    {
+      OZ_error("Globalization of unknown tert type %d\n",t->getType());
+      Assert(0);
+    }
   }
-
-  t->setTertType(Te_Manager);
-  OwnerEntry *oe;
-  int i = ownerTable->newOwner(oe);
-  PD((GLOBALIZING,"GLOBALIZING port/object index:%d",i));
-  DebugCode(if(t->getType()==Co_Object)
-  {
-    PD((SPECIAL,"object:%x class%x",t,((Object *)t)->getClass()));})
-  
-  oe->mkTertiary(t);
-  t->setIndex(i);
-  //    DebugCode(if(t->getType()==Co_Object) {
-  //      PD((SPECIAL,"object:%x class%x",t,((Object *)t)->getClass()));
-  //    })
 }
 
 
@@ -470,7 +457,6 @@ OwnerEntry* maybeReceiveAtOwner(DSite* mS,int OTI){
 
 inline OwnerEntry* receiveAtOwner(int OTI){
   OwnerEntry *oe=OT->getEntry(OTI);
-  Assert(!oe->isFree());
   return oe;
 }
 
@@ -505,124 +491,51 @@ void msgReceived(MsgContainer* msgC)
       OZ_Term t;
       msgC->get_M_PORT_SEND(portIndex,t);
       OwnerEntry *oe=receiveAtOwner(portIndex);
-      Assert(oe);
-      PortManager *pm=(PortManager*)(oe->getTertiary());
-      Assert(pm->checkTertiary(Co_Port,Te_Manager));
-
-      doPortSend(pm,t,NULL);
-
+      if (oe)
+	{
+	  PortManager *pm=(PortManager*)(oe->getTertiary());
+	  Assert(pm->checkTertiary(Co_Port,Te_Manager));
+	  doPortSend(pm,t,NULL);
+	}
       break;
     }
-  case M_ASK_FOR_CREDIT:
+  case M_UPDATE_REFERENCE:
     {
-#ifdef SEC_CREDIT_HANDLER
-      int na_index;
-      DSite* rsite;
-      msgC->get_M_ASK_FOR_CREDIT(na_index,rsite);
-      PD((MSG_RECEIVED,"ASK_FOR_CREDIT index:%d site:%s",
-	  na_index,rsite->stringrep()));
-      OwnerEntry *oe=receiveAtOwner(na_index);
-      Credit c= oe->getCreditBig();
-
-      MsgContainer *newmsgC = msgContainerManager->newMsgContainer(rsite);
-      newmsgC->put_M_BORROW_CREDIT(myDSite,na_index,c.credit);
-
-      send(newmsgC,-1);
-#else
-      OZ_error("Receiving sec-credit msg  without sec credits installed, M_OWNER_ASK_FOR_CREDIT");
-#endif
+      int index;
+      DSite *site;
+      msgC->get_M_UPDATE_REFERENCE(index,site);
+      OwnerEntry *oe=receiveAtOwner(index);
+      if (oe)
+	  oe->updateReference(site);
+      else
+	{
+	  // If the owner entry does not exist the entity 
+	  // has been reclaimed. A stub entry will now be created and
+	  // sent back instead.
+	  MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
+	  msgC->put_M_BORROW_REF(createFailedEntity(index,FALSE));
+	  send(msgC,-1);
+	}
       break;
     }
-  case M_OWNER_FW: 
+  case M_OWNER_REF: 
    {
-#ifndef SEC_CREDIT_HANDLER
-     int index;
-      int eint;
-      int dint;
-      Credit c;
-      msgC->get_M_OWNER_FW(index,eint,dint);
-      c.enumerator=eint;
-      c.denominator=dint;
-      
-      PD((MSG_RECEIVED,"OWNER_CREDIT index:%d credit:%d",index,c));
-      receiveAtOwner(index)->addCredit(c);
-#else
-      OZ_error("Receiving fw-credit msg  without fw credits installed, M_OWNER_FW");
-#endif
-      break;
-    }
-    
-  case M_OWNER_CREDIT: 
+     int val1,val2,type,index;
+     msgC->get_M_OWNER_REF(index,type,val1,val2);
+
+     PD((MSG_RECEIVED,"OWNER_REF index:%d type:%d val1:%d val2:%d",index,type,val1,val2));
+     OwnerEntry *oe=receiveAtOwner(index);
+     if (oe)
+       {
+	 oe->mergeReference(CreateRRinstance(type,val1,val2));
+       }
+     break;
+   }
+   
+  case M_BORROW_REF: 
     {
-#ifdef SEC_CREDIT_HANDLER
-      int index;
-      int cint;
-      Credit c;
-      msgC->get_M_OWNER_CREDIT(index,cint);
-
-      c.owner=NULL;
-
-      c.credit=cint;
-
-      PD((MSG_RECEIVED,"OWNER_CREDIT index:%d credit:%d",index,c));
-      receiveAtOwner(index)->addCredit(c);
-#else
-      OZ_error("Receiving sec-credit msg  without sec credits installed, M_OWNER_CREDIT");
-#endif
-
-      
-      break;
-    }
-
-  case M_OWNER_SEC_CREDIT:
-    {
-#ifdef SEC_CREDIT_HANDLER
-      int index;
-      int cint;
-      Credit c;
-      DSite* s;
-      msgC->get_M_OWNER_SEC_CREDIT(s,index,cint);
-      
-      c.owner=myDSite; // I am the owner of this secondary credit
-      c.credit=cint;
-      PD((MSG_RECEIVED,"OWNER_SEC_CREDIT site:%s index:%d credit:%d",
-	  s->stringrep(),index,c));    
-//        printf("received M_OWNER_SEC_CREDIT %x %d %d %x\n",
-//  	     (int)s,index,c.credit,(int)c.owner);
-
-
-      receiveAtBorrow(s,index)->addCredit(c);
-
-#else
-      OZ_error("Receiving sec-credit msg  without sec credits installed, M_OWNER_SEC_CREDIT");
-#endif
-      break;
-    }
-
-  case M_BORROW_CREDIT:  
-    {
-#ifdef SEC_CREDIT_HANDLER
-      int si;
-      int cint;
-      Credit c;
-      DSite* sd;
-      msgC->get_M_BORROW_CREDIT(sd,si,cint);
-      c.owner=NULL;
-      c.credit=cint;
-      PD((MSG_RECEIVED,"BORROW_CREDIT site:%s index:%d credit:%d",
-	  sd->stringrep(),si,c));
-      //The entry might have been gc'ed. If so send the 
-      //credit back. 
-      //erik 
-      NetAddress na=NetAddress(sd,si);
-      BorrowEntry* be=BT->find(&na);
-      if(be==NULL){
-	sendCreditBack(na.site,na.index,c);}
-      else {
-	be->addCredit(c);}
-#else
-      OZ_error("Receiving sec-credit msg  without sec credits installed, M_BORROW_CREDIT");
-#endif
+      OZ_Term dummy;
+      msgC->get_M_BORROW_REF(dummy);
       break;
     }
 
@@ -633,11 +546,14 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_REGISTER(OTI,rsite);
       PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
       OwnerEntry *oe=receiveAtOwner(OTI);
-      if (oe->isVar()) {
-	(GET_VAR(oe,Manager))->registerSite(rsite);
-      } else {
-	sendRedirect(rsite,OTI,OT->getEntry(OTI)->getRef());
-      }
+      if (oe)
+	{
+	  if (oe->isVar()) {
+	    (GET_VAR(oe,Manager))->registerSite(rsite);
+	  } else {
+	    sendRedirect(rsite,OTI,OT->getEntry(OTI)->getRef());
+	  }
+	}
       break;
     }
 
@@ -648,12 +564,15 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_REGISTER(OTI,rsite);
       PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
       OwnerEntry *oe=receiveAtOwner(OTI);
-      if (oe->isVar()) {
-	(GET_VAR(oe,Manager))->deregisterSite(rsite);
-      } else {
-	if(USE_ALT_VAR_PROTOCOL){
-	  recDeregister(OT->getEntry(OTI)->getRef(),rsite);}
-      }
+      if (oe)
+	{
+	  if (oe->isVar()) {
+	    (GET_VAR(oe,Manager))->deregisterSite(rsite);
+	  } else {
+	    if(USE_ALT_VAR_PROTOCOL){
+	      recDeregister(OT->getEntry(OTI)->getRef(),rsite);}
+	  }
+	}
       break;
     }
 
@@ -669,11 +588,13 @@ void msgReceived(MsgContainer* msgC)
       //
       OwnerEntry *oe = receiveAtOwner(OTI);
       //
-      OZ_Term t = oe->getTertTerm();
+      if (oe)
+	{
+	  OZ_Term t = oe->getTertTerm();
 
-      //
-      switch (lazyFlag) {
-      case OBJECT_AND_CLASS:
+	  //
+	  switch (lazyFlag) {
+	  case OBJECT_AND_CLASS:
 	{
 	  Assert(oz_isObject(t));
 	  Object *o = (Object *) tagged2Const(t);
@@ -707,7 +628,7 @@ void msgReceived(MsgContainer* msgC)
 	OZ_error("undefined/unimplemented lazy protocol!");
 	break;
       }
-
+	}
       //
       break;
     }
@@ -799,14 +720,15 @@ void msgReceived(MsgContainer* msgC)
       PD((MSG_RECEIVED,"M_SURRENDER index:%d site:%s val%s",
 	  OTI,rsite->stringrep(),toC(v)));
       OwnerEntry *oe = receiveAtOwner(OTI);
-
-      if (oe->isVar()) {
-	PD((PD_VAR,"SURRENDER do it"));
-	GET_VAR(oe,Manager)->surrender(oe->getPtr(),v,rsite);
-      } else {
-	PD((PD_VAR,"SURRENDER discard"));
-	PD((WEIRD,"SURRENDER discard"));
-	// ignore redirect: NOTE: v is handled by the usual garbage collection
+      if (oe){
+	if (oe->isVar()) {
+	  PD((PD_VAR,"SURRENDER do it"));
+	  GET_VAR(oe,Manager)->surrender(oe->getPtr(),v,rsite);
+	} else {
+	  PD((PD_VAR,"SURRENDER discard"));
+	  PD((WEIRD,"SURRENDER discard"));
+	  // ignore redirect: NOTE: v is handled by the usual garbage collection
+	}
       }
       break;
     }
@@ -818,9 +740,11 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_GETSTATUS(site,OTI);
       PD((MSG_RECEIVED,"M_GETSTATUS index:%d",OTI));
       OwnerEntry *oe = receiveAtOwner(OTI);
-
-      if(oe->isVar()){
-	varGetStatus(site,OTI,oz_status(oe->getValue()));}
+      if (oe)
+	{
+	  if(oe->isVar()){
+	    varGetStatus(site,OTI,oz_status(oe->getValue()));}
+	}
       break;
     }
 
@@ -864,7 +788,11 @@ void msgReceived(MsgContainer* msgC)
       DSite* rsite;
       msgC->get_M_CELL_LOCK_GET(OTI,rsite);
       PD((MSG_RECEIVED,"M_CELL_LOCK_GET index:%d site:%s",OTI,rsite->stringrep()));
-      cellLockReceiveGet(receiveAtOwner(OTI),rsite);
+      OwnerEntry *oe=receiveAtOwner(OTI);
+      if (oe)
+	{
+	  cellLockReceiveGet(oe,rsite);
+	}
       break;
     }
    case M_CELL_CONTENTS:
@@ -875,7 +803,7 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_CELL_CONTENTS(rsite,OTI,val);
       PD((MSG_RECEIVED,"M_CELL_CONTENTS index:%d site:%s val:%s",
 	  OTI,rsite->stringrep(),toC(val)));
-
+      // Erik, look at this
       OwnerEntry* oe=maybeReceiveAtOwner(rsite,OTI);
       if(oe!=NULL){
 	cellReceiveContentsManager(oe,val,OTI);
@@ -890,7 +818,10 @@ void msgReceived(MsgContainer* msgC)
       DSite* fS;
       msgC->get_M_CELL_READ(OTI,fS);
       PD((MSG_RECEIVED,"M_CELL_READ"));
-      cellReceiveRead(receiveAtOwner(OTI),fS,NULL); 
+      OwnerEntry *oe=receiveAtOwner(OTI);
+      if (oe){
+	cellReceiveRead(oe,fS,NULL);
+      }
       break;
     }
   case M_CELL_REMOTEREAD:      
@@ -909,6 +840,7 @@ void msgReceived(MsgContainer* msgC)
       TaggedRef val;
       msgC->get_M_CELL_READANS(mS,index,val);
       PD((MSG_RECEIVED,"CELL_READANS"));
+      // Erik, look
       OwnerEntry *oe=maybeReceiveAtOwner(mS,index);
       if(oe==NULL){
 	cellReceiveReadAns(receiveAtBorrow(mS,index)->getTertiary(),val);
@@ -934,7 +866,11 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_CELL_LOCK_DUMP(OTI,rsite);
       PD((MSG_RECEIVED,"M_CELL_LOCK_DUMP index:%d site:%s",
 	  OTI,rsite->stringrep()));
-      cellLockReceiveDump(receiveAtOwner(OTI),rsite);
+      OwnerEntry *oe=receiveAtOwner(OTI);
+      if (oe)
+	{
+	  cellLockReceiveDump(oe,rsite);
+	}
       break;
     }
   case M_CELL_CANTPUT:
@@ -945,7 +881,10 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_CELL_CANTPUT( OTI, rsite, val, ssite);
       PD((MSG_RECEIVED,"M_CELL_CANTPUT index:%d site:%s val:%s",
 	  OTI,rsite->stringrep(),toC(val)));
-      cellReceiveCantPut(receiveAtOwner(OTI),val,OTI,ssite,rsite);
+      OwnerEntry *oe=receiveAtOwner(OTI);
+      if (oe){
+	cellReceiveCantPut(oe,val,OTI,ssite,rsite);
+      }
       break;
     }  
   case M_LOCK_TOKEN:
@@ -955,6 +894,7 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_LOCK_TOKEN(rsite,OTI);
       PD((MSG_RECEIVED,"M_LOCK_TOKEN index:%d site:%s",
 	  OTI,rsite->stringrep()));
+      // Erik, look
       OwnerEntry *oe=maybeReceiveAtOwner(rsite,OTI);
       if(oe!=NULL){
 	lockReceiveTokenManager(oe,OTI);
@@ -969,7 +909,10 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_CHAIN_ACK(OTI,rsite);
       PD((MSG_RECEIVED,"M_CHAIN_ACK index:%d site:%s",
 	  OTI,rsite->stringrep()));
-      chainReceiveAck(receiveAtOwner(OTI),rsite);
+      OwnerEntry *oe=receiveAtOwner(OTI);
+      if (oe){
+	chainReceiveAck(oe,rsite);
+      }
       break;
     }
   case M_LOCK_CANTPUT:
@@ -979,7 +922,11 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_LOCK_CANTPUT( OTI, rsite, ssite);
       PD((MSG_RECEIVED,"M_LOCK_CANTPUT index:%d site:%s val:%s",
 	  OTI,rsite->stringrep()));
-      lockReceiveCantPut(receiveAtOwner(OTI),OTI,ssite,rsite);
+      OwnerEntry *oe=receiveAtOwner(OTI);
+      if(oe)
+	{
+	  lockReceiveCantPut(oe,OTI,ssite,rsite);
+	}
       break;
     }
   case M_CHAIN_QUESTION:
@@ -1002,7 +949,10 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_CHAIN_ANSWER(OTI,rsite,ans,deadS);
       PD((MSG_RECEIVED,"M_CHAIN_ANSWER index:%d site:%s val:%d",
 	  OTI,rsite->stringrep(),ans));
-      chainReceiveAnswer(receiveAtOwner(OTI),rsite,ans,deadS);
+      OwnerEntry *oe=receiveAtOwner(OTI);
+      if(oe){
+	chainReceiveAnswer(oe,rsite,ans,deadS);
+      }
       break;
     }  
 
@@ -1028,7 +978,10 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_ASK_ERROR(OTI,toS,ec);
       PD((MSG_RECEIVED,"M_ASK_ERROR index:%d ec:%d toS:%s",
 	  OTI,ec,toS->stringrep()));
-      receiveAskError(receiveAtOwner(OTI),toS,ec);
+      OwnerEntry *oe=receiveAtOwner(OTI);
+      if (oe){
+	receiveAskError(oe,toS,ec);
+      }
       break; 
     }
   case M_UNASK_ERROR:
@@ -1039,7 +992,10 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_UNASK_ERROR(OTI,toS,ec);
       PD((MSG_RECEIVED,"M_UNASK_ERROR index:%d ec:%d toS:%s",
 	  OTI,ec,toS->stringrep()));
-      receiveUnAskError(receiveAtOwner(OTI),toS,ec);
+      
+      OwnerEntry *oe=receiveAtOwner(OTI);
+      if (oe)
+	receiveUnAskError(oe,toS,ec);
       break; 
     }
   case M_PING:
@@ -1273,7 +1229,7 @@ OZ_Term getGatePort(DSite* sd){
     b=borrowTable->getBorrow(bi);
     PortProxy *pp = new PortProxy(bi);
     b->mkTertiary(pp);
-//      b->makePersistent(); // Already is
+
     if(sd->siteStatus()!=SITE_OK){
       if(sd->siteStatus()==SITE_PERM){
 	deferProxyTertProbeFault(pp,PROBE_PERM);}
