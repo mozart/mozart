@@ -88,6 +88,7 @@
 #ifdef DEBUG_CHECK
 inline void* ToPointer(uint32 i) { return _ToPointer(i); }
 inline uint32 ToInt32(const void *p) { return _ToInt32(p); }
+inline uint32 ToInt32(uint32 t) { return t; }
 #else
 #define ToPointer(i) _ToPointer(i)
 #define ToInt32(p)   _ToInt32(p)
