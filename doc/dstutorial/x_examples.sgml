@@ -359,8 +359,9 @@ raised by <<ProcOrObj>>.
 
 <NOTE FOOT>One-argument procedures are not exactly
 objects, since they do not have features.
-For all practical purposes, though, one-argument
-procedures and objects have identical calling patterns.</NOTE>
+For all practical purposes not requiring features,
+though, one-argument procedures
+and objects are interchangeable.</NOTE>
 
 
 <SUBSECTION><TITLE>A compute server</TITLE>
