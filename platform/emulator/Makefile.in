@@ -21,15 +21,10 @@
 #  of this file, and for a DISCLAIMER OF ALL
 #  WARRANTIES.
 
-export
-
-# Programs
 SUBDIRS         = FDLib FSetLib
-srcdir          = @srcdir@
 VPATH           = @srcdir@
 OZDIR           = @srcdir@
-CURDIR          = .
-SHELL           = @SH@
+export SHELL    = @SH@
 LEX             = @LEX@
 LFLAGS          = -8
 YACC            = @YACC@
@@ -37,170 +32,168 @@ YFLAGS          = -d
 MV              = @MV@
 SED             = @SED@
 ECHO            = @@ECHO@
-OZINCDIR        = $(srcdir)/../include
-M4A             = -DOZINCDIR=$(OZINCDIR) -DOZSRCDIR=$(srcdir)
+OZINCDIR        = $(OZDIR)/../include
+M4A             = -DOZINCDIR=$(OZINCDIR) -DOZSRCDIR=$(OZDIR)
 M4              = @M4@ $(M4A)
 M4_S            = @M4_S@ $(M4A)
-RM              = @RM@ -f
-CXX             = @CXX@
-LD              = @LD@
-DYNLD           = @DYNLD@
-RANLIB          = @RANLIB@
-AR              = @AR@
+export RM               = @RM@ -f
+export CXX              = @CXX@
+export LD               = @LD@
+export DYNLD            = @DYNLD@
+export RANLIB           = @RANLIB@
+export AR               = @AR@
 
-INSTALL         = @INSTALL@
-INSTALL_DIR     = $(INSTALL) -m 775 -d
-INSTALL_BIN     = $(INSTALL) -m 555
-INSTALL_OTHER   = $(INSTALL) -m 444
-LIBS            = @LIBS@
-LDFLAGS         = @LDFLAGS@
+export INSTALL          = @INSTALL@
+export INSTALL_DIR      = $(INSTALL) -m 775 -d
+export INSTALL_BIN      = $(INSTALL) -m 555
+export INSTALL_OTHER   = $(INSTALL) -m 444
+export LIBS            = @LIBS@
+export LDFLAGS          = @LDFLAGS@
 
-COPT            = @COPT@
-DEFS            = @DEFS@
-CWARN           = @CWARN@
-INCS            = -I. -I$(srcdir) -I$(OZINCDIR)
-CFLAGS          = $(COPT) $(DEFS) $(INCS) $(CWARN) $(CUSR)
-CXXFLAGS        = $(CFLAGS)
-DEPEND          = @DEPEND@ $(DEFS) $(INCS)
+export COPT             = @COPT@
+export DEFS             = @DEFS@
+export CWARN            = @CWARN@
+export INCS             = -I. -I$(OZDIR) -I$(OZINCDIR)
+export CFLAGS           = $(COPT) $(DEFS) $(INCS) $(CWARN) $(CUSR)
+export CXXFLAGS = $(CFLAGS)
+export DEPEND           = @DEPEND@ $(DEFS) $(INCS)
 
-PROGRAMNAME     = @PROGRAMNAME@
 TARGETS         = @TARGETS@
 
 prefix          = @prefix@
 platform        = @platform@
-platformdir     = $(prefix)/platform
-bindir          = $(platformdir)/$(platform)
-incdir          = $(prefix)/include
+export platformdir      = $(prefix)/platform
+export bindir           = $(platformdir)/$(platform)
+export incdir           = $(prefix)/include
 
 INSTRDEFS       = $(OZINCDIR)/instrDefs.m4
 
-MOREWARNINGS  =   -Wall -pedantic-errors -W -Wtraditional -Wshadow \
-        -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
-        -Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes \
-        -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls \
-        -Wnested-externs -Winline -Woverloaded-virtual -Wsynth -Werror
+#MOREWARNINGS  =   -Wall -pedantic-errors -W -Wtraditional -Wshadow \
+#       -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
+#       -Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes \
+#       -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls \
+#       -Wnested-externs -Winline -Woverloaded-virtual -Wsynth -Werror
 
-CWARN = -Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
+WARNINGS = -Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
         -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
         -Wnested-externs -Wsynth -Wno-unused -Wno-reorder -Wno-uninitialized
 
-ERRWARN = -Werr
-
-WARNLINUXDEBUG = -W -Wswitch -Wreturn-type -Wparentheses -Wimplicit \
-        /*-Wpointer-arithm*/ -Wconversion /*-Wshadow*/ -Wcast-align
-
 CREATEDINCS = \
-        $(CURDIR)/instrtab.hh\
-        $(CURDIR)/opcodes.hh\
-        $(CURDIR)/optostr.hh\
-        $(CURDIR)/marshaler.hh\
-        $(CURDIR)/marshalcode.cc\
-        $(CURDIR)/marshalMsg.cc\
-        $(CURDIR)/register.hh
+        instrtab.hh\
+        opcodes.hh\
+        optostr.hh\
+        marshaler.hh\
+        marshalcode.cc\
+        marshalMsg.cc\
+        register.hh
 
 CREATEDSRCS = \
-        $(CURDIR)/scancode.cc\
-        $(CURDIR)/opcodes.cc\
-        $(CURDIR)/ozma-p.cc\
-        $(CURDIR)/ozma-s.cc\
-        $(CURDIR)/initffuns.cc\
-        $(CURDIR)/scanner.cc\
-        $(CURDIR)/parser.cc
+        scancode.cc\
+        opcodes.cc\
+        ozma-p.cc\
+        ozma-s.cc\
+        scanner.cc\
+        parser.cc \
+        version.cc\
+        initffuns.cc
 
 CREATEDFILES = $(CREATEDINCS) $(CREATEDSRCS)
 
-PEANUTSFILE = $(OZDIR)/peanuts.cc
+PEANUTSFILE = peanuts.cc
 PEANUTS = \
-        $(OZDIR)/am.cc\
-        $(OZDIR)/genvar.cc\
-        $(OZDIR)/indexing.cc\
-        $(OZDIR)/fdhook.cc\
-        $(OZDIR)/taskstk.cc\
-        $(OZDIR)/mem.cc\
-        $(OZDIR)/assemble.cc\
-        $(OZDIR)/error.cc\
-        $(OZDIR)/fdprofil.cc\
-        $(OZDIR)/statisti.cc\
-        $(OZDIR)/fdgenvar.cc\
-        $(OZDIR)/codearea.cc\
-        $(OZDIR)/debug.cc\
-        $(OZDIR)/lps.cc\
-        $(OZDIR)/solve.cc\
-        $(OZDIR)/variable.cc\
-        $(OZDIR)/thrqueue.cc\
-        $(OZDIR)/thrspool.cc\
-        $(OZDIR)/avar.cc\
-        $(OZDIR)/perdiovar.cc\
-        $(OZDIR)/lazyvar.cc\
-        $(OZDIR)/print.cc
+        am.cc\
+        genvar.cc\
+        indexing.cc\
+        fdhook.cc\
+        taskstk.cc\
+        mem.cc\
+        assemble.cc\
+        error.cc\
+        fdprofil.cc\
+        statisti.cc\
+        fdgenvar.cc\
+        codearea.cc\
+        debug.cc\
+        lps.cc\
+        solve.cc\
+        variable.cc\
+        thrqueue.cc\
+        thrspool.cc\
+        avar.cc\
+        perdiovar.cc\
+        lazyvar.cc\
+        print.cc
 
 CXXSRCS = \
-        $(OZDIR)/actor.cc\
-        $(OZDIR)/board.cc\
-        $(OZDIR)/thread.cc\
-        $(OZDIR)/dictionary.cc\
-        $(OZDIR)/stack.cc\
-        $(OZDIR)/susplist.cc\
-        $(OZDIR)/cpbag.cc\
-        $(OZDIR)/tagged.cc\
-        $(OZDIR)/value.cc\
-        $(OZDIR)/cont.cc\
-        $(OZDIR)/config.cc\
-        $(OZDIR)/trail.cc\
-        $(OZDIR)/types.cc\
-        $(OZDIR)/foreign.cc\
-        $(OZDIR)/gc.cc\
-        $(OZDIR)/compiler.cc\
-        $(OZDIR)/ofgenvar.cc\
-        $(OZDIR)/genhashtbl.cc\
-        $(OZDIR)/ozostream.cc\
-        $(OZDIR)/runtime.cc\
-        $(OZDIR)/unix.cc\
-        $(OZDIR)/tcl_tk.cc\
-        $(OZDIR)/version.cc\
-        $(OZDIR)/metavar.cc\
-        $(OZDIR)/perdio.cc\
-        $(OZDIR)/urlc.cc\
-        $(OZDIR)/iso-ctype.cc\
-        $(OZDIR)/hashtbl.cc\
-        $(OZDIR)/os.cc\
-        $(OZDIR)/emulate.cc\
-        $(OZDIR)/builtins.cc\
-        $(OZDIR)/components.cc\
-        $(OZDIR)/network.cc\
-        $(OZDIR)/virtual.cc\
-        $(OZDIR)/comm.cc\
-        $(OZDIR)/marshaler.cc\
-        $(OZDIR)/liveness.cc
+        actor.cc\
+        board.cc\
+        thread.cc\
+        dictionary.cc\
+        stack.cc\
+        susplist.cc\
+        cpbag.cc\
+        tagged.cc\
+        value.cc\
+        cont.cc\
+        config.cc\
+        trail.cc\
+        types.cc\
+        foreign.cc\
+        gc.cc\
+        compiler.cc\
+        ofgenvar.cc\
+        genhashtbl.cc\
+        ozostream.cc\
+        runtime.cc\
+        unix.cc\
+        tcl_tk.cc\
+        metavar.cc\
+        perdio.cc\
+        urlc.cc\
+        iso-ctype.cc\
+        hashtbl.cc\
+        os.cc\
+        emulate.cc\
+        builtins.cc\
+        components.cc\
+        network.cc\
+        virtual.cc\
+        comm.cc\
+        marshaler.cc\
+        liveness.cc
 
 FDSRCS =\
-        $(OZDIR)/fdbuilti.cc\
-        $(OZDIR)/fdomn.cc\
-        $(OZDIR)/fdcore.cc\
-        $(OZDIR)/fdcd.cc\
-        $(OZDIR)/fdbvar.cc\
-        $(OZDIR)/fddist.cc
+        fdbuilti.cc\
+        fdomn.cc\
+        fdcore.cc\
+        fdcd.cc\
+        fdbvar.cc\
+        fddist.cc
 
 CPISRCS =\
-        $(OZDIR)/cpi.cc\
-        $(OZDIR)/cpi_fd.cc\
-        $(OZDIR)/cpi_prop.cc\
-        $(OZDIR)/cpi_fs.cc\
-        $(OZDIR)/cpi_expect.cc\
-        $(OZDIR)/cpi_misc.cc\
-        $(OZDIR)/cpi_stream.cc\
-        $(OZDIR)/cpi_profile.cc
+        cpi.cc\
+        cpi_fd.cc\
+        cpi_prop.cc\
+        cpi_fs.cc\
+        cpi_expect.cc\
+        cpi_misc.cc\
+        cpi_stream.cc\
+        cpi_profile.cc
 
 FSETSRCS =\
-        $(OZDIR)/fset.cc\
-        $(OZDIR)/fsetcore.cc\
-        $(OZDIR)/fsgenvar.cc
+        fset.cc\
+        fsetcore.cc\
+        fsgenvar.cc
 
-SRCS = $(FDSRCS) $(FSETSRCS) $(CPISRCS) $(CXXSRCS) $(CREATEDSRCS) @PEANUTS@
+SRCS1 = $(FDSRCS) $(FSETSRCS) $(CPISRCS) $(CXXSRCS) @PEANUTS@ main.cc
+
+SRCS = $(SRCS1) $(CREATEDSRCS)
 
 OBJS = $(SRCS:.cc=.o)
 
-.NOEXPORT: emulate.o $(PROGRAMNAME) peanuts.o
+.NOEXPORT: emulate.o @POGRAMNAME@ peanuts.o
+.PHONY: all subdirs win win-install first install install-bin install-inc \
+        install-dir version depend tags clean+ clean realclean veryclean
 
 all: subdirs $(TARGETS)
 
@@ -214,9 +207,14 @@ win-install:
 
 first: version $(CREATEDFILES) $(SRCS)
 
-$(PROGRAMNAME): first main.o $(OBJS) $(PROPOBJS)
-        $(LD) $(LDFLAGS) $(LDOPT) -o $@ \
-           main.o $(OBJS) $(PROPOBJS) $(LIBS)
+@PROGRAMNAME@: first $(OBJS)
+        $(LD) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
+
+@tmphack_programname@: first $(OBJS)
+        $(LD) $(LDFLAGS) $(LDOPT) -o /tmp/ozemu$$$$ $(OBJS) $(LIBS) && \
+         echo 'moving ...' && \
+         rcp /tmp/ozemu$$$$ @tmphack_host@:`pwd`/$@ && \
+         rm -f /tmp/ozemu$$$$
 
 install: install-dir install-bin install-inc
         for d in $(SUBDIRS); do (cd $$d; $(MAKE) install); done
@@ -238,16 +236,17 @@ version.cc: version
 emulate.cc:: register.hh
 
 initffuns.cc oz.c: oz.h
-        $(srcdir)/makeffuns $(srcdir)
+        $(OZDIR)/makeffuns $(OZDIR)
 
 version:
         $(SED) -e "s/HEREGOESDATE/`date '+%a %h, %d, 19%y \(%T\)'`/" \
              -e "s/OZPLATFORM/$(platform)/" \
-             $(srcdir)/version.sed > version.cc
+             $(OZDIR)/version.sed > version.cc
 
 
 depend: $(CREATEDFILES) $(SRCS)
-        $(DEPEND) $(SRCS) >> Makefile
+        $(DEPEND) `for f in $(SRCS1); do echo $(OZDIR)/$$f; done` \
+                $(CREATEDSRCS) >> Makefile
         for d in $(SUBDIRS); do (cd $$d; $(MAKE) depend); done
 
 $(M4FILES): $(INSTRDEFS)
@@ -268,7 +267,7 @@ realclean: clean
                 ozma-s.cc ozma-p.cc ozma.hh \
                 ozlib.lnk *.exe *.map *.imp *.sym *.so \
                 $(M4FILES) \
-                oz.c initffuns.cc TAGS \
+                $(CREATEDFILES) TAGS \
                 conf.h Makefile config.cache config.log config.status
         for d in $(SUBDIRS); do (cd $$d; $(MAKE) realclean); done
 
@@ -327,3 +326,11 @@ ozma-p.yy: ozma-p.m4yy
 
 .m4hh.hh:
         $(M4_S) $< > $@
+
+@tmphack_target@:
+        $(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && \
+                rcp /tmp/$$$$.o @tmphack_host@:`pwd`/$@; \
+                rm -f /tmp/$$$$.o
+
+marshaler.hh marshalMsg.cc: $(OZDIR)/msgFormat.m4
+scancode.cc ozma-s.ll ozma-p.yy optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh: $(OZINCDIR)/instrDefs.m4

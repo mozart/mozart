@@ -51,6 +51,28 @@ AC_CANONICAL_HOST
 AC_LANG_CPLUSPLUS
 
 dnl *****************************************************************
+dnl windows cross compilation
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --enable-wincross)
+AC_ARG_ENABLE(wincross,
+  [--enable-wincross   Windows cross compilation (default=no)])
+if test "x$enable_wincross" = xyes; then
+        AC_MSG_RESULT(yes)
+        WINCROSS="/project/ps/soft/cygwin-cross"
+        CXX="$WINCROSS/bin/i386-cygwin32-gcc"
+        CC="$CXX"
+        LD="$WINCROSS/bin/i386-cygwin32-ld"
+        RANLIB="$WINCROSS/bin/i386-cygwin32-ranlib"
+        LDFLAGS="$LDFLAGS -L$WINCROSS/lib -L../winlibs"
+        platform="win32-i486"
+        AC_DEFINE(GNUWIN32)
+        AC_DEFINE(WINDOWS)
+else
+        AC_MSG_RESULT(no)
+fi
+
+dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
 
@@ -92,19 +114,28 @@ AC_SUBST(PEANUTS)
 AC_SUBST(PROGRAMNAME)
 AC_SUBST(TARGETS)
 AC_SUBST(FDTARGETS)
-AC_SUBST(INSTALLFDTARGETS)
+AC_SUBST(FSETTARGETS)
+AC_SUBST(INSTALL_PROP)
 AC_SUBST(COPT)
 AC_SUBST(LD)
 AC_SUBST(AR)
 AC_SUBST(M4_S)
 AC_SUBST(DEPEND)
 AC_SUBST(DYNLD)
+AC_SUBST(CWARN)
+AC_SUBST(tmphack_target)
+AC_SUBST(tmphack_host)
+AC_SUBST(tmphack_programname)
 
 dnl *****************************************************************
 dnl platform
 dnl *****************************************************************
 
-platform=`$PLATFORMSCRIPT`
+if test "x$platform" = x
+then
+  platform=`$PLATFORMSCRIPT`
+fi
+
 PROGRAMNAME=oz.emulator.bin
 TARGETS="$PROGRAMNAME"
 
@@ -135,6 +166,7 @@ if test "x$GXX" = xyes; then
     G_OPT="-g3 -DINTERFACE"
     M4_S="$M4 -s"
     DEPEND="$CXX -MM"
+    CWARN="\$(WARNINGS)"
 fi
 
 case $platform in
@@ -171,6 +203,8 @@ AC_CHECK_LIB(intl, main)
 AC_CHECK_LIB(nsl, main)
 AC_CHECK_LIB(socket, main)
 AC_CHECK_LIB(m, main)
+AC_CHECK_LIB(kernel32,main)
+AC_CHECK_LIB(wsock32,main)
 
 dnl Special hack for our local configuration
 ps="$HOME/lib/$platform $PSDIR/lib/$platform"
@@ -190,7 +224,7 @@ AC_CHECK_LIB(gmp, mpz_init)
 
 
 # special hack for static linking under linux
-case $host_os in
+case $platform in
     linux*)
         AC_MSG_CHECKING(for --enable-lstatic)
         AC_ARG_ENABLE(lstatic,
@@ -260,7 +294,6 @@ case $enable_opt in
     n*|d*)
         AC_MSG_RESULT(debug)
         AC_DEFINE(DEBUG_EMULATOR)
-        AC_DEFINE(INTERFACE)
         COPT="$G_OPT"
     ;;
     *)
@@ -279,7 +312,7 @@ dnl ********************************
                 ;;
             *)
                 AC_MSG_RESULT(yes)
-                case $host_os in
+                case $platform in
                     linux*)
                         COPT="$COPT -fomit-frame-pointer"
                     ;;
@@ -315,7 +348,7 @@ dnl ********************************
                 AC_MSG_RESULT(no)
         fi
 
-        if test $PLATFORM = LINUX_I486
+        if test "x$platform" = xlinux-i486
         then
           if test -n "$PGXX"; then
             AC_MSG_CHECKING(for   --with-pgcc)
@@ -342,11 +375,13 @@ AC_ARG_ENABLE(linkprop,
   [--enable-linkprop  link propagators statically (default=yes)])
 if test "x$enable_linkprop" != xno; then
         AC_MSG_RESULT(yes)
-        FDTARGETS="libfd.a libsched.a libfset.a"
+        FDTARGETS="libfd.a libsched.a"
+        FSETTARGETS="libfset.a"
         LIBS="-L./FDLib -lfd -lsched -L./FSetLib -lfset $LIBS"
 else
-        FDTARGETS="fdlib.so schedlib.so fsetlib.so"
-        INSTALLFDTARGETS="\$FDTARGETS"
+        FDTARGETS="fdlib.so schedlib.so"
+        FSETTARGETS="fsetlib.so"
+        INSTALL_PROP="install-prop"
         AC_DEFINE(FOREIGNFDPROPS)
         AC_MSG_RESULT(no)
 fi
@@ -369,18 +404,38 @@ dnl *****************************************************************
 
 dnl rs: Have to use our own malloc/free: brain dead libc 5.12 returns
 dnl both pointers in which top most bits are set and not set.
-case $host_os in
-    linux*)
-        AC_MSG_CHECKING(for gmalloc)
-        if test -r $PSDIR/lib/linux-i486/gmalloc.o
-        then
-            AC_MSG_RESULT(yes)
-            LIBS="$LIBS $PSDIR/lib/linux-i486/gmalloc.o"
-        else
-            AC_MSG_RESULT(no)
+if test "x$platform" = xlinux-i486
+then
+    AC_MSG_CHECKING(if local gmalloc.o found)
+    if test -r $PSDIR/lib/$platform/gmalloc.o
+    then
+        AC_MSG_RESULT(yes)
+        LIBS="$LIBS $PSDIR/lib/$platform/gmalloc.o"
+    else
+        AC_MSG_RESULT(no)
+    fi
+fi
+
+dnl *****************************************************************
+dnl tmphack
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --enable-tmphack)
+AC_ARG_ENABLE(tmphack,
+  [--enable-tmphack   link and compile in /tmp (default=no)])
+if test "x$enable_tmphack" = xyes; then
+        AC_MSG_RESULT(yes)
+        tmphack_target=".cc.o"
+        tmphack_programname="$PROGRAMNAME"
+        PROGRAMNAME="$PROGRAMNAME.local"
+        if test "x$tmphack_host" = x; then
+            tmphack_host=localhost
         fi
-        ;;
-esac
+else
+        AC_MSG_RESULT(no)
+        tmphack_target=".cc.oo"
+        tmphack_programname="$PROGRAMNAME.tmp"
+fi
 
 dnl *****************************************************************
 dnl FINALIZE
