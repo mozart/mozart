@@ -718,7 +718,7 @@ define
 			 end
 	    in
 	       TextFile, putS({Util.indent 1}#ValName#
-			      " = {Value.byNeed fun {$} class $"#
+			      " = {Value.byNeedFuture fun {$} class $"#
 			      From#" "#Fields)
 	       TextFile, putS({Util.indent 2}#"meth toString($)")
 	       TextFile, putS({Util.indent 3}#"\""#ClassSN#"\"")

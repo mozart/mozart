@@ -175,6 +175,10 @@ OZ_BI_define(BIvarToFuture,2,0)
 {
   oz_declareDerefIN(0,v);
   if (oz_isVarOrRef(v)) {
+    if (oz_isFailed(v)) {   // added by raph
+      v = makeTaggedRef(vPtr);
+      goto bind_fut;
+    }
     if (oz_isFuture(v)) {
       if (((Future*)tagged2Var(v))->isFailed()) {
 	v = makeTaggedRef(vPtr);
@@ -202,6 +206,7 @@ OZ_BI_define(BIfuture,1,1)
   if (oz_isRef(v)) {
     OZ_Term *vPtr = tagged2Ref(v);
     if (oz_isFuture(*vPtr)) OZ_RETURN(v);
+    if (oz_isFailed(*vPtr)) OZ_RETURN(v);   // added by raph
     OzVariable *ov = tagged2Var(*vPtr);
     Board *bb = GETBOARD(ov);
     TaggedRef f = oz_newFuture(bb);
@@ -244,13 +249,12 @@ OZ_BI_define(BIisFailed,1,1)
   Assert(!oz_isRef(fut));
   OZ_RETURN(
 	    (oz_isVarOrRef(fut) &&
-	     // added by raph
-	     (oz_isFailed(fut) ||
+	     (oz_isFailed(fut) ||   // added by raph
 	      (oz_isFuture(fut) && ((Future*)tagged2Var(fut))->isFailed())))
 	    ? oz_true() : oz_false() );
 } OZ_BI_end
 
-OZ_BI_define(BIbyNeed,1,1)
+OZ_BI_define(BIbyNeedFuture,1,1)
 {
   oz_declareNonvarIN(0,p);
   if (oz_isProcedure(p) && oz_procedureArity(p)==1) {

@@ -70,7 +70,7 @@ prepare
 	    else
 	       {self trace('link [lazy]' Url)}
 	       {Dictionary.put ModMap Key
-		{ByNeed
+		{ByNeedFuture
 		 fun {$}
 		    try
 		       if {CondSelect Url scheme unit}==OzScheme
@@ -85,7 +85,7 @@ prepare
 	    if self.TypeCheckProc==unit then
 	       %% avoid laziness if possible
 	       if {IsDet Entry} then Entry.1
-	       else {ByNeed
+	       else {ByNeedFuture
 		     fun {$}
 			try Entry.1
 			catch E then {Value.byNeedFail E} end
@@ -94,7 +94,7 @@ prepare
 	    else
 	       %% this could easily be improved to avoid
 	       %% unnecessary laziness
-	       {ByNeed
+	       {ByNeedFuture
 		fun {$}
 		   try
 		      case Entry of Module#ActualType then

@@ -177,8 +177,11 @@ OZ_Return oz_var_addSusp(TaggedRef *v, Suspendable * susp) {
   case OZ_VAR_FAILED:
     return ((Failed *) ov)->addSusp(v, susp);
   case OZ_VAR_READONLY_QUIET:
+    ((ReadOnly*) ov)->becomeNeeded();
+    // fall through
   case OZ_VAR_READONLY:
-    return ((ReadOnly *) ov)->addSusp(v, susp);
+    ov->addSuspSVar(susp);
+    return (SUSPEND);
   case OZ_VAR_EXT:
     return var2ExtVar(ov)->addSuspV(v, susp);
   case OZ_VAR_OPT:
@@ -205,8 +208,8 @@ OZ_Return oz_var_addQuietSusp(TaggedRef *v, Suspendable * susp) {
   OzVariable *ov = tagged2Var(*v);
   switch (ov->getType()) {
   case OZ_VAR_FUTURE:
-    // not correct, to be fixed later
-    return ((Future *) ov)->addSusp(v, susp);
+    ov->addSuspSVar(susp);
+    return (SUSPEND);
   case OZ_VAR_EXT:
     return var2ExtVar(ov)->addSuspV(v, susp);
   case OZ_VAR_OPT:

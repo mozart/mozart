@@ -70,7 +70,7 @@ OZ_Term oz_newFuture(Board *bb) {
   return makeTaggedRef(newTaggedVar(new Future(bb)));
 }
 
-// bind a future, don't care about the variable, e.g. for byNeed
+// bind a future, don't care about the variable, e.g. for byNeedFuture
 inline
 void oz_bindFuture(OZ_Term *vPtr,OZ_Term val)
 {

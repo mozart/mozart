@@ -30,7 +30,7 @@ local
    fun {ByNeedDot X F}
       if {IsDet X} andthen {IsDet F}
       then try X.F catch E then {ByNeedFail E} end
-      else {ByNeed fun {$} try X.F catch E then {ByNeedFail E} end end}
+      else {ByNeedFuture fun {$} try X.F catch E then {ByNeedFail E} end end}
       end
    end
 in
@@ -64,6 +64,7 @@ in
 
 		 '!!':            Boot_Value.'!!'
 		 byNeed:          ByNeed
+		 byNeedFuture:    ByNeedFuture
 		 byNeedDot:       ByNeedDot
 		 byNeedFail:      Boot_Value.'byNeedFail'
 		 readOnly:        Boot_Value.readOnly

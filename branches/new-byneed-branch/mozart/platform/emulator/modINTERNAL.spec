@@ -76,10 +76,6 @@
 			      out => [],
 			      BI  => BIvarToReadOnly},
 
-     'readOnlyToVar'	 => { in  => ['value', 'value'],
-			      out => [],
-			      BI  => BIreadOnlyToVar},
-
      );
 
 1;;

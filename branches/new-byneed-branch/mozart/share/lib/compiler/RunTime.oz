@@ -82,7 +82,7 @@ prepare
 
 		     %% Value
 		     'Value.byNeedDot': Value.byNeedDot
-		     'Value.byNeed': Value.byNeed
+		     'Value.byNeedFuture': Value.byNeedFuture
 
 		     %% Name
 		     'Name.new': Name.new

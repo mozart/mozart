@@ -3,8 +3,8 @@
  *    Michael Mehl (mehl@dfki.de)
  * 
  *  Contributors:
- *    derived from var_future.cc by Raphael Collet <raph@info.ucl.ac.be>
- *    and Alfred Spiessens <fsp@info.ucl.ac.be>
+ *    Raphael Collet <raph@info.ucl.ac.be>
+ *    Alfred Spiessens <fsp@info.ucl.ac.be>
  * 
  *  Copyright:
  *    Denys Duchier (1998)
@@ -25,6 +25,8 @@
  *  WARRANTIES.
  *
  */
+
+// derived from var_future.cc by Raph & Fred
 
 #if defined(INTERFACE) && !defined(VAR_ALL)
 #pragma implementation "var_readonly.hh"
@@ -74,15 +76,6 @@ OZ_Return ReadOnly::becomeNeeded()
   return PROCEED;
 }
 
-// use this method for adding demanding suspensions only!
-OZ_Return ReadOnly::addSusp(TaggedRef *tPtr, Suspendable * susp) {
-  // release the current suspension list and mutate into a needed read-only
-  becomeNeeded();
-  // add susp into the ReadOnly's suspension list
-  addSuspSVar(susp);
-  return SUSPEND;
-}
-
 
 /*
  * Builtins
@@ -116,32 +109,33 @@ OZ_BI_define(BIbindReadOnly,2,0)
 
 
 // this builtin/propagator is only internally available
-// It binds a read-only variable to its final value.
+// It binds a read-only variable to its final value, AND
+// propagates the need from the read-only to the variable.
 OZ_BI_define(BIvarToReadOnly,2,0)
 {
   oz_declareDerefIN(0,v);
-
-  if (oz_isVarOrRef(v) && !oz_isFailed(v))
-    return oz_var_addQuietSusp(vPtr, oz_currentThread());
-
   oz_declareDerefIN(1,r);
+
+  if (oz_isVarOrRef(v)) {
+    if (oz_isFailed(v)) {
+      // The failed value must be bound to the read-only.
+      // (v cannot be used directly to bind the read-only)
+      v = makeTaggedRef(vPtr);
+      oz_bindReadOnly(rPtr,v);
+      return PROCEED;
+    }
+    if (oz_isNeeded(r)) { // propagate need
+      oz_var_need(vPtr);
+    } else { // r not needed yet: suspend again on r
+      OZ_Return ret = oz_var_addQuietSusp(rPtr, oz_currentThread());
+      Assert(ret == SUSPEND);
+    }
+    // suspend on v
+    return oz_var_addQuietSusp(vPtr, oz_currentThread());
+  }
+
+  // bind the read-only to its value v
   oz_bindReadOnly(rPtr,v);
-
-  return PROCEED;
-} OZ_BI_end
-
-// this builtin/propagator is only internally available
-// It makes a variable needed when it read-only view becomes needed.
-OZ_BI_define(BIreadOnlyToVar,2,0)
-{
-  oz_declareDerefIN(0,r);
-
-  if (!oz_isNeeded(r))
-    return oz_var_addQuietSusp(rPtr, oz_currentThread());
-
-  oz_declareDerefIN(1,v);
-  if (!oz_isNeeded(v)) oz_var_need(vPtr);
-
   return PROCEED;
 } OZ_BI_end
 
@@ -149,8 +143,6 @@ OZ_BI_define(BIreadOnlyToVar,2,0)
 OZ_BI_define(BIreadOnly,1,1)
 {
   oz_declareSafeDerefIN(0,v);
-  // TaggedRef v = OZ_in(0);
-  // v = oz_safeDeref(v);
 
   if (oz_isRef(v)) {
     // create the read-only variable in the same space as v
@@ -159,23 +151,19 @@ OZ_BI_define(BIreadOnly,1,1)
     Board *bb = GETBOARD(ov);
     TaggedRef r = oz_newReadOnly(bb);
 
-    // create the propagators for data and need
+    // create the propagator for data and need
     if (bb != oz_currentBoard()) {
-      Thread *datathr = oz_newThreadInject(bb);
-      datathr->pushCall(BI_varToReadOnly, RefsArray::make(v,r));
-
-      Thread *needthr = oz_newThreadInject(bb);
-      needthr->pushCall(BI_readOnlyToVar, RefsArray::make(r,v));
+      Thread *thr = oz_newThreadInject(bb);
+      thr->pushCall(BI_varToReadOnly, RefsArray::make(v,r));
 
     } else { // optimization: immediately suspend threads
-      Thread *datathr = oz_newThreadSuspended();
-      datathr->pushCall(BI_varToReadOnly, RefsArray::make(v,r));
-      OZ_Return ret = oz_var_addQuietSusp(vPtr, datathr);
-      Assert(ret==SUSPEND);
+      Thread *thr = oz_newThreadSuspended();
+      thr->pushCall(BI_varToReadOnly, RefsArray::make(v,r));
 
-      Thread *needthr = oz_newThreadSuspended();
-      needthr->pushCall(BI_readOnlyToVar, RefsArray::make(r,v));
-      ret = oz_var_addQuietSusp(tagged2Ref(r), needthr);
+      // suspend on both v and r
+      OZ_Return ret = oz_var_addQuietSusp(vPtr, thr);
+      Assert(ret==SUSPEND);
+      ret = oz_var_addQuietSusp(tagged2Ref(r), thr);
       Assert(ret==SUSPEND);
     }
 

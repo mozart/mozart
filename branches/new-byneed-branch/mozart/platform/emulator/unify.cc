@@ -257,21 +257,22 @@ loop:
     if (tb1 == tb2) {
       if (CMPVAR(v1, v2) < 0) {
 	Swap(termPtr1, termPtr2, TaggedRef*);
+	v1 = v2;
 	tb2 = tb1; DebugCode(tb1 = (Board *) -1);
       }
     } else if (oz_isBelow(tb2, tb1)) {            // strictly above;
       Swap(termPtr1, termPtr2, TaggedRef*);
+      v1 = v2;
       tb2 = tb1; DebugCode(tb1 = (Board *) -1);
     } else {
       Assert(tb1 != tb2 && oz_isBelow(tb1, tb2)); // strictly below;
       DebugCode(tb1 = (Board *) -1);
     }
+    // v1 might have been overwritten by v2
 
     //
     // Make the variable to which the binding is done fit!
-    int res = oz_var_cast(termPtr2, tb2, tagged2Var(*termPtr1)->getType());
-    // was: int res = oz_var_cast(termPtr2, tb2, v1->getType());
-    //
+    int res = oz_var_cast(termPtr2, tb2, v1->getType());
     // *termPtr2 can be changed!
 
     if (res != PROCEED) {

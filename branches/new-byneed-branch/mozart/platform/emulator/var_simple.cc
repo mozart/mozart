@@ -71,15 +71,6 @@ OZ_Return SimpleVar::becomeNeeded()
   return PROCEED;
 }
 
-// use this method for adding demanding suspensions only!
-OZ_Return SimpleVar::addSusp(TaggedRef *tPtr, Suspendable * susp) {
-  // release the current suspension list and mutate into a needed var
-  becomeNeeded();
-  // add susp into the SimpleVar's suspension list
-  addSuspSVar(susp);
-  return SUSPEND;
-}
-
 OzVariable *oz_newSimpleVar(Board *bb)
 {
   return new SimpleVar(bb);

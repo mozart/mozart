@@ -735,7 +735,7 @@ define
 					 CND)
 				end nil#FE2}
 	       NewFS = fFun(FE1 Formals
-			    fOpApply('Value.byNeed'
+			    fOpApply('Value.byNeedFuture'
 				     [fFun(fDollar(CND) nil NewFE nil CND)]
 				     CND) RestFlags C)
 	       Unnester, UnnestStatement(NewFS $)
