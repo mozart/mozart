@@ -1002,7 +1002,20 @@ OZ_ENABLE(modules-static,[ link modules statically],$oz_enable_modules_static,
 AC_SUBST(STATIC_MODULES)
 AC_SUBST(DYNAMIC_MODULES)
 
-OZ_CXX_OPTIONS(-fpic -Kpic,OZTOOLDYNOPT)
+case ${platform} in
+*-darwin)
+    ## seems needed on Darwin (MacOS X)
+    ## emitds pic code suitable for fynamic linking and avoiding
+    ## any limit on the size of the global offset table
+    ## (according to info from Marc-Antoine Parent maparent@acm.org)
+    PICOPTIONS="-fPIC -fpic -Kpic"
+    PICOPTIONSCC="-fPIC -fpic -Kpic"
+    ;;
+*)  PICOPTIONS="-fpic -Kpic"
+    PICOPTIONSCC="-fpic -Kpic"
+    ;;
+esac
+OZ_CXX_OPTIONS($PICOPTIONS,OZTOOLDYNOPT)
 if test "$oz_enable_modules_static" != "yes" ; then
     CDYNOPT=$OZTOOLDYNOPT
 fi
@@ -1432,7 +1445,7 @@ AC_SUBST(OZTOOL_CXX)
 OZ_CC_CHOOSE
 AC_LANG_SAVE
 AC_LANG_C
-OZ_CC_OPTIONS(-fpic -Kpic,OZTOOLDYNOPTCC)
+OZ_CC_OPTIONS($PICOPTIONSCC,OZTOOLDYNOPTCC)
 AC_LANG_RESTORE
 AC_SUBST(OZTOOLDYNOPTCC)
 
