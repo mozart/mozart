@@ -214,8 +214,11 @@
       </Picture.Choice>
 
     <Abstract>
-      This document gives reference documentation to the Mozart system
-      modules.
+      The Mozart system consists of two complementary parts: first
+      comes the Oz <em/core/ language which lays the semantic
+      foundations and whose programmatic interface is documented in
+      <ptr.extern to="ozdoc:base">, then come all the extras necessary
+      for practical programming; these are documented here.
     </Abstract>
 
 
@@ -282,3 +285,12 @@
     <Bib.Extern id="Ousterhout.94" to="system.bib" key="Ousterhout.94">
 
 </BOOK>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "../book.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
