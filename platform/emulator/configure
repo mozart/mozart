@@ -52,7 +52,7 @@ ac_help="$ac_help
 ac_help="$ac_help
 --enable-fasterreg   even faster temporary register access (default=yes)"
 ac_help="$ac_help
---enable-fastarith   use fast arithemtic (assembly), if available (default=yes)"
+--enable-fastarith   use fast arithemtic (assembly), if available (default=no)"
 ac_help="$ac_help
 --enable-modules-static  link modules statically (default=$oz_enable_modules_static)"
 ac_help="$ac_help
@@ -7287,7 +7287,7 @@ if test "${enable_fastarith+set}" = set; then
   :
 fi
 
-    : ${oz_enable_fastarith=yes}
+    : ${oz_enable_fastarith=no}
     if test -n "${enable_fastarith}"; then
         oz_enable_fastarith=$enable_fastarith
     fi
