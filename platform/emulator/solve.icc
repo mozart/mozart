@@ -59,6 +59,8 @@ TaggedRef SolveActor::merge(Board *bb) {
   solveBoard->setCommitted(bb);
   bb->incSuspCount(solveBoard->getSuspCount());
 
+  Assert(bb==am.currentBoard);
+
   // adjoin the list of or-actors to the list in actual solve actor!
 
   if (hasChoices()) {
@@ -69,8 +71,12 @@ TaggedRef SolveActor::merge(Board *bb) {
     }
   }
 
+  // Merge in current solve board but not elsewhere
+  
+  bb = am.currentSolveBoard;
+
   // merge local thread queue
-  if (localThreadQueue) {
+  if (bb && bb->isSolve() && localThreadQueue) {
     SolveActor * sa = SolveActor::Cast(bb->getActor());
 
     if (sa->getLocalThreadQueue()) {
