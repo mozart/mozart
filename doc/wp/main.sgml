@@ -128,6 +128,50 @@
     <Meta name=latex.table.spec arg1=table.widgets-2.event arg2="lllll">
     <Meta name=latex.table.spec arg1="table.widgets-2.event-args" arg2="cccc">
 
+<meta name="latex.picture.width" arg1="pict.ext.canvas.barchart" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.canvas.tags" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.canvas.waitdone" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.grid-span" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.grid-sticky" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.grid-weight" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.grid" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-anchor" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-bottom" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-fill" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-ipad" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-left" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-pad" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-plain" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-resize-both" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-resize-expand" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-resize-fill" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.widget-anchor" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.started.lower" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.started.upper" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.text.display" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.text.text-tags" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.text.toy" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.tools.dialog" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.tools.error" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.tools.menubar" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.fonts" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.images-1" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.labels" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.messages" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.predefined" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.relief-frames" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.toplevel-1" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.button" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.check-and-radio-action" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.check-and-radio" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.entry" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.file" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.help" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.listbox" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.menu" arg2="">
+<meta name="latex.picture.width"
+arg1="pict.ext.widgets-2.scale" arg2="">
+
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
 

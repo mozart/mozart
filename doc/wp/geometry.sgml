@@ -150,7 +150,7 @@ end
 	<Caption/Plain geometry computed by the packer./
                <picture.choice>
 	<Picture.Extern to="packer-plain.gif" type=gif>
-	<Picture.extern to="pictures/geometry/packer-plain.eps" type=ps>
+	<Picture.Extern id="pict.ext.geometry.packer-plain" to="pictures/geometry/packer-plain.eps" type=ps>
                </picture.choice>
       </Figure>
      
@@ -180,14 +180,14 @@ end
 	  <P>
                <picture.choice>
 	    <Picture.Extern to="packer-left.gif" type=gif>
-	    <Picture.extern to="pictures/geometry/packer-left.eps" type=ps>
+	    <Picture.Extern id="pict.ext.geometry.packer-left" to="pictures/geometry/packer-left.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/pack left/
 {Tk.send pack(b({NewLabels}) side:left)}
 </chunk>
                <picture.choice>
 	    <Picture.Extern to="packer-bottom.gif" type=gif>
-	    <Picture.extern to="pictures/geometry/packer-bottom.eps" type=ps>
+	    <Picture.Extern id="pict.ext.geometry.packer-bottom" to="pictures/geometry/packer-bottom.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/pack bottom/
 {Tk.send pack(b({NewLabels}) side:bottom)}
@@ -222,14 +222,14 @@ end
 	  <P>
                <picture.choice>
 	    <Picture.Extern to="packer-pad.gif" type=gif>
-	    <Picture.extern to="pictures/geometry/packer-pad.eps" type=ps>
+	    <Picture.Extern id="pict.ext.geometry.packer-pad" to="pictures/geometry/packer-pad.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/pack pad/
 {Tk.send pack(b({NewLabels}) padx:1#m pady:1#m)}
 </chunk>
                <picture.choice>
 	    <Picture.Extern to="packer-ipad.gif" type=gif>
-	    <Picture.extern to="pictures/geometry/packer-ipad.eps" type=ps>
+	    <Picture.Extern id="pict.ext.geometry.packer-ipad" to="pictures/geometry/packer-ipad.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/pack ipad/
 {Tk.send pack(b({NewLabels}) ipadx:2#m ipady:2#m)}
@@ -255,7 +255,7 @@ end
 	  <P>
                <picture.choice>
 	    <Picture.Extern to="packer-anchor.gif" type=gif>
-	    <Picture.extern to="pictures/geometry/packer-anchor.eps" type=ps>
+	    <Picture.Extern id="pict.ext.geometry.packer-anchor" to="pictures/geometry/packer-anchor.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/pack anchor/
 {Tk.send pack(b({NewLabels}) anchor:w padx:1#m pady:1#m)}
@@ -290,7 +290,7 @@ end
 	  <P>
                <picture.choice>
 	    <Picture.Extern to="packer-fill.gif" type=gif>
-	    <Picture.extern to="pictures/geometry/packer-fill.eps" type=ps>
+	    <Picture.Extern id="pict.ext.geometry.packer-fill" to="pictures/geometry/packer-fill.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/pack fill/
 {Tk.send pack(b({NewLabels}) fill:x)}
@@ -320,21 +320,21 @@ end
 	  <P>
                <picture.choice>
 	    <Picture.Extern to="packer-resize-fill.gif" type=gif>
-	    <Picture.extern to="pictures/geometry/packer-resize-fill.eps" type=ps>
+	    <Picture.Extern id="pict.ext.geometry.packer-resize-fill" to="pictures/geometry/packer-resize-fill.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/pack fill expand/
 {Tk.send pack(b({NewLabels}) fill:x)}
 </chunk>
                <picture.choice>
 	    <Picture.Extern to="packer-resize-expand.gif" type=gif>
-	    <Picture.extern to="pictures/geometry/packer-resize-expand.eps" type=ps>
+	    <Picture.Extern id="pict.ext.geometry.packer-resize-expand" to="pictures/geometry/packer-resize-expand.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/pack expand expand/
 {Tk.send pack(b({NewLabels}) expand:true)}
 </chunk>
                <picture.choice>
 	    <Picture.Extern to="packer-resize-both.gif" type=gif>
-	    <Picture.extern to="pictures/geometry/packer-resize-both.eps" type=ps>
+	    <Picture.Extern id="pict.ext.geometry.packer-resize-both" to="pictures/geometry/packer-resize-both.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/pack both expand/
 {Tk.send pack(b({NewLabels}) fill:both expand:true)}
@@ -364,7 +364,7 @@ end
 	<P>
                <picture.choice>
 	  <Picture.Extern to="grid.gif" type=gif>
-	  <Picture.extern to="pictures/geometry/grid.eps" type=ps>
+	  <Picture.Extern id="pict.ext.geometry.grid" to="pictures/geometry/grid.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/grid basic/
 proc {GL W R C S}
@@ -410,7 +410,7 @@ end
 	  <P>
                <picture.choice>
 	    <Picture.Extern to="grid-span.gif" type=gif>
-	    <Picture.extern to="pictures/geometry/grid-span.eps" type=ps>
+	    <Picture.Extern id="pict.ext.geometry.grid-span" to="pictures/geometry/grid-span.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/grid span/
 {Tk.send grid({New Tk.label tkInit(parent:W text:'Upper left')} 
@@ -447,7 +447,7 @@ end
 	  <P>
                <picture.choice>
 	    <Picture.Extern to="grid-sticky.gif" type=gif>
-	    <Picture.extern to="pictures/geometry/grid-sticky.eps" type=ps>
+	    <Picture.Extern id="pict.ext.geometry.grid-sticky" to="pictures/geometry/grid-sticky.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/grid sticky/
 {Tk.send grid({New Tk.label tkInit(parent:W text:'Upper left')} 
@@ -483,7 +483,7 @@ end
 	  <Caption/Result of resizing a window./
                <picture.choice>
 	  <Picture.Extern to="grid-weight.gif" type=gif>
-	  <Picture.extern to="pictures/geometry/grid-weight.eps" type=ps>
+	  <Picture.Extern id="pict.ext.geometry.grid-weight" to="pictures/geometry/grid-weight.eps" type=ps>
                </picture.choice>
 	</Figure>
 
@@ -509,7 +509,7 @@ end
 	<P>
                <picture.choice>
 	  <Picture.Extern to="widget-anchor.gif" type=gif>
-	  <Picture.extern to="pictures/geometry/widget-anchor.eps" type=ps>
+	  <Picture.Extern id="pict.ext.geometry.widget-anchor" to="pictures/geometry/widget-anchor.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/widget anchor/
 [L1 L2 L3]={NewLabels}

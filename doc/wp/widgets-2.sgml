@@ -61,7 +61,7 @@
         <P>
                <picture.choice>
           <Picture.Extern to="button.gif" type=gif>
-          <Picture.extern to="pictures/widgets-2/button.eps" type=ps>
+          <Picture.Extern id="pict.ext.widgets-2.button" to="pictures/widgets-2/button.eps" type=ps>
                </picture.choice>
 <index class=tails/<<Tk>><and><<button>>/
 <chunk class=anonymous><title/button/
@@ -134,7 +134,7 @@ B2={New Tk.button tkInit(parent: W
         <P>
                <picture.choice>
           <Picture.Extern to="check-and-radio.gif" type=gif>
-          <Picture.extern to="pictures/widgets-2/check-and-radio.eps" type=ps>
+          <Picture.Extern id="pict.ext.widgets-2.check-and-radio" to="pictures/widgets-2/check-and-radio.eps" type=ps>
                </picture.choice>
 <index class=tails/<<Tk>><and><<variable>>/
 <index class=tails/<<Tk>><and><<checkbutton>>/
@@ -393,7 +393,7 @@ L={New Tk.label tkInit(parent:W text:'A test text.' font:F)}
         <P>
                <picture.choice>
           <Picture.Extern to="menu.gif" type=gif>
-          <Picture.extern to="pictures/widgets-2/menu.eps" type=ps>
+          <Picture.Extern id="pict.ext.widgets-2.menu" to="pictures/widgets-2/menu.eps" type=ps>
                </picture.choice>
 <index class=tails/<<Tk>><and><<menu>>/
 <index class=tails/<<Tk>><and><<menuentry>><and><<cascade>>/
@@ -756,7 +756,7 @@ B2={New Tk.button tkInit(parent:W text:'Two' action: L#b2)}
         <P>
                <picture.choice>
           <Picture.Extern to="entry.gif" type=gif>
-          <Picture.extern to="pictures/widgets-2/entry.eps" type=ps>
+          <Picture.Extern id="pict.ext.widgets-2.entry" to="pictures/widgets-2/entry.eps" type=ps>
                </picture.choice>
 <index class=tails/<<Tk>><and><<entry>>/
 <chunk class=anonymous><title/entry/
@@ -816,7 +816,7 @@ E={New Tk.entry tkInit(parent:W width:20)}
         <P>
                <picture.choice>
           <Picture.Extern to="scale.gif" type=gif>
-          <Picture.extern to="pictures/widgets-2/scale.eps" type=ps>
+          <Picture.Extern id="pict.ext.widgets-2.scale" to="pictures/widgets-2/scale.eps" type=ps>
                </picture.choice>
 <index class=tails/<<Tk>><and><<listener>>/
 <index class=tails/<<Tk>><and><<scale>>/
@@ -889,7 +889,7 @@ Ss={Map [red green blue]
         <P>
                <picture.choice>
           <Picture.Extern to="listbox.gif" type=gif>
-          <Picture.extern to="pictures/widgets-2/listbox.eps" type=ps>
+          <Picture.Extern id="pict.ext.widgets-2.listbox" to="pictures/widgets-2/listbox.eps" type=ps>
                </picture.choice>
 <index class=tails/<<Tk>><and><<listbox>>/
 <index class=tails/<<Tk>><and><<scrollbar>>/
@@ -999,7 +999,7 @@ W={New Tk.toplevel tkInit(withdraw:true)}
         <P>
                <picture.choice>
           <Picture.Extern to="file.gif" type=gif>
-          <Picture.extern to="pictures/widgets-2/file.eps" type=ps>
+          <Picture.Extern id="pict.ext.widgets-2.file" to="pictures/widgets-2/file.eps" type=ps>
                </picture.choice>
 <index/<<tk_getOpenFile>>/
 <chunk class=anonymous><title/file/
@@ -1195,7 +1195,7 @@ end
           <P>
             <picture.choice>
             <Picture.Extern to="help.gif" type=gif>
-            <Picture.extern to="pictures/widgets-2/help.eps" type=ps>
+            <Picture.Extern id="pict.ext.widgets-2.help" to="pictures/widgets-2/help.eps" type=ps>
             </picture.choice>
 <chunk class=anonymous><title/help/
 Bs={Map ['Okay'   # 'Do nothing meaningful.'
