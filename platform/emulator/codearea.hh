@@ -21,6 +21,8 @@
  **********************************************************************/
 
 
+class AbstractionEntry;
+
 class AbstractionEntry {
 private:
   Abstraction *abstr;
@@ -29,24 +31,25 @@ private:
 public:
   IHashTable *indexTable;
 
-  AbstractionEntry() : abstr(NULL), indexTable(NULL), g(NULL), pc(NULL) {}
-
   Abstraction *getAbstr() { return abstr; };
   RefsArray getGRegs()    { return g; };
   ProgramCounter getPC()  { return pc; };
   void setPred(Abstraction *abs);
 
-  void gc();
+  void gcAbstractionEntry();
 };
 
 
 class AbstractionTable: public HashTable {
+  static AbstractionEntry defaultEntry;
 public:
-  AbstractionEntry *add(int id);
+  static void setDefaultEntry(Abstraction *a) { defaultEntry.setPred(a); }
   AbstractionTable(int s) : HashTable(INTTYPE,s) {};
 
-  void gc();
+  static AbstractionEntry *add(int id);
+  void gcAbstractionTable();
 };
+
 
 
 
@@ -74,10 +77,8 @@ class CodeArea {
   friend class Statistics;
   static HashTable atomTab;
   static HashTable nameTab;
-  static AbstractionTable abstractionTab;
   friend Literal *addToAtomTab(char *str);
   friend Literal *addToNameTab(char *str);
-  friend AbstractionEntry *addAbstractionTab(int id);
   friend inline void printAtomTab();
   friend inline void printNameTab();
 
@@ -89,6 +90,7 @@ class CodeArea {
   static CodeAreaList *allBlocks;
 
 public:
+  static AbstractionTable abstractionTab;
   static int totalSize; /* total size of code allocated in bytes */
 
   /* read from file and return start in "pc" */
@@ -230,7 +232,7 @@ public:
 
   static ProgramCounter writePredicateRef(int i, ProgramCounter ptr)
   {
-    AbstractionEntry *entry = addAbstractionTab(i);
+    AbstractionEntry *entry = AbstractionTable::add(i);
     return writeWord(entry, ptr);
   }
 };

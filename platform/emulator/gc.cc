@@ -1598,34 +1598,34 @@ void ArityTable::gc()
   }
 }
 
-inline void AbstractionEntry::gc()
+inline void AbstractionEntry::gcAbstractionEntry()
 {
   abstr = (Abstraction *) abstr->gcConstTerm();
-  if (!abstr) {
-#ifdef DEBUG_GC
-    warning("abstraction entry dead\n")); // mm2;
-#endif
+  if (abstr == NULL) {
+    DebugGCT(warning("abstraction entry dead\n")); // mm2;
     g = 0;
     return;
   }
-  g     = gcRefsArray(g);
+  g = gcRefsArray(g);
 }
 
-inline void AbstractionTable::gc()
+inline void AbstractionTable::gcAbstractionTable()
 {
   // there may be NULL entries in the table during gc
 
   GCMETHMSG("AbstractionTable::gc");
 
-  HashNode * hn = getFirst();
+  defaultEntry.gcAbstractionEntry();
+
+  HashNode *hn = getFirst();
   for (; hn != NULL; hn = getNext(hn)) {
-    ((AbstractionEntry*) hn->value)->gc();
+    ((AbstractionEntry*) hn->value)->gcAbstractionEntry();
   }
 }
 
 void CodeArea::gc()
 {
-  abstractionTab.gc();
+  abstractionTab.gcAbstractionTable();
 }
 
 
@@ -2216,8 +2216,8 @@ void performCopying(void)
 
     default:
       Assert(NO);
-     }
-   }
+    }
+  }
 }
 
 
@@ -2242,7 +2242,7 @@ void performCopying(void)
 void checkGC()
 {
   Assert(!am.isCritical());
-  if (getUsedMemory() > ozconf.heapThreshold && ozconf.gcFlag) {
+  if ((int) getUsedMemory() > ozconf.heapThreshold && ozconf.gcFlag) {
     am.setSFlag(StartGC);
   }
 }
@@ -2258,7 +2258,7 @@ void AM::doGC()
   gc(ozconf.gcVerbosity);
 
   /* calc upper limits for next gc */
-  unsigned int used = getUsedMemory();
+  int used = getUsedMemory();
   if (used > (ozconf.heapThreshold*ozconf.heapMargin)/100) {
     ozconf.heapThreshold = ozconf.heapThreshold*(100+ozconf.heapIncrement)/100;
   }
@@ -2271,7 +2271,7 @@ void AM::doGC()
 // pre-condition: root node is installed
 Bool AM::idleGC()
 {
-  if (getUsedMemory() > (ozconf.heapIdleMargin*ozconf.heapThreshold)/100 && ozconf.gcFlag) {
+  if ((int)getUsedMemory() > (ozconf.heapIdleMargin*ozconf.heapThreshold)/100 && ozconf.gcFlag) {
     if (ozconf.showIdleMessage) {
       printf("gc ... ");
       fflush(stdout);
