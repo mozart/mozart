@@ -5,7 +5,9 @@ WHAT = fdt
 MAIN = main.sgml
 
 SGMLSRCS0 = \
- bab constraints elimination golden-rules intro main minimizing packing problem propagators scheduling scripts traps user-defined
+	 bab constraints elimination golden-rules intro main \
+	minimizing packing problem propagators scheduling scripts \
+	traps user-defined reified
 
 SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
 
