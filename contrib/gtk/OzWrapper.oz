@@ -18,75 +18,102 @@
 %%% of this file, and for a DISCLAIMER OF ALL
 %%% WARRANTIES.
 %%%
-
 functor $
 import
+   Pickle(load save)
+   OS(getCWD)
    Word at 'x-oz://boot/Word.ozf'
+   NativeEmitter(coreResultType)
    Open
    Util
 export
-   'create' : Create
+   'createFuncs'  : CreateFuncs
+   'createFields' : CreateFields
 define
    class TextFile from Open.file Open.text end
-   
-   GtkFilePrepend = ["%%"
-		     "%% This file is generated. Please do not edit."
-		     "%%"
-		     ""
-		     "functor $"
-		     "import"
-		     "   GtkNative                             at 'GtkNative.so{native}'"
-		     "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
-		     "export"]
 
-   GdkFilePrepend = ["%%"
-		     "%% This file is generated. Please do not edit."
-		     "%%"
-		     ""
-		     "functor $"
-		     "import"
-		     "   GdkNative                             at 'GdkNative.so{native}'"
-		     "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
-		     "export"
-		     "   GetEvent"]
-
-   CanvasFilePrepend = ["%%"
-			"%% This file is generated. Please do not edit."
-			"%%"
-			""
-			"functor $"
-			"import"
-			"   GtkCanvasNative                       at 'GtkCanvasNative.so{native}'"
-			"   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
-			"   GTK                                   at 'GTK.ozf'"
-			"export"]
+   ToS            = Util.toString
+   CoreResultType = NativeEmitter.coreResultType
    
-   GdkInitStub = ["define"
-		  "   OzBase     = GOZCore.ozBase"
-		  "   P2O        = GOZCore.pointerToObject"
-		  "   O2P        = GOZCore.objectToPointer"
-		  "   GetEvent   = GOZCore.getGdkEvent"
-		  "   class OzColorBase from OzBase"
-		  "      meth new(R G B)"
-		  "         @object = {GOZCore.allocColor R G B}"
-		  "      end"
-		  "   end"]
-
-   GtkInitStub = ["define"
-		  "   OzBase     = GOZCore.ozBase"
-		  "   P2O        = GOZCore.pointerToObject"
-		  "   O2P        = GOZCore.objectToPointer"
-		  "   ExportList = GOZCore.exportList"
-		  "   ImportList = GOZCore.importList"
-		 ]
+   GtkFilePrepend =
+   ["%%"
+    "%% This file is generated. Please do not edit."
+    "%%"
+    ""
+    "functor $"
+    "import"
+    "   GtkNative                             at 'GtkNative.so{native}'"
+    "   GtkFieldNative                        at 'GtkFieldNative.so{native}'"
+    "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
+    "   GDK                                   at 'GDK.ozf'"
+    "export"]
    
-   CanvasInitStub = ["define"
-		     "   P2O    = GOZCore.pointerToObject"
-		     "   O2P    = GOZCore.objectToPointer"
-		     "   Widget = GTK.widget"
-		     "   Layout = GTK.layout"
-		     "   Object = GTK.object"
-		     "\\insert 'OzCanvasBase.oz'"]
+   GdkFilePrepend =
+   ["%%"
+    "%% This file is generated. Please do not edit."
+    "%%"
+    ""
+    "functor $"
+    "import"
+    "   GdkNative                             at 'GdkNative.so{native}'"
+    "   GdkFieldNative                        at 'GdkFieldNative.so{native}'"
+    "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
+    "export"
+    "   GetEvent"]
+   
+   CanvasFilePrepend =
+   ["%%"
+    "%% This file is generated. Please do not edit."
+    "%%"
+    ""
+    "functor $"
+    "import"
+    "   GtkCanvasNative                       at 'GtkCanvasNative.so{native}'"
+    "   GtkCanvasFieldNative                  at 'GtkCanvasFieldNative.so{native}'"
+    "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
+    "   GDK                                   at 'GDK.ozf'"
+    "   GTK                                   at 'GTK.ozf'"
+    "export"]
+   
+   GdkInitStub =
+   ["define"
+    "   OzBase     = GOZCore.ozBase"
+    "   P2O        = GOZCore.pointerToObject"
+    "   O2P        = GOZCore.objectToPointer"
+    "   GetEvent   = GOZCore.getGdkEvent"
+    "   class OzColorBase from OzBase"
+    "      meth new(R G B)"
+    "         @object = {GOZCore.allocColor R G B}"
+    "      end"
+    "   end"
+    "   \\insert 'GDKFIELDS.oz'"
+   ]
+
+   GtkInitStub =
+   ["define"
+    "   OzBase     = GOZCore.ozBase"
+    "   P2O        = GOZCore.pointerToObject"
+    "   O2P        = GOZCore.objectToPointer"
+    "   ExportList = GOZCore.exportList"
+    "   ImportList = GOZCore.importList"
+    "   GC         = GDK.gC"
+    "   Font       = GDK.font"
+    "   \\insert 'GTKFIELDS.oz'"
+   ]
+   
+   CanvasInitStub =
+   ["define"
+    "   P2O          = GOZCore.pointerToObject"
+    "   O2P          = GOZCore.objectToPointer"
+    "   ImportList   = GOZCore.importList"
+    "   Widget       = GTK.widget"
+    "   Layout       = GTK.layout"
+    "   Object       = GTK.object"
+    "   GC           = GDK.gC"
+    "   ColorContext = GDK.colorContext"
+    "  \\insert 'GTKCANVASFIELDS.oz'"
+    "   \\insert 'OzCanvasBase.oz'"
+   ]
 
    GtkEnd   = ["end"]
 
@@ -149,24 +176,7 @@ define
       end
    end
 
-   local
-      fun {MakeClassPrefixIter Ss NewSs Flag}
-	 case Ss
-	 of S|Sr then
-	    if {Char.isLower S}
-	    then {MakeClassPrefixIter Sr S|NewSs true}
-	    elseif Flag
-	    then {MakeClassPrefixIter Sr {Char.toLower S}|&_|NewSs false}
-	    else {MakeClassPrefixIter Sr {Char.toLower S}|NewSs true}
-	    end
-	 [] nil  then {Reverse &_|NewSs}
-	 end
-      end
-   in
-      fun {MakeClassPrefix Ss}
-	 {MakeClassPrefixIter Ss nil true}
-      end
-   end
+   MakeClassPrefix = Util.downTranslate
    
    fun {MakeArgs N I}
       case I
@@ -290,7 +300,8 @@ define
       fun {Search V Is}
 	 case Is
 	 of item(Name Val)|Ir then
-	    if {Util.toString V} == {Util.toString Name} then Val else {Search V Ir} end
+	    if {Util.toString V} == {Util.toString Name}
+	    then Val else {Search V Ir} end
 	 [] nil               then ({Pow 2 32} - 1)
 	 end
       end
@@ -349,6 +360,11 @@ define
 			flags:[write create truncate])
 	 GtkClasses, collect({Filter @entries IsStruct})
 	 GtkClasses, emit
+	 GtkClasses, saveDict("GtkClasses.ozp")
+      end
+      meth saveDict(FileName)
+	 {Pickle.save {Dictionary.keys @classes}
+	  {ToS {OS.getCWD}#"/"#FileName}}
       end
       meth resolve(S $)
 	 case {Dictionary.condGet @types S nil}
@@ -364,13 +380,17 @@ define
       meth addClass(Parent Class Forbidden)
 	 ClassForbidden = {Map Forbidden
 			   fun {$ X}
-			      {MakeClassPrefix {Util.firstLower {Util.toString X}}}
+			      {MakeClassPrefix
+			       {Util.firstLower {Util.toString X}}}
 			   end}
-	 ClassPrefix    = {MakeClassPrefix {Util.firstLower {Util.toString Class}}}
-	 Methods        = {Filter @entries {FuncPrefix ClassPrefix ClassForbidden}}
+	 ClassPrefix    = {MakeClassPrefix
+			   {Util.firstLower {Util.toString Class}}}
+	 Methods        = {Filter @entries
+			   {FuncPrefix ClassPrefix ClassForbidden}}
 	 ClassS         = {Util.toString Class}
       in
-	 {ClassReg add({Util.toString ClassS#"*"} {Util.cutPrefix @stdPrefix ClassS})}
+	 {ClassReg add({Util.toString ClassS#"*"}
+		       {Util.cutPrefix @stdPrefix ClassS})}
 	 {Dictionary.put @classes Class
 	  'class'(anchestor: Parent
 		  methods: Methods)}   
@@ -413,7 +433,8 @@ define
 		     then
 			NewSN = {Util.stripPrefix {Util.toString SN}}
 		     in
-			GtkClasses, addClass({Util.toAtom Key} {Util.toAtom NewSN} nil)
+			GtkClasses, addClass({Util.toAtom Key}
+					     {Util.toAtom NewSN} nil)
 		     end
 		  [] _ then skip
 		  end
@@ -444,10 +465,17 @@ define
 	 in
 	    case {Dictionary.get @classes Class}
 	    of 'class'(anchestor: Anchestor methods: Methods) then
-	       From    = " from "#{Util.cutPrefix @stdPrefix {Util.toString Anchestor}}
+	       From    =
+	       " from "#{Util.cutPrefix @stdPrefix {Util.toString Anchestor}}
 	       ValName = {Util.cutPrefix @stdPrefix ClassSN}
+	       Fields  = if ValName == "Imlib"
+			 then nil
+			 else ValName#"Fields"
+			 end
 	    in
-	       TextFile, putS({Util.indent 1}#ValName#" = {Value.byNeed fun {$} class $"#From)
+	       TextFile, putS({Util.indent 1}#ValName#
+			      " = {Value.byNeed fun {$} class $"#
+			      From#" "#Fields)
 	       GtkClasses, emitMethods({Util.firstLower ClassSN} Methods)
 	       TextFile, putS({Util.indent 1}#"end end}")
 	    end
@@ -465,12 +493,17 @@ define
       end
       meth emitSingleMeth(Prefix RawName RetType Args)
 	 Name      = {Util.translateName RawName}
-	 ShortName = {Util.firstLower {Util.cutPrefix {Util.firstLower Prefix} Name}}
-	 IsVoid    = case Args of [arg(type("void" "") _)] then true else false end
+	 ShortName = {Util.firstLower
+		      {Util.cutPrefix {Util.firstLower Prefix} Name}}
+	 IsVoid    = case Args of [arg(type("void" "") _)]
+		     then true else false end
 	 IsNew     = {IsConstructor ShortName}
 	 IsCont    = {IsContainerAdd Name}
 	 HasSelf   = {CheckFirstArg Prefix Args}
-	 IA        = if IsVoid then 0 else ({Length Args} - (if HasSelf then 1 else 0 end)) end
+	 IA        = if IsVoid
+		     then 0
+		     else ({Length Args} - (if HasSelf then 1 else 0 end))
+		     end
 	 OA        = case RetType
 		     of type("void" _) then 0
 		     [] _              then 1
@@ -486,21 +519,27 @@ define
 		     end
 	 CallStr  = GtkClasses, callStr(CallArgs $)
 	 CallDef  = GtkClasses, callDef(CallArgs $)
-	 CheckRes = if OA == 0 then nil else GtkClasses, checkResStart(RetType $) end
+	 CheckRes = if OA == 0
+		    then nil
+		    else GtkClasses, checkResStart(RetType $)
+		    end
 	 ResStart = if IsNew then "@object = " elseif OA == 1
 		    then "Res = "#CheckRes else "" end
 	 ResEnd   = if IsNew orelse CheckRes == nil then "" else "}" end
 	 Self     = if HasSelf then "@object " else "" end
       in
-	 TextFile, putS({Util.indent 2}#"meth "#{QuoteName ShortName}#"("#ArgStr#")")
+	 TextFile, putS({Util.indent 2}#"meth "#
+			{QuoteName ShortName}#"("#ArgStr#")")
 	 if CallDef \= nil
 	 then
 	    TextFile, putS(CallDef)
 	    TextFile, putS({Util.indent 2}#"in")
 	 end
-	 TextFile, putS({Util.indent 3}#ResStart#"{"#@module#"."#Name#" "#Self#CallStr#"}"#ResEnd)
+	 TextFile, putS({Util.indent 3}#ResStart#"{"#@module#
+			"."#Name#" "#Self#CallStr#"}"#ResEnd)
 	 GtkClasses, handleOutArgs(CallArgs)
-	 if IsCont then TextFile, putS({Util.indent 3}#"children <- A0|@children") end
+	 if IsCont then TextFile, putS({Util.indent 3}#
+				       "children <- A0|@children") end
 	 TextFile, putS({Util.indent 2}#"end")
       end
       meth prepareArgs(InArgs I OutArgs $)
@@ -515,7 +554,8 @@ define
 		   [] _          then 'IN'
 		   end
 	    Conv = if TStr == "GList*" then 'GLIST'
-		   elseif {IsBasicType @allTypes TStr} then 'NONE' else 'OBJECT' end
+		   elseif {IsBasicType @allTypes TStr}
+		   then 'NONE' else 'OBJECT' end
 	 in
 	    GtkClasses, prepareArgs(Ar (I + 1) (I#Type#Conv)|OutArgs $)
 	 [] nil then {Reverse OutArgs}
@@ -525,7 +565,7 @@ define
 	 case Args
 	 of Arg|Ar then
 	    Str = case Arg
-		  of I#'OUT'(...)#_  then "AO"#I
+		  of I#'OUT'(...)#_  then "AP"#I
 		  [] I#'IN'#'NONE'   then "A"#I
 		  [] I#'IN'#'GLIST'  then "{ExportList A"#I#"}"
 		  [] I#'IN'#'OBJECT' then "{O2P A"#I#"}"
@@ -541,7 +581,9 @@ define
 	 of Arg|Ar then
 	    case Arg
 	    of I#'OUT'(Type)#_ then
-	       {Util.indent 3}#"AO"#I#" = {GOZCore.alloc"#Type#" unit}\n"#GtkClasses, callDef(Ar $)
+	       {Util.indent 3}#"AI"#I#"#AO"#I#" = A"#I#"\n"#
+	       {Util.indent 3}#"AP"#I#
+	       " = {GOZCore.alloc"#Type#" AI"#I#"}\n"#GtkClasses, callDef(Ar $)
 	    [] _ then GtkClasses, callDef(Ar $)
 	    end
 	 [] nil then nil
@@ -552,8 +594,9 @@ define
 	 of Arg|Ar then
 	    case Arg
 	    of I#'OUT'(Type)#_ then
-	       TextFile, putS({Util.indent 3}#"A"#I#" = {GOZCore.get"#Type#" AO"#I#"}")
-	       TextFile, putS({Util.indent 3}#"{GOZCore.freeData AO"#I#"}")
+	       TextFile, putS({Util.indent 3}#"AO"#I#
+			      " = {GOZCore.get"#Type#" AP"#I#"}")
+	       TextFile, putS({Util.indent 3}#"{GOZCore.freeData AP"#I#"}")
 	    [] _ then skip
 	    end
 	    GtkClasses, handleOutArgs(Ar)
@@ -669,11 +712,15 @@ define
 			flags:[write create truncate])
 	 GdkClasses, collect(GdkClassList)
 	 GtkClasses, emit
+	 GtkClasses, saveDict("GdkClasses.ozp")
       end
       meth collect(Keys)
 	 case Keys
 	 of Key|Kr then
-	    Base = if Key == "GdkColor" then "GdkOzColorBase" else "GdkOzBase" end
+	    Base = if Key == "GdkColor"
+		   then "GdkOzColorBase"
+		   else "GdkOzBase"
+		   end
 	 in
 	    GtkClasses, addClass({Util.toAtom Base} {Util.toAtom Key} nil)
 	    GdkClasses, collect(Kr)
@@ -682,7 +729,8 @@ define
       end
    end
 
-   CanvasClassList = ["GtkOzCanvasBase"#"GtkCanvas"#["GtkCanvasItem" "GtkCanvasGroup"]
+   CanvasClassList = ["GtkOzCanvasBase"#"GtkCanvas"#
+		      ["GtkCanvasItem" "GtkCanvasGroup"]
 		      "GtkObject"#"GtkCanvasItem"#nil
 		      "GtkCanvasItem"#"GtkCanvasGroup"#nil]
    
@@ -702,14 +750,165 @@ define
 			flags:[write create truncate])
 	 CanvasClasses, collect(CanvasClassList)
 	 GtkClasses, emit
+	 GtkClasses, saveDict("GtkCanvasClasses.ozp")
       end
       meth collect(Keys)
 	 case Keys
 	 of (Parent#Key#Forbidden)|Kr then
-	    GtkClasses, addClass({Util.toAtom Parent} {Util.toAtom Key} Forbidden)
+	    GtkClasses, addClass({Util.toAtom Parent}
+				 {Util.toAtom Key} Forbidden)
 	    CanvasClasses, collect(Kr)
 	 [] nil then skip
 	 end
+      end
+   end
+
+   %%
+   %% Gtk/Gdk/GtkCanvas Field Data and Classes
+   %%
+
+   FieldFilePrepend =
+   ["%%"
+    "%% This file is generated. Please do not edit."
+    "%%"]
+
+   fun {IsValidAlias Alias}
+      if {IsAtom Alias}
+      then true
+      elsecase Alias
+      of 'struct_member(decl, expr)'(...) then true
+      else false
+      end
+   end
+   
+   class GtkFieldClasses from GtkClasses
+      attr
+	 first %% Needs Special Anchestor Treatment : true/false
+      meth init(Types Class Name)
+	 @module     = "GtkFieldNative"
+	 @stdPrefix  = "Gtk"
+	 @filePrep   = FieldFilePrepend
+	 @first      = true
+	 GtkFieldClasses, emit(Types Name Class)
+      end
+      meth emit(Types Name Class)
+	 Names = {Pickle.load {ToS {OS.getCWD}#"/"#Class}}
+      in
+	 @types    = Types
+	 @allTypes = Types
+	 TextFile, init(name: Name
+			flags:[write create truncate])
+	 {ForAll @filePrep proc {$ L} TextFile, putS(L) end}
+	 GtkFieldClasses, emitClasses(Names)
+      end
+      meth resolve(S $)
+	 case {Dictionary.condGet @types S nil}
+	 of nil         then nil
+	 [] alias(S _)  then GtkFieldClasses, resolve(S $)
+	 [] Struct      then
+	    case Struct
+	    of struct(...) then Struct
+	    else raise resolve(unknown_data Struct) end
+	    end
+	 end
+      end
+      meth emitClasses(Names)
+	 case Names
+	 of Name|Nr then
+	    case GtkFieldClasses, resolve(Name $)
+	    of struct(Items) then
+	       ClassName = {Util.cutPrefix @stdPrefix {Util.toString Name}}
+	       Class     = ClassName#"Fields"
+	    in
+	       TextFile, putS({ToS "\n"#{Util.indent 1}#"class "#Class})
+	       GtkFieldClasses, emitAccessors(Name Items @first)
+	       TextFile, putS({ToS {Util.indent 1}#"end"})
+	    [] _ then skip
+	    end
+	    GtkFieldClasses, emitClasses(Nr)
+	 [] nil then skip
+	 end
+      end
+      meth emitAccessors(Name Items First)
+	 case Items
+	 of Item|Ir then
+	    case Item
+	    of item(text(_) _ Alias) then
+	       if {IsValidAlias Alias}
+	       then
+		  FieldPrfx = {Util.firstLower
+			      {Util.cutPrefix @stdPrefix {ToS Name}}}
+		  FieldName = case Alias
+			      of 'struct_member(decl, expr)'(Name _) then Name
+			      [] _ then Alias
+			      end
+		  MethName = (FieldPrfx#"GetField"#
+			      {Util.firstUpper {Util.translateName FieldName}})
+	       in
+		  TextFile, putS({ToS {Util.indent 2}#"meth "#MethName#"($)"})
+		  GtkFieldClasses, emitFieldAccess(Name Item First)
+		  TextFile, putS({ToS {Util.indent 2}#"end"})
+	       end
+	    [] _ then skip
+	    end
+	    GtkFieldClasses, emitAccessors(Name Ir false)
+	 [] nil then skip
+	 end
+      end
+      meth emitFieldAccess(Name Item First)
+	 case Item
+	 of item(text(Field) Ptrs Alias) then
+	    FieldName = case Alias
+			of 'struct_member(decl, expr)'(Name _) then Name
+			[] _ then Alias
+			end
+	    Prefix    = {Util.firstLower {ToS Name}}#"GetField"
+	    FunName   = Prefix#{Util.firstUpper {Util.translateName FieldName}}
+	    TypeRaw   = {ToS Field#Ptrs}
+	    ResType   = if Ptrs == nil
+			then {CoreResultType TypeRaw @types}
+			else "OZ_makeForeignPointer"
+			end
+	    TypeS     = if First andthen ResType == "OZ_makeForeignPointer"
+			   andthen Ptrs == nil
+			then {ToS TypeRaw#"*"}
+			else TypeRaw
+			end
+	    TypeA     = {Util.toAtom TypeS}
+	    Convert = if TypeS == "GList*"
+			then "ImportList "
+			elseif {IsBasicType @types TypeS}
+			then nil
+			elseif {ClassReg member(TypeA $)}
+			then "P2O "#{ClassReg className(TypeA $)}#" "
+			else nil
+			end
+	    OStr      = if Convert == nil then nil else "{" end
+	    CStr      = if Convert == nil then nil else "}" end
+	 in
+	    TextFile, putS({ToS {Util.indent 3}#OStr#Convert#"{"#@module#
+			    "."#FunName#" @object}"#CStr})
+	 end
+      end
+   end
+
+   class GdkFieldClasses from GtkFieldClasses
+      meth init(Types Class Name)
+	 @module     = "GdkFieldNative"
+	 @stdPrefix  = "Gdk"
+	 @filePrep   = FieldFilePrepend
+	 @first      = false
+	 GtkFieldClasses, emit(Types Name Class)
+      end
+   end
+
+   class GtkCanvasFieldClasses from GtkFieldClasses
+      meth init(Types Class Name)
+	 @module     = "GtkCanvasFieldNative"
+	 @stdPrefix  = "Gtk"
+	 @filePrep   = FieldFilePrepend
+	 @first      = true
+	 GtkFieldClasses, emit(Types Name Class)
       end
    end
    
@@ -758,7 +957,7 @@ define
 	 end
       end
    in
-      proc {Create AllTypes}
+      proc {CreateFuncs AllTypes}
 	 AllKeys = {Dictionary.keys AllTypes}
       in
 	 {ForAll [FilterGtkTypes#GtkClasses#"GTK.oz"
@@ -768,6 +967,17 @@ define
 	     Keys  = {Filter AllKeys Fil}
 	     Types = {CopyTypes AllTypes Keys {Dictionary.new}}
 	     Obj   = {New Class init(Types AllTypes File)}
+	  in
+	     {Obj close}
+	  end}
+      end
+      proc {CreateFields Types}
+	 {ForAll [Types#GdkFieldClasses#"GdkClasses.ozp"#"GDKFIELDS.oz"
+		  Types#GtkFieldClasses#"GtkClasses.ozp"#"GTKFIELDS.oz"
+		  Types#GtkCanvasFieldClasses#
+		  "GtkCanvasClasses.ozp"#"GTKCANVASFIELDS.oz"]
+	  proc {$ Types#Class#Names#File}
+	     Obj = {New Class init(Types Names File)}
 	  in
 	     {Obj close}
 	  end}
