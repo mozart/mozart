@@ -3,9 +3,11 @@
 
 local
    
-   TkVerbose          = {New Tk.variable tkInit(ConfigVerbose)}
-   TkSystemProcedures = {New Tk.variable tkInit(ConfigSystemProcedures)}
-
+   TkVerbose             = {New Tk.variable tkInit(ConfigVerbose)}
+   TkStepSystemProcedures= {New Tk.variable tkInit(ConfigStepSystemProcedures)}
+   TkEnvSystemVariables  = {New Tk.variable tkInit(ConfigEnvSystemVariables)}
+   TkEnvProcedures       = {New Tk.variable tkInit(ConfigEnvProcedures)}
+   
    C  = command
    MB = menubutton
    CB = checkbutton
@@ -36,9 +38,19 @@ in
 	   MB(text: 'Options'
 	      menu:
 		 [CB(label:    'Step on all System Procedures'
-		     variable: TkSystemProcedures
-		     action:   Config # toggle(systemProcedures)
-		     feature:  systemProcedures)
+		     variable: TkStepSystemProcedures
+		     action:   Config # toggle(stepSystemProcedures)
+		     feature:  stepSystemProcedures)
+		  separator
+		  CB(label:   'Filter System Variables'
+		     variable: TkEnvSystemVariables
+		     action:   Config # toggle(envSystemVariables)
+		     feature:  envSystemVariables)
+		  CB(label:   'Filter Procedures'
+		     variable: TkEnvProcedures
+		     action:   Config # toggle(envProcedures)
+		     feature:  envProcedures)
+		  separator
 		  CB(label:   'Messages in Emulator buffer'
 		     variable: TkVerbose
 		     action:   Config # toggle(verbose)
@@ -49,6 +61,7 @@ in
 		 [separator]
 	      feature: help)
 	  ]}
+	 {self.menuBar tk(conf borderwidth:2)}
       end
    end
 end

@@ -83,7 +83,7 @@ in
 	 in
 	    case {Thread.is T} then
 	       %% &` == 96
-	       case {Cget systemProcedures} orelse
+	       case {Cget stepSystemProcedures} orelse
 		  Name == ''       orelse
 		  Name == '`,`'    orelse
 		  Name == '`send`' orelse
@@ -140,18 +140,14 @@ in
 	    end
 	    
 	 elseof susp then
-	    T    = M.thr.1  %% just suspending thread
-	    I    = M.thr.2  %% ...with it's id
-	    File = M.file
-	    Line = M.line
+	    T = M.thr.1  %% just suspending thread
+	    I = M.thr.2  %% ...with it's id
+	    F = M.file
+	    L = M.line
 	    E = {Ozcar exists(T $)}
 	 in
 	    case E then
-	       case T == @currentThread then <-- nach ThreadManager,block
-		  Gui,status(I blocked)
-		  ThreadManager,block(T I File Line)
-	       else skip end
-	       Gui,markNode(I blocked)
+	       ThreadManager,block(T I F L)
 	    else
 	       {OzcarMessage 'Unknown suspending thread'}
 	    end
@@ -176,13 +172,17 @@ in
       end
 
       meth block(T I F L)
-	 SourceManager,scrollbar(file:F line:L
-				 color:ScrollbarApplColor what:appl)
-	 SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
-	 %Gui,printAppl(id:I name:N args:A builtin:IsBuiltin)
-	 Gui,printStack(id:I stack:{Dbg.taskstack T 25})
 	 ThreadManager,setThrPos(id:I file:F line:L
 				 name:undef args:undef builtin:false)
+	 Gui,markNode(I blocked)
+	 case T == @currentThread then
+	    SourceManager,scrollbar(file:F line:L
+				    color:ScrollbarBlockedColor what:appl)
+	    SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
+	    Gui,printAppl(id:I name:undef args:undef builtin:false)
+	    Gui,printStack(id:I stack:{Dbg.taskstack T 25})
+	    Gui,status(I blocked)
+	 else skip end
       end
       
       meth add(T I Q)
@@ -275,14 +275,19 @@ in
 	    currentThread <- T
 	    
 	    Gui,status(I S)
-	    %Gui,printAppl(id:I name:N args:A builtin:B)
+	    Gui,printAppl(id:I name:N args:A builtin:B)
 	    Gui,printStack(id:I stack:{Dbg.taskstack T 25})
 	    
 	    Gui,selectNode(I)
 	    Gui,displayTree
 	    
 	    SourceManager,scrollbar(file:F line:L
-				    color:ScrollbarApplColor what:appl)
+				    color:
+				       case S
+				       of runnable then ScrollbarApplColor
+				       [] blocked  then ScrollbarBlockedColor
+				       end
+				    what:appl)
 	    SourceManager,scrollbar(file:undef line:undef
 				    color:undef what:stack)
 	 end

@@ -38,41 +38,48 @@ class Gui from Menu Dialog
 				   relief:ridge)}
        end}
       
-      {Tk.batch [grid(self.menuBar     row:0 column:0 sticky:we columnspan:3)
-		 grid(self.ButtonFrame row:1 column:0 sticky:we columnspan:3)
-		 grid(self.ApplFrame   row:4 column:0 sticky:we columnspan:3)
-		 grid(self.StatusFrame row:5 column:0 sticky:we columnspan:3)
+      {Tk.batch [grid(self.menuBar     row:0 column:0 sticky:we columnspan:2)
+		 grid(self.ButtonFrame row:1 column:0 sticky:we columnspan:2)
+		 grid(self.ApplFrame   row:2 column:0 sticky:we columnspan:2)
+		 grid(self.StatusFrame row:6 column:0 sticky:we columnspan:2)
 		]}
       
       %% the buttons
       local
-	 Bs = {Map [step next finish continue forget stack]
+	 %% Tk has some problems printing centered text :-(
+	 Bs = {Map [' step' ' next' ' finish' ' cont' ' forget' ' stack']
 	       fun {$ B}
-		  {New Tk.button tkInit(parent: self.ButtonFrame
-					text:   B
-					action: self # action(B))}
+		  {New Tk.button tkInit(parent:      self.ButtonFrame
+					text:        B
+					padx:        5
+					pady:        3
+					font:        ButtonFont
+					borderwidth: 1
+					action:      self # action(B))}
 	       end}
       in
-	 {Tk.send pack(b(Bs) side:left padx:2)}
+	 {Tk.send pack(b(Bs) side:left padx:1)}
       end
       
       %% application frame
+      self.ApplPrefix = {New Tk.label tkInit(parent: self.ApplFrame
+					     text:   ApplPrefixText)}
       self.ApplText   = {New Tk.text tkInit(parent: self.ApplFrame
-					    height: 3
+					    %height: 5
+					    height: 1
 					    bd:     SmallBorderSize
 					    cursor: TextCursor
 					    font:   DefaultFont
 					    bg:     DefaultBackground)}
-      {Tk.send pack(self.ApplText side:left fill:x expand:yes)}
-      {ForAll [tk(insert 'end' 'Call trace begins here')
-	       tk(conf state:disabled)]	self.ApplText}
-
+      {Tk.batch [pack(self.ApplPrefix side:left)
+		 pack(self.ApplText side:left fill:x expand:yes)]}
+      
       %% border line
       local
 	 F = {New Tk.frame tkInit(parent:self.toplevel height:3
 				  relief:ridge bd:1)}
       in
-	 {Tk.send grid(F row:3 column:0 sticky:we columnspan:3)}
+	 {Tk.send grid(F row:5 column:0 sticky:we columnspan:2)}
       end
       
       %% status line
@@ -98,19 +105,22 @@ class Gui from Menu Dialog
 					      font:   DefaultFont
 					      bg:     DefaultBackground)}
        end}
-      {Tk.batch [grid(self.ThreadTree row:2 column:0 sticky:nswe)
-		 grid(self.StackText  row:2 column:1 sticky:nswe)
-		 grid(self.EnvText    row:2 column:2 sticky:nswe)
-		 grid(rowconfigure    self.toplevel 2 weight:1)
-		 grid(columnconfigure self.toplevel 0 weight:2)
-		 grid(columnconfigure self.toplevel 1 weight:1)
-		 grid(columnconfigure self.toplevel 2 weight:1)
+      {Tk.batch [grid(self.ThreadTree row:3 column:0
+		      sticky:nswe rowspan:2)
+		 grid(self.StackText  row:3 column:1 sticky:nswe)
+		 grid(self.EnvText    row:4 column:1 sticky:nswe)
+		 grid(rowconfigure    self.toplevel 3 weight:1)
+		 grid(rowconfigure    self.toplevel 4 weight:1)
+		 grid(columnconfigure self.toplevel 0 weight:1)
+		 grid(columnconfigure self.toplevel 1 weight:2)
 		 wm(deiconify         self.toplevel)
 		]}
    end
 
    meth printEnv(frame:I globals:G<=nil locals:Y<=unknown)
-      E = self.EnvText
+      CV = {Not {Cget envSystemVariables}}
+      CP = {Not {Cget envProcedures}}
+      E  = self.EnvText
    in
       case I == 0 then
 	 {self.EnvText title(EnvTitle)}
@@ -123,18 +133,24 @@ class Gui from Menu Dialog
 	       tk(delete '0.0' 'end')
 	       tk(insert 'end' 'G'#NL)] E}
       case G == nil orelse G == unknown then
-	 {E tk(insert 'end' ' nil or unknown'#NL#NL)}
+	 skip
       else
 	 {ForAll G proc{$ V}
-		      T = {TagCounter get($)}
-		      Ac = {New Tk.action
-			    tkInit(parent: E
-				   action: proc{$}{Browse V.2}end)}
+		      AT = {ArgType V.2}
 		   in
-		      {ForAll [tk(insert 'end' ' ' # {PrintF V.1 13})
-			       tk(insert 'end' {ArgType V.2} # NL T)
-			       tk(tag bind T '<1>' Ac)
-			       tk(tag conf T font:BoldFont)] E}
+		      case CV orelse {Atom.toString V.1}.1 \= 96 then
+			 case CP orelse AT \= '<procedure>' then
+			    T = {TagCounter get($)}
+			    Ac = {New Tk.action
+				  tkInit(parent: E
+					 action: proc{$}{Browse V.2}end)}
+			 in
+			    {ForAll [tk(insert 'end' ' ' # {PrintF V.1 13})
+				     tk(insert 'end' AT # NL T)
+				     tk(tag bind T '<1>' Ac)
+				     tk(tag conf T font:BoldFont)] E}
+			 else skip end
+		      else skip end
 		   end}
 	 {E tk(insert 'end' NL)}
       end
@@ -142,7 +158,7 @@ class Gui from Menu Dialog
       %% Y
       {E tk(insert 'end' 'Y'#NL)}
       case Y == nil orelse Y == unknown then
-	 {E tk(insert 'end' ' nil or unknown'#NL#NL)}
+	 skip
       else
 	 {ForAll Y proc{$ V}
 		      T = {TagCounter get($)}
@@ -162,7 +178,7 @@ class Gui from Menu Dialog
    end
 
    meth frameClick(nr:I frame:F)
-      Gui,printEnv(frame:I globals:F.'G')
+      Gui,printEnv(frame:I globals:F.'G' locals:F.'Y')
       SourceManager,scrollbar(file:F.file line:F.line
 			      color:ScrollbarStackColor what:stack)
    end
@@ -208,7 +224,10 @@ class Gui from Menu Dialog
    
    meth printAppl(id:I name:N args:A builtin:B)
       case N == undef orelse A == undef then
-	 skip
+	 {ForAll [tk(conf state:normal)
+		  tk(delete '0.0' 'end')
+		  tk(insert 'end' ApplLabelInit)
+		  tk(conf state:disabled)] self.ApplText}
       else
 	 W         = self.ApplText
 	 Args      = {FormatArgs A}
@@ -216,7 +235,9 @@ class Gui from Menu Dialog
 	 T         = {TagCounter get($)}
       in
 	 {ForAll [tk(conf state:normal)
-		  tk(insert 'end' NL # ' ' # I # ' {')
+		  %tk(insert 'end' NL # ' ' # I # ' {')
+		  tk(delete '0.0' 'end')
+		  tk(insert 'end' ' {')
 		  tk(insert 'end' case N == '' then '$' else N end T)
 		  tk(tag conf T foreground:ApplColor)] W}
 	  
@@ -238,7 +259,7 @@ class Gui from Menu Dialog
 	  end}
 	  
 	 {ForAll [tk(insert 'end' '}')
-	          tk(yview 'end')
+	          %tk(yview 'end')
 	          tk(conf state:disabled)] W}
       end
    end
@@ -286,10 +307,10 @@ class Gui from Menu Dialog
 	 I = {Thread.id T}
 	 case {Label A}
 	    
-	 of step then
+	 of ' step' then
 	    {Thread.resume T}
 	    
-	 elseof next then
+	 elseof ' next' then
 	    B = ThreadManager,thrIsBuiltin(id:{Thread.id T} builtin:$)
 	 in
 	    case B then
@@ -300,11 +321,11 @@ class Gui from Menu Dialog
 	    end
 	    {Thread.resume T}
 	    
-	 elseof finish then
+	 elseof ' finish' then
 	    {Browse 'not yet implemented'}
 	    skip
 	    
-	 elseof continue then
+	 elseof ' cont' then
 	    /*
 	    {Dbg.stepmode T false}
 	    {Thread.resume T}
@@ -312,13 +333,13 @@ class Gui from Menu Dialog
 	    {Browse 'not yet implemented'}
 	    skip
 	    
-	 elseof forget then
+	 elseof ' forget' then
 	    {Dbg.trace T false}      %% thread is not traced anymore
 	    {Dbg.stepmode T false}   %% no step mode, run as you like!
 	    {Thread.resume T}        %% run, run to freedom!! :-)
 	    ThreadManager,remove(T I kill)
 	    
-	 elseof stack then  %% will go away, someday...
+	 elseof ' stack' then  %% will go away, someday...
 	    {Browse {Dbg.taskstack T 25}}
 	 end
 	 
