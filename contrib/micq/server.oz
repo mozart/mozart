@@ -625,7 +625,7 @@ define
       S={NewStationary ServerClass InitServer(dbdir:Args.dbdir)}
    in
       Logger = {New Log.log init(file:Args.dbdir#"server.log")}
-      {WriteLog "Server is started"}
+      {WriteLog "*** Server is started ***"}
       {System.showInfo "Logfile is "#Args.dbdir#"server.log"}
       {DB loadAll(dir:Args.dbdir)}
       {WriteLog "Database is loaded"}
