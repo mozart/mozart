@@ -280,7 +280,7 @@ OZ_Term OZ_termType(OZ_Term term)
 
 int OZ_getMinPrio(void) 
 {
-  return MIN_PRIORITY;
+  return OZMIN_PRIORITY;
 }
 
 int OZ_getDefaultPrio(void) 
@@ -295,7 +295,7 @@ int OZ_getPropagatorPrio(void)
 
 int OZ_getMaxPrio(void) 
 {
-  return MAX_PRIORITY;
+  return OZMAX_PRIORITY;
 }
 
 int OZ_smallIntMin(void) 
@@ -870,6 +870,7 @@ void cvar2buffer(ostream &out, char *s,GenCVariable *cv,int depth)
       break;
     }
   case AVAR:
+  case DVAR:
     {
       out << s;
       break;
@@ -1504,8 +1505,7 @@ OZ_Return OZ_raise(OZ_Term exc)
  * Suspending builtins
  * -----------------------------------------------------------------*/
 
-OZ_Thread OZ_makeSuspendedThread(OZ_Return (*fun)(int,OZ_Term[]),
-				 OZ_Term *args,int arity)
+OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
 {
 #ifdef SHOW_SUSPENSIONS
   static int xxx=0;
@@ -1523,8 +1523,7 @@ OZ_Thread OZ_makeSuspendedThread(OZ_Return (*fun)(int,OZ_Term[]),
 		fun, args, arity);
 }
 
-void OZ_makeRunnableThread(OZ_Return (*fun)(int,OZ_Term[]),
-			   OZ_Term *args,int arity)
+void OZ_makeRunableThread(OZ_CFun fun, OZ_Term *args,int arity)
 {
   Thread *tt = new Thread (am.currentBoard,
 			   ozconf.defaultPriority,
