@@ -16,10 +16,14 @@ SOURCETOOLS=$(SRCTOP)/share/tools
 BOOTEMU=$(BUILDTOP)/platform/emulator/emulator.exe
 BOOTCOM=$(BOOTEMU) -u $(BUILDLIB)/ozc --
 BOOTENG=$(SRCTOP)/share/ozengine.sh
-BOOTAR=$(BOOTENG) $(BUILDTOP)/share/lib/ozar
+BOOTOZL=$(BOOTENG) $(BUILDTOP)/share/lib/ozl
 
 ifdef OZC
 export OZC
+endif
+
+ifdef OZL
+export OZL
 endif
 
 ifdef OZINIT
@@ -70,7 +74,7 @@ boot-%:
         OZINIT=$(BUILDLIB)/Init.ozf \
         OZPATH=.:$(BUILDLIB):$(BUILDTOOLS):$(SOURCELIB):$(SOURCETOOLS) \
         OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(URL)/share/=$(BUILDLIB)/:prefix=$(URL)/share/=$(BUILDTOOLS)/:prefix=$(URL)/contrib/doc/=$(BUILDDOC)/:= \
-        OZAR="$(BOOTAR)" \
+        OZL="$(BOOTOZL)" \
         OZDOC_HOME="$(SRCTOP)/doc/utilities" \
         OZDOC_AUTHOR_PATH="$(SRCDIR):$(SRCTOP)/doc" \
         OZDOC_BIB_PATH="$(SRCDIR)" \
