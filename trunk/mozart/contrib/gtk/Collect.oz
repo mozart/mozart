@@ -31,7 +31,8 @@ define
       {VirtualString.toString X}
    end
    fun {IsTypeDef D}
-      {IsTuple D} andthen {Label D} == 'stor_spec/decl_spec' andthen D.1 == 'typedef'
+      {IsTuple D} andthen {Label D} == 'stor_spec/decl_spec'
+      andthen D.1 == 'typedef'
    end
 
    local
@@ -140,7 +141,8 @@ define
 	 fun {ComputeExp E}
 	    case E
 	    of '<<(expr, expr)'(X Y) then {DoMul {ToInt X} {ToInt Y}}
-	    [] E                     then if {IsAtom E} then {TryToInt E} else E end
+	    [] E                     then
+	       if {IsAtom E} then {TryToInt E} else E end
 	    end
 	 end
       end
@@ -150,8 +152,10 @@ define
 	 of nil  then nil
 	 [] X|Xr then
 	    Item = case X
-		   of 'enumerator(list, expr)'(Id Exp) then item({ToString Id} {ComputeExp Exp})
-		   [] Id                               then item({ToString Id} I)
+		   of 'enumerator(list, expr)'(Id Exp) then
+		      item({ToString Id} {ComputeExp Exp})
+		   [] Id                               then
+		      item({ToString Id} I)
 		   end
 	 in
 	    Item|{PrepareItems (I + 1) Xr}
@@ -181,15 +185,18 @@ define
       fun {CollectArgDecl Is}
 	 case Is
 	 of 'decl_spec decl'(D Is) then
-	    ArgType = type({ToString {CollectName D}} {ToString {CollectPtrs Is}})
+	    ArgType = type({ToString {CollectName D}}
+			   {ToString {CollectPtrs Is}})
 	 in
 	    arg(ArgType {FindAlias Is})
 	 [] 'decl_spec absdecl'(D Is) then
-	    ArgType = type({ToString {CollectName D}} {ToString {CollectPtrs Is}})
+	    ArgType = type({ToString {CollectName D}}
+			   {ToString {CollectPtrs Is}})
 	 in
 	    arg(ArgType {FindAlias Is})
 	 [] 'type_spec/decl_spec'(...) then
-	    arg(type({ToString {CollectName Is}} {ToString {CollectPtrs Is}}) '')
+	    arg(type({ToString {CollectName Is}}
+		     {ToString {CollectPtrs Is}}) '')
 	 [] Id then
 	    arg(type({ToString Id} nil) '')
 	 end
@@ -201,7 +208,8 @@ define
 	 [] 'decla(pars)'(_ Is)  then {CollectFunArgs Is}
 	 [] 'decla()'(_)         then nil
 	 [] 'pars decl'(...)     then {Map {Record.toList Is} CollectArgDecl}
-	 [] '...'(Is)            then {Append {CollectFunArgs Is} [arg(type("..." nil) _)]}
+	 [] '...'(Is)            then {Append {CollectFunArgs Is}
+				       [arg(type("..." nil) _)]}
 	 [] Is                   then [{CollectArgDecl Is}]
 	 end
       end
@@ -213,7 +221,8 @@ define
 	 Args    = {CollectFunArgs Is}
 	 RetType = type({ToString RetName} {ToString RetPtrs})
       in
-	 {Dictionary.put Types FunName function({ToString FunName} RetType Args)}
+	 {Dictionary.put Types FunName
+	  function({ToString FunName} RetType Args)}
       end
    end
    
@@ -248,7 +257,8 @@ define
    end
    
    fun {IsExternRef D}
-      {IsTuple D} andthen {Label D} == 'stor_spec/decl_spec' andthen D.1 == 'extern'
+      {IsTuple D} andthen {Label D} == 'stor_spec/decl_spec'
+      andthen D.1 == 'extern'
    end
 
    RegisterStructDef
@@ -291,7 +301,8 @@ define
 	 Items = {PrepareItems {Record.toList T.2}}
 	 Name  = {NewName}
       in
-	 {Dictionary.put Types Name case T.1 of 'union' then union(Items) else 'struct'(Items) end}
+	 {Dictionary.put Types Name
+	  case T.1 of 'union' then union(Items) else 'struct'(Items) end}
 	 Name
       end
       
@@ -313,7 +324,8 @@ define
 	       Name = {CollectSpecs Ss}
 	       Ptrs = {CollectPtrs Is}
 	    in
-	       item(if {IsName Name} then name(Name) else text({ToString Name}) end
+	       item(if {IsName Name} then name(Name)
+		    else text({ToString Name}) end
 		    {ToString Ptrs}
 		    {FindAlias Is})
 	    end|{PrepareItems Ir}
@@ -323,20 +335,24 @@ define
       proc {CollectNamedStruct T}
 	 ItemTup = T.3
 	 Items   = case {Label ItemTup}
-		   of 'struct_decls' then {PrepareItems {Record.toList ItemTup}}
+		   of 'struct_decls' then
+		      {PrepareItems {Record.toList ItemTup}}
 		   [] 'struct_item'  then {PrepareItems [ItemTup]}
 		   end
       in
-	 {Dictionary.put Types T.2 case T.1 of 'union' then union(Items) else 'struct'(Items) end}
+	 {Dictionary.put Types T.2
+	  case T.1 of 'union' then union(Items) else 'struct'(Items) end}
       end
       proc {!RegisterStructDef S Id}
 	 ItemTup = if {Label S}  == 'named struct{decls}' then S.3 else S.2 end
 	 Items   = case {Label ItemTup}
-		   of 'struct_decls' then {PrepareItems {Record.toList ItemTup}}
+		   of 'struct_decls' then
+		      {PrepareItems {Record.toList ItemTup}}
 		   [] 'struct_item'  then {PrepareItems [ItemTup]}
 		   end
       in
-	 {Dictionary.put Types Id case S.1 of 'union' then union(Items) else struct(Items) end}
+	 {Dictionary.put Types Id
+	  case S.1 of 'union' then union(Items) else struct(Items) end}
       end
   end
    

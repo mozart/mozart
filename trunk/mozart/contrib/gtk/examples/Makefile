@@ -2,10 +2,13 @@ OZC = ozc
 OZCFLAGS = -z9
 
 SRCS = HelloGTK.oz \
+       HelloText.oz \
        HelloCanvas.oz \
        CanvasEvents.oz \
        CanvasMove.oz \
-       CanvasScramble.oz
+       CanvasScramble.oz \
+       List.oz \
+       FileSelection.oz
 
 OBJS = $(SRCS:%.oz=%.ozf)
 
@@ -15,7 +18,6 @@ all: $(OBJS)
 
 %.ozf: %.oz
 	$(OZC) $(OZCFLAGS) -c $< -o $@
-
 
 clean:
 	rm -f $(OBJS)

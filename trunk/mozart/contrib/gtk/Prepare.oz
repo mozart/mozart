@@ -84,7 +84,8 @@ define
 	    [] "__attribute__(("            then {IncCounter} ""
 	    [] "__attribute__((__cdecl__))" then ""
 	    [] "dllimport"                  then ""
-	    [] "))"                         then if {DecCounter} then "" else "))" end
+	    [] "))"                         then
+	       if {DecCounter} then "" else "))" end
 	    [] K                            then K
 	    end|{KeyFilter Kr}
 	 [] nil then nil
@@ -103,7 +104,8 @@ define
 	 case Line
 	 of ""   then ""
 	 [] &#|_ then ""
-	 [] Line then {VirtualString.toString {RebuildLine {KeyFilter {Tokens Line [& &\t]}}}}
+	 [] Line then {VirtualString.toString
+		       {RebuildLine {KeyFilter {Tokens Line [& &\t]}}}}
 	 end
       end
       

@@ -36,9 +36,11 @@ define
 	 {self signalConnect('delete_event' deleteEvent _)}
       end
       meth deleteEvent(Event)
-	 %% Caution: At this time, the underlying GTK object has been destroyed already
+	 %% Caution: At this time, the underlying GTK object
+	 %% Caution: has been destroyed already
 	 %% Caution: Destruction also includes all attached child objects.
-	 %% Caution: This event is solely intended to do OZ side cleanup via calling close
+	 %% Caution: This event is solely intended to do OZ side
+	 %% Caution: cleanup via calling close
 	 {self close}
 	 {Application.exit 0}
       end
@@ -49,7 +51,8 @@ define
    %% Setup the Colors
    %% 1. Obtain the system colormap
    %% 2. Allocate the color structure with R, G, B preset
-   %% 3. Try to alloc appropriate system colors, non-writeable and with best-match
+   %% 3. Try to alloc appropriate system colors,
+   %%    non-writeable and with best-match
    %% 4. Use colors black and white
    Colormap = {New GDK.colormap getSystem}
    Black    = {New GDK.color new(0 0 0)}
@@ -68,7 +71,8 @@ define
    %% Create a Rectangle item (member of root group)
    RectItemPars = ["x1"#10.0 "y1"#20.0 "x2"#380.0 "y2"#380.0
 		   "fill_color_gdk"#White "outline_color_gdk"#Black]
-   RectItem = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas rectGetType($)} RectItemPars $)}
+   RectItem = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas rectGetType($)}
+				RectItemPars $)}
 
    %% Assign Events to Rectangle Item
    proc {ItemEvent Event}
@@ -93,7 +97,8 @@ define
       [] 'GDK_UNMAP'             then {System.show 'Got Unmap Event'}
       [] 'GDK_PROPERTY_NOTIFY'   then {System.show 'Got Property Event'}
       [] 'GDK_SELECTION_CLEAR'   then {System.show 'Got SelecitonClear Event'}
-      [] 'GDK_SELECTION_REQUEST' then {System.show 'Got SelectionRequest Event'}
+      [] 'GDK_SELECTION_REQUEST' then
+	 {System.show 'Got SelectionRequest Event'}
       [] 'GDK_SELECTION_NOTIFY'  then {System.show 'Got SelectionNotify Event'}
       [] 'GDK_PROXIMITY_IN'      then {System.show 'Got ProximityIn Event'}
       [] 'GDK_PROXIMITY_OUT'     then {System.show 'Got ProximityOut Event'}
@@ -114,7 +119,8 @@ define
    PolyItemPars =["points"#[20#20 380#200 20#380]
 		  "fill_color_gdk"#Black
 		  "width_pixels"#2]
-   _ = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas lineGetType($)} PolyItemPars $)}
+   _ = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas lineGetType($)}
+			 PolyItemPars $)}
    
    %% Make it all visible
    {Toplevel showAll}
