@@ -1849,13 +1849,6 @@ LBLagain:
       return PROCEED;
     }
 
-    /* special case for cells (mm 17.3.95) */
-    if (ozconf.cellHack && isCell(term)) {
-      Cell *cell= tagged2Cell(term);
-      term = cell->getValue();
-      goto LBLagain;
-    }
-
     goto typeError0;
   }
 typeError0:
@@ -5660,6 +5653,8 @@ OZ_C_proc_begin(BISystemGetThreads,1) {
   GetRecord;
   SetIntArg(AtomCreated,  ozstat.createdThreads.total);
   SetIntArg(AtomRunnable, am.getRunnableNumber());
+  SetIntArg(AtomMin,      ozconf.stackMinSize / TASKFRAMESIZE);
+  SetIntArg(AtomMax,      ozconf.stackMaxSize / TASKFRAMESIZE);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -5881,6 +5876,21 @@ OZ_C_proc_end
           
 #define SetIfPos(left,right,scale) if (right >= 0) left = right / scale;
 
+OZ_C_proc_begin(BISystemSetThreads,1) {
+  LookRecord(t);
+  DoNatFeature(minsize, t, AtomMin);
+  DoNatFeature(maxsize, t, AtomMax);
+  
+  SetIfPos(ozconf.stackMaxSize, maxsize, TASKFRAMESIZE);
+  SetIfPos(ozconf.stackMinSize, minsize, TASKFRAMESIZE);
+  
+  if (ozconf.stackMinSize > ozconf.stackMaxSize) 
+    ozconf.stackMinSize = ozconf.stackMaxSize;
+  
+  return PROCEED;
+} OZ_C_proc_end
+ 
+
 OZ_C_proc_begin(BISystemSetPriorities,1) {
   LookRecord(t);
 
@@ -5994,8 +6004,6 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
   DoBoolFeature(debugmode,  t, AtomDebug);
   DoBoolFeature(suspension, t, AtomShowSuspension);
   DoBoolFeature(stop,       t, AtomStopOnToplevelFailure);
-  DoBoolFeature(cell,       t, AtomCellHack);
-  DoNatFeature(stack,       t, AtomStackMaxSize);
   DoNatFeature(debugIP,     t, AtomDebugIP);
   DoNatFeature(debugPerdio, t, AtomDebugPerdio);
 
@@ -6009,8 +6017,6 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
     
   SetIfPos(ozconf.showSuspension,        suspension, 1);
   SetIfPos(ozconf.stopOnToplevelFailure, stop,       1);
-  SetIfPos(ozconf.cellHack,              cell,       1);
-  SetIfPos(ozconf.stackMaxSize,          stack,      KB);
   SetIfPos(ozconf.debugIP,               debugIP,    1);
   SetIfPos(ozconf.debugPerdio,           debugPerdio,1);
 
@@ -6933,6 +6939,7 @@ BIspec allSpec[] = {
   {"SystemGetHome",       1, BISystemGetHome},
   {"SystemGetPlatform",   1, BISystemGetPlatform},
 
+  {"SystemSetThreads",    1, BISystemSetThreads},
   {"SystemSetPriorities", 1, BISystemSetPriorities},
   {"SystemSetPrint",      1, BISystemSetPrint},
   {"SystemSetFD",         1, BISystemSetFD},
