@@ -60,6 +60,7 @@ ELISPFILES = $(ELS:%=$(ELISPDIR)/%) $(ELCS:%=$(ELISPDIR)/%)
 all: $(FUNCTORS) $(SYSLETS) $(ELCS)
 
 quick:
+depend:
 
 include $(SRCTOP)/share/Makefile.boot
 
