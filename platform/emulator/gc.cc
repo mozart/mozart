@@ -770,6 +770,7 @@ void CFuncContinuation::gcRecurse(void)
 }
 
 /* mm2: have to check for discarded node */
+inline
 CFuncContinuation *CFuncContinuation::gcCont(void)
 {
   GCMETHMSG("CFuncContinuation::gcCont");
@@ -2012,26 +2013,24 @@ Board *Board::gcBoard()
   GCMETHMSG("Board::gcBoard");
 
   Board *bb = this->gcGetBoardDeref();
-  
-  return bb ? bb->gcBoard1() : bb;
-}
 
-Board *Board::gcBoard1()
-{
-  CHECKCOLLECTED(*getGCField(), Board *);
-  DebugGC (opMode == IN_TC && !isLocalBoard (this),
+  if (bb == NULL)
+    return NULL;
+
+  CHECKCOLLECTED(*bb->getGCField(), Board *);
+  DebugGC (opMode == IN_TC && !isLocalBoard (bb),
 	    error ("non-local board is copied!")); 
   // Kludge: because of allocation of 'y' registers a non-'isInTree' board
   //         can be reached.
   // Moreover: because of allocation of 'x' registers (for instance, a
   // 'SuspContinuation' may containt in these registers any ***irrelevant***
   // values) a non-'isInTree' board can be reached;
-  if (opMode == IN_TC && isInTree(this) == NO) {
-    storeForward(getGCField(),this);
-    return this;
+  if (opMode == IN_TC && isInTree(bb) == NO) {
+    storeForward(bb->getGCField(),bb);
+    return bb;
   }
   size_t sz = sizeof(Board);
-  Board *ret = (Board *) gcRealloc(this,sz);
+  Board *ret = (Board *) gcRealloc(bb,sz);
       
   PROFILE_CODE1(if (opMode == IN_TC) {
 	           FDProfiles.inc_item(cp_no_board);
@@ -2040,23 +2039,18 @@ Board *Board::gcBoard1()
 	
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_BOARD);
-  storeForward(getGCField(),ret);
+  storeForward(bb->getGCField(),ret);
   return ret;
 }
 
 void Board::gcRecurse()
 {
   GCMETHMSG("Board::gcRecurse");
-  if (isCommitted()) {
-    error("Board::gcRecurse:: never collect committed nodes");
-//    body.defeat();
-//    GCREF(u.board);
-  } else {
-    DebugCheck (isFreedRefsArray(body.getY ()),
-		error ("freed 'y' regs in Board::gcRecurse ()"));
-    body.gcRecurse();
-    GCREF(u.actor);
-  }
+  Assert(!isCommitted());
+  Assert(!isFreedRefsArray(body.getY ()));
+  body.gcRecurse();
+  GCREF(u.actor);
+
   script.Script::gc();
 }
 

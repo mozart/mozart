@@ -92,7 +92,6 @@ public:
   ~Board();
 
   USEHEAPMEMORY;
-  Board *gcBoard1();
   Board *gcBoard();
   void gcRecurse(void);
   OZPRINT;
