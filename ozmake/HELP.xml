@@ -1232,7 +1232,7 @@ may also contain a <oz>contact</oz> feature which is either a record
 describing a person, or a list of such records.</p>
 
 <p>You should not have a <oz>contact</oz> feature in every makefile.  Rather,
-the <oz>contact</oz> feature is intended for makefiles that only have a
+the <oz>contact</oz> feature is usually intended for makefiles that only have a
 <oz>contact</oz> feature, i.e. whose only purpose is to create mogul entries
 for the corresponding persons. Here is an example of such a makefile:</p>
 <oz.display>
@@ -1245,6 +1245,6 @@ for the corresponding persons. Here is an example of such a makefile:</p>
                  www   : 'http://www.ps.uni-sb.de/~duchier/'))
 </oz.display>
 <p>You can invoke <opt>ozmake --publish</opt> on such a makefile to contribute
-the cotrresponding mogule database entries</p>
+the corresponding mogul database entries</p>
 </section>
 </doc>
