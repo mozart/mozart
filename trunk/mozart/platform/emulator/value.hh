@@ -511,7 +511,8 @@ enum TypeOfConst {
   Co_Object,   
   Co_Chunk,
   Co_Array,
-  Co_Dictionary
+  Co_Dictionary,
+  Co_Group,
 };
 
 
@@ -534,6 +535,7 @@ public:
   TypeOfConst getType() { return (TypeOfConst) tagTypeOf(ctu.tagged); }
   //  TypeOfConst typeOf()  { return getType(); }
   char *getPrintName();
+  int getArity();
   void *getPtr()        { return tagValueOf(ctu.tagged); }
   void setPtr(void *p)  { setTagged(getType(),p); }
 
@@ -557,6 +559,43 @@ public:
   Board *getBoardFast();
 };
 
+/*===================================================================
+ * Group
+ *=================================================================== */
+
+inline Bool isGroup(TaggedRef term)
+{
+  return isConst(term) && tagged2Const(term)->getType() == Co_Group;
+}
+
+inline
+Group *tagged2Group(TaggedRef term)
+{
+  Assert(isGroup(term));
+  return (Group *) tagged2Const(term);
+}
+
+class Group : public ConstTerm {
+  friend void ConstTerm::gcConstRecurse(void);
+private:
+  TaggedRef exceptionHandler;
+  TaggedRef parent;
+public:
+  Group(TaggedRef parent) : ConstTerm(Co_Group), parent(parent)
+  { Assert(!parent || isGroup(parent)); exceptionHandler = 0; }
+
+  void setExceptionHandler(TaggedRef hdl) { exceptionHandler = hdl; }
+
+  TaggedRef getExceptionHandler() {
+    Group *gr = this;
+  loop:
+    if (gr->exceptionHandler) return gr->exceptionHandler;
+    if (!gr->parent) return 0;
+    gr=tagged2Group(gr->parent);
+    goto loop;
+  }
+
+};
 
 /*===================================================================
  * HeapChunk
@@ -959,7 +998,6 @@ Bool isRecord(TaggedRef term) {
 
 
 SRecord *makeRecord(TaggedRef t);
-
 
 inline
 int isSTuple(TaggedRef term) {

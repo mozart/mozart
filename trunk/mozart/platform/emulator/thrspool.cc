@@ -27,6 +27,7 @@ void ThreadsPool::initThreads ()
 
   // public part;
   currentThread = (Thread *) NULL;
+  ozstat.createdThreads.incf();
   rootThread = new Thread (ozconf.defaultPriority, am.rootBoard);
 
   // 
