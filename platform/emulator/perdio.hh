@@ -85,7 +85,7 @@ class ByteStream {
   BYTE *endpos; 
   int totlen;  /* include header */
 
-  int ByteStream::availableSpace(){
+  int availableSpace(){
     Assert(last!=NULL);
     if(endpos==NULL) return 0;
     Assert(within(endpos,last));
@@ -244,7 +244,7 @@ public:
       return ch;}
     return *pos++;}
 
-  void ByteStream::unmarshalEnd(){
+  void unmarshalEnd(){
     PERDIO_DEBUG(MARSHALL_BE,"MARSHALL_BE unmarshal end");
     Assert(pos==NULL);}
   
