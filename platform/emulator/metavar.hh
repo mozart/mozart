@@ -9,47 +9,79 @@
 #include "genvar.hh"
 #include "oz.h"
 
-//-----------------------------------------------------------------------------
-// Here goes the private part, not accessible by oz.h
+#if defined(OUTLINE)
+#define inline
+#endif
 
-char * printMetaDefault(OZ_Term);
+struct MetaTag {
+friend class GenMetaVariable;
+
+private:
+  OZ_UnifyMetaDet     unify_meta_det;
+  OZ_UnifyMetaMeta    unify_meta_meta;
+  OZ_PrintMeta        print_meta_data;
+  char *              name;
+public:
+  MetaTag(OZ_UnifyMetaDet unify_md,
+	  OZ_UnifyMetaMeta unify_mm,
+	  OZ_PrintMeta print,
+	  char * n)
+  {
+    unify_meta_det = unify_md;
+    unify_meta_meta = unify_mm;
+    print_meta_data = print;
+    name = n;
+  }
+};
 
 class GenMetaVariable : public GenCVariable {
 friend class GenCVariable;
+
 private:
   TaggedRef data;
-  unsigned tag;
-  enum {maxmetavars = 10};
-  static struct meta_vars_t {
-    char * name;
-    unifyMeta_t unify_data;
-    printMeta_t print_data;
-  } meta_vars[maxmetavars];
-  static unsigned last_tag;
-  
+  MetaTag * tag;
   Bool unifyMeta(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
+
 public:
-  GenMetaVariable(unsigned ty, TaggedRef tr);
+  GenMetaVariable(MetaTag * t, TaggedRef tr);
 
-  static unsigned introduceMetaVar(char * name, unifyMeta_t unify_data,
-				   printMeta_t print_data = printMetaDefault);
+  MetaTag * getTag(void) { return tag; }
 
-  char * getName(void) { return meta_vars[tag].name; }
-  unsigned getMetaType(void) { return tag; }
   TaggedRef getData(void) { return data; }
   void setData(TaggedRef d) { data = d; }
+
   size_t getSize(void) { return sizeof(GenMetaVariable); }
   void gc(void);
-  char * PrintMeta(void) {
-    return meta_vars[getMetaType()].print_data(data);
-  }
+
+  char * getName(void) { return tag->name; }
+  
+  char * toString(void) { return tag->print_meta_data(data); }
+
   Bool valid(TaggedRef v);
+
   void constrainVar(TaggedRef v, TaggedRef d) {
     setData(d);
     propagate(v, suspList, d, pc_propagator);
   }
+
+  Bool isStrongerThan(TaggedRef data);
 };
 
 
+inline
+Bool isHeapChunk(TaggedRef term);
+
+inline
+Bool isGenMetaVar(TaggedRef term);
+
+inline
+Bool isGenMetaVar(TaggedRef term, TypeOfTerm tag);
+
+#if !defined(OUTLINE)
+#include "metavar.icc"
+#else
+#undef inline
 #endif
 
+
+#endif

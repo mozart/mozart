@@ -1,3 +1,14 @@
+ /*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
 #if defined(__GNUC__) && !defined(NOPRAGMA)
 #pragma implementation "metavar.hh"
 #endif
@@ -5,93 +16,58 @@
 
 #include "genvar.hh"
 #include "cell.hh"
+#include "builtins.hh"
 
-GenMetaVariable::meta_vars_t GenMetaVariable::meta_vars[maxmetavars];
-unsigned GenMetaVariable::last_tag = 0;
 
-ucr_t inconsistent_unifyMeta(int, OZ_TermType, OZ_Term,
-			     int, OZ_TermType, OZ_Term,
-			     OZ_Term *)
-{
-  return failed;
-}
-
-char * printMetaDefault(OZ_Term d)
+/*
+char * OZ_printMetaDefault(OZ_Term d)
 {
   return tagged2String(d, 10);
 }
+*/
 
-unsigned metadummy = GenMetaVariable::introduceMetaVar("Inconsistent meta var",
-						       inconsistent_unifyMeta);
-
-GenMetaVariable::GenMetaVariable(unsigned ty, TaggedRef tr)
-: data(tr), tag(ty), GenCVariable(MetaVariable)
-{
-  if (tag >= maxmetavars) {
-    tag = 0;
-    cout << "Maximum number of meta variables exceeded."
-	   << "Got tag: " << tag
-	   << " Introducing inconsistent meta variable." << endl;
-  }
-}
-
-unsigned GenMetaVariable::introduceMetaVar(char * name,
-					   unifyMeta_t unify_data,
-					   printMeta_t print_data)
-{
-  if (last_tag >= maxmetavars)
-    return 0;
-  
-  meta_vars[last_tag].name = name;
-  meta_vars[last_tag].unify_data = unify_data;
-  meta_vars[last_tag].print_data = print_data;
-  return last_tag ++;
-}
+GenMetaVariable::GenMetaVariable(MetaTag * t, TaggedRef tr)
+: data(tr), tag(t), GenCVariable(MetaVariable) { }
 
 
-// The idea of routine is to provided a universal unification
+// The idea of this routine is to provide a universal unification
 // service which just requires as constraint system dependent part
-// a function unify_data. This function must be provided by the
-// implementor of the constraint system and that's it.
-// A meta variable is only successively unifyable with a meta variable
-// or a determined term. Conversion from one constraint variable
-// one of another type needs explicite conversion.
+// two functions unify_meta_det and unify_meta_meta. These functions
+// must be provided by the implementor of the constraint system and that's it.
+// A meta variable is only successively unifyable with another meta variable
+// or a determined term. Unification with other GenCVariables will fail.
 Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 				TaggedRef * tptr, TaggedRef t,
 				Bool prop)
 {
   Assert(! isNotCVar(t));
   
-  TypeOfTerm ttag = tagTypeOf(t), rt;
-  TaggedRef result;
-
   if (isCVar(t)) {
     if (tagged2CVar(t)->getType() != MetaVariable) return FALSE;
-    if (((GenMetaVariable *) tagged2CVar(t))->getMetaType() != getMetaType())
-      return FALSE;
-  }
-  
-  ucr_t ret_value =
-    meta_vars[tag].unify_data(isLocalVariable(), OZ_typeOf(v), v,
-			       isCVar(t) ? am.isLocalCVar(t) : FALSE,
-			       OZ_typeOf(t), t,
-			       &result);
 
-#ifdef DEBUG_META
-  DebugCode(printf("0x%x\n", ret_value));
-#endif
-  
-  if (ret_value == failed) return FALSE;
-
-  if (isCVar(t)) {
     GenMetaVariable * term = (GenMetaVariable *) tagged2CVar(t);
+    TaggedRef result, trail = v;
+
+    *vptr = TaggedRef(tptr);
+    mur_t ret_value = tag->unify_meta_meta(getData(),
+					   term->getData(), term->getTag(),
+					   &result);
+    *vptr = trail;
+    
+#ifdef DEBUG_META
+    DebugCode(printf("0x%x\n", ret_value));
+#endif
+    
+    if (ret_value == meta_failed) return FALSE;
+
+    // start unification for meta-var and meta-var
     
     Bool v_is_local = (prop && isLocalVariable());
     Bool t_is_local = (prop && term->isLocalVariable());
     switch (v_is_local + 2 * t_is_local) {
     case TRUE + 2 * TRUE: // v and t are local
       if (heapNewer(vptr, tptr)) { // bind v to t
-	if (ret_value & determined) {
+	if (ret_value & meta_determined) {
 	  propagate(v, suspList, result, pc_cv_unif);
 	  term->propagate(t, term->suspList, result, pc_cv_unif);
 	  doBind(tptr, result);
@@ -104,7 +80,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 	  doBind(vptr, TaggedRef(tptr));
 	}
       } else { // bind t to v
-	if (ret_value & determined) {
+	if (ret_value & meta_determined) {
 	  propagate(v, suspList, result, pc_cv_unif);
 	  term->propagate(t, term->suspList, result, pc_cv_unif);
 	  doBind(vptr, result);
@@ -120,8 +96,8 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
       break;
       
     case TRUE + 2 * FALSE: // v is local and t is global
-      if (ret_value & right_constrained) {
-	if (ret_value & determined) {
+      if (ret_value & meta_right_constrained) {
+	if (ret_value & meta_determined) {
 	  propagate(v, suspList, result, pc_cv_unif);
 	  term->propagate(t, term->suspList, result, pc_cv_unif);
 	  term->addSuspension(new Suspension(am.currentBoard));
@@ -144,8 +120,8 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
       break;
       
     case FALSE + 2 * TRUE: // v is global and t is local
-      if (ret_value & left_constrained) {
-	if(ret_value & determined) {
+      if (ret_value & meta_left_constrained) {
+	if(ret_value & meta_determined) {
 	  propagate(v, suspList, result, pc_cv_unif);
 	  term->propagate(t, term->suspList, result, pc_cv_unif);
 	  addSuspension(new Suspension(am.currentBoard));
@@ -168,7 +144,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
       break;
 
     case FALSE + 2 * FALSE: // v and t is global
-      if (ret_value & determined){
+      if (ret_value & meta_determined){
 	if (prop) {
 	  propagate(v, suspList, result, pc_cv_unif);
 	  term->propagate(t, term->suspList, result, pc_cv_unif);
@@ -198,6 +174,20 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
       break;
     }
   } else {
+    TaggedRef result, trail = v;
+
+    *vptr = TaggedRef(tptr);
+    mur_t ret_value = tag->unify_meta_det(getData(),
+					  t, OZ_typeOf(t),
+					  &result);
+    *vptr = trail;
+    
+#ifdef DEBUG_META
+    DebugCode(printf("meta-det 0x%x\n", ret_value));
+#endif
+    
+    if (ret_value == meta_failed) return FALSE;
+    
     if (prop) propagate(v, suspList, result, pc_propagator);
 
     if (prop && isLocalVariable()) {
@@ -212,27 +202,47 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 
 Bool GenMetaVariable::valid(TaggedRef v)
 {
-  TaggedRef dummy;
-  return failed == meta_vars[tag].unify_data(FALSE, OZ_Type_CVar, 
-					     makeTaggedCVar(this),
-					     FALSE, OZ_typeOf(v), v,
-					     &dummy) ? FALSE : TRUE;
+  Assert(!isRef(v));
+  
+  TaggedRef d;
+  
+  return meta_failed != tag->unify_meta_det(getData(), v, OZ_typeOf(v), &d);
 }
+
+
+Bool GenMetaVariable::isStrongerThan(TaggedRef d)
+{
+  TaggedRef result;
+  
+  mur_t ret_value = tag->unify_meta_meta(getData(), d, getTag(), &result);
+  
+  if (ret_value == meta_failed) {
+    warning("GenMetaVariable::isStrongerThan found inconsistency.");
+    return FALSE;
+  }
+
+  return  (ret_value & meta_right_constrained) ? TRUE : FALSE;
+}
+
 //-----------------------------------------------------------------------------
-// implementation of interface functions
+// Implementation of interface functions
 
-unsigned introduceMetaVar(char * n, unifyMeta_t u, printMeta_t p)
+OZ_MetaType OZ_introMetaVar(OZ_UnifyMetaDet unify_md,
+			    OZ_UnifyMetaMeta unify_mm,
+			    OZ_PrintMeta print_m,
+			    char * name_m)
 {
-  return GenMetaVariable::introduceMetaVar(n, u, p);
+  return OZ_MetaType(::new MetaTag(unify_md, unify_mm,
+				   print_m, strdup(name_m)));
 }
 
-OZ_Bool makeMetaVar(OZ_Term v, unsigned t, OZ_Term d)
+OZ_Term OZ_makeMetaVar(OZ_MetaType t, OZ_Term d)
 {
-  return OZ_unify(v, TaggedRef(newTaggedCVar(new GenMetaVariable(t, d))));
+  return TaggedRef(newTaggedCVar(new GenMetaVariable((MetaTag *) t, d)));
 }
 
 
-void constrainMetaVar(int d, OZ_Term v, OZ_Term c)
+void OZ_constrainMetaVar(int d, OZ_Term v, OZ_Term c)
 {
   TaggedRef v_deref = deref(v);
   
@@ -242,30 +252,30 @@ void constrainMetaVar(int d, OZ_Term v, OZ_Term c)
   } else if (am.isLocalCVar(v_deref)) {
     ((GenMetaVariable *) tagged2CVar(v_deref))->constrainVar(v_deref, c);
   } else {
-    if (makeMetaVar(v, getTypeMetaVar(v_deref), c) == FAILED)
+    if (OZ_unify(OZ_makeMetaVar(OZ_getMetaVarType(v_deref), c), v) == FAILED)
       warning("Found inconsistency when constraining meta variable.");
   }  
 }
 
 
-unsigned getTypeMetaVar(OZ_Term v)
+OZ_MetaType OZ_getMetaVarType(OZ_Term v)
 {
   v = deref(v);
   if (isCVar(v) && tagged2CVar(v)->getType() == MetaVariable)
-    return ((GenMetaVariable *) tagged2CVar(v))->getMetaType();
-  return 0;
+    return ((GenMetaVariable *) tagged2CVar(v))->getTag();
+  return NULL;
 }
      
-OZ_Term getDataMetaVar(OZ_Term v)
+OZ_Term OZ_getMetaVarData(OZ_Term v)
 {
   v = deref(v);
   if (isCVar(v) && tagged2CVar(v)->getType() == MetaVariable)
     return ((GenMetaVariable *) tagged2CVar(v))->getData();
-  return 0;
+  return NULL;
 }
 
 
-int areIdentVars(OZ_Term v1, OZ_Term v2)
+int OZ_areIdentVars(OZ_Term v1, OZ_Term v2)
 {
   DEREF(v1, vptr1, vtag1);
   DEREF(v2, vptr2, vtag2);
@@ -273,32 +283,45 @@ int areIdentVars(OZ_Term v1, OZ_Term v2)
 }
 
 
-TaggedRef makeChunk(int s)
+OZ_Term OZ_makeHeapChunk(int s)
 {
   HeapChunk * hc = new HeapChunk(s);
   return makeTaggedConst(hc);
 }
 
-int getChunkSize(TaggedRef t)
+#define NotHeapChunkWarning(T, F, R)					      \
+if (! OZ_isHeapChunk(T)) {						      \
+  OZ_warning("Heap chunk expected in %s. Got 0x%x. Result undetermined.\n",   \
+             #F, T);	                                                      \
+  return R;								      \
+}
+
+int OZ_getHeapChunkSize(TaggedRef t)
 {
-  Assert(isChunk(t));
+  NotHeapChunkWarning(t, OZ_getHeapChunkSize, 0);
+  
   return ((HeapChunk *) tagged2Const(t))->getChunkSize();
 }
 
-void readChunkDataFromHeap(TaggedRef t, char * buf)
+char * OZ_getHeapChunk(TaggedRef t, char * buf)
 {
-  Assert(isChunk(t));
-  
+  NotHeapChunkWarning(t, OZ_getHeapChunk, NULL);
+
   HeapChunk * hc = (HeapChunk *) tagged2Const(t);
   char * hc_data = hc->getChunkData();
+  int hc_size = hc->getChunkSize();
   
-  for (int i = hc->getChunkSize(); i--; )
+  if (! buf) buf = ::new char[hc_size];
+  
+  for (int i = hc_size; i--; )
     buf[i] = hc_data[i];
+  
+  return buf;
 }
 
-void writeChunkDataToHeap(TaggedRef t, char * buf)
+void OZ_putHeapChunk(OZ_Term t, char * buf)
 {
-  Assert(isChunk(t));
+  NotHeapChunkWarning(t, OZ_putHeapChunk, );
   
   HeapChunk * hc = (HeapChunk *) tagged2Const(t);
   char * hc_data = hc->getChunkData();
@@ -307,24 +330,25 @@ void writeChunkDataToHeap(TaggedRef t, char * buf)
     hc_data[i] = buf[i];
 }
 
-int isChunk(TaggedRef t)
+int OZ_isHeapChunk(OZ_Term t)
 {
-  t = deref(t);
-  return tagTypeOf(t)==CONST ? tagged2Const(t)->getType()==Co_Chunk : FALSE;
+  return isHeapChunk(t);
 }
 
-int isMetaVar(TaggedRef t)
+
+int OZ_isMetaVar(OZ_Term t)
 {
   t = deref(t);
   return isCVar(t) ? tagged2CVar(t)->getType()==MetaVariable : FALSE;
 }
+
 
 OZ_TermType OZ_typeOf(OZ_Term t)
 {
   t = deref(t);
   if (isCell(t)) return OZ_Type_Cell;
   if (isCons(t)) return OZ_Type_Cons;
-  if (isConst(t)) return OZ_Type_Chunk;
+  if (isHeapChunk(t)) return OZ_Type_HeapChunk;
   if (isCVar(t)) return OZ_Type_CVar;
   if (isFloat(t)) return OZ_Type_Float;
   if (isSmallInt(t) || isBigInt(t)) return OZ_Type_Int;
@@ -336,3 +360,117 @@ OZ_TermType OZ_typeOf(OZ_Term t)
   return OZ_Type_Unknown;
 }
 
+//-----------------------------------------------------------------------------
+// Built-ins
+
+
+OZ_C_proc_begin(BImetaIsVar, 1)
+{ 
+  return isGenMetaVar(deref(OZ_getCArg(0))) ? PROCEED : FAILED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BImetaGetDataAsAtom, 2)
+{ 
+  ExpectedTypes("GenMetaVariable<ConstraintData>,Atom");
+  
+  OZ_getCArgDeref(0, var, varptr, vartag);
+
+  if(! isAnyVar(vartag)) {
+    return OZ_unify(var, OZ_getCArg(1));   
+  } else if (isGenMetaVar(var, vartag)) {
+    return OZ_unify(makeTaggedAtom(((GenMetaVariable *) tagged2CVar(var))->toString()),
+		    OZ_getCArg(1));   
+  } else if (isNotCVar(vartag)) {
+    OZ_addSuspension(TaggedRef(varptr),
+		     OZ_makeSuspension(OZ_self, OZ_args, OZ_arity));
+    return PROCEED;
+  } else {
+    TypeError(0, "");
+  }
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BImetaGetStrength, 2)
+{ 
+  ExpectedTypes("GenMetaVariable<ConstraintData>,ConstraintData");
+  
+  OZ_getCArgDeref(0, var, varptr, vartag);
+
+  if(! isAnyVar(vartag)) {
+    return OZ_unify(var, OZ_getCArg(1));   
+  } else if (isGenMetaVar(var, vartag)) {
+    return OZ_unify(((GenMetaVariable *) tagged2CVar(var))->getData(),
+		    OZ_getCArg(1));   
+  } else if (isNotCVar(vartag)) {
+    OZ_addSuspension(TaggedRef(varptr),
+		     OZ_makeSuspension(OZ_self, OZ_args, OZ_arity));
+    return PROCEED;
+  } else {
+    TypeError(0, "");
+  }
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BImetaGetNameAsAtom, 2)
+{ 
+  ExpectedTypes("GenMetaVariable<ConstraintData>,Atom");
+  
+  OZ_getCArgDeref(0, var, varptr, vartag);
+
+  if(! isAnyVar(vartag)) {
+    return OZ_unify(var, OZ_getCArg(1));   
+  } else if (isGenMetaVar(var, vartag)) {
+    return
+      OZ_unify(makeTaggedAtom(((GenMetaVariable*)tagged2CVar(var))->getName()),
+	       OZ_getCArg(1));   
+  } else if (isNotCVar(vartag)) {
+    OZ_addSuspension(TaggedRef(varptr),
+		     OZ_makeSuspension(OZ_self, OZ_args, OZ_arity));
+    return PROCEED;
+  } else {
+    TypeError(0, "");
+  }
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BImetaWatchVar, 2)
+{ 
+  ExpectedTypes("GenMetaVariable<ConstraintData>,ConstraintData");
+  
+  OZ_getCArgDeref(0, v, vptr, vtag);
+
+  if(! isAnyVar(vtag)) {
+    return PROCEED;
+  } else if (isGenMetaVar(v, vtag)) {
+    if (((GenMetaVariable*)tagged2CVar(v))->isStrongerThan(deref(OZ_args[1])))
+      return PROCEED;
+    
+    OZ_addSuspension(TaggedRef(vptr),
+		     OZ_makeSuspension(OZ_self, OZ_args, OZ_arity));
+    return PROCEED;
+  } else {
+    TypeError(0, "");
+  }
+}
+OZ_C_proc_end
+
+
+void BIinitMeta(void)
+{
+  BIadd("metaIsVar", 1, BImetaIsVar);
+  BIadd("metaWatchVar", 2, BImetaWatchVar);
+  BIadd("metaGetDataAsAtom", 2, BImetaGetDataAsAtom);
+  BIadd("metaGetNameAsAtom", 2, BImetaGetNameAsAtom);
+  BIadd("metaGetStrength", 2, BImetaGetStrength);
+}
+
+#if defined(OUTLINE)
+#define inline
+#include "metavar.icc"
+#undef inline
+#endif
