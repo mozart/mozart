@@ -244,11 +244,14 @@ define
       end
    in
       fun {CanvasItemNew Group Type Args}
-         {Canvas newItem(Group Type {Map UnwrapArgument Args} $)}
+         {Canvas newItem(Group Type {Map Args UnwrapArgument} $)}
       end
-      fun {CanvasItemConfigure Item Args}
-         {Canvas configureItem(Item {Map UnwrapArgument Args})}
-         unit
+      fun {CanvasItemSet Item Type Arg}
+         case {UnwrapArgument Type#Arg}
+         of Type#Arg then
+            {Item set(Type Arg)}
+            unit
+         end
       end
    end
 
@@ -477,7 +480,7 @@ define
          [] accel(Val)    then 'OBJECT'({PointerToObject GTK.accelGroup Val})
          [] style(Val)    then 'OBJECT'({PointerToObject GTK.style Val})
             %% GDK Events need special care
-         [] event(Val)    then {ComputeGdkEvent Val}
+         [] event(Val)    then 'EVENT'({ComputeGdkEvent Val})
          [] color(Val)    then 'OBJECT'({PointerToObject GDK.color Val})
          [] context(Val)  then 'OBJECT'({PointerToObject GDK.colorContext Val})
          [] map(Val)      then 'OBJECT'({PointerToObject GDK.colormap Val})
@@ -674,7 +677,7 @@ define
                           %% Oz/Alice Canvas Helper
                           pointsPut            : GOZSignal.pointsPut
                           canvasItemNew        : CanvasItemNew
-                          canvasItemConfigure  : CanvasItemConfigure
+                          canvasItemSet        : CanvasItemSet
                           %% OzBase Class
                           ozBase               : OzBase
                           %% Set Dispatcher Mode
