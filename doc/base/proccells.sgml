@@ -1,0 +1,72 @@
+<!--
+  Translated to SGML by:
+     Daniel Simon, dansim@ps.uni-sb.de
+     Leif Kornstaedt, kornstae@ps.uni-sb.de
+-->
+
+<Chapter id="chapter.proccells">
+  <Title/Procedures and Cells/
+  <Section>
+    <Title/Procedures/
+    <P>
+      The module <Span class=index/<<Procedure>>/ specifies operations on
+      procedures.
+      <List>
+        <Entry><Span class=index/<<IsProcedure>>/
+          <Index class=tails/<<Procedure>><And><<is>>/
+        <Synopsis>
+          <<{Procedure.is ?+{X} ??{B}}>>
+        <Item>
+          tests whether <<X>> is a procedure.
+
+        <Entry><Span class=index/<<ProcedureArity>>/
+          <Index class=tails/<<Procedure>><And><<arity>>/
+        <Synopsis>
+          <<{Procedure.arity ?+{P} ??{I}}>>
+        <Item>
+          returns the procedure arity of&nbsp;<<P>>, &ie;, the number of
+          arguments which <<P>> takes.
+      </List>
+
+  <Section>
+    <Title/Cells/
+    <P>
+      The module <Span class=index/<<Cell>>/ contains procedures operating
+      on cells.
+      <List>
+        <Entry><Span class=index/<<IsCell>>/
+          <Index class=tails/<<Cell>><And><<is>>/
+        <Synopsis>
+          <<{Cell.is ?+{X} ??{B}}>>
+        <Item>
+          tests whether <<X>> is a cell.
+
+        <Entry><Span class=index/<<NewCell>>/
+          <Index class=tails/<<Cell>><And><<new>>/
+        <Synopsis>
+          <<{Cell.new X ??{Cell}}>>
+        <Item>
+          returns a new cell with initial content&nbsp;<<X>>.
+
+        <Entry><Span class=index/<<Exchange>>/
+          <Index/<<Cell>><And><<exchange>>/
+        <Synopsis>
+          <<{Cell.exchange ?+{Cell} ??{X} ?_{Y}}>>
+        <Item>
+          returns the current content of <<Cell>> as&nbsp;<<X>>, and sets the
+          content of <<Cell>> to&nbsp;<<Y>>.
+
+        <Entry><Span class=index/<<Access>>/
+          <Index/<<Cell>><And><<access>>/
+        <Synopsis>
+          <<{Cell.access ?+{Cell} ??{X}}>>
+        <Item>
+          returns the current content of <<Cell>>.
+
+        <Entry><Span class=index/<<Assign>>/
+        <Synopsis>
+          <<{Cell.assign ?+{Cell} X}>>
+        <Item>
+          sets the content of <<Cell>> to&nbsp;<<X>>.
+      </List>
+</Chapter>

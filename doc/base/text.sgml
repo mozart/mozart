@@ -1,0 +1,335 @@
+<!--
+  Translated to SGML by:
+     Daniel Simon, dansim@ps.uni-sb.de
+     Leif Kornstaedt, kornstae@ps.uni-sb.de
+-->
+
+<Chapter id="chapter.text">
+  <Title/Text/
+  <P>
+    This chapter describes modules for handling data that encode textual
+    information.  <Index/characters/<Def class=noindex/Characters/ are
+    encoded as integers.  <Index/strings/<Def class=noindex/Strings/ are
+    lists of characters.  Strings are used as data structure for textual
+    input and for subsequent transformation.  A string can also be used to
+    output textual information.
+  <P>
+    <Index/virtual strings/<Def class=noindex/Virtual Strings/ are atoms,
+    strings, byte strings, integers, and floats closed under virtual
+    concatenation encoded by tuples with label&nbsp;<<'#'>>.  Virtual
+    strings are used to output textual information.  For example,
+    <<<"Contains "#also#" numbers: "#(1#' '#2.045)>>>
+    is a virtual string representing the string
+    <<<"Contains also numbers: 1 2.045">>>
+  <Section id="section.text.characters">
+    <Title/Characters/
+    <P>
+      The module <Span class=index/<<Char>>/ contains procedures operating
+      on characters.  Characters are integers between <<0>> and&nbsp;<<255>>,
+      used for building strings.  For the encoding of characters by integers,
+      we use the ISO&nbsp;8859-1 standard&nbsp;<Ptr to="ISO_8859_1">.
+      The functionality provided by this module is similar to the
+      <File/ctype.h/ module of ANSI&nbsp;C, see for instance&nbsp;<Ptr
+      to="kernighan88">.
+    <P>
+      The procedures described herein can be used to compute with strings
+      by using the generic procedures of the list module (see <Ptr
+      to="section.records.lists">.  For example,
+      <<<{Filter "r E m O\nv E" Char.isAlpha}>>>
+      keeps only the letters of the given string and returns the
+      string <<"rEmOvE">>.
+      <List>
+        <Entry><Span class=index/<<IsChar>>/
+          <Index class=tails/<<Char>><And><<is>>/
+        <Synopsis>
+          <<{Char.is ?+{X} ??{B}}>>
+        <Item>
+          tests whether <<X>> is a character, &ie;, an integer between <<0>>
+          and&nbsp;<<255>> inclusively.
+
+        <Entry><<isLower>>
+          <Index class=tails/<<Char>><And><<isLower>>/
+        <Synopsis>
+          <<{Char.isLower ?+{I} ??{B}}>>
+        <Item>
+          tests whether <<I>> encodes a lower-case letter.
+
+        <Entry><<isUpper>>
+          <Index class=tails/<<Char>><And><<isUpper>>/
+        <Synopsis>
+          <<{Char.isUpper ?+{I} ??{B}}>>
+        <Item>
+          tests whether <<I>> encodes an upper-case letter.
+
+        <Entry><<isDigit>>
+          <Index class=tails/<<Char>><And><<isDigit>>/
+        <Synopsis>
+          <<{Char.isDigit ?+{I} ??{B}}>>
+        <Item>
+          tests whether <<I>> encodes a digit.
+
+        <Entry><<isSpace>>
+          <Index class=tails/<<Char>><And><<isSpace>>/
+        <Synopsis>
+          <<{Char.isSpace ?+{I} ??{B}}>>
+        <Item>
+          tests whether <<I>> encodes a white space character, &ie;, either
+          a space, a form feed (<<&\f>>), a newline (<<&\n>>), a carriage
+          return (<<&\r>>), a tab (<<&\t>>), a vertical tab (<<&\v>>) or
+          a non-breaking space (<<&\240>>).
+
+        <Entry><<isPunct>>
+          <Index class=tails/<<Char>><And><<isPunct>>/
+        <Synopsis>
+          <<{Char.isPunct ?+{I} ??{B}}>>
+        <Item>
+          tests whether <<I>> encodes a punctuation character, &ie;, a
+          visible character, which is not a space, a digit, or a letter.
+
+        <Entry><<isCntrl>>
+          <Index class=tails/<<Char>><And><<isCntrl>>/
+        <Synopsis>
+          <<{Char.isCntrl ?+{I} ??{B}}>>
+        <Item>
+          tests whether <<I>> encodes a control character.
+
+        <Entry><<isAlpha>>
+          <Index class=tails/<<Char>><And><<isAlpha>>/
+        <Synopsis>
+          <<{Char.isAlpha ?+{I} ??{B}}>>
+        <Item>
+          tests whether <<I>> encodes a letter.
+
+        <Entry><<isAlNum>>
+          <Index class=tails/<<Char>><And><<isAlNum>>/
+        <Synopsis>
+          <<{Char.isAlNum ?+{I} ??{B}}>>
+        <Item>
+          tests whether <<I>> encodes a letter or a digit.
+
+        <Entry><<isGraph>>
+          <Index class=tails/<<Char>><And><<isGraph>>/
+        <Synopsis>
+          <<{Char.isGraph ?+{I} ??{B}}>>
+        <Item>
+          tests whether <<I>> encodes a visible character.
+
+        <Entry><<isPrint>>
+          <Index class=tails/<<Char>><And><<isPrint>>/
+        <Synopsis>
+          <<{Char.isPrint ?+{I} ??{B}}>>
+        <Item>
+          tests whether <<I>> is a visible character or either the space or
+          non-breaking space character.
+
+        <Entry><<isXDigit>>
+          <Index class=tails/<<Char>><And><<isXDigit>>/
+        <Synopsis>
+          <<{Char.isXDigit ?+{I} ??{B}}>>
+        <Item>
+          tests whether <<I>> is a hexadecimal digit.
+
+        <Entry><<type>>
+          <Index class=tails/<<Char>><And><<type>>/
+        <Synopsis>
+          <<{Char.type ?+{I} ??{A}}>>
+        <Item>
+          maps <<I>> to its simple type&nbsp;<<A>>, &ie;, one of to the atoms
+          <<lower>>, <<upper>>, <<digit>>, <<space>>, <<punct>>, or <<other>>.
+
+        <Entry><<toLower>>
+          <Index class=tails/<<Char>><And><<toLower>>/
+        <Synopsis>
+          <<{Char.toLower ?+{I1} ??{I2}}>>
+        <Item>
+          returns the corresponding lower-case letter if <<I1>> is an
+          upper-case letter, otherwise <<I1>> itself.
+
+        <Entry><<toUpper>>
+          <Index class=tails/<<Char>><And><<toUpper>>/
+        <Synopsis>
+          <<{Char.toUpper ?+{I1} ??{I2}}>>
+        <Item>
+          returns the corresponding upper-case letter if <<I1>> is a
+          lower-case letter, otherwise <<I1>> itself.
+
+        <Entry><<toAtom>>
+        <Synopsis>
+          <<{Char.toAtom ?+{I} ??{A}}>>
+        <Item>
+          maps <<I>> to the corresponding atom&nbsp;<<A>>.  If <<I>> is zero,
+          <<A>>&nbsp;will be the empty atom&nbsp;<<''>>.
+      </List>
+
+  <Section>
+    <Title/Strings/
+    <P>
+      The module <Span class=index/<<String>>/ contains procedures operating
+      on strings.  Strings are lists whose elements are characters (see
+      <Ptr to="section.text.characters">.
+      <List>
+        <Entry><Span class=index/<<IsString>>/
+          <Index class=tails/<<String>><And><<is>>/
+        <Synopsis>
+          <<{String.is ?+{X} ??{B}}>>
+        <Item>
+          tests whether <<X>> is string.
+
+        <Entry><Span class=index/<<StringToAtom>>/
+          <Index class=tails/<<String>><And><<toAtom>>/
+        <Synopsis>
+          <<{String.toAtom ?+{S} ??{A}}>>
+        <Item>
+          converts a string&nbsp;<<S>> to an atom&nbsp;<<A>>, according to
+          &Oz; concrete syntax.  See also <<Atom.toString>>.
+
+        <Entry><<isAtom>>
+          <Index class=tails/<<String>><And><<isAtom>>/
+        <Synopsis>
+          <<{String.isAtom ?+{S} ??{B}}>>
+        <Item>
+          tests whether the string&nbsp;<<S>> can be converted to an atom.
+
+        <Entry><Span class=index/<<StringToInt>>/
+          <Index class=tails/<<String>><And><<toInt>>/
+        <Synopsis>
+          <<{String.toInt ?+{S} ??{I}}>>
+        <Item>
+          converts a string&nbsp;<<S>> to an integer&nbsp;<<I>>, according to
+          &Oz; concrete syntax.  See also <<IntToString>>.
+
+        <Entry><<isInt>>
+          <Index class=tails/<<String>><And><<isInt>>/
+        <Synopsis>
+          <<{String.isInt ?+{S} ??{B}}>>
+        <Item>
+          tests whether the string&nbsp;<<S>> can be converted to an integer.
+
+        <Entry><Span class=index/<<StringToFloat>>/
+          <Index class=tails/<<String>><And><<toFloat>>/
+        <Synopsis>
+          <<{StringToFloat ?+{S} ??{F}}>>
+        <Item>
+          converts a string&nbsp;<<S>> to a float&nbsp;<<F>>, according to
+          &Oz; concrete syntax.  See also <<FloatToString>>.
+
+        <Entry><<isFloat>>
+          <Index class=tails/<<String>><And><<isFloat>>/
+        <Synopsis>
+          <<{String.isFloat ?+{S} ??{B}}>>
+        <Item>
+          tests whether the string&nbsp;<<S>> can be converted to a float.
+
+        <Entry><<token>>
+          <Index class=tails/<<String>><And><<token>>/
+        <Synopsis>
+          <<{String.token ?+{S} ?+{I} ??{S1} ??{S2}}>>
+        <Item>
+          splits the string&nbsp;<<S>> into two substrings <<S1>>
+          and&nbsp;<<S2>>.
+        <P>
+          <<S1>> contains all characters before the first occurence of
+          the character&nbsp;<<I>>, <<S2>> all remaining characters
+          with&nbsp;<<I>> excluded.
+        <P>
+          For example,
+          <<<{String.token "a:b:c" &: S1 S2}>>>
+          binds <<S1>> to <<"a">> and <<S2>> to <<"b:c">>.
+
+        <Entry><<tokens>>
+          <Index class=tails/<<String>><And><<tokens>>/
+        <Synopsis>
+          <<{String.tokens ?+{S} ?+{I} ??{Ss}}>>
+        <Item>
+          splits the string&nbsp;<<S>> into substrings&nbsp;<<Ss>> deleimited
+          by&nbsp;<<I>> in&nbsp;<<S>>.
+        <P>
+          For example,
+          <<<{String.tokens "a:bb:cc:d:" &:}>>>
+          returns <<["a" "bb" "cc" "d"]>>.
+      </List>
+
+  <Section>
+    <Title/Virtual Strings/
+    <P>
+      <Index/strings<And>virtual/
+      The module <Span class=index/<<VirtualString>>/ contains procedures
+      operating on virtual strings.  Virtual strings are designed as a
+      convenient way to combine strings, byte strings, atoms, integers
+      and floats to compound strings without explicit concatenation and
+      conversion.
+      <List>
+        <Entry><Span class=index/<<IsVirtualString>>/
+          <Index class=tails/<<VirtualString>><And><<is>>/
+        <Synopsis>
+          <<{VirtualString.is ?+{X} ??{B}}>>
+        <Item>
+          tests whether <<X>> is a virtual string.  Virtual strings are
+          defined recursively as the set of all integers, floats, atoms,
+          strings, byte strings, and tuples with label&nbsp;<<'#'>> whose
+          subtrees are virtual strings.
+
+        <Entry><<toString>>
+          <Index class=tails/<<VirtualString>><And><<toString>>/
+        <Synopsis>
+          <<{VirtualString.toString ?+{V} ??{S}}>>
+        <Item>
+          converts a virtual string&nbsp;<<V>> to a string&nbsp;<<S>>.
+        <P>
+          The transformation is straightforward:  Atoms, integers, floats and
+          byte strings are transformed into strings using <<Atom.toString>>,
+          <<Int.toString>>, <<Float.toString>>, and <<ByteString.toString>>
+          respectively, where in numbers <Samp/-/ is used instead of <Samp/~/.
+          A tuple with label&nbsp;<<'#'>> is transformed by concatenation of
+          the transformed subtrees.  Note that both <<nil>> and <<'#'>> denote
+          the empty string.
+        <P>
+          The following relation holds for all virtual strings <<V1>>
+          and&nbsp;<<V2>>:
+<<<{VirtualString.toString V1#V2}
+= {Append
+   {VirtualString.toString V1}
+   {VirtualString.toString V2}}>>>
+          Thus, <<VirtualString.toString>> maps <<#>> homomorphically to
+          <<Append>>.
+
+        <Entry><<toAtom>>
+          <Index class=tails/<<VirtualString>><And><<toAtom>>/
+        <Synopsis>
+          <<{VirtualString.toAtom ?+{V} ??{A}}>>
+        <Item>
+          converts a virtual string&nbsp;<<V>> to an atom&nbsp;<<A>>.
+        <P>
+          This procedure can be defined as:
+<<<fun {VirtualString.toAtom V}
+   {String.toAtom {VirtualString.toString V}}
+end>>>
+
+        <Entry><<toByteString>>
+          <Index class=tails/<<VirtualString>><And><<toByteString>>/
+        <Synopsis>
+          <<{VirtualString.toByteString ?+{V} ??{ByteString}}>>
+        <Item>
+          converts a virtual string&nbsp;<<V>> to a byte string <<ByteString>>.
+        <P>
+          This procedure is a synonym of <<ByteString.make>> (which see).
+
+        <Entry><<length>>
+          <Index class=tails/<<VirtualString>><And><<length>>/
+        <Synopsis>
+          <<{VirtualString.length ?+{V} ??{I}}>>
+        <Item>
+          returns the length of a virtual string in characters.
+          Can be defined as:
+          <<<{Length {VirtualString.toString V} I}>>>
+
+        <Entry><<changeSign>>
+          <Index class=tails/<<VirtualString>><And><<changeSign>>/
+        <Synopsis>
+          <<{VirtualString.changeSign ?+{V1} V2 ??{V3}}>>
+        <Item>
+          returns a virtual string derived from&nbsp;<<V1>> where all
+          occurrences of the unary minus sign for integers and floats
+          are replaced by the virtual string&nbsp;<<V2>>.
+      </List>
+</Chapter>

@@ -1,0 +1,492 @@
+<!--
+  Translated to SGML by:
+     Daniel Simon, dansim@ps.uni-sb.de
+     Leif Kornstaedt, kornstae@ps.uni-sb.de
+-->
+
+<Chapter id="chapter.chunks">
+  <Title/Chunks/
+  <Section>
+    <Title/Chunks in General/
+    <P>
+      The module <Span class=index/<<Chunk>>/ contains procedures operating
+      on chunks.
+      <List>
+        <Entry><Span class=index/<<.>>/
+          <Index/<<Value>><And><<'.'>>/
+        <Synopsis>
+          <<{Value.'.' ?+{RC} ?+{LI} ??{X}}>>
+        <Item>
+          returns the field&nbsp;<<X>> of&nbsp;<<RC>> at feature&nbsp;<<LI>>.
+
+        <Entry><Span class=index/<<HasFeature>>/
+          <Index/<<Value>><And><<hasFeature>>/
+        <Synopsis>
+          <<{HasFeature ?+{RC} ?+{LI} ??{B}}>>
+        <Item>
+          tests whether <<RC>> has feature&nbsp;<<LI>>.
+
+        <Entry><Span class=index/<<CondSelect>>/
+          <Index/<<Value>><And><<condSelect>>/
+        <Synopsis>
+          <<{CondSelect ?+{RC} ?+{LI} ?_{X} ??{Y}}>>
+        <Item>
+          returns the field of&nbsp;<<RC>> at&nbsp;<<LI>>, if <<RC>> has
+          feature&nbsp;<<LI>>.  Otherwise, return&nbsp;<<X>>.
+
+        <Entry><Span class=index/<<IsChunk>>/
+          <Index class=tails/<<Chunk>><And><<is>>/
+        <Synopsis>
+          <<{IsChunk ?+{X} ??{B}}>>
+        <Item>
+          tests whether <<X>> is a chunk.
+
+        <Entry><Span class=index/<<NewChunk>>/
+          <Index class=tails/<<Chunk>><And><<new>>/
+        <Synopsis>
+          <<{NewChunk ?+{R} ??{C}}>>
+        <Item>
+          returns a new chunk with the same features and fields as&nbsp;<<R>>.
+
+        <Entry><Span class=index/<<ChunkSelectFeature>>/
+          <Index class=tails/<<Chunk>><And><<selectFeature>>/
+        <Synopsis>
+          <<{ChunkSelectFeature ?+{C} ?+{F} ??{X}}>>
+        <Item>
+          returns the field&nbsp;<<X>> of&nbsp;<<C>> at feature&nbsp;<<F>>.
+
+        <Entry><Span class=index/<<ChunkHasFeature>>/
+          <Index class=tails/<<Chunk>><And><<hasFeature>>/
+        <Synopsis>
+          <<{ChunkHasFeature ?+{C} ?+{F} ??{B}}>>
+        <Item>
+          tests whether <<C>> has feature&nbsp;<<F>>.
+      </List>
+
+  <Section>
+    <Title/Arrays/
+    <P>
+      The module <Span class=index/<<Array>>/ contains procedures operating
+      on arrays.  Whenever an array access is indexed with an illegal key, an
+      error exception is raised.
+      <List>
+        <Entry><Span class=index/<<IsArray>>/
+          <Index class=tails/<<Array>><And><<is>>/
+        <Synopsis>
+          <<{IsArray ?+{X} ??{B}}>>
+        <Item>
+          tests whether <<X>> is an array.
+
+        <Entry><Span class=index/<<NewArray>>/
+          <Index class=tails/<<Array>><And><<new>>/
+        <Synopsis>
+          <<{NewArray ?+{LowI} ?+{HighI} ?_{InitX} ??{Array}}>>
+        <Item>
+          returns a new array with key range from <<LowI>> to <<HighI>>
+          including both.  All items are initialized to <<InitX>>.
+
+        <Entry><Span class=index/<<Put>>/
+          <Index/<<Array>><And><<put>>/
+        <Synopsis>
+          <<{Put ?+{Array} ?+{I} ?_{X}}>>
+        <Item>
+          sets the item of <<Array>> under key&nbsp;<<I>> to&nbsp;<<X>>.
+
+        <Entry><Span class=index/<<Get>>/
+          <Index/<<Array>><And><<get>>/
+        <Synopsis>
+          <<{Get ?+{Array} ?+{I} ??{X}}>>
+        <Item>
+          returns the item of <<Array>> under key&nbsp;<<I>>.
+
+        <Entry><<low>>
+          <Index class=tails/<<Array>><And><<low>>/
+        <Synopsis>
+          <<{Array.low ?+{Array} ??{LowI}}>>
+        <Item>
+          returns the lower bound of the key range of <<Array>>.
+
+        <Entry><<high>>
+          <Index class=tails/<<Array>><And><<high>>/
+        <Synopsis>
+          <<{Array.high ?+{Array} ??{HighI}}>>
+        <Item>
+          returns the upper bound of the key range of <<Array>>.
+
+        <Entry><<clone>>
+          <Index class=tails/<<Array>><And><<clone>>/
+        <Synopsis>
+          <<{Array.clone ?+{A1} ??{A2}}>>
+        <Item>
+          returns a copy of&nbsp;<<A1>>.
+
+        <Entry><<toRecord>>
+          <Index class=tails/<<Array>><And><<toRecord>>/
+        <Synopsis>
+          <<{Array.toRecord ?+{L} ?+{A} ??{R}}>>
+        <Item>
+          returns a record with label&nbsp;L that contains as features
+          the integers between <<{Array.low A}>> and <<{Array.high A}>> and
+          with the corresponding fields.
+        <P>
+          This procedure is specially optimized for tuples.
+      </List>
+
+  <Section>
+    <Title/Dictionaries/
+    <P>
+      The module <Span class=index/<<Dictionary>>/ contains procedures
+      operating on dictionaries.  If a dictionary contains an item under
+      some key&nbsp;<<LI>>, we say <<LI>> is a <Def/valid key/.  Whenever
+      a dictionary access is indexed with an invalid key, a type error is
+      raised.
+      <List>
+        <Entry><Span class=index/<<IsDictionary>>/
+          <Index class=tails/<<Dictionary>><And><<is>>/
+        <Synopsis>
+          <<{IsDictionary ?+{X} ??{B}}>>
+        <Item>
+          tests whether <<X>> is a dictionary.
+
+        <Entry><Span class=index/<<NewDictionary>>/
+          <Index class=tails/<<Dictionary>><And><<new>>/
+        <Synopsis>
+          <<{NewDictionary ??{Dictionary}}>>
+        <Item>
+          returns a new empty dictionary.
+
+        <Entry><<put>>
+          <Index class=tails/<<Dictionary>><And><<put>>/
+        <Synopsis>
+          <<{Dictionary.put ?+{Dictionary} ?+{LI} ?_{X}}>>
+        <Item>
+          sets the item in <<Dictionary>> under key&nbsp;<<LI>> to&nbsp;<<X>>.
+
+        <Entry><<get>>
+          <Index class=tails/<<Dictionary>><And><<get>>/
+        <Synopsis>
+          <<{Dictionary.get ?+{Dictionary} ?+{LI} ??{X}}>>
+        <Item>
+          returns the item of <<Dictionary>> under key&nbsp;<<LI>>.
+
+        <Entry><<condGet>>
+          <Index class=tails/<<Dictionary>><And><<condGet>>/
+        <Synopsis>
+          <<{Dictionary.condGet ?+{Dictionary} ?+{LI} ?_{X} ??{Y}}>>
+        <Item>
+          returns the item of <<Dictionary>> under key&nbsp;<<LI>>, if <<LI>>
+          is a valid key of <<Dictionary>>.  Otherwise returns&nbsp;<<X>>.
+
+        <Entry><<keys>>
+          <Index class=tails/<<Dictionary>><And><<keys>>/
+        <Synopsis>
+          <<{Dictionary.keys ?+{Dictionary} ??{LIs}}>>
+        <Item>
+          returns all currently valid keys of <<Dictionary>>.
+
+        <Entry><<entries>>
+          <Index class=tails/<<Dictionary>><And><<entries>>/
+        <Synopsis>
+          <<{Dictionary.entries ?+{Dictionary} ??{Ts}}>>
+        <Item>
+          returns the list of current entries of <<Dictionary>>.  An entry is
+          a pair <<LI#X>>, where <<LI>> is a valid key of <<Dictionary>> and
+          <<X>> the corresponding item.
+
+        <Entry><<items>>
+          <Index class=tails/<<Dictionary>><And><<items>>/
+        <Synopsis>
+          <<{Dictionary.items ?+{Dictionary} ??{Xs}}>>
+        <Item>
+          returns the list of all items currently in <<Dictionary>>.
+
+        <Entry><<remove>>
+          <Index class=tails/<<Dictionary>><And><<remove>>/
+        <Synopsis>
+          <<{Dictionary.remove ?+{Dictionary} ?+{LI}}>>
+        <Item>
+          if <<LI>> is a valid key of <<Dictionary>>, remove the corresponding
+          item.  Otherwise, do nothing.
+
+        <Entry><<removeAll>>
+          <Index class=tails/<<Dictionary>><And><<removeAll>>/
+        <Synopsis>
+          <<{Dictionary.removeAll ?+{Dictionary}}>>
+        <Item>
+          remove all entries currently in <<Dictionary>>.
+
+        <Entry><<member>>
+          <Index class=tails/<<Dictionary>><And><<member>>/
+        <Synopsis>
+          <<{Dictionary.member ?+{Dictionary} ?+{LI} ??{B}}>>
+        <Item>
+          tests whether <<LI>> is a valid key of <<Dictionary>>.
+
+        <Entry><<clone>>
+          <Index class=tails/<<Dictionary>><And><<clone>>/
+        <Synopsis>
+          <<{Dictionary.clone ?+{Dictionary1} ??{Dictionary2}}>>
+        <Item>
+          returns a new dictionary <<Dictionary2>> containing the same
+          keys and corresponding items as <<Dictionary1>>.
+
+        <Entry><<toRecord>>
+          <Index class=tails/<<Dictionary>><And><<toRecord>>/
+        <Synopsis>
+          <<{Dictionary.toRecord ?+{L} ?+{Dictionary} ??{R}}>>
+        <Item>
+          returns a record&nbsp;<<R>> with label&nbsp;<<L>> whose features
+          and their fields correspond to the keys and their entries of
+          <<Dictionary>>.
+      </List>
+
+  <Section>
+    <Title/Bit Arrays/
+    <P>
+      The module <Span class=index/<<BitArray>>/ contains procedures operating
+      on arrays of bits (&ie;, units of information each being either <Def/set/
+      or <Def/reset/).
+
+      <!--** BitArray operations -->
+
+  <Section>
+    <Title/Ports/
+    <P>
+      The module <Span class=index/<<Port>>/ contains procedures operating on
+      ports.
+      <List>
+        <Entry><Span class=index/<<IsPort>>/
+          <Index class=tails/<<Port>><And><<is>>/
+        <Synopsis>
+          <<{IsPort ?+{X} ??{B}}>>
+        <Item>
+          tests whether <<X>> is a port.
+
+        <Entry><Span class=index/<<NewPort>>/
+          <Index class=tails/<<Port>><And><<new>>/
+        <Synopsis>
+          <<{NewPort ?_{Xs} ??{Port}}>>
+        <Item>
+          returns a new port pointing to the stream&nbsp;<<Xs>>.
+
+        <Entry><Span class=index/<<Send>>/
+          <Index/<<Port>><And><<send>>/
+        <Synopsis>
+          <<{Send ?+{Port} ?_{X}}>>
+        <Item>
+          sends <<X>> to the port <<Port>>:  The stream pointed to by
+          <<Port>> is unified with <<X|_>> (in a newly created thread),
+          and the pointer advances to the stream's new tail.
+      </List>
+
+  <Section>
+    <Title/Locks/
+    <P>
+      The module <Span class=index/<<Lock>>/ contains procedures for locks.
+      <List>
+        <Entry><Span class=index/<<IsLock>>/
+          <Index class=tails/<<Lock>><And><<is>>/
+        <Synopsis>
+          <<{IsLock ?+{X} ??{B}}>>
+        <Item>
+          tests whether <<X>> is a lock.
+
+        <Entry><Span class=index/<<NewLock>>/
+          <Index class=tails/<<Lock>><And><<new>>/
+        <Synopsis>
+          <<{NewLock ??{LockC}}>>
+        <Item>
+          creates and returns a new lock.
+      </List>
+
+  <Section>
+    <Title/Classes/
+    <P>
+      The module <Span class=index/<<Class>>/ contains procedures operating
+      on classes.
+      <List>
+        <Entry><Span class=index/<<IsClass>>/
+          <Index class=tails/<<Class>><And><<is>>/
+        <Synopsis>
+          <<{Class.is ?+{X} ??{B}}>>
+        <Item>
+          tests whether <<X>> is a class.
+
+        <Entry><Span class=index/<<IsInstanceOf>>/
+          <Index/<<Class>><And><<isInstanceOf>>/
+        <Synopsis>
+          <<{Class.isInstanceOf ?+{O} ?+{C} ??{B}}>>
+        <Item>
+          The object&nbsp;<<O>> is an instance of the class&nbsp;<<C>>,
+          &ie;, <<C>>&nbsp;is above the class of&nbsp;<<O>> in the inheritance
+          hierarchy.
+
+        <Entry><<get>>
+          <Index class=tails/<<Class>><And><<get>>/
+        <Synopsis>
+          <<{Class.get ?+{O} ??{K}}>>
+        <Item>
+          binds <<K>> to the class of&nbsp;<<O>>.
+
+        <Entry><<methodNames>>
+          <Index class=tails/<<Class>><And><<methodNames>>/
+        <Synopsis>
+          <<{Class.methodNames ?+{K} ??{Ls}}>>
+        <Item>
+          <<Ls>> is the alphabetically sorted list of public (atomic) method
+          names that the instances of the class&nbsp;<<K>> can serve.
+          <!--** this is not true currently, names are also returned -->
+
+        <!--** attrNames, featNames, propNames, extendFeatures, hasProperty -->
+
+        <Entry><<parents>>
+          <Index class=tails/<<Class>><And><<parents>>/
+        <Synopsis>
+          <<{Class.parents ?+{K} ??{Ks}}>>
+        <Item>
+          binds <<Ks>> to the list of direct parents of&nbsp;<<K>> in the
+          order of increasing priority.  Note that parents are always classes,
+          and not objects.
+
+        <Entry><<getFeature>>
+          <Index class=tails/<<Class>><And><<getFeature>>/
+        <Synopsis>
+          <<{Class.getFeature ?+{K} ?+{L} ??{X}}>>
+        <Item>
+          returns the class feature&nbsp;<<X>> of&nbsp;<<K>> at&nbsp;<<L>>.
+
+        <Entry><<hasFeature>>
+          <Index class=tails/<<Class>><And><<hasFeature>>/
+        <Synopsis>
+          <<{Class.hasFeature ?+{K} ?+{L} ??{B}}>>
+        <Item>
+          tests whether <<K>> has class feature at&nbsp;<<L>>.
+      </List>
+
+  <Section>
+    <Title/Objects/
+    <P>
+      The module <Span class=index/<<Object>>/ contains procedures operating
+      on objects.
+    <P>
+      The system procedures that define the behaviour of Oz objects and classes
+      are also given in this section.
+      <List>
+        <Entry><Span class=index/<<IsObject>>/
+          <Index class=tails/<<Object>><And><<is>>/
+        <Synopsis>
+          <<{Object.is ?+{X} ??{B}}>>
+        <Item>
+          tests whether <<X>> is an object.
+
+        <Entry><Span class=index/<<New>>/
+          <Index class=tails/<<Object>><And><<new>>/
+        <Synopsis>
+          <<{New ?+{K} ?+{InitMessageR} ??{O}}>>
+        <Item>
+          Creates a new object from class&nbsp;<<K>> with initial message
+          <<InitMessageR>>.
+
+        <!--** ',', '@', '<-', exchange, send, 'class', meta -->
+      </List>
+    <SubSection class=unnumbered>
+      <Title/The <<BaseObject>> Class/
+      <P>
+        <Index class=tails/<<Object>><And><<base>>/
+        The class <Span class=index/<<BaseObject>>/ defines the following
+        method.
+        <List>
+          <Entry><<noop>>
+            <Index/<<Object>><And><<base>><And><<noop>>/
+          <Synopsis>
+            <<noop()>>
+          <Item>
+            does nothing.  It is defined as <<meth noop() skip end>>.
+        </List>
+    <SubSection class=unnumbered>
+      <Title/Classes for Master&slash;Slave Behaviour/
+      <P>
+        <Index class=tails/<<Object>><And><<master>>/
+        An instance <<MasterO>> of class <<Object.master>> becomes a
+        <Def/master/ of an <<Object.slave>> object when the latter
+        receives the message <<becomeSlave(MasterO)>>.
+      <Para class=apropos><Title/Methods for Masters/
+        <List>
+          <Entry><<init>>
+            <Index/<<Object>><And><<master>><And><<init>>/
+          <Synopsis>
+            <<init()>>
+          <Item>
+            initialization; mandatory for internal reasons.
+
+          <Entry><<getSlaves>>
+            <Index/<<Object>><And><<master>><And><<getSlaves>>/
+          <Synopsis>
+            <<getSlaves(??{SlaveOs})>>
+          <Item>
+            binds <<SlavesOs>> to the list of current slaves.
+        </List>
+      <P>
+        <Index class=tails/<<Object>><And><<slave>>/
+        An instance of <<Object.slave>> becomes a <Def/slave/ of an
+        <<Object.master>> object <<MasterO>> when it receives the message
+        <<becomeSlave(MasterO)>>.
+      <Para class=apropos><Title/Methods for Slaves/
+        <List>
+          <Entry><<becomeSlave>>
+            <Index/<<Object>><And><<slave>><And><<becomeSlave>>/
+          <Synopsis>
+            <<becomeSlave(?+{MasterO})>>
+          <Item>
+            makes <<self>> become a slave of <<MasterO>>.  <<self>> must
+            not yet be a slave of any object, else the error exception
+            <<object(slaveNotFree)>> is raised.
+
+          <Entry><<isFree>>
+            <Index/<<Object>><And><<slave>><And><<isFree>>/
+          <Synopsis>
+            <<isFree(??{B})>>
+          <Item>
+            tests whether <<self>> is not the slave of any object.
+
+          <Entry><<free>>
+            <Index/<<Object>><And><<slave>><And><<free>>/
+          <Synopsis>
+            <<free()>>
+          <Item>
+            frees <<self>>.  <<self>> must be the slave of some object,
+            else the error exception <<object(slaveAlreadyFree)>> is
+            raised.
+        </List>
+
+  <Section>
+    <Title/Functors/
+    <P>
+      The module <Span class=index/<<Functor>>/ contains procedures operating
+      on functors.
+      <List>
+        <Entry><<is>>
+          <Index class=tails/<<Functor>><And><<is>>/
+        <Synopsis>
+          <<{Functor.is ?+{X} ??{B}}>>
+        <Item>
+          tests whether <<X>> is a functor.
+
+        <Entry><<new>>
+          <Index class=tails/<<Functor>><And><<new>>/
+        <Synopsis>
+          <<{Functor.new ?+{T1} ?+{T2} ?+{P} ??{B}}>>
+        <Item>
+          returns a new functor with imports as described by&nbsp;<<T1>>,
+          exports as described by&nbsp;<<T2>> and body as performed
+          by&nbsp;<<P>>.
+          <!--** be a bit more verbose -->
+
+        <Entry><<getFeatures>>
+          <Index class=tails/<<Functor>><And><<getFeatures>>/
+        <Synopsis>
+          <<{Functor.getFeatures ?+{Functor} ??{LIs}}>>
+        <Item>
+          returns a list of the features exported by <<Functor>>.
+      </List>
+</Chapter>

@@ -1,0 +1,106 @@
+<!--
+  Translated to SGML by:
+     Daniel Simon, dansim@ps.uni-sb.de
+     Leif Kornstaedt, kornstae@ps.uni-sb.de
+-->
+
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % p.mix.local "|Em">
+<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Include Files -->
+<!ENTITY introduction SYSTEM "introduction.sgml">
+<!ENTITY typestruct SYSTEM "typestruct.sgml">
+<!ENTITY values SYSTEM "values.sgml">
+<!ENTITY numbers SYSTEM "numbers.sgml">
+<!ENTITY literals SYSTEM "literals.sgml">
+<!ENTITY records SYSTEM "records.sgml">
+<!ENTITY text SYSTEM "text.sgml">
+<!ENTITY proccells SYSTEM "proccells.sgml">
+<!ENTITY chunks SYSTEM "chunks.sgml">
+<!ENTITY control SYSTEM "control.sgml">
+<!ENTITY infix SYSTEM "infix.sgml">
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY Oz "Oz">
+
+<!-- Processing Instructions -->
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY resp PI "resp">
+<!ENTITY eg PI "eg">
+<!ENTITY etc PI "etc">
+<!ENTITY LaTeX PI "LaTeX">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <Meta name="html.split" value="chapter.introduction">
+    <Meta name="html.split" value="chapter.typestruct">
+    <Meta name="html.split" value="chapter.values">
+    <Meta name="html.split" value="chapter.numbers">
+    <Meta name="html.split" value="chapter.literals">
+    <Meta name="html.split" value="chapter.records">
+    <Meta name="html.split" value="chapter.text">
+    <Meta name="html.split" value="chapter.proccells">
+    <Meta name="html.split" value="chapter.chunks">
+    <Meta name="html.split" value="chapter.control">
+    <Meta name="html.split" value="chapter.infix">
+    <Meta name="html.split.bib" value="">
+    <Meta name="html.split.index" value="">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+
+    <Title/The &Oz; Base Environment/
+    <Author.Extern to="author.db" key="Martin.Henz">
+    <Author.Extern to="author.db" key="Martin.Mueller">
+    <Author.Extern to="author.db" key="Christian.Schulte">
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Comic>
+      <Picture.Choice>
+        <Picture.Extern to="base.gif" type=gif>
+      </Picture.Choice>
+    <Abstract>
+      <P.silent><!--**-->
+        &Oz; is a concurrent language providing for functional,
+        object-oriented, and constraint programming.  The &Oz; Base
+        Environment is part of the &Oz; language specification and contains
+        procedures that are made generally available to the programmer.
+        A thorough knowledge of the &Oz; Base Environment is highly
+        recommended for effective programming in &Oz;.
+      <P>
+        The &Oz; Base Environment provides the basic operations on the values
+        of the &Oz; universe and a set of procedures whose use makes for more
+        elegant and readable programs.  It provides high-level access to
+        programming with threads, to real-time programming and to data
+        structures such as arrays and dictionaries.
+    </Abstract>
+  <Body proglang=oz>
+    &introduction;
+    &typestruct;
+    &values;
+    &numbers;
+    &literals;
+    &records;
+    &text;
+    &proccells;
+    &chunks;
+    &control;
+    &infix;
+  <Back>
+    <Bib.Extern id="mozart-opi" to="mozart.bib" key="Mozart-OPI">
+    <Bib.Extern id="kernighan88" to="base.bib" key="kernighan88">
+    <Bib.Extern id="ISO_8859_1" to="base.bib" key="ISO_8859_1">
+</Book>
