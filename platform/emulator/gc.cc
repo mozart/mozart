@@ -1745,6 +1745,7 @@ void OZ_updateLocalHeapTerm(TaggedRef & to) {
 // treated and references to variables are properly updated
 void AM::gc(int msgLevel)
 {
+  //return;
 #ifdef VERBOSE
   verbReopen ();
 #endif
@@ -1808,7 +1809,7 @@ void AM::gc(int msgLevel)
   Assert(gcStack.isEmpty());
 
   GT.gcGNameTable();
-  gcSiteTable();
+  //gcSiteTable();
   gcPerdioFinal();
   Assert(gcStack.isEmpty());
 
