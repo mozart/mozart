@@ -553,7 +553,12 @@ local
       [] getMaxNumberOfErrors(?N) then
 	 'get maximal number of errors'
       [] setMaxNumberOfErrors(N) then
-	 'set maximal number of errors to '#{Value.toVirtualString N 0 0}
+	 'set maximal number of errors to '#N
+      [] getBaseURL(?A) then
+	 'get base URL for computed functors'
+      [] setBaseURL(X) then
+	 'set base URL for computed functors to '#
+	 case X of unit then 'unit' else '"'#X#'"' end
       [] addToEnv(PrintName Value) then
 	 'add variable '#{PrintNameToVirtualString PrintName}#
 	 ' to environment'
@@ -579,6 +584,8 @@ local
 	 'feed file "'#VS#'"'
       [] ping(?HereIAm) then
 	 'ping'
+      [] ping(?HereIAm X) then
+	 'ping, returning "'#{Value.toVirtualString X 1 1}#'"'
       else
 	 'unknown query ('#{Value.toVirtualString {Label M} 0 0}#')'
       end
@@ -735,6 +742,7 @@ in
 		     {self.Book toTop(self.Messages)}
 		  [] pong(_) then skip
 		  [] insert(_ _) then skip
+		  [] baseURL(_) then skip
 		  else {self M}
 		  end
 	       end
