@@ -341,17 +341,17 @@ OZ_Term OZ_termType(OZ_Term term)
 
 int OZ_getLowPrio(void)
 {
-  return OZMIN_PRIORITY;
+  return LOW_PRIORITY;
 }
 
 int OZ_getMediumPrio(void)
 {
-  return DEFAULT_PRIORITY;
+  return MID_PRIORITY;
 }
 
 int OZ_getHighPrio(void)
 {
-  return OZMAX_PRIORITY;
+  return HI_PRIORITY;
 }
 
 int OZ_smallIntMin(void)

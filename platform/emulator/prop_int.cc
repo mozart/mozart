@@ -174,9 +174,9 @@ void oz_pushToLPQ(Board *bb, Propagator * prop)
   if (lpq) {
     lpq->enqueue(prop);
   } else {
-    Thread * lpq_thr = oz_mkLPQ(bb, PROPAGATOR_PRIORITY);
+    Thread * lpq_thr = oz_mkLPQ(bb, DEFAULT_PRIORITY);
     bb->setLocalPropagatorQueue(new LocalPropagatorQueue(lpq_thr, prop));
-    am.threadsPool.scheduleThreadInline(lpq_thr, PROPAGATOR_PRIORITY);
+    am.threadsPool.scheduleThreadInline(lpq_thr, DEFAULT_PRIORITY);
 #ifdef DEBUG_THREADCOUNT
     existingLTQs += 1;
     //    printf("+LTQ=%p\n", localPropagatorQueue); fflush(stdout);

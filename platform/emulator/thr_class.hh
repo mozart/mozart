@@ -212,11 +212,11 @@ public:
   Object *getSelf()       { return self; }
 
   int getPriority() {
-    Assert(state.pri >= OZMIN_PRIORITY && state.pri <= OZMAX_PRIORITY);
+    Assert(state.pri >= LOW_PRIORITY && state.pri <= HI_PRIORITY);
     return state.pri;
   }
   void setPriority(int newPri) {
-    Assert(state.pri >= OZMIN_PRIORITY && state.pri <= OZMAX_PRIORITY);
+    Assert(state.pri >= LOW_PRIORITY && state.pri <= HI_PRIORITY);
     state.pri = newPri;
   }
 
