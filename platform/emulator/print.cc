@@ -96,6 +96,7 @@
 #include "var_of.hh"
 #include "var_ext.hh"
 #include "susp_queue.hh"
+#include "sort.hh"
 
 class Indent {
 public:
@@ -424,6 +425,11 @@ void OzVariable::printLongStream(ostream &stream, int depth, int offset)
 
 } // printLongStream(OzVariable)
 
+inline
+Bool order_taggedref_by_feat(const TaggedRef& a, const TaggedRef& b) {
+  return featureCmp(a,b) <= 0;
+}
+
 
 // Non-Name Features are output in alphanumeric order (ints before atoms):
 void DynamicTable::printStream(ostream &stream, int depth)
@@ -456,7 +462,7 @@ void DynamicTable::printStream(ostream &stream, int depth)
             arr[ai++]=tmplit;
     }
     // Sort the Atoms according to printName:
-    inplace_quicksort(arr, arr+(nAtomOrInt-1));
+    fastsort<TaggedRef,order_taggedref_by_feat>(arr,nAtomOrInt);
     // Output the Atoms first, in order:
     for (ai=0; ai<nAtomOrInt; ai++) {
       stream << " ";

@@ -32,9 +32,7 @@
  *
  */
 
-#ifdef USE_SORT_TEMPLATE
 #include "sort.hh"
-#endif
 
 #include "boundsalldist.hh"
 
@@ -57,7 +55,6 @@ public:
   int pos;
 };
 
-#ifdef USE_SORT_TEMPLATE
 inline
 Bool order_by_max_inc(const varinfo &x, const varinfo &y) {
   return x.max < y.max;
@@ -67,64 +64,6 @@ inline
 Bool order_by_min_dec(const varinfo &x, const varinfo &y) {
   return x.min > y.min;
 }
-#else
-inline
-void swap_varinfo(varinfo * vi, int i, int j) {
-  varinfo v=vi[i]; vi[i]=vi[j]; vi[j]=v;
-}
-
-static
-void sort_max(varinfo * x, int n)
-{
- next:
-  if (n < 3) {
-    if ((n == 2) && (x[1].max < x[0].max))
-      swap_varinfo(x,0,1);
-  } else {
-    int y = x[n >> 1].max;
-    int i = -1;
-    int j = n;
-
-    while (1) {
-      do j--; while (x[j].max > y);
-      do i++; while (y > x[i].max);
-      if (i >= j)
-        break;
-      swap_varinfo(x,i,j);
-    };
-
-    if (j < n-2) sort_max(x+j+1, n-j-1);
-    n = j+1;
-    goto next;
-  }
-}
-
-static
-void sort_min(varinfo * x, int n)
-{
- next:
-  if (n < 3) {
-    if ((n == 2) && (x[1].min > x[0].min))
-      swap_varinfo(x,0,1);
-  } else {
-    int y = x[n >> 1].min;
-    int i = -1;
-    int j = n;
-
-    while (1) {
-      do j--; while (x[j].min < y);
-      do i++; while (y < x[i].min);
-      if (i >= j)
-        break;
-      swap_varinfo(x,i,j);
-    };
-
-    if (j < n-2) sort_min(x+j+1, n-j-1);
-    n = j+1;
-    goto next;
-  }
-}
-#endif
 
 OZ_Return BoundsDistinctPropagator::propagate(void)
 {
@@ -157,11 +96,7 @@ OZ_Return BoundsDistinctPropagator::propagate(void)
   }
 
   // Sort variables in ascending order of max
-#ifdef USE_SORT_TEMPLATE
   fastsort<varinfo,order_by_max_inc>(xi, n);
-#else
-  sort_max(xi, n);
-#endif
 
   // Propagate lower bounds
   for (i = 0; i < n; i++) {
@@ -192,11 +127,7 @@ OZ_Return BoundsDistinctPropagator::propagate(void)
   }
 
   // Sort variables in descending order of min
-#ifdef USE_SORT_TEMPLATE
   fastsort<varinfo,order_by_min_dec>(xi, n);
-#else
-  sort_min(xi, n);
-#endif
 
   // Propagate upper bounds
   for (i = 0; i < n; i++) {
