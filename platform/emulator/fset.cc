@@ -33,6 +33,7 @@
 #include "fset.hh"
 #include "tagged.hh"
 #include "value.hh"
+#include "bits.hh"
 
 //*****************************************************************************
 #include <stdarg.h>
@@ -86,34 +87,8 @@ LTuple * mkListEl(LTuple * &h, LTuple * a, OZ_Term el)
 
 
 inline 
-unsigned char * initNumOfBitsInHalfWord(void)
-{
-  const unsigned int maxHalfWord = 0xffff;
-  unsigned char * r = new unsigned char[maxHalfWord+1];
-  Assert(r != NULL);
-  for(unsigned int i = 0; i <= maxHalfWord; i++) {
-    r[i] = 0;
-    int j = i;
-    while (j > 0) {
-      if (j & 1)
-	r[i]++;
-      j >>= 1;
-    }
-  }
-  return r;
-}
-
-inline 
-int findBitsSet(int high, const int * bv)
-{
-  static unsigned char * numOfBitsInHalfWord = initNumOfBitsInHalfWord();
-  int s, i;
-  for (s = 0, i = high; i--; ) {
-    s += numOfBitsInHalfWord[unsigned(bv[i]) & 0xffff];
-    s += numOfBitsInHalfWord[unsigned(bv[i]) >> 16];
-  }    
-  
-  return s;
+int findBitsSet(const int high, const int * bv) {
+  return get_num_of_bits(high, bv);
 }
 
 
