@@ -25,6 +25,7 @@ ENV2TYPE	= $(PERL) $(SRCTOP)/share/lib/env2type
 
 OZFLAGS		=
 OZBATCH		= @OZBATCH@
+OZFC		= $(OZBATCH) -DLILO -c
 
 COMPILE		= $(OZBATCH) $(OZFLAGS) -c
 EXEC		= $(OZBATCH) $(OZFLAGS)
@@ -112,6 +113,10 @@ COMPONENTS = \
 	CompilerPanel.ozc Panel.ozc Browser.ozc Explorer.ozc Emacs.ozc \
 	Ozcar.ozc Profiler.ozc Gump.ozc GumpScanner.ozc GumpParser.ozc
 
+FUNCTORS = \
+	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
+	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf
+
 TOOLSCOMPONENTS = $(COMPONENTS:%=$(OZTOOLS)/%)
 CACHECOMPONENTS = $(COMPONENTS:%=$(CACHEDIR)/%)
 CACHETYCS	= $(TYCS:tyc/%=$(CACHEDIR)/%)
@@ -126,9 +131,11 @@ IMAGES1 = \
 	browserMIcon.xbm browserIcon.xbm stop.xbm
 IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
 
-.PHONY: all bootstrap
+.PHONY: all bootstrap lilo
 
 all: Makefile $(COMPONENTS) $(SYSLETS)
+
+lilo: $(FUNCTORS)
 
 Makefile: Makefile.in ../config.status
 	cd .. && ./config.status
@@ -153,6 +160,9 @@ tyc/%.tyc: tyc/%.typ
 
 %.ozc: %.oz
 	$(COMPILE) $< -o $@
+
+%.ozf: %.oz
+	$(OZFC) $< -o $@
 
 CompilerPanel.ozc: $(COMPILERPANELSRC) Browser.env CompilerPanel.env
 
@@ -181,6 +191,31 @@ GumpParser.ozc: $(GUMPPARSERSRC) GumpParser.env
 
 opi: MakeOPI.oz $(TYCS)
 	$(EXEC) -l AP $<
+
+
+
+CompilerPanel.ozf: $(COMPILERPANELSRC) Browser.env CompilerPanel.env
+
+Panel.ozf: $(PANELSRC) Panel.env
+
+Browser.ozf: $(BROWSERSRC) Browser.env
+
+Explorer.ozf: $(EXPLORERSRC) Browser.env Explorer.env
+
+Emacs.ozf: $(EMACSSRC) Emacs.env
+
+Ozcar.ozf: $(OZCARSRC) Browser.env Emacs.env Ozcar.env
+
+Profiler.ozf: $(PROFILERSRC) Browser.env Emacs.env Profiler.env
+
+Gump.ozf: $(GUMPSRC) $(SRCTOP)/share/lib/compiler/TupleSyntax.oz \
+	$(SRCTOP)/share/lib/compiler/Misc.oz \
+	$(SRCTOP)/share/lib/compiler/FormatStrings.oz Gump.env
+
+GumpScanner.ozf: $(GUMPSCANNERSRC) GumpScanner.env
+
+GumpParser.ozf: $(GUMPPARSERSRC) GumpParser.env
+
 
 #---------------------------------------------------------------------
 # Installation
