@@ -47,7 +47,9 @@ import
    FSP at 'x-oz://boot/FSP'
    
    FD(decl list sum)
-   
+
+   ErrorRegistry(put)
+
 export
    include:      FSIsIncl
    exclude:      FSIsExcl
@@ -380,7 +382,9 @@ define
 	    in
 	       {FSDistGeneric L Order Filter Element RRobin Select Proc}
 	    else
-	       raise 'Error in FSDistribute'#K end
+	       {Exception.raiseError
+		fs(unknownDistributionStrategy
+		   'FS.distribute' [K Vs] 1)}
 	    end 
 	 end 
       end    
@@ -665,5 +669,25 @@ define
 	       convex:
 		  FSConvex)
    
+   %%
+   %% Register error formatter 
+   %%
+
+   {ErrorRegistry.put fs
+    fun {$ E}
+       T = 'error in finite set system'
+    in
+       case E
+       of fs(unknownDistributionStrategy A Xs P) then
+	  error(kind: T
+		msg: 'Unknown distribution strategy encountered.'
+		items: [hint(l:'At argument' m:P)
+			hint(l:'In statement' m:apply(A Xs))])
+       else
+	  error(kind: T
+		items: [line(oz(E))])
+       end
+    end}
+
 
 end
