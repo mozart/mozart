@@ -47,6 +47,8 @@ enum OZ_Registered_Extension_Id {
   OZ_E_BITARRAY,
   OZ_E_BITSTRING,
   OZ_E_BYTESTRING,
+  OZ_E_THREAD,
+  OZ_E_HEAPCHUNK,
   OZ_E_LAST,
 };
 

@@ -617,7 +617,6 @@ const int Co_Mask = (1<<Co_Bits)-1;
 enum TypeOfConst {
   Co_BigInt,
   Co_Foreign_Pointer,
-  Co_Thread,
   Co_Abstraction,
   Co_Builtin,
   Co_Cell,
@@ -630,7 +629,6 @@ enum TypeOfConst {
   Co_Object,
   Co_Port,
   Co_Chunk,
-  Co_HeapChunk,
   Co_Array,
   Co_Dictionary,
   Co_Lock,
@@ -1060,42 +1058,6 @@ public:
     if(info==NULL) return NO;
     return OK;}
   Bool threadIsPending(Thread* th);
-};
-
-
-
-/*===================================================================
- * HeapChunk
- *=================================================================== */
-
-class HeapChunk: public ConstTerm {
-private:
-  size_t chunk_size;
-  void * chunk_data;
-  void * copyChunkData(void) {
-    char * data = (char *) allocate(chunk_size);
-    for (int i = chunk_size; i--; )
-      data[i] = ((char *) chunk_data)[i];
-    return (void *) data;
-  }
-  void * allocate(int size) {
-    COUNT1(sizeHeapChunks,size);
-    return (void *) alignedMalloc(size, sizeof(double));
-  }
-public:
-  OZPRINT;
-  NO_DEFAULT_CONSTRUCTORS(HeapChunk);
-  HeapChunk(int size)
-  : ConstTerm(Co_HeapChunk), chunk_size(size), chunk_data(allocate(size)) 
-  {
-    COUNT1(sizeHeapChunks,sizeof(HeapChunk));
-  }
-
-  size_t getChunkSize(void) { return chunk_size; }
-
-  void * getChunkData(void) { return chunk_data; }
-
-  HeapChunk * gc(void);
 };
 
 /*===================================================================
