@@ -17,6 +17,7 @@
 #include "genvar.hh"
 #include "fdbuilti.hh"
 #include "builtins.hh"
+#include "ip.hh"
 
 AM am;
 
@@ -305,7 +306,12 @@ void AM::init(int argc,char **argv)
     // --> make sure that we check for input from compiler
     setSFlag(IOReady);
   } else {
-    OZ_Term v=oz_newVariable();
+    if (!perdioInit()) {
+      fprintf(stderr,"Perdio initialization for URL %s failed\n",url);
+      exit(1);
+    }
+
+    OZ_Term v=makeTaggedRef(newTaggedUVar(am.currentBoard));
     if (loadURL(url,v)!=PROCEED) {
       fprintf(stderr,"Loading from URL %s failed\n",url);
       exit(1);

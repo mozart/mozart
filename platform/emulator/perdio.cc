@@ -1182,6 +1182,8 @@ public:
 
   void makePersistent();
   void addCredit(Credit cin){ 
+    Credit cur=getCredit();
+    if (cur==INFINITE_CREDIT) return;
     Assert(cin!=INFINITE_CREDIT);
     PD((CREDIT,"borrow add s:%s o:%d add:%d to:%d",
        pSite(getNetAddress()->site),
@@ -1194,7 +1196,6 @@ public:
       PERDIO_DEBUG_DO(DEBUG_pendLink(pendLink));
       } // fall through with updated cin
     addToCredit(cin);
-    Credit cur=getCredit();
     if(cur>MAX_BORROW_CREDIT_SIZE){
       giveBackCredit(cur-MAX_BORROW_CREDIT_SIZE);
       setCredit(MAX_BORROW_CREDIT_SIZE);}
@@ -3255,6 +3256,7 @@ loop:
 	*ret = makeTaggedConst(sc);
 	addGName(gname,*ret);
       } else if (!isSChunk(deref(*ret))) {
+	// mm2: share the follwing code DIF_CHUNK, DIF_CLASS, DIF_PROC!
 	DEREF(*ret,chPtr,_1);
 	PerdioVar *pv;
 	if (!isPerdioVar(*ret) || !(pv=tagged2PerdioVar(*ret))->isURL()) {
@@ -4511,6 +4513,11 @@ OZ_C_proc_end
     PD((USER,"startSite succeeded"));					  \
   }
 
+int perdioInit()
+{
+  return ipInit(0,siteReceive) ? OK : NO;
+}
+
 OZ_C_proc_begin(BIstartServer,2)
 {
   OZ_declareIntArg(0,port);
@@ -4645,6 +4652,37 @@ public:
   {}
 };
 
+OZ_C_proc_begin(BIexport,2)
+{
+  OZ_declareArg(0,in);
+  OZ_declareArg(1,out);
+
+  INIT_IP(0);
+
+  OwnerEntry *oe;
+  int OTI=ownerTable->newOwner(oe);
+  oe->mkRef(in);
+  oe->makePersistent();
+
+  ip_address ip;
+  port_t port; 
+  time_t ts;
+  getSiteFields(mySite,ip,port,ts); 
+
+  static char url[100];
+
+  sprintf(url,"ozp://%u.%u.%u.%u:%u/%u/%u",
+	  (ip/(256*256*256))%256,
+	  (ip/(256*256))%256,
+	  (ip/256)%256,
+	  ip%256,
+	  port, ts, OTI);
+
+  return oz_unifyAtom(out,url);
+}
+OZ_C_proc_end
+
+
 OZ_C_proc_begin(BIsave,2)
 {
   OZ_declareArg(0,in);
@@ -4707,61 +4745,129 @@ int loadURL(TaggedRef url, OZ_Term out)
 
 int loadURL(char *url, OZ_Term out)
 {
-  if (strncmp(url,"file:",5)!=0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"only \"file:\" allowed",0);
-  }
+  switch (url[0]) {
+  case 'f':
+    {
+      if (strncmp(url,"file:",5)!=0) goto bomb;
 
-  char *filename = url+5;
+      char *filename = url+5;
 
-  INIT_IP(0);
+      int fd = open(filename,O_RDONLY);
+      if (fd < 0) {
+	return oz_raise(E_ERROR,OZ_atom("perdio"),"open",1,
+			oz_atom(OZ_unixError(errno)));
+      }
 
-  int fd = open(filename,O_RDONLY);
-  if (fd < 0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"open",1,
-		    oz_atom(OZ_unixError(errno)));
-  }
+      ByteStream *bs=bufferManager->getByteStream();
+      bs->getSingle();
 
-  ByteStream *bs=bufferManager->getByteStream();
-  bs->getSingle();
+      int max;
+      BYTE *pos=bs->initForRead(max);
+      int len=0;
 
-  int max;
-  BYTE *pos=bs->initForRead(max);
-  int len=0;
+      while (TRUE) {
+	int ret=osread(fd,pos,max);
+	if (ret < 0) {
+	  if (errno==EINTR) continue;
+	  return oz_raise(E_ERROR,OZ_atom("perdio"),"read",1,
+			  oz_atom(OZ_unixError(errno)));
+	}
+	if (ret < max) {
+	  bs->afterRead(ret);
+	  break;
+	}
+	bs->afterRead(max);
+	pos=bs->beginRead(max);
+      }
 
-  while (TRUE) {
-    int ret=osread(fd,pos,max);
-    if (ret < 0) {
-      if (errno==EINTR) continue;
-      return oz_raise(E_ERROR,OZ_atom("perdio"),"read",1,
-		      oz_atom(OZ_unixError(errno)));
+      bs->beforeInterpret(0);
+
+      bs->unmarshalBegin();
+
+      OZ_Term val = unmarshallTerm(bs);
+
+      bs->unmarshalEnd();
+
+      bs->afterInterpret();    
+
+      bufferManager->freeByteStream(bs);
+      SiteUnify(val,out);
+      return PROCEED;
     }
-    if (ret < max) {
-      bs->afterRead(ret);
-      break;
+  case 'o':
+    {
+      if (strncmp(url,"ozp://",6)!=0) goto bomb;
+      url+=6;
+
+      char *host;
+      port_t port;
+      time_t timestamp;
+      int OTI;
+      {
+	char *last = index(url,':');
+
+	if (!last) goto bomb;
+
+	int len=last-url;
+	host=new char[len+1];
+	for (int i=0; i<len; i++) {
+	  host[i]=url[i];
+	}
+	host[len]=0;
+	url+=len+1;
+      }
+      {
+	char *last;
+	unsigned long int p=strtoul(url,&last,10);
+	if (*last!='/') goto bomb;
+	url=last+1;
+	port = p;
+      }
+      {
+	char *last;
+	unsigned long int t=strtoul(url,&last,10);
+	if (*last!='/') goto bomb;
+	url=last+1;
+	timestamp=t;
+      }
+      {
+	char *last;
+	unsigned long int oti=strtoul(url,&last,10);
+	if (*last!=0) goto bomb;
+	OTI=oti;
+      }
+      
+      Site *sd;
+      if (importSite(host,port,timestamp,sd)!=NET_OK) {
+	// mm2
+	goto bomb;
+      }
+      NetAddress na = NetAddress(sd,OTI); 
+      BorrowEntry *b = borrowTable->find(&na);
+      if (b!=NULL) {
+	b->addCredit(INFINITE_CREDIT);
+	return oz_unify(out,b->getValue());
+      }
+      int bi=borrowTable->newBorrow(INFINITE_CREDIT,sd,OTI);
+      b=borrowTable->getBorrow(bi);
+      PerdioVar *pvar = new PerdioVar(bi);
+      TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
+      b->mkVar(val);
+      sendRegister(b);
+      return oz_unify(out,val);
     }
-    bs->afterRead(max);
-    pos=bs->beginRead(max);
   }
-
-  bs->beforeInterpret(0);
-
-  bs->unmarshalBegin();
-
-  OZ_Term val = unmarshallTerm(bs);
-
-  bs->unmarshalEnd();
-
-  bs->afterInterpret();    
-
-  bufferManager->freeByteStream(bs);
-  SiteUnify(val,out);
-  return PROCEED;
+bomb:
+  return oz_raise(E_ERROR,OZ_atom("perdio"),"url protocol error",1,
+		  oz_atom(url));
 }
 
 OZ_C_proc_begin(BIload,2)
 {
   OZ_declareVirtualStringArg(0,url);
   OZ_declareArg(1,out);
+
+  INIT_IP(0);
 
   return loadURL(url,out);
 }
@@ -4777,6 +4883,7 @@ BIspec perdioSpec[] = {
 
   {"save",    2, BIsave, 0},
   {"load",    2, BIload, 0},
+  {"export",    2, BIexport, 0},
 
 #ifdef DEBUG_PERDIO
   {"dvset",    2, BIdvset, 0},
