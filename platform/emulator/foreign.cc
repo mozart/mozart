@@ -178,11 +178,72 @@ int OZ_intToC(OZ_Term term)
   return 0;
 }
 
-/* NOTE: sign is '~' */
 char *OZ_toC(OZ_Term term)
 {
-  // OZ_warning("toC not fully impl");
-  return tagged2String(term);
+  if (term == makeTaggedNULL()) {
+    return "*** NULL TERM ***";
+  }
+
+  DEREF(term,termPtr,tag)
+  switch(tag) {
+  case UVAR:
+    return tagged2String(term);
+//    stream << "UV@" << termPtr;
+    break;
+  case SVAR:
+    return tagged2String(term);
+//    tagged2SVar(term)->print(stream,depth,offset);
+    break;
+  case CVAR:
+    return tagged2String(term);
+//    tagged2CVar(term)->print(stream, depth, offset);
+    break;
+  case STUPLE:
+    return tagged2String(term);
+//    tagged2STuple(term)->print(stream,depth,offset);
+    break;
+  case SRECORD:
+    return tagged2String(term);
+//    tagged2SRecord(term)->print(stream,depth,offset);
+    break;
+  case LTUPLE:
+    return tagged2String(term);
+//    tagged2LTuple(term)->print(stream,depth,offset);
+    break;
+  case ATOM:
+    {
+      Atom *a = tagged2Atom(term);
+      char *s = a->getPrintName();
+      if (a->isXName()) {
+	sprintf(TmpBuffer,"*%s-0x%x*",s,a);
+	return ozstrdup(TmpBuffer);
+      } else {
+	return ozstrdup(s);
+      }
+    }
+  case FLOAT:
+    {
+      float f = floatValue(term);
+      sprintf(TmpBuffer,"%e",f);
+      return ozstrdup(TmpBuffer);
+    }
+  case BIGINT:
+    {
+      BigInt *b = tagged2BigInt(term);
+      return b->stringMinus();
+    }
+  case SMALLINT:
+    {
+      int value = smallIntValue(term);
+      sprintf(TmpBuffer,"%s",value);
+    }
+    break;
+  case CONST:
+    return tagged2String(term);
+//    tagged2Const(term)->print(stream,depth,offset);
+    break;
+  }
+  return ozstrdup("unknown term");
 }
 
 
