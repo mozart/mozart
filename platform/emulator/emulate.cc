@@ -441,7 +441,7 @@ TRUE_##INSTR:
 #define DISPATCH(INC) {				\
   intlong aux = *(PC+INC);			\
   INCFPC(INC);					\
-  goto* (void*) (aux|textBase);			\
+  goto* FROM_TEXTBASE(aux);			\
 }
 #elif defined(_MSC_VER)
 #define DISPATCH(INC) {				\
@@ -453,7 +453,7 @@ TRUE_##INSTR:
 #else
 #define DISPATCH(INC) {				\
   INCFPC(INC);					\
-  goto* (void*) ((*PC)|textBase);		\
+  goto* FROM_TEXTBASE(*PC);			\
 }
 #endif
 

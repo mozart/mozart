@@ -71,7 +71,11 @@
  * needed for threaded code
  */
 
+#define FROM_TEXTBASE(AUX) ((void*) (AUX))
+/* originally it was (equivalent to):
 #define textBase 0x0
+#define FROM_TEXTBASE(AUX) ((void*) ((AUX)|textBase))
+*/
 
 /* convert an uint32 to a pointer and vice versa */
 #define _ToPointer(i) ((void*) (i)) 
