@@ -42,8 +42,6 @@
 #include "runtime.hh"
 #include "perdio.hh"
 
-#include "tcl_tk.hh"
-
 #include "genvar.hh"
 
 #include "fdhook.hh"
@@ -1781,8 +1779,6 @@ void AM::gc(int msgLevel)
   OZ_collectHeapTerm(defaultExceptionHdl,defaultExceptionHdl);
   OZ_collectHeapTerm(opiCompiler,opiCompiler);
   OZ_collectHeapTerm(debugStreamTail,debugStreamTail);
-
-  gc_tcl_sessions();
 
   extRefs = extRefs->gc();
   

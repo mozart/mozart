@@ -48,42 +48,42 @@ CREATEDOTHERS = \
 	fsbuilti.tbl fsbuilti.dcl
 
 CREATEDSRCS = \
-	copycode.cc opcodes.cc\
+	copycode.cc opcodes.cc \
 	scanner.cc parser.cc version.cc initffuns.cc
 
 CREATEDFILES = $(CREATEDOTHERS) $(CREATEDSRCS)
 
 PEANUTSFILE = peanuts.cc
 PEANUTS = \
-	am.cc genvar.cc	indexing.cc fdhook.cc\
-	taskstk.cc mem.cc assemble.cc\
-	fdprofil.cc statisti.cc fdgenvar.cc\
-	codearea.cc debug.cc lps.cc solve.cc\
-	variable.cc thrqueue.cc thrspool.cc\
-	perdiovar.cc lazyvar.cc\
+	am.cc genvar.cc	indexing.cc fdhook.cc \
+	taskstk.cc mem.cc assemble.cc \
+	fdprofil.cc statisti.cc fdgenvar.cc \
+	codearea.cc debug.cc lps.cc solve.cc \
+	variable.cc thrqueue.cc thrspool.cc \
+	perdiovar.cc lazyvar.cc \
 	print.cc
 
 CXXSRCS = \
-	actor.cc base.cc board.cc thread.cc\
-	dictionary.cc stack.cc susplist.cc\
-	cpbag.cc tagged.cc value.cc\
-	cont.cc ozconfig.cc trail.cc\
+	actor.cc base.cc board.cc thread.cc \
+	dictionary.cc stack.cc susplist.cc \
+	cpbag.cc tagged.cc value.cc \
+	cont.cc ozconfig.cc trail.cc \
 	foreign.cc \
-	ofgenvar.cc genhashtbl.cc\
-	ozostream.cc runtime.cc unix.cc\
-	tcl_tk.cc metavar.cc perdio.cc\
-	urlc.cc iso-ctype.cc hashtbl.cc\
-	os.cc emulate.cc scheduler.cc builtins.cc\
-	components.cc network.cc virtual.cc\
-	comm.cc marshaler.cc liveness.cc gc.cc\
+	ofgenvar.cc genhashtbl.cc \
+	ozostream.cc runtime.cc unix.cc \
+	metavar.cc perdio.cc \
+	urlc.cc iso-ctype.cc hashtbl.cc \
+	os.cc emulate.cc scheduler.cc builtins.cc \
+	components.cc network.cc virtual.cc \
+	comm.cc marshaler.cc liveness.cc gc.cc \
 	vprops.cc promise.cc wif.cc
 
 FDSRCS =\
-	fdbuilti.cc fdomn.cc fdcore.cc\
+	fdbuilti.cc fdomn.cc fdcore.cc \
 	fdcd.cc fdbvar.cc fddist.cc 
 
 CPISRCS =\
-	cpi.cc cpi_fd.cc cpi_prop.cc\
+	cpi.cc cpi_fd.cc cpi_prop.cc \
 	cpi_fs.cc cpi_expect.cc cpi_misc.cc\
 	cpi_stream.cc cpi_profile.cc
 
