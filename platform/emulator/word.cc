@@ -128,8 +128,8 @@ inline static Word *OZ_WordToC(OZ_Term t) {
 #define OZ_RETURN_WORD(size, value) OZ_RETURN(OZ_word(size, value))
 
 static
-OZ_Term unmarshalWord(void *p) {
-  MarshalerBuffer *bs = (MarshalerBuffer *) p;
+OZ_Term unmarshalWord(MarshalerBuffer *bs)
+{
 #ifdef USE_FAST_UNMARSHALER
   int size = unmarshalNumber(bs);
   int value = unmarshalNumber(bs);
