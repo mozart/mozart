@@ -1977,10 +1977,16 @@ void ConstTerm::gcConstRecurse()
   case Co_Cell:
     {
       Cell *c = (Cell *) this;
-
       c->home = c->home->gcBoard();
-
       gcTagged(c->val,c->val);
+      break;
+    }
+    
+  case Co_Port:
+    {
+      Port *p = (Port *) this;
+      p->home = p->home->gcBoard();
+      gcTagged(p->strm,p->strm);
       break;
     }
     
@@ -2087,6 +2093,12 @@ ConstTerm *ConstTerm::gcConstTerm()
     CheckLocal((Cell *) this);
     sz = sizeof(Cell);
     COUNT(cell);
+    break;
+
+  case Co_Port:
+    CheckLocal((Port *) this);
+    sz = sizeof(Port);
+    COUNT(port);
     break;
 
   case Co_Space:
