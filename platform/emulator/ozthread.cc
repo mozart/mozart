@@ -21,18 +21,17 @@
  *
  */
 
-#include "extension.hh"
 #include "builtins.hh"
 #include "board.hh"
 
-class OzThread: public SituatedExtension {
+class OzThread: public OZ_SituatedExtension {
 public:
 
 private:
   Thread *thread;
 public:
   OzThread(Thread *thread)
-    : SituatedExtension(GETBOARD(thread)), thread(thread) {}
+    : OZ_SituatedExtension(GETBOARD(thread)), thread(thread) {}
 
   virtual
   int getIdV() { return OZ_E_THREAD; }
@@ -46,7 +45,7 @@ public:
   OZ_Term typeV() { return oz_atom("thread"); }
 
   virtual
-  Extension *gcV(void) { return new OzThread(*this); }
+  OZ_Extension *gcV(void) { return new OzThread(*this); }
 
   // mm2: possible bug: eqV may fail when dead thread is compared!
   virtual

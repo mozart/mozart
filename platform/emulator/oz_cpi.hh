@@ -29,7 +29,127 @@
 
 #include <stddef.h>
 #include <stdio.h>
-#include "oz.h"
+#include "mozart.h"
+
+//-----------------------------------------------------------------------------
+// the old built-in interface
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+#define OZ_C_proc_proto(Name)   OZ_BI_proto(Name)
+
+#define OZ_C_proc_begin(Name,arity)                                       \
+OZ_BI_proto(Name);                                                        \
+OZ_Return FUNDECL(Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {      \
+    const OZ_CFun OZ_self = Name;                                         \
+    OZ_Term OZ_args[arity];                                               \
+    const int OZ_arity = arity;                                           \
+    { int i;                                                              \
+      for (i = arity; i--; ) {                                            \
+        OZ_args[i]=_OZ_NEW_ARGS[_OZ_NEW_LOC==OZ_ID_MAP?i:_OZ_NEW_LOC[i]]; \
+    }                                                                     \
+}
+
+#define OZ_C_proc_end                   OZ_BI_end
+
+/* access arguments */
+#define OZ_getCArg(N) OZ_args[N]
+
+/* useful macros and functions (mm 9.2.93) */
+
+#define OZ_declareArg(ARG,VAR) \
+     OZ_Term VAR = OZ_getCArg(ARG);
+
+#define OZ_nonvarArg(ARG)                       \
+{                                               \
+  if (OZ_isVariable(OZ_getCArg(ARG))) {         \
+    OZ_suspendOn(OZ_getCArg(ARG));              \
+  }                                             \
+}
+
+#define OZ_declareNonvarArg(ARG,VAR)            \
+OZ_Term VAR = OZ_getCArg(ARG);                  \
+{                                               \
+  if (OZ_isVariable(VAR)) {                     \
+    OZ_suspendOn(VAR);                          \
+  }                                             \
+}
+
+#define OZ_declareIntArg(ARG,VAR)               \
+ int VAR;                                       \
+ OZ_nonvarArg(ARG);                             \
+ if (! OZ_isInt(OZ_getCArg(ARG))) {             \
+   return OZ_typeError(ARG,"Int");              \
+ } else {                                       \
+   VAR = OZ_intToC(OZ_getCArg(ARG));            \
+ }
+
+#define OZ_declareFloatArg(ARG,VAR)             \
+ double VAR;                                    \
+ OZ_nonvarArg(ARG);                             \
+ if (! OZ_isFloat(OZ_getCArg(ARG))) {           \
+   return OZ_typeError(ARG,"Float");            \
+ } else {                                       \
+   VAR = OZ_floatToC(OZ_getCArg(ARG));          \
+ }
+
+
+#define OZ_declareAtomArg(ARG,VAR)              \
+ CONST char *VAR;                               \
+ OZ_nonvarArg(ARG);                             \
+ if (! OZ_isAtom(OZ_getCArg(ARG))) {            \
+   return OZ_typeError(ARG,"Atom");             \
+ } else {                                       \
+   VAR = OZ_atomToC(OZ_getCArg(ARG));           \
+ }
+
+#define OZ_declareProperStringArg(ARG,VAR)              \
+ char *VAR;                                             \
+ {                                                      \
+   OZ_Term OZ_avar;                                     \
+   if (!OZ_isProperString(OZ_getCArg(ARG),&OZ_avar)) {  \
+     if (OZ_avar == 0) {                                \
+       return OZ_typeError(ARG,"ProperString");         \
+     } else {                                           \
+       OZ_suspendOn(OZ_avar);                           \
+     }                                                  \
+   }                                                    \
+   VAR = OZ_stringToC(OZ_getCArg(ARG),0);                       \
+ }
+
+#define OZ_declareVirtualStringArg(ARG,VAR)             \
+ char *VAR;                                             \
+ {                                                      \
+   OZ_Term OZ_avar;                                     \
+   if (!OZ_isVirtualString(OZ_getCArg(ARG),&OZ_avar)) { \
+     if (OZ_avar == 0) {                                \
+       return OZ_typeError(ARG,"VirtualString");        \
+     } else {                                           \
+       OZ_suspendOn(OZ_avar);                           \
+     }                                                  \
+   }                                                    \
+   VAR = OZ_virtualStringToC(OZ_getCArg(ARG),0);                \
+ }
+
+#define OZ_declareForeignPointerArg(ARG,VAR)    \
+void *VAR;                                      \
+{                                               \
+  OZ_declareNonvarArg(ARG,_VAR);                \
+  if (!OZ_isForeignPointer(_VAR)) {             \
+    return OZ_typeError(ARG,"ForeignPointer");  \
+  } else {                                      \
+    VAR = OZ_getForeignPointer(_VAR);           \
+  }                                             \
+}
+
+#if defined(__cplusplus)
+}
+#endif
+
+//-----------------------------------------------------------------------------
+// real cpi starts here
 
 #define BIGFSET
 

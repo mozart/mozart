@@ -1062,12 +1062,12 @@ int oz_isExtension(OZ_Term t) {
 }
 
 inline
-Extension *oz_tagged2Extension(OZ_Term t) {
-  return (Extension *) tagValueOf2(EXT,t);
+OZ_Extension *oz_tagged2Extension(OZ_Term t) {
+  return (OZ_Extension *) tagValueOf2(EXT,t);
 }
 
 inline
-OZ_Term oz_makeTaggedExtension(Extension *e) {
+OZ_Term oz_makeTaggedExtension(OZ_Extension *e) {
   return makeTaggedRef2p(EXT,e);
 }
 

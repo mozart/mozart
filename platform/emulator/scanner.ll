@@ -33,7 +33,6 @@
 #endif
 
 #include "base.hh"
-#include "oz.h"
 #include "os.hh"
 #include "dictionary.hh"
 #include "am.hh"

@@ -46,7 +46,6 @@
 #include "dictionary.hh"
 #include "os.hh"
 #include "value.hh"
-#include "extension.hh"
 #include "codearea.hh"
 #include "fdgenvar.hh"
 #include "fsgenvar.hh"
@@ -1367,24 +1366,24 @@ ForeignPointer * ForeignPointer::gc(void) {
 
 TaggedRef gcExtension(TaggedRef term)
 {
-  Extension *ex = oz_tagged2Extension(term);
+  OZ_Extension *ex = oz_tagged2Extension(term);
   if (ex == NULL) {
     return makeTaggedNULL();
   }
 
   // hack alert: write forward into vtable!
   if ((*(int32*)ex)&1) {
-    return oz_makeTaggedExtension((Extension *)ToPointer((*(int32*)ex)&~1));
+    return oz_makeTaggedExtension((OZ_Extension *)ToPointer((*(int32*)ex)&~1));
   }
 
-  Board *bb=ex->getBoardInternal();
+  Board *bb=(Board*)(ex->__getSpaceInternal());
   if (bb) {
     bb = bb->derefBoard();
     if (!bb->gcIsAlive()) return makeTaggedNULL();
     if (!isInGc && bb->isMarkedGlobal()) return term;
   }
-  Extension *ret = ex->gcV();
-  if (bb) ret->setBoardInternal(bb);
+  OZ_Extension *ret = ex->gcV();
+  if (bb) ret->__setSpaceInternal(bb);
 
   gcStack.push(ret,PTR_EXTENSION);
 
@@ -1395,10 +1394,10 @@ TaggedRef gcExtension(TaggedRef term)
   return oz_makeTaggedExtension(ret);
 }
 
-void gcExtensionRecurse(Extension *ex)
+void gcExtensionRecurse(OZ_Extension *ex)
 {
-  Board *bb=ex->getBoardInternal();
-  if (bb) ex->setBoardInternal(bb->gcBoard());
+  Board *bb=(Board*) (ex->__getSpaceInternal());
+  if (bb) ex->__setSpaceInternal(bb->gcBoard());
   ex->gcRecurseV();
 }
 
@@ -2850,7 +2849,7 @@ void GcStack::recurse(void) {
       break;
 
     case PTR_EXTENSION:
-      gcExtensionRecurse((Extension *)ptr);
+      gcExtensionRecurse((OZ_Extension *)ptr);
       break;
 
     default:

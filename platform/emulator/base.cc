@@ -33,7 +33,6 @@
 
 #include "ozconfig.hh"
 #include "os.hh"
-#include "oz.h"
 
 #include <stdarg.h>
 #include <errno.h>

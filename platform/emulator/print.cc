@@ -89,7 +89,6 @@
 #include "fdomn.hh"
 #include "dictionary.hh"
 #include "builtins.hh"
-#include "extension.hh"
 #include "fdgenvar.hh"
 #include "fsgenvar.hh"
 #include "ctgenvar.hh"
@@ -184,8 +183,13 @@ void ozd_printStream(OZ_Term val, ostream &stream, int depth)
     stream << "<SmallInt @" << &ref << ": " << toC(ref) << ">";
     break;
   case EXT:
-    oz_tagged2Extension(ref)->printStreamV(stream,depth);
-    break;
+    {
+      int n;
+      char * s = OZ_virtualStringToC(oz_tagged2Extension(ref)->printV(depth),
+                                     &n);
+      stream << s;
+      break;
+    }
   case OZCONST:
     tagged2Const(ref)->printStream(stream,depth);
     break;
@@ -261,8 +265,12 @@ void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
     stream << endl;
     break;
   case EXT:
-    oz_tagged2Extension(ref)->printLongStreamV(stream,depth,offset);
-    break;
+    {
+      int n;
+      char* s = OZ_virtualStringToC(oz_tagged2Extension(ref)->printLongV(depth,offset),&n);
+      stream << s;
+      break;
+    }
   case OZCONST:
     tagged2Const(ref)->printLongStream(stream,depth,offset);
     break;

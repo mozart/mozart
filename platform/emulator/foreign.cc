@@ -32,7 +32,6 @@
 #include "iso-ctype.hh"
 
 #include "value.hh"
-#include "extension.hh"
 #include "genvar.hh"
 
 #include "os.hh"
@@ -1054,7 +1053,12 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
     list2buffer(out,tagged2LTuple(term),depth);
     break;
   case EXT:
-    oz_tagged2Extension(term)->printStreamV(out,depth);
+    {
+      int n;
+      char * s = OZ_virtualStringToC(oz_tagged2Extension(term)->printV(depth),
+                                     &n);
+      out << s;
+    }
     break;
   case OZCONST:
     const2buffer(out,tagged2Const(term));
@@ -1625,8 +1629,7 @@ OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
 
   case EXT:
     {
-      Extension *ex = oz_tagged2Extension(term);
-      return ex->getFeatureV(fea);
+      return oz_tagged2Extension(term)->getFeatureV(fea);
     }
 
   case OZCONST:

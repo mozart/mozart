@@ -40,7 +40,6 @@
 #include "allgenvar.hh"
 #include "codearea.hh"
 #include "fdomn.hh"
-#include "extension.hh"
 #include "trace.hh"
 #include "space.hh"
 
