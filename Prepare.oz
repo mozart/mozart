@@ -1,9 +1,11 @@
 %%%
 %%% Author:
 %%%   Thorsten Brunklaus <bruni@ps.uni-sb.de>
+%%%   Denys Duchier <duchier@ps.uni-sb.de>
 %%%
 %%% Copyright:
 %%%   Thorsten Brunklaus, 2001
+%%%   Denys Duchier, 2003
 %%%
 %%% Last Change:
 %%%   $Date$ by $Author$
