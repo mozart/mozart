@@ -47,7 +47,7 @@ public:
   // printing/debugging
   virtual void          printStreamV(ostream &out,int depth = 10)
   {
-    out << "<cvar: " << getType() << ">";
+    out << "<cvar: " << (int) getType() << ">";
   }
   virtual void          printLongStreamV(ostream &out,int depth = 10,
                                          int offset = 0)
