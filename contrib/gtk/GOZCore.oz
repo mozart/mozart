@@ -32,7 +32,7 @@ define
    Dispatcher
 
    %%
-   %% Force Evaluation of Modules
+   %% Force Evaluation of Modules in appropriate Order
    %%
 
    {Wait GdkNative}
@@ -47,22 +47,30 @@ define
    WrapPointer   = {NewName}
    UnwrapPointer = {NewName}
 
-   NativeGCStream
-
    local
-      Table = {WeakDictionary.new NativeGCStream}
+      ObjectTable = {Dictionary.new}
    in
-      fun {RegisterPointer Pointer}
-	 {WeakDictionary.put Table {ForeignPointer.toInt Pointer} Pointer} Pointer
-      end
+      %% Obtain Pointer from Oz Object/Pointer
       fun {ObjectToPointer Object}
 	 if {IsObject Object}
 	 then {Object UnwrapPointer($)}
 	 else Object
 	 end
       end
+      %% Convert Pointer to Oz Object
       fun {PointerToObject Class Pointer}
-	 {New Class WrapPointer({RegisterPointer Pointer})}
+	 Object = {New Class WrapPointer(Pointer)}
+      in
+	 {Dictionary.put ObjectTable {ForeignPointer.toInt Pointer} Object}
+	 Object
+      end
+      %% Pointer Tranlation (necessary for GDK Events)
+      fun {TranslatePointer Pointer}
+	 {Dictionary.condGet ObjectTable {ForeignPointer.toInt Pointer} Pointer}
+      end
+      %% Release Object Ptr (necessary for GC)
+      proc {RemoveObject Pointer}
+	 {Dictionary.remove ObjectTable {ForeignPointer.toInt Pointer}}
       end
    end
 
@@ -130,7 +138,7 @@ define
 	 X
       end
       fun {RGP X}
-	 {RegisterPointer X}
+	 {TranslatePointer X}
       end
       fun {ITB X}
 	  X == 1
@@ -190,50 +198,83 @@ define
    %% Gtk Oz Base Class (used for Oz Class Wrapper)
    %%
    
-   class OzBase from BaseObject
-      attr
-	 object
-      meth new
-	 @object = unit
-      end
-      meth signalConnect(Signal ProcOrMeth $)
-	 SigHandler = if {IsProcedure ProcOrMeth}
-		      then
-			 fun {$ Event}
-			    {ProcOrMeth Event}
-			    unit
+   local
+      CloseObject = {NewName}
+   in
+      class OzBase from BaseObject
+	 attr
+	    object         %% Native Object Ptr
+	    signals  : nil %% Connected Signals List
+	    children : nil %% All Children Objects
+	 meth new
+	    @object = unit
+	 end
+	 meth signalConnect(Signal ProcOrMeth $)
+	    SigHandler = if {IsProcedure ProcOrMeth}
+			 then
+			    fun {$ Event}
+			       {ProcOrMeth Event}
+			       unit
+			    end
+			 else
+			    fun {$ Event}
+			       {self ProcOrMeth(Event)}
+			       unit
+			    end
 			 end
-		      else
-			 fun {$ Event}
-			    {self ProcOrMeth(Event)}
-			    unit
-			 end
-		      end
-	 SignalId   = {Dispatcher registerHandler(SigHandler $)}
-      in
-	 {GOZSignal.signalConnect @object Signal SignalId}
-	 SignalId
-      end
-      meth signalDisconnect(SignalId)
-	 {GOZSignal.signalDisconnect @object SignalId}
-      end
-      meth signalBlock(SignalId)
-	 {GOZSignal.signalBlock @object SignalId}
-      end
-      meth signalUnblock(SignalId)
-	 {GOZSignal.signalUnblock @object SignalId}
-      end
-      meth signalEmit(Signal)
-	 {GOZSignal.signalEmit @object Signal}
-      end
-      meth connectEvents
-	 skip
-      end
-      meth !WrapPointer(Ptr)
-	 @object = Ptr
-      end
-      meth !UnwrapPointer($)
-	 @object
+	    SignalId   = {Dispatcher registerHandler(SigHandler $)}
+	 in
+	    signals <- SignalId|@signals
+	    {GOZSignal.signalConnect @object Signal SignalId}
+	    SignalId
+	 end
+	 meth signalDisconnect(SignalId)
+	    signals <- {Filter @signals fun {$ Id}
+					   SignalId \= Id
+					end}
+	    {GOZSignal.signalDisconnect @object SignalId}
+	    {Dispatcher unregisterHandler(SignalId)}
+	 end
+	 meth signalBlock(SignalId)
+	    {GOZSignal.signalBlock @object SignalId}
+	 end
+	 meth signalUnblock(SignalId)
+	    {GOZSignal.signalUnblock @object SignalId}
+	 end
+	 meth signalEmit(Signal)
+	    {GOZSignal.signalEmit @object Signal}
+	 end
+	 meth connectEvents
+	    skip
+	 end
+	 meth !WrapPointer(Ptr)
+	    @object = Ptr
+	 end
+	 meth !UnwrapPointer($)
+	    @object
+	 end
+	 meth close
+	    Children = @children
+	 in
+	    children <- nil
+	    OzBase, CloseObject(Children)
+	 end
+	 meth !CloseObject(Childs)
+	    case Childs
+	    of Child|Cr then
+	       {Child close}
+	       OzBase, CloseObject(Cr)
+	    [] nil then
+	       Object = @object
+	    in
+	       {ForAll @signals proc {$ SignalId}
+				   {Dispatcher unregisterHandler(SignalId)}
+				end}
+	       {RemoveObject Object}
+	       {GOZSignal.freeData Object}
+	       object <- unit
+	    end
+	 end
       end
    end
    
@@ -246,6 +287,11 @@ define
 	 NewSignalId = {NewName}
 	 FillStream  = {NewName}
 	 Dispatch    = {NewName}
+
+	 %% Dummy Handler to circumvent problems with event caching
+	 fun {EmptyHandler _}
+	    unit
+	 end
       in
 	 class DispatcherObject
 	    attr
@@ -258,10 +304,8 @@ define
 	       SignalPort = {Port.new Stream}
 	    in
 	       @signalId    = 0
-	       @handlerDict = {WeakDictionary.new _}
+	       @handlerDict = {Dictionary.new}
 	       @signalPort  = SignalPort
-	       %% Close Handler GC Stream (not needed)
-	       {WeakDictionary.close @handlerDict}
 	       %% Tell C side about signal port
 	       {GOZSignal.initializeSignalPort SignalPort}
 	       %% Fetch Events
@@ -277,17 +321,6 @@ define
 		     {System.show Ex}
 		     DispatcherObject, exit
 		  end
-	       end
-	       %% GC Thread
-	       thread
-		  proc {PerformGC Stream}
-		     case Stream
-		     of (_#Ptr)|Sr then {GOZSignal.freeData Ptr} {PerformGC Sr}
-		     [] nil        then skip
-		     end
-		  end
-	       in
-		  {PerformGC NativeGCStream}
 	       end
 	    end
 	    meth !FillStream(PollInterval)
@@ -305,16 +338,16 @@ define
 	    meth registerHandler(Handler $)
 	       SignalId = DispatcherObject, NewSignalId($)
 	    in
-	       {WeakDictionary.put @handlerDict SignalId Handler}
+	       {Dictionary.put @handlerDict SignalId Handler}
 	       SignalId
 	    end
 	    meth unregisterHandler(SignalId)
-	       {WeakDictionary.remove @handlerDict SignalId}
+	       {Dictionary.remove @handlerDict SignalId}
 	    end
 	    meth !Dispatch(Stream)
 	       case Stream
 	       of event(Id Data)|Tail then
-		  _ = {{WeakDictionary.get @handlerDict Id} Data}
+		  _ = {{Dictionary.condGet @handlerDict Id EmptyHandler} Data}
 		  DispatcherObject, Dispatch(Tail)
 	       [] _ then skip
 	       end
@@ -334,7 +367,6 @@ define
       
       %% Create Interface
       GOZCore = 'GOZCore'(%% Native Pointer Import/Translation
-			  registerPointer      : RegisterPointer
 			  pointerToObject      : PointerToObject
 			  objectToPointer      : ObjectToPointer
 			  %% Signal Handling
