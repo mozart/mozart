@@ -296,7 +296,7 @@ prepare
 	       items: [hint(l:'Value' m:oz(V))])
       [] ozmake(makefile:submakefilesnotallowed) then
 	 error(kind : TITLE_MAKEFILE
-	       msg  : 'feature `submakefile\' not allowed in user makefile')
+	       msg  : 'feature `submakefiles\' not allowed in user makefile')
       [] ozmake(uninstall:missingpackageormogul) then
 	 error(kind : TITLE_UNINSTALL
 	       msg  : 'no package or makefile'
