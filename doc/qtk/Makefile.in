@@ -99,5 +99,18 @@ SGMLSRCS = \
         param_underline.sgml \
         param_wraplength.sgml \
         qtk.sgml
+HTMLEXTRAFILES  = \
+        page.gif \
+        picture1.gif \
+        picture10.gif \
+        picture100.gif \
+        picture11.gif \
+        picture2.gif \
+        picture3.gif \
+        picture4.gif \
+        picture5.gif \
+        picture6.gif \
+        picture8.gif \
+        picture9.gif
 
 include ../Makefile.common
