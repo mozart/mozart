@@ -77,6 +77,22 @@ public:
 };
 
 
+
+typedef int32 ChachedOORegs;
+
+inline
+Object *getObject(ChachedOORegs regs)
+{
+  return (Object*) ToPointer(regs&~3);
+}
+
+
+inline 
+ChachedOORegs setObject(ChachedOORegs regs, Object *o)
+{
+  return (ToInt32(o)|(regs&0x3));
+}
+
 // this class contains the central global data
 class AM : public ThreadsPool {
 friend void engine();
@@ -95,10 +111,32 @@ public:
   Board *currentBoard;
   TaskStack *cachedStack;
 private:
-  Object *cachedSelf;
+#define OO_Final  0x1
+#define OO_Locked 0x2
+  ChachedOORegs cachedOORegisters;
+
 public:
-  void setSelf(Object *o) { Assert(!o || o->getType()==Co_Object); cachedSelf = o; }
-  Object *getSelf()       { return cachedSelf; }
+  void changeSelf(Object *o);
+  void saveSelf();
+  void restoreSelf(ChachedOORegs e) { cachedOORegisters = e; }
+  Object *getSelf() { return getObject(cachedOORegisters); }
+
+  int  isFinal()     { return (cachedOORegisters&OO_Final); }
+  void setFinal()    { cachedOORegisters |= OO_Final; }
+  void unsetFinal()  { cachedOORegisters &= ~OO_Final; }
+  int  isLocked()    { return (cachedOORegisters&OO_Locked); }
+  void setLocked()   { cachedOORegisters |= OO_Locked; }
+  void unsetLocked() { cachedOORegisters &= ~OO_Locked; }
+  int isFinalAndLocked() {
+    return ((cachedOORegisters&(OO_Final|OO_Locked)) == (OO_Final|OO_Locked)); }
+
+  void unlockSelf() 
+  { 
+    if (isFinalAndLocked()) {
+      getSelf()->unlock(); 
+      unsetLocked();
+    }
+  }
 
   TaggedRef currentUVarPrototype; // opt: cache
   Board *rootBoard;
@@ -290,6 +328,7 @@ public:
 
   void pushCall(TaggedRef def, int arity, RefsArray args);
   void pushDebug(TaggedRef def, int arity, RefsArray args);
+  void pushSetFinal();
   void pushTaskInline(ProgramCounter pc,
 		      RefsArray y,RefsArray g,RefsArray x,int i);
   void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x=0,int i=0);

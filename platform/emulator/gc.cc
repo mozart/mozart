@@ -882,6 +882,14 @@ RefsArray gcRefsArray(RefsArray r)
 //
 //  RunnableThreadBody;
 
+
+inline
+ChachedOORegs gcChachedOORegs(ChachedOORegs regs)
+{
+  Object *o = getObject(regs)->gcObject();
+  return setObject(regs,o);
+}
+
 RunnableThreadBody *RunnableThreadBody::gcRTBody ()
 {
   GCMETHMSG ("RunnableThreadBody::gcRTBody");
@@ -891,7 +899,7 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
   GCNEWADDRMSG (ret);
   taskStack.gc(&ret->taskStack);
 
-  ret->u.self = ret->u.self->gcObject();
+  ret->u.ooregs = gcChachedOORegs(ret->u.ooregs);
 
 #ifdef LINKEDTHREADS
   gcTagged(ret->parentThread,ret->parentThread);
@@ -1538,7 +1546,7 @@ void AM::gc(int msgLevel)
   Assert(rebindTrail.isEmpty());
 
   rootBoard = rootBoard->gcBoard();   // must go first!
-  setSelf(getSelf()->gcObject());
+  Assert(cachedOORegisters==0);
   Assert(rootBoard);
   setCurrent(currentBoard->gcBoard(),NO);
 
@@ -1871,6 +1879,9 @@ void TaskStack::gc(TaskStack *newstack)
       *(--newtop) = ((AWActor *) *(--oldtop))->gcActor();
       break;
 
+    case C_SETFINAL:
+      break;
+
     case C_CONT: 
       COUNT(cCont);
       // PC is already queued
@@ -1918,8 +1929,8 @@ void TaskStack::gc(TaskStack *newstack)
       *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));
       break;
 
-    case C_SET_SELF:
-      *(--newtop) = ((Object *) *(--oldtop))->gcObject();
+    case C_SET_OOREGS:
+      *(--newtop) = ToPointer(gcChachedOORegs(ToInt32(*(--oldtop))));
       break;
 
     case C_LTQ:

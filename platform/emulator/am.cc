@@ -225,7 +225,7 @@ void AM::init(int argc,char **argv)
   rootBoard->setInstalled();
   currentBoard = NULL;
   cachedStack = NULL;
-  setSelf(NULL);
+  cachedOORegisters = 0;
   setCurrent(rootBoard,OK);
   currentSolveBoard = (Board *) NULL; 
   wasSolveSet = NO; 

@@ -235,6 +235,19 @@ Port::Port(NetAddress *na) : ConstTermWithHome(am.rootBoard, Co_Port),
  * Object
  *=================================================================== */
 
+void Object::close()
+{
+  setFlag(OFlagClosed); 
+
+  while(!isNil(threads)) {
+    TaggedRef var = head(threads);
+    if (OZ_unify(var, NameTrue)==FAILED) {
+      warning("Object::close: unify failed");
+    }
+    threads = tail(threads);
+  }
+}
+
 /*
  * append two *det* lists
  *  NO ERROR CHECK!
