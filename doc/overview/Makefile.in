@@ -10,6 +10,7 @@ WHAT            = overview
 DOCDIR          = $(PREFIX)/doc/$(WHAT)
 
 FILES = index.html getstarted.html tutorials.html reference.html \
+        quick.html how.html content.html \
         ozdoc.css page.gif overview.gif
 
 all:
