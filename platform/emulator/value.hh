@@ -425,6 +425,7 @@ TaggedRef newSmallInt(int val)
 inline
 int smallIntValue(TaggedRef t)
 {
+  Assert(oz_isSmallInt(t));
   int help = (int) t;
 
   if (1||(-1>>1) == -1) {  /* -1>>1  means SRA? */
