@@ -47,7 +47,7 @@ SPSRC = System Debug Foreign Error Finalize
 OPSRC = OS Open Pickle
 APSRC = Application
 CPSRC = Search FD Schedule FS
-DPSRC = Connection Remote
+DPSRC = Connection Remote VirtualSite
 WPSRC = Tk TkTools
 MISCSRC = Misc
 
@@ -70,8 +70,7 @@ PEANUTS = \
 PEANUTSFUNCTORS = \
         $(PEANUTS:%=%.ozf)
 
-SYSLETS = \
-        ozc ozserver # ozvsserver
+SYSLETS = ozc ozserver ozvsserver
 
 .PHONY: all install clean
 
