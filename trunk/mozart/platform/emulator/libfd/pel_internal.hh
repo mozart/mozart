@@ -190,7 +190,6 @@ public:
 //-----------------------------------------------------------------------------
 // forward declaration:
 class _PEL_PropQueue;
-class _PEL_PropFnctTable;
 class PEL_PersistentEngine;
 class PEL_Engine;
 
