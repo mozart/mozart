@@ -21,6 +21,7 @@
 
 functor prop once
 import
+   Property(get)
    OS(tmpnam system unlink)
    Open(file text)
 export
@@ -30,7 +31,7 @@ define
    NoProgLang = {NewName}
 
    local
-      FONTIFY = '/home/ps-home/kornstae/mozart/doc/utilities/fontify.sh'
+      FONTIFY = {Property.get 'oz.home'}#'/bin/ozdoc-fontify.sh'
 
       fun {NotIsEOF C}
 	 C \= 4
@@ -120,7 +121,7 @@ define
 	    Command = FONTIFY#' '#' '#OutputType#' '#InFileName#' '#OutFileName
 	    case {OS.system Command} of 0 then skip
 	    elseof I then
-	       {Exception.raiseError sgml(fontification I)}
+	       {Exception.raiseError ozDoc(fontifier I)}
 	    end
 	    {OS.unlink InFileName}
 	    OutFile = {New TextFile init(name: OutFileName flags: [read])}
