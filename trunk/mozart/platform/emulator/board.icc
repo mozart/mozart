@@ -64,16 +64,32 @@ void Board::addToDistBag(Distributor * d) {
 }
 
 
-/*
- * Stability checking
- *
- */
-
 inline
-Bool Board::isBlocked(void) {
-  return (getThreads()==0) && !isStable();
+TaggedRef Board::genSucceeded(Bool isEntailed) {
+  ozstat.incSolveSolved();
+  SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
+
+  stuple->setArg(0, isEntailed ? AtomEntailed : AtomSuspended);
+
+  return makeTaggedSRecord(stuple);
 }
 
+inline
+TaggedRef Board::genAlt(int noOfClauses) {
+  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
+
+  Assert(!isCommitted());
+  stuple->setArg(0, makeTaggedSmallInt(noOfClauses));
+
+  return makeTaggedSRecord(stuple);
+}
+
+inline
+void Board::patchAltStatus(int i) {
+  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
+  stuple->setArg(0, makeTaggedSmallInt(i));
+  status = makeTaggedSRecord(stuple);
+}
 
 /*
  * Non monotonic propagators
@@ -106,54 +122,6 @@ Distributor * Board::getDistributor(void) {
 
 
 
-/*
- * Status variable
- *
- */
-
-inline
-void Board::patchAltStatus(int i) {
-  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
-  stuple->setArg(0, makeTaggedSmallInt(i));
-  status = makeTaggedSRecord(stuple);
-}
-
-inline
-void Board::clearStatus() {
-  if (OZ_isVariable(status))
-    return;
-
-  status = oz_newVar(getParent());
-}
-
-inline
-TaggedRef Board::genSucceeded(Bool isEntailed) {
-  ozstat.incSolveSolved();
-  SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
-
-  stuple->setArg(0, isEntailed ? AtomEntailed : AtomSuspended);
-
-  return makeTaggedSRecord(stuple);
-}
-
-inline
-TaggedRef Board::genAlt(int noOfClauses) {
-  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
-
-  Assert(!isCommitted());
-  stuple->setArg(0, makeTaggedSmallInt(noOfClauses));
-
-  return makeTaggedSRecord(stuple);
-}
-
-inline
-TaggedRef Board::genBlocked(TaggedRef arg) {
-  SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
-  stuple->setArg(0, arg);
-  return makeTaggedSRecord(stuple);
-}
-
-
 
 
 /*
@@ -179,6 +147,11 @@ Bool Board::isStable(void) {
   clearSuspList((Thread *) NULL);
 
   return isEmptySuspList();
+}
+
+inline
+Bool Board::isBlocked(void) {
+  return (getThreads()==0) && !isStable();
 }
 
 inline

@@ -36,7 +36,7 @@
 
 #ifdef DEBUG_CHECK
 
-#define DEBUG_CONSTRAIN_CVAR(ARGS) printf ARGS; fflush(stdout)
+#define DEBUG_CONSTRAIN_CVAR(ARGS)
 
 #else
 
