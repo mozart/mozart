@@ -72,9 +72,9 @@ void tkInitLiterals() {
  * Exceptions
  */
 
-static OZ_Return raise_os_error() {
+static OZ_Return raise_os_error(const char*s) {
   int xx = errno;
-  return oz_raise(E_SYSTEM,E_OS,"os",2,OZ_int(xx),
+  return oz_raise(E_SYSTEM,E_OS,"os",3,OZ_atom(s),OZ_int(xx),
 		  OZ_string(OZ_unixError(xx)));
 }
 
@@ -508,7 +508,7 @@ redo:
   if (ret < 0)  { 
     reset();
     LEAVE_TK_LOCK;
-    return raise_os_error();
+    return raise_os_error("select");
   } else if (ret==0) {
     goto wait_select;
   }  
@@ -517,7 +517,7 @@ redo:
     if (errno != EINTR) { 
       reset();
       LEAVE_TK_LOCK;
-      return raise_os_error();
+      return raise_os_error("write");
     }
   }
   
