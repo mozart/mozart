@@ -253,13 +253,12 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
     return TRUE;
   }
 
-  if (def && debugmode() && currentThread->isTraced()) {
+  if (def && debugmode()) {
     OzDebug *dbg;
     OZ_Term dinfo = nil();
     for (int i=def->getArity()-1; i>=0; i--) {
       dinfo = cons(arguments[i],dinfo);
     }
-    dinfo = cons(makeTaggedConst(def),dinfo);
 
     if (currentThread->stepMode() || def->getPred()->getSpyFlag()) {
       debugStreamCall(PC, def->getPrintName(), def->getArity(), arguments, 0);
@@ -2635,6 +2634,18 @@ LBLdispatcher:
 
       ozstat.createdThreads.incf();
       RefsArray newY = Y==NULL ? (RefsArray) NULL : copyRefsArray(Y);
+
+      if (e->debugmode()) {
+        TaskStackEntry *aux = CTT->getTaskStackRef()->getTop();
+        PopFrame(aux,ozdebugPC,Y,G);
+
+        if (ozdebugPC==C_DEBUG_CONT_Ptr) {
+          // inherit ozdebug from parent thread
+          OzDebug *dbg = (OzDebug*) Y;
+          tt->pushDebug(dbg);
+        }
+      }
+
       tt->pushCont(newPC,newY,G,NULL);
       tt->setSelf(e->getSelf());
 
