@@ -1178,7 +1178,11 @@ define
 	 end
       end
       meth MakeNode(Title BodyContents) NextHTML Node in
-	 Threading <- nav(NextHTML)|@Threading
+	 if @TOCMode then
+	    NextHTML = EMPTY
+	 else
+	    Threading <- nav(NextHTML)|@Threading
+	 end
 	 Node = html(head(title(thread {HTML.clean Title} end)
 			  link(rel: stylesheet
 			       type: 'text/css'
