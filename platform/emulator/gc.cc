@@ -685,6 +685,7 @@ SRecord *SRecord::gcSRecord()
 
   case R_ABSTRACTION:
     sz = sizeof(Abstraction);
+    DebugGCT(if (opMode == IN_GC) INTOSPACE(((Abstraction *) this)->name););
     break;
   case R_OBJECT:
     sz = sizeof(Object);
@@ -1187,6 +1188,10 @@ void AM::gc(int msgLevel)
   ExtRefNode::gc();
 
   performCopying();
+
+  // X regs initialization;
+  for(i = 0; i < NumberOfXRegisters; i++)
+    xRegs[i] = (TaggedRef) NULL;
 
 // -----------------------------------------------------------------------
 // ** second phase: the reference update stack has to checked now

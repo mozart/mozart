@@ -401,6 +401,14 @@ Thread *Thread::GetFirst() {
   tt->prev=tt->next=(Thread *) NULL;
 
   return tt;
+#ifdef DEBUG_CHECK
+  Thread *tmp = Head;
+  while (tmp != (Thread *) NULL) {
+    if (tmp->priority > tt->priority)
+      error ("Thread::GetFirst (): wrong task is got");
+    tmp = tmp->next;
+  }
+#endif
 }
 
 TaskStack *Thread::makeTaskStack()
