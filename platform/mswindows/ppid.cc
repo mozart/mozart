@@ -33,6 +33,11 @@
 
 #include "startup.hh"
 
+/* win32 does not support process groups,
+ * so we set OZPPID such that a subprocess can check whether
+ * its father still lives
+ */
+
 void publishPid(void) {
   char auxbuf[100];
   int ppid = GetCurrentProcessId();
