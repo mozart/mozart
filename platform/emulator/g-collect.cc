@@ -293,7 +293,9 @@ void IHashTable::gCollect(void) {
 }
 
 #define CODEGC_TAGGED(PCR) \
-  oz_gCollectTerm(getTaggedArg(PC+PCR),getTaggedArg(PC+PCR));
+{ TaggedRef * tr = (TaggedRef *) (PC+PCR); \
+  oz_gCollectTerm(*tr,*tr);                \
+}
 
 #define CODEGC_RECORDARITY(PCR) {};
 
