@@ -124,7 +124,7 @@ PLATFORMS=      solaris-sparc aix3-rs600 freebsd-i486 hpux-700\
 PLATFORMFILES=  LICENSE LICENSE.html bin cache contrib include share
 COMPRESS=       gzip -9
 TAR=            tar
-WINCACHEDIR=    oz/cache/$(HOMECACHE)
+WINCACHEDIR=    oz3/cache/$(HOMECACHE)
 PACKDIR=        /tmp/pack
 
 
@@ -167,29 +167,25 @@ $(PACKDIR) $(PACKDIR)/mozart $(PACKDIR)/mozart/doc:
         $(INSTALL_DIR) $@
 
 oz-win::
-        rm -rf oz oz3
-        ( cd $(PREFIX)/..; \
-          $(TAR) cf - oz/include oz/share \
-                   oz/LICENSE \
-                   oz/contrib \
-                   oz/doc \
-                   oz/platform/winbin \
-                   oz/platform/win32-i486/?*.exe \
-                   oz/platform/win32-i486/?*.dll \
-                   oz/platform/win32-i486/wish \
-         ) | $(TAR) xf -
-        $(INSTALL_DIR) oz/doc
+        rm -rf mozart oz3
+        $(INSTALL_DIR) oz3
+        ( cd $(PREFIX); \
+          $(TAR) cf - \
+                   LICENSE \
+                   include share \
+                   contrib doc\
+                   platform/winbin platform/win32-i486 \
+         ) | (cd oz3; $(TAR) xf -)
         $(INSTALL_DIR) $(WINCACHEDIR)/share
         $(INSTALL_DIR) $(WINCACHEDIR)/doc/demo
-        mv oz/share/images oz/share/?*.ozf $(WINCACHEDIR)/share
-        mv oz/doc/demo/applets $(WINCACHEDIR)/doc/demo
-        find oz -name '*.so-*' -not -name '*.so-win32-i486' -exec rm -f '{}' ';'
-        rm -rf oz/share/doc
-        mv $(WINCACHEDIR)/share/Init.ozf oz/share
+        mv oz3/share/images oz3/share/?*.ozf $(WINCACHEDIR)/share
+        mv oz3/doc/demo/applets $(WINCACHEDIR)/doc/demo
+        find oz3 -name '*.so-*' -not -name '*.so-win32-i486' -exec rm -f '{}' ';'
+        rm -rf oz3/share/doc
+        mv $(WINCACHEDIR)/share/Init.ozf oz3/share
         for i in ozc ozd ozl; do \
-          cat oz/platform/winbin/ozwrapper.exe \
-              $(PREFIX)/bin/$$i > oz/platform/winbin/$$i.exe;\
+          cat oz3/platform/winbin/ozwrapper.exe \
+              $(PREFIX)/bin/$$i > oz3/platform/winbin/$$i.exe;\
         done
-        i386-mingw32-strip oz/platform/win32-i486/*.exe
-        mv oz/platform/winbin oz/bin
-        mv oz oz3
+        i386-mingw32-strip oz3/platform/win32-i486/*.exe
+        mv oz3/platform/winbin oz3/bin
