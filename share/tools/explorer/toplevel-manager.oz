@@ -44,7 +44,7 @@ local
 					  scale({Tk.string.toFloat S})}
 				      end)
 		   tk(set DefScale)
-		   tkBind(event:  '<2>'
+		   tkBind(event:  '<3>'
 			  action: Manager # scaleToFit)]}
       in
 	 Canvas = {New ScrollCanvas init(self CanFrame Manager)}
