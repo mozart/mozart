@@ -929,14 +929,16 @@ changequote([,])
     [
       oz_tmp_cppflags="$CPPFLAGS"
       oz_tmp_ok=no
-      AC_TRY_CPP([#include "$1"],[
-        oz_tmp_ok=yes],[
-        for oz_tmp in $oz_inc_path; do
-          CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
-          AC_TRY_CPP([#include "$1"],[
-            oz_tmp_ok="-I$oz_tmp"
-            break])
-        done])
+      for oz_tmp in $oz_inc_path; do
+        CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
+        AC_TRY_CPP([#include "$1"],[
+        oz_tmp_ok="-I$oz_tmp"
+        break])
+      done
+      if test "$oz_tmp_ok" = no; then
+        AC_TRY_CPP([#include "$1"],[
+          oz_tmp_ok=yes],)
+      fi
       CPPFLAGS=$oz_tmp_cppflags
 changequote(`,')oz_cv_header_`'patsubst($1,[^a-zA-Z0-9],_)="$oz_tmp_ok"
 changequote([,])
