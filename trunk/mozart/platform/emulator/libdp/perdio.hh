@@ -90,7 +90,8 @@ public:
 
 extern MsgBufferManager *msgBufferManager;
 
-void globalizeTert(Tertiary *t);
+void globalizeTert(Tertiary *t, MsgBuffer *bs);
+GName *globalizeConst(ConstTerm *t, MsgBuffer *bs);
 
 inline Bool SEND_SHORT(DSite* s){
   if(s->siteStatus()==PERM_SITE) {return OK;}
