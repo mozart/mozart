@@ -420,7 +420,7 @@
           <Td/<<debug>>/
           <Td/yes/
           <Td/<<Bool>>/
-          <Td/Whether error messages contain debug information./
+          <Td/Whether error exceptions contain debug information./
         </Tr>
         <Tr>
           <Td/<<'thread'>>/
