@@ -1391,6 +1391,7 @@ static OZ_Return enter_exec_args(char * s, OZ_Term args, int &argno) {
 
 }
 
+
 OZ_BI_define(unix_pipe,2,2) {
   OZ_declareVsIN(0, s);
   OZ_declareTerm(1, args);
@@ -1412,6 +1413,9 @@ OZ_BI_define(unix_pipe,2,2) {
     strcat(buf,argv[k]);
     strcat(buf," ");
   }
+
+  int sv[2];
+  int aux = ossocketpair(PF_UNIX,SOCK_STREAM,0,sv);
 
   SECURITY_ATTRIBUTES sa;
   sa.nLength = sizeof(sa);
@@ -1437,24 +1441,20 @@ OZ_BI_define(unix_pipe,2,2) {
       !SetStdHandle((DWORD)STD_INPUT_HANDLE,rh2) ||
       !CreateProcess(NULL,buf,&sa,NULL,TRUE,0,
 		     NULL,NULL,&si,&pinf)) {
+    fprintf(stderr,"dup error %d\n",GetLastError());
     return raiseUnixError("CreatePipe",0, "Cannot create pipe process.", 
-			  "os");
+                          "os");
   }
 
   int pid = (int) pinf.hProcess;
   CloseHandle(wh1);
-  CloseHandle(rh2);
+  CloseHandle(wh1);
   SetStdHandle((DWORD)STD_OUTPUT_HANDLE,saveout);
   SetStdHandle((DWORD)STD_ERROR_HANDLE,saveerr);
   SetStdHandle((DWORD)STD_INPUT_HANDLE,savein);
-    
-  int rsock = oshdopen((int)rh1,O_RDONLY|O_BINARY);
-  int wsock = oshdopen((int)wh2,O_WRONLY|O_BINARY);
-  if (rsock<0 || wsock<0) {
-    return raiseUnixError("hdopen",0, 
-			  "Cannot connect to created pipe process.", 
-			  "os");
-  }
+
+  createReader(sv[1],rh1);
+  createWriter(sv[1],wh2);
 
 #else  /* !WINDOWS */
 
@@ -1508,11 +1508,12 @@ OZ_BI_define(unix_pipe,2,2) {
     break;
   }
   close(sv[1]);
-  
-  int rsock = sv[0];
-  /* we cann use the same descriptor for both reading and writing: */
-  int wsock = rsock;
+
 #endif
+
+  int rsock = sv[0];
+  /* we can use the same descriptor for both reading and writing: */
+  int wsock = rsock;
 
   int i;
   for (i=1 ; i<argno ; i++)
