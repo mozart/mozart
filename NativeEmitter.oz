@@ -205,7 +205,7 @@ define
 
       fun {CoreResultType Type Types}
 	 case Type
-	 of "gboolean" then "OZ_int"
+	 of "gboolean" then "GOZ_bool"
 	 [] "gchar"    then "OZ_int"
 	 [] "guchar"   then "OZ_int"
 	 [] "gint"     then "OZ_int"
