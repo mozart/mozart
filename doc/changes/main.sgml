@@ -294,32 +294,27 @@ to="ozdoc:loop"></p>
 
           <p>
           <list>
+          <item> Executable functors are now fully supported under Windows.
+          <item> More contributions have been made available.  In particular
+                 the native functors for the regex and gdbm modules have now
+                 been built.
+          <item> Subprocesses started from Mozart
+                 do not open new console windows.
+          <item> Mozart is no longer confused by
+                 other programs such as <file/fortify/ by
+                 a complete redesign of the communication
+                 between Mozart and Tk
+                 (bug 338).
           <item> Temporary files are put under
                  <file/C:\TEMP/ by default
                  (instead of <file/C:\/).
                  Creating many files directly under <file/C:\/ made
                  Windows NT freeze.
-          <item> Subprocesses started from Mozart
-                 do not open new console windows.
-          <item> Mozart is not longer confused by
-                 other programs such as <file/fortify/ by
-                 complete rewrite of communication
-                 between Mozart and Tk
-                 (bug 338).
           <item> <file/ozd/ now looks in the registry to see
                  whether it can figure out where Emacs is installed.
                  Furthermore, <file/ozd/ depended upon <file/bash/ as
                  command interpreter to start Emacs&emdash;now it also
                  works with <file/command.com/ and <file/cmd.exe/.
-          <item> Renamed <file/ozwrapper.exe/ to <file/ozwrapper.bin/
-                 and <file/ozwrapperw.exe/ to <file/ozwrapperw.bin/
-                 since they are not meant to be executed directly.
-          <item> <file/ozwrapperw.bin/ did not work under Windows&nbsp;NT4 and
-                 Windows&nbsp;2000 if the full path name of an application
-                 built with it contained spaces.
-          <item> More contributions have been made available.  In particular
-                 the native functors for the regex and gdbm modules have now
-                 been built.
           </list>
 
         <subsection>
