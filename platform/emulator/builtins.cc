@@ -6303,7 +6303,7 @@ OZ_Return atInline(TaggedRef fea, TaggedRef &out)
   }
 
 bomb:
-  TypeErrorT(1,"(valid) Feature");
+  TypeErrorT(0,"(valid) Feature");
 }
 DECLAREBI_USEINLINEFUN1(BIat,atInline)
 
