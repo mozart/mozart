@@ -71,7 +71,7 @@ define
 	    {Reporter startSubPhase('converting LaTeX sections to GIF')}
 	    try
 	       case
-		  {OS.system LATEX2GIF#' '#@FileName#' '#@DirName}
+		  {OS.system LATEX2GIF#' '#@FileName#' '#@N#' '#@DirName}
 	       of 0 then skip
 	       elseof I then
 		  {Exception.raiseError ozDoc(latexToGif I)}
