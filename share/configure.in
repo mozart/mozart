@@ -88,6 +88,14 @@ AC_MSG_RESULT($oz_picklecompression)
 AC_SUBST(oz_picklecompression)
 
 dnl ******************************************************************
+dnl need GMP for test
+dnl ******************************************************************
+
+OZ_LIB_GMP
+AC_SUBST(CPPFLAGS)
+AC_SUBST(LDFLAGS)
+
+dnl ******************************************************************
 dnl maybe select QTk
 dnl ******************************************************************
 
