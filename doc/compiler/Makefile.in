@@ -17,7 +17,7 @@ INSTALL_DIR     = @INSTALL_DIR@
 
 SGMLSRCS = \
         compiler.sgml \
-        directives.sgml ozbatch.sgml panel.sgml \
+        intro.sgml directives.sgml ozbatch.sgml panel.sgml \
         api.sgml engines.sgml interfaces.sgml \
         switches.sgml queries.sgml notifications.sgml
 OZSRCS = \

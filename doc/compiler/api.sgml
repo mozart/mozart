@@ -1,59 +1,52 @@
 <Chapter id="chapter.api">
   <Title/Application Programmer's Interface/
   <P>
-    The compiler is available through the module <<Compiler>>.
+    The compiler is available through the module <<Compiler>>, described
+    in <Ptr to="section.api.module">.  The material in this section should
+    prove sufficient for most uses.
   <P>
-    We distinguish between <Def/Compiler Engines/ described in
-    <Ptr to="section.api.engines">, which store the state of a compiler
-    and perform the compilation proper, and <Def/Compiler Interfaces/
-    described in <Ptr to="section.api.interfaces">, which allow to observe
-    the activities of Compiler Engines and to react to them.
+    The remainder of this chapter is intended for advanced users.
+    We distinguish between <Def/Compiler Engines/, described in <Ptr
+    to="section.api.engines">, which store the state of a compiler
+    and perform the compilation proper, and <Def/Compiler Interfaces/,
+    described in <Ptr to="section.api.interfaces">, which allow to
+    observe the activities of Compiler Engines and to react to them.
   <P>
-    For most users, the provided abstractions described in <Ptr
-    to="section.api.module"> should prove sufficient.
-  &engines;
-  &interfaces;
+    Finally, serving the purpose of examples, the provided abstractions
+    are explained in terms of compiler engines and interfaces in <Ptr
+    to="section.api.abstractions">.
   <Section id="section.api.module">
     <Title/The <<Compiler>> Module/
     <P>
-      Some useful abstractions to simplify the use of the compiler for
-      common tasks.
-    <SubSection>
-      <Title/Evaluating an Expression/
-        <P>
-          <Ptr to="program.evalExpression"> shows the abstraction
-          <Code display
-          >proc {Compiler.evalExpression VS Env ?Kill ?Result}</Code>
-          which evaluates an expression, given as a virtual string <<VS>>, in
-          a given environment <<Env>>, either returning the result <<Result>>
+      <List>
+        <Entry><<evalExpression>>
+        <Synopsis>
+          <<{Compiler.evalExpression ?+{V} ?+{EnvR} ??{KillP} ?_{X}}>>
+        <Item>
+          evaluates an expression, given as a virtual string&nbsp;?_{VS}, in
+          a given environment ?_{EnvR}, either returning the result ?_{X}
           of the evaluation or raising an exception.  Furthermore, the variable
-          <<Kill>> is bound to a nullary procedure which, when applied,
+          ?_{KillP} is bound to a nullary procedure which, when applied,
           interrupts compilation.
-          <Figure float id="program.evalExpression" class=program>
-            <Caption>The <<evalExpression>> abstraction.</Caption>
-            <P>
-              <Code.Extern display to="EvalExpression.oz">
-          </Figure>
-    <SubSection>
-      <Title/Replacement for System.virtualStringToValue/
+
+        <Entry><<virtualStringToValue>>
+        <Synopsis>
+          <<{Compiler.virtualStringToValue ?+{V} ?_{X}}>>
+        <Item>
+          is a replacement for <<System.virtualStringToValue>>, which
+          was available in Mozart's predecessor DFKI Oz.
         <P>
-          The procedure <<System.virtualStringToValue>>, which was available
-          in Mozart's predecessor DFKI Oz, can be replaced by another
-          abstraction, which makes use of the preceding one.  This abstraction
-          is available as <<Compiler.virtualStringToValue>> and is illustrated
-          in <Ptr to="program.virtualStringToValue">.
-          <Figure float id="program.virtualStringToValue" class=program>
-            <Caption>The <<virtualStringToValue>> abstraction.</Caption>
-            <P>
-              <Code.Extern display to="VirtualStringToValue.oz">
-          </Figure>
-        <P>
-          Note that this <Q/replacement/ is not identical to the original:
-          Besides that it is much more powerful, it can also prove to be much
-          less efficient.  Especially large manifest data structures can be
-          much slower to compile and the translation can require much more
-          memory than <<System.virtualStringToValue>>.  The modern (and
-          <Q/politically correct/) replacement to the duet
-          <<Value.toVirtualString>> and <<System.virtualStringToValue>>
-          is pickling and unpickling of data structures.
+          Note that you are discouraged from using this for large
+          data structures:  Because it is much more powerful than
+          <<System.virtualStringToValue>>, it can also be much less
+          efficient.  Rather, you should use pickling and unpickling
+          of data structures.
+      </List>
+  &engines;
+  &interfaces;
+  <Section id="section.api.abstractions">
+    <Title/A Look into the Provided Abstractions/
+    <P>
+      <Code.Extern display to="EvalExpression.oz">
+      <Code.Extern display to="VirtualStringToValue.oz">
 </Chapter>

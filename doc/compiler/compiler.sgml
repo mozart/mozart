@@ -5,6 +5,7 @@
 <!ELEMENT Em - - (#PCDATA)>
 
 <!-- Include Files -->
+<!ENTITY intro SYSTEM "intro.sgml">
 <!ENTITY directives SYSTEM "directives.sgml">
 <!ENTITY ozbatch SYSTEM "ozbatch.sgml">
 <!ENTITY panel SYSTEM "panel.sgml">
@@ -23,6 +24,7 @@
 <!ENTITY ie PI "ie">
 <!ENTITY nbsp PI "nbsp">
 <!ENTITY resp PI "resp">
+<!ENTITY emdash PI "emdash">
 
 ]>
 
@@ -50,20 +52,7 @@
       compiler.
     </Abstract>
   <Body>
-    <Chapter id="chapter.intro">
-      <Title/Introduction/
-      <P>
-        The Oz Compiler is a special evaluator.  In general, an evaluator
-        implements the mapping
-        <Math.Choice display>
-          <Math type=html>source_text &#215; environment -> value</Math>
-          <Math type=latex>\mbox{source\_text} \times \mbox{environment}
-            \rightarrow \mbox{value}</Math>
-        </Math.Choice>
-        The Oz Compiler does this by first translating the source text into
-        a more efficient representation (bytecode for the virtual machine) and
-        bringing it to execution.
-    <!-- Main Chapters -->
+    &intro;
     &directives;
     &ozbatch;
     &panel;
@@ -73,5 +62,6 @@
     &queries;
     &notifications;
   <Back>
+    <Bib.Extern id="mozart-opi" to="mozart.bib" key="Mozart-OPI">
     <Bib.Extern id="mozart-gump" to="mozart.bib" key="Mozart-Gump">
 </Book>

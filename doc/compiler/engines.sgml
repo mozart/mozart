@@ -12,7 +12,7 @@
     <P>
       The list of macro names currently defined is used by the
       parser to resolve macro directives such as <<\ifdef>> (see
-      <Ptr to="section.directives.macro">.
+      <Ptr to="section.directives.macro">).
     <P>
       Initially, this list only consists of macro names describing the
       Oz version number, &eg;, when running Oz&nbsp;3.0.10, the list is
