@@ -3,7 +3,7 @@ export 'class' : InteractiveManager
 import
    Application
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
-   Global(localDB mogulDB)
+   Global(localDB packageMogulDB authorMogulDB)
    ActionInstall(install:Install)
    ActionInfo(view)
    System(show:Show)
@@ -267,25 +267,10 @@ define
 	 C=InfoView
       end
    end
-
-   AuthorsDB={New class $
-		     feat dict
-		     meth init
-			self.dict={NewDictionary}
-			{ForAll Global.mogulDB.authors
-			 proc{$ R}
-			    {Dictionary.put self.dict R.id R.name}
-			 end}
-		     end
-		     meth condGet(Key Def Ret)
-			Ret={Dictionary.condGet self.dict Key Def}
-		     end
-		  end
-	      init}
    
    fun{AuthorsToString L}
       fun{AuthorIDToName ID}
-	 {AuthorsDB condGet({VirtualString.toAtom ID} ID $)}
+	 {Global.authorMogulDB condGet({VirtualString.toAtom ID} ID $)}.name
       end
    in
       if {List.is L} then
@@ -297,8 +282,6 @@ define
 	 {VirtualString.toString {AuthorIDToName L}}
       end
    end
-
-   
    %%
    %%
    %%
@@ -391,11 +374,20 @@ define
 	       {self.handle.author.desc set("No author defined.")}
 	    end
 	    local
-	       Desc={CondSelect Info body
-		     {CondSelect Info blurb unit}}
+	       Desc=if {HasFeature Info body} andthen
+		       Info.body\=unit andthen
+		       {VirtualString.toString Info.body}\=nil then
+		       Info.body
+		    elseif {HasFeature Info blurb} andthen
+		       Info.blurb\=unit andthen
+		       {VirtualString.toString Info.blurb}\=nil then
+		       Info.blurb
+		    else
+		       ""
+		    end
 	       Handle
 	    in
-	       if Desc\=unit then
+	       if Desc\=nil then
 		  {self.handle.blurb.desc set("Description : ")}
 		  {self.handle.blurb.place
 		   set(text(glue:nswe
@@ -580,7 +572,7 @@ define
 	 {Window show}
 	 self.toplevel=Window
 	 {Wait Global.localDB}
-	 {Wait Global.mogulDB}
+	 {Wait Global.packageMogulDB}
 	 {self displayInstalled}
 	 {Window wait}
 	 {Application.exit 0}
@@ -624,11 +616,13 @@ define
       
       meth displayInstalled
 	 {self.installTbButton set(true)}
-	 {@data display(r(info:{Global.localDB items($)} title:"Installed package"))}
+	 {@data display(r(info:{Global.localDB items($)}
+			  title:"Installed package"))}
       end
 
       meth displayMogul
-	 {@data display(r(info:Global.mogulDB.packages title:"Available packages from MOGUL"))}
+	 {@data display(r(info:{Global.packageMogulDB items($)}
+			  title:"Available packages from MOGUL"))}
       end
 
       meth displayFile
@@ -664,7 +658,11 @@ define
 	       end
 	    else skip end
 	 end
-	 {@info display(Info)}
+	 {@info display({Record.adjoinAt Info info
+			 {Record.adjoin
+			  {Global.packageMogulDB condGet(Info.info.id r $)}
+			  Info.info}}
+		       )}
       end
 
       meth install

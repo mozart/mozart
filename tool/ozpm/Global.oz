@@ -21,7 +21,9 @@ export
    dirPrefix        : DIRPREFIX
    pathLocalDB      : PATHLOCALDB
    localDB          : LOCALDB
-   mogulDB          : MOGULDB
+   mogulData        : MOGULDB
+   packageMogulDB   : PACKAGEMOGULDB
+   authorMogulDB    : AUTHORMOGULDB
    
 define
    FILEPKGDFT       = 'ozpm.dsc'
@@ -81,8 +83,14 @@ define
 		'mogul'(single type:string default:MOGUL)
 	       )}
 
-   DIRPREFIX   = {{Path.make {CondSelect Args 'prefix' DIRPREFIXDFT}} toBase($)}
-   PATHLOCALDB = {DIRPREFIX resolve(FILELOCALDB $)}
-   LOCALDB     = {New Database.'class' init(PATHLOCALDB)}
+   DIRPREFIX      = {{Path.make {CondSelect Args 'prefix' DIRPREFIXDFT}} toBase($)}
+   PATHLOCALDB    = {DIRPREFIX resolve(FILELOCALDB $)}
+   LOCALDB        = {New Database.'class' init(PATHLOCALDB)}
+   PACKAGEMOGULDB = {ByNeed fun{$}
+			       {New Database.'class' initFromList(MOGULDB.packages)}
+			    end}
+   AUTHORMOGULDB  = {ByNeed fun{$}
+			       {New Database.'class' initFromList(MOGULDB.authors)}
+			    end}
 
 end

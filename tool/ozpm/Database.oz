@@ -17,6 +17,14 @@ define
 	 file <- {{{Path.make File} expand($)} toString($)}
 	 db   <- {LoadDB @file}
       end
+      meth initFromList(L)
+	 file <- unit
+	 db   <- {NewDictionary}
+	 {ForAll L proc{$ R} {Dictionary.put @db
+			      {VirtualString.toAtom R.id}
+			      R}
+		   end}
+      end
       meth get(K V) {Dictionary.get @db {ToKey K} V} end
       meth put(K V) {Dictionary.put @db {ToKey K} V} end
       meth condGet(K D V) {Dictionary.condGet @db {ToKey K} D V} end
