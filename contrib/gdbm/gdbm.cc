@@ -39,6 +39,7 @@ int GDBM::id;
 
 inline Bool oz_isGdbm(OZ_Term t)
 {
+  t = OZ_deref(t);
   return oz_isExtension(t) &&
     oz_tagged2Extension(t)->getIdV()==GDBM::id;
 }
