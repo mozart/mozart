@@ -27,6 +27,10 @@
 // BitData
 // -------------------------------------------------------------------
 
+BitData::BitData(BitData&) {
+  OZ_error("unused");
+}
+
 void BitData::bitPrintStream(ostream& out) {
   int w = getWidth();
   for (int i=0; i<w; i++) out << ((get(i))?"1":"0");
@@ -287,6 +291,10 @@ OZ_BI_define(BIBitString_toList,1,1)
 // -------------------------------------------------------------------
 // ByteData
 // -------------------------------------------------------------------
+
+ByteData::ByteData(ByteData&) {
+  OZ_error("unused");
+}
 
 void ByteData::bytePrintStream(ostream& out) {
   int w = getWidth();
