@@ -88,13 +88,11 @@ OZ_Term GDBM::printV(int depth = 10)
 //
 // Errors have the form error(gdbm(PROC ARGS MSG) debug:DEBUG)
 
-#define GdbmARGS OZ_toList(_OZ_arity,_OZ_ARGS)
-
 #define GdbmException(PROC,MSG) \
-OZ_raiseC("gdbm",3,OZ_atom(PROC),GdbmARGS,OZ_atom(MSG))
+OZ_raiseC("gdbm",3,OZ_atom(PROC),OZ_inAsList(),OZ_atom(MSG))
 
 #define GdbmError(PROC,MSG) \
-OZ_raiseErrorC("gdbm",3,OZ_atom(PROC),GdbmARGS,OZ_atom(MSG))
+OZ_raiseErrorC("gdbm",3,OZ_atom(PROC),OZ_inAsList(),OZ_atom(MSG))
 
 OZ_BI_define(cgdbm_open,4,1)
 {
