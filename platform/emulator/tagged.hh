@@ -87,7 +87,7 @@ const int mallocBase = 0x40000000;
 const int mallocBase = 0;
 #endif
 #endif
-
+#endif
 
 // we loose 5 bits, 1 for GC, 4 for tags
 const int maxPointer = ((unsigned int)~0 >> (tagSize+1))|mallocBase;
