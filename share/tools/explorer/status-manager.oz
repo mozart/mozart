@@ -37,6 +37,8 @@ local
 	 BreakFlag:       nil
 	 BreakStatus:     none
 	 BrokenNodes:     nil
+	 KillFlag:        True
+	 KillId:          0
 	 IsPackedBlocked: False
 
       feat
@@ -125,7 +127,10 @@ local
 	 CurNodes      <- 0
 	 CurSolutions  <- 0
 	 CurFailures   <- 0
-	 CurBlocked   <- 0
+	 CurBlocked    <- 0
+	 @KillFlag     = True
+	 KillFlag      <- _
+	 KillId        <- @KillId + 1
 	 case @IsPackedBlocked then
 	    {Tk.send pack(forget self.Blocked self.BlockedImage)}
 	    IsPackedBlocked <- False 
@@ -262,6 +267,9 @@ local
 	 else true end
       end
 
+      meth getKill(?Flag ?Id)
+	 Flag=@KillFlag Id=@KillId
+      end
    end
 
 in
@@ -311,6 +319,10 @@ in
 	 {self.status unbreak}
       end
 
+      meth clearBreak
+	 {self.status start}
+      end
+      
       meth getBrokenNodes($)
 	 {self.status getBrokenNodes($)}
       end

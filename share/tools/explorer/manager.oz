@@ -31,15 +31,13 @@ in
       
       feat
 	 explorer
-	 killer
 
       attr
 	 IsBAB:        False
-	 Classes:      nil
 	 root:         False
 	 query:        False
 	 order:        False
-	 PrevBABSol:   False
+	 PrevSol:   False
 	 ToClose:      nil
 
       
@@ -49,31 +47,17 @@ in
 	 <<DialogManager   init>>
 	 <<MenuManager     init>>
 	 <<StatusManager   init>>
-	 create self.killer
-	    from UrObject
-	    attr Flag Id
-	    meth clear
-	       Id <- {NewName}   @Flag=True   Flag <- _
-	    end
-	    meth get(?F ?I)
-	       F=@Flag   I=@Id
-	    end
-	 end
 	 self.explorer       = EXPLORER
 	 {PackAll}
 	 <<ToplevelManager configurePointer(idle)>>
       end
       
       meth clear
-	 {self.killer clear}
 	 <<MenuManager     clear>>
 	 <<StatusManager   clear>>
 	 <<ToplevelManager clear>>
-	 Classes    <- False
-	 case @root of !False then true elseof Root then
-	    root <- False
-	 end
-	 PrevBABSol <- False
+	 root    <- False
+	 PrevSol <- False
       end
 
       meth clearDialogs
@@ -143,9 +127,10 @@ in
 	    case <<StatusManager hasBlocked($)>> then
 	       <<MenuManager disable(search([next all step]))>>
 	    else
-	       <<MenuManager state({CurNode isNextPossible($)}
+	       <<MenuManager state({CurNode isNextPossible({Not @IsBAB} $)}
 				   search([next all]))>>
-	       <<MenuManager state({CurNode isStepPossible($)} search(step))>>
+	       <<MenuManager state({CurNode isStepPossible({Not @IsBAB} $)}
+				   search(step))>>
 	    end
 	    %% Nodes
 	    case {CurNode isHidden($)} then
@@ -171,9 +156,7 @@ in
 
       meth Layout
 	 Scale = @scale
-	 Font  = case @curFont of !False then False
-		 elseof CF then CF.name
-		 end
+	 Font  = @curFont
 	 Root  = @root
       in
 	 <<ToplevelManager configurePointer(drawing)>>
@@ -207,15 +190,14 @@ in
 
       meth query(Query Order)
 	 <<Manager clear>>
-	 IsBAB      <- (Order\=False)
-	 query      <- Query
-	 order      <- Order
-	 curNode    <- False
-	 PrevBABSol <- False
-	 Classes    <- {MakeClasses @IsBAB self Order}
+	 IsBAB   <- (Order\=False)
+	 query   <- Query
+	 order   <- Order
+	 curNode <- False
+	 PrevSol <- False
 	 {self.status setBAB(@IsBAB)}
 	 <<StatusManager start(_)>>
-	 root <- {MakeRoot Query @IsBAB @Classes}
+	 root <- {MakeRoot self Query Order}
 	 <<Manager prepare>>
       end
 
@@ -260,6 +242,12 @@ in
       %% Implementation of ``Search'' functionality
       %%
 
+      meth getPrevSol($)
+	 case @PrevSol of !False then False
+	 elseof Sol then {Sol getOriginalSpace($)}
+	 end
+      end
+      
       meth startSearch($ <= _)
 	 <<Manager         busy>>
 	 <<MenuManager     normal(explorer(halt))>>
@@ -268,39 +256,36 @@ in
       end
 
       meth stopSearch(Sol Cursor <= False)
-	 PutCursor = case Cursor==False then
-			case Sol==False then @curNode
-			else
-			   case @IsBAB then PrevBABSol <- {Sol getSol($)}
-			   else true
+	 case @root==nil then true else
+	    PutCursor = case Cursor==False then
+			   case Sol==False then @curNode
+			   else
+			      case @IsBAB then PrevSol <- Sol
+			      else true
+			      end
+			      case {Sol isHidden($)} then @curNode
+			      else Sol
+			      end
 			   end
-			   case {Sol isHidden($)} then @curNode
-			   else Sol
-			   end
+			else Cursor
 			end
-		     else Cursor
-		     end
-      in
-	 <<StatusManager   stop>>
-	 <<ToplevelManager hideCursor>>
-	 <<Manager         LayoutAfterSearch>>
-	 <<Manager         setCursor(PutCursor)>>
-	 <<MenuManager     disable(explorer(halt))>>
-	 <<Manager         idle>>
+	 in
+	    <<StatusManager   stop>>
+	    <<ToplevelManager hideCursor>>
+	    <<Manager         LayoutAfterSearch>>
+	    <<Manager         setCursor(PutCursor)>>
+	    <<MenuManager     disable(explorer(halt))>>
+	    <<Manager         idle>>
+	 end
       end
       
       meth next
 	 CurNode = @curNode
 	 Break   = <<Manager startSearch($)>>
       in
-	 <<Manager stopSearch(case @IsBAB then
-				 {CurNode next(Break @PrevBABSol
-					       <<getSearchDist($)>>
-					       <<getInfoDist($)>> $)}
-			      else
-				 {CurNode next(Break <<getSearchDist($)>>
-					       <<getInfoDist($)>> $)}
-			      end)>>
+	 <<Manager stopSearch({CurNode next(Break <<getPrevSol($)>>
+					    <<getSearchDist($)>>
+					    <<getInfoDist($)>> $)})>>
       end
       
       meth all
@@ -311,17 +296,12 @@ in
       meth DoAll(NoSol)
 	 Break   = <<StatusManager getBreakFlag($)>>
 	 CurNode = @curNode
-	 Sol     = case @IsBAB then
-		      {CurNode next(Break @PrevBABSol
-				    <<getSearchDist($)>>
-				    <<getInfoDist($)>> $)}
-		   else
-		      {CurNode next(Break <<getSearchDist($)>>
+	 Sol     = {CurNode next(Break <<getPrevSol($)>>
+				 <<getSearchDist($)>>
 				 <<getInfoDist($)>> $)}
-		   end
       in
 	 case Sol\=False andthen <<StatusManager getBreakStatus($)>>==none then
-	    case @IsBAB then PrevBABSol <- {Sol getSol($)}
+	    case @IsBAB then PrevSol <- Sol
 	    else true
 	    end
 	    case NoSol==1 then
@@ -341,17 +321,13 @@ in
 	 CurNode = @curNode
       in
 	 <<Manager startSearch(_)>>
-	 <<Manager stopSearch(case @IsBAB then
-				 {CurNode step(@PrevBABSol
-					       <<getInfoDist($)>> $)}
-			      else {CurNode step(<<getInfoDist($)>> $)}
-			      end
-	                      {CurNode rightMost($)})>>
+	 <<Manager stopSearch({CurNode step(<<getPrevSol($)>>
+					    <<getInfoDist($)>> $)})>>
       end
 
       meth nodes(ToDo)
 	 <<Manager busy>>
-	 <<StatusManager unbreak>>
+	 <<StatusManager clearBreak>>
 	 <<Manager hideCursor>>
 	 {@curNode ToDo}
 	 <<Manager Layout>>
@@ -467,30 +443,27 @@ in
 	 end
       end	    
 
-      meth wake(Mom Id Control Message)
-	 case {self.killer get(_ $)}==Id then
-	    case Mom of !False then <<Manager reset>>
-	    else
-	       <<Manager busy>>
-	       case @IsBAB andthen {Label Control}==succeeded then
-		  PrevBABSol <- Control.1
-	       else true
-	       end
-	       <<StatusManager start(_)>>
+      meth wake(Node KillId)
+	 case {self.status getKill(_ $)}==KillId then
+	    case Node.mom of !False then
+	       <<Manager reset>>
+	    elseof Mom then
+	       {Mom  removeLast(<<Manager getPrevSol($)>>)}
+	       {Node close}
 	       {self.status removeBlocked}
-	       {Mom Message}
-	       <<Manager setCursor(@curNode)>>
+	       curNode <- Mom
+	       <<Manager step>>
 	    end
-	    <<Manager prepare>>
-	    <<Manager idle>>
 	 else true
 	 end
       end
 
       meth postscript
 	 <<Manager hideCursor>>
+	 <<ToplevelManager hideNumbers>>
 	 <<Manager busy>>
 	 <<DialogManager postscript>>
+	 <<ToplevelManager unhideNumbers>>
 	 <<Manager idle>>
 	 case @curNode\=False then
 	    <<Manager setCursor(@curNode False)>>

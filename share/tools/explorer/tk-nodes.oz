@@ -407,7 +407,7 @@ local
 		       fill:    BlockedColor
 		       width:   TermNodeBorderWidth
 		       outline: LineColor
-		       tags:    q(Node Tree))}
+		       tags:    q(Node Tree MomTree))}
 	    isDrawn <- True
 	 end
 	 
