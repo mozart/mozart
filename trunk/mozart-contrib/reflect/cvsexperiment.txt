@@ -1,0 +1,9 @@
+This file is to be deleted real soon.
+It was only vreated to verify CVS access privilages.
+
+This file was supposed to land in the mozart-contrib module, in the
+reflect directory.
+
+SzG
+
+
