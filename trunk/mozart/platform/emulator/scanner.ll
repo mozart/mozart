@@ -972,6 +972,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "finally"/\(                   { return T_finally; }
 "for"                          { return T_for; }
 "for"/\(                       { return T_for; }
+"loop"			       { return T_FOR; }
+"loop"/\(		       { return T_FOR; }
 "from"                         { return T_from; }
 "from"/\(                      { return T_from; }
 "fun"                          { return T_fun; }
