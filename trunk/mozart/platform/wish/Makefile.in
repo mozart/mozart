@@ -70,3 +70,5 @@ provide-copy: $(PLATFORMDIR)
 		$(LN_S) tk8.0 tk)
 
 check:
+
+depend:
