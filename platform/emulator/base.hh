@@ -367,17 +367,15 @@ Thread *oz_ThreadToC(TaggedRef term);
 OZ_Term oz_thread(Thread *tt);
 
 // see am.cc
-void handlerUSR1();
-void handlerINT();
-void handlerTERM();
-void handlerMessage();
-void handlerSEGV();
-void handlerBUS();
-void handlerPIPE();
-void handlerCHLD();
-void handlerFPE();
-void handlerALRM();
-void handlerUSR2();
+void handlerUSR1(int);
+void handlerINT(int);
+void handlerTERM(int);
+void handlerSEGV(int);
+void handlerBUS(int);
+void handlerPIPE(int);
+void handlerCHLD(int);
+void handlerALRM(int);
+void handlerUSR2(int);
 
 void oz_checkExtSuspension(Suspension susp, Board *varHome);
 
@@ -447,13 +445,16 @@ SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
 // see ioHandler.cc
 void oz_io_select(int fd, int mode, OZ_IOHandler fun, void *val);
 void oz_io_acceptSelect(int fd, OZ_IOHandler fun, void *val);
-int oz_io_select(int fd, int mode,TaggedRef l,TaggedRef r);
+int  oz_io_select(int fd, int mode,TaggedRef l,TaggedRef r);
 void oz_io_acceptSelect(int fd,TaggedRef l,TaggedRef r);
 void oz_io_deSelect(int fd,int mode);
 void oz_io_deSelect(int fd);
 void oz_io_handle();
 void oz_io_check();
 void oz_io_awakeVar(TaggedRef var);
+
+
+
 
 // see gc.cc
 Bool oz_staticProtect(TaggedRef *);

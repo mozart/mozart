@@ -184,9 +184,7 @@ LBLstart:
   //  Assert(CTT==0); // TMUELLER
 
   // check status register
-  if (e->isSetSFlag()) {
-    e->checkStatus();
-  }
+  e->checkStatus(OK);
 
   if (am.threadsPool.threadQueuesAreEmpty()) {
     e->suspendEngine();

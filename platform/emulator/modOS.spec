@@ -192,5 +192,8 @@
     'getpwnam'	=> { in  => ['+virtualString'],
 			     out => ['+record'],
 			     BI  => unix_getpwnam},
+    'signal'	=> { in  => ['+int','+procedure'],
+			     out => [],
+			     BI  => unix_signalHandler},
 
  );

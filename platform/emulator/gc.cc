@@ -2821,7 +2821,6 @@ void checkGC() {
 }
 
 void AM::doGC() {
-  osBlockSignals();
   Assert(oz_onToplevel());
 
   /* do gc */
@@ -2848,7 +2847,6 @@ void AM::doGC() {
   ozconf.heapThreshold = min(wanted, ozconf.heapMaxSize);
   
   unsetSFlag(StartGC);
-  osUnblockSignals();
 }
 
 OzDebug *OzDebug::gcOzDebug() {
