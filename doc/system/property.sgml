@@ -635,6 +635,23 @@
           <Td/Maximal depth used for <<System.show>> and
           <<System.print>> (see <Ptr to="chapter.system">)./
         </Tr>
+        <Tr>
+          <Td/<<scientificFloats>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Forces the scientific (with an exponent) representation
+          of floats. By default floats are printed in the decimal
+          notation unless the exponent of the scientific
+          representation is smaller than -4 or larger or equal to the
+          precision (the 'g' conversion by the 'fprintf' function in
+          POSIX.1)./
+        </Tr>
+        <Tr>
+          <Td/<<floatPrecision>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Number of digits in the representation of floats, 5 by default./
+        </Tr>
       </Table>
     </P>
 

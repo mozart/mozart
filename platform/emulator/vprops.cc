@@ -88,6 +88,8 @@ enum EmulatorPropertyIndex {
   // PRINT
   PROP_PRINT_DEPTH,
   PROP_PRINT_WIDTH,
+  PROP_PRINT_FLOATPRECISION,
+  PROP_PRINT_SCIENTIFICFLOATS,
   PROP_PRINT_VERBOSE,
   PROP_PRINT,
   // FD
@@ -359,10 +361,17 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     // PRINT
     CASE_INT(PROP_PRINT_DEPTH,ozconf.printDepth);
     CASE_INT(PROP_PRINT_WIDTH,ozconf.printWidth);
+    CASE_INT(PROP_PRINT_FLOATPRECISION,ozconf.printFloatPrecision);
+    CASE_BOOL(PROP_PRINT_SCIENTIFICFLOATS,ozconf.printScientificFloats);
     CASE_BOOL(PROP_PRINT_VERBOSE,ozconf.printVerbose);
-    CASE_REC(PROP_PRINT,"print",(3,AtomDepth,AtomWidth,AtomVerbose),
+    CASE_REC(PROP_PRINT,"print",(5,
+                                 AtomDepth,AtomWidth,
+                                 AtomFloatPrecision,AtomScientificFloats,
+                                 AtomVerbose),
              SET_INT(AtomDepth, ozconf.printDepth);
              SET_INT(AtomWidth, ozconf.printWidth);
+             SET_INT(AtomFloatPrecision, ozconf.printFloatPrecision);
+             SET_BOOL(AtomScientificFloats, ozconf.printScientificFloats);
              SET_BOOL(AtomVerbose, ozconf.printVerbose););
     // FD
     CASE_INT(PROP_FD_VARIABLES,ozstat.fdvarsCreated.total);
@@ -785,10 +794,14 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     // PRINT
     CASE_NAT(PROP_PRINT_WIDTH,ozconf.printWidth);
     CASE_NAT(PROP_PRINT_DEPTH,ozconf.printDepth);
+    CASE_NAT(PROP_PRINT_FLOATPRECISION,ozconf.printFloatPrecision);
+    CASE_BOOL(PROP_PRINT_SCIENTIFICFLOATS,ozconf.printScientificFloats);
     CASE_BOOL(PROP_PRINT_VERBOSE,ozconf.printVerbose);
     CASE_REC(PROP_PRINT,
              SET_NAT(AtomWidth,ozconf.printWidth);
              SET_NAT(AtomDepth,ozconf.printDepth);
+             SET_NAT(AtomFloatPrecision,ozconf.printFloatPrecision);
+             SET_BOOL(AtomScientificFloats,ozconf.printScientificFloats);
              SET_BOOL(AtomVerbose,ozconf.printVerbose););
     // FD
     CASE_NAT_DO(PROP_FD_THRESHOLD,reInitFDs(INT__));
@@ -1141,6 +1154,8 @@ static const struct prop_entry prop_entries[] = {
   // PRINT
   {"print.depth",PROP_PRINT_DEPTH},
   {"print.width",PROP_PRINT_WIDTH},
+  {"print.floatPrecision",PROP_PRINT_FLOATPRECISION},
+  {"print.scientificFloats",PROP_PRINT_SCIENTIFICFLOATS},
   {"print.verbose",PROP_PRINT_VERBOSE},
   {"print",PROP_PRINT},
   // FD

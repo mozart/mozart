@@ -124,6 +124,8 @@
           ( AtomUser,        "user"),
           ( AtomVariables,   "variables"),
           ( AtomWidth,       "width"),
+          ( AtomFloatPrecision, "floatPrecision"),
+          ( AtomScientificFloats,       "scientificFloats"),
           ( AtomVerbose,     "verbose"),
           ( AtomHeap,        "heap"),
           ( AtomDetailed,    "detailed"),

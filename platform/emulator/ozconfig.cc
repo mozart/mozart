@@ -51,6 +51,8 @@ Bool getDefaultPropertyBool(char *p,Bool def)
 void ConfigData::init() {
   printDepth            = PRINT_DEPTH;
   printWidth            = PRINT_WIDTH;
+  printFloatPrecision   = PRINT_FLOATPRECISION;
+  printScientificFloats = PRINT_SCIENTIFICFLOATS;
   printVerbose          = PRINT_VERBOSE;
   errorPrintDepth       = ERROR_PRINT_DEPTH;
   errorPrintWidth       = ERROR_PRINT_WIDTH;
