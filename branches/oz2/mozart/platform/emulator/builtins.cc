@@ -6595,16 +6595,7 @@ OZ_C_proc_begin(BIraiseError,1)
 {
   OZ_declareArg(0,exc);
 
-  OZ_Term ret = OZ_record(OZ_atom("error"),
-			  cons(OZ_int(1),
-			       cons(OZ_atom("debug"),nil())));
-  OZ_putSubtree(ret,OZ_int(1),exc);
-  OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
-
-  am.exception.info = NameUnit;
-  am.exception.value = ret;
-  am.exception.debug = TRUE;
-  return RAISE;
+  return OZ_raiseError(exc);
 }
 OZ_C_proc_end
 

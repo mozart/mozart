@@ -293,6 +293,8 @@ extern int _FUNDECL(OZ_unprotect,(OZ_Term *));
 extern OZ_Return _FUNDECL(OZ_typeError,(int pos,char *type));
 extern OZ_Return _FUNDECL(OZ_raise,(OZ_Term));
 extern OZ_Return _FUNDECL(OZ_raiseC,(char *label,int arity,...));
+extern OZ_Return _FUNDECL(OZ_raiseError,(OZ_Term));
+extern OZ_Return _FUNDECL(OZ_raiseErrorC,(char *label,int arity,...));
 
 /* special! dont use! */
 extern OZ_Return _FUNDECL(OZ_raiseA,(char*, int, int));
