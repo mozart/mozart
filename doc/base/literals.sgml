@@ -104,9 +104,9 @@
 	  always applies <<P>>.
 
 	<Entry><Span class=index/<<Or>>/
-	  <Index/<<Bool>><And><<or>>/
+	  <Index/<<Bool>><And><<'or'>>/
 	<Synopsis>
-	  <<{Bool.or ?+{B1} ?+{B2} ??{B3}}>>
+	  <<{Bool.'or' ?+{B1} ?+{B2} ??{B3}}>>
 	<Item>
 	  returns the disjunction of truth values <<B1>> and <<B2>>.
 	  Note that <<Or>> is different from conditional disjunction

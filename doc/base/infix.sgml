@@ -28,14 +28,14 @@
       <TR/<TD colspan=2/non-associative//
       <TR/<TD/<<??{B} = ?_{X} == ?_{Y}>>/<TD/<<{Value.'==' X Y B}>>//
       <TR/<TD/<<??{B} = ?_{X} \= ?_{Y}>>/<TD/<<{Value.'\\=' X Y B}>>//
-      <TR/<TD/<<??{B} = ?+{AIF1} &lt; ?+{AIF2}>>/
-	<TD/<<{Value.'&lt' AIF1 AIF2 B}>>//
-      <TR/<TD/<<??{B} = ?+{AIF1} =&lt; ?+{AIF2}>>/
-	<TD/<<{Value.'=&lt;' AIF1 AIF2 B}>>//
-      <TR/<TD/<<??{B} = ?+{AIF1} > ?+{AIF2}>>/
-	<TD/<<{Value.'>' AIF1 AIF2 B}>>//
-      <TR/<TD/<<??{B} = ?+{AIF1} >= ?+{AIF2}>>/
-	<TD/<<{Value.'>=' AIF1 AIF2 B}>>//
+      <TR/<TD/<<??{B} = ?+{AFI1} &lt; ?+{AFI2}>>/
+	<TD/<<{Value.'&lt' AFI1 AFI2 B}>>//
+      <TR/<TD/<<??{B} = ?+{AFI1} =&lt; ?+{AFI2}>>/
+	<TD/<<{Value.'=&lt;' AFI1 AFI2 B}>>//
+      <TR/<TD/<<??{B} = ?+{AFI1} > ?+{AFI2}>>/
+	<TD/<<{Value.'>' AFI1 AFI2 B}>>//
+      <TR/<TD/<<??{B} = ?+{AFI1} >= ?+{AFI2}>>/
+	<TD/<<{Value.'>=' AFI1 AFI2 B}>>//
       <TR/<TD colspan=2/left-associative//
       <TR/<TD/<<??{FI3} = ?+{FI1} + ?+{FI2}>>/
 	<TD/<<{Number.'+' FI1 FI2 FI3}>>//
@@ -51,14 +51,14 @@
       <TR/<TD/<<??{I3} = ?+{I1} mod ?+{I2}>>/
 	<TD/<<{Int.'mod' I1 I2 I3}>>//
       <TR/<TD colspan=2/left-associative//
-      <TR/<TD/<<?+{K} , ?+{R}>>/<TD/<<{Object.send R K self}>>//
+      <TR/<TD/<<?+{K}, ?+{R}>>/<TD/<<{Object.',' K R}>>//
       <TR/<TD colspan=2/prefix//
       <TR/<TD/<<??{FI1} = ~?+{FI2}>>/<TD/<<{Number.'~' FI2 FI1}>>//
       <TR/<TD colspan=2/left-associative//
-      <TR/<TD/<<?_{X} = ?+{RC} . ?+{LI}>>/<TD/<<{Value.'.' RC LI X}>>//
-      <TR/<TD/<<?_{X} = ?*{R} ^ ?+{LI}>>/<TD/<<{Record.'^' R LI X}>>//
+      <TR/<TD/<<?_{X} = ?+{RC}.?+{LI}>>/<TD/<<{Value.'.' RC LI X}>>//
+      <TR/<TD/<<?_{X} = ?*{R}^?+{LI}>>/<TD/<<{Record.'^' R LI X}>>//
       <TR/<TD colspan=2/infix//
       <TR/<TD/<<?_{X} = @?+{LI}>>/<TD/<<{Object.'@' LI X}>>//
+      <TR/<TD/<<?_{X} = !!?_{Y}>>/<TD/<<{Value.'!!' X Y}>>//
     </Table>
-    <!--** associativity -->
 </Chapter>
