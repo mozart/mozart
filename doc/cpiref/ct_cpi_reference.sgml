@@ -254,18 +254,21 @@ The constraint system dependent part of a class derived from
 <Item> a constraint <<C>>, &ie;, an instance of the class representing
 a constraint,
 
+<Item> a constraint <<EC>>, &ie;, an instance of the class representing
+a constraint,
+
 <Item> a reference to a constraint <<CR>>, and
 
 <Item> a constraint profile <<CP>>.
 
 </List>
 
-The constraint <<C>> is used either to encapsulate propagation (for
-reified constraints) or to handle constraints of global variables
-properly. The reference to a constraint <<CR>> is used to access the
-actual constraint and thus to be able to modify it. It either points
-to <<C>> or directly to the constraint associated with a constrained
-variable.
+The constraint <<C>> is used to handle constraints of global
+variables. The constraint <<EC>> is used to handle encapsulate
+propagation typically occurring in reified constraints. The reference
+to a constraint <<CR>> is used to access the actual constraint and
+thus to be able to modify it. It either points to <<C>>, <<EC>>, or
+directly to the constraint associated with a constrained variable.
 
 <SubSection id="ct.reference.ctvar.protected"> <Title>Members to
 be Defined</Title>
@@ -284,13 +287,19 @@ be Defined</Title>
 <Index class=proglang><<OZ_CtVar>><And><<ctRefConstraint>></Index>
 <Synopsis><<virtual OZ_Ct * ctRefConstraint(OZ_Ct * c) = 0;>>
 
-<Item> Set <<CR>> to <<c>> and returns <<CR>>.
+<Item> Sets <<CR>> to <<c>> and returns <<CR>>.
 
 <Entry class="protected purevirtual member function"><<ctSaveConstraint>>
 <Index class=proglang><<OZ_CtVar>><And><<ctSaveConstraint>></Index>
 <Synopsis><<virtual OZ_Ct * ctSaveConstraint(OZ_Ct * c) = 0;>>
 
-<Item> Stores <<c>> in <<C>> and returns <<c>>.
+<Item> Stores <<c>> in <<C>> and returns a reference to <<C>>.
+
+<Entry class="protected purevirtual member function"><<ctSaveEncapConstraint>>
+<Index class=proglang><<OZ_CtVar>><And><<ctSaveEncapConstraint>></Index>
+<Synopsis><<virtual OZ_Ct * ctSaveEncapConstraint(OZ_Ct * c) = 0;>>
+
+<Item> Stores <<c>> in <<EC>> and returns a reference to <<EC>>.
 
 <Entry class="protected purevirtual member function"><<ctRestoreConstraint>>
 <Index class=proglang><<OZ_CtVar>><And><<ctRestoreConstraint>></Index>
