@@ -303,7 +303,7 @@ BIspec fdSpec[] = {
   {"mkFSetVar", 5, BImkFSetVar},
 
 #ifndef FOREIGNFDPROPS
-  {"fsp_init",         0, fsp_init},
+  {"fsp_init",         1, fsp_init},
   {"fsp_isIn",         3, fsp_isIn},
   {"fsp_include",      2, fsp_include},
   {"fsp_exclude",      2, fsp_exclude},

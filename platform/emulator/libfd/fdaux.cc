@@ -13,7 +13,7 @@
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_init, 0)
+OZ_C_proc_begin(fdp_init, 1)
 {
   
 #ifdef OZ_DEBUG
@@ -21,7 +21,7 @@ OZ_C_proc_begin(fdp_init, 0)
 #elif OZ_PROFILE
   cout << "*** PROFILE-FDLIB ***" << endl << flush;
 #endif
-  return PROCEED;
+  return OZ_unifyAtom(OZ_args[0], __DATE__ " (" __TIME__ ")");
 }
 OZ_C_proc_end
 
