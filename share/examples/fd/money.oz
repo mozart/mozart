@@ -38,8 +38,8 @@ end
 {ExploreAll Money}
 
 /*
-{Browse {SearchOne Money}}
+{Inspect {SearchOne Money}}
 
-{Browse {SearchAll Money}}
+{Inspect {SearchAll Money}}
 
 */
