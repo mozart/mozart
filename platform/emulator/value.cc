@@ -331,6 +331,9 @@ Abstraction *ObjectClass::getMethod(TaggedRef label, SRecordArity arity, RefsArr
   return lookupDefault(label,arity,X) ? abstr : (Abstraction*) NULL;
 }
 
+
+
+/* X==NULL means: do not reorder X args */
 Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X)
 {
   TaggedRef def;
@@ -351,11 +354,13 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
         literalEq(oz_deref(rec->getArg(widthProvided)),NameOoRequiredArg))
       return NO;
 
-    for (int i=widthProvided; i<widthDefault; i++) {
-      if (literalEq(oz_deref(rec->getArg(i)),NameOoDefaultVar)) {
-        X[i] = oz_newVariable();
-      } else {
-        X[i] = rec->getArg(i);
+    if (X) {
+      for (int i=widthProvided; i<widthDefault; i++) {
+        if (literalEq(oz_deref(rec->getArg(i)),NameOoDefaultVar)) {
+          X[i] = oz_newVariable();
+        } else {
+          X[i] = rec->getArg(i);
+        }
       }
     }
     return OK;
@@ -377,14 +382,17 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
 
     if (!oz_isNil(arityList) && featureEq(oz_head(arityList),feat)) {
       arityList = oz_tail(arityList);
-      auxX[argno] = X[argnoProvided];
+      if (X)
+        auxX[argno] = X[argnoProvided];
       argnoProvided++;
     } else if (literalEq(value,NameOoDefaultVar)) {
-      auxX[argno] = oz_newVariable();
+      if (X)
+        auxX[argno] = oz_newVariable();
     } else if (literalEq(value,NameOoRequiredArg)) {
       return NO;
     } else {
-      auxX[argno] = rec->getArg(argno);
+      if (X)
+        auxX[argno] = rec->getArg(argno);
     }
   }
 
@@ -392,9 +400,11 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
   if (!oz_isNil(arityList))
     return NO;
 
-  while(argno>0) {
-    argno--;
-    X[argno] = auxX[argno];
+  if (X) {
+    while(argno>0) {
+      argno--;
+      X[argno] = auxX[argno];
+    }
   }
 
   return OK;
