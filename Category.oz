@@ -10,13 +10,13 @@ export
 define
    class HTML_File from Open.file Open.html end
    %%
-   fun {MakePage Title Rows Doc}
+   fun {MakePage Title Subtitle Rows Doc}
       html(
 	 head(
 	    title(Title)
 	    {Manager getCssLink($)})
 	 body({HTML_Navigation.getNavigationBar}
-	    h1('class':'title' Title)
+	    h1('class':'title' Subtitle)
 	    'div'(
 	       'class':'entryinfo'
 	       'div'(
@@ -37,7 +37,7 @@ define
    %%
    fun {MainPage Cats}
       {MakePage
-       "Categories"
+       "Categories" "All Categories"
        {Map {Record.toListInd Cats}
 	fun {$ C#R}
 	   tr('class':'header'
@@ -52,9 +52,9 @@ define
    end
    %%
    fun {CatPage C R Pkgs}
-      {MakePage C
-       tr(th(colspan:3 'class':'catinfo' {HtmlQuote R.description}))
-       |{Map {SortPkgs Pkgs}
+      {MakePage C {HtmlQuote R.description}#" ("#C#")"
+%       tr(th(colspan:3 'class':'catinfo' {HtmlQuote R.description}))|
+       {Map {SortPkgs Pkgs}
 	 fun {$ P}
 	    Id = {P getSlot('id' $)}
 	    Blurb = {P getSlot('blurb' $)}
@@ -105,7 +105,7 @@ define
       Pkgs = {Manager get_packages($)}
    in
       {WriteHtmlPage
-       {MakePage "Packages"
+       {MakePage "Packages" "All Packages"
 	{Map {SortPkgs Pkgs}
 	 fun {$ P}
 	    Id = {P getSlot('id' $)}

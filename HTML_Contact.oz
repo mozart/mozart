@@ -47,7 +47,7 @@ define
 			   {Map TOC
 			    fun {$ ID}
 			       L={Manager id_to_href(ID $)}
-			       N={{Manager condGetId(ID unit $)} getPackageName($)}
+			       N={{Manager condGetId(ID ReturnNil $)} getPackageName($)}
 			    in
 			       {Manager trace('creating link to '#ID#' '#L)}
 			       a(href:L
@@ -62,4 +62,5 @@ define
 	       ))
       end
    end
+   fun{ReturnNil _} nil end
 end
