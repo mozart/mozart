@@ -8,6 +8,15 @@
 : ${OZBOOTINIT="$BUILDTOP/share/lib/boot-init"}
 : ${OZBOOTOZC="$BUILDTOP/share/lib/boot-ozc"}
 
+case $OZPLATFORM in
+    win32*)
+        exe=emulator.dll
+        ;;
+    *)
+        exe=emulator.exe
+        ;;
+esac
+
 if test -z "$OZEMULATOR"
 then
     for d in \
@@ -15,9 +24,9 @@ then
         $BUILDTOP/platform/emulator/$OZPLATFORM \
         $OZPREFIX/platform/$OZPLATFORM
     do
-        if test -x $d/emulator.exe
+        if test -x $d/$exe
         then
-            OZEMULATOR=$d/emulator.exe
+            OZEMULATOR=$d/$exe
             break
         fi
     done
@@ -25,7 +34,7 @@ fi
 
 if test -z "$OZEMULATOR"
 then
-    echo Fatal error: emulator.exe not found
+    echo Fatal error: $exe not found
     exit 1
 fi
 
@@ -36,4 +45,14 @@ then
     echo "Using OZBOOTOZC:  $OZBOOTOZC"
 fi
 
-exec $OZEMULATOR -init $OZBOOTINIT -u $OZBOOTOZC -- "$@"
+case $OZPLATFORM in
+    win32*)
+        OZEMULATOR=`cygpath -w $OZEMULATOR`
+        OZINIT=`cygpath -w $OZBOOTINIT`
+        export OZEMULATOR OZINIT
+        exec $BUILDTOP/platform/mswindows/ozengine -u `cygpath -w $OZBOOTOZC` -- "$@"
+        ;;
+    *)
+        exec $OZEMULATOR -init $OZBOOTINIT -u $OZBOOTOZC -- "$@"
+        ;;
+esac
