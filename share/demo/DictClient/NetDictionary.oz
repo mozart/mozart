@@ -94,7 +94,12 @@ define
 	 end
       end
       meth writeLine(S)
-	 TextSocket, write(vs: S#'\r\n')
+	 try
+	    TextSocket, write(vs: S#'\r\n')
+	 catch system(os(os 4: Text ...) ...) then
+	    {self.crash}
+	    {Exception.raiseError netdict(serverClosed unit)}
+	 end
       end
    end
 
