@@ -1,3 +1,18 @@
+/*
+ *
+ * ###   #     # ######  ####### ######  #######    #    #     # #######
+ *  #    ##   ## #     # #     # #     #    #      # #   ##    #    #
+ *  #    # # # # #     # #     # #     #    #     #   #  # #   #    #
+ *  #    #  #  # ######  #     # ######     #    #     # #  #  #    #
+ *  #    #     # #       #     # #   #      #    ####### #   # #    #
+ *  #    #     # #       #     # #    #     #    #     # #    ##    #
+ * ###   #     # #       ####### #     #    #    #     # #     #    #
+ *
+ * Whenever you change this file, make sure that you also change the
+ * appropriate handbook chapter: system/system.raw!!!!!!!!
+ */
+
+
 #define COMPILER_TIMEOUT	100 /* ms */
 
 #define IO_BUF_SIZE		10000
@@ -60,4 +75,18 @@
 #define NumberOfXRegisters	10000
 
 #define OzCompiler	"oz.compiler"
+
+/*
+ *
+ * ###   #     # ######  ####### ######  #######    #    #     # #######
+ *  #    ##   ## #     # #     # #     #    #      # #   ##    #    #
+ *  #    # # # # #     # #     # #     #    #     #   #  # #   #    #
+ *  #    #  #  # ######  #     # ######     #    #     # #  #  #    #
+ *  #    #     # #       #     # #   #      #    ####### #   # #    #
+ *  #    #     # #       #     # #    #     #    #     # #    ##    #
+ * ###   #     # #       ####### #     #    #    #     # #     #    #
+ *
+ * Whenever you change this file, make sure that you also change the
+ * appropriate handbook chapter: system/system.raw!!!!!!!!
+ */
 
