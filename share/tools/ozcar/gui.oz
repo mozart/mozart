@@ -234,7 +234,7 @@ in
 	    self.emacsThreadsMenu =
 	    {New TkTools.popupmenu tkInit(parent:   self.ButtonFrame
 					  entries:  EmacsThreadsList
-					  selected: 2
+					  selected: 1
 					  relief:   raised
 					  padx:     5
 					  pady:     2
