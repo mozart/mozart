@@ -6092,8 +6092,6 @@ OZ_C_proc_begin(BISystemGetSpaces,1) {
 OZ_C_proc_end
 
 OZ_C_proc_begin(BISystemGetErrors,1) {
-  OZ_Term message  = OZ_pair2(OZ_atom("message"),
-                          ozconf.errorMessage  ? NameTrue : NameFalse);
   OZ_Term thread   = OZ_pair2(OZ_atom("thread"),
                           ozconf.errorThread   ? NameTrue : NameFalse);
   OZ_Term location = OZ_pair2(OZ_atom("location"),
@@ -6106,9 +6104,9 @@ OZ_C_proc_begin(BISystemGetErrors,1) {
   return OZ_unify(OZ_getCArg(0),
                   OZ_recordInit(OZ_atom("errors"),
                      OZ_cons(depth, OZ_cons(hints,
-                       OZ_cons(location, OZ_cons(message,
+                       OZ_cons(location,
                          OZ_cons(thread, OZ_cons(width,
-                                                 nil()))))))));
+                                                 nil())))))));
 }
 OZ_C_proc_end
 
@@ -6279,14 +6277,12 @@ OZ_C_proc_end
 OZ_C_proc_begin(BISystemSetErrors,1) {
   LookRecord(t);
 
-  DoBoolFeature(message,  t, "message");
   DoBoolFeature(thread,   t, "thread");
   DoBoolFeature(location, t, "location");
   DoBoolFeature(hints,    t, "hints");
   DoNatFeature(width,     t, "width");
   DoNatFeature(depth,     t, "depth");
 
-  SetIfPos(ozconf.errorMessage,    message,  1);
   SetIfPos(ozconf.errorThread,     thread,   1);
   SetIfPos(ozconf.errorLocation,   location, 1);
   SetIfPos(ozconf.errorHints,      hints,    1);

@@ -8,7 +8,6 @@
 #define PRINT_WIDTH             10
 #define ERROR_PRINT_DEPTH       2
 #define ERROR_PRINT_WIDTH       10
-#define ERROR_MESSAGE           1
 #define ERROR_THREAD            1
 #define ERROR_LOCATION          1
 #define ERROR_HINTS             1
@@ -36,11 +35,11 @@
 
 #define STACKMAXSIZE    10000
 #define HEAPMAXSIZE     -1
-#define HEAPMINSIZE     2000    /* kByte   */
+#define HEAPMINSIZE     1024    /* kByte   */
 #define HEAPFREE        70      /* percent */
 #define HEAPTOLERANCE   25      /* percent */
 #define HEAPSAFETY      256     /* kByte   */
-#define INITIALHEAPFREE 4000    /* kByte   */
+#define INITIALHEAPFREE 4096    /* kByte   */
 #define HEAPIDLEMARGIN  80      /* percent */
 
 #define CLOCK_TICK      10000   /* usec */
