@@ -1669,6 +1669,10 @@ static Bool across_redid = NO;
 
 /*
  * Before copying all spaces but the space to be copied get marked.
+ * 
+ * Important: even committed boards must be marked, since the globality
+ * test does not do a dereference!
+ *
  */
 inline
 void Board::setGlobalMarks(void) {
@@ -1677,7 +1681,7 @@ void Board::setGlobalMarks(void) {
   Board * b = this;
 
   do {
-    b = b->getParent(); b->setGlobalMark();
+    b = b->getParentInternal(); b->setGlobalMark();
   } while (!b->isRoot());
   
 }
@@ -1692,7 +1696,7 @@ void Board::unsetGlobalMarks(void) {
   Board * b = this;
 
   do {
-    b = b->getParent(); b->unsetGlobalMark();
+    b = b->getParentInternal(); b->unsetGlobalMark();
   } while (!b->isRoot());
 
 }
