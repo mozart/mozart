@@ -121,12 +121,17 @@ OZ_Return BitString::eqV(OZ_Term t) {
     ? PROCEED : FAILED;
 }
 
-int BitString::marshalV(MarshalerBuffer *mb)
+int BitString::toBePickledV()
+{
+  return (OK);
+}
+
+int BitString::pickleV(MarshalerBuffer *mb)
 {
   marshalNumber(mb, getWidth());
   for (int i = 0; i < getSize(); i++)
     marshalByte(mb, data[i]);
-  return OK;
+  return (OK);
 }
 
 OZ_Term unmarshalBitString(MarshalerBuffer *mb)
@@ -336,13 +341,18 @@ OZ_Return ByteString::eqV(OZ_Term t) {
     ? PROCEED : FAILED;
 }
 
-int ByteString::marshalV(MarshalerBuffer *mb)
+int ByteString::toBePickledV()
+{
+  return (OK);
+}
+
+int ByteString::pickleV(MarshalerBuffer *mb)
 {
   int size = getWidth();
   marshalNumber(mb, size);
   for (int i = 0; i < size; i++)
     marshalByte(mb, data[i]);
-  return OK;
+  return (OK);
 }
 
 OZ_Term unmarshalByteString(MarshalerBuffer *mb)

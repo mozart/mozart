@@ -42,7 +42,7 @@ ac_help="$ac_help
     search tcl header in <dir> (default: /usr/include)"
 ac_help="$ac_help
 --with-tcl-lib-tcl=<dir>
-    search tcl libraries (tcl) in <dir> (default: ${oz_tcl_lib_dir:-/usr/lib}/tcl8.0)"
+    search tcl libraries (tcl) in <dir> (default: ${oz_tcl_lib_dir:-/usr/lib}/tcl8.2)"
 ac_help="$ac_help
 --with-tk=<dir>
     search tk library, header, tk tcl-library in <dir> (default: NONE)"
@@ -54,7 +54,7 @@ ac_help="$ac_help
     search tk header in <dir> (default: oz_tk_inc_dir)"
 ac_help="$ac_help
 --with-tk-lib-tcl=<dir>
-    search tk libraries (tcl) in <dir> (default: ${oz_tk_lib_dir:-/usr/lib}/tk8.0)"
+    search tk libraries (tcl) in <dir> (default: ${oz_tk_lib_dir:-/usr/lib}/tk8.2)"
 ac_help="$ac_help
 --enable-copy-tcl-libs  Copy tcl libraries (rather than drawing a link) (default=yes)"
 
@@ -2864,7 +2864,7 @@ if test -n "${with_tcl}"
 then
     oz_tcl_lib_dir=$with_tcl/lib
     oz_tcl_inc_dir=$with_tcl/include
-    oz_tcl_lib_tcl_dir=$with_tcl/lib/tcl8.0
+    oz_tcl_lib_tcl_dir=$with_tcl/lib/tcl8.2
 fi
 
 # Check whether --with-tcl_lib or --without-tcl_lib was given.
@@ -2905,7 +2905,7 @@ then
     oz_tcl_lib_tcl_dir=$with_tcl_lib_tcl
 fi
 
-: ${oz_tcl_lib_tcl_dir=${oz_tcl_lib_dir:-/usr/lib}/tcl8.0}
+: ${oz_tcl_lib_tcl_dir=${oz_tcl_lib_dir:-/usr/lib}/tcl8.2}
 
 
 if test "$oz_coolness" != yes && test ! -f "$oz_tcl_lib_tcl_dir/init.tcl"
@@ -2920,9 +2920,9 @@ oz_inc_path="$oz_tcl_inc_dir $oz_inc_path"
 oz_lib_path="$oz_tcl_lib_dir $oz_lib_path"
 
 
-  echo $ac_n "checking for tcl8.0.h""... $ac_c" 1>&6
-echo "configure:2925: checking for tcl8.0.h" >&5
-if eval "test \"`echo '$''{'oz_cv_header_tcl8_0_h'+set}'`\" = set"; then
+  echo $ac_n "checking for tcl8.2.h""... $ac_c" 1>&6
+echo "configure:2925: checking for tcl8.2.h" >&5
+if eval "test \"`echo '$''{'oz_cv_header_tcl8_2_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   
@@ -2934,7 +2934,7 @@ else
 	cat > conftest.$ac_ext <<EOF
 #line 2936 "configure"
 #include "confdefs.h"
-#include "tcl8.0.h"
+#include "tcl8.2.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
 { (eval echo configure:2941: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
@@ -2955,7 +2955,7 @@ rm -f conftest*
 	cat > conftest.$ac_ext <<EOF
 #line 2957 "configure"
 #include "confdefs.h"
-#include "tcl8.0.h"
+#include "tcl8.2.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
 { (eval echo configure:2962: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
@@ -2972,14 +2972,14 @@ fi
 rm -f conftest*
       fi
       CPPFLAGS=$oz_tmp_cppflags
-oz_cv_header_tcl8_0_h="$oz_tmp_ok"
+oz_cv_header_tcl8_2_h="$oz_tmp_ok"
 
     
 fi
 
-echo "$ac_t""$oz_cv_header_tcl8_0_h" 1>&6
+echo "$ac_t""$oz_cv_header_tcl8_2_h" 1>&6
 
-  oz_tmp_val=$oz_cv_header_tcl8_0_h
+  oz_tmp_val=$oz_cv_header_tcl8_2_h
 
   if test "$oz_tmp_val" != no; then
     if test "$oz_tmp_val" != yes; then
@@ -3079,16 +3079,16 @@ echo "$ac_t""$oz_cv_header_tcl_h" 1>&6
     fi
     
   else
-    { echo "configure: error: required tcl8.0.h or tcl.h include file not found" 1>&2; exit 1; }
+    { echo "configure: error: required tcl8.2.h or tcl.h include file not found" 1>&2; exit 1; }
   fi
   fi
 
 
-  if test -n "$oz_cv_lib_path_ldflags_tcl8_0_Tcl_Init"; then
-    echo $ac_n "checking for library tcl8.0""... $ac_c" 1>&6
-echo "configure:3090: checking for library tcl8.0" >&5
-    oz_add_ldflags=$oz_cv_lib_path_ldflags_tcl8_0_Tcl_Init
-    oz_add_libs=$oz_cv_lib_path_libs_tcl8_0_Tcl_Init
+  if test -n "$oz_cv_lib_path_ldflags_tcl8_2_Tcl_Init"; then
+    echo $ac_n "checking for library tcl8.2""... $ac_c" 1>&6
+echo "configure:3090: checking for library tcl8.2" >&5
+    oz_add_ldflags=$oz_cv_lib_path_ldflags_tcl8_2_Tcl_Init
+    oz_add_libs=$oz_cv_lib_path_libs_tcl8_2_Tcl_Init
     if test "$oz_add_ldflags" = no; then
       oz_tmp=no
     else
@@ -3109,8 +3109,8 @@ echo "configure:3090: checking for library tcl8.0" >&5
     oz_tmp_libs=$LIBS
     oz_add_ldflags=no
     oz_add_libs=no
-    echo $ac_n "checking for Tcl_Init in -ltcl8.0 (default)""... $ac_c" 1>&6
-echo "configure:3114: checking for Tcl_Init in -ltcl8.0 (default)" >&5
+    echo $ac_n "checking for Tcl_Init in -ltcl8.2 (default)""... $ac_c" 1>&6
+echo "configure:3114: checking for Tcl_Init in -ltcl8.2 (default)" >&5
     
   oz_saved_LIBS=$LIBS
   
@@ -3136,7 +3136,7 @@ else
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   if test "${oz_enable_link_static}" = yes; then
-      oz_add_libs="-Xlinker -Bstatic -ltcl8.0 -Xlinker -Bdynamic"
+      oz_add_libs="-Xlinker -Bstatic -ltcl8.2 -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
@@ -3160,8 +3160,8 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS="-ltcl8.0 $oz_saved_LIBS"
-         oz_add_libs="-ltcl8.0"
+  LIBS="-ltcl8.2 $oz_saved_LIBS"
+         oz_add_libs="-ltcl8.2"
          
 	cat > conftest.$ac_ext <<EOF
 #line 3168 "configure"
@@ -3189,8 +3189,8 @@ else
             echo "$ac_t""no" 1>&6
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
-         echo $ac_n "checking for Tcl_Init in -L$p -ltcl8.0""... $ac_c" 1>&6
-echo "configure:3194: checking for Tcl_Init in -L$p -ltcl8.0" >&5
+         echo $ac_n "checking for Tcl_Init in -L$p -ltcl8.2""... $ac_c" 1>&6
+echo "configure:3194: checking for Tcl_Init in -L$p -ltcl8.2" >&5
          
   oz_saved_LIBS=$LIBS
   
@@ -3216,7 +3216,7 @@ else
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   if test "${oz_enable_link_static}" = yes; then
-      oz_add_libs="-Xlinker -Bstatic -ltcl8.0 -Xlinker -Bdynamic"
+      oz_add_libs="-Xlinker -Bstatic -ltcl8.2 -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
@@ -3240,8 +3240,8 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS="-ltcl8.0 $oz_saved_LIBS"
-         oz_add_libs="-ltcl8.0"
+  LIBS="-ltcl8.2 $oz_saved_LIBS"
+         oz_add_libs="-ltcl8.2"
          
 	cat > conftest.$ac_ext <<EOF
 #line 3248 "configure"
@@ -3272,8 +3272,8 @@ rm -f conftest*
 fi
 rm -f conftest*
     else
-      LIBS="-ltcl8.0 $oz_saved_LIBS"
-      oz_add_libs="-ltcl8.0"
+      LIBS="-ltcl8.2 $oz_saved_LIBS"
+      oz_add_libs="-ltcl8.2"
       
 	cat > conftest.$ac_ext <<EOF
 #line 3280 "configure"
@@ -3310,8 +3310,8 @@ rm -f conftest*
 fi
 rm -f conftest*
     else
-      LIBS="-ltcl8.0 $oz_saved_LIBS"
-      oz_add_libs="-ltcl8.0"
+      LIBS="-ltcl8.2 $oz_saved_LIBS"
+      oz_add_libs="-ltcl8.2"
       
 	cat > conftest.$ac_ext <<EOF
 #line 3318 "configure"
@@ -3339,8 +3339,8 @@ else
          echo "$ac_t""no" 1>&6
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
-         echo $ac_n "checking for Tcl_Init in -L$p -ltcl8.0""... $ac_c" 1>&6
-echo "configure:3344: checking for Tcl_Init in -L$p -ltcl8.0" >&5
+         echo $ac_n "checking for Tcl_Init in -L$p -ltcl8.2""... $ac_c" 1>&6
+echo "configure:3344: checking for Tcl_Init in -L$p -ltcl8.2" >&5
          
   oz_saved_LIBS=$LIBS
   
@@ -3366,7 +3366,7 @@ else
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   if test "${oz_enable_link_static}" = yes; then
-      oz_add_libs="-Xlinker -Bstatic -ltcl8.0 -Xlinker -Bdynamic"
+      oz_add_libs="-Xlinker -Bstatic -ltcl8.2 -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
@@ -3390,8 +3390,8 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS="-ltcl8.0 $oz_saved_LIBS"
-         oz_add_libs="-ltcl8.0"
+  LIBS="-ltcl8.2 $oz_saved_LIBS"
+         oz_add_libs="-ltcl8.2"
          
 	cat > conftest.$ac_ext <<EOF
 #line 3398 "configure"
@@ -3422,8 +3422,8 @@ rm -f conftest*
 fi
 rm -f conftest*
     else
-      LIBS="-ltcl8.0 $oz_saved_LIBS"
-      oz_add_libs="-ltcl8.0"
+      LIBS="-ltcl8.2 $oz_saved_LIBS"
+      oz_add_libs="-ltcl8.2"
       
 	cat > conftest.$ac_ext <<EOF
 #line 3430 "configure"
@@ -3462,8 +3462,8 @@ fi
 rm -f conftest*
     LDFLAGS=$oz_tmp_ldflags
     LIBS=$oz_tmp_libs
-    oz_cv_lib_path_ldflags_tcl8_0_Tcl_Init=$oz_add_ldflags
-    oz_cv_lib_path_libs_tcl8_0_Tcl_Init=$oz_add_libs
+    oz_cv_lib_path_ldflags_tcl8_2_Tcl_Init=$oz_add_ldflags
+    oz_cv_lib_path_libs_tcl8_2_Tcl_Init=$oz_add_libs
   fi
   if test "$oz_add_ldflags" = no; then
     
@@ -4303,7 +4303,7 @@ if test -n "${with_tk}"
 then
     oz_tk_lib_dir=$with_tk/lib
     oz_tk_inc_dir=$with_tk/include
-    oz_tk_lib_tcl_dir=$with_tk/lib/tk8.0
+    oz_tk_lib_tcl_dir=$with_tk/lib/tk8.2
 fi
 
 # Check whether --with-tk_lib or --without-tk_lib was given.
@@ -4344,7 +4344,7 @@ then
     oz_tk_lib_tcl_dir=$with_tk_lib_tcl
 fi
 
-: ${oz_tk_lib_tcl_dir=${oz_tk_lib_dir:-/usr/lib}/tk8.0}
+: ${oz_tk_lib_tcl_dir=${oz_tk_lib_dir:-/usr/lib}/tk8.2}
 
 if test "$oz_coolness" != yes && test ! -f "$oz_tk_lib_tcl_dir/tk.tcl"
 then
@@ -4358,9 +4358,9 @@ oz_inc_path="$oz_tk_inc_dir $oz_inc_path"
 oz_lib_path="$oz_tk_lib_dir $oz_lib_path"
 
 
-  echo $ac_n "checking for tk8.0.h""... $ac_c" 1>&6
-echo "configure:4363: checking for tk8.0.h" >&5
-if eval "test \"`echo '$''{'oz_cv_header_tk8_0_h'+set}'`\" = set"; then
+  echo $ac_n "checking for tk8.2.h""... $ac_c" 1>&6
+echo "configure:4363: checking for tk8.2.h" >&5
+if eval "test \"`echo '$''{'oz_cv_header_tk8_2_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   
@@ -4372,7 +4372,7 @@ else
 	cat > conftest.$ac_ext <<EOF
 #line 4374 "configure"
 #include "confdefs.h"
-#include "tk8.0.h"
+#include "tk8.2.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
 { (eval echo configure:4379: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
@@ -4393,7 +4393,7 @@ rm -f conftest*
 	cat > conftest.$ac_ext <<EOF
 #line 4395 "configure"
 #include "confdefs.h"
-#include "tk8.0.h"
+#include "tk8.2.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
 { (eval echo configure:4400: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
@@ -4410,14 +4410,14 @@ fi
 rm -f conftest*
       fi
       CPPFLAGS=$oz_tmp_cppflags
-oz_cv_header_tk8_0_h="$oz_tmp_ok"
+oz_cv_header_tk8_2_h="$oz_tmp_ok"
 
     
 fi
 
-echo "$ac_t""$oz_cv_header_tk8_0_h" 1>&6
+echo "$ac_t""$oz_cv_header_tk8_2_h" 1>&6
 
-  oz_tmp_val=$oz_cv_header_tk8_0_h
+  oz_tmp_val=$oz_cv_header_tk8_2_h
 
   if test "$oz_tmp_val" != no; then
     if test "$oz_tmp_val" != yes; then
@@ -4517,16 +4517,16 @@ echo "$ac_t""$oz_cv_header_tk_h" 1>&6
     fi
     
   else
-    { echo "configure: error: required tk8.0.h/tk.h include file not found" 1>&2; exit 1; }
+    { echo "configure: error: required tk8.2.h/tk.h include file not found" 1>&2; exit 1; }
   fi
   fi
 
 
-  if test -n "$oz_cv_lib_path_ldflags_tk8_0_Tk_Init"; then
-    echo $ac_n "checking for library tk8.0""... $ac_c" 1>&6
-echo "configure:4528: checking for library tk8.0" >&5
-    oz_add_ldflags=$oz_cv_lib_path_ldflags_tk8_0_Tk_Init
-    oz_add_libs=$oz_cv_lib_path_libs_tk8_0_Tk_Init
+  if test -n "$oz_cv_lib_path_ldflags_tk8_2_Tk_Init"; then
+    echo $ac_n "checking for library tk8.2""... $ac_c" 1>&6
+echo "configure:4528: checking for library tk8.2" >&5
+    oz_add_ldflags=$oz_cv_lib_path_ldflags_tk8_2_Tk_Init
+    oz_add_libs=$oz_cv_lib_path_libs_tk8_2_Tk_Init
     if test "$oz_add_ldflags" = no; then
       oz_tmp=no
     else
@@ -4547,8 +4547,8 @@ echo "configure:4528: checking for library tk8.0" >&5
     oz_tmp_libs=$LIBS
     oz_add_ldflags=no
     oz_add_libs=no
-    echo $ac_n "checking for Tk_Init in -ltk8.0 (default)""... $ac_c" 1>&6
-echo "configure:4552: checking for Tk_Init in -ltk8.0 (default)" >&5
+    echo $ac_n "checking for Tk_Init in -ltk8.2 (default)""... $ac_c" 1>&6
+echo "configure:4552: checking for Tk_Init in -ltk8.2 (default)" >&5
     
   oz_saved_LIBS=$LIBS
   
@@ -4574,7 +4574,7 @@ else
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   if test "${oz_enable_link_static}" = yes; then
-      oz_add_libs="-Xlinker -Bstatic -ltk8.0 -Xlinker -Bdynamic"
+      oz_add_libs="-Xlinker -Bstatic -ltk8.2 -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
@@ -4598,8 +4598,8 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS="-ltk8.0 $oz_saved_LIBS"
-         oz_add_libs="-ltk8.0"
+  LIBS="-ltk8.2 $oz_saved_LIBS"
+         oz_add_libs="-ltk8.2"
          
 	cat > conftest.$ac_ext <<EOF
 #line 4606 "configure"
@@ -4627,8 +4627,8 @@ else
             echo "$ac_t""no" 1>&6
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
-         echo $ac_n "checking for Tk_Init in -L$p -ltk8.0""... $ac_c" 1>&6
-echo "configure:4632: checking for Tk_Init in -L$p -ltk8.0" >&5
+         echo $ac_n "checking for Tk_Init in -L$p -ltk8.2""... $ac_c" 1>&6
+echo "configure:4632: checking for Tk_Init in -L$p -ltk8.2" >&5
          
   oz_saved_LIBS=$LIBS
   
@@ -4654,7 +4654,7 @@ else
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   if test "${oz_enable_link_static}" = yes; then
-      oz_add_libs="-Xlinker -Bstatic -ltk8.0 -Xlinker -Bdynamic"
+      oz_add_libs="-Xlinker -Bstatic -ltk8.2 -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
@@ -4678,8 +4678,8 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS="-ltk8.0 $oz_saved_LIBS"
-         oz_add_libs="-ltk8.0"
+  LIBS="-ltk8.2 $oz_saved_LIBS"
+         oz_add_libs="-ltk8.2"
          
 	cat > conftest.$ac_ext <<EOF
 #line 4686 "configure"
@@ -4710,8 +4710,8 @@ rm -f conftest*
 fi
 rm -f conftest*
     else
-      LIBS="-ltk8.0 $oz_saved_LIBS"
-      oz_add_libs="-ltk8.0"
+      LIBS="-ltk8.2 $oz_saved_LIBS"
+      oz_add_libs="-ltk8.2"
       
 	cat > conftest.$ac_ext <<EOF
 #line 4718 "configure"
@@ -4748,8 +4748,8 @@ rm -f conftest*
 fi
 rm -f conftest*
     else
-      LIBS="-ltk8.0 $oz_saved_LIBS"
-      oz_add_libs="-ltk8.0"
+      LIBS="-ltk8.2 $oz_saved_LIBS"
+      oz_add_libs="-ltk8.2"
       
 	cat > conftest.$ac_ext <<EOF
 #line 4756 "configure"
@@ -4777,8 +4777,8 @@ else
          echo "$ac_t""no" 1>&6
        for p in $oz_lib_path; do
          LDFLAGS="-L$p $oz_tmp_ldflags"
-         echo $ac_n "checking for Tk_Init in -L$p -ltk8.0""... $ac_c" 1>&6
-echo "configure:4782: checking for Tk_Init in -L$p -ltk8.0" >&5
+         echo $ac_n "checking for Tk_Init in -L$p -ltk8.2""... $ac_c" 1>&6
+echo "configure:4782: checking for Tk_Init in -L$p -ltk8.2" >&5
          
   oz_saved_LIBS=$LIBS
   
@@ -4804,7 +4804,7 @@ else
   cat conftest.$ac_ext >&5
   rm -rf conftest*
   if test "${oz_enable_link_static}" = yes; then
-      oz_add_libs="-Xlinker -Bstatic -ltk8.0 -Xlinker -Bdynamic"
+      oz_add_libs="-Xlinker -Bstatic -ltk8.2 -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       
 	cat > conftest.$ac_ext <<EOF
@@ -4828,8 +4828,8 @@ else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  LIBS="-ltk8.0 $oz_saved_LIBS"
-         oz_add_libs="-ltk8.0"
+  LIBS="-ltk8.2 $oz_saved_LIBS"
+         oz_add_libs="-ltk8.2"
          
 	cat > conftest.$ac_ext <<EOF
 #line 4836 "configure"
@@ -4860,8 +4860,8 @@ rm -f conftest*
 fi
 rm -f conftest*
     else
-      LIBS="-ltk8.0 $oz_saved_LIBS"
-      oz_add_libs="-ltk8.0"
+      LIBS="-ltk8.2 $oz_saved_LIBS"
+      oz_add_libs="-ltk8.2"
       
 	cat > conftest.$ac_ext <<EOF
 #line 4868 "configure"
@@ -4900,8 +4900,8 @@ fi
 rm -f conftest*
     LDFLAGS=$oz_tmp_ldflags
     LIBS=$oz_tmp_libs
-    oz_cv_lib_path_ldflags_tk8_0_Tk_Init=$oz_add_ldflags
-    oz_cv_lib_path_libs_tk8_0_Tk_Init=$oz_add_libs
+    oz_cv_lib_path_ldflags_tk8_2_Tk_Init=$oz_add_ldflags
+    oz_cv_lib_path_libs_tk8_2_Tk_Init=$oz_add_libs
   fi
   if test "$oz_add_ldflags" = no; then
     

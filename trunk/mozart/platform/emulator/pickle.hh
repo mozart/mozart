@@ -44,8 +44,15 @@ void initPickleMarshaler();
 
 //
 class Pickler : public GenTraverser {
+private:
+  Bool cc;			// cloneCells;
+
 public:
   virtual ~Pickler() {}
+  void init(Bool ccIn) {
+    cc = ccIn;
+  }
+
   //
   virtual void processSmallInt(OZ_Term siTerm);
   virtual void processFloat(OZ_Term floatTerm);
@@ -71,19 +78,10 @@ public:
   virtual Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
   virtual Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
   virtual void processSync();
-};
 
-//
-// Resource filtering business;
-inline
-Bool isResource(OZ_Term t)
-{
-  if (oz_isFree(t) || oz_isKinded(t) || oz_isFuture(t) || oz_isPort(t))
-    return OK;
-  return ozconf.perdioMinimal
-    ? NO
-    : oz_isObject(t) || oz_isLock(t) || oz_isCell(t);
-}
+  //
+  Bool cloneCells() { return (cc); }
+};
 
 //
 // Extract resources & nogoods from a term into lists;
@@ -171,8 +169,9 @@ void extractResources(OZ_Term in, Bool cloneCells,
 //
 // Interface procedures;
 inline
-void pickleTerm(PickleBuffer *bs, OZ_Term term)
+void pickleTerm(PickleBuffer *bs, OZ_Term term, Bool cloneCells)
 {
+  pickler.init(cloneCells);
   pickler.prepareTraversing((Opaque *) bs);
   pickler.traverse(term);
   pickler.finishTraversing();

@@ -37,17 +37,8 @@ OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t)
   return PROCEED;
 }
 
-// '!' SB-model - to remove;
-OZ_Return oz_export(OZ_Term t);
-
 OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr)
 {
-  // mm2
-  if (isExported()) {
-    OZ_Return aux = oz_export(makeTaggedRef(tPtr));
-    if (aux!=PROCEED) return aux;
-  }
-
   OzVariable *tv=tagged2CVar(*tPtr);
   if (tv->getType()==OZ_VAR_SIMPLE
       && oz_isBelow(tv->getBoardInternal(),GETBOARD(this))
@@ -56,9 +47,6 @@ OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr)
       && (!oz_isLocalVar(this) || heapNewer(tPtr,vPtr))
 #endif
       ) {
-  
-    if (tv->isExported()) 
-      markExported();
 
     oz_bindVar(tv,tPtr, makeTaggedRef(vPtr));
   } else {

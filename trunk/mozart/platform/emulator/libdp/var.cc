@@ -203,11 +203,6 @@ Bool ManagerVar::failurePreemption(TaggedRef term){
   return hit;
 }
 
-#define ExportControl(Val) \
-{ if(ozconf.perdioMinimal) { \
-     OZ_Return ret=oz_export(Val); \
-     if(ret!=PROCEED) return ret;}}
-
 OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
   PD((PD_VAR,"ProxyVar::doBind by thread: %x",oz_currentThread()));
   PD((PD_VAR,"bind proxy b:%d v:%s",getIndex(),toC(r)));
@@ -223,7 +218,6 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
 	am.addSuspendVarList(lPtr);
 	return SUSPEND;}
       BorrowEntry *be=BT->getBorrow(getIndex());
-      ExportControl(r);
       sendSurrender(be,r);
       PD((THREAD_D,"stop thread proxy bind %x",oz_currentThread()));
       binding=r;
@@ -382,7 +376,6 @@ OZ_Return ManagerVar::bindVInternal(TaggedRef *lPtr, TaggedRef r,DSite *s)
       am.addSuspendVarList(lPtr);
       return SUSPEND;
     }
-    ExportControl(r);
     EntityInfo *ei=info;
     sendRedirectToProxies(r, s);
     oz_bindLocalVar(this,lPtr,r);
@@ -422,8 +415,6 @@ OZ_Return ManagerVar::forceBindV(TaggedRef *lPtr, TaggedRef r)
   PD((PD_VAR,"bind manager o:%d v:%s",OTI,toC(*lPtr)));
   Bool isLocal = oz_isLocalVar(this);
   if (isLocal) {
-    // send redirect done first to check if r is exportable
-    ExportControl(r);
     sendRedirectToProxies(r, myDSite);
     EntityInfo *ei=info;
     oz_bindLocalVar(this,lPtr,r);
