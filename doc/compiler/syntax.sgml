@@ -84,7 +84,7 @@
         <Grammar.Alt/?={phrase}/
         <Grammar.Alt/<<fColon(?={feature} ?={phrase})>>/
       For the moment, the only recognized flags are <<instantiate>>, <<lazy>>,
-      and <<native>>.
+      <<dynamic>>, and <<native>>.
       <Grammar.Rule>?={proc flag}
         <Grammar.Alt/?={atom}/
     <Para class=apropos><Title/Functors/
