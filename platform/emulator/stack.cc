@@ -15,7 +15,8 @@
 
 void Stack::resize(int newSize)
 {
-  message("Resizing stack from %d to %d\n",size,newSize);
+  DebugCheckT(message("Resizing stack from %d to %d\n",size,newSize));
+  DebugCheck(newSize <= 0,error("Resizing stack <= 0\n"));
   int used = tos-array;
   array = reallocate(array, size, newSize);
   if(!array)
