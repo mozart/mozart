@@ -10,18 +10,31 @@ INSTALL_DIR     = @INSTALL_DIR@
 CC              = @CC@
 CXX             = @CXX@
 
-LIBS            = @LIBS@
-EXTRALDFLAGS    = @EXTRALDFLAGS@
-CPPFLAGS        = -I. @CPPFLAGS@
+TCL_VERSION     = @TCL_VERSION@
+TCL_PREFIX      = @TCL_PREFIX@
+TCL_LIBS        = @TCL_LIBS@
+TCL_LIB_SPEC    = @TCL_LIB_SPEC@
+
+TK_VERSION      = @TK_VERSION@
+TK_PREFIX       = @TK_PREFIX@
+TK_LIBS         = @TK_LIBS@
+TK_LIB_SPEC     = @TK_LIB_SPEC@
+TK_XINCLUDES    = @TK_XINCLUDES@
+
 CFLAGS          = @CFLAGS@
 LDFLAGS         = @LDFLAGS@
 LN_S            = @LN_S@
 
 PROVIDETCLLIBS  = @PROVIDETCLLIBS@
-TCLLIBTCLDIR    = @oz_tcl_lib_tcl_dir@
-TKLIBTCLDIR     = @oz_tk_lib_tcl_dir@
 
 WINDLLDIR       = @WINDLLDIR@
+
+LIBS            = $(TCL_LIBS) $(TCL_LIB_SPEC) $(TK_LIBS) $(TK_LIB_SPEC)
+CPPFLAGS        = -I. $(TK_XINCLUDES) -I$(TCL_PREFIX)/include -I$(TK_PREFIX)/include
+TCLLIBTCLDIR    = $(TCL_PREFIX)/lib/tcl$(TCL_VERSION)
+TKLIBTCLDIR     = $(TK_PREFIX)/lib/tk$(TK_VERSION)
+
+EXTRALDFLAGS    = @EXTRALDFLAGS@
 
 OZWISH          = tk.exe
 SRCS            = @SRCS@
