@@ -71,7 +71,7 @@ local
    functor OPI
 
    import
-      LILO.{loadByFeatures}
+      Module.{load}
       
       System.{printError
 	      property}
@@ -102,7 +102,7 @@ local
 	 Env = {List.toRecord env
 		{Map LibNames
 		 fun {$ A}
-		    A#{LILO.loadByFeatures nil A}
+		    A#{Module.load A unit nil}
 		 end}}
       in
 	 {OPICompiler enqueue(mergeEnv(Env))}
@@ -110,13 +110,13 @@ local
 
       {ForAll PrintNames
        proc {$ Key#Feats}
-	  Env = {LILO.loadByFeatures Feats Key}
+	  Env = {Module.load Key unit Feats}
        in
 	  {OPICompiler enqueue(mergeEnv(Env))}
        end}
 
-      {OPICompiler enqueue(mergeEnv(env('LILO':
-					   {LILO.loadByFeatures nil 'LILO'})))}
+      {OPICompiler enqueue(mergeEnv(env('Module':
+					   {Module.load 'Module' unit nil})))}
       
       CompilerUI = {New Emacs.interface init(OPICompiler)}
       Sock = {CompilerUI getSocket($)}
