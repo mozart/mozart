@@ -35,6 +35,8 @@
 #include "conf.h"
 #include "resources.hh"
 
+#include "wsock.hh"
+
 #define STATIC_FUNCTIONS
 #include "mozart.h"
 
