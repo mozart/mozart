@@ -58,15 +58,17 @@ HashTable *CodeArea::opcodeTable = 0;
 
 
 
-inline Literal *addToLiteralTab(const char *str, HashTable *table, Bool isName)
-{
+inline 
+Literal *addToLiteralTab(const char *str, HashTable *table, 
+			 Bool isName, Bool needsDup) {
   Literal *found = (Literal *) table->htFind(str);
 
   if (found != (Literal *) htEmpty) {
     return found;
   }
 
-  str = ozstrdup(str);
+  if (needsDup)
+    str = ozstrdup(str);
 
   if (isName) {
     found = NamedName::newNamedName(str);
@@ -82,14 +84,20 @@ inline Literal *addToLiteralTab(const char *str, HashTable *table, Bool isName)
 OZ_Term OZ_atom(OZ_CONST char *str)
 {
   CHECK_STRPTR(str);
-  Literal *lit=addToLiteralTab(str,&CodeArea::atomTab,NO);
+  Literal *lit=addToLiteralTab(str,&CodeArea::atomTab,NO,OK);
+  return makeTaggedLiteral(lit);
+}
+
+OZ_Term oz_atomNoDup(OZ_CONST char *str) {
+  CHECK_STRPTR(str);
+  Literal *lit=addToLiteralTab(str,&CodeArea::atomTab,NO,NO);
   return makeTaggedLiteral(lit);
 }
 
 TaggedRef oz_uniqueName(const char *str)
 {
   CHECK_STRPTR(str);
-  Literal *lit = addToLiteralTab(str,&CodeArea::nameTab,OK);
+  Literal *lit = addToLiteralTab(str,&CodeArea::nameTab,OK,OK);
   lit->setFlag(Lit_isUniqueName);
   return makeTaggedLiteral(lit);
 }
