@@ -37,5 +37,14 @@
      'newUnique'	=> { in  => ['+atom'],
 			     out => ['+name'],
 			     BI  => BInewUniqueName},
+
+     '<'		=> { in  => ['+name','+name'],
+			     out => ['+bool'],
+			     bi  => BInameLess},
+
+     'hash'		=> { in  => ['+name'],
+			     out => ['+int'],
+			     bi  => BInameHash},
+
      );
 1;;
