@@ -397,7 +397,10 @@ in
       meth DoPrintEnv(Widget Vars SV)
 	 {ForAll Vars
 	  proc{$ V}
-	     Name # Value = V
+	     Name0 # Value = V
+	     Name = if {IsName Name0} then
+		       {VirtualString.toAtom {V2VS Name0}}
+		    else Name0 end
 	     PrintName # PrintValue # ClickValue =
 	     if {Cget envPrintTypes} then
 		Name # {CheckType Value} # Value
