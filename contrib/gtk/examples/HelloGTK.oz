@@ -21,6 +21,7 @@
 
 functor $
 import
+   Application
    System(show)
    GTK at 'x-oz://system/gtk/GTK.ozf'
 define
@@ -30,12 +31,14 @@ define
 	 GTK.window, new(GTK.wINDOW_TOPLEVEL)
 	 GTK.window, signalConnect('destroy' destroyEvent _)
 	 GTK.window, setBorderWidth(10)
+	 GTK.window, setTitle("Hello GTK")
       end
       meth destroyEvent(Event)
 	 {System.show 'destroy Event occured'}
 	 %% This is necessary to alloc GC
 	 %% Toplevel is a container which recursively frees all its child widgets
 	 {self close}
+	 {Application.exit 0}
       end
    end
 
