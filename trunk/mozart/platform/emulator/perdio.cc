@@ -3806,7 +3806,7 @@ OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
   MsgBuffer *bs = msgBufferManager->getMsgBuffer(site);
   b->getOneMsgCredit();
   marshal_M_REMOTE_SEND(bs,index,biName,msg);
-  CheckNogoods(msg,bs,"send",);
+  CheckNogoods(msg,bs,"Resources found during send to port",);
   SendTo(site,bs,M_REMOTE_SEND,site,index);
   return PROCEED;
 }
@@ -3907,10 +3907,9 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg)
     unmarshal_M_PORT_SEND(bs,portIndex,t);
     dumpRemoteMsgBuffer(bs);
     */
-    return oz_raise(E_ERROR,OZ_atom("dp"),"portSend",3,
-		    oz_atom("nogoods"),
-		    makeTaggedTert(p),
-		    nogoods);
+    return raiseGeneric("Resources found during send to port",
+			mklist(OZ_pairA("Resources",nogoods),
+			       OZ_pairA("Port",makeTaggedTert(p))));
   }
   
 
@@ -3960,12 +3959,15 @@ void sendRegister(BorrowEntry *be) {
   creditSite = tmpS;
   SendTo(na->site,bs,M_REGISTER,na->site,na->index);}
 
+#define UNIFY_ERRORMSG \
+   "Unification of distributed variable with term containing resources"
+
 OZ_Return sendSurrender(BorrowEntry *be,OZ_Term val){
   be->getOneMsgCredit();
   NetAddress *na = be->getNetAddress();  
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
   marshal_M_SURRENDER(bs,na->index,mySite,val);
-  CheckNogoods(val,bs,"unify",);
+  CheckNogoods(val,bs,UNIFY_ERRORMSG,);
   SendTo(na->site,bs,M_SURRENDER,na->site,na->index);
   return PROCEED;
 }
@@ -3974,7 +3976,7 @@ OZ_Return sendRedirect(Site* sd,int OTI,TaggedRef val){
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(sd);
   OT->getOwner(OTI)->getOneCreditOwner();
   marshal_M_REDIRECT(bs,mySite,OTI,val);
-  CheckNogoods(val,bs,"unify",);
+  CheckNogoods(val,bs,UNIFY_ERRORMSG,);
   SendTo(sd,bs,M_REDIRECT,mySite,OTI);
   return PROCEED;
 }
@@ -4018,7 +4020,7 @@ OZ_Return sendRedirect(PerdioVar *pv,OZ_Term val, Site* ackSite, int OTI)
   if (pl==NULL && pv->isExported()) {
     MsgBuffer *bs=msgBufferManager->getMsgBuffer(NULL);
     marshal_M_REDIRECT(bs,mySite,OTI,val);
-    CheckNogoods(val,bs,"unify",);
+    CheckNogoods(val,bs,UNIFY_ERRORMSG,);
   }
   while (pl) {
     Site* sd=pl->sd;
