@@ -179,7 +179,7 @@ Bool DynamicTable::add(TaggedRef id, TaggedRef val)
       numelem++;
       table[i].ident=id;
     }
-    Assert(table[i].ident == id);
+    Assert(featureEq(table[i].ident, id));
     table[i].value=val;
     return TRUE;
   } else {
