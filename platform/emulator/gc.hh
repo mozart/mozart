@@ -56,4 +56,6 @@ OZ_C_proc_proto(BIlistThreads)
 
 void gcSiteTable();
 
+Bool inToSpace(void *p);
+
 #endif //__GC_H__
