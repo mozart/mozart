@@ -2473,10 +2473,10 @@ if test "${GXX}" = yes; then
 
 
         ozm_out=
-        if test -n "-fno-exceptions -fno-rtti"
+        if test -n "-fno-exceptions"
         then
             echo 'void f(){}' > oz_conftest.c
-            oz_for="-fno-exceptions -fno-rtti"
+            oz_for="-fno-exceptions"
             for ozm_opt in $oz_for
             do
                 echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6

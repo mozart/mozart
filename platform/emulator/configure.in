@@ -155,7 +155,7 @@ if test "${GXX}" = yes; then
     M4_S="-s"
     DEPEND="$CXX -MM"
 
-    OZ_CXX_OPTIONS(-fno-exceptions -fno-rtti,oz_a)
+    OZ_CXX_OPTIONS(-fno-exceptions,oz_a)
     CXXAVOID=$oz_a
     CXXFLAGS="$CXXFLAGS $oz_a"
 
