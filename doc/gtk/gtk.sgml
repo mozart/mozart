@@ -1,0 +1,121 @@
+<!--
+  - Authors:
+  -   Thorsten Brunklaus  <brunklaus@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Thorsten Brunklaus, 2001
+  -   Leif Kornstaedt, 2001
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
+<!ENTITY eg PI "eg">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <!-- Splitting the document into different HTML nodes -->
+    <Meta name="html.split" value="chapter.intro">
+    <Meta name="html.split" value="chapter.basics">
+    <Meta name="html.split" value="chapter.mapping">
+    <Meta name="html.split" value="chapter.builder">
+    <Meta name="html.split" value="chapter.reference">
+    <Meta name="html.split.index" value="">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=draft>
+    <Title/The Mozart GTK+ Binding/
+    <Author.Extern to="author.db" key="Thorsten.Brunklaus">
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Abstract>
+      This manual describes the GTK+ language binding for Oz.
+    <P>
+      GTK+ is a widget set that allows to build graphical user interfaces.
+      The language binding described herein enables Oz programmers to build
+      graphical user interfaces using this widget set.  We say that it is a
+      <Q/language binding/ because it provides access to GTK+ functionality
+      by lifting its C interface to the Oz level.  In other words, the
+      interface basically is the same, but Oz is used to invoke it.
+    <P>
+      This manual summarizes the basics of GTK+ and describes how it is
+      mapped to Oz.  The goal is to enable Oz programmers to fully make
+      use of the original reference documentation to write GTK+ applications
+      in Oz.
+    </Abstract>
+  <Body>
+    <Chapter id="chapter.intro">
+      <Title/Introduction/
+      <Para class=apropos><Title/GTK/
+	<!--**-->
+	What is GTK+?  Link + description, in the following just called GTK
+      <Para class=apropos><Title/GDK/
+	<!--**-->
+	What is GDK?
+      <Para class=apropos><Title/The Binding/
+	<!--**-->
+	What is provided by the binding?  Version numbers, &ellipsis;
+      <Section>
+	<Title/Example/
+	  <!--**-->
+      <Section>
+	<Title/Structure of the Manual/
+	  <!--**-->
+
+    <Chapter id="chapter.basics">
+      <Title/GTK Basics/
+      <P>
+	<!--**-->
+	widgets, signals, properties
+
+    <Chapter id="chapter.builder">
+      <Title/The GBuilder/
+	<!--**-->
+
+    <Chapter id="chapter.mapping">
+      <Title/How the C API is mapped to Oz/
+<!--**
+- types
+    guint -> integer
+    gfloat -> float
+    gchar * -> virtual string
+    GList * -> list
+    GtkWidget * -> object
+    enumeration types and flags -> integer (with constants)
+- constants
+   - enumeration types
+   - flags
+- classes
+   - methods
+- limitations
+   - varargs
+-->
+
+    <Chapter id="chapter.reference">
+      <Title/API Reference/
+	<!--**-->
+
+</Book>
