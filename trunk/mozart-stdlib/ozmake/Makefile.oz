@@ -14,7 +14,7 @@ prepare
 
    VALID_MAKEFILE_FEATURES = [bin lib doc src depends rules uri mogul author released clean veryclean
 			      blurb info_text info_html subdirs submakefiles requires categories version
-			      contact]
+			      contact tar]
 
 define
 
@@ -379,6 +379,25 @@ define
 	    {self set_src_targets({Reverse {Stack.toList}})}
 	 end
 
+	 %% process tar feature
+
+	 local
+	    TAR0={CondSelect R tar unit}
+	    TAR =if TAR0==unit then nil
+		 elseif {IsVirtualString TAR0} then [TAR0]
+		 elseif {IsList TAR0} andthen {All TAR0 IsVirtualString} then TAR0
+		 else raise ozmake(makefile:badtarvalue(TAR0)) end end
+	 in
+	    for X in TAR do
+	       if {Not {Member X ['tgz' 'tar.Z' 'tar.gz']}} then
+		  raise ozmake(makefile:badtarext(X)) end
+	       end
+	    end
+	    if TAR\=nil then
+	       {self set_tar_targets({Map TAR Path.toAtom})}
+	    end
+	 end
+
 	 %% process depends feature
 
 	 local DEP={CondSelect R depends o} in
@@ -564,11 +583,13 @@ define
 	 Categories= {self get_categories($)}
 	 Version   = {self get_version($)}
 	 Contact   = {self get_contact($)}
+	 Tar       = {self get_tar_targets($)}
       in
 	 MAK.bin     := {self get_bin_targets($)}
 	 MAK.lib     := {self get_lib_targets($)}
 	 MAK.doc     := {self get_doc_targets($)}
 	 MAK.src     := {self get_src_targets($)}
+	 if Tar\=nil then MAK.tar := Tar end
 	 MAK.depends := {Dictionary.toRecord o @Target2Depends}
 	 MAK.rules   := {Record.map {Dictionary.toRecord o @Target2Rule}
 			 fun {$ R} Tool=R.tool in

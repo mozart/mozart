@@ -109,6 +109,7 @@ define
 	 MogulDir    : unit
 	 MogulUrl    : unit
 	 ConfigAction: unit
+	 TarTargets  : nil
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -888,5 +889,8 @@ define
 
       meth set_database_ignore(B) DatabaseIgnore<-B end
       meth get_database_ignore($) @DatabaseIgnore end
+
+      meth set_tar_targets(L) TarTargets<-L end
+      meth get_tar_targets($) @TarTargets end
    end
 end
