@@ -115,7 +115,7 @@ class Gui from Menu Dialog
 		]}
    end
 
-   meth printEnv(frame:I globals:G<=nil locals:Y<=unknown)
+   meth printEnv(frame:I vars:V<=undef)
       CV = {Not {Cget envSystemVariables}}
       CP = {Not {Cget envProcedures}}
       E  = self.EnvText
@@ -126,57 +126,52 @@ class Gui from Menu Dialog
 	 {self.EnvText title(AltEnvTitle # I)}
       end
       
-      %% G
       {ForAll [tk(conf state:normal)
-	       tk(delete '0.0' 'end')
-	       tk(insert 'end' 'G'#NL)] E}
-      case G == nil orelse G == unknown then
-	 skip
-      else
-	 {ForAll G proc{$ V}
-		      AT = {ArgType V.2}
-		   in
-		      case CV orelse {Atom.toString V.1}.1 \= 96 then
-			 case CP orelse AT \= '<procedure>' then
-			    T = {TagCounter get($)}
-			    Ac = {New Tk.action
-				  tkInit(parent: E
-					 action: proc{$}{Browse V.2}end)}
-			 in
-			    {ForAll [tk(insert 'end' ' ' # {PrintF V.1 13})
-				     tk(insert 'end' AT # NL T)
-				     tk(tag bind T '<1>' Ac)
-				     tk(tag conf T font:BoldFont)] E}
-			 else skip end
-		      else skip end
-		   end}
-	 {E tk(insert 'end' NL)}
-      end
+	       tk(delete '0.0' 'end')] E}
       
-      %% Y
-      {E tk(insert 'end' 'Y'#NL)}
-      case Y == nil orelse Y == unknown then
+      case V == undef then
 	 skip
       else
-	 {ForAll Y proc{$ V}
-		      T = {TagCounter get($)}
-		      Ac = {New Tk.action
-			    tkInit(parent: E
-				   action: proc{$}{Browse V.2}end)}
-		   in
-		      {ForAll [tk(insert 'end' ' ' # {PrintF V.1 13})
-			       tk(insert 'end' {ArgType V.2} # NL T)
-			       tk(tag bind T '<1>' Ac)
-			       tk(tag conf T font:BoldFont)] E}
-		   end}
+	 {ForAll V.'G'
+	  proc{$ V}
+	     AT = {ArgType V.2}
+	  in
+	     case CV orelse {Atom.toString V.1}.1 \= 96 then
+		case CP orelse AT \= '<procedure>' then
+		   T = {TagCounter get($)}
+		   Ac = {New Tk.action
+			 tkInit(parent: E
+				action: proc{$}{Browse V.2}end)}
+		in
+		   {ForAll [tk(insert 'end' ' ' # {PrintF V.1 13})
+			    tk(insert 'end' AT # NL T)
+			    tk(tag bind T '<1>' Ac)
+			    tk(tag conf T font:BoldFont)] E}
+		else skip end
+	     else skip end
+	  end}
+	 {E tk(insert 'end' NL)}
+	 
+	 {ForAll V.'Y'
+	  proc{$ V}
+	     T = {TagCounter get($)}
+	     Ac = {New Tk.action
+		   tkInit(parent: E
+			  action: proc{$}{Browse V.2}end)}
+	  in
+	     {ForAll [tk(insert 'end' ' ' # {PrintF V.1 13})
+		      tk(insert 'end' {ArgType V.2} # NL T)
+		      tk(tag bind T '<1>' Ac)
+		      tk(tag conf T font:BoldFont)] E}
+	  end}
 	 {E tk(insert 'end' NL)}
       end
       
       {E tk(conf state:disabled)}
    end
-
+   
    meth frameClick(nr:I frame:F)
-      Gui,printEnv(frame:I globals:F.'G' locals:F.'Y')
+      Gui,printEnv(frame:I vars:F.vars)
       SourceManager,scrollbar(file:F.file line:F.line
 			      color:ScrollbarStackColor what:stack)
    end
@@ -197,7 +192,7 @@ class Gui from Menu Dialog
 	 Gui,printEnv(frame:0)
       else
 	 {self.StackText title(AltStackTitle # ThrID)}
-	 Gui,printEnv(frame:1 globals:S.1.'G' locals:S.1.'Y')
+	 Gui,printEnv(frame:1 vars:S.1.vars)
 	 %SourceManager,scrollbar(file:S.1.file line:S.1.line
 		%		 color:ScrollbarStackColor what:stack)
 
