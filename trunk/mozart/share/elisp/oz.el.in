@@ -638,27 +638,21 @@ With ARG, stop it instead."
   (interactive "P")
   (oz-send-string (if arg "{Ozcar.close}" "{Ozcar.open}") t))
 
-(defun oz-breakpoint-key-set (arg)
+(defun oz-breakpoint-at-point (arg)
   "Set breakpoint at current line.
 With ARG, delete it instead."
-  (interactive "P")
-  (oz-breakpoint (not arg)))
-
-(defun oz-breakpoint-key-delete (arg)
-  "Delete breakpoint at current line.
-With ARG, set it instead."
   (interactive "P")
   (oz-breakpoint arg))
 
 (defun oz-breakpoint-mouse-set (event)
   "Set breakpoint at line where mouse points to."
   (interactive "e")
-  (oz-breakpoint-mouse event t))
+  (oz-breakpoint-mouse event nil))
 
 (defun oz-breakpoint-mouse-delete (event)
   "Delete breakpoint at line where mouse points to."
   (interactive "e")
-  (oz-breakpoint-mouse event nil))
+  (oz-breakpoint-mouse event t))
 
 (defun oz-breakpoint-mouse (event flag)
   (save-excursion
@@ -677,9 +671,9 @@ With ARG, set it instead."
     (beginning-of-line)
     (let ((line (1+ (count-lines 1 (point)))))
       (oz-send-string
-       (concat "{Ozcar bpAt('"
+       (concat "{Ozcar.object bpAt('"
 	       (or (buffer-file-name) (buffer-name))
-	       "' " line (if flag " true" " false") ")}") t))))
+	       "' " line (if flag " false" " true") ")}") t))))
 
 ;;}}}
 ;;{{{ Interacting with the Oz Profiler
@@ -1882,7 +1876,7 @@ buffer."
   (define-key map (oz-kbd "M-n")         'oz-next-buffer)
   (define-key map (oz-kbd "M-p")         'oz-previous-buffer)
 
-  (define-key map (oz-kbd "C-x SPC")     'oz-breakpoint-key-set)
+  (define-key map (oz-kbd "C-x SPC")     'oz-breakpoint-at-point)
   (cond (oz-gnu-emacs
 	 (define-key map [(meta shift mouse-1)] 'oz-breakpoint-mouse-set)
 	 (define-key map [(meta shift mouse-3)] 'oz-breakpoint-mouse-delete))
