@@ -29,31 +29,26 @@ import
    Tk
    QTkDevel(splitParams:        SplitParams
 	    tkInit:             TkInit
+	    init:               Init
 	    assert:             Assert
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
 	    qTkClass:           QTkClass
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
-	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget)
+	    globalUngetType:    GlobalUngetType)
 
 export
-   WidgetType
-   Feature
-   QTkRadiobutton
+   Register
    
 define
-
-   WidgetType=radiobutton
-   Feature=false
    
    class QTkRadiobutton
 
       feat
 	 Return Name Value
 	 TkVar
-	 widgetType:WidgetType
+	 widgetType:radiobutton
 	 action
 	 typeInfo:r(all:{Record.adjoin GlobalInitType
 			 r(1:boolean
@@ -105,11 +100,11 @@ define
    
       from Tk.radiobutton QTkClass
       
-      meth radiobutton(...)=M
+      meth !Init(...)=M
 	 lock
 	    A B
 	 in
-	    QTkClass,{Record.adjoin M init}
+	    QTkClass,M
 	    if {HasFeature M group}==false then
 	       {Exception.raiseError qtk(missingParameter group self.widgetType M)}
 	    end
@@ -199,8 +194,8 @@ define
    
    end
 
-   {RegisterWidget r(widgetType:WidgetType
-		     feature:false
-		     qTkRadiobutton:QTkRadiobutton)}
+   Register=[r(widgetType:radiobutton
+	       feature:false
+	       widget:QTkRadiobutton)]
 
 end

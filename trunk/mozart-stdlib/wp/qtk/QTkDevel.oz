@@ -28,7 +28,7 @@
 functor
 
 import
-   System(show:Show)
+%   System(show:Show)
    Tk
    Error
    QTk at 'QTkBare.ozf'
@@ -58,27 +58,38 @@ export
    globalUnsetType:    GlobalUnsetType
    globalUngetType:    GlobalUngetType
    mapLabelToObject:   MapLabelToObject
-   registerWidget:     RegisterWidget
-   getWidget:          GetWidget
+%   registerWidget:     RegisterWidget
+%   getWidget:          GetWidget
    qTk:                NQTk
-   loadTk:             LoadTk
-   loadTkPI:           LoadTkPI
+   QTkDesc
+%   loadTk:             LoadTk
+%   loadTkPI:           LoadTkPI
    NewLook
    DefLook
-   PropagateLook
+%   PropagateLook
    NewRedirector
    Redirector
-   SetAlias
-   UnSetAlias
-   GetAlias
+%   SetAlias
+%   UnSetAlias
+%   GetAlias
+   GetBuilder
+   Builder
+   Init
+   WInfo
+   Feature
+   ParentFeature
 
    
 require
    BootObject at 'x-oz://boot/Object'
    BootName   at 'x-oz://boot/Name'
 prepare
-   GetClass = BootObject.getClass
-   OoFeat   = {BootName.newUnique 'ooFeat'}
+%   GetClass = BootObject.getClass
+%   OoFeat   = {BootName.newUnique 'ooFeat'}
+   MapLabelToObject={NewName}
+   QTkDesc = {NewName}
+   Builder = {NewName}
+   Init    = {NewName}
    
 
 %%% Functions and procedures that are heavily used when developping QTk widgets
@@ -170,7 +181,7 @@ prepare
       {Record.adjoin
        {Record.filterInd Var
 	fun{$ I R} {Int.is I}==false andthen
-	   {Member I [glue feature padx pady init return tooltips handle action look]}==false
+	   {Member I [glue padx pady init return tooltips handle action look]}==false
 	end}
        tkInit}
    end
@@ -437,19 +448,6 @@ prepare
       end
    end
 
-   %%
-   %% Functions required for the class definitions
-   %%
-
-      
-   fun{Majus Str}
-      {List.mapInd
-       {VirtualString.toString Str}
-       fun{$ I C}
-	  if I==1 then C-32 else C end
-       end}
-   end
-
 define
 
    NotifyMeth={NewName}
@@ -458,7 +456,6 @@ define
    NoArgs={NewName}
    Toplevel={NewName}
    NQTk={ByNeed fun{$} QTk end}
-   QTkRegisterWidget={ByNeed fun{$} QTk.registerWidget end}
    Redirector={NewName}
    Blackbox={NewName}
    Win32=({Property.get 'platform'}.os==win32)
@@ -849,16 +846,20 @@ define
    %% Assertion stuff for checking parameter types
    %%
    
-   AssertLevel={NewCell assert(init:full set:full get:full all:full)}
+   AssertLevel={NewCell assert(Init:full set:full get:full all:full)}
 
    proc{SetAssertLevel What Level}
       if (What==all) andthen {List.member Level [full partial none]} then
-	 {Assign AssertLevel assert(init:Level set:Level get:Level all:Level)}
+	 {Assign AssertLevel assert(Init:Level set:Level get:Level all:Level)}
       else
-	 if {List.member What [init set get]} andthen
+	 if {List.member What [set get]} andthen
 	    {List.member Level [full partial none]} then
 	    {Assign AssertLevel {Record.adjoinAt {Access AssertLevel}
 				 What Level}}
+	 elseif What==init andthen
+	    {List.member Level [full partial none]} then
+	    {Assign AssertLevel {Record.adjoinAt {Access AssertLevel}
+				 Init Level}}
 	 else
 	    {Exception.raiseError qtk(custom "Illegal AssertLevel" "Can only assert init, set and get to level full, partial or none" What#Level)}
 	 end
@@ -875,7 +876,7 @@ define
 	     proc{$ I V}
 		if {HasFeature TypeInfo.all I} then % the type is known
 		   case Op
-		   of init then
+		   of !Init then
 		      if {HasFeature TypeInfo.uninit I} then % the type can't be init
 			 {Exception.raiseError qtk(badParameter I Widget Rec)}
 		      end
@@ -1324,7 +1325,6 @@ define
    end
 
    Obj={NewName}
-   Apply={NewName}
    
    class BlackboxClass
 
@@ -1369,7 +1369,7 @@ define
 	 end
 	 thread
 	    proc{Loop O}
-	       case O of X|Xs then
+	       case O of _|Xs then
 		  OutS<-Xs
 		  {Loop Xs}
 	       end
@@ -1480,7 +1480,6 @@ define
       meth getGlobalName(V $)
 	 R={FindKey self.DB self.DBL V}
       in
-%	 {Show globalize#R}
 	 R
       end
 
@@ -1592,7 +1591,7 @@ define
 	 !Events
 	 typeInfo:unit % different from unit means type checking is on : r(init:r unset:r unget:r)
       
-      meth init(...)=M
+      meth !Init(...)=M
 	 lock
 	    self.Redirector={NewRedirector self}
 	    self.parent=M.parent
@@ -1891,35 +1890,69 @@ define
       end
    end
 
-   Widgets={NewDictionary}
-
-   proc{RegisterWidget M}
-      try
-	 {Dictionary.put Widgets M.widgetType
-	  r(feature:{CondSelect M feature false}
-	    object:M.{VirtualString.toAtom qTk#{Majus M.widgetType}})}
-      catch _ then
-	 {Exception.raiseError qtk(custom "Unable to register a widget" "The specified module is not a correct QTk widget module" M)}
-      end
-   end
-
-   fun{GetWidget M}
-      P={Dictionary.condGet Widgets M r(object:nil)}.object
+   fun{WInfo I}
+      R
+      What=winfo(I)
    in
-      if P==nil then
-	 E
-      in
-	 try
-	    E={QTkRegisterWidget M $}.{VirtualString.toAtom qTk#{Majus M}}
-	 catch _ then
-	    {Exception.raiseError qtk(custom "Unable to register a widget" "Missing or incorrect widget name" M)}
-	    E=nil
-	 end
-	 E
-      else
-	 P
-      end
+      R=case {Label I}
+	of cells then {Tk.returnInt What}
+	[] colormapfull then {Tk.return What}=="1"
+	[] depth then {Tk.returnInt What}
+	[] exist then {Tk.return What}=="1"
+	[] fpixels then {Tk.returnFloat What}
+	[] height then {Tk.returnInt What}
+	[] ismapped then {Tk.return What}=="1"
+	[] pixels then {Tk.returnInt What}
+	[] pointerx then {Tk.returnInt What}
+	[] pointery then {Tk.returnInt What}
+	[] reqheight then {Tk.returnInt What}
+	[] reqwidth then {Tk.returnInt What}
+	[] rootx then {Tk.returnInt What}
+	[] rooty then {Tk.returnInt What}
+	[] screen then {Tk.return What}
+	[] screencells then {Tk.returnInt What}
+	[] screendepth then {Tk.returnInt What}
+	[] screenheight then {Tk.returnInt What}
+	[] screenmmheight then {Tk.returnInt What}
+	[] screenmmwidth then {Tk.returnInt What}
+	[] screenvisual then {Tk.returnAtom What}
+	[] screenwidth then {Tk.returnInt What}
+	[] server then {Tk.return What}
+	[] viewable then {Tk.return What}=="1"
+	[] visual then {Tk.returnAtom What}
+	[] visualid then {Tk.return What}
+	[] vrootwidth then {Tk.returnInt What}
+	[] vrootheight then {Tk.returnInt What}
+	[] vrootx then {Tk.returnInt What}
+	[] vrooty then {Tk.returnInt What}
+	[] width then {Tk.returnInt What}
+	[] x then {Tk.returnInt What}
+	[] y then {Tk.returnInt What}
+	end
+      {Wait R}
+      R
    end
+   
+   
+%    Widgets={NewDictionary}
+
+%    fun{GetWidget M}
+%       P={Dictionary.condGet Widgets M r(object:nil)}.object
+%    in
+%       if P==nil then
+% 	 E
+%       in
+% 	 try
+% 	    E={QTkRegisterWidget M $}.{VirtualString.toAtom qTk#{Majus M}}
+% 	 catch _ then
+% 	    {Exception.raiseError qtk(custom "Unable to register a widget" "Missing or incorrect widget name" M)}
+% 	    E=nil
+% 	 end
+% 	 E
+%       else
+% 	 P
+%       end
+%    end
 
 %   fun{MakeClass ClassName Description}
 %      {Class.new [ClassName] q
@@ -1938,46 +1971,26 @@ define
 %      {New {MakeClass Class Desc} Desc}
 %   end
    
-   fun{MakeClass ClassName Description}
-      {Class.new [ClassName] q
-       {Record.map
-	{Record.filter Description
-	 fun{$ V}
-	    {IsDet V} andthen {IsRecord V} andthen {HasFeature V feature}
-	 end}
-	fun{$ V}
-	   V.feature
-	end}
-       [locking]}
-   end
+%    fun{MakeClass ClassName Description}
+%       {Class.new [ClassName] q
+%        {Record.map
+% 	{Record.filter Description
+% 	 fun{$ V}
+% 	    {IsDet V} andthen {IsRecord V} andthen {HasFeature V feature}
+% 	 end}
+% 	fun{$ V}
+% 	   V.feature
+% 	end}
+%        [locking]}
+%    end
 
-   fun{GetLook Rec}
-      {{CondSelect Rec look DefLook}.get Rec}
-   end
-
-   fun{PropagateLook Rec}
-      Look={CondSelect Rec look DefLook}
-   in
-      {GetLook
-       {Record.mapInd Rec
-	fun{$ I V}
-	   if {IsInt I} andthen {IsDet V} andthen {IsRecord V} then
-	      L=if {HasFeature V look}==false then
-		   {Record.adjoinAt V look Look}
-		else
-		   V
-		end
-	   in
-	      {GetLook L}
-	   else
-	      V
-	   end
-	end}}
-   end
+%    fun{GetLook Rec}
+%       {{CondSelect Rec look DefLook}.get Rec}
+%    end
    
-   fun{NewFeat Class Desc}
-      {New {MakeClass Class Desc} {PropagateLook Desc}}
-   end
+%    fun{NewFeat Class Desc}
+%       {New {MakeClass Class Desc} {PropagateLook Desc}}
+%    end
 
 
    NewRedirector
@@ -2012,305 +2025,445 @@ define
 	 {ForAll {Arity Feats} % copy all features
 	  proc{$ F} R.F=O.F end}
       in
-%	 {Show nd#R}
 	 R
       end
    end
 
-   Aliases={NewDictionary}
 
-   proc{SetAlias A R}
-      Aliases.A:=R
-   end
-
-   proc{UnSetAlias A}
-      {Dictionary.remove Aliases A}
-   end
-
-   fun{GetAlias A}
-      Aliases.A
-   end
+%    fun{PropagateLook Rec}
+%       Look={CondSelect Rec look DefLook}
+%    in
+%       {GetLook
+%        {Record.mapInd Rec
+% 	fun{$ I V}
+% 	   if {IsInt I} andthen {IsDet V} andthen {IsRecord V} then
+% 	      L=if {HasFeature V look}==false then
+% 		   {Record.adjoinAt V look Look}
+% 		else
+% 		   V
+% 		end
+% 	   in
+% 	      {GetLook L}
+% 	   else
+% 	      V
+% 	   end
+% 	end}}
+%    end
    
-   fun{MapLabelToObject R}
-      Name={Label R}
-      Al={Dictionary.condGet Aliases Name nil}
-   in
-      if Al\=nil then
-	 if {Record.is Al} then
-	    {MapLabelToObject {Record.adjoin {Record.adjoin Al R} {Label Al}}}
-	 else
-	    {MapLabelToObject {Record.adjoinAt {Al R} parent R.parent}}
-	 end
-      else
-	 A={Dictionary.condGet Widgets Name nil}
-	 D=if A\=nil then A else
-\ifndef DEBUG	     
-	      {fun{$}
-		  E
-	       in
 
-		  %%
-		  %% A flaw in the system prevents the following lines from working :-(
-		  %%
-	     
-%	     try
-%		%%
-%		%% unknown widget : first tries to load it on the fly
-%		%%
-%		M
-%	     in
-%		[M]={Module.link [{VirtualString.toString "QTk"#{Majus Name}#".ozf"}]}
-%		{Wait M}
-%		{RegisterWidget M}
-%	     catch _ then E=unit end
-	     
-		  try
-		     %%
-		     %% unknown widget : first tries to load it on the fly
-		     %%
-		     if {IsFree {QTkRegisterWidget Name $}} then E=unit end
-		  catch _ then E=unit end
-		  if {IsDet E} then
-		     %%
-		     %% secondly tries to build one on the fly !
-		     %%
-		     WidgetClass
-		  in
-		     try
-			UnknownWidget
-		     in
-			if {HasFeature R action} then
-			   class UnknownWidget
-			      feat
-				 widgetType:Name
-				 action
-			      from QTkClass
-			      meth unknownWidget(...)=M
-				 QTkClass,{Record.adjoin M init}
-				 Tk.Name,{Record.adjoin {TkInit M}
-					  tkInit(action:{self.action action($)})}
-			      end
-			      meth otherwise(M)
-				 {Tk.send M}
-			      end
-			   end		     
-			else
-			   class UnknownWidget
-			      feat widgetType:Name
-			      from QTkClass
-			      meth unknownWidget(...)=M
-				 QTkClass,{Record.adjoin M init}
-				 Tk.Name,{TkInit M}
-			      end
-			      meth otherwise(M)
-				 {Tk.send M}
-			      end
-			   end
-			end
-			WidgetClass={Class.new [Tk.{Label R} UnknownWidget] nil nil [locking]}
-		     catch _ then skip end
-		     if {IsFree WidgetClass} then
-			{Exception.raiseError qtk(badWidget R)}
-		     end
-		  end
-		  local
-		     X={Dictionary.condGet Widgets Name nil}
-		  in
-		     if X==nil then
-			{Exception.raiseError qtk(badWidget R)}
-			nil
-		     else
-			X
-		     end
-		  end
-	       end}
-\else
-	      {fun{$}
-		  {Exception.raiseError qtk(badWidget R)}
-		  nil
-	       end}
-\endif
-	   end
-	 Object
-%      RD={ByNeed fun{$} {NewRedirector Object} end}
-	 proc{SetHandle}
-	    if {HasFeature R handle} then
-	       R.handle=Object.Redirector
-	    end
-	    if {HasFeature R feature} then
-	       (R.parent).(R.feature)=Object.Redirector
-	    end
-	 end
-	 case D.feature
-	 of true then
-	    Object={NewFeat D.object R}
-	    {SetHandle}
-	 [] menu then
-	    Object={NewFeat D.object R}
-	    if {HasFeature R handle} then
-	       R.handle=Object.Redirector
-	    end
-	 [] false then
-	    Object={New D.object R}
-	    {SetHandle}
-	 [] unknown then
-	    Object={New D.object {Record.adjoin R unknownWidget}}
-	    {SetHandle}
-	 [] S then %% special support for scrollable widgets !
-	    if S==scroll orelse S==scrollfeat then
-	       if {CondSelect R tdscrollbar false} orelse {CondSelect R lrscrollbar false} then
-		  Type={Label R}
-		  B
-		  {SplitParams R [tdscrollbar lrscrollbar scrollwidth] _ B}
-		  class ScrollWidget
-		     from Tk.frame QTkClass
-		     meth init
-			lock
-			   QTkClass,init(parent:R.parent)
-			   Tk.frame,tkInit(parent:R.parent)
-			   if S==scroll then
-			      self.Type={New D.object {Record.adjoinAt R parent self}}
-			   else
-			      self.Type={NewFeat D.object {Record.adjoinAt R parent self}}
-			   end
-			   {Tk.batch [grid(self.Type row:0 column:0 sticky:nswe)
-				      grid(rowconfigure self 0 weight:1)
-				      grid(columnconfigure self 0 weight:1)]}
-			   if {CondSelect B tdscrollbar false} then
-			      self.tdscrollbar={New {Dictionary.get Widgets tdscrollbar}.object
-						{Record.adjoin
-						 if Win32 then if {HasFeature B scrollwidth} then r(width:B.scrollwidth) else r end
-						 else r(width:{CondSelect B scrollwidth 10}) end
-						 tdscrollbar(parent:self)}}
-%					     tdscrollbar(parent:self width:{CondSelect B scrollwidth 10})}
-			      {Tk.send grid(self.tdscrollbar row:0 column:1 sticky:ns)}
-			      {Tk.addYScrollbar self.Type self.tdscrollbar}
-			   end
-			   if {CondSelect B lrscrollbar false} then
-			      self.lrscrollbar={New {Dictionary.get Widgets lrscrollbar}.object
-						{Record.adjoin
-						 if Win32 then if {HasFeature B scrollwidth} then r(width:B.scrollwidth) else r end
-						 else r(width:{CondSelect B scrollwidth 10}) end
-						 lrscrollbar(parent:self)}}
-%					     lrscrollbar(parent:self width:{CondSelect B scrollwidth 10})}
-			      {Tk.send grid(self.lrscrollbar row:1 column:0 sticky:we)}
-			      {Tk.addXScrollbar self.Type self.lrscrollbar}
-			   end
-			   if {HasFeature R handle} then
-			      R.handle={NewRedirector self.Type}
-			   end
-			   if {HasFeature R feature} then
-			      (R.parent).(R.feature)=self.Type
-			   end
-			end
-		     end
-		     meth set(...)=M
-			{self.Type M}
-		     end
-		     meth get(...)=M
-			{self.Type M}
-		     end
-		     meth destroy
-			lock
-			   {self.Type destroy}
-			   if {CondSelect B tdscrollbar false} then
-			      {self.tdscrollbar destroy}
-			   end
-			   if {CondSelect B lrscrollbar false} then
-			      {self.lrscrollbar destroy}
-			   end
-			end
-		     end
-		     meth otherwise(M)
-			{self.Type M} %% passes the messages to the main object automatically
-		     end
-		  end
-		  ScrollObj={Class.new [ScrollWidget] q
-			     if {CondSelect B tdscrollbar false} then
-				if {CondSelect B lrscrollbar false} then
-				   q(Type tdscrollbar lrscrollbar)
-				else
-				   q(Type tdscrollbar)
-				end
-			     else
-				q(Type lrscrollbar)
-			     end
-			     [locking]}
-	       in
-		  Object={New ScrollObj init}
-	       else
-		  %% no scrollbars, use the normal widget
-		  Object=if S==scrollfeat then
-			    {NewFeat D.object R}
-			 else
-			    {New D.object R}
-			 end
-		  {SetHandle}
-	       end
-	    else
-	       {Exception.raiseError qtk(custom "Internal Error" "Invalid feature code" S)}
-	       Object=nil
-	    end
-	 end
-      in
-	 Object
-      end
-   end
+%    TkClass =
+%    {List.last
+%     {Arity
+%      {GetClass
+%       {New class $ from Tk.frame meth init skip end end init}}
+%      . OoFeat}}
    
-   TkClass =
-   {List.last
-    {Arity
-     {GetClass
-      {New class $ from Tk.frame meth init skip end end init}}
-     . OoFeat}}
-   
-   fun{TkLoad FileName TkName}
-      {ExecTk load FileName}
-      class $
-	 from Tk.frame
-	 feat !TkClass:TkName
-      end
-   end
+%    fun{TkLoad FileName TkName}
+%       {ExecTk load FileName}
+%       class $
+% 	 from Tk.frame
+% 	 feat !TkClass:TkName
+%       end
+%    end
 
-   fun{TkLoadPI FileName TkName}
-      P={Property.get 'platform'}.os
-   in
-      {TkLoad
-       FileName#"-"#P#if P==win32 then ".dll" else ".so" end
-       TkName}
-   end
+%    fun{TkLoadPI FileName TkName}
+%       P={Property.get 'platform'}.os
+%    in
+%       {TkLoad
+%        FileName#"-"#P#if P==win32 then ".dll" else ".so" end
+%        TkName}
+%    end
  
-   fun{RegisterLoadTkWidget TkClass TkName}
-      QTkName={VirtualString.toAtom qTk#{Majus TkName}}
-      class Temp
-	 feat widgetType:TkName
-	 from QTkClass TkClass
-	 meth !TkName(...)=M
-	    QTkClass,{Record.adjoin M init}
-	    TkClass,{TkInit M}
+%    fun{RegisterLoadTkWidget TkClass TkName}
+%       QTkName={VirtualString.toAtom qTk#{Majus TkName}}
+%       class Temp
+% 	 feat widgetType:TkName
+% 	 from QTkClass TkClass
+% 	 meth !TkName(...)=M
+% 	    QTkClass,{Record.adjoin M init}
+% 	    TkClass,{TkInit M}
+% 	 end
+% 	 meth otherwise(M)
+% %	    {ExecTk self M}
+% 	    {self tk(M)}
+% 	 end
+%       end		     
+%    in
+%       {RegisterWidget r(widgetType:TkName
+% 			feature:false
+% 			QTkName:Temp)}
+%       true
+%    end
+   
+%    fun{LoadTk FileName TkName}
+%       try
+% 	 {RegisterLoadTkWidget {TkLoad FileName TkName} TkName}
+%       catch _ then false end
+%    end
+   
+%    fun{LoadTkPI FileName TkName}
+%       try
+% 	 {RegisterLoadTkWidget {TkLoadPI FileName TkName} TkName}
+%       catch _ then false end
+%    end
+
+   Feature={NewName}
+   ParentFeature={NewName}
+   fun{NewFeat Class Desc}
+      {New {MakeClass Class Desc} {Subtracts Desc [feature Feature ParentFeature]}}
+   end
+   
+   fun{MakeClass ClassName Description}
+      fun{Loop J L}
+	 case L
+	 of I#V|Ls then
+	    if {IsInt I} andthen {IsDet V} andthen {IsRecord V} then
+	       fun{ILoop M}
+		  case M of N#O|Ms then
+		     N#O|{ILoop Ms}
+		  else
+		     if {HasFeature V feature} then
+			J#V.feature|{Loop J+1 Ls}
+		     else
+			{Loop J Ls}
+		     end
+		  end
+	       end
+	    in
+	       {ILoop {CondSelect V ParentFeature nil}}
+	    else
+	       {Loop J Ls}
+	    end
+	 else
+	    nil
 	 end
-	 meth otherwise(M)
-%	    {ExecTk self M}
-	    {self tk(M)}
-	 end
-      end		     
+      end
+      Features={List.toRecord q
+		{List.append
+		 {CondSelect Description Feature nil}
+		 {Loop 1 {Record.toListInd Description}}}}
    in
-      {RegisterWidget r(widgetType:TkName
-			feature:false
-			QTkName:Temp)}
-      true
+      {Class.new [ClassName] q Features [locking]}
    end
    
-   fun{LoadTk FileName TkName}
-      try
-	 {RegisterLoadTkWidget {TkLoad FileName TkName} TkName}
-      catch _ then false end
+   fun{GetBuilder GetToplevelClass}
+      fun{ApplyLook R L}
+	 {Record.adjoinAt {{CondSelect R look L}.get R} look L}
+      end
+      Register={NewName}
+      Builder={New
+	       class $
+		  feat
+		     build
+		     register
+		     setAlias
+		     unSetAlias
+		     getAlias
+		     defaultLook
+		     Widgets
+		     Aliases
+		     ToplevelClass
+		  meth !Init
+		     self.register    = proc{$ W} {self Register(W)} end
+		     self.defaultLook = {NewLook}
+		     self.ToplevelClass    = {GetToplevelClass self}
+		     self.build       = fun{$ Desc1}
+					   Look={CondSelect Desc1 look self.defaultLook}
+					   Desc={ApplyLook Desc1 Look}
+%					   R={NewFeat self.ToplevelClass Init({self Expand(Desc $)})}
+					   Exp={self Expand(Desc $)}
+					   R={NewFeat {MakeClass self.ToplevelClass Exp} Init(Exp)}
+					in
+					   R
+					end
+		     self.Widgets     = {NewDictionary}
+		     self.Aliases     = {NewDictionary}
+		     self.setAlias    = proc{$ A R} {self SetAlias(A R)} end
+		     self.unSetAlias  = proc{$ A}
+					   {Dictionary.remove self.Aliases A}
+					end
+		     self.getAlias    = fun{$ A}
+					   self.Aliases.A
+					end
+		  end
+		  meth Expand(R $)
+		     Look={CondSelect R look self.defaultLook}
+		  in
+		     {Record.mapInd R
+		      fun{$ I V}
+			 if {IsInt I} andthen {IsDet V} andthen {IsRecord V} then
+			    fun{Loop V}
+			       L1={ApplyLook V Look}
+			       Alias={Dictionary.condGet self.Aliases {Label L1} unit}
+			    in
+			       if Alias==unit then
+				  L1
+			       else
+				  {Loop {Alias L1}}
+			       end
+			    end
+			 in
+			    {Loop V}
+			 else
+			    V
+			 end
+		      end}
+		  end
+		  meth SetAlias(A R)
+		     if {Dictionary.member self.Widgets A} then
+			{Exception.raiseError qtk(custom "Can't set an alias to using a regular widget name." A setAlias(A R))}
+		     end
+		     if {Record.is R} then
+			{self.setAlias A
+			 fun{$ M} {Record.adjoin {Record.adjoin R M} {Label R}} end}
+		     elseif {Class.is R} then
+			{self.setAlias A
+			 fun{$ M}
+			    UI
+			    %% remove all options this function automatically manages from the description
+			    PurgedM={Record.filterInd M
+				     fun{$ I _}
+					{Not {List.member I [glue handle look parent feature Feature ParentFeature]}} end}
+			    %% look used by this description
+			    Look={CondSelect M look self.defaultLook}
+			    %% split children widgets descriptions from other options
+			    ChildrenWidget OtherOptions
+			    {Record.partitionInd PurgedM
+			     fun{$ I V} {IsInt I} andthen {IsDet V} andthen {Record.is V} end
+			     ChildrenWidget OtherOptions}
+			    %% apply look to children widgets
+			    LookedChildren={Record.map ChildrenWidget
+					    fun{$ C}
+					       {ApplyLook C Look}
+					    end}
+			    %% add a handle option for children widgets that have a feature option
+			    HandledLookedChildren={Record.map LookedChildren
+						   fun{$ C}
+						      if {HasFeature C feature} then
+							 Handle={CondSelect C handle _}
+						      in
+							 {Record.adjoinAt C handle Handle}
+						      else
+							 C
+						      end
+						   end}
+			    %% extract the feature options of all children widgets
+			    %% creating a list of pairs NameOfFeature#HandleOfCorrespondingWidget
+			    FeatList={Record.toList
+				      {Record.map
+				       {Record.filter HandledLookedChildren
+					fun{$ V}
+					   {Record.is V} andthen {HasFeature V feature}
+					end}
+				       fun{$ V} V.feature#V.handle end
+				      }}
+			    %% supress the feature option of children widgets
+			    NoFeatHandledLookedChildren={Record.map HandledLookedChildren
+							 fun{$ C}
+							    {Record.subtract C feature}
+							 end}
+			    %% builds the description really given to the class
+			    Desc={Record.adjoinAt
+				  {Record.adjoin NoFeatHandledLookedChildren OtherOptions}
+				  QTkDesc UI}
+			    %% creates the class, adding required features parameters
+			    Cl={MakeClass R {Record.adjoinAt M Feature FeatList}}
+			    %% builds the object
+			    Obj={New Cl Desc}
+			    %% set handle and feature
+			    {CondSelect M handle _}=Obj
+			    %% adds what is required to UI
+			    Out1={Record.adjoin
+				  r(glue:{CondSelect M glue ""}  % by default, passes the glue parameter as is
+				    ParentFeature:if {HasFeature M feature} then % feature parameter passed up to constructor widget
+						     M.feature#Obj|{CondSelect M ParentFeature nil}
+						  else nil end
+				    look:Look) % by default, passes the look parameter as is)
+				  UI}
+			 in
+			    if {HasFeature M parent} then
+			       {Record.adjoinAt Out1 parent M.parent}
+			    else
+			       Out1
+			    end
+			 end}
+		     elseif {Procedure.is R} then
+			self.Aliases.A:=R
+		     else
+			{Exception.raiseError qtk(custom "Invalid alias format, expecting a record, a class or a procedure." A setAlias(A R))}
+		     end	     
+		  end
+		  meth !Register(M)
+		     try
+			WidgetName
+			Feat1={CondSelect M feature false}
+			Feat2=if (Feat1==scroll) orelse (Feat1==scrollfeat) then
+				 WidgetName={NewName}
+				 if {Dictionary.member self.Aliases M.widgetType} orelse
+				    {Dictionary.member self.Widgets M.widgetType} then
+				    {Exception.raiseError qtk(custom "Error : widget already registered."
+							      M.widgetType
+							      M)}
+				 end
+				 self.Aliases.(M.widgetType):=fun{$ M1}
+								 M={Record.adjoin M1 WidgetName}
+								 Handle={CondSelect M handle _}
+								 V H
+								 LRFeat=if {CondSelect M lrscrollbar false} then
+									   lrscrollbar#H|nil
+									else nil end
+								 Feats=if {CondSelect M tdscrollbar false} then
+									  tdscrollbar#V|LRFeat
+								       else LRFeat end
+								 fun{Format M}
+								    {Record.adjoin
+								     r(Feature:Feats) % add tdscrollbar and lrscrollbar features
+								     {Record.adjoinAt
+								      {Record.adjoinAt
+								       {Record.filterInd M
+									fun{$ I V}
+									   {Not {List.member I [tdscrollbar lrscrollbar scrollwidth feature parent]}}
+									end}
+								       glue nswe}
+								      handle Handle}}
+								 end
+								 fun{Width R}
+								    {Record.adjoin
+								     if {HasFeature R scrollwidth} then
+									r(width:R.scrollwidth)
+								     elseif Win32 then
+									r
+								     else
+									r(width:10)
+								     end
+								     R}
+								 end
+								 fun{Out R}
+								    Out=if {HasFeature M parent} then
+									   {Record.adjoinAt R parent M.parent}
+									else R
+									end
+								 in
+								    if {HasFeature M feature} then
+								       {Record.adjoinAt Out
+									ParentFeature
+									M.feature#Handle|{CondSelect M Feature nil}}
+								    else
+								       Out
+								    end
+								 end
+								 thread
+								    if {CondSelect M tdscrollbar false} then
+								       {Wait V}
+								       {Tk.addYScrollbar Handle V}
+								    end
+								    if {CondSelect M lrscrollbar false} then
+								       {Wait H}
+								       {Tk.addXScrollbar Handle H}
+								    end
+								 end
+							      in
+								 if {CondSelect M tdscrollbar false} then
+								    if {CondSelect M lrscrollbar false} then
+								       %% td & lr
+								       {Out
+									lr({Format M} {Width tdscrollbar(handle:V glue:ns)} newline
+									   {Width lrscrollbar(handle:H glue:we)}
+									   glue:{CondSelect M glue ""})}
+								    else
+								       %% td
+								       {Out
+									lr({Format M} {Width tdscrollbar(handle:V glue:ns)} newline
+									   glue:{CondSelect M glue ""})}
+								    end
+								 else
+								    if {CondSelect M lrscrollbar false} then
+								       %% lr
+								       {Out
+									lr({Format M} newline
+									   {Width lrscrollbar(handle:H glue:we)}
+									   glue:{CondSelect M glue ""})}
+								    else
+								       M
+								    end
+								 end
+							      end
+				 Feat1==scrollfeat
+			      else
+				 if {Dictionary.member self.Widgets M.widgetType} then
+				    {Exception.raiseError qtk(custom "Error : widget already registered."
+							      M.widgetType
+							      M)}
+				 end
+				 WidgetName=M.widgetType
+				 Feat1
+			      end
+		     in
+			{Dictionary.put self.Widgets WidgetName
+			 r(feature:Feat2
+			   object:M.widget)}
+		     catch X then
+			{Exception.raiseError qtk(custom "Unable to register a widget"
+						  {Error.extendedVSToVS {Error.messageToVirtualString {Error.exceptionToMessage X}}}
+						  M)}
+		     end
+		  end
+		  meth !MapLabelToObject(R $)
+		     %% applies look to R
+		     R1={ApplyLook R self.defaultLook}
+		     %% alias ?
+		     N={Label R1}
+		     Alias={Dictionary.condGet self.Aliases N unit}
+		  in
+		     if Alias==unit then
+			%% no => gets the corresponding object
+			{self MapFlatLabelToObject(R1 $)}
+		     else
+			%% yes => maps the alias and loops
+			{self MapLabelToObject({Record.adjoinAt {Alias R} parent R.parent} $)}
+		     end
+		  end
+		  meth MapFlatLabelToObject(R1 $)
+		     %% pre : R has fully flattened its look and alias and is now a fully regular widget
+		     Name={Label R1}
+		     R={Record.adjoin R1 Init}
+		     D={Dictionary.condGet self.Widgets Name nil}
+		     if D==nil then
+			{Exception.raiseError qtk(custom "Invalid Widget" Name#" is not a valid widget name." R1)}
+		     end
+		     Object
+		     proc{SetHandle}
+			if {HasFeature R handle} then
+			   R.handle=Object.Redirector
+			end
+			if {HasFeature R feature} then
+			   try
+			      (R.parent).(R.feature)=Object.Redirector
+			   catch _ then
+			      {Exception.raiseError qtk(custom "Invalid feature parameter" "Can't set parent widget feature :"#R.feature R1)}
+			   end
+			end
+		     end
+		     case D.feature
+		     of true then
+			%% to help build this widget, all its children widget will be already expanded their looks and aliases
+			Object={NewFeat D.object {self Expand(R $)}}
+			{SetHandle}
+		     [] menu then
+			Object={NewFeat D.object R}
+			{SetHandle}
+		     [] false then
+%			Object={New D.object {Record.subtract R Feature}}
+			Object={NewFeat D.object R}
+			{SetHandle}
+		     end
+		  in
+		     Object
+		  end
+	       end
+	       Init}
+   in
+      Builder
    end
-   
-   fun{LoadTkPI FileName TkName}
-      try
-	 {RegisterLoadTkWidget {TkLoadPI FileName TkName} TkName}
-      catch _ then false end
-   end
-   
+      
 end

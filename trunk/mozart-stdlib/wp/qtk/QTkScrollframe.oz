@@ -27,21 +27,19 @@ functor
 import
    Tk
    QTkDevel(tkInit:             TkInit
+	    init:               Init
 	    mapLabelToObject:   MapLabelToObject
+	    builder:            Builder
 	    subtracts:          Subtracts
 	    qTkClass:           QTkClass
 	    returnTk:           ReturnTk
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
 	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget
-	    splitParams:        SplitParams
-	    propagateLook:      PropagateLook)
+	    splitParams:        SplitParams)
 
 export
-   WidgetType
-   Feature
-   QTkScrollframe
+   Register
    
 define
 
@@ -89,26 +87,23 @@ define
 			     tdscrollbar:unit)})
 	 Child
 	 
-      meth scrollframe(...)=M
+      meth !Init(...)=M
 	 lock
-	    A B1 B
+	    A B
 	 in
 	    if {HasFeature M 1}==false then
 	       {Exception.raiseError qtk(missingParameter 1 self.widgetType M)}
 	    end
-	    {SplitParams M [1] A B1}
-	    B={PropagateLook B1}
-	    QTkClass,{Record.adjoin A init}
+	    {SplitParams M [1] A B}
+	    QTkClass,A
 	    Tk.canvas,{TkInit {Subtracts A [tdscrollbar lrscrollbar]}}
 	    %% B contains the structure of
 	    %% creates the children
-	    self.Child={MapLabelToObject
-			{Record.subtract
-			 {Record.subtract
-			  {Record.adjoinAt B.1 parent self}
-			  handle}
-			 feature}
-		       }
+	    self.Child={self.toplevel.Builder MapLabelToObject({Record.subtract
+								{Record.subtract
+								 {Record.adjoinAt B.1 parent self}
+								 handle}
+								feature} $)}
 	    if {HasFeature B.1 feature} then
 	       self.((B.1).feature)=self.Child
 	    end
@@ -142,8 +137,8 @@ define
 
    end
    
-   {RegisterWidget r(widgetType:WidgetType
-		     feature:Feature
-		     qTkScrollframe:QTkScrollframe)}
+   Register=[r(widgetType:WidgetType
+	       feature:Feature
+	       widget:QTkScrollframe)]
 
 end

@@ -29,24 +29,19 @@ import
    Tk
    QTkDevel(splitParams:        SplitParams
 	    tkInit:             TkInit
+	    init:               Init
 	    assert:             Assert
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
 	    qTkClass:           QTkClass
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
-	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget)
+	    globalUngetType:    GlobalUngetType)
 
 export
-   WidgetType
-   Feature
-   QTkCheckbutton
+   Register
    
 define
-
-   WidgetType=checkbutton
-   Feature=false
    
    class QTkCheckbutton
 
@@ -102,11 +97,11 @@ define
    
       from Tk.checkbutton QTkClass
       
-      meth checkbutton(...)=M
+      meth !Init(...)=M
 	 lock
 	    A B
 	 in
-	    QTkClass,{Record.adjoin M init}
+	    QTkClass,M
 	    self.Return={CondSelect M return _}
 	    {SplitParams M [ipadx ipady init] A B}
 	    self.TkVar={New Tk.variable tkInit({CondSelect M init false})}
@@ -167,7 +162,7 @@ define
       
    end
 
-   {RegisterWidget r(widgetType:checkbutton
-		     feature:false
-		     qTkCheckbutton:QTkCheckbutton)}
+   Register=[r(widgetType:checkbutton
+	       feature:false
+	       widget:QTkCheckbutton)]
 end

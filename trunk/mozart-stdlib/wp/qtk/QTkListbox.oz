@@ -29,6 +29,7 @@ import
    Tk
    QTkDevel(splitParams:        SplitParams
 	    tkInit:             TkInit
+	    init:               Init
 	    assert:             Assert
 	    checkType:          CheckType
 	    execTk:             ExecTk
@@ -36,13 +37,10 @@ import
 	    qTkClass:           QTkClass
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
-	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget)
+	    globalUngetType:    GlobalUngetType)
 
 export
-   WidgetType
-   Feature
-   QTkListbox
+   Register
    
 define
 
@@ -108,11 +106,11 @@ define
 	 
       from Tk.listbox QTkClass
 	 
-      meth listbox(...)=M
+      meth !Init(...)=M
 	 lock
 	    A B
 	 in
-	    QTkClass,{Record.adjoin M init}
+	    QTkClass,M
 	    {SplitParams M [lrscrollbar tdscrollbar scrollwidth init selection return] A B}
 	    Tk.listbox,{TkInit A}
 	    Content<-nil
@@ -316,8 +314,8 @@ define
       
    end
 
-   {RegisterWidget r(widgetType:WidgetType
-		     feature:Feature
-		     qTkListbox:QTkListbox)}
+   Register=[r(widgetType:WidgetType
+	       feature:Feature
+	       widget:QTkListbox)]
 
 end

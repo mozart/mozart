@@ -23,7 +23,7 @@
 %  the Université catholique de Louvain.
 
 fun{NewFont D}
-   {New QTkFont {Record.adjoin D init}}
+   {New QTkFont {Record.adjoin D Init}}
 end
 
 class QTkFont
@@ -44,7 +44,7 @@ class QTkFont
 		)
       
       
-   meth init(...)=M
+   meth !Init(...)=M
       lock
 	 {Assert self.widgetType self.typeInfo M}
 	 Tk.font,{Record.adjoin M tkInit}

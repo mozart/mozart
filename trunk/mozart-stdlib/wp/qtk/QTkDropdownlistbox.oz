@@ -26,24 +26,18 @@
 functor
 
 import
-   Tk
    QTkBare
    QTkImage
    QTkDevel(assert:             Assert
-	    splitParams:        SplitParams
+	    init:               Init
+	    qTkDesc:            QTkDesc
 	    subtracts:          Subtracts
-	    qTkClass:           QTkClass
-	    setGet:             SetGet
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
-	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget)
-   
+	    globalUngetType:    GlobalUngetType)
 
 export
-   WidgetType
-   Feature
-   QTkDropdownlistbox
+   Register
 
 require QTkDropdownbutton_bitmap
 
@@ -78,7 +72,6 @@ define
    class QTkDropdownlistbox
 
       feat
-	 Return
 	 widgetType:WidgetType
 	 typeInfo:r(all:{Record.adjoin GlobalInitType
 			 r(1:listVs      %% parameters specific to the listbox
@@ -139,36 +132,41 @@ define
 			     selectmode:unit)}
 		   )
 	 action
-	 list
+	 Button
 	 Window
+	 tdscrollbar lrscrollbar
+
+      attr inside
    
-      from Tk.button QTkClass
-      
       meth dropdownlistbox(...)=M
 	 lock
 	    A B
 	 in
-	    QTkClass,{Record.adjoin M init}
-	    self.Return={CondSelect M return _}
-	    A#B={FilterButton M}
-	    Tk.button,{Record.adjoin B tkInit(parent:M.parent
-					      action:self#DropDown
-					      image:{Lib get(name:'mini-down.xbm' image:$)})}
+	    {Assert self.widgetType self.typeInfo {Record.subtract {Record.adjoin M Init} QTkDesc}}
+	    A#B={FilterButton {Record.subtract M QTkDesc}}
+	    self.action={CondSelect A action proc{$} skip end}
+	    M.QTkDesc={Record.adjoin B button(image:{Lib get(name:'mini-down.xbm' image:$)}
+					      handle:self.Button
+					      action:self#DropDown)}
 	    self.Window={QTk.build td(overrideredirect:true
-				      {Record.adjoin {Subtracts A [handle]}
+				      {Record.adjoin {Subtracts A [handle feature]}
 				       listbox(glue:nswe
+					       action:self#Execute
 					       feature:list)})}
-	    {self.Window.list bind(event:"<ButtonRelease-1>" action:self#Close)}
+	    {self.Window bind(event:'<Enter>' action:self#Inside(true))}
+	    {self.Window bind(event:'<Leave>' action:self#Inside(false))}
+	    {self.Window bind(event:'<ButtonRelease-1>' action:self#CondClose)}
+	    self.tdscrollbar={CondSelect self.Window.list tdscrollbar unit}
+	    self.lrscrollbar={CondSelect self.Window.list lrscrollbar unit}
 	 end
       end
-
       meth DropDown
 	 lock
 	    proc{D}
 	       BX BY BW BH SW SH
-	       {self winfo(rootx:BX rooty:BY
-			   width:BW height:BH
-			   screenwidth:SW screenheight:SH)}
+	       {self.Button winfo(rootx:BX rooty:BY
+				  width:BW height:BH
+				  screenwidth:SW screenheight:SH)}
 	       WW WH
 	       {self.Window winfo(width:WW height:WH)}
 	       X1=BX+BW-WW
@@ -186,6 +184,7 @@ define
 	 in
 	    {D}
 	    {D}
+	    inside<-false
 	 end
       end
 
@@ -193,45 +192,48 @@ define
 	 try
 	    {self.Window releaseGrab}
 	    {self.Window hide}
-	    {self.action execute}
 	 catch _ then skip end
       end
-      
-      meth destroy
-	 lock
-	    self.Return={self.toplevel getDestroyer($)}==self
-	 end
+      meth Inside(Val)
+	 inside<-Val
+      end
+      meth CondClose
+	 if @inside==false then {self Close} end
       end
 
       meth Execute
 	 lock
 	    {self Close}
-	    {self.action execute}
+	    if {Procedure.is self.action} then
+	       {self.action}
+	    elsecase self.action of E#M then
+	       if {Port.is E} then
+		  {Send E M}
+	       else
+		  {E M}
+	       end
+	    end
 	 end
       end
 
       meth set(...)=M
 	 lock
-	    A B C D
+	    A B
 	 in
 	    {Assert self.widgetType self.typeInfo M}
 	    A#B={FilterButton M}
-	    {SplitParams B [action tooltips] C D}
-	    QTkClass,D
-	    SetGet,C
+	    {self.Button B}
 	    {self.Window.list A}
 	 end
       end
 
       meth get(...)=M
 	 lock
-	    A B C D
+	    A B
 	 in
 	    {Assert self.widgetType self.typeInfo M}
 	    A#B={FilterButton M}
-	    {SplitParams B [action tooltips] C D}
-	    QTkClass,D
-	    SetGet,C
+	    {self.Button B}
 	    {self.Window.list A}
 	 end
       end
@@ -244,8 +246,8 @@ define
    
    end
    
-   {RegisterWidget r(widgetType:WidgetType
-		     feature:Feature
-		     qTkDropdownlistbox:QTkDropdownlistbox)}
-
+   Register=[r(widgetType:WidgetType
+	       feature:Feature
+	       widget:QTkDropdownlistbox)]
+   
 end

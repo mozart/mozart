@@ -28,23 +28,21 @@ functor
 import
    Tk
    QTkDevel(tkInit:             TkInit
+	    init:               Init
 	    mapLabelToObject:   MapLabelToObject
+	    builder:            Builder
 %	    subtracts:          Subtracts
 	    execTk:             ExecTk
 	    assert:             Assert
 	    qTkClass:           QTkClass
-	    propagateLook:      PropagateLook
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
 	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget
 	    redirector:         Redirector
 	    splitParams:        SplitParams)
 
 export
-   WidgetType
-   Feature
-   QTkPlaceholder
+   Register
    
 define
 
@@ -85,12 +83,12 @@ define
 			     font:unit)})
       attr Child Pack
 	 
-      meth placeholder(...)=M
+      meth !Init(...)=M
 	 lock
 	    A B
 	 in
 	    {SplitParams M [1] A B}
-	    QTkClass,{Record.adjoin A init}
+	    QTkClass,A
 	    Tk.frame,{TkInit A}
 	    %% B contains the structure of
 	    %% creates the children
@@ -118,8 +116,7 @@ define
 	       elseif {Label B}==empty then
 		  NC=empty
 	       else
-		  NC={MapLabelToObject
-		      {Record.adjoinAt {PropagateLook B} parent self}}
+		  NC={self.toplevel.Builder MapLabelToObject({Record.adjoinAt B parent self} $)}
 %		  if {HasFeature B feature} then
 %		     try
 %			self.(B.feature)=NC
@@ -136,7 +133,7 @@ define
 			  pady:{CondSelect B pady 0})|@Pack
 	       end
 	       if {IsFree NC} then {Exception.raiseError qtk(badParameter 1 self.widgetType M)} end
-	       {ForAll @Pack proc{$ R} if R.obj==NC.Redirector then P=R end end}
+	       if NC\=empty then {ForAll @Pack proc{$ R} if R.obj==NC.Redirector then P=R end end} end
 	       if @Child\=empty then {Tk.send grid(forget @Child)} end
 	       if NC\=empty then
 		  if {IsFree P} then {Exception.raiseError qtk(badParameter 1 self.widgetType M)} end
@@ -157,7 +154,7 @@ define
 	    {SplitParams M [1] A B}
 	    QTkClass,A
 	    {Assert self.widgetType self.typeInfo B}
-	    {CondSelect B 1 _}=@Child.Redirector
+	    {CondSelect B 1 _}=if @Child==empty then empty else @Child.Redirector end
 	 end
       end
 
@@ -170,9 +167,9 @@ define
       end
 
    end
-   
-   {RegisterWidget r(widgetType:WidgetType
-		     feature:Feature
-		     qTkPlaceholder:QTkPlaceholder)}
+
+   Register=[r(widgetType:WidgetType
+	       feature:Feature
+	       widget:QTkPlaceholder)]
 
 end

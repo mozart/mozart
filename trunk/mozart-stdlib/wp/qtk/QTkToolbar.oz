@@ -28,23 +28,19 @@ functor
 import
    Tk
    QTkDevel(splitParams:        SplitParams
+	    init:               Init
 	    assert:             Assert
 	    qTkClass:           QTkClass
 	    subtracts:          Subtracts
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
-	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget)
+	    globalUngetType:    GlobalUngetType)
 
 export
-   WidgetType
-   Feature
-   TbButtonArea
+   Register
    
 define
 
-   WidgetType=toolbar
-   Feature=false
    BAI=r(bitmap:unit
 	 image:unit
 	 highlightbitmap:unit
@@ -129,7 +125,7 @@ define
 	 iconType
 	 text
 	 
-      meth init(...)=M
+      meth !Init(...)=M
 	 lock
 	    QTkClass,M
 	    normal<-r
@@ -478,11 +474,11 @@ define
 	 Return
 	 State
 	 
-      meth tbbutton(...)=M
+      meth !Init(...)=M
 	 lock
 	    self.Return={CondSelect M return _}
-	    {Assert self.widgetType self.typeInfo init(return:self.Return)}
-	    TbButtonArea,{Record.adjoin {Subtracts M [return]} init}
+	    {Assert self.widgetType self.typeInfo Init(return:self.Return)}
+	    TbButtonArea,{Subtracts M [return]}
 	 end
       end
 
@@ -522,13 +518,13 @@ define
 	 Return
       attr sel
 	 
-      meth tbcheckbutton(...)=M
+      meth !Init(...)=M
 	 lock
 	    sel<-{CondSelect M init false}
 	    self.Return={CondSelect M return _}
-	    {Assert self.widgetType self.typeInfo init(return:self.Return
+	    {Assert self.widgetType self.typeInfo Init(return:self.Return
 						       init:@sel)}
-	    TbButtonArea,{Record.adjoin {Subtracts M [init return]} init}
+	    TbButtonArea,{Subtracts M [init return]}
 	 end
       end
 
@@ -608,7 +604,7 @@ define
 	 Value
 	 TkVar
 	 
-      meth tbradiobutton(...)=M
+      meth !Init(...)=M
 	 lock
 	    if {HasFeature M group}==false then
 	       {Exception.raiseError qtk(missingParameter group self.widgetType M)}
@@ -616,10 +612,10 @@ define
 	    sel<-{CondSelect M init false}
 	    self.Return={CondSelect M return _}
 	    self.Name=M.group
-	    {Assert self.widgetType self.typeInfo init(return:self.Return
+	    {Assert self.widgetType self.typeInfo Init(return:self.Return
 						       init:@sel
 						       group:self.Name)}
-	    TbButtonArea,{Record.adjoin {Subtracts M [init return]} init}
+	    TbButtonArea,{Subtracts M [init return]}
 	    local
 	       R={self.toplevel getRadioDict(self.Name $)}
 	    in
@@ -683,16 +679,14 @@ define
       
    end
    
-   {RegisterWidget r(widgetType:tbbutton
-		     feature:false
-		     qTkTbbutton:QTkTbbutton)}
-
-   {RegisterWidget r(widgetType:tbradiobutton
-		     feature:false
-		     qTkTbradiobutton:QTkTbradiobutton)}
-
-   {RegisterWidget r(widgetType:tbcheckbutton
-		     feature:false
-		     qTkTbcheckbutton:QTkTbcheckbutton)}
+   Register=[r(widgetType:tbbutton
+	       feature:false
+	       widget:QTkTbbutton)
+	     r(widgetType:tbradiobutton
+	       feature:false
+	       widget:QTkTbradiobutton)
+	     r(widgetType:tbcheckbutton
+	       feature:false
+	       widget:QTkTbcheckbutton)]
    
 end

@@ -29,24 +29,21 @@ import
    Tk
    QTkDevel(subtracts:          Subtracts
 	    assert:             Assert
+	    builder:            Builder
+	    feature:            Feature
 	    tkInit:             TkInit
+	    init:               Init
 	    qTkClass:           QTkClass
+	    mapLabelToObject:   MapLabelToObject
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
-	    globalUngetType:    GlobalUngetType
-	    registerWidget:     RegisterWidget
-	    getWidget:          GetWidget
-	    propagateLook:      PropagateLook)
+	    globalUngetType:    GlobalUngetType)
+   System(show:Show)
 
 export
-   WidgetType
-   Feature
-   QTkPanel
+   Register
    
 define
-
-   WidgetType=panel
-   Feature=true
 
    class QTkPanel
    
@@ -55,7 +52,7 @@ define
       prop locking
 
       feat
-	 widgetType:WidgetType
+	 widgetType:panel
 	 typeInfo:r(all:{Record.adjoin GlobalInitType
 			 r(borderwidth:pixel
 			   action:action
@@ -95,8 +92,14 @@ define
 	 ShowScroll
 	 Frames
 
-      meth panel(...)=M
+      meth !Init(...)=M1
 	 lock
+	    M={Record.mapInd M1
+	       fun{$ I V}
+		  if {IsInt I} andthen {IsDet V} andthen {IsRecord V} andthen {HasFeature V feature} then
+		     {Record.adjoinAt V handle {CondSelect V handle _}}
+		  else V end
+	       end}
 	    Features={Record.toList
 		      {Record.map
 		       {Record.filter M
@@ -104,33 +107,27 @@ define
 			   {IsDet V} andthen {IsRecord V} andthen {HasFeature V feature}
 			end}
 		       fun{$ V}
-			  V.feature
+			  V.feature#V.handle
 		       end}}
-	    fun{MakeClass C}
-	       {Class.new [C] q
-		Features
-		[locking]}
-	    end
-	    A B1 B
-	    QTkPlaceHolder={GetWidget placeholder}
+	    A B
 	 in
-	    {Record.partitionInd {Record.adjoin M init}
-	     fun{$ I _} {Int.is I} end B1 A}
-	    B={PropagateLook B1}
-	    QTkClass,{Record.adjoin A init}
+	    {Record.partitionInd M
+	     fun{$ I _} {Int.is I} end B A}
+	    QTkClass,A
 	    Tk.frame,{TkInit {Subtracts A [font]}}
 	    %% B contains the structure of
 	    %% creates the children
 	    Children<-nil
 	    TitleFont<-{CondSelect A font courier}
 	    TitleHeight<-{Tk.returnInt font(metrics @TitleFont "-linespace")}
-	    self.Place={New {MakeClass QTkPlaceHolder}
-			     placeholder(parent:self
-					 relief:raised
-					 bg:{self get(bg:$)}
-					 borderwidth:2
-					)}
-	    {ForAll Features proc{$ F} self.F=self.Place.F end}
+	    self.Place={self.toplevel.Builder MapLabelToObject(placeholder(parent:self
+									   relief:raised
+									   bg:{self get(bg:$)}
+									   Feature:Features
+									   borderwidth:2)
+							       $)}
+	    {ForAll Features
+	     proc{$ F#V} self.F=V end}
 	    self.Dummy={New Tk.canvas tkInit(parent:self
 					     bg:{self get(bg:$)}
 					     height:@TitleHeight+6)}
@@ -158,11 +155,13 @@ define
 	    self.MarkerTag={New Tk.canvasTag tkInit(parent:self.Canvas)}
 	    {ForAll {Record.toList B}
 	     proc{$ D}
-		{self addPanel(D)}
+		{Show adding#D}
+		{self addPanel({Record.subtract D feature})}
 	     end}
 	    if @Frames\=nil then {self Select({List.nth @Frames 1})} end
 	    {self.Canvas tkBind(event:"<Configure>"
 				action:self#Resize)}
+	    {Show features#Features}
 	 end
       end
 
@@ -263,7 +262,7 @@ define
 	    O
 	    Pos Rec
 	 in
-	    {Assert panel TypeInfo {Record.adjoin M init}}
+	    {Assert panel TypeInfo {Record.adjoin M Init}}
 	    if {HasFeature M after} then
 	       if M.after==all then Pos={Length @Frames}+1
 	       else
@@ -299,6 +298,7 @@ define
 			     {Subtracts D [title]}
 			     handle O})}
 	    {CondSelect M.1 handle _}=O
+	    {Show M.1}
 	    Rec=r(object:O
 		  title:D.title
 		  tag:{New Tk.canvasTag tkInit(parent:self.Canvas)})
@@ -362,8 +362,8 @@ define
 
    end
    
-   {RegisterWidget r(widgetType:WidgetType
-		     feature:Feature
-		     qTkPanel:QTkPanel)}
+   Register=[r(widgetType:panel
+	       feature:true
+	       widget:QTkPanel)]
 
 end

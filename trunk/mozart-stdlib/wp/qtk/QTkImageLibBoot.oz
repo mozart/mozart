@@ -34,6 +34,7 @@ export
    SaveImageLibrary
    ImageLibraryToBuilder
    MakeImageLibraryBuilder
+   
 define
 
    CArray={NewArray 0 63 0}
@@ -188,12 +189,12 @@ define
       {New QTkImageLibrary init}
    end
 
-   fun {ImageLibraryToBuilder L}
+   fun{ImageLibraryToBuilder L}
       PrepList={List.map {L getNames($)}
 		fun{$ Name}
 		   Name#{L get(name:Name data:$)}
 		end}
-      fun {BuildLibrary QTkImageLibrary}
+      fun{BuildLibrary QTkImageLibrary}
 	 Library={New QTkImageLibrary init}
 	 {ForAll PrepList
 	  proc{$ R}
