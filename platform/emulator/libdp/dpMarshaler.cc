@@ -55,6 +55,9 @@ void marshalCreditOutline(Credit credit,MsgBuffer *bs){
 Credit unmarshalCreditOutline(MsgBuffer *bs){
   return unmarshalCredit(bs);}
 
+Credit unmarshalCreditRobustOutline(MsgBuffer *bs, int *error){
+  return unmarshalCreditRobust(bs,error);}
+
 /**********************************************************************/
 /*  basic borrow, owner */
 /**********************************************************************/
@@ -107,65 +110,7 @@ void marshalBorrowHead(MarshalTag tag, int bi,MsgBuffer *bs){
   marshalDSite(ss,bs);
   return;}
 
-OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
-  PD((UNMARSHAL,"Borrow"));
-  DSite*  sd=unmarshalDSite(bs);
-  int si=unmarshalNumber(bs);
-  Credit cred;
-  MarshalTag mt=(MarshalTag) bs->get();
-  PD((UNMARSHAL,"borrow o:%d",si));
-  if(sd==myDSite){
-    Assert(0); 
-//     if(mt==DIF_PRIMARY){
-//       cred = unmarshalCredit(bs);      
-//       PD((UNMARSHAL,"myDSite is owner"));
-//       OwnerEntry* oe=OT->getOwner(si);
-//       if(cred != PERSISTENT_CRED)
-// 	oe->returnCreditOwner(cred);
-//       OZ_Term ret = oe->getValue();
-//       return ret;}
-//     Assert(mt==DIF_SECONDARY);
-//     cred = unmarshalCredit(bs);      
-//     DSite* cs=unmarshalDSite(bs);
-//     sendSecondaryCredit(cs,myDSite,si,cred);
-//     PD((UNMARSHAL,"myDSite is owner"));
-//     OwnerEntry* oe=OT->getOwner(si);
-//     OZ_Term ret = oe->getValue();
-//     return ret;
-  }
-  NetAddress na = NetAddress(sd,si); 
-  BorrowEntry *b = borrowTable->find(&na);
-  if (b!=NULL) {
-    PD((UNMARSHAL,"borrow found"));
-    cred = unmarshalCredit(bs);    
-    if(mt==DIF_PRIMARY){
-      if(cred!=PERSISTENT_CRED)
-	b->addPrimaryCredit(cred);
-      else Assert(b->isPersistent());}
-    else{
-      Assert(mt==DIF_SECONDARY);
-      DSite* s=unmarshalDSite(bs);
-      b->addSecondaryCredit(cred,s);}
-    ob = b;
-    return b->getValue();}
-  cred = unmarshalCredit(bs);    		
-  if(mt==DIF_PRIMARY){
-    bi=borrowTable->newBorrow(cred,sd,si);
-    b=borrowTable->getBorrow(bi);
-    if(cred == PERSISTENT_CRED )
-      b->makePersistent();
-    PD((UNMARSHAL,"borrowed miss"));
-    ob=b;
-    return 0;}
-  Assert(mt==DIF_SECONDARY);
-  DSite* site = unmarshalDSite(bs);    		  
-  bi=borrowTable->newSecBorrow(site,cred,sd,si);
-  b=borrowTable->getBorrow(bi);
-  PD((UNMARSHAL,"borrowed miss"));
-  b->moreCredit(); // The Borrow needs some of the real McCoys
-  ob=b;
-  return 0;
-}
+// for unmarshalBorrow see dpMarshaler_general.cc
 
 /**********************************************************************/
 /*  header */
@@ -242,6 +187,14 @@ void unmarshalFullObject(ObjectFields *o, MsgBuffer *bs)
   o->state = newUnmarshalTerm(bs);
   o->lock  = newUnmarshalTerm(bs);
 }
+void unmarshalFullObjectRobust(ObjectFields *o, MsgBuffer *bs, int *error)
+{
+  TaggedRef t = newUnmarshalTermRobust(bs);
+  o->feat  =  oz_isNil(t) ? (SRecord*)NULL : tagged2SRecord(t);
+  o->state = newUnmarshalTermRobust(bs);
+  o->lock  = newUnmarshalTermRobust(bs);
+  *error = (o->feat == 0) || (o->state == 0) || (o->lock == 0);
+}
 
 void fillInObject(ObjectFields *of, Object *o){
   o->setFreeRecord(of->feat);
@@ -252,6 +205,13 @@ void unmarshalFullObjectAndClass(ObjectFields *o, MsgBuffer *bs)
 {
   unmarshalFullObject(o,bs);
   o->clas = newUnmarshalTerm(bs);
+}
+void unmarshalFullObjectAndClassRobust(ObjectFields *o,MsgBuffer *bs,int *error)
+{
+  int e;
+  unmarshalFullObjectRobust(o,bs,&e);
+  o->clas = newUnmarshalTermRobust(bs);
+  *error = (e || (o->clas == 0));
 }
 
 void fillInObjectAndClass(ObjectFields *of, Object *o){
@@ -369,111 +329,11 @@ static char *tagToComment(MarshalTag tag)
     return "";
 }}
 
-OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag)
-{
-  OB_Entry* ob;
-  int bi;
-  OZ_Term val = unmarshalBorrow(bs,ob,bi);
-  if(val){
-    PD((UNMARSHAL,"%s hit b:%d",tagToComment(tag),bi));
-    switch (tag) {
-    case DIF_RESOURCE_T:
-    case DIF_RESOURCE_N:
-    case DIF_PORT:
-    case DIF_THREAD_UNUSED:
-    case DIF_SPACE:
-      break;
-    case DIF_CELL:{
-      Tertiary *t=ob->getTertiary(); // mm2: bug: ob is 0 if I am the owner
-      break;}
-    case DIF_LOCK:{
-      Tertiary *t=ob->getTertiary();
-      break;}
-    case DIF_OBJECT:
-    case DIF_VAR_OBJECT:
-      TaggedRef obj;
-      (void) unmarshalGName(&obj,bs);
-      TaggedRef clas;
-      (void) unmarshalGName(&clas,bs);
-      break;
-    default:         
-      Assert(0);
-    }
-    return val;
-  }
+// for unmarshalTertiaryImpl see dpMarshaler_general.cc
+// for unmarshalOwnerImpl see dpMarshaler_general.cc
+#define ROBUST_UNMARSHALER
+#include "dpMarshaler_general.cc"
+#undef ROBUST_UNMARSHALER
+#include "dpMarshaler_general.cc"
 
-  PD((UNMARSHAL,"%s miss b:%d",tagToComment(tag),bi));  
-  Tertiary *tert;
 
-  switch (tag) { 
-  case DIF_RESOURCE_N:
-  case DIF_RESOURCE_T:
-    tert = new DistResource(bi);
-    break;  
-  case DIF_PORT:
-    tert = new PortProxy(bi);        
-    break;
-  case DIF_THREAD_UNUSED:
-    // tert = new Thread(bi,Te_Proxy);  
-    break;
-  case DIF_SPACE:
-    tert = new Space(bi,Te_Proxy);   
-    break;
-  case DIF_CELL:
-    tert = new CellProxy(bi); 
-    break;
-  case DIF_LOCK:
-    tert = new LockProxy(bi); 
-    break;
-  case DIF_OBJECT:
-    {
-      TaggedRef obj;
-      GName *gnobj = unmarshalGName(&obj,bs);
-      TaggedRef clas;
-      GName *gnclass = unmarshalGName(&clas,bs);
-      if(!gnobj){
-	BT->maybeFreeBorrowEntry(bi);
-	return obj;}
-      
-      Object *o = new Object(bi);
-      o->setGName(gnobj);
-
-      // mm2: abstraction val=newObjectProxy(o,gnobj,gnclass,clas)
-      val = newObjectProxy(o,gnobj,gnclass,clas);
-
-      ob->changeToVar(val); 
-      return val;}
-  default:         
-    Assert(0);
-  }
-  val=makeTaggedConst(tert);
-  ob->changeToTertiary(tert); 
-  switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
-  case SITE_OK:{
-    break;}
-  case SITE_PERM:{
-    deferProxyTertProbeFault(tert,PROBE_PERM);
-    break;}
-  case SITE_TEMP:{
-    deferProxyTertProbeFault(tert,PROBE_TEMP);
-    break;}
-  default:
-    Assert(0);
-  } 
-  return val;
-}
-
-OZ_Term unmarshalOwnerImpl(MsgBuffer *bs,MarshalTag mt){
-  if(mt==DIF_OWNER){
-    int OTI=unmarshalNumber(bs);
-    PD((UNMARSHAL,"OWNER o:%d",OTI));
-    OwnerEntry* oe=OT->getOwner(OTI);
-    oe->returnCreditOwner(1,OTI);
-    OZ_Term oz=oe->getValue();
-    return oz;}
-  Assert(mt==DIF_OWNER_SEC);
-  int OTI=unmarshalNumber(bs);
-  DSite* cs=unmarshalDSite(bs);
-  sendSecondaryCredit(cs,myDSite,OTI,1);
-  return OT->getOwner(OTI)->getValue();
-}

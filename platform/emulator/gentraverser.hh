@@ -32,6 +32,7 @@
 #pragma interface
 #endif
 
+#include <setjmp.h>
 #include "base.hh"
 
 #include "stack.hh"
@@ -43,6 +44,8 @@
 #include "am.hh"
 #include "dictionary.hh"
 #include "gname.hh"
+
+//#define USE_ROBUST_UNMARSHALER
 
 //
 #define GT_STACKSIZE	4096
@@ -319,6 +322,11 @@ enum RecordArityType {
 inline
 RecordArityType unmarshalRecordArityType(MsgBuffer *bs) {
   return ((RecordArityType) unmarshalNumber(bs));
+}
+//
+inline
+RecordArityType unmarshalRecordArityTypeRobust(MsgBuffer *bs, int *overload) {
+  return ((RecordArityType) unmarshalNumberRobust(bs, overload));
 }
 inline
 void marshalRecordArityType(RecordArityType type, MsgBuffer *bs) {
@@ -1093,10 +1101,13 @@ public:
 class TermTable {
   OZ_Term *array;
   int size;
+  int last_index; // used for robust marshaler
+  int last_set_index;
 public:
   TermTable() {
     size     = 100;
     array    = new OZ_Term[size];
+    last_index = -1; // used for robust marshaler
   }
 
   void resize(int newsize) {
@@ -1123,6 +1134,20 @@ public:
       resize(pos);
     array[pos] = val;
   }
+
+  // For robust unmarshaling. To check that RefTags occurs in order.
+  Bool checkNewIndex(int index) {
+    int result = (index - last_index) == 1;
+    last_index = index;
+    return result;
+  }
+  // For robust unmarshaling. To check that ref refers to known value.
+  Bool checkIndexFound(int ref) {
+    return ref <= last_index;
+  }
+  void resetIndexChecker() {
+    last_index = -1;
+  }
 #ifdef DEBUG_CHECK
   void resetTT() {
     for (int i = 0; i < size; i++) 
@@ -1131,6 +1156,8 @@ public:
 #endif  
 
 };
+
+
 
 //
 // Dealing with binary areas requires a temporary stack used within
@@ -1191,6 +1218,8 @@ private:
   //
   void buildValueOutline(OZ_Term value, BTFrame *frame,
 			 BuilderTaskType type);
+  void buildValueOutlineRobust(OZ_Term value, BTFrame *frame,
+			       BuilderTaskType type);
 
   //
 public:
@@ -1207,6 +1236,7 @@ public:
   }
   // returns '0' if inconsistent:
   OZ_Term finish() {
+    resetIndexChecker();
     if (isEmpty()) {
       // CrazyDebug(fprintf(stdout, " --- %d nodes.\n", debugNODES););
       // CrazyDebug(fflush(stdout););
@@ -1240,54 +1270,6 @@ public:
   void stop() { clear(); }
 
   //
-  // 'buildValue' is the main actor: it pops tasks;
-  void buildValue(OZ_Term value) {
-    CrazyDebug(incDebugNODES(););
-    GetBTFrame(frame);
-    GetBTTaskType(frame, type);
-    if (type == BT_spointer) {
-      GetBTTaskPtr1(frame, OZ_Term*, spointer);
-      DiscardBTFrame(frame);
-      SetBTFrame(frame);
-      *spointer = value;
-    } else {
-      buildValueOutline(value, frame, type);
-    }
-  }
-  void buildValueRemember(OZ_Term value, int n) {
-    buildValue(value);
-    set(value, n);
-  }
-
-  //
-  void buildRepetition(int n) {
-    OZ_Term value = get(n);
-    buildValue(value);
-  }
-
-  //
-  void buildList() {
-    LTuple *l = new LTuple();
-    buildValue(makeTaggedLTuple(l));
-    GetBTFrame(frame);
-    EnsureBTSpace(frame, 2);
-    PutBTTaskPtr(frame, BT_spointer, l->getRefTail());
-    PutBTTaskPtr(frame, BT_spointer, l->getRefHead());
-    SetBTFrame(frame);
-  }
-  void buildListRemember(int n) {
-    LTuple *l = new LTuple();
-    OZ_Term list = makeTaggedLTuple(l);
-    buildValue(list);
-    set(list, n);
-    GetBTFrame(frame);
-    EnsureBTSpace(frame, 2);
-    PutBTTaskPtr(frame, BT_spointer, l->getRefTail());
-    PutBTTaskPtr(frame, BT_spointer, l->getRefHead());
-    SetBTFrame(frame);
-  }
-
-  //
   void buildTuple(int arity) {
     putTask(BT_makeTuple, arity);
   }
@@ -1309,42 +1291,11 @@ public:
     EnsureBTSpace(frame, 2);
     PutBTFrameArg(frame, n);
     PutBTTask(frame, BT_takeRecordLabelMemo);
+
     // Setting the slot to a 'GC' TaggedRef is exploited later by
     // '_intermediate' tasks to reassign a proper value passed over
     // that '_intermediate' task;
     set(makeGCTaggedInt(n), n);
-    SetBTFrame(frame);
-  }
-
-  //
-  void buildDictionary(int size) {
-    OzDictionary *aux = new OzDictionary(am.currentBoard(), size);
-    aux->markSafe();
-    //
-    buildValue(makeTaggedConst(aux));
-    //
-    GetBTFrame(frame);
-    EnsureBTSpace(frame, size);
-    while(size-- > 0) {
-      PutBTTaskPtr(frame, BT_dictKey, aux);
-    }
-    SetBTFrame(frame);
-  }
-
-  //
-  void buildDictionaryRemember(int size, int n) {
-    OzDictionary *aux = new OzDictionary(am.currentBoard(),size);
-    aux->markSafe();
-    //
-    OZ_Term dict = makeTaggedConst(aux);
-    buildValue(dict);
-    set(dict, n);
-    //
-    GetBTFrame(frame);
-    EnsureBTSpace(frame, size);
-    while(size-- > 0) {
-      PutBTTaskPtr(frame, BT_dictKey, aux);
-    }
     SetBTFrame(frame);
   }
 
@@ -1369,10 +1320,7 @@ public:
     Assert(gname);
     putTask(BT_chunkMemo, gname, n);
   }
-  void knownChunk(OZ_Term chunkTerm) {
-    buildValue(chunkTerm);
-    putTask(BT_spointer, &blackhole);
-  }
+  // knownChunk se general_builder_methods.hh
 
   //
   void buildClass(GName *gname, int flags) {
@@ -1409,11 +1357,6 @@ public:
     set(classTerm, n);
 
     putTask(BT_classFeatures, cl, flags);
-  }
-
-  void knownClass(OZ_Term classTerm) {
-    buildValue(classTerm);
-    putTask(BT_spointer, &blackhole); // class features;
   }
 
   //
@@ -1565,28 +1508,9 @@ public:
     }
   }
 
-  //
-  // There is a need for 'knownProc' since a user is not supposed to
-  // understand the structure of closure's (Oz) terms that are to be
-  // skipped;
-  void knownProcRemember(OZ_Term procTerm, int memoIndex) {
-    buildValue(procTerm);
-    set(procTerm, memoIndex);
+#include "robust_builder_methods.hh"
+#include "fast_builder_methods.hh"
 
-    //
-    Abstraction *pp = (Abstraction *) tagged2Const(procTerm);
-    Assert(isAbstraction(pp));
-    int gsize = pp->getPred()->getGSize();
-    //
-    GetBTFrame(frame);
-    EnsureBTSpace(frame, gsize+2); // 'name' and 'file' as well;
-    for (int i = 0; i < gsize; i++) {
-      PutBTTaskPtr(frame, BT_spointer, &blackhole);
-    }
-    PutBTTaskPtr(frame, BT_spointer, &blackhole); // name;
-    PutBTTaskPtr(frame, BT_spointer, &blackhole); // file;
-    SetBTFrame(frame);
-  }
 
   //
 #ifdef DEBUG_CHECK
