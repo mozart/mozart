@@ -110,5 +110,9 @@
                         out=> ['+bool'],
                         bi => BIaritySublist},
 
+     'toDictionary'=> { in => ['+record'],
+                        out=> ['+dictionary'],
+                        bi => BIrecordToDictionary},
+
      );
 1;;
