@@ -117,7 +117,7 @@ define
          ELISP_PATH =
          case Args.'elisp-path' of unit then
             case {OS.getEnv 'OZDOC_ELISP_PATH'} of false then
-               {Property.get 'oz.home'}#'/share/elisp'
+               SRC_DIR#':'#{Property.get 'oz.home'}#'/share/elisp'
             elseof X then X end
          elseof X then X end
          {Property.put 'ozdoc.elisp.path' ELISP_PATH}
