@@ -669,7 +669,12 @@ public:
 
 inline 
 void OZ_updateHeapTerm(OZ_Term &t) {
-  OZ_collect(&t);
+  OZ_collectHeapBlock(&t,&t,1);
+}
+
+inline
+void OZ_updateHeapBlock(OZ_Term *f, OZ_Term *t, int n) {
+  OZ_collectHeapBlock(f,t,n);
 }
 
 OZ_Boolean OZ_isPosSmallInt(OZ_Term val);
