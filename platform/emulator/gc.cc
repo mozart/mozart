@@ -477,12 +477,6 @@ static VarFix varFix;
  */
 static Board * fromCopyBoard;
 
-/*
- * Copying: groundness check needs to find whether situated entity
- * (i.e., variables, cells, procedures, ...) have been copied
- * 
- */
-static Bool isGround;
 
 
 /*
@@ -648,7 +642,6 @@ Name *Name::gcName() {
   if (isInGc && isOnHeap() ||
       !isInGc && !(GETBOARD(this))->isMarkedGlobal()) {
 
-    isGround = NO;
     Name *aux = (Name*) gcReallocStatic(this,sizeof(Name));
 
     storeFwd(&homeOrGName, aux);
@@ -1477,7 +1470,6 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
 	    Assert(new_cv);
 
 	    TaggedRef * var_ptr = newTaggedCVar(new_cv); 
-	    isGround = NO;
 	    to = makeTaggedRef(var_ptr);
 	    cv->gcMark(isInGc, var_ptr);
 	  } else {
@@ -1559,7 +1551,6 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
 	Assert(isInGc || !bb->isMarkedGlobal());
 	bb = bb->gcBoard();
 	Assert(bb);
-	isGround = NO;
 	to = makeTaggedUVar(bb);
       } else {
 	frm = makeTaggedRef(&to);
@@ -1578,7 +1569,6 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
 	Assert(tagTypeOf(*(cv->gcGetFwd())) == CVAR);
 	to = makeTaggedRef(cv->gcGetFwd());
       } else if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
-	isGround = NO;
 	to = makeTaggedCVar(cv->gcVar());
 	cv->gcMark(isInGc, &to);
       } else {
@@ -1722,8 +1712,6 @@ void VarFix::fix(void) {
   if (isEmpty())
     return;
   
-  isGround = NO;
-  
   do {
     TaggedRef * to = (TaggedRef *) pop();
 
@@ -1756,7 +1744,7 @@ void VarFix::fix(void) {
 static Bool across_redid = NO;
 #endif
 
-Board* AM::copyTree(Board* bb, Bool *getIsGround) {
+Board* AM::copyTree(Board* bb) {
 
 #ifdef CS_PROFILE
   across_redid  = NO;
@@ -1765,7 +1753,6 @@ Board* AM::copyTree(Board* bb, Bool *getIsGround) {
 
   isCollecting = OK;
   isInGc       = NO;
-  isGround     = OK;
 
   unsigned int starttime = 0;
 
@@ -1835,9 +1822,6 @@ redo:
 
   if (ozconf.timeDetailed)
     ozstat.timeForCopy.incf(osUserTime()-starttime);
-
-  if (getIsGround != (Bool *) NULL)
-    *getIsGround = isGround;
 
   isCollecting = NO;
 
@@ -2037,7 +2021,6 @@ void ConstTermWithHome::gcConstTermWithHome()
 
 void ConstTerm::gcConstRecurse()
 {
-  isGround = NO;
   switch(getType()) {
   case Co_Object:
     {
@@ -2599,8 +2582,7 @@ void SolveActor::gcRecurse () {
   solveBoard = solveBoard->gcBoard();
   Assert(solveBoard);
 
-  if (isInGc || !isGround())
-    OZ_collectHeapTerm(solveVar,solveVar);
+  OZ_collectHeapTerm(solveVar,solveVar);
   
   OZ_collectHeapTerm(result,result);
   suspList         = suspList->gc();
