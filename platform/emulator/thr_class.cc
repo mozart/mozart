@@ -71,7 +71,7 @@ void Thread::checkExtThreadOutlined ()
 {
   Assert (wasExtThread ());
   
-  Board *sb = (getBoard())->getSolveBoard ();
+  Board *sb = GETBOARD(this)->getSolveBoard ();
   AM *e = &am;
   
   while (sb) {
@@ -81,7 +81,7 @@ void Thread::checkExtThreadOutlined ()
     if (e->isStableSolve (sa)) {
       e->scheduleThread (e->mkRunnableThread (DEFAULT_PRIORITY,sb));
     }
-    sb = (sa->getBoard())->getSolveBoard ();
+    sb = GETBOARD(sa)->getSolveBoard();
   }
 }
 
@@ -90,7 +90,7 @@ void Thread::removeExtThreadOutlined ()
 {
   Assert (wasExtThread ());
   
-  Board *sb = (getBoard())->getSolveBoard ();
+  Board *sb = GETBOARD(this)->getSolveBoard ();
   AM *e = &am;
   
   while (sb) {
@@ -98,7 +98,7 @@ void Thread::removeExtThreadOutlined ()
     
     SolveActor *sa = SolveActor::Cast (sb->getActor ());
     sa->clearSuspList(this);
-    sb = (sa->getBoard())->getSolveBoard ();
+    sb = GETBOARD(sa)->getSolveBoard();
   }
 }
 

@@ -707,7 +707,7 @@ Name *Name::gcName()
     gn = getGName();
   }
   if (opMode == IN_GC && isOnHeap() ||
-      opMode == IN_TC && isLocalBoard(getBoard())) {
+      opMode == IN_TC && isLocalBoard(GETBOARD(this))) {
     GCMETHMSG("Name::gc");
     COUNT(literal);
     setVarCopied;
@@ -1045,7 +1045,7 @@ Thread *Thread::gcThread ()
   // nothing can be copied (IN_TC) until stability;
 
   // first class threads: must only copy thread when local to solve!!!
-  if (opMode == IN_TC && !isLocalBoard(getBoard())) {
+  if (opMode == IN_TC && !isLocalBoard(GETBOARD(this))) {
     return this;
   }
 
@@ -1055,7 +1055,7 @@ Thread *Thread::gcThread ()
   //  Note that runnable threads can be also counted 
   // in solve actors (for stability check), and, therefore, 
   // might not just dissappear!
-  if (isSuspended () && !((getBoard())->gcIsAlive ())) {
+  if (isSuspended () && !((GETBOARD(this))->gcIsAlive ())) {
     return ((Thread *) NULL);
   }
 
@@ -1123,7 +1123,7 @@ void Thread::gcRecurse ()
       Board *notificationBoard=getBoardInternal()->gcGetNotificationBoard();
       setBoard(notificationBoard->gcBoard());
       
-      getBoard()->incSuspCount ();
+      GETBOARD(this)->incSuspCount ();
       
       //
       //  Convert the thread to a 'wakeup' type, and just throw away
@@ -1418,10 +1418,10 @@ Board *gcGetVarHome(TaggedRef var)
     return tagged2VarHome(var)->derefBoard();
   } 
   if (isSVar(var)) {
-    return tagged2SVar(var)->getBoard();
+    return GETBOARD(tagged2SVar(var));
   }
   Assert(isCVar(var));
-  return tagged2CVar(var)->getBoard();
+  return GETBOARD(tagged2CVar(var));
 }  
 
 /*
@@ -1996,7 +1996,7 @@ void ConstTerm::gcConstRecurse()
       Object *o = (Object *) this;
 
       switch(o->getTertType()) {
-      case Te_Local:   o->setBoard(o->getBoard()->gcBoard()); break;
+      case Te_Local:   o->setBoard(GETBOARD(o)->gcBoard()); break;
       case Te_Proxy:   o->gcProxy(); break;
       case Te_Manager: o->gcManager(); break;
       default:         Assert(0);
@@ -2040,7 +2040,7 @@ void ConstTerm::gcConstRecurse()
       switch(t->getTertType()){
       case Te_Local:{
 	CellLocal *cl=(CellLocal*)t;
-	cl->setBoard(cl->getBoard()->gcBoard()); 
+	cl->setBoard(GETBOARD(cl)->gcBoard()); 
 	gcTagged(cl->val,cl->val);
 	break;}
       case Te_Proxy:{
@@ -2069,7 +2069,7 @@ void ConstTerm::gcConstRecurse()
       Port *p = (Port*) this;
       switch(p->getTertType()){
       case Te_Local:{
-	p->setBoard(p->getBoard()->gcBoard()); /* ATTENTION */
+	p->setBoard(GETBOARD(p)->gcBoard()); /* ATTENTION */
 	PortWithStream *pws = (PortWithStream *) this;
 	gcTagged(pws->strm,pws->strm);
 	break;}
@@ -2092,7 +2092,7 @@ void ConstTerm::gcConstRecurse()
 	if (s->solve != (Board *) 1)
 	s->solve = s->solve->gcBoard();
 	if (s->isLocal()) {
-	  s->setBoard(s->getBoard()->gcBoard());
+	  s->setBoard(GETBOARD(s)->gcBoard());
 	}
       }
       break;
@@ -2140,7 +2140,7 @@ void ConstTerm::gcConstRecurse()
 
       case Te_Local:{
 	LockLocal *ll = (LockLocal *) this;
-	ll->setBoard(ll->getBoard()->gcBoard());  /* maybe getBoardInternal() */
+	ll->setBoard(GETBOARD(ll)->gcBoard());  /* maybe getBoardInternal() */
 	gcPendThread(&(ll->pending));
 	ll->setLocker(ll->getLocker()->gcThread());
 	break;}
@@ -2177,9 +2177,9 @@ void ConstTerm::gcConstRecurse()
   }
 }
 
-#define CheckLocal(CONST) 					\
+#define CheckLocal(CONST)					\
 {								\
-   Board *bb=(CONST)->getBoard();				\
+   Board *bb=GETBOARD(CONST);					\
    if (!bb->gcIsAlive()) return NULL;				\
    if (opMode == IN_TC && !isLocalBoard(bb)) return this;	\
 }
@@ -2402,12 +2402,12 @@ Board* Board::gcGetNotificationBoard()
     /*
      * notification board must be changed
      */
-    bb=aa->getBoard();
+    bb=GETBOARD(aa);
     nb = bb;   // probably not dead;
     goto loop;
   }
   if (GCISMARKED(*aa->getGCField())) return nb;
-  bb = aa->getBoard();
+  bb = GETBOARD(aa);
   goto loop;
 }
 
@@ -2436,7 +2436,7 @@ Bool Board::gcIsAlive()
   aa=bb->getActor();
   if (aa->isCommitted ()) return (NO);
   if (GCISMARKED (*(aa->getGCField ()))) return (OK);
-  bb = aa->getBoard();
+  bb = GETBOARD(aa);
   goto loop;
 }
 
@@ -2609,8 +2609,8 @@ CpBag * CpBag::gc(void) {
   while (old) {
     WaitActor * wa = old->choice;
     
-    if (wa && wa->isAliveUpToSolve() && wa->getBoard()->gcIsAlive()) {
-      Assert(!(opMode == IN_TC && !isInTree(wa->getBoard())));
+    if (wa && wa->isAliveUpToSolve() && GETBOARD(wa)->gcIsAlive()) {
+      Assert(!(opMode == IN_TC && !isInTree(GETBOARD(wa))));
       
       CpBag * one = new CpBag((WaitActor *) wa->gcActor());
       *cur = one;

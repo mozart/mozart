@@ -78,7 +78,7 @@ inline Bool isEffectiveSusp(SuspList* sl)
   Thread *thr = sl->getElem ();
   if (thr->isDeadThread ())
     return NO;
-  if (!(thr->getBoard()))
+  if (!GETBOARD(thr))
     return NO;
   return OK;
 #endif
@@ -1115,7 +1115,7 @@ PRINT(Thread)
   if ((getFlags ()) & T_ltq)       stream << " Q";
   if ((getFlags ()) & T_nmo)       stream << " N";
   stream << " <";
-  getBoard()->print(stream, DEC(depth));
+  GETBOARD(this)->print(stream, DEC(depth));
   stream << ">";
 }
 
@@ -1156,7 +1156,7 @@ void SVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v)
   
   stream << indent(offset)
 	 << "HomeNode: ";
-  getBoard()->print(stream,DEC(depth));
+  GETBOARD(this)->print(stream,DEC(depth));
   stream << endl;
 }
 
@@ -1172,7 +1172,7 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
 	 << endl;
 
   stream << indent(offset) << "Home board: ";
-  getBoard()->print(stream,depth);
+  GETBOARD(this)->print(stream,depth);
   stream << endl;
 
   stream << indent(offset) << "Suspension List:\n"; 
@@ -1861,7 +1861,7 @@ void Board::printTree()
     aa->print(cout,1,off);
     cout << endl;
     off++;
-    bb = aa->getBoard();
+    bb = GETBOARD(aa);
   }
   bb->print(cout,1,off);
   cout << endl;

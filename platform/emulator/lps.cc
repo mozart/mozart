@@ -101,7 +101,7 @@ Bool LocalPropagationStore::propagate_locally () {
     Thread *thr = am.currentThread = pop ();
 
     Assert (am.currentThread != (Thread *) NULL);
-    Assert (am.currentBoard == thr->getBoard());
+    Assert (am.currentBoard == GETBOARD(thr));
     //
     //  No 'runnable' threads are allowed here, 
     // because only true propagators are in the LPS;
