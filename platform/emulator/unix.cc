@@ -609,7 +609,7 @@ OZ_Term timeval2Oz(struct timeval tv)
   return OZ_recordInit(OZ_atom("timeval"),pl);
 }
 
-#define HAVERUSAGE LINUX
+// #define HAVERUSAGE LINUX
 
 OZ_BI_iodefine(unix_getRUsage,1,1)
 {
