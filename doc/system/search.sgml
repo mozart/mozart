@@ -745,10 +745,16 @@ end
         of fork methods), and so on.
       <p>
         For example,
-        <<<E={New Search.parallel init(wallaby:1#automatic
-        godzilla:2#ssh grizzly:1#ssh)}>>>
-        creates a single process at the computer <<wallaby>> and two
-        processes at <<godzilla>>. Equivalently, this can be abbreviated
+        <<<E={New Search.parallel init(wallaby:  1#automatic
+                            godzilla: 2#ssh 
+                            grizzly:  1#ssh)}>>>
+        creates a single process at the computer <<wallaby>>, two
+        processes at <<godzilla>>, and one process at <<grizzly>>. The
+        fork method for <<wallaby>> is automatically determined, for
+        <<godzilla>> and <<grizzly>> the method <<ssh>> (secure shell)
+        is used. 
+      <p>
+        Equivalently, this can be abbreviated
         as follows:
         <<<E={New Search.parallel init(wallaby godzilla:2#ssh grizzly:ssh)}>>>
         That is, a field with integer feature is assumed to be a
