@@ -779,7 +779,7 @@ int FDBitVector::findMinElem(void)
     }
     if (!(word << 31))
       v++;
-  }
+  } else { v = -1; }
   return v;
 }
 
