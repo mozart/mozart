@@ -721,7 +721,7 @@ OZ_C_proc_begin(BItclWriteFilter,7) {
   OZ_declareIntArg(0, fd);
 
   init_tcl_buffer();
-  vs2buffer(OZ_getCArg(1));
+  tcl2buffer(OZ_getCArg(1));
   tcl_put(' ');
   vs2buffer(OZ_getCArg(2));
   tcl_put(' ');
