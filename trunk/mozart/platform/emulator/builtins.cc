@@ -5124,17 +5124,19 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
     goto raise;
   }
 
-  for (int i=0; ofiles[i] != NULL; i++) {
-    char *f = ofiles[i];
-    if (commandUsed + strlen(f) >= commandSize-1) {
-      OZ_warning("linkObjectFiles: too many arguments");
-      unlink(tempfile);
+  {
+    for (int i=0; ofiles[i] != NULL; i++) {
+      char *f = ofiles[i];
+      if (commandUsed + strlen(f) >= commandSize-1) {
+	OZ_warning("linkObjectFiles: too many arguments");
+	unlink(tempfile);
+	delete [] f;
+	goto raise;
+      }
+      strCat(command, commandUsed, " ");
+      strCat(command, commandUsed, f);
       delete [] f;
-      goto raise;
     }
-    strCat(command, commandUsed, " ");
-    strCat(command, commandUsed, f);
-    delete [] f;
   }
   
   if (ozconf.showForeignLoad) {
