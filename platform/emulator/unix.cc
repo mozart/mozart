@@ -538,6 +538,31 @@ OZ_C_proc_begin(unix_stat,2)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(unix_getCWD,1)
+{
+  OZ_declareArg(0, out);
+
+  const int SIZE=256;
+  char buf[SIZE];
+  if (getcwd(buf,SIZE)) return OZ_unifyString(out,buf);
+  if (errno != ERANGE) RETURN_UNIX_ERROR(out);
+
+  int size=SIZE+SIZE;
+  char *bigBuf;
+  while (OK) {
+    bigBuf=(char *) malloc(size);
+    if (getcwd(bigBuf,size)) {
+      OZ_Bool ret=OZ_unifyString(out,buf);
+      free(bigBuf);
+      return ret;
+    }
+    if (errno != ERANGE) RETURN_UNIX_ERROR(out);
+    free(bigBuf);
+    size+=SIZE;
+  }
+}
+OZ_C_proc_end
+
 OZ_C_ioproc_begin(unix_open,4)
 {
   OZ_declareVsArg("open", 0, filename);
@@ -1710,6 +1735,7 @@ void MyinitUnix()
 {
   OZ_addBuiltin("unix_getDir",2,unix_getDir);
   OZ_addBuiltin("unix_stat",2,unix_stat);
+  OZ_addBuiltin("unix_getCWD",1,unix_getCWD);
   OZ_addBuiltin("unix_open",4,unix_open);
   OZ_addBuiltin("unix_fileDesc",2,unix_fileDesc);
   OZ_addBuiltin("unix_close",2,unix_close);
