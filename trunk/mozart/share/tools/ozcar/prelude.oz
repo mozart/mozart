@@ -40,10 +40,10 @@ Dbg = dbg(on:           proc {$}
 UserActionLock = {NewLock}
 
 proc {EnqueueCompilerQuery M}
-   case {Compiler.getOPICompiler} of false then
+   case {Compiler.getOPI} of false then
       skip
-   elseof CompilerObject then
-      {CompilerObject enqueue(M)}
+   elseof OPI then
+      {{OPI getCompiler($)} enqueue(M)}
    end
 end
 
