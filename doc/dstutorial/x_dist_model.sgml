@@ -176,11 +176,11 @@ e.g., a <<final>> variable in Java.
 It is more than that because two logic variables can
 be bound together even before they are assigned,
 and because a variable can be assigned more than
-once, if it is always to the same value.
+once, if always to the same value.
 Logic variables are important for three reasons:
 <LIST>
 <ITEM> They have a more efficient protocol than cells.
-Often, variables are just used like placeholders, that is,
+Often, variables are used as placeholders, that is,
 they will be assigned only once.
 It would be highly inefficient in a distributed system
 to create a cell for that case.
@@ -304,7 +304,7 @@ to a site is copied eagerly.
 <P>In terms of the language semantics,
 there are only two different language
 entities: procedures and records.
-All others entities are derived.
+All other entities are derived.
 Functions are syntactic sugar for procedures.
 Chunks are a particular kind of record.
 Classes are chunks that contain object methods,
@@ -320,9 +320,14 @@ are called <EM>sited</EM>.
 References to these entities can be passed to other
 sites, but they do not work there.
 They work only on their home site.
+Entities that can be used on any site
+are called <EM>unsited</EM>.
 
-<P>In Mozart, a module is a record that
-encapsulates related operations and
+<P>In Mozart, all sited entities are modules,
+except for a few exceptional cases listed below.
+Not all modules are sited, though.
+A <EM>module</EM> is a record that
+groups related operations and
 that possibly has some internal state.
 The modules that are available in a Mozart
 process when it starts up are called <EM>base modules</EM>.
@@ -342,7 +347,7 @@ part of the base module <<Number>>.
 Due to limitations of the current release,
 threads, dictionaries, arrays, and spaces are sited,
 even though they are in base modules.
-Many of these entities will become
+These entities will become
 unsited in future releases.
 Some commonly-used base modules are
 <<Number>>, <<Int>>, and <<Float>> (operations on numbers),
@@ -357,19 +362,20 @@ or that imports directly or
 indirectly from a system module.
 All resources are sited.
 The reason is that
-they contain state, which is
-either part of the emulator or
+they contain state outside of the Oz language.
+This state is either part of the emulator or
 external to the Mozart process.
 Access to this state
 is limited to the machine hosting
 the Mozart process.
 Some commonly-used system modules are
-<<Tk>> and <<Browser>> (access to system graphics),
-<<Connection>> and <<Remote>> (access to site-specific distributed operations),
-<<Application>> and <<Module>> (access to application management),
-<<Search>> and <<FD>> (access to constraint programming),
-<<Open>> and <<Pickle>> (access to the file system),
-<<OS>> and <<Property>> (access to the OS and emulator),
+<<Tk>> and <<Browser>> (system graphics),
+<<Connection>> and <<Remote>> (site-specific distributed operations),
+<<Application>> and <<Module>>
+(standalone applications and dynamic linking),
+<<Search>> and <<FD>> (constraint programming),
+<<Open>> and <<Pickle>> (the file system),
+<<OS>> and <<Property>> (the OS and emulator),
 and so forth.
 
 <SECTION><TITLE>Bringing it all together</TITLE>
@@ -379,8 +385,8 @@ give programmers a warm, fuzzy feeling when
 writing distributed applications?
 In short, yes it does.
 The distribution model has been designed in tandem
-with many application prototypes and incredible
-numbers of Gedankenexperimenten.
+with many application prototypes and numerous
+Gedankenexperimenten.
 
 <P>Here's how to use the distribution model
 to build applications.
@@ -404,18 +410,19 @@ are the basic data structures
 of the application--they are
 passed between sites when needed.
 Logic variables and locks are
-used to manage the dataflow and the concurrency.
+used to manage dataflow and concurrency.
 
 <P>Functors and resources are the key players
 in distributed component-based programming.
 A functor is essentially a component.
 A functor is stateless, so it can be transparently copied
 anywhere across the net and made persistent by pickling on a file
-(see next section).
+(see the module <<Pickle>>).
 A functor is linked on a site by evaluating it there
-with the site resources that it needs.
+with the site resources that it needs
+(see the modules <<Module>> and <<Remote>>).
 The result is a new resource, which can be
-used to link more functors.
+used as is or to link more functors.
 Our goal is for functors to be the core
 technology driving an open community of developers,
 who contribute to a growing global pool
