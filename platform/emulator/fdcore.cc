@@ -324,9 +324,15 @@ OZ_C_proc_begin(BIfdPutList, 3)
   if (len_arr >= MAXFDBIARGS)
     warning("BIfdPutList: Probably elements of description are ignored");
 
+  OZ_getCArgDeref(0, var, varptr, vartag);
+
+  if (! (isGenFDVar(var,vartag) || isNotCVar(vartag) || isSmallInt(vartag))) {
+    TypeError(0, "");
+  }
+
   BIfdBodyManager x;
 
-  if (! x.introduce(OZ_getCArg(0))) TypeError(0, "");
+  if (! x.introduce(OZ_getCArg(0))) return FAILED;
 
   LocalFD aux; aux.initList(len_arr, left_arr, right_arr, min_arr, max_arr);
 
