@@ -66,6 +66,8 @@ the directory
 Replace this string in the following if you want to install into a
 different directory.
 <p>
+After installation you should make your web browser Mozart application enabled, which is described in <ptr to="applets">.
+<p>
 
 <list ENUM>
 <item>Download the binary tarballs for your particular platform from
