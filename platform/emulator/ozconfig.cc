@@ -74,6 +74,7 @@ void ConfigData::init() {
 
   showIdleMessage       = SHOW_IDLE_MESSAGE;
   showSuspension        = SHOW_SUSPENSION;
+  onlyFutures           = ONLY_FUTURES;
 
   stopOnToplevelFailure = STOP_ON_TOPLEVEL_FAILURE;
 
