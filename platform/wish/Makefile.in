@@ -1,6 +1,7 @@
-VPATH=          @srcdir@
-BUILDTOP=       @BUILDTOP@
-PREFIX=         @prefix@
+VPATH           = @srcdir@
+PREFIX          = @prefix@
+BUILDTOP        = @BUILDTOP@
+BUILDDIR        = $(BUILDTOP)/platform/wish
 
 PLATFORM        = @platform@
 PLATFORMDIR     = $(PREFIX)/platform/$(PLATFORM)
@@ -11,7 +12,7 @@ CC              = @CC@
 
 LIBS            = @LIBS@
 EXTRALDFLAGS    = @EXTRALDFLAGS@
-CPPFLAGS        = @CPPFLAGS@
+CPPFLAGS        = -I$(BUILDDIR) @CPPFLAGS@
 CFLAGS          = @CFLAGS@
 LDFLAGS         = @LDFLAGS@
 LN_S            = @LN_S@
