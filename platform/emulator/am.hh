@@ -194,7 +194,7 @@ public:
   void reduceTrailOnUnitCommit();
   void reduceTrailOnSuspend();
   void reduceTrailOnFail();
-  void reduceTrailOnShallow(int numbOfCons);
+  void reduceTrailOnShallow();
 
   // in emulate.cc
   Bool emulateHookOutline(Abstraction *def=NULL,
