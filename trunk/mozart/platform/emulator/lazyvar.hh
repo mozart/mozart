@@ -24,6 +24,7 @@ public:
   Bool unifyLazy(TaggedRef*,TaggedRef*,ByteCode*);
   // int hasFeature(TaggedRef fea,TaggedRef *out);
   Bool valid(TaggedRef /* val */) { return TRUE; }
+  OZ_Term getFunction() { return function; }
   void kickLazy();
   void kickLazy(TaggedRef*);
   void addSuspLazy(Thread*);
