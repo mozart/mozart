@@ -43,17 +43,6 @@ proc {EnqueueCompilerQuery M}
    {Emacs.condSend.compiler enqueue(M)}
 end
 
-fun {IsSpecialFrameName Name}
-   case Name of 'lock' then true
-   [] 'exception handler' then true
-   [] 'conditional' then true
-   [] 'exception' then true
-   [] 'statement' then true
-   [] 'unknown' then true
-   else false
-   end
-end
-
 %% send a warning/error message
 proc {OzcarShow X}
    case {Cget verbose} then
