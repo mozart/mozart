@@ -551,6 +551,7 @@ public:
 
   OZ_Return runNewPropagator(void) {
     Assert(isNewPropagator());
+    ozstat.propagatorsInvoked.incf();
     return item.propagator->run();
   }
   OZ_Propagator * getNewPropagator(void) {
