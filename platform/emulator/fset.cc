@@ -376,12 +376,14 @@ OZ_FSetImpl OZ_FSetImpl::unify(const OZ_FSetImpl &y) const
     goto end;
   }
 
-  for (int i = fset_high; i--; ) {
-    z._in[i]     = _in[i]     | y._in[i];
-    z._not_in[i] = _not_in[i] | y._not_in[i];
-    if (z._in[i] & z._not_in[i]) {
-      z._card_min = -1;
-      goto end;
+  {
+    for (int i = fset_high; i--; ) {
+      z._in[i]     = _in[i]     | y._in[i];
+      z._not_in[i] = _not_in[i] | y._not_in[i];
+      if (z._in[i] & z._not_in[i]) {
+	z._card_min = -1;
+	goto end;
+      }
     }
   }
 
@@ -429,16 +431,18 @@ void OZ_FSetImpl::init(const FSetValue &s)
 void OZ_FSetImpl::init(OZ_FSetState s) 
 {
   switch(s) {
-  case fs_empty:
+  case fs_empty: {
     for (int i = fset_high; i--; )
       _not_in[i] = ~(_in[i] = 0);  
     _card_min = _card_max = 0;
     break;
-  case fs_full:
+  }
+  case fs_full: {
     for (int i = fset_high; i--; )
       _in[i] = ~(_not_in[i] = 0);  
     _card_min = _card_max = 32*fset_high;
     break;
+  }
   default:
     error("Unexpected case in \"OZ_FSetImpl::init(OZ_FSetState\".");
   }
@@ -529,12 +533,13 @@ OZ_Boolean OZ_FSetImpl::normalize(void)
       goto end;
 
   // check if a value is in and out at the same time
-  for (int i = fset_high; i--; )
-    if (_in[i] & _not_in[i]) {
-      _card_min = -1;
-      goto end;
-    }
-  
+  {
+    for (int i = fset_high; i--; )
+      if (_in[i] & _not_in[i]) {
+	_card_min = -1;
+	goto end;
+      }
+  }
   
   _known_in = findBitsSet(fset_high, _in);
   _known_not_in = findBitsSet(fset_high, _not_in);
@@ -703,9 +708,11 @@ OZ_FSetImpl OZ_FSetImpl::operator & (const OZ_FSetImpl& y) const
     goto end;
   }
 
-  for (int i = fset_high; i--; ) {
-    z._in[i] = _in[i] & y._in[i];
-    z._not_in[i] = _not_in[i] | y._not_in[i];
+  {
+    for (int i = fset_high; i--; ) {
+      z._in[i] = _in[i] & y._in[i];
+      z._not_in[i] = _not_in[i] | y._not_in[i];
+    }
   }
   
   z._card_min = 0;
@@ -726,10 +733,12 @@ OZ_FSetImpl OZ_FSetImpl::operator | (const OZ_FSetImpl& y) const
     z._card_min = -1;
     goto end;
   }
-  
-  for (int i = fset_high; i--; ) {
-    z._in[i] = _in[i] | y._in[i];
-    z._not_in[i] = _not_in[i] & y._not_in[i];
+
+  {  
+    for (int i = fset_high; i--; ) {
+      z._in[i] = _in[i] | y._in[i];
+      z._not_in[i] = _not_in[i] & y._not_in[i];
+    }
   }
   
   z._card_min = max(_card_min, y._card_min);
