@@ -24,11 +24,9 @@ export
    Default
 require
    Compiler(parseOzFile)
-
 prepare
    HasErrors = {NewCell false}
-
-   AST = {Compiler.parseOzFile '@srcdir@/gump/ProductionTemplates.ozg'
+   AST = {Compiler.parseOzFile 'gump/ProductionTemplates.ozg'
 	  proc {$ M}
 	     case M of error(...) then
 		{Assign HasErrors true}
@@ -37,15 +35,12 @@ prepare
 	  end
 	  fun {$ _} true end
 	  {NewDictionary}}
-
    if {Access HasErrors} then
       {Exception.raiseError gump(errorsInProductionTemplates)}
    end
-   
    case AST of [fSynTopLevelProductionTemplates(_)] then skip
    else {Exception.raiseError gump(noProductionTemplates AST)}
    end
-   
 define
    [fSynTopLevelProductionTemplates(Default)] = AST
 end

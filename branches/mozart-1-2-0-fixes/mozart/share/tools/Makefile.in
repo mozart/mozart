@@ -235,7 +235,6 @@ GumpScanner.ozf: $(GUMPSCANNERSRC)
 GumpParser.ozf: $(GUMPPARSERSRC)
 
 ProductionTemplates.ozf: $(PRODUCTIONTEMPLATESSRC)
-	$(COMPILE) $(BUILDDIR)/ProductionTemplates.oz -o $@
 
 CreateObjects.ozf: $(INSPECTORTWCODEPSRC)
 LayoutObjects.ozf: $(INSPECTORTWLODEPSRC)
