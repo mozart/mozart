@@ -155,7 +155,7 @@ Case(GETSELF)
 
 Case(SETSELF)
      {
-       ChangeSelf(tagged2Object(XPC(1)));
+       ChangeSelf(tagged2Object(deref(XPC(1))));
        DISPATCH(2);
      }
 
