@@ -14,19 +14,19 @@
 #include <time.h>
 #include <errno.h>
 
-#include "dldwrap.h"
-#if DLOPEN
+#if defined(LINUX) || defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(IRIX5_MIPS) || defined(OSF1_ALPHA)
+#   define DLOPEN 1
+#endif
 
-#ifndef SUNOS_SPARC
-#include <dlfcn.h>
-#else
-
+#ifdef DLOPEN
+#ifdef SUNOS_SPARC
 #define RTLD_NOW 1
 extern "C" void * dlopen(char *, int);
 extern "C" char * dlerror(void);
 extern "C" void * dlsym(void *, char *);
 extern "C" int dlclose(void *);
-
+#else
+#include <dlfcn.h>
 #endif
 #endif
 
@@ -34,7 +34,6 @@ extern "C" int dlclose(void *);
 #include <bstring.h>
 #include <sys/time.h>
 #endif
-
 
 #ifdef HPUX_700
 #include <dl.h>
@@ -4538,6 +4537,41 @@ OZ_C_proc_begin(BIsendPort,2)
 }
 OZ_C_proc_end
 
+OZ_Return closePort(OZ_Term prt)
+{
+  Assert(isPort(prt));
+
+  Port *port  = tagged2Port(prt);
+  TertType tt = port->getTertType();
+
+  CheckLocalBoard(port,"port");
+
+  if(tt==Te_Proxy) {
+    int ret=remoteClose((PortProxy*) port);
+    return ret;
+  }
+  OZ_Term old = ((PortWithStream*)port)->exchangeStream(nil());
+
+  if (OZ_unify(nil(),old)!=PROCEED) {
+    OZ_fail("OZ_close failed\n");
+  }
+  return PROCEED;
+}
+
+OZ_C_proc_begin(BIclosePort,1)
+{
+  OZ_declareNonvarArg(0,prt);
+
+  prt = deref(prt);
+
+  if (!isPort(prt)) {
+    TypeErrorT(0,"Port");
+  }
+
+  return closePort(prt);
+}
+OZ_C_proc_end
+
 // ---------------------------------------------------------------------
 // Locks
 // ---------------------------------------------------------------------
@@ -5047,32 +5081,6 @@ char **arrayFromList(OZ_Term list, char **array, int size)
   return NULL;
 }
 
-#ifdef DLD
-/* dld initialization eats up approx 2MB of main memory, so
- * we dealy it, until it is realy neede
- */
-static char *executable = NULL;
-
-void dld_doinit()
-{
-  static Bool inited = NO;
-  if (!inited) {
-    if (dld_init(dld_find_executable(executable)) != 0) {
-      dld_perror("Failed to initialize DLD");
-      return;
-    }
-    inited = OK;
-  }
-}
-#endif
-
-void DLinit(char *nm) {
-#ifdef DLD
-  executable = nm;
-#endif
-}
-
-
 /* linkObjectFiles(+filelist,-handle)
  *    filelist: list of atoms (== object files)
  *    handle:   for future calls of findFunction
@@ -5084,37 +5092,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
   OZ_Term list = OZ_getCArg(0);
   OZ_Term out = OZ_getCArg(1);
 
-#ifdef DLD
-  dld_doinit();
-  while(OZ_isCons(list)) {
-
-    OZ_Term hh = OZ_head(list);
-    if (!OZ_isAtom(hh)) {
-      TypeErrorT(0,"List of Atoms");
-    }
-    char *fileName = OZ_atomToC(hh);
-    char *f = expandFileName(fileName,ozconf.linkPath);
-
-    if (!f) {
-      OZ_warning("linkObjectFiles(%s): expand filename failed",fileName);
-      goto raise;
-    }
-
-    if (ozconf.showForeignLoad) {
-      message("Linking file '%s'\n",f);
-    }
-    if (dld_link(f) != 0) {
-      OZ_warning("linkObjectFiles(%s): failed for %s",fileName,f);
-      dld_perror("linkObjectFiles");
-      delete [] f;
-      goto raise;
-    }
-    delete [] f;
-    list = OZ_tail(list);
-  }
-  dld_link("/usr/lib/libc.a");   /* check for unresolved references */
-  return OZ_unifyInt(out,0);  /* no handle needed */
-#elif defined(DLOPEN) || defined(HPUX_700)
+#ifdef DLOPEN
   const int commandSize = 1000;
   int commandUsed = 0;
   char command[commandSize];
@@ -5224,40 +5202,107 @@ raise:
 OZ_C_proc_end
 
 
+
+OZ_C_proc_begin(BIdlOpen,2)
+{
+  OZ_declareVirtualStringArg(0,filename);
+  OZ_Term out = OZ_getCArg(1);
+
+  OZ_Term err=NameUnit;
+  OZ_Term ret=NameUnit;
+
+  filename = expandFileName(filename,ozconf.linkPath);
+
+  if (!filename) {
+    err = OZ_atom("expand filename failed");
+    goto raise;
+  }
+
+  if (ozconf.showForeignLoad) {
+    message("Linking file %s\n",filename);
+  }
+
+#ifdef DLOPEN
+#ifdef HPUX_700
+  {
+    shl_t handle;
+    handle = shl_load(filename,
+                      BIND_IMMEDIATE | BIND_NONFATAL |
+                      BIND_NOSTART | BIND_VERBOSE, 0L);
+
+    if (handle == NULL) {
+      goto raise;
+    }
+    ret = OZ_int(ToInt32(handle));
+  }
+#else
+  {
+    void *handle=dlopen(filename, RTLD_NOW);
+
+    if (!handle) {
+      err=OZ_atom((char *) dlerror());
+      goto raise;
+    }
+    ret = OZ_int(ToInt32(handle));
+  }
+#endif
+
+#elif defined(WINDOWS)
+  {
+    void *handle = (void *)LoadLibrary(filename);
+    if (!handle) {
+      err=OZ_int(GetLastError());
+      goto raise;
+    }
+    ret = OZ_int(ToInt32(handle));
+  }
+#endif
+
+  return OZ_unify(out,ret);
+
+raise:
+  return am.raise(E_ERROR,E_KERNEL,"foreign",3,OZ_atom("dlOpen"),
+                  filename,err);
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIunlinkObjectFile,1)
 {
   OZ_declareAtomArg(0,fileName);
-
-  char *f = expandFileName(fileName,ozconf.linkPath);
-
-#ifdef DLD
-  dld_doinit();
-
-  if (!f) {
-    OZ_warning("unlinkObjectFile(%s): expand filename failed",fileName);
-    goto raise;
-  }
-  if (dld_unlink_by_file(f,0) != 0) {
-    delete [] f;
-    OZ_warning("unlinkObjectFile(%s): failed for %s",fileName,f);
-    goto raise;
-  }
-  delete [] f;
-#endif
 
 #ifdef WINDOWS
   FreeLibrary(GetModuleHandle(f));
 #endif
 
   return PROCEED;
-raise:
-  return am.raise(E_ERROR,E_KERNEL,"foreign",3,OZ_atom("unlinkFile"),fileName);
 }
 OZ_C_proc_end
 
-#ifdef DLD
-#define Link(handle,name) dld_get_func(name)
-#elif defined(DLOPEN)
+
+OZ_C_proc_begin(BIdlClose,1)
+{
+  OZ_declareIntArg(0,handle);
+
+
+#ifdef DLOPEN
+  if (dlclose((void *)handle)) {
+    goto raise;
+  }
+#endif
+
+#ifdef WINDOWS
+  FreeLibrary((void *) handle);
+#endif
+
+  return PROCEED;
+
+raise:
+  return am.raise(E_ERROR,E_KERNEL,"foreign",2,
+                  OZ_atom("dlClose"),OZ_int(handle));
+}
+OZ_C_proc_end
+
+#if defined(DLOPEN)
 #define Link(handle,name) dlsym(handle,name)
 #elif defined(HPUX_700)
 void *ozdlsym(void *handle,char *name)
@@ -5295,10 +5340,7 @@ FARPROC winLink(HMODULE handle, char *name)
 /* findFunction(+fname,+farity,+handle) */
 OZ_C_proc_begin(BIfindFunction,3)
 {
-#ifdef DLD
-    dld_doinit();
-#endif
-#if defined(DLD) || defined(DLOPEN) || defined(HPUX_700) || defined(WINDOWS)
+#if defined(DLOPEN) || defined(HPUX_700) || defined(WINDOWS)
   OZ_declareAtomArg(0,functionName);
   OZ_declareIntArg(1,functionArity);
   OZ_declareIntArg(2,handle);
@@ -5314,33 +5356,13 @@ OZ_C_proc_begin(BIfindFunction,3)
     free(a0);
     free(a1);
     free(a2);
-#ifdef DLD
-    dld_perror("findFunction");
-#endif
 #ifdef WINDOWS
     OZ_warning("error=%d\n",GetLastError());
 #endif
     goto raise;
   }
 
-#ifdef DLD
-  // check whether it contains unresolved references:
-  if (dld_function_executable_p(functionName) == 0) {
-    char * a0 = strdup(toC(OZ_getCArg(0)));
-    char * a1 = strdup(toC(OZ_getCArg(1)));
-    OZ_warning("Cannot find function %s of arity %s."
-               a0, a1);
-    free(a0);
-    free(a1);
-    char ** unresolved = dld_list_undefined_sym();
-    for (int i=0; i< dld_undefined_sym_count; i++)
-      OZ_warning("findFunction: %s",unresolved[i]);
-    goto raise;
-  }
-#endif
-
   OZ_addBuiltin(functionName,functionArity,*func);
-
 #endif
 
   return PROCEED;
@@ -6993,6 +7015,7 @@ BIspec allSpec1[] = {
 
   {"NewPort",         2,BInewPort,       0},
   {"Send",            2,BIsendPort,      0},
+  {"Port.close",      1,BIclosePort,     0},
 
   {"NewCell",         2,BInewCell,       0},
   {"Exchange",        3,BIexchangeCell, (IFOR) BIexchangeCellInline},
@@ -7129,6 +7152,10 @@ BIspec allSpec2[] = {
   {"loadFile",       1, BIloadFile,             0},
   {"linkObjectFiles",2, BIlinkObjectFiles,      0},
   {"unlinkObjectFile",1,BIunlinkObjectFile,     0},
+
+  {"dlOpen",2,          BIdlOpen,               0},
+  {"dlClose",1,         BIdlClose,              0},
+
   {"findFunction",   3, BIfindFunction,         0},
   {"shutdown",       0, BIshutdown,             0},
 

@@ -18,6 +18,7 @@
  *   variable protocol:
  *     failure/exception handling
  *     more than one bind request
+ *     testing
  *   cell protocol
  *     all
  *   object protocol
@@ -26,6 +27,14 @@
  *     all
  *   builtin
  *     classify secure/insecure
+ *   names true, false, unit and others (o-o)
+ *   ip
+ *     cache testing
+ *     fairness for IO
+ *     errors
+ *     flow control
+ *   port
+ *     close: must fail client?
  * -----------------------------------------------------------------------*/
 
 #ifdef PERDIO
@@ -96,6 +105,7 @@ enum MessageType {
   M_REDIRECT,           // NA  DIF
   M_ACKNOWLEDGE,        // NA (implicit 1 credit)
   M_SURRENDER,          // OTI SITE DIF (implicit 1 credit)
+  M_PORTCLOSE,          // OTI (implicit 1 credit)
 };
 
 /*
@@ -2530,6 +2540,21 @@ void siteReceive(ByteStream* bs)
       PERDIO_DEBUG(SPECIAL,"SPECIAL just after send port");
       break;
       }
+  case M_PORTCLOSE:    /* M_PORTCLOSE index */
+    {
+      PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:PORTCLOSE");
+
+      int portIndex = unmarshallNumber(bs);
+      bs->unmarshalEnd();
+
+      Tertiary *tert= ownerTable->getOwner(portIndex)->getTertiary();
+      ownerTable->returnCreditAndCheck(portIndex,1);
+      Assert(tert->checkTertiary(Co_Port,Te_Manager) ||
+             tert->checkTertiary(Co_Port,Te_Local));
+      closePort(makeTaggedConst(tert));
+      PERDIO_DEBUG(SPECIAL,"SPECIAL just after send port");
+      break;
+      }
   case M_ASK_FOR_CREDIT:
     {
       PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:ASK_FOR_CREDIT");
@@ -2809,6 +2834,26 @@ int remoteSend(PortProxy *p, TaggedRef msg) {
   return PROCEED;
 }
 
+int remoteClose(PortProxy *p) {
+  BorrowEntry *b= borrowTable->getBorrow(p->getIndex());
+  ByteStream *bs = bufferManager->getByteStream();
+  bs->marshalBegin();
+  NetAddress *na = b->getNetAddress();
+  Site* site = na->site;
+  int index = na->index;
+
+  bs->put(M_PORTCLOSE);
+  marshallNumber(index,bs);
+  bs->marshalEnd();
+  if(b->getOneCredit()) {
+    return reliableSend0(site,bs,FALSE);
+  }
+  PERDIO_DEBUG(DEBT_MAIN,"DEBT_MAIN:remoteClose");
+  PendEntry *pe = pendEntryManager->newPendEntry(bs,site,b);
+  b->inDebtMain(pe);
+  return PROCEED;
+}
+
 void getClosure(ProcProxy *pp, Bool getCode)
 {
   ByteStream *bs= bufferManager->getByteStream();
@@ -2996,7 +3041,7 @@ OZ_C_proc_begin(BIStartSite,2)
   if (ozport!=0) {
     return OZ_raise(OZ_mkTupleC("perdio",1,OZ_atom("site already started")));
   }
-  InterfaceCode ret=ipInit(vport,siteReceive);
+  InterfaceCode ret=ipInitV(vport,siteReceive);
   if(ret==INVALID_VIRTUAL_PORT){
     ozport=0;
     return OZ_raiseC("startSite",1,OZ_string("invalid virtual port"));}
@@ -3013,6 +3058,39 @@ OZ_C_proc_begin(BIStartSite,2)
 }
 OZ_C_proc_end
 
+#define INIT_IP(port)                                                     \
+  if (!ipIsInit()) {                                                      \
+    InterfaceCode ret=ipInit(port,siteReceive);                   \
+    if(ret==INVALID_VIRTUAL_PORT){                                        \
+      return OZ_raiseC("startSite",1,OZ_string("invalid virtual port"));} \
+    if(ret==NET_RAN_OUT_OF_TRIES){                                        \
+      return OZ_raiseC("startSite",1,OZ_string("ran out of tries"));}     \
+    PERDIO_DEBUG(USER,"USER:startSite succeeded");                        \
+  }
+
+OZ_C_proc_begin(BIstartServer,2)
+{
+  OZ_declareIntArg(0,port);
+  OZ_declareNonvarArg(1,prt);
+
+  prt=deref(prt);
+  if (!isPort(prt)) {
+    TypeErrorT(0,"Port");
+  }
+
+  PERDIO_DEBUG1(USER,"USER:startServer called p:%d",port);
+
+  INIT_IP(port);
+
+  ozport = prt;
+  Tertiary *tert=tagged2Port(prt);
+  tert->setTertType(Te_Manager);
+  ownerTable->newOZPort(tert);
+
+  return PROCEED;
+}
+OZ_C_proc_end
+
 
 inline OZ_Term connect_site_aux(Site * sd){
   int bi=borrowTable->newBorrow(OWNER_GIVE_CREDIT_SIZE,sd,0);
@@ -3021,8 +3099,6 @@ inline OZ_Term connect_site_aux(Site * sd){
   b->mkTertiary(tert);
   return makeTaggedConst(tert);
   }
-
-
 
 OZ_C_proc_begin(BIConnectSite,3){
   // CHECK_INIT;
@@ -3035,13 +3111,34 @@ OZ_C_proc_begin(BIConnectSite,3){
     return OZ_raiseC("connectSite",1,OZ_string("startSite first"));}
 
   Site * sd;
-  InterfaceCode ret=connectSite(host,vport,sd,FALSE);
+  InterfaceCode ret=connectSiteV(host,vport,sd,FALSE);
   if(ret==NET_OK){
     PERDIO_DEBUG(USER,"USER connectSite success");
     OZ_Term x=connect_site_aux(sd);
     return OZ_unify(out,x);}
   if(ret==NET_RAN_OUT_OF_TRIES){
     return OZ_raiseC("connectSite",1,OZ_string("ran out of tries"));}
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIstartClient,3){
+  // CHECK_INIT;
+  OZ_declareVirtualStringArg(0,host);
+  OZ_declareIntArg(1,port);
+  OZ_declareArg(2,out);
+
+  INIT_IP(0);
+
+  Site * sd;
+  InterfaceCode ret=connectSite(host,port,sd,FALSE);
+  if(ret==NET_OK){
+    PERDIO_DEBUG(USER,"USER connectSite success");
+    OZ_Term x=connect_site_aux(sd);
+    return OZ_unify(out,x);}
+  if(ret==NET_RAN_OUT_OF_TRIES){
+    return OZ_raiseC("connectSite",1,OZ_string("ran out of tries"));}
+  error("never here");
   return PROCEED;
 }
 OZ_C_proc_end
@@ -3056,7 +3153,7 @@ OZ_C_proc_begin(BIConnectSiteWait,3){
     return OZ_raiseC("connectSiteWait",1,OZ_string("startSite first"));}
 
   Site * sd;
-  InterfaceCode ret=connectSite(host,vport,sd,TRUE);
+  InterfaceCode ret=connectSiteV(host,vport,sd,TRUE);
   if(ret==NET_OK){
     PERDIO_DEBUG(USER,"USER connectSiteWait success");
     OZ_Term x=connect_site_aux(sd);
@@ -3072,6 +3169,9 @@ BIspec perdioSpec[] = {
   {"startSite",      2, BIStartSite, 0},
   {"connectSite",    3, BIConnectSite, 0},
   {"connectSiteWait",3, BIConnectSiteWait, 0},
+
+  {"startServer",    2, BIstartServer, 0},
+  {"startClient",    3, BIstartClient, 0},
   {0,0,0,0}
 };
 
@@ -3081,7 +3181,6 @@ void BIinitPerdio()
 
   OZ_protect(&ozport);
 
-  printf("init \n");
   refTable = new RefTable();
   refTrail = new RefTrail();
   ownerTable = new OwnerTable(DEFAULT_OWNER_TABLE_SIZE);

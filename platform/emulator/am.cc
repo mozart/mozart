@@ -205,9 +205,6 @@ void AM::init(int argc,char **argv)
 
   checkVersion();
 
-  extern void DLinit(char *name);
-  DLinit(argv[0]);
-
   engine(OK);
 
   initFDs();
