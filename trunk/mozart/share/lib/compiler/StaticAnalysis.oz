@@ -23,39 +23,25 @@
 %%% WARRANTIES.
 %%%  
 
-functor 
-
-require
-   Search(base)
-   FD(less distinct distribute record sup)
-   FS(var value include subset reflect monitorIn)
-
-prepare
-   
-   \insert POTypes
-
-   FdSup = FD.sup
-   
-
+functor
 import
    BootName at 'x-oz://boot/Name'
-
    CompilerSupport(newNamedName newCopyableName isCopyableName
 		   newPredicateRef newCopyablePredicateRef
-		   nameVariable isBuiltin) at 'x-oz://boot/CompilerSupport'
-   
+		   nameVariable
+		   isBuiltin
+		   isLocalDet) at 'x-oz://boot/CompilerSupport'
    System(eq printName)
    Type(is)
    Core
    Builtins(getInfo)
    RunTime(tokens)
-   
-export 
+export
    ImARecordConstr
    ImAValueNode
    ImAVariableOccurrence
    ImAToken
-   
+
    statement:              SAStatement
    typeOf:                 SATypeOf
    stepPoint:              SAStepPoint
@@ -90,108 +76,119 @@ export
    variableOccurrence:     SAVariableOccurrence
    token:                  SAToken
    nameToken:              SANameToken
-   
+require
+   Search(base)
+   FD(less distinct distribute record sup)
+   FS(var value include subset reflect monitorIn)
+prepare
+   \insert POTypes
+
+   FdSup = FD.sup
 define
-   
+
    %%-----------------------------------------------------------------------
    %% this translation routine is here since it depends on FD and hence
    %% refers to a resource. no other reason: logically, it belongs to POTypes
-   
+
    OzTypes = {MkOzPartialOrder}
 
    local
       OTE = OzTypes.encode
    in
       fun {OzValueToType V}
-	 case {Value.status V}
-	 of det(T) then
-	    case T
-	    of int then
-	       {OTE if {IsChar V} then char
-		    elseif V=<FdSup andthen V>=0 then fdIntC 
-		    else int
-		    end nil}
-	    [] float then
-	       {OTE float nil}
-	    [] atom then
-	       {OTE if V==nil then nilAtom
-		    else atom
-		    end nil}
-	    [] name then
-	       {OTE case V
-		    of true  then bool
-		    [] false then bool
-		    [] unit  then 'unit'
-		    else name
-		    end nil}
-	    [] tuple then
-	       {OTE case V
-		    of _|_ then cons
-		    [] _#_ then pair
-		    else tuple
-		    end nil}
-	    [] record then
-	       {OTE record nil}
-	    [] procedure then
-	       {OTE case {ProcedureArity V}
-		    of 0 then 'procedure/0'
-		    [] 1 then 'procedure/1'
-		    [] 2 then 'procedure/2'
-		    [] 3 then 'procedure/3'
-		    [] 4 then 'procedure/4'
-		    [] 5 then 'procedure/5'
-		    [] 6 then 'procedure/6'
-		    else 'procedure/>6'
-		    end nil}
-	    [] cell then
-	       {OTE cell nil}
-	    [] space then
-	       {OTE space nil}
-	    [] 'thread' then
-	       {OTE 'thread' nil}
-	    [] bitString then
-	       {OTE bitString nil}
-	    [] byteString then
-	       {OTE byteString nil}
-	    [] array then
-	       {OTE array nil}
-	    [] dictionary then
-	       {OTE dictionary nil}
-	    [] 'class' then
-	       {OTE 'class' nil}
-	    [] object then
-	       {OTE object nil}
-	    [] 'lock' then
-	       {OTE 'lock' nil}
-	    [] port then
-	       {OTE port nil}
-	    [] bitArray then
-	       {OTE bitArray nil}
-	    [] chunk then
-	       {OTE chunk [array dictionary 'class'
-			   'object' 'lock' port
-			   bitArray]}
-	    else
-	       {OTE value [int float record procedure
-			   cell chunk space 'thread']}
+	 if {CompilerSupport.isLocalDet V} then
+	    case {Value.status V}
+	    of det(T) then
+	       case T
+	       of int then
+		  {OTE if {IsChar V} then char
+		       elseif V=<FdSup andthen V>=0 then fdIntC
+		       else int
+		       end nil}
+	       [] float then
+		  {OTE float nil}
+	       [] atom then
+		  {OTE if V==nil then nilAtom
+		       else atom
+		       end nil}
+	       [] name then
+		  {OTE case V
+		       of true  then bool
+		       [] false then bool
+		       [] unit  then 'unit'
+		       else name
+		       end nil}
+	       [] tuple then
+		  {OTE case V
+		       of _|_ then cons
+		       [] _#_ then pair
+		       else tuple
+		       end nil}
+	       [] record then
+		  {OTE record nil}
+	       [] procedure then
+		  {OTE case {ProcedureArity V}
+		       of 0 then 'procedure/0'
+		       [] 1 then 'procedure/1'
+		       [] 2 then 'procedure/2'
+		       [] 3 then 'procedure/3'
+		       [] 4 then 'procedure/4'
+		       [] 5 then 'procedure/5'
+		       [] 6 then 'procedure/6'
+		       else 'procedure/>6'
+		       end nil}
+	       [] cell then
+		  {OTE cell nil}
+	       [] space then
+		  {OTE space nil}
+	       [] 'thread' then
+		  {OTE 'thread' nil}
+	       [] bitString then
+		  {OTE bitString nil}
+	       [] byteString then
+		  {OTE byteString nil}
+	       [] array then
+		  {OTE array nil}
+	       [] dictionary then
+		  {OTE dictionary nil}
+	       [] 'class' then
+		  {OTE 'class' nil}
+	       [] object then
+		  {OTE object nil}
+	       [] 'lock' then
+		  {OTE 'lock' nil}
+	       [] port then
+		  {OTE port nil}
+	       [] bitArray then
+		  {OTE bitArray nil}
+	       [] chunk then
+		  {OTE chunk [array dictionary 'class'
+			      'object' 'lock' port
+			      bitArray]}
+	       else
+		  {OTE value [int float record procedure
+			      cell chunk space 'thread']}
+	       end
+	    [] kinded(T) then
+	       case T
+	       of int then
+		  {OTE fdIntC nil}
+	       [] record then
+		  {OTE recordC nil}
+	       else
+		  {OTE value [fdIntC recordC]}
+	       end
+	    [] free then
+	       {OTE value nil}
+	    [] future then
+	       {OTE value nil}
 	    end
-	 [] kinded(T) then
-	    case T
-	    of int then
-	       {OTE fdIntC nil}
-	    [] record then
-	       {OTE recordC nil}
-	    else
-	       {OTE value [fdIntC recordC]}
-	    end
-	 [] free then
-	    {OTE value nil}
-	 [] future then
+	 else
 	    {OTE value nil}
 	 end
       end
    end
-   
+
    %%-----------------------------------------------------------------------
    %% Some constants and shorthands
    
@@ -3607,7 +3604,7 @@ define
 	    {System.show valToSubstBreakDepth(Val)}
 \endif
 	    unit   % stop analysis here
-	 else
+	 elseif {CompilerSupport.isLocalDet Val} then
 	    case {Value.status Val} of det(Type) then
 \ifdef DEBUGSA
 	       {System.show valToSubst(Val)}
@@ -3686,6 +3683,7 @@ define
 	       end
 	    else unit
 	    end
+	 else unit
 	 end
 	 SAVariable, setLastValue(ValRepr)
 	 SAVariable, setType({OzValueToType Val})
