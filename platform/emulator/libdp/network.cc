@@ -1457,7 +1457,7 @@ public:
     FreeListManager(WRITE_CONNECTION_CUTOFF){wc = 0;} 
 
   void freeConnection(WriteConnection *r){ 
-    printf("freed r:%d\n",(int)r);
+    //    printf("freed r:%d\n",(int)r);
     r->clearFlag(WRITE_CON);
     //Assert(r->isRemovable());
     deleteConnection(r);
@@ -1465,7 +1465,7 @@ public:
 
   WriteConnection *allocConnection(RemoteSite *s,int f){
     WriteConnection *r=newConnection(s,f);
-    printf("allocated r:%d s:%d fd:%d\n",(int)r,(int)s,f);
+    //    printf("allocated r:%d s:%d fd:%d\n",(int)r,(int)s,f);
     return r;}
  };
 
@@ -1768,7 +1768,7 @@ public:
       accept = TRUE;} 
   
   void add(Connection *w) {
-    printf("cache add connection r:%d\n",(int)w);
+    //    printf("cache add connection r:%d\n",(int)w);
     if(w->isOpening()){
       addToFront(w, currentHead, currentTail);  
       open_size++;
@@ -1799,7 +1799,7 @@ public:
     Assert(0);}
   
   void remove(Connection *w){
-    printf("cache remove connection r:%d\n",(int)w);
+    //    printf("cache remove connection r:%d\n",(int)w);
     //	   (int)w->getRemoteSite(),open_size, close_size);
     //EK remove thisone?
     if(w->isOpening()){
