@@ -98,7 +98,7 @@ static void xyerror(char *);
 // Atom definitions
 //-----------------
 
-OZ_Term _PA_AtomTab[109];
+OZ_Term _PA_AtomTab[110];
 
 #define PA_allowdeprecated                      _PA_AtomTab[0]
 #define PA_coord                                _PA_AtomTab[1]
@@ -209,6 +209,7 @@ OZ_Term _PA_AtomTab[109];
 #define PA_fLoop                                _PA_AtomTab[106]
 #define PA_fMacro                               _PA_AtomTab[107]
 #define PA_fDotAssign                           _PA_AtomTab[108]
+#define PA_fFOR                                 _PA_AtomTab[109]
 
 const char * _PA_CharTab[] = {
         "allowdeprecated",                      //0
@@ -320,10 +321,11 @@ const char * _PA_CharTab[] = {
         "fLoop",                                //106
         "fMacro",                               //107
         "fDotAssign",                           //108
+        "fFOR",                                 //109
 };
 
 void parser_init(void) {
-   for (int i = 109; i--; )
+   for (int i = 110; i--; )
      _PA_AtomTab[i] = oz_atomNoDup(_PA_CharTab[i]);
 }
 
@@ -529,7 +531,7 @@ void xy_setParserExpect() {
 %token T_false T_FALSE_LABEL T_feat T_finally T_from T_fun T_functor
 %token T_if T_import T_in T_local T_lock T_meth T_not T_of T_or
 %token T_prepare T_proc T_prop T_raise T_require T_self T_skip T_then
-%token T_thread T_true T_TRUE_LABEL T_try T_unit T_UNIT_LABEL T_for T_do
+%token T_thread T_true T_TRUE_LABEL T_try T_unit T_UNIT_LABEL T_for T_FOR T_do
 
 %token T_ENDOFFILE
 
@@ -673,6 +675,12 @@ void xy_setParserExpect() {
 %type <t>  iterators
 %type <t>  iterator
 %type <t>  optIteratorStep
+%type <t>  FOR_decls
+%type <t>  FOR_decl
+%type <t>  FOR_gen
+%type <t>  FOR_genOptInt
+%type <t>  FOR_genOptC
+%type <t>  FOR_genOptC2
 
 %%
 
@@ -889,6 +897,44 @@ phrase2         : phrase2 add coord phrase2 %prec T_ADD
                   { $$ = newCTerm(PA_fLoop,
                                   newCTerm(PA_fAnd,$3,$5),
                                   makeLongPos($2,$7)); }
+                | T_FOR coord FOR_decls T_do inSequence T_end coord
+                  { $$ = newCTerm(PA_fFOR,$3,$5,makeLongPos($2,$7)); }
+                ;
+
+FOR_decls       : /* empty */
+                  { $$ = AtomNil; }
+                | FOR_decl FOR_decls
+                  { $$ = oz_cons($1,$2); }
+                ;
+
+FOR_decl        : atom ':' phrase
+                  { $$ = newCTerm(oz_atom("forFeature"),$1,$3); }
+                | phrase T_in FOR_gen
+                  { $$ = newCTerm(oz_atom("forPattern"),$1,$3); }
+                ;
+
+FOR_gen         : phrase
+                  { $$ = newCTerm(oz_atom("forGeneratorList"),$1); }
+                | phrase T_2DOTS phrase FOR_genOptInt
+                  { $$ = newCTerm(oz_atom("forGeneratorInt"),$1,$3,$4); }
+                | phrase ';' FOR_genOptC
+                  { $$ = newCTerm(oz_atom("forGeneratorC"),$1,oz_head($3),oz_tail($3)); }
+                ;
+
+FOR_genOptInt   : /* empty */
+                  { $$ = NameUnit; }
+                | ';' phrase
+                  { $$ = $2; }
+                ;
+
+FOR_genOptC     : phrase FOR_genOptC2
+                  { $$ = oz_cons($1,$2); }
+                ;
+
+FOR_genOptC2    : /* empty */
+                  { $$ = NameUnit; }
+                | ';' phrase
+                  { $$ = $2; }
                 ;
 
 iterators       : iterators iterator
