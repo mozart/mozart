@@ -1,0 +1,6 @@
+Makefile
+config.*
+version.h
+*.bin
+*.rc
+*~

@@ -1,0 +1,124 @@
+<OZDOC.AUTHOR.DB>
+<OZDOC.AUTHOR
+	KEY='Joachim.Niehren'
+	LASTNAME='Niehren'
+	FIRSTNAME='Joachim'
+	WWW='http://www.ps.uni-sb.de/~niehren/'
+	EMAIL='niehren@ps.uni-sb.de'/>
+<OZDOC.AUTHOR
+	KEY='Claire.Gardent'
+	LASTNAME='Gardent'
+	FIRSTNAME='Claire'
+	WWW='http://www.coli.uni-sb.de/~claire/'
+	EMAIL='claire@coli.uni-sb.de'/>
+<OZDOC.AUTHOR
+	KEY='Denys.Duchier'
+	LASTNAME='Duchier'
+	FIRSTNAME='Denys'
+	WWW='http://www.ps.uni-sb.de/~duchier/'
+	EMAIL='duchier@ps.uni-sb.de'/>
+<OZDOC.AUTHOR
+	KEY='Martin.Henz'
+	LASTNAME='Henz'
+	FIRSTNAME='Martin'
+	WWW='http://www.iscs.nus.edu.sg/~henz'
+	EMAIL='henz@iscs.nus.sg'/>
+<OZDOC.AUTHOR
+	KEY='Leif.Kornstaedt'
+	LASTNAME='Kornstaedt'
+	FIRSTNAME='Leif'
+	MIDDLENAME='Tobias'
+	WWW='http://www.ps.uni-sb.de/~kornstae/'
+	EMAIL='kornstae@ps.uni-sb.de'/>
+<OZDOC.AUTHOR
+	KEY='Benjamin.Lorenz'
+	LASTNAME='Lorenz'
+	FIRSTNAME='Benjamin'
+	WWW='http://www.ps.uni-sb.de/~lorenz/'
+	EMAIL='lorenz@ps.uni-sb.de'/>
+<OZDOC.AUTHOR
+	KEY='Michael.Mehl'
+	LASTNAME='Mehl'
+	FIRSTNAME='Michael'
+	WWW='http://www.ps.uni-sb.de/~mehl/'
+	EMAIL='mehl@dfki.de'/>
+<OZDOC.AUTHOR
+	KEY='Martin.Mueller'
+	LASTNAME='M&#252;ller'
+	FIRSTNAME='Martin'
+	WWW='http://www.ps.uni-sb.de/~mmueller/'
+	EMAIL='mmueller@ps.uni-sb.de'/>
+<OZDOC.AUTHOR
+	KEY='Tobias.Mueller'
+	LASTNAME='M&#252;ller'
+	FIRSTNAME='Tobias'
+	WWW='http://www.ps.uni-sb.de/~tmueller/'
+	EMAIL='tmueller@ps.uni-sb.de'/>
+<OZDOC.AUTHOR
+	KEY='Konstantin.Popov'
+	LASTNAME='Popov'
+	FIRSTNAME='Konstantin'
+	MIDDLENAME='Evgeniewitsch'
+	WWW='http://www.sics.se/~kost/'
+	EMAIL='kost@sics.se'/>
+<OZDOC.AUTHOR
+	KEY='Ralf.Scheidhauer'
+	LASTNAME='Scheidhauer'
+	FIRSTNAME='Ralf'
+	WWW='http://www.ps.uni-sb.de/~scheidhr/'
+	EMAIL='scheidhr@ps.uni-sb.de'/>
+<OZDOC.AUTHOR
+	KEY='Christian.Schulte'
+	LASTNAME='Schulte'
+	FIRSTNAME='Christian'
+	WWW='http://www.ps.uni-sb.de/~schulte/'
+	EMAIL='schulte@ps.uni-sb.de'/>
+<OZDOC.AUTHOR
+	KEY='Gert.Smolka'
+	LASTNAME='Smolka'
+	FIRSTNAME='Gert'
+	WWW='http://www.ps.uni-sb.de/~smolka/'
+	EMAIL='smolka@ps.uni-sb.de'/>
+<OZDOC.AUTHOR
+	KEY='Joerg.Wuertz'
+	LASTNAME='W&#252;rtz'
+	FIRSTNAME='J&#246;rg'
+	WWW='http://www.ps.uni-sb.de/~wuertz/'
+	EMAIL='wuertz@de.ibm.com'/>
+<OZDOC.AUTHOR
+	KEY='Andreas.Sundstroem'
+	LASTNAME='Sundstr&#246;m'
+	FIRSTNAME='Andreas'
+	WWW='http://www.sics.se/~andreas'
+	EMAIL='andreas@sics.se'/>
+<OZDOC.AUTHOR
+	KEY='Seif.Haridi'
+	LASTNAME='Haridi'
+	FIRSTNAME='Seif'
+	WWW='http://www.sics.se/~seif'
+	EMAIL='seif@sics.se'/>
+<OZDOC.AUTHOR
+	KEY='Nils.Franzen'
+	LASTNAME='Franz&#233;n'
+	FIRSTNAME='Nils'
+	WWW='http://www.sics.se/~nilsf'
+	EMAIL='nilsf@sics.se'/>
+<OZDOC.AUTHOR
+	KEY='Simon.Lindblom'
+	LASTNAME='Lindblom'
+	FIRSTNAME='Simon'
+	WWW='http://www.sics.se/~simon'
+	EMAIL='simon@sics.se'/>
+<OZDOC.AUTHOR
+	KEY='Peter.VanRoy'
+	LASTNAME='Van Roy'
+	FIRSTNAME='Peter'
+	WWW='http://www.info.ucl.ac.be/~pvr'
+	EMAIL='pvr@info.ucl.ac.be'/>
+<OZDOC.AUTHOR
+	KEY='Per.Brand'
+	LASTNAME='Brand'
+	FIRSTNAME='Per'
+	WWW='http://www.sics.se/~perbrand'
+	EMAIL='perbrand@sics.se'/>
+</OZDOC.AUTHOR.DB>

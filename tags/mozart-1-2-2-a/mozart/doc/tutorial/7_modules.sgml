@@ -1,0 +1,125 @@
+<!--
+  - Authors:
+  -   Seif Haridi (seif@sics.se)
+  -   Nils Franzen (nilsf@sics.se)
+  -
+  - Copyright:
+  -   Seif Haridi, Nils Franzen, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<CHAPTER ID="chapter.modules">
+<TITLE>Modules and Interfaces</TITLE>
+
+<P>Modules, also known as packages, are collection of procedures and
+other values<NOTE FOOT>Classes, objects, etc.</NOTE> that are
+constructed together to provide certain related functionality. A
+module typically has a number of private procedures that are not
+visible outside the module and a number of interface procedures that
+provide the external services of the module. 
+In Oz there is syntactic support for module specification.
+The concept used is called <EM> functor </EM>.
+A functor is an expression that specifies the components of a module.
+The Mozart system converts a functor to a module with the help of
+a module manager.
+
+<P>Let us first see what a module is, and then look to a corresponding
+functor that specifies the module. In general a module is
+a bunch of locally defined entities, e.g. procedures, objects, 
+accessible through a record interface.
+Assume that we would
+like to construct a module called <<List>> that provides a number of
+interface procedures for appending, sorting and testing membership of
+lists. This would look as follows.
+
+<<<
+declare List in
+local 
+   proc {Append ... }  ... end
+   proc {MergeSort ...} ... end
+   proc {Sort ... } ... {MergeSort ...} ... end
+   proc {Member ...} ... end
+ in
+   List = 'export'(append: Append
+                   sort: Sort
+                   member: Member
+                   ... )
+end
+>>>
+
+<P>Access to <<Append>> procedure outside of the module <<List >>is
+done by using the field <<append>> from the <EM>record</EM> <<List>>:
+<<List.append>>. Notice that in the above example the procedure
+<<MergeSort>> is private to the module. Most of the base library modules of
+Mozart follow the above structure.
+The above module can be created from a functor that looks as follows:
+<<<
+functor 
+export 
+  append:Append
+  sort:Sort
+  member:Member
+  ...
+define
+   proc {Append ... }  ... end
+   proc {MergeSort ...} ... end
+   proc {Sort ... } ... {MergeSort ...} ... end
+   proc {Member ...} ... end
+end
+>>>
+Assuming that this functor is stored, somehow, on the file '/home/xxx/list.ozf', the module can be created as follows:
+<<<
+declare [List]= {Module.link ['/home/xxx/list.ozf']}
+>>>
+<P> <<Module.link/2>> is a function defined in the module <<Module>>
+that takes a list of functors, links them together, returns 
+a corresponding list of modules.
+
+<P>Functors may also have import declarations. If you want to import a
+system module you can just state the name of its functor. On the
+other-hand importing a user-defined module requires stating the URL of
+the file where the functor is stored.  
+
+<P> Consider the following functor.  
+<<< 
+functor 
+import
+   Browser 
+   FO at 'file:///home/seif/FileOperations.ozf' 
+define
+   {Browser.browse {FO.countLines '/etc/passwd'}} 
+end >>> 
+
+<P> The <<import>>
+declaration imports the system module <<Browser>>, and uses the
+procedure <<Browser.browse>>. It also imports the module <<FO>>
+specified by the functor stored in the file 
+<<'/home/seif/FileOperations.ozf'>>, and calls the procedure
+<<FO.countLines>> which counts the number of lines in a file
+given as argument. This functor is defined for its effect, therefore
+it does not export any interface. When this functor is linked
+the statement between <<define ... end>> is executed.
+ 
+<P CLASS=WARNING>Given 
+a file <<'x.oz'>> defining a functor, you may
+create the corresponding functor <<'x.ozf'>> from
+your shell by typing the command:
+<<< ozc -c x.ozf >>>
+
+
+
+</CHAPTER>

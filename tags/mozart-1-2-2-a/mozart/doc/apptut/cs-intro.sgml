@@ -1,0 +1,37 @@
+<chapter id=chapter.client.server.intro>
+  <title/Introduction/
+  <p>A large fraction of client/server applications fall in the same
+simple pattern: there is a basic service encapsulated as an object and
+we wish to allow remote clients to send requests to this object, to be
+processed at the server host.</p>
+  <p>The basic idea is to make available to clients a procedure that
+forwards a client's request to the live server object.  This
+forwarding is effected by means of a port.  The forwarding procedure
+itself is made available indirectly through a ticket.  This ticket is
+placed in a file that is accessible through a URL.</p>
+  <section>
+    <title/A Generic Server <file/server.oz//
+    <p>It is straightforward to write a generic server module that
+exports a ?_{Start} procedure.  The latter takes 2 arguments: ?_{Proc}
+the object or procedure implementing the service and ?_{File} the name
+of the file where the ticket should be saved.  ?_{Proc} is intended to
+be applied to messages forwarded by clients.</p>
+    <p>The forwarding procedure ?_{Proxy} takes the clients message
+?_{Msg} and sends <code/request(?_{Msg} ?_{OK})/ to the server's
+port.  The server binds ?_{OK} to true or false depending on whether
+the ?_{Msg} is processed successfully or an exception is raised.
+<code.extern display to="server.oz">
+The server functor will be used as an import in subsequent examples and
+can be compiled as follows:
+<code display proglang=sh/ozc -c server.oz/
+</p>
+</chapter>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
