@@ -391,6 +391,7 @@ void AM::doGCollect(void) {
 
 void AM::gCollect(int msgLevel) {
 
+  gCollectWeakDictionariesInit();
   varFix.init();
   cacStack.init();
 
@@ -443,11 +444,17 @@ void AM::gCollect(int msgLevel) {
   (*gCollectPerdioRoots)();
   cacStack.gCollectRecurse();
 
+  // now make sure that we preserve all weak dictionaries
+  // that still have stuff to do
+
+  gCollectWeakDictionariesPreserve();
+
   // now everything that is locally not garbage
   // has been marked and copied - whatever remains in
   // the weak dictionaries that is not marked is
   // otherwise inaccessible and should be finalized
-  gCollectWeakDictionaries();
+
+  gCollectWeakDictionariesContent();
   weakReviveStack.recurse();    // copy stuff scheduled for finalization
   cacStack.gCollectRecurse();
 
