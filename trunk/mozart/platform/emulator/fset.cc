@@ -3158,7 +3158,7 @@ int FSetConstraint::getGlbMaxElem(void) const {
   else 
     return getGlbSet().getMaxElem();
 #else
-  return getGlbSet().getMinElem();
+  return getGlbSet().getMaxElem();
 #endif
 }
 
