@@ -65,7 +65,7 @@ LBLstart:
   e->setCurrentThread(e->getFirstThread());
   Assert(CTT);
 
-  DebugTrace(trace("runnable thread->running"));
+  DebugTrace(ozd_trace("runnable thread->running"));
 
   // source level debugger & Thread.suspend
   if (CTT->getStop() || CTT->getPStop()) {
@@ -230,7 +230,7 @@ LBLerror:
    */
 LBLterminate:
   {
-    DebugTrace(trace("kill thread", CBB));
+    DebugTrace(ozd_trace("kill thread"));
     Assert(CTT);
     Assert(!CTT->isDeadThread());
     Assert(CTT->isRunnable());
@@ -327,7 +327,7 @@ LBLcheckEntailmentAndStability:
     // 
     DebugCode(e->unsetCurrentThread());
 
-    DebugTrace(trace("check entailment",CBB));
+    DebugTrace(ozd_trace("check entailment"));
 
 #ifdef DEBUG_NONMONOTONIC
     cout << "checkEntailment" << endl << flush;
@@ -418,7 +418,7 @@ LBLdiscardThread:
    */
 LBLsuspend:
   {
-    DebugTrace(trace("suspend runnable thread", CBB));
+    DebugTrace(ozd_trace("suspend runnable thread"));
 
     Assert(CTT);
     CTT->unmarkRunnable();
@@ -481,7 +481,7 @@ LBLsuspend:
    */
 LBLfailure:
    {
-     DebugTrace(trace("fail",CBB));
+     DebugTrace(ozd_trace("fail"));
 
      Assert(CTT);
      Assert(CTT->isRunnable());
@@ -578,7 +578,7 @@ LBLfailure:
 LBLraise:
   {
     DebugCheck(ozconf.stopOnToplevelFailure,
-	       DebugTrace(tracerOn();trace("raise")));
+	       DebugTrace(ozd_tracerOn();ozd_trace("raise")));
 
     Assert(CTT && !CTT->isPropagator());
 

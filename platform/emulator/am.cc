@@ -125,11 +125,23 @@ char *getOptArg(int &i, int argc, char **argv)
 }
 
 
+static void motd() {
+  fprintf(stderr,"-----------------------------------------------\n");
+  fprintf(stderr,"MOTD\n\n");
+  fprintf(stderr,"25 Feb 1998, mehl@dfki.de\n");
+  fprintf(stderr,"The foreign function interface was changed.\n");
+  fprintf(stderr,"User defined builtins have to be recompiled.\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"The interface will change again soon...\n");
+  fprintf(stderr,"-----------------------------------------------\n");
+}
+
 static
 void printBanner(char*initFile)
 {
   version();
 
+  motd();
 #ifdef NO_LTQ
   warning("LTQ is turned off.");
 #endif
@@ -242,7 +254,7 @@ void AM::init(int argc,char **argv)
     }
     if (strcmp(argv[i],"-d")==0) {
 #ifdef DEBUG_TRACE
-      tracerOn();
+      ozd_tracerOn();
 #endif
       continue;
     }
@@ -1865,7 +1877,7 @@ void handlerUSR1()
   CodeArea::writeInstr();
 
 #ifdef DEBUG_TRACE
-  tracerOn(); trace("halt");
+  ozd_tracerOn(); ozd_trace("halt");
 #endif
   message("Error handler exit ****\n");
 }

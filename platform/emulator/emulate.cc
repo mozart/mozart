@@ -857,7 +857,7 @@ LBLdispatcher:
   CodeArea::recordInstr(PC);
 #endif
 
-  DebugTrace( if (!trace("emulate",CBB,CAA,PC,Y,G)) {
+  DebugTrace( if (!ozd_trace("emulate",PC,Y,G)) {
 		goto LBLfailure;
 	      });
 
@@ -917,7 +917,7 @@ LBLdispatcher:
 #ifdef PROFILE_BI
       entry->incCounter();
 #endif
-      switch (biFun(-2, X)) { // -2 == don't check arity
+      switch (biFun(X,OZ_ID_MAP)) { // -2 == don't check arity
 
       case PROCEED:	  DISPATCH(3);
       case FAILED:	  HF_BI;
@@ -2181,7 +2181,7 @@ LBLdispatcher:
 #ifdef PROFILE_BI
        bi->incCounter();
 #endif
-       OZ_Return res = biFun(predArity, X);
+       OZ_Return res = biFun(X,OZ_ID_MAP);
 	     
        switch (res) {
 	    
@@ -2569,7 +2569,7 @@ LBLdispatcher:
 	X[i] = tmpX[i];
       }
       disposeRefsArray(tmpX);
-      DebugTrace(trace("call cont task",CBB));
+      DebugTrace(ozd_trace("call cont task"));
       isTailCall = OK;
 
       predicate=tagged2Const(taggedPredicate);
@@ -2640,9 +2640,9 @@ LBLdispatcher:
        }
        disposeRefsArray(tmpX);
 
-       DebugTrace(trace("cfunc cont task",CBB));
+       DebugTrace(ozd_trace("cfunc cont task"));
 
-       switch (biFun(predArity, X)) {
+       switch (biFun(X,OZ_ID_MAP)) {
        case FAILED:        HF_BI;
        case PROCEED:       goto LBLpopTask;
        case RAISE:

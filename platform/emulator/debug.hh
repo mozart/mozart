@@ -108,10 +108,10 @@ OZ_C_proc_proto(BIlivenessX)
 /* The Oz machine level debugger */
 
 #ifdef DEBUG_TRACE
-Bool trace(char *s,Board *board=NULL,Actor *actor=NULL,
-	   ProgramCounter PC=NOCODE,RefsArray Y=NULL,RefsArray G=NULL);
-void tracerOn();
-void tracerOff();
+Bool ozd_trace(char *s,
+	       ProgramCounter PC=NOCODE,RefsArray Y=NULL,RefsArray G=NULL);
+void ozd_tracerOn();
+void ozd_tracerOff();
 
 OZ_C_proc_proto(BIhalt)
 #endif
