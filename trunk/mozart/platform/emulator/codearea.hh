@@ -220,7 +220,7 @@ public:
 		       ProgramCounter to=NOCODE);
 
 private:
-  static int livenessXInternal(ProgramCounter from, TaggedRef *X,int n);
+  static int livenessXInternal(ProgramCounter from, TaggedRef *X,int n, int*xUsage);
 public:
   static int livenessX(ProgramCounter from, TaggedRef *X=0,int n=0);
 
@@ -460,21 +460,6 @@ public:
 
   ~GenCallInfoClass() { OZ_unprotect(&mn); }
   void dispose()      { delete this; }
-};
-
-class ApplMethInfoClass {
-public:
-  TaggedRef methName;
-  SRecordArity arity;
-  InlineCache methCache;
-
-  ApplMethInfoClass(TaggedRef mn, SRecordArity i, CodeArea *code)
-  {
-    arity = i;
-    methName = mn;
-    oz_staticProtect(&methName);
-    code->protectInlineCache(&methCache);
-  }
 };
 
 class OZ_Location {

@@ -67,7 +67,6 @@ define(opAction,
         $1,PredId,  handlePredId(PC++,ht);,
         $1,HashTableRef, handleHashTable(PC++,ht);,
         $1,GenCallInfo,handleGenCallInfo(PC++,ht);,
-        $1,ApplMethInfo,handleApplMethInfo(PC++,ht,code);,
         $1,Cache,handleCache(PC,code); PC += CacheSize;,
         $1,,,
         PC++;)')
@@ -171,24 +170,6 @@ static
 void handlePredId(ProgramCounter PC, HashTable *ht)
 {
   CodeArea::writeAddress(checkPTE(getPredArg(PC),ht),PC);
-}
-
-
-ApplMethInfoClass *checkAMI(ApplMethInfoClass *ami, HashTable *ht,CodeArea *code)
-{
-  CheckHT(ApplMethInfoClass *,ami);
-  
-  aux = new ApplMethInfoClass(checkTagged(ami->methName,ht),
-			      checkSRA(ami->arity,ht),code);
-  ht->htAdd(ToInt32(ami),aux);
-  return aux;
-}
-
-
-static
-void handleApplMethInfo(ProgramCounter PC, HashTable *ht,CodeArea *code)
-{
-  CodeArea::writeAddress(checkAMI((ApplMethInfoClass*) getAdressArg(PC),ht,code),PC);
 }
 
 

@@ -118,9 +118,9 @@ instruction(fastTailCall,PredicateRef,Dummy)
 dnl   instructions for objects
 instruction(sendMsg,Literal,readArg(Register),RecordArity,Cache)
 instruction(tailSendMsg,Literal,readArg(Register),RecordArity,Cache)
-dnl   ApplMethInfo = MethName x Arity
-instruction(applMeth,ApplMethInfo,readArg(Register))
-instruction(tailApplMeth,ApplMethInfo,readArg(Register))
+
+instruction(applMeth,Dummy,readArg(Register))
+instruction(tailApplMeth,Dummy,readArg(Register))
 
 instruction(getSelf,writeArg(XRegisterIndex))
 instruction(setSelf,readArg(XRegisterIndex))
