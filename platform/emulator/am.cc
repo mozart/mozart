@@ -1683,6 +1683,8 @@ void AM::stopThread(Thread *th) {
       setSFlag(StopThread);
     }
     th->stop();
+    if (th->isRunnable())
+      th->unmarkRunnable();
   }
 }
 
