@@ -276,13 +276,12 @@ public:
       endMB=first->tail();}
     pos=NULL;}
 
-  Bool atEnd() { return posMB==0; }
-
   BYTE getNext(){
     Assert(type==BS_Unmarshal);
     Assert(posMB!=NULL);
     if(posMB==curpos){
       posMB=NULL;
+      markEnd();
       Assert(first==last);
       return *curpos;}
     if(posMB==first->tail()){
@@ -322,9 +321,9 @@ public:
   virtual Bool globalize()          { return NO; }
 
   Exporter() {
-    posMB = endMB = 0; // so not data will be written nowhere
+    posMB = endMB = 0; // so no data will be written nowhere
     MsgBuffer::init();
-    vars      = oz_nil();
+    vars = oz_nil();
   }
 
   OZ_Term getVars() { return vars; }
