@@ -348,7 +348,7 @@ void OZ_CtVar::fail(void)
   }
 }
 
-OZ_Return OZ_mkOZ_VAR_CT(OZ_Term v, OZ_Ct * c, OZ_CtDefinition * d)
+OZ_Return OZ_mkCtVar(OZ_Term v, OZ_Ct * c, OZ_CtDefinition * d)
 {
   return tellBasicConstraint(v, c, d);
 }

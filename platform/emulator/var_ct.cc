@@ -43,7 +43,7 @@ OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term)
   OZ_Term trail = *vptr;
   *vptr = term;
 
-  OZ_Boolean result_unify = _constraint->unify(term);
+  OZ_Boolean result_unify = _constraint->isInDomain(term);
 
   // undo binding
   *vptr = trail;
@@ -99,12 +99,12 @@ OZ_Return OzCtVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
     // bind temporarily to avoid looping in unification on cyclic terms
     OZ_Term trail = * left_varptr;
     *left_varptr = right_var;
-    OZ_Ct * unified_constr = left_constr->unify(right_constr);
+    OZ_Ct * unified_constr = left_constr->intersectDomains(right_constr);
 
     // undo binding
     *left_varptr = trail;
 
-    if (! unified_constr->isValid()) {
+    if (unified_constr->isEmpty()) {
       goto failed;
     }
     if (left_var_is_local && right_var_is_local) {
@@ -219,7 +219,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
   //
   DEREF(v, vptr, vtag);
   //
-  if (constr && ! constr->isValid()) {
+  if (constr && constr->isEmpty()) {
     goto failed;
   }
   if (oz_isFree(v)) {
@@ -246,7 +246,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
     OzCtVariable * ctv =
       constr
       ? new OzCtVariable(constr, def, oz_currentBoard())
-      :  new OzCtVariable(def->leastConstraint(), def, oz_currentBoard());
+      :  new OzCtVariable(def->fullDomain(), def, oz_currentBoard());
     //
     OZ_Term *  tctv = newTaggedCVar(ctv);
     //
@@ -271,9 +271,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
     OzCtVariable * ctvar           = tagged2GenCtVar(v);
     OZ_Ct * old_constr             = ctvar->getConstraint();
     OZ_CtProfile * old_constr_prof = old_constr->getProfile();
-    OZ_Ct * new_constr             = old_constr->unify(constr);
+    OZ_Ct * new_constr             = old_constr->intersectDomains(constr);
 
-    if (! new_constr->isValid()) {
+    if (new_constr->isEmpty()) {
       goto failed;
     }
     if (! ctvar->getConstraint()->isWeakerThan(new_constr)) {
@@ -294,7 +294,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       //
       // `new_constr' does not designate a value
       //
-      ctvar->propagate(new_constr->getWakeUpDescriptor(old_constr_prof),
+      ctvar->propagate(new_constr->computeEvents(old_constr_prof),
                        pc_propagator);
 
       if (oz_isLocalVar(ctvar)) {
@@ -311,7 +311,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
     if (! constr) {
       goto proceed;
     }
-    if (constr->unify(v)) {
+    if (constr->isInDomain(v)) {
       goto proceed;
     }
     goto failed;
@@ -333,7 +333,7 @@ proceed:
 
 void OzCtVariable::propagate(OZ_CtWakeUp descr, PropCaller caller)
 {
-  int no_of_wakup_lists = _definition->getNoOfWakeUpLists();
+  int no_of_wakup_lists = _definition->getNoEvents();
 
   if (caller == pc_propagator) {
     // called by propagator
@@ -357,11 +357,11 @@ void OzCtVariable::relinkSuspListTo(OzCtVariable * lv, Bool reset_local)
   // Ensure locality invariant
 
   if (reset_local) {
-    for (int i = _definition->getNoOfWakeUpLists(); i--; )
+    for (int i = _definition->getNoEvents(); i--; )
       _susp_lists[i] =
         _susp_lists[i]->appendToAndUnlink(lv->suspList, reset_local);
   } else {
-    for (int i = _definition->getNoOfWakeUpLists(); i--; )
+    for (int i = _definition->getNoEvents(); i--; )
       _susp_lists[i] =
         _susp_lists[i]->appendToAndUnlink(lv->_susp_lists[i], reset_local);
   }
@@ -371,7 +371,7 @@ void OzCtVariable::installPropagators(OzCtVariable * glob_var)
 {
   installPropagatorsG(glob_var);
   Board * gb = glob_var->getBoardInternal();
-  for (int i = _definition->getNoOfWakeUpLists(); i--; )
+  for (int i = _definition->getNoEvents(); i--; )
     _susp_lists[i] = oz_installPropagators(_susp_lists[i],
                                            glob_var->_susp_lists[i],
                                            gb);

@@ -616,6 +616,8 @@ OZ_CtWakeUp OZ_CtWakeUp::getWakeUpAll(void) {
   return aux;
 };
 
+typedef OZ_CtWakeUp OZ_CtEvents;
+
 //----------------------------------------------------------------------
 
 class OZ_CtDefinition;
@@ -944,6 +946,18 @@ class OZ_Ct;
 
 class ozdeclspec OZ_CtDefinition {
 public:
+  virtual int getId(void) = 0;
+  virtual int getNoEvents(void) = 0;
+  virtual char ** getEventNames(void) = 0;
+  virtual char * getName(void) = 0;
+  virtual OZ_Ct * fullDomain(void) = 0;
+  virtual OZ_Boolean isValueOfDomain(OZ_Term) = 0;
+
+};
+
+/*
+class ozdeclspec OZ_CtDefinition {
+public:
   virtual int getKind(void) = 0;
   virtual int getNoOfWakeUpLists(void) = 0;
   virtual char ** getNamesOfWakeUpLists(void) = 0;
@@ -952,6 +966,7 @@ public:
   virtual OZ_Boolean isValidValue(OZ_Term) = 0;
 
 };
+*/
 
 //-----------------------------------------------------------------------------
 // OZ_CtProfile
@@ -965,6 +980,34 @@ public:
 //-----------------------------------------------------------------------------
 // OZ_Ct
 
+class ozdeclspec OZ_Ct {
+
+public:
+  OZ_Ct(void) {}
+
+  virtual OZ_Boolean isWeakerThan(OZ_Ct *) = 0; // becomes redundant soon
+
+  virtual OZ_Boolean isValue(void) = 0;
+  virtual OZ_Term toValue(void) = 0;
+
+  virtual OZ_Boolean isEmpty(void) = 0;
+  virtual OZ_Boolean operator == (OZ_Ct *) = 0;
+
+  virtual OZ_Ct * intersectDomains(OZ_Ct *) = 0;
+  virtual OZ_Boolean isInDomain(OZ_Term) = 0;
+
+  virtual OZ_CtProfile * getProfile(void) = 0;
+  virtual OZ_CtEvents computeEvents(OZ_CtProfile *) = 0;
+  virtual OZ_CtEvents computeEvents(OZ_Ct *) = 0;
+
+  virtual char * toString(int) = 0;
+  virtual OZ_Ct * copy(void) = 0;
+  virtual size_t sizeOf(void) = 0;
+
+  static void * operator new(size_t, int align = sizeof(void *));
+  static void operator delete(void *, size_t);
+};
+/*
 class ozdeclspec OZ_Ct {
 
 public:
@@ -984,7 +1027,7 @@ public:
   static void * operator new(size_t, int align = sizeof(void *));
   static void operator delete(void *, size_t);
 };
-
+*/
 //-----------------------------------------------------------------------------
 // OZ_CtVar
 
@@ -1030,7 +1073,7 @@ OZ_CtVar::OZ_CtVar(void)
 
 inline
 OZ_CtWakeUp OZ_CtVar::ctGetWakeUpDescriptor(void) {
-  return ctGetConstraint()->getWakeUpDescriptor(ctGetConstraintProfile());
+  return ctGetConstraint()->computeEvents(ctGetConstraintProfile());
 }
 
 inline
@@ -1042,6 +1085,7 @@ OZ_Boolean OZ_CtVar::leave(void) {
 // Miscellaneous II
 
 _FUNDECL(OZ_Return,OZ_mkOZ_VAR_CT,(OZ_Term, OZ_Ct *, OZ_CtDefinition *));
+_FUNDECL(OZ_Return,OZ_mkCtVar,(OZ_Term, OZ_Ct *, OZ_CtDefinition *));
 
 //-----------------------------------------------------------------------------
 // class OZ_Expect, etc.
@@ -1107,6 +1151,9 @@ public:
 
   OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectDomDescr(OZ_Term descr, int level = 4);
+  OZ_expect_t expectSetDescr(OZ_Term descr, int level = 4) {
+    return expectDomDescr(descr, level);
+  }
   OZ_expect_t expectFSetDescr(OZ_Term descr, int level = 4);
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
@@ -1148,6 +1195,8 @@ public:
   OZ_Return suspend(void);
   OZ_Return fail(void);
 };
+
+typedef OZ_Expect OZ_CreateProp;
 
 template <class RTYPE>
 class _OZ_ParamIterator {

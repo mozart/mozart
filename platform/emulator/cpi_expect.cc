@@ -216,13 +216,13 @@ OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t,
 {
   DEREF(t, tptr, ttag);
 
-  if (def->isValidValue(t)) {
+  if (def->isValueOfDomain(t)) {
     return expectProceed(1, 1);
   } else if (isGenCtVar(t)) {
     OzCtVariable * ctvar = tagged2GenCtVar(t);
 
     // check the kind
-    if (ctvar->getDefinition()->getKind() != def->getKind())
+    if (ctvar->getDefinition()->getId() != def->getId())
       goto fail;
 
     addSpawn(def, w, tptr);
