@@ -1234,6 +1234,9 @@ CodeArea::~CodeArea(void)
     case CREATEVARIABLEY:
     case CREATEVARIABLEX:
     case ENDDEFINITION:
+    case DECONSCALLX:
+    case DECONSCALLY:
+    case DECONSCALLG:
       PC += 2;
       break;
     case INLINEMINUS1:
@@ -1251,6 +1254,9 @@ CodeArea::~CodeArea(void)
     case CALLG:
     case CALLY:
     case CALLX:
+    case CONSCALLX:
+    case CONSCALLY:
+    case CONSCALLG:
     case CALLGLOBAL:
     case GETNUMBERG:
     case GETNUMBERY:
