@@ -14,10 +14,14 @@ INSTALLATION INSTRUCTIONS FOR THE MOZART SYSTEM
 
 * Fast installation
 
+Recommendations:
+	OZHOME should not be set in your environment
+	your PATH should not include a directory in which Oz executables
+		or scripts may be found
+
 ./configure
 make
 make install
-# use make bootstrap if you have no Oz system installed yet.
 
 * Multi platform installation
 
@@ -32,6 +36,14 @@ make install
 
   --prefix=<dir>  (default: /usr/local/oz)
      where to install the system
+  --disable-wish
+     in case you have already installed the wish component of Oz
+     and prefer to leave it alone (perhaps because you don't have
+     a nice tcl/tk installation)
+  --enable-contrib[=gdbm,regex] (default: NONE)
+     also configure these contributions. they are not included by
+     default because they require other packages to be installed
+     which may not be present.
 
 * variables
 
@@ -50,15 +62,22 @@ before running configure the following variables can be set
   $oz_gmp_inc_dir
     Where to find GNU mp libraries and headers
 
+  $oz_enable_wish
+    Whether to include wish in the configuration
+
+  $oz_enable_contrib
+    Which contributions to include in the configuration
+
 * targets
 
- make [all]
-  compile the system
-   lib needs preinstalled components
-
- make bootstrap
+ make [bootstrap]
   compile the system
    creates the components in lib using the assembler version of ozbatch
+
+ make all
+  in the top level directory this is the same as make bootstrap
+  in other directories, this will typically use Oz executable that
+	have already been installed
 
  make install
   install the system under $prefix
