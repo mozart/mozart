@@ -17,9 +17,21 @@ so that gdbm stuff may be found.
 
 			    INSTANTIATION
 
-The GDBM module must be instantiated with Foreign.
+The GDBM module looks up IMPORTS.'SP'.'Foreign'.load in its IMPORTS
+argument.  Interactively, you could instantiate it as follows:
+
 declare GDBM =
- {{Load 'http://www.ps.uni-sb.de/ozhome/tools/gdbm/gdbm.ozc'} Foreign}
+ {{Load 'http://www.ps.uni-sb.de/ozhome/tools/gdbm/gdbm.ozc'}
+  m('SP':x('Foreign':Foreign))}
+
+For use by the Application module, you can declare it as follows:
+
+{Application.register 'GDBM'
+ x(src:url('http://www.ps.uni-sb.de/ozhome/tools/gdbm/gdbm.ozc')
+   args:x('SP':'SP'))}
+
+and subsequently refer to module named 'GDBM' in your application
+constructing code.
 
 			    DOCUMENTATION
 
