@@ -10,7 +10,7 @@ SGMLSRCS = \
 	cs-ozc.sgml native-celloid.sgml native-counter.sgml \
 	native-counter-obj.sgml chat.sgml \
 	conc-cheap.sgml conc-patterns.sgml app.sgml \
-	mof.sgml pickle.sgml
+	mof.sgml pickle.sgml applets.sgml servlets.sgml
 HTMLEXTRAFILES = pictures/netscape.gif apptut.gif
 CHUNKFILES = \
 	chat-server.oz chat-client.oz chat-gui.oz \
