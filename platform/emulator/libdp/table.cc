@@ -951,7 +951,7 @@ void BorrowTable::init(int beg,int end)
 
 void BorrowTable::compactify(){
   Assert(notGCMarked());
-  if(no_used / size >= TABLE_LOW_LIMIT) return;
+  if((double)no_used / (double)size >= TABLE_LOW_LIMIT) return;
   Assert(size>=DEFAULT_BORROW_TABLE_SIZE);
   if(size==DEFAULT_BORROW_TABLE_SIZE) return;
   int newsize= no_used+TABLE_BUFFER;
