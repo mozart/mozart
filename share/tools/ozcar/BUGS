@@ -22,3 +22,9 @@ Forget loescht fehlerhaft aus dem Thread-Baum, wenn Knoten kein Blatt ist.
 
 Sat Jan 11 00:00:04 MET 1997
 Dialogboxen oeffnen nicht an Mausposition
+
+Tue Jan 14 18:25:50 MET 1997
+Erkennung von "veralteter" Codearea (wenn korrespondierendes
+Source-File neueren Datums ist) klappt nicht bei vorcompiliertem Code
+(Der Compiler muesste die aktuelle Zeit beim Compilieren berechnen,
+nicht der Emulator beim Laden des Codes).

@@ -21,7 +21,8 @@ local
       feat
 	 filename
       attr
-	 CurrentLine : line(appl:undef stack:undef)
+	 CurrentLine
+	 Time
       
       meth init(parent:P file:F
 		width: Width <=SourceWindowTextSize.1
@@ -29,15 +30,21 @@ local
 	 Tk.text,tkInit(parent: P         bg: SourceTextBackground
 			font:   SmallFont bd: BorderSize
 			width:  Width     height:Height)
+	 self.filename = F
+	 CurrentLine <- line(appl:undef stack:undef)
 	 {self Load(file:F)}
       end
-      
+
       meth Load(file:F)
 	 File = {New class $ from Open.file Open.text end
 		 init(name:F flags:[read])}
       in
-	 self.filename = F
-	 {self DoLoad(File 1)}
+	 Time <- {OS.stat F}.mtime
+	 {ForAll [tk(conf state:normal)
+		  tk(delete '0.0' 'end')
+		  DoLoad(File 1)
+		  tk(conf state:disabled)] self}
+	 {File close}
       end
       
       meth DoLoad(F L)
@@ -46,9 +53,7 @@ local
 	 case Line == false then
 	    skip
 	 else
-	    {ForAll [tk(conf state:normal)
-		     tk(insert 'end' {PrintF L 4} # {FixTabs Line} # [10] q(L))
-		     tk(conf state:disabled)] self}
+	    {self tk(insert 'end' {PrintF L 4} # {FixTabs Line} # [10] q(L))}
 	    {self DoLoad(F L+1)}
 	 end
       end
@@ -56,8 +61,16 @@ local
       meth Update(What Where)
 	 CurrentLine <- {Record.adjoinAt @CurrentLine What Where}
       end
-      
+
+      meth mtime($)
+	 @Time
+      end
+	 
       meth highlight(line:L color:C what:What<=appl)
+	 case {OS.stat self.filename}.mtime > @Time then
+	    {OzcarMessage 'Reloading file ' # self.filename}
+	    SourceWindow,Load(file:self.filename)
+	 else skip end
 	 case @CurrentLine.What \= undef then
 	    Other         = case What == appl then stack else appl end
 	    NewColors     = case @CurrentLine.Other == @CurrentLine.What then
@@ -180,6 +193,14 @@ in
 	 SourceManager,Update(What E.1)
 	 {self.NoteBook toTop(E.2)}
 	 {E.1 highlight(line:L color:C what:What)}
+      end
+
+      meth isUpToDate(Time $)
+	 case @CurrentWindow.appl == undef then
+	    true
+	 else
+	    {@CurrentWindow.appl mtime($)} =< Time
+	 end
       end
       
       meth close

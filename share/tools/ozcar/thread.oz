@@ -18,22 +18,25 @@ local
       
 	 Loc  : loc( file:undef line:undef)
 	 Call : call(builtin:false name:undef args:undef)
+	 Time : 0
 	 Stack: nil
 
       meth init(T)
 	 Th <- T
       end
       
-      meth setPos(file:F line:L name:N args:A builtin:B)
+      meth setPos(file:F line:L name:N args:A builtin:B time:T)
 	 Loc  <- loc( file:F line:L)
 	 Call <- call(builtin:B name:N args:A)
+	 Time <- T
       end
-      meth getPos(file:?F line:?L name:?N args:?A builtin:?B)
+      meth getPos(file:?F line:?L name:?N args:?A builtin:?B time:?T)
 	 F = @Loc.file
 	 L = @Loc.line
 	 N = @Call.name
 	 A = @Call.args
 	 B = @Call.builtin
+	 T = @Time
       end
 
       meth isBuiltin($)
@@ -72,12 +75,14 @@ in
       
       meth readStreamMessage(M)
 	 case {Label M}
+	    
 	 of step then
 	    T          = M.thr.1
 	    I          = M.thr.2
 	    File       = M.file
 	    Line       = M.line
 	    IsBuiltin  = M.builtin
+	    Time       = M.time
 	    Name = case {Value.hasFeature M name} then M.name else nil end
 	    Args = case {Value.hasFeature M args} then M.args else nil end
 	 in
@@ -90,7 +95,7 @@ in
 		  {Atom.toString Name}.1 \= 96 then
 		  ThreadManager,step(file:File line:Line thr:T id:I
 				     name:Name args:Args
-				     builtin:IsBuiltin)
+				     builtin:IsBuiltin time:Time)
 	       else
 		  {OzcarMessage 'Skipping system procedure ' # Name}
 		  {Thread.resume T}
@@ -99,7 +104,7 @@ in
 	       {OzcarMessage InvalidThreadID}
 	    end
 	    
-	 elseof thr then
+	 [] thr then
 	    T = M.thr.1
 	    I = M.thr.2
 	    Q = case {Value.hasFeature M par} then
@@ -127,7 +132,7 @@ in
 	       end
 	    end
 	    
-	 elseof term then
+	 [] term then
 	    T = M.thr.1  %% just terminated thread
 	    I = M.thr.2  %% ...with it's id
 	    E = {Ozcar exists(T $)}
@@ -139,23 +144,24 @@ in
 	       skip
 	    end
 	    
-	 elseof susp then
-	    T = M.thr.1  %% just suspending thread
-	    I = M.thr.2  %% ...with it's id
-	    F = M.file
-	    L = M.line
-	    N = M.name
-	    A = M.args
-	    B = M.builtin
+	 [] susp then
+	    T    = M.thr.1  %% just suspending thread
+	    I    = M.thr.2  %% ...with it's id
+	    F    = M.file
+	    L    = M.line
+	    N    = M.name
+	    A    = M.args
+	    B    = M.builtin
+	    Time = M.time
 	    E = {Ozcar exists(T $)}
 	 in
 	    case E then
-	       ThreadManager,block(T I F L N A B)
+	       ThreadManager,block(T I F L N A B Time)
 	    else
 	       {OzcarMessage 'Unknown suspending thread'}
 	    end
 	    
-	 elseof cont then
+	 [] cont then
 	    T = M.thr.1  %% woken thread
 	    I = M.thr.2  %% ...with it's id
 	    E = {Ozcar exists(T $)}
@@ -174,16 +180,17 @@ in
 	 end
       end
 
-      meth block(T I F L N A B)
-	 ThreadManager,setThrPos(id:I file:F line:L
+      meth block(T I F L N A B Time)
+	 ThreadManager,setThrPos(id:I file:F line:L time:Time
 				 name:N args:A builtin:B)
 	 Gui,markNode(I blocked)
 	 case T == @currentThread then
 	    SourceManager,scrollbar(file:F line:L
 				    color:ScrollbarBlockedColor what:appl)
 	    SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
-	    Gui,printAppl(id:I name:N args:A builtin:B file:F line:L)
-	    Gui,printStack(id:I stack:{Dbg.taskstack T 25})
+	    Gui,printAppl(id:I name:N args:A builtin:B
+			  file:F line:L time:Time)
+	    Gui,printStack(id:I stack:{Dbg.taskstack T 25} top:B)
 	    Gui,status(I blocked)
 	 else skip end
       end
@@ -237,16 +244,17 @@ in
       end
 
       meth setThrPos(id:I name:N args:A<=nil builtin:B<=false
-		     file:F<=undef line:L<=0)
+		     file:F<=undef line:L<=0 time:Time<=0)
 	 T = {Dictionary.get self.ThreadDic I}
       in
-	 {T setPos(file:F line:L name:N args:A builtin:B)}
+	 {T setPos(file:F line:L name:N args:A builtin:B time:Time)}
       end
       
-      meth getThrPos(id:I file:?F line:?L name:?N args:?A builtin:?B)
+      meth getThrPos(id:I file:?F line:?L name:?N args:?A
+		     builtin:?B time:?Time)
 	 T = {Dictionary.get self.ThreadDic I}
       in
-	 {T getPos(file:F line:L name:N args:A builtin:B)}
+	 {T getPos(file:F line:L name:N args:A builtin:B time:Time)}
       end
 
       meth thrIsBuiltin(id:I builtin:?B)
@@ -263,35 +271,35 @@ in
       end
       
       meth step(file:F line:L thr:T id:I name:N args:A
-		builtin:IsBuiltin)
+		builtin:IsBuiltin time:Time)
 	 case F == '' orelse F == noDebugInfo then
 	    {OzcarMessage NoFileInfo # I}
 	    SourceManager,scrollbar(file:'' line:undef color:undef what:both)
 	    {Thread.resume @currentThread}
 	 else
+	    SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
 	    SourceManager,scrollbar(file:F line:L
 				    color:ScrollbarApplColor what:appl)
-	    Gui,printAppl(id:I name:N args:A builtin:IsBuiltin file:F line:L)
-	    Gui,printStack(id:I stack:{Dbg.taskstack T 25}
-			   top:IsBuiltin)
+	    Gui,printAppl(id:I name:N args:A builtin:IsBuiltin time:Time
+			  file:F line:L)
+	    ThreadManager,setThrPos(id:I file:F line:L time:Time
+				    name:N args:A builtin:IsBuiltin)
+	    Gui,printStack(id:I stack:{Dbg.taskstack T 25} top:IsBuiltin)
 	 end
-	 SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
-	 ThreadManager,setThrPos(id:I file:F line:L
-				 name:N args:A builtin:IsBuiltin)
       end
       
       meth switch(I)
-	 F L N A T S B
+	 F L N A T S B Time
       in
 	 case I == 1 then
 	    Gui,status(0)
 	 else
-	    ThreadManager,getThrPos(id:I file:F line:L name:N args:A builtin:B)
+	    ThreadManager,getThrPos(id:I file:F line:L name:N
+				    args:A builtin:B time:Time)
 	    ThreadManager,getThrThr(id:I thr:T state:S)
 	    currentThread <- T
 	    
 	    Gui,status(I S)
-	    Gui,printAppl(id:I name:N args:A builtin:B file:F line:L)
 	    Gui,printStack(id:I stack:{Dbg.taskstack T 25} top:B)
 	    
 	    Gui,selectNode(I)
@@ -309,6 +317,7 @@ in
 	    else skip end
 	    SourceManager,scrollbar(file:undef line:undef
 				    color:undef what:stack)
+	    Gui,printAppl(id:I name:N args:A builtin:B file:F line:L time:Time)
 	 end
       end
       
