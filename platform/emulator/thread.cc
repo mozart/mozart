@@ -78,3 +78,19 @@ void Thread::setCompMode(int newMode) {
     compMode=newMode;
   }
 }
+
+
+/*
+ * check if a thread's board is below a failed board
+ */
+Bool Thread::isBelowFailed(Board *top)
+{
+  Board *bb=getBoardFast();
+  while (bb!=top) {
+    if (bb->isFailed()) {
+      return TRUE;
+    }
+    bb=bb->getParentFast();
+  }
+  return FALSE;
+}
