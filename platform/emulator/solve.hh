@@ -67,7 +67,8 @@ public:
   Bool areNoExtSuspensions ();
   TaggedRef* getSolveVarRef () { return (&solveVar); }
   TaggedRef getSolveVar () { return (solveVar); }
-  TaggedRef getResult () { return (makeTaggedRef (&result)); }
+  TaggedRef getResult () { return result; }
+  void setResult(TaggedRef v) { result = v; }
   TaggedRef getGuidance() { return (guidance); }
   void setGuidance(TaggedRef guiTR) { guidance = guiTR; }
   void pushWaitActor (WaitActor *a);
@@ -77,12 +78,13 @@ public:
   void setBoard (Board *bb) { board = bb; }
   void setBoardToInstall (Board *bb) { boardToInstall = bb; }
   Board* getBoardToInstall () { return (boardToInstall); }
-  TaggedRef genSolved ();
-  TaggedRef genStuck ();
-  TaggedRef genEnumed (Board *newSolveBB);
-  TaggedRef genChoice (int noOfClauses);
-  TaggedRef genEnumedFail ();
-  TaggedRef genFailed ();
+  TaggedRef genSolved();
+  TaggedRef genStuck();
+  TaggedRef genEnumed(Board *newSolveBB);
+  TaggedRef genChoice(int noOfClauses);
+  TaggedRef genEnumedFail();
+  TaggedRef genFailed();
+  TaggedRef genUnstable(TaggedRef arg);
   void printDebugKP();
 
 private:
