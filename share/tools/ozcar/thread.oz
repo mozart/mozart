@@ -82,9 +82,19 @@ in
 	    Args = case {Value.hasFeature M args} then M.args else nil end
 	 in
 	    case {Thread.is T} then
-	       ThreadManager,step(file:File line:Line thr:T id:I
-				  name:Name args:Args
-				  builtin:IsBuiltin)
+	       %% &` == 96
+	       case {Cget systemProcedures} orelse
+		  Name == ''       orelse
+		  Name == '`,`'    orelse
+		  Name == '`send`' orelse
+		  {Atom.toString Name}.1 \= 96 then
+		  ThreadManager,step(file:File line:Line thr:T id:I
+				     name:Name args:Args
+				     builtin:IsBuiltin)
+	       else
+		  {OzcarMessage 'Skipping system procedure ' # Name}
+		  {Thread.resume T}
+	       end
 	    else
 	       {OzcarMessage InvalidThreadID}
 	    end
@@ -130,13 +140,16 @@ in
 	    end
 	    
 	 elseof susp then
-	    T = M.thr.1  %% just suspending thread
-	    I = M.thr.2  %% ...with it's id
+	    T    = M.thr.1  %% just suspending thread
+	    I    = M.thr.2  %% ...with it's id
+	    File = M.file
+	    Line = M.line
 	    E = {Ozcar exists(T $)}
 	 in
 	    case E then
-	       case T == @currentThread then
+	       case T == @currentThread then <-- nach ThreadManager,block
 		  Gui,status(I blocked)
+		  ThreadManager,block(T I File Line)
 	       else skip end
 	       Gui,markNode(I blocked)
 	    else
@@ -160,6 +173,16 @@ in
 	 else
 	    {OzcarMessage 'Unknown message on stream'}
 	 end
+      end
+
+      meth block(T I F L)
+	 SourceManager,scrollbar(file:F line:L
+				 color:ScrollbarApplColor what:appl)
+	 SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
+	 %Gui,printAppl(id:I name:N args:A builtin:IsBuiltin)
+	 Gui,printStack(id:I stack:{Dbg.taskstack T 25})
+	 ThreadManager,setThrPos(id:I file:F line:L
+				 name:undef args:undef builtin:false)
       end
       
       meth add(T I Q)

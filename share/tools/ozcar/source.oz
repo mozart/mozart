@@ -117,33 +117,43 @@ in
       meth Update(What Which)
 	 CurrentWindow <- {Record.adjoinAt @CurrentWindow What Which}
       end
-      
+
+      meth EraseScrollbar(What)
+	 case What == both then
+	    {ForAll [appl stack]
+	     proc{$ W}
+		case @CurrentWindow.W \= undef then
+		   {@CurrentWindow.W highlight(line:undef
+					       color:undef what:W)}
+		   SourceManager,Update(W undef)
+		else skip end
+	     end}
+	 else
+	    case @CurrentWindow.What \= undef then
+	       {@CurrentWindow.What highlight(line:undef
+					      color:undef what:What)}
+	       SourceManager,Update(What undef)
+	    else skip end
+	 end
+      end
+	 
       meth scrollbar(file:F line:L color:C what:What<=appl)
 	 %% color is redundant, should be thrown away!!!
 	 case F == undef orelse F == '' orelse F == noDebugInfo then
-	    case What == both then
-	       {ForAll [appl stack]
-		proc{$ W}
-		   case @CurrentWindow.W \= undef then
-		      {@CurrentWindow.W highlight(line:undef
-						  color:undef what:W)}
-		      SourceManager,Update(W undef)
-		   else skip end
-		end}
-	    else
-	       case @CurrentWindow.What \= undef then
-		  {@CurrentWindow.What highlight(line:undef
-						 color:undef what:What)}
-		  SourceManager,Update(What undef)
-	       else skip end
-	    end
+	    SourceManager,EraseScrollbar(What)
 	 else
-	    E = {self lookup(file:F entry:$)}
+	    %% heuristic: if F begins with '.' then it's a prelude file
+	    RealF = case {Atom.toString F}.1 \= &. then
+		       F
+		    else
+		       {VS2A {System.get home} # '/lib/' # F}
+		    end
+	    E = {self lookup(file:RealF entry:$)}
 	 in
 	    case {IsDet E} then
 	       {self ToTop(entry:E line:L color:C what:What)}
 	    else
-	       {self NewFile(file:F line:L color:C what:What)}
+	       {self NewFile(file:RealF line:L color:C what:What)}
 	    end
 	    case @WithDrawn then
 	       {Tk.send wm(deiconify self)}
