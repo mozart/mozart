@@ -31,7 +31,8 @@ import
 	       hasLabel:     HasLabel
 	       monitorArity: MonArity)
    at 'x-oz://boot/RecordC'
-
+   Space(is)
+   
 export
    Is Width
    Tell TellSize
@@ -40,6 +41,8 @@ export
 
 define
 
+   {Wait Space.is}
+   
    proc {MonitorArity R P S}
       U
    in
