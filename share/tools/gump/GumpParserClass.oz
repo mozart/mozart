@@ -118,9 +118,8 @@ in
 	 Yyerrstatus <- 0
       end
       meth clearLookahead()
-	 case @lookaheadSymbol \= 'EOF' then
+	 if @lookaheadSymbol \= 'EOF' then
 	    lookaheadSymbol <- YYEMPTY
-	 else skip
 	 end
       end
 
@@ -135,11 +134,11 @@ in
 	 % Do appropriate processing given the current state.
 	 % First try to decide what to do without reference to lookahead token:
 	 Yyn <- self.synPAct.@Yystate
-	 case @Yyn == self.synFLAG then
+	 if @Yyn == self.synFLAG then
 	    GumpParser, Yydefault()
 	 else
 	    % Not known => get a lookahead token if don't already have one:
-	    case @lookaheadSymbol == YYEMPTY then Token Value in
+	    if @lookaheadSymbol == YYEMPTY then Token Value in
 	       {self.MyScanner getToken(?Token ?Value)}
 	       lookaheadSymbol <- Token
 	       lookaheadValue <- Value
@@ -149,9 +148,9 @@ in
 	    end
 
 	    Yyn <- @Yyn + @Yychar1
-	    case @Yyn < 0 orelse @Yyn > self.synLAST then
+	    if @Yyn < 0 orelse @Yyn > self.synLAST then
 	       GumpParser, Yydefault()
-	    elsecase self.synCheck.@Yyn \= @Yychar1 then
+	    elseif self.synCheck.@Yyn \= @Yychar1 then
 	       GumpParser, Yydefault()
 	    else
 	       Yyn <- self.synTable.@Yyn
@@ -160,24 +159,22 @@ in
 	       % Positive => shift, Yyn is new state.
 	       % If new state is final state => no shift, just return success.
 	       % 0, or most negative number => error.
-	       case @Yyn == 0 orelse @Yyn == self.synFLAG then
+	       if @Yyn == 0 orelse @Yyn == self.synFLAG then
 		  GumpParser, Yyerrlab()
-	       elsecase @Yyn < 0 then
+	       elseif @Yyn < 0 then
 		  Yyn <- ~@Yyn
 		  GumpParser, Yyreduce()
-	       elsecase @Yyn == self.synFINAL then
+	       elseif @Yyn == self.synFINAL then
 		  GumpParser, accept()
 	       else   % shift the lookahead token and enter state Yyn
 		  Yyvs <- @lookaheadValue|@Yyvs
-		  case @lookaheadSymbol \= 'EOF' then
+		  if @lookaheadSymbol \= 'EOF' then
 		     lookaheadSymbol <- YYEMPTY
-		  else skip
 		  end
 
 		  % after 3 tokens shifted since error, turn off error status:
-		  case @Yyerrstatus \= 0 then
+		  if @Yyerrstatus \= 0 then
 		     Yyerrstatus <- @Yyerrstatus - 1
-		  else skip
 		  end
 
 		  Yystate <- @Yyn
@@ -189,7 +186,7 @@ in
       meth Yydefault()
 	 % do the default action for the current state
 	 Yyn <- self.synDefAct.@Yystate
-	 case @Yyn == 0 then
+	 if @Yyn == 0 then
 	    GumpParser, Yyerrlab()
 	 else
 	    GumpParser, Yyreduce()
@@ -203,7 +200,7 @@ in
 	 catch !SynUserError then
 	    UserError = true
 	 end
-	 case UserError then
+	 if UserError then
 	    GumpParser, Yyerrlab1()
 	 else
 	    Yyvs <- Yyval|NewYyvs
@@ -213,9 +210,9 @@ in
 	    % back to and the symbol number reduced to:
 	    Yyn <- self.synR1.@Yyn
 	    Yystate <- self.synPGoto.@Yyn + @Yyss.1
-	    case @Yystate < 0 orelse @Yystate > self.synLAST then
+	    if @Yystate < 0 orelse @Yystate > self.synLAST then
 	       Yystate <- self.synDefGoto.@Yyn
-	    elsecase self.synCheck.@Yystate \= @Yyss.1 then
+	    elseif self.synCheck.@Yystate \= @Yyss.1 then
 	       Yystate <- self.synDefGoto.@Yyn
 	    else
 	      Yystate <- self.synTable.@Yystate
@@ -225,14 +222,14 @@ in
       end
       meth Yyerrlab()
 	 % here on detecting an error
-	 case @Yyerrstatus == 0 then   % if not already recovering from an error
+	 if @Yyerrstatus == 0 then   % if not already recovering from an error
 	    N = self.synPAct.@Yystate in
-	    case N > self.synFLAG andthen N < self.synLAST then Expected Msg in
+	    if N > self.synFLAG andthen N < self.synLAST then Expected Msg in
 	       Expected =
-	       {ForThread case N < 0 then ~N else 0 end
+	       {ForThread if N < 0 then ~N else 0 end
 		self.synNTOKENS + self.synNNTS - 1 1
 		fun {$ In X}
-		   case {CondSelect self.synCheck X + N ~1} == X then
+		   if {CondSelect self.synCheck X + N ~1} == X then
 		      (self.synTokenNames.X)|In
 		   else In
 		   end
@@ -253,10 +250,10 @@ in
       end
       meth Yyerrlab1()
 	 % here on error raised explicitly by an action
-	 case @Yyerrstatus == 3 then
+	 if @Yyerrstatus == 3 then
 	    % just tried and failed to reuse lookahead token after an error,
 	    % discard it:
-	    case @lookaheadSymbol == 'EOF' then
+	    if @lookaheadSymbol == 'EOF' then
 	       GumpParser, abort()
 	    else
 	       lookaheadSymbol <- YYEMPTY
@@ -269,22 +266,22 @@ in
       end
       meth Yyerrhandle()
 	 Yyn <- self.synPAct.@Yystate
-	 case @Yyn == self.synFLAG then
+	 if @Yyn == self.synFLAG then
 	    GumpParser, Yyerrdefault()
 	 else
 	    Yyn <- @Yyn + YYTERROR
-	    case @Yyn < 0 orelse @Yyn > self.synLAST then
+	    if @Yyn < 0 orelse @Yyn > self.synLAST then
 	       GumpParser, Yyerrdefault()
-	    elsecase self.synCheck.@Yyn \= YYTERROR then
+	    elseif self.synCheck.@Yyn \= YYTERROR then
 	       GumpParser, Yyerrdefault()
 	    else
 	       Yyn <- self.synTable.@Yyn
-	       case @Yyn == 0 orelse @Yyn == self.synFLAG then
+	       if @Yyn == 0 orelse @Yyn == self.synFLAG then
 		  GumpParser, Yyerrdefault
-	       elsecase @Yyn < 0 then
+	       elseif @Yyn < 0 then
 		  Yyn <- ~@Yyn
 		  GumpParser, Yyreduce()
-	       elsecase @Yyn == self.synFINAL then
+	       elseif @Yyn == self.synFINAL then
 		  GumpParser, accept()
 	       else
 		  Yyvs <- @lookaheadValue|@Yyvs

@@ -27,7 +27,7 @@ local
    fun {CheckLegalFlexName X} S in
       S = {Atom.toString X}
       case S of C|Cr then
-	 case C >= &A andthen C =< &Z
+	 if C >= &A andthen C =< &Z
 	    orelse C >= &a andthen C =< &z
 	    orelse C == &_
 	 then
@@ -66,24 +66,26 @@ local
 	 {Rep logSubPhase('writing flex input file ...')}
 	 {WriteVSFile Flex FlexFile}
 	 {Rep logSubPhase('generating scanner tables ...')}
-	 case {OS.system PLATFORMDIR#'/share/gump/flex -Cem '#FlexFile} \= 0
+	 if {OS.system PLATFORMDIR#'/share/gump/flex -Cem '#FlexFile} \= 0
 	 then
 	    {Rep error(kind: 'system error'
 		       msg: 'invocation of ozflex failed')}
 	    stop
 	 else
 	    {Rep logSubPhase('compiling scanner ...')}
-	    case {OS.system
-		  'g++ -fno-rtti -O3 '#
-		  '-I'#{Property.get 'oz.home'}#'/include -I'#INCLUDEDIR#
-		  ' -c '#{MakeFileName T ".C"}#
-		  ' -o '#{MakeFileName T ".o"}} \= 0 then
+	    if {OS.system
+		'g++ -fno-rtti -O3 '#
+		'-I'#{Property.get 'oz.home'}#'/include -I'#INCLUDEDIR#
+		' -c '#{MakeFileName T ".C"}#
+		' -o '#{MakeFileName T ".o"}} \= 0
+	    then
 	       {Rep error(kind: 'system error'
 			  msg: 'invocation of g++ failed')}
 	       stop
-	    elsecase {OS.system 'ozdynld '#
-		      {MakeFileName T ".o"}#' -o '#
-		      {MakeFileName T ".dl"}#' -lc'} \= 0 then
+	    elseif {OS.system 'ozdynld '#
+		    {MakeFileName T ".o"}#' -o '#
+		    {MakeFileName T ".dl"}#' -lc'} \= 0
+	    then
 	       {Rep error(kind: 'system error'
 			  msg: 'invocation of ozdynld failed')}
 	       stop
@@ -121,7 +123,7 @@ local
       end
       meth addGrammarSymbol(Entry Rep) Symbol CurrEntry in
 	 Symbol = {Entry getSymbol($)}
-	 case {CheckLegalFlexName Symbol.1} then skip
+	 if {CheckLegalFlexName Symbol.1} then skip
 	 else
 	    {Rep error(coord: {CoordinatesOf Symbol}
 		       kind: 'scanner generator error'
@@ -137,7 +139,7 @@ local
 	    grammarSymbols <- (Symbol#Entry)|@grammarSymbols
 	    grammarSymbolsNotAnalysed <- Entry|@grammarSymbolsNotAnalysed
 	 elsecase {Entry getEntryType($)} of lexicalMode then
-	    case {CurrEntry getEntryType($)} \= lexicalMode then
+	    if {CurrEntry getEntryType($)} \= lexicalMode then
 	       {Rep error(coord: {CoordinatesOf Symbol}
 			  kind: 'scanner generator error'
 			  msg: ('grammar symbol '#
@@ -163,7 +165,8 @@ local
 	 ScannerSpecification, AnalyseGrammarSymbols(Rep)
       end
       meth generate(Globals OutFile ?Flex ?Locals ?Meth)
-	 SCs Flex0 ICs CaseClauses X in
+	 SCs Flex0 ICs CaseClauses X
+      in
 	 _#SCs#Locals =
 	 {FoldL @grammarSymbols
 	  fun {$ I#In#ASTs _#E}
@@ -200,7 +203,7 @@ local
 
       meth GetGrammarSymbol(GrammarSymbols S $)
 	 case GrammarSymbols of (T#Entry)|Rest then
-	    case {SymbolEq S T} then Entry
+	    if {SymbolEq S T} then Entry
 	    else ScannerSpecification, GetGrammarSymbol(Rest S $)
 	    end
 	 [] nil then notFound
@@ -211,30 +214,32 @@ local
 	    grammarSymbolsNotAnalysed <- nil
 	    {ForAll Entries proc {$ Entry} {Entry analyse(self Rep)} end}
 	    ScannerSpecification, AnalyseGrammarSymbols(Rep)
-	 elsecase {Rep hasSeenError($)} then skip
-	 else ModeDescendants in
-	    ModeDescendants = {NewDictionary}
-	    {ForAll @grammarSymbols
-	     proc {$ Symbol#Entry}
-		case {Entry getEntryType($)} of lexicalMode then
-		   fVar(Y _) = Symbol in
-		   {ForAll {Entry getParents($)}
-		    proc {$ fVar(X _)}
-		       {Dictionary.put ModeDescendants X
-			Y|{Dictionary.condGet ModeDescendants X nil}}
-		    end}
-		else skip
-		end
-	     end}
-	    {ForAll @grammarSymbols
-	     proc {$ _#Entry}
-		case {Entry getEntryType($)} of lexicalMode then
-		   fVar(Y _) = {Entry getSymbol($)} in
-		   {Entry
-		    setDescendants({Dictionary.condGet ModeDescendants Y nil})}
-		else skip
-		end
-	     end}
+	 else
+	    if {Rep hasSeenError($)} then skip
+	    else ModeDescendants in
+	       ModeDescendants = {NewDictionary}
+	       {ForAll @grammarSymbols
+		proc {$ Symbol#Entry}
+		   case {Entry getEntryType($)} of lexicalMode then
+		      fVar(Y _) = Symbol in
+		      {ForAll {Entry getParents($)}
+		       proc {$ fVar(X _)}
+			  {Dictionary.put ModeDescendants X
+			   Y|{Dictionary.condGet ModeDescendants X nil}}
+		       end}
+		   else skip
+		   end
+		end}
+	       {ForAll @grammarSymbols
+		proc {$ _#Entry}
+		   case {Entry getEntryType($)} of lexicalMode then
+		      fVar(Y _) = {Entry getSymbol($)} in
+		      {Entry setDescendants({Dictionary.condGet
+					     ModeDescendants Y nil})}
+		   else skip
+		   end
+		end}
+	    end
 	 end
       end
    end
@@ -327,16 +332,15 @@ local
 	 {ForAll Parents
 	  proc {$ S} GrammarSymbol in
 	     GrammarSymbol = {Globals getGrammarSymbol(S $)}
-	     case GrammarSymbol of notFound then
+	     if GrammarSymbol == notFound then
 		{Rep error(coord: {CoordinatesOf S}
 			   kind: 'scanner generator error'
 			   msg: 'undefined mode '#{SymbolToVirtualString S})}
-	     elsecase {GrammarSymbol getEntryType($)} \= lexicalMode then
+	     elseif {GrammarSymbol getEntryType($)} \= lexicalMode then
 		{Rep error(coord: {CoordinatesOf S}
 			   kind: 'scanner generator error'
 			   msg: ({SymbolToVirtualString S}#
 				 ' does not denote a lexical mode'))}
-	     else skip
 	     end
 	  end}
 	 parents <- nil
@@ -354,18 +358,19 @@ local
 
       meth MergeParents(Symbols Globals Rep)
 	 case Symbols of Symbol|Rest then
-	    case {SymbolEq Symbol @symbol} then
+	    if {SymbolEq Symbol @symbol} then
 	       {Rep error(coord: {CoordinatesOf @symbol}
 			  kind: 'scanner generator error'
 			  msg: ('cyclic inheritance for lexical mode '#
 				{SymbolToVirtualString @symbol}))}
 	       LexicalMode, MergeParents(Rest Globals Rep)
-	    elsecase {Some @parents fun {$ S} {SymbolEq S Symbol} end} then
+	    elseif {Some @parents fun {$ S} {SymbolEq S Symbol} end} then
 	       LexicalMode, MergeParents(Rest Globals Rep)
 	    else
 	       GrammarSymbol = {Globals getGrammarSymbol(Symbol $)} in
-	       case GrammarSymbol \= notFound andthen
-		    {GrammarSymbol getEntryType($)} == lexicalMode then
+	       if GrammarSymbol \= notFound andthen
+		  {GrammarSymbol getEntryType($)} == lexicalMode
+	       then
 		  Parents = {GrammarSymbol getParents($)} in
 		  parents <- Symbol|@parents
 		  LexicalMode, MergeParents({Append Parents Rest}
@@ -392,11 +397,11 @@ in
       {Globals enterMeth(Ms)}
       {ForAll Rules
        proc {$ Rule} {TransformScannerDescriptor Rule Globals Rep} end}
-      case {Rep hasSeenError($)} then fSkip(unit)
+      if {Rep hasSeenError($)} then fSkip(unit)
       else
 	 {Rep logSubPhase('analysing scanner ...')}
 	 {Globals analyse(Rep)}
-	 case {Rep hasSeenError($)} then fSkip(unit)
+	 if {Rep hasSeenError($)} then fSkip(unit)
 	 else Flex Local Locals LexMeth MakeLexer in
 	    {Rep logSubPhase('extracting lexical rules ...')}
 	    {Globals generate(Globals {MakeFileName T ".C"}

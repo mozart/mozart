@@ -47,7 +47,7 @@ local
    fun {DoOutput VS P Q}
       % P: required precedence level
       % Q: precedence level of term in VS
-      case Q > P then VS else '('#PU#VS#PO#')' end
+      if Q > P then VS else '('#PU#VS#PO#')' end
    end
 
    fun {Oz Ex P}
@@ -83,9 +83,9 @@ local
       [] fWildcard(_) then '_'
       [] fRecord(L Ts) then
 	 case L of fAtom(X _) then
-	    case X == '#' andthen {Length Ts} > 1 then
+	    if X == '#' andthen {Length Ts} > 1 then
 	       {DoOutput {LI {Map Ts fun {$ T} {Oz T 801} end} "#"} P 800}
-	    elsecase X == '|' andthen {Length Ts} == 2 then
+	    elseif X == '|' andthen {Length Ts} == 2 then
 	       {Oz Ts.1 701}#'|'#{Oz Ts.2.1 700}
 	    else
 	       {OutputOz L}#'('#PU#{LI {Map Ts OutputOz} GL}#PO#')'
@@ -99,13 +99,9 @@ local
 	 {OutputOz L}#'<<'#PU#{LI {Map Ts OutputOz} GL}#GL#PO#'>>'
       [] fColon(S T) then {Oz S P}#': '#{Oz T P}
       [] fInt(X _) then
-	 case X < 0 then '~'#~X
-	 else X
-	 end
+	 if X < 0 then '~'#~X else X end
       [] fFloat(X _) then
-	 case X < 0.0 then '~'#~X
-	 else X
-	 end
+	 if X < 0.0 then '~'#~X else X end
       [] fApply(S Ts _) then '{'#PU#{LI {Map S|Ts OutputOz} GL}#PO#'}'
       [] fObjApply(S T _) then {DoOutput {Oz S 1101}#', '#{Oz T 1100} P 1100}
       [] fProc(T Fs E ProcFlags _) then

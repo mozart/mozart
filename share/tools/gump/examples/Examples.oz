@@ -41,7 +41,7 @@ local
    MyScanner = {New LambdaScanner init()}
    proc {GetTokens} T V in
       {MyScanner getToken(?T ?V)}
-      case T == 'EOF' then
+      case T of 'EOF' then
 	 {System.showInfo 'End of file reached.'}
       else
 	 {Show T#V}
@@ -65,7 +65,7 @@ in
    {MyScanner scanFile(LambdaIn)}
    {MyParser parse(program(?Definitions ?Terms) ?Status)}
    {MyScanner close()}
-   case Status then
+   if Status then
       {Browse Definitions}
       {Browse Terms}
       {System.showInfo 'accepted'}

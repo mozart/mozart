@@ -35,7 +35,7 @@ local
 
    fun {LookupProductionTemplate Templates Key ?NewVisibles}
       case Templates of Key0#ProductionTemplate|Rest then
-	 case Key == Key0 then
+	 if Key == Key0 then
 	    NewVisibles = Rest
 	    ProductionTemplate
 	 else
@@ -50,15 +50,17 @@ local
    % Auxiliary Functions for Attributes
 
    fun {OutputAttr Attr}
-      case {IsFree Attr} then ""
-      elsecase Attr of synthesized then ' /* synthesized */'
-      [] inherited then ' /* inherited */'
+      if {IsFree Attr} then ""
+      else
+	 case Attr of synthesized then ' /* synthesized */'
+	 [] inherited then ' /* inherited */'
+	 end
       end
    end
 
    fun {FindAttribute X As ?NewAs}
       case As of (Pair=Y#Attr)|Rest then
-	 case X == Y then
+	 if X == Y then
 	    NewAs = Rest
 	    Attr
 	 else NewAsRest in
@@ -75,7 +77,7 @@ local
    end
 
    fun {AdjoinAttribute X As}
-      case {Some As fun {$ Y#_} X == Y end} then As
+      if {Some As fun {$ Y#_} X == Y end} then As
       else (X#synthesized)|As
       end
    end
@@ -90,7 +92,7 @@ local
    local
       fun {Lookup X Assocs}
 	 case Assocs of (Y#RHS)|Rest then
-	    case X == Y then RHS
+	    if X == Y then RHS
 	    else {Lookup X Rest}
 	    end
 	 [] nil then notFound
@@ -102,9 +104,11 @@ local
 	    case {Lookup X Renamings} of notFound then OzExpr
 	    elseof Y then fVar(Y C)
 	    end
-	 elsecase {IsRecord OzExpr} then
-	    {Record.map OzExpr fun {$ E} {RenameVariables E Renamings} end}
-	 else OzExpr
+	 else
+	    if {IsRecord OzExpr} then
+	       {Record.map OzExpr fun {$ E} {RenameVariables E Renamings} end}
+	    else OzExpr
+	    end
 	 end
       end
 
@@ -147,11 +151,13 @@ local
 	 {FreeVariablesOf U VsInter2 nil}
 	 {GetPatternVariablesStatement S Vs1 nil}
 	 {VarListSub Vs1 Vs0 VsHd VsTl}
-      elsecase {IsRecord OzExpression} then
-	 {Record.foldL OzExpression
-	  fun {$ In T} {FreeVariablesOf T In $} end VsHd VsTl}
       else
-	 VsHd = VsTl
+	 if {IsRecord OzExpression} then
+	    {Record.foldL OzExpression
+	     fun {$ In T} {FreeVariablesOf T In $} end VsHd VsTl}
+	 else
+	    VsHd = VsTl
+	 end
       end
    end
 
@@ -211,9 +217,9 @@ local
 	 {Entry getSymbol(?Symbol)}
 	 ParserSpecification, getGrammarSymbol(Symbol ?CurrEntry)
 	 case {Entry getEntryType($)} of terminal then
-	    case CurrEntry of notFound then
+	    if CurrEntry == notFound then
 	       grammarSymbols <- Symbol#Entry|@grammarSymbols
-	    elsecase {CurrEntry getEntryType($)} \= terminal then
+	    elseif {CurrEntry getEntryType($)} \= terminal then
 	       {Rep error(coord: {CoordinatesOf Symbol}
 			  kind: ParserGeneratorError
 			  msg: ('grammar symbol '#
@@ -239,7 +245,7 @@ local
       end
       meth getGrammarSymbol(Symbol $) Res in
 	 ParserSpecification, GetGrammarSymbol(@grammarSymbols Symbol ?Res)
-	 case Res == notFound then
+	 case Res of notFound then
 	    case Symbol of fAtom(X _) then
 	       case {Atom.toString X} of [_] then Entry in
 		  % single-character atoms correspond to literal character
@@ -259,22 +265,24 @@ local
 	    grammarSymbolsNotAnalysed <- Rest
 	    {Entry analyse(self Rep)}
 	    ParserSpecification, analyse(Rep)
-	 elsecase {Rep hasSeenError($)} then skip
 	 else
-	    {ForAll @grammarSymbols
-	     proc {$ _#Entry}
-		case {Entry getEntryType($)} of nonterminal then
-		   {Entry classifyAttributes(self Rep)}
-		else skip
-		end
-	     end}
-	    {ForAll @grammarSymbols
-	     proc {$ _#Entry}
-		case {Entry getEntryType($)} of nonterminal then
-		   {Entry completeAttributes(Rep)}
-		else skip
-		end
-	     end}
+	    if {Rep hasSeenError($)} then skip
+	    else
+	       {ForAll @grammarSymbols
+		proc {$ _#Entry}
+		   case {Entry getEntryType($)} of nonterminal then
+		      {Entry classifyAttributes(self Rep)}
+		   else skip
+		   end
+		end}
+	       {ForAll @grammarSymbols
+		proc {$ _#Entry}
+		   case {Entry getEntryType($)} of nonterminal then
+		      {Entry completeAttributes(Rep)}
+		   else skip
+		   end
+		end}
+	    end
 	 end
       end
       meth output(T $)
@@ -298,7 +306,7 @@ local
 	 lastStartToken <- I
 	 X = {VirtualString.toAtom 'startToken'#I}
 	 Symbol = fAtom(X Coord)
-	 case {Some @grammarSymbols fun {$ S#_} {SymbolEq S Symbol} end} then
+	 if {Some @grammarSymbols fun {$ S#_} {SymbolEq S Symbol} end} then
 	    ParserSpecification, generateStartToken(Coord $)
 	 else Symbol
 	 end
@@ -306,7 +314,7 @@ local
 
       meth GetGrammarSymbol(GrammarSymbols S $)
 	 case GrammarSymbols of G|Rest then T#Entry = G in
-	    case {SymbolEq S T} then Entry
+	    if {SymbolEq S T} then Entry
 	    else ParserSpecification, GetGrammarSymbol(Rest S $)
 	    end
 	 [] nil then notFound
@@ -364,12 +372,11 @@ local
 	  end @variables}
 	 {ForAllTail LocalVariables
 	  proc {$ V|Vr}
-	     case {Some Vr fun {$ V0} {SymbolEq V V0} end} then
+	     if {Some Vr fun {$ V0} {SymbolEq V V0} end} then
 		{Rep error(coord: {CoordinatesOf V}
 			   kind: ParserGeneratorError
 			   msg: ('Symbol '#{SymbolToVirtualString V}#
 				 ' multiply defined in production template'))}
-	     else skip
 	     end
 	  end}
       end
@@ -400,7 +407,7 @@ local
 	 elseof (Sym2=fAtom(_ _))#fRecord(fAtom(Assoc APos) [fInt(Prec IPos)])
 	 then
 	    GrammarSymbol, init(Sym2)
-	    case Prec > 0 then
+	    if Prec > 0 then
 	       case Assoc of leftAssoc then assoc <- leftAssoc#Prec
 	       [] rightAssoc then assoc <- rightAssoc#Prec
 	       [] nonAssoc then assoc <- nonAssoc#Prec
@@ -463,7 +470,7 @@ local
       end
       meth addParameter(Parameter Rep)
 	 case Parameter of fDollar(P) then
-	    case @dollarIndex \= ~1 then
+	    if @dollarIndex \= ~1 then
 	       {Rep error(coord: P kind: ParserGeneratorError
 			  msg: ('multiple nesting markers in formal '#
 				'parameters'))}
@@ -474,10 +481,11 @@ local
 	       length <- @length + 1
 	    end
 	 [] fVar(X P) then
-	    case {Some {Dictionary.entries @formalParameters}
-		  fun {$ _#(P#_#_)}
-		     case P of fVar(Y _) then X == Y else false end
-		  end} then
+	    if {Some {Dictionary.entries @formalParameters}
+		fun {$ _#(P#_#_)}
+		   case P of fVar(Y _) then X == Y else false end
+		end}
+	    then
 	       {Rep error(coord: P kind: ParserGeneratorError
 			  msg: ({SymbolToVirtualString Parameter}#
 				' multiply contained in formal parameters'))}
@@ -503,7 +511,7 @@ local
 	  fun {$ Ps I} V#A#_ = {Dictionary.get Formals I} in (V#A)|Ps end nil}
       end
       meth output($)
-	 case @length == 0 then ""
+	 if @length == 0 then ""
 	 else Formals = @formalParameters Parameter AttrType in
 	    Parameter#AttrType#_ = {Dictionary.get Formals 0}
 	    {ForThread 1 @length - 1 1
@@ -516,10 +524,10 @@ local
       end
       meth setAttributeType(N X P Rep) Parameter AttrType P0 in
 	 Parameter#AttrType#P0 = {Dictionary.get @formalParameters N}
-	 case {IsFree P0} then P0 = P else skip end
-	 case {IsFree AttrType} orelse {IsFree X} then
+	 if {IsFree P0} then P0 = P end
+	 if {IsFree AttrType} orelse {IsFree X} then
 	    AttrType = X
-	 elsecase AttrType \= X then Items in
+	 elseif AttrType \= X then Items in
 	    Items = case AttrType of inherited then
 		       ['this is an inherited use' P0
 			'this is a synthesized use' P]
@@ -532,15 +540,12 @@ local
 		       msg: ('conflicting attribute types of formal '#
 			     'parameter '#{SymbolToVirtualString Parameter})
 		       items: Items)}
-	 else skip
 	 end
       end
       meth completeAttributes(Rep) Formals = @formalParameters in
 	 {For 0 @length - 1 1
 	  proc {$ I} _#AttrType#_ = {Dictionary.get Formals I} in
-	     case {IsFree AttrType} then AttrType = synthesized
-	     else skip
-	     end
+	     if {IsFree AttrType} then AttrType = synthesized end
 	  end}
       end
    end
@@ -584,8 +589,9 @@ local
 	 end
       end
       meth analyse(Globals Rep) Expected Vs TemplI SeqEx NewEx in
-	 Expected =
-	 case {@formalParameterList hasDollar($)} then term else expr end
+	 Expected = if {@formalParameterList hasDollar($)} then term
+		    else expr
+		    end
 	 Vs = {FoldL {@formalParameterList getParameters($)}
 	       fun {$ Vs P}
 		  case P of (V=fVar(_ _))#_ then V|Vs else Vs end
@@ -604,7 +610,7 @@ local
 	 As = {FoldL {@formalParameterList getParameters($)}
 	       fun {$ In P#Attr}
 		  case P of fVar(X _) then
-		     case {IsFree Attr} orelse Attr == synthesized then
+		     if {IsFree Attr} orelse Attr == synthesized then
 			(X#Attr)|In
 		     else In
 		     end
@@ -654,13 +660,17 @@ local
 
    class SynExpression
       meth synCompareResult(Result Expected Rep OzTerm)
-	 case Result == Expected then skip
-	 elsecase Expected of term then
-	    {Rep error(coord: {CoordinatesOf OzTerm} kind: ParserGeneratorError
-		       msg: 'statement at expression position')}
-	 [] expr then
-	    {Rep error(coord: {CoordinatesOf OzTerm} kind: ParserGeneratorError
-		       msg: 'expression at statement position')}
+	 if Result == Expected then skip
+	 else
+	    case Expected of term then
+	       {Rep error(coord: {CoordinatesOf OzTerm}
+			  kind: ParserGeneratorError
+			  msg: 'statement at expression position')}
+	    [] expr then
+	       {Rep error(coord: {CoordinatesOf OzTerm}
+			  kind: ParserGeneratorError
+			  msg: 'expression at statement position')}
+	    end
 	 end
       end
       meth getPatternVariables($)
@@ -696,7 +706,7 @@ local
       end
       meth assignTo(OzTerm Rep) DollarIndex in
 	 DollarIndex = {@actualParameterList getDollarIndex($)}
-	 case DollarIndex > ~1 then Parameter in
+	 if DollarIndex > ~1 then Parameter in
 	    Parameter = {New SynActualParameter init(OzTerm)}
 	    {@actualParameterList replaceParameter(DollarIndex Parameter)}
 	 else
@@ -718,13 +728,14 @@ local
 				kind: ParserGeneratorError
 				msg: ('unknown grammar symbol '#
 				      {SymbolToVirtualString Parameter}))}
-		  elsecase {Entry getEntryType($)} \= terminal then
-		     {Rep error(coord: {CoordinatesOf Parameter}
-				kind: ParserGeneratorError
-				msg: ('precedence token '#
-				      {SymbolToVirtualString Parameter}#
-				      ' must be a terminal'))}
-		  else skip
+		  else
+		     if {Entry getEntryType($)} \= terminal then
+			{Rep error(coord: {CoordinatesOf Parameter}
+				   kind: ParserGeneratorError
+				   msg: ('precedence token '#
+					 {SymbolToVirtualString Parameter}#
+					 ' must be a terminal'))}
+		     end
 		  end
 	       else
 		  {Rep error(coord: {CoordinatesOf Parameter}
@@ -751,7 +762,7 @@ local
 	       Parameter = {@actualParameterList getParameter(0 $)}
 	       NewEx =
 	       {{Ex copy(nil $)} simplify(Globals ExTemplI Rep term $)}
-	       case {Parameter isDollar($)} then
+	       if {Parameter isDollar($)} then
 		  SynExpression, synCompareResult(term Expected Rep @symbol)
 	       else Value in
 		  SynExpression, synCompareResult(expr Expected Rep @symbol)
@@ -793,14 +804,16 @@ local
 	    case {@actualParameterList getLength($)} of 1 then
 	       CheckInherited Parameter in
 	       proc {CheckInherited Attr P}
-		  case {IsFree Attr} then
+		  if {IsFree Attr} then
 		     Attr = synthesized
-		  elsecase Attr of inherited then
-		     {Rep error(coord: P kind: ParserGeneratorError
-				msg: ('inherited attribute illegal for '#
-				      'terminal'#
-				      {SymbolToVirtualString @symbol}))}
-		  [] synthesized then skip
+		  else
+		     case Attr of inherited then
+			{Rep error(coord: P kind: ParserGeneratorError
+				   msg: ('inherited attribute illegal for '#
+					 'terminal'#
+					 {SymbolToVirtualString @symbol}))}
+		     [] synthesized then skip
+		     end
 		  end
 	       end
 	       Parameter = {@actualParameterList getParameter(0 $)}
@@ -822,7 +835,7 @@ local
 	    Synthesized =
 	    {FoldL As
 	     fun {$ Xs X#Attr}
-		case {IsFree Attr} orelse Attr == inherited then Xs
+		if {IsFree Attr} orelse Attr == inherited then Xs
 		else X|Xs
 		end
 	     end nil}
@@ -834,22 +847,24 @@ local
 		elseof V then Value = V
 		end
 		case Value of fVar(X P) then
-		   case {Member X Illegal} then
+		   if {Member X Illegal} then
 		      {Rep error(coord: P kind: ParserGeneratorError
 				 msg: 'variable synthesized more than once')}
 		   else Attr NewAs in
 		      Attr = {FindAttribute X As ?NewAs}
-		      case {IsFree Attr} then
+		      if {IsFree Attr} then
 			 {Entry setAttributeType(I Attr P Rep)}
-			 case {IsFree Attr} then As#Illegal
+			 if {IsFree Attr} then As#Illegal
 			 else NewAs#Illegal
 			 end
-		      elsecase Attr of synthesized then
-			 {Entry setAttributeType(I synthesized P Rep)}
-			 NewAs#(X|Illegal)
-		      [] inherited then
-			 {Entry setAttributeType(I inherited P Rep)}
-			 NewAs#Illegal
+		      else
+			 case Attr of synthesized then
+			    {Entry setAttributeType(I synthesized P Rep)}
+			    NewAs#(X|Illegal)
+			 [] inherited then
+			    {Entry setAttributeType(I inherited P Rep)}
+			    NewAs#Illegal
+			 end
 		      end
 		   end
 		[] fDollar(P) then
@@ -859,11 +874,10 @@ local
 		   % complex term is an inherited attribute computation
 		   {ForAll {FreeVariablesOf Value $ nil}
 		    proc {$ fVar(X P)}
-		       case {Member X Synthesized} then
+		       if {Member X Synthesized} then
 			  {Rep error(coord: P kind: ParserGeneratorError
 				     msg: ('illegal use of non-allocated '#
 					   'variable'))}
-		       else skip
 		       end
 		    end}
 		   {Entry setAttributeType(I inherited SymbolPos Rep)}
@@ -875,13 +889,12 @@ local
       meth generate(Globals DataFlow PTG) Actuals DollarIndex Entry in
 	 Actuals = @actualParameterList
 	 DollarIndex = {Actuals getDollarIndex($)}
-	 case DollarIndex > ~1 then Variable Parameter in
+	 if DollarIndex > ~1 then Variable Parameter in
 	    % return parameter with nesting marker:
 	    Variable = fVar({Fresh} unit)
 	    Parameter = {New SynActualParameter init(Variable)}
 	    {Actuals replaceParameter(DollarIndex Parameter)}
 	    {DataFlow setAction(Variable)}
-	 else skip
 	 end
 	 Entry = {Globals getGrammarSymbol(@symbol $)}
 	 case @symbol of fAtom('prec' _) then
@@ -910,7 +923,8 @@ local
 	    {DataFlow appendSymbol(@symbol Vs)}
 	 [] terminal then Vs in
 	    Vs = case {Actuals getLength($)} of 0 then [fWildcard(unit)]
-		 [] 1 then Actual = {{Actuals getParameter(0 $)} getValue($)} in
+		 [] 1 then Actual in
+		    {{Actuals getParameter(0 $)} getValue(Actual)}
 		    case Actual of fEscape(V _) then [V]
 		    else [Actual]
 		    end
@@ -945,9 +959,9 @@ local
 	    SynExpression, synCompareResult(expr Expected Rep @symbol)
 	 [] 1 then Parameter in
 	    Parameter = {@actualParameterList getParameter(0 $)}
-	    case {Parameter isDollar($)} then
+	    if {Parameter isDollar($)} then
 	       SynExpression, synCompareResult(term Expected Rep @symbol)
-	    elsecase {Parameter isVariable($)} then
+	    elseif {Parameter isVariable($)} then
 	       SynExpression, synCompareResult(expr Expected Rep @symbol)
 	    else
 	       {Rep error(coord: {CoordinatesOf {Parameter getValue($)}}
@@ -966,15 +980,14 @@ local
       meth SimplifyNonterminalAppl(Entry Globals Rep Expected $)
 	 Length DollarIndex in
 	 Length = {@actualParameterList getLength($)}
-	 case Length \= {Entry getParameterListLength($)} then
+	 if Length \= {Entry getParameterListLength($)} then
 	    {Rep error(coord: {CoordinatesOf @symbol}
 		       kind: ParserGeneratorError
 		       msg: ('wrong number of parameters in application of '#
 			     {SymbolToVirtualString @symbol}))}
-	 else skip
 	 end
 	 DollarIndex = {@actualParameterList getDollarIndex($)}
-	 case DollarIndex \= ~1 then
+	 if DollarIndex \= ~1 then
 	    SynExpression, synCompareResult(term Expected Rep @symbol)
 	 else
 	    SynExpression, synCompareResult(expr Expected Rep @symbol)
@@ -1077,7 +1090,7 @@ local
 	    Alt = case Results of [Ex] then {Ex getType($)} == synAlternative
 		  else false
 		  end
-	    case Alt then Ex = Results.1 in
+	    if Alt then Ex = Results.1 in
 	       {Ex enterLocals(@localVariables)}
 	       Ex
 	    else
@@ -1156,7 +1169,7 @@ local
       end
       meth MergeActions(Sequence $)
 	 case Sequence of Ex1|(SequenceRest=Ex2|_) then
-	    case {Ex1 getType($)} == synAction
+	    if {Ex1 getType($)} == synAction
 	       andthen {Ex2 getType($)} == synAction
 	    then
 	       {Ex2 prependExpression({Ex1 getExpression($)})}
@@ -1168,7 +1181,7 @@ local
       end
       meth Normalize(Globals Sequence Rep Vs Expected $)
 	 case Sequence of Ex|ExRest then ExType = {Ex getType($)} in
-	    case ExType == synAction andthen ExRest \= nil
+	    if ExType == synAction andthen ExRest \= nil
 	       orelse ExType == synAlternative
 	    then Implicits in
 	       Implicits = {Ex getUsedLocals(Vs $)}
@@ -1430,8 +1443,8 @@ local
       end
       meth addParameter(OzTerm Rep) ActualParameter in
 	 ActualParameter = {New SynActualParameter init(OzTerm)}
-	 case {ActualParameter isDollar($)} then
-	    case @dollarIndex == ~1 then
+	 if {ActualParameter isDollar($)} then
+	    if @dollarIndex == ~1 then
 	       {Dictionary.put @actualParameters @length ActualParameter}
 	       dollarIndex <- @length
 	       length <- @length + 1
@@ -1453,10 +1466,10 @@ local
 	 {Dictionary.get @actualParameters Index}
       end
       meth replaceParameter(Index NewActualParameter)
-	 case @dollarIndex == Index then
+	 case @dollarIndex == Index of true then
 	    {Dictionary.put @actualParameters @dollarIndex NewActualParameter}
 	    dollarIndex <- ~1
-	 elsecase Index >= 0 andthen Index < @length then
+	 elsecase Index >= 0 andthen Index < @length of true then
 	    {Dictionary.put @actualParameters Index NewActualParameter}
 	 end
       end
@@ -1466,14 +1479,14 @@ local
       meth getPatternVariables($) Actuals = @actualParameters in
 	 {ForThread 0 @length - 1 1
 	  fun {$ In I} ActualParameter = {Dictionary.get Actuals I} in
-	     case {ActualParameter isPatternVariable($)} then
+	     if {ActualParameter isPatternVariable($)} then
 		{ActualParameter getValue($)}|In
 	     else In
 	     end
 	  end nil}
       end
       meth output($)
-	 case @length == 0 then ""
+	 if @length == 0 then ""
 	 else Actuals = @actualParameters in
 	    '('#PU#
 	    {ForThread 1 @length - 1 1
@@ -1583,8 +1596,7 @@ local
 	    end
 	    case {CondSelect Tables0 conflicts unit} of unit then skip
 	    elseof SR#RR then
-	       case SR == {Globals getFlag(expect $)} andthen RR == 0 then skip
-	       else
+	       if SR \= {Globals getFlag(expect $)} orelse RR \= 0 then
 		  {Rep warn(kind: ParserGeneratorWarning coord: P
 			    msg: 'parser specification contains conflicts'
 			    items: [hint(l: 'Shift/reduce' m: SR)
@@ -1605,7 +1617,7 @@ local
 
       meth ConvertSymbol(Symbol ?X)
 	 X = {SymbolToAtom Symbol}
-	 case {Member X @symbols} then skip
+	 if {Member X @symbols} then skip
 	 else symbols <- X|@symbols
 	 end
       end
@@ -1673,20 +1685,21 @@ local
 			   {Map Dss.1   % replace all unneeded variables by `_'
 			    fun {$ D}
 			       case D of fVar(_ _) then
-				  case {Some ActionVs
-					fun {$ V} {SymbolEq D V} end} then D
+				  if {Some ActionVs
+				      fun {$ V} {SymbolEq D V} end}
+				  then D
 				  else fWildcard(unit)
 				  end
 			       [] fWildcard(_) then D
 			       end
 			    end ?TmpDs}
-			   case {All TmpDs   % replace `_#_#...#_' by `_'
-				 fun {$ D} {Label D} == fWildcard end}
-			   then NewDs = fWildcard(unit)
-			   else NewDs = {MakeSemanticValue TmpDs}
-			   end
+			   NewDs = if {All TmpDs   % replace `_#_#...#_' by `_'
+				       fun {$ D} {Label D} == fWildcard end}
+				   then fWildcard(unit)
+				   else {MakeSemanticValue TmpDs}
+				   end
 			   ExtractRest = fRecord(fAtom('|' unit) [NewDs In])
-			   case Dss == NewSt then
+			   if Dss == NewSt then
 			      fEq(fEscape(NewStackX unit)
 				  {ShortenStackRest ExtractRest} unit)
 			   else ExtractRest
@@ -1699,7 +1712,7 @@ local
 	 Ns = @notAllocated
 	 Ls = {FoldL ActionVs
 	       fun {$ Ls V=fVar(X _)}
-		  case {Member X Ns} then fAnd(V Ls) else Ls end
+		  if {Member X Ns} then fAnd(V Ls) else Ls end
 	       end Extract}
 	 case @action of none then
 	    Action = fLocal(Ls {MakeSemanticValue @returnValues} unit)
@@ -1740,9 +1753,8 @@ local
       meth add(Ts Rep) OldPs in
 	 OldPs = @productionTemplates
 	 ProductionTemplatesClass, Add(Ts Rep)
-	 case {Rep hasSeenError($)} then
+	 if {Rep hasSeenError($)} then
 	    productionTemplates <- OldPs
-	 else skip
 	 end
       end
       meth Add(Ts Rep)
@@ -1834,27 +1846,26 @@ in
        end}
       {Rep logSubPhase('analysing and expanding grammar ...')}
       {Globals analyse(Rep)}
-      case {Rep hasSeenError($)} then fSkip(unit)
+      if {Rep hasSeenError($)} then fSkip(unit)
       else PTG F SynMeth Tables in
 	 {Rep logSubPhase('extracting BNF ...')}
 	 {Globals generate(?PTG)}
-	 case {PTG hasStartSymbols($)} then skip
+	 if {PTG hasStartSymbols($)} then skip
 	 else
 	    {Rep error(coord: P kind: ParserGeneratorError
 		       msg: 'grammar has no start symbol')}
 	 end
-	 case {Globals getFlag(outputSimplified $)} then
+	 if {Globals getFlag(outputSimplified $)} then
 	    {WriteVSFile
 	     {FormatStringToVirtualString {Globals output(T $)}}
 	     {MakeFileName T ".simplified"}}
-	 else skip
 	 end
-	 F = case {Globals getFlag(verbose $)} then
+	 F = if {Globals getFlag(verbose $)} then
 		{MakeFileName T ".output"}
 	     else ''
 	     end
 	 {PTG generateTables(Globals F P Rep ?SynMeth ?Tables)}
-	 case {Rep hasSeenError($)} then fSkip(unit)
+	 if {Rep hasSeenError($)} then fSkip(unit)
 	 else Descrs Meths in
 	    {Rep logSubPhase('building class definition ...')}
 	    {Globals
