@@ -1128,7 +1128,7 @@ fi
     PLATFORM=`$OZPLATFORM`
     
 
-cp $SRCDIR/methods.ozf.orig $BUILDTOP/contrib/micq/methods.ozf
+cp $SRCDIR/manager.oz $BUILDTOP/contrib/micq/manager.oz
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure

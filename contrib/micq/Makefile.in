@@ -65,7 +65,7 @@ newfriendsgui.ozf: newfriendsgui.oz $(BMETH)
 sysadm.ozf: sysadm.oz $(BMETH) addapplicationgui.ozf editapplicationgui.ozf
 	$(COMPILE) -c $< -o $@
 client.ozf : client.oz $(BMETH) clientgui.ozf newfriendsgui.ozf \
-	defaultsettings.ozf dialoggui.ozf mobility.ozf
+	defaultsettings.ozf dialoggui.ozf mobility.ozf 
 	$(COMPILE) -c $< -o $@
 clientgui.ozf : clientgui.oz $(BMETH) messagedisplay.ozf manager.ozf \
 	defaultsettings.ozf popup.ozf messagegui.ozf editaccount.ozf \
