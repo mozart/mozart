@@ -1,6 +1,6 @@
 template <class SERVICE, 
   class FDVAR, class FDM, class P_PFDVAR, class PFDVAR, class ENGINE>
-class FilterTasksOverlap : public OZ_StatefulFilter {
+class FilterTasksOverlap : public OZ_PersistentFilter {
 private:
   P_PFDVAR _cl1_t1, _cl1_t2, _cl1_o;
   P_PFDVAR _cl2_t1, _cl2_t2, _cl2_o;
