@@ -130,7 +130,7 @@ sub c_name_to_oz_variable($) {
     my @substrings;
     my $string;
 
-    $name =~ s/^ozg[dt]k_//s;
+    $name =~ s/^oz(gtk|gdk|gnome)_//s;
     @substrings = split /_/, $name;
     foreach $string (@substrings) {
         $string = ucfirst $string;
@@ -334,7 +334,7 @@ sub write_oz_bi_definition {
   print "OZ_BI_define ($C_FUN_PREFIX$meth, $arity_in, $arity_out) {\n";
 
   #
-  # Arguments
+  # function arguments
   #
   print "\t" . clean_type($out) . " ret;\n" if $out; # Standard C return value
 
@@ -442,7 +442,6 @@ sub gen_c_wrappers {
       process_spec;
   }
 }
-
 
 sub usage() {
     print <<EOF;
