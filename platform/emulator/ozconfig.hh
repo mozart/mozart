@@ -36,6 +36,8 @@ class ConfigData {
 public:
   int printDepth;
   int printWidth;
+  int printFloatPrecision;
+  int printScientificFloats;
   int printVerbose;
 
   int errorPrintDepth; 

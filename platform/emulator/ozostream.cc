@@ -31,6 +31,7 @@
 
 #include <errno.h>
 
+#include "ozconfig.hh"
 #include "base.hh"
 #include "ozostream.hh"
 #include "os.hh"
@@ -81,7 +82,10 @@ ozostream &ozostream::operator << (long i)
 ozostream &ozostream::operator << (double d)    
 {
   char buf[100];
-  sprintf(buf,"%g",d);
+  if (ozconf.printScientificFloats)
+    sprintf(buf,"%2$.*1$e",ozconf.printFloatPrecision,d);
+  else
+    sprintf(buf,"%2$.*1$g",ozconf.printFloatPrecision,d);
   return *this << buf;
 }
 
