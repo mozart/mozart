@@ -352,8 +352,11 @@ enabled for that level.
 <P>
 Both functions raise a type error exception if their arguments
 do not have the correct type.
-A temporary limitation of the current release is that
-one cannot install <<global>> handlers.
+A limitation of the current release is that
+handlers cannot be installed at the <<global>> level.
+Another limitation of the current release is that
+handlers installed on variables always retry
+the operation after they return.
 
 <P>A handler <<HandlerProc>> is a three-argument
 procedure that is called as <<{HandlerProc E FS OP}>>.
@@ -582,12 +585,13 @@ is undefined.
 <item>If an exception is raised or a handler is invoked
 for an object, then the attempted object operation cannot
 be retried.
-<item>Handlers cannot be installed at the <<global>> level,
+<item>A handler cannot be installed at the <<global>> level,
 i.e., the call <<{Fault.install _ global _ _}>> is undefined.
 If an attempt is made to install a <<global>> handler,
 then a <<notImplemented>> exception is given.
-<ITEM>The operation <<Probe>> is not available to users.
-
+<item>A handler installed on a variable will retry
+the operation after it returns.
+<item>The operation <<Probe>> is not available to users.
 </LIST>
 
 </CHAPTER>
