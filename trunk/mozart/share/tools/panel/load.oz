@@ -124,12 +124,12 @@ in
       meth DisplayLoads(Y1s Y2s X1 X2 Cs Ss T)
 	 case Y1s of nil then skip
 	 [] Y1|Y1r then
-	    !Y2s = Y2|Y2r
-	    !Cs  = C|Cr
-	    !Ss  = S|Sr
-	    CS   = ~@CurScale
-	    Y3   = case Y1r of nil then 0.0 [] Y|_ then Y end
-	    Y4   = case Y2r of nil then 0.0 [] Y|_ then Y end
+	    Y2|Y2r = !Y2s
+	    C|Cr   = !Cs 
+	    S|Sr   = !Ss
+	    CS     = ~@CurScale
+	    Y3     = case Y1r of nil then 0.0 [] Y|_ then Y end
+	    Y4     = case Y2r of nil then 0.0 [] Y|_ then Y end
 	 in
 	    Tk.canvas,tk(crea polygon
 			 X1 CS*Y3 X1 CS*Y1 X2 CS*Y2 X2 CS*Y4
