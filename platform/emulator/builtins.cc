@@ -1515,34 +1515,36 @@ loop:
       if (oz_isRef(pair))
 	return pair;
 
-      if (!oz_isPair2(pair)) return 0;
+      if (!oz_isPair2(pair))
+	return 0;
 
       fea = tagged2SRecord(pair)->getArg(0);
     } else {
       fea = oz_head(list);
     }
+
     fea = oz_safeDeref(fea);
-    
     if (oz_isRef(fea))
       return fea;
 
-    if (!oz_isFeature(fea)) return 0;
+    if (!oz_isFeature(fea))
+      return 0;
 
     LTuple *lt=new LTuple();
     *next=makeTaggedLTuple(lt);
     lt->setHead(fea);
     next=lt->getRefTail();
-    
+
     list = oz_safeDeref(oz_tail(list));
-    
     if (oz_isRef(list))
       return list;
 
-    if (list==old) return 0;
-    if (updateFlag) {
-      old=oz_deref(oz_tail(old));
-    }
+    // cycle check:
+    if (list == old) return 0;
+    if (updateFlag)
+      old = oz_deref(oz_tail(old));
     updateFlag=1-updateFlag;
+
     goto loop;
   }
 
@@ -1588,7 +1590,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
       goto typeError0;
     }
   }
-  
+
   if (oz_isNil(arity)) { // adjoin nothing
     switch (tagged2ltag(t0)) {
     case LTAG_SRECORD0: case LTAG_SRECORD1:
@@ -1851,7 +1853,8 @@ OZ_BI_define(BItestRecord,3,1)
     OZ_RETURN_BOOL(oz_eq(val,patLabel));
 
   // compute the pattern's arity:
-  TaggedRef sortedPatArityList = sortlist(duplist(patArityList,len),len);
+  TaggedRef sortedPatArityList =
+    sortlist(duplist(packlist(patArityList),len),len);
   if (oz_fastlength(sortedPatArityList) != len) {
     // duplicate features are not allowed
     return oz_raise(E_ERROR,E_KERNEL,"recordPattern",2,patLabel,patArityList);
