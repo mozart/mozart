@@ -89,6 +89,9 @@ everything into the *Oz Emulator* buffer.")
   "If non-nil, choose alternate key bindings.
 If nil, use default key bindings.")
 
+(defvar oz-read-emulator-output nil
+  "Non-nil iff output currently comes from the emulator.")
+
 (defvar oz-gdb-autostart t
   "*If non-nil, start emulator immediately in gdb mode.
 If nil, you have the possibility to first set breakpoints and only
@@ -1830,7 +1833,7 @@ and is used for fontification.")
       "thread" "exHandler" "createCond" "nextClause" "shallowGuard"
       "shallowTest[12]" "testConst" "testNumber" "testBool" "switchOnTerm"
       "getVariable" "getVarVar" "getVoid" "lockThread" "getSelf" "det"
-      "weakDet" "debugInfo" "globalVarname" "localVarname") "\\|")
+      "weakDet" "debugInfo" "globalVarname" "localVarname" "clearY") "\\|")
    "\\)("))
 
 (defconst ozm-instr-matcher-2
@@ -2009,9 +2012,6 @@ and is used for fontification.")
   "Regex that matches when emulator output begins.")
 (defvar oz-emulator-output-end   (char-to-string 6)
   "Regex that matches when compiler output begins.")
-
-(defvar oz-read-emulator-output nil
-  "Non-nil iff output currently comes from the emulator.")
 
 (defun oz-have-to-switch-outbuffer (string)
   "Return the column from which output has to go into the other buffer.
