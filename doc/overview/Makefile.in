@@ -15,7 +15,7 @@ HTMLFILES = \
 FILES = $(HTMLFILES:%=%.html) \
         ozdoc.css page.gif
 
-all: contrib.html
+all:
 quick:
 clean:
 veryclean:
