@@ -972,7 +972,7 @@ char *ostmpnam(char *s)
 {
   char *prefix = getenv("TMPDIR");
   if (prefix==NULL)
-    prefix = "C:";
+    prefix = "C:\\TEMP";
 
   static char *tn = NULL;
   static int tnlen = 100;
