@@ -343,7 +343,6 @@ in
 		{self tk(crea line (X-1)*SFX-OS Y*SFY
 			 (X-1)*SFX-OS (Y-DY+1)*SFY-5
 			 width:2 capstyle:projecting fill:TrunkColor)}
-
 	     else
 		{self tk(crea line (X-1)*SFX-OS Y*SFY
 			 (X-1)*SFX-OS (Y-DY+1)*SFY-SFY
