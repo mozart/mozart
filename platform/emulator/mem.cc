@@ -262,10 +262,6 @@ public:
   }
 
   //
-  // Yields&reserves a largest address that would accept a page of
-  // 'reqSize' bytes without interferences with other pages.  The
-  // (double-linked) list of pages is sorted (in the 'getNext()'
-  // direction) in decreasing addresses;
   caddr_t reservePlace(size_t reqSize) {
     Assert(reqSize >= HEAPBLOCKSIZE);
     Assert(reqSize%HEAPBLOCKSIZE == 0);

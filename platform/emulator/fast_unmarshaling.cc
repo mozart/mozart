@@ -30,7 +30,6 @@
 
 #undef buildValue_ROBUST
 #undef buildValueRemember_ROBUST
-#undef buildRepetition_ROBUST 
 #undef buildList_ROBUST  
 #undef buildListRemember_ROBUST
 #undef buildDictionary_ROBUST   
@@ -42,7 +41,6 @@
 
 #define buildValue_ROBUST                 buildValue
 #define buildValueRemember_ROBUST         buildValueRemember
-#define buildRepetition_ROBUST            buildRepetition
 #define buildList_ROBUST                  buildList
 #define buildListRemember_ROBUST          buildListRemember
 #define buildDictionary_ROBUST            buildDictionary

@@ -383,7 +383,7 @@ ProgramCounter unmarshalOzValue(Builder *b, ProgramCounter pc, CodeArea *code)
     b->getOzValue(putOzValueCA, loc);
     retPC = CodeArea::allocateWord(pc);
   } else {
-    b->discardOzValueCA();
+    b->discardOzValue();
     retPC = 0;
   }
   return (retPC);
@@ -426,7 +426,8 @@ ProgramCounter unmarshalGReg(ProgramCounter pc, MsgBuffer *bs)
 //
 // A builtin in a code area is stored not as an 'OzTerm' but as an
 // Builtin* (while in the stream it appears as an 'OzTerm'):
-static void putBuiltinCA(void *arg, OZ_Term value) {
+static 
+void putBuiltinCA(void *arg, OZ_Term value) {
   CodeAreaLocation *loc = (CodeAreaLocation *) arg;
   //
   Assert(oz_isBuiltin(value));
@@ -442,7 +443,7 @@ ProgramCounter unmarshalBuiltin(Builder *b, ProgramCounter pc)
     b->getOzValue(putBuiltinCA, loc);
     return (CodeArea::allocateWord(pc));
   } else {
-    b->discardOzValueCA();
+    b->discardOzValue();
     return ((ProgramCounter) 0);
   }
 }
@@ -500,8 +501,7 @@ ProgramCounter unmarshalLocation(ProgramCounter PC,MsgBuffer *bs)
 #endif
 
 //
-// Gets a *complete* arity list (thus, must be used with 'Builder::
-// getCompleteOzValue()') and puts 'SRecordArity';
+// Gets a (complete) arity list and puts 'SRecordArity';
 static void putRealRecordArityCA(void *arg, OZ_Term value) {
   CodeAreaLocation *loc = (CodeAreaLocation *) arg;
 
@@ -525,7 +525,7 @@ ProgramCounter unmarshalRecordArity(Builder *b,
   if (pc) {
     if (at == RECORDARITY) {
       CodeAreaLocation *loc = new CodeAreaLocation(pc);
-      b->getCompleteOzValue(putRealRecordArityCA, loc);
+      b->getOzValue(putRealRecordArityCA, loc);
       return (CodeArea::allocateWord(pc));
     } else {
       Assert(at == TUPLEWIDTH);
@@ -534,7 +534,7 @@ ProgramCounter unmarshalRecordArity(Builder *b,
     }
   } else {
     if (at == RECORDARITY)
-      b->discardOzValueCA();
+      b->discardOzValue();
     else
       skipNumber(bs);
     return ((ProgramCounter) 0);
@@ -670,22 +670,22 @@ ProgramCounter unmarshalPredId(Builder *b, ProgramCounter pc,
 
   } else {
     //
-    b->discardOzValueCA();	// name;
+    b->discardOzValue();	// name;
     //
     RecordArityType at = unmarshalRecordArityType(bs);
     if (at == RECORDARITY) {
-      b->discardOzValueCA();	// arity list;
+      b->discardOzValue();	// arity list;
     } else {
       Assert(at == TUPLEWIDTH);
       skipNumber(bs);
     }
     //
-    b->discardOzValueCA();	// file;
+    b->discardOzValue();	// file;
     //
     skipNumber(bs);		// line & column;
     skipNumber(bs);
     //
-    b->discardOzValueCA();	// flags list;
+    b->discardOzValue();	// flags list;
     //
     skipNumber(bs);		// maxX;
 
@@ -775,11 +775,11 @@ ProgramCounter unmarshalCallMethodInfo(Builder *b,
     //
     return (CodeArea::allocateWord(pc));
   } else {
-    b->discardOzValueCA();	// name;
+    b->discardOzValue();	// name;
     //
     RecordArityType at = unmarshalRecordArityType(bs);
     if (at == RECORDARITY)
-      b->discardOzValueCA();
+      b->discardOzValue();
     else
       skipNumber(bs);
 
@@ -942,22 +942,22 @@ ProgramCounter unmarshalHashTableRef(Builder *b, ProgramCounter pc,
       switch (termTag) {
       case RECORDTAG:
 	{
-	  b->discardOzValueCA();
+	  b->discardOzValue();
 	  //
 	  RecordArityType at = unmarshalRecordArityType(bs);
 	  if (at == RECORDARITY)
-	    b->discardOzValueCA();
+	    b->discardOzValue();
 	  else
 	    skipNumber(bs);
 	  break;
 	}
 
       case ATOMTAG:
-	b->discardOzValueCA();
+	b->discardOzValue();
 	break;
 
       case NUMBERTAG:
-	b->discardOzValueCA();
+	b->discardOzValue();
 	break;
 
       default: Assert(0); break;
@@ -1164,7 +1164,7 @@ ProgramCounter unmarshalRecordArityRobust(Builder *b, ProgramCounter pc,
   if (pc) {
     if (at == RECORDARITY) {
       CodeAreaLocation *loc = new CodeAreaLocation(pc);
-      b->getCompleteOzValue(putRealRecordArityCA, loc);
+      b->getOzValue(putRealRecordArityCA, loc);
       return (CodeArea::allocateWord(pc));
     } else {
       int e;
@@ -1174,7 +1174,7 @@ ProgramCounter unmarshalRecordArityRobust(Builder *b, ProgramCounter pc,
     }
   } else {
     if (at == RECORDARITY)
-      b->discardOzValueCA();
+      b->discardOzValue();
     else
       skipNumber(bs);
     return ((ProgramCounter) 0);
@@ -1222,22 +1222,22 @@ ProgramCounter unmarshalPredIdRobust(Builder *b, ProgramCounter pc,
 
   } else {
     //
-    b->discardOzValueCA();	// name;
+    b->discardOzValue();	// name;
     //
     RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
     if (at == RECORDARITY) {
-      b->discardOzValueCA();	// arity list;
+      b->discardOzValue();	// arity list;
     } else {
       Assert(at == TUPLEWIDTH);
       skipNumber(bs);
     }
     //
-    b->discardOzValueCA();	// file;
+    b->discardOzValue();	// file;
     //
     skipNumber(bs);		// line & column;
     skipNumber(bs);
     //
-    b->discardOzValueCA();	// flags list;
+    b->discardOzValue();	// flags list;
     //
     skipNumber(bs);		// maxX;
 
@@ -1275,11 +1275,11 @@ ProgramCounter unmarshalCallMethodInfoRobust(Builder *b, ProgramCounter pc,
     *error = e1 || e2 || e3;
     return (CodeArea::allocateWord(pc));
   } else {
-    b->discardOzValueCA();	// name;
+    b->discardOzValue();	// name;
     //
     RecordArityType at = unmarshalRecordArityTypeRobust(bs, &e2);
     if (at == RECORDARITY)
-      b->discardOzValueCA();
+      b->discardOzValue();
     else
       skipNumber(bs);
 
@@ -1369,23 +1369,23 @@ ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
       switch (termTag) {
       case RECORDTAG:
 	{
-	  b->discardOzValueCA();
+	  b->discardOzValue();
 	  //
 	  RecordArityType at = unmarshalRecordArityTypeRobust(bs, &e2);
 	  e1 = e1 || e2;
 	  if (at == RECORDARITY)
-	    b->discardOzValueCA();
+	    b->discardOzValue();
 	  else
 	    skipNumber(bs);
 	  break;
 	}
 
       case ATOMTAG:
-	b->discardOzValueCA();
+	b->discardOzValue();
 	break;
 
       case NUMBERTAG:
-	b->discardOzValueCA();
+	b->discardOzValue();
 	break;
 
       default: e1 = OK; break;

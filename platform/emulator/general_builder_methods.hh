@@ -51,9 +51,13 @@ void buildValueRemember_ROBUST(OZ_Term value, int n) {
 }
 
 //
-void buildRepetition_ROBUST(int n) {
-  OZ_Term value = get(n);
-  buildValue_ROBUST(value);
+// Process 'intermediate' tasks: nowadays it is abstracted away,
+// since we have to be eager with processing them 'cause of
+// cross-references!
+void processSync() {
+  GetBTFrame(frame);
+  GetBTTaskType(frame, type);
+  buildValueOutline_ROBUST(0, frame, type); // there is no value;
 }
 
 //

@@ -200,6 +200,7 @@ public:
   virtual Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
   virtual Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
   virtual Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
+  virtual void processSync();
 };
 
 //
