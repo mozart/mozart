@@ -202,7 +202,7 @@ PRINT(STuple)
   int i;
 
   tagged2Stream(getLabel(),stream,depth,offset);
-  if ( depth <= 0 ) {
+  if ( depth <= 1 ) {
     stream << "(...)";
   } else {
     stream << "(";
@@ -235,7 +235,7 @@ PRINT(SRecord)
     break;
   }
 
-  if (depth <= 0) {
+  if (depth <= 1) {
     stream << "(...)";
   } else if (type == R_RECORD || type == R_CHUNK) {
     stream << "(";
@@ -258,7 +258,7 @@ PRINT(SRecord)
 
 PRINT(LTuple)
 {
-  if ( depth <= 0 ) {
+  if ( depth <= 1 ) {
     stream << " ... ";
   } else {
     TaggedRef headd = getHead();
@@ -477,7 +477,7 @@ PRINT(SuspList){
 
 
 static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
-			      int depth = 0,int offset = 0)
+			      int depth = 1,int offset = 0)
 {
   if (ref == makeTaggedNULL()) {
     stream << "*** NULL TERM ***" << endl;
@@ -836,7 +836,7 @@ PRINTLONG(STuple)
 	 << indent(offset) << "Label: ";
   tagged2StreamLong(label,stream,depth,offset);
   stream << endl;
-  if ( depth <= 0 ) {
+  if ( depth <= 1 ) {
     stream << indent(offset) <<  "Args: ...";
   } else {
     for (i = 0; i < getSize (); i++) {
@@ -853,7 +853,7 @@ PRINTLONG(LTuple)
 {
   stream << indent(offset) << "List @" << this << endl;
 
-  if ( depth <= 0 ) {
+  if ( depth <= 1 ) {
     stream << indent(offset) << "Args: ...\n";
   } else {
     stream << indent(offset) << "Head:\n";
@@ -942,7 +942,7 @@ PRINTLONG(SRecord)
     break;
   }
 
-  if (depth < 0) {
+  if (depth <= 1) {
     stream << indent(offset) << "Args: ...\n";
   } else {
     stream << indent(offset) << "Args:\n";
@@ -1055,14 +1055,14 @@ void Board::printTree()
   Actor *aa;
   int off=0;
   while (bb!=am.rootBoard) {
-    bb->print(cout,0,off);
+    bb->print(cout,1,off);
     cout << endl;
     if (bb->isCommitted()) {
       bb=bb->u.board;
     } else {
       off++;
       aa = bb->u.actor;
-      aa->print(cout,0,off);
+      aa->print(cout,1,off);
       cout << endl;
       off++;
       bb = aa->getBoard();
