@@ -61,27 +61,32 @@ local
 	    Err  = 'Failed to '
 	    AcSet  = {New Tk.action
 		      tkInit(parent: self
-			     action: proc{$}
-					Ok = {Debug.breakpointAt
-					      self.filename L true}
-				     in
-					{Ozcar rawStatus(case Ok then
-							    'B'#Br#FL
-							 else
-							    Err#Set#Br#FL
-							 end)}
-				     end)}
+			     action:
+				proc{$}
+				   Ok = {Debug.breakpointAt
+					 self.filename L true}
+				in
+				   case Ok then
+				      {Ozcar rawStatus('B'#Br#FL)}
+				      {self tk(tag conf q(L)
+					       font:SmallBoldFont)}
+				   else
+				      {Ozcar rawStatus(Err#Set#Br#FL)}
+				   end
+				end)}
 	    AcDelete = {New Tk.action
 			tkInit(parent: self
 			       action: proc{$}
 					  Ok = {Debug.breakpointAt
 						self.filename L false}
 				       in
-					  {Ozcar rawStatus(case Ok then
-							      D1#Br#FL
-							   else
-							      Err#D2#Br#FL
-							   end)}
+					  case Ok then
+					     {Ozcar rawStatus(D1#Br#FL)}
+					     {self tk(tag conf q(L)
+						   font:SmallFont)}
+					  else
+					     {Ozcar rawStatus(Err#D2#Br#FL)}
+					  end
 				       end)}
 	 in
 	    {ForAll [tk(insert 'end' {PrintF L 4} # {FixTabs Line} # NL q(L))
@@ -147,8 +152,6 @@ in
 	 {Tk.batch [pack(self.NoteBook expand:yes fill:both)
 		    wm(iconname   self SourceWindowIcon)
 		    wm(iconbitmap self BitMap)
-		    wm(geometry   self SourceWindowGeometry)
-		    wm(resizable  self false false)
 		   ]}
       end
       
@@ -202,7 +205,10 @@ in
 	       {self NewFile(file:RealF line:L color:C what:What)}
 	    end
 	    case @WithDrawn then
-	       {Tk.send wm(deiconify self)}
+	       {Tk.batch [wm(geometry  self SourceWindowGeometry)
+			  wm(resizable self false false)
+			  wm(deiconify self)
+			 ]}
 	       WithDrawn <- false
 	    else skip end
 	 end
