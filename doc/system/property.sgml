@@ -120,6 +120,92 @@
 
   </Subsection>
 
+  <Subsection class=unnumbered id="section.property.dp">  
+    <Title/Distribution: <<dp>>/
+
+    <P>
+      <Table id="table.prop.dp">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<version>>/
+          <Td/no/
+          <Td/string/
+          <Td/The distribution version. Only ozengines with the same version can communicate./
+        </Tr>
+        <Tr>
+          <Td/<<probeInterval>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/How often probes are run in milliseconds./
+        </Tr>
+        <Tr>
+          <Td/<<probeTimeout>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Time before a non responded ping defines temp in milliseconds./
+        </Tr>
+<!--
+        <Tr>
+          <Td/<<isprobing>>/
+          <Td/yes/
+          <Td/Bool/
+          <Td/Probing on or off./
+        </Tr>
+-->
+        <Tr>
+          <Td/<<tcpHardLimit>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Maximum number of simultaneous tcp connections./
+        </Tr>
+        <Tr>
+          <Td/<<tcpWeakLimit>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Number of simultaneous tcp connections when stable. The 
+	  difference between tcpHardLimit and tcpWeakLimit is used for 
+	  accepts. If they are set equal, no further accepts will be made 
+	  until some connection has been closed./
+        </Tr>
+        <Tr>
+          <Td/<<retryTimeFloor>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Least time to wait before retrying a lost connection./
+        </Tr>
+        <Tr>
+          <Td/<<retryTimeCeiling>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Longest time to wait before retrying a lost connection./
+        </Tr>
+        <Tr>
+          <Td/<<retryTimeFactor>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Factor determining actual to wait before retrying a lost connection./
+        </Tr>
+        <Tr>
+          <Td/<<flowBufferSize>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Experimental property for flowcontrol./
+        </Tr>
+        <Tr>
+          <Td/<<flowBufferTime>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Experimental property for flowcontrol./
+        </Tr>
+      </Table>
+    </P>
+    <P>
+       Some of these properties affect running connections and some affect 
+       only new ones. Running: tcp*Limit. New: probe*, 
+       retryTime*.
+    </P>
+
+  </Subsection>
 
   <Subsection class=unnumbered id="section.property.errors">  
     <Title/Printing Errors: <<errors>>/

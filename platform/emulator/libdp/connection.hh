@@ -40,7 +40,7 @@ void handback(ComObj *comObj, TransObj *transObj);
 // it was waiting for.
 void comObjDone(ComObj *comObj);
 
-void changeMaxTCPCacheImpl();
+void changeTCPLimitImpl();
 
 // Used by dpMiscModule to set parameters such as what transport layer to use
 void setIPAddress__(int adr);

@@ -118,6 +118,8 @@
 
     <Meta name=latex.table.spec arg1="table.prop.application"
 	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.dp"
+	  arg2="lllp{0.6\linewidth}">
     <Meta name=latex.table.spec arg1="table.prop.errors"
 	  arg2="lllp{0.6\linewidth}">
     <Meta name=latex.table.spec arg1="table.prop.fd"
@@ -226,6 +228,7 @@
 
     <Meta name="html.split"       value="chapter.property">
     <Meta name="html.split"       value="section.property.application">  
+    <Meta name="html.split"       value="section.property.dp">  
     <Meta name="html.split"       value="section.property.errors">  
     <Meta name="html.split"       value="section.property.fd">  
     <Meta name="html.split"       value="section.property.gc">  
