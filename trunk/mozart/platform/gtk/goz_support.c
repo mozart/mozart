@@ -100,6 +100,11 @@ OZ_BI_define (ozgtk_signal_emit_by_name, 2, 0)
  * Until Thorsten has his own backend we need these functions
  *****************************************************************************/
 
+/*
+  Just easy cut&paste
+  These functions will be removed anyway when Thorsten does his backend
+*/
+
 OZ_BI_define (ozgtk_initialize_signal_port_sml, 1, 0)
 {
   OZ_declareTerm (0, port);
@@ -108,6 +113,36 @@ OZ_BI_define (ozgtk_initialize_signal_port_sml, 1, 0)
   return OZ_ENTAILED;
 } OZ_BI_end
 
+void
+signal_marshal (GtkObject * object,
+		gpointer    oz_id,  /* This pointer holds an guint */
+		guint       n_args,
+		GtkArg *    args)
+{
+  OZ_send (signal_port_sml, OZ_int ((guint) oz_id));
+}
+
+OZ_BI_define (ozgtk_signal_connect_sml, 3, 1)
+{
+  /*
+    The callback function will allways be NULL,
+    we only use our marshaller
+   */
+  guint id;
+  GOZ_DECLARE_GTKOBJECT (0, object);
+  OZ_declareTerm (1, _name); /* No strings for signals but atoms */
+  gchar * name = (gchar *) OZ_atomToC(_name);
+  OZ_declareInt (2, oz_id);
+  id = gtk_signal_connect_full (GTK_OBJECT (object),
+                                name,
+                                NULL,
+                                signal_marshal_sml,
+                                (gpointer) oz_id,
+                                NULL, /* TODO: add a destroy notify function */
+                                FALSE, /* TODO: verify if defaults are correct */
+                                FALSE);
+  OZ_RETURN_INT (id);
+} OZ_BI_end
 
 /*****************************************************************************
  * Convertions
