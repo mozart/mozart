@@ -981,33 +981,33 @@ do
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
 echo "configure:984: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_GZIP'+set}'`\" = set"; then
+if eval "test \"`echo '$''{'ac_cv_prog_THEGZIP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  if test -n "$GZIP"; then
-  ac_cv_prog_GZIP="$GZIP" # Let the user override the test.
+  if test -n "$THEGZIP"; then
+  ac_cv_prog_THEGZIP="$THEGZIP" # Let the user override the test.
 else
   IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
   for ac_dir in $PATH; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
-      ac_cv_prog_GZIP="$ac_prog"
+      ac_cv_prog_THEGZIP="$ac_prog"
       break
     fi
   done
   IFS="$ac_save_ifs"
 fi
 fi
-GZIP="$ac_cv_prog_GZIP"
-if test -n "$GZIP"; then
-  echo "$ac_t""$GZIP" 1>&6
+THEGZIP="$ac_cv_prog_THEGZIP"
+if test -n "$THEGZIP"; then
+  echo "$ac_t""$THEGZIP" 1>&6
 else
   echo "$ac_t""no" 1>&6
 fi
 
-test -n "$GZIP" && break
+test -n "$THEGZIP" && break
 done
-test -n "$GZIP" || GZIP="gzip"
+test -n "$THEGZIP" || THEGZIP="gzip"
 
 for ac_prog in emacs xemacs
 do
@@ -1421,7 +1421,7 @@ s%@MSWIN@%$MSWIN%g
 s%@LN_S@%$LN_S%g
 s%@M4@%$M4%g
 s%@PERL@%$PERL%g
-s%@GZIP@%$GZIP%g
+s%@THEGZIP@%$THEGZIP%g
 s%@THEEMACS@%$THEEMACS%g
 s%@OZPLATFORM@%$OZPLATFORM%g
 s%@OZC@%$OZC%g

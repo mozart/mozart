@@ -77,7 +77,7 @@ AC_PROG_LN_S
 
 AC_CHECK_PROGS(M4, gm4 m4, m4)
 AC_CHECK_PROGS(PERL, perl, perl)
-AC_CHECK_PROGS(GZIP, gzip, gzip)
+AC_CHECK_PROGS(THEGZIP, gzip, gzip)
 AC_CHECK_PROGS(THEEMACS, emacs xemacs, emacs)
 
 OZ_PATH_PROG(OZPLATFORM, ozplatform)
