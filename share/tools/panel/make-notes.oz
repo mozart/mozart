@@ -29,7 +29,7 @@ local
 		       bd:                 Border
 		       relief:             groove
 		       highlightthickness: 0)
-	       ,tk(crea rectangle ~2 ~2 SquareSize+2 SquareSize+2
+	 Square,tk(crea rectangle ~2 ~2 SquareSize+2 SquareSize+2
 		   fill:C stipple:S)
       end
    end
@@ -114,8 +114,8 @@ local
 			 action:             self # noop
 			 width:              8
 			 showvalue:          true)
-	         ,tk(set S)
-	         ,tkAction(action:A args:[int])
+	 Tk.scale,tk(set S)
+	 Tk.scale,tkAction(action:A args:[int])
 	 Saved <- S
       end
       meth set(N)
@@ -178,7 +178,7 @@ local
 	 Tk.entry,tkInit(parent: P
 			 bg:     EnterColor
 			 width:  LabelWidth)
-	         ,tkBind(event:  '<Return>'
+	 Tk.entry,tkBind(event:  '<Return>'
 			 action: self # take)
 	 self.Action = A
 	 self.Top    = T
@@ -197,7 +197,7 @@ local
 	 case N==@Save then skip else
 	    Save <- N
 	    Tk.entry,tk(delete 0 'end')
-	            ,tk(insert 0 N)
+	    Tk.entry,tk(insert 0 N)
 	 end
       end
    end

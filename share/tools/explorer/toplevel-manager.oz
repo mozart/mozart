@@ -110,7 +110,7 @@ local
 			  background:         BackColor
 			  bd:                 Border
 			  highlightthickness: 0)
-	          ,tkBind(event:  '<Configure>'
+	 Tk.canvas,tkBind(event:  '<Configure>'
 			  action: self # Resized
 			  args:   [float(h) float(w)]
 			  append: true)
@@ -161,7 +161,7 @@ local
       in 
 	 Tk.canvas,tk(xview moveto
 		      ({IntToFloat X}*Scale - Left - @width/2.0)/ (Right-Left))
-	          ,tk(yview moveto
+	 Tk.canvas,tk(yview moveto
 		      ({IntToFloat Y}*Scale - @height/2.0)/Bottom)
       end
 

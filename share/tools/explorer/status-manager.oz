@@ -141,8 +141,8 @@ local
 	    IsPackedBlocked <- false 
 	 else skip end
 	 Status,update
-	       ,start
-	       ,setBAB(false)
+	 Status,start
+	 Status,setBAB(false)
 	 {self.ChooseImage clear}
       end
 

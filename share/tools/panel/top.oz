@@ -15,7 +15,7 @@ local
 	 self.options = O
       end
       meth toTop
-	 self,update(nosample)
+	 {self update(nosample)}
       end
    end
 	 
@@ -311,8 +311,8 @@ in
 				color:   TimeColors.copy
 				stipple: TimeStipple.copy)
 			   time(text:    'Propagation:'
-				color:   TimeColors.prop
-				stipple: TimeStipple.prop)
+				color:   TimeColors.'prop'
+				stipple: TimeStipple.'prop')
 			   time(text:    'Load:'
 				color:   TimeColors.load
 				stipple: TimeStipple.load)]
@@ -563,7 +563,7 @@ in
 	 {EventFrame tkBind(event:'<Leave>'
 			    action:self # leave)}
 	 PanelTop,tkWM(deiconify)
-	         ,update(@DelayStamp)
+	 PanelTop,update(@DelayStamp)
       end
 
       meth update(Stamp)
@@ -634,7 +634,7 @@ in
 	    MouseInside <- true
 	    case @RequireMouse then
 	       PanelTop,stop
-		       ,delay
+	       PanelTop,delay
 	    else skip
 	    end
 	 end

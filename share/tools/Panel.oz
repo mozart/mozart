@@ -9,7 +9,7 @@ declare Panel in
 
 local
 
-   \insert panel/main.oz
+   \insert ~/Oz/lib/panel/main.oz
    
 in
 

@@ -97,13 +97,13 @@ in
 	 else
 	    %% Move: Top, Current, and stat are always possible
 	    MenuManager,normal([move([top cur]) nodes(stat)])
-	               ,state({CurNode back($)}\=false move(back))
+	    MenuManager,state({CurNode back($)}\=false move(back))
 	    %% Move: Previous Solution, Next Solution
-	               ,state({CurNode leftMost($)}\=CurNode move(leftMost))
-	               ,state({CurNode rightMost($)}\=CurNode move(rightMost))
+	    MenuManager,state({CurNode leftMost($)}\=CurNode move(leftMost))
+	    MenuManager,state({CurNode rightMost($)}\=CurNode move(rightMost))
 	    case {@root hasSolutions($)} then
 	       MenuManager,state({CurNode nextSol($)}\=false move(nextSol))
-	                  ,state({CurNode prevSol($)}\=false move(prevSol))
+	       MenuManager,state({CurNode prevSol($)}\=false move(prevSol))
 	    else
 	       MenuManager,disable(move([prevSol nextSol]))
 	    end
@@ -113,23 +113,23 @@ in
 	    else
 	       MenuManager,state({CurNode isNextPossible($)}
 				 search([next all]))
-	                  ,state({CurNode isStepPossible($)} search(step))
+	       MenuManager,state({CurNode isStepPossible($)} search(step))
 	    end
 	    %% Nodes
 	    MenuManager,state({CurNode isHidable($)} hide(toggle))
 	    case {CurNode isHidden($)} then
 	       MenuManager,normal(hide([all butfailed]))
-	                  ,disable([nodes([info cmp selCmp deselCmp])
+	       MenuManager,disable([nodes([info cmp selCmp deselCmp])
 				    hide(failed)])
 	    else
 	       MenuManager,normal(nodes(info))
-	                  ,state(@cmpNode==false nodes(selCmp))
-	                  ,state(@cmpNode\=false nodes([deselCmp cmp]))
-	                  ,state({CurNode isUnhidable($)}     hide(all))
-	                  ,state({CurNode isFailedHidable($)} hide(failed))
-	                  ,state({CurNode isButFailedUnhidable($)}
+	       MenuManager,state(@cmpNode==false nodes(selCmp))
+	       MenuManager,state(@cmpNode\=false nodes([deselCmp cmp]))
+	       MenuManager,state({CurNode isUnhidable($)}     hide(all))
+	       MenuManager,state({CurNode isFailedHidable($)} hide(failed))
+	       MenuManager,state({CurNode isButFailedUnhidable($)}
 				 hide(butfailed))
-	                  ,state(CurNode.kind==choose orelse
+	       MenuManager,state(CurNode.kind==choose orelse
 				 CurNode.kind==succeeded
 				 nodes(stat))
 	    end
@@ -191,7 +191,8 @@ in
 
       meth prepare
 	 StatusManager,stop
-	 Manager,Layout,setCursor(@root)
+	 Manager,Layout
+	 Manager,setCursor(@root)
 	 ToplevelManager,configurePointer(idle)
       end
       
@@ -233,7 +234,7 @@ in
       
       meth startSearch($ <= _)
 	 MenuManager,busy
-	            ,normal(explorer([halt break]))
+	 MenuManager,normal(explorer([halt break]))
 	 ToplevelManager,configurePointer(searching)
 	 StatusManager,start($)
       end
@@ -254,7 +255,7 @@ in
 	    StatusManager,stop
 	    ToplevelManager,hideCursor
 	    Manager,LayoutAfterSearch
-	           ,setCursor({TryCursor getOverHidden(TryCursor $)})
+	    Manager,setCursor({TryCursor getOverHidden(TryCursor $)})
 	    MenuManager,disable(explorer(halt))
 	    Manager,idle
 	 end
@@ -273,7 +274,7 @@ in
       
       meth all
 	 Manager,startSearch
-	        ,DoAll({Dictionary.get self.options.drawing update})
+	 Manager,DoAll({Dictionary.get self.options.drawing update})
       end
 
       meth DoAll(NoSol)
@@ -291,9 +292,9 @@ in
 	    case NoSol==1 then
 	       StatusManager,stop
 	       Manager,hideCursor
-	              ,LayoutAfterSearch
+	       Manager,LayoutAfterSearch
 	       StatusManager,unbreak
-	                    ,startTime
+	       StatusManager,startTime
 	       Manager,DoAll({Dictionary.get self.options.drawing update})
 	    else Manager,DoAll(NoSol-1)
 	    end
@@ -305,7 +306,7 @@ in
 	 CurNode = @curNode
       in
 	 Manager,startSearch(_)
-	        ,stopSearch({CurNode
+	 Manager,stopSearch({CurNode
 			     step(Manager,getPrevSol($)
 				  {Dictionary.get self.options.search
 				   information} $)})
@@ -313,13 +314,13 @@ in
 
       meth nodes(ToDo)
 	 MenuManager,busy
-	            ,normal(explorer(break))
+	 MenuManager,normal(explorer(break))
 	 StatusManager,clearBreak
 	 Manager,hideCursor
 	 {@curNode ToDo}
 	 Manager,Layout
-	        ,setCursor(@curNode false)
-	        ,idle
+	 Manager,setCursor(@curNode false)
+	 Manager,idle
       end
       
       meth stat
@@ -348,12 +349,12 @@ in
       
       meth nodesByXY(What X Y)
 	 Manager,setCursor(ToplevelManager,findByXY(X Y $) false)
-	        ,nodes(What)
+	 Manager,nodes(What)
       end
       
       meth doByXY(What X Y)
 	 Manager,setCursor(ToplevelManager,findByXY(X Y $) false)
-	        ,What
+	 Manager,What
       end
       
       meth selInfo(X Y)
@@ -384,7 +385,7 @@ in
 	       thread {Handler Number {Cast Info} ?CloseAction} end
 	    end
 	    Manager,setCursor(CurNode)
-	           ,idle
+	    Manager,idle
 	 end
       end
 
@@ -394,7 +395,7 @@ in
 	 cmpNode <- CurNode
 	 Manager,getNumber(CurNode _)
 	 MenuManager,disable(nodes(selCmp))
-	            ,normal(nodes(deselCmp))
+	 MenuManager,normal(nodes(deselCmp))
 	 Manager,setCursor(CurNode)
       end
 
@@ -433,7 +434,7 @@ in
 	       end
 	    end
 	    Manager,setCursor(CurNode)
-	           ,idle
+	    Manager,idle
 	 end
       end	    
 
@@ -463,7 +464,7 @@ in
 	 MenuManager,busy
 	 DialogManager,guiOptions(What)
 	 Manager,updateAfterOption
-	        ,idle
+	 Manager,idle
 	 case @curNode\=false then
 	    Manager,setCursor(@curNode false)
 	 else skip

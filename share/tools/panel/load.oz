@@ -81,8 +81,8 @@ in
 			  highlightthickness: 0
 			  xscrollincrement:   1
 			  yscrollincrement:   1)
-	          ,tk(yview scroll ~Height-Border units)
-	          ,tk(xview scroll ~LeftWidth     units)
+	 Tk.canvas,tk(yview scroll ~Height-Border units)
+	 Tk.canvas,tk(xview scroll ~LeftWidth     units)
 	 LeftTag      <- {New Tk.canvasTag tkInit(parent: self)}
 	 RightTag     <- {New Tk.canvasTag tkInit(parent: self)}
 	 self.BothTag   =  {New Tk.canvasTag tkInit(parent: self)} 
@@ -102,7 +102,7 @@ in
 		      outline: {TclGetConf self bg}
 		      fill:    {TclGetConf self bg}
 		      tags:    self.CoverTag)
-	          ,tk(crea rectangle 0 0 LoadWidth ~Height)
+	 Tk.canvas,tk(crea rectangle 0 0 LoadWidth ~Height)
 	 Load,DrawLabel(5 ~ Height div 5 Limit / 5.0)
       end
 
@@ -117,7 +117,7 @@ in
 		 text: N*{FloatToInt Y}#' '#self.Dimension
 		 anchor: e
 		 tags:   self.TextTag)
-	     ,tk(raise self.TextTag)
+	 Load,tk(raise self.TextTag)
 	 case N>0 then Load,DrawLabel(N-1 D Y) else skip end
       end
       
@@ -135,11 +135,11 @@ in
 			 X1 CS*Y3 X1 CS*Y1 X2 CS*Y2 X2 CS*Y4
 			 fill: C stipple: S
 			 tags: q(T self.BothTag))
-	             ,tk(crea line
+	    Tk.canvas,tk(crea line
 			 X1 CS*Y1 X2 CS*Y2
 			 tags: q(T self.BothTag))
 	    Load,tk(lower self.BothTag self.CoverTag)
-	        ,DisplayLoads(Y1r Y2r X1 X2 Cr Sr T)
+	    Load,DisplayLoads(Y1r Y2r X1 X2 Cr Sr T)
 	 end
       end
 
