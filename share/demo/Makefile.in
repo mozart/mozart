@@ -30,81 +30,71 @@ LINK            = $(OZL) $(OZLFLAGS) -z $(COMPRESSLEVEL)
 # The list of demos
 #
 
-CONSTRAINTS = \
-        JobShop Animated-queens
-
-CONCURRENT = \
-        Bounce Trucks Transport Lift
-
-DISTRIBUTED = \
+APPLETNAMES = \
+        JobShop AnimatedQueens \
+        Bounce Trucks Transport Lift \
         Board
 
-all::
+APPLETS = \
+        $(APPLETNAMES:%=%.oza)
 
-install:: $(OZDEMO)
+DEMOAPPLETS = \
+        $(APPLETS:%=$(OZDEMO)/%)
+
+
+all:: $(APPLETS)
+
+#
+# Applet installation
+#
+
+install:: $(OZDEMO) $(DEMOAPPLETS)
 
 $(OZDEMO):
         $(INSTALL_DIR) $@
 
+$(OZDEMO)/%.oza: %.oza
+        $(INSTALL_FILE) $< $@
 
 
 #
-# Compiling the applets
+# Applet compilation
 #
-
-CONSTRAINTAPPLETS  = $(CONSTRAINTS:%=%.oza)
-CONCURRENTAPPLETS  = $(CONCURRENT:%=%.oza)
-DISTRIBUTEDAPPLETS = $(DISTRIBUTED:%=%.oza)
-
-APPLETS = \
-        $(CONSTRAINTAPPLETS) \
-        $(CONCURRENTAPPLETS) \
-        $(DISTRIBUTEDAPPLETS)
 
 all:: $(APPLETS)
 
-%.oza: constraints/%.oz
+%.oza: %.oz
+        $(ZCOMPILE) $< -o $@
+
+%.oza: %.ozf
         $(COMPILE) $< -o $@
-%.oza: concurrent/%.oz
-        $(COMPILE) $< -o $@
-%.oza: distributed/%.oz
-        $(COMPILE) $< -o $@
-
-JOBSHOP = \
-        Compiler Tools TaskBoard Scheduler JobShop Examples TaskBoard
-
-JOBSHOPSRC = \
-        $(JOBSHOP:%=constraints/job-shop/%.oz)
-
-%.ozf: constraints/job-shop/%.oz
-        $(COMPILE) -b $(SRCDIR)/ $< -o $@
-
-Scheduler.ozf Tools.ozf JobShop.ozf TaskBoard.ozf: Configure.ozf
-JobShop.ozf: Examples.ozf
-
-JobShop.oza: JobShop.ozf Examples.ozf Scheduler.ozf Configure.ozf \
-        Compiler.ozf TaskBoard.ozf Tools.ozf
-        $(LINK) JobShop.ozf -o $@
 
 
+# JobShop application
+JobShop/%.ozf: JobShop/%.oz
+        $(COMPILE) -b $(SRCDIR)/JobShop/ $< -o $@
+
+JOBSHOP1 = \
+        Configure Examples
+JOBSHOP2 = \
+        JobShop Scheduler Compiler TaskBoard Tools
+
+JOBSHOPFUN1 = $(JOBSHOP1:%=JobShop/%.ozf)
+JOBSHOPFUN2 = $(JOBSHOP2:%=JobShop/%.ozf)
+
+$(JOBSHOPFUN2): $(JOBSHOPFUN1)
+
+JobShop.oza: $(JOBSHOPFUN2)
+        $(LINK) JobShop/JobShop.ozf -o $@
 
 
 TRANSPORT = \
         agent broker company configure contract \
         country driver environment frontend germany \
         makeplan randomizer truck widgets
-Transport.oza: $(TRANSPORT:%=concurrent/transport/%.oz)
+Transport.oza: $(TRANSPORT:%=Transport/%.oz)
 
 
-veryclean::
-        -rm -f $(APPLETS)
-
-OZAPPLETS = $(APPLETS:%=$(OZDEMO)/%)
-
-install:: $(OZAPPLETS)
-
-$(OZDEMO)/%.oza: %.oza
-        $(INSTALL_FILE) $< $@
 
 
 #
