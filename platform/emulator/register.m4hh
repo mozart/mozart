@@ -117,6 +117,7 @@ define(M4INSTRTWOREGS,``''
       DebugCheck(&Reg1(0)!= &(e->toplevelVars[0]),
                  error("createNamedVar: e->toplevelVars expected"););
       Reg1(regIndex) = createNamedVariable(regIndex,name,e);
+      Y = e->toplevelVars;
     }
     ''
     DISPATCH(3);
