@@ -227,7 +227,7 @@ define
       else {MakeDirRec {DirnameURL U}} {MakeDir U} end
    end
 
-   proc {CreateDir P} {Shell.execute [mkdir {Expand {ToNonBaseURL P}}]} end
+   proc {CreateDir P} {Shell.executeCommand [mkdir {Expand {ToNonBaseURL P}}]} end
 
    proc {Remove P}
       U = {ExpandURL {ToNonBaseURL P}}
@@ -240,7 +240,7 @@ define
    proc {RemoveDir P}
       S = {Expand {ToNonBaseURL P}}
    in
-      {Shell.execute [rmdir S]}
+      {Shell.executeCommand [rmdir S]}
    end
 
    proc {RemoveRec P}
@@ -254,7 +254,7 @@ define
    end
 
    proc {CopyFile P1 P2}
-      {Shell.execute [cp {Expand P1} {Expand P2}]}
+      {Shell.executeCommand [cp {Expand P1} {Expand P2}]}
    end
 
    fun {IsBasename F}

@@ -1,10 +1,12 @@
 %%% ==================================================================
-%%% {Shell.execute CMD}
+%%% {Shell.executeCommand CMD}
+%%% {Shell.executeProgram CMD}
 %%%	CMD is a list whose 1st element is the program to execute, and
 %%%	the remaining elements are the arguments to this program.  In
 %%%	order to be run by the shell, CMD must be transformed into a
 %%%	virtual string with all elements appropriately quoted.  The
-%%%	quote character is " for Windows and ' otherwise.
+%%%	quote character is " for Windows and ' otherwise.  With
+%%%	executeCommand, the command is explicitly passed to a shell.
 %%%
 %%% {Shell.quoteUsing CMD QUOTE}
 %%%	CMD is as above and QUOTE is a virtual string to use as the
@@ -15,7 +17,8 @@
 %%% ==================================================================
 functor
 export
-   Execute
+   ExecuteProgram
+   ExecuteCommand
    QuoteUsing
    ToUserVS
 import
@@ -60,9 +63,16 @@ define
 
    %% for execution, use the platform specific quote
 
-   fun {ToSystemVS CMD} SHELL#{QuoteUsing CMD QUOTE} end
+   fun {ToProgramVS CMD} {QuoteUsing CMD QUOTE} end
+   fun {ToCommandVS CMD} SHELL#{ToProgramVS CMD} end
 
-   proc {Execute CMD} VS={ToSystemVS CMD} in
+   proc {ExecuteCommand CMD} VS={ToCommandVS CMD} in
+      if {OS.system VS}\=0 then
+	 raise shell(VS) end
+      end
+   end
+   
+   proc {ExecuteProgram CMD} VS={ToProgramVS CMD} in
       if {OS.system VS}\=0 then
 	 raise shell(VS) end
       end
