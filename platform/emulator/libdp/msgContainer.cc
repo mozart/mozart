@@ -31,6 +31,7 @@ void MsgContainer::init(DSite *site) {
   destination = site;
   msgTS = (MsgTermSnapshot *) 0;
   next = NULL;
+  cntrlVar = (OZ_Term)0;
   msgNum=-1;
   //  sendTime=-1; AN!
   cont = (void *) 0;
@@ -111,12 +112,7 @@ MsgContainer *MsgContainerManager::newMsgContainer(DSite* site,int priority) {
 }
 
 MsgContainer *MsgContainerManager::newMsgContainer(DSite* site) {
-  FreeListEntry *f=getOne();
-  MsgContainer *msgC;
-  if(f==NULL)
-    msgC=new MsgContainer();
-  else
-    GenCast(f,FreeListEntry*,msgC,MsgContainer*);
+  MsgContainer *msgC = new MsgContainer();
   msgC->init(site);
   ++wc;
   msgC->setPriority(MSG_PRIO_MEDIUM);
@@ -129,13 +125,7 @@ void MsgContainerManager::deleteMsgContainer(MsgContainer* msgC) {
   else if(msgC->checkFlag(MSG_HAS_UNMARSHALCONT) && msgC->cont!=0)
     msgC->transController->returnUnmarshaler((Builder *) msgC->cont);
   msgC->deleteSnapshot();
-
-  FreeListEntry *f;
-  --wc;
-  GenCast(msgC,MsgContainer*,f,FreeListEntry*);
-  if(putOne(f)) return;
   delete msgC;
-  return;
 }
 
 void MsgContainerManager::deleteMsgContainer(MsgContainer* msgC,FaultCode fc) {
