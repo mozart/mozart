@@ -324,8 +324,9 @@ OZ_BI_define(fdp_divD, 3, 0)
   PropagatorExpect pe;
   int susp_count = 0;
 
+  OZ_EXPECT(pe, 1, expectInt);
+
   OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectInt,          susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
   if (susp_count > 1) 
@@ -375,8 +376,9 @@ OZ_BI_define(fdp_divI, 3, 0)
   PropagatorExpect pe;
   int susp_count = 0;
 
+  OZ_EXPECT(pe, 1, expectInt);
+
   OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectInt,          susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
   if (susp_count > 1) 
@@ -439,8 +441,9 @@ OZ_BI_define(fdp_modD, 3, 0)
   PropagatorExpect pe;
   int susp_count = 0;
 
+  OZ_EXPECT(pe, 1, expectInt);
+
   OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectInt,          susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
   if (susp_count > 1) 
@@ -507,8 +510,9 @@ OZ_BI_define(fdp_modI, 3, 0)
   PropagatorExpect pe;
   int susp_count = 0;
 
+  OZ_EXPECT(pe, 1, expectInt);
+
   OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectInt,          susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
   if (susp_count > 1) 
