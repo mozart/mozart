@@ -56,12 +56,6 @@
 (defvar oz-compiler-buffer "*Oz Compiler*"
   "The buffername of the Oz Compiler output")
 
-(defvar oz-protocol-buffer "*Oz Protocol*"
-  "The buffername of the Oz Protocol")
-
-(defvar oz-protocol-counter 0
-  "count the number outputs to oz-compiler")
-
 (defvar oz-emulator-hook nil
   "Hook used if non nil for starting the Oz Emulator.
 For example
@@ -89,10 +83,6 @@ starts the emulator under gdb")
 
 (defvar oz-status-string (format "%c" 19)
   "How compiler and engine signal status changes")
-
-(defvar oz-see-compiler-input t
-  "*If non-nil means every input to the compiler is echoed in the 
-Compiler buffer")
 
 (defvar oz-want-font-lock t
   "*If t means taht font-lock mode is switched on")
@@ -289,7 +279,6 @@ Compiler buffer")
     ("Fontify buffer"         . oz-fontify)
     ("Show/hide"
      ("errors"       . oz-toggle-errors)
-     ("protocol"     . oz-toggle-protocol)
      ("compiler"     . oz-toggle-compiler)
      ("emulator"      . oz-toggle-emulator)
      )
@@ -369,10 +358,6 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
       (set-process-filter (get-buffer-process oz-compiler-buffer)
 			  'oz-compiler-filter)
       (bury-buffer oz-compiler-buffer)
-
-      (oz-create-buffer oz-protocol-buffer)
-      (bury-buffer oz-protocol-buffer)
-      (setq oz-protocol-counter 1)
 
       (if oz-wait-for-compiler (sleep-for oz-wait-for-compiler))
 
@@ -501,19 +486,7 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-send-string(string)
   (oz-check-running nil)
   (comint-send-string (get-buffer-process oz-compiler-buffer) string)
-  (if oz-see-compiler-input
-      (oz-protocol string))
   (process-send-eof (get-buffer-process oz-compiler-buffer)))
-
-(defun oz-protocol (string)
-  (save-excursion
-    (set-buffer oz-protocol-buffer)
-    (goto-char (point-max))
-    (insert-before-markers string)
-    (insert-before-markers
-     (format "%%%%%% ------- %d -------\n" oz-protocol-counter))
-    (setq oz-protocol-counter (1+ oz-protocol-counter))
-    ))
 
 
 ;;------------------------------------------------------------
@@ -881,7 +854,6 @@ the GDB commands `cd DIR' and `directory'."
   (define-key map "\M-p"   'oz-previous-buffer)
   (define-key map "\C-c\C-e"    'oz-toggle-errors)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
-  (define-key map "\C-c\C-p"    'oz-toggle-protocol)
 ;  (if oz-lucid
 ;      (progn
 ;	(define-key map [(control button1)]       'oz-feed-region-browse)
@@ -1030,7 +1002,6 @@ OZ compiler, emulator and error window")
     (let* ((edges (window-edges (selected-window)))
 	   (win (or (get-buffer-window oz-emulator-buffer)
 		    (get-buffer-window oz-compiler-buffer)
-		    (get-buffer-window oz-protocol-buffer)
 		    (get-buffer-window "*Oz Errors*")
 		    (split-window (selected-window)
 				  (/ (* (- (nth 3 edges) (nth 1 edges))
@@ -1094,11 +1065,6 @@ OZ compiler, emulator and error window")
       (goto-char (point-max)))
 
     (oz-show-buffer buf)))
-
-(defun oz-toggle-protocol()
-  (interactive)
-  (setq oz-errors-found nil)
-  (oz-toggle-window oz-protocol-buffer))
 
 (defun oz-toggle-compiler()
   (interactive)
