@@ -30,28 +30,127 @@
 %%%
 %%% INTERFACE
 %%%
+%%% {Fontifier.emacs.set PGM}
+%%% {Fontifier.emacs.get PGM}
 %%%
+%%%     set or get the name of the emacs program.  You only need to
+%%% set this if emacs has an unusual name on your system, or you want
+%%% to pick up a different version (say, not in your path).
+%%%
+%%% {Fontifier.loadpath.get  LOADPATH}
+%%% {Fontifier.loadpath.set  LOADPATH}
+%%% {Fontifier.loadpath.push DIR}
+%%%
+%%%     LOADPATH is a list of directories to add to emacs load-path.
+%%% The default adds $OZHOME/share/elisp to search for oz specific
+%%% elisp libraries.
+%%%
+%%% {Fontifier.requires.get  FILES}
+%%% {Fontifier.requires.set  FILES}
+%%% {Fontifier.requires.push FILE}
+%%%
+%%%     the FILES will be loaded on startup.  One of them should
+%%% provide an implementation for (ozdoc-fontify).  The default is to
+%%% load both oz.elc and Fontifier.elc.
+%%%
+%%% {Fontifier.processVirtualString MODE VS RESULT}
+%%%
+%%%     MODE is the name of an emacs mode (with or without the -mode
+%%% suffix) that is appropriate for editing the code represented by
+%%% virtual string VS.  Emacs is invoked, the code is installed in a
+%%% buffer, MODE is turned on, and fontification is requested.  The
+%%% resulting face assignments are then examined and returned in
+%%% RESULT as a list of pairs FACE#STRING, where FACE is a symbol
+%%% denoting the face that was assigned to the piece of text
+%%% represented by STRING.  The pairs are presented in sequential
+%%% order of the source code (of course).
+%%%
+%%% {Fontifier.processFile MODE FILENAME RESULT}
+%%%
+%%%     This is similar to the above, except that the source code is
+%%% to be obtained from a file.
+%%%
+%%% {Fontifier.processRequest MODE REQUEST}
+%%%
+%%%     Sometimes the source code has already been parsed and you want
+%%% to add highlighting indications to this parsed representation. You
+%%% could try to highlight separately each piece of code text in your
+%%% parse tree, but the result would be poor since, in general,
+%%% highlighting is context dependent.  Instead, you can map you parse
+%%% tree to a "Structured Request", that accurately encodes the tree
+%%% structure of you parse tree, but performs highligting using the
+%%% full textual data that it contains.  A <REQUEST> has the following
+%%% structure:
+%%%             <REQUEST> ::= simple(<STRING> <RESULT>)
+%%%                       |   complex([<REQUEST> ...])
+%%%
+%%% <RESULT> is simply a variable that gets bound to a list of
+%%% FACE#STRING pairs as described earlier.
+%%%
+%%% An application of this technique devised by Leif Kornstaed is to
+%%% provide context to obtain proper highlighting of code.  For
+%%% example, if FooClass is the name of an Oz class, in order to have
+%%% it properly highlighted, it must be preceded by keyword `class'.
+%%% In this case you can use the following request:
+%%%
+%%%     complex([simple("class " _) simple("FooClass" RESULT)])
+%%%
+%%% where RESULT will be bound to the correct highlighting annotations
+%%%
+%%% Fontifier.'class'
+%%%
+%%%     When many code chunks need to be processed for highlighting,
+%%% such as is frequently the case during document processing, then it
+%%% it more efficient to only invoke emacs once and process all of
+%%% them in a batch manner.  By creating an OBJECT of class
+%%% Fontifier.'class', you can queue processing requests and then
+%%% cause all of them to be processed in one go.
+%%%
+%%% OBJECT = {New Fontifier.'class' init}
+%%%
+%%% {OBJECT enqueueVirtualString(MODE VS RESULT)}
+%%% {OBJECT enqueueFile(MODE FILENAME RESULT)}
+%%% {OBJECT enqueueRequest(MODE REQUEST)}
+%%%
+%%% The arguments are the same as for the process* procedures
+%%% described earlier.
+%%%
+%%% {OBJECT synck}
+%%%
+%%%     causes the currently buffered requests to be processed.
+%%%
+%%% {OBJECT processVirtualString(MODE VS RESULT)}
+%%% {OBJECT processFile(MODE FILENAME RESULT)}
+%%% {OBJECT processRequest(MODE REQUEST)}
+%%%
+%%%     These are equivalent to an enqueue* followed by a synck.  They
+%%% are used to implement the process* procedures described earlier.
 %%% ==================================================================
 
 functor
 import
    Open OS Property
 export
-   'class'      : Fontifier
-   vs           : FontifyVirtualString
-   file         : FontifyFile
-   complex      : FontifyComplex
-   SetEmacs
-   SetEmacsLoadPath
-   GetEmacsLoadPath
-   PushEmacsLoadPath
-   SetEmacsRequires
-   GetEmacsRequires
-   PushEmacsRequires
+   'class'      : FontifierClass
+   emacs        : ApiEmacs
+   loadpath     : ApiEpath
+   requires     : ApiEload
+   ProcessVirtualString
+   ProcessFile
+   ProcessRequest
 define
    EMACS = {NewCell 'emacs'}
    EPATH = {NewCell [{Property.get 'oz.home'}#'/share/elisp']}
-   ELOAD = {NewCell ['oz.elc' 'ozdoc-fontify.elc']}
+   ELOAD = {NewCell ['oz.elc' 'Fontifier.elc']}
+
+   ApiEmacs = o(get :proc {$ X} {Access EMACS X} end
+                set :proc {$ X} {Assign EMACS X} end)
+   ApiEpath = o(get :proc {$ X} {Access EPATH X} end
+                set :proc {$ X} {Assign EPATH X} end
+                push:proc {$ X} L in {Exchange EPATH L X|L} end)
+   ApiEload = o(get :proc {$ X} {Access ELOAD X} end
+                set :proc {$ X} {Assign ELOAD X} end
+                push:proc {$ X} L in {Exchange ELOAD L X|L} end)
 
    fun {MakeCommand}
       {Access EMACS}#' --batch '#
@@ -61,14 +160,6 @@ define
        fun {$ FILE VS} '-l '#FILE#' '#VS end nil}#
       '-f ozdoc-fontify'
    end
-
-   proc {SetEmacs X} {Assign EMACS X} end
-   proc {SetEmacsLoadPath L} {Assign EPATH L} end
-   proc {GetEmacsLoadPath L} {Access EPATH L} end
-   proc {SetEmacsRequires L} {Assign ELOAD L} end
-   proc {GetEmacsRequires L} {Access ELOAD L} end
-   proc {PushEmacsLoadPath D} {Assign EPATH D|{Access EPATH}} end
-   proc {PushEmacsRequires F} {Assign ELOAD F|{Access ELOAD}} end
 
    %% !!! TEMPORARY WORK AROUND FOR BUG WITH BYNEED VARIABLES !!!
    proc {Force L N}
@@ -149,7 +240,7 @@ define
    %% virtual strings and/or files.  The synck method causes the
    %% requests accumulated so far to be processed in one batch.
 
-   class Fontifier
+   class FontifierClass
       prop locking
       attr Head Tail
       meth init L in Head<-L Tail<-L end
@@ -160,13 +251,13 @@ define
          end
       end
       meth enqueueFile(Mode FileName Res)
-         Fontifier,Enqueue(file(Mode FileName Res))
+         FontifierClass,Enqueue(file(Mode FileName Res))
       end
       meth enqueueVirtualString(Mode VS Res)
-         Fontifier,Enqueue(data(Mode simple(VS Res)))
+         FontifierClass,Enqueue(data(Mode simple(VS Res)))
       end
-      meth enqueueComplex(Mode Complex)
-         Fontifier,Enqueue(data(Mode Complex))
+      meth enqueueRequest(Mode Complex)
+         FontifierClass,Enqueue(data(Mode Complex))
       end
       meth synck Requests in
          lock L in
@@ -188,7 +279,7 @@ define
             {self synck}
          end
       end
-      meth processComplex(Mode Complex)
+      meth processRequest(Mode Complex)
          lock
             {self enqueueComplex(Mode Complex)}
             {self synck}
@@ -336,21 +427,21 @@ define
       end
    end
 
-   fun {FontifyVirtualString Mode Vs}
-      F = {New Fontifier init}
+   fun {ProcessVirtualString Mode Vs}
+      F = {New FontifierClass init}
    in
       {F processVirtualString(Mode Vs $)}
    end
 
-   fun {FontifyFile Mode FileName}
-      F = {New Fontifier init}
+   fun {ProcessFile Mode FileName}
+      F = {New FontifierClass init}
    in
       {F processFile(Mode FileName $)}
    end
 
-   proc {FontifyComplex Mode Complex}
-      F = {New Fontifier init}
+   proc {ProcessRequest Mode Request}
+      F = {New FontifierClass init}
    in
-      {F processComplex(Mode Complex)}
+      {F processRequest(Mode Request)}
    end
 end
