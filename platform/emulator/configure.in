@@ -314,7 +314,7 @@ case $platform in
             OZ_CC_OPTIONS(-mno-cygwin,oz_cc_mingw)
             CC="$CC $oz_cc_mingw"
             LD="$CC"
-            TOOLLDCMD="`cd ../mswindows && pwd`/oztool -inc `pwd` ld"
+            TOOLLDCMD="`cd .. && pwd`/mswindows/oztool -inc `pwd` ld"
         else # cross-compiling
             AC_DEFINE(ARCH_I486)
             TOOLLDCMD="sh `pwd`/$target-oztool ld"
