@@ -1,7 +1,0 @@
-This example shows the tooltips parameter.
-
-All widget have a tooltips parameter that allow you to specify a text that appears when the user leaves the mouse over the widget for a while.
-
-Run the example below, move the mouse over the first button. Wait a while : the tooltips message appears.
-
-This parameter is available for all widgets (except when explicitly stated as for the menu entries).

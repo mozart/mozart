@@ -1,7 +1,0 @@
-This example shows the toplevel widget.
-
-The very first td or lr widget when QTk builds a window is the toplevel widget. It can be used to control the window properties as shown, hidden or iconic and also the title, position and so on.
-
-The toplevel widget have supplementary parameters, as title and geometry that allow you to control the window.
-
-You can also obtain informations about the window state by calling the winfo method of the toplevel object (cfr documentation)

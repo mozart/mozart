@@ -1,7 +1,0 @@
-This example shows the label widget.
-
-The label widget displays a line of text.
-
-- The text or init parameter set the initial displayed text (if both specified, init prevails).
-- The handle parameter allow to change the displayed text
-- The return parameter will bind the specified variable to the displayed text when the window is closed.

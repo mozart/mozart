@@ -1,3 +1,0 @@
-makefile(
-   subdirs:['parser']
-   )

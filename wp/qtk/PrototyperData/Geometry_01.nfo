@@ -1,9 +1,0 @@
-This example shows the basis or geomety management.
-
-In QTk, the geometry of the different widgets are organized by two widgets :
-td (top down) and lr (left to right)
-
-Run the example below.
-Replace td by lr and rerun to see how the labels change their organization.
-
-Note : when you build a window with QTk, the topmost widget must always be either td or lr : {QTk.build td(....)} or {QTk.build lr(....)}

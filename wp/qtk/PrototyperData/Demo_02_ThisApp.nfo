@@ -1,5 +1,0 @@
-This example shows the whole code for this application !
-
-Press "Run" to start :-)
-
-Warning : This demo expects the data to be in a subdirectory named PrototyperData. Unless you downloaded the Prototyper source, this directory doesn't exist on your system and the demo will display nothing. The stand-alone Prototyper application has already a pre-loaded PrototyperData subdirectoy loaded inside its executable to avoid this requirement.

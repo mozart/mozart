@@ -1,8 +1,0 @@
-This example shows the message widget.
-
-The message widget displays a line of text (like the label widget), wrapping the text so that it respects a specified ratio of width and height.
-
-- The aspect parameter express (in percent) the ratio of height/width.
-- The text or init parameter set the initial displayed text (if both specified, init prevails).
-- The handle parameter allows to change the displayed text
-- The return parameter will bind the specified variable to the displayed text when the window is closed.

@@ -1,6 +1,0 @@
-This examples shows the numberentry widget.
-
-This widget is very similar to the entry widget, but allow to type only an integer in a specified range. Small arrows allow to change the value with the mouse.
-
-- The min and max parameters specify the bounding integer values.
-- The init, handle, return and action parameters are similar to the entry widget.

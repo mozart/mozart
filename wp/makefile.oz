@@ -1,5 +1,0 @@
-makefile(
-   subdirs : ['qtk'
-	      %'qhtml'
-	     ]
-   )

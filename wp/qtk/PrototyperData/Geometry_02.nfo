@@ -1,5 +1,0 @@
-This example shows how widget can be configured to fit the available space.
-
-Run the example below and resize the window. As you can see, the Up left label sticks itself to the top left of the window while the other label sticks itself to the bottom right of the window.
-
-As you problably already guessed, the glue parameter is responsible for this. You can specify any combination of n, s, w and e (meaning north, south, west and east). See the following examples for geometry management.

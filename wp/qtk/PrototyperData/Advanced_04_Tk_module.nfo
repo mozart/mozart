@@ -1,7 +1,0 @@
-This example shows how the QTk module is connected with the Tk module.
-
-The QTk module uses the Oz Tk module (which in turns communicates with Tcl/Tk). You may sometimes find situations where you want to make things that isn't directly possible with QTk, even if it is possible with the pure Tk module.
-
-This example shows that QTk objects inherit from Tk objects and thus support their methods.
-
-Warning : use these methods iff you can't do otherwise. Using these methods can hamper with the built in functionalities of QTk so that the behaviour may become unpredictable if both are mixed.

@@ -1,4 +1,0 @@
-This example shows the grid widget.
-
-A grid widget is a frame, ie a rectangular area of a window. It's primary purpose is to act as a grid container for placing widgets. Widgets are placed inside the grid at declaration time from left to right, newline skips to the beginning of the next line. As long as the window exists, a grid acts as a gridded placeholder widget: widgets can be placed and removed from anywhere inside the grid dynamically.
-

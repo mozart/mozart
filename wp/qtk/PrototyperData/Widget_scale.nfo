@@ -1,9 +1,0 @@
-This example shows the scale widget.
-
-The lrscale (resp. tdscale) widget allows to choose a value between a range by moving a horizontal (resp. vertical) slider.
-
-- the 'from' and to parameters define the range of value.
-- the init parameter define the initial value.
-- the handle parameter allow to specify a variable that can control the widget.
-- the return parameter allow to specify a variable that will be bound to the value of the scale when the window is closed.
-- the action parameter defines a command that is to be executed when just after the user has changed the value of the scale.
