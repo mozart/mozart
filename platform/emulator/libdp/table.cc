@@ -750,8 +750,9 @@ void BorrowEntry::copyBorrow(BorrowEntry* from,int i){
     mkTertiary(from->getTertiary(),from->getFlags());
     from->getTertiary()->setIndex(i);
   } else if (from->isVar()) {
+    // mm2
     mkVar(from->getRef(),from->getFlags());
-    tagged2PerdioVar(*(from->getPtr()))->setIndex(i);
+    ((ProxyManagerVar*)oz_getExtVar(*(from->getPtr())))->gcSetIndex(i);
   } else {
     Assert(from->isRef());
     mkRef(from->getRef());
@@ -790,7 +791,7 @@ void BorrowEntry::freeBorrowEntry(){
 void BorrowEntry::gcBorrowRoot(int i) {
   if (isVar()) {
     PD((GC,"BT1 b:%d variable found",i));
-    PerdioVar *pv=tagged2PerdioVar(*getPtr());
+    PerdioVar *pv=(PerdioVar *)oz_getExtVar(*getPtr());
     if (pv->gcIsAliveV()) {
       PD((WEIRD,"BT1 b:%d pending unmarked var found",i));
       gcPO();

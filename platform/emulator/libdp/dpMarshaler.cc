@@ -43,7 +43,6 @@
 #include "gname.hh"
 #include "state.hh"
 #include "port.hh"
-#include "protocolVar.hh"
 
 /* for now credit is a 32-bit word */
 
@@ -176,30 +175,6 @@ MessageType unmarshalHeader(MsgBuffer *bs){
   MessageType mt= (MessageType) bs->get();
   mess_counter[mt].recv();
   return mt;}
-
-/* *********************************************************************/
-/*   perdiovar - special                                  */
-/* *********************************************************************/
-
-//
-// These two function are used by 'OldPerdioVar::marshalV()';
-void marshalVar(OldPerdioVar *pvar, MsgBuffer *bs)
-{
-  DSite *sd=bs->getSite();
-  if (pvar->isProxy()) {
-    int i=pvar->getIndex();
-    PD((MARSHAL,"var proxy o:%d",i));
-    if(sd && borrowTable->getOriginSite(i)==sd) {
-      marshalToOwner(i,bs);
-      return;}
-    marshalBorrowHead(DIF_VAR,i,bs);
-  } else {
-    Assert(pvar->isManager());
-    int i=pvar->getIndex();
-    PD((MARSHAL,"var manager o:%d",i));
-    marshalOwnHead(DIF_VAR,i,bs);
-  }
-}
 
 /* *********************************************************************/
 /*   objects                                  */
@@ -434,37 +409,6 @@ OZ_Term unmarshalOwner(MsgBuffer *bs,MarshalTag mt){
   return OT->getOwner(OTI)->getValue();
 }
 
-
-OZ_Term unmarshalVar(MsgBuffer* bs){
-  OB_Entry *ob;
-  int bi;
-  OZ_Term val1 = unmarshalBorrow(bs,ob,bi);
-  
-  if (val1) {
-    PD((UNMARSHAL,"var/chunk hit: b:%d",bi));
-    return val1;}
-  
-  PD((UNMARSHAL,"var miss: b:%d",bi));
-  OldPerdioVar *pvar = new OldPerdioVar(bi,oz_currentBoard());
-  TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
-  ob->mkVar(val); 
-  sendRegister((BorrowEntry *)ob);
-  return val;
-}
-
-// Returning 'NO' means we are going to proceed with 'marshal bomb';
-Bool marshalVariable(TaggedRef *tPtr, MsgBuffer *bs) {
-  if (!bs->globalize())
-    return checkExportable(*tPtr);
-
-  PerdioVar *pvar = var2PerdioVar(tPtr);
-  if (pvar==NULL) {
-    return (NO);
-  }
-  pvar->marshalV(bs);
-  return (OK);
-}
-
 void unmarshalUnsentTerm(MsgBuffer *bs) {
   OZ_Term t=unmarshalTerm(bs);}
 
@@ -480,20 +424,6 @@ void unmarshalUnsentString(MsgBuffer *bs)
 {
   char *aux = unmarshalString(bs);
   delete [] aux;
-}
-
-void marshalObjVar(OldPerdioVar *pvar, MsgBuffer *bs)
-{
-  Assert(pvar->isObject());
-  PD((MARSHAL,"var objectproxy"));
-
-  if (checkCycleOutLine(*(pvar->getObject()->getCycleRef()),bs,OZCONST))
-    return;
-
-  GName *classgn =  pvar->isObjectClassAvail() ?
-                      globalizeConst(pvar->getClass(),bs) : pvar->getGNameClass();
-
-  marshalObject(pvar->getObject(),bs,classgn);
 }
 
 /* *********************************************************************/
