@@ -22,9 +22,10 @@
 #include "am.hh"
 #include "ip.hh"
 
-#include "genhashtbl.hh"
 #include "perdio_debug.hh"
 #include "perdio_debug.cc"
+
+#include "genhashtbl.cc"
 
 /**********************************************************************/
 /**********************************************************************/
