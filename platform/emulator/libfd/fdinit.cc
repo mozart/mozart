@@ -46,7 +46,7 @@ void fdp_init(void)
 
 #ifdef OZ_DEBUG
   oz_debugprint("*** DEBUG-FDLIB ***");
-#elif OZ_PROFILE
+#elif defined(OZ_PROFILE)
   oz_debugprint("*** PROFILE-FDLIB ***");
 #endif
 
