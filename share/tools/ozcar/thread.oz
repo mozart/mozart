@@ -82,7 +82,7 @@ in
 		     ThreadManager,step(file:File line:Line thr:T id:I
 					name:Name args:Args frame:FrameId
 					builtin:IsBuiltin time:Time)
-		  elsecase File == '' andthen
+		  elsecase (File == '' orelse File == 'nofile') andthen
 		     (Args.1 == off orelse {Label Args.1} == bpAt) then
 		     {OzcarMessage 'message from Emacs detected.'}
 		     {Dbg.trace T false}
