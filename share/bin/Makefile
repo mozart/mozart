@@ -3,7 +3,7 @@ BINDIR  = $(OZHOME)/bin
 SHELL   = /bin/sh
 
 SCRIPTS = oz oz2lpr oz+ oz2declare ozarch
-LINKS   = oz- ozc oz.compiler oz.machine
+LINKS   = oz- ozc oz.compiler oz.machine ozwindowmanager
 
 help:
         @echo ""
