@@ -61,6 +61,10 @@ public:
   void gc(void); 
   void dispose(void);
   
+  // methods for trailing
+  OzVariable * copyForTrail(void);
+  void restoreFromCopy(OzFSVariable *);
+  
   OZ_Return bind(OZ_Term *, OZ_Term);
   OZ_Return unify(OZ_Term *, OZ_Term*);
   OZ_FSetConstraint &getSet(void) { return _fset; }

@@ -75,8 +75,8 @@ extern const int varSizes[];
 #define STORE_FLAG 1
 #define REIFIED_FLAG 2
 
-
-#define SVAR_EXPORTED 1
+#define SVAR_EXPORTED  0x1
+#define CVAR_TRAILED   0x2
 #define SVAR_FLAGSMASK 0x3
 
 class OzVariable {
@@ -118,11 +118,27 @@ public:
     return (Board *)(homeAndFlags&~SVAR_FLAGSMASK); 
   }
   void setHome(Board *h) { 
-    homeAndFlags = (homeAndFlags&SVAR_FLAGSMASK)|((unsigned)h); }
+    homeAndFlags = (homeAndFlags&SVAR_FLAGSMASK)|((unsigned)h); 
+  }
 
-  Bool isExported()   { return homeAndFlags&SVAR_EXPORTED; }
-  void markExported() { homeAndFlags |= SVAR_EXPORTED; }
+  Bool isExported(void) { 
+    return homeAndFlags&SVAR_EXPORTED; 
+  }
+  void markExported() { 
+    homeAndFlags |= SVAR_EXPORTED; 
+  }
   
+  Bool isTrailed(void) { 
+    return homeAndFlags&CVAR_TRAILED; 
+  }
+  void setTrailed(void) { 
+    homeAndFlags |= CVAR_TRAILED; 
+  }
+  void unsetTrailed(void) {
+    homeAndFlags &= ~CVAR_TRAILED;
+  }
+  
+
   void disposeS(void) {
     for (SuspList * l = suspList; l; l = l->dispose());
     DebugCode(suspList=0);
@@ -254,6 +270,10 @@ OZ_Return oz_var_addSusp(TaggedRef*, Suspendable *, int = TRUE);
 void oz_var_dispose(OzVariable*);
 void oz_var_printStream(ostream&, const char*, OzVariable*, int = 10);
 int oz_var_getSuspListLength(OzVariable*);
+
+OzVariable * oz_var_copyForTrail(OzVariable *);
+void oz_var_restoreFromCopy(OzVariable *, OzVariable *);
+
 
 inline
 Bool isFuture(TaggedRef term)

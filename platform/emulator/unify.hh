@@ -143,7 +143,7 @@ void doBind(TaggedRef *p, TaggedRef t)
   doBind(vp,t)
 
 #define DoBindAndTrail(vp,t) {			\
-  am.trail.pushBind(vp, *vp);			\
+  am.trail.pushBind(vp);			\
   DoBind(vp,t);					\
 }
 

@@ -472,6 +472,22 @@ void OzFDVariable::propagate(OZ_FDPropState state,
     OzVariable::propagate(suspList, prop_eq);
 }
 
+/*
+ * Trailing support
+ *
+ */
+
+OzVariable * OzFDVariable::copyForTrail(void) {
+  return new OzFDVariable(getDom(), oz_currentBoard());
+}
+
+void OzFDVariable::restoreFromCopy(OzFDVariable * c) {
+  OZ_FiniteDomain tmp = getDom();
+  setDom(c->getDom());
+  c->setDom(tmp);
+  tmp.disposeExtension();
+}
+
 
 #ifdef OUTLINE 
 #define inline
