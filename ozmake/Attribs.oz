@@ -118,6 +118,18 @@ define
 	 Fast        : true
 	 WantVersion : unit
 	 AutoDepend  : true
+	 Args        : unit
+	 Optlist     : unit
+	 DoRequires  : true
+
+      meth set_args(V) Args<-V end
+      meth get_args($) @Args end
+
+      meth set_optlist(V) Optlist<-V end
+      meth get_optlist($) @Optlist end
+
+      meth set_dorequires(V) DoRequires<-V end
+      meth get_dorequires($) @DoRequires end
 
       meth get_format($) @Format end
 

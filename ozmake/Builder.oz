@@ -15,6 +15,11 @@ define
       end
 
       meth build_all
+	 {self install_requires}
+	 {self BuildAll}
+      end
+
+      meth BuildAll
 	 if {self get_includelibs($)} then
 	    for T in {self get_lib_targets($)} do
 	       Builder,build_target(T)
@@ -27,7 +32,7 @@ define
 	       Builder,build_runtime_dependencies(T)
 	    end
 	 end
-	 {self recurse(build_all)}
+	 {self recurse(BuildAll)}
       end
 
       meth build_runtime_dependencies(T)

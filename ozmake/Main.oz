@@ -73,6 +73,7 @@ prepare
       extendpackage(single type:bool)
       keepzombies(single type:bool)
       savedb(single type:bool)
+      requires(single type:bool)
 
       '_installdocs'(single type:bool)
       includedocs(alias:'_installdocs'#true)
@@ -112,62 +113,63 @@ prepare
 
    OPTLIST =
    [
-    %% OPTION      # SET METHOD           # CONFIGURABLE?
-    verbose        # set_verbose	  # false
-    quiet          # set_quiet            # false
-    'just-print'   # set_justprint        # false
-    optlevel       # set_optlevel         # true
-    gnu            # set_gnu              # true
-    prefix         # set_prefix           # true
-    dir            # set_dir              # false
-    builddir       # set_builddir         # false
-    srcdir         # set_srcdir           # false
-    bindir         # set_bindir           # false
-    libdir         # set_libdir           # false
-    docdir         # set_docdir           # false
-    libroot        # set_libroot          # true
-    docroot        # set_docroot          # true
-    extractdir     # set_extractdir       # false
-    mogulpkgurl    # set_mogulpkgurl      # true
-    moguldocurl    # set_moguldocurl      # true
-    moguldburl     # set_moguldburl       # true
-    archive        # set_archive          # true
-    tmpdir         # set_tmpdir           # true
-    makefile       # set_makefile         # false
-    contactfile    # set_contactfile      # false
-    usemakepkg     # set_use_makepkg      # false
-    package        # set_package          # false
-    moguldatabase  # set_moguldatabase    # true
-    database       # set_database         # true
-    configfile     # set_configfile       # true
-    grade          # set_grade            # false
-    replacefiles   # set_replacefiles     # false
-    keepzombies    # set_keepzombies      # false
-    savedb         # set_savedb           # false
-    '_installdocs' # set_includedocs      # false
-    '_installlibs' # set_includelibs      # false
-    '_installbins' # set_includebins      # false
-    extendpackage  # set_extendpackage    # false
-    fullbuild      # set_fullbuild        # false
-    linewidth      # set_linewidth        # true
-    'local'        # set_local            # false
-    includedir     # set_includedirs      # true
-    librarydir     # set_librarydirs      # true
-    sysincludedirs # set_sysincludedirsok # true
-    syslibrarydirs # set_syslibrarydirsok # true
-    mogulpkgdir    # set_mogulpkgdir      # true
-    moguldocdir    # set_moguldocdir      # true
-    moguldbdir     # set_moguldbdir       # true
-    exe            # set_exe              # true
-    makepkgfile    # set_makepkgfile      # true
-    mogul          # set_mogul_action     # false
-    mogulrootid    # set_mogulrootid      # true
-    moguldir       # set_moguldir         # true
-    mogulurl       # set_mogulurl         # true
-    config         # set_config_action    # false
-    '_speed'       # set_fast             # true
-    packageversion # set_want_version     # false
-    autodepend     # set_autodepend       # true
+    %% OPTION      # SET METHOD           # CONFIGURABLE?	# ON-FORK?
+    verbose        # set_verbose	  # false		# true
+    quiet          # set_quiet            # false		# true
+    'just-print'   # set_justprint        # false		# true
+    optlevel       # set_optlevel         # true		# false
+    gnu            # set_gnu              # true		# true
+    prefix         # set_prefix           # true		# true
+    dir            # set_dir              # false		# false
+    builddir       # set_builddir         # false		# false
+    srcdir         # set_srcdir           # false		# false
+    bindir         # set_bindir           # false		# true
+    libdir         # set_libdir           # false		# false
+    docdir         # set_docdir           # false		# false
+    libroot        # set_libroot          # true		# true
+    docroot        # set_docroot          # true		# true
+    extractdir     # set_extractdir       # false		# false
+    mogulpkgurl    # set_mogulpkgurl      # true		# false
+    moguldocurl    # set_moguldocurl      # true		# false
+    moguldburl     # set_moguldburl       # true		# false
+    archive        # set_archive          # true		# true
+    tmpdir         # set_tmpdir           # true		# true
+    makefile       # set_makefile         # false		# false
+    contactfile    # set_contactfile      # false		# false
+    usemakepkg     # set_use_makepkg      # false		# false
+    package        # set_package          # false		# false
+    moguldatabase  # set_moguldatabase    # true		# true
+    database       # set_database         # true		# true
+    configfile     # set_configfile       # true		# true
+    grade          # set_grade            # false		# false
+    replacefiles   # set_replacefiles     # false		# true
+    keepzombies    # set_keepzombies      # false		# true
+    savedb         # set_savedb           # false		# true
+    '_installdocs' # set_includedocs      # false		# false
+    '_installlibs' # set_includelibs      # false		# false
+    '_installbins' # set_includebins      # false		# false
+    extendpackage  # set_extendpackage    # false		# false
+    fullbuild      # set_fullbuild        # false		# false
+    linewidth      # set_linewidth        # true		# true
+    'local'        # set_local            # false		# false
+    includedir     # set_includedirs      # true		# false
+    librarydir     # set_librarydirs      # true		# false
+    sysincludedirs # set_sysincludedirsok # true		# false
+    syslibrarydirs # set_syslibrarydirsok # true		# false
+    mogulpkgdir    # set_mogulpkgdir      # true		# true
+    moguldocdir    # set_moguldocdir      # true		# true
+    moguldbdir     # set_moguldbdir       # true		# true
+    exe            # set_exe              # true		# true
+    makepkgfile    # set_makepkgfile      # true		# false
+    mogul          # set_mogul_action     # false		# false
+    mogulrootid    # set_mogulrootid      # true		# true
+    moguldir       # set_moguldir         # true		# true
+    mogulurl       # set_mogulurl         # true		# true
+    config         # set_config_action    # false		# false
+    '_speed'       # set_fast             # true		# true
+    packageversion # set_want_version     # false		# false
+    autodepend     # set_autodepend       # true		# true
+    requires       # set_dorequires       # false               # true
    ]
       
 define
@@ -185,8 +187,11 @@ define
       Man     = {New Manager.'class' init}
       Targets = {Map Args.1 StringToAtom}
    in
+      %% we may need this info for processing "requires"
+      {Man set_args(Args)}
+      {Man set_optlist(OPTLIST)}
       %% process the options supplied by the user
-      for Key#Set#_ in OPTLIST do
+      for Key#Set#_#_ in OPTLIST do
 	 if {HasFeature Args Key} then {Man Set(Args.Key)} end
       end
       %% read some default configuration parameters

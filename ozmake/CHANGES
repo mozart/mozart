@@ -1,5 +1,13 @@
 -*-outline-*-
 
+* in progress
+  fixed uninstall problem when trying to remove twice the same file (don't
+  record it twice in the first place - be more permissive anyway).  Additionally
+  remove directories that have become empty.
+
+  added support for automatically installing missing packages identified by
+  their MOGUL id in the makefile.oz "requires" feature.
+
 * version 0.88
   protect against build circularities. added ExpandInCWD functionality -
   used it to make e.g. src and build dir absolute so that when added to
