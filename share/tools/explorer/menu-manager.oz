@@ -114,7 +114,7 @@ in
 				     state:   disabled
 				     feature: clear)
 			     separator
-			     command(label:   'Export Postscript'
+			     command(label:   'Export Postscript ...'
 				     action:  self # postscript
 				     state:   disabled
 				     feature: postscript)
