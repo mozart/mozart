@@ -7223,7 +7223,6 @@ BIspec allSpec2[] = {
   {"Thread.suspend",1,BIthreadSuspend},
   {"Thread.resume",1,BIthreadResume},
   {"Thread.terminate",1,BIthreadTerminate},
-  {"Thread.raise",2,BIthreadRaise},
   {"Thread.injectException",2,BIthreadRaise},
   {"Thread.preempt",1,BIthreadPreempt},
   {"Thread.setPriority",2,BIthreadSetPriority},
