@@ -392,6 +392,9 @@ _FUNDECL(OZ_Return ,OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
 #define OZ_suspendOn3(t1,t2,t3) \
    { return OZ_suspendOnInternal3(t1,t2,t3); }
 
+/* event mechanism */
+
+_FUNDECL(void,OZ_eventPush,(OZ_Term));
 
 /* ------------------------------------------------------------------------ *
  * III. macros
