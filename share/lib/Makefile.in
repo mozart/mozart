@@ -45,7 +45,7 @@ export SRCDIR
 export OZPREFIX
 export OZLIB
 export OZMAINIT = Init.ozc
-export OZMAFILE = "-u $(SRCDIR)/ozbatch.ozc"
+export OZMAFILE = -u $(SRCDIR)/ozbatch.ozc
 export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
