@@ -16,7 +16,10 @@
 
 static int initialized = 0;
 static pthread_mutex_t mutex;
-static int active_tasks = 0;
+
+static int number_of_tasks = 0;
+static int number_of_tasks_finished = 0;
+
 static sigset_t empty_mask;
 
 class OzTaskQueue {
@@ -106,7 +109,7 @@ void OzTaskQueue::enq(OzTask* t)
     queue_last->_next = t;
     queue_last = t;
   }
-  active_tasks++;
+  number_of_tasks++;
   // maybe create a new pthread
   if (idle==0 && total<total_max) {
     // block all signals, the newly created thread will inherit
@@ -155,9 +158,11 @@ void OzTaskQueue::work(void)
     if (!queue_first) queue_last=0;
     idle--;
     pthread_mutex_unlock(&mutex);
+    // perform asynchronous 1st step
     t->execute();
     pthread_mutex_lock(&mutex);
     idle++;
+    // enqueue task for synchronous 2nd step
     if (finish_last) {
       finish_last->_next = t;
     } else {
@@ -193,13 +198,14 @@ void OzTaskQueue::finish(void)
     OzTask* q = finish_first;
     OzTask* t;
     finish_first=finish_last=0;
+    number_of_tasks -= number_of_tasks_finished;
+    number_of_tasks_finished = 0;
     pthread_mutex_unlock(&mutex);
     while (q) {
       t = q;
       q = t->_next;
       t->finish();
       delete t;
-      active_tasks--;
     }
   } else pthread_mutex_unlock(&mutex);
 }
@@ -219,7 +225,7 @@ inline void OzTask::gc_linked(OzTask* t)
 
 void gc_tasks(void)
 {
-  if (active_tasks) {
+  if (number_of_tasks) {
     // if there are tasks, then this module was initialized
     pthread_mutex_lock(&mutex);
     gc_linked_tasks(finish_first);
