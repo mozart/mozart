@@ -205,6 +205,9 @@ void comment(MsgBuffer *bs, const char *format, ...)
 
 void marshalGName(GName *gname, MsgBuffer *bs)
 {
+  if (gname==NULL)
+    return;
+
   misc_counter[MISC_GNAME].send();
 
   Comment((bs,"GNAMESTART"));
@@ -308,10 +311,24 @@ void marshalSRecord(SRecord *sr, MsgBuffer *bs)
   marshalTerm(t,bs);
 }
 
+GName *globalizeConst(ConstTerm *t, MsgBuffer *bs)  
+{ 
+  if (!bs->globalize())
+    return 0;
+
+  switch(t->getType()) {
+  case Co_Object:      return ((Object*)t)->globalize();
+  case Co_Class:       return ((ObjectClass*)t)->globalize();
+  case Co_Chunk:       return ((SChunk*)t)->globalize();
+  case Co_Abstraction: return ((Abstraction*)t)->globalize();
+  default: Assert(0); return NULL;
+  }
+}
+
 void marshalClass(ObjectClass *cl, MsgBuffer *bs)
 {
   marshalDIF(bs,DIF_CLASS);
-  GName *gn = cl->getGName();
+  GName *gn = globalizeConst(cl,bs);
   trailCycle(cl->getCycleRef(),bs);
   marshalGName(gn,bs);
   marshalSRecord(cl->getFeatures(),bs);
@@ -375,7 +392,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   case Co_Chunk:
     {
       SChunk *ch=(SChunk *) t;
-      GName *gname=ch->getGName();
+      GName *gname=globalizeConst(ch,bs);
       marshalDIF(bs,DIF_CHUNK);
       trailCycle(t->getCycleRef(),bs);
       marshalGName(gname,bs);
@@ -388,7 +405,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       if (cl->isNative())
 	goto bomb;
 
-      cl->globalize();
+      globalizeConst(cl,bs);
       marshalClass(cl,bs);
       return;
     }
@@ -398,7 +415,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       if (pp->getPred()->isNative())
 	goto bomb;
 
-      GName *gname = pp->getGName();
+      GName *gname = globalizeConst(pp,bs);
 
       marshalDIF(bs,DIF_PROC);
       trailCycle(t->getCycleRef(),bs);
@@ -421,16 +438,12 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   case Co_Object:
     {
       CheckD0Compatibility;
- 
-      if (!isPerdioInitialized()) perdioInitLocal();
       marshalObject(t, bs);
       return;
     }
 
 #define HandleTert(string,tag,check)			\
     if (check) { CheckD0Compatibility; }		\
-    bs->addRes(makeTaggedConst(t));			\
-    if (!isPerdioInitialized()) perdioInitLocal();      \
     if (marshalTertiary((Tertiary *) t,tag,bs)) return;	\
     trailCycle(t->getCycleRef(),bs);			\
     return;
@@ -454,7 +467,11 @@ bomb:
 void marshalTerm(OZ_Term t, MsgBuffer *bs)
 {
   int depth = 0;
+
 loop:
+
+  bs->visit(t);
+
   DEREF(t,tPtr,tTag);
   switch(tTag) {
 
@@ -484,16 +501,15 @@ loop:
 	litTag = DIF_COPYABLENAME;
       } else {
 	litTag = DIF_NAME;
-	gname = ((Name*)lit)->globalize();
+	if (bs->globalize())
+	  gname = ((Name*)lit)->globalize();
       }
 
       marshalDIF(bs,litTag);
       const char *name = lit->getPrintName();
       trailCycle(lit->getCycleRef(),bs);
       marshalString(name,bs);
-      if (gname) {
-	marshalGName(gname,bs);
-      }
+      marshalGName(gname,bs);
       break;
     }
 
@@ -575,12 +591,10 @@ loop:
   case UVAR:
     // FUT
   case CVAR:
-    if (!isPerdioInitialized()) perdioInitLocal();
     if (marshalVariable(tPtr, bs))
       break;
-    else
-      t=makeTaggedRef(tPtr);
-      goto bomb;
+    t=makeTaggedRef(tPtr);
+    goto bomb;
 
   default:
   bomb:

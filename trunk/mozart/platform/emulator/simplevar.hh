@@ -65,6 +65,8 @@ Bool isSimpleVar(TaggedRef term)
   return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_SIMPLE);
 }
 
+GenCVariable *uvar2SimpleVar(TaggedRef *v);
+
 inline
 SimpleVar *tagged2SimpleVar(TaggedRef t) {
   Assert(isSimpleVar(t));
