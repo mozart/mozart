@@ -858,6 +858,16 @@ static void getHashTableNumEntryLabelCA(void *arg, OZ_Term value) {
   delete desc;
 }
 
+//
+static void handleDEBUGENTRY(void *arg)
+{
+  ProgramCounter PC = (ProgramCounter) arg;
+  Assert(PC);
+
+  TaggedRef file = getTaggedArg(PC+1);
+  int line = smallIntValue(getNumberArg(PC+2));
+  CodeArea::writeDebugInfo(PC, file, line);
+}
 
 #ifdef USE_FAST_UNMARSHALER
 //
@@ -981,7 +991,6 @@ ProgramCounter unmarshalProcedureRef(Builder *b, ProgramCounter pc,
   return (pc ? code->writeAbstractionEntry(entry,pc) : (ProgramCounter) pc);
 }
 
-
 //
 // Returning 'OK' means we are done (with the code area);
 // 'pc' can be zero meaning "discard the code". If it is non-zero,
@@ -1006,6 +1015,10 @@ Bool unmarshalCode(MsgBuffer *bs, Builder *b,
     }
 
     //
+    if (op == DEBUGENTRY && PC)
+      b->schedGenAction(handleDEBUGENTRY, PC);
+
+    //
     Assert(op != CALLPROCEDUREREF);
     if (PC)
       PC = CodeArea::writeOpcode(op,PC);
@@ -1018,12 +1031,6 @@ Bool unmarshalCode(MsgBuffer *bs, Builder *b,
       changequote([[,]])
 
     default: Assert(0); break;
-    }
-
-    if (op == DEBUGENTRY && PC) {
-      TaggedRef file = getTaggedArg(lastPC+1);
-      int line = smallIntValue(getNumberArg(lastPC+2));
-      CodeArea::writeDebugInfo(lastPC,file,line);
     }
   }
 
@@ -1446,6 +1453,10 @@ Bool unmarshalCodeRobust(MsgBuffer *bs, Builder *b,
     }
 
     //
+    if (op == DEBUGENTRY && PC)
+      b->schedGenAction(handleDEBUGENTRY, PC);
+
+    //
     Assert(op != CALLPROCEDUREREF);
     if (PC)
       PC = CodeArea::writeOpcode(op,PC);
@@ -1458,12 +1469,6 @@ Bool unmarshalCodeRobust(MsgBuffer *bs, Builder *b,
       changequote([[,]])
 
     default: return ERR;
-    }
-
-    if (op == DEBUGENTRY && PC) {
-      TaggedRef file = getTaggedArg(lastPC+1);
-      int line = smallIntValue(getNumberArg(lastPC+2));
-      CodeArea::writeDebugInfo(lastPC,file,line);
     }
   }
 

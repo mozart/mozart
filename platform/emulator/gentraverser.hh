@@ -658,6 +658,8 @@ enum BuilderTaskType {
   // intermediate task, as one would expect):
   BT_binary_getCompleteValue,
   BT_binary_getValue_intermediate,
+  // do arbitrary task at the point (see also 'schedGenAction'):
+  BT_binary_doGenAction_intermediate,
 
   //
   BT_NOTASK
@@ -1203,7 +1205,8 @@ public:
 //
 typedef int BuilderOpaqueBA;
 typedef void (*OzValueProcessor)(void *arg, OZ_Term value);
-
+typedef void (*OzValueProcessor)(void *arg, OZ_Term value);
+typedef void (*BuilderGenAction)(void *arg);
 //
 class Builder : private BuilderStack, public TermTable {
 private:
@@ -1482,6 +1485,22 @@ public:
   // processed, everyone is free to define its own processor;
   void discardOzValueCA() {
     putTask(BT_spointer, &blackhole);
+  }
+
+  //
+  // Sometimes it is also needed to execute a task just at a
+  // particular point during building. For instance, it is necessary
+  // to copy an Oz value from a 'DEBUGENTRY' instruction into the
+  // 'CodeArea' object itself.
+  //
+  // Note: the action is executed just before the last
+  // known-but-not-yet-built (that is, there is a task for it in the
+  // stack) Oz value will be built. This implies that e.g. all the
+  // tasks generated after that (say, we find a 'DEBUGENTRY'
+  // instruction in the stream that contains two Oz values and which,
+  // thus, will create two tasks) will be processed before it.
+  void schedGenAction(BuilderGenAction proc, void *arg) {
+    putTask(BT_binary_doGenAction_intermediate, (void *) proc, arg);
   }
 
   //
