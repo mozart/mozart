@@ -176,7 +176,7 @@ Bool Thread::hasJobDebug ()
 #endif
 
 //
-int Thread::findExceptionHandler(Chunk *&chunk, TaskStackEntry *&oldTos)
+int Thread::findExceptionHandler(TaggedRef &chunk, TaskStackEntry *&oldTos)
 {
   int spaceCount=0;
   TaskStack *ts = &(item.threadBody->taskStack);
@@ -187,7 +187,7 @@ int Thread::findExceptionHandler(Chunk *&chunk, TaskStackEntry *&oldTos)
     TaskStackEntry entry=*(tos-1);
     if (ts->isEmpty(entry)) {
       ts->setTop (tos);
-      chunk=0;
+      chunk=makeTaggedNULL();
       return spaceCount;
     }
 
@@ -195,7 +195,7 @@ int Thread::findExceptionHandler(Chunk *&chunk, TaskStackEntry *&oldTos)
 
     switch (cFlag) {
     case C_EXCEPT_HANDLER:
-      chunk = (Chunk*) *(tos-2);
+      chunk = (TaggedRef) *(tos-2);
       ts->setTop (tos-2);
       return spaceCount;
     case C_LOCAL:
