@@ -72,7 +72,7 @@ private:
   Bool unifyMeta(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
 
 public:
-  NO_DEFAULT_CONSTRUCTORS(GenMetaVariable);
+  GenMetaVariable() : GenCVariable(MetaVariable) {}
   GenMetaVariable(MetaTag * t, TaggedRef tr);
 
   MetaTag * getTag(void) { return tag; }
@@ -102,6 +102,29 @@ public:
     return tag->unify_meta_meta(makeTaggedCVar(this), getData(), 
 				var, vdata, vtype, NULL);
   }
+
+
+  OZ_Return unifyV(TaggedRef*vPtr,TaggedRef v,TaggedRef *tPtr,TaggedRef t,
+		   ByteCode*scp) {
+    return unifyMeta(vPtr,v,tPtr,t,scp);
+  }
+  OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
+    return valid(val);
+  }
+  OZ_Return hasFeatureV(TaggedRef val, TaggedRef *) {
+    return FAILED;
+  }
+  GenCVariable* gcV() { error("not impl"); return 0; }
+  void gcRecurseV() { error("not impl"); }
+  void addSuspV(Suspension susp, TaggedRef* ptr, int state) {
+    // mm2: addSuspFDVar(makeTaggedRef(ptr),susp,state);
+  }
+  Bool isKindedV() { return true; }
+  void disposeV(void) { freeListDispose(this, sizeof(GenMetaVariable)); }
+  int getSuspListLengthV() { return getSuspListLength(); }
+  void printV() {}
+  void printLongV() {}
+
 };
 
 

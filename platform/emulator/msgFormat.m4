@@ -67,6 +67,3 @@ message(M_EXPORT,Term)
 message(M_INIT_VS,Site)
 message(M_UNASK_ERROR,Index,Site,Index2)
 message(M_SEND_GATE,Term)
-
-
-
