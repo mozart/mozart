@@ -173,6 +173,8 @@ static long emulatorStartTime = 0;
 
 #ifndef WINDOWS
 // ===================================================================
+// we save the result of sysconf(_SC_CLK_TCK) in a global variable.
+// this is actually faster than calling sysconf each time.
 //
 // why both inner and outer variables (see below)? because at the
 // moment some Linux installations are suffering from the recent bump
@@ -188,14 +190,14 @@ static long emulatorStartTime = 0;
 // observed in its test.
 // ===================================================================
 
-#define    INNER_TICKS_PER_SEC_AS_INT    sysconf(_SC_CLK_TCK)
-#define    INNER_TICKS_PER_SEC_AS_DOUBLE (double) INNER_TICKS_PER_SEC_AS_INT
+static int    INNER_TICKS_PER_SEC_AS_INT = 0;
+static double INNER_TICKS_PER_SEC_AS_DOUBLE = 0.0;
 #ifdef CLK_TCK_BUG_RATIO
-#define    OUTER_TICKS_PER_SEC_AS_INT     (CLK_TCK_BUG_RATIO * INNER_TICKS_PER_SEC_AS_INT)
-#define    OUTER_TICKS_PER_SEC_AS_DOUBLE  (double) OUTER_TICKS_PER_SEC_AS_INT
+static int    OUTER_TICKS_PER_SEC_AS_INT = 0;
+static double OUTER_TICKS_PER_SEC_AS_DOUBLE = 0.0;
 #else
-#define    OUTER_TICKS_PER_SEC_AS_INT    INNER_TICKS_PER_SEC_AS_INT
-#define    OUTER_TICKS_PER_SEC_AS_DOUBLE INNER_TICKS_PER_SEC_AS_DOUBLE
+#define OUTER_TICKS_PER_SEC_AS_INT    INNER_TICKS_PER_SEC_AS_INT
+#define OUTER_TICKS_PER_SEC_AS_DOUBLE INNER_TICKS_PER_SEC_AS_DOUBLE
 #endif
 #endif
 
@@ -214,6 +216,7 @@ unsigned int osUserTime()
   struct tms buffer;
 
   times(&buffer);
+  Assert(INNER_TICKS_PER_SEC_AS_DOUBLE>0.0); // osInit() first
   return (unsigned int)(buffer.tms_utime*1000.0/INNER_TICKS_PER_SEC_AS_DOUBLE);
 #endif
 }
@@ -233,6 +236,7 @@ unsigned int osSystemTime()
   struct tms buffer;
 
   times(&buffer);
+  Assert(INNER_TICKS_PER_SEC_AS_DOUBLE>0.0); // osInit() first
   return (unsigned int)(buffer.tms_stime*1000.0/INNER_TICKS_PER_SEC_AS_DOUBLE);
 #endif
 }
@@ -256,6 +260,7 @@ unsigned int osTotalTime()
 
   struct tms buffer;
   int t = times(&buffer) - emulatorStartTime;
+  Assert(OUTER_TICKS_PER_SEC_AS_DOUBLE>0.0); // osInit() first
   return (unsigned int) (t*1000.0/OUTER_TICKS_PER_SEC_AS_DOUBLE);
 
 #endif
@@ -1151,7 +1156,7 @@ char *osinet_ntoa(char *ip)
 }
 
 #if !defined(WINDOWS) && !defined(SUNOS_SPARC)
-#define OUTER_TICKS_PER_10MS_AS_INT (OUTER_TICKS_PER_SEC_AS_INT / 100)
+int OUTER_TICKS_PER_10MS_AS_INT = 0;
 #endif
 
 void osInit()
@@ -1212,6 +1217,18 @@ void osInit()
 
 #endif
 
+#ifndef WINDOWS
+  INNER_TICKS_PER_SEC_AS_INT = sysconf(_SC_CLK_TCK);
+  INNER_TICKS_PER_SEC_AS_DOUBLE = (double) INNER_TICKS_PER_SEC_AS_INT;
+#ifdef CLK_TCK_BUG_RATIO
+  OUTER_TICKS_PER_SEC_AS_INT = CLK_TCK_BUG_RATIO * INNER_TICKS_PER_SEC_AS_INT;
+  OUTER_TICKS_PER_SEC_AS_DOUBLE = (double) OUTER_TICKS_PER_SEC_AS_INT;
+#endif
+#endif
+
+#if !defined(WINDOWS) && !defined(SUNOS_SPARC)
+  OUTER_TICKS_PER_10MS_AS_INT = OUTER_TICKS_PER_SEC_AS_INT / 100;
+#endif
 }
 
 #define CheckMode(mode) Assert(mode==SEL_READ || mode==SEL_WRITE)
@@ -1702,6 +1719,7 @@ int osgetEpid()
   ticks = (ms % 1000)/10;
 #else
   struct tms buffer;
+  Assert(OUTER_TICKS_PER_10MS_AS_INT>0); // osInit() first
   do {
     ticks = times(&buffer);
   } while ((ticks-emulatorStartTime)<OUTER_TICKS_PER_10MS_AS_INT);
