@@ -45,6 +45,9 @@ MOGUL_LIBRARIAN	= $(OZE) $(PKG_URI)/Librarian.exe	\
 
 MOGUL_EXPORT_OPTIONS	=	\
 	--export-db=$(MOGUL_DATABASE)-EXPORT
+MOGUL_IMPORT_OPTIONS	=	\
+	--import-db=$(MOGUL_DATABASE)-EXPORT \
+	--save-db
 
 MOGUL_DATABASE_OPTIONS	=	\
 	--update-info		\
@@ -72,6 +75,8 @@ mogul-database:
 
 mogul-export:
 	$(MOGUL_LIBRARIAN) $(MOGUL_EXPORT_OPTIONS) --print-reports
+mogul-import:
+	$(MOGUL_LIBRARIAN) $(MOGUL_IMPORT_OPTIONS) --print-reports
 
 MOGUL_ARCHIVE_DIRS = $(addprefix $(MOGUL_DIRECTORY)/,pkg doc)
 MOGUL_HTML_DIRS    = $(addprefix $(MOGUL_DIRECTORY)/,info info/category)
