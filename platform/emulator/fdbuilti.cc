@@ -648,7 +648,7 @@ void BIinitFD()
   BIadd("fdNotEqOff", 3, BIfdNotEqOff);
   BIadd("fdNotEqOff_body", 3, BIfdNotEqOff_body);
   BIadd("fdAllDifferent", 1, BIfdAllDifferent);
-  BIadd("fdAllDifferent_body", 1, BIfdAllDifferent_body);
+  BIadd("fdAllDifferent_body", 2, BIfdAllDifferent_body);
 
 // fdbool.cc
   BIadd("fdAnd", 3, BIfdAnd);
