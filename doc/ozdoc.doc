@@ -91,7 +91,7 @@ elements.  Phrase elements however require an end tag.
 *** Macros
 
 entities are a bit like macros.  You can add entity declarations where
-it say <!-- entity declarations --> above.  For example:
+it says <!-- entity declarations --> above.  For example:
 
         <!ENTITY quux "Guy L. Steele JR.">
 
@@ -191,7 +191,7 @@ means that non-terminal <FOO> can be rewritten to the sequence BAR
 BAZ.
 
 The annotation +<INDEXING> in the rule for BOOK indicates that the
-elements reresented by non-terminal <INDEXING> are allowed to occur
+elements represented by non-terminal <INDEXING> are allowed to occur
 anywhere within the scope of element BOOK.
 
 BOOK            ::= FRONT BODY BACK?                    +<INDEXING>
