@@ -321,7 +321,7 @@ OZ_Return DistinctPropagatorStream::propagate(void)
   while (!st.isEostr()) {
     OZ_Term e = st.get();
     if (OZ_isVariable(e)) {
-      MyList * newItem = new MyList;
+      MyList * newItem = ::new MyList;
       newItem->fd = e;
       if (new_items == 0)
 	{
@@ -356,8 +356,9 @@ OZ_Return DistinctPropagatorStream::propagate(void)
     for (i = 0; i<new_items; i++ ) {
       new_reg_fds[ts+i] = my_list->fd;
       imposeOn(my_list->fd);
-      :: delete my_list;
+      MyList * aux = my_list;
       my_list = my_list->next;
+      :: delete aux;
     }
     reg_fds  = new_reg_fds;
   }
