@@ -49,7 +49,7 @@ MODSPECS = FDP FSP Schedule Wif Parser OS Property Pickle \
         PID URL FDB FSB System Finalize CTB \
         CompilerSupport Profile \
         Debug Fault Foreign Browser Misc Distribution \
-        Builtins
+        Builtins VirtualSite
 
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
