@@ -88,7 +88,9 @@ end
       tickle. Otherwise <<false>> is returned. The procedure
       <<IsTclObject>> tests whether an object is a tickle-object. Note
       that records which have the labels <<#>> and <<|>> are treated
-      as virtual strings. 
+      as virtual strings. Note that <<IsTcl>> and the following
+      procedures serve as specification, the graphics engine itself
+      employs well optimized routines instead.
 
     <subsection id="section.tk.tickles.translation">
       <title/Translation to Virtual Strings/
@@ -320,6 +322,15 @@ end
       objects/. Applying a tickle object to a message translates it
       in a straightforward way into a tickle.
 
+    <p>
+      Tickle objects themselves enjoy an translation into strings,
+      each tickle object carries a unique identifier that is its
+      translation. Creation of a tickle object creates a new unique
+      identifier, where the exact identifier depends on the tickle
+      class the object is created from. The translation of a tickle
+      object application of course uses the tickle object's
+      identifier.
+
     <figure id="figure.tk.hierarchy">
       <caption/Hierarchy of tickle objects./
 <picture latex>
@@ -377,8 +388,8 @@ end
     <p>
       The available tickle classes are shown in <ptr
       to="figure.tk.hierarchy">, where the classes that are shadowed
-      gray are classes provided by the tk module, the others are just
-      conceptual.
+      gray are classes provided by the <<Tk>> module, the others are
+      just conceptual.
 
     <p> 
       To give a convenient translation from the message to a tickle,
@@ -398,6 +409,10 @@ end
 >>>
 </figure>
 
+      <p>
+        In the following we will present methods that will be
+        recurring.
+
     <subsection id="section.tk.tkInit">
        <title/Initialization: <<tkInit>>/
 
@@ -415,36 +430,223 @@ end
     <title/No-Action Widgets/
    
     <p>
+      <index  class=module/Tk<and>canvas/
+      <index  class=module/Tk<and>entry/
+      <index  class=module/Tk<and>frame/
+      <index  class=module/Tk<and>label/
+      <index  class=module/Tk<and>listbox/
+      <index  class=module/Tk<and>menu/
+      <index  class=module/Tk<and>menubutton/
+      <index  class=module/Tk<and>message/
+      <index  class=module/Tk<and>text/
+      The following table lists the widgets that do not accept actions:
       <table>
-        <tr/ <th/Widget/ <th/Example/ <th/Reference//
-        <tr/ <td/canvas/ 
+        <tr/ <th/Class/ <th/Example/ <th/Reference//
+        <tr/ <td/<<Tk.canvas>>/ 
              <td/<ptr.extern to="ozdoc:wp" key="chapter.canvas"/
              <td/<ref.extern to="&tkcmd;/canvas.htm"/<file/canvas////
-        <tr/ <td/entry/ 
+        <tr/ <td/<<Tk.entry>>/ 
              <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.entry"/
              <td/<ref.extern to="&tkcmd;/entry.htm"/<file/entry////
-        <tr/ <td/frame/ 
+        <tr/ <td/<<Tk.frame>>/ 
              <td/<ptr.extern to="ozdoc:wp" key="section.widgets-1.frame"/
              <td/<ref.extern to="&tkcmd;/frame.htm"/<file/frame////
-        <tr/ <td/label/ 
+        <tr/ <td/<<Tk.label>>/ 
              <td/<ptr.extern to="ozdoc:wp" key="section.widgets-1.label"/
              <td/<ref.extern to="&tkcmd;/label.htm"/<file/label////
-        <tr/ <td/listbox/ 
+        <tr/ <td/<<Tk.listbox>>/ 
              <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.listbox"/
              <td/<ref.extern to="&tkcmd;/listbox.htm"/<file/listbox////
-        <tr/ <td/menu/ 
+        <tr/ <td/<<Tk.menu>>/ 
              <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
              <td/<ref.extern to="&tkcmd;/menu.htm"/<file/menu////
-        <tr/ <td/menubutton/ 
+        <tr/ <td/<<Tk.menubutton>>/ 
              <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
              <td/<ref.extern to="&tkcmd;/menubutton.htm"/<file/menubutton////
-        <tr/ <td/message/ 
+        <tr/ <td/<<Tk.message>>/ 
              <td/<ptr.extern to="ozdoc:wp" key="section.widgets-1.messages"/
              <td/<ref.extern to="&tkcmd;/message.htm"/<file/message////
-        <tr/ <td/text/ 
+        <tr/ <td/<<Tk.text>>/ 
              <td/<ptr.extern to="ozdoc:wp" key="chapter.text"/
              <td/<ref.extern to="&tkcmd;/text.htm"/<file/text////
       </table>
+
+     <p>
+       All classes provide the following methods:
+
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>canvas<and>tkInit/
+         <index class=module/Tk<and>entry<and>tkInit/
+         <index class=module/Tk<and>frame<and>tkInit/
+         <index class=module/Tk<and>label<and>tkInit/
+         <index class=module/Tk<and>listbox<and>tkInit/
+         <index class=module/Tk<and>menu<and>tkInit/
+         <index class=module/Tk<and>menubutton<and>tkInit/
+         <index class=module/Tk<and>message<and>tkInit/
+         <index class=module/Tk<and>text<and>tkInit/
+       <synopsis>
+         <<tkInit(parent:?+{WidgetO} ...)>>
+       <item>
+         Creates.
+
+       <entry><<tk>>
+         <index class=module/Tk<and>canvas<and>tk/
+         <index class=module/Tk<and>entry<and>tk/
+         <index class=module/Tk<and>frame<and>tk/
+         <index class=module/Tk<and>label<and>tk/
+         <index class=module/Tk<and>listbox<and>tk/
+         <index class=module/Tk<and>menu<and>tk/
+         <index class=module/Tk<and>menubutton<and>tk/
+         <index class=module/Tk<and>message<and>tk/
+         <index class=module/Tk<and>text<and>tk/
+       <synopsis>
+         <<tk(...)>>
+       <item>
+         Sends.
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>canvas<and>tkReturn/
+         <index class=module/Tk<and>entry<and>tkReturn/
+         <index class=module/Tk<and>frame<and>tkReturn/
+         <index class=module/Tk<and>label<and>tkReturn/
+         <index class=module/Tk<and>listbox<and>tkReturn/
+         <index class=module/Tk<and>menu<and>tkReturn/
+         <index class=module/Tk<and>menubutton<and>tkReturn/
+         <index class=module/Tk<and>message<and>tkReturn/
+         <index class=module/Tk<and>text<and>tkReturn/
+         <index class=module/Tk<and>canvas<and>tkReturnString/
+         <index class=module/Tk<and>entry<and>tkReturnString/
+         <index class=module/Tk<and>frame<and>tkReturnString/
+         <index class=module/Tk<and>label<and>tkReturnString/
+         <index class=module/Tk<and>listbox<and>tkReturnString/
+         <index class=module/Tk<and>menu<and>tkReturnString/
+         <index class=module/Tk<and>menubutton<and>tkReturnString/
+         <index class=module/Tk<and>message<and>tkReturnString/
+         <index class=module/Tk<and>text<and>tkReturnString/
+         <index class=module/Tk<and>canvas<and>tkReturnAtom/
+         <index class=module/Tk<and>entry<and>tkReturnAtom/
+         <index class=module/Tk<and>frame<and>tkReturnAtom/
+         <index class=module/Tk<and>label<and>tkReturnAtom/
+         <index class=module/Tk<and>listbox<and>tkReturnAtom/
+         <index class=module/Tk<and>menu<and>tkReturnAtom/
+         <index class=module/Tk<and>menubutton<and>tkReturnAtom/
+         <index class=module/Tk<and>message<and>tkReturnAtom/
+         <index class=module/Tk<and>text<and>tkReturnAtom/
+         <index class=module/Tk<and>canvas<and>tkReturnInt/
+         <index class=module/Tk<and>entry<and>tkReturnInt/
+         <index class=module/Tk<and>frame<and>tkReturnInt/
+         <index class=module/Tk<and>label<and>tkReturnInt/
+         <index class=module/Tk<and>listbox<and>tkReturnInt/
+         <index class=module/Tk<and>menu<and>tkReturnInt/
+         <index class=module/Tk<and>menubutton<and>tkReturnInt/
+         <index class=module/Tk<and>message<and>tkReturnInt/
+         <index class=module/Tk<and>text<and>tkReturnInt/
+         <index class=module/Tk<and>canvas<and>tkReturnFloat/
+         <index class=module/Tk<and>entry<and>tkReturnFloat/
+         <index class=module/Tk<and>frame<and>tkReturnFloat/
+         <index class=module/Tk<and>label<and>tkReturnFloat/
+         <index class=module/Tk<and>listbox<and>tkReturnFloat/
+         <index class=module/Tk<and>menu<and>tkReturnFloat/
+         <index class=module/Tk<and>menubutton<and>tkReturnFloat/
+         <index class=module/Tk<and>message<and>tkReturnFloat/
+         <index class=module/Tk<and>text<and>tkReturnFloat/
+         <index class=module/Tk<and>canvas<and>tkReturnList/
+         <index class=module/Tk<and>entry<and>tkReturnList/
+         <index class=module/Tk<and>frame<and>tkReturnList/
+         <index class=module/Tk<and>label<and>tkReturnList/
+         <index class=module/Tk<and>listbox<and>tkReturnList/
+         <index class=module/Tk<and>menu<and>tkReturnList/
+         <index class=module/Tk<and>menubutton<and>tkReturnList/
+         <index class=module/Tk<and>message<and>tkReturnList/
+         <index class=module/Tk<and>text<and>tkReturnList/
+         <index class=module/Tk<and>canvas<and>tkReturnListString/
+         <index class=module/Tk<and>entry<and>tkReturnListString/
+         <index class=module/Tk<and>frame<and>tkReturnListString/
+         <index class=module/Tk<and>label<and>tkReturnListString/
+         <index class=module/Tk<and>listbox<and>tkReturnListString/
+         <index class=module/Tk<and>menu<and>tkReturnListString/
+         <index class=module/Tk<and>menubutton<and>tkReturnListString/
+         <index class=module/Tk<and>message<and>tkReturnListString/
+         <index class=module/Tk<and>text<and>tkReturnListString/
+         <index class=module/Tk<and>canvas<and>tkReturnListAtom/
+         <index class=module/Tk<and>entry<and>tkReturnListAtom/
+         <index class=module/Tk<and>frame<and>tkReturnListAtom/
+         <index class=module/Tk<and>label<and>tkReturnListAtom/
+         <index class=module/Tk<and>listbox<and>tkReturnListAtom/
+         <index class=module/Tk<and>menu<and>tkReturnListAtom/
+         <index class=module/Tk<and>menubutton<and>tkReturnListAtom/
+         <index class=module/Tk<and>message<and>tkReturnListAtom/
+         <index class=module/Tk<and>text<and>tkReturnListAtom/
+         <index class=module/Tk<and>canvas<and>tkReturnListInt/
+         <index class=module/Tk<and>entry<and>tkReturnListInt/
+         <index class=module/Tk<and>frame<and>tkReturnListInt/
+         <index class=module/Tk<and>label<and>tkReturnListInt/
+         <index class=module/Tk<and>listbox<and>tkReturnListInt/
+         <index class=module/Tk<and>menu<and>tkReturnListInt/
+         <index class=module/Tk<and>menubutton<and>tkReturnListInt/
+         <index class=module/Tk<and>message<and>tkReturnListInt/
+         <index class=module/Tk<and>text<and>tkReturnListInt/
+         <index class=module/Tk<and>canvas<and>tkReturnListFloat/
+         <index class=module/Tk<and>entry<and>tkReturnListFloat/
+         <index class=module/Tk<and>frame<and>tkReturnListFloat/
+         <index class=module/Tk<and>label<and>tkReturnListFloat/
+         <index class=module/Tk<and>listbox<and>tkReturnListFloat/
+         <index class=module/Tk<and>menu<and>tkReturnListFloat/
+         <index class=module/Tk<and>menubutton<and>tkReturnListFloat/
+         <index class=module/Tk<and>message<and>tkReturnListFloat/
+         <index class=module/Tk<and>text<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Sends.
+
+       <entry><<tkBind>>
+         <index class=module/Tk<and>canvas<and>tkBind/
+         <index class=module/Tk<and>entry<and>tkBind/
+         <index class=module/Tk<and>frame<and>tkBind/
+         <index class=module/Tk<and>label<and>tkBind/
+         <index class=module/Tk<and>listbox<and>tkBind/
+         <index class=module/Tk<and>menu<and>tkBind/
+         <index class=module/Tk<and>menubutton<and>tkBind/
+         <index class=module/Tk<and>message<and>tkBind/
+         <index class=module/Tk<and>text<and>tkBind/
+       <synopsis>
+         <<<tkBind(event:  ?_{EventV}
+       action: ?_{Action}  <= _
+       args:   ?_{Args}    <= nil
+       append: ?_{AppendB} <= false
+       break:  ?_{BreakB}  <= false)>>>
+       <item>
+         Sends.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>canvas<and>tkClose/
+         <index class=module/Tk<and>entry<and>tkClose/
+         <index class=module/Tk<and>frame<and>tkClose/
+         <index class=module/Tk<and>label<and>tkClose/
+         <index class=module/Tk<and>listbox<and>tkClose/
+         <index class=module/Tk<and>menu<and>tkClose/
+         <index class=module/Tk<and>menubutton<and>tkClose/
+         <index class=module/Tk<and>message<and>tkClose/
+         <index class=module/Tk<and>text<and>tkClose/
+       <synopsis>
+         <<tkClose()>>
+       <item>
+         Closes the widget object and destroys the widgets and all
+         slave widgets. Further object application will raise an
+         exception.
+
+     </list>
 
   </section>
 
@@ -453,28 +655,166 @@ end
     <title/Action Widgets/
    
     <p>
+      <index class=module/Tk<and>button/
+      <index class=module/Tk<and>checkbutton/
+      <index class=module/Tk<and>radiobutton/
+      <index class=module/Tk<and>scale/
+      <index class=module/Tk<and>scrollbar/
       <table>
-        <tr/ <th/Widget/ <th/Example/ <th/Reference//
-        <tr/ <td/button/ 
+        <tr/ <th/Class/ <th/Example/ <th/Reference//
+        <tr/ <td/<<Tk.button>>/ 
              <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.button"/
              <td/<ref.extern to="&tkcmd;/button.htm"/<file/button////
-        <tr/ <td/checkbutton/ 
+        <tr/ <td/<<Tk.checkbutton>>/ 
              <td/<ptr.extern to="ozdoc:wp" 
                              key="section.widgets-2.otherbuttons"/
              <td/<ref.extern to="&tkcmd;/checkbutton.htm"/<file/checkbutton////
-        <tr/ <td/radiobutton/ 
+        <tr/ <td/<<Tk.radiobutton>>/ 
              <td/<ptr.extern to="ozdoc:wp" 
                              key="section.widgets-2.otherbuttons"/
              <td/<ref.extern to="&tkcmd;/radiobutton.htm"/<file/radiobutton////
-        <tr/ <td/scale/ 
+        <tr/ <td/<<Tk.scale>>/ 
              <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.scale"/
              <td/<ref.extern to="&tkcmd;/scale.htm"/<file/scale////
-        <tr/ <td/scrollbar/ 
+        <tr/ <td/<<Tk.scrollbar>>/ 
              <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.listbox"/
              <td/<ref.extern to="&tkcmd;/scrollbar.htm"/<file/scrollbar////
       </table>
 
     <p>
+
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>button<and>tkInit/
+         <index class=module/Tk<and>checkbutton<and>tkInit/
+         <index class=module/Tk<and>radiobutton<and>tkInit/
+         <index class=module/Tk<and>scale<and>tkInit/
+         <index class=module/Tk<and>scrollbar<and>tkInit/
+       <synopsis>
+         <<<tkInit(parent: ?+{WidgetO} 
+       action: ?+{Action}
+       args:   ?+{Args}   <= nil 
+       ...)>>>
+       <item>
+         Creates.
+
+       <entry><<tk>>
+         <index class=module/Tk<and>button<and>tkInit/
+         <index class=module/Tk<and>checkbutton<and>tkInit/
+         <index class=module/Tk<and>radiobutton<and>tkInit/
+         <index class=module/Tk<and>scale<and>tkInit/
+         <index class=module/Tk<and>scrollbar<and>tkInit/
+       <synopsis>
+         <<tk(...)>>
+       <item>
+         Sends.
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>button<and>tkReturn/
+         <index class=module/Tk<and>checkbutton<and>tkReturn/
+         <index class=module/Tk<and>radiobutton<and>tkReturn/
+         <index class=module/Tk<and>scale<and>tkReturn/
+         <index class=module/Tk<and>scrollbar<and>tkReturn/
+         <index class=module/Tk<and>button<and>tkReturnString/
+         <index class=module/Tk<and>checkbutton<and>tkReturnString/
+         <index class=module/Tk<and>radiobutton<and>tkReturnString/
+         <index class=module/Tk<and>scale<and>tkReturnString/
+         <index class=module/Tk<and>scrollbar<and>tkReturnString/
+         <index class=module/Tk<and>button<and>tkReturnAtom/
+         <index class=module/Tk<and>checkbutton<and>tkReturnAtom/
+         <index class=module/Tk<and>radiobutton<and>tkReturnAtom/
+         <index class=module/Tk<and>scale<and>tkReturnAtom/
+         <index class=module/Tk<and>scrollbar<and>tkReturnAtom/
+         <index class=module/Tk<and>button<and>tkReturnInt/
+         <index class=module/Tk<and>checkbutton<and>tkReturnInt/
+         <index class=module/Tk<and>radiobutton<and>tkReturnInt/
+         <index class=module/Tk<and>scale<and>tkReturnInt/
+         <index class=module/Tk<and>scrollbar<and>tkReturnInt/
+         <index class=module/Tk<and>button<and>tkReturnFloat/
+         <index class=module/Tk<and>checkbutton<and>tkReturnFloat/
+         <index class=module/Tk<and>radiobutton<and>tkReturnFloat/
+         <index class=module/Tk<and>scale<and>tkReturnFloat/
+         <index class=module/Tk<and>scrollbar<and>tkReturnFloat/
+         <index class=module/Tk<and>button<and>tkReturnList/
+         <index class=module/Tk<and>checkbutton<and>tkReturnList/
+         <index class=module/Tk<and>radiobutton<and>tkReturnList/
+         <index class=module/Tk<and>scale<and>tkReturnList/
+         <index class=module/Tk<and>scrollbar<and>tkReturnList/
+         <index class=module/Tk<and>button<and>tkReturnListString/
+         <index class=module/Tk<and>checkbutton<and>tkReturnListString/
+         <index class=module/Tk<and>radiobutton<and>tkReturnListString/
+         <index class=module/Tk<and>scale<and>tkReturnListString/
+         <index class=module/Tk<and>scrollbar<and>tkReturnListString/
+         <index class=module/Tk<and>button<and>tkReturnListAtom/
+         <index class=module/Tk<and>checkbutton<and>tkReturnListAtom/
+         <index class=module/Tk<and>radiobutton<and>tkReturnListAtom/
+         <index class=module/Tk<and>scale<and>tkReturnListAtom/
+         <index class=module/Tk<and>scrollbar<and>tkReturnListAtom/
+         <index class=module/Tk<and>button<and>tkReturnListInt/
+         <index class=module/Tk<and>checkbutton<and>tkReturnListInt/
+         <index class=module/Tk<and>radiobutton<and>tkReturnListInt/
+         <index class=module/Tk<and>scale<and>tkReturnListInt/
+         <index class=module/Tk<and>scrollbar<and>tkReturnListInt/
+         <index class=module/Tk<and>button<and>tkReturnListFloat/
+         <index class=module/Tk<and>checkbutton<and>tkReturnListFloat/
+         <index class=module/Tk<and>radiobutton<and>tkReturnListFloat/
+         <index class=module/Tk<and>scale<and>tkReturnListFloat/
+         <index class=module/Tk<and>scrollbar<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Sends.
+
+       <entry><<tkAction>>
+         <index class=module/Tk<and>button<and>tkAction/
+         <index class=module/Tk<and>checkbutton<and>tkAction/
+         <index class=module/Tk<and>radiobutton<and>tkAction/
+         <index class=module/Tk<and>scale<and>tkAction/
+         <index class=module/Tk<and>scrollbar<and>tkAction/
+       <synopsis>
+<<<tkAction(action: ?+{Action} <= unit
+         args:   ?+{Args})>>>
+       <item>
+         Sends.
+
+       <entry><<tkBind>>
+         <index class=module/Tk<and>button<and>tkBind/
+         <index class=module/Tk<and>checkbutton<and>tkBind/
+         <index class=module/Tk<and>radiobutton<and>tkBind/
+         <index class=module/Tk<and>scale<and>tkBind/
+         <index class=module/Tk<and>scrollbar<and>tkBind/
+       <synopsis>
+         <<<tkBind(event:  ?_{EventV}
+       action: ?_{Action}  <= _
+       args:   ?_{Args}    <= nil
+       append: ?_{AppendB} <= false
+       break:  ?_{BreakB}  <= false)>>>
+       <item>
+         Sends.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>button<and>tkClose/
+         <index class=module/Tk<and>checkbutton<and>tkClose/
+         <index class=module/Tk<and>radiobutton<and>tkClose/
+         <index class=module/Tk<and>scale<and>tkClose/
+         <index class=module/Tk<and>scrollbar<and>tkClose/
+       <synopsis>
+         <<tkClose()>>
+       <item>
+         Closes the widget object and destroys the widgets and all
+         slave widgets. Further object application will raise an
+         exception.
+
+     </list>
 
   </section>
 
@@ -482,7 +822,82 @@ end
   <section id="section.tk.toplevel">
     <title/Toplevel Widgets/
    
-    <p>
+     <p>
+       <index class=module/Tk<and>toplevel/
+       The class <<Tk.toplevel>> provides the following methods:
+
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>toplevel<and>tkInit/
+       <synopsis>
+<<<tkInit(parent:   ?+{ParentTcl}
+       delete:   ?+{DeleteAction}
+       title:    ?+{TitleTcl}
+       withdraw: ?+{WithdrawB}
+       ...)>>>
+       <item>
+         Creates.
+
+       <entry><<tk>>
+         <index class=module/Tk<and>toplevel<and>tk/
+       <synopsis>
+         <<tk(...)>>
+       <item>
+         Sends.
+
+       <entry><<tkWM>>
+         <index class=module/Tk<and>toplevel<and>tkWM/
+       <synopsis>
+         <<tkWM(...)>>
+       <item>
+         Sends.
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>toplevel<and>tkReturn/
+         <index class=module/Tk<and>toplevel<and>tkReturnString/
+         <index class=module/Tk<and>toplevel<and>tkReturnAtom/
+         <index class=module/Tk<and>toplevel<and>tkReturnInt/
+         <index class=module/Tk<and>toplevel<and>tkReturnFloat/
+         <index class=module/Tk<and>toplevel<and>tkReturnList/
+         <index class=module/Tk<and>toplevel<and>tkReturnListString/
+         <index class=module/Tk<and>toplevel<and>tkReturnListAtom/
+         <index class=module/Tk<and>toplevel<and>tkReturnListInt/
+         <index class=module/Tk<and>toplevel<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Sends.
+
+       <entry><<tkBind>>
+         <index class=module/Tk<and>toplevel<and>tkBind/
+       <synopsis>
+         <<<tkBind(event:  ?_{EventV}
+       action: ?_{Action}  <= _
+       args:   ?_{Args}    <= nil
+       append: ?_{AppendB} <= false
+       break:  ?_{BreakB}  <= false)>>>
+       <item>
+         Sends.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>toplevel<and>tkClose/
+       <synopsis>
+         <<tkClose()>>
+       <item>
+         Closes the widget object and destroys the widgets and all
+         slave widgets. Further object application will raise an
+         exception.
+
+     </list>
 
   </section>
 
@@ -491,9 +906,135 @@ end
     <title/Menu Entries/
    
     <p>
+      <index class=module/Tk<and>menuentry<and>cascade/
+      <index class=module/Tk<and>menuentry<and>checkbutton/
+      <index class=module/Tk<and>menuentry<and>command/
+      <index class=module/Tk<and>menuentry<and>radiobutton/
+      <index class=module/Tk<and>menuentry<and>separator/
+      <table>
+        <tr/ <th/Class/ <th/Example/ <th/Reference//
+        <tr/ <td/<<Tk.menuentry.cascade>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menu.htm"/<file/menu////
+        <tr/ <td/<<Tk.menuentry.checkbutton>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menu.htm"/<file/menu////
+        <tr/ <td/<<Tk.menuentry.command>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menu.htm"/<file/menu////
+        <tr/ <td/<<Tk.menuentry.radiobutton>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menu.htm"/<file/menu////
+        <tr/ <td/<<Tk.menuentry.separator>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menu.htm"/<file/menu////
+      </table>
+
+    <p>
+
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>menuentry<and>cascade<and>tkInit/
+         <index class=module/Tk<and>menuentry<and>checkbutton<and>tkInit/
+         <index class=module/Tk<and>menuentry<and>command<and>tkInit/
+         <index class=module/Tk<and>menuentry<and>radiobutton<and>tkInit/
+         <index class=module/Tk<and>menuentry<and>separator<and>tkInit/
+       <synopsis>
+         <<<
+tkInit(parent: ?+{WidgetO} 
+       before: ?+{BeforeTcl}
+       action: ?+{Action}
+       args:   ?+{Args}   <= nil 
+       ...)>>>
+       <item>
+         Creates.
+
+       <entry><<tk>>
+         <index class=module/Tk<and>menuentry<and>cascade<and>tk/
+         <index class=module/Tk<and>menuentry<and>checkbutton<and>tk/
+         <index class=module/Tk<and>menuentry<and>command<and>tk/
+         <index class=module/Tk<and>menuentry<and>radiobutton<and>tk/
+         <index class=module/Tk<and>menuentry<and>separator<and>tk/
+       <synopsis>
+         <<tk(...)>>
+       <item>
+         Sends.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>menuentry<and>cascade<and>tkClose/
+         <index class=module/Tk<and>menuentry<and>checkbutton<and>tkClose/
+         <index class=module/Tk<and>menuentry<and>command<and>tkClose/
+         <index class=module/Tk<and>menuentry<and>radiobutton<and>tkClose/
+         <index class=module/Tk<and>menuentry<and>separator<and>tkClose/
+       <synopsis>
+         <<tkClose()>>
+       <item>
+         Closes the widget object and destroys the widgets and all
+         slave widgets. Further object application will raise an
+         exception.
+
+     </list>
+
 
   </section>
 
+
+  <section id="section.tk.variable">
+    <title/Variables/
+   
+    <index class=module/Tk<and>variable/
+
+    <p>
+      The class <<Tk.variable>> provides the following methods. Note
+      that it does not provide a method for closing.
+
+    <p>
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>variable<and>tkInit/
+       <synopsis>
+         <<<tkInit(?+{Tcl} <= unit)>>
+       <item>
+         Creates a new tickle variable with initial value ?_{Tcl}.
+
+       <entry><<tkSet>>
+         <index class=module/Tk<and>variable<and>tkSet/
+       <synopsis>
+         <<tkSet(?+{Tcl})>>
+       <item>
+         Sets the variable's value to ?+{Tcl}.
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>variable<and>tkReturn/
+         <index class=module/Tk<and>variable<and>tkReturnString/
+         <index class=module/Tk<and>variable<and>tkReturnAtom/
+         <index class=module/Tk<and>variable<and>tkReturnInt/
+         <index class=module/Tk<and>variable<and>tkReturnFloat/
+         <index class=module/Tk<and>variable<and>tkReturnList/
+         <index class=module/Tk<and>variable<and>tkReturnListString/
+         <index class=module/Tk<and>variable<and>tkReturnListAtom/
+         <index class=module/Tk<and>variable<and>tkReturnListInt/
+         <index class=module/Tk<and>variable<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Returns the current value of the variable. See <ptr
+         to="section.tk.objects"> for more details.
+
+     </list>
+
+    <p>
+
+  </section>
 
   <section id="section.tk.tagmark">
     <title/Tags And Marks/
@@ -518,13 +1059,6 @@ end
 
   </section>
 
-
-  <section id="section.tk.variable">
-    <title/Variables/
-   
-    <p>
-
-  </section>
 
 
   <section id="section.tk.action">
