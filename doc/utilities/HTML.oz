@@ -32,15 +32,15 @@ export
    verbatim: VERBATIM
    toVirtualString: HTMLToVirtualString
    Clean
-define
+prepare
    % names used for constructing the output tree:
    EMPTY    = {NewName}
    SEQ      = {NewName}
    BLOCK    = {NewName}
    COMMON   = {NewName}
    PCDATA   = {NewName}
-   VERBATIM = {NewName}   %--** should be eliminated
-
+   VERBATIM = {NewName}
+define
    fun {MakeCDATA S}
       '"'#S#'"'   %--** quotation marks etc.
    end
