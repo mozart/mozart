@@ -1084,7 +1084,7 @@ Thread *Thread::gcDeadThread()
   Thread *newThread = (Thread *) gcRealloc (this, sizeof (*this));
   GCNEWADDRMSG (newThread);
 
-  newThread->setBoardInternal(am.rootBoard->gcBoard());
+  newThread->setBoardInternal(am.rootBoard);
   newThread->state.flags=0;
   newThread->item.threadBody=0;
 
