@@ -32,12 +32,8 @@
 #pragma interface
 #endif
 
-#ifdef HAVE_CONFIG_H
 #include "conf.h"
-#endif
-
 #include "mozart.h"
-
 #include "machine.hh"
 #include "resources.hh"
 #include "config.h"
