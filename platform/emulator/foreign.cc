@@ -678,8 +678,6 @@ Bool checkAtom(char *s)
 	&& strcmp(t, "fun")? OK: NO;
   case 'i':
     return strcmp(t, "if") && strcmp(t, "in")? OK: NO;
-  case 'j':
-    return strcmp(t, "job")? OK: NO;
   case 'l':
     return strcmp(t, "local")? OK: NO;
   case 'm':
