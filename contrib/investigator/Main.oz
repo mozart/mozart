@@ -31,6 +31,7 @@ import
    Misc(vectorToList: VectorToList varEq: VarEq)
 
    Error
+   Property
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 define
@@ -413,5 +414,8 @@ define
       {DaVin graph(Result.graph)}
       {Loop FailSet VarTable PropTable Hist DaVin Stream Result}
    end
+
+   {Property.put 'internal.propLocation' true}
+   {Property.put 'gc.on' false}
 
 end
