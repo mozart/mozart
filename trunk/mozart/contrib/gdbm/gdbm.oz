@@ -43,7 +43,7 @@ in
 	 reorganize	: REORGANIZE
 	 member		: MEMBER
 	 ) at 'gdbm.so{native}'
-      Finalize(register	:Register)
+      Finalize(guardian	:Guardian)
       Resolve( expand	:Expand) URL
       Error(registerFormatter)
       MODE at 'x-oz://contrib/os/mode'
@@ -67,13 +67,15 @@ in
       new	: New
    define
 
+      Register = {Guardian FREE}
+
       fun {Open Name Flags Mode Block}
 	 ZFlags = {FlagsEncode Flags}
 	 ZMode  = {MODE.make Mode}
 	 ZFile  = {URL.toAtom {Expand Name}}
 	 DB     = {OPEN ZFile ZFlags ZMode Block}
       in
-	 {Register DB FREE}
+	 {Register DB}
 	 DB
       end
 
