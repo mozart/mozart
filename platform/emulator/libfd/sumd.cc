@@ -442,7 +442,7 @@ do_fail:
 do_leave:
   // bugfix : not recognizing 'entailed'
   // check if sum over all max/mins is smaller than upper bound
-  _OZ_DEBUGPRINT("do_leave")
+  _OZ_DEBUGPRINT("do_leave");
 
   int upsum = reg_c;
   for (int i =0; i < reg_sz; i++) {
