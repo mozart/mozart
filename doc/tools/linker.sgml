@@ -122,20 +122,14 @@ Scheduling:
         <Synopsis><<--exclude=<Var/URL/,&ellipsis,<Var/URL/>>
         <Item>
            Exclude all functors whose URL matches one of the comma
-           separated URL prefices.
+           separated URL prefices. Takes preference over both <<--include>>
+           and <<--relative>>.
       </List>
     <P>
 
     <P>
       Note that multiple <<--include>> and <<--exclude>> directives
-      can be given on the commandline, and that they are considered in
-      order. For example with a commandline containing
-      <<<--include=http --exclude=http://foo --include=http://foo.com>>>
-      a pickled functor with URL <File>http://bar/A.ozf</File> gets
-      <Em/included/, a pickled functor with URL
-      <File>http://foo.org/A.ozf</File> is <Em/excluded/, and a
-      pickled functor with URL <File>http://foo.com/A.ozf</File> is
-      <Em/included/ as well.
+      can be given on the commandline.
     </P>
 
   </Section>
