@@ -448,14 +448,14 @@ void AM::handleToplevelBlocking()
   currentThread=0;
 }
 
-#define CHECKSEQ \
-if (e->currentThread->compMode == ALLSEQMODE) { \
-  if (e->currentThread==e->rootThread) {        \
-    e->handleToplevelBlocking();                \
-  }                                             \
+#define CHECKSEQ				\
+if (e->currentThread->compMode == ALLSEQMODE) {	\
   e->currentThread->board=CBB;			\
-  goto LBLkillThread;                           \
-}                                               \
+  if (e->currentThread==e->rootThread) {	\
+    e->handleToplevelBlocking();		\
+  }						\
+  goto LBLkillThread;				\
+}						\
 goto LBLpopTask;
 
 inline
