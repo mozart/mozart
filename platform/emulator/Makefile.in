@@ -141,7 +141,7 @@ CPISRCS=\
 FSETSRCS=\
         fset.cc fsetcore.cc var_fs.cc
 
-TEXT2PICKLESRCS= text2pickle.cc opcodes.cc
+TEXT2PICKLESRCS= text2pickle.cc
 TEXT2PICKLEOBJS= $(TEXT2PICKLESRCS:.cc=.o)
 
 SRCS= \

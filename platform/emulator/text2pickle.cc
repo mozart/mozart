@@ -31,9 +31,11 @@
 #include <string.h>
 #include <unistd.h>
 
+/* do not include extension.hh: otherwise HPUX does not find OZ_atom :-( */
+#define __EXTENSIONHH
 
 #include "config.h"
-#include "opcodes.hh"
+#include "opcodes.cc"
 
 static int line=1, col=0;
 
