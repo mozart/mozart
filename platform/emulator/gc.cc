@@ -362,7 +362,7 @@ static SavedPtrStack savedPtrStack;
 inline int32  GCMARK(void *S)    { return makeTaggedRef(GCTAG,S); }
 inline int32  GCMARK(int32 S)    { return makeTaggedRef(GCTAG,S); }
 
-inline int32  GCUNMARK(int32 S)  { return (int32)tagValueOf(S); }
+inline void *GCUNMARK(int32 S)   { return tagValueOf(S); }
 inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
 
 
@@ -371,7 +371,7 @@ inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
  *   Then return the forward pointer to to-space.
  */
 #define CHECKCOLLECTED(elem,type)  \
-  if (GCISMARKED((int32)elem)) return (type) GCUNMARK((int) elem);
+  if (GCISMARKED((int32)elem)) return (type) GCUNMARK((int32) elem);
 
 
 /*
@@ -639,7 +639,7 @@ void Script::gc()
           if (auxTerm == makeTaggedNULL ())
             error ("NULL in script");
           if (GCISMARKED(auxTerm)) {
-            auxTerm = GCUNMARK(auxTerm);
+            auxTerm = ToInt32(GCUNMARK(auxTerm));
             continue;
           }
           if (isRef (auxTerm)) {
@@ -1069,8 +1069,8 @@ TaggedRef gcVariable(TaggedRef var)
       SVariable *cv = tagged2SVar(var);
       INFROMSPACE(cv);
       if (GCISMARKED((int)cv->suspList)) {
-        GCNEWADDRMSG(makeTaggedSVar((SVariable*)GCUNMARK((int)cv->suspList)));
-        return makeTaggedSVar((SVariable*)GCUNMARK((int)cv->suspList));
+        GCNEWADDRMSG(makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList))));
+        return makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList)));
       }
 
       Board *newBoard = cv->home->gcBoard();
@@ -1104,8 +1104,8 @@ TaggedRef gcVariable(TaggedRef var)
 
       INFROMSPACE(gv);
       if (GCISMARKED((int)gv->suspList)) {
-        GCNEWADDRMSG(makeTaggedCVar((GenCVariable*)GCUNMARK((int)gv->suspList)));
-        return makeTaggedCVar((GenCVariable*)GCUNMARK((int)gv->suspList));
+        GCNEWADDRMSG(makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList))));
+        return makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList)));
       }
 
       Board *newBoard = gv->home->gcBoard();
