@@ -40,7 +40,7 @@ INCDIR = $(PREFIX)/include
 INCFILES = \
 	$(INCDIR)/FlexLexer.h $(INCDIR)/lexer.h
 
-all: Makefile subdirs GumpScanner.so
+all: Makefile subdirs GumpScanner.so-$(PLATFORM)
 
 include $(SRCTOP)/share/Makefile.boot
 bootstrap: cboot-all
@@ -54,7 +54,7 @@ subdirs:
           fi; \
         done
 
-GumpScanner.so: GumpScanner.C $(SRCTOP)/platform/emulator/mozart.h
+GumpScanner.so-$(PLATFORM): GumpScanner.C $(SRCTOP)/platform/emulator/mozart.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o GumpScanner.o && \
 	$(DYNLD) -o $@ GumpScanner.o
 
@@ -66,36 +66,19 @@ install: all \
 $(SHAREDIR) $(PLATFORMDIR) $(INCDIR) $(NEWCACHEDIR):
 	$(MKINSTALLDIRS) $@
 
-$(NEWCACHEDIR)/GumpScanner.so-$(PLATFORM): GumpScanner.so
+$(NEWCACHEDIR)/GumpScanner.so-$(PLATFORM): GumpScanner.so-$(PLATFORM)
 	$(INSTALLDLL) $< $@
-$(NEWCACHEDIR)/Bison.so-$(PLATFORM): ozbison/Bison.so
-	$(INSTALLFILE) $< $@
-
-$(SHAREDIR)/GumpScanner.so-$(PLATFORM): $(PLATFORMDIR)/GumpScanner.so
-	$(RM) $(SHAREDIR)/GumpScanner.so-$(PLATFORM)
-	(cd $(SHAREDIR) && \
-	 $(LNS) ../platform/$(PLATFORM)/GumpScanner.so \
-	        GumpScanner.so-$(PLATFORM))
-
-$(SHAREDIR)/Bison.so-$(PLATFORM): $(PLATFORMDIR)/Bison.so
-	$(RM) $(SHAREDIR)/Bison.so-$(PLATFORM)
-	(cd $(SHAREDIR) && \
-	 $(LNS) ../platform/$(PLATFORM)/Bison.so Bison.so-$(PLATFORM))
+$(NEWCACHEDIR)/Bison.so-$(PLATFORM): ozbison/Bison.so-$(PLATFORM)
+	$(INSTALLDLL) $< $@
 
 $(PLATFORMDIR)/flex.exe: ozflex/flex
-	$(INSTALLPRG) $< $@
-
-$(PLATFORMDIR)/GumpScanner.so: GumpScanner.so
-	$(INSTALLPRG) $< $@
-
-$(PLATFORMDIR)/Bison.so: ozbison/Bison.so
 	$(INSTALLPRG) $< $@
 
 $(INCDIR)/%: %
 	$(INSTALLFILE) $< $@
 
 clean veryclean:
-	$(RM) *~ *.o *.so
+	$(RM) *~ *.o *.so-$(PLATFORM)
 	for i in $(SUBDIRS); do (cd $$i && $(MAKE) clean); done
 
 distclean: clean

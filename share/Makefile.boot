@@ -10,7 +10,9 @@ BUILDTOOLS=$(BUILDSHARE)/tools
 BUILDCONTRIB=$(BUILDTOP)/contrib
 BUILDGDBM=$(BUILDCONTRIB)/gdbm
 BUILDOS=$(BUILDCONTRIB)/os
-BUILDBISON=$(BUILDTOP)/platform/tools/gump/ozbison
+BUILDGUMP=$(BUILDTOP)/platform/tools/gump
+BUILDBISON=$(BUILDGUMP)/ozbison
+BUILDEMU=$(BUILDTOP)/platform/emulator
 
 SOURCELIB=$(SRCTOP)/share/lib
 SOURCETOOLS=$(SRCTOP)/share/tools
@@ -92,7 +94,7 @@ boot-%:
 	OZC="$(BOOTCOM)" \
 	OZINIT=$(BUILDLIB)/Init.ozf \
 	OZPATH=.:$(BUILDLIB):$(BUILDTOOLS):$(SOURCELIB):$(SOURCETOOLS) \
-	OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=$(BUILDLIB)/:prefix=$(HOMEURL)/share/=$(BUILDTOOLS)/:prefix=$(HOMEURL)/contrib/=$(BUILDCONTRIB)/:prefix=$(HOMEURL)/contrib/=$(BUILDGDBM)/:prefix=$(HOMEURL)/contrib/os/=$(BUILDOS)/:prefix=$(HOMEURL)/share/Bison.so-$(PLATFORM)=$(BUILDBISON)/Bison.so:prefix=x-oz://system/=$(BUILDLIB)/:prefix=x-oz://system/=$(BUILDTOOLS)/:prefix=x-oz://contrib/=$(BUILDCONTRIB)/:prefix=x-oz://contrib/=$(BUILDGDBM)/:prefix=x-oz://contrib/os/=$(BUILDOS)/:pattern=x-oz://boot/?{x}.so-$(PLATFORM)=$(BUILDTOP)/platform/emulator/?{x}.so:= \
+	OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=x-oz://system/=$(BUILDLIB)/:prefix=x-oz://system/=$(BUILDTOOLS)/:prefix=x-oz://contrib/=$(BUILDCONTRIB)/:prefix=x-oz://contrib/=$(BUILDGDBM)/:prefix=x-oz://contrib/os/=$(BUILDOS)/:prefix=x-oz://boot/=$(BUILDEMU)/:prefix=x-oz://system/=$(BUILDGUMP)/:prefix=x-oz://system/=$(BUILDBISON)/:= \
 	OZL="$(BOOTOZL)" \
 	OZDOC_HOME="$(SRCTOP)/doc/utilities" \
 	OZDOC_AUTHOR_PATH="$(SRCDIR):$(SRCTOP)/doc" \
