@@ -800,7 +800,6 @@ void maybeUnaskVar(BorrowEntry* b){
   case VAR_OBJECT:{
     ie= GET_VAR(b,Object)->getInfo();
     if(ie==NULL) return;
-    Assert(0);
     int i=GET_VAR(b,Object)->getObject()->getIndex();
     varAdjustPOForFailure(i,ie->getEntityCond(),ENTITY_NORMAL);
     return;}
