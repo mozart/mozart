@@ -300,10 +300,6 @@ OZ_Term OZ_termType(OZ_Term term)
     return oz_atom("foreign_pointer");
   }
 
-  if (oz_isPromise(term)) {
-    return oz_atom("promise");
-  }
-
   OZ_warning("OZ_termType: unknown type in 0x%x\n",term);
   return 0;
 }
@@ -1063,12 +1059,6 @@ void cvar2buffer(ostream &out, const char *s, GenCVariable *cv, int depth)
   case PerdioVariable:
     {
       PerdioVar *pv = (PerdioVar *) cv;
-      if (pv->isFuture()) {
-	out << s;
-	out << "<future>";
-	break;
-      }
-
       out << s << "<dist:";
       char *type = "";
       if (pv->isManager()) {
@@ -1151,9 +1141,6 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
     break;
   case OZCONST:
     const2buffer(out,tagged2Const(term));
-    break;
-  case PROMISE:
-    out << "<Promise>";
     break;
   case LITERAL:
     {
