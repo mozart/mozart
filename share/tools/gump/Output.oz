@@ -205,7 +205,7 @@ local
       [] fOr(Clauses Type _) then
 	 PU#case Type of fchoice then 'choice '
 	    [] fdis then 'dis '
-	    [] for then 'or '
+	    [] 'for' then 'or '
 	    end#{LI {Map Clauses OutputOz} NL#'[] '}#NL#PO#'end'
       [] fBoolCase(E T1 T2 _) then
 	 PU#'if '#{OutputOz E}#' then'#IN#NL#{OzBlock T1}#EX#
