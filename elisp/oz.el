@@ -81,6 +81,10 @@ starts the machine under gdb")
 (defvar oz-status-string (format "%c" 19)
   "How compiler and engine signal status changes")
 
+(defvar oz-see-compiler-input t
+  "*If non-nil means every input to the compiler is echoed in the 
+Compiler buffer")
+
 (defvar oz-temp-counter 0
   "gensym counter")
 
@@ -392,11 +396,13 @@ starts the machine under gdb")
   (define-key map "\C-c\C-e"    'oz-toggle-errors)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
   (if oz-lucid
-   (define-key map [(control button1)]       'oz-feed-region-browse)
-   (define-key map [(control button3)]       'oz-feed-region-browse-memory))
+      (progn
+	(define-key map [(control button1)]       'oz-feed-region-browse)
+	(define-key map [(control button3)]       'oz-feed-region-browse-memory)))
   (if oz-gnu19
-   (define-key map [C-down-mouse-1]        'oz-feed-region-browse)
-   (define-key map [C-down-mouse-3]        'oz-feed-region-browse-memory))
+      (progn
+	(define-key map [C-down-mouse-1]        'oz-feed-region-browse)
+	(define-key map [C-down-mouse-3]        'oz-feed-region-browse-memory)))
   
   (if oz-lucid
       (progn
@@ -633,6 +639,8 @@ the GDB commands `cd DIR' and `directory'."
   (oz-check-running)
   (or (get-process "Oz Compiler") (start-oz-process))
   (comint-send-string "Oz Compiler" string)
+  (if oz-see-compiler-input
+      (oz-compiler-filter (get-process "Oz Compiler") string))
   (process-send-eof "Oz Compiler"))
 
 
