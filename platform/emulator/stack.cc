@@ -14,6 +14,12 @@
 #include <malloc.h>
 #include "stack.hh"
 
+void Stack::resizeOutline(int n)
+{
+  resize((size*3)/2);  // faster than size*1.5
+  ensureFree(n);
+}
+
 void Stack::resize(int newSize)
 {
   DebugCheckT(printf("Resizing stack from %d to %d\n",size,newSize));
@@ -28,14 +34,19 @@ void Stack::resize(int newSize)
 }
 
 
-Stack::Stack(int sz, void *(*allocfun)(size_t t))
+void Stack::allocate(int sz, void *(*allocfun)(size_t t))
 {
-  size = sz;
   array = (StackEntry*) allocfun(size*sizeof(StackEntry));
   if(!array)
     error("Cannot alloc stack memory at %s:%d.", __FILE__, __LINE__);
   tos = array;
   stackEnd = array+size;
+}
+
+Stack::Stack(int sz, void *(*allocfun)(size_t t))
+{
+  size = sz;
+  allocate(sz,allocfun);
 }
 
 
