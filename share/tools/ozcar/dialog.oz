@@ -18,8 +18,9 @@ local
                                   text:   'Oz Debugger')}
 
          V = {New Tk.label tkInit(parent: self
-                                  text:   'Last updated on ' # Version # '\n' #
-                                          'Current platform is ' # Platform)}
+                                  text:   ('Last updated on ' # Version #
+                                           '\n' #
+                                           'Current platform is ' # Platform))}
 
          A = {New Tk.label tkInit(parent: self
                                   text:   NameOfBenni # '\n' # EmailOfBenni)}
@@ -33,10 +34,6 @@ local
 in
 
    class Dialog
-
-      meth init
-         skip
-      end
 
       meth about
          {Wait {New AboutDialog init(master:self.toplevel)}.tkClosed}
