@@ -240,8 +240,8 @@ and, with second priority, to larger values.
 <caption/A script for changing money together with a data specification./
 <chunk class=anonymous><title/ChangeMoney/
 fun {ChangeMoney BillsAndCoins Amount}
-   Available    = {Record.map BillsAndCoins fun {$ A#D} A end}
-   Denomination = {Record.map BillsAndCoins fun {$ A#D} D end}
+   Available    = {Record.map BillsAndCoins fun {$ A#_} A end}
+   Denomination = {Record.map BillsAndCoins fun {$ _#D} D end}
    NbDenoms     = {Width Denomination}
 in
    proc {$ Change}

@@ -32,11 +32,14 @@
 <chapter id=chapter.bab>
 <title/Branch and Bound/<p>
 
-In this chapter we focus on computing an optimal solution according
-to a given cost function.  While we have searched for optimal solutions
-already in <Ptr to="section.reified.photo"> and <Ptr to="section.reified.bin">, we
-have used a rather ad-hoc strategy there. This strategy lacks generality and
-does not provide either for a proof of optimality.
+In this chapter we focus on computing an optimal
+solution according to a given cost function.
+While we have searched for optimal solutions
+already in <Ptr to="section.reified.photo"> and
+<Ptr to="section.reified.bin">, we have used a
+rather ad-hoc strategy there. This strategy lacks
+generality and does not provide either for a proof
+of optimality.
 <p>
 
 <para><title/branch and bound/

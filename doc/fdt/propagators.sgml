@@ -186,18 +186,21 @@ using the standard first-fail strategy.
 
 <figure id="ProgPythagoras" class="Figure">
 <caption/A script that enumerates Pythagoras triples./
-
+<p>
+<chunk class=anonymous><title/Definition of Square/
+proc {Square X S}
+   {FD.times X X S}
+end
+</chunk>
 <chunk class=anonymous><title/Pythagoras/
 proc {Pythagoras Root}
-   proc {Square X S}
-      {FD.times X X S}
-   end
    [A B C] = Root
-   AA      = {Square A}
-   BB      = {Square B}
-   CC      = {Square C}
+   AA BB CC
 in
    Root ::: 1#1000
+   AA = {Square A}
+   BB = {Square B}
+   CC = {Square C}
    AA + BB =: CC
    A =<: B
    B =<: C
@@ -205,6 +208,7 @@ in
    {FD.distribute ff Root}
 end
 </chunk>
+</p>
 </figure>
 
 <subsection class=unnumbered>
@@ -575,7 +579,11 @@ declare
 %%
 
 declare
-<chunk.ref/Pythagoras/
+local
+   <chunk.ref/Definition of Square/
+in
+   <chunk.ref/Pythagoras/
+end
 
 {ExploreOne Pythagoras}
 
