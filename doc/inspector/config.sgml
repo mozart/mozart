@@ -150,6 +150,12 @@
         <ITEM>
           determines the subtree alignment. If ?_{I} is&nbsp;<<1>>,
           the standard aligment is used. A value of&nbsp;<<2>> selects fixed width indentation.
+        <ENTRY><<widgetShowStrings>>
+        <SYNOPSIS>
+          <<{Inspector.configure widgetShowStrings ?+{B}}>>
+        <ITEM>
+          switches between normal and readable representation of strings.
+          It defaults to <<false>>.
       </LIST>
   <SECTION id="section.configure.visual"><TITLE/Visual Settings/
     <P>
