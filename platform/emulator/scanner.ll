@@ -755,9 +755,16 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
                                      delete[] fullname;
                                      BEGIN(INITIAL);
                                    } else {
-                                     xyreportError("macro directive error",
-                                                   "could not open file to insert",
+                                     const char *s =
+                                       "could not open file `";
+                                     char *f = new char[strlen(s) + 1 +
+                                                        strlen(xytext) + 2];
+                                     strcpy(f,s);
+                                     strcat(f,xytext);
+                                     strcat(f,"'");
+                                     xyreportError("macro directive error",f,
                                                    xyFileName,xylino,xycharno());
+                                     delete[] f;
                                      BEGIN(DIRECTIVE);
                                    }
                                  } else
