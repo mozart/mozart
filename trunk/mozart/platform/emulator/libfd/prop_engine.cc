@@ -98,5 +98,3 @@ pf_return_t PropQueue::apply(PropFnctTable &pft,
   fnct_entry.unsetScheduled();
   return r;
 }
-
-
