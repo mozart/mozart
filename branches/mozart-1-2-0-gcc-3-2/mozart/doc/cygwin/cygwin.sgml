@@ -385,7 +385,7 @@ make install>>>
 	<Ref.Extern to="http://msdn.microsoft.com/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp"><File>http://msdn.microsoft.com/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp</File></Ref.Extern>.
 	The current version is 1.31.  (If the URL is invalid, search
 	Microsoft's site for <Q/download html help workshop/.  It seems
-	Microsoft tends to reorganize every so often.)
+	Microsoft tends to reorganize their site every so often.)
       <P>
 	This process will leave behind a file <File/Mozart.chm/, which we
 	can copy to a sensible place:
