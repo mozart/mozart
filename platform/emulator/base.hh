@@ -189,14 +189,6 @@ if (Cond) {					\
    default: break;
 #endif
 
-
-#ifdef DEBUG_TRACE
-#define DebugTrace(Command) Command
-#else
-#define DebugTrace(Command) 
-#endif
-
-
 #ifdef DEBUG_FD
 #define DebugFD(Cond,Then) if (Cond) {Then;}
 #else
