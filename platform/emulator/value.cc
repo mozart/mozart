@@ -26,7 +26,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
 
   NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
   NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
-  NameOoPrintName,NameOoLocking,NameOoFallback,
+  NameOoPrintName,NameOoLocking,NameOoFallback,NameOoId,
   AtomNew, AtomSend, AtomApply,
 
   NameUnit,
@@ -105,6 +105,7 @@ void initLiterals()
   NameOoPrintName   = getUniqueName("ooPrintName");
   NameOoLocking     = getUniqueName("ooLocking");
   NameOoFallback    = getUniqueName("ooFallback");
+  NameOoId          = getUniqueName("ooId");
 
   AtomNew           = makeTaggedAtom("new");
   AtomSend          = makeTaggedAtom("send"); 
