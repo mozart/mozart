@@ -61,7 +61,7 @@ void ThreadsPool::scheduleThreadOutline (Thread *th, int pri)
       break;
     }
 
-    Assert ((nextPrio[ix] < pri));
+    Assert (ix < 0 || nextPrio[ix] < pri);
     // invariants: ix indexes the queue _before_ inserted one;
     //  (ix's entry stays at the place;)
     for (jx = nextPrioInd; jx > ix; jx--)
