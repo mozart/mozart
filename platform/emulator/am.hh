@@ -43,6 +43,9 @@
 
 #include "thrspool.hh"
 
+#include "actor.hh"
+#include "board.hh"
+
 // more include's at end!
 
 // -----------------------------------------------------------------------
@@ -89,7 +92,8 @@ ChachedOORegs setObject(ChachedOORegs regs, Object *o)
 
 // this class contains the central global data
 class AM : public ThreadsPool {
-friend void engine(Bool init);
+friend int engine(Bool init);
+friend void scheduler();
 friend Board *ozx_rootBoard();
 
 private:
@@ -130,6 +134,7 @@ private:
     int debug;
     TaggedRef value;
     TaggedRef info;
+    ProgramCounter pc;
   } exception;
 
   Bool criticalFlag;  // if this is true we will NOT set Sflags
@@ -194,7 +199,7 @@ public:
     exception.debug = d;
   }
   TaggedRef getExceptionValue() { return exception.value; }
-  Bool hf_raise_failure(TaggedRef t);
+  Bool hf_raise_failure();
 
   // see builtins.cc
   inline OZ_Return eqeq(TaggedRef Ain,TaggedRef Bin);
@@ -409,11 +414,15 @@ public:
   void awakeIOVar(TaggedRef var);
 
   // entailment check
-  Bool entailment();
+  Bool entailment() {
+    return (!currentBoard()->hasSuspension()  // threads?
+            && trail.isEmptyChunk());       // constraints?
+  }
 
   void checkStability();
   int handleFailure(Continuation *&cont, AWActor *&aa);
   int commit(Board *bb, Thread *tt=0);
+  void failBoard();
 
   // Unification
   Bool unify(TaggedRef ref1, TaggedRef ref2, ByteCode *scp=0);
@@ -477,9 +486,6 @@ extern AM am;
 
 #include "cpi_heap.hh"
 #include "cpbag.hh"
-
-#include "actor.hh"
-#include "board.hh"
 
 #include "hashtbl.hh"
 

@@ -104,7 +104,7 @@ public:
 class CodeArea {
   friend class AM;
   friend class TMapping;
-  friend void engine(Bool init);
+  friend int engine(Bool init);
   friend class Statistics;
   static HashTable atomTab;
   static HashTable nameTab;

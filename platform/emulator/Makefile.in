@@ -71,7 +71,7 @@ CXXSRCS = \
         os.cc emulate.cc builtins.cc\
         components.cc network.cc virtual.cc\
         comm.cc marshaler.cc liveness.cc gc.cc\
-        vprops.cc deallocate.cc
+        vprops.cc deallocate.cc scheduler.cc
 
 FDSRCS =\
         fdbuilti.cc fdomn.cc fdcore.cc\

@@ -1261,6 +1261,8 @@ inline
 LTuple * LTuple::gc() {
   // Does basically nothing, the real stuff is in gcRecurse
 
+  Assert(inFromSpace(this));
+
   if (GCISMARKED(args[0]))
     return (LTuple *) GCUNMARK(args[0]);
 
@@ -1531,7 +1533,9 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 
           Assert(isInGc || !bb->isMarkedGlobal());
 
-          (void) bb->gcBoard();
+          bb = bb->gcBoard();
+
+          Assert(bb);
 
           varFix.defer(aux_ptr, &to);
           return;
@@ -2845,14 +2849,18 @@ void LTuple::gcRecurse() {
   // Restore original!
   frm->args[0] = to->args[0];
 
-  while (1) {
-    // Collect element
+  TaggedRef aux = deref(to->args[0]);
+
+  // Case : L=L|_
+  if (!isLTuple(aux) || tagged2LTuple(aux) != this) {
     OZ_collectHeapTerm(frm->args[0], to->args[0]);
 
+    storeFwd((int32 *)frm->args, to->args);
+  }
+
+  while (1) {
     // Store forward, order is important, since collection might already
     // have done a storeFwd, which means that this one will be overwritten
-    storeFwd((int32 *)frm->args, to->args);
-
     TaggedRef t = deref(frm->args[1]);
 
     if (!isLTuple(t)) {
@@ -2871,6 +2879,10 @@ void LTuple::gcRecurse() {
 
     to->args[1] = makeTaggedLTuple(next);
     to = next;
+
+    OZ_collectHeapTerm(frm->args[0], to->args[0]);
+
+    storeFwd((int32 *)frm->args, to->args);
 
   }
 
