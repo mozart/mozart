@@ -253,7 +253,7 @@ on <<OZ_CtWakeUp>>.
 <Synopsis> <<OZ_expect_t expectInt(OZ_Term t);>>
 
 <Item> Expects <<t>> to be a small integer. See the systems manual
-<ptr to="system"> for details.
+<Ptr.Extern to="ozdoc:foreign"> for details.
 
 
 <Entry class="member function"><<expectFloat>>
@@ -381,8 +381,8 @@ of the initial invocation of <<OZ_Propagator::propagate()>>.
 
 <Item> This member function is to be called if the header function has
 to be suspended. The thread <<th>> can be created with
-<<OZ_makeSuspendedThread()>> which is defined by the &sci (see <ptr
-to="system"> for details).
+<<OZ_makeSuspendedThread()>> which is defined by the &sci (see
+<Ptr.Extern to="ozdoc:foreign"> for details).
 
 
 <Entry class="member function"><<fail>>

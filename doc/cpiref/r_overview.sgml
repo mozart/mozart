@@ -17,7 +17,7 @@ in the following header file.
 
 This file includes the file <<mozart.h>> which provides the basic
 functionality for interfacing Oz with &ccpp; code. For details
-see <ptr to="system">.
+see <Ptr.Extern to="ozdoc:foreign">.
 <p>
 
 <para class=apropos><title/Naming Conventions/
