@@ -58,7 +58,7 @@ BI_send;
  *=================================================================== */
 
 
-/* any combination iof the following must be different from GCTAG,
+/* any combination of the following must be different from GCTAG,
  * otherwise getRef() will not work
  */
 #define Lit_isName        2
