@@ -343,15 +343,15 @@ file		: queries ENDOFFILE
 
 queries		: sequence queries1
 		  { $$ = consList($1,$2); }
+		| prodClauseList queries1
+		  { $$ = consList(newCTerm("fSynTopLevelProductionTemplates",
+					   $1),$2); }
 		| queries1
 		  { $$ = $1; }
 		;
 
 queries1	: directive queries
 		  { $$ = consList($1,$2); }
-		| prodClauseList queries
-		  { $$ = consList(newCTerm("fSynTopLevelProductionTemplates",
-					   $1),$2); }
 		| declare coord sequence _in_ thisCoord queries1
 		  { $$ = consList(newCTerm("fDeclare",$3,newCTerm("fSkip",$5),
 					   $2),$6); }
