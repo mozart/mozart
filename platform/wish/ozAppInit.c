@@ -60,9 +60,7 @@ int *tclDummyMainPtr = (int *) main;
  *----------------------------------------------------------------------
  */
 
-#ifndef Tk4
 extern int Blt_Init();
-#endif
 
 int
 Tcl_AppInit(interp)
@@ -83,11 +81,9 @@ Tcl_AppInit(interp)
      * where "Mod" is the name of the module.
      */
 
-#ifndef Tk4
     if (Blt_Init(interp) == TCL_ERROR) {
         return TCL_ERROR;
     }
-#endif
 
     if (Tcl_Init(interp) == TCL_ERROR) {
         return TCL_ERROR;
@@ -108,6 +104,5 @@ Tcl_AppInit(interp)
      * then no user-specific startup file will be run under any conditions.
      */
 
-    tcl_RcFileName = "~/.ozwishrc";
     return TCL_OK;
 }
