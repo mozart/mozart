@@ -1012,19 +1012,13 @@
   <txt:usemap>\begin{REWRITE}</txt:usemap>
   <for-each select="VAR">
     <txt:usemap>\REWRITEVAR{</txt:usemap>
-    <apply-templates/>
+    <apply-templates select="."/>
     <txt:usemap>}
 </txt:usemap>
   </for-each>
-  <for-each select="REWRITE.FROM[1]">
-    <apply-templates/>
-  </for-each>
-  <for-each select="REWRITE.TO[1]">
-    <apply-templates/>
-  </for-each>
-  <for-each select="REWRITE.CONDITION[1]">
-    <apply-templates/>
-  </for-each>
+  <apply-templates select="REWRITE.FROM[1]"/>
+  <apply-templates select="REWRITE.TO[1]"/>
+  <apply-templates select="REWRITE.CONDITION[1]"/>
   <txt:usemap>\end{REWRITE}</txt:usemap>
 </template>
 
