@@ -612,5 +612,328 @@ up after 10 tries.
    end
 </chunk>
 
+<SECTION><TITLE>A fault-tolerant broadcast channel service</TITLE>
+
+<P>We can use the fault-tolerant stationary object
+(see <ptr to="fault.tolerant.stationary.objects">)
+to define a simple open fault-tolerant broadcase channel service.
+This can be used as part of the implementation of
+an IRC application.
+The service has a client/server structure
+and is aware of permanent crashes of clients or the server.
+In case of a client crash, the system continues to work.
+In case of a server crash, the service will no longer
+be available.  Clients receive notification of this.
+
+<P>Users access the broadcast service through a local client.
+The user creates the client by using a procedure given by
+the server.
+The client is accessed as an object.
+It has a method <<sendMessage>> for broadcasting a message.
+When the client receives a message or is notified
+of a client or server crash,
+it informs the user by calling a user-defined procedure
+with one argument.
+The following events are possible:
+<LIST>
+<ITEM><<permServer>>: the broadcast channel server has crashed.
+<ITEM><<permClient(UserID)>>: the client identified by <<UserID>> has
+crashed.
+<ITEM><<message(UserID Mess)>>: receive the message <<Mess>> from client
+<<UserID>>.
+<ITEM><<registered(UserID)>>: the client identified by <<UserID>> has
+registered to the channel.
+<ITEM><<unregistered(UserID)>>: the client identified by <<UserID>>
+has unregistered from the channel.
+</LIST>
+<P>We give an example of how the broadcast channel is used,
+and we follow this by showing its implementation.
+We first show how to use
+and implement a <em>non-fault-tolerant</em> broadcast channel,
+and then we show the small extensions needed for it
+to detect client and server crashes.
+
+<SUBSECTION><TITLE>Sample use (no fault tolerance)</TITLE>
+
+<P>First we create the channel server.
+To connect with clients, the server offers a ticket
+with unlimited connection ability.
+The ticket is available through a publicly-accessible URL.
+<<<
+local
+   S={NewStat ChannelServer init(S)}
+in
+  {Pickle.save {Connection.offerUnlimited S}
+               "/usr/staff/pvr/public_html/chat"}
+end
+>>>
+
+<P>A client can be created on another site.
+We first define
+a procedure <<HandleIncomingMessage>>
+that will handle incoming messages from a broadcast channel.
+Then we get access to the server by its URL.
+Finally, we create a local client and give it
+our handler procedure.
+<<<
+local
+   proc {HandleIncomingMessage M}
+      {Show {VirtualString.toString
+         case M
+         of message(From Content) then From#' : '#Content
+         [] registered(UserID)    then UserID#' joined us'
+         [] unregistered(UserID)  then UserID#' left us'
+         end}}
+   end
+   S={Connection.take {Pickle.load "http://www.info.ucl.ac.be/~pvr/chat"}}
+   MakeNewClient={S getMakeNewClient($)}
+   C={MakeNewClient HandleIncomingMessage 'myNameAsID'}
+in
+   {For 1 1000 1
+      proc {$ I}
+      {C sendMessage('hello'#I)}
+      {Delay 800}
+   end}
+
+   {C close}
+end
+>>>
+<P>In this example we send 1000 messages
+of the form <<'hello'#I>>, where <<I>> takes successive values from
+1 to 1000.
+Then we close the client.
+
+<SUBSECTION id="channel.definition"><TITLE>Definition (no fault tolerance)</TITLE>
+
+<P>Since a fault-tolerant stationary object has well-defined
+behavior in the case of a permanent crash, we can show the
+service's implementation in two steps.
+First, we show how it is written without taking fault tolerance
+into account.
+Second, we complete the example by adding fault handling code.
+This is easy; it amounts to catching the <<remoteObjectError>>
+exception for each remote method call (client to server
+and server to client).
+
+<P>The client and server are stationary objects
+with the following structure:
+<chunk><title/Client and server classes/
+class ChannelClient
+   feat
+      server selfStatic usrMsgHandler userID
+   <chunk.ref/Client interface to user/
+   <chunk.ref/Client interface to server/
+end
+
+class ChannelServer
+   prop locking
+   feat SelfStatic
+   attr clientList
+   meth init(S)
+      lock
+         self.SelfStatic=S
+         clientList<-nil
+      end
+   end
+   <chunk.ref/Server's getMakeClient method/
+   <chunk.ref/Server interface to client/
+end
+</chunk>
+
+<SUBSUBSECTION id="client.definition"><TITLE>Client definition</TITLE>
+
+<P>The client provides two methods to the server.
+The first, <<put>>, for receiving broadcasted
+message from registered clients.
+The second, <<init>>, for the client
+initialization (remember that a client is created using a procedure
+defined by the server).
+<chunk><title/Client interface to server/
+meth put(Msg)
+   {self.usrMsgHandler Msg}
+end
+
+meth init(Server SelfReference UsrMsgHandler UserID)
+   self.server=Server
+   self.selfStatic=SelfReference
+   self.usrMsgHandler=UsrMsgHandler
+   self.userID=UserID
+   {self.server register(self.selfStatic self.userID)}
+end
+</chunk>
+<P>The client keeps a reference to the server, to itself
+for unregistering, to the user-defined handler procedure,
+and to its user identification.
+
+<P>A user accesses the channel service only through a client.
+The client provides
+the user with a method for sending a message through the channel
+and a method for leaving the channel.
+<chunk><title/Client interface to user/
+meth sendMessage(Msg)
+   {self.server broadcast(self.userID Msg)}
+end
+
+meth close
+   {self.server unregister(self.selfStatic)}
+end
+</chunk>
+
+<SUBSUBSECTION id="server.definition"><TITLE>Server definition</TITLE>
+
+<P>The server's <<getMakeClient>> method
+returns a reference to a procedure
+that creates clients:
+<chunk><title/Server's getMakeClient method/
+meth getMakeNewClient(MakeNewClient)
+   proc {MakeNewClient UserMessageHandler UserID StaticClientObj}
+      StaticClientObj={NewStat
+         ChannelClient
+         init(self.SelfStatic StaticClientObj
+              UserID UserMessageHandler)}
+   end
+end
+</chunk>
+
+<P>The server provides three methods for the client,
+namely <<register>>, <<unregister>>, and <<broadcast>>.
+A client can register to the broadcast channel by calling the
+<<register>> method and unregister by calling
+the <<unregister>> method.
+A client can broadcast a message on the channel
+by calling the <<broadcast>> method.
+The server will concurrently forward the message
+to all registered clients.
+The broadcast call will block until the message has
+reached all the clients.
+<chunk><title/Server interface to client/
+meth register(Client UserID)
+   clientList <- c(ref:Client id:UserID)|@clientList
+end
+
+meth unregister(Client)
+   lock
+      clientList <-
+         {List.filter @clientList
+            fun {$ Element} Element.ref\=Client end}
+   end
+end
+
+meth broadcast(SenderID Msg)
+  proc {ConcurrentForAll Ls P}
+    Sync
+    proc {DoConcurrentForAll Ls PrevSync FinalSync}
+       case Ls
+       of L|Ls then
+       NewSync in
+          thread {P L} PrevSync=NewSync end
+          {DoConcurrentForAll Ls NewSync FinalSync}
+       [] nil then
+          PrevSync=FinalSync
+       end
+    end
+  in
+    {DoConcurrentForAll Ls unit Sync}
+    {Wait Sync}
+  end
+in
+  {ConcurrentForAll @clientList
+     proc {$ Element}
+       {Element.ref put(message(SenderID Msg))}
+     end}
+end
+</chunk>
+
+
+
+<SUBSECTION><TITLE>Sample use (with fault tolerance)</TITLE>
+
+<P>The fault-tolerant channel can be used in the same way
+as the non-fault-tolerant version.
+We just have to create a fault-tolerant stationary object
+by calling <<NewSafeStat>> instead of <<NewStat>> to create
+the object.
+<<<
+S={NewSafeStat ChannelServer init(S)}
+>>>
+<P>The user-defined handler
+procedure now has to handle error messages as well:
+<<<
+proc {UserMessageHandler Msg}
+   {Show {VirtualString.toString
+      case Msg
+      of permClient(UID)       then UID#' has crashed'
+      [] message(From Content) then From#' : '#Content
+      [] permServer            then 'Server has crashed'
+      [] registered(UserID)    then UserID#' joined us'
+      [] unregistered(UserID)  then UserID#' left us'
+      end}}
+end
+>>>
+
+<SUBSECTION><TITLE>Definition (with fault tolerance)</TITLE>
+
+<P>The non-fault-tolerant version of <ptr to="channel.definition">
+is easily extended to detect client and server crashes.
+We give the small extensions to the client and server definitions.
+
+<SUBSUBSECTION><TITLE>Client definition</TITLE>
+
+<P>This definition extends the definition
+given in <ptr to="channel.definition">.
+We assume that the server has been created
+with <<NewSafeStat>>.
+Two changes are needed to the client.
+First,
+the client can detect a server crash
+by catching the <<remoteObjectError>> exception.
+Second, the server can detect a client crash
+in the same way, when it calls
+the client's <<selfStatic>> reference.
+Both of these changes can be done
+by redefining the values of
+<<self.server>> and <<self.selfStatic>>
+at the client.
+<<<
+meth init(Server SelfReference UsrMsgHandler UserID)
+   self.server =
+      proc {$ Msg}
+         try
+            {Server broadcast(self.userID Msg)}
+         catch remoteObjectError then
+            {self.usrMsgHandler permServ}
+         end
+      end
+   self.selfStatic =
+      proc {$ Msg}
+         try
+            {SelfReference Msg}
+         catch remoteObjectError then
+            {Server unregister(Client)}
+            {Server broadcastCrashEvent(UserID)}
+         end
+      end
+   self.usrMsgHandler=UsrMsgHandler
+   self.userID=UserID
+   {self.server register(self.selfStatic self.userID)}
+end
+>>>
+
+<SUBSUBSECTION><TITLE>Server definition</TITLE>
+
+<P>The server has the new method <<broadcastCrashEvent>>.
+<<<
+meth broadcastCrashEvent(CrashID)
+   {ForAll @clientList
+       proc {$ Element}
+          {Element.ref put(permClient(CrashID))}
+       end}
+end
+>>>
+
+
+
+
+
 
 </CHAPTER>
