@@ -689,6 +689,7 @@ in
       end
       
       meth enter
+	 {Thread.setThisPriority high}
 	 case
 	    lock
 	       MouseInside <- true
@@ -722,6 +723,7 @@ in
       end
 
       meth updateAfterOption
+	 {Thread.setThisPriority high}
 	 case
 	    lock
 	       O = self.options
