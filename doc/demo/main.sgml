@@ -45,6 +45,7 @@
 
 <!ENTITY chapter.queens         SYSTEM "queens.sgml">
 <!ENTITY chapter.jobshop        SYSTEM "jobshop.sgml">
+<!ENTITY chapter.cutting        SYSTEM "cutting.sgml">
 
 <!ENTITY chapter.trucks         SYSTEM "trucks.sgml">
 <!ENTITY chapter.bounce         SYSTEM "bounce.sgml">
@@ -67,6 +68,7 @@
 
     <Meta name="html.split"       value="chapter.queens">
     <Meta name="html.split"       value="chapter.jobshop">
+    <Meta name="html.split"       value="chapter.cutting">
 
     <Meta name="html.split"       value="chapter.trucks">
     <Meta name="html.split"       value="chapter.bounce">
@@ -78,6 +80,8 @@
     <Meta name="html.split"       value="chapter.corpus">
 
     <Meta name="html.split"       value="appendix.enable">
+
+    <!-- Meta name="html.split.toc"   value="" -->
 
     <Author.Extern to="author.db" key="Denys.Duchier">
     <Author.Extern to="author.db" key="Martin.Mueller">
@@ -94,6 +98,7 @@
       <Title/Constraint Applications/
       &chapter.queens;
       &chapter.jobshop;
+      &chapter.cutting;
     </Part>
 
     <Part id="part.concurrent">
