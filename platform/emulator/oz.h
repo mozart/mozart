@@ -648,12 +648,12 @@ extern void*    _FUNDECL(OZ_getForeignPointer,(OZ_Term));
 extern int      _FUNDECL(OZ_isForeignPointer,(OZ_Term));
 
 
-struct OZ_C_proc_interface {
+typedef struct {
   const char * name;
   short        inArity;
   short        outArity;
   OZ_CFun      func;
-};
+} OZ_C_proc_interface;
 
 /* Perdio related things */
 
