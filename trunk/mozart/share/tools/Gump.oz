@@ -23,8 +23,6 @@
 %%% WARRANTIES.
 %%%
 
-\ifdef LILO
-
 functor $
 
 import
@@ -45,25 +43,3 @@ export
 body
    \insert gump/Main.oz
 end
-
-\else
-
-fun instantiate {$ IMPORT}
-   \insert 'SP.env'
-   = IMPORT.'SP'
-   \insert 'OP.env'
-   = IMPORT.'OP'
-in
-   local
-      \insert gump/Main.oz
-
-      Gump = gump(makeProductionTemplates: MakeProductionTemplates
-		  transformScanner: TransformScanner
-		  transformParser: TransformParser)
-   in
-      \insert Gump.env
-   end
-end
-
-\endif
-

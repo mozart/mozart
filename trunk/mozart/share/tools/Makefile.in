@@ -18,7 +18,7 @@ INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_SRC	= @INSTALL_SRC@
 INSTALL_DIR	= @INSTALL_DIR@
 
-OZFLAGS		= -DLILO
+OZFLAGS		=
 OZC		= @OZC@
 
 COMPILE		= $(OZC) $(OZFLAGS) -c
@@ -131,30 +131,30 @@ opi: MakeOPI.oz
 
 
 
-CompilerPanel.ozf: $(COMPILERPANELSRC) Browser.env CompilerPanel.env
+CompilerPanel.ozf: $(COMPILERPANELSRC)
 
-Panel.ozf: $(PANELSRC) Panel.env
+Panel.ozf: $(PANELSRC)
 
-Browser.ozf: $(BROWSERSRC) Browser.env
+Browser.ozf: $(BROWSERSRC)
 
-Explorer.ozf: $(EXPLORERSRC) Browser.env Explorer.env
+Explorer.ozf: $(EXPLORERSRC)
 
-Emacs.ozf: $(EMACSSRC) Emacs.env
+Emacs.ozf: $(EMACSSRC)
 
 ozcar-version.oz: $(OZCARSRCNOVER)
 	echo \'`date '+%b %d'`\' > $@
 
-Ozcar.ozf: $(OZCARSRC) Browser.env Emacs.env Ozcar.env
+Ozcar.ozf: $(OZCARSRC)
 
-Profiler.ozf: $(PROFILERSRC) Browser.env Emacs.env Profiler.env
+Profiler.ozf: $(PROFILERSRC)
 
 Gump.ozf: $(GUMPSRC) $(SRCTOP)/share/lib/compiler/TupleSyntax.oz \
 	$(SRCTOP)/share/lib/compiler/Misc.oz \
-	$(SRCTOP)/share/lib/compiler/FormatStrings.oz Gump.env
+	$(SRCTOP)/share/lib/compiler/FormatStrings.oz
 
-GumpScanner.ozf: $(GUMPSCANNERSRC) GumpScanner.env
+GumpScanner.ozf: $(GUMPSCANNERSRC)
 
-GumpParser.ozf: $(GUMPPARSERSRC) GumpParser.env
+GumpParser.ozf: $(GUMPPARSERSRC)
 
 
 #---------------------------------------------------------------------

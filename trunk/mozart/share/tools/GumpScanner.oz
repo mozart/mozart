@@ -23,8 +23,6 @@
 %%% WARRANTIES.
 %%%
 
-\ifdef LILO
-
 functor $
 
 import
@@ -41,19 +39,3 @@ body
    \insert gump/GumpScannerClass
 
 end
-
-\else
-
-fun instantiate {$ IMPORT}
-   \insert 'SP.env'
-   = IMPORT.'SP'
-in
-   local
-      GumpScanner
-   in
-      \insert gump/GumpScannerClass
-      \insert GumpScanner.env
-   end
-end
-
-\endif
