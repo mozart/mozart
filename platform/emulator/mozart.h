@@ -116,8 +116,10 @@ extern int     OZ_length    _PROTOTYPE((OZ_Term list));
 
 extern OZ_Term OZ_pair      _PROTOTYPE((OZ_Term t1,OZ_Term t2));
 
+#define OZ_pairA(s1,t)      OZ_pair(OZ_CToAtom(s1),t)
 #define OZ_pairAI(s1,i)     OZ_pair(OZ_CToAtom(s1),OZ_CToInt(i))
 #define OZ_pairAA(s1,s2)    OZ_pair(OZ_CToAtom(s1),OZ_CToAtom(s2))
+#define OZ_pairAS(s1,s2)    OZ_pair(OZ_CToAtom(s1),OZ_CToString(s2))
 
 
 /* records */
