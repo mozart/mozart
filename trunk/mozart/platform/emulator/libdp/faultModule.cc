@@ -35,14 +35,6 @@
 #include "var.hh"
 
 
-OZ_BI_define(BIhwDeInstall,3,0){
-  return PROCEED;
-}OZ_BI_end
-
-
-OZ_BI_define(BIhwInstall,3,0){
-  return PROCEED;
-}OZ_BI_end
 
 OZ_BI_define(BIdistHandlerInstall,2,0){
   OZ_Term c0        = OZ_in(0);
