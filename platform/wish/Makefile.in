@@ -35,6 +35,7 @@ $(OZWISH): $(OBJS)
 
 clean:
         $(RM) $(OBJS)
+        $(RM) *~
 
 veryclean: clean
         $(RM) $(OZWISH)
