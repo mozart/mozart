@@ -20,24 +20,22 @@ TaggedRef formatError(TaggedRef info,TaggedRef val,
   return OZ_adjoinAt(val,OZ_atom("debug"),d);
 }
 
-OZ_C_proc_proto(BIfail);     // builtins.cc
-
 // check if failure has to be raised as exception on thread
 static
 int canOptimizeFailure(AM *e, Thread *tt)
 {
   if (tt->hasCatchFlag() || e->onToplevel()) { // catch failure
     if (tt->isSuspended()) {
-      tt->pushCFun(BIfail,0,0,NO);
+      tt->pushCall(BI_fail,0,0);
       e->suspThreadToRunnableOPT(tt);
       e->scheduleThread(tt);
     } else {
       printf("WEIRD: failure detected twice");
 #ifdef DEBUG_CHECK
       PopFrame(tt->getTaskStackRef(),PC,Y,G);
-      Assert(PC==C_CFUNC_CONT_Ptr);
-      Assert(((OZ_CFun)(void*)Y)==BIfail);
-      tt->pushCFun(BIfail,0,0,NO);
+      Assert(PC==C_CALL_CONT_Ptr);
+      Assert((TaggedRef)ToInt32(Y)==BI_fail);
+      tt->pushCall(BI_fail,0,0);
 #endif
     }
     return NO;

@@ -2033,26 +2033,8 @@ OZ_Term OZ_makeException(OZ_Term cat,OZ_Term key,char*label,int arity,...)
 }
 
 /* -----------------------------------------------------------------
- * Suspending builtins
+ * threads
  * -----------------------------------------------------------------*/
-
-OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
-{
-  Thread *thr;
-#ifdef SHOW_SUSPENSIONS
-  static int xxx=0;
-  printf("Suspension(%d):",xxx++);
-  for(int i=0; i<arity; i++) {
-    printf("%s, ",toC(args[i]));
-  }
-  printf("\n");
-#endif
-
-  thr = am.mkSuspendedThread(am.currentBoard(), DEFAULT_PRIORITY);
-  thr->pushCFun(fun, args, arity, OK);
-
-  return ((OZ_Thread) thr);
-}
 
 void OZ_pushCFun(OZ_Thread thr,OZ_CFun fun,OZ_Term *args,int arity)
 {
@@ -2064,24 +2046,51 @@ void OZ_pushCall(OZ_Thread thr,OZ_Term fun,OZ_Term *args,int arity)
   ((Thread *)thr)->pushCall(fun, args, arity);
 }
 
+OZ_Thread OZ_newSuspendedThread()
+{
+#ifdef SHOW_SUSPENSIONS
+  static int xxx=0;
+  printf("Suspension(%d):",xxx++);
+  for(int i=0; i<arity; i++) {
+    printf("%s, ",toC(args[i]));
+  }
+  printf("\n");
+#endif
+
+  Thread *thr = am.mkSuspendedThread(am.currentBoard(), DEFAULT_PRIORITY);
+  return (OZ_Thread) thr;
+}
+
+OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
+{
+  OZ_Thread thr=OZ_newSuspendedThread();
+  OZ_pushCFun(thr,fun,args,arity);
+  return thr;
+}
+
+OZ_Thread OZ_newRunnableThread()
+{
+  Thread *tt = am.mkRunnableThreadOPT(DEFAULT_PRIORITY, am.currentBoard());
+  am.scheduleThread(tt);
+  return (OZ_Thread) tt;
+}
 
 void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args,int arity)
 {
-  Thread *tt = am.mkRunnableThreadOPT(DEFAULT_PRIORITY, am.currentBoard());
-  tt->pushCFun(fun, args, arity, OK);
-  am.scheduleThread (tt);
+  OZ_Thread thr = OZ_newRunnableThread();
+  OZ_pushCFun(thr,fun,args,arity);
 }
-
-OZ_C_proc_proto(BIunify);
 
 void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
 {
   RefsArray args = allocateRefsArray(2,NO);
   args[0]=val1;
   args[1]=val2;
-  OZ_makeRunnableThread(BIunify,args,2);
+  OZ_Thread thr = OZ_newRunnableThread();
+  OZ_pushCall(thr,BI_Unify,args,2);
 }
 
+/* Suspensions */
 void OZ_addThread(OZ_Term var, OZ_Thread thr)
 {
   DEREF(var, varPtr, varTag);
