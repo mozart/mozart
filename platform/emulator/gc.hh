@@ -14,6 +14,12 @@
  * make external references into heap known to gc
  *****************************************************************************/
 
+#ifdef CS_PROFILE
+extern int32 * cs_copy_start;
+extern int32 * cs_orig_start;
+extern int     cs_copy_size;
+#endif
+
 extern Bool gc_is_running;
 Bool gcStaticProtect(TaggedRef *);
 Bool gcProtect(TaggedRef *);

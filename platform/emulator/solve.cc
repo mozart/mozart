@@ -206,7 +206,54 @@ SolveActor::SolveActor(Board *bb)
   result     = makeTaggedRef(newTaggedUVar(bb));
   solveBoard = new Board(this, Bo_Solve);
   solveVar   = makeTaggedRef(newTaggedUVar(solveBoard));
+#ifdef CS_PROFILE
+  orig_start  = (int32 *) NULL;
+  copy_start  = (int32 *) NULL;
+  copy_size   = 0;
+#endif
 }
+
+#ifdef CS_PROFILE
+TaggedRef SolveActor::getCloneDiff(void) {
+  TaggedRef l = nil();
+  
+  if (orig_start && (copy_size>0)) {
+    int n = 0;
+
+    while (n < copy_size) {
+      if (copy_start[n] != orig_start[n]) {
+	int d = 0;
+	
+	while ((n < copy_size) && (copy_start[n] != orig_start[n])) {
+	  d++; n++;
+	}
+      
+	LTuple *lt = new LTuple();
+	lt->setHead(newSmallInt(d));
+	lt->setTail(l);
+	l = makeTaggedLTuple(lt);
+      } else {
+	n++;
+      }
+      
+    }
+
+    free(copy_start);
+
+    TaggedRef ret = OZ_pair2(newSmallInt(copy_size),l);
+
+    copy_start = (int32 *) 0;
+    copy_size  = 0;
+    orig_start = (int32 *) 0;
+
+    return ret;
+    
+  } else {
+    return OZ_pair2(newSmallInt(0),l);
+  }
+
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // support for nonmonotonic propagators
