@@ -27,6 +27,9 @@ local
 	 InfoVisible: false
 	 PrevRuntime: ZeroTime
 
+      meth setInfo(I)
+	 InfoVisible <- I
+      end
       meth update(What)
 	 O   = self.options
 	 OT  = O.threads
@@ -96,6 +99,9 @@ local
       prop final
       attr InfoVisible:  false
       
+      meth setInfo(I)
+	 InfoVisible <- I
+      end
       meth update(What)
 	 O   = self.options
 	 OG  = O.gc
@@ -233,6 +239,7 @@ in
       
       meth init(manager:Manager options:O)
 	 lock
+	    Config = {Dictionary.get O config}
 	    Tk.toplevel,tkInit(title:              TitleName
 			       highlightthickness: 0
 			       withdraw:           true)
@@ -264,7 +271,8 @@ in
 				 feature: options
 				 menu:
 		         [checkbutton(label: 'Configurable'
-				      variable: {New Tk.variable tkInit(false)}
+				      variable: {New Tk.variable
+						 tkInit(Config)}
 				      action: self # toggleInfo)
 			  separator
 			  command(label:  'Update...'
@@ -328,7 +336,7 @@ in
 			     stipple: [RunnableStipple])])
 	      frame(text:    'Priorities'
 		    feature: priorities
-		    pack:    false
+		    pack:    Config
 		    left:
 		       [scale(text:    'High / Medium:'
 			      feature: high
@@ -376,7 +384,7 @@ in
 			     dim:     'MB')])
 	      frame(text:    'Heap Parameters'
 		    feature: parameter
-		    pack:    false
+		    pack:    Config
 		    left:
 		       [scale(text:    'Maximal Size Limit:'
 			      feature: maxSize
@@ -453,6 +461,7 @@ in
 					end)])
 	      frame(text:    'Heap Parameters'
 		    feature: showParameter
+		    pack:    {Not Config}
 		    left:
 		       [size(text:    'Maximal Size Limit:'
 			     feature: maxSize
@@ -463,7 +472,7 @@ in
 		    right: nil)
 	      frame(text:    'Garbage Collector'
 		    feature: gc
-		    pack:    false
+		    pack:    Config
 		    left:
 		       [checkbutton(text:   'Active'
 				    feature: active
@@ -501,7 +510,7 @@ in
 				      feature: succeeded)]
 		     right:   nil)]}
 	     OPI =
-	     {MakePage OpiPage 'Programming Interface' Book self false
+	     {MakePage OpiPage 'Programming Interface' Book self Config
 	      [frame(text:    'Status Messages'
 		     feature: messages
 		     left:
@@ -539,8 +548,7 @@ in
 			       action:  proc {$ N}
 					   {System.set print(width: N)}
 					end
-			       top:     self)
-			 ]
+			       top:     self)]
 		     right:
 			[button(text:    'Default'
 				feature: default
@@ -614,9 +622,9 @@ in
 	    RequireMouse <- {Dictionary.get O mouse}
 	    UpdateTime   <- {Dictionary.get O time}
 	    HistoryRange <- {Dictionary.get O history}
-	    case {Dictionary.get O config}==@InfoVisible then skip else
-	       PanelTop, toggleInfo
-	    end
+	    InfoVisible  <- Config
+	    {Threads setInfo(Config)}
+	    {Memory  setInfo(Config)}
 	 end
 	 PanelTop, delay(0)
       end
