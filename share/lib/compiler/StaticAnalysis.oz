@@ -1289,12 +1289,12 @@ local
 	       case {IsTuple @value} then
 		  {ListToVS
 		   '(' | {Map {Record.toList @value}
-			  fun {$ X} {X getPrintType(D-1 $)} end} 
+			  fun {$ X} {X getPrintType(D-1 $)} end}
 		   {LabelToVS {Label @value}} ' ' ' )'}
 	       else
 		  {ListToVS
 		   '(' | {Map {Record.toListInd @value}
-			  fun {$ F#X} F # ': ' # {X getPrintType(D-1 $)} end} 
+			  fun {$ F#X} F # ': ' # {X getPrintType(D-1 $)} end}
 		   {LabelToVS {Label @value}} ' ' ' )'}
 	       end
 	    elsecase
@@ -4519,7 +4519,7 @@ local
 	 @type
       end
       meth getPrintType(D $)
-	 {VS2A {TypeToVS @type}}
+	 {TypeToVS @type}
       end
       meth getData($)
 	 @value
