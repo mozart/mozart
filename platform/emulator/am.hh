@@ -166,6 +166,7 @@ public:
 
   TaggedRef methApplHdl;
   TaggedRef sendHdl;
+  TaggedRef newHdl;
 
   TaggedRef defaultExceptionHandler;
 

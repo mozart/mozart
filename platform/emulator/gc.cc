@@ -1575,6 +1575,7 @@ void AM::gc(int msgLevel)
 
   gcTagged(methApplHdl,methApplHdl);
   gcTagged(sendHdl,sendHdl);
+  gcTagged(newHdl,newHdl);
 
   gcTagged(defaultExceptionHandler,defaultExceptionHandler);
 
