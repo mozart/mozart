@@ -21,6 +21,7 @@
 ALL		/home/ps-home/hydra/CVS/CVSROOT/log.pl -m mehl %s
 Oz/Emulator	mail -s "I have changed %s" scheidhr,tmueller
 Oz/Compiler	mail -s "I have changed %s" henz,scheidhr
+Oz/Toto		mail -s "I have changed %s" henz,reiter
 Oz/include	mail -s "I have changed %s" scheidhr,tmueller,henz
 Oz/lib		mail -s "I have changed %s" henz,wuertz,popow,ibach,schulte
 Oz/demo		mail -s "I have changed %s" schulte
