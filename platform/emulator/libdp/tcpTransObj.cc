@@ -322,7 +322,6 @@ int TCPTransObj::readHandler(int fd) {
 
   // Read
   len=readBuffer->getReadParameters(pos);
-  Assert(osTestSelect(fd,SEL_READ) && len>0);
   while (TRUE) {
     globalOSReadCounter++;
     ret = osread(fd,pos,len);
