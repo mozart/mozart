@@ -28,7 +28,7 @@ import
    Tk
    TkTools
    Explorer
-   Compiler(smart: Compile) at 'Compiler.ozf'
+   Compiler(compile: Compile) at 'Compiler.ozf'
    Configure(text:Helv textBold:HelvBold)
 
 
