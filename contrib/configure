@@ -32,11 +32,11 @@ ac_help="$ac_help
 --enable-contrib-micq,
 	whether to build the Mozart instant messenger (default: yes)"
 ac_help="$ac_help
---enable-contrib-lp
-	whether to build the lp contribution (default: no)"
-ac_help="$ac_help
 --enable-contrib-ri
 	whether to build the ri contribution (default: no)"
+ac_help="$ac_help
+--enable-contrib-lp
+	whether to build the lp contribution (default: no)"
 ac_help="$ac_help
 --enable-contrib-davinci
 	whether to build the davinci contribution (default: no)"
@@ -1386,25 +1386,8 @@ echo "$ac_t""$oz_cv_enable_contrib_micq" 1>&6
 subdirs="$CONTRIBDIRS"
 
 
-echo $ac_n "checking for --enable-contrib-lp""... $ac_c" 1>&6
-echo "configure:1391: checking for --enable-contrib-lp" >&5
-# Check whether --enable-contrib-lp or --disable-contrib-lp was given.
-if test "${enable_contrib_lp+set}" = set; then
-  enableval="$enable_contrib_lp"
-  oz_cv_enable_contrib_lp=$enableval
-else
-  : ${oz_cv_enable_contrib_lp:=$oz_enable_contrib_lp}
-   : ${oz_cv_enable_contrib_lp:=no}
-fi
-
-echo "$ac_t""$oz_cv_enable_contrib_lp" 1>&6
-
-  if test "$oz_cv_enable_contrib_lp" = yes; then
-    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }lp"
-  fi
-
 echo $ac_n "checking for --enable-contrib-ri""... $ac_c" 1>&6
-echo "configure:1408: checking for --enable-contrib-ri" >&5
+echo "configure:1391: checking for --enable-contrib-ri" >&5
 # Check whether --enable-contrib-ri or --disable-contrib-ri was given.
 if test "${enable_contrib_ri+set}" = set; then
   enableval="$enable_contrib_ri"
@@ -1418,6 +1401,23 @@ echo "$ac_t""$oz_cv_enable_contrib_ri" 1>&6
 
   if test "$oz_cv_enable_contrib_ri" = yes; then
     CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }ri"
+  fi
+
+echo $ac_n "checking for --enable-contrib-lp""... $ac_c" 1>&6
+echo "configure:1408: checking for --enable-contrib-lp" >&5
+# Check whether --enable-contrib-lp or --disable-contrib-lp was given.
+if test "${enable_contrib_lp+set}" = set; then
+  enableval="$enable_contrib_lp"
+  oz_cv_enable_contrib_lp=$enableval
+else
+  : ${oz_cv_enable_contrib_lp:=$oz_enable_contrib_lp}
+   : ${oz_cv_enable_contrib_lp:=no}
+fi
+
+echo "$ac_t""$oz_cv_enable_contrib_lp" 1>&6
+
+  if test "$oz_cv_enable_contrib_lp" = yes; then
+    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }lp"
   fi
 
 echo $ac_n "checking for --enable-contrib-davinci""... $ac_c" 1>&6
