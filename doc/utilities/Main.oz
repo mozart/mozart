@@ -24,6 +24,7 @@ import
    Syslet(spec args exit)
    Property(get)
    System(printError)
+   Error(printExc)
    OzDocToHTML(translate)
 define
    Syslet.spec = single('in'(type: string)
@@ -44,14 +45,19 @@ define
          {Raise usage('illegal output type specified')}
       end
       {Syslet.exit 0}
-   catch usage(M) then
-      {System.printError
-       'Command line option error: '#M#'\n'#
-       'Usage: '#{Property.get 'root.url'}#' [options]\n'#
-       '--in=<File>      Specify the input SGML file.\n'#
-       '--type=<Type>    Specify what format to generate\n'#
-       '                 (supported: html-mono html-color).\n'#
-       '--out=<Dir>      Specify the output directory or file.\n'}
-      {Syslet.exit 2}
+   catch E then
+      case E of usage(M) then
+         {System.printError
+          'Command line option error: '#M#'\n'#
+          'Usage: '#{Property.get 'root.url'}#' [options]\n'#
+          '--in=<File>      Specify the input SGML file.\n'#
+          '--type=<Type>    Specify what format to generate\n'#
+          '                 (supported: html-mono html-color).\n'#
+          '--out=<Dir>      Specify the output directory or file.\n'}
+         {Syslet.exit 2}
+      else
+         {Error.printExc E}
+         {Syslet.exit 1}
+      end
    end
 end
