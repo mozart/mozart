@@ -795,8 +795,6 @@ loop:
         setCurrent(currentBoard->getParentFast());
         // don't decrement counter of parent board!
 
-        // statistic
-        ozstat.incSolveSolved();
         if (!fastUnifyOutline(solveAA->getResult(),
                               solveAA->genSolved(), OK)) {
           error("solve: unify result should never fail");
@@ -3536,8 +3534,6 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
   SolveActor *saa=SolveActor::Cast(aa);
   // don't decrement parent counter
 
-  // for statistic purposes
-  ozstat.incSolveFailed();
   if (!fastUnifyOutline(saa->getResult(),saa->genFailed(),OK)) {
     // this should never happen?
     error("solve: unify result should never fail");

@@ -124,6 +124,7 @@ Board *SolveActor::clone(Board *bb) {
 
 inline
 int SolveActor::choose(int left, int right) {
+  ozstat.incSolveAlt();
   WaitActor *wa = this->topChoice();
 
   if (!wa)
