@@ -861,56 +861,6 @@ OZ_BI_define(BIReceivedPID,1,0)
   return oz_unify(GateStream,stream);
 } OZ_BI_end
 
-OZ_BI_define(BIClosePID,0,0)
-{
-  return PROCEED;
-} OZ_BI_end
-
-
-
-OZ_BI_define(BISendPID,5,0)
-{
-  oz_declareVirtualStringIN(0,host);
-  oz_declareIntIN(1,port);
-  oz_declareNonvarIN(2,timeV);
-  oz_declareIntIN(3,pid);
-  oz_declareIN(4,val);
-
-  time_t time;
-  if (oz_isSmallInt(timeV)) {
-    int i = oz_IntToC(timeV);
-    if (i <= 0) goto bomb;
-    time = (time_t) i;
-  } else if (oz_isBigInt(timeV)) {
-    unsigned long i = tagged2BigInt(timeV)->getUnsignedLong();
-    if (i==0 && i == OzMaxUnsignedLong) goto bomb;
-    time = (time_t) i;
-  } else {
-  bomb:
-    return oz_raise(E_ERROR,E_SYSTEM,"PID.send",2,
-		    OZ_atom("badTime"),OZ_in(2));
-  }
-    
-  struct hostent *hostaddr = gethostbyname(host);
-  if (!hostaddr) {
-    return oz_raise(E_ERROR,E_SYSTEM,"PID.send",2,
-		    OZ_atom("gethostbyname"),OZ_in(0));
-  }
-  struct in_addr tmp;
-  memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
-  ip_address addr;
-  addr = ntohl(tmp.s_addr);
-
-  TimeStamp ts(time,pid);
-  Site *site = findSite(addr,port,ts);
-
-  if (!site) {
-    return oz_raise(E_ERROR,E_SYSTEM,"Ticket2Port",4,
-		    OZ_atom("findSite"),OZ_in(0),OZ_in(1),
-		    OZ_in(2));}
-  sendPort(getGatePort(site),val);
-  return PROCEED;
-} OZ_BI_end
 
 OZ_BI_define(BITicket2Port,4,1)
 {
