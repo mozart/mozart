@@ -92,7 +92,7 @@ free_derives()
 
 #ifdef	DEBUG
 
-void print_derives()
+print_derives()
 {
   register int i;
   register short *sp;
