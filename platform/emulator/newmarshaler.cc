@@ -161,8 +161,8 @@ void Marshaler::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
   if (bs->visit(biTerm)) {
     Builtin *bi= (Builtin *)biConst;
     if (bi->isSited()) {
-      processNoGood(biTerm,OK);
-      rememberNode(biTerm,bs);
+      processNoGood(biTerm, OK);
+      rememberNode(biTerm, bs);
       return;
     }
 
@@ -191,7 +191,7 @@ void Marshaler::processExtension(OZ_Term t)
     marshalDIF(bs,DIF_EXTENSION);
     marshalNumber(oz_tagged2Extension(t)->getIdV(),bs);
     if (!oz_tagged2Extension(t)->marshalV(bs)) {
-      processNoGood(t,NO);
+      processNoGood(t, NO);     // not remembered!
     }
   }
 }
@@ -202,7 +202,8 @@ void Marshaler::processObject(OZ_Term term, ConstTerm *objConst)
   if (bs->visit(term)) {
     Object *o = (Object*) objConst;
     if(ozconf.perdioMinimal || o->getClass()->isSited()) {
-      processNoGood(term,OK);
+      processNoGood(term, OK);
+      rememberNode(term, bs);
       return;
     }
     if (!bs->globalize()) return;
@@ -215,7 +216,8 @@ void Marshaler::processObject(OZ_Term term, ConstTerm *objConst)
     MsgBuffer *bs = (MsgBuffer *) getOpaque();          \
     if (!bs->visit(term)) return;                       \
     if (check && ozconf.perdioMinimal) {                \
-      processNoGood(term,OK);                           \
+      processNoGood(term, OK);                          \
+      rememberNode(term, bs);                           \
       return;                                           \
     }                                                   \
     if (!bs->globalize()) return;                       \
@@ -268,7 +270,8 @@ OZ_Term Marshaler::processCVar(OZ_Term *cvarTerm)
     rememberNode(cvarTerm, bs);
     return (0);
   }
-  processNoGood(makeTaggedRef(cvarTerm),NO);
+  processNoGood(makeTaggedRef(cvarTerm), OK);
+  rememberNode(cvarTerm, bs);
   return (0);
 }
 
@@ -322,13 +325,13 @@ Bool Marshaler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 }
 
 
-#define CheckD0Compatibility(Term,Trail) \
-   if (ozconf.perdioMinimal) { processNoGood(Term,Trail); return OK; }
+#define CheckD0Compatibility(Term) \
+   if (ozconf.perdioMinimal) { processNoGood(Term,NO); return OK; }
 
 
 Bool Marshaler::processFSETValue(OZ_Term fsetvalueTerm)
 {
-  CheckD0Compatibility(fsetvalueTerm,NO);
+  CheckD0Compatibility(fsetvalueTerm);
 
   MsgBuffer *bs = (MsgBuffer *) getOpaque();
 
@@ -342,11 +345,12 @@ Bool Marshaler::processFSETValue(OZ_Term fsetvalueTerm)
 Bool Marshaler::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 {
   OzDictionary *d = (OzDictionary *) dictConst;
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
   if (!d->isSafeDict()) {
-    processNoGood(dictTerm,OK);
+    processNoGood(dictTerm, OK);
+    rememberNode(dictTerm, bs);
     return OK;
   } else {
-    MsgBuffer *bs = (MsgBuffer *) getOpaque();
     marshalDIF(bs,DIF_DICT);
     rememberNode(dictTerm, bs);
     marshalNumber(d->getSize(),bs);
@@ -357,13 +361,14 @@ Bool Marshaler::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 Bool Marshaler::processClass(OZ_Term classTerm, ConstTerm *classConst)
 {
   ObjectClass *cl = (ObjectClass *) classConst;
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
   if (cl->isSited()) {
     processNoGood(classTerm, OK);
+    rememberNode(classTerm, bs);
     return (OK);                // done - a leaf;
   }
 
   //
-  MsgBuffer *bs = (MsgBuffer *) getOpaque();
   marshalDIF(bs, DIF_CLASS);
   GName *gn = globalizeConst(cl, bs);
   rememberNode(classTerm, bs);
@@ -383,6 +388,7 @@ Bool Marshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
   PrTabEntry *pred = pp->getPred();
   if (pred->isSited()) {
     processNoGood(absTerm, OK);
+    rememberNode(absTerm, bs);
     return (OK);                // done - a leaf;
   }
 
