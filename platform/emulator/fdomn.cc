@@ -947,9 +947,15 @@ int FiniteDomain::init(TaggedRef d)
   
   if (isSmallInt(d_tag)) {
     return initSingleton(smallIntValue(d));
+  } else if (AtomSup == d) {
+    return initSingleton(fd_iv_max_elem);
   } else if (isSTuple(d_tag)) {
     STuple &t = *tagged2STuple(d);
-    return init(smallIntValue(deref(t[0])), smallIntValue(deref(t[1])));
+    TaggedRef t0 = deref(t[0]), t1 = deref(t[1]);
+    return init(AtomSup == t0 ? fd_iv_max_elem : smallIntValue(t0),
+		AtomSup == t1 ? fd_iv_max_elem : smallIntValue(t1));
+  } else if (AtomBool == d) {
+    return init(0, 1);
   } else if (isNil(d)) {
     return initEmpty();
   } else if (isLTuple(d_tag)) {
@@ -971,10 +977,26 @@ int FiniteDomain::init(TaggedRef d)
 	min_arr = min(min_arr, left_arr[len_arr]);
 	max_arr = max(max_arr, right_arr[len_arr]);
 	len_arr ++;
+      } else if (AtomSup == val) {
+	left_arr[len_arr] = right_arr[len_arr] = fd_iv_max_elem;
+	min_arr = min(min_arr, left_arr[len_arr]);
+	max_arr = max(max_arr, right_arr[len_arr]);
+	len_arr ++;
+      } else if (AtomBool == val) {
+	left_arr[len_arr] = 0;
+	right_arr[len_arr] = 1;
+	
+	min_arr = min(min_arr, left_arr[len_arr]);
+	max_arr = max(max_arr, right_arr[len_arr]);
+
+	len_arr ++;
       } else if (isSTuple(valtag)) {
 	STuple &t = *tagged2STuple(val);
-	int l = max(0, smallIntValue(deref(t[0])));
-	int r = min(fd_iv_max_elem, smallIntValue(deref(t[1])));
+	TaggedRef t0 = deref(t[0]), t1 = deref(t[1]);
+
+	int l = max(0, AtomSup == t0 ? fd_iv_max_elem : smallIntValue(t0));
+	int r = min(fd_iv_max_elem,
+		    AtomSup == t1 ? fd_iv_max_elem : smallIntValue(t1));
 
 	if (l > r) goto for_loop;
 	
@@ -985,6 +1007,8 @@ int FiniteDomain::init(TaggedRef d)
 	max_arr = max(max_arr, right_arr[len_arr]);
 
 	len_arr ++;
+      } else {
+	error("Unexpected case when creating finite domain.");
       }
     for_loop:
       d = deref(list.getTail());
