@@ -88,8 +88,7 @@ public:
     if (num==1 && l==1 && r==1) {
       int ret = oz_unify(var,makeTaggedSmallInt(1));
       Assert(ret==PROCEED);
-      dispose();
-      return 1;
+      return 0;
     }
   
     if (l > num+1) {
@@ -102,7 +101,6 @@ public:
 	num = 0;
 	
 	telleq(bb,var,makeTaggedSmallInt(offset + 1));
-	return 1;
       }
     }
     return num;
@@ -265,6 +263,9 @@ OZ_BI_define(BImergeSpace, 1,1) {
 
   Assert(CBB == CBB->derefBoard());
 
+  if (CBB->getDistributor() && SBB->getDistributor())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor",0);
+  
   Bool isSibling = (!CBB->isRoot() && 
 		    CBB->getParent() == SBP &&
 		    CBB != SBB);
@@ -388,14 +389,10 @@ OZ_BI_define(BIcommitSpace, 2,0) {
 
   Board * sb = space->getSpace()->derefBoard();
 
-  Distributor * d = sb->getDistributor();
-
-  if (!d)
+  if (!sb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
 
-  int n = d->commit(sb,
-		    tagged2SmallInt(left),
-		    tagged2SmallInt(right));
+  int n = sb->commit(tagged2SmallInt(left),tagged2SmallInt(right));
     
   if (n>1) {
     sb->patchAltStatus(n);
@@ -452,11 +449,12 @@ OZ_BI_define(BIchooseSpace, 1, 1) {
 
   if (bb->isRoot()) {
     OZ_out(0) = oz_newVar(bb);
+  } else if (bb->getDistributor()) {
+    return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   } else {
-
     BaseDistributor * bd = new BaseDistributor(bb,i);
 
-    bb->addToDistBag(bd);
+    bb->setDistributor(bd);
 
     OZ_out(0) = bd->getVar();
   }
@@ -478,11 +476,12 @@ OZ_BI_define(BIwaitStableSpace, 0, 0) {
 
   if (bb->isRoot()) {
     args[0] = oz_newVar(bb);
+  } else if (bb->getDistributor()) {
+    return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   } else {
-
     BaseDistributor * bd = new BaseDistributor(bb,1);
 
-    bb->addToDistBag(bd);
+    bb->setDistributor(bd);
 
     args[0] = bd->getVar();
   }
