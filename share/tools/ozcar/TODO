@@ -62,3 +62,28 @@ Verteiltes Debuggen + lokales Debuggen der liboz:
 Tue Jan 13 18:43:25 MET 1998
 Pro Stackframe merken, wie die Scrollbars in den Env Windows liegen,
 bei Thread/Frame-Switches entsprechend anpassen.
+
+Thu Jan 29 15:21:08 CET 1998
+Gert spezial: 
+ - fonts auswaehlbar machen
+ - bildchen toggelbar mit text
+ - pause-Button toggelt zwischen gestoppt/nicht gestoppt,
+ - clear-button mit 'terminate all' funktionalitaet
+ - Dreiteilung 'Off', 'On' und 'Silent': 
+   'Off'    : wie bisher bei geschlossenen Fensters
+   'On'     : wie bisher bei geoeffneten Fenster und 'Add Queries' aktiv
+   'Silent' : 'Add Queries' aus, keine Exceptions abfangen, aber
+              Compilerschalter fuer Debugcode.
+ - Automatisches 'Raise' durch den wm bei verschiedenen, wohl zu definierenden
+   Events: Breakpoint angesprungen, exception geworfen, start, wenn schon da..
+
+Thu Jan 29 15:24:42 CET 1998
+leif ganz normal:
+ - thread tree reihenfolge fix fix fixen.
+
+Thu Jan 29 17:20:29 CET 1998
+gelegentliche (hm, wann genau??) Inkonsistenz zwischen Tk-Variablen
+(Attach Queries, etc...) und den internen Config-Zustaenden
+
+Thu Jan 29 22:54:07 CET 1998
+attach == ankoppeln, detach == entkoppeln??!
