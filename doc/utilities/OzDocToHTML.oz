@@ -35,7 +35,7 @@ import
 export
    Translate
 define
-   DEFAULTSTYLESHEET = 'http://www.ps.uni-sb.de/css/page.css'
+   DEFAULTSTYLESHEET = 'http://www.ps.uni-sb.de/css/ozdoc.css'
 
    %%
    %% Note: order is important in the following list!
