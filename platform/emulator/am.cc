@@ -269,7 +269,6 @@ void AM::init(int argc,char **argv)
       continue;
     }
     if (strcmp(argv[i],"-browser")==0) {
-      moreThanOne++;
       ozconf.browser = 1;
       continue;
     }
