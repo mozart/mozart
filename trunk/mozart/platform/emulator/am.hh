@@ -110,6 +110,7 @@ class TaskNode {
 private:
   void *arg;			// an opaque argument;
   TaskCheckProc check;		// both procedures take the same argument;
+  unsigned int minInterval;	// ... between calls of 'check';
   Bool ready;			// cached up;
   TaskProcessProc process;
 
@@ -119,12 +120,14 @@ public:
   // There is no task if check == NeverDo_CheckProc;
   TaskNode() {
     check = NeverDo_CheckProc;
+    minInterval = 0;
     ready = FALSE;		// ready is used by 'AM::handleTasks()';
     DebugCode(arg = (void *) 0; process = (TaskProcessProc) 0);
   }
   ~TaskNode() {
     DebugCode(check = NeverDo_CheckProc);
-    DebugCode(arg = (void *) 0; ready = NO; process = (TaskProcessProc) 0);
+    DebugCode(arg = (void *) 0; minInterval = 0);
+    DebugCode(ready = NO; process = (TaskProcessProc) 0);
   }
 
   //
@@ -138,6 +141,7 @@ public:
   }
   void dropTask() {
     check = NeverDo_CheckProc;
+    minInterval = 0;
     ready = FALSE;
   }
 
@@ -152,6 +156,15 @@ public:
     Assert(check != NeverDo_CheckProc);
     return (process);
   }
+
+  //
+  void setMinimalTaskInterval(unsigned int ms) {
+    Assert(ms);
+    Assert(ms >= (CLOCK_TICK/1000));
+    minInterval = ms;
+  }
+  void dropMinimalTaskInterval() { minInterval = 0; }
+  unsigned int getMinimalTaskInterval() { return (minInterval); }
 
   //
   void setReady() {
@@ -464,14 +477,10 @@ public:
   void handleTasks();
 
   //
-  // Tasks are handled with certain minimal interval;
-  // Right now there is no way to fall back with intervals...
-  void setMinimalTaskInterval(unsigned int ms) {
-    Assert(ms);
-    Assert(ms >= (CLOCK_TICK/1000));
-    taskMinInterval = min(taskMinInterval, ms);
-  }
-  DebugCode(void dropMinimalTaskInterval() { taskMinInterval = 0; })
+  // Tasks are handled with certain minimal interval. Setting it to
+  // zero for a particular task means it does not need to be performed
+  // now (but it must be ready that it can happen despite that);
+  void setMinimalTaskInterval(void *arg, unsigned int ms);
 
   // 
   Bool registerTask(void *arg, TaskCheckProc cIn, TaskProcessProc pIn);
