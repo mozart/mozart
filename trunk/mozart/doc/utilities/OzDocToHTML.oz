@@ -393,8 +393,8 @@ define
 				      VERBATIM(VS)])   %--** VERBATIM?
 			  OzDocToHTML, FinishNode(Title X HTML $)
 		       end
-		       case {@MyIndexer process($)} of unit then EMPTY
-		       elseof HTML2 then Title Label X HTML1 HTML in
+		       if {@MyIndexer empty($)} then EMPTY
+		       else Title Label X HTML1 HTML in
 			  Title = PCDATA('Index')
 			  OzDocToHTML, PrepareIdxNode(?X ?HTML1)
 			  ToGenerate <- Label|@ToGenerate
@@ -402,7 +402,7 @@ define
 			  @IdxNode = @CurrentNode
 			  HTML = SEQ([HTML1
 				      h1(a(name: Label Title))
-				      HTML2])
+				      {@MyIndexer process($)}])
 			  OzDocToHTML, FinishNode(Title X HTML $)
 		       end]
 	       TopTOC = if @SomeSplit then EMPTY
