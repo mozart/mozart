@@ -170,6 +170,15 @@ import
       <tr/<td/<<Schedule>>/
           <td/Scheduling propagators and distributors/
           <td/<ptr.extern to="ozdoc:system" key="chapter.schedule">//
+      <tr/<td/<<FC>>/
+          <td/Feature constraints (record constraints with open arities)/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.fc">//
+      <tr/<td/<<Combinator>>/
+          <td/Deep-guard combinators/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.combinator">//
+      <tr/<td/<<Space>>/
+          <td/First-class computation spaces/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.space">//
       <tr/<th colspan=3/Distributed Programming//
       <tr/<td/<<Connection>>/
           <td/Connecting to running Oz processes/
