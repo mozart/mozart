@@ -1447,23 +1447,15 @@ Thread* pendThreadResumeFirst(PendThread **pt){
   return t;}
 
 
-inline
-void oz_gCollectTermUnsafe(TaggedRef & frm, TaggedRef & to) {
-  if (frm)
-    oz_gCollectTerm(frm,to);
-  else
-    to=frm;
-}
-
 void gCollectPendThreadEmul(PendThread **pt)
 {
   PendThread *tmp;
   while (*pt!=NULL) {
     tmp=new PendThread(SuspToThread((*pt)->thread->gCollectSuspendable()),(*pt)->next);
     tmp->exKind = (*pt)->exKind;
-    oz_gCollectTermUnsafe((*pt)->old,tmp->old);
-    oz_gCollectTermUnsafe((*pt)->nw,tmp->nw);
-    oz_gCollectTermUnsafe((*pt)->controlvar,tmp->controlvar);
+    oz_gCollectTerm((*pt)->old,tmp->old);
+    oz_gCollectTerm((*pt)->nw,tmp->nw);
+    oz_gCollectTerm((*pt)->controlvar,tmp->controlvar);
     *pt=tmp;
     pt=&(tmp->next);
   }

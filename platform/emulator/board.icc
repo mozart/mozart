@@ -360,11 +360,6 @@ int Board::commit(int left, int right) {
 }
 
 
-inline  
-Bool Board::cacIsMarked(void) {
-  return hasMarkTwo();
-}
-
 inline
 Bool Board::cacIsAlive() {
   Board * s = this;
@@ -388,11 +383,6 @@ Bool Board::cacIsAlive() {
 
 }
 
-inline
-Board * Board::cacGetFwd(void) {
-  Assert(cacIsMarked());
-  return getParentInternal();
-}
 
 #ifdef OUTLINE
 #undef inline
