@@ -301,10 +301,6 @@ outerLoop2:
 	ISWRITE(GETREGARG(PC+3)); // must be last?
 	break;
 
-      case SHALLOWGUARD:
-	PUSH(getLabelArg(PC+1));
-	break;
-
       case TESTLE:
       case TESTLT:
 	ISREAD(GETREGARG(PC+1));
@@ -313,20 +309,8 @@ outerLoop2:
 	PUSH(getLabelArg(PC+4));
 	break;
 
-      case FAILURE:
       case RETURN:
       case ENDDEFINITION:
-      case WAIT:
-      case WAITTOP:
-      case ASK:
-      case CREATECOND:
-      case CREATEOR:
-      case CREATEENUMOR:
-      case CREATECHOICE:
-      case CLAUSE:
-      case EMPTYCLAUSE:
-      case NEXTCLAUSE:
-      case LASTCLAUSE:
 	BREAK;
 
       case EXHANDLER:
@@ -380,7 +364,6 @@ outerLoop2:
 	// fall through
       case CALLY:
       case CALLG:
-      case TAILCALLY:
       case TAILCALLG:
 	ISREAD_TO(getPosIntArg(PC+2));
 	BREAK;
@@ -401,7 +384,6 @@ outerLoop2:
 	break;
 
       case MOVEXY:
-      case MOVEXG:
 	ISREAD(GETREGARG(PC+1));
 	break;
       case MOVEYX:
@@ -438,15 +420,10 @@ outerLoop2:
 	ISWRITE(GETREGARG(PC+1));
 	// fall through
       case CREATEVARIABLEMOVEY:
-      case CREATEVARIABLEMOVEG:
 	ISWRITE(GETREGARG(PC+2));
 	break;
       case UNIFYXX:
 	ISREAD(GETREGARG(PC+1));
-	ISREAD(GETREGARG(PC+2));
-	break;
-      case UNIFYGX:
-      case UNIFYYX:
 	ISREAD(GETREGARG(PC+2));
 	break;
       case UNIFYXY:
@@ -507,9 +484,6 @@ outerLoop2:
 	break;
       case GETLISTVALVARX:
 	ISREAD(GETREGARG(PC+2));
-	// fall through
-      case GETLISTVALVARY:
-      case GETLISTVALVARG:
 	ISREAD(GETREGARG(PC+1));
 	ISWRITE(GETREGARG(PC+3));
 	break;
@@ -525,11 +499,9 @@ outerLoop2:
 	ISWRITE(GETREGARG(PC+2));
 	break;
       case GETVARVARXY:
-      case GETVARVARXG:
 	ISWRITE(GETREGARG(PC+1));
 	break;
       case GETVARVARYX:
-      case GETVARVARGX:
 	ISWRITE(GETREGARG(PC+2));
 	break;
       case UNIFYVARIABLEX:
@@ -543,7 +515,6 @@ outerLoop2:
 	ISWRITE(GETREGARG(PC+2));
 	break;
       case UNIFYVALVARXY:
-      case UNIFYVALVARXG:
 	ISREAD(GETREGARG(PC+1));
 	break;
       case UNIFYVALVARYX:
