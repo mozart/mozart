@@ -20,11 +20,24 @@
 %%% WARRANTIES.
 %%%
 
-local
+functor
 
-   \insert 'compiler.oz'
+require
+   Configure(helv:     Helv
+	     helvBold: HelvBold)
+   
+import
+   Search
+   FD
+   Tk
+   TkTools
+   Explorer
+   Compiler(smart: Compile) at 'Compiler.ozf'
 
-in
+export
+   'class': Scheduler
+   
+define
 
    class Scheduler
       from TkTools.note
