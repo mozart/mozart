@@ -250,6 +250,70 @@
           returns <<["a" "bb" "cc" "d"]>>.
       </List>
 
+  <section>
+    <title/Byte Strings/
+    <p>Module <code/ByteString/<index/<code/ByteString// provides an
+interface to a more economical representation for textual data: a
+simple array of bytes.  In terms of memory, the economy is at least a
+factor of 8, which may improve local processing, IO, pickle sizes, and
+remote communications (distributed processing).  However strings, &ie;
+lists, are often more convenient for all forms of recursive processing
+(&eg; <code/Map/ or <code/Filter/).  Typically, you will be processing
+textual data in list form, but saving or communicating it in byte
+string form.
+<list>
+        <entry/<span class=index/<code/IsByteString//
+<index/<code/ByteString/<and><code/is///
+        <synopsis/<code/{ByteString.is ?+{X} ??{B}}//
+        <item>tests whether ?_{X} is a byte string.
+        <entry/<code/make/
+<index/<code/ByteString/<and><code/make///
+        <synopsis/<code/{ByteString.new ?+{VS} ??{BS}}//
+        <item>creates a new byte string ?_{BS} from virtual string
+?_{VS}.
+        <entry/<code/get/
+<index/<code/ByteString/<and><code/get///
+        <synopsis/<code/{ByteString.get ?+{BS} ?+{I} ??{C}}//
+        <item>retrieves the ?_{I}th character of byte string ?_{BS}.
+The first index is 0.
+        <entry/<code/append/
+<index/<code/ByteString/<and><code/append///
+        <synopsis/<code/{ByteString.append ?+{BS1} ?+{BS2} ??{BS3}}//
+        <item>creates the new byte string ?_{BS3} which is the
+concatenation of ?_{BS1} and ?_{BS2}.
+        <entry/<code/slice/
+<index/<code/ByteString/<and><code/slice///
+        <synopsis/<code/{ByteString.slice ?+{BS1} ?+{From} ?+{To} ??{BS2}}//
+        <item>creates a byte string for the bytes in ?_{BS1} starting
+at index ?_{From} and extending up to, but not including, index
+?_{To}.
+        <entry/<code/width/
+<index/<code/ByteString/<and><code/width///
+        <entry/<code/length/
+<index/<code/ByteString/<and><code/length///
+        <synopsis/<code/{ByteString.width  ?+{BS} ??{N}}//
+        <synopsis/<code/{ByteString.length ?+{BS} ??{N}}//
+        <item>returns the width ?_{N} of byte string ?_{BS}.
+        <entry/<code/toString/
+<index/<code/ByteString/<and><code/toString///
+        <synopsis/<code/{ByteString.toString ?+{BS} ??{Str}}//
+        <item>converts a byte string ?_{BS} to a string ?_{Str}.
+        <entry/<code/toStringWithTail/
+<index/<code/ByteString/<and><code/toStringWithTail///
+        <synopsis/<code/{ByteString.toStringWithTail ?+{BS} ?_{Tail} ??{Str}}//
+        <item>converts a byte string ?_{BS} to a string ?_{Str} ending
+with ?_{Tail}.  This is useful for subsequently instantiating
+?_{Tail}, &eg; with another call to
+<code/ByteString.toStringWithTail/.
+        <entry/<code/strchr/
+<index/<code/ByteString/<and><code/strchr///
+        <synopsis/<code/{ByteString.strchr ?+{BS} ?+{Off} ?+{C} ??{Pos}}//
+        <item>returns the position ?_{Pos} of the first occurrence of
+?_{C} in ?_{BS} starting at offset ?_{Off}.  If none is found
+<code/false/ is returned instead.
+      </list></p>
+  </section>
+
   <Section>
     <Title/Virtual Strings/
     <P>
@@ -335,3 +399,13 @@ end>>>
           are replaced by&nbsp;?_{X}.
       </List>
 </Chapter>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
