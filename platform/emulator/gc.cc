@@ -1132,22 +1132,11 @@ void AM::gc(int msgLevel)
   opMode = IN_GC;
   gcing = 0;
   DebugGCT(updateStackCount = 0);
-#ifdef TURNED_OFF
-  fprintf(stdout, "I'm terribly sorry, but gc is currently turned off.\n");
-  fflush(stdout);
-  return;
-#endif
-  static int gcSoFar = 0;
-  unsigned int utime = usertime();
-  int i;
-  // print initial message
-  if (msgLevel>0) {
-    message("\nHeap garbage collection in progress.\n");
-  }
+
+  stat.initGcMsg(msgLevel);
 
   char *oldChain = heapGetStart();
-  unsigned int usedMem = getUsedMemory();
-  unsigned int allocMem = getAllocatedMemory();
+
   INITCHECKSPACE;
   initMemoryManagement();
 
@@ -1189,7 +1178,7 @@ void AM::gc(int msgLevel)
   Thread::GC();
 
   GCPROCMSG("ioNodes");
-  for(i = 0; i < FD_SETSIZE; i++)
+  for(int i = 0; i < FD_SETSIZE; i++)
     if(FD_ISSET(i,&IO::globalReadFDs)) {
       if (i != fileno(IO::QueryFILE)) {
         IO::ioNodes[i] = IO::ioNodes[i]->gcBoard();
@@ -1219,27 +1208,8 @@ void AM::gc(int msgLevel)
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //                garbage collection is finished here
 
-// print final message
-  gcSoFar += (usedMem - getUsedMemory())/MB;
-  utime = usertime() - utime;
-  stat.timeForGC += utime;
-  stat.heapAllocated += (usedMem - getUsedMemory());
+  stat.printGcMsg();
 
-  if (msgLevel > 0) {
-    fprintf(stdout,"Done (Disposed %d bytes in %d msec).\n",
-            usedMem - getUsedMemory(),
-            utime);
-    if (msgLevel > 1) {
-      fprintf(stdout,"Statistics:\t\t     before    afterwards\n");
-      fprintf(stdout,"\tmemory used      %10d%14d\n",
-              usedMem ,getUsedMemory());
-      fprintf(stdout,"\tmemory allocated %10d%14d\n",
-              allocMem ,getAllocatedMemory());
-      fprintf(stdout,"Total garbage collected: %d Mega bytes\n",
-              gcSoFar);
-    } // if (msgLevel > 1)
-    fflush(stdout);
-  } // if (msgLevel > 0)
   gcing = 1;
 } // AM::gc
 
