@@ -274,6 +274,7 @@ void ozd_printStack()
 
 #endif
 
+#ifdef DEBUG_CHECK
 
 void TaskStack::printTaskStack(int depth)
 {
@@ -304,6 +305,7 @@ void TaskStack::printTaskStack(int depth)
   fflush(stderr);
 }
 
+#endif
 
 TaggedRef TaskStack::getTaskStack(Thread *tt, Bool verbose, int depth) {
   Assert(this);

@@ -235,6 +235,8 @@ void *HashTable::htFind(intlong i)
     ? htEmpty : table[key].value;
 }
 
+#ifdef DEBUG_CHECK
+
 int HashTable::lengthList(int i)
 {
   int key;
@@ -288,6 +290,7 @@ void HashTable::printStatistic()
 	 tableSize, counter, counter*100/tableSize);
 }
 
+#endif
 
 //
 // above this do usual sequential reset;
