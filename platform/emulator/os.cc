@@ -601,7 +601,7 @@ int osSystem(char *cmd)
 
   //prepare the command to be executed to be passed
   //as an argument to cmd.exe via the /c switch
-  char* buf = (char*) malloc(sizeof(strlen(cmd)+5));
+  char* buf = (char*) malloc(sizeof(strlen(cmd)+6));
   sprintf(buf, "/c \"%s\"",cmd);
 
 
