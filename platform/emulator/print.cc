@@ -893,7 +893,6 @@ void Board::printStream(ostream &stream, int depth)
 
   stream << "Board @" << this << " [";
 
-  if (isInstalled())    stream << " Installed";
   if (isFailed())       stream << " Failed";
   if (isCommitted())    stream << " Committed";
   
