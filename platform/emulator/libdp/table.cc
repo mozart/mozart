@@ -213,42 +213,27 @@ void OwnerTable::freeOwnerEntry(int i)
 #define PO_getValue(po) \
 ((po)->isTertiary() ? makeTaggedConst((po)->getTertiary()) : (po)->getRef())
 
-OZ_Term OwnerTable::extract_info(){ // AN! reimplement
-  OZ_Term list = oz_nil();
-//    OZ_Term credit;
+OZ_Term OwnerTable::extract_info(){
+  OZ_Term list;
+  OZ_Term credit;
 
-//    for(int ctr = 0; ctr<size;ctr++){
-//      OwnerEntry *oe = OT->getEntry(ctr);
-//      if(oe==NULL){continue;}
-//      Assert(oe!=NULL);
-//      if(oe->isExtended()) {
-//        OwnerCreditExtension *next;
-//        next = oe->uOB.oExt;
-//        credit = oz_nil();
-//        while(next != NULL){
-//      credit = oz_cons(OZ_recordInit(oz_atom("ext"),
-//                 oz_cons(oz_pairAI("credit0",next->getCredit(0)),
-//                 oz_cons(oz_pairAI("credit1",next->getCredit(1)),
-//                         oz_nil()))), credit);
-//      next = next->getNext();}
-//        credit = OZ_recordInit(oz_atom("big"), oz_cons(credit, oz_nil()));}
-//      else {
-//        if(oe->uOB.credit == -1)
-//      credit = oz_atom("persistent");
-//        else
-//      credit = oz_int(oe->uOB.credit);
-//      }
-//      list=
-//        oz_cons(OZ_recordInit(oz_atom("oe"),
-//      oz_cons(oz_pairAI("index", ctr),
-//      oz_cons(oz_pairAA("type", toC(PO_getValue(oe))),
-//      oz_cons(oz_pairA("credit", credit),
-//              oz_nil())))), list);
-//    }
-//    return OZ_recordInit(oz_atom("ot"),
-//             oz_cons(oz_pairAI("size", size),
-//         oz_cons(oz_pairAI("localized", getLocalized()),
-//             oz_cons(oz_pairA("list", list), oz_nil()))));
+  for(int ctr = 0; ctr<size;ctr++){
+    OwnerEntry *oe = OT->getEntry(ctr);
+    if(oe==NULL){continue;}
+    Assert(oe!=NULL);
+    credit=oe->ocreditHandler.extract_info();
+
+    list=
+      oz_cons(OZ_recordInit(oz_atom("oe"),
+        oz_cons(oz_pairAI("index", ctr),
+        oz_cons(oz_pairAA("type", toC(PO_getValue(oe))),
+        oz_cons(oz_pairA("credit", credit),
+                oz_nil())))), list);
+  }
+  return OZ_recordInit(oz_atom("ot"),
+           oz_cons(oz_pairAI("size", size),
+           oz_cons(oz_pairAI("localized", getLocalized()),
+           oz_cons(oz_pairA("list", list), oz_nil()))));
   return list;
 }
 
@@ -297,83 +282,34 @@ void BorrowTable::print(){
 }
 
 OZ_Term BorrowEntry::extract_info(int index) {
-  return oz_nil();
-//    OwnerCreditExtension *next;
-//    OZ_Term primCred, secCred;
-//    OZ_Term na=
-//      OZ_recordInit(oz_atom("netAddress"),
-//        oz_cons(oz_pairA("site", oz_atom(netaddr.site->stringrep_notype())),
-//        oz_cons(oz_pairAI("index",(int)netaddr.index), oz_nil())));
-//  /*
-//    OZ_Term na=
-//      OZ_recordInit(oz_atom("netAddress"),
-//        oz_cons(oz_pairA("site",OZ_recordInit(oz_atom("site"),
-//            oz_cons(oz_pairAI("port",(int)netaddr.site->getPort()),
-//        oz_cons(oz_pairAI("timeint",(int)netaddr.site->getTimeStamp()->start),
-//        oz_cons(oz_pairA("timestr",oz_atom(
-//                                ctime(&netaddr.site->getTimeStamp()->start))),
-//        oz_cons(oz_pairAI("ipint",(unsigned int)netaddr.site->getAddress()),
-//        oz_cons(oz_pairAI("hval",(int)netaddr.site),
-//              oz_nil()))))))),
-//      oz_cons(oz_pairAI("index",(int)netaddr.index), oz_nil())));
-//  */
-//    switch(getExtendFlags()){
-//    case PO_PERSISTENT:
-//      primCred = oz_atom("persistent");
-//      secCred = oz_atom("persistent");
-//      break;
-//    case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:
-//      primCred = OZ_recordInit(oz_atom("slave"),
-//                   oz_pairII(1, getSlave()->getMaster()->primCredit));
-//      secCred = oz_nil();
-//      next = getSlave()->getMaster()->uSOB.oce;
-//      while(next != NULL){
-//        secCred = oz_cons(OZ_recordInit(oz_atom("big"),
-//                  oz_cons(oz_pairAI("credit0",next->getCredit(0)),
-//                  oz_cons(oz_pairAI("credit1",next->getCredit(1)),
-//                          oz_nil()))), secCred);
-//        next = next->getNext();}
-//      break;
-//    case PO_EXTENDED|PO_SLAVE|PO_MASTER:
-//      primCred = OZ_recordInit(oz_atom("slave"),
-//                   oz_pairII(1, getSlave()->getMaster()->primCredit));
-//      secCred = oz_int(getSlave()->getMaster()->uSOB.secCredit);
-//      break;
-//    case PO_EXTENDED|PO_SLAVE:
-//      primCred = OZ_recordInit(oz_atom("slave"),
-//                   oz_pairII(1, getSlave()->getMaster()->primCredit));
-//      secCred = oz_int(getSlave()->uSOB.secCredit);
-//      break;
-//    case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:
-//      primCred = OZ_recordInit(oz_atom("slave"),
-//                   oz_pairII(1, getMaster()->primCredit));
-//      secCred = oz_nil();
-//      next = getMaster()->uSOB.oce;
-//      while(next != NULL){
-//        secCred = oz_cons(OZ_recordInit(oz_atom("big"),
-//                  oz_cons(oz_pairAI("credit0",next->getCredit(0)),
-//                  oz_cons(oz_pairAI("credit1",next->getCredit(1)),
-//                          oz_nil()))), secCred);
-//        next = next->getNext();}
-//      break;
-//    case PO_EXTENDED|PO_MASTER:
-//      primCred = oz_int(getMaster()->primCredit);
-//      secCred = oz_int(getMaster()->uSOB.secCredit);
-//      break;
-//    case PO_NONE:
-//      secCred = oz_int(0);
-//      primCred = oz_int(uOB.credit);
-//      break;
-//    default:
-//      Assert(0);}
+  OZ_Term primCred, secCred;
+  OZ_Term na=
+    OZ_recordInit(oz_atom("netAddress"),
+      oz_cons(oz_pairA("site", oz_atom(bcreditHandler.netaddr.site->stringrep_notype())),
+      oz_cons(oz_pairAI("index",(int)bcreditHandler.netaddr.index), oz_nil())));
+/*
+  OZ_Term na=
+    OZ_recordInit(oz_atom("netAddress"),
+      oz_cons(oz_pairA("site",OZ_recordInit(oz_atom("site"),
+          oz_cons(oz_pairAI("port",(int)netaddr.site->getPort()),
+          oz_cons(oz_pairAI("timeint",(int)netaddr.site->getTimeStamp()->start),
+          oz_cons(oz_pairA("timestr",oz_atom(
+                                  ctime(&netaddr.site->getTimeStamp()->start))),
+          oz_cons(oz_pairAI("ipint",(unsigned int)netaddr.site->getAddress()),
+          oz_cons(oz_pairAI("hval",(int)netaddr.site),
+                oz_nil()))))))),
+        oz_cons(oz_pairAI("index",(int)netaddr.index), oz_nil())));
+*/
 
-//    return OZ_recordInit(oz_atom("be"),
-//       oz_cons(oz_pairAI("index", index),
-//       oz_cons(oz_pairAA("type", toC(PO_getValue(this))),
-//       oz_cons(oz_pairA("na", na),
-//       oz_cons(oz_pairAI("secCred", secCred),
-//       oz_cons(oz_pairA("primCred",primCred),
-//           oz_nil()))))));
+  bcreditHandler.extract_info(primCred, secCred);
+
+  return OZ_recordInit(oz_atom("be"),
+     oz_cons(oz_pairAI("index", index),
+     oz_cons(oz_pairAA("type", toC(PO_getValue(this))),
+     oz_cons(oz_pairA("na", na),
+     oz_cons(oz_pairAI("secCred", secCred),
+     oz_cons(oz_pairA("primCred",primCred),
+             oz_nil()))))));
 }
 
 

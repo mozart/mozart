@@ -497,6 +497,30 @@ void OwnerCreditHandler::print() {
 
 }
 
+OZ_Term OwnerCreditHandler::extract_info() {
+  OZ_Term credit;
+  if(isExtended()) {
+    OwnerCreditExtension *next;
+    next = cu.oExt;
+    credit = oz_nil();
+    while(next != NULL){
+      credit = oz_cons(OZ_recordInit(oz_atom("ext"),
+                   oz_cons(oz_pairAI("credit0",next->getCredit(0)),
+                   oz_cons(oz_pairAI("credit1",next->getCredit(1)),
+                           oz_nil()))), credit);
+      next = next->getNext();}
+    credit = OZ_recordInit(oz_atom("big"), oz_cons(credit, oz_nil()));
+  }
+  else {
+    if(cu.credit == -1)
+      credit = oz_atom("persistent");
+    else
+      credit = oz_int(cu.credit);
+  }
+
+  return credit;
+}
+
 OwnerCreditExtension* OwnerCreditHandler::getOwnerCreditExtension(){
   Assert(isExtended());
   return cu.oExt;}
@@ -657,6 +681,60 @@ void BorrowCreditHandler::print() {
     break;
   default:
     Assert(0);}
+}
+
+void BorrowCreditHandler::extract_info(OZ_Term primCred,OZ_Term secCred) {
+  OwnerCreditExtension *next;
+  switch(getExtendFlags()){
+  case CH_PERSISTENT:
+    primCred = oz_atom("persistent");
+    secCred = oz_atom("persistent");
+    break;
+  case CH_EXTENDED|CH_SLAVE|CH_MASTER|CH_BIGCREDIT:
+    primCred = OZ_recordInit(oz_atom("slave"),
+                 oz_pairII(1, getSlave()->getMaster()->primCredit));
+    secCred = oz_nil();
+    next = getSlave()->getMaster()->uSOB.oce;
+    while(next != NULL){
+      secCred = oz_cons(OZ_recordInit(oz_atom("big"),
+                    oz_cons(oz_pairAI("credit0",next->getCredit(0)),
+                    oz_cons(oz_pairAI("credit1",next->getCredit(1)),
+                            oz_nil()))), secCred);
+      next = next->getNext();}
+    break;
+  case CH_EXTENDED|CH_SLAVE|CH_MASTER:
+    primCred = OZ_recordInit(oz_atom("slave"),
+                 oz_pairII(1, getSlave()->getMaster()->primCredit));
+    secCred = oz_int(getSlave()->getMaster()->uSOB.secCredit);
+    break;
+  case CH_EXTENDED|CH_SLAVE:
+    primCred = OZ_recordInit(oz_atom("slave"),
+                 oz_pairII(1, getSlave()->getMaster()->primCredit));
+    secCred = oz_int(getSlave()->uSOB.secCredit);
+    break;
+  case CH_EXTENDED|CH_MASTER|CH_BIGCREDIT:
+    primCred = OZ_recordInit(oz_atom("slave"),
+                 oz_pairII(1, getMaster()->primCredit));
+    secCred = oz_nil();
+    next = getMaster()->uSOB.oce;
+    while(next != NULL){
+      secCred = oz_cons(OZ_recordInit(oz_atom("big"),
+                    oz_cons(oz_pairAI("credit0",next->getCredit(0)),
+                    oz_cons(oz_pairAI("credit1",next->getCredit(1)),
+                            oz_nil()))), secCred);
+      next = next->getNext();}
+    break;
+  case CH_EXTENDED|CH_MASTER:
+    primCred = oz_int(getMaster()->primCredit);
+    secCred = oz_int(getMaster()->uSOB.secCredit);
+    break;
+  case CH_NONE:
+    secCred = oz_int(0);
+    primCred = oz_int(cu.credit);
+    break;
+  default:
+    Assert(0);
+  }
 }
 
 Credit BorrowCreditHandler::getCreditBig() {
@@ -883,7 +961,6 @@ void BorrowCreditHandler::removeMaster_SM(BorrowCreditExtension* master){
   BorrowCreditExtension *slave=getSlave();
   int_Credit c=master->msGetPrimCredit();
   slave->slaveSetSecCredit(c);
-//    removeFlags(CH_EXTENDED|CH_MASTER); // AN! still extended?
   removeFlags(CH_MASTER);
   freeBorrowCreditExtension(master);
   generalTryToReduce();}
@@ -1093,7 +1170,7 @@ DSite *BorrowCreditHandler::getOneSecondaryCredit() {
       return getSlave()->getSite();}
     case CH_NONE:{
       createSecMaster();
-      break;} // AN! look at return... Shouldn't one be subtracted here?
+      break;}
     default:{
       OZ_error("secondary credit error");
       Assert(0);}

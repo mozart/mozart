@@ -35,19 +35,18 @@
 /*   Credit protocol                                     */
 /**********************************************************************/
 
-// AN! used?
-void sendCreditTo(DSite *toS,DSite *entitysite,int entityOTI,Credit c) {
-  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+//  void sendCreditTo(DSite *toS,DSite *entitysite,int entityOTI,Credit c) {
+//    MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
 
-  if(c.owner==NULL) {
-    msgC->put_M_OWNER_CREDIT(entityOTI,c.credit);
-  }
-  else {
-    msgC->put_M_OWNER_SEC_CREDIT(entitysite,entityOTI,c.credit);
-  }
+//    if(c.owner==NULL) {
+//      msgC->put_M_OWNER_CREDIT(entityOTI,c.credit);
+//    }
+//    else {
+//      msgC->put_M_OWNER_SEC_CREDIT(entitysite,entityOTI,c.credit);
+//    }
 
-  send(msgC,3);
-}
+//    send(msgC,3);
+//  }
 
 void sendCreditBack(DSite *entitysite,int entityOTI,Credit c) {
   MsgContainer *msgC;

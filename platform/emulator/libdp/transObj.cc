@@ -97,8 +97,6 @@ void TransController::getTransObj(ComObj *comObj) {
   if(used<getWeakMaxNumOfResources()) {
     used++;
     transObj=newTransObj();
-//      transObj->setOwner(comObj);
-//      addLast(running,running_last,comObj);
     transObjReady(comObj,transObj);
   }
   else
@@ -115,8 +113,6 @@ void TransController::transObjFreed(ComObj *comObj,TransObj *transObj) {
     if (next!=NULL) {
       PD((TCPCACHE,"Reusing a resource"));
       transObj->init(); // Refresh!
-//        transObj->setOwner(next);
-//        addLast(running,running_last,next);
       transObjReady(next,transObj);
       return;
     }
@@ -161,8 +157,6 @@ void TransController::changeNumOfResources() {
     if (next!=NULL) {
       used++;
       transObj=newTransObj();
-//        transObj->setOwner(next);
-//        addLast(running,running_last,next);
       transObjReady(next,transObj);
     }
     else { // All satisfied, can clear timer!

@@ -38,66 +38,6 @@ void MsgContainer::init(DSite *site) {
                msgFields[i].arg=NULL;)
 }
 
-//  void MsgContainer::setCntrl(Var cntrlVar) {
-//    this->cntrlVar = cntrlVar;
-//  }
-
-//  Var MsgContainer::getCntrlVar() {
-//    return cntrlVar;
-//  }
-
-void MsgContainer::setMsgNum(int msgNum) {
-  this->msgNum = msgNum;
-}
-
-int MsgContainer::getMsgNum() {
-  return msgNum;
-}
-
-void MsgContainer::setSendTime(int sendTime) {
-  this->sendTime = sendTime;
-}
-
-int MsgContainer::getSendTime() {
-  return sendTime;
-}
-
-//  void MsgContainer::setNext(MsgContainer* next) {
-//    this->next = next;
-//  }
-
-//  MsgContainer* MsgContainer::getNext() {
-//    return next;
-//  }
-
-MessageType MsgContainer::getMessageType() {
-  return mt;
-}
-
-void MsgContainer::setMessageType(MessageType mt) {
-  this->mt=mt;
-}
-
-void MsgContainer::setFlag(int flag) {
-  flags |= flag;
-}
-
-int MsgContainer::getFlags() {
-  return flags;
-}
-
-Bool MsgContainer::checkFlag(int flag) {
-  return flags & flag;
-}
-
-void MsgContainer::clearFlag(int flag) {
-  flags &= ~flag;
-}
-
-DSite* MsgContainer::getDestination() {
-  return destination;
-}
-
 void MsgContainer::takeSnapshot() {
   Assert(!checkFlag(MSG_HAS_MARSHALCONT));
   Assert(!checkFlag(MSG_HAS_UNMARSHALCONT));

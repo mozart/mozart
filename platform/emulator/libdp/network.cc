@@ -120,9 +120,6 @@ void initNetwork() {
   byteBufferManager = new ByteBufferManager();
   timers = new Timers();
 
-  if(!initAccept())
-    return;
-
   networkNotInitiated = FALSE;
 }
 

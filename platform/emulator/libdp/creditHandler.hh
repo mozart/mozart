@@ -80,6 +80,7 @@ public:
   Credit getCreditSmall();
   void addCredit(Credit c);
   void print();
+  OZ_Term extract_info();
 
 private:
   // Methods copied from previous implementation in table.hh/cc
@@ -114,6 +115,7 @@ public:
   Credit getCreditSmall();
   void addCredit(Credit c);
   void print();
+  void extract_info(OZ_Term primCred, OZ_Term secCred);
 
 private:
   // Methods copied from previous implementation in table.hh/cc
