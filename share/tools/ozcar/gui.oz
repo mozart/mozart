@@ -162,7 +162,7 @@ in
 	 local
 	    Bs = {Map [StepButtonBitmap   # StepButtonColor
 		       NextButtonBitmap   # NextButtonColor
-		       ContButtonBitmap   # ContButtonColor
+		       UnleashButtonBitmap# UnleashButtonColor
 		       StopButtonBitmap   # StopButtonColor
 		       ForgetButtonBitmap # ForgetButtonColor
 		       TermButtonBitmap   # TermButtonColor]
@@ -694,10 +694,14 @@ in
 		  [] blocked    then Gui,BlockedStatus(T A)
 		  [] terminated then Gui,TerminatedStatus(T A)
 		  else
+		     Frame
+		  in
+		     {@currentStack getFrame(~1 Frame)}
 		     Gui,UnselectStackFrame
 		     Gui,markNode({Thread.id T} running)
 		     {Emacs configureBar(running)}
 		     Gui,markStack(inactive)
+		     {Dbg.unleash @currentThread Frame.frameID}
 		     {Thread.resume @currentThread}
 		  end
 	       end
@@ -718,28 +722,25 @@ in
 		  else
 		     ThreadDic = ThreadManager,getThreadDic($)
 		     Stack     = {Dictionary.condGet ThreadDic I nil}
-		     TopFrame Dir
 		  in
 		     case Stack == nil then skip else
 			TopFrame  = {Stack getTop($)}
 			Dir       = case TopFrame == nil
 				    then entry else TopFrame.dir end
-			case Dir == exit then
-			   {OzcarMessage NextOnLeave}
-			else
-			   {Dbg.stepmode T false}
-			end
+		     in
+			{Dbg.stepmode T false}
 
 			Gui,UnselectStackFrame
 			Gui,markNode(I running)
 			Gui,markStack(inactive)
 			{Emacs configureBar(running)}
+			{Dbg.unleash @currentThread TopFrame.frameID}
 			{Thread.resume T}
 		     end
 		  end
 	       end
 
-	    elsecase A == ContButtonBitmap then
+	    elsecase A == UnleashButtonBitmap then
 	       T = @currentThread
 	    in
 	       case T == unit then
@@ -757,9 +758,13 @@ in
 		     Stack     = {Dictionary.condGet ThreadDic I nil}
 		  in
 		     case Stack == nil then skip else
+			Frame
+		     in
+			{@currentStack getFrame(@LastSelectedFrame Frame)}
 
 			{Dbg.stepmode T false}
-			{Dbg.contflag T true}
+			{@currentStack rebuild(true)}
+			{Dbg.unleash T Frame.frameID}
 
 			%% delete all tags
 			{ForAll [resetReservedTags({Stack getSize($)})
@@ -767,7 +772,8 @@ in
 
 			Gui,markNode({Thread.id T} running)
 			Gui,markStack(inactive)
-			Gui,doStatus('Continuing thread #' # I)
+			Gui,doStatus('Unleashing thread #' # I #
+				     ' to frame ' # @LastSelectedFrame)
 			{Emacs configureBar(running)}
 			{Thread.resume T}
 		     end
@@ -799,7 +805,6 @@ in
 			else
 			   {Stack rebuild(true)}
 			end
-			{Dbg.contflag T false}
 			{Dbg.stepmode T true}
 			Gui,doStatus('You have stopped thread #' # I)
 		     end

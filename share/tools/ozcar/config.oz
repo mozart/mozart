@@ -58,8 +58,6 @@ EarlyThreadDeath       = 'won\'t add short living thread #'
 EarlyTermThread        = 'Early terminating thread'
 KnownThread            = 'Got known thread'
 NewThread              = 'Got new thread'
-NextOnLeave            = ('\'next\' while leaving procedure - ' #
-			  'substituting by \'step\'')
 WaitForThread          = ('waiting for thread to be added ' #
 			  'to dictionary of debugged threads...')
 
@@ -163,7 +161,7 @@ IconBitMap             = GlobalBitMapDir # debugger # BitmapExtension
 
 StepButtonBitmap       = step
 NextButtonBitmap       = next
-ContButtonBitmap       = cont
+UnleashButtonBitmap    = unleash
 StopButtonBitmap       = stop
 ForgetButtonBitmap     = forget
 TermButtonBitmap       = term
@@ -206,7 +204,7 @@ CheckButtonSelectColor
 
 StepButtonColor
 NextButtonColor
-ContButtonColor
+UnleashButtonColor
 StopButtonColor
 ForgetButtonColor
 TermButtonColor
@@ -242,7 +240,7 @@ case UseColors then
 
    StepButtonColor         = SelectedBackground
    NextButtonColor         = SelectedBackground
-   ContButtonColor         = RunnableThreadColor
+   UnleashButtonColor      = RunnableThreadColor
    StopButtonColor         = BlockedThreadColor
    ForgetButtonColor       = DefaultForeground
    TermButtonColor         = DefaultForeground
@@ -277,7 +275,7 @@ else
 
    StepButtonColor         = black
    NextButtonColor         = black
-   ContButtonColor         = black
+   UnleashButtonColor      = black
    StopButtonColor         = black
    ForgetButtonColor       = black
    TermButtonColor         = black
