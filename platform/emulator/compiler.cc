@@ -88,7 +88,7 @@ OZ_BI_define(BIgetOpcode,1,1)
 {
   oz_declareAtomIN(0,opname);
 
-  Opcode oc = CodeArea::stringToOp(opname);
+  Opcode oc = stringToOpcode(opname);
   if (oc == OZERROR) {
     return oz_raise(E_ERROR,OZ_atom("assembler"),
 		    "unknownInstruction",1,OZ_in(0));
@@ -101,7 +101,7 @@ OZ_BI_define(BIgetInstructionSize,1,1)
 {
   oz_declareAtomIN(0,opname);
 
-  Opcode oc = CodeArea::stringToOp(opname);
+  Opcode oc = stringToOpcode(opname);
   if (oc == OZERROR) {
     return oz_raise(E_ERROR,OZ_atom("assembler"),
 		    "unknownInstruction",1,OZ_in(0));
