@@ -149,22 +149,35 @@ public:
   void setFree()              { type = PO_Free; }
   void unsetFree()            { DebugCode(type=(PO_TYPE)4712); }
 
-  void mkTertiary(Tertiary *t){
-    type = PO_Tert; u.tert=t; flags=PO_NONE; }
   void mkTertiary(Tertiary *t,unsigned short f){
     type = PO_Tert; u.tert=t; flags=f; }
+
+  void mkTertiary(Tertiary *t){
+    type = PO_Tert; u.tert=t; flags=PO_NONE; }
+
+  void mkRef(TaggedRef v,unsigned short f){
+    type=PO_Ref; u.ref=v; flags=f; }
 
   void mkRef(TaggedRef v){
     type=PO_Ref; u.ref=v; flags=PO_NONE; }
 
-  void mkVar(TaggedRef v){
-    type=PO_Var; u.ref=v; flags=PO_NONE; }
-
   void mkVar(TaggedRef v,unsigned short f){
-    type=PO_Var; u.ref=v; flags=f;}
+    type=PO_Var; u.ref=v; }
 
-  void mkRef(){
-    Assert(isVar()); type=PO_Ref;flags=PO_NONE; }
+  void mkVar(TaggedRef v){
+    type=PO_Var; u.ref=v; flags=PO_NONE;}
+
+  void changeToRef(){
+    Assert(isVar()); type=PO_Ref; }
+
+  void changeToVar(TaggedRef v){
+    type=PO_Var; u.ref=v;}
+
+  void changeToTertiary(Tertiary* t){
+    type=PO_Tert; u.tert=t;}
+
+  void updateTertiaryGC(Tertiary *t){
+    u.tert=t; }
 
   unsigned short getFlags()         {return flags;}
   void setFlags(unsigned short f)   {flags=f;}
@@ -429,6 +442,7 @@ class OwnerTable {
 
 public:
   OwnerEntry* array;  /* TODO move to private */
+  void print();
 
   OZ_Term extract_info();
 
@@ -520,6 +534,7 @@ protected:
 
 public:
   BorrowCreditExtension(){}
+  void print_entry(int nr);
 };
 
 /* ********************************************************************** */
@@ -759,6 +774,7 @@ private:
 
 public:
   NetHashTable *hshtbl;
+  void print();
 
   BorrowEntry *getBorrow(int i)  { Assert(i>=0 && i<size); return &array[i];}
 

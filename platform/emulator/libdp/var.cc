@@ -250,7 +250,7 @@ void ProxyVar::proxyBind(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
 {
   PD((TABLE,"REDIRECT - borrow entry hit b:%d",getIndex()));
   primBind(vPtr,val);
-  be->mkRef();
+  be->changeToRef();
   if (hasVal()) {
     PD((PD_VAR,"REDIRECT while pending"));
     redirect(val);
@@ -270,7 +270,7 @@ void ProxyVar::proxyAck(TaggedRef *vPtr, BorrowEntry *be)
   bindings->dispose();
   bindings=tmp;
   redirect(val);
-  be->mkRef();
+  be->changeToRef();
   BT->maybeFreeBorrowEntry(getIndex());
   // dispose();
 }
@@ -323,7 +323,7 @@ OZ_Return ManagerVar::doBindPV(TaggedRef *lPtr, TaggedRef v)
   PD((PD_VAR,"bind manager o:%d v:%s",getIndex(),toC(v)));
   OZ_Return aux = sendRedirectToProxies(v, myDSite);
   if (aux == PROCEED) {
-    OT->getOwner(getIndex())->mkRef();
+    OT->getOwner(getIndex())->changeToRef();
     primBind(lPtr,v);
   }
   return aux;
@@ -342,7 +342,7 @@ void ManagerVar::managerBind(TaggedRef *vPtr, TaggedRef val,
   }
 #endif
   primBind(vPtr,val);
-  oe->mkRef();
+  oe->changeToRef();
   if (oe->hasFullCredit()) {
     PD((WEIRD,"SURRENDER: full credit"));
   }
@@ -506,7 +506,10 @@ void sendHelpX(MessageType mt,BorrowEntry *be)
 
 void ObjectVar::addSuspV(TaggedRef * v, Suspension susp, int unstable)
 {
+  Bool send=FALSE;
+  if(getSuspListLengthS()==0) send=TRUE;
   addSuspSVar(susp, unstable);
+  if(! send) return;
   if (isObjectClassNotAvail()) {
     MessageType mt;
     if(oz_findGName(getGNameClass())==0) {mt=M_GET_OBJECTANDCLASS;}

@@ -181,9 +181,9 @@ void gcProxy(Tertiary *t) {
     PD((GC,"borrow already marked:%d",i));
     return;}
   be->makeGCMark();
+  if(be->isTertiary()) {
+    be->updateTertiaryGC(t);}
   PD((GC,"relocate borrow :%d old:%x new:%x",i,be,t));
-  if (be->isTertiary())  /* might be avariable for an object */
-    be->mkTertiary(t,be->getFlags());
   return;}
 
 // PER-LOOK: unnecessary inderection;
@@ -518,6 +518,7 @@ void msgReceived(MsgBuffer* bs)
       unmarshal_M_SEND_OBJECT(bs,sd,si,&of);
       PD((MSG_RECEIVED,"M_SEND_OBJECT site:%s index:%d",sd->stringrep(),si));
       BorrowEntry *be=receiveAtBorrow(sd,si);
+      Assert(be->isVar()); // check for duplicate object requests
 
       ObjectVar *pv = (ObjectVar *) getPerdioVar(be);
       Object *o = pv->getObject();
@@ -534,7 +535,7 @@ void msgReceived(MsgBuffer* bs)
       o->setClass(cl);
 
       pv->primBind(be->getPtr(),makeTaggedConst(o));
-      be->mkRef();
+      be->changeToRef();
       BT->maybeFreeBorrowEntry(o->getIndex());
       o->localize();
       break;
@@ -549,6 +550,7 @@ void msgReceived(MsgBuffer* bs)
       PD((MSG_RECEIVED,"M_SEND_OBJECTANDCLASS site:%s index:%d",
           sd->stringrep(),si));
       BorrowEntry *be=receiveAtBorrow(sd,si);
+      Assert(be->isVar());// check for duplicate object requests
 
       ObjectVar *pv = (ObjectVar *) getPerdioVar(be);
       Object *o = pv->getObject();
@@ -559,7 +561,7 @@ void msgReceived(MsgBuffer* bs)
 
       fillInObjectAndClass(&of,o);
       pv->primBind(be->getPtr(),makeTaggedConst(o));
-      be->mkRef();
+      be->changeToRef();
       BT->maybeFreeBorrowEntry(o->getIndex());
       o->localize();
       break;
@@ -1101,6 +1103,7 @@ void initPerdio()
   Assert(sizeof(LockSecEmul)==sizeof(LockSec));
   Assert(sizeof(CellSecEmul)==sizeof(CellSec));
   Assert(sizeof(PortManager)==sizeof(PortLocal));
+  Assert(sizeof(PortProxy)==12);
 }
 
 /**********************************************************************/
@@ -1136,7 +1139,7 @@ OZ_Term getGatePort(DSite* sd){
   if (b==NULL) {
     int bi=borrowTable->newBorrow( PERSISTENT_CRED,sd,si);
     b=borrowTable->getBorrow(bi);
-    b->mkTertiary((new PortProxy(bi)),b->getFlags());
+    b->mkTertiary((new PortProxy(bi)));
     b->makePersistent();
     return b->getValue();}
   Assert(b->isPersistent());
