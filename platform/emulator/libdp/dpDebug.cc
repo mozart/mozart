@@ -109,7 +109,6 @@ char *debugTypeStr[LAST] = {
 };
 
 
-Bool openClosedConnection(int Type);
 void wakeUpTmp(int i, int time);
 int openclose(int Type);
 
@@ -118,9 +117,10 @@ OZ_BI_define(BIstartTmp,2,0)
   OZ_declareInt(0,val);
   OZ_declareInt(1,time);
   PD((TCPCACHE,"StartTmp v:%d t:%d",val,time));
-  if(openClosedConnection(val)){
-    PD((TCPCACHE,"StartTmp; continuing"));
-    wakeUpTmp(val,time);}
+  /*  if(openClosedConnection(val)){
+      PD((TCPCACHE,"StartTmp; continuing"));
+      wakeUpTmp(val,time);}
+  */
   return PROCEED;
 } OZ_BI_end
 
