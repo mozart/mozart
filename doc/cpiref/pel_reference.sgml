@@ -9,13 +9,20 @@
 
 <Entry class="enumtype"><<pf_return_t>>
 <Index class=proglang><<pf_return_t>> </Index>
-<Synopsis><<typedef enum { pf_failed, pf_entailed, pf_sleep } pf_return_t;>>
+<Synopsis>
+<<<
+typedef enum { pf_failed,
+               pf_entailed,
+               pf_sleep } pf_return_t;>>
 
 <Item> Return type of a propagation function.
 
 <Entry class="fncttype"><<pf_fnct_t>>
 <Index class=proglang><<pf_fnct_t>> </Index>
-<Synopsis><<typedef pf_return_t (* pf_fnct_t)(int *, PEL_SuspVar * []);>>
+<Synopsis>
+<<<
+typedef pf_return_t (* pf_fnct_t)(int *, PEL_SuspVar * []);
+>>>
 
 <Item> Type of a propagation function. A propagation function takes an
 array of parameter indicies and an array of references to constrained
@@ -31,7 +38,7 @@ variables (<<(PEL_SuspVar *)>>). It returns a value of type
 
 <List proglang=cc>
 
-<Entry class="member function"><<add>>
+<Entry class="member function"><<Sadd>>
 <Index class=proglang><<PEL_ParamTable>> <And> <<add>> </Index>
 <Synopsis><<int add(int i);>>
 
@@ -157,13 +164,13 @@ i.e., the element can be read and written.
 <Entry class="member function"><<add>>
 <Index class=proglang><<PEL_PropFnctTable>><And><<add>> </Index>
 <Synopsis>
-<<
+<<<
 int add(PEL_ParamTable &amp;pt, PEL_PropQueue &amp;pq,
         pf_fnct_t fnct, int x, int y);
 
 int add(PEL_ParamTable &amp;pt, PEL_PropQueue &amp;pq,
         pf_fnct_t fnct, int x, int y, int z);
->>
+>>>
 
 <Item> Adds an entry for the propagation function <<fnct>> with
 parameters <<x>> and <<y>> (resp. <<x>>, <<y>>, and <<z>>) and returns
@@ -198,11 +205,11 @@ propagation function index is related to a propagation function table.
 
 <Entry class="member function"><<apply>>
 <Index class=proglang><<PEL_PropQueue>> <And> <<apply>> </Index>
-<Synopsis><<
+<Synopsis><<<
 pf_return_t apply(PEL_PropFnctTable &amp;pft,
                   PEL_ParamTable &amp;pt,
                   PEL_SuspVar * []);
->>
+>>>
 
 <Item> Dequeues an index and applies the corresponding propagation
 function closure of <<pft>>. It returns the value returned by the
@@ -455,11 +462,14 @@ derived from <<PEL_SuspVar>>.
 <Entry class="constructor"><<PEL_SuspFSetVar>>
 <Index class=proglang><<PEL_SuspFSetVar>> </Index>
 <Synopsis>
-<<
-PEL_SuspFSetVar(PEL_FSetProfile &amp;fsetp, OZ_FSetConstraint &amp;fset,
-                PEL_FSetEventLists &amp;fsetel, PEL_PropQueue &amp;pq,
-                PEL_PropFnctTable &amp;pft, int first = 1);
->>
+<<<
+PEL_SuspFSetVar(PEL_FSetProfile &amp;fsetp,
+                OZ_FSetConstraint &amp;fset,
+                PEL_FSetEventLists &amp;fsetel,
+                PEL_PropQueue &amp;pq,
+                PEL_PropFnctTable &amp;pft,
+                int first = 1);
+>>>
 
 <Item> Constructs an initialized library finite set variable which is
 directly connected with the corresponding variable in the constraint
@@ -468,10 +478,12 @@ store.
 <Entry class="constructor"><<PEL_SuspFSetVar>>
 <Index class=proglang><<PEL_SuspFSetVar>> </Index>
 <Synopsis>
-<<
-PEL_SuspFSetVar(OZ_FSetConstraint &amp;fsetl, PEL_FSetEventLists &amp;fsetel,
-                PEL_PropQueue &amp;pq, PEL_PropFnctTable &amp;pft);
->>
+<<<
+PEL_SuspFSetVar(OZ_FSetConstraint &amp;fsetl,
+                PEL_FSetEventLists &amp;fsetel,
+                PEL_PropQueue &amp;pq,
+                PEL_PropFnctTable &amp;pft);
+>>>
 
 <Item> Constructs an initialized library finite set variable which is
 not directly connected with the corresponding variable in the
@@ -482,11 +494,14 @@ a disjunction.
 <Entry class="member function"><<init>>
 <Index class=proglang><<PEL_SuspFSetVar>> <And> <<init>> </Index>
 <Synopsis>
-<<
-PEL_SuspFSetVar * init(PEL_FSetProfile &amp;fsetp, OZ_FSetConstraint &amp;fset,
-                       PEL_FSetEventLists &amp;fsetel, PEL_PropQueue &amp;pq,
-                       PEL_PropFnctTable &amp;pft, int first = 1);
->>
+<<<
+PEL_SuspFSetVar * init(PEL_FSetProfile &amp;fsetp,
+                       OZ_FSetConstraint &amp;fset,
+                       PEL_FSetEventLists &amp;fsetel,
+                       PEL_PropQueue &amp;pq,
+                       PEL_PropFnctTable &amp;pft,
+                       int first = 1);
+>>>
 
 <Item> This initialization function is associated with the constructor
 for the directly connected library variable and returns a pointer the
@@ -495,10 +510,12 @@ library variable.
 <Entry class="member function"><<init>>
 <Index class=proglang><<PEL_SuspFSetVar>> <And> <<init>> </Index>
 <Synopsis>
-<<
-PEL_SuspFSetVar * init(OZ_FSetConstraint &amp;fsetl, PEL_FSetEventLists &amp;fsetel,
-                       PEL_PropQueue &amp;pq, PEL_PropFnctTable &amp;pft);
->>
+<<<
+PEL_SuspFSetVar * init(OZ_FSetConstraint &amp;fsetl,
+                       PEL_FSetEventLists &amp;fsetel,
+                       PEL_PropQueue &amp;pq,
+                       PEL_PropFnctTable &amp;pft);
+>>>
 
 <Item> This initialization function is associated with the constructor
 for the not directly connected library variable and returns a pointer the
@@ -554,11 +571,14 @@ with this variable.
 <Entry class="constructor"><<PEL_SuspFDVar>>
 <Index class=proglang><<PEL_SuspFDVar>> </Index>
 <Synopsis>
-<<
-PEL_SuspFDIntVar(PEL_FDProfile &amp;fdp, OZ_FiniteDomain &amp;fdv,
-                 PEL_FDEventLists &amp;fdel, PEL_PropQueue &amp;pd,
-                 PEL_PropFnctTable &amp;pft, int first = 1);
->>
+<<<
+PEL_SuspFDIntVar(PEL_FDProfile &amp;fdp,
+                 OZ_FiniteDomain &amp;fdv,
+                 PEL_FDEventLists &amp;fdel,
+                 PEL_PropQueue &amp;pd,
+                 PEL_PropFnctTable &amp;pft,
+                 int first = 1);
+>>>
 
 <Item> Constructs an initialized library finite domain variable which is
 directly connected with the corresponding variable in the constraint
@@ -568,10 +588,12 @@ store.
 <Entry class="constructor"><<PEL_SuspFDVar>>
 <Index class=proglang><<PEL_SuspFDVar>> </Index>
 <Synopsis>
-<<
-PEL_SuspFDIntVar(OZ_FiniteDomain &amp;fdl, PEL_FDEventLists &amp;fdel,
-                 PEL_PropQueue &amp;pd, PEL_PropFnctTable &amp;pft);
->>
+<<<
+PEL_SuspFDIntVar(OZ_FiniteDomain &amp;fdl,
+                 PEL_FDEventLists &amp;fdel,
+                 PEL_PropQueue &amp;pd,
+                 PEL_PropFnctTable &amp;pft);
+>>>
 
 <Item> Constructs an initialized library finite domain variable which
 is not directly connected with the corresponding variable in the
@@ -584,11 +606,14 @@ a disjunction.
 <Entry class="member function"><<init>>
 <Index class=proglang><<PEL_SuspFDVar>> <And> <<init>> </Index>
 <Synopsis>
-<<
-PEL_SuspFDIntVar * init(PEL_FDProfile &amp;fdp, OZ_FiniteDomain &amp;fd,
-                        PEL_FDEventLists &amp;fdel, PEL_PropQueue &amp;pq,
-                        PEL_PropFnctTable &amp;pft, int first = 1);
->>
+<<<
+PEL_SuspFDIntVar * init(PEL_FDProfile &amp;fdp,
+                        OZ_FiniteDomain &amp;fd,
+                        PEL_FDEventLists &amp;fdel,
+                        PEL_PropQueue &amp;pq,
+                        PEL_PropFnctTable &amp;pft,
+                        int first = 1);
+>>>
 
 <Item> This initialization function is associated with the constructor
 for the directly connected library variable and returns a pointer the
@@ -598,10 +623,12 @@ library variable.
 <Entry class="member function"><<init>>
 <Index class=proglang><<PEL_SuspFDVar>> <And> <<init>> </Index>
 <Synopsis>
-<<
-PEL_SuspFDIntVar * init(OZ_FiniteDomain &amp;fdl, PEL_FDEventLists &amp;fdel,
-                        PEL_PropQueue &amp;pq, PEL_PropFnctTable &amp;pft);
->>
+<<<
+PEL_SuspFDIntVar * init(OZ_FiniteDomain &amp;fdl,
+                        PEL_FDEventLists &amp;fdel,
+                        PEL_PropQueue &amp;pq,
+                        PEL_PropFnctTable &amp;pft);
+>>>
 
 <Item> This initialization function is associated with the constructor
 for the not directly connected library variable and returns a pointer the

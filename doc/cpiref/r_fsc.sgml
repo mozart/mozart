@@ -8,12 +8,6 @@ satisfying the Constraint; and a set of values who may or may not be
 in. These sets will be referred to as <<IN>>, <<OUT>>,  and
 <<UNKNOWN>> sets in the descriptions below.
 
-<!--
-<<fs_sup>> is set in the file <<mozart_cpi.hh>>. Normally, it will be
-the same as <<fd_sup>>. If the extended Finite Set representation is
-disabled, however, it is <<32*fset_high>>.
--->
-
 <!-- ********************************************************************** -->
 
 <subsection id="r_fsc.constr">
@@ -46,7 +40,7 @@ disabled, however, it is <<32*fset_high>>.
 <table>
 <tr> <th/value of <<state>>/ <th/constraint/
 <tr> <td/<<fs_empty>>/ <td/the empty set matches/
-<tr> <td/<<fs_full>>/ <td/the set <math/\{0, \ldots, fs_sup\}/ matches./
+<tr> <td/<<fs_full>>/ <td/the set <math/\{0, \ldots, OZ\_getFSetSup()\}/ matches./
 </table>
 
 
@@ -89,7 +83,7 @@ disabled, however, it is <<32*fset_high>>.
 <table>
 <tr> <th/value of <<state>>/ <th/constraint/
 <tr> <td/<<fs_empty>>/ <td/the empty set matches/
-<tr> <td/<<fs_full>>/ <td/the set <math/\{0, \ldots, fs_sup\}/ matches./
+<tr> <td/<<fs_full>>/ <td/the set <math/\{0, \ldots, OZ\_getFSetSup()\}/ matches./
 </table>
 
 </List>
@@ -198,7 +192,7 @@ in <em/some/ a set satisfying the constraint.
 <Index class=proglang><<OZ_FSetConstraint>><And><<getUnknownNextLargerElem>></Index>
 
 <Synopsis>
-<<
+<<<
 int getGlbMinElem(void) const;
 int getLubMinElem(void) const;
 int getNotInMinElem(void) const;
@@ -215,7 +209,7 @@ int getGlbNextLargerElem(int) const;
 int getLubNextLargerElem(int) const;
 int getNotInNextLargerElem(int) const;
 int getUnknownNextLargerElem(int) const;
->>
+>>>
 
 <Item>
 
@@ -477,7 +471,7 @@ constraint.
 
 <Item>
 Returns <<true>> if <<*this>> can only be satisfied by the set
-containing all possible values (&ie , <math/\{0, \ldots, fs\_sup\}/).
+containing all possible values (&ie , <math/\{0, \ldots, OZ\_getFSetSup()\}/).
 <p>
 
 <Entry class="constant member function"><<isSubsumedBy>>

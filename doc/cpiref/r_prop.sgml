@@ -125,10 +125,11 @@ refers to a variable, <<OZ_TRUE>> is returned, otherwise <<OZ_FALSE>>.
 
 <Entry class="member function"><<addImpose>>
 <Index class=proglang><<OZ_Propagator>><And><<addImpose>></Index>
-<Synopsis> <<
+<Synopsis>
+<<<
 void addImpose(OZ_FDPropState s, OZ_Term v);
 void addImpose(OZ_FSetPropState s, OZ_Term v);
->>
+>>>
 
 <Item> These member functions add <<v>> to the parameters of the propagator
 to be imposed with next invocation of <<OZ_Propagator::impose>>. In

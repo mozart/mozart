@@ -83,15 +83,11 @@ The last parameter indicates the success of the LP solvers.
           <Grammar.Alt type="def">
                        <<config(avail:  ?={AVAIL_SOLVERS}>></Grammar.Alt>
           <Grammar.Alt><<       mode:   ?={MODES}>></Grammar.Alt>
-          <Grammar.Alt><<       solver: ?={SOLVER})>>
-                       <Grammar.Note/takes a value of ?{MODES}/</Grammar.Alt>
+          <Grammar.Alt><<       solver: ?={SOLVER})>></Grammar.Alt>
 
-       The solvers available depend on the machine your are on. The
-       solver <EM/LP_SOLVE 2.0/ (<<lpsolve>>) is the default
-       solver. <Note foot>Note for users at PS Lab Saarbrücken: On
-       <KBD/orca/ you may be able to use optional solvers provided
-       by <EM/CPLEX 5.0/ (namely <<cplex_primopt>> and
-       <<cplex_dualopt>>).</Note>
+       Note that ?={SOLVER} takes a value out of ?={AVAIL_SOLVERS}. The
+       solvers available depend on your local installation. The solver
+       <EM/LP_SOLVE/ (<<lpsolve>>) is the default solver.
 
        <Grammar.Rule>?{AVAIL_SOLVERS}
           <Grammar.Alt type="def"><<lpsolve>></Grammar.Alt>
