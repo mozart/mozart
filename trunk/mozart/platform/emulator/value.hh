@@ -1371,7 +1371,7 @@ OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY)
       if (check == OZ_CHECK_FEATURE) {
 	if (!oz_isFeature(h)) return oz_false();
       } else {
-	Assert(check==OZ_CHECK_CHAR || check==OZ_CHECK_NONZERO);
+	Assert(check==OZ_CHECK_CHAR || check==OZ_CHECK_CHAR_NONZERO);
 	if (!oz_isSmallInt(h)) return oz_false();
 	int i=smallIntValue(h);
 	if (i<0 || i>255) return oz_false();
