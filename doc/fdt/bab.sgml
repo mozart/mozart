@@ -81,7 +81,7 @@ preferences. The resulting script is shown in
 
 <Figure id="ProgPhotoRevised">
 <caption/The revised script for the Photo Puzzle./
-<<<
+<chunk class=anonymous><title/RevisedPhoto/
 proc {RevisedPhoto Root}
    Persons       = [betty chris donald fred gary mary paul]
    Preferences   = [betty#gary betty#mary  chris#betty chris#gary
@@ -101,22 +101,22 @@ in
    Alignment.fred <: Alignment.betty     % breaking symmetries
    {FD.distribute split Alignment}
 end
->>>
+</chunk>
 </figure>
 
 <p>
 Next we define an ordering procedure which states that
 the overall sum of satisfied preferences in an alternative solution must
 be strictly greater than the corresponding sum in a previous solution:
-<<<
+<chunk class=anonymous><title/PhotoOrder/
 proc {PhotoOrder Old New}
    Old.satisfaction <: New.satisfaction
 end	
->>>
+</chunk>
 The optimal solution can be found with the statement
-<<<
+<chunk class=anonymous><title/{ExploreBest RevisedPhoto}/
 {ExploreBest RevisedPhoto PhotoOrder}
->>>
+</chunk>
 We obtain the same solution as in
 <Ptr to="page.reified.photoSol">. But now only 141 choice nodes are
 needed to find the optimal solution whereas 219 choice nodes were needed
@@ -297,30 +297,30 @@ guarantees that a variable <math/{\it Open}_i/ in the model is constrained to
 
 <p>
 The first solution of the problem can be found with the statement
-<<<
+<chunk class=anonymous><title/{ExploreOne WareHouse}/
 {ExploreOne WareHouse}
->>>
+</chunk>
 
 <p>
 To compute the solution with minimal costs we define the following
 ordering relation. 
-<<<
+<chunk class=anonymous><title/WareHouseOrder/
 proc {Order Old New} 
    Old.totalCost >: New.totalCost 
 end
->>>
+</chunk>
 
 <P>
 The optimal solution with total cost 604 can now be computed with
-<<<
+<chunk class=anonymous><title/{ExploreBest WareHouse}/
 {ExploreBest WareHouse Order}
->>>
+</chunk>
 
 
 <figure id="program.Warehouse">
 <caption/A script for the warehouse problem./<p>
 
-<<<
+<chunk class=anonymous><title/WareHouse/
 Capacity   = supplier(3 1 4 1 4)
 CostMatrix = store(supplier(36 42 22 44 52) 
 		   supplier(49 47 134 135 121) 
@@ -335,7 +335,9 @@ CostMatrix = store(supplier(36 42 22 44 52)
 BuildingCost = 50
 
 fun {Regret X}
-   M = {FD.reflect.min X} in {FD.reflect.nextLarger X M} - M
+   M = {FD.reflect.min X} 
+in 
+   {FD.reflect.nextLarger X M} - M
 end
 proc {WareHouse X}
    NbSuppliers = {Width Capacity}
@@ -367,10 +369,48 @@ in
     generic(order: fun {$ X Y} {Regret X} > {Regret Y} end)
     Cost}
 end
->>>
+</chunk>
 </figure>
 </section>
 
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Branch and Bound
+%%%
+
+%%
+%% Example: Aligning for a Photo, Revisited
+%%
+
+declare
+<chunk.ref/RevisedPhoto/
+
+declare
+<chunk.ref/PhotoOrder/
+
+<chunk.ref/{ExploreBest RevisedPhoto}/
+
+
+
+%%
+%% Example: Locating Warehouses
+%%
+
+declare
+<chunk.ref/WareHouse/
+
+<chunk.ref/{ExploreOne WareHouse}/
+
+declare
+<chunk.ref/WareHouseOrder/
+
+<chunk.ref/{ExploreBest WareHouse}/
+
+</chunk>
+]]>
 
 </chapter>
 

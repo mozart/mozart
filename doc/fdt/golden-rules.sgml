@@ -29,7 +29,7 @@
   -
   -->
 
-<chapter id=chapter.golden-rules><title/Golden Rules/
+<appendix id=appendix.golden-rules><title/Golden Rules/
 <p>
 We offer the following rules for the design of
 efficient constraint programs.
@@ -99,7 +99,7 @@ out how many variables and propagators were
 created.
 <p>
 This rule conflicts with the rule asking for
-maximisation of constraint propagation.  Extra
+maximization of constraint propagation.  Extra
 propagators for redundant constraints will improve
 performance if they reduce significantly either
 the size of search tree or the number of
@@ -130,6 +130,7 @@ occurring fractions.
 </section>
 
 <section class=unnumbered><title/Introduce Propagators for Redundant Constraints/
+
 <p>
 Propagators for redundant constraints can often
 strengthen a script's propagation.  A redundant
@@ -144,7 +145,18 @@ for nonredundant propagators for redundant
 constraints.
 </section>
 
-<section class=unnumbered><title/Use Recomputation if Memory Consumption is a Problem/
+<section class=unnumbered><title/Use Recomputation 
+if Memory Consumption is a Problem/
+
+<p>
+Scripts which create a large number of variables or propagators or
+scripts for which the search tree is very deep might use too much
+memory to be feasible. Search engines described in <Ptr.extern
+to="ozdoc:system" key="chapter.search"> and the Explorer (see
+<Ptr.extern to="ozdoc:tools" key="chapter.explorer">) feature support
+for so-called <def/ recomputation/. Recomputation reduces the space
+requirements for these problems in that it trades space for time.
+
 </section>
-</chapter>
+</appendix>
 
