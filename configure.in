@@ -4,7 +4,7 @@ dnl  Authors:
 dnl    Michael Mehl (mehl@dfki.de)
 dnl 
 dnl  Contributors:
-dnl    optional, Contributor's name (Contributor's email address)
+dnl    Denys Duchier, (duchier@ps.uni-sb.de)
 dnl 
 dnl  Copyright:
 dnl    Michael Mehl (1997)
@@ -35,16 +35,19 @@ AC_INIT(OZVERSION)
 
 OZ_INIT
 
+BUILDTOP=`pwd`
+AC_SUBST(BUILDTOP)
+
+AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 #OZ_PATH_PROG(DYNLD,          ozdynld)
 OZ_PATH_PROG(MKINSTALLDIRS,  mkinstalldirs)
 
-#AC_CONFIG_SUBDIRS(bin elisp ozwish Emulator lib)
-AC_CONFIG_SUBDIRS(platform/emulator platform/tools/gump platform/wish share)
+AC_CONFIG_SUBDIRS(platform share contrib)
 
-AC_OUTPUT(Makefile contrib/conf.all:contrib/conf.in)
+AC_OUTPUT(Makefile)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded.
