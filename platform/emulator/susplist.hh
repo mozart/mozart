@@ -69,8 +69,6 @@ public:
 
   SuspList * appendToAndUnlink(SuspList * &, Bool reset_local);
 
-  void dealloc();
-
   SuspList * dispose(void) {
     SuspList * ret = next;
     freeListDispose(this, sizeof(SuspList));
