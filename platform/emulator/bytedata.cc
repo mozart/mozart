@@ -343,7 +343,8 @@ OZ_Term unmarshalByteString(void*bs1) {
 #ifdef USE_FAST_UNMARSHALER
   int width = unmarshalNumber(bs);
 #else
-  int width = unmarshalNumberRobust(bs, NULL);
+  int e;
+  int width = unmarshalNumberRobust(bs, &e);
 #endif
   ByteString*s = new ByteString(width);
   for (int i=0; i<width; i++)
