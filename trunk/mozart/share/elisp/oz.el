@@ -266,7 +266,7 @@ For example
 	    (define-key map (vector aname) entry)
 	  (let ((newmap (make-sparse-keymap name)))
 	    (define-key map (vector aname)
-	      (cons (concat "< " name " >")
+	      (cons name
 		    newmap))
 	    (oz-make-menu-gnu19 newmap (reverse rest))))))
     (oz-make-menu-gnu19 map (cdr list))))
@@ -990,7 +990,7 @@ the GDB commands `cd DIR' and `directory'."
        "pred" "proc" "fun"
        "local" "declare"
        "if" "or" "case" "then" "else" "elseif" "of" "elseof" "end" "fi" "ro"
-       "class" "create" "meth" "from" "with"  "self"
+       "class" "create" "meth" "from" "with" "attr" "feat" "self"
        "true" "false"
        "div" "mod"
        "not" "process" "in"
