@@ -176,8 +176,9 @@ public:
   void enterReturn(TaggedRef ret, TaggedRef cast) {
     TaggedRef newt = OZ_cons(OZ_cons(ret,cast),
 			     oz_newVariable());
-    
-    (void) oz_unify(newt,tk_rets); // mm_u
+    OZ_Return ures = oz_unify(newt, tk_rets);
+    // kost@ : the 'Tk.oz' is supposed to take care of it:
+    Assert(ures == PROCEED);
     tk_rets = oz_tail(newt);
   }
 
