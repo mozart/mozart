@@ -43,8 +43,8 @@ pf_return_t lessEqOff(int * map, PEL_SuspVar * regs[])
   FailOnEmpty(*y >= (x->getMinElem() + c));
 
   if (x->getMaxElem() + c <= y->getMinElem()) {
-    x.wakeUp();
-    y.wakeUp();
+    x.wakeup();
+    y.wakeup();
     CDM(("\t-> entailed\n"));
     return pf_entailed;
   }
@@ -54,7 +54,7 @@ pf_return_t lessEqOff(int * map, PEL_SuspVar * regs[])
     goto failure;
   }
   {
-    pf_return_t r = (x.wakeUp() | y.wakeUp()) ? pf_sleep : pf_entailed;
+    pf_return_t r = (x.wakeup() | y.wakeup()) ? pf_sleep : pf_entailed;
     CDM(("\t-> %s\n", r == pf_sleep ? "sleep" : "entailed"));
     return r;
   }
@@ -76,8 +76,8 @@ pf_return_t greaterOff(int * map, PEL_SuspVar * regs[])
   FailOnEmpty(*y <= (x->getMaxElem() + c - 1));
 
   if (x->getMinElem() + c > y->getMaxElem()) {
-    x.wakeUp();
-    y.wakeUp();
+    x.wakeup();
+    y.wakeup();
     CDM(("\t-> entailed\n"));
     return pf_entailed;
   }
@@ -87,7 +87,7 @@ pf_return_t greaterOff(int * map, PEL_SuspVar * regs[])
     goto failure;
   }
   {
-    pf_return_t r = (x.wakeUp() | y.wakeUp()) ? pf_sleep : pf_entailed;
+    pf_return_t r = (x.wakeup() | y.wakeup()) ? pf_sleep : pf_entailed;
     CDM(("\t-> %s\n", r == pf_sleep ? "sleep" : "entailed"));
     return r;
   }
