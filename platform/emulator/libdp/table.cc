@@ -1058,7 +1058,10 @@ int BorrowTable::newSecBorrow(DSite *creditSite,Credit c,DSite * sd,int off){
   int index=nextfree;
   nextfree= array[index].uOB.nextfree;
   BorrowEntry* oe = &(array[index]);
+  Assert(oe->isFree());
   oe->initSecBorrow(creditSite,c,sd,off);
+  Assert(oe->getFlags() != (PO_TYPE)4712);
+
   hshtbl->add(oe->getNetAddress(),index);
   no_used++;
   PD((TABLE,"borrow insert: b:%d",index));
@@ -1091,6 +1094,7 @@ Bool BorrowTable::maybeFreeBorrowEntry(int index){
     if(b->getExtendFlags() & PO_MASTER) {
       if(b->isVar()){
         b->changeToRef();}
+      //Assert(b->initialized());
       return FALSE;}
     Assert(b->getExtendFlags()==PO_SLAVE);
     b->removeSlave();}
@@ -1222,7 +1226,8 @@ void BorrowTable::gcFrameToProxy(){
       Tertiary *t=b->getTertiary();
       if(t->isFrame()) {
         if((t->getType()==Co_Cell)
-           && ((CellFrame*)t)->getState()==Cell_Lock_Invalid){
+           && ((CellFrame*)t)->getState()==Cell_Lock_Invalid
+           && ((CellSec*)((CellFrame*)t)->getSec())->getPending()==NULL){
           ((CellFrame*)t)->convertToProxy();}
         else{
           if((t->getType()==Co_Lock)

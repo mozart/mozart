@@ -317,19 +317,24 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
     break;}
   default: Assert(0);}
 
-  int index=c->getIndex();
-  if(!c->isManager()) {
-    Assert(c->isFrame());
-    PD((CELL,"Sending to mgr read"));
-    BorrowEntry *be=BT->getBorrow(index);
-    be->getOneMsgCredit();
-    cellSendRead(be,myDSite);}
-  else{ // ERIK-LOOK
-    Assert(((CellManager*)c)->getChain()->getCurrent() != myDSite);
-    sendPrepOwner(index);
-    cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),
-                       myDSite,index,myDSite);
-}
+  // We must send a access request. There might be a request alredy.
+  // If so there must be a pendingThread for that operation and we
+  // can use that answer when it arrives.
+  if (pending == NULL){
+    int index=c->getIndex();
+    if(!c->isManager()) {
+      Assert(c->isFrame());
+      PD((CELL,"Sending to mgr read"));
+      BorrowEntry *be=BT->getBorrow(index);
+      be->getOneMsgCredit();
+      cellSendRead(be,myDSite);}
+    else{ // ERIK-LOOK
+      Assert(((CellManager*)c)->getChain()->getCurrent() != myDSite);
+      sendPrepOwner(index);
+      cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),
+                         myDSite,index,myDSite);
+    }
+  }
   pendThreadAddToEnd(&pending,val,fea,fea ? DEEPAT : ACCESS);
   if(!errorIgnore(c)){
     if(maybeProblem(c)) deferEntityProblem(c);}
@@ -414,6 +419,10 @@ OZ_Return cellDoAccessImpl(Tertiary *c, TaggedRef val){
       TaggedRef op=mkOp1("cellAccess",val);
       return tertiaryFailHandle(c,proc,ec,op);}}
   if(oz_onToplevel()){
+    // This seems as if the access operation
+    // will possible spread variables. val that
+    // is a variable will be unified in its own thread
+    // with old and allso be put as contents.
     return cellDoExchangeImpl(c,val,val);}
   else
     return cellDoAccessImpl(c,val,0);}

@@ -173,11 +173,13 @@ Bool secReceiveReadAnsCheck(PendThread* pb){
 
 void CellSec::secReceiveReadAns(TaggedRef val){
   PendThread* pb=pending;
-  if((pb->exKind==ACCESS) || (pb->exKind==DEEPAT)){
+  while(pb!=NULL && ((pb->exKind==ACCESS) || (pb->exKind==DEEPAT))){
     TaggedRef aux=unpendCell(pb,val);
     Assert(aux==val);
+    pending=pending->next;
     pb->dispose();
-    pending=pending->next;}
+    pb = pending;
+  }
   Assert(secReceiveReadAnsCheck(pending));
 }
 
