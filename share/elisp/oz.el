@@ -39,6 +39,14 @@
 ;; Variables/Initialization
 ;;------------------------------------------------------------
 
+(defvar oz-gdb-autostart t
+  "In gdb mode: start emulator immediately or not.
+
+non-nil: Start emulator immediately.
+nil:     Don't start emulator (use command 'run').
+         This is useful when you want to use breakpoints.
+")
+
 (defvar oz-indent-chars 3
   "*Indentation of Oz statements with respect to containing block.")
 
@@ -440,7 +448,10 @@ the GDB commands `cd DIR' and `directory'."
     (process-send-string
      (get-buffer-process oz-emulator-buffer)
      init-str)
-;    (..)
+    (if oz-gdb-autostart
+	(process-send-string
+	 (get-buffer-process oz-emulator-buffer)
+	 "run\n"))
     (switch-to-buffer old-buffer)))
 
 ;;------------------------------------------------------------
