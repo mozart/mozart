@@ -97,7 +97,10 @@ define
 	    FileName = {OS.tmpnam}
 	    File = {New Open.file init(name: FileName
 				       flags: [write create truncate])}
-	    {File write(vs: '\\documentclass{report}\n')}
+	    {File write(vs: ('\\documentclass{report}\n' #
+			     '\\usepackage{times}\n' #
+			     '\\usepackage{mathptm}\n' #
+			     '\\DeclareMathAlphabet{\\mathnormal}{OT1}{phv}{m}{sl}\n'))}
 	    {ForAll Packages
 	     proc {$ P}
 		case P of X#Y then
