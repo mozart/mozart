@@ -41,9 +41,9 @@ in
 	 dup		: DUP
 	 pipe		: PIPE
 	 getfd		: GETFD
-	 ) @ 'io.so{native}'
-      PROC @ 'process'
-      MODE @ 'mode'
+	 ) at 'io.so{native}'
+      PROC at 'process'
+      MODE at 'mode'
       Finalize URL Resolve Exception OS
    export
       is	: IS

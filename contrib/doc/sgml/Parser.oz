@@ -1,6 +1,6 @@
 functor
 import
-   IO @ 'x-oz://contrib/os/io'
+   IO at 'x-oz://contrib/os/io'
 export
    program : Program
    catalog : Catalog
