@@ -1821,6 +1821,10 @@ update:
 
   case GCTAG:
     to = makeTaggedRef((TaggedRef*) GCUNMARK(aux));
+    // mm2: this can lead to not shortened ref chains together with
+    // the CONS forwarding: if a CONS cell is collected then every
+    // reference to the first element becomes a ref. May try this:
+    // if (!isVar(*to)) to=deref(to);
     break;
     
   case SMALLINT: 
