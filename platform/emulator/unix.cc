@@ -811,26 +811,6 @@ OZ_C_proc_begin(unix_select,2)
 OZ_C_proc_end
 
 
-OZ_C_ioproc_begin(unix_openIO,2) {
-  OZ_declareIntArg("openIO",0,fd);
-  OZ_declareArg(1,out);
-  if (!OZ_openIO(fd)) {
-    RETURN_ANY_ERROR(out,0,"Oz open IO failed","internal");
-  }
-  return OZ_unifyInt(out,0);
-}
-OZ_C_proc_end
-
-
-OZ_C_ioproc_begin(unix_closeIO,2) {
-  OZ_declareIntArg("closeIO",0,fd);
-  OZ_declareArg(1,out);
-  if (!OZ_closeIO(fd)) {
-    RETURN_ANY_ERROR(out,0,"Oz close IO failed","internal");
-  }
-  return OZ_unifyInt(out,0);
-}
-OZ_C_proc_end
 
 
 
@@ -1765,8 +1745,6 @@ void BIinitUnix()
   OZ_addBuiltin("unix_unlink",2,unix_unlink);
   OZ_addBuiltin("unix_getServByName",4,unix_getServByName);
   OZ_addBuiltin("unix_select",2,unix_select);
-  OZ_addBuiltin("unix_openIO",2,unix_openIO);
-  OZ_addBuiltin("unix_closeIO",2,unix_closeIO);
   OZ_addBuiltin("unix_system",2,unix_system);
   OZ_addBuiltin("unix_wait",2,unix_wait);
   OZ_addBuiltin("unix_getEnv",3,unix_getEnv);
