@@ -1325,9 +1325,32 @@ LBLsuspendThread:
 
     if (e->debugmode() && CTT->isTraced()) {
       TaskStackEntry *auxtos = CTT->getTaskStackRef()->getTop();
-      PopFrame(auxtos,debugPC,_Y,_G);
-      PopFrameNoDecl(auxtos,debugPC,_Y,_G);
-      debugStreamSuspend(debugPC,CTT);
+      PopFrame(auxtos,debugPC,Y,G);
+      PopFrame(auxtos,debuginfoPC,_Y,_G);
+
+      TaggedRef name = OZ_atom("Unknown");
+      TaggedRef args = nil();
+
+      // the following code is basically the same as in
+      // TaskStack::dbgGetTaskStack (print.cc)
+      // For now, only suspending on builtins gives correct name & args
+
+      if (debugPC==C_CFUNC_CONT_Ptr) {
+        OZ_CFun biFun    = (OZ_CFun) Y;
+        RefsArray X      = (RefsArray) G;
+
+        if (X)
+          for (int i=getRefsArraySize(X)-1; i>=0; i--)
+            args = cons(X[i],args);
+        else
+          args = nil();
+
+        name = OZ_atom(builtinTab.getName((void *) biFun));
+        debugStreamSuspend(debuginfoPC,CTT,name,args,1);
+      }
+      else {
+        debugStreamSuspend(debuginfoPC,CTT,name,args,0);
+      }
     }
 
     CTT = (Thread *) NULL;

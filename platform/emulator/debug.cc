@@ -42,7 +42,8 @@ static void gotoBoard(Board *b) {
   am.currentBoard = b;
 }
 
-void debugStreamSuspend(ProgramCounter PC, Thread *tt) {
+void debugStreamSuspend(ProgramCounter PC, Thread *tt,
+                        TaggedRef name, TaggedRef args, bool builtin) {
   Board *bb = gotoRootBoard();
 
   TaggedRef tail    = am.threadStreamTail;
@@ -68,7 +69,11 @@ void debugStreamSuspend(ProgramCounter PC, Thread *tt) {
                               OZ_int(tt->getID()))),
          cons(OZ_pairA("file", file),
               cons(OZ_pairAI("line", line),
-                   nil())));
+                   cons(OZ_pairA("name", name),
+                        cons(OZ_pairA("args",args),
+                             cons(OZ_pairA("builtin",
+                                           builtin ? OZ_true() : OZ_false()),
+                             nil()))))));
 
   TaggedRef entry = OZ_recordInit(OZ_atom("susp"), pairlist);
   OZ_unify(tail, OZ_cons(entry, newTail));
