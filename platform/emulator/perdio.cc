@@ -9,7 +9,7 @@
  *  Version: $Revision$
  *  State: $State$
  *
- *  network layer
+ *  protocol and message layer
  * -----------------------------------------------------------------------*/
 
 #ifdef PERDIO
@@ -64,7 +64,7 @@ enum MessageType {
   M_ASK_FOR_CREDIT,     // OTI SITE (implicit 1 credit)
   M_OWNER_CREDIT,	// OTI CREDIT
   M_BORROW_CREDIT,      // NA  CREDIT
-  M_GET_CLOSUREANDCODE, // OTI SITE (mm2: TODO implicit 1 credit)
+  M_GET_CLOSUREANDCODE, // OTI SITE (implicit 1 credit)
   M_GET_CLOSURE,        // same as above
   M_SEND_CLOSUREANDCODE,// NA  N DIFs CODE
   M_SEND_CLOSURE,       // same as above
@@ -632,39 +632,28 @@ public:
 
 class OwnerEntry: public OB_Entry {
 friend class OwnerTable;
-public:
-  Bool isFullCredit() {return u.credit==START_CREDIT_SIZE;}
 
-  void returnCredit(Credit c) {
-    if (u.credit == INFINITE_CREDIT) return;
-    addToCredit(c);}
-
-  void returnOneCredit() {
-    if (u.credit != INFINITE_CREDIT) 
-      addToCredit(1);}
-
-  Credit getSendCredit(){
+private:
+  Credit requestCredit(Credit req){
     Credit c=getCredit();
-    if(c < 2*OWNER_GIVE_CREDIT_SIZE) setCredit(INFINITE_CREDIT);
-    if(c == INFINITE_CREDIT) return(OWNER_GIVE_CREDIT_SIZE);	
-    subFromCredit(OWNER_GIVE_CREDIT_SIZE);
-    return(OWNER_GIVE_CREDIT_SIZE);}
 
-  // for redirect
-  void getOneCredit() {
-    Credit c=getCredit();
-    if(c < 2) setCredit(INFINITE_CREDIT);
-    if(c == INFINITE_CREDIT) return;
-    subFromCredit(1);
+    if(c == INFINITE_CREDIT) return(req);
+    if(c < 2*req) {
+      setCredit(INFINITE_CREDIT);
+      return req;
+    }
+    subFromCredit(req);
+    return req;
   }
-
-  Credit giveMoreCredit(){
-    Credit c=getCredit();
-    if(c < 2*ASK_CREDIT_SIZE) setCredit(INFINITE_CREDIT);
-    if(c == INFINITE_CREDIT) return(ASK_CREDIT_SIZE);	
-    subFromCredit(ASK_CREDIT_SIZE);
-    return(ASK_CREDIT_SIZE);}
-
+public:
+  void returnCredit(Credit c) {
+    if (getCredit() == INFINITE_CREDIT) return;
+    addToCredit(c);
+  }
+  int hasFullCredit()     { return getCredit()==START_CREDIT_SIZE; }
+  Credit getSendCredit()  { return requestCredit(OWNER_GIVE_CREDIT_SIZE); }
+  void getOneCredit()     { (void) requestCredit(1); }   // for redirect
+  Credit giveMoreCredit() { return requestCredit(ASK_CREDIT_SIZE); }
 }; 
 
 
@@ -711,30 +700,31 @@ public:
 
   void freeOwnerEntry(int);
 
-  void receiveReturnCredit(int,Credit);
+  void returnCreditAndCheck(int,Credit);
 };
 
-void OwnerTable::receiveReturnCredit(int index,Credit c){
-
-  OwnerEntry *o= getOwner(index);
-  o->returnCredit(c);
-  if(!(o->isFullCredit())) return;
-  if (o->isTertiary()) {
-    Tertiary *te=o->getTertiary();
-    Assert(te->getTertType()==Te_Manager);
-    te->localize();
-  } else {
-    // localize a variable
-    TaggedRef tPtr=o->getRef();
-    TaggedRef val = deref(tPtr);
-    if (isPerdioVar(val)) {
-      PerdioVar *pvar = tagged2PerdioVar(val);
-      SVariable *svar = new SVariable(am.rootBoard);
-      svar->setSuspList(pvar->getSuspList());
-      doBindSVar(tagged2Ref(tPtr),svar);
+void OwnerTable::returnCreditAndCheck(int OTI,Credit c)
+{
+  OwnerEntry *oe = getOwner(OTI);
+  oe->returnCredit(c);
+  if (oe->hasFullCredit()) {
+    if (oe->isTertiary()) {
+      Tertiary *te=oe->getTertiary();
+      Assert(te->getTertType()==Te_Manager);
+      te->localize();
+    } else {
+      // localize a variable
+      TaggedRef tPtr=oe->getRef();
+      TaggedRef val = deref(tPtr);
+      if (isPerdioVar(val)) {
+	PerdioVar *pvar = tagged2PerdioVar(val);
+	SVariable *svar = new SVariable(am.rootBoard);
+	svar->setSuspList(pvar->getSuspList());
+	doBindSVar(tagged2Ref(tPtr),svar);
+      }
     }
+    freeOwnerEntry(OTI);
   }
-  freeOwnerEntry(index);
 }
 
 void OwnerTable::init(int beg,int end)
@@ -1115,7 +1105,6 @@ int sendRegister(BorrowEntry *be) {
     return ret;
   }
 
-  // mm2: I don't understand this!!
   PERDIO_DEBUG(DEBT_MAIN,"DEBT_MAIN:register");
   PendEntry *pe= pendEntryManager->newPendEntry(bs,site,be);
   be->inDebtMain(pe);
@@ -1925,16 +1914,16 @@ NetAddress *unmarshallNetAddress(ByteStream *bs)
 }
 
 
-Bool unmarshallBorrow(ByteStream *bs,OB_Entry *&ob,int &bi){
+OZ_Term unmarshallBorrow(ByteStream *bs,OB_Entry *&ob,int &bi){
   int sd=unmarshallSiteId(bs);
   int si=unmarshallNumber(bs);
   Credit cred = unmarshallCredit(bs);
   PERDIO_DEBUG3(UNMARSHALL,"UNMARSHALL:borrowed sd:%d si=%d cr=%d",sd,si,cred);
   if (ipIsLocal(sd)) {
-    OwnerEntry *o = ownerTable->getOwner(si);
-    o->returnCredit(cred);
-    ob=o;
-    return TRUE;
+    OZ_Term ret = ownerTable->getOwner(si)->getValue();;
+    ownerTable->returnCreditAndCheck(si,cred);
+    DebugCode(ob=0;bi=-4711);
+    return ret;
   }
   NetAddress na = NetAddress(sd,si); 
   int hindex;
@@ -1942,20 +1931,13 @@ Bool unmarshallBorrow(ByteStream *bs,OB_Entry *&ob,int &bi){
   if (b!=NULL) {
     PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:borrowed hit");
     b->addCredit(cred);
-    ob=b;
-    return TRUE;  }
+    return b->getValue();
+  }
   bi=borrowTable->newBorrow(cred,sd,si);
   b=borrowTable->getBorrow(bi);
   PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:borrowed miss");
   ob=b;
-  return FALSE;  }
-
-int unmarshallOwn(ByteStream *bs,OwnerEntry *&oe){
-  int si=unmarshallNumber(bs);
-  PERDIO_DEBUG1(UNMARSHALL,"UNMARSHALL:own %d",si);
-  oe=ownerTable->getOwner(si);
-  oe->returnOneCredit();
-  return si;
+  return 0;
 }
 
 void unmarshallNoDest(BYTE *buf, int len, OZ_Term *t){
@@ -2351,20 +2333,21 @@ loop:
 
   case M_OWNER:
     {
-      OwnerEntry *oe;
-      int si=unmarshallOwn(bs,oe);
-      PERDIO_DEBUG1(UNMARSHALL,"UNMARSHALL:owner=%d",si);
-      *ret=oe->getValue();
-
-      return;}
+      int OTI=unmarshallNumber(bs);
+      PERDIO_DEBUG1(UNMARSHALL,"UNMARSHALL:ownner %d",si);
+      *ret = OT->getOwner(OTI)->getValue();
+      OT->returnCreditAndCheck(OTI,1);
+      return;
+    }
 
   case M_PORT: 
     {
       OB_Entry *ob;
       int bi;
-      if (unmarshallBorrow(bs,ob,bi)) {
+      OZ_Term val = unmarshallBorrow(bs,ob,bi);
+      if (val) {
 	PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:port hit");
-	*ret=ob->getValue();
+	*ret=val;
 	return;
       }
       PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:port miss");
@@ -2378,9 +2361,10 @@ loop:
     {
       OB_Entry *ob;
       int bi;
-      if (unmarshallBorrow(bs,ob,bi)) {
+      OZ_Term val1 = unmarshallBorrow(bs,ob,bi);
+      if (val1) {
 	PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:var hit");
-	*ret=ob->getValue();
+	*ret=val1;
 	return;
       }
       PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:var miss");
@@ -2399,15 +2383,15 @@ loop:
     {
       OB_Entry *ob;
       int bi;
-      int skip=unmarshallBorrow(bs,ob,bi);
+      OZ_Term val=unmarshallBorrow(bs,ob,bi);
 
       GName gname;     unmarshallGName(&gname,bs);
       GName gnamecode; unmarshallGName(&gnamecode,bs);
       OZ_Term name = unmarshallTerm(bs);
       int arity    = unmarshallNumber(bs);
 
-      if (skip) {
-	*ret=ob->getValue();
+      if (val) {
+	*ret=val;
 	return;
       }
 
@@ -2514,11 +2498,10 @@ void siteReceive(BYTE *msg,int len)
       if (ozconf.debugPerdio) {
 	printf("siteReceive: PORTSEND '%s'\n",OZ_toC(t,10,10));
       }
-      OwnerEntry *oe=ownerTable->getOwner(portIndex);
-      ownerTable->receiveReturnCredit(portIndex,1);
-      Tertiary *tert= oe->getTertiary();
-      if(!(tert->checkTertiary(Co_Port,Te_Manager)))
-	{OZ_fail("siteReceive: PORTSEND not to port\n");}
+      Tertiary *tert= ownerTable->getOwner(portIndex)->getTertiary();
+      ownerTable->returnCreditAndCheck(portIndex,1);
+      Assert(tert->checkTertiary(Co_Port,Te_Manager) ||
+	     tert->checkTertiary(Co_Port,Te_Local));
       sendPort(makeTaggedConst(tert),t);
       break;
       }
@@ -2527,13 +2510,15 @@ void siteReceive(BYTE *msg,int len)
       PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:ASK_FOR_CREDIT");
       ByteStream *bs=new ByteStream(msg+1,len-1);
       int na_index=unmarshallNumber(bs);
-      OwnerEntry *o=ownerTable->getOwner(na_index);
       int rsite=unmarshallSiteId(bs);
       Assert(rsite>=0);
       bs->endCheck();
-      o->returnOneCredit(); /* cannot be full credit */
       delete bs;
-      Credit c= o->giveMoreCredit();
+
+      OwnerEntry *o=ownerTable->getOwner(na_index);
+      o->returnCredit(1); // don't delete entry
+      Credit c = o->giveMoreCredit();
+
       ByteStream *bs1=new ByteStream();
       bs1->put(M_BORROW_CREDIT);
       NetAddress na = NetAddress(lookupLocalSite(),na_index);
@@ -2552,7 +2537,7 @@ void siteReceive(BYTE *msg,int len)
       Credit c=unmarshallCredit(bs);
       PERDIO_DEBUG1(MSG_RECEIVED,"MSG_RECEIVED:OWNER_CREDIT %d",c);
       bs->endCheck();
-      ownerTable->receiveReturnCredit(index,c);
+      ownerTable->returnCreditAndCheck(index,c);
       break;
     }
   case M_BORROW_CREDIT:  
@@ -2651,10 +2636,7 @@ void siteReceive(BYTE *msg,int len)
       PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:REGISTER");
       ByteStream *bs=new ByteStream(msg+1,len-1);
 
-      int na_index=unmarshallNumber(bs);
-      OwnerEntry *o=ownerTable->getOwner(na_index);
-      o->returnOneCredit();
-      // mm2: TODO: what if credit is full??? /* cannot be full credit */
+      int OTI=unmarshallNumber(bs);
 
       int rsite=unmarshallSiteId(bs);
       Assert(rsite>=0);
@@ -2663,12 +2645,14 @@ void siteReceive(BYTE *msg,int len)
 
       delete bs;
 
-      TaggedRef ptr = o->getRef();
+      TaggedRef ptr = OT->getOwner(OTI)->getRef();
+      OT->getOwner(OTI)->returnCredit(1);
+      Assert(!OT->getOwner(OTI)->hasFullCredit());
       TaggedRef val=deref(ptr);
       if (isPerdioVar(val)) {
 	tagged2PerdioVar(val)->registerSite(rsite);
       } else {
-	if (sendRedirect(rsite,na_index,ptr) != PROCEED) {
+	if (sendRedirect(rsite,OTI,ptr) != PROCEED) {
 	  printf("mm2: redirect failed");//TODO
 	}
       }
@@ -2717,10 +2701,7 @@ void siteReceive(BYTE *msg,int len)
       PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:SURRENDER");
       ByteStream *bs=new ByteStream(msg+1,len-1);
 
-      int na_index=unmarshallNumber(bs);
-      OwnerEntry *o=ownerTable->getOwner(na_index);
-      o->returnOneCredit();
-      // mm2: TODO: what if credit is full??? /* cannot be full credit */
+      int OTI=unmarshallNumber(bs);
 
       int rsite=unmarshallSiteId(bs);
       Assert(rsite>=0);
@@ -2731,13 +2712,16 @@ void siteReceive(BYTE *msg,int len)
 
       delete bs;
 
-      TaggedRef ptr = o->getRef();
+      TaggedRef ptr = ownerTable->getOwner(OTI)->getRef();
+
       TaggedRef val=deref(ptr);
       if (isPerdioVar(val)) {
 	PerdioVar *pv = tagged2PerdioVar(val);
 	pv->primBind(tagged2Ref(ptr),v);
-	sendRedirect(pv->getProxies(),v,rsite,na_index);
+	ownerTable->getOwner(OTI)->returnCredit(1); // don't delete!
+	sendRedirect(pv->getProxies(),v,rsite,OTI);
       } else {
+	ownerTable->returnCreditAndCheck(OTI,1);
 	// ignore redirect: NOTE: v is handled by the usual garbage collection
       }
       break;
