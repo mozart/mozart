@@ -31,18 +31,7 @@ local
       MozartUrl   = UrlDefaults.'home'
    end
 
-   LibNames = ['Application'
-	       'Search' 'FD' 'Schedule' 'FS'
-	       'System' 'Error' 'ErrorRegistry' 'Debug' 'Finalize' 'Foreign'
-	       'Connection' 'Remote' 'VirtualSite'
-	       'OS' 'Open' 'Pickle'
-	       'Tk' 'TkTools'
-	       'Compiler'
-	       'Misc']
-
-   ToolNames = ['Panel' 'Browser' 'Explorer' 'CompilerPanel'
-		'Emacs' 'Ozcar' 'Profiler' 'Gump' 'GumpScanner'
-		'GumpParser']
+   FuncDefaults = \insert '../functor-defaults'
 
    local
       fun {IsPrintName A}
@@ -59,19 +48,15 @@ local
    end
    
    PrintNames =
-   {FoldL LibNames
-    fun {$ PNs A}
-       Ns={GetPrintNames {Load MozartUrl#'lib/'#A#FunExt}.'export'}
-    in
-       case Ns==nil then PNs else A#Ns|PNs end
-    end 
-    {FoldL ToolNames
-     fun {$ PNs A}
-	Ns={GetPrintNames {Load MozartUrl#'tools/'#A#FunExt}.'export'}
-     in
-	case Ns==nil then PNs else A#Ns|PNs end
-     end nil}}
-
+   {FoldL FuncDefaults.dirs
+    fun {$ PNs Dir}
+       {FoldL FuncDefaults.Dir
+	fun {$ PNs A}
+	   Ns={GetPrintNames {Load MozartUrl#Dir#'/'#A#FunExt}.'export'}
+	in
+	   case Ns==nil then PNs else A#Ns|PNs end
+	end PNs}
+    end nil}
 
    proc {LazyAdapt M1 Fs ?M2}
       Request
@@ -122,7 +107,7 @@ local
 
       local
 	 Env = {List.toRecord env
-		{Map LibNames
+		{Map FuncDefaults.lib
 		 fun {$ A}
 		    A#{Module.load A unit}
 		 end}}
@@ -139,6 +124,8 @@ local
 
       {OPICompiler enqueue(mergeEnv(env('Module':
 					   {Module.load 'Module' unit})))}
+      {OPICompiler enqueue(mergeEnv(env('URL':
+					   {Module.load 'URL' unit})))}
       
       CompilerUI = {New Emacs.interface init(OPICompiler)}
       Sock = {CompilerUI getSocket($)}
