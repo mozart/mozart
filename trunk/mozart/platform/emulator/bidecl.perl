@@ -2860,10 +2860,10 @@ sub argspec {
 
     # now parse the type of the argument
 
-    if    ($spec =~ /^\[(.+)\#(.+)\]$/) { $typ="list(pair($1 $2))"; }
-    elsif ($spec =~ /^\[(.+)\]$/      ) { $typ="list($1)"; }
-    elsif ($spec =~ /^(.+)\#(.+)$/    ) { $typ="pair($1 $2)"; }
-    else                                { $typ=$spec; }
+    if    ($spec =~ /^\[(.+)\#(.+)\]$/) { $typ="list(pair('$1' '$2'))"; }
+    elsif ($spec =~ /^\[(.+)\]$/      ) { $typ="list('$1')"; }
+    elsif ($spec =~ /^(.+)\#(.+)$/    ) { $typ="pair('$1' '$2')"; }
+    else                                { $typ="'$spec'"; }
 
     return ($mod,$det,$typ,$own);
 }
