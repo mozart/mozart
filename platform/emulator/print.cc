@@ -861,7 +861,19 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_Class:       ((ObjectClass *) this)->printStream(stream,depth);
     break;
-  case Co_Cell:        ((CellLocal *) this)->printStream(stream,depth);
+  case Co_Cell:
+    switch(((Tertiary *)this)->getTertType()){
+    case Te_Local:   ((CellLocal *)   this)->printStream(stream,depth);
+      break;
+    case Te_Frame:   ((CellFrame *)   this)->printStream(stream,depth);
+      break;
+    case Te_Manager: ((CellManager *) this)->printStream(stream,depth);
+      break;
+    case Te_Proxy:   ((CellProxy *)   this)->printStream(stream,depth);
+      break;
+    default:
+      Assert(NO);
+    }
     break;
   case Co_Port:
     switch(((Tertiary *)this)->getTertType()){
