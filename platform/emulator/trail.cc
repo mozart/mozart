@@ -78,14 +78,6 @@ void Trail::pushVariable(TaggedRef * varPtr) {
 
 }
 
-void Trail::pushCast(TaggedRef * varPtr) {
-  ensureFree(3);
-  Stack::push((StackEntry) varPtr,             NO);
-  Stack::push((StackEntry) ToPointer(*varPtr), NO);
-  Stack::push((StackEntry) Te_Cast,            NO);
-}
-
-
 void Trail::pushMark(void) {
   // All variables marked as trailed must be unmarked!
 
@@ -137,14 +129,6 @@ void Trail::popVariable(TaggedRef *&varPtr, OzVariable *&orig) {
   varPtr = (TaggedRef *)  Stack::pop();
 }
 
-inline
-void Trail::popCast(TaggedRef *&val, TaggedRef &old) {
-  Assert(getTeType() == Te_Cast);
-  (void) Stack::pop();
-  old = (TaggedRef)  ToInt32(Stack::pop());
-  val = (TaggedRef*) Stack::pop();
-}
-
 
 void Trail::popMark(void) {
   Assert(isEmptyChunk());
@@ -182,60 +166,6 @@ inline
 void unBind(TaggedRef *p, TaggedRef t) {
   Assert(oz_isVariable(t));
   *p = t;
-}
-
-inline
-void unCast(TaggedRef * tvp, // The variable to which...
-            TaggedRef fvt) { //          ... from which casted
-
-  Assert(isCVar(fvt));
-
-  OzVariable * fv = tagged2CVar(fvt);
-
-  Assert(oz_isRef(*tvp));
-
-  Assert(isCVar(*tagged2Ref(*tvp)));
-
-  OzVariable * tv = tagged2CVar(*tagged2Ref(*tvp));
-
-  /*
-   * Copy back suspensions
-   *
-   * Important invariant: All  suspensions that tv has acquired
-   * in the single generic suspension list.
-   *
-   * The other special purpose suspensionlists are empty! This
-   * is due to the fact that theses lists can hold only local
-   * entries (local with respect to the variable's home).
-   *
-   * This also the reason, why the home pointer of the variable
-   * can be changed! If the suspension list were not empty
-   * this would violate the above mentioned invariant,
-   * which would lead to problems during garbage
-   * collection.
-   *
-   */
-
-  fv->setSuspList(tv->unlinkSuspList());
-
-  // Check that there are indeed no suspension
-
-  Assert(oz_var_getSuspListLength(tv) == 0);
-
-  /*
-   * Make cast variable local
-   *   (it must be global: this is the trail, man!)
-   *
-   * This allows us to put it into the script! The reason
-   * to put it there at all are the suspensions! They
-   * are recovered by this.
-   *
-   */
-
-  Assert(tv->getBoardInternal()->derefBoard() != oz_currentBoard());
-
-  tv->setHome(oz_currentBoard());
-
 }
 
 
@@ -308,34 +238,6 @@ void Trail::unwind(void) {
         break;
       }
 
-      case Te_Cast: {
-        TaggedRef
-          * tvp, // The variable to which...
-          fvt;   //          ... from which casted
-
-        popCast(tvp, fvt);
-
-        unCast(tvp, fvt);
-
-        /*
-         * Just put it into the script
-         *
-         */
-
-        s[i].left  = *tvp;
-        s[i].right = makeTaggedRef(tvp);
-
-        unBind(tvp, fvt);
-
-        /*
-         * Do not create suspension, some other trail entry should
-         * have done this
-         *
-         */
-
-        break;
-      }
-
       default:
         break;
       }
@@ -375,20 +277,6 @@ void Trail::unwindFailed(void) {
       Assert(tagged2CVar(*varPtr)->isTrailed());
 
       tagged2CVar(*varPtr)->unsetTrailed();
-
-      break;
-    }
-
-    case Te_Cast: {
-      TaggedRef
-        * tvp, // The variable to which...
-        fvt;   //          ... from which casted
-
-      popCast(tvp, fvt);
-
-      unCast(tvp, fvt);
-
-      unBind(tvp, fvt);
 
       break;
     }
@@ -448,26 +336,6 @@ void Trail::unwindEqEq(void) {
       tagged2CVar(*varPtr)->unsetTrailed();
 
       am.addSuspendVarList(varPtr);
-
-      break;
-    }
-
-    case Te_Cast: {
-      TaggedRef
-        * tvp, // The variable to which...
-        fvt;   //          ... from which casted
-
-      popCast(tvp, fvt);
-
-      unCast(tvp, fvt);
-
-      unBind(tvp, fvt);
-
-      /*
-       * Do not create suspension, some other trail entry should
-       * have done this
-       *
-       */
 
       break;
     }
