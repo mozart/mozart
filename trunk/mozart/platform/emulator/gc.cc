@@ -142,6 +142,7 @@ void performCopying(void);
 typedef enum {IN_GC = 0, IN_TC} GcMode;
 
 GcMode opMode;
+static int varCount;
 static Board* fromCopyNode;
 static Board* toCopyNode;
 
@@ -996,6 +997,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
   case SVAR:
   case UVAR:
   case CVAR:
+    varCount++;
     if (auxTerm == fromTerm) {   // (fd-)variable is component of this block
       
       DebugGc(toTerm = fromTerm); // otherwise 'makeTaggedRef' complains
@@ -1279,10 +1281,11 @@ inline void unsetPathMarks (Board *node)
  *   AM::copyTree () routine (for search capabilities of the machine)
  *
  */
-Board* AM::copyTree (Board* node)
+Board* AM::copyTree (Board* node,Bool *isGround)
 {
   opMode = IN_TC;
   gcing = 0;
+  varCount=0;
   timeForCopy -= usertime();
 
   DebugGc(updateStackCount = 0);
@@ -1311,6 +1314,13 @@ Board* AM::copyTree (Board* node)
   timeForCopy += usertime();
   // Note that parent, right&leftSibling must be set in this subtree -
   // for instance, with "setParent"
+
+  if (isGround != (Bool *) NULL) {
+    if (varCount == 0)
+      *isGround = OK;
+    else
+      *isGround = NO;
+  }
 
   return toCopyNode;
 }
@@ -1735,7 +1745,7 @@ int smallGCLimit = InitialSmallGCLimit;
 void AM::doGC()
 {
   //  --> empty trail
-  deinstallPath(Board::Root);
+  deinstallPath(Board::GetRoot());
 
   // do gc
   gc(gcVerbosity);

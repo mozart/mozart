@@ -165,14 +165,14 @@ OZ_Bool OZ_unify(OZ_Term t1, OZ_Term t2)
 
 OZ_Term OZ_newVariable(char *name)
 {
-  SVariable *cvar = new SVariable(Board::Current,
+  SVariable *cvar = new SVariable(Board::GetCurrent(),
 				  OZ_stringToTerm(name));
   return makeTaggedRef(newTaggedSVar(cvar));
 }
 
 OZ_Term OZ_newVar()
 {
-  return makeTaggedRef(newTaggedUVar(Board::Current));
+  return makeTaggedRef(newTaggedUVar(Board::GetCurrent()));
 }
 
 int OZ_label(OZ_Term term, char **label)
@@ -378,8 +378,8 @@ int addBuiltin(char *name, int arity, OZ_CFun fun)
 OZ_Suspension *OZ_makeSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
 				 OZ_Term *args,int arity)
 {
-  Board::Current->addSuspension();
-  return new OZ_Suspension(new CFuncContinuation(Board::Current,
+  Board::GetCurrent()->addSuspension();
+  return new OZ_Suspension(new CFuncContinuation(Board::GetCurrent(),
 						 fun, args, arity));
 }
 
