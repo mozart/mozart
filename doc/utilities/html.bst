@@ -1264,7 +1264,8 @@ FUNCTION {begin.bib}
   if$
   preamble$ empty$
     'skip$
-    { preamble$ write$ newline$ }
+%    { preamble$ write$ newline$ }
+    { "non-empty preamble not supported" warning$ }
   if$
 %  "\begin{thebibliography}{"  longest.label  * "}" * write$ newline$
   "<DL>" write$ newline$
