@@ -653,13 +653,13 @@ local
    %-----------------------------------------------------------------------
 
    class SynExpression
-      meth synCompareResult(Result Expected Rep Pos)
+      meth synCompareResult(Result Expected Rep OzTerm)
 	 case Result == Expected then skip
 	 elsecase Expected of term then
-	    {Rep error(coord: Pos kind: ParserGeneratorError
+	    {Rep error(coord: {CoordinatesOf OzTerm} kind: ParserGeneratorError
 		       msg: 'statement at expression position')}
 	 [] expr then
-	    {Rep error(coord: Pos kind: ParserGeneratorError
+	    {Rep error(coord: {CoordinatesOf OzTerm} kind: ParserGeneratorError
 		       msg: 'expression at statement position')}
 	 end
       end
