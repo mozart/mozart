@@ -256,7 +256,7 @@ define(M4INSTRTWOREGS,``''
 		 int arity = getPosIntArg(PC+2);
 		 
 		 TaggedRef term = Reg1( getRegArg(PC+3) );
-		 DEREF(term,termPtr,tag);
+		 FASTDEREF(term,termPtr,tag);
 
 		 if (isNotCVar(term)) {
 		   // then produce new .
@@ -300,7 +300,7 @@ define(M4INSTRTWOREGS,``''
 		 Arity *ff = (Arity *) getAdressArg(PC+2);
 		 
 		 TaggedRef term = Reg1( getRegArg(PC+3) );
-		 DEREF(term,termPtr,tag);
+		 FASTDEREF(term,termPtr,tag);
 
 		 if (isNotCVar(term)) {
 		   // then produce new record
@@ -344,7 +344,7 @@ define(M4INSTRTWOREGS,``''
 		 Atom *atom = getAtomArg(PC+1);
 		 
 		 TaggedRef term = Reg1( getRegArg(PC+2) );
-		 DEREF(term,termPtr,tag);
+		 FASTDEREF(term,termPtr,tag);
 
 		 if (isNotCVar(tag)) {
 		   e->bindToNonvar(termPtr, term, makeTaggedAtom(atom));
@@ -377,7 +377,7 @@ define(M4INSTRTWOREGS,``''
 		 Reg reg = getRegArg(PC+2);
 		 
 		 TaggedRef term = Reg1(reg);
-		 DEREF(term,termPtr,tag);
+		 FASTDEREF(term,termPtr,tag);
 
 		 if (isNotCVar(tag)) {
 		   e->bind(termPtr, term, &i);
@@ -412,7 +412,7 @@ define(M4INSTRTWOREGS,``''
 
 	
 		 TaggedRef term = Xreg(reg1);
-		 DEREF(term,termPtr,tag);
+		 FASTDEREF(term,termPtr,tag);
 
 		 if(isNotCVar(term)) {
 		   LTuple *ltuple = new LTuple(Reg1(reg2),e->currentUVarPrototype);
@@ -455,7 +455,7 @@ define(M4INSTRTWOREGS,``''
 		 Reg reg = getRegArg(PC+1);
 		 
 		 register TaggedRef term = Reg1(reg);
-		 DEREF(term,termPtr,tag);
+		 FASTDEREF(term,termPtr,tag);
 
 		 if(isNotCVar(term)) {
 		   LTuple *ltuple = new LTuple();
@@ -664,8 +664,8 @@ define(M4INSTRTWOREGS,``''
   M4INSTRONEREG( BRANCHONVAR,
 	       ``
 	       TaggedRef term = Reg1(getRegArg(PC+1));
-	       DEREF(term,_,tag);
-	       if (isAnyVar(tag)) {
+	       DEREF(term,_1,_2);
+	       if (isAnyVar(term)) {
 		 JUMP( getLabelArg(PC+2) );
 	       }
 	       DISPATCH(3);
@@ -675,8 +675,8 @@ define(M4INSTRTWOREGS,``''
   M4INSTRONEREG( BRANCHONNONVAR,
 	       ``
 	       TaggedRef term = Reg1(getRegArg(PC+1));
-	       DEREF(term,_,tag);
-	       if (!isAnyVar(tag)) {
+	       DEREF(term,_1,_2);
+	       if (!isAnyVar(term)) {
 		 JUMP( getLabelArg(PC+2) );
 	       }
 	       DISPATCH(3);
