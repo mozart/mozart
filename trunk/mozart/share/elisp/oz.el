@@ -302,6 +302,7 @@ for example
               "-----"
 	     ["Include file"           oz-include-file t]
 	     ["Compile file"           oz-precompile-file t]
+	     ["Find demo file"         oz-find-demo-file t]
               "-----"
 	     ["New Oz buffer"          oz-new-buffer t]
 	     ["Refresh buffer"         oz-prettyprint t]
@@ -351,6 +352,7 @@ for example
 		(Buffer\ to\ printer  . oz-print-buffer)
 		(Include\ file        . oz-include-file)
 		(Compile\ file        . oz-precompile-file)
+		(Find\ demo\ file     . oz-find-demo-file)
 		(Show/hide\ compiler  . oz-toggle-compiler-window)
 		(Show/hide\ machine   . oz-toggle-machine-window)
 		(Show/hide\ errors    . oz-toggle-errors)
@@ -585,6 +587,15 @@ the GDB commands `cd DIR' and `directory'."
   (interactive "FPrecompile file: ")
   (oz-hide-errors)
   (oz-send-string (concat "!precompile '" file "'\n"))) 
+
+(defun oz-find-demo-file()
+  (interactive)
+  (find-file (read-file-name "Find demo file: "
+			     (concat oz-home "demo/")
+			     nil
+			     t)))
+
+
 
 
 
