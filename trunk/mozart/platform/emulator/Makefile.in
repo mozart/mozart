@@ -197,8 +197,7 @@ realclean::
 	$(RM) oz.c initffuns.cc TAGS
 	$(RM) conf.h Makefile
 
-veryclean::
-	realclean
+veryclean:: realclean
 
 ozlib.lnk: oz.h
 	grep FUNDECL oz.h | grep -v typedef | grep -v define | \
