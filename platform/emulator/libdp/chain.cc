@@ -238,8 +238,6 @@ int printChain(Chain* chain){
   printf("Chain ### Flags: [");
   if(chain->hasFlag(INTERESTED_IN_OK))
     printf(" INTERESTED_IN_OK");
-  if(chain->hasFlag(INTERESTED_IN_TEMP ))
-    printf(" INTERESTED_IN_TEMP");
   if(chain->hasFlag( TOKEN_PERM_SOME))
     printf(" TOKEN_PERM_SOME");
   if(chain->hasFlag(TOKEN_LOST))
