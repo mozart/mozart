@@ -341,6 +341,14 @@ in
 	 end
       end
 
+      meth suspend(TkSusp)
+	 Value = {TkSusp tkReturnInt($)}
+	 Arg   = case Value == 0 then false else true end
+      in
+	 {OzcarMessage 'Dbg.suspend called with argument ' # Value}
+	 {Dbg.suspend Arg}
+      end
+      
       meth close
 	 %% actually, we should kill this damned thread, but then we get this:
 	 %% board.icc:21

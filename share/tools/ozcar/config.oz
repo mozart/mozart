@@ -9,7 +9,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.0.2 (Feb 97)'
+Version                = '1.0.3 (Feb 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -115,6 +115,9 @@ EnvVarWidth            = 16
 	
 SmallBorderSize        = 1
 BorderSize             = 2
+
+PadXButton             = 5
+PadYButton             = 3
 
 ScrollbarWidth         = 12
 

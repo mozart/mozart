@@ -137,16 +137,28 @@ in
 	    Bs = {Map [' step' ' next' /* ' finish' */ ' cont' ' forget'
 		       ' stack' ]
 		  fun {$ B}
-		     {New Tk.button tkInit(parent:      self.ButtonFrame
-					   text:        B
-					   padx:        5
-					   pady:        3
-					   font:        ButtonFont
+		     {New Tk.button tkInit(parent: self.ButtonFrame
+					   text:   B
+					   padx:   PadXButton
+					   pady:   PadYButton
+					   font:   ButtonFont
 					   borderwidth: SmallBorderSize
-					   action:      self # action(B))}
+					   action: self # action(B))}
 		  end}
+	    TkSusp = {New Tk.variable tkInit(0)} % emulator default
+	    Susp   = {New Tk.checkbutton
+		      tkInit(parent:    self.ButtonFrame
+			     variable:  TkSusp
+			     text:      'Suspend'
+			     relief:    raised
+			     font:      ButtonFont
+			     padx:      PadXButton
+			     pady:      PadYButton
+			     borderwidth: SmallBorderSize
+			     action:    self # suspend(TkSusp))}
 	 in
-	    {Tk.send pack(b(Bs) side:left padx:1)}
+	    {Tk.batch [pack(b(Bs) side:left  padx:1)
+		       pack(Susp  side:right padx:2)]}
 	 end
       
 	 %% status line
