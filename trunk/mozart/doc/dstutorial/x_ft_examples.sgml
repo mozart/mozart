@@ -275,7 +275,7 @@ an instance of <<Counter>> with <<NewSafeStat>>.
 Note that the object is not created yet.
 It will be only when the functor is applied.
 
-<<<.
+<<<
 declare
 F=functor
   export statObj:StatObj
@@ -284,6 +284,13 @@ F=functor
      StatObj={NewSafeStat Counter init}
   end
 >>>
+
+<P>It may seem overkill to create a functor that just creates
+a single object.
+But the idea of functors goes much beyond this.
+Functors have an optional <<import>> clause that specifies
+which <em>resources</em> to use on the remote site.
+This makes functors the basic building block for mobile computations.
 
 <P>Now let's create a remote site and make an instance
 of <<Counter>> called <<StatObj>>.
