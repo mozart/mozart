@@ -246,6 +246,19 @@ local
 	 'raise'#IN#NL#{OzBlock S}#EX#NL#'end'
       [] fGrammar(T Obj _) then
 	 {Obj output(T $)}
+      [] fFOR(Ds B _) then
+	 'for '#{LI {Map Ds OutputOz} ' '}#' do '#{OutputOz B}#' end'
+      [] forPattern(P G) then {OutputOz P}#' in '#{OutputOz G}
+      [] forFeature(F E) then {OutputOz F}#':'#{OutputOz E}
+      [] forGeneratorList(E) then {OutputOz E}
+      [] forGeneratorInt(E1 E2 E3) then
+	 {OutputOz E1}#'..'#{OutputOz E2}#
+	 if E3==unit then nil else ';'#{OutputOz E3} end
+      [] forGeneratorC(E1 E2 E3) then
+	 '('#{OutputOz E1}#';'#{OutputOz E2}#
+	 if E3==unit then nil else ';'#{OutputOz E3} end#')'
+      [] forFrom(P G) then
+	 {OutputOz P}#' from '#{OutputOz G}
       end
    end
 in
