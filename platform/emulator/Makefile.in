@@ -337,6 +337,7 @@ clean::
 
 new-scanner:
 	$(LEX) $(LFLAGS) -L -Pxy -o$(SRCDIR)/scanner.cc $(SRCDIR)/scanner.ll
+	grep -v unistd.h $(SRCDIR)/scanner.cc > $(SRCDIR)/winscanner.cc
 
 new-parser:
 	$(YACC) $(YFLAGS) -l -p xy $(SRCDIR)/parser.yy
