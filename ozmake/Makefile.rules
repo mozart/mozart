@@ -29,6 +29,7 @@ clean::
 doc:
 	$(MAKE) doc.html
 	$(MAKE) doc.text
+	$(MAKE) doc.man
 
 ifeq ($(XSLTPROC),UNDEFINED)
 doc.html:
@@ -61,6 +62,12 @@ doc.text:
 	echo >&2 "(see http://lynx.browser.org/)"
 	exit -1
 endif
+
+doc.man:
+	$(XSLTPROC) -o $(SRCDIR)/HELP.man \
+		--stringparam OZMAKEVERSION $(VERSION) \
+		$(SRCDIR)/HELP-man.xsl $(SRCDIR)/HELP.xml
+	cp $(SRCDIR)/HELP.man $(SRCDIR)/ozmake.1
 
 other.doc: have.xsltproc ozmake.xml ozmake.xsl
 	$(XSLTPROC) -o ozmake.html \

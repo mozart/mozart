@@ -1,0 +1,1055 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH OZMAKE 1 "July 30, 2004"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+Ozmake \- Make for Oz
+
+.SH
+SYNOPSIS
+\fBozmake --help\fR
+.br 
+\fBozmake [--build] [TARGETS...]\fR
+.br 
+\fBozmake --install [TARGETS...]\fR
+.br 
+\fBozmake --install [--package=PKG]\fR
+.br 
+\fBozmake --uninstall [--package=PKG]\fR
+.br 
+\fBozmake --clean\fR
+.br 
+\fBozmake --veryclean\fR
+.br 
+\fBozmake --create [--package=FILE]\fR
+.br 
+\fBozmake --publish\fR
+.br 
+\fBozmake --extract [--package=PKG]\fR
+.br 
+\fBozmake --list [--package=MOGUL]\fR
+.br 
+\fBozmake --config=(put|delete|list) ...\fR
+.br 
+\fBozmake --mogul=(put|delete|list|export) ...\fR
+.br 
+.SH
+
+DESCRIPTION
+
+\fBozmake OPTIONS TARGETS\fR
+.br 
+.P
+\fBozmake\fP is a tool for building Mozart-based projects and for creating and installing Mozart packages. It was inspired by the Unix tools \fBmake\fP and \fBrpm\fP,but is much, much simpler, is specialized for Mozart-based software development and deployment, and transparently supports all platforms on which Mozart has been ported.
+\fBozmake\fP must currently be invoked from a shell, but it will eventually acquire additionally an optional, user-friendly graphical interface.
+
+.SH
+OPTIONS
+.P
+In the following, we write meta variables between angle brackets, e.g. \fI<PREFIX>\fR or \fI<URI as cache path>\fR
+
+.SS
+General Options
+
+.TP
+.SM
+-v  --verbose  
+.br 
+print out more tracing information that the default. By supplying this option twice, you will sometimes get even more information.
+.TP
+.SM
+-q  --quiet  
+.br 
+suppress all tracing and feedback information
+.TP
+.SM
+-n  --just-print  
+.br 
+perform a dry run, i.e. just print what would happen without actually performing the actions
+.TP
+.SM
+--local  
+.br 
+do not recurse into subdirectories
+.TP
+.SM
+--(no)autodepend  
+.br 
+\fBdefault:\fP true
+.br 
+
+automatically determine build-time and install-time (run-time) dependencies. Currently, this is only supported for Oz sources by looking at import and require sections. 
+.TP
+.SM
+--(no)requires  
+.br 
+\fBdefault:\fP true
+.br 
+
+automatically fetch and install other packages that the current one requires. This option is relevant both for building and for installing. 
+.P
+What you should remember here, is that \fB-vn\fR is your friend. Add
+\fB-vn\fR at the end of any \fBozmake\fP invocation, and it will tell you in great detail what the command would do, without actually doing it.
+
+.SS
+Directories and URLs
+
+.TP
+.SM
+--prefix=\fI<PREFIX>\fP  
+.br 
+\fBdefault:\fP ~/.oz
+.br 
+root of private installation area
+.TP
+.SM
+--dir=\fI<DIR>\fP  
+.br 
+\fBdefault:\fP current directory
+.br 
+default directory for other options below
+.TP
+.SM
+--builddir=\fI<BUILDDIR>\fP  
+.br 
+\fBdefault:\fP \fI<DIR>\fP
+.br 
+directory in which to build
+.TP
+.SM
+--srcdir=\fI<SRCDIR>\fP  
+.br 
+\fBdefault:\fP \fI<DIR>\fP
+.br 
+directory where source files are located
+.TP
+.SM
+--bindir=\fI<BINDIR>\fP  
+.br 
+\fBdefault:\fP \fI<PREFIX>\fP/bin
+.br 
+directory where bin targets are placed
+.TP
+.SM
+--libroot=\fI<LIBROOT>\fP  
+.br 
+\fBdefault:\fP \fI<PREFIX>\fP/cache
+.br 
+root directory of cache into which lib targets are installed
+.TP
+.SM
+--libdir=\fI<LIBDIR>\fP  
+.br 
+\fBdefault:\fP \fI<LIBROOT>\fP/\fI<URI as cache path>\fP
+.br 
+directory into which lib targets are installed
+.TP
+.SM
+--docroot=\fI<DOCROOT>\fP  
+.br 
+\fBdefault:\fP \fI<PREFIX>\fP/doc
+.br 
+root directory into which doc targets are installed
+.TP
+.SM
+--docdir=\fI<DOCDIR>\fP  
+.br 
+\fBdefault:\fP \fI<DOCROOT>\fP/\fI<MOGUL as filename>\fP
+.br 
+directory into which doc targets are installed
+.TP
+.SM
+--extractdir=\fI<EXTRACTDIR>\fP  
+.br 
+\fBdefault:\fP \fI<DIR>\fP
+.br 
+directory into which to extract a package
+.TP
+.SM
+--archive=\fI<ARCHIVE>\fP  
+.br 
+\fBdefault:\fP http://www.mozart-oz.org/mogul/pkg
+.br 
+URL of mogul archive from which packages can be downloaded
+.TP
+.SM
+--moguldir=\fI<MOGULDIR>\fP  
+.br 
+directory in which are placed sub-directories for the user's contributions: a directory for packages, one for documentation, one for mogul database entries.
+.TP
+.SM
+--mogulurl=\fI<MOGULURL>\fP  
+.br 
+url corresponding to the MOGULDIR directory
+.SS
+Files
+
+.TP
+.SM
+-m \fI<FILE>\fP  --makefile=\fI<FILE>\fP  
+.br 
+\fBdefault:\fP \fI<SRCDIR>\fP/makefile.oz
+.br 
+location of makefile
+.TP
+.SM
+-p \fI<PKG>\fP  --package=\fI<PKG>\fP  
+.br 
+
+file or URL of package. when creating a package, it should be a local filename. when extracting or installing, it can also be a URL or a mogul id; in the latter case, the package is automatically downloaded from the mogul archive 
+.TP
+.SM
+-V \fI<VERSION>\fP  --packageversion=\fI<VERSION>\fP  
+.br 
+
+this option is respected by  \fB--extract\fR  and	 \fB--install\fR .When  \fB--extract\fR  is given a MOGUL id and downloads the corresponding package from the MOGUL archive, it will look precisely for the given	VERSION of the package.  \fB--install\fR 
+will simply check that the package to be installed really has this VERSION. 
+.TP
+.SM
+--database=\fI<DB>\fP  
+.br 
+\fBdefault:\fP \fI<PREFIX>\fP/DATABASE
+.br 
+
+base path of installed packages database. The database is saved in both pickled and textual format respectively in files DB.ozf and DB.txt
+.SS
+Help
+
+\fBozmake --help\fR
+.br 
+.TP
+.SM
+-h  --help  
+.br 
+print this information message
+.SS
+Build
+
+\fBozmake [--build]\fR
+.br 
+.RS
+build all targets
+.RE
+
+\fBozmake [--build] FILES...\fR
+.br 
+.RS
+build these target
+.RE
+
+.TP
+.SM
+-b  --build  
+.br 
+this is the default. builds targets of the package
+.TP
+.SM
+--optlevel=( none | debug | optimize )  
+.br 
+\fBdefault:\fP optimize
+.br 
+select optimization level for compilation
+.TP
+.SM
+-g  --debug  --optlevel=debug  
+.br 
+compile with debugging
+.TP
+.SM
+-O  --optimize  --optlevel=optimize  
+.br 
+compile with full optimization. this is the default
+.TP
+.SM
+--(no)gnu  
+.br 
+
+is the C++ compiler the GNU compiler. this is determined automatically and allows a greater optimization level, namely passing  \fB-O3\fR  rather than just  \fB-O\fR  to the compiler 
+.TP
+.SM
+--(no)fullbuild  
+.br 
+\fBdefault:\fP false
+.br 
+also build the src targets
+.TP
+.SM
+--includedir DIR  -I DIR  
+.br 
+tell the C++ compiler to additionally search DIR for include files
+.TP
+.SM
+--(no)sysincludedirs  
+.br 
+\fBdefault:\fP true
+.br 
+tell the C++ compiler to additionally search (or not, if using  \fB--nosysincludedirs\fR )the Mozart-specific include directories located in the global installation directory and in the user's private ~/.oz area.
+.TP
+.SM
+--librarydir DIR  -L DIR  
+.br 
+tell the C++ linker to additionally search DIR for libraries
+.TP
+.SM
+--(no)syslibrarydirs  
+.br 
+\fBdefault:\fP true
+.br 
+tell the C++ linker to additionally search (or not, if using  \fB--nosyslibrarydirs\fR )the Mozart-specific library directories located in the global installation directory and in the user's private ~/.oz area.
+.SS
+Install
+
+\fBozmake --install\fR
+.br 
+.RS
+install using the makefile
+.RE
+
+\fBozmake --install FILES...\fR
+.br 
+.RS
+install these targets using the makefile
+.RE
+
+\fBozmake --install --package=PKG\fR
+.br 
+.RS
+install package  \fBPKG\fR 
+.RE
+
+.TP
+.SM
+-i  --install  
+.br 
+install targets of the package and updates the package database
+.TP
+.SM
+--grade=( none | same | up | down | any | freshen )  
+.br 
+\fBdefault:\fP none
+.br 
+what to do if this package is already installed? ozmake will compare version and dates, where the version is more significant.  \fB--grade=none\fR signals an error \fB--grade=same\fR requires versions and dates to be the same \fB--grade=up\fR requires a package with newer version or same version and newer release date than the one installed \fB--grade=down\fR requires a package with older version or same version and older release date than the one installed \fB--grade=any\fR no conditions \fB--grade=freshen\fR install if the package is newer else do nothing
+.TP
+.SM
+-U  --upgrade  
+.br 
+equivalent to  \fB--install --grade=up\fR 
+.TP
+.SM
+--downgrade  
+.br 
+equivalent to  \fB--install --grade=down\fR 
+.TP
+.SM
+-A  --anygrade  
+.br 
+equivalent to  \fB--install --grade=any\fR 
+.TP
+.SM
+-F  --freshen  
+.br 
+equivalent to  \fB--install --grade=freshen\fR 
+.TP
+.SM
+--(no)replacefiles  
+.br 
+\fBdefault:\fP false
+.br 
+
+allow installation to overwrite files from other packages 
+.TP
+.SM
+-R  --replace  
+.br 
+
+equivalent to  \fB--install --grade=any --replacefiles\fR 
+.TP
+.SM
+--(no)extendpackage  
+.br 
+\fBdefault:\fP false
+.br 
+
+whether to replace or extend the current installation of this package if any 
+.TP
+.SM
+-X  --extend  
+.br 
+
+equivalent to  \fB--install --grade=any --extendpackage\fR 
+.TP
+.SM
+--(no)savedb  
+.br 
+\fBdefault:\fP true
+.br 
+
+save the updated database after installation 
+.TP
+.SM
+--includedocs  --excludedocs  
+.br 
+\fBdefault:\fP --includedocs
+.br 
+whether to install the doc targets
+.TP
+.SM
+--includelibs  --excludelibs  
+.br 
+\fBdefault:\fP --includelibs
+.br 
+whether to install the lib targets
+.TP
+.SM
+--includebins  --excludebins  
+.br 
+\fBdefault:\fP --includebins
+.br 
+whether to install the bin targets
+.TP
+.SM
+--(no)keepzombies  
+.br 
+\fBdefault:\fP false
+.br 
+
+whether to remove files left over from a previous installation of this package 
+.TP
+.SM
+--exe=( default | yes | no | both | multi )  
+.br 
+\fBdefault:\fP default
+.br 
+
+the convention on Windows is that executables have a .exe,while on Unix they have no extension. The  \fB--exe\fR  option allows you to control the conventions used by ozmake when installing executables.  \fB--exe=default\fR use the platform's convention \fB--exe=yes\fR use a .exe extension \fB--exe=no\fR use no extension \fB--exe=both\fR install all executables with .exe extension and without \fB--exe=multi\fR install executable functors for both Unix and Windows. The Unix versions are installed without extension, and the Windows versions are installed with .exe extension
+.SS
+Uninstall
+
+\fBozmake --uninstall\fR
+.br 
+.RS
+uninstall package described by makefile
+.RE
+
+\fBozmake --uninstall --package=PKG\fR
+.br 
+.RS
+uninstall package named by mogul id  \fBPKG\fR 
+.RE
+
+.TP
+.SM
+-e  --uninstall  
+.br 
+uninstall a package
+.SS
+Clean
+
+\fBozmake --clean\fR
+.br 
+\fBozmake --veryclean\fR
+.br *~ *.ozf *.o *.so-* *.exe
+.RS
+
+remove files as specified by the makefile's clean and veryclean features.  \fB--veryclean\fR  implies	 \fB--clean\fR . 
+.RE
+
+.SS
+Create
+
+\fBozmake --create [--package=\fI<FILE>\fR]\fR
+.br 
+.RS
+
+create a package and save it in FILE.the files needed for the package are automatically computed from the makefile. If  \fB--package=\fI<FILE>\fR\fR  is not supplied, a default is computed using the mogul id (and possibly version number) found in the makefile. 
+.RE
+
+.TP
+.SM
+--include(bins|libs|docs)  --exclude(bins|libs|docs)  
+.br 
+
+control which target types are included in the package 
+.SS
+Publish
+
+\fBozmake --publish\fR
+.br 
+.RS
+
+automatically takes care of all the steps necessary for creating/updating a package contributed by the user and making all necessary data available to the MOGUL librarian. See documentation for  \fB--mogul\fR  below. 
+.RE
+
+.SS
+Extract
+
+\fBozmake --extract --package=\fI<PKG>\fR\fR
+.br 
+.RS
+
+extract the files from file or URL PKG.if PKG is a mogul id, then the package is automatically downloaded from the mogul archive 
+.RE
+
+.SS
+List
+
+\fBozmake --list\fR
+.br 
+.RS
+list info for all packages in the installed package database
+.RE
+
+\fBozmake --list --package=\fI<MOGUL>\fR\fR
+.br 
+.RS
+ list info for the installed package indentified by mogul id MOGUL
+.RE
+
+.TP
+.SM
+--linewidth=N  
+.br 
+\fBdefault:\fP 70
+.br 
+assume a line with of  \fBN\fR  characters
+.SS
+Config
+
+\fBozmake --config=put \fI<OPTIONS>\fR\fR
+.br 
+.RS
+record the given OPTIONS in ozmake's configuration database, and use them as defaults in subsequent invocations of ozmake unless explicitly overriden on the command line. For example:  \fBozmake --config=put --prefix=/usr/local/oz\fR 
+saves /usr/local/oz as the default value for option  \fB--prefix\fR 
+.RE
+
+\fBozmake --config=delete \fI<OPT1>\fR ... \fI<OPTn>\fR\fR
+.br 
+.RS
+deletes some entries from the configuration database. For example:  \fBozmake --config=delete prefix\fR 
+removes the default for  \fB--prefix\fR  from the configuration database
+.RE
+
+\fBozmake --config=list\fR
+.br 
+.RS
+lists the contents of ozmake's configuration database
+.RE
+
+.P
+the argument to \fB--config\fR can be abbreviated to any non-ambiguous prefix
+
+.SS
+Mogul
+
+.P
+If you choose to contribute packages to the MOGUL archive,
+\fBozmake --mogul=\fI<ACTION>\fR\fR simplifies your task. It makes it easy for you to maintain a database of your contributions and to export them so that the MOGUL librarian may automatically find them. In fact, the simplest way is to use
+\fBozmake --publish\fR which will take take care of all defails for you.
+
+\fBozmake --mogul=put\fR
+.br 
+.RS
+update the user's database of own mogul contributions with the data for this contribution (in local directory)
+.RE
+
+\fBozmake --mogul=put --package=\fI<PKG>\fR\fR
+.br 
+.RS
+same as above, but using the package PKG explicitly given
+.RE
+
+\fBozmake --mogul=delete \fI<MOG1>\fR ... \fI<MOGn>\fR\fR
+.br 
+.RS
+remove the entries with mogul ids MOG1 through MOGn
+from the user's database of own contribution
+.RE
+
+\fBozmake --mogul=delete\fR
+.br 
+.RS
+remove entry for current contribution
+.RE
+
+\fBozmake --mogul=list\fR
+.br 
+.RS
+show the recorded data for all entries in the user's database of own mogul contributions
+.RE
+
+\fBozmake --mogul=list \fI<MOG1>\fR ... \fI<MOGn>\fR\fR
+.br 
+.RS
+show the recorded data for entries MOG1 through MOGn
+in the user's database of own mogul contributions
+.RE
+
+\fBozmake --mogul=export\fR
+.br 
+.RS
+write all necessary mogul entries for the user's own mogul contributions. These are the entries which will be read by the MOGUL librarian to automatically assemble the full MOGUL database.
+.RE
+
+.P
+The data for your contributions need to be made available to the MOGUL librarian on the WEB. You want to just update a local directory with your contributions, but, in order for the MOGUL librarian to find them, these directories must also be available through URLs on the WEB. Here are some options that allow you to control this correspondance, and for which you should set default using
+\fBozmake --config=put\fR
+
+.TP
+.SM
+--moguldir=\fI<MOGULDIR>\fP  
+.br 
+
+.TP
+.SM
+--mogulurl=\fI<MOGULURL>\fP  
+.br 
+MOGULDIR is a directory which is also available on the WEB through url MOGULURL. MOGULDIR is intended as a root directory in which sub-directories for packages, documentation, and mogul entries will be found.
+.P
+For those who really enjoy pain, \fBozmake\fP has of course many options to shoot yourself in the foot. In the options below \fI<ID>\fR stands for the filename version of the package's mogul id (basically replace slashes by dashes). You can control where packages, their documentation and mogul database entries and stored and made available using the options below:
+
+.TP
+.SM
+--mogulpkgdir=\fI<MOGULPKGDIR>\fP  
+.br 
+\fBdefault:\fP \fI<MOGULDIR>\fP/pkg/\fI<ID>\fP/
+.br 
+
+.TP
+.SM
+--mogulpkgurl=\fI<MOGULPKGURL>\fP  
+.br 
+\fBdefault:\fP \fI<MOGULURL>\fP/pkg/\fI<ID>\fP/
+.br 
+
+.TP
+.SM
+--moguldocdir=\fI<MOGULDOCDIR>\fP  
+.br 
+\fBdefault:\fP \fI<MOGULDIR>\fP/doc/\fI<ID>\fP/
+.br 
+
+.TP
+.SM
+--moguldocurl=\fI<MOGULDOCURL>\fP  
+.br 
+\fBdefault:\fP \fI<MOGULURL>\fP/doc/\fI<ID>\fP/
+.br 
+
+.TP
+.SM
+--moguldbdir=\fI<MOGULDBDIR>\fP  
+.br 
+\fBdefault:\fP \fI<MOGULDIR>\fP/db/\fI<ID>\fP/
+.br 
+
+.TP
+.SM
+--moguldburl=\fI<MOGULDBURL>\fP  
+.br 
+\fBdefault:\fP \fI<MOGULURL>\fP/db/\fI<ID>\fP/
+.br 
+
+.P
+Your contributions should all have mogul ids which are \fIbelow\fP
+the mogul id which you where granted for your section of the mogul database. For convenience, \fBozmake\fP will attempt to guess the root mogul id of your section as soon as there are entries in your database of your own contributions. However, it is much preferable to tell \fBozmake\fP about it using:
+
+.TP
+.SM
+--mogulrootid=\fI<ROOTID>\fP  
+.br 
+
+.P
+and to set it using \fBozmake --config=put --mogulrootid=\fI<ROOTID>\fR\fR
+
+.SH
+MAKEFILE
+.P
+The makefile contains a single Oz record which describes the project and should normally be placed in a file called \fImakefile.oz\fR.A makefile typically looks like this:
+
+        makefile(
+          lib : ['Foo.ozf']
+          uri : 'x-ozlib://mylib'
+          mogul : 'mogul:/denys/lib-foo')
+
+.P
+stating explicitly that there is one library target, namely the functor \fIFoo.ozf\fR,and that it should installed at URI:
+
+        x-ozlib://mylib/Foo.ozf
+
+.P
+and implicitly that it should be compiled from the Oz source file
+\fIFoo.oz\fR.When you invoke \fBozmake --install\fR,the
+\fBmogul\fP feature serves to uniquely identify this package and the files it contributes in the \fBozmake\fP database of installed packages.
+
+.P
+There are many more features which can occur in the makefile and they are all optional. If you omit all the features, you only get the defaults and you don't even need a makefile. All values, suchs as
+\fBfiles\fP,should be given as virtual string; atoms are recommended except for features \fBblurb\fP, \fBinfo_text\fP and
+\fBinfo_html\fP,where strings are recommended.
+
+        makefile(
+          bin      : [ FILES... ]
+          lib      : [ FILES... ]
+          doc      : [ FILES... ]
+          src      : [ FILES... ]
+          depends  :
+             o( FILE : [ FILES... ]
+                ...
+              )
+          rules    :
+             o( FILE : TOOL(FILE)
+                ...
+              )
+          clean     : [ GLOB... ]
+          veryclean : [ GLOB... ]
+          uri       : URI
+          mogul     : MOGUL
+          author    : [ AUTHORS... ]
+          released  : DATE
+          blurb     : TEXT
+          info_text : TEXT
+          info_html : TEXT
+          subdirs   : [ DIRS... ]
+          requires  : [ MOGUL... ]
+          categories: [ CATEGORY... ]
+          version   : VERSION
+          provides  : [ FILES... ]
+        )
+
+.P
+Features bin, lib and doc list targets to be installed in
+\fI<BINDIR>\fR, \fI<LIBDIR>\fR and \fI<DOCDIR>\fR
+respectively. \fBbin\fP targets should be executable functors, i.e. they should end with extension \fI.exe\fR. \fBlib\fP
+targets are typically compiled functors i.e. ending with extension
+\fI.ozf\fR,but could also be native functors, i.e. ending with extension \fI.so\fR,or simply data files. \fBdoc\fP
+targets are documentation files.
+
+.SS
+Extensions
+
+.P
+\fBozmake\fP knows how to build targets by looking at the target's extension:
+
+.P
+ \fIFoo.exe\fR
+.IP
+is an executable functor and is created from \fIFoo.ozf\fR
+.P
+ \fIFoo.ozf\fR
+.IP
+is a compiled functor and is created from \fIFoo.oz\fR
+.P
+ \fIFoo.o\fR
+.IP
+is a compiled C++ file and is created from \fIFoo.cc\fR
+.P
+ \fIFoo.so\fR
+.IP
+is a native functor and is created from \fIFoo.o\fR
+.P
+ \fIFoo.cc\fR
+.IP
+is a C++ source file
+.P
+ \fIFoo.hh\fR
+.IP
+is a C++ header file
+.P
+Note that these are \fIabstract\fP targets. In particular,
+\fIFoo.so\fR really denotes the file
+\fIFoo.so-\fI<PLATFORM>\fR\fR where \fI<PLATFORM>\fR
+identifies the architecture and operating system where the package is built; for example: \fIlinux-i486\fR.Also, when a bin target
+\fIFoo.exe\fR is installed, it is installed both as
+\fI\fI<BINDIR>\fR/Foo.exe\fR and
+\fI\fI<BINDIR>\fR/Foo\fR so that it can be invoked as
+\fIFoo\fR on both Windows and Unix platforms.
+
+.P
+It is imperative that you respect the conventional use of extensions described here: \fBozmake\fP permits no variation and supports no other extensions.
+
+.SS
+Rules
+
+.P
+\fBozmake\fP has built-in rules for building files. Occasionally, you may want to override the default rule for one or more targets. This is done with feature \fBrule\fP which contains a record mapping target to rule:
+
+        TARGET_FILE : TOOL(SOURCE_FILE)
+
+.P
+the rule may also have a list of options:
+
+        TARGET_FILE : TOOL(SOURCE_FILE OPTIONS)
+
+.P
+The tools supported by \fBozmake\fP are \fBozc\fP (Oz compiler), \fBozl\fP (Oz linker), \fBcc\fP (C++ compiler), \fBld\fP (C++ linker). The default rules are:
+
+        'Foo.exe' : ozl('Foo.ozf' [executable])
+        'Foo.ozf' : ozc('Foo.oz')
+        'Foo.o'   : cc('Foo.cc')
+        'Foo.so'  : ld('Foo.o')
+
+.P
+The tools support the following options:
+
+.P
+ \fBozc\fP
+.IP
+
+ 
+.P
+     \fBexecutable\fP
+.IP
+make the result executable
+.P
+     \fB'define'(S)\fP
+.IP
+define macro \fBS\fP.Same as -D\fBS\fP on the command line
+ 
+.P
+ \fBozl\fP
+.IP
+
+ 
+.P
+     \fBexecutable\fP
+.IP
+make the result executable
+ 
+.P
+ \fBcc\fP
+.IP
+
+ 
+.P
+     \fBinclude(DIR)\fP
+.IP
+Similar to the usual C++ compiler option \fB-IDIR\fP. \fBDIR\fP is a virtual string
+.P
+     \fB'define'(MAC)\fP
+.IP
+Similar to the usual C++ compiler option \fB-DMAC\fP. \fBMAC\fP is a virtual string
+ 
+.P
+ \fBld\fP
+.IP
+
+ 
+.P
+     \fBlibrary(DIR)\fP
+.IP
+Similar to the usual C++ linker option \fB-lDIR\fP. \fBDIR\fP is a virtual string
+ 
+.P
+You might want to specify a rule to create a pre-linked library:
+
+        'Utils.ozf' : ozl('Foo.ozf')
+
+.P
+or to create a non-prelinked executable:
+
+        'Foo.exe' : ozc('Foo.oz' [executable])
+
+.SS
+Dependencies
+
+.P
+\fBozmake\fP automatically determines whether targets needed to be rebuilt, e.g. because they are missing or if some source file needed to create them has been modified. The rules are used to determine dependencies between files. Sometimes this is insufficient e.g. because you use tool \fBozl\fP (dependencies on imports), or \fB\insert\fP in an Oz file, or #include in a C++ file. In this case you can specify additional dependencies using feature \fBdepends\fP which is a record mapping targets to list of dependencies:
+
+        TARGET : [ FILES... ]
+
+.P
+For example:
+
+        'Foo.o' : [ 'Foo.hh' 'Baz.hh' ]
+
+.P
+or
+
+        'Foo.exe' : [ 'Lib1.ozf' 'Lib2.ozf' ]
+
+.SS
+Cleaning
+
+.P
+During development, it is often convenient to be able to easily remove all junk and compiled files to obtain again a clean project directory. This is supported by \fBozmake --clean\fR and
+\fBozmake --veryclean\fR;the latter also implies the former. Files to be removed are specified by
+\fIglob\fP
+patterns where \fB?\fR matches any 1 character and \fB*\fR
+matches a sequence of 0 or more characters. All files in
+BUILDDIR matching one such pattern is removed. There are built-in patterns, but ou can override them with features
+\fBclean\fP and \fBveryclean\fP which should be lists of glob patterns. For example the default clean glob patterns are:
+
+        clean : [ "*~" "*.ozf" "*.o" "*.so-*" "*.exe" ]
+
+.SS
+Package Related Features
+
+.B
+uri
+
+.P
+feature \fBuri\fP indicates the URI where to install lib targets. For example:
+
+        uri : 'x-ozlib://mylib/XML'
+
+.P
+states that all \fBlib\fP targets (e.g. \fIFoo.ozf\fR)will be installed under this URI so that they can also be imported from it, i.e.:
+
+       import MyFoo at 'x-ozlib://mylib/XML/Foo.ozf'
+
+.B
+mogul
+
+.P
+feature \fBmogul\fP is the mogul id uniquely identifying this package. It is used to identify the package in the database of installed packages, to create/publish the package, and to install its documention files.
+
+.B
+author
+
+.P
+feature \fBauthor\fP is a virtual string or list of virtual string resp. identifying the author or authors of the package. It is recommended to identify authors by their mogul id, however is is also possible to simply give their names. For example, the recommended way is:
+
+        author : 'mogul:/duchier'
+
+.P
+but the following is also possible:
+
+        author : 'Denys Duchier'
+
+.B
+released
+
+.P
+feature \fBreleased\fP is a virtual string specifying the date and time of release in the following format:
+
+        released : "YYYY-MM-DD-HH:MM:SS"
+
+.P
+time is optional. An appropriate release date using the currentdate and time is automatically inserted when invoking
+\fBozmake --create\fR or \fBozmake --publish\fR..
+
+.B
+blurb
+
+.P
+feature \fBblurb\fP contains a very short piece of text describing the package. This text should be just one line and is intended to be used as a title when the package is published in the mogul archive.
+
+.B
+info_text
+
+.P
+feature \fBinfo_text\fP contains a plain text description of the package. This is intended to be used as an abstract on the presentation page for the package in the mogul archive. It should be brief and informative, but should not attempt to document the package.
+
+.B
+info_html
+
+.P
+feature \fBinfo_html\fP is similar to \fBinfo_text\fP but contains HTML rather than plain text.
+
+.B
+src
+
+.P
+feature \fBsrc\fP indicates which targets should be considered source, i.e. in particular non-buildable. All targets mentioned in
+\fBsrc\fP should be mentioned in \fBbin\fP, \fBlib\fP,or
+\fBdoc\fP too. The point of \fBsrc\fP is to support distributing packages with pre-built targets and without giving out the corresponding sources. You should not do this with native functors since they are platform dependent and not portable, but it can be a convenient means of distributing prebuilt Oz libraries. For example:
+
+        makefile(
+          lib : [ 'Foo.ozf' ]
+          src : [ 'Foo.ozf' ]
+          uri : 'x-ozlib://mylib'
+          mogul : 'mogul:/myname/foolib')
+
+.P
+is a makefile for a package that distribute the precompiled
+\fIFoo.ozf\fR,but does not also distribute its source
+\fIFoo.oz\fR.Normally, when you build a package it simply checks that the \fBsrc\fP files are present but will not attempt to build them. If you have the sources, you can force building the
+\fBsrc\fP targets if necessary using \fB--fullbuild\fR..
+
+.B
+subdirs
+
+.P
+feature \fBsubdirs\fP is a list of bare filenames representing subdirectories of the project. By default, when necessary,
+\fBozmake\fP will recurse into these subdirectories. It is expected that each subdirectory should provide its own makefile. The mogul id is automatically inherited to subdirectories and the uri is automatically extended by appending the name of the subdirectory: thus submakefiles can be simpler since they don't need to be concerned with package-level features.
+
+.B
+requires
+
+.P
+feature \fBrequires\fP is a list of module URIs or package MOGUL ids. These represent the \fIexternal\fP dependencies of the package. They are not yet used, but eventually \fBozmake\fP will be able to use them to automate the recursive installation of other packages required by the one you are interested in.
+
+.B
+categories
+
+.P
+feature \fBcategories\fP is a list of MOGUL categories to help categorize this package in the MOGUL archive.
+
+.B
+version
+
+.P
+feature \fBversion\fP is used to provide a version string. This is a string that consist of integers separated by single dots, e.g.
+\fB"2"\fP or \fB"3.1.7"\fP..
+
+.B
+provides
+
+.P
+feature \fBprovides\fP is used to override the default information about what the package provides, normally automatically computed from the \fBbin\fP and \fBlib\fP targets: it should be a list which contains a subset of these targets. The
+\fBprovides\fP feature of a makefile does not override or otherwise affect its submakefiles: each makefile should separately override if it so desires. To state that a makefile does not officially provide any functors or executable application, you would add:
+
+provides : nil
+
+You should use the \fBprovides\fP feature when your package contains both official public functors as well as purely implementational functors that are not part of the official public interface and should not be mentioned as \fIprovided\fP by the package.
+
+.SH
+CONTACTS
+.P
+Authors should really be referred to by mogul ids denoting mogul entries that describe them. In order to make this easier, a \fImakefile.oz\fR
+may also contain a \fBcontact\fP feature which is either a record describing a person, or a list of such records.
+
+.P
+You should not have a \fBcontact\fP feature in every makefile. Rather, the \fBcontact\fP feature is usually intended for makefiles that only have a
+\fBcontact\fP feature, i.e. whose only purpose is to create mogul entries for the corresponding persons. Here is an example of such a makefile:
+
+        makefile(
+           contact :
+              o(
+                 mogul : 'mogul:/duchier/denys'
+                 name  : 'Denys Duchier'
+                 email : 'duchier@ps.uni-sb.de'
+                 www   : 'http://www.ps.uni-sb.de/~duchier/'))
+
+.P
+You can invoke \fBozmake --publish\fR on such a makefile to contribute the corresponding mogul database entries
+
+.SH AUTHOR
+This man page has been automatically generated from the \fBozmake\fR help file. The
+\fBozmake\fR help file is maintained by Denys Duchier.
+.SH SEE ALSO
+Full documentation of the Mozart system and the Oz programming
+language is available through the
+the \fImozart-doc\fP package, or from the mozart web page
+\fIwww.mozart-oz.org\fP.
+See in particular the document \fIThe Oz Programming Interface\fP.
+
+.P
+.BR ozc (1),
+.BR ozd (1),
+.BR ozengine (1),
+.BR ozl (1),
+.BR oztool (1),
+.BR convertTextPickle (1).

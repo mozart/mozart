@@ -214,7 +214,7 @@ it.</p>
   <option>
     <opt>--archive=<meta>ARCHIVE</meta></opt>
   </option>
-  <default><file>http://ww.mozart-oz.org/mogul/pkg</file></default>
+  <default><file>http://www.mozart-oz.org/mogul/pkg</file></default>
   <item>URL of mogul archive from which packages can be
   downloaded</item>
   <example>
@@ -265,7 +265,7 @@ one for mogul database entries.</item>
   <item>
         file or URL of package.  when creating a package, it should be
         a local filename.  when extracting or installing, it can also
-        be a URL or a mogul id; it the latter case, the package is
+        be a URL or a mogul id; in the latter case, the package is
         automatically downloaded from the mogul archive
   </item>
 </optentry>
