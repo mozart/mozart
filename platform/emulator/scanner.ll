@@ -395,7 +395,7 @@ static char *scExpndFileName(char *fileName, char *curfile) {
     if (ret != NULL)
       return ret;
     if (path[i] == '\0')
-      return NULL;
+      break;
     path = &path[i + 1];
   }
 
