@@ -32,9 +32,9 @@
 //-----------------------------------------------------------------------------
 
 // X + C <= Y
-pf_return_t lessEqOff(int *, SuspVar * []);
+pf_return_t lessEqOff(int *, PEL_SuspVar * []);
 
 // X + C > Y
-pf_return_t greaterOff(int *, SuspVar * []);
+pf_return_t greaterOff(int *, PEL_SuspVar * []);
 
 #endif
