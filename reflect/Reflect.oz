@@ -62,12 +62,12 @@ define
       
    fun {SpaceReflect Vs}
 \ifdef VERBOSE
-      {System.showInfo '\t collecting ... '}      
+      {System.showInfo '\t collecting ...'}      
 \endif
       ReflectTables = {BIspaceReflect Vs}
 \ifdef VERBOSE
       {System.showInfo '\t preparing '#{Width ReflectTables.vars}
-       #' variables ... '}
+       #' variables ...'}
 \endif
       VarTable = {Record.map
 		  ReflectTables.vars
@@ -97,7 +97,7 @@ define
 		  end}
 \ifdef VERBOSE
       {System.showInfo '\t preparing '#{Width ReflectTables.props}
-       #' propagators ... '}      
+       #' propagators ...'}      
 \endif
       PropTable = {Record.map
 		   ReflectTables.props
@@ -126,11 +126,18 @@ define
 		   end}
    in
 \ifdef VERBOSE
-      {System.showInfo '\t done. '}      
+      {System.showInfo '\t done.'}      
 \endif
       
-      reflect_space(varsTable: VarTable
-		    propTable: PropTable)
+      reflect_space(varsTable:  VarTable
+		    propTable:  PropTable
+		    failedProp: {Record.foldL PropTable
+				 fun {$ L propagator(reference: Ref id: Id ...)}
+				    if L == unit then
+				       if {PropIsFailed Ref}
+				       then Id else unit end
+				    else L end
+				 end unit})
    end
 
 end
