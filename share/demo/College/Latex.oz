@@ -1,13 +1,33 @@
+functor
 
-local
+export
+
+   LaTeX
+
+import
+
+   Open
+   OS
+   FD
+
+   Common(monday:          Monday
+          tuesday:         Tuesday
+          wednesday:       Wednesday
+          thursday:        Thursday
+          friday:          Friday
+          quartersPerDay:  QuartersPerDay
+          quartersPerHour: QuartersPerHour)
+
+
+define
 
    %% maps starting time to LaTeX tabular entry in German
    fun {StartToVS Start}
-      cond Start::Monday then "Montag"
-      [] Start::Tuesday then "Dienstag"
+      cond Start::Monday  then "Montag"
+      [] Start::Tuesday   then "Dienstag"
       [] Start::Wednesday then "Mittwoch"
-      [] Start::Thursday then "Donnerstag"
-      [] Start::Friday then "Freitag"
+      [] Start::Thursday  then "Donnerstag"
+      [] Start::Friday    then "Freitag"
       end
       #
       " & "
@@ -67,81 +87,65 @@ local
    %% End of tabular environment
    EndTab = "\\end{tabular}\n"
 
-%% LecturesToLaTeX transforms list of lectures to LaTeX format
-fun {LecturesToLaTeX Lectures}
-   BeginTab
-   #
-   {FoldL Lectures
-    fun {$ N#In Lecture}
-       N+1
-       #
-       (In
-        #if N mod LinesOnPage == 0
-         then EndTab # "\\newpage\n" # BeginTab
-         else ""
-         end
-        #Lecture.name
-        #" & "
-        #Lecture.professor
-        #" & "
-        #{StartToVS Lecture.start}
-        #"\\\\\n")
-    end
-    1#""}.2
-   #
-   EndTab
-end
+   %% LecturesToLaTeX transforms list of lectures to LaTeX format
+   fun {LecturesToLaTeX Lectures}
+      BeginTab
+      #
+      {FoldL Lectures
+       fun {$ N#In Lecture}
+          N+1
+          #
+          (In
+           #if N mod LinesOnPage == 0
+            then EndTab # "\\newpage\n" # BeginTab
+            else ""
+            end
+           #Lecture.name
+           #" & "
+           #Lecture.professor
+           #" & "
+           #{StartToVS Lecture.start}
+           #"\\\\\n")
+       end
+       1#""}.2
+      #
+      EndTab
+   end
 
-%% WriteSchedule writes a solution to file FileName
-proc {WriteSchedule Lectures FileName Ordering}
-   OO = {New Open.file init(name:FileName
-                            flags: [write 'create' truncate])}
-in
-   {OO write(vs:{LecturesToLaTeX
-                 {Sort
-                  {List.flatten Lectures} Ordering}})}
-   {OO close}
-end
+   %% WriteSchedule writes a solution to file FileName
+   proc {WriteSchedule Lectures FileName Ordering}
+      OO = {New Open.file init(name:FileName
+                               flags: [write 'create' truncate])}
+   in
+      {OO write(vs:{LecturesToLaTeX
+                    {Sort
+                     {List.flatten Lectures} Ordering}})}
+      {OO close}
+   end
 
-Name = {OS.tmpnam}
-SourceName = !Name#".tex"
-DVIName = !Name#".dvi"
-NameFileName = {OS.tmpnam}#".tex"
-ProfFileName = {OS.tmpnam}#".tex"
-TimeFileName = {OS.tmpnam}#".tex"
+   Name = {OS.tmpnam}
+   SourceName = !Name#".tex"
+   DVIName = !Name#".dvi"
+   NameFileName = {OS.tmpnam}#".tex"
+   ProfFileName = {OS.tmpnam}#".tex"
+   TimeFileName = {OS.tmpnam}#".tex"
 
-LaTeXSource=
-'\\documentstyle[12pt]{article}
+   LaTeXSource= '\\documentstyle[12pt]{article}\\begin{document}'
+   #'\\section*{Vorlesungsplan der Katholischen Hochschule f\\"ur Soziale Arbeit, Saarbr\\"ucken}'
+   #'\\subsection*{Nach Professoren alphabetisch geordnet}'
+   #'\\input '#!ProfFileName
+   #'\\newpage \\subsection*{Nach Vorlesungen geordnet}'
+   #'\\input '#!NameFileName
+   #'\\newpage \\subsection*{Nach Anfangszeiten geordnet}'
+   #'\\input '#!TimeFileName
+   #'\\end{document}'
 
-\\begin{document}
-\\section*{Vorlesungsplan der Katholischen Hochschule
-           f\\"ur Soziale Arbeit, Saarbr\\"ucken}
-\\subsection*{Nach Professoren alphabetisch geordnet}
-\\input '
-#!ProfFileName#
-'
-\\newpage
-
-\\subsection*{Nach Vorlesungen geordnet}
-\\input '
-#!NameFileName#
-'
-\\newpage
-
-\\subsection*{Nach Anfangszeiten geordnet}
-\\input '
-#!TimeFileName#
-'
-\\end{document}'
-
-local
-   OO = {New Open.file init(name:SourceName
-                            flags:[read write 'create'])}
-in
-   {OO write(vs:LaTeXSource)}
-end
-
-in
+   local
+      OO = {New Open.file init(name:SourceName
+                               flags:[read write 'create'])}
+   in
+      {OO write(vs:LaTeXSource)}
+   end
 
    %% Write computes the first solution
    %% and writes three different listings to files
