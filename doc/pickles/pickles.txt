@@ -84,9 +84,13 @@ MINORVERSION = 4
 
 <ozatom>       ::= D:ATOM <reftag> <string>
 
-<ozname>	::= (D:UNIQUENAME | D:COPYABLENAME | D:NAME)
-		    <tstring>			   % printname
-		    <gname>
+<ozname>       ::= D:UNIQUENAME <reftag>
+		   <tstring>			   % printname
+                 | D:COPYABLENAME <reftag>
+		   <tstring>			   % printname
+                 | D:NAME <reftag>
+		   <tstring>			   % printname
+		   <gname>
 
 <ozlist>       ::= D:LIST <reftag> 
 	           <value> <value> % head, tail
@@ -115,6 +119,7 @@ MINORVERSION = 4
 
 <ozclass>      ::= D:CLASS <reftag>
 		   <gname>
+		   <tint>                          % flags
 		   <value>			   % features
 
 <ozproc>       ::= D:PROC 
@@ -127,7 +132,7 @@ MINORVERSION = 4
 		   <value>*			   % value of gregs
 		   <code>
 
-<ozref>        ::= D:REF T:<int>		   % reference to term (global scope)
+<ozref>        ::= D:REF <tint>		   % reference to term (global scope)
 
 
 
@@ -166,14 +171,14 @@ MINORVERSION = 4
 		  | <htable>
 		  | <recordarity>
 		  | <gencallinfo>
-		  | <applmethinfo>
 		  | <gregref>
 		  | <location>
 
 <labelref>	::= L:<string>			  % label reference
 
 <predref>       ::= I:0				  % not copyable
-		  | I:1 <reftag> D:ABSTRENTRY	  % copyable
+		  | I:1 D:ABSTRENTRY <reftag>	  % copyable
+                  | I:1 D:REF T:<int>
 
 <predid>        ::= <value>			  % printname
 		    <recordarity>		  % (method)arity
@@ -188,9 +193,6 @@ MINORVERSION = 4
 
 <gencallinfo>	::= <tint>			  % flags
 		    <value>			  % method name
-		    <recordarity>		  % arity
-
-<applmethinfo>  ::= <value>			  % name
 		    <recordarity>		  % arity
 
 <gregref>	::= <tint>			  % number of regs
