@@ -296,11 +296,9 @@ OZ_Term OZ_termType(OZ_Term term)
     return oz_atom("fset");
   }
 
-#ifdef FOREIGN_POINTER
   if (OZ_isForeignPointer(term)) {
     return oz_atom("foreign_pointer");
   }
-#endif
 
   OZ_warning("OZ_termType: unknown type in 0x%x\n",term);
   return 0;
@@ -812,11 +810,9 @@ void const2buffer(ostream &out, ConstTerm *c)
     }
     break;
 
-#ifdef FOREIGN_POINTER
   case Co_Foreign_Pointer:
-    out << "<ForeignPointer>";
+    out << "<ForeignPointer " << ((ForeignPointer *) c)->getPointer() << ">";
     break;
-#endif
 
   default:
     if (c->isChunk()) {

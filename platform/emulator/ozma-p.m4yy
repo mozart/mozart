@@ -90,6 +90,7 @@ static void lookupLabel(TaggedRef key, int *location) {
 }
 
 %token <tagged> INTEGER FLOAT NIL ATOM TRUE FALSE UNIT NAME UNIQUENAME
+%token <tagged> FOREIGNPOINTER
 %token <index> XREGISTER YREGISTER GREGISTER
 %token LBL PID HT ONVAR ONSCALAR ONRECORD GCI AMI
 
@@ -353,7 +354,24 @@ ArityAndIsTail  : Integer
 Dummy           : Integer
                 ;
 
-PredicateRef    : INTEGER
+PredicateRef    : UNIT
+                  { codeArea->writeAddress(NULL); }
+                | FOREIGNPOINTER
+                  {
+                    AbstractionEntry *predId;
+                    TaggedRef key = $1;
+                    TaggedRef abstrEntry;
+                    if (abstrEntryDict->getArg(key,abstrEntry) == PROCEED)
+                      predId =
+                        (AbstractionEntry *) OZ_getForeignPointer(abstrEntry);
+                    else {
+                      predId = new AbstractionEntry(NO);
+                      abstrEntry = OZ_makeForeignPointer(predId);
+                      abstrEntryDict->setArg(key,abstrEntry);
+                    }
+                    codeArea->writeAddress(predId);
+                  }
+                | INTEGER
                   {
                     AbstractionEntry *predId = NULL;
                     TaggedRef key = $1;

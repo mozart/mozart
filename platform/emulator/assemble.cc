@@ -257,9 +257,13 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIstorePredicateRef,2)
 {
   declareCodeBlock(0,code);
-  OZ_declareIntArg(1,id);
-  AbstractionEntry *predId = (AbstractionEntry *) ToPointer(id);
-  code->writeAddress(predId);
+  OZ_declareNonvarArg(1,p);
+  if (OZ_isUnit(p))
+    code->writeAddress(NULL);
+  else {
+    OZ_declareForeignPointerArg(1,predId);
+    code->writeAddress((AbstractionEntry *) predId);
+  }
   return PROCEED;
 }
 OZ_C_proc_end

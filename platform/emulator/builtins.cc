@@ -5305,6 +5305,14 @@ OZ_C_proc_end
    dynamic link objects files
    ----------------------------------------------------------------- */
 
+OZ_C_proc_begin(BIisForeignPointer,2)
+{
+  oz_declareNonvarArg(0,p);
+  oz_declareArg(1,res);
+  return OZ_unify(res,OZ_isForeignPointer(p)? NameTrue: NameFalse);
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIdlOpen,2)
 {
   oz_declareVirtualStringArg(0,filename);
@@ -6471,7 +6479,7 @@ OZ_C_proc_begin(BIgenerateAbstractionTableID,2)
   oz_declareNonvarArg(0,forComponent);
   oz_declareArg(1,res);
   AbstractionEntry *entry = new AbstractionEntry(OZ_isTrue(forComponent));
-  return oz_unifyInt(res,ToInt32(entry));
+  return oz_unify(res,OZ_makeForeignPointer(entry));
 }
 OZ_C_proc_end
 
@@ -6734,13 +6742,9 @@ static int finalizable(OZ_Term& x)
       ConstTerm* xp = tagged2Const(x);
       Board*b;
       switch (xp->getType()) {
-#ifdef FOREIGN_POINTER
       case Co_Foreign_Pointer:
         return 1;
-#else
-      case Co_UNUSED1:
-#endif
-      case Co_UNUSED2:
+      case Co_UNUSED:
         return 2;
         // Tertiary Consts
       case Co_Thread:
@@ -7298,10 +7302,11 @@ BIspec allSpec[] = {
   {"==Rel",   2,BIeq,     0},
   {"\\=Rel",  2,BIneq,    0},
 
-  {"dlOpen",2,          BIdlOpen,               0},
-  {"dlClose",1,         BIdlClose,              0},
-  {"findFunction",   3, BIfindFunction,         0},
-  {"dlLoad",         3, BIdlLoad,               0},
+  {"isForeignPointer",2,BIisForeignPointer,     0},
+  {"dlOpen",          2,BIdlOpen,               0},
+  {"dlClose",         1,BIdlClose,              0},
+  {"findFunction",    3,BIfindFunction,         0},
+  {"dlLoad",          3,BIdlLoad,               0},
 
   {"shutdown",       1, BIshutdown,             0},
 

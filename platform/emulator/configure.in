@@ -603,17 +603,6 @@ OZ_ENABLE_YES(finalization,[
         )
 
 dnl *****************************************************************
-dnl FOREIGN POINTER SUPPORT
-dnl *****************************************************************
-
-OZ_ENABLE_YES(foreign-pointer,[
-                   provide support for foreign pointers],
-        ,
-        AC_MSG_RESULT(no)
-        AC_DEFINE(NOFOREIGN_POINTER)
-        )
-
-dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************
 

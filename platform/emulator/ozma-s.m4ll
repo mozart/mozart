@@ -215,6 +215,12 @@ undefine(`instruction')
     return UNIQUENAME;
 }
 
+"<ForeignPointer "{INT}">" {
+  ozmatext[ozmaleng - 1] = '\0';
+  ozmalval.tagged = OZ_CStringToInt(ozmatext + 16);
+  return FOREIGNPOINTER;
+}
+
 {ATOM} {
   stripTrans('\'');
   ozmalval.tagged = OZ_atom(ozmatext);

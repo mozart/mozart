@@ -1398,7 +1398,6 @@ void Thread::gcRecurse () {
 }
 
 
-#ifdef FOREIGN_POINTER
 ForeignPointer * ForeignPointer::gc(void) {
   ForeignPointer * ret =
     (ForeignPointer*) gcReallocStatic(this,sizeof(ForeignPointer));
@@ -1407,7 +1406,6 @@ ForeignPointer * ForeignPointer::gc(void) {
   storeFwdField(this, ret);
   return ret;
 }
-#endif
 
 // ===================================================================
 // Finalization
@@ -2497,10 +2495,8 @@ ConstTerm *ConstTerm::gcConstTerm() {
   case Co_Builtin:
     return this;
 
-#ifdef FOREIGN_POINTER
   case Co_Foreign_Pointer:
     return ((ForeignPointer*)this)->gc();
-#endif
 
   default:
     Assert(0);

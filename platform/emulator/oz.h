@@ -33,10 +33,6 @@
 #define FINALIZATION
 #endif
 
-#ifndef NOFOREIGN_POINTER
-#define FOREIGN_POINTER
-#endif
-
 /* ------------------------------------------------------------------------ *
  * 0. intro
  * ------------------------------------------------------------------------ */
@@ -498,7 +494,6 @@ OZ_Term VAR = OZ_getCArg(ARG);                  \
    VAR = OZ_virtualStringToC(OZ_getCArg(ARG));          \
  }
 
-#ifdef FOREIGN_POINTER
 #define OZ_declareForeignPointerArg(ARG,VAR)    \
 void *VAR;                                      \
 {                                               \
@@ -509,7 +504,6 @@ void *VAR;                                      \
     VAR = OZ_getForeignPointer(_VAR);           \
   }                                             \
 }
-#endif
 
 /* ------------------------------------------------------------------------ *
  * end
@@ -549,9 +543,7 @@ typedef enum {
   OZ_Type_Record,
   OZ_Type_Tuple,
   OZ_Type_Var,
-#ifdef FOREIGN_POINTER
   OZ_Type_ForeignPointer,
-#endif
   OZ_Type_Unknown
 } OZ_TermType;
 
@@ -576,6 +568,14 @@ extern void        _FUNDECL(OZ_putMetaTermType,(OZ_Term v, OZ_MetaType t));
 
 extern OZ_Term _FUNDECL(OZ_getMetaTermAttr,(OZ_Term v));
 
+extern int _FUNDECL(OZ_areIdentVars,(OZ_Term v1, OZ_Term v2));
+
+extern OZ_Return _FUNDECL(OZ_suspendMetaProp,(OZ_CFun, OZ_Term *, int));
+
+#define OZ_MetaPropSuspend OZ_suspendMetaProp(OZ_self, OZ_args, OZ_arity)
+
+/* storing foreign data */
+
 extern OZ_Term   _FUNDECL(OZ_makeHeapChunk,(int s));
 extern void *    _FUNDECL(OZ_getHeapChunkData,(OZ_Term t));
 extern int       _FUNDECL(OZ_getHeapChunkSize,(OZ_Term t));
@@ -584,12 +584,15 @@ extern int       _FUNDECL(OZ_isMetaTerm,(OZ_Term t));
 extern int       _FUNDECL(OZ_isSingleValue,(OZ_Term t));
 extern OZ_Return _FUNDECL(OZ_constrainMetaTerm,(OZ_Term v, OZ_MetaType t, OZ_Term d));
 
-extern int _FUNDECL(OZ_areIdentVars,(OZ_Term v1, OZ_Term v2));
+extern OZ_Term  _FUNDECL(OZ_makeForeignPointer,(void*));
+extern void*    _FUNDECL(OZ_getForeignPointer,(OZ_Term));
+extern int      _FUNDECL(OZ_isForeignPointer,(OZ_Term));
 
-extern OZ_Return _FUNDECL(OZ_suspendMetaProp,(OZ_CFun, OZ_Term *, int));
 
-#define OZ_MetaPropSuspend OZ_suspendMetaProp(OZ_self, OZ_args, OZ_arity)
-
+struct OZ_C_proc_interface {
+  const char* name;
+  int         arity;
+};
 
 /* Perdio related things */
 
@@ -609,17 +612,6 @@ extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
 }
 #endif
 
-#ifdef FOREIGN_POINTER
-extern OZ_Term  _FUNDECL(OZ_makeForeignPointer,(void*));
-extern void*    _FUNDECL(OZ_getForeignPointer,(OZ_Term));
-extern int      _FUNDECL(OZ_isForeignPointer,(OZ_Term));
-#endif
-
-/* foreign function interface */
-struct OZ_C_proc_interface {
-  const char* name;
-  int         arity;
-};
 
 /* Transitional Interface for the new regime for builtins */
 /* OZ_BI_define(Name,InArity,OutArity){ ... }
