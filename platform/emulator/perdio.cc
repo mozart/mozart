@@ -198,6 +198,7 @@ public:
       return getRef();
     }
   }
+
 };
 
 typedef Tertiary Proxy;
@@ -482,7 +483,7 @@ class NetHashTable: public GenHashTable{
   Bool findPlace(int ,NetAddress *, GenHashNode *&);
 public:
   NetHashTable():GenHashTable(NET_HASH_TABLE_DEFAULT_SIZE){}
-  BorrowEntry* findNA(NetAddress *);
+  int findNA(NetAddress *);
   void add(NetAddress *,int);
   void sub(NetAddress *);
 #ifdef DEBUG_PERDIO
@@ -1230,13 +1231,15 @@ public:
 
   void gcBorrowTable();
 
-  BorrowEntry *find(NetAddress *na)  {
-    BorrowEntry *b=hshtbl->findNA(na);
-    if(b==NULL) {
-      PD(LOOKUP,"borrow NO");}
-    else {
-      PD(LOOKUP,"borrow yes");}
-    return b;
+  BorrowEntry* find(NetAddress *na)  {
+    int i = hshtbl->findNA(na);
+    if(i<0) {
+      PD(LOOKUP,"borrow NO");
+      return 0;
+    } else {
+      PD(LOOKUP,"borrow yes i:%d",i);
+      return borrowTable->getBorrow(i);
+    }
   }
 
   void resize();
@@ -1321,7 +1324,7 @@ int BorrowTable::newBorrow(Credit c,Site * sd,int off){
                 hshtbl->table);
   hshtbl->add(oe->getNetAddress(),index);
   no_used++;
-  PD(TABLE,"borrow insert: %d",index);
+  PD(TABLE,"borrow insert: i:%d",index);
   return index;}
 
 void BorrowTable::maybeFreeBorrowEntry(int index){
@@ -1333,7 +1336,7 @@ void BorrowTable::maybeFreeBorrowEntry(int index){
   array[index].u.nextfree=nextfree;
   nextfree=index;
   no_used--;
-  PD(TABLE,"borrow delete: %d",index);
+  PD(TABLE,"borrow delete: i:%d",index);
   return;}
 
 void BorrowTable::copyBorrowTable(BorrowEntry *oarray,int osize){
@@ -1438,15 +1441,15 @@ int NetHashTable::hashFunc(NetAddress *na){
       h = h ^ g;}}
   return (int) h;}
 
-BorrowEntry *NetHashTable::findNA(NetAddress *na){
+int NetHashTable::findNA(NetAddress *na){
   GenHashNode *ghn;
   int bindex;
   int hvalue=hashFunc(na);
   if(findPlace(hvalue,na,ghn)){
     int bindex= GenHashNode2BorrowIndex(ghn);
-    PD(HASH,"borrow index %d",bindex);
-    return borrowTable->getBorrow(bindex);}
-  return NULL;}
+    PD(HASH,"borrow index i:%d",bindex);
+    return bindex;}
+  return -1;}
 
 void NetHashTable::add(NetAddress *na,int bindex){
   int hvalue=hashFunc(na);
@@ -2002,7 +2005,6 @@ OZ_Term unmarshallBorrow(ByteStream *bs,OB_Entry *&ob,int &bi){
     return ret;}
 
   NetAddress na = NetAddress(sd,si);
-  int hindex;
   BorrowEntry *b = borrowTable->find(&na);
   if (b!=NULL) {
     PD(UNMARSHALL,"borrowed hit");
@@ -2340,18 +2342,18 @@ loop:
   case M_ATOM:
     {
       char *aux = unmarshallString(bs);
+      PD(UNMARSHALL,"atom %s",aux);
       *ret = OZ_atom(aux);
       delete aux;
-      PD(UNMARSHALL,"atom %s",aux);
       return;
     }
 
   case M_BIGINT:
     {
       char *aux = unmarshallString(bs);
+      PD(UNMARSHALL,"big int %s",aux);
       *ret = OZ_CStringToNumber(aux);
       delete aux;
-      PD(UNMARSHALL,"big int");
       return;
     }
 
@@ -2719,8 +2721,10 @@ void siteReceive(ByteStream* bs)
 
       Assert(be->isVar());
       PerdioVar *pv = be->getVar();
+      PD(TABLE,"REDIRECT - borrow entry hit i:%d",pv->getIndex());
       Assert(pv->isProxy());
       pv->primBind(be->getPtr(),val);
+      be->mkRef();
 
       if (pv->hasVal()) {
         PD(PD_VAR,"REDIRECT while pending");
@@ -2731,7 +2735,7 @@ void siteReceive(ByteStream* bs)
         }
       }
 
-      be->freeBorrowEntry();
+      BT->maybeFreeBorrowEntry(pv->getIndex());
 
       break;
     }
@@ -2779,8 +2783,9 @@ void siteReceive(ByteStream* bs)
       Assert(be->isVar());
       PerdioVar *pv = be->getVar();
       pv->primBind(be->getPtr(),pv->getVal());
+      be->mkRef();
 
-      be->freeBorrowEntry();
+      BT->maybeFreeBorrowEntry(pv->getIndex());
 
       break;
     }
