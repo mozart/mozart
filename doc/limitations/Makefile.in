@@ -1,0 +1,13 @@
+VPATH           = @srcdir@
+SRCDIR          = @srcdir@
+
+WHAT = limitations
+MAIN = main.sgml
+
+HTMLEXTRAFILES =
+
+HTMLEXTRASUPPORTFILES =
+
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
