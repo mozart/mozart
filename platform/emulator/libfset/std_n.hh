@@ -139,7 +139,7 @@ public:
     : FSetUnionNPropagator(vs, s) {}
 
   virtual OZ_Return propagate(void);
-  
+
   virtual size_t sizeOf(void) { return sizeof(FSetPartitionPropagator); }
 
   virtual OZ_PropagatorProfile * getProfile(void) const {
@@ -151,6 +151,34 @@ public:
   virtual OZ_Boolean isMonotonic(void) const { return OZ_FALSE; }
   virtual OZ_NonMonotonic::order_t getOrder(void) const {
     return _nm.getOrder();
+  }
+};
+
+//-----------------------------------------------------------------------------
+
+class FSetIntersectionNPropagator : public Propagator_VS_S {
+  friend INIT_FUNC(fsp_init);
+
+protected:
+  static OZ_PropagatorProfile profile;
+
+public:
+  FSetIntersectionNPropagator(OZ_Term vs, OZ_Term s)
+    : Propagator_VS_S(vs, s) { }
+
+  virtual OZ_Return propagate(void);
+
+  virtual size_t sizeOf(void) { return sizeof(FSetIntersectionNPropagator); }
+
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
+  }
+
+  virtual void gCollect(void) {
+    Propagator_VS_S::gCollect();
+  }
+  virtual void sClone(void) {
+    Propagator_VS_S::sClone();
   }
 };
 

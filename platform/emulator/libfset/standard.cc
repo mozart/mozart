@@ -26,11 +26,11 @@
 
 #include "standard.hh"
 
-OZ_Return make_intersect_3(OZ_Term x, OZ_Term y, OZ_Term z)
+OZ_Return make_intersect_3(OZ_Expect * ope, OZ_Term x, OZ_Term y, OZ_Term z)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET "," OZ_EM_FSET);
 
-  PropagatorExpect pe;
+  PropagatorExpect &pe = * (PropagatorExpect *) ope;
 
   int susp_count = 0;
 
@@ -46,7 +46,8 @@ OZ_Return make_intersect_3(OZ_Term x, OZ_Term y, OZ_Term z)
 
 OZ_BI_define(fsp_intersection, 3, 0)
 {
-  return make_intersect_3(OZ_in(0), OZ_in(1), OZ_in(2));
+  PropagatorExpect pe;
+  return make_intersect_3(&pe, OZ_in(0), OZ_in(1), OZ_in(2));
 }
 OZ_BI_end
 
@@ -157,182 +158,14 @@ OZ_BI_end
 
 //*****************************************************************************
 
-//-----------------------------------------------------------------------------
-// OZ_Filter
-
-class OZ_Filter {
-public:
-  virtual int hasState(void) = 0;
-};
-
-
-//-----------------------------------------------------------------------------
-// OZ_Service
-
-class OZ_CPIVarVector {
-private:
-  int _size;
-  OZ_Term ** _vector;
-public:
-  OZ_CPIVarVector(int sz, OZ_Term * &vector) : _size(sz), _vector(&vector) {}
-  void condens(void);
-};
-
-
-class OZ_FSetVarVector : public OZ_CPIVarVector {
-  OZ_FSetVar * _vector;
-public:
-  OZ_FSetVarVector(int size, OZ_Term * &vector);
-};
-
-typedef OZ_Return (*make_prop_fn_2)(OZ_Term, OZ_Term);
-typedef OZ_Return (*make_prop_fn_3)(OZ_Term, OZ_Term, OZ_Term);
-typedef OZ_Return (*make_prop_fn_4)(OZ_Term, OZ_Term, OZ_Term, OZ_Term);
-
-
-class OZ_Service {
-private:
-  int _closed;
-  OZ_Propagator * _prop;
-  OZ_ParamIterator * _iter;
-  static const int _max_actions = 10;
-  struct _actions_t {
-    enum {
-      _serv_failed = 0,
-      _serv_entailed,
-      _serv_leave,
-      _serv_replace,
-      _serv_equate} _what;
-    union _action_params_t {
-      int _vars_left;
-      OZ_Propagator * _replacement;
-      struct { OZ_Term _x, _y; } _equat;
-    } _action_params;
-  } _actions[_max_actions];
-  int _nb_actions;
-  OZ_Return update_return(OZ_Return  o, OZ_Return n) {
-    if (o == OZ_ENTAILED) {
-      return n;
-    } else if (o == OZ_SLEEP) {
-      return (n == OZ_FAILED ? n : o);
-    } else if (o = OZ_FAILED) {
-      return o;
-    }
-  }
-public:  //
-  OZ_Service(OZ_Propagator * prop, OZ_ParamIterator * iter)
-    : _closed(0), _prop(prop), _iter(iter), _nb_actions(0) {}
-  //
-  // sleep is default, after one of these operations, the object is
-  // closed
-  void leave(int vars_left = 0) {
-    if (!_closed) {
-      _actions[_nb_actions]._what = _actions_t::_serv_entailed;
-      _actions[_nb_actions]._action_params._vars_left = vars_left;
-      _nb_actions += 1;
-      OZ_ASSERT(_nb_actions =< _max_actions);
-    }
-  }
-  void entailed(void) {
-    if (!_closed) {
-      _actions[_nb_actions]._what = _actions_t::_serv_entailed;
-      _nb_actions += 1;
-      OZ_ASSERT(_nb_actions =< _max_actions);
-    }
-  }
-  void failed(void) {
-    if (!_closed) {
-      _actions[_nb_actions]._what = _actions_t::_serv_failed;
-      _nb_actions += 1;
-      OZ_ASSERT(_nb_actions =< _max_actions);
-    }
-  }
-  void equate(OZ_Term x, OZ_Term y) {
-    if (!_closed) {
-      _actions[_nb_actions]._what = _actions_t::_serv_equate;
-      _actions[_nb_actions]._action_params._equat._x = x;
-      _actions[_nb_actions]._action_params._equat._y = y;
-      _nb_actions += 1;
-      OZ_ASSERT(_nb_actions =< _max_actions);
-    }
-  }
-  void add_parameter(OZ_CPIVar &, int event) {
-    OZ_ASSERT(0);
-  }
-  void drop_parameter(OZ_CPIVar &) {
-    OZ_ASSERT(0);
-  }
-  // propagator is set `scheduled'
-  void impose_propagator(make_prop_fn_2, OZ_Term, OZ_Term);
-  void impose_propagator(make_prop_fn_3, OZ_Term, OZ_Term, OZ_Term);
-  void impose_propagator(make_prop_fn_4, OZ_Term, OZ_Term, OZ_Term, OZ_Term);
-  // replacing a propagator by another one happens frequently, hence a
-  // dedicated fucntion is introduced, not that ununsed parameters
-  // have to be passed as arguments and the replacment react on the
-  // same events at the respective parameters
-  void replace_propagator(OZ_Propagator * prop, int vars_drop,/*OZ_Term*/ ...)
-  {
-    if (!_closed) {
-      _actions[_nb_actions]._what = _actions_t::_serv_replace;
-      _actions[_nb_actions]._action_params._replacement = prop;
-      _nb_actions += 1;
-      OZ_ASSERT(_nb_actions =< _max_actions);
-    }
-    // add drop parameter code here
-  }
-  // changes state of propagator, propagator shall
-  // not be set `scheduled' (hence, `impose_propagator' does not work)
-  void condens_vector(OZ_CPIVarVector &);
-  OZ_Return operator ()() {
-    OZ_Return r = OZ_ENTAILED;
-    int do_leave = 1;
-    //
-    for (int i = 0; i < _nb_actions; i += 1) {
-      _actions_t::_action_params_t &a = _actions[_nb_actions]._action_params;
-      //
-      if (r = OZ_FAILED) {
-	break;
-      }
-      switch (_actions[_nb_actions]._what) {
-      case _actions_t::_serv_failed:
-	do_leave = 0;
-	r = update_return(r, _iter->fail());
-	break;
-      case _actions_t::_serv_leave:
-	do_leave = 0;
-	r = update_return(r, _iter->leave(a._vars_left));
-	break;
-      case _actions_t::_serv_entailed:
-	do_leave = 0;
-	r = update_return(r, _iter->vanish());
-	break;
-      case _actions_t::_serv_replace:
-	do_leave = 0;
-	_iter->vanish();
-	r = update_return(r, _prop->replaceBy(a._replacement));
-	break;
-      case _actions_t::_serv_equate:
-	do_leave = 0;
-	_iter->vanish();
-	r = update_return(r, _prop->replaceBy(a._equat._x, a._equat._y));
-	break;
-      default:
-	OZ_ASSERT(0);
-      }
-    }
-    if (do_leave) {
-      r = update_return(r, _iter->leave());
-    }
-    return r;
-  }
-};
-
+#include "filter.hh"
 
 //-----------------------------------------------------------------------------
 
-OZ_Return filter_intersection(OZ_Propagator * Prop,
-			      OZ_ParamIterator &P,
-			      OZ_FSetVar &x, OZ_FSetVar &y, OZ_FSetVar &z)
+OZ_Service &filter_intersection(OZ_Service & s,
+				OZ_FSetVar &x,
+				OZ_FSetVar &y,
+				OZ_FSetVar &z)
 {
   FSetTouched xt, yt, zt;
   //
@@ -341,24 +174,21 @@ OZ_Return filter_intersection(OZ_Propagator * Prop,
     //
     if (z->isEmpty()) {
       OZ_DEBUGPRINTTHIS("replace: (z empty)");
-      P.vanish();
-      return Prop->replaceBy(new FSetDisjointPropagator(x, y));
+      return s.replace_propagator(new FSetDisjointPropagator(x, y));
     }
     if (x->isSubsumedBy(*y)) {
       OZ_DEBUGPRINTTHIS("replace: (x subsumbed by y)");
-      P.vanish();
-      return OZ_DEBUGRETURNPRINT(Prop->replaceBy(x, z));
+      return s.equate(x, z);
     }
     if (y->isSubsumedBy(*x)) {
       OZ_DEBUGPRINTTHIS("replace: (y subsumbed by x)");
-      P.vanish();
-      return OZ_DEBUGRETURNPRINT(Prop->replaceBy(y, z));
+      return s.equate(y, z);
     }
     if (z->isFull()) {
       FailOnInvalid(x->putCard(fs_max_card, fs_max_card));
       FailOnInvalid(y->putCard(fs_max_card, fs_max_card));
       OZ_DEBUGPRINTTHIS("replace: (z = U)");
-      return P.vanish();
+      return s.entail();
     }
     //
     FailOnInvalid(*x <= -(- *z & *y)); // lub
@@ -375,10 +205,10 @@ OZ_Return filter_intersection(OZ_Propagator * Prop,
     //
   } while (xt <= x || yt <= y || zt <= z);
   //
-  return P.leave(1);
+  return s.leave(1);
   //
  failure:
-  return P.fail();
+  return s.fail();
 }
 
 #define TMUELLER
@@ -390,8 +220,9 @@ OZ_Return FSetIntersectionPropagator::propagate(void)
   //
   OZ_FSetVar x(_x), y(_y), z(_z);
   PropagatorController_S_S_S P(x, y, z);
+  OZ_Service s(this, &P);
   //
-  return filter_intersection(this, P, x, y, z);
+  return filter_intersection(s, x, y, z)();
 }
 #else
 OZ_Return FSetIntersectionPropagator::propagate(void) 
