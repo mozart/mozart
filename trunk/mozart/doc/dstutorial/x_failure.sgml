@@ -218,7 +218,7 @@ entity is allowed but has no observable effect.
 deinstall <EM>handlers</EM> and <EM>watchers</EM>
 on entities.
 These are procedures that are invoked
-when there is fault.
+when there is a failure.
 Handlers are invoked synchronously (when attempting
 to perform an operation) and watchers are
 invoked asynchronously (in their own thread as
