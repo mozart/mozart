@@ -8,7 +8,7 @@
 #pragma implementation "builtins.hh"
 #endif
 
-#include "types.h"
+#include "types.hh"
 
 #include "wsock.hh"
 
