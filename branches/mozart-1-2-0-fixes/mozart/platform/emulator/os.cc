@@ -170,6 +170,34 @@ static long emulatorStartTime = 0;
 
 #endif
 
+#ifndef WINDOWS
+// ===================================================================
+// we save the result of sysconf(_SC_CLK_TCK) in a global variable.
+// this is actually faster than calling sysconf each time.
+//
+// why both inner and outer variables (see below)? because at the
+// moment some Linux installations are suffering from the recent bump
+// of HZ from 100 to 1000 in some new kernels.  glibc is a bit
+// schizophrenic: times(&buffer) returns a number of ticks that needs
+// to be divided by 10*sysconf(_SC_CLK_TCK) yet the clock_t values in
+// the buffer must just be divided by sysconf(_SC_CLK_TCK).  Therefore
+// inner is for the buffer stuff and outer is for the ticks returned
+// by times.
+//
+// configure checks for the bug and, if present, defines CLK_TCK_BUG
+// to the integer ratio of outer over inner as observed in its test.
+// ===================================================================
+
+static int   SYS_CLK_TCK_INNER;
+static double OZ_CLK_TCK_INNER;
+#ifdef CLK_TCK_BUG
+static int   SYS_CLK_TCK_OUTER;
+static double OZ_CLK_TCK_OUTER;
+#else
+#define SYS_CLK_TCK_OUTER SYS_CLK_TCK_INNER
+#define  OZ_CLK_TCK_OUTER  OZ_CLK_TCK_INNER
+#endif
+#endif
 
 // return current usertime in milliseconds
 unsigned int osUserTime()
@@ -186,7 +214,7 @@ unsigned int osUserTime()
   struct tms buffer;
 
   times(&buffer);
-  return (unsigned int)(buffer.tms_utime*1000.0/(double)sysconf(_SC_CLK_TCK));
+  return (unsigned int)(buffer.tms_utime*1000.0/OZ_CLK_TCK_INNER);
 #endif
 }
 
@@ -205,7 +233,7 @@ unsigned int osSystemTime()
   struct tms buffer;
 
   times(&buffer);
-  return (unsigned int)(buffer.tms_stime*1000.0/(double)sysconf(_SC_CLK_TCK));
+  return (unsigned int)(buffer.tms_stime*1000.0/OZ_CLK_TCK_INNER);
 #endif
 }
 
@@ -228,7 +256,7 @@ unsigned int osTotalTime()
 
   struct tms buffer;
   int t = times(&buffer) - emulatorStartTime;
-  return (unsigned int) (t*1000.0/(double)sysconf(_SC_CLK_TCK));
+  return (unsigned int) (t*1000.0/OZ_CLK_TCK_OUTER);
 
 #endif
 }
@@ -1140,7 +1168,7 @@ void osInit()
 
   FD_ZERO(&socketFDs);
 
-#ifdef SUNOS_SPARC
+#if defined(SUNOS_SPARC)
 
   struct timeval tp;
 
@@ -1185,6 +1213,15 @@ void osInit()
   struct tms buffer;
   emulatorStartTime = times(&buffer);;
 
+#endif
+
+#ifndef WINDOWS
+  SYS_CLK_TCK_INNER = sysconf(_SC_CLK_TCK);
+  OZ_CLK_TCK_INNER = (double) SYS_CLK_TCK_INNER;
+#ifdef CLK_TCK_BUG
+  SYS_CLK_TCK_OUTER = CLK_TCK_BUG*SYS_CLK_TCK_INNER;
+  OZ_CLK_TCK_OUTER = (double) SYS_CLK_TCK_OUTER;
+#endif
 #endif
 }
 
@@ -1607,7 +1644,7 @@ int osgetEpid()
   do {
     ticks = times(&buffer);
   } while (ticks==emulatorStartTime);
-  ticks = ticks % sysconf(_SC_CLK_TCK);
+  ticks = ticks % SYS_CLK_TCK_OUTER;
 #endif
   Assert(ticks<100);
   unsigned int pid = (unsigned int) osgetpid();

@@ -139,3 +139,6 @@ typedef int socklen_t;
 
 /* whether gmp.h needs c++ */
 #undef GMP_NEEDS_CPLUSPLUS
+
+/* whether we have the times/sysconf(_SC_CLK_TCK) bug */
+#undef CLK_TCK_BUG
