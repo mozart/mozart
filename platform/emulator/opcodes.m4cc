@@ -24,7 +24,8 @@ int sizeOf(Opcode oc)
    include(`../include/instrDefs.m4')
 
   default:
-    error("sizeOf: unknown opcode: %d",oc);
+    warning("sizeOf: unknown opcode: %d",oc);
+    return 1;
   }
 
   return -1;

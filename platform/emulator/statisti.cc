@@ -46,10 +46,10 @@ void printPercent(FILE *fd,char *s,unsigned int t,unsigned int total)
 {
   fprintf(fd,s);
   if (total == 0) {
-    fprintf(fd,"0%%");
+    fprintf(fd,"0");
   } else {
     unsigned int rel = (t*100)/total;
-    fprintf(fd,"%u%%",rel);
+    fprintf(fd,"%u",rel);
   }
 }
 
@@ -248,16 +248,16 @@ void Statistics::printIdle(FILE *fd)
   if (ozconf.showIdleMessage) {
     fprintf(fd,"idle (");
     printTime(fd,"r: ", timeUtime.sinceidle());
-    printPercent(fd,", p: ",
+    printPercent(fd," (",
                  timeForPropagation.sinceidle(),
                  timeUtime.sinceidle());
-    printPercent(fd,", c: ",
+    printPercent(fd,"%%p, ",
                  timeForCopy.sinceidle(),
                  timeUtime.sinceidle());
-    printPercent(fd,", g: ",
+    printPercent(fd,"%%c, ",
                  timeForGC.sinceidle(),
                  timeUtime.sinceidle());
-    printMem(fd,", h: ", (totalHeap-heapUsed.sinceIdle)*KB);
+    printMem(fd,"%%g), h: ", (totalHeap-heapUsed.sinceIdle)*KB);
     fprintf(fd,")\n");
     fflush(fd);
   }

@@ -409,7 +409,7 @@ public:
   }
 
   void setX (RefsArray x, int i);
-  int getXSize ();
+  inline int getXSize ();
   RefsArray getX () { return (xRegs); }
   void getX (RefsArray X);
   OZ_Term &getXReg (int i) {
