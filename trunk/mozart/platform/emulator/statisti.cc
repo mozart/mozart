@@ -39,7 +39,7 @@ void printTime(FILE *fd,char *s,unsigned int t) {
   if (t < 1000) {
     fprintf(fd,"%u ms",t);
   } else {
-    fprintf(fd,"%u.%u sec",t/1000,(t/100)%10);
+    fprintf(fd,"%u.%u sec",t/1000,(t/100)%100);
   }
 }
 
