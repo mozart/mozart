@@ -5360,31 +5360,36 @@ OZ_C_proc_begin(BIfindFunction,3)
   // get the function
   OZ_CFun func;
   if ((func = (OZ_CFun) Link((void *) handle,functionName)) == 0) {
-    OZ_warning("findFunction(%s,%s,%s): not found",
-	       toC(OZ_getCArg(0)),
-	       toC(OZ_getCArg(1)),
-	       toC(OZ_getCArg(2))
-	       );
+    char * a0 = strdup(toC(OZ_getCArg(0)));
+    char * a1 = strdup(toC(OZ_getCArg(1)));
+    char * a2 = strdup(toC(OZ_getCArg(2)));
+    OZ_warning("Cannot find function %s of arity %s with handle %s.", 
+	       a0, a1, a2);
+    free(a0);
+    free(a1); 
+    free(a2);
 #ifdef DLD
     dld_perror("findFunction");
 #endif
 #ifdef WINDOWS
     OZ_warning("error=%d\n",GetLastError());
 #endif
-    return OZ_raiseC("???",0);
+    goto raise;
   }
   
 #ifdef DLD
   // check whether it contains unresolved references: 
   if (dld_function_executable_p(functionName) == 0) {
-    OZ_warning("findFunction(%s,%s): unresolved references:",
-	       toC(OZ_getCArg(0)),
-	       toC(OZ_getCArg(1))
-	       );
+    char * a0 = strdup(toC(OZ_getCArg(0)));
+    char * a1 = strdup(toC(OZ_getCArg(1)));
+    OZ_warning("Cannot find function %s of arity %s."
+	       a0, a1);
+    free(a0); 
+    free(a1);
     char ** unresolved = dld_list_undefined_sym();
     for (int i=0; i< dld_undefined_sym_count; i++)
       OZ_warning("findFunction: %s",unresolved[i]);
-    return OZ_raiseC("???",0);
+    goto raise;
   }
 #endif
   
@@ -5393,6 +5398,11 @@ OZ_C_proc_begin(BIfindFunction,3)
 #endif
 
   return PROCEED;
+raise:
+  return OZ_raiseC("foreign", 3,
+		   OZ_atom("cannotFindFunction"), 
+		   OZ_getCArg(0), 
+		   OZ_getCArg(1));
 }
 OZ_C_proc_end
 
