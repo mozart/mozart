@@ -34,6 +34,8 @@ import
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
 	    qTkClass:           QTkClass
+	    convertToType:      ConvertToType
+	    vS2Tk:              VS2Tk
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
 	    globalUngetType:    GlobalUngetType)
@@ -143,7 +145,7 @@ define
 	    {Record.forAllInd B
 	     proc{$ I V}
 		case I
-		of 1 then {self.TkVar tkSet(V)}
+		of 1 then {self.TkVar tkSet({VS2Tk V})}
 		[] selectionfrom then {ExecTk self selection('from' V)}
 		[] selectionto then {ExecTk self selection(to V)}
 		end
@@ -161,7 +163,7 @@ define
 	    {Record.forAllInd B
 	     proc{$ I V}
 		case I
-		of 1 then {self.TkVar tkReturn(V)}
+		of 1 then V={ConvertToType {self.TkVar tkReturn($)} vs}
 		end
 		{Wait V}
 	     end}

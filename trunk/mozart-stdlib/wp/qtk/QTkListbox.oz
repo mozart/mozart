@@ -35,6 +35,7 @@ import
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
 	    qTkClass:           QTkClass
+	    convertToType:      ConvertToType
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
 	    globalUngetType:    GlobalUngetType)
@@ -186,7 +187,7 @@ define
 	    QTkClass,A
 	    {Assert self.widgetType self.typeInfo B}
 	    if {HasFeature B reload} then
-	       Content<-{self tkReturnList(get(0 'end') $)}
+	       Content<-{List.map {self tkReturnList(get(0 'end') $)} fun{$ S} {ConvertToType S vs} end}
 	       {Wait @Content}
 	       B.reload=@Content
 	    end

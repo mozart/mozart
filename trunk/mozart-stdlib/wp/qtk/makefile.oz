@@ -8,10 +8,12 @@ makefile(
 		   'QTkCanvas.ozf' 'QTkListbox.ozf' 'QTkText.ozf' 'QTkPlaceholder.ozf' 'QTkGrid.ozf'
 		   'QTkPanel.ozf' 'QTkRubberframe.ozf' 'QTkScrollframe.ozf' 'QTkToolbar.ozf'
 		   'QTkDropdownlistbox.ozf' 'QTkNumberentry.ozf'
-		   'PrintCanvas.ozf']
+		   'PrintCanvas.ozf' 'TkTranslator.ozf']
 		'QTkBare.ozf'
 		: ['QTk.oz' 'QTkClipboard.oz' 'QTkFont.oz' 'QTkDialogbox.oz'
 		   'QTkFrame.oz']
+                'TkTranslator.ozf'
+                : ['TkTranslator.oz' 'utf2iso.dat']
 		'QTkDropdownbutton_bitmap.ozf'
 		: ['QTkImageLibBoot.ozf' 'mini-down.xbm']
 		'QTkDropdownlistbox.ozf'

@@ -266,7 +266,7 @@ define
 		   proc{$ O}
 		      {Tk.send place(O x:0 y:0)}
 		   end}
-		  {Tk.send update}
+		  {Wait {Tk.return update(idletasks)}}
 		  Sizes<-{List.map self.Children
 			  fun{$ O}
 			     {Tk.returnInt winfo(if self.Vert then

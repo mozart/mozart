@@ -74,6 +74,7 @@ export
    SetAssertLevel
    QTkDesc
    newBuilder:GetBuilder
+   Flush
 
 prepare
    NoArgs={NewName}
@@ -724,5 +725,9 @@ define
    DialogBuilder=DefaultBuilder.build
    
    {Tk.send tk_setPalette(grey)} % to force all qtk users to have the same default palette
+
+   proc{Flush}
+      {Wait {Tk.return update(idletasks)}}
+   end
    
 end

@@ -1,11 +1,11 @@
 declare
-[QTk]={Module.link ["x-oz://system/wp/QTk.ozf"]}
+[QTk]={Module.link ["http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf"]}
 
 proc{SaveText}
    Name={QTk.dialogbox save($)}
 in 
    try 
-      File={New Open.file init(name:Name flags:[write create truncate])}
+      File={New Open.file init(name:Name flags:[write create])}
       Contents={TextHandle get($)}
    in 
       {File write(vs:Contents)}
