@@ -54,7 +54,7 @@ OZ_BI_define(BIbyNeedAssign,2,0)
   OZ_Term val = OZ_in(1);
 
   Assert(isFuture(var));
-  oz_bind(varPtr,var,val);
+  oz_bind(varPtr,val);
   return PROCEED;
 } OZ_BI_end
 
@@ -120,7 +120,7 @@ OZ_BI_define(VarToFuture,2,0)
   OZ_Term f = OZ_in(1);
   DEREF(f,fPtr,_);
   Assert(isFuture(f));
-  oz_bind(fPtr,f,v);
+  oz_bind(fPtr,v);
   return PROCEED;
 } OZ_BI_end
 
@@ -139,6 +139,11 @@ OZ_BI_define(BIfuture,1,1)
     OZ_RETURN(f);
   }
   OZ_RETURN(v);
+} OZ_BI_end
+
+OZ_BI_define(BIwaitQuiet,1,0)
+{
+  return PROCEED;
 } OZ_BI_end
 
 OZ_BI_define(BIbyNeed,1,1)

@@ -81,7 +81,7 @@ public:
   BitData(BitData&);
   Bool checkIndex(int i) { return i>=0 && i<width; }
   Bool equal(BitData*);
-  void printStream(ostream &out);
+  void bitPrintStream(ostream &out);
   int  get(int);
   void put(int,Bool);
   void conj(BitData*);
@@ -160,7 +160,7 @@ public:
   ByteData(ByteData&);
   Bool checkIndex(int i) { return i>=0 && i<width; }
   Bool equal(ByteData*);
-  void printStream(ostream& out);
+  void bytePrintStream(ostream& out);
   BYTE get(int i) { Assert(checkIndex(i)); return data[i]; }
   void put(int i,BYTE b) {
     Assert(checkIndex(i));

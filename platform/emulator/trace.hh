@@ -34,6 +34,8 @@
 #define __TRACEH
 
 #ifdef DEBUG_TRACE
+#include "base.hh"
+
 Bool ozd_trace(char *s,
 	       ProgramCounter PC=NOCODE,RefsArray Y=NULL,Abstraction *G=NULL);
 void ozd_tracerOn();

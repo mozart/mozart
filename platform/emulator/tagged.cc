@@ -34,6 +34,9 @@
 char *TypeOfTermString[1<<tagSize];
 #endif
 
+#ifdef DEBUG_REF
+int debugRef=1;
+#endif
 
 void initTagged()
 {
@@ -53,19 +56,19 @@ void initTagged()
 #ifdef DEBUG_CHECK
   char **tts = TypeOfTermString;
   
-  tts[0]        = "REF";       //  0
+  tts[REF]      = "REF";       //  0
+  tts[REFTAG2]  = "REF2";      //  4
+  tts[REFTAG3]  = "REF3";      //  8
+  tts[REFTAG4]  = "REF4";      //  12
   tts[UVAR]     = "UVAR";      //  1
   tts[LTUPLE]   = "LTUPLE";    //  2
   tts[SMALLINT] = "SMALLINT";  //  3
-  tts[4]        = "REF";       //  4
   tts[CVAR]     = "CVAR";      //  5
   tts[FSETVALUE]= "FSETVALUE"; //  6
   tts[UNUSED7]  = "UNUSED7";   //  7
-  tts[8]        = "REF";       //  8
-  tts[UNUSED_VAR]     = "";      //  9 // FUT
+  tts[UNUSED_VAR] = "";        //  9 // FUT
   tts[OZCONST]  = "OZCONST";   // 10
   tts[OZFLOAT]  = "OZFLOAT";   // 11
-  tts[12]       = "REF";       // 12
   tts[GCTAG]    = "GCTAG";     // 13
   tts[SRECORD]  = "SRECORD";   // 14
   tts[LITERAL]  = "ATOM";      // 15

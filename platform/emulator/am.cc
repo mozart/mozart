@@ -40,6 +40,7 @@
 #include "codearea.hh"
 #include "fdomn.hh"
 #include "extension.hh"
+#include "trace.hh"
 
 AM am;
 
@@ -438,23 +439,22 @@ OZ_Return oz_unify(TaggedRef t1, TaggedRef t2, ByteCode *scp)
 
   OZ_Return result = FAILED;
 
-  TaggedRef *termPtr1 = &t1;
-  TaggedRef *termPtr2 = &t2;
+  TaggedRef term1 = t1;
+  TaggedRef term2 = t2;
 
 loop:
   int argSize;
 
   COUNT(totalUnify);
 
-  DEREFPTR(term1,termPtr1,tag1);
-  DEREFPTR(term2,termPtr2,tag2);
+  DEREF(term1,termPtr1,tag1);
+  DEREF(term2,termPtr2,tag2);
 
   // identical terms ?
-  if (term1 == term2 &&
-      (!isUVar(term1) || termPtr1 == termPtr2)) {
+  if (isUVar(term1) ? termPtr1 == termPtr2 : term1 == term2) {
     goto next;
   }
-
+  
   if (oz_isVariable(term1)) {
     if (oz_isVariable(term2)) {
       goto var_var;
@@ -486,7 +486,7 @@ loop:
     goto fail;
   }
   
-  oz_bindToNonvar(termPtr1, term1, term2, scp);
+  oz_bindToNonvar(termPtr1, term2, scp);
   goto next;
 
 
@@ -507,15 +507,15 @@ loop:
 	isMoreLocal(term2,term1) &&
 	(!am.isLocalVariable(term1,termPtr1) ||
 	 heapNewer(termPtr2,termPtr1))) {
-      oz_bind(termPtr2, term2, makeTaggedRef(termPtr1));
+      oz_bind(termPtr2, makeTaggedRef(termPtr1));
     } else {
-      oz_bind(termPtr1, term1, makeTaggedRef(termPtr2));
+      oz_bind(termPtr1, makeTaggedRef(termPtr2));
     }
     goto next;
   }
   
   if (isUVar(tag2)) {
-    oz_bind(termPtr2, term2, makeTaggedRef(termPtr1));
+    oz_bind(termPtr2, makeTaggedRef(termPtr1));
     goto next;
   }
 
@@ -561,7 +561,7 @@ cvar:
       LTuple *lt1 = tagged2LTuple(term1);
       LTuple *lt2 = tagged2LTuple(term2);
 
-      rebind(termPtr2,termPtr1);
+      if (termPtr1 && termPtr2) rebind(termPtr2,termPtr1);
       argSize = 2;
       termPtr1 = lt1->getRef();
       termPtr2 = lt2->getRef();
@@ -577,7 +577,7 @@ cvar:
       if (! sr1->compareFunctor(sr2))
 	goto fail;
 
-      rebind(termPtr2,termPtr1);
+      if (termPtr1 && termPtr2) rebind(termPtr2,termPtr1);
       argSize  = sr1->getWidth();
       termPtr1 = sr1->getRef();
       termPtr2 = sr2->getRef();
@@ -641,6 +641,8 @@ push:
     unifyStack.push(termPtr1+1,NO);
     unifyStack.push(termPtr2+1,NO);
   }
+  term1=tagged2NonVariable(termPtr1);
+  term2=tagged2NonVariable(termPtr2);
   goto loop;
  
 fail:
@@ -683,20 +685,20 @@ Bool checkHome(TaggedRef *vPtr) {
  * Note: does not handle CVARs specifically
  */
 
-void oz_bind(TaggedRef *varPtr, TaggedRef var, TaggedRef term)
+void oz_bind(TaggedRef *varPtr, TaggedRef term)
 {
   /* first step: do suspension */
-  if (isCVar(var)) {
-    oz_checkSuspensionList(tagged2SVarPlus(var), pc_std_unif);
+  if (isCVar(*varPtr)) {
+    oz_checkSuspensionList(tagged2SVarPlus(*varPtr), pc_std_unif);
   }
 
   /* second step: push binding for non-local variable on trail;     */
-  if ( !am.isLocalVariable(var,varPtr)) {
+  if ( !am.isLocalVariable(*varPtr,varPtr)) {
     Assert(am.inShallowGuard() || checkHome(varPtr));
-    am.doTrail(varPtr,var);
+    am.trail.pushRef(varPtr,*varPtr);
   } else  {
-    if (isCVar(var)) {
-      tagged2CVar(var)->dispose();
+    if (isCVar(*varPtr)) {
+      tagged2CVar(*varPtr)->dispose();
     }
   }
 
