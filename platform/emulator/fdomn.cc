@@ -14,13 +14,35 @@
 #endif
 
 #include "fdomn.hh"
+#include "fdbuilti.hh"
 
 //-----------------------------------------------------------------------------
 // Miscellaneous --------------------------------------------------------------
 
-extern unsigned char numOfBitsInByte[];
-extern int toTheLowerEnd[];
-extern int toTheUpperEnd[];
+unsigned char *numOfBitsInByte, *numOfBitsInHalfWord;
+
+int toTheLowerEnd[32] = {
+  0x00000001,0x00000003,0x00000007,0x0000000f,
+  0x0000001f,0x0000003f,0x0000007f,0x000000ff,
+  0x000001ff,0x000003ff,0x000007ff,0x00000fff,
+  0x00001fff,0x00003fff,0x00007fff,0x0000ffff,
+  0x0001ffff,0x0003ffff,0x0007ffff,0x000fffff,
+  0x001fffff,0x003fffff,0x007fffff,0x00ffffff,
+  0x01ffffff,0x03ffffff,0x07ffffff,0x0fffffff,
+  0x1fffffff,0x3fffffff,0x7fffffff,0xffffffff
+};
+
+int toTheUpperEnd[32] = {
+  0xffffffff,0xfffffffe,0xfffffffc,0xfffffff8,
+  0xfffffff0,0xffffffe0,0xffffffc0,0xffffff80,
+  0xffffff00,0xfffffe00,0xfffffc00,0xfffff800,
+  0xfffff000,0xffffe000,0xffffc000,0xffff8000,
+  0xffff0000,0xfffe0000,0xfffc0000,0xfff80000,
+  0xfff00000,0xffe00000,0xffc00000,0xff800000,
+  0xff000000,0xfe000000,0xfc000000,0xf8000000,
+  0xf0000000,0xe0000000,0xc0000000,0x80000000
+};
+
 
 int fd_bv_left_conv[fd_bv_conv_max_high];
 int fd_bv_right_conv[fd_bv_conv_max_high];
@@ -603,8 +625,8 @@ int FDBitVector::findSize(void)
 {
   int s, i;
   for (s = 0, i = fd_bv_max_high; i--; ) {
-    s += numOfBitsInByte[unsigned(b_arr[i]) & 0xffff];
-    s += numOfBitsInByte[unsigned(b_arr[i]) >> 16];
+    s += numOfBitsInHalfWord[unsigned(b_arr[i]) & 0xffff];
+    s += numOfBitsInHalfWord[unsigned(b_arr[i]) >> 16];
   }    
 
   return s;
@@ -2045,3 +2067,35 @@ void OZ_FiniteDomain::copyExtension(void)
   CASTTHIS->copyExtensionInline();
 }
 
+
+const unsigned int maxByte     = 0xff;
+const unsigned int maxHalfWord = 0xffff;
+
+void initFDs()
+{
+  unsigned int i;
+
+  /* initialize numOfBitsInByte */
+  numOfBitsInByte = new unsigned char[maxByte];
+  Assert(numOfBitsInByte!=NULL);
+  for(i=0; i<maxByte; i++) {
+    numOfBitsInByte[i] = 0;
+    int j = i;
+    while (j>0) {
+      if (j&1)
+	numOfBitsInByte[i]++;
+      j = j>>1;
+    }
+  }
+
+  /* initialize numOfBitsInHalfWord */
+  numOfBitsInHalfWord = new unsigned char[maxHalfWord];
+  Assert(numOfBitsInHalfWord!=NULL);
+  for(i=0; i<maxHalfWord; i++) {
+    numOfBitsInHalfWord[i] = numOfBitsInByte[i&0xff] + numOfBitsInByte[i>>8];
+  }
+
+
+  BIfdHeadManager::initStaticData();
+  BIfdBodyManager::initStaticData();
+}
