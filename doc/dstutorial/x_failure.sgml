@@ -168,7 +168,7 @@ kinds of fault detection:
 <ITEM> <<proc {Fault.defaultEnable FStates}>> sets the global default.
 <<FStates>> is a list of fault states that cause exceptions.
 When the system starts up, the defaults are set up as if
-the call <<{Fault.defaultEnable [tempFail,permFail]}>> had been done.
+the call <<{Fault.defaultEnable [tempFail permFail]}>> had been done.
 
 <ITEM> <<fun {Fault.enable Entity Level FStates}>> is a more targeted
 way to do fault detection.
@@ -286,7 +286,7 @@ the thread level always overrides the site level,
 which always overrides the global level.
 
 <P>For example, let's say that the cell <<C>>
-has a global detection for <<[tempFail,permFail]>>
+has a global detection for <<[tempFail permFail]>>
 and a thread-specific detection for <<[permFail]>>
 in thread <<T1>>.
 Let's say that many threads are trying to do
