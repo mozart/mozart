@@ -21,8 +21,9 @@ local
 				  text:   'Last updated on ' # Version)}
 
 	 A = {New Tk.label tkInit(parent: self
-				  text:   NameOfBenni # '\n' #
-				          '(' # EmailOfBenni # ')')}
+				  text:
+				     NameOfRalf # ' & ' # NameOfBenni # '\n' #
+				  EmailOfAuthors)}
       in
          {Tk.send pack(T V A side:top expand:1)}
          AboutDialog,tkPack
