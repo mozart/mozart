@@ -6851,24 +6851,6 @@ OZ_C_proc_begin(BImakeClass,6)
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIsetMethApplHdl,1)
-{
-  OZ_Term pred = OZ_getCArg(0); DEREF(pred,_1,_2);
-  if (!isAbstraction(pred) || tagged2Const(pred)->getArity()!=2) {
-    oz_typeError(0,"Procedure/2 (no builtin)");
-  }
-
-  if (!am.setMethApplHdl(pred)) {
-    OZ_warning("reinstalling methApplHandler ignored");
-    return PROCEED;
-    //    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
-    //		    oz_atom("setMethApplHdl"));
-  }
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
 OZ_C_proc_begin(BIcomma,2) {
   TaggedRef cl = deref(OZ_getCArg(0));
 
@@ -6888,25 +6870,6 @@ OZ_C_proc_begin(BIcomma,2) {
   am.currentThread()->pushCall(fb,OZ_args,2);
   am.emptySuspendVarList();  
   return BI_REPLACEBICALL;
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIsetSendHdl,1)
-{
-  OZ_Term pred = OZ_getCArg(0); DEREF(pred,_1,_2);
-  if (!isAbstraction(pred) || tagged2Const(pred)->getArity()!=3) {
-    oz_typeError(0,"Procedure/3 (no builtin)");
-  }
-
-  if (!am.setSendHdl(pred)) {
-    OZ_warning("reinstalling sendHandler");
-    return PROCEED;
-    //return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
-    //	    oz_atom("setSendHdl"));
-  }
-
-  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -7037,24 +7000,6 @@ OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
 
 DECLAREBI_USEINLINEFUN1(BInewObject,newObjectInline)
 
-
-OZ_C_proc_begin(BIsetNewHdl,1)
-{
-  OZ_Term pred = OZ_getCArg(0); DEREF(pred,_1,_2);
-  if (!isAbstraction(pred) || tagged2Const(pred)->getArity()!=3) {
-    oz_typeError(0,"Procedure/3 (no builtin)");
-  }
-
-  if (!am.setNewHdl(pred)) {
-    OZ_warning("reinstalling newHandler");
-    return PROCEED;
-    //    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
-    //		    oz_atom("setNewHdl"));
-  }
-
-  return PROCEED;
-}
-OZ_C_proc_end
 
 OZ_C_proc_begin(BINew,3) {
   TaggedRef cl = deref(OZ_getCArg(0));
@@ -7816,14 +7761,11 @@ BIspec allSpec[] = {
   {"<-",              2,BIassign,              (IFOR) assignInline},
   {"copyRecord",      2,BIcopyRecord,          0},
   {"makeClass",       6,BImakeClass,	       0},
-  {"setMethApplHdl",  1,BIsetMethApplHdl,      0},
-  {"setSendHdl",      1,BIsetSendHdl,          0},
   {",",               2,BIcomma,               0},
   {"send",            3,BIsend,                0},
   {"getClass",        2,BIgetClass, 	       (IFOR) getClassInline},
   {"ooGetLock",       1,BIooGetLock, 	       (IFOR) ooGetLockInline},
   {"newObject",       2,BInewObject, 	       (IFOR) newObjectInline},
-  {"setNewHdl",       1,BIsetNewHdl,          0},
   {"New",             3,BINew,                0},
   {"getSelf",         1,BIgetSelf,            0},
   {"setSelf",         1,BIsetSelf,            0},

@@ -1644,10 +1644,6 @@ void AM::gc(int msgLevel)
   gcTagged(aVarUnifyHandler,aVarUnifyHandler);
   gcTagged(aVarBindHandler,aVarBindHandler);
 
-  gcTagged(methApplHdl,methApplHdl);
-  gcTagged(sendHdl,sendHdl);
-  gcTagged(newHdl,newHdl);
-
   gcTagged(defaultExceptionHdl,defaultExceptionHdl);
   gcTagged(opiCompiler,opiCompiler);
   gcTagged(debugStreamTail,debugStreamTail);
