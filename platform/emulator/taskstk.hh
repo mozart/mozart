@@ -34,7 +34,6 @@
 #include "tagged.hh"
 #include "stack.hh"
 
-
 // if you ever change this check POPTASK, ie. in other words:
 // keep your hands off this definition if you don't
 // fully understand the macro POPTASK
@@ -90,7 +89,6 @@ public:
   virtual void deallocate(StackEntry *p, int n);
   virtual StackEntry *reallocate(StackEntry *p, int oldsize, int newsize);
   void dispose () { deallocate(array,size); }
-
   virtual void resize(int newSize);
 
   OZPRINT;
@@ -137,18 +135,6 @@ public:
   // for debugging
   TaggedRef TaskStack::DBGmakeList();
 
-  void queueCont(Board *n,ProgramCounter pc,RefsArray y) 
-  {
-    Assert(!isFreedRefsArray(y));
-    shift(4);
-    checkNode (n);
-    // array[0] contains emptyTaskStackEntry
-    array[4] = (TaskStackEntry) setContFlag(n,C_CONT);
-    array[3] = pc;
-    array[2] = y;
-    array[1] = NULL;
-  }
-
   void pushCall(Board *n, SRecord *pred, RefsArray  x, int i)
   {
     DebugCheckT(nodeCheckY(n));
@@ -162,7 +148,7 @@ public:
     push((TaskStackEntry) setContFlag(n, C_CALL_CONT), NO);
   }
 
-  void pushCont(Board *n, OZ_CFun f, Suspension* s, RefsArray  x, int i)
+  void pushCont(Board *n, OZ_CFun f, Suspension* s, RefsArray  x=NULL, int i=0)
   {
     DebugCheckT(nodeCheckY(n));
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
@@ -170,7 +156,7 @@ public:
     ensureFree(4);
     checkNode (n);
 
-    DebugCheckT(regsInToSpace(x, i));
+    Assert(MemChunks::areRegsInHeap(x, i));
     push(i>0 ? copyRefsArray(x, i) : NULL, NO);
     push((TaskStackEntry) s, NO);
     push((TaskStackEntry) f, NO);
@@ -179,7 +165,7 @@ public:
   
   
   void pushCont(Board *n,ProgramCounter pc,
-		RefsArray y,RefsArray g,RefsArray x,int i)
+		RefsArray y,RefsArray g=NULL,RefsArray x=NULL,int i=0)
   {
     Assert(!isFreedRefsArray(y));
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
@@ -187,11 +173,9 @@ public:
     ensureFree(5);
     checkNode (n);
 
-    DebugCheckT(
-		regsInToSpace(x,i);
-		if (y) regsInToSpace(y,getRefsArraySize(y));
-		if (g) regsInToSpace(g,getRefsArraySize(g))
-		);
+    Assert(MemChunks::areRegsInHeap(x,i));
+    Assert(!y || MemChunks::areRegsInHeap(y,getRefsArraySize(y)));
+    Assert(!g || MemChunks::areRegsInHeap(g,getRefsArraySize(g)));
 	       
     // cache top in register since gcc does not do it
     TaskStackEntry *newTop = tos;   
@@ -203,23 +187,6 @@ public:
     *(newTop+3) = (TaskStackEntry) setContFlag(n, i>0 ? C_XCONT : C_CONT);
     
     tos = newTop + 4;
-  }
-
-  void queueNervous(Board *n) 
-  {
-    shift(1);
-
-    DebugCheckT(nodeCheckY(n));
-    checkNode (n);
-    // array[0] contains emptyTaskStackEntry
-    array[1] = (TaskStackEntry) setContFlag(n,C_NERVOUS);
-  }
-
-  void pushNervous(Board *n)
-  {
-    DebugCheckT(nodeCheckY(n));
-    checkNode (n);
-    push((TaskStackEntry) setContFlag(n,C_NERVOUS));
   }
 
   void pushDebug(Board *n, OzDebug *deb)

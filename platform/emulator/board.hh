@@ -19,8 +19,44 @@
 
 #include "constter.hh"
 
-#include "constr.hh"
 #include "suspensi.hh"
+
+
+struct Equation {
+friend class Script;
+private:
+  TaggedRef left;
+  TaggedRef right;
+public:
+  void setLeft(TaggedRef *l) { left = makeTaggedRef(l); }
+  void setRight(TaggedRef r) { right = r; }
+  TaggedRef getLeft() { return left; }
+  TaggedRef getRight() { return right; }
+};
+
+class Script {
+public:
+  void gc();
+
+  Script() { numbOfCons = 0; first = (Equation *)NULL; }
+  Script(int sizeInit);
+  ~Script();
+  void allocate(int sizeInit);
+  void dealloc();
+
+  inline short getSize() { return numbOfCons; }
+  inline Equation* getRef()  { return (first); }
+
+  inline Equation &operator[] (short elem)  { return ( *(first + elem) ); }
+  /* no bounds checking;    */
+
+private:
+  short numbOfCons;
+  Equation* first;
+};
+
+
+
 
 enum BoardFlags {
   Bo_Ask	= 0x0001,
@@ -50,7 +86,7 @@ private:
     Actor *actor;
     Board *board;
   } u;
-  ConsList script;
+  Script script;
 public:
   Board(Actor *a,int type);
   ~Board();
@@ -75,7 +111,7 @@ public:
   Continuation *getBodyPtr() { return &body; }
   Board *getParentBoard();
   Board* getSolveBoard (); 
-  ConsList &getScriptRef() { return script; }
+  Script &getScriptRef() { return script; }
   int getSuspCount(void);
   Bool hasSuspension(void);
   Bool isAsk() { return flags & Bo_Ask ? OK : NO; }
