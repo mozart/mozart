@@ -323,50 +323,58 @@ define
       meth translate(Mode Args) SGMLNode in
          {@Reporter startBatch()}
          {@Reporter startPhase('parsing SGML input')}
-         SGMLNode = {SGML.parse Args.'in' @Reporter}
-         if {@Reporter hasSeenError($)} then skip
-         else
-            FontifyMode <- Mode
-            StyleSheet <- {Property.get 'ozdoc.stylesheet'}
-            MyFontifier <- {New Fontifier.'class' init()}
-            OutputDirectory <- Args.'out'
-            {OS.system "mkdir -p "#@OutputDirectory _}   %--** OS.mkDir
-            MyThumbnails <- {New Thumbnails.'class' init(@OutputDirectory)}
-            MyLaTeXToGIF <- if Args.'latextogif' then
-                               {New LaTeXToGIF.'class' init(@OutputDirectory)}
-                            else unit
-                            end
-            MyPostScriptToGIF <- {New PostScriptToGIF.'class'
-                                  init(@OutputDirectory)}
-            CurrentNode <- 'index.html'
-            NodeCounter <- 0
-            ToWrite <- nil
-            Split <- Args.'split'
-            MakeAbstract <- Args.'abstract'
-            SomeSplit <- false
-            Threading <- nil
-            ProgLang <- Fontifier.noProgLang
-            Labels <- {NewDictionary}
-            ToGenerate <- nil
-            AutoIndex <- Args.'autoindex'
-            {@Reporter startPhase('translating to HTML')}
-            OzDocToHTML, Process(SGMLNode unit)
-         end
-         if {@Reporter hasSeenError($)} then skip
-         else
-            {@Reporter startSubPhase('adding navigation panels')}
-            {DoThreading {Reverse @Threading} unit 'index.html' nil}
-            {@Reporter startSubPhase('generating cross-reference labels')}
-            OzDocToHTML, GenerateLabels()
-            {ForAll {Dictionary.items @Labels}
-             proc {$ N#T}
-                if {IsFree N} then N#T = 'file:///dev/null'#PCDATA('???') end
-             end}
-            {@Reporter startSubPhase('writing output files')}
-            {ForAll @ToWrite
-             proc {$ DocType#Node#File}
-                {WriteFile DocType#{HTML.toVirtualString Node} File}
-             end}
+         try
+            SGMLNode = {SGML.parse Args.'in' @Reporter}
+            if {@Reporter hasSeenError($)} then skip
+            else
+               FontifyMode <- Mode
+               StyleSheet <- {Property.get 'ozdoc.stylesheet'}
+               MyFontifier <- {New Fontifier.'class' init()}
+               OutputDirectory <- Args.'out'
+               {OS.system "mkdir -p "#@OutputDirectory _}   %--** OS.mkDir
+               MyThumbnails <- {New Thumbnails.'class' init(@OutputDirectory)}
+               MyLaTeXToGIF <- if Args.'latextogif' then
+                                  {New LaTeXToGIF.'class'
+                                   init(@OutputDirectory)}
+                               else unit
+                               end
+               MyPostScriptToGIF <- {New PostScriptToGIF.'class'
+                                     init(@OutputDirectory)}
+               CurrentNode <- 'index.html'
+               NodeCounter <- 0
+               ToWrite <- nil
+               Split <- Args.'split'
+               MakeAbstract <- Args.'abstract'
+               SomeSplit <- false
+               Threading <- nil
+               ProgLang <- Fontifier.noProgLang
+               Labels <- {NewDictionary}
+               ToGenerate <- nil
+               AutoIndex <- Args.'autoindex'
+               {@Reporter startPhase('translating to HTML')}
+               OzDocToHTML, Process(SGMLNode unit)
+            end
+            if {@Reporter hasSeenError($)} then skip
+            else
+               {@Reporter startSubPhase('adding navigation panels')}
+               {DoThreading {Reverse @Threading} unit 'index.html' nil}
+               {@Reporter startSubPhase('generating cross-reference labels')}
+               OzDocToHTML, GenerateLabels()
+               {ForAll {Dictionary.items @Labels}
+                proc {$ N#T}
+                   if {IsFree N} then
+                      N#T = 'file:///dev/null'#PCDATA('???')
+                   end
+                end}
+               {@Reporter startSubPhase('writing output files')}
+               {ForAll @ToWrite
+                proc {$ DocType#Node#File}
+                   {WriteFile DocType#{HTML.toVirtualString Node} File}
+                end}
+            end
+         catch tooManyErrors then
+            {@Reporter
+             tell(info('%** Too many errors, aborting compilation\n'))}
          end
          if {@Reporter hasSeenError($)} then
             {@Reporter endBatch(rejected)}
