@@ -171,7 +171,7 @@ int OZ_intToC(OZ_Term term)
     return tagged2BigInt(term)->BigInt2Int();
   }
 
-  OZ_warning("intToC(%s): int arg expected",tagged2String(term));
+  OZ_warning("intToC(%s): int arg expected", OZ_toC(term));
   return 0;
 }
 
@@ -278,7 +278,7 @@ OZ_Float OZ_floatToC(OZ_Term term)
   if (isFloat(tag)) {
     return floatValue(term);
   }
-  OZ_warning("floatToC(%s): float arg expected",tagged2String(term));
+  OZ_warning("floatToC(%s): float arg expected",OZ_toC(term));
   return 0.0;
 }
 
@@ -325,7 +325,7 @@ char *OZ_atomToC(OZ_Term term)
 //    return ozstrdup(tagged2Atom(term)->getPrintName());
     return tagged2Atom(term)->getPrintName();
   }
-  OZ_warning("atomToC(%s): atom arg expected",tagged2String(term));
+  OZ_warning("atomToC(%s): atom arg expected",OZ_toC(term));
   return NULL;
 }
 
@@ -347,27 +347,27 @@ char *OZ_toC(OZ_Term term)
   DEREF(term,termPtr,tag)
   switch(tag) {
   case UVAR:
-    return tagged2String(term);
+    return tagged2String(term,am.conf.printDepth);
 //    stream << "UV@" << termPtr;
     break;
   case SVAR:
-    return tagged2String(term);
+    return tagged2String(term,am.conf.printDepth);
 //    tagged2SVar(term)->print(stream,depth,offset);
     break;
   case CVAR:
-    return tagged2String(term);
+    return tagged2String(term,am.conf.printDepth);
 //    tagged2CVar(term)->print(stream, depth, offset);
     break;
   case STUPLE:
-    return tagged2String(term);
+    return tagged2String(term,am.conf.printDepth);
 //    tagged2STuple(term)->print(stream,depth,offset);
     break;
   case SRECORD:
-    return tagged2String(term);
+    return tagged2String(term,am.conf.printDepth);
 //    tagged2SRecord(term)->print(stream,depth,offset);
     break;
   case LTUPLE:
-    return tagged2String(term);
+    return tagged2String(term,am.conf.printDepth);
 //    tagged2LTuple(term)->print(stream,depth,offset);
     break;
   case ATOM:
@@ -389,7 +389,7 @@ char *OZ_toC(OZ_Term term)
   case SMALLINT:
     return OZ_intToCString(term);
   case CONST:
-    return tagged2String(term);
+    return tagged2String(term,am.conf.printDepth);
 //    tagged2Const(term)->print(stream,depth,offset);
     break;
 

@@ -72,7 +72,7 @@ OZ_C_proc_begin(BIspy, 1)
 {
   NONVAR(OZ_getCArg(0),predd,predTag);
   if (!isAbstraction(predd)) {
-    OZ_warning("spy: abstraction expected, got: %s",tagged2String(predd));
+    OZ_warning("spy: abstraction expected, got: %s",OZ_toC(predd));
     return FAILED;
   }
 
@@ -86,7 +86,7 @@ OZ_C_proc_begin(BInospy, 1)
 {
   NONVAR(OZ_getCArg(0),predd,predTag);
   if (!isAbstraction(predd)) {
-    OZ_warning("nospy: abstraction expected, got: %s",tagged2String(predd));
+    OZ_warning("nospy: abstraction expected, got: %s",OZ_toC(predd));
     return FAILED;
   }
 
