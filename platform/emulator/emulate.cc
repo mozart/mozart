@@ -1225,7 +1225,7 @@ LBLpopTask:
     Assert(!e->currentThread->isSuspended());
     Assert(CBB==currentDebugBoard);
     asmLbl(popTask);
-    DebugCheckT(Board *fsb);
+
     if (emulateHookPopTask(e)) {
       goto LBLschedule;
     }
@@ -2507,7 +2507,7 @@ LBLsuspendThread:
       Abstraction *def = getSendMethod(obj,label,arity,X);
       if (def == StateLocked) {
 	goto bombSend;
-	TaggedRef state = obj->getCell(); DEREF(state,statePtr,_2);
+	TaggedRef state = obj->getCell(); DEREF(state,statePtr,_22);
 	Assert(isAnyVar(state));
 	SUSP_PC(statePtr,arity+3+1,PC);
       }
