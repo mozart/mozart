@@ -764,7 +764,7 @@ the GDB commands `cd DIR' and `directory'."
     (if (= (point) 1)
 	t
       (backward-char))
-    (if (looking-at ":")
+    (if (and (looking-at ":") (null (oz-comment-start)))
 	t
       (goto-char old)
       nil)))
