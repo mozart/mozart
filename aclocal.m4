@@ -677,7 +677,7 @@ changequote([,])
         PERL=perl_not_found
         AC_MSG_WARN(perl not found)
       else
-        AC_MSG_WARN([
+        AC_MSG_ERROR([
 Perl version] OZ_VERSION_PERL [or higher is needed to build the system.
 It can be retrieved from:
 
