@@ -319,13 +319,14 @@ urlc::tcpip_open(const char* h, int p)
 	URLC_PERROR("socket");
 	return (URLC_ESOCK);
     }
-    while(-1 == connect(fd, (struct sockaddr*) &serv_addr, 
-			sizeof(serv_addr))) {
-	if(EINTR != errno) {
-	    URLC_PERROR("connect");
-	    return (URLC_ESOCK);
-	}
+
+    if(osconnect(fd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
+      Assert(EINTR != errno);
+      URLC_PERROR("connect");
+      return (URLC_ESOCK);
     }
+    osUnblockSignals();
+
     if(-1 == fcntl(fd, F_SETFL, O_NONBLOCK))
 	URLC_PERROR("fcntl");
     
