@@ -155,6 +155,17 @@ int OZ_getMaxInt(void)
   return OzMaxInt;
 }
 
+OZ_Term OZ_getNameFalse(void)
+{
+  return NameFalse;
+}
+
+OZ_Term OZ_getNameTrue(void)
+{
+  return NameTrue;
+}
+
+
 /* -----------------------------------------------------------------
  * convert: C from/to Oz datastructure
  * -----------------------------------------------------------------*/
