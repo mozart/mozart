@@ -574,15 +574,19 @@ the GDB commands `cd DIR' and `directory'."
 	       '("from" "attr" "feat" "with"))))
 
 (defconst oz-middle-pattern 
-      (concat (oz-make-keywords-for-match
-	       '("in" "then" "else" "elseif" "of" "elseof"))
-	      "\\|" "\\[\\]"))
+  (concat (oz-make-keywords-for-match
+	   '("in" "then" "else" "elseif" "of" "elseof"))
+	  "\\|" "\\[\\]"))
+
+(defconst oz-feat-end-pattern
+  ":[ \t]*")
 
 (defconst oz-key-pattern
       (concat oz-declare-pattern "\\|" oz-begin-pattern "\\|"
 	      oz-between-pattern "\\|"
 	      oz-left-pattern "\\|" oz-right-pattern "\\|"
-	      oz-middle-pattern "\\|" oz-end-pattern))
+	      oz-middle-pattern "\\|" oz-end-pattern
+	      ))
 
 (defun oz-indent-buffer()
   (interactive)
@@ -629,11 +633,9 @@ the GDB commands `cd DIR' and `directory'."
       (setq case-fold-search old-cc))))
 
 
-
 ;; calculate the indent column (<0 means: don't change)
 ;; pre: point is at beginning of text
 ;; arg: no-empty-line: t = do not indent empty lines and comment lines
-
 (defun oz-calc-indent(no-empty-line)
   (cond ((and no-empty-line (oz-is-empty))
 	  ;; empty lines are not changed
@@ -644,6 +646,9 @@ the GDB commands `cd DIR' and `directory'."
 	 0)
 	((looking-at "%%%")
 	 0)
+	((oz-is-field-value)
+	 (oz-search-matching-paren)
+	 (+ (oz-indent-after-paren) oz-indent-chars))
 	((or (looking-at oz-end-pattern) (looking-at oz-middle-pattern))
 	 ;; we must indent to the same column as the matching begin
 	 (oz-search-matching-begin nil))
@@ -658,44 +663,43 @@ the GDB commands `cd DIR' and `directory'."
 	     (looking-at oz-left-pattern)
 	     (looking-at "$")
 	     (looking-at "%"))
-	 (let ((col (oz-search-matching-begin t)))
-	   (if (< col 0)
-	       (if (= col -1)
-		   col
-		 (beginning-of-line)
-		 (skip-chars-forward " \t")
-		 (current-column)
-		 )
-	     (cond ((looking-at oz-declare-pattern)
-		    (current-column))
-		   ((looking-at oz-left-pattern)
-		    (let ((col (current-column)))
-		      (goto-char (match-end 0))
-		      (if (oz-is-right)
-			  (+ col 2)
-			(re-search-forward "[^ \t]")
-			(1- (current-column)))))
-		   ((looking-at oz-begin-pattern)
-		    (+ (current-column) oz-indent-chars))
-		   ((= (point) 1)
-		    0)
-		   (t
-		    (error "mm2: never be here")
-		    (+ (current-column) oz-indent-chars))))))
+	 (let (col (ret nil))
+	   (while (not ret)
+	     (setq col (oz-search-matching-begin t))
+	     (if (< col 0)
+		 (if (= col -1)
+		     (setq ret col)
+		   ;; previous block begin found: check if is first in column
+		   (let ((found-col (current-column))
+			 first-col)
+		     (beginning-of-line)
+		     (skip-chars-forward " \t")
+		     (setq first-col (current-column))
+		     (if (= first-col found-col)
+			 (setq ret first-col))))
+	       (cond ((looking-at oz-declare-pattern)
+		      (setq ret (current-column)))
+		     ((looking-at oz-left-pattern)
+		      (setq ret (oz-indent-after-paren)))
+		     ((looking-at oz-begin-pattern)
+		      (setq ret (+ (current-column) oz-indent-chars)))
+		     ((= (point) 1)
+		      (setq ret 0))
+		     (t
+		      (error "mm2: never be here")
+		      (setq ret (+ (current-column) oz-indent-chars))))))
+	   ret))
 	(t (oz-calc-indent1))
 	)
   )
 
 
 ;; the heavy case
-;; backward search for
-;;    the next oz-key-pattern
-;; or for a line without an oz-pattern
-;; or for an paren
+;; backward search for the next oz-key-pattern
 (defun oz-calc-indent1 ()
   (if (re-search-backward
        (concat oz-key-pattern 
-;	       "\\|" "^[ \t]*[^ \t\n]"
+;mm2	       "\\|" "^[ \t]*[^ \t\n]"
 	       )
        0 t)
       (cond ((oz-comment-start)
@@ -731,11 +735,14 @@ the GDB commands `cd DIR' and `directory'."
 	    ((looking-at oz-end-pattern)
 	     ;; we are the first token after an 'fi' 'end'
 	     (oz-search-matching-begin nil)
-	     (oz-calc-indent1))
+	     ;mm2 (oz-calc-indent1)
+	     (current-column)
+	     )
 	    ((looking-at oz-right-pattern)
 	     ;; we are the first token after an ')' '}'
 	     (oz-search-matching-paren)
-	     (oz-calc-indent1))
+	     (oz-calc-indent1)
+	     )
 	    (t
 	     ;; else impossible
 	     (error "mm2: here"))
@@ -744,6 +751,30 @@ the GDB commands `cd DIR' and `directory'."
     0
     )
   )
+
+
+;; check for record fields with seperate line for feature and value
+;;  f( arity:
+;;        myarity)
+(defun oz-is-field-value ()
+  (let ((old (point)))
+    (skip-chars-backward " \t\n")
+    (backward-char)
+    (if (looking-at ":")
+	t
+      (goto-char old)
+      nil)))
+
+
+;; calculate the start position for features after '('
+(defun oz-indent-after-paren ()
+  (let ((col (current-column)))
+    (forward-char)
+    (if (oz-is-right)
+	(+ col 2)
+      (re-search-forward "[^ \t]")
+      (1- (current-column)))))
+
 
 (defun oz-comment-start ()
   (let ((p (point)))
@@ -824,7 +855,7 @@ the GDB commands `cd DIR' and `directory'."
 		     (setq do-loop nil)
 		   (setq nesting (- nesting 1))))
 		((looking-at oz-right-pattern)
-		 ;; 'end'
+		 ;; ')'
 		 (setq nesting (+ nesting 1)))
 		(t (error "mm2: paren"))
 		)
