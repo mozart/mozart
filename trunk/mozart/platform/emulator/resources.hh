@@ -183,6 +183,9 @@
 # define DEBUG_PRINT
 #endif
 
+/* enable disjunctive construction */
+#define FDCD
+
 /* all debug switches for the emulator */
 #ifdef DEBUG_EMULATOR
 
@@ -199,10 +202,9 @@
 #define RECINSTRFETCH 500
 
 #define DEBUG_FD
-#define DEBUG_FD_CONSTRREP
-#define DEBUG_FSET
-#define DEBUG_FSET_CONSTRREP
-
+//#define DEBUG_FD_CONSTRREP
+//#define DEBUG_FSET
+//#define DEBUG_FSET_CONSTRREP
 //#define DEBUG_FDCD
 
 #define DEBUG_DET	// use counter instead of alarm timer for scheduling
