@@ -7,3 +7,5 @@ scanner.cc parser.cc parser.hh
 ozlib.lnk
 oz.c
 initffuns.cc
+config.status
+config.cache
