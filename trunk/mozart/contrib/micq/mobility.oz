@@ -25,11 +25,11 @@
 %%% Large part of this code will be replaced with the SafeSend(Point2Point)-abstraction, when available
 
 functor
-
+import
+   Fault
 export
    stationaryClass:StationaryObject
    newStationary:NewStationaryObject
-   
 define
    class StationaryObject
       feat this
@@ -43,21 +43,28 @@ define
       proc{RemoteInvokeMeth M}
 	 if {Label M}=='GETPORT' then
 	    M.1=P
-	 else Sync in
-	    %% Initialize timeout thread
-	    thread
-	       {Delay 120000}
-	       try Sync=exception(networkFailure(timeout(P))) catch _ then skip end
+	 else
+	    Sync
+	    proc{Watcher _ _}
+	       try Sync=exception(networkFailure(remoteObjectGone(P))) catch _ then skip end
 	    end
-
+	 in
+	    %% Failure handling
+	    {Fault.installWatcher P [permFail] Watcher}
+	    
 	    %% Try to send to remote object
 	    try
 	       {Send P M#Sync}
 	    catch _ then
-	       try Sync=exception(networkFailure(remoteObjectGone(P))) catch _ then skip end
+	       skip
 	    end
 	    
 	    %% Wait for outcome
+	    {Wait Sync}
+
+	    %% Unistall watcher
+	    {Fault.deInstallWatcher P Watcher}
+
 	    if {Label Sync}==exception then raise Sync.1 end end
 	 end
       end
