@@ -78,6 +78,9 @@ const int tagMask   = 0xF;
 #if defined(ULTRIX_MIPS) || defined(IRIX5_MIPS)
 const int mallocBase = 0x10000000;
 #else
+#ifdef AIX3_RS6000
+const int mallocBase = 0x20000000;
+#else
 #ifdef HPUX_700
 const int mallocBase = 0x40000000;
 #else
