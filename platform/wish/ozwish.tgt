@@ -12,7 +12,7 @@ NEXE
 3
 WString
 5
-nw2e9
+nw2en
 1
 0
 1
@@ -199,8 +199,8 @@ WVList
 0
 48
 MItem
-26
-..\..\..\tcl\bin\tcl75.dll
+20
+d:\tcl\bin\tcl75.dll
 49
 WString
 3
@@ -217,8 +217,8 @@ WVList
 0
 52
 MItem
-25
-..\..\..\tcl\bin\tk41.dll
+19
+d:\tcl\bin\tk41.dll
 53
 WString
 3
