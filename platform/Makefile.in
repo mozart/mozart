@@ -1,0 +1,15 @@
+@SET_MAKE@
+BUILDTOP= @BUILDTOP@
+RM      = @RM@
+SUBDIRS = @PLATFORMDIRS@
+
+.PHONY: bootstrap all install clean veryclean realclean depend distclean check
+all::
+bootstrap: all
+all install clean veryclean realclean depend distclean::
+        dirs="$(SUBDIRS)"; for i in $$dirs; do (cd $$i && $(MAKE) $@); done
+clean veryclean realclean distclean::
+        -$(RM) *~
+distclean::
+        -$(RM) Makefile config.status config.log
+check::
