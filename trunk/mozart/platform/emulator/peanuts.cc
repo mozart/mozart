@@ -13,13 +13,10 @@
 #define PEANUTS
 #ifdef INTERFACE
 
-#pragma implementation "actor.hh"
 #pragma implementation "am.hh"
 #pragma implementation "assemble.hh"
 #pragma implementation "avar.hh"
-#pragma implementation "board.hh"
 #pragma implementation "debug.hh"
-#pragma implementation "dictionary.hh"
 #pragma implementation "dllist.hh"
 #pragma implementation "perdiovar.hh"
 #pragma implementation "cpbag.hh"
@@ -53,14 +50,11 @@
 
 #include "wsock.hh"
 
-#include "actor.cc"
 #include "am.cc"
 #include "assemble.cc"
 #include "avar.cc"
-#include "board.cc"
 #include "codearea.cc"
 #include "debug.cc"
-#include "dictionary.cc"
 #include "dllist.cc"
 #include "perdiovar.cc"
 #include "cpbag.cc"

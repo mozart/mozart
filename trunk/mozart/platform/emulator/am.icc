@@ -162,40 +162,6 @@ void AM::addSuspendVarList(TaggedRef * t)
 }
 
 /*
- * MISC
- */
-
-inline
-Board *Name::getBoard()
-{
-  if (hasGName() || isNamedName())
-    return am.rootBoard;
-
-  return ((Board*)ToPointer(homeOrGName))->derefBoard();
-}
-
-
-inline
-Board *ConstTermWithHome::getBoard() { 
-  if (hasGName())
-    return am.rootBoard;
-  return getBoardInternal()->derefBoard();
-}
-
-inline
-Board *Tertiary::getBoardInternal()
-{
-  return isLocal() ? (Board*)getPointer() : am.rootBoard;
-}
-
-inline
-Board *Tertiary::getBoard()
-{
-  return getBoardInternal()->derefBoard();
-}
-
-
-/*
  * Threads
  */
 

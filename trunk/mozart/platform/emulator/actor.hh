@@ -14,10 +14,6 @@
 #pragma interface
 #endif
 
-#ifdef OUTLINE
-#define inline
-#endif
-
 #include "cpbag.hh"
 
 // ------------------------------------------------------------------------
@@ -39,20 +35,25 @@ protected:
   int flags;
   Board *board;
 public:
-  Actor();
-  Actor(Actor &);
-  Actor(int typ,Board *bb);
+  Actor(); // fake for compiler
+  Actor(Actor &); // fake for compiler
+  // ~Actor(); // fake for compiler
 
-  //  ~Actor();
+protected:
+  Actor(int typ,Board *bb)
+    : ConstTerm(Co_Actor),board(bb)
+  {
+    flags = typ;
+  }
 
+public:
   USEHEAPMEMORY;
   Actor *gcActor();
   void gcRecurse(void);
   OZPRINT;
   OZPRINTLONG;
 
-  inline Board *getBoard();
-  inline Board *getBoardAndTest();
+  Board *getBoardInternal() { return board; }
   Bool isCommitted() { return flags & Ac_Committed; }
   Bool isAsk() { return ((flags & Ac_Ask) ? OK : NO); }
   Bool isWait() { return ((flags & Ac_Wait) ? OK : NO); }
@@ -79,21 +80,37 @@ protected:
   Continuation next;
   int childCount;
 public:
-  AWActor();
-  //~AWActor();
-  AWActor(AWActor&);
-  AWActor(int type,Board *s,Thread *tt,
+  AWActor();  // fake for compiler
+  //~AWActor();  // fake for compiler
+  AWActor(AWActor&);  // fake for compiler
+  AWActor(int typ,Board *bb,Thread *tt,
 	  ProgramCounter p=NOCODE,RefsArray y=0,RefsArray g=0,
-	  RefsArray x=0,int i=0);
+	  RefsArray x=0,int i=0)
+    : Actor (typ, bb)
+  {
+    thread=tt;
+    childCount=0;
+    next.setPC(p);
+    next.setY(y);
+    next.setG(g);
+    next.setX(x,i);
+  }
+
   USEHEAPMEMORY;
 
   void gcRecurse(void);
-  void addChild(Board *n);
-  void failChild(Board *n);
+  void addChild() {
+    childCount++;
+  }
+
+  void failChild() {
+    childCount--;
+    Assert(childCount>=0);
+  }
   Continuation *getNext() { return &next; }
   Bool hasNext() { return ((next.getPC() == NOCODE) ? NO : OK); }
   /* see also: hasOneChild() */
-  Bool isLeaf() { return ((childCount == 0 && next.getPC() == NOCODE) ? OK : NO); }
+  Bool isLeaf() { return childCount == 0 && next.getPC() == NOCODE; }
   void lastClause() { next.setPC(NOCODE); }
   void nextClause(ProgramCounter pc) { next.setPC(pc); }
   void setThread(Thread *th) { thread = th; }
@@ -109,12 +126,23 @@ public:
 private:
   ProgramCounter elsePC;
 public:
-  AskActor();
-  ~AskActor();
-  AskActor(AskActor&);
+  AskActor(); // fake for compiler
+  ~AskActor(); // fake for compiler
+  AskActor(AskActor&); // fake for compiler
   AskActor(Board *s,Thread *tt,
 	   ProgramCounter elsepc,
-	   ProgramCounter p, RefsArray y,RefsArray g, RefsArray x, int i);
+	   ProgramCounter p, RefsArray y,RefsArray g, RefsArray x, int i)
+    : AWActor(Ac_Ask,s,tt,p,y,g,x,i)
+  {
+    elsePC = elsepc;
+  }
+
+  void addAskChild(Board *bb) {
+    addChild();
+  }
+  void failAskChild(Board *n) {
+    failChild();
+  }
 
   void gcRecurse();
 
@@ -138,14 +166,20 @@ public:
   WaitActor(WaitActor&);
   WaitActor(Board *s,Thread *tt,
 	    ProgramCounter p,RefsArray y,RefsArray g,RefsArray x, int i,
-	    Bool d);
+	    Bool d)
+    : AWActor((d ? (ActorFlags)(Ac_Wait | Ac_Choice) : Ac_Wait),s,tt,
+	      p,y,g,x,i)
+  {
+    children  = NULL;
+    cpb       = NULL;
+  }
 
   USEFREELISTMEMORY;
 
   void gcRecurse();
 
-  void addChildInternal(Board *n);
-  void failChildInternal(Board *n);
+  void addWaitChild(Board *n);
+  void failWaitChild(Board *n);
   Board *getLastChild() { Board* b=children[0]; children[0] = NULL; return b; }
   // returns the first created child; this child is unlinked from the actor;
   Board *getChildRef() { return children[0]; }
@@ -157,7 +191,10 @@ public:
   Bool hasNoChildren() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
   int selectOrFailChildren(int l, int r);
 
-  void dispose(void);
+  void dispose(void) {
+    //  freeListDispose(children-1,(ToInt32(children[-1])+1)*sizeof(Board *));
+    //  freeListDispose(this,sizeof(WaitActor));
+  }
 
   Bool isAliveUpToSolve(void);
  
@@ -174,12 +211,5 @@ public:
 };
 
 // ------------------------------------------------------------------------
-
-#ifdef OUTLINE
-#undef inline
-#else
-#include "board.hh"
-#include "actor.icc"
-#endif
 
 #endif
