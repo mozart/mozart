@@ -32,6 +32,13 @@ fun {VS2A X} %% virtual string to atom
    {String.toAtom {VirtualString.toString X}}
 end
 
+%% Dictionary.xxx is too long, really...
+Dput   = Dictionary.put
+Dkeys  = Dictionary.keys
+Dget   = Dictionary.get
+Ditems = Dictionary.items
+Dremove= Dictionary.remove
+
 local
    fun {MakeSpace N}
       case N < 1 then nil else 32 | {MakeSpace N-1} end
