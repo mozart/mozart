@@ -91,7 +91,7 @@ AC_MSG_RESULT($oz_subdirs)
 
 AC_SUBST(oz_subdirs)
 
-AC_CONFIG_SUBDIRS($oz_subdirs misc)
+AC_CONFIG_SUBDIRS($oz_subdirs)
 
 AC_OUTPUT(Makefile)
 
