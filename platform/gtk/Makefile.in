@@ -156,10 +156,13 @@ distclean: veryclean
 #        $(SHAREDIR) $(SHAREFILES) $(PROVIDETCLLIBS) \
 #       $(NEWPLATFORMFILES)
 
-install: $(NEWCACHEDIR) $(NEWPLATFORMFILES)
+install: $(NEWCACHEDIR) $(NEWPLATFORMFILES) $(PREFIX)/include/goz_support.h
 
 $(NEWCACHEDIR)/%.so-$(PLATFORM) : %.so-$(PLATFORM)
         $(INSTALL_DLL) $< $@
+
+$(PREFIX)/include/%: %
+        $(INSTALL_FILE) $< $@
 
 ### GTK install
 
