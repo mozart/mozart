@@ -104,9 +104,10 @@ end
 <P>In order to compile this servlet,
 you have to do:
 <code display proglang=sh>
-ozc --execpath=$OZHOME/bin -x small.oz -o small.cgi
+ozc --execpath=?{OZHOME}/bin/ozengine -x small.oz -o small.cgi
 </code>
-<P>The <<execpath>> argument is needed because the
+<P>Where ?{OZHOME} denotes the installation directory of the Mozart
+system. The <<execpath>> argument is needed because the
 servlet needs an absolute path.
 Servlets are normally executed by the Web server
 in an extremely minimal user environment.
@@ -116,6 +117,11 @@ In particular you cannot expect the Mozart system
 to be in the path of the user!
 This is why you need an absolute pathname when compiling
 the servlet.
+
+<P>On a Unix system, you can more simply invoke:
+<code display proglang=sh>
+ozc --execpath=`which ozengine` -x small.oz -o small.cgi
+</code>
 
 <P>The final step is to install the servlet
 in your Web server.
