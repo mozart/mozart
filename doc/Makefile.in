@@ -54,7 +54,7 @@ Makefile: Makefile.in config.status
 
 install:: all $(SHDOCDIR) $(DOCDIR) $(DOCDIR)/index.html $(DOCDIR)/page.gif $(DOCDIR)/ozdoc.css $(LIBFILES) $(DOCDIR)/tcltk
 
-$(DOCDIR)/tcltk: $(TKDOCBASE) $(DOCDIR)
+$(DOCDIR)/tcltk: $(DOCDIR)
 	-rm -rf $(TKDOCBASE)
 	gzip -dc < $(TKDOC) | tar xf -
 	for i in Keywords TclCmd TclLib TkCmd TkLib UserCmd; do \
