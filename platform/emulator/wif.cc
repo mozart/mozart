@@ -26,6 +26,7 @@
 #include "am.hh"
 #include "gc.hh"
 #include "dictionary.hh"
+#include "bytedata.hh"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -365,6 +366,26 @@ public:
     
   }
 
+  OZ_Return put_byteString(TaggedRef term) {
+    Assert(oz_isByteString(term))
+    // term must already be derefed
+    ByteString*bs = tagged2ByteString(term);
+    int n = bs->getWidth();
+    ensure(n);
+    for (int i=0;i<n;i++) *buffer++ = bs->get(i);
+    return PROCEED;
+  }
+
+  OZ_Return put_byteString_quote(TaggedRef term) {
+    Assert(oz_isByteString(term))
+    // term must already be derefed
+    ByteString*bs = tagged2ByteString(term);
+    int n = bs->getWidth();
+    ensure(4*n);
+    for (int i=0;i<n;i++) put_quote(bs->get(i));
+    return PROCEED;
+  }
+
   OZ_Return put_string_quote(TaggedRef list) {
     while (1) {
       TaggedRef h = oz_head(list);
@@ -665,6 +686,8 @@ OZ_Return WIF::put_vs(TaggedRef vs) {
     return PROCEED;
   } else if (isLTupleTag(vs_tag)) {
     return put_string(vs);
+  } else if (oz_isByteString(vs)) {
+    return put_byteString(vs);
   } else {
     return raise_type_error(vs);
   }
@@ -702,6 +725,8 @@ OZ_Return WIF::put_vs_quote(TaggedRef vs) {
     return PROCEED;
   } else if (isLTupleTag(vs_tag)) {
     return put_string_quote(vs);
+  } else if (oz_isByteString(vs)) {
+    return put_byteString_quote(vs);
   } else {
     return raise_type_error(vs);   
   }
