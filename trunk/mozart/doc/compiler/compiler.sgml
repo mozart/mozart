@@ -60,9 +60,6 @@
     <Meta name="html.split" value="appendix.syntax">
     <Meta name="html.split.bib" value="">
 
-    <Meta name="link.bib" arg1="ozdoc:base" arg2="mozart-base">
-    <Meta name="link.bib" arg1="ozdoc:opi" arg2="mozart-opi">
-
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
     <Title/The Mozart Compiler/
@@ -83,9 +80,4 @@
     &switches;
     &narrator;
     &syntax;
-  <Back>
-    <Bib.Extern id="mozart-opi" to="mozart.bib" key="Mozart-OPI">
-    <Bib.Extern id="mozart-base" to="mozart.bib" key="Mozart-Base">
-    <Bib.Extern id="mozart-gump" to="mozart.bib" key="Mozart-Gump">
-    <Bib.Extern id="mozart-ap" to="mozart.bib" key="Mozart-AP">
 </Book>
