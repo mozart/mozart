@@ -427,7 +427,8 @@ public:
     return value;
   }
 
-  Abstraction *lookup(ObjectClass *c, TaggedRef meth, SRecordArity arity,RefsArray X)
+  Abstraction *lookup(ObjectClass *c, TaggedRef meth,
+		      SRecordArity arity, RefsArray X)
   {
     if (ToInt32(c) != key) {
       Bool defaultsUsed = NO;
