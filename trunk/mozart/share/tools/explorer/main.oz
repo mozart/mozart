@@ -50,18 +50,8 @@ in
 	 Stacked:    nil
          MyManager:  False
 
-      meth init(one:  ?OneHandler  <= _
-		all:  ?AllHandler  <= _
-		best: ?BestHandler <= _)
-	 proc {OneHandler Q}
-	    {self [query(Q) Next]}
-	 end
-	 proc {AllHandler Q}
-	    {self [query(Q) All]}
-	 end
-	 proc {BestHandler Q O}
-	    {self [query(Q O) All]}
-	 end
+      meth init
+	 true
       end
       
       meth Init()
@@ -87,6 +77,17 @@ in
 	 <<ExplorerClass Init>>
 	 {@MyManager query(Query Order)}
       end
+
+      meth one(Query Order <=False)
+	 <<ExplorerClass query(Query Order)>>
+	 {@MyManager.menu.search.next tk(invoke)}
+      end
+
+      meth all(Query Order <=False)
+	 <<ExplorerClass query(Query Order)>>
+	 {@MyManager.menu.search.all  tk(invoke)}
+      end
+
 
       meth add(label:Label<=NoLabel ...) = Add
 	 case @MyManager==False then
@@ -182,14 +183,6 @@ in
 	 end
       end
       
-      meth Next
-	 {@MyManager.menu.search.next tk(invoke)}
-      end
-
-      meth All
-	 {@MyManager.menu.search.all  tk(invoke)}
-      end
-
       meth close
 	 case @MyManager of !False then true elseof M then {M close} end
 	 <<UrObject close>>
