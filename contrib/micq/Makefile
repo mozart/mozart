@@ -1,0 +1,112 @@
+#
+# Authors:
+#   Nils Franzén (nilsf@sics.se)
+#   Simon Lindblom (simon@sics.se)
+#
+# Copyright:
+#   Nils Franzén, 1998
+#   Simon Lindblom, 1998
+#
+# Last change:
+#   $Date$ by $Author$
+#   $Revision$
+#
+# This file is part of Mozart, an implementation
+# of Oz 3
+#    http://mozart.ps.uni-sb.de
+#
+# See the file "LICENSE" or
+#    http://mozart.ps.uni-sb.de/LICENSE.html
+# for information on usage and redistribution
+# of this file, and for a DISCLAIMER OF ALL
+# WARRANTIES.
+#
+
+all: nc ns 
+
+c : client	# Make only client
+s : micq	# Make only server
+
+ns : s
+	ozl micq -o server.oza
+nc : c
+	ozl client -o client.oza
+
+micq : server.ozf defaultsettings.ozf startserver.oz 
+	ozc -x startserver.oz -o micq
+
+
+server.ozf: methods.ozf database.ozf mobility.ozf newaccountgui.ozf log.ozf server.oz sysadm.ozf
+	ozc -c server.oz -o server.ozf
+
+methods.ozf : methods.oz
+	ozc -c methods.oz -o methods.ozf  
+
+database.ozf : database.oz
+	ozc -c database.oz -o database.ozf
+
+mobility.ozf : mobility.oz
+	ozc -c mobility.oz -o mobility.ozf
+
+newaccountgui.ozf : newaccountgui.oz
+	ozc -c newaccountgui.oz -o newaccountgui.ozf
+
+log.ozf: log.oz
+	ozc -c log.oz -o log.ozf
+
+sysadm.ozf: sysadm.oz addapplicationgui.ozf editapplicationgui.ozf
+	ozc -c sysadm.oz -o sysadm.ozf
+
+client : client.ozf startclient.oz
+	ozc -x startclient -o client
+
+client.ozf : methods.ozf clientgui.ozf newfriendsgui.ozf defaultsettings.ozf dialoggui.ozf mobility.ozf client.oz 
+	ozc -c client.oz -o client.ozf
+
+clientgui.ozf : messagedisplay.ozf manager.ozf defaultsettings.ozf popup.ozf messagegui.ozf editaccount.ozf draganddrop.ozf addapplicationgui.ozf configureclient.ozf clientgui.oz editapplicationgui.ozf
+	ozc -c clientgui.oz -o clientgui.ozf
+
+addapplicationgui.ozf: addapplicationgui.oz
+	ozc -c addapplicationgui.oz -o addapplicationgui.ozf
+
+editapplicationgui.ozf: editapplicationgui.oz
+	ozc -c editapplicationgui.oz -o editapplicationgui.ozf
+
+
+configureclient.ozf: configureclient.oz
+	ozc -c configureclient.oz -o configureclient.ozf
+
+messagegui.ozf : popup.ozf messagegui.oz
+	ozc -c messagegui.oz -o messagegui.ozf
+
+newfriendsgui.ozf : newfriendsgui.oz
+	ozc -c newfriendsgui.oz -o newfriendsgui.ozf
+
+editaccount.ozf : editaccount.oz
+	ozc -c editaccount.oz -o editaccount.ozf
+
+dialoggui.ozf : dialoggui.oz
+	ozc -c dialoggui.oz -o dialoggui.ozf
+
+popup.ozf : popup.oz
+	ozc -c popup.oz -o popup.ozf
+
+draganddrop.ozf : draganddrop.oz
+	ozc -c draganddrop.oz -o draganddrop.ozf
+
+
+defaultsettings.ozf : defaultsettings.oz
+	ozc -c defaultsettings.oz -o defaultsettings.ozf
+
+manager.ozf : manager.oz
+	ozc -c manager.oz -o manager.ozf
+
+messagedisplay.ozf : messagedisplay.oz
+	ozc -c messagedisplay.oz -o messagedisplay.ozf
+
+
+clean: 
+	rm -f *.ozf *~ micq client
+
+
+
