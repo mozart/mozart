@@ -32,60 +32,143 @@
 #pragma interface
 #endif
 
-#include <stdio.h>
-
 #include "base.hh"
 #include "mem.hh"
 #include "atoms.hh"
 
 /*
- * TAGS
+ * There are two different classes of tags:
+ *  - Short tags (stag_t). They span 3 bits and do not 
+ *    distinguish between literals and small integers.
+ *  - Long tags (ltag_t). They span an additional bit
+ *    and thus can distinguish literals and small integers.
+ *  Additionally, each short tag appears twice as long tag.
+ *
+ * Depending on whether one wants to distinguish literals
+ * and small integers one can use either short or long tags.
  *
  */
 
-enum TypeOfTerm {
-  TAG_REF       =  0,   // 0000
-  TAG_REF2      =  4,   // 0100
-  TAG_REF3      =  8,   // 1000
-  TAG_REF4      = 12,   // 1100
+#define RTAG_BITS 2  /* Bits for references */ 
+#define STAG_BITS 3  /* Bits for short tags */
+#define LTAG_BITS 4  /* Bits for long tags  */
 
-  TAG_UNUSED_UVAR   =  1,   // 0001
-  TAG_UNUSED_SVAR   =  9,   // 1001
-  TAG_VAR       =  5,   // 0101
-  TAG_GCMARK    = 13,   // 1101
-	    
-  TAG_LTUPLE    =  2,   // 0010
-  TAG_UNUSED_FSETVALUE = 14,   // 1110
-  TAG_SRECORD   =  3,   // 0011
-		  
-  TAG_LITERAL   = 15,   // 1111
+#define __MASKIFY(i) ((1<<(i))-1)
 
-  TAG_CONST     = 10,   // 1010
-
-  TAG_SMALLINT  =  6,   // 0110
-  TAG_UNUSED_EXT       =  7,   // 0111
-  TAG_UNUSED_FLOAT     = 11    // 1011
-};  
+#define RTAG_MASK __MASKIFY(RTAG_BITS)
+#define STAG_MASK __MASKIFY(STAG_BITS)
+#define LTAG_MASK __MASKIFY(LTAG_BITS)
 
 
-#define TAG_SIZE      4
-#define TAG_MASK      0xF
+/*
+ * Short tags
+ *
+ */
+
+enum stag_t {
+  STAG_REF0     = 0 /* 000 */,  // This is fixed: least two bits are zero!
+  STAG_VAR      = 1 /* 001 */,
+  STAG_CONST    = 2 /* 010 */,
+  STAG_LTUPLE   = 3 /* 011 */,
+  STAG_REF1     = 4 /* 100 */,  // This is fixed: least two bits are zero!
+  STAG_SRECORD  = 5 /* 101 */,
+  STAG_TOKEN    = 6 /* 110 */,
+  STAG_MARK     = 7 /* 111 */,
+};
+
+
+/*
+ * Long tags
+ *
+ */
+
+enum ltag_t {
+  LTAG_REF00     =  0 /* 0000 */,  // This is fixed: least two bits are zero!
+  LTAG_VAR0      =  1 /* 0001 */,
+  LTAG_CONST0    =  2 /* 0010 */,
+  LTAG_LTUPLE0   =  3 /* 0011 */,
+  LTAG_REF10     =  4 /* 0100 */,  // This is fixed: least two bits are zero!
+  LTAG_SRECORD0  =  5 /* 0101 */,
+  LTAG_LITERAL   =  6 /* 0110 */,  // IMPORTANT!!
+  LTAG_MARK0     =  7 /* 0111 */,
+  LTAG_REF01     =  8 /* 1000 */,  // This is fixed: least two bits are zero!
+  LTAG_VAR1      =  9 /* 1001 */,
+  LTAG_CONST1    = 10 /* 1010 */,
+  LTAG_LTUPLE1   = 11 /* 1011 */,
+  LTAG_REF11     = 12 /* 1100 */,  // This is fixed: least two bits are zero!
+  LTAG_SRECORD1  = 13 /* 1101 */,
+  LTAG_SMALLINT  = 14 /* 1110 */,  // IMPORTANT!!
+  LTAG_MARK1     = 15 /* 1111 */,
+};
+
+
+
+#define __tagged2stag(t) ((stag_t) ((t) & STAG_MASK))
+#define __hasStag(t,st)  !((((unsigned int) (t)) - ((unsigned int) (st))) \
+			   & STAG_MASK)
+
+#define __tagged2ltag(t) ((ltag_t) ((t) & LTAG_MASK))
+#define __hasLtag(t,lt)  !((((unsigned int) (t)) - ((unsigned int) (lt))) \
+			   & LTAG_MASK)
+
+
+#ifdef DEBUG_CHECK
+
+inline ltag_t tagged2ltag(TaggedRef t) { return __tagged2ltag(t); }
+inline stag_t tagged2stag(TaggedRef t) { return __tagged2stag(t); }
+
+inline int hasStag(TaggedRef t, stag_t st) { return __hasStag(t,st); }
+inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
+
+#else
+
+#define tagged2ltag(t) __tagged2ltag(t)
+#define tagged2stag(t) __tagged2stag(t)
+
+#define hasStag(t,st)  __hasStag(t,st)
+#define hasLtag(t,lt)  __hasLtag(t,lt)
+
+#endif
+
+
+
+
+/*
+ * Alignment tests
+ *
+ */
+
+#define isSWAligned(ptr)  (ToInt32(ptr) & STAG_MASK)
+#define isDWAligned(ptr)  (!isSWAligned(ptr))
+
+
+
+
+/*
+ * Value tests
+ *
+ */
+
+#define oz_isRef(t)      (!((t) & RTAG_MASK))
+#define oz_isVar(t)      hasStag(t,STAG_VAR)
+#define oz_isLTuple(t)   hasStag(t,STAG_LTUPLE)
+#define oz_isLiteral(t)  hasLtag(t,LTAG_LITERAL)
+#define oz_isSRecord(t)  hasStag(t,STAG_SRECORD)
+#define oz_isSmallInt(t) hasLtag(t,LTAG_SMALLINT)
+#define oz_isConst(t)    hasStag(t,STAG_CONST)
+#define oz_isMark(t)     hasStag(t,STAG_MARK)
+
+
 #define TAG_LOWERMASK 3
 #define TAG_PTRBITS   2
 
-// '!'
-#define TAG_NEW_MASK	0x7
-//
-// double- and singe-word aligned references.
-#define isDWAligned(ptr)  (((int32)ToInt32(ptr) & TAG_NEW_MASK) == TAG_REF)
-#define isSWAligned(ptr)  (((int32)ToInt32(ptr) & TAG_NEW_MASK) == TAG_REF2)
+
+
 
 /*
  * Basic macros
  *
  */
-
-#define _tagTypeOf(ref)          ((TypeOfTerm)(ref&TAG_MASK))
 
 #define TaggedToPointer(t)       ((void*) (mallocBase|t))
 
@@ -99,7 +182,7 @@ enum TypeOfTerm {
 
 /* small ints are the only TaggedRefs that do not
  * contain a pointer in the value part */
-#define _makeTaggedSmallInt(s) ((s << TAG_SIZE) | TAG_SMALLINT)
+#define _makeTaggedSmallInt(s) ((s << LTAG_BITS) | LTAG_SMALLINT)
 // kost@ : both generic traverser and builder exploit 'TAG_GCMARK':
 
 #define _makeTaggedRef(s) ((TaggedRef) ToInt32(s))
@@ -119,7 +202,7 @@ enum TypeOfTerm {
 
 #else 
 
-#define OzMaxInt (INT_MAX>>TAG_SIZE)
+#define OzMaxInt (INT_MAX>>LTAG_BITS)
 #define OzMinInt (-(OzMaxInt+1))
 
 #endif
@@ -131,56 +214,21 @@ enum TypeOfTerm {
 inline void * tagValueOf(TaggedRef ref) { 
   return _tagValueOf(ref);
 }
-inline void * tagValueOf2(TypeOfTerm tag, TaggedRef ref) {
+inline void * tagValueOf2(ltag_t tag, TaggedRef ref) {
   return _tagValueOf2(tag,ref);
 }
 inline void * tagValueOfVerbatim(TaggedRef ref) { 
   return _tagValueOfVerbatim(ref);
 }
-inline TypeOfTerm tagTypeOf(TaggedRef ref) { 
-  return _tagTypeOf(ref);
-}
-inline TaggedRef makeTaggedRef2i(TypeOfTerm tag, int32 i) {
+
+inline TaggedRef makeTaggedRef2i(ltag_t tag, int32 i) {
   Assert((i&3) == 0); return _makeTaggedRef2(tag,i);
 }
-inline TaggedRef makeTaggedRef2p(TypeOfTerm tag, void *ptr) {
+inline TaggedRef makeTaggedRef2p(ltag_t tag, void *ptr) {
   return _makeTaggedRef2i(tag,ptr);
 }
 
 
-// This is the normal tag test
-#define _hasTag(term,tag)   (tagTypeOf(term)==(tag))
-
-
-/*
- * VALUE TESTS
- *
- */
-
-inline Bool oz_isRef(TaggedRef term) {
-  return _isRef(term);
-}
-inline Bool oz_isVar(TaggedRef term) {
-  return _hasTag(term,TAG_VAR);
-}
-inline Bool oz_isLTuple(TaggedRef term) {
-  return _hasTag(term,TAG_LTUPLE);
-}
-inline Bool oz_isLiteral(TaggedRef term) {
-  return _hasTag(term,TAG_LITERAL);
-}
-inline Bool oz_isSRecord(TaggedRef term) {
-  return _hasTag(term,TAG_SRECORD);
-}
-inline Bool oz_isSmallInt(TaggedRef term) {
-  return _hasTag(term,TAG_SMALLINT);
-}
-inline Bool oz_isConst(TaggedRef term) {
-  return _hasTag(term,TAG_CONST);
-}
-inline Bool oz_isGcMark(TaggedRef term) {
-  return _hasTag(term,TAG_GCMARK);
-}
 
 /*
  * UNTAGGING
@@ -205,39 +253,39 @@ inline TaggedRef * tagged2Ref(TaggedRef ref) {
 }
 inline OzVariable * tagged2Var(TaggedRef ref) {
   Assert(oz_isVar(ref));
-  return (OzVariable *) tagValueOf2(TAG_VAR,ref);
+  return (OzVariable *) tagValueOf2(LTAG_VAR0,ref);
 }
 inline SRecord * tagged2SRecord(TaggedRef ref) {
   Assert(oz_isSRecord(ref));
-  return (SRecord *) tagValueOf2(TAG_SRECORD,ref);
+  return (SRecord *) tagValueOf2(LTAG_SRECORD0,ref);
 }
 inline LTuple * tagged2LTuple(TaggedRef ref) {
   Assert(oz_isLTuple(ref));
-  return (LTuple *) tagValueOf2(TAG_LTUPLE,ref);
+  return (LTuple *) tagValueOf2(LTAG_LTUPLE0,ref);
 }
 inline Literal * tagged2Literal(TaggedRef ref) {
   Assert(oz_isLiteral(ref));
-  return (Literal *) tagValueOf2(TAG_LITERAL,ref);
+  return (Literal *) tagValueOf2(LTAG_LITERAL,ref);
 }
 inline ConstTerm * tagged2Const(TaggedRef ref) {
   Assert(oz_isConst(ref));
-  return (ConstTerm *) tagValueOf2(TAG_CONST,ref);
+  return (ConstTerm *) tagValueOf2(LTAG_CONST0,ref);
 }
 inline void * tagged2UnmarkedPtr(TaggedRef ref) {
-  Assert(oz_isGcMark(ref));
-  return (void *) tagValueOf2(TAG_GCMARK,ref);
+  Assert(oz_isMark(ref));
+  return (void *) tagValueOf2(LTAG_MARK0,ref);
 }
-#define tagged2UnmarkedInt(t) ((int32) ((t) >> TAG_SIZE))
+#define tagged2UnmarkedInt(t) ((int32) ((t) >> LTAG_BITS))
 
 inline int tagged2SmallInt(TaggedRef t) {
   Assert(oz_isSmallInt(t));
   int help = (int) t;
 
   if (WE_DO_ARITHMETIC_SHIFTS) {
-    return (help>>TAG_SIZE);
+    return (help>>LTAG_BITS);
   } else {
-    return (help >= 0) ? help >> TAG_SIZE
-                       : ~(~help >> TAG_SIZE);
+    return (help >= 0) ? help >> LTAG_BITS
+                       : ~(~help >> LTAG_BITS);
   }
 }
 
@@ -254,36 +302,36 @@ inline TaggedRef makeTaggedRef(TaggedRef * s) {
 }
 inline TaggedRef makeTaggedVar(OzVariable *s) {
   Assert(s != NULL && oz_isHeapAligned(s));
-  return makeTaggedRef2p(TAG_VAR, s);
+  return makeTaggedRef2p(LTAG_VAR0, s);
 }
 inline TaggedRef makeTaggedLTuple(LTuple *s) {
   Assert(s != NULL && oz_isHeapAligned(s));
-  return makeTaggedRef2p(TAG_LTUPLE,s);
+  return makeTaggedRef2p(LTAG_LTUPLE0,s);
 }
 inline TaggedRef makeTaggedSRecord(SRecord *s) {
   Assert(s != NULL && oz_isHeapAligned(s));
-  return makeTaggedRef2p(TAG_SRECORD,s);
+  return makeTaggedRef2p(LTAG_SRECORD0,s);
 }
 inline TaggedRef makeTaggedLiteral(Literal *s) {
   Assert(s != NULL && oz_isDoubleHeapAligned(s));
-  return makeTaggedRef2p(TAG_LITERAL,s);
+  return makeTaggedRef2p(LTAG_LITERAL,s);
 }
 inline TaggedRef makeTaggedConst(ConstTerm *s) {
   Assert(s != NULL && oz_isHeapAligned(s));
-  return makeTaggedRef2p(TAG_CONST,s);
+  return makeTaggedRef2p(LTAG_CONST0,s);
 }
 inline TaggedRef makeTaggedMarkPtr(void * s) {
   Assert(oz_isHeapAligned(s));
-  return makeTaggedRef2p(TAG_GCMARK,s);
+  return makeTaggedRef2p(LTAG_MARK0,s);
 }
-#define makeTaggedMarkInt(s) (((s) << TAG_SIZE) | TAG_GCMARK)
+#define makeTaggedMarkInt(s) (((s) << LTAG_BITS) | LTAG_MARK0)
 
 inline TaggedRef makeTaggedSmallInt(int s) {
   Assert(s >= OzMinInt && s <= OzMaxInt);
   return _makeTaggedSmallInt(s);
 }
 inline TaggedRef makeTaggedVerbatim(void * s) {
-  return makeTaggedRef2p((TypeOfTerm)0,s);
+  return makeTaggedRef2p((ltag_t)0,s);
 }
 
 
@@ -297,7 +345,7 @@ inline TaggedRef makeTaggedVerbatim(void * s) {
  */
 
 #define _DEREF(term, termPtr)		               \
-  while(oz_isRef(term)) {			       \
+  while (oz_isRef(term)) {			       \
     termPtr = tagged2Ref(term);			       \
     term    = *termPtr;				       \
   }
@@ -314,15 +362,9 @@ inline TaggedRef makeTaggedVerbatim(void * s) {
   register TaggedRef term = *termPtr;		       \
   _DEREF(term,termPtr);
 
-#define SAFE_DEREF(term)			       \
-if (oz_isRef(term)) {				       \
-  DEREF(term,SAFE__PTR__);			       \
-  if (oz_isVar(term)) term=makeTaggedRef(SAFE__PTR__); \
-}
-
 inline
 TaggedRef oz_deref(TaggedRef t) {
-  DEREF(t,_1);
+  DEREF0(t,_1);
   return t;
 }
 
@@ -334,7 +376,11 @@ TaggedRef oz_derefOne(TaggedRef t) {
 
 inline
 TaggedRef oz_safeDeref(TaggedRef t) {
-  SAFE_DEREF(t);
+  if (oz_isRef(t)) {
+    TaggedRef * sp = tagged2Ref(t);
+    _DEREF(t,sp);			               
+    if (oz_isVar(t)) t=makeTaggedRef(sp);          
+  }
   return t;
 }
 
@@ -383,30 +429,11 @@ inline TaggedRef * newTaggedVar(OzVariable * c) {
 
 typedef TaggedRef * RefsArray;
 
-#ifdef DEBUG_CHECK
-
-inline void setRefsArraySize(RefsArray a, int32 n) {
-  a[-1] = n;
-}
-inline int getRefsArraySize(RefsArray a) {
-  return a[-1];
-}
-
-#else
-
 #define setRefsArraySize(a,n) ((a)[-1] = (n))
 #define getRefsArraySize(a)   ((a)[-1])
 
-#endif
-
-
-#if defined(DEBUG_CHECK) && defined(WINDOWS)
-static
-#else
 inline
-#endif
-Bool initRefsArray(RefsArray a, int size, Bool init) {
-
+void initRefsArray(RefsArray a, int size, Bool init) {
   setRefsArraySize(a,size);
   register TaggedRef nvr = NameVoidRegister;
   if (init) {
@@ -423,15 +450,11 @@ Bool initRefsArray(RefsArray a, int size, Bool init) {
     case  1: a[0] = nvr;
       break;
     default:
-      {
-	for(int i = size-1; i >= 0; i--) 
-	  a[i] = nvr;
-      }
+      for (int i = size; i--; ) 
+	a[i] = nvr;
       break;
     }
   }
-
-  return OK;  /* due to stupid CC */
 }
 
 inline
@@ -503,20 +526,20 @@ inline Bool oz_eq(TaggedRef t1, TaggedRef t2) {
  *
  */
 
-#define tagged2Mask 3
-#define tagged2Bits 2
+#define __tagged2Mask 3
+#define __tagged2Bits 2
 
 class Tagged2 {
 private:
   uint32 tagged;
-  void checkTag(int tag)       { Assert(tag >=0 && tag <=tagged2Mask); }
-  void checkVal(uint32 val)    { Assert((val & (tagged2Mask<<(32-tagged2Bits))) == 0); }
-  void checkPointer(void* ptr) { Assert((((uint32) ptr)&tagged2Mask) == 0); }
+  void checkTag(int tag)       { Assert(tag >=0 && tag <=__tagged2Mask); }
+  void checkVal(uint32 val)    { Assert((val & (__tagged2Mask<<(32-__tagged2Bits))) == 0); }
+  void checkPointer(void* ptr) { Assert((((uint32) ptr)&__tagged2Mask) == 0); }
 public:
 
-  int     getTag()  { return (tagged&tagged2Mask); }
-  uint32  getData() { return tagged>>tagged2Bits; }
-  void*   getPtr()  { return (void*)(tagged&~tagged2Mask); }
+  int     getTag()  { return (tagged&__tagged2Mask); }
+  uint32  getData() { return tagged>>__tagged2Bits; }
+  void*   getPtr()  { return (void*)(tagged&~__tagged2Mask); }
 
   void set(void* ptr,int tag) {
     checkPointer(ptr);
@@ -526,7 +549,7 @@ public:
   void set(uint32 val,int tag) {
     checkTag(tag);
     checkVal(val);
-    tagged = (val<<tagged2Bits) | tag;
+    tagged = (val<<__tagged2Bits) | tag;
   }
   void setPtr(void* ptr) {
     checkPointer(ptr);
@@ -534,19 +557,19 @@ public:
   }
   void setTag(int tag) {
     checkTag(tag);
-    tagged = (tagged & ~tagged2Mask) | tag;
+    tagged = (tagged & ~__tagged2Mask) | tag;
   }
   void borTag(int tag) {
     checkTag(tag);
     tagged = tagged | tag;
   }
   void bandTag(int tag) {
-    checkTag(tag & tagged2Mask);
-    tagged = tagged & (tag | ~tagged2Mask);
+    checkTag(tag & __tagged2Mask);
+    tagged = tagged & (tag | ~__tagged2Mask);
   }
   void setVal(uint32 val) {
     checkVal(val);
-    tagged = (val<<tagged2Bits) | getTag();
+    tagged = (val<<__tagged2Bits) | getTag();
   }
 
   Tagged2()                   { tagged = 0; }
@@ -554,7 +577,6 @@ public:
   Tagged2(uint32 val,int tag) { set(val,tag); }
 
 };
-
 
 
 

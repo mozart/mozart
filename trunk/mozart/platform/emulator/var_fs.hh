@@ -129,7 +129,6 @@ OZ_Return tellBasicConstraint(OZ_Term, OZ_FSetConstraint *);
 #include "var_fs.icc"
 #else
 Bool isGenFSetVar(OZ_Term term);
-Bool isGenFSetVar(OZ_Term term, TypeOfTerm tag);
 OzFSVariable * tagged2GenFSetVar(OZ_Term term);
 
 #undef inline

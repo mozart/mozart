@@ -151,28 +151,32 @@ void ozd_printStream(OZ_Term val, ostream &stream, int depth)
 
   OZ_Term ref=oz_deref(val);
 
-  switch(tagTypeOf(ref)) {
-  case TAG_VAR:
+  switch(tagged2ltag(ref)) {
+  case LTAG_VAR0:
+  case LTAG_VAR1:
     stream << oz_varGetName(val);
     tagged2Var(ref)->printStream(stream, depth);
     break;
-  case TAG_SRECORD:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     tagged2SRecord(ref)->printStream(stream,depth);
     break;
-  case TAG_LTUPLE:
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
     tagged2LTuple(ref)->printStream(stream,depth);
     break;
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     tagged2Literal(ref)->printStream(stream,depth);
     break;
-  case TAG_SMALLINT:
+  case LTAG_SMALLINT:
     stream << "<SmallInt @" << &ref << ": " << toC(ref) << ">";
     break;
-  case TAG_CONST:
+  case LTAG_CONST0:
+  case LTAG_CONST1:
     tagged2Const(ref)->printStream(stream,depth);
     break;
   default:
-    stream << "<unknown tag " << (int) tagTypeOf(ref) << ">";
+    stream << "<unknown tag " << (int) tagged2ltag(ref) << ">";
     break;
   }
 }
@@ -206,30 +210,34 @@ void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
     stream << endl;
   }
 
-  switch(tagTypeOf(ref)) {
-  case TAG_VAR:
+  switch(tagged2ltag(ref)) {
+  case LTAG_VAR0:
+  case LTAG_VAR1:
     stream << indent(offset) << oz_varGetName(val);
     tagged2Var(ref)->printLongStream(stream, depth, offset);
     break;
-  case TAG_SRECORD:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     tagged2SRecord(ref)->printLongStream(stream,depth,offset);
     break;
-  case TAG_LTUPLE:
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
     tagged2LTuple(ref)->printLongStream(stream,depth,offset);
     break;
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     tagged2Literal(ref)->printLongStream(stream,depth,offset);
     break;
-  case TAG_SMALLINT:
+  case LTAG_SMALLINT:
     stream << indent(offset);
     ozd_printStream(val,stream,depth);
     stream << endl;
     break;
-  case TAG_CONST:
+  case LTAG_CONST0:
+  case LTAG_CONST1:
     tagged2Const(ref)->printLongStream(stream,depth,offset);
     break;
   default:
-    stream << "unknown tag " << (int) tagTypeOf(ref) << endl;
+    stream << "unknown tag " << (int) tagged2ltag(ref) << endl;
     break;
   }
 }

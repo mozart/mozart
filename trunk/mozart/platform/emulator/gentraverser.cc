@@ -71,7 +71,7 @@ void GTIndexTable::gCollectGTIT()
     // special pseudo-snapshot of a value before gc step begins).
     // Observe that variables are NOT stored directly in hash nodes!
     // 
-    if (!oz_isGcMark(t)) {
+    if (!oz_isMark(t)) {
 #ifdef DEBUG_CHECK
       Bool isVar;
       if (oz_isRef(t)) {
@@ -120,10 +120,7 @@ void GenTraverser::gCollect()
     OZ_Term tc = t;
     DEREF(tc, tPtr);
 
-    //
-    switch (tagTypeOf(tc)) {
-    case TAG_GCMARK:
-      //
+    if (oz_isMark(tc)) {
       switch (tc) {
       case taggedBATask:
 	--ptr;
@@ -142,9 +139,7 @@ void GenTraverser::gCollect()
 	}
 	break;
       }
-      break;
-
-    default:
+    } else {
       // do not GC the dereferenced copy - do the original slot;
       oz_gCollectTerm(t, t);
       break;
@@ -165,13 +160,13 @@ void GenTraverser::doit()
     DEREF(t, tPtr);
 
     //
-    switch (tagTypeOf(t)) {
+    switch (tagged2ltag(t)) {
 
-    case TAG_SMALLINT:
+    case LTAG_SMALLINT:
       processSmallInt(t);
       break;
 
-    case TAG_LITERAL:
+    case LTAG_LITERAL:
       {
 	int ind = findTerm(t);
 	if (ind >= 0) {
@@ -182,7 +177,8 @@ void GenTraverser::doit()
 	break;
       }
 
-    case TAG_LTUPLE:
+    case LTAG_LTUPLE0:
+    case LTAG_LTUPLE1:
       {
 	int ind = findTerm(t);
 	if (ind >= 0) {
@@ -204,7 +200,8 @@ void GenTraverser::doit()
 	break;
       }
 
-    case TAG_SRECORD:
+    case LTAG_SRECORD0:
+    case LTAG_SRECORD1:
       {
 	int ind = findTerm(t);
 	if (ind >= 0) {
@@ -237,7 +234,8 @@ void GenTraverser::doit()
 	break;
       }
 
-    case TAG_CONST:
+    case LTAG_CONST0:
+    case LTAG_CONST1:
       {
 	int ind = findTerm(t);
 	if (ind >= 0) {
@@ -396,7 +394,8 @@ void GenTraverser::doit()
 	break;
       }
 
-    case TAG_VAR:
+    case LTAG_VAR0:
+    case LTAG_VAR1:
       {
 	// Note: we remember locations of variables, - not the
 	// variables themselves! This works, since values and
@@ -411,7 +410,8 @@ void GenTraverser::doit()
 	}
       }
 
-    case TAG_GCMARK:
+    case LTAG_MARK0:
+    case LTAG_MARK1:
       //
       switch (t) {
       case taggedBATask:
