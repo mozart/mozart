@@ -63,7 +63,7 @@ void oz_cv_printStream(ostream &out, const char *s, GenCVariable *cv,
     ((Future *)cv)->printStream(out,depth); return;
   case PerdioVariable:
     out << s;
-    ((PerdioVar *)cv)->printStream(out,depth); return;
+    ((PerdioVar *)cv)->printStreamV(out,depth); return;
   case BoolVariable:
     out << s;
     ((GenBoolVariable*)cv)->printStream(out,depth); return;
@@ -102,5 +102,5 @@ int oz_cv_getSuspListLength(GenCVariable *cv)
 
 VariableStatus _oz_statusPerdioVar(PerdioVar *pv)
 {
-  return pv->status();
+  return pv->statusV();
 }

@@ -269,8 +269,8 @@ void OwnerTable::print(){
 	next = oe->uOB.oExt;
 	printf("<%d>\t %s\t", i, toC(PO_getValue(oe)));
 	while(next != NULL){
-	  printf("ex:%d %d#%d ", (int) ctr, (int) next->getCredit(0), 
-		 (int) next->getCredit(1));
+	  printf("ex:%d %ld#%ld ", ctr, next->getCredit(0), 
+		 next->getCredit(1));
 	  ctr ++;
 	  next = next->getNext();}
 	printf("\n");}
@@ -278,8 +278,8 @@ void OwnerTable::print(){
 	if(oe->uOB.credit == -1)
 	  printf("<%d>\t %s\t PERSISTENT\n", i, toC(PO_getValue(oe)));
 	else
-	  printf("<%d>\t %s\t %d\n", i, toC(PO_getValue(oe)), 
-		 (int) oe->uOB.credit);}
+	  printf("<%d>\t %s\t %ld\n", i, toC(PO_getValue(oe)), 
+		 oe->uOB.credit);}
 #ifdef XXDEBUG_PERDIO
       getOwner(i)->print();
     } else{
@@ -862,7 +862,7 @@ void BorrowEntry::gcBorrowRoot(int i) {
   if (isVar()) {
     PD((GC,"BT1 b:%d variable found",i));
     PerdioVar *pv=tagged2PerdioVar(*getPtr());
-    if (pv->getSuspList() || (pv->isProxy() && pv->hasVal())) {
+    if (pv->gcIsAliveV()) {
       PD((WEIRD,"BT1 b:%d pending unmarked var found",i));
       gcPO();
     }
@@ -1032,44 +1032,44 @@ void BorrowEntry::print_entry(int nr) {
 	   toC(PO_getValue(this)), netaddr.index);
     return;
   case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:
-    sprintf(primCred, "%d(slave)", (int) getSlave()->getMaster()->primCredit);
+    sprintf(primCred, "%ld(slave)", getSlave()->getMaster()->primCredit);
     next = getSlave()->getMaster()->uSOB.oce;
     *secCred = '\0';
     temp = secCred;
     while(next != NULL){
       temp += strlen(temp);
-      sprintf(temp, "ex:%d %d#%d ", ctr, (int) next->getCredit(0), 
-	      (int) next->getCredit(1));
+      sprintf(temp, "ex:%d %ld#%ld ", ctr, next->getCredit(0), 
+	      next->getCredit(1));
       ctr ++;
       next = next->getNext();}
     break;
   case PO_EXTENDED|PO_SLAVE|PO_MASTER:
-    sprintf(primCred, "%d(slave)", (int) getSlave()->getMaster()->primCredit);
-    sprintf(secCred, "%d", (int) getSlave()->getMaster()->uSOB.secCredit);
+    sprintf(primCred, "%ld(slave)", getSlave()->getMaster()->primCredit);
+    sprintf(secCred, "%ld", getSlave()->getMaster()->uSOB.secCredit);
     break;
   case PO_EXTENDED|PO_SLAVE:
-    sprintf(primCred, "%d", (int) getSlave()->primCredit);
-    sprintf(secCred, "%d", (int) getSlave()->uSOB.secCredit);
+    sprintf(primCred, "%ld", getSlave()->primCredit);
+    sprintf(secCred, "%ld", getSlave()->uSOB.secCredit);
     break;
   case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:
-    sprintf(primCred, "%d", (int) getMaster()->primCredit);
+    sprintf(primCred, "%ld", getMaster()->primCredit);
     next = getMaster()->uSOB.oce;
     *secCred = '\0';
     temp = secCred;
     while(next != NULL){
       temp += strlen(temp);
-      sprintf(temp, "ex:%d %d#%d ", ctr, (int) next->getCredit(0), 
-	      (int) next->getCredit(1));
+      sprintf(temp, "ex:%d %ld#%ld ", ctr, next->getCredit(0), 
+	      next->getCredit(1));
       ctr ++;
       next = next->getNext();}
     break;
   case PO_EXTENDED|PO_MASTER:
-    sprintf(primCred, "%d", (int) getMaster()->primCredit);
-    sprintf(secCred, "%d", (int) getMaster()->uSOB.secCredit);
+    sprintf(primCred, "%ld", getMaster()->primCredit);
+    sprintf(secCred, "%ld", getMaster()->uSOB.secCredit);
     break;
   case PO_NONE:
     secCred = "0";
-    sprintf(primCred, "%d", (int) uOB.credit);
+    sprintf(primCred, "%ld", uOB.credit);
     break;
   default:
     Assert(0);}
