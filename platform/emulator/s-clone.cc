@@ -100,7 +100,7 @@ redo:
 
   across_chunks = NO;
 
-  cs_orig_start = (int32 *) heapTop;
+  cs_orig_start = (int32 *) _oz_heap_cur;
 #endif
 
   Assert(!isCommitted());
