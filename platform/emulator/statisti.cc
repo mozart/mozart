@@ -131,10 +131,11 @@ void Statistics::print(FILE *fd)
 #endif
 
   fprintf(fd,"\n  Spaces (Search):\n");
-  fprintf(fd,"    alternatives (choose): %d\n",   solveAlt.total);
-  fprintf(fd,"    cloned:                %d\n",   solveClone.total);
+  fprintf(fd,"    created:               %d\n",   solveCreated.total);
+  fprintf(fd,"    cloned:                %d\n",   solveCloned.total);
   fprintf(fd,"    succeeded:             %d\n",   solveSolved.total);
   fprintf(fd,"    failed:                %d\n",   solveFailed.total);
+  fprintf(fd,"    alternatives (choose): %d\n",   solveAlt.total);
 
 #ifdef HEAP_PROFILE
   printCount();
@@ -182,7 +183,8 @@ void Statistics::reset()
   timeForLoading.reset();
 
   solveAlt.reset();
-  solveClone.reset();
+  solveCloned.reset();
+  solveCreated.reset();
   solveSolved.reset();
   solveFailed.reset();
 
@@ -230,7 +232,7 @@ OZ_Term Statistics::getStatistics()
   OZ_Term u=OZ_pairAI("u",timeNow);
 
   OZ_Term a2=OZ_pairAI("a",solveAlt.total);
-  OZ_Term c2=OZ_pairAI("c",solveClone.total);
+  OZ_Term c2=OZ_pairAI("c",solveCloned.total);
   OZ_Term s2=OZ_pairAI("s",solveSolved.total);
   OZ_Term f2=OZ_pairAI("f",solveFailed.total);
   OZ_Term e=OZ_pair2(OZ_atom("e"),
@@ -241,6 +243,66 @@ OZ_Term Statistics::getStatistics()
 		       OZ_cons(r,OZ_cons(p,OZ_cons(g,OZ_cons(l,OZ_cons(c,OZ_cons(h,OZ_cons(s,OZ_cons(u,OZ_cons(e,nil()))))))))));
 }
 
+
+OZ_Term Statistics::getThreads() {
+  OZ_Term created  = OZ_pairAI("created",  createdThreads.total);
+  OZ_Term runnable = OZ_pairAI("runnable", 0);
+  
+  return OZ_recordInit(OZ_atom("threads"),
+		       OZ_cons(created,
+			       OZ_cons(runnable,nil())));
+}
+
+OZ_Term Statistics::getTime() {
+  unsigned int timeNow = osUserTime();
+
+  OZ_Term copy      = OZ_pairAI("copy",      timeForCopy.total);
+  OZ_Term gc        = OZ_pairAI("gc",        timeForGC.total);
+  OZ_Term load      = OZ_pairAI("load",      timeForLoading.total);
+  OZ_Term propagate = OZ_pairAI("propagate", timeForPropagation.total);
+  OZ_Term run       = OZ_pairAI("run",       timeNow-(timeForGC.total +
+						      timeForLoading.total +
+						      timeForPropagation.total +
+						      timeForCopy.total));
+  OZ_Term system    = OZ_pairAI("system",    osSystemTime());
+  OZ_Term user      = OZ_pairAI("user",      timeNow);
+  
+  return OZ_recordInit(OZ_atom("time"),
+		       OZ_cons(copy,OZ_cons(gc,
+			 OZ_cons(load,OZ_cons(propagate,
+			   OZ_cons(run,OZ_cons(system,
+                             OZ_cons(user,nil()))))))));
+}
+
+OZ_Term Statistics::getSpaces() {
+  OZ_Term chosen  = OZ_pairAI("chosen",  solveAlt.total);
+  OZ_Term cloned  = OZ_pairAI("cloned",  solveCloned.total);
+  OZ_Term created = OZ_pairAI("created", solveCreated.total);
+  OZ_Term failed  = OZ_pairAI("failed",  solveFailed.total);
+  OZ_Term solved  = OZ_pairAI("solved",  solveSolved.total);
+  
+  return OZ_recordInit(OZ_atom("spaces"),
+		       OZ_cons(chosen,OZ_cons(cloned,
+			 OZ_cons(created,OZ_cons(failed,
+                           OZ_cons(solved,nil()))))));
+}
+
+OZ_Term Statistics::getFD() {
+  OZ_Term variables   = OZ_pairAI("variables",   fdvarsCreated.total);
+  OZ_Term propagators = OZ_pairAI("propagators", propagatorsCreated.total);
+  OZ_Term invoked     = OZ_pairAI("invoked",     propagatorsInvoked.total);
+  OZ_Term runs        = OZ_pairAI("runs",        
+				  (timeForPropagation.total>0) ?
+				  ((int) (1000*double(propagatorsInvoked.total)/
+					  timeForPropagation.total)) :
+				  0);
+  
+  return OZ_recordInit(OZ_atom("fd"),
+		       OZ_cons(variables,
+			       OZ_cons(propagators,
+				       OZ_cons(invoked,
+					       OZ_cons(runs,nil())))));
+}
 
 void Statistics::printRunning(FILE *fd)
 {
