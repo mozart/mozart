@@ -116,7 +116,7 @@ if (FORCE_ALL || COND) { \
   } \
 }
 
-/*
+
 #define SimplifyOnUnify(EQ01, EQ02, EQ12) \
   if (isUnifyCurrentTaskSusp()) { \
     OZ_getCArgDeref(0, x, xPtr, xTag); \
@@ -135,29 +135,7 @@ if (FORCE_ALL || COND) { \
       return (EQ12); \
     } \
   }
-  */
 
-#define SimplifyOnUnify(EQ01, EQ02, EQ12) \
-  if (isUnifyCurrentTaskSusp()) { \
-    OZ_getCArgDeref(0, x, xPtr, xTag); \
-    OZ_getCArgDeref(1, y, yPtr, yTag); \
-    if (xPtr == yPtr && isAnyVar(xTag)) { \
-      FDcurrentTaskSusp->markDead(); \
-      FDcurrentTaskSusp = NULL; \
-       return (EQ01); \
-    } \
-    OZ_getCArgDeref(2, z, zPtr, zTag); \
-    if (xPtr == zPtr && isAnyVar(xTag)) { \
-      FDcurrentTaskSusp->markDead(); \
-      FDcurrentTaskSusp = NULL; \
-      return (EQ02); \
-    } \
-    if (yPtr == zPtr && isAnyVar(yTag)) { \
-      FDcurrentTaskSusp->markDead(); \
-      FDcurrentTaskSusp = NULL; \
-      return (EQ12); \
-    } \
-  }
 
 enum pm_term_type {pm_none = 0x0, pm_singl = 0x1,
                    pm_bool = 0x2, pm_fd = 0x4,
