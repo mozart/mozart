@@ -9,24 +9,12 @@
   ------------------------------------------------------------------------
 */
 
-#ifndef __fdgenvar_icc__
-#define __fdgenvar_icc__
+#ifndef __FDGENVAR_ICC__
+#define __FDGENVAR_ICC__
 
 #if defined(INTERFACE) && !defined(OUTLINE) && !defined(FDOUTLINE)
 #pragma interface
 #endif
-
-inline
-GenBoolVariable * GenFDVariable::becomesBool(void) {
-  relinkSuspListToItself();
-  setType(BoolVariable);
-
-  finiteDomain.disposeExtension();
-    // sizeof(GenCVariable) == sizeof(GenBoolVariable) !!!
-  //    freeListDispose(((char *)this) + sizeof(GenCVariable),
-  //                sizeof(GenFDVariable) - sizeof(GenCVariable));
-  return (GenBoolVariable *) this;
-}
 
 inline
 void GenFDVariable::dispose(void) {
@@ -73,20 +61,6 @@ void GenFDVariable::relinkSuspListTo(GenFDVariable * lv, Bool reset_local)
     fdSuspList[i] =
       fdSuspList[i]->appendToAndUnlink(lv->fdSuspList[i], reset_local);
 }
-
-inline
-void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
-{
-  if (isSmallInt(*trPtr)) return;
-
-  Assert(this == tagged2SuspVar(*trPtr));
-
-  TaggedRef si_val = OZ_int(finiteDomain.getSingleElem());
-  propagate(*trPtr, fd_singl);
-  doBind(trPtr, si_val);
-  dispose();
-}
-
 
 inline
 void GenFDVariable::installPropagators(GenFDVariable * glob_var,
@@ -166,4 +140,29 @@ void addSuspFDVar(TaggedRef v, Thread * el, OZ_FDPropState list_index)
   }
 }
 
-#endif
+inline
+GenBoolVariable * GenFDVariable::becomesBool(void) {
+  relinkSuspListToItself();
+  setType(BoolVariable);
+
+  finiteDomain.disposeExtension();
+    // sizeof(GenCVariable) == sizeof(GenBoolVariable) !!!
+  //    freeListDispose(((char *)this) + sizeof(GenCVariable),
+  //                sizeof(GenFDVariable) - sizeof(GenCVariable));
+  return (GenBoolVariable *) this;
+}
+
+inline
+void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
+{
+  if (isSmallInt(*trPtr)) return;
+
+  Assert(this == tagged2SuspVar(*trPtr));
+
+  TaggedRef si_val = OZ_int(finiteDomain.getSingleElem());
+  propagate(*trPtr, fd_singl);
+  doBind(trPtr, si_val);
+  dispose();
+}
+
+#endif /* __FDGENVAR_ICC__ */

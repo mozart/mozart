@@ -214,7 +214,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
     return OZ_FALSE;
   } else if(!isTouched()) {
     return OZ_TRUE;
-  } else if (isSort(int_e)) {
+  } else if (isSort(int_e)) { // finite domain variable
     if (*domPtr == fd_singleton) {
       if (isState(loc_e)) {
         tagged2GenFDVar(var)->becomesSmallIntAndPropagate(varPtr);
@@ -251,7 +251,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       return OZ_TRUE;
     }
   } else {
-    Assert(isSort(bool_e) && *domPtr == fd_singleton);
+    Assert(isSort(bool_e) && *domPtr == fd_singleton); // boolean variable
 
     if (isState(loc_e)) {
       tagged2GenBoolVar(var)->becomesSmallIntAndPropagate(varPtr, *domPtr);

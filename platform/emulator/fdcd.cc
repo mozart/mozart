@@ -395,30 +395,11 @@ OZ_Return cd_wrapper_b(int OZ_arity, OZ_Term OZ_args[],
   return EntailFD;
 }
 
-OZ_C_proc_begin(BIfdPutLeCD, 3)
+OZ_C_proc_begin(BIfdTellConstraintCD, 3)
 {
-  return cd_wrapper_b(OZ_arity, OZ_args, OZ_self, BIfdPutLe);
+  return cd_wrapper_b(OZ_arity, OZ_args, OZ_self, BIfdTellConstraint);
 }
 OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdPutGeCD, 3)
-{
-  return cd_wrapper_b(OZ_arity, OZ_args, OZ_self, BIfdPutGe);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdPutListCD, 3)
-{
-  return cd_wrapper_b(OZ_arity, OZ_args, OZ_self, BIfdPutList);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdPutNotCD, 3)
-{
-  return cd_wrapper_b(OZ_arity, OZ_args, OZ_self, BIfdPutNot);
-}
-OZ_C_proc_end
-
 
 //-----------------------------------------------------------------------------
 // Propagators
@@ -549,3 +530,6 @@ OZ_Return CDSuppl::run(void)
   P.vanish();
   return ret_val == FAILED ? PROCEED : ret_val;
 }
+
+// end fo file
+//-----------------------------------------------------------------------------

@@ -313,6 +313,138 @@ int GenFDVariable::intersectWithBool(void)
   return ((OZ_FiniteDomainImpl *) &finiteDomain)->intersectWithBool();
 }
 
+OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
+{
+  /*
+  cout << "tellBasicConstraint - in - : ";
+  taggedPrint(v);
+  cout << " , " << *fd << endl <<flush;
+  */
+  DEREF(v, vptr, vtag);
+
+  if (fd && (*fd == fd_empty))
+    goto failed;
+
+
+// tell finite domain constraint to unconstrained variable
+  if (isNotCVar(vtag)) {
+    if (! fd) goto fdvariable;
+
+    // fd is singleton domain --> v becomes integer
+    if (fd->getSize() == 1) {
+      if (am.isLocalVariable(v, vptr)) {
+        if (isSVar(vtag))
+          am.checkSuspensionList(v);
+        doBind(vptr, OZ_int(fd->getSingleElem()));
+      } else {
+        am.doBindAndTrail(v, vptr, OZ_int(fd->getSingleElem()));
+      }
+      goto proceed;
+    }
+
+    GenCVariable * cv;
+
+    // create appropriate constrained variable
+    if (*fd == fd_bool) {
+      cv = (GenCVariable *) new GenBoolVariable();
+    } else {
+    fdvariable:
+      cv = (GenCVariable *) fd ? new GenFDVariable(*fd) : new GenFDVariable();
+    }
+    OZ_Term *  tcv = newTaggedCVar(cv);
+
+    if (am.isLocalVariable(v, vptr)) {
+      if (isSVar(vtag)) {
+        am.checkSuspensionList(v);
+        cv->setSuspList(tagged2SVar(v)->getSuspList());
+      }
+      doBind(vptr, makeTaggedRef(tcv));
+    } else {
+      am.doBindAndTrail(v, vptr, makeTaggedRef(tcv));
+    }
+
+    goto proceed;
+// tell finite domain constraint to finite domain variable
+  } else if (isGenFDVar(v, vtag)) {
+    if (! fd) goto proceed;
+
+    GenFDVariable * fdvar = tagged2GenFDVar(v);
+    OZ_FiniteDomain dom = (fdvar->getDom() & *fd);
+
+    if (dom.getSize() == fdvar->getDom().getSize())
+      goto proceed;
+
+    if (dom == fd_singleton) {
+      if (am.isLocalCVar(v)) {
+        fdvar->getDom() = dom;
+        fdvar->becomesSmallIntAndPropagate(vptr);
+      } else {
+        int singl = dom.getSingleElem();
+        fdvar->propagate(v, fd_singl);
+        am.doBindAndTrail(v, vptr, OZ_int(singl));
+      }
+    } else if (dom == fd_bool) {
+      if (am.isLocalCVar(v)) {
+        fdvar->becomesBoolVarAndPropagate(vptr);
+      } else {
+        fdvar->propagate(v, fd_bounds);
+        GenBoolVariable * newboolvar = new GenBoolVariable();
+        OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
+        am.doBindAndTrailAndIP(v, vptr,
+                               makeTaggedRef(newtaggedboolvar),
+                               newboolvar, tagged2GenBoolVar(v),
+                               OZ_FALSE);
+      }
+    } else {
+      fdvar->propagate(v, fd_bounds);
+      if (am.isLocalCVar(v)) {
+        fdvar->getDom() = dom;
+      } else {
+        GenFDVariable * locfdvar = new GenFDVariable(dom);
+        OZ_Term * loctaggedfdvar = newTaggedCVar(locfdvar);
+        am.doBindAndTrailAndIP(v, vptr,
+                               makeTaggedRef(loctaggedfdvar),
+                               locfdvar, tagged2GenFDVar(v), OZ_FALSE);
+      }
+    }
+    goto proceed;
+// tell finite domain constraint to boolean finite domain variable
+  } else if (isGenBoolVar(v, vtag)) {
+    if (! fd) goto proceed;
+
+    int dom = fd->intersectWithBool();
+
+    if (dom == -2) goto failed;
+    if (dom == -1) goto proceed;
+
+    GenBoolVariable * boolvar = tagged2GenBoolVar(v);
+    if (am.isLocalCVar(v)) {
+      boolvar->becomesSmallIntAndPropagate(vptr, dom);
+    } else {
+      boolvar->propagate(v);
+      am.doBindAndTrail(v, vptr, OZ_int(dom));
+    }
+// tell finite domain constraint to integer, i.e. check for compatibility
+  } else if (isSmallInt(v)) {
+    if (! fd) goto proceed;
+
+    if (fd->isIn(smallIntValue(v)))
+      goto proceed;
+  }
+
+failed:
+
+  return FAILED;
+
+proceed:
+  /*
+  cout << "tellBasicConstraint - out - : ";
+  if (vptr) taggedPrint(*vptr); else taggedPrint(v);
+  cout << " , " << *fd << endl <<flush;
+  */
+  return PROCEED;
+}
+
 #if defined(OUTLINE) || defined(FDOUTLINE)
 #define inline
 #include "fdgenvar.icc"

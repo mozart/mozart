@@ -103,7 +103,7 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
   if (isNotCVar(descr_tag)) {
     addSuspend(descr_ptr);
     return expectSuspend(1, 0);
-  } else if (IsPosSmallInt(descr) && (level >= 1)) { // (1)
+  } else if (isPosSmallFDInt(descr) && (level >= 1)) { // (1)
     return expectProceed(1, 1);
   } else if (isGenFDVar(descr, descr_tag) && (level >= 1)) {
     addSuspend(descr_ptr);
@@ -153,7 +153,7 @@ OZ_expect_t OZ_Expect::expectSetDescr(OZ_Term descr, int level)
   if (isNotCVar(descr_tag)) {
     addSuspend(descr_ptr);
     return expectSuspend(1, 0);
-  } else if (IsPosSmallSetInt(descr) && (level >= 1)) { // (1)
+  } else if (isPosSmallSetInt(descr) && (level >= 1)) { // (1)
     return expectProceed(1, 1);
   } else if (isGenFDVar(descr, descr_tag) && (level >= 1)) {
     addSuspend(descr_ptr);
@@ -220,7 +220,7 @@ OZ_expect_t OZ_Expect::expectIntVar(OZ_Term t, OZ_FDPropState ps)
 {
   DEREF(t, tptr, ttag);
 
-  if (IsPosSmallInt(t)) {
+  if (isPosSmallFDInt(t)) {
     return expectProceed(1, 1);
   } else if (isGenBoolVar(t, ttag) || isGenFDVar(t, ttag)) {
     addSpawn(ps, tptr);
@@ -390,6 +390,7 @@ OZ_Return OZ_Expect::spawn(OZ_Propagator * p, int prio,
     DEREF(v, vptr, vtag);
 
     if (isNotCVar(vtag)) {
+      // tellBasicConstraint()
       GenFDVariable * fv = new GenFDVariable();
       OZ_Term * tfv = newTaggedCVar(fv);
 
@@ -447,7 +448,7 @@ OZ_Return OZ_Expect::spawn(OZ_Propagator * p, int prio,
   OZ_Boolean all_local = OZ_TRUE;
 
   // caused by the first run of the run method variables may have
-  // become determioned
+  // become determined
   for (i = staticSpawnVarsNumber; i--; ) {
     OZ_Term v = makeTaggedRef(staticSpawnVars[i].var);
     DEREF(v, vptr, vtag);

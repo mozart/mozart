@@ -52,10 +52,9 @@ public:
   }
 };
 
-#define IsPosSmallInt(V) (isSmallInt(V) && (smallIntValue(V) >= 0))
-
-#define IsPosSmallSetInt(V) \
-(isSmallInt(V) && (smallIntValue(V) >= 0) && (smallIntValue(V) <= fset_sup))
+OZ_Boolean isPosSmallInt(OZ_Term v);
+OZ_Boolean isPosSmallFDInt(OZ_Term v);
+OZ_Boolean isPosSmallSetInt(OZ_Term v);
 
 #define MAXFDBIARGS 1000 // maximum number of arguments of fd built-ins
 

@@ -2263,6 +2263,11 @@ int OZ_FiniteDomain::constrainBool(void)
   return CASTTHIS->constrainBool();
 }
 
+int OZ_FiniteDomain::intersectWithBool(void)
+{
+  return CASTTHIS->intersectWithBool();
+}
+
 OZ_FiniteDomain OZ_FiniteDomain::operator & (const OZ_FiniteDomain & y) const
 {
   return CASTTHIS->operator & (CASTREF y);
