@@ -87,11 +87,13 @@
         <Ptr to="chapter.running">, and <Ptr to="chapter.tools">) are
         dedicated to the three main features mentioned above respectively.
       <P>
-        Two appendices provide information for advanced users.  <Ptr
+        Three appendices provide information for advanced users.  <Ptr
         to="appendix.devel"> details how to test Mozart system components
-        locally and how to run Mozart under <Name type=tool/gdb/.  Finally,
-        <Ptr to="appendix.api"> documents some functions of the &OPI; that
-        might be useful for users who want to write their own editing commands.
+        locally and how to run Mozart under <Name type=tool/gdb/.  <Ptr
+        to="appendix.api"> documents some functions of the &OPI; that might
+        be useful for users who want to write their own editing commands.
+        Finally, <Ptr to="appendix.limitations"> lists the known limitations
+        of the &OPI; with workarounds.
       <Para class=apropos><Title/Learning Emacs/
         This manual will assume some familiarity with the general editing
         commands of Emacsen and will use standard Emacs terminology.
@@ -236,7 +238,7 @@
             <List>
               <Item>
                 Nearly all functions and variables start with
-                <<oz-&ellipsis>>
+                <<oz-&ellipsis;>>
               <Item>
                 If the <Span class=index/documentation string/ of a variable
                 starts with an asterisk, then its value is meant for the
@@ -469,7 +471,7 @@
             matching <Span class=index/<<end>>/.  Also, we use the term
             <Index/expression/<Def/Oz expression/ to stand for the text
             corresponding to either a bracketed Oz construct (such as
-            <<proc &ellipsis; end>> or <<local &ellipsis end>>) or a single
+            <<proc &ellipsis; end>> or <<local &ellipsis; end>>) or a single
             word.
           <P>
             <List>
@@ -1096,7 +1098,7 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
           <Item proglang=oz>
             A backslash character token <<&\\>> immediately followed by a
             lowercase letter is misinterpreted as a directive, &eg;, in
-            <<C == &\\andthen &ellipsis;>>.  Workaround:  Include a space
+            <<C == &\\andthen &ellipsis;>>  Workaround:  Include a space
             character.
           <Item>
             At maximum fontification level, method names are coloured
