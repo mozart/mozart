@@ -740,6 +740,14 @@ public:
  * BigInt
  *=================================================================== */
 
+BigInt *newBigInt();
+BigInt *newBigInt(long i);
+BigInt *newBigInt(unsigned long i);
+BigInt *newBigInt(int i);
+BigInt *newBigInt(unsigned int i);
+BigInt *newBigInt(char *s);
+
+
 class BigInt : public ConstTerm {
 private:
   MP_INT value;
@@ -820,7 +828,7 @@ public:
 
 #define MKOP(op,mpop)                                                         \
   TaggedRef op(BigInt *b) {                                                   \
-    BigInt *n = new BigInt();                                                 \
+    BigInt *n = newBigInt();                                                  \
     mpop(&n->value,&value,&b->value);                                         \
     return n->shrink();                                                       \
   }
@@ -832,7 +840,7 @@ public:
 #undef MKOP
 
   TaggedRef neg() {
-    BigInt *n = new BigInt();
+    BigInt *n = newBigInt();
     mpz_neg(&n->value,&value);
     return n->shrink();
   }
@@ -846,6 +854,7 @@ public:
   unsigned int hash()              { return 75; } // all BigInt hash to same value
   BigInt *gc();
 };
+
 
 inline
 Bool oz_isBigInt(TaggedRef term) {
@@ -888,7 +897,7 @@ inline
 TaggedRef makeInt(int i)
 {
   if (i > OzMaxInt || i < OzMinInt)
-    return makeTaggedConst(new BigInt(i));
+    return makeTaggedConst(newBigInt(i));
   else
     return newSmallInt(i);
 }
@@ -897,7 +906,7 @@ inline
 TaggedRef oz_unsignedInt(unsigned int i)
 {
   if (i > (unsigned int) OzMaxInt)
-    return makeTaggedConst(new BigInt(i));
+    return makeTaggedConst(newBigInt(i));
   else
     return newSmallInt(i);
 }

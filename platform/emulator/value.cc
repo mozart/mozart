@@ -719,7 +719,7 @@ TaggedRef BitArray::complementToList(void) {
 
 
 /*===================================================================
- * Bigint memory management
+ * Bigints
  *=================================================================== */
 
 static void *bigint_alloc(size_t size)
@@ -744,6 +744,16 @@ void bigIntInit()
 {
   mp_set_memory_functions(bigint_alloc,bigint_realloc,bigint_dealloc);
 }
+
+
+BigInt *newBigInt()                { return new BigInt(); }
+BigInt *newBigInt(long i)          { return new BigInt(i); }
+BigInt *newBigInt(unsigned long i) { return new BigInt(i); }
+BigInt *newBigInt(int i)           { return new BigInt(i); }
+BigInt *newBigInt(unsigned int i)  { return new BigInt(i); }
+BigInt *newBigInt(char *s)         { return new BigInt(s); }
+
+
 
 /*===================================================================
  * SRecord
