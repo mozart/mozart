@@ -81,8 +81,6 @@
       <TR/<TD colspan=2/left-associative//
       <TR/<TD/<<?_{X} = ?+{RC}.?+{LI}>>/
         <TD/<<{Value.'.' ?_{RC} ?_{LI} ?_{X}}>>//
-      <TR/<TD/<<?_{X} = ?*{R}^?+{LI}>>/
-        <TD/<<{Record.'^' ?_{R} ?_{LI} ?_{X}}>>//
       <TR/<TD colspan=2/infix//
       <TR/<TD/<<?_{X} = @?+{LI}>>/<TD/<<{Object.'@' ?_{LI} ?_{X}}>>//
       <TR/<TD/<<?_{X} = !!?_{Y}>>/<TD/<<{Value.'!!' ?_{X} ?_{Y}}>>//

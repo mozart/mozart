@@ -64,6 +64,9 @@
 
 <!-- Constraint programming -->
 
+<!ENTITY chapter.space       SYSTEM "space.sgml">
+<!ENTITY chapter.fc       SYSTEM "fc.sgml">
+<!ENTITY chapter.combinator SYSTEM "combinator.sgml">
 <!ENTITY chapter.fd       SYSTEM "fd.sgml">
 <!ENTITY chapter.fs       SYSTEM "fs.sgml">
 <!ENTITY chapter.types_modes_constr SYSTEM "types_modes_constr.sgml">
@@ -192,6 +195,12 @@
     <Meta name="html.split"       value="section.fs.reflection">
     <Meta name="html.split"       value="section.fs.distribution">
 
+    <Meta name="html.split"       value="chapter.fc">
+
+    <Meta name="html.split"       value="chapter.combinator">
+
+    <Meta name="html.split"       value="chapter.space">
+
     <!-- Distributed programming -->
 
     <Meta name="html.split"       value="chapter.connection">
@@ -295,6 +304,9 @@
     &chapter.fd;
     &chapter.schedule;
     &chapter.fs;
+    &chapter.fc;
+    &chapter.combinator;
+    &chapter.space;
   </Part>
 
   <Part id="Part.Distributed">
