@@ -624,9 +624,9 @@ public:
   void init(void);
   OZ_Boolean isEmpty(void);
   OZ_Boolean setWakeUp(int i);
-  OZ_Boolean setEvent(int i) {return setWakeUp(i); };
+  OZ_Boolean setEvent(int i);
   OZ_Boolean isWakeUp(int i);
-  OZ_Boolean isEvent(int i) { return isWakeUp(i); };
+  OZ_Boolean isEvent(int i);
   static OZ_CtWakeUp getWakeUpAll(void);
 };
 
@@ -639,7 +639,11 @@ OZ_Boolean OZ_CtWakeUp::isEmpty(void) { return (_wakeUpDescriptor == 0); }
 inline
 OZ_Boolean OZ_CtWakeUp::setWakeUp(int i) { return (_wakeUpDescriptor |= (1 << i)); }
 inline
+OZ_Boolean OZ_CtWakeUp::setEvent(int i) {return setWakeUp(i); };
+inline
 OZ_Boolean OZ_CtWakeUp::isWakeUp(int i) { return (_wakeUpDescriptor & (1 << i)); }
+inline
+OZ_Boolean OZ_CtWakeUp::isEvent(int i)  { return isWakeUp(i); };
 inline
 OZ_CtWakeUp OZ_CtWakeUp::getWakeUpAll(void) {
   OZ_CtWakeUp aux;
