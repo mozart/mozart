@@ -31,6 +31,19 @@
 
 #include "byNeed.hh"
 
+inline
+Bool isByNeedVariable(TaggedRef term)
+{
+  GCDEBUG(term);
+  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_BYNEED);
+}
+
+inline
+ByNeedVariable *tagged2ByNeedVariable(TaggedRef t) {
+  Assert(isByNeedVariable(t));
+  return (ByNeedVariable *) tagged2CVar(t);
+}
+
 // this builtin is only internally available
 OZ_BI_define(BIbyNeedAssign,2,0)
 {
