@@ -25,7 +25,6 @@ S2A = String.toAtom
 %% Text
 %%
 
-Version                = 'Mar 28 1998'
 TitleName              = 'Oz Profiler'
 IconName               = 'Profiler'
 
