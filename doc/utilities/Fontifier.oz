@@ -76,7 +76,7 @@ define
          case ProgLang of oz then 'oz-mode'
          [] gump then 'oz-gump-mode'
          [] c then 'c-mode'
-         [] cc then 'cc-mode'
+         [] cc then 'c++-mode'
          [] elisp then 'emacs-lisp-mode'
          [] !NoProgLang then 'fundamental-mode'
          else
