@@ -1,13 +1,9 @@
 <!--
   - Authors:
   -   Denys Duchier     <duchier@ps.uni-sb.de>
-  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
-  -   Christian Schulte <schulte@ps.uni-sb.de>
   -
   - Copyright:
-  -   Denys Duchier, 1998
-  -   Leif Kornstaedt, 1998
-  -   Christian Schulte, 1998
+  -   Denys Duchier, 2001
   -
   - Last change:
   -   $Date$ by $Author$
@@ -143,6 +139,8 @@ make src</code>
 make doc</code>
         This will suck in all the installed documentation and create
 	file <file>mozart-$VERSION.$DATE-src.tar.gz</file>.</p>
+	<p>Except I lied and you need to install the standard library
+	before that, else its doc will be missing.  See below.</p>
       </section>
       <section>
         <title/Binary Tarballs/
@@ -163,6 +161,25 @@ make bin</code>
 	value returned by shell script:
 	<code display>$SOURCE/share/bin/ozplatform</code>
         You can ignore the last tarball.</p>
+	<subsection>
+	  <title/Mozart Standard Library/
+	  <p>In order to produce a complete binary distribution, you
+	  also need to install the Mozart Standard Library.  You must
+	  do this before invoking <code/make bin/.  It can be obtained
+	  from the CVS server as follows:
+	  <code display>cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/services/mozart/CVS get -r $REL mozart-stdlib</code>
+	  you can create a tarball for the standard library by
+	  invoking
+	  <code display>make STDLIB=... std</code>
+	  where <code/.../ is the directory where you checked out the
+	  standard library.
+	  However, before you do this, you need to have
+	  <code/ozengine/ and <code/ozmake/ in your path.  As a
+	  result, the following tarball is created:
+	  <list>
+	    <item><file>mozart-$VERSION.$DATE-$PLATFORM-std.tar.gz</file></item>
+	  </list>
+	</subsection>
 	<subsection>
 	  <title/Non-Linux Platforms/
 	  <p>Mozart requires a number of libraries which are not
@@ -217,7 +234,8 @@ make bin</code>
       <section>
         <title/Source RPM/
 	<p>In order to create the source RPM, you need to have already
-	created or downloaded the source and documentation tarballs.
+	created or downloaded the source, documentation, and standard
+	library tarballs.
 	Become somebody important and execute:
 	<code display>$SOURCE/misc/create-rpm $BUILD $BUILD</code>
 	Note that this will create both a source RPM and binary RPMs.
