@@ -132,7 +132,7 @@
 			     out => [],
 			     BI  => unix_listen},
 
-     'connect'	=> { in  => ['+int','+virtualString','+int'],
+     'connect'	=> { in  => ['+int','+value','+int'],
 		     out => [],
 		     BI  => unix_connectInet},
 

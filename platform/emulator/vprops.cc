@@ -440,6 +440,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
   CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
   CASE_INT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
+  // PERDIO
   CASE_INT(PROP_PERDIO_DEBUG,ozconf.debugPerdio);
   CASE_BOOL(PROP_PERDIO_SEIFHANDLER,ozconf.perdioSeifHandler);
   CASE_INT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);

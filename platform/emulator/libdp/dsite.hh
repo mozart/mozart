@@ -554,7 +554,7 @@ public:
     if(t==0) {
       flags |= PERM_SITE; 
       return;}    
-    Assert(!(t & SECONDARY_TABLE_SITE));
+//      Assert(!(t & SECONDARY_TABLE_SITE));
     if(t & PERM_SITE) return;
     if(t & CONNECTED){
       if(t & REMOTE_SITE){

@@ -1,3 +1,5 @@
+#include "builtins.hh"
+
 #include "tcpTransObj.hh"
 #include "comObj.hh"
 #include "msgContainer.hh"
@@ -67,17 +69,20 @@ void TCPTransObj::init() {
   fd=-1;
 }
 
-void *TCPTransObj::close() {
+void TCPTransObj::close() {
   PD((TCP_INTERFACE,"TCPTransObj closing down"));
   //printf("cl on %x to %x\n",(int)this,(int)comObj);
+//    printf("close %d %x %x %d\n", getpid(), (int)comObj, (int)this, fd);
 //    comObj=NULL; // DEVEL
   if(fd!=-1) {
     OZ_unregisterRead(fd);  // Sometimes done twice!
     OZ_unregisterWrite(fd); // Sometimes done twice!
+    osclose(fd);
+    fd=-1;
   }
-  int ret=fd;
-  fd=-1;
-  return (void *) ret;
+  // Must be last, this may be deleted or reused
+  // implies that close may never be used twice!
+  tcptransController->transObjFreed(comObj,this);
 }
 
 void TCPTransObj::deliver() {
@@ -90,16 +95,29 @@ void TCPTransObj::readyToReceive() {
   OZ_registerReadHandler(fd,tcpTransObj_readHandler,(void *) this);
 }
 
-void TCPTransObj::setFD(int fd) {
-  this->fd=fd;
-}
-
 void TCPTransObj::setSite(DSite *site) {
   this->site=site;
 }
 
 void TCPTransObj::setOwner(ComObj *comObj) {
   this->comObj=comObj;
+}
+
+void TCPTransObj::setUp(DSite *site,ComObj *comObj,OZ_Term settings) {
+  this->site=site;
+  setOwner(comObj);
+
+  SRecord *s = tagged2SRecord(settings);
+  int index = s->getIndex(oz_atom("fd"));
+  if (index>=0) { 
+      OZ_Term t0 = s->getArg(index);
+      NONVAR(t0,t);
+      if(!oz_isInt(t))
+	OZ_typeError(-1,"Int");
+      int fd=oz_intToC(t);
+      this->fd=fd;
+  }
+  tcptransController->addRunning(comObj);
 }
 
 Bool TCPTransObj::hasEmptyBuffers() {
@@ -276,7 +294,7 @@ int TCPTransObj::readHandler(int fd) {
     ret = osread(fd,pos,len);
 
     if (ret<0) {
-      //      printf("Error in read %d\n",ossockerrno());
+//        printf("Error in read %d\n",ossockerrno());
       switch(classifyError()) {
       case GO_AHEAD:
 	break;
@@ -318,6 +336,7 @@ int TCPTransObj::readHandler(int fd) {
 
   readBuffer->getBegin();
   while(contin==U_MORE) {
+    Assert(this->fd!=-1 && this->fd==fd);
     if(readBuffer->canGet(mustRead))     // Includes previously read bytes
       contin=unmarshal();
     else

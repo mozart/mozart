@@ -20,7 +20,7 @@ protected:
 
   virtual void init()=0;
 public:
-  virtual void *close()=0;
+  virtual void close()=0;
   // ComObj keeps track of its deliver calls so that as long as 
   // it has called deliver, and TransObj has not pulled all of its
   // messages with getNextMsgContainer, it will not say deliver again.
@@ -29,6 +29,7 @@ public:
 
   virtual void setSite(DSite *site)=0;
   virtual void setOwner(ComObj *comObj)=0;
+  virtual void setUp(DSite *site,ComObj *comObj,OZ_Term settings)=0;
 
   virtual Bool hasEmptyBuffers()=0;
 
