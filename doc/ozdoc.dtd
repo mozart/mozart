@@ -497,7 +497,7 @@
         ">>>" code.end
         ">>"  code.end
 >
-<!USEMAP code.map body>
+<!USEMAP code.map code>
 
 <!--==================== CROSS REFERENCES =========================-->
 <!--
