@@ -538,7 +538,7 @@ OZ_C_proc_begin(unix_stat,2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(unix_uname,1)
+OZ_C_proc_begin(unix_uName,1)
 {
   OZ_declareArg(0, out);
 
@@ -546,15 +546,15 @@ OZ_C_proc_begin(unix_uname,1)
   if (uname(&buf) < 0)
     RETURN_UNIX_ERROR(out);
 
-  OZ_Term t1=OZ_pairAA("sysname",buf.sysname);
-  OZ_Term t2=OZ_pairAA("nodename",buf.nodename);
-  OZ_Term t3=OZ_pairAA("release",buf.release);
-  OZ_Term t4=OZ_pairAA("version",buf.version);
-  OZ_Term t5=OZ_pairAA("machine",buf.machine);
+  OZ_Term t1=OZ_pairAS("sysname",buf.sysname);
+  OZ_Term t2=OZ_pairAS("nodename",buf.nodename);
+  OZ_Term t3=OZ_pairAS("release",buf.release);
+  OZ_Term t4=OZ_pairAS("version",buf.version);
+  OZ_Term t5=OZ_pairAS("machine",buf.machine);
 
   OZ_Term pairlist=
     OZ_cons(t1,OZ_cons(t2,OZ_cons(t3,OZ_cons(t4,OZ_cons(t5,OZ_nil())))));
-  return OZ_unify(out,OZ_recordInit(OZ_CToAtom("uname"),pairlist));
+  return OZ_unify(out,OZ_recordInit(OZ_CToAtom("utsname"),pairlist));
 }
 OZ_C_proc_end
 
@@ -1473,17 +1473,23 @@ OZ_C_ioproc_begin(unix_pipe,4)
 
   int pid =  fork();
   switch (pid) {
-   case 0: // child
+  case 0: // child
     {
-      for (int i = 0; i < FD_SETSIZE; i++) {
-        if (i != sv[1])
-          close(i);
+      int i;
+      for (i = 0;
+	     i < FD_SETSIZE;
+	     i++)
+	{
+	  if (i != sv[1]) {
+	    close(i);
+	  }
+	}
+      dup(sv[1]);
+      dup(sv[1]);
+      dup(sv[1]);
+      if (execvp(s,argv)  < 0) {
+	RETURN_UNIX_ERROR(rpid);
       }
-      dup(sv[1]);
-      dup(sv[1]);
-      dup(sv[1]);
-      if (execvp(s,argv)  < 0) 
-        _exit(-1);
     }
     break;
   case -1:
@@ -1491,7 +1497,8 @@ OZ_C_ioproc_begin(unix_pipe,4)
   default: // parent
     close(sv[1]);
 
-    for (int i=1 ; i<argno ; i++)
+    int i;
+    for (i=1 ; i<argno ; i++)
       free(argv[i]);
     
     return OZ_unifyInt(rpid,pid) == PROCEED
@@ -1525,23 +1532,23 @@ static OZ_Term mkAddressList(char **lstptr)
   return ret;
 }
 
-OZ_C_ioproc_begin(unix_getHostByName, 4)
+OZ_C_ioproc_begin(unix_getHostByName, 2)
 {
   OZ_declareVsArg("getHostByName", 0, name);
-  OZ_declareArg(1, offName);
-  OZ_declareArg(2, aliases);
-  OZ_declareArg(3, addresses);
+  OZ_declareArg(1, out);
 
   struct hostent *hostaddr;
 
   if ((hostaddr = gethostbyname(name)) == NULL) {
-    RETURN_NET_ERROR(offName);
+    RETURN_NET_ERROR(out);
   }
 
-  return (OZ_unify(offName,OZ_CToString(hostaddr->h_name)) == PROCEED &&
-	  OZ_unify(aliases,mkAliasList(hostaddr->h_aliases)) == PROCEED &&
-	  OZ_unify(addresses,mkAddressList(hostaddr->h_addr_list)) == PROCEED)
-    ? PROCEED : FAILED;
+  OZ_Term t1=OZ_pairAS("name",hostaddr->h_name);
+  OZ_Term t2=OZ_pairA("aliases",mkAliasList(hostaddr->h_aliases));
+  OZ_Term t3=OZ_pairA("addrList",mkAddressList(hostaddr->h_addr_list));
+  OZ_Term pairlist= OZ_cons(t1,OZ_cons(t2,OZ_cons(t3,OZ_nil())));
+
+  return OZ_unify(out,OZ_recordInit(OZ_CToAtom("hostent"),pairlist));
 }
 OZ_C_proc_end
 
@@ -1749,7 +1756,7 @@ void MyinitUnix()
 {
   OZ_addBuiltin("unix_getDir",2,unix_getDir);
   OZ_addBuiltin("unix_stat",2,unix_stat);
-  OZ_addBuiltin("unix_uname",1,unix_uname);
+  OZ_addBuiltin("unix_uName",1,unix_uName);
   OZ_addBuiltin("unix_getCWD",1,unix_getCWD);
   OZ_addBuiltin("unix_open",4,unix_open);
   OZ_addBuiltin("unix_fileDesc",2,unix_fileDesc);
@@ -1789,7 +1796,7 @@ void MyinitUnix()
   OZ_addBuiltin("unix_receiveFromInet",8,unix_receiveFromInet);
   OZ_addBuiltin("unix_getSockName",2,unix_getSockName);
   OZ_addBuiltin("unix_pipe",4,unix_pipe);
-  OZ_addBuiltin("unix_getHostByName",4,unix_getHostByName);
+  OZ_addBuiltin("unix_getHostByName",2,unix_getHostByName);
 #endif
 }
 
