@@ -1674,7 +1674,14 @@ LBLdispatcher:
     {      
       TaggedRef fea = getLiteralArg(PC+1);
 
-      SRecord *rec = e->getSelf()->getState();
+      Object *self = e->getSelf();
+      SRecord *rec = self->getState();
+      
+      if (e->currentBoard != self->getBoard()) {
+	(void) e->raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("object"));
+	goto LBLraise;
+      }
+
       if (rec) {
 	int index = ((InlineCache*)(PC+4))->lookup(rec,fea);
 	if (index>=0) {
@@ -1958,7 +1965,8 @@ LBLdispatcher:
       }
       
       if (!isLock(aux)) {
-	(void) e->raise(E_ERROR,E_OBJECT,"lockClosed",0);
+	(void) typeErrorT(0,"Lock");
+	RAISE_TYPE1("lock",cons(aux,nil()));
 	goto LBLraise;
       }
 
