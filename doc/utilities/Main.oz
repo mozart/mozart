@@ -36,7 +36,7 @@ define
    Syslet.spec = single('in'(         type:string optional:false default:unit)
                         'type'(       type:string optional:false default:unit)
                         'out'(        type:string optional:false default:unit)
-                        'autoindex'(  type:bool                  default:true)
+                        'autoindex'(  type:bool                  default:false)
                         % HTML options
                         'stylesheet'( type:string optional:false default:unit)
                         'latexmath'(  type:bool                  default:true)
