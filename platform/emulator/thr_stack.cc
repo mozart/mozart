@@ -37,6 +37,7 @@
 #include "codearea.hh"
 #include "board.hh"
 #include "debug.hh"
+#include "dpInterface.hh"
 
 int TaskStack::tasks()
 {
@@ -284,8 +285,8 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
       OzLock *lck = (OzLock *) Y;
       switch(lck->getTertType()){
       case Te_Local: ((LockLocal*)lck)->unlock();break;
-      case Te_Frame: ((LockFrame*)lck)->unlock(thr);break;
-      case Te_Manager: ((LockManager*)lck)->unlock(thr);break;
+      case Te_Frame: ((LockFrameEmul*)lck)->unlock(thr);break;
+      case Te_Manager: ((LockManagerEmul*)lck)->unlock(thr);break;
       case Te_Proxy: error("lock proxy unlocking\n");break;}
     } else if (PC==C_SET_SELF_Ptr) { 
       Object *newSelf = (Object*)Y;

@@ -32,6 +32,8 @@
 #include "value.hh"
 #include "dictionary.hh"
 #include "am.hh"
+#include "gname.hh"
+#include "controlvar.hh"
 
 #include <stdarg.h>
 
@@ -44,7 +46,7 @@ TaggedRef
 
   NameTrue, NameFalse,
 
-  BI_Unify,BI_portWait,BI_send,BI_probe,BI_Delay,BI_startTmp,
+  BI_Unify,BI_send,BI_Delay,
   BI_load, BI_fail, BI_url_load, BI_boot_manager,
 
   BI_dot,
@@ -303,6 +305,10 @@ int Object::getWidth()
   return ret;
 }
 
+void Object::globalize(){
+  if (!hasGName()) {
+    setGName(newGName(makeTaggedConst(this),GNT_OBJECT));}
+}
 
 int ObjectClass::getWidth() 
 {
@@ -1393,4 +1399,53 @@ Builtin * cfunc2Builtin(void * f) {
     }
   }
   return tagged2Builtin(BI_unknown);
+}
+
+/*===================================================================
+ * LockLocal
+ *=================================================================== */
+
+void LockLocal::unlockComplex(){
+  setLocker(pendThreadResumeFirst(&pending));
+  return;}
+
+void LockLocal::lockComplex(Thread *t){
+  (void) pendThreadAddToEndEmul(getPendBase(),t,getBoardInternal());}
+
+/*===================================================================
+ * PendThread
+ *=================================================================== */
+
+OZ_Return pendThreadAddToEndEmul(PendThread **pt,Thread *t, Board *home)
+{
+  while(*pt!=NULL){pt= &((*pt)->next);}
+
+  ControlVarNew(controlvar,home);
+  *pt=new PendThread(t,NULL,0,0,controlvar,NOEX);
+  SuspendOnControlVar;
+}
+
+Thread* pendThreadResumeFirst(PendThread **pt){
+  PendThread *tmp=*pt;
+  Assert(tmp!=NULL);
+  ControlVarResume(tmp->controlvar);
+  Thread *t=tmp->thread;
+  Assert(t!=NULL);
+  Assert(t!=(Thread*) 0x1);
+  *pt=tmp->next;
+  tmp->dispose();
+  return t;}
+
+void gcPendThreadEmul(PendThread **pt)
+{
+  PendThread *tmp;
+  while (*pt!=NULL) {
+    tmp=new PendThread((*pt)->thread->gcThread(),(*pt)->next);
+    tmp->exKind = (*pt)->exKind;
+    OZ_collectHeapTerm((*pt)->old,tmp->old);
+    OZ_collectHeapTerm((*pt)->nw,tmp->nw);
+    OZ_collectHeapTerm((*pt)->controlvar,tmp->controlvar);
+    *pt=tmp;
+    pt=&(tmp->next);
+  }
 }

@@ -1626,15 +1626,15 @@ LBLdispatcher:
   
   switch(t->getTertType()){
   case Te_Frame:{
-    if(((LockFrame*)t)->hasLock(th)) {goto has_lock;}
-    if(((LockFrame*)t)->lockB(oz_currentThread())){goto got_lock;}
+    if(((LockFrameEmul *)t)->hasLock(th)) {goto has_lock;}
+    if(((LockFrameEmul *)t)->lockB(oz_currentThread())){goto got_lock;}
     goto no_lock;}
   case Te_Proxy:{
-    ((LockProxy*)t)->lock(th);
+    lockLockProxy(t, th);
     goto no_lock;}
   case Te_Manager:{
-    if(((LockManager*)t)->hasLock(th)) {goto has_lock;}
-    if(((LockManager*)t)->lockB(th)){goto got_lock;}
+    if(((LockManagerEmul *)t)->hasLock(th)) {goto has_lock;}
+    if(((LockManagerEmul *)t)->lockB(th)){goto got_lock;}
     goto no_lock;}
   default:
     Assert(0);}
@@ -2294,13 +2294,13 @@ LBLdispatcher:
 	((LockLocal*)lck)->unlock();
 	break;
       case Te_Frame:
-	((LockFrame*)lck)->unlock(oz_currentThread());
+	((LockFrameEmul *)lck)->unlock(oz_currentThread());
 	break;
       case Te_Proxy:
 	oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
 	RAISE_THREAD_NO_PC;
       case Te_Manager:
-	((LockManager*)lck)->unlock(oz_currentThread());
+	((LockManagerEmul *)lck)->unlock(oz_currentThread());
 	break;}
       goto LBLpopTaskNoPreempt;
     }

@@ -162,7 +162,7 @@ Bool IHashTable::disentailed(GenCVariable *cvar, TaggedRef *ptr)
 
   // mm2: hack: an arbitrary number is check for validity
   case PerdioVariable:
-    return !oz_cv_validINLINE((GenCVariable *)cvar,ptr,OZ_int(4711));
+    return (!perdioVarValid(cvar, OZ_int(4711)));
 
   default:    
     return NO;
