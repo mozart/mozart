@@ -182,7 +182,7 @@ OZ_Return FSetsConvexPropagator::propagate(void)
       break;
     }
   }
-  return s.leave()?SLEEP:ENTAILED;
+  return s.leave()?SLEEP:OZ_ENTAILED;
 failure:
   s.fail();
   return FAILED;

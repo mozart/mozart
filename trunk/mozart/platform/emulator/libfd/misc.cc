@@ -258,7 +258,7 @@ OZ_Return SumACProp::propagate(void)
  FailOnEmpty(*d&=(unified ? *x[dpos] : d_aux_neg|d_aux_pos));
  vars_left=d.leave();
  for(j=size; j--;) vars_left|=x[j].leave();
- return (vars_left ? SLEEP : ENTAILED); // Iteratorclass
+ return (vars_left ? SLEEP : OZ_ENTAILED); // Iteratorclass
  
  failure:
  for(j=size;j--;) x[j].fail(); 
@@ -324,7 +324,7 @@ OZ_Return SpawnLess::propagate(void)
     addImpose(fd_prop_bounds, a);
     addImpose(fd_prop_bounds, b);
     impose(new Less(a, b));
-    return ENTAILED;
+    return OZ_ENTAILED;
   }
 
   return SLEEP;
