@@ -373,6 +373,7 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter from)
     case CREATENAMEDVARIABLEX:
     case CREATENAMEDVARIABLEY:
     case CREATENAMEDVARIABLEG:
+    case OZERROR:
       return NOCODE;
       
     case GLOBALVARNAME:    // last instr in CodeArea::init
@@ -438,22 +439,21 @@ void CodeArea::getDebugInfoArgs(ProgramCounter PC,
 
 void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 {
+  if (sz <=0) return;
+
   ProgramCounter PC = from;
 
-  Bool isEnd = NO;
-  Opcode op;
-  int i;
-
-  for (i = 1; isEnd == NO; i++) {
-    if (sz > 0 && i >= sz)
-      isEnd = OK;
+  for (int i = 1; i<=sz; i++) {
     fprintf(ofile, "0x%08x:  ", PC);
-    op = getOpcode(PC);
-    if (op <= OZERROR) {
-      fprintf(ofile, "%03d %s", op,opToString[(int)op]);
+    Opcode op = getOpcode(PC);
+    if (op == OZERROR) {
+      message("End of code block reached\n");
+      return;
     }
+
+    fprintf(ofile, "%03d %s", op,opToString[(int)op]);
+
     switch (op) {
-    case OZERROR:
     case FAILURE:
     case SUCCEED:
     case WAIT:
@@ -1003,8 +1003,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     default:
       fflush(ofile);
       warning("Undefined command: %d (function void CodeArea::display)", op);
-      isEnd = OK;
-      DISPATCH();
+      return;
     }
   }
 }
