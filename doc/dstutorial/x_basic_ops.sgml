@@ -699,11 +699,11 @@ to add extra functionality or to fix a bug.
 We show how to upgrade the server
 without stopping it.
 This cannot be done in Java.
-In practice, one can even do it interactively,
-where a person using the OPI
-(interactive development environment)
-can upgrade a server on another site
-while it is running.
+In practice, one can even do it interactively.
+A person sits down at a terminal anywhere
+in the world, starts up an interactive Mozart
+session, and can
+upgrade the server while it is running.
 
 <P> Let's first define a generic upgradable server
 on top of stationary objects:
@@ -741,6 +741,10 @@ Srv2={New CComputeServer init}
 >>>
 
 <P> That's all there is to it.
+Furthermore, this can be
+repeated indefinitely
+since garbage collection removes
+the old compute server code.
 The extended compute server runs
 each compute job in its own thread and
 has two method calls, <<run(P)>>
