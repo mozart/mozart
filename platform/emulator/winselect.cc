@@ -394,10 +394,12 @@ int win32Select(fd_set *rfds, fd_set *wfds, unsigned int *timeout)
 
 #endif /* WINDOWS */
 
+int osOpenMax();
+
 void printfds(fd_set *fds)
 {
   fprintf(stderr,"FDS: ");
-  for(int i=0; i<100000; i++) {
+  for(int i=0; i<osOpenMax(); i++) {
     if (FD_ISSET(i,fds)) {
       fprintf(stderr,"%d,",i);
     }
