@@ -1277,7 +1277,7 @@ void engine() {
       int size = list.getSize();
       RefsArray gRegs = (size == 0) ? NULL : allocateRefsArray(size);
 
-      Abstraction *p = new Abstraction(pred,gRegs);
+      Abstraction *p = new Abstraction (pred, gRegs, e->currentBoard);
       TaggedRef term = RegAccess(HelpReg1,reg);
       if (!e->fastUnify(term,makeTaggedSRecord(p))) {
         HANDLE_FAILURE(next,
