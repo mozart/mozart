@@ -34,7 +34,8 @@ enum BoardFlags {
   Bo_Failed	= 0x0100,
   Bo_Committed	= 0x0200,
   Bo_Discarded	= 0x0400,
-  Bo_Waiting    = 0x0800
+  Bo_Waiting    = 0x0800,
+  Bo_Reflected  = 0x1000	// for debugging of solve combinator;
 };
 
 class Board : public ConstTerm {
@@ -96,6 +97,8 @@ public:
   Bool isWaiting() { return flags & Bo_Waiting ? OK : NO; }
   Bool isRoot() { return flags & Bo_Root ? OK : NO; }
   Bool isSolve () { return ((flags & Bo_Solve) ? OK : NO); }
+  void setReflected () { flags |= Bo_Reflected; }
+  Bool isReflected () { return ((flags & Bo_Reflected) ? OK : NO); }
   void newScript(int size);
   inline void removeSuspension();
   void setBody(ProgramCounter p,RefsArray y,
