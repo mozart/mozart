@@ -425,6 +425,81 @@ OZ_BI_define(BIgetDGC,1,1)
   OZ_RETURN(oz_atom("local_entity"));
 }OZ_BI_end
 
+
+OZ_BI_define(BIgetMsgPriority,0,1)
+{
+  OZ_Term msgPrio=oz_nil();
+  for (int i=M_NONE+1; i<C_FIRST; i++) {
+    char* prioType;
+    switch(default_mess_priority[i]){
+    case MSG_PRIO_EAGER:
+      prioType = "eager";
+      break;
+    case MSG_PRIO_LAZY:
+      prioType = "lazy";
+      break;
+    case MSG_PRIO_HIGH:
+      prioType = "high";
+      break;
+    case MSG_PRIO_MEDIUM:
+      prioType = "medium";
+      break;
+    case MSG_PRIO_LOW:
+      prioType = "low";
+      break;
+    case USE_PRIO_OF_SENDER:
+      prioType = "sender";
+      break;
+    default:
+      prioType = "Error";
+    }
+    msgPrio=oz_cons(oz_pairAA(mess_names[i],prioType),msgPrio);
+  }
+   OZ_RETURN(OZ_recordInit(oz_atom("msgPrio"),msgPrio));
+
+}OZ_BI_end
+
+OZ_BI_define(BIsetMsgPriority,2,0)
+{
+  oz_declareNonvarIN(0,msg);
+  oz_declareNonvarIN(1,prio);
+  int int_prio;
+  if (OZ_eq(prio,oz_atom("eager"))){
+    int_prio =  MSG_PRIO_EAGER;
+  }
+  else
+    if (OZ_eq(prio,oz_atom("lazy"))){
+      int_prio =  MSG_PRIO_LAZY;
+    }
+    else
+      if (OZ_eq(prio,oz_atom("high"))){
+        int_prio =  MSG_PRIO_HIGH;
+      }
+      else
+        if (OZ_eq(prio,oz_atom("medium"))){
+          int_prio =  MSG_PRIO_MEDIUM;
+        }
+        else
+          if (OZ_eq(prio,oz_atom("low"))){
+            int_prio =  MSG_PRIO_LOW;
+          }
+          else
+            if (OZ_eq(prio,oz_atom("sender"))){
+              int_prio = USE_PRIO_OF_SENDER;
+            }
+            else
+              return FAILED;
+
+  for (int i=M_NONE+1; i<C_FIRST; i++)
+    if (OZ_eq(oz_atom(mess_names[i]),msg)){
+      default_mess_priority[i]=int_prio;
+      return OZ_ENTAILED;
+    }
+  return FAILED;
+}OZ_BI_end
+
+
+
 #ifndef MODULES_LINK_STATIC
 
 #include "modDPMisc-if.cc"
