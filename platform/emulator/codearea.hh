@@ -376,10 +376,6 @@ inline void printNameTab()
 #define GetLoc(PC)       ((OZ_Location*) getAdressArg(PC))
 #define GetBI(PC)        ((Builtin*) getAdressArg(PC))
 
-
-void displayCode(ProgramCounter from, int ssize);
-
-
 /*
  * Inline caching
  */

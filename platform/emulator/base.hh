@@ -388,6 +388,10 @@ int loadURL(const char *,OZ_Term,Thread *th);
 // see term.cc
 void initLiterals();
 
+// see codearea.cc
+void displayCode(ProgramCounter from, int ssize);
+void displayDef(ProgramCounter from, int ssize);
+
 /* Ultrix does not have 'strdup' */
 inline char *ozstrdup(const char *s)
 {
