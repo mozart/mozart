@@ -106,8 +106,7 @@ OZ_Return distHandlerInstallHelp(SRecord *condStruct,
   entity=0;
   th=NULL;
 
-  TaggedRef aux,aux2;
-
+  TaggedRef aux;
   FeatureTest(condStruct,aux,"cond");
 
   OZ_Return ret = translateWatcherConds(aux,ec);

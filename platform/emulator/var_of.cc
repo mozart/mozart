@@ -138,7 +138,6 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp)
     }
 
   case SRECORD:
-  Record:
   {
     // For all features of var, term should contain the feature.
     // Unify the values of corresponding features.

@@ -708,26 +708,6 @@ TaggedRef packsort(TaggedRef list)
  return sortlist(list,len);
 }
 
-/************************************************************************/
-/*			Useful Stuff: Numbers				*/
-/************************************************************************/
-
-/*
- *	Return the truncate of the logarithm of i by base 2.
- */
-
-inline
-unsigned int intlog(unsigned int i)
-{     
-  if ( i ) {
-    unsigned int result = 0;
-    while (i>>=1)
-      result++;
-    return result;
-  } else {
-    return 0;
-  }
-}
 
 //************************************************************************
 //                        Class Arity
@@ -1292,7 +1272,7 @@ void PrTabEntry::patchFileAndLine()
 {
   Reg reg;
   int next;
-  TaggedRef newpos, comment, predName, fil;
+  TaggedRef predName, fil;
   int lin,colu;
   CodeArea::getDefinitionArgs(PC-sizeOf(DEFINITION),reg,next,fil,lin,colu,predName);
   file  = fil;

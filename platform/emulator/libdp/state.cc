@@ -479,7 +479,6 @@ void LockSec::unlockPending(Thread *t){
   *pt=(*pt)->next;}
 
 void LockSec::unlockComplex(Tertiary* tert){
-  int xxx=0;
   PD((LOCK,"unlock complex in state:%d",getState()));
   Assert(getState() & Cell_Lock_Valid);
   if(getState() & Cell_Lock_Next){
@@ -605,7 +604,6 @@ void CellManager::gcCellManager(){
   Assert(oe->getTertiary()->gcIsMarked()?
 	 oe->getTertiary()->gcGetFwd()->getType() == Co_Cell:
 	 oe->getTertiary()->getType() == Co_Cell );
-  CellFrame *cf=(CellFrame*)this;
   getCellSec()->gcCellSec();}
 
 void LockSec::gcLockSec(){

@@ -1023,11 +1023,8 @@ void BIfdBodyManager::printTerm(int i) {
 //#define DEBUG_FDCD
 
 Bool do_cd_propagation (LocalPropagationStore &lps) {
-  Board *currentBoard = oz_currentBoard();
-  RefsArray args;
-  
   // kost@ : --> let's try ...
-  Assert (currentBoard->getSuspCount () >= lps.getSize ());
+  Assert (oz_currentBoard()->getSuspCount () >= lps.getSize ());
   
   while (!(lps.isEmpty ())) {
     Propagator * prop = lps.pop();

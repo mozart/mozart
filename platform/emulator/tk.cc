@@ -956,7 +956,6 @@ OZ_Return TK::put_tcl_filter(TaggedRef tcl, TaggedRef fs) {
   if (isLiteralTag(tcl_tag)) {
     return PROCEED;
   } else if (isSRecordTag(tcl_tag)) {
-    OZ_Return s = PROCEED;
     SRecord * sr = tagged2SRecord(tcl);
     TaggedRef as = sr->getArityList(); /* arity list is already deref'ed */
     fs = oz_deref(fs);
