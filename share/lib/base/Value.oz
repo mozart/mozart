@@ -29,7 +29,7 @@ local
    fun {ByNeedDot X F}
       if {IsDet X} andthen {IsDet F}
       then try X.F catch E then {FailedValue E} end
-      else {ByNeedFuture fun {$} try X.F catch E then {FailedValue E} end end}
+      else {ByNeedFuture fun {$} X.F end}
       end
    end
 in

@@ -127,7 +127,9 @@ define
 		      end}
 		  end
 
-		  {AskVerbose S}=succeeded(entailed)
+		  % The space is stuck because some by-need computations
+		  % have not been triggered
+		  {AskVerbose S}=succeeded(stuck)
 		  
 	       end
 	       keys:[port space situatedness])])
