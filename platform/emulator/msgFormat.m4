@@ -54,7 +54,7 @@ message(M_CHAIN_ACK,Index,Site)
 message(M_CHAIN_QUESTION,Index,Site)
 message(M_CHAIN_ANSWER,Index,Site,Index2)
 message(M_ASK_ERROR,Index,Site,Index2);
-message(M_TELL_ERROR,Site,Index,Index2);
+message(M_TELL_ERROR,Site,Index,Index2,Index3);
 
 message(M_GET_OBJECT,Index,Site)
 message(M_GET_OBJECTANDCLASS,Index,Site)
@@ -64,5 +64,5 @@ message(M_SEND_OBJECTANDCLASS,Site,Index,ObjectAndClass)
 message(M_FILE,String,Term)
 message(M_REGISTER_VS,Site)
 message(M_INIT_VS,Term)
-
+message(M_UNASK_ERROR,Index,Site,Index2)
 message(M_SEND_GATE,Term)

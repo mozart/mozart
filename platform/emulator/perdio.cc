@@ -161,7 +161,7 @@ void lockReceiveDump(LockManager*,Site*);
 void lockReceiveLock(LockFrame*);
 void lockReceiveCantPut(LockManager *cm,int mI,Site* rsite, Site* dS);
 
-void receiveTellError(Tertiary*,Site*,int,EntityCond);
+void receiveTellError(Tertiary*,Site*,int,EntityCond,Bool);
 void chainReceiveAck(OwnerEntry*, Site*);
 void chainReceiveAnswer(OwnerEntry*,Site*,int);
 void chainReceiveQuestion(BorrowEntry*,Site*,int);
@@ -169,12 +169,13 @@ void chainSendAnswer(Site*,int,int);
 void chainSendQuestion(Site*,int);
 void chainSendAck(Site*,int);
 void receiveAskError(OwnerEntry *,Site*,EntityCond);
-void sendTellError(OwnerEntry *,Site*,int,EntityCond);
+void receiveUnAskError(OwnerEntry *,Site*,EntityCond);
+void sendTellError(OwnerEntry *,Site*,int,EntityCond,Bool);
 void lockSendForward(Site *toS,Site *fS,int mI);
 void lockSendForwardFailure(Site*, int);
 void lockSendTokenFailure(Site*,Site*,int);
 void lockSendDump(BorrowEntry*,LockFrame*);
-
+void sendUnAskError(Tertiary*,EntityCond);
 void sendRegister(BorrowEntry *);
 
 OZ_C_proc_proto(BIapply);
@@ -249,7 +250,7 @@ char *mess_names[M_LAST] = {
   "send_objectandclass",
   "register virtual site",
   "init virtual site",
-
+  "unask_error"
   "send_gate",
 };
 
@@ -2420,11 +2421,21 @@ void BorrowTable::gcFrameToProxy()
   }
 }
 
+void maybeUnask(BorrowEntry *be){
+  Tertiary *t=be->getTertiary();
+  Watcher *w=t->getWatchersIfExist();
+  while(w!=NULL){
+    if(w->isTriggered(TEMP_SOME|TEMP_ALL|TEMP_BLOCKED|PERM_SOME)){
+      sendUnAskError(t,w->getEntityCond());}
+    w=w->getNext();}
+}
+
 extern TaggedRef gcTagged1(TaggedRef in);
 
 /* OBSERVE - this must done at the end of other gc */
 void BorrowTable::gcBorrowTable3()
 {
+  Tertiary *t;
   PD((GC,"borrow gc"));
   int i;
   for(i=0;i<size;i++) {
@@ -2435,6 +2446,8 @@ void BorrowTable::gcBorrowTable3()
           b->removeGCMark(); // marks owner site too
           PD((GC,"BT b:%d mark variable found",i));}
         else{
+          if(b->getTertiary()->maybeHasInform()){
+            maybeUnask(b);}
           PD((GC,"BT b:%d unmarked variable found",i));
           borrowTable->maybeFreeBorrowEntry(i);}}
       else{
@@ -3584,8 +3597,8 @@ void Site::msgReceived(MsgBuffer* bs)
     {
       Site *site;
       int OTI;
-      int ec;
-      unmarshal_M_TELL_ERROR(bs,site,OTI,ec);
+      int ec,flag;
+      unmarshal_M_TELL_ERROR(bs,site,OTI,ec,flag);
       PD((MSG_RECEIVED,"M_TELL_ERROR index:%d site:%s ec:%d",OTI,site->stringrep(),ec));
 
       NetAddress na=NetAddress(site,OTI);
@@ -3595,7 +3608,7 @@ void Site::msgReceived(MsgBuffer* bs)
         return;
       }
       be->receiveCredit();
-      receiveTellError(be->getTertiary(),site,OTI,ec);
+      receiveTellError(be->getTertiary(),site,OTI,ec,flag);
       break;
     }
 
@@ -3609,6 +3622,18 @@ void Site::msgReceived(MsgBuffer* bs)
       OwnerEntry *oe=OT->getOwner(OTI);
       oe->receiveCredit(OTI);
       receiveAskError(oe,toS,ec);
+      break;
+    }
+  case M_UNASK_ERROR:
+    {
+      int OTI;
+      int ec;
+      Site *toS;
+      unmarshal_M_ASK_ERROR(bs,OTI,toS,ec);
+      PD((MSG_RECEIVED,"M_ASK_ERROR index:%d ec:%d toS:%s",OTI,ec,toS->stringrep()));
+      OwnerEntry *oe=OT->getOwner(OTI);
+      oe->receiveCredit(OTI);
+      receiveUnAskError(oe,toS,ec);
       break;
     }
   default:
@@ -4120,12 +4145,15 @@ void cellDoAccess(Tertiary *c,TaggedRef val){
   if(cf->getState()==Cell_Lock_Requested){
     cf->addPendBinding(am.currentThread(),val);
     oz_suspendOnNet(am.currentThread());
+    c->maybeInvokeSoon();
     return;}
   cf->addPendBinding(am.currentThread(),val);
   if(tt==Te_Manager){
     CellManager *cm=(CellManager*)c;
     int mI=cm->getIndex();
     Assert(cm->getCurrent()!=mySite);
+    if(c->maybeInvokeSoon()){
+      return;}
     OwnerEntry *oe=OT->getOwner(mI);
     oe->getOneCreditOwner();
     PD((CELL,"access on INVALID manager %d",cf->getIndex()));
@@ -4706,10 +4734,18 @@ void sendAskError(Tertiary *t,EntityCond ec){
   marshal_M_ASK_ERROR(bs,t->getIndex(),mySite,ec);
   SendTo(na->site,bs,M_ASK_ERROR,na->site,na->index);}
 
+void sendUnAskError(Tertiary *t,EntityCond ec){
+  BorrowEntry *be=BT->getBorrow(t->getIndex());
+  NetAddress* na=be->getNetAddress();
+  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
+  be->getOneMsgCredit();
+  marshal_M_UNASK_ERROR(bs,t->getIndex(),mySite,ec);
+  SendTo(na->site,bs,M_UNASK_ERROR,na->site,na->index);}
+
 void receiveAskError(OwnerEntry *oe,Site *toS,EntityCond ec){
   Tertiary *t=oe->getTertiary();
   if(t->getEntityCond() & ec){
-    sendTellError(oe,toS,t->getIndex(),ec);
+    sendTellError(oe,toS,t->getIndex(),ec,true);
     return;}
   InformElem *ie=newInformElem();
   ie->init(toS,ec);
@@ -4722,6 +4758,10 @@ void receiveAskError(OwnerEntry *oe,Site *toS,EntityCond ec){
     return;}
   default:
     NOT_IMPLEMENTED;}}
+
+void receiveUnAskError(OwnerEntry *oe,Site *toS,EntityCond ec){
+  Chain *ch=getChainFromTertiary(oe->getTertiary());
+  ch->removeInformElem(toS,ec);}
 
 void cellReceiveCantPut(CellManager *cm,TaggedRef val,int mI,Site* rsite, Site* badS){
   Assert(cm->getType()==Co_Cell);
@@ -4769,7 +4809,6 @@ Bool Tertiary::installHandler(EntityCond wc,TaggedRef proc,Thread* th){
   insertWatcher(w);
   if(getEntityCond() & wc){
     NOT_IMPLEMENTED;}
-
   if(wc & TEMP_BLOCKED){
     if(getTertType()==Te_Manager){
       return TRUE;}
@@ -4826,17 +4865,32 @@ void Tertiary::entityProblem(EntityCond ec){
     }}
 }
 
-void sendTellError(OwnerEntry *oe,Site* toS,int mI,EntityCond ec){
+void sendTellError(OwnerEntry *oe,Site* toS,int mI,EntityCond ec,Bool set){
   if(SEND_SHORT(toS)) {return;}
   oe->getOneCreditOwner();
   MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
-  marshal_M_TELL_ERROR(bs,mySite,mI,ec);
+  marshal_M_TELL_ERROR(bs,mySite,mI,ec,set);
   SendTo(toS,bs,M_TELL_ERROR,mySite,mI);}
 
-void receiveTellError(Tertiary *t,Site* mS,int mI,EntityCond ec){
-  t->entityProblem(ec);}
+void receiveTellError(Tertiary *t,Site* mS,int mI,EntityCond ec,Bool set){
+  if(set){
+    t->entityProblem(ec);}
+  else{
+    t->resetEntityCond(ec);}}
 
-void Chain::informHandle(Tertiary* t,EntityCond ec){
+void Chain::removeInformElem(Site* s,EntityCond ec){
+  InformElem **ce= &inform;
+  InformElem *tmp;
+  while(TRUE){
+    if(*ce==NULL){Assert(0);}
+    if(((*ce)->site==s) && ((*ce)->watchcond ==ec)){
+      tmp=*ce;
+      ce= &(tmp->next);
+      freeInformElem(tmp);}
+    else{
+      ce=&((*ce)->next);}}}
+
+void Chain::informHandle(Tertiary* t,EntityCond ec,Bool set){
   InformElem **base=&inform;
   InformElem *cur=*base;
   while(cur!=NULL){
@@ -4846,9 +4900,8 @@ void Chain::informHandle(Tertiary* t,EntityCond ec){
       cur=*base;}
     else{
       if(cur->watchcond & ec){
-        Assert(t->getTertType()==Te_Manager);
         int OTI=t->getIndex();
-        sendTellError(OT->getOwner(OTI),cur->site,OTI,cur->watchcond & ec);
+        sendTellError(OT->getOwner(OTI),cur->site,OTI,cur->watchcond & ec,set);
         *base=cur->next;
         freeInformElem(cur);
         cur=*base;}
@@ -4856,31 +4909,30 @@ void Chain::informHandle(Tertiary* t,EntityCond ec){
         base=&(cur->next);
         cur=*base;}}}}
 
-/* incorrect lock can recover somewhat */
 
 void Chain::informAutomatic(Tertiary* t){
   ChainElem *ce=first;
   while(ce!=NULL){
     if(!SEND_SHORT(ce->site)){
-      sendTellError(OT->getOwner(t->getIndex()),ce->site,t->getIndex(),PERM_BLOCKED);}
+      sendTellError(OT->getOwner(t->getIndex()),ce->site,t->getIndex(),PERM_BLOCKED,true);}
     ce=ce->next;}}
 
 void tokenLost(Chain *ch,Tertiary *t){
   t->entityProblem(PERM_BLOCKED|PERM_SOME|PERM_ALL);
-  ch->informHandle(t,PERM_BLOCKED|PERM_SOME|PERM_ALL);
+  ch->informHandle(t,PERM_BLOCKED|PERM_SOME|PERM_ALL,true);
   ch->informAutomatic(t);}
 
 void tokenRecovery(Chain *ch,Tertiary *t){
   t->entityProblem(PERM_SOME);
-  ch->informHandle(t,PERM_SOME);}
+  ch->informHandle(t,PERM_SOME,true);}
 
 void tokenTempLost(Chain *ch,Tertiary* t){
   t->entityProblem(TEMP_BLOCKED|TEMP_SOME|TEMP_ALL);
-  ch->informHandle(t,TEMP_BLOCKED|TEMP_SOME|TEMP_ALL);}
+  ch->informHandle(t,TEMP_BLOCKED|TEMP_SOME|TEMP_ALL,true);}
 
 void tokenTempRecovery(Chain* ch,Tertiary *t){
   t->entityProblem(TEMP_SOME);
-  ch->informHandle(t,TEMP_SOME);}
+  ch->informHandle(t,TEMP_SOME,true);}
 
 void Chain::managerSeesSiteCrash(Tertiary *t,Site *s){
   PD((ERROR_DET,"managerSeesSiteCrash site:%s nr:%d",s->stringrep(),t->getIndex()));
@@ -4909,7 +4961,7 @@ void Chain::managerSeesSiteCrash(Tertiary *t,Site *s){
 
 Site* Chain::proxySeesSiteCrash(Tertiary *t,Site *s){
   PD((ERROR_DET,"proxySeesSiteCrash site:%s ",s->stringrep()));
-  informHandle(t,PERM_SOME);
+  informHandle(t,PERM_SOME,true);
   t->entityProblem(PERM_SOME); // informing this site
   return removeSecondElem();}
 
@@ -4922,9 +4974,11 @@ void cellLock_Perm(int state,Tertiary* t,Site *s){
   case Cell_Lock_Invalid:{
     t->entityProblem(PERM_SOME|PERM_BLOCKED);
     return;}
+  case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
     t->entityProblem(PERM_SOME);// ATTENTION note that we don't know if we'll be blocked maybe TEMP?
     return;}
+  case Cell_Lock_Valid|Cell_Lock_Next:
   case Cell_Lock_Valid:{
     t->entityProblem(PERM_ALL|PERM_SOME);
     return;}
@@ -4936,9 +4990,11 @@ void cellLock_Temp(int state,Tertiary* t,Site *s){
   case Cell_Lock_Invalid:{
     t->entityProblem(TEMP_SOME|TEMP_BLOCKED);
     return;}
+  case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
     t->entityProblem(TEMP_SOME);// note that we don't know if we'll be blocked
     return;}
+  case Cell_Lock_Valid|Cell_Lock_Next:
   case Cell_Lock_Valid:{
     t->entityProblem(TEMP_ALL|TEMP_SOME);
     return;}
@@ -4955,6 +5011,11 @@ void Tertiary::managerProbeFault(Site *s, int pr){
     if(getTertType()==Te_Proxy){
       cellLock_Temp(Cell_Lock_Invalid,this,s);
       return;}
+    if(pr == PROBE_OK){
+      resetEntityCond(TEMP_BLOCKED);
+      ((CellManager*) this)->getChain()->informHandle(this,TEMP_BLOCKED,false);
+      return;}
+    Assert(pr==PROBE_TEMP);
     Assert(getTertType()==Te_Frame);
     cellLock_Temp(((CellFrame*)this)->getState(),this,s);
     return;}
@@ -4962,6 +5023,11 @@ void Tertiary::managerProbeFault(Site *s, int pr){
     if(pr == PROBE_PERM){
       getChainFromTertiary(this)->managerSeesSiteCrash(this,s);
       return;}
+    if(pr == PROBE_OK){
+      resetEntityCond(TEMP_BLOCKED);
+      ((LockManager*)this)->getChain()->informHandle(this,TEMP_BLOCKED,true);
+      return;}
+    Assert(pr==PROBE_TEMP);
     if(getTertType()==Te_Proxy){
         cellLock_Temp(Cell_Lock_Invalid,this,s);
         return;}
@@ -4982,6 +5048,10 @@ void Tertiary::proxyProbeFault(Site *s,int pr){
         Assert(getTertType()==Te_Frame);
         cellLock_Perm(((CellFrame*)this)->getState(),this,s);
         return;}
+      if(pr == PROBE_OK){
+        resetEntityCond(TEMP_BLOCKED);
+        return;}
+      Assert(pr==PROBE_TEMP);
       if(getTertType()==Te_Proxy){
         cellLock_Temp(Cell_Lock_Invalid,this,s);
         return;}
@@ -4996,6 +5066,10 @@ void Tertiary::proxyProbeFault(Site *s,int pr){
         Assert(getTertType()==Te_Frame);
         cellLock_Perm(((LockFrame*)this)->getState(),this,s);
         return;}
+      if(pr == PROBE_OK){
+        resetEntityCond(TEMP_BLOCKED);
+        return;}
+      Assert(pr==PROBE_TEMP);
       if(getTertType()==Te_Proxy){
         cellLock_Temp(Cell_Lock_Invalid,this,s);
         return;}

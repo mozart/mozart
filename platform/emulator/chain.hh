@@ -1,3 +1,29 @@
+/*
+ *  Authors:
+ *    Per Brand (perbrand@sics.se)
+ *
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ *
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ *
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ *
+ *  This file is part of Mozart, an implementation
+ *  of Oz 3:
+ *     $MOZARTURL$
+ *
+ *  See the file "LICENSE" or
+ *     $LICENSEURL$
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
+ *  WARRANTIES.
+ *
+ */
+
 #ifndef __CHAINHH
 #define __CHAINHH
 
@@ -57,7 +83,7 @@ public:
 
   void init(Site*);
 
-  void informHandle(Tertiary*,EntityCond);
+  void informHandle(Tertiary*,EntityCond,Bool);
 
   void informAutomatic(Tertiary*);
 
@@ -84,12 +110,13 @@ public:
   Bool siteExists(Site*);
 
   void installProbeAfterAck(){
-    if(first->site!=mySite){
-      first->site->installProbe(PROBE_TYPE_PERM,0);}}
+    Assert(first->next!=NULL);
+    if(first->next->site!=mySite){
+      first->next->site->installProbe(PROBE_TYPE_PERM,0);}}
 
   void installTwoProbesAfterAck(){
     installProbeAfterAck();
-    Site *s=first->next->site;
+    Site *s=first->site;
     if(s!=mySite){s->installProbe(PROBE_TYPE_PERM,0);}}
 
   Bool afterOneAnother(Site *s1,Site* s2);
@@ -105,6 +132,8 @@ public:
   void addInform(InformElem *ie){
     ie->next=inform;
     inform=ie;}
+
+  void removeInformElem(Site*,EntityCond);
 };
 
 /* __CHAINHH */
