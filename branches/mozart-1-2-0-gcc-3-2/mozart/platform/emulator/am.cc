@@ -881,9 +881,9 @@ public:
 void AM::insertUser(int ms, TaggedRef node)
 {
   osBlockSignals();
-
+  cerr << "now=" << osTotalTime() << endl;
   unsigned int wakeupAt = osTotalTime() + ms;
-
+  cerr << "inserting user: time=" << wakeupAt << " node=" << node << endl;
   OzSleep **prev = &sleepQueue;
   for (OzSleep *aux = *prev; aux; prev = &aux->next, aux=aux->next) {
     if (wakeupAt <= aux->time) {
@@ -950,6 +950,7 @@ void AM::wakeUser()
 #else
   unsigned int now = osTotalTime();
   while (sleepQueue && sleepQueue->time<=now) {
+    cerr << "waking up user: time=" << sleepQueue->time << " node=" << sleepQueue->node << " now=" << now << endl;
     oz_io_awakeVar(sleepQueue->node);
     OzSleep *aux = sleepQueue->next;
     delete sleepQueue;
@@ -1114,14 +1115,16 @@ OZ_Return oz_addSuspendInArgs3(OZ_Term * _OZ_LOC[]) {
   return SUSPEND;
 }
 
-#ifdef __GNUC__
-#if defined(XDENYS) || __GNUC__>2
+#if OUTLINE_SETEXCEPTIONINFO
 void AM::setExceptionInfo(TaggedRef inf) {
     if (exception.info == NameUnit) {
       exception.info=oz_nil();
     }
     exception.info = oz_cons(inf,exception.info);
   }
+#endif
+
+#if OUTLINE_HF_RAISE_FAILURE
 Bool AM::hf_raise_failure()
 {
   if (!oz_onToplevel() && !oz_currentThread()->isCatch())
@@ -1132,5 +1135,4 @@ Bool AM::hf_raise_failure()
   exception.debug = ozconf.errorDebug;
   return NO;
 }
-#endif
 #endif
