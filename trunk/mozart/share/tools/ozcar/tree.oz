@@ -1,7 +1,6 @@
 %%% $Id$
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
-%declare
 local
    class Node
       attr
@@ -100,15 +99,14 @@ in
    end
 end
 
-class Tree from BaseTree Tk.canvas
-
+class Tree from BaseTree ScrolledTitleCanvas
+   
    attr
       Selected : undef
 
-   meth init(parent:P width:W<=100 height:H<=100)
+   meth tkInit(...)=M
       BaseTree,init
-      Tk.canvas,tkInit(parent:P width:W height:H)
-      {Tk.send pack(self)}
+      ScrolledTitleCanvas,M
    end
 
    meth select(T)
@@ -151,55 +149,3 @@ class Tree from BaseTree Tk.canvas
        end}
    end
 end
-
-
-/*
-
-local
-   X = 1 Y = 1
-   SF = 70 OS = 20
-   X1 = X*SF-OS
-   Y1 = Y*SF-OS
-   X2 = X*SF+OS
-   Y2 = Y*SF+OS
-   TX = X*SF
-   TY = Y*SF
-in
-   {ForAll [tk(crea oval X1 Y1 X2 Y2)
-	    tk(crea text TX+1 TY text:10*X#11*Y)] C}
-end
-
-declare
-W = {New Tk.toplevel tkInit}
-T = {New Tree init(parent:W width:500 height:700)}
-{T add(1 2 undef)}
-{T add(1 3 undef)}
-{T add(1 4 undef)}
-{T add(2 9 undef)}
-{T add(2 11 undef)}
-{T add(3 7 undef)}
-{T add(3 8 undef)}
-{T add(4 5 undef)}
-{T add(4 6 undef)}
-{T add(5 10 undef)}
-{T add(5 12 undef)}
-{T add(6 20 undef)}
-{T add(6 21 undef)}
-{T add(20 22 undef)}
-{T add(20 23 undef)}
-{T add(22 24 undef)}
-{T display}
-
-{T print}
-
-
-declare
-W = {New Tk.toplevel tkInit}
-C = {New Tk.canvas tkInit(parent:W)}
-{Tk.send pack(C)}
-
-{C tk(delete all)}
-
-*/
-
-

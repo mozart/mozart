@@ -2,7 +2,21 @@
 # Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
 install:
-	install -m 444 pre.oz config.oz emacs.oz thread.oz \
-	ozcar.oz frontend.oz main.oz source.oz stack.oz tree.oz \
-	dialog.oz tkext.oz string.oz menu.oz \
+	install -m 444 \
+            prelude.oz \
+            string.oz  \
+            tk.oz      \
+            config.oz  \
+                       \
+            tree.oz    \
+            thread.oz  \
+                       \
+            source.oz  \
+                       \
+            menu.oz    \
+            dialog.oz  \
+            gui.oz     \
+                       \
+            ozcar.oz   \
+            main.oz    \
 	/project/ps/soft/oz-devel/oz/tools/ozcar-devel
