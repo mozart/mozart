@@ -169,7 +169,7 @@
 			     out => ['+int','+int#int'],
 			     BI  => unix_pipe},
 
-    'exec'		=> { in  => ['+virtualString','value'],
+    'exec'		=> { in  => ['+virtualString','value','+bool'],
 			     out => ['+int'],
 			     BI  => unix_exec},
 
