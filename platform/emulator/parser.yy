@@ -604,8 +604,12 @@ optFeatures     : /* empty */
                   { $$ = $3; }
                 ;
 
-featureList     : featureNoVar
+featureList     : nakedVariable '=' featureNoVar
+                  { $$ = consList(pair($1,$3),nilAtom); }
+                | featureNoVar
                   { $$ = consList($1,nilAtom); }
+                | nakedVariable '=' featureNoVar featureList
+                  { $$ = consList(pair($1,$3),$4); }
                 | featureNoVar featureList
                   { $$ = consList($1,$2); }
                 ;
