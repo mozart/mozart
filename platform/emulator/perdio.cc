@@ -2526,26 +2526,46 @@ inline int unmarshallShort(ByteStream *bs){
 class DoubleConv {
 public:
   union {
-    int32 i[2];
+    unsigned char c[sizeof(double)];
+    int i[sizeof(double)/sizeof(int)];
     double d;
   } u;
 };
+
+Bool isLowEndian()
+{
+  DoubleConv dc;
+  dc.u.i[0] = 1;
+  return dc.u.c[0] == 1;
+}
+
+const Bool lowendian = isLowEndian();
 
 inline
 void marshallFloat(double d, ByteStream *bs)
 {
   static DoubleConv dc;
   dc.u.d = d;
-  marshallNumber(dc.u.i[0],bs);
-  marshallNumber(dc.u.i[1],bs);
+  if (lowendian) {
+    marshallNumber(dc.u.i[0],bs);
+    marshallNumber(dc.u.i[1],bs);
+  } else {
+    marshallNumber(dc.u.i[1],bs);
+    marshallNumber(dc.u.i[0],bs);
+  }
 }
 
 inline
 double unmarshallFloat(ByteStream *bs)
 {
   static DoubleConv dc;
-  dc.u.i[0] = unmarshallNumber(bs);
-  dc.u.i[1] = unmarshallNumber(bs);
+  if (lowendian) {
+    dc.u.i[0] = unmarshallNumber(bs);
+    dc.u.i[1] = unmarshallNumber(bs);
+  } else {
+    dc.u.i[1] = unmarshallNumber(bs);
+    dc.u.i[0] = unmarshallNumber(bs);
+  }
   return dc.u.d;
 }
 
