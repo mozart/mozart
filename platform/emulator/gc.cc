@@ -2270,7 +2270,7 @@ void ConstTerm::gcConstRecurse()
 
 	OZ_collectHeapBlock(a->getArgs(), newargs, aw);
 	
-	a->setPtr(newargs);
+	a->args=newargs;
 
       }
       

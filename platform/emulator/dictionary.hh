@@ -374,7 +374,7 @@ public:
     table = t->copyDynamicTable();
     isSafe = NO;
   }
-  
+
   OZ_Return getArg(TaggedRef key, TaggedRef &out) { 
     TaggedRef ret = table->lookup(key);
     if (ret == makeTaggedNULL())
