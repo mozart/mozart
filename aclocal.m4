@@ -158,7 +158,7 @@ AC_DEFUN(OZ_INIT, [
   AC_SUBST(HOMEURL)
   AC_SUBST(HOMECACHE)
   case "$target" in
-    i386-mingw32) 
+    i386-mingw32|i386-mingw32msvc)
 	PLATFORM=win32-i486
 	platform="win32-i486"
 	ozplatform=$platform
@@ -183,7 +183,7 @@ AC_DEFUN(OZ_INIT, [
 
     *)
 	OZ_PATH_PROG(OZPLATFORM,ozplatform)
-	PLATFORM=`$OZPLATFORM`
+	PLATFORM=`$OZPLATFORM || exit 1`
 	OZ_PATH_PROG(OZTOOL,oztool,[OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"])
     ;;
   esac
