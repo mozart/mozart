@@ -45,6 +45,7 @@ static OzDictionary *labelDict = NULL;
 static OzDictionary *abstrEntryDict = NULL;
 static OzDictionary *nameDict1 = NULL;
 static OzDictionary *nameDict2 = NULL;
+static OzDictionary *runTimeDict = NULL;
 
 static IHashTable *ht = NULL;
 
@@ -92,7 +93,7 @@ static void lookupLabel(TaggedRef key, int *location) {
 
 %token <tagged> INTEGER FLOAT NIL ATOM
 %token <tagged> TRUE FALSE UNIT NAMEDNAME COPYABLENAME UNIQUENAME
-%token <tagged> PREDICATEREF COPYABLEPREDICATEREF
+%token <tagged> PREDICATEREF COPYABLEPREDICATEREF RUNTIMEPROC
 %token <index> XREGISTER YREGISTER GREGISTER
 %token POS LBL PID HT ONSCALAR ONRECORD GCI AMI
 
@@ -146,6 +147,7 @@ CodeSize	: INTEGER
 		    abstrEntryDict = new OzDictionary(am.currentBoard());
 		    nameDict1 = new OzDictionary(am.currentBoard());
 		    nameDict2 = new OzDictionary(am.currentBoard());
+		    runTimeDict = new OzDictionary(am.currentBoard());
 		  }
 		;
 
@@ -296,6 +298,15 @@ Feature		: INTEGER
 
 Constant	: Number
 		| Literal
+		| RUNTIMEPROC
+		  {
+		    TaggedRef proc;
+		    if (runTimeDict->getArg($1,proc) != PROCEED) {
+		      proc = OZ_newVariable();
+		      runTimeDict->setArg($1,proc);
+		    }
+		    codeArea->writeTagged(proc);
+		  }
 		;
 
 Builtinname	: Atom
@@ -626,7 +637,9 @@ OZ_BI_define(ozma_readProc,1,1)
 		OZ_mkTupleC("pos",3,OZ_atom(""),OZ_int(0),OZ_int(0)),
 		oz_nil(),maxX);
   pte->PC = codeArea->getStart();
-  pte->setGSize(0);
-  Abstraction *ab=Abstraction::newAbstraction(pte,am.currentBoard());
+  pte->setGSize(1);
+  Abstraction *ab = Abstraction::newAbstraction(pte,am.currentBoard());
+  ab->initG(0,makeTaggedConst(runTimeDict));
+fprintf(stderr,"%s\n",toC(makeTaggedConst(ab)));
   OZ_RETURN(makeTaggedConst(ab));
 } OZ_BI_end
