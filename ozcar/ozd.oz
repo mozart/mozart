@@ -33,6 +33,11 @@
 %% -- is it possible to attach to a running Emacs instead of starting
 %%    a new one?  Alternatively, provide for a means to start ozd from
 %%    the OPI
+%% -- attach Emacs queries does not work with the Emacs sub-process
+%%    (the created Emacs interface is not entered as opi.compiler property)
+%% -- the environment of the created compiler should be richer (cf. OPI),
+%%    especially, it is not yet possible to set breakpoints since Ozcar is
+%%    not in there
 %%
 
 functor
