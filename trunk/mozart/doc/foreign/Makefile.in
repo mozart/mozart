@@ -1,0 +1,12 @@
+# $Id$
+
+VPATH  = @srcdir@
+SRCDIR = @srcdir@
+
+WHAT = foreign
+MAIN = toc.sgml
+SGMLSRCS = foreign.bib foreign.sgml
+HTMLEXTRAFILES = danger.gif
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
