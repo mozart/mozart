@@ -46,9 +46,6 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
 
   Assert(!isNotCVar(rVal));
   
-  if (isTertProxy())
-    return FALSE;
-
   PerdioVar *lVar = this;
 
   if (isCVar(rVal)) {
@@ -58,6 +55,13 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
     }
 
     PerdioVar *rVar = tagged2PerdioVar(rVal);
+
+    if (isTertProxy()) {
+      if (rVar->isTertProxy())
+	return FALSE;
+      Swap(rVal,lVal,TaggedRef);
+      Swap(rPtr,lPtr,TaggedRef*);
+    }
 
     PD((PD_VAR,"unify i:%d i:%d",lVar->getIndex(),rVar->getIndex()));
 
@@ -82,6 +86,10 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
   }
   
   Assert(!isAnyVar(rVal));
+
+  if (isTertProxy())
+    return FALSE;
+
   if (prop && am.isLocalSVar(lVar)) {
     bindPerdioVar(lVar,lPtr,rVal);
     return TRUE;

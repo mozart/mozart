@@ -216,6 +216,8 @@ void addSuspCVar(TaggedRef v, Thread *el)
   case PerdioVariable:
     ((PerdioVar*)cv)->addSuspPerdioVar();
     break;
+  default:
+    break;
   }
   cv->addSuspSVar(el);
 }
