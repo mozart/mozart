@@ -567,60 +567,82 @@ ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
 
 
     
-    
+  
+  
+  srcdir=`cd $srcdir && pwd`
+  SRCDIR="$srcdir"
+  
 
-    srcdir=`cd $srcdir && pwd`
-
+  
+  echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
+echo "configure:579: checking for SRCTOP" >&5
+if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
     
-# Make sure we can run config.sub.
-if $ac_config_sub sun4 >/dev/null 2>&1; then :
-else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
+  oz_tmp_dir=$srcdir
+  oz_tmp_ok=
+  for oz_tmp1 in OZVERSION; do
+    for oz_tmp2 in $oz_tmp_dir \
+		   $oz_tmp_dir/.. \
+		   $oz_tmp_dir/../.. \
+		   $oz_tmp_dir/../../.. \
+		   $oz_tmp_dir/../../../.. \
+		   $oz_tmp_dir/../../../../..; do
+      if test -e "$oz_tmp2/$oz_tmp1"; then
+	echo Looking for $oz_tmp2/$oz_tmp1
+        oz_cv_path_SRCTOP=`cd $oz_tmp2 && pwd`
+        oz_tmp_ok=yes
+        break
+      fi
+    done
+    test -n "$oz_tmp_ok" && break
+  done
+    if test -z "$oz_cv_path_SRCTOP"; then
+      { echo "configure: error: cannot find SRCTOP" 1>&2; exit 1; }
+    fi
 fi
 
-echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:582: checking host system type" >&5
-
-host_alias=$host
-case "$host_alias" in
-NONE)
-  case $nonopt in
-  NONE)
-    if host_alias=`$ac_config_guess`; then :
-    else { echo "configure: error: can not guess host type; you must specify one" 1>&2; exit 1; }
-    fi ;;
-  *) host_alias=$nonopt ;;
-  esac ;;
-esac
-
-host=`$ac_config_sub $host_alias`
-host_cpu=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\1/'`
-host_vendor=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\2/'`
-host_os=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
-echo "$ac_t""$host" 1>&6
-
-
-    if test -z "$SRCTOP"
-    then
-	for SRCTOP in 	$srcdir \
-			$srcdir/.. \
-			$srcdir/../.. \
-			$srcdir/../../.. \
-			$srcdir/../../../..; do
-	  if test -r $SRCTOP/OZVERSION
-	  then
-		break
-	  fi
-	done
-    fi
-    if test ! -r $SRCTOP/OZVERSION
-    then
-	{ echo "configure: error: can't find SRCTOP" 1>&2; exit 1; }
-    fi
-    SRCTOP=`cd $SRCTOP && pwd`
+echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
+  SRCTOP=$oz_cv_path_SRCTOP
+  
+  
+  echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
+echo "configure:613: checking for BUILDTOP" >&5
+if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
     
+  oz_tmp_dir=.
+  oz_tmp_ok=
+  for oz_tmp1 in contrib config.cache; do
+    for oz_tmp2 in $oz_tmp_dir \
+		   $oz_tmp_dir/.. \
+		   $oz_tmp_dir/../.. \
+		   $oz_tmp_dir/../../.. \
+		   $oz_tmp_dir/../../../.. \
+		   $oz_tmp_dir/../../../../..; do
+      if test -e "$oz_tmp2/$oz_tmp1"; then
+	echo Looking for $oz_tmp2/$oz_tmp1
+        oz_cv_path_BUILDTOP=`cd $oz_tmp2 && pwd`
+        oz_tmp_ok=yes
+        break
+      fi
+    done
+    test -n "$oz_tmp_ok" && break
+  done
+    if test -z "$oz_cv_path_BUILDTOP"; then
+      { echo "configure: error: cannot find BUILDTOP" 1>&2; exit 1; }
+    fi
+fi
 
-    echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:624: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "$ac_t""$oz_cv_path_BUILDTOP" 1>&6
+  BUILDTOP=$oz_cv_path_BUILDTOP
+  
+  echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
+echo "configure:646: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -646,7 +668,7 @@ else
   SET_MAKE="MAKE=${MAKE-make}"
 fi
 
-    # Find a good install program.  We prefer a C program (faster),
+  # Find a good install program.  We prefer a C program (faster),
 # so one script is as good as another.  But avoid the broken or
 # incompatible versions:
 # SysV /etc/install, /usr/sbin/install
@@ -657,7 +679,7 @@ fi
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:661: checking for a BSD compatible install" >&5
+echo "configure:683: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -706,7 +728,7 @@ test -z "$INSTALL_PROGRAM" && INSTALL_PROGRAM='${INSTALL}'
 
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
-    
+  
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $PATH | sed -e 's/:://g'`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
@@ -717,7 +739,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:721: checking for $ac_word" >&5
+echo "configure:743: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -752,30 +774,9 @@ fi
 	
     fi
     
-    #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-    #OZ_PATH_PROG(DYNLD,          ozdynld)
+#OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+#OZ_PATH_PROG(DYNLD,          ozdynld)
 
-    if test -z "$BUILDTOP"
-    then
-	for BUILDTOP in	`pwd` \
-			`pwd`/.. \
-			`pwd`/../.. \
-			`pwd`/../../.. \
-			`pwd`/../../../.. \
-			`pwd`/../../../../..; do
-	  if test -r $BUILDTOP/config.cache
-	  then
-		break
-	  fi
-	done
-    fi
-    if test ! -r $BUILDTOP/config.cache
-    then
-	{ echo "configure: error: can't find BUILDTOP" 1>&2; exit 1; }
-    fi
-    BUILDTOP=`cd $BUILDTOP && pwd`
-    
-    
     
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $PATH | sed -e 's/:://g'`
@@ -787,7 +788,7 @@ fi
     # Extract the first word of "ozc", so it can be a program name with args.
 set dummy ozc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:791: checking for $ac_word" >&5
+echo "configure:792: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -833,7 +834,7 @@ fi
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:837: checking for $ac_word" >&5
+echo "configure:838: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1017,16 +1018,12 @@ s%@oldincludedir@%$oldincludedir%g
 s%@infodir@%$infodir%g
 s%@mandir@%$mandir%g
 s%@SET_MAKE@%$SET_MAKE%g
-s%@host@%$host%g
-s%@host_alias@%$host_alias%g
-s%@host_cpu@%$host_cpu%g
-s%@host_vendor@%$host_vendor%g
-s%@host_os@%$host_os%g
+s%@SRCDIR@%$SRCDIR%g
 s%@SRCTOP@%$SRCTOP%g
+s%@BUILDTOP@%$BUILDTOP%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
 s%@INSTALL_DIR@%$INSTALL_DIR%g
-s%@BUILDTOP@%$BUILDTOP%g
 s%@OZC@%$OZC%g
 s%@OZPLATFORM@%$OZPLATFORM%g
 s%@PLATFORM@%$PLATFORM%g
