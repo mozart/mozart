@@ -941,7 +941,7 @@ loop:
 	  return CE_NOTHING;
 	}
       }
-    } else if (solveAA->isDebug() && solveAA->getThreads() == 0) {
+    } else if (solveAA->getThreads() == 0) {
       // There are some external suspensions to this solver!
 
       deinstallCurrent();
