@@ -26,7 +26,6 @@ import
 export
    'class': MathToGIFClass
 define
-   %% -- PATH has already been augmented
    LATEX2GIF = 'latex2gif'
 
    class MathToGIFClass
