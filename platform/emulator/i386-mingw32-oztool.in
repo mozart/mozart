@@ -9,7 +9,7 @@ Usage:
         oztool c++ -c SourceFile
         oztool cc  -c SourceFile
         oztool ld  -o TargetLib FileList
-        oztool platform
+        oztool platform [-o file]
 EOF
   exit 2
 fi
@@ -20,7 +20,12 @@ shift
 case "$cmd" in
   c++)      exec ${plat}-g++ -I@srcdir@ -I@srcdir@/../tools/gump "$@" ;;
   cc)       exec ${plat}-gcc -I@srcdir@ -I@srcdir@/../tools/gump "$@" ;;
-  platform) echo "win32-i486"; exit 0;;
+  platform)
+    case "$1" in
+    -o) echo "win32-i486" > "$2";;
+    * ) echo "win32-i486";;
+    esac
+    exit 0;;
 
   ld) ;;  # see below
 
