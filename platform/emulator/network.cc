@@ -12,6 +12,7 @@
 
 
 
+#include <sys/types.h>
 #ifdef WINDOWS
 #include "wsock.hh"
 #else
@@ -20,7 +21,6 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #endif
-#include <sys/types.h>
 #include <sys/utsname.h>
 #include <errno.h>
 #include <netdb.h>
