@@ -46,6 +46,7 @@ import
    ReflectExport at 'reflect.so{native}'
    System
    FS
+   CTB at 'x-oz://boot/CTB'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 define
@@ -59,6 +60,22 @@ define
    PropIsFailed = ReflectExport.propagatorIsFailed
 
    BIspaceReflect = ReflectExport.spaceReflect
+
+   GetCtVarNameAsAtom       = CTB.getNameAsAtom
+   GetCtVarConstraintAsAtom = CTB.getConstraintAsAtom
+
+   fun {VariableToVirtualString V}
+      case {Value.status V}
+      of kinded(free)  then {Value.toVirtualString V 1 1}
+      [] kinded(int)   then {Value.toVirtualString V 1 1}
+      [] kinded(fset)  then {Value.toVirtualString V 1 1}
+      [] kinded(other) then {Value.toVirtualString V 1 1}
+         #'<'#{GetCtVarNameAsAtom V}#':'#{GetCtVarConstraintAsAtom V}#'>'
+      else
+         {Exception.raiseError vc("Unexpected case" "VariableToVirtualString")}
+         error
+      end
+   end
 
    fun {SpaceReflect Vs}
 \ifdef VERBOSE
@@ -89,6 +106,7 @@ define
                   in
                      var(id:             Id
                          name:           Name
+                         nameconstraint: {VariableToVirtualString Reference}
                          type:           Type
                          reference:      Reference
                          susplists:      SL
@@ -110,7 +128,7 @@ define
                       CP = {FS.diff
                             {FS.unionN
                              {Map
-                              Params %{FS.reflect.lowerBoundList PS}
+                              Params
                               fun {$ PI}
                                  VarTable.PI.propagators
                               end}}
@@ -132,7 +150,9 @@ define
       reflect_space(varsTable:  VarTable
                     propTable:  PropTable
                     failedProp: {Record.foldL PropTable
-                                 fun {$ L propagator(reference: Ref id: Id ...)}
+                                 fun {$ L propagator(reference: Ref
+                                                     id: Id
+                                                     ...)}
                                     if L == unit then
                                        if {PropIsFailed Ref}
                                        then Id else unit end
