@@ -28,9 +28,9 @@ public:
   OzDictionary();
   ~OzDictionary();
   OzDictionary(OzDictionary&);
-  OzDictionary(Board *b) : ConstTermWithHome(b,Co_Dictionary) 
+  OzDictionary(Board *b, int sz=4) : ConstTermWithHome(b,Co_Dictionary) 
   {
-    table = DynamicTable::newDynamicTable();
+    table = DynamicTable::newDynamicTable(sz);
   }
   OzDictionary(Board *b, DynamicTable *t) : ConstTermWithHome(b,Co_Dictionary)
   {
@@ -90,6 +90,14 @@ public:
   {
     return table->toRecord(lbl);
   }
+
+  int getSize() { return table->numelem; }
+
+  // iteration
+  int getFirst()            { return table->getFirst(); }
+  int getNext(int i)        { return table->getNext(i); }
+  TaggedRef getKey(int i)   { return table->getKey(i); }
+  TaggedRef getValue(int i) { return table->getValue(i); }
 
   OZPRINT;
   OZPRINTLONG;

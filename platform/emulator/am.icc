@@ -223,11 +223,6 @@ Board *Name::getBoard()
   return (hasGName()) ? am.rootBoard : ((Board*)ToPointer(homeOrGName))->derefBoard();
 }
 
-inline
-Board *Object::getBoard()
-{
-  return isDeep() ? ((DeepObject*)this)->home->derefBoard() : am.rootBoard;
-}
 
 inline
 Board *ConstTermWithHome::getBoard() { 

@@ -30,7 +30,7 @@ dt_index ceilPwrTwo(dt_index s)
 
 // Create an initially empty dynamictable of size s 
 DynamicTable* DynamicTable::newDynamicTable(dt_index s) {
-    Assert(isPwrTwo(s));
+    s = nextPowerOf2(s);
     size_t memSize = DTBlockSize(s);
     DynamicTable* ret = (DynamicTable *) freeListMalloc(memSize);
     Assert(ret!=NULL);

@@ -2344,7 +2344,7 @@ LBLdispatcher:
 	   Assert(e->sendHdl != makeTaggedNULL());
 	   def = tagged2Abstraction(e->sendHdl);
 	   /* {Obj Msg} --> {Send Msg Class Obj} */
-	   X[predArity++] = o->getOzClass();
+	   X[predArity++] = makeTaggedConst(o->getOzClass());
 	   X[predArity++] = makeTaggedConst(o);
 	   if (!isTailCall) { 
 	     CallPushCont(PC);
