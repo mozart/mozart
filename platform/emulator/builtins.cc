@@ -4925,6 +4925,18 @@ OZ_C_proc_begin(BIdictionaryToRecord,3)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BIdictionaryRemoveAll,1)
+{
+  oz_declareNonvarArg(0,dict);
+  if (!isDictionary(dict)) {
+    oz_typeError(0,"Dictionary");
+  }
+
+  tagged2Dictionary(dict)->removeAll();
+  return PROCEED;
+}
+OZ_C_proc_end
+
 
 /* -----------------------------------------------------------------
    Statistics
@@ -6091,6 +6103,15 @@ OZ_C_proc_begin(BISystemGetMemory,1) {
   return PROCEED;
 }
 OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIheapUsed,1)
+{
+  oz_declareArg(0,out);
+  return OZ_unifyInt(out,getUsedMemory());
+}
+OZ_C_proc_end
+
 
 OZ_C_proc_begin(BISystemGetLimits,1) {
   GetRecord;
@@ -7422,6 +7443,7 @@ BIspec allSpec[] = {
   {"Dictionary.put",     3, BIdictionaryPut,    (IFOR) dictionaryPutInline},
   {"Dictionary.deepPut", 3, BIdictionaryDeepPut,(IFOR) dictionaryDeepPutInline},
   {"Dictionary.remove",  2, BIdictionaryRemove, (IFOR) dictionaryRemoveInline},
+  {"Dictionary.removeAll",1, BIdictionaryRemoveAll, 0},
   {"Dictionary.member",  3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
   {"Dictionary.keys",    2, BIdictionaryKeys,    0},
   {"Dictionary.entries", 2, BIdictionaryEntries, 0},
@@ -7699,6 +7721,7 @@ BIspec allSpec[] = {
   {"System.printError",1,BIprintError},
   {"System.valueToVirtualString",4,BItermToVS},
   {"getTermSize",4,BIgetTermSize},
+  {"heapUsed",1,BIheapUsed},
 
   {"dumpThreads",0,BIdumpThreads},
   {"listThreads",1,BIlistThreads},
