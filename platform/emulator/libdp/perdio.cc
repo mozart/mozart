@@ -254,9 +254,12 @@ void gcPerdioFinal()
 /*   globalization                                       */
 /* *********************************************************************/
 
-void globalizeTert(Tertiary *t)
+void globalizeTert(Tertiary *t, MsgBuffer *bs)
 { 
   Assert(t->isLocal());
+
+  if (bs && !bs->globalize())
+    return;
 
   switch(t->getType()) {
   case Co_Cell:
@@ -293,7 +296,7 @@ void globalizeTert(Tertiary *t)
 	  while(w!=NULL){
 	    insertWatcher(cell,w);
 	  }}
-	globalizeTert(cell);
+	globalizeTert(cell,bs);
 	o->setState(cell);}
       break;
     }
@@ -315,6 +318,7 @@ void globalizeTert(Tertiary *t)
   if(t->getType()==Co_Object)
     {PD((SPECIAL,"object:%x class%x",t,((Object *)t)->getClass()));}
 }
+
 
 /**********************************************************************/
 /*   Localizing                 should be more localize */
@@ -522,7 +526,7 @@ void msgReceived(MsgBuffer* bs)
       OldPerdioVar *pv = (OldPerdioVar *) getPerdioVar(be);
       Object *o = pv->getObject();
       Assert(o);
-      GName *gnobj = o->hasGName();
+      GName *gnobj = o->getGName1();
       Assert(gnobj);
       gnobj->setValue(makeTaggedConst(o));
             
@@ -553,7 +557,7 @@ void msgReceived(MsgBuffer* bs)
       OldPerdioVar *pv = (OldPerdioVar *) getPerdioVar(be);
       Object *o = pv->getObject();
       Assert(o);
-      GName *gnobj = o->hasGName();
+      GName *gnobj = o->getGName1();
       Assert(gnobj);
       gnobj->setValue(makeTaggedConst(o));
       
