@@ -1681,7 +1681,7 @@ if (N!=n-- || !equal(OP##N##_VALUE,((char*)*(bytecode-1))[-1])) return 1
 /* otherwise gcc delays incrementation of bytecode until too late
    in the branch we jump too.  The asm instruction makes gcc believe
    that the new value of bytecode is needed at this point */
-#define DISPATCH { void * where = *bytecode; ++bytecode; asm("" : : "=g" (bytecode)); goto *where; }
+#define DISPATCH { void * where = *bytecode; ++bytecode; asm("" : : "g" (bytecode)); goto *where; }
 #else
 #define DISPATCH goto **bytecode++
 #endif
