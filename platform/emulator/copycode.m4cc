@@ -66,7 +66,7 @@ define(opAction,
         $1,PredicateRef,handlePredicateRef(PC++,ht,code);,
         $1,PredId,  handlePredId(PC++,ht);,
         $1,HashTableRef, handleHashTable(PC++,ht);,
-        $1,GenCallInfo,handleGenCallInfo(PC++,ht);,
+        $1,CallMethodInfo,handleCallMethodInfo(PC++,ht);,
         $1,Cache,handleCache(PC,code); PC += CacheSize;,
         $1,,,
         PC++;)')
@@ -102,28 +102,27 @@ void handleLiteral(ProgramCounter PC, HashTable *ht, CodeArea *code)
 
 
 
-GenCallInfoClass *checkGCI(GenCallInfoClass *gci, HashTable *ht)
+CallMethodInfo *checkGCI(CallMethodInfo *cmi, HashTable *ht)
 {
-  TaggedRef newname = checkTagged(gci->mn,ht);
+  TaggedRef newname = checkTagged(cmi->mn,ht);
 
   // GCIs are deleted after use, so always make a copy
   // if (newname == gci->mn)
   //   return gci;
 
-  CheckHT(GenCallInfoClass *,gci);
+  CheckHT(CallMethodInfo *,cmi);
   
-  aux = new GenCallInfoClass(gci->regIndex,gci->isMethAppl,newname, 
-			     gci->isTailCall,gci->arity);
-  ht->htAdd(ToInt32(gci),aux);
+  aux = new CallMethodInfo(cmi->regIndex,newname,cmi->isTailCall,cmi->arity);
+  ht->htAdd(ToInt32(cmi),aux);
   return aux;
 }
 
 
 static
-void handleGenCallInfo(ProgramCounter PC, HashTable *ht)
+void handleCallMethodInfo(ProgramCounter PC, HashTable *ht)
 {
-  GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC);
-  CodeArea::writeAddress(checkGCI(gci,ht),PC);
+  CallMethodInfo *cmi = (CallMethodInfo*)getAdressArg(PC);
+  CodeArea::writeAddress(checkGCI(cmi,ht),PC);
 }
 
 

@@ -78,7 +78,7 @@ define(opAction,
         $1,PredId,marshalPredId(m,(PrTabEntry*)getAdressArg(PC++),bs);ozValuesCnt--;,
         $1,HashTableRef,marshalHashTableRef(m,instrstart-start,(IHashTable *)getAdressArg(PC++),bs);ozValuesCnt--;,
         $1,RecordArity,marshalRecordArity(m,(SRecordArity) getAdressArg(PC++),bs);ozValuesCnt--;,
-        $1,GenCallInfo,marshalGenCallInfo(m,(GenCallInfoClass*)getAdressArg(PC++),bs);ozValuesCnt--;,
+        $1,CallMethodInfo,marshalCallMethodInfo(m,(CallMethodInfo*)getAdressArg(PC++),bs);ozValuesCnt--;,
         $1,GRegRef,marshalGRegRef((AssRegArray*)getAdressArg(PC++),bs);,
         $1,Location,marshalLocation((OZ_Location*)getAdressArg(PC++),bs);,
         $1,Cache,PC += CacheSize;)]])
@@ -143,13 +143,12 @@ void marshalPredId(Marshaler *m, PrTabEntry *p, MsgBuffer *bs)
 
 //
 inline static
-void marshalGenCallInfo(Marshaler *m, GenCallInfoClass *gci, MsgBuffer *bs)
+void marshalCallMethodInfo(Marshaler *m, CallMethodInfo *cmi, MsgBuffer *bs)
 {
-  int compact = 
-    (gci->regIndex<<2) | (gci->isMethAppl<<1) | (gci->isTailCall);
+  int compact = (cmi->regIndex<<1) | (cmi->isTailCall);
   marshalNumber(compact, bs);
-  m->marshalOzValue(gci->mn);
-  marshalRecordArity(m, gci->arity, bs);
+  m->marshalOzValue(cmi->mn);
+  marshalRecordArity(m, cmi->arity, bs);
 }
 
 //
@@ -354,7 +353,7 @@ define(opAction,
         $1,PredId,PC=unmarshalPredId(b,PC,lastPC,bs);ozValuesCnt--;,
         $1,HashTableRef,PC=unmarshalHashTableRef(b,PC,bs);ozValuesCnt--;,
         $1,RecordArity,PC=unmarshalRecordArity(b,PC,bs);ozValuesCnt--;,
-        $1,GenCallInfo,PC=unmarshalGenCallInfo(b,PC,bs);ozValuesCnt--;,
+        $1,CallMethodInfo,PC=unmarshalCallMethodInfo(b,PC,bs);ozValuesCnt--;,
         $1,GRegRef,PC=unmarshalGRegRef(PC,bs);,
         $1,Location,PC=unmarshalLocation(PC,bs);,
         $1,Cache,PC=unmarshalCache(PC,code);)]])
@@ -684,7 +683,7 @@ ProgramCounter unmarshalPredId(Builder *b, ProgramCounter pc,
 
 //
 // 
-class GenCallInfoLocation : public CodeAreaLocation {
+class CallMethodInfoLocation : public CodeAreaLocation {
 private:
   int compact;
   SRecordArity sra;		// tuples;
@@ -692,7 +691,7 @@ private:
 
   //
 public:
-  GenCallInfoLocation(ProgramCounter ptrIn, int compactIn)
+  CallMethodInfoLocation(ProgramCounter ptrIn, int compactIn)
     : CodeAreaLocation(ptrIn), compact(compactIn), sra((SRecordArity) 0)
   {
     DebugCode(arityList = (OZ_Term) -1;);
@@ -707,8 +706,8 @@ public:
 };
 
 //
-static void getGenCallInfoNameCA(void *arg, OZ_Term value) {
-  GenCallInfoLocation *loc = (GenCallInfoLocation *) arg;
+static void getCallMethodInfoNameCA(void *arg, OZ_Term value) {
+  CallMethodInfoLocation *loc = (CallMethodInfoLocation *) arg;
   int compact = loc->getCompact();
   SRecordArity sra = loc->getSRA();
 
@@ -719,40 +718,39 @@ static void getGenCallInfoNameCA(void *arg, OZ_Term value) {
   }
 
   //
-  int ri      = compact>>2;
-  Bool ism    = (compact>>1)&1;
+  int ri      = compact>>1;
   Bool ist    = (compact&1);
-  GenCallInfoClass *gci = new GenCallInfoClass(ri, ism, value, ist, sra);
-  CodeArea::writeAddressAllocated(gci, loc->getPtr());
+  CallMethodInfo *cmi = new CallMethodInfo(ri, value, ist, sra);
+  CodeArea::writeAddressAllocated(cmi, loc->getPtr());
 
   //
   delete loc;
 }
 
 //
-static void saveGenCallInfoRecordArityCA(void *arg, OZ_Term value)
+static void saveCallMethodInfoRecordArityCA(void *arg, OZ_Term value)
 {
-  GenCallInfoLocation *loc = (GenCallInfoLocation *) arg;
+  CallMethodInfoLocation *loc = (CallMethodInfoLocation *) arg;
   loc->setArityList(value);
 }
 
 //
 static
-ProgramCounter unmarshalGenCallInfo(Builder *b,
-				    ProgramCounter pc, MsgBuffer *bs) 
+ProgramCounter unmarshalCallMethodInfo(Builder *b,
+				       ProgramCounter pc, MsgBuffer *bs) 
 {
   int compact = unmarshalNumber(bs);
 
   //
   if (pc) {
-    GenCallInfoLocation *loc = new GenCallInfoLocation(pc, compact);
+    CallMethodInfoLocation *loc = new CallMethodInfoLocation(pc, compact);
 
     //
-    b->getOzValue(getGenCallInfoNameCA, loc);
+    b->getOzValue(getCallMethodInfoNameCA, loc);
     //
     RecordArityType at = unmarshalRecordArityType(bs);
     if (at == RECORDARITY) {
-      b->getOzValue(saveGenCallInfoRecordArityCA, loc);
+      b->getOzValue(saveCallMethodInfoRecordArityCA, loc);
     } else {
       Assert(at == TUPLEWIDTH);
       int width = unmarshalNumber(bs);
@@ -985,6 +983,7 @@ Bool unmarshalCode(MsgBuffer *bs, Builder *b,
   while (ozValuesCnt > 0) {
     lastPC = PC;
     Opcode op = (Opcode) bs->get();
+    Assert(op != GENCALL);
     if (op == ENDOFFILE) {
       done = OK;
       break;
