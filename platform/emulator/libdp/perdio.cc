@@ -1072,16 +1072,7 @@ OZ_BI_proto(BIportWait);
 
 void initPerdio()
 {
-  //
-#ifdef DEBUG_CHECK
-  fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", osgetpid());
-  fflush(stderr);
-  sleep(10);
-#endif
-
-#ifdef DEBUG_PERDIO
   DV = new DebugVector();
-#endif
 
   initNetwork();
 
@@ -1092,10 +1083,9 @@ void initPerdio()
   msgBufferManager = new MsgBufferManager();
 
   BI_probe = makeTaggedConst(new Builtin("probe", 1, 0, BIprobe, OK));
-#if defined(DEBUG_PERDIO) && defined(MISC_BUILTINS)
+
   BI_startTmp  = makeTaggedConst(new Builtin("startTmp",
 					     2, 0, BIstartTmp, OK));
-#endif
   BI_portWait  = makeTaggedConst(new Builtin("portWait", 
 					     2, 0, BIportWait, OK));
 

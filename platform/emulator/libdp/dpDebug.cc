@@ -33,6 +33,7 @@
 #include "debug.hh"
 #include "dpDebug.hh"
 #include "network.hh"
+#include "thr_int.hh"
 
 //
 // This one is used by the 'Fault' library now;
@@ -42,7 +43,7 @@ OZ_BI_define(BIcloseCon,1,1)
   OZ_RETURN(oz_int(openclose(what)));
 } OZ_BI_end
 
-#ifdef DEBUG_PERDIO
+
 
 DebugVector *DV = NULL;
 
@@ -107,7 +108,6 @@ char *debugTypeStr[LAST] = {
   "TCP_CONNECTION"
 };
 
-#ifdef MISC_BUILTINS
 
 Bool openClosedConnection(int Type);
 void wakeUpTmp(int i, int time);
@@ -128,13 +128,19 @@ TaggedRef BI_startTmp;
 
 void wakeUpTmp(int i, int time) {
   PD((TCPCACHE,"Starting DangelingThread"));
-  Thread *tt = oz_newThreadToplevel(LOW_PRIORITY);
+  Thread *tt = oz_newThread(LOW_PRIORITY);
   tt->pushCall(BI_startTmp, oz_int(i), oz_int(time));
   tt->pushCall(BI_Delay, oz_int(time));
 }
 
+
+#ifdef DEBUG_PERDIO
+
 OZ_BI_define(BIdvset,2,0)
 {
+  if(!isPerdioInitialized()) 
+    perdioInitLocal();
+
   OZ_declareIntIN(0,what);
   OZ_declareIntIN(1,val);
 
@@ -146,7 +152,6 @@ OZ_BI_define(BIdvset,2,0)
   return PROCEED;
 } OZ_BI_end
 
-#endif
 
 void maybeDebugBufferGet(BYTE b){
   PD((MARSHAL_CT,"one char got c:%d",b));}
@@ -155,6 +160,14 @@ void maybeDebugBufferPut(BYTE b){
   PD((MARSHAL_CT,"one char pub c:%d",b));}
 
 #else
+
+OZ_BI_define(BIdvset,2,0)
+{
+  OZ_declareIntIN(0,what);
+  OZ_declareIntIN(1,val);
+  OZ_warning("has no effect - you must compile with DEBUG_PERDIO");
+  return PROCEED;
+} OZ_BI_end
 
 void maybeDebugBufferGet(BYTE b) {}
 void maybeDebugBufferPut(BYTE b) {}

@@ -37,8 +37,7 @@
 
     'dvset'		=> { in  => ['+int','+int'],
 			     out => [],
-			     BI  => BIdvset,
-			     ifdef=>DEBUG_PERDIO},
+			     BI  => BIdvset},
 
     'siteStatistics'	=> { in  => [],
 			     out => ['+[value]'],
@@ -48,14 +47,6 @@
 			     out => ['+[value]'],
 			     BI  => BItablesExtract},
 
-    'printBorrowTable'	=> { in  => [],
-			     out => [],
-			     BI  => BIprintBorrowTable},
-
-    'printOwnerTable'	=> { in  => [],
-			     out => [],
-			     BI  => BIprintOwnerTable},
-
     'perdioStatistics'	=> { in  => [],
 			     out => ['+record'],
 			     BI  => BIperdioStatistics},
@@ -64,3 +55,5 @@
 			     out => [],
 			     bi  => BIslowNet},
  );
+
+

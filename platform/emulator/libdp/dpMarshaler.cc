@@ -501,10 +501,13 @@ void marshalObjVar(OldPerdioVar *pvar, MsgBuffer *bs)
 /*   SECTION 15: statistics                                            */
 /* *********************************************************************/
 
-#ifdef MISC_BUILTINS
+// note that the marshaler always give you these statistics - should be changed
 
 OZ_BI_define(BIperdioStatistics,0,1)
 {
+  if(!isPerdioInitialized()) 
+    perdioInitLocal();
+
   OZ_Term dif_send_ar=oz_nil();
   OZ_Term dif_recv_ar=oz_nil();
   int i;
@@ -559,4 +562,5 @@ OZ_BI_define(BIperdioStatistics,0,1)
   OZ_RETURN(OZ_recordInit(oz_atom("perdioStatistics"),ar));
 } OZ_BI_end
 
-#endif
+
+

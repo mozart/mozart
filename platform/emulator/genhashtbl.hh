@@ -82,9 +82,6 @@ public:
       return FALSE;}
     return TRUE;}
   
-#ifdef DEBUG_PERDIO
-
-
   int length(){
     int ct=0;
     FreeListEntry *f=free;
@@ -92,7 +89,6 @@ public:
       f= f->next;
       ct++;}
     return ct;}
-#endif
 };
 
 class GenHashBaseKey{
@@ -112,9 +108,7 @@ protected:
   GenHashBaseKey * basekey;
   GenHashEntry *entry;
   GenHashNode *next;
-#ifdef DEBUG_PERDIO
   int getLength();
-#endif
   Bool isEmpty()  {return entry==FREE_ENTRY;}
 
   void makeEmpty() {entry=FREE_ENTRY;}
@@ -208,10 +202,7 @@ public:
   int htGetKey(int i) {return table[i].getKey();}
   void deleteFirst(GenHashNode*);
   void deleteNonFirst(GenHashNode*,GenHashNode*);
-#ifdef DEBUG_PERDIO
-  void printStatistics();
   GenHashNode *getElem(int);
-#endif
 };
 
 
