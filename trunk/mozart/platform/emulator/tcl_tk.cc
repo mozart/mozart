@@ -295,6 +295,8 @@ OZ_C_proc_begin(BIisTclFilter, 3) {
       return s;
     }
   }
+  Assert(0);
+  return FAILED;
 } OZ_C_proc_end
 
 
