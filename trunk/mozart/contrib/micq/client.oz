@@ -62,12 +62,17 @@ import
 	errorBox:ErrorBox
 	removeApp:RemoveApp
 	updateApp:UpdateApp) at 'clientgui.ozf'
-
+\ifdef MOZART_POWER
+   MozartPower(showLogo:ShowLogo)
+\endif
 export
    start: StartClient
 
 define
-   
+\ifdef MOZART_POWER
+   StopLogo StopLogoDelay
+\endif   
+
    WaitQuit
    
    class ClientClass from StationaryClass
@@ -83,10 +88,6 @@ define
 	    try {@ServerRef M} 
 	    catch X then
 	       case X of networkFailure(...) then
-		  %{Browse networkFailure(serverGone X.1 M)}
-		  %{StopGUI}
-		  %{Delay 1}
-		  %unit=WaitQuit
 		  {self reConnect(M)}
 	       elseof idAllreadyInUse(ID) then
 		  raise idAllreadyInUse(ID)  end
@@ -95,8 +96,6 @@ define
 		   "Please make sure that you are running a client compiled for this particular server, or make "#
 		   "sure that you have typed the right ticket URL!\n\n"#
 		   "If you have any questions, please send a mail to: nilsf@sics.se or simon@sics.se"}
-		  {StopGUI}
-		  {Delay 1}
 		  unit=WaitQuit
 	       else
 		  {Browse client(X M)}
@@ -173,6 +172,11 @@ define
 	 if @GUIStarted then skip
 	 else
 	    try	H={self load($)} in
+\ifdef MOZART_POWER
+	       {Wait StopLogoDelay}
+	       StopLogo=1
+	       {Delay 500}
+\endif
 	       {StartGUI self.this @server @id H S}
 	       GUIStarted <- true
 	    catch X then {Browse exception(startgui X)} end
@@ -276,9 +280,7 @@ define
       
       meth logout()
 	 {@server S_logout(id:@id)}
-	 {StopGUI}
-	 %{System.printError "*** Close client\n"}
-	 {Delay 1}
+	 thread {StopGUI} end
 	 unit=WaitQuit
       end
 
@@ -286,12 +288,8 @@ define
 	 thread
 	    if Msg\=nil then
 	       {ErrorBox "Logout message from server: "#Msg}
-	    else
-	       skip
-	       %{System.printError "*** Server close-down\n"}
 	    end
-	    {StopGUI}
-	    {Delay 1}
+	    thread {StopGUI} end
 	    unit=WaitQuit
 	 end
       end
@@ -363,33 +361,42 @@ define
 
    
    proc{StartClient A}
-      try
-	 S={Connection.take {Pickle.load A.ticketURL}}
-	 C={NewStationary ClientClass init(server:S args:A)}
-      in
-	 if A.newuser==false then
-	    {C registerclient(id:A.login passwd:A.passwd)}
-	 else
-	    {C newAccount(A)}
-	 end
-      catch X then
-	 case X of error(1:connection(ticketToDeadSite _) ...) then
-	    {ErrorBox "Server ("#A.ticketURL#") is down!"}
-	    unit=WaitQuit
-	 else
-	    %{Browse X}
-	    thread
-	       {ErrorBox "Unknown exception: "#{Label X}}
-	       unit=WaitQuit
+\ifdef MOZART_POWER
+      Start
+   in
+      {ShowLogo Start StopLogo}
+\endif
+      thread
+	 try
+	    S={Connection.take {Pickle.load A.ticketURL}}
+	    C={NewStationary ClientClass init(server:S args:A)}
+	 in
+\ifdef MOZART_POWER
+	    Start=500
+	    thread {Delay 3000} StopLogoDelay=unit end
+\endif
+	    if A.newuser==false then
+	       {C registerclient(id:A.login passwd:A.passwd)}
+	    else
+	       {C newAccount(A)}
 	    end
-	    raise X end
+	 catch X then
+	    case X of error(1:connection(ticketToDeadSite _) ...) then
+	       {ErrorBox "Server ("#A.ticketURL#") is down!"}
+	       unit=WaitQuit
+	    else
+	    %{Browse X}
+	       thread
+		  {ErrorBox "Unknown exception: "#{Label X}}
+		  unit=WaitQuit
+	       end
+	       raise X end
+	    end
 	 end
       end
-
       {Wait WaitQuit}
       {Delay 3000}
    end
 in
    skip
 end
-
