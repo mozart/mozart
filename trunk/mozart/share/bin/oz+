@@ -3,5 +3,5 @@
 unset OZHOME OZPATH OZCOMPILER OZMACHINE OZARCH OZ_PI
 export OZHOME OZPATH OZCOMPILER OZMACHINE OZARCH OZ_PI
 
-exec /usr/share/gs/soft/OzReleases/oz/bin/oz
+exec /usr/share/dfki/oz/bin/oz
 
