@@ -29,7 +29,7 @@ BINDIR=		$(PREFIX)/@BINDIRNAME@
 CXX=		@CXX@ @CXXFLAGS@
 LD=		$(CXX) @LDFLAGS@
 AR=		@AR@
-WINDRES=	@WINDRES@
+WINDRES=	@WINDRES@ --preprocessor "$(CXX) -E -xc-header -DRC_INVOKED"
 
 INCS=		-I. -I$(SRCDIR)
 LIBS=		-L. -lstartup -luser32
