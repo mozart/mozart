@@ -501,7 +501,34 @@
 % width of the page and to move it left by the width of the left
 % margin.
 
-\renewcommand\float@makebox{%
+% newer versions of float.sty define \float@makebox with an argument
+% first we need to determine whether this is the case
+
+\newif\if@mozart@float@noarg
+\@mozart@float@noargtrue
+
+\bgroup
+\long\def\tmp{}
+\catcode`\:=12\relax
+\def\next#1:#2#3\END{%
+  \def\inspect#1:##1##2\END{%
+    \if##1#2\global\@mozart@float@noargtrue
+    \else   \global\@mozart@float@noargfalse\fi}}
+\expandafter\next\meaning\tmp\END
+\expandafter\inspect\meaning\float@makebox\END
+\egroup
+
+% redefine \float@makebox accordingly
+% this is tricky, we need to temporarily make sure that
+% \@fs@iftopcapt is bound to a conditional, otherwise
+% TeX scanning fucks up when skipping over the ignored
+% alternative definition
+
+\let\saved@iftopcapt\@fs@iftopcapt
+\let\@fs@iftopcapt\iftrue
+
+\if@mozart@float@noarg
+\renewcommand{\float@makebox}{%
   \vbox{\moveleft\mozart@leftmarginwidth
   \vbox{\hsize\mozart@fullwidth \@parboxrestore
     \@fs@pre\@fs@iftopcapt
@@ -510,6 +537,19 @@
     \else\unvbox\@currbox
       \ifvbox\@floatcapt\par\@fs@mid\unvbox\@floatcapt\fi
     \fi\par\@fs@post\vskip\z@}}}
+\else
+% for the time being, we just add a formal arg and ignore it
+\renewcommand{\float@makebox}[1]{%
+  \vbox{\moveleft\mozart@leftmarginwidth
+  \vbox{\hsize\mozart@fullwidth \@parboxrestore
+    \@fs@pre\@fs@iftopcapt
+      \ifvbox\@floatcapt\unvbox\@floatcapt\par\@fs@mid\fi
+      \unvbox\@currbox
+    \else\unvbox\@currbox
+      \ifvbox\@floatcapt\par\@fs@mid\unvbox\@floatcapt\fi
+    \fi\par\@fs@post\vskip\z@}}}
+\fi
+\let\@fs@iftopcapt\saved@iftopcapt
 
 % this seems to do the trick.  otherwise we get loads of overfull warnings.
 \renewcommand{\@floatboxreset}{%
