@@ -63,4 +63,4 @@
 \insert 'standard/Time.oz'
 \insert 'standard/Lazy.oz'
 \insert 'standard/Promise.oz'
-
+\insert 'standard/Functor.oz'
