@@ -178,7 +178,7 @@ to get a <<remoteProblem>> fault state.
 entity consists of at most one
 element from the set
 {<<tempFail>>, <<permFail>>}
-together with at most one element from the set
+together with at most two elements from the set
 {<<remoteProblem(permSome)>>,
 <<remoteProblem(permAll)>>,
 <<remoteProblem(tempSome)>>,
@@ -186,6 +186,11 @@ together with at most one element from the set
 Permanent remote problems mask temporary ones,
 i.e., if <<remoteProblem<<permSome>> is detected
 then <<remoteProblem<<tempSome>> cannot be detected.
+If a (temporary or permanent)
+problem exists on <EM>all</EM> remote sites
+(e.g., <<remoteProblem(permAll)>>)
+then the problem also exists on <EM>some</EM>
+sites (e.g., <<remoteProblem(permSome)>>).
 
 
 <SECTION><TITLE>Basic model</TITLE>
@@ -540,15 +545,20 @@ If the fault state is <<remoteProblem>>,
 then the wait operation may not be able
 to complete if the problem exists 
 at the proxy that should bind the variable.
-Therefore, it is important to detect the
-fault state <<remoteProblem>>.
+This is <EM>not</EM> a <<tempFail>> or <<permFail>>,
+since another proxy can successfully bind the variable.
+But from the application's viewpoint, it may still
+be important to know about this problem.
+Therefore, the fault state <<remoteProblem>>
+is important for variables.
 
 <P>A common case for variables is the client-server.
 The client sends a request containing a variable to the server.
 The server binds the variable to the answer.
 The variable exists only on the client and server sites.
 In this case, if the client detects a <<remoteProblem>>
-then it knows that the variable binding will be delayed.
+then it knows that the variable binding will be
+delayed or never done.
 
 <SUBSECTION><TITLE>Cells and locks</TITLE>
 
@@ -561,23 +571,23 @@ The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
 <ITEM> Owner site down and state pointer not present
-(<<permFail(info:owner)>>).
+(<<permFail(info:owner)>> and <<remoteProblem(permSome)>>).
 <ITEM> Owner site unreachable and state pointer not present
 (<<tempFail(info:owner)>>).
 <ITEM> State pointer lost (owner site up)
-(<<permFail(info:state)>>).
+(<<permFail(info:state)>>, <<remoteProblem(permAll)>>,
+and <<remoteProblem(permSome)>>).
 This failure mode is only for cells.
 If a lock token is lost then the owner recreates it.
 <ITEM> State pointer unreachable (owner site up)
 (<<tempFail(info:state)>>).
 <ITEM> State pointer present and owner site down
-(<<remoteProblem(permAll)>>).
+(<<remoteProblem(permAll)>> and <<remoteProblem(permSome)>>).
 <ITEM> State pointer present and owner site unreachable
-(<<remoteProblem(tempAll)>>).
+(<<remoteProblem(tempAll)>> and <<remoteProblem(tempSome)>>).
 </LIST>
-<P>Objects and cells have one primitive operation,
-namely a state update.
-For a cell this operation is called <<Exchange>>.
+<P>A cell has one primitive operation,
+a state update, which is called <<Exchange>>.
 
 <SUBSECTION><TITLE>Objects</TITLE>
 
@@ -593,18 +603,19 @@ the following failure modes are possible:
 <ITEM> Normal operation (<<ok>>).
 <ITEM> Owner site down and
 object-record or state pointer not present
-(<<permFail(info:owner)>>).
+(<<permFail(info:owner)>> and <<remoteProblem(permSome)>>).
 <ITEM> Owner site unreachable and
 object-record or state pointer not present
 (<<tempFail(info:owner)>>).
 <ITEM> State pointer lost (owner site up)
-(<<permFail(info:state)>>).
+(<<permFail(info:state)>>, <<remoteProblem(permAll)>>,
+and <<remoteProblem(permSome)>>).
 <ITEM> State pointer unreachable (owner site up)
 (<<tempFail(info:state)>>).
 <ITEM> Object-record and state pointer present and owner site down
-(<<remoteProblem(permAll)>>).
+(<<remoteProblem(permAll)>> and <<remoteProblem(permSome)>>).
 <ITEM> Object-record and state pointer present and owner site unreachable
-(<<remoteProblem(tempAll)>>).
+(<<remoteProblem(tempAll)>> and <<remoteProblem(tempSome)>>).
 </LIST>
 Compared to cells,
 objects have two new failure modes:
