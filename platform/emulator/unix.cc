@@ -159,10 +159,10 @@ int unixIsCons(OZ_Term list, OZ_Term *hd, OZ_Term *tl) {
 // -------------------------------------------------
 
 
-#define WRAPCALL(CALL, RET) \
-int RET;                                     \
-while ((RET = CALL) < 0) {                   \
-  if (ossockerrno() != EINTR) { RETURN_UNIX_ERROR; } \
+#define WRAPCALL(f, CALL, RET)				\
+int RET;						\
+while ((RET = CALL) < 0) {				\
+  if (ossockerrno() != EINTR) { RETURN_UNIX_ERROR(f); }	\
 }
 
 
@@ -170,19 +170,19 @@ while ((RET = CALL) < 0) {                   \
 // specification of returning
 // -------------------------------------------------
 
-int raiseUnixError(int n, char * e, char * g) {
-  return oz_raise(E_SYSTEM,E_OS, g, 2, OZ_int(n), OZ_string(e)); 
+int raiseUnixError(char *f,int n, char * e, char * g) {
+  return oz_raise(E_SYSTEM,E_OS, g, 3, OZ_string(f), OZ_int(n), OZ_string(e)); 
 }
 
 // return upon unix-error
-#define RETURN_UNIX_ERROR \
-{ return raiseUnixError(ossockerrno(), OZ_unixError(ossockerrno()), "os"); }
+#define RETURN_UNIX_ERROR(f) \
+{ return raiseUnixError(f,ossockerrno(), OZ_unixError(ossockerrno()), "os"); }
 
 
 #if defined(ULTRIX_MIPS) || defined(OS2_I486)
 
-#define RETURN_NET_ERROR \
-{ return raiseUnixError(0, "Host lookup failure.", "host"); }
+#define RETURN_NET_ERROR(f) \
+{ return raiseUnixError(f, 0, "Host lookup failure.", "host"); }
 
 #else
 
@@ -206,8 +206,8 @@ static char* h_strerror(const int err) {
   }
 }
 
-#define RETURN_NET_ERROR \
-{ return raiseUnixError(h_errno, h_strerror(h_errno), "host"); }
+#define RETURN_NET_ERROR(f) \
+{ return raiseUnixError(f, h_errno, h_strerror(h_errno), "host"); }
 
 
 #endif
@@ -227,32 +227,32 @@ static char* h_strerror(const int err) {
 // check file descriptors
 // -------------------------------------------------
 
-#define CHECK_READ(FD) \
-{ int sel = osTestSelect(FD,SEL_READ);                           \
-  if (sel < 0)  { RETURN_UNIX_ERROR; }	                         \
-  if (sel == 0) {                                                \
-    TaggedRef t = oz_newVariable(); \
-    (void) OZ_readSelect(FD, NameUnit, t);                       \
-    DEREF(t, t_ptr, t_tag);                                      \
-    if (oz_isVariable(t_tag)) {                                       \
-      am.addSuspendVarList(t_ptr);                               \
-      return SUSPEND;                                            \
-    }                                                            \
-  }                                                              \
+#define CHECK_READ(FD)					\
+{ int sel = osTestSelect(FD,SEL_READ);			\
+  if (sel < 0)  { RETURN_UNIX_ERROR("select"); }	\
+  if (sel == 0) {					\
+    TaggedRef t = oz_newVariable();			\
+    (void) OZ_readSelect(FD, NameUnit, t);		\
+    DEREF(t, t_ptr, t_tag);				\
+    if (oz_isVariable(t_tag)) {				\
+      am.addSuspendVarList(t_ptr);			\
+      return SUSPEND;					\
+    }							\
+  }							\
 }
                              
-#define CHECK_WRITE(FD) \
-{ int sel = osTestSelect(FD,SEL_WRITE);                          \
-  if (sel < 0)  { RETURN_UNIX_ERROR; }	                         \
-  if (sel == 0) {                                                \
-    TaggedRef t = oz_newVariable(); \
-    (void) OZ_writeSelect(FD, NameUnit, t);                      \
-    DEREF(t, t_ptr, t_tag);                                      \
-    if (oz_isVariable(t_tag)) {                                       \
-      am.addSuspendVarList(t_ptr);                               \
-      return SUSPEND;                                            \
-    }                                                            \
-  }                                                              \
+#define CHECK_WRITE(FD)					\
+{ int sel = osTestSelect(FD,SEL_WRITE);			\
+  if (sel < 0)  { RETURN_UNIX_ERROR("select"); }	\
+  if (sel == 0) {					\
+    TaggedRef t = oz_newVariable();			\
+    (void) OZ_writeSelect(FD, NameUnit, t);		\
+    DEREF(t, t_ptr, t_tag);				\
+    if (oz_isVariable(t_tag)) {				\
+      am.addSuspendVarList(t_ptr);			\
+      return SUSPEND;					\
+    }							\
+  }							\
 }
 
 static OZ_Term openbuff2list(int len, const char *s, const OZ_Term tl) {
@@ -531,12 +531,12 @@ OZ_BI_iodefine(unix_getDir,1,1)
   OZ_declareVsIN(0, path);
 
   if ((dp = opendir(path)) == NULL)
-    RETURN_UNIX_ERROR;
+    RETURN_UNIX_ERROR("opendir");
 
   dirValue = readEntries(dp);
 
   if (closedir(dp) < 0)
-    RETURN_UNIX_ERROR;
+    RETURN_UNIX_ERROR("closedir");
 
   OZ_RETURN(dirValue);
 } OZ_BI_ioend
@@ -550,7 +550,7 @@ OZ_BI_iodefine(unix_stat,1,1)
   OZ_declareVsIN(0, filename);
 
   if (stat(filename, &buf) < 0)
-    RETURN_UNIX_ERROR;
+    RETURN_UNIX_ERROR("stat");
 
 #ifndef _MSC_VER
   if      (S_ISREG(buf.st_mode))  fileType = "reg";
@@ -575,7 +575,7 @@ OZ_BI_iodefine(unix_uName,0,1)
 {
   struct utsname buf;
   if (uname(&buf) < 0)
-    RETURN_UNIX_ERROR;
+    RETURN_UNIX_ERROR("uname");
 
   OZ_Term t2=OZ_pairAS("machine",buf.machine);
   OZ_Term t3=OZ_pairAS("nodename",buf.nodename);
@@ -588,7 +588,7 @@ OZ_BI_iodefine(unix_uName,0,1)
 #if defined(SUNOS_SPARC) || defined(LINUX)
   char dname[65];
   if (getdomainname(dname, 65)) {
-    RETURN_UNIX_ERROR;
+    RETURN_UNIX_ERROR("getdomainname");
   }
   pairlist = cons(OZ_pairAS("domainname",dname),pairlist);
 #endif
@@ -623,7 +623,7 @@ OZ_BI_iodefine(unix_getRUsage,1,1)
   }  
   struct rusage buf;
   if (getrusage(who,&buf) < 0)
-    RETURN_UNIX_ERROR;
+    RETURN_UNIX_ERROR("getrusage");
 
   OZ_Term pl=nil();
 
@@ -675,7 +675,7 @@ OZ_BI_iodefine(unix_chDir,1,0)
 {
   OZ_declareVsIN(0,dir);
   if (chdir(dir)) {
-    RETURN_UNIX_ERROR;
+    RETURN_UNIX_ERROR("chdir");
   } else
     return PROCEED;
 } OZ_BI_ioend
@@ -685,7 +685,7 @@ OZ_BI_iodefine(unix_getCWD,0,1)
   const int SIZE=256;
   char buf[SIZE];
   if (getcwd(buf,SIZE)) OZ_RETURN_ATOM(buf);
-  if (errno != ERANGE) RETURN_UNIX_ERROR;
+  if (errno != ERANGE) RETURN_UNIX_ERROR("getcwd");
 
   int size=SIZE+SIZE;
   char *bigBuf;
@@ -696,7 +696,7 @@ OZ_BI_iodefine(unix_getCWD,0,1)
       free(bigBuf);
       OZ_RETURN(res);
     }
-    if (errno != ERANGE) RETURN_UNIX_ERROR;
+    if (errno != ERANGE) RETURN_UNIX_ERROR("getcwd");
     free(bigBuf);
     size+=SIZE;
   }
@@ -794,7 +794,7 @@ OZ_BI_iodefine(unix_open,3,1)
     return OZ_typeError(2,"enum openMode");
   }
 
-  WRAPCALL(osopen(filename, flags, mode),desc);
+  WRAPCALL("open",osopen(filename, flags, mode),desc);
 
   OZ_RETURN_INT(desc);
 } OZ_BI_ioend
@@ -805,7 +805,7 @@ OZ_BI_iodefine(unix_close,1,0)
 {
   OZ_declareIntIN(0,fd);
 
-  WRAPCALL(osclose(fd),ret);
+  WRAPCALL("close",osclose(fd),ret);
 
   return PROCEED;
 } OZ_BI_ioend
@@ -823,7 +823,7 @@ OZ_BI_iodefine(unix_read,5,0)
 
   char *buf = (char *) malloc(maxx+1);
 
-  WRAPCALL(osread(fd, buf, maxx), ret);
+  WRAPCALL("read",osread(fd, buf, maxx), ret);
 
   OZ_Term hd = openbuff2list(ret, buf, outTail);
 
@@ -853,7 +853,7 @@ OZ_BI_iodefine(unix_write, 2,1)
     if (status != PROCEED && status != SUSPEND)
       return status;
   
-    WRAPCALL(oswrite(fd, write_buff, len), ret);
+    WRAPCALL("write",oswrite(fd, write_buff, len), ret);
     
     if (status == PROCEED) {
       if (len == ret) {
@@ -893,7 +893,7 @@ OZ_BI_iodefine(unix_lSeek,3,1) {
     return OZ_typeError(2,"enum(SEEK_CUR SEEK_END)");
   }
     
-  WRAPCALL(lseek(fd, offset, whence),ret);
+  WRAPCALL("lseek",lseek(fd, offset, whence),ret);
 
   OZ_RETURN_INT(ret);
 } OZ_BI_ioend
@@ -902,7 +902,7 @@ OZ_BI_iodefine(unix_lSeek,3,1) {
 OZ_BI_iodefine(unix_readSelect, 1,0) {
   OZ_declareIntIN(0,fd);
 
-  WRAPCALL(osTestSelect(fd,SEL_READ),sel);
+  WRAPCALL("select",osTestSelect(fd,SEL_READ),sel);
 
   if (sel == 0) {
     TaggedRef t = oz_newVariable();
@@ -923,7 +923,7 @@ OZ_BI_iodefine(unix_readSelect, 1,0) {
 OZ_BI_iodefine(unix_writeSelect,1,0) {
   OZ_declareIntIN(0,fd);
 
-  WRAPCALL(osTestSelect(fd,SEL_WRITE),sel);
+  WRAPCALL("select",osTestSelect(fd,SEL_WRITE),sel);
 
   if (sel == 0) {
     TaggedRef t = oz_newVariable();
@@ -944,7 +944,7 @@ OZ_BI_iodefine(unix_writeSelect,1,0) {
 OZ_BI_iodefine(unix_acceptSelect,1,0) {
   OZ_declareIntIN(0,fd);
 
-  WRAPCALL(osTestSelect(fd,SEL_READ),sel);
+  WRAPCALL("select",osTestSelect(fd,SEL_READ),sel);
 
   if (sel == 0) {
 
@@ -1021,7 +1021,7 @@ OZ_BI_iodefine(unix_socket,3,1)
     protocol = 0;
   }
 
-  WRAPCALL(ossocket(domain, type, protocol), sock);
+  WRAPCALL("socket",ossocket(domain, type, protocol), sock);
 
   OZ_RETURN_INT(sock);
 } OZ_BI_ioend
@@ -1038,7 +1038,7 @@ OZ_BI_iodefine(unix_bindInet,2,0)
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
   addr.sin_port = htons ((unsigned short) port);
 
-  WRAPCALL(bind(sock,(struct sockaddr *)&addr,sizeof(struct
+  WRAPCALL("bind",bind(sock,(struct sockaddr *)&addr,sizeof(struct
                                                      sockaddr_in)),ret);
   return PROCEED;
 } OZ_BI_ioend
@@ -1056,7 +1056,7 @@ OZ_BI_define(unix_getSockName,1,1)
   int length = sizeof(addr);
 #endif
 
-  WRAPCALL(getsockname(s, (struct sockaddr *) &addr, &length), ret);
+  WRAPCALL("getsockname",getsockname(s, (struct sockaddr *) &addr, &length), ret);
 
   OZ_RETURN_INT(ntohs(addr.sin_port));
 } OZ_BI_end
@@ -1067,7 +1067,7 @@ OZ_BI_iodefine(unix_listen,2,0)
   OZ_declareIntIN(0, s);
   OZ_declareIntIN(1, n);
 
-  WRAPCALL(listen(s,n), ret);
+  WRAPCALL("listen",listen(s,n), ret);
 
   return PROCEED;
 } OZ_BI_ioend
@@ -1082,7 +1082,7 @@ OZ_BI_define(unix_connectInet,3,0)
   struct hostent *hostaddr;
 
   if ((hostaddr = gethostbyname(host)) == NULL) {
-    RETURN_NET_ERROR;
+    RETURN_NET_ERROR("gethostbyname");
   }
 
   struct sockaddr_in addr;
@@ -1094,7 +1094,7 @@ OZ_BI_define(unix_connectInet,3,0)
   int ret = osconnect(s,(struct sockaddr *) &addr,sizeof(addr));
   if (ret<0) {
     Assert(errno != EINTR);
-    RETURN_UNIX_ERROR;
+    RETURN_UNIX_ERROR("connect");
   }
 
   return PROCEED;
@@ -1110,7 +1110,7 @@ OZ_BI_iodefine(unix_acceptInet,1,3)
   struct sockaddr_in from;
   int fromlen = sizeof from;
 
-  WRAPCALL(osaccept(sock,(struct sockaddr *)&from, &fromlen),fd);
+  WRAPCALL("accept",osaccept(sock,(struct sockaddr *)&from, &fromlen),fd);
 
   struct hostent *gethost = gethostbyaddr((char *) &from.sin_addr,
                                           fromlen, AF_INET);
@@ -1187,7 +1187,7 @@ OZ_BI_iodefine(unix_send, 3,1)
     if (status != PROCEED && status != SUSPEND)
       return status;
     
-    WRAPCALL(send(sock, write_buff, len, flags), ret);
+    WRAPCALL("send",send(sock, write_buff, len, flags), ret);
     
     if (len==ret && status != SUSPEND) {
       OZ_RETURN_INT(len);
@@ -1231,7 +1231,7 @@ OZ_BI_iodefine(unix_sendToInet, 5,1)
     struct hostent *hostaddr;
     
     if ((hostaddr = gethostbyname(host)) == NULL) {
-      RETURN_NET_ERROR;
+      RETURN_NET_ERROR("gethostbyname");
     }
     
     struct sockaddr_in addr;
@@ -1252,7 +1252,7 @@ OZ_BI_iodefine(unix_sendToInet, 5,1)
     if (status != PROCEED && status != SUSPEND)
       return status; 
     
-    WRAPCALL(sendto(sock, write_buff, len, flags,
+    WRAPCALL("sendto",sendto(sock, write_buff, len, flags,
 		    (struct sockaddr *) &addr, sizeof(addr)), ret);
     
     if (len==ret && status != SUSPEND) {
@@ -1281,7 +1281,7 @@ OZ_BI_iodefine(unix_shutDown, 2,0)
   OZ_declareIntIN(0,sock);
   OZ_declareIntIN(1,how);
 
-  WRAPCALL(shutdown(sock, how), ret);
+  WRAPCALL("shutdown",shutdown(sock, how), ret);
 
   return PROCEED;
 } OZ_BI_ioend
@@ -1317,7 +1317,7 @@ OZ_BI_iodefine(unix_receiveFromInet,5,3)
   int fromlen = sizeof from;
 #endif
 
-  WRAPCALL(recvfrom(sock, buf, maxx, flags,
+  WRAPCALL("recvfrom",recvfrom(sock, buf, maxx, flags,
                     (struct sockaddr*)&from, &fromlen),ret);
 
   struct hostent *gethost = gethostbyaddr((char *) &from.sin_addr,
@@ -1447,8 +1447,8 @@ OZ_BI_define(unix_pipe,2,2)
       !SetStdHandle((DWORD)STD_INPUT_HANDLE,rh2) ||
       !CreateProcess(NULL,buf,&sa,NULL,TRUE,0,
 		     NULL,NULL,&si,&pinf)) {
-    return raiseUnixError(0, "Cannot create pipe process.", 
-			  "windows");
+    return raiseUnixError("CreatePipe",0, "Cannot create pipe process.", 
+			  "os");
   }
 
   int pid = (int) pinf.hProcess;
@@ -1460,15 +1460,15 @@ OZ_BI_define(unix_pipe,2,2)
   int rsock = _hdopen((int)rh1,O_RDONLY|O_BINARY);
   int wsock = _hdopen((int)wh2,O_WRONLY|O_BINARY);
   if (rsock<0 || wsock<0) {
-    return raiseUnixError(0, 
+    return raiseUnixError("hdopen",0, 
 			  "Cannot connect to created pipe process.", 
-			  "windows");
+			  "os");
   }
 
 #else  /* !WINDOWS */
 
   int sv[2];
-  WRAPCALL(socketpair(PF_UNIX,SOCK_STREAM,0,sv),ret);
+  WRAPCALL("socketpair",socketpair(PF_UNIX,SOCK_STREAM,0,sv),ret);
 
 
   int pid =  fork();
@@ -1482,7 +1482,7 @@ OZ_BI_define(unix_pipe,2,2)
        *   this allows to press Control-C when debugging the emulator
        */
       if (setsid() < 0) {
-        RETURN_UNIX_ERROR;
+        RETURN_UNIX_ERROR("setsid");
       }
 #endif
 
@@ -1493,7 +1493,7 @@ OZ_BI_define(unix_pipe,2,2)
       rlim.rlim_cur = 0;
       rlim.rlim_max = 0;
       if (setrlimit(RLIMIT_CORE, &rlim) < 0) {
-	RETURN_UNIX_ERROR;
+	RETURN_UNIX_ERROR("setrlimit");
       }
 
       int i;
@@ -1506,13 +1506,13 @@ OZ_BI_define(unix_pipe,2,2)
       osdup(sv[1]);
       osdup(sv[1]);
       if (execvp(s,argv)  < 0) {
-        RETURN_UNIX_ERROR;
+        RETURN_UNIX_ERROR("execvp");
       }
       printf("execvp failed\n");
       exit(-1);
     }
   case -1:
-    RETURN_UNIX_ERROR;
+    RETURN_UNIX_ERROR("fork");
   default: // parent
     break;
   }
@@ -1563,7 +1563,7 @@ OZ_BI_iodefine(unix_getHostByName, 1,1)
   struct hostent *hostaddr;
 
   if ((hostaddr = gethostbyname(name)) == NULL) {
-    RETURN_NET_ERROR;
+    RETURN_NET_ERROR("gethostbyname");
   }
 
   OZ_Term t1=OZ_pairAS("name", hostaddr->h_name);
@@ -1580,7 +1580,7 @@ OZ_BI_iodefine(unix_getHostByName, 1,1)
 OZ_BI_iodefine(unix_unlink, 1,0) {
   OZ_declareVsIN(0,path);
 
-  WRAPCALL(unlink(path),ret);
+  WRAPCALL("unlink",unlink(path),ret);
   return PROCEED;
 } OZ_BI_ioend
   
@@ -1627,7 +1627,7 @@ OZ_BI_iodefine(unix_tmpnam,0,1) {
   char *filename; 
 
   if (!(filename = ostmpnam(NULL))) {
-    return raiseUnixError(0, "OS.tmpnam failed.", "os");
+    return raiseUnixError("tmpnam",0, "OS.tmpnam failed.", "os");
   }
   filename = ozstrdup(filename);
 
@@ -1659,7 +1659,7 @@ OZ_BI_iodefine(unix_putEnv,2,0)
   int ret = putenv(buf);
   if (ret != 0) {
     delete buf;
-    return raiseUnixError(0, "OS.putEnv failed.", "os");
+    return raiseUnixError("putenv", 0, "OS.putEnv failed.", "os");
   }
 
   return PROCEED;
@@ -1807,7 +1807,7 @@ OZ_BI_define(unix_getpwnam,1,1)
   OZ_declareVirtualStringIN(0,user);
   struct passwd *p = getpwnam(user);
   if (p==0) {
-    return raiseUnixError(errno,OZ_unixError(errno),"getpwnam");
+    return raiseUnixError("getpwnam",errno,OZ_unixError(errno),"os");
   } else {
     // return only POSIX fields
     OZ_Term N1 = oz_pairAA("name"  ,p->pw_name  );
