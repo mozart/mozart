@@ -347,7 +347,8 @@ void oz_suspendPropagator(Propagator * prop)
 //
 //  Dispose a thread. That's a private method!
 INLINE
-void oz_disposeThread(Thread *tt)
+static
+void oz_disposeThreadInternal(Thread *tt)
 {
   tt->markDeadThread();
 
@@ -374,13 +375,13 @@ void oz_disposeSuspendedThread(Thread *tt)
   Assert(tt->isSuspended());
   Assert(!GETBOARD(tt)->checkAlive());
 
-  oz_disposeThread(tt);
+  oz_disposeThreadInternal(tt);
 }
 
 //
 //  It marks also the thread as dead;
 INLINE
-void AM::oz_disposeRunnableThread(Thread *tt)
+void oz_disposeRunnableThread(Thread *tt)
 {
 #ifdef DEBUG_THREADCOUNT
   if (tt->isLPQThread())
@@ -389,7 +390,7 @@ void AM::oz_disposeRunnableThread(Thread *tt)
 
   Assert(tt->isRunnable());
 
-  oz_disposeThread(tt);
+  oz_disposeThreadInternal(tt);
 }
 
 //
