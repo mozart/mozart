@@ -1471,17 +1471,17 @@ echo "configure:1469: checking $CXX version is at least 2.7" >&5
     # first we try to locate the string "version"
     oz_tmp_version2=`echo "${oz_tmp_version1}" | tr '\012' ' '`
 
-    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._-]*\)'`
+    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._-]*[a-z]\?\)'`
     # if that failed: we look at the end of the first line
     if test -z "$oz_tmp_version"; then
       oz_tmp_IFS="$IFS"
       IFS='
 '
       for oz_tmp_version3 in ${oz_tmp_version1}; do
-        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*\)$'`
+        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*[a-z]\?\)$'`
         # else try to match the entire first line
         if test -z "$oz_tmp_version"; then
-          oz_tmp_version=`expr "${oz_tmp_version3}" : '\([0-9._-]*\)$'`
+          oz_tmp_version=`expr "${oz_tmp_version3}" : '\([0-9._-]*[a-z]\?\)$'`
         fi
         break
       done
@@ -1492,23 +1492,62 @@ echo "configure:1469: checking $CXX version is at least 2.7" >&5
 
   oz_tmp_got="$oz_tmp_version"
   oz_tmp_want="2.7"
-  oz_tmp_IFS="$IFS"
-  IFS="$IFS._-"
-  oz_tmp_got=`echo $oz_tmp_got`
-  oz_tmp_want=`echo $oz_tmp_want`
+
+  oz_tmp="$oz_tmp_got"
+
+  oz_tmp=`echo $oz_tmp | sed -e 's/[a-z]/.\0/'`
+  oz_tmp=`echo $oz_tmp | sed -e 's/[._-]/ /g'`
+
+  oz_tmp_got=$oz_tmp
+
+  oz_tmp="$oz_tmp_want"
+
+  oz_tmp=`echo $oz_tmp | sed -e 's/[a-z]/.\0/'`
+  oz_tmp=`echo $oz_tmp | sed -e 's/[._-]/ /g'`
+
+  oz_tmp_want=$oz_tmp
   set $oz_tmp_got DONE
-  IFS=""
-  IFS="$oz_tmp_IFS"
   oz_tmp__ok=yes
   for oz_tmp_cur in $oz_tmp_want; do
-    if test "$1" = DONE; then
-      break
-    elif test "$oz_tmp_cur" -lt "$1"; then
-      break
-    elif test "$oz_tmp_cur" -gt "$1"; then
-      oz_tmp__ok=no
-      break
-    fi
+    case $oz_tmp_cur in
+      DONE)
+         case $1 in
+           a-z) oz_tmp__ok=no;;
+           *);;
+         esac
+         break
+         ;;
+      a-z)
+         case $1 in
+           DONE) break;;
+           a-z)
+              if test `expr $oz_tmp_cur '<=' $1` -eq 0; then
+                oz_tmp__ok=no
+                break
+              fi
+           ;;
+           *) break
+           ;;
+         esac
+         ;;
+      *)
+         case $1 in
+           DONE) oz_tmp__ok=no
+             break
+             ;;
+           a-z) oz_tmp__ok=no
+             break
+             ;;
+           *) if test "$oz_tmp_cur" -lt "$1"; then
+                break
+              elif test "$oz_tmp_cur" -gt "$1"; then
+                oz_tmp__ok=no
+                break
+              fi
+           ;;
+         esac
+         ;;
+    esac
     shift
   done
   oz_tmp_ok=$oz_tmp__ok
@@ -1559,7 +1598,7 @@ You may find a mirror archive closer to you by consulting:
             for ozm_opt in $oz_for
             do
                 echo $ac_n "checking c++ compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:1563: checking c++ compiler option $ozm_opt" >&5
+echo "configure:1602: checking c++ compiler option $ozm_opt" >&5
                 ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
                 if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1590,7 +1629,7 @@ fi
     ;;
     esac
     echo $ac_n "checking how to run the C++ preprocessor""... $ac_c" 1>&6
-echo "configure:1594: checking how to run the C++ preprocessor" >&5
+echo "configure:1633: checking how to run the C++ preprocessor" >&5
 if test -z "$CXXCPP"; then
 if eval "test \"`echo '$''{'ac_cv_prog_CXXCPP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1603,12 +1642,12 @@ ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftes
 cross_compiling=$ac_cv_prog_cxx_cross
   CXXCPP="${CXX-g++} -E"
   cat > conftest.$ac_ext <<EOF
-#line 1607 "configure"
+#line 1646 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1612: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1651: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1640,23 +1679,23 @@ echo "$ac_t""$CXXCPP" 1>&6
   else
 
   echo $ac_n "checking for C++ compiler""... $ac_c" 1>&6
-echo "configure:1644: checking for C++ compiler" >&5
+echo "configure:1683: checking for C++ compiler" >&5
   CXX=$oz_cv_CXX
   echo "$ac_t""(cached) $CXX" 1>&6
 
   echo $ac_n "checking whether we are using GNU C++""... $ac_c" 1>&6
-echo "configure:1649: checking whether we are using GNU C++" >&5
+echo "configure:1688: checking whether we are using GNU C++" >&5
   GXX=$oz_cv_GXX
   echo "$ac_t""(cached) $GXX" 1>&6
 
   echo $ac_n "checking for C++ preprocessor""... $ac_c" 1>&6
-echo "configure:1654: checking for C++ preprocessor" >&5
+echo "configure:1693: checking for C++ preprocessor" >&5
   CXXCPP=$oz_cv_CXXCPP
   echo "$ac_t""(cached) $CXXCPP" 1>&6
     if test "${CXXFLAGS+set}" != set; then
 
   echo $ac_n "checking for default CXXFLAGS""... $ac_c" 1>&6
-echo "configure:1660: checking for default CXXFLAGS" >&5
+echo "configure:1699: checking for default CXXFLAGS" >&5
   CFLAGS=$oz_cv_CFLAGS
   echo "$ac_t""(cached) $CFLAGS" 1>&6
     fi
@@ -1686,7 +1725,7 @@ esac
 
 
 echo $ac_n "checking build system type""... $ac_c" 1>&6
-echo "configure:1690: checking build system type" >&5
+echo "configure:1729: checking build system type" >&5
 
 build_alias=$build
 case "$build_alias" in
@@ -1712,7 +1751,7 @@ fi
 # Extract the first word of "${ac_tool_prefix}ar", so it can be a program name with args.
 set dummy ${ac_tool_prefix}ar; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1716: checking for $ac_word" >&5
+echo "configure:1755: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_AR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1744,7 +1783,7 @@ fi
 # Extract the first word of "${ac_tool_prefix}windres", so it can be a program name with args.
 set dummy ${ac_tool_prefix}windres; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1748: checking for $ac_word" >&5
+echo "configure:1787: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_WINDRES'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1775,7 +1814,7 @@ fi
 
 
 echo $ac_n "checking for --enable-opt""... $ac_c" 1>&6
-echo "configure:1779: checking for --enable-opt" >&5
+echo "configure:1818: checking for --enable-opt" >&5
 # Check whether --enable-opt or --disable-opt was given.
 if test "${enable_opt+set}" = set; then
   enableval="$enable_opt"
