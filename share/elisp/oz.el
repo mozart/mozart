@@ -904,13 +904,22 @@ if that value is non-nil."
   (setq mode-name "Oz")
   (oz-mode-variables)
   (if oz-lucid
-   (set-buffer-menubar (append current-menubar oz-menubar)))
+   (set-buffer-menubar (oz-insert-menu oz-menubar current-menubar)))
 
   ; font lock stuff
   (setq font-lock-keywords (list oz-keywords))
   (if oz-want-font-lock
       (font-lock-mode 1))
   (run-hooks 'oz-mode-hook))
+
+;; do not put Oz menu too much to the right
+(defun oz-insert-menu (menu list)
+  (if (eq nil list)
+      menu
+    (if (eq (car list) nil)
+	(cons (car menu) list)
+      (cons (car list)
+	    (oz-insert-menu menu (cdr list))))))
 
 
 ;;------------------------------------------------------------
