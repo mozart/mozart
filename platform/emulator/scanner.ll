@@ -608,7 +608,6 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 \\sh(o(w(Switches)?)?)?        { BEGIN(DIRECTIVE); return SHOWSWITCHES; }
 \\f(e(ed?)?)?                  { BEGIN(INPUTFILE); return FEED; }
 \\threadedfeed                 { BEGIN(INPUTFILE); return THREADEDFEED; }
-\\core(t(r(ee?)?)?)?           { BEGIN(INPUTFILE); return CORETREE; }
 \\c(o(re?)?)?                  { BEGIN(INPUTFILE); return CORE; }
 \\m(a(c(h(i(ne?)?)?)?)?)?      { BEGIN(INPUTFILE); return MACHINE; }
 \\t(o(p(v(a(rs?)?)?)?)?)?      { BEGIN(OUTPUTFILE); return TOPVARS; }

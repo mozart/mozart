@@ -241,7 +241,7 @@ static CTerm decls[DEPTH];
 }
 
 %token HELP SWITCH SHOWSWITCHES FEED THREADEDFEED
-%token CORETREE CORE MACHINE TOPVARS
+%token CORE MACHINE TOPVARS
 %token SWITCHNAME FILENAME
 %token OZATOM ATOM_LABEL OZFLOAT OZINT AMPER DOTINT STRING
 %token VARIABLE VARIABLE_LABEL
@@ -432,8 +432,6 @@ directive	: HELP
 		  { $$ = newCTerm("dirFeed",newCTerm(xyhelpFileName)); }
 		| THREADEDFEED FILENAME
 		  { $$ = newCTerm("dirThreadedFeed",newCTerm(xyhelpFileName)); }
-		| CORETREE FILENAME
-		  { $$ = newCTerm("dirCoreTree",newCTerm(xyhelpFileName)); }
 		| CORE FILENAME
 		  { $$ = newCTerm("dirCore",newCTerm(xyhelpFileName)); }
 		| MACHINE FILENAME
