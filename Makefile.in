@@ -179,14 +179,14 @@ oz-win::
          ) | (cd oz3; $(TAR) xf -)
         $(INSTALL_DIR) $(WINCACHEDIR)/share
         $(INSTALL_DIR) $(WINCACHEDIR)/doc/demo
+        find oz3 -name '*.so-*' -not -name '*.so-win32-i486' -exec rm -f '{}' ';'
         mv oz3/share/images oz3/share/?*.ozf $(WINCACHEDIR)/share
-        cp oz3/share/*.so-win32-i486 $(WINCACHEDIR)/share || true
-        rm -f oz3/share/*.so-win32-i486
+        mv oz3/share/*.so-win32-i486 $(WINCACHEDIR)/share || true
         cp -r oz3/doc/demo/applets $(WINCACHEDIR)/doc/demo
         (cd oz3/contrib;\
          rm -rf os text;\
-         rm -rf gdbm.ozf regex.ozf LP.ozf Psql.ozf RI.ozf Reflect.ozf DaVinci.ozf)
-        find oz3 -name '*.so-*' -not -name '*.so-win32-i486' -exec rm -f '{}' ';'
+         rm -rf gdbm.ozf LP.ozf Psql.ozf RI.ozf Reflect.ozf DaVinci.ozf)
+        mv oz3/contrib $(WINCACHEDIR)
         rm -rf oz3/share/doc oz3/platform/win32-i486/oztool.sh
         mv $(WINCACHEDIR)/share/Init.ozf oz3/share
         for i in ozc ozd ozl; do \
