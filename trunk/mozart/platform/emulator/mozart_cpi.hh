@@ -326,8 +326,6 @@ class FSetValue;
 //
 // This patch results in an emulator.dll with which the Select package 
 // builds.
-// NO OTHER TESTS HAVE BEEN PERFORMED !
-// I DO NOT EVEN KNOW IF MOZART STILL RUNS AFTER THIS PATCH ! 
 //
 // This function calls all non-const functions. Somehow all const functions
 // were not affected by the gcc bug.
