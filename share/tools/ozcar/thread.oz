@@ -28,9 +28,13 @@ local
    end
 
    proc {Detach T}
-      {Dbg.trace T false}
-      {Dbg.step T false}
-      {Thread.resume T}
+      try
+	 {Dbg.trace T false}
+	 {Dbg.step T false}
+	 {Thread.resume T}
+      catch
+	 error(kernel(deadThread ...) ...)
+      then skip end
    end
 
    proc {OzcarReadEvalLoop S}
