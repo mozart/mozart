@@ -316,8 +316,8 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         Bool vLoc=(prop && am.isLocalSVar(this));
 
         // Bind OFSVar to the Literal:
-        if (vLoc) doBind(vPtr, TaggedRef(term));
-        else am.doBindAndTrail(var, vPtr, TaggedRef(term));
+        if (vLoc) doBind(vPtr, makeTaggedRef(term));
+        else am.doBindAndTrail(var, vPtr, makeTaggedRef(term));
 
         // Update the OFS suspensions:
         if (vLoc) am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);

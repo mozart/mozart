@@ -182,7 +182,7 @@ OZ_Bool BIfdBodyManager::entailmentClause(int from_b, int to_b,
           tagged2GenBoolVar(bifdbm_var[j])->
             relinkSuspListTo(tagged2GenFDVar(bifdbm_var[i]));
         }
-        doBind(bifdbm_varptr[j], TaggedRef(bifdbm_varptr[i]));
+        doBind(bifdbm_varptr[j], makeTaggedRef(bifdbm_varptr[i]));
       } else if (bifdbm_vartag[i] == pm_bool) {
         if (bifdbm_vartag[j] == pm_fd) {
           tagged2GenFDVar(bifdbm_var[j])->
@@ -191,7 +191,7 @@ OZ_Bool BIfdBodyManager::entailmentClause(int from_b, int to_b,
           tagged2GenBoolVar(bifdbm_var[j])->
             relinkSuspListTo(tagged2GenBoolVar(bifdbm_var[i]));
         }
-        doBind(bifdbm_varptr[j], TaggedRef(bifdbm_varptr[i]));
+        doBind(bifdbm_varptr[j], makeTaggedRef(bifdbm_varptr[i]));
       } else {
         process(j);
       }
