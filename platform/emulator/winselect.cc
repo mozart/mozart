@@ -82,7 +82,6 @@ unsigned __stdcall readerThread(void *arg)
 #endif
       ret = read(sr->fd, &sr->chr, sizeof(char));
     if (ret<0) {
-      perror("readerThread: read");
       break;
     }
 
@@ -198,7 +197,7 @@ int win32Select(int maxfd, fd_set *fds, int *timeout)
     return -1;
   }
 
-  time_t startTime = time(NULL);
+  DWORD startTime = timeGetTime();
   DWORD active = WaitForMultipleObjects(nh, wait_hnd, FALSE, wait);
 
   if (active == WAIT_FAILED) {
@@ -212,9 +211,9 @@ int win32Select(int maxfd, fd_set *fds, int *timeout)
   }
 
   if (*timeout != 0) {
-    time_t endTime = time(NULL);
-    double d = difftime(endTime,startTime);
-    *timeout = wait - (int)(d*1000.0);
+    DWORD endTime = timeGetTime();
+    int resttime = wait - (endTime-startTime);
+    *timeout = max(0, resttime);
   }
 
   return getAvailFDs(maxfd, fds);
