@@ -214,7 +214,7 @@ void xy_setParserExpect() {
 %token OZATOM ATOM_LABEL OZFLOAT OZINT AMPER DOTINT STRING
 %token VARIABLE VARIABLE_LABEL
 %token DEFAULT CHOICE LDOTS
-%token attr at body _case_ catch choice _class_ cond _condis_ declare define
+%token attr at _case_ catch choice _class_ cond _condis_ declare define
 %token dis _else_ elsecase elseif elseof end export fail false FALSE_LABEL
 %token feat finally _from_ _fun_ functor _if_ import _in_ local _lock_
 %token _meth_ not of or prepare proc prop _raise_ require self skip then
@@ -254,10 +254,6 @@ void xy_setParserExpect() {
 %type <t>  optFunctorDescriptorList
 %type <t>  functorDescriptorList
 %type <t>  importDecls
-%type <t>  oldFeatures
-%type <t>  oldFeatureList
-%type <t>  oldOptFrom
-%type <t>  oldFrom
 %type <t>  variableLabel
 %type <t>  featureList
 %type <t>  optImportAt
@@ -607,13 +603,6 @@ functorDescriptorList
                   { $$ = consList(newCTerm("fImport",$3,$2),$4); }
                 | export coord exportDecls optFunctorDescriptorList
                   { $$ = consList(newCTerm("fExport",$3,$2),$4); }
-                | prop coord atom procFlags optFunctorDescriptorList
-                  { $$ = consList(newCTerm("fProp",consList($3,$4),$2),$5); }
-                | body coord sequence _in_ sequence optFunctorDescriptorList
-                  { $$ = consList(newCTerm("fDefine",$3,$5,$2),$6); }
-                | body coord sequence optFunctorDescriptorList
-                  { $$ = consList(newCTerm("fDefine",$3,
-                                           newCTerm("fSkip",$2),$2),$4); }
                 | define coord sequence _in_ sequence optFunctorDescriptorList
                   { $$ = consList(newCTerm("fDefine",$3,$5,$2),$6); }
                 | define coord sequence optFunctorDescriptorList
@@ -623,40 +612,10 @@ functorDescriptorList
 
 importDecls     : /* empty */
                   { $$ = nilAtom; }
-                | nakedVariable oldFeatures oldOptFrom importDecls
-                  { $$ = consList(newCTerm("fImportItem",$1,$2,$3),$4); }
-                | nakedVariable oldFrom importDecls
-                  { $$ = consList(newCTerm("fImportItem",$1,nilAtom,$2),$3); }
                 | nakedVariable optImportAt importDecls
                   { $$ = consList(newCTerm("fImportItem",$1,nilAtom,$2),$3); }
                 | variableLabel '(' featureList ')' optImportAt importDecls
                   { $$ = consList(newCTerm("fImportItem",$1,$3,$5),$6); }
-                ;
-
-oldFeatures     : '.' featureNoVar
-                  { $$ = consList($2,nilAtom); }
-                | '.' '{' oldFeatureList '}'
-                  { $$ = $3; }
-                ;
-
-oldFeatureList  : nakedVariable '=' featureNoVar
-                  { $$ = consList(pair($1,$3),nilAtom); }
-                | featureNoVar
-                  { $$ = consList($1,nilAtom); }
-                | nakedVariable '=' featureNoVar oldFeatureList
-                  { $$ = consList(pair($1,$3),$4); }
-                | featureNoVar oldFeatureList
-                  { $$ = consList($1,$2); }
-                ;
-
-oldOptFrom      : /* empty */
-                  { $$ = newCTerm("fNoImportAt"); }
-                | _from_ atom
-                  { $$ = newCTerm("fImportAt",$2); }
-                ;
-
-oldFrom         : _from_ atom
-                  { $$ = newCTerm("fImportAt",$2); }
                 ;
 
 variableLabel   : VARIABLE_LABEL coord
@@ -676,8 +635,6 @@ featureList     : featureNoVar
 optImportAt     : /* empty */
                   { $$ = newCTerm("fNoImportAt"); }
                 | at atom
-                  { $$ = newCTerm("fImportAt",$2); }
-                | '@' atom
                   { $$ = newCTerm("fImportAt",$2); }
                 ;
 
