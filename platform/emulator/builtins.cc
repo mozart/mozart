@@ -7008,11 +7008,13 @@ OZ_C_proc_begin(BInewNamedName,2)
 {
   static int uniqueID = 1;
   oz_declareAtomArg(0,printName);
-  char s[strlen(printName) + 12];
+  char *s = new char[strlen(printName) + 12];
   sprintf(s,"%s %d",printName,uniqueID);
   uniqueID++;
   oz_declareArg(1,res);
-  return oz_unify(makeTaggedLiteral(addToNameTab(s)),res);
+  OZ_Return ret = oz_unify(makeTaggedLiteral(addToNameTab(s)),res);
+  delete s;
+  return ret;
 }
 OZ_C_proc_end
 

@@ -40,8 +40,8 @@ OZ_Return IncludeRPropagator::propagate(void)
   if (*r == fd_singl) {
     r.leave();
     return replaceBy((r->getSingleElem() == 1)
-                     ? new IncludePropagator(_s, _d)
-                     : new ExcludePropagator(_s, _d));
+                     ? (OZ_Propagator*) new IncludePropagator(_s, _d)
+                     : (OZ_Propagator*) new ExcludePropagator(_s, _d));
   }
 
   int r_val = 0;

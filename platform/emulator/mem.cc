@@ -51,6 +51,18 @@ void initMemoryManagement(void) {
 
 void *FreeList[freeListMaxSize];
 
+void *freeListMallocOutline(size_t chunk_size)
+{
+  return freeListMalloc(chunk_size);
+}
+
+
+void freeListDisposeOutline(void *addr, size_t chunk_size)
+{
+  freeListDispose(addr,chunk_size);
+}
+
+
 
 void heapFree(void * /* addr */)
 {
