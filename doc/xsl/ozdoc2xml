@@ -31,9 +31,26 @@ sub decodeChar {
 	  'PTR.EXTERN'		=> 1
 	  );
 
+# we now try to ignore text() nodes consisting only of whitespace
+# if they occur immediately following a <P> tag or a <P.SILENT> tag
+# or immediately preceding a </P> tag or a </P.SILENT> tag
+
+my $ignorespaces=0;
+
+my $toilet = '';
+sub flush {
+    if ($toilet) {
+	print $toilet;
+	$toilet = '';
+    }
+}
+
 while (<>) {
     if (/^\((.+)$/) {
 	my $tag = $1;
+	&flush;
+	# try to ignore spaces that immediately follow <P> and <P.SILENT>
+	$ignorespaces=1 if $tag eq 'P' || $tag eq 'P.SILENT';
 	print "<$tag";
 	while (($key,$val) = each %attr) {
 	    $val=&encode($val);
@@ -44,6 +61,10 @@ while (<>) {
 	else { print ">"; }
     }
     elsif (/^\)(.+)$/) {
+	my $tag = $1;
+	if ($tag eq 'P' || $tag eq 'P.SILENT') { $toilet=''; }
+	else { &flush; }
+	$ignorespaces=0;
 	print "</$1>" unless $empty{$1};
 	%attr=();
     }
@@ -54,10 +75,20 @@ while (<>) {
 	$attr{$key} = $val;
     }
     elsif (/^-/) {
+	&flush;
 	my $txt = $'; chop($txt);
-	print &encode(&decode($txt));
+	$txt = &decode($txt);
+	if ($txt =~ /^\s*$/) {
+	    $toilet = &encode($txt) unless $ignorespaces;
+	}
+	else {
+	    print &encode($txt);
+	}
+	$ignorespaces=0;
     }
     elsif (/^\?/) {
+	&flush;
+	$ignorespaces=0;
 	my $txt = $'; chop($txt);
 	print "<?",&decode($txt),"?>";
     }
