@@ -106,8 +106,9 @@ Import:
         <Entry><<--relative>>
         <Synopsis><<--relative>> (default), <<--norelative>>
         <Item>
-           All functors that are referred to by relative urlss are
-           included.
+           All functors that are referred to by relative urls are
+           included.  Import urls in the resulting functor remain
+	   relative.
 
         <Entry><<--include>>
         <Synopsis><<--include=<Var/URL/,&ellipsis,<Var/URL/>>
@@ -120,6 +121,24 @@ Import:
         <Item>
            Exclude all functors whose url matches one of the comma
            separated url prefixes.
+
+	<Entry><<--rewrite>>
+	<Synopsis><<--rewrite=<Var/RULE/,&ellipsis,<Var/RULE/>>
+	<Item>
+	   When the functors are gathered that make up the linked functor,
+	   all import URLs are resolved with respect to the importing
+	   functor.  This means that all file urls become absolute, and
+	   as such make up the import of the output functor.
+	<P>
+	   This is often not desirable.  In the common case that the
+	   imported functors lie in the same directory or in subdirectories
+	   as the root functor, the <<--relative>> option can be used, in
+	   which case the import urls remain relative.
+	<P>
+	   The <<--rewrite>> option generalizes this principle:  It allows
+	   to specify a list of rules of the form << <Var/FROM/=<Var/TO/>>,
+	   meaning:  If a url has prefix <Var/FROM/, then replace it by
+	   <Var/TO/.  The first matching rule is applied.
       </List>
     <P>
 
