@@ -1981,7 +1981,14 @@ void ConstTerm::gcConstRecurse()
   case Co_Object:
     {
       Object *o = (Object *) this;
-      o->gcConstTermWithHome();
+
+      switch(o->getTertType()) {
+      case Te_Local:   o->setBoard(o->getBoard()->gcBoard()); break;
+      case Te_Proxy:   o->gcProxy(); break;
+      case Te_Manager: o->gcManager(); break;
+      default:         Assert(0);
+      }
+
       o->setClass(o->getClass()->gcClass());
       o->setFreeRecord(o->getFreeRecord()->gcSRecord());
       RecOrCell state = o->getState();
@@ -1990,8 +1997,7 @@ void ConstTerm::gcConstRecurse()
       } else {
         o->setState(getRecord(state)->gcSRecord());
       }
-      int oldFlags = o->flagsAndLock&(~ObjFlagMask);
-      o->flagsAndLock = ToInt32(o->getLock()->gcConstTerm())|oldFlags;
+      o->lock = (OzLock*) o->getLock()->gcConstTerm();
       break;
     }
 
@@ -2192,7 +2198,6 @@ ConstTerm *ConstTerm::gcConstTerm()
       Object *o = (Object *) this;
       CheckLocal(o);
       sz = sizeof(Object);
-      gn = o->getGName1();
       break;
     }
   case Co_Class:
