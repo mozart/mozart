@@ -4551,40 +4551,6 @@ OZ_C_proc_begin(BIsendPort,2)
 }
 OZ_C_proc_end
 
-OZ_Return closePort(OZ_Term prt)
-{
-  Assert(isPort(prt));
-
-  Port *port  = tagged2Port(prt);
-  TertType tt = port->getTertType();
-
-  CheckLocalBoard(port,"port");
-
-  if(tt==Te_Proxy) {
-    remoteSend(port,"Port.close",nil());
-    return PROCEED;
-  }
-  OZ_Term old = ((PortWithStream*)port)->exchangeStream(nil());
-
-  if (oz_unify(nil(),old)!=PROCEED) {
-    return oz_raise(E_SYSTEM,E_KERNEL,"portClosed",1,prt);      \
-  }
-  return PROCEED;
-}
-
-
-OZ_C_proc_begin(BIclosePort,1)
-{
-  oz_declareNonvarArg(0,prt);
-
-  if (!isPort(prt)) {
-    oz_typeError(0,"Port");
-  }
-
-  return closePort(prt);
-}
-OZ_C_proc_end
-
 // ---------------------------------------------------------------------
 // Locks
 // ---------------------------------------------------------------------
@@ -7645,7 +7611,6 @@ BIspec allSpec[] = {
 
   {"NewPort",         2,BInewPort,       0},
   {"Send",            2,BIsendPort,      0},
-  {"Port.close",      1,BIclosePort,     0},
 
   {"NewCell",         2,BInewCell,       0},
   {"Exchange",        3,BIexchangeCell, (IFOR) BIexchangeCellInline},
