@@ -42,7 +42,7 @@ ExportedManagerVar::ExportedManagerVar(ManagerVar *mv, DSite *dest)
 
   //
   oti = mv->getIndex();
-  saveMarshalOwnHead(oti, credit);
+  saveMarshalOwnHead(oti, remoteRef);
   if ((USE_ALT_VAR_PROTOCOL) && globalRedirectFlag == AUT_REG) {
     tag = mv->isFuture() ? DIF_FUTURE_AUTO : DIF_VAR_AUTO;
     mv->registerSite(dest);
@@ -57,7 +57,7 @@ void ExportedManagerVar::marshal(ByteBuffer *bs)
   DebugCode(PD((MARSHAL,"exported var manager oti:%d", oti)););
   Assert(isMarshaled == NO);
   //
-  marshalOwnHeadSaved(bs, tag, oti, credit);
+  marshalOwnHeadSaved(bs, tag, oti, remoteRef);
   isMarshaled = OK;
 }
 
@@ -67,7 +67,7 @@ void ExportedManagerVar::disposeV()
   Assert(isEmptySuspList());
   //
   if (!isMarshaled) {
-    discardOwnHeadSaved(oti, credit);
+    discardOwnHeadSaved(oti, remoteRef);
   }
   oz_freeListDispose(this, sizeof(ExportedManagerVar));
 }
