@@ -51,8 +51,7 @@ install-bin:
         $(INSTALL_BIN) $(TARGETS) $(bindir)
 
 depend: $(FSETLIBSRCS)
-        $(DEPEND) $(FSETLIBSRCS) \
-                >> Makefile
+        $(DEPEND) $(FSETLIBSRCS) >> Makefile
 
 tags:
         etags --regex='/OZ_C[^(]+([     ]*\([^  ,)]+\)/\1/' -l c++ \
@@ -62,14 +61,11 @@ clean:
         $(RM) *.o *~  *.bak *.obj
 
 realclean: clean
-        $(RM) *.a *.so
+        $(RM) *.a *.so Makefile
 
 veryclean: realclean
 
 .SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
-
-.cc.o:
-        $(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && $(MV) /tmp/$$$$.o $@
 
 .cc.s:
         $(CXX) $(CXXFLAGS) -S -o $@ $<

@@ -64,9 +64,8 @@ libsched.a: $(SCHEDLIBOBJS)
 install-bin:
         $(INSTALL_BIN) $(TARGETS) $(bindir)
 
-depend: $(FDLIBSRCS) $(SCHEDLIBSRCS) $(FSETLIBSRCS)
-        $(DEPEND) $(FDLIBSRCS) $(SCHEDLIBSRCS) $(FSETLIBSRCS) \
-                >> Makefile
+depend: $(FDLIBSRCS) $(SCHEDLIBSRCS)
+        $(DEPEND) $(FDLIBSRCS) $(SCHEDLIBSRCS) >> Makefile
 
 tags:
         etags --regex='/OZ_C[^(]+([     ]*\([^  ,)]+\)/\1/' -l c++ \
@@ -76,14 +75,11 @@ clean:
         $(RM) *.o *~  *.bak *.obj
 
 realclean: clean
-        $(RM) *.a *.so
+        $(RM) *.a *.so Makefile
 
 veryclean: realclean
 
 .SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
-
-.cc.o:
-        $(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && $(MV) /tmp/$$$$.o $@
 
 .cc.s:
         $(CXX) $(CXXFLAGS) -S -o $@ $<

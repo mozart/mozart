@@ -143,9 +143,8 @@ win-install:
 first: version $(M4FILES) $(SRCS)
 
 $(PROGRAMNAME): first main.o $(OBJS) $(PROPOBJS)
-        $(LD) $(LDFLAGS) $(LDOPT) -o /tmp/$@.$$$$ \
-           main.o $(OBJS) $(PROPOBJS) $(LIBS); \
-        echo 'moving ...'; rcp /tmp/$@.$$$$ fs-home:`pwd`/$@
+        $(LD) $(LDFLAGS) $(LDOPT) -o $@ \
+           main.o $(OBJS) $(PROPOBJS) $(LIBS)
 
 install: install-dir install-bin install-inc
         for d in $(SUBDIRS); do (cd $$d; $(MAKE) install); done
@@ -244,10 +243,6 @@ ozma-p.yy: ozma-p.m4yy
 #       $(CXX) $(CXXFLAGS) -w -c $< -o $@
 
 .SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
-
-.cc.o:
-        $(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && \
-                rcp /tmp/$$$$.o fs-home:`pwd`/$@
 
 .cc.s:
         $(CXX) $(CXXFLAGS) -S -o $@ $<
