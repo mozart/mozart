@@ -37,6 +37,42 @@ OZ_atom("Propagator Reference is DISCARDED")
 #define EXCEPTION \
 "reflect"
 
+//-----------------------------------------------------------------------------
+
+OZ_BI_define(BIIdentifyParameter, 1, 1)
+{
+  DEBUGPRINT(("BIIdentifyParameter in\n"));
+
+  ExpectedTypes("List of variables" "," "List of integers");
+
+  OZ_Term var_list = oz_deref(OZ_in(0));
+  OZ_Term id_list = OZ_nil();
+
+  VarListExpect vle;
+
+  EXPECT_BLOCK(vle, 0, expectListVar, "List of variables");
+
+  int length = OZ_length(var_list);
+
+  OZ_Term vars[length];
+
+  for (int i = 0; !OZ_isNil(var_list); var_list = OZ_tail(var_list), i += 1) {
+    vars[i] = OZ_head(var_list);
+  }
+
+  int * ids = OZ_findEqualVars(length, vars);
+
+  for (int i = length; i--; ) {
+    id_list = OZ_cons(OZ_int(ids[i]), id_list);
+  }
+
+  DEBUGPRINT(("BIIdentifyParameter out\n"));
+
+  OZ_RETURN(id_list);
+} OZ_BI_end
+
+//-----------------------------------------------------------------------------
+
 OZ_BI_define(BIIsPropagator, 1, 1)
 {
   DEBUGPRINT(("BIIsPropagator in\n"));
@@ -101,6 +137,8 @@ OZ_BI_define(BIDiscardPropagator, 1, 0)
   ((PropagatorReference *) se1)->discard();
 
   DEBUGPRINT(("BIDiscardPropagator out\n"));
+
+  return PROCEED;
 } OZ_BI_end
 
 //-----------------------------------------------------------------------------
