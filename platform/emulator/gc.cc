@@ -32,6 +32,10 @@
 /****************************************************************************
  ****************************************************************************/
 
+// mm2: with pseudo shallow guard dead value may appear in the wrong
+// space, because threads are not sited
+#define DEEP_GARBAGE
+
 // loeckelt (for big fsets)
 #include "mozart_cpi.hh"
 
@@ -997,12 +1001,9 @@ OzVariable * OzVariable::gcVar(void) {
 
   Board * bb = getHome1()->gcBoard();
 
-  // mm2: assertion disabled: dead value may appear in the wrong space
-#define DEEP_GARBAGE
 #ifdef DEEP_GARBAGE
   if (!bb) return 0;
 #endif
-
   Assert(bb);
 
   SuspList * sl = suspList->gc();
@@ -1471,11 +1472,10 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
       case SRECORD:   goto DO_SRECORD;
       case OZFLOAT:   goto DO_OZFLOAT;
       case OZCONST:   goto DO_OZCONST;
-        // All variables are not direct!
 
       case UNUSED_VAR: // FUT
 
-      case UVAR:
+      case UVAR: // non-direct var: delay collection
         {
           Board * bb = tagged2VarHome(aux)->derefBoard();
 
@@ -1488,13 +1488,13 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
 
           bb = bb->gcBoard();
 
-          // mm: fix pb. with variables from guard optimizations
-          // should be replaced by Assert(bb);
+#ifdef DEEP_GARBAGE
           if (!bb) {
             to = 0;
             return;
           }
-
+#endif
+          Assert(bb);
           varFix.defer(aux_ptr, &to);
           return;
         }
@@ -1509,13 +1509,15 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
           } else if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
             Assert(isInGc || !(GETBOARD(cv))->isMarkedGlobal());
             OzVariable *new_cv=cv->gcVar();
+
 #ifdef DEEP_GARBAGE
-            // mm2: dead value may appear in the wrong space
             if (!new_cv) {
               to=0;
               return;
             }
 #endif
+            Assert(new_cv);
+
             TaggedRef * var_ptr = newTaggedCVar(new_cv);
             isGround = NO;
             to = makeTaggedRef(var_ptr);
@@ -1588,15 +1590,16 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
     {
       ConstTerm *ct = tagged2Const(aux)->gcConstTerm();
       to = ct ? makeTaggedConst(ct) : 0;
+      return;
     }
-#else
-    to = makeTaggedConst(tagged2Const(aux)->gcConstTerm());
 #endif
+    to = makeTaggedConst(tagged2Const(aux)->gcConstTerm());
     return;
 
   case UNUSED_VAR:  // FUT
-
-  case UVAR:
+    Assert(0); OZ_error("impossible");
+    return;
+  case UVAR: // direct var
     {
       Board * bb = tagged2VarHome(aux)->derefBoard();
 
@@ -1616,7 +1619,8 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
     }
     return;
 
-  case CVAR:
+  case CVAR: // direct cvar
+    //mm2: maybe this is dead code???
     {
       OzVariable * cv = tagged2CVar(aux);
 
@@ -2282,9 +2286,8 @@ ConstTerm *ConstTerm::gcConstTerm() {
       if (!isInGc && !bb->isInTree()) {
         return 0;
       }
-#else
-      Assert(isInGc || bb->isInTree());
 #endif
+      Assert(isInGc || bb->isInTree());
 
       ret = (ConstTerm *) gcReallocStatic(this,sizeof(Space));
       break;

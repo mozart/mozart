@@ -27,7 +27,7 @@
 // BitData
 // -------------------------------------------------------------------
 
-BitData::BitData(BitData&) {
+BitData::BitData(BitData&v) : BytePtr(v) {
   OZ_error("unused");
 }
 
@@ -292,7 +292,7 @@ OZ_BI_define(BIBitString_toList,1,1)
 // ByteData
 // -------------------------------------------------------------------
 
-ByteData::ByteData(ByteData&) {
+ByteData::ByteData(ByteData& t) : BytePtr(t) {
   OZ_error("unused");
 }
 

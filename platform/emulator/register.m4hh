@@ -257,7 +257,7 @@ Case(CREATEVARIABLEMOVEY)
      Yreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
 
   Case(PUTCONSTANTG)
-     IMPOSSIBLE("PUTNUMBERG/PUTLITERALG/PUTCONSTANTG");
+     IMPOSSIBLE("PUTCONSTANTG");
 
   CaseOneRegGImpossible( PUTLIST,
                ``{
