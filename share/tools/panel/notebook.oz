@@ -304,8 +304,8 @@ in
 	    <<Notebook HideNote(Top)>>
 	    <<Notebook UnhideNote(Note)>>
 	    TopNote <- Note
-	    {Note toTop}
 	 end
+	 {Note toTop}
       end
 
       meth confHeight(H)

@@ -220,12 +220,13 @@ local
 				 action: L.action
 				 state:  L.state)}
 	    L2 = {New Tk.label tkInit(parent: P
+				      anchor: w
 				      text:   {CondSelect L dim ''})}
 	 in
 	    R.{GetFeature L}=S1
 	    grid(L1 sticky:e column:0 row:N) |
 	    grid(S1 sticky:e column:1 row:N) | 
-	    grid(L2 sticky:e column:2 row:N) | TclR	    
+	    grid(L2 sticky:w column:2 row:N) | TclR	    
 	 [] number    then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
@@ -251,7 +252,7 @@ local
 	    L2 = {New PrintNumber init(parent:P)}
 	    L3 = {New Tk.label tkInit(parent: P
 				      anchor: e
-				      text:   'KB')}
+				      text:   {CondSelect L dim 'KB'})}
 	    L4 = case {HasFeature L color} orelse {HasFeature L stipple} then
 		    C = {CondSelect L color black}
 		    S = {CondSelect L stipple ''}

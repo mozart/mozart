@@ -86,7 +86,6 @@ local
       meth update(What)
 	 O   = self.options
 	 OG  = O.gc
-	 OP  = O.parameter
 	 OU  = O.usage
 	 G   = {System.get gc}
       in
@@ -100,12 +99,19 @@ local
 	    {OU.size       set(G.size div KiloByteI)}
 	    {OU.threshold  set(G.threshold div KiloByteI)}
 	    case @InfoVisible then
+	       OP  = O.parameter
+	       OU  = O.usage
+	    in
 	       {OP.minSize    set(G.min div MegaByteI)}
 	       {OP.maxSize    set(G.max div MegaByteI)}
 	       {OP.free       set(G.free)}
 	       {OP.tolerance  set(G.tolerance)}
 	       {OG.active     set(G.on)}
-	    else true
+	    else
+	       OP  = O.showParameter
+	    in
+	       {OP.minSize    set(G.min div MegaByteI)}
+	       {OP.maxSize    set(G.max div MegaByteI)}
 	    end
 	 end
 	 touch
@@ -117,12 +123,17 @@ local
       meth toggleInfo
 	 O = self.options
       in
-	 {Tk.send case @InfoVisible then
-		     pack(forget O.parameter.frame O.gc.frame)
-		  else pack(O.parameter.frame O.gc.frame
-			    after:O.usage.frame side:top pady:Pad padx:Pad)
-		  end}
+	 {Tk.batch case @InfoVisible then
+		      [pack(forget O.parameter.frame O.gc.frame)
+		       pack(O.showParameter.frame 
+			    after:O.usage.frame side:top pady:Pad padx:Pad)]
+		   else
+		      [pack(forget O.showParameter)
+		       pack(O.parameter.frame O.gc.frame
+			    after:O.usage.frame side:top pady:Pad padx:Pad)]
+		   end}
 	 InfoVisible <- {Not @InfoVisible}
+	 <<MemoryPage update(nosample)>>
       end
    end
 
@@ -330,7 +341,7 @@ in
 		 feature: parameter
 		 pack:    False
 		 height:  125
-		 left:    [scale(text:    'Maximal size:'
+		 left:    [scale(text:    'Maximal size limit:'
 				 range:   1#1024
 				 dim:     'MB'
 				 feature: maxSize
@@ -349,7 +360,7 @@ in
 					     {System.set 
 					      gc(max: N * MegaByteI)}
 					  end)
-			   scale(text:    'Minimal size:'
+			   scale(text:    'Minimal size limit:'
 				 range:   1#1024
 				 dim:     'MB'
 				 feature: minSize
@@ -404,6 +415,16 @@ in
 						 tolerance: 10)}
 					     {Memory update(nosample)}
 					  end)])
+	   frame(text:    'Heap Parameters'
+		 feature: showParameter
+		 height:  40
+		 left:    [size(text:    'Maximal size limit:'
+				feature: maxSize
+				dim:     'MB')
+			   size(text:    'Minimal size limit:'
+				feature: minSize
+				dim:     'MB')]
+		 right:   nil)
 	   frame(text:    'Garbage Collector'
 		 feature: gc
 		 pack:    False
