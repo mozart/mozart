@@ -23,18 +23,18 @@
 #include "suspension.hh"
 
 enum BoardFlags {
-  Bo_Ask	= 1<<0,  // 0xf
-  Bo_Wait	= 1<<1,
-  Bo_Solve      = 1<<2,
-  Bo_Root	= 1<<3,
-  Bo_Installed	= 1<<4,  // 0xf0
-  Bo_Nervous	= 1<<5,
-  Bo_WaitTop	= 1<<6,
-  Bo_PathMark	= 1<<7,
-  Bo_Failed	= 1<<8,  // 0xf00
-  Bo_Committed	= 1<<9,
-  Bo_Discarded	= 1<<10,
-  Bo_Waiting    = 1<<11
+  Bo_Ask	= 0x0001,
+  Bo_Wait	= 0x0002,
+  Bo_Solve      = 0x0004,
+  Bo_Root	= 0x0008,
+  Bo_Installed	= 0x0010,
+  Bo_Nervous	= 0x0020,
+  Bo_WaitTop	= 0x0040,
+  Bo_PathMark	= 0x0080,
+  Bo_Failed	= 0x0100,
+  Bo_Committed	= 0x0200,
+  Bo_Discarded	= 0x0400,
+  Bo_Waiting    = 0x0800
 };
 
 class Board : public ConstTerm {
