@@ -7,8 +7,9 @@
 
 : ${BUILDTOP=../..}
 : ${SRCDIR=.}
-: ${OZMAFILE="-b $SRCDIR/ozc.ozm"}
-: ${OZPLATFORM=`$SRCDIR/../bin/ozplatform`}
+: ${SRCTOP=$SRCDIR/../..}
+: ${OZMAFILE="-b $SRCTOP/share/lib/ozc.ozm"}
+: ${OZPLATFORM=`$SRCTOP/share/bin/ozplatform`}
 : ${OZPREFIX=/usr/local/oz}
 
 if test -z "$OZEMULATOR"
