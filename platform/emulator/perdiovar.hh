@@ -23,7 +23,8 @@
 enum PV_TYPES {
   PV_MANAGER,
   PV_PROXY,
-  PV_OBJECT,
+  PV_OBJECTURL,   // class available maybe only as URL
+  PV_OBJECTGNAME, // only the class's gname known
   PV_URL
 };
 
@@ -63,62 +64,74 @@ public:
 };
 
 class PerdioVar: public GenCVariable {
-  TaggedPtr tagged;  // TODO: check if can reuse home
+  PV_TYPES pvtype;
+  void *ptr;
   union {
     PendBinding *bindings;
     ProxyList *proxies;
     TaggedRef aclass;
     TaggedRef url;
+    GName *gnameClass;
   } u;
 public:
+  void setpvType(PV_TYPES t) { pvtype = t; }
+  PV_TYPES getpvType()       { return pvtype; }
+
   PerdioVar() : GenCVariable(PerdioVariable) {
     u.proxies=0;
-    tagged.setType(PV_MANAGER);
+    setpvType(PV_MANAGER);
   }
 
   PerdioVar(int i) : GenCVariable(PerdioVariable) {
     u.bindings=0;
-    tagged.setType(PV_PROXY);
+    setpvType(PV_PROXY);
     setIndex(i);
   }
 
   PerdioVar(Object *o) : GenCVariable(PerdioVariable) {
-    tagged.setType(PV_OBJECT);
-    tagged.setPtr(o);
+    setpvType(PV_OBJECTURL);
+    ptr = o;
   }
 
   void setClass(TaggedRef cl) {
-    Assert(isObject());
+    Assert(isObjectURL());
     u.aclass=cl;
+  }
+
+  void setGNameClass(GName *gn) {
+    setpvType(PV_OBJECTGNAME);
+    u.gnameClass=gn;
   }
   PerdioVar(GName *gname, TaggedRef url) : GenCVariable(PerdioVariable) {
     u.url = url;
-    tagged.setType(PV_URL);
-    tagged.setPtr(gname);
+    setpvType(PV_URL);
+    ptr = gname;
   }
 
-  void globalize(int i) { tagged.setType(PV_MANAGER); tagged.setIndex(i); }
+  void globalize(int i) { setpvType(PV_MANAGER); ptr = ToPointer(i); }
 
-  Bool isManager()   { return tagged.getType()==PV_MANAGER; }
-  Bool isProxy()     { return tagged.getType()==PV_PROXY; }
-  Bool isObject()    { return tagged.getType()==PV_OBJECT; }
-  Bool isURL()       { return tagged.getType()==PV_URL; }
+  Bool isManager()   { return getpvType()==PV_MANAGER; }
+  Bool isProxy()     { return getpvType()==PV_PROXY; }
+  Bool isObjectURL() { return getpvType()==PV_OBJECTURL; }
+  Bool isObjectGName() { return getpvType()==PV_OBJECTGNAME; }
+  Bool isURL()       { return getpvType()==PV_URL; }
 
-  int getIndex() { return tagged.getIndex(); }
+  int getIndex() { return ToInt32(ptr); }
 
-  GName *getGName() { return isURL() ? (GName *) tagged.getPtr() : getObject()->getGName(); }
+  GName *getGName() { return isURL() ? (GName *) ptr : 0; }
+  GName *getGNameClass() { Assert(isObjectGName()); return u.gnameClass; }
   TaggedRef getURL() { Assert(isURL()); return u.url; }
   void setIndex(int i) {
-    Assert(!isURL() && !isObject());
-    tagged.setIndex(i);
+    Assert(!isURL() && !isObjectURL() && !isObjectGName());
+    ptr = ToPointer(i);
   }
 
   Bool valid(TaggedRef *varPtr, TaggedRef v);
   
   size_t getSize(void) { return sizeof(PerdioVar); }
   
-  Object *getObject() { Assert(isObject()); return (Object*)tagged.getPtr(); }
-  TaggedRef getClass() { Assert(isObject()); return u.aclass; }
+  Object *getObject() { Assert(isObjectURL() || isObjectGName()); return (Object*)ptr; }
+  TaggedRef getClass() { Assert(isObjectURL()); return u.aclass; }
 
   void registerSite(Site* sd) {
     Assert(isManager());
