@@ -1,0 +1,130 @@
+<!--
+  Translated to SGML by:
+     Daniel Simon, dansim@ps.uni-sb.de
+     Leif Kornstaedt, kornstae@ps.uni-sb.de
+-->
+
+<Chapter id="chapter.values">
+  <Title/Values/
+  <Section>
+    <Title/Values in General/
+    <P>
+      The module <Span class=index/<<Value>>/ contains procedures that can
+      operate on many kinds of values.
+      <List>
+	<Entry><Span class=index/<<=>>/
+	  <Index/<<Value>><And><<'='>>/
+	<Synopsis>
+	  <<{Value.'=' ?_{X} ?_{Y}}>>
+	<Item>
+	  unifies the values of the variables <<X>> and&nbsp;<<Y>>.
+
+	<Entry><Span class=index/<<==>>/
+	  <Index/<<Value>><And><<'=='>>/
+	<Synopsis>
+	  <<{Value.'==' ?_{X} ?_{Y} ??{B}}>>
+	<Item>
+	  tests whether <<X>> is equal to&nbsp;<<Y>>.
+	  The test may suspend.
+
+	<Entry><Span class=index/<<\=>>/
+	  <Index/<<Value>><And><<'\\='>>/
+	<Synopsis>
+	  <<{Value.'\\=' ?_{X} ?_{Y} ??{B}}>>
+	<Item>
+	  tests whether <<X>> is not equal to&nbsp;<<Y>>.
+	  The test may suspend.
+      </List>
+  <Section>
+    <Title/Variable Status/
+    <P>
+      The following procedures allow to inspect a variable's status.
+      <List>
+	<Entry><Span class=index/<<IsFree>>/
+	  <Index/<<Value>><And><<isFree>>/
+	<Synopsis>
+	  <<{Value.isFree ?_{X} ??{B}}>>
+	<Item>
+	  tests whether <<X>> is currently free.
+
+	<Entry><Span class=index/<<IsDet>>/
+	  <Index/<<Value>><And><<isDet>>/
+	<Synopsis>
+	  <<{Value.isDet ?_{X} ??{B}}>>
+	<Item>
+	  tests whether <<X>> is determined.
+
+	<Entry><Span class=index/<<IsKinded>>/
+	  <Index/<<Value>><And><<isKinded>>/
+	<Synopsis>
+	  <<{Value.isKinded ?_{X} ??{B}}>>
+	<Item>
+	  tests whether <<X>> is currently kinded, &ie;, neither determined
+	  nor free.
+
+	<Entry><<Value.status>>
+	  <Index class=tails/<<Value>><And><<status>>/
+	<Synopsis>
+	  <<{Value.status ?_{X} ??T}>>
+	<Item>
+	  returns status and type information on&nbsp;<<X>>.  If <<X>> is
+	  free, the atom <<free>> is returned.  If <<X>> is kinded, the
+	  tuple <<kinded(?{Y})>> is returned, where <Var type=meta/Y/ is
+	  bound to an atom depending on the type of&nbsp;<<X>>.  If <<X>>
+	  is determined, the tuple <<det(?{Y})>> is returned, where <Var
+	  type=meta/Y/ is bound to an atom depending on the type of&nbsp;<<X>>.
+	  <!--** what atoms are returned for what type? -->
+
+	<!--** Value.type -->
+      </List>
+  <Section>
+    <Title/Comparisons/
+    <P>
+      This section collects procedures to compare integers with integers,
+      floats with floats, and atoms with atoms. Atoms are compared lexically.
+      Comparison between values of different types is not allowed and an
+      attempt to do so will raise a run-time error.
+      <List>
+	<Entry><Span class=index/<<=&lt;>>/
+	  <Index/<<Value>><And><<'=&lt;'>>/
+	<Synopsis>
+	  <<{Value.'=&lt;' ?+{AFI1} ?+{AFI2} ??{B}}>>
+	<Item>
+	  tests whether <<AFI1>> is less than or equal to <<AFI2>>.
+
+	<Entry><Span class=index/<<&lt;>>/
+	  <Index/<<Value>><And><<'&lt;'>>/
+	<Synopsis>
+	  <<{Value.'&lt;' ?+{AFI1} ?+{AFI2} ??{B}}>>
+	<Item>
+	  tests whether <<AFI1>> is less than <<AFI2>>.
+
+	<Entry><Span class=index/<<&gt;=>>/
+	  <Index/<<Value>><And><<'&gt;='>>/
+	<Synopsis>
+	  <<{Value.'&gt;=' ?+{AFI1} ?+{AFI2} ??{B}}>>
+	<Item>
+	  tests whether <<AFI1>> is greater than or equal to <<AFI2>>.
+
+	<Entry><Span class=index/<<&gt;>>/
+	  <Index/<<Value>><And><<'&gt;'>>/
+	<Synopsis>
+	  <<{Value.'&gt;' ?+{AFI1} ?+{AFI2} ??{B}}>>
+	<Item>
+	  tests whether <<AFI1>> is greater than <<AFI2>>.
+
+	<Entry><Span class=index/<<Max>>/
+	  <Index/<<Value>><And><<max>>/
+	<Synopsis>
+	  <<{Value.max ?+{AFI1} ?+{AFI2} ??{AFI3}}>>
+	<Item>
+	  returns the maximum of <<AFI1>> and <<AFI2>>.
+
+	<Entry><Span class=index/<<Min>>/
+	  <Index/<<Value>><And><<min>>/
+	<Synopsis>
+	  <<{Value.min ?+{AFI1} ?+{AFI2} ??{AFI3}}>>
+	<Item>
+	  returns the minimum of <<AFI1>> and <<AFI2>>.
+      </List>
+</Chapter>
