@@ -9,7 +9,7 @@
   ------------------------------------------------------------------------
 */
 
-#if defined(__GNUC__) && !defined(NOPRAGMA)
+#if defined(INTERFACE)
 #pragma implementation "taskstk.hh"
 #endif
 
@@ -73,6 +73,28 @@ int TaskStack::getSeqSize()
     tos = tos - frameSize(cFlag) + 1;
   }
 }
+
+#ifdef DEBUG_CHECK
+int TaskStack::hasJob()
+{
+  TaskStackEntry *oldTos=tos;
+
+  while (1) {
+    if (isEmpty()) {
+      tos=oldTos;
+      return NO;
+    }
+    TaskStackEntry entry=*(--tos);
+    ContFlag cFlag = getContFlag(ToInt32(entry));
+
+    if (cFlag == C_JOB) {
+      tos=oldTos;
+      return OK;
+    }
+    tos = tos - frameSize(cFlag) + 1;
+  }
+}
+#endif
 
 /*
  * copySeq: copy the sequential part of newStack

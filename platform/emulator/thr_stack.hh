@@ -13,7 +13,7 @@
 #ifndef __TASKSTACKH
 #define __TASKSTACKH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 
@@ -65,6 +65,7 @@ ContFlag getContFlag(TaggedPC tpc)
 
 
 typedef StackEntry TaskStackEntry;
+
 
 /* The bottom of the TaskStack contains a special element: emptyTaskStackEntry
  * this allows faster check for emptyness
@@ -188,14 +189,22 @@ public:
     push(ToPointer(C_DEBUG_CONT));
   }
 
-  void pushJob()
+  static TaskStackEntry makeJobEntry(Bool hasJob)
   {
-    if (!isEmpty()) {
-      push(ToPointer(C_JOB));
-    }
+    return (TaskStackEntry) ToPointer(makeTaggedRef((TypeOfTerm)C_JOB,hasJob));
+  }
+
+  static Bool getJobFlagFromEntry(TaskStackEntry e)
+  {
+    return (Bool) tagValueOf((TypeOfTerm)C_JOB,(TaggedRef) ToInt32(e));
+  }
+  void pushJob(Bool hasJobs)
+  {
+    push(makeJobEntry(hasJobs));
   }
 
   int getSeqSize();
+  int hasJob();
   void copySeq(TaskStack *newStack,int size);
   Chunk *findExceptionHandler();
   static int frameSize(ContFlag);

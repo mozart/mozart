@@ -16,12 +16,13 @@
 #define __THREADHH
 
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 
 enum TFlags {
   T_Suspended   =0x0001,
+  T_HasJobs     =0x0010,
 };
 
 class Thread : public ConstTerm, public TaskStack
@@ -50,6 +51,28 @@ public:
   void unsetSuspended() { flags &= ~T_Suspended; }
   int  isSuspended() { return (flags & T_Suspended); }
   Bool isBelowFailed(Board *top);
+
+  /*
+   * Optimization:
+   * If thread has more than one job the flag T_HasJobs is set.
+   * Limitation: not unset when all JOB-tasks are discarded.
+   */
+  Bool hasJobs() {
+    Assert((flags & T_HasJobs) || !TaskStack::hasJob());
+    return flags & T_HasJobs;
+  }
+  void setHasJobs() { flags |= T_HasJobs; }
+  Bool unsetHasJobs() {
+    Assert(!TaskStack::hasJob());
+    return flags &= ~T_HasJobs;
+  }
+  void pushJob()
+  {
+    if (!isEmpty()) {
+      TaskStack::pushJob(hasJobs());
+      setHasJobs();
+    }
+  }
 
   void setPriority(int prio);
   Board *getBoardFast() { return board->getBoardFast(); }
