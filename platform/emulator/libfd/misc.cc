@@ -407,7 +407,7 @@ OZ_Return Counter::propagate(void)
       const char * l = OZ_atomToC(OZ_label(e));
       
       if (! strcmp("get", l)) {
-	if (OZ_unify(OZ_int(c), OZ_getArg(e, 0)) == FAILED) 
+	if (OZ_unify(OZ_int(c), OZ_getArg(e, 0)) == FAILED) // mm_u
 	  goto failure;
       } else if (! strcmp ("put", l)) {
 	OZ_Term e_0 = OZ_getArg(e, 0);
@@ -494,7 +494,7 @@ OZ_Return FirstFail::propagate(void)
 	// No elements left
         if (current==size) {
 	  size = 0;
-	  if (OZ_unify(OZ_getArg(e, 0), OZ_int(-1)) == FAILED)
+	  if (OZ_unify(OZ_getArg(e, 0), OZ_int(-1)) == FAILED) // mm_u
 	    goto failure;
 	}
 	else {
@@ -522,7 +522,7 @@ OZ_Return FirstFail::propagate(void)
 	    }
 	    size = new_cur;
       
-	    if (OZ_unify(reg_fds[minElem], OZ_getArg(e, 0)) == FAILED) 
+	    if (OZ_unify(reg_fds[minElem], OZ_getArg(e, 0)) == FAILED) // mm_u
 	      goto failure;
 	}
       } else {
