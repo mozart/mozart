@@ -149,6 +149,14 @@
         This view is the only one which is not located inside Ozcar's
         main window. Instead, Emacs serves for this purpose by
         highlightening source code lines appropriately while single stepping.
+        <p>
+        <Para class=apropos><Title/Color scheme/
+        Emacs gives the highlighted lines different colors, depending on
+        how the line was reached by the corresponding thread. The idea
+        is quite simple: If nothing really special has happened (just
+        some booring step into or unleash), the color is blue, otherwise,
+        that is, if a breakpoint has been reached or an unhandled exception
+        was raised, the color is red.
       <Chapter>
         <title/A First Interaction
         <p>
@@ -193,7 +201,7 @@ end>>>
         <<{Value.'='_ hello}>> is highlighted, like this:
         <figure class="picture">
         <caption/Emacs shows the exact position of the stopped thread/
-          <p><picture.extern gif to="ozcar-hello3.gif">
+          <p><picture.extern gif to="ozcar-hello-emacs.gif">
         </figure>
         <Para class=apropos><Title/Single Stepping/ Now, how can we
         apply the function <<Value.'='>>? One way is to use the mouse,
@@ -230,7 +238,7 @@ end>>>
         a step point. Emacs always highlights the whole line where
         the thread is currently stopped, together with a second mark
         which shows the column within this line where the syntactic
-        construct starts or ends (see below).
+        construct starts or ends.
         <list>
           <entry>Definition
           <item>
@@ -280,7 +288,7 @@ end>>>
         <p>
         The simplest way how to control the execution of a thread is
         to single step from step point to step point. This is exactly
-        what step into (Button <picture.extern inline
+        what step into (<picture.extern inline
         gif to="step.gif">) is doing. You get a very detailed view of how your
         program is executing. Often, it will be too detailed;
         this is where step over and unleash enter the scene.
@@ -290,7 +298,7 @@ end>>>
         Whenever execution has stopped on a step point, you can decide if you
         want to enter the corresponding inner block (i.e. the procedure
         body, the case clause, etc). If yes, you do a step into (see above).
-        If not, you do a step over (Button <picture.extern inline
+        If not, you do a step over (<picture.extern inline
         gif to="next.gif">). This continues execution until the corresponding
         block has been left again. Typically, Emacs will show you standing
         on an <<end>> keyword or a closing brace then.
@@ -298,7 +306,7 @@ end>>>
         <title/Action Unleash/
         <p>
         Actually, step over is a special case of a more generic action,
-        which is called unleash (Button <picture.extern inline
+        which is called unleash (<picture.extern inline
         gif to="unleash.gif">). It continues the execution of the thread
         until the currently marked stack frame is just to be removed from
         the stack, or until the thread has finished executing the whole
@@ -322,7 +330,7 @@ in
 end
 >>>
         Suppose you already pressed the <picture.extern inline
-        gif to="step.gif"> some times, so that there was build
+        gif to="step.gif"> button some times, so that there was build
         a nice stack already, and that you have marked stack frame 5
         by clicking on it. What you will see is something like this:
 
@@ -357,7 +365,9 @@ end
 <<<
 local
    fun {Fac N}
-      if N < 2 then {Ozcar.breakpoint} 1 else
+      if N < 2 then
+         {Ozcar.breakpoint} 1
+      else
          N * {Fac N-1}
       end
    end
@@ -384,19 +394,83 @@ end
         <p>
         Unfortunately, there is no information yet about all currently
         defined dynamic breakpoints. You just have to keep them in mind.
-        This might be changed in the future.
+        This should be changed in the future.
       <Chapter>
         <title/Environment Inspectation/
         <p>
+        In this chapter you learn how to investigate the environment, i.e,
+        how to access the values of variables. In fact, we must
+        distinguish between two kinds of enviroments in Oz. First, there
+        is the toplevel enviroment. Here you find all the variables
+        which are defined right after you started the mozart system. The
+        procedure <<Show>> is an example, the module <<String>> is another.
+        Second, there exist environments for each stack frame
+        (i.e. each called procedure)
+        of a thread. They consist of local variables, which are the union
+        of locally defined variables and formal parameters, and global
+        variables, which are referenced inside the procedure, but
+        defined outside.
+        <p>
+        Environment inspectation is easy with Ozcar. In fact,
+        it is done automatically for you. Whenever you select a stack
+        frame, the variables which are visible inside this frame are
+        printed in the variable windows. You can browse the values by
+        clicking on their type information.
         <section>
+        <title/The Query Dialog/
+        <p>
+        There might be situations where you have to operate on some
+        values which are found in the local or global environment.
+        For example, you want to convert a data structure, or to
+        bind an unbound variable which causes your program to hang.
+        <p>
+        For this purpose the query dialog exists. You can open it
+        by selecting the Query... menu entry in the Stack menu.
+        <subsection>
         <title/Evaluation of Expressions/
         <p>
-        <section>
+        Using this dialog, you can evaluate arbitrary Oz expressions.
+        For example, if you type
+<<<{fun {$ A B C} A+B*C end 1 2 3}>>>
+        in the Query line and press the Eval button,
+        you get the expected result, <<7>>, in the Result line.
+        Another example shows the following picture:
+        <figure class="picture">
+        <caption/You can evaluate arbitrary expressions/
+          <p><picture.extern gif to="eval-expression.gif">
+        </figure>
+        <subsection>
         <title/Execution of Statements/
         <p>
+        Another thing you can do with the Query dialog is to execute
+        Oz statements. For example, if you type <<{Browse hugo}>>
+        and press the Exec button, the Browser pops up and prints
+        the obvious data. Note that the result of executing a statement
+        is <<unit>>. Another example comes with
+        the next picture. An unbound variable, <<G2>>, is
+        bound to the value <<7>>. You would have to reprint the variable
+        view's content (by reselecting the stack frame) in order to
+        update its information.
+        <figure class="picture">
+        <caption/You can execute all kinds of statements/
+          <p><picture.extern gif to="exec-statement.gif">
+        </figure>
       <Chapter>
         <title/Exceptions/
         <p>
+        Errors in programs often manifest themselves by threads throwing
+        unhandled exceptions. It would be nice to have a post mortem stack
+        to check how the position of the big bang was reached. Moreover,
+        the environment should be visible.
+        <p>
+        Ozcar provides this information. Exceptions which would normally
+        be printed in the Emulator buffer are catched by Ozcar, which
+        prints the post mortem stack, together with an explanation of
+        the exception in the status line. All stack frames
+        provide variable information.
+        <p>
+        Here comes an example. There was forgotten an <<else>> branch
+        in the case statement.
 <<<
 local
    proc {Check X}
@@ -413,12 +487,13 @@ end
         <caption/An unhandled exception has been raised/
           <p><picture.extern gif to="exception.gif">
         </figure>
-
+        Emacs prints the location in the source where the error
+        happened. Note that the bar is printed in red, as you reached
+        the position unexpectedly.
         <figure class="picture">
-        <caption/Emacs shows the exact position where the error occured/
+        <caption/Emacs shows the position where the error occured/
           <p><picture.extern gif to="exception-emacs.gif">
         </figure>
-
       <Chapter>
       <title/Reference Section/
         <p>
