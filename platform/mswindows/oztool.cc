@@ -1,102 +1,112 @@
 /*
  *  Authors:
- *    Ralf Scheidhauer (scheidhr@dfki.de)
- *
- *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Ralf Scheidhauer <scheidhr@dfki.de>
+ *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Ralf Scheidhauer, 1999
+ *    Leif Kornstaedt, 1999
  *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
  *
- *  This file is part of Mozart, an implementation
- *  of Oz 3:
- *     http://www.mozart-oz.org
+ *  This file is part of Mozart, an implementation of Oz 3:
+ *    http://www.mozart-oz.org
  *
  *  See the file "LICENSE" or
- *     http://www.mozart-oz.org/LICENSE.html
+ *    http://www.mozart-oz.org/LICENSE.html
  *  for information on usage and redistribution
  *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
- *
  */
 
-#define OZENGINE
-#include "misc.cc"
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include <io.h>
+#include <process.h>
 
-void dossify(char *path)
+#include "startup.hh"
+
+//
+// Summary of how oztool behaves:
+//
+// oztool -gnu c++ -c <files>
+//    g++ -I"$OZHOME/include" -c <files>
+// oztool -gnu cc -c <files>
+//    gcc -I"$OZHOME/include" -c <files>
+// oztool -gnu ld -o <target> <file1> ... <filen>
+//    dlltool --def emulator.def --output-lib <tmpfile1>.a
+//    dlltool --dllname <target> --output-exp <tmpfile2>.a \
+//       <file1> ... <filen>
+//    dllwrap -s -o <target> --dllname <target> <file1> ... <filen> \
+//       <tmpfile2>.a <tmpfile1>.a
+//    rm tmpfile1.a tmpfile2.a
+//
+// oztool -msvc c++ -c <files> -o <outfile>
+//    cl -nologo -TP -I"$OZHOME\include" -c <files>
+//    // where `-o <outfile>' within <files> is converted to `/Fo<outfile>'
+// oztool -msvc cc -c <files>
+//    cl -nologo -TC -I"$OZHOME\include" -c <files>
+//    // where `-o <outfile>' within <files> is converted to `/Fo<outfile>'
+// oztool -msvc ld -o <target> <file1> ... <filen>
+//    lib /nologo /def:$OZHOME\include\emulator.def /machine:ix86 \
+//       /out:<tmpfile>.lib
+//    link /nologo /dll /out:<target> <file1> ...<filen> <tmpfile>.lib
+//    rm <tmpfile>.lib <tmpfile>.exp
+//
+// oztool -watcom c++ -c <files>
+//    wpp386 -zq -bd -I"$OZHOME/include" -c <files>
+// oztool -watcom cc -c <files>
+//    wcc386 -zq -bd -I"$OZHOME/include" -c <files>
+// oztool -watcom ld -o <target> <file1> ... <filen>
+//    wlink system nt_dll initinstance terminstance name <target> \
+//       file <file1>,...,<filen>
+//
+
+bool console = true;
+
+void usage()
 {
-  char *aux;
-  for(aux=path; *aux; aux++) {
-    if (*aux == '/') {
-      *aux = '\\';
-    }
-  }
-}
-
-char *getOzHome()
-{
-  char buffer[5000];
-  GetModuleFileName(NULL, buffer, sizeof(buffer));
-  char *ret = getOzHome(buffer,2);
-  dossify(ret);
-  return ret;
-}
-
-
-char *pappzammn(char **argv, int von, int bis)
-{
-  int l=0;
-  for (int i=von; i<bis; i++)
-    l += strlen(argv[i])+strlen(",");
-  char *ret= new char[l+1];
-  if (ret==NULL) exit(2);
-  ret[0]='\0';
-  while (von<bis) {
-    strcat(ret,argv[von++]);
-    if (von<bis) strcat(ret, ",");
-  }
-  return ret;
+  fprintf(stderr,
+          "Usage:\n"
+          "\toztool [-verbose] [-gnu|-msvc|-watcom] c++ SourceFile\n"
+          "\toztool [-verbose] [-gnu|-msvc|-watcom] cc SourceFile\n"
+          "\toztool [-verbose] [-gnu|-msvc|-watcom] ld -o TargetLib FileList\n"
+          "\toztool platform\n");
+  exit(2);
 }
 
 void usage(char *msg)
 {
-  fprintf(stderr,
-          "%s"
-          "\nUsage:\n"
-          "\toztool [-verbose] [-gnu|-watcom|-msvc] ld -o TargetLib FileList\n"
-          "\toztool [-verbose] [-gnu|-watcom|-msvc] c++ SourceFile\n"
-          "\toztool [-verbose] [-gnu|-watcom|-msvc] c   SourceFile\n"
-          "\toztool platform\n",
-          msg);
-  exit(2);
+  fprintf(stderr,msg);
+  usage();
 }
 
-char * concat(const char * st1, const char * st2)
+char *concat(const char *st1, const char *st2)
 {
-  int i = (strlen(st1)+strlen(st2)+1)*sizeof(char);
+  int i = strlen(st1) + strlen(st2) + 1;
   char *ret = new char[i];
-  if (ret==NULL) {
-    fprintf(stderr,"concat(%s,%s): malloc failed\n",st1,st2);
-    exit(1);
-  }
-
   strcpy(ret, st1);
   strcat(ret, st2);
   return ret;
 }
 
-char *oz_include()
+char *commaList(char **argv, int from, int to)
 {
-  return concat(concat("-I",getOzHome()),"\\include");
-}
-
-char * get_mozart_c()
-{
-  return concat(getOzHome(),"\\include\\mozart.c");
+  int len = 0;
+  for (int i = from; i < to; i++)
+    len += strlen(argv[i]) + 1;
+  char *ret = new char[len + 1];
+  char *aux = ret;
+  while (from < to) {
+    strcpy(aux, argv[from++]);
+    aux += strlen(aux);
+    if (from < to)
+      *aux++ = ',';
+  }
+  return ret;
 }
 
 char *ostmpnam()
@@ -104,11 +114,10 @@ char *ostmpnam()
   return tmpnam(NULL);
 }
 
-
 void doexit(int n)
 {
-  if (n!=0)
-    fprintf(stderr,"*** error: oztool aborted\n");
+  if (n != 0)
+    fprintf(stderr,"*** error: oztool aborted with code %d\n",n);
   exit(n);
 }
 
@@ -116,29 +125,52 @@ int verbose = 0;
 
 int execute(char **argv)
 {
-  char **aux = argv;
-  if (verbose) {
-    while(*aux) {
-      printf("%s ",*aux);
-      aux++;
-    }
-    printf("\n",argv);
+  char buffer[4096];
+  char *aux = buffer;
+  while (*argv) {
+    *aux++ = '\"';
+    strcpy(aux,*argv);
+    aux += strlen(*argv++);
+    *aux++ = '\"';
+    *aux++ = ' ';
   }
-  return spawnvp(P_WAIT,argv[0],argv);
+  *aux = '\0';
+
+  if (verbose) {
+    printf("%s\n",buffer);
+    fflush(stdout);
+  }
+
+  STARTUPINFO si;
+  ZeroMemory(&si,sizeof(si));
+  si.cb = sizeof(si);
+  PROCESS_INFORMATION pi;
+  BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi);
+  if (ret == FALSE) {
+    panic(true,"Cannot run '%s'.\n",buffer);
+  }
+  WaitForSingleObject(pi.hProcess,INFINITE);
+
+  DWORD code;
+  if (GetExitCodeProcess(pi.hProcess,&code) != FALSE)
+    return code;
+  else
+    return 0;
+
 }
 
-#define SYS_GNU  1
-#define SYS_WAT  2
-#define SYS_MSVC 3
+enum system_type {
+  SYS_GNU, SYS_MSVC, SYS_WATCOM
+};
 
 int main(int argc, char** argv)
 {
-  if (argc<2)
-    usage("");
+  if (argc < 2)
+    usage();
 
   if (!strcmp(argv[1],"platform")) {
-    if (argc!=2)
-      usage("");
+    if (argc != 2)
+      usage();
     printf("%s\n",ozplatform);
     exit(0);
   }
@@ -149,42 +181,162 @@ int main(int argc, char** argv)
     argc--;
   }
 
+  if (argc < 3)
+    usage();
 
-  if (argc<3)
-    usage("");
-
-  int sys = SYS_GNU;
-  if (!strcmp(argv[1],"-watcom")) {
-    sys = SYS_WAT;
+  system_type sys = SYS_GNU;
+  if (!strcmp(argv[1],"-gnu")) {
+    sys = SYS_GNU;
     argv++; argc--;
   } else if (!strcmp(argv[1],"-msvc")) {
     sys = SYS_MSVC;
     argv++; argc--;
-  } else if (!strcmp(argv[1],"-gnu")) {
-    sys = SYS_GNU;
+  } else if (!strcmp(argv[1],"-watcom")) {
+    sys = SYS_WATCOM;
     argv++; argc--;
   }
 
-  if (!strcmp(argv[1],"ld")) {
-    if (sys == SYS_WAT) {
-      if (argc>=4 && !strcmp(argv[2],"-o")) {
-        if (argc==4) {
-          usage("Missing Object Files.\n");
+  char *ozhome = getOzHome(false);
+  if ((!strcmp(argv[1],"cc") || !strcmp(argv[1],"c++")) && argc > 2) {
+    int cxx = !strcmp(argv[1],"c++");
+    int r = 0;
+    char **wc = new char*[argc + 2];
+    switch (sys) {
+    case SYS_GNU:
+      if (cxx)
+        wc[r++] = "g++";
+      else
+        wc[r++] = "gcc";
+      break;
+    case SYS_MSVC:
+      wc[r++] = "cl.exe";
+      wc[r++] = "-nologo";
+      if (cxx)
+        wc[r++] = "-TP";
+      else
+        wc[r++] = "-TC";
+      break;
+    case SYS_WATCOM:
+      if (cxx)
+        wc[r++] = "wpp386";
+      else
+        wc[r++] = "wcc386";
+      wc[r++] = "-zq";
+      wc[r++] = "-bd";
+      break;
+    }
+    wc[r++] = concat("-I",concat(ozhome,"\\include"));
+    wc[r++] = "-DWINDOWS";
+    for (int i = 2; i < argc; i++) {
+      if (sys == SYS_MSVC && !strcmp(argv[i],"-o")) {
+        wc[r++] = concat("/Fo",argv[++i]);
+      }else {
+        wc[r++] = argv[i];
+      }
+    }
+    wc[r] = NULL;
+    r = execute(wc);
+    doexit(r);
+  } else if (!strcmp(argv[1],"ld") && argc >= 4 && !strcmp(argv[2],"-o")) {
+    if (argc == 4) {
+      usage("Missing object files.\n");
+    }
+    char *target = argv[3];
+    switch (sys) {
+    case SYS_GNU:
+      {
+        char *libname  = argv[3];
+        char *defname  = concat(libname,".def");
+        char *aname    = concat("lib",concat(libname,".a"));
+        char *tempfile = concat(ostmpnam(),".o");
+
+        char **gcc     = new char*[7];
+        gcc[0]="gcc";
+        gcc[1]="-I.";//oz_include();
+        gcc[3]="mozart.c";//get_mozart_c();
+        gcc[2]="-c";
+        gcc[4]="-o";
+        gcc[5]=tempfile;
+        gcc[6]=NULL;
+        int r = execute(gcc);
+        if (!r) {
+          char **dlltool = new char*[argc+4];
+          dlltool[r++]="dlltool";
+          dlltool[r++]="--output-def";
+          dlltool[r++]=defname;
+          dlltool[r++]="--dllname";
+          dlltool[r++]=libname;
+          dlltool[r++]="--output-lib";
+          dlltool[r++]=aname;
+          dlltool[r++]=tempfile;
+          for (int i=4; i<argc; i++) dlltool[r++]=argv[i];
+          dlltool[r]=NULL;
+          r = execute(dlltool);
+          if (!r) {
+            char **dllwrap = new char*[argc+9];
+            dllwrap[r++]="dllwrap";
+            dllwrap[r++]="-s";
+            dllwrap[r++]="-o";
+            dllwrap[r++]=libname;
+            dllwrap[r++]="--def";
+            dllwrap[r++]=defname;
+            dllwrap[r++]="--dllname";
+            dllwrap[r++]=libname;
+            dllwrap[r++]=tempfile;
+            for (int i=4; i<argc; i++) dllwrap[r++]=argv[i];
+            dllwrap[r]=NULL;
+            r = execute(dllwrap);
+          }
         }
-        /* ld -watcom -o */
+        unlink(tempfile);
+        unlink(aname);
+        unlink(defname);
+        doexit(r);
+      }
+    case SYS_MSVC:
+      {
+        char *tmpfile1 = "emulator";//--**ostmpnam();
+        char *tmpfile1lib = concat(tmpfile1,".lib");
+        char *tmpfile1exp = concat(tmpfile1,".exp");
+        char **libCmd = new char *[6];
+        libCmd[0] = "lib.exe";
+        libCmd[1] = "/nologo";
+        libCmd[2] =
+          concat("/def:",concat(ozhome,"\\include\\emulator.def"));
+        libCmd[3] = "/machine:ix86";
+        libCmd[4] = concat("/out:",tmpfile1lib);
+        libCmd[5] = NULL;
+        int r = execute(libCmd);
+        if (!r) {
+          char **linkCmd = new char *[argc + 1];
+          r = 0;
+          linkCmd[r++] = "link.exe";
+          linkCmd[r++] = "/nologo";
+          linkCmd[r++] = "/dll";
+          linkCmd[r++] = concat("/out:",target);
+          for (int i = 4; i < argc; i++)
+            linkCmd[r++] = argv[i];
+          linkCmd[r++] = tmpfile1lib;
+          linkCmd[r] = NULL;
+          r = execute(linkCmd);
+        }
+        unlink(tmpfile1lib);
+        unlink(tmpfile1exp);
+        doexit(r);
+      }
+    case SYS_WATCOM:
+      {
         char *tempfile=concat(ostmpnam(),".obj");
         char **wuergs = new char*[7];
         wuergs[0]="wcc386";
         wuergs[1]="-zq";
         wuergs[2]="-bd";
-        wuergs[3]=oz_include();
-        wuergs[4]=get_mozart_c();
+        wuergs[3]="-I.";//oz_include();
+        wuergs[4]="mozart.c";//get_mozart_c();
         wuergs[5]=concat("-fo=",tempfile);
         wuergs[6]=NULL;
-        int r=execute(wuergs);
-        if (r)
-          goto cleanup;
-        {
+        int r = execute(wuergs);
+        if (!r) {
           char **links = new char*[10];
           char *libname = argv[3];
           links[0]="wlink";
@@ -195,144 +347,14 @@ int main(int argc, char** argv)
           links[5]="name";
           links[6]=libname;
           links[7]="file";
-          links[8]=concat(tempfile,concat(",",pappzammn(argv,4,argc)));
+          links[8]=concat(tempfile,concat(",",commaList(argv,4,argc)));
           links[9]=NULL;
           r=execute(links);
         }
-      cleanup:
         unlink(tempfile);
-        doexit(r);
-      }
-    }
-    if (sys == SYS_MSVC) {
-      if (argc>=4 && !strcmp(argv[2],"-o")) {
-        if (argc==4) {
-          usage("Missing Object Files.\n");
-        }
-        /* ld -msvc -o */
-        char *tempfile=concat(ostmpnam(),".obj");
-        char *junklib = concat(ostmpnam(),".lib");
-        char *junkexp = concat(ostmpnam(),".exp");
-        char **wuergs = new char*[7];
-        wuergs[0]="cl";
-        wuergs[1]="-nologo";
-        wuergs[2]="-c";
-        wuergs[3]=oz_include();
-        wuergs[4]=get_mozart_c();
-        wuergs[5]=concat("-Fo",tempfile);
-        wuergs[6]=NULL;
-        int r=execute(wuergs);
-        if (r)
-          goto cleanup;
-        {
-          char **links = new char*[argc+9];
-          char *libname = argv[3];
-          r = 0;
-          links[r++]="link";
-          links[r++]="-DLL";
-          links[r++]=tempfile;
-          for (int i=4; i<argc; i++) links[r++]=argv[i];
-          links[r++]=concat("-OUT:",libname);
-          links[r++]=concat("-IMPLIB:",junklib);
-          links[r]=NULL;
-          r=execute(links);
-        }
-      cleanup3:
-        unlink(tempfile);
-        unlink(junklib);
-        unlink(junkexp);
-        doexit(r);
-      }
-    }
-    if (sys == SYS_GNU) {
-      if (argc>=4 && !strcmp(argv[2],"-o")) {
-        if (argc==4) {
-          usage("Missing Object Files.\n");
-        }
-        char **wuergs  = new char*[argc+4];
-        char **links   = new char*[argc+9];
-        char **moz     = new char*[7];
-        char *libname  = argv[3];
-        char *defname  = concat(libname,".def");
-        char *aname    = concat("lib",concat(libname,".a"));
-        char *tempfile = concat(ostmpnam(),".o");
-
-        moz[0]="gcc";
-        moz[1]=oz_include();
-        moz[3]=get_mozart_c();
-        moz[2]="-c";
-        moz[4]="-o";
-        moz[5]=tempfile;
-        moz[6]=NULL;
-
-        int r=0;
-        wuergs[r++]="dlltool";
-        wuergs[r++]="--output-def";
-        wuergs[r++]=defname;
-        wuergs[r++]="--dllname";
-        wuergs[r++]=libname;
-        wuergs[r++]="--output-lib";
-        wuergs[r++]=aname;
-        wuergs[r++]=tempfile;
-        for (int i=4; i<argc; i++) wuergs[r++]=argv[i];
-        wuergs[r]=NULL;
-
-        r=0;
-        links[r++]="dllwrap";
-        links[r++]="-s";
-        links[r++]="-o";
-        links[r++]=libname;
-        links[r++]="--def";
-        links[r++]=defname;
-        links[r++]="--dllname";
-        links[r++]=libname;
-        links[r++]=tempfile;
-        for (int i=4; i<argc; i++) links[r++]=argv[i];
-        links[r]=NULL;
-
-        if ((r=execute(moz)) ||
-            (r=execute(wuergs)) ||
-            (r=execute(links))) {
-          goto cleanup2;
-        }
-      cleanup2:
-        unlink(tempfile);
-        unlink(aname);
-        unlink(defname);
         doexit(r);
       }
     }
   }
-  else if (strcmp(argv[1],"c")==0 || strcmp(argv[1],"c++")==0) {
-    if (argc<3)
-      usage("");
-    int cxx = (strcmp(argv[1],"c++")==0);
-    int r=0;
-    char ** wc=new char*[argc+1];
-    switch (sys) {
-    case SYS_WAT:
-      if (cxx)
-        wc[r++]="wpp386";
-      else
-        wc[r++]="wcc386";
-      wc[r++]="-zq";
-      wc[r++]="-bd";
-      break;
-    case SYS_GNU:
-      if (cxx)
-        wc[r++]="g++";
-      else
-        wc[r++]="gcc";
-      break;
-    case SYS_MSVC:
-      wc[r++]="cl";
-      break;
-    }
-    wc[r++]=oz_include();
-    for (int i=2; i<argc; i++) wc[r++]=argv[i];
-    wc[r]=NULL;
-    r=execute(wc);
-    exit (r);
-  }
-  usage("");
+  usage();
 }

@@ -1,9 +1,11 @@
 /*
- *  Author:
+ *  Authors:
  *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+ *    Ralf Scheidhauer <scheidhr@dfki.de>
  *
  *  Copyright:
  *    Leif Kornstaedt, 1999
+ *    Ralf Scheidhauer, 1999
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -19,17 +21,21 @@
  *  WARRANTIES.
  */
 
+//
+// Set the OZPPID environment variable such that an ozengine.exe subprocess
+// can check whether its father still lives
+//
+
 #include <windows.h>
+#include <stdlib.h>
+#include <string.h>
+#include <io.h>
 
 #include "startup.hh"
 
-bool console = false;
-
-int WINAPI
-WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
-        LPSTR /*lpszCmdLine*/, int /*nCmdShow*/)
-{
-  publishPid();
-
-  return createProcess(makeCmdLine(false));
+void publishPid(void) {
+  char auxbuf[100];
+  int ppid = GetCurrentProcessId();
+  sprintf(auxbuf,"%d",ppid);
+  SetEnvironmentVariable("OZPPID",strdup(auxbuf));
 }

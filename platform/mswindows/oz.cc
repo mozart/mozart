@@ -1,201 +1,74 @@
 /*
  *  Authors:
- *    Ralf Scheidhauer (scheidhr@dfki.de)
- *
- *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+ *    Ralf Scheidhauer <scheidhr@dfki.de>
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Leif Kornstaedt, 1999
+ *    Ralf Scheidhauer, 1999
  *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
  *
- *  This file is part of Mozart, an implementation
- *  of Oz 3:
- *     http://www.mozart-oz.org
+ *  This file is part of Mozart, an implementation of Oz 3:
+ *    http://www.mozart-oz.org
  *
  *  See the file "LICENSE" or
- *     http://www.mozart-oz.org/LICENSE.html
+ *    http://www.mozart-oz.org/LICENSE.html
  *  for information on usage and redistribution
  *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
- *
  */
 
-#include "misc.cc"
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include <io.h>
 
-#if !defined(OZENGINE) && !defined(OZENGINEW)
-#define OZSCRIPT
-#endif
+#include "startup.hh"
 
+bool console = false;
 
-char *getEmulator(char *ozhome)
+static char *getEmacsHome()
 {
-  char buffer[5000];
-  char *ozemulator = getenv("OZEMULATOR");
-  if (ozemulator == NULL) {
-    sprintf(buffer,"%s/platform/%s/emulator.exe",ozhome,ozplatform);
-    ozemulator = buffer;
+  char *ehome = getRegistry("SOFTWARE\\GNU\\Emacs","emacs_dir");
+  if (ehome==NULL) {
+    panic(1,"Cannot find GNU Emacs.\n");
   }
-  return strdup(ozemulator);
+
+  char buffer[1000];
+  normalizePath(ehome,true);
+  sprintf(buffer,"%s/bin/runemacs.exe",ehome);
+  if (access(buffer,0)) {
+    panic(0,"Emacs binary '%s' does not exist.",buffer);
+  }
+  return ehome;
 }
 
-
-CRITICAL_SECTION lock;
-
-
-#ifdef OZENGINEW
-
-#define bufsz 1000
-
-DWORD __stdcall readerThread(void *arg)
-{
-  HANDLE hd = (HANDLE)arg;
-  DWORD ret;
-  char buf[bufsz];
-  while(1) {
-    if (ReadFile(hd,buf,bufsz-1,&ret,0)==FALSE)
-      return 0;
-    buf[ret]=0;
-    //MessageBeep(MB_ICONINFORMATION);
-    EnterCriticalSection(&lock);
-    MessageBox(NULL, buf, "Mozart Emulator says:",
-               MB_ICONINFORMATION | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
-    LeaveCriticalSection(&lock);
-  }
-  return 1;
-}
-#endif
-
-
-#ifdef OZENGINE
-int main(int argc, char **argv)
-#else
 int WINAPI
 WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
         LPSTR /*lpszCmdLine*/, int /*nCmdShow*/)
-#endif
 {
-  /* win32 does not support process groups,
-   * so we set OZPPID such that subprocess can check whether
-   * its father still lives
-   */
-  {
-    char auxbuf[100];
-    int ppid = GetCurrentProcessId();
-    sprintf(auxbuf,"%d",ppid);
-    SetEnvironmentVariable("OZPPID",strdup(auxbuf));
-  }
-
-  InitializeCriticalSection(&lock);
-
   char buffer[5000];
 
-  GetModuleFileName(NULL, buffer, sizeof(buffer));
-  char *ozhome = getOzHome(buffer,2);
+  initEnv();
 
-  ozSetenv("OZPLATFORM",ozplatform);
-  ozSetenv("OZHOME",ozhome);
-
-  char *ozpath = getenv("OZPATH");
-  if (ozpath == NULL) {
-    ozpath = ".";
-  }
-  sprintf(buffer,"%s;%s/share", ozpath,ozhome);
-  ozSetenv("OZPATH",buffer);
-
-  sprintf(buffer,"%s/winbin;%s/bin;%s/platform/%s;%s",
-          ozhome,ozhome,ozplatform,getenv("PATH"));
-  ozSetenv("PATH",buffer);
-
-  int console = 0;
-
-#ifdef OZSCRIPT
   char *emacshome  = getEmacsHome();
   sprintf(buffer,
-          "%s/bin/runemacs.exe -L \"%s/share/elisp\" -l oz.elc -f run-oz",
-          emacshome,ozhome);
-#else
-# ifdef OZENGINEW
-  int argc    = _argc;
-  char **argv = _argv;
-  console = DETACHED_PROCESS | CREATE_SUSPENDED;
-# endif
-  if (argc < 2) {
-    panic(0,"Usage: ozengine"
-# ifdef OZENGINEW
-          "w"
-# endif
-          " url <args>");
-  }
-  char *ozemulator = getEmulator(ozhome);
-  char *url = argv[1];
-  sprintf(buffer,"\"%s\" -u \"%s\" -- ", ozemulator,url);
-  for (int i=2; i<argc; i++) {
-    strcat(buffer," \"");
-    strcat(buffer,argv[i]);
-    strcat(buffer,"\"");
-  }
-#endif
+          "%s/bin/runemacs.exe -L \"%s/share/elisp\" -l oz.elc -f run-oz %s",
+          emacshome,ozGetenv("OZHOME"),getCmdLine());
 
   STARTUPINFO si;
   ZeroMemory(&si,sizeof(si));
   si.cb = sizeof(si);
-  si.dwFlags = STARTF_FORCEOFFFEEDBACK;
-
-#ifdef OZENGINEW
-  HANDLE rh,wh;
-  {
-    SECURITY_ATTRIBUTES sa;
-    ZeroMemory(&sa,sizeof(sa));
-    sa.nLength = sizeof(sa);
-    sa.lpSecurityDescriptor = NULL;
-    sa.bInheritHandle = TRUE;
-    if (CreatePipe(&rh,&wh,&sa,0) == FALSE) {
-      panic(1,"Could not create pipe.\n");
-    }
-    // Is it OK not to initialize hStdInput?
-    // Is it OK to pass the same handle twice?
-    si.dwFlags |= STARTF_USESTDHANDLES;
-    si.hStdOutput = wh;
-    si.hStdError  = wh;
-  }
-#endif
-
-  // Why make the pi.hProcess handle inheritable?
-  SECURITY_ATTRIBUTES sa;
-  ZeroMemory(&sa,sizeof(sa));
-  sa.nLength = sizeof(sa);
-  sa.lpSecurityDescriptor = NULL;
-  sa.bInheritHandle = TRUE;
   PROCESS_INFORMATION pi;
-  BOOL ret = CreateProcess(NULL,buffer,&sa,NULL,TRUE,
-                           console,NULL,NULL,&si,&pi);
+  BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,
+                           0,NULL,NULL,&si,&pi);
 
   if (ret == FALSE) {
     panic(1,"Cannot run '%s'.",buffer);
   }
-
-#ifdef OZENGINEW
-  DWORD thrid;
-  CreateThread(0,10000,&readerThread,rh,0,&thrid);
-  ResumeThread(pi.hThread);
-#endif
-
-  WaitForSingleObject(pi.hProcess,INFINITE);
-
-#ifdef OZENGINEW
-  DWORD code;
-  if (GetExitCodeProcess(pi.hProcess,&code) != FALSE && code != 0) {
-    sprintf(buffer,"Emulator exited abnormally with status: %d",code);
-    EnterCriticalSection(&lock);
-    MessageBox(NULL, buffer, "Emulator died:",
-               MB_ICONERROR | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
-    LeaveCriticalSection(&lock);
-  }
-#endif
 
   return 0;
 }

@@ -19,17 +19,22 @@
  *  WARRANTIES.
  */
 
-#include <windows.h>
+#include <startup.hh>
 
-#include "startup.hh"
-
-bool console = false;
-
-int WINAPI
-WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
-        LPSTR /*lpszCmdLine*/, int /*nCmdShow*/)
+void normalizePath(char *path, bool toUnix)
 {
-  publishPid();
+  char from, to;
+  if (toUnix) {
+    from = '\\';
+    to = '/';
+  } else {
+    from = '/';
+    to = '\\';
+  }
 
-  return createProcess(makeCmdLine(false));
+  for (char *aux = path; *aux != '\0'; aux++) {
+    if (*aux == from) {
+      *aux = to;
+    }
+  }
 }

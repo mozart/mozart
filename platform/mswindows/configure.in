@@ -70,12 +70,14 @@ esac
 
 AC_SUBST(CXX)
 
+AC_CHECK_TOOL(AR, ar)
+AC_CHECK_TOOL(WINDRES, windres)
 
 dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************
 
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile res.rc)
 
 
 errprint(ifdef([OZ_INIT],
