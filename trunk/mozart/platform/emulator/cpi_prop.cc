@@ -189,7 +189,8 @@ OZ_Return OZ_Propagator::postpone(void)
 OZ_Boolean OZ_Propagator::imposeOn(OZ_Term t)
 {
   DEREF(t, tptr);
-  if (oz_isVar(t)) {
+  Assert(!oz_isRef(t));
+  if (oz_isVarOrRef(t)) {
     oz_var_addSusp(tptr, Propagator::getRunningPropagator());
     return OZ_TRUE;
   } 
@@ -199,7 +200,8 @@ OZ_Boolean OZ_Propagator::imposeOn(OZ_Term t)
 OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
 {
   DEREF(v, vptr);
-  if (!oz_isVar(v))
+  Assert(!oz_isRef(v));
+  if (!oz_isVarOrRef(v))
     return FALSE;
   Assert(vptr);
 
@@ -210,7 +212,8 @@ OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
 OZ_Boolean OZ_Propagator::addImpose(OZ_FSetPropState s, OZ_Term v)
 {
   DEREF(v, vptr);
-  if (!oz_isVar(v))
+  Assert(!oz_isRef(v));
+  if (!oz_isVarOrRef(v))
     return FALSE;
   Assert(vptr);
 
@@ -224,7 +227,8 @@ OZ_Boolean OZ_Propagator::addImpose(OZ_CtWakeUp e,
 				    OZ_Term v)
 {
   DEREF(v, vptr);
-  if (!oz_isVar(v))
+  Assert(!oz_isRef(v));
+  if (!oz_isVarOrRef(v))
     return FALSE;
   Assert(vptr);
 
@@ -253,12 +257,13 @@ int OZ_Propagator::impose(OZ_Propagator * p)
     void * cpi_raw = (void *) NULL;
     int isNonEncapTagged = 0, isEncapTagged = 0;
     //
-    if (oz_isVar(v)) {
+    // kost@ : conditional subsumed by the assertion above;
+    // if (oz_isVar(v)) {
       OzVariable * var = tagged2Var(v);
       isNonEncapTagged  = var->isParamNonEncapTagged();
       isEncapTagged     = var->isParamEncapTagged();
       cpi_raw           = var->getRawAndUntag();
-    }
+    // }
     //
     if (isGenFDVar(v)) {
       addSuspFDVar(v, prop, staticSpawnVarsProp[i].state.fd);
@@ -281,6 +286,7 @@ int OZ_Propagator::impose(OZ_Propagator * p)
     //
     // undo everything
     //
+    Assert(!oz_isRef(v));
     if (oz_isVar(v)) {
       OzVariable * var = tagged2Var(v);
       if (isNonEncapTagged) {

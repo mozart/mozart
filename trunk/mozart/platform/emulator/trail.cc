@@ -208,7 +208,8 @@ TaggedRef Trail::unwind(Board * b) {
 	TaggedRef vv= *refPtr;
 	DEREF(vv,vvPtr);
 
-	if (hasNoRunnable && oz_isVar(vv) && !oz_var_hasSuspAt(vv,b)) {
+	Assert(!oz_isRef(vv));
+	if (hasNoRunnable && oz_isVarOrRef(vv) && !oz_var_hasSuspAt(vv,b)) {
 	  AssureThread;
 	  oz_var_addSusp(vvPtr,t);
 	}
@@ -327,7 +328,8 @@ void Trail::unwindEqEq(void) {
 
       unBind(refPtr,value);
 
-      if (oz_isVar(oldVal))
+      Assert(!oz_isRef(oldVal));
+      if (oz_isVarOrRef(oldVal))
 	(void) oz_addSuspendVarList(ptrOldVal);
 
       (void) oz_addSuspendVarList(refPtr);

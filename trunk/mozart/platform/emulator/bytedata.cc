@@ -252,11 +252,13 @@ static inline
 void marshalByteArray(ByteBuffer *mb, GenTraverser *gt,
 		      DPMExtDesc *desc)
 {
-  int availSpace = mb->availableSpace();
+  // we should advance with marshaling:
   int size = desc->getCurrentSize();
   BYTE *data = desc->getData();
 
   //
+  Assert(mb->availableSpace() > MNumberMaxSize);
+  int availSpace = mb->availableSpace();
   // the current fragment's size must fit anyway:
   availSpace -= MNumberMaxSize;
   int ms = min(availSpace, size);
@@ -285,7 +287,7 @@ void dpMarshalByteArrayCont(GenTraverser *gt, GTAbstractEntity *arg)
   DPMExtDesc *desc = (DPMExtDesc *) arg;
 
   // we should advance with marshaling:
-  Assert(bs->availableSpace() > 2*DIFMaxSize + 2*MNumberMaxSize);
+  Assert(bs->availableSpace() > DIFMaxSize + 2*MNumberMaxSize);
   marshalDIF(bs, DIF_EXT_CONT);
   marshalNumber(bs, desc->getExtID());
 
@@ -357,10 +359,16 @@ public:
 };
 
 //
-//
-int BitString::marshalSuspV(OZ_Term oet, ByteBuffer *bs, GenTraverser *gt)
+OZ_Boolean BitString::toBeMarshaledV()
 {
-  Assert(bs->availableSpace() >= MNumberMaxSize);
+  return (OK);
+}
+
+//
+OZ_Boolean
+BitString::marshalSuspV(OZ_Term oet, ByteBuffer *bs, GenTraverser *gt)
+{
+  Assert(bs->availableSpace() > 2*MNumberMaxSize);
 
   //
   marshalNumber(bs, getWidth());
@@ -378,7 +386,7 @@ int BitString::marshalSuspV(OZ_Term oet, ByteBuffer *bs, GenTraverser *gt)
 //
 int BitString::minNeededSpace()
 {
-  return (MNumberMaxSize);
+  return (2*MNumberMaxSize + 1);
 }
 
 //
@@ -690,9 +698,15 @@ public:
 };
 
 //
+OZ_Boolean ByteString::toBeMarshaledV()
+{
+  return (OK);
+}
+
+//
 int ByteString::marshalSuspV(OZ_Term oet, ByteBuffer *bs, GenTraverser *gt)
 {
-  Assert(bs->availableSpace() >= MNumberMaxSize);
+  Assert(bs->availableSpace() > 2*MNumberMaxSize);
 
   //
   marshalNumber(bs, getWidth());
@@ -710,7 +724,7 @@ int ByteString::marshalSuspV(OZ_Term oet, ByteBuffer *bs, GenTraverser *gt)
 //
 int ByteString::minNeededSpace()
 {
-  return (MNumberMaxSize);
+  return (2*MNumberMaxSize + 1);
 }
 
 //

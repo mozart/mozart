@@ -109,7 +109,8 @@ void ResourceHashTable::gcResourceTable()
 	DEREF(te, tep);
 
 	//
-	if (oz_isVar(oer)) {
+	Assert(!oz_isRef(oer));
+	if (oz_isVarOrRef(oer)) {
 	  Assert(oerp);
 	  // 'tep' can be anything, however;
 	  if (oerp == tep) {

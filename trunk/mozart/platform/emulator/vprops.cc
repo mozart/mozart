@@ -632,7 +632,8 @@ return oz_raise(E_ERROR,E_SYSTEM,"putProperty",2,F,oz_atom(T));
 INT__ = REC__->getFeature(F);			\
 if (INT__) {					\
   DEREF(INT__,PTR__);			        \
-  if (oz_isVar(INT__))  oz_suspendOnPtr(PTR__); \
+  Assert(!oz_isRef(INT__));			\
+  if (oz_isVarOrRef(INT__))  oz_suspendOnPtr(PTR__); \
   if (oz_isSmallInt(INT__)) {                   \
     INT__=tagged2SmallInt(INT__);		\
   } else if (oz_isBigInt(INT__)) {              \
@@ -651,7 +652,8 @@ if (INT__) {					\
 INT__ = REC__->getFeature(F);				\
 if(INT__) {						\
   DEREF(INT__,PTR__);				        \
-  if (oz_isVar(INT__)) oz_suspendOnPtr(PTR__);	        \
+  Assert(!oz_isRef(INT__));				\
+  if (oz_isVarOrRef(INT__)) oz_suspendOnPtr(PTR__);	\
   if (!oz_isLiteral(INT__)) BAD_FEAT(F,"Bool");		\
   if      (oz_isTrue(INT__)) INT__=1;			\
   else if (oz_isFalse(INT__)) INT__=0;			\
@@ -908,7 +910,8 @@ OZ_Return GetProperty(TaggedRef k,TaggedRef& val)
 {
   TaggedRef key = k;
   DEREF(key,key_ptr);
-  if (oz_isVar(key)) oz_suspendOnPtr(key_ptr);
+  Assert(!oz_isRef(key));
+  if (oz_isVarOrRef(key)) oz_suspendOnPtr(key_ptr);
   if (!oz_isAtom(key)) oz_typeError(0,"Atom");
   OzDictionary* dict;
   TaggedRef entry;
@@ -939,7 +942,8 @@ OZ_Return PutProperty(TaggedRef k,TaggedRef v)
   if (!oz_onToplevel()) return PROP__NOT__GLOBAL;
   TaggedRef key = k;
   DEREF(key,key_ptr);
-  if (oz_isVar(key)) oz_suspendOnPtr(key_ptr);
+  Assert(!oz_isRef(key));
+  if (oz_isVarOrRef(key)) oz_suspendOnPtr(key_ptr);
   if (!oz_isAtom(key)) oz_typeError(0,"Atom");
   OzDictionary* dict;
   TaggedRef entry;

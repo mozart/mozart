@@ -47,7 +47,8 @@ void OZ_CtVar::ask(OZ_Term v)
   var = v;
   varPtr = _vptr;
   //
-  if (oz_isVar(v)) {
+  Assert(!oz_isRef(v));
+  if (oz_isVarOrRef(v)) {
     // 
     // found constrained variable
     //
@@ -74,7 +75,8 @@ void OZ_CtVar::read(OZ_Term v)
   var = v;
   varPtr = _vptr;
   //
-  if (oz_isVar(v)) {
+  Assert(!oz_isRef(v));
+  if (oz_isVarOrRef(v)) {
     //
     // found constrained variable
     //
@@ -171,7 +173,8 @@ void OZ_CtVar::readEncap(OZ_Term v)
   var = v;
   varPtr = _vptr;
   //
-  if (oz_isVar(v)) {
+  Assert(!oz_isRef(v));
+  if (oz_isVarOrRef(v)) {
     //
     // found variable
     //

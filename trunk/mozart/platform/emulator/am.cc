@@ -1004,7 +1004,7 @@ void AM::emptyPreparedCalls()
 
 OZ_Return AM::suspendOnVarList(Thread *thr)
 {
-  while (oz_isCons(_suspendVarList)) {
+  while (oz_isLTuple(_suspendVarList)) {
     OZ_Term v=oz_head(_suspendVarList);
     Assert(oz_isVar(*tagged2Ref(v)));
     OZ_Return ret = oz_var_addSusp(tagged2Ref(v),thr);
@@ -1035,23 +1035,28 @@ OZ_Return oz_addSuspendVarList(TaggedRef t) {
 
 OZ_Return oz_addSuspendVarList2(TaggedRef t1,TaggedRef t2) {
   DEREF(t1,t1ptr);
-  if (oz_isVar(t1))
+  Assert(!oz_isRef(t1));
+  if (oz_isVarOrRef(t1))
     (void) am.addSuspendVarListInline(t1ptr);
   DEREF(t2,t2ptr);
-  if (oz_isVar(t2))
+  Assert(!oz_isRef(t2));
+  if (oz_isVarOrRef(t2))
     (void) am.addSuspendVarListInline(t2ptr);
   return SUSPEND;
 }
 
 OZ_Return oz_addSuspendVarList3(TaggedRef t1, TaggedRef t2, TaggedRef t3) {
   DEREF(t1,t1ptr);
-  if (oz_isVar(t1))
+  Assert(!oz_isRef(t1));
+  if (oz_isVarOrRef(t1))
     (void) am.addSuspendVarListInline(t1ptr);
   DEREF(t2,t2ptr);
-  if (oz_isVar(t2))
+  Assert(!oz_isRef(t2));
+  if (oz_isVarOrRef(t2))
     (void) am.addSuspendVarListInline(t2ptr);
   DEREF(t3,t3ptr);
-  if (oz_isVar(t3))
+  Assert(!oz_isRef(t3));
+  if (oz_isVarOrRef(t3))
     (void) am.addSuspendVarListInline(t3ptr);
   return SUSPEND;
 }
@@ -1065,11 +1070,13 @@ OZ_Return oz_addSuspendInArgs1(OZ_Term * _OZ_LOC[]) {
 OZ_Return oz_addSuspendInArgs2(OZ_Term * _OZ_LOC[]) {
   TaggedRef t1 = OZ_in(0);
   DEREF(t1,t1ptr);
-  if (oz_isVar(t1))
+  Assert(!oz_isRef(t1));
+  if (oz_isVarOrRef(t1))
     (void) am.addSuspendVarListInline(t1ptr);
   TaggedRef t2 = OZ_in(1);
   DEREF(t2,t2ptr);
-  if (oz_isVar(t2))
+  Assert(!oz_isRef(t2));
+  if (oz_isVarOrRef(t2))
     (void) am.addSuspendVarListInline(t2ptr);
   return SUSPEND;
 }
@@ -1077,15 +1084,18 @@ OZ_Return oz_addSuspendInArgs2(OZ_Term * _OZ_LOC[]) {
 OZ_Return oz_addSuspendInArgs3(OZ_Term * _OZ_LOC[]) {
   TaggedRef t1 = OZ_in(0);
   DEREF(t1,t1ptr);
-  if (oz_isVar(t1))
+  Assert(!oz_isRef(t1));
+  if (oz_isVarOrRef(t1))
     (void) am.addSuspendVarListInline(t1ptr);
   TaggedRef t2 = OZ_in(1);
   DEREF(t2,t2ptr);
-  if (oz_isVar(t2))
+  Assert(!oz_isRef(t2));
+  if (oz_isVarOrRef(t2))
     (void) am.addSuspendVarListInline(t2ptr);
   TaggedRef t3 = OZ_in(2);
   DEREF(t3,t3ptr);
-  if (oz_isVar(t3))
+  Assert(!oz_isRef(t3));
+  if (oz_isVarOrRef(t3))
     (void) am.addSuspendVarListInline(t3ptr);
   return SUSPEND;
 }

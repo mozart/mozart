@@ -63,7 +63,7 @@ public:
   virtual void processLock(OZ_Term lockTerm, Tertiary *lockTert);
   virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
   virtual void processResource(OZ_Term resTerm, Tertiary *tert);
-  virtual void processNoGood(OZ_Term resTerm, Bool trail);
+  virtual Bool processNoGood(OZ_Term resTerm, Bool trail);
   virtual void processVar(OZ_Term cv, OZ_Term *varTerm);
   virtual void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
   virtual Bool processLTuple(OZ_Term ltupleTerm);
@@ -113,7 +113,7 @@ public:
   virtual void processLock(OZ_Term lockTerm, Tertiary *lockTert);
   virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
   virtual void processResource(OZ_Term resTerm, Tertiary *tert);
-  virtual void processNoGood(OZ_Term resTerm, Bool trail);
+  virtual Bool processNoGood(OZ_Term resTerm, Bool trail);
   virtual void processVar(OZ_Term cv, OZ_Term *varTerm);
   virtual void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
   virtual Bool processLTuple(OZ_Term ltupleTerm);

@@ -2555,7 +2555,7 @@ fi
     *-i486) 
 	case `$CXX -dumpversion` in
 	2.95.*)
-	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
+	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove -fstrict-aliasing" 
 	    oz_om="-mcpu=pentium -fomit-frame-pointer"
 	    ;;
 	*)
@@ -2568,7 +2568,7 @@ fi
     *-sparc)
 	case `$CXX -dumpversion` in
 	2.95.*)
-	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
+	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove -fstrict-aliasing"
             oz_om="-mcpu=v8 -fdelayed-branch"
 	    ;;
 	*)
