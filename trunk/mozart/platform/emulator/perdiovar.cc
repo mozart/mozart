@@ -56,8 +56,8 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
 
     PerdioVar *rVar = tagged2PerdioVar(rVal);
 
-    if (isTertProxy()) {
-      if (rVar->isTertProxy())
+    if (isTertProxy() || isURL()) {
+      if (rVar->isTertProxy() || rVar->isURL())
 	return FALSE;
       Swap(rVal,lVal,TaggedRef);
       Swap(rPtr,lPtr,TaggedRef*);
@@ -91,6 +91,21 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
     return FALSE;
 
   if (prop && am.isLocalSVar(lVar)) {
+    if (isURL()) {
+      GName *gn=getGName();
+      if (isAbstraction(rVal)) {
+	warning("mm2:check gname");
+	// if (tagged2Abstraction(rVal)->getGName()!=gn) return FALSE;
+      } else if (isSChunk(rVal)) {
+	warning("mm2:check gname");
+	// if (tagged2SChunk(rVal)->getGName()!=gn) return FALSE;
+      } else if (isObject(rVal)) {
+	warning("mm2:check gname");
+	// if (tagged2Object(rVal)->getGName()!=gn) return FALSE;
+      } else {
+	return FALSE;
+      }
+    }
     bindPerdioVar(lVar,lPtr,rVal);
     return TRUE;
   } else {
@@ -104,7 +119,7 @@ Bool PerdioVar::valid(TaggedRef *varPtr, TaggedRef v)
 {
   Assert(!isRef(v) && !isAnyVar(v));
 
-  return isTertProxy() ? FALSE : TRUE;
+  return (isTertProxy() || isURL()) ? FALSE : TRUE;
 }
 
 //-----------------------------------------------------------------------------
