@@ -99,6 +99,16 @@ const Bool OK = 1;
 const Bool TRUE  = 1;
 const Bool FALSE = 0;
 
+
+/*
+ * special return values for builtins
+ */
+#define BI_PREEMPT       1024
+#define BI_REPLACEBICALL 1025
+#define BI_TYPE_ERROR    1026
+#define BI_CONTROL_VAR   1027
+
+
 typedef unsigned char BYTE;
 
 typedef int32 ByteCode;
