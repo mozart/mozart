@@ -43,6 +43,17 @@ void SuspList::init(void) {
   _gc_sentinel = (SuspList *) malloc(sizeof(SuspList));
 }
 
+Bool SuspList::hasSuspAt(Board * b) {
+  b = b->derefBoard();
+  for (SuspList * sl = this; sl ; sl = sl->getNext()) {
+    Suspendable * s = sl->getSuspendable();
+    if (!s->isDead() && !s->isRunnable() &&
+	(b == s->getBoardInternal()->derefBoard()))
+      return OK;
+  }
+  return NO;
+}
+
 int SuspList::length(void) {
   int i=0;
   for (SuspList * aux = this; aux != NULL; aux = aux->getNext()) {
