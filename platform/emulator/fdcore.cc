@@ -382,6 +382,7 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
   OZ_getCArgDeref(0, v, vptr, vtag);
   int vsize = 0;
 
+// get the current size of the domain
   if(isSmallInt(vtag)) {
     vsize = 1;
   } else if (isGenFDVar(v,vtag)) {
@@ -394,6 +395,7 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
     TypeError(0, "");
   }
 
+// get the value to compare with
   OZ_getCArgDeref(1, vs, vsptr, vstag);
   int size = 0;
 
@@ -405,7 +407,9 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
     TypeError(1, "");
   }
 
+// compute return value
   if (vsize < size) return OZ_unify (OZ_getCArg(2), NameTrue);
+  if (size < 1) return (OZ_unify (OZ_getCArg(2), NameFalse));
 
   if (isAnyVar(vtag)){
     //  must return SUSPEND;
@@ -420,20 +424,24 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
 
   OZ_getCArgDeref(0, v, vptr, vtag);
-  int vmin = -1;
+  int vmin = -1, vmax = -1;
 
+// get the current lower bound of the domain
   if(isSmallInt(vtag)) {
-    vmin = OZ_intToC(v);
+    vmin = vmax = OZ_intToC(v);
   } else if (isGenFDVar(v,vtag)) {
     vmin = tagged2GenFDVar(v)->getDom().getMinElem();
+    vmax = tagged2GenFDVar(v)->getDom().getMaxElem();
   } else if (isGenBoolVar(v, vtag)) {
     vmin = 0;
+    vmax = 1;
   } else if (isNotCVar(vtag)) {
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   } else {
     TypeError(0, "");
   }
 
+// get the value to compare with
   OZ_getCArgDeref(1, vm, vmptr, vmtag);
   int min = -1;
 
@@ -445,9 +453,10 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
     TypeError(1, "");
   }
 
+  if (min < 0) return (OZ_unify (OZ_getCArg(2), NameFalse));
   if (vmin > min) return OZ_unify (OZ_getCArg(2), NameTrue);
 
-  if (isAnyVar(vtag)){
+  if (isAnyVar(vtag) && min < vmax){
     //  must return SUSPEND;
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   }
@@ -460,13 +469,16 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
 
   OZ_getCArgDeref(0, v, vptr, vtag);
-  int vmax = -1;
+  int vmin = -1, vmax = -1;
 
+// get the current lower bound of the domain
   if(isSmallInt(vtag)) {
-    vmax = OZ_intToC(v);
+    vmin = vmax = OZ_intToC(v);
   } else if (isGenFDVar(v,vtag)) {
+    vmin = tagged2GenFDVar(v)->getDom().getMinElem();
     vmax = tagged2GenFDVar(v)->getDom().getMaxElem();
   } else if (isGenBoolVar(v, vtag)) {
+    vmin = 0;
     vmax = 1;
   } else if (isNotCVar(vtag)) {
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
@@ -474,6 +486,7 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
     TypeError(0, "");
   }
 
+// get the value to compare with
   OZ_getCArgDeref(1, vm, vmptr, vmtag);
   int max = -1;
 
@@ -486,8 +499,9 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
   }
 
   if (vmax < max) return OZ_unify (OZ_getCArg(2), NameTrue);
+  if (max < 0) return (OZ_unify (OZ_getCArg(2), NameFalse));
 
-  if (isAnyVar(vtag)){
+  if (isAnyVar(vtag) && vmin < max){
     //  must return SUSPEND;
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   }
