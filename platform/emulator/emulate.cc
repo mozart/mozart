@@ -833,7 +833,11 @@ void engine(Bool init)
    * if -DREGOPT is set
    */
   register ProgramCounter PC   Reg1 = 0;
+#ifdef MANY_REGISTERS
+  register TaggedRef *X Reg2 = am.xRegs;
+#else
   register TaggedRef * const X Reg2 = am.xRegs;
+#endif
   register RefsArray Y         Reg3 = NULL;
   register TaggedRef *sPointer Reg4 = NULL;
   register AM * const e        Reg5 = &am;

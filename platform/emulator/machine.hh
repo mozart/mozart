@@ -90,6 +90,10 @@
 #define DELAY_SLOT
 #endif
 
+#if !defined(LINUX_I486) && !defined(FREEBSD_I486) && !defined(SOLARIS_I486)
+#define MANY_REGISTERS
+#endif
+
 /* where does the text segment start
  * needed for threaded code
  */
