@@ -1311,8 +1311,8 @@ void printX(FILE *fd, RefsArray X)
 
 void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 {
-  if (this == NULL) {
-    message("TaskStack empty.\n");
+  if (this == NULL || isEmpty()) {
+    // message("TaskStack empty.\n");
     return;
   }
 
@@ -1400,14 +1400,14 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
       {
         SRecord *s = (SRecord *) pop();
         RefsArray X = (RefsArray) pop();
-        message("\tC_DEBUG_CONT: Pred=0x%x\n", s);
+        message("\tC_CALL_CONT: Pred=0x%x\n", s);
         printX(stdout,X);
         if (!verbose) break;
         break;
       }
 
     default:
-      error("printDebug: unexpected task found.");
+      Assert(0);
     } // switch
   } // while
 
