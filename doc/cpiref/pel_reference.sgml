@@ -10,12 +10,17 @@
 <Entry class="enumtype"><<pf_return_t>>
 <Index class=proglang><<pf_return_t>> </Index>
 <Synopsis><<typedef enum { pf_failed, pf_entailed, pf_sleep } pf_return_t;>>
-<Item> gaga
+
+<Item> Return type of a propagation function.
 
 <Entry class="fncttype"><<pf_fnct_t>>
 <Index class=proglang><<pf_fnct_t>> </Index>
 <Synopsis><<typedef pf_return_t (* pf_fnct_t)(int *, PEL_SuspVar * []);>>
-<Item> gaga
+
+<Item> Type of a propagation function. A propagation function takes an
+array of parameter indicies and an array of references to constrained
+variables (<<(PEL_SuspVar *)>>). It returns a value of type
+<<pf_return_t>>.
 
 </List>
 
@@ -29,17 +34,21 @@
 <Entry class="member function"><<add>>
 <Index class=proglang><<PEL_ParamTable>> <And> <<add>> </Index>
 <Synopsis><<int add(int i);>>
-<Item> gaga
+
+<Item> Add parameter index <<i>> to parameter table. The table index
+where <<i>> is stored is returned.
 
 <Entry class="member function"><<getHigh>>
 <Index class=proglang><<PEL_ParamTable>> <And> <<getHigh>> </Index>
 <Synopsis><<int getHigh(void);>>
-<Item> gaga
+<Item> Returns the highest table index of the table.
 
 <Entry class="operator member function"><<operator []>>
 <Index class=proglang><<PEL_ParamTable>> <And> <<operator []>> </Index>
 <Synopsis><<int &amp;operator [] (int i);>>
-<Item> gaga
+
+<Item> Returns a reference to the element at table position <<i>>,
+i.e., the element can be read and written.
 
 </List>
 
@@ -54,22 +63,27 @@
 <Entry class="member function"><<add>>
 <Index class=proglang><<PEL_EventList>> <And> <<add>> </Index>
 <Synopsis><<int add(int i);>>
-<Item> gaga
+
+<Item> Add propagation function index <<i>> to event list. The event
+list index where <<i>> is stored is returned.
 
 <Entry class="member function"><<wakeup>>
 <Index class=proglang><<PEL_EventList>> <And> <<wakeup>> </Index>
 <Synopsis><<void wakeup(PEL_PropQueue *pq, PEL_PropFnctTable * pft[]);>>
-<Item> gaga
+
+<Item> Copies all entries of the event list to <<pq>> and marks the
+appropriate entries in <<pft>> as <EM/scheduled/.
 
 <Entry class="member function"><<getHigh>>
 <Index class=proglang><<PEL_EventList>> <And> <<getHigh>> </Index>
 <Synopsis><<int getHigh(void);>>
-<Item> gaga
+<Item> Returns the highest index of the event list.
 
 <Entry class="operator member function"><<operator []>>
 <Index class=proglang><<PEL_EventList>> <And> <<operator []>> </Index>
 <Synopsis><<int &amp;operator [] (int i);>>
-<Item> gaga
+<Item> Returns a reference to the element at event list  position <<i>>,
+i.e., the element can be read and written.
 
 </List>
 </Section>
@@ -83,42 +97,48 @@
 <Entry class="constructor"><<PEL_PropFnctTableEntry>>
 <Index class=proglang><<PEL_PropFnctTableEntry>> </Index>
 <Synopsis><<PEL_PropFnctTableEntry(pf_fnct_t fn, int idx);>>
-<Item> gaga
+
+<Item> Constructs a propagator table entry with propagation function
+<<fn>> and index to parameter table <<idx>>.
 
 <Entry class="member function"><<isScheduled>>
 <Index class=proglang><<PEL_PropFnctTableEntry>> <And> <<isScheduled>> </Index>
 <Synopsis><<void isScheduled(void);>>
-<Item> gaga
+
+<Item> Tests if the propagation function of this entry is marked as
+<EM/scheduled/.
 
 <Entry class="member function"><<setScheduled>>
 <Index class=proglang><<PEL_PropFnctTableEntry>> <And> <<setScheduled>> </Index>
 <Synopsis><<void setScheduled(void);>>
-<Item> gaga
+
+<Item> Marks the propagation function of this entry as <EM/scheduled/.
 
 <Entry class="member function"><<unsetScheduled>>
 <Index class=proglang><<PEL_PropFnctTableEntry>> <And> <<unsetScheduled>> </Index>
 <Synopsis><<void unsetScheduled(void);>>
-<Item> gaga
+<Item> Marks the propagation function of this entry as not <EM/scheduled/.
 
 <Entry class="member function"><<isDead>>
 <Index class=proglang><<PEL_PropFnctTableEntry>> <And> <<isDead>> </Index>
 <Synopsis><<int isDead(void);>>
-<Item> gaga
+<Item> Tests if the propagation function of this entry is marked as
+<EM/dead/.
 
 <Entry class="member function"><<setDead>>
 <Index class=proglang><<PEL_PropFnctTableEntry>> <And> <<setDead>> </Index>
 <Synopsis><<void setDead(void);>>
-<Item> gaga
+<Item> Marks the propagation function of this entry as <EM/dead/.
 
 <Entry class="member function"><<getFnct>>
 <Index class=proglang><<PEL_PropFnctTableEntry>> <And> <<getFnct>> </Index>
 <Synopsis><<pf_fnct_t getFnct(void);>>
-<Item> gaga
+<Item> Returns the pointer to the propagation function of this entry.
 
 <Entry class="member function"><<getParamIdx>>
 <Index class=proglang><<PEL_PropFnctTableEntry>> <And> <<getParamIdx>> </Index>
 <Synopsis><<int getParamIdx(void);>>
-<Item> gaga
+<Item> Returns the index to parameter table of this entry.
 
 </List>
 </Section>
@@ -132,7 +152,7 @@
 <Entry class="constructor"><<PEL_PropFnctTable>>
 <Index class=proglang><<PEL_PropFnctTable>> </Index>
 <Synopsis><<PEL_PropFnctTable(void);>>
-<Item> gaga
+<Item> Constructs a propagation function table.
 
 <Entry class="member function"><<add>>
 <Index class=proglang><<PEL_PropFnctTable>><And><<add>> </Index>
@@ -140,17 +160,15 @@
 <<
 int add(PEL_ParamTable &amp;pt, PEL_PropQueue &amp;pq,
         pf_fnct_t fnct, int x, int y);
->>
-<Item> gaga
 
-<Entry class="member function"><<add>>
-<Index class=proglang><<PEL_PropFnctTable>><And><<add>> </Index>
-<Synopsis>
-<<
 int add(PEL_ParamTable &amp;pt, PEL_PropQueue &amp;pq,
         pf_fnct_t fnct, int x, int y, int z);
 >>
-<Item> gaga
+
+<Item> Adds an entry for the propagation function <<fnct>> with
+parameters <<x>> and <<y>> (resp. <<x>>, <<y>>, and <<z>>) and returns
+the index of the entry in the table. The propagation function is
+registered with <<pq>> and the parameter indices are stored in <<pt>>.
 
 </List>
 </Section>
@@ -164,17 +182,19 @@ int add(PEL_ParamTable &amp;pt, PEL_PropQueue &amp;pq,
 <Entry class="constructor"><<PEL_PropQueue>>
 <Index class=proglang><<PEL_PropQueue>> </Index>
 <Synopsis><<PEL_PropQueue(void);>>
-<Item> gaga
+<Item> Constructs a propagation queue.
 
 <Entry class="member function"><<enqueue>>
 <Index class=proglang><<PEL_PropQueue>> <And> <<enqueue>> </Index>
 <Synopsis><<void enqueue(int fnct_idx);>>
-<Item> gaga
+
+<Item> Enqueue a propagation function index <<fnct_idx>>. The
+propagation function index is related to a propagation function table.
 
 <Entry class="member function"><<dequeue>>
 <Index class=proglang><<PEL_PropQueue>> <And> <<dequeue>> </Index>
 <Synopsis><<int dequeue(void);>>
-<Item> gaga
+<Item> Returns a propagation function index.
 
 <Entry class="member function"><<apply>>
 <Index class=proglang><<PEL_PropQueue>> <And> <<apply>> </Index>
@@ -183,47 +203,52 @@ pf_return_t apply(PEL_PropFnctTable &amp;pft,
                   PEL_ParamTable &amp;pt,
                   PEL_SuspVar * []);
 >>
-<Item> gaga
+
+<Item> Dequeues an index and applies the corresponding propagation
+function closure of <<pft>>. It returns the value returned by the
+propagation function.
 
 <Entry class="member function"><<isEmpty>>
 <Index class=proglang><<PEL_PropQueue>> <And> <<isEmpty>> </Index>
 <Synopsis><<int isEmpty(void);>>
-<Item> gaga
+<Item> Tests if the queue is empty.
 
 <Entry class="member function"><<setFailed>>
 <Index class=proglang><<PEL_PropQueue>> <And> <<setFailed>> </Index>
 <Synopsis><<void setFailed(void);>>
-<Item> gaga
+<Item> Sets the queue <Em/failed/.
 
 <Entry class="member function"><<isFailed>>
 <Index class=proglang><<PEL_PropQueue>> <And> <<isFailed>> </Index>
 <Synopsis><<int isFailed(void);>>
-<Item> gaga
+<Item> Tests if the queue is <Em/failed/.
 
 <Entry class="member function"><<isBasic>>
 <Index class=proglang><<PEL_PropQueue>> <And> <<isBasic>> </Index>
 <Synopsis><<int isBasic(void);>>
-<Item> gaga
+
+<Item> Tests if all propagation functions registered with the queue
+have ceased to exist.
 
 <Entry class="member function"><<incAPF>>
 <Index class=proglang><<PEL_PropQueue>> <And> <<incAPF>> </Index>
 <Synopsis><<void incAPF(void);>>
-<Item> gaga
+<Item> Increments the registration counter by 1.
 
 <Entry class="member function"><<decAPF>>
 <Index class=proglang><<PEL_PropQueue>> <And> <<decAPF>> </Index>
 <Synopsis><<void decAPF(void);>>
-<Item> gaga
+<Item> Decrements the registration counter by 1.
 
 <Entry class="member function"><<reset>>
 <Index class=proglang><<PEL_PropQueue>> <And> <<reset>> </Index>
 <Synopsis><<void reset(void);>>
-<Item> gaga
+<Item> Resets the queue. (???)
 
 <Entry class="member function"><<getSize>>
 <Index class=proglang><<PEL_PropQueue>> <And> <<getSize>> </Index>
 <Synopsis><<int getSize(void);>>
-<Item> gaga
+<Item> Returns the number of queued propagation function entry indicies.
 
 </List>
 
@@ -238,32 +263,40 @@ pf_return_t apply(PEL_PropFnctTable &amp;pft,
 <Entry class="constructor"><<PEL_FSetProfile>>
 <Index class=proglang><<PEL_FSetProfile>> </Index>
 <Synopsis><<PEL_FSetProfile(void);>>
-<Item> gaga
+<Item> Constructs a profile for finite set constraint.
 
 <Entry class="member function"><<init>>
 <Index class=proglang><<PEL_FSetProfile>> <And> <<init>> </Index>
 <Synopsis><<void init(OZ_FSetConstraint &amp;fset);>>
-<Item> gaga
+<Item> Initializes the profile with <<fset>>.
 
 <Entry class="member function"><<isTouched>>
 <Index class=proglang><<PEL_FSetProfile>> <And> <<isTouched>> </Index>
 <Synopsis><<int isTouched(OZ_FSetConstraint &amp;fset);>>
-<Item> gaga
+
+<Item> Tests if the constraint <<fset>> is more constrained than the
+constraint, the profile has been initialized with.
 
 <Entry class="member function"><<isTouchedSingleValue>>
 <Index class=proglang><<PEL_FSetProfile>> <And> <<isTouchedSingleValue>> </Index>
 <Synopsis><<int isTouchedSingleValue(OZ_FSetConstraint &amp;fset);>>
-<Item> gaga
+
+<Item> Tests if the constraint <<fset>> has become a single value
+since the last initialization of the profile.
 
 <Entry class="member function"><<isTouchedLowerBound>>
 <Index class=proglang><<PEL_FSetProfile>> <And> <<isTouchedLowerBound>> </Index>
 <Synopsis><<int isTouchedLowerBound(OZ_FSetConstraint &amp;fset);>>
-<Item> gaga
+
+<Item> Tests if the lower bound of the constraint <<fset>> has been
+further constrained since the last initialization of the profile.
 
 <Entry class="member function"><<isTouchedUpperBound>>
 <Index class=proglang><<PEL_FSetProfile>> <And> <<isTouchedUpperBound>> </Index>
 <Synopsis><<int isTouchedUpperBound(OZ_FSetConstraint &amp;fset);>>
-<Item> gaga
+
+<Item> Tests if the upper bound of the constraint <<fset>> has been
+further constrained since the last initialization of the profile.
 
 </List>
 </Section>
@@ -277,22 +310,24 @@ pf_return_t apply(PEL_PropFnctTable &amp;pft,
 <Entry class="member function"><<getLowerBound>>
 <Index class=proglang><<PEL_FSetProfile>> <And> <<getLowerBound>> </Index>
 <Synopsis><<PEL_EventList &amp;getLowerBound(void);>>
-<Item> gaga
+<Item> Returns the event list for lower bound events.
 
 <Entry class="member function"><<getUpperBound>>
 <Index class=proglang><<PEL_FSetEventList>> <And> <<getUpperBound>> </Index>
 <Synopsis><<PEL_EventList &amp;getUpperBound(void);>>
-<Item> gaga
+<Item> Returns the event list for upper bound events.
 
 <Entry class="member function"><<getSingleValue>>
 <Index class=proglang><<PEL_FSetEventList>> <And> <<getSingleValue>> </Index>
 <Synopsis><<PEL_EventList &amp;getSingleValue(void);>>
-<Item> gaga
+<Item> Returns the event list for single value events.
 
 <Entry class="member function"><<gc>>
 <Index class=proglang><<PEL_FSetEventList>> <And> <<gc>> </Index>
 <Synopsis><<void gc(void);>>
-<Item> gaga
+
+<Item> Performs a garbage collection. Has to be called if the hosting
+propagation is garbage collected.
 
 </List>
 </Section>
@@ -306,42 +341,59 @@ pf_return_t apply(PEL_PropFnctTable &amp;pft,
 <Entry class="constructor"><<PEL_FDProfile>>
 <Index class=proglang><<PEL_FDProfile>> </Index>
 <Synopsis><<PEL_FDProfile(void);>>
-<Item> gaga
+<Item> Constructs a profile for finite domain constraint.
 
 <Entry class="member function"><<init>>
 <Index class=proglang><<PEL_FDProfile>> <And> <<init>> </Index>
 <Synopsis><<void init(OZ_FDConstraint &amp;fd);>>
-<Item> gaga
+<Item> Initializes the profile with <<fd>>.
 
 <Entry class="member function"><<isTouched>>
 <Index class=proglang><<PEL_FDProfile>> <And> <<isTouched>> </Index>
 <Synopsis><<int isTouched(OZ_FDConstraint &amp;fd);>>
-<Item> gaga
+
+<Item> Tests if the constraint <<fd>> is more constrained than the
+constraint, the profile has been initialized with.
 
 <Entry class="member function"><<isTouchedWidth>>
 <Index class=proglang><<PEL_FDProfile>> <And> <<isTouchedWidth>> </Index>
 <Synopsis><<int isTouchedWidth(OZ_FDConstraint &amp;fd);>>
-<Item> gaga
+
+<Item> Tests if the width of the constraint <<fd>> has been further
+constrained since the last initialization of the profile.
 
 <Entry class="member function"><<isTouchedLowerBound>>
 <Index class=proglang><<PEL_FDProfile>> <And> <<isTouchedLowerBound>> </Index>
 <Synopsis><<int isTouchedLowerBound(OZ_FDConstraint &amp;fd);>>
-<Item> gaga
+
+<Item> Tests if the lower bound of the constraint <<fd>> has been
+further constrained since the last initialization of the profile.
+
 
 <Entry class="member function"><<isTouchedUpperBound>>
 <Index class=proglang><<PEL_FDProfile>> <And> <<isTouchedUpperBound>> </Index>
 <Synopsis><<int isTouchedUpperBound(OZ_FDConstraint &amp;fd);>>
-<Item> gaga
+
+<Item> Tests if the upper bound of the constraint <<fd>> has been
+further constrained since the last initialization of the profile.
+
 
 <Entry class="member function"><<isTouchedBounds>>
 <Index class=proglang><<PEL_FDProfile>> <And> <<isTouchedBounds>> </Index>
 <Synopsis><<int isTouchedBounds(OZ_FDConstraint &amp;fd);>>
-<Item> gaga
+
+<Item> Tests if at least one of the bounds of the constraint <<fd>>
+has been further constrained since the last initialization of the
+profile.
+
 
 <Entry class="member function"><<isTouchedSingleValue>>
 <Index class=proglang><<PEL_FDProfile>> <And> <<isTouchedSingleValue>> </Index>
 <Synopsis><<int isTouchedSingleValue(OZ_FDConstraint &amp;fd);>>
-<Item> gaga
+
+<Item> Tests if the constraint <<fd>> has become a single value since
+the last initialization of the profile.
+
 
 </List>
 </Section>
@@ -355,17 +407,19 @@ pf_return_t apply(PEL_PropFnctTable &amp;pft,
 <Entry class="member function"><<getBounds>>
 <Index class=proglang><<PEL_FDProfile>> <And> <<getBounds>> </Index>
 <Synopsis><<PEL_EventList &amp;getBounds(void);>>
-<Item> gaga
+<Item> Returns the event list for bound events.
 
 <Entry class="member function"><<getSingleValue>>
 <Index class=proglang><<PEL_FDEventList>> <And> <<getSingleValue>> </Index>
 <Synopsis><<PEL_EventList &amp;getSingleValue(void);>>
-<Item> gaga
+<Item> Returns the event list for single value events.
 
 <Entry class="member function"><<gc>>
 <Index class=proglang><<PEL_FDEventList>> <And> <<gc>> </Index>
 <Synopsis><<void gc(void);>>
-<Item> gaga
+
+<Item> Performs a garbage collection. Has to be called if the hosting
+propagation is garbage collected.
 
 </List>
 </Section>
@@ -374,12 +428,15 @@ pf_return_t apply(PEL_PropFnctTable &amp;pft,
 <Section id="pel.suspvar">
 <title/The class <<PEL_SuspVar>>/
 <p>
+This class defines the minimal functionality required by classes
+derived from <<PEL_SuspVar>>.
+
 <List proglang=cc>
 
 <Entry class="purevirtual member function"><<wakeup>>
 <Index class=proglang><<PEL_SuspVar>> <And> <<wakeup>> </Index>
 <Synopsis><<virtual int wakeup(void) = 0;>>
-<Item> gaga
+<Item> This function is required to be defined the derived classes.
 
 </List>
 </Section>
@@ -393,7 +450,7 @@ pf_return_t apply(PEL_PropFnctTable &amp;pft,
 <Entry class="constructor"><<PEL_SuspFSetVar>>
 <Index class=proglang><<PEL_SuspFSetVar>> </Index>
 <Synopsis><<PEL_SuspFSetVar(void);>>
-<Item> gaga
+<Item> Constructs an uninitialized library finite set variable.
 
 <Entry class="constructor"><<PEL_SuspFSetVar>>
 <Index class=proglang><<PEL_SuspFSetVar>> </Index>
@@ -403,7 +460,10 @@ PEL_SuspFSetVar(PEL_FSetProfile &amp;fsetp, OZ_FSetConstraint &amp;fset,
                 PEL_FSetEventLists &amp;fsetel, PEL_PropQueue &amp;pq,
                 PEL_PropFnctTable &amp;pft, int first = 1);
 >>
-<Item> gaga
+
+<Item> Constructs an initialized library finite set variable which is
+directly connected with the corresponding variable in the constraint
+store.
 
 <Entry class="constructor"><<PEL_SuspFSetVar>>
 <Index class=proglang><<PEL_SuspFSetVar>> </Index>
@@ -412,7 +472,12 @@ PEL_SuspFSetVar(PEL_FSetProfile &amp;fsetp, OZ_FSetConstraint &amp;fset,
 PEL_SuspFSetVar(OZ_FSetConstraint &amp;fsetl, PEL_FSetEventLists &amp;fsetel,
                 PEL_PropQueue &amp;pq, PEL_PropFnctTable &amp;pft);
 >>
-<Item> gaga
+
+<Item> Constructs an initialized library finite set variable which is
+not directly connected with the corresponding variable in the
+constraint store. This constructor is used if the library variable is
+subordinated to the store variable, e.g. when implementing a clause of
+a disjunction.
 
 <Entry class="member function"><<init>>
 <Index class=proglang><<PEL_SuspFSetVar>> <And> <<init>> </Index>
@@ -422,7 +487,10 @@ PEL_SuspFSetVar * init(PEL_FSetProfile &amp;fsetp, OZ_FSetConstraint &amp;fset,
                        PEL_FSetEventLists &amp;fsetel, PEL_PropQueue &amp;pq,
                        PEL_PropFnctTable &amp;pft, int first = 1);
 >>
-<Item> gaga
+
+<Item> This initialization function is associated with the constructor
+for the directly connected library variable and returns a pointer the
+library variable.
 
 <Entry class="member function"><<init>>
 <Index class=proglang><<PEL_SuspFSetVar>> <And> <<init>> </Index>
@@ -431,27 +499,42 @@ PEL_SuspFSetVar * init(PEL_FSetProfile &amp;fsetp, OZ_FSetConstraint &amp;fset,
 PEL_SuspFSetVar * init(OZ_FSetConstraint &amp;fsetl, PEL_FSetEventLists &amp;fsetel,
                        PEL_PropQueue &amp;pq, PEL_PropFnctTable &amp;pft);
 >>
-<Item> gaga
+
+<Item> This initialization function is associated with the constructor
+for the not directly connected library variable and returns a pointer the
+library variable.
+
 
 <Entry class="member function"><<propagate_to>>
 <Index class=proglang><<PEL_SuspFSetVar>> <And> <<propagate_to>> </Index>
 <Synopsis><<int propagate_to(OZ_FSetConstraint &amp;fset, int first = 0);>>
-<Item> gaga
+
+<Item> The constraint <<fset>> is propagated to the library variable
+and <<wakeup>> is called if necessary. The function returns 0 in case
+propagation fails. Otherwise it returns 1.
 
 <Entry class="member function"><<wakeup>>
 <Index class=proglang><<PEL_SuspFSetVar>> <And> <<wakeup>> </Index>
 <Synopsis><<virtual int wakeup(int first = 0);>>
-<Item> gaga
 
-<Entry class="operator member function"><<operator *>>
-<Index class=proglang><<PEL_SuspFSetVar>> <And> <<operator *>> </Index>
+<Item> Causes propagation functions to be scheduled for rerun
+according to the constraints imposed on this variable since the last
+invocation of this function. This function returns 1 if variable
+denotes a single value and else 0.
+
+<Entry class="operator member function"><<operator *>> <Index
+class=proglang><<PEL_SuspFSetVar>> <And> <<operator *>> </Index>
 <Synopsis><<OZ_FSetConstraint &amp;operator * (void);>>
-<Item> gaga
+
+<Item> Returns the finite set constraint associated with this
+variable.
 
 <Entry class="operator member function"><<operator -> >>
 <Index class=proglang><<PEL_SuspFSetVar>> <And> <<operator -> >> </Index>
 <Synopsis><<OZ_FSetConstraint * operator -> (void);>>
-<Item> gaga
+
+<Item> Returns the pointer to the finite set constraint associated
+with this variable.
 
 </List>
 </Section>
@@ -465,7 +548,8 @@ PEL_SuspFSetVar * init(OZ_FSetConstraint &amp;fsetl, PEL_FSetEventLists &amp;fse
 <Entry class="constructor"><<PEL_SuspFDVar>>
 <Index class=proglang><<PEL_SuspFDVar>> </Index>
 <Synopsis><<PEL_SuspFDVar(void);>>
-<Item> gaga
+
+<Item> Constructs an uninitialized library finite set variable.
 
 <Entry class="constructor"><<PEL_SuspFDVar>>
 <Index class=proglang><<PEL_SuspFDVar>> </Index>
@@ -475,7 +559,11 @@ PEL_SuspFDIntVar(PEL_FDProfile &amp;fdp, OZ_FiniteDomain &amp;fdv,
                  PEL_FDEventLists &amp;fdel, PEL_PropQueue &amp;pd,
                  PEL_PropFnctTable &amp;pft, int first = 1);
 >>
-<Item> gaga
+
+<Item> Constructs an initialized library finite domain variable which is
+directly connected with the corresponding variable in the constraint
+store.
+
 
 <Entry class="constructor"><<PEL_SuspFDVar>>
 <Index class=proglang><<PEL_SuspFDVar>> </Index>
@@ -484,7 +572,14 @@ PEL_SuspFDIntVar(PEL_FDProfile &amp;fdp, OZ_FiniteDomain &amp;fdv,
 PEL_SuspFDIntVar(OZ_FiniteDomain &amp;fdl, PEL_FDEventLists &amp;fdel,
                  PEL_PropQueue &amp;pd, PEL_PropFnctTable &amp;pft);
 >>
-<Item> gaga
+
+<Item> Constructs an initialized library finite domain variable which
+is not directly connected with the corresponding variable in the
+constraint store. This constructor is used if the library variable is
+subordinated to the store variable, e.g. when implementing a clause of
+a disjunction.
+
+
 
 <Entry class="member function"><<init>>
 <Index class=proglang><<PEL_SuspFDVar>> <And> <<init>> </Index>
@@ -494,7 +589,11 @@ PEL_SuspFDIntVar * init(PEL_FDProfile &amp;fdp, OZ_FiniteDomain &amp;fd,
                         PEL_FDEventLists &amp;fdel, PEL_PropQueue &amp;pq,
                         PEL_PropFnctTable &amp;pft, int first = 1);
 >>
-<Item> gaga
+
+<Item> This initialization function is associated with the constructor
+for the directly connected library variable and returns a pointer the
+library variable.
+
 
 <Entry class="member function"><<init>>
 <Index class=proglang><<PEL_SuspFDVar>> <And> <<init>> </Index>
@@ -503,27 +602,45 @@ PEL_SuspFDIntVar * init(PEL_FDProfile &amp;fdp, OZ_FiniteDomain &amp;fd,
 PEL_SuspFDIntVar * init(OZ_FiniteDomain &amp;fdl, PEL_FDEventLists &amp;fdel,
                         PEL_PropQueue &amp;pq, PEL_PropFnctTable &amp;pft);
 >>
-<Item> gaga
+
+<Item> This initialization function is associated with the constructor
+for the not directly connected library variable and returns a pointer the
+library variable.
+
 
 <Entry class="member function"><<propagate_to>>
 <Index class=proglang><<PEL_SuspFDVar>> <And> <<propagate_to>> </Index>
 <Synopsis><<int propagate_to(OZ_FiniteDomain &amp;fd, int first = 0);>>
-<Item> gaga
+
+<Item> The constraint <<fd>> is propagated to the library variable and
+<<wakeup>> is called if necessary. The function returns 0 in case
+propagation fails. Otherwise it returns 1.
+
 
 <Entry class="member function"><<wakeup>>
 <Index class=proglang><<PEL_SuspFDVar>> <And> <<wakeup>> </Index>
 <Synopsis><<virtual int wakeup(int first = 0);>>
-<Item> gaga
+
+<Item> Causes propagation functions to be scheduled for rerun
+according to the constraints imposed on this variable since the last
+invocation of this function. This function returns 1 if variable
+denotes a single value and else 0.
+
 
 <Entry class="operator member function"><<operator *>>
 <Index class=proglang><<PEL_SuspFDVar>> <And> <<operator *>> </Index>
 <Synopsis><<OZ_FiniteDomain &amp;operator * (void);>>
-<Item> gaga
+
+<Item> Returns the finite domain constraint associated with this
+variable.
+
 
 <Entry class="operator member function"><<operator -> >>
 <Index class=proglang><<PEL_SuspFDVar>> <And> <<operator -> >> </Index>
 <Synopsis><<OZ_FiniteDomain * operator -> (void);>>
-<Item> gaga
+
+<Item> Returns the pointer to the finite domain constraint associated
+with this variable.
 
 
 </List>
