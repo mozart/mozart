@@ -195,7 +195,7 @@
 
 <!ELEMENT body O O ((%sect0.class;)*,part*,appendix*)>
 
-<!ELEMENT part            - O (title?,(%p.model;),(%sect0.class;)*)>
+<!ELEMENT part            - O (title?,(%p.model;),(%sect0.class;)*,appendix*)>
 <!ELEMENT (%sect0.class;) - O (title?,(%p.model;),(%sect1.class;)*)>
 <!ELEMENT (%sect1.class;) - O (title?,(%p.model;),(%sect2.class;)*)>
 <!ELEMENT (%sect2.class;) - O (title?,(%p.model;),(%sect3.class;)*)>
