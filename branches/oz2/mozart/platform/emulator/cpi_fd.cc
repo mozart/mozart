@@ -13,23 +13,23 @@
 
 void * OZ_FDIntVar::operator new(size_t s) 
 {
-  return heap_new(s);
+  return CpiHeap.alloc(s);
 }
 
 void OZ_FDIntVar::operator delete(void * p, size_t s)
 {
-  heap_delete(p, s);
+  // deliberately left empty
 }
 
 #ifdef __GNUC__
 void * OZ_FDIntVar::operator new[](size_t s) 
 {
-  return heap_new(s);
+  return CpiHeap.alloc(s);
 }
 
 void OZ_FDIntVar::operator delete[](void * p, size_t s)
 {
-  heap_delete(p, s);
+  // deliberately left empty
 }
 #endif
 

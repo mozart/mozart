@@ -19,6 +19,7 @@
 #endif
 
 #include "oz_cpi.hh"
+#include "cpi_heap.hh"
 
 //
 //  On Sparc (v8), most efficient flags are (strictly) between 0x0 and 
@@ -483,8 +484,7 @@ public:
   OZ_Return runPropagator(void) {
     Assert(isPropagator());
     ozstat.propagatorsInvoked.incf();
-    extern char * ctHeap, * ctHeapTop;
-    ctHeap = ctHeapTop;
+    CpiHeap.reset();
     return item.propagator->propagate();
   }
   OZ_Propagator * getPropagator(void) {
