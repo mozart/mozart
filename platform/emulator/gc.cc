@@ -1856,6 +1856,7 @@ void TaskStack::gc(TaskStack *newstack)
 
 void ConstTerm::gcConstRecurse()
 {
+  varCount++;
   switch(getType()) {
   case Co_Object:
     {
@@ -1877,7 +1878,6 @@ void ConstTerm::gcConstRecurse()
       a->gRegs = gcRefsArray(a->gRegs);
 
       a->home = a->home->gcBoard();
-      varCount++;
 
       Assert(a->home != (Board *) ToPointer(ALLBITS) &&
              a->home != NULL);
@@ -1891,7 +1891,6 @@ void ConstTerm::gcConstRecurse()
       Cell *c = (Cell *) this;
 
       c->home = c->home->gcBoard();
-      varCount++;
 
       gcTagged(c->val,c->val);
       break;
@@ -1903,7 +1902,6 @@ void ConstTerm::gcConstRecurse()
       if (s->solve != (Board *) 1)
         s->solve = s->solve->gcBoard();
       s->home  = s->home->gcBoard();
-      varCount++;
 
       break;
     }
@@ -1914,7 +1912,6 @@ void ConstTerm::gcConstRecurse()
 
       gcTagged(c->value,c->value);
       c->setPtr(((Board *) c->getPtr())->gcBoard());
-      varCount++;
 
       break;
     }
@@ -1922,20 +1919,26 @@ void ConstTerm::gcConstRecurse()
   case Co_Array:
     {
       OzArray *a = (OzArray*) this;
-      TaggedRef *oldargs = a->getArgs();
-      TaggedRef *newargs = (TaggedRef*) gcRealloc(oldargs,
-                                                  sizeof(TaggedRef)*a->getWidth());
-      for (int i=0; i < a->getWidth(); i++) {
-        gcTagged(oldargs[i],newargs[i]);
-      }
 
-      a->setPtr(newargs);
+      a->home = a->home->gcBoard();
+
+      if (a->getWidth() > 0) {
+        TaggedRef *oldargs = a->getArgs();
+        TaggedRef *newargs = (TaggedRef*) gcRealloc(oldargs,
+                                                    sizeof(TaggedRef)*a->getWidth());
+        for (int i=0; i < a->getWidth(); i++) {
+          gcTagged(oldargs[i],newargs[i]);
+        }
+
+        a->setPtr(newargs);
+      }
       break;
     }
 
   case Co_Dictionary:
     {
       OzDictionary *dict = (OzDictionary *) this;
+      dict->home  = dict->home->gcBoard();
       dict->table = dict->table->gc();
       break;
     }
@@ -2006,10 +2009,12 @@ ConstTerm *ConstTerm::gcConstTerm()
     break;
 
   case Co_Array:
+    CheckLocal((Cell *) this);
     sz = sizeof(OzArray);
     break;
 
   case Co_Dictionary:
+    CheckLocal((Cell *) this);
     sz = sizeof(OzDictionary);
     break;
 

@@ -276,13 +276,6 @@ Board *Literal::getBoardFast()
 }
 
 inline
-Board *Abstraction::getBoardFast()
-{
-  return home->getBoardFast();
-}
-
-
-inline
 Board *Object::getBoardFast()
 {
   return isDeep() ? ((DeepObject*)this)->home->getBoardFast() : am.rootBoard;
@@ -295,12 +288,7 @@ Board *SChunk::getBoardFast()
 }
 
 inline
-Board *Cell::getBoardFast() {
-  return home->getBoardFast();
-}
-
-inline
-Board *Space::getBoardFast() {
+Board *ConstTermWithHome::getBoardFast() {
   return home->getBoardFast();
 }
 

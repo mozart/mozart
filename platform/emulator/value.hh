@@ -542,6 +542,15 @@ public:
 };
 
 
+class ConstTermWithHome: public ConstTerm {
+protected:
+  Board *home;
+public:
+  ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t), home(b) {}
+  Board *getBoardFast();
+};
+
+
 /*===================================================================
  * HeapChunk
  *=================================================================== */
@@ -1220,7 +1229,7 @@ Bool isChunk(TaggedRef t)
  * Arrays
  *=================================================================== */
 
-class OzArray: public ConstTerm {
+class OzArray: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 private:
   int offset, width;
@@ -1228,18 +1237,22 @@ private:
   TaggedRef *getArgs() { return (TaggedRef*) getPtr(); }
 
 public:
-  OzArray(int low, int high, TaggedRef initvalue) : ConstTerm(Co_Array)
+  OzArray(Board *b, int low, int high, TaggedRef initvalue) : ConstTermWithHome(b,Co_Array)
   {
-    Assert(high>low);
     Assert(isRef(initvalue) || !isAnyVar(initvalue));
 
     offset = low;
     width = high-low+1;
-    TaggedRef *args = (TaggedRef*) int32Malloc(sizeof(TaggedRef)*width);
-    for(int i=0; i<width; i++) {
-      args[i] = initvalue;
+    if (width <= 0) {
+      width = 0;
+      setPtr(NULL);
+    } else {
+      TaggedRef *args = (TaggedRef*) int32Malloc(sizeof(TaggedRef)*width);
+      for(int i=0; i<width; i++) {
+        args[i] = initvalue;
+      }
+      setPtr(args);
     }
-    setPtr(args);
   }
 
   int getLow()      { return offset; }
@@ -1369,24 +1382,19 @@ public:
   void unsetSpyFlag() { spyFlag = NO; }
 };
 
-class Abstraction: public ConstTerm {
+class Abstraction: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 private:
 // DATA
   RefsArray gRegs;
   PrTabEntry *pred;
-  Board *home;
 public:
   Abstraction(PrTabEntry *prd, RefsArray gregs, Board *b)
-  : ConstTerm(Co_Abstraction), gRegs(gregs), pred(prd)
-  {
-    home = b;
-  }
+  : ConstTermWithHome(b,Co_Abstraction), gRegs(gregs), pred(prd) { }
 
   OZPRINT;
   OZPRINTLONG;
 
-  Board *getBoardFast();
   RefsArray &getGRegs()  { return gRegs; }
   ProgramCounter getPC() { return pred->getPC(); }
   int getArity()         { return pred->getArity(); }
@@ -1540,13 +1548,12 @@ Builtin *tagged2Builtin(TaggedRef term)
  * Cell
  *=================================================================== */
 
-class Cell: public ConstTerm {
+class Cell: public ConstTermWithHome {
 friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef val;
-  Board *home;
 public:
-  Cell(Board *b,TaggedRef v) : ConstTerm(Co_Cell), home(b), val(v) {};
+  Cell(Board *b,TaggedRef v) : ConstTermWithHome(b,Co_Cell), val(v) {};
 
   OZPRINT;
   OZPRINTLONG;
@@ -1557,7 +1564,6 @@ public:
     val = v;
     return ret;
   }
-  Board *getBoardFast();
 };
 
 
@@ -1577,25 +1583,23 @@ Cell *tagged2Cell(TaggedRef term)
  * Space
  *=================================================================== */
 
-class Space: public ConstTerm {
+class Space: public ConstTermWithHome {
 friend void ConstTerm::gcConstRecurse(void);
 private:
-  Board *home, *solve;
+  Board *solve;
   // The solve pointer can be:
   // - 0 (the board is failed and has been discarded by the garbage
   //      collector)
   // - 1 (the space has been merged)
   // or a valid pointer
 public:
-  Space(Board *h, Board *s) :
-    ConstTerm(Co_Space), home(h), solve(s) {};
+  Space(Board *h, Board *s) : ConstTermWithHome(h,Co_Space), solve(s) {};
 
   OZPRINT;
   OZPRINTLONG;
 
   SolveActor *getSolveActor();
   Board *getSolveBoard() { return solve; }
-  Board *getBoardFast();
   void  merge() { solve = (Board *) 1; }
   Bool isFailed();
   Bool isMerged();
