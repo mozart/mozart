@@ -208,7 +208,7 @@ current buffer's file name, minus the `.oz' or `.ozg' extension."
 	   :type 'string
 	   :group 'mozart)))
 (put 'oz-engine-program 'variable-interactive
-     "sShell command to invoke an Oz application: ")
+     "sDefault Oz engine to run the OPI: ")
 
 ;;}}}
 ;;{{{ Variables/Initialization
