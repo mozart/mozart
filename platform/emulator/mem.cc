@@ -238,7 +238,7 @@ public:
   MemAllocator() {
     pagesize = sysconf(_SC_PAGESIZE);
     realTop = top = (caddr_t)
-      (((((unsigned int32) -1) >> lostPtrBits) / pagesize) * pagesize);
+      (((((unsigned int32) -1) >> TAG_PTRBITS) / pagesize) * pagesize);
 #if defined(SOLARIS_SPARC)
     bottom = &_end + MEM_C_HEAP_SIZE;
 #endif
