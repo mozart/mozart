@@ -3,7 +3,7 @@ SRCDIR          = @srcdir@
 VPATH           = @srcdir@
 
 HTMLEXTRAFILES = \
-        image1.gif image33.gif image57.gif image161.gif tutorial.gif \
+        image1.gif thread.gif image33.gif image57.gif image161.gif tutorial.gif \
         opi1.gif opi2.gif opi3.gif opi4.gif opi5.gif opi6.gif opi7.gif \
         opi8.gif opi9.gif opi10.gif
 
