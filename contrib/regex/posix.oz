@@ -3,7 +3,10 @@
 fun {$ IMPORT}
    Fload    = IMPORT.'SP'.'Foreign'.load
    Register = IMPORT.'SP'.'Finalize'.register
-   regex(compile:COMPILE execute:EXECUTE free:FREE flags:FLAGS)
+   foreign(regex_compile:COMPILE
+           regex_execute:EXECUTE
+           regex_free:FREE
+           regex_flags:FLAGS)
    = {Fload 'tools/regex/posix.so'}
    flag(EXTENDED ICASE NEWLINE NOSUB NOTBOL NOTEOL)={FLAGS}
    Flags = flag(extended:EXTENDED
