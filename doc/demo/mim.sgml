@@ -30,7 +30,7 @@
 
   <P><LIST CLASS=linkmenu>
       <ITEM/<REF.EXTERN
-      TO="http://www.sics.se/mozart/mim/clientz.oza"/Start Client//
+      TO="applets/MIM.oza"/Start Client//
       <ITEM/<REF.EXTERN
       TO="http://www.sics.se/mozart/mim/"/More Information//
       <ITEM><REF.EXTERN TO="ozdoc:apptut" KEY="applets"/How to enable Applets/
@@ -38,10 +38,10 @@
   <SECTION CLASS=unnumbered>
     <TITLE/Starting a Client/
     <P>First a window pops up and prompts you for a login name and a
-    password. If this is your first sesseion, click on the "New User"
+    password. If this is your first session, click on the "New User"
     button and fill-in the fields. Use <KEY/TAB/ to move between the
     fields and press <KEY/RET/ when done. More information about
-    <EM>Mozart Instant messegner</EM> is found <REF.EXTERN
+    <EM>Mozart Instant messenger</EM> is found <REF.EXTERN
     TO="http://www.sics.se/mozart/mim/">here</REF.EXTERN>.
 </SECTION>
 </CHAPTER>
