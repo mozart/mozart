@@ -63,44 +63,43 @@
         closes the Inspector window, if any.
       <ENTRY><<'class'>>
       <SYNOPSIS>
-        <<Inspector.'class'>>
+        <<Inspector.new>>
       <ITEM>
-        is the class from which Inspector instances can be created.
-        <!--** missing: methods -->
+        creates are new Inspector instance. This function replaces
+        the old class field for safety reasons. Extensions are still
+        possible by using adapter construction. This object is concurrency
+        safe and can be used in any space.
       <ENTRY><<object>>
       <SYNOPSIS>
         <<Inspector.object>>
       <ITEM>
-        is the default instance of class <<Inspector.'class'>> which
+        is the default instance of the Inspector and
         is implicitly used by <<Inspect>>, <<Inspector.inspectN>>,
-        <<Inspector.configure>>, <<Inspector.configureN>> and <<Inspector.close>>. Note that this object is not
-        thread safe. Use the wrappers provided or a server abstraction.
+        <<Inspector.configure>>, <<Inspector.configureN>> and
+        <<Inspector.close>>. This object is creating using the above
+        <<Inspector.new>> function.
     </LIST>
-  <SECTION id="section.configure.methods"><TITLE/Inspector class methods/
+  <SECTION id="section.configure.methods"><TITLE/Inspector object methods/
    <P>
-     The inspector class provides the methods shown below.
+     The inspector object provides the methods shown below.
      <LIST>
-       <ENTRY><<create>>
-       <ITEM>
-         initializes a new inspector object with reasonable defaults.
        <ENTRY><<inspect(?_{X})>>
        <ITEM>
          inspects the value ?_{X}.
        <ENTRY><<inspectN(?+{N} ?_{X})>>
        <ITEM>
-         inspects the value denoted by ?_{X} using widget number ?_{N}. Keep in mind
+         inspects the value denoted by ?_{X} using
+         widget number ?_{N}. Keep in mind
          then the corresponding widget must have been created already.
        <ENTRY><<configureEntry(?+{Key} ?+{Value})>>
        <ITEM>
-         tells the inspector to update the option denoted by ?_{Key} with value ?_{Value}.
+         tells the inspector to update the option
+         denoted by ?_{Key} with value ?_{Value}.
        <ENTRY><<close>>
        <ITEM>
          closes and unmaps the inspector object.
      </LIST>
     <P>
-      <EM/Caution:/ The created inspector object itself is not thread safe. Use a server
-      wrapper instead if concurrency is required. This limitation applies only to the
-      inspector object itself but not its widgets.
   <SECTION id="section.configure.inspector"><TITLE/Inspector Options/
     <P>
       This section covers global Inspector options.
@@ -109,20 +108,23 @@
         <SYNOPSIS>
           <<{Inspector.configure inspectorWidth ?+{I}}>>
         <ITEM>
-          adjusts the Inspector's horizontal window dimension to ?_{I}&nbsp;pixels.
+          adjusts the Inspector's
+          horizontal window dimension to ?_{I}&nbsp;pixels.
           Defaults to 600.
         <ENTRY><<inspectorDepth>>
         <SYNOPSIS>
           <<{Inspector.configure inspectorDepth ?+{I}}>>
         <ITEM>
-          adjusts the Inspector's vertical window dimension to ?_{I}&nbsp;pixels.
+          adjusts the Inspector's
+          vertical window dimension to ?_{I}&nbsp;pixels.
           Defaults to 400.
         <ENTRY><<inspectorOptionsRange>>
         <SYNOPSIS>
           <<{Inspector.configure inspectorOptionsRange ?+{A}}>>
         <ITEM>
            determines which widgets will be affected by reconfiguration.
-           ?_{A} can be either <<'active'>> or <<'all'>>, with the obvious meaning.
+           ?_{A} can be either <<'active'>> or <<'all'>>,
+           with the obvious meaning.
       </LIST>
    <SECTION id="section.configure.representation"><TITLE/Value Represenation/
     <P>
