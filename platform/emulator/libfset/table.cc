@@ -31,7 +31,7 @@
  * The builtin table
  */
 
-#ifndef STATIC_LIBFD
+#ifndef STATIC_LIBFSET
 
 #include "../libfset.dcl"
 
