@@ -711,7 +711,7 @@
                 of the grammar
             <TR>
               <TD><Code><Span class=ignore>\switch +</Span>verbose</Code>
-              <TD>create then <File/.output/ file with the Bison verbose
+              <TD>create the <File/.output/ file with the Bison verbose
                 output
           </Table>
         </Figure>
