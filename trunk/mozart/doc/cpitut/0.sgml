@@ -91,6 +91,7 @@
     <Meta name="html.split" value="ct.intro.overview">
     <Meta name="html.split" value="ct.casestudy">
     <Meta name="html.split" value="ct.casestudy.impl">
+    <Meta name="html.split" value="ct.casestudy.reference">
 
     <Meta name="html.split" value="ct.casestudy.impl.ridef">
     <Meta name="html.split" value="ct.casestudy.impl.profilewakeup">
