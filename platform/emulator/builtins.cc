@@ -832,10 +832,12 @@ LBLagain:
           cfs = oz_deref(tagged2ObjectClass(term)->classGetFeature(NameOoUnFreeFeat));
           if (oz_isSRecord(cfs)) {
             t = tagged2SRecord(cfs)->getFeature(fea);
-            TaggedRef dt = oz_deref(t);
+            if (t) {
+              TaggedRef dt = oz_deref(t);
 
-            if (oz_isName(dt) && oz_eq(dt,NameOoFreeFlag))
-              t = makeTaggedNULL();
+              if (oz_isName(dt) && oz_eq(dt,NameOoFreeFlag))
+                t = makeTaggedNULL();
+            }
           }
         }
         break;
