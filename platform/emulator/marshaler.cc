@@ -1010,7 +1010,7 @@ void initMarshaler()
    * following tests fails: increase PERDIOMINOR
    */
   Assert(OZERROR == 225);  /* new instruction(s) added? */
-  Assert(DIF_LAST == 42);  /* new dif(s) added? */
+  Assert(DIF_LAST == 43);  /* new dif(s) added? */
 }
 
 
