@@ -52,6 +52,8 @@
 
 	  ( AtomExport,     "export"),
 	  ( AtomObtain,     "obtain"),
+	  ( AtomGetInternal,"getInternal"),
+	  ( AtomGetNative,  "getNative"),
 	  ( AtomBoot,       "Boot"),
 
 	  ( AtomNew,        "new"),
