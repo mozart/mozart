@@ -101,11 +101,19 @@
 				  BI  => BIprintDPTables},
 
 
+     'getMsgPriority'        =>  { in  => [],
+                                   out => ['+record'],
+                                   BI  => BIgetMsgPriority},
 
+     'setMsgPriority'        =>  { in  => ['+atom', '+atom'],
+                                   out => [],
+                                   BI  => BIsetMsgPriority},
 
      'createLogFile'         => { in  => ['+string'],
 				  out => [],
 				  BI  => BIcreateLogFile}
+
+				  
 );
 
 
