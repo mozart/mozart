@@ -6027,6 +6027,15 @@ OZ_C_proc_begin(BISystemGetArgv,1) {
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BISystemGetInternal,1) {
+  GetRecord;
+
+  SetBoolArg(AtomBrowser, ozconf.browser);
+
+  return PROCEED;
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BISystemGetStandalone,1) {
   return oz_unify(OZ_getCArg(0),ozconf.runningUnderEmacs? NameFalse: NameTrue);
 }
@@ -6263,6 +6272,9 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
   SetIfPos(ozconf.debugIP,               debugIP,    1);
   SetIfPos(ozconf.debugPerdio,           debugPerdio,1);
 
+  DoBoolFeature(b, t, AtomBrowser);
+  ozconf.browser = b;
+
   return PROCEED;
 }
 OZ_C_proc_end
@@ -6292,10 +6304,11 @@ OZ_C_proc_begin(BIaddr,2)
   oz_declareArg(1,out);
 
   DEREF(val,valPtr,valTag);
-  if (valPtr) {
-    return oz_unifyInt(out,ToInt32(valPtr));
-  }
-  return oz_unifyInt(out,ToInt32(tagValueOf2(valTag,val)));
+
+  return oz_unifyInt(out,
+                     (isAnyVar(valTag) && valPtr) ?
+                     ToInt32(valPtr) :
+                     ToInt32(tagValueOf2(valTag,val)));
 }
 OZ_C_proc_end
 
@@ -7664,6 +7677,7 @@ BIspec allSpec[] = {
   {"SystemGetStandalone", 1, BISystemGetStandalone},
   {"SystemGetHome",       1, BISystemGetHome},
   {"SystemGetPlatform",   1, BISystemGetPlatform},
+  {"SystemGetInternal",   1, BISystemGetInternal},
 
   {"SystemSetTime",       1, BISystemSetTime},
   {"SystemSetThreads",    1, BISystemSetThreads},
@@ -7674,6 +7688,7 @@ BIspec allSpec[] = {
   {"SystemSetErrors",     1, BISystemSetErrors},
   {"SystemSetMessages",   1, BISystemSetMessages},
   {"SystemSetInternal",   1, BISystemSetInternal},
+
 
   {"onToplevel",1,BIonToplevel},
   {"addr",2,BIaddr},
