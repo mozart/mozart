@@ -272,6 +272,14 @@ if test "${GXX}" = yes; then
         esac
         ;;
 
+    linux-parisc)
+	case `$CXX -dumpversion` in
+	3.*)
+	    oz_opt="-O3 -pipe -fstrict-aliasing"
+	    oz_om="-fomit-frame-pointer"
+	    ;;
+	esac
+	;;
     *)  ;;
     esac
 
