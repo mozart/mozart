@@ -1,0 +1,22 @@
+BINDIR  = $(OZHOME)/bin
+SHELL   = /bin/sh
+
+SCRIPTS = oz oz+ ozplatform ozwish
+LINKS   = oz- ozc ozsa ozsac oz.compiler oz.emulator ozdo \
+          ozemacs ozdemo
+
+all::
+	@echo ""
+	@echo "The following targets are available"
+	@echo "	install		{scheidhr,mehl}@dfki.uni-sb.de"
+	@echo ""
+
+install:: $(BINDIR)
+	install -m 555 $(SCRIPTS) $(BINDIR)
+	@set -x; cd $(BINDIR);\
+	for file in $(LINKS); \
+        do\
+	   rm -f $$file; \
+	   ln -s oz $$file; \
+        done
+

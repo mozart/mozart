@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -x
+
+TK=tk4.1b1
+TCL=tcl7.5b1
+
+cd $TCL/unix
+rm -rf dltest
+make -k distclean
+./configure --prefix=/project/ps/soft/$TCL
+make
+
+cd ../../$TK/unix
+rm -rf dltest
+make -k distclean
+./configure --prefix=/project/ps/soft/$TCL
+make
+
+cd ../..
+
+LIBDIR=/project/ps/soft/$TCL/platform/`ozplatform`
+mkdir -p $LIBDIR/lib
+cp $TCL/unix/libtcl7.5.a $LIBDIR/lib/libtcl.a
+cp $TK/unix/libtk4.1.a $LIBDIR/lib/libtk.a
+ranlib $LIBDIR/lib/*.a

@@ -1,0 +1,56 @@
+actor		if/or conditionals
+am		emulator, unification, ...
+assemble	builtins for assembling
+bignum		smallint, bigint, float and there builtins
+board		computation spaces
+builtins	builtins
+cell		cell
+codearea	code area
+compiler	connection to compiler (incl. ling. refl.)
+config		configuration options
+constter	tagged objects
+core		builtins for kernel
+debug		debugging
+dld		dynamic linking
+dllist		double linked list
+dllstack	double linked stack
+emulate		emulator
+error		message
+fdxx		finite domains
+foreign		foreign function impl.
+gc		garbage collector
+oz		foreign function interface
+genvar		generic variables
+gmp		bigints
+hashtbl		hash tables for strings and ints
+indexing	emulator: indexing
+instrtab	emulator: thread code
+machine		32/64 bit stuff
+mem		memory management
+metavar		mega generic variables
+objects		object optimizations
+ofgenvar	OFS
+opcodes		code area: opcode
+optostr		code area: opcode
+os		Operating system depended stuff
+oz_fd		foreign function
+print		printing
+records		"closed" records
+register	emulator
+scancode	code area: scanning
+solve		solve actor
+special		builtins
+stack		ADT stack
+suspensi	thread which are suspended
+system		builtins
+tagged		values and tagging stuff
+taskstk		thread: stacks
+term		literal, (s)variables, static part of procedure, tuple
+thread		thread
+trail		stack for unification
+types		types and prototypes
+unix		posix/unix stuff
+variable	class variable
+verbose		debugging
+version		version number
+

@@ -1,0 +1,128 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: popow
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  Solver
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __SOLVE_ICC_
+#define __SOLVE_ICC_
+
+#if !defined(OUTLINE) && defined(INTERFACE)
+#pragma interface
+#endif
+
+/* ------------------------------------------------------------------------
+   class SolveActor
+   ------------------------------------------------------------------------ */
+
+inline
+void SolveActor::addSuspension(SuspList *l)
+{
+  l->setNext(suspList);
+  suspList = l;
+}
+
+inline
+void SolveActor::addSuspension (Thread *thr)
+{
+  suspList = new SuspList (thr, suspList);
+}
+
+inline
+Bool SolveActor::areNoExtSuspensions()
+{
+  if (suspList == NULL)
+    return (OK);
+  else
+    return (checkExtSuspList ());
+}
+
+inline
+void SolveActor::inject(int prio, TaggedRef proc) {
+  // thread creation for {proc root}
+  RefsArray args = allocateRefsArray(1, NO);
+  args[0] = makeTaggedRef(&solveVar);
+
+  Thread *it = new Thread(prio, solveBoard, OK);
+  it->pushCall(makeTaggedConst((Abstraction *) tagValueOf(proc)), args, 1);
+  am.scheduleThread(it);
+}
+
+inline
+TaggedRef SolveActor::merge(Board *bb) {
+  solveBoard->setCommitted(bb);
+  bb->incSuspCount(solveBoard->getSuspCount());
+
+  // adjoin the list of or-actors to the list in actual solve actor!
+
+  if (hasChoices()) {
+    if (bb->isWait()) {
+      WaitActor::Cast(bb->getActor())->pushChoices(cps);
+    } else if (bb->isSolve()) {
+      SolveActor::Cast(bb->getActor())->pushChoices(cps);
+    }
+  }
+
+  return solveVar;
+}
+
+inline
+Board *SolveActor::clone(Board *bb) {
+  ozstat.incSolveClone();
+  Board *copy = (Board *) am.copyTree(solveBoard, (Bool *) NULL);
+  
+  SolveActor::Cast(copy->getActor())->setBoard(bb);
+
+  return copy;
+}
+
+inline
+int SolveActor::choose(int left, int right) {
+  WaitActor *wa = this->topChoice();
+  
+  if (!wa)
+    return -1;
+
+  int n = wa->selectOrFailChildren(left, right);
+
+  if (n==0) {
+    return 0;
+  } else if (n==1) {
+    this->popChoice();
+
+    if (wa->hasChoices())
+      this->pushChoices(wa->getCps());
+
+    Board *waitBoard = wa->getChildRef();
+
+    waitBoard->setCommitted(solveBoard);
+    Assert(!solveBoard->isCommitted());
+    solveBoard->incSuspCount(waitBoard->getSuspCount()-1);
+
+    if (!am.installScript(waitBoard->getScriptRef()))
+      return 0;
+
+    if (waitBoard->isWaitTop())
+      return 1;
+
+    am.currentThread->pushCont(waitBoard->getBodyPtr());
+  }
+
+  return 1;
+}
+
+inline
+void SolveActor::clearResult(Board* bb) {
+  if (OZ_isVariable(result))
+    return;
+
+  result = makeTaggedRef(newTaggedUVar(bb));
+}
+
+#endif  // __SOLVE_ICC_

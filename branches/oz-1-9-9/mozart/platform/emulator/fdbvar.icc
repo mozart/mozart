@@ -1,0 +1,92 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __fdbvar_icc__
+#define __fdbvar_icc__
+
+#if defined(INTERFACE) && !defined(OUTLINE) && !defined(FDOUTLINE)
+#pragma interface
+#endif
+
+inline
+void GenBoolVariable::dispose(void) {
+  suspList->disposeList();
+  freeListDispose(this, sizeof(GenBoolVariable));
+}
+
+
+inline
+void GenBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr,
+						  OZ_FiniteDomain & fd)
+{
+  if (isSmallInt(*trPtr)) return;
+  TaggedRef si_val = OZ_int(fd.singl());
+  propagate(*trPtr);
+  doBind(trPtr, si_val);
+  dispose();
+}
+
+
+inline
+void GenBoolVariable::installPropagators(GenFDVariable * glob_var,
+					 Board * glob_home)
+{
+  for (int i = 0; i < fd_any; i += 1)
+    suspList= ::installPropagators(suspList,
+				   glob_var->fdSuspList[i],
+				   glob_home);
+}
+
+
+inline
+Bool isGenBoolVar(TaggedRef term)
+{
+  GCDEBUG(term);
+  return isCVar(term) && (tagged2CVar(term)->getType() == BoolVariable);
+}
+
+inline
+Bool isGenBoolVar(TaggedRef term, TypeOfTerm tag)
+{
+  GCDEBUG(term);
+  Assert(tag == tagTypeOf(term));
+  return isCVar(tag) && (tagged2CVar(term)->getType() == BoolVariable);
+}
+
+inline
+GenBoolVariable * tagged2GenBoolVar(TaggedRef term)
+{
+  GCDEBUG(term);
+  return (GenBoolVariable *) tagged2CVar(term);
+}
+
+inline
+void addSuspBoolVar(TaggedRef v, SuspList * el)
+{
+  GenBoolVariable * bv = tagged2GenBoolVar(v);
+
+  bv->suspList = addSuspToList(bv->suspList, el, bv->home);
+}
+
+inline
+void addSuspBoolVar(TaggedRef v, Thread * el)
+{
+  GenBoolVariable * bv = tagged2GenBoolVar(v);
+
+  bv->suspList = addSuspToList(bv->suspList, el, bv->home);
+}
+
+#endif
+
+
+
+
+
