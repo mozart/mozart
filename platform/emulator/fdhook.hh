@@ -23,6 +23,16 @@
 
 extern Suspension * FDcurrentTaskSusp;
 
+#ifdef DEBUG_CHECK
+//#define DEBUG_STABLE
+#endif
+
+#ifdef DEBUG_STABLE
+extern SuspList * board_constraints;
+void printBC(ostream &, Board *);
+void printBCDebug(Board * b = NULL) { printBC(cerr, b); }
+#endif
+
 void reviveCurrentTaskSusp(void);
 void killPropagatedCurrentTaskSusp(void);
 void dismissCurrentTaskSusp(void);
