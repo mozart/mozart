@@ -54,10 +54,12 @@ extern TaggedRef
   BI_ByNeedAssign,
   BI_waitStatus,
   BI_unknown,
+  BI_varToFuture,
+  BI_raise,
 
   __UNUSED_DUMMY_END_MARKER;
 
-extern Builtin *bi_raise, *bi_raiseError, *bi_raiseDebug;
+extern Builtin *bi_raise, *bi_raiseError;
 
 // hack to avoid including am.hh
 extern Board *oz_rootBoardOutline();

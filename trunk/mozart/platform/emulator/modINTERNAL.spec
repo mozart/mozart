@@ -64,6 +64,10 @@
 			      out => ['value'],
 			      BI  => BIwaitStatus},
 
+     'varToFuture'	 => { in  => ['value', 'value'],
+			      out => [],
+			      BI  => BIvarToFuture},
+
      );
 
 1;;

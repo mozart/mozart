@@ -20,6 +20,8 @@
 ### WARRANTIES.
 ###
 
+$module_init_fun_name = "browser_init";
+
 %builtins_all =
 (
 
