@@ -250,18 +250,18 @@ static int collectThreads = 0;
 OZ_BI_define(BIprepareDumpThreads, 0,0) {
   collectThreads++;
   return PROCEED;
-}
+} OZ_BI_end
 
 OZ_BI_define(BIlistThreads,0,1) {
   collectThreads--;
   OZ_RETURN(ThreadList::list());
-}
+} OZ_BI_end
 
 OZ_BI_define(BIdumpThreads,0,0) {
   ThreadList::print();
   collectThreads--;
   return PROCEED;
-}
+} OZ_BI_end
 
 
 /*

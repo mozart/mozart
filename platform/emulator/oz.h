@@ -633,6 +633,7 @@ extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
 #define OZ_in(N) OZ__IN[N]
 #define OZ_out(N) OZ__OUT[N]
 #define OZ_result(V) OZ_out(0)=V
+#define OZ_BI_end
 #define OZ_BI_define(Name,Arity_IN,Arity_OUT)		\
 OZ_BI_proto(BI__##Name);				\
 OZ_C_proc_begin(Name,Arity_IN+Arity_OUT)		\

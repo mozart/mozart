@@ -162,13 +162,13 @@ OZ_BI_define(BILazyNew,2,0)
     return OZ_typeError(0,"Unary Procedure|Object|Tuple");
   GenLazyVariable *lazy = new GenLazyVariable(oz_fun,oz_res);
   return OZ_unify(oz_res,(OZ_Term)newTaggedCVar((GenCVariable*)lazy));
-}
+} OZ_BI_end
 
 OZ_BI_define(BILazyIs,1,1)
 {
   OZ_declareIN(0,var);
   OZ_RETURN(isLazyVar(deref(var))?OZ_true():OZ_false());
-}
+} OZ_BI_end
 
 static BIspec lazySpecs[] = {
   {"Lazy.new", 2, BILazyNew, 0},
