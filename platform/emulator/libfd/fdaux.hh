@@ -21,7 +21,7 @@
 //-----------------------------------------------------------------------------
 // debug macros
 
-#define OZ_DEBUG
+// #define OZ_DEBUG
 #ifdef OZ_DEBUG
 #define OZ_DEBUGCODE(C) C
 
