@@ -68,7 +68,8 @@ define
       end
       %% Pointer Tranlation (necessary for GDK Events and GLists)
       fun {TranslatePointer Pointer}
-         {Dictionary.condGet ObjectTable {ForeignPointer.toInt Pointer} Pointer}
+         {Dictionary.condGet ObjectTable
+          {ForeignPointer.toInt Pointer} Pointer}
       end
       %% Release Object Ptr (necessary for GC)
       proc {RemoveObject Pointer}
@@ -111,14 +112,14 @@ define
    end
 
    %%
-   %% Lowlevel Allocation Stubs (functional setup)
+   %% Lowlevel Allocation Stubs
    %%
 
-   fun {AllocInt _}
-      {GOZSignal.allocInt}
+   fun {AllocInt InVal}
+      {GOZSignal.allocInt InVal}
    end
-   fun {AllocDouble _}
-      {GOZSignal.allocDouble}
+   fun {AllocDouble InVal}
+      {GOZSignal.allocDouble InVal}
    end
    fun {AllocColor Red Blue Green}
       {GOZSignal.allocColor Red Blue Green}
@@ -154,12 +155,16 @@ define
       end
 
       ExposeFs     = [window#RGP send#ITB area#RGP count#Id]
-      MotionFs     = [window#RGP send#ITB time#Id x#Id y#Id pressure#Id xtilt#Id ytilt#Id state#Id
+      MotionFs     = [window#RGP send#ITB time#Id x#Id y#Id
+                      pressure#Id xtilt#Id ytilt#Id state#Id
                       is_hint#Id source#Id deveceid#Id x_root#Id y_root#Id]
-      ButtonFs     = [window#RGP send#ITB time#Id x#Id y#Id pressure#Id xtilt#Id ytilt#Id state#Id
+      ButtonFs     = [window#RGP send#ITB time#Id x#Id y#Id
+                      pressure#Id xtilt#Id ytilt#Id state#Id
                       button#Id source#Id deveceid#Id x_root#Id y_root#Id]
-      KeyFs        = [window#RGP send#ITB time#Id state#Id keyval#Id length#Id string#Id]
-      CrossingFs   = [window#RGP send#ITB subwindow#RGP time#Id x#Id y#Id x_root#Id y_root#Id
+      KeyFs        = [window#RGP send#ITB time#Id state#Id
+                      keyval#Id length#Id string#Id]
+      CrossingFs   = [window#RGP send#ITB subwindow#RGP time#Id
+                      x#Id y#Id x_root#Id y_root#Id
                       mode#Id detail#Id focus#ITB state#Id]
       FocusFs      = [window#RGP send#ITB hasFocus#ITB]
       ConfigureFs  = [window#RGP send#ITB x#Id y#Id width#Id height#Id]
@@ -168,7 +173,8 @@ define
       fun {MakeEvent Label FeatS Event}
          GdkEvent = {Record.make Label {Map FeatS fun {$ X#_} X end}}
       in
-         {List.forAllInd FeatS proc {$ I X#F} GdkEvent.X = {F Event.I} end} GdkEvent
+         {List.forAllInd FeatS
+          proc {$ I X#F} GdkEvent.X = {F Event.I} end} GdkEvent
       end
    in
       fun {GetGdkEvent GdkEvent}
@@ -183,11 +189,15 @@ define
          [] 'GDK_BUTTON_RELEASE'    then {MakeEvent GdkLabel ButtonFs GdkEvent}
          [] 'GDK_KEY_PRESS'         then {MakeEvent GdkLabel KeyFs GdkEvent}
          [] 'GDK_KEY_RELEASE'       then {MakeEvent GdkLabel KeyFs GdkEvent}
-         [] 'GDK_ENTER_NOTIFY'      then {MakeEvent GdkLabel CrossingFs GdkEvent}
-         [] 'GDK_LEAVE_NOTIFY'      then {MakeEvent GdkLabel CrossingFs GdkEvent}
+         [] 'GDK_ENTER_NOTIFY'      then
+            {MakeEvent GdkLabel CrossingFs GdkEvent}
+         [] 'GDK_LEAVE_NOTIFY'      then
+            {MakeEvent GdkLabel CrossingFs GdkEvent}
          [] 'GDK_FOCUS_CHANGE'      then {MakeEvent GdkLabel FocusFs GdkEvent}
-         [] 'GDK_CONFIGURE'         then {MakeEvent GdkLabel ConfigureFs GdkEvent}
-         [] 'GDK_VISIBILITY_NOTIFY' then {MakeEvent GdkLabel VisibilityFs GdkEvent}
+         [] 'GDK_CONFIGURE'         then
+            {MakeEvent GdkLabel ConfigureFs GdkEvent}
+         [] 'GDK_VISIBILITY_NOTIFY' then
+            {MakeEvent GdkLabel VisibilityFs GdkEvent}
          [] 'GDK_NO_EXPOSE'         then {MakeEvent GdkLabel ExposeFs GdkEvent}
          [] Name                    then Name
          end
@@ -273,12 +283,14 @@ define
             [] nil then
                Object = @object
             in
-               %% Removal of OZ Handlers is sufficient (due to destroy handling below)
+               %% Removal of OZ Handlers is sufficient
+               %% (due to destroy handling below)
                {ForAll @signals proc {$ SignalId}
                                    {Dispatcher unregisterHandler(SignalId)}
                                 end}
                {RemoveObject Object}
-               %% Eliminate Pointer reference (allows tracing of programming errors)
+               %% Eliminate Pointer reference
+               %% (allows tracing of programming errors)
                object <- unit
             end
          end

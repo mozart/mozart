@@ -48,14 +48,16 @@ define
          GTK.window, showAll
       end
       meth deleteEvent(Event)
-         %% Caution: At this time, the underlying GTK object has been destroyed already
+         %% Caution: At this time, the underlying GTK object
+         %% Caution: has been destroyed already
          %% Caution: Destruction also includes all attached child objects.
-         %% Caution: This event is solely intended to do OZ side cleanup via calling close
+         %% Caution: This event is solely intended to do OZ side
+         %% Caution: cleanup via calling close
          {System.show 'delete Event occured'}
          {self close}
          {Application.exit 0}
       end
    end
 
-   Toplevel = {New MyToplevel new}
+   _ = {New MyToplevel new}
 end

@@ -23,7 +23,8 @@ functor $
 import
    NativeEmitter
 export
-   'create' : Create
+   'createFuncs'  : CreateFuncs
+   'createFields' : CreateFields
 define
    local
       fun {ToString V}
@@ -56,9 +57,8 @@ define
       fun {FilterEntry Prefix Entry}
          {HasPrefix Prefix {GetId Entry}}
       end
-
-      proc {EmitNative Types#Entries#File}
-         Emitter = {New NativeEmitter.'class' init(Types File)}
+      proc {EmitNative Types#EmitType#Entries#File}
+         Emitter = {New NativeEmitter.EmitType init(Types File)}
       in
          {Emitter emit(Entries)}
          {Emitter emitInterfacePrefix}
@@ -67,18 +67,26 @@ define
          {Emitter close}
       end
    in
-      fun {Create T}
+      proc {CreateFuncs T}
          GdkEntries GtkEntries GtkCanvasEntries
       in
          {List.partition
           {List.partition
-           {List.partition {Dictionary.entries T} fun {$ E} {FilterEntry "gdk" E} end GdkEntries}
+           {List.partition {Dictionary.entries T}
+            fun {$ E} {FilterEntry "gdk" E} end GdkEntries}
            fun {$ E} {FilterEntry "gtk_canvas" E} end GtkCanvasEntries}
           fun {$ E} {FilterEntry "gtk" E} end GtkEntries _}
-         {ForAll [T#GdkEntries#"GdkNative.c"
-                  T#GtkEntries#"GtkNative.c"
-                  T#GtkCanvasEntries#"GtkCanvasNative.c"] EmitNative}
-         T
+         {ForAll [T#funcEmitter#GdkEntries#"GdkNative.c"
+                  T#funcEmitter#GtkEntries#"GtkNative.c"
+                  T#funcEmitter#GtkCanvasEntries#"GtkCanvasNative.c"]
+          EmitNative}
+      end
+      proc {CreateFields T}
+         {ForAll [T#fieldEmitter#"GdkClasses.ozp"#"GdkFieldNative.c"
+                  T#fieldEmitter#"GtkClasses.ozp"#"GtkFieldNative.c"
+                  T#fieldEmitter#
+                  "GtkCanvasClasses.ozp"#"GtkCanvasFieldNative.c"]
+          EmitNative}
       end
    end
 end

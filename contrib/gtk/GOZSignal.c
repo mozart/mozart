@@ -42,7 +42,8 @@ OZ_BI_define (native_initialize_signal_port, 1, 0) {
 
 
 /*
- * Process all events in the queue and tell the host side whether there were events or not
+ * Process all events in the queue and tell the host side
+ * whether there were events or not
  */
 
 OZ_BI_define (native_handle_pending_events, 0, 1) {
@@ -290,7 +291,8 @@ static OZ_Term createGdkEvent(GdkEvent *event) {
   case GDK_CLIENT_EVENT:
     return OZ_atom("GDK_CLIENT_EVENT");
   case GDK_VISIBILITY_NOTIFY:
-    return createVisibilityEvent("GDK_VISIBILITY_NOTIFY", (GdkEventVisibility *) event);
+    return createVisibilityEvent("GDK_VISIBILITY_NOTIFY",
+                                 (GdkEventVisibility *) event);
   case GDK_NO_EXPOSE:
     return createNoExposeEvent("GDK_NO_EXPOSE", (GdkEventNoExpose *) event);
   default:
@@ -305,15 +307,17 @@ static OZ_Term createGdkEvent(GdkEvent *event) {
  * Additional Data will be ignored and should not be used.
  */
 
-static void signal_marshal(GtkObject *object, gpointer oz_id, guint n_args, GtkArg *args) {
+static void signal_marshal(GtkObject *object, gpointer oz_id,
+                           guint n_args, GtkArg *args) {
   switch (n_args) {
   case 0: /* GtkWidget Event */
     OZ_send(signal_port, OZ_mkTuple(OZ_atom("event"), 2, OZ_int((guint) oz_id),
                                     OZ_atom("UNSUPPORTED")));
     break;
   case 1: /* GdkEvent Type is stored as object */
-    OZ_send(signal_port, OZ_mkTuple(OZ_atom("event"), 2, OZ_int((guint) oz_id),
-                                    createGdkEvent((GdkEvent *) GTK_VALUE_OBJECT(args[0]))));
+    OZ_send(signal_port,
+            OZ_mkTuple(OZ_atom("event"), 2, OZ_int((guint) oz_id),
+                       createGdkEvent((GdkEvent*) GTK_VALUE_OBJECT(args[0]))));
     break;
   default:
     fprintf(stderr, "signal_marshal: unable to handle event. IGNORED.\n");
@@ -341,8 +345,10 @@ OZ_BI_define (native_signal_connect, 3, 0) {
   OZ_declareTerm(1, name);
   OZ_declareInt(2, oz_id);
 
-  gtk_signal_connect_full(GTK_OBJECT (object), (gchar *) OZ_virtualStringToC(name, NULL),
-                          NULL, signal_marshal, (gpointer) oz_id, NULL, FALSE, FALSE);
+  gtk_signal_connect_full(GTK_OBJECT (object),
+                          (gchar *) OZ_virtualStringToC(name, NULL),
+                          NULL, signal_marshal, (gpointer) oz_id,
+                          NULL, FALSE, FALSE);
 
   return OZ_ENTAILED;
 } OZ_BI_end
@@ -387,16 +393,20 @@ OZ_BI_define(native_signal_emit, 2, 0) {
  * Lowlevel Allocation Functions
  */
 
-OZ_BI_define (native_alloc_int, 0, 1) {
+OZ_BI_define (native_alloc_int, 1, 1) {
+  OZ_declareInt(0, val);
   int *ret = (int *) malloc(sizeof(int));
 
+  *ret = val;
   OZ_out(0) = OZ_makeForeignPointer(ret);
   return OZ_ENTAILED;
 } OZ_BI_end
 
-OZ_BI_define (native_alloc_double, 0, 1) {
+OZ_BI_define (native_alloc_double, 1, 1) {
+  OZ_declareFloat(0, val);
   double *ret = (double *) malloc(sizeof(double));
 
+  *ret = val;
   OZ_out(0) = OZ_makeForeignPointer(ret);
   return OZ_ENTAILED;
 } OZ_BI_end
@@ -483,8 +493,8 @@ static OZ_C_proc_interface oz_interface[] = {
   {"signalBlock", 2, 0, native_signal_block},
   {"signalUnblock", 2, 0, native_signal_unblock},
   {"signalEmit", 2, 0, native_signal_emit},
-  {"allocInt", 0, 1, native_alloc_int},
-  {"allocDouble", 0, 1, native_alloc_double},
+  {"allocInt", 1, 1, native_alloc_int},
+  {"allocDouble", 1, 1, native_alloc_double},
   {"allocColor", 3, 1, native_alloc_color},
   {"getInt", 1, 1, native_get_int},
   {"getDouble", 1, 1, native_get_double},

@@ -35,9 +35,11 @@ define
          {self signalConnect('delete_event' deleteEvent _)}
       end
       meth deleteEvent(Event)
-         %% Caution: At this time, the underlying GTK object has been destroyed already
+         %% Caution: At this time, the underlying GTK object
+         %% Caution: has been destroyed already
          %% Caution: Destruction also includes all attached child objects.
-         %% Caution: This event is solely intended to do OZ side cleanup via calling close
+         %% Caution: This event is solely intended to do OZ side
+         %% Caution: cleanup via calling close
          {self close}
          {Application.exit 0}
       end
@@ -48,7 +50,8 @@ define
    %% Set up the Colors
    %% 1. Obtain the system colormap
    %% 2. Allocate the color structure with R, G, B preset
-   %% 3. Try to alloc appropriate system colors, non-writeable and with best-match
+   %% 3. Try to alloc appropriate system colors,
+   %%    non-writeable and with best-match
    %% 4. Use color black
    Colormap = {New GDK.colormap getSystem}
    Black    = {New GDK.color new(0 0 0)}
@@ -58,7 +61,8 @@ define
    TextItem = ["text"#"Hello, Canvas World!"
                "x"#100.0
                "y"#100.0
-               "font"#"-adobe-helvetica-medium-r-normal--18-*-72-72-p-*-iso8859-1"
+               "font"#
+               "-adobe-helvetica-medium-r-normal--18-*-72-72-p-*-iso8859-1"
                "fill_color_gdk"#Black]
 
    %% Setup canvas
@@ -68,7 +72,8 @@ define
    %% Make Canvas child of toplevel
    {Toplevel add(MyCanvas)}
    %% Create our item (member of root group); ignore item object
-   _ = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas textGetType($)} TextItem $)}
+   _ = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas textGetType($)}
+                         TextItem $)}
 
    %% Make it all visible
    {Toplevel showAll}

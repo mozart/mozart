@@ -24,32 +24,49 @@ import
    Application
    Module
    System
-   Inspector
-   Parser at 'parser.so{native}'
+   Property
+   Parser  at 'parser.so{native}'
    Prepare at 'Prepare.ozf'
    Flatten at 'Flatten.ozf'
    Collect at 'Collect.ozf'
    ToolKit at 'ToolKit.ozf'
 define
+   %%
+   %% Cleanup preprocessed data
+   %%
    TreeSource = "gtkraw.c"
    PrepTree   = "gtkheader.c"
    {Prepare.'prepare' TreeSource PrepTree}
-   ParseTree = {Parser.parse PrepTree}
-   case ParseTree
-   of 'parse error'(...) then {System.show 'parse error'} {Inspector.inspect ParseTree}
+   %%
+   %% Parse Tree and create Binding
+   %%
+   case {Parser.parse PrepTree}
+   of 'parse error'(...) then
+      {System.show 'parse error'}
    [] ParseTree then
       FlatTree  = {Record.toList {Flatten.flatten ParseTree}}
       [Wrapper] = {Module.link {Application.getArgs plain}}
    in
+      %% 4 Phases
+      %% 1. Create Native Functors containing the functions
+      %% 2. Create Oz/Alice Wrap Functors for functions
+      %%    This phase produces the class hierarchy information
+      %%    and makes it persistent
+      %% 3. Create Native Functors containing the field accessors
+      %%    This phase needs the the hierarchy data as input
+      %% 4. create Oz/Alice Wrap Functors for fields
       try
-         {Wrapper.create {ToolKit.create {Collect.collect FlatTree}}}
+         TypeDict = {Collect.collect FlatTree}
+      in
+         {ToolKit.createFuncs TypeDict}
+         {Wrapper.createFuncs TypeDict}
+         {ToolKit.createFields TypeDict}
+         {Wrapper.createFields TypeDict}
          {Application.exit 0}
       catch E then
-         {Inspector.configure widgetUseNodeSet 2}
-         {Inspector.configure widgetTreeFont font(family:'courier' size:10 weight:normal)}
-         {Inspector.inspect error(E)}
-         {Inspector.inspect ParseTree}
-         {Inspector.inspect FlatTree}
+         {Property.put 'print.width' 10000}
+         {Property.put 'print.depth' 10000}
+         {System.show 'format exception: '#E}
       end
    end
 end

@@ -35,7 +35,8 @@ define
    %% Setup the Colors
    %% 1. Obtain the system colormap
    %% 2. Allocate the color structure with R, G, B preset
-   %% 3. Try to alloc appropriate system colors, non-writeable and with best-match
+   %% 3. Try to alloc appropriate system colors,
+   %5    non-writeable and with best-match
    %% 4. Use colors black and white
    Colormap = {New GDK.colormap getSystem}
    Black    = {New GDK.color new(0 0 0)}
@@ -86,7 +87,8 @@ define
       in
          Canvas.canvas, new
          Canvas.canvas, setUsize(XDim YDim)
-         Canvas.canvas, setScrollRegion(0.0 0.0 {Int.toFloat XDim} {Int.toFloat YDim})
+         Canvas.canvas, setScrollRegion(0.0 0.0
+                                        {Int.toFloat XDim} {Int.toFloat YDim})
       end
       meth getPieceColor(Piece $)
          Y      = Piece div 4
@@ -95,7 +97,8 @@ define
          G      = ((4 - Y) * 255) div 4
          B      = 128
          Color  = {New GDK.color new(R G B)}
-         ColStr = {VirtualString.toString "#"#{MakeHex R}#{MakeHex G}#{MakeHex B}}
+         ColStr = {VirtualString.toString
+                   "#"#{MakeHex R}#{MakeHex G}#{MakeHex B}}
       in
          {{New GDK.color noop} parse(ColStr Color _)}
          {Colormap allocColor(Color 0 1 _)}
@@ -103,7 +106,8 @@ define
       end
       meth checkVictory(I $)
          if I < 15
-         then {Dictionary.get @posArr I} == I andthen MyCanvas, checkVictory((I + 1) $)
+         then {Dictionary.get @posArr I} == I andthen
+            MyCanvas, checkVictory((I + 1) $)
          else {System.show 'You win!'} true
          end
       end
@@ -114,10 +118,14 @@ define
          Pos3    = (Y * 4 + X - 1)
          Pos4    = (Y * 4 + X + 1)
       in
-         if (Y > 0)     andthen {IsEmpty ItemArr Pos1} then 0.0#(~1.0)#X#(Y-1)#true
-         elseif (Y < 3) andthen {IsEmpty ItemArr Pos2} then 0.0#1.0#X#(Y+1)#true
-         elseif (X > 0) andthen {IsEmpty ItemArr Pos3} then (~1.0)#0.0#(X-1)#Y#true
-         elseif (X < 3) andthen {IsEmpty ItemArr Pos4} then 1.0#0.0#(X+1)#Y#true
+         if (Y > 0)     andthen {IsEmpty ItemArr Pos1}
+         then 0.0#(~1.0)#X#(Y-1)#true
+         elseif (Y < 3) andthen {IsEmpty ItemArr Pos2}
+         then 0.0#1.0#X#(Y+1)#true
+         elseif (X > 0) andthen {IsEmpty ItemArr Pos3}
+         then (~1.0)#0.0#(X-1)#Y#true
+         elseif (X < 3) andthen {IsEmpty ItemArr Pos4}
+         then 1.0#0.0#(X+1)#Y#true
          else false
          end
       end
@@ -131,7 +139,8 @@ define
             Y  = I div 4
             X1 = {Int.toFloat (X * PieceSize)}
             Y1 = {Int.toFloat (Y * PieceSize)}
-            Group = {self itemNew(Root {{New Canvas.canvasGroup noop} getType($)}
+            Group = {self itemNew(Root {{New Canvas.canvasGroup noop}
+                                        getType($)}
                                   ["x"#X1 "y"#Y1] $)}
             _     = {self itemNew(Group {self rectGetType($)}
                                   ["x1"#0.0 "y1"#0.0
@@ -294,9 +303,11 @@ define
          {self signalConnect('delete_event' deleteEvent _)}
       end
       meth deleteEvent(Event)
-         %% Caution: At this time, the underlying GTK object has been destroyed already
+         %% Caution: At this time, the underlying GTK object
+         %% Caution: has been destroyed already
          %% Caution: Destruction also includes all attached child objects.
-         %% Caution: This event is solely intended to do OZ side cleanup via calling close
+         %% Caution: This event is solely intended to do OZ side
+         %% Caution: cleanup via calling close
          {self close}
          {Application.exit 0}
       end

@@ -35,9 +35,11 @@ define
          {self signalConnect('delete_event' deleteEvent _)}
       end
       meth deleteEvent(Event)
-         %% Caution: At this time, the underlying GTK object has been destroyed already
+         %% Caution: At this time, the underlying GTK object
+         %% Caution: has been destroyed already
          %% Caution: Destruction also includes all attached child objects.
-         %% Caution: This event is solely intended to do OZ side cleanup via calling close
+         %% Caution: This event is solely intended to do OZ side
+         %% Caution: cleanup via calling close
          {self close}
          {Application.exit 0}
       end
@@ -48,7 +50,8 @@ define
    %% Setup the Colors
    %% 1. Obtain the system colormap
    %% 2. Allocate the color structure with R, G, B preset
-   %% 3. Try to alloc appropriate system colors, non-writeable and with best-match
+   %% 3. Try to alloc appropriate system colors,
+   %%    non-writeable and with best-match
    %% 4. Use colors black and white
    Colormap = {New GDK.colormap getSystem}
    Black    = {New GDK.color new(0 0 0)}
@@ -67,15 +70,18 @@ define
    %% Create a text item (member of root group) and ignore item obj
    TextItemPars = ["x"#10.0 "y"#10.0
                    "text"#"Press Button to move canvas item below"
-                   "font"#"-adobe-helvetica-medium-r-normal--12-*-72-72-p-*-iso8859-1"
+                   "font"#
+                   "-adobe-helvetica-medium-r-normal--12-*-72-72-p-*-iso8859-1"
                    "fill_color_gdk"#Black
                    "anchor"#GTK.aNCHOR_NORTH_WEST]
-   _ = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas textGetType($)} TextItemPars $)}
+   _ = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas textGetType($)}
+                         TextItemPars $)}
 
    %% Create a rectangle item
    RectItemPars = ["x1"#200.0 "y1"#60.0 "x2"#400.0 "y2"#180.0
                    "fill_color_gdk"#Black "outline_color_gdk"#White]
-   RectItem = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas rectGetType($)} RectItemPars $)}
+   RectItem = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas rectGetType($)}
+                                RectItemPars $)}
 
    %% Create Rectangle Item Event Handler
    local

@@ -29,7 +29,9 @@ export
    stripPrefix   : StripPrefix
    cutPrefix     : CutPrefix
    translateName : TranslateName
+   downTranslate : MakeClassPrefix
    firstLower    : FirstLower
+   firstUpper    : FirstUpper
    indent        : Indent
 define
    %%
@@ -99,7 +101,9 @@ define
       case Xs
       of X|Xr then
          case Ys
-         of Y|Yr then if {Char.toUpper X} == {Char.toUpper Y} then {CutPrefix Xr Yr} else Ys end
+         of Y|Yr then
+            if {Char.toUpper X} == {Char.toUpper Y}
+            then {CutPrefix Xr Yr} else Ys end
          [] nil  then nil
          end
       [] nil  then Ys
@@ -138,6 +142,36 @@ define
       case Vs
       of V|Vr then {Char.toLower V}|Vr
       [] V    then V
+      end
+   end
+
+   fun {FirstUpper Vs}
+      case Vs
+      of V|Vr then {Char.toUpper V}|Vr
+      [] V    then V
+      end
+   end
+
+   %%
+   %% Name Translation gtkDoo -> gtk_Doo_
+   %%
+
+   local
+      fun {MakeClassPrefixIter Ss NewSs Flag}
+         case Ss
+         of S|Sr then
+            if {Char.isLower S}
+            then {MakeClassPrefixIter Sr S|NewSs true}
+            elseif Flag
+            then {MakeClassPrefixIter Sr {Char.toLower S}|&_|NewSs false}
+            else {MakeClassPrefixIter Sr {Char.toLower S}|NewSs true}
+            end
+         [] nil  then {Reverse &_|NewSs}
+         end
+      end
+   in
+      fun {MakeClassPrefix Ss}
+         {MakeClassPrefixIter {FirstLower {ToString Ss}} nil true}
       end
    end
 
