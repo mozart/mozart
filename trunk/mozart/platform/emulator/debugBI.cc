@@ -40,10 +40,10 @@ OZ_BI_define(BIgetDebugStream,0,1)
 
 OZ_BI_define(BIthreadUnleash,2,0)
 {
-  oz_declareThreadIN(0,thread);
+  oz_declareThread(0,thread);
   OZ_declareIntIN(1,frameId);
 
-  if (!thread->isDeadThread() && thread->hasStack())
+  if (thread->hasStack())
     thread->getTaskStackRef()->unleash(frameId);
 
   return PROCEED;
@@ -51,7 +51,7 @@ OZ_BI_define(BIthreadUnleash,2,0)
 
 OZ_BI_define(BIsetStepFlag,2,0)
 {
-  oz_declareThreadIN(0,thread);
+  oz_declareThread(0,thread);
   oz_declareNonvarIN(1,yesno);
 
   if (OZ_isTrue(yesno))
@@ -65,7 +65,7 @@ OZ_BI_define(BIsetStepFlag,2,0)
 
 OZ_BI_define(BIsetTraceFlag,2,0)
 {
-  oz_declareThreadIN(0,thread);
+  oz_declareThread(0,thread);
   oz_declareNonvarIN(1,yesno);
 
   if (OZ_isTrue(yesno))
@@ -79,7 +79,8 @@ OZ_BI_define(BIsetTraceFlag,2,0)
 
 OZ_BI_define(BIcheckStopped,1,1)
 {
-  oz_declareThreadIN(0,thread);
+  oz_declareThread(0,thread);
+
   OZ_RETURN(thread->getStop() ? NameTrue : NameFalse);
 } OZ_BI_end
 
@@ -155,21 +156,15 @@ OZ_BI_define(BIprocedureCoord, 1,1)
 
 OZ_BI_define(BIthreadID,1,1)
 {
-  oz_declareThreadIN(0,th);
-
-  if (th->isProxy())
-    return oz_raise(E_ERROR,E_SYSTEM,"threadID Proxy not impl",0);
+  oz_declareThread(0,th);
 
   OZ_RETURN_INT(th->getID() & THREAD_ID_MASK);
 } OZ_BI_end
 
 OZ_BI_define(BIsetThreadID,2,0)
 {
-  oz_declareThreadIN(0,th);
+  oz_declareThread(0,th);
   oz_declareIntIN(1,id);
-
-  if (th->isProxy())
-    return oz_raise(E_ERROR,E_SYSTEM,"setThreadID Proxy not impl",0);
 
   th->setID(id | (1 << THREAD_ID_SIZE));
   return PROCEED;
@@ -177,17 +172,14 @@ OZ_BI_define(BIsetThreadID,2,0)
 
 OZ_BI_define(BIparentThreadID,1,1)
 {
-  oz_declareThreadIN(0,th);
-
-  if (th->isProxy())
-    return oz_raise(E_ERROR,E_SYSTEM,"parentThreadID Proxy not impl",0);
+  oz_declareThread(0,th);
 
   OZ_RETURN_INT((th->getID() >> THREAD_ID_SIZE) & THREAD_ID_MASK);
 } OZ_BI_end
 
 OZ_BI_define(BIthreadSetRaiseOnBlock,2,0)
 {
-  oz_declareThreadIN(0,thread);
+  oz_declareThread(0,thread);
   oz_declareNonvarIN(1,yesno);
   
   if (OZ_isTrue(yesno))
@@ -201,7 +193,7 @@ OZ_BI_define(BIthreadSetRaiseOnBlock,2,0)
 
 OZ_BI_define(BIthreadGetRaiseOnBlock,1,1)
 {
-  oz_declareThreadIN(0,thread);
+  oz_declareThread(0,thread);
 
   OZ_RETURN(thread->getNoBlock()? NameTrue: NameFalse);
 } OZ_BI_end
@@ -209,11 +201,11 @@ OZ_BI_define(BIthreadGetRaiseOnBlock,1,1)
 
 OZ_BI_define(BIthreadTaskStack,3,1)
 {
-  oz_declareThreadIN(0,thread);
+  oz_declareThread(0,thread);
   oz_declareIntIN(1,depth);
   oz_declareNonvarIN(2,verbose);
 
-  if (thread->isDeadThread() || !thread->hasStack())
+  if (!thread->hasStack())
     OZ_RETURN(oz_nil());
 
   Bool doverbose;
@@ -230,10 +222,10 @@ OZ_BI_define(BIthreadTaskStack,3,1)
 
 OZ_BI_define(BIthreadFrameVariables,2,1)
 {
-  oz_declareThreadIN(0,thread);
+  oz_declareThread(0,thread);
   oz_declareIntIN(1,frameId);
 
-  if (thread->isDeadThread() || !thread->hasStack())
+  if (!thread->hasStack())
     OZ_RETURN(NameUnit);
   
   TaskStack *taskstack = thread->getTaskStackRef();
@@ -243,13 +235,9 @@ OZ_BI_define(BIthreadFrameVariables,2,1)
 
 OZ_BI_define(BIthreadLocation,1,1)
 {
-  oz_declareThreadIN(0,thread);
+  oz_declareThread(0,thread);
 
-  if (thread->isDeadThread()) {
-    OZ_RETURN(oz_nil());
-  } else {
-    OZ_RETURN(oz_getLocation(GETBOARD(thread)));
-  }
+  OZ_RETURN(oz_getLocation(GETBOARD(thread)));
 } OZ_BI_end
 
 /*

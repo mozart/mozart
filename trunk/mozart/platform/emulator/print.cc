@@ -762,9 +762,6 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
   case Co_BigInt:
     ((BigInt *) this)->printLongStream(stream, depth, offset);
     break;
-  case Co_HeapChunk:
-    ((HeapChunk *) this)->printLongStream(stream, depth, offset);
-    break;
   case Co_Abstraction:
     ((Abstraction *) this)->printLongStream(stream,depth,offset);
     break;
@@ -862,8 +859,6 @@ void ConstTerm::printStream(ostream &stream, int depth)
   switch (getType()) {
   case Co_BigInt:      ((BigInt *) this)->printStream(stream, depth);
     break;
-  case Co_HeapChunk:   ((HeapChunk *) this)->printStream(stream, depth);
-    break;
   case Co_BitArray:
     break;
   case Co_Abstraction: ((Abstraction *) this)->printStream(stream,depth);
@@ -927,17 +922,6 @@ void ConstTerm::printStream(ostream &stream, int depth)
     ((ForeignPointer*)this)->printStream(stream,depth); break;
   default:             Assert(NO);
   }
-}
-
-void HeapChunk::printStream(ostream &stream, int depth)
-{
-  stream << "heap chunk: " << (int) chunk_size << " bytes at " << this << '.';
-/*
-  char * data = (char *) chunk_data;
-  for (int i = 0; i < chunk_size; i += 1)
-    stream << "chunk_data[" << i << "]@" << &data[i] << "="
-	   << data[i] << endl;
-	   */
 }
 
 void ForeignPointer::printStream(ostream &stream, int depth)

@@ -1312,13 +1312,14 @@ SRecord *SRecord::gcSRecord() {
   return ret;
 }
 
+// mm2
 Thread *Thread::gcDeadThread() {
   Assert(isDeadThread());
 
   Thread *newThread = (Thread *) gcReallocStatic(this,sizeof(Thread));
 
   Assert(inToSpace(am.rootBoardGC()));
-  newThread->setBoard(am.rootBoardGC());
+  newThread->setBoardInternal(am.rootBoardGC());
   // newThread->state.flags=T_dead;
   // newThread->item.threadBody=NULL;
   // Assert(newThread->item.threadBody==NULL);
@@ -1338,35 +1339,33 @@ OZ_Propagator * OZ_Propagator::gc(void) {
 }
 
 inline
-void Thread::gcRecurse () {
-
-  if (isLocal()) {
-    Board *newBoard = getBoardInternal()->gcBoard ();
-    if (!newBoard) {
-      // 
-      //  The following assertion holds because suspended threads
-      // which home board is dead are filtered out during 
-      // 'Thread::gcThread ()';
-      Assert (isRunnable ());
+void Thread::gcRecurse ()
+{
+  Board *newBoard = getBoardInternal()->gcBoard ();
+  if (!newBoard) {
+    // 
+    //  The following assertion holds because suspended threads
+    // which home board is dead are filtered out during 
+    // 'Thread::gcThread ()';
+    Assert (isRunnable ());
       
-      // 
-      //  Actually, there are two cases: for runnable threads with 
-      // a taskstack, and without it (note that the last case covers 
-      // also the GC'ing of propagators);
-      Board *notificationBoard=getBoardInternal()->gcGetNotificationBoard();
-      setBoard(notificationBoard->gcBoard());
+    // 
+    //  Actually, there are two cases: for runnable threads with 
+    // a taskstack, and without it (note that the last case covers 
+    // also the GC'ing of propagators);
+    Board *notificationBoard=getBoardInternal()->gcGetNotificationBoard();
+    setBoardInternal(notificationBoard->gcBoard());
       
-      GETBOARD(this)->incSuspCount ();
+    GETBOARD(this)->incSuspCount ();
       
-      //
-      //  Convert the thread to a 'wakeup' type, and just throw away
-      // the body;
-      setWakeUpTypeGC ();
-      item.threadBody = (RunnableThreadBody *) NULL;
-      return;
-    } else {
-      setBoard(newBoard);
-    }
+    //
+    //  Convert the thread to a 'wakeup' type, and just throw away
+    // the body;
+    setWakeUpTypeGC ();
+    item.threadBody = (RunnableThreadBody *) NULL;
+    return;
+  } else {
+    setBoardInternal(newBoard);
   }
 
   //
@@ -1385,7 +1384,6 @@ void Thread::gcRecurse () {
     Assert(0);
   }
 }
-
 
 ForeignPointer * ForeignPointer::gc(void) {
   ForeignPointer * ret =
@@ -2245,14 +2243,11 @@ void ConstTerm::gcConstRecurse()
       break;
     }
     
-  case Co_Thread:
-    break;
-
   case Co_Extension:
     {
       Extension *ex=(Extension *) this;
-      Assert(isInGc || ex->getBoardInternal());
-      ex->setBoardInternal(ex->getBoardInternal()->gcBoard());
+      Board *bb=ex->getBoardInternal();
+      if (bb) ex->setBoardInternal(bb->gcBoard());
       ex->gcRecurseV();
       break;
      }
@@ -2316,8 +2311,6 @@ ConstTerm *ConstTerm::gcConstTerm() {
     } else {
       return this;
     }
-  case Co_HeapChunk: 
-    return ((HeapChunk *) this)->gc();
   case Co_Abstraction: 
     {
       Abstraction *a = (Abstraction *) this;
@@ -2445,13 +2438,6 @@ ConstTerm *ConstTerm::gcConstTerm() {
 	break;}}
       break;
     }
-  case Co_Thread:
-    {
-      Thread *old = (Thread *)this;
-      Thread *th  = old->gcThread();
-      if (!th) th = old->gcDeadThread();
-      return th;
-    }
 
   /* builtins are allocate dusing malloc */
   case Co_Builtin:
@@ -2465,12 +2451,12 @@ ConstTerm *ConstTerm::gcConstTerm() {
       Extension *ex= (Extension *) this;
       Board *bb=ex->getBoardInternal();
       if (bb) {
-	bb=bb->derefBoard();
+	bb = bb->derefBoard();
 	if (!bb->gcIsAlive()) return NULL;
 	if (!isInGc && bb->isMarkedGlobal()) return this;
       }
       ret = ex->gcV();
-      ((Extension *)ret)->setBoardInternal(bb);
+      if (bb) ((Extension *)ret)->setBoardInternal(bb);
       break;
     }
 
@@ -2518,16 +2504,6 @@ ConstTerm* ConstTerm::gcConstTermSpec() {
   gcStack.push(ret,PTR_CONSTTERM);
   return ret;
 }
-
-HeapChunk * HeapChunk::gc(void) {
-  HeapChunk * ret = (HeapChunk *) gcReallocStatic(this, sizeof(HeapChunk));
-
-  ret->chunk_data = copyChunkData();
-  
-  storeFwdField(this,ret);
-  return ret;
-}
-
 
 inline
 Bool Actor::gcIsMarked(void) {
