@@ -102,11 +102,11 @@ void MsgContainerManager::deleteMsgContainer(MsgContainer* msgC) {
   else if(msgC->checkFlag(MSG_HAS_UNMARSHALCONT) && msgC->cont!=0)
     msgC->transController->returnUnmarshaler((Builder *) msgC->cont);
 
-//    FreeListEntry *f; // AN ****
-//    --wc;
-//    GenCast(msgC,MsgContainer*,f,FreeListEntry*);
-//    if(putOne(f)) return;
-//    delete msgC;
+  FreeListEntry *f; // AN ****
+  --wc;
+  GenCast(msgC,MsgContainer*,f,FreeListEntry*);
+  if(putOne(f)) return;
+  delete msgC;
   return;
 }
 
