@@ -35,7 +35,7 @@ its virtual computer.
 
 . Copy the following sources into $BUILD:
 -r--r--r--    1 kost     sics      7284401 Feb 14 19:06 binutils-2.10.1.tar.gz
--r--r--r--    1 kost     sics     12973458 Feb 14 19:06 gcc-2.95.2.tar.gz
+-r--r--r--    1 kost     sics     12911721 Apr 12 15:40 gcc-2.95.3.tar.gz
 -r--r--r--    1 kost     sics       134080 Feb 14 19:06 gdbm-1.8.0.tar.gz
 -r--r--r--    1 kost     sics      1033780 Feb 14 19:06 gmp-3.1.1.tar.gz
 -rw-r--r--    1 kost     sics       317588 Feb 19 19:32 m4-1.4.tar.gz
@@ -66,8 +66,8 @@ its virtual computer.
 
 . On Linux, optionally, in order to include the ps/pdf docs run:
 
-    cd $BUILD/doc; make ps installps;
-    cd $BUILD; make doc;
+    cd $BUILD/build-$PLAT/doc; make ps installps;
+    cd $BUILD/build-$PLAT; make doc;
 
 . On Linux (or when just using rpm), 'su' to root, run
 

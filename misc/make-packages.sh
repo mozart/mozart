@@ -30,7 +30,7 @@
 #
 # kost (534) ll *gz
 # -r--r--r--    1 kost     sics      7284401 Feb 14 19:06 binutils-2.10.1.tar.gz
-# -r--r--r--    1 kost     sics     12973458 Feb 14 19:06 gcc-2.95.2.tar.gz
+# -r--r--r--    1 kost     sics     12911721 Apr 12 15:40 gcc-2.95.3.tar.gz
 # -r--r--r--    1 kost     sics       134080 Feb 14 19:06 gdbm-1.8.0.tar.gz
 # -r--r--r--    1 kost     sics      1033780 Feb 14 19:06 gmp-3.1.1.tar.gz
 # -r--r--r--    1 kost     sics       297790 Feb 14 19:06 regex-0.12.tar.gz
@@ -51,7 +51,7 @@ case $PLAT in
     linux-i486)
          CFLAGS=
          CXXFLAGS=
-         GCC=gcc-2.95.2
+         GCC=gcc-2.95.3
          BINUTILS=binutils-2.10.1
          zcat < $GCC.tar.gz | tar xf -
          cd $GCC
@@ -73,7 +73,7 @@ case $PLAT in
     solaris-sparc)
          CFLAGS=
          CXXFLAGS=
-         GCC=gcc-2.95.2
+         GCC=gcc-2.95.3
          zcat < $GCC.tar.gz | tar xf -
          mkdir $GCC-build
          (cd $GCC-build; \
@@ -91,7 +91,7 @@ case $PLAT in
     netbsd-sparc)
          CFLAGS=
          CXXFLAGS=
-         GCC=gcc-2.95.2
+         GCC=gcc-2.95.3
          # zcat < $GCC.tar.gz | tar xf -
          mkdir $GCC-build
          (cd $GCC-build; \
@@ -108,7 +108,7 @@ case $PLAT in
     freebsdelf-i486)
          CFLAGS=
          CXXFLAGS=
-         GCC=gcc-2.95.2
+         GCC=gcc-2.95.3
          zcat < $GCC.tar.gz | tar xf -
          mkdir $GCC-build
          (cd $GCC-build; \
