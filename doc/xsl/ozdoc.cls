@@ -942,13 +942,20 @@
 
 % \mozart@chunk@ref@bwd{CHUNK.ID}{CHUNK.NUM}
 
+\newcommand{\mozart@chunk@ref}[2]{%
+  \expandafter\expandafter\expandafter\mozart@chunk@ref@fmt
+  \csname r@chunk.#1.#2\endcsname}
+\newcommand{\mozart@chunk@ref@fmt}[2]{%
+  {\chunk@ref@font\fontsize{8}{8pt}\selectfont#2\@alph{#1}}}
+
 \newcommand{\mozart@chunk@ref@bwd}[2]{%
   \hbox to5mm{%
     \mozart@cnt#2\relax
     \advance\mozart@cnt\m@ne
     \@ifundefined{r@chunk.#1.\the\mozart@cnt}%
       {}%
-      {$\triangleleft$\chunk@ref@font\pageref{chunk.#1.\the\mozart@cnt}}%
+      %{$\triangleleft$\chunk@ref@font\small\pageref{chunk.#1.\the\mozart@cnt}\@alph{\ref{chunk.#1.\the\mozart@cnt}}}%
+      {$\triangleleft$\mozart@chunk@ref{#1}{\the\mozart@cnt}}%
     \hfil}}
 
 \newcommand{\mozart@chunk@ref@fwd}[2]{%
@@ -958,7 +965,9 @@
     \advance\mozart@cnt\@ne
     \@ifundefined{r@chunk.#1.\the\mozart@cnt}%
       {}%
-      {{\chunk@ref@font\pageref{chunk.#1.\the\mozart@cnt}}$\triangleright$}}}
+      %{{\chunk@ref@font\small\pageref{chunk.#1.\the\mozart@cnt}\@alph{\ref{chunk.#1.\the\mozart@cnt}}}$\triangleright$}
+      {\mozart@chunk@ref{#1}{\the\mozart@cnt}$\triangleright$}%
+}}
 
 \newcommand{\mozart@chunk@equiv}[1]{%
   \ifnum#1=1\else{+}\fi{\equiv}}
@@ -981,6 +990,7 @@
      \topsep\z@\parskip\z@\partopsep\z@\parsep\z@\itemsep\z@
      \let\obeylines\@empty
      \hfill\hbox{\rlap{\mozart@chunk@ref@bwd{#2}{#3}%
+                       \hskip3mm
                        \mozart@chunk@ref@fwd{#2}{#3}}}%
      \begin{alltt}\mozart@code@font\mozart@specials@code@display}
   {\end{alltt}\end{list}}
