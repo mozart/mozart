@@ -1136,10 +1136,10 @@ Point is left at the first character of the keyword."
 	  "[0-9]+\\(\\.[0-9]*\\([eE]~?[0-9]+\\)?\\)?\\)")
   "Regular expression matching an Oz number; used by oz-bar.")
 (defconst oz-token-pattern
-  (concat oz-atom-pattern "\\|" oz-string-pattern "\\|"
-	  oz-variable-pattern "\\|" oz-char-pattern "\\|"
+  (concat oz-atom-pattern "(?" "\\|" oz-string-pattern "\\|"
+	  oz-variable-pattern "(?" "\\|" oz-char-pattern "\\|"
 	  oz-number-pattern "\\|"
-	  "[A-Za-z][A-Za-z0-9_]*\\|"
+	  "[A-Za-z][A-Za-z0-9_]*(?\\|"
 	  "\\[\\]\\|\\.\\.\\.\\|<-\\|:=\\|!!\\|=<\\|>=\\|\\\\=\\|"
 	  ":::?\\|==\\|[<>]:\\|=<:\\|>=:\\|=:\\|"
 	  "[+<>*/{}()|#:=.^@$!~_,]\\|\\[\\|\\]\\|\\-")
