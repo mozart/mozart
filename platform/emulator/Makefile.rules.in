@@ -1,6 +1,6 @@
 .PHONY: tags clean+ clean realclean veryclean
 
-all install clean realclean depend distclean::
+install clean realclean depend distclean::
         dirs="$(SUBDIRS)"; for i in $$dirs; do (cd $$i && $(MAKE) $@); done
 
 realclean::

@@ -23,6 +23,8 @@
 
 include Makefile.vars
 
+FDTARGETS       = @FDTARGETS@
+FSETTARGETS     = @FSETTARGETS@
 TARGETS         = @TARGETS@
 SUBDIRS         = FDLib FSetLib
 
@@ -91,21 +93,28 @@ OBJS = $(SRCS:.cc=.o)
 
 .NOEXPORT: emulate.o @PROGRAMNAME@ peanuts.o
 .PHONY: all subdirs win win-install first install install-bin install-inc \
-        install-dir version depend tags clean+ clean realclean veryclean
+        install-dir version depend tags clean distclean realclean veryclean \
+        $(FDTARGETS) $(FSETTARGETS)
 
-all::
+all: $(TARGETS)
+
+$(FDTARGETS):
+        cd FDLib; $(MAKE) $@
+
+$(FSETTARGETS):
+        cd FSetLib; $(MAKE) $@
 
 win: ozlib.lnk $(CREATEDFILES)
 
 win-install:
         $(INSTALL_BIN) ozemulator.exe $(BINDIR)
 
-first: version $(CREATEDFILES) $(SRCS)
+first: $(CREATEDFILES) $(SRCS)
 
-@PROGRAMNAME@: first $(OBJS)
+@PROGRAMNAME@: first $(OBJS) $(FDTARGETS) $(FSETTARGETS)
         $(LD) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
 
-@tmphack_programname@: first $(OBJS)
+@tmphack_programname@: first $(OBJS) $(FDTARGETS) $(FSETTARGETS)
         tmp=/tmp/ozemu$$$$; \
         trap "$(RM) $$tmp; exit 1" 1 2 15; \
          $(LD) $(LDFLAGS) $(LDOPT) -o $$tmp $(OBJS) $(LIBS) && \
@@ -115,7 +124,7 @@ first: version $(CREATEDFILES) $(SRCS)
 
 install:: install-dir install-bin install-inc
 
-install-bin: $(TARGETS)
+install-bin: version $(TARGETS)
         $(INSTALL_BIN) $(TARGETS) $(BINDIR)
 
 install-inc:
@@ -127,10 +136,11 @@ install-dir:
         if test ! -d $(BINDIR); then $(INSTALL_DIR) $(BINDIR) ; fi
         if test ! -d $(INCDIR); then $(INSTALL_DIR) $(INCDIR) ; fi
 
-version.cc: version
-
 initffuns.cc oz.c: oz.h
         $(SRCDIR)/makeffuns $(SRCDIR) "$(OZVERSION)"
+
+version.cc: version.sed
+        $(MAKE) version
 
 version:
         $(SED) -e "s/HEREGOESDATE/`date '+%h %d 19%y \(%T\)'`/" \
@@ -197,8 +207,7 @@ config.h: $(TOPDIR)/include/config.m4h
 
 include Makefile.rules
 
-# all/realclean should be after make in subdirs (see Makefiles.rules)
-all:: $(TARGETS)
+# realclean should be after make in subdirs (see Makefiles.rules)
 
 realclean::
         $(RM) version.cc scanner.cc parser.cc parser.hh $(TARGETS) \

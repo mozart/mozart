@@ -42,7 +42,7 @@ SCHEDLIBSRCS = scheduling.cc schedulingDist.cc \
 
 SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.o)
 
-all:: $(FDTARGETS)
+all: $(FDTARGETS)
 
 fdlib.so: $(FDLIBOBJS)
         $(DYNLD) -o $@ $(FDLIBOBJS)
