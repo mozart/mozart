@@ -736,18 +736,19 @@ int osOpenMax()
 
 
 
-#ifdef WINDOWS
-
 char *oslocalhostname()
 {
-  DWORD len = MAX_COMPUTERNAME_LENGTH;
-  char buf[MAX_COMPUTERNAME_LENGTH + 1];
-  BOOL aux = GetComputerName(buf,&len);
-  if (aux==FALSE) {
-    return NULL;
+  char buf[1000];
+  int aux = gethostname(buf,sizeof(buf));
+  if (aux < 0) {
+    warning("cannot determine hostname\n");
+    sprintf(buf,"%s","localhost");
   }
   return strdup(buf);
 }
+
+
+#ifdef WINDOWS
 
 
 char *ostmpnam(char *s)
@@ -783,15 +784,6 @@ int osdup(int fd)
 #else
 
 char *ostmpnam(char *s) { return tmpnam(s); }
-
-char *oslocalhostname()
-{
-  struct utsname unp;
-  int n = uname(&unp);
-  if(0 > n) /* braindead Solaris, returns >0 if OK. POSIX says 0 */
-    return 0;
-  return strdup(unp.nodename);
-}
 
 int osdup(int fd) { return dup(fd); }
 
@@ -830,6 +822,17 @@ void osInit()
 
   /* allow select on stdin */
   wrappedStdin = _hdopen(STD_INPUT_HANDLE, O_RDONLY);
+
+  /* init sockets */
+  WSADATA wsa_data;
+  WORD req_version = MAKEWORD(1,1);
+
+  int ret = WSAStartup(req_version, &wsa_data);
+  if (ret != 0 && ret != WSASYSNOTREADY)
+    OZ_warning("Initialization of socket interface failed\n");
+
+  //  fprintf(stderr, "szDescription = \"%s\"", wsa_data.szDescription);
+  //  fprintf(stderr, "szSystemStatus = \"%s\"", wsa_data.szSystemStatus);
 
 #else
 
