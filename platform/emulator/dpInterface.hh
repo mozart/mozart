@@ -35,6 +35,7 @@
 #include "base.hh"
 #include "pickle.hh"
 
+#define SIZEOFPORTPROXY 12
 //
 Bool isPerdioInitialized();
 
