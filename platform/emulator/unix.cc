@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <netdb.h>
 
-#if defined(LINUX_I486) || defined(HPUX_700)
+#if defined(LINUX) || defined(HPUX_700)
 extern int h_errno;
 #endif
 
@@ -128,7 +128,7 @@ while ((RET = CALL) < 0) {                          \
 { RETURN_ANY_ERROR(OUT,errno,OZ_unixError(errno),"unix"); }
 
 
-#if defined(SUNOS_SPARC) || defined(SOLARIS_SPARC) || defined(LINUX_I486) || defined(HPUX_700) || defined(IRIX5_MIPS) || defined(AIX3_RS6000) || defined(OSF1_ALPHA)
+#if defined(SUNOS_SPARC) || defined(SOLARIS_SPARC) || defined(LINUX) || defined(HPUX_700) || defined(IRIX5_MIPS) || defined(AIX3_RS6000) || defined(OSF1_ALPHA)
 
 static char* h_strerror(const int err) {
   switch (err) {
@@ -138,7 +138,7 @@ static char* h_strerror(const int err) {
     return "Retry later again.";
   case NO_RECOVERY:
     return "Unexpected non-recoverable server failure.";
-#if defined(SOLARIS_SPARC) || defined(LINUX_I486)
+#if defined(SOLARIS_SPARC) || defined(LINUX)
   case NO_ADDRESS:
 #endif
 #if defined(SUNOS_SPARC)
