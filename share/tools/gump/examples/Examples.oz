@@ -31,7 +31,6 @@
 
 \switch +gumpparseroutputsimplified +gumpparserverbose
 \gumpparserexpect 0
-\insert gump/ProductionTemplates
 \insert gump/examples/LambdaParser.ozg
 
 declare LambdaIn = 'Lambda.in'
