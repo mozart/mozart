@@ -399,10 +399,11 @@ config.status: configure
 
 .PHONY: test-all test lib-all check
 
+OZTESTOPTS=-v
 test:
 	OZEMULATOR=`pwd`/emulator.exe; export OZEMULATOR; \
 	cd $(TESTDIR) && \
-	$(MAKE) check
+	$(MAKE) check OZTESTOPTS=$(OZTESTOPTS)
 
 lib-all:
 	$(MAKE) lib-check
@@ -415,7 +416,7 @@ lib-%:
 test-%:
 	OZEMULATOR=`pwd`/emulator.exe && export OZEMULATOR; \
 	cd $(TESTDIR) && \
-	$(MAKE) $*
+	$(MAKE) $* OZTESTOPTS=$(OZTESTOPTS)
 
 check-all: emulator.exe
 	$(MAKE) test
