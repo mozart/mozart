@@ -1949,8 +1949,6 @@ void ConstTerm::gcConstRecurse()
     {
       Builtin *bi = (Builtin *) this;
       gcTagged(bi->suspHandler,bi->suspHandler);
-      Assert(!isFreedRefsArray (bi->gRegs));
-      bi->gRegs = gcRefsArray(bi->gRegs);
       break;
     }
 	
