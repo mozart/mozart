@@ -8,10 +8,11 @@
 : ${SRCDIR=.}
 : ${OZMAFILE=$SRCDIR/ozbatch.ozm}
 : ${OZPLATFORM=`$SRCDIR/../bin/ozplatform`}
+: ${OZPREFIX=/usr/local/oz}
 
 if test -z "$OZEMULATOR"
 then
-    for d in /usr/local/oz/platform/$OZPLATFORM \
+    for d in $OZPREFIX/platform/$OZPLATFORM \
         $SRCDIR/../Emulator $SRCDIR/../Emulator/$OZPLATFORM
     do
         if test -x $d/oz.emulator.bin
