@@ -1070,12 +1070,12 @@ in
 				font: SwitchFont
 				variable: Expression
 				action: {MkAction Switch(expression)})}
-	 System = {New Tk.variable tkInit(true)}
+	 SystemV = {New Tk.variable tkInit(true)}
 	 SystemSw = {New Tk.checkbutton
 		     tkInit(parent: ParsingFrame
 			    text: 'Allow use of system variables'
 			    font: SwitchFont
-			    variable: System
+			    variable: SystemV
 			    action: {MkAction Switch(system)})}
 	 Gump = {New Tk.variable tkInit(false)}
 	 GumpSw = {New Tk.checkbutton
@@ -1327,7 +1327,7 @@ in
 				   warnunusedformals: WarnUnusedFormals
 				   warnforward: WarnForward
 				   expression: Expression
-				   system: System
+				   system: SystemV
 				   gump: Gump
 				   staticanalysis: StaticAnalysis
 				   core: Core
