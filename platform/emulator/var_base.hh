@@ -68,8 +68,6 @@
 #define REIFIED_FLAG 2
 
 class SVariable {
-friend TaggedRef gcVariable(TaggedRef);
-  friend void processUpdateStack(void);
 protected:
   SuspList *suspList;
   Board *home;
@@ -102,7 +100,7 @@ public:
   void ** gcGetMarkField(void);
   SVariable * gcGetFwd(void);
   SVariable * gc();
-  Bool gcNeeded(void);
+  Bool gcNeeded();
 
   void setStoreFlag(void) {
     suspList = (SuspList *) (((long) suspList) | STORE_FLAG);
