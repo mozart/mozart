@@ -228,6 +228,21 @@ in
 	    else
 	       {OzcarMessage UnknownWokenThread}
 	    end
+
+	 [] exception then
+	    T = M.thr.1
+	    I = M.thr.2
+	    X = M.exc
+	    S = M.stack
+	    E = {Ozcar exists(I $)}
+	 in
+	    case E then
+	       StackObj = {Dget self.ThreadDic I}
+	    in
+	       {StackObj printException(X#S)}
+	    else
+	       ThreadManager,add(T I X#S false)
+	    end
 	    
 	 else
 	    {OzcarMessage UnknownMessage}
@@ -244,7 +259,7 @@ in
 	 SkippedProcs <- {Filter @SkippedProcs
 			  fun {$ F} F.2 \= I end}
       end
-      
+
       meth add(T I Q R)
 	 Stack = {New StackManager init(thr:T id:I)}
       in
@@ -254,17 +269,23 @@ in
 	    Breakpoint <- true
 	 else skip end
 	 
-	 Gui,addNode(I Q)
-	 case Q == 0 orelse Q == 1 then 
-	    ThreadManager,switch(I)       %% does Gui,displayTree
-	    case Q == 1 then
-	       Gui,rawStatus('Got new query, selecting thread #' # I)
-	    else
-	       Gui,rawStatus('Breakpoint reached by thread #' # I #
-			     ', which has been added and selected')
-	    end
+	 case {IsTuple Q} then %% exception
+	    Gui,addNode(I 0)
+	    ThreadManager,switch(I)
+	    {Stack printException(Q)}
 	 else
-	    Gui,displayTree
+	    Gui,addNode(I Q)
+	    case Q == 0 orelse Q == 1 then 
+	       ThreadManager,switch(I)       %% does Gui,displayTree
+	       case Q == 1 then
+		  Gui,rawStatus('Got new query, selecting thread #' # I)
+	       else
+		  Gui,rawStatus('Breakpoint reached by thread #' # I #
+				', which has been added and selected')
+	       end
+	    else
+	       Gui,displayTree
+	    end
 	 end
       end
 

@@ -7,9 +7,16 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% some helpers
+S2A = String.toAtom  %% string to atom
+fun {VS2A X}         %% virtual string to atom
+   {S2A {VirtualString.toString X}}
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.2.1 (Mar 97)'
+Version                = '1.3.0 (Mar 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -98,7 +105,7 @@ MagicAtom              = 'noActionPlease'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry
 %%
-ToplevelGeometry       = '540x380+7+50'
+ToplevelGeometry       = '510x360+30+40'
 SourceWindowGeometry   = '511x564+560+50'   %% I really hate hardcoding this
                                             %% but window managers seem
                                             %% to be f*cking stupid :-((
@@ -111,8 +118,9 @@ ThreadTreeOffset       = 4
 
 StackTextWidth         = 0
 EnvTextWidth           = 24
-EnvVarWidth            = 15
+EnvVarWidth            = 14
 
+NoBorderSize           = 0
 SmallBorderSize        = 1
 BorderSize             = 2
 
@@ -132,6 +140,7 @@ ThreadTreeFont         = DefaultFont
 ThreadTreeBoldFont     = BoldFont
 ButtonFont             = '-adobe-helvetica-medium-r-normal-*-10-*-*-*-*-*-*-*'
 TitleFont              = '-adobe-helvetica-bold-r-normal-*-10-*-*-*-*-*-*-*'
+StatusFont             = TitleFont
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Files

@@ -85,6 +85,26 @@ in
       meth rebuild(Flag)
 	 Rebuild <- Flag
       end
+
+      meth printException(Q)
+	 %{Browse Q.2}
+	 Exc#Stack = Q
+	 H|T = case Stack.1 == nil then Stack.2.2 else Stack end
+	 C = case Exc.1.1 == noElse then %% correct the line number
+		{Record.adjoinAt H line Exc.1.2}
+	     else H end
+	 S = builtin(name:'Raise' args:[Exc]) | debug([0 999999999]) | C | T
+	 Status
+      in
+	 {Error.debug.doOzError Exc}
+	 {Error.debug.last Status}
+
+	 {Ozcar rawStatus('Exception: ' # Status.1 # {Lines Status.2})}
+	 
+	 StackManager,ReCalculate({Reverse S})
+	 {Ozcar scrollbar(file:C.file line:C.line
+			  color:ScrollbarBlockedColor what:appl)}
+      end
       
       meth print
 	 case @Rebuild then
@@ -159,8 +179,9 @@ in
 	 {ForAll Frames proc {$ Frame} {Dremove self.D Frame} end}
       end
       
-      meth ReCalculate
-	 CurrentStack = StackManager,GetStack($)
+      meth ReCalculate(S<=noStack)
+	 CurrentStack = case S == noStack then StackManager,GetStack($)
+			else S end
       in
 	 {OzcarMessage 're-calculating stack of thread #' # self.I}
 	 {Ozcar removeSkippedProcs(self.I)}

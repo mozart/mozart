@@ -14,7 +14,7 @@ class TitleFrame from Tk.frame
 	 self.Label = {New Tk.label tkInit(parent: self
 					   text:   T
 					   font:   TitleFont
-					   bd:     SmallBorderSize
+					   bd:     NoBorderSize
 					   relief: raised)}
 	 {Tk.send grid(self.Label row:0 column:0 sticky:we)}
       end
