@@ -244,12 +244,6 @@ extern size_t nextChopSize;
 
 unsigned int getMemoryInFreeList();
  
-
-#ifdef MM2
-// mm2: who needs this? please comment
-extern "C" void* memset(void*, int, size_t);
-#endif
-
 void initMemoryManagement(void);
 void deleteChunkChain(char *);
 int inChunkChain(void *, void *);
@@ -271,5 +265,3 @@ unsigned int getUsedMemoryBytes(void);
 #endif
 
 #endif
-
-
