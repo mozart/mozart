@@ -1491,7 +1491,7 @@ Board *Board::gcGetBoardDeref()
 {
   Board *bb = this;
   while (OK) {
-    if (GCISMARKED(bb->suspCount)) {
+    if (!bb || GCISMARKED(bb->suspCount)) {
       return bb;
     }
     if (bb->isDiscarded() || bb->isFailed()) {

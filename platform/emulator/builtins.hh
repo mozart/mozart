@@ -195,7 +195,7 @@ BuiltinTabEntry *BIreplace(char *name,int arity,BIFun fun);
 void BIinitSpecial();
 void BIinitWIO();
 void BIinitDebug();
-void BIinitDatatypes();
+void BIinitCore();
 void BIinitFeatures();
 void BIinitFD(void);
 

@@ -31,7 +31,7 @@ private:
   static Thread *Current;
   static Thread *Root;
   static int TimeSlice;
-  static int UserPriority;
+  static int DefaultPriority;
   static int SystemPriority;
 
 public:
@@ -45,7 +45,7 @@ public:
   static int GetSystemPriority();
   static Thread *GetTail();
   static int GetTimeSlice();
-  static int GetUserPriority();
+  static int GetDefaultPriority();
   static Bool QueueIsEmpty();
   static void Start();
   static void MakeTaskStack();
@@ -77,6 +77,7 @@ public:
   OZPRINTLONG;
 
   int getPriority();
+  void setPriority(int prio);
   Bool isNormal();
   Bool isWarm();
   Bool isNervous();
