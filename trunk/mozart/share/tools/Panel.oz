@@ -26,8 +26,9 @@ import
    Property(get
 	    put)
 
-   System(gcDo
-	  exit)
+   System(gcDo)
+
+   Application(exit)
 
    Error(formatGeneric
 	 format
