@@ -87,7 +87,7 @@ veryclean::
 
 distclean::
         -rm -f *~
-        -rm -f $(CED) xref.db index.db
+        -rm -f $(CED) xref.db index.db idx.html
         -rm -f ced.el catalog
         -rm -f Makefile Makefile.common config.log config.status config.cache
 
@@ -97,8 +97,10 @@ PSDOCDIRS       = apptut base browser bugs changes compiler \
         opi ozcar ozdoc panel profiler system tools \
         tutorial wp
 
-idx.html: index.db
-        $(OZDOC) --in=index.db --out=idx.html --type=html-global-index
+idx.html:
+        if [ -e index.db ]; then \
+        $(OZDOC) --in=index.db --out=idx.html --type=html-global-index; \
+        else touch idx.html; fi
 
 global-xref-db.xml:
         dirs="$(PSDOCDIRS)"; \
