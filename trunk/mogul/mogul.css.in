@@ -151,7 +151,7 @@ P.LI {
 }
 
 div.entryinfo {
-  border: 2px solid slateblue;
+  border: 1px solid white; /* 2px solid slateblue; */
   margin-right:0pt;
 }
 table.formatheaders {

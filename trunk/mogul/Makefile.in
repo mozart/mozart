@@ -120,7 +120,7 @@ $(LIBDIR_TOP) $(LIBDIR_SUB) $(LIBDIR_BIN) $(LIBDIR_DOC) $(LIBDIR_API) $(TARDIR):
 #=====================================================================
 # AUTOMATICALLY REMAKE MAKEFILE WHEN NECESSARY
 # =====================================================================
-Makefile: Makefile.in
+Makefile mogul.css: % : %.in
 	./config.status
 #=====================================================================
 # SOURCE TAR BALL
