@@ -216,8 +216,8 @@ L ={New LC init}>>>
       The Tk Module provides also for a set of procedures that can transform
       strings into atoms, integers, floats and lists of these three types.
       With these procedures it is possible to transform return strings in
-      a user defined fashion.  For more information see <Ptr
-      to="section.tk.strings">.
+      a user defined fashion.  For more information see ???? (strings
+      in tk ref).
     <SubSection>
       <Title/Querying Configuration Options/
       <P>
@@ -258,9 +258,7 @@ L ={New LC init}>>>
       managed by a geometry manager.  Instead as soon as a menu entry is
       created it is displayed in its parent menu.  To configure a menu entry
       after it has been created, one needs to use the <<entryconfigure>>
-      command rather than the <<configure>> command.  More details
-      can be found in the manpage <File/menu(n)/ and in <Ptr
-      to="section.tk.menuentries">.
+      command rather than the <<configure>> command.
     <P>
       The program shown in <Ptr to="figure.widgets-2.menu"> creates two menu
       widgets <<M1>> and <<M2>>.  The first cascade entry of the menu widget
