@@ -4,7 +4,10 @@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
 SHELL           = @SH@
+LEX             = @LEX@
 LEXFLAGS        = -8
+YACC            = @YACC@
+YFLAGS          = -d -p xy
 MV              = @MV@
 SED             = @SED@
 ECHO            = @@ECHO@
@@ -192,6 +195,14 @@ linkdir:
               ../Emulator/Imakefile .; ../ozmkmf; \
         rm -f version.cc; make version
 
+
+scanner.cc: scanner.ll
+        $(LEX) $(LFLAGS) -t scanner.ll > scanner.cc
+
+parser.cc parser.hh: parser.yy
+        $(YACC) $(YFLAGS) parser.yy
+        @mv y.tab.c parser.cc
+        @mv y.tab.h parser.hh
 
 .cc.o:
         $(CXX) $(CCFLAGS) -c -o $@ $<
