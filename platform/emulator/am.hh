@@ -122,7 +122,10 @@ private:
 
   Bool wasSolveSet;
 
+#ifdef OLD_COMPILER
   CompStream *compStream;
+#endif
+
   Bool isStandaloneF;
 
 #ifdef DEBUG_CHECK
@@ -209,7 +212,10 @@ public:
   void setSelf(Object *o) { cachedSelf = o; }
   Object *getSelf() { return cachedSelf; }
 
+#ifdef OLD_COMPILER
   CompStream *getCompStream() { return compStream; }
+  Bool loadQuery(CompStream *fd);
+#endif
 
   void setProfileMode(Bool p) { profileMode = p; }
 
@@ -463,7 +469,6 @@ public:
   void restartThread();
 
   void handleIO();
-  Bool loadQuery(CompStream *fd);
   void select(int fd, int mode, OZ_IOHandler fun, void *val);
   void acceptSelect(int fd, OZ_IOHandler fun, void *val);
   int select(int fd,int mode, TaggedRef l, TaggedRef r);

@@ -222,8 +222,10 @@ void AM::init(int argc,char **argv)
     ozconf.linkPath = tmp;
   }
 
+#ifdef OLD_COMPILER
   char *compilerFIFO = NULL;  // path name where to connect to
   char *precompiledFile = NULL;
+#endif
   char *url = NULL;
   char *initFile = getenv("OZINIT");
   char *assemblyCodeFile = NULL;
@@ -255,6 +257,7 @@ void AM::init(int argc,char **argv)
       compilerName = getOptArg(i,argc,argv);
       continue;
     }
+#ifdef OLD_COMPILER
     if (strcmp(argv[i],"-S")==0) {
       moreThanOne++;
       compilerFIFO = getOptArg(i,argc,argv);
@@ -265,6 +268,7 @@ void AM::init(int argc,char **argv)
       precompiledFile = getOptArg(i,argc,argv);
       continue;
     }
+#endif
     if (strcmp(argv[i],"-browser")==0) {
       ozconf.browser = 1;
       continue;
@@ -328,12 +332,15 @@ void AM::init(int argc,char **argv)
   }
 
   isStandaloneF=NO;
+#ifdef OLD_COMPILER
   compStream = 0;
+#endif
   if (url) {
     isStandaloneF=OK;
   } else if (assemblyCodeFile) {
     isStandaloneF=OK;
   } else {
+#ifdef OLD_COMPILER
     if (compilerFIFO) {
       compStream = connectCompiler(compilerFIFO);
     } else if (precompiledFile) {
@@ -350,6 +357,11 @@ void AM::init(int argc,char **argv)
     }
 
     checkVersion();
+#else
+      fprintf(stderr,"Cannot open code input\n");
+      ossleep(5);
+      osExit(1);
+#endif
   }
 
 
@@ -402,9 +414,11 @@ void AM::init(int argc,char **argv)
 
   toplevelVars[0] = makeTaggedConst(entry);
 
+#ifdef OLD_COMPILER
   if (!isStandalone()) {
     osWatchFD(compStream->csfileno(),SEL_READ);
   }
+#endif
 
   osInitSignals();
   osSetAlarmTimer(CLOCK_TICK/1000);
@@ -469,6 +483,7 @@ void AM::init(int argc,char **argv)
 
 }
 
+#ifdef OLD_COMPILER
 void AM::checkVersion()
 {
   char s[100];
@@ -482,10 +497,13 @@ void AM::checkVersion()
     osExit(1);
   }
 }
+#endif
 
 void AM::exitOz(int status)
 {
+#ifdef OLD_COMPILER
   if (compStream) compStream->csclose();
+#endif
   osExit(status);
 }
 
@@ -1436,6 +1454,7 @@ void AM::setCurrent(Board *c, Bool checkNotGC)
   }
 }
 
+#ifdef OLD_COMPILER
 Bool AM::loadQuery(CompStream *fd)
 {
   unsigned int starttime = 0;
@@ -1456,7 +1475,7 @@ Bool AM::loadQuery(CompStream *fd)
 
   return ret;
 }
-
+#endif
 
 void AM::select(int fd, int mode, OZ_IOHandler fun, void *val)
 {
@@ -1536,6 +1555,7 @@ void AM::handleIO()
   unsetSFlag(IOReady);
   int numbOfFDs = osFirstSelect();
 
+#ifdef OLD_COMPILER
   /* check input from compiler */
   if (compStream) {
     if (osNextSelect(compStream->csfileno(),SEL_READ) || /* do this FIRST, sideeffect! */
@@ -1546,6 +1566,7 @@ void AM::handleIO()
       numbOfFDs--;
     }
   }
+#endif
 
   // find the nodes to awake
   for (int index = 0; numbOfFDs > 0; index++) {
@@ -1582,7 +1603,10 @@ void AM::checkIO()
 {
   int numbOfFDs = osCheckIO();
   if (!isCritical() && (numbOfFDs > 0
-                        || (compStream && !compStream->bufEmpty()))) {
+#ifdef OLD_COMPILER
+                        || (compStream && !compStream->bufEmpty())
+#endif
+                        )) {
     setSFlag(IOReady);
   }
 }
@@ -1601,7 +1625,11 @@ void AM::suspendEngine()
       handleUser();
     }
 
-    if (isSetSFlag(IOReady) || (compStream && !compStream->bufEmpty())) {
+    if (isSetSFlag(IOReady)
+#ifdef OLD_COMPILER
+        || (compStream && !compStream->bufEmpty())
+#endif
+        ) {
       handleIO();
     }
 
@@ -1609,11 +1637,13 @@ void AM::suspendEngine()
       break;
     }
 
+#ifdef OLD_COMPILER
     if (compStream && isStandalone() && !compStream->cseof()) {
       loadQuery(compStream);
       continue;
     }
     Assert(!compStream || compStream->bufEmpty());
+#endif
 
     // mm2: test if system is idle (not yet working: perdio test is missing)
 #ifdef TEST_IDLE
