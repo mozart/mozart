@@ -260,7 +260,7 @@ currently the following:
 <ITEM> <<Op>> indicates which operation the handler call replaces.
 The possible values of <<Op>> are currently:
 <LIST>
-<ITEM>
+<ITEM> blab.
 </LIST>
 
 </LIST>
