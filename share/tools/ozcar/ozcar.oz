@@ -29,6 +29,10 @@ Ozcar =
 	meth unhide
 	   {Tk.send wm(deiconify self.toplevel)}
 	   {Compile "\\sw -optimize +debuginfo"}
+	   
+	   %% still searching for the gc bug... :-(
+	   {System.set gc(on:false)}
+	   
 	   {Debug.on}
 	end
 	

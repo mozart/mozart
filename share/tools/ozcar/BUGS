@@ -1,9 +1,5 @@
 $Id$
 
-Fri Dec 13 17:12:09 MET 1996
-thread E end unmittelbar nach {Debug.breakpoint} wird von Ozcar
-nicht erkannt (kein stepping moeglich)
-
 Fri Jan 10 18:01:11 MET 1997
 Forget loescht fehlerhaft aus dem Thread-Baum, wenn Knoten kein Blatt ist.
 
@@ -12,3 +8,22 @@ Erkennung von "veralteter" Codearea (wenn korrespondierendes
 Source-File neueren Datums ist) klappt nicht bei vorcompiliertem Code
 (Der Compiler muesste die aktuelle Zeit beim Compilieren berechnen,
 nicht der Emulator beim Laden des Codes).
+
+Wed Jan 22 18:54:07 MET 1997
+Das Builtin breakpointAt braucht weiteren Parameter `timestamp'. Sonst
+kann es passieren, dass faelschlicherweise das Setzen eines Breakpoints
+als erfolgreich bestaetigt wird, obwohl es (im aktuell gefeedeten Code) 
+gar nicht geklappt hat.
+
+Wed Jan 22 19:01:25 MET 1997
+!!!! Garbage collection funktioniert nicht !!!!
+Heap garbage collection... disposed 1.4 MB in 670 msec.
+Program received signal SIGSEGV, Segmentation fault.
+Board::isCommitted (this=0x95a9e4) at board.hh:123
+(gdb) bt
+#0  Board::isCommitted (this=0x95a9e4) at board.hh:123
+#1  0x1147fc in Board::derefBoard (this=0x95a9e4) at board.icc:55
+#2  0x1263b4 in Thread::getBoard (this=0x85ad10) at thread.icc:106
+#3  0x57bd0 in engine (init=0) at emulate.cc:1031
+#4  0x6e464 in OZ_main (argc=3, argv=0xefffec7c) at foreign.cc:1989
+#5  0x482a0 in main (argc=3, argv=0xefffec7c) at main.cc:5
