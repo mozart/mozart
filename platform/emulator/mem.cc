@@ -354,6 +354,12 @@ void printChunkChain(void *Chain)
 }
 
 
+void *heapMallocOutline(size_t chunk_size)
+{
+  return heapMalloc(chunk_size);
+}
+
+
 void getMemFromOS(size_t sz)
 {
   if (sz > heapMaxSize) {
