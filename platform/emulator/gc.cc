@@ -2338,9 +2338,14 @@ inline void EntityInfo::gcWatchers(){
   Watcher **base=&watchers;
   Watcher *w=*base;
   while(w!=NULL){
+    Thread *th=w->thread->gcThread();
+    if(w->isHandler() && th==NULL){
+      *base= w->next;
+      w=*base;
+      continue;}
     Watcher* newW=(Watcher*) gcReallocStatic(w,sizeof(Watcher));
     *base=newW;
-    newW->thread=newW->thread->gcThread();
+    newW->thread=th;
     OZ_collectHeapTerm(newW->proc,newW->proc);
     base= &(newW->next);
     w=*base;}}
