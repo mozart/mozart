@@ -17,16 +17,8 @@
 
 #define YYDEBUG 1
 
-#ifdef WINDOWS
-#include <malloc.h>
-#undef SP_ERROR
-#include <winsock.h>
-#include <process.h>
-#include <time.h>
-#else
 #include <sys/time.h>
 #include <sys/wait.h>
-#endif
 
 static void parserInit();
 static unsigned int parseFile(char *file);
