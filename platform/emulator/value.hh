@@ -35,7 +35,6 @@
 #endif
 
 #include "tagged.hh"
-#include "hashtbl.hh"
 #include "atoms.hh"
 
 /*===================================================================

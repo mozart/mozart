@@ -39,13 +39,13 @@
 #include "board.hh"
 #include "pointer-marks.hh"
 
-#define AddSuspToList0(List, Susp, Home)        \
-{                                               \
-  if ((List) && ((List)->getElem() == Susp)) {  \
-  } else {                                      \
-    List = new SuspList(Susp, List);            \
-    if (Home) checkExtSuspension(Susp, Home);   \
-  }                                             \
+#define AddSuspToList0(List, Susp, Home)                \
+{                                                       \
+  if ((List) && ((List)->getElem() == Susp)) {          \
+  } else {                                              \
+    List = new SuspList(Susp, List);                    \
+    if (Home) oz_checkExtSuspension(Susp, Home);        \
+  }                                                     \
 }
 
 #ifdef DEBUG_STABLE
@@ -188,9 +188,10 @@ void addSuspAnyVar(TaggedRefPtr v, Suspension susp,int unstable = TRUE)
   }
 }
 
-/*
+
+/* ------------------------------------------------------------------------
  * Class VariableNamer: assign names to variables
- */
+ * ------------------------------------------------------------------------ */
 
 class VariableNamer {
 private:

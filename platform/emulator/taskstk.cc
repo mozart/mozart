@@ -274,7 +274,7 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
     } else if (PC==C_ACTOR_Ptr) {
       Actor *ac = (Actor *) Y;
       ac->discardActor();
-      am.currentBoard()->decSuspCount();
+      oz_currentBoard()->decSuspCount();
     } else if (PC==C_LOCK_Ptr) {
       OzLock *lck = (OzLock *) Y;
       switch(lck->getTertType()){
@@ -297,7 +297,7 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
 // for debugging:
 void ozd_printStack()
 {
-  am.currentThread()->printLong();
+  oz_currentThread()->printLong();
 }
 
 #endif

@@ -90,7 +90,7 @@ TaggedRef SolveActor::genUnstable(TaggedRef arg) {
 }
 
 Bool SolveActor::isBlocked() {
-  return ((getThreads()==0) && !am.isStableSolve(this));
+  return ((getThreads()==0) && !oz_isStableSolve(this));
 }
 
 static

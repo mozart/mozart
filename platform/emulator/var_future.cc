@@ -63,7 +63,7 @@ void Future::kick(TaggedRef *ptr)
 {
   Assert(function!=0);
   Board* bb      = GETBOARD(this);
-  Thread* thr    = am.mkRunnableThread(DEFAULT_PRIORITY,bb);
+  Thread* thr    = oz_mkRunnableThread(DEFAULT_PRIORITY,bb);
   OZ_Term newvar = oz_newVar(bb);
 
   static RefsArray args = allocateStaticRefsArray(2);
@@ -72,7 +72,7 @@ void Future::kick(TaggedRef *ptr)
 
   thr->pushCFun(BIbyNeedAssign, args, 2, OK);
   thr->pushCall(function,newvar);
-  am.scheduleThread(thr);
+  am.threadsPool.scheduleThread(thr);
   function=0;
 }
 

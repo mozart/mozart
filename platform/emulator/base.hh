@@ -364,7 +364,7 @@ void handlerFPE();
 void handlerALRM();
 void handlerUSR2();
 
-void checkExtSuspension(Suspension susp, Board * home);
+void oz_checkExtSuspension(Suspension susp, Board * home);
 
 #ifdef DEBUG_STABLE
 extern SuspList * board_constraints;

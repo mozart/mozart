@@ -49,9 +49,9 @@
 // more includes at end!
 
 #ifdef DEBUG_THREADCOUNT
-#define DECSOLVETHREADS(BB, S) decSolveThreads(BB, S)
+#define DECSOLVETHREADS(BB, S) oz_decSolveThreads(BB, S)
 #else
-#define DECSOLVETHREADS(BB, S) decSolveThreads(BB)
+#define DECSOLVETHREADS(BB, S) oz_decSolveThreads(BB)
 #endif
 
 /* -----------------------------------------------------------------------
@@ -189,7 +189,7 @@ ChachedOORegs setObject(ChachedOORegs regs, Object *o)
  * -----------------------------------------------------------------------*/
 
 // this class contains the central global data
-class AM : public ThreadsPool {
+class AM  {
 friend int engine(Bool init);
 friend void scheduler();
 friend inline Board *oz_rootBoard();
@@ -205,7 +205,6 @@ private:
   Bool debugMode;
 
   int statusReg;
-  Trail trail;
   TaggedRef xRegs[NumberOfXRegisters];
   TaskStack *cachedStack;
   Object *cachedSelf;
@@ -238,8 +237,6 @@ private:
 
   unsigned int lastThreadID;
 
-  Bool installingScript;  // ask TM
-
   // internal clock in 'ms';
   unsigned long emulatorClock;
 
@@ -250,7 +247,24 @@ private:
   //
   OzSleep *sleepQueue;
 
-  Bool profileMode;
+private:
+  Bool _profileMode;
+public:
+  void setProfileMode()   { _profileMode=TRUE; }
+  void unsetProfileMode() { _profileMode=FALSE; }
+  Bool profileMode()      { return _profileMode; }
+
+private:
+  Bool installingScript;  // ask TM
+public:
+  void setInstallingScript()   { installingScript=TRUE; }
+  void unsetInstallingScript() { installingScript=FALSE; }
+  Bool isInstallingScript(void) {return installingScript;}
+
+public:
+  ThreadsPool threadsPool;
+  Trail trail;
+
 public:
 
   AM() {};
@@ -304,8 +318,6 @@ public:
   void saveSelf();
   void setSelf(Object *o) { cachedSelf = o; }
   Object *getSelf() { return cachedSelf; }
-
-  void setProfileMode(Bool p) { profileMode = p; }
 
   int currentUVarPrototypeEq(TaggedRef t) {
     return _currentUVarPrototype == t;
@@ -378,55 +390,15 @@ public:
 
   Bool debugmode()          { return debugMode; }
   void setdebugmode(Bool x) { debugMode = x; }
-  void checkDebug(Thread *tt, Board *bb) {
-    if (debugmode() && bb==_rootBoard) checkDebugOutline(tt);
-  }
-  void checkDebugOutline(Thread *tt);
 
 
   void setCurrent(Board *c, Bool checkNotGC=OK);
-  InstType installPath(Board *to); // ###
-  Bool installScript(Script &script);
-  Bool installScriptOutline(Script &script);
-  Bool isInstallingScript(void) {return installingScript;}
-  Bool install(Board *bb);
-  void deinstallPath(Board *top);
-  INLINE void deinstallCurrent();
-  void reduceTrailOnUnitCommit();
-  void reduceTrailOnSuspend();
-  void reduceTrailOnFail();
-  void reduceTrailOnShallow();
-  void reduceTrailOnEqEq();
 
   // in emulate.cc
-  Bool emulateHookOutline();
   Bool hookCheckNeeded();
   Bool isNotPreemptiveScheduling(void);
 
-  INLINE RunnableThreadBody* allocateBody();
-  INLINE Thread *newThreadInternal(int prio, Board *bb);
-  INLINE Thread *mkRunnableThread(int prio, Board *bb);
-  INLINE Thread *mkRunnableThreadOPT(int prio, Board *bb);
-  Thread *mkLPQ(Board *bb, int prio);
-  inline Thread *mkWakeupThread(Board *bb);
-  Propagator * mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
-  INLINE Thread *mkSuspendedThread(Board *bb, int prio);
   INLINE int newId();
-
-  INLINE void suspThreadToRunnableOPT(Thread *tt);
-  INLINE void suspThreadToRunnable(Thread *tt);
-  inline void wakeupToRunnable(Thread *tt);
-  INLINE void propagatorToRunnable(Thread *tt);
-  INLINE void updateSolveBoardPropagatorToRunnable(Thread *tt);
-
-  // wake up cconts and board conts
-  void wakeupAny(Suspension susp, Board * bb);
-  inline Bool wakeUp(Suspension susp, Board * home, PropCaller calledBy);
-  INLINE Bool wakeUpPropagator(Propagator * prop, Board *home,
-                        PropCaller calledBy = pc_propagator);
-  inline Bool wakeUpBoard(Thread *tt, Board *home);
-  inline Bool wakeUpThread(Thread *tt, Board *home);
-  INLINE OZ_Return runPropagator(Propagator *);
 
   //
   //  Note: killing the suspended thread *might not* make any
@@ -452,45 +424,6 @@ public:
   //
   INLINE void disposeThread(Thread *tt);
 
-  //  Check all the solve actors above for stabily
-  // (and, of course, wake them up if needed);
-  INLINE void checkExtSuspension(Suspension);
-  INLINE void removeExtThread(Thread *tt);
-
-  void setExtSuspensionOutlined(Suspension susp, Board *varHome);
-
-  //  special allocator for thread's bodies;
-  INLINE void freeThreadBody(Thread *tt);
-
-  //
-  //  it asserts that the suspended thread is 'external' (see beneath);
-  void checkExtSuspensionOutlined(Suspension susp);
-  void removeExtThreadOutlined(Thread *tt);
-
-  //
-  //  (re-)Suspend a propagator again; (was: 'reviveCurrentTaskSusp');
-  //  It does not take into account 'solve threads', i.e. it must
-  // be done externally - if needed;
-  INLINE void suspendPropagator(Propagator *);
-  INLINE void scheduledPropagator(Propagator *);
-
-  //
-  //  Terminate a propagator thread which is (still) marked as runnable
-  // (was: 'killPropagatedCurrentTaskSusp' with some variations);
-  //
-  //  This might be used only from the local propagation queue,
-  // because it doesn't check for entaiment, stability, etc.
-  // Moreover, such threads are NOT counted in solve actors
-  // and are not marked as "inSolve" EVEN in the "running" state!
-  //
-  //  Philosophy (am i right, Tobias?):
-  // When some propagator returns 'PROCEED' and still has the
-  // 'runnable' flag set, then it's done.
-  INLINE void closeDonePropagator(Propagator *);
-
-  INLINE void closeDonePropagatorCD(Propagator *);
-  INLINE void closeDonePropagatorThreadCD(Propagator *);
-
   void gc(int msgLevel);  // ###
   void doGC();
   // coping of trees (and terms);
@@ -501,11 +434,6 @@ public:
     return (!currentBoard()->hasSuspension()  // threads?
             && trail.isEmptyChunk());       // constraints?
   }
-
-  void checkStability();
-  int handleFailure(Continuation *&cont, AWActor *&aa);
-  int commit(Board *bb, Thread *tt=0);
-  void failBoard();
 
   // Unification
   void doTrail(TaggedRef *vp, TaggedRef v) {
@@ -525,18 +453,6 @@ public:
   Bool isLocalSVar(SVariable *var);
   Bool isLocalCVar(TaggedRef var);
   Bool isLocalVariable(TaggedRef var,TaggedRef *varPtr);
-
-  void checkSuspensionList(TaggedRef taggedvar,
-                           PropCaller calledBy = pc_propagator);
-  SuspList * checkSuspensionList(SVariable * var,
-                                 SuspList * suspList, PropCaller calledBy);
-  int incSolveThreads(Board *bb);
-#ifdef DEBUG_THREADCOUNT
-  void decSolveThreads(Board *bb, char *);
-#else
-  void decSolveThreads(Board *bb);
-#endif
-  DebugCode(Bool isInSolveDebug(Board *bb);)
 
   void restartThread();
 
@@ -575,8 +491,6 @@ public:
   int  nextUser();
   Bool checkUser();
 
-  //
-  Bool isStableSolve(SolveActor *sa);
 };
 
 extern AM am;
@@ -601,6 +515,121 @@ int oz_isCurrentBoard(Board *bb) { return oz_currentBoard() == bb; }
 inline
 int oz_onToplevel() { return oz_currentBoard() == oz_rootBoard(); }
 
+
+/* -----------------------------------------------------------------------
+ * Threads
+ * -----------------------------------------------------------------------*/
+
+inline Thread* oz_currentThread() { return am.threadsPool.currentThread(); }
+
+INLINE Thread *oz_newThreadInternal(int prio, Board *bb);
+INLINE Thread *oz_mkRunnableThread(int prio, Board *bb);
+INLINE Thread *oz_mkRunnableThreadOPT(int prio, Board *bb);
+Thread *oz_mkLPQ(Board *bb, int prio);
+inline Thread *oz_mkWakeupThread(Board *bb);
+Propagator * oz_mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
+INLINE Thread *oz_mkSuspendedThread(Board *bb, int prio);
+
+INLINE void oz_suspThreadToRunnableOPT(Thread *tt);
+INLINE void oz_suspThreadToRunnable(Thread *tt);
+inline void oz_wakeupToRunnable(Thread *tt);
+INLINE void oz_propagatorToRunnable(Thread *tt);
+INLINE void oz_updateSolveBoardPropagatorToRunnable(Thread *tt);
+
+//
+//  (re-)Suspend a propagator again; (was: 'reviveCurrentTaskSusp');
+//  It does not take into account 'solve threads', i.e. it must
+// be done externally - if needed;
+INLINE void oz_suspendPropagator(Propagator *);
+INLINE void oz_scheduledPropagator(Propagator *);
+
+//
+//  Terminate a propagator thread which is (still) marked as runnable
+// (was: 'killPropagatedCurrentTaskSusp' with some variations);
+//
+//  This might be used only from the local propagation queue,
+// because it doesn't check for entaiment, stability, etc.
+// Moreover, such threads are NOT counted in solve actors
+// and are not marked as "inSolve" EVEN in the "running" state!
+//
+//  Philosophy (am i right, Tobias?):
+// When some propagator returns 'PROCEED' and still has the
+// 'runnable' flag set, then it's done.
+INLINE void oz_closeDonePropagator(Propagator *);
+
+INLINE void oz_closeDonePropagatorCD(Propagator *);
+INLINE void oz_closeDonePropagatorThreadCD(Propagator *);
+
+
+/* -----------------------------------------------------------------------
+ * XXX
+ * -----------------------------------------------------------------------*/
+
+SuspList *oz_checkAnySuspensionList(SuspList *suspList,Board *home,
+                                    PropCaller calledBy);
+
+Bool oz_installScript(Script &script);
+
+InstType oz_installPath(Board *to);
+Bool oz_install(Board *bb);
+void oz_deinstallPath(Board *top);
+void oz_deinstallCurrent();
+void oz_reduceTrailOnUnitCommit();
+void oz_reduceTrailOnSuspend();
+void oz_reduceTrailOnFail();
+void oz_reduceTrailOnShallow();
+void oz_reduceTrailOnEqEq();
+
+
+// wake up cconts and board conts
+void oz_wakeupAny(Suspension susp, Board * bb);
+inline Bool oz_wakeUp(Suspension susp, Board * home, PropCaller calledBy);
+INLINE Bool oz_wakeUpPropagator(Propagator * prop, Board *home,
+                        PropCaller calledBy = pc_propagator);
+inline Bool oz_wakeUpBoard(Thread *tt, Board *home);
+inline Bool oz_wakeUpThread(Thread *tt, Board *home);
+INLINE OZ_Return oz_runPropagator(Propagator *);
+
+//  Check all the solve actors above for stabily
+// (and, of course, wake them up if needed);
+INLINE void oz_checkExtSuspension(Suspension);
+INLINE void oz_removeExtThread(Thread *tt);
+
+void oz_setExtSuspensionOutlined(Suspension susp, Board *varHome);
+
+//  it asserts that the suspended thread is 'external' (see beneath);
+void oz_checkExtSuspensionOutlined(Suspension susp);
+void oz_removeExtThreadOutlined(Thread *tt);
+
+void oz_checkStability();
+int oz_handleFailure(Continuation *&cont, AWActor *&aa);
+int oz_commit(Board *bb, Thread *tt=0);
+void oz_failBoard();
+
+Bool oz_isStableSolve(SolveActor *sa);
+
+int oz_incSolveThreads(Board *bb);
+#ifdef DEBUG_THREADCOUNT
+void oz_decSolveThreads(Board *bb, char *);
+#else
+void oz_decSolveThreads(Board *bb);
+#endif
+DebugCode(Bool oz_isInSolveDebug(Board *bb);)
+
+
+
+/* -----------------------------------------------------------------------
+ * Debugger
+ * -----------------------------------------------------------------------*/
+
+void oz_checkDebugOutline(Thread *tt);
+
+inline
+void oz_checkDebug(Thread *tt, Board *bb) {
+  if (am.debugmode() && oz_isRootBoard(bb)) oz_checkDebugOutline(tt);
+}
+
+
 #include "cpi_heap.hh"
 #include "cpbag.hh"
 
@@ -615,6 +644,14 @@ int oz_onToplevel() { return oz_currentBoard() == oz_rootBoard(); }
 #include "thread.hh"
 #include "susplist.hh"
 #include "variable.hh"
+
+inline
+void oz_checkSuspensionList(SVariable *var,
+                            PropCaller calledBy=pc_propagator)
+{
+  var->setSuspList(oz_checkAnySuspensionList(var->getSuspList(),
+                                             GETBOARD(var),calledBy));
+}
 
 #include "solve.hh"
 

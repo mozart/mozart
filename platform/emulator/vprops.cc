@@ -193,13 +193,13 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   switch (prop) {
     // THREADS
     CASE_INT(PROP_THREADS_CREATED,ozstat.createdThreads.total);
-    CASE_INT(PROP_THREADS_RUNNABLE,am.getRunnableNumber());
+    CASE_INT(PROP_THREADS_RUNNABLE,am.threadsPool.getRunnableNumber());
     CASE_INT(PROP_THREADS_MIN,ozconf.stackMinSize / TASKFRAMESIZE);
     CASE_INT(PROP_THREADS_MAX,ozconf.stackMaxSize / TASKFRAMESIZE);
     CASE_REC(PROP_THREADS,"threads",
              (4,AtomCreated,AtomRunnable,AtomMin,AtomMax),
              SET_INT(AtomCreated ,ozstat.createdThreads.total);
-             SET_INT(AtomRunnable,am.getRunnableNumber());
+             SET_INT(AtomRunnable,am.threadsPool.getRunnableNumber());
              SET_INT(AtomMin     ,ozconf.stackMinSize/TASKFRAMESIZE);
              SET_INT(AtomMax     ,ozconf.stackMaxSize/TASKFRAMESIZE););
     // PRIORITIES

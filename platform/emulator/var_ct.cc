@@ -267,7 +267,7 @@ OZ_Return tellBasicConstraint(OZ_Term v,
     if (constr->isValue()) {
       if (am.isLocalVariable(v, vptr)) {
         if (isSVar(vtag))
-          am.checkSuspensionList(v);
+          oz_checkSuspensionList(tagged2SVar(v));
         doBind(vptr, constr->toValue());
       } else {
         am.doBindAndTrail(vptr, constr->toValue());
@@ -284,7 +284,7 @@ OZ_Return tellBasicConstraint(OZ_Term v,
 
       if (am.isLocalVariable(v, vptr)) {
         if (isSVar(vtag)) {
-          am.checkSuspensionList(v);
+          oz_checkSuspensionList(tagged2SVar(v));
           ctv->setSuspList(tagged2SVar(v)->getSuspList());
         }
         doBind(vptr, makeTaggedRef(tctv));

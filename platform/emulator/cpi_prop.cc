@@ -167,7 +167,7 @@ OZ_Boolean OZ_Propagator::mayBeEqualVars(void)
 OZ_Return OZ_Propagator::replaceBy(OZ_Propagator * p)
 {
   Propagator::getRunningPropagator()->setPropagator(p);
-  return am.runPropagator(Propagator::getRunningPropagator());
+  return oz_runPropagator(Propagator::getRunningPropagator());
 }
 
 OZ_Return OZ_Propagator::replaceBy(OZ_Term a, OZ_Term b)
@@ -208,11 +208,11 @@ OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
 
 void OZ_Propagator::impose(OZ_Propagator * p, int prio)
 {
-  Board * cb = am.currentBoard();
-  Propagator * prop = am.mkPropagator(cb, prio, p);
+  Board * cb = oz_currentBoard();
+  Propagator * prop = oz_mkPropagator(cb, prio, p);
   ozstat.propagatorsCreated.incf();
 
-  am.suspendPropagator(prop);
+  oz_suspendPropagator(prop);
 
   prop->markRunnable();
   cb->pushToLPQ(prop);

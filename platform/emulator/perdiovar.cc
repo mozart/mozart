@@ -43,14 +43,13 @@ int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar);
 
 void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
 {
-  setSuspList(am.checkSuspensionList(this, getSuspList(), pc_std_unif));
+  oz_checkSuspensionList(this, pc_std_unif);
 
   TaggedRef vv=oz_deref(v);
   if (isSVar(vv)) {
     SVariable *sv=tagged2SVar(vv);
     if (sv==this) return;
-    sv->setSuspList(am.checkSuspensionList(sv, sv->getSuspList(),
-                                           pc_std_unif));
+    oz_checkSuspensionList(sv, pc_std_unif);
     relinkSuspListTo(sv);
   }
   doBind(lPtr, v);
@@ -94,7 +93,7 @@ OZ_Return PerdioVar::unifyV(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
     // Note: for perdio variables: am.isLocal == am.onToplevel
     if (scp!=0 || !am.isLocalSVar(lVar)) {
       // in any kind of guard then bind and trail
-      am.checkSuspensionList(lVal,pc_std_unif);
+      oz_checkSuspensionList(tagged2SVarPlus(lVal),pc_std_unif);
       am.doBindAndTrail(lPtr,makeTaggedRef(rPtr));
       return PROCEED;
     } else {
@@ -119,7 +118,7 @@ OZ_Return PerdioVar::unifyV(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
     return bindPerdioVar(this,lPtr,r);
   } else {
     // in guard: bind and trail
-    am.checkSuspensionList(*lPtr,pc_std_unif);
+    oz_checkSuspensionList(tagged2SVarPlus(*lPtr),pc_std_unif);
     am.doBindAndTrail(lPtr,r);
     return PROCEED;
   }

@@ -72,7 +72,7 @@ enum ThreadFlag {
 
 
 class RunnableThreadBody {
-friend class AM;
+friend class ThreadsPool;
 friend class Thread;
 private:
   TaskStack taskStack;

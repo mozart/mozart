@@ -366,14 +366,14 @@ Builtin * cfunc2Builtin(void * f);
 inline
 Thread *oz_newSuspendedThread()
 {
-  return am.mkSuspendedThread(oz_currentBoard(), DEFAULT_PRIORITY);
+  return oz_mkSuspendedThread(oz_currentBoard(), DEFAULT_PRIORITY);
 }
 
 inline
 Thread *oz_newRunnableThread(int prio=DEFAULT_PRIORITY)
 {
-  Thread *tt = am.mkRunnableThreadOPT(prio, oz_currentBoard());
-  am.scheduleThread(tt);
+  Thread *tt = oz_mkRunnableThreadOPT(prio, oz_currentBoard());
+  am.threadsPool.scheduleThread(tt);
   return tt;
 }
 
