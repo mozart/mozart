@@ -111,13 +111,14 @@ define
 		   {self get_this_pkgname($)}
 		else N end
 	 Dir = {self get_this_pkgdir($)}
+	 RDir = {self get_id_as_rel_path($)}
       in
 	 {Manager trace('Downloading pkg '#U2)}
 	 try
 	    {Wget.wgetPkg U2 Dir File}
 	    if IsPKG then
 	       if FormatIsKnown then
-		  {Manager addToManifest(Dir#'/'#File)}
+		  {Manager addToManifest(RDir#'/'#File)}
 	       else
 		  FMT = {self determineFormat(Dir#'/'#File $)}
 		  FileFinal = {self get_this_pkgname($ format:FMT)}
@@ -125,7 +126,7 @@ define
 	       in
 		  {Manager trace(Cmd)}
 		  {OS.system Cmd _}
-		  {Manager addToManifest(Dir#'/'#FileFinal)}
+		  {Manager addToManifest(RDir#'/'#FileFinal)}
 	       end
 	    end
 	 catch mogul(...)=E then
