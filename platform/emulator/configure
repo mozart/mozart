@@ -52,7 +52,7 @@ ac_help="$ac_help
 ac_help="$ac_help
 --enable-miscbuiltins    include misc builtins (default=no)"
 ac_help="$ac_help
---enable-newmarshaler    include new marshaler (default=no)"
+--enable-newmarshaler    include new marshaler (default=yes)"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -6486,7 +6486,7 @@ if test "${enable_newmarshaler+set}" = set; then
   :
 fi
 
-    : ${oz_enable_newmarshaler=no}
+    : ${oz_enable_newmarshaler=yes}
     if test -n "${enable_newmarshaler}"; then
         oz_enable_newmarshaler=$enable_newmarshaler
     fi
