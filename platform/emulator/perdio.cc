@@ -158,7 +158,10 @@ void lockSendToken(Site*,int,Site*);
 void cellSendContentsFailure(TaggedRef,Site*,Site*,int);
 void lockReceiveCantPut(LockManager *cm,int mI,Site* rsite, Site* dS);
 
-void receiveTellError(Tertiary*,Site*,int,EntityCond,Bool);
+void receiveAskError(OwnerEntry*,Site*,EntityCond);
+void sendAskError(Tertiary*, EntityCond);
+void receiveTellError(Tertiary*, Site*, int, EntityCond, Bool);
+
 void chainReceiveAck(OwnerEntry*, Site*);
 void chainReceiveAnswer(OwnerEntry*,Site*,int,Site*);
 void chainReceiveQuestion(BorrowEntry*,Site*,int,Site*);
@@ -174,10 +177,13 @@ void lockSendDump(BorrowEntry*,LockFrame*);
 void sendUnAskError(Tertiary*,EntityCond);
 void sendRegister(BorrowEntry *);
 
+void printChain(Chain*);
+
 OZ_C_proc_proto(BIapply);
 
 void sendObject(Site* sd, Object *o, Bool);
 
+TaggedRef listifyWatcherCond(EntityCond);
 PERDIO_DEBUG_DO(void printTables());
 
 
@@ -2101,6 +2107,7 @@ void Chain::releaseChainElem(ChainElem *ce){
       deinstallProbe(ce->getSite(),PROBE_TYPE_PERM);}}
   freeChainElem(ce);}
 
+
 void Chain::removePerm(ChainElem** base){
   ChainElem *ce=*base;
   *base=ce->next;
@@ -2141,8 +2148,9 @@ Site* Chain::setCurrent(Site* s){
   last= e;
   if(s==mySite){
     return toS;}
-  if(getFirstNonGhost()->site==s){
-    e->setFlagAndCheck(CHAIN_DUPLICATE);}
+  ChainElem *de = getFirstNonGhost();
+  if(de->site==s){
+    de->setFlagAndCheck(CHAIN_DUPLICATE);}
   if(hasFlag(INTERESTED_IN_TEMP)){
     installProbe(s,PROBE_TYPE_ALL);}
   else{
@@ -2678,6 +2686,27 @@ void LockLocal::globalize(int myIndex){
   ch->init(mySite);
   lm->initOnGlobalize(myIndex,ch,sec);}
 
+void CellManager::initOnGlobalize(int index,Chain* ch,CellSec *secX){
+  Watcher *w = getWatchersIfExist();
+  setTertType(Te_Manager);
+  setIndex(index);
+  setPtr(ch);
+  sec=secX;
+  while(w!=NULL){
+    if(managerPart(w->getWatchCond()) != ENTITY_NORMAL){
+      getChain()->newInform(mySite,w->getWatchCond());}
+    w = w->getNext();}}
+
+void LockManager::initOnGlobalize(int index,Chain* ch,LockSec *secX){
+  Watcher *w = getWatchersIfExist();
+  setTertType(Te_Manager);
+  setIndex(index);
+  setPtr(ch);
+  sec=secX;
+  while(w!=NULL){
+    if(managerPart(w->getWatchCond()) != ENTITY_NORMAL){
+      getChain()->newInform(mySite,w->getWatchCond());}
+    w = w->getNext();}}
 
 void Tertiary::globalizeTert()
 {
@@ -3569,7 +3598,7 @@ void Site::msgReceived(MsgBuffer* bs)
       int OTI;
       TaggedRef val;
       unmarshal_M_LOCK_CANTPUT(bs,OTI,rsite);
-      PD((MSG_RECEIVED,"M_CELL_CANTPUT index:%d site:%s val:%s",OTI,rsite->stringrep()));
+      PD((MSG_RECEIVED,"M_LOCK_CANTPUT index:%d site:%s val:%s",OTI,rsite->stringrep()));
       lockReceiveCantPut(receiveAtOwner(OTI),OTI,this,rsite);
       break;
     }
@@ -3628,6 +3657,13 @@ void Site::msgReceived(MsgBuffer* bs)
       receiveUnAskError(receiveAtOwner(OTI),toS,ec);
       break;
     }
+  /*  case M_SITEDWN_DBG:
+    {
+      PD((MSG_RECEIVED,"M_SITEDWN_DBG %s",this->stringrep()));
+      receiveSiteDwnDbg();
+      break;
+    }
+    */
   default:
     error("siteReceive: unknown message %d\n",mt);
     break;
@@ -3844,7 +3880,8 @@ void cellLockReceiveGet(OwnerEntry* oe,Site* toS){
   Tertiary* t=oe->getTertiary();
   Chain *ch=getChainFromTertiary(t);
   if(ch->hasFlag(TOKEN_LOST)){
-    sendTellError(oe,toS,t->getIndex(),PERM_BLOCKED|PERM_SOME|PERM_ME,TRUE);
+    PD((ERROR_DET,"TOKEN_LOST message bouncing"));
+    sendTellError(oe,toS,t->getIndex(),PERM_BLOCKED|PERM_SOME|PERM_ME,true);
     return;}
   if(t->getType()==Co_Cell){
     cellReceiveGet(oe,(CellManager*) t,toS);}
@@ -3934,6 +3971,7 @@ void cellReceiveGet(OwnerEntry* oe,CellManager* cm,Site* toS){
   Chain *ch=cm->getChain();
   Site* current=ch->setCurrent(toS);
   PD((CELL,"CellMgr Received get from %s",toS->stringrep()));
+  //DebugCode(printChain(ch);)
   if(current==mySite){
     PD((CELL,"CELL - shortcut in cellReceiveGet"));
     TaggedRef val;
@@ -4223,7 +4261,6 @@ void Chain::removeBefore(Site* s){
   ChainElem **base,*ce;
   base=getFirstNonGhostBase();
   Assert(siteExists(s));
-  Assert((*base)->site!=s);
   while((*base)->site!=s){
     if((*base)->flagIsSet(CHAIN_QUESTION_ASKED)){
       makeGhost(*base);
@@ -4297,7 +4334,7 @@ void Chain::removeInformOnPerm(Site *s){
 void chainSendAck(Site* toS, int mI){
   if(SEND_SHORT(toS)) {return;}
   MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
-  PD((CELL,"M_CHAIN_ACK indx:%d site:%s",mI,toS->stringrep()));
+  PD((CHAIN,"M_CHAIN_ACK indx:%d site:%s",mI,toS->stringrep()));
   marshal_M_CHAIN_ACK(bs,mI,mySite);
   SendTo(toS,bs,M_CHAIN_ACK,toS,mI);}
 
@@ -4306,9 +4343,11 @@ void chainReceiveAck(OwnerEntry* oe,Site* rsite){
   Chain* chain=tertiaryGetChain(t);
   if(!(chain->siteExists(rsite))) {
     return;}
-  chain->removeBefore(rsite);}
+  chain->removeBefore(rsite);
+  //DebugCode(printChain(chain);)
+}
 
-ChainAnswer answerChainQuestion(Tertiary *t){
+  ChainAnswer answerChainQuestion(Tertiary *t){
   if(t->getTertType()==Te_Proxy){
     return PAST_ME;}
   switch(getStateFromLockOrCell(t)){
@@ -4332,7 +4371,9 @@ void chainReceiveQuestion(BorrowEntry *be,Site* site,int OTI,Site* deadS){
 
 void chainReceiveAnswer(OwnerEntry* oe,Site* fS,int ans,Site* deadS){
   Tertiary* t=oe->getTertiary();
-  getChainFromTertiary(t)->receiveAnswer(t,fS,ans,deadS);}
+  getChainFromTertiary(t)->receiveAnswer(t,fS,ans,deadS);
+  //DebugCode(printChain(getChainFromTertiary(t));)
+}
 
 inline void maybeChainSendQuestion(ChainElem *ce,Tertiary *t,Site* deadS){
   if(ce->getSite()!=mySite){
@@ -4357,24 +4398,32 @@ void Chain::receiveAnswer(Tertiary* t,Site* site,int ans,Site* deadS){
     answer=*base;
     answer->resetFlagAndCheck(CHAIN_QUESTION_ASKED);
     dead=answer->next;
-    Assert(dead->site==deadS);
+    if(dead->site!=deadS) {
+      PD((ERROR_DET,"dead->site!=deadS"));
+      Assert(answer==getFirstNonGhost());
+      return;}
     if(answer->flagIsSet(CHAIN_DUPLICATE)){
+      PD((ERROR_DET,"answer->flagIsSet(CHAIN_DUPLICATE)"));
       dead->setFlagAndCheck(CHAIN_PAST);
       managerSeesSitePerm(t,deadS);
       return;}
     if(ans==PAST_ME){
+      PD((ERROR_DET,"ans==PAST_ME"));
       dead->setFlagAndCheck(CHAIN_PAST);
       managerSeesSitePerm(t,deadS);
       return;}
+    PD((ERROR_DET,"Manager will receive CANT_PUT from %s",site->stringrep()));
     dead->setFlagAndCheck(CHAIN_CANT_PUT);
     dead->resetFlag(CHAIN_BEFORE);
     dead->resetFlag(CHAIN_PAST);
+    //DebugCode(printChain(this);)
     return;}
   PD((ERROR_DET,"chain receive answer - order dead-answer"));
   dead= *base;                      // order Dead-Answer
   answer=dead->next;
   Assert(answer->site=site);
   Assert(ans==BEFORE_ME);
+  answer->resetFlagAndCheck(CHAIN_QUESTION_ASKED);
   dead->setFlagAndCheck(CHAIN_BEFORE);
   managerSeesSitePerm(t,deadS);
   return;}
@@ -4430,6 +4479,7 @@ void lockReceiveGet(OwnerEntry* oe,LockManager* lm,Site* toS){
   Chain *ch=lm->getChain();
   PD((LOCK,"LockMgr Received get from %s",toS->stringrep()));
   Site* current=ch->setCurrent(toS);
+  //DebugCode(printChain(ch);)
   if(current==mySite){                             // shortcut
     PD((LOCK," shortcut in lockReceiveGet"));
     TaggedRef val;
@@ -4461,6 +4511,7 @@ void lockReceiveTokenManager(OwnerEntry* oe,int mI){
   LockSec *sec=lm->getSec();
   Site* toS;
   if(sec->secReceiveToken(t,toS)) return;
+   //DebugCode(printChain(lm->getChain());)
   oe->getOneCreditOwner();
   lockSendToken(mySite,mI,toS);}
 
@@ -4668,6 +4719,7 @@ void lockSendCantPut(Site* toS, Site *mS, int mI){
   return;}
 
 void lockSendTokenFailure(Site* toS,Site *mS, int mI){
+  PD((ERROR_DET,"LockTokenFailure"));
   if(toS==mS) {// ManagerSite is down
     lockManagerIsDown(mS,mI);
     return;}
@@ -4684,7 +4736,9 @@ void lockReceiveCantPut(OwnerEntry *oe,int mI,Site* rsite, Site* bad){
   PD((ERROR_DET,"Proxy cant Put"));
   Chain *ch=lm->getChain();
   ch->removeBefore(bad);
-  ch->shortcutCrashLock(lm);}
+  ch->shortcutCrashLock(lm);
+  //DebugCode(printChain(ch);)
+}
 
 void cellReceiveCantPut(OwnerEntry* oe,TaggedRef val,int mI,Site* rsite, Site* badS){
   CellManager* cm=(CellManager*)oe->getTertiary();
@@ -4693,7 +4747,9 @@ void cellReceiveCantPut(OwnerEntry* oe,TaggedRef val,int mI,Site* rsite, Site* b
   PD((ERROR_DET,"Proxy cant Put"));
   Chain *ch=cm->getChain();
   ch->removeBefore(badS);
-  ch->shortcutCrashCell(cm,val);}
+  ch->shortcutCrashCell(cm,val);
+  //DebugCode(printChain(ch);)
+}
 
 void sendAskError(Tertiary *t,EntityCond ec){ // caused by installing handler/watcher
   BorrowEntry *be=BT->getBorrow(t->getIndex());
@@ -4722,7 +4778,8 @@ void receiveAskError(OwnerEntry *oe,Site *toS,EntityCond ec){
   if(ch->hasFlag(TOKEN_LOST)){
     EntityCond tmp=ec & (PERM_SOME|PERM_ME);
     if(tmp != ENTITY_NORMAL){
-      sendTellError(oe,toS,t->getIndex(),tmp,TRUE);}
+      sendTellError(oe,toS,t->getIndex(),tmp,true);
+      return;}
     ch->newInform(toS,ec);
     ch->dealWithTokenLostBySite(oe,t->getIndex(),toS);
     return;}
@@ -4784,7 +4841,7 @@ Bool Tertiary::handlerExists(Thread *t){
   if(info==NULL) return NO;
   Watcher *w=info->watchers;
   while(w!=NULL){
-    if(w->getThread()==t) {return OK;}
+    if(w->isHandler() && w->getThread()==t) {return OK;}
     w=w->next;}
   return NO;}
 
@@ -4810,13 +4867,18 @@ void informInstallHandler(Tertiary* t,EntityCond ec){
     ch->newInform(mySite,ec);
     return;}
   sendAskError(t,managerPart(ec));
-  getSiteFromTertiaryProxy(t)->installProbe(PROBE_TYPE_ALL,0);}
+  if(someTempCondition(ec))
+    getSiteFromTertiaryProxy(t)->installProbe(PROBE_TYPE_ALL,0);
+  else
+    getSiteFromTertiaryProxy(t)->installProbe(PROBE_TYPE_PERM,0);}
 
 Bool Tertiary::installHandler(EntityCond wc,TaggedRef proc,Thread* th){
   if(handlerExists(th)){return FALSE;} // duplicate
   PD((NET_HANDLER,"Handler installed on tertiary %x",this));
   Watcher *w=new Watcher(proc,th,wc);
   insertWatcher(w);
+  if(this->getTertType() == Te_Local){
+    return TRUE;}
   if(wc & TEMP_BLOCKED){
     Assert(wc==TEMP_BLOCKED|PERM_BLOCKED);
     informInstallHandler(this,wc);
@@ -4825,14 +4887,41 @@ Bool Tertiary::installHandler(EntityCond wc,TaggedRef proc,Thread* th){
   getSiteFromTertiaryProxy(this)->installProbe(PROBE_TYPE_PERM,0);
   return TRUE;}
 
+
 Bool Tertiary::deinstallHandler(Thread *th){
   if(!handlerExists(th)){return FALSE;} // nonexistent
   PD((NET_HANDLER,"Handler deinstalled on tertiary %x",this));
   NOT_IMPLEMENTED;
   return NO;}
 
+
+
 void Tertiary::installWatcher(EntityCond wc,TaggedRef proc){
-  NOT_IMPLEMENTED;}
+  PD((NET_HANDLER,"Watcher installed on tertiary %x",this));
+  Watcher *w=new Watcher(proc,wc);
+  insertWatcher(w);
+   if(getTertType() == Te_Local){
+    return;}
+  if(managerPart(wc) != ENTITY_NORMAL){
+    informInstallHandler(this,managerPart(wc));
+    return;}
+  if(this->getTertType() == Te_Manager){
+    return;}
+  if(someTempCondition(wc))
+    getSiteFromTertiaryProxy(this)->installProbe(PROBE_TYPE_ALL,0);
+  else
+    getSiteFromTertiaryProxy(this)->installProbe(PROBE_TYPE_PERM,0);}
+
+Bool Tertiary::deinstallWatcher(EntityCond wc, TaggedRef proc){
+  Watcher** base=getWatcherBase();
+  while(*base!=NULL){
+    if((!((*base)->isHandler())) &&
+       ((*base)->proc==proc) &&
+       ((*base)->getWatchCond() == wc)){
+      *base = (*base)->next;
+      return OK;}
+    base= &((*base)->next);}
+  return NO;}
 
 void Watcher::invokeHandler(EntityCond ec,Tertiary* entity){
   Assert(isHandler());
@@ -4846,7 +4935,13 @@ void Watcher::invokeHandler(EntityCond ec,Tertiary* entity){
   oz_resumeFromNet(thread);}
 
 void Watcher::invokeWatcher(EntityCond ec,Tertiary* entity){
-  NOT_IMPLEMENTED;}
+  Assert(!isHandler());
+  Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, ozx_rootBoard());
+  RefsArray args = allocateRefsArray(2,NO);
+  args[0]=makeTaggedTert(entity);
+  args[1]=listifyWatcherCond(ec);
+  tt->pushCall(proc, args, 2);
+  am.scheduleThread(tt);}
 
 Bool CellSec::threadIsPending(Thread *t){
   return basicThreadIsPending(pending,t);}
@@ -4876,7 +4971,6 @@ Bool Tertiary::threadIsPending(Thread* th){
 /*   SECTION 38:: error                                               */
 /**********************************************************************/
 
-
 void sendTellError(OwnerEntry *oe,Site* toS,int mI,EntityCond ec,Bool set){
   if(toS==mySite){
     receiveTellError(oe->getTertiary(),mySite,mI,ec,set);
@@ -4888,7 +4982,7 @@ void sendTellError(OwnerEntry *oe,Site* toS,int mI,EntityCond ec,Bool set){
   SendTo(toS,bs,M_TELL_ERROR,mySite,mI);}
 
 void receiveTellError(Tertiary *t,Site* mS,int mI,EntityCond ec,Bool set){
-  Assert((t->getTertType()==Te_Proxy)|| (t->getTertType()==Te_Frame));
+
   if(set){
     if(t->setEntityCondManager(ec)){
       t->entityProblem();}
@@ -5021,6 +5115,7 @@ void Chain::handleTokenLost(OwnerEntry *oe,int OTI){
 
 void Chain::managerSeesSitePerm(Tertiary *t,Site *s){
   PD((ERROR_DET,"managerSeesSitePerm site:%s nr:%d",s->stringrep(),t->getIndex()));
+  //DebugCode(printChain(this);)
   removeGhost(s); // remove ghost if any
   if(!siteExists(s)) return;
   ChainElem **base=getFirstNonGhostBase();
@@ -5065,8 +5160,10 @@ void Chain::managerSeesSitePerm(Tertiary *t,Site *s){
   if(before!=NULL) {
     removeBefore(dead->site);}
   if(t->getType()==Co_Lock){
+    PD((ERROR_DET,"LockToken lost, now recreated"));
     ((LockManager*)t)->getChain()->shortcutCrashLock((LockManager*) t);
     return;}
+  PD((ERROR_DET,"Token lost"));
   setFlagAndCheck(TOKEN_LOST);
   int OTI=t->getIndex();
   OwnerEntry *oe=OT->getOwner(OTI);
@@ -5092,7 +5189,6 @@ void Chain::managerSeesSiteTemp(Tertiary *t,Site *s){
       index=t->getIndex();
       sendTellError(OT->getOwner(index),cur->site,index,ec,TRUE);}
     cur=cur->next;}
-
   ChainElem *ce=findAfter(s); // deal with TEMP_BLOCKED handlers
   while(ce!=NULL){
     cur=inform;
@@ -5254,7 +5350,6 @@ void Site::probeFault(ProbeReturn pr){
       PD((PROBES,"Informing Manager"));
       Assert(tr->getTertType()==Te_Manager);
       tr->managerProbeFault(this,pr);}} // TO_BE_IMPLEMENTED vars
-
   limit=BT->getSize();
   for(int ctr1 = 0; ctr1<limit;ctr1++){
     BorrowEntry *be = BT->getEntry(ctr1);
@@ -5294,31 +5389,32 @@ void Site::communicationProblem(MessageType mt,Site*
   TaggedRef tr;
   CommCase flag;
 
-  PD((SITE,"CommProb type:%d site:%x indx:%d faultCode:%d",
-      mt,storeSite, storeIndex, fc));
+  PD((SITE,"CommProb type:%d site:%s\n storeSite: %s \n indx:%d faultCode:%d",
+      mt,this->stringrep(),storeSite->stringrep(), storeIndex, fc));
   switch(mt){
+
   case M_PORT_SEND:{
     flag=USUAL_BORROW_CASE;
     break;}
 
-    case M_REMOTE_SEND:{
-      NOT_IMPLEMENTED;}
+  case M_REMOTE_SEND:{
+    NOT_IMPLEMENTED;}
 
-    case M_ASK_FOR_CREDIT:{
+  case M_ASK_FOR_CREDIT:{
+    flag=USUAL_BORROW_CASE;
+    break;}
+
+  case M_OWNER_CREDIT:{
       flag=USUAL_BORROW_CASE;
       break;}
 
-    case M_OWNER_CREDIT:{
-      flag=USUAL_BORROW_CASE;
-      break;}
+  case M_OWNER_SEC_CREDIT:{
+    flag=USUAL_BORROW_CASE;
+    break;}
 
-    case M_OWNER_SEC_CREDIT:{
-      flag=USUAL_BORROW_CASE;
-      break;}
-
-    case M_BORROW_CREDIT:{
-      flag=USUAL_OWNER_CASE;
-      break;}
+  case M_BORROW_CREDIT:{
+    flag=USUAL_OWNER_CASE;
+    break;}
 
     case M_REGISTER:{
       flag=USUAL_BORROW_CASE;
@@ -5367,8 +5463,10 @@ void Site::communicationProblem(MessageType mt,Site*
         returnSendCredit(s1,OTI);
         cellSendContentsFailure(tr,this,storeSite,OTI);
         return;}
-      if(fc==COMM_FAULT_PERM_MAYBE_SENT){
+      /*
+        if(fc==COMM_FAULT_PERM_MAYBE_SENT){
         NOT_IMPLEMENTED;}
+        */
       return;}
 
     case M_CELL_READ:{
@@ -5396,7 +5494,7 @@ void Site::communicationProblem(MessageType mt,Site*
       return;}
 
     case M_LOCK_CANTPUT:{
-      NOT_IMPLEMENTED;}
+      return;}
 
     case M_FILE:{
       Assert(0);
@@ -5407,6 +5505,7 @@ void Site::communicationProblem(MessageType mt,Site*
       flag=USUAL_BORROW_CASE;
       break;}
 
+
     case M_CHAIN_QUESTION:{
       flag=USUAL_OWNER_CASE;
       break;}
@@ -5416,6 +5515,10 @@ void Site::communicationProblem(MessageType mt,Site*
       break;}
 
     case M_ASK_ERROR:{
+      flag=USUAL_OWNER_CASE;
+      break;}
+
+    case M_UNASK_ERROR:{
       flag=USUAL_OWNER_CASE;
       break;}
 
@@ -5568,3 +5671,101 @@ OwnerEntry *getOwnerEntryFromOTI(int i){
 
 Tertiary* getTertiaryFromOTI(int i){
   return OT->getOwner(i)->getTertiary();}
+
+TaggedRef listifyWatcherCond(EntityCond ec){
+  TaggedRef list = nil();
+
+  while(ec != 0){
+    if(ec & PERM_BLOCKED)
+      {list = cons(AtomPermBlocked, list);
+      ec = ec & ~(PERM_BLOCKED|TEMP_BLOCKED);
+      continue;}
+    if(ec & TEMP_BLOCKED){
+      list = cons(AtomTempBlocked, list);
+      ec = ec & ~(TEMP_BLOCKED);
+      continue;}
+    if(ec & PERM_ME)
+      {list = cons(AtomPermMe, list);
+      ec = ec & ~(PERM_ME);
+      continue;}
+    if(ec & TEMP_ME){
+      list = cons(AtomTempMe, list);
+      ec = ec & ~(TEMP_ME);
+      continue;}
+    if(ec & PERM_ALL)
+      {list = cons(AtomPermAllOthers, list);
+      ec = ec & ~(TEMP_ALL|PERM_ALL);
+      continue;}
+    if(ec & TEMP_ALL){
+      list = cons(AtomTempAllOthers, list);
+      ec = ec & ~(TEMP_ALL);
+      continue;}
+    if(ec & PERM_SOME){
+      list = cons(AtomPermSomeOther, list);
+      ec = ec & ~(TEMP_SOME|PERM_SOME);
+      continue;}
+    if(ec & TEMP_SOME){
+      list = cons(AtomTempSomeOther, list);
+      ec = ec & ~(TEMP_SOME);
+      continue;}
+    OZ_warning("Error in ec");
+    Assert(0);
+  }
+  return list;
+}
+
+/**********************************************************************/
+/*   SECTION 44::Debug                                                */
+/**********************************************************************/
+
+ChainElem* Chain::getFirst(){return first;}
+ChainElem* Chain::getLast(){return last;}
+
+void printChain(Chain* chain){
+  printf("Chain ### Flags: [");
+  if(chain->hasFlag(INTERESTED_IN_OK))
+    printf(" INTERESTED_IN_OK");
+  if(chain->hasFlag(INTERESTED_IN_TEMP ))
+    printf(" INTERESTED_IN_TEMP");
+  if(chain->hasFlag( TOKEN_PERM_SOME))
+    printf(" TOKEN_PERM_SOME");
+  if(chain->hasFlag(TOKEN_LOST))
+    printf(" TOKEN_LOST");
+  printf("]\n");
+  ChainElem* cp = chain->getFirst();
+  while(cp!= chain->getLast()){
+    Assert(cp!=NULL);
+    printf("Elem  Flags: [ ");
+    if(cp->flagIsSet(CHAIN_GHOST ))
+       printf("CHAIN_GHOST ");
+    if(cp->flagIsSet( CHAIN_QUESTION_ASKED))
+       printf("CHAIN_QUESTION_ASKED ");
+    if(cp->flagIsSet( CHAIN_BEFORE))
+       printf("CHAIN_BEFORE ");
+    if(cp->flagIsSet( CHAIN_PAST))
+       printf("CHAIN_PAST ");
+    if(cp->flagIsSet( CHAIN_CANT_PUT))
+       printf("CHAIN_CANT_PUT ");
+    if(cp->flagIsSet( CHAIN_DUPLICATE))
+       printf("CHAIN_DUPLICATE ");
+    printf("] %s\n",cp->getSite()->stringrep());
+    cp = cp->getNext();}
+  Assert(cp!=NULL);
+  printf("Elem  Flags: [ ");
+  if(cp->flagIsSet(CHAIN_GHOST ))
+    printf(" CHAIN_GHOST");
+  if(cp->flagIsSet( CHAIN_QUESTION_ASKED))
+    printf(" CHAIN_QUESTION_ASKED");
+  if(cp->flagIsSet( CHAIN_BEFORE))
+    printf(" CHAIN_BEFORE");
+  if(cp->flagIsSet( CHAIN_PAST))
+    printf(" CHAIN_PAST");
+  if(cp->flagIsSet( CHAIN_CANT_PUT))
+    printf(" CHAIN_CANT_PUT");
+  if(cp->flagIsSet( CHAIN_DUPLICATE))
+    printf(" CHAIN_DUPLICATE");
+  printf("] %s\n",cp->getSite()->stringrep());}
+
+void receiveSiteDwnDbg(){
+
+}

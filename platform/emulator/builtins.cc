@@ -5001,19 +5001,26 @@ Bool translateWatcherCond(TaggedRef tr,EntityCond &ec){
 
 OZ_C_proc_begin(BIwatcherInstall,3)
 {
-  OZ_Term entity   = OZ_getCArg(0);
-  OZ_Term cond     = OZ_getCArg(1);
+  OZ_Term e        = OZ_getCArg(0);
+  OZ_Term c        = OZ_getCArg(1);
   OZ_Term proc     = OZ_getCArg(2);
 
-  if(isAnyVar(cond)) {return SUSPEND;}
 
+  NONVAR(c, cond);
+  /*
+  if(isAnyVar(cond)) {return SUSPEND;}
+  */
   EntityCond ec;
 
   if(!translateWatcherCond(cond,ec)){
     return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
+  NONVAR(e, entity);
 
+  /*
   if(isAnyVar(entity)){
-    return oz_raise(E_ERROR,E_SYSTEM,"handlers on variables not implemented",0);      }
+  return oz_raise(E_ERROR,E_SYSTEM,"handlers on variables not implemented",0);      }
+  */
+
 
   Tertiary *tert = tagged2Tert(entity);
   if((tert->getType()!=Co_Cell) && (tert->getType()!=Co_Lock)){

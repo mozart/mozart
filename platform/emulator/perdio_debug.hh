@@ -74,8 +74,9 @@ enum DEBUGType {
   ACK_QUEUE,    // 40
   CELL_MGR,
   PROBES,
-  LOCK_MGR,     // 43
   NET_HANDLER,
+  LOCK_MGR,
+  CHAIN,        // 45
   LAST
 
 };

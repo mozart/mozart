@@ -76,7 +76,7 @@ enum ProbeReturn{
 
 enum GiveUpInput{
   ALL_GIVEUP,         // debug purpose only
-    TEMP_GIVEUP
+  TEMP_GIVEUP
   };
 
 enum GiveUpReturn{
@@ -87,7 +87,7 @@ enum GiveUpReturn{
 
 enum ProbeType{
   PROBE_TYPE_ALL,
-    PROBE_TYPE_PERM
+  PROBE_TYPE_PERM
 };
 
 enum SiteStatus{
@@ -118,6 +118,7 @@ RemoteSite* createRemoteSite(Site*,int readCtr);
 void zeroRefsToRemote(RemoteSite *);
 void nonZeroRefsToRemote(RemoteSite *);
 int sendTo_RemoteSite(RemoteSite*,MsgBuffer*,MessageType,Site*, int);
+void sendAck_RemoteSite(RemoteSite*);
 int discardUnsentMessage_RemoteSite(RemoteSite*,int);
 int getQueueStatus_RemoteSite(RemoteSite*,int &noMsgs);  // return size in bytes
 SiteStatus siteStatus_RemoteSite(RemoteSite*);
@@ -128,6 +129,7 @@ ProbeReturn deinstallProbe_RemoteSite(RemoteSite*,ProbeType);
 ProbeReturn probeStatus_RemoteSite(RemoteSite*,ProbeType &pt,int &frequncey,void* &storePtr);
 GiveUpReturn giveUp_RemoteSite(RemoteSite*);
 void discoveryPerm_RemoteSite(RemoteSite*);
+void discoveryTmp_RemoteSite(RemoteSite*);
 
 void initNetwork();
 
@@ -200,11 +202,16 @@ public:
   char* stringrep();
 
   void marshalBaseSite(MsgBuffer* buf){
+    PD((MARSHAL,"base site =>"));
     marshalNumber(address,buf);
+    PD((MARSHAL,"base site address %d",address));
     marshalShort(port,buf);
-    marshalNumber(timestamp,buf);}
+    PD((MARSHAL,"base site port %d",port));
+    marshalNumber(timestamp,buf);
+    PD((MARSHAL,"base site timestamp %d",timestamp));}
 
   void unmarshalBaseSite(MsgBuffer* buf){
+    PD((UNMARSHAL,"base site =>"));
     address=unmarshalNumber(buf);
     PD((UNMARSHAL,"base site address %d",address));
     port=unmarshalShort(buf);
@@ -478,6 +485,8 @@ public:
       if(getType() & REMOTE_SITE){
         return sendTo_RemoteSite(getRemoteSite(),buf,mt,storeSite,storeIndex);}
       return sendTo_VirtualSite(getVirtualSite(),buf,mt,storeSite,storeIndex);}
+    PD((ERROR_DET,"MsgNot sent, discovered at Site level %d",
+        PERM_NOT_SENT));
     return PERM_NOT_SENT;}
 
   int discardUnsentMessage(int msgNum){

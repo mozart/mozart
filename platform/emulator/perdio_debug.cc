@@ -70,13 +70,14 @@ char *debugTypeStr[LAST] = {
 
   "USER",
   "SPECIAL",
-  "ERROR_DET",    //38
+  "ERROR_DET",
   "WRITE_QUEUE",
   "ACK_QUEUE",    //40
-  "CELL_MGR",      //41
+  "CELL_MGR",
   "PROBES",
   "NET_HANDLER",
   "LOCK_MGR"
+  "CHAIN"        //45
 };
 
 #endif
