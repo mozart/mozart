@@ -42,6 +42,7 @@ class ThreadQueue
 {
 public:
   USEFREELISTMEMORY;
+  OZPRINT;
   Bool isScheduledSlow(Thread *th) {
     return find(th)?OK:NO;
   }
@@ -82,6 +83,10 @@ public:
   ~LocalPropagatorQueue();
   Thread * getLPQThread(void) { return lpq_thr; }
   LocalPropagatorQueue * gc();
+  LocalPropagatorQueue * merge(LocalPropagatorQueue*q) {
+    return (LocalPropagatorQueue*)
+      LinkedQueue<Propagator,PROPAGATOR_QUEUE_SIZE>::merge(q);
+  }
 };
 
 class LocalPropagatorQueueIterator
