@@ -2897,6 +2897,8 @@ inline OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
 
   if (A == B && !isAnyVar(A)) return PROCEED;
 
+  if (isConst(tagA))    return tagged2Const(A)->unify(B,NO) ? PROCEED : FAILED;
+
  dontknow:
   am.trail.pushMark();
   Bool ret = am.unify(Ain,Bin,NO);
