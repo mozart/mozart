@@ -1023,7 +1023,7 @@ OZ_C_ioproc_begin(unix_acceptUnix,3)
   struct sockaddr_un from;
   int fromlen = sizeof from;
 
-  WRAPCALL(accept(sock,(struct sockaddr *)&from, &fromlen), fd);
+  WRAPCALL(osaccept(sock,(struct sockaddr *)&from, &fromlen), fd);
 
   return (OZ_unify(path, OZ_string(from.sun_path)) == PROCEED
     && OZ_unifyInt(out, fd) == PROCEED) ? PROCEED: FAILED;
@@ -1105,9 +1105,7 @@ OZ_C_ioproc_begin(unix_acceptInet,4)
   struct sockaddr_in from;
   int fromlen = sizeof from;
 
-  WRAPCALL(accept(sock,(struct sockaddr *)&from, &fromlen),fd);
-
-  registerSocket(fd);
+  WRAPCALL(osaccept(sock,(struct sockaddr *)&from, &fromlen),fd);
 
   struct hostent *gethost = gethostbyaddr((char *) &from.sin_addr,
                                           fromlen, AF_INET);
