@@ -25,15 +25,15 @@
   -
   -->
 
-<Chapter id="Chapter.Window">
+<Part id="Part.Window">
   <Title/Window Programming/
 
-  <Section id="Section.Window.Tk">
+  <Chapter id="Chapter.Tk">
     <Title/The Tk Interface: <<Tk>>/
-  </Section>
+  </Chapter>
 
-  <Section id="Section.Window.TkTools">
+  <Chapter id="Chapter.TkTools">
     <Title/Graphical Tools: <<TkTools>>/
-  </Section>
+  </Chapter>
 
-</Chapter>
+</Part>

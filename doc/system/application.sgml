@@ -25,14 +25,15 @@
   -
   -->
 
-<Chapter id="Chapter.Application">
+<Part id="Part.Application">
   <Title/Application Programming/
 
-  <Section id="Section.Application.Application">
+  <Chapter id="Chapter.Application">
     <Title/Application Support: <<Application>>/
-  </Section>
+  </Chapter>
 
-  <Section id="Section.Application.Module">
+
+  <Chapter id="Chapter.Module">
     <Title/Module Managers: <<Module>>/
 
     <P>
@@ -44,7 +45,7 @@
       class from which new module managers can be created.
     </P>
 
-    <Subsection id="Section.Application.Module.Basic">
+    <Section id="Section.Module.Basic">
       <Title/Module Tables/
 
       <P>
@@ -84,9 +85,9 @@
         classes by inheritance that refine particular methods.
       </P>
 
-    </Subsection>
+    </Section>
 
-    <Subsection id="Section.Application.Modules.Names">
+    <Section id="Section.Modules.Names">
       <Title/Module Names and URLs/
 
       <P>
@@ -100,9 +101,9 @@
         for a module URL. System module or extension appended.
       </P>
 
-    </Subsection>
+    </Section>
 
-    <Subsection id="Section.Application.Modules.Link">
+    <Section id="Section.Modules.Link">
       <Title/Using Module Managers/
 
       <P>
@@ -152,17 +153,17 @@
             module under that particular URL installed.
         </List>
        </P>         
-    </Subsection>
+    </Section>
 
-    <Subsection id="Section.Application.Modules.Example">
+    <Section id="Section.Modules.Example">
       <Title/An Example/
-    </Subsection>
+    </Section>
 
-    <Subsection id="Section.Application.Modules.Inherit">
+    <Section id="Section.Modules.Inherit">
       <Title/Customizing Module Managers/
 
-    </Subsection>
+    </Section>
 
-  </Section>
+  </Chapter>
 
-</Chapter>
+</Part>
