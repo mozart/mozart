@@ -12,6 +12,11 @@
 #undef TURNED_OFF
 // #define TURNED_OFF
 
+#ifdef LINUX_I486
+/* FD_ISSET missing */
+#include <sys/time.h>
+#endif
+
 #include <ctype.h>
 
 #include "../include/config.h"
