@@ -44,12 +44,8 @@ case "$target" in
    ;;
    i386-mingw32) 
         AC_MSG_RESULT(cross compiling for windows)
-	CC=${target}-gcc
 	EXTRALDFLAGS="-mwindows -s"
-	platform="win32-i486"
 	SRCS="winMain.c"
-	oz_tcl_inc_dir=$oz_wincross_tcl_inc_dir
-	oz_tcl_lib_dir=$oz_wincross_tcl_lib_dir
    ;;
 
    *)
