@@ -34,7 +34,13 @@
 
 #include "base.hh"
 #include "mem.hh"
-#include "atoms.hh"
+
+/*
+ * The macros are still broken (some casts missing?)
+ *   However, the inline functions are okay...
+ */
+
+#define NO_TAG_OPTS 1
 
 /*
  * There are two different classes of tags:
@@ -104,15 +110,13 @@ enum ltag_t {
 
 
 #define __tagged2stag(t) ((stag_t) ((t) & STAG_MASK))
-#define __hasStag(t,st)  !((((unsigned int) (t)) - ((unsigned int) (st))) \
-			   & STAG_MASK)
+#define __hasStag(t,st)  !(((t)-(st)) & STAG_MASK)
 
 #define __tagged2ltag(t) ((ltag_t) ((t) & LTAG_MASK))
-#define __hasLtag(t,lt)  !((((unsigned int) (t)) - ((unsigned int) (lt))) \
-			   & LTAG_MASK)
+#define __hasLtag(t,lt)  !(((t)-(lt)) & LTAG_MASK)
 
 
-#ifdef DEBUG_CHECK
+#if defined(DEBUG_CHECK) || defined(NO_TAG_OPTS)
 
 inline ltag_t tagged2ltag(TaggedRef t) { return __tagged2ltag(t); }
 inline stag_t tagged2stag(TaggedRef t) { return __tagged2stag(t); }
@@ -134,10 +138,13 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
 
 
 /*
- * Alignment tests
+ * Alignment tests: "is Short/Long Tag Aligned"
+ * The memory initialization routine ('initMemoryManagement()') checks
+ * whether this can be really fulfilled. 
  *
  */
 
+#define isRTAligned(ptr)  (!(ToInt32(ptr) & RTAG_MASK))
 #define isSTAligned(ptr)  (!(ToInt32(ptr) & STAG_MASK))
 #define isLTAligned(ptr)  (!(ToInt32(ptr) & LTAG_MASK))
 
@@ -159,38 +166,34 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
 #define oz_isMark(t)     hasStag(t,STAG_MARK)
 
 
-#define TAG_LOWERMASK 3
-#define TAG_PTRBITS   2
-
-
-
-
 /*
- * Basic macros
+ * Tagging & untagging: low level
  *
  */
 
-#define TaggedToPointer(t)       ((void*) (mallocBase|t))
+#define __unltag_ptr(t,lt)   ((void *) ((t)-(lt)))
+#define __unstag_ptr(t,st)   ((void *) ((t)-(st)))
 
-#define _tagValueOf2(tag,ref)    TaggedToPointer(((ref)>>TAG_PTRBITS) - ((tag)>>TAG_PTRBITS))
-#define _tagValueOf(ref)         TaggedToPointer(((ref)>>TAG_PTRBITS)&~TAG_LOWERMASK)
-#define _makeTaggedRef2(tag,i)   ((i << TAG_PTRBITS) | tag)
+// FIXME
+#define ARITHMETIC_SHIFTS
 
-#define _makeTaggedRef2i(tag,ptr) _makeTaggedRef2(tag,(int32)ToInt32(ptr))
+#ifdef ARITHMETIC_SHIFTS
+#define __unltag_int(t) (((int) t)>>LTAG_BITS)
+#define __unstag_int(t) (((int) t)>>STAG_BITS)
+#else
+ERROR
+#endif
 
 
-/* small ints are the only TaggedRefs that do not
- * contain a pointer in the value part */
-#define _makeTaggedSmallInt(s) ((s << LTAG_BITS) | LTAG_SMALLINT)
-#define _makeTaggedMarkInt(s) ((s << LTAG_BITS) | LTAG_MARK0)
+#define __ltag_ptr(t,lt) ((TaggedRef) (((int) t)+(lt)))
+#define __stag_ptr(t,st) ((TaggedRef) (((int) t)+(st)))
 
-#define _makeTaggedRef(s) ((TaggedRef) ToInt32(s))
-#define _isRef(term)      ((term & TAG_LOWERMASK) == 0)
-#define _tagged2Ref(ref)  ((TaggedRef *) ToPointer(ref))
+#define __ltag_int(t,lt) ((TaggedRef) (((t)<<LTAG_BITS)+(lt)))
+#define __stag_int(t,st) ((TaggedRef) (((t)<<STAG_BITS)+(st)))
 
 
 /*
- * SMALL INTEGERS
+ * Small integers
  *
  */
 
@@ -206,151 +209,171 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
 
 #endif
 
-#define TaggedOzMaxInt _makeTaggedSmallInt(OzMaxInt)
-#define TaggedOzMinInt _makeTaggedSmallInt(OzMinInt)
+#define TaggedOzMaxInt __ltag_int(OzMaxInt,LTAG_SMALLINT)
+#define TaggedOzMinInt __ltag_int(OzMinInt,LTAG_SMALLINT)
 
-
-inline void * tagValueOf(TaggedRef ref) { 
-  return _tagValueOf(ref);
-}
-inline void * tagValueOf2(ltag_t tag, TaggedRef ref) {
-  return _tagValueOf2(tag,ref);
-}
-inline TaggedRef makeTaggedRef2i(ltag_t tag, int32 i) {
-  Assert((i&3) == 0); return _makeTaggedRef2(tag,i);
-}
-inline TaggedRef makeTaggedRef2p(ltag_t tag, void *ptr) {
-  return _makeTaggedRef2i(tag,ptr);
-}
 
 
 
 /*
- * UNTAGGING
+ * Untagging
  *
  */
 
+#if defined(DEBUG_CHECK) || defined(NO_TAG_OPTS)
 
-/* 
- * The C++ standard does not specify whether shifting right negative values
- * means shift logical or shift arithmetical. So we test what this C++ compiler
- * does.
- *
- * CS: I guess this has always been broken (it's always true!)
- *
- */
-
-#define WE_DO_ARITHMETIC_SHIFTS (1||(-1>>1) == -1)
-
-inline TaggedRef * tagged2Ref(TaggedRef ref) {
-  Assert(oz_isRef(ref));
-  return _tagged2Ref(ref);
+inline 
+TaggedRef * tagged2Ref(TaggedRef t) {
+  Assert(oz_isRef(t));
+  return (TaggedRef *) t;
 }
-inline OzVariable * tagged2Var(TaggedRef ref) {
-  Assert(oz_isVar(ref));
-  return (OzVariable *) tagValueOf2(LTAG_VAR0,ref);
+inline 
+OzVariable * tagged2Var(TaggedRef t) {
+  Assert(oz_isVar(t));
+  return (OzVariable *) __unstag_ptr(t,STAG_VAR);
 }
-inline SRecord * tagged2SRecord(TaggedRef ref) {
-  Assert(oz_isSRecord(ref));
-  return (SRecord *) tagValueOf2(LTAG_SRECORD0,ref);
+inline 
+SRecord * tagged2SRecord(TaggedRef t) {
+  Assert(oz_isSRecord(t));
+  return (SRecord *) __unstag_ptr(t,STAG_SRECORD);
 }
-inline LTuple * tagged2LTuple(TaggedRef ref) {
-  Assert(oz_isLTuple(ref));
-  return (LTuple *) tagValueOf2(LTAG_LTUPLE0,ref);
+inline 
+LTuple * tagged2LTuple(TaggedRef t) {
+  Assert(oz_isLTuple(t));
+  return (LTuple *) __unstag_ptr(t,STAG_LTUPLE);
 }
-inline Literal * tagged2Literal(TaggedRef ref) {
-  Assert(oz_isLiteral(ref));
-  return (Literal *) tagValueOf2(LTAG_LITERAL,ref);
+inline 
+Literal * tagged2Literal(TaggedRef t) {
+  Assert(oz_isLiteral(t));
+  return (Literal *) __unltag_ptr(t,LTAG_LITERAL);
 }
-inline ConstTerm * tagged2Const(TaggedRef ref) {
-  Assert(oz_isConst(ref));
-  return (ConstTerm *) tagValueOf2(LTAG_CONST0,ref);
+inline 
+ConstTerm * tagged2Const(TaggedRef t) {
+  Assert(oz_isConst(t));
+  return (ConstTerm *) __unstag_ptr(t,STAG_CONST);
 }
-inline void * tagged2UnmarkedPtr(TaggedRef ref) {
-  Assert(oz_isMark(ref));
-  return (void *) tagValueOf2(LTAG_MARK0,ref);
-}
-
-inline int tagged2UnmarkedInt(TaggedRef t) {
+inline 
+void * tagged2UnmarkedPtr(TaggedRef t) {
   Assert(oz_isMark(t));
-  int help = (int) t;
-
-  if (WE_DO_ARITHMETIC_SHIFTS) {
-    return (help>>LTAG_BITS);
-  } else {
-    return (help >= 0) ? help >> LTAG_BITS
-                       : ~(~help >> LTAG_BITS);
-  }
+  return (void *) __unstag_ptr(t,STAG_MARK);
 }
-
-inline int tagged2SmallInt(TaggedRef t) {
+inline
+int tagged2UnmarkedInt(TaggedRef t) {
+  Assert(oz_isMark(t));
+  return (int) __unstag_int(t);
+}
+inline 
+int tagged2SmallInt(TaggedRef t) {
   Assert(oz_isSmallInt(t));
-  int help = (int) t;
-
-  if (WE_DO_ARITHMETIC_SHIFTS) {
-    return (help>>LTAG_BITS);
-  } else {
-    return (help >= 0) ? help >> LTAG_BITS
-                       : ~(~help >> LTAG_BITS);
-  }
+  return (int) __unltag_int(t);
 }
+
+#else
+
+#define tagged2Ref(t)         ((TaggedRef *) (t))
+#define tagged2Var(t)         ((OzVariable *) __unstag_ptr(t,STAG_VAR))
+#define tagged2SRecord(t)     ((SRecord *) __unstag_ptr(t,STAG_SRECORD))
+#define tagged2LTuple(t)      ((LTuple *) __unstag_ptr(t,STAG_LTUPLE))
+#define tagged2Literal(t)     ((Literal *) __unltag_ptr(t,LTAG_LITERAL))
+#define tagged2Const(t)       ((ConstTerm *) __unstag_ptr(t,STAG_CONST))
+#define tagged2UnmarkedPtr(t) ((void *) __unstag_ptr(t,STAG_MARK))
+#define tagged2UnmarkedInt(t) ((int) __unstag_int(t))
+#define tagged2SmallInt(t)    ((int) __unltag_int(t))
+
+#endif
 
 
 
 /*
- * TAGGING
+ * Tagging
  *
  */
 
-inline TaggedRef makeTaggedRef(TaggedRef * s) {
-  Assert(s != NULL); 
-  return _makeTaggedRef(s);
+#if defined(DEBUG_CHECK) || defined(NO_TAG_OPTS)
+
+inline 
+TaggedRef makeTaggedRef(TaggedRef * p) {
+  Assert(p != NULL && isRTAligned(p)); 
+  return (TaggedRef) p;
 }
-inline TaggedRef makeTaggedVar(OzVariable *s) {
-  Assert(s != NULL && isSTAligned(s));
-  return makeTaggedRef2p(LTAG_VAR0, s);
+inline 
+TaggedRef makeTaggedVar(OzVariable * p) {
+  Assert(p != NULL && isSTAligned(p));
+  return __stag_ptr(p,STAG_VAR);
 }
 // For the GenTraverser (non-relocatable pointers are masqueraded as
 // tagged variables);
-inline TaggedRef makePseudoTaggedVar(void *p) {
+inline 
+TaggedRef makePseudoTaggedVar(void *p) {
   Assert(p != NULL && isSTAligned(p));
-  return makeTaggedRef2p(LTAG_VAR0, p);
+  return __stag_ptr(p, STAG_VAR);
 }
-inline TaggedRef makeTaggedLTuple(LTuple *s) {
-  Assert(s != NULL && isSTAligned(s));
-  return makeTaggedRef2p(LTAG_LTUPLE0,s);
+inline 
+TaggedRef makeTaggedLTuple(LTuple * p) {
+  Assert(p != NULL && isSTAligned(p));
+  return __stag_ptr(p,STAG_LTUPLE);
 }
-inline TaggedRef makeTaggedSRecord(SRecord *s) {
-  Assert(s != NULL && isSTAligned(s));
-  return makeTaggedRef2p(LTAG_SRECORD0,s);
+inline 
+TaggedRef makeTaggedSRecord(SRecord * p) {
+  Assert(p != NULL && isSTAligned(p));
+  return __stag_ptr(p,STAG_SRECORD);
 }
-inline TaggedRef makeTaggedLiteral(Literal *s) {
-  Assert(s != NULL && isLTAligned(s));
-  return makeTaggedRef2p(LTAG_LITERAL,s);
+inline 
+TaggedRef makeTaggedLiteral(Literal * p) {
+  Assert(p != NULL && isLTAligned(p));
+  return __ltag_ptr(p,LTAG_LITERAL);
 }
-inline TaggedRef makeTaggedConst(ConstTerm *s) {
-  Assert(s != NULL && isSTAligned(s));
-  return makeTaggedRef2p(LTAG_CONST0,s);
+inline 
+TaggedRef makeTaggedConst(ConstTerm * p) {
+  Assert(p != NULL && isSTAligned(p));
+  return __stag_ptr(p,STAG_CONST);
 }
-inline TaggedRef makeTaggedMarkPtr(void * s) {
-  Assert(isSTAligned(s));
-  return makeTaggedRef2p(LTAG_MARK0,s);
+inline 
+TaggedRef makeTaggedMarkPtr(void * p) {
+  Assert(isSTAligned(p));
+  return __stag_ptr(p, STAG_MARK);
 }
-inline TaggedRef makeTaggedMarkInt(int si) {
-  Assert(tagged2UnmarkedInt(_makeTaggedMarkInt(si)) == si);
-  return (_makeTaggedMarkInt(si));
+inline
+TaggedRef makeTaggedMarkInt(int i) {
+  return __stag_int(i, STAG_MARK);
 }
 // e.g. gentraverser needs static constants;
-#define makeTaggedMarkIntNOTEST(si)	_makeTaggedMarkInt(si)
-
-inline TaggedRef makeTaggedSmallInt(int s) {
-  Assert(s >= OzMinInt && s <= OzMaxInt);
-  return _makeTaggedSmallInt(s);
+#define makeTaggedMarkIntNOTEST(i)	__stag_int(i, STAG_MARK)
+inline 
+TaggedRef makeTaggedSmallInt(int i) {
+  Assert(i >= OzMinInt && i <= OzMaxInt);
+  return __ltag_int(i,LTAG_SMALLINT);
 }
 
+#else
+
+#define makeTaggedRef(p)            ((TaggedRef) p)
+#define makeTaggedVar(p)            __stag_ptr(p,STAG_VAR)
+#define makePseudoTaggedVar(p)      __stag_ptr(p,STAG_VAR)
+#define makeTaggedLTuple(p)         __stag_ptr(p,STAG_LTUPLE)
+#define makeTaggedSRecord(p)        __stag_ptr(p,STAG_SRECORD)
+#define makeTaggedLiteral(p)        __ltag_ptr(p,LTAG_LITERAL)
+#define makeTaggedConst(p)          __stag_ptr(p,STAG_CONST)
+#define makeTaggedMarkPtr(p)        __stag_ptr(p,STAG_MARK)
+#define makeTaggedMarkInt(p)        __stag_int(p,STAG_MARK)
+#define makeTaggedMarkIntNOTEST(p)  __stag_int(p,STAG_MARK)
+#define makeTaggedSmallInt(p)       __ltag_int(p,LTAG_SMALLINT)
+
+#endif
+
+
+
+
+/*
+ * Standard values
+ *
+ */
 
 #define makeTaggedNULL()       ((TaggedRef) 0)
-#define taggedVoidValue        _makeTaggedSmallInt(0)
+#define taggedVoidValue        __ltag_int(0,LTAG_SMALLINT)
+
+
+
 
 
 /*
@@ -443,7 +466,7 @@ TaggedRef * newTaggedVar(OzVariable * c) {
  *
  */
 
-#ifdef DEBUG_CHECK
+#if defined(DEBUG_CHECK) || defined(NO_TAG_OPTS)
 
 inline Bool oz_eq(TaggedRef t1, TaggedRef t2) {
   Assert(t1==oz_safeDeref(t1));
