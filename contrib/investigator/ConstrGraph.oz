@@ -17,7 +17,9 @@ import
 define
 
    fun {ShareVars VarTable Vs1 Vs2}
+\ifdef DEBUG
       {System.show shareVars}
+\endif
 
       S1 = {FS.value.make
             {Map Vs1 fun {$ V} {Tables.getVarId VarTable V} end}}
@@ -28,7 +30,9 @@ define
    end
 
    fun {MakeEdges Hist VarTable H T}
+\ifdef DEBUG
       {System.show makeEdges}
+\endif
 
       if T == nil then ""
       else
@@ -64,7 +68,9 @@ define
    end
 
    fun {MakeNode Hist VarTable H}
+\ifdef DEBUG
       {System.show makeNode}
+\endif
 
       "l(\"cn<"#H.id#">\",n(\"\",[a(\"OBJECT\",\""#H.n
       #if H.loc == noLoc then ""
@@ -76,13 +82,19 @@ define
       #{Hist insert_menu($)}
       #"menu_entry(\"cg<all>\",\"Constraint graph all constraints\")"
       #",menu_entry(\"scg<"#H.id#">\",\"Single constraint graph of "
-      #H.n#"\")])"
+      #H.n
+      #if H.loc == noLoc then ""
+       else " ("#H.loc.file#":"#H.loc.line#")"
+       end
+      #"\")])"
       #"],["
       #{MakeEdges Hist VarTable H H.ps}#"]))"
    end
 
    fun {MakeNodes Hist VarTable L}
+\ifdef DEBUG
       {System.show makeNodes}
+\endif
 
       if L == nil then ""
       else
@@ -93,7 +105,9 @@ define
    end
 
    fun {Make Hist Ps}
+\ifdef DEBUG
       {System.show make}
+\endif
 
       VarTable  = {Tables.makeVarTable}
       PropTable = {Tables.makePropTable}
