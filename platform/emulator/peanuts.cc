@@ -46,6 +46,7 @@
 #pragma implementation "thrqueue.hh"
 #pragma implementation "thrspool.hh"
 #pragma implementation "verbose.hh"
+#pragma implementation "iso-ctype.hh"
 
 #endif
 
@@ -85,4 +86,4 @@
 #include "thrqueue.cc"
 #include "thrspool.cc"
 #include "verbose.cc"
-
+#include "iso-ctype.cc"
