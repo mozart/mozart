@@ -324,6 +324,31 @@ OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len,
   return PROCEED;
 }
 
+OZ_Return bytestring2buff(OZ_Term bs, char **write_buff, int *len, 
+			  OZ_Term *rest, OZ_Term *susp)
+{
+  cerr << "[bytestring2buff ";
+  if (!OZ_isByteString(bs))
+    return OZ_typeError(-1,"ByteString");
+
+  int n;
+  char* s = OZ_vsToC(bs,&n);
+  cerr << n << "]" << endl;
+
+  while (n>0 && *len<max_vs_length) {
+    **write_buff = *s;
+    (*write_buff)++;
+    (*len)++; n--; s++;
+  }
+
+  if (*len==max_vs_length && n>0) {
+    *susp = OZ_mkByteString(s,n);
+    *rest = *susp;
+    return SUSPEND;
+  }
+
+  return PROCEED;
+}
 
 OZ_Return int2buff(OZ_Term ozint, char **write_buff, int *len,
 		   OZ_Term *rest, OZ_Term *susp)
@@ -425,6 +450,9 @@ static OZ_Return vs2buff(OZ_Term vs, char **write_buff, int *len,
   if (OZ_isAtom(vs)) {
     return OZ_isNil(vs) ? PROCEED : atom2buff(vs, write_buff, len, rest, susp);
   }
+
+  if (OZ_isByteString(vs))
+    return bytestring2buff(vs,write_buff,len,rest,susp);
 
   const char *label = NULL;
   if (OZ_isTuple(vs) && (label = OZ_atomToC(OZ_label(vs)))) {
