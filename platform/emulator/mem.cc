@@ -425,10 +425,8 @@ char *getMemFromOS(size_t sz) {
   heapTotalSizeBytes += thisBlockSz;
   
   if (ozconf.heapMaxSize != -1 && 
-      ((gc_is_running == NO) ?
-       (heapTotalSize > ((100 + ozconf.heapTolerance) * 
-			 (unsigned long) ozconf.heapMaxSize) / 100) :
-       (heapTotalSize > (unsigned) ozconf.heapMaxSize))) {
+      (heapTotalSize > ((100 + ozconf.heapTolerance) * 
+			(unsigned long) ozconf.heapMaxSize) / 100)) {
     int newSize = (heapTotalSize * 3) / 2;
 
     if (ozconf.runningUnderEmacs) {
