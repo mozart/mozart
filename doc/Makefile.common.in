@@ -47,9 +47,11 @@ Makefile: $(SRCDIR)/Makefile.in ../config.status
 
 $(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
 	rm -f latex.db && \
+	if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTNAME); \
+	else opt=; fi; \
 	$(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
 	--type=html-stylesheets --stylesheet=../ozdoc.css \
-	--link=Top,../index.html \
+	--link=Top,../index.html $$opt \
 	--bib-path=$(SRCDIR):$(SRCTOP)/doc \
 	--bst-path=$(SRCTOP)/doc/utilities \
 	--latexdb=latex.db \
@@ -71,7 +73,9 @@ $(WHAT)-tex/$(WHAT).ps: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
 quick:: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
 	$(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
 	--type=html-stylesheets --stylesheet=../ozdoc.css \
-	--link=Top,../index.html \
+	if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTNAME); \
+	else opt=; fi; \
+	--link=Top,../index.html $$opt \
 	--bib-path=$(SRCDIR):$(SRCTOP)/doc \
 	--bst-path=$(SRCTOP)/doc/utilities \
 	--latexdb=latex.db --keeppictures \
