@@ -44,8 +44,8 @@
 //
 void initDP();
 
-//
-void send(MsgContainer *msgC,int priority);
+
+void send(MsgContainer *msgC);
 
 //
 // kost@ 26.3.98 : 'msgReceived()' is NOT a method of a site object.

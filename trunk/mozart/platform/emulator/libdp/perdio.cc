@@ -147,12 +147,11 @@ void initDP()
 /*   Utility routines                                      */
 /* *********************************************************************/
 
-//
-void send(MsgContainer *msgC, int priority)
+void send(MsgContainer *msgC)
 {
   globalSendCounter++;
 
-  int ret=msgC->getDestination()->send(msgC, priority);
+  int ret=msgC->getDestination()->send(msgC);
 
   switch (ret) {
   case PERM_NOT_SENT:
@@ -514,7 +513,7 @@ void msgReceived(MsgContainer* msgC)
 	  // sent back instead.
 	  MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
 	  msgC->put_M_BORROW_REF(createFailedEntity(index,FALSE));
-	  send(msgC,-1);
+	  send(msgC);
 	}
       break;
     }
@@ -608,7 +607,7 @@ void msgReceived(MsgContainer* msgC)
 	  //
 	  msgC->put_M_SEND_LAZY(myDSite, OTI, OBJECT_AND_CLASS,
 				o->getClassTerm());
-	  send(msgC, -1);
+	  send(msgC);
 	}
 	// no break here! - proceed with the 'OBJECT' case;
 
@@ -620,7 +619,7 @@ void msgReceived(MsgContainer* msgC)
 
 	  //
 	  msgC->put_M_SEND_LAZY(myDSite, OTI, OBJECT, t);
-	  send(msgC, -1);
+	  send(msgC);
 	}	
 	break;
 
