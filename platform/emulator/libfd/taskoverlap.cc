@@ -28,6 +28,13 @@
 #include "rel.hh"
 #include "taskoverlap_filter.hh"
 
+template class PEL_LessEqOffset<PEL_PersistentEngine, PEL_FDIntVar, PEL_PersistentFDIntVar>;
+template class PEL_GreaterOffset<PEL_PersistentEngine, PEL_FDIntVar, PEL_PersistentFDIntVar>;
+template class FilterTasksOverlap<OZ_Filter<OZ_Propagator>, OZ_FDIntVar, OZ_FiniteDomain, PEL_PersistentFDIntVar, PEL_FDIntVar, PEL_PersistentEngine>;
+
+template void make_PEL_GreaterOffset<PEL_PersistentEngine, PEL_PersistentFDIntVar, PEL_FDIntVar>(PEL_PersistentEngine &, PEL_PersistentFDIntVar &, int, PEL_PersistentFDIntVar &);
+template void make_PEL_LessEqOffset<PEL_PersistentEngine, PEL_PersistentFDIntVar, PEL_FDIntVar>(PEL_PersistentEngine &, PEL_PersistentFDIntVar &, int, PEL_PersistentFDIntVar &);
+
 //-----------------------------------------------------------------------------
 // propagation member function
 

@@ -1,5 +1,3 @@
-template void make_PEL_GreaterOffset<PEL_PersistentEngine, PEL_PersistentFDIntVar, PEL_FDIntVar>(PEL_PersistentEngine &, PEL_PersistentFDIntVar &, int, PEL_PersistentFDIntVar &);
-template void make_PEL_LessEqOffset<PEL_PersistentEngine, PEL_PersistentFDIntVar, PEL_FDIntVar>(PEL_PersistentEngine &, PEL_PersistentFDIntVar &, int, PEL_PersistentFDIntVar &);
 
 template <class SERVICE, 
   class FDVAR, class FDM, class P_PFDVAR, class PFDVAR, class ENGINE>

@@ -24,6 +24,7 @@
  *
  */
 
+#include "base.hh"
 #include "diffn.hh"
 #include "rel.hh"
 #include "auxcomp.hh"

@@ -24,6 +24,7 @@
  *
  */
 
+#include "base.hh"
 #include "schedulingDistAux.hh"
 #include "rel.hh"
 #include "auxcomp.hh"
@@ -42,7 +43,6 @@ struct min_max_dur_setFL {
 
 static inline int intMin(int a, int b) { return a < b ? a : b; }
 static inline int intMax(int a, int b) { return a > b ? a : b; }
-static inline int ozabs(int a) {return a > 0 ? a : -a;}
 
 static int CompareFirsts(const void *x, const void *y)
 {

@@ -24,6 +24,7 @@
  *
  */
 
+#include "base.hh"
 #include "streamProps.hh"
 #include "arith.hh"
 #include "bool.hh"

@@ -31,8 +31,13 @@
 #pragma implementation "count.hh"
 #endif
 
+#include "base.hh"
 #include "count.hh"
 #include "auxcomp.hh"
+
+template class CountPropagator<true,true>;
+template class CountPropagator<false,true>;
+template class CountPropagator<true,false>;
 
 //-----------------------------------------------------------------------------
 // BaseCount

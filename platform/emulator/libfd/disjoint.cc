@@ -25,6 +25,7 @@
  *
  */
 
+#include "base.hh"
 #include "disjoint.hh"
 #include "rel.hh"
 #include "auxcomp.hh"
