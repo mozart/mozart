@@ -351,7 +351,15 @@ DECLAREBOOLFUN1(BIisFree,isFreeInline,isFreeRelInline)
 
 OZ_Return isKindedRelInline(TaggedRef term) {
   DEREF(term, _1, tag);
-  return isCVar(tag) ? PROCEED : FAILED;
+  if (isCVar(tag)) {
+    bool kinded = true;
+    switch (tagged2CVar(term)->getType()) {
+    case LazyVariable: kinded=tagged2LazyVar(term)->isKinded(); break;
+    default: break;
+    }
+    return kinded?PROCEED:FAILED;
+  }
+  else FAILED;
 }
 
 DECLAREBI_USEINLINEREL1(BIisKindedRel,isKindedRelInline)

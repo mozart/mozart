@@ -148,6 +148,7 @@ public:
   OZ_FiniteDomain * getReifiedPatch(void) {
     return (OZ_FiniteDomain *)  (u.var_type & ~u_mask);
   }
+  bool isKinded() { return true; }
 };
 
 
