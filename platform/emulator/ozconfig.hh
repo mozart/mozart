@@ -83,6 +83,7 @@ public:
   int dumpCore;
 
   int runningUnderEmacs;
+  int browser;
 
   char *ozHome;
   char *osname, *cpu;
