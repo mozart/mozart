@@ -1475,8 +1475,10 @@ LBLdispatcher:
   Case(FASTTAILCALL)
   LBLFastTailCall:
     {
-      COUNT(fastcalls);
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
+
+      COUNT(fastcalls);
+      ProfileCode(entry->getAbstr()->getPred()->numCalled++);
 
       CallDoChecks(entry->getAbstr(),entry->getGRegs());
 
@@ -2207,6 +2209,8 @@ LBLdispatcher:
       AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
       AssRegArray *list           = (AssRegArray*) getAdressArg(PC+5);
 
+      ProfileCode(predd->numClosures++);
+
       if (predd->getPC()==NOCODE) {
         predd->PC = PC+sizeOf(DEFINITION);
       }
@@ -2317,10 +2321,11 @@ LBLdispatcher:
         goto bombSend;
       }
 
-      COUNT(sendmsg);
       if (!isTailCall) CallPushCont(PC+6);
       ChangeSelf(obj);
       CallDoChecks(def,def->getGRegs());
+      COUNT(sendmsg);
+      ProfileCode(def->getPred()->numCalled++);
       JUMP(def->getPC());
     }
 
@@ -2352,7 +2357,6 @@ LBLdispatcher:
 
  ApplyMethod:
   {
-    COUNT(applmeth);
     ApplMethInfoClass *ami = (ApplMethInfoClass*) getAdressArg(PC+1);
     SRecordArity arity     = ami->arity;
     TaggedRef origObject   = RegAccess(HelpReg,getRegArg(PC+2));
@@ -2371,6 +2375,8 @@ LBLdispatcher:
     }
 
     if (!isTailCall) { CallPushCont(PC); }
+    COUNT(applmeth);
+    ProfileCode(def->getPred()->numCalled++);
     CallDoChecks(def,def->getGRegs());
     JUMP(def->getPC());
 
@@ -2451,6 +2457,7 @@ LBLdispatcher:
          CheckArity(def->getArity(), makeTaggedConst(def));
          if (!isTailCall) { CallPushCont(PC); }
 
+         ProfileCode(def->getPred()->numCalled++);
          CallDoChecks(def,def->getGRegs());
          JUMP(def->getPC());
        }

@@ -239,6 +239,8 @@ void Statistics::initCount() {
   nonoptbicalls=nonoptsendmsg=0;
   numNewName=numNewNamedName=0;
   numThreads=0;
+
+  PrTabEntry::profileReset();
 }
 
 #include "ofgenvar.hh"

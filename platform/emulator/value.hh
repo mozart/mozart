@@ -1657,6 +1657,14 @@ private:
   int lineno;
 
 public:
+  ProfileCode(
+      PrTabEntry *next;
+      int numClosures;
+      int numCalled;
+      static PrTabEntry *allPrTabEntries;
+      static void printPrTabEntries();
+      static void profileReset());
+
   ProgramCounter PC;
 
   PrTabEntry (TaggedRef name, SRecordArity arityInit,TaggedRef file, int line)
@@ -1667,6 +1675,7 @@ public:
     arity =  (unsigned short) getWidth(arityInit);
     Assert((int)arity == getWidth(arityInit)); /* check for overflow */
     PC = NOCODE;
+    ProfileCode(numClosures=0; numCalled=0; next=allPrTabEntries; allPrTabEntries=this);
   }
 
   OZPRINTLONG;

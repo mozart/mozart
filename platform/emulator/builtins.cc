@@ -4896,6 +4896,14 @@ OZ_C_proc_begin(BIstatisticsPrint, 0)
 }
 OZ_C_proc_end
 
+
+OZ_C_proc_begin(BIstatisticsPrintProcs, 0)
+{
+  ProfileCode(PrTabEntry::printPrTabEntries());
+  return PROCEED;
+}
+OZ_C_proc_end
+
 /* -----------------------------------------------------------------
    dynamic link objects files
    ----------------------------------------------------------------- */
@@ -7266,8 +7274,9 @@ BIspec allSpec[] = {
 
   {"printLong",2,BIprintLong},
 
-  {"statisticsReset",0,BIstatisticsReset},
-  {"statisticsPrint",0,BIstatisticsPrint},
+  {"statisticsReset",     0, BIstatisticsReset},
+  {"statisticsPrint",     0, BIstatisticsPrint},
+  {"statisticsPrintProcs",0, BIstatisticsPrintProcs},
 
   {"traceBack",0,BItraceBack},
 
