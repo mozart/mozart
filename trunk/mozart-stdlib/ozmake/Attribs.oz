@@ -62,6 +62,8 @@ define
 	 Submans    : unit	% managers for subdirectories
 	 Superman   : unit	% manager for parent directory
 	 Submakefiles:unit
+	 IncludeDirs: nil
+	 LibraryDirs: nil
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -472,5 +474,10 @@ define
       meth get_submakefile(D $)
 	 @Submakefiles.{Path.toAtom D}
       end
+
+      meth set_includedirs(L) IncludeDirs<-L end
+      meth get_includedirs($) @IncludeDirs end
+      meth set_librarydirs(L) LibraryDirs<-L end
+      meth get_librarydirs($) @LibraryDirs end
    end
 end

@@ -67,6 +67,9 @@ prepare
       '_installbins'(single type:bool)
       includebins(alias:installbins#true)
       excludebins(alias:installbins#false)
+
+      includedir(multiple char:&I type:string)
+      librarydir(multiple char:&L type:string)
       )
 
    OPTLIST =
@@ -102,6 +105,8 @@ prepare
     fullbuild      # set_fullbuild
     linewidth      # set_linewidth
     'local'        # set_local
+    includedir     # set_includedirs
+    librarydir     # set_librarydirs
    ]
       
 define

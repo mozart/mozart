@@ -368,7 +368,14 @@ define
 		  end
 	       [] cc then
 		  for O in Rule.options do
-		     raise ozmake(makefile:illegaltooloption(cc O)) end
+		     case O
+		     of include(S) then
+			if {Not {IsVirtualString S}} then
+			   raise ozmake(makefile:illegaltooloptionarg(cc O)) end
+			end
+		     else
+			raise ozmake(makefile:illegaltooloption(cc O)) end
+		     end
 		  end
 	       [] ld then
 		  for O in Rule.options do
