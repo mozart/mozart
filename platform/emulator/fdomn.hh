@@ -17,181 +17,28 @@
 #pragma interface
 #endif
 
+/*
 #include "tagged.hh"
 #include "term.hh"
 #include "bignum.hh"
+*/
 
 
-#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
-#define DEBUG_FD_IR(COND, CODE) if (COND) CODE;
-#define AssertFD(C) \
-   if (!(C)) error("FD assertion '%s' failed at %s:%d.", \
-       #C, __FILE__, __LINE__); 
-#else
-#define DEBUG_FD_IR(COND, CODE)
-#define AssertFD(C)
-#endif
+#include "oz.h"
+
+typedef int Bool;
+class ostream;
+
+
+class FDBitVector;
+class FDIntervals;
 
 
 enum FDPropState {fd_det = 0, fd_bounds, fd_any};
-enum FDState {fd_empty, fd_full, fd_discrete, fd_bool, fd_singleton};
-
-
-#define FD_NOI 4 // number of intervals
+enum FDState {fd_empty, fd_full, fd_bool, fd_singleton};
 #define MAXFDBIARGS 1000 // maximum number of arguments of fd built-ins
-
-const int fd_iv_max_high = FD_NOI;
 const int fd_inf = 0;
-const int fd_sup = OzMaxInt - 1;
-const int fd_full_size = fd_sup + 1;
-
-
-struct i_arr_type {int left; int right;};
-  
-// Invariants: high == 1 reduce to FiniteDomain
-class FDIntervals {
-friend class FiniteDomain;
-private:
-  int high;
-#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
-  Bool isConsistent(void) const;
-  struct _i_arr_type {
-    i_arr_type _i_arr[fd_iv_max_high];
-    i_arr_type &operator [] (int i) /*const*/ {
-      Assert(0 <= i && i < *(((int *)this) - 1));
-      return _i_arr[i];
-    } 
-    i_arr_type operator [] (int i) const {
-      Assert(0 <= i && i < *(((int *)this) - 1));
-      return _i_arr[i];
-    } 
-  } i_arr;
-#else
-  i_arr_type i_arr[fd_iv_max_high];
-#endif
-  
-  int findPossibleIndexOf(int) const;
-public:
-  FDIntervals(int hi) {high = hi;}
-  FDIntervals(const FDIntervals &);
- 
-  const FDIntervals &operator = (const FDIntervals &);
-
-  size_t memory_required(int hi) { // used for profiling
-    return sizeof(int) + 2 * hi * sizeof(int);
-  }
-  void * operator new (size_t s) {return freeListMalloc(s);}
-  void * operator new (size_t s, int hi) {
-    return heapMalloc(s + 2 * (hi - fd_iv_max_high) * sizeof(int));
-  }
-  void operator delete(void *, size_t) {
-    error("Unexpected call of FDIntervals::delete.");
-  }
-  void dispose(void) {
-    if (high <= fd_iv_max_high) freeListDispose(this, sizeof(FDIntervals));
-  }
-  int getHigh(void) { return high; }
-  
-  void print(ostream & = cout, int = 0) const;
-  void printLong(ostream & = cout, int = 0) const;
-  void printDebug(void) const;
-  void printDebugLong(void) const;
-
-  Bool contains(int i) const;
-  int findSize(void);
-  int findMinElem(void);
-  int findMaxElem(void);
-  void initList(int list_len, int * list_left, int * list_right);
-  void init(int l, int r) {i_arr[0].left = l; i_arr[0].right = r;}
-  int nextBiggerElem(int v, int upper) const;
-  Bool next(int i, int &n) const;
-  TaggedRef getAsList(void) const;
-  FDIntervals * copy(void);
-  int operator <= (const int);    
-  int operator >= (const int);
-  FDIntervals * operator -= (const int);
-  FDIntervals * operator += (const int);
-  void init(int, int, int, int);
-  FDIntervals * complement(FDIntervals *);
-  FDIntervals * complement(int, int * , int *);
-  void copy(FDIntervals *);
-  int union_iv(const FDIntervals &, const FDIntervals &);
-  int intersect_iv(FDIntervals &, const FDIntervals &);
-  int subtract_iv (FDIntervals &, const FDIntervals &);
-};
-
-const int fd_bv_max_high = 2 * FD_NOI + 1;
-const int fd_bv_max_elem = 32 * fd_bv_max_high - 1;
-const int fd_bv_conv_max_high = (fd_bv_max_elem) / 2 + 2;
-
-extern int fd_bv_left_conv[fd_bv_conv_max_high];
-extern int fd_bv_right_conv[fd_bv_conv_max_high];
-
-// Invariants: size < max_elem - min_elem + 1 otherwise reduce to FiniteDomain
-class FDBitVector {
-private:
-#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
-  struct b_arr_t {
-    int _b_arr[fd_bv_max_high];
-    int &operator [] (int i) /*const*/ {
-      Assert(0 <= i && i < fd_bv_max_high);
-      return _b_arr[i];
-    } 
-    int operator [] (int i) const {
-      Assert(0 <= i && i < fd_bv_max_high);
-      return _b_arr[i];
-    } 
-  } b_arr;
-#else
-  int b_arr[fd_bv_max_high];
-#endif
-public:
-  void * operator new (size_t s) {return freeListMalloc(s);}
-  void operator delete(void *, size_t) {
-    error("Unexpected call of FDBitVector::delete.");
-  }
-  void dispose(void) {freeListDispose(this, sizeof(FDBitVector));}
-
-  size_t memory_required(void) { // used for profiling
-    return 4 * size_t(ceil(float(findMaxElem())/32));
-  }
-  FDBitVector(void){}
-  void print(ostream & = cout, int = 0) const;
-  void printLong(ostream & = cout, int = 0) const;
-  void printDebug(void) const;
-  void printDebugLong(void) const;
-
-  Bool contains(int i) const;
-
-  void setEmpty(void);
-  void setBit(int i);
-  void resetBit(int i);
-  void setFromTo(int, int);
-  void addFromTo(int, int);
-  
-  int findSize(void);
-  int findMinElem(void);
-  int findMaxElem(void);
-  void initList(int list_len, int * list_left, int * list_right);
-  int nextBiggerElem(int v, int upper) const;
-  Bool next(int i, int &n) const;
-  TaggedRef getAsList(void) const;
-  FDBitVector * copy(void);
-  int operator <= (const int);    
-  int operator >= (const int);
-  int operator -= (const FDBitVector &);
-  int mkRaw(int * list_left, int * list_right) const;
-  int union_bv(const FDBitVector &, const int,
-	       const FDBitVector &, const int); 
-  int intersect_bv(FDBitVector &, const FDBitVector &); 
-};
-
-typedef FDBitVector BitArray;
-
-typedef int * intptr;
-
-extern intptr fd_iv_left_sort[MAXFDBIARGS];
-extern intptr fd_iv_right_sort[MAXFDBIARGS];
+const int fd_sup = OZ_getMaxInt() - 1;
 
 class FiniteDomain {
 private:
@@ -202,79 +49,43 @@ private:
   int size;
   
   enum descr_type {bv_descr = 0, iv_descr = 1, fd_descr = 2};
-  static char * descr_type_text[3]; 
   void * descr;
-  descr_type getType(void) const {return (descr_type)ToInt32(andPointer(descr,3));}
-  void setType(descr_type t) {descr = orPointer(andPointer(descr,~3),t);}
-  void setType(descr_type t, void * p) {descr = orPointer(p,t);}
-  void setType(FDBitVector * p) {descr = orPointer(p,bv_descr);}
-  void setType(FDIntervals * p) {descr = orPointer(p,iv_descr);}
-  void set_iv(void * p) {descr = orPointer(p,iv_descr);}
-  FDIntervals * get_iv(void) const {return (FDIntervals *)andPointer(descr,~3);}
-  void set_bv(void * p) {descr = p;}
-  FDBitVector * get_bv(void) const {return (FDBitVector *)andPointer(descr,~3);}
+
+  descr_type getType(void) const;
+  void setType(descr_type t);
+  void setType(descr_type t, void * p);
+  void setType(FDBitVector * p);
+  void setType(FDIntervals * p);
+  void set_iv(void * p);
+  FDIntervals * get_iv(void) const;
+  void set_bv(void * p);
+  FDBitVector * get_bv(void) const;
 
   FDBitVector * provideBitVector(void) const;
   FDIntervals * provideIntervals(int) const;
-  int findSize(void) const {return max_elem - min_elem + 1;}
-  Bool isSingleInterval(void) const {return size == (max_elem - min_elem + 1);}
+  int findSize(void) const;
+  Bool isSingleInterval(void) const;
   FDBitVector * asBitVector(void) const;
   FDIntervals * asIntervals(void) const;
 
-#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
   Bool isConsistent(void) const;
-#endif
   
 public:
-  void dispose(void) {
-    switch (getType()) {
-    case iv_descr: get_iv()->dispose(); return;
-    case bv_descr: get_bv()->dispose(); return;
-    default: return;
-    }
-  }
-  void FiniteDomainInit(void * d = NULL) {setType(fd_descr, d);};
+  void dispose(void);
+  void FiniteDomainInit(void * d);
 
-  FiniteDomain(void * d = NULL) {FiniteDomainInit(d);}
+  FiniteDomain(void * d);
+  FiniteDomain(void);
 
-  unsigned getDescrSize() {
-    switch (getType()) {
-    case iv_descr: 
-      return sizeof(FDIntervals) + 2 * (get_iv()->getHigh() - fd_iv_max_high) * sizeof(int);
-    case bv_descr: return sizeof(FDBitVector);
-    default: return 0;
-    }
-  }
+  unsigned getDescrSize(void);
 
-  int setEmpty(void) {
-    setType(fd_descr, NULL);
-    return size = 0;
-  }
+  int setEmpty(void);
+  int setFull(void);
 
-  int setFull(void) {
-    setType(fd_descr, NULL);
-    min_elem = fd_inf;
-    max_elem = fd_sup;
-    return size = fd_full_size;
-  }
-
-  FiniteDomain(FDState state) {
-    switch (state) {
-    case fd_empty:
-      setEmpty();
-      break;
-    case fd_full:
-      setFull();
-      break;
-    default:
-      error("Unexpected FDState.");
-      break;
-    }
-  }
+  FiniteDomain(FDState state);
 
   FiniteDomain(const FiniteDomain &);
   const FiniteDomain &operator = (const FiniteDomain &fd);
-  void gc(void);
 
   int initFull(void);
   int initEmpty(void);
@@ -282,7 +93,7 @@ public:
   int initList(int list_len, int * list_left, int * list_right,
 	       int list_min, int list_max);
   int init(int, int);
-  int init(TaggedRef);
+  int init(OZ_Term);
   
   int setSingleton(int);
   int setBool(void);
@@ -294,7 +105,7 @@ public:
    
   Bool contains(int i) const;
   FDPropState checkAgainst(FiniteDomain &dom);
-  TaggedRef getAsList(void) const;
+  OZ_Term getAsList(void) const;
   Bool next(int i, int &n) const; 
   int nextBiggerElem(int v) const;
   int intersectWithBool(void);
@@ -319,10 +130,13 @@ public:
   Bool operator == (const int) const;
   Bool operator != (const int) const;
 
-  void print(ostream & = cout, int = 0) const;
-  void printLong(ostream & = cout, int = 0) const;
+  void print(ostream &, int = 0) const;
+  void printLong(ostream &, int = 0) const;
   void printDebug(void) const;
   void printDebugLong(void) const;
+
+  void gc(void);
+  void copyExtension(void);
 };
 
 
@@ -356,23 +170,7 @@ public:
 #include "fdomn.icc"
 #endif
 
-
-#ifdef LOCAL_FD
-class LocalFD : public FiniteDomain {
-private:
-  char iv_bv_descr[sizeof(FDIntervals)];
-public:
-  LocalFD() : FiniteDomain(&iv_bv_descr) {
-    Assert(sizeof(FDIntervals) == sizeof(FDBitVector));
-  }
-  const LocalFD &operator =(const FiniteDomain &fd) {
-    FiniteDomain::operator=(fd);
-    return *this;
-  }
-};
-#else
 typedef FiniteDomain LocalFD;
-#endif
 
 inline
 ostream &operator << (ostream &ofile, const FiniteDomain &fd) {
