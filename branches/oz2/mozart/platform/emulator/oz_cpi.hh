@@ -282,8 +282,10 @@ OZ_Boolean OZ_isPosSmallInt(OZ_Term val);
 
 OZ_Term * OZ_hallocOzTerms(int);
 int *     OZ_hallocCInts(int);
+char *    OZ_hallocChars(int);
 void      OZ_hfreeOzTerms(OZ_Term *, int);
 void      OZ_hfreeCInts(int *, int);
+void      OZ_hfreeChars(char *, int);
 
 int * OZ_findEqualVars(int, OZ_Term *); // static return value
 OZ_Boolean OZ_isEqualVars(OZ_Term, OZ_Term);
