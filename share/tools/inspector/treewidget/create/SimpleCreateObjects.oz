@@ -114,13 +114,6 @@ in
       end
    end
 
-   class StringCreateObject from SimpleCreateObject
-      meth create(Value Parent Index Visual Depth)
-	 @type = string
-	 CreateObject, create(Value Parent Index Visual Depth)
-      end
-   end
-   
    class ByteStringCreateObject from SimpleCreateObject
       meth create(Value Parent Index Visual Depth)
 	 @type = bytestring

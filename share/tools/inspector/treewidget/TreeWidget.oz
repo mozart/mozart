@@ -35,7 +35,7 @@ export
 define
    %% Create All Nodes Export Record
    AllNodes = {Record.adjoinAt TreeNodes.all 'helper' Helper}
-
+   
    fun {ValueToKey V}
       case {Value.status V}
       of kinded(Type) then
@@ -75,24 +75,6 @@ define
       {Value.isFree V} orelse {Value.isFuture V}
    end
 
-   %%
-   %% String related Stuff
-   %%
-   fun {IsOzString V W}
-      if W == 0
-      then true
-      elseif {IsDet V}
-      then
-	 case V
-	 of C|Vr then
-	    ({IsDet C} andthen {Char.is C}) andthen {IsOzString Vr (W - 1)}
-	 [] nil  then true
-	 else false
-	 end
-      else false
-      end
-   end
-   
    class TreeWidget from StoreListener GraphicSupport
       attr
 	 widPort       %% TreeWidget Port
@@ -118,7 +100,6 @@ define
 	 relGlobal     %% Global Relation Mode
 	 globalRelMan  %% Global Relation Manager
 	 isAtomic      %% Atomic Test Function (must not be changed in Oz)
-	 showString    %% String Flag
       meth create(Options Parent DspWidth DspHeight)
 	 StoreListener, create
 	 GraphicSupport, create(Parent DspWidth DspHeight)
@@ -220,13 +201,11 @@ define
       meth queryDB
 	 OpDict = @opDict
       in
-	 dWidth     <- {Dictionary.get OpDict widgetTreeWidth}
-	 dDepth     <- {Dictionary.get OpDict widgetTreeDepth}
-	 dMode      <- {Not {Dictionary.get OpDict widgetTreeDisplayMode}}
-	 showString <- {Dictionary.get OpDict widgetShowStrings}
-	 isAtomic   <- {Dictionary.get OpDict widgetAtomicTest}
-	 curDefRel  <-
-	 TreeWidget, searchDefRel({Dictionary.get OpDict widgetRelationList} $)
+	 dWidth    <- {Dictionary.get OpDict widgetTreeWidth}
+	 dDepth    <- {Dictionary.get OpDict widgetTreeDepth}
+	 dMode     <- {Not {Dictionary.get OpDict widgetTreeDisplayMode}}
+	 curDefRel <- TreeWidget, searchDefRel({Dictionary.get OpDict widgetRelationList} $)
+	 isAtomic  <- {Dictionary.get OpDict widgetAtomicTest}
 	 GraphicSupport, queryDB
       end
       meth searchDefRel(Rels $)
@@ -376,49 +355,20 @@ define
 	 end
 	 TreeWidget, update(RI|nil RI)
       end
-      meth valueToKey(V $)
-	 case {Value.status V}
-	 of kinded(Type) then
-	    case Type
-	    of int    then fdint
-	    [] fset   then fsvar
-	    [] record then kindedrecord
-	    else Type
-	    end
-	 [] det(Type) then
-	    case Type
-	    of tuple then
-	       case {Label V}
-	       of '#' then hashtuple
-	       [] '|' then
-		  if ({Width V} == 1)
-		  then labeltuple
-		  elseif (@showString andthen {IsOzString V @dWidth})
-		  then string
-		  else pipetuple
-		  end
-	       else labeltuple
-	       end
-	    else Type
-	    end
-	 elseof Type then Type
-	 end
-      end
       meth treeCreate(Val Parent Index Depth $)
 	 MaxDepth = @dDepth
       in
 	 if Depth > MaxDepth
 	 then {New Helper.bitmap treeCreate(depth Parent Index self Val)}
 	 else
-	    ValKey = TreeWidget, valueToKey(Val $)
+	    ValKey = {ValueToKey Val}
 	 in
 	    case {Dictionary.condGet @mapDict ValKey nil}
 	    of nil then
 	       if @dMode
 	       then TreeWidget, graphCreate(Val Parent Index Depth $)
 	       else
-		  {New {Dictionary.condGet
-			@normNodesDict ValKey @treeNodes.generic}
+		  {New {Dictionary.condGet @normNodesDict ValKey @treeNodes.generic}
 		   create(Val Parent Index self Depth)}
 	       end
 	    elseof F then
@@ -428,10 +378,8 @@ define
 	       Node = if @dMode
 		      then TreeWidget, graphCreate(NVal Parent Index Depth $)
 		      else
-			 ValKey = TreeWidget, valueToKey(NVal $)
-		      in
 			 {New {Dictionary.condGet @normNodesDict
-			       ValKey @treeNodes.generic}
+			       {ValueToKey NVal} @treeNodes.generic}
 			  create(NVal Parent Index self Depth)}
 		      end
 	    in
@@ -445,21 +393,15 @@ define
       meth graphCreate(Val Parent Index Depth $)
 	 if {@isAtomic Val}
 	 then
-	    ValKey = TreeWidget, valueToKey(Val $)
-	 in
-	    {New {Dictionary.condGet @relNodesDict ValKey @treeNodes.generic}
+	    {New {Dictionary.condGet @relNodesDict {ValueToKey Val} @treeNodes.generic}
 	     create(Val Parent Index self Depth)}
 	 else
 	    Entry = {@curRelMan query(Val $)}
 	 in
 	    if {Entry isActive($)}
-	    then {New @treeNodes.variableRef
-		  create(Entry Parent Index self Depth)}
+	    then {New @treeNodes.variableRef create(Entry Parent Index self Depth)}
 	    else
-	       ValKey = TreeWidget, valueToKey(Val $)
-	    in
-	       {New
-		{Dictionary.condGet @relNodesDict ValKey @treeNodes.generic}
+	       {New {Dictionary.condGet @relNodesDict {ValueToKey Val} @treeNodes.generic}
 		gcr(Entry Val Parent Index self Depth)}
 	    end
 	 end
@@ -485,9 +427,7 @@ define
 	 if Depth > @dDepth
 	 then {New Helper.bitmap treeCreate(dpeth Parent Index self Val)}
 	 else
-	    ValKey = TreeWidget, valueToKey(Val $)
-	 in
-	    {New {Dictionary.condGet @normNodesDict ValKey @treeNodes.generic}
+	    {New {Dictionary.condGet @normNodesDict {ValueToKey Val} @treeNodes.generic}
 	     create(Val Parent Index self Depth)}
 	 end
       end

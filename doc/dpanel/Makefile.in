@@ -4,7 +4,7 @@ VPATH		= @srcdir@
 
 WHAT = dpanel
 WHATCLASS=tools
-PRINTNAME=DistributionPanel
+PRINTNAME=Oz
 HTMLEXTRAFILES=basic.gif DSframe.gif  MSframe.gif UxpctExports.gif EEframe.gif  MassImportation.gif  StrangeRTT.gif IEframe.gif Cframe.gif TicketPort.gif
 
 

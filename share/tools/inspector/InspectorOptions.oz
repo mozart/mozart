@@ -49,35 +49,26 @@ define
    %% TreeWidget Specific Settings
    %%
    %% Node Translation Tables
-   NormalNodes      = [int#int float#float atom#atom name#name
-		       procedure#procedure
-		       hashtuple#hashTuple pipetuple#pipeTuple
-		       labeltuple#labelTuple
+   NormalNodes      = [int#int float#float atom#atom name#name procedure#procedure
+		       hashtuple#hashTuple pipetuple#pipeTuple labeltuple#labelTuple
 		       record#record kindedrecord#kindedRecord fdint#fdInt
-		       fset#fsVal fsvar#fsVar free#free future#future
-		       string#string byteString#byteString]
-   RelationNodes    = [int#int float#float atom#atom name#name
-		       procedure#procedure
+		       fset#fsVal fsvar#fsVar free#free future#future byteString#byteString]
+   RelationNodes    = [int#int float#float atom#atom name#name procedure#procedure
 		       hashtuple#hashTupleGr pipetuple#pipeTupleGrM
 		       labeltuple#labelTupleGr record#recordGr
 		       kindedrecord#kindedRecordGr fdint#fdIntGr
 		       fset#fsValGr fsvar#fsVarGr free#freeGr future#futureGr
-		       string#string byteString#byteString]
-   NormalIndNodes   = [int#int float#float atom#atom name#name
-		       procedure#procedure
-		       hashtuple#hashTuple pipetuple#pipeTuple
-		       labeltuple#labelTupleInd
-		       record#recordInd kindedrecord#kindedRecordInd
-		       fdint#fdInt
-		       fset#fsVal fsvar#fsVar free#free future#future
-		       string#string byteString#byteString]
-   RelationIndNodes = [int#int float#float atom#atom name#name
-		       procedure#procedure
+		       byteString#byteString]
+   NormalIndNodes   = [int#int float#float atom#atom name#name procedure#procedure
+		       hashtuple#hashTuple pipetuple#pipeTuple labeltuple#labelTupleInd
+		       record#recordInd kindedrecord#kindedRecordInd fdint#fdInt
+		       fset#fsVal fsvar#fsVar free#free future#future byteString#byteString]
+   RelationIndNodes = [int#int float#float atom#atom name#name procedure#procedure
 		       hashtuple#hashTupleGr pipetuple#pipeTupleGrM
 		       labeltuple#labelTupleGrInd record#recordGrInd
 		       kindedrecord#kindedRecordGrInd fdint#fdIntGr
 		       fset#fsValGr fsvar#fsVarGr free#freeGr future#futureGr
-		       string#string byteString#byteString]
+		       byteString#byteString]
 
    local
       %% Stuctural Equality (Unification Function)
@@ -176,7 +167,6 @@ define
 			widgetTreeWidth        # 50
 			widgetTreeDepth        # 15
 			widgetTreeDisplayMode  # true
-			widgetShowStrings      # false
 			widgetUseNodeSet       # 1 %% Select the used node-set (1,2)
 			widgetNodesContainer   # default %% default or Interface Record
 			widgetNodeSets         # ((NormalNodes|RelationNodes)#
@@ -215,7 +205,6 @@ define
 		       intColor         # Color1
 		       floatColor       # Color1
 		       atomColor        # Color2
-		       stringColor      # Color2
 		       variablerefColor # Color3
 		       refColor         # Color6
 		       labelColor       # Color4
@@ -281,7 +270,6 @@ define
       SimpleMenus = [
 		     intMenu         # nil
 		     floatMenu       # nil
-		     stringMenu      # nil
 		     bytestringMenu  # nil
 		     atomMenu        # nil
 		     variablerefMenu # nil
@@ -363,6 +351,9 @@ define
 	 in
 	    fun {ShowVirtualString V W D}
 	       {Convert 1 V 1 {Width V} W false}
+	    end
+	    fun {ShowString V W D}
+	       if {IsString V W} then {ByteString.make "\""#V#"\""} else V end
 	    end
 	 end
 	 %% Pruning Functions
@@ -463,7 +454,8 @@ define
 						  nil)
 			   pipetupleMenu   # menu(WidthList
 						  DepthList
-						  ['Prune Odd'(PipPruneOdd)
+						  ['Show String'(ShowString)
+						   'Prune Odd'(PipPruneOdd)
 						   'Prune Even'(PipPruneEven)
 						   'Split Odd/Even'(PipSplitOddEven)]
 						  nil)
