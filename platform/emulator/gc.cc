@@ -2292,16 +2292,6 @@ void performCopying(void)
 //             AM methods to launch gc under certain conditions
 //*****************************************************************************
 
-/*
-#ifdef DEBUG_GC
-#  define InitialBigGCLimit   (1 * (1<<20))
-#  define InitialSmallGCLimit (1<<20)
-#else
-#  define InitialBigGCLimit   (9 * (1<<20))  // 9 * 2^10 = 9 MB
-#  define InitialSmallGCLimit (1<<20)        // 1 * 2^10 = 1 MB
-#endif
-*/
-
 
 // signal handler
 void checkGC()
