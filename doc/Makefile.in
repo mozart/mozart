@@ -36,8 +36,6 @@ INSTALL_DIR     = @INSTALL_DIR@
 HOMEURL         = @HOMEURL@
 OZDOC           = @OZDOC@
 
-ENABLE_INDEX    = @ENABLE_INDEX@
-
 FILES           = ozdoc.dcl ozdoc.dtd ozdoc.doc catalog author.db
 LIBFILES        = $(addprefix $(SHDOCDIR)/,$(FILES))
 
@@ -54,7 +52,7 @@ Makefile.vars: Makefile.vars.in config.status
         ./config.status
 
 install:: all $(SHDOCDIR) $(DOCDIR) $(LIBFILES) $(DOCDIR)/.htaccess \
-        $(DOCDIR)/idx $(ENABLE_INDEX:%=$(DOCDIR)/%)
+        $(DOCDIR)/idx $(DOCDIR)/idx/index.html
 
 $(SHDOCDIR) $(DOCDIR) $(DOCDIR)/idx:
         $(INSTALL_DIR) $@
@@ -104,10 +102,8 @@ PSDOCDIRS       = apptut base browser bugs changes compiler \
 
 idx/index.html:
         mkdir idx 2> /dev/null; \
-        if [ -r index.db ]; \
-        then $(OZDOC) --in=index.db --out=idx --type=html-global-index \
-        --stylesheet=ozdoc.css; \
-        else touch idx/index.html; fi
+        $(OZDOC) --in=index.db --out=idx --type=html-global-index \
+        --stylesheet=ozdoc.css
 
 global-xref-db.xml:
         dirs="$(PSDOCDIRS)"; \
