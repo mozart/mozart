@@ -500,7 +500,7 @@ the GDB commands `cd DIR' and `directory'."
 	(cur (current-buffer)))
     (if (or (not file) (buffer-modified-p))
 	(oz-feed-region (point-min) (point-max))
-      (oz-feed-file file))
+      (oz-insert-file file))
     (switch-to-buffer cur))
   (oz-zmacs-stuff))
 
@@ -980,11 +980,9 @@ the GDB commands `cd DIR' and `directory'."
   (if oz-lucid
       (progn
 	;; otherwise this looks in the menubar like "C-TAB" "C-BS" "C_RET"
-	(define-key map [(control c) (control i)] 'oz-feed-file)
 	(define-key map [(control c) (control h)] 'oz-halt)
 	(define-key map [(control c) (control m)]   'oz-toggle-emulator))
     (define-key map "\C-c\C-h"    'oz-halt)
-    (define-key map "\C-c\C-i"    'oz-feed-file)
     (define-key map "\C-c\C-m"    'oz-toggle-emulator))
 
   (define-key map "\C-c\C-e"    'oz-toggle-emulator)
@@ -1387,6 +1385,10 @@ OZ compiler, emulator and error window")
   "Feed an file into the Oz Compiler"
   (interactive "FFeed file: ")
   (oz-send-string (concat "\\feed '" file "'"))) 
+
+(defun oz-insert-file(file)
+  "Insert an file into the Oz Compiler"
+  (oz-send-string (concat "\\insert '" file "'"))) 
 
 (defun oz-precompile-file(file)
   "precompile an Oz file"
