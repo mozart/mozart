@@ -34,13 +34,15 @@ INSTALL_DIR     = @INSTALL_DIR@
 FILES           = ozdoc.dcl ozdoc.dtd ozdoc.doc catalog ozdoc.ced author.db
 LIBFILES        = $(addprefix $(DOCDIR)/,$(FILES))
 
-.PHONY: all bootstrap check install clean veryclean distclean
+.PHONY: all bootstrap check install clean veryclean distclean depend
 
 all: ozdoc.ced
 
 bootstrap: all
 
 check:
+
+depend:
 
 Makefile: Makefile.in config.status
         ./config.status

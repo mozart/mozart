@@ -93,3 +93,5 @@ config.status: configure
         ./config.status --recheck
 
 check:
+
+depend:
