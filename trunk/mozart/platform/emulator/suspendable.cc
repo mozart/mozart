@@ -145,7 +145,15 @@ void oz_checkAnySuspensionList(SuspList ** suspList,
 
   SuspList * sl = *suspList;
 
+#ifdef COUNT_PROP_INVOCS
+  int _len = 0;
+#endif
+
   while (sl) {
+
+#ifdef COUNT_PROP_INVOCS
+    _len += 1;
+#endif
 
     SuspList ** n = sl->getNextRef();
 
@@ -160,6 +168,21 @@ void oz_checkAnySuspensionList(SuspList ** suspList,
 
 
   }
+
+#ifdef COUNT_PROP_INVOCS
+  if (_len) {
+    extern int count_prop_invocs_max_len_sl;
+    count_prop_invocs_max_len_sl = max(count_prop_invocs_max_len_sl,
+				       _len);
+    extern int count_prop_invocs_min_len_sl;
+    count_prop_invocs_min_len_sl = min(count_prop_invocs_min_len_sl,
+				       _len);
+    extern int count_prop_invocs_sum_len_sl;
+    count_prop_invocs_sum_len_sl += _len;
+    extern int count_prop_invocs_nb_nonempty_sl;
+    count_prop_invocs_nb_nonempty_sl += 1;
+  }
+#endif
 
 }
 
@@ -275,7 +298,15 @@ void oz_checkLocalSuspensionList(SuspList ** suspList,
   if (sb != am.currentBoard())
     return;
 
+#ifdef COUNT_PROP_INVOCS
+  int _len = 0;
+#endif
+
   do {
+
+#ifdef COUNT_PROP_INVOCS
+    _len += 1;
+#endif
 
     SuspList ** n = sl->getNextRef();
 
@@ -292,6 +323,21 @@ void oz_checkLocalSuspensionList(SuspList ** suspList,
 
 
   } while (sl);
+
+#ifdef COUNT_PROP_INVOCS
+  if (_len) {
+    extern int count_prop_invocs_max_len_el;
+    count_prop_invocs_max_len_el = max(count_prop_invocs_max_len_el,
+				       _len);
+    extern int count_prop_invocs_min_len_el;
+    count_prop_invocs_min_len_el = min(count_prop_invocs_min_len_el,
+				       _len);
+    extern int count_prop_invocs_sum_len_el;
+    count_prop_invocs_sum_len_el += _len;
+    extern int count_prop_invocs_nb_nonempty_el;
+    count_prop_invocs_nb_nonempty_el += 1;
+  }
+#endif
 
 }
 

@@ -85,7 +85,7 @@ if (!(C)) OZ_error("AssertFS '%s' failed at %s:%d.", #C, __FILE__, __LINE__);
 
 #define _DEBUG_FSET_IR(CODE) { print_to_fsfile CODE ; }
 #define DEBUG_FSET_IR(CODE) _DEBUG_FSET_IR(CODE)
-#define FSDEBUG(X) //{ X; }
+#define FSDEBUG(X) { X; }
 
 #else
 

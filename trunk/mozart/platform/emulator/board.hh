@@ -30,6 +30,9 @@
 #ifndef __BOARDH
 #define __BOARDH
 
+// propagation stack for propagators
+#define PROPAGATION_STACK
+
 #ifdef INTERFACE
 #pragma interface
 #endif
@@ -281,8 +284,11 @@ public:
   //
 
 private:
+#ifdef PROPAGATION_STACK
+  SuspStack lpq;
+#else
   SuspQueue lpq;
-  
+#endif
   static Board * board_served;
   
   void wakeServeLPQ(void);
