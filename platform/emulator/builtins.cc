@@ -6187,21 +6187,13 @@ OZ_C_proc_end
 
 // ---------------------------------------------------------------------------
 
-#ifdef PARSER
-OZ_C_proc_proto(ozparser_parse)
 OZ_C_proc_proto(ozparser_init)
-OZ_C_proc_proto(ozparser_exit)
-#else
-OZ_C_proc_begin(ozparser_parse,2)
-return PROCEED;
-OZ_C_proc_end
-OZ_C_proc_begin(ozparser_init,0)
-return PROCEED;
-OZ_C_proc_end
-OZ_C_proc_begin(ozparser_exit,0)
-return PROCEED;
-OZ_C_proc_end
-#endif
+OZ_C_proc_proto(ozparser_setShowInsert)
+OZ_C_proc_proto(ozparser_setGumpSyntax)
+OZ_C_proc_proto(ozparser_parseFile)
+OZ_C_proc_proto(ozparser_parseVirtualString)
+OZ_C_proc_proto(ozparser_parseFileAtomic)
+OZ_C_proc_proto(ozparser_parseVirtualStringAtomic)
 
 
 // ---------------------------------------------------------------------
@@ -6936,9 +6928,14 @@ BIspec allSpec[] = {
   {"SystemSetInternal",   1, BISystemSetInternal},
 
   {"shutdown",       0, BIshutdown,		0},
-  {"ozparser_parse",2,ozparser_parse},
+
   {"ozparser_init",0,ozparser_init},
-  {"ozparser_exit",0,ozparser_exit},
+  {"ozparser_setShowInsert",1,ozparser_setShowInsert},
+  {"ozparser_setGumpSyntax",1,ozparser_setGumpSyntax},
+  {"ozparser_parseFile",2,ozparser_parseFile},
+  {"ozparser_parseVirtualString",2,ozparser_parseVirtualString},
+  {"ozparser_parseFileAtomic",6,ozparser_parseFileAtomic},
+  {"ozparser_parseVirtualStringAtomic",6,ozparser_parseVirtualStringAtomic},
 
   {"taskstack",   2, BItaskStack},
   {"location",    2, BIlocation},
