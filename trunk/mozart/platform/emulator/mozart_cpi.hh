@@ -1300,7 +1300,7 @@ typedef CPIVector<OZ_CtVar> OZ_CtVarVector;
 //-----------------------------------------------------------------------------
 // OZ_Filter
 
-class OZ_StatefulFilter {
+class OZ_PersistentFilter {
 public:
   virtual void sClone(void) = 0;
   virtual void gCollect(void) = 0;
