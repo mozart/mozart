@@ -1175,6 +1175,19 @@ AC_DEFUN(OZ_DENYS_EVENTS,
    AC_SUBST(DENYS_EVENTS)])
 
 dnl ------------------------------------------------------------------
+dnl OZ_SITE_PROPERTY
+dnl	check for --enable-site-property
+dnl sets SITE_PROPERTY accordingly
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_SITE_PROPERTY,
+  [OZ_ENABLE(site-property,[enable site property support],no,
+	SITE_PROPERTY=yes,
+	SITE_PROPERTY=no)
+   AC_MSG_RESULT($SITE_PROPERTY)
+   AC_SUBST(SITE_PROPERTY)])
+
+dnl ------------------------------------------------------------------
 dnl OZ_ARG_WITH_LIB_DIR
 dnl
 dnl maybe adds some directories to LDFLAGS and oz_lib_path
