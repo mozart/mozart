@@ -64,7 +64,7 @@ public:
 
   void printTree();
 
-  void incSuspCount(int n=1) { suspCount += n; }
+  void incSuspCount(int n=1);
   void addSuspension (Suspension *susp);
   // should be applied only for 'solve' boards;
   Board *gcGetBoardDeref();
@@ -76,8 +76,8 @@ public:
   Board *getParentBoard();
   Board* getSolveBoard (); 
   ConsList &getScriptRef() { return script; }
-  int getSuspCount() { return suspCount; }
-  Bool hasSuspension() { return suspCount == 0 ? NO : OK; }
+  int getSuspCount(void);
+  Bool hasSuspension(void);
   Bool isAsk() { return flags & Bo_Ask ? OK : NO; }
   Bool isCommitted() { return flags & Bo_Committed ? OK : NO; }
   Bool isDiscarded();
