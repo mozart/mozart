@@ -686,23 +686,27 @@ Bool checkAtom(const char *s)
   switch (t[0]) {
   case 'a':
     return strcmp(t, "andthen") && strcmp(t, "attr")? OK: NO;
+  case 'b':
+    return strcmp(t, "body")? OK: NO;
   case 'c':
     return strcmp(t, "case") && strcmp(t, "catch")
 	&& strcmp(t, "choice") && strcmp(t, "class")
-	&& strcmp(t, "condis") ? OK: NO;
+	&& strcmp(t, "condis")? OK: NO;
   case 'd':
     return strcmp(t, "declare") && strcmp(t, "dis")
 	&& strcmp(t, "div")? OK: NO;
   case 'e':
     return strcmp(t, "else") && strcmp(t, "elsecase")
 	&& strcmp(t, "elseif") && strcmp(t, "elseof")
-	&& strcmp(t, "end")? OK: NO;
+	&& strcmp(t, "end") && strcmp(t, "export")? OK: NO;
   case 'f':
     return strcmp(t, "false") && strcmp(t, "feat")
 	&& strcmp(t, "finally") && strcmp(t, "from")
-	&& strcmp(t, "fun") && strcmp(t, "fail")? OK: NO;
+	&& strcmp(t, "fun") && strcmp(t, "functor")
+	&& strcmp(t, "fail")? OK: NO;
   case 'i':
-    return strcmp(t, "if") && strcmp(t, "in")? OK: NO;
+    return strcmp(t, "if") && strcmp(t, "import")
+	&& strcmp(t, "in")? OK: NO;
   case 'l':
     return strcmp(t, "local") && strcmp(t, "lock")? OK: NO;
   case 'm':
