@@ -99,7 +99,7 @@ TaggedRef SolveActor::merge(Board *bb) {
 	Thread * thr = localThreadQueue->dequeue();
 	DebugCode (thr->unmarkPropagated());
 	thr->propagatorToRunnable ();
-	am.scheduleThread (thr, thr->getPriority());
+	am.scheduleThreadInline (thr, thr->getPriority());
       }
     
       // empty taskstack of ltq thread and dispose ltq
@@ -172,7 +172,7 @@ void SolveActor::pushToLTQ(Thread * thr, Board * b) {
   } else {
     Thread * ltq_thr = am.mkLTQ(b, PROPAGATOR_PRIORITY, this);
     localThreadQueue = new LocalThreadQueue(ltq_thr, thr);
-    am.scheduleThread(ltq_thr, PROPAGATOR_PRIORITY);
+    am.scheduleThreadInline(ltq_thr, PROPAGATOR_PRIORITY);
   }
 }
 
