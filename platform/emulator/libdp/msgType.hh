@@ -98,7 +98,16 @@ enum MessageType {
   M_LAST
 };
 
+// Default priorities for message sends.
+#define MSG_PRIO_EAGER  4
+#define MSG_PRIO_LAZY   0
+#define MSG_PRIO_HIGH   3
+#define MSG_PRIO_MEDIUM 2
+#define MSG_PRIO_LOW    1
+#define USE_PRIO_OF_SENDER -1
+
 
 extern char *mess_names[];
+extern int default_mess_priority[];
 
 #endif
