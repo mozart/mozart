@@ -123,7 +123,7 @@ OZ_C_proc_begin(Name,2)					\
 OZ_C_proc_end
 
 #define NEW_DECLAREBI_USEINLINEREL2(Name,InlineName)	\
-OZ_BI_define(Name,2,1)					\
+OZ_BI_define(Name,2,0)					\
 {							\
   oz_declareIN(0,arg0);					\
   oz_declareIN(1,arg1);					\
