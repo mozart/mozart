@@ -1298,8 +1298,8 @@ then
     oz_x11_inc_dir=$with_x11_include
 fi
 
-: ${oz_x11_lib_dir=/usr/local/lib}
-: ${oz_x11_inc_dir=/usr/local/include}
+: ${oz_x11_lib_dir=/usr/X11R6/lib}
+: ${oz_x11_inc_dir=/usr/X11R6/include}
 
 echo "$ac_t""trying \"-L$oz_x11_lib_dir -I$oz_x11_inc_dir\"" 1>&6
 
