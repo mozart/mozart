@@ -62,8 +62,8 @@ in
 	 Colors
 	 Stipple
       attr
-	 LeftTag:      Unit
-	 RightTag:     Unit
+	 LeftTag:      unit
+	 RightTag:     unit
 	 LeftMaxY:     0.0
 	 RightMaxY:    0.0
 	 PrevYs:       nil
