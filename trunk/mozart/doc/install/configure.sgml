@@ -11,7 +11,71 @@ env/CONFIG_SITE/ prior to invoking the configure script:
 <code display>
 setenv CONFIG_SITE ~/mozart.config
 </code>
+  <subsection>
+    <title/General Parameters/
+    <p><list>
+	<entry class=option><code>--prefix=$HOME/mozart-install</code></entry>
+	<entry class=variable><code>prefix=$HOME/mozart-install</code></entry>
+	<item>Use <file>~/mozart-install</file> as the default
+installation directory.  The installation directory can also be
+overriden when installing by supplying an overriding setting for the
+make variable <var env/PREFIX/:
+<code display>
+% make install PREFIX=$HOME/mozart-install
+</code></item>
+      </list>
 </p>
+  </subsection>
+  <subsection id=contrib>
+    <title/Contributions/
+    <p>The <q/contributions/ are not an intrinsic part of the Mozart
+distribution.  Often they require that you install additional
+packages: for example the <file/gdbm/ contribution requires that you
+install the gdbm package. Some have not yet been ported to Windows.
+<list>
+	<entry class=option/<code/--enable-contrib//
+	<entry class=option/<code/--disable-contrib//
+	<entry class=variable/<code/oz_enable_contrib=contrib//
+	<item>By default, the contributions will be configured and
+built.  You can completely omit them using <code/--disable-contrib/ or
+setting the variable to an empty value, &ie; <code/oz_enable_contrib=/
+      </list>
+</p>
+  </subsection>
+  <subsection>
+    <title/Documentation/
+    <p>Processing the documentation requires the contributions (<ptr
+to=contrib>).  Also you need additional packages such as LaTeX,
+netpbm, ghostscript, and a very recent version of nsgmls.
+<list>
+	<entry class=option/<code/--enable-doc//
+	<entry class=option/<code/--disable-doc//
+	<entry class=variable/<code/oz_enable_doc=doc//
+	<item>You can omit the documentation using option
+<code/--disable-doc/ or by setting the variable to an empty value,
+&ie; <code/oz_enable_doc=/</item>
+      </list></p>
+  </subsection>
+  <subsection>
+    <title/Emulator/
+    <p>The emulator has quite a few configuration parameters.
+<list>
+	<entry class=option/<code/--with-cxx=?{c++-compiler}//
+	<entry class=variable/<code/oz_with_cxx=?{c++-compiler}//
+	<item>Overrides the default C++ compiler.</item>
+
+	<entry class=option/<code/--enable-warnings//
+	<entry class=variable/<code/oz_enable_warnings=yes//
+	<item>By default, the value is <code/no/.  Enabling it causes
+the C++ compiler to print all warnings.</item>
+
+	<entry class=option/<code/--enable-errors//
+	<entry class=variable/<code/oz_enable_errors=yes//
+	<item>By default, the value is <code/no/.  When enabled, every
+warning from the C++ compiler will cause the build process to fail.
+This is only really useful for the developers of the system.</item>
+      </list>
+  </subsection>
 </section>
 <!--
 Local Variables:
