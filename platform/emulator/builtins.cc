@@ -4606,7 +4606,7 @@ OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef &newVal)
 {
   NONVAR(c,rec);
   newVal = oz_newVariable();
-
+  OZ_warning("unsafe exchange");
   if (!isCell(rec)) {oz_typeError(0,"Cell");}
 
   Tertiary *tert = tagged2Tert(rec);
@@ -4626,11 +4626,29 @@ OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef &newVal)
  */
 OZ_C_proc_begin(BIexchangeCell,3)
 {			
+  oz_declareNonvarArg(0,cell);
+
+  OZ_Term inState = OZ_getCArg(1);
+  OZ_Term outState = OZ_getCArg(2);
+  if (!isCell(cell)) {oz_typeError(0,"Cell");}  
+  Tertiary *tert = tagged2Tert(cell);
+  if(tert->getTertType()!=Te_Local){
+    cellDoExchange(tert,inState,outState,oz_currentThread);
+    return checkSuspend();
+  }
+  CellLocal *cellL=(CellLocal*)tert;
+  CheckLocalBoard(cellL,"cell");
+  TaggedRef old = cellL->exchangeValue(outState);
+  return oz_unify(old,inState);
+
+/*   incorrect semantics
   OZ_Term help;
   OZ_Term cell = OZ_getCArg(0);
   OZ_Term inState = OZ_getCArg(1);
   OZ_Term outState = OZ_getCArg(2);
-  OZ_Return state=BIexchangeCellInline(cell,inState,help);
+  
+  OZ_Return state=BIexchangeCellInline(cell,inState,help); 
+  
   switch (state) {
   case SUSPEND:
     oz_suspendOn(cell);
@@ -4639,6 +4657,7 @@ OZ_C_proc_begin(BIexchangeCell,3)
   default:
     return state;
   }
+  */
 }
 OZ_C_proc_end
 

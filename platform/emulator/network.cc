@@ -758,7 +758,7 @@ public:
     Assert(totalNrMsg >=0 && totalMsgSize >=0);
     totalNrMsg++;
     totalMsgSize += size;
-    PD((SITE,"New queue entry nr: %d size: %d",
+    PD((WRT_QUEUE,"New queue entry nr: %d size: %d",
 	totalNrMsg,totalMsgSize));}
 
   void deQueueMessage(int size){
@@ -772,7 +772,7 @@ public:
 	totalMsgSize <= MsgMonitorSize)
       queueSizeMsgs(totalNrMsg, totalMsgSize, MsgMonitorPtr);
       */
-      PD((SITE,"Remove queue entry nr: %d size: %d",
+      PD((WRT_QUEUE,"Remove queue entry nr: %d size: %d",
 	totalNrMsg,totalMsgSize));}
 
   void partlyDeQueueMessage(int size){
@@ -880,11 +880,11 @@ public:
 
   void receivedNewSize(int size){
     recSizeAck +=  size;
-    PD((SITE,"SizeReceived s: %d l: %d",recSizeAck
+    PD((ACK_QUEUE,"SizeReceived s: %d l: %d",recSizeAck
 	,maxSizeAck));
     if(recSizeAck >= maxSizeAck &&
        tcpAckReader(this,remoteSite->getRecMsgCtr())){
-      PD((SITE,"Ack, limit reached...."));
+      PD((ACK_QUEUE,"Ack, limit reached...."));
       recSizeAck = 0;}}
   
   void messageSent(){
@@ -1062,11 +1062,15 @@ public:
     probeCtr = 0;
   }
   void installProbe(){
+    PD((PROBES,"Probe Installed to  num: %d site: %s",probeCtr,
+	remoteSite->site->stringrep()));
     Assert(probeCtr >=0);
     if(probeCtr==0)
       setProbingPrm();
     probeCtr++;}
   void deInstallProbe(){
+    PD((PROBES,"Probe DeInstalled to  num: %d site: %s",probeCtr,
+	remoteSite->site->stringrep()));
     Assert(probeCtr>0);
     probeCtr--;
     if(probeCtr==0)
@@ -1179,7 +1183,7 @@ public:
   
   void freeConnection(ReadConnection *r){ 
     PD((REMOTE,"freed r:%x nr:%d",r,--wc));
-    Assert(r->isRemovable());
+    //Assert(r->isRemovable());
     deleteConnection(r);
     return;}
 
@@ -1215,7 +1219,7 @@ public:
   void freeConnection(WriteConnection *r){ 
     PD((REMOTE,"freed r:%x nr%d",r,--wc));
     r->clearFlag(WRITE_CON);
-    Assert(r->isRemovable());
+    //Assert(r->isRemovable());
     deleteConnection(r);
     return;}
 
@@ -1633,7 +1637,7 @@ void WriteConnection::prmDwn(){
     Message *m = sentMsg;
     sentMsg = NULL;
     while(m != NULL){
-      PD((REMOTESITE,"Emptying ackqueu m:%x bs: %x",m, m->bs)); 
+      PD((ACK_QUEUE,"Emptying ackqueu m:%x bs: %x",m, m->bs)); 
       remoteSite->site->communicationProblem(m->msgType, m->site, m->storeIndx,
 				 COMM_FAULT_PERM_MAYBE_SENT,(FaultInfo) m->bs);
       Message *tmp = m;
@@ -1679,7 +1683,7 @@ Bool WriteConnection::checkAckQueue(){
   Message *m = sentMsg;
   if (m == NULL ) return false;
   while (m != NULL){
-    PD((REMOTESITE,"Ack queue ptr: %d nr: %d ctr: %d",
+    PD((ACK_QUEUE,"Ack queue ptr: %d nr: %d ctr: %d",
 	m,m->msgNum,sentMsgCtr));
     m=m->next;}
   return true;
@@ -1695,7 +1699,7 @@ Bool WriteConnection::checkAckQueue(){
 
 
 void RemoteSite::storeSentMessage(Message* m) {
-  PD((REMOTESITE,"Adding to ack queue  %d",m));
+  PD((ACK_QUEUE,"Adding to ack queue  %d",m));
   Assert(writeConnection != NULL);
   writeConnection->storeSentMessage(m);}
   
@@ -1912,7 +1916,7 @@ void NetMsgBuffer::PiggyBack(Message* m)
   int2net(thispos, remotesite->getRecMsgCtr());
   m->setMsgNum(msgCtr);
   remotesite->storeSentMessage(m);
-  PD((SITE,"¤¤¤¤¤ Message nr: %d Ack nr: %d inserted ¤¤¤¤¤¤¤¤"
+  PD((ACK_QUEUE,"¤¤¤¤¤ Message nr: %d Ack nr: %d inserted ¤¤¤¤¤¤¤¤"
       ,msgCtr, remotesite->getRecMsgCtr()));
 }
 
@@ -3014,7 +3018,7 @@ void ReadConnection::resend(){
 
 void WriteConnection::ackReceived(int nr){  
     int ctr = sentMsgCtr;
-    PD((REMOTESITE,"Ack nr:%d received, total sent: %d",nr,ctr));
+    PD((ACK_QUEUE,"Ack nr:%d received, total sent: %d",nr,ctr));
     checkAckQueue();
     Message *ptr = sentMsg;
     Message *old;
@@ -3023,14 +3027,14 @@ void WriteConnection::ackReceived(int nr){
 	sentMsg = NULL;
       else{
 	while(ctr > nr){
-	  PD((REMOTESITE,"Stepping through ackQueue cur:%d stop%d",ctr, nr));
+	  PD((ACK_QUEUE,"Stepping through ackQueue cur:%d stop%d",ctr, nr));
 	  old = ptr;
 	  ptr = ptr->next;
 	  if(ptr == NULL) break;
 	  ctr = ptr -> msgNum;}
 	old->next = NULL;}
       while(ptr!=NULL) {
-	PD((REMOTESITE,"Removing from queue nr %d %d",
+	PD((ACK_QUEUE,"Removing from queue nr %d %d",
 	    ptr->msgNum,ptr));
 	    old = ptr;
 	    ptr=ptr->next;
@@ -3085,18 +3089,18 @@ void RemoteSite::setWriteConnection(WriteConnection *r){
   r->setSite(this);}
 
 Bool RemoteSite::receivedNewMsg(int Nr, int a){
-  PD((REMOTESITE,"Ack received: %d",a));
-  PD((REMOTESITE,"MsgnumReceived new:%d old:%d",Nr,recMsgCtr));
+  PD((ACK_QUEUE,"Ack received: %d",a));
+  PD((ACK_QUEUE,"MsgnumReceived new:%d old:%d",Nr,recMsgCtr));
   
   if (Nr  == recMsgCtr + 1 || (Nr == 1 && recMsgCtr > Nr)){
-    PD((REMOTESITE,"Message nr %d accepted",Nr));
+    PD((ACK_QUEUE,"Message nr %d accepted",Nr));
     recMsgCtr = Nr;}
   else if(Nr > recMsgCtr){
-    PD((REMOTESITE,"Message nr %d too large, old %d", Nr, recMsgCtr));
+    PD((ACK_QUEUE,"Message nr %d too large, old %d", Nr, recMsgCtr));
     readConnection->resend();
     return false;}
   if(writeConnection!= NULL) {
-    PD((REMOTESITE,"Ack received: %d waiting for: %d",
+    PD((ACK_QUEUE,"Ack received: %d waiting for: %d",
 	a,writeConnection->getMsgCtr()));
     writeConnection->ackReceived(a);}
   return true;}

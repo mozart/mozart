@@ -56,9 +56,14 @@ enum DEBUGType {
   HASH2,        // 35
 
   USER,					// misc
-  SPECIAL,      // 37
-  ERROR_DET,    // 38
+  SPECIAL,      
+  ERROR_DET,    
+  WRT_QUEUE,
+  ACK_QUEUE,    // 40
+  CELL_MGR,
+  PROBES,
   LAST
+
 };
 
 #ifdef DEBUG_PERDIO 
