@@ -48,7 +48,8 @@ OZSRCS          = \
 		Config.oz \
 		Tables.oz \
 		ConstrGraph.oz \
-		ParamGraph.oz
+		ParamGraph.oz \
+		ProcedureGraph.oz
 
 OZGSRCS         = 
 
@@ -61,6 +62,7 @@ LIB_TARGETS	= $(TARGETS:%=$(LIB_DIR)/%)
 
 all:     $(TARGETS)
 install: $(LIB_TARGETS)
+new:	 clean all
 
 Investigator.ozf: $(OZFNCTS)
 	$(OZL) -z 9 Main.ozf -o $@

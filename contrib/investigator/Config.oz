@@ -2,6 +2,9 @@ functor
 
 export
 
+   ProcNodeColour
+   ProcNodeShape 
+
    ParamColour
    ParamNodeShape
    
@@ -10,10 +13,11 @@ export
    PropNodeShape
    
    EventColour
+   FailedEdgeColour
    EventNodeShape
    
    EdgeColour
-
+   
    MarkedPropNodeAttr
    MarkedParamNodeAttr
    UnMarkedPropNodeAttr
@@ -28,8 +32,12 @@ define
    FailedPropColour  = red
    PropNodeShape     = box
    
+   ProcNodeColour    = white
+   ProcNodeShape     = circle
+   
    EventColour       = lightyellow1
    EdgeColour        = black
+   FailedEdgeColour  = red
    EventNodeShape    = rhombus
 
    MarkedPropNodeAttr    = double
