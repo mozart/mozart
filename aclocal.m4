@@ -433,8 +433,11 @@ AC_DEFUN(OZ_PROG_FLEX,[
     if test "$oz_tmp_ok" = yes; then
       oz_cv_LEX=$LEX
     else
-      LEX=flex_not_found
-      AC_MSG_WARN([
+      if test "$oz_coolness" = yes; then
+         LEX=flex_not_found
+         AC_MSG_WARN(GNU flex not found)
+      else
+         AC_MSG_ERROR([
 GNU flex version] OZ_VERSION_FLEX [or higher is needed to build the
 system.  It can be retrieved from:
 
@@ -449,6 +452,7 @@ You may find a mirror archive closer to you by consulting:
 
 	http://www.gnu.org/order/ftp.html
 ])
+      fi
     fi
   else
     OZ_FROM_CACHE(LEX,[for GNU flex])
@@ -486,8 +490,11 @@ AC_DEFUN(OZ_PROG_BISON,[
     if test "$oz_tmp_ok" = yes; then
       oz_cv_YACC=$YACC
     else
-      YACC=bison_not_found
-      AC_MSG_WARN([
+      if test "$oz_coolness" = yes; then
+        YACC=bison_not_found
+        AC_MSG_WARN(bison not found)
+      else
+        AC_MSG_ERROR([
 GNU bison version] OZ_VERSION_BISON [or higher is needed to build the system.
 It can be retrieved from:
 
@@ -503,6 +510,7 @@ You may find a mirror archive closer to you by consulting:
 
 	http://www.gnu.org/order/ftp.html
 ])
+      fi
     fi
   else
     OZ_FROM_CACHE(YACC,[for GNU bison])
@@ -529,8 +537,11 @@ AC_DEFUN(OZ_PROG_PERL,[
     if test "$oz_tmp_ok" = yes; then
       oz_cv_PERL=$PERL
     else
-      PERL=perl_not_found
-      AC_MSG_WARN([
+      if test "$oz_coolness" = yes; then
+        PERL=perl_not_found
+        AC_MSG_WARN(perl not found)
+      else
+        AC_MSG_WARN([
 Perl version] OZ_VERSION_PERL [or higher is needed to build the system.
 It can be retrieved from:
 
@@ -545,6 +556,7 @@ You may find further information on the Perl site:
 
 	http://www.perl.org/
 ])
+      fi
     fi
   else
     OZ_FROM_CACHE(PERL,[for perl])
@@ -581,8 +593,11 @@ AC_DEFUN(OZ_PROG_M4,[
       if test "$oz_tmp_ok" = yes; then
         oz_cv_M4=$M4
       else
+      if test "$oz_coolness" = yes; then
 	M4=m4_not_found
-        AC_MSG_WARN([
+        AC_MSG_WARN(m4 not found)
+      else
+        AC_MSG_ERROR([
 GNU m4 is needed to build the system.
 It can be retrieved from:
 
@@ -597,6 +612,7 @@ You may find a mirror archive closer to you by consulting:
 
 	http://www.gnu.org/order/ftp.html
 ])
+        fi
       fi
     fi
   else
