@@ -112,6 +112,7 @@
 <!ENTITY % p.mix.local "">
 <!ENTITY % p.mix.noindex "
           file    | kbd            | key        | samp
+        | em
         | q       | span           | def        | name
         | ref     | ptr            | ref.extern | ptr.extern
         | var
@@ -619,9 +620,9 @@
 
 <!ENTITY % data.chars.mix "#PCDATA|var">
 <!ELEMENT file - - (%data.chars.mix;)*>
-<!ELEMENT (kbd|key|samp|name) - - RCDATA>
+<!ELEMENT (kbd|key|samp|em|name) - - RCDATA>
 <!ELEMENT (q|span|def) - - (%p.chars.mix;)* -- should be more restricted -- >
-<!ATTLIST (file|kbd|key|samp|span)
+<!ATTLIST (file|kbd|key|samp|em|span)
         %common.attr;
         %inline.attr;
 >
