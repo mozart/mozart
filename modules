@@ -39,3 +39,5 @@ editinfo	-i mkmodules CVSROOT editinfo
 # Add other modules here...
 CPS		CPS
 OzPar		OzPar
+mozart		mozart
+
