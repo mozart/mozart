@@ -110,6 +110,29 @@ public:
   Board(Actor *a,int type);
 
   USEHEAPMEMORY;
+
+  Bool isAsk()          { return flags & Bo_Ask;        }
+  Bool isCommitted()    { return flags & Bo_Committed;  }
+  Bool isFailed()       { return flags & Bo_Failed;     }
+  Bool isInstalled()    { return flags & Bo_Installed;  }
+  Bool isNervous()      { return flags & Bo_Nervous;    }
+  Bool isMarkedGlobal() { return flags & Bo_GlobalMark; }
+  Bool isWaitTop()      { return flags & Bo_WaitTop;    }
+  Bool isWait()         { return flags & Bo_Wait;       }
+  Bool isWaiting()      { return flags & Bo_Waiting;    }
+  Bool _isRoot()        { return flags & Bo_Root;       }
+  Bool isSolve ()       { return flags & Bo_Solve;      }
+
+  void setInstalled()  { flags |= Bo_Installed; }
+  void setNervous()    { flags |= Bo_Nervous; }
+  void setFailed()     { flags |= Bo_Failed; }
+  void setGlobalMark() { flags |= Bo_GlobalMark; }
+  void setWaitTop()    { flags |= Bo_WaitTop; }
+  void setWaiting()    { flags |= Bo_Waiting; }
+
+  void unsetInstalled()  { flags &= ~Bo_Installed;  }
+  void unsetNervous()    { flags &= ~Bo_Nervous;    }
+  void unsetGlobalMark() { flags &= ~Bo_GlobalMark; }
   
   Bool gcIsMarked(void);
   void gcMark(Board *);
@@ -175,17 +198,6 @@ public:
     Assert(suspCount >= 0);
     return suspCount != 0;
   }
-  Bool isAsk()          { return flags & Bo_Ask;        }
-  Bool isCommitted()    { return flags & Bo_Committed;  }
-  Bool isFailed()       { return flags & Bo_Failed;     }
-  Bool isInstalled()    { return flags & Bo_Installed;  }
-  Bool isNervous()      { return flags & Bo_Nervous;    }
-  Bool isMarkedGlobal() { return flags & Bo_GlobalMark; }
-  Bool isWaitTop()      { return flags & Bo_WaitTop;    }
-  Bool isWait()         { return flags & Bo_Wait;       }
-  Bool isWaiting()      { return flags & Bo_Waiting;    }
-  Bool _isRoot()        { return flags & Bo_Root;       }
-  Bool isSolve ()       { return flags & Bo_Solve;      }
 
   void newScript(int size) {
     script.allocate(size);
@@ -198,13 +210,6 @@ public:
     body.setG(g);
     body.setX(x,i);
   }
-
-  void setInstalled()  { flags |= Bo_Installed; }
-  void setNervous()    { flags |= Bo_Nervous; }
-  void setFailed()     { flags |= Bo_Failed; }
-  void setGlobalMark() { flags |= Bo_GlobalMark; }
-  void setWaitTop()    { flags |= Bo_WaitTop; }
-  void setWaiting()    { flags |= Bo_Waiting; }
 
   void setCommitted(Board *s) {
     Assert(!isInstalled() && !isCommitted());
@@ -219,10 +224,6 @@ public:
     script[i].setLeft(v);
     script[i].setRight(r);
   }
-
-  void unsetInstalled()  { flags &= ~Bo_Installed;  }
-  void unsetNervous()    { flags &= ~Bo_Nervous;    }
-  void unsetGlobalMark() { flags &= ~Bo_GlobalMark; }
 
   Bool isInTree(void);
   void unsetGlobalMarks(void);

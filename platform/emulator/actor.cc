@@ -63,37 +63,50 @@
 void WaitActor::addWaitChild(Board *bb)
 {
   addChild();
+
   if (!children) {
-    children=(Board **) freeListMalloc(3*sizeof(Board *));
-    *children++ = (Board *) 2;
-    children[0] = bb;
-    children[1] = NULL;
+    Board ** c = (Board **) freeListMalloc(3*sizeof(Board *));
+    *c++ = (Board *) 2;
+    children = c;
+    c[0] = bb;
+    c[1] = NULL;
     return;
   }
-  int32 maxx= ToInt32(children[-1]);
+
+  Board ** c = children;
+
+  int32 maxx = ToInt32(c[-1]);
+
   int i;
+  
   for (i = 0; i < maxx; i++) {
-    if (!children[i]) {
-      children[i] = bb;
+    if (!c[i]) {
+      c[i] = bb;
       return;
     }
   }
+
   int size = 2*maxx;
+  
   Board **cc = (Board **) freeListMalloc((size+1)*sizeof(Board *));
+
   *cc++ = (Board *) ToPointer(size);
-  for (i = 0; i < maxx; i++) {
-    cc[i] = children[i];
-  }
-  freeListDispose(children-1,(ToInt32(children[-1])+1)*sizeof(Board *));
+  
+  for (i = maxx; i--; )
+    cc[i] = c[i];
+
+  freeListDispose(c-1,(ToInt32(c[-1])+1)*sizeof(Board *));
+  
   children = cc;
-  children[maxx] = bb;
-  for (i = maxx+1; i < size; i++) {
-    children[i] = NULL;
-  }
+
+  cc[maxx] = bb;
+
+  for (i = maxx+1; i < size; i++)
+    cc[i] = NULL;
+
 }
 
-void WaitActor::failWaitChild(Board *bb)
-{
+void WaitActor::failWaitChild(Board *bb) {
   failChild();
   int32 maxx = ToInt32(children[-1]);
   for (int i = 0; i < maxx; i++) {
@@ -105,7 +118,7 @@ void WaitActor::failWaitChild(Board *bb)
       return;
     }
   }
-  error("WaitActor::failChildInternal");
+  Assert(0);
 }
 
 void WaitActor::selectOrFailChildren(int l, int r) {
@@ -137,24 +150,21 @@ Bool WaitActor::isAliveUpToSolve(void) {
     return NO;
 
   Board *bb = GETBOARD(this);
-  Actor *aa;
 
-loop:
-  // must be applied to a result of 'getBoard()';
-  Assert (!(bb->isCommitted ()));
-
-  if (bb->isFailed()) 
-    return NO;
-  if (bb->_isRoot() || bb->isSolve())
-    return OK;
+  while (1) {
+    if (bb->isFailed()) 
+      return NO;
+    if (bb->_isRoot() || bb->isSolve())
+      return OK;
   
-  aa=bb->getActor();
-  if (aa->isCommitted()) 
-    return NO;
+    Actor * aa = bb->getActor();
+    if (aa->isCommitted()) 
+      return NO;
 
-  bb = GETBOARD(aa);
+    bb = GETBOARD(aa);
+  }
 
-  goto loop;
-  // should never come here
-  return NO;
+  Assert(0);
 }
+
+
