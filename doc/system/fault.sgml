@@ -1,13 +1,11 @@
 <!--
   - Authors:
+  -   Per Brand		<perbrand@sics.se>
   -   Denys Duchier     <duchier@ps.uni-sb.de>
-  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
-  -   Christian Schulte <schulte@dfki.de>
   -
   - Copyright:
+  -   Per Brand, 1998
   -   Denys Duchier, 1998
-  -   Leif Kornstaedt, 1998
-  -   Christian Schulte, 1998
   -
   - Last change:
   -   $Date$ by $Author$
@@ -24,16 +22,223 @@
   - WARRANTIES.
   -
   -->
-  <Chapter id="Chapter.Fault">
-    <Title/Detecting and Handling Failure: <<Fault>>/
-  </Chapter>
+<Chapter id="Chapter.Fault">
+  <Title/Detecting and Handling Distribution Problems: <<Fault>>/
 
+  <p>Fault Model WARNING. At Seifs request the fault condition names
+will be changed before the release, and some other small interface
+changes.</p>
+
+  <section>
+    <title/Introduction/
+    <p>Introduction The fault model provides functions to install and
+deinstall injectors and watchers and to access the fault condition of
+an entity.
+<list>
+	<entry/<code/{Fault.install Specification Procedure}//
+	<item>installs an injector/handler according to the
+specification, if this is possible. Return true if  the installation
+is successful, false otherwise. Raises an exception if the
+specification is of  the wrong format.
+<p>The specification is a record with one of the following labels.
+<code display/injector safeInjector siteWatcher netWatcher/
+The procedure is any two argument procedure
+	<entry/<code/{Fault.deInstall Specification Procedure}//
+	<item>deinstalls a previously installed  injector/handler
+according to the specification, if this is  possible. Return true if
+the deinstallation is successful, false otherwise. Raises an exception
+if the specification is  of the wrong format.
+<p>The specification is a record with one of the following labels.
+<code display/injector safeInjector siteWatcher netWatcher watcher/
+As the name suggests you can only  deinstall a distribution handler
+that was previously  installed. In most cases the same procedure must
+be specified .
+	<entry/<code/{Fault.getEntityCond Entity}/
+	<item>return a list of current fault condition of the entity.
+</list>
+</p>
+  </section>
+
+  <section>
+    <title/Injectors/
+
+    <p>Injectors The injector specification record has the following
+fields:
+<list>
+	<entry/<code/'cond'//
+	<item> A list of fault conditions
+	<entry/<code/entityType//
+	<item>the atom <code/'single'/ or <code/'all'/
+	<entry/<code/entity//
+	<item>an arbitrary Oz-term
+	<entry/<code/'thread'//
+	<item>the atom <code/'this'/ or <code/'all'/ or a first-class
+thread
+	<entry/<code/retry//
+	<item>the atom <code/'retry'/ or <code/'skip'/
+</list>
+The <code/retry/ field may be omitted (the default is
+<code/retry:'skip'/). The entity field may be omitted if the
+<code/entityType/ is <code/'all'/.
+<p>
+The legal fault conditions are restricted <code/topermBlocked/ and
+<code/tempBlocked/.
+<p>If the <code/entityType/ is <code/'single'/ then the injector is
+entity-specific. If the <code/'thread'/ field is not <code/'all'/ then
+injector is thread-specific. Currently, injectors can be in order of
+generality:
+<list>
+	<item>entity and thread-specific  (<code/entityType:single/,
+<code/'thread':{'this',?={first-class thread}}/
+	<item>entity-specific and thread-unspecific (<code/entityType:single/,
+<code/'thread':'all'/)
+	<item>entity-unspecific and
+thread-unspecific. (<code/entityType:'all'/, <code/'thread':'all'/)
+</list>
+The model is if that when threads attempt operations on distributed
+entities that is in a distribution fault state then if there is an
+applicable and triggered injector on that entity the handler
+procedurewill be invoked in that thread. The injector is applicable
+if:
+<list>
+	<item>the entity matches (if the injector is entity-specific)
+	<item>the thread matches (if the injector is thread-specific)
+	<item>there is no more specific injector applicable
+</list>
+The injector is triggered if the entity currently is subject to one of
+the specified fault conditions. Upon completion of the
+handler-procedure the original operation that could not be performed
+is either repeated or skipped depending on the value of the
+<code/'retry'/ field.
+<p>
+You can only install one entity and thread-unspecific injector per
+site. You can only install one entity-specific and thread-unspecific
+injector per entity. And finally, you can only install one
+entity-specific and thread-specific injector per entity and
+thread. &ie; there is at most one applicable injector for each
+attempted operation.
+<p>
+Currently there is a default entity-unspecific and thread-unspecific
+injector installed on start-up. This injector raises an exception.
+<p>
+The injectors as described here are sited, i.e. do not work on other
+sites if exported.
+
+<p>You may install injectors on entities before they are
+distributed, or after. You do not have to know the instantiation state
+to install injectors. You may install injectors on variables, if the
+variable is later bound the injector is carried over.  You may install
+injectors on stateless entities as well , this has no effect, as it is
+assumed that you meant to install on a variable that was bound before
+you were able to install the injector.
+<p>
+The operations that can cause injector invocation are
+<em/exchange/, <em/access/, <em/update/ of cells, or object
+attributes, <em/locking/ a lock, <em/binding/ a variable, <em/sending/
+to a port.
+<p>
+The system guarantees that if you attempt the above operations you
+will either eventually complete the operation or get the corresponding
+injector invoked.
+</p>
+  </section>
+
+  <section>
+    <title/Safe Injectors/
+    <p>
+The safe-injector specification record has almost the same fields as
+ordinary injectors. The difference is that the <code/entityType/ is not
+needed, in that this type of injector is always entity-specific (as if
+you had specified <code/'single'/). Also this type of injector is always
+thread-specific as well (so you may not use the value <code/'all'/ in the
+<code/'thread'/ field.
+<p>
+Safe injectors are thus always entity-specific and
+thread-specific. The  big difference is that safe injectors are
+unsited and can be freely exported, and shared between sites. This is
+important for encapsulation of  failure-handling. Note that you are
+ensured that imported code cannot change your more general injectors,
+in particular such code cannot change default entity-unspecific and
+thread-unspecific injectors of your site.
+</p>
+  </section>
+
+  <section>
+    <title/Watchers/
+    <p>A watcher specification (specification record label
+<code/siteWatcher/, <code/netWatcher/ or <code/watcher/) has the
+fields:
+<list>
+	<entry/<code/'cond'//
+	<item>A list of fault conditions
+	<entry/<code/entity//
+	<item>an arbitrary Oz-term
+</list>
+If the entity has one of the fault conditions listed in the list the
+handler procedure is invoked in its own thread. You may install any
+number of watchers on the same entity.
+<p>
+The allowed fault conditions are:
+<list>
+	<entry/<code/permBlocked//
+	<item><code/siteWatcher/s only
+	<entry/<code/tempBlocked//
+	<item><code/siteWatcher/s only
+	<entry/<code/permWillBlock//
+	<item><code/siteWatcher/s only
+	<entry/<code/tempWillBlock//
+	<item><code/siteWatcher/s only
+	<entry/<code/permSome//
+	<item><code/netWatcher/s only
+	<entry/<code/tempSome//
+	<item><code/netWatcher/s only
+	<entry/<code/permAll//
+	<item><code/netWatcher/s only
+	<entry/<code/tempAll//
+	<item><code/netWatcher/s only
+</list>
+<para><title/SiteWatchers/
+SiteWatchers provide you with information when one of the operations
+mentioned in the preceding section cannot be performed due to
+distribution faults. The <code/blocked/ fault conditions occur when some
+thread is trying to perform an operation on the faulty entity, while
+the <code/willBlock/ conditions occur when the entity is faulty even when
+no thread is attempting operations on it (i.e. provides information
+eagerly).
+<para><title/NetWatchers/
+NetWatchers provide you with information as to the problems
+experienced by other sites. The <code/some/ conditions indicate that at
+least one other site is experiencing problems (e.g. has crashed, or is
+disconnected). The <code/all/ conditions provide the information that all
+other sites are experiencing problems. The <code/all/ conditions only apply
+to cells and  object state.
+<p>
+Observe that netWatchers cannot provide complete information, there
+may be problems that you will never know about.
+<p>
+Watchers are unsited and may be freely exported, and shared.
+</p>
+  </section>
+
+  <section>
+    <title/Deinstallation/
+
+    <p>Deinstallation is basically the reverse of installation for all
+the distribution handlers (injectors andwatchers).
+<p>
+Currently you must supply the installed handler procedure in order to
+be able to  deinstall, except in the special case of the system
+default entity-unspecific and thread-unspecific injector, where
+the procedure is not checked. This will probably be changed.
+</p>
+  </section>
+</Chapter>
 
 <!--
 Local Variables:
 mode: sgml
 mode: auto-fill
-sgml-default-dtd-file: "part.ced"
+sgml-default-dtd-file: "chapter.ced"
 sgml-auto-activate-dtd: t
 adaptive-fill-mode: nil
 End:
