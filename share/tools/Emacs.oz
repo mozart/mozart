@@ -23,11 +23,12 @@ functor
 import
    Parser(expandFileName) at 'x-oz://boot/Parser'
    Property(get condGet)
-   System(printInfo)
+   System(printInfo showError)
    Error(messageToVirtualString)
    OS(tmpnam)
    Open(socket text file)
    Listener('class')
+   OPIServer(port)
 export
    getOPI:    GetOPI
    condSend:  CondSend
@@ -62,10 +63,13 @@ define
 		  Sock = {New TextSocket server(port: ?Port)}
 	       end
 	       {Wait Port}
+	       {System.showError "BEFORE"}
+	       {Wait OPIServer.port}
+	       {System.showError "AFTER"}
 	       Socket <- Sock
 	       {Print '\'oz-socket '#case Host of unit then ""
 				     else '"'#Host#'" '
-				     end#Port#'\''}
+				     end#Port#' '#OPIServer.port#'\''}
 	       Listener.'class', init(CompilerObject Serve)
 	    end
 	 end
