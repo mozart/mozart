@@ -240,7 +240,6 @@ extern OZ_Term _FUNDECL(OZ_newName,());
 
 /* print warning */
 extern void _FUNDECL(OZ_warning,(char * ...));
-extern void _FUNDECL(OZ_fail,(char * ...));
 
 /* generate the unix error string from an errno (see perror(3)) */
 char * _FUNDECL(OZ_unixError,(int err));

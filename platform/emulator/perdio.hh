@@ -29,13 +29,9 @@ X();  \
 ~X(); \
 (X&);
 
-OZ_Return closePort(OZ_Term);
-void remoteSend(PortProxy *p, TaggedRef msg);
-void remoteClose(PortProxy *p);
+OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg);
 void cellDoExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
 void cellDoAccess(Tertiary*,TaggedRef);
-OZ_Return remoteApplication(char *biName, Tertiary *th, TaggedRef arg);
-OZ_Return remoteApplication(char *biName, Tertiary *th);
 
 void networkSiteDec(int sd);
 
