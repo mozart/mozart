@@ -359,7 +359,7 @@ OZ_Return isKindedRelInline(TaggedRef term) {
     }
     return kinded?PROCEED:FAILED;
   }
-  else FAILED;
+  else return FAILED;
 }
 
 DECLAREBI_USEINLINEREL1(BIisKindedRel,isKindedRelInline)
