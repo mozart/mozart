@@ -57,14 +57,21 @@
 #include "gname.hh"
 #include "interFault.hh"
 #include "weakdict.hh"
-
-// loeckelt (for big fsets)
 #include "mozart_cpi.hh"
 
-// hack alert: usage #pragma interface requires this
 #ifdef OUTLINE
 #define inline
 #endif
+
+/*
+ * Notes on global stucture of garbage collection and space cloning
+ *
+ * The routines fall into several classes:
+ *  - Collection
+ *  - Recursion
+ *
+ */
+
 
 /*
  * isCollecting: collection is running
@@ -305,11 +312,13 @@ if (GCISMARKED(elem)) {return (Type) GCUNMARK(elem);}
   d->cacMark(t);
 
 
-#ifdef G_COLLECT
+/*
+ * Section ():
+ *    Maintaining external references into heap
+ *
+ */
 
-//*****************************************************************************
-//               Functions to gc external references into heap
-//*****************************************************************************
+#ifdef G_COLLECT
 
 class ExtRefNode;
 static ExtRefNode *extRefs = NULL;
@@ -321,16 +330,21 @@ public:
   TaggedRef *elem;
   ExtRefNode *next;
 
-  ExtRefNode(TaggedRef *el, ExtRefNode *n): elem(el), next(n){ Assert(elem); }
+  ExtRefNode(TaggedRef *el, ExtRefNode *n): elem(el), next(n){ 
+    Assert(elem); 
+  }
 
-  void remove()                  { elem = NULL; }
-  ExtRefNode *add(TaggedRef *el) { return new ExtRefNode(el,this); }
+  void remove(void) { 
+    elem = NULL; 
+  }
+  ExtRefNode *add(TaggedRef *el) { 
+    return new ExtRefNode(el,this); 
+  }
   
-  ExtRefNode *gCollect()
-  {
+  ExtRefNode *gCollect(void) {
     ExtRefNode *aux = this;
     ExtRefNode *ret = NULL;
-    while(aux) {
+    while (aux) {
       if (aux->elem) {
 	ret = new ExtRefNode(aux->elem,ret);
 	oz_gCollectTerm(*ret->elem,*ret->elem);
@@ -340,20 +354,16 @@ public:
     return ret;
   }
 
-
-  ExtRefNode *protect(TaggedRef *el)
-  {
+  ExtRefNode *protect(TaggedRef *el) {
     Assert(oz_isRef(*el) || !oz_isVariable(*el));
     Assert(!find(el));
     return add(el);
   }
 
-
-  Bool unprotect(TaggedRef *el) 
-  {
+  Bool unprotect(TaggedRef *el) {
     Assert(el);
     ExtRefNode *aux = extRefs;
-    while(aux) {
+    while (aux) {
       if (aux->elem==el) {
 	aux->remove();
 	return OK;
@@ -363,23 +373,21 @@ public:
     return NO;
   }
 
-
-  ExtRefNode *find(TaggedRef *el)
-  {
+  ExtRefNode * find(TaggedRef *el) {
     Assert(el);
     ExtRefNode *aux = extRefs;
-    while(aux) {
+    while (aux) {
       if (aux->elem==el)
 	break;
       aux = aux->next;
     }
     return aux;
   }
+
 };
 
 
-Bool oz_protect(TaggedRef *ref)
-{
+Bool oz_protect(TaggedRef *ref) {
   extRefs = extRefs->protect(ref);
   return OK;
 }
@@ -387,16 +395,14 @@ Bool oz_protect(TaggedRef *ref)
 /* protect a ref, that will never change its initial value
  *  --> no need to remember it, if it's a small int or atom 
  */
-Bool oz_staticProtect(TaggedRef *ref)
-{
+Bool oz_staticProtect(TaggedRef *ref) {
   if (needsNoCollection(*ref))
     return OK;
-
+  
   return oz_protect(ref);
 }
 
-Bool oz_unprotect(TaggedRef *ref)
-{
+Bool oz_unprotect(TaggedRef *ref) {
   ExtRefNode *aux = extRefs->find(ref);
 
   if (aux == NULL)
@@ -421,17 +427,32 @@ GCMeManager * GCMeManager::_head;
 
 #endif
 
+
+/*
+ * Section ()
+ *    Collection stacks
+ *
+ */
+
 #ifdef G_COLLECT
 
-VarFix varFix;
+VarFix   varFix;
 CacStack cacStack;
 
 #endif
 
 
-/****************************************************************************
- * Collect all types of terms
- ****************************************************************************/
+/*
+ * Section () 
+ *   Collection of terms
+ *
+ */
+
+
+/*
+ * RefsArrays
+ *
+ */
 
 // Structure of type 'RefsArray' (see ./tagged.h)
 // r[0]..r[n-1] data
@@ -471,6 +492,14 @@ RefsArray _cacRefsArray(RefsArray r) {
   return aux;
 }
 
+
+/*
+ * Boards:
+ *
+ */
+
+
+// Test whether a board must be copied
 #ifdef G_COLLECT
 
 #define NEEDSCOPYING(bb) (OK)
@@ -501,7 +530,7 @@ void Board::_cacMark(Board * fwd) {
 }
 
 inline
-Board * Board::_cacBoard() {
+Board * Board::_cacBoard(void) {
   GCDBG_INFROMSPACE(this);
 
   // Do not clone a space above or collect a space above root ;-(
@@ -525,20 +554,6 @@ Board * Board::_cacBoard() {
   return ret;
 }
 
-#ifdef G_COLLECT
-
-void dogcGName(GName *gn) {
-  if (gn) 
-    gCollectGName(gn);
-}
-
-#else
-
-#define dogcGName(no) 
-
-#endif
-
-
 /*
  * Literals:
  *   3 cases: atom, optimized name, dynamic name
@@ -546,7 +561,7 @@ void dogcGName(GName *gn) {
  */
 
 inline
-Name *Name::_cacName() {
+Name *Name::_cacName(void) {
   CHECKCOLLECTED(homeOrGName, Name *);
 #ifdef G_COLLECT
   GName * gn = NULL;
@@ -593,6 +608,46 @@ Literal * Literal::_cac(void) {
 
   return ((Name*) this)->_cacName();
 }
+
+
+/*
+ * Dynamic tables
+ *
+ */
+
+inline
+DynamicTable * DynamicTable::_cac(void) {
+  Assert(isPwrTwo(size));
+
+  // Copy the table:
+  DynamicTable * to = (DynamicTable *) heapMalloc((size-1)*sizeof(HashElement)
+						  + sizeof(DynamicTable));
+  to->numelem = numelem;
+  to->size    = size;
+
+  HashElement * ft = table;
+  HashElement * tt = to->table;
+
+  for (dt_index i=size; i--; ) 
+    if (ft[i].ident) {
+      if (ft[i].value) {
+	OZ_cacBlock(&(ft[i].ident), &(tt[i].ident), 2);
+      } else {
+	oz_cacTerm(ft[i].ident, tt[i].ident);
+	tt[i].value = makeTaggedNULL();
+      }
+    } else {
+      tt[i].ident = makeTaggedNULL();
+      tt[i].value = makeTaggedNULL();
+    }
+
+  return to;
+}
+
+/*
+ * Variables
+ *
+ */
 
 inline
 void OzVariable::_cacMark(TaggedRef * fwd) {
@@ -693,34 +748,6 @@ OzVariable * OzVariable::_cacVarInline(void) {
     
 }
 
-inline
-DynamicTable * DynamicTable::_cac(void) {
-  Assert(isPwrTwo(size));
-
-  // Copy the table:
-  DynamicTable * to = (DynamicTable *) heapMalloc((size-1)*sizeof(HashElement)
-						  + sizeof(DynamicTable));
-  to->numelem = numelem;
-  to->size    = size;
-
-  HashElement * ft = table;
-  HashElement * tt = to->table;
-
-  for (dt_index i=size; i--; ) 
-    if (ft[i].ident) {
-      if (ft[i].value) {
-	OZ_cacBlock(&(ft[i].ident), &(tt[i].ident), 2);
-      } else {
-	oz_cacTerm(ft[i].ident, tt[i].ident);
-	tt[i].value = makeTaggedNULL();
-      }
-    } else {
-      tt[i].ident = makeTaggedNULL();
-      tt[i].value = makeTaggedNULL();
-    }
-
-  return to;
-}
 
 inline
 void OzOFVariable::_cacRecurse(void) {
@@ -1446,7 +1473,9 @@ void ConstTerm::_cacConstRecurse(void) {
       Object *o = (Object *) this;
 
 #ifdef G_COLLECT
-      dogcGName(o->getGName1());
+      GName * gn = o->getGName1();
+      if (gn) 
+	gCollectGName(gn);
 #endif
 
       switch(o->getTertType()) {
@@ -1712,7 +1741,7 @@ ConstTerm *ConstTerm::gCollectConstTermInline(void) {
  const_withhome: {
    ConstTermWithHome * ctwh_t = (ConstTermWithHome *) oz_hrealloc(this, sz);
    if (ctwh_t->hasGName())
-     dogcGName(ctwh_t->getGName1());
+     gCollectGName(ctwh_t->getGName1());
    else
      ctwh_t->setBoard(ctwh_t->getSubBoardInternal()->gCollectBoard());
    cacStack.push(ctwh_t, PTR_CONSTTERM);

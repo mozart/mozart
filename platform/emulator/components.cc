@@ -125,7 +125,7 @@ public:
     }
 
     buf[j] = 0;
-    header = ozstrdup(buf);
+    header = strdup(buf);
     free(buf);
     checkSum = 0;
 
@@ -427,7 +427,7 @@ OZ_BI_define(BIsaveWithHeader,4,0)
   OZ_declareInt(3,compressionlevel);
 
   OZ_declareVirtualString(1,filename);
-  filename = ozstrdup(filename);
+  filename = strdup(filename);
   OZ_declareVirtualString(2,header);
 
   OZ_Return ret = saveIt(value,filename,header,compressionlevel,NO);
@@ -658,7 +658,7 @@ char *newTempFile()
 {
   char tn[L_tmpnam] = ""; // I like POSIX!
   ostmpnam(tn);
-  return ozstrdup(tn);  
+  return strdup(tn);  
 }
 
 enum URLAction { URL_LOCALIZE , URL_OPEN , URL_LOAD };
@@ -677,7 +677,7 @@ public:
     fd(f), pid(p), file(tmpf), out(o), action(act)
   {
     controlvar = var;;
-    url = ozstrdup(u);
+    url = strdup(u);
     OZ_protect(&controlvar); 
     OZ_protect(&out); 
   }
@@ -781,7 +781,7 @@ public:
   const char *url;
   int fd;
   URLInfo(const char *file, const char *u, int f):
-    tmpfile(ozstrdup(file)), url(ozstrdup(u)), fd(f) {}
+    tmpfile(strdup(file)), url(strdup(u)), fd(f) {}
   ~URLInfo() {
     delete tmpfile;
     delete (char*) url;
