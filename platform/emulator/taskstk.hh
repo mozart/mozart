@@ -30,11 +30,11 @@ enum ContFlag {
   C_CFUNC_CONT     = 2, // a continuation  to call a c-function
   C_DEBUG_CONT     = 3, // a continuation for debugging
   C_CALL_CONT      = 4, // an application
-  C_XXXX1          = 5, //
+  C_SETFINAL       = 5, //
   C_ACTOR          = 6, // an actor task
   C_XXXX2          = 7, //
   C_XXXX3          = 9, //
-  C_SET_SELF       = 9, // set am.cachedSelf
+  C_SET_OOREGS     = 9, // set am.ooRegisters
   C_LTQ            = 10,// local thread queue
   C_CATCH          = 11 // exception handler
 };
@@ -128,6 +128,12 @@ public:
   void gc(TaskStack *newstack);
 
   TaggedRef findCatch(TaggedRef &traceback);
+
+  void pushSetFinal()
+  {
+    push(ToPointer(C_SETFINAL));
+  }
+
   void pushCatch(TaggedRef hdl)
   {
     ensureFree(2);
@@ -200,7 +206,7 @@ public:
   }
 
   void pushDebug(OzDebug *deb)   { pushPair(deb,C_DEBUG_CONT); }
-  void pushSelf(Object *obj)     { pushPair(obj,C_SET_SELF); }
+  void pushOORegs(int32 regs)    { pushPair(ToPointer(regs),C_SET_OOREGS); }
   void pushActor(Actor *aa)      { pushPair(aa,C_ACTOR); }
 
   static int frameSize(ContFlag);

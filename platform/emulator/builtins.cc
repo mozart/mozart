@@ -6711,11 +6711,8 @@ void assignError(TaggedRef rec, TaggedRef fea, char *name)
   message("state found      : %s\n", toC(rec));
 }
 
-#define CheckSelf                               \
-     Assert(am.getSelf() != NULL);              \
-     { Object *o = am.getSelf();                \
-       Assert(o->getDeepness()>=1);             \
-     }
+
+#define CheckSelf Assert(am.getSelf()!=NULL && am.getSelf()->isLocked());
 
 
 OZ_Return atInline(TaggedRef fea, TaggedRef &out)
@@ -6789,7 +6786,7 @@ OZ_C_proc_begin(BImakeClass,8)
   OZ_Term send       = OZ_getCArg(3); { DEREF(send,_1,_2); }
   OZ_Term features   = OZ_getCArg(4); { DEREF(features,_1,_2); }
   OZ_Term ufeatures  = OZ_getCArg(5); { DEREF(ufeatures,_1,_2); }
-  OZ_Term defmethods = OZ_getCArg(6);{ DEREF(defmethods,_1,_2); }
+  OZ_Term defmethods = OZ_getCArg(6); { DEREF(defmethods,_1,_2); }
   OZ_Term out        = OZ_getCArg(7);
 
   SRecord *methods = NULL;
@@ -6931,6 +6928,7 @@ OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
               NO,
               am.currentBoard);
 
+  //  out->setLocked();
   return makeTaggedConst(out);
 }
 
@@ -6979,14 +6977,34 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIsetClosed,1)
 {
-  OZ_Term obj=OZ_getCArg(0);
+  OZ_Term obj = OZ_getCArg(0);
 
   DEREF(obj,objPtr,_2);
-  if (isAnyVar(obj)) OZ_suspendOn(makeTaggedRef(objPtr));
+  if (isAnyVar(obj)) OZ_suspendOn(OZ_getCArg(0));
   if (!isObject(obj)) TypeErrorT(0,"Object");
   Object *oo = (Object *)tagged2Const(obj);
-  oo->close();
-  return PROCEED;
+  if (oo->isClosed()) return PROCEED;
+  if (am.isLocked() || !oo->isLocked()) {
+    oo->close();
+    return PROCEED;
+  }
+
+  OZ_suspendOn(oo->attachThread());
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIisClosed,2)
+{
+  OZ_Term tobj = OZ_getCArg(0);
+  DEREF(tobj,_1,_2);
+  if (isAnyVar(tobj)) OZ_suspendOn(OZ_getCArg(0));
+  if (!isObject(tobj)) TypeErrorT(0,"Object");
+
+  Object *obj = (Object *) tagged2Const(tobj);
+
+  return OZ_unify(OZ_getCArg(1),
+                  obj->isClosed() ? NameTrue : NameFalse);
 }
 OZ_C_proc_end
 
@@ -7004,36 +7022,11 @@ OZ_C_proc_begin(BIgetOONames,5)
 OZ_C_proc_end
 
 
-OZ_Return objectIsFreeInline(TaggedRef tobj, TaggedRef &out)
-{
-  DEREF(tobj,_1,_2);
-  Assert(isObject(tobj));
-
-  Object *obj = (Object *) tagged2Const(tobj);
-
-  if (am.currentBoard != obj->getBoardFast()) {
-    return OZ_raiseC("globalState",1,OZ_atom("obj"));
-  }
-
-  if (obj->isClosed()) {
-    out = NameTrue;
-  } else if (obj->getDeepness()>=1) {
-    out = obj->attachThread();
-  } else {
-    obj->incDeepness();
-    out = NameFalse;
-  }
-  return PROCEED;
-}
-
-DECLAREBI_USEINLINEFUN1(BIobjectIsFree,objectIsFreeInline)
-
-
 
 /* is sometimes explicitely called within Object.oz */
 OZ_C_proc_begin(BIreleaseObject,0)
 {
-  am.getSelf()->release();
+  am.unlockSelf();
   return PROCEED;
 }
 OZ_C_proc_end
@@ -7047,41 +7040,14 @@ OZ_C_proc_begin(BIgetSelf,1)
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIsetSelf,1)
-{
-  TaggedRef o = OZ_getCArg(0);
-  DEREF(o,_1,_2);
-  if (!isObject(o)) {
-    TypeErrorT(0,"object");
-  }
-
-  Object *obj = (Object *) tagged2Const(o);
-  /* same code as in emulate.cc !!!!! */
-  if (am.getSelf()!=obj) {
-    am.currentThread->pushSelf(am.getSelf());
-    am.setSelf(obj);
-  }
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
 OZ_C_proc_begin(BIoogetCounterSelf,1)
 {
-  int counter = am.getSelf()->getDeepness();
-  return OZ_unifyInt(OZ_getCArg(0),counter);
+  return OZ_unifyInt(OZ_getCArg(0),0);
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIoosetCounterSelf,1)
 {
-  OZ_declareIntArg(0,counter);
-
-  /* set counter+1 and the nrelease which decreases counter again */
-  am.getSelf()->setDeepness(counter+1);
-  am.getSelf()->release();
-
   return PROCEED;
 }
 OZ_C_proc_end
@@ -7503,11 +7469,10 @@ BIspec allSpec2[] = {
   {"getClass",         2,BIgetClass,           (IFOR) getClassInline},
   {"new",              3,BInew,                0},
   {"newObject",        2,BInewObject,          (IFOR) newObjectInline},
-  {"objectIsFree",     2,BIobjectIsFree,       (IFOR) objectIsFreeInline},
   {"getOONames",       5,BIgetOONames,         0},
   {"releaseObject",    0,BIreleaseObject,      0},
   {"getSelf",          1,BIgetSelf,            0},
-  {"setSelf",          1,BIsetSelf,            0},
+  {"isClosed",         2,BIisClosed,           0},
   {"setClosed",        1,BIsetClosed,          0},
 
   {"Space.new",           2, BInewSpace,        0},

@@ -18,12 +18,14 @@
 int TaskStack::frameSize(ContFlag cFlag)
 {
   switch (cFlag){
+  case C_SETFINAL:
+    return 1;
   case C_CONT:
     return 3;
   case C_XCONT:
     return 4;
   case C_DEBUG_CONT:
-  case C_SET_SELF:
+  case C_SET_OOREGS:
   case C_LTQ:
   case C_CATCH:
   case C_ACTOR:
@@ -84,7 +86,8 @@ loop:
 }
 
 
-TaggedRef TaskStack::findCatch(TaggedRef &out) {
+TaggedRef TaskStack::findCatch(TaggedRef &out)
+{
   if (ozconf.moreInfo)
     out = nil();
   else
@@ -154,20 +157,24 @@ TaggedRef TaskStack::findCatch(TaggedRef &out) {
         break;
       }
 
+    case C_SETFINAL:
+      am.setFinal();
+      break;
+
     case C_CATCH:
       {
         TaggedRef pred = (TaggedRef) ToInt32(pop());
         return pred;
       }
 
-    case C_SET_SELF:
+    case C_SET_OOREGS:
       {
-        Object *oldSelf = am.getSelf();
-        Object *newSelf = (Object *) pop();
-        oldSelf->setDeepness(0); /* free the object */
-        am.setSelf(newSelf);
+        Assert(am.isFinal());
+        am.unlockSelf();
+        ChachedOORegs newSelf = ToInt32(pop());
+        am.restoreSelf(newSelf);
         if (ozconf.moreInfo)
-          out = cons(OZ_atom("setSelf"),out);
+          out = cons(OZ_atom("setOORegs"),out);
         break;
       }
 

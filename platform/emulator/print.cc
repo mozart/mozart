@@ -1333,6 +1333,11 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
     TaggedPC topElem = ToInt32(pop());
     ContFlag flag = getContFlag(topElem);
     switch (flag){
+
+    case C_SETFINAL:
+      message("\tIn setFinal\n");
+      break;
+
     case C_CONT:
       {
         ProgramCounter PC = getPC(C_CONT,topElem);
@@ -1406,11 +1411,11 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
         break;
       }
 
-    case C_SET_SELF:
+    case C_SET_OOREGS:
       {
-        Object *obj = (Object *) pop();
+        pop();
         if (verbose)
-          message("\tSET_SELF: 0x%x\n", obj);
+          message("\tSET_OOREGS\n");
         break;
       }
 
@@ -1450,6 +1455,11 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
     TaggedPC topElem = ToInt32(pop());
     ContFlag flag = getContFlag(topElem);
     switch (flag){
+
+    case C_SETFINAL:
+      out = cons(OZ_atom("setFinal"),out);
+      break;
+
     case C_CONT:
       {
         ProgramCounter PC = getPC(C_CONT,topElem);
@@ -1513,9 +1523,9 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
         break;
       }
 
-    case C_SET_SELF:
+    case C_SET_OOREGS:
       {
-        Object *obj = (Object *) pop();
+        pop();
         out = cons(OZ_atom("setSelf"),out);
         break;
       }

@@ -336,7 +336,7 @@ Case(SETVOID)
               addSusp (labPtr, thr);
             }
           }
-          CHECK_CURRENT_THREAD;
+          goto LBLsuspendThread;
         }
 
         JUMP( getLabelArg(PC+4) );
@@ -360,7 +360,7 @@ Case(SETVOID)
           e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
           Thread *thr = e->mkSuspThread ();
           addSusp (termPtr, thr);
-          CHECK_CURRENT_THREAD;
+          goto LBLsuspendThread;
         }
 
         JUMP( getLabelArg(PC+4) );
@@ -388,7 +388,7 @@ Case(SETVOID)
           e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
           Thread *thr = e->mkSuspThread ();
           addSusp (termPtr, thr);
-          CHECK_CURRENT_THREAD;
+          goto LBLsuspendThread;
         }
 
         JUMP( getLabelArg(PC+4) );
