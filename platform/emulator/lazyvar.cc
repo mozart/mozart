@@ -110,31 +110,27 @@ GenLazyVariable::kickLazy()
   OZ_warning("Lazy variable contains illegal spec");
 }
 
-void
-GenLazyVariable::kickLazy(TaggedRef*me)
-{
-  kickLazy();
-  // create a free var in the same home space
-  // and bind this to the free var
-  SuspList* suspl = suspList;
-  if (suspl!=NULL) {
-    SVariable* sv = new SVariable(home);
-    sv->setSuspList(suspl);
-    *me = makeTaggedSVar(sv);
-  } else {
-    *me = makeTaggedUVar(home);
-  }
-}
-
 int
 GenLazyVariable::unifyLazy(TaggedRef*vPtr,TaggedRef*tPtr,ByteCode*scp)
 {
   // if x:lazy=y:var y<-x if x is global, then trail
   // ^^^DONE AUTOMATICALLY
   // else x.kick() x=y
-  kickLazy(vPtr);
+
+  kickLazy();
+
+  // create a free var in the same home space
+  // and bind this to the free var
+  if (suspList!=NULL) {
+    SVariable* sv = new SVariable(home);
+    sv->setSuspList(suspList);
+    *vPtr = makeTaggedSVar(sv);
+  } else {
+    *vPtr = makeTaggedUVar(home);
+  }
 
   am.genericBind(vPtr,*vPtr,tPtr,*tPtr);
+  dispose();
   return OK;
 }
 
