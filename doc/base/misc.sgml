@@ -56,7 +56,7 @@ set./
     is useful for implementors of foreign libraries: any C pointer can
     be encapsulated as a ForeignPointer and passed around as an Oz
     value.  However, you should consider subclassing the <code
-    proglang/Oz_Extension/ class instead, to encapsulate your C++ data
+    proglang=cc/Oz_Extension/ class instead, to encapsulate your C++ data
     structures into new Oz (abstract) datatypes.
     <list>
     <entry/<span class=index/<code/IsForeignPointer//
