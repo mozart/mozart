@@ -538,7 +538,7 @@ TaggedRef makeTaggedTert(Tertiary *s)
 #ifdef LARGEADRESSES
 #define makeTaggedSmallInt(s) ((s << tagSize) | SMALLINT)
 #else
-#define makeTaggedSmallInt(s) makeTaggedRef2p(SMALLINT,(void*)s);
+#define makeTaggedSmallInt(s) makeTaggedRef2p(SMALLINT,(void*)s)
 #endif
 
 
