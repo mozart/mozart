@@ -21,7 +21,7 @@
 
 
 const int STEP=5;
-const double MAXFULL=0.6; // The max. load of HashTable
+const double MAXFULL=0.75; // The max. load of HashTable
 
 
 inline Bool isPrime(int prime)
@@ -40,6 +40,9 @@ inline Bool isPrime(int prime)
 
 int nextPrime(int prime)
 {
+  if (prime <= STEP) {
+    prime = STEP+2;
+  }
   if (prime%2 == 0) {
     prime++;
   }
