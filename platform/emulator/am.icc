@@ -289,4 +289,7 @@ Board *SChunk::getBoardFast()
   return home->getBoardFast();
 }
 
+inline
+Board *Cell::getBoardFast() { return home->getBoardFast(); }
+
 #endif  // __AM_ICC

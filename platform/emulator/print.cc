@@ -1262,6 +1262,25 @@ PRINTLONG(Abstraction)
   }
 }
 
+
+void AssReg::print()
+{
+  char c;
+  switch (kind) {
+  case XReg:
+    c = 'X';
+    break;
+  case YReg:
+    c = 'Y';
+    break;
+  case GReg:
+  default:
+    c = 'G';
+    break;
+  }
+  printf ("%c%d", c, number);
+}
+
 PRINTLONG(PrTabEntry)
 {
   CHECKDEPTHLONG;
