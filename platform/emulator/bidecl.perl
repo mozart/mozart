@@ -108,23 +108,13 @@
 ### determinacy annotations for subtypes of complex types are not yet
 ### supported.
 ###
-### Old style builtins have at least: bi => OLDBI, where OLDBI is the name
+### Old style builtins have: bi => OLDBI, where OLDBI is the name
 ### of the C procedure that implements it (normally defined using
-### OZ_C_proc_begin(OLDBI,...)).  ibi => OLDIBI, is for the case where the
-### builtin also has an inline version implemented by OLDIBI.  Whether this
-### is an inline fun or rel is determined by the output arity: 0 means rel,
-### 1 means fun.
+### OZ_C_proc_begin(OLDBI,...)).
 ###
-### New style builtins have only: BI => NEWBI, where NEWBI is the name of
-### the C procedure that implements it and defined using
-### OZ_BI_define(NEWBI,...,...).
-###
-### Old style boolean funs sometimes have a corresponding rel that can be
-### used in shallow guards.  This is indicated by: 'shallow' => 'REL' where
-### REL is the string by which the rel is known to the emulator.
-###
-### eqeq => 1, indicates that the builtin must be specially compiled using
-### the eqeq instruction.
+### New style builtins have: BI => NEWBI, where NEWBI is the name
+### of the C procedure that implements it (defined using
+### OZ_BI_define(NEWBI,...,...)).
 ###
 ### ifdef => MACRO, indicates that the entry for this builtin in the
 ### emulator's table should be bracketed by #ifdef MACRO ... #endif.
@@ -137,6 +127,11 @@
 ### doesNotReturn => 1, indicates that the builtin does not return and
 ### therefore that the code following it will never be executed.  For
 ### example 'raise'.
+###
+### negated => BI, indicates that the builtin BI returns the negated
+### result of the builtin.  For example `<' is the negated version of `>='.
+### This only makes sense for builtins with a single output argument which
+### is of type bool.
 ###
 ### module => M, indicates that the builtin belongs to module M.  This
 ### permits selective inclusion or exclusion through command line options
@@ -162,133 +157,96 @@ $builtins = {
     'IsNumber'          => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisNumberB,
-                             ibi => BIisNumberBInline,
-                             shallow => isNumberRel,
                              native => false},
 
     'IsInt'             => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisIntB,
-                             ibi => BIisIntBInline,
-                             shallow => isIntRel,
                              native => false},
 
     'IsFloat'           => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisFloatB,
-                             ibi => BIisFloatBInline,
-                             shallow => isFloatRel,
                              native => false},
 
     'IsRecord'          => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisRecordB,
-                             ibi => isRecordBInline,
-                             shallow => isRecordRel,
                              native => false},
 
     'IsTuple'           => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisTupleB,
-                             ibi => isTupleBInline,
-                             shallow => isTupleRel,
                              native => false},
 
     'IsLiteral'         => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisLiteralB,
-                             ibi => isLiteralBInline,
-                             shallow => isLiteralRel,
                              native => false},
 
     'IsLock'            => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisLockB,
-                             ibi => isLockBInline,
-                             shallow => isLockRel,
                              native => false},
 
     'IsCell'            => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisCellB,
-                             ibi => isCellBInline,
-                             shallow => isCellRel,
                              native => false},
 
     'IsPort'            => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisPortB,
-                             ibi => isPortBInline,
-                             shallow => isPortRel,
                              native => false},
 
     'IsProcedure'       => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisProcedureB,
-                             ibi => isProcedureBInline,
-                             shallow => isProcedureRel,
                              native => false},
 
     'IsName'            => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisNameB,
-                             ibi => isNameBInline,
-                             shallow => isNameRel,
                              native => false},
 
     'IsAtom'            => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisAtomB,
-                             ibi => isAtomBInline,
-                             shallow => isAtomRel,
                              native => false},
 
     'IsBool'            => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisBoolB,
-                             ibi => isBoolBInline,
-                             shallow => isBoolRel,
                              native => false},
 
     'IsUnit'            => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisUnitB,
-                             ibi => isUnitBInline,
-                             shallow => isUnitRel,
                              native => false},
 
     'IsChunk'           => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisChunkB,
-                             ibi => isChunkBInline,
-                             shallow => isChunkRel,
                              native => false},
 
     'IsRecordC'         => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisRecordCB,
-                             ibi => isRecordCBInline,
-                             shallow => isRecordCRel,
                              native => false},
 
     'IsObject'          => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisObjectB,
-                             ibi => BIisObjectBInline,
-                             shallow => isObjectRel,
                              native => false},
 
     'IsDictionary'      => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisDictionary,
-                             ibi => isDictionaryInline,
                              native => false},
-
 
     'IsArray'           => { in  => ['+value'],
                              out => ['+bool'],
                              bi  => BIisArray,
-                             ibi => isArrayInline,
                              native => false},
 
     'IsChar'            => { in  => ['+value'],
@@ -309,157 +267,28 @@ $builtins = {
     'IsFree'            => { in  => ['value'],
                              out => ['+bool'],
                              bi  => BIisFree,
-                             ibi => isFreeInline,
-                             shallow => IsFreeRel,
                              native => false},
 
     'IsKinded'          => { in  => ['value'],
                              out => ['+bool'],
                              bi  => BIisKinded,
-                             ibi => isKindedInline,
-                             shallow => IsKindedRel,
                              native => false},
 
     'IsDet'             => { in  => ['value'],
                              out => ['+bool'],
                              bi  => BIisDet,
-                             ibi => isDetInline,
-                             shallow => IsDetRel,
-                             native => false},
-
-    'isNumberRel'       => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisNumber,
-                             ibi => BIisNumberInline,
-                             native => false},
-
-    'isIntRel'          => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisInt,
-                             ibi => BIisIntInline,
-                             native => false},
-
-    'isFloatRel'        => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisFloat,
-                             ibi => BIisFloatInline,
-                             native => false},
-
-    'isRecordRel'       => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisRecord,
-                             ibi => isRecordInline,
-                             native => false},
-
-    'isTupleRel'        => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisTuple,
-                             ibi => isTupleInline,
-                             native => false},
-
-    'isLiteralRel'      => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisLiteral,
-                             ibi => isLiteralInline,
-                             native => false},
-
-    'isCellRel'         => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisCell,
-                             ibi => isCellInline,
-                             native => false},
-
-    'isPortRel'         => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisPort,
-                             ibi => isPortInline,
-                             native => false},
-
-    'isProcedureRel'    => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisProcedure,
-                             ibi => isProcedureInline,
-                             native => false},
-
-    'isNameRel'         => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisName,
-                             ibi => isNameInline,
-                             native => false},
-
-    'isAtomRel'         => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisAtom,
-                             ibi => isAtomInline,
-                             native => false},
-
-    'isLockRel'         => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisLock,
-                             ibi => isLockInline,
-                             native => false},
-
-    'isBoolRel'         => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisBool,
-                             ibi => isBoolInline,
-                             native => false},
-
-    'isUnitRel'         => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisUnit,
-                             ibi => isUnitInline,
-                             native => false},
-
-    'isChunkRel'        => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisChunk,
-                             ibi => isChunkInline,
-                             native => false},
-
-    'isRecordCRel'      => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisRecordC,
-                             ibi => isRecordCInline,
-                             native => false},
-
-    'isObjectRel'       => { in  => ['+value'],
-                             out => [],
-                             bi  => BIisObject,
-                             ibi => BIisObjectInline,
-                             native => false},
-
-    'IsFreeRel'         => { in  => ['value'],
-                             out => [],
-                             bi  => BIisFreeRel,
-                             ibi => isFreeRelInline,
-                             native => false},
-
-    'IsKindedRel'       => { in  => ['value'],
-                             out => [],
-                             bi  => BIisKindedRel,
-                             ibi => isKindedRelInline,
-                             native => false},
-
-    'IsDetRel'          => { in  => ['value'],
-                             out => [],
-                             bi  => BIisDetRel,
-                             ibi => isDetRelInline,
                              native => false},
 
     'Type.ofValue'      => { in  => ['+value'],
                              out => ['+atom'],
                              bi  => BItermType,
-                             ibi => BItermTypeInline,
                              native => false},
-
 
     ##* Type Conversion
 
     'AtomToString'      => { in  => ['+atom'],
                              out => ['+string'],
                              bi  => BIatomToString,
-                             ibi => atomToStringInline,
                              native => false},
 
     'StringToAtom'      => { in  => ['+string'],
@@ -470,13 +299,11 @@ $builtins = {
     'IntToFloat'        => { in  => ['+int'],
                              out => ['+float'],
                              bi  => BIintToFloat,
-                             ibi => BIintToFloatInline,
                              native => false},
 
     'FloatToInt'        => { in  => ['+float'],
                              out => ['+int'],
                              bi  => BIfloatToInt,
-                             ibi => BIfloatToIntInline,
                              native => false},
 
     'IntToString'       => { in  => ['+int'],
@@ -523,213 +350,155 @@ $builtins = {
     '/'         => { in  => ['+float','+float'],
                      out => ['+float'],
                      bi  => BIfdiv,
-                     ibi => BIfdivInline ,
                      native => false},
 
     '*'         => { in  => ['+number','+number'],
                      out => ['+number'],
                      bi  => BImult,
-                     ibi => BImultInline,
                      native => false},
 
     'div'       => { in  => ['+int','+int'],
                      out => ['+int'],
                      bi  => BIdiv,
-                     ibi => BIdivInline,
                      native => false},
 
     'mod'       => { in  => ['+int','+int'],
                      out => ['+int'],
                      bi  => BImod,
-                     ibi => BImodInline,
                      native => false},
 
     '-'         => { in  => ['+number','+number'],
                      out => ['+number'],
                      bi  => BIminus,
-                     ibi => BIminusInline,
                      native => false},
 
     '+'         => { in  => ['+number','+number'],
                      out => ['+number'],
                      bi  => BIplus,
-                     ibi => BIplusInline,
                      native => false},
 
     'Max'       => { in  => ['+comparable','+comparable'],
                      out => ['+comparable'],
                      bi  => BImax,
-                     ibi => BImaxInline,
                      native => false},
 
     'Min'       => { in  => ['+comparable','+comparable'],
                      out => ['+comparable'],
                      bi  => BImin,
-                     ibi => BIminInline,
                      native => false},
 
     '<'         => { in  => ['+comparable','+comparable'],
                      out => ['+bool'],
                      bi  => BIlessFun,
-                     ibi => BIlessInlineFun,
                      negated => '>=',
-                     shallow => '<Rel' ,
                      native => false},
 
     '=<'        => { in  => ['+comparable','+comparable'],
                      out => ['+bool'],
                      bi  => BIleFun,
-                     ibi => BIleInlineFun,
                      negated => '>',
-                     shallow => '=<Rel' ,
                      native => false},
 
     '>'         => { in  => ['+comparable','+comparable'],
                      out => ['+bool'],
                      bi  => BIgreatFun,
-                     ibi => BIgreatInlineFun,
                      negated => '=<',
-                     shallow => '>Rel' ,
                      native => false},
 
     '>='        => { in  => ['+comparable','+comparable'],
                      out => ['+bool'],
                      bi  => BIgeFun,
-                     ibi => BIgeInlineFun,
                      negated => '<',
-                     shallow => '>=Rel' ,
-                     native => false},
-
-    '=<Rel'     => { in  => ['+comparable','+comparable'],
-                     out => [],
-                     bi  => BIle,
-                     ibi => BIleInline,
-                     native => false},
-
-    '<Rel'      => { in  => ['+comparable','+comparable'],
-                     out => [],
-                     bi  => BIless,
-                     ibi => BIlessInline,
-                     native => false},
-
-    '>=Rel'     => { in  => ['+comparable','+comparable'],
-                     out => [],
-                     bi  => BIge,
-                     ibi => BIgeInline,
-                     native => false},
-
-    '>Rel'      => { in  => ['+comparable','+comparable'],
-                     out => [],
-                     bi  => BIgreat,
-                     ibi => BIgreatInline,
                      native => false},
 
     '~'         => { in  => ['+number'],
                      out => ['+number'],
                      bi  => BIuminus,
-                     ibi => BIuminusInline,
                      native => false},
 
     '+1'        => { in  => ['+int'],
                      out => ['+int'],
                      bi  => BIadd1,
-                     ibi => BIadd1Inline,
                      native => false},
 
     '-1'        => { in  => ['+int'],
                      out => ['+int'],
                      bi  => BIsub1,
-                     ibi => BIsub1Inline,
                      native => false},
 
     'Exp'       => { in  => ['+float'],
                      out => ['+float'],
                      bi  => BIexp,
-                     ibi => BIinlineExp,
                      native => false},
 
     'Log'       => { in  => ['+float'],
                      out => ['+float'],
                      bi  => BIlog,
-                     ibi => BIinlineLog,
                      native => false},
 
     'Sqrt'      => { in  => ['+float'],
                      out => ['+float'],
                      bi  => BIsqrt,
-                     ibi => BIinlineSqrt,
                      native => false},
 
     'Sin'       => { in  => ['+float'],
                      out => ['+float'],
                      bi  => BIsin,
-                     ibi => BIinlineSin,
                      native => false},
 
     'Asin'      => { in  => ['+float'],
                      out => ['+float'],
                      bi  => BIasin,
-                     ibi => BIinlineAsin,
                      native => false},
 
     'Cos'       => { in  => ['+float'],
                      out => ['+float'],
                      bi  => BIcos,
-                     ibi => BIinlineCos,
                      native => false},
 
     'Acos'      => { in  => ['+float'],
                      out => ['+float'],
                      bi  => BIacos,
-                     ibi => BIinlineAcos,
                      native => false},
 
     'Tan'       => { in  => ['+float'],
                      out => ['+float'],
                      bi  => BItan,
-                     ibi => BIinlineTan,
                      native => false},
 
     'Atan'      => { in  => ['+float'],
                      out => ['+float'],
                      bi  => BIatan,
-                     ibi => BIinlineAtan,
                      native => false},
 
     'Ceil'      => { in  => ['+float'],
                      out => ['+float'],
                      bi  => BIceil,
-                     ibi => BIinlineCeil,
                      native => false},
 
     'Floor'     => { in  => ['+float'],
                      out => ['+float'],
                      bi  => BIfloor,
-                     ibi => BIinlineFloor,
                      native => false},
 
     'Abs'       => { in  => ['+number'],
                      out => ['+number'],
                      bi  => BIabs,
-                     ibi => BIabsInline,
                      native => false},
 
     'Round'     => { in  => ['+float'],
                      out => ['+float'],
                      bi  => BIround,
-                     ibi => BIinlineRound,
                      native => false},
 
     'Atan2'     => { in  => ['+float','+float'],
                      out => ['+float'],
                      bi  => BIatan2,
-                     ibi => BIatan2Inline,
                      native => false},
 
     'fPow'      => { in  => ['+float','+float'],
                      out => ['+float'],
                      bi  => BIfPow,
-                     ibi => BIfPowInline,
                      native => false},
 
     ###* Array/Dictionaries
@@ -742,25 +511,21 @@ $builtins = {
     'Array.high'        => { in  => ['+array'],
                              out => ['+int'],
                              bi  => BIarrayHigh,
-                             ibi => arrayHighInline,
                              native => false},
 
     'Array.low'         => { in  => ['+array'],
                              out => ['+int'],
                              bi  => BIarrayLow,
-                             ibi => arrayLowInline,
                              native => false},
 
     'Get'               => { in  => ['+array','+int'],
                              out => ['value'],
                              bi  => BIarrayGet,
-                             ibi => arrayGetInline,
                              native => false},
 
     'Put'               => { in  => ['+array','+int','value'],
                              out => [],
                              bi  => BIarrayPut,
-                             ibi => arrayPutInline,
                              native => false},
 
 
@@ -772,31 +537,26 @@ $builtins = {
     'Dictionary.isEmpty'=> { in  => ['+dictionary'],
                              out => ['+bool'],
                              bi  => BIdictionaryIsMt,
-                             ibi => dictionaryIsMtInline,
                              native => false},
 
     'Dictionary.get'    => { in  => ['+dictionary','+feature'],
                              out => ['value'],
                              bi  => BIdictionaryGet,
-                             ibi => dictionaryGetInline,
                              native => false},
 
     'Dictionary.condGet'=> { in  => ['+dictionary','+feature','value'],
                              out => ['value'],
                              bi  => BIdictionaryCondGet,
-                             ibi => dictionaryCondGetInline,
                              native => false},
 
     'Dictionary.put'    => { in  => ['+dictionary','+feature','value'],
                              out => [],
                              bi  => BIdictionaryPut,
-                             ibi => dictionaryPutInline,
                              native => false},
 
     'Dictionary.condPut'=> { in  => ['+dictionary','+feature','value'],
                              out => [],
                              bi  => BIdictionaryCondPut,
-                             ibi => dictionaryCondPutInline,
                              native => false},
 
     'Dictionary.exchange'=> { in  => ['+dictionary','+feature','value',
@@ -814,7 +574,6 @@ $builtins = {
     'Dictionary.remove' => { in  => ['+dictionary','+feature'],
                              out => [],
                              bi  => BIdictionaryRemove,
-                             ibi => dictionaryRemoveInline,
                              native => false},
 
     'Dictionary.removeAll'=> { in  => ['+dictionary'],
@@ -825,7 +584,6 @@ $builtins = {
     'Dictionary.member' => { in  => ['+dictionary','+feature'],
                              out => ['+bool'],
                              bi  => BIdictionaryMember,
-                             ibi => dictionaryMemberInline,
                              native => false},
 
     'Dictionary.keys' => { in  => ['+dictionary'],
@@ -984,7 +742,6 @@ $builtins = {
     'Adjoin'            => { in  => ['+record','+record'],
                              out => ['+record'],
                              bi  => BIadjoin,
-                             ibi => BIadjoinInline,
                              native => false},
 
     'AdjoinList'        => { in  => ['+record','+[feature#value]'],
@@ -1000,7 +757,6 @@ $builtins = {
     'Arity'             => { in  => ['+record'],
                              out => ['+[feature]'],
                              bi  => BIarity,
-                             ibi => BIarityInline,
                              native => false},
 
     'AdjoinAt'          => { in  => ['+record','+feature','value'],
@@ -1011,19 +767,16 @@ $builtins = {
     'MakeTuple'         => { in  => ['+literal','+int'],
                              out => ['+tuple'],
                              bi  => BItuple,
-                             ibi => tupleInline,
                              native => false},
 
     'Label'             => { in  => ['*recordC'],
                              out => ['+literal'],
                              bi  => BIlabel,
-                             ibi => labelInline,
                              native => false},
 
     'hasLabel'          => { in  => ['value'],
                              out => ['+bool'],
                              bi  => BIhasLabel,
-                             ibi => hasLabelInline,
                              native => false},
 
     'TellRecord'        => { in  => ['+literal','record'],
@@ -1051,31 +804,26 @@ $builtins = {
     '.'                 => { in  => ['*recordCOrChunk','+feature'],
                              out => ['value'],
                              bi  => BIdot,
-                             ibi => dotInline,
                              native => false},
 
     '^'                 => { in  => ['*recordCOrChunk','+feature'],
                              out => ['value'],
                              bi  => BIuparrowBlocking,
-                             ibi => uparrowInlineBlocking,
                              native => false},
 
     'HasFeature'        => { in  => ['*recordCOrChunk','+feature'],
                              out => ['+bool'],
                              bi  => BIhasFeatureB,
-                             ibi => hasFeatureBInline,
                              native => false},
 
     'CondSelect'        => { in  => ['*recordCOrChunk','+feature','value'],
                              out => ['value'],
                              bi  => BImatchDefault,
-                             ibi => matchDefaultInline,
                              native => false},
 
     'Width'             => { in  => ['+record'],
                              out => ['+int'],
                              bi  => BIwidth,
-                             ibi => widthInline,
                              native => false},
 
     ###* Chunks
@@ -1102,7 +850,6 @@ $builtins = {
     'ProcedureArity'    => { in  => ['+procedure'],
                              out => ['+int'],
                              bi  => BIprocedureArity,
-                             ibi => procedureArityInline,
                              native => false},
 
     ###* Object-Oriented Primitives
@@ -1146,19 +893,16 @@ $builtins = {
     'getClass'          => { in  => ['+object'],
                              out => ['+class'],
                              bi  => BIgetClass,
-                             ibi => getClassInline,
                              native => false},
 
     'ooGetLock'         => { in  => ['lock'],
                              out => [],
                              bi  => BIooGetLock,
-                             ibi => ooGetLockInline,
                              native => false},
 
     'newObject'         => { in  => ['+class'],
                              out => ['+object'],
                              bi  => BInewObject,
-                             ibi => newObjectInline,
                              native => false},
 
     'New'               => { in  => ['+class','+record','+object'],
@@ -1331,27 +1075,13 @@ $builtins = {
     '=='                => { in  => ['*value','*value'],
                              out => ['+bool'],
                              bi  => BIeqB,
-                             ibi => eqeqInline,
-                             eqeq => 1,
                              negated => '\\\\=',
                              native => false},
 
     '\\\\='             => { in  => ['*value','*value'],
                              out => ['+bool'],
                              bi  => BIneqB,
-                             ibi => neqInline,
-                             eqeq => 1,
                              negated => '==',
-                             native => false},
-
-    '==Rel'             => { in  => ['*value','*value'],
-                             out => [],
-                             BI  => BIeq,
-                             native => false},
-
-    '\\\\=Rel'          => { in  => ['*value','*value'],
-                             out => [],
-                             BI  => BIneq,
                              native => false},
 
     ###* Other Misc Operations
@@ -1359,7 +1089,6 @@ $builtins = {
     'Wait'              => { in  => ['+value'],
                              out => [],
                              bi  => BIisValue,
-                             ibi => isValueInline,
                              native => false},
 
     'WaitOr'            => { in  => ['value','value'],
@@ -1380,25 +1109,21 @@ $builtins = {
     'Not'               => { in  => ['+bool'],
                              out => ['+bool'],
                              bi  => BInot,
-                             ibi => notInline,
                              native => false},
 
     'And'               => { in  => ['+bool','+bool'],
                              out => ['+bool'],
                              bi  => BIand,
-                             ibi => andInline,
                              native => false},
 
     'Or'                => { in  => ['+bool','+bool'],
                              out => ['+bool'],
                              bi  => BIor,
-                             ibi => orInline,
                              native => false},
 
     'Value.status'      => { in  => ['value'],
                              out => ['+tuple'],
                              bi  => BIstatus,
-                             ibi => BIstatusInline,
                              native => false},
 
     ##* Exceptions
@@ -1579,13 +1304,11 @@ $builtins = {
     'Print'             => { in  => ['value'],
                              out => [],
                              bi  => BIprint,
-                             ibi => printInline,
                              native => true},
 
     'Show'              => { in  => ['value'],
                              out => [],
                              bi  => BIshow,
-                             ibi => showInline,
                              native => true},
 
     ##* Statistics
@@ -2122,7 +1845,6 @@ $builtins = {
      'atRedo'           => { in  => ['+feature', 'value'],
                              out => [],
                              bi  => BIatRedo,
-                             ibi => atInlineRedo,
                              native => true},
 
     #* Pickles
