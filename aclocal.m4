@@ -889,7 +889,8 @@ if test "$oz_zlib_inc_found" = no || \
 The ZLIB general purpose compression library is required to
 build the system.  It can be retrieved from:
 
-        http://www.cdrom.com/pub/infozip/zlib/
+        http://www.info-zip.org/pub/infozip/zlib/
+
 ])
 fi
 ])
