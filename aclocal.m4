@@ -342,7 +342,7 @@ dnl Christian's request, CXXFLAGS is set to -O by default if it is not
 dnl already set in the environment
 dnl ==================================================================
 
-AC_DEFUN(OZ_VERSION_GXX,[2.7])
+AC_DEFUN(OZ_VERSION_GXX,[2.95.3])
 AC_DEFUN(OZ_CXX_CHOOSE,[
   if test -z "$oz_cv_cxx__chosen"; then
     : ${CXXFLAGS="-O"}
@@ -363,10 +363,10 @@ system.  It can be retrieved from:
 
 	ftp://ftp.gnu.org/pub/gnu/
 
-The latest version at this time is 2.95.2 and is available
+The latest version at this time is 3.3.2 and is available
 packaged as the following archive:
 
-	gcc-2.95.2.tar.gz 
+	gcc-3.3.2.tar.gz 
 
 You may find a mirror archive closer to you by consulting:
 
