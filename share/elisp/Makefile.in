@@ -27,7 +27,7 @@ oz.elc: $(SRCDIR)/oz.el
 install: all $(ELISPDIR) $(LIBFILES)
 
 $(ELISPDIR):
-	$(INSTALLDIR) $@
+	$(MKINSTALLDIRS) $@
 
 $(ELISPDIR)/%.el: $(SRCDIR)/%.el
 	$(INSTALLSRC) $< $@
