@@ -960,6 +960,11 @@
     <when test="PICTURE[@TYPE='LATEX']">
       <txt:usemap><value-of select="PICTURE[@TYPE='LATEX']"/></txt:usemap>
     </when>
+    <when test="PICTURE.EXTERN[@TYPE='LATEX']">
+      <txt:usemap>\input{</txt:usemap>
+      <value-of select="PICTURE.EXTERN[@TYPE='LATEX'][1]/@TO"/>
+      <txt:usemap>}</txt:usemap>
+    </when>
     <when test="PICTURE.EXTERN[@TYPE='PS']">
       <apply-templates select="PICTURE.EXTERN[@TYPE='PS'][1]" mode="pic.choice"/>
     </when>
