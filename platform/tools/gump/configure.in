@@ -1,4 +1,5 @@
 AC_INIT(FlexLexer.h)
+AC_CONFIG_AUX_DIR($srcdir/../../..)
 OZ_INIT
 TOPDIRA=`(cd $TOPDIR; pwd)`
 AC_SUBST(TOPDIRA)
