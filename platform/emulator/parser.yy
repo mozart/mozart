@@ -527,7 +527,7 @@ void xy_setParserExpect() {
 %token T_false T_FALSE_LABEL T_feat T_finally T_from T_fun T_functor 
 %token T_if T_import T_in T_local T_lock T_meth T_not T_of T_or 
 %token T_prepare T_proc T_prop T_raise T_require T_self T_skip T_then
-%token T_thread T_true T_TRUE_LABEL T_try T_unit T_UNIT_LABEL T_loop
+%token T_thread T_true T_TRUE_LABEL T_try T_unit T_UNIT_LABEL T_loop T_for T_do
 
 %token T_ENDOFFILE
 
@@ -668,6 +668,9 @@ void xy_setParserExpect() {
 %type <t>  synInstTerm
 %type <t>  synLabel
 %type <t>  synProdCallParams
+%type <t>  iterators
+%type <t>  iterator
+%type <t>  optIteratorStep
 
 %%
 
@@ -924,7 +927,58 @@ phrase2		: phrase2 add coord phrase2 %prec T_ADD
 		  { $$ = newCTerm(PA_fLoop,$3,makeLongPos($2,$5)); }
 		| T_LMACRO coord phraseList T_RMACRO coord
 		  { $$ = newCTerm(PA_fMacro,$3,makeLongPos($2,$5)); }
+		| T_for coord iterators T_do inSequence T_end coord
+		  { $$ = newCTerm(PA_fLoop,
+				  newCTerm(PA_fAnd,$3,$5),
+				  makeLongPos($2,$7)); }
 		;
+
+iterators	: iterators iterator
+		  {
+		    $$ = newCTerm(PA_fAnd,$1,$2);
+		  }
+		| iterator
+		;
+
+iterator	: nakedVariable T_in coord phrase2 T_2DOTS phrase2 optIteratorStep coord
+		  {
+		    $$ = newCTerm(PA_fMacro,
+				  oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
+					  $1,
+					  newCTerm(PA_fAtom,oz_atom("from"),NameUnit),
+					  $4,
+					  newCTerm(PA_fAtom,oz_atom("to"),NameUnit),
+					  $6,
+					  newCTerm(PA_fAtom,oz_atom("by"),NameUnit),
+					  ($7 == 0)?makeInt("1",NameUnit):$7,
+					  0),
+				  makeLongPos(OZ_subtree($1,newSmallInt(2)),$8));
+		  }
+		| nakedVariable T_in coord phrase2 optIteratorStep coord
+                  {
+		    /* <<for X 'in' L>>
+		       <<for X = E1 'then' E2>> */
+		    if ($5 == 0) {
+		      $$ = newCTerm(PA_fMacro,
+				    oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
+					    $1,
+					    newCTerm(PA_fAtom,oz_atom("in"),NameUnit),
+					    $4,
+					    0),
+				    makeLongPos(OZ_subtree($1,newSmallInt(2)),$6));
+		    } else {
+		      $$ = newCTerm(PA_fMacro,
+				    oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
+					    newCTerm(PA_fEq,$1,$4,NameUnit),
+					    newCTerm(PA_fAtom,oz_atom("next"),NameUnit),
+					    $5,
+					    0),
+				    makeLongPos(OZ_subtree($1,newSmallInt(2)),$6));
+		    }
+		  }
+		;
+
+optIteratorStep	: optByPhrase;
 
 procFlags	: /* empty */
 		  { $$ = AtomNil; }
