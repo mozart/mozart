@@ -15,12 +15,6 @@ Ozcar =
 	end
 	
 	meth off
-	   I T = @currentThread
-	in
-	   case T \= undef then         %% == undef: closed from within Ozcar
-	      I = {Thread.id T}         %% \= undef: closed from within Emacs
-	      ThreadManager,remove(T I kill)
-	   else skip end
 	   {Debug.off}
 	   {Tk.send wm(withdraw self.toplevel)}
 	   {Compile "\\sw +optimize -debuginfo"}
