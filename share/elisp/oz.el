@@ -62,8 +62,8 @@ For example
   (setq oz-emulator-hook 'oz-start-gdb-emulator)
 starts the emulator under gdb")
 
-(defvar oz-wait-for-compiler 5
-  "Wait between startup of compiler and engine")
+;(defvar oz-wait-for-compiler 5
+;  "Wait between startup of compiler and engine")
 
 (defvar oz-home (concat (or (getenv "OZHOME") "/usr/share/gs/soft/oz") "/")
   "The directory where oz is installed")
@@ -314,13 +314,14 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (message "halting Oz...")
   (if (and (get-buffer-process oz-compiler-buffer)
 	   (get-buffer-process oz-emulator-buffer))
-      (let ((i oz-halt-timeout))
+      (let ((i (* 2 oz-halt-timeout))
+	    (eproc (get-buffer-process oz-emulator-buffer))
+	    (cproc (get-buffer-process oz-compiler-buffer)))
 	(oz-send-string "\\halt ")
-	(while (and (or (get-buffer-process oz-compiler-buffer)
-			(get-buffer-process oz-emulator-buffer))
+	(while (and (not (eq (process-status eproc) 'exit))
+		    (not (eq (process-status cproc) 'exit))
 		    (> i 0))
-	  (sit-for 1)
-	  (sleep-for 1)
+	  (sleep-for 0.5)
 	  (setq i (1- i)))))
 
   (if (get-buffer-process oz-compiler-buffer)
@@ -329,7 +330,6 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
       (delete-process oz-emulator-buffer))
   (message "")
   (oz-reset-title))
-
 
 (defun oz-check-running(start-flag)
   (if (and (get-buffer-process oz-compiler-buffer)
@@ -345,6 +345,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (if (get-buffer-process oz-compiler-buffer)
       t
     (let ((file (oz-make-temp-name "/tmp/ozsock")))
+;	  (i (* 2 oz-wait-for-compiler)))
       (if (not start-flag) (message "Oz died for some reason. Restarting ..."))
       (make-comint "Oz Compiler" "oz.compiler" nil "-emacs" "-S" file)
       (setq oz-compiler-buffer "*Oz Compiler*")
@@ -353,7 +354,10 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 			  'oz-compiler-filter)
       (bury-buffer oz-compiler-buffer)
 
-      (if oz-wait-for-compiler (sleep-for oz-wait-for-compiler))
+;      (while (and (> i 0)
+;		  (not (file-exists-p file)))
+;	(sleep-for 0.5)
+;	(setq i (1- i)))
 
       (if oz-emulator-hook
 	  (funcall oz-emulator-hook file)
@@ -962,6 +966,7 @@ if that value is non-nil."
 	(let ((newbuf (process-buffer proc))
 	      old-point
 	      moving
+	      index
 	      (errs-found (string-match oz-error-chars string)))
 	  
 	  (if errs-found
@@ -975,6 +980,13 @@ if that value is non-nil."
 	    (goto-char (process-mark proc))
 	    (setq old-point (point))
 	    (goto-char (point-max))
+
+	    ;; Irix outputs garbage, when sending EOF
+	    (setq index (string-match "\\^D" string))
+	    (if index
+		(setq string (concat (substring string 0 index)
+				     (substring string (+ 4 index)))))
+
 	    (insert-before-markers string)
 	    (set-marker (process-mark proc) (point))
             
@@ -1161,7 +1173,7 @@ OZ compiler, emulator and error window")
    (let ((file-1 (concat oz-temp-file ".oz"))
 	 (file-2 (concat oz-temp-file suffix)))
      (if (file-exists-p file-2)
-	 (shell-command (concat "rm -f " file-2)))
+	 (delete-file file-2))
      (write-region start end file-1)
      (message "")
      (oz-hide-errors)
