@@ -242,7 +242,6 @@
 	    <Grammar.Alt><<&gt;=>> | <<=:>> | <<\=:>> | <<&lt;:>> |
 	      <<=&lt;:>> | <<&gt;:>> | <<&gt;=:>> | <<::>> |
 	      <<:::>></Grammar.Alt>
-	  </Grammar.Rule>
 	  Each keyword represents itself as token. 
       <Section>
 	<Title/Variables/
@@ -251,10 +250,9 @@
 	    <Grammar.Alt/?={upper-case letter} { ?={alphanumerical} }/
 	    <Grammar.Alt/<<`>> { ?={variable char} | ?={pseudo char} } <<`>>//
 	  A word of the form ?={variable} represents a variable token
-	  of the form <Math/\lfloor/<<variable>>, ?{n}<Math
-	  /^+/<Math/\rfloor/, where ?{n}<Math/^+/ is the sequence
-	  of characters that make up the word, including the possibly
-	  surrounding <<`>>&nbsp;characters.
+	  of the form <Math/\lfloor/<<variable>>, ?{n}+<Math/\rfloor/,
+	  where ?{n}+ is the sequence of characters that make up the
+	  word, including the possibly surrounding <<`>>&nbsp;characters.
 	<P>
 	  For example, the word <Code proglang=oz/Xs/ represents the token
 	  <Math/\lfloor/<<variable>>, 88 115<Math/\rfloor/
@@ -270,9 +268,9 @@
 	      ?={keyword}/
 	    <Grammar.Alt/<<'>> { ?={atom char} | ?={pseudo char} } <<'>>//
 	  A word of the form ?={atom} represents an atom token of the form
-	  <Math/\lfloor/<<atom>>, ?{n}<Math/^*/<Math/\rfloor/,
-	  where ?{n}<Math/^*/ is the sequence of characters that make up the
-	  word, excluding the possibly surrounding <<'>>&nbsp;characters. 
+	  <Math/\lfloor/<<atom>>, ?{n}*<Math/\rfloor/, where ?{n}* is the
+	  sequence of characters that make up the word, excluding the possibly
+	  surrounding <<'>>&nbsp;characters. 
 	<P>
 	  For example, the word <Code proglang=oz/atom/ represents the token
 	  <Math/\lfloor/<<atom>>, 97 116 111 109<Math/\rfloor/
@@ -288,8 +286,8 @@
 	      <<unit>> ) <<(>>//
 	  A word of the form ?={label} represents a sequence of two tokens.
 	  The first one is a label token of the form
-	  <Math/\lfloor/<<variablelabel>>, ?{n}<Math/^+/<Math/\rfloor/, 
-	  <Math/\lfloor/<<atomlabel>>, ?{n}<Math/^*/<Math/\rfloor/
+	  <Math/\lfloor/<<variablelabel>>, ?{n}+<Math/\rfloor/, 
+	  <Math/\lfloor/<<atomlabel>>, ?{n}*<Math/\rfloor/
 	  (similar to the corresponding tokens for words of the form
 	  ?={variable} and ?={atom}), <<truelabel>>, <<falselabel>>, or
 	  <<unitlabel>>.  The second one is the keyword token&nbsp;<<(>>.
@@ -304,7 +302,7 @@
 	<Title/Integers/
 	<P>
 	  <Grammar.Rule/?={int}
-	    <Grammar.Alt/[ <<~>> ] ( <<0>> | { ?={non-zero digit} } )
+	    <Grammar.Alt/[ <<~>> ] ( <<0>> | ?={non-zero digit} { ?={digit} } )
 	      <Grammar.Note/decimal representation//
 	    <Grammar.Alt/[ <<~>> ] <<0>> { ?={octal digit} }+
 	      <Grammar.Note/octal representation//
@@ -476,7 +474,7 @@
 	    <Grammar.Alt/<<elsecase>> ?={expression} <<of>>
 	      ?={case statement clause}/
 	    <Grammar.Alt type=space/{ <Q class=terminal/<<[]>>/
-	      ?={case statement clause}/
+	      ?={case statement clause} }/
 	    <Grammar.Alt type=space/[ ?={else statement} ]/
 	    <Grammar.Alt/<<else>> ?={in statement}//
 	<Para class=apropos><Title/Expressions/
@@ -561,9 +559,8 @@
 	      <Q class=terminal/<<&lt;=>>/ | <Q class=terminal/<<&gt;>>/ |
 	      <Q class=terminal/<<&gt;=>>//
 	    <Grammar.Alt><Q class=terminal/<<+>>/ |
-	      <Q class=terminal/<<->>/ | <Q class=terminal/<<*>>/
+	      <Q class=terminal/<<->>/ | <Q class=terminal/<<*>>/ |
 	      <Q class=terminal><</>></Q> | <<div>> | <<mod>></Grammar.Alt>
-	  </Grammar.Rule>
 	  <Grammar.Rule/?={label}
 	    <Grammar.Alt/?={variable label} | ?={atom label}/
 	    <Grammar.Alt/?={unit label} | ?={true label} | ?={false label}//
@@ -631,6 +628,9 @@
 	      ?={int}/
 	    <Grammar.Alt/<<unit>> | <<true>> | <<false>>//
 	<Para class=apropos><Title/Methods/
+	  As method body both a statements and an expression may be
+	  possible, depending on whether the ?={method head} contains a
+	  nesting marker (<<$>>) or not.
 	  <Grammar.Rule/?={method}
 	    <Grammar.Alt/<<meth>> ?={method head}
 	      [ <Q class=terminal/<<=>>/ ?={variable} ]/
@@ -667,7 +667,7 @@
 	    <Grammar.Rule/?={functor descriptor}
 	      <Grammar.Alt/<<import>> { ?={import declaration} }+//
 	    <Grammar.Rule/?={import declaration}
-	      <Grammar.Alt/?={naked variable} [ ?={import at} ]/
+	      <Grammar.Alt/?={variable} [ ?={import at} ]/
 	      <Grammar.Alt/?={variable label} ?={import features}
 		[ ?={import at} ]//
 	  <Para class=apropos><Title/Restricting the Import/
@@ -687,7 +687,7 @@
 	    For convenience, aliases may be introduced for the values of the
 	    imported module's subtrees.
 	    <Grammar.Rule/?={import alias}
-	      <Grammar.Alt/[ <Q class=terminal/<<:>>/ ?={naked variable} ]//
+	      <Grammar.Alt/[ <Q class=terminal/<<:>>/ ?={variable} ]//
 	  <Para class=apropos><Title/Specifying URLs/
 	    The aditional <<at>> clause allows to specify a relative URL
 	    given to the module manager to locate the referenced functor.
@@ -708,7 +708,7 @@
 	    in which case the print name is taken as-is).
 	    <Grammar.Rule/?={export declaration}
 	      <Grammar.Alt/[ ?={module feature} <Q class=terminal/<<:>>/ ]
-		?={naked variable}//
+		?={variable}//
 	  <P>
 	    Note that the variables mentioned in the export are not binding
 	    but referring occurrences.
