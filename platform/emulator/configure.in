@@ -42,6 +42,7 @@ dnl This will check that we are in the Oz directory and initiate
 AC_INIT(base.hh)
 
 OZ_INIT
+OZ_DENYS_EVENTS
 
 dnl *****************************************************************
 dnl additional tests
