@@ -26,7 +26,7 @@
   <Title/Microsoft Windows/
   <P>
     Get the self-extracting executable from the
-    <Ref.Extern to="http://www.mozart-oz.org/download/ftp.cgi?action=windows"
+    <Ref.Extern to="http://www.mozart-oz.org/download/view.cgi?action=windows"
     /download page/, execute it, and follow the on-screen instructions.
     You should glance over the following section to see if there are any
     caveats or additional requirements for your system.
@@ -40,7 +40,7 @@
       Documentation is distributed in CHM format.  To read it, you need
       Microsoft's HTML Help, bundled with newer versions of Microsoft
       Windows.  HTML Help can also be downloaded <Ref.Extern
-      to="ftp://ftp.mozart-oz.org/pub/mozart/extras/hhupd.exe"/here/.
+      to="http://www.mozart-oz.org/download/mozart-ftp/extras/hhupd.exe"/here/.
     <Para class=apropos><Title/Windows Installer/
       Mozart setup uses the Windows Installer, which also comes with
       Office 2000 and Windows 2000 or newer.  If you do not have Windows
@@ -53,9 +53,9 @@
       steps <Em/before/ running Mozart setup:
       <List enum>
         <Item>Download the Windows Installer redistributable, <Ref.Extern
-          to="ftp://ftp.mozart-oz.org/pub/mozart/extras/instmsiW.exe"
+          to="http://www.mozart-oz.org/download/mozart-ftp/extras/instmsiW.exe"
           /<File/instmsiW.exe// for Windows NT4 or <Ref.Extern
-          to="ftp://ftp.mozart-oz.org/pub/mozart/extras/instmsiA.exe"
+          to="http://www.mozart-oz.org/download/mozart-ftp/extras/instmsiA.exe"
           /<File/instmsiA.exe// for Windows 95/98.
         <Item>Run this file and reboot your machine.
         <Item>Run Mozart setup.  Should you get the error message
@@ -81,7 +81,7 @@
     <P>
       If you want to develop applications yourself using the Oz Programming
       Interface, then you need GNU Emacs or XEmacs.  From the <Ref.Extern
-      to="http://www.mozart-oz.org/download/ftp.cgi?action=windows"
+      to="http://www.mozart-oz.org/download/view.cgi?action=windows"
       /Mozart download page/, you can also obtain an installer for
       GNU Emacs.  Execute it and follow the instructions.
     <P>
