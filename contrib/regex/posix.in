@@ -12,12 +12,12 @@ export
    'execute'    : Regex_Execute
    'match'      : Regex_Match
    'flag'       : Flags
-body
-   foreign(compile:COMPILE
-           execute:EXECUTE
-           free:FREE
-           flags:FLAGS)
-   = {Fload '@PACKAGE@/posix.so'}
+define
+   MOD = {Fload '@PACKAGE@/posix.so'}
+   COMPILE = MOD.compile
+   EXECUTE = MOD.execute
+   FREE    = MOD.free
+   FLAGS   = MOD.flags
    flag(EXTENDED ICASE NEWLINE NOSUB NOTBOL NOTEOL)={FLAGS}
    Flags = flag(extended:EXTENDED
                 icase   :ICASE
