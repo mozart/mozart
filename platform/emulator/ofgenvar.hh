@@ -255,9 +255,9 @@ public:
     }
 
     // With new table of given size (must be pwr. of 2) in given space:
-    GenOFSVariable(Board* home, dt_index size)
-    : GenCVariable(OFSVariable,home) {
-        label=makeTaggedRef(newTaggedUVar(home));
+    GenOFSVariable(Board* hm, dt_index size)
+    : GenCVariable(OFSVariable,hm) {
+        label=makeTaggedRef(newTaggedUVar(hm));
         dynamictable=DynamicTable::newDynamicTable(size);
     }
 

@@ -192,9 +192,11 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
                 am.doBindAndTrail(var, vPtr, int_val);
                 am.doBindAndTrail(term, tPtr, int_val);
               } else {
-                GenCVariable * c_var =
-                  (intsct == fd_bool) ? new GenBoolVariable()
-                  : new GenFDVariable(intsct);
+                GenCVariable *c_var;
+                if (intsct == fd_bool)
+                  c_var = new GenBoolVariable();
+                else
+                  c_var = new GenFDVariable(intsct);
                 TaggedRef * var_val = newTaggedCVar(c_var);
                 if (prop) {
                   propagateUnify(var);
