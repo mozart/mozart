@@ -340,6 +340,20 @@ void unmarshalUnsentString(MsgBuffer *bs)
 }
 
 
+#define Comment(Args) if (bs->textmode()) {comment Args;}
+
+void comment(MsgBuffer *bs, const char *format, ...)
+{
+  char buf[10000];
+  va_list ap;
+  va_start(ap,format);
+  vsprintf(buf,format,ap);
+  va_end(ap);
+  putComment(buf,bs);
+}
+
+
+
 
 /* *********************************************************************/
 /*   SECTION 7: gname marshaling/unmarshaling                          */
@@ -349,12 +363,15 @@ void marshalGName(GName *gname, MsgBuffer *bs)
 {
   misc_counter[MISC_GNAME].send();
   PD((MARSHAL,"gname: s:%s", gname->site->stringrep()));
+
+  Comment((bs,"GNAMESTART"));
   gname->site->marshalPSite(bs);
   for (int i=0; i<fatIntDigits; i++) {
     PD((MARSHAL,"gname: id%d:%u", i,gname->id.number[i]));
     marshalNumber(gname->id.number[i],bs);
   }
   marshalNumber((int)gname->gnameType,bs);
+  Comment((bs,"GNAMEEND"));
 }
 
 void unmarshalGName1(GName *gname, MsgBuffer *bs)
@@ -413,20 +430,6 @@ inline Bool checkCycle(OZ_Term t, MsgBuffer *bs, TypeOfTerm tag)
   }
   return NO;
 }
-
-
-#define Comment(Args) if (bs->textmode()) {comment Args;}
-
-void comment(MsgBuffer *bs, const char *format, ...)
-{
-  char buf[10000];
-  va_list ap;
-  va_start(ap,format);
-  vsprintf(buf,format,ap);
-  va_end(ap);
-  putComment(buf,bs);
-}
-
 
 
 
