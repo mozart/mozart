@@ -2646,6 +2646,7 @@ LBLdispatcher:
 
        if (exceptionType==E_DEEP_FAILURE ||
            (exceptionType==E_USER &&
+            !e->isToplevel() &&
             OZ_eq(OZ_label(exceptionValue),OZ_atom("failure")))) {
          goto LBLfailure;
        }
