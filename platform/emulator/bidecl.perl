@@ -152,6 +152,7 @@ sub INTERFACE {
 
     $mod_name = $_[0];
 
+    $mod_name =~ s/^.*\///o;
     $mod_name =~ s/^mod//o;
     $mod_name =~ s/\.spec//o;
 
