@@ -120,7 +120,7 @@ static void printBanner()
   version();
 
 #ifdef DEBUG_DET
-  warning("\nSleep disabled.\n");
+  warning("Sleep disabled.");
 #endif
 
 #ifdef DEBUG_CHECK
@@ -713,6 +713,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
     checkSuspensionList(var, tvar ? makeTaggedRef(termPtr) : term,
                         pc_std_unif);
 
+#ifdef BUGFIX_FOR_TM_ONLY_WHEN_EXAMPLE_AVAILABLE
     // suspension entries with conditions may remain unpropagated, so that
     // they have to be saved to the suspension list of the remaining variable
     if (tvar) {
@@ -720,6 +721,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
       tvar->setSuspList(tvar->getSuspList()->appendTo(svar->getSuspList()));
       svar->setSuspList(NULL);
     }
+#endif
 
     LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
                              localPropStore.isInLocalPropagation()));
