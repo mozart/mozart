@@ -26,8 +26,8 @@ extern int h_errno;
 #include <sys/param.h>
 #include <sys/stat.h>
 
-#ifndef MSDOS
 #include <sys/socket.h>
+#ifndef OS2_I486
 #include <sys/uio.h>
 #include <sys/un.h>
 #endif
@@ -159,7 +159,7 @@ static char* h_strerror(const int err) {
 
 #endif
 
-#ifdef ULTRIX_MIPS
+#if defined(ULTRIX_MIPS) || defined(OS2_I486)
 #define RETURN_NET_ERROR(OUT) \
 { RETURN_ANY_ERROR(OUT,0,"Host lookup failure.","host"); }
 #endif
@@ -573,7 +573,7 @@ OZ_C_ioproc_begin(unix_open,4)
 
     if (OZ_isVariable(head))
       return SUSPEND;
-#ifdef MSDOS
+#ifdef OS2_I486
     OZ_warning("open: illegal mode");
     return FAILED;
 #else
@@ -829,7 +829,6 @@ OZ_C_ioproc_begin(unix_socket,4)
 }
 OZ_C_proc_end
 
-
 OZ_C_ioproc_begin(unix_bindInet,3)
 {
   OZ_declareIntArg("bindInet",0,sock);
@@ -849,7 +848,8 @@ OZ_C_ioproc_begin(unix_bindInet,3)
 }
 OZ_C_proc_end
 
-#ifndef MSDOS
+
+#ifndef OS2_I486
 OZ_C_ioproc_begin(unix_bindUnix,3)
 {
   OZ_declareIntArg("bindUnix",0,s);
@@ -867,7 +867,6 @@ OZ_C_ioproc_begin(unix_bindUnix,3)
   return OZ_unifyInt(out,ret);
 }
 OZ_C_proc_end
-
 
 OZ_C_ioproc_begin(unix_getSockName,2)
 {
@@ -895,6 +894,8 @@ OZ_C_ioproc_begin(unix_listen,3)
   return OZ_unifyInt(out,ret);
 }
 OZ_C_proc_end
+#endif
+
 
 static void blockSignals()
 {
@@ -914,6 +915,7 @@ static void unblockSignals()
 }
 
 
+#ifndef OS2_I486
 OZ_C_ioproc_begin(unix_connectInet,4)
 {
   OZ_declareIntArg("connectInet", 0, s);
@@ -1335,7 +1337,6 @@ OZ_C_proc_end
 const int maxArgv = 100;
 static char* argv[maxArgv];
 
-
 OZ_C_ioproc_begin(unix_pipe,4)
 {
   OZ_declareVsArg("pipe",0,s);
@@ -1440,6 +1441,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
   return FAILED;
 }
 OZ_C_proc_end
+#endif
 
 
 static OZ_Term mkAliasList(char **alias)
@@ -1487,8 +1489,6 @@ OZ_C_ioproc_begin(unix_getHostByName, 4)
     ? PROCEED : FAILED;
 }
 OZ_C_proc_end
-
-#endif
 
 
 
@@ -1710,9 +1710,9 @@ void MyinitUnix()
   OZ_addBuiltin("unix_srand",1,unix_srand);
   OZ_addBuiltin("unix_rand",1,unix_rand);
   OZ_addBuiltin("unix_randLimits",2,unix_randLimits);
-#ifndef MSDOS
   OZ_addBuiltin("unix_socket",4,unix_socket);
   OZ_addBuiltin("unix_bindInet",3,unix_bindInet);
+#ifndef OS2_I486
   OZ_addBuiltin("unix_bindUnix",3,unix_bindUnix);
   OZ_addBuiltin("unix_listen",3,unix_listen);
   OZ_addBuiltin("unix_connectInet",4,unix_connectInet);
