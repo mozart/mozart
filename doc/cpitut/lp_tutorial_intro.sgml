@@ -38,10 +38,10 @@ kind <Ptr to="Chvantal:83">:
 \multicolumn{9}{l}{\mbox{\bf minimize resp. maximize:}} \\
 & c_1 x_1 & + & \ldots & + & c_n x_n &   &   & \mbox{objective function}\\ \\
 \multicolumn{9}{l}{\mbox{\bf subject to:}} \\
-& a_{1,1} x_1 & + & \cdots & + & a_{n,1} x_n & \Diamond & b_1 & \mbox{constraints}\\
+& a_{1,1} x_1 & + & \cdots & + & a_{n,1} x_n & \diamond & b_1 & \mbox{constraints}\\
 & \vdots      &   &        &   & \vdots      &          & \vdots &  \\
-& a_{1,m} x_1 &  + & \cdots & + & a_{n,m} x_n & \Diamond & b_m & \\
-&             &    &         &  &            & & & (\Diamond \in \{\le, = , \ge\}) \\ \\
+& a_{1,m} x_1 &  + & \cdots & + & a_{n,m} x_n & \diamond & b_m & \\
+&             &    &         &  &            & & & (\diamond \in \{\le, = , \ge\}) \\ \\
 & \multicolumn{7}{l}{l_i \le x_i \le u_i \;\;\;\;(i = 1,\ldots,n)} & \mbox{bound constraints}.
 \end{array}
 </Math>
