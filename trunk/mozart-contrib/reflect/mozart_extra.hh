@@ -7,3 +7,4 @@ enum OzVarKind {
   OZ_VAR_CT
 };
 
+extern OzVarKind OZ_getVarKind(OZ_Term);
