@@ -39,6 +39,7 @@
 <Book proglang=oz>
   <Front>
     <!-- Splitting the document into different HTML nodes -->
+    <Meta name="html.split" value="chapter.intro">
     <Meta name="html.split" value="chapter.invoking">
     <Meta name="html.split" value="chapter.gui">
     <Meta name="html.split" value="chapter.sample">
@@ -1058,20 +1059,20 @@ end>>>
 	  The <<Ozcar>> module, available at <File>x-oz://system/Ozcar</File>,
 	  exports the following features.
 	  <List>
-	    <Entry><<object>>
+	    <Entry><<object>><Index class=module/Ozcar<And>object/
 	    <Synopsis><<{Ozcar.object ?+{Message}}>>
 	    <Item>
 	      provides the interface to the running debugger itself.
 	      It is described below.
-	    <Entry><<open>>
+	    <Entry><<open>><Index class=module/Ozcar<And>open/
 	    <Synopsis><<{Ozcar.open}>>
 	    <Item>
 	      is identical to <<{Ozcar.object on}>>.
-	    <Entry><<close>>
+	    <Entry><<close>><Index class=module/Ozcar<And>close/
 	    <Synopsis><<{Ozcar.close}>>
 	    <Item>
 	      is identical to <<{Ozcar.object off}>>.
-	    <Entry><<breakpoint>>
+	    <Entry><<breakpoint>><Index class=module/Ozcar<And>breakpoint/
 	    <Synopsis><<{Ozcar.breakpoint}>>
 	    <Item>
 	      sets a static breakpoint (see
@@ -1079,7 +1080,7 @@ end>>>
 	      Execution of <<{Ozcar.breakpoint}>> causes the current
 	      thread to be stopped and attached to the debugger if
 	      the debugger has been started, and is ignored otherwise.
-	    <Entry><<startServer>>
+	    <Entry><<startServer>><Index class=module/Ozcar<And>startServer/
 	    <Synopsis><<{Ozcar.startServer ??{Ticket}}>>
 	    <Item>
 	      starts a server to accept connections of remote debugging
@@ -1092,20 +1093,20 @@ end>>>
 	<Title/<<Ozcar.object>>/
 	<P>
 	  <List>
-	    <Entry><<init>>
+	    <Entry><<init>><Index class=module/Ozcar.object<And>init/
 	    <Synopsis><<{Ozcar.object init()}>>
 	    <Item>
 	      closes and recreates the internal Ozcar object,
 	      discarding all information about attached threads.
 	      Identical to the <Samp/Destoy/ menu item described
 	      in <Ptr to="section.menu-ozcar">.
-	    <Entry><<on>>
+	    <Entry><<on>><Index class=module/Ozcar.object<And>on/
 	    <Synopsis><<{Ozcar.object on()}>>
 	    <Item>
 	      starts Ozcar, opening the Ozcar window, setting the virtual
 	      machine to debug mode, and configuring the OPI compiler to
 	      generate debug code.
-	    <Entry><<off>>
+	    <Entry><<off>><Index class=module/Ozcar.object<And>off/
 	    <Synopsis><<{Ozcar.object off()}>>
 	    <Item>
 	      by default, suspends Ozcar, closing its window, but keeping all
@@ -1113,7 +1114,7 @@ end>>>
 	      <<on()>>) will resume a debugging session exactly where it has
 	      been left before.  Can be reconfigured by <<closeAction>> (see
 	      below).
-	    <Entry><<conf>>
+	    <Entry><<conf>><Index class=module/Ozcar.object<And>conf/
 	    <Synopsis><<{Ozcar.object conf(?_{FeatureA}: ?+{ValueX} ...)}>>
 	    <Item>
 	      configures Ozcar parameters.  The method must be a record
@@ -1121,7 +1122,7 @@ end>>>
 	      and the corresponding subtree ?_{ValueX} the value to set the
 	      parameter to.  See <Ptr to="section.configuration"> for a list
 	      of parameters.
-	    <Entry><<bpAt>>
+	    <Entry><<bpAt>><Index class=module/Ozcar.object<And>bpAt/
 	    <Synopsis><<{Ozcar.object bpAt(?+{FileV} ?+{LineI} ?+{EnableB})}>>
 	    <Item>
 	      sets or resets dynamic breakpoints.  All step points in files
@@ -1131,6 +1132,7 @@ end>>>
 	      See <Ptr to="section.dynamic-breakpoints"> for more information
 	      on dynamic breakpoints.
 	    <Entry><<lastClickedValue>>
+	      <Index class=module/Ozcar.object<And>lastClickedValue/
 	    <Synopsis><<{Ozcar.object lastClickedValue(?_{X})}>>
 	    <Item>
 	      returns the value that has last been clicked on in the user
@@ -1142,14 +1144,14 @@ end>>>
 	  <Table id="table.prop.application">
 	    <Tr><Th/Feature/<Th/Type/<Th/Default/<Th/Description/</Tr>
 	    <Tr>
-	      <Td/<<timeoutToSwitch>>/
+	      <Td/<Span class=index/<<timeoutToSwitch>>//
 	      <Td/integer/
 	      <Td/100/
 	      <Td/Timeout in milliseconds before a thread switch is performed,
 		unless another thread switch is initiated before it./
 	    </Tr>
 	    <Tr>
-	      <Td/<<timeoutToUpdateEnv>>/
+	      <Td/<Span class=index/<<timeoutToUpdateEnv>>//
 	      <Td/integer/
 	      <Td/200/
 	      <Td/Timeout in milliseconds before the Environment Views are
@@ -1157,14 +1159,14 @@ end>>>
 		before this./
 	    </Tr>
 	    <Tr>
-	      <Td/<<emacsInterface>>/
+	      <Td/<Span class=index/<<emacsInterface>>//
 	      <Td/<<false>> or an object/
 	      <Td/The OPI/
 	      <Td/The object to talk to for source display and highlighting
 		requests.  Typically an instance of <<Emacs.interface>>./
 	    </Tr>
 	    <Tr>
-	      <Td/<<closeAction>>/
+	      <Td/<Span class=index/<<closeAction>>//
 	      <Td/<<unit>> or a nullary procedure/
 	      <Td/<<unit>>/
 	      <Td/Configures how the <<off()>> method behaves&emdash;and
@@ -1178,7 +1180,7 @@ end>>>
 	<Title/The <<OzcarClient>> Module/
 	<P>
 	  <List>
-	    <Entry><<start>>
+	    <Entry><<start>><Index class=module/OzcarClient<And>start/
 	    <Synopsis><<{OzcarClient.start ?+{Ticket}}>>
 	    <Item>
 	      starts a local debug session, connecting to a remote debugger
