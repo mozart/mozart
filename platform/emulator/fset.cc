@@ -14,6 +14,8 @@
 #pragma implementation "fset.hh"
 #endif
 
+#include "ozostream.hh"
+#include "fddebug.hh"
 #include "fset.hh"
 #include "tagged.hh"
 #include "value.hh"
