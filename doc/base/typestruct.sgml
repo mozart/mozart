@@ -17,7 +17,7 @@
       <P>
         <Index/primary types/<Index/types<And>primary/
         <Figure float id="figure.types" class=maxi>
-          <Caption>Primary Types in Oz.</Caption>
+          <Caption>Standard Primary Types in &Oz;.</Caption>
           <P>
             <Picture.extern latex to="primary-types.tex">
         </Figure>
@@ -25,7 +25,9 @@
         Primary types provide a classification of values in the &Oz; Universe
         such that any two different subtypes of some primary type are disjoint.
         To check for a value to belong to a primary type, only its top-level
-        constructor needs to be tested.
+        constructor needs to be tested.  Note that implementations of &Oz; are
+        free to introduce more primary types (so called <Def/extensions/) as
+        immediate subtypes of either <Q/value/ or <Q/chunk/.
       <Para class=apropos><Title/Numbers/
         Numbers are either integers or floats.
       <Para class=apropos><Title/Literals/
