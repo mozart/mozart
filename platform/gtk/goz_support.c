@@ -152,7 +152,9 @@ OZ_BI_define (ozgtk_signal_connect_sml, 3, 1)
  * Convertions
  *****************************************************************************/
 
-/* In Oz a GtkArg is a tuple of the form Name|Value */
+/* In Oz a GtkArg is a tuple of the form Name|Value
+ * where Name is a virtual string
+ */
 GtkArg
 goz_ozterm_to_gtkarg(OZ_Term term)
 {
