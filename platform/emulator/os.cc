@@ -1263,7 +1263,7 @@ int WINAPI dll_entry(int a,int b,int c)
    stack dump
    ----------------------------------------------------------------- */
 
-#if !defined(WINDOWS)
+#if !defined(WINDOWS) && !defined(DEBUG_CHECK)
 
 /* try to attach gdb to us and print a stack dump */
 
@@ -1280,7 +1280,7 @@ void osStackDump()
   if (tmpout != stdout) {
     fclose(tmpout);
     char buf[1000];
-    sprintf(buf,"gdb -batch -n -x %s -c %d %s",tmpfile,osgetpid(),ozconf.emuexe);
+    sprintf(buf,"gdb -x %s -c %d %s",tmpfile,osgetpid(),ozconf.emuexe);
     osSystem(buf);
   }
   

@@ -942,6 +942,11 @@ void AM::pushPreparedCalls(Thread *thr)
   }
 }
 
+Bool AM::isEmptyPreparedCalls()
+{
+  return preparedCalls==0;
+}
+
 void AM::emptyPreparedCalls()
 {
   while(preparedCalls) {
