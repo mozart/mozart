@@ -1,0 +1,238 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<!-- EDIT -->
+<TITLE>Title of Package</TITLE>
+<STYLE>
+BODY {
+	background-color: white;
+	margin-left	: 2cm;
+	margin-right	: 2cm;
+	font-family	: tahoma,arial,helvetica,sans-serif;
+}
+H1 {
+	text-align	: center;
+	color		: #9B0000;
+}
+H2 {	color		: #FF9933; }
+H4 {	color		: slateblue; }
+H3 {	color		: #881155; }
+H5 {	color		: darkslateblue; }
+CODE {	color		: #663366; }
+CODE,TT {
+	font-family	: "lucida console",courier,monospace;
+}
+PRE.DISPLAY, CODE.DISPLAY {
+	display		: block;
+	white-space	: pre;
+	margin-left	: 2cm;
+	margin-top	: 1em;
+	margin-bottom	: 1em;
+	color		: #663366;
+}
+P.AUTHOR {
+	text-align	: center;
+	font-weight	: bold;
+}
+SPAN.MODULE {
+	color		: steelblue;
+}
+A {	color		: steelblue; }
+SPAN.COMMENT      { color: #B22222; }
+SPAN.KEYWORD      { color: #A020F0; }
+SPAN.STRING       { color: #BC8F8F; }
+SPAN.FUNCTIONNAME { color: #0000FF; }
+SPAN.TYPE         { color: #228B22; }
+SPAN.VARIABLENAME { color: #B8860B; }
+SPAN.REFERENCE    { color: #5F9EA0; }
+SPAN.BUILTIN      { color: #DA70D6; }
+</STYLE>
+</HEAD>
+<BODY>
+<!-- EDIT -->
+<H1>XML Parser</H1>
+<P CLASS="AUTHOR">
+  <A HREF="http://www.loria.fr/~duchier/">Denys Duchier</A>
+</P>
+<DL>
+  <DT><B>provides</B>
+  <DD><SPAN CLASS="MODULE">x-ozlib://duchier/xml/parser.ozf</SPAN>
+</DL>
+<HR>
+
+<H2>Introduction</H2>
+<P>This module implements a namespace-aware object-oriented XML parser.
+It understands just enough of the optional
+<code>DOCTYPE</code> declaration to respect <code>ENTITY</code>
+declarations.  For example, if you place the following entity
+declarations in your document's <CODE>DOCTYPE</CODE>:</P>
+<pre CLASS="DISPLAY">&lt;!ENTITY section1 SYSTEM "foo/baz.xml"&gt;
+&lt;!ENTITY w3 "http://www.w3.org"&gt;
+</pre>
+<P>then any occurence of entity reference
+    <CODE>&amp;section1;</CODE> causes the contents of file
+    <SPAN CLASS="FILE">foo/baz.xml</SPAN> to be <EM>included</EM> and any
+    occurrence of entity reference <CODE>&amp;w3;</CODE> is
+    expanded into <CODE>http://www.w3.org</CODE>.  The parser is also
+    able to strip whitespace text nodes on the fly according to a
+    user specification in the style of XSLT.</p>
+
+<H2>Exports</H2>
+<P>The <code>parser</code> module exports the following features:</P>
+<DL>
+  <DT><code>parser</code>
+  <DD>a class implementing the XML parser
+  <DT><code>spaceManager</code>
+  <DD>a class implementing the decision rules for stripping whitespace
+</DL>
+
+<H2>Space Manager</H2>
+
+<P>A <code>SpaceManager</code> can answer the question: <i>"should
+isolated text nodes consisting of only whitespace characters be
+discarded in this context?"</i>  The question must be parametrized by
+a URI (for the namespace) and a Tag (for the name of the element in
+which the whitespace text node occurs):</p>
+<pre class="DISPLAY">askStripSpace(+URI +Tag ?Bool)
+askPreserveSpace(+URI +Tag ?Bool)
+</pre>
+<p>The default answer is <b>no</b>. Additional rules can be stated
+using the following methods:</p>
+<pre class="DISPLAY">stripSpace(+URI +Tag)
+preserveSpace(+URI +Tag)
+</pre>
+<p><code>stripSpace(URI Tag)</code> states that isolated text nodes
+consisting only of whitespace characters must be discarded when they
+occur as children of an element named <code>Tag</code> in namespace
+<code>URI</code>.  For an element not in any namespace (this is
+different from an element in the default namespace)
+<code>URI=unit</code>.</p>
+<p>It is possible to use wilcards <code>'*'</code> for either or both
+of the arguments.  Thus <code>stripSpace(URI '*')</code> says that
+isolated whitespace text nodes occurring in any element of the
+<code>URI</code> namespace should be discarded.  Additional rules can
+overrule in more specific cases.  For example:</p>
+<code CLASS="DISPLAY">
+stripSpace(URI '*')
+preserveSpace(URI code)
+</code>
+<p>states that isolated whitespace text nodes should be discarded in
+all elements of namespace <code>URI</code>, except for element
+<code>code</code> in which they should be preserved.  Which rule takes
+precedence?  Here is the hierarchy:</p>
+<table>
+<tr><td><b>Low</b></td><td>&nbsp;&nbsp;:&nbsp;&nbsp;</td><td><code>('*' '*')</td></tr>
+<tr><td><b>Medium</b></td><td>&nbsp;&nbsp;:&nbsp;&nbsp;</td><td><code>(URI *) ('*' Tag)</code></td></tr>
+<tr><td><b>High</b></td><td>&nbsp;&nbsp;:&nbsp;&nbsp;</td><td><code>(URI Tag)</code></td></tr>
+</table>
+<p>There can be an ambiguity on Medium, in which case an error is
+raised when the question is asked.</p>
+<p>When asking questions, i.e. with the methods
+<code>askStripSpace</code> and <code>askPreserveSpace</code>, no
+wildcard can be used, of course.</p>
+
+<H2>Parser</H2>
+
+<dl>
+<dt><code>@keepComments</code>
+<dt><code>setKeepComments(+Bool)</code>
+<dd>attribute and method for setting it.  It controls whether comment
+nodes are kept (or automatically discarded).  The default value is
+<code>false</code>, i.e. they are discarded.<p>
+<dt><code>@keepNamespaceDeclarations</code>
+<dt><code>setKeepNamespaceDeclarations(+Bool)</code>
+<dd>attribute and method for setting it.  It controls whether
+namespace declarations are kept (or by default discarded).  The
+default value is <code>false</code>.<p>
+<dt><code>setSpaceManager(+M)</code>
+<dd>installs a <code>SpaceManager</code> to control the parser's
+behaviour with respect to isolated whitespace text nodes.<p>
+<dt><code>parseVS(+VS ?Doc)</code>
+<dt><code>parseFile(+Filename ?Doc)</code>
+<dt><code>parseURL(+URL ?Doc)</code>
+<dd>parse a document and return its representation.<p>
+<dt><code>onStartDocument()</code>
+<dt><code>onEndDocument()</code>
+<dd>invoked respectively at the start and end of the document<p>
+<dt><code>onStartElement(Tag Alist Children)</code>
+<dd>invoked on the start tag of an element.  It is it's responsability
+to construct a representation of the element and to contribute it to
+the list of items currently being accumulated (by invoking the
+<code>append(_)</code> method).  Its default definition is:
+<pre class="DISPLAY">
+meth onStartElement(Tag Alist Children)
+   {self append(
+            element(
+               uri        : Tag.uri
+               name       : Tag.name
+               attributes : Alist
+               children   : Children))}
+end
+</pre>
+<code>Tag</code> is a record that describes the start tag and has the
+following features:
+<ul>
+<li><b>qname</b>: the tag's fullname as it appears in the document
+<li><b>prefix</b>: just it's prefix (<code>unit</code> if none)
+<li><b>uri</b>: the namespace uri bound the prefix (<code>unit</code>
+if none)
+<li><b>name</b>: the localname of the tag (i.e. minus prefix)
+<li><b>coord</b>: the debug coordinates where the start tag occurred
+<li><b>endCoord</b>: the, as yet uninstantiated, debug coordinates
+where the corresponding end tag occurs
+</ul>
+<p>
+<code>qname</code>, <code>prefix</code>, <code>uri</code> and
+<code>name</code> are all atoms. Debug coordinates are records of the
+form: <code>coord(Filename LineNumber)</code>. <code>Alist</code> is
+the list of accumulated attributes and possibly namespace
+declarations. <code>Children</code> is the, as yet uninstantiated,
+list of accumulated children of this element.<p>
+<dt><code>append(X)</code>
+<dd>contribute the item <code>X</item> to the contents list being
+accumulated for the current element.<p>
+<dt><code>onEndElement(Tag)
+<dd>invoked on an end tag<p>
+<dt><code>onAttribute(Tag Value)</code>
+<dd>invoked for each attribute of ab element.  It is its
+responsability to construct a representation of the attribute and to
+contribute it to the list of attributes currently being accumulated
+(by invoking the <code>attributeAppend(_)</code> method).  Of course,
+attributes can be ignored by <em>not</em> contributing them.
+<p><code>Tag</code> is a record describing the attribute's name and
+has features <code>qname</code>, <code>prefix</code>,
+<code>name</code>, <code>uri</code>, <code>coord</code>, with the same
+interpretation as for elements.  Note that attribute without an
+explicit are always considered to be in <em>no</em> namespace, and not
+in the default namespace (if any).
+<p>It should be noted that the attributes of an element are processed
+before its <code>onStartElement</code> is called.  The reason for this
+is that it is necessary to process all namespace declarations before
+attempting to interpret the tag.<p>
+<dt><code>onNamespaceDeclaration(Prefix URI Coord)</code>
+<dd>some attributes are really namespace declarations.  This is
+identified by their <code>xmlns</code> prefix (using any possibly
+mixed capitalization as desired)
+<p><code>Prefix</code> and <code>URI</code> are both atoms,
+<code>Coords</code> is a debug coordinates record.
+<p>The default implementation, checks
+<code>@keepNamespaceDeclarations</code> and contributes only if it is
+<code>true</code><p>
+<dt><code>onProcessingInstruction(Name Data Coord)</code>
+<dd><code>Name</code> is an atom, <code>Data</code> is a string,
+<code>Coord</code> is a debug coordinates record<p>
+<dt><code>onCharacters(Data Coord)</code>
+<dd>invoked for text nodes. <code>Chars</code> is a string,
+<code>Coord</code> is a debug coordinates record<p>
+<dt><code>onComments(Data Coord)</code>
+<dd>invoked on comment nodes. <code>Data</code> is a string,
+<code>Coord</code> is a debug coordinates record.  Note that comment
+nodes are automatically discarded if <code>@keepComments</code> is
+<code>false</code>
+</dl>
+<HR>
+<ADDRESS>
+<A HREF="http://www.loria.fr/~duchier/">Denys Duchier</A>
+</ADDRESS>
+</BODY>
+</HTML>
