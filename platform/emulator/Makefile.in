@@ -35,7 +35,7 @@ include Makefile.vars
 MODULE_NAMES =							\
 	PID Fault DPMisc DPB VirtualSite DPPane Tk Schedule FDP FSP Parser \
 	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
-	Win32 System Profile
+	Win32 System Profile OsTime
 
 STATIC_MODULES=		@STATIC_MODULES@
 DYNAMIC_MODULES=	@DYNAMIC_MODULES@
@@ -67,7 +67,7 @@ MODSPECS= \
 	PID URL FDB FSB CTB RecordC Space System CTB \
 	CompilerSupport Compat Win32 Profile \
 	Debug Fault Browser Misc DPMisc Distribution \
-	VirtualSite Application DPPane \
+	VirtualSite Application DPPane OsTime \
 	$(BIMODSPECS) \
 	$(DENYS_SPECS)
 
@@ -156,6 +156,8 @@ COMPILERSUPPORTSRCS= \
 	compiler.cc
 BROWSERSRCS= \
 	browser.cc
+OSTIMESRCS= \
+	ostime.cc
 DEBUGSRCS= \
 	debugBI.cc
 SPACEOPSRCS = \
@@ -180,6 +182,7 @@ PROFILESRCS = \
 TKOBJS=	$(TKSRCS:%.cc=%.lo)
 COMPILERSUPPORTOBJS=	$(COMPILERSUPPORTSRCS:%.cc=%.lo)
 BROWSEROBJS=	$(BROWSERSRCS:%.cc=%.lo)
+OSTIMEOBJS=	$(OSTIMESRCS:%.cc=%.lo)
 DEBUGOBJS=	$(DEBUGSRCS:%.cc=%.lo)
 SPACEOPOBJS=	$(SPACEOPSRCS:%.cc=%.lo)
 FDBOBJS=	$(FDBSRCS:%.cc=%.lo)
@@ -196,7 +199,7 @@ ALLSRCS= $(SRCS) \
 	$(TKSRCS) $(COMPILERSUPPORTSRCS) $(BROWSERSRCS) \
 	$(SPACEOPSRCS) $(FDBSRCS) $(FSBSRCS) $(CTBSRCS) \
 	$(RECORDCSRCS) $(COMPATSRCS) $(WIN32SRCS) $(SYSTEMSRCS) \
-	$(PROFILESRCS) \
+	$(PROFILESRCS) $(OSTIMESRCS) \
 	$(DEBUGSRCS) $(TEXT2PICKLESRCS)
 
 ############################################################################
@@ -316,6 +319,12 @@ Browser.so: $(BROWSEROBJS)
 
 libBrowser.a: $(BROWSEROBJS)
 	$(AR) -rc $@ $(BROWSEROBJS) && $(RANLIB) $@
+
+OsTime.so: $(OSTIMEOBJS)
+	$(DYNLD) -o $@ $(OSTIMEOBJS)
+
+libOsTime.a: $(OSTIMEOBJS)
+	$(AR) -rc $@ $(OSTIMEOBJS) && $(RANLIB) $@
 
 Debug.so: $(DEBUGOBJS)
 	$(DYNLD) -o $@ $(DEBUGOBJS)

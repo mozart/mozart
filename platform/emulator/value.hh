@@ -775,6 +775,10 @@ public:
     }
   }
 
+  long getLong(void) {
+    return mpz_get_si(&value);
+  }
+
   /* make an 'unsigned long' if <Big> fits into it, else return 0,~0 */
   unsigned long getUnsignedLong()
   {
@@ -870,6 +874,16 @@ int oz_intToC(TaggedRef term)
   }
 
   return tagged2BigInt(term)->getInt();
+}
+
+inline
+long oz_intToCL(TaggedRef term)
+{
+  if (oz_isSmallInt(term)) {
+    return (long) smallIntValue(term);
+  }
+
+  return tagged2BigInt(term)->getLong();
 }
 
 OZ_Term oz_long(long i);
