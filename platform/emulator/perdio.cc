@@ -715,10 +715,9 @@ PendLinkManager *pendLinkManager;
 #define ASK_CREDIT_SIZE          OWNER_GIVE_CREDIT_SIZE
 
 #define CELL_CREDIT_SIZE        (8)
-
 #else
 
-#define START_CREDIT_SIZE        ((1<<31) - 1)
+#define START_CREDIT_SIZE        ((1<<31)-1)
 #define OWNER_GIVE_CREDIT_SIZE   ((1<<15))
 #define BORROW_GIVE_CREDIT_SIZE  ((1<<7))
 #define MIN_BORROW_CREDIT_SIZE   2
@@ -1040,7 +1039,9 @@ public:
     if (c==INFINITE_CREDIT) { makePersistent(); return; }
     addToCredit(c);
   }
-  int hasFullCredit()     { return getCredit()==START_CREDIT_SIZE; }
+  int hasFullCredit()     { 
+    Assert(getCredit()<=START_CREDIT_SIZE);
+    return getCredit()==START_CREDIT_SIZE; }
   Credit getSendCredit()  { return requestCredit(OWNER_GIVE_CREDIT_SIZE); }
   Credit getOneCredit()   { return requestCredit(1); }
   // for redirect, acknowledge
@@ -1898,6 +1899,12 @@ void gcGNameTable()       { theGNameTable.gcGNameTable();}
 void gcGName(GName* name) { if (name) name->gcGName(); }
 void gcFrameToProxy()     {borrowTable->gcFrameToProxy();}
 
+#define DummyThread ((Thread*)0x1)
+#define MoveThread  ((Thread*)NULL)
+
+inline Bool isRealThread(Thread* t){
+  if((t==MoveThread) || (t==DummyThread)) return FALSE;
+  return TRUE;}
 
 void Tertiary::gcProxy(){
   int i=getIndex();
@@ -1921,8 +1928,12 @@ void Tertiary::gcManager(){
 /* pendThread inlines */
 
 void gcPendThread(PendThread **pt){
+  PendThread *tmp;
   while(*pt!=NULL){
-    PendThread *tmp=new PendThread((*pt)->thread->gcThread(),(*pt)->next);
+    if(((*pt)->thread == NULL) || ((*pt)->thread== (Thread*) 0x1)){
+      tmp=new PendThread((*pt)->thread,(*pt)->next);}
+    else{
+      tmp=new PendThread((*pt)->thread->gcThread(),(*pt)->next);}
     *pt=tmp;
     pt=&(tmp->next);}}
 
@@ -1930,7 +1941,8 @@ inline void pendThreadResumeAll(PendThread *pt){
   PendThread *tmp;
   while(pt!=NULL){
     Thread *t=pt->thread;
-    if(t!=NULL){
+    Assert(t!=MoveThread);
+    if(isRealThread(t)){
       PD((THREAD_D,"start thread ResumeAll %x",t));
       oz_resume(t);}
     tmp=pt;
@@ -1941,6 +1953,7 @@ inline Thread* pendThreadResumeFirst(PendThread **pt){
   PendThread *tmp=*pt;
   Assert(tmp!=NULL);
   Thread *t=tmp->thread;
+  Assert(isRealThread(t));
   PD((THREAD_D,"start thread ResumeFirst %x",t));
   oz_resume(t);
   *pt=tmp->next;
@@ -1950,27 +1963,22 @@ inline Thread* pendThreadResumeFirst(PendThread **pt){
 inline void pendThreadRemoveFirst(PendThread **pt){
   PendThread *tmp=*pt;
   Assert(tmp!=NULL);
-  Assert(tmp->thread==NULL);
+  Assert(!isRealThread(tmp->thread));
   *pt=tmp->next;  
   tmp->dispose();}
 
 inline void pendThreadAddToEnd(PendThread **pt,Thread *t){
-  oz_stop(t);
-  PD((THREAD_D,"stop thread addToEnd %x",t));
+  if(isRealThread(t)){
+    oz_stop(t);
+    PD((THREAD_D,"stop thread addToEnd %x",t));}
   while(*pt!=NULL){pt= &((*pt)->next);}
   *pt=new PendThread(t,NULL);
   return;}
 
-inline void pendThreadAddDummyToEnd(PendThread **pt){
-  while(*pt!=NULL){
-    Assert((*pt)->thread!=NULL); // only one dummy per chain
-    pt= &((*pt)->next);}
-  *pt=new PendThread(NULL,NULL);
-  return;}
-
 inline void pendThreadAddToNonFirst(PendThread **pt,Thread *t){
-  oz_stop(t);
-  PD((THREAD_D,"stop thread addToNonFirst %x",t));
+  if(isRealThread(t)){
+    oz_stop(t);
+    PD((THREAD_D,"stop thread addToNonFirst %x",t));}
   if(*pt!=NULL){pt= &((*pt)->next);}
   *pt=new PendThread(t,NULL);
   return;}
@@ -4739,9 +4747,10 @@ int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar)
 /*              CELL PROTOCOL - BEGIN                                     */
 /* ********************************************************************** */
 
-/* ---------------------    send  primitives  ---------------------------- */
+/* ---------------------    send  primitives  TYPE 1 -------------------- */
+/* -------------            OBS  holding one credit  ---------------------*/
                    
-void cellSendForward(Site *toS,Site *rS,int ctr,int mI){  // holding one credit
+void cellSendForward(Site *toS,Site *rS,int ctr,int mI){  
   PD((MSG_SENT,"CELL_FORWARD id:%d to s:%s then:%s ctr:%d",mI,pSite(toS),pSite2(rS),ctr));
   ByteStream* bs=bufferManager->getByteStreamMarshal();  // marshal
   marshallMess(bs,M_CELL_FORWARD);
@@ -4753,7 +4762,7 @@ void cellSendForward(Site *toS,Site *rS,int ctr,int mI){  // holding one credit
   reliableSendFail(toS,bs,FALSE,15);                      // send
   return;}
 
-void cellSendRemoteRead(int mI,Site *toS,TaggedRef val){  // holding one credit
+void cellSendRemoteRead(int mI,Site *toS,TaggedRef val){  
   ByteStream* bs=bufferManager->getByteStreamMarshal();   // marshal
   marshallMess(bs,M_CELL_REMOTEREAD);
   marshallMySite(bs);
@@ -4764,7 +4773,7 @@ void cellSendRemoteRead(int mI,Site *toS,TaggedRef val){  // holding one credit
   debtSendSimple(bs,toS,16);
   return;}
 
-void cellSendContents(TaggedRef tr,Site* toS,Site *mS,int mI){ // holding one credit
+void cellSendContents(TaggedRef tr,Site* toS,Site *mS,int mI){ 
   ByteStream *bs=bufferManager->getByteStreamMarshal();    // marshal
   marshallMess(bs,M_CELL_CONTENTS);
   marshallSite(mS,bs);
@@ -4776,7 +4785,10 @@ void cellSendContents(TaggedRef tr,Site* toS,Site *mS,int mI){ // holding one cr
   return;
 }
 
-void cellSendGet(BorrowEntry *be){      // not holding any credit
+/* ---------------------    send  primitives  TYPE 2 -------------------- */
+/* -------------            OBS  not holding any credit ------------------*/
+
+void cellSendGet(BorrowEntry *be){      
   NetAddress *na=be->getNetAddress();
   Site *toS=na->site;
   ByteStream *bs=bufferManager->getByteStreamMarshal();
@@ -4896,7 +4908,7 @@ void cellReceiveDump(CellManager *cm,Site *fromS){
   Assert(cf->getState()==Cell_Invalid);
   networkSiteCheck(fromS);
   TaggedRef tr=oz_newVariable();
-  cellDoExchange((Tertiary *)cf,tr,tr,NULL); /* ATTENTION */
+  cellDoExchange((Tertiary *)cf,tr,tr,DummyThread);
   return;
 }
 
@@ -4972,8 +4984,7 @@ TaggedRef cellGetContentsFast(Tertiary *c)
     {
       if(!((CellManager*)c)->isOwnCurrent())
 	return makeTaggedNULL();
-    }
-  // no break here
+    }  // no break here
   case Te_Frame:
     {
       CellFrame *cf=(CellFrame *)c; 
@@ -4995,13 +5006,11 @@ inline void e_invalid(CellFrame *cf,TaggedRef old,TaggedRef nw,Thread* th){
   cf->setState(Cell_Requested);
   cf->setHead(old);
   cf->setContents(nw);
-  if (th) {
-    oz_stop(th);
-    PD((THREAD_D,"stop thread invalid exchange %x",th));
-    PendThread* pt=new PendThread(th,NULL);
-    cf->setPending(pt);}}
+  Assert(isRealThread(th) || th==DummyThread);
+  pendThreadAddToEnd(cf->getPendBase(),th);}
 
 void cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
+  Assert(th!=MoveThread);
   TertType tt=c->getTertType();
   CellFrame *cf=(CellFrame *)c; 
 
@@ -5020,6 +5029,7 @@ void cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
 	e_invalid(cf,old,nw,th);  
 	int myI=cm->getIndex();
 	OwnerEntry *oe=OT->getOwner(myI);
+	oe->getOneCredit();
 	cellSendForward(current,mySite,cm->getAndInitManCtr(),myI);
 	return;}}
     else{
@@ -5037,10 +5047,11 @@ void cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
     PD((CELL,"exchange on REQUESTED"));
     TaggedRef tr=cf->getContents();
     cf->setContents(nw);
-    if (th) {
-      pendThreadAddToNonFirst(cf->getPendBase(),th);
-      SiteUnify(tr,old);}
+    Assert(th!=DummyThread);
+    pendThreadAddToEnd(cf->getPendBase(),th);
+    SiteUnify(tr,old);
     return;}
+  
   Assert(c->getTertType()==Te_Frame);
   Assert(state==Cell_Invalid);
   PD((CELL,"exchange on INVALID"));
@@ -5095,9 +5106,9 @@ void cellDoAccess(Tertiary *c,TaggedRef val){
 /* ********************************************************************** */
 /*              LOCK PROTOCOL    - BEGIN                                  */
 
-/* basic send */
+/* basic sends - type 1 - holding one credit  */
 
-void lockSendForward(Site *toS,Site *fS,int mI){         // holding one credit
+void lockSendForward(Site *toS,Site *fS,int mI){ 
   PD((MSG_SENT,"LOCK_FORWARD id:%d send-to:%s to:%s",mI,pSite(toS),pSite2(fS)));
   ByteStream* bs=bufferManager->getByteStreamMarshal();  // marshal
   marshallMess(bs,M_LOCK_FORWARD);
@@ -5107,6 +5118,18 @@ void lockSendForward(Site *toS,Site *fS,int mI){         // holding one credit
   bs->marshalEnd();                  
   reliableSendFail(toS,bs,FALSE,15);                      // send
   return;}
+
+void lockSendLock(Site *mS,int mI,Site* toS){
+  ByteStream *bs= bufferManager->getByteStreamMarshal();
+  marshallMess(bs,M_LOCK_SENT);
+  marshallSite(mS,bs);
+  marshallNumber(mI,bs);
+  bs->marshalEnd();
+  PD((MSG_SENT,"LOCK_SENT id:%s-%d to:%s",pSite(mS),mI,pSite2(toS)));
+  reliableSendFail(toS,bs,FALSE,67);
+  return;}
+
+/* basic sends - type 2 - NOT holding one credit  */
 
 void lockSendDump(BorrowEntry *be,LockFrame *lf){       
   Assert(lf->getState()==Lock_Valid);
@@ -5132,16 +5155,6 @@ void lockSendLockBorrow(BorrowEntry *be,Site* toS){
   bs->marshalEnd();
   PD((MSG_PREP,"LOCK_SENT id:%s-%d to:%s",pSite(na->site),na->index,pSite2(toS)));
   borrowSendSimple(be,bs,toS,67);
-  return;}
-
-void lockSendLock(Site *mS,int mI,Site* toS){
-  ByteStream *bs= bufferManager->getByteStreamMarshal();
-  marshallMess(bs,M_LOCK_SENT);
-  marshallSite(mS,bs);
-  marshallNumber(mI,bs);
-  bs->marshalEnd();
-  PD((MSG_SENT,"LOCK_SENT id:%s-%d to:%s",pSite(mS),mI,pSite2(toS)));
-  reliableSendFail(toS,bs,FALSE,67);
   return;}
 
 void lockSendGet(BorrowEntry *be){
@@ -5180,16 +5193,13 @@ Bool lockReceiveGet(LockManager* lm,int mI,Site* toS){  // holding one credit
     lf->setState(Lock_Valid | Lock_Next);
     lf->setNext(toS);
     networkSiteInc(toS);    
-    return FALSE;}
+    return TRUE;}
   
   lockSendForward(current,toS,mI);
   networkSiteDec(current);
   return FALSE;
 }
 
-void dummyGetLock(LockFrame *lf){
-  Assert(0); /* ATTENTION */
-}
 
 void lockReceiveDump(LockManager* lm,Site *fromS){
   Assert(lm->getType()==Co_Lock);
@@ -5203,7 +5213,7 @@ void lockReceiveDump(LockManager* lm,Site *fromS){
     PD((WEIRD,"WEIRD- LOCK dump not needed"));
     return;}
   networkSiteCheck(fromS);
-  dummyGetLock(lf);
+  lm->lockComplex(DummyThread);
   return;
 }
 
@@ -5215,8 +5225,15 @@ void lockReceiveLock(LockFrame* lf){
   if(state & Lock_Next) {lf->setState(Lock_Valid | Lock_Next);}
   else {lf->setState(Lock_Valid);}
   Assert(lf->getLocker()==NULL);
-  lf->setLocker(pendThreadResumeFirst(lf->getPendBase()));
-  return;}
+  if(lf->getPending()->thread!=DummyThread){
+    lf->setLocker(pendThreadResumeFirst(lf->getPendBase()));
+    return;}
+  pendThreadRemoveFirst(lf->getPendBase());
+  Assert(lf->getTertType()==Te_Manager);
+  if(lf->getPending()==NULL) {
+    lf->setLocker(NULL);
+    return;}
+  ((LockManager*)lf)->unlockComplex();}
 
 Bool lockReceiveForward(LockFrame *lf,Site *toS,Site* mS,int mI){
   Assert(lf->getTertType()==Te_Frame);
@@ -5237,7 +5254,7 @@ Bool lockReceiveForward(LockFrame *lf,Site *toS,Site* mS,int mI){
   lf->setNext(toS);
   lf->setState(Lock_Valid | Lock_Next);
   networkSiteInc(toS);
-  pendThreadAddDummyToEnd(lf->getPendBase());
+  pendThreadAddToEnd(lf->getPendBase(),MoveThread);
   return TRUE;}
 
 void LockProxy::lock(Thread *t){
@@ -5246,6 +5263,7 @@ void LockProxy::lock(Thread *t){
     ((LockFrame*)this)->lock(t);}
 
 inline void basicLock(LockFrame *lf,Thread *t){
+  Assert(isRealThread(t));
   int state=lf->getState();
   if(state & Lock_Valid){
     Thread *ct=lf->getLocker();
@@ -5261,7 +5279,7 @@ inline void basicLock(LockFrame *lf,Thread *t){
     PD((LOCK,"lock VALID lock held by other"));
     if(state & Lock_Next){
       if(lf->getPending()==NULL){
-	pendThreadAddDummyToEnd(lf->getPendBase());
+	pendThreadAddToEnd(lf->getPendBase(),MoveThread);
 	PD((LOCK,"lock VALID due to be shipped out"));}
     }
     pendThreadAddToEnd(lf->getPendBase(),t);
@@ -5278,6 +5296,7 @@ inline void basicLock(LockFrame *lf,Thread *t){
   return;}
   
 void LockManager::lockComplex(Thread *t){
+  Assert(t!=MoveThread);
   LockFrame *lf=(LockFrame*)this;
   if(lf->getState()==Lock_Invalid){
     PD((LOCK,"lock on INVALID manager  %s-%d",pSite(mySite),getIndex()));
@@ -5319,7 +5338,9 @@ void LockFrame::unlockComplex(){
       networkSiteDec(toS);
       setState(Lock_Invalid);
       return;}
-    if(getPending()->thread==NULL){      // indicates where request to forward came 
+    Assert(getPending()->thread != DummyThread);
+               // indicates where request to forward came 
+    if(getPending()->thread==MoveThread){      
       BorrowEntry *be=BT->getBorrow(getIndex());
       pendThreadRemoveFirst(getPendBase());
       setLocker((Thread*) NULL);
@@ -5354,7 +5375,16 @@ void LockManager::unlockComplex(){
       lf->setLocker(NULL);
       lf->setState(Lock_Invalid);
       return;}
-    if(lf->getPending()->thread==NULL){
+    if(lf->getPending()->thread==DummyThread)  { // dummy lock
+      pendThreadRemoveFirst(lf->getPendBase());
+      if(lf->getPending()==NULL){
+	lf->setLocker(NULL);
+	return;}
+      if(lf->getPending()->thread!=NULL){
+	Assert(lf->getPending()->thread != DummyThread);
+	lf->setLocker(pendThreadResumeFirst(lf->getPendBase()));
+	return;}} 
+    if(lf->getPending()->thread==MoveThread){ 
       OwnerEntry *oe=OT->getOwner(getIndex());
       pendThreadRemoveFirst(lf->getPendBase());
       lf->setLocker((Thread*) NULL);
@@ -5369,6 +5399,7 @@ void LockManager::unlockComplex(){
       lockSendForward(current,mySite,getIndex());
       networkSiteDec(current);
       return;}
+    Assert(lf->getPending()->thread != DummyThread);
     lf->setLocker(pendThreadResumeFirst(lf->getPendBase()));
     return;}
   if(lf->getPending()==NULL){
