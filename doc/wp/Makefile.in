@@ -21,7 +21,7 @@ WIDGETS2 = \
         button check-and-radio check-and-radio-action \
         menu entry scale file listbox help
 CANVAS = \
-        barchart
+        barchart tags waitdone
 TOOLS = \
         dialog error menubar
 
@@ -32,7 +32,8 @@ HTMLEXTRAFILES0 = \
         $(WIDGETS2:%=widgets-2/%.gif) \
         $(CANVAS:%=canvas/%.gif) \
         $(TOOLS:%=tools/%.gif) \
-        queen.xbm truck-left.ppm truck-right.ppm \
+        queen.xbm magnifier.xbm \
+        truck-left.ppm truck-right.ppm \
         wp.gif
 HTMLEXTRAFILES = \
         $(addprefix pictures/,$(HTMLEXTRAFILES0))
