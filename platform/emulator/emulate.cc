@@ -107,18 +107,24 @@ void AM::enrichTypeException(char *fun, OZ_Term args)
  * Handle Failure macros (HF)
  */
 
-#define HF_RAISE_FAILURE(T)                                     \
-   {                                                            \
-     if (!e->isToplevel()) {                                    \
-       if (!CTT->hasCatchFlag() || CBB!=CTT->getBoard()) {      \
-         goto LBLfailure;                                       \
-       }                                                        \
-     }                                                          \
-     e->exception.info  = ozconf.errorDebug?T:NameUnit;         \
-     e->exception.value = RecordFailure;                        \
-     e->exception.debug = ozconf.errorDebug;                    \
-     goto LBLraise;                                             \
-   }
+bool hf_raise_failure(AM *e, TaggedRef t)
+{
+  if (!e->isToplevel() &&
+      (!e->currentThread->hasCatchFlag() ||
+       e->currentBoard!=e->currentThread->getBoard())) {
+    return OK;
+  }
+  e->exception.info  = ozconf.errorDebug?t:NameUnit;
+  e->exception.value = RecordFailure;
+  e->exception.debug = ozconf.errorDebug;
+  return NO;
+}
+
+#define HF_RAISE_FAILURE(T)                     \
+   if (hf_raise_failure(e,T))                   \
+     goto LBLfailure;                           \
+   goto LBLraise;
+
 
 #define HF_FAIL       HF_RAISE_FAILURE(OZ_atom("fail"))
 #define HF_DIS        HF_RAISE_FAILURE(OZ_atom("fail"))
@@ -173,6 +179,15 @@ if (predArity != arityExp && VarArity != arityExp) {                     \
 #ifdef OUTLINE
 #define inline
 #endif
+
+inline
+TaggedRef fastnewTaggedUVar(AM *e)
+{
+  TaggedRef *ret = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
+  *ret = e->currentUVarPrototype();
+  return makeTaggedRef(ret);
+}
+
 
 // -----------------------------------------------------------------------
 // genCallInfo: self modifying code!
@@ -419,13 +434,6 @@ void Thread::makeRunning ()
 
 #define PushCont(PC,Y,G)  CTS->pushCont(PC,Y,G,0);
 
-void AM::pushContX(ProgramCounter PC, RefsArray Y, RefsArray G,
-                   RefsArray X, int I) {
-  int i=I;
-  RefsArray x=i>0?copyRefsArray(X,i):0;
-  cachedStack->pushCont(PC,Y,G,x);
-}
-
 /* NOTE:
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
@@ -456,7 +464,7 @@ void AM::pushContX(ProgramCounter PC, RefsArray Y, RefsArray G,
 
 #define INCFPC(N) PC += N
 
-// #define WANT_INSTRPROFILE
+#define WANT_INSTRPROFILE
 #if defined(WANT_INSTRPROFILE) && defined(__GNUC__)
 #define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
@@ -1655,7 +1663,7 @@ LBLdispatcher:
 
       // XPC(3) maybe the same register as XPC(2)
       OZ_Return res = fun(XPC(2),XPC(3));
-      if (res==PROCEED) DISPATCH(5);
+      if (res==PROCEED) { DISPATCH(5); }
       if (res==FAILED) {
         SHALLOWFAIL;
         Assert(0);
@@ -1698,7 +1706,7 @@ LBLdispatcher:
       // note: XPC(4) is maybe the same as XPC(2) or XPC(3) !!
       OZ_Return res = fun(XPC(2),XPC(3),XPC(4));
 
-      if (res==PROCEED) DISPATCH(6);
+      if (res==PROCEED) { DISPATCH(6); }
       if (res==FAILED) {
         SHALLOWFAIL;
         HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
@@ -1926,18 +1934,10 @@ LBLdispatcher:
       OZ_Return res = fun(XPC(2),XPC(3),XPC(4));
       if (res==PROCEED) { DISPATCH(6); }
 
-      switch (res) {
-      case SUSPEND:
-        e->pushContX(PC,Y,G,X,getPosIntArg(PC+5));
-        e->suspendOnVarList(CTT);
-        goto LBLsuspendThread;
-
-      case RAISE:
-      case FAILED:
-      case SLEEP:
-      default:
-        Assert(0);
-      }
+      Assert(res==SUSPEND);
+      e->pushContX(PC,Y,G,X,getPosIntArg(PC+5));
+      e->suspendOnVarList(CTT);
+      goto LBLsuspendThread;
     }
 
 #undef SHALLOWFAIL
@@ -2057,9 +2057,19 @@ LBLdispatcher:
   Case(ALLOCATEL9)  { Y =  allocateY(9); DISPATCH(1); }
   Case(ALLOCATEL10) { Y = allocateY(10); DISPATCH(1); }
 
+  Case(DEALLOCATEL1)    { deallocateY(Y,1);  Y=0; DISPATCH(1); }
+  Case(DEALLOCATEL2)  { deallocateY(Y,2);  Y=0; DISPATCH(1); }
+  Case(DEALLOCATEL3)  { deallocateY(Y,3);  Y=0; DISPATCH(1); }
+  Case(DEALLOCATEL4)  { deallocateY(Y,4);  Y=0; DISPATCH(1); }
+  Case(DEALLOCATEL5)  { deallocateY(Y,5);  Y=0; DISPATCH(1); }
+  Case(DEALLOCATEL6)  { deallocateY(Y,6);  Y=0; DISPATCH(1); }
+  Case(DEALLOCATEL7)  { deallocateY(Y,7);  Y=0; DISPATCH(1); }
+  Case(DEALLOCATEL8)  { deallocateY(Y,8);  Y=0; DISPATCH(1); }
+  Case(DEALLOCATEL9)  { deallocateY(Y,9);  Y=0; DISPATCH(1); }
+  Case(DEALLOCATEL10) { deallocateY(Y,10); Y=0; DISPATCH(1); }
+
   Case(DEALLOCATEL)
     {
-      Assert(!isFreedRefsArray(Y));
       if (Y) {
         deallocateY(Y);
         Y = NULL;
@@ -2171,7 +2181,7 @@ LBLdispatcher:
         Assert(!CTT->isSuspended());
         Assert(CBB==currentDebugBoard);
 
-        emulateHookPopTask(e);
+        //emulateHookPopTask(e);
 
         DebugCheckT(CAA = NULL);
 
