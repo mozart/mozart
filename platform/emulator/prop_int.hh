@@ -43,6 +43,7 @@
 inline
 Propagator * oz_newPropagator(OZ_Propagator * p) {
   Board * bb = oz_currentBoard();
+  bb->incSuspCount();
   Propagator * prop = new Propagator(p, bb);
   prop->setRunnable();
   prop->setUnify();
@@ -62,6 +63,7 @@ void oz_closeDonePropagator(Propagator * prop) {
   Assert(!prop->isDead());
   Assert(oz_isCurrentBoard(GETBOARD(prop)));
 
+  GETBOARD(prop)->decSuspCount();
   prop->dispose();
   prop->setDead();
 }
