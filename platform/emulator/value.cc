@@ -42,9 +42,12 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomTotal, AtomDetailed,
   AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap,
   AtomDebugIP, AtomDebugPerdio,
+  // Atoms for NetError Handlers
+  AtomTempBlocked, AtomPermBlocked,
+
   RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
-  BI_Unify,BI_Show,BI_send;
+  BI_Unify,BI_Show,BI_send,BI_restop;
 
 
 
@@ -180,6 +183,13 @@ void initLiterals()
   AtomDebugIP               = makeTaggedAtom("debugIP");
   AtomDebugPerdio           = makeTaggedAtom("debugPerdio");
 
+  // Atom Handlers
+  AtomTempBlocked             = makeTaggedAtom("permBlocked");
+  AtomPermBlocked             = makeTaggedAtom("tempBlocked");
+
+
+
+
 
   RecordFailure = OZ_record(OZ_atom("failure"),
                             OZ_cons(OZ_atom("debug"),OZ_nil()));
@@ -196,6 +206,7 @@ void initLiterals()
   BI_Unify=makeTaggedConst(builtinTab.find("="));
   BI_Show=makeTaggedConst(builtinTab.find("Show"));
   BI_send=makeTaggedConst(builtinTab.find("Send"));
+  BI_restop=makeTaggedConst(builtinTab.find("perdioRestop"));
 }
 
 

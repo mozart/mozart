@@ -1262,7 +1262,8 @@ LBLdispatcher:
   Case(FASTTAILCALL)
     //  LBLFastTailCall:
     {
-      AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
+      AbstractionEntry *entry =
+        (AbstractionEntry *)getAdressArg(PC+1);
 
       COUNT(fastcalls);
       CallDoChecks(entry->getAbstr(),entry->getGRegs());
@@ -1991,9 +1992,13 @@ LBLdispatcher:
       case Te_Frame:{
         if(((LockFrame*)t)->hasLock(th)) {goto has_lock;}
         if(((LockFrame*)t)->lockB(e->currentThread())){goto got_lock;}
+        if(t->getNetCondition()!=NotBlocked &&
+           t->threadHasHandler(th)) {goto lost_lock_n;}
         goto no_lock;}
       case Te_Proxy:{
         ((LockProxy*)t)->lock(th);
+        if(t->getNetCondition()!=NotBlocked &&
+           t->threadHasHandler(th)) {goto lost_lock_n;}
         goto no_lock;}
       case Te_Manager:{
         if(((LockManager*)t)->hasLock(th)) {goto has_lock;}
@@ -2003,13 +2008,20 @@ LBLdispatcher:
       Assert(0);
 
       got_lock:
-         PushCont(lbl,Y,G);
-         CTS->pushLock(t);
-         DISPATCH(4);
+        PushCont(lbl,Y,G);
+      CTS->pushLock(t);
+      DISPATCH(4);
 
-      has_lock:
-         PushCont(lbl,Y,G);
-         DISPATCH(4);
+    has_lock:
+      PushCont(lbl,Y,G);
+      DISPATCH(4);
+
+      lost_lock_n:
+      PushCont(lbl,Y,G);
+      CTS->pushLock(t);
+      PushContX((PC+4),Y,G,X,toSave);      /* ATTENTION */
+      ((LockFrame*)t)->blocked(t->getNetCondition(),false);
+      DISPATCH(4);
 
       no_lock:
         PushCont(lbl,Y,G);
@@ -2017,6 +2029,7 @@ LBLdispatcher:
         CheckLiveness(PC+4,toSave);
         PushContX((PC+4),Y,G,X,toSave);      /* ATTENTION */
         goto LBLsuspendThread;
+
 
     }
 
@@ -2775,13 +2788,13 @@ LBLdispatcher:
         ((LockLocal*)lck)->unlock();
         break;
       case Te_Frame:
-        ((LockFrame*)lck)->unlock();
+        ((LockFrame*)lck)->unlock(am.currentThread());
         break;
       case Te_Proxy:
         oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
         goto LBLraise;
       case Te_Manager:
-        ((LockManager*)lck)->unlock();
+        ((LockManager*)lck)->unlock(am.currentThread());
         break;}
       goto LBLpopTaskNoPreempt;
     }
