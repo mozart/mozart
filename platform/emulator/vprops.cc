@@ -284,7 +284,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_GC_SIZE,getUsedMemory()*KB);
     CASE_INT(PROP_GC_ACTIVE,ozstat.gcLastActive*KB);
     CASE_REC(PROP_GC,"gc",
-             (8,AtomMin,AtomMax,AtomFree,AtomTolerance,
+             (9,AtomCodeCycles,AtomMin,AtomMax,AtomFree,AtomTolerance,
               AtomOn,AtomThreshold,AtomSize,AtomActive),
              SET_INT(AtomMin,       ozconf.heapMinSize*KB);
              SET_INT(AtomMax,       ozconf.heapMaxSize*KB);
@@ -293,6 +293,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
              SET_BOOL(AtomOn,       ozconf.gcFlag);
              SET_INT(AtomThreshold, ozconf.heapThreshold*KB);
              SET_INT(AtomSize,      getUsedMemory()*KB);
+             SET_INT(AtomCodeCycles, ozconf.codeGCcycles);
              SET_INT(AtomActive,    ozstat.gcLastActive*KB););
     // PRINT
     CASE_INT(PROP_PRINT_DEPTH,ozconf.printDepth);
@@ -593,6 +594,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_REC(PROP_GC,
              DO_NAT(AtomMin,ozconf.heapMinSize=INT__/KB);
              DO_NAT(AtomMax,ozconf.heapMaxSize=INT__/KB);
+             SET_NAT(AtomCodeCycles,ozconf.codeGCcycles);
              if (ozconf.heapMinSize > ozconf.heapMaxSize)
                ozconf.heapMaxSize = ozconf.heapMinSize;
              SET_PERCENT(AtomFree,ozconf.heapFree);

@@ -77,6 +77,7 @@
           ( AtomFree,        "free"),
           ( AtomFreelist,    "freelist"),
           ( AtomGC,          "gc"),
+          ( AtomCodeCycles,  "codeCycles"),
           ( AtomHigh,        "high"),
           ( AtomHints,       "hints"),
           ( AtomIdle,        "idle"),
