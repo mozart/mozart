@@ -178,20 +178,20 @@ local
 	 end
       end
    in
-      fun {CompileScanner Flex T Rep}
+      fun {CompileScanner Flex T Rep Dir}
 	 case Flex of noLexer then noLexer
-	 else FlexFile = {MakeFileNameGumpdir T ".l"} in
+	 else FlexFile = {MakeFileName T ".l" Dir} in
 	    {Rep startSubPhase('writing flex input file')}
 	    {WriteVSFile Flex FlexFile}
 	    {Rep startSubPhase('generating scanner tables')}
 	    case {InvokeFlex FlexFile Rep} of 0 then
 	       PLATFORM = {GetTargetPlatform Rep}
 	       Cmd1 = ({OZTOOL}#' c++ '#{OZTOOLINC}#
-		       ' -c '#{MakeFileNameGumpdir T ".C"}#
-		       ' -o '#{MakeFileNameGumpdir T ".o"})
+		       ' -c '#{MakeFileName T ".C" Dir}#
+		       ' -o '#{MakeFileName T ".o" Dir})
 	       Cmd2 = ({OZTOOL}#' ld '#
-		       ' -o '#{MakeFileNameGumpdir T ".so"}#'-'#PLATFORM#' '#
-		       {MakeFileNameGumpdir T ".o"})
+		       ' -o '#{MakeFileName T ".so" Dir}#'-'#PLATFORM#' '#
+		       {MakeFileName T ".o" Dir})
 	       Exit1 Exit2
 	    in
 	       {Rep startSubPhase('compiling scanner')}
@@ -514,7 +514,7 @@ local
    end
 in
    fun {TransformScanner T From Prop Attr Feat Ms Rules P Flags ImportFV Rep}
-      Globals FS Imports
+      Globals Dir FS Imports
    in
       {Rep startPhase('processing scanner "'#{SymbolToVirtualString T}#'"')}
       Globals = {New ScannerSpecification init()}
@@ -524,6 +524,7 @@ in
       {Globals enterAttr(Attr)}
       {Globals enterFeat(Feat)}
       {Globals enterMeth(Ms)}
+      Dir = {Globals getFlag(directory $)}
       {ForAll Rules
        proc {$ Rule} {TransformScannerDescriptor Rule Globals Rep} end}
       if {Rep hasSeenError($)} then
@@ -537,9 +538,10 @@ in
 	    fSkip(unit)
 	 else Flex Local Locals LexMeth MakeLexer in
 	    {Rep startSubPhase('extracting lexical rules')}
-	    {Globals generate(Globals {MakeFileNameGumpdir T ".C"}
+	    {Globals generate(Globals {MakeFileName T ".C" Dir}
 			      ?Flex ?Local|?Locals ?LexMeth)}
-	    MakeLexer = {CompileScanner Flex T Rep}
+	    MakeLexer = {CompileScanner Flex T Rep
+			 {Globals getFlag(directory $)}}
 	    case MakeLexer of stop then
 	       Imports = nil
 	       fSkip(unit)
@@ -547,7 +549,7 @@ in
 	       {Rep startSubPhase('building class definition')}
 	       case MakeLexer of continue then From in
 		  From = {VirtualString.toAtom
-			  './'#{MakeFileName T ".so"}#'{native}'}
+			  './'#{MakeFileName T ".so" Dir}#'{native}'}
 		  case ImportFV of unit then New Message in
 		     Imports = nil
 		     New = fApply(fVar('New' unit)
