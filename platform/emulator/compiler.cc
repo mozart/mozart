@@ -357,7 +357,7 @@ OZ_BI_define(BIgetInstructionSizes,0,1) {
 
 #define CIS_CONST(ii) \
   Assert(t_instr_type[ii] == CI_TYPE_OTHER); \
-  code->writeTagged(t_instr_args[ii]);
+  code->writeTagged(tagged2SRecord(t_instr)->getArg(ii));
 #define CIS_LIT(ii)  CIS_CONST(ii)
 #define CIS_FEAT(ii) CIS_CONST(ii)
 #define CIS_NUM(ii)  CIS_CONST(ii)
