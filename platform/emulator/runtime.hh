@@ -93,6 +93,7 @@ OZ_Term oz_newChunk(OZ_Term val)
 }
 
 #define oz_newVariable() makeTaggedRef(newTaggedUVar(am.currentBoard()))
+#define oz_newToplevelVariable() makeTaggedRef(newTaggedUVar(am.rootBoard()))
 
 // stop thread: {Wait v}
 void oz_suspendOnNet(Thread *th);
@@ -272,7 +273,7 @@ Arity *oz_makeArity(OZ_Term list)
  * -----------------------------------------------------------------------*/
 
 #define ControlVarNew(var)                      \
-OZ_Term var = oz_newVariable();                 \
+OZ_Term var = oz_newToplevelVariable();         \
 am.addSuspendVarList(var);
 
 
