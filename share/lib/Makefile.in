@@ -175,7 +175,7 @@ compiler-Env.oz: $(RUNFUNCTORS) Standard.ozf functor2env
         $(OZENGINE) functor2env -in=Standard.ozf -out=compiler-Env.oz
 
 FUNFUNCTORS = FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCode.ozf \
-        FunCore.ozf FunUnnest.ozf FunAssembler.ozf FunCompiler.ozf
+        FunCore.ozf FunRT.ozf FunUnnest.ozf FunAssembler.ozf FunCompiler.ozf
 
 FunMisc.ozf: compiler/Misc.oz $(STANDARD)
 
@@ -188,6 +188,8 @@ FunCode.ozf: compiler/CodeStore.oz compiler/CodeEmitter.oz \
 
 FunCore.ozf: compiler/Annotate.oz compiler/CoreLanguage.oz $(STANDARD)
 
+FunRT.ozf: compiler/RunTime.oz $(STANDARD)
+
 FunUnnest.ozf: compiler/TupleSyntax.oz compiler/BindingAnalysis.oz \
         compiler/UnnestFD.oz compiler/Unnester.oz $(STANDARD)
 
@@ -199,7 +201,7 @@ FunCompiler.ozf: compiler-Env.oz compiler/FormatStrings.oz \
         compiler-Version.oz $(STANDARD)
 
 Compiler.ozf: FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCode.ozf \
-        FunCore.ozf FunUnnest.ozf FunAssembler.ozf FunCompiler.ozf \
+        FunCore.ozf FunRT.ozf FunUnnest.ozf FunAssembler.ozf FunCompiler.ozf \
         compiler/FunMake.oz compiler/FunMain.oz Standard.ozf
         $(COMPILE) -l Pickle compiler/FunMake.oz -o Compiler.ozf
 
