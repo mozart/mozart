@@ -1050,6 +1050,20 @@ class OZ_Expect;
 
 typedef OZ_expect_t (OZ_Expect::*OZ_ExpectMeth) (OZ_Term);
 
+#define __E(ME, EM)					\
+{							\
+  OZ_expect_t e = ME(v);				\
+  if (isFailing(e)) {					\
+    fail();						\
+    r = OZ_typeErrorCPI(EM, 0, "");			\
+    return 1;						\
+  } else if (isSuspending(e) || isExceptional(e)) {	\
+    r = suspend();					\
+    return 2;						\
+  }							\
+  return 0;						\
+}
+
 class ozdeclspec OZ_Expect {
 private:
   OZ_Boolean collect;
@@ -1101,54 +1115,16 @@ public:
   OZ_expect_t expectVectorInt(OZ_Term t) {
     return expectVector(t, &expectInt);
   }
-  int expectIntVarBounds(OZ_Term v, OZ_Return &r) {
-    OZ_expect_t e = expectIntVarMinMax(v);
-    if (isFailing(e)) {
-      fail();
-      r = OZ_typeErrorCPI(OZ_EM_FD, 0, "");
-      return 1;
-    } else if (isSuspending(e) || isExceptional(e)) {
-      r = suspend();
-      return 1;
-    }
-    return 0;
-  }
-  int expectVectorIntVarBounds(OZ_Term v, OZ_Return &r) {
-    OZ_expect_t e = expectVectorIntVarMinMax(v);
-    if (isFailing(e)) {
-      fail();
-      r = OZ_typeErrorCPI(OZ_EM_VECT OZ_EM_FD, 0, "");
-      return 1;
-    } else if (isSuspending(e) || isExceptional(e)) {
-      r = suspend();
-      return 1;
-    }
-    return 0;
-  }
-  int expectInt(OZ_Term v, OZ_Return &r) {
-    OZ_expect_t e = expectInt(v);
-    if (isFailing(e)) {
-      fail();
-      r = OZ_typeErrorCPI(OZ_EM_FD, 0, "");
-      return 1;
-    } else if (isSuspending(e) || isExceptional(e)) {
-      r = suspend();
-      return 1;
-    }
-    return 0;
-  }
-  int expectVectorInt(OZ_Term v, OZ_Return &r) {
-    OZ_expect_t e = expectVectorInt(v);
-    if (isFailing(e)) {
-      fail();
-      r = OZ_typeErrorCPI(OZ_EM_VECT OZ_EM_FD, 0, "");
-      return 1;
-    } else if (isSuspending(e) || isExceptional(e)) {
-      r = suspend();
-      return 1;
-    }
-    return 0;
-  }
+  int expectBoolVar(OZ_Term v, OZ_Return &r) 
+    __E(expectBoolVar, OZ_EM_FDBOOL)
+  int expectIntVarBounds(OZ_Term v, OZ_Return &r)
+    __E(expectIntVarMinMax, OZ_EM_FD)
+  int expectVectorIntVarBounds(OZ_Term v, OZ_Return &r)
+    __E(expectVectorIntVarMinMax, OZ_EM_VECT OZ_EM_FD)
+  int expectInt(OZ_Term v, OZ_Return &r)
+    __E(expectInt, OZ_EM_FD)
+  int expectVectorInt(OZ_Term v, OZ_Return &r)
+    __E(expectVectorInt, OZ_EM_VECT OZ_EM_FD)
   OZ_expect_t expectFSetVar(OZ_Term, OZ_FSetPropState = fs_prop_any);
   OZ_expect_t expectInt(OZ_Term);
   OZ_expect_t expectFloat(OZ_Term);
@@ -1269,11 +1245,11 @@ typedef CPIVector<OZ_CtVar> OZ_CtVarVector;
 //-----------------------------------------------------------------------------
 // OZ_Filter
 
-class OZ_Filter {
+class OZ_StatefulFilter {
 public:
-  virtual int hasState(void) = 0;
+  virtual void sClone(void) = 0;
+  virtual void gCollect(void) = 0;
 };
-
 
 //-----------------------------------------------------------------------------
 // OZ_Service
