@@ -78,6 +78,11 @@ void LinkedQueueImpl::remove(void* x)
 
 // -- IMPLEMENTATION OF ThreadQueue
 
+// template class LinkedQueue<Thread,THREAD_QUEUE_SIZE>;
+// template class LinkedQueueIterator<Thread,THREAD_QUEUE_SIZE>;
+// template class LinkedQueue<Propagator,PROPAGATOR_QUEUE_SIZE>;
+// template class LinkedQueueIterator<Propagator,PROPAGATOR_QUEUE_SIZE>;
+
 int ThreadQueue::getRunnableNumber()
 {
   ThreadQueueIterator iter(this);
