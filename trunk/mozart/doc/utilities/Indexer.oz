@@ -90,7 +90,7 @@ in
 	    end
 	 end
       in
-	 fun {MakeSortKey VS}
+	 fun {MakeSortKey VS#_}
 	    {String.toAtom {MakeSortKeySub {VirtualString.toString VS}}}
 	 end
       end
@@ -124,29 +124,49 @@ in
 	 end
       end
 
+      fun {MakeHierarchy Es}
+	 case Es of E|_ then And Ys Ns Zs Singles SubItems DT in
+	    _#(And|_)#_ = E
+	    {List.partition Es fun {$ _#(And1|_)#_} And1 == And end ?Ys ?Ns}
+	    Zs = {Map Ys fun {$ Ks#Ands#HTML} Ks#Ands.2#HTML end}
+	    {List.takeDropWhile Zs fun {$ _#Ands#_} Ands == nil end
+	     ?Singles ?SubItems}
+	    DT = case Singles of nil then And.2
+		 else
+		    SEQ(And.2|PCDATA(': ')|
+			{List.foldRTail Singles
+			 fun {$ _#_#A|Ar In}
+			    A|case Ar of _|_ then PCDATA(', ')
+			      else EMPTY
+			      end|In
+			 end nil})
+		 end
+	    dl(dt(DT)
+	       case SubItems of nil then EMPTY
+	       else dd(SEQ({MakeHierarchy SubItems}))
+	       end)|
+	    {MakeHierarchy Ns}
+	 [] nil then nil
+	 end
+      end
+
       class IndexerClass
 	 attr Entries: unit
 	 meth init()
 	    Entries <- nil
 	 end
-	 meth enter(Ands HTML) Key Entry in
-	    Key = {Map Ands fun {$ K#_} K end}
-	    Entry = SEQ({List.foldRTail Ands
-			 fun {$ _#A|Ar In}
-			    A|case Ar of _|_ then PCDATA(', ')
-			      else EMPTY
-			      end|In
-			 end [PCDATA(': ') HTML]})
-	    Entries <- Key#Entry|@Entries
+	 meth enter(Ands HTML)
+	    Entries <- Ands#HTML|@Entries
 	 end
 	 meth empty($)
 	    @Entries == nil
 	 end
-	 meth process(?HTML) Es SortedEs Groups in
-	    %--** grouping, hierarchy
-	    thread
+	 meth process(?HTML)
+	    thread Es SortedEs Groups in
 	       Es = {Map @Entries
-		     fun {$ Ks#HTML} {Map Ks MakeSortKey}#HTML end}
+		     fun {$ Ands#HTML}
+			{Map Ands MakeSortKey}#Ands#HTML
+		     end}
 	       SortedEs = {Sort Es fun {$ X Y} {KeyLess X.1 Y.1} end}
 	       Groups = {Group SortedEs}
 	       HTML = SEQ({Map Groups
@@ -156,10 +176,7 @@ in
 					      [] &0 then 'Numbers'
 					      else [G]
 					      end))
-				    SEQ({Map Es
-					 fun {$ _#HTML}
-					    SEQ([HTML br()])
-					 end}))
+				    SEQ({MakeHierarchy Es}))
 			   end})
 	    end
 	 end
