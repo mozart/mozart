@@ -38,7 +38,6 @@ in
    
    class ThreadManager
       feat
-	 Stream                %% info stream of the emulator
 	 ThreadDic             %% dictionary that holds various information
                                %% about debugged threads
 	 ReadLoopThread
@@ -53,11 +52,10 @@ in
 	 SwitchSync    : _
       
       meth init
-	 self.Stream    = {Dbg.stream}
 	 self.ThreadDic = {Dictionary.new}
 	 thread
 	    self.ReadLoopThread = {Thread.this}
-	    {ReadLoop self.Stream}
+	    {ReadLoop {Dbg.stream}}
 	 end
       end
 
