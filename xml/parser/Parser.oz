@@ -320,8 +320,8 @@ prepare
 	 CONTENTS <- L
 	 {self onStartDocument}
 	 Parser,PARSE()
-	 @CONTENTS=nil
 	 {self onEndDocument}
+	 @CONTENTS=nil
       end
 
       %% =============================================================
