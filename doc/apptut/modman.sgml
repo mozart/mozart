@@ -296,12 +296,48 @@ import
     <title/Functors in the Oz Programming Environment/
 
     <p>
-      Functors are first class entities in the language, that can be
-      also created in the Oz Programming Interface.
+      Functors are first class entities in the language that can of
+      course also be created in the Oz Programming Interface. This
+      eases development of functors considerably.
+
+    <p>
+      Suppose the following demo functor definition
+<<<functor F
+export Pam
+define
+   fun {DoPam Xs P Ys}
+      case Xs of nil then nil
+      [] X|Xr then {DoPam Xr {P X}|Ys}
+      end
+   end
+
+   fun {Pam Xs P}
+      {DoPam Xs P nil}
+   end
+end>>>
+      After feeding the definition, the defined functor can be applied
+      as follows:
+<<<[M]={Module.apply [F]}>>>
+      The module <<M>> can be used in the OPI as usual, that is
+<<<{Browse {M.pam [1 2 3] fun {$ I} I+1 end}}>>>
+      displays the list <<[4 3 2]>>.
+
+    <p>
+      <<Module.apply>> takes a list of functors as argument, creates a
+      new module manager, applies each functor element and returns the
+      resulting list of modules. It is also possible to specify the
+      base url used in linking the argument modules of the applied
+      functor. For more information see <ptr.extern to="ozdoc:system"
+      key="chapter.module">.
 
 
-
-
+    <p>
+      Of course, also other situations allow to take advantage of
+      first-class functors and that they can be applied by module
+      managers. In particular they are useful for remote module
+      managers that create new Oz processes on networked
+      computers. More on this issue you can find in <ptr.extern
+      to="ozdoc:dstutorial">.
 
 
 </Chapter>
