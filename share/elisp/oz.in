@@ -259,6 +259,9 @@ run the emulator when you issue the command `run' to gdb."
 (defvar oz-compiler-buffer "*Oz Compiler*"
   "Name of the Oz Compiler buffer.")
 
+(defvar oz-compiler-buffers nil
+  "List of buffers in which Oz Compilers have been started.")
+
 (defvar oz-temp-buffer "*Oz Temp*"
   "Name of the Oz temporary buffer.")
 
@@ -436,7 +439,8 @@ All strings matching this regular expression are removed.")
   ;; Try to find a buffer or file named NAME.
   (or (get-buffer name)
       (find-buffer-visiting name)
-      (find-file-noselect name)))
+      (let ((find-file-run-dired nil))
+	(find-file-noselect name))))
 
 (defun oz-shell-command-to-string (command)
   ;; Execute shell command COMMAND and return its output as a string.
@@ -859,8 +863,8 @@ If FORCE is non-nil, kill it immediately."
 	  (let ((opi "http://www.ps.uni-sb.de/ozhome/bin/opi"))
 	    (if oz-win32
 		(make-comint "Oz Emulator" "ozemulator" nil "-u" opi)
-	      (make-comint "Oz Emulator" "opi" nil)))
-	  (oz-create-buffer oz-emulator-buffer 'emulator))
+	      (make-comint "Oz Emulator" "ozengine" nil opi)))
+	  (oz-create-emulator-buffer oz-emulator-buffer))
 
 	(let ((proc (get-buffer-process oz-emulator-buffer)))
 	  (setq oz-emulator-filter-hook filter)
@@ -869,22 +873,34 @@ If FORCE is non-nil, kill it immediately."
 	(bury-buffer oz-emulator-buffer)
 
 	(oz-set-title oz-frame-title)
-	(message "Oz started."))
-    (if start-flag
-	(oz-show-buffer (get-buffer oz-compiler-buffer)))))
+	(message "Oz started."))))
 
 (defun oz-socket (host port)
-  (make-comint "Oz Compiler" (cons host port))
-  (oz-create-buffer oz-compiler-buffer 'compiler)
-  (set-process-filter (get-buffer-process oz-compiler-buffer)
-		      'oz-compiler-filter)
-  (oz-show-buffer (get-buffer oz-compiler-buffer))
-  (bury-buffer oz-compiler-buffer)
-  (let ((xs oz-buffered-send-string))
-    (setq oz-buffered-send-string nil)
-    (while xs
-      (oz-send-string (car (car xs)) (cdr (car xs)))
-      (setq xs (cdr xs)))))
+  (let ((bs oz-compiler-buffers) (newbs nil))
+    (while bs
+      (if (not (comint-check-proc (car bs)))
+	  (kill-buffer (car bs))
+	(setq newbs (cons (car bs) newbs)))
+      (setq bs (cdr bs)))
+    (setq oz-compiler-buffers newbs))
+  (let ((buffer (generate-new-buffer "Oz Compiler")))
+    (if (null oz-compiler-buffers)
+      (setq oz-compiler-buffer buffer))
+    (setq oz-compiler-buffers (cons buffer oz-compiler-buffers))
+    (oz-create-compiler-buffer buffer)
+    (save-excursion
+      (set-buffer buffer)
+      (comint-mode))
+    (comint-exec buffer (buffer-name buffer) (cons host port) nil nil)
+    (set-process-filter (get-buffer-process oz-compiler-buffer)
+			'oz-compiler-filter)
+    (oz-show-buffer buffer)
+    (bury-buffer buffer)
+    (let ((xs oz-buffered-send-string))
+      (setq oz-buffered-send-string nil)
+      (while xs
+	(oz-send-string (car (car xs)) (cdr (car xs)))
+	(setq xs (cdr xs))))))
 
 
 ;;------------------------------------------------------------
@@ -2397,8 +2413,23 @@ The ARG is interpreted just as with \\[recenter]."
 
 (defun oz-show-buffer (buffer)
   (if (and buffer (not (get-buffer-window buffer)))
+      (let ((win (split-window (get-largest-window)
+			       (/ (* (window-height (get-largest-window))
+				     (- 100 oz-other-buffer-size))
+				  100))))
+	(set-window-buffer win buffer)
+	(set-buffer buffer)
+	(set-window-point win (point-max))
+	(bury-buffer buffer))))
+
+(defun oz-show-buffer (buffer)
+  (if (and buffer (not (get-buffer-window buffer)))
       (let ((win (or (get-buffer-window oz-emulator-buffer)
-		     (get-buffer-window oz-compiler-buffer)
+		     (let ((bs oz-compiler-buffers) com)
+		       (while (and (not com) bs)
+			 (setq com (get-buffer-window (car bs)))
+			 (setq bs (cdr bs)))
+		       com)
 		     (get-buffer-window oz-temp-buffer)
 		     (split-window (get-largest-window)
 				   (/ (* (window-height (get-largest-window))
@@ -2409,37 +2440,39 @@ The ARG is interpreted just as with \\[recenter]."
 	(set-window-point win (point-max))
 	(bury-buffer buffer))))
 
-(defun oz-create-buffer (buffer which)
+(defun oz-create-compiler-buffer (buffer)
   (save-excursion
     (set-buffer (get-buffer-create buffer))
-    (cond ((eq which 'compiler)
-	   ;; enter oz-mode but no highlighting; use own map, inherit
-	   ;; from oz-mode-map
-	   (kill-all-local-variables)
-	   (if (not oz-compiler-buffer-map)
-	       (setq oz-compiler-buffer-map (copy-keymap oz-mode-map)))
-	   (oz-set-mouse-error-key oz-compiler-buffer-map)
-	   (define-key oz-compiler-buffer-map "\C-c\C-c" 'oz-goto-next-error)
-	   (use-local-map oz-compiler-buffer-map)
-	   (setq mode-name "Oz-Output")
-	   (setq major-mode 'oz-mode)
-	   (set (make-local-variable 'compilation-error-regexp-alist)
-		'((oz-error-pattern 2 3 5)))
-	   (set (make-local-variable 'compilation-parsing-end)
-		(point))
-	   (set (make-local-variable 'compilation-error-list)
-		nil)
-	   (set (make-local-variable 'compilation-last-buffer)
-		(current-buffer)))
-	  ((eq which 'emulator)
-	   (if (not oz-emulator-buffer-map)
-	       (setq oz-emulator-buffer-map (copy-keymap comint-mode-map)))
-	   (oz-set-mouse-error-key oz-emulator-buffer-map)
-	   (use-local-map oz-emulator-buffer-map)))
+    (kill-all-local-variables)
+    (if (not oz-compiler-buffer-map)
+	(setq oz-compiler-buffer-map (copy-keymap oz-mode-map)))
+    (oz-set-mouse-error-key oz-compiler-buffer-map)
+    (define-key oz-compiler-buffer-map "\C-c\C-c" 'oz-goto-next-error)
+    (use-local-map oz-compiler-buffer-map)
+    (setq mode-name "Oz-Output")
+    (setq major-mode 'oz-mode)
+    (set (make-local-variable 'compilation-error-regexp-alist)
+	 '((oz-error-pattern 2 3 5)))
+    (set (make-local-variable 'compilation-parsing-end)
+	 (point))
+    (set (make-local-variable 'compilation-error-list)
+	 nil)
+    (set (make-local-variable 'compilation-last-buffer)
+	 (current-buffer))
     (if oz-lucid-emacs
 	(set-buffer-menubar (append current-menubar oz-menubar)))
     (erase-buffer)))
 
+(defun oz-create-emulator-buffer (buffer)
+  (save-excursion
+    (set-buffer (get-buffer-create buffer))
+    (if (not oz-emulator-buffer-map)
+	(setq oz-emulator-buffer-map (copy-keymap comint-mode-map)))
+    (oz-set-mouse-error-key oz-emulator-buffer-map)
+    (use-local-map oz-emulator-buffer-map)
+    (if oz-lucid-emacs
+	(set-buffer-menubar (append current-menubar oz-menubar)))
+    (erase-buffer)))
 
 (defun oz-toggle-compiler ()
   "Toggle Oz Compiler window.
