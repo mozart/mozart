@@ -525,6 +525,16 @@ negated implication)./
 	  sends ?_{X} to the port ?_{Port}:  The stream pointed to by
 	  ?_{Port} is unified with <<?_{X}|_>> (in a newly created thread),
 	  and the pointer advances to the stream's new tail.
+
+	<Entry><Span class=index/<<SendRecv>>/
+	  <Index/<<Port>><And><<sendRecv>>/
+	<Synopsis>
+	  <<{Port.sendRecv ?+{Port} ?_{X} ?_{Y}}>>
+	<Item>
+	  sends the pair <<?_{X}#?_{Y}>> to the port ?_{Port}:  The stream pointed to by
+	  ?_{Port} is unified with <<?_{X}#?_{Y}|_>> (in a newly created thread),
+	  and the pointer advances to the stream's new tail. 
+        <p>The argument ?_{X} is commonly used as message to be sent, while ?_{Y} serves as reply to that message.
       </List>
 
   <Section id="section.chunks.locks">
