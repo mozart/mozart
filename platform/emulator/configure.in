@@ -321,6 +321,10 @@ oz_warn=$oz_a
 OZ_CXX_OPTIONS($oz_warn_error,oz_a)
 oz_warn_error=$oz_a
 
+OZ_CXX_OPTIONS(-fpic,CDYNOPT)
+AC_SUBST(CDYNOPT)
+
+
 dnl *****************************************************************
 dnl Checks for header files.
 dnl *****************************************************************

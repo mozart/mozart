@@ -20,3 +20,4 @@ config.log
 perdio.cc
 *-if.cc
 Builtins.oz
+*.lo
