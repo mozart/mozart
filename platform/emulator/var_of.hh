@@ -53,6 +53,7 @@ private:
     DynamicTable* dynamictable;
 
 public:
+  NO_DEFAULT_CONSTRUCTORS2(GenOFSVariable);
     GenOFSVariable(DynamicTable &dt)
     : GenCVariable(OFSVariable) {
         label=oz_newVariable();

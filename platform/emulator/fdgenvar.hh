@@ -57,6 +57,7 @@ private:
 
   GenBoolVariable * becomesBool(void);
 public:
+  NO_DEFAULT_CONSTRUCTORS2(GenFDVariable);
   GenFDVariable(OZ_FiniteDomain &fd) : GenCVariable(FDVariable) {
     ozstat.fdvarsCreated.incf();
     finiteDomain = fd;

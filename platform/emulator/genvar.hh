@@ -93,7 +93,7 @@ protected:
 
 public:
   USEFREELISTMEMORY;
-
+  NO_DEFAULT_CONSTRUCTORS(GenCVariable);
   // the constructor creates per default a local variable (wrt curr. node)
   GenCVariable(TypeOfGenCVariable, Board * = NULL);
 

@@ -31,6 +31,7 @@
 #pragma interface
 #endif
 
+#include "base.hh"
 #include "genvar.hh"
 #include "fdomn.hh"
 #include "fdhook.hh"
@@ -52,6 +53,7 @@ private:
   OZ_FiniteDomain * store_patch;
 
 public:
+  NO_DEFAULT_CONSTRUCTORS2(GenBoolVariable);
   GenBoolVariable(void) : GenCVariable(BoolVariable) {
     ozstat.fdvarsCreated.incf();
   }
