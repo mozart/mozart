@@ -1,0 +1,64 @@
+AC_INIT(gdbm.cc)
+AC_CANONICAL_HOST
+AC_PROG_CXX
+AC_PROG_CXXCPP
+AC_LANG_CPLUSPLUS
+AC_PROG_INSTALL
+AC_PATH_PROG(DYNLD, ozdynld, ozdynld, ../../bin)
+AC_PATH_PROG(PLATFORM, ozplatform, ../../bin)
+platform=`$PLATFORM`
+AC_SUBST(DYNLD)
+AC_SUBST(platform)
+dnl
+dnl Try to find the gdbm.h header file
+dnl
+my_cppflags="$CPPFLAGS"
+AC_MSG_CHECKING([for gdbm.h (default)])
+AC_TRY_CPP([#include "gdbm.h"],
+  AC_MSG_RESULT(yes),
+  AC_MSG_RESULT(no)
+  AC_MSG_CHECKING([[for gdbm.h (/usr/local/include)]])
+  CPPFLAGS="$my_cppflags -I/usr/local/include"
+  AC_TRY_CPP([[#include "gdbm.h"]],
+    AC_MSG_RESULT(yes),
+    AC_MSG_RESULT(no)
+    AC_MSG_CHECKING([[[for gdbm.h (/opt/gnu/include)]]])
+    CPPFLAGS="$my_cppflags -I/opt/gnu/include"
+    AC_TRY_CPP([[[#include "gdbm.h"]]],
+      AC_MSG_RESULT(yes),
+      AC_MSG_RESULT(no)
+   [[[echo 'could not find the gdbm.h header file.'
+      echo 'try setting the CPPFLAGS environment variable.'
+      echo 'if gdbm is not installed on your system, you can obtain'
+      echo 'it from http://www.gnu.org/']]]
+      AC_MSG_ERROR([gdbm.h header file not found]))))
+dnl
+dnl Attempt to find the gdbm library
+dnl
+my_libs="$LIBS"
+LIBS="$LIBS -lgdbm -lc"
+AC_MSG_CHECKING([for gdbm library (default)])
+AC_TRY_LINK(,[gdbm_open()],
+  AC_MSG_RESULT(yes),
+  AC_MSG_RESULT(no)
+  LIBS="$my_libs -L/usr/lib -lgdbm -lc"
+  AC_MSG_CHECKING([[for gdbm library (/usr/lib)]])
+  AC_TRY_LINK(,[[gdbm_open()]],
+    AC_MSG_RESULT(yes),
+    AC_MSG_RESULT(no)
+    LIBS="$my_libs -L/usr/local/lib -lgdbm -lc"
+    AC_MSG_CHECKING([[[for gdbm library (/usr/local/lib)]]])
+    AC_TRY_LINK(,[[[gdbm_open()]]],
+      AC_MSG_RESULT(yes),
+      AC_MSG_RESULT(no)
+      LIBS="$my_libs -L/opt/gnu/lib -lgdbm -lc"
+      AC_MSG_CHECKING([[[[for gdbm library (/opt/gnu/lib)]]]])
+      AC_TRY_LINK(,[[[[gdbm_open()]]]],
+        AC_MSG_RESULT(yes),
+        AC_MSG_RESULT(no)
+     [[[echo 'could not find the gdbm library.'
+        echo 'try setting the LDFLAGS environment variable.'
+        echo 'if gdbm is not installed on your system you can obtain'
+        echo 'it from http://www.gnu.org/']]]
+        AC_MSG_ERROR([[[[[gdbm library not found]]]]])))))
+AC_OUTPUT(Makefile)
