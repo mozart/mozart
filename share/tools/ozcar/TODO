@@ -8,5 +8,6 @@ loading file... nach source.oz, methode scrollbar
 500,700 delay nach config.oz
 90,180 delay vergroessern
 bei aktiviertem start threads; stack kaputt bei tk action (cd.oz)
+bei "rest-debugs" auf dem stack diese entfernen! ("cont")
 'start threads' und breakpoints, in die viele th laufen, testen (+blocking!)
 C-c C-d C-h mit 'start threads' laesst thread zurueck
