@@ -141,69 +141,37 @@ inline void gotRef(MsgBuffer *bs, TaggedRef val, int index)
 
 
 
-/*
-
-  RefTrail
-  Problem: there is no room in lists to remember, that they have
-  been visited already: first element might be a variable which was bound
-  --> we might have REF cells pointing to the beginning of the list, so we
-  run into problems if the list is _first_ marshalled.
-  Solution: for lists we do not mark the datastructure but remember a
-  pointer to it in a hash table
-
- */
-
-
-class RefTrail: public Stack {
-  int counter;
-  HashTable *lists;
+class RefTrail: public HashTable {
+  int rtcounter;
 public:
-  int getCounter() { return counter; }
 
-  RefTrail() : Stack(200,Stack_WithMalloc) {
-    lists = new HashTable(HT_INTKEY,2000);
-    counter=0;
-  }
-  void pushInt(int i) { push(ToPointer(i)); }
-  int trail(OZ_Term *t)
-  {
-    pushInt(*t);
-    push(t);
-    return counter++;
-  }
-  int trail(LTuple *l)
+  RefTrail(): HashTable(HT_INTKEY,2000), rtcounter(0) {}
+
+  int trail(void *l)
   {
     Assert(find(l)==-1);
-    lists->htAdd((intlong)l,ToPointer(counter++));
-    return counter-1;
+    htAdd((intlong)l,ToPointer(rtcounter++));
+    return rtcounter-1;
   }
 
-  int find(LTuple *l)
+  int find(void *l)
   {
-    void *ret = lists->htFind((intlong)l);
+    void *ret = htFind((intlong)l);
     return (ret==htEmpty) ? -1 : (int)ToInt32(ret);
   }
 
   void unwind()
   {
-    counter -= lists->getSize();
-    lists->mkEmpty();
-
-    while(!isEmpty()) {
-      OZ_Term *loc = (OZ_Term*) pop();
-      OZ_Term oldval = ToInt32(pop());
-      *loc = oldval;
-      counter--;
-    }
-    Assert(counter==0);
+    rtcounter -= getSize();
+    mkEmpty();
+    Assert(isEmpty());
   }
+  Bool isEmpty() { return rtcounter==0; }
 };
 
 
-void trailCycleOutLine(LTuple *l, MsgBuffer *bs);
-void trailCycleOutLine(OZ_Term *l, MsgBuffer *bs);
-Bool checkCycleOutLine(LTuple *l, MsgBuffer *bs);
-Bool checkCycleOutLine(OZ_Term t, MsgBuffer *bs, TypeOfTerm tag);
+void trailCycleOutLine(void *l, MsgBuffer *bs);
+Bool checkCycleOutLine(void *l, MsgBuffer *bs);
 
 
 #endif // __MARSHALER_HH

@@ -293,7 +293,7 @@ void ManagerVar::managerBind(TaggedRef *vPtr, TaggedRef val,
 void ObjectVar::marshal(MsgBuffer *bs)
 {
   PD((MARSHAL,"var objectproxy"));
-  int done=checkCycleOutLine(*(getObject()->getCycleRef()),bs,OZCONST);
+  int done=checkCycleOutLine(getObject(),bs);
   if (!done) {
     GName *classgn =  isObjectClassAvail()
       ? globalizeConst(getClass(),bs) : getGNameClass();

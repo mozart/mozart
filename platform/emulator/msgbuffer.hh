@@ -58,6 +58,7 @@ public:
   virtual void unmarshalBegin()=0;
   virtual void unmarshalEnd()=0;
 
+  virtual int getMinor() { return PERDIOMINOR; }
   virtual void getVersion(int *major, int *minor) {
     *major = PERDIOMAJOR; *minor = PERDIOMINOR; }
 

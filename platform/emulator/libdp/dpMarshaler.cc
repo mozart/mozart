@@ -195,7 +195,7 @@ void marshalObject(Object *o, MsgBuffer *bs, GName *gnclass)
   Assert(o->getGName1());
   marshalGName(globalizeConst(o,bs),bs);
   marshalGName(gnclass,bs);
-  trailCycleOutLine(o->getCycleRef(),bs);
+  trailCycleOutLine(o,bs);
 }
 
 void unmarshalObject(ObjectFields *o, MsgBuffer *bs){

@@ -156,9 +156,9 @@ void marshalPredicateRef(AbstractionEntry *entry,MsgBuffer *bs)
   Bool copyable = entry && entry->copyable;
   marshalNumber(copyable,bs);
   if (copyable) {
-    if (checkCycle(ToInt32(entry->indexTable),bs,REF)) return;
+    if (checkCycle(entry,bs)) return;
     marshalDIF(bs,DIF_ABSTRENTRY);
-    trailCycle((OZ_Term *)&entry->indexTable,bs);
+    trailCycle(entry,bs);
   } else {
     Assert(entry==NULL || entry->getAbstr() != NULL);
   }

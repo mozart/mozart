@@ -117,15 +117,9 @@ public:
     timestamp.pid=unmarshalNumber(buf);
   }
 
-  void unmarshalBaseSiteGName(MsgBuffer* buf){
+  void unmarshalBaseSiteGName(MsgBuffer* buf, int minor){
     address=unmarshalNumber(buf);
-    int major, minor;
-    buf->getVersion(&major,&minor);
-    if (minor==0) {
-      port=unmarshalShort(buf);
-    } else {
-      port = 0;
-    }
+    port = (minor==0) ? unmarshalShort(buf) : 0;
     timestamp.start=unmarshalNumber(buf);
     timestamp.pid=unmarshalNumber(buf);
   }

@@ -66,9 +66,6 @@ extern Board *oz_rootBoardOutline();
  *=================================================================== */
 
 
-/* any combination of the following must be different from GCTAG,
- * otherwise getCycleRef() will not work
- */
 #define Lit_isName          2
 #define Lit_isNamedName     4
 #define Lit_hasGName        8
@@ -108,8 +105,6 @@ public:
   const char *getPrintName();
 
   Literal *gc();
-
-  TaggedRef *getCycleRef() { return (TaggedRef*)&flagsAndOthers; }
 
   inline unsigned int hash();
 };
@@ -560,8 +555,6 @@ public:
   }
   const char *getPrintName();
   int getArity();
-
-  TaggedRef *getCycleRef() { return (TaggedRef *) &tag; }
 };
 
 
@@ -1163,7 +1156,6 @@ public:
   TaggedRef getArg(int i) { return tagged2NonVariable(args+i); }
   void setArg(int i, TaggedRef t) { args[i] = t; }
   TaggedRef *getRef() { return args; }
-  TaggedRef *getCycleRef() { return args; }
   TaggedRef *getRef(int i) { return args+i; }
   TaggedRef &operator [] (int i) {return args[i];}
 
@@ -1213,8 +1205,6 @@ public:
   Bool compareFunctor(SRecord* str) {
     return compareSortAndArity(str->getLabel(),str->getSRecordArity());
   }
-
-  TaggedRef *getCycleAddr() { return &label; }
 };
 
 TaggedRef oz_adjoinAt(SRecord *, TaggedRef feature, TaggedRef value);

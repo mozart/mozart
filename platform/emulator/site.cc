@@ -134,13 +134,12 @@ Site* unmarshalSite(MsgBuffer *buf)
   Site tryS;
 
   //
-  int major, minor;
-  buf->getVersion(&major,&minor);
+  int minor = buf->getMinor();
   if (minor==0) {
     MarshalTag tag = (MarshalTag) buf->get();
     Assert(tag == DIF_PASSIVE || tag == DIF_SITE_PERM);
   }
-  tryS.unmarshalBaseSiteGName(buf);
+  tryS.unmarshalBaseSiteGName(buf,minor);
 
   //
   int hvalue = tryS.hash();
