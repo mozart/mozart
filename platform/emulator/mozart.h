@@ -105,7 +105,7 @@ typedef unsigned int OZ_Return;
 typedef void *OZ_Thread;
 typedef void *OZ_Arity;
 
-typedef _FUNTYPEDECL(OZ_Return,OZ_CFun,(OZ_Term *,int *));
+typedef _FUNTYPEDECL(OZ_Return,OZ_CFun,(OZ_Term **));
 typedef _FUNTYPEDECL(OZ_Term,oz_unmarshalProcType,(void*));
 
 typedef int OZ_Boolean;
@@ -406,26 +406,25 @@ _FUNDECL(void,OZ_eventPush,(OZ_Term));
    */
 
 #ifdef __cplusplus
-#define OZ_BI_proto(Name)  extern "C" ozdeclspec OZ_Return (ozcdecl Name)(OZ_Term [],int [])
+#define OZ_BI_proto(Name)  extern "C" ozdeclspec OZ_Return (ozcdecl Name)(OZ_Term * [])
 #else
 #define OZ_BI_proto(Name)  extern ozdeclspec OZ_Return (ozcdecl Name)()
 #endif
 
-#define OZ_ID_MAP 0
-#define OZ_in(N) _OZ_ARGS[_OZ_LOC==OZ_ID_MAP?N:_OZ_LOC[N]]
-#define OZ_out(N) _OZ_ARGS[_OZ_LOC==OZ_ID_MAP?_OZ_arity+N:_OZ_LOC[_OZ_arity+N]]
+#define OZ_in(N)     (*(_OZ_LOC[(N)]))
+#define OZ_out(N)    (*(_OZ_LOC[_OZ_arity+(N)]))
 #define OZ_result(V) OZ_out(0)=V
 
-#define OZ_BI_define(Name,Arity_IN,Arity_OUT)                   \
-OZ_BI_proto(Name);                                              \
-OZ_Return (ozcdecl Name)(OZ_Term _OZ_ARGS[],int _OZ_LOC[]) {    \
+#define OZ_BI_define(Name,Arity_IN,Arity_OUT)    \
+OZ_BI_proto(Name);                               \
+OZ_Return (ozcdecl Name)(OZ_Term * _OZ_LOC[]) {  \
     const int _OZ_arity = Arity_IN;
 
 #define OZ_BI_end }
 
-#define OZ_RETURN(V) return ((OZ_result(V)),PROCEED)
-#define OZ_RETURN_INT(I) OZ_RETURN(OZ_int(I))
-#define OZ_RETURN_ATOM(S) OZ_RETURN(OZ_atom(S))
+#define OZ_RETURN(V)        return ((OZ_result(V)),PROCEED)
+#define OZ_RETURN_INT(I)    OZ_RETURN(OZ_int(I))
+#define OZ_RETURN_ATOM(S)   OZ_RETURN(OZ_atom(S))
 #define OZ_RETURN_STRING(S) OZ_RETURN(OZ_string(S))
 
 /* ------------------------------------------------------------------------ *

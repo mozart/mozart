@@ -125,6 +125,7 @@ void printBanner()
 }
 
 
+extern void initOzIdLoc(void);
 extern void initBuiltins();
 extern void bigIntInit(); /* from value.cc */
 extern void initffuns();  /* from initffuns.cc */
@@ -323,6 +324,8 @@ void AM::init(int argc,char **argv)
     for (int i=NumberOfXRegisters; i--; )
       xRegs[i] = taggedVoidValue;
   }
+  initOzIdLoc();
+
 #ifdef PICKLE2TEXTHACK
   if (p2t) {
     extern int pickle2text();

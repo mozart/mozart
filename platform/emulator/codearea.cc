@@ -396,7 +396,7 @@ void printLoc(FILE *ofile,OZ_Location *loc) {
   if (loc->getInArity()) {
     fprintf(ofile,"[");
     for (int i=0; i<loc->getInArity(); i++) {
-      fprintf(ofile,"%sx(%d)",i?" ":"",loc->in(i));
+      fprintf(ofile,"%sx(%d)",i?" ":"",loc->getIndex(i));
     }
     fprintf(ofile,"]");
   } else
@@ -405,7 +405,7 @@ void printLoc(FILE *ofile,OZ_Location *loc) {
   if (loc->getOutArity()) {
     fprintf(ofile,"[");
     for (int i=0; i<loc->getOutArity(); i++) {
-      fprintf(ofile,"%sx(%d)",i?" ":"",loc->out(i));
+      fprintf(ofile,"%sx(%d)",i?" ":"",loc->getIndex(i));
     }
     fprintf(ofile,"]");
   } else
@@ -1312,4 +1312,37 @@ ProgramCounter CodeArea::writeAbstractionEntry(AbstractionEntry *p, ProgramCount
   checkPtr(ptr);
   gclist = gclist->addAbstractionEntry(ptr);
   return ret;
+}
+
+
+/*
+ * OZ_ID_LOC
+ *
+ */
+
+OZ_Location * OZ_ID_LOC;
+
+void initOzIdLoc(void) {
+  OZ_ID_LOC = OZ_Location::newLocation(NumberOfXRegisters,0);
+  for (int i=NumberOfXRegisters; i--;  )
+    OZ_ID_LOC->set(i,i);
+}
+
+TaggedRef OZ_Location::getArgs(void) {
+  TaggedRef out=oz_nil();
+  int i;
+  for (i=getOutArity(); i--; ) {
+    out=oz_cons(oz_newVariable(),out);
+  }
+  for (i=getInArity(); i--; ) {
+    out=oz_cons(getInValue(i),out);
+  }
+  return out;
+}
+
+TaggedRef OZ_Location::getInArgs(void) {
+  TaggedRef out=oz_nil();
+  for (int i=getInArity(); i--; )
+    out=oz_cons(getInValue(i),out);
+  return out;
 }

@@ -98,11 +98,9 @@ TaggedRef formatError(TaggedRef info, TaggedRef val, TaggedRef traceBack) {
 #define RAISE_TYPE1_FUN(fun,args) \
   RAISE_TYPE1(fun, appendI(args,oz_mklist(oz_newVariable())));
 
-#define RAISE_TYPE_NEW(bi,loc) \
-  RAISE_TYPE1(bi->getPrintName(), biArgs(loc,X));
+#define RAISE_TYPE(bi,loc) \
+  RAISE_TYPE1(bi->getPrintName(), loc->getArgs());
 
-#define RAISE_TYPE(bi) \
-  RAISE_TYPE1(bi->getPrintName(), OZ_toList(bi->getArity(),X));
 
 /*
  * Handle Failure macros (HF)
@@ -128,11 +126,10 @@ Bool AM::hf_raise_failure()
    RAISE_THREAD;
 
 
-#define HF_EQ(X,Y)    HF_RAISE_FAILURE(OZ_mkTupleC("eq",2,X,Y))
-#define HF_TELL(X,Y)  HF_RAISE_FAILURE(OZ_mkTupleC("tell",2,X,Y))
-#define HF_APPLY(N,A) HF_RAISE_FAILURE(OZ_mkTupleC("apply",2,N,A))
-#define HF_BI(bi)     HF_APPLY(bi->getName(),OZ_toList(bi->getArity(),X));
-#define HF_BI_NEW(bi,loc)   HF_APPLY(bi->getName(),biArgs(loc,X));
+#define HF_EQ(X,Y)     HF_RAISE_FAILURE(OZ_mkTupleC("eq",2,X,Y))
+#define HF_TELL(X,Y)   HF_RAISE_FAILURE(OZ_mkTupleC("tell",2,X,Y))
+#define HF_APPLY(N,A)  HF_RAISE_FAILURE(OZ_mkTupleC("apply",2,N,A))
+#define HF_BI(bi,loc)  HF_APPLY(bi->getName(),loc->getArgs());
 
 #define CheckArity(arityExp,proc)                                          \
 if (predArity != arityExp) {                                               \
@@ -269,7 +266,7 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
   Assert(am.isEmptySuspendVarList());
   Assert(am.isEmptyPreparedCalls());
 
-  const int inAr = bi->getInArity();
+  const int inAr  = bi->getInArity();
   const int outAr = bi->getOutArity();
 
   if (savedX)
@@ -279,7 +276,7 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
   int i;
   for (i=outAr; i--; ) savedX[i]=X[inAr+i];
 
-  OZ_Return ret1 = bi->getFun()(X,OZ_ID_MAP);
+  OZ_Return ret1 = bi->getFun()(OZ_ID_LOC->getMapping());
   if (ret1!=PROCEED) {
     switch (ret1) {
     case FAILED:
@@ -333,34 +330,14 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
 }
 
 static
-void set_exception_info_call(Builtin *bi,OZ_Term *X, int *map=OZ_ID_MAP)
-{
-  if (bi==bi_raise||bi==bi_raiseError) return;
+void set_exception_info_call(Builtin *bi, OZ_Location * loc) {
+  if (bi==bi_raise||bi==bi_raiseError)
+    return;
 
-  int iarity = bi->getInArity();
-  int oarity = bi->getOutArity();
-
-  OZ_Term args=oz_nil();
-  for (int j = iarity; j--;) {
-    args=oz_cons(X[map == OZ_ID_MAP? j : map[j]],args);
-  }
   am.setExceptionInfo(OZ_mkTupleC("fapply",3,
                                   makeTaggedConst(bi),
-                                  args,
-                                  OZ_int(oarity)));
-}
-
-static
-OZ_Term biArgs(OZ_Location *loc, OZ_Term *X) {
-  OZ_Term out=oz_nil();
-  int i;
-  for (i=loc->getOutArity(); i--; ) {
-    out=oz_cons(oz_newVariable(),out);
-  }
-  for (i=loc->getInArity(); i--; ) {
-    out=oz_cons(X[loc->in(i)],out);
-  }
-  return out;
+                                  loc->getInArgs(),
+                                  oz_int(bi->getOutArity())));
 }
 
 // -----------------------------------------------------------------------
@@ -435,11 +412,10 @@ Bool hookCheckNeeded()
       e->changeSelf(obj);
 
 #define PushCont(_PC)  CTS->pushCont(_PC,Y,CAP);
-#define PushContX(_PC) pushContX(CTS,_PC,Y,CAP,X);
+#define PushContX(_PC) pushContX(CTS,_PC,Y,CAP);
 
 void pushContX(TaskStack *stk,
-               ProgramCounter pc,RefsArray y,Abstraction *cap,
-               RefsArray x);
+               ProgramCounter pc,RefsArray y,Abstraction *cap);
 
 /* NOTE:
  * in case we have call(x-N) and we have to switch process or do GC
@@ -1834,15 +1810,16 @@ Case(GETVOID)
       bi->incCounter();
 #endif
 
-      int res = bi->getFun()(X,loc->mapping());
+      int res = bi->getFun()(loc->getMapping());
       if (res == PROCEED) { DISPATCH(3); }
       switch (res) {
-      case FAILED:        HF_BI_NEW(bi,loc);
+      case FAILED:        HF_BI(bi,loc);
       case RAISE:
-        if (e->exception.debug) set_exception_info_call(bi,X,loc->mapping());
+        if (e->exception.debug)
+          set_exception_info_call(bi,loc);
         RAISE_THREAD;
 
-      case BI_TYPE_ERROR: RAISE_TYPE_NEW(bi,loc);
+      case BI_TYPE_ERROR: RAISE_TYPE(bi,loc);
 
       case SUSPEND:
         PushContX(PC);
@@ -1875,22 +1852,23 @@ Case(GETVOID)
 #ifdef PROFILE_BI
       bi->incCounter();
 #endif
-      int ret = bi->getFun()(X,loc->mapping());
+      int ret = bi->getFun()(loc->getMapping());
       if (ret==PROCEED) {
-        if (oz_isTrue(X[loc->out(0)])) {
+        if (oz_isTrue(loc->getOutValue(0))) {
           DISPATCH(4);
         } else {
-          Assert(oz_isFalse(X[loc->out(0)]));
+          Assert(oz_isFalse(loc->getOutValue(0)));
           JUMPRELATIVE(getLabelArg(PC+3));
         }
       }
 
       switch (ret) {
       case RAISE:
-        if (e->exception.debug) set_exception_info_call(bi,X,loc->mapping());
+        if (e->exception.debug)
+          set_exception_info_call(bi,loc);
         RAISE_THREAD;
       case BI_TYPE_ERROR:
-        RAISE_TYPE_NEW(bi,loc);
+        RAISE_TYPE(bi,loc);
 
       case SUSPEND:
         PushContX(PC);
@@ -2890,10 +2868,14 @@ Case(GETVOID)
 
        case SLEEP:         Assert(0);
        case RAISE:
-         if (e->exception.debug) set_exception_info_call(bi,X);
+         if (e->exception.debug)
+           set_exception_info_call(bi, OZ_ID_LOC);
+
          RAISE_THREAD;
-       case BI_TYPE_ERROR: RAISE_TYPE(bi);
-       case FAILED:        HF_BI(bi);
+       case BI_TYPE_ERROR:
+         RAISE_TYPE(bi,OZ_ID_LOC);
+       case FAILED:
+         HF_BI(bi,OZ_ID_LOC);
 
        case BI_PREEMPT:
          if (!isTailCall) {
@@ -3070,14 +3052,15 @@ Case(GETVOID)
 
        DebugTrace(ozd_trace(cfunc2Builtin((void *) biFun)->getPrintName()));
 
-       switch (biFun(X,OZ_ID_MAP)) {
+       switch (biFun(OZ_ID_LOC->getMapping())) {
        case PROCEED:       goto LBLpopTask;
-       case FAILED:        HF_BI(cfunc2Builtin((void *) biFun));
+       case FAILED:        HF_BI(cfunc2Builtin((void *) biFun),OZ_ID_LOC);
        case RAISE:
          if (e->exception.debug)
-           set_exception_info_call(cfunc2Builtin((void *) biFun),X);
+           set_exception_info_call(cfunc2Builtin((void *) biFun),OZ_ID_LOC);
          RAISE_THREAD_NO_PC;
-       case BI_TYPE_ERROR: RAISE_TYPE(cfunc2Builtin((void *) biFun));
+       case BI_TYPE_ERROR:
+         RAISE_TYPE(cfunc2Builtin((void *) biFun),OZ_ID_LOC);
 
        case BI_REPLACEBICALL:
          PC = NOCODE;
@@ -3124,17 +3107,13 @@ Case(GETVOID)
               dbg->data = makeTaggedConst(bi);
               int iarity = bi->getInArity(), oarity = bi->getOutArity();
               int arity = iarity + oarity;
-              int *map = GetLoc(PC+7)->mapping();
+              OZ_Location * loc = GetLoc(PC+7);
               dbg->arity = arity;
               if (arity > 0) {
                 dbg->arguments =
                   (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * arity);
-                if (map == OZ_ID_MAP)
-                  for (int i = iarity; i--; )
-                    dbg->arguments[i] = X[i];
-                else
-                  for (int i = iarity; i--; )
-                    dbg->arguments[i] = X[map[i]];
+                for (int i = iarity; i--; )
+                  dbg->arguments[i] = loc->getInValue(i);
                 if (CTT->isStep())
                   for (int i = oarity; i--; )
                     dbg->arguments[iarity + i] = OZ_newVariable();
@@ -3273,20 +3252,19 @@ Case(GETVOID)
                 oz_eq(getLiteralArg(PC+4),AtomDebugCallF))
             && CodeArea::getOpcode(dbg->PC+5) == CALLBI) {
           Builtin *bi = GetBI(dbg->PC+6);
-          int iarity = bi->getInArity(), oarity = bi->getOutArity();
-          int *map = GetLoc(dbg->PC+7)->mapping();
+          int iarity        = bi->getInArity();
+          int oarity        = bi->getOutArity();
+          OZ_Location * loc = GetLoc(dbg->PC+7);
           if (oarity > 0)
             if (dbg->arguments[iarity] != NameVoidRegister)
               for (int i = oarity; i--; ) {
-                TaggedRef x =
-                  X[map == OZ_ID_MAP ? iarity + i: map[iarity + i]];
+                TaggedRef x = loc->getOutValue(i);
                 if (OZ_unify(dbg->arguments[iarity + i], x) == FAILED)
                   return T_FAILURE;
               }
             else
               for (int i = oarity; i--; )
-                dbg->arguments[iarity + i] =
-                  X[map == OZ_ID_MAP? iarity + i: map[iarity + i]];
+                dbg->arguments[iarity + i] = loc->getInValue(i);
         }
 
         if (dothis == DBG_STEP && CTT->isTrace()) {
@@ -3722,11 +3700,9 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
 
 // outlined:
 void pushContX(TaskStack *stk,
-               ProgramCounter pc,RefsArray y,Abstraction *cap,
-               RefsArray x)
-{
+               ProgramCounter pc,RefsArray y,Abstraction *cap) {
   stk->pushCont(pc,y,cap);
-  stk->pushX(x,cap->getPred()->getMaxX());
+  stk->pushX(am.getXRef(),cap->getPred()->getMaxX());
 }
 
 

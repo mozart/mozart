@@ -549,47 +549,67 @@ public:
 class OZ_Location {
 private:
   int inAr,outAr;
-  int map[1];
+  TaggedRef * map[1];
 public:
   NO_DEFAULT_CONSTRUCTORS(OZ_Location)
   static OZ_Location *newLocation(int inArity,int outArity)
   {
-    int sz = sizeof(OZ_Location)+sizeof(int)*(inArity+outArity-1);
+    int sz = sizeof(OZ_Location)+sizeof(TaggedRef*)*(inArity+outArity-1);
     OZ_Location *loc = (OZ_Location *)new char[sz];
     loc->inAr=inArity;
     loc->outAr=outArity;
     return loc;
   }
-  int *mapping() { return map; }
-  int get(int n) {
+  TaggedRef ** getMapping(void) {
+    return map;
+  }
+  int getArity(void) {
+    return inAr+outAr;
+  }
+  int getInArity(void) {
+    return inAr;
+  }
+  int getOutArity(void) {
+    return outAr;
+  }
+  int getIndex(int n) {
     Assert(n>=0 && n<inAr+outAr);
-    return map[n];
+    return (map[n]-am.getXRef());
+  }
+  int getInIndex(int n) {
+    Assert(n>=0 && n<inAr);
+    return getIndex(n);
+  }
+  int getOutIndex(int n) {
+    Assert(n>=0 && n<outAr);
+    return getIndex(inAr + n);
+  }
+  TaggedRef getValue(int n) {
+    return *map[n];
+  }
+  TaggedRef getInValue(int n) {
+    return getValue(n);
+  }
+  TaggedRef getOutValue(int n) {
+    return getValue(inAr+n);
   }
   void set(int n,int i) {
     Assert(n>=0 && n<inAr+outAr);
-    map[n]=i;
+    map[n]=am.getXRef(i);
   }
-  int &out(int n) {
-    Assert(n>=0 && n<outAr);
-    return map[inAr+n];
-  }
-  int &in(int n) {
+  void setIn(int n,int i) {
     Assert(n>=0 && n<inAr);
-    return map[n];
+    set(n,i);
   }
-  int getArity() { return inAr+outAr; }
-  int getInArity() { return inAr; }
-  int getOutArity() { return outAr; }
-  int max(int n) {
-    for (int i = inAr+outAr-1; i >= inAr; i--) {
-      if (get(i)>=n) {
-        n=get(i)+1;
-      }
-    }
-    return n;
+  void setOut(int n,int i) {
+    Assert(n>=0 && n<outAr);
+    set(n+inAr,i);
   }
+  TaggedRef getInArgs(void);
+  TaggedRef getArgs(void);
 };
 
+extern OZ_Location * OZ_ID_LOC;
 
 #ifdef FASTREGACCESS
 

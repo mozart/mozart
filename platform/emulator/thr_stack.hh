@@ -147,20 +147,14 @@ public:
     pushEmpty();
   }
 
-  void pushX(RefsArray X) {
-#ifdef DEBUG_LIVENESS
-    checkLiveness(X);
-#endif
-    Assert(X);
-    pushFrame(C_XCONT_Ptr,X,makeTaggedNULL());
-  }
-
   void pushX(RefsArray X, int i) {
     Assert(i>=0);
     if (i>0) {
       RefsArray x=copyRefsArray(X,i);
-      Assert(MemChunks::areRegsInHeap(x,getRefsArraySize(x)));
-      pushX(x);
+#ifdef DEBUG_LIVENESS
+      checkLiveness(x);
+#endif
+      pushFrame(C_XCONT_Ptr,x,makeTaggedNULL());
     }
   }
 
