@@ -733,7 +733,7 @@ variables `oz-compiler-buffer' and `oz-emulator-buffer'."
 
 (defun oz-halt (force)
   "Halt Oz System.
-If FORCE is nil, send the `\\halt' directive and wait for the process
+If FORCE is nil, send the `{Exit 0}' statement and wait for the process
 to terminate.  Waiting time is limited by variable `oz-halt-timeout';
 after this delay, the process is simply killed if still living.
 If FORCE is non-nil, kill it immediately."
@@ -742,7 +742,7 @@ If FORCE is non-nil, kill it immediately."
   (if (and (not force) (oz-is-running))
       (let* ((i oz-halt-timeout)
 	     (proc (get-buffer-process oz-emulator-buffer)))
-	(oz-send-string "\\halt")
+	(oz-send-string "{Exit 0}" t)
 	(while (and (eq (process-status proc) 'run)
 		    (> i 0))
 	  (message "Halting Oz ... %s" i)
