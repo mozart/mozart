@@ -66,6 +66,7 @@ import
    EditApplicationGUI( start: EditApp) at 'editapplicationgui.ozf'
    DisplayMess(display) at 'messagedisplay.ozf'
 export
+   dlgBox:DlgBox
    start:Start
    shutdown:Shutdown
    addapp:AddApp
@@ -566,7 +567,7 @@ define
 	 O=row<-N
 	 N=O+1
       end
-      meth add(id:ID name:T)
+      meth add(id:ID name:T) 
 	 E={New AppEntry tkInit(id:ID parent:self name:T)}
 	 R={self getRow($)}
       in
@@ -595,9 +596,46 @@ define
    in
       {Tk.send bell} {Wait E.tkClosed}
    end
+
+   fun{DlgBox M}
+      E= {New DialogBox init(master:T text:M button: 'Abort and logout!'
+			    title: "Connection trouble")}
+   in
+      {Tk.send bell}
+      E
+   end
+
+   class DialogBox
+      feat
+	 wait
+      attr
+	 window
+
+      meth init( title: T button: B text: Msg master:M) L in
+	 window <- {New TkTools.dialog
+		    tkInit(title:   T
+			   buttons: [B#proc {$} self.wait=true end ]
+			   master:  M
+			   default: 1)}
+	 L={New Tk.label tkInit(parent:@window text:Msg)}
+	 {Tk.batch [pack(L pady:2#m) ]}
+      end
+
+      meth wait($)
+	 {Wait self.wait}
+	 if self.wait then
+	    {@window tkClose()}
+	 end
+	 self.wait
+      end
+      meth close()
+	 {@window tkClose()}
+	 self.wait=false
+      end
+   end
    
    proc{Shutdown} if {IsDet GUIisStarted} then {Delay 500} {T tkClose} end end
-
+   
  %   fun {GetAllMessages} E Tmp in
 %       {Dictionary.items DB E}
 %       Tmp = {Map E fun{$ X} O S in
@@ -713,12 +751,20 @@ define
    end
    proc{Friends F}
       lock CLock then
-	 {ForAll F.online proc{$ X} {Online add(id:X.id name:X.name)}
-			     if X.online==away then E={Dictionary.get DB X.id} in
-				{E.widget away()}
+	 {ForAll F.online proc{$ X}
+			     if  {Dictionary.member DB X.id} then skip else
+				{Online add(id:X.id name:X.name)}
+				
+				if X.online==away then E={Dictionary.get DB X.id} in
+				   {E.widget away()}
+				end
 			     end
 			  end}
-	 {ForAll F.offline proc{$ X} {Offline add(id:X.id name:X.name)} end}
+	 {ForAll F.offline proc{$ X} 
+			      if  {Dictionary.member DB X.id} then skip else
+				 {Offline add(id:X.id name:X.name)}
+			      end
+			   end}
       end
    end
    

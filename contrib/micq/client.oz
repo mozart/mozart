@@ -34,7 +34,7 @@ require
 	 clearHistory: S_clearHistory) at 'methods.ozf'
 import
    Browser(browse:Browse)
-   System
+%   System
    OS(uName)
    Connection(take)
    Pickle(load)
@@ -47,6 +47,7 @@ import
    CGUI(start:StartGUI
 	shutdown:StopGUI
 	addapp:AddApp
+	dlgBox:DlgBox
 	startapp:AddAppGUI
 	invite:InviteClient
 	friends:Friends
@@ -69,21 +70,23 @@ define
    WaitQuit
    
    class ClientClass from StationaryClass
+      prop
+	 locking
       feat
-	 args  ticketDB
+	 args  ticketDB connecting
       attr
-	 id  server  args  name  ServerRef
+	 id  server  args  name  ServerRef GUIStarted
 	 
       meth init(server:S args:A)
 	 proc{MyServer M}
 	    try {@ServerRef M} 
 	    catch X then
 	       case X of networkFailure(...) then
-		  {Browse networkFailure(serverGone X.1 M)}
-		  {ErrorBox "The server has crashed..."}
-		  {StopGUI}
-		  {Delay 1}
-		  unit=WaitQuit
+		  %{Browse networkFailure(serverGone X.1 M)}
+		  %{StopGUI}
+		  %{Delay 1}
+		  %unit=WaitQuit
+		  {self reConnect(M)}
 	       elseof idAllreadyInUse(ID) then
 		  raise idAllreadyInUse(ID)  end
 	       elseof noSuchMethodInServer(...) then
@@ -101,12 +104,48 @@ define
 	    end
 	 end
       in
+	 GUIStarted <- false
+	 self.connecting = {NewCell false}
 	 ServerRef<-S
 	 server<-MyServer
 	 args<-A
 	 self.ticketDB={Dictionary.new}
+	 thread {self pingServer()} end
       end
 
+      meth reConnect(Msg)
+	 proc{ConnectLoop}
+	    try S in
+	       S={Connection.take {Pickle.load @args.ticketURL}}
+	       ServerRef <- S
+	       {self registerclient(id:@args.login passwd:@args.passwd)}
+	       {UnSetCon}
+	    catch _ then
+	       {Delay 15000}
+	       {ConnectLoop}
+	    end
+	 end
+	 fun{SetCon} O in
+	    {Exchange self.connecting O true}
+	    O
+	 end
+	 proc {UnSetCon}
+	    {Exchange self.connecting _ false}
+	 end
+      in
+	 if {SetCon} then skip
+	 else
+	    D = {DlgBox "Lost connection with server...\nRetrying..."}
+	 in
+	    thread if {D wait($)} then
+		      {self serverLogout()}
+		   end
+	    end
+	    {ConnectLoop}
+	    {D close()}
+	 end
+      end
+      
       meth registerclient(id:L passwd:PW)
 	 id<-L
 	 {@server S_login(id:L passwd:PW client:self.this host:{String.toAtom {OS.uName}.nodename})}
@@ -119,12 +158,22 @@ define
       meth clearHistory( friend: F )
 	 {@server S_clearHistory( id: @id friend: F)}
       end
+
+      meth pingServer()
+	 {Delay 60000 * 1}
+	 {@server ping}
+	 {self pingServer()}
+      end
       
       meth startgui(settings:S<=nil) H in
-	 H = {self load($)}
-	 try
-	    {StartGUI self.this @server @id H S}
-	 catch X then {Browse exception(startgui X)} end
+	 if @GUIStarted then skip
+	 else
+	    H = {self load($)}
+	    try
+	       {StartGUI self.this @server @id H S}
+	       GUIStarted <- true
+	    catch X then {Browse exception(startgui X)} end
+	 end
       end
 
       meth load($)
@@ -216,24 +265,27 @@ define
       meth logout()
 	 {@server S_logout(id:@id)}
 	 {StopGUI}
-	 {System.printError "*** Close client\n"}
+	 %{System.printError "*** Close client\n"}
 	 {Delay 1}
 	 unit=WaitQuit
       end
 
       meth serverLogout(Msg<=nil)
-	 if Msg\=nil then
-	    {ErrorBox "Logout message from server: "#Msg}
-	 else
-	    {System.printError "*** Server close-down\n"}
+	 thread
+	    if Msg\=nil then
+	       {ErrorBox "Logout message from server: "#Msg}
+	    else
+	       skip
+	       %{System.printError "*** Server close-down\n"}
+	    end
+	    {StopGUI}
+	    {Delay 1}
+	    unit=WaitQuit
 	 end
-	 {StopGUI}
-	 {Delay 1}
-	 unit=WaitQuit
       end
 
       meth apply(F execute:E<=proc{$ _} skip end)
-	 {System.printError "*** Applying a functor\n"}
+	 %{System.printError "*** Applying a functor\n"}
 	 thread
 	    M1 M={New Module.manager init}
 	 in
@@ -271,7 +323,7 @@ define
 		      catch X then {Browse applicationExecption#X} end       
 		   end  
       in
-	 {System.printError "*** Linking a remote functor\n"}
+	 %{System.printError "*** Linking a remote functor\n"}
 	 
 	 R = {New Remote.manager init(host: localhost fork:sh)}
 	 {R apply( Starter)}

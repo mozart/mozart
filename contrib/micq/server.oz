@@ -89,6 +89,10 @@ define
    class ServerClass from StationaryClass
       prop locking final
       feat dbdir watchers
+
+      meth ping()
+	 skip
+      end
 	 
       meth !InitServer(dbdir:D)
 	 self.dbdir=D
