@@ -1358,7 +1358,7 @@ to handle lines like 'attr a:'."
 
 (defun oz-bar (file line column state)
   "Display bar at given line, load file if necessary."
-  (if (string-equal file "nofile")
+  (if (string-equal file "")
       (oz-bar-remove)
     (if (string-equal file "unchanged")
 	(if oz-bar-overlay
@@ -2723,8 +2723,8 @@ When in emulator buffer, visit place indicated in next callstack line."
 	       (lineno (string-to-number lineno-string))
 	       (column-string (nth 3 error-data))
 	       (column (and column-string (string-to-number column-string)))
-	       (buf (if (string-equal file "nofile")
-			(error "No source buffer found")
+	       (buf (if (string-equal file "")
+			(error "Error has no associated source buffer")
 		      (oz-find-buffer-or-file file)))
 	       source-marker)
 	  (if (not buf)
@@ -2745,7 +2745,7 @@ When in emulator buffer, visit place indicated in next callstack line."
 	 (beginning-of-line)
 	 (let ((error-marker (point-marker)))
 	   (if (re-search-forward oz-error-pattern nil t)
-	       (let ((file (or (oz-match-string 2) "nofile"))
+	       (let ((file (or (oz-match-string 2) ""))
 		     (lineno-string (oz-match-string 3))
 		     (column-string (oz-match-string 5)))
 		 (setq oz-next-error-marker (point-marker))
@@ -2763,7 +2763,7 @@ When in emulator buffer, visit place indicated in next callstack line."
 (defun oz-fetch-next-callstack-data ()
   (beginning-of-line)
   (if (re-search-forward oz-error-pattern nil t)
-      (let ((file (or (oz-match-string 2) "nofile"))
+      (let ((file (or (oz-match-string 2) ""))
 	    (lineno-string (oz-match-string 3))
 	    (column-string (oz-match-string 5)))
 	(setq oz-next-error-marker (point-marker))
