@@ -179,8 +179,9 @@ OZ_C_proc_begin(sched_taskIntervalsProof, 5)
   OZ_EXPECT(pe, 3, expectStream);
   OZ_EXPECT(pe, 4, expectInt);
 
-  return pe.impose(new TaskIntervalsProof(OZ_args[0], OZ_args[1], OZ_args[2], 
-					  OZ_args[3], OZ_intToC(OZ_args[4])));
+  return pe.impose(new TaskIntervalsProof(OZ_args[0], OZ_args[1], 
+					  OZ_args[2], OZ_args[3], 
+					  OZ_intToC(OZ_args[4])));
 }
 OZ_C_proc_end
 
@@ -200,7 +201,7 @@ void TaskIntervalsProof::updateHeapRefs(OZ_Boolean duplicate)
   int * new_reg_nb_tasks     = OZ_hallocCInts(reg_nb_tasks_size);
   int * new_reg_order_vector = OZ_hallocCInts(reg_order_vector_size);
   OZ_Term * new_reg_pe       = OZ_hallocOzTerms(1);
-
+  
   int i;
   for (i = reg_fds_size; i--; ) {
     new_reg_fds[i]  = reg_fds[i];
@@ -301,7 +302,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
 
 
   constraints = initConstraints;
-  int * constraintsExtension;
+  int * constraintsExtension = NULL;
 
   int constraintLimit = INITIALSIZE;
 
@@ -482,9 +483,8 @@ OZ_Return TaskIntervalsProof::propagate(void)
 						       + left];
 		      addImpose(fd_prop_bounds, left_side_task);
 		      addImpose(fd_prop_bounds, right_side_task);
-		      impose(new LessEqOffPropagator(right_side_task, 
-						     left_side_task,
-						     -all_durs[i][left]));
+		      impose(new LessEqOffPropagator(right_side_task, left_side_task,
+						    -all_durs[i][left]));
 
 		    }
 		  }
@@ -519,9 +519,8 @@ OZ_Return TaskIntervalsProof::propagate(void)
 			addImpose(fd_prop_bounds, left_side_task);
 			addImpose(fd_prop_bounds, right_side_task);
 			
-			impose(new LessEqOffPropagator(left_side_task, 
-						       right_side_task,
-						       -all_durs[i][task]));
+			impose(new LessEqOffPropagator(left_side_task, right_side_task,
+						      -all_durs[i][task]));
 
 		      }
 		    }
@@ -669,14 +668,19 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	      }
 	      if (v <= g_costs) {
 		g_costs = v;
-		if (side == 1) {
+		p1 = best_left;
+		p2 = firsts_l;
+		/*
+		  // Caseau original code
+		  if (side == 1) {
 		  p1 = best_left;
 		  p2 = firsts_l;
-		}
-		else {
+		  }
+		  else {
 		  p1 = firsts_l;
 		  p2 = best_left;
-		}
+		  }
+		  */
 	      }
 	    }
 	    
@@ -765,14 +769,19 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	      }
 	      if (v <= g_costs) {
 		g_costs = v;
-		if (side == 1) {
+		p1 = lasts_l;
+		p2 = best_right;
+		/*
+		  // Caseau original code
+		  if (side == 1) {
 		  p1 = lasts_l;
 		  p2 = best_right;
-		}
-		else {
+		  }
+		  else {
 		  p1 = best_right;
 		  p2 = lasts_l;
-		}
+		  }
+		  */
 	      }
 	    }
 	    
