@@ -7,10 +7,10 @@ local
    HelpTitle    = 'Ozcar Help'
    OkButtonText = 'Aha'
    NoTopic      = 'No Help Available'
-   NoHelp       = 'Feel free to ask the author.\n' #
-                  'Send a mail to ' # EmailOfBenni
+   NoHelp       = ('Feel free to ask the author.\n' #
+                   'Send a mail to ' # EmailOfBenni)
 
-   HelpDict     = {Dictionary.new}
+   HelpDict     = {Dnew}
 
    {ForAll
     [

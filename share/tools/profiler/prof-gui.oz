@@ -313,7 +313,7 @@ in
          case RemoveEmacsBar then
             {self.BarCanvas tk(conf scrollregion: q(7 3 7 3))}
             case {Cget emacs} then
-               SourceManager,removeBar
+               {Emacs removeBar}
             else skip end
          else skip end
          {ForAll @TagList
@@ -347,7 +347,7 @@ in
                        ' Heap: ' # {FormatSize S.heap})
             Gui,Disable(self.ProcText)
             case {Cget emacs} then
-               SourceManager,bar(file:S.file line:S.line state:runnable)
+               {Emacs bar(file:S.file line:S.line state:runnable)}
             else skip end
          end
       end
@@ -401,7 +401,7 @@ in
       meth toggleEmacs
          case {Cget emacs} then
             Gui,doStatus('Not using Emacs Bar')
-            SourceManager,removeBar
+            {Emacs removeBar}
          else
             Gui,doStatus('Using Emacs Bar')
          end
@@ -419,7 +419,6 @@ in
                       P \= 'prof-string.oz'  andthen
                       P \= 'prof-tk.oz'      andthen
                       P \= 'prof-prelude.oz' andthen
-                      P \= 'prof-source.oz'  andthen
                       P \= 'prof-config.oz'  andthen
                       P \= 'TkTools.oz'      andthen
                       P \= 'Time.oz'
