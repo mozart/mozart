@@ -449,6 +449,15 @@ OZ_BI_define(BIByteString_toString,1,1)
   OZ_RETURN(list);
 } OZ_BI_end
 
+OZ_BI_define(BIByteString_toStringWithTail,2,1)
+{
+  oz_declareByteStringIN(0,b1);
+  OZ_declareIN(1,list);
+  int i = b1->getWidth();
+  while (i-- > 0) list = oz_cons(oz_int(b1->get(i)),list);
+  OZ_RETURN(list);
+} OZ_BI_end
+
 OZ_Term OZ_mkByteString(char*s,int n) {
   ByteString* bs = new ByteString(n);
   memcpy((void*)bs->getData(),(void*)s,n);

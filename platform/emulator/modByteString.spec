@@ -30,6 +30,10 @@
 
      'toString' => { in  => ['+byteString'],
                      out => ['+string'],
-                     bi  => BIByteString_toString}
+                     bi  => BIByteString_toString},
+     'toStringWithTail'
+     =>            { in  => ['+byteString','value'],
+                     out => ['string'],
+                     bi  => BIByteString_toStringWithTail}
      );
 1;;
