@@ -624,7 +624,9 @@ public:
   void init(void);
   OZ_Boolean isEmpty(void);
   OZ_Boolean setWakeUp(int i);
+  OZ_Boolean setEvent(int i) {return setWakeUp(i); };
   OZ_Boolean isWakeUp(int i);
+  OZ_Boolean isEvent(int i) { return isWakeUp(i); };
   static OZ_CtWakeUp getWakeUpAll(void);
 };
 
