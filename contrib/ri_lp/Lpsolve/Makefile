@@ -1,4 +1,5 @@
-CC= gcc -fno-exceptions -fno-rtti
+#CC= gcc -fno-exceptions -fno-rtti
+CC= oztool cc
 
 #should be OK in most situations:
 #CFLAGS= -O
