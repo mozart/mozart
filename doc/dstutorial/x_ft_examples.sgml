@@ -814,14 +814,16 @@ meth getMakeNewClient(MakeNewClient)
 end
 </chunk>
 
-<P>The server needs a concurrent ForAll procedure that
+<P>The server uses a concurrent ForAll procedure that
 invokes all commands concurrently and waits until
 they are all finished.  This is important for implementing
-broadcasts.  With the concurrent ForAll, the
+broadcasts.  With the concurrent ForAll, the total
 time for the broadcast is the <em>maximum</em> of
 all client round-trip times, instead of the <em>sum</em>,
 if the broadcast would sequentially send to each client
 and wait for an acknowledgement before continuing.
+Concurrent broadcast is efficient in Mozart
+due to its extremely lightweight threads.
 <chunk><title/Concurrent ForAll procedure/
 proc {ConcurrentForAll Ls P}
    Sync
@@ -850,8 +852,8 @@ the <<unregister>> method.
 Note that clients are identified uniquely by references
 to the client object <<Client>>,
 and not by the client's user ID <<UserID>>.
-This means that the channel will still work
-if there are clients with the same user ID.
+This means that the channel will work correctly
+even if there are clients with the same user ID.
 The users may get confused, but the channel will not.
 
 <P>A client can broadcast a message on the channel
