@@ -173,7 +173,7 @@ GumpScanner.ozc: $(GUMPSCANNERSRC) GumpScanner.env
 GumpParser.ozc: $(GUMPPARSERSRC) GumpParser.env
 
 opi: MakeOPI.oz
-	$(EXEC) $<
+	$(EXEC) -l AP $<
 
 #---------------------------------------------------------------------
 # Installation
@@ -245,3 +245,15 @@ tags:
 	--regex='/[ \t]*class[ \t]+!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
 	--regex='/[ \t]*meth\([ \t]+\|[ \t]*![ \t]*\)\([A-Za-z0-9][A-Za-z0-9_]*\|`.+`|'\''.+'\''\)/\2/' \
 	$(ALLSRCS)
+
+#---------------------------------------------------------------------
+# Testing Components Locally
+#---------------------------------------------------------------------
+
+.PHONY: stage1
+
+STAGE1=./stage1
+
+# stage1: create the components using the installed ones
+stage1:
+	$(MAKE) install-main PREFIX=$(STAGE1)
