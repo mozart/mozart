@@ -52,7 +52,7 @@ public:
   void execute(void);
 };
 
-static void* OzTask_execute(void*x)
+static void* OZ_taskExecute(void*x)
 {
   ((OzTaskManager*)x)->work();
   return NULL;
@@ -69,11 +69,13 @@ void OzTaskManager::enq(OzTask* t)
     queue_last = t;
   }
   if (idle==0 && total<total_max) {
+    sigset_t new_mask;
     sigset_t old_mask;
+    sigemptyset(&new_mask);
     pthread_sigmask(SIG_SETMASK,&empty_mask,&old_mask);
     pthread_t id;
-    pthread_create(&id,&thread_attr,OzTask_execute,(void*)this)
-      pthread_sigmask(SIG_SETMASK,&old_mask,NULL);
+    pthread_create(&id,&thread_attr,OZ_taskExecute,(void*)this);
+    pthread_sigmask(SIG_SETMASK,&old_mask,NULL);
   }
   pthread_cond_signal(&cond);
   pthread_mutex_unlock(&mutex);
@@ -129,13 +131,16 @@ void OzTaskManager::work(void)
 void OzTaskManager::finish(void)
 {
   pthread_mutex_lock(&mutex);
-  OzTask* t;
-  while (finish_first) {
-    t = finish_first;
-    finish_first = t->_next;
-    t->_next = 0;
-    t->finish();
-  }
-  finish_last = 0;
-  pthread_mutex_unlock(&mutex);
+  if (finish_first) {
+    OzTask* q = finish_first;
+    OzTask* t;
+    finish_first=finish_last=0;
+    pthread_mutex_unlock(&mutex);
+    while (q) {
+      t = q;
+      q = t->_next;
+      t->_next = 0;
+      t->finish();
+    }
+  } else pthread_mutex_unlock(&mutex);
 }
