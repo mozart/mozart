@@ -273,6 +273,97 @@ OZ_BI_define(BItuple, 2, 1)
   OZ_RETURN(sr->normalize());
 } OZ_BI_end
 
+/********************************************************************
+ * Arrays
+ ******************************************************************** */
+
+OZ_BI_define(BIarrayNew,3,1)
+{
+  oz_declareIntIN(0,ilow);
+  oz_declareIntIN(1,ihigh);
+  oz_declareIN(2,initValue);
+
+  if (!oz_isSmallInt(OZ_deref(OZ_in(0)))) { oz_typeError(0,"smallInteger"); }
+  if (!oz_isSmallInt(OZ_deref(OZ_in(1)))) { oz_typeError(1,"smallInteger"); }
+
+  OzArray *array = new OzArray(oz_currentBoard(),ilow,ihigh,initValue);
+  if (array==NULL || array->getWidth()==-1) {
+    return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("not enough memory"));
+  }
+    
+  OZ_RETURN(makeTaggedConst(array));
+} OZ_BI_end
+
+
+inline
+OZ_Return arrayLowInline(TaggedRef t, TaggedRef &out)
+{
+  NONVAR( t, term );
+  if (!oz_isArray(term)) {
+    oz_typeError(0,"Array");
+  }
+  out = makeTaggedSmallInt(tagged2Array(term)->getLow());
+  return PROCEED;
+}
+OZ_DECLAREBI_USEINLINEFUN1(BIarrayLow,arrayLowInline)
+
+inline
+OZ_Return arrayHighInline(TaggedRef t, TaggedRef &out)
+{
+  NONVAR( t, term );
+  if (!oz_isArray(term)) {
+    oz_typeError(0,"Array");
+  }
+  out = makeTaggedSmallInt(tagged2Array(term)->getHigh());
+  return PROCEED;
+}
+
+OZ_DECLAREBI_USEINLINEFUN1(BIarrayHigh,arrayHighInline)
+
+inline
+OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
+{
+  NONVAR( t, array );
+  NONVAR( i, index );
+
+  if (!oz_isArray(array)) {
+    oz_typeError(0,"Array");
+  }
+
+  if (!oz_isSmallInt(index)) {
+    oz_typeError(1,"smallInteger");
+  }
+
+  OzArray *ar = tagged2Array(array);
+  out = ar->getArg(tagged2SmallInt(index));
+  if (out) return PROCEED;
+  return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
+}
+OZ_DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
+
+inline
+OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
+{
+  NONVAR( t, array );
+  NONVAR( i, index );
+
+  if (!oz_isArray(array)) {
+    oz_typeError(0,"Array");
+  }
+
+  if (!oz_isSmallInt(index)) {
+    oz_typeError(1,"smallInteger");
+  }
+
+  OzArray *ar = tagged2Array(array);
+  CheckLocalBoard(ar,"array");
+  if (ar->setArg(tagged2SmallInt(index),value)) return PROCEED;
+
+  return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
+}
+
+OZ_DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline);
+
 // ---------------------------------------------------------------------
 // Tuple & Record
 // ---------------------------------------------------------------------
@@ -3093,97 +3184,6 @@ OZ_BI_define(BIexchangeCellFun,2,1)
   OZ_result(old);
   return ret;
 } OZ_BI_end
-
-/********************************************************************
- * Arrays
- ******************************************************************** */
-
-OZ_BI_define(BIarrayNew,3,1)
-{
-  oz_declareIntIN(0,ilow);
-  oz_declareIntIN(1,ihigh);
-  oz_declareIN(2,initValue);
-
-  if (!oz_isSmallInt(OZ_deref(OZ_in(0)))) { oz_typeError(0,"smallInteger"); }
-  if (!oz_isSmallInt(OZ_deref(OZ_in(1)))) { oz_typeError(1,"smallInteger"); }
-
-  OzArray *array = new OzArray(oz_currentBoard(),ilow,ihigh,initValue);
-  if (array==NULL || array->getWidth()==-1) {
-    return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("not enough memory"));
-  }
-    
-  OZ_RETURN(makeTaggedConst(array));
-} OZ_BI_end
-
-
-inline
-OZ_Return arrayLowInline(TaggedRef t, TaggedRef &out)
-{
-  NONVAR( t, term );
-  if (!oz_isArray(term)) {
-    oz_typeError(0,"Array");
-  }
-  out = makeTaggedSmallInt(tagged2Array(term)->getLow());
-  return PROCEED;
-}
-OZ_DECLAREBI_USEINLINEFUN1(BIarrayLow,arrayLowInline)
-
-inline
-OZ_Return arrayHighInline(TaggedRef t, TaggedRef &out)
-{
-  NONVAR( t, term );
-  if (!oz_isArray(term)) {
-    oz_typeError(0,"Array");
-  }
-  out = makeTaggedSmallInt(tagged2Array(term)->getHigh());
-  return PROCEED;
-}
-
-OZ_DECLAREBI_USEINLINEFUN1(BIarrayHigh,arrayHighInline)
-
-inline
-OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
-{
-  NONVAR( t, array );
-  NONVAR( i, index );
-
-  if (!oz_isArray(array)) {
-    oz_typeError(0,"Array");
-  }
-
-  if (!oz_isSmallInt(index)) {
-    oz_typeError(1,"smallInteger");
-  }
-
-  OzArray *ar = tagged2Array(array);
-  out = ar->getArg(tagged2SmallInt(index));
-  if (out) return PROCEED;
-  return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
-}
-OZ_DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
-
-inline
-OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
-{
-  NONVAR( t, array );
-  NONVAR( i, index );
-
-  if (!oz_isArray(array)) {
-    oz_typeError(0,"Array");
-  }
-
-  if (!oz_isSmallInt(index)) {
-    oz_typeError(1,"smallInteger");
-  }
-
-  OzArray *ar = tagged2Array(array);
-  CheckLocalBoard(ar,"array");
-  if (ar->setArg(tagged2SmallInt(index),value)) return PROCEED;
-
-  return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
-}
-
-OZ_DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline);
 
 /*
  * Control Vars
