@@ -104,6 +104,8 @@ You may find a mirror archive closer to you by consulting:
 ])
 fi
 
+OZ_CHECK_LIB_PATH(regex,regcomp)
+
 AC_OUTPUT(Makefile)
 
 errprint(ifdef([OZ_INIT],
