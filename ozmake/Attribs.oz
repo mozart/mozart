@@ -8,6 +8,11 @@ import
    Path  at 'Path.ozf'
    Utils at 'Utils.ozf'
    URL
+prepare
+   DB_OZMAKE = 'apps/ozmake/ozmake.db'
+   DB_MOGUL  = 'apps/ozmake/mogul.db'
+   DB_CONFIG = 'apps/ozmake/config.db'
+   DB_CONFIG_OLDSTYLE = 'apps/ozmake/DATABASE'
 define
    class Attribs
       attr
@@ -100,6 +105,7 @@ define
 	 MustExtract : true
 	 MogulAction : unit
 	 Contact     : unit
+	 MogulRootID : unit
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -316,7 +322,7 @@ define
 	    if @Superman\=unit then
 	       Database<-{@Superman get_database($)}
 	    else
-	       Database<-{Path.resolve Attribs,get_prefix($) 'DATABASE'}
+	       Database<-{Path.resolve Attribs,get_prefix($) DB_OZMAKE}
 	    end
 	 end
 	 @Database
@@ -325,6 +331,10 @@ define
 	 if @Superman\=unit then
 	    {@Superman get_database_given($)}
 	 else @DatabaseGiven end
+      end
+
+      meth get_database_oldstyle($)
+	 {Path.resolve Attribs,get_prefix($) 'DATABASE'}
       end
 
       meth set_released(D) Released<-D end
@@ -740,7 +750,7 @@ define
 	    if @Superman\=unit then
 	       MogulDatabase<-{@Superman get_moguldatabase($)}
 	    else
-	       MogulDatabase<-{Path.resolve Attribs,get_prefix($) 'mogul/DATABASE'}
+	       MogulDatabase<-{Path.resolve Attribs,get_prefix($) DB_MOGUL}
 	    end
 	 end
 	 @MogulDatabase
@@ -752,9 +762,12 @@ define
       end
       meth get_configfile($)
 	 if @ConfigFile==unit then
-	    {self set_configfile('apps/ozmake/DATABASE')}
+	    {self set_configfile(DB_CONFIG)}
 	 end
 	 @ConfigFile
+      end
+      meth get_configfile_oldstyle($)
+	 {Path.resolve Attribs,get_prefix($) DB_CONFIG_OLDSTYLE}
       end
 
       meth set_mogulpkgurl(U)
@@ -838,5 +851,14 @@ define
 
       meth set_mogul_action(A) MogulAction<-{self mogul_validate_action(A $)} end
       meth get_mogul_action($) @MogulAction end
+
+      meth set_mogulrootid(ID)
+	 if {Utils.isMogulID ID} then
+	    MogulRootID <- ID
+	 else
+	    raise ozmake(mogul:badrootid(ID)) end
+	 end
+      end
+      meth get_mogulrootid($) @MogulRootID end
    end
 end
