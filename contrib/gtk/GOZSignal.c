@@ -70,7 +70,7 @@ static OZ_Term createExposeEvent(char *type, GdkEventExpose *event) {
 
   return OZ_mkTuple(OZ_atom(type), 4,
                     OZ_makeForeignPointer(event->window),
-                    OZ_int(event->send_event),
+                    GOZ_bool(event->send_event),
                     OZ_makeForeignPointer(rect),
                     OZ_int(event->count));
 }
@@ -138,7 +138,7 @@ static OZ_Term computeVisibility(GdkVisibilityState state) {
 static OZ_Term createMotionEvent(char *type, GdkEventMotion *event) {
   return OZ_mkTuple(OZ_atom(type), 14,
                     OZ_makeForeignPointer(event->window),
-                    OZ_int(event->send_event),
+                    GOZ_bool(event->send_event),
                     OZ_int(event->time),
                     OZ_float(event->x),
                     OZ_float(event->y),
@@ -156,7 +156,7 @@ static OZ_Term createMotionEvent(char *type, GdkEventMotion *event) {
 static OZ_Term createKeyEvent(char *type, GdkEventKey *event) {
   return OZ_mkTuple(OZ_atom(type), 7,
                     OZ_makeForeignPointer(event->window),
-                    OZ_int(event->send_event),
+                    GOZ_bool(event->send_event),
                     OZ_int(event->time),
                     OZ_int(event->state),
                     OZ_int(event->keyval),
@@ -167,7 +167,7 @@ static OZ_Term createKeyEvent(char *type, GdkEventKey *event) {
 static OZ_Term createCrossingEvent(char *type, GdkEventCrossing *event) {
   return OZ_mkTuple(OZ_atom(type), 12,
                     OZ_makeForeignPointer(event->window),
-                    OZ_int(event->send_event),
+                    GOZ_bool(event->send_event),
                     OZ_makeForeignPointer(event->subwindow),
                     OZ_int(event->time),
                     OZ_float(event->x),
@@ -176,21 +176,21 @@ static OZ_Term createCrossingEvent(char *type, GdkEventCrossing *event) {
                     OZ_float(event->y_root),
                     computeCrossing(event->mode),
                     computeNotify(event->detail),
-                    OZ_int((int) event->focus),
+                    GOZ_bool((int) event->focus),
                     OZ_int((int) event->state));
 }
 
 static OZ_Term createFocusEvent(char *type, GdkEventFocus *event) {
   return OZ_mkTuple(OZ_atom(type), 3,
                     OZ_makeForeignPointer(event->window),
-                    OZ_int(event->send_event),
-                    OZ_int((int) event->in));
+                    GOZ_bool(event->send_event),
+                    GOZ_bool((int) event->in));
 }
 
 static OZ_Term createConfigureEvent(char *type, GdkEventConfigure *event) {
   return OZ_mkTuple(OZ_atom(type), 6,
                     OZ_makeForeignPointer(event->window),
-                    OZ_int(event->send_event),
+                    GOZ_bool(event->send_event),
                     OZ_int(event->x),
                     OZ_int(event->y),
                     OZ_int(event->width),
@@ -200,7 +200,7 @@ static OZ_Term createConfigureEvent(char *type, GdkEventConfigure *event) {
 static OZ_Term createButtonEvent(char *type, GdkEventButton *event) {
   return OZ_mkTuple(OZ_atom(type), 14,
                     OZ_makeForeignPointer(event->window),
-                    OZ_int(event->send_event),
+                    GOZ_bool(event->send_event),
                     OZ_int(event->time),
                     OZ_float(event->x),
                     OZ_float(event->y),
@@ -218,14 +218,14 @@ static OZ_Term createButtonEvent(char *type, GdkEventButton *event) {
 static OZ_Term createVisibilityEvent(char *type, GdkEventVisibility *event) {
   return OZ_mkTuple(OZ_atom(type), 3,
                     OZ_makeForeignPointer(event->window),
-                    OZ_int(event->send_event),
+                    GOZ_bool(event->send_event),
                     computeVisibility(event->state));
 }
 
 static OZ_Term createNoExposeEvent(char *type, GdkEventNoExpose *event) {
   return OZ_mkTuple(OZ_atom(type), 2,
                     OZ_makeForeignPointer(event->window),
-                    OZ_int(event->send_event));
+                    GOZ_bool(event->send_event));
 }
 
 OZ_Term createGdkEvent(GdkEvent *event) {

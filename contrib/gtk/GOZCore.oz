@@ -433,25 +433,25 @@ define
       fun {RGT X}
          {PointerToObject GDK.rectangle X}
       end
-      fun {ITB X}
-         X == 1
-      end
+%       fun {ITB X}
+%        X == 1
+%       end
 
-      ExposeFs     = [window#RGW send#ITB area#RGT count#Id]
-      MotionFs     = [window#RGW send#ITB time#Id x#Id y#Id
+      ExposeFs     = [window#RGW send#Id area#RGT count#Id]
+      MotionFs     = [window#RGW send#Id time#Id x#Id y#Id
                       pressure#Id xtilt#Id ytilt#Id state#Id
                       is_hint#Id source#Id deveceid#Id x_root#Id y_root#Id]
-      ButtonFs     = [window#RGW send#ITB time#Id x#Id y#Id
+      ButtonFs     = [window#RGW send#Id time#Id x#Id y#Id
                       pressure#Id xtilt#Id ytilt#Id state#Id
                       button#Id source#Id deveceid#Id x_root#Id y_root#Id]
-      KeyFs        = [window#RGW send#ITB time#Id state#Id
+      KeyFs        = [window#RGW send#Id time#Id state#Id
                       keyval#Id length#Id string#Id]
-      CrossingFs   = [window#RGW send#ITB subwindow#RGW time#Id
+      CrossingFs   = [window#RGW send#Id subwindow#RGW time#Id
                       x#Id y#Id x_root#Id y_root#Id
-                      mode#Id detail#Id focus#ITB state#Id]
-      FocusFs      = [window#RGW send#ITB hasFocus#ITB]
-      ConfigureFs  = [window#RGW send#ITB x#Id y#Id width#Id height#Id]
-      VisibilityFs = [window#RGW send#ITB state#Id]
+                      mode#Id detail#Id focus#Id state#Id]
+      FocusFs      = [window#RGW send#Id hasFocus#Id]
+      ConfigureFs  = [window#RGW send#Id x#Id y#Id width#Id height#Id]
+      VisibilityFs = [window#RGW send#Id state#Id]
 
       fun {First X#_} X end
 
@@ -493,7 +493,8 @@ define
    local
       fun {ConvertArgument Arg}
          case Arg
-         of int(Val)      then Val
+         of bool(Val)     then Val
+         [] int(Val)      then Val
          [] double(Val)   then Val
          [] string(Val)   then Val
          [] pointer(Val)  then Val
@@ -539,7 +540,8 @@ define
    local
       fun {ConvertArgument Arg}
          case Arg
-         of int(Val)      then 'INT'(Val)
+         of bool(Val)     then 'BOOL'(Val)
+         [] int(Val)      then 'INT'(Val)
          [] double(Val)   then 'DOUBLE'(Val)
          [] string(Val)   then 'STRING'({ByteString.make Val})
          [] pointer(Val)  then 'OBJECT'({PointerToObject none Val})

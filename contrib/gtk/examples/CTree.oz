@@ -35,11 +35,11 @@ define
       in
          GTK.cTree, newWithTitles(2 0 {GTK.makeStrArr Titles})
          N1 = GTK.cTree, insertNode(unit unit {GTK.makeStrArr Row1}
-                                    0 unit unit unit unit 0 0 $)
+                                    0 unit unit unit unit false false $)
          GTK.cTree, insertNode(N1 unit {GTK.makeStrArr Row2}
-                               0 unit unit unit unit 0 0 _)
+                               0 unit unit unit unit false false _)
          GTK.cTree, insertNode(unit unit {GTK.makeStrArr Row3}
-                               0 unit unit unit unit 0 0 _)
+                               0 unit unit unit unit false false _)
          GTK.cTree, signalConnect('tree-select-row' myEvent _)
       end
       meth myEvent(Args)

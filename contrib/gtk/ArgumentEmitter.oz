@@ -50,7 +50,7 @@ define
                  "  } else if (type == GTK_TYPE_DOUBLE) {"
                  "    return GOZ_ARG_double(arg->d.double_data);"
                  "  } else if (type == GTK_TYPE_BOOL) {"
-                 "    return GOZ_ARG_int(arg->d.bool_data);"
+                 "    return GOZ_ARG_bool(arg->d.bool_data);"
                  "  } else if (type == GTK_TYPE_ENUM) {"
                  "    return GOZ_ARG_int(arg->d.int_data);"
                  "  } else if (type == GTK_TYPE_FLAGS) {"

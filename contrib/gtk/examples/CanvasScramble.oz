@@ -271,17 +271,17 @@ define
          Button    = {New GTK.button newWithLabel("Scramble")}
          Board     = {Canvas createBoard($)}
       in
-         GTK.vBox, new(0 4)
+         GTK.vBox, new(false 4)
          {self setBorderWidth(4)}
          {self show}
-         {self packStart(Alignment 1 1 0)}
+         {self packStart(Alignment true true 0)}
          {Alignment show}
          {Frame setShadowType(GTK.'SHADOW_IN')}
          {Alignment add(Frame)}
          {Frame show}
          {Frame add(Canvas)}
          {Canvas show}
-         {self packStart(Button 0 0 0)}
+         {self packStart(Button false false 0)}
          {Button signalConnect('clicked' {ScrambleEvent Canvas Board} _)}
       end
    end
@@ -294,7 +294,7 @@ define
          GTK.window, setTitle("Canvas Demo")
          {self signalConnect('delete-event' deleteEvent _)}
          GTK.window, add(Notebook)
-         {Notebook setShowTabs(1)}
+         {Notebook setShowTabs(true)}
          {Notebook appendPage(Scramble {New GTK.label new("Fifteen")})}
       end
       meth deleteEvent(Args)
