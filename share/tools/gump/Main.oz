@@ -28,8 +28,8 @@ local
       INCLUDEDIR = OZHOME#'/include'
    end
 
-   \insert ../compiler/Misc
-   \insert ../compiler/FormatStrings
+   \insert ../../lib/compiler/Misc
+   \insert ../../lib/compiler/FormatStrings
 
    %--------------------------------------------------------------------
    % Auxiliary Functions and Classes
@@ -76,7 +76,7 @@ local
    %--------------------------------------------------------------------
    % Auxiliary Functions on Oz Terms, Expressions and Variables
 
-   \insert ../compiler/TupleSyntax
+   \insert ../../lib/compiler/TupleSyntax
 
    fun {SymbolEq S1 S2}
       case S1 of fVar(X _) then
