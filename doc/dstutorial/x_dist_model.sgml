@@ -122,7 +122,9 @@ a stationary object is created with <<NewStat>>,
 and an sequential asynchronous stationary object
 is created with <<NewSASO>>.
 A stationary object is a good abstraction to
-build servers (see <ptr to="making.stationary.objects">).
+build servers (see <ptr to="making.stationary.objects">)
+and fault-tolerant servers
+(see <ptr to="fault.tolerant.stationary.objects">).
 It is easy to program other distribution
 semantics in Oz.
 <ptr to="chapter.examples"> gives some examples.
