@@ -24,15 +24,25 @@ HourF          = {IntToFloat HourI}
 
 EnterColor     = wheat
 
-RunnableColor  = red
+RunnableColor  = lightslateblue
 
-ThresholdColor = blue
-SizeColor      = red
-ActiveColor    = yellow
+ThresholdColor = lightslateblue
+SizeColor      = mediumvioletred
+ActiveColor    = mediumaquamarine
 
-TimeColors   = colors(run:  red
-		      prop: green
-		      copy: blue
-		      gc:   yellow
-		      load: pink)
+TimeColors   = colors(run:  lightslateblue
+		      prop: mediumvioletred
+		      copy: mediumaquamarine
+		      gc:   mediumseagreen
+		      load: wheat)
 
+AboutColor = blue
+
+AboutFont       = '-Adobe-times-bold-r-normal--*-240*'
+
+TitleName = 'Oz Panel'
+
+
+BigPad = 4
+
+BitMap = '@' # {System.get home} # '/lib/bitmaps/panel.xbm'
