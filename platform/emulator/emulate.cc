@@ -324,8 +324,9 @@ void genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
   if (gci->isMethAppl) {
     if (!isObject(pred) ||
 	NULL == (abstr = getApplyMethod((Object *) tagged2Const(pred),
-					gci->lit,gci->arity))) {
-      ApplMethInfoClass *ami = new ApplMethInfoClass(gci->lit,gci->arity);
+					gci->mn.codedName,gci->arity))) {
+      ApplMethInfoClass *ami = new ApplMethInfoClass(gci->mn.realName,gci->mn.codedName,
+						     gci->arity);
       CodeArea::writeOpcode(gci->isTailCall ? TAILAPPLMETHG : APPLMETHG, PC);
       CodeArea::writeAddress(ami, PC+1);
       CodeArea::writeRegIndex(gci->regIndex, PC+2);
@@ -1964,6 +1965,7 @@ LBLsuspendThread:
 	      });
 
 #ifndef THREADED
+  // displayCode(PC,1);
   switch (op) {
 #endif
     
@@ -2663,7 +2665,7 @@ LBLsuspendThread:
 
  SendMethod:
   {
-    TaggedRef label    = getLiteralArg(PC+1);
+    MethodName *label  = (MethodName *) getAdressArg(PC+1);
     TaggedRef origObj  = RegAccess(HelpReg,getRegArg(PC+2));
     TaggedRef object   = origObj;
     SRecordArity arity = (SRecordArity) getAdressArg(PC+3);
@@ -2675,7 +2677,7 @@ LBLsuspendThread:
     DEREF(object,objectPtr,_2);
     if (isObject(object)) {
       Object *obj      = (Object *) tagged2Const(object);
-      Abstraction *def = getSendMethod(obj,label,arity,(MethodCache*)(PC+4));
+      Abstraction *def = getSendMethod(obj,label->codedName,arity,(MethodCache*)(PC+4));
       if (def == NULL) {
 	goto bombSend;
       }
@@ -2698,11 +2700,11 @@ LBLsuspendThread:
       goto bombSend;
 
     RAISE_APPLY(object,
-		cons(makeMessage(arity,label,X),nil()));
+		cons(makeMessage(arity,label->realName,X),nil()));
 
   bombSend:
     if (!isTailCall) PC = PC+6;
-    X[0] = makeMessage(arity,label,X);
+    X[0] = makeMessage(arity,label->realName,X);
     predArity = 1;
     predicate = tagged2Const(object);
     goto LBLcall;
@@ -2720,7 +2722,6 @@ LBLsuspendThread:
  ApplyMethod:
   {
     ApplMethInfoClass *ami = (ApplMethInfoClass*) getAdressArg(PC+1);
-    TaggedRef label        = ami->methName;
     SRecordArity arity     = ami->arity;
     TaggedRef origObject   = RegAccess(HelpReg,getRegArg(PC+2));
     TaggedRef object       = origObject;
@@ -2732,7 +2733,7 @@ LBLsuspendThread:
     if (!isObject(object)) {
       goto bombApply;
     }
-    def = getApplyMethod((Object *) tagged2Const(object),label,arity);
+    def = getApplyMethod((Object *) tagged2Const(object),ami->methName.codedName,arity);
     if (def==NULL) {
       goto bombApply;
     }
@@ -2747,7 +2748,7 @@ LBLsuspendThread:
       error("no apply handler");
     }
 
-    X[1] = makeMessage(arity,label,X);
+    X[1] = makeMessage(arity,ami->methName.realName,X);
     X[0] = origObject;
 
     predArity = 2;
