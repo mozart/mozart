@@ -3405,7 +3405,7 @@ OZ_Return BIuminusInline(TaggedRef A, TaggedRef &out)
     return SUSPEND;
 
   default:
-    return FAILED;
+    TypeErrorT(0,"Int");
   }
 }
 
@@ -3435,7 +3435,7 @@ OZ_Return BIabsInline(TaggedRef A, TaggedRef &out)
     return SUSPEND;
   }
 
-  return FAILED;
+  TypeErrorT(0,"Number");
 }
 
 // add1(X) --> X+1
@@ -3458,7 +3458,7 @@ OZ_Return BIadd1Inline(TaggedRef A, TaggedRef &out)
     return SUSPEND;
   }
 
-  return FAILED;
+  TypeErrorT(0,"Int");
 }
 
 // sub1(X) --> X-1
@@ -3481,7 +3481,7 @@ OZ_Return BIsub1Inline(TaggedRef A, TaggedRef &out)
     return SUSPEND;
   }
 
-  return FAILED;
+  TypeErrorT(0,"Int");
 }
 
 
@@ -3549,7 +3549,6 @@ OZ_Return BIminInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 	return PROCEED;
       }
       TypeErrorM("Number or Atom");
-      return FAILED;
 
     default: break;
     }
@@ -3585,7 +3584,6 @@ OZ_Return BImaxInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 	return PROCEED;
       }
       TypeErrorM("Names are not ordered");
-      return FAILED;
 
     default: break;
     }
@@ -3624,7 +3622,6 @@ OZ_Return BIlessInline(TaggedRef A, TaggedRef B)
           ? PROCEED : FAILED;
       }
       TypeErrorM("Names are not ordered");
-      return FAILED;
     }
   }
 
@@ -3747,7 +3744,6 @@ OZ_Return BIleInline(TaggedRef A, TaggedRef B)
 	  ? PROCEED : FAILED;
       }
       TypeErrorM("Names are not ordered");
-      return FAILED;
     }
 
   }
@@ -3762,18 +3758,15 @@ OZ_Return BIleInline(TaggedRef A, TaggedRef B)
 
 OZ_Return BIleInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  switch (BIleInline(A,B)) {
-  case PROCEED:
-    out = NameTrue;
-    return PROCEED;
-  case FAILED:
-    out = NameFalse;
-    return PROCEED;
-  case SUSPEND:
-  default:
-    return SUSPEND;
+  OZ_Return ret = BIleInline(A,B);
+  switch (ret) {
+  case PROCEED: out = NameTrue;  return PROCEED;
+  case FAILED:  out = NameFalse; return PROCEED;
+  default:      return ret;
   }
 }
+
+
 
 OZ_Return BIgeInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
@@ -3808,7 +3801,7 @@ OZ_Return BIintToFloatInline(TaggedRef A, TaggedRef &out)
     return SUSPEND;
   }
 
-  return FAILED;
+  TypeErrorT(0,"Int");
 }
 
 /* mm2: I don't know if this is efficient, but it's only called,
@@ -3862,7 +3855,6 @@ OZ_C_proc_begin(BIfloatToString, 2)
     OZ_Return ret = OZ_unify(out,OZ_string(s));
     return ret;
   }
-  TypeErrorT(0,"Float");
   return FAILED;
 }
 OZ_C_proc_end
@@ -3946,7 +3938,6 @@ OZ_C_proc_begin(BIintToString, 2)
     return ret;
   }
   TypeErrorT(0,"Int");
-  return FAILED;
 }
 OZ_C_proc_end
 #endif
@@ -4011,21 +4002,21 @@ DECLAREBOOLFUN1(BIisNumberB,BIisNumberBInline,BIisNumberInline)
    ----------------------------------------------------------------------- */
 
 
-#define FLOATFUN(Fun,BIName,InlineName)					      \
-OZ_Return InlineName(TaggedRef AA, TaggedRef &out)				      \
-{									      \
-  DEREF(AA,_,tag);							      \
-									      \
-  if (isAnyVar(tag)) {							      \
-    return SUSPEND;							      \
-  }									      \
-									      \
-  if (isFloat(tag)) {							      \
-    out = makeTaggedFloat(Fun(floatValue(AA)));			      \
-    return PROCEED;							      \
-  }									      \
-  return FAILED;							      \
-}									      \
+#define FLOATFUN(Fun,BIName,InlineName)			\
+OZ_Return InlineName(TaggedRef AA, TaggedRef &out)	\
+{							\
+  DEREF(AA,_,tag);					\
+							\
+  if (isAnyVar(tag)) {					\
+    return SUSPEND;					\
+  }							\
+							\
+  if (isFloat(tag)) {					\
+    out = makeTaggedFloat(Fun(floatValue(AA)));		\
+    return PROCEED;					\
+  }							\
+  TypeErrorT(0,"Float");				\
+}							\
 DECLAREBI_USEINLINEFUN1(BIName,InlineName)
 
 
@@ -5386,8 +5377,7 @@ OZ_C_proc_begin(BIsetAbstractionTabDefaultEntry,1)
 {
   TaggedRef in = OZ_getCArg(0); DEREF(in,_1,_2);
   if (!isAbstraction(in)) {
-    warning("setAbstractionTabDefaultEntry: abstraction expected: %s",toC(in));
-    return FAILED;
+    TypeErrorT(0,"Abstraction");
   }
 
   AbstractionEntry::setDefaultEntry(tagged2Abstraction(in));
