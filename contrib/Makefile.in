@@ -4,11 +4,11 @@ BUILDTOP= @BUILDTOP@
 PREFIX  = @prefix@
 SUBDIRS = @CONTRIBDIRS@
 
-.PHONY:	bootstrap all install clean distclean veryclean World files check
+.PHONY:	bootstrap all install clean distclean veryclean World files check depend
 
 all::
 
-bootstrap all install clean veryclean depend distclean::
+bootstrap all install clean veryclean distclean::
 	dirs="$(SUBDIRS)"; \
 	for i in $$dirs; do \
 	  if (cd $$i && $(MAKE) $@); \
@@ -25,3 +25,5 @@ distclean::
 	-rm -f config.log config.status config.cache
 
 check::
+
+depend::
