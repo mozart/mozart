@@ -373,17 +373,21 @@ starts the emulator under gdb")
 ;; Debugger stuff
 ;;------------------------------------------------------------
 
+
+(defvar oz-devel-debugger nil "*Iff true use newest debugger.")
+
 (defun oz-debug-start()
   "Start the debugger."
   (interactive)
-  (oz-insert-file "tools/ozcar/main.oz")
+  (oz-insert-file
+   (if oz-devel-debugger 
+       "tools/ozcar-devel/main.oz"
+     "tools/ozcar/main.oz"))
   (oz-send-string "\\sw -optimize +debuginfo"))
 
 (defun oz-debug-devel-start()
-  "Start the development version of Ozcar."
   (interactive)
-  (oz-insert-file "tools/ozcar-devel/main.oz")
-  (oz-send-string "\\sw -optimize +debuginfo"))
+  (setq oz-devel-debugger t))
 
 (defun oz-debug-stop()
   "Stop the debugger."
