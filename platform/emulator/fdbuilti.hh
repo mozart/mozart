@@ -21,7 +21,6 @@
 // include oz.h
 #include "fdomn.hh"
 #include "fdprofil.hh"
-#include "fdinterface.hh"
 
 // have to vanish
 //#include "fdhook.hh"

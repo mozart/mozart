@@ -7,7 +7,7 @@
 
 #include "fddebug.hh"
 
-#include "fdinterface.hh"
+#include "oz_cpi.hh"
 
 #define FD_NOI 4 // number of intervals
 //#define FD_NOI 16 // number of intervals
