@@ -1,9 +1,24 @@
-%%%  Programming Systems Lab, DFKI Saarbruecken,
-%%%  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5315
-%%%  Author: Joerg Wuertz
-%%%  Email: wuertz@dfki.uni-sb.de
-%%%  Last modified: $Date$ by $Author$
-%%%  Version: $Revision$
+%%%
+%%% Authors:
+%%%   Jörg Würtz <wuertz@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Jörg Würtz, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
 
 declare Bridge InitialDelay=2000 RepDelay=180
 
@@ -20,15 +35,9 @@ local
    ScheduleLength = 104
    %% Colors
    [GroundColor BColor MColor TColor VColor FColor PColor] =
-   case Tk.isColor then
-      [burlywood grey55 grey72 steelblue1 khaki1 khaki1 black]
-%      [grey white white white white white white]
-   else [black white white white white white white]
-   end
+   [burlywood grey55 grey72 steelblue1 khaki1 khaki1 black]
    OutlineColor = black
-   CanvasColor = case Tk.isColor then lightskyblue1
-		 else white
-		 end
+   CanvasColor = lightskyblue1
    %% Data for tasks
    Start = start( a1: 19 a2: 6 a3: 0 a4: 4 a5: 2 a6: 26
 		  b1: 34 b2: 14 b3: 26 b4: 48 b5: 10 b6: 44
@@ -251,7 +260,7 @@ in
 	 Canvas = @canvas
 	 IncTime = @time+1
       in 
-	 case @toggle==0 then
+	 if @toggle==0 then
 	    {Anim Starting.IncTime start(Canvas)}
 	    {Anim Running.IncTime moveIn}
 	    {Anim Ending.IncTime moveIn}
@@ -261,11 +270,11 @@ in
 	    time  <- IncTime
 	 end
 	 toggle <- (@toggle + 1) mod 2
-	 case @time>ScheduleLength then {self stop} else skip end
+	 if @time>ScheduleLength then {self stop} end
       end
       meth init
 	 W = {New Tk.toplevel tkInit }
-	 {Tk.send wm(title(W "Bridge Construction"))}
+	 {Tk.send wm(title W 'Bridge Construction')}
 	 Canvas = {New Tk.canvas tkInit(parent:W
 					background: CanvasColor
 					highlightthickness:0
@@ -281,37 +290,14 @@ in
 	 toggle <- 0
 	 time <- 0
       end
-      meth postscript
-	 {@canvas tk(postscrip(file: '/home/ps-home/wuertz/bridge.ps'
-			       colormode: color
-			       height: CanvasHeight*Zoom
-			       width: CanvasWidth*Zoom
-			       x: 0
-			       y: 0
-%			       rotate: 1
-			       rotate: 0
-			       ))}
-      end
    end
 end
 
-local B in
-   thread
-      B = {New Bridge init} in
-      {B setRepDelay(RepDelay)}
-      {B setRepAction(check)}
-      {Delay InitialDelay}
-      {B go}
-   end
+thread
+   B={New Bridge init}
+in
+   {B setRepDelay(RepDelay)}
+   {B setRepAction(check)}
+   {Delay InitialDelay}
+   {B go}
 end
-
-/*
-declare B = {New Bridge init} in
-{B [setRepDelay(RepDelay) setRepAction(check)]}
-{Delay InitialDelay}
-{B go}
-
-{B stop}
-
-{B postscript}
-*/

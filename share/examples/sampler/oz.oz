@@ -1,10 +1,26 @@
-%%%  Programming Systems Lab, DFKI Saarbruecken,
-%%%  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5315
-%%%  Author: Gert Smolka
-%%%  Email: smolka@dfki.uni-sb.de
-%%%  Last modified: $Date$ by $Author$
-%%%  Version: $Revision$
-
+%%%
+%%% Authors:
+%%%   Christian Schulte <schulte@ps.uni-sb.de>
+%%%   Gert Smolka <smolka@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Christian Schulte, 1998
+%%%   Gert Smolka, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% Functional Programming
 
@@ -240,7 +256,7 @@ Canvas = {New Tk.canvas tkInit(parent:Window
 
 declare
 proc {DrawCircle X Y R}
-   {Canvas tk(crea oval X-R Y-R X+R Y+R)}
+   {Canvas tk(create oval X-R Y-R X+R Y+R)}
 end
 
 {DrawCircle 100 100 20}
@@ -263,7 +279,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 declare
-BigFont = '-*-helvetica-bold-r-*--*-180-*'
+BigFont = {New Tk.font tkInit(weight:bold size:18)}
 class Text from Tk.canvasTag
    meth init(X Y T)
       Tk.canvasTag,tkInit(parent:Canvas)
@@ -328,10 +344,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 declare
-TruckImage = {New Tk.image
-	      tkInit(type:photo format:gif
-		     file: {System.get home}#
-		     '/demo/bitmaps/trucks/truck-right.gif')}
+Images={TkTools.images
+	['http://mozart.ps.uni-sb.de/home/'#
+	 'doc/demo/applets/images/trucks/truck-right.ppm']}
+TruckImage = Images.'truck-right'
 class Truck from Tk.canvasTag Time.repeat
    meth init(Position)
       {self tkInit(parent:Canvas)}
@@ -386,6 +402,7 @@ IC={New InternetController server(port:{Browse portNumber($)})}
 
 
 ********************************************
+
 
 
 
