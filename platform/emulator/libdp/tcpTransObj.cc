@@ -32,7 +32,7 @@
 #include "os.hh"
 #include <errno.h>
 
-#define BYTE_DEF_SIZE 4096
+#define BYTE_DEF_SIZE 8192
 #define MIN_FOR_HEADER 200// Minimal size available to even consider marshaling
 
 #define HEADER 11
@@ -203,6 +203,7 @@ int TCPTransObj::writeHandler(int fd) {
   int acknum;
   totLen = writeBuffer->getUsed();
 
+  
   if (totLen < minSend) {
     while (writeBuffer->availableSpace()>MIN_FOR_HEADER &&
 	   (msgC=comObj->getNextMsgContainer(acknum))!=NULL) {
@@ -243,14 +244,19 @@ int TCPTransObj::writeHandler(int fd) {
     }
 
     writeBuffer->clearWrite(ret);
+    // If we didn't write all the data stop writing and 
+    // stay registered.
     if(ret<len) {
       return 0;
     }
   }
-  if (msgC!=NULL)
+  // Everything is written from the buffer. If there are queued messages
+  // continue write(i.e have the write handler registered)
+  if (comObj->hasQueued())
     return 0;
-  else
+  else 
     return 1;
+  
 }
 
 inline
