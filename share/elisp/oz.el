@@ -47,7 +47,7 @@
 (defvar oz-mode-abbrev-table nil)
 (defvar oz-mode-map (make-sparse-keymap))
 
-(defvar oz-machine nil)
+(defvar oz-machine (concat (getenv "HOME") "/Oz/AM/oz.machine.bin"))
 (defvar oz-machine-buffer "*Oz Machine*")
 
 (defvar oz-machine-hook nil
