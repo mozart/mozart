@@ -159,7 +159,9 @@ body
    in
       class CompilerInterfaceEmacs from Compiler.genericInterface
 	 prop final
-	 attr Socket BarSync: _ BarLock: {NewLock} Trace: false
+	 attr
+	    Socket BarSync: _ BarLock: {NewLock} Trace: false
+	    lastFile: unit lastLine: unit lastColumn: unit
 	 meth init(CompilerObject)
 	    lock Port NodeName in
 	       Compiler.genericInterface, init(CompilerObject Serve)
@@ -246,8 +248,9 @@ body
 	    BarSync <- New = unit
 	    thread
 	       {WaitOr New {Alarm TimeoutToConfigBar}}
-	       case {IsDet New} then skip else
-		  CompilerInterfaceEmacs, MakeOzBar(unchanged 0 0 State)
+	       case {IsDet New} orelse @lastFile == unit then skip else
+		  CompilerInterfaceEmacs,
+		  MakeOzBar(@lastFile @lastLine @lastColumn State)
 	       end
 	    end
 	 end
@@ -257,10 +260,12 @@ body
 	 end
 	 meth MakeOzBar(File Line Column State)
 	    lock @BarLock then
-	       C = case Column == unit then 0 else Column end
-	       S = 'oz-bar ' # File # ' ' # Line # ' ' # C # ' ' # State
+	       S = 'oz-bar ' # File # ' ' # Line # ' ' # Column # ' ' # State
 	    in
 	       {@Socket write(vs: '\'' # S # '\'')}
+	       lastFile <- File
+	       lastLine <- Line
+	       lastColumn <- Column
 	       {Delay 1}   % this is needed for Emacs
 	    end
 	 end
