@@ -316,6 +316,7 @@ define
          MyIndexer: unit
          IdxNode: unit
          IndexSortAs: unit
+         WhereNow: unit
          AutoIndex: unit
       meth init()
          Reporter <- Narrator.'class', init($)
@@ -534,6 +535,7 @@ define
                BibNode <- _
                MyIndexer <- {New Indexer.'class' init()}
                IdxNode <- _
+               WhereNow <- nil
                TOC <- nil
                TOCMode <- false
                ChunkDefinitions <- {NewDictionary}
@@ -545,8 +547,10 @@ define
                        end
                        if @Split
                           andthen {Dictionary.member @Meta 'html.split.toc'}
-                       then Title Label X HTML1 HTML in
+                       then Title WhereBefore Label X HTML1 HTML in
                           Title = PCDATA('Table of Contents')
+                          WhereBefore = @WhereNow
+                          WhereNow <- Title|WhereBefore
                           OzDocToHTML, PrepareTOCNode(?X ?HTML1)
                           ToGenerate <- Label|@ToGenerate
                           TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
@@ -554,15 +558,18 @@ define
                           WholeTOC <- _
                           HTML = SEQ([HTML1
                                       h1(a(name: Label Title)) @WholeTOC])
+                          WhereNow <- WhereBefore
                           OzDocToHTML, FinishNode(Title X HTML $)
                        else EMPTY
                        end
                        TopTOC
                        OzDocToHTML, Process(M.2='body'(...) $)
                        case @Exercises of nil then EMPTY
-                       else Title Label X HTML1 HTML in
+                       else Title WhereBefore Label X HTML1 HTML in
                           {@Reporter startSubPhase('generating answers')}
                           Title = PCDATA('Answers to the Exercises')
+                          WhereBefore = @WhereNow
+                          WhereNow <- Title|WhereBefore
                           OzDocToHTML, PrepareAnswersNode(?X ?HTML1)
                           ToGenerate <- Label|@ToGenerate
                           TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
@@ -570,13 +577,16 @@ define
                           HTML = SEQ([HTML1
                                       h1(a(name: Label Title))
                                       OzDocToHTML, OutputAnswers($)])
+                          WhereNow <- WhereBefore
                           OzDocToHTML, FinishNode(Title X HTML $)
                        end
                        case {@MyBibliographyDB process(@Reporter $)}
                        of unit then EMPTY
-                       elseof VS then Title Label X HTML1 HTML in
+                       elseof VS then Title WhereBefore Label X HTML1 HTML in
                           {@Reporter startSubPhase('generating bibliography')}
                           Title = PCDATA('Bibliography')
+                          WhereBefore = @WhereNow
+                          WhereNow <- Title|WhereBefore
                           OzDocToHTML, PrepareBibNode(?X ?HTML1)
                           ToGenerate <- Label|@ToGenerate
                           TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
@@ -585,6 +595,7 @@ define
                           HTML = SEQ([HTML1
                                       h1(a(name: Label Title))
                                       VERBATIM(VS)])   %--** VERBATIM?
+                          WhereNow <- WhereBefore
                           OzDocToHTML, FinishNode(Title X HTML $)
                        end
                        IndexHTML]
@@ -595,9 +606,11 @@ define
                                      [] stylesheets then 'html-stylesheets'
                                      end)}
                IndexHTML = if {@MyIndexer empty($)} then EMPTY
-                           else Title Label X HTML1 HTML in
+                           else Title WhereBefore Label X HTML1 HTML in
                               {@Reporter startSubPhase('generating index')}
                               Title = PCDATA('Index')
+                              WhereBefore = @WhereNow
+                              WhereNow <- Title|WhereBefore
                               OzDocToHTML, PrepareIdxNode(?X ?HTML1)
                               ToGenerate <- Label|@ToGenerate
                               TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
@@ -606,6 +619,7 @@ define
                               HTML = SEQ([HTML1
                                           h1(a(name: Label Title))
                                           {@MyIndexer process($)}])
+                              WhereNow <- WhereBefore
                               OzDocToHTML, FinishNode(Title X HTML $)
                            end
                OzDocToHTML, MakeNode(@TopTitle SEQ(HTML))
@@ -1621,6 +1635,7 @@ define
                end
             end
          end
+         WhereNow <- NodeTitle|@WhereNow
          TOC <- {Append @TOC [Level#TheLabel#@CurrentNode#NodeTitle]}
          HTML = SEQ([HTML1 {LayoutTitle Res}
                      case Authors of nil then EMPTY
@@ -1922,8 +1937,7 @@ define
          end
          case {CondSelect M see unit} of unit then L2 in
             ToGenerate <- L2|@ToGenerate
-            {@MyIndexer enter(L Ands a(href: @CurrentNode#"#"#L2
-                                       PCDATA('here')))}   %--**
+            {@MyIndexer enter(L Ands a(href: @CurrentNode#"#"#L2 @WhereNow.1))}
             a(name: L2)
          elseof X then Node HTML in
             OzDocToHTML, ID(X ?Node ?HTML)
