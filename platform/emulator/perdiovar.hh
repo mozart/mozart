@@ -258,7 +258,7 @@ public:
   }
   void printLongStream(ostream &out,int depth = 10,
 			int offset = 0) {
-    printStream(out,depth); out << endl;
+    printStreamV(out,depth); out << endl;
   }
 
   void proxyBindV(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be);
