@@ -793,6 +793,9 @@ void engine() {
 		        message("\nArg %d: %s",i+1,tagged2String(X[i]));
 		     );
     case PROCEED:
+      LOCAL_PROPAGATION(if (localPropStore.isEnabled())
+			if (! localPropStore.do_propagation())
+			goto LBLfailure);
       killPropagatedCurrentTaskSusp();
       goto LBLcheckEntailment;
     default:
@@ -936,6 +939,9 @@ void engine() {
 		       { message("\nArg %d: %s",i+1,tagged2String(X[i])); }
 		       );
       case PROCEED:
+	LOCAL_PROPAGATION(if (localPropStore.isEnabled())
+			  if (! localPropStore.do_propagation())
+			  goto LBLfailure);
 	killPropagatedCurrentTaskSusp();
 	DISPATCH(3);
       default:
@@ -1651,6 +1657,9 @@ void engine() {
 			     { message("\nArg %d: %s",i+1,tagged2String(X[i])); }
 			     );
 	    case PROCEED:
+	      LOCAL_PROPAGATION(if (localPropStore.isEnabled())
+				if (! localPropStore.do_propagation())
+				goto LBLfailure);
 	      if (emulateHook0(e)) {
 		if (!isExecute) {
 		  e->pushTaskOutline(CBB,PC,Y,G);
