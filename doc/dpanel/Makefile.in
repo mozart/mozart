@@ -1,0 +1,18 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+
+WHAT = dpanel
+WHATCLASS=tools
+PRINTNAME=Oz
+HTMLEXTRAFILES=DSframe.gif  MSframe.gif          RCframeGCbar.gif  UxpctExports.gif EEframe.gif  MassImportation.gif  StrangeRTT.gif IEframe.gif  RCframe.gif TicketPort.gif
+
+
+WHAT	= dpanel
+MAIN	= main.sgml
+SGMLSRCS = chapter1.sgml chapter2.sgml
+
+
+
+include ../Makefile.common
+
