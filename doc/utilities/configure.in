@@ -29,7 +29,7 @@ OZ_PATH_PROG(OZC,ozc)
 OZ_PATH_PROG(OZL,ozl)
 AC_SUBST(OZENGINE)
 AC_SUBST(OZC)
-AC_SUBST(OZAR)
+AC_SUBST(OZL)
 AC_OUTPUT(Makefile)
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded
