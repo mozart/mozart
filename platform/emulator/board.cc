@@ -392,3 +392,28 @@ void Board::checkStability(void) {
   oz_deinstallCurrent();
   return;
 }
+
+void Board::fail(Thread * ct) {
+  // Note that ``this'' might be different from the thread's home:
+  // this can happen while trying to install the space!
+  Assert(ct->isRunnable());
+
+  Board * pb = getParent();
+
+  Assert(!isRoot());
+
+  setFailed();
+
+  am.trail.unwindFailed();
+
+  am.setCurrent(pb);
+
+  if (!oz_unify(getStatus(),genFailed())) {
+    Assert(0);
+  }
+
+  pb->decSolveThreads();
+
+  oz_disposeThread(ct);
+
+}
