@@ -158,7 +158,7 @@ public:
   void removeBefore(Site*);
   void removePerm(ChainElem**);                
   void removeNextChainElem(ChainElem** base);
-  void probeTemp();                          // for all manipulation of list of chain elements
+  void probeTemp(Tertiary*);                          // for all manipulation of list of chain elements
   void deProbeTemp();
   Bool basicSiteExists(ChainElem*,Site*);    // accessing list of chain elements
   Bool siteExists(Site*);
