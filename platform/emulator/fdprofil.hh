@@ -142,7 +142,7 @@ public:
   Board * getBoard(void) { return board; }
   void setBoard(Board * b) { board = b; }
 
-  void gc(void) { if (board) board = board->gcBoard(); }
+  void gc(void);
 };
 
 class ProfileHost {
