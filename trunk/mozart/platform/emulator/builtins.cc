@@ -247,13 +247,8 @@ OZ_Return isLiteralInline(TaggedRef t)
           if (ofsvar->getWidth()>0) return FAILED;
           return SUSPEND;
 	}
-      case FDVariable:
-      case BoolVariable:
-          return FAILED;
       default:
-	// mm2
-	// return tagged2CVar(term)->isLiteralV();
-          return SUSPEND;
+          return FAILED;
       }
   }
   return isLiteralTag(tag) ? PROCEED : FAILED;
@@ -339,13 +334,8 @@ OZ_Return isNameInline(TaggedRef t)
           if (ofsvar->getWidth()>0) return FAILED;
           return SUSPEND;
 	}
-      case FDVariable:
-      case BoolVariable:
-          return FAILED;
       default:
-      // mm2
-      // return tagged2CVar(term)->isNameV();
-          return SUSPEND;
+          return FAILED;
       }
   }
   if (!isLiteralTag(tag)) return FAILED;
@@ -589,7 +579,7 @@ OZ_BI_define(BIsystemTellSize,3,0)
        tagged2GenOFSVar(t)->propagateOFS();
        return ret;
     }
-    // mm2
+    if (!oz_isFree(t)) oz_typeError(3,"Record");
     // else fall through to creation case
   case UVAR:
   case SVAR:
@@ -675,8 +665,7 @@ OZ_BI_define(BIrecordTell,2,0)
        tagged2GenOFSVar(t)->propagateOFS();
        return ret;
     }
-    oz_typeError(0,"Record");
-    // mm2
+    if (!oz_isFree(t)) oz_typeError(0,"Record");
     // else fall through to creation case
   case UVAR:
   case SVAR:
@@ -809,8 +798,8 @@ OZ_C_proc_begin(BIwidthC, 2)
         break;
     }
     case CVAR:
-      // mm2
-        if (tagged2CVar(wid)->getType()!=FDVariable) return FAILED;
+        if (!oz_isFree(wid) && tagged2CVar(wid)->getType()!=FDVariable)
+	  return FAILED;
         break;
     case OZCONST:
       if (!oz_isBigInt(wid)) return FAILED;
@@ -1126,36 +1115,33 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
 
     // mm2
     // optimize the most common case: adding or reading a feature
-    if (isCVar(termTag)) {
-      if (tagged2CVar(term)->getType()!=OFSVariable) goto typeError1;
-      if (oz_isFeature(fea)) {
-	GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+    if (isCVar(termTag) &&
+	tagged2CVar(term)->getType()==OFSVariable &&
+	oz_isFeature(fea)) {
+      GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
 
-	TaggedRef t=ofsvar->getFeatureValue(fea);
-	if (t!=makeTaggedNULL()) {
-	  // Feature exists
-	  out=t;
-	  return PROCEED;
-	}
+      TaggedRef t=ofsvar->getFeatureValue(fea);
+      if (t!=makeTaggedNULL()) {
+	// Feature exists
+	out=t;
+	return PROCEED;
+      }
       
-	if (am.isCurrentBoard(GETBOARD(ofsvar))) {
-	  TaggedRef uvar=oz_newVariable();
-	  Bool ok=ofsvar->addFeatureValue(fea,uvar);
-	  Assert(ok);
-	  ofsvar->propagateOFS();
-	  out=uvar;
-	  return PROCEED;
-	}
+      if (am.isCurrentBoard(GETBOARD(ofsvar))) {
+	TaggedRef uvar=oz_newVariable();
+	Bool ok=ofsvar->addFeatureValue(fea,uvar);
+	Assert(ok);
+	ofsvar->propagateOFS();
+	out=uvar;
+	return PROCEED;
       }
     }
 
     // Wait until Y is a feature:
     if (isVariableTag(feaTag)) {
-      if (isCVar(feaTag)) {
-        if (tagged2CVar(fea)->getType()==OFSVariable) {
-	  GenOFSVariable *ofsvar=tagged2GenOFSVar(fea);
-	  if (ofsvar->getWidth()>0) goto typeError2;
-        }
+      if (isCVar(feaTag) && tagged2CVar(fea)->getType()==OFSVariable) {
+	GenOFSVariable *ofsvar=tagged2GenOFSVar(fea);
+	if (ofsvar->getWidth()>0) goto typeError2;
       }
       if (!oz_isVariable(term) && !oz_isRecord(term)) goto typeError2;
 
@@ -1191,9 +1177,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
     Assert(term!=makeTaggedNULL());
     switch (termTag) {
     case CVAR:
-      {
-	// mm2
-        Assert(tagged2CVar(term)->getType() == OFSVariable);
+      if (tagged2CVar(term)->getType() == OFSVariable) {
         GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
         TaggedRef t=ofsvar->getFeatureValue(fea);
         if (t!=makeTaggedNULL()) {
@@ -1227,7 +1211,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
         }
         return PROCEED;
       }
-
+      // else fall through
     case UVAR:
     case SVAR:
       {

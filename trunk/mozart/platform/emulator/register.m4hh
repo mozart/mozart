@@ -360,33 +360,37 @@ Case(CREATEVARIABLEMOVEY)
         TaggedRef term = Reg1(getRegArg(PC+1));
         TaggedRef atm  = getLiteralArg(PC+2);
 
-	DEREF(term,termPtr,tag);
+	if (oz_isRef(term)) {
+	  DEREF(term,termPtr,tag);
+	  if (oz_isFree(term)) {
+	    PushContX(PC);
+	    addSuspPtr(termPtr, CTT);
+	    return T_SUSPEND;
+	  } else if (isCVar(term) && tagged2CVar(term)->valid(termPtr,atm)) {
+	    PushContX(PC);
+	    addSuspPtr(termPtr, CTT);
+
+	    /* Bug fix:
+	       declare Y Z
+	       {RecLabel Y Z}
+	       if Y=b then {Show yes36b} else {Show no36b} fi
+	       Z=c
+	       we must suspend on the label of OFS too!!
+	       */
+
+	    if (isCVar(term) && tagged2CVar(term)->getType() == OFSVariable) {
+	      TaggedRef lab = ((GenOFSVariable*)tagged2CVar(term))->getLabel();
+	      DEREF(lab,labPtr,labTag);
+	      if (oz_isVariable(labTag)) {
+		addSuspPtr(labPtr, CTT);
+	      }
+	    }
+	    return T_SUSPEND;
+	  }
+	}
 
 	if (literalEq(term,atm)) {
 	  DISPATCH(4);
-	}
-
-        if (isNotCVar(term) ||
-	    isCVar(term) && tagged2CVar(term)->valid(termPtr,atm)) {
-	  PushContX(PC);
-	  addSuspPtr(termPtr, CTT);
-
-	  /* Bug fix:
-	     declare Y Z
-	     {RecLabel Y Z}
-	     if Y=b then {Show yes36b} else {Show no36b} fi
-	     Z=c
-	     we must suspend on the label of OFS too!!
-	     */
-
-	  if (isCVar(term) && tagged2CVar(term)->getType() == OFSVariable) {
-	    TaggedRef lab = ((GenOFSVariable*)tagged2CVar(term))->getLabel();
-	    DEREF(lab,labPtr,labTag);
-	    if (oz_isVariable(labTag)) {
-	      addSuspPtr(labPtr, CTT);
-	    }
-	  }
-	  return T_SUSPEND;
 	}
 
 	JUMPRELATIVE( getLabelArg(PC+3) );
@@ -435,7 +439,7 @@ Case(CREATEVARIABLEMOVEY)
 	  DISPATCH(4);
 	}
 
-        if (isNotCVar(term) ||
+	if (oz_isFree(term) ||
 	    isCVar(term) && tagged2CVar(term)->valid(termPtr,i)) {
 	  PushContX(PC);
 	  addSuspPtr(termPtr, CTT);
@@ -459,6 +463,10 @@ Case(CREATEVARIABLEMOVEY)
 	    sPointer = tagged2SRecord(term)->getRef();
 	    DISPATCH(5);
 	  }
+	} else if (oz_isFree(term)) {
+	  PushContX(PC);
+	  addSuspPtr(termPtr, CTT);
+	  return T_SUSPEND;
 	} else if (isCVar(term)) {
 	  GenCVariable *cvar = tagged2CVar(term);
 	  switch (cvar->getType()) {
@@ -475,20 +483,13 @@ Case(CREATEVARIABLEMOVEY)
 		  JUMPRELATIVE(getLabelArg(PC+4));
 		}
 	      }
+	      PushContX(PC);
+	      addSuspPtr(termPtr, CTT);
+	      return T_SUSPEND;
 	    }
-	    // fall through
-	  case PerdioVariable:
-	  case LazyVariable:
-	    PushContX(PC);
-	    addSuspPtr(termPtr, CTT);
-	    return T_SUSPEND;
 	  default:
 	    break;
 	  }
-	} else if (oz_isVariable(term)) {
-	  PushContX(PC);
-	  addSuspPtr(termPtr, CTT);
-	  return T_SUSPEND;
 	}
 	JUMPRELATIVE(getLabelArg(PC+4));
     }''
@@ -503,6 +504,10 @@ Case(CREATEVARIABLEMOVEY)
 	if (isLTupleTag(tag)) {
 	  sPointer = tagged2LTuple(term)->getRef();
 	  DISPATCH(3);
+	} else if (oz_isFree(term)) {
+	  PushContX(PC);
+	  addSuspPtr(termPtr, CTT);
+	  return T_SUSPEND;
 	} else if (isCVar(term)) {
 	  GenCVariable *cvar = tagged2CVar(term);
 	  switch (cvar->getType()) {
@@ -512,20 +517,13 @@ Case(CREATEVARIABLEMOVEY)
 	      if (ofsvar->disentailed(tagged2Literal(AtomCons),2)) {
 		JUMPRELATIVE(getLabelArg(PC+2));
 	      }
+	      PushContX(PC);
+	      addSuspPtr(termPtr, CTT);
+	      return T_SUSPEND;
 	    }
-	    // fall through
-	  case PerdioVariable:
-	  case LazyVariable:
-	    PushContX(PC);
-	    addSuspPtr(termPtr, CTT);
-	    return T_SUSPEND;
 	  default:
 	    break;
 	  }
-	} else if (oz_isVariable(term)) {
-	  PushContX(PC);
-	  addSuspPtr(termPtr, CTT);
-	  return T_SUSPEND;
 	}
 	JUMPRELATIVE(getLabelArg(PC+2));
     }''
@@ -552,7 +550,6 @@ Case(CREATEVARIABLEMOVEY)
 		   tmpRet = tagged2CVar(term)->unifyV(termPtr,atm,NOFLATGUARD);
 		   if (tmpRet==PROCEED) { DISPATCH(3); }
 		   if (tmpRet!=FAILED)  { goto LBLunifySpecial; }
-		   term = *termPtr;  // Note: 'term' may be disposed
 		 }
 
 		 SHALLOWFAIL;
@@ -580,7 +577,6 @@ Case(CREATEVARIABLEMOVEY)
 		   tmpRet=tagged2CVar(term)->unifyV(termPtr,i,NOFLATGUARD);
 		   if (tmpRet==PROCEED) { DISPATCH(3); }
 		   if (tmpRet!=FAILED)  { goto LBLunifySpecial; }
-		   term = *termPtr;  // Note: 'term' may be disposed
 		 }
 
 		 SHALLOWFAIL;
