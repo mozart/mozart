@@ -781,3 +781,31 @@ OZ_BI_define(BIdictionaryRemoveAll,1,0)
   return PROCEED;
 } OZ_BI_end
 
+OZ_BI_define(BIdictionaryWaitOr,1,1)
+{
+  oz_declareNonvarIN(0,td);
+  if (!oz_isDictionary(td)) {
+    oz_typeError(0,"Dictionary");
+  }
+
+  OzDictionary * dict = tagged2Dictionary(td);
+
+  TaggedRef arity = dict->keys();
+
+  while (!OZ_isNil(arity)) {
+    TaggedRef v;
+    dict->getArg(OZ_head(arity),v);
+
+    DEREF(v,vPtr,_);
+    if (!oz_isVariable(v)) {
+      am.emptySuspendVarList();
+      OZ_RETURN(OZ_head(arity));
+    }
+    am.addSuspendVarList(vPtr);
+    arity=OZ_tail(arity);
+  }
+  
+  return SUSPEND;
+  
+} OZ_BI_end
+
