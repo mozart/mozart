@@ -941,7 +941,7 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-: ${PLATFORM=`$OZPLATFORM`}
+PLATFORM=`$OZPLATFORM`
 
 
 
