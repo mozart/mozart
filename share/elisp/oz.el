@@ -464,7 +464,7 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
   (if (and (get-process "Oz Compiler")
 	   (get-buffer-process oz-machine-buffer))
       (let ((i oz-halt-timeout))
-	(oz-send-string "!halt \n")
+	(oz-send-string "\\halt \n")
 	(while (and (or (get-process "Oz Compiler")
 			(get-buffer-process oz-machine-buffer))
 		    (> i 0))
@@ -1250,7 +1250,7 @@ OZ compiler, machine and error window")
 
 (defun oz-to-coresyntax-region (start end)
    (interactive "r")
-   (oz-directive-on-region start end "!pi" ".i" t))
+   (oz-directive-on-region start end "\\core" ".i" t))
 
 
 (defun oz-to-machinecode-buffer()
@@ -1264,7 +1264,7 @@ OZ compiler, machine and error window")
 
 (defun oz-to-machinecode-region (start end)
    (interactive "r")
-   (oz-directive-on-region start end "!compile" ".ham" nil))
+   (oz-directive-on-region start end "\\machine" ".ham" nil))
 
 
 
@@ -1322,13 +1322,13 @@ OZ compiler, machine and error window")
   "Feed an file into the Oz Compiler"
   (interactive "FFeed file: ")
   (oz-hide-errors)
-  (oz-send-string (concat "!include '" file "'\n"))) 
+  (oz-send-string (concat "\\feed '" file "'\n"))) 
 
 (defun oz-precompile-file(file)
   "precompile an Oz file"
   (interactive "FPrecompile file: ")
   (oz-hide-errors)
-  (oz-send-string (concat "!precompile '" file "'\n"))) 
+  (oz-send-string (concat "\\precompile '" file "'\n"))) 
 
 
 
