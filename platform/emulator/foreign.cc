@@ -1272,6 +1272,7 @@ void virtualString2buffer(ostream &out,OZ_Term term)
   }
   if (oz_isByteString(t)) {
     byteString2buffer(out,t);
+    return;
   }
 
   if (!oz_isPair(t)) {

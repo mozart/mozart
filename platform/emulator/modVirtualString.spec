@@ -9,5 +9,10 @@
      'length'  => { in  => ['!virtualString','!+int'],
                     out => ['+int'],
                     BI  => BIvsLength},
+
+     'toByteString'     => { in  => ['!+virtualString','!+int',
+                                     '+virtualString'],
+                             out => ['+byteString'],
+                             bi  => BIvsToBs},
      );
 1;;

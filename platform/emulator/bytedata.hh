@@ -169,6 +169,9 @@ public:
   void copy(ByteData*other,int offset) {
     memcpy((void*)(data+offset),(void*)other->data,other->width);
   }
+  void copy(char*str,int n,int offset=0) {
+    memcpy((void*)(data+offset),(void*)str,n);
+  }
   void slice(ByteData*other,int from,int to) {
     memcpy((void*)data,(void*)(other->data+from),to-from);
   }
