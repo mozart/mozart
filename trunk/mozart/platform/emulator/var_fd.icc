@@ -30,14 +30,13 @@ void GenFDVariable::propagate(TaggedRef var, FDPropState state,
 			      PropCaller prop_eq)
 {
   if (prop_eq == pc_propagator) {
-    home = getBoardFast();
     switch (state) {
     case fd_det:
       if (fdSuspList[fd_det])
 	GenCVariable::propagate(var, fdSuspList[fd_det], prop_eq);
     case fd_bounds:
       if (fdSuspList[fd_bounds])
-	fdSuspList[fd_bounds] = fdSuspList[fd_bounds]->propagate_p(home);
+	GenCVariable::propagate(var, fdSuspList[fd_bounds], prop_eq);
     default:
       break;
     }
