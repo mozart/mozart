@@ -1047,8 +1047,9 @@ OZ_BI_iodefine(unix_socket,3,1)
   // compute protocol
   if (*OzProtocol != '\0') {
     struct protoent *proto;
-
+    osBlockSignals();
     proto = getprotobyname(OzProtocol);
+    osUnblockSignals();
     if (!proto) {
       return OZ_typeError(2,"enum protocol");
     }
@@ -1266,8 +1267,10 @@ OZ_BI_iodefine(unix_accept_nonblocking,1,3)
   if (strcmp(host,"127.0.0.1")==0) {  // this prevents network connections being
     host = "localhost";               // opened when working at home for example
   } else {
+    osBlockSignals();
     struct hostent *gethost = gethostbyaddr((char *) &from.sin_addr,
                                             fromlen, AF_INET);
+    osUnblockSignals();
     if (gethost) {
       host = gethost->h_name;
     }
