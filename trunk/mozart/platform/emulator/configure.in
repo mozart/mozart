@@ -43,9 +43,6 @@ AC_INIT(base.hh)
 
 OZ_INIT
 
-dnl kost@ : defaults
-oz_enable_modules_static=no
-
 dnl *****************************************************************
 dnl additional tests
 dnl *****************************************************************
@@ -145,7 +142,7 @@ OZ_PROG_MAKE
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
-OZ_PROG_M4
+AC_CHECK_PROGS(M4, m4 gm4, m4)
 OZ_PROG_PERL
 
 AC_CHECK_PROGS(SED, gnused sed, sed)
@@ -235,37 +232,46 @@ fi
 : ${LD=$CXX}
 AC_SUBST(LD)
 
+
 case $platform in
     sunos*)
-        TOOLLDFLAGS=""
+        TOOLLDCMD=""
+	oz_enable_modules_static=yes
 	;;
     linux*)
-        TOOLLDFLAGS="-Wl,-shared"
+        TOOLLDCMD="gcc -shared"
 	EMULDFLAGS="-Wl,-export-dynamic"
+	: ${oz_enable_modules_static=no}
 	;;
     solaris*)
-        TOOLLDFLAGS="-Wl,-G"
+        TOOLLDCMD="gcc -shared"
+	: ${oz_enable_modules_static=no}
 	;;
     irix*)
-        TOOLLDFLAGS="-Wl,-shared -Wl,-check_registry -Wl,/dev/null"
+        TOOLLDCMD="gcc -shared -Wl,-check_registry -Wl,/dev/null"
+	oz_enable_modules_static=yes
 	;;
     osf1*)
-        TOOLLDFLAGS="-Wl,-shared -Wl,-expect_unresolved -Wl,'*'"
+        TOOLLDCMD="gcc -shared -Wl,-expect_unresolved -Wl,*"
 	dnl dont change LDFLAGS, see machine.hh !!!
 	EMULDFLAGS="-Wl,-D -Wl,0x30000000 -Wl,-T -Wl,0x20000000"
+	: ${oz_enable_modules_static=no}
 	;;
     hpux*)
-        TOOLLDFLAGS="-Wl,-b"
+        TOOLLDCMD="ld -b"
+	oz_enable_modules_static=yes
 	;;
     freebsd*)
-        TOOLLDFLAGS="-Wl,-Bshareable"
+        TOOLLDCMD="ld -Bshareable"
+	oz_enable_modules_static=yes
         ;;
     netbsd*)
-        TOOLLDFLAGS="-Wl,-Bshareable"
+        TOOLLDCMD="ld -Bshareable"
+	oz_enable_modules_static=yes
         ;;
 esac
 
-AC_SUBST(TOOLLDFLAGS)
+AC_SUBST(TOOLLDCMD)
 AC_SUBST(EMULDFLAGS)
 
 # compiler options
@@ -285,15 +291,17 @@ AC_SUBST(oz_warn_error)
 # m4 options
 if test -n "$M4"
 then
-    AC_MSG_CHECKING(whether $M4 understands -E option)
-    oz_tmp=`$M4 -E < /dev/null 2>&1`
-    if test -n "$oz_tmp"
-    then
-	AC_MSG_RESULT(no)
-    else
-	AC_MSG_RESULT(yes)
-	M4="$M4 -E"
-    fi
+    for oz_opt in -E -B10000; do
+	AC_MSG_CHECKING(whether $M4 understands $oz_opt option)
+	oz_tmp=`$M4 $oz_opt < /dev/null 2>&1`
+	if test -n "$oz_tmp"
+	then
+	    AC_MSG_RESULT(no)
+	else
+	    AC_MSG_RESULT(yes)
+	    M4="$M4 $oz_opt"
+	fi
+    done
 fi
 AC_SUBST(M4_S)
 
