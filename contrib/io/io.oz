@@ -30,7 +30,7 @@ in
          read           : READ
          make           : MAKE
          close          : CLOSE
-         release        : RELEASE
+         free           : FREE
          readLock       : READLOCK
          writeLock      : WRITELOCK
          open           : OPEN
@@ -39,12 +39,13 @@ in
          fork           : FORK
          execvp         : EXECVP
          pipe           : PIPE
+         getfd          : GETFD
          ) @ 'io.so{native}'
       MODE @ 'io/mode'
       Finalize
    export
       Make Write Read ReadAsString Open Close SocketPair Dup
-      Fork Run
+      Fork Run Pipe DevNull
    define
 
       fun {Make I}
@@ -104,7 +105,7 @@ in
                   end}
       in
          FD = {Make {OPEN File Flags Mode}}
-         {Finalize.register FD RELEASE}
+         {Finalize.register FD FREE}
       end
 
       proc {SocketPair FD1 FD2}
@@ -150,26 +151,47 @@ in
 
       proc {RunProcess Spec}
          CMD  = Spec.1
-         ARGS = {CondSelect Spec 2      nil}
          IN   = {CondSelect Spec stdin  unit}
          OUT  = {CondSelect Spec stdout unit}
          ERR  = {CondSelect Spec stderr unit}
+         ARGS = {CondSelect Spec 2      nil}
+         if {IsVirtualString CMD}       andthen
+            {IsList ARGS}               andthen
+            {List.length ARGS}<100      andthen
+            {All ARGS IsVirtualString}  andthen
+            (IN ==unit orelse {IS IN }) andthen
+            (OUT==unit orelse {IS OUT}) andthen
+            (ERR==unit orelse {IS ERR})
+         then skip else
+            raise io(run Spec) end
+         end
          PID  = {Fork}
       in
          if PID==0 then
             %% child
+            %% -- dup for safety
             IN2  = if IN \=unit then {Dup IN } else unit end
             OUT2 = if OUT\=unit then {Dup OUT} else unit end
             ERR2 = if ERR\=unit then {Dup ERR} else unit end
          in
-            %% close std{in,out,err}
-            if IN  \=unit then {CLOSE IN } end
-            if OUT \=unit then {CLOSE OUT} end
-            if ERR \=unit then {CLOSE ERR} end
-            %% reopen them
-            if IN2 \=unit then {DUP IN2  _} {CLOSE IN2 } end
-            if OUT2\=unit then {DUP OUT2 _} {CLOSE OUT2} end
-            if ERR2\=unit then {DUP ERR2 _} {CLOSE ERR2} end
+            %% -- close std{in,out,err} if to be redirected
+            if IN \=unit then {CLOSE {Make 0}} end
+            if OUT\=unit then {CLOSE {Make 1}} end
+            if ERR\=unit then {CLOSE {Make 2}} end
+            %% -- redup to get std{in,out,err}
+            if IN \=unit then {DUP IN2  _} end
+            if OUT\=unit then {DUP OUT2 _} end
+            if ERR\=unit then {DUP ERR2 _} end
+            %% -- now close the left overs
+            if IN \=unit then {CLOSE IN2 }
+               if {GETFD IN }>2 then {CLOSE IN } end
+            end
+            if OUT\=unit then {CLOSE OUT2}
+               if {GETFD OUT}>2 then {CLOSE OUT} end
+            end
+            if ERR\=unit then {CLOSE ERR2}
+               if {GETFD ERR}>2 then {CLOSE ERR} end
+            end
             {EXECVP CMD ARGS}
          else
             %% parent

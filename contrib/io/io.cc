@@ -26,8 +26,8 @@ public:
   virtual Extension* gcV();
   virtual void gcRecurseV();
   //
-  void release();
-  void close();
+  void doFree();
+  void doClose();
 };
 
 //
@@ -73,11 +73,11 @@ void FileDescriptor::gcRecurseV()
   OZ_collectHeapTerm(write_lock,write_lock);
 }
 
-void FileDescriptor::close() {
-  if (fd>=0) { ::close(fd); fd = -1; }
+void FileDescriptor::doClose() {
+  if (fd>=0) { close(fd); fd = -1; }
 }
 
-void FileDescriptor::release() { close(); }
+void FileDescriptor::doFree() { doClose(); }
 
 //
 // Builtins
@@ -181,14 +181,14 @@ OZ_BI_define(io_make,3,1)
 OZ_BI_define(io_close,1,0)
 {
  OZ_declareFD(0,FD);
- FD->close();
+ FD->doClose();
  return PROCEED;
 } OZ_BI_end
 
-OZ_BI_define(io_release,1,0)
+OZ_BI_define(io_free,1,0)
 {
   OZ_declareFD(0,FD);
-  FD->release();
+  FD->doFree();
   return PROCEED;
 } OZ_BI_end
 
@@ -237,7 +237,7 @@ OZ_BI_define(io_socketpair,0,2)
 
 OZ_BI_define(io_dup,1,1)
 {
-  OZ_declareFD(0,FD1);
+  OZ_declareFD(0,FD);
   WRAPCALL("dup",dup(FD->fd),ret);
   if (ret<0) RETURN_UNIX_ERROR("dup");
   OZ_RETURN_INT(ret);
@@ -253,9 +253,10 @@ OZ_BI_define(io_fork,0,1)
 
 OZ_BI_define(io_execvp,2,0)
 {
-  OZ_expectVS(0,CMD,LEN);
-  OZ_expectDetTerm(1,ARGS);
+  OZ_declareDetTerm(1,ARGS);
+  OZ_declareVS(0,CMD,LEN);
   int i = 1;
+  static char* argv[100];
   argv[0] = strdup(CMD);
   while (!OZ_isNil(ARGS)) {
     argv[i] = strdup(OZ_virtualStringToC(OZ_head(ARGS),0));
@@ -276,6 +277,12 @@ OZ_BI_define(io_pipe,0,2)
   return PROCEED;
 } OZ_BI_end
 
+OZ_BI_define(io_getfd,1,1)
+{
+  OZ_declareFD(0,FD);
+  OZ_RETURN_INT(FD->fd);
+} OZ_BI_end
+
 extern "C"
 {
   OZ_C_proc_interface * oz_init_module(void)
@@ -286,7 +293,7 @@ extern "C"
       {"read"           ,1,1,io_read},
       {"make"           ,1,3,io_make},
       {"close"          ,1,0,io_close},
-      {"release"        ,1,0,io_release},
+      {"free"           ,1,0,io_free},
       {"readLock"       ,1,1,io_readLock},
       {"writeLock"      ,1,1,io_writeLock},
       {"open"           ,3,1,io_open},
@@ -295,6 +302,7 @@ extern "C"
       {"fork"           ,0,1,io_fork},
       {"execvp"         ,2,0,io_execvp},
       {"pipe"           ,0,2,io_pipe},
+      {"getfd"          ,1,1,io_getfd},
       {0,0,0,0}
     };
     FileDescriptor::id = oz_newUniqueId();
