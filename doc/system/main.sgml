@@ -32,7 +32,7 @@
 <!-- Extension to the DTD -->
 <!ENTITY % p.mix.local "|Em">
 <!ELEMENT Em - - (#PCDATA)>
-<!ENTITY % proglang.values.local "|sh">
+<!ENTITY % proglang.values.local "|sh|none">
 
 <!-- Abbreviations -->
 <!ENTITY lt "<">
@@ -126,7 +126,7 @@
     <!-- Constraint programming -->
 
     <Meta name="html.split"       value="chapter.search">
-    <Meta name="html.split" value="chapter.types_modes_constr">
+    <Meta name="html.split"       value="chapter.types_modes_constr">
     <Meta name="html.split"       value="chapter.fd">
     <Meta name="html.split"       value="chapter.schedule">
     <Meta name="html.split"       value="chapter.fs">
@@ -150,19 +150,19 @@
 
 
     <Meta name="html.split"       value="chapter.property">
-    <Meta name="html.split" value="section.property.threads">  
-    <Meta name="html.split" value="section.property.priority">  
-<Meta name="html.split" value="section.property.time">  
-<Meta name="html.split" value="section.property.gc">  
-<Meta name="html.split" value="section.property.print">  
-<Meta name="html.split" value="section.property.fd">  
-<Meta name="html.split" value="section.property.spaces">  
-<Meta name="html.split" value="section.property.errors">  
-<Meta name="html.split" value="section.property.messages">  
-<Meta name="html.split" value="section.property.memory">  
-<Meta name="html.split" value="section.property.limits">  
-<Meta name="html.split" value="section.property.application">  
-<Meta name="html.split" value="section.property.platform">  
+    <Meta name="html.split"       value="section.property.threads">  
+    <Meta name="html.split"       value="section.property.priority">  
+    <Meta name="html.split"       value="section.property.time">  
+    <Meta name="html.split"       value="section.property.gc">  
+    <Meta name="html.split"       value="section.property.print">  
+    <Meta name="html.split"       value="section.property.fd">  
+    <Meta name="html.split"       value="section.property.spaces">  
+    <Meta name="html.split"       value="section.property.errors">  
+    <Meta name="html.split"       value="section.property.messages">  
+    <Meta name="html.split"       value="section.property.memory">  
+    <Meta name="html.split"       value="section.property.limits">  
+    <Meta name="html.split"       value="section.property.application">  
+    <Meta name="html.split"       value="section.property.platform">  
 
     <Meta name="html.split"       value="chapter.error">
     <Meta name="html.split"       value="chapter.errorregistry">
@@ -198,6 +198,8 @@
 
     <Meta name="html.split"       value="chapter.objectsupport">
 
+    <Meta name="proglang.mode" arg1="none" arg2="fundamental-mode">
+
     <Author.Extern to="author.db" key="Denys.Duchier">
     <Author.Extern to="author.db" key="Leif.Kornstaedt">
     <Author.Extern to="author.db" key="Tobias.Mueller">
@@ -205,7 +207,6 @@
 
 
     <Abstract>
-      <P.silent><!--**-->
       Cool stuff.
     </Abstract>
 
