@@ -478,7 +478,7 @@ OZ_BI_define(BIObtainGetNative,1,1) {
     init_fun_t init_function = (init_fun_t) osDlsym(handle,if_identifier);
     if (init_function == 0)
       return oz_raise(E_ERROR,AtomForeign, "cannotFindOzInitModule", 1,
-                      OZ_in(0));
+                      oz_atom(filename));
     char * modname =(char*) osDlsym(handle,USC "oz_module_name");
     OZ_RETURN(ozInterfaceToRecord((*init_function)(), modname, OK));
   }
