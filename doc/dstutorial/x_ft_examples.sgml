@@ -285,7 +285,7 @@ In <<MakeStat>>, we distinguish four parts.
 The first two implement the client interface
 to the server.
 
-<<<
+<chunk><title/Exception-based stationary object/
 declare
 proc {MakeStat PO ?StatP}
    S P={NewPort S}
@@ -299,6 +299,7 @@ in
    <chunk.ref/Main server loop/
    <chunk.ref/Server synchronizes with the client/
 end
+</chunk>
 
 proc {NewSafeStat Class Init ?Object}
    Object={MakeStat {New Class Init}}
