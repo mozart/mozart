@@ -264,7 +264,6 @@ public:
 
   void checkSuspensionList(TaggedRef taggedvar, 
 			   PropCaller calledBy = pc_propagator);
-  TaggedRef getWidthSuspension(void *prop, TaggedRef rec);
   Bool hasOFSSuspension(SuspList *suspList);
   void addFeatOFSSuspensionList(TaggedRef var, SuspList* suspList,
 				TaggedRef flist, Bool determined);

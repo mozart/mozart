@@ -617,7 +617,7 @@ PROFILE_CODE1
   
  // already propagated susps remain in suspList
     if (thr->isPropagated ()) {
-      if (thr->isPropagator () || thr->isNewPropagator ()) {
+      if (thr->isPropagator ()) {
 	if (calledBy && !(thr->isUnifyThread ())) {
 	  switch (isBetween(thr->getBoardFast (), var->getBoardFast ())) {
 	  case B_BETWEEN:
@@ -908,35 +908,6 @@ void AM::reduceTrailOnShallow(Thread *thread)
 /* -------------------------------------------------------------------------
  * OFS
  * -------------------------------------------------------------------------*/
-
-// Check if there is a propagator prop on a given variable rec
-// If so, return the width argument of the propagator
-// If not, return NULL
-TaggedRef AM::getWidthSuspension(void *prop, TaggedRef rec)
-{
-    Assert(tagged2CVar(rec)->getType()==OFSVariable);
-    GenOFSVariable *ofsvar=tagged2GenOFSVar(rec);
-    SuspList *suspList=ofsvar->getSuspList();
-
-    while (suspList) {
-        Thread *thr = suspList->getElem();
-	// Tobias personally guarantees that isPropagator implies CCont!
-        if (thr->isPropagator()) {
-	    CFuncContinuation *cont = thr->getCCont();
-	    OZ_CFun fun=cont->getCFunc();
-	    if ((void*)fun==prop) {
-	        RefsArray xregs=cont->getX();
-	        TaggedRef arg0=xregs[0];
-	        DEREF(arg0,arg0Ptr,arg0Tag);
-	        if (arg0==rec) return xregs[1];
-	    }
-        }
-        suspList = suspList->getNext();
-    }
-    return makeTaggedNULL();
-}
-
-
 // Check if there exists an S_ofs (Open Feature Structure) suspension in the suspList
 // (Used only for monitorArity)
 Bool AM::hasOFSSuspension(SuspList *suspList)
@@ -944,7 +915,7 @@ Bool AM::hasOFSSuspension(SuspList *suspList)
     while (suspList) {
         Thread *thr = suspList->getElem ();
         if (!(thr->isDeadThread () || thr->isPropagated ()) &&
-            thr->isNewPropagator() && thr->isOFSThread ()) return TRUE;
+            thr->isPropagator() && thr->isOFSThread ()) return TRUE;
         suspList = suspList->getNext();
     }
     return FALSE;
@@ -971,9 +942,9 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
             continue;
         }
 
-        if (thr->isNewPropagator() && thr->isOFSThread ()) {
+        if (thr->isPropagator() && thr->isOFSThread ()) {
             MonitorArityPropagator *prop =
-                (MonitorArityPropagator *) thr->getNewPropagator();
+                (MonitorArityPropagator *) thr->getPropagator();
 
             Assert(sizeof(MonitorArityPropagator)==prop->sizeOf());
 
