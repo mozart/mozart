@@ -70,7 +70,7 @@ OZ_Return sendSurrender(BorrowEntry *be,OZ_Term val){
   NetAddress *na = be->getNetAddress();  
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
   marshal_M_SURRENDER(bs,na->index,myDSite,val);
-  CheckNogoods(val,bs,UNIFY_ERRORMSG,);
+  CheckNogoods(val,bs,"unify:resources",UNIFY_ERRORMSG,);
   SendTo(na->site,bs,M_SURRENDER,na->site,na->index);
   return PROCEED;
 }
@@ -89,7 +89,7 @@ OZ_Return sendRedirect(DSite* sd,int OTI,TaggedRef val){
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(sd);
   OT->getOwner(OTI)->getOneCreditOwner();
   marshal_M_REDIRECT(bs,myDSite,OTI,val);
-  CheckNogoods(val,bs,UNIFY_ERRORMSG,);
+  CheckNogoods(val,bs,"unify:resources",UNIFY_ERRORMSG,);
   SendTo(sd,bs,M_REDIRECT,myDSite,OTI);
   return PROCEED;
 }
