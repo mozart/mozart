@@ -10,7 +10,6 @@ void transObjReady(ComObj *comObj, TransObj *transObj);
 void comObjDone(ComObj *comObj);
 
 Bool initAccept();
-int acceptHandler(int fd,void *unused);
 
 void handback(ComObj *comObj, TransObj *transObj);
 
@@ -21,5 +20,7 @@ void setIPAddress__(int adr);
 int  getIPAddress();
 void setIPPort__(int port);
 int getIPPort();
+void setTransport(OZ_Term);
+OZ_Term getTransport();
 
 #endif
