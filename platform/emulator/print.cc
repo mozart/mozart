@@ -916,7 +916,7 @@ void Board::printLongStream(ostream &stream, int depth, int offset)
 
   stream << indent(offset) << "Board:" << endl;
   getParentInternal()->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
-  stream << "Local propagator queue: " << localPropagatorQueue << endl;
+  stream << "Local propagator queue: " << &lpq << endl;
 }
 
 void Script::printStream(ostream &stream, int depth)
@@ -941,19 +941,19 @@ void Equation::printStream(ostream &stream, int depth)
 void ThreadsPool::printThreads() {
   cout << "Threads" << endl;
 
-  if (!_q[ HI_PRIORITY]->isEmpty()) {
+  if (!_q[ HI_PRIORITY].isEmpty()) {
     cout << "   prio = HI";
-    _q[ HI_PRIORITY]->print();
+    _q[ HI_PRIORITY].print();
   }
 
-  if (!_q[MID_PRIORITY]->isEmpty()) {
+  if (!_q[MID_PRIORITY].isEmpty()) {
     cout << "   prio = MID";
-    _q[MID_PRIORITY]->print();
+    _q[MID_PRIORITY].print();
   }
 
-  if (!_q[LOW_PRIORITY]->isEmpty()) {
+  if (!_q[LOW_PRIORITY].isEmpty()) {
     cout << "   prio = LOW";
-    _q[LOW_PRIORITY]->print();
+    _q[LOW_PRIORITY].print();
   }
 
 }
@@ -1249,15 +1249,15 @@ void ThreadQueue::printStream(ostream &stream, int depth)
 void SuspQueue::printStream(ostream &stream, int depth)
 {
   if (isEmpty()) {
-    stream << "Thread queue empty.\n";
+    stream << "Suspendable queue empty.\n";
   } else {
-    stream << "Thread #" << size << endl << flush;
+    stream << "Suspendable queue #" << getSize() << endl << flush;
 
-    for (int aux_size = size, aux_head = head; 
-	 aux_size; 
-	 aux_head = (aux_head + 1) & (maxsize - 1), aux_size--) {
-      stream << "queue[" << aux_head << "]=" << flush;
-      queue[aux_head]->printStream(stream,depth);
+    int i = 0;
+
+    for (SuspList * sl = last->getNext(); sl != last; sl = sl->getNext()) {
+      stream << "queue[" << i++ << "]=" << flush;
+      sl->printStream(stream,depth);
     }
   }
 }

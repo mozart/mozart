@@ -49,6 +49,9 @@ class SuspList {
 private:
   Suspendable * _susp;
   SuspList    * _next;
+
+  static SuspList * _gc_sentinel;
+
 public:
   USEFREELISTMEMORY;
   NO_DEFAULT_CONSTRUCTORS(SuspList);
@@ -58,6 +61,8 @@ public:
 
   SuspList(Suspendable * s)
     : _susp(s) {}
+
+  static void init(void);
 
 
   SuspList * getNext(void)   { 
@@ -84,7 +89,7 @@ public:
   int length(void);
   int lengthProp(void);
 
-  SuspList * gcRecurse(void);
+  SuspList * gcRecurse(SuspList **);
   SuspList * gcLocalRecurse(Board *);
 
   OZPRINTLONG;
