@@ -52,7 +52,7 @@ fi
 if [ X${OZ_PI-xx} = Xxx ]; then
   # where Oz searches for files:
   : ${OZPATH=.}
-  OZPATH=${OZPATH}:${OZHOME}:${OZHOME}/lib:${OZHOME}/platform/${OZPLATFORM}
+  OZPATH=${OZPATH}:${OZHOME}:${OZHOME}/lib:${OZHOME}/tools:${OZHOME}/platform/${OZPLATFORM}
   export OZPATH
   # increment path
   PATH=${OZHOME}/bin:${OZHOME}/platform/${OZPLATFORM}:${PATH}
