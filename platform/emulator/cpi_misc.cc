@@ -157,6 +157,46 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
   return is;
 }
 
+OZ_Boolean OZ_hasEqualVars(int sz, OZ_Term * ts)
+{
+#ifdef __GNUC__
+  /* gcc supports dynamic array sizes */
+  OZ_TermTrail _term_trail[sz];
+#else
+  OZ_TermTrail * _term_trail = new OZ_TermTrail[sz];
+#endif
+  OZ_Boolean r = OZ_FALSE;
+  int te = 0;
+  int i;
+
+  for (i = sz; i--; ) {
+    OZ_Term t = ts[i];
+    DEREF(t, tptr);
+    if (oz_isVar(t)) {
+      Assert(oz_isVar(t));
+      _term_trail[te].ptr  = tptr;
+      _term_trail[te].term = t;
+      te++;
+      *tptr = makeTaggedMarkInt(0);
+    } else if (oz_isMark(t)) {
+      r = OZ_TRUE;
+    } else {
+      Assert(oz_isSmallInt(t) || oz_isLiteral(t) || oz_isFSetValue(t));
+    }
+  }
+
+  while (te--) {
+    *(_term_trail[te].ptr) = _term_trail[te].term;
+    Assert(OZ_isVariable(makeTaggedRef(_term_trail[te].ptr)));
+  }
+
+#ifndef __GNUC__
+  delete _term_trail;
+#endif
+
+  return r;
+}
+
 static EnlargeableArray<int> sgl(1024);
 
 int * OZ_findSingletons(int sz, OZ_Term * ts)
