@@ -292,8 +292,8 @@ OZ_Return BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)	\
 }									\
 DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 
-#define CheckLocalBoard(Object,Where);				\
-  if (am.currentBoard != Object->getBoard()) {			\
+#define CheckLocalBoard(Object,Where);					\
+  if (!am.isToplevel() && am.currentBoard != Object->getBoard()) {	\
     return am.raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom(Where));	\
   }
 
