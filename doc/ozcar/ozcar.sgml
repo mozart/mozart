@@ -57,8 +57,8 @@
 	<title/Invocation from the OPI/
 	<p>
 	To start Ozcar from the OPI, you have to apply the elisp
-	function <span proglang=elisp><<oz-debugger>></span> (<Key/C-c
-	C-d/). Executed with prefix argument (<Key/C-u C-c C-d/), the
+	function <span proglang=elisp><<oz-debugger>></span> (<Key/C-.
+	C-. d/). Executed with prefix argument (<Key/C-u C-. C-. d/), the
 	Ozcar window gets closed again. Note, however, that this just
 	suspends the debugger; after re-opening the window, you can
 	continue debugging exactly where you stopped before,
@@ -67,11 +67,13 @@
       <section>
 	<title/Invocation from the Shell/
 	<p>
-	Another way of using Ozcar is to debug Oz applications.
+	Another way of using Ozcar is to debug Oz applications
+	(see <ptr.extern to="ozdoc:apptut" key="chapter.hello">).
 	For this purpose, the program ozd is provided (which is an
 	oz application itself, btw.). If you want to debug the
-	application foo, you just type from the shell ozd foo. This
-	starts an Oz engine, which in turn starts Ozcar and Emacs.
+	application foo, you just type from the shell 'ozd -E foo'. This
+	starts an Oz engine, which in turn starts Ozcar and Emacs (the
+	latter because of the -E option).
     <chapter id="chapter.gui">
       <title/Ozcar's Main Components/
 	<p>
@@ -626,8 +628,6 @@ end
 	    are the thread id and the parent thread id. In parentheses,
 	    information is given if the selected thread is stopped or
 	    running, and if it is runnable, blocked or terminated.
-	    
-
 	  </list>
 	  <subsection>
 	  <title/Stack/
@@ -647,13 +647,30 @@ end
 	    <item>
 	    Update the stack view. You may see special,
 	    compiler-generated stack frames then, as well as some
-	    variables which have been bound in the meanwhile appear
-	    which their value instead of an underscore. (There is
+	    variables (which have been bound in the meanwhile) appear
+	    with their value instead of an underscore. (There is
 	    <em>no</em> automatic update which forces the stack view
 	    to display a variable's value as soon as it becomes known.)
           </list>
 	  <subsection>
 	  <title/Options/
+	  <subsubsection>
+	  <title/The Value Printing submenu/
+	  <p>
+	  In this menu you can determine how to display values in the
+	  stack and variable windows. There is a short form which only
+	  prints type information, and a long form which prints the
+	  actual value (up to a given print depth, see ??).
+	  <list>
+            <entry><menu key="<"/Types Only/
+	    <item>
+	    This is the default setting. You just see the values type,
+	    which leads to a very compact display.
+	    <entry><menu key=">"/Complete/
+	    <item>
+	    You see the actual value, using the function
+	    <span proglang=oz><<Value.toVirtualString>></span>.
+	  </list>
 	  <subsection>
 	  <title/Help/
 	<section>
