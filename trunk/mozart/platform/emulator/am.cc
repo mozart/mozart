@@ -47,6 +47,7 @@
 #include "thread.hh"
 #include "tracer.hh"
 #include "ozdebug.hh"
+#include "unify.hh"
 
 AM am;
 
