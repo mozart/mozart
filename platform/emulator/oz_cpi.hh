@@ -257,6 +257,18 @@ public:
   order_t getOrder(void) const { return _order; }
 };
 
+class OZ_CFunHeader {
+private:
+  OZ_CFunHeader * _next;
+  static OZ_CFunHeader * _all_headers;
+  OZ_CFun _header;
+  unsigned _calls, _samples;
+public:
+  OZ_CFunHeader(OZ_CFun header = NULL)
+    : _calls(0), _samples(0), _header(header), _next(NULL) {}
+  OZ_CFun getHeader(void) { return _header; }
+};
+
 enum OZ_FDPropState {fd_prop_singl = 0, fd_prop_bounds, fd_prop_any};
 
 // virtual base class; never create an object from this class
