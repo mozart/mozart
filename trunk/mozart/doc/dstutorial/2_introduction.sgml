@@ -5,7 +5,7 @@
 has become a popular subject, fueled by the
 development of the Internet, which provides
 a global infrastructure for distributed applications.
-Platforms such as Java and CORBA have become popular.
+Platforms such as Java and CORBA have become widely-used.
 On first glance, one might think that distributed
 programming has become a solved problem.
 But this is far from the case.
@@ -32,8 +32,8 @@ application functionality and distribution structure,
 and provides primitives for fault-tolerance,
 openness, and partial support for security.
 Current research is focussed on completing
-the separation for fault-tolerance and openness
-and will be offered in future releases.
+the separation for fault-tolerance and openness,
+which will be offered in future releases.
 
 <P>This tutorial presents many examples
 of practical programs and techniques of distributed
@@ -46,5 +46,15 @@ mobile agents, and
 fault-tolerant mobile agents,
 and shows how easy it is to develop new abstractions
 in the Mozart platform.
+
+<P>The Mozart platform provides much functionality
+in addition to distribution.
+It provides an interactive development environment
+with incremental compiler,
+many tools including a browser, debugger, and parser-generator,
+a C++ interface for developing dynamically-linked libraries,
+and state-of-the-art constraint programming support.
+We refer the reader to the other tutorials and the extensive
+system documentation.
 
 </CHAPTER>
