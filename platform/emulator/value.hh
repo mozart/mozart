@@ -154,6 +154,7 @@ public:
   Bool isTriggered(EntityCond ec){
     if(ec & watchcond) return OK;
     return NO;}
+  EntityCond getEntityCond(){return watchcond;}
 };
 
 /*===================================================================
@@ -829,6 +830,10 @@ public:
   Watcher *getWatchers(){
     return info->watchers;}
 
+  Watcher *getWatchersIfExist(){
+    if(info==NULL){return NULL;}
+    return info->watchers;}
+
   Watcher** getWatcherBase(){
     if(info==NULL) return NULL;
     if(info->watchers==NULL) return NULL;
@@ -879,6 +884,10 @@ public:
       invokeSoon();
       return OK;}
     return NO;}
+
+  Bool maybeHasInform(){
+    if(info==NULL) return NO;
+    return OK;}
 };
 
 
