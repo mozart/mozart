@@ -34,23 +34,11 @@ OZ_Term reflect_propagator(Suspension susp)
   OZ_Propagator * p = prop->getPropagator();
   Board * b = GETBOARD(susp.getPropagator());
 
-  OZ_Term space = atom_oops;
-  if (b == am.currentBoard()) {
-    space = atom_local;
-  } else if (b->isAsk()) {
-    space = atom_ask;
-  } else if (b->isWait()) {
-    space = atom_wait;
-  } else if (b->isWaitTop()) {
-    space = atom_waittop;
-  }
-
   OZ_Term arity_def[] = {
     {OZ_pair2(atom_type, atom_prop)},
     {OZ_pair2(atom_params, p->getParameters())},
     {OZ_pair2(atom_name, prop_name(p->getProfile()->getPropagatorName()))},
     {OZ_pair2(atom_ref, propagator2Term(prop))},
-    {OZ_pair2(atom_space, space)},
     {(OZ_Term) 0}
   };
 
@@ -64,21 +52,9 @@ OZ_Term reflect_propagator(Suspension susp)
 OZ_Term reflect_thread(Suspension susp)
 {
   Board * b = GETBOARD(susp.getThread());
-  OZ_Term space = atom_oops;
-
-  if (b == am.currentBoard()) {
-    space = atom_flat;
-  } else if (b->isAsk()) {
-    space = atom_ask;
-  } else if (b->isWait()) {
-    space = atom_wait;
-  } else if (b->isWaitTop()) {
-    space = atom_waittop;
-  }
 
   OZ_Term arity_def[] = {
     {OZ_pair2(atom_type, atom_thread)},
-    {OZ_pair2(atom_space, space)},
     {(OZ_Term) 0}
   };
 

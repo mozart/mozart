@@ -54,11 +54,10 @@ OZ_Term prop_name(char * name)
 //-----------------------------------------------------------------------------
 
 OZ_Term atom_var, atom_any, atom_type, atom_fd, atom_fs, atom_bool,
-  atom_bounds, atom_val, atom_glb, atom_lub, atom_flat, atom_local, atom_ask,
-  atom_wait, atom_waittop, atom_oops, atom_prop, atom_params, atom_name,
-  atom_space, atom_susp, atom_thread, atom_ct, atom_susplists, atom_ref,
-  atom_id, atom_loc, atom_vars, atom_props, atom_reflect,
-  atom_reflect_vartable, atom_reflect_proptable;
+  atom_bounds, atom_val, atom_glb, atom_lub, atom_oops, atom_prop,
+  atom_params, atom_name, atom_space, atom_susp, atom_thread, atom_ct,
+  atom_susplists, atom_ref, atom_id, atom_loc, atom_vars, atom_props,
+  atom_reflect, atom_reflect_vartable, atom_reflect_proptable;
 
 //=============================================================================
 // interface to the Oz loader
@@ -88,16 +87,10 @@ extern "C"
     atom_val               = OZ_atom("val");
     atom_glb               = OZ_atom("lowerbound");
     atom_lub               = OZ_atom("upperbound");
-    atom_flat              = OZ_atom("flat actor");
-    atom_local             = OZ_atom("home");
-    atom_ask               = OZ_atom("ask actor");
-    atom_wait              = OZ_atom("wait actor");
-    atom_waittop           = OZ_atom("waittop actor");
     atom_oops              = OZ_atom("oops");
     atom_prop              = OZ_atom("propagator");
     atom_params            = OZ_atom("params");
     atom_name              = OZ_atom("name");
-    atom_space             = OZ_atom("space");
     atom_susp              = OZ_atom("suspension");
     atom_thread            = OZ_atom("thread");
     atom_ct                = OZ_atom("ct");
