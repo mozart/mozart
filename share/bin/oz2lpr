@@ -46,12 +46,23 @@ if [ $? != 0 ]; then
 fi
 
 cat >> /tmp/$tmpfile.tex << EOF
-\documentstyle[dina4]{article}
+
+\documentstyle{article}
 \include{oz2tex_preamble}
 \pagestyle{empty}
+
+\setlength{\topmargin}{-2cm}
+
+\setlength{\evensidemargin}{-1cm}
+\setlength{\oddsidemargin}{-1cm}
+
+\setlength{\textwidth}{18cm}
+\setlength{\textheight}{26cm}
+
 \begin{document}
 \input{/tmp/$ozfile.tex}
 \end{document}
+
 EOF
 
 echo "latex $tmpfile ..."
@@ -66,6 +77,7 @@ fi
 
 echo "dvips $tmpfile ..."
 dvips /tmp/$tmpfile > /dev/null 2>&1
+#xdvi /tmp/$tmpfile
 cleanup
 
 done # for
