@@ -416,7 +416,8 @@ $(BOOTOZCTXT):
 
 new-boot:
         $(MAKE) $(BOOTINITTXT) $(BOOTOZCTXT)
-        gzip $(BOOTINITTXT) $(BOOTOZCTXT)
+        $(GZIP) < $(BOOTINITTXT) > $(SRCDIR)/$(BOOTINITTXT).gz
+        $(GZIP) < $(BOOTOZCTXT) > $(SRCDIR)/$(BOOTOZCTXT).gz
 
 boot-unzip:
         rm -f $(BOOTINITTXT) $(BOOTOZCTXT)
