@@ -17,10 +17,10 @@ LNS             = @LN_S@
 DYNLD           = @DYNLD@
 CXX             = @CXX@
 CPPFLAGS        = -I$(SRCDIR) -I. -I$(SRCTOP)/platform/emulator @CPPFLAGS@
-CXXFLAGS        = @CXXFLAGS@ $(CFLAGS)
+CDYNOPT         = @CDYNOPT@
+CXXFLAGS        = @CXXFLAGS@ $(CFLAGS) $(CDYNOPT)
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@ -lc
-CFLAGS          += -fPIC
 
 INSTALL         = @INSTALL@
 INSTALLPRG      = $(INSTALL) -m 555
@@ -54,10 +54,6 @@ subdirs:
 GumpScanner.so: GumpScanner.C $(SRCTOP)/platform/emulator/mozart.h
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o GumpScanner.o && \
         $(DYNLD) -o $@ GumpScanner.o $(LDFLAGS) $(LIBS)
-
-## here we install shared object libs twice: once in the old
-## location and once in the cache.  eventually we should only
-## install into the cache, I think.
 
 install: all \
         $(SHAREDIR) $(SHAREFILES) \

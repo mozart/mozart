@@ -20,12 +20,8 @@ CPPFLAGS        = @CPPFLAGS@
 DEFS            = @DEFS@
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@
-CFLAGS          += -fPIC
 
-# You can define these to be "lex" and "libl.a" if you want to replace
-# lex at your site.
 FLEX = flex
-#FLEXLIB = libfl.a
 
 SHELL = /bin/sh
 srcdir = @srcdir@

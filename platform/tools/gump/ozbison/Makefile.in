@@ -12,7 +12,7 @@ DYNLD           = @DYNLD@
 
 CC              = @CC@
 CFLAGS          = @CFLAGS@
-CFLAGS          += -fPIC
+CDYNOPT         = @CDYNOPT@
 INCLUDES        = -I$(SRCTOP)/platform/emulator @CPPFLAGS@
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@ -lc
@@ -24,7 +24,7 @@ OBJS =  LR0.o allocate.o closure.o conflicts.o derives.o gram.o \
 all: Bison.so
 
 %.o: %.c
-        $(CC) $(CFLAGS) $(INCLUDES) -c $< -o $*.o
+        $(CC) $(CFLAGS) $(CDYNOPT) $(INCLUDES) -c $< -o $*.o
 
 Bison.so: $(OBJS)
         $(DYNLD) -o Bison.so $(OBJS) $(LDFLAGS) $(LIBS)
