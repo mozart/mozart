@@ -3761,7 +3761,7 @@ char * OZ_FSetConstraint::toString()
 {
   static ozstrstream str;
   str.reset();
-//  CASTTHIS->print(str);
+  CASTTHIS->print(str);
   return str.str();
 }
 
