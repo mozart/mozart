@@ -622,11 +622,11 @@ the GDB commands `cd DIR' and `directory'."
   (interactive "r")
   (oz-send-string (concat "\\line "
 			  (+ 1 (count-lines (point-min) start))
-			  " "
+			  " '"
 			  (if (buffer-file-name)
 			    (buffer-file-name)
 			    "nofile")
-			  "\n"
+			  "'\n"
 			  (buffer-substring start end)))
   (setq oz-last-fed-region-start (copy-marker start))
   (oz-zmacs-stuff))
