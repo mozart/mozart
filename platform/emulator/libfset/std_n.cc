@@ -228,9 +228,12 @@ OZ_Return FSetUnionNPropagator::propagate(void)
   DECL_DYN_ARRAY(FSetTouched, vst, _vs_size);
   PropagatorController_VS_S P(_vs_size, vs, s);
   int i;
-
-  for (i = _vs_size; i--; ) 
+  OZ_Boolean isAllValues = OZ_TRUE;
+  
+  for (i = _vs_size; i--; ) {
     vs[i].read(_vs[i]);
+    isAllValues &= vs[i]->isValue();
+  }
 
   OZ_Boolean doagain;
 
@@ -247,6 +250,17 @@ OZ_Return FSetUnionNPropagator::propagate(void)
       
     return replaceBy(_s, _vs[0]);
   } 
+
+  if (isAllValues) {
+    OZ_FSetValue aux(fs_empty);
+
+    for (int i = _vs_size; i--; )
+      aux |= vs[i]->getGlbSet();
+
+    FailOnInvalid(*s <<= aux);
+
+    return P.vanish();
+  }
 
   do {
     doagain = OZ_FALSE;
