@@ -5,8 +5,8 @@
   xmlns:id      ="http://www.jclark.com/xt/java/ID"
   xmlns:msg     ="http://www.jclark.com/xt/java/Msg"
   xmlns:meta    ="http://www.jclark.com/xt/java/Meta"
-  xmlns:tex ="java:com.jclark.xsl.sax.LaTeXOutputHandler"
-  result-ns ="tex">
+  xmlns:txt     ="java:com.jclark.xsl.sax.TextOutputHandler"
+  result-ns     ="txt">
 
 <!-- for elements that only contain other elements but never data,
      all spaces should be stripped away -->
@@ -24,7 +24,12 @@
 
 <template match="/">
   <call-template name="build.tables"/>
-  <apply-templates/>
+  <txt:document>
+    <call-template name="declare.maps"/>
+    <txt:usemap name="text">
+      <apply-templates/>
+    </txt:usemap>
+  </txt:document>
 </template>
 
 <!-- build tables -->
@@ -51,38 +56,76 @@
   </for-each>
 </template>
 
+<!-- declare maps -->
+
+<template name="declare.maps">
+  <call-template name="declare.map.text"/>
+  <call-template name="declare.map.code"/>
+</template>
+
+<template name="declare.map.common">
+  <txt:enter char="#">\mozartHASH{}</txt:enter>
+  <txt:enter char="$">\mozartDOLLAR{}</txt:enter>
+  <txt:enter char="%">\mozartPERCENT{}</txt:enter>
+  <txt:enter char="&amp;">\mozartAMPERSAND{}</txt:enter>
+  <txt:enter char="~">\mozartTILDE{}</txt:enter>
+  <txt:enter char="_">\mozartUNDERSCORE{}</txt:enter>
+  <txt:enter char="^">\mozartCARET{}</txt:enter>
+  <txt:enter char="\">\mozartBSLASH{}</txt:enter>
+  <txt:enter char="{{">\mozartLBRACE{}</txt:enter>
+  <txt:enter char="}}">\mozartRBRACE{}</txt:enter>
+  <txt:enter char="&lt;">\mozartLT{}</txt:enter>
+  <txt:enter char="&gt;">\mozartGT{}</txt:enter>
+  <txt:enter char="|">\mozartVBAR{}</txt:enter>
+  <txt:enter char="&#10;"> \mozartEMPTY
+</txt:enter>
+</template>
+
+
+<template name="declare.map.text">
+  <txt:defmap name="text">
+    <call-template name="declare.map.common"/>
+  </txt:defmap>
+</template>
+
+<template name="declare.map.code">
+  <txt:defmap name="code">
+    <call-template name="declare.map.common"/>
+    <txt:enter char=" ">\mozartSPACE{}</txt:enter>
+    <txt:enter char="&#10;">\mozartNEWLINE{}</txt:enter>
+  </txt:defmap>
+</template>
+
 <!-- book -->
 
 <template match="BOOK">
-  <tex:document>
-  <tex:code>\documentclass{ozdoc}
-</tex:code>
+  <txt:usemap>\documentclass{ozdoc}
+</txt:usemap>
   <apply-templates select="FRONT"/>
-  <tex:code>\begin{document}
-</tex:code>
+  <txt:usemap>\begin{document}
+</txt:usemap>
   <apply-templates select="BODY"/>
   <apply-templates select="BACK"/>
-  <tex:code>\end{document}
-</tex:code>
-  </tex:document>
+  <txt:usemap>\end{document}
+</txt:usemap>
 </template>
 
 <template match="BOOK/FRONT">
   <for-each select="META[@NAME='LATEX.PACKAGE']">
-    <tex:code>\usepackage{<value-of select="@VALUE"/>}
-</tex:code>
+    <txt:usemap>\usepackage{<value-of select="@VALUE"/>}
+</txt:usemap>
   </for-each>
   <for-each select="META[@NAME='LATEX.INPUT']">
-    <tex:code>\input{<value-of select="@VALUE"/>}
-</tex:code>
+    <txt:usemap>\input{<value-of select="@VALUE"/>}
+</txt:usemap>
   </for-each>
-  <tex:code>\title{</tex:code>
+  <txt:usemap>\title{</txt:usemap>
   <apply-templates select="TITLE" mode="ok"/>
-  <tex:code>}
-\author{</tex:code>
+  <txt:usemap>}
+\author{</txt:usemap>
   <apply-templates select="AUTHOR|AUTHOR.EXTERN"/>
-  <tex:code>}
-</tex:code>
+  <txt:usemap>}
+</txt:usemap>
 </template>
 
 <!-- ignore FRONT otherwise -->
@@ -109,13 +152,13 @@
 
 <template match="*" priority="-1.0">
   <if test="msg:say('UNMATCHED ELEMENT: ') and msg:saynl((local-part(.)))"/>
-  <tex:code>\UNMATCHED{<value-of select="local-part(.)"/>}</tex:code>
+  <txt:usemap>\UNMATCHED{<value-of select="local-part(.)"/>}</txt:usemap>
 </template>
 
 <!-- processing instructions -->
 
 <template match="processing-instruction()">
-  <tex:code>\usepi{<value-of select="local-part(.)"/>}</tex:code>
+  <txt:usemap>\usepi{<value-of select="local-part(.)"/>}</txt:usemap>
 </template>
 
 <!-- format author. for the time being, we don't actually
@@ -124,14 +167,14 @@
      the period by a space -->
 
 <template match="AUTHOR.EXTERN">
-  <if test="not(position()=1)"><tex:code>\\
-</tex:code></if>
+  <if test="not(position()=1)"><txt:usemap>\\
+</txt:usemap></if>
   <value-of select="translate((string(@KEY)),'.',' ')"/>
 </template>
 
 <template match="AUTHOR">
-  <if test="not(position()=1)"><tex:code>\\
-</tex:code></if>
+  <if test="not(position()=1)"><txt:usemap>\\
+</txt:usemap></if>
   <apply-templates/>
 </template>
 
@@ -141,16 +184,19 @@
      has an id -->
 
 <template match="PART|CHAPTER|APPENDIX|SECTION|SUBSECTION|SUBSUBSECTION|PARA">
-  <tex:eoln/>
-  <tex:eoln/>
-  <tex:code>\<value-of select="local-part(.)"/>{</tex:code>
+  <txt:usemap><text>
+
+</text>\<value-of select="local-part(.)"/>{</txt:usemap>
   <apply-templates select="TITLE | FRONT/TITLE" mode="ok"/>
-  <tex:code>}</tex:code>
+  <txt:usemap>}</txt:usemap>
   <if test="@ID">
-    <tex:code>\label{<value-of select="@ID"/>}</tex:code>
+    <txt:usemap>\label{</txt:usemap>
+    <value-of select="@ID"/>
+    <txt:usemap>}</txt:usemap>
   </if>
-  <tex:eoln/>
-  <tex:eoln/>
+  <txt:usemap><text>
+
+</text></txt:usemap>
   <apply-templates/>
 </template>
 
@@ -162,8 +208,9 @@
 <!-- format a paragraph -->
 
 <template match="P">
-  <tex:eoln/>
-  <tex:eoln/>
+  <txt:usemap><text>
+
+</text></txt:usemap>
   <apply-templates/>
 </template>
 
@@ -171,35 +218,38 @@
 <!-- 1. simple enumerated list -->
 
 <template match="LIST[@ENUM='ENUM' and not(ENTRY)]">
-  <tex:code>\begin{enumerate}</tex:code>
+  <txt:usemap>\begin{enumerate}</txt:usemap>
   <for-each select="ITEM">
-    <tex:eoln/>
-    <tex:code>\item{}</tex:code>
+    <txt:usemap><text>
+\item{}</text></txt:usemap>
     <apply-templates/>
   </for-each>
-  <tex:eoln/>
-  <tex:code>\end{enumerate}</tex:code>
+  <txt:usemap><text>
+\end{enumerate}
+</text></txt:usemap>
 </template>
 
 <!-- 2. simple itemized list -->
 
 <template match="LIST[not(@ENUM) and not(ENTRY)]">
-  <tex:code>\begin{itemize}</tex:code>
+  <txt:usemap>\begin{itemize}</txt:usemap>
   <for-each select="ITEM">
-    <tex:eoln/>
-    <tex:code>\item{}</tex:code>
+    <txt:usemap><text>
+\item{}</text></txt:usemap>
     <apply-templates/>
   </for-each>
-  <tex:eoln/>
-  <tex:code>\end{itemize}</tex:code>
+  <txt:usemap><text>
+\end{itemize}
+</text></txt:usemap>
 </template>
 
 <!-- 3. enumerated description -->
 
 <template match="LIST[@ENUM='ENUM' and ENTRY]">
-  <tex:code>\begin{enumerate}</tex:code>
+  <txt:usemap>\begin{enumerate}</txt:usemap>
   <apply-templates mode="list.enum.entry"/>
-  <tex:code>\end{enumerate}</tex:code>
+  <txt:usemap>\end{enumerate}
+</txt:usemap>
 </template>
 
 <template mode="list.enum.entry" match="ITEM">
@@ -207,93 +257,88 @@
 </template>
 
 <template mode="list.enum.entry" match="ENTRY">
-  <tex:code>\item{}</tex:code>
+  <txt:usemap>\item{}</txt:usemap>
   <apply-templates/>
 </template>
 
 <!-- 4. itemized description -->
 
 <template match="LIST[not(@ENUM) and ENTRY]">
-  <tex:code>\begin{DESCRIPTION}
-</tex:code>
+  <txt:usemap>\begin{DESCRIPTION}
+</txt:usemap>
   <apply-templates mode="list.desc"/>
-  <tex:code>\end{DESCRIPTION}
-</tex:code>
+  <txt:usemap>\end{DESCRIPTION}
+</txt:usemap>
 </template>
 
-<!--
 <template mode="list.desc" match="ENTRY">
-  <tex:code>\item[{</tex:code>
+  <txt:usemap>\ENTRY{</txt:usemap>
   <apply-templates/>
-  <tex:code>}]</tex:code>
+  <txt:usemap>}</txt:usemap>
   <if test="@ID">
-    <tex:code>\label{<value-of select="@ID"/>}</tex:code>
-  </if>
-</template>
--->
-<template mode="list.desc" match="ENTRY">
-  <tex:code>\ENTRY{</tex:code>
-  <apply-templates/>
-  <tex:code>}</tex:code>
-  <if test="@ID">
-    <tex:code>\label{<value-of select="@ID"/>}</tex:code>
+    <txt:usemap>\label{</txt:usemap>
+    <value-of select="@ID"/>
+    <txt:usemap>}</txt:usemap>
   </if>
   <if test=".//CODE|.//MENU">
-    <tex:code>\ENTRYHASCODE</tex:code>
+    <txt:usemap>\ENTRYHASCODE</txt:usemap>
   </if>
-  <tex:eoln/>
+  <txt:usemap><text>
+</text></txt:usemap>
 </template>
 
 <template mode="list.desc" match="ITEM">
-  <tex:code>\ITEM </tex:code>
+  <txt:usemap>\ITEM </txt:usemap>
   <apply-templates/>
 </template>
 
 <template mode="list.desc" match="SYNOPSIS">
-  <tex:code>\begin{SYNOPSIS}
-</tex:code>
+  <txt:usemap>\begin{SYNOPSIS}
+</txt:usemap>
   <apply-templates/>
-  <tex:code>\end{SYNOPSIS}
-</tex:code>
+  <txt:usemap>\end{SYNOPSIS}
+</txt:usemap>
 </template>
 
 <!-- menu/mouse -->
 
 <template match="MENU">
-  <tex:code>\MENU{</tex:code>
+  <txt:usemap>\MENU{</txt:usemap>
   <apply-templates/>
-  <tex:code>}{</tex:code>
+  <txt:usemap>}{</txt:usemap>
   <if test="@KEY">
-    <tex:code>\KEY{</tex:code>
+    <txt:usemap>\KEY{</txt:usemap>
     <value-of select="@KEY"/>
-    <tex:code>}</tex:code>
+    <txt:usemap>}</txt:usemap>
   </if>
-  <tex:code>}{</tex:code>
+  <txt:usemap>}{</txt:usemap>
   <if test="@MOUSE">
-    <tex:code>\MOUSE{</tex:code>
-    <tex:code><value-of select="@MOUSE"/></tex:code>
-    <tex:code>}</tex:code>
+    <txt:usemap>\MOUSE{<value-of select="@MOUSE"/>}</txt:usemap>
   </if>
-  <tex:code>}</tex:code>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <!-- format code -->
 
 <template match="CODE[@DISPLAY='INLINE']">
-  <tex:code>\CODEINLINE{</tex:code>
-  <apply-templates/>
-  <tex:code>}</tex:code>
+  <txt:usemap>\CODEINLINE{</txt:usemap>
+  <txt:usemap name="code">
+    <apply-templates/>
+  </txt:usemap>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <template match="CODE.EXTERN[@DISPLAY='DISPLAY']">
-  <tex:code>\CODEEXTERN{<value-of select="@TO"/>}</tex:code>
+  <txt:usemap>\CODEEXTERN{<value-of select="@TO"/>}</txt:usemap>
 </template>
 
 <template match="CODE[@DISPLAY='DISPLAY']">
-  <tex:code>\begin{CODEDISPLAY}</tex:code>
-  <apply-templates/>
-  <tex:code>\end{CODEDISPLAY}
-</tex:code>
+  <txt:usemap>\begin{CODEDISPLAY}</txt:usemap>
+  <txt:usemap name="code">
+    <apply-templates/>
+  </txt:usemap>
+  <txt:usemap>\end{CODEDISPLAY}
+</txt:usemap>
 </template>
 
 <template match="HILITE">
@@ -301,9 +346,9 @@
 </template>
 
 <template match="HILITE.FACE">
-  <tex:code>\FACE<value-of select="@NAME"/>{</tex:code>
+  <txt:usemap>\FACE<value-of select="@NAME"/>{</txt:usemap>
   <apply-templates/>
-  <tex:code>}</tex:code>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <template match="CODE/SPAN[@CLASS='IGNORE']"/>
@@ -313,17 +358,18 @@
 <template match="VAR">
   <variable name="type"><value-of select="@TYPE"/></variable>
   <if test="$type='PROG' and @MODE">
-    <tex:code>\MODE{<value-of select="@MODE"/>}</tex:code>
+    <txt:usemap>\MODE{<value-of select="@MODE"/>}</txt:usemap>
   </if>
-  <tex:code>\<value-of select="$type"/>VAR{</tex:code>
+  <txt:usemap>\<value-of select="$type"/>VAR{</txt:usemap>
   <apply-templates/>
-  <tex:code>}</tex:code>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <!-- format code text: preserve newlines and escape weird chars.
      for efficiency: don't use CODE//text(), just look 1, 2 or
      3 elements up -->
 
+<!--
 <template match=" CODE/text()
                  |CODE/*/text()
                  |CODE/*/*/text()
@@ -332,13 +378,14 @@
                  |CHUNK.SILENT/*/*/text()">
   <tex:verb><value-of select="."/></tex:verb>
 </template>
+-->
 
 <!-- miscellaneous commands -->
 
 <template match="FILE | SAMP | EM | KBD | KEY">
-  <tex:code>\<value-of select="local-part(.)"/>{</tex:code>
+  <txt:usemap>\<value-of select="local-part(.)"/>{</txt:usemap>
   <apply-templates/>
-  <tex:code>}</tex:code>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <template match="Q">`<apply-templates/>'</template>
@@ -347,9 +394,9 @@
 
 <template match="REF.EXTERN">
   <apply-templates/>
-  <tex:code>\footnote{</tex:code>
+  <txt:usemap>\footnote{</txt:usemap>
   <call-template name="ref.extern" select="."/>
-  <tex:code>}</tex:code>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <template match="PTR.EXTERN">
@@ -360,7 +407,7 @@
   <variable name="to"><value-of select="@TO"/></variable>
   <choose>
   <when test="starts-with($to,'ozdoc:')">
-    <tex:code>\REFEXTTO{</tex:code>
+    <txt:usemap>\REFEXTTO{</txt:usemap>
     <choose>
       <when test="$to='ozdoc:system'"
             >The System Modules</when>
@@ -407,20 +454,20 @@ A Tutorial Introduction</when>
             >The Mozart Constraint Extensions Tutorial</when>
       <otherwise>
         <if test="msg:say('UNRECOGNIZED OZDOC REF: ') and msg:saynl(string($to))"/>
-        <tex:text>!!!UNRECOGNIZED REF!!!<value-of select="$to"/>!!!</tex:text>
+        <txt:usemap name="text">!!!UNRECOGNIZED REF!!!<value-of select="$to"/>!!!</txt:usemap>
       </otherwise>
     </choose>
-    <tex:code>}</tex:code>
+    <txt:usemap>}</txt:usemap>
     <if test="@KEY">
-      <tex:code> \REFEXTKEY{</tex:code>
+      <txt:usemap> \REFEXTKEY{</txt:usemap>
       <value-of select="@KEY"/>
-      <tex:code>}</tex:code>
+      <txt:usemap>}</txt:usemap>
     </if>
   </when>
   <otherwise>
-    <tex:code>\DEFAULTREFEXT{</tex:code>
+    <txt:usemap>\DEFAULTREFEXT{</txt:usemap>
     <value-of select="$to"/>
-    <tex:code>}</tex:code>
+    <txt:usemap>}</txt:usemap>
   </otherwise>
   </choose>
 </template>
@@ -435,22 +482,22 @@ A Tutorial Introduction</when>
 </template>
 
 <template mode="ptr.ref" match="CHAPTER">
-  <tex:text>Chapter</tex:text>
+  <txt:usemap name="text">Chapter</txt:usemap>
   <call-template name="ref.to.id"/>
 </template>
 
 <template mode="ptr.ref" match="PART">
-  <tex:text>Part</tex:text>
+  <txt:usemap name="text">Part</txt:usemap>
   <call-template name="ref.to.id"/>
 </template>
 
 <template mode="ptr.ref" match="APPENDIX">
-  <tex:text>Appendix</tex:text>
+  <txt:usemap name="text">Appendix</txt:usemap>
   <call-template name="ref.to.id"/>
 </template>
 
 <template mode="ptr.ref" match="SECTION | SUBSECTION | SUBSUBSECTION">
-  <tex:text>Section</tex:text>
+  <txt:usemap name="text">Section</txt:usemap>
   <call-template name="ref.to.id"/>
 </template>
 
@@ -459,14 +506,14 @@ A Tutorial Introduction</when>
 </template>
 
 <template mode="ptr.ref" match="FIGURE">
-  <tex:text>Figure</tex:text>
+  <txt:usemap name="text">Figure</txt:usemap>
   <call-template name="ref.to.id"/>
 </template>
 
 <template mode="ptr.ref" match="BIB.EXTERN">
-  <tex:code>\cite{</tex:code>
+  <txt:usemap>\cite{</txt:usemap>
   <value-of select="@KEY"/>
-  <tex:code>}</tex:code>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <template mode="ptr.ref" match="*" priority="-1.0">
@@ -480,15 +527,15 @@ A Tutorial Introduction</when>
 </template>
 
 <template name="ref.to.id">
-  <tex:code>~\ref{</tex:code>
+  <txt:usemap>~\ref{</txt:usemap>
   <value-of select="@ID"/>
-  <tex:code>}</tex:code>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <template mode="ref.ref" match="BIB.EXTERN">
-  <tex:code>\cite{</tex:code>
+  <txt:usemap>\cite{</txt:usemap>
   <value-of select="@KEY"/>
-  <tex:code>}</tex:code>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <template mode="ref.ref" match="*">
@@ -496,95 +543,96 @@ A Tutorial Introduction</when>
 </template>
 
 <template name="pageref.to.id">
-  <tex:code> (page~\pageref{</tex:code>
+  <txt:usemap> (page~\pageref{</txt:usemap>
   <value-of select="@ID"/>
-  <tex:code>})</tex:code>
+  <txt:usemap>})</txt:usemap>
 </template>
 
 <!-- format tables -->
 
 <template match="TABLE">
   <call-template name="maybe.display.begin"/>
-  <tex:code>\begin{tabular}{</tex:code>
+  <txt:usemap>\begin{tabular}{</txt:usemap>
   <choose>
     <when test="@ID and meta:latexTableSpecExists((string(@ID)))">
-      <tex:code>
+      <txt:usemap>
         <value-of select="meta:latexTableSpecGet((string(@ID)))"/>
-      </tex:code>
+      </txt:usemap>
     </when>
     <otherwise>
       <for-each select="TR[position()=1]/*">l</for-each>
     </otherwise>
   </choose>
-  <tex:code>}</tex:code>
+  <txt:usemap>}</txt:usemap>
   <apply-templates/>
-  <tex:code>\end{tabular}</tex:code>
+  <txt:usemap>\end{tabular}</txt:usemap>
   <call-template name="maybe.display.end"/>
 </template>
 
 <template name="maybe.display.begin">
   <if test="@DISPLAY='DISPLAY'">
-    <tex:code>\begin{center}</tex:code>
+    <txt:usemap>\begin{center}</txt:usemap>
   </if>
 </template>
 
 <template name="maybe.display.end">
   <if test="@DISPLAY='DISPLAY'">
-    <tex:code>\end{center}</tex:code>
+    <txt:usemap>\end{center}</txt:usemap>
   </if>
 </template>
 
 <template match="TR">
   <apply-templates/>
   <if test="not(position()=last())">
-    <tex:code>\\</tex:code>
+    <txt:usemap>\\
+</txt:usemap>
   </if>
 </template>
 
 <template match="TD | TH">
   <if test="not(position()=1)">
-    <tex:code>&amp;</tex:code>
+    <txt:usemap>&amp;</txt:usemap>
   </if>
   <if test="@COLSPAN">
-    <tex:code>\multicolumn{<value-of select="@COLSPAN"/>}{l}{</tex:code>
+    <txt:usemap>\multicolumn{<value-of select="@COLSPAN"/>}{l}{</txt:usemap>
   </if>
   <if test="local-part(.)='TH'">
-    <tex:code>\bf{}</tex:code>
+    <txt:usemap>\bf{}</txt:usemap>
   </if>
   <apply-templates/>
   <if test="@COLSPAN">
-    <tex:code>}</tex:code>
+    <txt:usemap>}</txt:usemap>
   </if>
 </template>
 
 <!-- figures -->
 
 <template match="FIGURE">
-  <tex:code>\begin{FIGURE}</tex:code>
+  <txt:usemap>\begin{FIGURE}</txt:usemap>
   <apply-templates/>
   <if test="@ID and not(CAPTION)">
-    <tex:code>\CAPTIONID{</tex:code>
+    <txt:usemap>\CAPTIONID{</txt:usemap>
     <value-of select="@ID"/>
-    <tex:code>}</tex:code>
+    <txt:usemap>}</txt:usemap>
   </if>
-  <tex:code>\end{FIGURE}</tex:code>
+  <txt:usemap>\end{FIGURE}</txt:usemap>
 </template>
 
 <template match="FIGURE/TITLE">
-  <tex:code>\begin{FIGTITLE}</tex:code>
+  <txt:usemap>\begin{FIGTITLE}</txt:usemap>
   <apply-templates/>
-  <tex:code>\end{FIGTITLE}</tex:code>
+  <txt:usemap>\end{FIGTITLE}</txt:usemap>
 </template>
 
 <template match="FIGURE/CAPTION">
-  <tex:code>\caption{</tex:code>
+  <txt:usemap>\caption{</txt:usemap>
   <if test="../@ID">
-    <tex:code>\label{</tex:code>
+    <txt:usemap>\label{</txt:usemap>
     <value-of select="../@ID"/>
-    <tex:code>}</tex:code>
+    <txt:usemap>}</txt:usemap>
   </if>
   <apply-templates/>
-  <tex:code>}</tex:code>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <!-- pictures -->
@@ -593,18 +641,18 @@ A Tutorial Introduction</when>
   <call-template name="maybe.display.begin"/>
   <choose>
     <when test="PICTURE[@TYPE='LATEX']">
-      <tex:code><value-of select="PICTURE[@TYPE='LATEX']"/></tex:code>
+      <txt:usemap><value-of select="PICTURE[@TYPE='LATEX']"/></txt:usemap>
     </when>
     <when test="PICTURE.EXTERN[@TYPE='PS']">
-      <tex:code>\PICEXT{</tex:code>
+      <txt:usemap>\PICEXT{</txt:usemap>
       <value-of select="PICTURE.EXTERN[@TYPE='PS']/@TO"/>
-      <tex:code>}</tex:code>
+      <txt:usemap>}</txt:usemap>
     </when>
     <when test="PICTURE.EXTERN[@TYPE='GIF']">
       <!-- for foo.gif, we will create foo.gif.ps -->
-      <tex:code>\PICEXT{</tex:code>
+      <txt:usemap>\PICEXT{</txt:usemap>
       <value-of select="PICTURE.EXTERN[@TYPE='GIF']/@TO"/>
-      <tex:code>.ps}</tex:code>
+      <txt:usemap>.ps}</txt:usemap>
     </when>
     <otherwise>
       <if test="msg:saynl('UNMATCHED PICTURE')"/>
@@ -615,23 +663,23 @@ A Tutorial Introduction</when>
 </template>
 
 <template match="PICTURE[@TYPE='LATEX']">
-  <tex:code><value-of select="."/></tex:code>
+  <txt:usemap><value-of select="."/></txt:usemap>
 </template>
 
 <template match="PICTURE.EXTERN[@DISPLAY='DISPLAY']">
   <variable name="type"><value-of select="@TYPE"/></variable>
   <variable name="to"><value-of select="@TO"/></variable>
-  <tex:code>\begin{PICEXTDISPLAY}</tex:code>
+  <txt:usemap>\begin{PICEXTDISPLAY}</txt:usemap>
   <choose>
     <when test="$type='LATEX'">
-      <tex:code>\input{</tex:code>
+      <txt:usemap>\input{</txt:usemap>
       <value-of select="$to"/>
-      <tex:code>}</tex:code>
+      <txt:usemap>}</txt:usemap>
     </when>
     <when test="$type='GIF'">
-      <tex:code>\PICEXTFULL{</tex:code>
+      <txt:usemap>\PICEXTFULL{</txt:usemap>
       <value-of select="$to"/>
-      <tex:code>}</tex:code>
+      <txt:usemap>}</txt:usemap>
     </when>
     <otherwise>
       <if test="msg:say('UNMATCHED PICTURE.EXTERN: ') and msg:saynl($to)"/>
@@ -640,56 +688,56 @@ A Tutorial Introduction</when>
       <text>!!!</text>
     </otherwise>
   </choose>
-  <tex:code>\end{PICEXTDISPLAY}</tex:code>
+  <txt:usemap>\end{PICEXTDISPLAY}</txt:usemap>
 </template>
 
 <!-- grammar thingies -->
 
 <template match="GRAMMAR.RULE | GRAMMAR">
   <call-template name="maybe.display.begin"/>
-  <tex:code>\begin{tabular}{lrll}
-</tex:code>
+  <txt:usemap>\begin{tabular}{lrll}
+</txt:usemap>
   <apply-templates/>
-  <tex:code>\end{tabular}
-</tex:code>
+  <txt:usemap>\end{tabular}
+</txt:usemap>
   <call-template name="maybe.display.end"/>
 </template>
 
 <template match="GRAMMAR/GRAMMAR.RULE" priority="2.0">
-  <if test="position()>1"><tex:code>\\
-</tex:code></if>
+  <if test="position()>1"><txt:usemap>\\
+</txt:usemap></if>
   <apply-templates/>
 </template>
 
 <template match="GRAMMAR.ALT">
-  <tex:code>&amp;</tex:code>
-  <tex:code>
+  <txt:usemap>&amp;</txt:usemap>
+  <txt:usemap>
     <choose>
       <when test="not(@TYPE) and position()=2 or @TYPE='DEF'">\GRAMDEF</when>
       <when test="@TYPE='ADD'">\GRAMADD</when>
       <when test="not(@TYPE) and position()>2 or @TYPE='OR'">\GRAMOR</when>
       <when test="@TYPE='SPACE'">\GRAMSPACE</when>
     </choose>
-  </tex:code>
-  <tex:code>&amp;</tex:code>
+  </txt:usemap>
+  <txt:usemap>&amp;</txt:usemap>
   <apply-templates/>
   <if test="not(child::GRAMMAR.NOTE)">
-    <tex:code>&amp;</tex:code>
+    <txt:usemap>&amp;</txt:usemap>
   </if>
-  <if test="not(position()=last())"><tex:code>\\
-</tex:code></if>
+  <if test="not(position()=last())"><txt:usemap>\\
+</txt:usemap></if>
 </template>
 
 <template match="GRAMMAR.NOTE">
-  <tex:code>&amp;\GRAMMARNOTE{</tex:code>
+  <txt:usemap>&amp;\GRAMMARNOTE{</txt:usemap>
   <apply-templates/>
-  <tex:code>}</tex:code>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <!-- math -->
 
 <template match="MATH[@TYPE='LATEX']">
-  <tex:code>
+  <txt:usemap>
     <choose>
       <when test="parent::MATH.CHOICE[@DISPLAY='DISPLAY']">\[</when>
       <when test="@DISPLAY='DISPLAY'">\[</when>
@@ -701,7 +749,7 @@ A Tutorial Introduction</when>
       <when test="@DISPLAY='DISPLAY'">\]</when>
       <otherwise>\)</otherwise>
     </choose>
-  </tex:code>
+  </txt:usemap>
 </template>
 
 <template match="MATH.CHOICE[MATH[@TYPE='LATEX']]">
@@ -711,29 +759,33 @@ A Tutorial Introduction</when>
 <!-- literate programming: chunks -->
 
 <template match="CHUNK">
-  <tex:code>\begin{CHUNK}{</tex:code>
+  <txt:usemap>\begin{CHUNK}{</txt:usemap>
   <apply-templates select="TITLE"/>
-  <tex:code>}</tex:code>
-  <apply-templates select="CHUNK.SILENT"/>
-  <tex:code>\end{CHUNK}</tex:code>
+  <txt:usemap>}</txt:usemap>
+  <txt:usemap name="code">
+    <apply-templates select="CHUNK.SILENT"/>
+  </txt:usemap>
+  <txt:usemap>\end{CHUNK}</txt:usemap>
 </template>
 
 <template match="CHUNK.REF">
-  <tex:code>\CHUNKREF{</tex:code>
-  <apply-templates/>
-  <tex:code>}</tex:code>
+  <txt:usemap>\CHUNKREF{</txt:usemap>
+  <txt:usemap name="text">
+    <apply-templates/>
+  </txt:usemap>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <!-- notes and footnotes -->
 
 <template match="NOTE[@FOOT='FOOT']" priority="2.0">
-  <tex:code>\footnote{</tex:code>
+  <txt:usemap>\footnote{</txt:usemap>
   <apply-templates/>
-  <tex:code>}</tex:code>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <template match="NOTE">
-  <tex:code>\paragraph{Note:}</tex:code>
+  <txt:usemap>\paragraph{Note:}</txt:usemap>
   <apply-templates/>
 </template>
 
@@ -741,11 +793,11 @@ A Tutorial Introduction</when>
 
 <template match="BACK">
   <for-each select="BIB.EXTERN[position()=1]">
-    <tex:code>
+    <txt:usemap><text>
 \bibliographystyle{plain}
-\bibliography{</tex:code>
+\bibliography{</text></txt:usemap>
     <value-of select="substring-before((string(@TO)),'.bib')"/>
-    <tex:code>}</tex:code>
+    <txt:usemap>}</txt:usemap>
   </for-each>
 </template>
 
