@@ -83,6 +83,13 @@ void BaseSite::marshalBaseSiteForGName(MarshalerBuffer* buf)
   marshalNumber(buf, timestamp.start);
   marshalNumber(buf, timestamp.pid);
 }
+void BaseSite::marshalBaseSiteForGName(PickleBuffer* buf)
+{
+  marshalNumber(buf, address);
+  Assert(port == 0); // kost@ : otherwise hashing will be broken;
+  marshalNumber(buf, timestamp.start);
+  marshalNumber(buf, timestamp.pid);
+}
 
 #ifdef USE_FAST_UNMARSHALER   
 

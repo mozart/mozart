@@ -296,6 +296,11 @@ void marshalTermRef(PickleBuffer *bs, int lbl)
 #if !defined(TEXT2PICKLE)
 
 //
+#define MARSHALERBUFFER		PickleBuffer
+#include "marshalerBaseShared.cc"
+#undef  MARSHALERBUFFER
+
+//
 #ifdef USE_FAST_UNMARSHALER
 
 //
@@ -319,7 +324,6 @@ char *getString(PickleBuffer *bs, unsigned int i)
 //
 char *unmarshalString(PickleBuffer *bs)
 {
-  misc_counter[MISC_STRING].recv();
   unsigned int i = unmarshalNumber(bs);
   return (getString(bs,i));
 }
@@ -359,7 +363,6 @@ char *getStringRobust(PickleBuffer *bs, unsigned int i, int *error)
 char *unmarshalStringRobust(PickleBuffer *bs, int *error)
 {
   char *string;
-  misc_counter[MISC_STRING].recv();
   unsigned int i = unmarshalNumberRobust(bs,error);
   if(*error) return NULL;
   string = getStringRobust(bs,i,error);

@@ -300,12 +300,12 @@ void marshalFloat(MarshalerBuffer *bs, double d);
 void marshalGName(MarshalerBuffer *bs, GName *gname);
 
 //
-inline
 //
 // Dump 'num' characters; 'num' should not be larger than the real
 // string length. It returns the remaining portion of the string if
 // any, an zero otherwise. Observe that the marshaled string fragment
 // looks exactly as a 'marshalString's string;
+inline
 void marshalStringNum(MarshalerBuffer *bs, const char *s, int num) {
   marshalNumber(bs, num);
   while (num--) {
@@ -316,24 +316,47 @@ void marshalStringNum(MarshalerBuffer *bs, const char *s, int num) {
 }
 
 //
-inline 
-void rememberNode(GenTraverser *gt, MarshalerBuffer *bs, OZ_Term node) {
-  int ind = gt->rememberTerm(node);
-  marshalTermDef(bs, ind);
+// The following procedures must be either macros, or be redefined for
+// different MarshalerBuffer"s. Otherwise only the predefined
+// 'marshalTermDef' etc. will be used;
+
+#define rememberNode(gt, bs, node)				\
+{								\
+  int ind = gt->rememberTerm(node);				\
+  marshalTermDef(bs, ind);					\
 }
-inline 
-void rememberVarNode(GenTraverser *gt, MarshalerBuffer *bs, OZ_Term *p) {
-  int ind = gt->rememberVarLocation(p);
-  marshalTermDef(bs, ind);
+#define rememberVarNode(gt, bs, p)				\
+{								\
+  int ind = gt->rememberVarLocation(p);				\
+  marshalTermDef(bs, ind);					\
 }
-inline 
-void rememberLocation(GenTraverser *gt, MarshalerBuffer *bs, void *p) {
-  int ind = gt->rememberLocation(p);
-  marshalTermDef(bs, ind);
+#define rememberLocation(gt, bs, p)				\
+{								\
+  int ind = gt->rememberLocation(p);				\
+  marshalTermDef(bs, ind);					\
 }
 
 //
 void skipNumber(MarshalerBuffer *bs);
+
+//
+class DoubleConv {
+public:
+  union {
+    unsigned char c[sizeof(double)];
+    int i[sizeof(double)/sizeof(int)];
+    double d;
+  } u;
+};
+
+//
+inline Bool isLowEndian() {
+  DoubleConv dc;
+  dc.u.i[0] = 1;
+  return dc.u.c[0] == 1;
+}
+//
+static const Bool lowendian = isLowEndian();
 
 //
 // Basic data structures;
