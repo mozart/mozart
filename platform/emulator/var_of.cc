@@ -1,4 +1,3 @@
-
 /*
  *  Authors:
  *    Peter van Roy (pvr@info.ucl.ac.be)
