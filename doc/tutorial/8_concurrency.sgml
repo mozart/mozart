@@ -555,8 +555,8 @@ One way to access <<Y>> is by perform the operation
 >>>
 
 
-<FIGURE ID="volvos2" CLASS="Figure">
-<CAPTION>Producing Volvo's lazily</CAPTION>
+<FIGURE ID="volvos3" CLASS="Figure">
+<CAPTION>Producing Volvo's using <<ByNeed>> </CAPTION>
 <<<
 local
    proc {Producer Xs}
