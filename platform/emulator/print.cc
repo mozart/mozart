@@ -820,7 +820,7 @@ PRINT(HeapChunk)
 {
   CHECKDEPTH;
   stream << indent(offset)
-         << "heap chunk: " << chunk_size << " bytes at " << this << '.';
+         << "heap chunk: " << (int) chunk_size << " bytes at " << this << '.';
 /*
   char * data = (char *) chunk_data;
   for (int i = 0; i < chunk_size; i += 1)
@@ -834,7 +834,7 @@ PRINTLONG(HeapChunk)
 {
   CHECKDEPTHLONG;
   stream << indent(offset)
-         << "heap chunk: " << chunk_size << " bytes at " << this << '.';
+         << "heap chunk: " << (int) chunk_size << " bytes at " << this << '.';
 }
 
 
