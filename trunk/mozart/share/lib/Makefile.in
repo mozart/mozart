@@ -170,10 +170,9 @@ compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
 	echo 'DATE = '\'`date '+%h %d 19%y (%T)'`\' > $@ \
 	|| (rm -f $@; exit 1)
 
-compiler-Builtins.oz: ../../platform/emulator/bidecl.perl
-	(cd $(SRCDIR)/../../platform/emulator; \
-	 $(PERL) bidecl.perl -oztable \
-	 -exclude wif,fd,libfd,libschedule,fset,libfset,libparser) > $@
+BIDECL=../../platform/emulator/bidecl.perl
+compiler-Builtins.oz: ../../platform/emulator/builtins.spec
+	perl $(BIDECL) -file $< -oztable > $@
 
 compiler-Opcodes.oz: compiler/Opcodes.m4oz ../../platform/emulator/instrDefs.m4
 	$(M4) -DEMUDIR=$(SRCDIR)/../../platform/emulator < $< > $@ \
