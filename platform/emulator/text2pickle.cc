@@ -597,8 +597,10 @@ TaggedPair *unpickle(FILE *in)
 main(int argc, char **argv)
 {
   int textmode = 0;
-  if (argc == 2 && strcmp(argv[1],"--textmode")==0)
+  if (argc == 2 && strcmp(argv[1],"--textmode")==0) {
+    /* out in textmode too: eliminates unused labels */
     textmode = 1;
+  }
 
   TaggedPair *aux = unpickle(stdin);
 
