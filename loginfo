@@ -1,2 +1,1 @@
-ALL	mail -s "loginfo: %s" mehl
-Hydra	mail -s "loginfo (Hydra): %s" mehl
+Hydra	mail -s "Hydra-Dir changed: %s" mehl
