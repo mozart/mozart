@@ -595,8 +595,8 @@ EntityCond askPart(Tertiary* t, EntityCond ec){
 }
 
 ProbeType managerProbePart(Tertiary* t, EntityCond ec){
-  Assert(!(t->isLocal));
-  Assert(!(t->isManager));
+  Assert(!(t->isLocal()));
+  Assert(!(t->isManager()));
   switch(t->getType()){
   case Co_Lock:
   case Co_Cell:
