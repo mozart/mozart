@@ -26,17 +26,15 @@
 functor
 import
    Property(get condGet)
-   System(showInfo printInfo)
+   System(printInfo)
    Error(formatLine msg)
    OS(getEnv stat tmpnam)
    Open(socket text file)
    Listener('class')
-
 export
    getOPI:    GetOPI
    condSend:  CondSend
    interface: CompilerInterfaceEmacs
-
 define
    TimeoutToConfigBar = 200
    TimeoutToUpdateBar = TimeoutToConfigBar
@@ -46,21 +44,6 @@ define
    end
 
    local
-      fun {V2VS X}
-	 P = {Property.get errors}
-      in
-	 {Value.toVirtualString X P.depth P.width}
-      end
-
-      proc {Trace M}
-	 case {GetOPI} of false then skip
-	 elseof OPI then
-	    if {OPI isTrace($)} then
-	       {System.showInfo 'Emacs: ' # M}
-	    end
-	 end
-      end
-
       OsName      = {Property.get 'platform.os'}
       WindowsName = 'win32'
 
@@ -87,7 +70,9 @@ define
 	      end}}
 	 end
 
-	 OzPathEnv = {OS.getEnv 'OZPATH'}
+	 OzPathEnv = case {OS.getEnv 'OZPATH'} of false then "."
+		     elseof X then X
+		     end
       in
 	 OzPath = case {OS.getEnv 'HOME'} of false then
 		     {SystemPathList OzPathEnv}
@@ -105,16 +90,10 @@ define
 	    OrigF
 	 elseof Path|SearchListRest then Try = Path # '/' # F in
 	    try
-	       if {OS.stat Try}.type == reg then
-		  {Trace F # ' is ' # Try}
-		  Try
-	       else
-		  {Trace F # ' is not ' #
-		   Try # ': ' # {V2VS {OS.stat Try}}}
-		  {DoLookupFile SearchListRest F OrigF}
+	       case {OS.stat Try}.type of reg then Try
+	       else {DoLookupFile SearchListRest F OrigF}
 	       end
 	    catch system(...) then
-	       {Trace F # ' is not ' # Try # ': file not found'}
 	       {DoLookupFile SearchListRest F OrigF}
 	    end
 	 end
@@ -161,32 +140,55 @@ define
       class CompilerInterfaceEmacs from Listener.'class'
 	 prop final
 	 attr
-	    Socket BarSync: _ BarLock: {NewLock} Trace: false Topped: false
+	    Socket: unit BarSync: _ BarLock: {NewLock} Topped: false
 	    lastFile: unit lastLine: unit lastColumn: unit
 	 meth init(CompilerObject Host <= unit Print <= System.printInfo)
-	    lock Port in
+	    lock Sock Port in
 	       Listener.'class', init(CompilerObject Serve)
 	       thread
-		  @Socket = {New TextSocket server(port: ?Port)}
+		  Sock = {New TextSocket server(port: ?Port)}
 	       end
 	       {Wait Port}
+	       Socket <- Sock
 	       {Print '\'oz-socket '#case Host of unit then ""
 				     else '"'#Host#'" '
 				     end#Port#'\''}
 	    end
 	 end
-	 meth readQueries() VS0 VS in
-	    {@Socket readQuery(?VS0)}
-	    VS = case VS0 of ""#'\n'#VS1 then VS1 else VS0 end
-	    {Listener.'class', getNarrator($) enqueue(feedVirtualString(VS))}
-	    CompilerInterfaceEmacs, readQueries()
+	 meth close()
+	    Listener.'class', close()
+	    case @Socket of unit then skip
+	    elseof S then {S close()}
+	    end
 	 end
+	 meth Write(VS)
+	    case @Socket of unit then skip
+	    elseof S then
+	       try
+		  {S write(vs: VS)}
+	       catch system(os(os _ 32 ...) ...) then
+		  Socket <- unit
+	       end
+	    end
+	 end
+
+	 meth readQueries()
+	    case @Socket of unit then skip
+	    elseof S then VS0 VS in
+	       {S readQuery(?VS0)}
+	       VS = case VS0 of ""#'\n'#VS1 then VS1 else VS0 end
+	       {Listener.'class', getNarrator($)
+		enqueue(feedVirtualString(VS))}
+	       CompilerInterfaceEmacs, readQueries()
+	    end
+	 end
+
 	 meth Serve(Ms)
 	    case Ms of M|Mr then
 	       case M of info(VS) then
-		  {@Socket write(vs: VS)}
+		  CompilerInterfaceEmacs, Write(VS)
 	       [] info(VS _) then
-		  {@Socket write(vs: VS)}
+		  CompilerInterfaceEmacs, Write(VS)
 	       [] message(Record _) then
 		  case {Label Record} of error then
 		     CompilerInterfaceEmacs, ToTop()
@@ -194,7 +196,7 @@ define
 		  end
 		  {Error.msg
 		   proc {$ X}
-		      {@Socket write(vs: {Error.formatLine X})}
+		      CompilerInterfaceEmacs, Write({Error.formatLine X})
 		   end
 		   Record}
 	       [] displaySource(Title Ext VS) then Name File in
@@ -204,8 +206,8 @@ define
 			       flags: [write create truncate])}
 		  {File write(vs: VS)}
 		  {File close()}
-		  {@Socket write(vs: {VirtualString.toAtom
-				      '\'oz-show-temp '#Name#'\''})}
+		  CompilerInterfaceEmacs, Write({VirtualString.toAtom
+						 '\'oz-show-temp '#Name#'\''})
 	       [] runQuery(_ _) then
 		  Topped <- false
 	       [] attention() then
@@ -219,16 +221,9 @@ define
 	    if {Property.get 'oz.standalone'} then skip
 	    elseif @Topped then skip
 	    else
-	       {@Socket write(vs: MSG_ERROR)}
+	       CompilerInterfaceEmacs, Write(MSG_ERROR)
 	       Topped <- true
 	    end
-	 end
-
-	 meth setTrace(B)
-	    Trace <- B
-	 end
-	 meth isTrace($)
-	    @Trace
 	 end
 
 	 meth bar(file:F line:L column:C state:S)
@@ -262,11 +257,15 @@ define
 	    BarSync <- _ = unit
 	    CompilerInterfaceEmacs, MakeOzBar('' 0 0 hide)
 	 end
+	 meth exit()
+	    BarSync <- _ = unit
+	    CompilerInterfaceEmacs, MakeOzBar('' 0 0 exit)
+	 end
 	 meth MakeOzBar(File Line Column State)
 	    lock @BarLock then
 	       S = 'oz-bar ' # File # ' ' # Line # ' ' # Column # ' ' # State
 	    in
-	       {@Socket write(vs: '\'' # S # '\'')}
+	       CompilerInterfaceEmacs, Write('\'' # S # '\'')
 	       lastFile <- File
 	       lastLine <- Line
 	       lastColumn <- Column
