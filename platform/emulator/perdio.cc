@@ -2277,14 +2277,14 @@ void PerdioVar::gcPerdioVar(void)
 }
 
 
-void PerdioVar::addSuspPerdioVar(Thread *el)
+void PerdioVar::addSuspPerdioVar(Thread *el, int unstable)
 {
   if (suspList!=NULL) {
-    addSuspSVar(el);
+    addSuspSVar(el,unstable);
     return;
   }
 
-  addSuspSVar(el);
+  addSuspSVar(el,unstable);
 
   if (isObjectGName()) {
     Bool getclass = findGName(getGNameClass())==0;
@@ -2298,7 +2298,7 @@ void PerdioVar::addSuspPerdioVar(Thread *el)
     if (isPerdioVar(cl)) {
       PerdioVar *pv=tagged2PerdioVar(cl);
       Assert(pv->isURL());
-      pv->addSuspPerdioVar(el);
+      pv->addSuspPerdioVar(el,unstable);
     } else {
       Assert(isClass(cl));
       sendMessage(getObject()->getIndex(),M_GET_OBJECT);

@@ -1083,6 +1083,10 @@ OZ_Term mkTuple(int from, int to) {
 class TaggedPtr {
   int32 tagged;
 public:
+  TaggedPtr(void *p,int t) {
+    Assert(t >= 0 && t <=3)
+    tagged = (ToInt32(p)<<2) || t;
+  }
   TaggedPtr()         { tagged = 0; }
   int *getRef()       { return &tagged; }
   int getType()       { return (tagged&3); }

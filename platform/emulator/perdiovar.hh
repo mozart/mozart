@@ -169,7 +169,7 @@ public:
 
   ProxyList *getProxies() { Assert(isManager()); return u.proxies; }
 
-  void addSuspPerdioVar(Thread *el);
+  void addSuspPerdioVar(Thread *el, int unstable);
 
   void gcPerdioVar(void);
 };
