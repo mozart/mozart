@@ -47,11 +47,11 @@
 
     <Meta name="latex.fullwidth" value="table.info.threads">
     <Meta name="latex.fullwidth" value="table.heap.usage">
-    <Meta name="latex.fullwidth" value="table.problem.solving">
 
-    <Meta name="latex.table.spec" arg1="table.info.threads"    arg2="LP{0.45\linewidth}">
-    <Meta name="latex.table.spec" arg1="table.heap.usage"      arg2="LP{0.45\linewidth}">
-    <Meta name="latex.table.spec" arg1="table.problem.solving" arg2="LP{0.45\linewidth}">
+    <Meta name="latex.table.spec" arg1="table.info.threads"    arg2="LP{0.44\linewidth}">
+    <Meta name="latex.table.spec" arg1="table.heap.usage"      arg2="LP{0.44\linewidth}">
+    <Meta name="latex.table.spec" arg1="table.problem.solving" arg2="P{0.25\linewidth}P{0.7\linewidth}">
+    <Meta name="latex.table.spec" arg1="table.usage.opi"       arg2="P{0.25\linewidth}P{0.7\linewidth}">
 
     <Meta name="latex.picture.width" arg1="runtime-load.gif" arg2="0.5\linewidth">
     <Meta name="latex.picture.width" arg1="runtime-dist.gif" arg2="0.5\linewidth">
@@ -329,7 +329,7 @@ The information the panel displays is described in
 <section id="chapter.usage.opi">
   <title/Information on Programming Interface/
 
-  <P><table>
+  <P><table id="table.usage.opi">
     <tr>
       <th colspan=2>Status Messages</th>
     </tr>
