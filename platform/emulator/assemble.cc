@@ -9,6 +9,8 @@
   */
 
 
+#ifdef ASSEMBLER
+
 #include "am.hh"
 #include "assemble.hh"
 
@@ -224,22 +226,29 @@ OZ_C_proc_begin(BIwritePredId,4)
 OZ_C_proc_end
 
 
+static
+BIspec biSpec[] = {
+  {"stringToOp",        2, BIstringToOp,        NO,0},
+  {"sizeOfOp",          2, BIsizeOfOp,          NO,0},
+  {"newCodeArea",       2, BInewCodeArea,       NO,0},
+  {"scheduleCode",      3, BIscheduleCode,      NO,0},
+  {"writeOpcode",       3, BIwriteOpcode,       NO,0},
+  {"writeReg",          3, BIwriteReg,          NO,0},
+  {"writeBuiltin",      3, BIwriteBuiltin,      NO,0},
+  {"writeConst",        3, BIwriteConst,        NO,0},
+  {"writePosint",       3, BIwritePosint,       NO,0},
+  {"writeInt",          3, BIwriteInt,          NO,0},
+  {"writeArity",        3, BIwriteArity,        NO,0},
+  {"writeRecordArity",  3, BIwriteRecordArity,  NO,0},
+  {"writePredicateRef", 3, BIwritePredicateRef, NO,0},
+  {"writeLabel",        4, BIwriteLabel,        NO,0},
+  {"writePredId",       4, BIwritePredId,       NO,0},
+  {0,0,0,0,0}
+};
 
 void BIinitAssembler()
 {
-  BIadd("stringToOp",        2, BIstringToOp);
-  BIadd("sizeOfOp",          2, BIsizeOfOp);
-  BIadd("newCodeArea",       2, BInewCodeArea);
-  BIadd("scheduleCode",      3, BIscheduleCode);
-  BIadd("writeOpcode",       3, BIwriteOpcode);
-  BIadd("writeReg",          3, BIwriteReg);
-  BIadd("writeBuiltin",      3, BIwriteBuiltin);
-  BIadd("writeConst",        3, BIwriteConst);
-  BIadd("writePosint",       3, BIwritePosint);
-  BIadd("writeInt",          3, BIwriteInt);
-  BIadd("writeArity",        3, BIwriteArity);
-  BIadd("writeRecordArity",  3, BIwriteRecordArity);
-  BIadd("writePredicateRef", 3, BIwritePredicateRef);
-  BIadd("writeLabel",        4, BIwriteLabel);
-  BIadd("writePredId",       4, BIwritePredId);
+  BIaddSpec(biSpec);
 }
+
+#endif
