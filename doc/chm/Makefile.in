@@ -29,12 +29,12 @@ Mozart.hhc: Mozart.hhc.in
 
 quick:
 depend:
-include $(BUILDTOP)/share/Makefile.boot
+
 bootstrap: boot-all
 bootquick: boot-all
 boot-quick: boot-all
 
-# make it possible to configuree and build just the doc
+# make it possible to configure and build just the doc
 -include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
