@@ -4,6 +4,7 @@ import
    URL(resolve toBase)
    Pickle(load save)
    Path(make) at 'x-ozlib://duchier/sp/Path.ozf'
+   Database('class')
 export
    Args
    %% file   : file name (no path)
@@ -82,15 +83,6 @@ define
 
    DIRPREFIX   = {{Path.make {CondSelect Args 'prefix' DIRPREFIXDFT}} toBase($)}
    PATHLOCALDB = {DIRPREFIX resolve(FILELOCALDB $)}
-   fun lazy {READDB}
-      try
-	 {Pickle.load {PATHLOCALDB toString($)}}
-      catch error(url(load ...) ...) then
-	 {PATHLOCALDB mkdirs}
-	 {Pickle.save nil {PATHLOCALDB toString($)}}
-	 nil
-      end
-   end
-   LOCALDB     = {READDB}
+   LOCALDB     = {New Database.'class' init(PATHLOCALDB)}
 
 end
