@@ -3022,39 +3022,26 @@ Case(GETVOID)
 	  case CALLBI:
 	    {
 	      Builtin *bi = GetBI(PC+6);
-
 	      dbg->data = makeTaggedConst(bi);
-
-	      int 
-		iarity = bi->getInArity(), 
-		oarity = bi->getOutArity(),
-		arity  = iarity + oarity;
-
+	      int iarity = bi->getInArity(), oarity = bi->getOutArity();
+	      int arity = iarity + oarity;
 	      int *map = GetLoc(PC+7)->mapping();
-
 	      dbg->arity = arity;
-
 	      if (arity > 0) {
-
-		dbg->arguments = 
+		dbg->arguments =
 		  (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * arity);
-
 		if (map == OZ_ID_MAP)
 		  for (int i = iarity; i--; )
 		    dbg->arguments[i] = X[i];
 		else
 		  for (int i = iarity; i--; )
 		    dbg->arguments[i] = X[map[i]];
-		
 		if (CTT->isStep())
 		  for (int i = oarity; i--; )
 		    dbg->arguments[iarity + i] = OZ_newVariable();
-		else 
+		else
 		  for (int i = oarity; i--; )
 		    dbg->arguments[iarity + i] = NameVoidRegister;
-		
-	      } else {
-		dbg->arguments = (TaggedRef *) NULL;
 	      }
 	    }
 	    break;
@@ -3086,19 +3073,13 @@ Case(GETVOID)
 	  default:
 	    break;
 	  }
+	  dbg->arity = arity;
 	  if (arity > 0) {
-	    dbg->arity = arity;
-	    dbg->arguments = 
+	    dbg->arguments =
 	      (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * arity);
-	
 	    for (int i = arity; i--; )
 	      dbg->arguments[i] = Xreg(intToReg(i));
-	    
-	  } else {
-	    dbg->arity = 0;
-	    dbg->arguments = (TaggedRef *) NULL;
 	  }
-	  
 	} else if (oz_eq(kind,AtomDebugLockC) ||
 		   oz_eq(kind,AtomDebugLockF)) {
 	  // save the lock:
@@ -3169,7 +3150,7 @@ Case(GETVOID)
 	OzDebug *dbg = new OzDebug(PC,NULL,CAP);
 	CTT->pushDebug(dbg,DBG_EXIT);
       }
- 
+
       DISPATCH(5);
     }
 
@@ -3187,19 +3168,14 @@ Case(GETVOID)
 	    && (oz_eq(getLiteralArg(PC+4),AtomDebugCallC) ||
 		oz_eq(getLiteralArg(PC+4),AtomDebugCallF))
 	    && CodeArea::getOpcode(dbg->PC+5) == CALLBI) {
-
 	  Builtin *bi = GetBI(dbg->PC+6);
-
-	  int 
-	    iarity = bi->getInArity(), 
-	    oarity = bi->getOutArity();
-
+	  int iarity = bi->getInArity(), oarity = bi->getOutArity();
 	  int *map = GetLoc(dbg->PC+7)->mapping();
-
 	  if (oarity > 0)
 	    if (dbg->arguments[iarity] != NameVoidRegister)
 	      for (int i = oarity; i--; ) {
-		TaggedRef x = X[map == OZ_ID_MAP ? iarity + i: map[iarity + i]];
+		TaggedRef x =
+		  X[map == OZ_ID_MAP ? iarity + i: map[iarity + i]];
 		if (OZ_unify(dbg->arguments[iarity + i], x) == FAILED)
 		  return T_FAILURE;
 	      }
