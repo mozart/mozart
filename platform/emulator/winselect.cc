@@ -378,7 +378,7 @@ int win32Select(fd_set *rfds, fd_set *wfds, unsigned int *timeout)
 void printfds(fd_set *fds)
 {
   fprintf(stderr,"FDS: ");
-  for(int i=0; i<max(maxSocket,maxfd)+1; i++) {
+  for(int i=0; i<100000; i++) {
     if (FD_ISSET(i,fds)) {
       fprintf(stderr,"%d,",i);
     }
