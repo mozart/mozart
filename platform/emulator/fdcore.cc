@@ -367,7 +367,7 @@ OZ_C_proc_begin(BIfdPutInterval, 3)
     TypeError(1, "");
   }
 
-  OZ_getCArgDeref(1, u, uptr, utag); // upper bound
+  OZ_getCArgDeref(2, u, uptr, utag); // upper bound
 
   if (isAnyVar(utag)) {
     return addNonResSuspForDet(u, uptr, utag,
@@ -378,7 +378,7 @@ OZ_C_proc_begin(BIfdPutInterval, 3)
 
   OZ_getCArgDeref(0, var, varptr, vartag);
 
-  if (! (isGenFDVar(var,vartag) || isNotCVar(vartag) || isSmallInt(vartag))) {
+  if (! (isGenFDVar(var, vartag) || isNotCVar(vartag) || isSmallInt(vartag))) {
     TypeError(0, "");
   }
 
