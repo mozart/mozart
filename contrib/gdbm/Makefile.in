@@ -28,9 +28,10 @@ LIB_FILES_LOAD	= $(addprefix $(DIR_LOAD)/,$(FILES_LOAD))
 LIB_FILES_DLOAD	= $(addprefix $(DIR_DLOAD)/,$(FILES_DLOAD))
 
 .PHONY: all install install-load install-dload \
-	clean veryclean distclean
+	clean veryclean distclean bootstrap
 
 all: gdbm.so gdbm.ozc
+bootstrap: all
 
 install: install-load install-dload
 install-load:	$(DIR_LOAD)  $(LIB_FILES_LOAD)
