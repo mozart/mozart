@@ -311,6 +311,13 @@ __ControlVarUnify(var,OZ_mkTuple(AtomApply,2,P,Args))
 __ControlVarUnify(var,OZ_mkTuple(AtomApplyList,1,PairList))
 
 
+extern OZ_Return suspendOnControlVar();
+
+#define SuspendOnControlVar			\
+  return suspendOnControlVar();
+
+
+
 
 /* -----------------------------------------------------------------------
  * argument declaration for builtins
