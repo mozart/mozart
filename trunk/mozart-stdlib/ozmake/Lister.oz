@@ -8,6 +8,7 @@ prepare
       mogul     : '        mogul:  '
       uri       : '          uri:  '
       author    : '       author:  '
+      version   : '      version:  '
       released  : '     released:  '
       installed : '    installed:  '
       )
@@ -57,11 +58,17 @@ define
 	       {self print(FEATURES.author#A)}
 	    end
 	 end
+	 if {CondSelect PKG version unit}\=unit then
+	    {self print(FEATURES.version#PKG.version)}
+	 end
 	 if {CondSelect PKG released unit}\=unit then
 	    {self print(FEATURES.released#{Utils.dateToUserVS PKG.released})}
 	 end
 	 if {CondSelect PKG installed unit}\=unit then
 	    {self print(FEATURES.installed#{Utils.dateToUserVS PKG.installed})}
+	 end
+	 if {CondSelect PKG requires unit}\=unit then
+	    Lister,PrintFiles(' requires ' PKG.requires)
 	 end
 	 if {CondSelect PKG blurb unit}\=unit then
 	    Lister,PrintTitle(' blurb ' &-)

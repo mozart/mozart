@@ -24,6 +24,8 @@ define
 	 end
       end
 
+      %meth check_wanted_version
+
       %% return all install targets according to both makefile
       %% and command line options
 
@@ -265,6 +267,14 @@ define
 	    end
 	    local I={self get_info_html($)} in
 	       if I\=unit then PKG.info_html := I end
+	    end
+	    local V={self get_version($)} in
+	       if V\=unit then PKG.version := V end
+	    end
+	    local L={self get_requires($)} in
+	       if L\=unit andthen L\=nil then
+		  PKG.requires := L
+	       end
 	    end
 	    %% finally update the database
 	    {self database_save}

@@ -98,10 +98,17 @@ define
 	 in
 	    if Grade==any then skip else
 	       MOG = {self get_mogul($)}
+	       VER = {self get_version($)}
 	       PKG = {CondSelect @Mogul2Package MOG unit}
+	       PVR = {CondSelect PKG version unit}
 	    in
 	       %% is the package already installed
-	       if PKG\=unit then
+	       if PKG\=unit then 
+		  VComp = case PVR#VER
+			  of unit#unit then eq
+			  [] unit#_    then gt
+			  [] _   #unit then lt
+			  else {Utils.versionCompare PVR VER} end
 		  %% make sure we actually get dates (not unit)
 		  CurDate = {Utils.dateCurrent}
 		  CurNext = {AdjoinAt CurDate sec 1+CurDate.sec}
@@ -136,23 +143,28 @@ define
 		  else gt end
 		  OldString = {Utils.dateToUserVS OldReleased}
 		  NewString = {Utils.dateToUserVS NewReleased}
+		  UsingVersion
+		  FullCmp = case VComp#NewOldCmp
+			    of lt#_ then UsingVersion=true lt
+			    [] gt#_ then UsingVersion=true gt
+			    [] _ #C then UsingVersion=false C end
 	       in
 		  case Grade
 		  of none then
-		     raise ozmake(database:nograde(OldString NewString NewOldCmp)) end
+		     raise ozmake(database:nograde(OldString NewString PVR VER FullCmp UsingVersion)) end
 		  [] same then
-		     if NewOldCmp\=eq then
-			raise ozmake(database:samegrade(OldString NewString NewOldCmp)) end
+		     if FullCmp\=eq then
+			raise ozmake(database:samegrade(OldString NewString PVR VER FullCmp UsingVersion)) end
 		     end
 		  [] up then
-		     if NewOldCmp==lt then
-			raise ozmake(database:upgrade(OldString NewString)) end
+		     if FullCmp==lt then
+			raise ozmake(database:upgrade(OldString NewString PVR VER UsingVersion)) end
 		     end
 		  [] down then
-		     if NewOldCmp==gt then
-			raise ozmake(datebase:downgrade(OldString NewString)) end
+		     if FullCmp==gt then
+			raise ozmake(database:downgrade(OldString NewString PVR VER UsingVersion)) end
 		     end
-		  [] freshen then Skip=(NewOldCmp\=gt)
+		  [] freshen then Skip=(FullCmp\=gt)
 		  end
 	       end
 	    end

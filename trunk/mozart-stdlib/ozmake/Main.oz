@@ -37,6 +37,7 @@ prepare
       database(single         type:string)
       moguldatabase(single    type:string)
       configdatabase(single   type:string)
+      packageversion(single char:&V type:string)
 
       action(single type:atom(build install clean veryclean
 			      create publish extract list help
@@ -161,6 +162,7 @@ prepare
     mogulurl       # set_mogulurl         # true
     config         # set_config_action    # false
     fast           # set_fast             # true
+    packageversion # set_want_version     # false
    ]
       
 define

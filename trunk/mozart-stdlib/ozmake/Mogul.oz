@@ -1,13 +1,4 @@
 functor
-   %% ACTIONS
-   %%     1. write a package entry either using the makefile or a given package
-   %%     2. write contact entries
-   %%     3. list mogul info using makefile or given package
-   %%     4. list mogul database
-   %%     5. write section entries for current database
-   %%     6. delete entries in current database
-   %% ozmake --mogul-update
-   %% ozmake -M update
 export
    'class' : Mogul
 prepare
@@ -578,11 +569,18 @@ define
 	    {self get_lib_targets($)}\=nil orelse
 	    {self get_doc_targets($)}\=nil
 	 then
-	    {self set_package(
-		     {Path.resolve
-		      {self get_mogulpkgdir($)}
-		      {Utils.mogulToPackagename {self get_mogul($)}}})}
+	    DIR = {self get_mogulpkgdir($)}
+	    MOG = {self get_mogul($)}
+	    VER = {self get_version($)}
+	    PKG = {Path.resolve DIR {Utils.mogulToPackagename MOG}}
+	 in
+	    {self set_package(PKG)}
 	    {self create}
+	    if VER\=unit then
+	       FIL = {Path.resolve DIR {Utils.mogulToFilename MOG}#'-'#VER#'.pkg'}
+	    in
+	       {self exec_cp(PKG FIL)}
+	    end
 	 end
 	 %% create all mogul entries
 	 {self mogul_put}

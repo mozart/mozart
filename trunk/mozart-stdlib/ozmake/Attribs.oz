@@ -112,6 +112,7 @@ define
 	 ConfigAction: unit
 	 TarTargets  : nil
 	 Fast        : false
+	 WantVersion : unit
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -915,5 +916,14 @@ define
 
       meth set_fast(B) Fast<-B end
       meth get_fast($) @Fast end
+
+      meth set_want_version(S)
+	 if {Utils.isVersion S} then
+	    WantVersion<-S
+	 else
+	    raise ozmake(badwantversion(S)) end
+	 end
+      end
+      meth get_want_version($) @WantVersion end
    end
 end

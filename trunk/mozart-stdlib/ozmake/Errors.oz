@@ -43,11 +43,13 @@ prepare
 	 error(kind : TITLE_DATABASE
 	       msg  : 'package database not found'
 	       items: [hint(l:'Database' m:S)])
-      [] ozmake(database:nograde(Old New Cmp)) then
+      [] ozmake(database:nograde(Old New OldVer NewVer Cmp _)) then
 	 error(kind : TITLE_DATABASE
 	       msg  : 'package already installed'
-	       hint : [hint(l:'Release date of installed version' m:Old)
-		       hint(l:'Release date of this package' m:New)
+	       hint : [hint(l:'Release date of installed package' m:Old)
+		       hint(l:'Version      of installed package' m:if OldVer==unit then 'None' else OldVer end)
+		       hint(l:'Release date of this      package' m:New)
+		       hint(l:'Version      of this      package' m:if NewVer==unit then 'None' else NewVer end)
 		       case Cmp
 		       of eq then
 			  line('use --grade=(same|up|down|any) in your command')
@@ -56,28 +58,34 @@ prepare
 		       [] lt then
 			  line('use --grade=(down|any) un your command')
 		       end])
-      [] ozmake(database:samegrade(Old New Cmp)) then
+      [] ozmake(database:samegrade(Old New OldVer NewVer Cmp UsingVersion)) then
 	 error(kind : TITLE_DATABASE
-	       msg  : 'package already installed with different release date'
-	       items: [hint(l:'Release date of installed version' m:Old)
-		       hint(l:'Release date of this package' m:New)
+	       msg  : 'package already installed with different '#if UsingVersion then 'version' else 'release date' end
+	       items: [hint(l:'Release date of installed package' m:Old)
+		       hint(l:'Version      of installed package' m:if OldVer==unit then 'None' else OldVer end)
+		       hint(l:'Release date of this      package' m:New)
+		       hint(l:'Version      of this      package' m:if NewVer==unit then 'None' else NewVer end)
 		       case Cmp
 		       of gt then
 			  line('use --grade=(up|any) in your command')
 		       [] lt then
 			  line('use --grade=(down|any) in your command')
 		       end])
-      [] ozmake(database:upgrade(Old New)) then
+      [] ozmake(database:upgrade(Old New OldVer NewVer UsingVersion)) then
 	 error(kind : TITLE_DATABASE
-	       msg  : 'package already installed with newer release date'
-	       items: [hint(l:'Release date of installed version' m:Old)
-		       hint(l:'Release date of this package' m:New)
+	       msg  : 'package already installed with newer '#if UsingVersion then 'version' else 'release date' end
+	       items: [hint(l:'Release date of installed package' m:Old)
+		       hint(l:'Version      of installed package' m:if OldVer==unit then 'None' else OldVer end)
+		       hint(l:'Release date of this      package' m:New)
+		       hint(l:'Version      of this      package' m:if NewVer==unit then 'None' else NewVer end)
 		       line('use --grade=(down|any) in your command')])
-      [] ozmake(database:downgrade(Old New)) then
+      [] ozmake(database:downgrade(Old New OldVer NewVer UsingVersion)) then
 	 error(kind : TITLE_DATABASE
-	       msg  : 'package already installed with older release date'
-	       items: [hint(l:'Release date of installed version' m:Old)
-		       hint(l:'Release date of this package' m:New)
+	       msg  : 'package already installed with older '#if UsingVersion then 'version' else 'release date' end
+	       items: [hint(l:'Release date of installed package' m:Old)
+		       hint(l:'Version      of installed package' m:if OldVer==unit then 'None' else OldVer end)
+		       hint(l:'Release date of this      package' m:New)
+		       hint(l:'Version      of this      package' m:if NewVer==unit then 'None' else NewVer end)
 		       line('use --grade=(up|any) in your command')])
       [] ozmake(filenotfound:F) then
 	 error(kind : TITLE
@@ -546,6 +554,11 @@ prepare
 	       items: [line('either provide an explicit --package=FILE argument')
 		       line('or the makefile should contain a MOGUL id from which')
 		       line('I can automatically derive a plausible package filename')])
+      [] ozmake(badwantversion(S)) then
+	 error(kind : TITLE
+	       msg  : 'bad value for --packageversion'
+	       items: [hint(l:'Value' m:S)
+		       line('a version number should consist of integers separated by single dots')])
       end
    end
 define

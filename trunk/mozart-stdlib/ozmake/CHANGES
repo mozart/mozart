@@ -1,5 +1,13 @@
 -*-outline-*-
 
+* version 0.76
+** ozmake --publish will now publish the package both under the bare filename
+   derived from the mogul id and from the same augmented with the
+   version number if any.
+** ozmake --install will compare both version and date to determine if the
+   package to be installed is newer than the installed
+   version. version is more significant than date.
+
 * version 0.75
 ** ozmake --create will now automatically pick a package filename if none
    is given: it will be formed using the mogul id and the version number
