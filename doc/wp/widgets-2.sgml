@@ -58,9 +58,9 @@
 
     <p>
       <Figure id="figure.widgets-2.buttons">
-	<Caption/Buttons with attached actions./
-	<P>
-	  <Picture.Extern to="button.gif" type=gif>
+        <Caption/Buttons with attached actions./
+        <P>
+          <Picture.Extern to="button.gif" type=gif>
 <chunk class=anonymous><title/button/
 B1 = {New Tk.button tkInit(parent: T 
                            text:   'Press me!'
@@ -126,9 +126,9 @@ B2 = {New Tk.button tkInit(parent: T
       which of the radiobuttons is selected initially.
 
       <Figure id="figure.widgets-2.check-and-radio">
-	<Caption/A checkbutton and three radiobuttons./
-	<P>
-	  <Picture.Extern to="check-and-radio.gif" type=gif>
+        <Caption/A checkbutton and three radiobuttons./
+        <P>
+          <Picture.Extern to="check-and-radio.gif" type=gif>
 <chunk class=anonymous><title/check and radio/
 V1 = {New Tk.variable tkInit(false)}
 C  = {New Tk.checkbutton tkInit(parent:T variable:V1
@@ -169,28 +169,28 @@ Rs = {Map ['Times' 'Helvetica' 'Courier']
       in <Ptr to="figure.widgets-2.check-and-radio">.
 
       <Figure id="figure.widgets-2.check-and-radio-action">
-	<Caption/Actions for radiobuttons and checkbuttons./
-	<P>
-	  <Picture.Extern to="check-and-radio-action.gif" type=gif>
+        <Caption/Actions for radiobuttons and checkbuttons./
+        <P>
+          <Picture.Extern to="check-and-radio-action.gif" type=gif>
 <chunk class=anonymous><title/LC/
 fun {GetWeight}
    if {V1 tkReturnInt($)}==1 then bold else normal end
 end
 F = {New Tk.font tkInit(size:24
-			family: {V2 tkReturn($)}
-			weight: {GetWeight})}
+                        family: {V2 tkReturn($)}
+                        weight: {GetWeight})}
 L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
 
 {C  tkAction(action: proc {$}
-			{F tk(configure weight:{GetWeight})}
-			{L tk(configure font:F)}
-		     end)}
+                        {F tk(configure weight:{GetWeight})}
+                        {L tk(configure font:F)}
+                     end)}
 {List.forAllInd ['Times' 'Helvetica' 'Courier']
  proc {$ I Family}
     {{Nth Rs I} tkAction(action: proc {$}
-				    {F tk(configure family:Family)}
-				    {L tk(configure font:F)}
-				 end)}
+                                    {F tk(configure family:Family)}
+                                    {L tk(configure font:F)}
+                                 end)}
  end}
 </chunk>
       </Figure>
@@ -239,45 +239,45 @@ L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
       transformed by <<tkReturnInt>> to the integer&nbsp;<<1>>.
 
       <Figure class=table id="table.widgets-2.return">
-	<Caption/Returns methods and examples of return values./
-	<Table>
-	  <TR>
-	    <TH>Method
-	    <TH>Example string
-	    <TH>Return value
-	  <TR>
-	    <TD><<tkReturn>>
-	    <TD><<"red 1 1.0">>
-	    <TD><<"red 1 1.0">>
-	  <TR>
-	    <TD><<tkReturnAtom>>
-	    <TD><<"red 1 1.0">>
-	    <TD><<'red 1 1.0'>>
-	  <TR>
-	    <TD><<tkReturnInt>>
-	    <TD><<"1">>
-	    <TD><<1>>
-	  <TR>
-	    <TD><<tkReturnFloat>>
-	    <TD><<"1.0">>
-	    <TD><<1.0>>
-	  <TR>
-	    <TD><<tkReturnList>>
-	    <TD><<"red 1 1.0">>
-	    <TD><<["red" "1" "1.0"]>>
-	  <TR>
-	    <TD><<tkReturnListAtom>>
-	    <TD><<"red 1 1.0">>
-	    <TD><<[red '1' '1.0']>>
-	  <TR>
-	    <TD><<tkReturnListInt>>
-	    <TD><<"red 1 1.0">>
-	    <TD><<[false 1 1]>>
-	  <TR>
-	    <TD><<tkReturnListFloat>>
-	    <TD><<"red 1 1.0">>
-	    <TD><<[false 1.0 1.0]>>
-	</Table>
+        <Caption/Returns methods and examples of return values./
+        <Table>
+          <TR>
+            <TH>Method
+            <TH>Example string
+            <TH>Return value
+          <TR>
+            <TD><<tkReturn>>
+            <TD><<"red 1 1.0">>
+            <TD><<"red 1 1.0">>
+          <TR>
+            <TD><<tkReturnAtom>>
+            <TD><<"red 1 1.0">>
+            <TD><<'red 1 1.0'>>
+          <TR>
+            <TD><<tkReturnInt>>
+            <TD><<"1">>
+            <TD><<1>>
+          <TR>
+            <TD><<tkReturnFloat>>
+            <TD><<"1.0">>
+            <TD><<1.0>>
+          <TR>
+            <TD><<tkReturnList>>
+            <TD><<"red 1 1.0">>
+            <TD><<["red" "1" "1.0"]>>
+          <TR>
+            <TD><<tkReturnListAtom>>
+            <TD><<"red 1 1.0">>
+            <TD><<[red '1' '1.0']>>
+          <TR>
+            <TD><<tkReturnListInt>>
+            <TD><<"red 1 1.0">>
+            <TD><<[false 1 1]>>
+          <TR>
+            <TD><<tkReturnListFloat>>
+            <TD><<"red 1 1.0">>
+            <TD><<[false 1.0 1.0]>>
+        </Table>
       </Figure>
 
     <P>
@@ -291,34 +291,34 @@ L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
       <Title/Querying Configuration Options/
 
       <P>
-	The values of configuration options of a widget can be queried with the
-	<<configure>> command.  Instead of giving a value to which the option
-	is to be set, we give the tickle <<unit>> as value.  The tickle
-	<<unit>> expands to just nothing, meaning that the value is not to
-	be set but to be queried.  For example, to query the value of the
-	<<bg>> option of a widget&nbsp;?_{T}, we can feed
+        The values of configuration options of a widget can be queried with the
+        <<configure>> command.  Instead of giving a value to which the option
+        is to be set, we give the tickle <<unit>> as value.  The tickle
+        <<unit>> expands to just nothing, meaning that the value is not to
+        be set but to be queried.  For example, to query the value of the
+        <<bg>> option of a widget&nbsp;?_{T}, we can feed
 <<<{Browse {?_{T} tkReturnListAtom(configure bg:unit $)}}>>
 
       <P>
-	This displays a list of atoms, usually it suffices to know that the
-	current value of the option is the fifth element of the list, whereas
-	its default value is the fourth element of the list.
+        This displays a list of atoms, usually it suffices to know that the
+        current value of the option is the fifth element of the list, whereas
+        its default value is the fourth element of the list.
 
     <SubSection>
       <Title/Querying Widget Parameters/
 
       <P>
-	The command <<winfo>> is helpful to query parameters of widgets.  For
-	instance, to query the positon and geometry of a widget&nbsp;?_{T}, we
-	can use the following:
+        The command <<winfo>> is helpful to query parameters of widgets.  For
+        instance, to query the positon and geometry of a widget&nbsp;?_{T}, we
+        can use the following:
 <<<{Browse {Map [rootx width rooty height]
          fun {$ A} 
             {Tk.returnInt winfo(A ?_{T})} 
          end}}>>>
 
-	The <<winfo>> commands provides more options than those used above,
-	for the details please consult <ref.extern
-	to="&tkcmd/winfo.htm"/<kbd/winfo//.
+        The <<winfo>> commands provides more options than those used above,
+        for the details please consult <ref.extern
+        to="&tkcmd/winfo.htm"/<kbd/winfo//.
 
 
   <Section id="section.widgets-2.menu">
@@ -328,11 +328,11 @@ L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
       Menu widgets serve as containers for menu entries.  A menu entry can be
       one of the following:
       <Table>
-	<TR/<TD/<<separator>>/<TD/displays a vertical line//
-	<TR/<TD/<<command>>/<TD/similar to button widgets//
-	<TR/<TD/<<radiobutton>>/<TD/similar to radiobutton widgets//
-	<TR/<TD/<<checkbutton>>/<TD/similar to checkbutton widgets//
-	<TR/<TD/<<cascade>>/<TD/displays sub menus//
+        <TR/<TD/<<separator>>/<TD/displays a vertical line//
+        <TR/<TD/<<command>>/<TD/similar to button widgets//
+        <TR/<TD/<<radiobutton>>/<TD/similar to radiobutton widgets//
+        <TR/<TD/<<checkbutton>>/<TD/similar to checkbutton widgets//
+        <TR/<TD/<<cascade>>/<TD/displays sub menus//
       </Table>
       Menu entries are not widgets.  In particular, menu entries are not
       managed by a geometry manager.  Instead as soon as a menu entry is
@@ -349,9 +349,9 @@ L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
       entry displays the menu in a window on its own.
 
       <Figure id="figure.widgets-2.menu">
-	<Caption/A menu with entries, including a cascaded sub menu./
-	<P>
-	  <Picture.Extern to="menu.gif" type=gif>
+        <Caption/A menu with entries, including a cascaded sub menu./
+        <P>
+          <Picture.Extern to="menu.gif" type=gif>
 <chunk class=anonymous><title/menu/
 Cs =['Wheat' 'Firebrick' 'Navy' 'Darkorange']
 M1 ={New Tk.menu tkInit(parent:T  tearoff:false)}
@@ -363,10 +363,10 @@ E3 ={New Tk.menuentry.command
      tkInit(parent:M1 label:'Quit' action: T # tkClose)}
 V  ={New Tk.variable tkInit(Cs.1)}
 CEs={Map Cs fun {$ C}
-	       {New Tk.menuentry.radiobutton
-		tkInit(parent:M2 label:C var:V val:C
-		       action: T # tk(configure bg:C))}
-	    end}
+               {New Tk.menuentry.radiobutton
+                tkInit(parent:M2 label:C var:V val:C
+                       action: T # tk(configure bg:C))}
+            end}
 </chunk>
       </Figure>
 
@@ -395,7 +395,7 @@ CEs={Map Cs fun {$ C}
       appear on the screen.  Ideally, we want the menu widget to appear after
       pressing the mouse button when the mouse pointer is over some widget.
       The <ref to="section.widgets-2.events"/next section/ introduces
-      events which allows to attach actions to abitrary widgets.
+      events which allows to mattach actions to abitrary widgets.
 
   <Section id="section.widgets-2.events">
     <Title/Events/
@@ -433,14 +433,15 @@ CEs={Map Cs fun {$ C}
       event arguments.
 
       <Figure id="figure.widgets-2.event-menu">
-	<Caption/Action to popup menu./
+        <Caption/Action to popup menu./
 <chunk class=anonymous><title/popup/
-TX={Tk.returnInt winfo(rootx T)}
-TY={Tk.returnInt winfo(rooty T)}
 {T tkBind(event:  '&lt;Button-1&gt;'
-	  args:   [int(x) int(y)]
-	  action: proc {$ X Y}
-		     {Tk.send tk_popup(M1 X+TX Y+TY)}
+          args:   [int(x) int(y)]
+          action: proc {$ X Y}
+                     TX={Tk.returnInt winfo(rootx T)}
+                     TY={Tk.returnInt winfo(rooty T)}
+                  in
+                     {Tk.send tk_popup(M1 X+TX Y+TY)}
                   end)}
 </chunk>
       </Figure>
@@ -449,99 +450,99 @@ TY={Tk.returnInt winfo(rooty T)}
       <Title/Event Patterns/
 
       <P>
-	An event pattern is either a string consisting of a single character,
-	where the character must be different from the space character and
-	<<&lt;>>.  This event pattern matches a <<KeyPress>> event for that
-	character.
+        An event pattern is either a string consisting of a single character,
+        where the character must be different from the space character and
+        <<&lt;>>.  This event pattern matches a <<KeyPress>> event for that
+        character.
 
       <P>
-	Otherwise, an event pattern must be a string
+        Otherwise, an event pattern must be a string
 <<<'&lt;'#?_{Modifier}#'-'#?_{Modifier}#'-'#?_{Type}#'-'#?_{Detail}#'&gt;'>>>
-	where only one of either ?_{Type} or ?_{Detail} is mandatory.  This
-	means, for example that also
-	<<<'&lt;'#?_{Type}#'&gt;'>>>
-	or
-	<<<'&lt;'#?_{Detail}#'&gt;'>>>
-	are valid event patterns. 
+        where only one of either ?_{Type} or ?_{Detail} is mandatory.  This
+        means, for example that also
+        <<<'&lt;'#?_{Type}#'&gt;'>>>
+        or
+        <<<'&lt;'#?_{Detail}#'&gt;'>>>
+        are valid event patterns. 
 
       <P>
-	<Ptr to="figure.widgets-2.event-args2"> shows common event modifiers
-	and event types.  Multiple entries separated by commas can be used as
-	synonyms.  The full set of modifiers and types is described in
+        <Ptr to="figure.widgets-2.event-args2"> shows common event modifiers
+        and event types.  Multiple entries separated by commas can be used as
+        synonyms.  The full set of modifiers and types is described in
         <ref.extern to="&tkcmd/bind.htm"/<kbd/bind//.
 
-	<Figure id="figure.widgets-2.event-args2">
-	  <Caption/Some event modifiers and types./
-	  <P proglang=none>
-	    <Table>
-	      <Title/Event Modifier/
-	      <TR>
-		<TD/<<Control>>/
-		<TD/<<Shift>>/
-		<TD/<<Lock>>/
-		<TD/<<Meta>>/
-		<TD/<<Alt>>/
-	      <TR>
-		<TD/<<Button1>>, <<B1>>/
-		<TD/<<Button2>>, <<B2>>/
-		<TD/<<Button3>>, <<B3>>/
-		<TD/<<Button4>>, <<B4>>/
-		<TD/<<Button5>>, <<B5>>/
-	      <TR>
-		<TD/<<Double>>/
-		<TD/<<Triple>>/
-		<TD/<P.silent>/
-		<TD/<P.silent>/
-		<TD/<P.silent>/
-	    </Table>
-	    <Table>
-	      <TR>
-		<TH/Event Type/
-		<TH/Description/
-	      <TR>
-		<TD/<<Key>>, <<KeyPress>>/
-		<TD/key has been pressed/
-	      <TR>
-		<TD/<<KeyRelease>>/
-		<TD/key has been released/
-	      <TR>
-		<TD/<<Button>>, <<ButtonPress>>/
-		<TD/mouse button has been pressed/
-	      <TR>
-		<TD/<<ButtonRelease>>/
-		<TD/mouse button has been released/
-	      <TR>
-		<TD/<<Enter>>/
-		<TD/mouse pointer has entered a widget/
-	      <TR>
-		<TD/<<Leave>>/
-		<TD/mouse pointer has left a widget/
-	      <TR>
-		<TD/<<Motion>>/
-		<TD/mouse pointer has been moved within widget/
-	    </Table>
-	</Figure>
+        <Figure id="figure.widgets-2.event-args2">
+          <Caption/Some event modifiers and types./
+          <P proglang=none>
+            <Table>
+              <TR/<TH colspan=5/Event Modifier//
+              <TR>
+                <TD/<<Control>>/
+                <TD/<<Shift>>/
+                <TD/<<Lock>>/
+                <TD/<<Meta>>/
+                <TD/<<Alt>>/
+              <TR>
+                <TD/<<Button1>>, <<B1>>/
+                <TD/<<Button2>>, <<B2>>/
+                <TD/<<Button3>>, <<B3>>/
+                <TD/<<Button4>>, <<B4>>/
+                <TD/<<Button5>>, <<B5>>/
+              <TR>
+                <TD/<<Double>>/
+                <TD/<<Triple>>/
+                <TD/<P.silent>&nbsp;/
+                <TD/<P.silent>&nbsp;/
+                <TD/<P.silent>&nbsp;/
+            </Table>
+            <Table>
+              <TR>
+                <TH/Event Type/
+                <TH/Description/
+              <TR>
+                <TD/<<Key>>, <<KeyPress>>/
+                <TD/key has been pressed/
+              <TR>
+                <TD/<<KeyRelease>>/
+                <TD/key has been released/
+              <TR>
+                <TD/<<Button>>, <<ButtonPress>>/
+                <TD/mouse button has been pressed/
+              <TR>
+                <TD/<<ButtonRelease>>/
+                <TD/mouse button has been released/
+              <TR>
+                <TD/<<Enter>>/
+                <TD/mouse pointer has entered a widget/
+              <TR>
+                <TD/<<Leave>>/
+                <TD/mouse pointer has left a widget/
+              <TR>
+                <TD/<<Motion>>/
+                <TD/mouse pointer has been moved within widget/
+            </Table>
+        </Figure>
 
       <P>
-	For example, the event pattern
-	<<<'&lt;Shift-Double-Button&gt;'>>>
-	matches the event that a mouse button is double-klicked while
-	the control key is pressed.
+        For example, the event pattern
+        <<<'&lt;Shift-Double-Button&gt;'>>>
+        matches the event that a mouse button is double-klicked while
+        the shift key is pressed.
 
       <P proglang=none>
-	If the event is <<ButtonPress>> or <<ButtonRelease>>, ?_{Detail} may
-	be the number of a mouse button.  The number must be between <<1>>
-	and&nbsp;<<5>>, where <<1>> is the leftmost button.  The number as
-	detail means that only events from pressing or releasing this
-	particular button match.  If no detail is given, pressing or
-	releasing any button matches the event.  If a number is given as
-	detail, <<ButtonPress>> can be omitted, &eg;, <<&lt;ButtonPress-1&gt;>>
-	and <<&lt;1&gt;>> match the same events.
+        If the event is <<ButtonPress>> or <<ButtonRelease>>, ?_{Detail} may
+        be the number of a mouse button.  The number must be between <<1>>
+        and&nbsp;<<5>>, where <<1>> is the leftmost button.  The number as
+        detail means that only events from pressing or releasing this
+        particular button match.  If no detail is given, pressing or
+        releasing any button matches the event.  If a number is given as
+        detail, <<ButtonPress>> can be omitted, &eg;, <<&lt;ButtonPress-1&gt;>>
+        and <<&lt;1&gt;>> match the same events.
 
       <P proglang=none>
-	If the event is <<KeyPress>> or <<KeyRelease>>, ?_{Detail} may be
-	the specification of an X keysymbol, &eg;, <<comma>> for the
-	<Key/,/&nbsp;key.  For more information please consult
+        If the event is <<KeyPress>> or <<KeyRelease>>, ?_{Detail} may be
+        the specification of a keysymbol, &eg;, <<comma>> for the
+        <Key/,/&nbsp;key.  For more information please consult
         <ref.extern to="&tkcmd/bind.htm"/<kbd/bind//.
 
 
@@ -549,92 +550,138 @@ TY={Tk.returnInt winfo(rooty T)}
       <Title/Event Arguments/
 
       <P>
-	The <<args>> option of the <<tkBind>> method takes a list of
-	argument specifications.  An argument specification describes
-	the type of the argument and the argument itself.  <Ptr
-	to="figure.widgets-2.event-args"> shows the valid types and some
-	arguments.  The types mean the same as the types for the different
-	return methods as discussed in <Ptr to="section.widgets-2.return">.
+        The <<args>> option of the <<tkBind>> method takes a list of
+        argument specifications.  An argument specification describes
+        the type of the argument and the argument itself.  <Ptr
+        to="figure.widgets-2.event-args"> shows the valid types and some
+        arguments.  The types mean the same as the types for the different
+        return methods as discussed in <Ptr to="section.widgets-2.return">.
 
-	<Figure id="figure.widgets-2.event-args">
-	  <Caption/Event arguments./
-	  <P>
-	    <Table>
-	      <Title/Argument Type/
-	      <TR>
-		<TD/<<string(?_{A})>>, <<?_{A}>>/
-		<TD/<<atom(?_{A})>>/
-		<TD/<<int(?_{A})>>/
-		<td/<<float(?_{A})>>/
-	      <TR>
-		<TD/<<list(string(?_{A}))>>, <<list(?_{A})>>/
-		<TD/<<list(atom(?_{A})>>/
-		<TD/<<list(int(?_{A})>>/
-		<TD/<<list(float(?_{A})>>/
-	    </Table>
-	    <Table proglang=none>
-	      <TR>
-		<TH/Event Argument/
-		<TH/Description/
-	      <TR>
-		<TD/<<x>>/
-		<TD/x coordinate/
-	      <TR>
-		<TD/<<y>>/
-		<TD/y coordinate/
-	      <TR>
-		<TD/<<K>>/
-		<TD/string describing the symbol of the key pressed/
-	      <TR>
-		<TD/<<A>>/
-		<TD/character describing the key pressed/
-	    </Table>
-	</Figure>
+        <Figure id="figure.widgets-2.event-args">
+          <Caption/Event arguments./
+          <P>
+            <Table>
+              <TR/<TH colspan=4/Argument Type//
+              <TR>
+                <TD/<<string(?_{A})>>, <<?_{A}>>/
+                <TD/<<atom(?_{A})>>/
+                <TD/<<int(?_{A})>>/
+                <td/<<float(?_{A})>>/
+              <TR>
+                <TD/<<list(string(?_{A}))>>, <<list(?_{A})>>/
+                <TD/<<list(atom(?_{A})>>/
+                <TD/<<list(int(?_{A})>>/
+                <TD/<<list(float(?_{A})>>/
+            </Table>
+            <Table proglang=none>
+              <TR>
+                <TH/Event Argument/
+                <TH/Description/
+              <TR>
+                <TD/<<x>>/
+                <TD/x coordinate/
+              <TR>
+                <TD/<<y>>/
+                <TD/y coordinate/
+              <TR>
+                <TD/<<K>>/
+                <TD/string describing the symbol of the key pressed/
+              <TR>
+                <TD/<<A>>/
+                <TD/character describing the key pressed/
+            </Table>
+        </Figure>
 
     <SubSection>
       <Title/Invoking Actions/
 
       <P>
-	When an event matches an event pattern to which an action has been
-	bound by <<tkBind>>, a new thread is created in which the action is
-	executed.  If the action is a procedure the arity of the procedure
-	has to be equal to the length of the argument list specified in
-	<<tkBind>>.
+        When an event matches an event pattern to which an action has been
+        bound by <<tkBind>>, a new thread is created in which the action is
+        executed.  If the action is a procedure the arity of the procedure
+        has to be equal to the length of the argument list specified in
+        <<tkBind>>.
 
       <P>
-	If the action is a pair of object and message, the object is applied
-	to message with the arguments appended.  For example, after creating
-	an event binding by
+        If the action is a pair of object and message, the object is applied
+        to message with the arguments appended.  For example, after creating
+        an event binding by
 <<<{T tkBind(event:  '<1>'
           args:   [int(x)]
-          action: O # invoke(button))}>>>
-	pressing the leftmost button at ?{x} coordinate 42 creates a thread to
-	execute the statement 
-	<<<{O invoke(button 42)}>>>
+          action: ?_{O} # invoke(button))}>>>
+        pressing the leftmost button at x-coordinate 42 creates a thread that
+        executes the statement 
+        <<<{?_{O} invoke(button 42)}>>>
 
     <SubSection>
       <Title/Appending and Deleting Event Bindings/
 
       <P>
-	If <<tkBind>> is used as before, any other existing binding for the
-	event pattern specified is overwritten.  If no action is specified any
-	existing binding for the event pattern is deleted.
+        If <<tkBind>> is used as before, any other existing binding for the
+        event pattern specified is overwritten.  If no action is specified any
+        existing binding for the event pattern is deleted.
 
       <P>
-	For a single event pattern there may be more than one binding.  To
-	create an event binding that does not overwrite already existing
-	bindings, we can give the option <<append>> with value <<true>>.
-	For instance, if we do not only want to popup the menu but also to
-	display <<pop>> in the Browser, we can create an additional binding by
-<<<{T tkBind(event:'<1>' append:true
-          action: proc {$} {Browse pop} end)}>>>
+        For a single event pattern there may be more than one binding.  To
+        create an event binding that does not overwrite already existing
+        bindings, we can give the option <<append>> with value <<true>>.
+        For instance, if we do not only want to popup the menu but also to
+        display <<pop>> in the Browser, we can create an additional binding by
+<chunk class=anonymous><title/event append/
+{T tkBind(event:  '<1>' 
+          append: true
+          action: proc {$} {Browse pop} end)}
+</chunk>
 
   <Section id="section.widgets-2.action">
     <Title/More on Actions: Listeners/
 
     <p>
-      Gaga.
+      In previous sections we used procedures or pairs of object and
+      message as actions. Each time an action is invoked, a new thread
+      is created. While this is fine as it comes to efficiency
+      (threads in &Oz; are light weight), it may cause trouble in
+      that the order in which actions are invoked might be lost: the
+      threads are created in the right order but there is no guarantee
+      that they will run in that order.
 
+    <p>
+      To that aim the class <<Tk.listener>> is provided. An instance
+      of a subclass of <<Tk.listener>> has a thread of its own, in
+      which it serves action messages in order of invocation.
+      For example, in
+<chunk class=anonymous><title/listener/
+L ={New class $ from Tk.listener
+            meth b1 {Browse b1} end
+            meth b2 {Browse b2} end
+         end tkInit}
+B1={New Tk.button tkInit(parent:T text:'One' action: L # b1)}
+B2={New Tk.button tkInit(parent:T text:'Two' action: L # b2)}
+{Tk.send pack(B1 B2 side:left)}
+</chunk>
+      the methods <<b1>> and <<b2>> are always executed in the same
+      order in which the corresponding buttons are pressed.
+
+    <p>
+      When the <<tkInit>> method of the class <<Tk.listener>> is
+      executed, a new thread together with a message stream is
+      created.
+      Whenever an action is 
+      invoked, where the object ?_{O} of an object message pair
+      <<?_{O}#?_{M}>> is an instance of <<Tk.listener>>, no new thread
+      is created but ?_{M} is appended at the end of the message stream.
+      The thread then serves the message ?_{M} as soon as all previous
+      messages on the stream have been served completely. It serves
+      ?_{M} by executing the object application <<{?_{O} ?_{M}}>>.
+
+    <p>
+      An additional message ?_{M} to be served can be given to a
+      listener by the method <<tkServe(?_{M})>>. For example, by
+<chunk class=anonymous><title/tkServe/
+{L tkServe(b1)}
+</chunk>
+      the message <<b1>> is served by <<L>>.
+    
   </Section>
 
   <Section id="section.widgets-2.entry">
@@ -649,14 +696,14 @@ TY={Tk.returnInt winfo(rooty T)}
       appended is taken as width in characters and not in pixels.
 
       <Figure id="figure.widgets-2.entry">
-	<Caption/An entry widget to enter text./
-	<P>
-	  <Picture.Extern to="entry.gif" type=gif>
+        <Caption/An entry widget to enter text./
+        <P>
+          <Picture.Extern to="entry.gif" type=gif>
 <chunk class=anonymous><title/entry/
 L = {New Tk.label tkInit(parent:T text:'File name:')}
 E = {New Tk.entry tkInit(parent:T width:20)}
 {Tk.batch [pack(L E side:left pady:1#m padx:1#m)
-	   focus(E)]}
+           focus(E)]}
 </chunk>
        </Figure>
 
@@ -705,24 +752,26 @@ E = {New Tk.entry tkInit(parent:T width:20)}
       colors.
 
       <Figure id="figure.widgets-2.scales">
-	<Caption/Scales to configure a frame's background color./
-	<P>
-	  <Picture.Extern to="scales.gif" type=gif>
-<<<class FC from Tk.frame
-   attr red:0 green:0 blue:0
-   meth bg(C I)
-      C <- I FC,tk(configure bg:c(@red @green @blue))
-   end
-end
-F ={New FC tkInit(parent:T height:2#c)}
+        <Caption/Scales to configure a frame's background color./
+        <P>
+          <Picture.Extern to="scale.gif" type=gif>
+<chunk class=anonymous><title/scale/
+L = {New class $ from Tk.listener
+            attr red:0 green:0 blue:0
+            meth bg(C I)
+               C <- I {F tk(configure bg:c(@red @green @blue))}
+            end
+         end tkInit}
+F ={New Tk.frame tkInit(parent:T height:2#c)}
 Ss={Map [red green blue]
     fun {$ C}
        {New Tk.scale tkInit(parent:T orient:horizontal length:8#c
-			    label:C 'from':0 to:255
-			    action: F # bg(C)
-			    args:   [int])}
+                            label:C 'from':0 to:255
+                            action: L # bg(C)
+                            args:   [int])}
     end}
-{Tk.send pack(b(Ss) F fill:x)}>>>
+{Tk.send pack(b(Ss) F fill:x)}
+</chunk>
       </Figure>
 
     <P>
@@ -758,43 +807,39 @@ Ss={Map [red green blue]
       A scrollbar widgets allows the user to determine the portion of
       strings displayed by moving a slider.  Scrollbars are independent of
       a particular widget type: they can be also attached to other widgets
-      including entries.  See for an example also
-      <!--** <ptr to="section.canvas-text.canvas"> -->.
+      including entries.
 
     <P>
       <Ptr to="figure.widgets-2.listbox"> shows a program that allows to select
       a color from a list of colors.  The list of colors is provided by some
-      external file feeded at the beginning of the program.  The listbox object
-      is initilaized creates an event binding for pressing the left mouse
+      external file inserted at the beginning of the program.  The listbox object 
+      is initialized and creates an event binding for pressing the left mouse
       button as follows.  First the currently selected index&nbsp;<<I>>
       is retrieved (the strings in the list box are indexed).  Then the
       string&nbsp;<<C>> at this index is retrieved and used as background
       color of the listbox widget.
 
       <Figure id="figure.widgets-2.listbox">
-	<Caption/A listbox together with a vertical scrollbar./
-	<P>
-	  <Picture.Extern to="listbox.gif" type=gif>
-<<<\insert 'misc/colors.oz'
-class LC from Tk.listbox
-   meth init
-      LC,tkInit(parent:T height:6)
-      LC,tkBind(event:  '&lt;1&gt;'
-	        action: proc {$}
-			   I={L tkReturn(curselection $)}
-			   C={L tkReturn(get(I) $)}
-		        in
-			   {L tk(configure bg:C)}
-		        end)
-   end
-end
-L = {New LC init}
+        <Caption/A listbox together with a vertical scrollbar./
+        <P>
+          <Picture.Extern to="listbox.gif" type=gif>
+<chunk class=anonymous><title/listbox/
+L = {New Tk.listbox tkInit(parent:T height:6)}
+{L tkBind(event:  '&lt;1&gt;'
+          action: proc {$}
+                     I={L tkReturn(curselection $)}
+                     C={L tkReturn(get(I) $)}
+                  in
+                     {L tk(configure bg:C)}
+                  end)}
 S = {New Tk.scrollbar tkInit(parent:T)}
-{ForAll Colors proc {$ C}
-		  {L tk(insert 'end' C)}
-	       end}
+{ForAll <chunk.ref/Color names/ 
+ proc {$ C}
+    {L tk(insert 'end' C)}
+ end}
 {Tk.addYScrollbar L S}
-{Tk.send pack(L S fill:y side:left)}>>>
+{Tk.send pack(L S fill:y side:left)}
+</chunk>
       </Figure>
 
     <P>
@@ -820,9 +865,9 @@ S = {New Tk.scrollbar tkInit(parent:T)}
 
     <P>
       For example, by
-      <<<{Tk.send wm(iconify ?_{W})}>>>
-      the toplevel widget&nbsp;?_{W} is iconified whereas by
-      <<<{Tk.send wm(iconify ?_{W})}>>>
+      <<<{Tk.send wm(iconify ?_{T})}>>>
+      the toplevel widget&nbsp;?_{T} is iconified whereas by
+      <<<{Tk.send wm(iconify ?_{T})}>>>
       it is deiconified.
       For more information see <ref.extern to="&tkcmd/wm.htm"/<kbd/wm//.
 
@@ -833,7 +878,9 @@ S = {New Tk.scrollbar tkInit(parent:T)}
 
     <P>
       For example
-      <<<T={New Tk.toplevel tkInit(title:'Something different')}>>>
+<chunk class=anonymous><title/wm title/
+T={New Tk.toplevel tkInit(title:'Something different')}
+</chunk>
       creates a toplevel widget with the title <Samp/Something different/
       rather than <Samp/Oz Window/.
 
@@ -844,11 +891,15 @@ S = {New Tk.scrollbar tkInit(parent:T)}
       toplevel widget, invoke a geometry manager for them, and only then
       make the toplevel widget appear on the screen.  A toplevel widget can
       be created in withdrawn state by
-      <<<T={New Tk.toplevel tkInit(withdraw:true)}>>>
+<chunk class=anonymous><title/wm withdraw/
+T={New Tk.toplevel tkInit(withdraw:true)}
+</chunk>
 
     <P>
       To make the toplevel widget appear, the window manager command
-      <<<{Tk.send wm(deiconify T)}>>>
+<chunk class=anonymous><title/wm deiconify/
+{Tk.send wm(deiconify T)}
+</chunk>
       can be used.
 
   <Section id="section.widgets-2.file">
@@ -866,13 +917,15 @@ S = {New Tk.scrollbar tkInit(parent:T)}
       Otherwise, the string&nbsp;<<S>> gives the filename of the file to be
       openend.
       <Figure id="figure.widgets-2.file">
-	<Caption/Selecting files./
-	<P>
-	  <Picture.Extern to="file.gif" type=gif>
-<<<case {Tk.return tk_getOpenFile}
+        <Caption/Selecting files./
+        <P>
+          <Picture.Extern to="file.gif" type=gif>
+<chunk class=anonymous><title/file/
+case {Tk.return tk_getOpenFile}
 of nil then skip
-elseof S then {Show file({String.toAtom S})}
-end>>>
+elseof S then {Browse file({String.toAtom S})}
+end
+</chunk>
       </Figure>
 
     <P>
@@ -891,15 +944,6 @@ end>>>
       the rest see        <ref.extern to="&tkcmd/tk_getOpenFile.htm"/<kbd/tk_getOpenFile//) allow to specify a
       title and special filetypes.
 
-    <P>
-<<<case {Tk.return 
-      tk_getSaveFile(title:  'Select File'
-	             filetypes:  q(q('Postscript Files' q('.ps'))
-                                   q('Oz Files'         q('.oz'))
-			           q('All Files'        '*')))}
-of nil then skip
-elseof S then {Show file({String.toAtom S})} 
-end>>>
 
   <Section id="section.widgets-2.help">
     <Title/Example: Help Popups/
@@ -912,139 +956,175 @@ end>>>
       if the mouse pointer leaves the screen area covered by the widget.
 
     <P>
-      We will build a mixin class such that inheriting from the mixin class
-      and from a widget class, we obtain a class which provides this
-      functionality to us. We proceed in two steps, the first is to create a
-      toplevel widget that displays the help text, the second is the mixin
-      class itself.
+      We will build a procedure <<AttachHelp>> such that help texts
+      are enabled by application of
+      the procedure to a widget and a help text.
+      We proceed in three steps, the first is to create a function to
+      create a
+      toplevel widget that displays the help text, the second is a
+      listener class (that is, a subclass of <<Tk.listener>>), and the
+      last step is the definition of <<AttachHelp>> itself.
 
     <SubSection>
       <Title/Displaying Help/
+
       <P>
-	The procedure <<MakePopup>> shown in <Ptr
-	to="figure.widgets-2.help-create"> takes the help text as its
-	argument and returns a function to create a toplevel widget
-	containing the text at some positoon on the screen.
-	<Figure id="figure.widgets-2.help-create">
-	  <Caption/Creating a help window./
-<<<fun {MakePopup Text}
-   fun {$ X Y}
+        The procedure <<MakePopup>> shown in <Ptr
+        to="figure.widgets-2.help-create"> takes a widget and the help
+        text as its 
+        argument and returns a function to create a toplevel widget
+        containing the text at a position relative to the widget on
+        the screen.
+
+      <P>
+        <Figure id="figure.widgets-2.help-create">
+          <Caption/Creating a help window./
+<chunk><title/Definition of MakePopup/
+fun {MakePopup Parent Text}
+   fun {$}
+      [X Y H] = {Map [rootx rooty height]
+                 fun {$ WI}
+                    {Tk.returnInt winfo(WI Parent)}
+                 end}
       T = {New Tk.toplevel tkInit(withdraw:true bg:black)}
       M = {New Tk.message
-	   tkInit(parent:T text:Text bg:aquamarine4 aspect:400)}
+           tkInit(parent:T text:Text bg:khaki aspect:400)}
    in
       {Tk.batch [wm(overrideredirect T true)
-		 wm(geometry T '+'#X#'+'#Y)
-		 pack(M padx:2 pady:2)
-		 wm(deiconify T)]}
+                 wm(geometry T '+'#X+10#'+'#Y+H)
+                 pack(M padx:2 pady:2)
+                 wm(deiconify T)]}
       T
    end
-end>>>
-	</Figure>
+end
+</chunk>
+        </Figure>
 
       <P>
-	The returned function creates a toplevel widget in wirthdrawn state and
-	configures the toplevel widget such that it:
-	<List enum>
-	  <Item>
-	    is not equipped with a frame from the window manager.  This is
-	    done by using the window manager command <<overrideredirect>>:
-	    the window manager is advised to not <Q/redirect/ the toplevel
-	    widget into a frame.
-	  <Item>
-	    appears at the position given by <<X>> and&nbsp;<<Y>>, which is
-	    done by the <<geometry>> window manager command.
-	  <Item>
-	    appears on the screen by deiconifying it.
-	</List>
+        The returned function creates a toplevel widget in withdrawn state and
+        configures the toplevel widget such that it:
+        <List enum>
+          <Item>
+            is not equipped with a frame from the window manager.  This is
+            done by using the window manager command <<overrideredirect>>:
+            the window manager is advised to not <Q/redirect/ the toplevel
+            widget into a frame.
+          <Item>
+            appears at a position relative to <<X>> and&nbsp;<<Y>>
+            coordinates of the widget parent, which 
+            done by the <<geometry>> window manager command.
+          <Item>
+            appears on the screen by deiconifying it.
+        </List>
 
     <SubSection>
-      <Title/The Mixin Class/
+      <Title/The Listener Class/
 
       <P>
-	The mixin class <<Help>> is shown in <Ptr
-	to="figure.widgets-2.help-mixin">.  The method <<help>> initializes an
-	instance of this class by defining several event bindings and creating
-	a procedure for creation of the popup widget.
-	<Figure id="figure.widgets-2.help-mixin">
-	  <Caption/The mixin class./
-<<<class Help
-   attr Stamp:{NewName} Window:true
-   feat Popup
-   meth help(text:T)
-      {self tkBind(event:'&lt;Enter&gt;'  action:self#Start append:true)}
-      {self tkBind(event:'&lt;Leave&gt;'  action:self#Stop  append:true)}
-      {self tkBind(event:'&lt;Button&gt;' action:self#Stop  append:true)}
-      self.Popup = {MakePopup T}
+        The listener class <<HelpListener>> is shown in <Ptr
+        to="figure.widgets-2.help-mixin">.  The method <<init>> initializes an
+        instance of this class by creating
+        a procedure for creation of the popup widget.
+
+       <p>
+        <Figure id="figure.widgets-2.help-mixin">
+          <Caption/The listener class <<HelpListener>>./
+<chunk><title/Definition of HelpListener/
+class HelpListener from Tk.listener
+   attr
+      cancel: unit
+      popup:  unit
+   meth init(parent:P text:T)
+      popup <- {MakePopup P T}
+      Tk.listener,tkInit
    end
-   meth Start
-      NewStamp={NewName}
+   meth enter
+      C
    in
-      Stamp&lt;-NewStamp {Delay 1000} {self Display(NewStamp)}
-   end
-   meth Stop
-      Stamp&lt;-{NewName} 
-      case {IsObject @Window} then {@Window tkClose} else skip end
-   end
-   meth Display(NewStamp)
-      case @Stamp==NewStamp then
-	 [X Y H] = {Map [rootx rooty height]
-		    fun {$ WI} {Tk.returnInt winfo(WI self)} end}
-      in
-	 Window &lt;- {self.Popup X+10 Y+H}
-      else skip
+      cancel <- C
+      thread A={Alarm 1000} in
+         {WaitOr C A}
+         if {IsDet A} then T={@popup} in
+            {Wait C} {T tkClose}
+         end
       end
    end
-end>>>
-	</Figure>
+   meth leave
+      @cancel=unit
+   end
+end
+</chunk>
+        </Figure>
 
       <P>
-	When the mouse pointer enters the widget, the instance is applied to
-	the method <<Start>>.  This method creates a new timestamp, waits
-	for a second and then applies the object to a <<Display>> message
-	containing the timestammp.  Note that the object is released after
-	the new time stamp has been stored in the object.
+        When the mouse pointer enters the parent widget,
+        the method <<enter>> gets executed. This method stores a new
+        variable <<C>> in the attribute <<cancel>> which serves as
+        flag whether the help popup must be closed. The newly
+        created thread waits until either one second has elapsed
+        (<<A>> gets bound after 1000 milliseconds) or the widget has
+        been left (<<C>> gets bound). Then possibly the widget for the help
+        text is created, which gets closed when the parent widget is
+        left. Note that if both <<A>> and <<C>> happen to be bound at
+        the same time,
+        the popup will be created and then closed immediately.
 
       <P>
-	The <<Stop>> method creates a new time stamp and closes the window
-	stored in the attribute <<Window>>.  This method is invoked if either
-	the mouse button is pressed while the mouse pointer is over the widget
-	or the mouse pointer leaves the widget. If the popup widget has not
-	been created yet it must be prevented to be created: this is done by
-	creating a new timestamp.  Otherwise, the popup widget needs to be
-	closed.
+        The <<leave>> method signals that the help popup must be
+        closed by binding the variable stored in <<cancel>>.
 
-      <P>
-	The <<Display>> method creates a popup widget only if the time stamps
-	match: this is the case if the <<Stop>> method has not been executed
-	since the <<Start>> method was executed.  For creation of the poup
-	widget the coordinates for the popup widgets are determined such that
-	the popup widget does not overlap the widget itself.
+
+
+    <SubSection>
+      <Title/<<AttachHelp>>/
+
+      <p>
+        The definition of <<AttachHelp>> is shown in <ptr
+        to="figure.widgets-2.attach">. It creates a listener and
+        creates event bindings that are served by that listener.
+
+      <p>
+        <figure id="figure.widgets-2.attach">
+<chunk class=anonymous><title/Definition of AttachHelp/
+local
+   <chunk.ref/Definition of MakePopup/
+   <chunk.ref/Definition of HelpListener/
+in
+   proc {AttachHelp Widget Text}
+      L={New HelpListener init(parent:Widget text:Text)}
+   in
+      {Widget tkBind(event:'&lt;Enter&gt;'  action:L#enter append:true)}
+      {Widget tkBind(event:'&lt;Leave&gt;'  action:L#leave append:true)}
+      {Widget tkBind(event:'&lt;Button&gt;' action:L#leave append:true)}
+   end
+end
+</chunk>
+       </figure>
 
     <SubSection>
       <Title/Using Help Popups/
 
       <P>
-	A small example that shows how the mixin class is used is shown in
-	<Ptr to="figure.widgets-2.help-use">.  First a class is created by
-	inheriting from both the <<Help>> mixin as well as from the class
-	<<Tk.button>>.  This class is used to create three buttons with a
-	help poup attached.
-	<Figure id="figure.widgets-2.help-use">
-	  <Caption/Demo of the <<HelpPopup>> class./
-	  <P>
-	    <Picture.Extern to="help.gif" type=gif>
-<<<class HelpButton from Tk.button Help meth noop skip end end
-Bs = {Map ['Okay'   # noop    # 'Do nothing meaningful.'
-           'Cancel' # noop    # 'Do nothing at all.'
-           'Quit'   # tkClose # 'Close the window.']
-      fun {$ Text # Mess # Help}
-         B={New HelpButton tkInit(parent:T text:Text action:T#Mess)}
+        A small example that shows how to use help popups is shown in
+        <Ptr to="figure.widgets-2.help-use">.  
+
+      <P>
+        <Figure id="figure.widgets-2.help-use">
+          <Caption/Demo of the <<HelpPopup>> class./
+          <P>
+            <Picture.Extern to="help.gif" type=gif>
+<chunk class=anonymous><title/help/
+Bs = {Map ['Okay'   # 'Do nothing meaningful.'
+           'Cancel' # 'Do nothing at all.'
+           'Quit'   # 'Close the window.']
+      fun {$ Text # Help}
+         B={New Tk.button tkInit(parent:T text:Text)}
       in
-         {B help(text:Help)} B
+         {AttachHelp B Help} B
       end}
-{Tk.send pack(b(Bs) side:left padx:2#m pady:2#m)}>>>
-	</Figure>
+{Tk.send pack(b(Bs) side:left padx:2#m pady:2#m)}
+</chunk>
+        </Figure>
 
 
 
@@ -1105,11 +1185,25 @@ T={New Tk.toplevel tkInit}
 %% Events
 %%
 
+<chunk.ref/popup/
+
+<chunk.ref/event append/
+
+{T tkClose}
+
 
 
 %%
 %% More on Actions: Listeners
 %%
+
+declare
+T ={New Tk.toplevel tkInit}
+<chunk.ref/listener/
+
+<chunk.ref/tkServe/
+
+{T tkClose}
 
 
 
@@ -1117,11 +1211,25 @@ T={New Tk.toplevel tkInit}
 %% Entries and Focus
 %%
 
+declare
+T={New Tk.toplevel tkInit}
+<chunk.ref/entry/
+
+<chunk.ref/entry get/
+
+{T tkClose}
+
 
 
 %%
 %% Scales
 %%
+
+declare
+T={New Tk.toplevel tkInit}
+<chunk.ref/scale/
+
+{T tkClose}
 
 
 
@@ -1129,11 +1237,30 @@ T={New Tk.toplevel tkInit}
 %% Listboxes and Scrollbars
 %%
 
+declare
+T={New Tk.toplevel tkInit}
+<chunk.ref/listbox/
+
+{T tkClose}
+
 
 
 %%
 %% Toplevel Widgets and Window Manager Commands
 %%
+
+declare
+<chunk.ref/wm title/
+
+{T tkClose}
+
+
+declare
+<chunk.ref/wm withdraw/
+
+<chunk.ref/wm deiconify/
+
+{T tkClose}
 
 
 
@@ -1141,11 +1268,20 @@ T={New Tk.toplevel tkInit}
 %% Selecting Files
 %%
 
+<chunk.ref/file/
+
 
 
 %%
 %% Example: Help Popups
 %%
+
+declare
+<chunk.ref/Definition of AttachHelp/
+
+declare 
+T={New Tk.toplevel tkInit}
+<chunk.ref/help/
 
 
 
