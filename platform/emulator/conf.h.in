@@ -73,8 +73,8 @@
 /* define if libparser is linked statically */
 #undef STATIC_LIBPARSER
 
-/* define for including the Oz assembler */
-#undef OZMA
+/* define if libozma is linked statically */
+#undef STATIC_LIBOZMA
 
 /* debugging */
 #undef DEBUG_EMULATOR
