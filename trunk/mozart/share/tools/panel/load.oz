@@ -7,7 +7,10 @@
 
 local
 
-   PlainColor      = '#d9d9d9'
+   fun {TclGetConf T Opt}
+      l(lindex(l(T conf '-'#Opt) 4))
+   end
+
    ActiveColor     = white
    Width           = 240
    LeftWidth       = 60
@@ -94,8 +97,8 @@ in
 	 <<Load DrawTicks(5 ~ Height div 5)>>
 	 <<Tk.canvas tk(crea rectangle
 			~LeftWidth-4 Border ~1 ~Height - Border
-			outline: PlainColor
-			fill:    PlainColor
+			outline: {TclGetConf self bg}
+			fill:    {TclGetConf self bg}
 			tags:    self.CoverTag)>>
 	 <<Tk.canvas tk(crea rectangle 0 0 Width ~Height)>>
 	 <<Load DrawLabel(5 ~ Height div 5 Limit / 5.0)>>
