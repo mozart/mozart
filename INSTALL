@@ -129,7 +129,6 @@ before running configure the following variables can be set
     platform/<platform>/
 	binaries
 
-
 * TIPS:
 
   - run ./config.status to recreate the Makefile when changing Makefile.in
