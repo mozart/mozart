@@ -811,6 +811,8 @@ void AM::handleTasks()
   }
 }
 
+void (*oz_child_handle)() = 0;
+
 void AM::suspendEngine()
 {
   oz_deinstallPath(_rootBoard);
@@ -842,6 +844,11 @@ void AM::suspendEngine()
 
     if (isSetSFlag(TasksReady)) {
       handleTasks();
+    }
+
+    if (isSetSFlag(ChildReady)) {
+      unsetSFlag(ChildReady);
+      if (oz_child_handle!=0) (*oz_child_handle)();
     }
 
     if (!threadsPool.threadQueuesAreEmpty()) {
@@ -885,8 +892,6 @@ void AM::suspendEngine()
 
   osUnblockSignals();
 }
-
-void (*oz_child_handle)() = 0;
 
 void AM::checkStatus()
 {
