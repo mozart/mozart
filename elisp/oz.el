@@ -303,6 +303,8 @@ For example
     ("Browse"   . oz-feed-region-browse)
     ("Panel"   . oz-feed-panel)
     ("-----")
+    ("Next Oz buffer"         . oz-next-buffer)
+    ("Previous Oz buffer"     . oz-previous-buffer)
     ("New Oz buffer"          . oz-new-buffer)
     ("Fontify buffer"         . oz-fontify)
     ("Show/hide"
@@ -373,6 +375,8 @@ For example
   (define-key map "\M-\C-m" 'oz-feed-buffer)
   (define-key map "\M-r"    'oz-feed-region)
   (define-key map "\M-l"    'oz-feed-line)
+  (define-key map "\M-n"   'oz-next-buffer)
+  (define-key map "\M-p"   'oz-previous-buffer)
   (define-key map "\C-c\C-e"    'oz-toggle-errors)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
   (define-key map "\C-c\C-m"    'oz-toggle-machine)
@@ -425,7 +429,7 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
   (if (or (get-process "Oz Compiler") (get-process "Oz Machine"))
       (error "Oz already running, try halting Oz"))
   (start-oz-process)
-  (if (not (eq major-mode 'oz-mode))
+  (if (not (equal mode-name "Oz"))
       (oz-new-buffer)))
 
 (defvar oz-halt-timeout 5
@@ -512,12 +516,11 @@ the GDB commands `cd DIR' and `directory'."
   (oz-set-state 'oz-machine-state "running under gdb")
   (let* ((path (expand-file-name gdb-oz-machine))
 	(file (file-name-nondirectory path)))
-    (setq default-directory (file-name-directory path))
 
     (make-comint "Oz Machine" gdb-command-name nil "-fullname"
-		 "-cd" default-directory file)
+		 "-cd" (file-name-directory path) file)
     (save-excursion
-      (set-buffer (get-buffer "*Oz Machine*"))
+      (set-buffer (get-buffer-create "*Oz Machine*"))
       (delete-region (point-min) (point-max))
       (gdb-mode)
       )
@@ -969,7 +972,7 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-fontify-region(beg end &optional verbose)
   (if (null beg) (setq beg (mark)))
   (if (null end) (setq beg (point)))
-  (if (eq major-mode 'oz-mode)
+  (if (equal mode-name "Oz")
       (let ((old-case case-fold-search))
 	;; search case dependent:
 	(setq case-fold-search nil)
@@ -1189,7 +1192,7 @@ OZ compiler, machine and error window")
 (defun oz-previous-buffer()
   (interactive)
   (oz-hide-errors)
-  (bury-buffer)
+;;  (bury-buffer)
   (oz-walk-trough-buffers (buffer-list)))
 
 
@@ -1204,7 +1207,7 @@ OZ compiler, machine and error window")
 	(cur (current-buffer)))
     (while (and bufs bool)
       (set-buffer (car bufs))
-      (if (eq major-mode 'oz-mode)
+      (if (equal mode-name "Oz")
 	  (progn (switch-to-buffer (car bufs))
 		 (setq bool nil))
 	  (setq bufs (cdr bufs))))
