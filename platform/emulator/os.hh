@@ -30,7 +30,6 @@
 // execlp, getpid
 #include <process.h>
 
-inline int fork() { return -1; };
 
 #endif
 
@@ -102,6 +101,9 @@ void osKillChildren();
 Bool osHasJobControl();
 int osOpenMax();
 void osInit();
+
+int osread(int fd, void *buf, unsigned int len);
+int oswrite(int fd, void *buf, unsigned int len);
 
 inline
 int osMsToClockTick(int ms)
