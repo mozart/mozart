@@ -1801,48 +1801,63 @@ NotAvail("getServByName",3,unix_getServByName);
 NotAvail("uName",1,unix_uName);
 #endif
 
+// specification for builtins
+struct OZ_BIspec {
+  char *name;
+  int arity;
+  OZ_CFun fun;
+};
+
+
+OZ_BIspec spec[] = {
+  {"unix_getDir",2,unix_getDir},
+  {"unix_stat",2,unix_stat},
+  {"unix_getCWD",1,unix_getCWD},
+  {"unix_open",4,unix_open},
+  {"unix_fileDesc",2,unix_fileDesc},
+  {"unix_close",2,unix_close},
+  {"unix_write",3,unix_write},
+  {"unix_read",5,unix_read},
+  {"unix_lSeek",4,unix_lSeek},
+  {"unix_unlink",2,unix_unlink},
+  {"unix_readSelect",2,unix_readSelect},
+  {"unix_writeSelect",2,unix_writeSelect},
+  {"unix_deSelect",1,unix_deSelect},
+  {"unix_system",2,unix_system},
+  {"unix_getEnv",2,unix_getEnv},
+  {"unix_putEnv",2,unix_putEnv},
+  {"unix_gmTime",1,unix_gmTime},
+  {"unix_localTime",1,unix_localTime},
+  {"unix_srand",1,unix_srand},
+  {"unix_rand",1,unix_rand},
+  {"unix_randLimits",2,unix_randLimits},
+  {"unix_socket",4,unix_socket},
+  {"unix_bindInet",3,unix_bindInet},
+  {"unix_listen",3,unix_listen},
+  {"unix_connectInet",4,unix_connectInet},
+  {"unix_acceptInet",4,unix_acceptInet},
+  {"unix_shutDown",3,unix_shutDown},
+  {"unix_send",4,unix_send},
+  {"unix_sendToInet",6,unix_sendToInet},
+  {"unix_receiveFromInet",8,unix_receiveFromInet},
+  {"unix_getSockName",2,unix_getSockName},
+  {"unix_getHostByName",2,unix_getHostByName},
+  {"unix_bindUnix",3,unix_bindUnix},
+  {"unix_sendToUnix",5,unix_sendToUnix},
+  {"unix_connectUnix",3,unix_connectUnix},
+  {"unix_acceptUnix",3,unix_acceptUnix},
+  {"unix_receiveFromUnix",7,unix_receiveFromUnix},
+  {"unix_pipe",4,unix_pipe},
+  {"unix_tempName",3,unix_tempName},
+  {"unix_wait",2,unix_wait},
+  {"unix_getServByName",3,unix_getServByName},
+  {"unix_uName",1,unix_uName},
+  {0,0,0}
+};
+
 void BIinitUnix()
 {
-  OZ_addBuiltin("unix_getDir",2,unix_getDir);
-  OZ_addBuiltin("unix_stat",2,unix_stat);
-  OZ_addBuiltin("unix_getCWD",1,unix_getCWD);
-  OZ_addBuiltin("unix_open",4,unix_open);
-  OZ_addBuiltin("unix_fileDesc",2,unix_fileDesc);
-  OZ_addBuiltin("unix_close",2,unix_close);
-  OZ_addBuiltin("unix_write",3,unix_write);
-  OZ_addBuiltin("unix_read",5,unix_read);
-  OZ_addBuiltin("unix_lSeek",4,unix_lSeek);
-  OZ_addBuiltin("unix_unlink",2,unix_unlink);
-  OZ_addBuiltin("unix_readSelect",2,unix_readSelect);
-  OZ_addBuiltin("unix_writeSelect",2,unix_writeSelect);
-  OZ_addBuiltin("unix_deSelect",1,unix_deSelect);
-  OZ_addBuiltin("unix_system",2,unix_system);
-  OZ_addBuiltin("unix_getEnv",2,unix_getEnv);
-  OZ_addBuiltin("unix_putEnv",2,unix_putEnv);
-  OZ_addBuiltin("unix_gmTime",1,unix_gmTime);
-  OZ_addBuiltin("unix_localTime",1,unix_localTime);
-  OZ_addBuiltin("unix_srand",1,unix_srand);
-  OZ_addBuiltin("unix_rand",1,unix_rand);
-  OZ_addBuiltin("unix_randLimits",2,unix_randLimits);
-  OZ_addBuiltin("unix_socket",4,unix_socket);
-  OZ_addBuiltin("unix_bindInet",3,unix_bindInet);
-  OZ_addBuiltin("unix_listen",3,unix_listen);
-  OZ_addBuiltin("unix_connectInet",4,unix_connectInet);
-  OZ_addBuiltin("unix_acceptInet",4,unix_acceptInet);
-  OZ_addBuiltin("unix_shutDown",3,unix_shutDown);
-  OZ_addBuiltin("unix_send",4,unix_send);
-  OZ_addBuiltin("unix_sendToInet",6,unix_sendToInet);
-  OZ_addBuiltin("unix_receiveFromInet",8,unix_receiveFromInet);
-  OZ_addBuiltin("unix_getSockName",2,unix_getSockName);
-  OZ_addBuiltin("unix_getHostByName",2,unix_getHostByName);
-  OZ_addBuiltin("unix_bindUnix",3,unix_bindUnix);
-  OZ_addBuiltin("unix_sendToUnix",5,unix_sendToUnix);
-  OZ_addBuiltin("unix_connectUnix",3,unix_connectUnix);
-  OZ_addBuiltin("unix_acceptUnix",3,unix_acceptUnix);
-  OZ_addBuiltin("unix_receiveFromUnix",7,unix_receiveFromUnix);
-  OZ_addBuiltin("unix_pipe",4,unix_pipe);
-  OZ_addBuiltin("unix_tempName",3,unix_tempName);
-  OZ_addBuiltin("unix_wait",2,unix_wait);
-  OZ_addBuiltin("unix_getServByName",3,unix_getServByName);
-  OZ_addBuiltin("unix_uName",1,unix_uName);
+  for (int i=0; spec[i].name; i++) {
+    OZ_addBuiltin(spec[i].name,spec[i].arity,spec[i].fun);
+  }
 }
