@@ -32,17 +32,17 @@ in
 		    action:  self # about
 		    key:     ctrl(i))
 		  separator
-		  C(label:   'Remove All'
+		  C(label:   'Remove All Threads'
 		    action:  self # action(RemoveAllAction)
 		    key:     ctrl(r))
-		  C(label:   'Remove All Dead'
+		  C(label:   'Remove Dead Threads'
 		    action:  self # action(RemoveAllDeadAction)
 		    key:     ctrl(u))
 		  separator
-		  C(label:   'Suspend'
+		  C(label:   'Suspend Debugging'
 		    action:  self # off
 		    key:     ctrl(x))
-		  C(label:   'Destroy'
+		  C(label:   'Destroy Ozcar'
 		    action:  Ozcar # reInit
 		    key:     ctrl(d))])
 	   MB(text: 'Thread'
