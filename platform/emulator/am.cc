@@ -890,12 +890,15 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
     TaggedRef *refPtr;
     TaggedRef value;
     trail.popRef(refPtr,value);
+
+    TaggedRef oldVal = makeTaggedRef(refPtr);
+    DEREF(oldVal,ptrOldVal,_1);
     *refPtr = value;
 
-    DebugCheck(!isAnyVar(*refPtr),
-               error("Non-variable on trail"));
-
     taggedBecomesSuspVar(refPtr)->addSuspension(susp);
+    if (isAnyVar(oldVal)) {
+      taggedBecomesSuspVar(ptrOldVal)->addSuspension(susp);
+    }
   }
 
   trail.popMark();
