@@ -309,10 +309,6 @@ case $platform in
 	oz_enable_modules_static=yes
 	if test "$target" = NONE
 	then # compiling for mingw32 under cygwin
-	    OZ_CXX_OPTIONS(-mno-cygwin,oz_cxx_mingw)
-	    CXX="$CXX $oz_cxx_mingw"
-	    OZ_CC_OPTIONS(-mno-cygwin,oz_cc_mingw)
-	    CC="$CC $oz_cc_mingw"
 	    LD="$CC"
 	    TOOLLDCMD="`cd .. && pwd`/mswindows/oztool -inc `pwd` ld"
 	else # cross-compiling
