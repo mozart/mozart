@@ -22,6 +22,7 @@
 functor
 import
    GBuilder(create: Create keyPress: KeyPress)
+   at 'x-oz://system/gtk/GBuilder.ozf'
    Open(file)
    NetDictionary('class'
                  defaultServer: DEFAULT_SERVER
