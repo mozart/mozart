@@ -39,9 +39,9 @@ static char SYSLETHEADER = 2;
 #define PERDIOMAGICSTART       31
 
 #define PERDIOMAJOR      1
-#define PERDIOMINOR      4
+#define PERDIOMINOR      5
 
-#define PERDIOVERSION     "1#4" /* PERDIOMAJOR "#" PERDIOMINOR */
+#define PERDIOVERSION     "1#5" /* PERDIOMAJOR "#" PERDIOMINOR */
 
 // the DIFs
 // the protocol layer needs to know about some of these 
