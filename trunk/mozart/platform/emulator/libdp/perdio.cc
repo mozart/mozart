@@ -139,9 +139,11 @@ void SendTo(DSite* toS,MsgBuffer *bs,MessageType mt,DSite* sS,int sI)
 
   int ret=toS->sendTo(bs,mt,sS,sI);
   if(ret==ACCEPTED) return;
-  if(ret==PERM_NOT_SENT)
+  if(ret==PERM_NOT_SENT){
     toS->communicationProblem(mt,sS,sI,COMM_FAULT_PERM_NOT_SENT,
 			      (FaultInfo) bs);
+    msgBufferManager->dumpMsgBuffer(bs);
+  }
   else
     toS->communicationProblem(mt,sS,sI,COMM_FAULT_TEMP_NOT_SENT,ret);
 }
