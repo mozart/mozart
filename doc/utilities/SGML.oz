@@ -31,19 +31,51 @@ export
    GetSubtree
    IsOfClass
 define
+   ParseError = 'sgml parse error'
+   CrossRefError = 'sgml cross-reference error'
+
    PI = {NewName}
-   fun {Parse File} Res Errors in
+
+   proc {OutputParseErrors S Reporter} Line Lines in
+      {List.takeDropWhile S fun {$ C} C \= &\n end ?Line ?Lines}
+      try R1 FileName R2 LineNumber R3 ColumnNumber R4 Kind Msg in
+	 Line = &n|&s|&g|&m|&l|&s|&:|R1
+	 {List.takeDropWhile R1 fun {$ C} C \= &: end ?FileName &:|?R2}
+	 {List.takeDropWhile R2 fun {$ C} C \= &: end ?LineNumber &:|?R3}
+	 {List.takeDropWhile R3 fun {$ C} C \= &: end ?ColumnNumber &:|?R4}
+	 Kind#Msg = case R4 of &E|&:|& |R then ParseError#R
+		    elseof &X|&:|& |R then CrossRefError#R
+		    elseof & |R then ParseError#R
+		    end
+	 {Reporter error(coord: pos({String.toAtom FileName}
+				    {String.toInt LineNumber}
+				    {String.toInt ColumnNumber})
+			 kind: Kind
+			 msg: Msg)}
+      catch _ then
+	 {Reporter error(kind: ParseError msg: Line)}
+      end
+      case Lines of [&\n] then skip
+      elseof &\n|Rest then {OutputParseErrors Rest Reporter}
+      elseof nil then skip
+      elseof X then {OutputParseErrors X Reporter}
+      end
+   end
+
+   fun {Parse File Reporter} Res Errors in
       {Parser.object
        process([File] ?Res
 	       catalog:{Property.get 'ozdoc.catalog'}
 	       casefold:lower
 	       error:Errors)}
-      case Errors of nil then {Transform Res.docElem}
+      case Errors of nil then
+	 {Transform Res.docElem}
       else
-	 {List.is Errors _}   % request lazily computed list
-	 raise errors(Errors) end
+	 {OutputParseErrors Errors Reporter}
+	 unit
       end
    end
+
    fun {GetSubtree M L ?Mr}
       if {IsTuple M} then
 	 case {Record.toList M} of (X=L(...))|Xr then
@@ -59,9 +91,11 @@ define
 	   {Filter {Record.toListInd M} fun {$ X#_} {IsInt X} end}} L ?Mr}
       end
    end
+
    fun {IsOfClass M C}
       {Member C {CondSelect M 'class' nil}}
    end
+
    fun {Transform E}
       case E
       of element(tag:T attributes:A linkAttributes:L children:C) then
@@ -69,10 +103,11 @@ define
 	  {Append {List.mapInd C fun {$ I C} I#{Transform C} end}
 	   {FoldR L TransformAttribute
 	    {FoldR A TransformAttribute nil}}}}
-      elseof pi(Name) then PI(Name)
-      elseof data(Bytes) then {ByteString.toString Bytes}
+      [] pi(Name) then PI(Name)
+      [] data(Bytes) then {ByteString.toString Bytes}
       end
    end
+
    fun {TransformAttribute A L}
       Prop = A.name Kind = A.kind Value = A.value
    in
