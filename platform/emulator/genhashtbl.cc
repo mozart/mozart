@@ -80,12 +80,12 @@ GenHashTable::basic_htAdd(int ke,GenHashBaseKey* kb, GenHashEntry *en){
   GenHashNode *main= &table[index];
   if(main->isEmpty()){
       main->set(ke,kb,en);
-      PERDIO_DEBUG1(HASH,"HASH:add-direct at %d",index);
+      PD(HASH,"add-direct at %d",index);
       return;}
   Assert(!(kb==main->getBaseKey()));
   GenHashNode *ne=manager->newGenHashNode();
   ne->setWithNext(ke,kb,en,main->getNext());
-  PERDIO_DEBUG1(HASH,"HASH:add-collision at %d",index);
+  PD(HASH,"add-collision at %d",index);
   main->setNext(ne);}
 
 inline void GenHashTable::rehash(GenHashNode *old,int size){
@@ -111,7 +111,7 @@ void GenHashTable::calc_percents(){
 
 void GenHashTable::resize(){
   int newSize=nextPrime2(tableSize*EXPANSION_FACTOR);
-  PERDIO_DEBUG3(TABLE,"TABLE:hash-table resize old=%d new=%d used=%d",
+  PD(TABLE,"hash-table resize old=%d new=%d used=%d",
 		tableSize,newSize,counter);
   PERDIO_DEBUG_DO1(TABLE2,resize_hash());
   GenHashNode *oldtable=table;
@@ -124,7 +124,7 @@ void GenHashTable::resize(){
   tableSize=newSize;
   rehash(oldtable,oldSize);
   calc_percents();
-  PERDIO_DEBUG(TABLE,"TABLE: recomplete resize hash");
+  PD(TABLE,"recomplete resize hash");
   PERDIO_DEBUG_DO1(TABLE2,resize_hash());
   free(oldtable);}
 
@@ -135,21 +135,21 @@ void GenHashTable::compactify(){
   int newSize = nextPrime2((int) ( ((double) counter) / IDEALFULL));
   if(newSize<minSize) newSize=minSize;
   Assert(newSize<tableSize);
-  PERDIO_DEBUG3(TABLE,"TABLE:compactify hash old=%d new=%d used=%d",
+  PD(TABLE,"compactify hash old=%d new=%d used=%d",
 		tableSize,newSize,counter);
   PERDIO_DEBUG_DO1(TABLE2,resize_hash());
   GenHashNode *oldtable=table;
   table= (GenHashNode *) malloc(newSize * sizeof(GenHashNode));
   Assert(table!=NULL);
   if(table==NULL){
-    PERDIO_DEBUG(TABLE,"TABLE:compactify hash failed");
+    PD(TABLE,"compactify hash failed");
     return;}
   init(0,newSize);
   int oldSize=tableSize;
   tableSize=newSize;
   rehash(oldtable,oldSize);
   calc_percents();
-  PERDIO_DEBUG(TABLE,"TABLE:hash-table resize complete");
+  PD(TABLE,"hash-table resize complete");
   PERDIO_DEBUG_DO1(TABLE2,resize_hash());
   free(oldtable);}
 
@@ -183,16 +183,16 @@ void GenHashTable::htSub(int bigIndex,GenHashNode *cur){
   GenHashNode *try0=&table[index];
   if(try0==cur){
     if(cur->next==NULL){
-      PERDIO_DEBUG1(HASH,"HASH:sub-direct at %d - no coll",index);
+      PD(HASH,"sub-direct at %d - no coll",index);
       cur->makeEmpty();}
     else{
       try0=cur->next;
       cur->copyFrom(try0);
-      PERDIO_DEBUG1(HASH,"HASH:sub-direct at %d - with coll",index);
+      PD(HASH,"sub-direct at %d - with coll",index);
       manager->deleteGenHashNode(try0);}}
   else{
     while(try0->next!=cur) {Assert(try0!=NULL);try0=try0->next;}
-    PERDIO_DEBUG1(HASH,"HASH:sub-cll chain at %d",index);
+    PD(HASH,"sub-cll chain at %d",index);
     try0->next=cur->next;
     manager->deleteGenHashNode(cur);}
   return;}
