@@ -186,7 +186,7 @@ void OwnerTable::resize(){
 #ifdef BTRESIZE_CRITICAL
   OZ_warning("OwnerTable::resize: maybe incorrect");
 #endif
-  int newsize = ((int) ((double) ozconf.dpTableExpandFactor*size)/100.0);
+  int newsize = (int) (((double) ozconf.dpTableExpandFactor*size)/100.0);
   PD((TABLE,"resize owner old:%d no_used:%d new:%d",
 		size,no_used,newsize));
   array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
@@ -1020,7 +1020,7 @@ void BorrowTable::resize()
   OZ_warning("BorrowTable::resize: maybe incorrect");
 #endif
   Assert(no_used==size);
-  int newsize = (int) ((double) ozconf.dpTableExpandFactor*size)/100.0;
+  int newsize = (int) (((double) ozconf.dpTableExpandFactor*size)/100.0);
   PD((TABLE,"resize borrow old:%d no_used:%d new:%d", size,no_used,newsize));
   BorrowEntry *oldarray=array;
   array = (BorrowEntry*) malloc(newsize*sizeof(BorrowEntry));
