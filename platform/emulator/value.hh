@@ -2420,8 +2420,8 @@ inline Port *tagged2Port(TaggedRef term)
  *=================================================================== */
 
 class Space: public Tertiary {
-  friend void ConstTerm::gCollectConstTerm(void);
-  friend void ConstTerm::sCloneConstTerm(void);
+  friend ConstTerm * ConstTerm::gCollectConstTerm(void);
+  friend ConstTerm * ConstTerm::sCloneConstTerm(void);
 private:
   Board *solve;
   // The solve pointer can be:
