@@ -13,7 +13,7 @@ local
                                pack:    false
                                default: 1)
 	 T = {New Tk.label tkInit(parent: self
-				  fg:     ScrollbarStackColor
+				  fg:     SelectedBackground
 				  font:   HelpTitleFont
 				  text:   'This is ' # IconName)}
 
