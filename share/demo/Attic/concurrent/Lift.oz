@@ -26,10 +26,17 @@
 
 local
 
-   fun {MakeLift IMPORT}
-      \insert 'WP.env'
-      = IMPORT.'WP'
+   functor MakeLift prop once
 
+   import
+
+      Tk
+
+      TkTools
+      
+      Applet
+
+   body
       %%
       %% Lift Simulation -- Randomised and Interactive Lift Requests
       %%
@@ -609,80 +616,75 @@ local
 	 end
       end
       
-   in
 
       %%
       %% Create Window and Lifts object as manager for group of Lift objects
       %%
       
-      proc {$ W Argv}
-	 BFrame = {New Tk.frame tkInit(parent:     W
-				       width:      20
-				       background: BGColor)}
-	 
-	 L1 = {New Tk.label tkInit(parent:     BFrame
-				   text:       "automatic operation"
-				   background: BGColor)}
-	 
-	 L2 = {New Tk.label tkInit(parent:     W
-				   text:       "Press arrows for manual operation"
-				   width:      30
-				   background: BGColor)}
-	 
-	 AllFloors  = {List.make NumFloors}
-	 AllLifts   = {List.make NumLifts}
-	 
-	 Lifts = {New LiftManager init(parent:W floors:AllFloors)}
-	 
-	 GoB   = {New Tk.label tkInit(parent:     BFrame
-				      text:       " start "
-				      relief:     raised
-				      bd:         2
-				      width:      9
-				      background: FGColor)}
-	 
-	 proc {AutoOn}
-	    {GoB tk(conf text:" stop ")}
-	    {GoB tkBind(action:AutoOff event:'<1>')}
-	    {CatchClosed proc {$} {Lifts go} end}
-	 end
-	 
-	 proc {AutoOff}
-	    {GoB tk(conf text:" start ")}
-	    {GoB tkBind(action:AutoOn event:'<1>')}
-	    {Lifts stop}
-	 end
-	 
-      in
-	 
-	 {GoB tkBind(action:AutoOn event:'<1>')}
-	 
-	 {Tk.batch [pack(Lifts  padx:10 pady:20)
-		    pack(BFrame side:top)
-		    pack(GoB L1 side:left padx:2 expand:true)
-		    pack(L2     side:top pady:2)
-		   ]}
-
-
-	 %%
-	 %% Create lift and floor objects
-	 %%
-	 
-	 case NumFloors>=2 then
-	    
-	    {List.forAllInd AllFloors
-	     fun {$ N}
-		{New Floor init(Lifts N)}
-	     end}
-	    
-	    {ForAll AllLifts
-	     fun{$}
-		{New Lift init(Lifts)}
-	     end}
-	    
-	 else skip end
-	 
+      BFrame = {New Tk.frame tkInit(parent:     Applet.toplevel
+				    width:      20
+				    background: BGColor)}
+      
+      L1 = {New Tk.label tkInit(parent:     BFrame
+				text:       "automatic operation"
+				background: BGColor)}
+      
+      L2 = {New Tk.label tkInit(parent:     Applet.toplevel
+				text:       "Press arrows for manual operation"
+				width:      30
+				background: BGColor)}
+      
+      AllFloors  = {List.make NumFloors}
+      AllLifts   = {List.make NumLifts}
+      
+      Lifts = {New LiftManager init(parent:Applet.toplevel floors:AllFloors)}
+      
+      GoB   = {New Tk.label tkInit(parent:     BFrame
+				   text:       " start "
+				   relief:     raised
+				   bd:         2
+				   width:      9
+				   background: FGColor)}
+      
+      proc {AutoOn}
+	 {GoB tk(conf text:" stop ")}
+	 {GoB tkBind(action:AutoOff event:'<1>')}
+	 {CatchClosed proc {$} {Lifts go} end}
       end
+      
+      proc {AutoOff}
+	 {GoB tk(conf text:" start ")}
+	 {GoB tkBind(action:AutoOn event:'<1>')}
+	 {Lifts stop}
+      end
+      
+      {GoB tkBind(action:AutoOn event:'<1>')}
+      
+      {Tk.batch [pack(Lifts  padx:10 pady:20)
+		 pack(BFrame side:top)
+		 pack(GoB L1 side:left padx:2 expand:true)
+		 pack(L2     side:top pady:2)
+		]}
+
+      
+      %%
+      %% Create lift and floor objects
+      %%
+      
+      case NumFloors>=2 then
+	 
+	 {List.forAllInd AllFloors
+	  fun {$ N}
+	     {New Floor init(Lifts N)}
+	  end}
+	 
+	 {ForAll AllLifts
+	  fun{$}
+	     {New Lift init(Lifts)}
+	  end}
+	 
+      else skip end
+	 
 
    end
 
@@ -690,8 +692,6 @@ in
 
    {Application.applet
     'lift.oza'
-    
-    c('WP': eager)
     
     MakeLift
 
