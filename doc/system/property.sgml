@@ -400,7 +400,7 @@
           <Td/Whether garbage collection is invoked automatically./
         </Tr>
         <Tr>
-          <Td/<<codeCycle>>/
+          <Td/<<codeCycles>>/
           <Td/yes/
           <Td/<<Int>>/
           <Td/After how many garbage collections also code garbage
