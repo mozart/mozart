@@ -10,7 +10,7 @@ OZC             = @OZC@
 INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
-FUNCTORS        = CheckBox.ozf
+FUNCTORS        = CheckBox.ozf ScrollFrame.ozf
 
 all:            $(FUNCTORS)
 %.ozf: %.oz
