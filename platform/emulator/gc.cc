@@ -97,7 +97,6 @@ static void OZ_collectHeapBlock(TaggedRef *, TaggedRef *, int);
 
 
 
-
 /*
  * CHECKSPACE -- check if object is really copied from heap
  *   has as set of macros:
@@ -147,51 +146,6 @@ void exitCheckSpace() {
 #endif
 
 
-/**************************************************
- *  Invalidating of inline caches
- **************************************************/
-
-const int inlineCacheListBlockSize = 100;
-
-class InlineCacheList {
-  InlineCacheList *next;
-  int nextFree;
-  InlineCache *block[inlineCacheListBlockSize];
-
-public:
-  InlineCacheList(InlineCacheList *nxt) { nextFree=0; next=nxt; }
-
-  InlineCacheList *add(InlineCache *ptr)
-  {
-    if (nextFree < inlineCacheListBlockSize) {
-      block[nextFree] = ptr;
-      nextFree++;
-      return this;
-    } else {
-      InlineCacheList *aux = new InlineCacheList(this);
-      return aux->add(ptr);
-    }
-  }
-
-  void cacheListGC()
-  {
-    InlineCacheList *aux = this;
-    while(aux) {
-      for (int i=aux->nextFree; i--; ) {
-        aux->block[i]->invalidate();
-      }
-      aux = aux->next;
-    }
-  }
-};
-
-
-static InlineCacheList *cacheList = new InlineCacheList(NULL);
-
-void protectInlineCache(InlineCache *cache)
-{
-  cacheList = cacheList->add(cache);
-}
 
 
 /*
@@ -488,7 +442,6 @@ Bool needsCollection(Literal *l)
 }
 
 
-inline
 Bool needsNoCollection(TaggedRef t)
 {
   Assert(t != makeTaggedNULL());
@@ -1711,7 +1664,6 @@ void AM::gc(int msgLevel)
   MemChunks * oldChain = MemChunks::list;
 
   VariableNamer::cleanup();  /* drop bound variables */
-  cacheList->cacheListGC();  /* invalidate inline caches */
 
   initCheckSpace();
 
@@ -1728,8 +1680,6 @@ void AM::gc(int msgLevel)
 
   _rootBoard = _rootBoard->gcBoard();   // must go first!
   setCurrent(_currentBoard->gcBoard(),NO);
-
-  AbstractionEntry::gcAbstractionEntries();
 
   aritytable.gc ();
   threadsPool.doGC();
@@ -1766,6 +1716,9 @@ void AM::gc(int msgLevel)
   Assert(gcStack.isEmpty());
 
   exitCheckSpace();
+
+  CodeArea::gcCollectCodeBlocks();
+  AbstractionEntry::freeUnusedEntries();
 
   oldChain->deleteChunkChain();
 
@@ -1962,14 +1915,32 @@ void PrTabEntry::gcPrTabEntries()
   }
 }
 
-void AbstractionEntry::gcAbstractionEntries()
+void AbstractionEntry::freeUnusedEntries()
 {
-  // there may be NULL entries in the table during gc
   AbstractionEntry *aux = allEntries;
-  while(aux) {
-    aux->abstr = gcAbstraction(aux->abstr);
-    aux = aux->next;
+  allEntries = NULL;
+  while (aux) {
+    AbstractionEntry *aux1 = aux->next;
+    if (aux->collected ||
+        aux->abstr==NULL) { // RS: HACK alert: compiler might have reference to
+                            // abstraction entries: how to detect them??
+      aux->collected = NO;
+      aux->next  = allEntries;
+      allEntries = aux;
+    } else {
+      delete aux;
+    }
+    aux = aux1;
   }
+}
+
+
+void AbstractionEntry::gcAbstractionEntry()
+{
+  if (this==NULL || collected) return;
+
+  collected = OK;
+  abstr = gcAbstraction(abstr);
 }
 
 void ThreadsPool::doGC () {
@@ -2106,6 +2077,7 @@ void ConstTerm::gcConstRecurse()
     {
       Abstraction *a = (Abstraction *) this;
       a->gcConstTermWithHome();
+      CodeArea::gcReferenced(a->getPC());
       break;
     }
 
@@ -2289,6 +2261,7 @@ void Tertiary::gcEntityInfo(){
   info=newInfo;
   info->gcWatchers();}
 
+
 ConstTerm *ConstTerm::gcConstTerm() {
 
   if (this == NULL) {
@@ -2327,6 +2300,7 @@ ConstTerm *ConstTerm::gcConstTerm() {
       }
       OZ_collectHeapBlock(a->getGRef(),newA->getGRef(),
                           a->getPred()->getGSize());
+
       return newA;
     }
 
@@ -2564,6 +2538,8 @@ void TaskStack::gc(TaskStack *newstack) {
   while (1) {
     GetFrame(oldtop,PC,Y,CAP);
 
+    CodeArea::gcReferenced(PC);
+
     if (PC == C_EMPTY_STACK) {
       *(--newtop) = PC;
       *(--newtop) = Y;
@@ -2575,6 +2551,7 @@ void TaskStack::gc(TaskStack *newstack) {
     } else if (PC == C_XCONT_Ptr) {
       // mm2: opt: only the top task can/should be xcont!!
       ProgramCounter pc   = (ProgramCounter) *(oldtop-1);
+      CodeArea::gcReferenced(pc);
       (void) CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
       Y = gcRefsArray(Y); // X
     } else if (PC == C_LOCK_Ptr) {
@@ -2955,6 +2932,65 @@ TaggedRef gcTagged1(TaggedRef in) {
   TaggedRef x=oz_deref(in);
   Assert(GCISMARKED(x));
   return makeTaggedRef((TaggedRef*)GCUNMARK(x));
+}
+
+
+void CodeArea::gcReferenced(ProgramCounter PC)
+{
+  if (!isInGc)
+    return;
+
+  CodeArea *code = findBlock(PC);
+  if (code->referenced == NO) {
+    code->referenced = OK;
+    code->gclist->collectGClist();
+  }
+}
+
+void CodeGCList::collectGClist()
+{
+  CodeGCList *aux = this;
+  while(aux) {
+    for (int i=aux->nextFree; i--; ) {
+      switch(aux->block[i].tag) {
+      case C_TAGGED:
+        OZ_collectHeapTerm(*aux->block[i].u.tagged,*aux->block[i].u.tagged);
+        break;
+      case C_ABSTRENTRY:
+        (*(aux->block[i].u.entry))->gcAbstractionEntry();
+        break;
+      case C_INLINECACHE:
+        aux->block[i].u.cache->invalidate();
+        break;
+      case C_FREE:
+        break;
+      default:
+        Assert(0);
+      }
+    }
+    aux = aux->next;
+  }
+}
+
+void CodeArea::gcCollectCodeBlocks()
+{
+  CodeArea *code = allBlocks;
+  allBlocks = NULL;
+  while (code) {
+    if (code->referenced == NO) {
+      //message("collected(%x): %d\n",code,code->size*sizeof(ByteCode));
+      //displayCode(code->getStart(),5);
+      CodeArea *aux = code;
+      code = code->nextBlock;
+      delete aux;
+    } else {
+      code->referenced = NO;
+      CodeArea *aux    = code;
+      code             = code->nextBlock;
+      aux->nextBlock   = allBlocks;
+      allBlocks        = aux;
+    }
+  }
 }
 
 

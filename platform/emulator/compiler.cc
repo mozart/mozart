@@ -289,7 +289,7 @@ OZ_BI_define(BIstorePredicateRef,2,0)
   } else {
     OZ_declareForeignPointerIN(1,predId);
     Assert(predId);
-    code->writeAddress((AbstractionEntry *) predId);
+    code->writeAbstractionEntry((AbstractionEntry *) predId);
   }
   return PROCEED;
 } OZ_BI_end
@@ -426,7 +426,7 @@ OZ_BI_define(BIstoreApplMethInfo,3,0)
   }
   OZ_declareRecordArityIN(2,arity);
 
-  ApplMethInfoClass *ami = new ApplMethInfoClass(name,arity);
+  ApplMethInfoClass *ami = new ApplMethInfoClass(name,arity,code);
   code->writeAddress(ami);
   return PROCEED;
 } OZ_BI_end

@@ -391,7 +391,8 @@ Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC,
     /* ok abstr points to an abstraction */
     AbstractionEntry *entry = new AbstractionEntry(NO);
     entry->setPred(abstr);
-    CodeArea::writeAddress(entry, PC+1);
+    CodeArea *code = CodeArea::findBlock(PC);
+    code->writeAbstractionEntry(entry, PC+1);
     CodeArea::writeOpcode(gci->isTailCall ? FASTTAILCALL : FASTCALL, PC);
     return OK;
   }
@@ -399,7 +400,8 @@ Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC,
 
 insertMethApply:
   {
-    ApplMethInfoClass *ami = new ApplMethInfoClass(gci->mn,gci->arity);
+    CodeArea *code = CodeArea::findBlock(PC);
+    ApplMethInfoClass *ami = new ApplMethInfoClass(gci->mn,gci->arity,code);
     CodeArea::writeOpcode(gci->isTailCall ? TAILAPPLMETHG : APPLMETHG, PC);
     CodeArea::writeAddress(ami, PC+1);
     CodeArea::writeRegIndex(gci->regIndex, PC+2);
@@ -1026,8 +1028,7 @@ LBLdispatcher:
   Case(FASTTAILCALL)
     //  LBLFastTailCall:
     {
-      AbstractionEntry *entry =
-        (AbstractionEntry *)getAdressArg(PC+1);
+      AbstractionEntry *entry = (AbstractionEntry *)getAdressArg(PC+1);
 
       COUNT(fastcalls);
       CallDoChecks(entry->getAbstr());
@@ -1702,20 +1703,14 @@ LBLdispatcher:
 
       predd->numClosures++;
 
-      if (predd->numClosures > 1 && predd->isCopyOnce()) {
-        (void) oz_raise(E_ERROR,E_SYSTEM,"onceOnlyFunctor",0);
-        RAISE_THREAD;
-      }
-
       if (isTailCall) { // was DEFINITIONCOPY?
         TaggedRef list = oz_deref(Xreg(reg));
         ProgramCounter preddPC = predd->PC;
-        Bool copyOnce = predd->isCopyOnce() && !ozconf.copyalways;
         predd = new PrTabEntry(predd->getName(), predd->getMethodArity(),
                                predd->getFile(), predd->getLine(), predd->getColumn(),
                                oz_nil(), // mm2: inherit native?
                                predd->getMaxX());
-        predd->PC = copyCode(preddPC,list,copyOnce==NO);
+        predd->PC = copyCode(preddPC,list);
         predd->setGSize(size);
       }
 
@@ -2699,12 +2694,13 @@ LBLdispatcher:
       }
 
       if (oz_isAbstraction(pred)) {
-        OZ_unprotect((TaggedRef*)(PC+1));
+        CodeArea::unprotect((TaggedRef*)(PC+1));
         Abstraction *abstr = tagged2Abstraction(pred);
         AbstractionEntry *entry = new AbstractionEntry(NO);
         entry->setPred(abstr);
         CodeArea::writeOpcode((tailcallAndArity&1)? FASTTAILCALL: FASTCALL,PC);
-        CodeArea::writeAddress(entry, PC+1);
+        CodeArea *code = CodeArea::findBlock(PC);
+        code->writeAbstractionEntry(entry, PC+1);
         DISPATCH(0);
       }
       if (oz_isBuiltin(pred) || oz_isObject(pred)) {

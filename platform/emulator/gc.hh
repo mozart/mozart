@@ -45,10 +45,10 @@ extern int     cs_copy_size;
 
 extern Bool isCollecting;
 
-void protectInlineCache(InlineCache *);
-
 void gcSiteTable();
 
 Bool inToSpace(void *p);
+
+Bool needsNoCollection(TaggedRef t);
 
 #endif //__GC_H__

@@ -25,4 +25,4 @@
 
 #include "value.hh"
 
-ProgramCounter copyCode(ProgramCounter start, TaggedRef alist, Bool makecopy);
+ProgramCounter copyCode(ProgramCounter start, TaggedRef alist);
