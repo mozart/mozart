@@ -1,6 +1,5 @@
 BINDIR  = $(OZHOME)/bin
 SHELL   = /bin/sh
-DISTDIR	= .
 
 SCRIPTS = oz oz2lpr oz+ ozplatform ozwish
 LINKS   = oz- ozc ozsa ozsac oz.compiler oz.emulator ozdo \
@@ -24,19 +23,4 @@ install:: $(BINDIR)
 $(BINDIR):
 	install -d -m 775 $@
 
-dist: common $(PLATFORMS)
-
-common:
-	(cd $(OZHOME)/..; \
-	tar -cf - oz/bin oz/demo oz/include oz/lib oz/README oz/doc \
-		oz/ozwish/tcl ) | \
-	compress > $(DISTDIR)/oz-$(OZVERSION)-$@.tar.Z
-
-PLATFORMS = sunos-sparc solaris-sparc ultrix-mips linux-i486 hpux-700 \
-	irix-mips
-
-$(PLATFORMS):
-	(cd $(OZHOME)/..; \
-	tar -cf - oz/platform/$@ oz/ozwish/platform/$@) | \
-	compress > $(DISTDIR)/oz-$(OZVERSION)-$@.tar.Z
 
