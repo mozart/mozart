@@ -286,7 +286,7 @@ install-bin: $(TARGETS) $(BINDIR)
 
 install-inc: $(INCDIR)
 	$(INSTALL_FILE) $(SRCDIR)/oz.h $(INCDIR)
-	$(INSTALL_FILE) $(SRCDIR)/oz.c $(INCDIR)
+	$(INSTALL_FILE) $(BUILDDIR)/oz.c $(INCDIR)
 	$(INSTALL_FILE) $(SRCDIR)/oz_cpi.hh $(INCDIR)
 
 install-module: $(DYNAMIC_MODULETARGETS) $(BINDIR)
