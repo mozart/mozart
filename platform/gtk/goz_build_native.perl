@@ -103,7 +103,7 @@ EOF
 
 ###############################################################################
 #
-#                           c_name_to_oz_feature
+# c_name_to_oz_feature
 #
 # Transforms a C name as c_name_to_oz_variable does, but the first character
 # is forced to be lower case.
@@ -118,7 +118,7 @@ sub c_name_to_oz_feature($) {
 
 ###############################################################################
 #
-#                            c_name_to_oz_variable
+# c_name_to_oz_variable
 #
 # Transforms a C name to an Oz variable name, while fullfill Oz naming
 # conventions. 'ozgtk_box_set_child_packing' gets 'BoxSetChildPacking'
@@ -142,7 +142,7 @@ sub c_name_to_oz_variable($) {
 
 ###############################################################################
 #
-#                            get_interface_data
+# get_interface_data
 #
 # Parses C files for OZ_BI_define'd functions and generates an array containing
 # the interface data as described below.
@@ -161,14 +161,14 @@ sub get_interface_data(@) {
     my @interface_data;
 
     $/ = "\n"; # parse line for line
-#    my $comment = 0;
+    my $comment = 0;
 
     foreach $file (@c_files) {
 	open(INPUT, $file) || warn "Could not open file '$file'. $!\n";
 	while (<INPUT>) {
 	    if(m/\/\*/ && m/\*\//) { next };
 	    $comment++ if m/\s*\/\*/;        # comment start
-	    $comment-- if m/\*\/\s*/;       # comment end
+	    $comment-- if m/\*\/\s*/;        # comment end
 	    next unless $comment == 0;       # ignore C comment lines
 	    if(m/OZ_BI_define\s*\((\w+)\,\s*(\d+)\s*\,\s*(\d+)\s*\)/) {
 		my $c_name = $1;
@@ -199,7 +199,7 @@ sub gen_prelude {
 
 ###############################################################################
 #
-#                              gen_oz_interface
+# gen_oz_interface
 #
 # searches C files for OZ_BI_defined functions and generates prototypes and the
 # Oz/C procedure interface and writes them in a file
@@ -342,7 +342,7 @@ sub write_oz_bi_definition {
   foreach my $arg (@$in) {
       print "\t";
       if (is_return_value($arg)) {
-	  # We have to declare a variable for the return value
+	  # We have to declare a variable for the C return value
 	  my $real_type = $arg;
 	  $real_type =~ s/\*$//s; # drop last asterisk
 	  if (is_array($real_type)) { # array types
@@ -418,6 +418,13 @@ sub write_oz_bi_definition {
   print "} OZ_BI_end\n\n";
 }
 
+###############################################################################
+#
+# gen_c_wrappers
+#
+# Process a specification and generate glue code for it
+#
+###############################################################################
 sub process_spec {
   return unless ($$class{meths} or $$class{inits});
 
@@ -432,6 +439,13 @@ sub process_spec {
   }
 }
 
+###############################################################################
+#
+# gen_c_wrappers
+#
+# Generate the C glue code for the given spec files
+#
+###############################################################################
 sub gen_c_wrappers {
   my @specs = @_;
 
@@ -443,6 +457,11 @@ sub gen_c_wrappers {
   }
 }
 
+###############################################################################
+#
+# usage
+#
+###############################################################################
 sub usage() {
     print <<EOF;
 usage: $0 OPTION INPUT_FILE ...
@@ -460,7 +479,7 @@ EOF
 
 ###############################################################################
 #
-#                                   main
+# main
 #
 ###############################################################################
 
