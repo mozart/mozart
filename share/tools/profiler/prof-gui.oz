@@ -337,9 +337,7 @@ in
       meth DeleteBars(RemoveEmacsBar<=true)
 	 if RemoveEmacsBar then
 	    {self.BarCanvas tk(conf scrollregion: q(7 3 7 3))}
-	    if {Cget emacs} then
-	       {Emacs.condSend.interface removeBar}
-	    end
+	    {SendEmacs removeBar}
 	 end
 	 local
 	    C = {self.BarCanvas w($)}
@@ -399,10 +397,8 @@ in
 			 ' Smpl: ' # S.samples # '\n' #
 			 ' Heap: ' # {FormatSize S.heap})
 		       o(T conf state:disabled)]}
-	    if {Cget emacs} then
-	       {Emacs.condSend.interface
-		bar(file:S.file line:S.line column:S.column state:runnable)}
-	    end
+	    {SendEmacs
+	     bar(file:S.file line:S.line column:S.column state:runnable)}
 	 end
       end
 
@@ -459,7 +455,7 @@ in
       meth toggleEmacs
 	 if {Cget emacs} then
 	    Gui,doStatus('Not using Emacs Bar')
-	    {Emacs.condSend.interface removeBar}
+	    {SendEmacs removeBar}
 	 else
 	    Gui,doStatus('Using Emacs Bar')
 	 end

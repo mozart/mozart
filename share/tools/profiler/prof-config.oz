@@ -136,50 +136,55 @@ end
 ConfigEmacs     = {Emacs.getOPI} \= false % should we use Emacs?
 ConfigUpdate    = UpdateTimes.1.1  % Automatic update interval
 ConfigThreshold = t(calls:2 closures:2 samples:2 heap:256)
+EmacsInterface  = {Emacs.getOPI}
 
-local
+Config =
+{New
+ class
 
-   Config =
-   {New
-    class
+    feat
+       ConfAllowed: confAllowed(emacsInterface: true
+				closeAction:    true)
 
-       attr
-	  emacs     : ConfigEmacs
-	  update    : ConfigUpdate
-	  threshold : ConfigThreshold
+    attr
+       emacs          : ConfigEmacs
+       update         : ConfigUpdate
+       threshold      : ConfigThreshold
+       emacsInterface : EmacsInterface
+       closeAction    : unit
 
-       meth init
-	  skip
-       end
+    meth init
+       skip
+    end
 
-       meth toggle(What)
-	  What <- {Not @What}
-       end
+    meth confAllowed(F $)
+       {CondSelect self.ConfAllowed F false}
+    end
 
-       meth set(What Value)
-	  What <- Value
-       end
+    meth toggle(What)
+       What <- {Not @What}
+    end
 
-       meth get(What $)
-	  @What
-       end
+    meth set(What Value)
+       What <- Value
+    end
 
-    end init}
+    meth get(What $)
+       @What
+    end
 
-in
+ end init}
 
-   proc {Ctoggle What}
-      {Config toggle(What)}
-   end
+proc {Ctoggle What}
+   {Config toggle(What)}
+end
 
-   proc {Cset What Value}
-      {Config set(What Value)}
-   end
+proc {Cset What Value}
+   {Config set(What Value)}
+end
 
-   fun {Cget What}
-      {Config get(What $)}
-   end
-
+fun {Cget What}
+   {Config get(What $)}
 end
 
 %%

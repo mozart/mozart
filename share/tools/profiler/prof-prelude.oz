@@ -45,3 +45,11 @@ fun {StripPath File}
       end
    end
 end
+
+proc {SendEmacs M}
+   if {Cget emacs} then
+      case {Cget emacsInterface} of false then skip
+      elseof I then {I M}
+      end
+   end
+end
