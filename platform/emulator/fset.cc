@@ -131,9 +131,9 @@ ostream &OZ_FSetImpl::print(ostream &o) const
   printBits(o, fset_high, _not_in);
   o << ")}#";
   if (_card_min == _card_max)
-    o << '[' << _card_min << ',' << _card_max << ']';
-  else
     o << _card_min;
+  else
+    o << '[' << _card_min << ',' << _card_max << ']';
 
   return o;
 }
