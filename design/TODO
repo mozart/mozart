@@ -11,3 +11,5 @@ available (request: Picker)
 * Emulator
 ** 64bits
 is this finished or not?
+** signals
+clean this up and document?
