@@ -366,7 +366,7 @@ int osSystem(char *cmd)
 }
 
 
-#ifndef __GNUC__
+#if !defined(__GNUC__) || defined(DMALLOC)
 // Linking object files compiled with gcc needs these:
 
 /* void * operator new (size_t sz) */
