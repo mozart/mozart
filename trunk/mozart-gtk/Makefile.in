@@ -45,8 +45,8 @@ GTKFLAGS        = @GTK_CFLAGS@ @IMLIB_CFLAGS@
 GTKLIBS         = @GTK_LIBS@ @IMLIB_LIBS@
 
 ifeq ($(HAVE_CANVAS), yes)
-GTKCANVASFLAGS = -I$(CANVASDIR)/include
-GTKCANVASLIBS  = -L$(CANVASDIR)/lib -lgtk-canvas -lart_lgpl -lgdk_imlib
+GTKCANVASFLAGS = -I$(CANVASDIR)/include @LIBART_CFLAGS@
+GTKCANVASLIBS  = -L$(CANVASDIR)/lib @LIBART_LIBS@ -lgtk-canvas -lart_lgpl -lgdk_imlib
 else
 GTKCANVASFLAGS =
 GTKCANVASLIBS  =
