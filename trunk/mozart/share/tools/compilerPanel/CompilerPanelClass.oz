@@ -1354,8 +1354,8 @@ in
 	    QueryIdsHd <- X
 	    QueryIdsTl <- X
 	 end
-	 CompilerPanel, addAction('Show' Show)
-	 CompilerPanel, addAction('Browse' Browse)
+	 CompilerPanel, addAction('Show'   System.show)
+	 CompilerPanel, addAction('Browse' Browser.browse)
       end
 
       meth FeedFile() FileName in
@@ -1609,7 +1609,7 @@ in
       meth !DoLoadVariable(PrintName URL) Value in
 	 LastURL <- URL
 	 try
-	    Value = {Load URL}
+	    Value = {Pickle.load URL}
 	 catch error(...) then
 	    {New TkTools.error
 	     tkInit(master: self.TopLevel
@@ -1634,10 +1634,10 @@ in
 	 {Tk.return tk_getSaveFile(parent: self.TopLevel
 				   title: 'Oz Compiler: Save Variable'
 				   filetypes:
-				      q(q('Oz Component Files' q('.ozc'))
+				      q(q('Oz Pickle Files' q('.ozp'))
 					q('All Files' '*')))}
 	 case FileName == "" then skip
-	 else {Component.save Value FileName}
+	 else {Pickle.save Value FileName}
 	 end
       end
 
