@@ -3231,6 +3231,10 @@ OZ_C_proc_begin(BIstartServer,2)
 
   PD(USER,"startServer called p:%d",port);
 
+  if (ipIsInit()) {
+    return OZ_raiseC("startServer",1,OZ_string("already running"));
+  }
+
   INIT_IP(port);
 
   ozport = prt;
@@ -3243,13 +3247,15 @@ OZ_C_proc_begin(BIstartServer,2)
 OZ_C_proc_end
 
 
-inline OZ_Term connect_site_aux(Site * sd){
+// builtin assumption: connect to a port with OTI=0 !!!
+inline OZ_Term connect_site_aux(Site * sd)
+{
   int bi=borrowTable->newBorrow(OWNER_GIVE_CREDIT_SIZE,sd,0); 
   BorrowEntry *b=borrowTable->getBorrow(bi);
   Tertiary *tert=new PortProxy(bi);
   b->mkTertiary(tert);
   return makeTaggedConst(tert);
-  }
+}
 
 OZ_C_proc_begin(BIConnectSite,3){
   // CHECK_INIT;
