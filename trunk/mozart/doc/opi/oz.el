@@ -1,5 +1,6 @@
 (or (getenv "OZHOME")
-    (setenv "OZHOME" "/usr/local/oz"))
+    (setenv "OZHOME"
+	    "/usr/local/oz"))   ; or wherever Mozart is installed
 (setenv "PATH" (concat (getenv "OZHOME") "/bin:" (getenv "PATH")))
 
 (setq load-path (cons (concat (getenv "OZHOME") "/share/elisp")
