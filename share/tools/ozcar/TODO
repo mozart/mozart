@@ -1,12 +1,6 @@
 $Id$
 
 Mon Mar  3 21:59:55 MET 1997
-test auf schlunz ergab:
-=======================
-switch: bei add kein scrollbar noetig
-loading file... nach source.oz, methode scrollbar
-500,700 delay nach config.oz
-90,180 delay vergroessern
 bei aktiviertem start threads; stack kaputt bei tk action (cd.oz)
 bei "rest-debugs" auf dem stack diese entfernen! ("cont")
 'start threads' und breakpoints, in die viele th laufen, testen
@@ -14,9 +8,9 @@ bei "rest-debugs" auf dem stack diese entfernen! ("cont")
 C-c C-d C-h mit 'start threads' laesst thread zurueck
 
 Thu Mar 27 15:02:53 MET 1997
-leif special: running... anzeige (irgendwie) realisieren!
-              (z.B. blinkende(?) thread nummern im thread tree :-))
+running... anzeige realisieren!
+  (z.B. blinkende(?) thread nummern im thread tree :-))
 
 Tue Apr  1 14:37:45 MET DST 1997
-leif special: Action auf args einstellbar Browse <-> Show
-              (eventuell???????) Doppelclick fuer Argument Anzeige Action
+Action auf args einstellbar Browse <-> Show
+(eventuell???????) Doppelclick fuer Argument Anzeige Action

@@ -86,7 +86,7 @@ in
 	    case {Thread.is T} then
 	       Ok = {AppOK Name}
 	    in
-	       case ThreadManager,exists(I $) then
+	       case ThreadManager,Exists(I $) then
 		  case Ok then
 		     ThreadManager,step(file:File line:Line thr:T id:I
 					name:Name args:Args frame:FrameId
@@ -147,7 +147,7 @@ in
 		else
 		   0        %% parent unknown (threads of tk actions...)
 		end
-	    E = ThreadManager,exists(I $)
+	    E = ThreadManager,Exists(I $)
 	 in
 	    case E then
 	       Stack = {Dget self.ThreadDic I}
@@ -187,7 +187,7 @@ in
 	    end
 	    
 	 [] term(thr:T#I) then
-	    E = ThreadManager,exists(I $)
+	    E = ThreadManager,Exists(I $)
 	 in
 	    case E then
 	       ThreadManager,remove(T I noKill)
@@ -196,7 +196,7 @@ in
 	    end
 	    
 	 [] block(thr:T#I file:F line:L name:N args:A builtin:B time:Time) then
-	    E = ThreadManager,exists(I $)
+	    E = ThreadManager,Exists(I $)
 	 in
 	    case E then
 	       StackObj = {Dget self.ThreadDic I}
@@ -225,7 +225,7 @@ in
 	    end
 	    
 	 [] cont(thr:T#I) then
-	    E = ThreadManager,exists(I $)
+	    E = ThreadManager,Exists(I $)
 	 in
 	    case E then
 	       /*
@@ -256,12 +256,12 @@ in
 	    end
 
 	 [] exception(thr:T#I exc:X) then
-	    case ThreadManager,exists(I $) then
+	    case ThreadManager,Exists(I $) then
 	       {{Dget self.ThreadDic I} printException(X)}
 	    else
 	       thread
 		  {Delay 320}
-		  case ThreadManager,exists(I $) then
+		  case ThreadManager,Exists(I $) then
 		     {Delay 140}
 		     {{Dget self.ThreadDic I} printException(X)}
 		  else
@@ -277,10 +277,14 @@ in
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      meth exists(I $)
+      meth Exists(I $)
 	 {Dmember self.ThreadDic I}
       end
 
+      meth EmptyTree($)
+	 {Dkeys self.ThreadDic} == nil
+      end
+      
       meth removeSkippedProcs(I)
 	 SkippedProcs <- {Filter @SkippedProcs
 			  fun {$ F} F.2 \= I end}
@@ -313,30 +317,51 @@ in
 	 end
       end
       
-      meth remove(T I Mode)
+      meth remove(T I Mode Select<=true)
+	 Next in
 	 {OzcarMessage 'removing thread #' # I # ' with mode ' # Mode}
 	 ThreadManager,removeSkippedProcs(I)
 	 case Mode == kill then
-	    Gui,killNode(I)
+	    Gui,killNode(I Next)
 	    {Dremove self.ThreadDic I}
+	    case ThreadManager,EmptyTree($) then
+	       currentThread <- undef
+	       currentStack  <- undef
+	       SourceManager,scrollbar(file:'' line:undef
+				       color:undef what:both)
+	       Gui,selectNode(0)
+	       Gui,clearStack
+	       case Select then
+		  Gui,status(', thread tree is now empty' append)
+	       else skip end
+	    else skip end
 	 else
 	    Gui,removeNode(I)
 	 end
 	 case T == @currentThread then
-	    SourceManager,scrollbar(file:'' line:undef color:undef what:both)
 	    case Mode == kill then
-	       currentThread <- undef
-	       currentStack  <- undef
-	       Gui,selectNode(0)
-	    else skip end
-	    Gui,printStack(id:I frames:nil depth:0)
+	       case ThreadManager,EmptyTree($) then skip else
+		  case Select then
+		     ThreadManager,switch(Next)
+		     Gui,status(', new selected thread is #' # Next append)
+		  else skip end
+	       end
+	    else
+	       Gui,status('Thread #' # I # ' died')
+	       Gui,printStack(id:I frames:nil depth:0)
+	    end
 	 else skip end
       end
-
-      meth kill(T I)
-	 {Dbg.trace T false}
-	 {Thread.terminate T}
-	 ThreadManager,remove(T I kill)
+      
+      meth kill(T I Select<=true)
+	 lock
+	    {Dbg.trace T false}
+	    {Thread.terminate T}
+	    case Select then
+	       Gui,status(TerminateMessage # I # TerminateMessage2)
+	    else skip end
+	    ThreadManager,remove(T I kill Select)
+	 end
       end
 
       meth killAll($)
@@ -348,16 +373,20 @@ in
 	     I = {S getId($)}
 	     T = {S getThread($)}
 	  in
-	     ThreadManager,kill(T I)
+	     ThreadManager,kill(T I false)
+	     Gui,status('.' append)
 	  end}
 	 DeleteCount
       end
       
       meth forget(T I)
-	 {Dbg.trace T false}      %% thread is not traced anymore
-	 {Dbg.stepmode T false}   %% no step mode, run as you like!
-	 {Thread.resume T}        %% run, run to freedom!! :-)
-	 ThreadManager,remove(T I kill)
+	 lock
+	    {Dbg.trace T false}      %% thread is not traced anymore
+	    {Dbg.stepmode T false}   %% no step mode, run as you like!
+	    {Thread.resume T}        %% run, run to freedom!! :-)
+	    Gui,status(ForgetMessage # I # ForgetMessage2)
+	    ThreadManager,remove(T I kill)
+	 end
       end
 
       meth step(file:F line:L thr:T id:I name:N args:A
@@ -381,25 +410,33 @@ in
       end
       
       meth block(thr:T id:I file:F line:L name:N args:A builtin:B time:Time)
-	 Stack = {Dget self.ThreadDic I}
+	 Stack
       in
-	 {Stack rebuild(true)}
-	 Gui,markNode(I blocked)
-	 case T == @currentThread andthen
-	    {self.tkRunChildren tkReturnInt($)} == 0 then
-	    case {UnknownFile F} then
-	       {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
-	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
-	    else
-	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
-	       SourceManager,scrollbar(file:F line:L
-				       color:ScrollbarBlockedColor
-				       what:appl)
+	 lock
+	    try Stack = {Dget self.ThreadDic I}
+	    catch system(kernel(dict ...) ...) then
+	       {Thread.terminate {Thread.this}}
 	    end
-	    {Stack printTop} 
-	 else skip end
+	    {Stack rebuild(true)}
+	    Gui,markNode(I blocked)
+	    case T == @currentThread andthen
+	       {self.tkRunChildren tkReturnInt($)} == 0 then
+	       case {UnknownFile F} then
+		  {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
+		  SourceManager,scrollbar(file:'' line:0 color:undef what:both)
+	       else
+		  SourceManager,scrollbar(file:'' line:0
+					  color:undef what:stack)
+		  SourceManager,scrollbar(file:F line:L
+					  color:ScrollbarBlockedColor
+					  what:appl)
+	       end
+	       Gui,status('Thread #' # I # ' is blocked')
+	       {Stack printTop} 
+	    else skip end
+	 end
       end
-
+      
       meth rebuildCurrentStack
 	 Stack = @currentStack
       in
