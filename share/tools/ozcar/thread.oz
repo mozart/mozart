@@ -67,6 +67,8 @@ in
 	       andthen
 	       ({Cget stepNewNameBuiltin} orelse Name \= 'NewName')
 	       andthen
+	       ({Cget stepSetSelfBuiltin} orelse Name \= 'setSelf')
+	       andthen
 	       ({Cget stepSystemProcedures} orelse
 		Name == ''       orelse
 		Name == '`,`'    orelse
