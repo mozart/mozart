@@ -587,11 +587,10 @@ int length(OZ_Term l)
 enum TypeOfConst {
   Co_Board,
   Co_Actor,
-  Co_HeapChunk,
   Co_Thread,
+  Co_Abstraction,
 
-  Co_Abstraction,  /* 4 */
-  Co_Builtin,
+  Co_Builtin,       /* 4 */
   Co_Cell,
   Co_Space,
 
@@ -603,6 +602,7 @@ enum TypeOfConst {
   Co_Object,
   Co_Port,
   Co_Chunk,
+  Co_HeapChunk,
   Co_Array,
   Co_Dictionary,    /* 12 */
   Dummy,           // GCTAG
