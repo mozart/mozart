@@ -48,18 +48,6 @@ StackEntry *TaskStack::reallocate(StackEntry *p, int oldsize, int newsize)
 }
 
 
-#ifdef DEBUG_CHECK
-#include "constter.hh"
-#include "board.hh"
-void nodeCheckY(Board *n)
-{
-  if (isFreedRefsArray(n->getBodyPtr()->getY())) {
-    error("Referencing freed environment");
-  }
-}
-
-#endif
-
 /*
  * getSeqSize:
  *   calculate the size of the sequential part of the taskstack
@@ -73,20 +61,21 @@ int TaskStack::getSeqSize()
   while (1) {
     Assert(!isEmpty());
     TaskStackEntry entry=*(--tos);
-    TaggedBoard tb = (TaggedBoard) ToInt32(entry);
-    ContFlag cFlag = getContFlag(tb);
-    if (cFlag == C_COMP_MODE) {
-      Assert(getCompMode(entry)==PARMODE);
-      break;
-    }
+    ContFlag cFlag = (ContFlag) ToInt32(entry);
 
     switch (cFlag){
+    case C_COMP_MODE:
+      Assert(getCompMode(entry)==PARMODE);
+      return oldTos-tos-1;
 
     case C_NERVOUS:
       break;
 
-    case C_COMP_MODE:
-      Assert(0);
+    case C_LOCAL:
+      tos++;
+      return -(oldTos-tos);
+
+    case C_SOLVE:
       break;
 
     case C_CONT:
@@ -114,8 +103,6 @@ int TaskStack::getSeqSize()
       break;
     }
   } // while not task stack is empty
-
-  return oldTos-tos-1;
 } // TaskStack::getSeqSize
 
 /*
@@ -124,8 +111,68 @@ int TaskStack::getSeqSize()
  */
 void TaskStack::copySeq(TaskStack *newStack,int len)
 {
-  TaskStackEntry *next=newStack->tos+1;
+  TaskStackEntry *next=newStack->tos;
+  if (len < 0) {
+    pushLocal();
+    len = -len;
+  } else {
+    next++;
+  }
   for (;len>0;len--) {
     push(*next++);
   }
+}
+
+/*
+ * remove local tasks
+ * return OK, if done
+ * return NO, if no C_LOCAL/C_SOLVE found
+ */
+Bool TaskStack::discardLocalTasks()
+{
+  TaskStackEntry *oldTos=tos;
+
+  while (!isEmpty()) {
+    TaskStackEntry entry=*(--tos);
+    ContFlag cFlag = (ContFlag) ToInt32(entry);
+
+    switch (cFlag){
+    case C_COMP_MODE:
+      break;
+
+    case C_NERVOUS:
+      break;
+
+    case C_LOCAL:
+      return OK;
+
+    case C_SOLVE:
+      return OK;
+
+    case C_CONT:
+      tos-=3; // PC Y G
+      break;
+      
+    case C_XCONT:
+      tos-=4; // PC Y G X
+      break;
+
+    case C_DEBUG_CONT: 
+      tos--;
+      break;
+
+    case C_CALL_CONT: 
+      tos-=2;
+      break;
+
+    case C_CFUNC_CONT:
+      tos-=3;
+      break;
+
+    default:
+      Assert(0);
+      break;
+    }
+  } // while not task stack is empty
+  return NO;
 }

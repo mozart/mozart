@@ -29,32 +29,12 @@ enum ContFlag {
   C_NERVOUS    = 2,  // check for stability & distribution after solved
   C_CFUNC_CONT = 3,  // a continuation  to call a c-function
   C_DEBUG_CONT = 4,  // a continuation for debugging
-  C_CALL_CONT  = 5,  // 
-  C_COMP_MODE  = 6   // 
+  C_CALL_CONT  = 5,  // an application
+  C_COMP_MODE  = 6,  // switch to seq/par mode
+  C_SOLVE      = 7,  // the SOLVE combinator
+  C_LOCAL      = 8,  // a local computation space
 };
 
-
-typedef TaggedRef TaggedBoard;
-
-inline TaggedBoard setContFlag(Board *n, ContFlag flag)
-{
-  return (TaggedBoard) makeTaggedRef((TypeOfTerm) flag, n);
-}
-
-inline Board *getBoard(TaggedBoard n,ContFlag flag)
-{
-  return (Board *) tagValueOf((TypeOfTerm) flag, (TaggedRef) n);
-}
-
-inline ContFlag getContFlag(TaggedBoard n)
-{
-  return (ContFlag) tagTypeOf(n);
-}
-
-
-#ifdef DEBUG_CHECK
-void nodeCheckY(Board *n);
-#endif
 
 typedef StackEntry TaskStackEntry;
 
@@ -80,7 +60,6 @@ public:
 
   void printDebug(ProgramCounter pc, Bool verbose, int depth = 10000);
   
-  void checkNode (Board *n)      { Assert(n != NULL); }
   Bool isEmpty(TaskStackEntry t) { return (t == emptyTaskStackEntry); }
   Bool isEmpty()                 { return isEmpty(*(tos-1)); }
 
@@ -112,31 +91,36 @@ public:
   // for debugging
   TaggedRef TaskStack::DBGmakeList();
 
-  void pushCall(Board *n, Chunk *pred, RefsArray  x, int i)
+  void pushCall(Chunk *pred, RefsArray  x, int i)
   {
-    DebugCheckT(nodeCheckY(n));
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
-    checkNode(n);
 
     ensureFree(3);
 
     push(i>0 ? copyRefsArray(x, i) : NULL, NO);
     push((TaskStackEntry) pred, NO);
-    push((TaskStackEntry) setContFlag(n, C_CALL_CONT), NO);
+    push((TaskStackEntry) ToPointer(C_CALL_CONT), NO);
   }
 
-  void pushNervous(Board *n)
+  void pushNervous()
   {
-    checkNode(n);
-    push((TaskStackEntry) setContFlag(n, C_NERVOUS));
+    push((TaskStackEntry) ToPointer(C_NERVOUS));
   }
 
-  void pushCFunCont(Board *n, OZ_CFun f, Suspension* s,
+  void pushSolve()
+  {
+    push((TaskStackEntry) ToPointer(C_SOLVE));
+  }
+
+  void pushLocal()
+  {
+    push((TaskStackEntry) ToPointer(C_LOCAL));
+  }
+
+  void pushCFunCont(OZ_CFun f, Suspension* s,
 		    RefsArray  x, int i, Bool copy)
   {
-    DebugCheckT(nodeCheckY(n));
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
-    checkNode(n);
 
     ensureFree(4);
 
@@ -144,16 +128,15 @@ public:
     push(i>0 ? (copy ? copyRefsArray(x, i) : x) : NULL, NO);
     push((TaskStackEntry) s, NO);
     push((TaskStackEntry) f, NO);
-    push((TaskStackEntry) setContFlag(n, C_CFUNC_CONT), NO);
+    push((TaskStackEntry) ToPointer(C_CFUNC_CONT), NO);
   }
   
   
-  void pushCont(Board *n,ProgramCounter pc,
+  void pushCont(ProgramCounter pc,
 		RefsArray y,RefsArray g,RefsArray x,int i, Bool copy)
   {
     Assert(!isFreedRefsArray(y));
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
-    checkNode(n);
 
     /* cache top of stack in register since gcc does not do it */
     TaskStackEntry *newTop = ensureFree(5);
@@ -166,15 +149,15 @@ public:
     *newTop     = g;
     *(newTop+1) = y; 
     *(newTop+2) = pc;
-    *(newTop+3) = (TaskStackEntry) setContFlag(n, i>0 ? C_XCONT : C_CONT);
+    *(newTop+3) = (TaskStackEntry) ToPointer(i>0 ? C_XCONT : C_CONT);
     
     tos = newTop + 4;
   }
 
-  void pushDebug(Board *n, OzDebug *deb)
+  void pushDebug(OzDebug *deb)
   {
     push(deb);
-    push((TaskStackEntry) setContFlag(n,C_DEBUG_CONT));
+    push((TaskStackEntry) ToPointer(C_DEBUG_CONT));
   }
 
   static TaskStackEntry makeCompMode(int mode) {
@@ -190,6 +173,7 @@ public:
 
   int getSeqSize();
   void copySeq(TaskStack *newStack,int size);
+  Bool discardLocalTasks();
 
 private:
 
