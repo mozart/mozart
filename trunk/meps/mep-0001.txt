@@ -186,14 +186,14 @@ Each MEP should have the following parts:
 MEP Formating and Template
 ==========================
 
-There are two MEP formats available to authors: plaintext and reStructuredText_
-[#ReSTHOME].
+There are two MEP formats available to authors: plaintext and reStructuredText
+[#ReSTHOME]_.
 
 Plaintext MEPs are written in plain ASCII text, contain minimal structural
 markup, and should adhere to a rigid style.  MEP 9 contains a boilerplate
 template [#TXT]_ you can use to get started writing your plaintext MEP.
 
-ReStructuredText_ MEPs allow for rich markup that is still quite easy to read,
+ReStructuredText MEPs allow for rich markup that is still quite easy to read,
 but results in much better-looking and more functional HTML.  MEP 2 contains a
 boilerplate template [#ReST]_ for use with reStructuredText MEPs.
 
