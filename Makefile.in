@@ -222,7 +222,8 @@ MOGUL_LIBRARIAN	= $(OZE) $(URL_TOP)/Librarian.exe	\
 	--mogul-url=$(MOGUL_ROOT_URL)			\
 	--root-url=mogul-root.mogul			\
 	--open-db=$(MOGUL_DATABASE)			\
-	--mogul-dir=$(MOGUL_DIRECTORY)
+	--mogul-dir=$(MOGUL_DIRECTORY)			\
+	--mogul-top=$(MOGUL_TOP)
 
 MOGUL_DATABASE_OPTIONS	=	\
 	--update-info		\
