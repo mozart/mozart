@@ -786,9 +786,8 @@ void AM::reduceTrailOnSuspend()
   // one single suspension for all
 
   bb->newScript(numbOfCons);
-  if (numbOfCons > 0) {
-    susp = new Suspension(bb);
-  }
+
+  susp = (numbOfCons > 0) ? new Suspension(bb) : NULL;
 
   for (int index = 0; index < numbOfCons; index++) {
     TaggedRef *refPtr;
