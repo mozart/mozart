@@ -20,7 +20,7 @@ case $system in
    ;;
    RISC\ ULTRIX\ 4.*)   OZARCH=ultrix-mips
    ;;
-   i[3456]86\ Linux\ *) OZARCH=linux-i486
+   i[4567]86\ Linux\ *) OZARCH=linux-i486
    ;;
    m68k\ Linux\ *)      OZARCH=linux-m68k
    ;;
@@ -45,7 +45,7 @@ case $system in
    ;;
    *i386*NetBSD*)       OZARCH=netbsd-i486
    ;;
-   *i586*CYGWIN*)       OZARCH=win32-i486
+   *i[4567]86*CYGWIN*)       OZARCH=win32-i486
    ;;
    *Power*Mac*Rhapsody*) OZARCH=powermac-rhapsody
    ;;
