@@ -1903,6 +1903,7 @@ OZ_Boolean FSetConstraint::normalize(void)
   OZ_Boolean retval = OZ_FALSE;
 
   if (!isValid()) {
+    FSDEBUG(printf("fsc::normalize reason not valid"); DP());
     goto end;
   }
 
@@ -1910,16 +1911,19 @@ OZ_Boolean FSetConstraint::normalize(void)
   if (_normal) {
     if (_otherin & _otherout) {
       _card_min = -1;
+      FSDEBUG(printf("fsc::normalize reason 1"); DP());
       goto end;
     }
     for (int i = fset_high; i--; )
       if (_in[i] & _not_in[i]) {
         _card_min = -1;
+        FSDEBUG(printf("fsc::normalize reason 2"); DP());
         goto end;
       }
   } else { // !_normal
     if ((_IN & _OUT).getSize() != 0) {
       _card_min = -1;
+      FSDEBUG(printf("fsc::normalize reason reason 3"); DP());
       goto end;
     }
 
@@ -1953,6 +1957,7 @@ OZ_Boolean FSetConstraint::normalize(void)
       (_card_min > (fs_sup - _known_not_in + 1)) ||
       (_card_max < _card_min)) {
     _card_min = -1;
+    FSDEBUG(printf("fsc::normalize reason 4"); DP());
     goto end;
   }
   // but we can do better
@@ -1986,6 +1991,7 @@ OZ_Boolean FSetConstraint::normalize(void)
     for (int i = fset_high; i--; )
       if (_in[i] & _not_in[i]) {
         _card_min = -1;
+        FSDEBUG(printf("fsc::normalize reason 5"); DP());
         goto end;
       }
   }
@@ -2004,6 +2010,7 @@ OZ_Boolean FSetConstraint::normalize(void)
       (_card_min > (32 * fset_high - _known_not_in)) ||
       (_card_max < _card_min)) {
     _card_min = -1;
+    FSDEBUG(printf("fsc::normalize reason 6"); DP());
     goto end;
   }
   // but we can do better
@@ -3380,14 +3387,14 @@ inline
 OZ_Boolean FSetConstraint::operator <= (const int i)
 {
   _card_max = min(i, _card_max);
-  return normalize();
+  return !normalize();
 }
 
 inline
 OZ_Boolean FSetConstraint::operator >= (const int i)
 {
   _card_min = max(i, _card_min);
-  return normalize();
+  return !normalize();
 }
 
 inline
@@ -3405,9 +3412,11 @@ OZ_Boolean FSetConstraint::operator |= (const FSetValue &y)
       for (int i = fset_high; i--; ) {
         _in[i] |= y._in[i];
       }
+      _normal = true;
     } else {
       toExtended();
       _IN = _IN | y._IN;
+      _normal = false;
     }
   } else {
     if (y._normal) {
@@ -3416,6 +3425,7 @@ OZ_Boolean FSetConstraint::operator |= (const FSetValue &y)
     } else {
       _IN = _IN | y._IN;
     }
+    _normal = false;
   }
 #else
   for (int i = fset_high; i--; ) {
@@ -3424,7 +3434,7 @@ OZ_Boolean FSetConstraint::operator |= (const FSetValue &y)
 #endif
 
   FSDEBUG(DP());
-  return normalize();
+  return !normalize();
 }
 
 inline
@@ -3436,32 +3446,36 @@ OZ_Boolean FSetConstraint::operator &= (const FSetValue & y)
   FSDEBUG(printf("fsc::&= "); DP(); y.DP("y"));
 
 #ifdef BIGFSET
+  FSetValue neg_y = -y;
   if (_normal) {
-    if (y._normal) {
-      _otherout |= y._other;
+    if (neg_y._normal) {
+      _otherout |= neg_y._other;
       for (int i = fset_high; i--; ) {
-        _not_in[i] |= y._in[i];
+        _not_in[i] |= neg_y._in[i];
       }
+      _normal = true;
     } else {
       toExtended();
-      _OUT = _OUT | y._IN;
+      _OUT = _OUT | neg_y._IN;
+      _normal = false;
     }
   } else {
-    if (y._normal) {
-      set_Auxout(y._in, y._other);
+    if (neg_y._normal) {
+      set_Auxout(neg_y._in, neg_y._other);
       _OUT = _OUT | _Auxout;
     } else {
-      _OUT = _OUT | y._IN;
+      _OUT = _OUT | neg_y._IN;
     }
+    _normal = false;
   }
 #else
   for (int i = fset_high; i--; ) {
-    _not_in[i] |= y._in[i];
+    _not_in[i] |= neg_y._in[i];
   }
 #endif
 
   FSDEBUG(DP());
-  return normalize();
+  return !normalize();
 }
 
 
