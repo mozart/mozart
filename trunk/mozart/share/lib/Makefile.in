@@ -268,7 +268,7 @@ clean:
 	$(RM) compiler/*.ozc
 
 realclean: clean
-	$(RM) -r $(STAGE1) $(STAGE2) $(STAGE3)
+	$(RM) -r $(STAGE1) $(STAGE2) $(STAGE2B) $(STAGE3) $(STAGE3B)
 
 veryclean: realclean
 
