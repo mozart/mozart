@@ -1501,6 +1501,8 @@ OZ_C_ioproc_begin(unix_getEnv,3)
 }
 OZ_C_proc_end
 
+
+/* putenv is NOT POSIX !!! */
 OZ_C_ioproc_begin(unix_putEnv,2)
 {
   OZ_declareVsArg("putEnv", 0, envVar);
