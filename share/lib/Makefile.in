@@ -199,7 +199,7 @@ ozc: Standard.ozf MakeBatch.oz BatchCompile.oz
 ozserver: Standard.ozf MakeOzServer.oz
         $(EXECWITHSTD) MakeOzServer.oz
 
-ozvsserver: Standard.ozf MakeOzVSServer.oz
+ozvsserver: Standard.ozf MakeOzVSServer.oz dp/VSServer.oz
         $(EXECWITHSTD) MakeOzVSServer.oz
 
 #---------------------------------------------------------------------
