@@ -80,4 +80,4 @@ set -x
 # we do here, --lib-copies tells the 'create-rpm' script to include
 # the copies of libgcc_s.so and libstdc++.so as well
 echo executing "$use_src/misc/create-rpm --lib-copies $build $build-stdlib $dst"
-$use_src/misc/create-rpm $build $build-stdlib $dst
+$use_src/misc/create-rpm --lib-copies $build $build-stdlib $dst
