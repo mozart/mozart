@@ -2180,7 +2180,7 @@ LBLdispatcher:
 	Assert(!CTT->isSuspended());
 	Assert(CBB==currentDebugBoard);
 
-	//emulateHookPopTask(e);
+	emulateHookPopTask(e);
 
 	DebugCheckT(CAA = NULL);
 
