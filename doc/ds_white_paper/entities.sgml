@@ -93,19 +93,14 @@ that this is of course not necessary for replicated stateless
 entities. 
 
 <p>Stateful entities can have a real state or be single assignment,
-where single assignment means transforming into a stateless entity
-once. Single assignment entities can be dealt with efficiently by a
-proxy-manager structure where the manager knows and notifies its
-proxies. Other stateful entities may implement distribution by
-letting their state move around to active proxies or by letting a
-manager act as a server for read and write requests. This gives us
-with three different protocols for maintaining entity semantics:
-
-<para class=apropos><title/Single Assignment/ 
-
-     The manager knows all of its proxies and
-     can administer any request to make the entity stateless and
-     forward this to all proxies.
+where single assignment means transforming into another entity
+once. This is used to implement distributed logic variables. Single
+assignment entities can be dealt with efficiently by a proxy-manager
+structure where the manager knows and notifies its proxies. Other
+stateful entities may implement distribution by letting their state
+move around to active proxies or by letting a manager act as a server
+for read and write requests. This gives us with three different
+protocols for maintaining entity semantics:
 
 <para class=apropos><title/Stationary State/
 
@@ -117,6 +112,12 @@ with three different protocols for maintaining entity semantics:
 
      Any proxy can attract the state of a stateful entity and operate
      on it locally as on a plain entity while the state is present.
+
+<para class=apropos><title/Single Assignment/ 
+
+     The manager knows all of its proxies and can administer any
+     request to transform the entity to a reference to another entity,
+     and forward this to all proxies.
 
 <section><title/Distribution of Mozart Entities/
 
@@ -159,7 +160,15 @@ the local garbage collector.
 <p>To ensure that globalized entities are localized when and only when
 no more remote references exist, the DS has a distributed reference
 consistency algorithm. This is currently implemented by an extended
-version of Weighted Reference Counting called Secondary Weight.
-Secondary Weight overcomes the problems of limited weight present in
-the original algorithm.
+version of Weighted Reference Counting<note foot>Presented
+independently by D I Bevan in <em>Distributed Garbage Collection Using
+Reference Counting</em>,1987, and Watson and Watson in <em>An Efficient
+Garbage Collection Scheme for Parallel Computer Architecture</em>,
+1987.</note> called Secondary Weight. Weighted Reference Counting is
+an algorithm that assigns a total weight to an entity. When references
+are shared, a part of this weight is shared too. When all weight is
+present at the manager, the entity is local.  The original algorithm
+has a problem in that weight is limited. Secondary Weight overcomes
+that problem, by allowing proxies to create a new range of weight that
+they manage.
 
