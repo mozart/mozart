@@ -168,7 +168,7 @@ public:
     }
   }
 
-  void pushCFun(OZ_CFun f, RefsArray  x, int i, Bool copy)
+  void pushCFun(OZ_CFun f, RefsArray  x, int i)
   {
     Assert(i>=0);
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
@@ -176,8 +176,7 @@ public:
     Assert(MemChunks::areRegsInHeap(x, i));
 
 
-    pushFrame(C_CFUNC_CONT_Ptr,(void*)f,
-	      i>0 ? (copy ? copyRefsArray(x, i) : x) : NULL);
+    pushFrame(C_CFUNC_CONT_Ptr,(void*)f, i>0 ? copyRefsArray(x, i) : NULL);
   }
   
   void pushCont(ProgramCounter pc,RefsArray y,Abstraction *cap)

@@ -30,16 +30,15 @@
 // WAKEUP
 
 inline
-// static
-Bool oz_wakeUpThread(Thread * tt, Board *home)
+static
+Bool wakeup_Thread(Thread * tt, Board *home)
 {
   Assert (tt->isSuspended());
   Assert (tt->isRThread());
 
   switch (oz_isBetween(GETBOARD(tt), home)) {
   case B_BETWEEN:
-    oz_suspThreadToRunnableOPT(tt);
-    am.threadsPool.scheduleThread(tt);
+    oz_wakeupThreadOPT(tt);
     return TRUE;
 
   case B_NOT_BETWEEN:
@@ -48,7 +47,7 @@ Bool oz_wakeUpThread(Thread * tt, Board *home)
   case B_DEAD:
     //  
     //  The whole thread is eliminated - because of the invariant
-    // stated just before 'disposeSuspendedThread ()' in thread.hh;
+    // stated just before 'disposeThread ()' in thread.hh;
     tt->markDeadThread();
     oz_checkExtSuspension(tt);
     am.threadsPool.freeThreadBody(tt);
@@ -61,12 +60,13 @@ Bool oz_wakeUpThread(Thread * tt, Board *home)
 }
 
 inline
-// static
-void oz_wakeupToRunnable(Thread *tt)
+static
+void wakeup_Wakeup(Thread *tt)
 {
   Assert(tt->isSuspended());
 
   tt->markRunnable();
+  am.threadsPool.scheduleThread(tt);
 
   if (am.isBelowSolveBoard() || tt->isExtThread()) {
     Assert (oz_isInSolveDebug(GETBOARD(tt)));
@@ -78,8 +78,8 @@ void oz_wakeupToRunnable(Thread *tt)
 }
 
 inline
-// static 
-Bool oz_wakeUpBoard(Thread *tt, Board *home)
+static 
+Bool wakeup_Board(Thread *tt, Board *home)
 {
   Assert(tt->isSuspended());
   Assert(tt->getThrType() == S_WAKEUP);
@@ -131,8 +131,7 @@ Bool oz_wakeUpBoard(Thread *tt, Board *home)
   // to schedule a wakeup for the new thread's home board, 
   // because it could be the last thread in it - check entailment!
   if (bb == home && bb->getSuspCount() == 1) {
-    oz_wakeupToRunnable(tt);
-    am.threadsPool.scheduleThread(tt);
+    wakeup_Wakeup(tt);
     return OK;
   }
 
@@ -141,8 +140,7 @@ Bool oz_wakeUpBoard(Thread *tt, Board *home)
   switch (oz_isBetween(bb, home)) {
   case B_BETWEEN:
     Assert(!oz_currentBoard()->isSolve() || am.isBelowSolveBoard());
-    oz_wakeupToRunnable(tt);
-    am.threadsPool.scheduleThread(tt);
+    wakeup_Wakeup(tt);
     return OK;
 
   case B_NOT_BETWEEN:
@@ -160,21 +158,81 @@ Bool oz_wakeUpBoard(Thread *tt, Board *home)
 }
 
 
+#define WAKEUP_PROPAGATOR(CALL_WAKEUP_FUN)	\
+{						\
+  Board * bb = GETBOARD(prop);			\
+  switch (oz_isBetween(bb, home)) {		\
+  case B_BETWEEN:				\
+						\
+    if (calledBy)				\
+      prop->markUnifyPropagator();		\
+						\
+    CALL_WAKEUP_FUN;				\
+    return FALSE;				\
+						\
+  case B_NOT_BETWEEN:				\
+    return FALSE;				\
+						\
+  case B_DEAD:					\
+    prop->markDeadPropagator();			\
+    oz_checkExtSuspension(prop);		\
+    prop->dispose();				\
+    return TRUE;				\
+						\
+  default:					\
+    Assert(0);					\
+    return FALSE;				\
+  }						\
+}
+
+Bool _wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy)
+{
+  Assert(prop->getBoardInternal() && prop->getPropagator());
+
+  Board *cb_cache = oz_currentBoard();
+  
+  if (prop->isNonMonotonicPropagator() && am.isBelowSolveBoard()) {
+#ifdef DEBUG_NONMONOTONIC
+    OZ_PropagatorProfile * profile = prop->getPropagator()->getProfile();
+    char * pn = profile->getPropagatorName();
+    printf("wakeup_Propagator: nonmono prop <%s %d>\n", 
+	   pn, 
+	   prop->getPropagator()->getOrder()); 
+    fflush(stdout);
+#endif
+
+    Assert(!prop->getPropagator()->isMonotonic());
+
+    WAKEUP_PROPAGATOR(prop->markRunnable();
+		      SolveActor::Cast(am.currentSolveBoard()->getActor())->addToNonMonoSuspList(prop));
+  }
+  
+  if (localPropStore.isUseIt()) {
+    Assert(GETBOARD(prop) == cb_cache);
+    prop->markRunnable();
+    localPropStore.push(prop);
+    return FALSE;
+  }
+  
+  WAKEUP_PROPAGATOR(prop->markRunnable();
+		    oz_pushToLPQ(GETBOARD(prop),prop));
+} 
+
 //
 //  Generic 'wakeUp';
 //  Since this method is used at the only one place, it's inlined;
 inline
-// static 
-Bool oz_wakeUp(Suspension susp, Board * home, PropCaller calledBy) 
+static 
+Bool wakeup_Suspension(Suspension susp, Board * home, PropCaller calledBy) 
 {
   if (susp.isThread()) {
     Thread * tt = susp.getThread();
     
     switch (tt->getThrType()) {
     case S_RTHREAD: 
-      return oz_wakeUpThread(tt,home);
+      return wakeup_Thread(tt,home);
     case S_WAKEUP:
-      return oz_wakeUpBoard(tt,home);
+      return wakeup_Board(tt,home);
     default:
       Assert(0);
       return FALSE;
@@ -182,12 +240,12 @@ Bool oz_wakeUp(Suspension susp, Board * home, PropCaller calledBy)
   } else {
     Assert(susp.isPropagator());
     
-    return oz_wakeUpPropagator(susp.getPropagator(), home, calledBy);
+    return _wakeup_Propagator(susp.getPropagator(), home, calledBy);
   }
 }
 
-
-void oz_wakeupAny(Suspension susp, Board * bb)
+static
+void wakeup_Suspension_Any(Suspension susp, Board * bb)
 {
   if (susp.isThread()) {
     Thread * tt = susp.getThread();
@@ -196,22 +254,34 @@ void oz_wakeupAny(Suspension susp, Board * bb)
     case S_RTHREAD:
       Assert (tt->isSuspended());
       Assert (tt->isRThread());
-      oz_suspThreadToRunnable(tt);
-      am.threadsPool.scheduleThread(tt);
+      oz_wakeupThread(tt);
       break;
     case S_WAKEUP:
       Assert(tt->isSuspended());
-      oz_wakeupToRunnable(tt);
-      am.threadsPool.scheduleThread(tt);
+      wakeup_Wakeup(tt);
       break;
     default:
       Assert(0);
     }
   } else {
     Assert(susp.isPropagator());
-    
-    int ret = oz_wakeUpPropagator(susp.getPropagator(), bb, pc_std_unif);
+    // mm2: i'm not sure what i'm doing here
+    int ret = _wakeup_Propagator(susp.getPropagator(), bb, pc_std_unif);
     Assert(ret);
+  }
+}
+
+void oz_wakeupAll(SVariable *sv)
+{
+  SuspList *sl=sv->getSuspList();
+  sv->setSuspList(0);
+  while (sl) {
+    Suspension susp = sl->getElem();
+
+    if (!susp.isDead() && !susp.isRunnable()) {
+      wakeup_Suspension_Any(susp, GETBOARD(sv));
+    }
+    sl = sl->dispose();
   }
 }
 
@@ -256,7 +326,7 @@ SuspList *oz_checkAnySuspensionList(SuspList *suspList,Board *home,
 	continue;
       }
     } else {
-      if (oz_wakeUp(susp, home, calledBy)) {
+      if (wakeup_Suspension(susp, home, calledBy)) {
 	Assert (susp.isDead() || susp.isRunnable());
 	suspList = suspList->dispose ();
 	continue;
@@ -516,7 +586,7 @@ void oz_solve_clearSuspList(SolveActor *sa,Suspension killSusp)
       Thread * thr = susp.getThread();
 
       if (bb == 0) {
-	oz_disposeSuspendedThread(thr);
+	oz_disposeThread(thr);
 	tmpSuspList = tmpSuspList->dispose ();
       } else {
 	SuspList *helpList = tmpSuspList;
@@ -581,8 +651,7 @@ void oz_checkExtSuspensionOutlined(Suspension susp)
     
     SolveActor * sa = SolveActor::Cast(sb->getActor());
     if (oz_isStableSolve(sa)) {
-      am.threadsPool.scheduleThread(oz_mkRunnableThreadOPT(DEFAULT_PRIORITY,
-							   sb));
+      oz_newThreadInject(DEFAULT_PRIORITY, sb); // mm2: maybe OPT
     }
     sb = GETBOARD(sa)->getSolveBoard();
   }

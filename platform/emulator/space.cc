@@ -163,7 +163,7 @@ void oz_reduceTrailOnSuspend()
 
     //
     // one single suspended thread for all;
-    Thread *thr = oz_mkWakeupThread(bb);
+    Thread *thr = oz_newThreadPropagate(bb);
   
     for (int index = 0; index < numbOfCons; index++) {
       TaggedRef * refPtr, value;
@@ -318,8 +318,7 @@ void oz_decSolveThreads(Board *bb)
 	//
 	// ... first - notification board below the failed solve board; 
 	if (!(sa->isCommitted ()) && oz_isStableSolve (sa)) {
-	  am.threadsPool.scheduleThread(oz_mkRunnableThread(DEFAULT_PRIORITY,
-							    bb));
+	  oz_newThreadInject(DEFAULT_PRIORITY, bb);
 	}
       } else {
 	Assert (sa->getThreads () > 0);
@@ -409,8 +408,7 @@ int oz_commit(Board *bb, Thread *tt)
   if (!tt) {
     tt=aw->getThread();
     Assert(tt->isSuspended());
-    oz_suspThreadToRunnableOPT(tt);
-    am.threadsPool.scheduleThread(tt);
+    oz_wakeupThreadOPT(tt);
     DebugCheckT(aw->setThread(0));
   }
 
