@@ -27,7 +27,6 @@ BUILDTOP	= @BUILDTOP@
 VPATH		= @srcdir@
 FSETDIR		= @srcdir@
 INCS		= -I. -I$(FSETDIR)/.. -I..
-FSETTARGETS	= @FSETTARGETS@
 
 FSETLIBSRCS =	standard.cc telling.cc \
 		testing.cc fsaux.cc \
@@ -41,16 +40,14 @@ all: $(FSETTARGETS)
 
 .PHONY: libfset.a libfset.so
 
+libfset.a: ../libfset.a
+libfset.so: ../libfset.so
+
 ../libfset.so: $(FSETLIBOBJS)
 	$(DYNLD) -o $@ $(FSETLIBOBJS)
 
 ../libfset.a: $(FSETLIBOBJS)
 	$(AR) -rc $@ $(FSETLIBOBJS) && $(RANLIB) $@
-
-install:: @FSETINSTALL@
-
-install-fset:
-	$(INSTALL_BIN) $(FSETTARGETS) $(BINDIR)
 
 depend:: Makefile $(FSETLIBSRCS) 
 	$(DEPEND) $(FSETLIBSRCS:%=$(FSETDIR)/%) > Makefile.deps
