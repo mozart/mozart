@@ -36,10 +36,14 @@
 <!-- build tables -->
 
 <template name="build.tables">
+  <if test="msg:saynl('BUILDING TABLES...')"/>
+  <if test="msg:saynl('BUILDING TABLE: ID')"/>
   <call-template name="build.table.id"/>
   <call-template name="build.table.tabspec"/>
   <call-template name="build.table.picwid"/>
   <call-template name="build.table.category"/>
+  <call-template name="build.table.fullwidth"/>
+  <if test="msg:saynl('BUILDING TABLES...DONE')"/>
 </template>
 
 <!-- build table mapping id to node -->
@@ -54,6 +58,7 @@
 <!-- build table mapping id to latex table spec -->
 
 <template name="build.table.tabspec">
+  <if test="msg:saynl('BUILDING TABLE: LATEX.TABLE.SPEC')"/>
   <for-each select="/BOOK/FRONT/META[@NAME='LATEX.TABLE.SPEC']">
     <if test="meta:latexTableSpecPut((string(@ARG1)),(string(@ARG2)))"/>
   </for-each>
@@ -62,6 +67,7 @@
 <!-- build table mapping id to requested picture width -->
 
 <template name="build.table.picwid">
+  <if test="msg:saynl('BUILDING TABLE: LATEX.PICTURE.WIDTH')"/>
   <for-each select="/BOOK/FRONT/META[@NAME='LATEX.PICTURE.WIDTH']">
     <if test="meta:pictureWidthPut(string(@ARG1),string(@ARG2))"/>
   </for-each>
@@ -70,6 +76,7 @@
 <!-- build table mapping entry categories to names -->
 
 <template name="build.table.category">
+  <if test="msg:saynl('BUILDING TABLE: ENTRY.CATEGORY')"/>
   <for-each select="/BOOK/FRONT/META[@NAME='ENTRY.CATEGORY']">
     <choose>
       <when test="@VALUE">
@@ -82,6 +89,16 @@
         <if test="msg:saynl('ILL-FORMED META ENTRY.CATEGORY')"/>
       </otherwise>
     </choose>
+  </for-each>
+</template>
+
+<!-- build table mapping id to bool indicating if it has fullwidth -->
+<!-- prop -->
+
+<template name="build.table.fullwidth">
+  <if test="msg:saynl('BUILDING TABLE: LATEX.FULLWIDTH')"/>
+  <for-each select="/BOOK/FRONT/META[@NAME='LATEX.FULLWIDTH']">
+    <if test="@VALUE and meta:fullwidthPut(string(@VALUE))"/>
   </for-each>
 </template>
 
@@ -708,26 +725,14 @@
   <call-template name="maybe.display.end.table"/>
 </template>
 
-<template match="TD|TH" mode="colspan">
-  <call-template name="expand.colspan">
-    <with-param name="colspan">
-      <choose>
-        <when test="@COLSPAN"><value-of select="@COLSPAN"/></when>
-        <otherwise>1</otherwise>
-      </choose>
-    </with-param>
-  </call-template>
+<template match="TD[@COLSPAN]|TH[@COLSPAN]" mode="colspan">
+  <txt:usemap>*{</txt:usemap>
+  <value-of select="@COLSPAN"/>
+  <txt:usemap>}{Dl}</txt:usemap>
 </template>
 
-<template name="expand.colspan">
-  <param name="colspan" select="0"/>
-  <if test="$colspan &gt; 0">
-    <text>l</text>
-    <variable name="tmp"><value-of select="$colspan - 1"/></variable>
-    <call-template name="expand.colspan">
-      <with-param name="colspan" select="$tmp"/>
-    </call-template>
-  </if>
+<template match="TD[not(@COLSPAN)]|TH[not(@COLSPAN)]" mode="colspan">
+  <txt:usemap>Dl</txt:usemap>
 </template>
 
 <template name="maybe.display.begin.table">
@@ -744,13 +749,27 @@
 
 <template name="maybe.display.begin">
   <if test="@DISPLAY='DISPLAY'">
-    <txt:usemap>\begin{center}</txt:usemap>
+    <choose>
+      <when test="@ID and meta:fullwidthGet(string(@ID))">
+        <txt:usemap>\begin{FULLWIDTHLEFT}</txt:usemap>
+      </when>
+      <otherwise>
+        <txt:usemap>\begin{center}</txt:usemap>
+      </otherwise>
+    </choose>
   </if>
 </template>
 
 <template name="maybe.display.end">
   <if test="@DISPLAY='DISPLAY'">
-    <txt:usemap>\end{center}</txt:usemap>
+    <choose>
+      <when test="@ID and meta:fullwidthGet(string(@ID))">
+        <txt:usemap>\end{FULLWIDTHLEFT}</txt:usemap>
+      </when>
+      <otherwise>
+        <txt:usemap>\end{center}</txt:usemap>
+      </otherwise>
+    </choose>
   </if>
 </template>
 
@@ -778,12 +797,21 @@
   <if test="not(position()=1)">
     <txt:usemap>&amp;</txt:usemap>
   </if>
-  <if test="@COLSPAN">
-    <txt:usemap>\multicolumn{<value-of select="@COLSPAN"/>}{l}{</txt:usemap>
-  </if>
-  <if test="local-part(.)='TH'">
-    <txt:usemap>\mozartTH{}</txt:usemap>
-  </if>
+  <choose>
+    <when test="@COLSPAN">
+      <txt:usemap>\multicolumn{<value-of select="@COLSPAN"/>}{</txt:usemap>
+      <choose>
+        <when test="@ID and meta:latexTableSpecExists((string(@ID)))">
+          <txt:usemap>
+            <value-of select="meta:latexTableSpecExists((string(@ID)))"/>
+          </txt:usemap>
+        </when>
+        <when test="local-part()='TD'">Dl</when>
+        <otherwise>Hl</otherwise>
+      </choose>
+      <txt:usemap>}{</txt:usemap>
+    </when>
+  </choose>
   <apply-templates/>
   <if test="@COLSPAN">
     <txt:usemap>}</txt:usemap>
