@@ -785,6 +785,10 @@ define
                   Out <- @Out#'"'
                   OzDocToHTML, Batch(M 1)
                   Out <- @Out#'"'
+               elseif {SGML.isOfClass M quasi} then
+                  Out <- @Out#'`'
+                  OzDocToHTML, Batch(M 1)
+                  Out <- @Out#'\''
                else
                   Out <- @Out#'``'
                   OzDocToHTML, Batch(M 1)
