@@ -357,7 +357,6 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case ALLOCATEL9:
     case ALLOCATEL10:
     case SHALLOWTHEN:
-    case SWITCHCOMPMODE:
           /* Commands with no args.   */
       fprintf(ofile, "\n");       
       DISPATCH();
@@ -768,7 +767,6 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case NEXTCLAUSE: 
     case THREAD:
     case JOB:
-    case CONC:
     case SAVECONT:
 	  /* ***type 8:    OP Label */
       fprintf(ofile, "(@ 0x%x)\n", getLabelArg (PC+1));
