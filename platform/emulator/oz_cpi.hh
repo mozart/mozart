@@ -46,8 +46,8 @@
 #define OZ_EM_INT       "integer"
 #define OZ_EM_FD        "finite domain integer"
 #define OZ_EM_FDDESCR   "description of finite domain integer"
-#define OZ_EM_FSETVAL   "finite set of integers value"
-#define OZ_EM_FSET      "finite set of integers"
+#define OZ_EM_FSETVAL   "finite set of integers"
+#define OZ_EM_FSET      "finite set of integers constraint"
 #define OZ_EM_FSETDESCR "description of finite set of integers"
 #define OZ_EM_VECT      "vector of "
 #define OZ_EM_TNAME     "truth name"
@@ -56,7 +56,7 @@
 //-----------------------------------------------------------------------------
 // OZ_FiniteDomain 
 
-enum OZ_FDState {fd_empty, fd_full, fd_bool, fd_singleton};
+enum OZ_FDState {fd_empty, fd_full, fd_bool, fd_singl};
 
 class OZ_FiniteDomain {
 friend ostream &operator << (ostream &, const OZ_FiniteDomain &);
@@ -122,14 +122,47 @@ ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
 }
 
 //-----------------------------------------------------------------------------
-// OZ_FiniteSet 
+// OZ_FSetValue
+
+enum OZ_FSetState {fs_empty, fs_full};
 
 const int fset_high = 2;
 
-enum OZ_FSetPropState {fs_glb = 0, fs_lub, fs_val, fs_any};
+class OZ_FSetConstraint;
 
-class OZ_FiniteSet {
-friend ostream &operator << (ostream &, const OZ_FiniteSet &);
+class OZ_FSetValue {
+friend ostream &operator << (ostream &, const OZ_FSetValue &);
+
+protected:
+  int _card;
+  int _in[fset_high];
+
+  ostream &print(ostream &) const;
+public:
+  OZ_FSetValue(void) {}
+  OZ_FSetValue(const OZ_FSetConstraint&);
+  int getCard(void) const { return _card; }
+  OZ_Boolean isIn(int) const;
+  OZ_Boolean isNotIn(int) const;
+  OZ_Term getKnownInList(void) const;
+  OZ_Term getKnownNotInList(void) const;
+};
+
+inline
+ostream &operator << (ostream &ofile, const OZ_FSetValue &fs) {
+  return fs.print(ofile);
+}
+
+
+//-----------------------------------------------------------------------------
+// OZ_FSetConstraint 
+
+
+enum OZ_FSetPropState {fs_prop_glb = 0, fs_prop_lub, fs_prop_val, 
+		       fs_prop_any, fs_prop_bounds};
+
+class OZ_FSetConstraint {
+friend ostream &operator << (ostream &, const OZ_FSetConstraint &);
 
 protected:
   int _card_min, _card_max; 
@@ -138,19 +171,49 @@ protected:
 
   ostream &print(ostream &) const;
 public:
-  OZ_FiniteSet(void) {};
+  OZ_FSetConstraint(void) {}
+  OZ_FSetConstraint(const OZ_FSetValue &);
+  OZ_FSetConstraint(OZ_FSetState);
+
+  int getKnownIn(void) const { return _known_in; }
+  int getKnownNotIn(void) const { return _known_not_in; }
+  int getCardSize(void) const { return _card_max - _card_min + 1; }
+  int getCardMin(void) const { return _card_min; } 
+  int getCardMax(void) const { return _card_max; } 
+  OZ_Boolean putCard(int, int);
+  OZ_Boolean isValue(void) const;
+  void init(void);
+  OZ_Boolean isIn(int) const;
+  OZ_Boolean isNotIn(int) const;
+  OZ_Boolean isEmpty(void) const;
+  OZ_Boolean isFull(void) const;
+  OZ_Boolean isSubsumedBy(const OZ_FSetConstraint &) const;
+  OZ_Term getKnownInList(void) const;
+  OZ_Term getKnownNotInList(void) const;
+  OZ_Term getUnknownList(void) const;
+  OZ_Term getLubList(void) const;
+  OZ_Term getCardTuple(void) const;
+  OZ_FSetConstraint operator - (void) const;
+  OZ_Boolean operator += (int);
+  OZ_Boolean operator -= (int);
+  OZ_Boolean operator <<= (const OZ_FSetConstraint &);
+  OZ_FSetConstraint operator & (const OZ_FSetConstraint &) const;
+  OZ_FSetConstraint operator | (const OZ_FSetConstraint &) const;
+  OZ_Boolean operator <= (const OZ_FSetConstraint &);
+  OZ_Boolean operator >= (const OZ_FSetConstraint &);
+  OZ_Boolean operator != (const OZ_FSetConstraint &);
 };   
 
 
 inline
-ostream &operator << (ostream &ofile, const OZ_FiniteSet &fs) {
+ostream &operator << (ostream &ofile, const OZ_FSetConstraint &fs) {
   return fs.print(ofile);
 }
 
 //-----------------------------------------------------------------------------
 // class OZ_Propagator
 
-enum OZ_FDPropState {fd_singl = 0, fd_bounds, fd_any};
+enum OZ_FDPropState {fd_prop_singl = 0, fd_prop_bounds, fd_prop_any};
 
 // virtual base class; never create an object from this class
 class OZ_Propagator {
@@ -172,8 +235,8 @@ public:
   OZ_Return postpone(void);
   OZ_Boolean postOn(OZ_Term);
   OZ_Boolean addSpawn(OZ_FDPropState s, OZ_Term v);
+  OZ_Boolean addSpawn(OZ_FSetPropState s, OZ_Term v);
   void spawn(OZ_Propagator * p, int prio = OZ_getMediumPrio());
-
   virtual size_t sizeOf(void) = 0;
   virtual void updateHeapRefs(OZ_Boolean duplicate) = 0;
   virtual OZ_Return run(void) = 0;
@@ -200,9 +263,14 @@ typedef OZ_expect_t (OZ_Expect::*OZ_ExpectMeth) (OZ_Term);
 class OZ_Expect {
 private:
   OZ_Boolean collect;
+
+  OZ_expect_t _expectFSetDescr(OZ_Term descr, int level);
 protected:
   void addSpawn(OZ_FDPropState, OZ_Term *);
+  void addSpawn(OZ_FSetPropState, OZ_Term *);
   void addSuspend(OZ_Term *);
+  void addSuspend(OZ_FDPropState, OZ_Term *);
+  void addSuspend(OZ_FSetPropState, OZ_Term *);
 public:
   OZ_Expect(void); 
   ~OZ_Expect(void); 
@@ -211,14 +279,16 @@ public:
   void collectVarsOff(void);
 
   OZ_expect_t expectDomDescr(OZ_Term descr, int level = 4);
-  OZ_expect_t expectSetDescr(OZ_Term descr, int level = 3);
+  OZ_expect_t expectFSetDescr(OZ_Term descr) {
+    return _expectFSetDescr(descr, 3);
+  }
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
   OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState);
-  OZ_expect_t expectSetVar(OZ_Term, OZ_FSetPropState);
-  OZ_expect_t expectIntVarAny(OZ_Term t) { return expectIntVar(t, fd_any); }
+  OZ_expect_t expectFSetVar(OZ_Term, OZ_FSetPropState);
+  OZ_expect_t expectIntVarAny(OZ_Term t) { return expectIntVar(t, fd_prop_any); }
   OZ_expect_t expectInt(OZ_Term);
-  OZ_expect_t expectSet(OZ_Term);
+  OZ_expect_t expectFSetValue(OZ_Term);
   OZ_expect_t expectLiteral(OZ_Term);
   OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectStream(OZ_Term st); 
@@ -248,7 +318,7 @@ private:
   OZ_Term * varPtr;
   int initial_size;
   enum Sort_e {sgl_e = 1, bool_e = 2, int_e  = 3} sort;
-  enum State_e {loc_e = 1, glob_e = 2, spec_e = 3} state;
+  enum State_e {loc_e = 1, glob_e = 2, encap_e = 3} state;
   OZ_Boolean isSort(Sort_e s) const {return s == sort;}
   void setSort(Sort_e s) {sort = s;}
   OZ_Boolean isState(State_e s) const {return s == state;}
@@ -283,16 +353,17 @@ public:
 
 //-----------------------------------------------------------------------------
 // class OZ_FSetVar
+// the whole class is not documented
 
 class OZ_FSetVar {
 private:
-  OZ_FiniteSet set;
-  OZ_FiniteSet * setPtr;
+  OZ_FSetConstraint set;
+  OZ_FSetConstraint * setPtr;
   OZ_Term var;
   OZ_Term * varPtr;
-  int initial_size;
+  int known_in, known_not_in, card_size;
   enum Sort_e {val_e = 1, var_e = 2} sort;
-  enum State_e {loc_e = 1, glob_e = 2, spec_e = 3} state;
+  enum State_e {loc_e = 1, glob_e = 2, encap_e = 3} state;
   OZ_Boolean isSort(Sort_e s) const {return s == sort;}
   void setSort(Sort_e s) {sort = s;}
   OZ_Boolean isState(State_e s) const {return s == state;}
@@ -312,8 +383,8 @@ public:
   static void operator delete[](void *, size_t);
 #endif
 
-  OZ_FiniteSet &operator * (void) {return *setPtr;}
-  OZ_FiniteSet * operator -> (void) {return setPtr;}
+  OZ_FSetConstraint &operator * (void) {return *setPtr;}
+  OZ_FSetConstraint * operator -> (void) {return setPtr;}
 
   OZ_Boolean isTouched(void) const;
 
@@ -327,7 +398,6 @@ public:
 
 //-----------------------------------------------------------------------------
 // class OZ_Stream
-// the whole class is not documented
 
 class OZ_Stream {
 private:

@@ -39,7 +39,6 @@ public:
   }
 
   SuspList * getNext(void) {return next;}
-  SuspList * getNextAndDispose(void);
 
   void setNext(SuspList * n) {next = n;}
 
@@ -64,6 +63,12 @@ public:
   
   SuspList * gc();
 
+  int isContained(SuspList * e) { 
+    for (SuspList *aux = this; aux; aux = aux->getNext())
+      if (aux == e)
+	return 1;
+    return 0;
+  }
   OZPRINT;
 }; // SuspList
 

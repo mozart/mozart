@@ -147,18 +147,25 @@ void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
   case FDVariable:
 
     switch (getType()){
+
     case FDVariable:
-      ((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var, glob_home);
-    break;
-    case BoolVariable:     
-      ((GenBoolVariable *)this)->installPropagators((GenFDVariable *) glob_var, glob_home);
-    break;
-    case OFSVariable: 
-    case MetaVariable: 
-    case AVAR:
-    case PerdioVariable:
-    case FSetVariable:
+      ((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var, 
+						  glob_home);
       break;
+      
+    case BoolVariable:     
+      ((GenBoolVariable *)this)->installPropagators((GenFDVariable *) glob_var,
+						    glob_home);
+      break;
+      
+    case FSetVariable:
+      ((GenFSetVariable *)this)->installPropagators((GenFSetVariable *) glob_var,
+						    glob_home);
+      break;
+
+    case OFSVariable: case MetaVariable: case AVAR: case PerdioVariable:
+      break;
+
     default:
       Assert(0);
     }

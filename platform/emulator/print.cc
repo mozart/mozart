@@ -137,6 +137,9 @@ void tagged2Stream(TaggedRef ref, ostream &stream, int depth, int offset)
   case OZCONST:
     tagged2Const(ref)->print(stream,depth,offset);
     break;
+  case FSETVALUE:
+    ((FSetValue *) tagged2FSetValue(ref))->print(stream,depth,offset);
+    break;
   default:
     if (isRef(ref)) {
       stream << "PRINT: REF detected";
@@ -178,16 +181,16 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
         stream << " a" << suspList->length();
   
       GenFDVariable * me = (GenFDVariable *) this;
-      if (isEffectiveList(me->fdSuspList[fd_singl]) == OK)
+      if (isEffectiveList(me->fdSuspList[fd_prop_singl]) == OK)
 	stream << " s("
-	       << me->fdSuspList[fd_singl]->length()
+	       << me->fdSuspList[fd_prop_singl]->length()
 	       << '/'
-	       << me->fdSuspList[fd_singl]->lengthProp()
+	       << me->fdSuspList[fd_prop_singl]->lengthProp()
 	       << ')';
-      if (isEffectiveList(me->fdSuspList[fd_bounds]) == OK)
-	stream << " b(" << me->fdSuspList[fd_bounds]->length()
+      if (isEffectiveList(me->fdSuspList[fd_prop_bounds]) == OK)
+	stream << " b(" << me->fdSuspList[fd_prop_bounds]->length()
 	       << '/'
-	       << me->fdSuspList[fd_bounds]->lengthProp()
+	       << me->fdSuspList[fd_prop_bounds]->lengthProp()
 	       << ')';
       stream << ' ' <<  me->getDom() << ">";
       break;
@@ -204,6 +207,37 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
         stream << " a" << suspList->length();
   
       stream << " {0 1}>";
+      break;
+    }
+
+  case FSetVariable:
+    {
+      stream << indent(offset)
+	     << "<CV: "
+	     << getVarName(v)
+	     << " @"
+	     << this;
+      if (isEffectiveList(suspList) == OK)
+        stream << " a" << suspList->length();
+  
+      GenFSetVariable * me = (GenFSetVariable *) this;
+      if (isEffectiveList(me->fsSuspList[fs_prop_val]) == OK)
+	stream << " val("
+	       << me->fsSuspList[fs_prop_val]->length()
+	       << '/'
+	       << me->fsSuspList[fs_prop_val]->lengthProp()
+	       << ')';
+      if (isEffectiveList(me->fsSuspList[fs_prop_glb]) == OK)
+	stream << " glb(" << me->fsSuspList[fs_prop_glb]->length()
+	       << '/'
+	       << me->fsSuspList[fs_prop_glb]->lengthProp()
+	       << ')';
+      if (isEffectiveList(me->fsSuspList[fs_prop_lub]) == OK)
+	stream << " lub(" << me->fsSuspList[fs_prop_lub]->length()
+	       << '/'
+	       << me->fsSuspList[fs_prop_lub]->lengthProp()
+	       << ')';
+      stream << ' ' <<  me->getSet() << ">";
       break;
     }
 
@@ -431,6 +465,18 @@ PRINTLONG(OzArray)
   print(stream,depth+1,offset);
 }
 
+PRINT(FSetValue)
+{
+  CHECKDEPTH;
+  print2stream(stream);
+}
+
+PRINTLONG(FSetValue)
+{
+  CHECKDEPTHLONG;
+  print(stream,depth+1,offset);
+}
+
 PRINT(OzDictionary)
 {
   CHECKDEPTH;
@@ -625,6 +671,9 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
     break;
   case OZCONST:
     tagged2Const(ref)->printLong(stream,depth,offset);
+    break;
+  case FSETVALUE:
+    ((FSetValue *) tagged2FSetValue(ref))->printLong(stream,depth,offset);
     break;
   default:
     if (isRef(ref)) {
@@ -1069,16 +1118,31 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
   switch(getType()){
   case FDVariable:
     stream << indent(offset) << "FD Singleton SuspList:\n"; 
-    ((GenFDVariable*)this)->fdSuspList[fd_singl]->print(stream, depth, offset+3);
+    ((GenFDVariable*)this)->fdSuspList[fd_prop_singl]->print(stream, depth, offset+3);
   
     stream << indent(offset) << "FD Bounds SuspList:\n"; 
-    ((GenFDVariable*)this)->fdSuspList[fd_bounds]->print(stream, depth, offset+3);
+    ((GenFDVariable*)this)->fdSuspList[fd_prop_bounds]->print(stream, depth, offset+3);
     stream << indent(offset) << "FD Domain:\n"; 
     ((OZ_FiniteDomainImpl *) &((GenFDVariable*)this)->getDom())->printLong(stream, offset+3);
     break;
 
   case BoolVariable:
     stream << indent(offset) << "Boolean Domain: {0 1}" << endl; 
+    break;
+
+  case FSetVariable:
+    stream << indent(offset) << "FSet val SuspList:\n"; 
+    ((GenFSetVariable*)this)->fsSuspList[fs_prop_val]->print(stream, depth, offset+3);
+  
+    stream << indent(offset) << "FSet glb SuspList:\n"; 
+    ((GenFSetVariable*)this)->fsSuspList[fs_prop_glb]->print(stream, depth, offset+3);
+    
+    stream << indent(offset) << "FSet lub SuspList:\n"; 
+    ((GenFSetVariable*)this)->fsSuspList[fs_prop_lub]->print(stream, depth, offset+3);
+    
+    stream << indent(offset) << "FSet :\n" << indent(offset + 3); 
+    ((OZ_FSetImpl *) &((GenFSetVariable*)this)->getSet())->print(stream);
+    stream << endl;
     break;
 
   case OFSVariable:

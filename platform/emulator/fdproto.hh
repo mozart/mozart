@@ -9,9 +9,8 @@
   ------------------------------------------------------------------------
 */
 
-//-----------------------------------------------------------------------------
-//                         Prototypes of FD-built-ins
-//-----------------------------------------------------------------------------
+//*****************************************************************************
+// Finite Domains
 
 // fdprof.cc
 OZ_C_proc_proto(BIfdReset)
@@ -110,5 +109,19 @@ OZ_C_proc_proto(fdtest_counter)
 OZ_C_proc_proto(fdtest_firstFail)
 OZ_C_proc_proto(fdtest_spawnLess)
 OZ_C_proc_proto(fdtest_plus)
+OZ_C_proc_proto(fdtest_sumac)
+
+//*****************************************************************************
+//  Finite Sets 
+
+OZ_C_proc_proto(fsp_init)
+OZ_C_proc_proto(fsp_isIn)
+OZ_C_proc_proto(fsp_tellIsIn)
+OZ_C_proc_proto(fsp_tellIsNotIn)
+OZ_C_proc_proto(fsp_card)
+OZ_C_proc_proto(fsp_intersection)
+OZ_C_proc_proto(fsp_union)
+OZ_C_proc_proto(fsp_subsume)
+OZ_C_proc_proto(fsp_disjoint)
 
 #endif

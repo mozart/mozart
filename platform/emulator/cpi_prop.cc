@@ -61,6 +61,10 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
       o << smallIntValue(h);
       break;
 
+    case FSETVALUE:
+      o << *tagged2FSetValue(h);
+      break;
+
     case CVAR:
       {
 	char * n = getVarName(makeTaggedRef(hptr));
@@ -69,13 +73,19 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
 	GenCVariable * cv = tagged2CVar(h);
 	
 	if (cv->testReifiedFlag()) {
-	  if (cv->isBoolPatched()) goto bool_lbl; else goto fd_lbl;
+	  if (cv->isBoolPatched()) goto bool_lbl; 
+	  if (cv->isFDPatched()) goto fd_lbl;
+	  if (cv->isFSetPatched()) goto fs_lbl;
+	  /*Assert(cv->isFDPatched()); goto ri_lbl;*/ 
 	} else if (cv->getType() == FDVariable) {
 	fd_lbl:
 	  o << ((GenFDVariable *) cv)->getDom();
 	} else if (cv->getType() == BoolVariable) {
 	bool_lbl:
 	  o << "{0#1}";
+	} else if (cv->getType() == FSetVariable) {
+	fs_lbl:
+	  o << ((GenFSetVariable *) cv)->getSet();
 	} else {	  
 	  goto problem;
 	}

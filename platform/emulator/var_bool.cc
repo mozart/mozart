@@ -181,20 +181,20 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 
 	      if (intsct != -1) {
 		TaggedRef int_var = OZ_int(intsct);
-		termvar->propagate(term, fd_singl, pc_cv_unif);
+		termvar->propagate(term, fd_prop_singl, pc_cv_unif);
 		propagate(var, pc_cv_unif);
 		doBind(vPtr, int_var);
 		doBind(tPtr, int_var);
 		if (disp) { dispose(); termvar->dispose(); }
 	      } else if (heapNewer(vPtr, tPtr)) { // bind var to term
 		propagate(var, pc_cv_unif);
-		termvar->propagate(term, fd_bounds, pc_cv_unif);
+		termvar->propagate(term, fd_prop_bounds, pc_cv_unif);
 		termvar->becomesBool();
 		relinkSuspListTo(termvar);
 		doBind(vPtr, makeTaggedRef(tPtr));
 		if (disp) dispose();
 	      } else { // bind term to var
-		termvar->propagate(term, fd_bounds, pc_cv_unif);
+		termvar->propagate(term, fd_prop_bounds, pc_cv_unif);
 		propagate(var, pc_cv_unif);
 		termvar->relinkSuspListTo(this);
 		doBind(tPtr, makeTaggedRef(vPtr));
@@ -212,14 +212,14 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 		if (intsct != -1) {
 		  TaggedRef int_var = OZ_int(intsct);
 		  if (isNotInstallingScript) 
-		    termvar->propagate(term, fd_singl, pc_cv_unif);
+		    termvar->propagate(term, fd_prop_singl, pc_cv_unif);
 		  if (isConstrainedVar) propagate(var, pc_cv_unif);
 		  doBind(vPtr, int_var);
 		  am.doBindAndTrail(term, tPtr, int_var);
 		  if (disp) dispose();
 		} else {
 		  if (isNotInstallingScript) 
-		    termvar->propagate(term, fd_bounds, pc_cv_unif);
+		    termvar->propagate(term, fd_prop_bounds, pc_cv_unif);
 		  if (isConstrainedVar) propagate(var, pc_cv_unif);
 		  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
 					 this, termvar, prop);
@@ -237,13 +237,13 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 		  TaggedRef int_term = OZ_int(intsct);
 		  if (isNotInstallingScript) propagate(var, pc_cv_unif);
 		  if (isConstrainedTerm) 
-		    termvar->propagate(term, fd_singl, pc_cv_unif);
+		    termvar->propagate(term, fd_prop_singl, pc_cv_unif);
 		  doBind(tPtr, int_term);
 		  am.doBindAndTrail(var, vPtr, int_term);
 		  if (disp) termvar->dispose();
 		} else {
 		  if (isConstrainedTerm) 
-		    termvar->propagate(term, fd_bounds, pc_cv_unif);
+		    termvar->propagate(term, fd_prop_bounds, pc_cv_unif);
 		  if (isNotInstallingScript) propagate(var, pc_cv_unif);
 		  termvar->relinkSuspListTo(this, TRUE);
 		  doBind(tPtr, makeTaggedRef(vPtr));
@@ -262,7 +262,7 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 		  TaggedRef int_val = OZ_int(intsct);
 		  if (prop) {
 		    propagate(var, pc_cv_unif);
-		    termvar->propagate(term, fd_singl, pc_cv_unif);
+		    termvar->propagate(term, fd_prop_singl, pc_cv_unif);
 		  }
 		  am.doBindAndTrail(var, vPtr, int_val);
 		  am.doBindAndTrail(term, tPtr, int_val);
@@ -271,7 +271,7 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 		  TaggedRef * var_val = newTaggedCVar(bool_var);
 		  if (prop) {
 		    propagate(var, pc_cv_unif);
-		    termvar->propagate(term, fd_bounds, pc_cv_unif);
+		    termvar->propagate(term, fd_prop_bounds, pc_cv_unif);
 		  }
 		  am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
 					 bool_var, this, prop);
