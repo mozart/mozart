@@ -75,10 +75,12 @@ static void lookupLabel(TaggedRef key, int *location) {
     if (OZ_isInt(backpatchListOrLabel))
       *location = (ProgramCounter) OZ_intToC(backpatchListOrLabel) - opcodePC;
     else
-      labelDict->setArg(key,OZ_cons(OZ_cons(OZ_int(opcodePC),OZ_int(location)),
+      labelDict->setArg(key,OZ_cons(OZ_cons(OZ_int((int) opcodePC),
+                                            OZ_int((int) location)),
                                     backpatchListOrLabel));
   else
-    labelDict->setArg(key,OZ_cons(OZ_cons(OZ_int(opcodePC),OZ_int(location)),
+    labelDict->setArg(key,OZ_cons(OZ_cons(OZ_int((int) opcodePC),
+                                          OZ_int((int) location)),
                                   OZ_nil()));
 }
 
@@ -209,7 +211,7 @@ Instruction     : LBL '(' DefLabel ')'
                           backpatchList = tail(backpatchList);
                         }
                     }
-                    labelDict->setArg($3,OZ_int(PC));
+                    labelDict->setArg($3,OZ_int((int) PC));
                   }
 include(EMUDIR/instrDefs.m4)
 undefine(`instruction')
@@ -407,7 +409,7 @@ HashTableRef    : HT '(' DefLabel '[' HashTableEntries ']' ')'
                         SRecordArity ar = getArity(rec->getArg(1));
                         if (literalEq(reclabel,AtomCons)
                             && sraIsTuple(ar) && getTupleWidth(ar)==2) {
-                          ht->listLabel = (ProgramCounter) 1;
+                          ht->listLabel = 1;
                           lookupLabel(rec->getArg(2),&ht->listLabel);
                         } else
                           lookupLabel(rec->getArg(2),
