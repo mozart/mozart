@@ -416,7 +416,7 @@ public:
   GNameSite site;
   FatInt id;
   Bool same(GName *other) { return site.same(other->site) && id.same(other->id); }
-  GName() {}
+  GName() { flags = 0; }
   GName(char *ip, int port, int timestamp)
   {
     flags = 0;
@@ -429,13 +429,9 @@ public:
     id = *idCounter;
   }
 
-  void setGCMark() { flags |= GNAME_GC_MARK; }
-
-  Bool resetGCMark() {
-    Bool ret = (flags&GNAME_GC_MARK);
-    flags &= ~GNAME_GC_MARK;
-    return ret;
-  }
+  void setGCMark()   { flags |= GNAME_GC_MARK; }
+  Bool getGCMark()   { return (flags&GNAME_GC_MARK); }
+  void resetGCMark() { flags &= ~GNAME_GC_MARK; }
 };
 
 class GNameTable: public GenHashTable{
@@ -1406,21 +1402,21 @@ void BorrowTable::gcBorrowTable()
 void GNameTable::gcGNameTable()
 {
   PERDIO_DEBUG(GC,"GC:gname gc");
-  int sz = getSize();
-  for(int i=0;i<sz;i++) {
-    GenHashNode *aux = htFindFirst(i);
-    while(aux) {
-      if (!aux->isEmptyForRS()) {
-        GName *gn = (GName*) aux->getBaseKey();
-        if (gn->resetGCMark()) {
-          TaggedRef t = (TaggedRef) ToInt32(aux->getEntry());
-          gcTagged(t,t);
-          aux->setEntry((GenHashEntry*)ToPointer(t));
-        } else {
-          aux->makeEmptyForRS();
-        }
-      }
-      aux = htFindNext(aux,i);
+  int index;
+  GenHashNode *aux = getFirst(index);
+  while(aux) {
+    GName *gn = (GName*) aux->getBaseKey();
+    if (gn->getGCMark()) {
+      TaggedRef t = (TaggedRef) ToInt32(aux->getEntry());
+      gcTagged(t,t);
+      gn->resetGCMark();
+      aux->setEntry((GenHashEntry*)ToPointer(t));
+      aux = getNext(aux,index);
+    } else {
+      GenHashNode *aux1 = aux;
+      int oldindex = index;
+      aux = getNext(aux,index);
+      htSub(oldindex,aux1);
     }
   }
   compactify();
@@ -2316,6 +2312,7 @@ GET_CODE       oindex  site
 **********************************************************************
 **********************************************************************/
 
+static
 OZ_Term ozport=0;
 
 void siteReceive(BYTE *msg,int len)
@@ -2715,6 +2712,8 @@ void BIinitPerdio()
 {
   BIaddSpec(perdioSpec);
 
+  OZ_protect(&ozport);
+
   refTable = new RefTable();
   refTrail = new RefTrail();
   ownerTable = new OwnerTable(DEFAULT_OWNER_TABLE_SIZE);
@@ -2723,8 +2722,7 @@ void BIinitPerdio()
   pendLinkManager = new PendLinkManager();
   pendEntryManager = new PendEntryManager();
 
-  /* TODO: gname-table */
-  idCounter = new FatInt();
+  idCounter  = new FatInt();
   gnameTable = new GNameTable();
 
 #ifdef DEBUG_PERDIO
