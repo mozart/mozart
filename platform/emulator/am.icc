@@ -270,6 +270,14 @@ Thread *AM::mkSuspendedThread(Board *bb, int prio)
   return th;
 }
 
+inline
+int AM::newId() {
+  unsigned int currentThreadID = currentThread() ?
+    currentThread()->getID() & THREAD_ID_MASK : 1;
+  lastThreadID = (lastThreadID + 1) & THREAD_ID_MAX;
+  return lastThreadID | (currentThreadID << THREAD_ID_SIZE);
+}
+
 
 inline
 void AM::suspThreadToRunnableOPT(Thread *tt)

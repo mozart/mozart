@@ -281,14 +281,10 @@ public:
   int isSetSFlag()                { return statusReg; }
 
   Bool debugmode() { return isSetSFlag(DebugMode); }
-  int newId() {
-    return ++lastThreadID % MAX_ID;
-  }
   void checkDebug(Thread *tt) {
     if (debugmode()) checkDebugOutline(tt);
   }
   void checkDebugOutline(Thread *tt);
-
 
 
   void setCurrent(Board *c, Bool checkNotGC=OK);
@@ -318,6 +314,7 @@ public:
   Thread *mkWakeupThread(Board *bb);
   Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
   INLINE Thread *mkSuspendedThread(Board *bb, int prio);
+  INLINE int newId();
 
   INLINE void suspThreadToRunnableOPT(Thread *tt);
   INLINE void suspThreadToRunnable(Thread *tt);

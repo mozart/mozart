@@ -762,7 +762,7 @@ void const2buffer(ostream &out, ConstTerm *c)
 
   switch (c->getType()) {
   case Co_Thread:
-    out << "<Thread #" << ((Thread*) c)->getID() << ">" ;
+    out << "<Thread #" << (((Thread*) c)->getID() & THREAD_ID_MASK) << ">" ;
     break;
   case Co_Abstraction:
   case Co_Builtin:

@@ -2748,9 +2748,34 @@ OZ_C_proc_begin(BIthreadID,2)
   oz_declareArg(1,out);
 
   if (th->isProxy())
-    return oz_raise(E_ERROR,E_SYSTEM,"threadId Proxy not impl",0);
+    return oz_raise(E_ERROR,E_SYSTEM,"threadID Proxy not impl",0);
 
-  return oz_unifyInt(out, th->getID());
+  return oz_unifyInt(out, th->getID() & THREAD_ID_MASK);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIsetThreadID,2)
+{
+  oz_declareThreadArg(0,th);
+  oz_declareIntArg(1,id);
+
+  if (th->isProxy())
+    return oz_raise(E_ERROR,E_SYSTEM,"setThreadID Proxy not impl",0);
+
+  th->setID(id | (1 << THREAD_ID_SIZE));
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIparentThreadID,2)
+{
+  oz_declareThreadArg(0,th);
+  oz_declareArg(1,out);
+
+  if (th->isProxy())
+    return oz_raise(E_ERROR,E_SYSTEM,"parentThreadID Proxy not impl",0);
+
+  return oz_unifyInt(out, (th->getID() >> THREAD_ID_SIZE) & THREAD_ID_MASK);
 }
 OZ_C_proc_end
 
@@ -7885,8 +7910,6 @@ BIspec allSpec[] = {
 
   // source level debugger
   {"Debug.mode",            1, BIdebugmode},
-  {"Debug.addEmacsThreads", 1, BIaddEmacsThreads},
-  {"Debug.addSubThreads",   1, BIaddSubThreads},
   {"Debug.getStream",       1, BIgetDebugStream},
   {"Debug.setStepFlag",     2, BIsetStepFlag},
   {"Debug.setTraceFlag",    2, BIsetTraceFlag},
@@ -7910,6 +7933,8 @@ BIspec allSpec[] = {
 
   {"Thread.is",             2, BIthreadIs},
   {"Thread.id",             2, BIthreadID},
+  {"Thread.setId",          2, BIsetThreadID},
+  {"Thread.parentId",       2, BIparentThreadID},
   {"Thread.this",           1, BIthreadThis},
   {"Thread.suspend",        1, BIthreadSuspend},
   {"Thread.unleash",        2, BIthreadUnleash},

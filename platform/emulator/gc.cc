@@ -301,8 +301,11 @@ public:
         s = "ready";
       else
         s = "blocked";
-      message("Thread: id = %d, state: %s\n",aux->elem->getID(),s);
-      message("----------------------------------------\n");
+      message("Thread: id = %d, parent = %d, state: %s\n",
+              aux->elem->getID() & THREAD_ID_MASK,
+              (aux->elem->getID() >> THREAD_ID_SIZE) & THREAD_ID_MASK,
+              s);
+      //message("---------------------------------------------\n");
       aux->elem->printTaskStack(ozconf.errorThreadDepth);
     }
   }

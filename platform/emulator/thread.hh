@@ -201,6 +201,7 @@ public:
   }
 
   unsigned int getID() { return id; }
+  void setID(unsigned int newId) { id = newId; }
 
   void setAbstr(PrTabEntry *a) { abstr = a; }
   PrTabEntry *getAbstr()       { return abstr; }

@@ -80,7 +80,6 @@ public:
 };
 
 void execBreakpoint(Thread*);
-void debugStreamThread(Thread*, Thread* parent=NULL);
 void debugStreamBlocked(Thread*);
 void debugStreamReady(Thread*);
 void debugStreamTerm(Thread*);
@@ -90,8 +89,6 @@ void debugStreamExit(OzDebug*, int);
 void debugStreamUpdate(Thread*);
 
 OZ_C_proc_proto(BIdebugmode)
-OZ_C_proc_proto(BIaddEmacsThreads)
-OZ_C_proc_proto(BIaddSubThreads)
 OZ_C_proc_proto(BIgetDebugStream)
 OZ_C_proc_proto(BIthreadUnleash)
 OZ_C_proc_proto(BIsetContFlag)
