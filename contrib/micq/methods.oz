@@ -49,6 +49,9 @@ local
    S_getHistory={NewName}
    S_clearHistory={NewName}
    S_getUserInfo={NewName}
+   S_getFAQ={NewName}
+   S_dumpDB={NewName}
+   S_updateFAQ={NewName}
 in
    functor
    export
@@ -78,6 +81,9 @@ in
       getHistory:S_getHistory
       clearHistory:S_clearHistory
       getUserInfo:S_getUserInfo
+      getFAQ:S_getFAQ
+      dumpDB:S_dumpDB
+      updateFAQ:S_updateFAQ
    define
       skip
    end

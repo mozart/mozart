@@ -48,7 +48,10 @@ require
          removeApplication:S_removeApplication
          getHistory: S_getHistory
          clearHistory: S_clearHistory
-         getUserInfo: S_getUserInfo) at 'methods.ozf'
+         getUserInfo: S_getUserInfo
+         getFAQ:S_getFAQ
+         dumpDB:S_dumpDB
+         updateFAQ:S_updateFAQ) at 'methods.ozf'
 import
    Tk
    System(show showInfo)
@@ -112,11 +115,19 @@ define
          catch _ then {WriteLog "Could not return applicaion "#I} end
       end
 
-      meth !S_message(receiver:ID message:M sender:SID reply_to:R mid:Mid date:Date faq:FAQ<=unit) D={GetDate} GlobalMID={GetID} in
+      meth !S_message(receiver:ID message:M sender:SID reply_to:R mid:Mid date:Date faq:FAQ<=unit)
+         D={GetDate} GlobalMID={GetID} MM
+      in
          {WriteLog "Received and stored message "#GlobalMID#" from "#SID#" to: "#{Value.toVirtualString ID 30 30}}
          {DB storeMessage(receiver:ID id:GlobalMID sender:SID message:M date:D reply_to:R)}
          if FAQ\=unit then
-            {WriteLog "Message "#GlobalMID#" is added to FAQ"}
+            E={DB get(id:SID entry:$)}
+         in
+            {WriteLog "Message "#GlobalMID#" is added to FAQ by "#SID}
+            {DB storeX(id:GlobalMID data:faq(poster:SID answer:M date:Date question:FAQ))}
+            MM="\n-- This message is added to the FAQ --\n"#M#"\n--------------------------------------\n"#FAQ
+         else
+            MM=M
          end
          {ForAll ID proc {$ I}
                        thread E in
@@ -128,7 +139,7 @@ define
                           if E\=nil then
                              try C={DB getClient(id:I client:$)} in
                                 {WriteLog "Forward message "#GlobalMID#" to "#E.name}
-                                {C receiveMessage(mid:GlobalMID message:M sender:SID date:D reply_to:R)
+                                {C receiveMessage(mid:GlobalMID message:MM sender:SID date:D reply_to:R)
                                  "Message ("#GlobalMID#") forwarding to "#E.name#" failed"}
                              catch networkFailure(...) then skip end
                           end
@@ -144,11 +155,16 @@ define
          {DB clearHistory( id: ID friend: F)}
       end
 
-      meth !S_getHistory( id:ID history:History ) H in
+      meth !S_getHistory( id:ID history:History )
          H={DB getHistory( id: ID history: $ )}
+         Hs={Map H fun{$ X} _#X end}
+         H1={Map Hs fun{$ X} X.1 end}
+      in
          try
-            History=H
-         catch _ then {WriteLog "Could not return history to "#ID} end
+%           {Browse H}
+            History=H1
+            {ForAll Hs proc{$ X} X.1=X.2 {Delay 100} end}
+         catch _ then {WriteLog "Could not return complete history to "#ID} end
       end
 
       meth !S_logout(id:ID client:C<=nil)
@@ -574,7 +590,7 @@ define
       end
 
       %% Unprotected methods (will change when methods.oz is recomiled)
-      meth dumpDB(uid:UID Ans) A Rec={DB toRecord(record:$)} in
+      meth !S_dumpDB(uid:UID Ans) A Rec={DB toRecord(record:$)} in
          {WriteLog UID#" requests database-dump"}
          A=db(members:{Map {Record.toList Rec.membersDB} fun{$ X}
                                                             user(id:X.id email:X.email firstname:X.firstname lastname:X.lastname
@@ -582,9 +598,19 @@ define
                                                          end}
               online:{Map {Record.toList Rec.onlineDB} fun{$ X} X.id#X.online end}
              )
-         Ans=A
+         try
+            Ans=A
+         catch _ then
+            {WriteLog "Can't return database dump to "#UID}
+         end
       end
-
+      meth !S_getFAQ($)
+         {WriteLog "FAQ request"}
+         {Map {DB entriesX($)} fun{$ X} X.2 end}
+      end
+      meth !S_updateFAQ(id:ID data:Data)
+         {DB storeX(id:ID data:Data)}
+      end
 
       %% Local methods (used ONLY by server)
       meth !HaltServer(1:Msg<=nil)
@@ -817,8 +843,8 @@ define
 
       {Wait WaitQuit}
       {WriteLog "Server is going down immediately...\n-----------------------------------------------------------\n"}
-      {Delay 1000}
       {Logger close}
+      {Delay 2500}
    end
    OSinfo = {OS.uName}
 in
