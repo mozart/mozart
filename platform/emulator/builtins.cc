@@ -3795,11 +3795,8 @@ OZ_DECLAREBI_USEINLINEREL1(BIprint,printInline)
 
 
 static
-OZ_Return printTerm(OZ_Term t, int fd, Bool newline)
+OZ_Return printVS(char*s,int n, int fd, Bool newline)
 {
-  int n;
-  char * s = OZ_virtualStringToC(t,&n);
-
   char c = '\n';
   if ((ossafewrite(fd,s,n) < 0) ||
       (newline && (ossafewrite(fd,&c,1) < 0))) {
@@ -3810,29 +3807,29 @@ OZ_Return printTerm(OZ_Term t, int fd, Bool newline)
 
 OZ_BI_define(BIprintInfo,1,0)
 {
-  oz_declareIN(0,t);
-  return printTerm(t,STDOUT_FILENO,NO);
+  OZ_declareVS(0,s,n);
+  return printVS(s,n,STDOUT_FILENO,NO);
 } OZ_BI_end
 
 
 OZ_BI_define(BIshowInfo,1,0)
 {
-  oz_declareIN(0,t);
-  return printTerm(t,STDOUT_FILENO,OK);
+  OZ_declareVS(0,s,n);
+  return printVS(s,n,STDOUT_FILENO,OK);
 } OZ_BI_end
 
 OZ_BI_define(BIprintError,1,0)
 {
-  oz_declareIN(0,t);
+  OZ_declareVS(0,s,n);
   prefixError(); // print popup code for opi
-  return printTerm(t,STDERR_FILENO,NO);
+  return printVS(s,n,STDERR_FILENO,NO);
 } OZ_BI_end
 
 OZ_BI_define(BIshowError,1,0)
 {
-  oz_declareIN(0,t);
+  OZ_declareVS(0,s,n);
   prefixError(); // print popup code for opi
-  return printTerm(t,STDERR_FILENO,OK);
+  return printVS(s,n,STDERR_FILENO,OK);
 } OZ_BI_end
 
 OZ_BI_define(BItermToVS,3,1)
