@@ -496,6 +496,7 @@ void VirtualSite::unmarshalResources(MarshalerBuffer *mb)
 {
 #ifndef USE_FAST_UNMARSHALER
   segKeysNum = unmarshalNumberRobust(mb, error);
+  if(*error) return;
 #else
   segKeysNum = unmarshalNumber(mb);
 #endif
@@ -519,9 +520,8 @@ void VirtualSite::unmarshalResources(MarshalerBuffer *mb)
   //
 #ifndef USE_FAST_UNMARSHALER
   for (int i = 0; i < segKeysNum; i++) {
-    int e;
-    segKeys[i] = (key_t) unmarshalNumberRobust(mb, &e);
-    *error = *error || e;
+    segKeys[i] = (key_t) unmarshalNumberRobust(mb, error);
+    if(*error) return;
   }
 #else
   for (int i = 0; i < segKeysNum; i++)

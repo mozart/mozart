@@ -106,31 +106,28 @@ void BaseSite::unmarshalBaseSiteGName(MarshalerBuffer* buf)
 
 void BaseSite::unmarshalBaseSiteRobust(MarshalerBuffer* buf, int *error)
 {
-  int o;
-  address = unmarshalNumberRobust(buf, &o);
+  address = unmarshalNumberRobust(buf, error);
   if(o || (address <= NON_BROADCAST_MIN)) { // address should be of int32
-    *error = OK;
     return;
   }
   port = unmarshalShort(buf);
-  timestamp.start = unmarshalNumberRobust(buf, &o);
-  if(o || timestamp.start < 0) {
-    *error = OK;
+  timestamp.start = unmarshalNumberRobust(buf, error);
+  if(*error || timestamp.start < 0) {
     return;
   }
-  timestamp.pid=unmarshalNumberRobust(buf, &o);
+  timestamp.pid=unmarshalNumberRobust(buf, error);
   // andreas & kost@ : Windows* return arbitrary pid_t"s,
   // so no MAX_PID whatsoever!
-  *error = o;
 }
 void BaseSite::unmarshalBaseSiteGNameRobust(MarshalerBuffer* buf, int *error)
 {
-  int o1, o2, o3;
-  address = unmarshalNumberRobust(buf, &o1);
+  address = unmarshalNumberRobust(buf, error);
+  if(*error) return;
   port = 0;
-  timestamp.start = unmarshalNumberRobust(buf, &o2);
-  timestamp.pid = unmarshalNumberRobust(buf, &o3);
-  *error= o1 || o2 || o3;
+  timestamp.start = unmarshalNumberRobust(buf, error);
+  if(*error) return;
+  timestamp.pid = unmarshalNumberRobust(buf, error);
+  if(*error) return;
 }
 
 #endif
@@ -236,12 +233,13 @@ Site* unmarshalSite(MarshalerBuffer *buf)
   return (s);
 }
 #else
-Site* unmarshalSiteRobust(MarshalerBuffer *buf, int *overflow)
+Site* unmarshalSiteRobust(MarshalerBuffer *buf, int *error)
 {
   Site tryS;
 
   //
-  tryS.unmarshalBaseSiteGNameRobust(buf, overflow);
+  tryS.unmarshalBaseSiteGNameRobust(buf, error);
+  if(*error) return NULL;
 
   //
   int hvalue = tryS.hash();

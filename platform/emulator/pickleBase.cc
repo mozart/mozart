@@ -358,12 +358,11 @@ char *getStringRobust(PickleBuffer *bs, unsigned int i, int *error)
 //
 char *unmarshalStringRobust(PickleBuffer *bs, int *error)
 {
-  int e1,e2;
   char *string;
   misc_counter[MISC_STRING].recv();
-  unsigned int i = unmarshalNumberRobust(bs,&e1);
-  string = getStringRobust(bs,i,&e2);
-  *error = e1 || e2;
+  unsigned int i = unmarshalNumberRobust(bs,error);
+  if(*error) return NULL;
+  string = getStringRobust(bs,i,error);
   return string;
 }
 

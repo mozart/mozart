@@ -33,6 +33,9 @@
 #include "pickle.hh"
 #include "boot-manager.hh"
 
+#define RETURN_ON_ERROR(ERROR)             \
+        if(ERROR) { (void) b->finish(); return 0; }
+
 //
 // init stuff - must be called;
 static Bool isInitialized;
@@ -540,10 +543,7 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
 #ifndef USE_FAST_UNMARSHALER
           int e;
           double f = unmarshalFloatRobust(bs, &e);
-          if(e) {
-            (void) b->finish();
-            return 0;
-          }
+          RETURN_ON_ERROR(e);
 #else
           double f = unmarshalFloat(bs);
 #endif
@@ -554,15 +554,14 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
       case DIF_NAME:
         {
 #ifndef USE_FAST_UNMARSHALER
-          int e1,e2,e3;
-          int refTag = unmarshalRefTagRobust(bs, b, &e1);
-          char *printname = unmarshalStringRobust(bs, &e2);
+          int e;
+          int refTag = unmarshalRefTagRobust(bs, b, &e);
+          RETURN_ON_ERROR(e);
+          char *printname = unmarshalStringRobust(bs, &e);
+          RETURN_ON_ERROR(e);
           OZ_Term value;
-          GName *gname    = unmarshalGNameRobust(&value, bs, &e3);
-          if(e1 || e2 || e3) {
-            (void) b->finish();
-            return 0;
-          }
+          GName *gname    = unmarshalGNameRobust(&value, bs, &e);
+          RETURN_ON_ERROR(e);
 #else
           int refTag = unmarshalRefTag(bs);
           char *printname = unmarshalString(bs);
@@ -594,10 +593,11 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
       case DIF_COPYABLENAME:
         {
 #ifndef USE_FAST_UNMARSHALER
-          int e1,e2;
-          int refTag      = unmarshalRefTagRobust(bs, b, &e1);
-          char *printname = unmarshalStringRobust(bs, &e2);
-          if(e1 || e2 || (printname == NULL)) {
+          int e;
+          int refTag      = unmarshalRefTagRobust(bs, b, &e);
+          RETURN_ON_ERROR(e);
+          char *printname = unmarshalStringRobust(bs, &e);
+          if(e || (printname == NULL)) {
             (void) b->finish();
             return 0;
           }
@@ -618,10 +618,11 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
       case DIF_UNIQUENAME:
         {
 #ifndef USE_FAST_UNMARSHALER
-          int e1,e2;
-          int refTag      = unmarshalRefTagRobust(bs, b, &e1);
-          char *printname = unmarshalStringRobust(bs, &e2);
-          if(e1 || e2 || (printname == NULL)) {
+          int e;
+          int refTag      = unmarshalRefTagRobust(bs, b, &e);
+          RETURN_ON_ERROR(e);
+          char *printname = unmarshalStringRobust(bs, &e);
+          if(e || (printname == NULL)) {
             (void) b->finish();
             return 0;
           }
@@ -641,13 +642,11 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
       case DIF_ATOM:
         {
 #ifndef USE_FAST_UNMARSHALER
-          int e1,e2;
-          int refTag = unmarshalRefTagRobust(bs, b, &e1);
-          char *aux  = unmarshalStringRobust(bs, &e2);
-          if(e1 || e2) {
-            (void) b->finish();
-            return 0;
-          }
+          int e;
+          int refTag = unmarshalRefTagRobust(bs, b, &e);
+          RETURN_ON_ERROR(e);
+          char *aux  = unmarshalStringRobust(bs, &e);
+          RETURN_ON_ERROR(e);
 #else
           int refTag = unmarshalRefTag(bs);
           char *aux  = unmarshalString(bs);
@@ -681,10 +680,7 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
 #ifndef USE_FAST_UNMARSHALER
           int e;
           int refTag = unmarshalRefTagRobust(bs, b, &e);
-          if(e) {
-            (void) b->finish();
-            return 0;
-          }
+          RETURN_ON_ERROR(e);
 #else
           int refTag = unmarshalRefTag(bs);
 #endif
@@ -695,13 +691,11 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
       case DIF_TUPLE:
         {
 #ifndef USE_FAST_UNMARSHALER
-          int e1,e2;
-          int refTag = unmarshalRefTagRobust(bs, b, &e1);
-          int argno  = unmarshalNumberRobust(bs, &e2);
-          if(e1 || e2) {
-            (void) b->finish();
-            return 0;
-          }
+          int e;
+          int refTag = unmarshalRefTagRobust(bs, b, &e);
+          RETURN_ON_ERROR(e);
+          int argno  = unmarshalNumberRobust(bs, &e);
+          RETURN_ON_ERROR(e);
 #else
           int refTag = unmarshalRefTag(bs);
           int argno  = unmarshalNumber(bs);
@@ -715,10 +709,7 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
 #ifndef USE_FAST_UNMARSHALER
           int e;
           int refTag = unmarshalRefTagRobust(bs, b, &e);
-          if(e) {
-            (void) b->finish();
-            return 0;
-          }
+          RETURN_ON_ERROR(e);
 #else
           int refTag = unmarshalRefTag(bs);
 #endif
@@ -780,14 +771,12 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
       case DIF_CHUNK:
         {
 #ifndef USE_FAST_UNMARSHALER
-          int e1,e2;
-          int refTag = unmarshalRefTagRobust(bs, b, &e1);
+          int e;
+          int refTag = unmarshalRefTagRobust(bs, b, &e);
+          RETURN_ON_ERROR(e);
           OZ_Term value;
-          GName *gname = unmarshalGNameRobust(&value, bs, &e2);
-          if(e1 || e2) {
-            (void) b->finish();
-            return 0;
-          }
+          GName *gname = unmarshalGNameRobust(&value, bs, &e);
+          RETURN_ON_ERROR(e);
 #else
           int refTag = unmarshalRefTag(bs);
           OZ_Term value;
@@ -806,14 +795,13 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
         {
           OZ_Term value;
 #ifndef USE_FAST_UNMARSHALER
-          int e1,e2,e3;
-          int refTag = unmarshalRefTagRobust(bs, b, &e1);
-          GName *gname = unmarshalGNameRobust(&value, bs, &e2);
-          int flags = unmarshalNumberRobust(bs, &e3);
-          if(e1 || e2 || e3 || (flags > CLASS_FLAGS_MAX)) {
-            (void) b->finish();
-            return 0;
-          }
+          int e;
+          int refTag = unmarshalRefTagRobust(bs, b, &e);
+          RETURN_ON_ERROR(e);
+          GName *gname = unmarshalGNameRobust(&value, bs, &e);
+          RETURN_ON_ERROR(e);
+          int flags = unmarshalNumberRobust(bs, &e);
+          RETURN_ON_ERROR(e);
 #else
           int refTag = unmarshalRefTag(bs);
           GName *gname = unmarshalGName(&value, bs);
@@ -878,19 +866,23 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
         {
           OZ_Term value;
 #ifndef USE_FAST_UNMARSHALER
-          int e1,e2,e3,e4,e5,e6,e7,e8;
-          int refTag    = unmarshalRefTagRobust(bs, b, &e1);
-          GName *gname  = unmarshalGNameRobust(&value, bs, &e2);
-          int arity     = unmarshalNumberRobust(bs, &e3);
-          int gsize     = unmarshalNumberRobust(bs, &e4);
-          int maxX      = unmarshalNumberRobust(bs, &e5);
-          int line      = unmarshalNumberRobust(bs, &e6);
-          int column    = unmarshalNumberRobust(bs, &e7);
-          int codesize  = unmarshalNumberRobust(bs, &e8); // in ByteCode"s;
-          if(e1 || e2 || e3 || e4 || e5 || e6 || e7 || e8) {
-            (void) b->finish();
-            return 0;
-          }
+          int e;
+          int refTag    = unmarshalRefTagRobust(bs, b, &e);
+          RETURN_ON_ERROR(e);
+          GName *gname  = unmarshalGNameRobust(&value, bs, &e);
+          RETURN_ON_ERROR(e);
+          int arity     = unmarshalNumberRobust(bs, &e);
+          RETURN_ON_ERROR(e);
+          int gsize     = unmarshalNumberRobust(bs, &e);
+          RETURN_ON_ERROR(e);
+          int maxX      = unmarshalNumberRobust(bs, &e);
+          RETURN_ON_ERROR(e);
+          int line      = unmarshalNumberRobust(bs, &e);
+          RETURN_ON_ERROR(e);
+          int column    = unmarshalNumberRobust(bs, &e);
+          RETURN_ON_ERROR(e);
+          int codesize  = unmarshalNumberRobust(bs, &e); // in ByteCode"s;
+          RETURN_ON_ERROR(e);
           if (maxX < 0 || maxX >= NumberOfXRegisters) {
             (void) b->finish();
             return 0;
@@ -969,13 +961,11 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
       case DIF_DICT:
         {
 #ifndef USE_FAST_UNMARSHALER
-          int e1,e2;
-          int refTag = unmarshalRefTagRobust(bs, b, &e1);
-          int size   = unmarshalNumberRobust(bs, &e2);
-          if(e1 || e2) {
-            (void) b->finish();
-            return 0;
-          }
+          int e;
+          int refTag = unmarshalRefTagRobust(bs, b, &e);
+          RETURN_ON_ERROR(e);
+          int size   = unmarshalNumberRobust(bs, &e);
+          RETURN_ON_ERROR(e);
 #else
           int refTag = unmarshalRefTag(bs);
           int size   = unmarshalNumber(bs);
@@ -988,14 +978,13 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
       case DIF_ARRAY:
         {
 #ifndef USE_FAST_UNMARSHALER
-          int e1,e2,e3;
-          int refTag = unmarshalRefTagRobust(bs, b, &e1);
-          int low    = unmarshalNumberRobust(bs, &e2);
-          int high   = unmarshalNumberRobust(bs, &e3);
-          if(e1 || e2 || e3) {
-            (void) b->finish();
-            return 0;
-          }
+          int e;
+          int refTag = unmarshalRefTagRobust(bs, b, &e);
+          RETURN_ON_ERROR(e);
+          int low    = unmarshalNumberRobust(bs, &e);
+          RETURN_ON_ERROR(e);
+          int high   = unmarshalNumberRobust(bs, &e);
+          RETURN_ON_ERROR(e);
 #else
           int refTag = unmarshalRefTag(bs);
           int low    = unmarshalNumber(bs);
@@ -1009,13 +998,11 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
       case DIF_BUILTIN:
         {
 #ifndef USE_FAST_UNMARSHALER
-          int e1,e2;
-          int refTag = unmarshalRefTagRobust(bs, b, &e1);
-          char *name = unmarshalStringRobust(bs, &e2);
-          if(e1 || e2 || (name == NULL)) {
-            (void) b->finish();
-            return 0;
-          }
+          int e;
+          int refTag = unmarshalRefTagRobust(bs, b, &e);
+          RETURN_ON_ERROR(e);
+          char *name = unmarshalStringRobust(bs, &e);
+          RETURN_ON_ERROR(e);
 #else
           int refTag = unmarshalRefTag(bs);
           char *name = unmarshalString(bs);
@@ -1045,10 +1032,7 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
 #ifndef USE_FAST_UNMARSHALER
           int e;
           int type = unmarshalNumberRobust(bs, &e);
-          if(e) {
-            (void) b->finish();
-            return 0;
-          }
+          RETURN_ON_ERROR(e);
 #else
           int type = unmarshalNumber(bs);
 #endif
@@ -1084,10 +1068,7 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
 #ifndef USE_FAST_UNMARSHALER
           int e;
           int refTag = unmarshalRefTagRobust(bs, b, &e);
-          if (e) {
-            (void) b->finish();
-            return 0;
-          }
+          RETURN_ON_ERROR(e);
 #else
           int refTag = unmarshalRefTag(bs);
 #endif
