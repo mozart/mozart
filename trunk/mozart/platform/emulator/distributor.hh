@@ -38,41 +38,10 @@ public:
   virtual int getAlternatives(void) = 0;
   virtual int commit(Board *, int, int) = 0;
   
-  virtual int sizeOf(void) = 0;
   virtual Distributor * gc(void) = 0;
-
-  void dispose(void);
+  
+  virtual void dispose(void) = 0;
 };
-
-class BaseDistributor : public Distributor {
-protected:
-  int offset, num;
-  TaggedRef var;
-public:
-
-  BaseDistributor(Board * bb, const int n);
-  
-  TaggedRef getVar(void) {
-    return var;
-  }
-  
-  virtual int isAlive(void) {
-    return num > 0;
-  }
-  
-  virtual int getAlternatives(void) {
-    return num;
-  }
-
-  virtual int commit(Board * bb, int l, int r);
-  
-  virtual int sizeOf(void) {
-    return sizeof(BaseDistributor);
-  }
-  
-  virtual Distributor * gc(void);
-};
-
 
 class DistBag {
   Distributor * dist;

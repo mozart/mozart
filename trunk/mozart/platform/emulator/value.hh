@@ -1469,8 +1469,8 @@ public:
 
   const char *getPrintName();
 
-  ObjectClass *gcClass() { return (ObjectClass *) gcConstTerm(); }
-
+  ObjectClass *gcClass();
+  
   void import(SRecord *feat,OzDictionary *fm, SRecord *uf,
 	      OzDictionary *dm, int f)
   {
