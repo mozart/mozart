@@ -100,6 +100,7 @@ OZ_BI_define(BIsiteStatistics,0,1)
 //        oz_cons(oz_pairA("timestr",oz_atom(ctime(&ts->start))),
 //        oz_cons(oz_pairAI("ipint",(unsigned int)found->getAddress()),
 //        oz_cons(oz_pairAI("hval",(int)found),
+      oz_cons(oz_pairAI("addr",a),
       oz_cons(oz_pairAA("ip",ip),
       oz_cons(oz_pairAI("sent",sent),
       oz_cons(oz_pairAI("received",received),
@@ -108,7 +109,7 @@ OZ_BI_define(BIsiteStatistics,0,1)
       oz_cons(oz_pairAI("pid",ts->pid),
       oz_cons(oz_pairA("state",found->getStateStatistics()),
 //        oz_cons(oz_pairAI("type",(int)found->getTypeStatistics()),
-              oz_nil()))))))))))),sitelist);
+              oz_nil())))))))))))),sitelist);
     if(primary){
       node = getPrimaryNode(node,indx);
       if(node!=NULL) {
