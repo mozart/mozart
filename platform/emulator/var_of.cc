@@ -298,8 +298,10 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
     TaggedRef t1, t2;
     while (p->getpair(t1, t2)) {
       Assert(!p->isempty());
-      if ((ret = oz_unify(t1, t2)) != PROCEED)
+      if ((ret = oz_unify(t1, t2)) != PROCEED) {
+        DebugCode(success=FALSE);
         break;
+      }
       p->nextpair();
     }
     Assert(!success || p->isempty());
