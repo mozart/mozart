@@ -2,13 +2,18 @@ dnl Process this file with autoconf to produce a configure script.
 
 dnl This will check that we are in the Oz directory and initiate
 
+dnl *****************************************************************
+dnl INITIALIZE
+dnl *****************************************************************
+
 AC_INIT(oz.h)
 
 AC_CANONICAL_HOST
 
-AC_PROG_MAKE_SET
-
+dnl *****************************************************************
 dnl Checks for programs.
+dnl *****************************************************************
+
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
@@ -24,70 +29,180 @@ AC_CHECK_PROGS(MV, mv)
 AC_CHECK_PROGS(ECHO, echo true)
 AC_CHECK_PROGS(SED, gnused sed)
 
-case "$host" in
-i?86-*-linux)
-	AC_DEFINE(LINUX_I486)
-	platform=linux-i486
+dnl *****************************************************************
+dnl Checks for libraries.
+dnl *****************************************************************
+
+AC_CHECK_LIB(dl, dlopen)
+AC_CHECK_LIB(intl, main)
+AC_CHECK_LIB(nsl, main)
+AC_CHECK_LIB(socket, main)
+
+dnl *****************************************************************
+dnl Checks for header files.
+dnl *****************************************************************
+
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS(fcntl.h limits.h malloc.h strings.h sys/time.h unistd.h)
+
+dnl *****************************************************************
+dnl Checks for typedefs, structures, and compiler characteristics.
+dnl *****************************************************************
+
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_MODE_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+AC_STRUCT_TM
+
+dnl *****************************************************************
+dnl Checks for library functions.
+dnl *****************************************************************
+
+AC_FUNC_ALLOCA
+AC_FUNC_MEMCMP
+AC_TYPE_SIGNAL
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname)
+
+dnl *****************************************************************
+dnl Specific tests and substitutions
+dnl *****************************************************************
+
+dnl substitutions variable
+AC_SUBST(PROPOBJ)
+AC_SUBST(platform)
+AC_SUBST(PLATFORM)
+AC_SUBST(PEANUTS)
+AC_SUBST(EMUEXE)
+AC_SUBST(COPT)
+
+dnl *****************************************************************
+dnl platform
+dnl *****************************************************************
+
+platform=`../bin/ozplatform`
+PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
+AC_DEFINE_UNQUOTED($PLATFORM)
+
+case "$host_cpu" in
+	i?86)
+		AC_DEFINE(I486)
 	;;
-sparc-sun-sunos4*)
-	AC_DEFINE(SUNOS_SPARC)
-	platform=sunos-sparc
+	sparc)
+		AC_DEFINE(SPARC)
 	;;
-sparc-sun-solaris*)
-	AC_DEFINE(SOLARIS_SPARC)
-	platform=solaris-sparc
-	;;
-aix-*)
+	*)
+		AC_MSG_ERROR(cpu $host_cpu not supported)
 	;;
 esac
 
-OzPlatform=$platform
+dnl *****************************************************************
+dnl variables
+dnl *****************************************************************
+
+EMUEXE=oz.emulator.bin
 psdir=/project/ps
-AC_MSG_CHECKING(for dir $psdir/lib/$platform)
-if test -d $psdir/lib/$platform
-then
-  LDFLAGS="$LDFLAGS -L$psdir/lib/$platform"
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
+libs="$psdir/lib/$platform $HOME/lib/$platform"
 
-AC_MSG_CHECKING(for dir $HOME/lib/$platform)
-if test -d $HOME/lib/$platform
-then
-  LDFLAGS="$LDFLAGS -L$HOME/lib/$platform"
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
+dnl *****************************************************************
+dnl gmp library
+dnl *****************************************************************
 
-AC_MSG_CHECKING(for --enable-threaded)
-AC_ARG_ENABLE(threaded,
-  [--enable-threaded       threaded code emulator (default=yes)])
-if test "x$enable_threaded" != xno; then
-        AC_MSG_RESULT(yes)
-        AC_DEFINE(THREADED)
-else
+for p in $libs
+do
+  AC_MSG_CHECKING(for dir $p)
+  if test -d $p
+  then
+    LDFLAGS="$LDFLAGS -L$p"
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+  fi
+done
+
+AC_CHECK_LIB(gmp, mpz_init)
+
+dnl *****************************************************************
+dnl *** Features
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --enable-opt)
+AC_ARG_ENABLE(opt,
+  [--enable-opt       optimize [y|n|d|p] (default=yes)])
+case $enable_opt in
+    n*)
         AC_MSG_RESULT(no)
-fi
-AC_MSG_CHECKING(for --enable-fastreg)
-AC_ARG_ENABLE(fastreg,
-  [--enable-fastreg	fast register access (default=yes)])
-if test "x$enable_fastreg" != xno; then
+    ;;
+    d*)
+        AC_MSG_RESULT(debug)
+	CFLAGS="\$(DEBUG_DEFS) -g3 $CFLAGS"
+    ;;
+    p*)
+        AC_MSG_RESULT(profile)
+	CFLAGS="\$(PROF_DEFS) -pg -O3 $CFLAGS"
+	LDFLAGS="-pg $LDFLAGS"
+    ;;
+    *)
         AC_MSG_RESULT(yes)
-        AC_DEFINE(FASTREGACCESS)
-else
-        AC_MSG_RESULT(no)
-fi
-AC_MSG_CHECKING(for --enable-regopt)
-AC_ARG_ENABLE(regopt,
-  [--enable-regopt	register optimization (default=yes)])
-if test "x$enable_regopt" != xno; then
-        AC_MSG_RESULT(yes)
-        AC_DEFINE(REGOPT)
-else
-        AC_MSG_RESULT(no)
-fi
+	case $host_os in
+        	linux*)
+			COPT="-O6 -fomit-frame-pointer"
+	        ;;
+		*)
+			COPT="-O2"
+		;;
+	esac
+	AC_MSG_CHECKING(for   --enable-threaded)
+	AC_ARG_ENABLE(threaded,
+	  [--enable-threaded       threaded code emulator (default=yes)])
+	if test "x$enable_threaded" != xno; then
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(THREADED)
+	else
+		AC_MSG_RESULT(no)
+	fi
+	
+	AC_MSG_CHECKING(for   --enable-fastreg)
+	AC_ARG_ENABLE(fastreg,
+	  [--enable-fastreg	fast register access (default=yes)])
+	if test "x$enable_fastreg" != xno; then
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(FASTREGACCESS)
+	else
+		AC_MSG_RESULT(no)
+	fi
+	AC_MSG_CHECKING(for   --enable-regopt)
+	AC_ARG_ENABLE(regopt,
+	  [--enable-regopt	register optimization (default=yes)])
+	if test "x$enable_regopt" != xno; then
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(REGOPT)
+	else
+		AC_MSG_RESULT(no)
+	fi
+
+	if test $PLATFORM = LINUX_I486
+	then
+	  AC_MSG_CHECKING(for   --enable-pgcc)
+	  AC_ARG_ENABLE(pgcc,
+	    [--enable-pgcc	use pgcc compiler (default=no)])
+	  if test "x$enable_pgcc" = xyes; then
+	        AC_MSG_RESULT(yes)
+		COPT="-O6 -frisc -fno-rtti -Wno-sign-compare -mpentium"
+		CXX="pg++"
+	  else
+	    AC_MSG_RESULT(no)
+	    COPT="-O3 -fomit-frame-pointer -m486"
+	    COPT="$COPT -malign-loops=4 -malign-jumps=4 -malign-functions=4"
+	  fi
+	fi
+    ;;
+esac
 
 
 AC_MSG_CHECKING(for --enable-linkprop)
@@ -113,72 +228,9 @@ else
 	PEANUTS="\$(PEANUTS)"
 fi
 
-dnl Checks for libraries.
-AC_CHECK_LIB(dl, dlopen)
-AC_CHECK_LIB(gmp, mpz_init)
-AC_CHECK_LIB(intl, main)
-AC_CHECK_LIB(nsl, main)
-AC_CHECK_LIB(socket, main)
-
-dnl Checks for header files.
-AC_HEADER_DIRENT
-AC_HEADER_STDC
-AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS(fcntl.h limits.h malloc.h strings.h sys/time.h unistd.h)
-
-dnl Checks for typedefs, structures, and compiler characteristics.
-AC_C_CONST
-AC_C_INLINE
-AC_TYPE_MODE_T
-AC_TYPE_PID_T
-AC_TYPE_SIZE_T
-AC_HEADER_TIME
-AC_STRUCT_TM
-
-dnl Checks for library functions.
-AC_FUNC_ALLOCA
-AC_FUNC_MEMCMP
-AC_TYPE_SIGNAL
-AC_FUNC_VPRINTF
-AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname)
-
-COPT="-O2"
-
-MOREWARN="-Wall -pedantic-errors -W -Wtraditional -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls -Wnested-externs -Winline -Woverloaded-virtual -Wsynth -Werror"
-
-CWARN="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wsynth -Wno-unused -Wno-reorder -Wno-uninitialized"
-
-case $host_os in
-        linux*)
-                AC_DEFINE(LINUX)
-		COPT="-O6 -fomit-frame-pointer"
-        ;;
-        solaris*)
-                AC_DEFINE(SOLARIS)
-	;;
-	sunos*)
-		AC_DEFINE(SUNOS)
-        ;;
-
-        irix*)
-                AC_DEFINE(IRIX)
-        ;;
-	*)
-		AC_MSG_ERROR(os $host_os not supported)
-	;;
-esac
-
-case "$host_cpu" in
-	i?86)
-		AC_DEFINE(I486)
-	;;
-	sparc)
-		AC_DEFINE(SPARC)
-	;;
-	*)
-		AC_MSG_ERROR(cpu $host_cpu not supported)
-	;;
-esac
+dnl *****************************************************************
+dnl Compiler selection
+dnl *****************************************************************
 
 AC_ARG_ENABLE(sun-pro,
 	--enable-sun-pro  use the Sun Pro Compiler,
@@ -186,10 +238,9 @@ AC_ARG_ENABLE(sun-pro,
 	COPT="-fast")
 
 
-AC_SUBST(COPT)
-AC_SUBST(PROPOBJ)
-AC_SUBST(OzPlatform)
-AC_SUBST(PEANUTS)
+dnl *****************************************************************
+dnl FINALIZE
+dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf.h)
 
