@@ -32,6 +32,7 @@
 #endif
 
 
+// mm_u
 inline
 Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
 			 TaggedRef * tptr2, TaggedRef term2,
@@ -66,10 +67,6 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
       if (! ((GenBoolVariable *)this)->unifyBool(tptr1, term1, tptr2, term2, scp))
 	return FALSE;
     }
-    break;
-  case AVAR:
-    if (! ((AVar *)this)->unifyAVar(tptr1, tptr2==0?&term2:tptr2, scp))
-      return FALSE;
     break;
   case PerdioVariable:
     if (! ((PerdioVar *)this)->unifyPerdioVar(tptr1, tptr2==0?&term2:tptr2,
@@ -117,7 +114,6 @@ Bool GenCVariable::valid(TaggedRef *ptr,TaggedRef val)
   case MetaVariable: return ((GenMetaVariable*)this)->valid(val);
   case BoolVariable: return ((GenBoolVariable*)this)->valid(val);
   case FSetVariable: return ((GenFSetVariable*)this)->valid(val);
-  case AVAR:         return ((AVar *)this)->valid(val);
   case PerdioVariable: return ((PerdioVar *)this)->valid(ptr,val);
   case LazyVariable: return ((GenLazyVariable*)this)->valid(val);
   default: Assert(0); break;
@@ -206,7 +202,6 @@ void GenCVariable::installPropagators(GenCVariable * glob_var)
   // lists which have to be installed
 
   case OFSVariable:
-  case AVAR:
     break;
 
   default:

@@ -1031,7 +1031,7 @@ RefsArray resize(RefsArray r, int s)
 // identity test
 //
 inline
-Bool termEq(TaggedRef t1, TaggedRef t2)
+Bool oz_eq(TaggedRef t1, TaggedRef t2)
 {
   DEREF(t1,t1Ptr,_1);
   DEREF(t2,t2Ptr,_2);

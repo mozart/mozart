@@ -129,7 +129,7 @@ GenLazyVariable::unifyLazy(TaggedRef*vPtr,TaggedRef*tPtr,ByteCode*scp)
     *vPtr = makeTaggedUVar(home);
   }
 
-  am.genericBind(vPtr,*vPtr,tPtr,*tPtr);
+  oz_bind(vPtr,*vPtr,tPtr,*tPtr); // mm_u
   dispose();
   return OK;
 }
@@ -150,7 +150,7 @@ OZ_BI_define(BILazyNew,2,0)
       !OZ_isTuple(oz_fun))
     return OZ_typeError(0,"Unary Procedure|Object|Tuple");
   GenLazyVariable *lazy = new GenLazyVariable(oz_fun,oz_res);
-  return OZ_unify(oz_res,(OZ_Term)newTaggedCVar((GenCVariable*)lazy));
+  return oz_unify(oz_res,(OZ_Term)newTaggedCVar((GenCVariable*)lazy));
 } OZ_BI_end
 
 OZ_BI_define(BILazyIs,1,1)

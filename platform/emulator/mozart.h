@@ -275,6 +275,10 @@ extern int       _FUNDECL(OZ_eq,(OZ_Term, OZ_Term));
 #define OZ_unifyInt(t1,i)        OZ_unify(t1, OZ_int(i))
 #define OZ_unifyAtom(t1,s)       OZ_unify(t1, OZ_atom(s))
 
+#define OZ_eqAtom(t1,s)       OZ_eq(t1, OZ_atom(s))
+#define OZ_eqInt(t1,s)        OZ_eq(t1, OZ_int(s))
+#define OZ_eqFloat(t1,s)      OZ_eq(t1, OZ_float(s))
+
 /* create a new oz variable */
 extern OZ_Term _FUNDECL(OZ_newVariable,());
 

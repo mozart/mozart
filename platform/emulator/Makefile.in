@@ -58,7 +58,7 @@ PEANUTS = \
 	fdprofil.cc statisti.cc fdgenvar.cc\
 	codearea.cc debug.cc lps.cc solve.cc\
 	variable.cc thrqueue.cc thrspool.cc\
-	avar.cc perdiovar.cc lazyvar.cc\
+	perdiovar.cc lazyvar.cc\
 	print.cc
 
 CXXSRCS = \

@@ -291,7 +291,7 @@ void SiteUnify(TaggedRef val1,TaggedRef val2)
   
   if (isUVar(aux1) || isUVar(aux2)) {
     // cannot fail --> do it in current thread
-    OZ_unify(val1,val2);
+    OZ_unify(val1,val2); // mm2: should be bind?
     return;
   }
   Assert(am.onToplevel());
@@ -2745,7 +2745,7 @@ void PerdioVar::gcRecurse(void)
 GName *Name::globalize()
 {
   if (!hasGName()) {
-    Assert(am.isRootBoard(GETBOARD(this)));
+    Assert(oz_isRootBoard(GETBOARD(this)));
     homeOrGName = ToInt32(newGName(makeTaggedLiteral(this),GNT_NAME));
     setFlag(Lit_hasGName);
   }
@@ -5262,7 +5262,7 @@ void Watcher::invokeHandler(EntityCond ec,Tertiary* entity, Thread * th){
 
 void Watcher::invokeWatcher(EntityCond ec,Tertiary* entity){
   Assert(!isHandler());
-  Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, ozx_rootBoard());
+  Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, oz_rootBoard());
   tt->pushCall(proc, makeTaggedTert(entity), listifyWatcherCond(ec));
   am.scheduleThread(tt);}
 
@@ -5771,7 +5771,7 @@ void Site::probeFault(ProbeReturn pr){
 
 void insertDangelingEvent(Tertiary *t){
   PD((PROBES,"Starting DangelingThread"));
-  Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, ozx_rootBoard());
+  Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, oz_rootBoard());
   tt->pushCall(BI_probe, makeTaggedTert(t));
   am.scheduleThread(tt);}
 
@@ -6048,7 +6048,7 @@ OZ_BI_define(BIportWait,2,0)
 
 void wakeUpTmp(int i, int time){
   PD((TCPCACHE,"Starting DangelingThread"));
-  Thread *tt = am.mkRunnableThread(LOW_PRIORITY, ozx_rootBoard());
+  Thread *tt = am.mkRunnableThread(LOW_PRIORITY, oz_rootBoard());
   tt->pushCall(BI_startTmp, makeTaggedSmallInt(i), makeTaggedSmallInt(time));
   tt->pushCall(BI_Delay, makeTaggedSmallInt(time));
   am.scheduleThread(tt);}

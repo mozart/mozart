@@ -206,7 +206,7 @@ OZ_BI_define(BIgetTclNames,0,3) {
 }
 
 #define LEAVE_TCL_LOCK(TS) \
-  (void) am.fastUnify((TS)->getLock(), NameUnit, 0);
+  (void) oz_unify((TS)->getLock(), NameUnit); // mm_u
 
 
 /*
@@ -264,7 +264,7 @@ public:
     TaggedRef newt = OZ_cons(OZ_cons(ret,cast),
 			     oz_newVariable());
     
-    (void) OZ_unify(newt,tcl_rets);
+    (void) oz_unify(newt,tcl_rets); // mm_u
     tcl_rets = tail(newt);
   }
 
@@ -1187,7 +1187,7 @@ OZ_BI_define(BIcloseTclSession, 1,0) {
     TclSession ** ts = &tcl_sessions[smallIntValue(head(sid))];
     delete *ts;
     *ts = (TclSession *) NULL;
-    OZ_unify(tail(sid),NameUnit);
+    oz_unify(tail(sid),NameUnit); // mm_u
   }
   return PROCEED;
 } OZ_BI_end
