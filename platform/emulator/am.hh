@@ -178,13 +178,13 @@ public:
   Bool isEmptyTrailChunk ();
 
   // Unification
-  Bool unify(TaggedRef ref1, TaggedRef ref2);
+  Bool unify(TaggedRef ref1, TaggedRef ref2, Bool prop = OK);
   Bool fastUnify(TaggedRef ref1, TaggedRef ref2);
 #ifdef FASTSS
   Bool fastUnifyOutline(TaggedRef term1, TaggedRef *term1Ptr, TaggedRef term2);
 #endif
-  Bool performUnify(TaggedRef *ref1, TaggedRef *ref2);
-  void bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef term);
+  Bool performUnify(TaggedRef *ref1, TaggedRef *ref2, Bool prop);
+  void bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef term, Bool prop);
 
   void rebind(TaggedRef *ref, TaggedRef ptr);
   Bool isLocalUVar(TaggedRef var);
@@ -204,8 +204,8 @@ public:
   void pushCFun(Board *n, OZ_CFun f, RefsArray x=NULL, int i=0);
   void pushNervous (Board *n); 
   void genericBind(TaggedRef *varPtr, TaggedRef var,
-		   TaggedRef *termPtr, TaggedRef term);
-  void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr);
+		   TaggedRef *termPtr, TaggedRef term, Bool prop);
+  void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr, Bool prop);
   void checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
 			   SVariable * rightVar,
 			   PropCaller calledBy = pc_propagator);

@@ -28,9 +28,13 @@ void DynamicTable::printLong(ostream& ofile, int idnt) const {
 
 
 // (Arguments are dereferenced)
-Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,  TypeOfTerm vTag,
-                              TaggedRef *tPtr, TaggedRef term, TypeOfTerm tTag)
+Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
+			      TaggedRef *tPtr, TaggedRef term,
+			      Bool prop)
 {
+    TypeOfTerm vTag = tagTypeOf(var);
+    TypeOfTerm tTag = tagTypeOf(term);
+  
     switch (tTag) {
     case SRECORD:
       {
@@ -46,7 +50,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,  TypeOfTerm vTag,
         if (!sameAtom(termSRec->getLabel(),AtomOpen)) return FALSE;
 
         // Get local/global flag:
-        Bool vLoc=isLocalVariable();
+        Bool vLoc=(prop && isLocalVariable());
   
         // Check that all features of the OFSVar exist in the SRecord:
         // (During the check, calculate the list of feature pairs that correspond.)
@@ -63,7 +67,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,  TypeOfTerm vTag,
         TaggedRef t1, t2;
         while (p->getpair(t1, t2)) {
             Assert(!p->isempty());
-            if (am.unify(t1, t2)) {
+            if (am.unify(t1, t2,prop)) {
                 // Unification successful
             } else {
                 // Unification failed
@@ -79,7 +83,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,  TypeOfTerm vTag,
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
-        propagate(var, suspList, makeTaggedRef(vPtr), pc_cv_unif);
+        if (prop) propagate(var, suspList, makeTaggedRef(vPtr), pc_cv_unif);
 
         // Take care of linking suspensions
         if (!vLoc) {
@@ -104,8 +108,8 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,  TypeOfTerm vTag,
         GenOFSVariable* termVar=tagged2GenOFSVar(term);
   
         // Get local/global flags:
-        Bool vLoc=isLocalVariable();
-        Bool tLoc=termVar->isLocalVariable();
+        Bool vLoc=(prop==OK && isLocalVariable());
+        Bool tLoc=(prop==OK && termVar->isLocalVariable());
   
         GenOFSVariable* newVar=NULL;
         GenOFSVariable* otherVar=NULL;
@@ -177,7 +181,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,  TypeOfTerm vTag,
         TaggedRef t1, t2;
         while (p->getpair(t1, t2)) {
             Assert(!p->isempty());
-            if (am.unify(t1, t2)) { // CAN ARGS BE _ANY_ TAGGEDREF* ?
+            if (am.unify(t1, t2, prop)) { // CAN ARGS BE _ANY_ TAGGEDREF* ?
                 // Unification successful
             } else {
                 // Unification failed
@@ -216,10 +220,12 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,  TypeOfTerm vTag,
 		termVar->relinkSuspListTo(this);
 	    }
         } else if (!vLoc && !tLoc) {
-            Suspension* susp=new Suspension(am.currentBoard);
-            Assert(susp!=NULL);
-            termVar->addSuspension(susp);
-            addSuspension(susp);
+  	    if (prop) {
+	      Suspension* susp=new Suspension(am.currentBoard);
+	      Assert(susp!=NULL);
+	      termVar->addSuspension(susp);
+	      addSuspension(susp);
+	    }
         } else Assert(FALSE);
 
         return TRUE;

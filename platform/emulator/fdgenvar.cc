@@ -24,20 +24,24 @@
 // Only if a local variable is bound relink its suspension list, since
 // global variables are trailed.(ie. their suspension lists are
 // implicitely relinked.)
-Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
-			    TaggedRef * tPtr, TaggedRef term, TypeOfTerm tTag)
+Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
+			    TaggedRef *tPtr, TaggedRef term,
+			    Bool prop)
 {
+  TypeOfTerm vTag = tagTypeOf(var);
+  TypeOfTerm tTag = tagTypeOf(term);
+  
   switch (tTag){
   case SMALLINT:
     {
       if (! finiteDomain.contains(smallIntValue(term))) return FALSE;
       propagate(var, fd_det, term, pc_propagator);
 
-      if (isLocalVariable()) {
+      if (prop && isLocalVariable()) {
 	doBind(vPtr, term);
 	dispose();
       } else {
-	addSuspension(new Suspension(am.currentBoard));
+	if (prop) addSuspension(new Suspension(am.currentBoard));
 	doBindAndTrail(var, vPtr, term);
       }
       
@@ -57,8 +61,8 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
       FDPropState right_dom = intsct.checkAgainst(termDom);
       
 // bind - trail - propagate
-      Bool varIsLocal = isLocalVariable();
-      Bool termIsLocal = termVar->isLocalVariable();
+      Bool varIsLocal =  (prop && isLocalVariable());
+      Bool termIsLocal = (prop && termVar->isLocalVariable());
       switch (varIsLocal + 2 * termIsLocal) {
       case TRUE + 2 * TRUE: // var and term are local
 	{
@@ -157,21 +161,27 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	{
 	  if (intsct == fd_singleton){
 	    TaggedRef int_val = newSmallInt(intsct.singl());
-	    propagate(var, left_dom, int_val, pc_cv_unif);
-	    termVar->propagate(term, right_dom, int_val, pc_cv_unif);
+	    if (prop) {
+	      propagate(var, left_dom, int_val, pc_cv_unif);
+	      termVar->propagate(term, right_dom, int_val, pc_cv_unif);
+	    }
 	    doBindAndTrail(var, vPtr, int_val);
 	    doBindAndTrail(term, tPtr, TaggedRef(vPtr));
 	  } else {
 	    TaggedRef pn = tagged2CVar(var)->getName();
 	    TaggedRef * var_val = newTaggedCVar(new GenFDVariable(intsct, pn));
-	    propagate(var, left_dom, TaggedRef(var_val), pc_cv_unif);
-	    termVar->propagate(term, right_dom, TaggedRef(var_val), pc_cv_unif);
+	    if (prop) {
+	      propagate(var, left_dom, TaggedRef(var_val), pc_cv_unif);
+	      termVar->propagate(term, right_dom, TaggedRef(var_val), pc_cv_unif);
+	    }
 	    doBindAndTrail(var, vPtr, TaggedRef(var_val));
 	    doBindAndTrail(term, tPtr, TaggedRef(var_val));
 	  }
-	  Suspension * susp = new Suspension(am.currentBoard);
-	  termVar->addSuspension(susp);
-	  addSuspension(susp);
+	  if (prop) {
+	    Suspension * susp = new Suspension(am.currentBoard);
+	    termVar->addSuspension(susp);
+	    addSuspension(susp);
+	  }
 	  break;
 	}
       default:
