@@ -114,9 +114,8 @@ char *getOptArg(int &i, int argc, char **argv)
 }
 
 
-
-void AM::init(int argc,char **argv)
-{  
+static void printBanner()
+{
   version();
 
 #ifdef DEBUG_CHECK
@@ -163,8 +162,10 @@ void AM::init(int argc,char **argv)
   printf("Not using threaded code.\n");
 #endif
 #endif
+}
 
-
+void AM::init(int argc,char **argv)
+{  
   conf.init();
 
 #ifdef MAKEANEWPGRP
@@ -177,9 +178,6 @@ void AM::init(int argc,char **argv)
 
   int c;
 
-  extern char *optarg;
-  extern int optind, opterr;
-  
   char *compilerFile;
   if (!(compilerFile = getenv("OZCOMPILER"))) {
     compilerFile = OzCompiler;
@@ -197,7 +195,8 @@ void AM::init(int argc,char **argv)
 
   char *comPath = NULL;  // path name where to create AF_UNIX socket
   char *queryFileName = NULL;
-
+  Bool quiet = FALSE;
+  
   /* process command line arguments */
   conf.argV = NULL;
   conf.argC = 0;
@@ -208,6 +207,10 @@ void AM::init(int argc,char **argv)
     }
     if (strcmp(argv[i],"-d")==0) {
       tracerOn();
+      continue;
+    }
+    if (strcmp(argv[i],"-quiet")==0) {
+      quiet = TRUE;
       continue;
     }
     if (strcmp(argv[i],"-c")==0) {
@@ -240,6 +243,10 @@ void AM::init(int argc,char **argv)
      usage(argc,argv);
    }
 
+  if (quiet == FALSE) {
+    printBanner();
+  }
+  
   IO::initQuery(comPath,queryFileName,compilerFile);
 
   extern void DLinit(char *name);
