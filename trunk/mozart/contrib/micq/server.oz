@@ -204,6 +204,7 @@ define
       meth !S_logout(id:ID client:C<=nil)
 	 lock P={Dictionary.condGet self.watchers ID nil} in
 	    if P\=nil then
+	       {Dictionary.remove self.watchers ID}
 	       {Fault.removeSiteWatcher P.port P.procedure}
 	    end
 	    {self Notify(id:ID online:offline)}
@@ -383,7 +384,7 @@ define
 	       end
 	       
 	       %% Initialize the client
-	       {C startgui(settings:E.settings) "Couldn't start client"}
+	       {C startgui(settings:E.settings) "Could not start client"}
 	       	       
 	       %% So that we can uninstall watcher
 	       {Dictionary.put self.watchers ID entry(port: CP procedure: WatcherProc )}
