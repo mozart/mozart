@@ -123,6 +123,9 @@ in
 	 LastSelectedFrame : 0
 	 EnvSync           : _
 	 StatusSync        : _
+	 MarkNodeSync      : _
+	 MarkStackSync     : _
+	 MarkEnvSync       : _
 
 	 LastClicked       : unit
 
@@ -396,7 +399,7 @@ in
 				     end)}
 	     in
 		Gui,Enqueue(env o(W insert 'end'
-			      {PrintF ' ' # Name {EnvVarWidth}}))
+				  {PrintF ' ' # Name {EnvVarWidth}}))
 		Gui,Enqueue(env o(W insert 'end' Print # '\n' T))
 		Gui,Enqueue(env o(W tag bind T '<1>' Ac))
 		Gui,Enqueue(env o(W tag conf T font:BoldFont))
@@ -498,7 +501,7 @@ in
       meth SelectStackFrame(T)
 	 LSF = @LastSelectedFrame
       in
-	 {OzcarMessage 'SelectStackFrame: LSF == ' # LSF # ', T == ' # T}
+%       {OzcarMessage 'SelectStackFrame: LSF == ' # LSF # ', T == ' # T}
 	 case LSF \= T then
 	    case LSF > 0 then
 	       Gui,DeactivateLine(LSF)
@@ -648,6 +651,17 @@ in
       end
 
       meth markNode(I How)
+	 New in
+	 MarkNodeSync <- New = unit
+	 thread
+	    {WaitOr New {Alarm TimeoutToMark}}
+	    case {IsDet New} then skip else
+	       Gui,DoMarkNode(I How)
+	    end
+	 end
+      end
+
+      meth DoMarkNode(I How)
 	 {self.ThreadTree mark(I How)}
       end
 
@@ -712,6 +726,17 @@ in
       end
 
       meth markStack(How)
+	 New in
+	 MarkStackSync <- New = unit
+	 thread
+	    {WaitOr New {Alarm TimeoutToMark}}
+	    case {IsDet New} then skip else
+	       Gui,DoMarkStack(How)
+	    end
+	 end
+      end
+
+      meth DoMarkStack(How)
 	 case How
 	 of active then
 	    {OzcarMessage 'activating stack'}
@@ -725,6 +750,17 @@ in
       end
 
       meth markEnv(How)
+	 New in
+	 MarkEnvSync <- New = unit
+	 thread
+	    {WaitOr New {Alarm TimeoutToMark}}
+	    case {IsDet New} then skip else
+	       Gui,DoMarkEnv(How)
+	    end
+	 end
+      end
+
+      meth DoMarkEnv(How)
 	 case How
 	 of active then
 	    {OzcarMessage 'activating env'}
@@ -737,11 +773,18 @@ in
 	 end
       end
 
+      meth MarkRunning(T)
+	 case {CheckState T} == blocked then skip else
+	    Gui,markNode({Thread.id T} running)
+	 end
+	 Gui,markStack(inactive)
+	 Gui,markEnv(inactive)
+	 {SendEmacs configureBar(running)}
+      end
+
       meth ContinueTo(T Frame)
 	 Gui,UnselectStackFrame
-	 Gui,markNode({Thread.id T} running)
-	 Gui,markStack(inactive)
-	 {SendEmacs configureBar(running)}
+	 Gui,MarkRunning(T)
 	 case Frame.frameID of unit then
 	    {Dbg.unleash T 0}
 	 elseof FrameID then
@@ -802,7 +845,7 @@ in
 	    I = {Thread.id T}
 	    case {CheckState T}
 	    of running    then Gui,RunningStatus(I StepInto)
-%	    [] blocked    then Gui,BlockedStatus(T StepInto)
+%           [] blocked    then Gui,BlockedStatus(T StepInto)
 	    [] terminated then Gui,TerminatedStatus(T StepInto)
 	    else
 	       TopFrame = {@currentStack getTop($)}
@@ -823,7 +866,7 @@ in
 	    I = {Thread.id T}
 	    case {CheckState T}
 	    of running    then Gui,RunningStatus(I StepOver)
-%	    [] blocked    then Gui,BlockedStatus(T StepOver)
+%           [] blocked    then Gui,BlockedStatus(T StepOver)
 	    [] terminated then Gui,TerminatedStatus(T StepOver)
 	    else
 	       TopFrame = {@currentStack getTop($)}
@@ -836,7 +879,6 @@ in
 				' over')
 		     {Dbg.step T false}
 		  end
-%		  Gui,markEnv(inactive)
 		  Gui,ContinueTo(T TopFrame)
 	       end
 	    end
@@ -846,7 +888,7 @@ in
 	    I = {Thread.id T}
 	    case {CheckState T}
 	    of running    then Gui,RunningStatus(I A)
-%	    [] blocked    then Gui,BlockedStatus(T A)
+%           [] blocked    then Gui,BlockedStatus(T A)
 	    [] terminated then Gui,TerminatedStatus(T A)
 	    else
 	       Frame
@@ -855,9 +897,9 @@ in
 	    in
 	       {Stk getFrame(LSF Frame)}
 	       case Frame == unit then skip
-%	       elsecase Frame.dir == exit then
-%		  Gui,doStatus('Already at end of procedure ' #
-%			       'application -- unleash has no effect')
+%              elsecase Frame.dir == exit then
+%                 Gui,doStatus('Already at end of procedure ' #
+%                              'application -- unleash has no effect')
 	       else
 		  {Dbg.step T false}
 		  {Stk rebuild(true)}
@@ -868,13 +910,10 @@ in
 		  end
 
 		  Gui,resetLastSelectedFrame
-		  Gui,markNode({Thread.id T} running)
-		  Gui,markStack(inactive)
-		  Gui,markEnv(inactive)
+		  Gui,MarkRunning(T)
 		  Gui,doStatus('Unleashing thread #' # I #
 			       ' to frame ' #
 			       case LSF == 0 then 1 else LSF end)
-		  {SendEmacs configureBar(running)}
 		  {Thread.resume T}
 	       end
 	    end
@@ -1001,9 +1040,11 @@ in
 	 Gui,Enqueue(W o(Widget conf foreground:DefaultForeground))
       end
 
-      meth Append(W Widget Text Color<=DefaultForeground)
+      meth Append(W Widget Text Color<=unit)
 	 Gui,Enqueue(W o(Widget insert 'end' Text))
-	 Gui,Enqueue(W o(Widget conf fg:Color))
+	 case Color == unit then skip else
+	    Gui,Enqueue(W o(Widget conf fg:Color))
+	 end
       end
 
       meth DeleteLine(W Widget Nr)
@@ -1019,7 +1060,7 @@ in
       end
 
       meth toTop
-	 %% I am looking for a better method... 
+	 %% I am looking for a better method...
 	 {Tk.batch [wm(iconify   self.toplevel)
 		    wm(deiconify self.toplevel)]}
       end
