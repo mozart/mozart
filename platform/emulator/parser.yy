@@ -218,7 +218,7 @@ void xy_setParserExpect() {
 %token OZATOM ATOM_LABEL OZFLOAT OZINT AMPER DOTINT STRING
 %token VARIABLE VARIABLE_LABEL
 %token DEFAULT CHOICE LDOTS
-%token attr at _case_ catch choice _class_ cond _condis_ declare define
+%token attr at _case_ catch choice _class_ cond declare define
 %token dis _else_ elsecase elseif elseof end export fail false FALSE_LABEL
 %token feat finally _from_ _fun_ functor _if_ import _in_ local _lock_
 %token _meth_ not of or prepare proc prop _raise_ require self skip then
@@ -309,9 +309,6 @@ void xy_setParserExpect() {
 %type <t>  condElse
 %type <t>  condClauseList
 %type <t>  condClause
-%type <t>  condisClauseList
-%type <t>  condisClause
-%type <t>  fdExpression
 %type <t>  orClauseList
 %type <t>  orClause
 %type <t>  choiceClauseList
@@ -569,8 +566,6 @@ phrase2		: phrase2 add coord phrase2 %prec ADD
 		  { $$ = newCTerm("fDis",$3,makeLongPos($2,$5)); }
 		| choice coord choiceClauseList end coord
 		  { $$ = newCTerm("fChoice",$3,makeLongPos($2,$5)); }
-		| _condis_ coord condisClauseList end coord
-		  { $$ = newCTerm("fCondis",$3,makeLongPos($2,$5)); }
 		| scannerSpecification
 		  { $$ = $1; }
 		| parserSpecification
@@ -980,24 +975,6 @@ condClause	: sequence then coord inSequence
 		  { $$ = newCTerm("fClause",newCTerm("fSkip",$3),$1,$4); }
 		| sequence _in_ sequence then inSequence
 		  { $$ = newCTerm("fClause",$1,$3,$5); }
-		;
-
-condisClauseList: condisClause CHOICE condisClause
-		  { $$ = consList($1,consList($3,nilAtom)); }
-		| condisClause CHOICE condisClauseList
-		  { $$ = consList($1,$3); }
-		;
-
-condisClause	: fdExpression
-		  { $$ = consList($1,nilAtom); }
-		| fdExpression condisClause
-		  { $$ = consList($1,$2); }
-		;
-
-fdExpression	: phrase fdCompare coord phrase
-		  { $$ = newCTerm("fFdCompare",$2,$1,$4,$3); }
-		| phrase fdIn coord phrase
-		  { $$ = newCTerm("fFdIn",$2,$1,$4,$3); }
 		;
 
 orClauseList	: orClause CHOICE orClause
