@@ -141,6 +141,7 @@ void Statistics::reset()
 
   gcCollected.reset();
   heapUsed.reset();
+  timeForPropagation.reset();
   timeForGC.reset();
   timeForCopy.reset();
   timeForLoading.reset();
@@ -179,8 +180,10 @@ OZ_Term Statistics::getStatistics()
 {
   unsigned int timeNow = osUserTime();
 
-  OZ_Term r=OZ_pairAI("r",timeNow-(timeForGC.total+timeForLoading.total+
-                                   timeForCopy.total));
+  OZ_Term r=OZ_pairAI("r",
+                      timeNow-(timeForGC.total+timeForLoading.total+
+                               timeForCopy.total+timeForPropagation.total));
+  OZ_Term p=OZ_pairAI("p",timeForPropagation.total);
   OZ_Term g=OZ_pairAI("g",timeForGC.total);
   OZ_Term l=OZ_pairAI("l",timeForLoading.total);
   OZ_Term c=OZ_pairAI("c",timeForCopy.total);
@@ -197,8 +200,7 @@ OZ_Term Statistics::getStatistics()
                                    OZ_cons(a2,OZ_cons(c2,OZ_cons(s2,OZ_cons(f2,OZ_nil()))))));
 
   return OZ_recordInit(OZ_atom("stat"),
-                       OZ_cons(r,OZ_cons(g,OZ_cons(l,OZ_cons(c,OZ_cons(h,OZ_cons(s,OZ_cons(u,OZ_cons(e,nil())))))))));
-
+                       OZ_cons(r,OZ_cons(p,OZ_cons(g,OZ_cons(l,OZ_cons(c,OZ_cons(h,OZ_cons(s,OZ_cons(u,OZ_cons(e,nil()))))))))));
 }
 
 
@@ -212,7 +214,9 @@ void Statistics::printIdle(FILE *fd)
     fprintf(fd,"idle (");
     printTime(fd,"r: ",
               timeUtime.sinceidle()-
-              (timeForGC.sinceidle()+timeForLoading.sinceidle()+timeForCopy.sinceidle()));
+              (timeForGC.sinceidle()+timeForLoading.sinceidle()
+               +timeForCopy.sinceidle()+timeForPropagation.sinceidle()));
+    //printTime(fd,", p: ",timeForPropagation.sinceidle());
     printTime(fd,", c: ",timeForCopy.sinceidle());
     printTime(fd,", g: ",timeForGC.sinceidle());
     printTime(fd,", l: ",timeForLoading.sinceidle());
@@ -221,6 +225,7 @@ void Statistics::printIdle(FILE *fd)
     fflush(fd);
   }
   heapUsed.sinceIdle = totalHeap;
+  timeForPropagation.idle();
   timeForGC.idle();
   timeForCopy.idle();
   timeForLoading.idle();

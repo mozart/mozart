@@ -501,6 +501,7 @@ OZ_Return BIfdHeadManager::spawnPropagator
       error ("propagator returned an unknown value.\n");
     }
   }
+  return FAILED;
 #else
   Thread *prop;
 
@@ -567,6 +568,7 @@ OZ_Return BIfdHeadManager::spawnPropagator
       error ("propagator returned an unknown value.\n");
     }
   }
+  return FAILED;
 #else
   Thread *prop;
 
@@ -639,6 +641,7 @@ OZ_Return BIfdHeadManager::spawnPropagator
       error ("propagator returned an unknown value.\n");
     }
   }
+  return FAILED;
 #else
   Thread *prop;
 
@@ -1197,6 +1200,8 @@ void BIfdBodyManager::processFromTo(int from, int to)
 
     if (vartag == pm_singl || isSmallInt(*bifdbm_varptr[i])) {
       continue;
+    } else if (bifdbm_var[i] != *bifdbm_varptr[i]) { // avoid multiple telling
+      continue;                                      // of global vars
     } else if (! isTouched(i)) {
       vars_left = OZ_TRUE;
     } else if (vartag == pm_fd) {

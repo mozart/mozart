@@ -40,8 +40,47 @@ Bool ThreadsPool::isScheduled (Thread *thr)
 }
 
 //
-void ThreadsPool::scheduleThread (Thread *th)
+void ThreadsPool::scheduleThreadOutline(Thread *th, int pri)
 {
+  ThreadQueue *insQueue = &queues[pri];
+
+  if (!insQueue->isAllocated ()) {
+    insQueue->allocate (THREAD_QUEUE_SIZE);
+  }
+  insQueue->enqueue (th);
+
+  if (pri > currentPriority) {
+    if (currentPriority != -1) {
+      nextPrio[++nextPrioInd] = currentPriority;
+    }
+    currentPriority = pri;
+    currentQueue = insQueue;
+  } else {
+    // look through the stack (nextPrio) and insert when necessary;
+    int ix, jx;
+
+    for (ix = nextPrioInd; ix >= 0; ix--) {
+      if (nextPrio[ix] > pri) continue; // not yet;
+
+      if (nextPrio[ix] == pri) return;
+      // i.e. it's O.k. already - it will be taken anyway;
+
+      //  otherwise (nextPrio[ix] < pri) - insert a new entry;
+      break;
+    }
+
+    Assert (ix < 0 || nextPrio[ix] < pri);
+    // invariants: ix indexes the queue _before_ inserted one;
+    //  (ix's entry stays at the place;)
+    for (jx = nextPrioInd; jx > ix; jx--)
+      nextPrio[jx+1] = nextPrio[jx];
+
+    nextPrio[ix+1] = pri;
+    nextPrioInd++;
+  }
+}
+
+void ThreadsPool::scheduleThread (Thread *th) {
   int pri = th->getPriority ();
 
   Assert (!th->isDeadThread ());
@@ -51,42 +90,7 @@ void ThreadsPool::scheduleThread (Thread *th)
   if (pri == currentPriority) {
     currentQueue->enqueue (th);
   } else {
-    ThreadQueue *insQueue = &queues[pri];
-
-    if (!insQueue->isAllocated ()) {
-      insQueue->allocate (THREAD_QUEUE_SIZE);
-    }
-    insQueue->enqueue (th);
-
-    if (pri > currentPriority) {
-      if (currentPriority != -1) {
-        nextPrio[++nextPrioInd] = currentPriority;
-      }
-      currentPriority = pri;
-      currentQueue = insQueue;
-    } else {
-      // look through the stack (nextPrio) and insert when necessary;
-      int ix, jx;
-
-      for (ix = nextPrioInd; ix >= 0; ix--) {
-        if (nextPrio[ix] > pri) continue;       // not yet;
-
-        if (nextPrio[ix] == pri) return;
-        // i.e. it's O.k. already - it will be taken anyway;
-
-        //  otherwise (nextPrio[ix] < pri) - insert a new entry;
-        break;
-      }
-
-      Assert (ix < 0 || nextPrio[ix] < pri);
-      // invariants: ix indexes the queue _before_ inserted one;
-      //  (ix's entry stays at the place;)
-      for (jx = nextPrioInd; jx > ix; jx--)
-        nextPrio[jx+1] = nextPrio[jx];
-
-      nextPrio[ix+1] = pri;
-      nextPrioInd++;
-    }
+    scheduleThreadOutline (th, pri);
   }
 }
 

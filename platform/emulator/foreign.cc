@@ -283,9 +283,19 @@ int OZ_getMinPrio(void)
   return OZMIN_PRIORITY;
 }
 
+int OZ_getDefaultPrio(void)
+{
+  return OZDEFAULT_PRIORITY;
+}
+
+int OZ_getPropagatorPrio(void)
+{
+  return OZPROPAGATOR_PRIORITY;
+}
+
 int OZ_getMaxPrio(void)
 {
-  return OZMAX_PRIORITY ;
+  return OZMAX_PRIORITY;
 }
 
 int OZ_smallIntMin(void)

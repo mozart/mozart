@@ -53,8 +53,6 @@ public:
 
   Bool checkCondition(TaggedRef taggedVar, TaggedRef term);
 
-  SuspList * stable_wake(void);
-
   ~SuspList (void) {}
   SuspList * dispose(void);
   void disposeList(void);

@@ -26,10 +26,10 @@
 
 #include "thrqueue.hh"
 
-void ThreadQueue::resize ()
+void ThreadQueueImpl::resize ()
 {
   int new_maxsize = maxsize * 2;
-  ThreadPtr *new_queue = ::new ThreadPtr[new_maxsize];
+  Thread ** new_queue = ::new Thread*[new_maxsize];
   int index = 0;
   int currentSize = size;
   int currentHead = head;

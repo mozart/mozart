@@ -20,51 +20,72 @@ typedef Thread* ThreadPtr;
 
 //
 //  A queue a'la 'LocalPropagationQueue' by Tobias;
-class ThreadQueue {
-private:
+
+class ThreadQueueImpl {
+protected:
   int head, tail, size, maxsize;
   //  maxsize is required to be a power of 2;
-  ThreadPtr *queue;
+  Thread ** queue;
 
-  void resize ();
+  void resize (void);
+
 public:
   //
-  ThreadQueue () : maxsize(0), size(0), head(0), tail(-1), queue (NULL)
-  {}
-  ~ThreadQueue () {
+  ThreadQueueImpl(void)
+    : maxsize(0), size(0), head(0), tail(-1), queue (NULL)  {}
+
+  ~ThreadQueueImpl (void) {
     if (queue) delete queue;
     maxsize = size = head = tail = -1;
   }
 
-  void doGC ();
+  Bool isEmpty () { return (size == 0); }
+  int getSize () { return (size); }
+  Bool isAllocated () { return (maxsize); }
 
   void allocate (int initsize) {
     maxsize = initsize;
     head = size = 0;
     tail = initsize - 1;
-    queue = ::new ThreadPtr[initsize];
+    queue = ::new Thread*[initsize];
   }
 
-  void enqueue (Thread *th) {
+  void enqueue (Thread * th) {
     if (size == maxsize) resize ();
     tail = (tail + 1) & (maxsize - 1);
     queue[tail] = th;
     size++;
   }
-  Bool isEmpty () { return (size == 0); }
-  Thread *dequeue () {
-    Thread *th;
+
+  Thread * dequeue (void) {
     Assert (!isEmpty ());
-    th = queue[head];
+    Thread * th = queue[head];
     head = (head + 1) & (maxsize - 1);
     size--;
     return (th);
   }
+  void print(void);
+};
 
-  int getSize () { return (size); }
-  Bool isAllocated () { return (maxsize); }
+class ThreadQueue : public ThreadQueueImpl {
+public:
+  ThreadQueue(void) : ThreadQueueImpl() {}
 
-  Bool isScheduled (Thread *thr);
+  Bool isScheduled (Thread * thr);
+  void doGC ();
+};
+
+class LocalThreadQueue : public ThreadQueueImpl {
+public:
+  LocalThreadQueue(void) : ThreadQueueImpl() {}
+  LocalThreadQueue(Thread * thr) : ThreadQueueImpl() {
+    allocate(0x20);
+    enqueue(thr);
+  }
+  LocalThreadQueue(int sz) : ThreadQueueImpl(){
+    allocate(0x20);
+  }
+  LocalThreadQueue * gc(void);
 };
 
 #endif

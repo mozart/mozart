@@ -815,3 +815,65 @@ OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
   return a.release();
 }
 OZ_C_proc_end
+
+
+//-----------------------------------------------------------------------------
+//
+//
+
+#undef FailOnEmpty
+#undef SimplifyOnUnify
+
+#include "../FDLib/cd.hh"
+
+CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b)
+{
+  thr = (OZ_Thread) new Thread(am.currentBoard, OZ_getPropagatorPrio() + 1, p);
+}
+
+void CDSuppl::gcRecurse(void) {
+  thr = (OZ_Thread) ((Thread *)thr)->gcThread();
+  OZ_gcTerm(reg_b);
+}
+
+ostream& CDSuppl::print(ostream& o) const
+{
+  return o << '(' << *((Thread *)thr)->getNewPropagator()
+    << ") ><" <<OZ_toStream(reg_b);
+}
+
+OZ_Return CDSuppl::run(void)
+{
+  OZ_FDIntVar b(reg_b);
+  PropagatorController_V P(b);
+
+  if (*b == 0) {
+    ((Thread *) thr)->closeDonePropagatorCD();
+    return PROCEED;
+  }
+
+  if (*b == 1) {
+    OZ_Propagator * p = ((Thread *) thr)->swapNewPropagator(this);
+    ((Thread *) thr)->closeDonePropagatorThreadCD();
+    return replaceBy(p);
+  }
+
+  Thread * backup_currentThread = am.currentThread;
+  am.currentThread = (Thread *) thr;
+  OZ_Return ret_val = ((Thread *) thr)->runNewPropagator();
+  am.currentThread = backup_currentThread;
+
+  OZ_ASSERT(b->maxElem() >= 2);
+
+  if (ret_val == PROCEED) {
+    ((Thread *) thr)->closeDonePropagatorCD();
+    *b <= (b->maxElem() - 1);
+    OZ_ASSERT(b->maxElem() >= 2);
+  } else if (ret_val == FAILED) {
+    ((Thread *) thr)->closeDonePropagatorCD();
+    *b &= 0;
+  }
+
+  P.vanish();
+  return ret_val == FAILED ? PROCEED : ret_val;
+}

@@ -26,49 +26,6 @@
 //-----------------------------------------------------------------------------
 //                          class SuspList
 
-SuspList * SuspList::stable_wake(void) {
-  Assert(this);
-
-  SuspList * sl = this;
-
-  do {
-    Thread *thr = sl->getElem ();
-
-    Assert(thr->isPropagator () || thr->isNewPropagator());
-    Assert(thr->isPropagated ());
-
-    Board *b = thr->getBoardFast ();
-
-    if (b == am.currentBoard) {
-#ifndef TM_LP
-      if (localPropStore.isUseIt ()) {
-        localPropStore.push (thr);
-      } else {
-        //
-        //  Note that these threads might be converted into the
-        // runnable state only now, because of the counter of runnable
-        // threads in the solve actor: otherwise, if they would be converted
-        // earlier, they will affect stability, so that no stability
-        // could be reached at all!
-        DebugCode (thr->unmarkPropagated ()); // otherwise assertion hits;
-        thr->cContToRunnable ();
-
-        //
-        am.scheduleThread (thr);
-      }
-#else
-      localPropStore.push (thr);
-#endif
-    } else {
-      am.scheduleThread (thr);
-    }
-
-  } while ((sl = sl->getNextAndDispose ()));
-
-  return NULL;
-}
-
-
 int SuspList::length(void)
 {
   int i=0;

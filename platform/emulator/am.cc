@@ -54,14 +54,20 @@ void printBanner()
   version();
 
 #ifdef DEBUG_DET
-  warning("DEBUG_DET implies eager weaking of sleep.");
+  warning("DEBUG_DET implies eager waking of sleep.");
 #elif defined(WINDOWS)
   // windows dumps without this printf at the beginnning
   printf(" ");
 #endif
 
+#ifdef DEBUG_CHECK
+#ifdef LTQ
+  warning("Local thread queue turned on.");
+#endif
+
 #ifndef TM_LP
   warning("Local propagation turned off.");
+#endif
 #endif
 
 #ifdef DEBUG_CHECK
@@ -698,6 +704,8 @@ void AM::doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t)
 
   CHECK_NONVAR(t);
   *vp = t;
+
+  Assert(isRef(*vp) || !isAnyVar(*vp));
 }
 
 /*
@@ -710,7 +718,10 @@ void AM::doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
   lv->installPropagators(gv,prop);
   trail.pushRef(vp, v);
 
+  CHECK_NONVAR(t);
   *vp = t;
+
+  Assert(isRef(*vp) || !isAnyVar(*vp));
 }
 
 /*

@@ -93,6 +93,7 @@ int TaskStack::frameSize(ContFlag cFlag)
   case C_EXCEPT_HANDLER:
   case C_SET_CAA:
   case C_SET_SELF:
+  case C_LTQ:
     return 2;
   case C_CALL_CONT:
   case C_CFUNC_CONT:

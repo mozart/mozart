@@ -140,8 +140,8 @@ Bool SolveActor::checkExtSuspList()
 }
 
 SolveActor::SolveActor(Board *bb, int prio, Bool debug)
- : Actor (Ac_Solve, bb, prio),
-   suspList (NULL), threads (0), cps(NULL)
+ : Actor (Ac_Solve, bb, prio), suspList (NULL), threads (0), cps(NULL),
+   localThreadQueue(NULL)
 {
   result     = makeTaggedRef(newTaggedUVar(bb));
   solveBoard = new Board(this, Bo_Solve);

@@ -150,7 +150,8 @@ struct OZ_expect_t {
 
 enum OZ_PropagatorFlags {
    NULL_flag,
-   OFS_flag
+   OFS_flag,
+   CD_flag
 };
 
 class OZ_PropagatorExpect {
@@ -165,10 +166,10 @@ public:
   OZ_PropagatorExpect(void);
   ~OZ_PropagatorExpect(void);
 
-  OZ_Return spawn(OZ_Propagator *, int prio = OZ_getMaxPrio(),
+  OZ_Return spawn(OZ_Propagator *, int prio = OZ_getPropagatorPrio(),
                   OZ_PropagatorFlags flags=NULL_flag);
   OZ_Return spawn(OZ_Propagator * p, OZ_PropagatorFlags flags) {
-      return spawn(p, OZ_getMaxPrio(), flags);
+      return spawn(p, OZ_getPropagatorPrio(), flags);
   }
   OZ_Return suspend(OZ_Thread);
   OZ_Return fail(void);

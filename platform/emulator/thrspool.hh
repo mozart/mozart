@@ -70,7 +70,16 @@ public:
   //
   void doGC ();
 
+  void scheduleThread (Thread *th, int pri) {
+    if (pri == currentPriority) {
+      currentQueue->enqueue (th);
+    } else {
+      scheduleThreadOutline (th, pri);
+    }
+  }
   void scheduleThread (Thread *th);
+  void scheduleThreadOutline (Thread *th, int pri);
+
   Bool threadQueueIsEmpty ();
   Thread *getFirstThread ();
 

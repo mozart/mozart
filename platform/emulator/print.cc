@@ -897,6 +897,7 @@ PRINTLONG(SolveActor)
   stream << indent(offset) << "threads=" << threads << endl;
   stream << indent(offset) << "SuspList:" << endl;
   suspList->print(stream,DEC(depth),offset+2);
+  stream << "Local thread queue: " << localThreadQueue << endl;
 }
 
 void ThreadsPool::printThreads()
@@ -956,87 +957,50 @@ PRINT(Thread)
     return;
   }
 
-  if (isSuspended ()) {
-    //  former suspension, now - a suspended thread;
-    stream << indent(offset) << "Suspended Thread @" << this
-           << endl << indent (offset+2)
-           << " [prio: " << getPriority () << ", type: ";
+  stream << indent(offset) <<
+    (isSuspended() ? "Suspended " : "Runnable ") <<
+    "Thread @" << this << endl <<
+    indent(offset+2) << " [prio: " << getPriority();
 
-    switch (getThrType ()) {
-    case S_WAKEUP:
-      stream << "'board'";
-      break;
+  switch (getThrType ()) {
+  case S_RTHREAD:
+    stream << " 'seq thread'";
+    stream << ", stack depth #" << item.threadBody->taskStack.getUsed()-1;
 
-    case S_RTHREAD:
-      stream << "'allseq thread'";
-      stream << ", stack depth #" << item.threadBody->taskStack.getUsed()-1;
+  case S_WAKEUP:
+    stream << " 'board'";
+    break;
 
-    case S_CFUN:
-      stream << "'ccont', fun = "
-             << builtinTab.getName(((void *) getCCont ()->getCFunc ()))
+  case S_CFUN:
+    stream << " 'ccont', fun="
+           << builtinTab.getName(((void *) getCCont ()->getCFunc ()))
              << '(' << getCCont()->getXSize() << ", "
              << (void *) getCCont()->getX() << "[])";
-      break;
+    break;
 
-    case S_PR_THR:
-      stream << "'prop', fun = "
-             << builtinTab.getName(((void *) getCCont ()->getCFunc ()))
-             << '(' << getCCont()->getXSize() << ", "
-             << (void *) getCCont()->getX() << "[])";
-      break;
-
-    case S_NEW_PR_THR:
-      stream << *item.propagator;
-      break;
-
-    default:
-      stream << "(unknown)";
-    }
-  } else {
-    // a runnable thread;
-    stream << indent(offset) << "Runnable Thread @" << this
-           << endl << indent (offset+2)
-           << " [prio: " << getPriority ();
-
-    switch (getThrType ()) {
-    case S_RTHREAD:
-      stream << "'seq thread'";
-      stream << ", stack depth #" << item.threadBody->taskStack.getUsed()-1;
-
-    case S_WAKEUP:
-      stream << "'board'";
-      break;
-
-    case S_CFUN:
-      stream << "'ccont', fun = "
+  case S_PR_THR:
+      stream << " 'prop', fun="
              << builtinTab.getName(((void *) getCCont ()->getCFunc ()))
                << '(' << getCCont()->getXSize() << ", "
                << (void *) getCCont()->getX() << "[])";
       break;
 
-    case S_PR_THR:
-      stream << "'prop', fun = "
-             << builtinTab.getName(((void *) getCCont ()->getCFunc ()))
-               << '(' << getCCont()->getXSize() << ", "
-               << (void *) getCCont()->getX() << "[])";
-      break;
+  case S_NEW_PR_THR:
+    stream << " 'new prop'" << *getNewPropagator();
+    break;
 
-    case S_NEW_PR_THR:
-      stream << "'new prop'";
-      break;
-
-    default:
-      stream << "(unknown)";
-    }
+  default:
+    stream << "(unknown)";
   }
 
-  stream << ", flags:  <";
+  stream << ", flags: <";
   if ((getFlags ()) & T_T_solve)     stream << 'S';
   if ((getFlags ()) & T_S_ext)       stream << 'E';
   if ((getFlags ()) & T_S_loca)      stream << 'L';
   if ((getFlags ()) & T_S_unif)      stream << 'U';
   if ((getFlags ()) & T_S_ofs)       stream << 'O';
   if ((getFlags ()) & T_S_tag)       stream << 'T';
+  if ((getFlags ()) & T_S_ltq)       stream << 'Q';
   stream << ">]" << endl;
 
   if (board) {
@@ -1461,6 +1425,15 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
         break;
       }
 
+    case C_LTQ:
+      {
+        ThreadQueueImpl * ltq = (ThreadQueueImpl *) pop();
+        message("\tLocal thread queue @0x%x\n", ltq);
+        if (verbose) {
+          ltq->print();
+        }
+        break;
+      }
     default:
       Assert(0);
     } // switch
@@ -1469,6 +1442,21 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
   setTop(p);
 }
 
+void ThreadQueueImpl::print(void)
+{
+  if (isEmpty()) {
+    message("Thread queue empty.\n");
+  } else {
+    cout << "Thread #" << size << endl << flush;
+
+    for (int aux_size = size, aux_head = head;
+         aux_size;
+         aux_head = (aux_head + 1) & (maxsize - 1), aux_size--) {
+      cout << "queue[" << aux_head << "]=" << flush;
+      queue[aux_head]->print();
+    }
+  }
+}
 
 
 #define RANGESTR "#"

@@ -199,6 +199,7 @@ public:
   Bool emulateHookOutline(Abstraction *def=NULL,
                           int arity=0, TaggedRef *arguments=NULL);
   Bool hookCheckNeeded();
+  Bool isNotPreemtiveScheduling(void);
   Thread *mkSuspThread ();
   void suspendCond(AskActor *aa);
 

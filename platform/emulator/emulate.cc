@@ -22,7 +22,6 @@
 #include "genvar.hh"
 #include "fdhook.hh"
 
-
 #define KOSTJA_MAGIC 0x6b6f7374
 
 
@@ -340,6 +339,18 @@ Bool AM::emulateHookOutline(Abstraction *def, int arity, TaggedRef *arguments)
 }
 
 inline
+Bool AM::isNotPreemtiveScheduling(void)
+{
+  if (isSetSFlag(ThreadSwitch)) {
+    if (threadQueueIsEmpty() || getNextThPri() < currentThread->getPriority())
+      restartThread();
+    else
+      return FALSE;
+  }
+  return TRUE;
+}
+
+inline
 Bool AM::hookCheckNeeded()
 {
 #ifdef DEBUG_DET
@@ -412,7 +423,7 @@ Bool AM::hookCheckNeeded()
 
 #define INCFPC(N) PC += N
 
-//#define WANT_INSTRPROFILE
+#define WANT_INSTRPROFILE
 #if defined(WANT_INSTRPROFILE) && defined(__GNUC__)
 #define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
@@ -1005,7 +1016,7 @@ void engine()
 
   SaveSelf(e,NULL,NO);
   e->currentThread->setBoard (CBB);
-  e->scheduleThread(e->currentThread);
+  e->scheduleThread(e->currentThread, e->currentThread->getPriority());
   e->currentThread=(Thread *) NULL;
 
  LBLerror:
@@ -1100,6 +1111,7 @@ void engine()
 
     LOCAL_PROPAGATION(Assert(localPropStore.isEmpty ()););
 
+    //    unsigned int starttime = osUserTime();
     switch (e->currentThread->runNewPropagator()) {
     case SLEEP:
       e->currentThread->suspendPropagator ();
@@ -1110,6 +1122,7 @@ void engine()
       e->currentThread = (Thread *) NULL;
       LOCAL_PROPAGATION(if (!(localPropStore.do_propagation ()))
                          goto localhack7;);
+      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
       goto LBLstart;
 
     case SCHEDULED:
@@ -1121,12 +1134,14 @@ void engine()
       e->currentThread = (Thread *) NULL;
       LOCAL_PROPAGATION(if (!(localPropStore.do_propagation ()))
                          goto localhack7;);
+      //      ozstat.timeForPropagation.incf(osUserTime()-starttime);
       goto LBLstart;
 
     case PROCEED:
       // Note: e->currentThread must be reset in 'LBLkillXXX';
       LOCAL_PROPAGATION(if (!(localPropStore.do_propagation ()))
                          goto localhack7;);
+      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
       if (e->isToplevel ()) {
         goto LBLkillToplevelThread;
       } else {
@@ -1138,6 +1153,7 @@ void engine()
       LOCAL_PROPAGATION(localPropStore.reset());
 
     localhack7:
+      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
       HF_FAIL(INFO_BI);
 
     default:
@@ -1287,13 +1303,12 @@ LBLpopTask:
     Assert(CBB==currentDebugBoard);
     asmLbl(popTask);
 
-    emulateHookPopTask(e,
-                       goto LBLpreemption);
+    emulateHookPopTask(e, goto LBLpreemption);
 
     DebugCheckT(CAA = NULL);
 
-    TaskStack *taskstack = e->currentThread->getTaskStackRef ();
-    TaskStackEntry *topCache = taskstack->getTop();
+    TaskStack * taskstack = e->currentThread->getTaskStackRef();
+    TaskStackEntry * topCache = taskstack->getTop();
     TaskStackEntry topElem;
     ContFlag cFlag;
 
@@ -1313,6 +1328,63 @@ LBLpopTask:
       G  = (RefsArray) TaskStackPop(topCache-3);
       taskstack->setTop(topCache-3);
       goto LBLemulate;
+    }
+
+
+    if (cFlag == C_LTQ) {
+      {
+        asmLbl(ltq);
+        Assert(e->currentBoard->isSolve());
+        Assert(!e->isToplevel());
+        Assert(taskstack->getUsed()-1 == 2); // approximates one LTQ task
+
+        // postpone poping task from taskstack until
+        // local thread queue is empty
+        SolveActor * sa = SolveActor::Cast(e->currentBoard->getActor());
+        LocalThreadQueue * ltq = sa->getLocalThreadQueue();
+
+        Assert(!ltq->isEmpty());
+
+        //unsigned int starttime = osUserTime();
+        Thread * backup_currentThread = e->currentThread;
+
+        while (!ltq->isEmpty() && e->isNotPreemtiveScheduling()) {
+          Thread * thr = e->currentThread = ltq->dequeue();
+
+          Assert(!thr->isDeadThread());
+
+          OZ_Return r = thr->runNewPropagator();
+
+          if (r == SLEEP) {
+            thr->suspendPropagator();
+          } else if (r == PROCEED) {
+            thr->closeDonePropagator();
+          } else if (r == FAILED) {
+            thr->closeDonePropagator();
+            e->currentThread = backup_currentThread;
+            //ozstat.timeForPropagation.incf(osUserTime()-starttime);
+            goto LBLfailure; // top-level failure not possible
+          } else {
+            Assert(r == SCHEDULED);
+            thr->scheduledPropagator();
+          }
+        }
+
+        e->currentThread = backup_currentThread;
+        //ozstat.timeForPropagation.incf(osUserTime()-starttime);
+
+        if (ltq->isEmpty()) {
+          sa->resetLocalThreadQueue();
+
+          // pop task from taskstack now
+          taskstack->setTop(topCache-2);
+          Assert(taskstack->isEmpty());
+          goto LBLpopTask;
+        } else {
+          // need not push task onto taskstack since it hasn't been poped
+          goto LBLpreemption;
+        }
+      }
     }
 
     if (taskstack->isEmpty(topElem)) {
