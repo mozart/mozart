@@ -954,6 +954,11 @@ private:
   void checkVal(uint32 val)    { Assert((val & (tagged2Mask<<(32-tagged2Bits))) == 0); }
   void checkPointer(void* ptr) { Assert((((uint32) ptr)&tagged2Mask) == 0); }
 public:
+
+  int     getTag()  { return (tagged&tagged2Mask); }
+  uint32  getData() { return tagged>>tagged2Bits; }
+  void*   getPtr()  { return (void*)(tagged&~tagged2Mask); }
+
   Tagged2()                   { tagged = 0; }
   Tagged2(void* ptr,int tag)  { set(ptr,tag); }
   Tagged2(uint32 val,int tag) { set(val,tag); }
@@ -977,10 +982,6 @@ public:
     tagged = (val<<tagged2Bits) | getTag();
   }
 
-  uint32* getRef()  { return &tagged; }
-  int     getTag()  { return (tagged&tagged2Mask); }
-  uint32  getData() { return tagged>>tagged2Bits; }
-  void*   getPtr()  { return (void*)(tagged&~tagged2Mask); }
 };
 
 /*
