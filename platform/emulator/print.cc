@@ -679,7 +679,6 @@ PRINTLONG(ConstTerm)
   case Co_Board:        ((Board *) this)->printLong(stream, depth, offset);      break;
   case Co_Actor:        ((Actor *) this)->printLong(stream, depth, offset);      break;
   case Co_HeapChunk:    ((HeapChunk *) this)->printLong(stream, depth, offset);  break;
-  case Co_Class:        ((ObjectClass *) this)->printLong(stream, depth, offset);break;
   case Co_Abstraction:  ((Abstraction *) this)->printLong(stream,depth,offset);  break;
   case Co_Object:	((Object *) this)->printLong(stream,depth,offset); 	 break;
   case Co_Cell:	        ((Cell *) this)->printLong(stream,depth,offset);         break;
@@ -696,7 +695,6 @@ PRINT(ConstTerm)
   case Co_Board:       ((Board *) this)->print(stream, depth, offset);       break;
   case Co_Actor:       ((Actor *) this)->print(stream, depth, offset);       break;
   case Co_HeapChunk:   ((HeapChunk *) this)->print(stream, depth, offset);   break;
-  case Co_Class:       ((ObjectClass *) this)->print(stream, depth, offset); break;
   case Co_Abstraction: ((Abstraction *) this)->print(stream,depth,offset);   break;
   case Co_Object:      ((Object *) this)->print(stream,depth,offset);        break;
   case Co_Cell:        ((Cell *) this)->print(stream,depth,offset);          break;
@@ -1472,14 +1470,16 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
     case C_SET_CAA:
       { 
 	AskActor *aa = (AskActor *) pop ();
-	message("\tC_SET_CAA: AA=0x%x\n", aa);
+	if (verbose)
+	  message("\tC_SET_CAA: AA=0x%x\n", aa);
 	break;
       }
 
     case C_SET_SELF:
       { 
 	Object *obj = (Object *) pop();
-	message("\tSET_SELF: 0x%x\n", obj);
+	if (verbose)
+	  message("\tSET_SELF: 0x%x\n", obj);
 	break;
       }
 
