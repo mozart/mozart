@@ -122,15 +122,6 @@ OZ_BI_define(BIisAtom, 1,1)
   OZ_RETURN(oz_isAtom(term) ? oz_true() : oz_false());
 } OZ_BI_end
 
-OZ_BI_define(BIisLock, 1,1)
-{
-  oz_declareNonvarIN(0,term);
-  OZ_RETURN(oz_isLock(term) ? oz_true() : oz_false());
-} OZ_BI_end
-
-
-
-
 OZ_BI_define(BIwaitStatus,2,1)
 {
   oz_declareNonvarIN(0,status);
@@ -3031,74 +3022,14 @@ OZ_BI_define(BIsendPort,2,0)
 
 OZ_BI_define(BInewLock,0,1)
 {
-
   OZ_RETURN(makeTaggedConst(new LockLocal(oz_currentBoard())));
 } OZ_BI_end
 
-
-OZ_BI_define(BIlockLock,1,0)
+OZ_BI_define(BIisLock, 1,1)
 {
-  oz_declareNonvarIN(0,lock);
-
-  if (!oz_isLock(lock)) {
-    oz_typeError(0,"Lock");
-  }
-
-  Tertiary *t=tagged2Tert(lock);
-  if(t->isLocal()){
-    LockLocal *ll=(LockLocal*)t;
-    if (!oz_onToplevel()) {
-      if (!oz_isCurrentBoard(GETBOARD(ll))) {
-        return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));
-      }}
-    ll->lock(oz_currentThread());
-    return PROCEED;}
-  if(!oz_onToplevel()){
-    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));}
-
-  switch(t->getTertType()){
-  case Te_Manager:{
-    ((LockManagerEmul *)t)->lock(oz_currentThread());
-    return PROCEED;}
-  case Te_Proxy:{
-    (*lockLockProxy)(t, oz_currentThread());
-    return PROCEED;}
-  case Te_Frame:{
-    ((LockFrameEmul *)t)->lock(oz_currentThread());
-    return PROCEED;}
-  default:
-    Assert(0);}
-  return PROCEED;
+  oz_declareNonvarIN(0,term);
+  OZ_RETURN(oz_isLock(term) ? oz_true() : oz_false());
 } OZ_BI_end
-
-
-OZ_BI_define(BIunlockLock,1,0)
-{
-  oz_declareNonvarIN(0,lock);
-
-  if (!oz_isLock(lock)) {
-    oz_typeError(0,"Lock");
-  }
-  Tertiary *t=tagged2Tert(lock);
-
-  //
-  switch(t->getTertType()){
-  case Te_Local:{
-    ((LockLocal*)t)->unlock();
-    return PROCEED;}
-  case Te_Manager:{
-    ((LockManagerEmul *)t)->unlock(oz_currentThread());
-    return PROCEED;}
-  case Te_Proxy:{
-    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));}
-  case Te_Frame:{
-    ((LockFrameEmul *)t)->unlock(oz_currentThread());
-    return PROCEED;}
-  }
-  Assert(0);
-  return PROCEED;
-} OZ_BI_end
-
 
 // ---------------------------------------------------------------------
 // Cell
