@@ -84,7 +84,7 @@ local
 	       stop
 	    elseif {OS.system 'ozdynld '#
 		    {MakeFileName T ".o"}#' -o '#
-		    {MakeFileName T ".so"}#' -lc'} \= 0
+		    {MakeFileName T ".so"}#'-'#PLATFORM#' -lc'} \= 0
 	    then
 	       {Rep error(kind: 'system error'
 			  msg: 'invocation of ozdynld failed')}
@@ -416,18 +416,23 @@ in
 	       fSkip(unit)
 	    else LexerLoad Locals2 Descrs Meths in
 	       {Rep logSubPhase('building class definition ...')}
-	       case MakeLexer of continue then LexerFileName in
-		  LexerFileName = {MakeFileName T ".so"}
-		  case ImportFV of unit then
+	       case MakeLexer of continue then From in
+		  From = {VirtualString.toAtom
+			  {MakeFileName T ".so"}#'{native}'}
+		  case ImportFV of unit then New Message in
 		     Imports = nil
-		     LexerLoad = fEq(fVar('`lexer`' unit)
-				     fApply(fOpApply('.' [fVar('Foreign' unit)
-							  fAtom('load' unit)]
-						     unit)
-					    [fAtom(LexerFileName unit)]
-					    unit) unit)
-		  else Feature From in
-		     From = {VirtualString.toAtom LexerFileName#'{native}'}
+		     New = fApply(fVar('New' unit)
+				  [fOpApply('.' [fVar('Module' unit)
+						 fAtom(manager unit)] unit)
+				   fAtom(init unit)] unit)
+		     Message = fRecord(fAtom(link unit)
+				       [fColon(fAtom(url unit)
+					       fAtom(From unit))
+					fVar('`lexer`' unit)])
+		     LexerLoad = fLocal(fEq(fVar('M' unit) New unit)
+					fApply(fVar('M' unit) [Message] unit)
+					unit)
+		  else Feature in
 		     Imports = [Feature#From]
 		     LexerLoad = fEq(fVar('`lexer`' unit)
 				     fOpApply('.' [ImportFV
