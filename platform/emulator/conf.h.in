@@ -237,3 +237,6 @@
 
 /* Define if you want support for finalization */
 #undef NOFINALIZATION
+
+/* Define if you want support for virtual sites */
+#undef VIRTUALSITES
