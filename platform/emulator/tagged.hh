@@ -18,7 +18,7 @@
 #ifndef __TAGGEDH
 #define __TAGGEDH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

@@ -18,7 +18,7 @@
 # define FDPROFILE_GC(what,sz)
 #else
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

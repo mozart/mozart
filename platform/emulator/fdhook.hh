@@ -12,7 +12,7 @@
 #ifndef __FDHOOK__H__
 #define __FDHOOK__H__
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

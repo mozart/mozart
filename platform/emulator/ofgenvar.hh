@@ -1,7 +1,7 @@
 #ifndef __GENOFSVAR__H__
 #define __GENOFSVAR__H__
 
-#if defined(__GNUC__)
+#if defined(INTERFACE)
 #pragma interface
 #endif
 

@@ -12,7 +12,7 @@
 #ifndef __STATISTICS_H__
 #define __STATISTICS_H__
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

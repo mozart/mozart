@@ -9,7 +9,7 @@
   ------------------------------------------------------------------------
 */
 
-#if defined(__GNUC__) && !defined(NOPRAGMA)
+#if defined(INTERFACE)
 #pragma implementation "board.hh"
 #endif
 
@@ -156,8 +156,9 @@ Board::~Board() {
   error("Board::~Board");
 }
 
+#ifdef DEBUG_CHECK
 /*
- * for debugging: check if a board is alive
+ * Check if a board is alive.
  * NOTE: this test can be very expensive !!!
  */
 Bool Board::checkAlive()
@@ -172,6 +173,7 @@ loop:
   bb=aa->getBoardFast();
   goto loop;
 }
+#endif
 
 // -------------------------------------------------------------------------
 

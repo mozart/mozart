@@ -12,7 +12,7 @@
 #ifndef __THREADQUEUEH
 #define __THREADQUEUEH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

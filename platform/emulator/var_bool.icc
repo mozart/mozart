@@ -12,7 +12,7 @@
 #ifndef __fdbvar_icc__
 #define __fdbvar_icc__
 
-#if defined(__GNUC__) && !defined(OUTLINE) && !defined(FDOUTLINE)
+#if defined(INTERFACE) && !defined(OUTLINE) && !defined(FDOUTLINE)
 #pragma interface
 #endif
 

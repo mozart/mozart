@@ -9,7 +9,7 @@
   ------------------------------------------------------------------------
 */
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma implementation "print.hh"
 #endif
 
