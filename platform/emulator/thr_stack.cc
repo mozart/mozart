@@ -137,7 +137,7 @@ loop:
 
 TaggedRef TaskStack::findCatch(TaggedRef &out)
 {
-  if (out) out = nil();
+  out = nil();
 
   Assert(this);
 
