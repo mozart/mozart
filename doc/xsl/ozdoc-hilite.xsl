@@ -16,8 +16,20 @@
 <template match="/">
   <nxml:nxml>
     <nxml:escape char='"'>\"</nxml:escape>
+    <nxml:escape char="\">\\</nxml:escape>
     <apply-templates/>
   </nxml:nxml>
+</template>
+
+<template match="META[@NAME='PROGLANG.MODE' and @ARG1 and @ARG2]">
+  <nxml:control>
+    <text>(ozdoc-declare-mode "</text>
+    <nxml:data><value-of select="@ARG1"/></nxml:data>
+    <text>" '</text>
+    <value-of select="@ARG2"/>
+    <text>)
+</text>
+  </nxml:control>
 </template>
 
 <template match="CHUNK.REF">
