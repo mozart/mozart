@@ -325,13 +325,14 @@ void patchToFastCall(Abstraction *abstr, ProgramCounter PC, Bool isTailCall)
 #if defined(DEBUG_DET)
 #define DET_COUNTER 10000
 
+static int hookCheckCounter = DET_COUNTER;
+
 inline
 Bool hookCheckNeeded(AM *e)
 {
-  static int counter = DET_COUNTER;
-  if (--counter < 0) {
+  if (--hookCheckCounter < 0) {
     e->handleAlarm(CLOCK_TICK/1000);   // simulate an alarm
-    counter = DET_COUNTER;
+    hookCheckCounter = DET_COUNTER;
   }
   return (e->isSetSFlag());
 }
