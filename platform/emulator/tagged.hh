@@ -46,8 +46,8 @@ enum TypeOfTerm {
   GCTAG            =  13,  // 1101
 
   LTUPLE           =  2,   // 0010
-  FREEE            =  3,   // 0011
-  SRECORD          = 14,   // 1110
+  FREEE            = 14,   // 1110
+  SRECORD          =  3,   // 0011
 
   LITERAL          = 15,   // 1111
 
