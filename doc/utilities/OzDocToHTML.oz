@@ -591,9 +591,12 @@ define
                   Out <- @Out#('<DD><P align=right><I>'#ClassName#
                                '</I></P></DD>\n')
                end
-            [] synopsis then
+            [] synopsis then X in
                Out <- @Out#'<DD><BLOCKQUOTE>\n'
+               X = @Align
+               Align <- ""
                OzDocToHTML, Batch(M 1)
+               Align <- X
                Out <- @Out#'</BLOCKQUOTE></DD>\n'
             [] item then
                if @InDescription then
