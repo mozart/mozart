@@ -9,7 +9,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.0.0 (Feb 97)'
+Version                = '1.0.1 (Feb 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -134,6 +134,23 @@ TitleFont              = '-adobe-helvetica-bold-r-normal-*-10-*-*-*-*-*-*-*'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Files
 %%
+HomeDir                = {VS2A {OS.getEnv 'HOME'} # '/'}
+
+OzUnixPath             = {OS.getEnv 'OZPATH'}
+OzPath
+local
+   fun {PathList UnixPath} % UnixPath must be of type string
+      H T P in
+      {List.takeDropWhile UnixPath fun {$ C} C \= &: end H T}
+      P = {VS2A H#'/'}
+      case T == nil then P|nil
+      else P|{PathList T.2}
+      end
+   end
+in
+   OzPath = {PathList OzUnixPath}
+end
+
 BitMapDir              = {System.get home} # '/lib/bitmaps/'
 BitMap                 = '@' # BitMapDir # 'debugger.xbm'
 
