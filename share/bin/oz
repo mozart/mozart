@@ -137,11 +137,11 @@ case "$cmd" in
    ;;
 
    ozdemo)
-        exec $OZHOME/demo/rundemo $@
+        exec $OZHOME/demo/rundemo "$@"
    ;;
 
    ozemacs)
-        exec $OZEMACS $@
+        exec $OZEMACS "$@"
    ;;
 
    oz.compiler)
