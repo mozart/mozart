@@ -72,7 +72,7 @@ OZ_Return MonitorInPropagator::propagate(void)
   stream.leave();
   _stream = stream.getTail();
   fsetvar.leave();
-  return vanish ? ENTAILED : SLEEP;
+  return vanish ? OZ_ENTAILED : SLEEP;
 
 failure:
   OZ_DEBUGPRINT("fail " << *this);

@@ -83,5 +83,5 @@ entailment:
   }
 
   r.leave(); s.leave(); d.leave();
-  return ENTAILED;
+  return OZ_ENTAILED;
 }
