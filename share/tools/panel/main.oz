@@ -135,7 +135,7 @@ in
 		  {T updateAfterOption}
 	       end
 	    else
-	       {`RaiseError` panel(option OM)}
+	       {Exception.raiseError panel(option OM)}
 	    end
 	 end
       end

@@ -147,7 +147,7 @@ in
 	       end
 	    then skip
 	    else
-	       {`RaiseError` explorer(actionAdd Add)}
+	       {Exception.raiseError explorer(actionAdd Add)}
 	    end
 	 end
       end
@@ -172,7 +172,7 @@ in
 	       end
 	    then skip
 	    else
-	       {`RaiseError` explorer(actionDel Del)}
+	       {Exception.raiseError explorer(actionDel Del)}
 	    end
 	 end
       end
@@ -268,7 +268,7 @@ in
 		  {M updateAfterOption}
 	       end
 	    else
-	       {`RaiseError` explorer(option OM)}
+	       {Exception.raiseError explorer(option OM)}
 	    end
 	 end
       end
