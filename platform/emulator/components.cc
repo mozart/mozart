@@ -974,7 +974,7 @@ url_local:
   case URL_LOCALIZE:
     {
       if (access(urlDecoded,F_OK)<0) goto kaboom;
-      out = OZ_mkTupleC("old",1,oz_atom(url));
+      out = OZ_mkTupleC("old",1,oz_atom(urlDecoded));
       Return(PROCEED);
     }
   case URL_OPEN:
@@ -1006,6 +1006,7 @@ kaboom:
                   oz_atom(url)));
 
  exit:
+  delete urlDecoded;
   return ret;
 }
 
