@@ -3307,7 +3307,7 @@ void Site::msgReceived(MsgBuffer* bs)
       args[1]=t;
       int arity=found->getArity();
       Assert(arity<=2);
-      OZ_Return ret = found->getFun()(arity,args);
+      OZ_Return ret = found->getFun()(args,OZ_ID_MAP);
       if (ret != PROCEED) {
         PD((SPECIAL,"REMOTE_SEND failed: %d\n",ret));
       }
