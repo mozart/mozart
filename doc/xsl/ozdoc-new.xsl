@@ -71,6 +71,8 @@
 <template name="declare.maps">
   <call-template name="declare.map.text"/>
   <call-template name="declare.map.code"/>
+  <call-template name="declare.map.index.text"/>
+  <call-template name="declare.map.index.code"/>
 </template>
 
 <template name="declare.map.common">
@@ -107,11 +109,41 @@
   </txt:defmap>
 </template>
 
+<template name="declare.map.index.common">
+  <txt:enter char="!">"!</txt:enter>
+  <txt:enter char='"'>""</txt:enter>
+  <txt:enter char="@">"@</txt:enter>
+  <txt:enter char="|">"|</txt:enter>
+  <txt:enter char="&#10;">\mozartEMPTY
+</txt:enter>
+</template>
+
+<template name="declare.map.index.text">
+  <txt:defmap name="index.text">
+    <call-template name="declare.map.common"/>
+    <call-template name="declare.map.index.common"/>
+  </txt:defmap>
+</template>
+
+<template name="declare.map.index.code">
+  <txt:defmap name="index.code">
+    <call-template name="declare.map.common"/>
+    <call-template name="declare.map.index.common"/>
+    <txt:enter char=" ">\mozartSPACE{}</txt:enter>
+    <txt:enter char="&#10;">\mozartNEWLINE
+</txt:enter>
+  </txt:defmap>
+</template>
+
 <!-- book -->
 
 <template match="BOOK">
   <txt:usemap>\documentclass{ozdoc}
 </txt:usemap>
+  <if test=".//INDEX">
+    <txt:usemap>\DOINDEX
+</txt:usemap>
+  </if>
   <apply-templates select="FRONT"/>
   <txt:usemap>\begin{document}
 </txt:usemap>
@@ -159,12 +191,6 @@
         REWRITE.FROM/P.SILENT | REWRITE.TO/P.SILENT |
         REWRITE.CONDITION/P.SILENT">
   <apply-templates/>
-</template>
-
-<!-- for some elements: just ignore them -->
-
-<template match="INDEX">
-  <if test="msg:say('IGNORING ') and msg:saynl((local-part(.)))"/>
 </template>
 
 <!-- default node template: output an error message -->
@@ -1038,6 +1064,40 @@
   <txt:usemap>\DTDPI{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
+</template>
+
+<!-- indexing -->
+
+<template match="INDEX">
+  <txt:usemap>\INDEX{</txt:usemap>
+  <txt:alias from="text" to="index.text">
+    <txt:alias from="code" to="index.code">
+      <txt:usemap name="text">
+        <apply-templates mode="index.key"/>
+        <txt:usemap>@</txt:usemap>
+        <apply-templates/>
+      </txt:usemap>
+    </txt:alias>
+  </txt:alias>
+  <txt:usemap>}</txt:usemap>
+</template>
+
+<template match="AND" mode="index.key">
+  <if test="position()&gt;1"><txt:usemap>!</txt:usemap></if>
+  <apply-templates mode="index.key"/>
+</template>
+
+<template match="processing-instruction()" mode="index.key">
+  <apply-templates select="."/>
+</template>
+
+<template match="AND">
+  <if test="position()&gt;1"><txt:usemap>, </txt:usemap></if>
+  <apply-templates/>
+</template>
+
+<template match="SEE">
+  <if test="msg:saynl('IGNORING SEE')"/>
 </template>
 
 </stylesheet>

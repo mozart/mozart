@@ -869,3 +869,12 @@
 
 \newcommand{\PAGEREF}{\protect\pageref}
 \newcommand{\REF}{\protect\ref}
+
+%% indexing
+
+\newcommand{\INDEX}{\index}
+\AtEndDocument{\mozart@printindex}
+\newcommand{\mozart@printindex}{}
+\newcommand{\DOINDEX}{%
+  \usepackage{makeidx}\makeindex
+  \def\mozart@printindex{\clearpage\printindex}}

@@ -45,15 +45,20 @@ public class TextOutputHandler implements DocumentHandler, OutputStreamConverter
     private UsemapCharacterHandler first_map = null;
     private UsemapCharacterHandler lookup(String name) throws SAXException {
         for(UsemapCharacterHandler h=first_map;h!=null;h=h.next)
-            if (h.name==name) return h;
+            if (h.name==name) return h.deref();
         throw new SAXException("no such map: "+name);
     }
 
     class UsemapCharacterHandler extends CharacterHandler {
         private String name;
         private UsemapCharacterHandler next;
+        private UsemapCharacterHandler alias;
 
         UsemapCharacterHandler(String n) { name=n; }
+
+        UsemapCharacterHandler deref() {
+            return (alias==null)?this:alias;
+        }
 
         void record() throws SAXException {
             for(UsemapCharacterHandler h=first_map;h!=null;h=h.next)
@@ -169,6 +174,20 @@ public class TextOutputHandler implements DocumentHandler, OutputStreamConverter
             push((mapname==null || mapname.length()==0)
                  ? defaultCharacterHandler : lookup(mapname));
         }
+        else if (name.equals("alias")) {
+            if (context!=ContextDocument)
+                throw new SAXException("element not allowed here: alias");
+            String fromname = atts.getValue("from");
+            if (fromname==null)
+                throw new SAXException("alias: from attribute mandatory");
+            String toname = atts.getValue("to");
+            if (toname==null)
+                throw new SAXException("alias: to attribute mandatory");
+            UsemapCharacterHandler frommap = lookup(fromname);
+            UsemapCharacterHandler tomap = lookup(toname);
+            trail(frommap);
+            frommap.alias = tomap;
+        }
         else
             throw new SAXException("unknown element: "+name);
     }
@@ -180,7 +199,8 @@ public class TextOutputHandler implements DocumentHandler, OutputStreamConverter
             context=ContextDefmap;
         }
         else context=ContextDocument;
-        pop();
+        if (name.equals("alias")) untrail();
+        else pop();
     }
 
     private CharacterHandler[] stack = new CharacterHandler[100];
@@ -199,4 +219,29 @@ public class TextOutputHandler implements DocumentHandler, OutputStreamConverter
     }
 
     public void setOutputStream(OutputStream out) { this.out = out; }
+
+    private TrailEntry trail_top;
+
+    class TrailEntry {
+        private UsemapCharacterHandler map;
+        private UsemapCharacterHandler was;
+        private TrailEntry next;
+        TrailEntry(UsemapCharacterHandler m) {
+            map = m;
+            was = m.alias;
+        }
+        void link() {
+            next = trail_top;
+            trail_top = this;
+        }
+        void redo() {
+            map.alias = was;
+            trail_top = next;
+        }
+    }
+
+    void trail(UsemapCharacterHandler m) {
+        (new TrailEntry(m)).link();
+    }
+    void untrail() { trail_top.redo(); }
 }
