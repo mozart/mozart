@@ -29,9 +29,9 @@
 
 //-----------------------------------------------------------------------------
 
-void * OZ_Ct::operator new(size_t s, int align)
+void * OZ_Ct::operator new(size_t s, int)
 {
-  return alignedMalloc(s, align);
+  return doubleMalloc(s);
 }
 
 void OZ_Ct::operator delete(void * p, size_t s)
