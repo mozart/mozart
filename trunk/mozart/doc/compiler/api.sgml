@@ -100,7 +100,8 @@
 	  data structures:  Because it is much more powerful than
 	  <<System.virtualStringToValue>>, it can also be much less
 	  efficient.  Rather, you should use pickling and unpickling
-	  of data structures&nbsp;<Ptr.Extern to="ozdoc:system">.
+	  of data structures (see <Ptr.Extern to="ozdoc:system"
+	  key="Chapter.Pickle">).
 
 	<Entry><<engine>>
 	<Synopsis>
@@ -120,23 +121,81 @@
 	<Entry><<parseOzFile>>
 	<Synopsis>
 	  <<{Compiler.parseOzFile ?+{V} ?+{O} ?+{P} ?+{Dictionary} ??{T}}>>
+	<Item>
+	  parses the Oz source file named ?_{V}, returning an abstract
+	  syntax tree as defined in <Ptr to="appendix.syntax"> in ?_{T}.
+	  ?_{O} is an instance of the <<PrivateNarrator>> class described
+	  in <Ptr to="appendix.narrator">; its methods are invoked for
+	  example to report compilation errors.  ?_{P} is a unary procedure
+	  expecting a switch name as described in <Ptr to="appendix.switches">
+	  and returning a boolean value indicating the switch's state;
+	  in the current implementation, only the settings of <<gump>>,
+	  <<allowdeprecated>> and <<showinsert>> are requested.  Finally,
+	  ?_{Dictionary} is the set of macro names:  The keys are defined
+	  macro names; its items should always be <<true>>.  As a side-effect,
+	  ?_{Dictionary} is modified according to <<\define>> and <<\undef>>
+	  macro directives.
+
 	<Entry><<parseOzVirtualString>>
 	<Synopsis>
 <<{Compiler.parseOzVirtualString ?+{V} ?+{O} ?+{P} ?+{Dictionary} ??{T}}>>
 	<Item>
-	  <P.silent><!--**-->
+	  is similar to <<parseOzFile>>, except that ?_{V} denotes the
+	  source text itself instead of a source file name.
 
 	<Entry><<assemble>>
 	<Synopsis>
 	  <<{Compiler.assemble ?+{Ts} ?+{Xs} ?+{SwitchR} ??{P}}>>
 	<Item>
-	  <P.silent><!--**-->
+	  takes a list of bytecode instructions ?_{Ts} for the Mozart virtual
+	  machine (see <Ptr to="appendix.bytecode">), assembles them and
+	  returns the result in ?_{P}, a nullary procedure which causes the
+	  code to be executed when applied.  ?_{Xs} is a list of global
+	  variables (the closure of ?_{P}), the first element corresponding
+	  to register <<g(0)>>.  ?_{SwitchR} is a record whose features
+	  are switch names and whose values are booleans.  In the current
+	  implementation, the switches <<profile>>, <<controlflowinfo>>,
+	  <<verify>>, and <<peephole>> are used.  All features of ?_{SwitchR}
+	  are optional (default values are substituted).
       </List>
   &engines;
   &interfaces;
   <Section id="section.api.abstractions">
     <Title/A Look into the Provided Abstractions/
     <P>
+      The implementation of the <<Compiler.evalExpression>> procedure
+      is a good example of how to use compiler engines and interfaces.
+      <<evalExpression>> causes compilation of an expression within
+      a speciied environment.  It is synchronous, &ie;, only returns
+      after the compilation has finished.  Compiler error messages are
+      raised as exceptions, and the compilation may be interrupted using
+      the nullary procedure returned in <<Kill>>.
+    <Para class=apropos><Title/Startup/
+      Since we both want to control a compilation (done by a new compiler
+      engine) and to observe the compilation process (to synchronize and
+      to determine whether it produced errors), we first instantiate both
+      an engine and an interface which we register with the engine.
+      A number of queries are enqueued to the engine:  We need to set
+      the environment and appropriate compiler switches for compilation
+      of an expression and to cause synchronous execution of the compiled
+      program.  When we're done configuring the compiler, we can start
+      compilation of the source proper, expecting a result to be
+      returned in variable <<Result>>.
+    <Para class=apropos><Title/Killing/
+      We then define the <<Kill>> procedure.  The rest of the observation
+      is performed in a new thread, because we want to kill the observation
+      as well when <<Kill>> is invoked.  <<Kill>> will clear any non-processed
+      queries from the queue and interrupt the current one, then kill the
+      observation thread (unless it had been already dead).
+    <Para class=apropos><Title/Observing/
+      Next we'll observe the running compiler, and for this we need to make
+      use of the interface we created earlier.  When the compiler becomes
+      idle, we check whether it has output any error messages, in which
+      case we record the faulty condition, else we report success.  The main
+      thread waits until the condition becomes known and reacts upon it.
       <Code.Extern display to="EvalExpression.oz">
+    <Para class=apropos><Title/virtualStringToValue/
+      The <<Compiler.virtualStringToValue>> is trivial to implement on
+      top of the functionality provided by <<evalExpression>>.
       <Code.Extern display to="VirtualStringToValue.oz">
 </Chapter>

@@ -93,9 +93,9 @@
 	<Entry><<message(?_{R} ?_{Coord})>>
 	<Item>
 	  An error or warning message&nbsp;?_{R}, related to the source
-	  coordinates ?_{Coord}, is to be printed out.  ?_{R}&nbsp;has the
-	  standard error message format, described in
-	  <File>mozart/share/lib/sp/Error.oz</File>.<!--**-->
+	  coordinates ?_{Coord}, is to be printed out.  ?_{R}&nbsp;has
+	  the standard error message format, described in <Ptr.Extern
+	  to="ozdoc:system" key="Chapter.Error">.
 	<Entry><<insert(?_{V} ?_{Coord})>>
 	<Item>
 	  During parsing, the file named&nbsp;?_{V} has been read.
@@ -108,7 +108,6 @@
 	  ?_{ExtV} is typically used (such as <File/oz/ or <File/ozm/).
 	<Entry><<attention()>>
 	<Item>
-	  <!--** neu -->
 	  The error output buffer should be raised with the cursor at
 	  the current output coordinates (an error message should follow).
       </List>
@@ -123,22 +122,41 @@
   <SubSection>
     <Title/The <<Compiler.interface>> Class/
     <P>
-      <!--**-->
+      The <<Compiler.interface>> class is a subclass of the error listener
+      class described in <Ptr to="appendix.narrator">.  Its purpose is
+      to provide a standard listener powerful enough to server many
+      purposes, to spare the user of defining an own listener.
+    <Para class=apropos><Title/Methods/
+      In addition to the standard error listener interface, it supports the
+      following methods.
       <List>
-	<Entry><<init(?+{EngineO} ?+{L} &lt;= false)>>
+	<Entry><<init(?+{EngineO} ?+{VerboseL} &lt;= false)>>
 	<Item>
-	  <P.silent><!--**-->
-	<Entry><<reset()>>
-	<Item>
-	  <P.silent><!--**-->
+	  initializes a new compiler interface, attaching it to the
+	  compiler engine ?_{EngineO}.  ?_{VerboseL} can be one of <<true>>,
+	  <<false>>, or <<auto>>:  If <<true>>, all messages, including the
+	  compiler's banner, will be output.  If <<false>>, no messages
+	  will be output.  If <<auto>>, the interface will remain silent
+	  unless an error of warning message arrives, in which case it
+	  will become verbose.
 	<Entry><<sync()>>
 	<Item>
-	  <P.silent><!--**-->
+	  waits until the compiler engine becomes idle.
 	<Entry><<getInsertedFiles(??{Vs})>>
 	<Item>
-	  <P.silent><!--**-->
+	  returns a list of the file names that compilation has caused
+	  the inclusion of so far, in order of appearance.
 	<Entry><<getSource(??{V})>>
 	<Item>
-	  <P.silent><!--**-->
+	  returns the source that has last been displayed by the
+	  compiler (typically some intermediate representation), or
+	  the empty string if none.
+	<Entry><<reset()>>
+	<Item>
+	  clears the internal lists of inserted files and the displayed
+	  source.
+	<Entry><<clear()>>
+	<Item>
+	  is the same as <<reset>>.
       </List>
 </Section>
