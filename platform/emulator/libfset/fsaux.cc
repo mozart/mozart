@@ -28,7 +28,7 @@
 
 #include "fsaux.hh"
 
-template _OZ_ParamIterator<OZ_Return>;
+template class _OZ_ParamIterator<OZ_Return>;
 extern FILE *cpi_fileout;
 
 void oz_fsetdebugprint(char *format, ...)
