@@ -2086,6 +2086,138 @@ OZ_Return BIarityInline(TaggedRef term, TaggedRef &out)
 OZ_DECLAREBI_USEINLINEFUN1(BIarity,BIarityInline)
 
 
+// Builtins for Record Pattern-Matching
+
+OZ_BI_define(BItestRecord,3,1)
+{
+  // type-check the inputs:
+  oz_declareNonKindedIN(0,val);
+  oz_declareNonvarIN(1,patLabel);
+  oz_declareNonvarIN(2,patArityList);
+  if (!oz_isLiteral(patLabel)) {
+    oz_typeError(1,"Literal");
+  }
+  int len = OZ_length(patArityList);
+  if (len < 1) {
+    oz_typeError(2,"NonEmptyRecordArity");
+  }
+  TaggedRef aux = oz_deref(patArityList);
+  while (oz_isCons(aux)) {
+    if (!oz_isFeature(oz_head(aux))) {
+      oz_typeError(2,"NonEmptyRecordArity");
+    }
+    aux = oz_deref(oz_tail(aux));
+  }
+
+  // compute the pattern's arity:
+  TaggedRef sortedPatArityList = sortlist(duplist(patArityList,len),len);
+  if (oz_fastlength(sortedPatArityList) != len) {
+    // duplicate features are not allowed
+    return oz_raise(E_ERROR,E_KERNEL,"recordPattern",2,patLabel,patArityList);
+  }
+  Arity *patArity = aritytable.find(sortedPatArityList);
+
+  // is the input a proper record (or can it still become one)?
+  if (oz_isVariable(val) && oz_isKinded(val) && isGenOFSVar(val)) {
+    OzOFVariable *ofsvar = tagged2GenOFSVar(val);
+    if (patArity->isTuple()) {
+      if (ofsvar->disentailed(tagged2Literal(patLabel),patArity->getWidth())) {
+        OZ_RETURN(oz_false());
+      }
+    } else {
+      if (ofsvar->disentailed(tagged2Literal(patLabel),patArity)) {
+        OZ_RETURN(oz_false());
+      }
+    }
+    oz_declareDerefIN(0,a);
+    am.addSuspendVarList(aPtr);
+    return SUSPEND;
+  }
+  if (oz_isLiteral(val) || !oz_isRecord(val)) {
+    // literals never match since the arity is always a non-empty list
+    OZ_RETURN(oz_false());
+  }
+  // from here on we deal with a determined proper record
+
+  // get the value's label and SRecordArity:
+  TaggedRef valLabel;
+  SRecordArity valSRA;
+  if (oz_isSRecord(val)) {
+    SRecord *rec = tagged2SRecord(val);
+    valLabel = rec->getLabel();
+    valSRA = rec->getSRecordArity();
+  } else {
+    Assert(oz_isCons(val));
+    valLabel = AtomCons;
+    valSRA = mkTupleWidth(2);
+  }
+
+  // do the records match?
+  SRecordArity patSRA = (patArity->isTuple())?
+    mkTupleWidth(patArity->getWidth()): mkRecordArity(patArity);
+  if (literalEq(valLabel,patLabel) && sameSRecordArity(valSRA,patSRA)) {
+    OZ_RETURN(oz_true());
+  } else {
+    OZ_RETURN(oz_false());
+  }
+} OZ_BI_end
+
+OZ_BI_define(BItestRecordLabel,2,1)
+{
+  oz_declareNonKindedIN(0,val);
+  oz_declareNonvarIN(1,patLabel);
+  if (!oz_isLiteral(patLabel)) {
+    oz_typeError(1,"Literal");
+  }
+
+  // get value's label:
+  TaggedRef valLabel;
+  if (oz_isVariable(val) && oz_isKinded(val) && isGenOFSVar(val)) {
+    valLabel = oz_safeDeref(tagged2GenOFSVar(val)->getLabel());
+    if (oz_isVariable(valLabel)) {
+      oz_declareDerefIN(0,a);
+      am.addSuspendVarList(aPtr);
+      return SUSPEND;
+    }
+  } else if (oz_isLiteral(val)) {
+    valLabel = val;
+  } else if (!oz_isRecord(val)) {
+    OZ_RETURN(oz_false());
+  } else if (oz_isSRecord(val)) {
+    valLabel = tagged2SRecord(val)->getLabel();
+  } else {
+    Assert(oz_isCons(val));
+    valLabel = AtomCons;
+  }
+
+  // do the labels match?
+  if (literalEq(patLabel,valLabel)) {
+    OZ_RETURN(oz_true());
+  } else {
+    OZ_RETURN(oz_false());
+  }
+} OZ_BI_end
+
+OZ_BI_define(BItestRecordFeature,2,2)
+{
+  oz_declareIN(0,val);
+  oz_declareIN(1,patFeature);
+  TaggedRef out;
+  switch (genericDot(val,patFeature,&out,FALSE)) {
+  case SUSPEND:
+    oz_suspendOn2(val,patFeature);
+  case FAILED:
+    OZ_out(1) = oz_unit();
+    OZ_RETURN(oz_false());
+  case PROCEED:
+    OZ_out(1) = out;
+    OZ_RETURN(oz_true());
+  default:
+    Assert(0);
+  }
+  OZ_RETURN(oz_false());   // keep gcc happy
+} OZ_BI_end
+
 /* -----------------------------------------------------------------------
    Numbers
    ----------------------------------------------------------------------- */
