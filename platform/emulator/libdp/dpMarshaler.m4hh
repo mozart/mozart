@@ -90,6 +90,10 @@ undefine(`message')
 define(message,`void unmarshal_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
 include(EMUDIR/msgFormat.m4)
 
+undefine(`message')
+define(message,`void unmarshalRobust_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
+include(EMUDIR/msgFormat.m4)
+
 void marshalDSite(DSite *, MsgBuffer *);
 void marshalVarObject(Object *o, MsgBuffer *bs, GName *gnclass);
 void marshalFullObjectAndClass(Object *o, MsgBuffer* bs);
@@ -97,7 +101,9 @@ void marshalFullObject(Object *o, MsgBuffer* bs);
 
 MessageType unmarshalHeader(MsgBuffer *bs);
 void unmarshalFullObject(ObjectFields *o, MsgBuffer *bs);
+void unmarshalFullObjectRobust(ObjectFields *o, MsgBuffer *bs, int *error);
 void unmarshalFullObjectAndClass(ObjectFields *o, MsgBuffer *bs);
+void unmarshalFullObjectAndClassRobust(ObjectFields *o,MsgBuffer *bs,int *error);
 
 inline void marshalCredit(Credit credit,MsgBuffer *bs){
   Assert(sizeof(Credit)==sizeof(int));
@@ -112,9 +118,16 @@ inline Credit unmarshalCredit(MsgBuffer *bs){
   PD((UNMARSHAL,"credit c:%d",c));
   PD((CREDIT,"unmarshal:credit c:%d",c));
   return c;}
+inline Credit unmarshalCreditRobust(MsgBuffer *bs,int *error){
+  Assert(sizeof(Credit)==sizeof(int));
+  Credit c=unmarshalNumberRobust(bs,error);
+  PD((UNMARSHAL,"credit c:%d",c));
+  PD((CREDIT,"unmarshal:credit c:%d",c));
+  return c;}
 
 // var.cc
 OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi);
+OZ_Term unmarshalBorrowRobust(MsgBuffer *bs,OB_Entry *&ob,int &bi,int *error);
 void marshalToOwner(int bi,MsgBuffer *bs);
 void marshalBorrowHead(MarshalTag tag, int bi,MsgBuffer *bs);
 void marshalOwnHead(int tag,int i,MsgBuffer *bs);
@@ -122,7 +135,9 @@ void marshalOwnHead(int tag,int i,MsgBuffer *bs);
 //
 void marshalTertiaryImpl(Tertiary *t, MarshalTag tag, MsgBuffer *bs);
 OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag);
+OZ_Term unmarshalTertiaryRobustImpl(MsgBuffer *bs, MarshalTag tag,int *error);
 OZ_Term unmarshalOwnerImpl(MsgBuffer *bs,MarshalTag mt);
+OZ_Term unmarshalOwnerRobustImpl(MsgBuffer *bs,MarshalTag mt,int *error);
 void marshalObjectImpl(ConstTerm* t, MsgBuffer *bs);
 void marshalSPPImpl(TaggedRef entity, MsgBuffer *bs, Bool trail);
 

@@ -212,6 +212,20 @@ double unmarshalFloat(MsgBuffer *bs)
   }
   return dc.u.d;
 }
+double unmarshalFloatRobust(MsgBuffer *bs, int *overflow)
+{
+  static DoubleConv dc;
+  int o1, o2;
+  if (lowendian) {
+    dc.u.i[0] = unmarshalNumberRobust(bs, &o1);
+    dc.u.i[1] = unmarshalNumberRobust(bs, &o2);
+  } else {
+    dc.u.i[1] = unmarshalNumberRobust(bs, &o1);
+    dc.u.i[0] = unmarshalNumberRobust(bs, &o2);
+  }
+  *overflow = o1 || o2;
+  return dc.u.d;
+}
 
 
 static
@@ -230,6 +244,26 @@ char *getString(MsgBuffer *bs, unsigned int i)
   ret[i] = '\0';
   return ret;
 }
+static
+char *getStringRobust(MsgBuffer *bs, unsigned int i, int *error)
+{
+  char *ret = new char[i+1];
+  if (ret==NULL) {
+    *error = OK;
+    return NULL;
+  }
+  for (unsigned int k=0; k<i; k++) {
+    if (bs->atEnd()) {
+      delete ret;
+      *error = OK;
+      return NULL;
+    }
+    ret[k] = bs->get();
+  }
+  ret[i] = '\0';
+  *error = NO;
+  return ret;
+}
 
 char *unmarshalString(MsgBuffer *bs)
 {
@@ -238,7 +272,16 @@ char *unmarshalString(MsgBuffer *bs)
 
   return getString(bs,i);
 }
-
+char *unmarshalStringRobust(MsgBuffer *bs, int *error)
+{
+  int e1,e2;
+  char *string;
+  misc_counter[MISC_STRING].recv();
+  unsigned int i = unmarshalNumberRobust(bs,&e1);
+  string = getStringRobust(bs,i,&e2);
+  *error = e1 || e2;
+  return string;
+}
 
 /* a version of unmarshalString that is more stable against garbage input */
 char *unmarshalVersionString(MsgBuffer *bs)
@@ -246,7 +289,6 @@ char *unmarshalVersionString(MsgBuffer *bs)
   unsigned int i = bs->get();
   return getString(bs,i);
 }
-
 
 #endif
 
@@ -340,6 +382,30 @@ void marshalString(const char *s, MsgBuffer *bs)
 BYTE unmarshalByte(MsgBuffer *bs)
 {
   return bs->get();
+}
+
+unsigned int unmarshalNumberRobust(MsgBuffer *bs, int *overflow)
+{
+  unsigned int ret = 0, shft = 0;
+  unsigned int c = bs->get();
+  while (c >= SBit) {
+    ret += ((c-SBit) << shft);
+    c = bs->get();
+    shft += 7;
+  }
+  if(shft > RobustMarshaler_Max_Shift) {
+    *overflow = OK;
+    return 0;
+  }
+  else if(shft == RobustMarshaler_Max_Shift) {
+    if(c >= RobustMarshaler_Max_Hi_Byte) {
+      *overflow = OK;
+      return 0;
+    }
+  }
+  ret |= (c<<shft);
+  *overflow = NO;
+  return ret;
 }
 
 unsigned int unmarshalNumber(MsgBuffer *bs)

@@ -74,6 +74,8 @@ enum GNameType {
   GNT_PROMISE
 };
 
+const int MAX_GNT = GNT_PROMISE;
+
 class GName {
   TaggedRef value;
   char gcMark;

@@ -579,6 +579,43 @@ OZ_Term unmarshalVarImpl(MsgBuffer* bs, Bool isFuture, Bool isAuto){
   default:
     Assert(0);
   }
+
+  return val;
+}
+
+// extern
+OZ_Term unmarshalVarRobustImpl(MsgBuffer* bs, Bool isFuture,
+                             Bool isAuto, int *error){
+  OB_Entry *ob;
+  int bi;
+  OZ_Term val1 = unmarshalBorrowRobust(bs,ob,bi,error);
+
+  if (val1) {
+    PD((UNMARSHAL,"var/chunk hit: b:%d",bi));
+    return val1;}
+
+  PD((UNMARSHAL,"var miss: b:%d",bi));
+  ProxyVar *pvar = new ProxyVar(oz_currentBoard(),bi,isFuture);
+
+  TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
+  ob->changeToVar(val); // PLEASE DONT CHANGE THIS
+  if(!isAuto) {
+    sendRegister((BorrowEntry *)ob);}
+  else{
+    pvar->makeAuto();}
+
+  switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
+  case SITE_OK:{
+    break;}
+  case SITE_PERM:{
+    deferProxyVarProbeFault(val,PROBE_PERM);
+    break;}
+  case SITE_TEMP:{
+    deferProxyVarProbeFault(val,PROBE_TEMP);
+    break;}
+  default:
+    Assert(0);
+  }
   return val;
 }
 

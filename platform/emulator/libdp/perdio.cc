@@ -221,7 +221,7 @@ void pendThreadAddRAToEnd(PendThread **pt,DSite *s1, DSite *s2,int index){
 }
 
 /* ******************************************************************* */
-/*   SECTION 18::  garbage-collection  DMM + some BASIC                           */
+/*   SECTION 18::  garbage-collection  DMM + some BASIC                */
 /* ******************************************************************* */
 
 /* OBS: ---------- interface to gc.cc ----------*/
@@ -519,7 +519,11 @@ void msgReceived(MsgBuffer* bs)
     {
       int portIndex;
       OZ_Term t;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_PORT_SEND(bs,portIndex,t);
+#else
       unmarshal_M_PORT_SEND(bs,portIndex,t);
+#endif
       PD((MSG_RECEIVED,"PORTSEND: o:%d v:%s",portIndex,toC(t)));
       OwnerEntry *oe=receiveAtOwner(portIndex);
       Assert(oe);
@@ -535,7 +539,11 @@ void msgReceived(MsgBuffer* bs)
     {
       int na_index;
       DSite* rsite;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_ASK_FOR_CREDIT(bs,na_index,rsite);
+#else
       unmarshal_M_ASK_FOR_CREDIT(bs,na_index,rsite);
+#endif
       PD((MSG_RECEIVED,"ASK_FOR_CREDIT index:%d site:%s",
           na_index,rsite->stringrep()));
       OwnerEntry *oe=receiveAtOwner(na_index);
@@ -550,7 +558,11 @@ void msgReceived(MsgBuffer* bs)
     {
       int index;
       Credit c;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_OWNER_CREDIT(bs,index,c);
+#else
       unmarshal_M_OWNER_CREDIT(bs,index,c);
+#endif
       PD((MSG_RECEIVED,"OWNER_CREDIT index:%d credit:%d",index,c));
       receiveAtOwnerNoCredit(index)->returnCreditOwner(c,index);
       break;
@@ -561,7 +573,11 @@ void msgReceived(MsgBuffer* bs)
       int index;
       Credit c;
       DSite* s;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_OWNER_SEC_CREDIT(bs,s,index,c);
+#else
       unmarshal_M_OWNER_SEC_CREDIT(bs,s,index,c);
+#endif
       PD((MSG_RECEIVED,"OWNER_SEC_CREDIT site:%s index:%d credit:%d",
           s->stringrep(),index,c));
       receiveAtBorrowNoCredit(s,index)->addSecondaryCredit(c,myDSite);
@@ -574,7 +590,11 @@ void msgReceived(MsgBuffer* bs)
       int si;
       Credit c;
       DSite* sd;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_BORROW_CREDIT(bs,sd,si,c);
+#else
       unmarshal_M_BORROW_CREDIT(bs,sd,si,c);
+#endif
       PD((MSG_RECEIVED,"BORROW_CREDIT site:%s index:%d credit:%d",
           sd->stringrep(),si,c));
       receiveAtBorrowNoCredit(sd,si)->addPrimaryCredit(c);
@@ -585,7 +605,11 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_REGISTER(bs,OTI,rsite);
+#else
       unmarshal_M_REGISTER(bs,OTI,rsite);
+#endif
       PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
       OwnerEntry *oe=receiveAtOwner(OTI);
       if (oe->isVar()) {
@@ -600,7 +624,11 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_REGISTER(bs,OTI,rsite);
+#else
       unmarshal_M_REGISTER(bs,OTI,rsite);
+#endif
       PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
       OwnerEntry *oe=receiveAtOwner(OTI);
       if (oe->isVar()) {
@@ -617,7 +645,11 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_GET_OBJECT(bs,OTI,rsite);
+#else
       unmarshal_M_GET_OBJECT(bs,OTI,rsite);
+#endif
       PD((MSG_RECEIVED,"M_GET_OBJECT(ANDCLASS) index:%d site:%s",
           OTI,rsite->stringrep()));
       //      OwnerEntry *oe=receiveAtOwner(OTI);
@@ -633,7 +665,11 @@ void msgReceived(MsgBuffer* bs)
       ObjectFields of;
       DSite* sd;
       int si;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_SEND_OBJECT(bs,sd,si,&of);
+#else
       unmarshal_M_SEND_OBJECT(bs,sd,si,&of);
+#endif
       PD((MSG_RECEIVED,"M_SEND_OBJECT site:%s index:%d",sd->stringrep(),si));
       BorrowEntry *be=receiveAtBorrow(sd,si);
       Assert(be->isVar()); // check for duplicate object requests
@@ -647,7 +683,11 @@ void msgReceived(MsgBuffer* bs)
       ObjectFields of;
       DSite* sd;
       int si;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_SEND_OBJECTANDCLASS(bs,sd,si,&of);
+#else
       unmarshal_M_SEND_OBJECTANDCLASS(bs,sd,si,&of);
+#endif
       PD((MSG_RECEIVED,"M_SEND_OBJECTANDCLASS site:%s index:%d",
           sd->stringrep(),si));
       BorrowEntry *be=receiveAtBorrow(sd,si);
@@ -662,7 +702,11 @@ void msgReceived(MsgBuffer* bs)
       DSite* sd;
       int si;
       TaggedRef val;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_REDIRECT(bs,sd,si,val);
+#else
       unmarshal_M_REDIRECT(bs,sd,si,val);
+#endif
       PD((MSG_RECEIVED,"M_REDIRECT site:%s index:%d val%s",
           sd->stringrep(),si,toC(val)));
       BorrowEntry* be=maybeReceiveAtBorrow(sd,si);
@@ -681,7 +725,11 @@ void msgReceived(MsgBuffer* bs)
       int OTI;
       DSite* rsite;
       TaggedRef v;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_SURRENDER(bs,OTI,rsite,v);
+#else
       unmarshal_M_SURRENDER(bs,OTI,rsite,v);
+#endif
       PD((MSG_RECEIVED,"M_SURRENDER index:%d site:%s val%s",
           OTI,rsite->stringrep(),toC(v)));
       OwnerEntry *oe = receiveAtOwner(OTI);
@@ -701,7 +749,11 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* site;
       int OTI;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_GETSTATUS(bs,site,OTI);
+#else
       unmarshal_M_GETSTATUS(bs,site,OTI);
+#endif
       PD((MSG_RECEIVED,"M_GETSTATUS index:%d",OTI));
       OwnerEntry *oe = receiveAtOwner(OTI);
 
@@ -715,7 +767,11 @@ void msgReceived(MsgBuffer* bs)
       DSite* site;
       int OTI;
       TaggedRef status;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_SENDSTATUS(bs,site,OTI,status);
+#else
       unmarshal_M_SENDSTATUS(bs,site,OTI,status);
+#endif
       PD((MSG_RECEIVED,"M_SENDSTATUS site:%s index:%d status:%d",
           site->stringrep(),OTI,status));
       NetAddress na=NetAddress(site,OTI);
@@ -734,7 +790,11 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* sd;
       int si;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_ACKNOWLEDGE(bs,sd,si);
+#else
       unmarshal_M_ACKNOWLEDGE(bs,sd,si);
+#endif
       PD((MSG_RECEIVED,"M_ACKNOWLEDGE site:%s index:%d",sd->stringrep(),si));
 
       NetAddress na=NetAddress(sd,si);
@@ -751,7 +811,11 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_CELL_LOCK_GET(bs,OTI,rsite);
+#else
       unmarshal_M_CELL_LOCK_GET(bs,OTI,rsite);
+#endif
       PD((MSG_RECEIVED,"M_CELL_LOCK_GET index:%d site:%s",OTI,rsite->stringrep()));
       cellLockReceiveGet(receiveAtOwner(OTI),rsite);
       break;
@@ -761,7 +825,11 @@ void msgReceived(MsgBuffer* bs)
       DSite* rsite;
       int OTI;
       TaggedRef val;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_CELL_CONTENTS(bs,rsite,OTI,val);
+#else
       unmarshal_M_CELL_CONTENTS(bs,rsite,OTI,val);
+#endif
       PD((MSG_RECEIVED,"M_CELL_CONTENTS index:%d site:%s val:%s",
           OTI,rsite->stringrep(),toC(val)));
 
@@ -777,7 +845,11 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* fS;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_CELL_READ(bs,OTI,fS);
+#else
       unmarshal_M_CELL_READ(bs,OTI,fS);
+#endif
       PD((MSG_RECEIVED,"M_CELL_READ"));
       cellReceiveRead(receiveAtOwner(OTI),fS);
       break;
@@ -786,7 +858,11 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* fS,*mS;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_CELL_REMOTEREAD(bs,mS,OTI,fS);
+#else
       unmarshal_M_CELL_REMOTEREAD(bs,mS,OTI,fS);
+#endif
       PD((MSG_RECEIVED,"CELL_REMOTEREAD %s",fS->stringrep()));
       cellReceiveRemoteRead(receiveAtBorrow(mS,OTI),mS,OTI,fS);
       break;
@@ -796,7 +872,11 @@ void msgReceived(MsgBuffer* bs)
       int index;
       DSite*mS;
       TaggedRef val;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_CELL_READANS(bs,mS,index,val);
+#else
       unmarshal_M_CELL_READANS(bs,mS,index,val);
+#endif
       PD((MSG_RECEIVED,"CELL_READANS"));
       OwnerEntry *oe=maybeReceiveAtOwner(mS,index);
       if(oe==NULL){
@@ -809,7 +889,11 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* site,*rsite;
       int OTI;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_CELL_LOCK_FORWARD(bs,site,OTI,rsite);
+#else
       unmarshal_M_CELL_LOCK_FORWARD(bs,site,OTI,rsite);
+#endif
       PD((MSG_RECEIVED,"M_CELL_LOCK_FORWARD index:%d site:%s rsite:%s",
           OTI,site->stringrep(),rsite->stringrep()));
 
@@ -820,7 +904,11 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_CELL_LOCK_DUMP(bs,OTI,rsite);
+#else
       unmarshal_M_CELL_LOCK_DUMP(bs,OTI,rsite);
+#endif
       PD((MSG_RECEIVED,"M_CELL_LOCK_DUMP index:%d site:%s",
           OTI,rsite->stringrep()));
       cellLockReceiveDump(receiveAtOwner(OTI),rsite);
@@ -831,7 +919,11 @@ void msgReceived(MsgBuffer* bs)
       DSite* rsite, *ssite;
       int OTI;
       TaggedRef val;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_CELL_CANTPUT(bs, OTI, rsite, val, ssite);
+#else
       unmarshal_M_CELL_CANTPUT(bs, OTI, rsite, val, ssite);
+#endif
       PD((MSG_RECEIVED,"M_CELL_CANTPUT index:%d site:%s val:%s",
           OTI,rsite->stringrep(),toC(val)));
       cellReceiveCantPut(receiveAtOwner(OTI),val,OTI,ssite,rsite);
@@ -841,7 +933,11 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* rsite;
       int OTI;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_LOCK_TOKEN(bs,rsite,OTI);
+#else
       unmarshal_M_LOCK_TOKEN(bs,rsite,OTI);
+#endif
       PD((MSG_RECEIVED,"M_LOCK_TOKEN index:%d site:%s",
           OTI,rsite->stringrep()));
       OwnerEntry *oe=maybeReceiveAtOwner(rsite,OTI);
@@ -855,7 +951,11 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_CHAIN_ACK(bs,OTI,rsite);
+#else
       unmarshal_M_CHAIN_ACK(bs,OTI,rsite);
+#endif
       PD((MSG_RECEIVED,"M_CHAIN_ACK index:%d site:%s",
           OTI,rsite->stringrep()));
       chainReceiveAck(receiveAtOwner(OTI),rsite);
@@ -865,7 +965,11 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* rsite, *ssite;
       int OTI;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_LOCK_CANTPUT(bs, OTI, rsite, ssite);
+#else
       unmarshal_M_LOCK_CANTPUT(bs, OTI, rsite, ssite);
+#endif
       PD((MSG_RECEIVED,"M_LOCK_CANTPUT index:%d site:%s val:%s",
           OTI,rsite->stringrep()));
       lockReceiveCantPut(receiveAtOwner(OTI),OTI,ssite,rsite);
@@ -875,7 +979,11 @@ void msgReceived(MsgBuffer* bs)
    {
       DSite* site,*deadS;
       int OTI;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_CHAIN_QUESTION(bs,OTI,site,deadS);
+#else
       unmarshal_M_CHAIN_QUESTION(bs,OTI,site,deadS);
+#endif
       PD((MSG_RECEIVED,"M_CHAIN_QUESTION index:%d site:%s",
           OTI,site->stringrep()));
       BorrowEntry *be=maybeReceiveAtBorrow(site,OTI);
@@ -888,7 +996,11 @@ void msgReceived(MsgBuffer* bs)
       DSite* rsite,*deadS;
       int OTI;
       int ans;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_CHAIN_ANSWER(bs,OTI,rsite,ans,deadS);
+#else
       unmarshal_M_CHAIN_ANSWER(bs,OTI,rsite,ans,deadS);
+#endif
       PD((MSG_RECEIVED,"M_CHAIN_ANSWER index:%d site:%s val:%d",
           OTI,rsite->stringrep(),ans));
       chainReceiveAnswer(receiveAtOwner(OTI),rsite,ans,deadS);
@@ -900,7 +1012,11 @@ void msgReceived(MsgBuffer* bs)
       DSite* site;
       int OTI;
       int ec,flag;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_TELL_ERROR(bs,site,OTI,ec,flag);
+#else
       unmarshal_M_TELL_ERROR(bs,site,OTI,ec,flag);
+#endif
       PD((MSG_RECEIVED,"M_TELL_ERROR index:%d site:%s ec:%d",
           OTI,site->stringrep(),ec));
       BorrowEntry *be=maybeReceiveAtBorrow(site,OTI);
@@ -914,7 +1030,11 @@ void msgReceived(MsgBuffer* bs)
       int OTI;
       int ec;
       DSite* toS;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_ASK_ERROR(bs,OTI,toS,ec);
+#else
       unmarshal_M_ASK_ERROR(bs,OTI,toS,ec);
+#endif
       PD((MSG_RECEIVED,"M_ASK_ERROR index:%d ec:%d toS:%s",
           OTI,ec,toS->stringrep()));
       receiveAskError(receiveAtOwner(OTI),toS,ec);
@@ -925,7 +1045,11 @@ void msgReceived(MsgBuffer* bs)
       int OTI;
       int ec;
       DSite* toS;
+#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+      unmarshalRobust_M_UNASK_ERROR(bs,OTI,toS,ec);
+#else
       unmarshal_M_UNASK_ERROR(bs,OTI,toS,ec);
+#endif
       PD((MSG_RECEIVED,"M_UNASK_ERROR index:%d ec:%d toS:%s",
           OTI,ec,toS->stringrep()));
       receiveUnAskError(receiveAtOwner(OTI),toS,ec);
@@ -1038,7 +1162,10 @@ void initDPCore()
   marshalTertiary = marshalTertiaryImpl;
   unmarshalTertiary = unmarshalTertiaryImpl;
   unmarshalOwner = unmarshalOwnerImpl;
+  unmarshalTertiaryRobust = unmarshalTertiaryRobustImpl;
+  unmarshalOwnerRobust = unmarshalOwnerRobustImpl;
   unmarshalVar = unmarshalVarImpl;
+  unmarshalVarRobust = unmarshalVarRobustImpl;
   marshalVariable = marshalVariableImpl;
   triggerVariable = triggerVariableImpl;
   marshalObject = marshalObjectImpl;

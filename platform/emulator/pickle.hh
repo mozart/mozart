@@ -163,6 +163,7 @@ class MsgBuffer;
 
 void marshalNumber(unsigned int i, MsgBuffer *bs);
 unsigned int unmarshalNumber(MsgBuffer *bs);
+unsigned int unmarshalNumberRobust(MsgBuffer *bs, int *overflow);
 void skipNumber(MsgBuffer *bs);
 BYTE unmarshalByte(MsgBuffer *bs);
 void marshalCode(ProgramCounter,MsgBuffer*);
@@ -191,8 +192,10 @@ void marshalFloat(double d, MsgBuffer *bs);
 
 unsigned short unmarshalShort(MsgBuffer*);
 char *unmarshalVersionString(MsgBuffer *);
+double unmarshalFloatRobust(MsgBuffer *bs, int *overflow);
 double unmarshalFloat(MsgBuffer *bs);
 char *unmarshalString(MsgBuffer *);
+char *unmarshalStringRobust(MsgBuffer *, int *error);
 
 
 typedef unsigned int32 crc_t;

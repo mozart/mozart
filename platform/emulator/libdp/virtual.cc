@@ -393,11 +393,21 @@ void decomposeVSInitMsg(VSMsgBuffer *mb, DSite* &s)
 {
   s = unmarshalDSite(mb);
 }
+//
+void decomposeVSInitMsgRobust(VSMsgBuffer *mb, DSite* &s, int *error)
+{
+  s = unmarshalDSiteRobust(mb, error);
+}
 
 //
 void decomposeVSSiteIsAliveMsg(VSMsgBuffer *mb, DSite* &src)
 {
   src = unmarshalDSite(mb);
+}
+//
+void decomposeVSSiteIsAliveMsgRobust(VSMsgBuffer *mb, DSite* &src,int *error)
+{
+  src = unmarshalDSiteRobust(mb, error);
 }
 
 //
@@ -408,34 +418,27 @@ void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, DSite* &s, VirtualSite* &vs)
   vs = s->getVirtualSite();
   vs->unmarshalResources(mb);
 }
-
 //
-// 'dvs' may be zero - when the site has been recognized locally as
-// dead and GC'ed after that;
-void decomposeVSSiteDeadMsg(VSMsgBuffer *mb, DSite* &ds, VirtualSite* &dvs)
+void decomposeVSSiteAliveMsgRobust(VSMsgBuffer *mb, DSite* &s,
+                             VirtualSite* &vs, int *error)
 {
-  // Note that the 's' is not marked in the stream as 'PERM',
-  // so we can get here both 'PERM' and alive sites;
-  ds = unmarshalDSite(mb);
-  Assert(ds->virtualComm());
-  //
-  if (ds->isPerm()) {
-    dvs = (VirtualSite *) 0;
-  } else if (ds->isConnected()) {
-    dvs = ds->getVirtualSite();
-    // must be logically connected in this case:
-    Assert(dvs);
-    // however, it may be physically disconnected, of course;
-  } else {
-    // both logically and physically disconnected - we won't connect,
-    // so virtual site won't contain any useful "resources" info;
-    dvs = (VirtualSite *) 0;
-  }
+  int e1,e2;
+  s = unmarshalDSiteRobust(mb, &e1);
+  Assert(s->virtualComm());
+  vs = s->getVirtualSite();
+  vs->unmarshalResourcesRobust(mb, &e2);
+  *error = e1 || e2;
 }
+
+// for decomposeVSSiteDeadMsg see virtual_general.cc
 
 void decomposeVSYourIndexHereMsg(VSMsgBuffer *mb, int &index)
 {
   index = (int) unmarshalNumber(mb);
+}
+void decomposeVSYourIndexHereMsgRobust(VSMsgBuffer *mb, int &index, int *error)
+{
+  index = (int) unmarshalNumberRobust(mb, error);
 }
 
 //
@@ -444,6 +447,16 @@ void decomposeVSUnusedShmIdMsg(VSMsgBuffer *mb, DSite* &s, key_t &shmid)
   Assert(sizeof(key_t) <= sizeof(unsigned int));
   s = unmarshalDSite(mb);
   shmid = (key_t) unmarshalNumber(mb);
+}
+//
+void decomposeVSUnusedShmIdMsgRobust(VSMsgBuffer *mb, DSite* &s,
+                                   key_t &shmid, int *error)
+{
+  Assert(sizeof(key_t) <= sizeof(unsigned int));
+  int e1,e2;
+  s = unmarshalDSiteRobust(mb, &e1);
+  shmid = (key_t) unmarshalNumberRobust(mb, &e2);
+  *error = e1 || e2;
 }
 
 
@@ -456,197 +469,11 @@ static Bool checkVSMessages(unsigned long clock, void *vMBox)
   return ((Bool) mbox->getSize());
 }
 
-//
-static Bool readVSMessages(unsigned long clock, void *vMBox)
-{
-  // unsafe by now - some magic number(s) should be added;
-  VSMailboxOwned *mbox = (VSMailboxOwned *) vMBox;
-  int msgs = MAX_MSGS_ATONCE;
-
-  //
-  //
-  while (mbox->isNotEmpty() && msgs) {
-    key_t msgChunkPoolKey;
-    int chunkNumber;
-
-    //
-    msgs--;
-    if (mbox->dequeue(msgChunkPoolKey, chunkNumber)) {
-      // got a message;
-      VSMsgType msgType;
-      // sender's index, virtual and DSite;
-      int vsIndex;
-      VirtualSite *sVS;
-      DSite *sS;
-
-      //
-      myVSMsgBufferImported = new (myVSMsgBufferImported)
-        VSMsgBufferImported(importedVSChunksPoolManager,
-                            msgChunkPoolKey, chunkNumber);
-      //
-      myVSMsgBufferImported->unmarshalBegin();
-
-      //
-      if (myVSMsgBufferImported->isVoid()) {
-        // We cannot do much here, since it's not even known where the
-        // message came from. However, we *must* guarantee that this
-        // message loss is NOT due to resource problems; otherwise the
-        // PERDIO layer will be confused;
-        myVSMsgBufferImported->dropVoid();
-        myVSMsgBufferImported->cleanup();
-        // next message (if any could be processed??)
-        continue;
-      }
-      //
-      msgType = getVSMsgType(myVSMsgBufferImported);
-
-      //
-      // Take the site info out of the stream:
-      vsIndex = (int) unmarshalNumber(myVSMsgBufferImported);
-      if (vsIndex >= 0) {
-        sVS = vsTable[vsIndex];
-        sS = sVS->getSite();
-        //
-        myVSMsgBufferImported->setSite(sS);
-        myVSMsgBufferImported->setKeysRegister(sVS->getKeysRegister());
-        vsResourceManager.startMsgReceived(sVS);
-      } else {
-        sS = unmarshalDSite(myVSMsgBufferImported);
-        sVS = sS->getVirtualSite();
-        //
-        // Exactly in this order: first, complete the initializing the
-        // message buffer, notify the resource manager that we are
-        // unmarshalling a message, and then - compose the 'your index
-        // here' message:
-        myVSMsgBufferImported->setSite(sS);
-        myVSMsgBufferImported->setKeysRegister(sVS->getKeysRegister());
-        vsResourceManager.startMsgReceived(sVS);
-
-        //
-        // Now, assign the index and send it out:
-        int vsIndex = vsTable.put(sVS);
-        //
-        VSMsgBufferOwned *bs = composeVSYourIndexHereMsg(sS, vsIndex);
-        if (sendTo_VirtualSiteImpl(sVS, bs, /* messageType */ M_NONE,
-                                   /* storeSite */ (DSite *) 0,
-                                   /* storeIndex */ 0) != ACCEPTED)
-          OZ_error("readVSMessages: unable to send 'your index here' msg?");
-      }
-
-      //
-      switch (msgType) {
-
-      case VS_M_PERDIO:
-        //
-        DebugVSMsgs(vsSRCounter.recv(););
-        msgReceived(myVSMsgBufferImported);
-        break;
-
-      case VS_M_INVALID:
-        OZ_error("readVSMessages: M_INVALID message???");
-        break;
-
-      case VS_M_INIT_VS:
-        OZ_error("readVSMessages: VS_M_INIT_VS is not expected here.");
-        break;
-
-      case VS_M_SITE_IS_ALIVE:
-        {
-          DSite *myS;
-          //
-          // 'myS' is supposed to be 'myDSite' - otherwise it is dead;
-          decomposeVSSiteIsAliveMsg(myVSMsgBufferImported, myS);
-
-          //
-          if (myS == myDSite) {
-            VSMsgBufferOwned *bs = composeVSSiteAliveMsg(sS, sVS);
-            if (sendTo_VirtualSiteImpl(sVS, bs, /* messageType */ M_NONE,
-                                       /* storeSite */ (DSite *) 0,
-                                       /* storeIndex */ 0) != ACCEPTED)
-              OZ_error("readVSMessages: unable to send 'site alive' msg?");
-
-            //
-          } else {
-            // The site 'myS' is dead: there cann't be two distinct
-            // processes with the same pid. Pid"s are the same because
-            // of the mailboxes naming scheme - two keys can be equal
-            // only if their sites' pid"s are equal.
-            VSMsgBufferOwned *bs = composeVSSiteDeadMsg(sS, myS);
-            if (!myS->isPerm() && myS->isConnected()) {
-              VirtualSite *vs = myS->getVirtualSite();
-              Assert(vs);
-              vs->killResources();
-            }
-            myS->discoveryPerm();
-            // if (vsProbingObject.isProbed(myS))
-            myS->probeFault(PROBE_PERM);
-          }
-
-          break;
-        }
-
-      case VS_M_SITE_ALIVE:
-        {
-          DSite *s;
-          VirtualSite *vs;
-          decomposeVSSiteAliveMsg(myVSMsgBufferImported, s, vs);
-          s->siteAlive();
-          break;
-        }
-
-      case VS_M_SITE_DEAD:
-        {
-          DSite *ds;
-          VirtualSite *dvs;
-          decomposeVSSiteDeadMsg(myVSMsgBufferImported, ds, dvs);
-          // effectively dead;
-          if (dvs)
-            dvs->killResources();
-          ds->discoveryPerm();
-          // if (vsProbingObject.isProbed(ds))
-          ds->probeFault(PROBE_PERM);
-        }
-
-      case VS_M_YOUR_INDEX_HERE:
-        {
-          int index;
-          decomposeVSYourIndexHereMsg(myVSMsgBufferImported, index);
-          sVS->setVSIndex(index);
-          break;
-        }
-
-      case VS_M_UNUSED_SHMID:
-        {
-          DSite *s;
-          key_t shmid;
-          decomposeVSUnusedShmIdMsg(myVSMsgBufferImported, s, shmid);
-          importedVSChunksPoolManager->removeSegmentManager(shmid);
-          // kill the segment from the virtual site's 'keys' register:
-          sVS->dropSegManager(shmid);
-          break;
-        }
-
-      default:
-        OZ_error("readVSMessages: unknown 'vs' message type!");
-        break;
-      }
-
-      //
-      myVSMsgBufferImported->unmarshalEnd();
-      myVSMsgBufferImported->releaseChunks();
-      myVSMsgBufferImported->cleanup();
-
-      //
-      vsResourceManager.finishMsgReceived();
-    } else {
-      // is locked - then let's try to read later;
-      return (FALSE);
-    }
-  }
-
-  //
-  return (TRUE);
-}
+// for readVSMessages see virtual_general.cc
+#define ROBUST_UNMARSHALER
+#include "virtual_general.cc"
+#undef ROBUST_UNMARSHALER
+#include "virtual_general.cc"
 
 //
 //

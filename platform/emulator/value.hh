@@ -1546,6 +1546,7 @@ OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY)
 
 #define CLASS_LOCKING 0x1
 #define CLASS_SITED   0x2
+#define CLASS_FLAGS_MAX 0x3
 
 class ObjectClass: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);

@@ -30,6 +30,20 @@
 #include "newmarshaler.hh"
 #include "dpMarshaler.hh"
 
+inline
+void messageError(DSite *dsite, Bool dsite_unmarshalled) {
+  if(dsite_unmarshalled) {
+    char s[200];
+    char *s1;
+    s1 = "Malicious message received from site: ";
+    strcpy(s, s1);
+    strcat(s, "dsite->stringrep()");
+    OZ_error(s);
+  }
+  else
+    OZ_error("Malicious message received");
+}
+
 define(message,`
         void marshal_$1(MsgBuffer * buf,arg($2,$3)arg($3,$4) arg($4,$5) arg($5,$6) arg($6 $7)) {
         PD((MARSHAL_BE,"marshal begin %s  kind:%s","$1",buf->siteStringrep()));
@@ -122,5 +136,54 @@ define(argEnc,`ifelse($1,Index,i1=unmarshalNumber(buf);,
                    $1,String,str=unmarshalString(buf);,
                    $1,Site,s1=unmarshalDSite(buf);,
                    $1,Site2,s2=unmarshalDSite(buf);,)')
+
+include(EMUDIR/msgFormat.m4)
+
+//robust unmarshaling
+undefine(`argEnc')
+undefine(`arg')
+undefine(`message')
+
+define(message,`
+        void unmarshalRobust_$1(MsgBuffer* buf,arg($2,$3)arg($3,$4) arg($4,$5) arg($5,$6) arg($6 $7)) {
+        PD((MARSHAL_BE,"unmarshal begin: %s s:%s","$1",buf->siteStringrep()));
+        Bool ds=NO;
+        DSite *dsite;
+        int e=NO;
+        Assert(creditSiteIn==NULL);
+        if(buf->get()==DIF_SECONDARY){
+          creditSiteIn=unmarshalDSite(buf);
+          PD((CREDIT,"Found sec creds %s",creditSiteIn->stringrep()));
+        }
+        argEnc($2)
+        argEnc($3)
+        argEnc($4)
+        argEnc($5)
+        argEnc($6)
+        PD((MARSHAL_BE,"unmarshal end: %s s:%s","$1",buf->siteStringrep()));
+        return;}')
+
+define(arg,`ifelse($1,Index,int &i1,
+                   $1,Index2,int &i2,
+                   $1,Index3,int &i3,
+                   $1,Term,TaggedRef &t,
+                   $1,String,char* &str,
+                   $1,Credit,Credit &c,
+                   $1,Object,ObjectFields *o,
+                   $1,ObjectAndClass,ObjectFields* o,
+                   $1,Site,DSite* &s1,
+                   $1,Site2,DSite* &s2)'
+            `ifelse($2,`',`',`,')')
+
+define(argEnc,`ifelse($1,Index,i1=unmarshalNumberRobust(buf,&e);if(e) messageError(dsite,ds);,
+                   $1,Index2,i2=unmarshalNumberRobust(buf,&e);if(e) messageError(dsite,ds);,
+                   $1,Index3,i3=unmarshalNumberRobust(buf,&e);if(e) messageError(dsite,ds);,
+                   $1,Term,t=newUnmarshalTermRobust(buf);if(!t) messageError(dsite,ds);;,
+                   $1,Credit,c=unmarshalCreditRobust(buf,&e);if(e) messageError(dsite,ds);,
+                   $1,Object,unmarshalFullObjectRobust(o,buf,&e);if(e) messageError(dsite,ds);,
+                   $1,ObjectAndClass,unmarshalFullObjectAndClassRobust(o,buf,&e);if(e) messageError(dsite,ds);,
+                   $1,String,str=unmarshalStringRobust(buf,&e);if(e) messageError(dsite,ds);,
+                   $1,Site,s1=unmarshalDSiteRobust(buf,&e);ds=OK;dsite=s1;if(e) messageError(dsite,ds);,
+                   $1,Site2,s2=unmarshalDSiteRobust(buf,&e);if(e) messageError(dsite,ds);,)')
 
 include(EMUDIR/msgFormat.m4)
