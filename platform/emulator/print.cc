@@ -81,8 +81,6 @@
  *     dito, but also printLongStream must be implemented
  */
 
-#include "runtime.hh"
-
 #ifdef DEBUG_PRINT
 
 #include "genvar.hh"

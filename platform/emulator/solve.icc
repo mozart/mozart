@@ -3,6 +3,9 @@
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Christian Schulte (schulte@dfki.de)
  *
+ *  Contributors:
+ *    Michael Mehl (mehl@dfki.de)
+ *
  *  Copyright:
  *    Organization or Person (Year(s))
  *
@@ -31,9 +34,11 @@
 #pragma interface
 #endif
 
+#include "board.hh"
+
 /* ------------------------------------------------------------------------
-   class SolveActor
-   ------------------------------------------------------------------------ */
+ * class SolveActor
+ * ------------------------------------------------------------------------ */
 
 inline
 void SolveActor::addSuspension(SuspList *l)
@@ -49,99 +54,41 @@ void SolveActor::addSuspension (Suspension susp)
 }
 
 inline
-Bool SolveActor::areNoExtSuspensions()
-{
-  if (suspList == NULL)
-    return (OK);
-  else
-    return (checkExtSuspList ());
-}
-
-inline
-void SolveActor::inject(int prio, TaggedRef proc) {
-  // thread creation for {proc root}
-  RefsArray args = allocateRefsArray(1, NO);
-  args[0] = makeTaggedRef(&solveVar);
-
-  Thread *it = oz_mkRunnableThread(prio, solveBoard);
-  it->pushCall(proc, args, 1);
-  am.threadsPool.scheduleThread(it);
-}
-
-inline
-TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
-  solveBoard->setCommitted(bb);
-  bb->incSuspCount(solveBoard->getSuspCount());
-
-  if (!oz_installScript(solveBoard->getScriptRef())) {
-    return makeTaggedNULL();
-  }
-
-  Assert(oz_isCurrentBoard(bb));
-
+void SolveActor::mergeCPB(Board *bb, int sibling) {
   // adjoin the list of or-actors to the list in actual solve actor!
-
   if (bb->isWait()) {
     WaitActor::Cast(bb->getActor())->mergeChoices(cpb);
   } else if (bb->isSolve()) {
     SolveActor *sa = SolveActor::Cast(bb->getActor());
-
     sa->mergeChoices(cpb);
-
-    if (isSibling)
+    if (sibling)
       sa->incThreads(threads);
   }
+}
 
+
+void oz_solve_scheduleNonMonoSuspList(SolveActor *sa);
+
+inline
+void SolveActor::mergeNonMono(Board *bb) {
   // merge nonmonotonic susp lists
   if (nonMonoSuspList) {
     // Merge in current solve board but not elsewhere
-    bb = am.currentSolveBoard();
-
     if (bb && bb->isSolve()) {
       // merge nonmonotonic susp list to another solve space
-
       SolveActor * sa = SolveActor::Cast(bb->getActor());
-
       if (sa->nonMonoSuspList) {
         sa->mergeNonMonoSuspListWith(nonMonoSuspList);
         setNonMonoSuspList(NULL);
       } else {
         sa->setNonMonoSuspList(nonMonoSuspList);
       }
-
     } else {
       // merge nonmonotinic susp list to a non-solve space
-
       DebugCode(OZ_warning("Merging solve space with non-solve space."));
-
-      scheduleNonMonoSuspList();
+      oz_solve_scheduleNonMonoSuspList(this);
     }
   }
-
-  return solveVar;
-}
-
-inline
-Board *SolveActor::clone(Board *bb) {
-  ozstat.incSolveCloned();
-  Bool testGround;
-  Board *copy = (Board *) am.copyTree(solveBoard, &testGround);
-  SolveActor *ca = SolveActor::Cast(copy->getActor());
-
-  ca->setBoard(bb);
-
-  if (testGround == OK) {
-    ca->setGround();
-    this->setGround();
-  }
-
-#ifdef CS_PROFILE
-  ca->orig_start = cs_orig_start;
-  ca->copy_start = cs_copy_start;
-  ca->copy_size  = cs_copy_size;
-#endif
-
-  return copy;
 }
 
 inline

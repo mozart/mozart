@@ -45,7 +45,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <strings.h>
-#include "runtime.hh"
 #include "codearea.hh"
 #include "indexing.hh"
 

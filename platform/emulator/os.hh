@@ -155,20 +155,6 @@ void registerSocket(int fd);
 
 char *osfgets(char *s, int n, FILE *stream);
 
-inline
-int osMsToClockTick(int ms)
-{
-  int clockMS = CLOCK_TICK/1000;
-  return (ms+clockMS-1) / clockMS;
-}
-
-inline
-int osClockTickToMs(int cl)
-{
-  int clockMS = CLOCK_TICK/1000;
-  return cl * clockMS;
-}
-
 #ifdef _MSC_VER
 #define _hdopen(file,flags) _open_osfhandle(file,flags)
 #define _os_handle(fd) _get_osfhandle(fd)
@@ -186,7 +172,7 @@ extern int _hdopen(int, int flags);
 #define PathSeparator ':'
 #endif
 
-int osDlopen(char *filename, OZ_Term& out);
+TaggedRef osDlopen(char *filename, OZ_Term& out);
 int osDlclose(void* handle);
 void *osDlsym(void *handle,const char *name);
 

@@ -33,9 +33,9 @@
 
 #include "wsock.hh"
 
-#include "runtime.hh"
-
 #include "os.hh"
+#include "value.hh"
+#include "ozconfig.hh"
 
 #include <errno.h>
 #include <limits.h>
@@ -1200,7 +1200,7 @@ int WINAPI dll_entry(int a,int b,int c)
 #define F_OK 00
 #endif
 
-int osDlopen(char *filename, OZ_Term& ret)
+TaggedRef osDlopen(char *filename, OZ_Term& ret)
 {
   OZ_Term err=NameUnit;
 
@@ -1253,20 +1253,18 @@ int osDlopen(char *filename, OZ_Term& ret)
   }
 #endif
 
-  return PROCEED;
+  return 0;
   // return oz_unify(out,ret);
 
 raise:
-
-  return oz_raise(E_ERROR,AtomForeign,"dlOpen",2,
-                  oz_atom(filename),err);
+  return err;
 }
 
 int osDlclose(void* handle)
 {
 #ifdef DLOPEN
   if (dlclose(handle)) {
-    goto raise;
+    return -1;
   }
 #endif
 
@@ -1274,10 +1272,7 @@ int osDlclose(void* handle)
   FreeLibrary(handle);
 #endif
 
-  return PROCEED;
-
-raise:
-  return oz_raise(E_ERROR,AtomForeign,"dlClose",0);
+  return 0;
 }
 
 #if defined(DLOPEN)

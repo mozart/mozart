@@ -33,7 +33,7 @@
 
 #include <stdarg.h>
 #include "oz_cpi.hh"
-#include "runtime.hh"
+#include "builtins.hh"
 #include "genvar.hh"
 #include "cpi_heap.hh"
 

@@ -29,8 +29,9 @@
 #pragma implementation "value.hh"
 #endif
 
-#include "runtime.hh"
+#include "value.hh"
 #include "dictionary.hh"
+#include "am.hh"
 
 #include <stdarg.h>
 
@@ -1477,4 +1478,20 @@ OZ_Term oz_list(OZ_Term t1, ...)
   lt->setTail(oz_nil());
   va_end(ap);
   return ret;
+}
+
+/*===================================================================
+ * BuiltinTab
+ *=================================================================== */
+
+Builtin * cfunc2Builtin(void * f) {
+  SRecord * sr = tagged2SRecord(builtinRecord);
+
+  for (int i = sr->getWidth(); i--; ) {
+    Builtin * bi = tagged2Builtin(sr->getArg(i));
+
+    if (bi->getFun() == (OZ_CFun) f)
+      return bi;
+  }
+  return tagged2Builtin(BI_unknown);
 }

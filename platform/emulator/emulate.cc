@@ -32,8 +32,11 @@
 
 #include <stdarg.h>
 
-#include "runtime.hh"
-
+#include "am.hh"
+#include "space.hh"
+#include "threadInterface.hh"
+#include "codearea.hh"
+#include "builtins.hh"
 #include "indexing.hh"
 
 #include "genvar.hh"
@@ -43,6 +46,7 @@
 #include "marshaler.hh"
 #include "copycode.hh"
 #include "trace.hh"
+#include "os.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -803,7 +807,7 @@ void oz_checkStability()
     }
 
     // check for nonmonotonic propagators
-    solveAA->scheduleNonMonoSuspList();
+    oz_solve_scheduleNonMonoSuspList(solveAA);
     if (! oz_isStableSolve(solveAA))
       return;
 
@@ -1137,7 +1141,7 @@ LBLdispatcher:
       if (isSmallIntTag(tagA)) {
         TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
         if (isSmallIntTag(tagB) ) {
-          XPC(3) = makeInt(smallIntValue(A) - smallIntValue(B));
+          XPC(3) = oz_int(smallIntValue(A) - smallIntValue(B));
           DISPATCH(4);
         }
       }
@@ -1168,7 +1172,7 @@ LBLdispatcher:
       if ( isSmallIntTag(tagA)) {
         TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
         if (isSmallIntTag(tagB) ) {
-          XPC(3) = makeInt(smallIntValue(A) + smallIntValue(B));
+          XPC(3) = oz_int(smallIntValue(A) + smallIntValue(B));
           DISPATCH(4);
         }
       }
@@ -2022,14 +2026,13 @@ LBLdispatcher:
     {
       CBB->decSuspCount();
 
-      if ( e->entailment() ) { // OPT commit()
+      if ( oz_entailment() ) { // OPT commit()
         e->trail.popMark();
         Board *tmpBB = CBB;
         e->setCurrent(CBB->getParent());
         DebugCheckT(currentDebugBoard=CBB);
         tmpBB->unsetInstalled();
-        tmpBB->setCommitted(CBB);
-        CBB->decSuspCount();
+        oz_merge(tmpBB,CBB,-1);
         CTS->discardActor();
         WaitActor::Cast(CAA)->disposeWait();
         CAA = NULL;
@@ -2045,14 +2048,13 @@ LBLdispatcher:
       CBB->decSuspCount();
 
       // entailment ?
-      if (e->entailment()) { // OPT commit()
+      if (oz_entailment()) { // OPT commit()
         e->trail.popMark();
         Board *tmpBB = CBB;
         e->setCurrent(CBB->getParent());
         DebugCheckT(currentDebugBoard=CBB);
         tmpBB->unsetInstalled();
-        tmpBB->setCommitted(CBB);
-        CBB->decSuspCount();
+        oz_merge(tmpBB,CBB,-1);
         CTS->discardActor();
         AskActor::Cast(CAA)->disposeAsk();
         CAA = NULL;
@@ -2102,7 +2104,7 @@ LBLdispatcher:
         //  should we activate the 'else' clause?
         if (aa->isLeaf()) { // OPT commit()
           CTS->discardActor();
-          aa->setCommitted();
+          aa->setCommittedActor();
           CBB->decSuspCount();
 
           LOADCONT(aa->getNext());
@@ -2465,7 +2467,7 @@ LBLdispatcher:
 
              oz_closeDonePropagator(prop);
 
-             sb->resetLocalPropagatorQueue();
+             oz_resetLocalPropagatorQueue(sb);
 
              RAISE_THREAD;
            } else {
@@ -2481,7 +2483,7 @@ LBLdispatcher:
        }
 
        if (lpq->isEmpty()) {
-         sb->resetLocalPropagatorQueue();
+         oz_resetLocalPropagatorQueue(sb);
 #ifdef DEBUG_LTQ
          cout << "sb emu sb=" << sb << " EMPTY" << endl << flush;
 #endif

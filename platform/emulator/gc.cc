@@ -39,7 +39,6 @@
 
 #include "gc.hh"
 
-#include "runtime.hh"
 #include "perdio.hh"
 
 #include "genvar.hh"
@@ -49,6 +48,9 @@
 #include "fdomn.hh"
 
 #include "dictionary.hh"
+#include "os.hh"
+#include "value.hh"
+#include "codearea.hh"
 
 #ifdef OUTLINE
 #define inline

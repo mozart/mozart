@@ -1,5 +1,37 @@
-#include "runtime.hh"
+/*
+ *  Authors:
+ *    Kostja Popow (popow@ps.uni-sb.de)
+ *    Michael Mehl (mehl@dfki.de)
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ *
+ *  Contributors:
+ *    Benjamin Lorenz (lorenz@ps.uni-sb.de)
+ *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ *
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ *
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ *
+ *  This file is part of Mozart, an implementation
+ *  of Oz 3:
+ *     http://mozart.ps.uni-sb.de
+ *
+ *  See the file "LICENSE" or
+ *     http://mozart.ps.uni-sb.de/LICENSE.html
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
+ *  WARRANTIES.
+ *
+ */
+
+#include "value.hh"
 #include "trace.hh"
+#include "threadInterface.hh"
+#include "builtins.hh"
 
 # define CBB (oz_currentBoard())
 # define CTT (oz_currentThread())
@@ -274,7 +306,7 @@ LBLcheckEntailmentAndStability:
     CBB->unsetNervous();
 
   // check for entailment of ASK and WAITTOP
-    if ((CBB->isAsk() || CBB->isWaitTop()) && e->entailment()) {
+    if ((CBB->isAsk() || CBB->isWaitTop()) && oz_entailment()) {
       Board *bb = CBB;
       oz_deinstallCurrent();
       int ret=oz_commit(bb);
@@ -439,7 +471,7 @@ LBLfailure:
        //  Reduce (i.e. with failure in this case) the solve actor;
        //  The solve actor goes simply away, and the 'failed' atom is bound to
        // the result variable;
-       aa->setCommitted();
+       aa->setCommittedActor();
        SolveActor *saa=SolveActor::Cast(aa);
        // don't decrement parent counter
 
@@ -479,7 +511,7 @@ LBLfailure:
 
          //  should we activate the 'else' clause?
          if (aa->isLeaf()) {  // OPT commit()
-           aa->setCommitted();
+           aa->setCommittedActor();
            CBB->decSuspCount();
            TaskStack *ts = tt->getTaskStackRef();
            ts->discardActor();

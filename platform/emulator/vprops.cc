@@ -9,12 +9,16 @@
 // class VirtualProperty.
 //
 
-#include <stdarg.h>
-#include "runtime.hh"
+#include "vprops.hh"
 #include "dictionary.hh"
 #include "fdomn.hh"
-#include "vprops.hh"
+#include "am.hh"
+#include "os.hh"
+#include "codearea.hh"
 #include "CONF.h"
+#include "builtins.hh"
+
+#include <stdarg.h>
 
 extern char *AMVersion, *AMDate;
 
@@ -354,7 +358,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_LIMITS_INT_MIN,OzMinInt);
     CASE_INT(PROP_LIMITS_INT_MAX,OzMaxInt);
   case PROP_LIMITS:
-    return oz_pair2(makeInt(OzMinInt),makeInt(OzMaxInt));
+    return oz_pair2(oz_int(OzMinInt),oz_int(OzMaxInt));
     // ARGV
   case PROP_ARGV:
     {

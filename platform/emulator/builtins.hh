@@ -29,6 +29,8 @@
 #ifndef __BUILTINSH
 #define __BUILTINSH
 
+#include "value.hh"
+#include "am.hh"
 
 /********************************************************************
  * Macros
@@ -289,5 +291,98 @@ char *VAR;                                      \
   }                                             \
   VAR = OZ_virtualStringToC(_VAR1);             \
 }
+
+
+#define CheckLocalBoard(Object,Where);                                  \
+  if (!oz_onToplevel() && !oz_isCurrentBoard(GETBOARD(Object))) {       \
+    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom(Where));   \
+  }
+
+/* -----------------------------------------------------------------------
+ * suspend
+ * -----------------------------------------------------------------------*/
+
+#define oz_suspendOnVar(vin) {                  \
+  am.addSuspendVarList(vin);                    \
+  return SUSPEND;                               \
+}
+
+#define oz_suspendOn(vin) {                     \
+  OZ_Term v=vin;                                \
+  DEREF(v,vPtr,___1);                           \
+  Assert(oz_isVariable(v));                     \
+  am.addSuspendVarList(vPtr);                   \
+  return SUSPEND;                               \
+}
+
+#define oz_suspendOnPtr(vPtr) {                 \
+  am.addSuspendVarList(vPtr);                   \
+  return SUSPEND;                               \
+}
+
+#define oz_suspendOn2(v1in,v2in) {              \
+  OZ_Term v1=v1in;                              \
+  DEREF(v1,v1Ptr,___1);                         \
+  if (oz_isVariable(v1)) {                              \
+    am.addSuspendVarList(v1Ptr);                \
+  }                                             \
+  OZ_Term v2=v2in;                              \
+  DEREF(v2,v2Ptr,___2);                         \
+  if (oz_isVariable(v2)) {                              \
+    am.addSuspendVarList(v2Ptr);                \
+  }                                             \
+  return SUSPEND;                               \
+}
+
+#define oz_suspendOn3(v1in,v2in,v3in) {         \
+  OZ_Term v1=v1in;                              \
+  DEREF(v1,v1Ptr,___1);                         \
+  if (oz_isVariable(v1)) {                              \
+    am.addSuspendVarList(v1Ptr);                \
+  }                                             \
+  OZ_Term v2=v2in;                              \
+  DEREF(v2,v2Ptr,___2);                         \
+  if (oz_isVariable(v2)) {                              \
+    am.addSuspendVarList(v2Ptr);                \
+  }                                             \
+  OZ_Term v3=v3in;                              \
+  DEREF(v3,v3Ptr,___3);                         \
+  if (oz_isVariable(v3)) {                              \
+    am.addSuspendVarList(v3Ptr);                \
+  }                                             \
+  return SUSPEND;                               \
+}
+
+/* -----------------------------------------------------------------------
+ * C <-> Oz conversions
+ * -----------------------------------------------------------------------*/
+
+#define oz_IntToC(v) OZ_intToC(v)
+#define oz_AtomToC(v) OZ_atomToC(v)
+#define oz_ThreadToC(v) tagged2Thread(v)
+#define oz_DictionaryToC(v) tagged2Dictionary(v)
+#define oz_SRecordToC(v) tagged2SRecord(v)
+#define oz_STupleToC(v) tagged2SRecord(v)
+
+/* -----------------------------------------------------------------------
+ * exceptions
+ * -----------------------------------------------------------------------*/
+
+int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...);
+
+#define oz_typeError(pos,type)                  \
+{                                               \
+  (void) oz_raise(E_ERROR,E_KERNEL,             \
+                  "type",5,NameUnit,NameUnit,   \
+                  OZ_atom(type),                \
+                  OZ_int(pos+1),                \
+                  OZ_string(""));               \
+  return BI_TYPE_ERROR;                         \
+}
+
+OZ_Return typeError(int pos, char *comment, char *typeString);
+
+#define ExpectedTypes(S) char * __typeString = S;
+#define TypeError(Pos, Comment) return typeError(Pos,Comment,__typeString);
 
 #endif

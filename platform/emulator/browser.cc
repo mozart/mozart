@@ -37,7 +37,6 @@
 #endif
 
 #include "builtins.hh"
-#include "runtime.hh"
 
 #include "genvar.hh"
 

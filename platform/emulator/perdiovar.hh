@@ -32,7 +32,7 @@
 #pragma interface
 #endif
 
-#include "am.hh"
+#include "controlvar.hh"
 #include "genvar.hh"
 #include "oz.h"
 #include "perdio_debug.hh"

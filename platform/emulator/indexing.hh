@@ -31,6 +31,8 @@
 #pragma interface
 #endif
 
+#include "value.hh"
+
 class HTEntry {
  protected:
   int label;

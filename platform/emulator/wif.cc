@@ -29,7 +29,9 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "runtime.hh"
+#include "builtins.hh"
+#include "os.hh"
+#include "am.hh"
 #include "gc.hh"
 #include "dictionary.hh"
 
@@ -185,7 +187,7 @@ public:
   TaggedRef genTopName() {
     SRecord * s = SRecord::newSRecord(AtomPair,2);
     s->setArg(0,WifAtomDot);
-    s->setArg(1,makeInt(widget_ctr++));
+    s->setArg(1,oz_int(widget_ctr++));
     return makeTaggedSRecord(s);
   }
 
@@ -193,28 +195,28 @@ public:
     SRecord * s = SRecord::newSRecord(AtomPair,3);
     s->setArg(0,parent);
     s->setArg(1,WifAtomDot);
-    s->setArg(2,makeInt(widget_ctr++));
+    s->setArg(2,oz_int(widget_ctr++));
     return makeTaggedSRecord(s);
   }
 
   TaggedRef genTagName() {
     SRecord * s = SRecord::newSRecord(AtomPair,2);
     s->setArg(0,WifAtomTagPrefix);
-    s->setArg(1,makeInt(tag_ctr++));
+    s->setArg(1,oz_int(tag_ctr++));
     return makeTaggedSRecord(s);
   }
 
   TaggedRef genVarName() {
     SRecord * s = SRecord::newSRecord(AtomPair,2);
     s->setArg(0,WifAtomVarPrefix);
-    s->setArg(1,makeInt(var_ctr++));
+    s->setArg(1,oz_int(var_ctr++));
     return makeTaggedSRecord(s);
   }
 
   TaggedRef genImageName() {
     SRecord * s = SRecord::newSRecord(AtomPair,2);
     s->setArg(0,WifAtomImagePrefix);
-    s->setArg(1,makeInt(image_ctr++));
+    s->setArg(1,oz_int(image_ctr++));
     return makeTaggedSRecord(s);
   }
 

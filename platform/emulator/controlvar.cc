@@ -1,12 +1,12 @@
 /*
  *  Authors:
- *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ *    Michael Mehl (mehl@dfki.de)
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Michael Mehl (1997,1998)
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -24,20 +24,16 @@
  *
  */
 
-#ifndef __FDHOOK__H__
-#define __FDHOOK__H__
+//  internal interface to AMOZ
 
-#ifdef INTERFACE
-#pragma interface
-#endif
+#include "am.hh"
 
-#include "base.hh"
+/*
+ * Control Vars
+ */
 
-#include "thread.hh"
-
-inline
-Bool isUnifyCurrentPropagator () {
-  return Propagator::getRunningPropagator()->isUnifyPropagator();
+OZ_Return suspendOnControlVar()
+{
+  am.prepareCall(BI_controlVarHandler,am.emptySuspendVarList());
+  return BI_REPLACEBICALL;
 }
-
-#endif

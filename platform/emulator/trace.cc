@@ -34,7 +34,6 @@
 #include <signal.h>
 #include <setjmp.h>
 
-#include "runtime.hh"
 #include "trace.hh"
 #include "codearea.hh"
 #include "builtins.hh"

@@ -30,6 +30,7 @@
 
 #include "am.hh"
 #include "genvar.hh"
+#include "builtins.hh"
 
 // `var' and `vptr' belongs to `this', i.e., is a `GenCtVariable
 // `term' and `tptr' are either values or other constrained variable

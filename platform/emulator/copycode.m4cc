@@ -25,9 +25,9 @@
 
 
 #include "copycode.hh"
-#include "runtime.hh"
-#include "am.hh"
 #include "indexing.hh"
+#include "value.hh"
+#include "codearea.hh"
 
 define(readArg,$1)
 define(writeArg,$1)

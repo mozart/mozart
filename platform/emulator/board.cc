@@ -29,7 +29,6 @@
 #pragma implementation "board.hh"
 #endif
 
-#include "am.hh"
 #include "board.hh"
 
 Equation *ScriptAllocate(int size)
@@ -206,43 +205,6 @@ loop:
   bb=GETBOARD(aa);
   goto loop;
 }
-#endif
-
-#ifdef DEBUG_THREADCOUNT
-int existingLTQs = 0;
-#endif
-
-void Board::pushToLPQ(Propagator * prop) {
-  if (localPropagatorQueue) {
-    localPropagatorQueue->enqueue(prop);
-  } else {
-    Thread * lpq_thr = oz_mkLPQ(this, PROPAGATOR_PRIORITY);
-    localPropagatorQueue = new LocalPropagatorQueue(lpq_thr, prop);
-    am.threadsPool.scheduleThreadInline(lpq_thr, PROPAGATOR_PRIORITY);
-#ifdef DEBUG_THREADCOUNT
-    existingLTQs += 1;
-    //    printf("+LTQ=%p\n", localPropagatorQueue); fflush(stdout);
-#endif
-  }
-}
-
-void Board::setCommitted(Board *s) {
-  Assert(!isInstalled() && !isCommitted());
-
-  s->setLocalPropagatorQueue(localPropagatorQueue->merge(s->getLocalPropagatorQueue()));
-
-  flags |= Bo_Committed;
-  u.actor->setCommitted();
-  u.ref = s;
-}
-
-// -------------------------------------------------------------------------
-
-
-#ifdef OUTLINE
-#define inline
-#include "board.icc"
-#undef inline
 #endif
 
 // eof

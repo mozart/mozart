@@ -30,6 +30,7 @@
 #endif
 
 #include "future.hh"
+#include "builtins.hh"
 
 inline
 Bool isFuture(TaggedRef term)

@@ -26,7 +26,8 @@
  */
 
 #include "value.hh"
-#include "runtime.hh"
+#include "os.hh"
+#include "am.hh"
 
 class IONode {
 public:
