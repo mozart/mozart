@@ -304,7 +304,11 @@ char *mess_names[M_LAST] = {
   "lock_get",
   "lock_sent",
   "lock_forward",
-  "lock_dump"
+  "lock_dump",
+  "get_object",
+  "get_objectandclass",
+  "send_object",
+  "send_objectandclass",
 };
 
 void marshallMess(ByteStream *bs, MessageType tag);
