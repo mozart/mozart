@@ -79,28 +79,8 @@ local
 		   returnInt#'Height'#25
 		compilerSourceWrap:
 		   return#'Wrap'#none)
-
-      class OptionsClass
-	 attr Window
-	 meth init()
-	    Window <- {New Tk.toplevel tkInit(withdraw: true)}
-	 end
-	 meth get(Name $)
-	    Return#Class#Default = Resources.Name
-	 in
-	    case {case Return
-		  of return then
-		     Tk.return
-		  [] returnInt then
-		     Tk.returnInt
-		  end option(get @Window Name Class)} of nil then Default
-	    elseof false then Default
-	    elseof Value then Value
-	    end
-	 end
-      end
    in
-      Options = {New OptionsClass init()}
+      Options = {New Tk.optionsManager init(Resources)}
    end
 
    local
