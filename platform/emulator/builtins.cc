@@ -51,6 +51,7 @@
 #include "dictionary.hh"
 #include "dpInterface.hh"
 #include "bytedata.hh"
+#include "atoms.hh"
 
 #include <string.h>
 #include <time.h>
