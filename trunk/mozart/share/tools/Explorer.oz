@@ -20,7 +20,7 @@ local
 
 in
 
-   Explorer = {New ExplorerClass init}
+   Explorer = {New ExplorerClass noop}
 
    proc {ExploreOne P}
       {Explorer one(P)}
