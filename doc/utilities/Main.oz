@@ -48,7 +48,7 @@ prepare
                  'chunk'(multiple type:string)
                  'chunk-sep'(single type:string default:"\t")
                  %% HTML options
-                 'top'(single type: string default: unit)
+                 'link'(multiple type: string)
                  'stylesheet'(single type: string default: unit)
                  'latextogif'(rightmost type: bool default: true)
                  'latexdb'(single type: string default: unit)
@@ -252,7 +252,8 @@ define
           '--include=A1,...,An Assume `<!ENTITY & Ai "INCLUDE">\'.\n'#
           '\n'#
           'HTML options\n'#
-          '--top=<RURL>        What to link `Top\' to.\n'#
+          '--link=<Text>,<RelURL>\n'#
+          '                    Include a link in the margin of each page.\n'#
           '--stylesheet=<RURL> What style sheet to use for generated pages.\n'#
           '--(no)latextogif    Generate GIF files from LaTeX code.\n'#
           '--latexdb=<File>    Reuse GIFs generated from LaTeX code.\n'#
