@@ -78,10 +78,15 @@ local
    GL = format(glue(" "))
    fun {LI Xs Sep} format(list(Xs Sep)) end
 
-   proc {WriteVSFile VS Name} File in
+   proc {WriteVSFile VS Name}
+      T = {Thread.this}
+      RaiseOnBlock = {Thread.getRaiseOnBlock T}
+      {Thread.setRaiseOnBlock T false}
       File = {New Open.file init(name: Name flags: [write create truncate])}
+   in
       {File write(vs: VS)}
       {File close()}
+      {Thread.setRaiseOnBlock T RaiseOnBlock}
    end
 
    %--------------------------------------------------------------------
