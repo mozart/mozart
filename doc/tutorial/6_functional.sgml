@@ -1,5 +1,5 @@
 <CHAPTER ID="chapter.functional">
-<TITLE>Basic Control Structures</TITLE>
+<TITLE>Functions</TITLE>
 
 <SECTION><TITLE/Functional Notation/
 <P>Oz provides functional notation as syntactic convenience. We have seen
