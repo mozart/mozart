@@ -109,9 +109,6 @@ unsigned int getMemoryInFreeList();
 
 extern "C" void* memset(void*, int, size_t);
 
-void * freeListMalloc(size_t chunk_size);
-void freeListDispose(void *addr, size_t chunk_size);
-
 int initMemoryManagement(void);
 void deleteChunkChain(char *);
 int inChunkChain(void *, void *);
@@ -119,6 +116,9 @@ void printChunkChain(void *);
 
 #ifndef OUTLINE
 #include "mem.icc"
+#else
+void * freeListMalloc(size_t chunk_size);
+void freeListDispose(void *addr, size_t chunk_size);
 #endif
 
 #endif
