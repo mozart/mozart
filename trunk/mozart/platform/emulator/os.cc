@@ -340,11 +340,21 @@ extern "C" void * __builtin_new (size_t sz)
   return p;
 }
 
+extern "C" void * __builtin_vec_new (size_t sz)
+{
+  return __builtin_new(sz);
+}
+
 /* void operator delete (void *ptr) */
 extern "C" void __builtin_delete (void *ptr)
 {
   if (ptr)
     free (ptr);
+}
+
+extern "C" void __builtin_vec_delete (void *ptr)
+{
+  __builtin_delete(ptr);
 }
 
 #endif  /* __GNUC__ */
