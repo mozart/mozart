@@ -456,11 +456,6 @@ void oz_gCollectTerm(TaggedRef & f, TaggedRef & t) {
   OZ_gCollectBlock(&f, &t, 1);
 }
 
-inline 
-void oz_sCloneTerm(TaggedRef & f, TaggedRef & t) {
-  OZ_sCloneBlock(&f, &t, 1);
-}
-
 // builtins.cc
 OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val);
 
