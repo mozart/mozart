@@ -469,14 +469,14 @@ Bool AM::hookCheckNeeded()
 // failure in shallow guard can never be handled
 #define RAISE_THREAD_NO_PC			\
   e->exception.pc=NOCODE;			\
-  e->shallowHeapTop = 0;			\
+  e->setShallowHeapTop(0);			\
   return T_RAISE;
 
 #define RAISE_THREAD				\
   e->exception.pc=PC;				\
   e->exception.y=Y;				\
   e->exception.cap=CAP;				\
-  e->shallowHeapTop = 0;			\
+  e->setShallowHeapTop(0);			\
   return T_RAISE;
 
 
@@ -1410,7 +1410,7 @@ LBLdispatcher:
   Case(SHALLOWGUARD)
     {
       shallowCP = PC;
-      e->shallowHeapTop = heapTop;
+      e->setShallowHeapTop(heapTop);
       e->trail.pushMark();
       DISPATCH(2);
     }
@@ -1509,7 +1509,7 @@ LBLdispatcher:
     {
       if (e->trail.isEmptyChunk()) {
 	shallowCP = NULL;
-	e->shallowHeapTop = NULL;
+	e->setShallowHeapTop(NULL);
 	e->trail.popMark();
 	DISPATCH(1);
       }
@@ -1520,7 +1520,7 @@ LBLdispatcher:
 	CheckLiveness(shallowCP);
 	PushContX(shallowCP);
 	shallowCP = NULL;
-	e->shallowHeapTop = NULL;
+	e->setShallowHeapTop(NULL);
 	oz_reduceTrailOnShallow();
 	return T_SUSPEND;
       }
@@ -2844,7 +2844,7 @@ LBLdispatcher:
       }
       PC=shallowCP;
       shallowCP=0;
-      e->shallowHeapTop = NULL;
+      e->setShallowHeapTop(NULL);
     }
     switch (tmpRet) {
     case BI_REPLACEBICALL:
@@ -2873,7 +2873,7 @@ LBLshallowFail:
     }
     PC                 = shallowCP;
     shallowCP          = NULL;
-    e->shallowHeapTop  = NULL;
+    e->setShallowHeapTop(NULL);
     JUMPRELATIVE(getLabelArg(PC+1));
   }
 } // end engine
