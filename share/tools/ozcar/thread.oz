@@ -147,7 +147,7 @@ in
 	    case E then
 	       ThreadManager,remove(T I noKill)
 	    else
-	       %{OzcarMessage 'Unknown terminating thread'}
+	       %{OzcarMessage UnknownTermThread}
 	       skip
 	    end
 	    
@@ -165,7 +165,7 @@ in
 	    case E then
 	       ThreadManager,block(T I F L N A B Time)
 	    else
-	       {OzcarMessage 'Unknown suspending thread'}
+	       {OzcarMessage UnknownSuspThread}
 	    end
 	    
 	 [] cont then
@@ -179,11 +179,11 @@ in
 	       else skip end
 	       Gui,markNode(I runnable)
 	    else
-	       {OzcarMessage 'Unknown woken thread'}
+	       {OzcarMessage UnknownWokenThread}
 	    end
 	    
 	 else
-	    {OzcarMessage 'Unknown message on stream'}
+	    {OzcarMessage UnknownMessage}
 	 end
       end
 
@@ -193,8 +193,7 @@ in
 	 Gui,markNode(I blocked)
 	 case T == @currentThread then
 	    case F == '' orelse F == 'nofile' orelse F == 'noDebugInfo' then
-	       {OzcarMessage 'Thread #' # I #
-		' blocks without line number information'}
+	       {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
 	       SourceManager,scrollbar(file:'' line:undef
 				       color:undef what:both)
 	    else

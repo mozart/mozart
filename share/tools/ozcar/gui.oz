@@ -262,7 +262,7 @@ class Gui from Menu Dialog
 				andthen X.name \= 'Toplevel abstraction'
 			     end}
       ArgList = {List.filter Stack fun{$ X}
-				      {Label X} == 'args'
+				      {Label X} == 'debug'
 				   end}
       SL            = {List.length S}
       ArgListLength = {List.length ArgList}

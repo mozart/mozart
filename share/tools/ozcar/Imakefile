@@ -1,3 +1,7 @@
+# $Id$
+# Benjamin Lorenz <lorenz@ps.uni-sb.de>
+
+
 OZLIB     = $(OZHOME)/lib
 BITMAPDIR = $(OZLIB)/bitmaps
 OZCAR     = $(OZLIB)/ozcar
@@ -5,7 +9,7 @@ OZCAR     = $(OZLIB)/ozcar
 
 LOCALFILES = \
 	prelude.oz string.oz tk.oz config.oz \
-	tree.oz thread.oz source.oz menu.oz dialog.oz gui.oz \
+	tree.oz thread.oz stack.oz source.oz menu.oz dialog.oz gui.oz \
 	ozcar.oz
 
 BITMAPS = debugger.xbm
