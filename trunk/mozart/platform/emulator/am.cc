@@ -82,9 +82,6 @@ void AM::init(int argc,char **argv)
 #ifdef DEBUG_FD
          " DEBUG_FD"
 #endif
-#ifdef DEBUG_MAPPING
-         " DEBUG_MAPPING"
-#endif
 #ifdef PROFILE_FD
          " PROFILE_FD"
 #endif
