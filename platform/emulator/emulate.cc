@@ -971,22 +971,24 @@ void engine() {
                             goto localhack0;);
           goto LBLcheckEntailment;
         case SUSPEND:
-          killPropagatedCurrentTaskSusp();
-          LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
-                            goto localhack0;);
-          extern TaggedRef *globalSeqSuspendHack;
-          Assert(globalSeqSuspendHack);
-          Suspension *susp =
-            e->mkSuspension(CBB,GET_CURRENT_PRIORITY(),
-                            biFun,X,XSize);
-          taggedBecomesSuspVar(globalSeqSuspendHack)
-            ->addSuspension(susp);
-          globalSeqSuspendHack=0;
-          if (e->currentThread->compMode == ALLSEQMODE) {
-            e->currentThread=0;
-            goto LBLstart;
+          {
+            killPropagatedCurrentTaskSusp();
+            LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
+                              goto localhack0;);
+            extern TaggedRef *globalSeqSuspendHack;
+            Assert(globalSeqSuspendHack);
+            Suspension *susp =
+              e->mkSuspension(CBB,GET_CURRENT_PRIORITY(),
+                              biFun,X,XSize);
+            taggedBecomesSuspVar(globalSeqSuspendHack)
+              ->addSuspension(susp);
+            globalSeqSuspendHack=0;
+            if (e->currentThread->compMode == ALLSEQMODE) {
+              e->currentThread=0;
+              goto LBLstart;
+            }
+            goto LBLcheckEntailment;
           }
-          goto LBLcheckEntailment;
         default:
           Assert(NO);
           goto LBLerror;
@@ -1332,16 +1334,18 @@ void engine() {
 
   Case(SHALLOWTHEN):
     {
-      int numbOfCons = e->trail.chunkSize();
 
-      if (numbOfCons == 0) {
-        e->trail.popMark();
+      if (e->trail.isEmptyChunk()) {
         inShallowGuard = NO;
         shallowCP = NULL;
+        e->trail.popMark();
         DISPATCH(1);
       }
 
 /* RS:  OUTLINE */
+      int numbOfCons = e->trail.chunkSize();
+      Assert(numbOfCons>0);
+
       if (e->conf.showSuspension) {
         printSuspension(PC);
       }
@@ -1349,9 +1353,9 @@ void engine() {
       int argsToSave = getPosIntArg(shallowCP+2);
       Suspension *susp=e->mkSuspension(CBB,GET_CURRENT_PRIORITY(),
                                        shallowCP,Y,G,X,argsToSave);
-      e->reduceTrailOnShallow(susp,numbOfCons);
       inShallowGuard = NO;
       shallowCP = NULL;
+      e->reduceTrailOnShallow(susp,numbOfCons);
       if (e->currentThread->compMode == ALLSEQMODE) {
         e->currentThread=0;
         goto LBLstart;
