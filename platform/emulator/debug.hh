@@ -45,7 +45,7 @@ void debugStreamThread(Thread*,Thread* parent=NULL);
 void debugStreamTerm(Thread*);
 void debugStreamCall(ProgramCounter, char*, int, TaggedRef*, bool, int);
 void debugStreamExit(TaggedRef);
-void debugStreamRaise(Thread*, TaggedRef, TaggedRef);
+void debugStreamRaise(Thread*, TaggedRef);
 
 OZ_C_proc_proto(BIdebugmode)
 OZ_C_proc_proto(BItaskStack)
