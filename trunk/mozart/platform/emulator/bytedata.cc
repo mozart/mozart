@@ -484,3 +484,20 @@ OZ_BI_define(BIByteString_strchr,3,1)
   if (s2==NULL) OZ_RETURN(OZ_false());
   else OZ_RETURN_INT(s2-s1);
 } OZ_BI_end
+
+OZ_BI_define(BIByteString_cmp,2,1)
+{
+  oz_declareByteStringIN(0,bs1);
+  oz_declareByteStringIN(1,bs2);
+  int n1 = bs1->getWidth();
+  int n2 = bs2->getWidth();
+  char* s1 = (char*) bs1->getData();
+  char* s2 = (char*) bs2->getData();
+  for (int i=(n1<n2)?n1:n2;i!=0;i--,s1++,s2++) {
+    char c1 = *s1;
+    char c2 = *s2;
+    if (c1 < c2) OZ_RETURN_INT(-1);
+    if (c1 > c2) OZ_RETURN_INT( 1);
+  }
+  OZ_RETURN_INT((n1<n2)?-1:((n1>n2)?1:0));
+} OZ_BI_end
