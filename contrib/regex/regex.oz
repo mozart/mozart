@@ -3,7 +3,7 @@
 
 functor
 import
-   Foreign.{Fload=load}
+   MOD @ 'regex.so{native}'
    Finalize.{Register=register}
 export
    'class'      : Regex
@@ -13,7 +13,6 @@ export
    'match'      : Regex_Match
    'flag'       : Flags
 define
-   MOD = {Fload '@PACKAGE@/posix.so'}
    COMPILE = MOD.compile
    EXECUTE = MOD.execute
    FREE    = MOD.free

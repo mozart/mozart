@@ -6,19 +6,15 @@
 
 functor prop once
 import
-   Foreign
+   MOD @ 'gdbm.so{native}'
    Finalize
 export
    'class': GDBM
 define
-   FLoad    = Foreign.load
    Register = Finalize.register
    %% open a new `local' to protect redefinitions of
    %% variables already in Base
    local
-      %% Foreign.require will resolve this name in a platform
-      %% dependent way
-      MOD = {FLoad '@PACKAGE@/gdbm.so'}
       Open       = MOD.open
       Fetch      = MOD.fetch
       Store      = MOD.store

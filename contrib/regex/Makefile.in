@@ -1,3 +1,4 @@
+@SET_MAKE@
 BUILDTOP        = @BUILDTOP@
 prefix          = @prefix@
 SRCDIR          = @srcdir@
@@ -5,13 +6,11 @@ VPATH           = @srcdir@
 PLATFORM        = @PLATFORM@
 PACKAGE         = @PACKAGE@
 PROTOCOL        = @PROTOCOL@
-DIR_LOAD        = $(prefix)/cache/$(PROTOCOL)/$(PACKAGE)
-DIR_DLOAD       = $(prefix)/platform/$(PLATFORM)/cache/$(PACKAGE)
+LIB_DIR         = $(prefix)/contrib
 
 OZC             = @OZC@
 COMPILE         = $(OZC) -c
 OZDYNLD         = @OZDYNLD@
-MKINSTALLDIRS   = @MKINSTALLDIRS@
 
 CXX             = @CXX@
 CXXFLAGS        = @CXXFLAGS@
@@ -21,59 +20,51 @@ LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@ -lc
 
 INSTALL         = @INSTALL@
-INSTALL_DIR     = $(MKINSTALLDIRS)
-INSTALL_BIN     = $(INSTALL) -m 555
+INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
 
-POSIX_LOAD      = posix.ozf
-POSIX_DLOAD     = posix.so
+TARGETS         = regex.ozf regex.so
+LIB_TARGETS     = $(LIB_DIR)/regex.ozf $(LIB_DIR)/regex.so-$(PLATFORM)
 
-ALL_LOAD        = $(POSIX_LOAD)
-ALL_DLOAD       = $(POSIX_DLOAD)
+.PHONY: all install clean veryclean distclean bootstrap depend
 
-LIB_POSIX_LOAD  = $(addprefix $(DIR_LOAD)/,$(POSIX_LOAD))
-LIB_POSIX_DLOAD = $(addprefix $(DIR_DLOAD)/,$(POSIX_DLOAD))
+all:            $(TARGETS)
+install:        $(LIB_DIR) $(LIB_TARGETS)
 
-.PHONY: all install install-load install-dload \
-        posix install-posix install-posix-load install-posix-dload \
-        clean veryclean distclean \
-        bootstrap
-
-all:    posix
-posix:  $(POSIX_LOAD) $(POSIX_DLOAD)
-
-install:        install-posix
-install-load:   install-posix-load
-install-dload:  install-posix-dload
-
-install-posix:  install-posix-load install-posix-dload
-install-posix-load:     $(DIR_LOAD)  $(LIB_POSIX_LOAD)
-install-posix-dload:    $(DIR_DLOAD) $(LIB_POSIX_DLOAD)
-
-$(DIR_LOAD) $(DIR_DLOAD):
+$(LIB_DIR):
         $(INSTALL_DIR) $@
 
-$(subst %,\%,$(DIR_LOAD))/%: %
+$(LIB_DIR)/regex.ozf: regex.ozf
         $(INSTALL_LIB) $< $@
 
-$(subst %,\%,$(DIR_DLOAD))/%: %
+$(LIB_DIR)/regex.so-$(PLATFORM): regex.so
         $(INSTALL_LIB) $< $@
 
-$(ALL_LOAD): %.ozf : %.oz
+regex.ozf: regex.oz
         $(COMPILE) $< -o $@
 
-$(ALL_DLOAD): %.so : %.o
+regex.so: regex.o
         $(OZDYNLD) -o $@ $< $(LDFLAGS) $(LIBS)
 
-%.o: %.c
+regex.o: regex.cc
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 clean veryclean:
         -$(RM) *~ *.ozf *.o *.so
 
 distclean: clean
-        -$(RM) config.* Makefile posix.oz
+        -$(RM) config.* Makefile
 
 include $(SRCDIR)/../../share/Makefile.boot
 
 bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+        ./config.status
+
+config.status: configure
+        ./config.status --recheck

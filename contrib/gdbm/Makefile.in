@@ -6,14 +6,11 @@ prefix          = @prefix@
 PLATFORM        = @PLATFORM@
 PACKAGE         = @PACKAGE@
 PROTOCOL        = @PROTOCOL@
-DIR_LOAD        = $(prefix)/cache/$(PROTOCOL)/$(PACKAGE)
-DIR_DLOAD       = $(prefix)/platform/$(PLATFORM)/cache/$(PACKAGE)
+LIB_DIR         = $(prefix)/contrib
 
 OZC             = @OZC@
 COMPILE         = $(OZC) -c
-#COMPILE                = $(OZC) -l Standard -c
 OZDYNLD         = @OZDYNLD@
-MKINSTALLDIRS   = @MKINSTALLDIRS@
 
 CXX             = @CXX@
 CPPFLAGS        = -I$(SRCDIR)/../../platform/emulator @CPPFLAGS@
@@ -22,49 +19,51 @@ LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@
 
 INSTALL         = @INSTALL@
-INSTALL_DIR     = $(MKINSTALLDIRS)
-INSTALL_BIN     = $(INSTALL) -m 555
+INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
 
-FILES_LOAD      = gdbm.ozf
-FILES_DLOAD     = gdbm.so
+TARGETS         = gdbm.ozf gdbm.so
+LIB_TARGETS     = $(LIB_DIR)/gdbm.ozf $(LIB_DIR)/gdbm.so-$(PLATFORM)
 
-LIB_FILES_LOAD  = $(addprefix $(DIR_LOAD)/,$(FILES_LOAD))
-LIB_FILES_DLOAD = $(addprefix $(DIR_DLOAD)/,$(FILES_DLOAD))
+.PHONY: all install clean veryclean distclean bootstrap depend
 
-.PHONY: all install install-load install-dload \
-        clean veryclean distclean bootstrap
+all:            $(TARGETS)
+install:        $(LIB_DIR) $(LIB_TARGETS)
 
-all: gdbm.so gdbm.ozf
-
-install: install-load install-dload
-install-load:   $(DIR_LOAD)  $(LIB_FILES_LOAD)
-install-dload:  $(DIR_DLOAD) $(LIB_FILES_DLOAD)
-
-$(DIR_LOAD) $(DIR_DLOAD):
+$(LIB_DIR):
         $(INSTALL_DIR) $@
 
-$(subst %,\%,$(DIR_LOAD))/%: %
+$(LIB_DIR)/gdbm.ozf: gdbm.ozf
         $(INSTALL_LIB) $< $@
 
-$(subst %,\%,$(DIR_DLOAD))/%: %
+$(LIB_DIR)/gdbm.so-$(PLATFORM): gdbm.so
         $(INSTALL_LIB) $< $@
+
+gdbm.ozf: gdbm.oz
+        $(COMPILE) $< -o $@
+
+gdbm.so: gdbm.o
+        $(OZDYNLD) -o $@ $< $(LDFLAGS) $(LIBS)
 
 gdbm.o: gdbm.cc
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
-gdbm.so: gdbm.o
-        $(OZDYNLD) -o gdbm.so gdbm.o $(LDFLAGS) $(LIBS)
-
-gdbm.ozf: gdbm.oz
-        $(COMPILE) gdbm.oz -o gdbm.ozf
 
 clean veryclean:
         -$(RM) *~ *.bak *.o *.so *.ozf
 
 distclean: clean
-        -$(RM) config.* Makefile gdbm.oz
+        -$(RM) config.* Makefile
 
 include $(SRCDIR)/../../share/Makefile.boot
 
 bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+        ./config.status
+
+config.status: configure
+        ./config.status --recheck
