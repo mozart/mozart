@@ -33,13 +33,6 @@
 #include "opcodes.hh"
 #include "value.hh"
 
-/**********************************************************************
- *							              *
- *    class AbstractionTable: represented as hash table               *
- *							              *
- **********************************************************************/
-
-
 class AbstractionEntry {
 private:  
   Abstraction *abstr;
@@ -71,22 +64,6 @@ public:
 
   static void gcAbstractionEntries();
 };
-
-
-class AbstractionTable: public HashTable {
-public:
-  AbstractionTable(int s) : HashTable(HT_INTKEY,s) {};
-
-  static AbstractionEntry *add(int id);
-  static AbstractionEntry *add(Abstraction *abstr);
-  void gcAbstractionTable()
-  {
-    AbstractionEntry::gcAbstractionEntries();
-  }
-
-};
-
-
 
 
 /*****************************************************************************/
@@ -145,7 +122,6 @@ public:
   }
 
   ByteCode *getStart() { return codeBlock; }
-  static AbstractionTable abstractionTab;
   static int totalSize; /* total size of code allocated in bytes */
 
   /* read from file and return start in "pc" */
@@ -283,12 +259,6 @@ public:
     return writeWord((ByteCode)i,ptr);    
   }
 
-
-  static ProgramCounter writePredicateRef(int i, ProgramCounter ptr)
-  {
-    AbstractionEntry *entry = AbstractionTable::add(i);
-    return writeWord(entry, ptr);
-  }
 
   static ProgramCounter writeAddress(void *p, ProgramCounter ptr)
   {
