@@ -334,15 +334,19 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def,
 }
 
 inline
-Bool AM::isNotPreemtiveScheduling(void)
+Bool AM::isNotPreemptiveScheduling(void)
 {
-  if (isSetSFlag(ThreadSwitch)) {
-    if (threadQueuesAreEmpty())
-      restartThread();
-    else
-      return FALSE;
+  if (isSetSFlag()) {
+    if (isSetSFlag(ThreadSwitch)) {
+      if (threadQueuesAreEmpty())
+	restartThread();
+      else
+	return FALSE;
+    }
+    return !isSetSFlag();
+  } else {
+    return TRUE;
   }
-  return !isSetSFlag(StartGC);
 }
 
 inline
@@ -3019,7 +3023,7 @@ LBLdispatcher:
 
        Thread * backup_currentThread = CTT;
 
-       while (!ltq->isEmpty() && e->isNotPreemtiveScheduling()) {
+       while (!ltq->isEmpty() && e->isNotPreemptiveScheduling()) {
 	 Thread * thr = CTT = ltq->dequeue();
 	  
 	 Assert(!thr->isDeadThread());
