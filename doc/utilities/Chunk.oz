@@ -1,6 +1,6 @@
 functor
 import
-   Narrator SGML ErrorListener Browser
+   Narrator SGML ErrorListener
 export
    GetChunk
 define
@@ -191,8 +191,7 @@ define
 	 case Str of H|T then
 	    Indentor,putc(H)
 	    Indentor,enterstring(T)
-	 elseof nil then skip
-	 else {Browser.browse Str} {Wait _} end
+	 elseof nil then skip end
       end
    end
 end
