@@ -548,7 +548,7 @@ propagator evolves into:
 <<sumCN>>
 <synopsis>
 <<<
-{FD.sumCN ?+{Iv} ?+{Dvv} ?+{A} ?+{D}}
+{FD.sumCN ?+{Iv} ?*{Dvv} ?+{A} ?*{D}}
 >>>
 <item>
 creates a propagator for 
@@ -682,7 +682,7 @@ domain integers).
 <<sumAC>>
 <synopsis>
 <<<
-{FD.sumAC ?+{Iv} ?+{Dv} ?+{A} ?+{D}}
+{FD.sumAC ?+{Iv} ?*{Dv} ?+{A} ?*{D}}
 >>>
 <item>
 creates a propagator for the absolute value of the scalar product of the
@@ -711,13 +711,35 @@ where the disjunction is realized by constructive disjunction.
 <<sumACN>>
 <synopsis>
 <<<
-{FD.sumACN ?+{Iv} ?+{Dvv} ?+{A} ?+{D}}
+{FD.sumACN ?+{Iv} ?*{Dvv} ?+{A} ?*{D}}
 >>>
 <item>
 creates a propagator for 
 <p><math>|{\tt I}_1*{\tt D}_{11}*\ldots*{\tt D}_{1k_1}+\ldots+{\tt I}_n*{\tt D}_{n1}*\ldots*{\tt D}_{nk_n}|\;\sim_{{\tt A}}\;{\tt D}</math><p>
 <p>
 The operational semantics is defined analogously to <<FD.sumAC>>.
+
+<entry>
+<index class=module/FD<and>sumD/
+<<sumD>>
+<synopsis>
+<<<
+{FD.sumD ?*{Dv} ?+{A} ?*{D}}
+>>>
+<item>
+creates a propagator analogous to <<FD.sum>> but performs
+<em>domain-consistent</em> propagation.
+
+<entry>
+<index class=module/FD<and>sumCD/
+<<sumCD>>
+<synopsis>
+<<<
+{FD.sumCD ?+{Iv} ?*{Dv} ?+{A} ?*{D}}
+>>>
+<item>
+creates a propagator analogous to <<FD.sumC>> but performs
+<em>domain-consistent</em> propagation.
 </list>
 </section>
 
