@@ -2336,7 +2336,7 @@ void sendHelpX(MessageType mt,BorrowEntry *be)
   SendTo(na->site,bs,mt,na->site,na->index);
 }
 
-void PerdioVar::addSuspPerdioVar(TaggedRef * v, Suspension susp, int unstable)
+void PerdioVar::addSusp(TaggedRef * v, Suspension susp, int unstable)
 {
   if (suspList!=NULL) {
     addSuspSVar(susp, unstable);
@@ -2920,7 +2920,7 @@ PerdioVar *var2PerdioVar(TaggedRef *tPtr)
 
   oe->mkVar(makeTaggedRef(tPtr));
 
-  PerdioVar *ret = new PerdioVar();
+  PerdioVar *ret = new PerdioVar(oz_currentBoard());
   ret->setIndex(i);
 
   if (isSVar(*tPtr))
@@ -3204,7 +3204,7 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
       
       Object *o = new Object(bi);
       o->setGName(gnobj);
-      PerdioVar *pvar = new PerdioVar(o);
+      PerdioVar *pvar = new PerdioVar(o,oz_currentBoard());
       val = makeTaggedRef(newTaggedCVar(pvar));
       addGName(gnobj, val);
       
@@ -3248,7 +3248,7 @@ OZ_Term unmarshalVar(MsgBuffer* bs){
     return val1;}
   
   PD((UNMARSHAL,"var miss: b:%d",bi));
-  PerdioVar *pvar = new PerdioVar(bi);
+  PerdioVar *pvar = new PerdioVar(bi,oz_currentBoard());
   TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
   ob->mkVar(val); 
   sendRegister((BorrowEntry *)ob);

@@ -68,10 +68,10 @@ private:
 
   void relinkSuspListTo(GenCtVariable * lv, Bool reset_local = FALSE);
 
-  void installPropagators(GenCtVariable *, Board *);
-
 public:
   USEFREELISTMEMORY;
+
+  void installPropagators(GenCtVariable *);
 
   int getNoOfSuspLists(void) {
     return _definition->getNoOfWakeUpLists();
@@ -83,8 +83,8 @@ public:
 	    : (SuspList *) NULL);
   }
 
-  GenCtVariable(OZ_GenConstraint * c, OZ_GenDefinition * d) 
-    : _definition(d), GenCVariable(CtVariable)
+  GenCtVariable(OZ_GenConstraint * c, OZ_GenDefinition * d,Board *bb) 
+    : _definition(d), GenCVariable(CtVariable,bb)
   {
     Assert(c);
     Assert(d);
@@ -122,26 +122,17 @@ public:
     resetReifiedFlag();
   }
 
-  OZ_Return unifyV(OZ_Term * vPtr, OZ_Term t, ByteCode * scp);
+  OZ_Return unify(OZ_Term * vPtr, OZ_Term t, ByteCode * scp);
 
-  OZ_Return validV(OZ_Term * /* vPtr */, OZ_Term val) {    
+  OZ_Return valid(OZ_Term val) {    
     return _constraint->unify(val);
   }
 
-  OZ_Return hasFeatureV(OZ_Term val, OZ_Term *) { 
-    return SUSPEND; 
-  }
+  GenCVariable * gc(void);
 
-  virtual GenCVariable * gcV(void);
-
-  virtual void gcRecurseV(void);
+  void gcRecurse(void);
   
-  virtual void addSuspV(Suspension susp, OZ_Term * ptr, int state) 
-  {
-    // covered by `addSuspCVar(OZ_Term, Suspension, int)' [genvar.icc]
-  }
-
-  virtual void disposeV(void) {
+  void dispose(void) {
     // dispose suspension lists
     freeListDispose(_susp_lists, getNoOfSuspLists() * sizeof(SuspList *));
 
@@ -149,18 +140,14 @@ public:
     delete _constraint;        
   }
 
-  virtual int getSuspListLengthV(void) { 
-    return getSuspListLength(); 
-  }
-
-  virtual void printStreamV(ostream &out, int depth = 10) {
+  void printStream(ostream &out, int depth = 10) {
     out << _definition->getName() << ':' << _constraint->toString(depth);
   }
 
-  virtual void printLongStreamV(ostream &out,
-				int depth = 10,
-				int offset = 0) {
-    printStreamV(out,depth); out << endl;
+  void printLongStream(ostream &out,
+		       int depth = 10,
+		       int offset = 0) {
+    printStream(out,depth); out << endl;
   }
 };
 

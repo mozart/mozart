@@ -25,6 +25,8 @@
  */
 
 #include "cpi.hh"
+#include "allgenvar.hh"
+#include "threadInterface.hh"
 
 inline
 OZ_expect_t expectFail(void) {
@@ -102,11 +104,8 @@ void OZ_Expect::addSuspend(OZ_Term * v)
 {
   if (collect) {
     staticSuspendVars[staticSuspendVarsNumber].var = v;
-#ifdef Assert
-    staticSuspendVars[staticSuspendVarsNumber++].expected_type = NonGenCVariable;
-#else
+    DebugCode(staticSuspendVars[staticSuspendVarsNumber].expected_type = OZ_VAR_INVALID);
     staticSuspendVarsNumber++;
-#endif
 
     staticSuspendVars.request(staticSuspendVarsNumber);
   }
@@ -794,7 +793,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     if (isVariableTag(vtag)) {
       Assert(isCVar(vtag));
       
-      addSuspCVar(vptr, prop);
+      oz_cv_addSuspINLINE(tagged2CVar(v), vptr, prop);
       all_local &= am.isLocalSVar(v);
     }
   }

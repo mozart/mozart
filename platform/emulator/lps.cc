@@ -33,8 +33,7 @@
 #include "lps.hh"
 #include "am.hh"
 
-#include "genvar.hh"
-
+#include "threadInterface.hh"
 
 #ifdef OUTLINE
 #define inline

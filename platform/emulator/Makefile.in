@@ -131,11 +131,11 @@ $(MODINTERS): bidecl.perl
 
 libFDP.a FDP.so libSchedule.a Schedule.so: \
 	libfd modFDP-if.cc modSchedule-if.cc
-	cd libfd; $(MAKE) $@
+	cd libfd; $(MAKE) ../$@
 
 libFSP.a FSP.so: \
 	libfset modFSP-if.cc
-	cd libfset; $(MAKE) $@
+	cd libfset; $(MAKE) ../$@
 
 Wif.so: wif.o
 	$(DYNLD) -o $@ wif.o

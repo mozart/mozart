@@ -11,7 +11,7 @@
  *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
  * 
  *  Copyright:
- *    Michael Mehl, 1997
+ *    Michael Mehl, 1997,1998
  *    Kostja Popow, 1997
  *    Ralf Scheidhauer, 1997
  *    Christian Schulte, 1997
@@ -4190,13 +4190,15 @@ OZ_BI_define(BIapply,2,0)
  * ???
  * --------------------------------------------------------------------- */
 
+int oz_cv_getSuspListLength(GenCVariable *cv);
+
 OZ_BI_define(BIconstraints,1,1)
 {
   oz_declareDerefIN(0,in);
 
   int len = 0;
   if (isCVar(inTag)) {
-    len=tagged2CVar(in)->getSuspListLength();
+    len=oz_cv_getSuspListLength(tagged2CVar(in));
   } else if (isSVar(inTag)) {
     len = tagged2SVar(in)->getSuspList()->length();
   }

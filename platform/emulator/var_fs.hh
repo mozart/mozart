@@ -36,7 +36,6 @@
 #include "fset.hh"
 #include "fdhook.hh"
 #include "oz_cpi.hh"
-#include "threadInterface.hh"
 
 class GenFSetVariable: public GenCVariable {
 
@@ -49,12 +48,13 @@ private:
   
 public:
   GenFSetVariable(DummyClass *) : GenCVariable(FSetVariable,(DummyClass*)0) {}
-  GenFSetVariable(void) : GenCVariable(FSetVariable) { 
+  GenFSetVariable(Board *bb) : GenCVariable(FSetVariable,bb) { 
     _fset.init(); 
     for (int i = fs_prop_any; i--; )
       fsSuspList[i] = NULL;
   }
-  GenFSetVariable(OZ_FSetConstraint &fs) : GenCVariable(FSetVariable) { 
+  GenFSetVariable(OZ_FSetConstraint &fs,Board *bb)
+    : GenCVariable(FSetVariable,bb) { 
     _fset = fs; 
     for (int i = fs_prop_any; i--; )
       fsSuspList[i] = NULL;
@@ -63,7 +63,7 @@ public:
   void gc(GenFSetVariable *); 
   void dispose(void);
   
-  OZ_Return unifyV(OZ_Term *, OZ_Term, ByteCode *);
+  OZ_Return unify(OZ_Term *, OZ_Term, ByteCode *);
   OZ_FSetConstraint &getSet(void) { return _fset; }
   void setSet(OZ_FSetConstraint fs) { _fset = fs; }
 
@@ -89,7 +89,7 @@ public:
 
   void becomesFSetValueAndPropagate(OZ_Term *);
 
-  void installPropagators(GenFSetVariable *, Board *);
+  void installPropagators(GenFSetVariable *);
 
   OZ_FSetConstraint * getReifiedPatch(void) { 
     return (OZ_FSetConstraint *) (u.var_type & ~u_mask);
@@ -103,24 +103,12 @@ public:
     resetReifiedFlag();
   }
 
-
-  OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
-    return valid(val);
-  }
-  GenCVariable* gcV() { error("not impl"); return 0; }
-  void gcRecurseV() { error("not impl"); }
-  void addSuspV(Suspension susp, TaggedRef* ptr, int state) {
-    error("not impl");
-    // mm2: addSuspBoolVar(makeTaggedRef(ptr),susp,state);
-  }
-  void disposeV(void) { dispose(); }
-  int getSuspListLengthV() { return getSuspListLength(); }
-  void printStreamV(ostream &out,int depth = 10) {
+  void printStream(ostream &out,int depth = 10) {
     out << getSet().toString();
   }
-  void printLongStreamV(ostream &out,int depth = 10,
-			int offset = 0) {
-    printStreamV(out,depth); out << endl;
+  void printLongStream(ostream &out,int depth = 10,
+		       int offset = 0) {
+    printStream(out,depth); out << endl;
   }
 };
 

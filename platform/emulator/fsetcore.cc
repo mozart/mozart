@@ -27,6 +27,7 @@
 #include "builtins.hh"
 #include "space.hh"
 #include "cpi.hh"
+#include "fsgenvar.hh"
 
 //*****************************************************************************
 

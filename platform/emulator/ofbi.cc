@@ -33,8 +33,10 @@
  */
 
 #include <math.h>
-#include "genvar.hh"
+#include "ofgenvar.hh"
+#include "fdgenvar.hh"
 #include "builtins.hh"
+#include "fdomn.hh"
 
 /*********************************************************************
  * OF builtins
@@ -201,7 +203,7 @@ OZ_BI_define(BIsystemTellSize,3,0)
     dt_index numFeats=smallIntValue(tNumFeats);
     dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
 			     : (int)ceil((double)numFeats/FILLFACTOR));
-    GenOFSVariable *newofsvar=new GenOFSVariable(label,size);
+    GenOFSVariable *newofsvar=new GenOFSVariable(label,size,oz_currentBoard());
     OZ_Return ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 			  makeTaggedRef(tPtr));
     Assert(ok==PROCEED); // mm2
@@ -263,7 +265,8 @@ OZ_BI_define(BIsystemTellSize,3,0)
       dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
                                                      : (int)ceil((double)numFeats/FILLFACTOR));
       // Create newofsvar with unbound variable as label & given initial size:
-      GenOFSVariable *newofsvar=new GenOFSVariable(label,size);
+      GenOFSVariable *newofsvar
+	=new GenOFSVariable(label,size,oz_currentBoard());
       // Unify newofsvar and term:
       Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 		       makeTaggedRef(tPtr));
@@ -288,7 +291,7 @@ OZ_BI_define(BIrecordTell,2,0)
 
   /* most probable case first */
   if (isLiteralTag(labelTag) && oz_isFree(t)) {
-    GenOFSVariable *newofsvar=new GenOFSVariable(label);
+    GenOFSVariable *newofsvar=new GenOFSVariable(label,oz_currentBoard());
     Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 		     makeTaggedRef(tPtr));
     Assert(ok==PROCEED); // mm2
@@ -343,7 +346,7 @@ OZ_BI_define(BIrecordTell,2,0)
   case SVAR:
     {
       // Create newofsvar with unbound variable as label & given initial size:
-      GenOFSVariable *newofsvar=new GenOFSVariable(label);
+      GenOFSVariable *newofsvar=new GenOFSVariable(label,oz_currentBoard());
       // Unify newofsvar and term:
       Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 		       makeTaggedRef(tPtr));
@@ -435,7 +438,7 @@ OZ_C_proc_begin(BIwidthC, 2)
     case SVAR:
     {
         // Create new fdvar:
-        GenFDVariable *fdvar=new GenFDVariable(); // Variable with maximal domain
+        GenFDVariable *fdvar=new GenFDVariable(oz_currentBoard()); // Variable with maximal domain
         // Unify fdvar and wid:
         Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(fdvar)),rawwid);
         Assert(ok==PROCEED); // mm2
@@ -528,7 +531,7 @@ OZ_Return WidthPropagator::propagate(void)
             slice.initRange(recwidth,fd_sup);
             OZ_FiniteDomain &dom = tagged2GenFDVar(wid)->getDom();
             if (dom.getSize() > (dom & slice).getSize()) { 
-                GenFDVariable *fdcon=new GenFDVariable(slice);
+                GenFDVariable *fdcon=new GenFDVariable(slice,oz_currentBoard());
                 Bool res=oz_unify(makeTaggedRef(newTaggedCVar(fdcon)),rawwid); // mm2
                 // No loc/glob handling: res=(fdwid>=recwidth);
                 if (!res) { result = FAILED; break; }
@@ -794,7 +797,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
       } else {
 	if (oz_isFree(term)) {
 	  // Create newofsvar with unbound variable as label:
-	  GenOFSVariable *newofsvar=new GenOFSVariable();
+	  GenOFSVariable *newofsvar=new GenOFSVariable(oz_currentBoard());
 	  // Unify newofsvar and term:
 	  Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 			   makeTaggedRef(termPtr));
@@ -841,7 +844,8 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
                 out=uvar;
             } else {
                 // Create newofsvar:
-                GenOFSVariable *newofsvar=new GenOFSVariable();
+                GenOFSVariable *newofsvar
+		  =new GenOFSVariable(oz_currentBoard());
                 // Add feature to newofsvar:
                 TaggedRef uvar=oz_newVariable();
                 Bool ok1=newofsvar->addFeatureValue(fea,uvar);
@@ -860,7 +864,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
     case SVAR:
       {
         // Create newofsvar:
-        GenOFSVariable *newofsvar=new GenOFSVariable();
+        GenOFSVariable *newofsvar=new GenOFSVariable(oz_currentBoard());
         // Add feature to newofsvar:
         TaggedRef uvar=oz_newVariable();
 	Bool ok1=newofsvar->addFeatureValue(fea,uvar);

@@ -418,7 +418,7 @@ public:
   void doBindAndTrail(TaggedRef * vp, TaggedRef t);
 
 #define DoBindAndTrailAndIP(vp,t,lv,gv) {	\
-  lv->GenCVariable::installPropagators(gv);	\
+  lv->installPropagators(gv);			\
   am.doBindAndTrail(vp,t);			\
   }
 
@@ -545,13 +545,16 @@ OZ_Term oz_newChunk(OZ_Term val)
   return makeTaggedConst(new SChunk(oz_currentBoard(), val));
 }
 
-#ifdef DEBUG_NO_UVAR
-#define oz_newVar(bb)            makeTaggedRef(newTaggedUVar(bb))
-#else
-#define oz_newVar(bb)            makeTaggedRef(newTaggedUVar(bb))
-#endif
+inline
+TaggedRef oz_newVariableOPT()
+{
+  TaggedRef *ret = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
+  *ret = am.currentUVarPrototype();
+  return makeTaggedRef(ret);
+}
+
 #define oz_newVariable()         oz_newVar(oz_currentBoard())
-#define oz_newToplevelVariable() oz_newVar(oz_rootBoard())
+
 
 /* -----------------------------------------------------------------------
  * Debugger
