@@ -227,7 +227,6 @@ if that value is non-nil."
 (defun start-oz-machine(port)
   (message (format "Starting Machine (port = %s)" port))
   (start-process "Oz Machine" nil oz-machine port)
-;  (make-comint "Oz Machine" oz-machine nil port)
 ;; wait a little bit until machine has bind it's socket
   (sleep-for time-wait)
 )
