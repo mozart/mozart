@@ -72,9 +72,6 @@ extern "C" char *ozStrerror(int errno);
    *(VAR+len) = '\0';                                                 \
  }
 
-#define OZ_declareArg(ARG,VAR) \
-     OZ_Term VAR = OZ_getCArg(ARG);
-
 #define IsPair(s) (s[0]=='#' && s[1]=='\0')
 
 
@@ -496,7 +493,7 @@ inline OZ_Bool buffer_vs(OZ_Term vs, char *write_buff, int *len,
 
 OZ_C_ioproc_begin(unix_fileDesc,2)
 {
-  OZ_declareStringArg("fileDesc", 0, OzFileDesc);
+  OZ_declareAtomArg("fileDesc", 0, OzFileDesc);
   OZ_declareArg(1, out);
   
   int desc;
@@ -696,7 +693,7 @@ OZ_C_ioproc_begin(unix_lSeek,4)
 {
   OZ_declareIntArg("lSeek", 0, fd);
   OZ_declareIntArg("lSeek", 1, offset);
-  OZ_declareStringArg("lSeek", 2, OzWhence);
+  OZ_declareAtomArg("lSeek", 2, OzWhence);
   OZ_declareArg(3, out);
 
   int whence;
@@ -777,8 +774,8 @@ OZ_C_proc_end
 
 OZ_C_ioproc_begin(unix_socket,4)
 {
-  OZ_declareStringArg("socket", 0, OzDomain);
-  OZ_declareStringArg("socket", 1, OzType);
+  OZ_declareAtomArg("socket", 0, OzDomain);
+  OZ_declareAtomArg("socket", 1, OzType);
   OZ_declareVsArg("socket", 2, OzProtocol);
   OZ_declareArg(3, out);
 
