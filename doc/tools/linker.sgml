@@ -1,0 +1,57 @@
+<Chapter id="Chapter.Linker" proglang=sh>
+  <Title/The Oz Linker: <Kbd/ozl//
+
+    <P>
+      Application development can be considerably eased by splitting
+      the application in a large number of orthogonal and reusable
+      functors. However, deployment of an application gets harder in
+      the presence of a large number of functors:
+    </P>
+
+    <P>
+      <List>
+        <Item>Installing the application requires correct installation
+        of a large number of functors.
+        <Item>Execution might be slow due to frequent file- or even
+        network accesses.
+      </List>
+    </P>
+
+    <P>
+      The commandline tool <Kbd/ozl/ eases deployment by creating a
+      new functor that includes imported functors in a prelinked
+      fashion: it is possible to collapse a hierarchy of functors into
+      a single equivalent one. The model that should be kept in mind,
+      is that the newly created functor employs an internal, private
+      module manager (see also ???) that excutes the toplevel
+      application functor together with all included functors.
+    </P>
+
+    <P>
+      A short introduction by means of examples can be found ???.
+    </P>
+
+  <Section id="Section.Linker.Basic">
+    <Title/Basic Usage: Specifying Input and Output/
+
+    <P>
+      The linker can be invoked on the input functor <Var/In/ in order
+      to create an output functor <Var/Out/ as follows:
+      <<<% ozl <Var/In/ -o <Var/Out/>>>
+    </P
+
+  </Section>
+
+  <Section id="Section.Linker.Include">
+    <Title/Including and Excluding Functors/
+  </Section>
+
+  <Section id="Section.Linker.Pickling">
+    <Title/Pickling Options/
+  </Section>
+
+  <Section id="Section.Linker.Misc">
+    <Title/Miscellaneous Options/
+  </Section>
+
+</Chapter>
