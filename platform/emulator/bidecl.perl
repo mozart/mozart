@@ -611,6 +611,29 @@ $builtins = {
                                BI  => BIdictionaryMarkSafe,
                                native => false},
 
+    ###* Groups
+
+
+    'addFastGroup'      => { in  => ['+value','value'],
+                             out => ['value'],
+                             BI  => BIaddFastGroup,
+                             native => false},
+
+    'delFastGroup'      => { in  => ['value'],
+                             out => [],
+                             BI  => BIdelFastGroup,
+                             native => false},
+
+    'getFastGroup'      => { in  => ['+value'],
+                             out => ['+value'],
+                             BI  => BIgetFastGroup,
+                             native => false},
+
+    'delAllFastGroup'   => { in  => ['+value'],
+                             out => ['+value'],
+                             BI  => BIdelAllFastGroup,
+                             native => false},
+
     ###* Locks, Cells, Ports
 
     'NewLock'           => { in  => [],
@@ -1388,27 +1411,27 @@ $builtins = {
     'getsBoundB'        => { in  => ['value','value'],
                              out => [],
                              BI  => BIgetsBoundB,
-                             native => true},
+                             native => false},
 
     'addr'              => { in  => ['value'],
                              out => ['+int'],
                              BI  => BIaddr,
-                             native => true},
+                             native => false},
 
     'recordCIsVarB'     => { in  => ['value'],
                              out => ['+bool'],
                              BI  => BIisRecordCVarB,
-                             native => true},
+                             native => false},
 
     'deepFeed'          => { in  => ['+cell','value'],
                              out => [],
                              BI  => BIdeepFeed,
-                             native => true},
+                             native => false},
 
     'chunkWidth'        => { in  => ['+chunk'],
                              out => ['+int'],
                              BI  => BIchunkWidth,
-                             native => true},
+                             native => false},
 
     ##* Misc. System Procs
 
@@ -1854,19 +1877,19 @@ $builtins = {
                              out => [],
                              BI  => BIsave,
                              module=>components,
-                             native => true},
+                             native => false},
 
     'load'              => { in  => ['value','value'],
                              out => [],
                              BI  => BIload,
                              module=>components,
-                             native => true},
+                             native => false},
 
     'export'            => { in  => ['value'],
                              out => [],
                              BI  => BIexport,
                              module=>components,
-                             native => true},
+                             native => false},
 
     #* Connection
 
@@ -1874,25 +1897,25 @@ $builtins = {
                              out => ['+record'],
                              BI  => BIGetPID,
                              module=>components,
-                             native => true},
+                             native => false},
 
     'PID.received'      => { in  => ['value'],
                              out => [],
                              BI  => BIReceivedPID,
                              module=>components,
-                             native => true},
+                             native => false},
 
     'PID.close'         => { in  => [],
                              out => [],
                              BI  => BIClosePID,
                              module=>components,
-                             native => true},
+                             native => false},
 
     'PID.send'          => { in  => ['+virtualString','+int','+int','value'],
                              out => [],
                              BI  => BISendPID,
                              module=>components,
-                             native => true},
+                             native => false},
 
     #* URL
 
@@ -1988,30 +2011,6 @@ $builtins = {
     'tclCloseWeb'       => { in  => ['value','!value'],
                              out => [],
                              BI  => BItclCloseWeb,
-                             module=>'tcl_tk',
-                             native => true},
-
-    'addFastGroup'      => { in  => ['+value','value'],
-                             out => ['value'],
-                             BI  => BIaddFastGroup,
-                             module=>'tcl_tk',
-                             native => true},
-
-    'delFastGroup'      => { in  => ['value'],
-                             out => [],
-                             BI  => BIdelFastGroup,
-                             module=>'tcl_tk',
-                             native => true},
-
-    'getFastGroup'      => { in  => ['+value'],
-                             out => ['+value'],
-                             BI  => BIgetFastGroup,
-                             module=>'tcl_tk',
-                             native => true},
-
-    'delAllFastGroup'   => { in  => ['+value'],
-                             out => ['+value'],
-                             BI  => BIdelAllFastGroup,
                              module=>'tcl_tk',
                              native => true},
 

@@ -58,6 +58,7 @@
 #include "solve.hh"
 #include "oz_cpi.hh"
 #include "dictionary.hh"
+#include "find-alive-entry.hh"
 
 /********************************************************************
  * Macros
@@ -6767,6 +6768,94 @@ OZ_BI_define(BIfinalize_setHandler,1,0)
 } OZ_BI_end
 
 #endif
+
+/*
+ * Groups
+ */
+
+
+OZ_BI_define(BIaddFastGroup,2,1)
+{
+  OZ_nonvarIN(0);
+  TaggedRef group = oz_deref(OZ_in(0));
+
+  if (oz_isCons(group)) {
+    TaggedRef member = cons(OZ_in(1),findAliveEntry(tail(group)));
+    tagged2LTuple(group)->setTail(member);
+    OZ_RETURN(member);
+  }
+  return OZ_typeError(0,"List");
+} OZ_BI_end
+
+
+OZ_BI_define(BIdelFastGroup,1,0)
+{
+  TaggedRef member = oz_deref(OZ_in(0));
+
+  if (oz_isCons(member)) {
+    tagged2LTuple(member)->setHead(NameGroupVoid);
+    tagged2LTuple(member)->setTail(findAliveEntry(tail(member)));
+  }
+
+  return PROCEED;
+} OZ_BI_end
+
+
+OZ_BI_define(BIgetFastGroup,1,1)
+{
+  OZ_nonvarIN(0);
+  TaggedRef group = OZ_in(0);
+
+  DEREF(group, _1, _2);
+
+  if (oz_isCons(group)) {
+    TaggedRef out = nil();
+
+    group = oz_deref(tail(group));
+
+    while (oz_isCons(group)) {
+      TaggedRef ahead = oz_deref(head(group));
+
+      if (!(oz_isLiteral(ahead) && literalEq(ahead,NameGroupVoid)))
+        out = cons(ahead, out);
+
+      group = oz_deref(tail(group));
+    }
+
+    if (oz_isNil(group)) OZ_RETURN(out);
+  }
+
+  return OZ_typeError(0,"List");
+} OZ_BI_end
+
+
+OZ_BI_define(BIdelAllFastGroup,1,1)
+{
+  OZ_nonvarIN(0);
+  TaggedRef group = OZ_in(0);
+
+  DEREF(group, _1, _2);
+
+  Assert(oz_isCons(group));
+  TaggedRef out = nil();
+
+  group = oz_deref(tail(group));
+
+  while (oz_isCons(group)) {
+    TaggedRef ahead = oz_deref(head(group));
+
+    if (!(oz_isLiteral(ahead) && literalEq(ahead,NameGroupVoid))) {
+      out = cons(ahead, out);
+      tagged2LTuple(group)->setHead(NameGroupVoid);
+    }
+
+    group = oz_deref(tail(group));
+  }
+
+  Assert(oz_isNil(group));
+  OZ_RETURN(out);
+} OZ_BI_end
+
 
 /********************************************************************
  * System Registry
