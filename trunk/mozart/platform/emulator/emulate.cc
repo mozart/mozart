@@ -2826,6 +2826,7 @@ void engine() {
 
   Case(DEBUGINFO):
     {
+      /*
       TaggedRef filename = getLiteralArg(PC+1);
       int line           = smallIntValue(getNumberArg(PC+2));
       int absPos         = smallIntValue(getNumberArg(PC+3));
@@ -2840,6 +2841,7 @@ void engine() {
         }
       }
       printf("\n");
+      */
       DISPATCH(6);
     }
 
