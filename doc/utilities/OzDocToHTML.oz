@@ -317,6 +317,10 @@ define
 	 GrammarHead: unit
 	 GrammarAltType: unit
 	 GrammarNote: unit
+	 % for Table:
+	 TableCols: unit
+	 TableRow: unit
+	 CurTableCols: unit
 	 % for List:
 	 InDescription: unit
 	 OLTypes: (X='1'|'a'|'i'|'A'|'I'|X in X)
@@ -1188,9 +1192,17 @@ define
 	    %-----------------------------------------------------------
 	    % Tables
 	    %-----------------------------------------------------------
-	    [] table then Title Mr in
+	    [] table then Old Title Mr HTML in
 	       %--** display attribute
+	       Old = @TableCols#@TableRow#@CurTableCols
+	       TableCols <- unit
+	       TableRow <- 1
+	       CurTableCols <- unit
 	       Title = {SGML.getSubtree M title ?Mr}
+	       OzDocToHTML, Batch(Mr 1 ?HTML)
+	       TableCols <- Old.1
+	       TableRow <- Old.2
+	       CurTableCols <- Old.3
 	       BLOCK(table(COMMON: @Common
 			   align: center
 			   border: if {SGML.isOfClass M dyptic} then 0
@@ -1201,14 +1213,37 @@ define
 			      tr(td(p(align: center
 				      b(OzDocToHTML, Batch(Title 1 $)))))
 			   end
-			   OzDocToHTML, Batch(Mr 1 $)))
-	    [] tr then
-	       tr(COMMON: @Common valign: top OzDocToHTML, Batch(M 1 $))
+			   HTML))
+	    [] tr then HTML in
+	       CurTableCols <- 0
+	       OzDocToHTML, Batch(M 1 ?HTML)
+	       case @TableCols of unit then
+		  TableCols <- @CurTableCols
+	       elseof N then
+		  if N \= @CurTableCols then
+		     {@Reporter warn(kind: OzDocWarning
+				     msg: ('inconsistent number of columns '#
+					   'in table row')
+				     items: [hint(l: 'Row number' m: @TableRow)
+					     hint(l: 'Found' m: @CurTableCols)
+					     hint(l: 'First row' m: N)])}
+		  end
+	       end
+	       TableRow <- @TableRow + 1
+	       tr(COMMON: @Common valign: top HTML)
 	    [] th then
+	       CurTableCols <- (@CurTableCols +
+				case {CondSelect M colspan unit} of unit then 1
+				elseof N then N
+				end)
 	       th(COMMON: @Common
 		  colspan: {CondSelect M colspan unit}
 		  OzDocToHTML, Batch(M 1 $))
 	    [] td then
+	       CurTableCols <- (@CurTableCols +
+				case {CondSelect M colspan unit} of unit then 1
+				elseof N then N
+				end)
 	       td(COMMON: @Common
 		  colspan: {CondSelect M colspan unit}
 		  OzDocToHTML, Batch(M 1 $))
