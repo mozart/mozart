@@ -56,24 +56,19 @@ in
 		  separator
 		  C(label:  'Step'
 		    action: self # action(' step')
-		    event:  s
-		    key:    '  s')
+		    key:    s)
 		  C(label:  'Next'
 		    action: self # action(' next')
-		    event:  n
-		    key:    '  n')
+		    key:    n)
 		  C(label:  'Continue'
 		    action: self # action(' cont')
-		    event:  c
-		    key:    '  c')
+		    key:    c)
 		  C(label:  'Forget'
 		    action: self # action(' forget')
-		    event:  f
-		    key:    '  f')
+		    key:    f)
 		  C(label:  'Terminate'
 		    action: self # action(' term')
-		    event:  t
-		    key:    '  t')]
+		    key:    t)]
 	      feature: thr)
 	   MB(text: 'Stack'
 	      menu:
