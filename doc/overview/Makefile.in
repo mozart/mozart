@@ -26,6 +26,7 @@ bootstrap:
 bootquick:
 boot-quick:
 installps:
+clean-xref:
 
 install: $(DOCDIR) $(addprefix $(DOCDIR)/,$(FILES))
 $(DOCDIR):
