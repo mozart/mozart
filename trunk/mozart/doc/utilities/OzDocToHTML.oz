@@ -374,6 +374,8 @@ define
 	       VERBATIM('resp.')
 	    [] etc then
 	       VERBATIM('etc.')
+	    [] 'LaTeX' then
+	       VERBATIM('LaTeX')
 	    [] 'PI:LATEX' then
 	       VERBATIM('LaTeX')
 	    [] 'PI:EG' then
