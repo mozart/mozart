@@ -66,7 +66,7 @@ static int CompareLasts(const void *x, const void *y)
 //////////
 
 FirstsLasts::FirstsLasts(OZ_Term tasks, OZ_Term start,
-                         OZ_Term durs, OZ_Term st)
+                         OZ_Term durs, OZ_Term st, int flag)
 {
   stream = st;
   int i,j;
@@ -108,6 +108,8 @@ FirstsLasts::FirstsLasts(OZ_Term tasks, OZ_Term start,
     }
   }
 
+  reg_flag = flag;
+
 }
 
 //////////
@@ -132,9 +134,9 @@ FirstsLasts::~FirstsLasts()
 //////////
 // BUILTIN
 //////////
-OZ_C_proc_begin(sched_firstsLasts, 4)
+OZ_C_proc_begin(sched_firstsLasts, 5)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_STREAM);
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_STREAM "," OZ_EM_INT);
 
   PropagatorExpect pe;
 
@@ -145,8 +147,9 @@ OZ_C_proc_begin(sched_firstsLasts, 4)
   pe.collectVarsOn();
 
   OZ_EXPECT(pe, 3, expectStream);
+  OZ_EXPECT(pe, 4, expectInt);
 
-  return pe.spawn(new FirstsLasts(OZ_args[0], OZ_args[1], OZ_args[2], OZ_args[3]));
+  return pe.spawn(new FirstsLasts(OZ_args[0], OZ_args[1], OZ_args[2], OZ_args[3], OZ_intToC(OZ_args[4])));
 }
 OZ_C_proc_end
 
@@ -346,37 +349,43 @@ OZ_Return FirstsLasts::run(void)
         }
         else {
 
+          int max1 = -1;
+          int max2 = -1;
+          int min1 = fd_sup;
+          int min2 = fd_sup;
           int rStart = resource_starts[reg_resource];
           current_tasks = reg_nb_tasks[reg_resource];
           currentRes = reg_resource;
           DECL_DYN_ARRAY(min_max_dur_set, all_tasks, current_tasks);
           for (j=0; j < current_tasks; j++) {
             if (reg_ordered[rStart + j] == 0) {
-              all_tasks[j].min = all_fds[currentRes][j]->getMinElem();
-              all_tasks[j].max = all_fds[currentRes][j]->getMaxElem();
-              all_tasks[j].dur = reg_durs[currentRes][j];
+              int cmin = all_fds[currentRes][j]->getMinElem();
+              int cmax = all_fds[currentRes][j]->getMaxElem();
+              int cdur = reg_durs[currentRes][j];
+              int cdue = cmax + cdur;
+              all_tasks[j].min = cmin;
+              all_tasks[j].max = cmax;
+              all_tasks[j].dur = cdur;
               sumDur           = sumDur + reg_durs[currentRes][j];
+              if (cdue > max1) {
+                max2 = max1;
+                max1 = cdue;
+              }
+              else {
+                if (cdue > max2)
+                  max2 = cdue;
+              }
+              if (cmin < min1 ) {
+                min2 = min1;
+                min1 = cmin;
+              }
+              else {
+                if (cmin < min2)
+                  min2 = cmin;
+              }
             }
           }
 
-          // to store relase and due without values
-          DECL_DYN_ARRAY(int, dues, current_tasks);
-          DECL_DYN_ARRAY(int, releases, current_tasks);
-          for (i=0; i < current_tasks; i++) {
-            if (reg_ordered[rStart + i] == 0) {
-              int release = fd_sup;
-              int due     = 0;
-              for (j=0; j < current_tasks; j++) {
-                if ( (j==i) || (reg_ordered[rStart + j] == 1) ) continue;
-                else {
-                  due     = intMax(due, all_tasks[j].max + all_tasks[j].dur);
-                  release = intMin(release, all_tasks[j].min);
-                }
-              }
-              dues[i] = due;
-              releases[i] = release;
-            }
-          }
 
           // compute firsts and lasts
           int number_of_firsts = 0;
@@ -388,14 +397,24 @@ OZ_Return FirstsLasts::run(void)
             if (reg_ordered[rStart + i] == 0) {
               first_valid = i;
               how_many++;
-              if (dues[i] - all_tasks[i].min >= sumDur) {
+              int cmin = all_tasks[i].min;
+              int cmax = all_tasks[i].max;
+              int cdur = all_tasks[i].dur;
+              int cdue = cmax + cdur;
+              int up = 0;
+              int down = 0;
+              if (cdue == max1) up = max2;
+              else up = max1;
+              if (up - cmin >= sumDur) {
                 firsts[number_of_firsts].id = i;
                 firsts[number_of_firsts].min = all_tasks[i].min;
                 firsts[number_of_firsts].max = all_tasks[i].max;
                 firsts[number_of_firsts].dur = all_tasks[i].dur;
                 number_of_firsts++;
               }
-              if (all_tasks[i].max + all_tasks[i].dur - releases[i] >= sumDur) {
+              if (cmin == min1) down = min2;
+              else down = min1;
+              if (cmax + cdur - down >= sumDur) {
                 lasts[number_of_lasts].id = i;
                 lasts[number_of_lasts].min = all_tasks[i].min;
                 lasts[number_of_lasts].max = all_tasks[i].max;
@@ -405,8 +424,11 @@ OZ_Return FirstsLasts::run(void)
             }
           }
 
+          /*
           qsort(firsts, number_of_firsts, sizeof(min_max_dur_setFL), CompareFirsts);
           qsort(lasts, number_of_lasts, sizeof(min_max_dur_setFL), CompareLasts);
+          */
+
 
           OZ_Term nil = OZ_nil();
           OZ_Term ret = nil;
@@ -414,15 +436,10 @@ OZ_Return FirstsLasts::run(void)
           OZ_Term tmp_out = OZ_tuple(OZ_atom("#"), 4);
 
           if ( (how_many > 1) && ( (number_of_lasts==0) ||
-                                   (number_of_firsts==0) ) ){
-            /*
-            for (i=0; i<current_tasks; i++) {
-              if (reg_ordered[rStart + i] == 0)
-                cout << i << " min: " << all_tasks[i].min << " max: " << all_tasks[i].max << " dur: " << all_tasks[i].dur << " sumDur: " << sumDur << " due: " << dues[i] << " release: " << releases[i] << endl;
+                                   (number_of_firsts==0) ) )
+            {
+              goto failure;
             }
-            */
-            goto failure;
-          }
           else {
             for (i=0; i< current_tasks; i++) {
               if (reg_ordered[rStart + i]==0) {
@@ -433,14 +450,52 @@ OZ_Return FirstsLasts::run(void)
 
 
             if (how_many == 1) goto imposeOne;
-            else if (number_of_lasts < number_of_firsts) goto imposeLasts;
-            else if (number_of_lasts > number_of_firsts) goto imposeFirsts;
+            else if ((reg_flag == 0) && (number_of_lasts < number_of_firsts))
+              goto imposeLasts;
+            else if ((reg_flag == 0) && (number_of_lasts > number_of_firsts))
+              goto imposeFirsts;
             else if (number_of_firsts == 1) goto imposeFirsts;
             else if (number_of_lasts == 1) goto imposeLasts;
+            else if (reg_flag == 1)  goto imposeFirsts;
+            else if (reg_flag == 2)  goto imposeLasts;
             else {
-              int diff1 = ozabs(firsts[1].min - firsts[2].min);
-              int diff2 = ozabs(lasts[1].max + lasts[1].dur -
-                                lasts[2].max - lasts[2].dur);
+              int min1, min2;
+              if (CompareFirsts( & (firsts[0]), & (firsts[1])) == -1) {
+                min1 = 0; min2 = 1;
+              }
+              else {
+                min1 = 1; min2 = 0;
+              }
+              int max1, max2;
+              if (CompareLasts( & (lasts[0]), & (lasts[1])) == -1) {
+                max1 = 0; max2 = 1;
+              }
+              else {
+                max1 = 1; max2 = 0;
+              }
+              for (i=2; i<number_of_firsts; i++)
+                if (CompareFirsts( & (firsts[i]), & (firsts[min1])) == -1) {
+                  min2 = min1;
+                  min1 = i;
+                }
+                else {
+                  if (CompareFirsts( & (firsts[i]), &(firsts[min2])) == -1) {
+                    min2 = i;
+                  }
+                }
+              for (i=2; i<number_of_lasts; i++)
+                if (CompareLasts(&(lasts[i]), &(lasts[max1])) == -1) {
+                  max2 = max1;
+                  max1 = i;
+                }
+                else {
+                  if (CompareLasts(&(lasts[i]), &(lasts[max2])) == -1) {
+                    max2 = i;
+                  }
+                }
+              int diff1 = ozabs(firsts[min1].min - firsts[min2].min);
+              int diff2 = ozabs(lasts[max1].max + lasts[max1].dur -
+                                lasts[max2].max - lasts[max2].dur);
               if (diff1 > diff2)
                 goto imposeFirsts;
               else goto imposeLasts;
