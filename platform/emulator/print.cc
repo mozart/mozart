@@ -1237,7 +1237,7 @@ PRINTLONG(Cell)
   tagged2StreamLong(val,stream,depth,offset+2);
 }
 
-/* TODO: ?? */
+
 PRINTLONG(PortLocal)
 {
   CHECKDEPTHLONG;
@@ -1245,10 +1245,9 @@ PRINTLONG(PortLocal)
          << "PortLocal@id" << this << endl
          << indent(offset)
          << " stream:"<<endl;
-  tagged2StreamLong(NULL,stream,depth,offset+2);
+  tagged2StreamLong(strm,stream,depth,offset+2);
 }
 
-/* TODO: FIX NULL*/
 
 PRINTLONG(PortManager)
 {
@@ -1257,7 +1256,7 @@ PRINTLONG(PortManager)
          << "PortManager@id" << this << endl
          << indent(offset)
          << " stream:"<<endl;
-  tagged2StreamLong(NULL,stream,depth,offset+2);
+  tagged2StreamLong(strm,stream,depth,offset+2);
 }
 
 PRINTLONG(PortProxy)

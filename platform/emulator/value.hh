@@ -609,49 +609,57 @@ public:
 };
 
 
-#define NO_ENTRY ((~0) << tagSize)
-#define MAX_INT_SIZE_WITH_TAG  (1<<(31-tagSize))
-
-typedef unsigned int u32;
-
-inline TertType basicGetTertType(u32 t) {return (TertType)(t&tagMask);}
-inline u32 basicSetTertiary(u32 x,TertType t) {return ((x<<tagSize) | t);}
-inline u32 basicGetIndex(u32 x) {return ((x & (~tagMask))>>tagSize);}
-
 class Tertiary: public ConstTerm {
-  u32 ownerOrBorrow;
+  int32 tagged;
 public:
-  Tertiary(TypeOfConst s,TertType t) : ConstTerm(s) {
-    ownerOrBorrow=basicSetTertiary(u32 NO_ENTRY,t);}
 
-  void setTertType(TertType t) {
-    ownerOrBorrow=basicSetTertiary(getIndex(),t);}
+  TertType getTertType()       { return (TertType) (tagged&3); }
+  void setTertType(TertType t) { tagged = (tagged&~3)|(int)t; }
 
-  TertType getTertType(){return (TertType) basicGetTertType(ownerOrBorrow);}
+  Tertiary(Board *b, TypeOfConst s,TertType t) : ConstTerm(s) {
+    tagged = 0;
+    setTertType(t);
+    setBoard(b);
+  }
 
   void setIndex(int i) {
-    TertType oldtype = basicGetTertType(ownerOrBorrow);
-    ownerOrBorrow = basicSetTertiary(((u32) i) , oldtype);}
+    TertType oldtype = getTertType();
+    tagged = i<<2;
+    setTertType(oldtype);
+  }
 
-  int getIndex() {return (int) basicGetIndex(ownerOrBorrow);}
+  int getIndex() { return tagged>>2; }
 
+  void setPointer (void *p)
+  {
+    Assert(isLocal());
+    TertType oldtype = getTertType();
+    tagged = ToInt32(p);
+    setTertType(oldtype);
+  }
+
+  void *getPointer()
+  {
+    Assert(isLocal());
+    return ToPointer(tagged&~3);
+  }
   Bool checkTertiary(TypeOfConst s,TertType t){
-    return (s==getType() & t==getTertType());}
+    return (s==getType() && t==getTertType());}
 
   Board *getBoard();
+  void setBoard(Board *b);
+
+  Bool isLocal()   { return (getTertType() == Te_Local); }
+  Bool isManager() { return (getTertType() == Te_Manager); }
+  Bool isProxy()   { return (getTertType() == Te_Proxy); }
+
+  void globalize();
+  void localize();
+
+  void gcTertiary();
 };
 
-inline
-Bool isLocal(Tertiary *t) {
-  return(Bool (t->getTertType() == Te_Local)); }
 
-inline
-Bool isManager(Tertiary *t) {
-   return(Bool (t->getTertType() & Te_Manager)); }
-
-inline
-Bool isProxy(Tertiary *t) {
-   return(Bool (t->getTertType() & Te_Proxy)); }
 
 /*===================================================================
  * HeapChunk
@@ -1548,17 +1556,25 @@ public:
 
 
 
-class Abstraction: public ConstTermWithHome {
+class Abstraction: public Tertiary {
   friend void ConstTerm::gcConstRecurse(void);
-private:
+protected:
 // DATA
   RefsArray gRegs;
   PrTabEntry *pred;
 public:
   Abstraction(Abstraction&);
   Abstraction(PrTabEntry *prd, RefsArray gregs, Board *b)
-  : ConstTermWithHome(b,Co_Abstraction), gRegs(gregs), pred(prd)
+  : Tertiary(b,Co_Abstraction,Te_Local), gRegs(gregs), pred(prd)
   { }
+
+  Abstraction(TaggedRef name, int arity)
+  : Tertiary(0,Co_Abstraction,Te_Proxy)
+  {
+    pred = new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
+    pred->PC = NOCODE;
+    gRegs = NULL;
+  }
 
   OZPRINT;
   OZPRINTLONG;
@@ -1609,6 +1625,21 @@ Abstraction *tagged2Abstraction(TaggedRef term)
   Assert(isAbstraction(term));
   return (Abstraction *)tagged2Const(term);
 }
+
+
+class ProcProxy: public Abstraction {
+  friend void ConstTerm::gcConstRecurse(void);
+  TaggedRef suspVar;
+public:
+  ProcProxy(ProcProxy&);
+  ProcProxy(int i, TaggedRef name, int arity):  Abstraction(name,arity)
+  {
+    suspVar = makeTaggedNULL();
+    setIndex(i);
+  }
+
+  void localize(RefsArray g, ProgramCounter pc);
+};
 
 
 /*===================================================================
@@ -1754,17 +1785,15 @@ Cell *tagged2Cell(TaggedRef term)
  * Ports
  *=================================================================== */
 
-class Port: public Tertiary{
+class Port: public Tertiary {
 friend void ConstTerm::gcConstRecurse(void);
 public:
-
-  Board *getBoard();
-  Port(TertType tt):Tertiary(Co_Port,tt){}
+  Port(Board *b, TertType tt) : Tertiary(b,Co_Port,tt){}
 };
 
 class PortWithStream: public Port {
 friend void ConstTerm::gcConstRecurse(void);
-private:
+protected:
   TaggedRef strm;
 public:
   TaggedRef exchangeStream(TaggedRef newStream)
@@ -1772,15 +1801,13 @@ public:
     TaggedRef ret = strm;
     strm = newStream;
     return ret;   }
-  PortWithStream(Board *b, TaggedRef s) : Port(Te_Local)  {
-    setPtr(b);
+  PortWithStream(Board *b, TaggedRef s) : Port(b,Te_Local)  {
     strm = s;}
 };
 
 class PortManager: public PortWithStream {
 friend void ConstTerm::gcConstRecurse(void);
 public:
-  PortLocal *localize();
   OZPRINTLONG;
   OZPRINT;
   PortManager() : PortWithStream(0,0) { Assert(0); };
@@ -1796,9 +1823,6 @@ lst word:   Co_Port:board       Co_Port:_         Co_Port:_
 class PortLocal: public PortWithStream {
 friend void ConstTerm::gcConstRecurse(void);
 public:
-  void setBoard(Board *b) {setPtr(b);}
-  PortManager *globalize();
-  Board *getBoard() {return (Board *) getPtr();}
   OZPRINTLONG;
   OZPRINT;
   PortLocal(Board *b, TaggedRef s) : PortWithStream(b,s) {};
@@ -1807,7 +1831,7 @@ public:
 class PortProxy: public Port {
 friend void ConstTerm::gcConstRecurse(void);
 public:
-  PortProxy(int i): Port(Te_Proxy){setIndex(i);}
+  PortProxy(int i): Port(0,Te_Proxy) { setIndex(i); }
   OZPRINTLONG;
   OZPRINT;
 };

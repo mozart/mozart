@@ -423,14 +423,8 @@ void OwnerTable::receiveReturnCredit(int index,Credit c){
   o->returnCredit(c);
   if(!(o->isFullCredit())) return;
   Tertiary *te=o->entry.object;
-  switch(te->getType()){
-  case Co_Port:{
-    Assert((te->getTertType())==Te_Manager);
-    (tert2PortManager(te))->localize();
-    break;}
-  default:
-    Assert(0);
-    break;}
+  Assert(te->getTertType()==Te_Manager);
+  te->localize();
   freeOwnerEntry(index);}
 
 void OwnerTable::init(int beg,int end)
@@ -1118,18 +1112,35 @@ void NetHashTable::print(){
 void gcOwnerTable() { ownerTable->gcOwnerTable();}
 void gcBorrowTable(){ borrowTable->gcBorrowTable();}
 
-void gcPortProxy(PortProxy *pp){
-  int i=pp->getIndex();
-  borrowTable->getBorrow(i)->makeMark();
-  PERDIO_DEBUG3(GC,"GC-relocate borrow:%d old%x new %x",
-               i,borrowTable->getBorrow(i),pp);
-  (borrowTable->getBorrow(i))->setBorrowObject(pp);}
+void Tertiary::gcTertiary()
+{
+  switch (getTertType()) {
 
-void gcPortManager(PortManager *pm){
-  int i=pm->getIndex();
-  PERDIO_DEBUG3(GC,"GC-relocate owner:%d old%x new %x",
-               i,ownerTable->getOwner(i),pm);
-  ownerTable->getOwner(i)->setOwnerObject(pm);}
+  case Te_Local:
+    {
+      setBoard(getBoard()->gcBoard());
+      break;
+    }
+
+  case Te_Proxy:
+    {
+      int i=getIndex();
+      borrowTable->getBorrow(i)->makeMark();
+      PERDIO_DEBUG3(GC,"GC-relocate borrow:%d old%x new %x",
+                    i,borrowTable->getBorrow(i),this);
+      borrowTable->getBorrow(i)->setBorrowObject(this);
+      break;
+    }
+
+  case Te_Manager:
+    {
+      int i=getIndex();
+      PERDIO_DEBUG3(GC,"GC-relocate owner:%d old%x new %x",
+                    i,ownerTable->getOwner(i),this);
+      ownerTable->getOwner(i)->setOwnerObject(this);
+    }
+  }
+}
 
 /*--------------------*/
 
@@ -1165,15 +1176,13 @@ void BorrowTable::gcBorrowTable()
 /**********************************************************************/
 /**********************************************************************/
 
-PortManager *PortLocal::globalize()
+void Tertiary::globalize()
 {
-  PERDIO_DEBUG(GLOBALIZING,"GLOBALIZING:port");
+  PERDIO_DEBUG(GLOBALIZING,"GLOBALIZING");
   Assert(sizeof(PortManager)==sizeof(PortLocal));
-  PortManager *pm= (PortManager*) this;
-  pm->setTertType(Te_Manager);
-  int i = ownerTable->newOwner(pm);
-  pm->setIndex(i);
-  return pm;
+  setTertType(Te_Manager);
+  int i = ownerTable->newOwner(this);
+  setIndex(i);
 }
 
 /**********************************************************************/
@@ -1182,14 +1191,22 @@ PortManager *PortLocal::globalize()
 /**********************************************************************/
 /**********************************************************************/
 
-PortLocal *PortManager::localize()
+void Tertiary::localize()
 {
-  PERDIO_DEBUG(GLOBALIZING,"GLOBALIZING: localizing port");
+  PERDIO_DEBUG(GLOBALIZING,"GLOBALIZING: localizing proxy");
   Assert(sizeof(PortManager)==sizeof(PortLocal));
-  PortLocal *pl= (PortLocal*) this;
-  pl->setTertType(Te_Local);
-  pl->setBoard(am.rootBoard);
-  return pl;
+  setTertType(Te_Local);
+  setBoard(am.rootBoard);
+}
+
+void ProcProxy::localize(RefsArray g, ProgramCounter pc)
+{
+  Tertiary::localize();
+  gRegs = g;
+  pred->PC = pc;
+  if (OZ_unify(suspVar,NameUnit) != PROCEED) {
+    warning("ProcProxy::localize: unify failed");
+  }
 }
 
 /**********************************************************************/
@@ -1203,7 +1220,7 @@ PortLocal *PortManager::localize()
 typedef enum {SMALLINTTAG, BIGINTTAG, FLOATTAG, ATOMTAG,
               RECORDTAG, TUPLETAG, LISTTAG, REFTAG,
               OWNERTAG, BORROWTAG,
-              PORTTAG} MarshallTag;
+              PORTTAG, PROCTAG} MarshallTag;
 
 int unmarshallWithDest(BYTE *buf, int len, OZ_Term *t);
 void unmarshallNoDest(BYTE *buf, int len, OZ_Term *t);
@@ -1542,6 +1559,47 @@ void trailCycle(OZ_Term *t)
   refCounter++;
 }
 
+void marshallTerm(int sd,OZ_Term t, ByteStream *bs, DebtRec *dr);
+
+void marshallTertiary(int sd, Tertiary *t, ByteStream *bs, DebtRec *dr)
+{
+  switch (t->getType()) {
+  case Co_Port:
+    bs->put(PORTTAG);
+    return;
+  case Co_Abstraction:
+    {
+      bs->put(PROCTAG);
+      Abstraction *pp = (Abstraction *) t;
+      marshallTerm(sd,pp->getName(),bs,dr);
+      marshallNumber(pp->getArity(),bs);
+      return;
+    }
+  default: Assert(0);
+  }
+}
+
+
+Tertiary *unmarshallTertiary(ByteStream *bs, int bi,  Bool skip)
+{
+  MarshallTag tag = (MarshallTag) bs->get();
+  switch(tag){
+  case PORTTAG:
+    return skip ? (Tertiary*) NULL : new PortProxy(bi);
+  case PROCTAG:
+    {
+      OZ_Term name;
+      unmarshallTerm(bs,&name);
+      int arity = unmarshallNumber(bs);
+      return skip ? (Tertiary*) NULL : new ProcProxy(bi,name,arity);
+    }
+  default:
+    Assert(0);
+    return NULL;
+  }
+
+}
+
 void marshallTerm(int sd,OZ_Term t, ByteStream *bs, DebtRec *dr)
 {
   OZ_Term *args;
@@ -1607,42 +1665,39 @@ loop:
   case OZCONST:
     {
       PERDIO_DEBUG(MARSHALL,"MARSHALL:constterm");
-      Tertiary *ptr = tagged2Tert(t);
-      switch(ptr->getType()) {
-      case Co_Port:
-        {
-          if(isProxy(ptr)) {
-              PortProxy *pp=(PortProxy*) ptr;
-              PERDIO_DEBUG(MARSHALL,"MARSHALL:port proxy");
-              int bi=pp->getIndex();
-              if(borrowTable->getOriginSite(bi)==sd){
-                marshallToOwner(bi,bs,dr);
-                return;}
-              marshallBorrowHead(bi,bs,dr);
-              bs->put(PORTTAG);
-              return;}
-          bs->put(BORROWTAG);
-          PortManager *pm;
-          if(isLocal(ptr)){
-            PERDIO_DEBUG(MARSHALL,"MARSHALL:port local");
-            pm=((PortLocal *)ptr)->globalize();}
-          else {
-            PERDIO_DEBUG(MARSHALL,"MARSHALL:port manager");
-            pm= (PortManager *)ptr;
-            CheckCycle(*(pm->getRef()));}
-          trailCycle(pm->getRef());
-          marshallOwnHead(pm->getIndex(),bs);
-          bs->put(PORTTAG);
-          return;
+      if (!isProcedure(t) && !isPort(t))
+        goto bomb;
+
+      {
+
+        Tertiary *ptr = tagged2Tert(t);
+        if(ptr->isProxy()) {
+          PERDIO_DEBUG(MARSHALL,"MARSHALL: proxy");
+          int bi=ptr->getIndex();
+          if(borrowTable->getOriginSite(bi)==sd){
+            marshallToOwner(bi,bs,dr);
+            return;}
+          marshallBorrowHead(bi,bs,dr);
+          marshallTertiary(sd,ptr,bs,dr);
         }
-      default:
-        warning("Cannot marshall generic %s",toC(t));
-        marshallTerm(sd,nil(),bs,dr);
+
+        bs->put(BORROWTAG);
+        if(ptr->isLocal()){
+          PERDIO_DEBUG(MARSHALL,"MARSHALL:proxy local");
+          ptr->globalize();
+        } else {
+          PERDIO_DEBUG(MARSHALL,"MARSHALL:proxy manager");
+          CheckCycle(*(ptr->getRef()));}
+        trailCycle(ptr->getRef());
+        marshallOwnHead(ptr->getIndex(),bs);
+        marshallTertiary(sd,ptr,bs,dr);
         return;
       }
     }
     // no break here
+
   default:
+  bomb:
     if (isAnyVar(t)) {
       warning("Cannot marshall variables");
     } else {
@@ -1768,35 +1823,17 @@ loop:
     {
       BorrowEntry *b;
       int bi;
-      if(unmarshallBorrow(bs,b,bi)) {
+      if (unmarshallBorrow(bs,b,bi)) {
         PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:borrow hit");
         *ret=makeTaggedConst(b->getObject());
-        tag = (MarshallTag) bs->get();
-        switch(tag){
-        case PORTTAG:return;
-        default:
-          /* TODO proper exception */
-          printf("unmarshall: unexpected tag: %d\n",tag);
-          Assert(0);
-          *ret = nil();
-          return;}
-        Assert(0);
-        return;}
+        (void) unmarshallTertiary(bs,bi,OK);
+        return;
+      }
       PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:borrow miss");
-      tag = (MarshallTag) bs->get();
-      switch(tag){
-      case PORTTAG:{
-        PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:port proxy");
-        PortProxy *pp=new PortProxy(bi);
-        *ret= makeTaggedConst(pp);
-        b->setBorrowObject(pp);
-        return;}
-      default:
-        /* TODO - proper exception */
-        printf("unmarshall: unexpected tag: %d\n",tag);
-        Assert(0);
-        *ret = nil();
-        return;}
+      Tertiary *tert = unmarshallTertiary(bs,bi,NO);
+      *ret= makeTaggedConst(tert);
+      b->setBorrowObject(tert);
+      return;
     }
   default:
     printf("unmarshall: unexpected tag: %d\n",tag);

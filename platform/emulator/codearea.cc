@@ -330,16 +330,7 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter from)
     case CREATENAMEDVARIABLEX:
     case CREATENAMEDVARIABLEY:
     case CREATENAMEDVARIABLEG:
-    case TASKXCONT:
-    case TASKCFUNCONT:
-    case TASKDEBUGCONT:
-    case TASKCALLCONT:
-    case TASKLOCK:
-    case TASKACTOR:
-    case TASKSETSELF:
-    case TASKLTQ:
-    case TASKCATCH:
-    case TASKEMPTYSTACK:
+    case GLOBALVARNAME:
       return NOCODE;
 
     case DEFINITION:
@@ -966,16 +957,18 @@ CodeArea::CodeArea(int sz)
 {
   allocateBlock(sz);
   C_XCONT_Ptr = wPtr;
-  C_CFUNC_CONT_Ptr = writeOpcode(TASKXCONT,C_XCONT_Ptr);
-  C_DEBUG_CONT_Ptr = writeOpcode(TASKCFUNCONT,C_CFUNC_CONT_Ptr);
-  C_CALL_CONT_Ptr  = writeOpcode(TASKDEBUGCONT,C_DEBUG_CONT_Ptr);
-  C_LOCK_Ptr       = writeOpcode(TASKCALLCONT,C_CALL_CONT_Ptr);
-  C_ACTOR_Ptr      = writeOpcode(TASKLOCK,C_LOCK_Ptr);
-  C_SET_SELF_Ptr   = writeOpcode(TASKACTOR,C_ACTOR_Ptr);
-  C_LTQ_Ptr        = writeOpcode(TASKSETSELF,C_SET_SELF_Ptr);
-  C_CATCH_Ptr      = writeOpcode(TASKLTQ,C_LTQ_Ptr);
-  C_EMPTY_STACK    = writeOpcode(TASKCATCH,C_CATCH_Ptr);
-  (void) writeOpcode(TASKEMPTYSTACK,C_EMPTY_STACK);
+  C_CFUNC_CONT_Ptr   = writeOpcode(TASKXCONT,C_XCONT_Ptr);
+  C_DEBUG_CONT_Ptr   = writeOpcode(TASKCFUNCONT,C_CFUNC_CONT_Ptr);
+  C_CALL_CONT_Ptr    = writeOpcode(TASKDEBUGCONT,C_DEBUG_CONT_Ptr);
+  C_LOCK_Ptr         = writeOpcode(TASKCALLCONT,C_CALL_CONT_Ptr);
+  C_ACTOR_Ptr        = writeOpcode(TASKLOCK,C_LOCK_Ptr);
+  C_SET_SELF_Ptr     = writeOpcode(TASKACTOR,C_ACTOR_Ptr);
+  C_LTQ_Ptr          = writeOpcode(TASKSETSELF,C_SET_SELF_Ptr);
+  C_CATCH_Ptr        = writeOpcode(TASKLTQ,C_LTQ_Ptr);
+  C_EMPTY_STACK      = writeOpcode(TASKCATCH,C_CATCH_Ptr);
+  ProgramCounter aux =  writeOpcode(TASKEMPTYSTACK,C_EMPTY_STACK);
+  /* mark end with GLOBALVARNAME, so definitionEnd works properly */
+  (void) writeOpcode(GLOBALVARNAME,aux);
 }
 
 void CodeArea::init(void **instrTable)

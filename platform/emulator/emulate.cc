@@ -3086,6 +3086,14 @@ LBLdispatcher:
     }
 
 
+  /* TASKCATCH must be different from the following,
+   * otherwise definitionEnd breaks under threaded code
+   */
+  Case(TASKCATCH)
+    {
+      error("impossible");
+    }
+
   Case(TESTLABEL1)
   Case(TESTLABEL2)
   Case(TESTLABEL3)
@@ -3095,8 +3103,6 @@ LBLdispatcher:
   Case(TEST2)
   Case(TEST3)
   Case(TEST4)
-
-  Case(TASKCATCH)
 
   Case(ENDOFFILE)
   Case(ENDDEFINITION)

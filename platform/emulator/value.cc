@@ -223,22 +223,14 @@ int ConstTerm::getArity()
   }
 }
 
-/*===================================================================
- * Ports
- *=================================================================== */
-
-Board *Port::getBoard()
+void Tertiary::setBoard(Board *b)
 {
-  switch(getTertType()) {
-  case Te_Local:
-    return ((PortLocal*)this)->getBoard();
-  case Te_Manager:
-  case Te_Proxy:
-  default:
-    return am.rootBoard;
+  if (getTertType() == Te_Local) {
+    setPointer(b);
+  } else {
+    Assert(b==am.rootBoard);
   }
 }
-
 
 /*===================================================================
  * Object
