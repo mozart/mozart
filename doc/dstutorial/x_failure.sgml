@@ -144,11 +144,15 @@ The current site can find this out.
 The following remote problems are identified:
 <LIST>
 <ITEM> At least one of the other sites
-referencing the entity has crashed
+referencing the entity can no longer
+perform operations on the entity
 (fault state <<remoteProblem(permSome)>>).
+The sites may or may not have crashed.
 <ITEM> All of the other sites referencing
-the entity have crashed
+the entity can no longer perform operations
+on the entity
 (fault state <<remoteProblem(permAll)>>).
+The sites may or may not have crashed.
 <ITEM> At least one of the other sites
 referencing the entity is currently unreachable
 (fault state <<remoteProblem(tempSome)>>).
@@ -236,8 +240,8 @@ an operation at the given level (levels are explained below),
 then an exception is raised instead of doing the operation.
 The <<Entity>> is a reference to
 a particular object, cell, port, lock, or logic variable.
-The <<Level>> is <<global>>, <<site>>, or <<'thread'(T)>>
-(where <<T>> is a thread identifier, e.g., <<{Thread.this T}>>).<NOTE
+The <<Level>> is <<global>>, <<site>>, <<'thread'(this)>>
+(for the current thread), or <<'thread'(T)>>.<NOTE
 FOOT>Since <<thread>> is already used as a keyword in the language,
 it has to be quoted.</NOTE>
 
@@ -336,9 +340,11 @@ Each site can have a set of enabled fault states.
 Finally, the most fine-grained is 
 <<'thread'(T)>>, which detects the fault when the
 operation is attempted in a particular thread.
-The thread is identified by
-<<T>>, which can be obtained in the thread by <<{Thread.this T}>>.
 Each thread can have a set of enabled fault states.
+The thread is identified by
+<<T>>, which is either <<this>> (for the current thread),
+or which can be obtained by executing <<{Thread.this T}>>
+in the thread.
 
 <P>The thread level is the most specific; if it is enabled 
 it overrides the two others in its thread.
