@@ -65,7 +65,7 @@ static void lookupLabel(TaggedRef key, ProgramCounter *location) {
   int index;
 }
 
-%token <tagged> INTEGER FLOAT NIL ATOM TRUE FALSE UNIT NAME
+%token <tagged> INTEGER FLOAT NIL ATOM TRUE FALSE UNIT NAME UNIQUENAME
 %token <index> XREGISTER YREGISTER GREGISTER
 %token LBL PID HT ONVAR ONSCALAR ONRECORD GCI AMI
 
@@ -223,10 +223,12 @@ Name		: Bool
 		    TaggedRef theName;
 		    if (nameDict->getArg(key,theName) != PROCEED) {
 		      theName = OZ_newName();
-		      abstrEntryDict->setArg(key,theName);
+		      nameDict->setArg(key,theName);
 		    }
 		    $$ = theName;
 		  }
+		| UNIQUENAME
+		  { $$ = $1; }
 		;
 
 Feature		: INTEGER
@@ -351,7 +353,7 @@ HashTableRef	: HT '(' DefLabel '[' HashTableEntries ']' ')'
 		    TaggedRef entries = $5;
 		    int size = length(entries);
 		    ht = new IHashTable(size,0);
-		    lookupLabel($3,&ht->elseLabel);
+		    lookupLabel(elseLabel,&ht->elseLabel);
 		    for (int i = 0; i < size; i++) {
 		      SRecord *rec = tagged2SRecord(head(entries));
 		      entries = tail(entries);
@@ -368,16 +370,21 @@ HashTableRef	: HT '(' DefLabel '[' HashTableEntries ']' ')'
 			  lookupLabel(rec->getArg(1),
 				      ht->add(value,0));
 		      } else {
-			SRecordArity ar = getArity(rec->getArg(1));
 			TaggedRef reclabel = rec->getArg(0);
-			if (literalEq(reclabel,AtomCons) && sraIsTuple(ar)
-			    && getTupleWidth(ar)==2)
+			SRecordArity ar = getArity(rec->getArg(1));
+			if (literalEq(reclabel,AtomCons)
+			    && sraIsTuple(ar) && getTupleWidth(ar)==2) {
+			  ht->listLabel = (ProgramCounter) 1;
 			  lookupLabel(rec->getArg(2),&ht->listLabel);
-			else
+			} else
 			  lookupLabel(rec->getArg(2),
 				      ht->add(tagged2Literal(reclabel),ar,0));
 		      }
 		    }
+		    if (!ht->listLabel)
+		      lookupLabel(elseLabel,&ht->listLabel);
+		    if (!ht->varLabel)
+		      lookupLabel(elseLabel,&ht->varLabel);
 		    codeArea->writeAddress(ht);
 		  }
 		;
@@ -426,7 +433,7 @@ ArityFeature	: INTEGER
 		  { $$ = $1; }
 		;
 
-GenCallInfo	: GCI '(' GREGISTER Bool Atom Bool ARecordArity ')'
+GenCallInfo	: GCI '(' GREGISTER Bool ALiteral Bool ARecordArity ')'
 		  {
 		    SRecordArity ari = getArity($7);
 		    GenCallInfoClass *gci =

@@ -8,6 +8,7 @@
 #ifdef OZMA
 
 #include "tagged.hh"
+#include "value.hh"
 #include "ozma.hh"
 
 void ozmaerror(const char *message);
@@ -177,11 +178,22 @@ define(instructionsUnneededForNewCompiler,`divert(-1)')
 include(`../include/instrDefs.m4')
 undefine(`instruction')
 
-\<{ATOM}\> {
-  strip('<');
-  stripTrans('\'');
+"<N: "[^>]+">" {
   ozmalval.tagged = OZ_atom(ozmatext);
   return NAME;
+}
+
+"<U: "[^>]+">" {
+  strip('<');
+  ozmalval.tagged = getUniqueName(ozmatext + 3);
+  if (OZ_isTrue(ozmalval.tagged))
+    return TRUE;
+  else if (OZ_isFalse(ozmalval.tagged))
+    return FALSE;
+  else if (OZ_isUnit(ozmalval.tagged))
+    return UNIT;
+  else
+    return UNIQUENAME;
 }
 
 {ATOM} {
