@@ -83,6 +83,7 @@ void LocalThreadQueue::resize ()
     currentSize--;
   }
   
+  freeListDispose (queue, (size_t) (maxsize * sizeof (Thread *)));
   queue = new_queue;
   head = 0;
   tail = size - 1;
