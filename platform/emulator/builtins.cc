@@ -91,10 +91,12 @@ OZ_C_proc_begin(BIunixIsLinked,0)
 OZ_C_proc_end
 
 
-extern void BIinitCore();
-extern void BIinitSpecial();
-extern void BIinitSystem();
+extern void BIinitCore(void);
+extern void BIinitSpecial(void);
+extern void BIinitSystem(void);
 extern void BIinitFD(void);
+extern void BIinitMeta(void);
+
 
 #ifdef LINKUNIX
 extern void MyinitUnix();
@@ -115,6 +117,7 @@ BuiltinTabEntry *BIinit()
   BIinitAssembler();
 
   BIinitFD();
+  BIinitMeta();
 
 #ifdef LINKUNIX
   MyinitUnix();
