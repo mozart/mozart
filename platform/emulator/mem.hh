@@ -183,7 +183,7 @@ Bool reallyHeapNever(void *ptr1, void *ptr2)
 
 
 // free list management
-const int freeListMaxSize = 1000;
+#define freeListMaxSize 1000
 
 extern void *FreeList[freeListMaxSize];
 
