@@ -233,14 +233,6 @@ The information the panel displays is described in
           <td>Minimal Size</td>
           <td>Minimal heap size.</td>
         </tr>
-        <tr>
-          <td>Maximal Size</td>
-          <td>Maximal allowed heap size. If the heap size exceeds this
-        limit by a percentage of heap tolerance (see below) before garbage
-	collection 
-        can take place, the user is prompted to increase the limit.</td>
-        </tr>
-        <tr>
           <td>Free</td>
           <td>Gives the percentage of free heap memory after garbage
         collection. For example, a value of $75$ means that 
@@ -252,8 +244,9 @@ The information the panel displays is described in
         <tr>
           <td>Tolerance</td>
           <td>Gives the percentage by which the system is allowed for
-        purposes of better memory allocation to exceed
-        the maximal heap size or to increase the heap threshold.</td>
+        purposes of better memory allocation to
+          increase the heap 
+          threshold.</td>
         </tr>
     <tr>
       <th colspan=2>Garbage Collector</th>
