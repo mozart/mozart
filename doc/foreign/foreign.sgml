@@ -174,10 +174,10 @@ arguments. <code /func/ is a pointer to the function being exported.
 <p>
 Now we can link our module into &Oz; by executing:
 
-<<<
+<code display proglang=oz>
 declare
 [Goodies]={Module.link ['./goodies.so{native}']}
->>>
+</code>
 
 This will lazily load the module upon first access and bind
 <<Goodies>> to a record with a single (since we exported only one
@@ -185,9 +185,9 @@ function) feature named <<getenv>> (this is derived from the value of
 the <code /name/ field of <code /OZ_C_proc_interface/). Now we can call
 it like this:
 
-<<<
+<code display proglang=oz>
 {Browse {Goodies.getenv 'HOME'}}
->>>
+</code>
 
 <p>
 
@@ -213,11 +213,11 @@ Visual C++ version 4.0. In the following we shortly describe how to
 proceed on each of these compilers to create the DLL named
 <code /getenv.dll/ for the example above. This DLL can be loaded into
 &Oz; as described in Section <ptr to=sec.opprog-foreign-oz> using
-<<<
+<code display proglang=oz>
 Goodies = {Foreign.load
              ['C:/whatever/getenv.dll']
              goodies(getenv: 2)}
->>>
+</code>
 <subsection><title/Watcom/
 <p>
 First create a file named <code /getenv.lnk/ with the following contents:
