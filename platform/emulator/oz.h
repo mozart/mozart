@@ -352,7 +352,9 @@ extern OZ_Term   _FUNDECL(OZ_makeException,(OZ_Term kind,OZ_Term key,char*label,
 
 /* Suspending builtins */
 
+extern OZ_Thread _FUNDECL(OZ_newRunnableThread,());
 extern void      _FUNDECL(OZ_makeRunnableThread,(OZ_CFun, OZ_Term *, int));
+extern OZ_Thread _FUNDECL(OZ_newSuspendedThread,());
 extern OZ_Thread _FUNDECL(OZ_makeSuspendedThread,(OZ_CFun, OZ_Term *, int));
 extern void      _FUNDECL(OZ_addThread,(OZ_Term, OZ_Thread));
 extern void      _FUNDECL(OZ_pushCFun,(OZ_Thread,OZ_CFun,OZ_Term *,int));

@@ -72,7 +72,8 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   
   RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
-  BI_Unify,BI_Show,BI_send,BI_restop,BI_probe,BI_Delay,BI_startTmp;
+  BI_Unify,BI_Show,BI_send,BI_restop,BI_probe,BI_Delay,BI_startTmp,
+  BI_load, BI_fail;
 
 
 

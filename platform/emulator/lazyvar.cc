@@ -44,8 +44,6 @@
 //	3#URL	==> thread {Load URL ME} end
 //	4#call(P X1 ... Xn) ==> thread {P X1 ... Xn ME} end
 
-OZ_C_proc_proto(BIload);
-
 void
 GenLazyVariable::kickLazy()
 {
@@ -86,7 +84,7 @@ GenLazyVariable::kickLazy()
 	      Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,home);
 	      args[0] = snd;
 	      args[1] = result;
-	      thr->pushCFun(BIload,args,2,TRUE);
+	      thr->pushCall(BI_load,args,2);
 	      am.scheduleThread(thr);
 	      break;
 	    }

@@ -191,8 +191,6 @@ void printBanner(char*initFile)
 extern void bigIntInit(); /* from value.cc */
 extern void initffuns();  /* from initffuns.cc */
 
-OZ_C_proc_proto(BIload);
-
 void AM::init(int argc,char **argv)
 {  
   Assert(makeTaggedNULL() == 0);
@@ -441,7 +439,7 @@ void AM::init(int argc,char **argv)
       args[0] = oz_atom(url);
       args[1] = oz_newVariable();
       tt->pushCall(args[1],0,0);
-      tt->pushCFun(BIload,args,2,OK);
+      tt->pushCall(BI_load,args,2);
     }
 
     OZ_Term (*ozmaFunc)(const char *);
@@ -468,7 +466,7 @@ void AM::init(int argc,char **argv)
       args[0] = oz_atom(initFile);
       args[1] = oz_newVariable();
       tt->pushCall(args[1],0,0);
-      tt->pushCFun(BIload,args,2,OK);
+      tt->pushCall(BI_load,args,2);
     }
 
     if (tt) scheduleThread(tt);
