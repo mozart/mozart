@@ -975,6 +975,13 @@ Bool dpMarshalHashTableRef(GenTraverser *gt,
   Assert(wcFit > 0);
   // Note: that field is present but not used by the pickler;
   marshalNumber(bs, wcFit);
+#if defined(DBG_TRACE)
+  DBGINIT();
+  fprintf(dbgout,
+	  ">  hash table=%p, nDone=%d, tEntries=%d, wcFit=%d\n",
+	  table, nDone, tEntries, wcFit);
+  fflush(dbgout);
+#endif
 
   //
   int hti;
@@ -1030,10 +1037,14 @@ Bool dpMarshalHashTableRef(GenTraverser *gt,
   //
   if (wcFit < rEntries) {
     desc->setHTIndex(hti);
-    desc->setHTNDone(wcFit);
+    desc->setHTNDone(nDone + wcFit);
+    DebugCode(desc->setHTREntries(rEntries));
+    DebugCode(desc->setHTable(table));
     return (OK);
   } else {
     DebugCode(desc->setHTIndex(-1));
+    DebugCode(desc->setHTREntries(-1));
+    DebugCode(desc->setHTable((IHashTable *) -1));
     desc->setHTNDone(0);
     return (NO);
   }

@@ -134,7 +134,8 @@ void receiveTellError(BorrowEntry* b,EntityCond ec,Bool set){
 
 void sendTellError(OwnerEntry *oe,DSite* toS,int mI,EntityCond ec,Bool set){
   if(toS==myDSite){
-    Assert(0); // PER-LOOK is this possible
+    // kost@ : Erik told me the assertion is wrong.
+    // Assert(0); // PER-LOOK is this possible
     receiveTellErrorTert(oe->getTertiary(),ec,set);
     return;}
   if(SEND_SHORT(toS)) {return;}
