@@ -1,22 +1,20 @@
 @SET_MAKE@
 BUILDTOP        = @BUILDTOP@
 SRCTOP          = @SRCTOP@
-prefix          = @prefix@
+PREFIX          = @prefix@
 SRCDIR          = @srcdir@
 VPATH           = @srcdir@
 PLATFORM        = @PLATFORM@
-LIB_DIR         = $(prefix)/contrib
+LIB_DIR         = $(PREFIX)/contrib
 HOMEURL         = @HOMEURL@
 
 OZC             = @OZC@
 COMPILE         = $(OZC) -c
-OZDYNLD         = @OZDYNLD@
-
-CXX             = @CXX@
-CXXFLAGS        = @CXXAVOID@ @CXXFLAGS@
+OZTOOL          = @OZTOOL@
+CXXFLAGS        = @CXXFLAGS@
 CPPFLAGS        = -I$(SRCTOP)/platform/emulator \
                   -I$(BUILDTOP)/platform/emulator \
-                  -I$(prefix)/include @CPPFLAGS@
+                  -I$(PREFIX)/include @CPPFLAGS@
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@ -lc
 
@@ -45,10 +43,10 @@ regex.ozf: regex.oz
         $(COMPILE) $< -o $@
 
 regex.so-$(PLATFORM): regex.o
-        $(OZDYNLD) -o $@ $< $(LDFLAGS) $(LIBS)
+        $(OZTOOL) ld -o $@ $< $(LDFLAGS) $(LIBS)
 
 regex.o: regex.cc
-        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+        $(OZTOOL) c++ $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 clean veryclean:
         -$(RM) *~ *.ozf *.o *.so-*
