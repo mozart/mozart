@@ -65,6 +65,8 @@ on a given site:
 This is because a remote site crucial to the entity
 is currently unreachable due to a network problem.
 This fault state can go away.
+A limitation of the current release is that
+temporary problems are indicated very slowly.
 <ITEM> The entity is permanently not working
 (local fault state <<permFail>>).
 This is because a site crucial to the entity
@@ -73,14 +75,15 @@ This fault state is permanent.
 </LIST>
 <P>The system cannot always determine
 whether a fault is temporary or permanent.
-In particular, a <<tempFail>> may hide
-a crash on the other side.
+In particular, a <<tempFail>> may hide a site crash.
 However, network failures can always
 be considered temporary since the
 system actively tries
 to reestablish another connection.
-In addition to these three states,
-the entity can contain other information:
+
+<P>These three fault states pertain
+to whether an entity operation can be performed locally.
+An entity can also contain additional information.
 <LIST>
 <ITEM> On at least one remote site,
 the entity is not working
@@ -88,9 +91,21 @@ the entity is not working
 identifies the remote problem).
 For example, the current site waits for a variable binding,
 but the remote site that will do the binding has crashed.
-The current site can know about the remote problem.
-A remote problem can go away if it is temporary.
+This is a permanent remote problem.
+It never goes away.
+A temporary remote problem can go away,
+just like a <<tempFail>>.
 </LIST>
+<P>If there is a remote problem,
+then it is not always possible to
+return a <<remoteProblem>> fault state.
+For example,
+if the owner site is inaccessible
+then it might not be possible to learn
+anything about the remote sites.
+But if there is no <<tempFail>>
+or <<permFail>>, then one will always
+be able to get a <<remoteProblem>> fault state.
 
 <P>The fault state <<remoteProblem(I)>> 
 identifies four different remote problems:
@@ -106,15 +121,17 @@ referencing the entity are currently unreachable.
 </LIST>
 
 <P>The complete fault state of an
-entity is a subset of
-{<<tempFail>>, <<permFail>>,
-<<remoteProblem(permSome)>>,
+entity consists of at most one
+element from the set
+{<<tempFail>>, <<permFail>>}
+together with at most one element from the set
+{<<remoteProblem(permSome)>>,
 <<remoteProblem(permAll)>>,
 <<remoteProblem(tempSome)>>,
 <<remoteProblem(tempAll)>>}.
-Not all subsets are possible since
-at most one of <<tempFail>> and <<permFail>>
-can be in the fault state.
+Permanent remote problems mask temporary ones,
+i.e., if <<remoteProblem<<permSome>> is detected
+then <<remoteProblem<<tempSome>> cannot be detected.
 
 
 <SUBSECTION><TITLE>Temporary faults</TITLE>
@@ -151,6 +168,7 @@ abstraction to appear at the top level.
 The application might then pop up a window to ask the user whether
 to continue waiting or not.
 
+
 <SECTION><TITLE>Basic model</TITLE>
 
 <P>We present the failure model in two steps:
@@ -164,18 +182,17 @@ applications is to use the basic model.
 
 <SUBSECTION><TITLE>Enabling exceptions on faults</TITLE>
 
-<P>By default, an exception will be raised on fault states
-<<tempFail>> or <<permFail>>.
-A <<remoteProblem>> is ignored by default since the operation
-completes normally.
+<P>By default, new entities are
+set up so that an exception will be raised
+on fault states <<tempFail>> or <<permFail>>.
 The following operations are provided to do other
 kinds of fault detection:
 <LIST>
 <ENTRY> <<fun {Fault.defaultEnable FStates}>>
 <ITEM> enables the default
 fault states for the <<global>> level.
-If a new entity <<E>> is declared when the default is enabled,
-then it is as if the call <<{Fault.enable E global FStates}>>
+For any new entity <<E>> declared after the default is enabled,
+it is as if the call <<{Fault.enable E global FStates}>>
 were done at its declaration.
 <<FStates>> is a list of fault states that cause exceptions.
 When the system starts up, the defaults are set up as if
@@ -197,7 +214,7 @@ The <<Entity>> is a reference to
 a particular object, cell, port, lock, or logic variable.
 The <<Level>> is <<global>>, <<site>>, or <<'thread'(T)>>
 (where <<T>> is a thread identifier, e.g., <<{Thread.this T}>>).<NOTE
-FOOT>Since <<thread>> is already used as keyword in the language,
+FOOT>Since <<thread>> is already used as a keyword in the language,
 it has to be quoted.</NOTE>
 
 <ENTRY> <<fun {Fault.disable Entity Level}>>
@@ -229,14 +246,14 @@ at the site on which the operation was attempted.
 This list is a subset of the list for which fault detection
 was enabled.
 Each fault state in <<FS>> may have an extra
-field <<info:>> that gives additional information about
+field <<info>> that gives additional information about
 the fault.
 The possible elements of <<FS>> are
 currently the following:
 <LIST>
 <ITEM> <<tempFail(info:I)>> or <<permFail(info:I)>>,
 where <<I>> is in {<<state>>, <<owner>>}.
-The <<info:>> field only exists for
+The <<info>> field only exists for
 objects, cells, and locks.
 <ITEM> <<remoteProblem(tempSome)>>, <<remoteProblem(permSome)>>,
 <<remoteProblem(tempAll)>>, or
@@ -283,7 +300,9 @@ the <<Probe>> operation is not available to users.
 <SUBSECTION><TITLE>Levels of fault detection</TITLE>
 
 <P>There are three levels of fault detection,
-depending on where the attempted operation is executed.
+global, site-based, and thread-based.
+The more specific levels, if they exist,
+override the more general levels.
 The most general is
 <<global>>, which detects the fault when the operation
 is attempted anywhere.
@@ -306,16 +325,18 @@ It doesn't matter what the actual fault states are;
 the thread level always overrides the site level,
 which always overrides the global level.
 
-<P>For example, let's say that the cell <<C>>
+<P>For example, assume that the cell <<C>>
 has a global detection for <<[tempFail permFail]>>
 and a thread-specific detection for <<[permFail]>>
 in thread <<T1>>.
-Let's say that many threads are trying to do
-an exchange, but that the cell's actual fault state
-is <<tempFail>> everywhere.
+What happens if many threads try to do
+an exchange if cell's actual fault state
+is <<tempFail>> everywhere?
 Then thread <<T1>> will block, since it is set up
 to detect only <<permFail>>.
 All other threads will raise the exception <<tempFail>>.
+Thread <<T1>> will continue the operation when and
+if the <<tempFail>> state goes away.
 
 <SECTION><TITLE>Advanced model</TITLE>
 
@@ -571,33 +592,49 @@ In both cases the object
 cannot be used, so we simply consider the new failure modes
 to be instances of <<tempFail>> and <<permFail>>.
 
-<SECTION><TITLE>Limitations of current release</TITLE>
-
+<section><title/Limitations and modifications/
+ 
 <P>The current release has the following limitations
-which will be removed in future releases:
-<LIST>
-<ITEM>Functions, procedures, classes, and functors
-are copied immediately in messages,
-even if they are already present at the destination.
+and modifications with respect to the specification.
+A <EM>limitation</EM> is an operation that is specified
+but not possible in the current release.
+A <EM>modification</EM> is an operation that is specified
+but behaves differently in the current release.
+The limitations are:
+<list>
+<item>The code of functions, procedures, classes, and functors
+(but not objects) is always inserted in messages,
+even this code is already present at the destination.
 In future releases, these entities will be copied
 across the network only
 if they are not present on the destination site.
 In both current and future releases, at most a single copy
-of such an entity can exist per site.
+of these entities can exist per site.
+<item>The fault state <<tempFail>> is indicated only after
+a long delay.
 <item>If an exception is raised or a handler or watcher
-is invoked for an object, then the entity argument <<E>>
-is undefined.
+is invoked for an <EM>object</EM>,
+then the <<Entity>> argument is undefined.
+For handlers and watchers, this limitation can
+be circumvented by letting the handler or watcher
+reference the object.
 <item>If an exception is raised or a handler is invoked
-for an object, then the attempted object operation cannot
-be retried.
+for an <EM>object</EM>,
+then the attempted object operation cannot be retried.
 <item>A handler cannot be installed at the <<global>> level,
 i.e., the call <<{Fault.install _ global _ _}>> is undefined.
 If an attempt is made to install a <<global>> handler,
 then a <<notImplemented>> exception is given.
-<item>A handler installed on a variable will retry
-the operation after it returns.
-<item>The operation <<Probe>> is not available to users.
-</LIST>
+</list>
+The modifications are:
+<list>
+<item>A handler installed on a <EM>variable</EM> will retry
+the operation (i.e., bind or wait) after it returns.
+That is, the handler is inserted before the operation
+instead of replacing the operation.
+</list>
+These limitations and modifications
+will be removed in future releases.
 
 </CHAPTER>
 
