@@ -514,15 +514,19 @@ OZ_BI_iodefine(unix_fileDesc,1,1)
 } OZ_BI_ioend
 
 
-static OZ_Term readEntries(DIR *dp) {
-  static struct dirent *dirp;
-  OZ_Term dirEntry;
-  if ((dirp = readdir(dp)) != NULL) {
-    dirEntry = OZ_string(dirp->d_name);
-    return oz_cons(dirEntry, readEntries(dp));
-  }
-  else
-    return oz_nil();
+static
+OZ_Term readEntries(DIR *dp) {
+  struct dirent *dirp;
+  OZ_Term dirs = oz_nil();
+  do {
+  retry:
+    struct dirent * dirp = readdir(dp);
+    if (dirp == NULL) {
+      if (errno==EINTR) goto retry;
+      return dirs;
+    }
+    dirs = oz_cons(OZ_string(dirp->d_name),dirs);
+  } while(OK);
 }
 
 OZ_BI_iodefine(unix_getDir,1,1)
@@ -531,13 +535,15 @@ OZ_BI_iodefine(unix_getDir,1,1)
   OZ_Term dirValue;
   OZ_declareVsIN(0, path);
 
-  if ((dp = opendir(path)) == NULL)
+ retry:
+  if ((dp = opendir(path)) == NULL) {
+    if (errno==EINTR) goto retry;
     RETURN_UNIX_ERROR("opendir");
+  }
 
   dirValue = readEntries(dp);
 
-  if (closedir(dp) < 0)
-    RETURN_UNIX_ERROR("closedir");
+  WRAPCALL("closedir", closedir(dp), __ret);
 
   OZ_RETURN(dirValue);
 } OZ_BI_ioend
