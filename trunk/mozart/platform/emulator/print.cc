@@ -183,11 +183,11 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
         stream << " a" << suspList->length();
   
       GenFDVariable * me = (GenFDVariable *) this;
-      if (isEffectiveList(me->fdSuspList[fd_det]) == OK)
-	stream << " d("
-	       << me->fdSuspList[fd_det]->length()
+      if (isEffectiveList(me->fdSuspList[fd_singl]) == OK)
+	stream << " s("
+	       << me->fdSuspList[fd_singl]->length()
 	       << '/'
-	       << me->fdSuspList[fd_det]->lengthProp()
+	       << me->fdSuspList[fd_singl]->lengthProp()
 	       << ')';
       if (isEffectiveList(me->fdSuspList[fd_bounds]) == OK)
 	stream << " b(" << me->fdSuspList[fd_bounds]->length()
@@ -1084,8 +1084,8 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
 
   switch(getType()){
   case FDVariable:
-    stream << indent(offset) << "FD Det SuspList:\n"; 
-    ((GenFDVariable*)this)->fdSuspList[fd_det]->print(stream, depth, offset+3);
+    stream << indent(offset) << "FD Singleton SuspList:\n"; 
+    ((GenFDVariable*)this)->fdSuspList[fd_singl]->print(stream, depth, offset+3);
   
     stream << indent(offset) << "FD Bounds SuspList:\n"; 
     ((GenFDVariable*)this)->fdSuspList[fd_bounds]->print(stream, depth, offset+3);

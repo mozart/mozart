@@ -52,7 +52,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 #endif
 
       if (prop && (isNotInstallingScript || isLocalVar)) 
-	propagate(var, fd_det);
+	propagate(var, fd_singl);
 
       if (prop && isLocalVar) {
 	doBind(vPtr, term);

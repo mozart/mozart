@@ -688,7 +688,7 @@ void BIfdBodyManager::processFromTo(int from, int to)
 	  tagged2GenFDVar(bifdbm_var[i])->
 	    becomesSmallIntAndPropagate(bifdbm_varptr[i]);
 	} else {
-	  tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_det);
+	  tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_singl);
 	  am.doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
 			    OZ_int(bifdbm_dom[i]->getSingleElem()));
 	}
@@ -785,7 +785,7 @@ void BIfdBodyManager::processNonRes(void)
 	tagged2GenFDVar(bifdbm_var[0])->
 	  becomesSmallIntAndPropagate(bifdbm_varptr[0]);
       } else {
-	tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_det);
+	tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_singl);
 	am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
 			  OZ_int(bifdbm_dom[0]->getSingleElem()));
       }
