@@ -300,7 +300,7 @@ public:
 class FL_Manager {
 
 private:
-  static FL_Small * small[];
+  static FL_Small * small[FL_SizeToIndex(FL_MaxSize) + 1];
   static FL_Large * large;
 
 private:
