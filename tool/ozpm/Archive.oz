@@ -2,7 +2,7 @@ functor
 export
    'class' : Archive
    Make
-import System
+import
    URL(toVirtualStringExtended)
    Resolve(expand)
    ZFile at 'zfile.so{native}'
@@ -102,13 +102,9 @@ define
    end
 
    proc {Make File Files}
-      {System.showInfo File}
-      for F in Files do {System.showInfo '\t'#F} end
       Infos = {Map Files FileInfo}
       F = {Expand File}
-      {System.showInfo F}
       Z = {ZFile.open F "wb9"}
-      {System.show Z}
    in
       %% write how many files:
       {WriteInt Z {Length Files}}

@@ -51,7 +51,6 @@ OZ_raiseErrorC("zfile",2,OZ_atom(PROC),OZ_inAsList())
 #define ZFileError2(PROC,MSG) \
 OZ_raiseErrorC("zfile",3,OZ_atom(PROC),OZ_inAsList(),OZ_atom(MSG))
 
-#include <stdio.h>
 #include <string.h>
 
 OZ_BI_define(zfile_open,2,1)
@@ -60,7 +59,6 @@ OZ_BI_define(zfile_open,2,1)
   char m[100];
   strcpy(m,m0);
   OZ_declareVirtualString(0,s);
-  fprintf(stderr,"file=%s mode=%s\n",s,m);
   ZFile * z = new ZFile(s,m);
   if (z->f == NULL)
     return ZFileError("zfile_open");
