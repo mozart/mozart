@@ -32,7 +32,6 @@ enum ContFlag {
   C_CALL_CONT      = 4, // an application
   C_JOB            = 5, // job marker
   C_LOCAL          = 6, // a local computation space
-  C_EXCEPT_HANDLER = 7, // 
   C_SET_CAA        = 8, // supply the emulator with the CAA pointer;
   C_SET_SELF       = 9, // set am.cachedSelf
   C_LTQ            = 10 // local thread queue
@@ -183,10 +182,6 @@ public:
   void pushDebug(OzDebug *deb)   { pushPair(deb,C_DEBUG_CONT); }
   void pushSetCaa (AskActor *aa) { pushPair(aa,C_SET_CAA); }
   void pushSelf(Object *obj)     { pushPair(obj,C_SET_SELF); }
-  void pushExceptionHandler(TaggedRef pred) { 
-    pushPair(ToPointer(pred),C_EXCEPT_HANDLER);
-  }
-
 
   static TaskStackEntry makeJobEntry(Bool hasJob)
   {

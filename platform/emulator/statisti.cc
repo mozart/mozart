@@ -98,11 +98,13 @@ void Statistics::print(FILE *fd)
 
 #ifdef PROFILE
   fprintf(fd,"  Memory statistics:\n");
-  fprintf(fd,"    Allocate uses \t\t %d bytes (%d%% of used heap)\n",
-	  allocateCounter,
-	  (allocateCounter*100)/occupied);
-  fprintf(fd,"    Dellocate frees \t\t %d bytes (%d%%)\n",
-	  deallocateCounter, (deallocateCounter*100)/allocateCounter);
+  if (allocateCounter) {
+    fprintf(fd,"    Allocate uses \t\t %d bytes (%d%% of used heap)\n",
+	    allocateCounter,
+	    (allocateCounter*100)/occupied);
+    fprintf(fd,"    Dellocate frees \t\t %d bytes (%d%%)\n",
+	    deallocateCounter, (deallocateCounter*100)/allocateCounter);
+  }
   fprintf(fd,"    Process uses \t\t %d bytes\n",procCounter);
   fprintf(fd,"    Conds uses \t\t %d bytes\n",askCounter);
   fprintf(fd,"    Disj  uses \t\t %d bytes\n",waitCounter);
@@ -115,6 +117,15 @@ void Statistics::print(FILE *fd)
   int sum = allocateCounter+ procCounter+waitCounter+askCounter;
   fprintf(fd,"    Sum\t\t\t %d bytes ( = %d %%)\n",
 	  sum, 	  (sum*100)/occupied );
+#endif
+
+  fprintf(fd,"  Threads:\n");
+  fprintf(fd,"    created        : %d\n", 
+	  createdThreads.total); 
+
+#ifdef MM
+  fprintf(fd,"    runable        : %d\n", 
+	  runableThreads.total); 
 #endif
 
   fprintf(fd,"  Search:\n");
@@ -176,6 +187,9 @@ void Statistics::reset()
   fdvarsCreated.reset();
   propagatorsCreated.reset();
   propagatorsInvoked.reset();
+
+  createdThreads.reset();
+  runableThreads.reset();
 }
 
 

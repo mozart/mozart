@@ -25,7 +25,7 @@ struct BIspec {
 
 // add specification to builtin table
 void BIaddSpec(BIspec *spec);
-
+OZ_Term OZ_findBuiltin(char *name, OZ_Term handler);
 
 BuiltinTabEntry *BIinit();
 BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun,IFOR infun=(IFOR) NULL);

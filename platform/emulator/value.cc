@@ -131,6 +131,20 @@ char *ConstTerm::getPrintName()
   }
 }
 
+int ConstTerm::getArity()
+{
+  switch (getType()) {
+  case Co_Abstraction:
+    return ((Abstraction *) this)->getArity();
+  case Co_Object:
+    return 1;
+  case Co_Builtin:
+    return ((Builtin *)this)->getArity();
+  default:
+    return -1;
+  }
+}
+
 /*===================================================================
  * Object
  *=================================================================== */
