@@ -81,6 +81,11 @@ public:
   RefsArray toplevelVars;
 
   Board *currentBoard;
+private:
+  Object *currentObject;
+public:
+  void setCurrentObject(Object *o) { currentObject = o; };
+  Object *getCurrentObject()       { return currentObject; };
   TaggedRef currentUVarPrototype; // opt: cache
   Board *rootBoard;
 

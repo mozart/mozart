@@ -49,10 +49,8 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, int arity, TaggedRef *X
     return NULL;
   }
 
-  TaggedRef state = obj->getCell(); DEREF(state,_1,_2);
-  if (isAnyVar(state))
+  if (obj->deepness>0)
     return StateLocked;
-  Assert(isLiteral(state) || isSRecord(state));
 
   TaggedRef method = methods ? methods->getFeature(label)
                              : makeTaggedNULL();
@@ -66,8 +64,8 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, int arity, TaggedRef *X
     return NULL;
   }
 
-  TaggedRef newState = makeTaggedRef(newTaggedUVar(am.currentBoard));
-  obj->setCell(newState);
+  TaggedRef state    = makeInt(4712);
+  TaggedRef newState = makeInt(4712);
 
   X[0] = state;
   X[1] = makeTaggedConst(obj);
@@ -381,26 +379,33 @@ Bool AM::hookCheckNeeded()
 
 #define CallPushCont(ContAdr) e->pushTask(ContAdr,Y,G)
 
+#define SaveCurObject(e,obj)                                            \
+     if (e->getCurrentObject()!=obj) {                                  \
+       e->currentThread->pushSetCurObject(e->getCurrentObject());       \
+       e->setCurrentObject(obj);                                        \
+     }
+
+
 /* NOTE:
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,gRegs,Arity)                        \
-     G = gRegs;                                                               \
-     if (emulateHookCall(e,Pred,Arity,X)) {                                   \
-        e->pushTaskOutline(Pred->getPC(),NULL,G,X,Arity);                     \
-        goto LBLschedule;                                                     \
+#define CallDoChecks(Pred,gRegs,Arity)                          \
+     G = gRegs;                                                 \
+     if (emulateHookCall(e,Pred,Arity,X)) {                     \
+        e->pushTaskOutline(Pred->getPC(),NULL,G,X,Arity);       \
+        goto LBLschedule;                                       \
      }
 
 // load a continuation into the machine registers PC,Y,G,X
-#define LOADCONT(cont) \
-  { \
-      Continuation *tmpCont = cont; \
-      PC = tmpCont->getPC(); \
-      Y = tmpCont->getY(); \
-      G = tmpCont->getG(); \
-      predArity = tmpCont->getXSize(); \
-      tmpCont->getX(X); \
+#define LOADCONT(cont)                          \
+  {                                             \
+      Continuation *tmpCont = cont;             \
+      PC = tmpCont->getPC();                    \
+      Y = tmpCont->getY();                      \
+      G = tmpCont->getG();                      \
+      predArity = tmpCont->getXSize();          \
+      tmpCont->getX(X);                         \
   }
 
 // -----------------------------------------------------------------------
@@ -597,12 +602,14 @@ void AM::suspendOnVarList(Thread *thr)
 // is entered;
 Thread *AM::mkSuspThread ()
 {
-  return (currentThread->getJob ());
+  /* save special registers */
+  SaveCurObject(this,NULL);
+  return currentThread->getJob();
 }
 
 void AM::suspendCond(AskActor *aa)
 {
-  Thread *th = currentThread->getJob ();
+  Thread *th = mkSuspThread();
 
   Assert (th->isSuspended ());
   //  we put in either the same thread, or a part of it;
@@ -1098,6 +1105,7 @@ void engine()
 // ------------------------------------------------------------------------
  LBLschedule:
 
+  SaveCurObject(e,NULL);
   e->currentThread->setBoard (CBB);
   e->scheduleThread(e->currentThread);
   e->currentThread=(Thread *) NULL;
@@ -1458,13 +1466,18 @@ LBLpopTask:
       }
 
     case C_SET_CAA:
-      {
-        CAA = (AWActor *) TaskStackPop (--topCache);
-        taskstack->setTop (topCache);
+      CAA = (AWActor *) TaskStackPop (--topCache);
+      taskstack->setTop (topCache);
+      goto next_task;
 
-        goto next_task;
-      }
+    case C_SET_CUROBJECT:
+      e->setCurrentObject((Object *) TaskStackPop(--topCache));
+      taskstack->setTop(topCache);
+      goto next_task;
 
+    case C_SET_MODETOP:
+      Assert(0);
+      goto next_task;
 
     default:
       error("invalid task type");
@@ -1792,6 +1805,7 @@ LBLsuspendThread:
     //  see the note for the 'LBLkillThread';
     Assert (tmpThread->isInSolve () || !e->currentSolveBoard);
     Assert (e->currentSolveBoard || !(tmpThread->isInSolve ()));
+
     asmLbl(suspendThread);
 
     //
@@ -2600,15 +2614,17 @@ LBLsuspendThread:
       Abstraction *def = getSendMethod(obj,label,arity,X);
       if (def == StateLocked) {
         goto bombSend;
-        TaggedRef state = obj->getCell(); DEREF(state,statePtr,_22);
-        Assert(isAnyVar(state));
-        SUSP_PC(statePtr,arity+3+1,PC);
       }
       if (def == NULL) {
         goto bombSend;
       }
 
-      if (!isTailCall) { CallPushCont(PC+4); }
+      if (!isTailCall) {
+        CallPushCont(PC+4);
+      }
+      SaveCurObject(e,obj);
+      Assert(obj->deepness==0);
+      obj->deepness = 1;
       CallDoChecks(def,def->getGRegs(),arity+3);
       Y = NULL; // allocateL(0);
       JUMP(def->getPC());
@@ -2736,11 +2752,16 @@ LBLsuspendThread:
              def = o->getAbstraction();
              X[predArity++] = o->getSlowMethods();
              X[predArity++] = makeTaggedConst(predicate);
+             if (!isTailCall) {
+               CallPushCont(PC);
+             }
+             SaveCurObject(e,o);
+             // o->deepness = 1;
            } else {
              def = (Abstraction *) predicate;
              CheckArity(def->getArity(), def->getPrintName());
+             if (!isTailCall) { CallPushCont(PC); }
            }
-           if (!isTailCall) { CallPushCont(PC); }
            CallDoChecks(def,def->getGRegs(),def->getArity());
            Y = NULL; // allocateL(0);
 

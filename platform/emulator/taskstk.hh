@@ -25,15 +25,17 @@
  * - there are 4 tag bits
  */
 enum ContFlag {
-  C_CONT       = 0,  // a continuation without X registers
-  C_XCONT      = 1,  // a continuation with    X registers
-  C_CFUNC_CONT = 2,  // a continuation  to call a c-function
-  C_DEBUG_CONT = 3,  // a continuation for debugging
-  C_CALL_CONT  = 4,  // an application
-  C_JOB        = 5,  // job marker
-  C_LOCAL      = 6,  // a local computation space
+  C_CONT           = 0, // a continuation without X registers
+  C_XCONT          = 1, // a continuation with    X registers
+  C_CFUNC_CONT     = 2, // a continuation  to call a c-function
+  C_DEBUG_CONT     = 3, // a continuation for debugging
+  C_CALL_CONT      = 4, // an application
+  C_JOB            = 5, // job marker
+  C_LOCAL          = 6, // a local computation space
   C_EXCEPT_HANDLER = 7, //
-  C_SET_CAA    = 8   // supply the emulator with the CAA pointer;
+  C_SET_CAA        = 8, // supply the emulator with the CAA pointer;
+  C_SET_CUROBJECT  = 9, // set am.curObject
+  C_SET_MODETOP    =10
 };
 
 
@@ -187,6 +189,17 @@ public:
   {
     push (aa);
     push (ToPointer(C_SET_CAA));
+  }
+
+  void pushSetCurObject(Object *obj)
+  {
+    push(obj);
+    push(ToPointer(C_SET_CUROBJECT));
+  }
+
+  void pushSetModeTop()
+  {
+    push(ToPointer(C_SET_MODETOP));
   }
 
   static TaskStackEntry makeJobEntry(Bool hasJob)

@@ -1063,14 +1063,21 @@ public:
 class Object: public ConstTerm {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
-  TaggedRef cell;   /* no need to have a Cell* object here! */
+  SRecord *state;
   ObjectClass *aclass;
+  TaggedRef threads;
+  Bool closed;
 public:
-  Object(TaggedRef cell,ObjectClass *aclass,SRecord *feat,Bool iscl):
-    ConstTerm(Co_Object), cell(cell),aclass(aclass)
+  int deepness;
+
+  Object(SRecord *s,ObjectClass *aclass,SRecord *feat,Bool iscl):
+    ConstTerm(Co_Object), state(s),aclass(aclass)
   {
     setFreeRecord(feat);
     if (iscl) setClass();
+    deepness = 0;
+    closed = NO;
+    threads = AtomNil;
   };
 
   Bool isClass()        { return ((intlong)aclass)&1; }
@@ -1086,8 +1093,10 @@ public:
     if (isc) setClass();
   }
 
-  Bool isClosed() { return cell==AtomClosed; }
-  void close() { cell=AtomClosed; }
+  void wakeThreads();
+  TaggedRef attachThread();
+  Bool isClosed() { return closed; }
+  void close() { closed=OK; }
 
   ObjectClass *getClass() { return (ObjectClass *) (((intlong)aclass)&~3); }
 
@@ -1097,8 +1106,7 @@ public:
 
   char *getPrintName()          { return getClass()->getPrintName(); }
   SRecord *getMethods()         { return getClass()->getfastMethods(); }
-  TaggedRef getCell()           { return cell; }
-  void setCell(TaggedRef val)   { cell = val; }
+  SRecord *getState()           { return state; }
   Abstraction *getAbstraction() { return getClass()->getAbstraction(); }
   TaggedRef getSlowMethods()    { return getClass()->getslowMethods(); }
   TaggedRef getOzClass()        { return getClass()->getOzClass(); }
@@ -1126,9 +1134,9 @@ class DeepObject: public Object {
 private:
   Board *home;
 public:
-  DeepObject(TaggedRef cell,ObjectClass *aclass,
+  DeepObject(SRecord *s,ObjectClass *aclass,
              SRecord *feat,Bool iscl, Board *bb):
-    Object(cell,aclass,feat,iscl)
+    Object(s,aclass,feat,iscl)
   {
     setIsDeep();
     home=bb;

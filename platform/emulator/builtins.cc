@@ -1378,6 +1378,13 @@ State dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 DECLAREBI_USEINLINEFUN2(BIdot,dotInline)
 
 
+// !!! second assertion deactivated because of bug in state threading
+#define CheckCurObj                             \
+     Assert(am.getCurrentObject() != NULL);     \
+     { Object *o = am.getCurrentObject();       \
+       Assert(1 || o->deepness>=1);             \
+     }
+
 
 /* Sometimes the compiler optimizes {@ InState Attr Val OutState} to
  * {. InState Attr Val} iff InState=OutState
@@ -1388,9 +1395,10 @@ State atOptimizedInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
   Assert(!isRef(fea) && isFeature(fea));
   DEREF(term, _2, termTag);
 
-  Assert(isSRecord(term) || isLiteral(term));
-  if (isSRecord(term)) {
-    TaggedRef t = tagged2SRecord(term)->getFeature(fea);
+  CheckCurObj;
+  SRecord *rec = am.getCurrentObject()->getState();
+  if (rec) {
+    TaggedRef t = rec->getFeature(fea);
     if (t) {
       out = t;
       return PROCEED;
@@ -1406,15 +1414,16 @@ State atInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
   DEREF(fea, _1, feaTag);
   DEREF(term, _2, termTag);
 
-  Assert(isSRecord(term) || isLiteral(term));
-  if (isSRecord(term)) {
+  SRecord *rec = am.getCurrentObject()->getState();
+  if (rec) {
     if (!isFeature(fea)) {
       if (isAnyVar(fea)) {
         return SUSPEND;
       }
       goto bomb;
     }
-    TaggedRef t = tagged2SRecord(term)->getFeature(fea);
+    CheckCurObj;
+    TaggedRef t = rec->getFeature(fea);
     if (t) {
       out = t;
       return PROCEED;
@@ -2731,52 +2740,6 @@ void assignError(TaggedRef rec, TaggedRef fea, char *name)
 }
 
 
-// destructive version of adjoinAt
-State BIassignConcurInline(TaggedRef rec, TaggedRef fea, TaggedRef value, TaggedRef &out)
-{
-  TaggedRef oldRec = rec;
-  DEREF(rec,_1,recTag);
-  DEREF(fea,_2,feaTag);
-
-  if ( isFeature(feaTag) ) {
-
-    if ( isSRecord(recTag) ) {
-      out = tagged2SRecord(rec)->replaceFeature(fea,value);
-      if (out == makeTaggedNULL()) {
-        goto bomb;
-      }
-      return PROCEED;
-    }
-
-    if ( isLiteral(recTag) ) {
-      goto bomb;
-    }
-
-    if (isAnyVar(recTag)) {
-      return SUSPEND;
-    }
-    OZ_warning("<-(%s,%s,%s): bad input state",
-               OZ_toC(rec),OZ_toC(fea),OZ_toC(value));
-    return FAILED;
-  }
-
-  if (isAnyVar(feaTag)) {
-    if (isAnyVar(recTag) || isLiteral(recTag) || isSRecord(recTag)) {
-      return SUSPEND;
-    }
-    OZ_warning("<-(%s,%s,%s): bad input state",
-               OZ_toC(rec),OZ_toC(fea),OZ_toC(value));
-    return FAILED;
-  }
-
- bomb:
-
-  out = oldRec;
-  assignError(rec,fea,"<- (concurrent)");
-  return PROCEED;
-}
-DECLAREBI_USEINLINEFUN3(BIassignConcur,BIassignConcurInline)
-
 // know: rec is a record, fea is a derefed literal
 OZ_C_proc_begin(BIassignOptimized,3)
 {
@@ -2787,8 +2750,10 @@ OZ_C_proc_begin(BIassignOptimized,3)
   Assert(!isRef(fea) && isFeature(fea));
   DEREF(rec,_1,recTag);
 
-  if (isSRecord(recTag)) {
-    if (tagged2SRecord(rec)->replaceFeature(fea,value) == makeTaggedNULL()) {
+  SRecord *r = am.getCurrentObject()->getState();
+  if (r) {
+    CheckCurObj;
+    if (r->replaceFeature(fea,value) == makeTaggedNULL()) {
       goto bomb;
     }
     return PROCEED;
@@ -2810,14 +2775,16 @@ OZ_C_proc_begin(BIassign,3)
   DEREF(rec,_1,recTag);
   DEREF(fea, _2, feaTag);
 
-  if (isSRecord(recTag)) {
+  SRecord *r = am.getCurrentObject()->getState();
+  if (r) {
+    CheckCurObj;
     if (!isFeature(fea)) {
       if (isAnyVar(fea)) {
         return SUSPEND;
       }
       goto bomb;
     }
-    if (tagged2SRecord(rec)->replaceFeature(fea,value) == makeTaggedNULL()) {
+    if (r->replaceFeature(fea,value) == makeTaggedNULL()) {
       goto bomb;
     }
     return PROCEED;
@@ -5361,13 +5328,13 @@ OZ_C_proc_proto(ozparser_init)
 OZ_C_proc_proto(ozparser_exit)
 
 
-Object *newObject(SRecord *feat, TaggedRef cl, ObjectClass *cla,
+Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla,
                   Bool iscl, Board *b)
 {
   Bool deep = (b!=am.rootBoard);
   Object *ret = deep
-    ? new DeepObject(cl,cla,feat,iscl,b)
-    : new Object(cl,cla,feat,iscl);
+    ? new DeepObject(st,cla,feat,iscl,b)
+    : new Object(st,cla,feat,iscl);
   return ret;
 }
 
@@ -5423,7 +5390,7 @@ OZ_C_proc_begin(BImakeClass,8)
   }
 
   if (!isRecord(ufeatures)) {
-    warning("makeObject: record expected: %s", OZ_toC(ufeatures));
+    warning("makeClass: record expected: %s", OZ_toC(ufeatures));
     return FAILED;
   }
 
@@ -5437,7 +5404,7 @@ OZ_C_proc_begin(BImakeClass,8)
                                     uf);
 
   Object *reto = newObject(tagged2SRecord(features),
-                           AtomNil, // initState
+                           NULL, // initState
                            cl,
                            OK,
                            am.currentBoard);
@@ -5450,10 +5417,15 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BImakeObject,4)
 {
-  OZ_Term initState = OZ_getCArg(0);
+  OZ_Term initState = OZ_getCArg(0); { DEREF(initState,_1,_2); }
   OZ_Term ffeatures = OZ_getCArg(1); { DEREF(ffeatures,_1,_2); }
   OZ_Term clas      = OZ_getCArg(2); { DEREF(clas,_1,_2); }
   OZ_Term obj       = OZ_getCArg(3);
+
+  if (!isRecord(initState)) {
+    warning("makeObject: record expected: %s", OZ_toC(initState));
+    return FAILED;
+  }
 
   if (!isRecord(ffeatures)) {
     warning("makeObject: record expected: %s", OZ_toC(ffeatures));
@@ -5466,7 +5438,7 @@ OZ_C_proc_begin(BImakeObject,4)
   }
 
   Object *out = newObject(tagged2SRecord(ffeatures),
-                          initState,
+                          isSRecord(initState) ? tagged2SRecord(initState) : NULL,
                           ((Object*)tagged2Const(clas))->getClass(),
                           NO,
                           am.currentBoard);
@@ -5613,10 +5585,22 @@ State exchangeObjectInline(TaggedRef tobj, TaggedRef instate, TaggedRef &outstat
     return FAILED;
   }
 
+#ifdef RS
+!!!!!!!!!!!!
   TaggedRef oldval = obj->getCell();
   if (!obj->isClosed()) {
     outstate = makeTaggedRef(newTaggedUVar(am.currentBoard));
     obj->setCell(outstate);
+  }
+#endif
+
+  TaggedRef oldval;
+  outstate = makeInt(4712);
+  if (obj->deepness>=1) {
+    oldval = obj->attachThread();
+  } else {
+    oldval = outstate;
+    obj->deepness++;
   }
   return am.fastUnify(instate,oldval,OK) ? PROCEED : FAILED;
 }
@@ -5626,6 +5610,14 @@ DECLAREBI_USEINLINEFUN2(BIexchangeObject,exchangeObjectInline)
 
 State releaseObjectInline(TaggedRef instate, TaggedRef &outstate)
 {
+  CheckCurObj;
+  Object *o = am.getCurrentObject();
+  o->deepness--;
+  if (o->deepness<=1) {
+    // !!! should be:
+    //  if (o->deepness==1) {
+    o->wakeThreads();
+  }
   outstate = instate;
   return PROCEED;
 }
@@ -5634,14 +5626,41 @@ DECLAREBI_USEINLINEFUN1(BIreleaseObject,releaseObjectInline)
 
 State getSelfInline(TaggedRef in, TaggedRef &out)
 {
-  out = in;
+#ifdef DEBUG_CHECK
+  TaggedRef aux = in;
+  DEREF(aux,_1,_2);
+  Assert(isObject(aux));
+  Assert((Object *) tagged2Const(aux) == am.getCurrentObject());
+#endif
+
+  //  out = in;
+  out = makeTaggedConst(am.getCurrentObject());
   return PROCEED;
 }
 
 DECLAREBI_USEINLINEFUN1(BIgetSelf,getSelfInline)
 
+OZ_C_proc_begin(BIsetSelf,1)
+{
+  Assert(0); // no longer needed
+
+  OZ_Term self = OZ_getCArg(0);
+  DEREF(self,_1,_2);
+  Assert(isObject(self));
+  am.currentThread->pushSetCurObject(am.getCurrentObject());
+  am.setCurrentObject((Object*) tagged2Const(self));
+  return PROCEED;
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIsetModeToDeep,0)
 {
+  CheckCurObj;
+  Object *o = am.getCurrentObject();
+  o->deepness++;
+  // am.currentThread->pushSetModeTop();
+  // am.currentThread->pushSetCurObject(am.getCurrentObject());
+
   return PROCEED;
 }
 OZ_C_proc_end
@@ -5808,7 +5827,6 @@ BIspec allSpec[] = {
   {"arity",           2,BIarity,           NO, (IFOR) BIarityInline},
   {"adjoinAt",        4,BIadjoinAt,        NO, 0},
   {"@ (concurrent)",  4,BIatConcurrent,    NO, (IFOR) BIatConcurrentInline},
-  {"<- (concurrent)", 4,BIassignConcur,    NO, (IFOR) BIassignConcurInline},
   {"<- (optimized)",  3,BIassignOptimized, NO, 0},
   {"<-",              3,BIassign,          NO, 0},
   {"copyRecord",      2,BIcopyRecord,      NO, 0},
@@ -5980,6 +5998,7 @@ BIspec allSpec[] = {
   {"hasFastBatch",     1,BIhasFastBatch,       NO,(IFOR) hasFastBatchInline},
   {"exchangeObject",   3,BIexchangeObject,     NO,(IFOR) exchangeObjectInline},
   {"releaseObject",    2,BIreleaseObject,      NO,(IFOR) releaseObjectInline},
+  {"setSelf",          1,BIsetSelf,            NO,0},
   {"getSelf",          2,BIgetSelf,            NO,(IFOR) getSelfInline},
   {"Object.is",        2,BIisObjectB,          NO,(IFOR) BIisObjectBInline},
   {"isClass",          1,BIisClass,            NO,(IFOR) BIisClassInline},

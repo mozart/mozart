@@ -1463,6 +1463,7 @@ void AM::gc(int msgLevel)
   rebindTrail.gc();
 
   rootBoard = rootBoard->gcBoard();   // must go first!
+  setCurrentObject((Object *) getCurrentObject()->gcConstTerm());
   Assert(rootBoard);
   setCurrent(currentBoard->gcBoard(),NO);
 
@@ -1765,6 +1766,7 @@ void TaskStack::gcRecurse()
 
     case C_LOCAL:     COUNT(cLocal);   break;
     case C_JOB:       COUNT(cJob);     break;
+    case C_SET_MODETOP:                break;
 
     case C_CONT:
       COUNT(cCont);
@@ -1818,6 +1820,10 @@ void TaskStack::gcRecurse()
       gcQueue (((Actor *) oldstack->pop ())->gcActor ());  // CAA
       break;
 
+    case C_SET_CUROBJECT:
+      gcQueue(((Object *)oldstack->pop())->gcConstTerm());
+      break;
+
     default:
       error("Unexpected case in TaskStack::gc().");
       break;
@@ -1845,7 +1851,8 @@ void ConstTerm::gcConstRecurse()
       if (o->isDeep()){
         ((DeepObject*)o)->home = o->getBoardFast()->gcBoard();
       }
-      gcTagged(o->cell,o->cell);
+      o->state = o->getState()->gcSRecord();
+      gcTagged(o->threads,o->threads);
       break;
     }
 
