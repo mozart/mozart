@@ -317,7 +317,7 @@ static CTerm decls[DEPTH];
 %token SWITCHNAME FILENAME
 %token OZATOM ATOM_LABEL OZFLOAT OZINT AMPER DOTINT STRING
 %token VARIABLE VARIABLE_LABEL
-%token DEFAULT CHOICE LDOTS OBJPATTERNOPEN OBJPATTERNCLOSE
+%token DEFAULT CHOICE LDOTS
 %token attr _case_ catch choice _class_ _condis_ declare dis
 %token _else_ elsecase elseif elseof end fail false FALSE_LABEL
 %token feat finally _from_ _fun_ functor _if_ _in_ local _lock_
@@ -621,8 +621,6 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                   { $$ = newCTerm("fRecord",$1,$3); }
                 | label '(' recordArguments LDOTS ')'
                   { $$ = newCTerm("fOpenRecord",$1,$3); }
-                | label OBJPATTERNOPEN recordArguments OBJPATTERNCLOSE
-                  { $$ = newCTerm("fObjPattern",$1,$3); }
                 | '[' fixedListArgs ']'
                   { $$ = $2; }
                 | '{' coord phrase phraseList '}'
