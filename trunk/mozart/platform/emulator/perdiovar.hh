@@ -163,7 +163,6 @@ public:
     ControlVarNew(controlvar,oz_rootBoard());
     PD((THREAD_D,"stop thread setVal %x",am.currentThread()));
     u.bindings=new PendBinding(t,controlvar,0);
-    am.setSFlag(StopThread); // should go away
     SuspendOnControlVar;
   }
   OZ_Return pushVal(OZ_Term t) {
@@ -172,7 +171,6 @@ public:
     ControlVarNew(controlvar,oz_rootBoard());
     PD((THREAD_D,"stop thread pushVal %x",am.currentThread()));
     u.bindings->next=new PendBinding(t,controlvar,u.bindings->next);
-    am.setSFlag(StopThread); // should go away
     SuspendOnControlVar;
   }
   void redirect(OZ_Term val);
