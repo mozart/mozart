@@ -90,7 +90,7 @@ tags:	$(CREATEDFILES)
 	etags \
 	--regex='/OZ_BI_\(io\)?define([ 	]*\([^ 	,)]+\)/\2/' \
 	--regex='/OZ_C_\(io\)?proc_begin([ 	]*\([^ 	,)]+\)/\2/' \
-	--regex='/OZ_DECLARE[A-Z0-9_]*([ 	]*\([^ 	,)]+\)/\2/' -l c++ \
+	--regex='/OZ_DECLARE[A-Z0-9_]*([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
 	-o $(SRCDIR)/TAGS \
 	$(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
 	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/../*c $(SRCDIR)/../*h  
