@@ -48,6 +48,8 @@ description ?{D} such that <math/\conv({\tt D}) = {\tt S}/.
 <p>
 For more information on the finite set constraint system
 see&nbsp;<ptr to=MuellerMueller.WLP.97>.
+
+<!-- ********************************************************************** -->
 <section id="section.fs.genral"><title/Finite Set Intervals/
 <p>
 <list>
@@ -123,6 +125,8 @@ maps an element to a weight according to the weight description passed
 to <<FS.makeWeights>>.
 </list>
 </section>
+
+<!-- ********************************************************************** -->
 <section id="section.fs.integers"><title/Sets over Integers/
 <p>
 <list>
@@ -194,6 +198,8 @@ elements of <<M>> in ascending order.
 elements of <<M1>> are smaller than any element of <<M2>>.
 </list>
 </section>
+
+<!-- ********************************************************************** -->
 <section id="section.fs.standard"><title/Standard Propagators/
 <p>
 <list>
@@ -289,6 +295,8 @@ All elements of the vector ?{Mv} are pairwise distinct.
 union yields ?{M}. 
 </list>
 </section>
+
+<!-- ********************************************************************** -->
 <section id="section.fs.vars"><title/Finite Set Interval Variables/
 <p>
 <list>
@@ -479,6 +487,8 @@ For all elements <<M>> of <<Mr>>: <math/{\tt M} \in
 </list>
 </subsection>
 </section>
+
+<!-- ********************************************************************** -->
 <section id="section.fs.consts"><title/Finite Set Constants/
 <p>
 <list>
@@ -532,9 +542,12 @@ Tests whether <<M>> is a finite set value or not.
 Converts <<M>> to a string and returns it in <<M>>.
 </list>
 </section>
+
+<!-- ********************************************************************** -->
 <section id="section.fs.reified"><title/Reified Propagators/
 <p>
 <list>
+
 <entry>
 <index class=module/FS<and>reified<and>isIn/
 <<reified.isIn>>
@@ -544,6 +557,7 @@ Converts <<M>> to a string and returns it in <<M>>.
 <item>
 <math/\codeinline{oz}{D} \in \{0,1\} \wedge ((\codeinline{oz}{I} \in \codeinline{oz}{M}) \leftrightarrow
 \codeinline{oz}{D} = 1)/
+
 <entry>
 <index class=module/FS<and>reified<and>areIn/
 <<reified.areIn>>
@@ -554,6 +568,7 @@ Converts <<M>> to a string and returns it in <<M>>.
 ?{Is} and ?{Ds} are lists of the same length such that every element
 <math/{\tt D}_i/ of ?{Ds} reifies the presence of the corresponding element
 <math/{\tt I}_i/ of ?{Is} in the set ?{M}.
+
 <entry>
 <index class=module/FS<and>reified<and>include/
 <<reified.include>>
@@ -561,9 +576,21 @@ Converts <<M>> to a string and returns it in <<M>>.
 <<<{FS.reified.include +D1 *S $D2}
 >>>
 <item>
-?{D1} reifies the presence of ?{D2} in the set ?{S}. 
+?{D2} reifies the presence of ?{D1} in the set ?{S}. 
+
+<entry>
+<index class=module/FS<and>reified<and>equal/
+<<reified.equal>>
+<synopsis>
+<<<{FS.reified.equal *S1 *S2 $D}
+>>>
+<item>
+?{D} reifies the equality of ?{S1} and ?{S2}. 
+
 </list>
 </section>
+
+<!-- ********************************************************************** -->
 <section id="section.fs.iterating"><title/Iterating and Monitoring/
 <p>
 <list>
@@ -600,6 +627,8 @@ determined the stream <<Is>> will be closed.
 This procedure applies <<P/1>> to all elements of <<M>>. 
 </list>
 </section>
+
+<!-- ********************************************************************** -->
 <section id="section.fs.reflection"><title/Reflection/
 <p>
 The result of a reflective procedure depends on the current state of the
@@ -702,6 +731,8 @@ Returns the cardinality of the current greatest lower bound for ?{M}.
         be included or excluded from ?{M}.
 </list>
 </section>
+
+<!-- ********************************************************************** -->
 <section id="section.fs.distribution"><title/Distribution/
 <p>
 Given a set ?{M}, let <math/{\it lowerBound}({\tt M})/ and <math/{\it
