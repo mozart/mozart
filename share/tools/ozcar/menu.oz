@@ -63,8 +63,8 @@ in
 		    action: self # action(NextButtonBitmap)
 		    key:    n)
 		  separator
-		  C(label:  'Continue'
-		    action: self # action(ContButtonBitmap)
+		  C(label:  'Unleash'
+		    action: self # action(UnleashButtonBitmap)
 		    key:    c)
 		  C(label:  'Stop'
 		    action: self # action(StopButtonBitmap)
