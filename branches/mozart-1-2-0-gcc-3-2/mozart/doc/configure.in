@@ -101,7 +101,12 @@ AC_ARG_WITH(documents,
 : ${oz_doc_dirs=}
 AC_MSG_RESULT($oz_doc_dirs)
 
-OZ_ENABLE(qtk,[QTk QUI Builder],no,QTK_ENABLED=yes,QTK_ENABLED=no)
+OZ_ENABLE(qtk,[QTk QUI Builder],no,
+    QTK_ENABLED=yes
+    AC_MSG_RESULT(yes),
+    QTK_ENABLED=no
+    AC_MSG_RESULT(no)
+)
 AC_SUBST(QTK_ENABLED)
 
 if test "${oz_doc_dirs}" = "all"; then
