@@ -26,18 +26,6 @@
 
 #include "misc.cc"
 
-char *splitFirstArg(char *s)
-{
-  while (*s && (*s)!=' ') {
-    s++;
-  }
-  
-  if (*s==0)
-    return s;
-  *s=0;
-  return s+1;
-}
-
 
 char *getEmulator(char *ozhome)
 {
@@ -90,28 +78,26 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
     }
     sprintf(buffer,"%s/bin/runemacs.exe -L \"%s/share/elisp\" -l oz.elc -f run-oz",
 	    emacshome,ozhome);
-#ifndef OZENGINE
-  } else if (stricmp(progname,"ozenginew.exe")==0) {
-      char *rest = splitFirstArg(lpszCmdLine);
-      char *url = lpszCmdLine;
-      char *ozemulator = getEmulator(ozhome);
-      sprintf(buffer,"%s -u \"%s\" -- %s",ozemulator,url,rest);
-      console = DETACHED_PROCESS;
-#else
+#ifdef OZENGINE
   } else if (stricmp(progname,"ozengine.exe")==0) {
+#else
+  } else if (stricmp(progname,"ozenginew.exe")==0) {
+      int argc    = _argc;
+      char **argv = _argv;
+      console = DETACHED_PROCESS;
+#endif
     if (argc < 2) {
-      fprintf(stderr,"usage: ozengine url <args>\n");
-      exit(1);
+      OzPanic(1,"usage: ozengine url <args>\n");
     }
     char *ozemulator = getEmulator(ozhome);
     char *url = argv[1];
     sprintf(buffer,"%s -u \"%s\" -- ", ozemulator,url);
     for (int i=2; i<argc; i++) {
-      strcat(buffer," ");
+      strcat(buffer," \"");
       strcat(buffer,argv[i]);
+      strcat(buffer,"\"");
     }
     //    console = DETACHED_PROCESS;
-#endif
   } else {
     OzPanic(1,"Unknown invocation: %s", progname);
   } 
@@ -125,11 +111,13 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
   if (ret!=TRUE) {
     OzPanic(1,"Cannot run '%s' Oz.\nError = %d.\nDid you run setup?",buffer,errno);
   }
-#ifdef OZENGINE
   WaitForSingleObject(pinf.hProcess,INFINITE);
+
+#ifdef OZENGINE
   fprintf(stdout,"\n");
   fflush(stdout);
 #endif
+
   return 0;
 }
 
