@@ -105,7 +105,7 @@ case "$cmd" in
    ;;
 
    oz.compiler)
-	setOZC
+	setOZC "$@"
         if [ X$1 = X"-emacs" ]; then
 	  shift
           exec $OZCOMPILER +E `echo $* |  sed -e 's/-/+/g'`
@@ -117,7 +117,7 @@ case "$cmd" in
    ;;
 
    oz.emulator)
-	setOZE
+	setOZE "$@"
 	if [ X$1 = X"-emacs" ]; then
 		shift
 		exec $OZEMULATOR -E "$@"
@@ -129,17 +129,17 @@ case "$cmd" in
    ;;
 
    ozsa)  # standalone system
-	setOZE
+	setOZE "$@"
         exec $OZEMULATOR -E "$@"
    ;;
 
    oz-)
-	setOZC
+	setOZC "$@"
 	exec $ILE $OZCOMPILER "$@"
    ;;
 
    ozc)
-	setOZC
+	setOZC "$@"
 	set -e
         for file in $@; do
             # +p /dev/null --> do not load ~/.ozrc
@@ -149,7 +149,7 @@ case "$cmd" in
    ;;
 
    ozsac)
-	setOZC
+	setOZC "$@"
         if [ $# -ne 2 ]; then
 	   echo "Usage: $0 infile outfile"
 	   exit 1
