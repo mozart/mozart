@@ -111,32 +111,40 @@ public:
   void printThreads(void);
 };
 
-class LocalThreadQueue : public ThreadQueueImpl {
+class LocalPropagatorQueue : public ThreadQueueImpl {
 private:
   // needed when merging spaces to unpack threads in local thread queue
-  Thread * ltq_thr;
+  Thread * lpq_thr;
 public:
-  LocalThreadQueue(Thread * lthr, Thread * thr) 
-    : ltq_thr(lthr), ThreadQueueImpl() 
+  LocalPropagatorQueue(Thread * lthr, Propagator * p) 
+    : lpq_thr(lthr), ThreadQueueImpl() 
   {
     allocate(QUEUEMINSIZE);
-    enqueue(thr);
+    enqueue(p);
   }
-  LocalThreadQueue(int sz) : ThreadQueueImpl(){
+  LocalPropagatorQueue(int sz) : ThreadQueueImpl(){
     allocate(sz);
   }
-  ~LocalThreadQueue();
+  ~LocalPropagatorQueue();
 
-  LocalThreadQueue * gc(void);
+  LocalPropagatorQueue * gc(void);
+
+  Propagator * dequeue(void) { 
+    return (Propagator *) ThreadQueueImpl::dequeue();
+  }
+  
+  void enqueue(Propagator * p) {
+    ThreadQueueImpl::enqueue((Thread *) p);
+  }
 
   void dispose () {
     ThreadQueueImpl::disposePool();
-    freeListDispose (this, sizeof(LocalThreadQueue));
+    freeListDispose (this, sizeof(LocalPropagatorQueue));
   }
 
-  Thread * getLTQThread(void) { return ltq_thr; }
+  Thread * getLPQThread(void) { return lpq_thr; }
 
-  LocalThreadQueue * merge(LocalThreadQueue * tq) {
+  LocalPropagatorQueue * merge(LocalPropagatorQueue * tq) {
     if (this == NULL) {
       // this == NULL and tq != NULL OR this == NULL  and tq == NULL
       return tq;
@@ -150,10 +158,6 @@ public:
     return this;
   }
 };
-
-#ifdef PROP_MERGING
-typedef LocalThreadQueue PropagatorQueue;
-#endif
 
 #endif /* __THREADQUEUEH */
 

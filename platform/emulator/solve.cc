@@ -33,6 +33,10 @@
 #include "cpbag.hh"
 #include "solve.hh"
 
+#ifdef DEBUG_NONMONOTONIC
+#include "runtime.hh"
+#endif
+
 /*
  * class SolveActor:
  *    solve actor;
@@ -138,12 +142,12 @@ Bool extParameters(OZ_Term list, Board * solve_board)
   return FALSE;
 }
 
-void SolveActor::clearSuspList(Thread *killThr) {
-  SuspList *tmpSuspList = suspList;
+void SolveActor::clearSuspList(Suspension killSusp) {
+  SuspList * tmpSuspList = suspList;
 
   suspList = NULL;
   while (tmpSuspList) {
-    Thread *thr = tmpSuspList->getElem ();
+    Suspension susp = tmpSuspList->getSuspension();
 
     /*
      *  kost@
@@ -157,16 +161,16 @@ void SolveActor::clearSuspList(Thread *killThr) {
      *
      */
 
-    if (thr->isDeadThread () ||
-	killThr == thr ||
-	(thr->isRunnable () && !(thr->isPropagator()))) {
+    if (susp.isDead() ||
+	killSusp == susp ||
+	(susp.isRunnable() && !susp.isPropagator())) {
       tmpSuspList = tmpSuspList->dispose ();
       continue;
     }
 
-    Board *bb = GETBOARD(thr);
+    Board * bb = GETBOARDOBJ(susp);
 
-    // find threads, which occured in a failed nested search space
+    // find suspensions, which occured in a failed nested search space
     while (1) {
       bb = bb->getSolveBoard();
       if (bb == solveBoard) break;
@@ -175,18 +179,19 @@ void SolveActor::clearSuspList(Thread *killThr) {
       if (bb == 0) break;
     }
 
-    if (thr->isPropagator()) {
-
+    if (susp.isPropagator()) {
+      Propagator * prop = susp.getPropagator();
+      
 #ifdef DEBUG_PROP_STABILTY_TEST
       cout << "SolveActor::clearSuspList : Found propagator." << endl 
-	   << thr->getPropagator()->toString() << endl
+	   << prop->toString() << endl
 	   << "\tbb = " << bb << endl << flush;
 #endif
 
       if (bb) {
 	// if propagator suspends on external variable then keep its
 	// thread in the list to avoid stability
-	if (extParameters(thr->getPropagator()->getParameters(), solveBoard)) {
+	if (extParameters(prop->getPropagator()->getParameters(), solveBoard)) {
 #ifdef DEBUG_PROP_STABILTY_TEST
 	  cout << "\tExt parameter found!" << endl << flush;
 #endif
@@ -202,6 +207,10 @@ void SolveActor::clearSuspList(Thread *killThr) {
       }
       tmpSuspList = tmpSuspList->getNext ();
     } else {
+      Assert(susp.isThread());
+      
+      Thread * thr = susp.getThread();
+
       if (bb == 0) {
 	am.disposeSuspendedThread(thr);
 	tmpSuspList = tmpSuspList->dispose ();
@@ -272,15 +281,15 @@ TaggedRef SolveActor::getCloneDiff(void) {
 //-----------------------------------------------------------------------------
 // support for nonmonotonic propagators
 
-void SolveActor::addToNonMonoSuspList(Thread * thr)
+void SolveActor::addToNonMonoSuspList(Propagator * prop)
 {
-  nonMonoSuspList = nonMonoSuspList->insert(thr);
+  nonMonoSuspList = nonMonoSuspList->insert(prop);
 }
 
 void SolveActor::mergeNonMonoSuspListWith(OrderedSuspList * p)
 {
   for (; p != NULL; p = p->getNext())
-    nonMonoSuspList = nonMonoSuspList->insert(p->getThread()); 
+    nonMonoSuspList = nonMonoSuspList->insert(p->getPropagator()); 
 }
 
 void SolveActor::scheduleNonMonoSuspList(void)
@@ -291,17 +300,18 @@ void SolveActor::scheduleNonMonoSuspList(void)
 #endif
 
   for (OrderedSuspList * p = nonMonoSuspList; p != NULL; p = p->getNext()) {
-    Thread * thr = p->getThread();
+    Propagator * prop = p->getPropagator();
 
 #ifdef DEBUG_NONMONOTONIC
-    OZ_CFunHeader * header = thr->getPropagator()->getHeader();
+    OZ_CFunHeader * header = prop->getPropagator()->getHeader();
     OZ_CFun headerfunc = header->getHeaderFunc();
     printf("<%s %d>\n", builtinTab.getName((void *) headerfunc),
-	   thr->getPropagator()->getOrder()); 
+    	   prop->getPropagator()->getOrder()); 
 #endif
     
-    am.updateSolveBoardPropagatorToRunnable(thr);
-    am.scheduleThreadInline(thr, thr->getPriority());
+    //am.updateSolveBoardPropagatorToRunnable(thr);
+    GETBOARD(prop)->pushToLPQ(prop);
+    //am.scheduleThreadInline(thr, thr->getPriority());
   }  
 
   nonMonoSuspList = NULL;

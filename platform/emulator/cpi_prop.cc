@@ -88,10 +88,16 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
 	GenCVariable * cv = tagged2CVar(h);
 	
 	if (cv->testReifiedFlag()) {
-	  if (cv->isBoolPatched()) goto bool_lbl; 
-	  if (cv->isFDPatched()) goto fd_lbl;
-	  if (cv->isFSetPatched()) goto fs_lbl;
-	  /*Assert(cv->isFDPatched()); goto ri_lbl;*/ 
+
+	  if (cv->isBoolPatched()) 
+	    goto bool_lbl; 
+	  if (cv->isFDPatched()) 
+	    goto fd_lbl;
+	  if (cv->isFSetPatched()) 
+	    goto fs_lbl;
+	  if (cv->isCtPatched()) 
+	    goto ct_lbl; 
+
 	} else if (cv->getType() == FDVariable) {
 	fd_lbl:
 	  o << ((GenFDVariable *) cv)->getDom().toString();
@@ -101,6 +107,9 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
 	} else if (cv->getType() == FSetVariable) {
 	fs_lbl:
 	  o << ((GenFSetVariable *) cv)->getSet().toString();
+	} else if (cv->getType() == CtVariable) {
+	ct_lbl:
+	  o << ((GenCtVariable *) cv)->getConstraint()->toString();
 	} else {	  
 	  goto problem;
 	}
@@ -128,13 +137,6 @@ ostream& operator << (ostream& o, const OZ_Propagator &p)
   const char * func_name = builtinTab.getName((void *) p.getHeader()->getHeaderFunc());
   OZ_Term args = p.getParameters();
  
- 
-  /*
-#ifdef DEBUG_CHECK
-  o << "cb(" << (void *) am.currentBoard << "), p(" << (void *) &p << ") ";
-#endif
-*/
-  
   if (!p.isMonotonic())
     o << p.getOrder() << '#' << flush;
 
@@ -155,14 +157,14 @@ char *OZ_Propagator::toString() const
 
 OZ_Boolean OZ_Propagator::mayBeEqualVars(void)
 {
-  return am.currentThread()->isUnifyThread();
+  return Propagator::getRunningPropagator()->isUnifyPropagator();
 }
 
 
 OZ_Return OZ_Propagator::replaceBy(OZ_Propagator * p)
 {
-  am.currentThread()->setPropagator(p);
-  return am.runPropagator(am.currentThread());
+  Propagator::getRunningPropagator()->setPropagator(p);
+  return am.runPropagator(Propagator::getRunningPropagator());
 }
 
 OZ_Return OZ_Propagator::replaceBy(OZ_Term a, OZ_Term b)
@@ -184,7 +186,7 @@ OZ_Boolean OZ_Propagator::imposeOn(OZ_Term t)
 {
   DEREF(t, tptr, ttag);
   if (isVariableTag(ttag)) {
-    addSuspAnyVar(tptr, am.currentThread());
+    addSuspAnyVar(tptr, Propagator::getRunningPropagator());
     return OZ_TRUE;
   } 
   return OZ_FALSE;
@@ -203,12 +205,14 @@ OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
 
 void OZ_Propagator::impose(OZ_Propagator * p, int prio) 
 {
-  Thread * thr = am.mkPropagator(am.currentBoard(), prio, p);
+  Board * cb = am.currentBoard();
+  Propagator * prop = am.mkPropagator(cb, prio, p);
   ozstat.propagatorsCreated.incf();
 
-  am.suspendPropagator(thr);
-  am.propagatorToRunnable(thr);
-  am.scheduleThreadInline(thr, thr->getPriority()); 
+  am.suspendPropagator(prop);
+
+  prop->markRunnable();
+  cb->pushToLPQ(prop);
 
   OZ_Boolean all_local = OZ_TRUE;
 
@@ -221,30 +225,31 @@ void OZ_Propagator::impose(OZ_Propagator * p, int prio)
     Bool isStorePatched = 0, isReifiedPatched = 0, isBoolPatched = 0;
     OZ_FiniteDomain * tmp_fd = NULL;
 
+    // TMUELLER: needs to extended to FSet and GenConstraint
     if (isCVar(vtag)) {
       isStorePatched = testResetStoreFlag(v);
       isReifiedPatched = testResetReifiedFlag(v);
       if (isReifiedPatched) {
 	isBoolPatched = testBoolPatched(v);
-	tmp_fd = unpatchReified(v, isBoolPatched);
+	tmp_fd = unpatchReifiedFD(v, isBoolPatched);
       }
     }
 
     if (isGenFDVar(v, vtag)) {
-      addSuspFDVar(v, thr, staticSpawnVarsProp[i].state.fd);
+      addSuspFDVar(v, prop, staticSpawnVarsProp[i].state.fd);
       all_local &= am.isLocalSVar(v);
     } else if (isGenOFSVar(v, vtag)) {
-      addSuspOFSVar(v, thr);
+      addSuspOFSVar(v, prop);
       all_local &= am.isLocalSVar(v);
     } else if (isGenBoolVar(v, vtag)) {
-      addSuspBoolVar(v, thr);  
+      addSuspBoolVar(v, prop);  
       all_local &= am.isLocalSVar(v);
     } else if (isSVar(vtag)) {
-      addSuspSVar(v, thr);
+      addSuspSVar(v, prop);
       all_local &= am.isLocalSVar(v);
     } else {
       Assert(isUVar(vtag));
-      addSuspUVar(vptr, thr);
+      addSuspUVar(vptr, prop);
       all_local &= am.isLocalUVar(v,vptr);
     }
 
@@ -257,7 +262,7 @@ void OZ_Propagator::impose(OZ_Propagator * p, int prio)
   }
 
   if (all_local) 
-    thr->markLocalThread();
+    prop->markLocalPropagator();
   
   staticSpawnVarsNumberProp = 0;
 }

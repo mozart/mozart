@@ -1329,6 +1329,7 @@ int OZ_FiniteDomainImpl::initFull(void)
 inline
 int OZ_FiniteDomainImpl::initEmpty(void)
 {
+  min_elem = max_elem = -1;
   setType(fd_descr, NULL);
   return size = 0;
 }

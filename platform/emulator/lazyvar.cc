@@ -124,10 +124,10 @@ GenLazyVariable::unifyLazy(TaggedRef*vPtr,TaggedRef t,ByteCode*scp)
 }
 
 void
-GenLazyVariable::addSuspLazy(Thread*th,int unstable)
+GenLazyVariable::addSuspLazy(Suspension susp, int unstable)
 {
   kickLazy();
-  addSuspSVar(th,unstable);
+  addSuspSVar(susp, unstable);
 }
 
 OZ_BI_define(BILazyNew,2,0)

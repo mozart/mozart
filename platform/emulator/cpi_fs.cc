@@ -84,12 +84,12 @@ void OZ_FSetVar::read(OZ_Term v)
     setPtr = &set;
     setSort(val_e);
     known_in = set.getCardMin();
-    known_not_in = 0;
+    known_not_in = 0; // TMUELLER: that is not correct!
     card_size = 1;
   } else {
     Assert(isCVar(vtag));
 
-    if (am.currentThread()->isLocalThread()) {
+    if (Propagator::getRunningPropagator()->isLocalPropagator()) {
     // local variable per definition
 
       setState(loc_e);
@@ -145,18 +145,18 @@ void OZ_FSetVar::readEncap(OZ_Term v)
     Assert(isCVar(vtag));
 
     setState(encap_e);
+    setSort(var_e);
+
     GenFSetVariable * fsvar = tagged2GenFSetVar(v);
     
     if (fsvar->testReifiedFlag()) {
-    // var is already entered somewhere else
-      setSort(var_e);
+      // fs var already entered somewhere else
       setPtr = fsvar->getReifiedPatch();
       known_in = setPtr->getKnownIn();
       known_not_in = setPtr->getKnownNotIn();
       card_size = setPtr->getCardSize();
     } else {
-    // fd var entered first time
-      setSort(var_e);
+      // fs var entered first time
       set = fsvar->getSet();
       setPtr = &set;
       known_in = set.getKnownIn();
@@ -176,7 +176,7 @@ OZ_Boolean OZ_FSetVar::tell(void)
 #endif
 
   if (testReifiedFlag(var)) 
-    unpatchReified(var);
+    unpatchReifiedFSet(var);
   
   if (!testResetStoreFlag(var)) {
     goto f;
@@ -237,7 +237,7 @@ void OZ_FSetVar::fail(void)
   if (isSort(val_e)) 
     return;
   if (isState(encap_e)) {
-    unpatchReified(var);
+    unpatchReifiedFSet(var);
     return;
   }
 

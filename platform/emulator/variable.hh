@@ -39,28 +39,32 @@
 #include "board.hh"
 #include "pointer-marks.hh"
 
-#define AddSuspToList0(List,Thread,Home)		\
-{							\
-  if ((List) && ((List)->getElem() == Thread)) {	\
-  } else {						\
-    List = new SuspList(Thread, List);			\
-    if (Home) checkExtThread(Thread,Home);		\
-  }							\
+#define AddSuspToList0(List, Susp, Home)	\
+{						\
+  if ((List) && ((List)->getElem() == Susp)) {	\
+  } else {					\
+    List = new SuspList(Susp, List);		\
+    if (Home) checkExtSuspension(Susp, Home);	\
+  }						\
 }
 
 #ifdef DEBUG_STABLE
-#define AddSuspToList(List,Thread,Home)				\
+
+#define AddSuspToList(List, Susp, Home)				\
 {								\
-  AddSuspToList0(List,Thread,Home);				\
+  AddSuspToList0(List, Susp, Home);				\
 								\
-  if (board_constraints_thr != Thread) {			\
-    board_constraints_thr = Thread;				\
+  if (board_constraints_thr != Susp) {				\
+    board_constraints_thr = Susp;				\
     board_constraints = new SuspList(board_constraints_thr,	\
 				     board_constraints);	\
   }								\
 }
+
 #else
-#define AddSuspToList(List,Thread,Home) AddSuspToList0(List,Thread,Home)
+
+#define AddSuspToList(List, Susp, Home) AddSuspToList0(List, Susp, Home)
+
 #endif
 
 
@@ -69,8 +73,8 @@
 
 class SVariable {
 protected:
-  SuspList *suspList;
-  Board *home;
+  SuspList * suspList;
+  Board * home;
 public:
 
   USEFREELISTMEMORY;
@@ -137,9 +141,9 @@ public:
     return r;
   }
 
-  void addSuspSVar(Thread * el, int unstable)
+  void addSuspSVar(Suspension susp, int unstable)
   {
-    AddSuspToList(suspList,el,unstable?home:0);
+    AddSuspToList(suspList, susp, unstable ? home : 0);
   }
 
   void wakeupAll();
@@ -148,31 +152,31 @@ public:
 };
 
 inline
-void addSuspSVar(TaggedRef v, Thread * el,int unstable=TRUE)
+void addSuspSVar(TaggedRef v, Suspension susp,int unstable = TRUE)
 {
-  tagged2SVar(v)->addSuspSVar(el,unstable);
+  tagged2SVar(v)->addSuspSVar(susp, unstable);
 }
 
 inline
-void addSuspUVar(TaggedRefPtr v, Thread * el, int unstable=TRUE)
+void addSuspUVar(TaggedRefPtr v, Suspension susp, int unstable = TRUE)
 {
   SVariable *sv = new SVariable(tagged2VarHome(*v));
   *v = makeTaggedSVar(sv);
-  sv->addSuspSVar(el,unstable);
+  sv->addSuspSVar(susp, unstable);
 }
 
 extern
-void addSuspCVarOutline(TaggedRef *v, Thread *el, int unstable);
+void addSuspCVarOutline(TaggedRef *v, Suspension susp, int unstable);
 inline
-void addSuspAnyVar(TaggedRefPtr v, Thread *thr,int unstable=TRUE)
+void addSuspAnyVar(TaggedRefPtr v, Suspension susp,int unstable = TRUE)
 {
   TaggedRef t = *v;
   if (isSVar(t)) { 
-    addSuspSVar(t,thr,unstable);
+    addSuspSVar(t, susp, unstable);
   } else if (isCVar(t)) {
-    addSuspCVarOutline(v,thr,unstable);
+    addSuspCVarOutline(v, susp, unstable);
   } else {
-    addSuspUVar(v,thr,unstable);
+    addSuspUVar(v, susp, unstable);
   }
 }
 

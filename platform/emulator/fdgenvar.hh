@@ -47,7 +47,7 @@ class GenFDVariable: public GenCVariable {
 
 friend class GenCVariable;
 friend class GenBoolVariable;
-friend inline void addSuspFDVar(TaggedRef, Thread *, OZ_FDPropState);
+friend inline void addSuspFDVar(TaggedRef, Suspension, OZ_FDPropState);
   
 private:
   OZ_FiniteDomain finiteDomain;
@@ -113,7 +113,7 @@ public:
   }
 };
 
-void addSuspFDVar(TaggedRef, Thread *, OZ_FDPropState = fd_prop_any);
+void addSuspFDVar(TaggedRef, Suspension, OZ_FDPropState = fd_prop_any);
 OZ_Return tellBasicConstraint(OZ_Term, OZ_FiniteDomain *);
 
 #ifndef OUTLINE 
@@ -127,5 +127,5 @@ GenFDVariable * tagged2GenFDVar(TaggedRef term);
 
 #endif
 
-
-
+// eof
+//-----------------------------------------------------------------------------
