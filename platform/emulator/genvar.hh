@@ -104,11 +104,8 @@ public:
   }  
     
   // methods relevant for term copying (gc and solve)  
-  Bool gcIsMarked(void);
-  void ** gcGetMarkField(void);
-  void gcMark(GenCVariable *);
-  GenCVariable * gcGetFwd(void);
   void gc(void);
+  void gcRecurse(void);
 
   // unifies a generic variable with another generic variable
   // or a non-variable
