@@ -942,23 +942,6 @@ OZ_C_proc_end
 #endif
 
 
-static void unixblockSignals()
-{
-  sigset_t s,sOld;
-  sigfillset(&s);
-  sigprocmask(SIG_SETMASK,&s,&sOld);
-  sigemptyset(&s);
-  memcmp(&s,&sOld,sizeof(sigset_t));
-}
-
-
-static void unixunblockSignals()
-{
-  sigset_t s;
-  sigemptyset(&s);
-  sigprocmask(SIG_SETMASK,&s,NULL);
-}
-
 
 #ifndef OS2_I486
 OZ_C_ioproc_begin(unix_connectInet,4)
@@ -981,18 +964,18 @@ OZ_C_ioproc_begin(unix_connectInet,4)
   addr.sin_port = htons ((unsigned short) port);
 
 // critical region  
-  unixblockSignals();
+  osBlockSignals();
 
   int ret;
   while ((ret = connect(s,(struct sockaddr *) &addr,sizeof(addr)))<0) {
     if (errno != EINTR) {
-      unixunblockSignals();
+      osUnblockSignals();
       RETURN_UNIX_ERROR(out);
     }
   }
 
 // end of critical region
-  unixunblockSignals();
+  osUnblockSignals();
 
   return OZ_unifyInt(out,ret);
 }
@@ -1011,19 +994,19 @@ OZ_C_ioproc_begin(unix_connectUnix,3)
   strcpy(addr.sun_path, path); 
 
 // critical region  
-  unixblockSignals();
+  osBlockSignals();
 
   int ret;
   while ((ret = connect(s,(struct sockaddr *) &addr,
 			sizeof(struct sockaddr_un)))<0) {
     if (errno != EINTR) {
-      unixunblockSignals();
+      osUnblockSignals();
       RETURN_UNIX_ERROR(out);
     }
   }
 
 // end of critical region
-  unixunblockSignals();
+  osUnblockSignals();
 
   return OZ_unifyInt(out,ret);
 }
