@@ -46,13 +46,14 @@
  * -----------------------------------------------------------------------*/
 
 typedef enum {
-  ThreadSwitch	= 1 << 2, // choose a new process
-  IOReady	= 1 << 3, // IO handler has signaled IO ready
-  UserAlarm	= 1 << 4, // Alarm handler has signaled User Alarm
-  StartGC	= 1 << 5, // need a GC
-  TasksReady    = 1 << 6,
-  ChildReady	= 1 << 7, // SIGCHLD raised
-  SigPending	= 1 << 8  // some signal caught
+  ThreadSwitch	 = 1 << 2, // choose a new process
+  IOReady	 = 1 << 3, // IO handler has signaled IO ready
+  UserAlarm	 = 1 << 4, // Alarm handler has signaled User Alarm
+  StartGC	 = 1 << 5, // need a GC
+  TasksReady     = 1 << 6,
+  ChildReady	 = 1 << 7, // SIGCHLD raised
+  SigPending	 = 1 << 8,  // some signal caught
+  TimerInterrupt = 1 << 9
 } StatusBit;
 
 /* -----------------------------------------------------------------------
@@ -278,8 +279,6 @@ public:
   }
 
 private:
-  // internal clock in 'ms';
-  unsigned long emulatorClock;
 
   // minimal interval at which tasks are checked/handled.
   // '0' means no minimal interval is required.
@@ -288,9 +287,12 @@ private:
   //
   OzSleep *sleepQueue;
 
-private:
   Bool _profileMode;
+
 public:
+  // internal clock in 'ms';
+  unsigned long emulatorClock;
+
   void setProfileMode()   { _profileMode=TRUE; }
   void unsetProfileMode() { _profileMode=FALSE; }
   Bool profileMode()      { return _profileMode; }
@@ -499,7 +501,7 @@ public:
 
   //
   // 'ms' is time since last call in milliseconds;
-  void handleAlarm(unsigned int ms);
+  void handleAlarm(int ms = -1);
   // 'SIGUSR2' notifies about presence of tasks. Right now these are 
   // only virtual site messages;
   void handleUSR2();

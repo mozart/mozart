@@ -460,6 +460,7 @@ bombGenCall:
 inline
 Bool isNotPreemptiveScheduling(void)
 {
+  //  return TRUE;
   if (am.isSetSFlag()) {
     if (am.isSetSFlag(ThreadSwitch)) {
       if (am.threadsPool.threadQueuesAreEmpty())
@@ -507,26 +508,11 @@ Bool hookCheckNeeded()
   return T_RAISE;
 
 
-Bool oz_emulateHookOutline()
-{
-  // without signal blocking;
-  if (am.isSetSFlag(ThreadSwitch)) {
-    if (am.threadsPool.threadQueuesAreEmpty()) {
-      am.restartThread();
-    } else {
-      return TRUE;
-    }
-  }
-  return am.isSetSFlag();
-}
-
 /* macros are faster ! */
 #define emulateHookCall(e,Code)			\
    if (hookCheckNeeded()) {			\
-     if (oz_emulateHookOutline()) {		\
        Code;					\
        return T_PREEMPT;			\
-     }						\
    }
 
 #define emulateHookPopTask(e) emulateHookCall(e,)
@@ -2392,7 +2378,7 @@ LBLdispatcher:
 	 if (ozconf.timeDetailed)
 	   starttime = osUserTime();
 	 
-	 while (!lpq->isEmpty() && isNotPreemptiveScheduling()) {
+	 while (!lpq->isEmpty() && !hookCheckNeeded()) {
 	   Propagator * prop = lpq->dequeue();
 	   Propagator::setRunningPropagator(prop);
 	   Assert(!prop->isDeadPropagator());
