@@ -121,9 +121,6 @@ in
       meth input($)
 	 lock {self.lexer.input @LexerAddr $} end
       end
-      meth unput(C)
-	 lock {self.lexer.unput @LexerAddr C} end
-      end
 
       meth setInteractive(B)
 	 lock

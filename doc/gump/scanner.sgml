@@ -500,11 +500,6 @@
 	  <Item>
 	    The next (unmatched) character is removed from the character
 	    stream and returned in&nbsp;?_{C}.
-	  <Entry><<meth unput(?+{C})>>
-	  <Item>
-	    A character&nbsp;?_{C} is prepended to the input character
-	    stream.  This is next used by matching operations or returned
-	    by <<input>>.
 	  <Entry><<meth scanFile(?+{V})>>
 	  <Item>
 	    This method causes the currently scanned buffer (if any) to be
