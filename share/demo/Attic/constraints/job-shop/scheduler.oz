@@ -151,9 +151,9 @@ in
       end
 
       meth explore
-         {Explorer all(@Problem proc {$ O N}
-                                   O.pe >: N.pe
-                                end)}
+         {Explorer.object all(@Problem proc {$ O N}
+                                          O.pe >: N.pe
+                                       end)}
       end
 
       meth setSpan(S)

@@ -22,12 +22,18 @@
 
 local
 
-   fun {MakeQueens IMPORT}
-      \insert 'CP.env'
-      = IMPORT.'CP'
-      \insert 'WP.env'
-      = IMPORT.'WP'
+   functor MakeQueens prop once
 
+   import
+      FD
+
+      Tk
+
+      TkTools
+
+      Applet
+
+   body
       URL = 'http://www.ps.uni-sb.de/ozhome/demo/images/animated-queens/'
 
       MaxWidth      = 600 % How large can the drawing area be
@@ -553,13 +559,7 @@ local
 
       end
 
-   in
-
-      proc {$ T Argv}
-
-         {New Board init(T) _}
-
-      end
+      {New Board init(Applet.toplevel) _}
 
    end
 
@@ -567,9 +567,6 @@ in
 
    {Application.applet
     'animated-queens.oza'
-
-    c('CP':       eager
-      'WP':       eager)
 
     MakeQueens
 

@@ -32,9 +32,16 @@ local
    TruckHeight = 60
    Free        = 25
 
-   fun {MakeTruckRace IMPORT}
-      \insert 'WP.env'
-      = IMPORT.'WP'
+   functor MakeTruckRace prop once
+
+   import
+      Tk
+
+      TkTools
+
+      Applet
+
+   body
 
       Url = 'http://www.ps.uni-sb.de/ozhome/demo/images/trucks/'
 
@@ -103,20 +110,15 @@ local
          end
       end
 
-   in
+      C = {New Tk.canvas tkInit(parent: Applet.toplevel
+                                bg:     white
+                                width:  Width
+                                height: Height)}
+      {Tk.send pack(C fill:both)}
 
-      proc {$ W Argv}
-         C = {New Tk.canvas tkInit(parent: W
-                                   bg:     white
-                                   width:  Width
-                                   height: Height)}
-      in
-         {Tk.send pack(C fill:both)}
-
-         thread {New Truck init(c:C y:Free)  _} end
-         thread {New Truck init(c:C y:Free+TruckHeight)  _} end
-         thread {New Truck init(c:C y:Free+TruckHeight*2) _} end
-      end
+      thread {New Truck init(c:C y:Free)  _} end
+      thread {New Truck init(c:C y:Free+TruckHeight)  _} end
+      thread {New Truck init(c:C y:Free+TruckHeight*2) _} end
 
    end
 
@@ -124,8 +126,6 @@ in
 
    {Application.applet
     'trucks.oza'
-
-    c('WP': eager)
 
     MakeTruckRace
 

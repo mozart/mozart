@@ -14,8 +14,8 @@ INSTALL_FILE    = $(INSTALL) -m 444
 INSTALL_SRC     = @INSTALL_SRC@
 INSTALL_DIR     = @INSTALL_DIR@
 
-OZBATCH         = @OZBATCH@
-OZCA            = $(OZBATCH) -l AP,OP
+OZC             = @OZC@
+OZCA            = $(OZC) -l Application,Open
 
 
 #
@@ -59,44 +59,44 @@ DISTRIBUTEDWEB = $(DISTRIBUTED:%=distributed/%.html)
 WEBPAGES = \
         $(CONSTRAINTWEB) $(CONCURRENTWEB) $(DISTRIBUTEDWEB)
 
-CONSTRAINTWEBC  = $(CONSTRAINTS:%=constraints/%-html.ozc)
-CONCURRENTWEBC  = $(CONCURRENT:%=concurrent/%-html.ozc)
-DISTRIBUTEDWEBC = $(DISTRIBUTED:%=distributed/%-html.ozc)
+CONSTRAINTWEBP  = $(CONSTRAINTS:%=constraints/%-html.ozp)
+CONCURRENTWEBP  = $(CONCURRENT:%=concurrent/%-html.ozp)
+DISTRIBUTEDWEBP = $(DISTRIBUTED:%=distributed/%-html.ozp)
 
 WEBC = \
         $(CONSTRAINTWEBC) $(CONCURRENTWEBC) $(DISTRIBUTEDWEBC)
 
 all:: $(WEBPAGES) $(WEBC)
 
-ozc2html: make-ozc2html.oz
+ozp2html: make-ozp2html.oz
         $(OZCA) $<
 
-$(WEBPAGES): ozc2html
+$(WEBPAGES): ozp2html
 
 OZENGINE=ozengine
-OZC2HTML=$(OZENGINE) ./ozc2html
-constraints/%.html: constraints/%-html.ozc
+OZP2HTML=$(OZENGINE) ./ozp2html
+constraints/%.html: constraints/%-html.ozp
         @mkdir constraints 2> /dev/null || true
-        $(OZC2HTML) --ozc=$< > $@
-concurrent/%.html: concurrent/%-html.ozc
+        $(OZP2HTML) --ozp=$< > $@
+concurrent/%.html: concurrent/%-html.ozp
         @mkdir concurrent 2> /dev/null || true
-        $(OZC2HTML) --ozc=$< > $@
-distributed/%.html: distributed/%-html.ozc
+        $(OZP2HTML) --ozp=$< > $@
+distributed/%.html: distributed/%-html.ozp
         @mkdir distributed 2> /dev/null || true
-        $(OZC2HTML) --ozc=$< > $@
+        $(OZP2HTML) --ozp=$< > $@
 
-constraints/%-html.ozc: constraints/%-html.oz
+constraints/%-html.ozp: constraints/%-html.oz
         @mkdir constraints 2> /dev/null || true
         $(OZCA) -c $< -o $@
-concurrent/%-html.ozc: concurrent/%-html.oz
+concurrent/%-html.ozp: concurrent/%-html.oz
         @mkdir concurrent 2> /dev/null || true
         $(OZCA) -c $< -o $@
-distributed/%-html.ozc: distributed/%-html.oz
+distributed/%-html.ozp: distributed/%-html.oz
         @mkdir distributed 2> /dev/null || true
         $(OZCA) -c $< -o $@
 
 clean::
-        -rm -f $(WEBC) ozc2html
+        -rm -f $(WEBC) ozp2html
 
 veryclean::
         -rm -f $(WEBPAGES)

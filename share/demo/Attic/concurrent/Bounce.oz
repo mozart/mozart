@@ -28,9 +28,14 @@
 
 local
 
-   fun {MakeBounce IMPORT}
-      \insert 'WP.env'
-      = IMPORT.'WP'
+   functor MakeBounce prop once
+
+   import
+      Tk
+
+      Applet
+
+   body
 
       CanvasWidth  = 400.0
       CanvasHeight = 400.0
@@ -142,11 +147,7 @@ local
       end
 
 
-   in
-
-      proc {$ T Argv}
-         {Tk.send pack({New Manager init(parent:T)})}
-      end
+      {Tk.send pack({New Manager init(parent:Applet.toplevel)})}
 
    end
 
@@ -154,8 +155,6 @@ in
 
    {Application.applet
     'bounce.oza'
-
-    c('WP': eager)
 
     MakeBounce
 
