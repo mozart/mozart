@@ -1135,6 +1135,45 @@ fi
     fi
     
 
+    # Extract the first word of "ozplatform", so it can be a program name with args.
+set dummy ozplatform; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1142: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_PLATFORMSCRIPT'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$PLATFORMSCRIPT" in
+  /*)
+  ac_cv_path_PLATFORMSCRIPT="$PLATFORMSCRIPT" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $PATH:$oz_topdira/bin:$oz_topdira$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_PLATFORMSCRIPT="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+PLATFORMSCRIPT="$ac_cv_path_PLATFORMSCRIPT"
+if test -n "$PLATFORMSCRIPT"; then
+  echo "$ac_t""$PLATFORMSCRIPT" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    if test ! -n "$PLATFORMSCRIPT"
+    then
+	PLATFORMSCRIPT=undefined
+	
+    fi
+    
+: ${platform=`$PLATFORMSCRIPT`}
+
 subdirs="ozflex"
 
 trap '' 1 2 15
@@ -1296,6 +1335,7 @@ s%@SET_MAKE@%$SET_MAKE%g
 s%@RM@%$RM%g
 s%@DYNLD@%$DYNLD%g
 s%@INSTALLSRC@%$INSTALLSRC%g
+s%@PLATFORMSCRIPT@%$PLATFORMSCRIPT%g
 s%@platform@%$platform%g
 s%@subdirs@%$subdirs%g
 
