@@ -35,6 +35,7 @@
 #endif
 
 #include "tagged.hh"
+#include "hashtbl.hh"
 
 /*===================================================================
  * global names and atoms
@@ -1433,7 +1434,10 @@ public:
 
   Bool lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X);
 
-  TaggedRef classGetFeature(TaggedRef lit) { return features->getFeature(lit); }
+  TaggedRef classGetFeature(TaggedRef lit)
+  {
+    return features->getFeature(lit);
+  }
 
   SRecord *getUnfreeRecord() { return unfreeFeatures; }
   SRecord *getFeatures()     { return features; }
@@ -1442,7 +1446,8 @@ public:
 
   ObjectClass *gcClass() { return (ObjectClass *) gcConstTerm(); }
 
-  void import(SRecord *feat,OzDictionary *fm, SRecord *uf, OzDictionary *dm, Bool l)
+  void import(SRecord *feat,OzDictionary *fm, SRecord *uf,
+	      OzDictionary *dm, Bool l)
   {
     features       = feat;
     fastMethods    = fm;
@@ -2020,8 +2025,6 @@ public:
   long getCounter() { return counter; }
 #endif
 };
-
-
 
 inline
 Bool isBuiltin(ConstTerm *s)

@@ -240,9 +240,6 @@ void initLiterals()
   BI_restop=makeTaggedConst(builtinTab.find("perdioRestop"));
 }
 
-
-
-
 /*===================================================================
  * Literal
  *=================================================================== */
@@ -1427,6 +1424,9 @@ void PrTabEntry::profileReset()
     aux = aux->next;
   }
 }
+
+#include "opcodes.hh"
+#include "codearea.hh"
 
 void PrTabEntry::patchFileAndLine()
 {

@@ -27,6 +27,13 @@
 
 #include "am.hh"
 
+#ifdef OUTLINE
+#define inline
+#include "am.icc"
+#undef inline
+#endif
+
+#include "os.hh"
 #include "genvar.hh"
 #include "fdbuilti.hh"
 #include "builtins.hh"
@@ -2134,10 +2141,3 @@ SuspList *AM::installPropagators(SuspList * local_list, SuspList * glob_list,
   
   return ret_list;
 }
-
-#ifdef OUTLINE
-#define inline
-#include "am.icc"
-#undef inline
-#endif
-

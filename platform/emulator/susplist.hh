@@ -33,7 +33,7 @@
 #pragma interface
 #endif
 
-#include "types.hh"
+#include "base.hh"
 #include "mem.hh"
 
 // #include "oz_cpi.hh"

@@ -31,10 +31,8 @@
 #pragma interface
 #endif
 
-#include "ozostream.hh"
-
+#include "base.hh"
 #include "oz_cpi.hh"
-#include "types.hh"
 
 class FSetValue : public OZ_FSetValue {
 

@@ -94,6 +94,7 @@
 #include "codearea.hh"
 #include "indexing.hh"
 
+#include "perdio.hh"
 #include "perdio_debug.hh"  
 #include "perdio_debug.cc"  
 #include "genvar.hh"
@@ -104,7 +105,6 @@
 #include "marshaler.hh"
 #include "comm.hh"
 #include "msgbuffer.hh"
-#include "perdio.hh"
 #include "chain.hh"
 
 /* *********************************************************************/

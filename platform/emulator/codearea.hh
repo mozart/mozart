@@ -28,7 +28,7 @@
 #define __CODE_AREAH
 
 #include <sys/time.h>
-#include "types.hh"
+#include "base.hh"
 #include "hashtbl.hh"
 #include "opcodes.hh"
 #include "value.hh"

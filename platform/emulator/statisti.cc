@@ -30,9 +30,8 @@
 
 #include <stdio.h>
 
-#include "tagged.hh"
-#include "config.hh"
 #include "statisti.hh"
+#include "ozconfig.hh"
 
 #include "am.hh"
 
