@@ -118,17 +118,16 @@ void Board::decSolveThreads(void) {
 
 inline
 void Board::checkSolveThreads(void) {
-  Assert(!isCommitted() && !isRoot());
+  Assert(!isCommitted());
 
   Board * bb = this;
   
-  do {
-    
+  while (!bb->isRoot()) {
     if (bb->isStable())
       oz_newThreadInject(bb);
     
     bb = bb->getParent();
-  } while (!bb->isRoot());
+  }
   
 }
 
