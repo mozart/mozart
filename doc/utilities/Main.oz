@@ -41,6 +41,7 @@ prepare
                  %% HTML options
                  'stylesheet'(single type: string default: unit)
                  'latextogif'(rightmost type: bool default: true)
+                 'latexdb'(single type: string default: unit)
                  'split'(rightmost type: bool default: true)
                  'abstract'(rightmost type: bool default: false)
                  %% Path names

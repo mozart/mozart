@@ -27,7 +27,6 @@ functor
 import
    %% System Modules
    OS(system localTime)
-   Open(text file)
    Narrator('class')
    ErrorListener('class')
    %% Application Modules
@@ -39,6 +38,7 @@ import
    Thumbnails('class')
    LaTeXToGIF('class')
    PostScriptToGIF('class')
+   File(read: ReadFile write: WriteFile)
    HTML(empty: EMPTY
         seq: SEQ
         common: COMMON
@@ -246,31 +246,6 @@ define
       end
    end
 
-   local
-      class TextFile from Open.file Open.text
-         prop final
-         meth readAll($)
-            case TextFile, getS($) of false then ""
-            elseof S then S#'\n'#TextFile, readAll($)
-            end
-         end
-      end
-   in
-      proc {ReadFile File ?VS}
-         F = {New TextFile init(name: File flags: [read])}
-      in
-         {F readAll(?VS)}
-         {F close()}
-      end
-   end
-
-   proc {WriteFile VS File}
-      F = {New Open.file init(name: File flags: [write create truncate])}
-   in
-      {F write(vs: VS)}
-      {F close()}
-   end
-
    class OzDocToHTML from Narrator.'class'
       attr
          Reporter: unit
@@ -350,7 +325,7 @@ define
                MyThumbnails <- {New Thumbnails.'class' init(@OutputDirectory)}
                MyLaTeXToGIF <- if Args.'latextogif' then
                                   {New LaTeXToGIF.'class'
-                                   init(@OutputDirectory)}
+                                   init(@OutputDirectory Args.'latexdb')}
                                else unit
                                end
                MyPostScriptToGIF <- {New PostScriptToGIF.'class'

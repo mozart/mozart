@@ -23,14 +23,26 @@ functor
 import
    OS(tmpnam system unlink)
    Open(file)
+   Gdbm at 'x-oz://contrib/gdbm'
+   File(read: ReadFile write: WriteFile)
 export
    'class': LaTeXToGIFClass
 define
    LATEX2GIF = 'latex2gif'
 
    class LaTeXToGIFClass
-      attr Dict: unit Keys: unit DirName: unit N: unit
-      meth init(Dir)
+      attr DB: unit Dict: unit Keys: unit DirName: unit N: unit
+      meth init(Dir DBName)
+         DB <- case DBName of unit then unit
+               else
+                  try
+                     {Gdbm.new write(DBName)}
+                  catch _ then
+                     {Gdbm.new create(DBName)}
+                  end
+               end
+         Dict <- {NewDictionary}
+         Keys <- nil
          DirName <- Dir
          N <- 0
       end
@@ -43,23 +55,22 @@ define
                                 end ?OutFileName)
       end
       meth Enter(VS OutFileName) A in
-         case @Dict of unit then
-            Dict <- {NewDictionary}
-            Keys <- nil
-         else skip
-         end
          A = {VirtualString.toAtom VS}
          case {Dictionary.condGet @Dict A unit} of unit then
             N <- @N + 1
             OutFileName = 'latex'#@N#'.gif'
             {Dictionary.put @Dict A OutFileName}
-            Keys <- A|@Keys
+            case @DB == unit orelse {Gdbm.condGet @DB A true} of true then
+               Keys <- A|@Keys
+            elseof X then
+               {WriteFile X @DirName#'/'#OutFileName}
+            end
          else
             {Dictionary.get @Dict A OutFileName}
          end
       end
       meth process(Packages Reporter)
-         case @Dict of unit then skip
+         case @Keys of nil then skip
          else FileName File in
             {Reporter startSubPhase('converting LaTeX sections to GIF')}
             FileName = {OS.tmpnam}
@@ -79,14 +90,23 @@ define
             {File write(vs: '\\end{document}\n')}
             {File close()}
             try
-               case
-                  {OS.system LATEX2GIF#' '#FileName#' '#@N#' '#@DirName}
+               case {OS.system LATEX2GIF#' '#FileName#' '#@N#' '#@DirName}
                of 0 then skip
                elseof I then
                   {Exception.raiseError ozDoc(latexToGif I)}
                end
+               if @DB \= unit then
+                  {ForAll @Keys
+                   proc {$ X}
+                      {Gdbm.put @DB X
+                       {ReadFile @DirName#'/'#{Dictionary.get @Dict X}}}
+                   end}
+               end
             finally
                {OS.unlink FileName}
+               if @DB \= unit then
+                  {Gdbm.close @DB}
+               end
             end
          end
       end
