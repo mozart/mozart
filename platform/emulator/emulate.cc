@@ -306,28 +306,30 @@ Bool hookCheckNeeded(AM *e)
 // -----------------------------------------------------------------------
 // THREADED CODE
 
+//#define WANT_INSTRPROFILE
+
 #if defined(RECINSTRFETCH) && defined(THREADED)
  Error: RECINSTRFETCH requires THREADED == 0;
 #endif
 
 #define INCFPC(N) PC += N
 
-#ifdef THREADED
-
-#define DODISPATCH goto* ToPointer(help);
-
-//#define WANT_INSTRPROFILE
-#if defined(WANT_INSTRPROFILE) && defined(sparc)
+#if defined(WANT_INSTRPROFILE)
 #define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
 #define asmLbl(INSTR)
 #endif
 
+#ifdef THREADED
+
 #define INSTRUCTION(INSTR)   INSTR##LBL: asmLbl(INSTR);
 
-
 // let gcc fill in the delay slot of the "jmp" instruction:
-#   define DISPATCH(INC) { ByteCode help=*(PC+INC); INCFPC(INC); DODISPATCH; }
+#define DISPATCH(INC) {                                                       \
+  intlong help = *(PC+INC);                                                   \
+  INCFPC(INC);                                                                \
+  goto* (void*) (help|textBase);                                              \
+}
 
 #else /* THREADED */
 
@@ -335,7 +337,7 @@ Bool hookCheckNeeded(AM *e)
 
 #   define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
 
-#if defined(__GNUC__) && defined(WANT_INSTRPROFILE)
+#if defined(WANT_INSTRPROFILE)
 #   define INSTRUCTION(INSTR)   case INSTR: asm(" " #INSTR ":");
 #else
 #   define INSTRUCTION(INSTR)   case INSTR:
@@ -349,7 +351,7 @@ Bool hookCheckNeeded(AM *e)
 
 
 #ifdef FASTREGACCESS
-#define RegAccess(Reg,Index) (*(RefsArray)((int)Reg + Index))
+#define RegAccess(Reg,Index) (*(RefsArray)((intlong) Reg + Index))
 #define LessIndex(Index,CodedIndex) (Index <= CodedIndex/sizeof(TaggedRef))
 #else
 #define RegAccess(Reg,Index) (Reg[Index])
@@ -387,10 +389,37 @@ Bool hookCheckNeeded(AM *e)
 
 
 /* define REGOPT if you want the into register optimization for GCC */
-#if __GNUC__ >= 2 && defined(sparc) && !defined(DEBUG_CHECK) && defined(REGOPT)
+#if defined(REGOPT) &&__GNUC__ >= 2 && (defined(OSF1_ALPHA) || defined(SPARC)) && !defined(DEBUG_CHECK)
 #define Into(Reg) asm(#Reg)
+
+#ifdef SPARC
+#define Reg1 asm("i0")
+#define Reg2 asm("i1")
+#define Reg3 asm("i2")
+#define Reg4 asm("i3")
+#define Reg5 asm("i4")
+#define Reg6 asm("i5")
+#define Reg7 asm("l0")
+#endif
+
+#ifdef OSF1_ALPHA
+#define Reg1 asm("$9")
+#define Reg2 asm("$10")
+#define Reg3
+#define Reg4
+#define Reg5
+#define Reg6
+#define Reg7
+#endif
+
 #else
-#define Into(Reg)
+#define Reg1
+#define Reg2
+#define Reg3
+#define Reg4
+#define Reg5
+#define Reg6
+#define Reg7
 #endif
 
 
@@ -543,13 +572,16 @@ void engine() {
 // ------------------------------------------------------------------------
 // *** Global Variables
 // ------------------------------------------------------------------------
-  register ProgramCounter PC   Into(i0) = 0;
-  register TaggedRef *sPointer Into(i1) = NULL;
-  register AMModus mode        Into(i2);
-  register AM *e               Into(i3) = &am;
-  register RefsArray X         Into(i4) = e->xRegs;
-  register RefsArray Y         Into(i5) = NULL;
-  register RefsArray G         Into(l0) = NULL;
+  /* ordered by iomportance: first variables will go into machine registers
+   * if -DREGOPT is set
+   */
+  register ProgramCounter PC   Reg1 = 0;
+  register RefsArray X         Reg2 = am.xRegs;
+  register RefsArray Y         Reg3 = NULL;
+  register TaggedRef *sPointer Reg4 = NULL;
+  register AMModus mode        Reg5;
+  register AM *e               Reg6 = &am;
+  register RefsArray G         Reg7 = NULL;
 
   int XSize = 0;
 
