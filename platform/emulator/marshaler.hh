@@ -53,6 +53,7 @@ OZ_Term unmarshalTermRT(MsgBuffer *bs);
 int unmarshalNumber(MsgBuffer*);
 double unmarshalFloat(MsgBuffer *bs);
 char *unmarshalString(MsgBuffer *);
+char *unmarshalVersionString(MsgBuffer *);
 unsigned short unmarshalShort(MsgBuffer*);
 GName* unmarshalGName(TaggedRef*,MsgBuffer*);
 SRecord* unmarshalSRecord(MsgBuffer*);
