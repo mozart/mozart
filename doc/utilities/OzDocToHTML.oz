@@ -297,6 +297,8 @@ define
 	       Out <- @Out#'w.&nbsp;r.&nbsp;t.'
 	    [] eg then
 	       Out <- @Out#'e.&nbsp;g.'
+	    [] resp then
+	       Out <- @Out#'resp.'
 	    [] 'PI:LATEX' then
 	       Out <- @Out#'LaTeX'
 	    [] 'PI:EG' then
