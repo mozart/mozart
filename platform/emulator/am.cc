@@ -1661,7 +1661,7 @@ Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
 #ifdef PERDIO
 void AM::stopThread(Thread *th) {
   if (th->pStop()==0) {
-    if (th==am.currentThread) {
+    if (th==currentThread) {
       setSFlag(StopThread);
     }
     th->stop();
@@ -1672,9 +1672,14 @@ void AM::resumeThread(Thread *th) {
   if (th->pCont()==0) {
     th->cont();
 
-    if (!th->isDeadThread() && !am.isScheduled(th)) {
-      th->suspThreadToRunnable();
-      am.scheduleThread(th);
+    if (!th->isDeadThread()) {
+      if (th == currentThread) {
+	Assert(isSetSFlag(StopThread));
+	unsetSFlag(StopThread);
+      } else {
+	th->suspThreadToRunnable();
+	scheduleThread(th);
+      }
     }
   }
 }
