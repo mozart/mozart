@@ -72,6 +72,9 @@ define
 	 {PickleToString {Label V} MID (&R|OUT)}
       elseif {IsDictionary V} then
 	 {PickleToString {Dictionary.entries V} IN (&D|OUT)}
+      elseif {IsByteString V} then N={ByteString.length V} MID in
+	 {PickleToString N IN (&B|MID)}
+	 {Append {ByteString.toString V} OUT MID}
       end
    end
    proc {PickleListToString L IN OUT}
@@ -109,6 +112,10 @@ define
       [] &S|L then case Stack of N|Stack then L1 L2 in
 		      {List.takeDrop L N L1 L2}
 		      {PickleFromString L2 L1|Stack}
+		   end
+      [] &B|L then case Stack of N|Stack then L1 L2 in
+		      {List.takeDrop L N L1 L2}
+		      {PickleFromString L2 {ByteString.make L1}|Stack}
 		   end
       [] &L|L then case Stack of N|StackIn then StackOut Lst in
 		      {Grab N StackIn StackOut nil Lst}
@@ -160,8 +167,11 @@ define
    proc {ToFile V F}
       O={New Open.file init(name:F flags:[write create truncate])}
    in
-      {O write(vs:{ToString V})}
-      {O close}
+      try
+	 {O write(vs:{ToString V})}
+      finally
+	 try {O close} catch _ then skip end
+      end
    end
    fun {FromFile F}
       O={New Open.file init(url:F)}
