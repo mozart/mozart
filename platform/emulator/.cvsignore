@@ -1,3 +1,5 @@
+solaris-sparc
+linux-i486
 version.cc oz.emulator.bin
 Makefile
 Makefile.rules
@@ -22,4 +24,3 @@ ozma-s.cc
 ozma-p.yy
 ozma-p.cc
 perdio.cc
-
