@@ -60,8 +60,6 @@
 
 <!ENTITY chapter.flowers        SYSTEM "flowers.sgml">
 <!ENTITY chapter.board          SYSTEM "board.sgml">
-<!ENTITY chapter.flights        SYSTEM "flights.sgml">
-<!ENTITY chapter.corpus         SYSTEM "corpus.sgml">
 <!ENTITY chapter.chat		SYSTEM "chat.sgml">
 
 <!ENTITY chapter.dict-client    SYSTEM "dict-client.sgml">
@@ -144,8 +142,6 @@
     <Part id="part.distributed">
       <Title/Distributed Applications/
       &chapter.board;
-      &chapter.flights;
-      &chapter.corpus;
 	&chapter.chat;
     </Part>
 
