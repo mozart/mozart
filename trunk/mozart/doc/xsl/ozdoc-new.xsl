@@ -806,7 +806,7 @@
   <txt:usemap>}</txt:usemap>
 </template>
 
-<template match="TD | TH">
+<template match="TD">
   <if test="not(position()=1)">
     <txt:usemap>&amp;</txt:usemap>
   </if>
@@ -819,8 +819,7 @@
             <value-of select="meta:latexTableSpecExists((string(@ID)))"/>
           </txt:usemap>
         </when>
-        <when test="local-part()='TD'">Dl</when>
-        <otherwise>Hl</otherwise>
+        <otherwise>Dl</otherwise>
       </choose>
       <txt:usemap>}{</txt:usemap>
     </when>
@@ -829,6 +828,31 @@
   <if test="@COLSPAN">
     <txt:usemap>}</txt:usemap>
   </if>
+</template>
+
+<template match="TH">
+  <if test="not(position()=1)">
+    <txt:usemap>&amp;</txt:usemap>
+  </if>
+  <txt:usemap>\multicolumn{</txt:usemap>
+  <choose>
+    <when test="@COLSPAN">
+      <value-of select="@COLSPAN"/>
+    </when>
+    <otherwise>1</otherwise>
+  </choose>
+  <txt:usemap>}{</txt:usemap>
+  <choose>
+    <when test="@ID and meta:latexTableSpecExists((string(@ID)))">
+      <txt:usemap>
+        <value-of select="meta:latexTableSpecExists((string(@ID)))"/>
+      </txt:usemap>
+    </when>
+    <otherwise>Hl</otherwise>
+  </choose>
+  <txt:usemap>}{</txt:usemap>
+  <apply-templates/>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <!-- figures -->
@@ -1089,6 +1113,8 @@
   <txt:usemap name="text">
     <apply-templates/>
   </txt:usemap>
+  <txt:usemap>}{</txt:usemap>
+  <value-of select="@CHUNK.ID"/>
   <txt:usemap>}</txt:usemap>
 </template>
 

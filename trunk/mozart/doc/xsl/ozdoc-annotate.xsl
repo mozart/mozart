@@ -41,6 +41,22 @@
   </copy>
 </template>
 
+<template match="CHUNK.REF" mode="ok">
+  <copy>
+    <apply-templates select="@*"/>
+    <variable name="title">
+      <value-of select="."/>
+    </variable>
+    <if test="not(meta:chunkExists(string($title)))">
+      <if test="meta:chunkRegister(generate-id(),string($title))"/>
+    </if>
+    <attribute name="CHUNK.ID">
+      <value-of select="meta:chunkGetID(string($title))"/>
+    </attribute>
+    <apply-templates select="*|text()|processing-instruction()"/>
+  </copy>
+</template>
+
 <template match="CODE|CHUNK.SILENT|VAR[@TYPE='PROG']">
   <element name="HILITE.MODE" namespace="">
     <attribute name="PROGLANG">
@@ -82,7 +98,7 @@
   </element>
 </template>
 
-<template match="CHUNK.REF|VAR[@TYPE!='PROG']" mode="ok">
+<template match="VAR[@TYPE!='PROG']" mode="ok">
   <copy-of select="."/>
 </template>
 
