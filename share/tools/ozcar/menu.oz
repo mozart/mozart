@@ -131,10 +131,12 @@ in
 			[RB(label:    'Types Only'
 			    variable: TkEnvPrintTypes
 			    value:    true
+			    key:      'less'
 			    action:   Config # set(envPrintTypes true))
 			 RB(label:    'Complete'
 			    variable: TkEnvPrintTypes
 			    value:    false
+			    key:      'greater'
 			    action:   Config # set(envPrintTypes false))])
 		  separator
 		  CB(label:    'Use Emacs'
