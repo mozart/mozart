@@ -2024,7 +2024,7 @@ void engine() {
 	e->incSolveThreads (e->currentSolveBoard);
 	tt->setNotificationBoard (e->currentSolveBoard);
       }
-      IncfProfCounter(procCounter,sizeof(Thread)+TaskStack::DefaultSize*4);
+      IncfProfCounter(procCounter,sizeof(Thread));
       tt->pushTask(CBB,newPC,Y,G);
       tt->schedule();
       JUMP(contPC);
