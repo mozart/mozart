@@ -73,13 +73,13 @@ void Statistics::print(FILE *fd)
 {
   fprintf(fd,"\n******************************\n");
   fprintf(fd,"***  Oz System Statistics  ***\n");
-  fprintf(fd,"******************************\n\n");
+  fprintf(fd,"******************************\n");
 
   unsigned total    = getUsedMemory()*KB;
   unsigned freeList = getMemoryInFreeList();
   unsigned occupied = total-freeList;
 
-  fprintf(fd,  "  Memory areas:");
+  fprintf(fd,  "\n  Memory areas:");
   printMem(fd, "\n    Code size is ", CodeArea::totalSize);
   printMem(fd, ".\n    Heap allocated is  ", getAllocatedMemory()*KB);
   printMem(fd, ".\n    Heap in freelist is ", freeList);
@@ -94,10 +94,10 @@ void Statistics::print(FILE *fd)
   printTime(fd,"\n    User time is ", osUserTime());
   printTime(fd,".\n    System time is ", osSystemTime());
   printMem(fd,".\n    Size is ", ToInt32(sbrk(0))-mallocBase);
-  fprintf(fd, ".\n\n");
+  fprintf(fd, ".\n");
 
 #ifdef PROFILE
-  fprintf(fd,"  Memory statistics:\n");
+  fprintf(fd,"\n  Memory statistics:\n");
   if (allocateCounter) {
     fprintf(fd,"    Allocate uses \t\t %d bytes (%d%% of used heap)\n",
 	    allocateCounter,
@@ -119,7 +119,7 @@ void Statistics::print(FILE *fd)
 	  sum, 	  (sum*100)/occupied );
 #endif
 
-  fprintf(fd,"  Threads:\n");
+  fprintf(fd,"\n  Threads:\n");
   fprintf(fd,"    created        : %d\n", 
 	  createdThreads.total); 
 
@@ -128,17 +128,17 @@ void Statistics::print(FILE *fd)
 	  runableThreads.total); 
 #endif
 
-  fprintf(fd,"  Search:\n");
+  fprintf(fd,"\n  Search:\n");
   fprintf(fd,"    alternatives: %d\n",   solveAlt.total);
   fprintf(fd,"    clones:       %d\n",   solveClone.total);
   fprintf(fd,"    solutions:    %d\n",   solveSolved.total);
-  fprintf(fd,"    failures:     %d\n\n", solveFailed.total);
+  fprintf(fd,"    failures:     %d\n",   solveFailed.total);
 
 #ifdef HEAP_PROFILE
   printCount();
 #endif
   
-  fprintf(fd,"  Finite Domain Constraints:\n");
+  fprintf(fd,"\n  Finite Domain Constraints:\n");
   fprintf(fd,"    Variables created          : %d\n", 
 	  fdvarsCreated.total);
   fprintf(fd,"    Propagators created        : %d\n", 
@@ -150,10 +150,10 @@ void Statistics::print(FILE *fd)
     fprintf(fd,"\n    Propagator runs per second : %.0lf\n\n", 
 	    1000*double(propagatorsInvoked.total)/timeForPropagation.total); 
   } else {
-    fprintf(fd,"\n\n");
+    fprintf(fd,"\n");
   }    
 
-  fprintf(fd,"******************************\n");
+  fprintf(fd,"\n******************************\n");
   fprintf(fd,"***   End of Statistics    ***\n");
   fprintf(fd,"******************************\n\n");
 }
