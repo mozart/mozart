@@ -2300,7 +2300,7 @@ After splitting, the outputs are passed to the common oz-filter."
 		  (set-buffer buf)
 		  (insert-file-contents filename t nil nil t)
 		  (delete-file filename)
-		  (cond ((string-match "\\.ozc$" filename)
+		  (cond ((string-match "\\.ozi$" filename)
 			 (oz-mode))
 			((string-match "\\.ozm$" filename)
 			 (ozm-mode))))))
