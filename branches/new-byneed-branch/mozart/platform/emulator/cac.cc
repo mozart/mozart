@@ -43,7 +43,10 @@
 #include "var_of.hh"
 #include "var_ct.hh"
 #include "var_future.hh"
+#include "var_readonly.hh"
+#include "var_readonly_quiet.hh"
 #include "var_simple.hh"
+#include "var_quiet.hh"
 #include "var_opt.hh"
 #include "var_ext.hh"
 #include "thr_int.hh"
@@ -739,6 +742,9 @@ OzVariable * OzVariable::_cacVarInline(void) {
   switch (getType()) {
   case OZ_VAR_OPT:
     Assert(0);
+  case OZ_VAR_QUIET:
+    cacReallocStatic(OzVariable,this,to,sizeof(QuietVar));
+    break;
   case OZ_VAR_SIMPLE:
     cacReallocStatic(OzVariable,this,to,sizeof(SimpleVar));
     break;
@@ -747,6 +753,12 @@ OzVariable * OzVariable::_cacVarInline(void) {
     memcpy(to,this,sizeof(OzVariable));
     GCDBG_INTOSPACE(to);
     cacStack.push(to, PTR_VAR);
+    break;
+  case OZ_VAR_READONLY_QUIET:
+    cacReallocStatic(OzVariable,this,to,sizeof(QuietReadOnly));
+    break;
+  case OZ_VAR_READONLY:
+    cacReallocStatic(OzVariable,this,to,sizeof(ReadOnly));
     break;
   case OZ_VAR_FUTURE:
     cacReallocStatic(OzVariable,this,to,sizeof(Future));

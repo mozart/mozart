@@ -36,6 +36,7 @@ local
 in
    Value = value(wait:            Wait
 		 waitQuiet:       Boot_Value.'waitQuiet'
+                 waitNeeded:      WaitNeeded
 		 waitOr:          WaitOr
 
 		 '=<':            Boot_Value.'=<'
@@ -57,6 +58,7 @@ in
 		 isFuture:        IsFuture
 		 isFailed:        IsFailed
 		 isDet:           IsDet
+		 isNeeded:        IsNeeded
 		 status:          Boot_Value.status
 		 type:            Boot_Value.type
 

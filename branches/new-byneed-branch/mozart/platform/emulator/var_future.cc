@@ -230,7 +230,8 @@ OZ_BI_define(BIwaitQuiet,1,0)
       p->addSuspSVar(oz_currentThread());
       return (SUSPEND);
     }
-    oz_suspendOnPtr(futPtr);
+    // oz_suspendOnPtr(futPtr);
+    return oz_var_addQuietSusp(futPtr, oz_currentThread());
   }
   return PROCEED;
 } OZ_BI_end
