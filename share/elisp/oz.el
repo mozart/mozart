@@ -65,7 +65,7 @@ For example
   (setq oz-emulator-hook 'oz-start-gdb-emulator)
 starts the emulator under gdb")
 
-(defvar OZ-HOME "/usr/share/gs/Oz"
+(defvar OZ-HOME "/usr/share/gs/oz"
   "The directory where oz is installed")
 
 (defun oz-home ()
