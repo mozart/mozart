@@ -25,15 +25,15 @@
   -
   -->
 
-<Chapter id="Chapter.Open">
+<Part id="Part.Open">
   <Title/Open Programming/
 
-  <Section id="Section.Open.OS">
+  <Chapter id="Chapter.OS">
     <Title/Operating System Support: <<OS>>/
-  </Section>
+  </Chapter>
 
-  <Section id="Section.Open.Open">
+  <Chapter id="Chapter.Open">
     <Title/Files, Sockets, and Pipes: <<Open>>/
-  </Section>
+  </Chapter>
 
-</Chapter>
+</Part>

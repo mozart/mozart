@@ -25,24 +25,24 @@
   -
   -->
 
-<Chapter id="Chapter.Constraints">
+<Part id="Part.Constraints">
   <Title/Constraint Programming/
 
-  <Section id="Section.Constraints.Search">
+  <Chapter id="Chapter.Search">
     <Title/Search Engines: <<Search>>/
-  </Section>
+  </Chapter>
 
-  <Section id="Section.Constraints.FD">
+  <Chapter id="Chapter.FD">
     <Title/Finite Domain Constraints: <<FD>>/
-  </Section>
+  </Chapter>
 
-  <Section id="Section.Constraints.Schedule">
+  <Chapter id="Chapter.Schedule">
     <Title/Scheduling Support: <<Schedule>>/
-  </Section>
+  </Chapter>
 
-  <Section id="Section.Constraints.FS">
+  <Chapter id="Chapter.FS">
     <Title/Finite Set Constraints: <<FS>>/
-  </Section>
+  </Chapter>
 
 
-</Chapter>
+</Part>
