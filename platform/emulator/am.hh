@@ -140,7 +140,9 @@ public:
   void scheduleSuspCCont(Board *bb, int prio,
 			 CFuncContinuation *c, Bool wasExtSusp,
 			 Suspension *s=0);
+#ifndef NEWCOUNTER
   void scheduleSolve(Board *b);
+#endif
   void scheduleWakeup(Board *b, Bool wasExtSusp);
 
   void pushToplevel(ProgramCounter pc);
