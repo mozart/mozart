@@ -142,10 +142,19 @@ define
 	    elseof X then X end
 	 elseof X then X end
 	 {Property.put 'ozdoc.catalog' CATALOG}
+	 TEXINPUTS =
+	 '.:'#
+	 case {OS.getEnv 'OZDOC_TEXINPUTS'} of false then
+	    SRC_DIR#':'
+	 elseof X then X end
+	 #':'#
+	 case {OS.getEnv 'TEXINPUTS'} of false then nil
+	 elseof X then X end
       in
 	 {OS.putEnv 'PATH' SBIN_PATH#':'#{OS.getEnv 'PATH'}}
 	 {OS.putEnv 'OZDOC_ELISP_PATH' ELISP_PATH}
 	 {OS.putEnv 'EMACS_UNIBYTE' 'yes'}
+	 {OS.putEnv 'TEXINPUTS' TEXINPUTS}
       end
       %% The actual translation
       case Args.1 of _|_ then
