@@ -254,7 +254,7 @@ OZ_BI_define(BIstoreLabel,2,0)
 } OZ_BI_end
 
 
-OZ_BI_define(BIstorePredicateRef,2,0)
+OZ_BI_define(BIstoreProcedureRef,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,p);
@@ -592,19 +592,19 @@ OZ_BI_define(BIisUniqueName,1,1)
   OZ_RETURN(oz_bool(oz_isLiteral(val) && tagged2Literal(val)->isUniqueName()));
 } OZ_BI_end
 
-OZ_BI_define(BInewPredicateRef,0,1)
+OZ_BI_define(BInewProcedureRef,0,1)
 {
   AbstractionEntry *entry = new AbstractionEntry(NO);
   OZ_RETURN(OZ_makeForeignPointer(entry));
 } OZ_BI_end
 
-OZ_BI_define(BInewCopyablePredicateRef,0,1)
+OZ_BI_define(BInewCopyableProcedureRef,0,1)
 {
   AbstractionEntry *entry = new AbstractionEntry(OK);
   OZ_RETURN(OZ_makeForeignPointer(entry));
 } OZ_BI_end
 
-OZ_BI_define(BIisCopyablePredicateRef,1,1)
+OZ_BI_define(BIisCopyableProcedureRef,1,1)
 {
   OZ_declareForeignPointer(0,p);
   AbstractionEntry *entry = (AbstractionEntry *) p;
