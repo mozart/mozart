@@ -972,6 +972,8 @@ lexRule         : lex regex inSequence end
 
 regex           : REGEX
                   { $$ = OZ_string(xytext); }
+                | STRING
+                  { $$ = OZ_string(xytext); }
                 ;
 
 modeClause      : _mode_ nakedVariable modeDescrs end
@@ -1440,9 +1442,11 @@ OZ_C_proc_begin(ozparser_parseFile, 3)
   if (!OZ_isRecord(optRec))
     return OZ_typeError(1, "Record");
   OZ_Term defines = init_options(optRec);
+  OZ_Return res;
   if (!xy_init_from_file(file, defines))
-    return OZ_atom("fileNotFound");
-  OZ_Return res = OZ_unify(OZ_getCArg(2), parse());
+    res = OZ_unifyAtom(OZ_getCArg(2), "fileNotFound");
+  else
+    res = OZ_unify(OZ_getCArg(2), parse());
   if (res == PROCEED) {
     OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
     if (x == 0) {
