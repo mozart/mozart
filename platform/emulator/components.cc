@@ -360,6 +360,15 @@ OZ_BI_define(BIsave,2,0)
 } OZ_BI_end
 
 
+OZ_BI_define(BIsaveCompressed,3,0)
+{
+  OZ_declareIN(0,in);
+  OZ_declareVirtualStringIN(1,filename);
+  oz_declareIntIN(2,complevel);
+  return saveIt(in,filename,"",complevel,NO);
+} OZ_BI_end
+
+
 OZ_BI_define(BIsaveWithHeader,4,0)
 {
   OZ_declareIN(0,value);
