@@ -459,6 +459,8 @@ static void stripRegex() {
 static void transBody(char c, char *text, int &i, int &j) {
   int jstart = j;
   while (text[j] != c) {
+    if (text[j] == '\n')
+      xylino++;
     if (text[j] == '\\') {
       j++;
       switch (text[j]) {
