@@ -432,15 +432,8 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     fprintf(ofile, "%03d\t%s", op, opcodeToString(op));
 
     switch (op) {
-    case FAILURE:
     case SKIP:
-    case WAIT:
-    case EMPTYCLAUSE:
-    case WAITTOP:
-    case ASK:
     case RETURN:
-    case CLAUSE:
-    case LASTCLAUSE:
     case DEALLOCATEL:
     case DEALLOCATEL1:
     case DEALLOCATEL2:
@@ -462,10 +455,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case ALLOCATEL8:
     case ALLOCATEL9:
     case ALLOCATEL10:
-    case SHALLOWTHEN:
-    case CREATEOR:
-    case CREATEENUMOR:
-    case CREATECHOICE:
     case PROFILEPROC:
     case POPEX:
     case TASKXCONT:
@@ -492,7 +481,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 
     case PUTLISTX:
     case PUTLISTY:
-    case PUTLISTG:
     case FUNRETURNX:
     case FUNRETURNY:
     case FUNRETURNG:
@@ -507,19 +495,15 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case UNIFYVALUEG:
     case GETVARIABLEX:
     case GETVARIABLEY:
-    case GETVARIABLEG:
     case SETVARIABLEX:
     case SETVARIABLEY:
-    case SETVARIABLEG:
     case UNIFYVARIABLEX:
     case UNIFYVARIABLEY:
-    case UNIFYVARIABLEG:
     case GETRETURNX:
     case GETRETURNY:
     case GETRETURNG:
     case CREATEVARIABLEX:
     case CREATEVARIABLEY:
-    case CREATEVARIABLEG:
     case GETSELF:
     case SETSELF:
     case CLEARY:
@@ -528,15 +512,12 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 
     case CREATEVARIABLEMOVEX:
     case CREATEVARIABLEMOVEY:
-    case CREATEVARIABLEMOVEG:
       fprintf (ofile, "(%d x(%d))\n",
 	       regToInt(getRegArg(PC+1)),
 	       regToInt(getRegArg(PC+2)));
       DISPATCH();
 
     case GETLISTVALVARX:
-    case GETLISTVALVARY:
-    case GETLISTVALVARG:
       fprintf (ofile, "(x(%d) %d x(%d))\n",
 	       regToInt(getRegArg(PC+1)),
 	       regToInt(getRegArg(PC+2)),
@@ -710,7 +691,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case CALLY:
     case CALLG:
     case TAILCALLX:
-    case TAILCALLY:
     case TAILCALLG:
       {
 	Reg reg = regToInt(getRegArg(PC+1));
@@ -742,43 +722,26 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 
     case MOVEXX:
     case MOVEXY:
-    case MOVEXG:
     case MOVEYX:
     case MOVEYY:
-    case MOVEYG:
     case MOVEGX:
     case MOVEGY:
-    case MOVEGG:
 
     case UNIFYXX:
     case UNIFYXY:
     case UNIFYXG:
-    case UNIFYYX:
-    case UNIFYYY:
-    case UNIFYYG:
-    case UNIFYGX:
-    case UNIFYGY:
-    case UNIFYGG:
 
     case GETVARVARXX:
     case GETVARVARXY:
-    case GETVARVARXG:
     case GETVARVARYX:
     case GETVARVARYY:
-    case GETVARVARYG:
-    case GETVARVARGX:
-    case GETVARVARGY:
-    case GETVARVARGG:
 
     case UNIFYVALVARXX:
     case UNIFYVALVARXY:
-    case UNIFYVALVARXG:
     case UNIFYVALVARYX:
     case UNIFYVALVARYY:
-    case UNIFYVALVARYG:
     case UNIFYVALVARGX:
     case UNIFYVALVARGY:
-    case UNIFYVALVARGG:
       {
 	Reg reg = regToInt(getRegArg(PC+1));
 	fprintf(ofile, "(%d %d)\n", reg, regToInt(getRegArg(PC+2)));
@@ -842,7 +805,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 
     case PUTRECORDX:
     case PUTRECORDY:
-    case PUTRECORDG:
     case GETRECORDX:
     case GETRECORDY:
     case GETRECORDG:
@@ -859,7 +821,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
       DISPATCH();
     case PUTCONSTANTX:
     case PUTCONSTANTY:
-    case PUTCONSTANTG:
     case GETLITERALX:
     case GETLITERALY:
     case GETLITERALG:
@@ -881,8 +842,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
       DISPATCH();
 
     case BRANCH:
-    case NEXTCLAUSE:
-    case THREAD:
     case EXHANDLER:
       fprintf(ofile, "(%p)\n", computeLabelArg(PC,PC+1));
       DISPATCH();
@@ -893,14 +852,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
       {
 	Reg reg = regToInt(getRegArg(PC+1));
 	fprintf(ofile, "(%d ...)\n", reg);
-      }
-      DISPATCH();
-
-    case SHALLOWGUARD:
-    case CREATECOND:
-      {
-	ProgramCounter lbl = computeLabelArg(PC,PC+1);
-	fprintf(ofile, "(%p)\n", lbl);
       }
       DISPATCH();
 
