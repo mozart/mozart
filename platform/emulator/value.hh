@@ -593,6 +593,8 @@ private:
   Group *parent;
 public:
   Group *gcGroup();
+  OZPRINT;
+  OZPRINTLONG;
 
   Group(Group *p) : ConstTerm(Co_Group), parent(p)
   {
@@ -1793,5 +1795,6 @@ Space *tagged2Space(TaggedRef term)
 
 char *toC(OZ_Term);
 TaggedRef reverseC(TaggedRef l);
+TaggedRef appendI(TaggedRef x,TaggedRef y);
 
 #endif
