@@ -49,7 +49,7 @@
 
 OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
   Assert(p->getTertType()==Te_Proxy);
-  BorrowEntry* b  = BT->bi2borrow(MakeOB_TIndex(p->getTertPointer()));
+  BorrowEntry* b  = borrowIndex2borrowEntry(MakeOB_TIndex(p->getTertPointer()));
   NetAddress *na  = b->getNetAddress();
   DSite* site     = na->site;
   Ext_OB_TIndex index = na->index;

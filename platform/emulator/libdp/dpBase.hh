@@ -38,7 +38,6 @@ class CellManager;
 class VirtualInfo;
 class VirtualSite;
 class RemoteSite;
-class DSiteHashTable;
 class TransController;
 class Watcher;
 class Twin;

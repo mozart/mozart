@@ -61,7 +61,7 @@ void ObjectVar::sendRequest()
   // There could be an optimization: avoiding retrieving the same
   // class twice from different objects (not done);
   LazyFlag sendClass = isObjectClassAvail() ? OBJECT : OBJECT_AND_CLASS;
-  BorrowEntry *be=BT->bi2borrow(index);      
+  BorrowEntry *be=borrowIndex2borrowEntry(index);      
 
   NetAddress* na=be->getNetAddress();
   // MarshalerBuffer *bs=msgBufferManager->getMarshalerBuffer(na->site);
@@ -76,7 +76,7 @@ void ObjectVar::sendRequest()
 
 void ObjectVar::gCollectRecurseV(void)
 {
-  BT->bi2borrow(index)->gcPO();
+  borrowIndex2borrowEntry(index)->gcPO();
   oz_gCollectTerm(aclass, aclass);
   Assert(gname);
   gCollectGName(gname);

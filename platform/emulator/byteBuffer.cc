@@ -22,6 +22,10 @@
  *
  */
 
+#if defined(INTERFACE)
+#pragma implementation "memaux.hh"
+#endif
+
 #include "byteBuffer.hh"
 
 // Utilities

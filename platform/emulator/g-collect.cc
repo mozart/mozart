@@ -1129,7 +1129,7 @@ void AM::gCollect(int msgLevel)
 
   Assert(cacStack.isEmpty());
 
-  GT.gCollectGNameTable();
+  gnameTable.gCollectGNameTable();
   //   MERGECON gcPerdioFinal();
   gCollectSiteTable();
   (*gCollectPerdioFinal)();

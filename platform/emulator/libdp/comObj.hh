@@ -26,7 +26,7 @@
 #define __COMOBJ_HH
 
 #include "dpBase.hh"
-#include "genhashtbl.hh"
+#include "memaux.hh"
 #include "prioQueues.hh"
 
 #define NO_MSG_NUM -1

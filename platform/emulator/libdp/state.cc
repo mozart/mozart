@@ -89,7 +89,7 @@ PendThread* getPendThreadStartFromCellLock(Tertiary* t){
 
 static inline void sendPrepOwner(OB_TIndex index)
 {
-  OwnerEntry *oe = OT->index2entry(index);
+  OwnerEntry *oe = ownerIndex2ownerEntry(index);
 }
 
 /**********************************************************************/
@@ -265,7 +265,7 @@ void CellSec::dummyExchange(CellManager* c){
   Assert(!((CellManager*)c)->getChain()->hasFlag(TOKEN_LOST));
   DSite *toS=((CellManager*)c)->getChain()->setCurrent(myDSite,c);
   sendPrepOwner(index);
-  cellLockSendForward(toS,myDSite,OT->entry2extOTI(index));}
+  cellLockSendForward(toS,myDSite,ownerEntry2extOTI(index));}
 
 OZ_Return CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,ExKind exKind){
   switch(state){
@@ -288,14 +288,14 @@ OZ_Return CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,ExKind exKind
     pendThreadAddToEnd(&pending,old,nw,exKind);
     OB_TIndex index = MakeOB_TIndex(c->getTertPointer());
     if(c->isFrame()){
-      BorrowEntry* be=BT->bi2borrow(index);
+      BorrowEntry* be=borrowIndex2borrowEntry(index);
       cellLockSendGet(be);}
     else{
       Assert(c->isManager());
       if(!((CellManager*)c)->getChain()->hasFlag(TOKEN_LOST)){
 	DSite *toS=((CellManager*)c)->getChain()->setCurrent(myDSite,c);
 	sendPrepOwner(index);
-	cellLockSendForward(toS,myDSite,OT->entry2extOTI(index));}}
+	cellLockSendForward(toS,myDSite,ownerEntry2extOTI(index));}}
     if(errorIgnore(c)) return SuspendOnControlVarReturnValue;
     if(maybeProblem(c)) deferEntityProblem(c);
     return SuspendOnControlVarReturnValue;}
@@ -334,7 +334,7 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
     if(!c->isManager()) {
       Assert(c->isFrame());
       PD((CELL,"Sending to mgr read"));
-      BorrowEntry *be=BT->bi2borrow(index);
+      BorrowEntry *be=borrowIndex2borrowEntry(index);
       cellSendRead(be,myDSite);}
     else{ // ERIK-LOOK 
       Assert(((CellManager*)c)->getChain()->getCurrent() != myDSite);
@@ -344,7 +344,7 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
       // cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),
       //		    myDSite,index,myDSite,NULL);
       cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),
-			 myDSite, OT->entry2extOTI(index),myDSite, NULL);
+			 myDSite, ownerEntry2extOTI(index),myDSite, NULL);
     }
   }
 
@@ -363,7 +363,7 @@ OZ_Return cellDoExchangeInternal(Tertiary *c, TaggedRef old, TaggedRef nw,
   PD((CELL,"CELL: exchange on %s-%d",
       (c->isManager()?myDSite:BT->getOriginSite(MakeOB_TIndex(c->getTertPointer())))->stringrep(),
       (c->isManager() ?
-       OT->entry2extOTI(MakeOB_TIndex(c->getTertPointer())) :
+       ownerEntry2extOTI(MakeOB_TIndex(c->getTertPointer())) :
        BT->getOriginIndex(MakeOB_TIndex(c->getTertPointer())))));
   return getCellSecFromTert(c)->exchange(c,old,nw,e);
 }
@@ -502,12 +502,12 @@ void unlockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr){
 void secLockToNext(LockSec* sec,Tertiary* t,DSite* toS){
   OB_TIndex index = MakeOB_TIndex(t->getTertPointer());
   if (t->isFrame()) {
-    BorrowEntry *be=BT->bi2borrow(index);
+    BorrowEntry *be=borrowIndex2borrowEntry(index);
     NetAddress *na=be->getNetAddress();
     lockSendToken(na->site, na->index, toS);
     return;}
   Assert(t->isManager());
-  OwnerEntry *oe=OT->index2entry(index);
+  OwnerEntry *oe=ownerIndex2ownerEntry(index);
   //  kost@ 'lockSendToken()' signature ??!
   //  was like that:
   // lockSendToken(myDSite, index, toS);
@@ -518,11 +518,11 @@ void secLockGet(LockSec* sec,Tertiary* t,Thread* th){
   OB_TIndex index = MakeOB_TIndex(t->getTertPointer());
   sec->makeRequested();
   if(t->isFrame()){
-    BorrowEntry *be=BT->bi2borrow(index);
+    BorrowEntry *be=borrowIndex2borrowEntry(index);
     cellLockSendGet(be);
     return;}
   Assert(t->isManager());
-  OwnerEntry *oe=OT->index2entry(index);
+  OwnerEntry *oe=ownerIndex2ownerEntry(index);
   Chain* ch=((LockManager*) t)->getChain();
   DSite* current=ch->setCurrent(myDSite,t);
   cellLockSendForward(current,myDSite,oe->getExtOTI());
@@ -684,7 +684,7 @@ void CellManager::gcCellManager(){
   getChain()->gcChainSites(); 
   OB_TIndex i = MakeOB_TIndex(getTertPointer());
   PD((GC,"relocate cellManager:%d",i));
-  OwnerEntry* oe=OT->index2entry(i);
+  OwnerEntry* oe=ownerIndex2ownerEntry(i);
   Assert(oe->getTertiary()->cacIsMarked()?
 	 ((ConstTerm *) oe->getTertiary()->cacGetFwd())->getType() == Co_Cell:
 	 oe->getTertiary()->getType() == Co_Cell );
@@ -714,7 +714,7 @@ void LockManager::gcLockManager(){
   getChain()->gcChainSites(); 
   OB_TIndex i = MakeOB_TIndex(getTertPointer());
   PD((GC,"relocate lockManager:%d",i));
-  OwnerEntry* oe=OT->index2entry(i);
+  OwnerEntry* oe=ownerIndex2ownerEntry(i);
   oe->gcPO(this);
   getLockSec()->gcLockSec();}
 
