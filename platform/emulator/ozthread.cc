@@ -24,6 +24,8 @@
 #include "builtins.hh"
 #include "board.hh"
 
+Suspendable * (*suspendableSCloneSuspendableDynamic)(Suspendable *);
+
 class OzThread: public OZ_SituatedExtension {
 public:
 
@@ -63,7 +65,9 @@ public:
   }
   virtual
   void sCloneRecurseV(void) {
-    Thread *tmpThread = SuspToThread(thread->sCloneSuspendable());
+    Thread *tmpThread = 
+      SuspToThread((*suspendableSCloneSuspendableDynamic)(thread));
+
     if (!tmpThread) {
       tmpThread=new Thread(thread->getFlags(),thread->getPriority(),
 			   oz_rootBoard(),thread->getID());

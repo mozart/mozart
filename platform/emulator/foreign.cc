@@ -1754,6 +1754,16 @@ int OZ_unprotect(OZ_Term *t)
   return 1;
 }
 
+void OZ_gCollect(OZ_Term * to) {
+  oz_gCollectTerm(*to, *to);
+}
+
+void (*OZ_sCloneBlockDynamic)(OZ_Term *,OZ_Term *,const int) = NULL;
+
+void OZ_sClone(OZ_Term * to) {
+  (*OZ_sCloneBlockDynamic)(to, to, 1);
+}
+
 /* -----------------------------------------------------------------
  * vs
  * -----------------------------------------------------------------*/
