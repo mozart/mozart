@@ -43,7 +43,7 @@
 static
 Board *varHome(TaggedRef val) {
   if (isUVar(val)) {
-    return tagged2VarHome(val);
+    return tagged2VarHome(val)->derefBoard();
   } else {
     return GETBOARD(tagged2SVarPlus(val));
   }
