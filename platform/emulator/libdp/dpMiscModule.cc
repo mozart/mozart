@@ -115,6 +115,57 @@ OZ_BI_define(BIclose,1,0)
   return PROCEED;
 } OZ_BI_end
 
+OZ_BI_define(BIinitIPConnection,1,1)
+{
+  oz_declareNonvarIN(0,rec);
+
+  OZ_Term ipf = oz_atom("ip");
+  OZ_Term portf = oz_atom("port");
+  OZ_Term fwf = oz_atom("firewall");
+  int ip,port;
+  Bool fw;
+
+  if (oz_isLiteral(rec));
+  else if (oz_isLTuple(rec));
+  else if (oz_isSRecord(rec)) {
+    SRecord *srec = tagged2SRecord(rec);
+    int index = srec->getIndex(ipf);
+    if (index>=0) {
+      OZ_Term t = srec->getArg(index);
+      if(!oz_isInt(t))
+        oz_typeError(-1,"Int");
+      ip = OZ_intToC(t);
+      //      setIPAddress(ip);
+    }
+    index = srec->getIndex(portf);
+    if (index>=0) {
+      OZ_Term t = srec->getArg(index);
+      if(!oz_isInt(t))
+        oz_typeError(-1,"Int");
+      port = OZ_intToC(t);
+      //setIPPort(port);
+    }
+    index = srec->getIndex(fwf);
+    if (index>=0) {
+      OZ_Term t = srec->getArg(index);
+      if(!oz_isBool(t))
+        oz_typeError(-1,"Bool");
+      fw = OZ_boolToC(t);
+      //setFirewallStatus(fv);
+    }
+  } else {
+    oz_typeError(0,"Record");
+  }
+
+  initDP();
+
+  OZ_Term ret = OZ_nil();
+  OZ_RETURN(ret);
+
+  // OZ_RETURN(getIPInfo());
+} OZ_BI_end
+
+
 /*
  * The builtin table
  */
