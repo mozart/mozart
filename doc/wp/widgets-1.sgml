@@ -585,14 +585,33 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
 
   <Section id="section.widgets-1.images">
     <Title/Images/
+
     <P>
       Besides of text and bitmaps labels can display images.  Images differ
       from bitmaps in that they allow for more than two colors to be
       displayed.
+
     <P>
       Images are provided as objects in &Oz;.  These objects are also tickle
       objects (see <Ptr to="section.widgets-1.tickles">), but are different
       from widget objects.
+
+    <P>
+      <Figure id="figure.widgets-1.images">
+        <Caption/Three labels displaying the same image./
+        <P>
+          <Picture.Extern to="images-1.gif" type=gif>
+<chunk class=anonymous><title/Tk.image/
+I  = {New Tk.image
+      tkInit(type:photo format:gif
+             file:{System.get home}#'/demo/bitmaps/trucks/truck-left.gif')}
+L1 = {New Tk.label tkInit(parent:T image:I)}
+L2 = {New Tk.label tkInit(parent:T image:I)}
+L3 = {New Tk.label tkInit(parent:T image:I)}
+{Tk.send pack(L1 L2 L3 padx:1#m pady:1#m side:left)}
+</chunk>
+
+
     <P>
       The program in <Ptr to="figure.widgets-1.images"> creates an image object
       and displays the image in three labels.  Changing the configuration of
@@ -603,19 +622,7 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
            '/demo/bitmaps/trucks/truck-right.gif')}>>>
       replaces all three displayed trucks by trucks heading in the inverse
       direction.
-      <Figure id="figure.widgets-1.images">
-        <Caption/Three labels displaying the same image./
-        <P>
-          <Picture.Extern to="images-1.gif" type=gif>
-<<<T  = {New Tk.toplevel tkInit}
-I  = {New Tk.image
-      tkInit(type:photo format:gif
-             file:{System.get home}#'/demo/bitmaps/trucks/truck-left.gif')}
-L1 = {New Tk.label tkInit(parent:T image:I)}
-L2 = {New Tk.label tkInit(parent:T image:I)}
-L3 = {New Tk.label tkInit(parent:T image:I)}
-{Tk.send pack(L1 L2 L3 padx:1#m pady:1#m side:left)}>>>
-      </Figure>
+
     <P>
       Images can be of two different types.  The value of the <<type>>
       configuration option can be <<photo>> (as in our example), or <<bitmap>>.
