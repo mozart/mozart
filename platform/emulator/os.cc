@@ -74,8 +74,29 @@ static long openMax;
 #ifdef WINDOWS
 int runningUnderNT = 0;
 
-unsigned long fileTimeToMS(FILETIME *ft);
-int getTime();
+typedef long long verylong;
+
+verylong fileTimeToMS(FILETIME *ft)
+{
+  verylong x1 = ((verylong)(unsigned int)ft->dwHighDateTime)<<32;
+  verylong x2 = x1 + (unsigned int)ft->dwLowDateTime;
+  verylong ret = x2 / 10000;
+  return ret;
+}
+
+
+FILETIME emuStartTime;
+
+/* return time since start in milli seconds */
+unsigned int getTime()
+{
+  SYSTEMTIME st;
+  GetSystemTime(&st);
+  FILETIME ft;
+  SystemTimeToFileTime(&st,&ft);
+  return fileTimeToMS(&ft)-fileTimeToMS(&emuStartTime);
+}
+
 
 #endif
 
@@ -91,7 +112,7 @@ unsigned int osUserTime()
   /* only NT supports this */
   FILETIME ct,et,kt,ut;
   GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut);
-  return fileTimeToMS(&ut);
+  return (unsigned int) fileTimeToMS(&ut);
 
 #else
   struct tms buffer;
@@ -112,7 +133,7 @@ unsigned int osSystemTime()
   /* only NT supports this */
   FILETIME ct,et,kt,ut;
   GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut);
-  return fileTimeToMS(&kt);
+  return (unsigned int) fileTimeToMS(&kt);
 
 #else
   struct tms buffer;
@@ -127,15 +148,7 @@ unsigned int osSystemTime()
 unsigned int osTotalTime()
 {
 #if defined(WINDOWS)
-  if (!runningUnderNT) {
-    return 0;
-  }
-
-  /* only NT supports this */
-  FILETIME ct,et,kt,ut;
-  GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut);
-  return fileTimeToMS(&kt);
-
+  return getTime();
 #else
 
 
@@ -335,14 +348,14 @@ extern "C" void __builtin_delete (void *ptr)
 
 const int wrappedHDStart = 30; /* !!!!!!!!!!!!! */
 
-class WrappedHandles {
+class WrappedHandle {
 public:
   static int nextno;
-  static WrappedHandles *allHandles;
+  static WrappedHandle *allHandles;
   HANDLE hd;
   int fd;
-  WrappedHandles *next;
-  WrappedHandles(HANDLE h)
+  WrappedHandle *next;
+  WrappedHandle(HANDLE h)
   {
     hd = h;
     fd = nextno++;
@@ -350,21 +363,39 @@ public:
     allHandles = this;
   }
 
-  static HANDLE find(int f)
+  static WrappedHandle *find(int f)
   {
-    WrappedHandles *aux = allHandles;
+    WrappedHandle *aux = allHandles;
     while(aux) {
       if (f == aux->fd)
-        return aux->hd;
+        return aux;
       aux = aux->next;
     }
     return 0;
   }
+
+  static WrappedHandle *getHandle(HANDLE hd)
+  {
+    WrappedHandle *aux = allHandles;
+    while (aux) {
+      if (aux->hd==0) {
+        aux->hd = hd;
+        return aux;
+      }
+      aux = aux->next;
+    }
+    return new WrappedHandle(hd);
+  }
+
+  void close()
+  {
+    hd = 0;
+  }
 };
 
-int WrappedHandles::nextno = wrappedHDStart;
+int WrappedHandle::nextno = wrappedHDStart;
 
-WrappedHandles *WrappedHandles::allHandles = NULL;
+WrappedHandle *WrappedHandle::allHandles = NULL;
 
 int rawread(int fd, void *buf, int sz)
 {
@@ -374,7 +405,7 @@ int rawread(int fd, void *buf, int sz)
   if (isSocket(fd))
     return recv(fd,((char*)buf),sz,0);
 
-  HANDLE hd = WrappedHandles::find(fd);
+  HANDLE hd = WrappedHandle::find(fd)->hd;
   Assert(hd!=0);
 
   unsigned int ret;
@@ -392,7 +423,7 @@ int rawwrite(int fd, void *buf, int sz)
   if (isSocket(fd))
     return send(fd, (char *)buf, sz, 0);
 
-  HANDLE hd = WrappedHandles::find(fd);
+  HANDLE hd = WrappedHandle::find(fd)->hd;
   Assert(hd!=0);
 
   unsigned int ret;
@@ -401,11 +432,13 @@ int rawwrite(int fd, void *buf, int sz)
   return ret;
 }
 
+Bool createReader(int fd);
+
 int _hdopen(int handle, int flags)
 {
-  WrappedHandles *wh = new WrappedHandles((HANDLE)handle);
+  WrappedHandle *wh = WrappedHandle::getHandle((HANDLE)handle);
   if ((flags&O_WRONLY)==0)
-    osWatchFD(wh->fd,SEL_READ);
+    createReader(wh->fd);
   return wh->fd;
 }
 
@@ -669,6 +702,10 @@ void osInit()
   _fmode = O_BINARY;
 
   watchParent();
+
+  SYSTEMTIME st;
+  GetSystemTime(&st);
+  SystemTimeToFileTime(&st,&emuStartTime);
 #endif
 }
 
@@ -679,11 +716,6 @@ void osWatchFDInternal(int fd, int mode)
 {
   CheckMode(mode);
   OZ_FD_SET(fd,&globalFDs[mode]);
-#ifdef WINDOWS
-  Assert(mode==SEL_READ);
-  if (!isSocket(fd))
-    createReader(fd);
-#endif
 }
 
 
@@ -756,7 +788,7 @@ int osTestSelect(int fd, int mode)
   IOChannel *ch = lookupChannel(fd);
   /* no select on write */
   if (ch)
-    return (mode==SEL_WRITE || ch->status==OK);
+    return (mode==SEL_WRITE || ch->status==ST_AVAIL);
 
   if (!isSocket(fd))
     return OK;
@@ -910,11 +942,14 @@ int osread(int fd, void *buf, unsigned int len)
     Assert(ch->thrd);
     WaitForSingleObject(ch->char_avail, INFINITE);
 
+    if (ch->status==ST_ERROR) return -1;
+    if (ch->status==ST_EOF)   return 0;
+    Assert(ch->status==ST_AVAIL);
+    ch->status=ST_NOTAVAIL;
     *(char*)buf = ch->chr;
     int ret = rawread(fd,((char*)buf)+1,len-1);
     if (ret<0)
       return ret;
-    ch->status=NO;
     ResetEvent(ch->char_avail);
     SetEvent(ch->char_consumed);
     return ret+1;
@@ -938,8 +973,20 @@ int osclose(int fd)
     FD_CLR(fd,&socketFDs);
     return closesocket(fd);
   }
+
+  IOChannel *ch = lookupChannel(fd);
+  if (ch) { ch->close(); }
+  WrappedHandle *wh = WrappedHandle::find(fd);
+  if (wh) { wh->close(); }
 #endif
+
+  FD_CLR(fd,&globalFDs[SEL_READ]);
+  FD_CLR(fd,&globalFDs[SEL_WRITE]);
   FD_CLR(fd,&socketFDs);
+
+#ifdef WINDOWS
+  if (wh) return 0;
+#endif
   return close(fd);
 }
 
