@@ -671,11 +671,12 @@ denotes the duration of a task <math/T/).
 <list enum>
 <item> <math display/
 (Bi + \Dur{Bi}) - (Si+\Dur{Si}) \leq 4, \quad 1 \leq i \leq 6/
-<item> <table class=dyptic>
-<tr/<td/<math display/
-Si - (Ai+\Dur{Ai}) \leq 3,  \quad i \in \{1,2,5,6\}///
-<tr/<td/<math display/S3-(P1+\Dur{P1}) \leq 3 \qquad S4-(P2+\Dur{P2}) \leq 3///
-</table>
+<item> <math display/
+Si - (Ai+\Dur{Ai}) \leq 3,  \quad i \in \{1,2,5,6\}/
+<p>
+<math display/S3-(P1+\Dur{P1}) \leq 3/
+<p>
+<math display/S4-(P2+\Dur{P2}) \leq 3/
 <item> <math display/\mbox{UE} + 6 \leq Si, \quad 1 \leq i \leq 6/
 <item> <math display/(Mi+\Dur{Mi}) - 2 \leq \mbox{UA}, \quad 1 \leq i \leq 6/
 <item> <math display/L = \mbox{PA} + 30/
