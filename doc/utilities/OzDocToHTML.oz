@@ -485,6 +485,8 @@ define
                VERBATIM('&nbsp;')
             [] ellipsis then
                VERBATIM('...')
+            [] cdots then
+               VERBATIM('&middot;&middot;&middot;')
             [] slash then
                VERBATIM('/')
             [] ie then
