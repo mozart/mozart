@@ -103,7 +103,6 @@ public:
 
 // Glue and fixes during development.
 // To be REMOVED!
-  OZ_Term getNoGoods();
   void marshalBegin();
   void marshalEnd();
   void unmarshalBegin();

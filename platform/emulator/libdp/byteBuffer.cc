@@ -253,11 +253,6 @@ Bool ByteBuffer::putDebug() {
 
 // Glue and fixes during development.
 // To be REMOVED!
-OZ_Term ByteBuffer::ByteBuffer::getNoGoods() {
-  PD((TCP_INTERFACE,"byteBuffer: OLD getNoGoods USED"));
-  return oz_nil();
-}
-
 void ByteBuffer::marshalBegin() {
   PD((TCP_INTERFACE,"byteBuffer: OLD marshalBegin USED"));
 }
