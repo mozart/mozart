@@ -46,10 +46,6 @@
 #include "thread.hh"
 #include "tracer.hh"
 
-#ifdef OUTLINE
-#define inline
-#endif
-
 AM am;
 ConfigData conf;
 
@@ -232,16 +228,6 @@ void AM::init(int argc,char **argv)
 }
 
 // ----------------------- unification
-
-// optimize: inline ....
-inline void AM::rebind(TaggedRef *refPtr, TaggedRef newRef)
-/* (re)bind Ref *ref to Term *ptr;                     */
-/* We need this procedure for the rational unification */
-/* algorithm;                                          */
-{
-  rebindTrail.pushCouple(refPtr, *refPtr);   /* always;   */
-  doBind(refPtr,newRef);
-}
 
 
 // unify and manage rebindTrail
@@ -639,7 +625,16 @@ InstType AM::installPath(Board *to)
 }
 
 
-inline void AM::deinstallPath(Board *top)
+inline
+void AM::deinstallCurrent()
+{
+  reduceTrailOnSuspend();
+  AM::currentBoard->unsetInstalled();
+  Board::SetCurrent(AM::currentBoard->getParentBoard()->getBoardDeref());
+}
+
+
+void AM::deinstallPath(Board *top)
 {
   DebugCheck(top->isCommitted(),
 	     error("AM::deinstallPath: top already commited");
@@ -651,13 +646,6 @@ inline void AM::deinstallPath(Board *top)
 	       && top != AM::rootBoard,
 	       error("AM::deinstallPath: root node reached"));
   }
-}
-
-inline void AM::deinstallCurrent()
-{
-  reduceTrailOnSuspend();
-  AM::currentBoard->unsetInstalled();
-  Board::SetCurrent(AM::currentBoard->getParentBoard()->getBoardDeref());
 }
 
 void AM::reduceTrailOnUnitCommit()
@@ -764,97 +752,8 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
   trail.popMark();
 }
 
-
-
-
-
-
-inline Bool AM::installScript(ConsList &script)
-{
-  Bool ret = OK;
-  for (int index = 0; index < script.getSize(); index++) {
-    if (!unify(script[index].getLeft(),script[index].getRight())) {
-      ret = NO;
-      if (!isToplevel()) {
-	break;
-      }
-    }
-  }
-  script.dealloc();
-  return ret;
-}
-
-
-/*
- *   Procedure what checks whether one node is in subtree of another;
- *
- */
-inline Bool AM::isInScope (Board *above, Board* node) {
-  while (node != AM::rootBoard) {
-    if (node == above)
-      return (OK);
-    node = node->getParentBoard()->getBoardDeref();
-  }
-  return (NO);
-}
-
-
-inline Bool AM::isLocalUVar(TaggedRef var)
-{
-  return (var == currentUVarPrototype ||
-	  // variables are usually bound 
-	  // in the node where they are created
-	  tagged2VarHome(var)->getBoardDeref() == AM::currentBoard )
-    ? OK : NO;
-}
-
-inline Bool AM::isLocalSVar(TaggedRef var) {
-  Board *home = tagged2SVar(var)->getHome1();
-
-  return (home == AM::currentBoard ||
-	  home->getBoardDeref() == AM::currentBoard )
-    ? OK : NO;
-}
-
-inline Bool AM::isLocalCVar(TaggedRef var) {
-  Board *home = tagged2CVar(var)->getHome1();
-
-  return (home == AM::currentBoard ||
-          home->getBoardDeref() == AM::currentBoard )
-    ? OK : NO;
-}
-
-inline Bool AM::isLocalVariable(TaggedRef var)
-{
-  CHECK_ISVAR(var);
-
-  if (isUVar(var))
-    return isLocalUVar(var);
-  if (isSVar(var))
-    return isLocalSVar(var);
-
-  return isLocalCVar(var);
-}
-
-inline void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
-				    SVariable *rightVar)
-{
-  SVariable* var = tagged2SuspVar(taggedvar);
-  var->concSuspList(checkSuspensionList(var, taggedvar,
-					var->unlinkSuspension(),
-					term, rightVar));
-}
-
-inline Bool AM::isEmptyTrailChunk ()
-{
-  return (trail.isEmptyChunk ());
-}
-
-inline Bool AM::isToplevel() {
-  return AM::currentBoard == AM::rootBoard ? OK : NO;
-}
-
 #ifdef OUTLINE
+#define inline
 #include "am.icc"
 #undef inline
 #endif
