@@ -107,6 +107,7 @@ documentation.
         <subsection>
           <title/Constraint Programming/
 
+        <p>
         <list>
          <entry>General improvements
          <item>
@@ -172,6 +173,7 @@ in this release. It will only enable connections through the simplest of
 fire walls, but that is better than nothing.  We are working on a more
 general solution that will enable our sites to work over more complex
 fire-walls.
+</p>
 <p>
 There were problems related to the shortcoming of fire-walls. When a
 Mozart sites needs to communicate it will try to open a connection. If
@@ -181,11 +183,13 @@ trying to open the connection until it succeeds or finds the site dead.
 This behavior can disturb fire-walls a lot. The time-out is now growing
 with a growth factor. There is now a way to alter the start time-out
 value, the growth factor and the timeout ceiling.
+</p>
 
 
         <subsection>
           <title/Documentation/
 
+          <p>
           <list>
           <entry>Global Index
           <item>The online documentation has been provided with a new index
@@ -208,6 +212,7 @@ under the Getting Started/Documentation
         <subsection>
           <title/All Platforms/
 
+          <p>
           <list>
           <item> Return methods for classes in
                  <<Tk.menuentry>> added.
@@ -256,6 +261,7 @@ under the Getting Started/Documentation
         <subsection>
           <title/Windows/
 
+          <p>
           <list>
           <item> Temporary files are put under
                  <file/"C:\TEMP"/ by default
@@ -274,6 +280,7 @@ under the Getting Started/Documentation
         <subsection>
           <title/Linux/
 
+          <p>
           <list>
           <item> Memory management for Linux 2.2.x
                  fixed (bugs 391, 403).
@@ -283,6 +290,7 @@ under the Getting Started/Documentation
         <subsection>
           <title/Other Platforms/
 
+          <p>
           <list>
           <item> Initial support for Mac OS X.
           <item> Compiles under FreeBSD (Bug 393).
