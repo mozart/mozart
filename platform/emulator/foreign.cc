@@ -1292,7 +1292,7 @@ void virtualString2buffer(ostream &out,OZ_Term term,int nulok)
   }
 
   if (!oz_isPair(t)) {
-    OZ_warning("no virtual string: %s",toC(term));
+    OZ_error("no virtual string: %s",toC(term));
     return;
   }
 
@@ -1373,7 +1373,7 @@ OZ_Term OZ_label(OZ_Term term)
   case TAG_SRECORD:
     return tagged2SRecord(term)->getLabel();
   default:
-    OZ_warning("OZ_label: no record");
+    OZ_error("OZ_label: no record");
     return 0;
   }
 }
@@ -1390,7 +1390,7 @@ int OZ_width(OZ_Term term)
   case TAG_LITERAL:
     return 0;
   default:
-    OZ_warning("OZ_width: no record");
+    OZ_error("OZ_width: no record");
     return 0;
   }
 }
@@ -1399,7 +1399,7 @@ OZ_Term OZ_tuple(OZ_Term label, int width)
 {
   label = oz_deref(label);
   if (!oz_isLiteral(label)) {
-    OZ_warning("OZ_tuple: label is no literal");
+    OZ_error("OZ_tuple: label is no literal");
     return 0;
   }
 
@@ -1460,7 +1460,7 @@ void OZ_putArg(OZ_Term term, int pos, OZ_Term newTerm)
     }
   }
   if (!oz_isSTuple(term)) {
-    OZ_warning("OZ_putArg: no record");
+    OZ_error("OZ_putArg: no record");
     return;
   }
   tagged2SRecord(term)->setArg(pos,newTerm);
@@ -1478,11 +1478,11 @@ OZ_Term OZ_getArg(OZ_Term term, int pos)
     }
   }
   if (!oz_isSRecord(term)) {
-    OZ_warning("OZ_getArg: no record");
+    OZ_error("OZ_getArg: no record");
     return 0;
   }
   if (pos < 0 || pos >= tagged2SRecord(term)->getWidth()) {
-    OZ_warning("OZ_getArg: invalid index: %d",pos);
+    OZ_error("OZ_getArg: invalid index: %d",pos);
     return 0;
   }
   return tagged2SRecord(term)->getArg(pos);
@@ -1502,7 +1502,7 @@ OZ_Term OZ_head(OZ_Term term)
 {
   term=oz_deref(term);
   if (!oz_isLTuple(term)) {
-    OZ_warning("OZ_head: no cons");
+    OZ_error("OZ_head: no cons");
     return 0;
   }
   return oz_head(term);
@@ -1512,7 +1512,7 @@ OZ_Term OZ_tail(OZ_Term term)
 {
   term=oz_deref(term);
   if (!oz_isLTuple(term)) {
-    OZ_warning("OZ_tail: no cons");
+    OZ_error("OZ_tail: no cons");
     return 0;
   }
   return oz_tail(term);
@@ -1601,15 +1601,15 @@ void OZ_putSubtree(OZ_Term term, OZ_Term feature, OZ_Term value)
       tagged2LTuple(term)->setTail(value);
       return;
     }
-    OZ_warning("OZ_putSubtree: invalid feature");
+    OZ_error("OZ_putSubtree: invalid feature");
     return;
   }
   if (!oz_isSRecord(term)) {
-    OZ_warning("OZ_putSubtree: invalid record");
+    OZ_error("OZ_putSubtree: invalid record");
     return;
   }
   if (!tagged2SRecord(term)->setFeature(feature,value)) {
-    OZ_warning("OZ_putSubtree: invalid feature");
+    OZ_error("OZ_putSubtree: invalid feature");
     return;
   }
 }
@@ -2055,8 +2055,7 @@ void OZ_addThread(OZ_Term var, OZ_Thread thr)
 {
   DEREF(var, varPtr, varTag);
   if (!isVariableTag(varTag)) {
-    OZ_warning("OZ_addThread(%s): var arg expected",
-	       toC(var));
+    OZ_error("OZ_addThread(%s): var arg expected", toC(var));
     return;
   }
 
