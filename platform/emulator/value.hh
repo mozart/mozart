@@ -49,11 +49,12 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomMin, AtomMax, AtomMid, AtomLow,
        AtomNaive, AtomSize, AtomNbSusps,
        AtomDebugCall, AtomDebugCond, AtomDebugHandler, AtomDebugLock,
+       AtomException, AtomUnify,
 
        NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
        NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
        NameOoPrintName,NameOoLocking,NameOoFallback,NameOoId,
-       AtomNew, AtomSend, AtomApply,
+       AtomNew, AtomSend, AtomApply, AtomApplyList,
 
        NameUnit,
        AtomKinded, AtomDet, AtomRecord, AtomFSet, 
@@ -78,7 +79,8 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
 RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
   BI_Unify,BI_Show,BI_send,BI_restop,BI_probe,BI_Delay,BI_startTmp,
-  BI_load,BI_fail,BI_url_load;
+  BI_load,BI_fail,BI_url_load,
+  BI_controlVarHandler;
 
 
 extern Board *ozx_rootBoard();

@@ -45,11 +45,12 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomMin, AtomMax, AtomMid,
   AtomNaive, AtomSize, AtomNbSusps,
   AtomDebugCall, AtomDebugCond, AtomDebugHandler, AtomDebugLock,
+  AtomException, AtomUnify,
 
   NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
   NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
   NameOoPrintName,NameOoLocking,NameOoFallback,NameOoId,
-  AtomNew, AtomSend, AtomApply,
+  AtomNew, AtomSend, AtomApply, AtomApplyList,
 
   NameUnit,
   AtomKinded, AtomDet, AtomRecord, AtomLow, AtomFSet,
@@ -73,8 +74,8 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
   BI_Unify,BI_Show,BI_send,BI_restop,BI_probe,BI_Delay,BI_startTmp,
-  BI_load, BI_fail, BI_url_load;
-
+  BI_load, BI_fail, BI_url_load,
+  BI_controlVarHandler;
 
 
 TaggedRef getUniqueName(const char *s)
@@ -118,6 +119,9 @@ void initLiterals()
   AtomDebugHandler = makeTaggedAtom("handler");
   AtomDebugLock    = makeTaggedAtom("lock");
 
+  AtomUnify        = makeTaggedAtom("unify");
+  AtomException    = makeTaggedAtom("exception");
+
   NameUnit         = getUniqueName("unit");
 
   NameTrue         = getUniqueName(NAMETRUE);
@@ -139,6 +143,7 @@ void initLiterals()
   AtomNew           = makeTaggedAtom("new");
   AtomSend          = makeTaggedAtom("send"); 
   AtomApply         = makeTaggedAtom("apply");
+  AtomApplyList     = makeTaggedAtom("applyList");
 
   AtomMin     = makeTaggedAtom("min");
   AtomMax     = makeTaggedAtom("max");
