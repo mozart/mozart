@@ -12,9 +12,6 @@ kann es passieren, dass faelschlicherweise das Setzen eines Breakpoints
 als erfolgreich bestaetigt wird, obwohl es (im aktuell gefeedeten Code) 
 gar nicht geklappt hat.
 
-Thu Jul 10 16:04:43 MET DST 1997
-spy-flag reaktivieren: value.hh:class PrTabEntry
-
 Thu Oct 23 00:27:38 MET DST 1997
 - `ooNew` faelschlicherweise auf Stack (fixen im Compiler!)
 - action 'step' auf Prozeduren _ohne_ Steppunkte sollte nichtsdestotrotz
@@ -23,10 +20,6 @@ Thu Oct 23 00:27:38 MET DST 1997
 
 Thu Oct 23 01:01:01 MET DST 1997
 optionale alphabetische Sortierung des Environments
-
-Thu Oct 23 01:33:12 MET DST 1997
-Bei Tastatur-Selektion von Stackframes, die gerade nicht angezeigt werden,
-scrollt das Stackwidget nicht
 
 Thu Oct 23 12:09:18 MET DST 1997
 reset optional auch ohne kill anbieten
@@ -42,3 +35,10 @@ im File wird jedoch an die richtige Stelle gesprungen.
 Mon Nov 10 14:59:14 CET 1997
 Kontext-Menues fuer Stackframe: u.a. unleash
                     Thread    : kill etc...
+
+Mon Nov 24 20:17:34 CET 1997
+rebuildCurrentStack sollte aktuell selektierten stackframe nicht veraendern
+(statt dessen wird zum obersten frame zurueckgesprungen)
+
+Mon Nov 24 20:24:37 CET 1997
+Left und Right selektieren "neuen" Thread, wenn nur einer da ist...
