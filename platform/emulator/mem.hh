@@ -116,23 +116,23 @@ inline void *mallocBody(size_t chunk_size, int align)
 {
   Assert(ToInt32(heapTop)%sizeof(int32) == 0);
 
- retry:
+retry:
   heapTop -= chunk_size;
-  if (heapEnd <= heapTop) {
-    if (sizeof(int32) != align) {
-      HeapTopAlign(align);
-    }
-#ifdef DEBUG_MEM
-    memset((char *)heapTop,0x5A,chunk_size);
-#endif
-    return heapTop;
+
+  if (sizeof(int32) != align) {
+    HeapTopAlign(align);
   }
 
-  if (!getMemFromOS(chunk_size)) {
-    return 0;
+  if (heapEnd > heapTop) {
+    (void) getMemFromOS(chunk_size);
+    goto retry;
   }
-  goto retry;
+#ifdef DEBUG_MEM
+  memset((char *)heapTop,0x5A,chunk_size);
+#endif
+  return heapTop;
 }
+
 
 
 /* return pointer aligned to sizeof(int32) */
