@@ -213,6 +213,9 @@
        	  ( AtomResource,       "resource" ),
 
 	  ( AtomExtension,      "extension" ),
+	  ( AtomBitArray,       "bitArray" ),
+	  ( AtomBitString,      "bitString" ),
+	  ( AtomByteString,     "byteString" ),
 	  ( AtomSituatedExtension, "situatedExtension" ),
 	  ( AtomSited,             "sited" ),
           ( AtomAssembler,       "assembler" ),          

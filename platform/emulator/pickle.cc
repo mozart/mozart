@@ -107,6 +107,7 @@ void Pickler::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
 //
 void Pickler::processExtension(OZ_Term t)
 {
+  Assert(tagged2Extension(t)->toBePickledV());
   PickleBuffer *bs = (PickleBuffer *) getOpaque();
 
   //
@@ -1027,7 +1028,7 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
 	  int refTag = unmarshalRefTag(bs);
 	  int type = unmarshalNumber(bs);
 #endif
-	  OZ_Term value = oz_extension_unmarshal(type,bs);
+	  OZ_Term value = oz_extension_unmarshal(type, bs);
 	  if(value == 0) {
 	    break;  // next value is nogood
 	  }

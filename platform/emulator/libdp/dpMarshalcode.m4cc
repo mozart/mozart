@@ -372,6 +372,7 @@ Bool dpUnmarshalCodeRobust(ByteBuffer *bs, Builder *b,
   // 'CodeArea*' is passed in it itself:
   CodeArea *code = desc->getCodeArea();
   Bool done = NO;
+  int e;
 
   //
   while (ozValuesCnt > 0) {

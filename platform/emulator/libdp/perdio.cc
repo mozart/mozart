@@ -54,7 +54,6 @@
 #include "protocolFail.hh"
 #include "msgContainer.hh"
 #include "dpMarshaler.hh"
-#include "dpMarshalExt.hh"
 #include "flowControl.hh"
 #include "ozconfig.hh"
 
@@ -1113,8 +1112,6 @@ void initDPCore()
   //
   DV = new DebugVector();
 
-  dpAddExtensions();
-  dpmInit();
   initNetwork();
 
   borrowTable      = new BorrowTable(DEFAULT_BORROW_TABLE_SIZE);
@@ -1359,6 +1356,10 @@ void dpExitWithTimer(unsigned int timeUntilClose)
     do {
       unsigned long idle_start = osTotalTime();
       remaining = BT->dumpFrames();
+//        fprintf(stderr, "... closing, \n", remaining, osgetpid());
+//        fprintf(stderr, "... closing, remaining %d frames (pid %d)!\n",
+//  	      remaining, osgetpid());
+//        fflush(stderr);
       oz_io_handle();
       osUnblockSignals();
       unsigned int ts = TIME_SLICE;
