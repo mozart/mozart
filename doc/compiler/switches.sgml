@@ -1,0 +1,144 @@
+<Section id="section.reference.switches">
+  <Title/Compiler Switches/
+    <P>
+      <Ptr to="table.switches"> summarizes (the most important of) the
+      available boolean switches, giving their name (as an atom), their
+      default setting, and their effects on the compilation process if
+      they are set.
+      <Figure float id="table.switches" class=table>
+	<Caption>Summary of All Compiler Switches.</Caption>
+	<P><!--**-->
+	  <Table>
+	    <TR>
+	      <TH colspan=3>Global Configuration
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/compilerpasses</Code>
+	      <TD><<false>>
+	      <TD>Output tracing information about the different phases the
+		execution of each query proceeds through.
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/showinsert</Code>
+	      <TD><<false>>
+	      <TD>Show the names of files as they get inserted by the
+	      <<\insert>> macro directive, after their name has been
+	      resolved by means of the environment variable <<OZPATH>>.
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/echoqueries</Code>
+	      <TD><<true>>
+	      <TD>Output each (compilation) query verbatim.
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/showdeclares</Code>
+	      <TD><<true>>
+	      <TD>Summarize the variables declared by each query and thus added
+		to the environment (provided the compilation succeeds and the
+		compiled code is actually executed).
+	    <TR>
+	      <TH colspan=3>Warnings
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/warnredecl</Code>
+	      <TD><<false>>
+	      <TD>Output warnings about `declare's of variables already
+		contained in the top-level environment.
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/warnunused</Code>
+	      <TD><<false>>
+	      <TD>Output warnings about local variables never used or used only
+		once (that is, initialized but never used again).
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/warnunusedformals</Code>
+	      <TD><<false>>
+	      <TD>Output the above warnings also for formal parameters.
+	      If warnunused is not set, this switch is ignored.
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/warnforward</Code>
+	      <TD><<false>>
+	      <TD>Warn about uses of features, attributes or methods which are
+		not known to be declared in the enclosing class.
+	    <TR>
+	      <TH colspan=3>I&dot; Parsing and Expanding
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/unnest</Code>
+	      <TD><<true>>
+	      <TD>Enable unnesting.  If unnesting is disabled, none of the
+		following passes are executed either.
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/expression</Code>
+	      <TD><<false>>
+	      <TD>Compile expressions, not statements.  The result of an
+		evaluated expression can be obtained through an output
+		argument of the enqueued query (see below).
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/allowdeprecated</Code>
+	      <TD><<true>>
+	      <TD>Allow the use of deprecated syntax, &ie;, allow to use
+		<<case>> for boolean conditionals and to mix <<if>> with
+		<<elsecase>> and <<case>> with <<elseif>>.
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/gump</Code>
+	      <TD><<false>>
+	      <TD>Allow Gump definitions.  If this switch is off, Gump
+		keywords are parsed as ordinary atoms.
+	    <TR>
+	      <TH colspan=3>II&dot; Static Analysis
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/staticanalysis</Code>
+	      <TD><<true>>
+	      <TD>Perform static analysis.  Switching this off has severe
+		impact on optimization.
+	    <TR>
+	      <TH colspan=3>III&dot; Core Output
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/core</Code>
+	      <TD><<false>>
+	      <TD>Output the result of the core expansion of a query.
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/realcore</Code>
+	      <TD><<false>>
+	      <TD>Output the core expansion as it really is (and not beautified
+		by, &eg;, the use of operator symbols).
+	    <TR>
+	      <TH colspan=3>IV&dot; Code Generation
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/codegen</Code>
+	      <TD><<true>>
+	      <TD>Generate code.
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/outputcode</Code>
+	      <TD><<false>>
+	      <TD>Output the generated code as human-readable assembler
+		code.
+	    <TR>
+	      <TH colspan=3>V&dot; Feeding to the Emulator
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/feedtoemulator</Code>
+	      <TD><<true>>
+	      <TD>Load the generated code into the emulator and execute
+		it.
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/threadedqueries</Code>
+	      <TD><<true>>
+	      <TD>Execute each piece of generated code in a seperate thread
+		without waiting for it to terminate before proceeding to the
+		next query.
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/profile</Code>
+	      <TD><<false>>
+	      <TD>Include profiling information in the generated code.
+	    <TR>
+	      <TH colspan=3>VI&dot; Debugging
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/runwithdebugger</Code>
+	      <TD><<false>>
+	      <TD>Place a static breakpoint on the first statement of each
+		each compiled query.
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/debuginfocontrol</Code>
+	      <TD><<false>>
+	      <TD>Include program flow information in the generated code.
+	    <TR>
+	      <TD><Code><Span class=ignore/\switch +/debuginfovarnames</Code>
+	      <TD><<false>>
+	      <TD>Include environment information in the generated code.
+	</Table>
+      </Figure>
+</Section>
