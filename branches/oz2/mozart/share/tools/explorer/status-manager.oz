@@ -11,7 +11,7 @@ local
       case N<10 then '0'#N else N end
    end
    
-   fun {FormatTime Totaltime Copytime}
+   fun {FormatTime Totaltime}
       Hours      = Totaltime div 3600000
       Minutes    = Totaltime div 60000
       Seconds    = Totaltime div 1000
@@ -25,10 +25,7 @@ local
 	 else Minutes # 'm ' # Seconds - Minutes * 60 # 's'
 	 end
       else Hours # 'h ' # Minutes - Hours * 60 # 'm'
-      end #
-      ' (' # case Totaltime of 0 then '0'
-	     else (100 * Copytime) div Totaltime
-	     end # '%c)'
+      end
    end
 
    class Status
@@ -73,7 +70,7 @@ local
 					  text:   'Time:'
 					  font:   StatusFont)}
 	 TimeField = {New Tk.label tkInit(parent: TimeFrame
-					  text:   {FormatTime 0 0}
+					  text:   {FormatTime 0}
 					  font:   BoldStatusFont)}
 	 
 	 NodeFrame      = {New Tk.frame tkInit(parent: self)}
@@ -283,7 +280,6 @@ in
    class StatusManager
       attr
 	 CurTotalTime: 0
-	 CurCopyTime:  0
 	 StartTime:    0
       feat
 	 status
@@ -295,29 +291,23 @@ in
       meth clear
 	 {self.status clear}
 	 CurTotalTime <- 0
-	 CurCopyTime  <- 0
-	 {self.status setTime({FormatTime 0 0})}
+	 {self.status setTime({FormatTime 0})}
       end
 
       meth start($)
-	 StartTime  <- {System.get time}
+	 StartTime  <- {System.get time}.user
 	 {self.status start}
 	 {self.status getBreakFlag($)}
       end
 
       meth startTime
-	 StartTime  <- {System.get time}
+	 StartTime  <- {System.get time}.user
       end
       
       meth stop
-	 S = {System.get time}
-	 RunDelta  = S.run  - @StartTime.run
-	 CopyDelta = S.copy - @StartTime.copy
-      in
-	 CurTotalTime <- @CurTotalTime + RunDelta + CopyDelta
-	 CurCopyTime  <- @CurCopyTime  + CopyDelta
+	 CurTotalTime <- @CurTotalTime + {System.get time}.user - @StartTime
 	 {self.status update}
-	 {self.status setTime({FormatTime @CurTotalTime @CurCopyTime})}
+	 {self.status setTime({FormatTime @CurTotalTime})}
       end
 
       meth getBreakFlag($)
