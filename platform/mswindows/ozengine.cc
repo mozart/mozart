@@ -40,12 +40,6 @@ static DWORD __stdcall watchParentThread(void *arg)
   return 1;
 }
 
-//
-// ozwrapper.bin hands its pid via envvar OZPPID to ozengine.exe;
-// the latter then creates a thread watching whether the wrapper
-// is still living and kills itself otherwise
-//
-
 static void watchParent()
 {
   char buf[100];
@@ -72,6 +66,9 @@ int main(int argc, char **argv)
 
   initEnv();
   watchParent();
+  // sameh@, dragan@ and kost@: first watch the parent, if any,
+  // *then* set the OZPPID. In other words, DO NOT MOVE IT UP!
+  publishPid();
 
   char *ozemulator = ozGetenv("OZEMULATOR");
   if (ozemulator == NULL) {
