@@ -36,22 +36,22 @@ void unBind(TaggedRef *p, TaggedRef t)
   *p = t;
 }
 
-Bool oz_installScript(Script &script)
+OZ_Return oz_installScript(Script &script)
 {
-  Bool ret = OK;
+  OZ_Return ret = PROCEED;
   am.setInstallingScript(); // mm2: special hack ???
   for (int index = 0; index < script.getSize(); index++) {
     int res = oz_unify(script[index].getLeft(),script[index].getRight());
     if (res == PROCEED) continue;
     if (res == FAILED) {
-      ret = NO;
+      ret = FAILED;
       if (!oz_onToplevel()) {
 	break;
       }
     } else {
       // mm2: instead of failing, this should corrupt the space
       (void) am.emptySuspendVarList();
-      ret = NO;
+      ret = FAILED;
       if (!oz_onToplevel()) {
 	break;
       }
@@ -188,8 +188,11 @@ Board * installOnly(Board * frm, Board * to) {
   am.setCurrent(to);
   am.trail.pushMark();
   
-  if (!oz_installScript(to->getScriptRef()))
+  OZ_Return ret = oz_installScript(to->getScriptRef());
+  if (ret != PROCEED) {
+    Assert(ret==FAILED);
     return to;
+  }
     
   return r;
   
