@@ -7,7 +7,9 @@ real-interval constraints introduced in <Ptr to="ct.casestudy">.
 
 <P> The modules <<LP>> and <<RI>> are provided as contribution (being
 part of the &moz3; distribution) and can be accessed either by
-<<<declare [LP RI] = {Module.link ['x-oz://contrib/LP' 'x-oz://contrib/RI']}>>
+<<<
+declare [LP RI] = {Module.link ['x-oz://contrib/LP' 
+                                'x-oz://contrib/RI']}>>>
  or by 
 <<<
 import RI at 'x-oz://contrib/RI'
@@ -78,9 +80,11 @@ is added when maximizing.
 
 <P>
 Before running the LP solver, the variables are constrained to
-<<X1&lt;real interval:[0, 1.79769e+308]&gt;>> and <<X2&lt;real
-interval:[0,1.79769e+308]&gt;>>. After calling the LP solver the
-variables are instantiated to: <<X1=3.75>>, <<X2=2.25>>, <<Sol=41.25>>, and <<Ret=optimal>>.
+<<<X1&lt;real interval:[0, 1.79769e+308]&gt;>>> and 
+<<<X2&lt;real interval:[0,1.79769e+308]&gt;.>>> 
+The LP solver binds the
+variables  to: <<X1=3.75>>, <<X2=2.25>>,
+<<Sol=41.25>>, and <<Ret=optimal>>.
 
 <Para><Title/The tutorial problem: Solving a multiknapsack problem./
 This tutorial uses a multiknapsack problem to demonstrate the benefits

@@ -17,20 +17,20 @@ installed Oz system. The following points should be obeyed.
 
 <Entry> Include File.
 
-<Item> To obtain the functionality provided by the &cpi it is required
-to include the file <Code proglang=sh>mozart_cpi.hh</Code> in the
-appropriate &ccpp; source files.
+<Item> To obtain the functionality provided by the &cpi include the
+file <Code proglang=sh>mozart_cpi.hh</Code> in the appropriate &ccpp;
+source files.
 
 <Entry> Platform-independent compilation and linkage of native
 functors.
 
-<Item> You are encouraged to use <Code proglang=sh/oztool/ to compile
-your &ccpp; source programs (<Code proglang=sh/oztool c++/) and to
-link your object files (<Code proglang=sh/oztool ld/). It has the
-right options &resp; search paths set depending on your current
-platform and environment. See <Ptr.extern to="ozdoc:apptut"
-key="section.counter.global.compilation"> for details on <Code
-proglang=sh/oztool/.
+<Item> Use <Code proglang=sh/oztool/ to compile &ccpp; source programs
+ (<Code proglang=sh/oztool c++/) and to link object files (<Code
+ proglang=sh/oztool ld/). It has the right options &resp; search paths
+ set depending on your current platform and environment. See
+ <Ptr.extern to="ozdoc:apptut"
+ key="section.counter.global.compilation"> for details on <Code
+ proglang=sh/oztool/.
 
 <Entry> Naming Conventions.
 
