@@ -77,7 +77,7 @@ void Thread::checkExtThreadOutlined ()
     
     SolveActor *sa = SolveActor::Cast (sb->getActor ());
     if (e->isStableSolve (sa)) {
-      e->scheduleThread (e->mkRunnableThread (sa->getPriority (),sb));
+      e->scheduleThread (e->mkRunnableThread (DEFAULT_PRIORITY,sb));
     }
     sb = (sa->getBoard())->getSolveBoard ();
   }

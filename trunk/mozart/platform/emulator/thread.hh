@@ -30,7 +30,7 @@ enum ThreadFlag {
 
   //
   T_dead   = 0x000001,   // the thread is dead;
-  T_prop   = 0x000002,   // "propagated", i.e. the thread is runnable;
+  T_runnable   = 0x000002,   // the thread is runnable;
 
   //
   T_p_thr  = 0x000004,   // 'real' propagators by Tobias;
@@ -223,21 +223,16 @@ public:
   //  ... if not dead;
   Bool isSuspended () { 
     Assert (!(isDeadThread ()));
-    return (!(state.flags & T_prop));
+    return (!(state.flags & T_runnable));
   }
-  Bool isPropagated () { 
-    Assert (!(isDeadThread ()));
-    return (state.flags & T_prop);
-  }
-  //  'isRunnable' is just an alias for the 'isPropagated'; 
   Bool isRunnable () { 
     Assert (!(isDeadThread ()));
-    return (state.flags & T_prop);
+    return (state.flags & T_runnable);
   }
 
   //  For reinitialisation; 
   void setRunnable () { 
-    state.flags = (state.flags & ~T_dead) | T_prop;
+    state.flags = (state.flags & ~T_dead) | T_runnable;
   }
 
   Bool isInSolve () { 
@@ -250,13 +245,13 @@ public:
   }
 
   //  non-runnable threads;
-  void markPropagated () {
+  void markRunnable () {
     Assert (isSuspended () && !(isDeadThread ()));
-    state.flags = state.flags | T_prop;
+    state.flags = state.flags | T_runnable;
   }
-  void unmarkPropagated () { 
-    Assert (isPropagated () && !(isDeadThread ()));
-    state.flags = state.flags & ~T_prop;
+  void unmarkRunnable () { 
+    Assert (isRunnable () && !(isDeadThread ()));
+    state.flags = state.flags & ~T_runnable;
   }
 
   void setExtThread () { 
@@ -289,7 +284,7 @@ public:
   }
   
   void headInitPropagator(void) {
-    state.flags = T_p_thr | T_prop | T_unif;
+    state.flags = T_p_thr | T_runnable | T_unif;
   }
 
   // debugger
@@ -561,7 +556,7 @@ public:
   void scheduledPropagator();
 
   //
-  //  Terminate a propagator thread which is (still) marked as propagated
+  //  Terminate a propagator thread which is (still) marked as runnable
   // (was: 'killPropagatedCurrentTaskSusp' with some variations);
   //
   //  This might be used only from the local propagation queue,
@@ -571,7 +566,7 @@ public:
   //
   //  Philosophy (am i right, Tobias?):
   // When some propagator returns 'PROCEED' and still has the 
-  // 'propagated' flag set, then it's done.
+  // 'runnable' flag set, then it's done.
   void closeDonePropagator ();
 
   void closeDonePropagatorCD ();

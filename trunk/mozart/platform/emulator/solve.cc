@@ -147,7 +147,7 @@ void SolveActor::clearSuspList(Thread *killThr) {
 
     if (thr->isDeadThread () ||
 	killThr == thr ||
-	(thr->isPropagated () && !(thr->isPropagator()))) {
+	(thr->isRunnable () && !(thr->isPropagator()))) {
       tmpSuspList = tmpSuspList->dispose ();
       continue;
     }
@@ -202,8 +202,8 @@ void SolveActor::clearSuspList(Thread *killThr) {
   }
 }
 
-SolveActor::SolveActor(Board *bb, int prio)
- : Actor (Ac_Solve, bb, prio), suspList (NULL), threads (0), cpb(NULL), 
+SolveActor::SolveActor(Board *bb)
+ : Actor (Ac_Solve, bb), suspList (NULL), threads (0), cpb(NULL), 
    localThreadQueue(NULL) {
   result     = makeTaggedRef(newTaggedUVar(bb));
   solveBoard = new Board(this, Bo_Solve);
