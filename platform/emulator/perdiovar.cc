@@ -39,6 +39,19 @@ void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
   doBind(lPtr, v);
 }
 
+GName *getGNameForUnify(TaggedRef val) {
+  if (!isConst(val)) return 0;
+  ConstTerm *c=tagged2Const(val);
+  switch(c->getType()) {
+  case Co_Abstraction:
+  case Co_Object:
+  case Co_Chunk:
+    return c->getGName1();
+  default:
+    return 0;
+  }
+}
+
 Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
 {
   TaggedRef rVal = *rPtr;
@@ -56,11 +69,22 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
 
     PerdioVar *rVar = tagged2PerdioVar(rVal);
 
-    if (isTertProxy() || isURL()) {
-      if (rVar->isTertProxy() || rVar->isURL())
-	return FALSE;
-      Swap(rVal,lVal,TaggedRef);
-      Swap(rPtr,lPtr,TaggedRef*);
+    if (isObject() || isURL()) {
+      if (rVar->isObject() || rVar->isURL()) {
+	if (getGName() != rVar->getGName()) {
+	  warning("mm2:gname mismatch (var-var)");
+	  return FALSE;
+	}
+      }
+      if (!rVar->isObject()) {
+	/*
+	 * binding preferences
+	 * bind perdiovar -> proxy
+	 * bind url proxy -> object proxy
+	 */
+	Swap(rVal,lVal,TaggedRef);
+	Swap(rPtr,lPtr,TaggedRef*);
+      }
     }
 
     PD((PD_VAR,"unify i:%d i:%d",lVar->getIndex(),rVar->getIndex()));
@@ -87,25 +111,9 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
   
   Assert(!isAnyVar(rVal));
 
-  if (isTertProxy())
-    return FALSE;
+  if (!valid(lPtr,rVal)) return FALSE;
 
   if (prop && am.isLocalSVar(lVar)) {
-    if (isURL()) {
-      GName *gn=getGName();
-      if (isAbstraction(rVal)) {
-	warning("mm2:check gname");
-	// if (tagged2Abstraction(rVal)->getGName()!=gn) return FALSE;
-      } else if (isSChunk(rVal)) {
-	warning("mm2:check gname");
-	// if (tagged2SChunk(rVal)->getGName()!=gn) return FALSE;
-      } else if (isObject(rVal)) {
-	warning("mm2:check gname");
-	// if (tagged2Object(rVal)->getGName()!=gn) return FALSE;
-      } else {
-	return FALSE;
-      }
-    }
     bindPerdioVar(lVar,lPtr,rVal);
     return TRUE;
   } else {
@@ -119,7 +127,13 @@ Bool PerdioVar::valid(TaggedRef *varPtr, TaggedRef v)
 {
   Assert(!isRef(v) && !isAnyVar(v));
 
-  return (isTertProxy() || isURL()) ? FALSE : TRUE;
+  if (isObject() || isURL()) {
+    if (getGName() != getGNameForUnify(v)) {
+      warning("mm2:gname mismatch (var-val)");
+      return FALSE;
+    }
+  }
+  return TRUE;
 }
 
 //-----------------------------------------------------------------------------

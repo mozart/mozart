@@ -262,31 +262,16 @@ GName *Abstraction::globalize()
   if (!getPtr()) {
     setGName(newGName(makeTaggedConst(this),GNT_PROC));
   }
-  getPred()->globalize();
   return getGName();
 }
 
-void PrTabEntry::globalize()
-{
-  if (gname==NULL) {
-    setGName(newGName(this));
+GName *SChunk::globalize() {
+  if (!getPtr()) {
+    setGName(newGName(makeTaggedConst(this),GNT_CHUNK));
   }
+  return getGName();
 }
 
-
-Abstraction::Abstraction(TaggedRef name, int arity, GName *gn)
-  : Tertiary(0,Co_Abstraction,Te_Proxy)
-{
-  PrTabEntry *aux = findCodeGName(gn);
-  if (aux==NULL) {
-    aux = new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
-    GName *gnret = copyGName(gn);
-    addGName(gnret,aux);
-    aux->setGName(gnret);
-  }
-  pred = aux;
-  gRegs = NULL;
-}
 
 /*===================================================================
  * ConstTerm
@@ -378,13 +363,6 @@ TaggedRef reverseC(TaggedRef l)
   }
   Assert(isNil(l));
   return out;
-}
-
-GName *SChunk::globalize() {
-  if (!getPtr()) {
-    setGName(newGName(makeTaggedConst(this),GNT_CHUNK));
-  }
-  return getGName();
 }
 
 GName *Object::globalize() {
@@ -1224,7 +1202,6 @@ TaggedRef *OzLock::lock(Thread *t)
 
   return headRef(*aux);
 }
-
 
 /*===================================================================
  * Misc
