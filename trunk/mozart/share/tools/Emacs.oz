@@ -20,101 +20,72 @@
 
 fun instantiate {$ IMPORT}
    \insert 'SP.env'
-       = IMPORT.'SP'
+   = IMPORT.'SP'
    \insert 'OP.env'
-       = IMPORT.'OP'
+   = IMPORT.'OP'
+   \insert 'Compiler.env'
+   = IMPORT.'Compiler'
 
    TimeoutToConfigBar = 100
    TimeoutToUpdateBar = TimeoutToConfigBar
-
-   S2A = String.toAtom
-   fun {VS2A X}
-      {S2A {VirtualString.toString X}}
-   end
-   fun {V2VS X}
-      P = {System.get errors}
-   in
-      {System.valueToVirtualString X P.depth P.width}
-   end
-
-   Platform = local
-		 X#Y = {System.get platform}
-	      in
-		 {VS2A X#'-'#Y}
-	      end
-   WindowsPlatform = 'win32-i486'
-
-   FieldSeparator = case Platform == WindowsPlatform then &; else &: end
-   OzRawPath      = local
-		       HomeEnv   = {OS.getEnv 'HOME'}
-		       OzPathEnv = {OS.getEnv 'OZPATH'}
-		    in
-		       case HomeEnv \= false then
-			  {VirtualString.toString
-			   HomeEnv # '/Oz/lib' # [FieldSeparator] # OzPathEnv}
-		       else
-			  OzPathEnv
-		       end
-		    end
-   OzPath
-
-   local
-      fun {PathList RawPath} % RawPath must be of type string
-	 H T P in
-	 {List.takeDropWhile RawPath fun {$ C} C \= FieldSeparator end H T}
-	 P = {VS2A H#'/'}
-	 case T == nil then P|nil
-	 else P|{PathList T.2}
-	 end
-      end
-   in
-      OzPath = {PathList OzRawPath}
-   end
-
-   proc {Trace M}
-      case {Emacs checkVerbose($)} then
-	 {System.showInfo 'Emacs: ' # M}
-      else skip end
-   end
-
-   local
-      BarLock = {NewLock}
-   in
-      proc {MagicEmacsBar File Line Column State}
-	 C = case Column == unit then 0 else Column end
-	 S = {VS2A 'oz-bar ' # File # ' ' # Line # ' ' # C # ' ' # State}
-      in
-	 lock BarLock then
-	    {Print S}
-	    %% enforce a thread preemption to win some time --
-	    %% this is needed for Emacs to always match the regex correctly...
-	    {Delay 1}
-	 end
-      end
-   end
 
    fun {UnknownFile F}
       F == nofile orelse F == ''
    end
 
    local
-      LS = 'file lookup: '
+      fun {V2VS X}
+	 P = {System.get errors}
+      in
+	 {System.valueToVirtualString X P.depth P.width}
+      end
+
+      proc {Trace M}
+	 case {Emacs.getOPI} of false then skip
+	 elseof OPI then
+	    case {OPI isTrace($)} then
+	       {System.showInfo 'Emacs: ' # M}
+	    else skip
+	    end
+	 end
+      end
+
+      Platform = {System.get platform}.1
+      WindowsPlatform = 'win32'
+
+      local
+	 FieldSeparator = case Platform == WindowsPlatform then &; else &: end
+
+	 fun {PathList RawPath} H T in   % RawPath must be of type string
+	    {List.takeDropWhile RawPath fun {$ C} C \= FieldSeparator end H T}
+	    case T == nil then [H]
+	    else H|{PathList T.2}
+	    end
+	 end
+
+	 OzPathEnv = {OS.getEnv 'OZPATH'}
+      in
+	 OzPath = case {OS.getEnv 'HOME'} of false then {PathList OzPathEnv}
+		  elseof HomeEnv then HomeEnv#'/Oz/lib'|{PathList OzPathEnv}
+		  end
+      end
+
       fun {DoLookupFile SearchList F OrigF}
 	 case SearchList of nil then
 	    %% must have been the name of an unsaved file or buffer in Emacs:
 	    OrigF
-	 elseof Path|SearchListRest then Try = Path # F in
+	 elseof Path|SearchListRest then Try = Path # '/' # F in
 	    try
 	       case {OS.stat Try}.type == reg then
-		  {Trace LS # F # ' is ' # Try}
-		  {VS2A Try}
+		  {Trace F # ' is ' # Try}
+		  Try
 	       else
-		  {Trace LS # F # ' is not ' #
+		  {Trace F # ' is not ' #
 		   Try # ': ' # {V2VS {OS.stat Try}}}
 		  {DoLookupFile SearchListRest F OrigF}
 	       end
 	    catch system(...) then
-	       {Trace LS # F # ' is not ' # Try # ': file not found'}
+	       {Trace F # ' is not ' # Try # ': file not found'}
 	       {DoLookupFile SearchListRest F OrigF}
 	    end
 	 end
@@ -143,65 +114,118 @@ fun instantiate {$ IMPORT}
       end
    end
 
-   Emacs =
-   {New class $
+   local
+      MSG_ERROR = [17]
+   in
+      class CompilerInterfaceEmacs from Compiler.genericInterface
+	 prop final
+	 attr Socket: unit BarSync: _ BarLock: {NewLock} Trace: false
+	 meth init(CompilerObject Sock)
+	    lock
+	       Socket <- Sock
+	       Compiler.genericInterface, init(CompilerObject Serve)
+	       {{`Builtin` setOPICompiler 1} self}
+	    end
+	 end
+	 meth Serve(Ms)
+	    case Ms of M|Mr then
+	       case M of info(VS) then
+		  {@Socket write(vs: VS)}
+	       [] info(VS _) then
+		  {@Socket write(vs: VS)}
+	       [] message(Record _) then
+		  {Error.msg
+		   proc {$ X}
+		      {@Socket write(vs: {Error.formatLine X})}
+		   end
+		   Record}
+	       [] displaySource(Title Ext VS) then Name File in
+		  Name = {OS.tmpnam}#Ext
+		  File = {New Open.file
+			  init(name: Name
+			       flags: [write create truncate])}
+		  {File write(vs: VS)}
+		  {File close()}
+		  {@Socket write(vs: {VirtualString.toAtom
+				      '\'oz-show-temp '#Name#'\''})}
+	       [] toTop() then
+		  case {System.get standalone} then skip
+		  else
+		     {@Socket write(vs: MSG_ERROR)}
+		  end
+	       else skip
+	       end
+	       CompilerInterfaceEmacs, Serve(Mr)
+	    end
+	 end
 
-	   prop
-	      final
+	 meth setTrace(B)
+	    Trace <- B
+	 end
+	 meth isTrace($)
+	    @Trace
+	 end
 
-	   attr
-	      BarSync  : _
-	      Verbose  : false
+	 meth bar(file:F line:L column:C state:S)
+	    BarSync <- _ = unit
+	    case {UnknownFile F} orelse L == unit then
+	       CompilerInterfaceEmacs, removeBar()
+	    else
+	       CompilerInterfaceEmacs, MakeOzBar({LookupFile F} L C S)
+	    end
+	 end
+	 meth delayedBar(file:F line:L column:C state:S<=unchanged) New in
+	    BarSync <- New = unit
+	    thread
+	       {WaitOr New {Alarm TimeoutToUpdateBar}}
+	       case {IsDet New} then skip else
+		  CompilerInterfaceEmacs, bar(file:F line:L column:C state:S)
+	       end
+	    end
+	 end
+	 meth configureBar(State) New in
+	    BarSync <- New = unit
+	    thread
+	       {WaitOr New {Alarm TimeoutToConfigBar}}
+	       case {IsDet New} then skip else
+		  CompilerInterfaceEmacs, MakeOzBar(unchanged 0 0 State)
+	       end
+	    end
+	 end
+	 meth removeBar()
+	    BarSync <- _ = unit
+	    CompilerInterfaceEmacs, MakeOzBar(nofile 0 0 hide)
+	 end
+	 meth MakeOzBar(File Line Column State)
+	    lock @BarLock then
+	       C = case Column == unit then 0 else Column end
+	       S = 'oz-bar ' # File # ' ' # Line # ' ' # C # ' ' # State
+	    in
+	       {@Socket write(vs: '\'' # S # '\'')}
+	       {Delay 1}   % this is needed for Emacs
+	    end
+	 end
+      end
+   end
 
-	   meth init
-	      skip
-	   end
+   GetOPI = {`Builtin` getOPICompiler 1}
 
-	   %% should we print debugging code?
-	   meth setVerbose(B) Verbose <- B end
-	   meth checkVerbose($) @Verbose end
-
-	   meth bar(file:F line:L column:C state:S)=M
-	      BarSync <- _ = unit
-	      {Trace {V2VS M}}
-	      case {UnknownFile F} orelse L == unit then
-		 {self removeBar}
-	      else
-		 {MagicEmacsBar {LookupFile F} L C S}
-	      end
-	   end
-
-	   meth delayedBar(file:F line:L column:C state:S<=unchanged)
-	      New in BarSync <- New = unit
-	      thread
-		 {WaitOr New {Alarm TimeoutToUpdateBar}}
-		 case {IsDet New} then skip else
-		    {self bar(file:F line:L column:C state:S)}
-		 end
-	      end
-	   end
-
-	   meth configureBar(State)=M
-	      New in BarSync <- New = unit
-	      {Trace {V2VS M}}
-	      thread
-		 {WaitOr New {Alarm TimeoutToConfigBar}}
-		 case {IsDet New} then skip else
-		    {MagicEmacsBar unchanged 0 0 State}
-		 end
-	      end
-	   end
-
-	   meth removeBar
-	      BarSync <- _ = unit
-	      {Trace 'removing bar'}
-	      {MagicEmacsBar nofile 0 0 hide}
-	   end
-
-	end init}
-
+   Emacs = emacs(getOPI: GetOPI
+		 condSend: condSend(interface:
+				       proc {$ M}
+					  case {GetOPI} of false then skip
+					  elseof OPI then
+					     {OPI M}
+					  end
+				       end
+				    compiler:
+				       proc {$ M}
+					  case {GetOPI} of false then skip
+					  elseof OPI then
+					     {{OPI getCompiler($)} M}
+					  end
+				       end)
+		 interface: CompilerInterfaceEmacs)
 in
-
    \insert 'Emacs.env'
-
 end
