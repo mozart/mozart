@@ -3,9 +3,11 @@
 %%%
 %%%
 declare
-proc {NewGdbm Standard GDBM}
-\insert 'Standard.env'
-   = Standard
+proc {NewGdbm Foreign %Standard
+      GDBM}
+%\insert 'Standard.env'
+%   = Standard
+   skip
 in
    %% open a new `local' to protect redefinitions of
    %% variables already in Base
@@ -103,6 +105,8 @@ in
       end
    end
 end
+
+in skip
 
 /*
 
