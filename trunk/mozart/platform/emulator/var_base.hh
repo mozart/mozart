@@ -13,7 +13,6 @@ class SVariable {
 friend TaggedRef gcVariable(TaggedRef);
 friend inline void addSuspSVar(TaggedRef, SuspList *);
 friend inline void addSuspUVar(TaggedRefPtr, SuspList *);
-friend inline void addSuspOnlyToUVar(TaggedRefPtr, SuspList *);
 friend inline void addSuspNotCVar(TaggedRefPtr, SuspList *);
 friend void addSuspAnyVar(TaggedRefPtr, SuspList *);
   
@@ -75,13 +74,6 @@ void addSuspUVar(TaggedRefPtr v, SuspList * el)
   SVariable * sv = new SVariable(tagged2VarHome(*v));
   *v = makeTaggedSVar(sv);
   sv->suspList = addSuspToList(sv->suspList, el, sv->home);
-}
-
-inline
-void addSuspOnlyToUVar(TaggedRefPtr v, SuspList * el)
-{
-  if (tagTypeOf(*v) != UVAR) { Assert(0); return; }
-  addSuspUVar(v, el);
 }
 
 inline
