@@ -381,7 +381,7 @@ Bool AM::isLocalUVarOutline(TaggedRef var, TaggedRef *varPtr)
 {
   Board *bb=tagged2VarHome(var);
   if (bb->isCommitted()) {
-    bb=bb->getBoardFast();
+    bb=bb->derefBoard();
     *varPtr=makeTaggedUVar(bb);
   }
   return  bb == currentBoard;
@@ -416,8 +416,8 @@ Board *getVarBoard(TaggedRef var)
 inline
 Bool AM::isMoreLocal(TaggedRef var1, TaggedRef var2)
 {
-  Board *board1 = getVarBoard(var1)->getBoardFast();
-  Board *board2 = getVarBoard(var2)->getBoardFast();
+  Board *board1 = getVarBoard(var1)->derefBoard();
+  Board *board2 = getVarBoard(var2)->derefBoard();
   return isBelow(board1,board2);
 }
 
@@ -591,7 +591,7 @@ Bool AM::isBelow(Board *below, Board *above)
   while (1) {
     if (below == above) return OK;
     if (below == rootBoard) return NO;
-    below = below->getParentFast();
+    below = below->getParent();
   }
 }
 
@@ -623,16 +623,16 @@ SuspList * AM::checkSuspensionList(SVariable * var,
 
 PROFILE_CODE1
   (
-   if (var->getBoardFast() == am.currentBoard) {
-     if (thr->getBoardFast() == am.currentBoard)
+   if (var->getBoard() == am.currentBoard) {
+     if (thr->getBoard() == am.currentBoard)
        FDProfiles.inc_item(from_home_to_home_hits); 
      else
        FDProfiles.inc_item(from_home_to_deep_hits);
    } else {
-     Board * b = thr->getBoardFast();
-     if (b == var->getBoardFast())
+     Board * b = thr->getBoard();
+     if (b == var->getBoard())
        FDProfiles.inc_item(from_deep_to_home_misses);
-     else if (am.isBetween(b, var->getBoardFast())==B_BETWEEN)
+     else if (am.isBetween(b, var->getBoard())==B_BETWEEN)
        FDProfiles.inc_item(from_deep_to_deep_hits);
      else
        FDProfiles.inc_item(from_deep_to_deep_misses);
@@ -643,7 +643,7 @@ PROFILE_CODE1
     if (thr->isPropagated ()) {
       if (thr->isPropagator ()) {
 	if (calledBy && !(thr->isUnifyThread ())) {
-	  switch (isBetween(thr->getBoardFast (), var->getBoardFast ())) {
+	  switch (isBetween(thr->getBoard(), var->getBoard())) {
 	  case B_BETWEEN:
 	    thr->markUnifyThread ();
 	    break;
@@ -662,7 +662,7 @@ PROFILE_CODE1
 	continue;
       }
     } else {
-      if (thr->wakeUp(var->getBoardFast(), calledBy)) {
+      if (thr->wakeUp(var->getBoard(), calledBy)) {
 	Assert (thr->isDeadThread () || thr->isPropagated ());
 	suspList = suspList->dispose ();
 	continue;
@@ -1225,7 +1225,7 @@ void AM::incSolveThreads(Board *bb)
       //
       Assert (!(isStableSolve (sa)));
     }
-    bb = bb->getParentFast();
+    bb = bb->getParent();
   }
 }
 
@@ -1248,7 +1248,7 @@ void AM::decSolveThreads(Board *bb)
 	Assert (sa->getThreads () > 0);
       }
     }
-    bb = bb->getParentFast();
+    bb = bb->getParent();
   }
 }
 
@@ -1267,7 +1267,7 @@ Bool AM::isInSolveDebug (Board *bb)
 	return (OK);
       }
     }
-    bb = bb->getParentFast();
+    bb = bb->getParent();
   }
 
   return (NO);
@@ -1554,7 +1554,7 @@ OZ_Term AM::dbgGetSpaces() {
     } else {
       out = cons(OZ_atom("???"),out);
     }
-    bb=bb->getParentFast();
+    bb=bb->getParent();
   }
   return out;
 }

@@ -9,10 +9,6 @@
   ------------------------------------------------------------------------
 */
 
-#ifdef INTERFACE
-#pragma implementation "print.hh"
-#endif
-
 #include <ctype.h>
 
 #include "ozstrstream.h"
@@ -86,7 +82,7 @@ inline Bool isEffectiveSusp(SuspList* sl)
   Thread *thr = sl->getElem ();
   if (thr->isDeadThread ())
     return NO;
-  if (!(thr->getBoardFast ()))
+  if (!(thr->getBoard()))
     return NO;
   return OK;
 }
@@ -583,7 +579,7 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
 	     << endl
 	     << indent(offset)
 	     << "HomeNode: ";
-      tagged2VarHome(ref)->getBoardFast()->print(stream,DEC(depth));
+      tagged2VarHome(ref)->derefBoard()->print(stream,DEC(depth));
       stream << endl;
     }
     break;
@@ -990,7 +986,7 @@ PRINT(Thread)
   if ((getFlags ()) & T_tag)       stream << " T";
   if ((getFlags ()) & T_ltq)       stream << " Q";
   stream << " <";
-  getBoardFast()->print(stream, DEC(depth));
+  getBoard()->print(stream, DEC(depth));
   stream << ">";
 }
 
@@ -1031,7 +1027,7 @@ void SVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v)
   
   stream << indent(offset)
 	 << "HomeNode: ";
-  home->getBoardFast()->print(stream,DEC(depth));
+  getBoard()->print(stream,DEC(depth));
   stream << endl;
 }
 
@@ -1047,7 +1043,7 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
 	 << endl;
 
   stream << indent(offset) << "Home board: ";
-  home->getBoardFast()->print(stream,depth);
+  getBoard()->print(stream,depth);
   stream << endl;
 
   stream << indent(offset) << "Suspension List:\n"; 
@@ -1787,7 +1783,7 @@ void Board::printTree()
     aa->print(cout,1,off);
     cout << endl;
     off++;
-    bb = aa->getBoardFast();
+    bb = aa->getBoard();
   }
   bb->print(cout,1,off);
   cout << endl;

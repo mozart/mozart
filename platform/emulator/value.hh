@@ -64,7 +64,7 @@ public:
   isOptName()  { return home == (Board *) ToPointer(ALLBITS); }
   isDynName()  { return !isAtom() && !isOptName(); }
 
-  Board *getBoardFast(); // see am.icc
+  Board *getBoard(); // see am.icc
 
   Literal *gc ();       // for non-top-level names only;
   void gcRecurse (); // too;
@@ -596,7 +596,7 @@ public:
   ~ConstTermWithHome();
   ConstTermWithHome(ConstTermWithHome&);
   ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t), home(b) {}
-  Board *getBoardFast();
+  Board *getBoard();
 };
 
 
@@ -1197,7 +1197,7 @@ public:
   OzDictionary *getSlowMethods() { return getClass()->getSlowMethods(); }
   OzDictionary *getDefMethods()  { return getClass()->getDefMethods(); }
   TaggedRef getOzClass()        { return getClass()->getOzClass(); }
-  Board *getBoardFast();
+  Board *getBoard();
   SRecord *getFreeRecord()          { return (SRecord *) getPtr(); }
   SRecord *getUnfreeRecord() { 
     return isClass() ? (SRecord*) NULL : getClass()->getUnfreeRecord(); 
@@ -1307,7 +1307,7 @@ public:
   TaggedRef getFeature(TaggedRef fea) { return OZ_subtree(value,fea); }
   TaggedRef getArityList() { return ::getArityList(value); }
   int getWidth () { return ::getWidth(value); }
-  Board *getBoardFast();
+  Board *getBoard();
 };
 
 
