@@ -166,24 +166,25 @@ enum tcpMessageType {
 };
 
 enum ConnectionFlags{
-  CLOSING           = 1,        // has sent CLOSE request
-  OPENING           = 2,        // has made connection
-  WANTS_TO_CLOSE    = 4,        // is blocked on trying to send CLOSE
-  CURRENT           = 8,        // incompleteRead or Write
-  WRITE_QUEUE       = 0x10,       // has something in write queue
-  CAN_CLOSE         = 0x20,       // Zero refs to site, but still something to send
-  ACK_MSG_INCOMMING = 0x40,       // incomplete on back-channel
+  CLOSING           = 1,         // has sent CLOSE request
+  OPENING           = 2,         // has made connection
+  WANTS_TO_CLOSE    = 4,         // is blocked on trying to send CLOSE
+  CURRENT           = 8,         // incompleteRead or Write
+  WRITE_QUEUE       = 0x10,      // has something in write queue
+  CAN_CLOSE         = 0x20,      // Zero refs to site, but still something to send
+  ACK_MSG_INCOMMING = 0x40,      // incomplete on back-channel
   WRITE_CON         = 0x80,      // connection type is WRITE
-  MY_DWN            = 0x100,      // Closed by me
-  REFERENCE         = 0x200,      // There are references to this site
+  MY_DWN            = 0x100,     // Closed by me
+  REFERENCE         = 0x200,     // There are references to this site
   OK_PROBE          = 0x400,     // Probe for Ok
   TMP_DWN           = 0x800,     // Closed due to Tmp problem
-  RC_READING        = 0x1000,     // ReadCon in midle of read
+  RC_READING        = 0x1000,    // ReadCon in midle of read
   RC_CRASHED        = 0x2000,    // ReadCon crashed during read
   HIS_DWN           = 0x4000,    // WriteCon closed by reader
   PROBE             = 0x8000,    // WriteCon in probe list
-  HIS_MY_TMP        = 0x10000,    // WriteCon in closed by initiative and Tmp
-  HANDOVER_OPENING  = 0x20000    // WriteCon is used for opening a readconnection
+  HIS_MY_TMP        = 0x10000,   // WriteCon in closed by initiative and Tmp
+  HANDOVER_OPENING  = 0x20000,   // WriteCon is used for opening a readconnection
+  HANDED_OVER       = 0x40000   // The WriteCon was not opened by us. Be carefull when closing.
 };
 
 enum ByteStreamType {
@@ -943,6 +944,7 @@ class RemoteSite{
 public:
   DSite* site;
   Bool   hasBeenConnected;
+  Bool   handedOver;
 protected:
   void init(DSite*, int);
 public:
@@ -1179,9 +1181,8 @@ public:
 
 
   Bool canbeClosed(){
-    if(isClosing()) return FALSE;
-    if(isOpening()) return FALSE;
-    return TRUE;}
+    return !(isClosing() || isOpening());}
+
 
   Bool goodCloseCand(){
     return canbeClosed() && !isIncomplete();}
@@ -1312,10 +1313,7 @@ public:
     clearFlag(CAN_CLOSE);}
 
   Bool canbeClosed(){
-    if(isClosing()) return FALSE;
-    if(isOpening()) return FALSE;
-    // Ek is it writing? insert that here
-    return TRUE;}
+    return !(isClosing() || isOpening() || testFlag(HANDED_OVER));}
 
   Bool isTmpDwn(){
     return testFlag(TMP_DWN);}
@@ -1508,16 +1506,24 @@ void RemoteSite::zeroReferences(){
   PD((SITE,"Zero references to site %s",site->stringrep()));
   if(writeConnection == NULL)  return;
   writeConnection->removeReference();
+  // If we are handed this connection, and there are a read connection dont close it.
+  if(writeConnection->testFlag(HANDED_OVER) && readConnection != NULL)
+    {return;}
   if(writeConnection->goodCloseCand() && !writeConnection->isTmpDwn() && !writeConnection->isProbing())
     writeConnection->closeConnection();
   else
     writeConnection -> setCanClose();}
 
 void RemoteSite::writeConnectionRemoved(){
-    writeConnection = NULL;
-    if(readConnection == NULL){
-      site->dumpRemoteSite(recMsgCtr);
-      remoteSiteManager->freeRemoteSite(this);}}
+  writeConnection = NULL;
+  if(readConnection == NULL){
+    site->dumpRemoteSite(recMsgCtr);
+    remoteSiteManager->freeRemoteSite(this);}
+  else{
+    if(handedOver && !readConnection->isClosing()){
+      readConnection->closeConnection();
+    }}
+}
 
 void RemoteSite::readConnectionRemoved(){
   readConnection = NULL;
@@ -2920,6 +2926,7 @@ int tcpPreReadHandler(int fd,void *r0){
   BYTE *pos = tcpOpenMsgBuffer->getBuf(),header;
   int ackStartNr,maxNrSize,todo;
   DSite *si;
+  RemoteSite *rs;
   PD((TCP_CONNECTIONH,"tcpPreReadHandler invoked r:%x",r));
   if(smallMustRead(fd,pos,PREREAD_NO_BYTES,PREREAD_HANDLER_TRIES))
     goto tcpPreFailure;
@@ -2935,26 +2942,49 @@ int tcpPreReadHandler(int fd,void *r0){
   maxNrSize= unmarshalNumber(tcpOpenMsgBuffer);
   si = unmarshalDSite(tcpOpenMsgBuffer);
   tcpOpenMsgBuffer->unmarshalEnd();
-
-  if(si->getRemoteSite() == NULL)
+  rs = si->getRemoteSite();
+  if(rs == NULL)
     goto tcpPreFailure;
 
   // The connection established is not intended
   // as a readconnection but as a writeconnection.
   if(header==TCP_MYSITE_HANDOVER){
-    Assert(si->getRemoteSite()->getWriteConnection() ==  NULL);
     // get rid of the read connection. Its not needed any longer.
     tcpCache->remove(r);
-    readConnectionManager->freeConnection(r);
-    WriteConnection *w = writeConnectionManager->allocConnection(si->getRemoteSite(),fd);
-    si->getRemoteSite()->setWriteConnection(w);
-    w->setOpening();
-    tcpCache->add(w);
-    OZ_registerReadHandler(fd,tcpConnectionHandler,(void *)w);
-    return 0;
+    // There might be a write connection attached to the
+    // RemoteSite alredy....
+    WriteConnection *w = rs->getWriteConnection();
+    if(w != NULL && (w->isProbing() || w->isMyInitiative() || w->isHisInitiative() || w->isTmpDwn())){
+      tcpCache->remove(w);
+      writeConnectionManager->freeConnection(w);
+      w = NULL;
+    }
+    if(w ==  NULL){
+      rs->handedOver = TRUE;
+      tcpCache->remove(r);
+      readConnectionManager->freeConnection(r);
+      w = writeConnectionManager->allocConnection(rs,fd);
+      rs->setWriteConnection(w);
+      w->setOpening();
+      w->setFlag(HANDED_OVER);
+      tcpCache->add(w);
+      OZ_registerReadHandler(fd,tcpConnectionHandler,(void *)w);
+      return 0;}
+    else{
+      // We alredy got a writeconnection. The allocated fd must be closed.
+      osclose(fd);
+    }
   }
   old = si->getRemoteSite()->getReadConnection();
   if(old!=NULL){old->close();}
+
+  // To be sure that we have a writeConnection if the other peer is
+  // behind a firewall we close all open atempts from that site until
+  // there is a proper WriteCon.
+  if(si->getRemoteSite()->handedOver &&
+     (si->getRemoteSite()->getWriteConnection() == NULL
+      || si->getRemoteSite()->getWriteConnection()->isClosing())){
+    goto tcpPreFailure;}
 
   si->getRemoteSite()->setReadConnection(r);
 
@@ -3297,6 +3327,12 @@ int tcpConnectionHandler(int fd,void *r0){
   timestamp=net2int(pos);
   tcheck=r->remoteSite->site->checkTimeStamp(timestamp);
   if(tcheck!=0) goto tcpConPermLost;
+
+  // Check if we was handed the connection or not.
+  // If not inform the remoteSite.
+
+  if (!r->testFlag(HANDED_OVER)) {
+    r->remoteSite->handedOver = FALSE;}
 
   pos += netIntSize;
   strngLen = net2int(pos);
@@ -3884,6 +3920,7 @@ void RemoteSite::init(DSite* s, int msgCtr){
     nrOfSentMsgs = 0;
     nrOfRecMsgs = 0;
     hasBeenConnected = FALSE;
+    handedOver = FALSE;
 }
 
 void RemoteSite::setWriteConnection(WriteConnection *r){
