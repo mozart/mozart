@@ -60,7 +60,7 @@
 	<P>
                <picture.choice>
 	  <Picture.Extern to="dialog.gif" type=gif>
-	  <Picture.extern to="pictures/tools/dialog.eps" type=ps>
+	  <Picture.Extern id="pict.ext.tools.dialog" to="pictures/tools/dialog.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/dialog/
 D={New TkTools.dialog
@@ -125,7 +125,7 @@ E={New Tk.entry tkInit(parent:D bg:wheat width:20)}
 	<P>
                <picture.choice>
 	  <Picture.Extern to="error.gif" type=gif>
-	  <Picture.extern to="pictures/tools/error.eps" type=ps>
+	  <Picture.Extern id="pict.ext.tools.error" to="pictures/tools/error.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/error/
 E={New TkTools.error
@@ -184,7 +184,7 @@ E={New TkTools.error
 	<P>
                <picture.choice>
 	  <Picture.Extern to="menubar.gif" type=gif>
-	  <Picture.extern to="pictures/tools/menubar.eps" type=ps>
+	  <Picture.Extern id="pict.ext.tools.menubar" to="pictures/tools/menubar.eps" type=ps>
                </picture.choice>
 <index class=tails/<<TkTools>><and><<menubar>>/
 <chunk class=anonymous><title/menubar/

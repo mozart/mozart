@@ -50,12 +50,12 @@
 <p>
                <picture.choice>
                  <Picture.Extern to="lower.gif" type=gif>
-                 <Picture.Extern to="pictures/started/lower.eps" type=ps>
+                 <Picture.Extern id="pict.ext.started.lower" to="pictures/started/lower.eps" type=ps>
                </picture.choice>
 <p>
                <picture.choice>
                  <Picture.Extern to="upper.gif" type=gif>
-                 <Picture.Extern to="pictures/started/upper.eps" type=ps>
+                 <Picture.Extern id="pict.ext.started.upper" to="pictures/started/upper.eps" type=ps>
                </picture.choice>
       </Figure>
 
