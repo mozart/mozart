@@ -70,8 +70,6 @@ in
 	     format
 	     dispatch
 	     info}
-
-      System.{Show = show}
       
    export
       put:     NewFormatter 
@@ -909,6 +907,12 @@ in
 	 elseof dp(connection(refusedTicket V)) then
 	    {Error.format
 	     'Ticket refused for connection'
+	     unit
+	     [hint(l:'Ticket' m:V)]
+	     Exc}
+	 elseof dp(connection(ticketToDeadSite V)) then
+	    {Error.format
+	     'Ticket refused: refers to dead site'
 	     unit
 	     [hint(l:'Ticket' m:V)]
 	     Exc}
