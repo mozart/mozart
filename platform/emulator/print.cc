@@ -667,7 +667,7 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
   case Co_Extension:
     {
       int n;
-      char * s = OZ_virtualStringToC(((OZ_Extension *) this)->printV(depth),&n);
+      char * s = OZ_virtualStringToC(((OZ_Extension *) (OZ_Container *) this)->printV(depth),&n);
       stream << s;
       break;
     }
@@ -767,7 +767,7 @@ void ConstTerm::printStream(ostream &stream, int depth)
   case Co_Extension:
     {
       int n;
-      char * s = OZ_virtualStringToC(((OZ_Extension *) this)->printV(depth),&n);
+      char * s = OZ_virtualStringToC(((OZ_Extension *) (OZ_Container*) this)->printV(depth),&n);
       stream << s;
       break;
     }

@@ -611,12 +611,12 @@ Bool oz_isExtension(TaggedRef t) {
 inline
 OZ_Extension * tagged2Extension(TaggedRef t) {
   Assert(oz_isExtension(t));
-  return (OZ_Extension *) tagged2Const(t);
+  return (OZ_Extension *) (OZ_Container *) tagged2Const(t);
 }
 
 inline
 TaggedRef makeTaggedExtension(OZ_Extension * s) {
-  return makeTaggedConst((ConstTerm *) s);
+  return makeTaggedConst((ConstTerm *) (OZ_Container *) s);
 }
 
 /*===================================================================

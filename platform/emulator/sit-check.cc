@@ -234,7 +234,7 @@ int ConstTerm::checkSituatedness(void) {
 
   switch (getType()) {
   case Co_Extension: {
-    OZ_Extension * ex = (OZ_Extension *) this;
+    OZ_Extension * ex = (OZ_Extension *) (OZ_Container*) this;
     Assert(ex);
     Board * bb = (Board *) (ex->__getSpaceInternal());
     if (!bb || ISGOOD(bb))
