@@ -30,9 +30,8 @@ dnl mm2: Known Problems and Bugs
 dnl  SunPro feature
 dnl  Warnings pedwarn
 dnl  Windows support
-dnl  PS-LAB: prefix and rcp/mv
-dnl  VPATH
 dnl  pmake support
+dnl  ensure that all needed programs are really found
 
 dnl *****************************************************************
 dnl INITIALIZE
@@ -49,6 +48,27 @@ if test -n "$OZHOME" && test -d "$OZHOME";
 then
   ac_default_prefix=$OZHOME
 fi
+
+
+dnl *****************************************************************
+dnl topdir
+dnl *****************************************************************
+
+case $srcdir in
+    .*)
+	srcdir=`(cd $srcdir; pwd)`
+	;;
+esac
+
+if test "x$TOPDIR" = x
+then
+    TOPDIR=`(cd $srcdir; cd ..; pwd)`
+fi
+AC_SUBST(TOPDIR)
+
+# set OZVERSION
+. $TOPDIR/VERSION
+AC_SUBST(OZVERSION)
 
 dnl *****************************************************************
 dnl windows cross compilation
@@ -77,6 +97,8 @@ dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
 
+PATH=$TOPDIR/bin:$TOPDIR:$PATH
+
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
@@ -95,56 +117,13 @@ AC_CHECK_PROGS(SED, gnused sed)
 AC_CHECK_PROGS(PGXX, pg++)
 AC_CHECK_PROGS(AR, ar)
 
-OZPATH=$PATH:../bin:../../bin
-AC_PATH_PROG(PLATFORMSCRIPT, ozplatform, grummel, $OZPATH)
-AC_PATH_PROG(DYNLD, ozdynld, grummel, $OZPATH)
+AC_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+AC_PATH_PROG(DYNLD, ozdynld)
 
 M4_S="$M4"
+AC_SUBST(M4_S)
 
 AC_PATH_PROG(DEPEND, makedepend)
-
-dnl *****************************************************************
-dnl configurable variables
-dnl *****************************************************************
-
-dnl substitutions variable
-AC_SUBST(PROPOBJS)
-AC_SUBST(platform)
-AC_SUBST(PLATFORM)
-AC_SUBST(PEANUTS)
-AC_SUBST(PROGRAMNAME)
-AC_SUBST(TARGETS)
-AC_SUBST(FDTARGETS)
-AC_SUBST(FSETTARGETS)
-AC_SUBST(INSTALL_PROP)
-AC_SUBST(LD)
-AC_SUBST(AR)
-AC_SUBST(M4_S)
-AC_SUBST(DEPEND)
-AC_SUBST(DYNLD)
-AC_SUBST(CWARN)
-AC_SUBST(tmphack_target)
-AC_SUBST(tmphack_host)
-AC_SUBST(tmphack_programname)
-AC_SUBST(TOPDIR)
-AC_SUBST(OZVERSION)
-
-dnl *****************************************************************
-dnl topdir
-dnl *****************************************************************
-
-case $srcdir in
-    .*)
-	srcdir=`(cd $srcdir; pwd)`
-	;;
-esac
-
-if test "x$TOPDIR" = x
-then
-    TOPDIR=`(cd $srcdir; cd ..; pwd)`
-fi
-
-. $TOPDIR/VERSION
 
 dnl *****************************************************************
 dnl platform
@@ -154,15 +133,19 @@ if test "x$platform" = x
 then
     platform=`$PLATFORMSCRIPT`
 fi
+AC_SUBST(platform)
 
 if test "x$PROGRAMNAME" = x
 then
     PROGRAMNAME=oz.emulator.bin
 fi
 TARGETS="$PROGRAMNAME"
+AC_SUBST(PROGRAMNAME)
+AC_SUBST(TARGETS)
 
 PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
 AC_DEFINE_UNQUOTED($PLATFORM)
+AC_SUBST(PLATFORM)
 
 OS=`echo $PLATFORM|sed -e 's/.*_//'`
 AC_DEFINE_UNQUOTED($OS)
@@ -177,6 +160,8 @@ dnl *****************************************************************
 if test "$ac_test_CFLAGS" != set; then
     CFLAGS=""
 fi
+
+AC_SUBST(CWARN)
 
 O_OPT="-O"
 G_OPT="-g"
@@ -224,6 +209,22 @@ if test "x$GCC" = xyes
 then
   LD="$CC"
 fi
+AC_SUBST(LD)
+
+dnl Special hack for finding library directories
+ps="$HOME/lib/$platform"
+if test -n "$PSDIR"
+then
+    ps="$ps $PSDIR/lib/$platform"
+fi
+for p in $ps
+do
+  if test -d $p
+  then
+    AC_MSG_RESULT(using library dir $p)
+    LDFLAGS="$LDFLAGS -L$p"
+  fi
+done
 
 AC_CHECK_LIB(intl, main)
 AC_CHECK_LIB(nsl, main)
@@ -231,21 +232,6 @@ AC_CHECK_LIB(socket, main)
 AC_CHECK_LIB(m, main)
 AC_CHECK_LIB(kernel32,main)
 AC_CHECK_LIB(wsock32,main)
-
-dnl Special hack for our local configuration
-ps="$HOME/lib/$platform $PSDIR/lib/$platform"
-for p in $ps
-do
-  AC_MSG_CHECKING(for dir $p)
-  if test -d $p
-  then
-    LDFLAGS="$LDFLAGS -L$p"
-    AC_MSG_RESULT(yes)
-  else
-    AC_MSG_RESULT(no)
-  fi
-done
-
 AC_CHECK_LIB(gmp, mpz_init, , AC_MSG_ERROR(required GNU MP lib not found))
 
 
@@ -399,7 +385,6 @@ dnl ********************************
     ;;
 esac
 
-
 AC_MSG_CHECKING(for --enable-linkprop)
 AC_ARG_ENABLE(linkprop,
   [--enable-linkprop  link propagators statically (default=yes)])
@@ -415,6 +400,9 @@ else
         AC_MSG_RESULT(no (-DFOREIGNFDPROPS))
 	AC_DEFINE(FOREIGNFDPROPS)
 fi
+AC_SUBST(FDTARGETS)
+AC_SUBST(FSETTARGETS)
+AC_SUBST(INSTALL_PROP)
 
 AC_MSG_CHECKING(for --enable-peanuts)
 AC_ARG_ENABLE(peanuts,
@@ -426,6 +414,7 @@ else
         AC_MSG_RESULT(no)
 	PEANUTS="\$(PEANUTS)"
 fi
+AC_SUBST(PEANUTS)
 
 
 dnl *****************************************************************
@@ -466,6 +455,9 @@ else
 	tmphack_target=".cc.oo"
 	tmphack_programname="$PROGRAMNAME.tmp"
 fi
+AC_SUBST(tmphack_target)
+AC_SUBST(tmphack_host)
+AC_SUBST(tmphack_programname)
 
 dnl *****************************************************************
 dnl FINALIZATION SUPPORT
