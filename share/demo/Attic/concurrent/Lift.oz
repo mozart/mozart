@@ -69,7 +69,7 @@ define
    Images = {TkTools.images
              {Map [upF downF upE downE lift liftUp liftDown]
               fun {$ A}
-                 'http://www.ps.uni-sb.de/ozhome/demo/images/lift/'#A#'.xbm'
+                 'http://mozart.ps.uni-sb.de/home/doc/demo/images/lift/'#A#'.xbm'
               end}}
 
    Bold = 'lucidasanstypewriter-bold-18'
