@@ -2398,14 +2398,20 @@ DECLAREBI_USEINLINEFUN2(BIor,orInline)
 // Atom
 // ---------------------------------------------------------------------
 
-OZ_C_proc_begin(BIatomToString,2)
+OZ_Return atomToStringInline(TaggedRef t, TaggedRef &out)
 {
-  OZ_declareAtomArg(0,str);
-  OZ_Term out = OZ_getCArg(1);
+  DEREF(t,_1,_2);
+  if (isAnyVar(t)) return SUSPEND;
 
-  return OZ_unify(out,OZ_string(str));
+  if (!isAtom(t)) {
+    TypeErrorT(-1,"atom");
+  }
+
+  out = OZ_string(tagged2Literal(t)->getPrintName());
+  return PROCEED;
 }
-OZ_C_proc_end
+DECLAREBI_USEINLINEFUN1(BIatomToString,atomToStringInline)
+
 
 OZ_C_proc_begin(BIstringToAtom,2)
 {
@@ -7096,6 +7102,19 @@ OZ_C_proc_begin(BIgetSelf,1)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BIsetSelf,1)
+{
+  OZ_Term obj = OZ_getCArg(0);
+  obj = deref(obj);
+  if (!isObject(obj)) {
+    TypeErrorT(0,"Object");
+  }
+  am.setSelf(tagged2Object(obj));
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
 OZ_C_proc_begin(BIoogetCounterSelf,1)
 {
   return OZ_unifyInt(OZ_getCArg(0),0);
@@ -7378,7 +7397,7 @@ BIspec allSpec2[] = {
   {"CondSelect", 4, BImatchDefault, (IFOR) matchDefaultInline},
   {"Width",      2, BIwidth,       (IFOR) widthInline},
 
-  {"AtomToString",    2, BIatomToString,        0},
+  {"AtomToString",    2, BIatomToString,        (IFOR) atomToStringInline},
   {"StringToAtom",    2, BIstringToAtom,        0},
 
   {"NewChunk",        2,BInewChunk,     0},
@@ -7544,6 +7563,7 @@ BIspec allSpec2[] = {
   {"newObject",        2,BInewObject,          (IFOR) newObjectInline},
   {"getOONames",       5,BIgetOONames,         0},
   {"getSelf",          1,BIgetSelf,            0},
+  {"setSelf",          1,BIsetSelf,            0},
   {"isClosed",         2,BIisClosed,           0},
   {"setClosed",        1,BIsetClosed,          0},
 
