@@ -329,6 +329,9 @@ static SigHandler handlers[] = {
 #ifdef SIGBUS
   {SIGBUS,"SIGBUS",NO,0,0},
 #endif
+#ifdef SIGKILL
+  {SIGKILL,"SIGKILL",NO,0,0},
+#endif
 #ifdef SIGPIPE
   {SIGPIPE,"SIGPIPE",NO,0,0},
 #endif
