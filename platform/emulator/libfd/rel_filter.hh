@@ -27,8 +27,6 @@
 #ifndef __REL_FILTER__
 #define __REL_FILTER__
 
-#include "rel.hh"
-
 #define EXPECT(O, F, V, R) if (O.F(V, R)) return R;
 
 template <class RETURN, class EXPECT, class VAR1, class VAR2>

@@ -25,7 +25,7 @@
  *
  */
 
-#include "fdaux.hh"
+#include "rel.hh"
 #include "rel_filter.hh"
 #include "pel_fncts.hh"
 
@@ -40,15 +40,15 @@ public:
   PEL_Service(PEL_ParamIterator_V_V &iter) : _iter(&iter), _r(-1) {}
   PEL_Service &entail(void) {
     CDM(("PEL_Service::entail()\n"));
-    _r = _iter->vanish(); 
+    _r = _iter->vanish();
     return *this;
   }
-  PEL_Service &leave(int vars_left = 0) { 
+  PEL_Service &leave(int vars_left = 0) {
     CDM(("PEL_Service::leave()\n"));
-    _r = _iter->leave(vars_left); 
+    _r = _iter->leave(vars_left);
     return *this;
   }
-  PEL_Service &fail(void) { 
+  PEL_Service &fail(void) {
     CDM(("PEL_Service::fail()\n"));
     _r = _iter->fail();
     return *this;
@@ -56,7 +56,7 @@ public:
   pf_return_t operator ()() { return pf_return_t(_r); }
 };
 
-pf_return_t PEL_LessEqOffset::propagate(PEL_Engine &e) 
+pf_return_t PEL_LessEqOffset::propagate(PEL_Engine &e)
 {
   //
   PEL_FDIntVar &x = *(PEL_FDIntVar *) e[_x];
