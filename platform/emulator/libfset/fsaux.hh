@@ -367,7 +367,7 @@ public:
   FSetIterator(OZ_FSetValue * fs) : _fset(fs) {}
   FSetIterator(OZ_FSetValue * fs, int elem) : _elem(elem), _fset(fs) {}
 
-  int init(int elem) { _elem = elem; }
+  void init(int elem) { _elem = elem; }
 
   int resetToMin(void) {
     return _elem = _fset->getMinElem();
