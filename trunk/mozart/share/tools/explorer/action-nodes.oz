@@ -68,7 +68,6 @@ in
    ActionNodes=c(succeeded: Leaf
 		 failed:    Leaf
 		 blocked:   Leaf
-		 choose:    Choose
-		 sentinel:  EmptyClass)
+		 choose:    Choose)
 
 end
