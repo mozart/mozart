@@ -93,6 +93,7 @@ int TaskStack::frameSize(ContFlag cFlag)
   case C_SET_CAA:
   case C_SET_SELF:
   case C_LTQ:
+  case C_CATCH:
     return 2;
   case C_CALL_CONT:  
   case C_CFUNC_CONT:
@@ -131,4 +132,103 @@ loop:
     }
     ozconf.stackMaxSize = newMaxSize;
   }
+}
+
+
+TaggedRef TaskStack::findCatch(TaggedRef &out)
+{
+  if (out) out = nil();
+
+  Assert(this);
+
+  while (!isEmpty()) {
+    TaggedPC topElem = ToInt32(pop());
+    ContFlag flag = getContFlag(topElem);
+    switch (flag){
+    case C_JOB:
+      return 0;
+
+    case C_CONT:
+      {
+        ProgramCounter PC = getPC(C_CONT,topElem);
+        RefsArray Y = (RefsArray) pop();
+        RefsArray G = (RefsArray) pop();
+        out = cons(CodeArea::dbgGetDef(PC),out);
+      }
+      break;
+
+    case C_XCONT:
+      {
+        ProgramCounter PC = getPC(C_XCONT,topElem);
+        RefsArray Y = (RefsArray) pop();
+        RefsArray G = (RefsArray) pop();
+        RefsArray X = (RefsArray) pop();
+        out = cons(CodeArea::dbgGetDef(PC),out);
+        break;
+      }
+
+    case C_LOCAL:
+      error("impossible");
+      return 0;
+
+    case C_CFUNC_CONT:
+      {
+        OZ_CFun biFun    = (OZ_CFun) pop();
+        RefsArray X      = (RefsArray) pop();
+        out = cons(OZ_mkTupleC("builtin",2,
+                               OZ_atom(builtinTab.getName((void *) biFun)),
+                               OZ_toList(getRefsArraySize(X),X)),
+		   out);
+        break;
+      }
+
+    case C_DEBUG_CONT:
+      {
+        OzDebug *deb = (OzDebug*) pop();
+        out = cons(OZ_atom("debug"),out);
+        break;
+      }
+
+    case C_CALL_CONT:
+      {
+        TaggedRef pred = (TaggedRef) ToInt32(pop());
+        RefsArray X = (RefsArray) pop();
+        out = cons(OZ_mkTupleC("apply",2,
+			       pred,OZ_toList(getRefsArraySize(X),X)),
+		   out);
+        break;
+      }
+
+    case C_CATCH:
+      {
+        TaggedRef pred = (TaggedRef) ToInt32(pop());
+	return pred;
+      }
+
+    case C_SET_CAA:
+      { 
+        AskActor *aa = (AskActor *) pop ();
+        out = cons(OZ_atom("setCAA"),out);
+        break;
+      }
+
+    case C_SET_SELF:
+      { 
+        Object *obj = (Object *) pop();
+        out = cons(OZ_atom("setSelf"),out);
+        break;
+      }
+
+    case C_LTQ:
+      {
+        ThreadQueueImpl * ltq = (ThreadQueueImpl *) pop();
+        out = cons(OZ_atom("ltq"),out);
+        break;
+      }
+    default:
+      Assert(0);
+    } // switch
+  } // while
+
+  return 0;
 }

@@ -1298,6 +1298,12 @@ LBLpopTask:
       taskstack->setTop(topCache);
       goto LBLemulate;
 
+    case C_CATCH:
+      {
+	TaskStackPop(--topCache);
+	goto LBLpopTask;
+      }
+
     case C_DEBUG_CONT:
       {
 	OzDebug *ozdeb = (OzDebug *) TaskStackPop(--topCache);
@@ -2771,25 +2777,36 @@ LBLsuspendThread:
      {
        DebugCheck(ozconf.stopOnToplevelFailure, tracerOn();trace("raise"));
 
-       TaggedRef traceBack = e->currentThread->dbgGetTaskStack(PC);
-       TaggedRef pred = e->currentThread->getValue();
+       TaggedRef traceBack;
+       TaggedRef pred = e->currentThread->findCatch(traceBack);
+       if (PC != NOCODE) {
+	 traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
+       }
+       traceBack = reverseC(traceBack);
 
        if (!pred || !isProcedure(pred)) {
 	 pred = e->defaultExceptionHandler;
-	 e->currentThread->setValue(nil());
        }
 
        /* mm2: exception is already in X[0],
 	*   TODO: should somehow be reflected !!! */
 
        int arity = tagged2Const(pred)->getArity();
+       if (arity !=1 && arity != 3) {
+	 pred = e->defaultExceptionHandler;
+	 arity = tagged2Const(pred)->getArity();
+	 if (arity != 1 && arity !=3) {
+	   pred = e->biExceptionHandler;
+	   arity = tagged2Const(pred)->getArity();
+	 }
+       }
+	   
        if (arity == 1) {
 	 RefsArray argsArray = allocateRefsArray(1,NO);
 	 argsArray[0]=X[0];
 	 e->currentThread->pushCall(pred,argsArray,1);
        } else {
-	 if (arity != 3) pred = e->biExceptionHandler;
-	 Assert(tagged2Const(pred)->getArity() == 3);
+	 Assert(arity == 3);
 	 RefsArray argsArray = allocateRefsArray(3,NO);
 	 argsArray[0]=X[0];
 	 argsArray[1]=e->dbgGetSpaces();
@@ -3386,7 +3403,7 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
       /* rule: if fi --> false */
       if (cont->getPC() == NOCODE) {
 	if (!isToplevel()) return CE_FAIL;
-	exception=OZ_atom("failCond");
+	exception=OZ_atom("failure");
 	return CE_RAISE;
       }
 
