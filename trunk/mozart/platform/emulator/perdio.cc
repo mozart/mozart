@@ -3069,6 +3069,9 @@ void marshallClass(Site *sd, ObjectClass *cl, ByteStream *bs, MarshallInfo *mi)
 
 void marshallDict(Site *sd, OzDictionary *d, ByteStream *bs, MarshallInfo *mi)
 {
+  if (!d->isSafeDict()) {
+    warning("Marshalling unsafe dictionary, will expire soon!!\n");
+  }
   int size = d->getSize();
   marshallNumber(size,bs);
   trailCycle(d->getRef(),bs,3);
@@ -3479,6 +3482,7 @@ void unmarshallDict(ByteStream *bs, TaggedRef *ret)
 {
   int size = unmarshallNumber(bs);
   OzDictionary *aux = new OzDictionary(am.currentBoard,size);
+  aux->markSafe();
   *ret = makeTaggedConst(aux);
   gotRef(bs,*ret);
 
