@@ -1215,7 +1215,10 @@ BIspec fdSpec[] = {
   {"fdp_subset", 2, fdp_subset},
 
   {"counter", 2, fdtest_counter},
+  {"firstFail", 2, fdtest_firstFail},
+  {"taskIntervalsProof", 4, fdtest_taskIntervalsProof},
   {"spawnLess", 2, fdtest_spawnLess},
+
 #endif
 #ifdef DEBUG_STABLE
   {"debugStable", 0, debugStable},
