@@ -32,7 +32,7 @@ end
 %% Text
 %%
 
-Version                = 'Mar 15 1998'
+Version                = 'Mar 28 1998'
 TitleName              = 'Oz Profiler'
 IconName               = 'Profiler'
 
@@ -61,7 +61,7 @@ SortButtonText         = 'Sort By:'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry
 %%
-ToplevelGeometry       = '450x290'
+ToplevelGeometry       = '450x284'
 
 BarCanvasWidth         = 300
 ProcTextWidth          = 24
@@ -116,16 +116,14 @@ BitMap                 = '@' # BitMapDir # 'debugger.xbm'
 %%
 
 TextCursor             = left_ptr
-
-HelpEvent              = '<3>'
-
+MaxEntries             = 50
 TimeoutToStatus        = 210
-
 UpdateTimes            = [0     # 'never'
 			  2000  # '2s'
 			  5000  # '5s'
 			  10000 # '10s'
 			  30000 # '30s']
+HelpEvent              = '<3>'
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
