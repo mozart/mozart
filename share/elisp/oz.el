@@ -453,7 +453,7 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
   (if (not (equal mode-name "Oz"))
       (oz-new-buffer)))
 
-(defvar oz-halt-timeout 5
+(defvar oz-halt-timeout 15
   "How long to wait in oz-halt after sending the directive halt")
 
 (defun oz-halt()
@@ -749,9 +749,14 @@ the GDB commands `cd DIR' and `directory'."
 	       (re-search-forward "[^ \t]")
 	       (1- (current-column))))
 	    ((looking-at oz-abstr-pattern)
-	     (beginning-of-line)
-	     (skip-chars-forward " \t")
-	     (+ (current-column) oz-indent-chars))
+	     ;; the arguments of pred are behind
+	     ;; so indent the body to the start of 'pred'
+	     (+ (current-column) oz-indent-chars)
+	     )
+;	    ((looking-at oz-abstr-pattern)
+;	     (beginning-of-line)
+;	     (skip-chars-forward " \t")
+;	     (+ (current-column) oz-indent-chars))
 	    ((looking-at oz-meth-pattern)
 	     ;; the arguments of pred are behind
 	     ;; so indent the body to the start of 'pred'
@@ -866,11 +871,11 @@ the GDB commands `cd DIR' and `directory'."
 		     (setq s nil)
 		   )
 		 )
-		((and (looking-at oz-abstr-pattern) (= n 0))
-		 (setq s nil)
-		 (beginning-of-line)
-		 (skip-chars-forward " \t")
-		 (current-column))
+;		((and (looking-at oz-abstr-pattern) (= n 0))
+;		 (setq s nil)
+;		 (beginning-of-line)
+;		 (skip-chars-forward " \t")
+;		 (current-column))
 		((looking-at oz-begin-pattern)
 		 ;; 'if'
 		 (if (= n 0)
