@@ -1,0 +1,282 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@dfki.de>
+  -
+  - Contributors (sgml translation):
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+
+<!--
+  Translated to SGML by:
+     Daniel Simon, dansim@ps.uni-sb.de
+     Andy Walter, anwalt@ps.uni-sb.de
+-->
+
+<Chapter id="chapter.files">
+  <Title/Files/
+  <P>
+    This section explains by means of examples how to read data from and
+    write data to a file.  Detailed reference information on files is
+    available in 
+
+  <Section id="section.files.basic">
+    <Title/Basic Patterns of Use/
+    <P>
+      The basic idea of how to use files in Mozart is as follows.  We provide
+      a class <<Open.file>>.  Creating an object by inheriting from this class
+      we get a <Def/file object/<Index/file<And>object/.  Conceptually, its
+      state consists of a string together with the current position in this
+      string called <Def/seek pointer/.
+    <P>
+      In the following, we will refer to this particular string as <Def/file/.
+      It is visible to other operating system processes via the operating
+      system's filesystem.
+    <P>
+      The atoms used for labels and fields of methods of the class
+      <<Open.file>> are chosen to coincide with the common operating system
+      terminology (&ie;, POSIX terminology).
+    <SubSection>
+      <Title/Reading a File/
+      <P>
+	Suppose we want to read data from a file named <File/a.txt/.  The
+	contents of this file is as follows<Note foot/The demo file for this
+	document contains the &Oz; code to create this file./:
+	<Table>
+	  <TR>
+	    <TH/<P.silent>/
+	    <TH/0/<TH/1/<TH/2/<TH/3/<TH/4/<TH/5/<TH/6/<TH/7/<TH/8/<TH/9/
+	  <TR>
+	    <TH/0/
+	    <TD/H/<TD/e/<TD/l/<TD/l/<TD/o/<TD/H/<TD/e/<TD/l/<TD/l/<TD/o/
+	  <TR>
+	    <TH/10/
+	    <TD/O/<TD/z/<TD/_/<TD/I/<TD/s/<TD/_/<TD/b/<TD/e/<TD/a/<TD/u/
+	  <TR>
+	    <TH/20/
+	    <TD/t/<TD/i/<TD/f/<TD/u/<TD/l/
+	    <TD/<P.silent>/<TD/<P.silent>/<TD/<P.silent>/
+	    <TD/<P.silent>/<TD/<P.silent>/
+	</Table>
+      <P>
+	The first step is to create a file object and associate it to the
+	file <File/a.txt/.  This is done by feeding
+	<<<F={New Open.file init(name:'a.txt' flags:[read])}>>>
+	<Index class=module/Open<And>file<And>init/
+	The list <<[read]>> used as value of the field <<flags>> means
+	that we want to have read access to the file.
+      <P>
+	After the file has been opened and associated to the file
+	object&nbsp;<<F>>, we can read from it.  To read the next five
+	characters from the file we feed
+	<<<{F read(list:{Browse} size:5)}>>>
+	<Index class=module/Open<And>file<And>read/
+	The character string <<Hello>> appears in the browser window (the
+	value&nbsp;<<5>> at the field <<size>> signals that we want to read
+	five characters from the file).
+      <P>
+	Note that if we had not switched the browser to the mode for
+	displaying virtual strings (see <Ptr to="chapter.data">), we would
+	have seen the output <<[72 101 108 108 111]>> in the browser window.
+      <P>
+	A common pattern of use is to read the entire file into an &Oz;
+	string.  This is especially supported.  Feed:
+	<<<{F read(list:{Browse} size:all)}>>>
+	<Index class=module/Open<And>file<And>read/
+	The rest of the file <<HelloOz is beautiful>> appears in the
+	browser window.
+      <P>
+	Up to now we have read the data in strict left to right fashion.
+	Suppose we want to start reading at the eighth character of the file.
+	Navigating to this character and reading the following five characters
+	is done by:
+<<<{F seek(whence:set offset:7)}
+{F read(list:{Browse} size:5)}>>>
+	<Index class=module/Open<And>file<And>read/
+	<Index class=module/Open<And>file<And>seek/
+	You will see <<lloOz>> in the browser window.  Internally, as already
+	mentioned, each file object has a <Def/seek pointer/.  Each operation
+	refers to its position: for instance, instead of <Q/reading five
+	characters/ one should think of <Q/reading the next five characters
+	after the seek pointer/.  Note that in order to read the first
+	character of a file, the seek pointer must be set to the offset zero.
+      <P>
+	Furthermore, you can get the current position of the seek pointer by:
+	<<<{F tell(offset:{Browse})}>>>
+	<Index class=module/Open<And>file<And>tell/
+	The number <<12>> appears in the browser window.
+    <SubSection>
+      <Title/Closing a File/
+      <P>
+	After use, the file object&nbsp;<<F>> must be closed.  By applying
+	<<F>> to the message <<close>>:
+	<<<{F close}>>>
+	<Index class=module/Open<And>file<And>close/
+	the file as well as the file object are closed.  Note that invoking a
+	method other than <<close>> of the class <<Open.file>> after the object
+	has been closed raises an exception.  Exceptions are discussed later.
+    <SubSection>
+      <Title/Writing a File/
+      <P>
+	Suppose we want to create an object for a file which does not yet exist
+	and that should be named <File/ours.txt/.  Furthermore, this file
+	should have read and write access rights for yourself and for each
+	member of your group.  We feed
+<<<F={New Open.file 
+       init(name:  'ours.txt'
+            flags: [write create]
+            mode:  mode(owner: [read write] 
+                        group: [read write]))}>>>
+	<Index class=module/Open<And>file<And>init/
+	Data to be written to the file must be virtual strings.  For
+	example, the character sequence <<"Go ahead">> can be written to
+	the file&nbsp;<<F>> by
+	<<<{F write(vs:'Go ahead!')}>>>
+	<Index class=module/Open<And>file<And>write/
+	The same character sequence we also can write by
+	<<<{F write(vs:"Go ahead!")}>>>
+	<Index class=module/Open<And>file<And>write/
+      <P>
+	Also more complex virtual strings are handled this way.  For example
+<<<{F write(vs:"This is "#1#' And '#
+            ("now a float: "#2.0)#"\n")}>>>
+	<Index class=module/Open<And>file<And>write/
+	writes a nested virtual string containing integers, atoms, strings and
+	floats to the file.  Even the filename argument of the <<init>> method
+	of class <<Open.file>> is allowed to be a virtual string.  For more
+	information on virtual strings see <Ptr to="section.virtualstrings">.
+      <P>
+	If you type the Unix command
+	<Code display proglang=sh/<Span class=index/cat/ ours.txt/
+	or the Windows command
+	<Code display proglang=sh/type ours.txt/
+	to a shell, you see the content of <File/ours.txt/ printed to
+	standard output.
+    <SubSection>
+      <Title/Exceptions/
+      <P>
+	Functionality provided by the class <<Open.file>> relies on operating
+	system services.  These services might report exceptions, these
+	exceptions are then raised as &Oz; exceptions.
+      <P>
+	For example, trying to open a non existing file raises an exception.
+	Operating system dependent exceptions can be caught as follows:
+<<<try
+   _={New Open.file init(name:'not-existing')}
+catch system(os(A I S) ...) then
+   {Browse os(category:    A
+              number:      I
+              description: S)}
+end>>>
+	where <<A>> is an atom describing the category of the error
+	(&eg;, <<os>> or <<net>>), <<I>>&nbsp;is the operating system
+	dependent error number, and <<S>> is a string describing the error.
+	For more information on exceptions see also <Ptr to="Mozart-Base">.
+      <P>
+	Besides of operating system exceptions, the methods of the class
+	<<Open.file>> can raise two different exceptions themselves:
+	<List enum>
+	  <Item>
+	    An exception is raised when an object is initialized twice.
+	    This exception can be caught as follows:
+<<<try
+   &ellipsis; % Initialize twice
+catch system(open(alreadyInitialized O M) ...) then
+   &ellipsis;
+end>>>
+	    Here <<O>> is the object that has been tried to be initialized
+	    twice by applying it to the method&nbsp;<<M>>.
+	  <Item>
+	    An exception is raised when a message other than <<close>> is
+	    executed by an already closed file object.  This exception can
+	    be caught as follows:
+<<<try
+   &ellipsis; % Apply closed object
+catch system(open(alreadyClosed O M) ...) then
+   &ellipsis;
+end>>>
+	    Here <<O>> is the object that has been closed already and <<M>>
+	    the message <<O>> has been applied to.
+	</List>
+  <Section id="section.expand-a">
+    <Title/Example: Expanding TAB Characters/
+    <P>
+      Suppose we want to read a file, expand all <Name type=char/TAB/
+      characters to space characters, and write the expanded lines to
+      another file.  The program which implements this task is shown in
+      <Ptr to="program.expand">.
+      <Figure class=program id="program.expand">
+	<Caption/The <<Expand>> procedure./
+<<<local
+   fun {Insert N Is}
+      case N>0 then {Insert N-1 & |Is} else Is end
+   end
+   fun {Scan Is Tab N}
+      case Is of nil then nil
+      [] I|Ir then
+         case I 
+         of &\t then M=Tab-(N mod Tab) in {Insert M {Scan Ir Tab M+N}}
+         [] &\n then I|{Scan Ir Tab 0}
+         [] &\b then I|{Scan Ir Tab {Max 0 N-1}}
+         else I|{Scan Ir Tab N+1}
+         end
+      end
+   end
+in
+   proc {Expand Tab IN ON}
+      IF={New Open.file init(name:IN)} 
+      OF={New Open.file init(name:ON flags:[write create truncate])}
+      Is
+   in
+      {IF read(list:Is size:all)}    {IF close}
+      {OF write(vs:{Scan Is Tab 0})} {OF close}
+   end
+end>>>
+      </figure>
+      The file with name <<IN>> is opened for reading.  After reading the
+      entire file into the list <<Is>>, the file and the associated object
+      are closed.  Remember that reading the entire file is obtained by giving
+      <<all>> as the value for feature <<size>>.
+    <P>
+      The expansion of <Name type=char/TAB/ characters is done in the function
+      <<Scan>>.  It takes as input parameters the list of characters <<Is>>,
+      the <<Tab>>, and the current position <<N>> in the current line.
+    <P>
+      The outer <<case>> of <<Scan>> figures out whether there are characters
+      to process.  If the next character to process is a <Name type=char/TAB/
+      character, enough space characters to reach the next multiple of
+      <<TabStop>> are inserted.  This is performed by the self explanatory
+      function <<Insert>>.
+    <P>
+      A newline character resets the position&nbsp;<<N>> to zero.  The
+      position is decremented whenever a backspace character is encountered.
+      Any other character increments the position.
+    <P>
+      A second file is opened for writing (indicated by <<write>>).  If a file
+      with name <<ON>> does not exist, it is created (indicated by <<create>>).
+      Otherwise the already existing file is truncated to length zero
+      (indicated by <<truncate>>) and rewritten.  The expanded string is
+      written to this file.
+    <P>
+      The file and its associated file object are closed after writing the
+      expanded list of characters to it.
+</Chapter>
