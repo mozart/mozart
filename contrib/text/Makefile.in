@@ -1,0 +1,55 @@
+@SET_MAKE@
+BUILDTOP        = @BUILDTOP@
+SRCTOP          = @SRCTOP@
+SRCDIR          = @srcdir@
+VPATH           = @srcdir@
+PREFIX          = @prefix@
+LIB_DIR         = $(PREFIX)/contrib/text
+OZC             = @OZC@
+INSTALL         = @INSTALL@
+INSTALL_DIR     = @INSTALL_DIR@
+INSTALL_LIB     = $(INSTALL) -m 444
+EMACS           = emacs
+HOMEURL         = @HOMEURL@
+PLATFORM        = @PLATFORM@
+
+TARGETS         = xsl-attribute.ozf \
+                  XSL_Attribute_Scanner.so-$(PLATFORM) \
+                  xsl-stylesheet.ozf \
+                  xml.ozf XML_Scanner.so-$(PLATFORM)
+LIB_TARGETS     = $(addprefix $(LIB_DIR)/,$(TARGETS))
+
+all:            $(TARGETS)
+install:        $(LIB_DIR) $(LIB_TARGETS)
+
+$(LIB_DIR) $(ELIB_DIR):
+        $(INSTALL_DIR) $@
+
+$(LIB_TARGETS): $(LIB_DIR)/% : %
+        $(INSTALL_LIB) $< $@
+
+%.ozf: %.oz
+        $(OZC) -c $< -o $@
+
+XSL_Scanner.so-$(PLATFORM): xsl-parser.ozf
+XML_Scanner.so-$(PLATFORM): xml.ozf
+
+clean veryclean:
+        -rm *~ *.ozf *.C *.l *.o
+
+distclean: veryclean
+        -rm Makefile config.*
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in ../config.status
+        cd .. && ./config.status
+
+config.status: ../configure
+        cd .. && ./config.status --recheck
