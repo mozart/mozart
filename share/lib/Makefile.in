@@ -32,7 +32,7 @@ OZAR            = @OZAR@
 
 COMPILE         = $(OZC) $(OZFLAGS) -l Base -c
 EXEC            = $(OZC) $(OZFLAGS)
-COMPILESYSLET   = $(OZC) $(OZFLAGS) -l Base -x
+COMPILEEXEC     = $(OZC) $(OZFLAGS) -l Base -x
 ARCHIVE         = $(OZAR) $(OZARFLAGS)
 
 P2T             = $(SRCDIR)/p2t.sh
@@ -52,7 +52,7 @@ export OZMAKE_VERBOSE           = no
 
 SPSRC   = Error ErrorRegistry Finalize
 OPSRC   = Open
-APSRC   = GetArgs Syslet Servlet Applet Application
+APSRC   = Application
 CPSRC   = Search FD Schedule FS
 DPSRC   = Connection Remote RemoteServer Fault URL
 WPSRC   = Tk TkTools
@@ -233,11 +233,11 @@ Compiler.ozf: $(FUNFUNCTORS) ozar
 $(SYSLETS): $(RUNFUNCTORS)
 
 ozc: Base.ozf ozbatch/Main.oz ozbatch/Compile.oz
-        $(COMPILESYSLET) ozbatch/Main.oz -o $@
+        $(COMPILEEXEC) ozbatch/Main.oz -o $@
 
 ozar: URL.ozf ar/Print.oz ar/Main.oz ar/Archiver.oz ../functor-defaults.oz \
         ../url-defaults.oz
-        $(COMPILESYSLET) -l URL=URL.ozf ar/Main.oz -o $@
+        $(COMPILEEXEC) -l URL=URL.ozf ar/Main.oz -o $@
 
 #---------------------------------------------------------------------
 # Installation
