@@ -109,7 +109,7 @@ in
       in
 	 SkippedProcs <- Key | @SkippedProcs
 	 {OzcarMessage 'skipping procedure \'' # Name # '\''}
-	 {OzcarShow @SkippedProcs}
+%	 {OzcarShow @SkippedProcs}
 	 {Thread.resume T}
       end
 
@@ -182,7 +182,7 @@ in
 	    Key   = FrameId # I
 	    Found = {Member Key @SkippedProcs}
 	 in
-	    {OzcarShow @SkippedProcs # Key # Found}
+%	    {OzcarShow @SkippedProcs # Key # Found}
 	    case Found then
 	       {OzcarMessage 'ignoring `exit\' message of ignored application'}
 	       SkippedProcs  <- {Filter @SkippedProcs fun {$ F} F \= Key end}
@@ -290,7 +290,7 @@ in
 	 Stack = {New StackManager init(thr:T id:I)}
       in
 	 {Dictionary.put self.ThreadDic I Stack}
-	 {OzcarMessage 'adding thread #' # I # '/' # Q}
+	 {OzcarMessage 'attaching thread #' # I # '/' # Q}
 	 case Exc of exc(X) then   %% exception
 	    Gui,addNode(I Q)
 	    ThreadManager,switch(I false)
