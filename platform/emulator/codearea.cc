@@ -469,6 +469,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case FAILURE:
     case SUCCEED:
     case WAIT:
+    case EMPTYCLAUSE:
     case WAITTOP:
     case ASK:
     case RETURN:
