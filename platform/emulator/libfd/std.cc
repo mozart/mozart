@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#if defined(WINDOWS) || defined(NETBSD)
+#if __GLIBC__ == 2 || defined(WINDOWS) || defined(NETBSD)
 
 /* the following have been copied from linux's values.h */
 #define _DEXPLEN    11
