@@ -207,6 +207,7 @@ loop:
 <INLINE>\"	STARTSTRING;
 <INLINE>.	FLUSHECHO;
 
+<INL,CINL>	ESCAPE;
 <INL,CINL>"}"	if (--level<=0) {ENDPOP;} else {FLUSH;printf("\\OzChar\\}");};
 <INL,CINL>"{"	{level++;FLUSH;printf("\\OzChar\\{");}
 <INL,CINL>"/*"	{FLUSH;printf("\\OzComment{");PUSH(COMMENT);}
