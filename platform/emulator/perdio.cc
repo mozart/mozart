@@ -117,7 +117,6 @@ class MsgBuffer;
 
 OZ_Return sendRedirect(Site* sd,int OTI,TaggedRef val);
 OZ_Return sendRedirect(ProxyList *pl,OZ_Term val, Site* ackSite,int OTI);
-OZ_Return sendAcknowledge(Site* sd,int OTI);
 void sendCreditBack(Site* sd,int OTI,Credit c);
 void sendPrimaryCredit(Site *sd,int OTI,Credit c);
 void sendSecondaryCredit(Site* s,Site* site,int index,Credit c);
@@ -3806,10 +3805,11 @@ void Site::msgReceived(MsgBuffer* bs)
 /**********************************************************************/
 
 
+/* RS: have to GC the byte stream again !!!!!!!!!*/
 #define CheckNogoods(bs,msg)				\
   { OZ_Term nogoods = bs->getNoGoods();			\
     if (!literalEq(nil(),nogoods)) {			\
-       return oz_raise(E_ERROR,OZ_atom("perdio"),msg,2,	\
+       return oz_raise(E_ERROR,OZ_atom("dp"),msg,2,	\
 	  	       oz_atom("nogoods"),		\
 		       nogoods);			\
     }							\
@@ -4027,6 +4027,11 @@ void PerdioVar::redirect(OZ_Term val) {
 
 OZ_Return sendRedirect(ProxyList *pl,OZ_Term val, Site* ackSite, int OTI){
   OZ_Return ret = PROCEED;
+  if (pl==NULL) { // have to check in this case too for non-exportables
+    MsgBuffer *bs=msgBufferManager->getMsgBuffer(NULL);
+    marshal_M_REDIRECT(bs,mySite,OTI,val);
+    CheckNogoods(bs,"unify");
+  }
   while (pl) {
     Site* sd=pl->sd;
     ProxyList *tmp=pl->next;
@@ -4045,9 +4050,11 @@ OZ_Return bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
   PD((PD_VAR,"bindPerdioVar by thread: %x",am.currentThread()));
   if (pv->isManager()) {
     PD((PD_VAR,"bind manager o:%d v:%s",pv->getIndex(),toC(v)));
-    pv->primBind(lPtr,v);
     OT->getOwner(pv->getIndex())->mkRef();
-    return sendRedirect(pv->getProxies(),v,mySite,pv->getIndex());
+    OZ_Return aux = sendRedirect(pv->getProxies(),v,mySite,pv->getIndex());
+    if (aux == PROCEED)
+      pv->primBind(lPtr,v);
+    return aux;
   } 
   if (pv->isObject()) {
     PD((PD_VAR,"bind object u:%s",toC(makeTaggedConst(pv->getObject()))));
@@ -4059,13 +4066,13 @@ OZ_Return bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
   Assert(pv->isProxy());
   if (pv->hasVal()) {
     return pv->pushVal(v); // save binding for ack message, ...
-  } else {
-    BorrowEntry *be=BT->getBorrow(pv->getIndex());
-    OZ_Return aux = sendSurrender(be,v);
-    if (aux!=PROCEED) 
-      return aux;
-    return pv->setVal(v); // save binding for ack message, ...
-  }
+  } 
+  
+  BorrowEntry *be=BT->getBorrow(pv->getIndex());
+  OZ_Return aux = sendSurrender(be,v);
+  if (aux!=PROCEED) 
+    return aux;
+  return pv->setVal(v); // save binding for ack message, ...
 }
 
 /**********************************************************************/
