@@ -335,9 +335,11 @@ OZ_Bool solveActorWaker (int n, TaggedRef *args)
 	       bb->isDiscarded () == OK || bb->isFailed () == OK), 
 	      error ("the blackboard the solveActor is applied to is gone?"));
   SolveActor *sa = CastSolveActor (bb->getActor ());
+  // DebugCheckT (message ("solveActorWaker (@0x%x)\n", (void *) sa));
 
   sa->decThreads ();      // get rid of threads - '1' in creator; 
   if (sa->isStable () == OK) {
+    // DebugCheckT (message ("solveActorWaker: stable (@0x%x)\n", (void *) sa));
     am.pushNervous (bb);  // inderectly - can't say 'goto LBLreduce'; 
   }
   return (PROCEED);    // always; 
@@ -370,8 +372,13 @@ Bool SolveActor::isStable ()
 {
   if (threads != 0) 
     return (NO); 
-  if (am.trail.isEmptyChunk() == NO)
-    return (NO);
+//   if (am.currentBoard == solveBoard) {
+//     if (am.trail.isEmptyChunk() == NO)
+//       return (NO);
+//   } else {
+//     if ((solveBoard->getScriptRef ()).getSize () != 0)
+//       return (NO);
+//   }
   return (areNoExtSuspensions ()); 
 }
 

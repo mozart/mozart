@@ -190,6 +190,7 @@ void Thread::ScheduleSolve (Board *b)
 {
   DebugCheck ((b->isCommitted () == OK || b->isSolve () == NO),
 	      error ("no solve board in Thread::ScheduleSolve ()"));
+  // DebugCheckT (message("Thread::ScheduleSolve (@0x%x)\n", (void *) b->getActor ()));
   Thread *t = new Thread;
   t->flags = (T_Nervous|T_Solve|T_SolveReduce);
   am.incSolveThreads (b->getParentBoard ());
