@@ -92,6 +92,7 @@ EOF
 
    'gint'                     => 'OZ_int',
    'guint'                    => 'OZ_int',
+   'guint32'                  => 'OZ_int',
 
    'glong'                    => 'OZ_int',
    'gulong'                   => 'OZ_int'
