@@ -111,6 +111,7 @@ public:
   Literal *sClone(void);
 
   inline unsigned int hash();  
+  int checkSituatedness(void);
 };
 
 class Atom: public Literal {
@@ -167,6 +168,7 @@ public:
   GName *getGName1() { return (GName*) ToPointer(homeOrGName); }
   GName *globalize();
   void import(GName *);
+  int checkSituatedness(void);
 };
 
 inline
@@ -648,6 +650,7 @@ public:
   }
   const char *getPrintName();
   int getArity();
+  int checkSituatedness(void);
 };
 
 

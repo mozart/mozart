@@ -71,5 +71,10 @@ $module_init_fun_name = "space_init";
      'waitStable'       => { in  => [],
                              out => [],
                              BI  => BIwaitStableSpace},
+
+     'checkSit'         => { in  => ['value'],
+                             out => [],
+                             BI  => BIcheckSit},
+                 
      );
 1;;
