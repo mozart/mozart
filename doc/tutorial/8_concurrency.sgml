@@ -629,5 +629,39 @@ in
 end
 >>>
 </FIGURE>
+<P> The program <PTR TO="pingpong1"> didn't terminate properly
+when the <<Ping>> and the <<Pong>> threads terminated. This 
+problem can be remedied now. If we use <<Application.exit/1>> 
+a stand-alone application terminates aborting remaining threads.
+We can arrange things such that the main thread terminates only when
+the <<Ping>> and the <<Pong>> threads terminate. This is shown
+in <PRT TO="pingpong2">.
 
+<P><FIGURE ID="pingpong2" CLASS="Figure">
+<CAPTION>A 'Ping Pong' program stand-alone</CAPTION>
+<<<
+functor
+import
+   Browser(browse:Browse) %Import Browse form Browser module
+   Application
+define
+   proc {Ping N}
+      if N==0 then {Browse 'ping terminated'}
+      else {Delay 500} {Browse ping} {Ping N-1} end
+   end
+   proc {Pong N}
+      {For 1 N 1 
+         proc {$ I} {Delay 600} {Browse pong} end }
+      {Browse 'pong terminated'}
+   end
+   X1 X2
+in
+   {Browse 'game started'}
+   thread {Ping 50} X1=unit end
+   thread {Pong 50} X2=X1 end
+   {Wait X2}
+   {Application.exit 0}
+end
+>>>
+</FIGURE>
 </CHAPTER>
