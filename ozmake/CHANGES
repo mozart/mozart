@@ -2,6 +2,7 @@
 
 * version 0.78
 ** automatically remove spurious trailing slashes on MOGUL IDs.
+** `provides' in submakefiles are now really not forgotten
 
 * version 0.77
 ** --fast is now `really' the default

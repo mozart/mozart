@@ -26,7 +26,7 @@ define
 	 local R in
 	    {BatchCompiler enqueue(feedFile(FromFile return(result:?R)))}
 	    {UI sync()}
-	    if {UI hasErrors($)} then raise ozmake(fast) end end
+	    if {UI hasErrors($)} then raise ozmake(build:fast) end end
 	    if Executable then
 	       {self exec_save_with_header(R ToFile Windows.execHeader 9)}
 	       {self exec_mkexec(ToFile)}

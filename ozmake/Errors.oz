@@ -564,6 +564,9 @@ prepare
 	       msg  : 'version found does not match --packageversion argument'
 	       items: [hint(l:'Found' m:if Have==unit then 'None' else Have end)
 		       hint(l:'Wanted' m:if Want==unit then 'None' else Want end)])
+      [] ozmake(build:fast) then
+	 error(kind : TITLE_BUILD
+	       msg  : 'there were errors during compilation')
       end
    end
 define
