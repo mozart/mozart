@@ -35,7 +35,34 @@ AC_INIT(OZVERSION)
 
 OZ_INIT
 
-: ${oz_subdirs="platform share contrib doc"}
+AC_MSG_CHECKING(for --enable-contrib)
+AC_ARG_ENABLE(contrib,
+    [--enable-contrib
+	configure the contributions (default: yes)])
+
+if test "${enable_contrib}" != no
+then
+    : ${oz_enable_contrib=contrib}
+    AC_MSG_RESULT(yes)
+else
+    AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(for --enable-doc)
+AC_ARG_ENABLE(doc,
+    [--enable-doc
+	configure the documentation (default: yes)])
+
+if test "${enable_doc}" != no
+then
+    : ${oz_enable_doc=doc}
+    AC_MSG_RESULT(yes)
+else
+    AC_MSG_RESULT(no)
+fi
+
+: ${oz_subdirs="platform share $oz_enable_contrib $oz_enable_doc"}
+
 AC_MSG_CHECKING(for --enable-subdirs)
 AC_ARG_ENABLE(subdirs,
     [--enable-subdirs=<dirs>
