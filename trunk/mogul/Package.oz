@@ -37,7 +37,7 @@ define
 	    contact      <- {Msg condGet('contact' nil $)}
 	    keywords     <- {Append {Msg getSplit('keyword' $)}
 			     {Msg getSplit('keywords' $)}}
-	    format       <- {Msg condGet('format' nil $)}
+	    format       <- {Msg condGet1('format' nil $)}
 	    local Table={NewDictionary} in
 	       for C in {Msg condGet('category' nil $)} do
 		  Table.{VirtualString.toAtom C} := unit
