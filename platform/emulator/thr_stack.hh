@@ -38,6 +38,7 @@
 #include "ozconfig.hh"
 #include "stack.hh"
 #include "tagged.hh"
+#include "value.hh"
 
 extern ProgramCounter
   C_XCONT_Ptr          , // a continuation with    X registers
@@ -184,8 +185,8 @@ public:
   void discardCatch()            { 
     discardFrame(C_CATCH_Ptr); 
   }
-  void pushDebug(OzDebug *dbg, OzDebugDoit dothis) { 
-    pushFrame(C_DEBUG_CONT_Ptr, dbg, makeTaggedSmallInt((int) dothis)); 
+  void pushDebug(OzDebug *dbg, Atom * dothis) { 
+    pushFrame(C_DEBUG_CONT_Ptr, dbg, makeTaggedLiteral(dothis)); 
   }
   void pushSelf(Object *o) { 
     pushFrame(C_SET_SELF_Ptr, 

@@ -294,7 +294,8 @@ class ProxyList;
 class MsgBuffer;
 
 // source level debugger
-enum OzDebugDoit {DBG_STEP, DBG_NOSTEP, DBG_EXIT};
+class Atom;
+extern Atom * DBG_STEP_ATOM, * DBG_NOSTEP_ATOM, * DBG_EXIT_ATOM;
 class OzDebug;
 
 class AM;
