@@ -765,7 +765,6 @@ inline
 void const2buffer(ostream &out, ConstTerm *c)
 {
   const char *s = c->getPrintName();
-  int arity = c->getArity();
 
   switch (c->getType()) {
   case Co_Thread:
@@ -773,40 +772,26 @@ void const2buffer(ostream &out, ConstTerm *c)
     break;
   case Co_Abstraction:
   case Co_Builtin:
-    {
-      out << "<P/" << arity;
-      if (*s != 0) {
-        out << ' ' << s;
-      }
-      out << '>';
+    out << "<P/" << c->getArity();
+    if (*s != 0) {
+      out << ' ' << s;
     }
+    out << '>';
     break;
-  case Co_Cell:
-    out << "<Cell>";
-    break;
-  case Co_Port:
-    out << "<Port>";
-    break;
-  case Co_Space:
-    out << "<Space>";
-    break;
+
+  case Co_Cell:       out << "<Cell>"; break;
+  case Co_Port:       out << "<Port>"; break;
+  case Co_Space:      out << "<Space>"; break;
+  case Co_Lock:       out << "<Lock>"; break;
+  case Co_Array:      out << "<Array>"; break;
+  case Co_Dictionary: out << "<Dictionary>"; break;
 
   case Co_Class:
   case Co_Object:
-    {
-      if (*s == '_' && *(s+1) == 0) {
-        if (c->getType()==Co_Class) {
-          out << "<C>";
-        } else {
-          out << "<O>";
-        }
-      } else {
-        if (c->getType()==Co_Class) {
-          out << "<C: " << s << '>';
-        } else {
-          out << "<O: " << s << '>';
-        }
-      }
+    if (*s == '_' && *(s+1) == 0) {
+      out << (isObjectClass(c) ? "<C>" : "<O>");
+    } else {
+      out << (isObjectClass(c) ? "<C: " : "<O: ") << s << '>';
     }
     break;
 
@@ -1932,7 +1917,7 @@ OZ_Term OZ_newName()
 
 int OZ_addBuiltin(const char *name, int inArity, int outArity, OZ_CFun fun)
 {
-  return BIadd(name,inArity,outArity,fun) == NULL ? 0 : 1;
+  return BIadd(name,inArity,outArity,fun,OK) == NULL ? 0 : 1;
 }
 
 void OZ_addBISpec(OZ_BIspec *spec)
