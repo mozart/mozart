@@ -559,7 +559,7 @@ define
 	    {self set_docdir({Path.resolve
 			      {self get_moguldocdir($)}
 			      {Utils.mogulToFilename {self get_mogul($)}}})}
-	    {self install()}
+	    {self install(nil)}
 	    {self set_includelibs(ILIBS)}
 	    {self set_includebins(IBINS)}
 	    {self set_includedocs(IDOCS)}
