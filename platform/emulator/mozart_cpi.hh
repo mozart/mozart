@@ -49,30 +49,40 @@
 #define OZ_EXPECTED_TYPE(S) char * expectedType = S
 
 
-#define OZ_EXPECT(O, A, F)                              \
-  {                                                     \
-    OZ_Term     P = OZ_in(A);                           \
-    OZ_expect_t r = O.F(P);                             \
-    if (O.isFailing(r)) {                               \
-      O.fail();                                         \
-      return OZ_typeErrorCPI(expectedType, A, "");      \
-    } else if (O.isSuspending(r) || O.isExceptional(r)) \
-      return O.suspend();                               \
+#define _OZ_EXPECT(O, V, A, F)				\
+  {							\
+    OZ_expect_t r = O.F(V);				\
+    if (O.isFailing(r)) {				\
+      O.fail();						\
+      return OZ_typeErrorCPI(expectedType, A, "");	\
+    } else if (O.isSuspending(r) || O.isExceptional(r))	\
+      return O.suspend();				\
+  }
+
+#define OZ_EXPECT(O, A, F)			\
+  {						\
+    OZ_Term P = OZ_in(A);			\
+    _OZ_EXPECT(O, P, A, F)				\
   }
 
 
-#define OZ_EXPECT_SUSPEND(O, A, F, SC)                  \
-  {                                                     \
-    OZ_Term     P = OZ_in(A);                           \
-    OZ_expect_t r = O.F(P);                             \
-    if (O.isFailing(r)) {                               \
-      O.fail();                                         \
-      return OZ_typeErrorCPI(expectedType, A, "");      \
-    } else if (O.isSuspending(r)) {                     \
-      SC += 1;                                          \
-    } else if (O.isExceptional(r)) {                    \
-      return O.suspend();                               \
-    }                                                   \
+#define _OZ_EXPECT_SUSPEND(O, V, A, F, SC)			\
+  {							\
+    OZ_expect_t r = O.F(V);				\
+    if (O.isFailing(r)) {				\
+      O.fail();						\
+      return OZ_typeErrorCPI(expectedType, A, "");	\
+    } else if (O.isSuspending(r)) {			\
+      SC += 1;						\
+    } else if (O.isExceptional(r)) {			\
+      return O.suspend();				\
+    }							\
+  }
+
+#define OZ_EXPECT_SUSPEND(O, A, F, SC)		\
+  {						\
+    OZ_Term P = OZ_in(A);			\
+    _OZ_EXPECT_SUSPEND(O, P, A, F, SC)		\
   }
 
 
@@ -285,6 +295,8 @@ const int fs_sup = 32*fset_high - 1;
 //const int fset_high = 220;
 const int fsethigh32 = 32*fset_high;
 #endif
+
+const int fs_max_card = fs_sup + 1;
 
 class OZ_FSetConstraint;
 class OZ_FiniteDomainImpl;
@@ -624,6 +636,9 @@ public:
   static void * operator new[](size_t);
   static void operator delete[](void *, size_t);
 #endif
+
+  // conversion operator: OZ_CPIVar -> OZ_Term
+  operator OZ_Term () const { return varPtr == NULL ? var : (OZ_Term) varPtr; }
 };
 
 //-----------------------------------------------------------------------------
@@ -938,7 +953,6 @@ class ozdeclspec OZ_CtProfile {
 public:
   OZ_CtProfile(void) {}
   virtual void init(OZ_Ct *) = 0;
-
 };
 
 //-----------------------------------------------------------------------------
@@ -1126,64 +1140,6 @@ inline
 OZ_Boolean OZ_Expect::isExceptional(OZ_expect_t r) {
   return (r.accepted == -2);
 }
-
-//-----------------------------------------------------------------------------
-// OZ_Filter
-
-class OZ_Filter {
-public:
-  virtual int hasState(void) = 0;
-};
-
-
-//-----------------------------------------------------------------------------
-// OZ_Service
-
-class OZ_CPIVarVector {
-private:
-  int _size;
-  OZ_Term ** _vector;
-public:
-  OZ_CPIVarVector(int sz, OZ_Term * &vector) : _size(sz), _vector(&vector) {}
-  void condens(void);
-};
-
-
-class OZ_FSetVarVector : public OZ_CPIVarVector {
-  OZ_FSetVar * _vector;
-public:
-  OZ_FSetVarVector(int size, OZ_Term * &vector);
-};
-
-typedef OZ_Return (*make_prop_fn_2)(OZ_Term, OZ_Term);
-typedef OZ_Return (*make_prop_fn_3)(OZ_Term, OZ_Term, OZ_Term);
-typedef OZ_Return (*make_prop_fn_4)(OZ_Term, OZ_Term, OZ_Term, OZ_Term);
-
-
-class OZ_Service {
-private:
-  int _closed;
-public:
-  //
-  OZ_Service(void) : _closed(0) {}
-  //
-  // sleep is default, after one of these operations, the object is
-  // closed
-  void entailed(void);
-  void failed(void);
-  void equate(OZ_CPIVar &, OZ_CPIVar &);
-  void add_parameter(OZ_CPIVar &, int event);
-  void drop_parameter(OZ_CPIVar &);
-  // propagator is set `scheduled'
-  void impose_propagator(make_prop_fn_2, OZ_Term, OZ_Term);
-  void impose_propagator(make_prop_fn_3, OZ_Term, OZ_Term, OZ_Term);
-  void impose_propagator(make_prop_fn_4, OZ_Term, OZ_Term, OZ_Term, OZ_Term);
-  // changes state of propagator, propagator shall not be set
-  // `scheduled' (hence, `impose_propagator' does not work)
-  void condens_vector(OZ_CPIVarVector &);
-  OZ_Return operator ()();
-};
-
 
 #endif // __MOZART_CPI_HH__
 //
