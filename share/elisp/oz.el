@@ -1565,10 +1565,7 @@ OZ compiler, emulator and error window")
 
 (defun oz-insert-file (file)
   "Insert an file into the Oz Compiler"
-  (if oz-step-mode
-      (progn (write-region 1 1 "/tmp/ozdebugmagic")
-	     (oz-send-string (concat "\\threadedfeed '" file "'")))
-    (oz-send-string (concat "\\threadedfeed '" file "'"))))
+    (oz-send-string (concat "\\threadedfeed '" file "'")))
 
 (defun oz-precompile-file (file)
   "precompile an Oz file"
