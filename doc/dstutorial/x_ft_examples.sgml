@@ -808,7 +808,9 @@ The broadcast call will block until the message has
 reached all the clients.
 <chunk><title/Server interface to client/
 meth register(Client UserID)
-   clientList <- c(ref:Client id:UserID)|@clientList
+   lock
+      clientList <- c(ref:Client id:UserID)|@clientList
+   end
 end
 
 meth unregister(Client)
