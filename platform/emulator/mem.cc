@@ -605,12 +605,13 @@ public:
     MemList **aux = &allchunks;
     while (*aux) {
       if ((*aux)->sz==size) {
-        MemList *aux2 = (*aux)->next;
+        MemList *aux2 = *aux;
         char *ret = aux2->mem;
         *aux = aux2->next;
         delete aux2;
         return ret;
       }
+      aux = &(*aux)->next;
     }
     return NULL;
   }
