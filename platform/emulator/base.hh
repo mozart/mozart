@@ -468,7 +468,6 @@ Bool oz_unprotect(TaggedRef *);
 
 void OZ_collectHeapTerm(TaggedRef &, TaggedRef &);
 void OZ_collectHeapBlock(TaggedRef *, TaggedRef *, int);
-void * OZ_hrealloc(void *, size_t);
 
 // builtins.cc
 OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val);
