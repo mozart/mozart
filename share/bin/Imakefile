@@ -22,20 +22,28 @@ install:: $(BINDIR)
            ln -s oz $$file; \
         done
 
-.cpp.obj:
-        $(VCBIN)/cl -c $<
+#.cpp.obj:
+#       $(VCBIN)/cl -c $<
 
-.rc.res:
-        $(VCBIN)/rc $<
+#.rc.res:
+#       $(VCBIN)/rc $<
 
-setup.exe: setup.obj setup.res
-        $(VCBIN)/cl -o $@ setup.obj setup.res user32.lib advapi32.lib
+#setup.exe: setup.obj setup.res
+#       $(VCBIN)/cl -o $@ setup.obj setup.res user32.lib advapi32.lib
 
-oz.exe: oz.obj oz.res
-        $(VCBIN)/cl -o $@ oz.obj oz.res user32.lib advapi32.lib
+#oz.exe: oz.obj oz.res
+#       $(VCBIN)/cl -o $@ oz.obj oz.res user32.lib advapi32.lib
 
-ozdemo.exe: ozdemo.obj oz.res
-        $(VCBIN)/cl -o $@ ozdemo.obj oz.res user32.lib advapi32.lib
+#ozdemo.exe: ozdemo.obj oz.res
+#       $(VCBIN)/cl -o $@ ozdemo.obj oz.res user32.lib advapi32.lib
+
+ozdemo.exe: oz.exe
+        cp oz.exe ozdemo.exe
+
 
 win-install:: setup.exe oz.exe ozdemo.exe
         cp setup.exe oz.exe ozdemo.exe $(OZHOME)
+
+
+clean::
+        rm -f *.exe *.sym *.map *.mk* *.lk* *.err oz.res setup.res ozdemo.cpp
