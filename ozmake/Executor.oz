@@ -85,7 +85,9 @@ define
 
       meth exec_rule(Target Rule)
 	 DST = Executor,make_dst(Target $)
-	 SRC = if Rule.tool==unit then unit
+	 SRC = case Rule.tool
+	       of unit then unit
+	       [] ozg  then unit
 	       else Executor,make_src(Rule.file $) end
       in
 	 case Rule.tool
@@ -93,6 +95,7 @@ define
 	 [] ozl then Executor,OZL(DST SRC Rule.options)
 	 [] cc  then Executor,CC( DST SRC Rule.options)
 	 [] ld  then Executor,LD( DST SRC Rule.options)
+	 [] ozg then Executor,OZG(Rule.file)
 	 [] unit then Executor,NULL(Target)
 	 else raise ozmake(build:unknowntool(Rule.tool)) end
 	 end
@@ -114,20 +117,30 @@ define
       %% Oz compiler
 
       meth OZC(DST SRC Options)
-	 Executor,exec_mkdir({Path.dirname DST})
-	 L1 = [SRC '-o' DST]
-	 L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
-	 L3 = if {Member executable Options} then '-x'|L2 else '-c'|L2 end
+	 DIR = {Path.dirname DST}
+	 CUR = {OS.getCWD}
       in
-	 {self xtrace({Utils.listToVS ozc|L3})}
-	 if {self get_justprint($)} then
-	    %% record time of simulated build
-	    Executor,SimulatedTouch(DST)
-	 else
-	    try {Shell.executeProgram
-		 {self get_oz_engine($)}|{self get_oz_ozc($)}|L3}
-	    catch shell(CMD) then
-	       raise ozmake(build:shell(CMD)) end
+	 try
+	    Executor,exec_mkdir(DIR)
+	    if DIR\=nil then {OS.chDir DIR} end
+	    L1 = [SRC '-o' DST]
+	    L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
+	    L3 = if {Member executable Options} then '-x'|L2 else '-c'|L2 end
+	 in
+	    {self xtrace({Utils.listToVS ozc|L3})}
+	    if {self get_justprint($)} then
+	       %% record time of simulated build
+	       Executor,SimulatedTouch(DST)
+	    else
+	       try {Shell.executeProgram
+		    {self get_oz_engine($)}|{self get_oz_ozc($)}|L3}
+	       catch shell(CMD) then
+		  raise ozmake(build:shell(CMD)) end
+	       end
+	    end
+	 finally
+	    if DIR\=nil then
+	       try {OS.chDir CUR} catch _ then skip end
 	    end
 	 end
       end
@@ -135,18 +148,30 @@ define
       %% Oz linker
 
       meth OZL(DST SRC Options)
-	 Executor,exec_mkdir({Path.dirname DST})
+	 DIR = {Path.dirname DST}
+	 Executor,exec_mkdir(DIR)
 	 L0 = [SRC '-o' DST]
 	 L1 = if {Member executable Options} then '-x'|L0 else L0 end
 	 L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
+	 URI={self get_uri($)}
       in
-	 {self xtrace({Utils.listToVS ozl|L2})}
+	 {self xtrace({Utils.listToVS
+		       ozl
+		       |if DIR\=nil
+			then '--rewrite='#DIR#'/='#URI#'/'|L2
+			else L2 end})}
 	 if {self get_justprint($)} then
 	    %% record time of simulated build
 	    Executor,SimulatedTouch(DST)
 	 else
 	    try {Shell.executeProgram
-		 {self get_oz_engine($)}|{self get_oz_ozl($)}|L2}
+		 {self get_oz_engine($)}|{self get_oz_ozl($)}
+		 %% here is a temporary fix. The right thing to do is
+		 %% to extend ozl with --rooturl=URL to let it know
+		 %% from where to resolve the imports
+		 |if DIR\=nil
+		  then '--rewrite='#DIR#'/='#URI#'/'|L2
+		  else L2 end}
 	    catch shell(CMD) then
 	       raise ozmake(build:shell(CMD)) end
 	    end
@@ -219,6 +244,8 @@ define
 	    end
 	 end
       end
+
+      meth OZG(_) skip end
 
       meth exec_simulated_touch(F) Executor,SimulatedTouch(F) end
 

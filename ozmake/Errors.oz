@@ -76,6 +76,10 @@ prepare
 	 error(kind : TITLE
 	       msg  : 'file not found'
 	       items: [hint(l:'File' m:F)])
+      [] ozmake(build:outdated(T)) then
+	 error(kind : TITLE_BUILD
+	       msg  : 'target still outdated'
+	       items: [hint(l:'Target' m:T)])
       [] ozmake(build:unknowntool(T)) then
 	 error(kind : TITLE_BUILD
 	       msg  : 'unknown tool'

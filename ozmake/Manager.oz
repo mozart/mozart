@@ -13,6 +13,7 @@ import
    Extractor   at 'Extractor.ozf'
    Lister      at 'Lister.ozf'
    Uninstaller at 'Uninstaller.ozf'
+   MakeGUI     at 'MakeGUI.ozf'
 define
    class Manager
       from
@@ -27,6 +28,7 @@ define
 	 Extractor  .'class'
 	 Lister     .'class'
 	 Uninstaller.'class'
+	 MakeGUI    .'class'
 
       meth init
 	 {self exec_init}
