@@ -89,6 +89,8 @@ public:
   char *osname, *cpu;
   char *ozPath;
 
+  char *emuhome;
+
   /* command line arguments visible from Oz */
   char **argV;
   int argC;
