@@ -58,7 +58,10 @@ enum DEBUGType {
   CELL,
   SITE_OP,     // 40
   MSG_QUEUED, 
+  MSG_PREP,
+  LOCK,     
   REF_COUNTER,
+  THREAD_D,
   LAST
 };
 

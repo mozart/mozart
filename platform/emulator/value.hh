@@ -683,7 +683,7 @@ public:
   ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t), board(b) {}
   Board *getBoardInternal() { return board; }
   Board *getBoard();
-  setBoard(Board *bb) { board = bb; }
+  void setBoard(Board *bb) { board = bb; }
 };
 
 
@@ -724,8 +724,8 @@ public:
 
   void gcProxy();
   void gcManager();
-  void gcBorrowSec(int);
   void gcTertiary();
+  void gcBorrowMark();
 };
 
 
@@ -1813,7 +1813,6 @@ BuiltinTabEntry *tagged2Builtin(TaggedRef term)
  * Cell
  *=================================================================== */
 
-#define NO_INDEX (0-1)
 
 class CellLocal:public Tertiary{
 friend void ConstTerm::gcConstRecurse(void);
@@ -1851,7 +1850,7 @@ private:
   short int readCtr;
   TaggedRef head;
   PendThread* pending;
-  int nextIndex;
+  Site* next;
   TaggedRef contents;
 
 public:
@@ -1859,7 +1858,7 @@ public:
     state=Cell_Valid;
     readCtr=0;
     pending=NULL;
-    nextIndex=NO_INDEX; // debug
+    DebugCode(next=NULL); 
     contents=val;}
 
   CellSec(){ // on Proxy becoming Frame
@@ -1869,7 +1868,7 @@ public:
     DebugCode(head=makeTaggedNULL()); 
     DebugCode(contents=makeTaggedNULL());
     DebugCode(pending=NULL);
-    DebugCode(nextIndex=NO_INDEX);}
+    DebugCode(next=NULL);}
 };
 
 class CellManager:public Tertiary{
@@ -1882,24 +1881,25 @@ public:
 
   CellManager() : Tertiary(0,Co_Cell,Te_Manager){Assert(0);}  
     
-  void incCtr(){sec->readCtr++;}
-  int getAndInitCtr(){int i=sec->readCtr;sec->readCtr=0;return i;}
+  void incManCtr(){
+	Assert(getTertType()==Te_Manager);
+	sec->readCtr++;}
+  int getAndInitManCtr(){
+	Assert(getTertType()==Te_Manager);
+	int i=sec->readCtr;
+	sec->readCtr=0;
+	return i;}
 
   void setOwnCurrent(){
-    setPrimIndex(NO_INDEX);}
+    setPtr(NULL);}
   Bool isOwnCurrent(){
-    if(getPrimIndex()==NO_INDEX) return TRUE;
+    if(getPtr()==NULL) return TRUE;
     return FALSE;}
-  void setCurrent(int i){
-    DebugIndexCheck(i);
-    setPrimIndex(i);}
-  int getCurrent(){
-    return getPrimIndex();}
 
-  int getOwnerIndex(){return getIndex();}  
-  void setOwnerIndex(int i){
-    DebugIndexCheck(i);
-    setIndex(i);}
+  void setCurrent(Site *s){
+    setPtr(s);}
+  Site* getCurrent(){
+    return (Site*) getPtr();}
 
   void localize();
   void gcCellManager();
@@ -1914,13 +1914,9 @@ public:
   OZPRINTLONG;       
 
  CellProxy(int manager):Tertiary(manager,Co_Cell,Te_Proxy){  // on import
-   DebugIndexCheck(manager);
-   DebugCode(setPrimIndex(NO_INDEX));
-   setIndex(manager);}
+   DebugIndexCheck(manager);}
 
-  void convertToFrame(int myIndex);
-
-  int getManagerIndex(){return getIndex();}
+  void convertToFrame();
 };
 
 class CellFrame:public Tertiary{
@@ -1949,19 +1945,10 @@ public:
   void myStoreForward(void* forward){setPtr(forward);}
   void* getForward(){return getPtr();}
 
-  int getManagerIndex(){return getIndex();}
-  void setManagerIndex(int i){
-    DebugIndexCheck(i);
-    setIndex(i);}
-
-  int getOwnerIndex(){return getPrimIndex();}
-  void setOwnerIndex(int i){  
-    DebugIndexCheck(i);
-    setPrimIndex(i);}
-
   void setPending(PendThread *pt){
     sec->pending=pt;}
   PendThread* getPending(){return sec->pending;}
+  PendThread ** getPendBase(){return &(sec->pending);}
 
   void incCtr(){sec->readCtr++;}
   void decCtr(int i){sec->readCtr -= i;}
@@ -1970,25 +1957,21 @@ public:
   TaggedRef getHead(){return sec->head;}
   void setHead(TaggedRef val){sec->head=val;}
 
-  void setNext(int n){
-    DebugIndexCheck(n);
-    sec->nextIndex=n;}
-  int getNext(){return sec->nextIndex;}
+  void setNext(Site *s){
+    sec->next=s;}
+  Site* getNext(){return sec->next;}
 
   TaggedRef getContents(){
     Assert(getState()&(Cell_Valid|Cell_Requested));return sec->contents;}
   void setContents(TaggedRef tr){sec->contents=tr;}    
 
-  void initFromProxy(int myIndex){
-    DebugIndexCheck(myIndex);
-    setOwnerIndex(myIndex);
+  void initFromProxy(){
     sec=new CellSec();}
 
   void initFromGlobalize(TaggedRef val){
     sec=new CellSec(val);}
     
   void convertToProxy(){
-    DebugCode(setOwnerIndex(NO_INDEX)); 
     setTertType(Te_Proxy);
     DebugCode(sec=NULL);} 
   
@@ -2112,53 +2095,245 @@ Space *tagged2Space(TaggedRef term)
  * Locks
  *=================================================================== */
 
-class OzLock: public ConstTermWithHome {
-  friend void ConstTerm::gcConstRecurse(void);
-private:
-  Thread *locker;
-  TaggedRef threads;
+class OzLock:public Tertiary{
 public:
-  OzLock(Board *b) : ConstTermWithHome(b,Co_Lock) 
-  {
-    locker = NULL;
-    threads = nil();
-  }
+  OzLock(Board *b,TertType tt):Tertiary(b,Co_Lock,tt){}
+  OzLock(int i,TertType tt):Tertiary(i,Co_Lock,tt){}
+};
 
-  void unlock()
-  {
-    Assert(!isRef(threads));
-    Assert(locker);
-    locker = NULL;
+class LockLocal:public OzLock{
+friend void ConstTerm::gcConstRecurse(void);
+private:
+  PendThread *pending;
+public:                
+  LockLocal(Board *b) : OzLock(b,Te_Local){
+    setPtr(NULL);
+    pending= NULL;}
 
-    if (!isNil(threads)) {
-      /* wake first thread */
-      TaggedRef var = head(threads);
-      if (OZ_unify(var, NameUnit)==FAILED) {
-	warning("OzLock::wakeThreads: unify failed");
-      }
-      threads = tail(threads);
-    }
-  }
+  PendThread* getPending(){return pending;}
+  void setPending(PendThread *pt){pending=pt;}
+  PendThread** getPendBase(){return &pending;}
+  
+  Thread * getLocker(){return (Thread*) getPtr();}
+  void setLocker(Thread *t){setPtr(t);}
+  Bool hasLock(Thread *t){if(t==getLocker()) return TRUE;return FALSE;}
 
-  Bool isLocked(Thread *t) { return (locker==t); }
-  TaggedRef *lock(Thread *t);
+  void unlockComplex();
+  void unlock(){
+    Assert(getLocker()!=NULL);
+    if(pending==NULL){
+      setLocker(NULL);
+      return;}
+    unlockComplex();}
+
+  Bool isLocked(Thread *t) { return (getLocker()==t); }
+
+  void lockComplex(Thread *);
+  void lock(Thread *t){
+    if(t==getLocker()) {return;}
+    if(getLocker()==NULL) {setLocker(t);return;}
+    lockComplex(t);}
+  Bool lockB(Thread *t){
+    if(t==getLocker()) {return TRUE;}
+    if(getLocker()==NULL) {setLocker(t);return TRUE;}
+    lockComplex(t);
+    return FALSE;}
 
   OZPRINT;
   OZPRINTLONG;
+  void globalize(int);
+
+  void convertToLocal(Thread *t,PendThread *pt){
+    setLocker(t);
+    pending=pt;}
 };
+
+#define Lock_Invalid     0
+#define Lock_Requested   1
+#define Lock_Next        2
+#define Lock_Valid       4
+#define Lock_Dump_Asked  8
+#define Lock_Access     16
+
+class LockSec{
+friend class LockFrame;
+friend class LockManager;
+private:
+  unsigned int state;
+  PendThread* pending;
+  Site* next;
+  Thread *locker;
+
+public:
+  LockSec(Thread *t,PendThread *pt){ // on globalize
+    state=Lock_Valid;
+    pending=pt;
+    locker=t;
+    DebugCode(next=NULL); }
+
+  LockSec(){ // on Proxy becoming Frame
+    state=Lock_Invalid;
+    locker=NULL;
+    DebugCode(pending=NULL);
+    DebugCode(next=NULL);}
+};
+
+class LockFrame:public OzLock{
+friend void ConstTerm::gcConstRecurse(void);
+private:
+  LockSec *sec;
+public:
+  OZPRINT;
+  OZPRINTLONG;       
+
+  LockFrame():OzLock(NULL,Te_Frame){Assert(0);}
+  unsigned int getState(){
+    Assert(sec!=NULL);
+    return sec->state;}
+  void setState(short s){
+    Assert(sec!=NULL);
+    sec->state=s;}
+
+  void setLocker(Thread *t){
+    sec->locker=t;}
+  Thread *getLocker(){
+    return sec->locker;}
+  Bool hasLock(Thread *t){if(t==getLocker()) return TRUE;return FALSE;}
+  
+  Bool isAccessBit(){
+    if(getState() & Cell_Access_Bit) return TRUE;
+    return FALSE;}
+  void setAccessBit(){
+    setState(getState()| Cell_Access_Bit);}
+  void resetAccessBit(){setState(getState() & (~Cell_Access_Bit));}
+
+  void myStoreForward(void* forward){setPtr(forward);}
+  void* getForward(){return getPtr();}
+
+  void setPending(PendThread *pt){sec->pending=pt;}
+  PendThread* getPending(){return sec->pending;}
+  PendThread** getPendBase(){return &sec->pending;}
+
+  void setNext(Site *s){sec->next=s;}
+  Site* getNext(){return sec->next;}
+
+  void initFromProxy(){
+    sec=new LockSec();}
+  void initFromGlobalize(Thread *t,PendThread *pt){
+    sec=new LockSec(t,pt);}
+    
+  void convertToProxy(){
+    setTertType(Te_Proxy);
+    DebugCode(sec=NULL);} 
+  
+  void gcLockFrame();
+  void gcLockFrameSec();
+
+  void lockComplex(Thread *);
+  void lock(Thread *t){
+    if(getLocker()==t) return;
+    if((getLocker()==NULL) && (getState()==Lock_Valid)){
+      Assert(getPending()==NULL);
+      setLocker(t);
+      return;}
+    lockComplex(t);}
+  Bool lockB(Thread *t){
+    if(getLocker()==t) return TRUE;
+    if((getLocker()==NULL) && (getState()==Lock_Valid)){
+      Assert(getPending()==NULL);
+      setLocker(t);
+      return TRUE;}
+    lockComplex(t);
+    return FALSE;}
+
+  void unlock(){
+    setLocker(NULL);
+    if((getState()==Lock_Valid) && (getPending()==NULL)){
+      return;}
+    unlockComplex();}
+    
+  void unlockComplex();
+};
+
+class LockManager:public OzLock{
+friend void ConstTerm::gcConstRecurse(void);
+private:
+  LockSec *sec;
+public:
+  OZPRINT;
+  OZPRINTLONG;       
+
+  LockManager() : OzLock(NULL,Te_Manager){Assert(0);}  
+
+  void setOwnCurrent(){
+    setPtr(NULL);}
+  Bool isOwnCurrent(){
+    if(getPtr()==NULL) return TRUE;
+    return FALSE;}
+
+  void setCurrent(Site *s){
+    setPtr(s);}
+  Site* getCurrent(){
+    return (Site*) getPtr();}
+
+  void localize();
+  void gcLockManager();
+
+  Bool hasLock(Thread *t){if(t==((LockFrame*)this)->getLocker()) return TRUE;return FALSE;}
+
+  void lockComplex(Thread *);
+  void lock(Thread *t){
+    LockFrame *lf=(LockFrame*)this;
+    if(lf->getLocker()==t) return;
+    if((lf->getLocker()==NULL) && (lf->getState()==Lock_Valid)){
+      Assert(lf->getPending()==NULL);
+      lf->setLocker(t);
+      return;}
+    lockComplex(t);}
+
+  Bool lockB(Thread *t){
+    LockFrame *lf=(LockFrame*)this;
+    if(lf->getLocker()==t) return TRUE;
+    if((lf->getLocker()==NULL) && (lf->getState()==Lock_Valid)){
+      Assert(lf->getPending()==NULL);
+      lf->setLocker(t);
+      return TRUE;}
+    lockComplex(t);
+    return FALSE;}
+
+  void unlock(){
+    LockFrame *lf=(LockFrame*)this;    
+    lf->setLocker(NULL);
+    if((lf->getState()==Lock_Valid) && (lf->getPending()==NULL)){
+      return;}
+    unlockComplex();}
+    
+  void unlockComplex();
+
+};
+
+class LockProxy:public OzLock{
+friend void ConstTerm::gcConstRecurse(void);
+private:
+  int * dummy;
+public:
+  OZPRINT;
+  OZPRINTLONG;       
+
+ LockProxy(int manager):OzLock(manager,Te_Proxy){  // on import
+   DebugIndexCheck(manager);}
+
+  void convertToFrame();
+  void lock(Thread *);
+  void unlock();
+};
+
 
 
 inline
 Bool isLock(TaggedRef term)
 {
   return isConst(term) && tagged2Const(term)->getType() == Co_Lock;
-}
-
-inline
-OzLock *tagged2Lock(TaggedRef term)
-{
-  Assert(isLock(term));
-  return (OzLock *) tagged2Const(term);
 }
 
 /*===================================================================
