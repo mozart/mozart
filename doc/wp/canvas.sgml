@@ -36,7 +36,7 @@
   <section id="section.canvas.widgets">
     <title/Getting Started/
 
-    <p>
+    <para class=apropos><title/items/
       A canvas widget displays <def/items/. An item is created
       with the <<create>> command, followed by coordinates and options. The
       number of coordinates and the options depend on
@@ -172,7 +172,7 @@ V={New Tk.scrollbar tkInit(parent:W orient:vertical)}
       involves latency. But there are some good news here, since it is
       not necessary to refer to items by numbers.
 
-    <p>
+    <para class=apropos><title/tags/
       Canvas widgets offer a more powerful and easier method to
       manipulate single items or even groups of items. Items can be
       referred to by <def/tags/. A single item can be referred to by as
@@ -236,7 +236,7 @@ O={New Tk.canvasTag tkInit(parent:C)}
 </chunk>
       </figure> 
 
-    <p>
+    <para class=apropos><title/configuring items/
       Items can be configured by using the command <<itemconfigure>>,
       which is similar to the command <<configure>> for widgets. The
       color of all rectangle and oval items in our previous example
@@ -375,6 +375,7 @@ declare Done
 <chunk class=anonymous><title/Is Done/
 Done=unit
 </chunk>
+
 
 <![ %EXTRA; [
 <section><title/Examples/
