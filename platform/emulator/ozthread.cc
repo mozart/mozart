@@ -53,9 +53,10 @@ public:
   void gcRecurseV(void) {
     Thread *tmpThread = thread->gcThread();
     if (!tmpThread) {
-      tmpThread=new Thread(*thread);
-      tmpThread->setBoardInternal(am.rootBoardGC());
+      tmpThread=new Thread(thread->getFlags(),thread->getPriority(),
+			   oz_rootBoard(),thread->getID());
     }
+    thread=tmpThread;
   }
 
   virtual
