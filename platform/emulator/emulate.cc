@@ -46,8 +46,7 @@
 #include "thread.hh"
 #include "tracer.hh"
 #include "ozdebug.hh"
-#include "fdAddOn.hh"
-
+#include "fdhook.hh"
 
 
 // -----------------------------------------------------------------------
@@ -376,7 +375,6 @@ void engine() {
   int XSize = 0;
 
   Bool isExecute = NO;
-  extern Suspension* FDcurrentTaskSusp; // see fdAddOn
   Suspension* &currentTaskSusp = FDcurrentTaskSusp;
   AWActor *CAA = NULL;
   Board *tmpBB = NULL;
@@ -507,7 +505,7 @@ void engine() {
             goto LBLTaskEmpty;
           }
           biFun = ccont->getCFunc();
-          // mm2: tm ??? currentTaskSusp = susp;
+          currentTaskSusp = c->getResSusp();
           XSize = ccont->getXSize();
           ccont->getX(X);
           DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&

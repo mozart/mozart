@@ -152,7 +152,8 @@ inline int  GCMARK(void *S)    { return GCMARK((int) S); }
 inline int  GCUNMARK(int S)    { return S & ~GCTAG; }
 inline Bool GCISMARKED(int S)  { return S &  GCTAG ? OK : NO; }
 
-inline void fastmemcpy(int *to, int *from, int size)
+inline
+void fastmemcpy(int *to, int *from, int size)
 {
   switch(size) {
   case 36: *(to+8) = *(from+8);
@@ -174,7 +175,8 @@ inline void fastmemcpy(int *to, int *from, int size)
 }
 
 
-inline void *gcRealloc(void *ptr, size_t size)
+inline
+void *gcRealloc(void *ptr, size_t size)
 {
   void *ret = heapMalloc(size);
   DebugCheck(size%sizeof(int) != 0,
@@ -185,7 +187,8 @@ inline void *gcRealloc(void *ptr, size_t size)
 
 
 
-inline Bool needsNoCollection(TaggedRef t)
+inline
+Bool needsNoCollection(TaggedRef t)
 {
   Assert(t!=makeTaggedNULL());
 
@@ -199,14 +202,16 @@ inline Bool needsNoCollection(TaggedRef t)
 //                        Consistency checks of trails
 //*****************************************************************************
 
-inline void RebindTrail::gc()
+inline
+void RebindTrail::gc()
 {
   Assert(empty());
 }
 
 
 // cursor points to next free position
-inline void Trail::gc()
+inline
+void Trail::gc()
 {
   Assert(empty());
 }
@@ -231,17 +236,20 @@ enum TypeOfPtr {
 
 typedef TaggedRef TaggedPtr;
 
-inline TaggedPtr makeTaggedPtr(void *ptr, TypeOfPtr tag)
+inline
+TaggedPtr makeTaggedPtr(void *ptr, TypeOfPtr tag)
 {
   return makeTaggedRef((TypeOfTerm) tag, ptr);
 }
 
-inline TypeOfPtr getType(TaggedPtr tp)
+inline
+TypeOfPtr getType(TaggedPtr tp)
 {
   return (TypeOfPtr) tagTypeOf(tp);
 }
 
-inline void *getPtr(TaggedPtr tp)
+inline
+void *getPtr(TaggedPtr tp)
 {
   return tagValueOf(tp);
 }
@@ -374,7 +382,8 @@ DebugGCT(static int updateStackCount);
  *  else save cell at ptr and also store in this cell.
  *
  */
-inline void setHeapCell (int* ptr, int newValue)
+inline
+void setHeapCell (int* ptr, int newValue)
 {
   if (opMode == IN_TC) {
     savedPtrStack.pushPtr(ptr, (int) *ptr);
@@ -390,7 +399,8 @@ inline void setHeapCell (int* ptr, int newValue)
 }
 
 
-inline void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int size)
+inline
+void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int size)
 {
   for(int i = size-1; i>=0; i--) {
     if (!isRef(oldBlock[i]) && isAnyVar(oldBlock[i])) {
@@ -399,7 +409,8 @@ inline void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int size)
   }
 }
 
-inline void gcTaggedBlockRecurse(TaggedRef *block,int size)
+inline
+void gcTaggedBlockRecurse(TaggedRef *block,int size)
 {
   for(int i = size-1; i>=0; i--) {
     if (isRef(block[i]) || !isAnyVar(block[i])) {
@@ -409,7 +420,8 @@ inline void gcTaggedBlockRecurse(TaggedRef *block,int size)
 }
 
 
-inline Bool isLocalBoard (Board* b)
+inline
+Bool isLocalBoard (Board* b)
 {
   return b->isPathMark() ? NO : OK;
 }
@@ -417,13 +429,15 @@ inline Bool isLocalBoard (Board* b)
 
 // WARNING: the value field of floats has no bit left for a gc mark
 //   --> copy every float !! so that X=Y=1.0 --> X=1.0, Y=1.0
-inline Float *Float::gc()
+inline
+Float *Float::gc()
 {
   Float *ret =  new Float(value);
   return ret;
 }
 
-inline BigInt *BigInt::gc()
+inline
+BigInt *BigInt::gc()
 {
   CHECKCOLLECTED(*(int *)&value.alloc, BigInt *);
 
@@ -433,7 +447,8 @@ inline BigInt *BigInt::gc()
   return ret;
 }
 
-inline void ConsList::gc()
+inline
+void ConsList::gc()
 {
   GCMETHMSG("ConsList::gc");
   if(first){
@@ -475,7 +490,8 @@ inline void ConsList::gc()
 
 
 /* mm2: have to check for discarded node */
-inline SuspContinuation *SuspContinuation::gcCont()
+inline
+SuspContinuation *SuspContinuation::gcCont()
 {
   GCMETHMSG("SuspContinuation::gcCont");
   if (this == NULL) return NULL;
@@ -565,7 +581,8 @@ Continuation *Continuation::gc()
   return ret;
 }
 
-inline void Continuation::gcRecurse(){
+inline
+void Continuation::gcRecurse(){
   GCMETHMSG("Continuation::gcRecurse");
   DebugCheck (isFreedRefsArray (yRegs),
               error ("freed 'y' refs array in Continuation::gcRecurse ()"));
@@ -578,14 +595,16 @@ inline void Continuation::gcRecurse(){
   xRegs = gcRefsArray(xRegs);
 }
 
-inline void SuspContinuation::gcRecurse(){
+inline
+void SuspContinuation::gcRecurse(){
   GCMETHMSG("SuspContinuation::gcRecurse");
   node=node->gcBoard();
   Continuation::gcRecurse();
 }
 
 
-inline STuple *STuple::gc()
+inline
+STuple *STuple::gc()
 {
   GCMETHMSG("STuple::gc");
   CHECKCOLLECTED(label, STuple *);
@@ -601,7 +620,8 @@ inline STuple *STuple::gc()
 }
 
 
-inline LTuple *LTuple::gc()
+inline
+LTuple *LTuple::gc()
 {
   GCMETHMSG("LTuple::gc");
   CHECKCOLLECTED(args[0], LTuple *);
@@ -617,7 +637,8 @@ inline LTuple *LTuple::gc()
 }
 
 
-inline SRecord *SRecord::gcSRecord()
+inline
+SRecord *SRecord::gcSRecord()
 {
   GCMETHMSG("SRecord::gcSRecord");
   if (this == NULL) return NULL; /* objects may contain an empty record */
@@ -674,7 +695,8 @@ inline SRecord *SRecord::gcSRecord()
 // kost@: we have to split suspension lists of variables which are quantified
 //        in "solve" board itself in two parts - "relevant" wrt copy and
 //        'irrelevant';
-inline Bool isInTree (Board *b)
+inline
+Bool isInTree (Board *b)
 {
   while (b != (Board *)NULL) {
     DebugCheck ((b->isCommitted () == OK),
@@ -690,7 +712,8 @@ inline Bool isInTree (Board *b)
 
 
 /* return NULL if contains pointer to discarded node */
-inline Suspension *Suspension::gcSuspension(Bool tcFlag)
+inline
+Suspension *Suspension::gcSuspension(Bool tcFlag)
 {
   GCMETHMSG("Suspension::gcSuspension");
   if (!this || isDead()) return NULL;
@@ -877,7 +900,8 @@ void GenFDVariable::gc(void)
 }
 
 
-inline Bool updateVar(TaggedRef var)
+inline
+Bool updateVar(TaggedRef var)
 {
   GCPROCMSG("updateVar");
   Bool toUpdate = OK;
@@ -1190,7 +1214,8 @@ void processUpdateStack(void)
 }
 
 // all nodes but node self
-inline void setPathMarks (Board *bb)
+inline
+void setPathMarks (Board *bb)
 {
   bb = bb->getParentBoard ();
   while (OK) {
@@ -1206,7 +1231,8 @@ inline void setPathMarks (Board *bb)
   error ("(gc) getPathMarks");
 }
 
-inline void unsetPathMarks (Board *bb)
+inline
+void unsetPathMarks (Board *bb)
 {
   bb = bb->getParentBoard ();
   while (OK) {
@@ -1417,6 +1443,8 @@ void Thread::gcRecurse()
   GCREF(next);
   GCREF(prev);
 
+  if (resSusp != NULL)
+   resSusp->gcSuspension(OK);
   if (isNormal()) {
     GCREF(u.taskStack);
   } else if (isSuspCont()) {
@@ -1578,7 +1606,8 @@ void SolveActor::gcRecurse ()
   orActors.gc (SolveActor::StackEntryGC);   // higher order :))
 }
 
-inline DLLStackEntry SolveActor::StackEntryGC (DLLStackEntry entry)
+inline
+DLLStackEntry SolveActor::StackEntryGC (DLLStackEntry entry)
 {
   if (((Actor *) entry)->isCommitted () == OK) {
     return ((DLLStackEntry) NULL);
@@ -1671,7 +1700,8 @@ void SRecord::gcRecurse()
   args = gcRefsArray(args);
 }
 
-inline void STuple::gcRecurse()
+inline
+void STuple::gcRecurse()
 {
   GCMETHMSG("STuple::gcRecurse");
   gcTagged(label,label);
@@ -1679,7 +1709,8 @@ inline void STuple::gcRecurse()
 }
 
 
-inline void LTuple::gcRecurse()
+inline
+void LTuple::gcRecurse()
 {
   GCMETHMSG("LTuple::gcRecurse");
   gcTaggedBlockRecurse(args,2);
