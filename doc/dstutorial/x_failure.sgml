@@ -61,7 +61,8 @@ remote problems are temporary.
 <P> An entity on a site therefore has four
 possible basic fault states.
 We now explain how these fault states occur
-in terms of the possible system failures.
+in terms of the possible system failures
+for each language entity.
 Each language entity has a different
 distributed protocol, and therefore the
 fault states occur in different ways.
