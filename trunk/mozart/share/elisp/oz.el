@@ -47,7 +47,7 @@
 (defvar oz-mode-abbrev-table nil)
 (defvar oz-mode-map (make-sparse-keymap))
 
-(defvar oz-emulator (concat (getenv "HOME") "/Oz/AM/oz.machine.bin")
+(defvar oz-emulator (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin")
   "The emulator for gdb mode and for [oz-other]")
 
 (defvar oz-emulator-buffer "*Oz Emulator*"
@@ -78,11 +78,9 @@ starts the emulator under gdb")
 (defvar oz-error-string (format "%c" 17)
   "how compiler and engine signal errors")
 
-(defvar oz-warn-string (format "%c" 18)
-  "how compiler and engine signal warnings")
-
-(defvar oz-status-string (format "%c" 19)
-  "How compiler and engine signal status changes")
+(defconst oz-remove-pattern
+  (concat oz-error-string "\\|" (format "%c" 18) "\\|" (format "%c" 19))
+  "")
 
 (defvar oz-want-font-lock t
   "*If t means that font-lock mode is switched on")
@@ -474,7 +472,6 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-feed-region (start end)
   "Consults the region."
    (interactive "r")   
-   (oz-hide-errors)
    (oz-send-string (buffer-substring start end))
    (if oz-lucid (setq zmacs-region-stays t)))
      
@@ -952,7 +949,6 @@ if that value is non-nil."
 
 (defun oz-fontify(&optional arg)
   (interactive "P")
-  (oz-hide-errors)
   (recenter arg)
   (oz-fontify-buffer))
 
@@ -970,15 +966,6 @@ if that value is non-nil."
   (oz-filter proc string))
 
 
-(defconst oz-escape-chars
-  (concat oz-status-string "\\|" oz-warn-string "\\|" oz-error-string)
-  "")
-
-(defconst oz-error-chars
-  (concat oz-error-string)
-  "")
-
-
 (defun oz-filter (proc string)
   (let ((old-buffer (current-buffer)))
     (unwind-protect
@@ -986,7 +973,7 @@ if that value is non-nil."
 	      old-point
 	      moving
 	      index
-	      (errs-found (string-match oz-error-chars string)))
+	      (errs-found (string-match oz-error-string string)))
 	  
 	  (if errs-found
 	      (if oz-gnu19
@@ -1013,7 +1000,7 @@ if that value is non-nil."
             
 	    ;; remove escape characters
 	    (goto-char old-point)
-	    (while (search-forward-regexp oz-escape-chars nil t)
+	    (while (search-forward-regexp oz-remove-pattern nil t)
 	      (replace-match "" nil t)))
 	  (if moving (goto-char (process-mark proc)))
 	  (if errs-found
@@ -1064,12 +1051,6 @@ OZ compiler, emulator and error window")
     (delete-region (point-min) (point-max))))
 
 
-(defun oz-hide-errors()
-  (interactive)
-  (if (get-buffer "*Oz Temp*") 
-      (delete-windows-on "*Oz Temp*")))
-
-
 (defun oz-toggle-compiler()
   (interactive)
   (oz-toggle-window oz-compiler-buffer))
@@ -1092,21 +1073,18 @@ OZ compiler, emulator and error window")
 
 (defun oz-new-buffer()
   (interactive)
-  (oz-hide-errors)
   (switch-to-buffer (generate-new-buffer "Oz"))
   (oz-mode))
 
 
 (defun oz-previous-buffer()
   (interactive)
-  (oz-hide-errors)
   (bury-buffer)
   (oz-walk-trough-buffers (buffer-list)))
 
 
 (defun oz-next-buffer()
   (interactive)
-  (oz-hide-errors)
   (oz-walk-trough-buffers (reverse (buffer-list))))
 
 
@@ -1192,7 +1170,6 @@ OZ compiler, emulator and error window")
 
 (defun oz-directive-on-region (start end directive suffix mode)
   "Applies a directive to the region."
-   (oz-hide-errors)
    (let ((file-1 (concat oz-temp-file ".oz"))
 	 (file-2 (concat oz-temp-file suffix)))
      (if (file-exists-p file-2)
@@ -1200,7 +1177,6 @@ OZ compiler, emulator and error window")
      (write-region start end file-1)
      (message "")
      (shell-command (concat "touch " file-2))
-     (oz-hide-errors)
      (if (get-buffer "*Oz Temp*") (kill-buffer "*Oz Temp*"))
      (start-process "Oz Temp" "*Oz Temp*" "tail" "-f" file-2)
      (message "")
@@ -1217,7 +1193,6 @@ OZ compiler, emulator and error window")
 (defun oz-feed-region-browse (start end)
   "Feed the current region into the Oz Compiler"
   (interactive "r")
-  (oz-hide-errors)
   (let ((contents (buffer-substring start end)))
     (oz-send-string (concat "{Browse " contents "}"))))
 
@@ -1225,19 +1200,16 @@ OZ compiler, emulator and error window")
 (defun oz-feed-panel ()
   "Feed {Panel popup} into the Oz Compiler"
   (interactive)
-  (oz-hide-errors)
   (oz-send-string "{Panel popup}"))
 
 (defun oz-feed-file(file)
   "Feed an file into the Oz Compiler"
   (interactive "FFeed file: ")
-  (oz-hide-errors)
   (oz-send-string (concat "\\feed '" file "'"))) 
 
 (defun oz-precompile-file(file)
   "precompile an Oz file"
   (interactive "FPrecompile file: ")
-  (oz-hide-errors)
   (oz-send-string (concat "\\precompile '" file "'"))) 
 
 

@@ -2,7 +2,7 @@
 
 ELS  = oz.el ozstartup.el
 ELCS = $(ELS:.el=.elc)
-
+ELISPDIR = $(OZHOME)/lib/elisp
 all:: help
 
 help:
@@ -11,8 +11,8 @@ help:
 	@echo "	install		{scheidhr,mehl}@dfki.uni-sb.de"
 	@echo ""
 
-install: $(ELCS)
-	install -m 444 $(ELS) $(ELCS) $(OZHOME)/lib/elisp
+install:: $(ELISPDIR) $(ELCS)
+	install -m 444 $(ELS) $(ELCS) $(ELISPDIR)
 
 .el.elc:
 	@echo "(setq load-path (cons \".\" load-path))\
@@ -23,3 +23,5 @@ install: $(ELCS)
 clean::
 	rm -f $(ELCS) *~
 
+$(ELISPDIR):
+	install -d -m 775 $@
