@@ -16,7 +16,7 @@
 #pragma interface
 #endif
 
-#define PROPAGATOR_CD
+// #define PROPAGATOR_CD
 
 // include oz.h
 #include "fdomn.hh"
