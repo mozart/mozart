@@ -158,6 +158,7 @@ enum EmulatorPropertyIndex {
   PROP_PERDIO_FLOWBUFFERTIME,
   PROP_PERDIO_DEBUG,
   PROP_PERDIO_MINIMAL,
+  PROP_PERDIO_VERSION,
   PROP_PERDIO_USEALTVARPROTOCOL,
   PROP_PERDIO,
   // DPTABLE
@@ -447,11 +448,16 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_INT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
   CASE_INT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
   CASE_BOOL(PROP_PERDIO_MINIMAL,ozconf.perdioMinimal);
+
+  case PROP_PERDIO_VERSION: return OZ_pair2(oz_int(PERDIOMAJOR),
+					    oz_int(PERDIOMINOR));
+
   CASE_BOOL(PROP_PERDIO_USEALTVARPROTOCOL,ozconf.perdioUseAltVarProtocol);
   CASE_REC(PROP_PERDIO,"perdio",
-	   (6,oz_atom("useAltVarProtocol"),oz_atom("minimal"),
+	   (7,oz_atom("useAltVarProtocol"),oz_atom("minimal"),
 	    oz_atom("seifHandler"),oz_atom("debug"),
-	    oz_atom("flowbuffersize"),oz_atom("flowbuffertime")),
+	    oz_atom("flowbuffersize"),oz_atom("flowbuffertime"),
+	    oz_atom("version")),
 	   SET_BOOL(oz_atom("useAltVarProtocol"),
 		    ozconf.perdioUseAltVarProtocol);
 	   SET_BOOL(oz_atom("minimal"), ozconf.perdioMinimal);
@@ -459,6 +465,8 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	   SET_INT(oz_atom("debug"), ozconf.debugPerdio);
 	   SET_INT(oz_atom("flowbuffersize"), ozconf.perdioFlowBufferSize);
 	   SET_INT(oz_atom("flowbuffertime"), ozconf.perdioFlowBufferTime);
+	   SET_REC(oz_atom("version"), OZ_pair2(oz_int(PERDIOMAJOR),
+						oz_int(PERDIOMINOR)));
 	   );
   CASE_INT(PROP_DPTABLE_DEFAULTOWNERTABLESIZE,
 	   ozconf.dpTableDefaultOwnerTableSize);
@@ -1050,6 +1058,7 @@ void initVirtualProperties()
   VirtualProperty::add("perdio.useAltVarProtocol", 
 		       PROP_PERDIO_USEALTVARPROTOCOL);
   VirtualProperty::add("perdio.minimal",PROP_PERDIO_MINIMAL);
+  VirtualProperty::add("perdio.version",PROP_PERDIO_VERSION);
   VirtualProperty::add("perdio.flowbuffersize",PROP_PERDIO_FLOWBUFFERTIME);
   VirtualProperty::add("perdio.flowbuffertime",PROP_PERDIO_FLOWBUFFERSIZE);
   VirtualProperty::add("perdio.seifHandler",PROP_PERDIO_SEIFHANDLER);
