@@ -6311,6 +6311,8 @@ OZ_C_proc_proto(ozparser_setShowInsert)
 OZ_C_proc_proto(ozparser_setGumpSyntax)
 OZ_C_proc_proto(ozparser_parseFile)
 OZ_C_proc_proto(ozparser_parseVirtualString)
+OZ_C_proc_proto(ozparser_parseFileAtomic)
+OZ_C_proc_proto(ozparser_parseVirtualStringAtomic)
 
 
 // ---------------------------------------------------------------------
@@ -7233,6 +7235,8 @@ BIspec allSpec[] = {
   {"ozparser_setGumpSyntax",1,ozparser_setGumpSyntax},
   {"ozparser_parseFile",2,ozparser_parseFile},
   {"ozparser_parseVirtualString",2,ozparser_parseVirtualString},
+  {"ozparser_parseFileAtomic",6,ozparser_parseFileAtomic},
+  {"ozparser_parseVirtualStringAtomic",6,ozparser_parseVirtualStringAtomic},
 
   {"System.printInfo",1,BIprintInfo},
   {"System.printError",1,BIprintError},
