@@ -1,0 +1,97 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@dfki.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.jobshop">
+  <Title/Job-Shop Scheduling/
+
+  <P>
+    The scheduler allows to edit (<Ptr to="section.jobshop.edit">) 
+    job-shop scheduling problems and to compute 
+    schedules (<Ptr to="section.jobshop.schedule">)
+    for the edited problem.
+  </P>
+     
+  <Section class=unnumbered id="section.jobshop.edit">
+    <Title/Edit Jobs/
+
+    <P>
+      <List>
+        <Entry>Resource
+        <Item>
+	  Clicking a resource selects it and makes the resource tool
+          active.  While the resource tool is active, the resource of
+          a task can be changed by clicking the task.
+        <Entry>Duration
+        <Item>
+	  Clicking a duration value selects this value and makes the
+	  duration tool active. While the duration tool is active, the
+	  duration of a task can be changed to the selected value by
+	  clicking the task. 
+	<Entry>Create Task
+        <Item>	
+          After clicking this tool, new tasks can be
+	  created. Newly created tasks are created as being
+	  the last task of a job.  The resource and duration
+	  of a newly created task is described by the
+	  setting of the Resource- and Duration-tool.
+	<Entry>Delete Task
+	<Item>
+	  After clicking this tool, tasks can be 
+	  deleted by clicking them.
+      </List>     
+    </P>
+  </Section>
+
+  <Section class=unnumbered id="section.jobshop.schedule">
+    <Title/Schedule Jobs/
+    <P>   
+      <List>
+        <Entry>Reset
+	<Item>
+          Resets the scheduling engine.
+	<Entry>Next
+        <Item>
+	  Searches for a next schedule and displays the
+	  schedule found and its maximal span.  Search can
+	  be interrupted by clicking
+	  <<Stop>>.
+	<Entry>Best
+        <Item>
+	  Searches for a best schedule and displays the
+	  schedule found and its maximal span. All schedules
+	  found in between are displayed together with their
+	  maximal span.  Search can be interrupted by
+	  clicking <<Stop>>.
+	<Entry>Stop
+        <Item>	
+	  Stops the search for a next or a best
+	  schedule.
+	<Entry>Search Tree
+        <Item>
+	  Displays the search tree of the scheduling
+	  problem in the Oz Explorer.'
+      </List>
+     </P>
+   </Section>
+
+</Chapter>

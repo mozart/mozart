@@ -1,0 +1,109 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@dfki.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % p.mix.local "|Em">
+<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY % proglang.values.local "|sh">
+
+<!-- Abbreviations -->
+<!ENTITY amp "&">
+<!ENTITY Oz "Oz">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY eg PI "eg">
+<!ENTITY etc PI "etc">
+
+
+<!ENTITY chapter.queens         SYSTEM "queens.sgml">
+<!ENTITY chapter.jobshop        SYSTEM "jobshop.sgml">
+
+<!ENTITY chapter.trucks         SYSTEM "trucks.sgml">
+<!ENTITY chapter.bounce         SYSTEM "bounce.sgml">
+<!ENTITY chapter.lift           SYSTEM "lift.sgml">
+<!ENTITY chapter.transportation SYSTEM "transportation.sgml">
+
+<!ENTITY chapter.board          SYSTEM "board.sgml">
+<!ENTITY chapter.flights        SYSTEM "flights.sgml">
+<!ENTITY chapter.corpus         SYSTEM "corpus.sgml">
+]>
+
+
+<BOOK>
+<Title/Mozart Demo Applications/
+    <!-- Splitting the document into different HTML nodes -->
+    <Meta name=latex.package value="pstricks">
+    <Meta name=latex.package value="pifont">
+
+    <Meta name="html.split"       value="chapter.queens">
+    <Meta name="html.split"       value="chapter.jobshop">
+
+    <Meta name="html.split"       value="chapter.trucks">
+    <Meta name="html.split"       value="chapter.bounce">
+    <Meta name="html.split"       value="chapter.lift">
+    <Meta name="html.split"       value="chapter.transportation">
+
+    <Meta name="html.split"       value="chapter.board">
+    <Meta name="html.split"       value="chapter.flights">
+    <Meta name="html.split"       value="chapter.corpus">
+
+    <Author.Extern to="author.db" key="Denys.Duchier">
+    <Author.Extern to="author.db" key="Martin.Mueller">
+    <Author.Extern to="author.db" key="Michael.Mehl">
+    <Author.Extern to="author.db" key="Christian.Schulte">
+    <Author.Extern to="author.db" key="Gert.Smolka">
+    <Author.Extern to="author.db" key="Joerg.Wuertz">
+    <Abstract>
+      <P.silent><!--**-->
+      Cool stuff.
+    </Abstract>
+  
+    <Part id="part.constraints">
+      <Title/Constraint Applications/
+      &chapter.queens;
+      &chapter.jobshop;
+    </Part>
+
+    <Part id="part.concurrent">
+      <Title/Multi Agent and Concurrent Applications/
+      &chapter.trucks;
+      &chapter.bounce;
+      &chapter.lift;
+      &chapter.transportation;
+    </Part>
+
+    <Part id="part.distributed">
+      <Title/Distributed Applications/
+      &chapter.board;
+      &chapter.flights;
+      &chapter.corpus;
+    </Part>
+
+</BOOK>
