@@ -1,5 +1,10 @@
-JAR	= /home/denys/Mozart/ozlib/OzMake2/XT.jar
-STYLE	= /home/denys/Mozart/ozlib/OzMake2/ozmake.xsl
+ifeq ($(HOSTNAME),speedy)
+OZLIB	= /home/denys/Mozart/ozlib
+else
+OZLIB	= /home/duchier/ozlib
+endif
+JAR	= $(OZLIB)/OzMake2/XT.jar
+STYLE	= $(OZLIB)/OzMake2/ozmake.xsl
 
 doc: index.xml $(STYLE)
 	case `java -version 2>&1` in \
