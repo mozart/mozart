@@ -6,28 +6,34 @@
 <P>There are two kinds of global names in Oz:
 <index/global name<and>internal/
 <LIST>
-<ITEM>References that can exist <em>only within</em> an Oz computation space.
-They can reference <em>any</em> language entity.
+<ITEM>Internal references,
+i.e., that can exist only <em>within</em> an Oz computation space.
 They are globally unique,
-even for references created before
+even for references existing before
 connecting with another application.
+All data structures in Oz are addressed through these
+references; they correspond roughly to pointers and network pointers
+in mainstream languages, but they are protected from abuse (as in Java).
 See <ptr to="language.entities">
 for more information on the distribution
 semantics of these references.
 In most cases, you can ignore these references
 since they don't affect the language semantics.
+In this section we will not talk any more
+of these references.
 <index/global name<and>external/
-<ITEM>References that can exist <em>anywhere</em>, i.e., both
+<ITEM>External references,
+i.e., that can exist <em>anywhere</em>, i.e., both
 inside and outside of an Oz computation space.
-These references are known as external global names.
+They are also known as external global names.
 They are represented as character strings, and can
-therefore be stored and communicated through many media,
-including Web pages, Oz computation spaces, and many more.
+therefore be stored and communicated on many different media,
+including Web pages, Oz computation spaces, etc.
 They are needed when a Mozart application wants to interact
 with the external world.
-In this section we are interested only in these references.
 </LIST>
-<P>Oz recognizes three basic kinds of external global names,
+<P>This section focuses on external global names.
+Oz recognizes three kinds,
 namely tickets, URLs, and hostnames:
 <index/ticket<and>definition/
 <index/global name<and>ticket/
@@ -61,7 +67,7 @@ Mozart process on the host
 key="chapter.remote"/<<Remote>>/).
 </LIST>
 <P>For maximum flexibility,
-these three types can be represented as
+all three kinds can be represented as
 virtual strings inside Oz.
 
 <SUBSECTION><TITLE>Connecting applications by means of tickets</TITLE>
@@ -134,7 +140,7 @@ declare Stream in
 by doing <<Stream=a|b|c|_>>
 then Application 2's browse window will show the bindings.
 
-<SUBSECTION><TITLE>Persistent data structures</TITLE>
+<SUBSECTION><TITLE>Persistent data structures by means of pickles</TITLE>
 
 <index/<<Pickle>> module<and>example/
 <index/example<and>using <<Pickle>> module/
@@ -184,9 +190,12 @@ cannot be pickled.
 on a remote host
 that uses the resources of that host and
 that continues to interact with the application.
-The computation is specified as a functor,
+The computation is specified as a <em>functor</em>,
 which is the standard way to
 define computations with the resources they need.
+A functor is a module specification that
+makes explicit the resources that the module needs
+(see <ptr to="bringing">).
 
 <P>First we create a new Mozart process
 that is ready to accept new computations:
