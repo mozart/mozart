@@ -187,7 +187,8 @@ public:
   // space ourselves;
   void put(OZ_Term term) {
     Assert(tagTypeOf(term) != TAG_GCMARK);
-    Assert(tagTypeOf(term) != TAG_UVAR); // '!'
+    Assert(tagTypeOf(term) != TAG_UVAR);
+    Assert(tagTypeOf(term) != TAG_CVAR);
     checkConsistency();
     *tos++ = ToPointer(term);
   }
