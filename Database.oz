@@ -304,6 +304,110 @@ define
 		 fun {$ ID} Database,CondGet(ID unit $) end}
 		fun {$ X} X\=unit end})
       end
+      %%
+      meth get_ozmake_info($)
+	 CTable = {NewDictionary}
+	 PTable = {NewDictionary}
+      in
+	 for ID in Database,condGet('*author list*' nil $) do
+	    case Database,condGet(ID unit $)
+	    of unit then skip
+	    [] E then CTable.ID := {self OzmakeContact(E $)} end
+	 end
+	 for ID in Database,condGet('*package list*' nil $) do
+	    case Database,condGet(ID unit $)
+	    of unit then skip
+	    [] E then PTable.ID := {self OzmakePackage(E $)} end
+	 end
+	 ozmake(
+	    contacts: {Dictionary.toRecord o CTable}
+	    packages: {Dictionary.toRecord o PTable})
+      end
+      %%
+      meth OzmakeContact(E $)
+	 Table = {NewDictionary}
+      in
+	 case {CondSelect E content_type unit}
+	 of unit then skip
+	 [] S then Table.content_type := {VS2A S} end
+	 case {CondSelect E body unit}
+	 of unit then skip
+	 [] S then Table.body := {VS2A S} end
+	 case {CondSelect E id unit}
+	 of unit then skip
+	 [] S then Table.mogul := {VS2A S} end
+	 case {CondSelect E url unit}
+	 of unit then skip
+	 [] S then Table.url := {VS2A S} end
+	 case {CondSelect E email unit}
+	 of unit then skip
+	 [] S then Table.url := {VS2A S} end
+	 case {CondSelect E www unit}
+	 of unit of skip
+	 [] S then Table.www := {VS2A S} end
+	 case {CondSelect E name unit}
+	 of unit then skip
+	 [] S then Table.name := {VS2A S} end
+	 case {CondSelect E name_for_index unit}
+	 of unit then skip
+	 [] S then Table.name_for_index := {VS2A S} end
+	 {Dictionary.toRecord contact Table}
+      end
+      %%
+      meth OzmakePackage(E $)
+	 Table = {NewDictionary}
+      in
+	 case {CondSelect E id unit}
+	 of unit then skip
+	 [] S then Table.mogul := {VS2A S} end
+	 case {CondSelect E url unit}
+	 of unit then skip
+	 [] S then Table.url := {VS2A S} end
+	 case {CondSelect E blurb unit}
+	 of unit then skip
+	 [] S then Table.blurb := {VS2A S} end
+	 case {CondSelect E provides nil}
+	 of nil then skip
+	 [] L then Table.provides := {Map L VS2A} end
+	 case {CondSelect E requires nil}
+	 of nil then nil
+	 [] L then Table.requires := {Map L VS2A} end
+	 case {CondSelect E content_type unit}
+	 of unit then skip
+	 [] S then Table.content_type := {VS2A S} end
+	 case {CondSelect E url_pkg unit}
+	 of unit then skip
+	 [] L then Table.url_pkg := {Map L VS2A} end
+	 case {CondSelect E url_doc unit}
+	 of unit then skip
+	 [] L then Table.url_doc := {Map L VS2A} end
+	 case {CondSelect E body nil}
+	 of nil then skip
+	 [] S then Table.body := {VS2A S} end
+	 case {CondSelect E author nil}
+	 of nil then skip
+	 [] L then Table.author := {Map L VS2A} end
+	 case {CondSelect E contact nil}
+	 of nil then skip
+	 [] unit then skip
+	 [] L then Table.contact := {Map L VS2A} end
+	 case {CondSelect E keywords nil}
+	 of nil then skip
+	 [] L then Table.keywords := {Map L VS2A} end
+	 case {CondSelect E categories nil}
+	 of nil then skip
+	 [] L then Table.categories := {Map L VS2A} end
+	 case {CondSelect E url_doc_extra nil}
+	 of nil then skip
+	 [] L then Table.url_doc_extra := {Map L VS2A} end
+	 case {CondSelect E title nil}
+	 of nil then skip
+	 [] S then Table.title := {VS2A S} end
+	 case {CondSelect E version nil}
+	 of nil then skip
+	 [] S then Table.version := {VS2A S} end
+	 {Dictionary.toRecord package Table}
+      end
    end
    %%
    local
