@@ -117,7 +117,7 @@ on different operating systems. Thus, the order
 of equal elements is not the same on different systems
 */
 template <class T>
-void myqsort(T * my, int left, int right,
+static void myqsort(T * my, int left, int right,
              int (*compar)(const T *a, const T *b))
 {
   register int i = left, j = right;
