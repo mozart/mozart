@@ -3,7 +3,7 @@
 
 local
    
-   fun {S2F Nr Id Dir File Line Time Name Args Builtin}
+   fun {S2F Nr Id Dir File Line Time Name Args Vars Builtin}
       frame(nr      : Nr
 	    id      : Id
 	    dir     : Dir
@@ -12,6 +12,7 @@ local
 	    time    : Time
 	    name    : Name
 	    args    : Args
+	    vars    : Vars
 	    builtin : Builtin)
    end
    
@@ -39,10 +40,14 @@ local
 	    else
 	       case {Label Z} == builtin then
 		  {P I {S2F I 0 enter X.file X.line
-			Y.1.2.1 Z.name Z.args true}}
+			Y.1.2.1 Z.name Z.args
+			case {HasFeature X vars} then X.vars else nil end
+			true}}
 	       else
 		  {P I {S2F I Y.1.1 enter X.file X.line
-			Y.1.2.1 Z.name Y.1.2.2 false}}
+			Y.1.2.1 Z.name Y.1.2.2
+			case {HasFeature X vars} then X.vars else nil end
+			false}}
 	       end
 	       {DoStackForAllInd Z|T I+1 P}
 	    end
@@ -75,8 +80,8 @@ in
 	 Rebuild        % should we re-calculate the stack
                         % when the next 'step' message arrives?
 
-	 Sync  : _      % sync block/cont actions
-	 Delay : false
+	 Sync    : _      % sync block/cont actions
+	 InDelay : false
       
       meth init(thr:Thr id:ID)
 	 self.T = Thr
@@ -87,21 +92,21 @@ in
 	 Rebuild <- false
       end
 
+      meth getVars(Nr $)
+	 {Dget self.D Nr}.vars
+      end
+      
       meth blockMsg(Ack)
 	 New in
 	 Sync  <- New = unit
-	 Delay <- true
-	 thread
-            {WaitOr New {Alarm TimeoutToBlock}}
-	    lock
-	       Delay <- false
-	       case {IsDet New} then Ack = no else Ack = ok end
-	    end
-         end
+	 InDelay <- true
+	 {WaitOr New {Alarm TimeoutToBlock}}
+	 InDelay <- false
+	 case {IsDet New} then Ack = no else Ack = ok end
       end
       
       meth contMsg(Ack)
-	 case @Delay then Ack = no else Ack = ok end
+	 case @InDelay then Ack = no else Ack = ok end
 	 Sync <- _ = unit
       end
       
@@ -113,8 +118,11 @@ in
 	 case {HasFeature X debug} then
 	    Stack = X.debug.stack
 	    H|T   = case Stack.1 == nil then Stack.2.2 else Stack end
-	    C     = case X.1.1 == noElse then %% correct the line number
-		       {Record.adjoinAt H line X.1.2}
+	    C     = case %% you never know...
+		       {HasFeature X 1} andthen {HasFeature X.1 1} then
+		       case X.1.1 == noElse then %% correct the line number
+			  {Record.adjoinAt H line X.1.2}
+		       else H end
 		    else H end
 	    S = builtin(name:'Raise' args:[X]) | debug([0 999999999]) | C | T
 	    Status
@@ -173,7 +181,7 @@ in
       end
       
       meth step(name:N args:A builtin:B file:F line:L time:T frame:FrameId)
-	 Frame = {S2F @SP FrameId enter F L T N A B}
+	 Frame = {S2F @SP FrameId enter F L T N A nil B}
       in
 	 {Dput self.D @SP Frame}
 	 SP   <- @SP + 1

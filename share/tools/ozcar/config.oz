@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.4.1 (Apr 97)'
+Version                = '1.4.2 (Apr 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -40,7 +40,8 @@ InvalidThreadID        = 'Invalid Thread ID in step message' /* end */
 NoFileInfo             = 'step message without line number information, ' #
                          'continuing thread #' /* end */
 NoFileBlockInfo        = ' blocks without line number information'
-EarlyThreadDeath       = 'won\'t add thread as it died already.' /* end */
+EarlyThreadDeath       = 'won\'t add thread #' /* end */
+EarlyTermThread        = 'Early terminating thread' /* end */
 KnownThread            = 'Got known thread' /* end */
 NewThread              = 'Got new thread' /* end */
 NextOnLeave            = '\'next\' while leaving procedure - ' #
@@ -49,7 +50,6 @@ NextOnLeave            = '\'next\' while leaving procedure - ' #
 UnknownSuspThread      = 'Unknown suspending thread' /* end */
 UnknownWokenThread     = 'Unknown woken thread' /* end */
 UnknownMessage         = 'Unknown message on stream'
-UnknownTermThread      = 'Unknown terminating thread' /* end */
 
 WaitForThread          = 'waiting for thread to be added ' # /* end */
                          'to dictionary of debugged threads...' /* end */
@@ -174,8 +174,7 @@ TextCursor             = left_ptr
 MaxStackSize           = 40
 MaxStackBrowseSize     = 15
 
-TimeoutToMessage       = 350   % ms
-TimeoutToCalc          =  90
+TimeoutToCalc          =  90 % ms
 TimeoutToRedraw        = 180
 TimeoutToBlock         = 400
 
