@@ -75,7 +75,7 @@ void printDef(ProgramCounter PC)
 }
 
 
-void TaskStack::printDebug(Bool verbose, int depth)
+void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
 {
   if (this == NULL) {
     message("TaskStack empty.\n");
@@ -86,6 +86,9 @@ void TaskStack::printDebug(Bool verbose, int depth)
   message("Stack dump:\n");
   message("-----------\n");
 
+  if (pc != NOCODE && pc !=NULL) {
+    printDef(pc);
+  }
   TaskStackEntry *p = getTop();
 
   while (isEmpty() == NO && depth-- > 0) {

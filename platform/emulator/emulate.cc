@@ -51,7 +51,7 @@ extern void printSuspension(ProgramCounter pc);
       if (e->conf.errorVerbosity > 1) {                                       \
         message("\n");                                                        \
         {MSG_LONG;}                                                           \
-        e->currentThread->taskStack.printDebug(NO,10000);                     \
+        e->currentThread->taskStack.printDebug(PC,NO,10000);                  \
       }                                                                       \
       errorTrailer();                                                         \
     } else {                                                                  \
@@ -66,7 +66,7 @@ extern void printSuspension(ProgramCounter pc);
 
 /* called if t1=t2 fails */
 void failureUnify(AM *e, char *msgShort, TaggedRef arg1, TaggedRef arg2,
-                  char *msgLong)
+                  char *msgLong, ProgramCounter PC)
 {
   HF_BODY(message(msgShort, OZ_toC(arg1),
                   (arg2 == makeTaggedNULL()) ? "" : OZ_toC(arg2)),
@@ -76,7 +76,7 @@ void failureUnify(AM *e, char *msgShort, TaggedRef arg1, TaggedRef arg2,
 
 #define HF_UNIFY(MSG_SHORT,T1,T2,MSG_LONG)                                    \
    if (!e->isToplevel()) { goto LBLfailure; }                                 \
-   failureUnify(e,MSG_SHORT,T1,T2,MSG_LONG);                                  \
+   failureUnify(e,MSG_SHORT,T1,T2,MSG_LONG,PC);                               \
    goto LBLkillThread;
 
 
@@ -87,11 +87,11 @@ void failureUnify(AM *e, char *msgShort, TaggedRef arg1, TaggedRef arg2,
    goto LBLkillThread;
 
 
-void failureNomsg(AM *e) { HF_BODY(,); }
+void failureNomsg(AM *e, ProgramCounter PC) { HF_BODY(,); }
 
 #define HF_NOMSG                                                              \
    if (!e->isToplevel()) { goto LBLfailure; }                                 \
-   failureNomsg(e);                                                           \
+   failureNomsg(e,PC);                                                        \
    goto LBLkillThread;
 
 

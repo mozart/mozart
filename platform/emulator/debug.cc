@@ -320,7 +320,7 @@ void showCall(DBGPort port, Board *b, SRecord *def, int arity, TaggedRef *args,
       break;
 
     case DBG_STACK:
-      am.currentThread->taskStack.printDebug(NO,help);
+      am.currentThread->taskStack.printDebug(NULL,NO,help);
       break;
 
     case DBG_EMUL:
