@@ -19,10 +19,15 @@
 %%% WARRANTIES.
 %%%
 
-%% TODO:
+%%
+%% This functor defines a class encapsulating the whole of
+%% the DICT protocol.
+%%
+%% Not implemented yet:
 %% -- UTF-8
 %% -- Authentication
 %% -- OPTION MIME
+%%
 
 functor
 import
@@ -32,12 +37,17 @@ export
    'class': NetDictionary
    defaultServer: DEFAULT_SERVER
    defaultPort: DEFAULT_PORT
-define
+prepare
+   %% Default server host to connect to
    DEFAULT_SERVER = 'dict.org'
+   %% Default port to connect to
    DEFAULT_PORT = 2628
+
+   %% String send by the client to identify itself
    CLIENT_TEXT = 'Mozart client, http://mozart.ps.uni-sb.de/'
 
    fun {DropCR S}
+      %% Discard the final return character of a line.
       case S of "\r" then ""
       elseof C1|Cr then C1|{DropCR Cr}
       [] nil then ""
@@ -45,19 +55,29 @@ define
    end
 
    fun {DropSpace S}
+      %% Discard leading whitespace.
       {List.dropWhile S
        fun {$ C} C == &  orelse C == &\t end}
    end
+define
+   %%
+   %% Extended Socket Class for Protocol Basics
+   %%
 
    class TextSocket from Open.socket Open.text
       prop final
-      feat crash
+      feat crash   % nullary procedure to invoke when server closes connection
       meth getS($)
+	 %% Override `Open.socket,getS' to discard the final return character.
 	 case Open.text, getS($) of false then false
 	 elseof S then {DropCR S}
 	 end
       end
       meth getTextLine($)
+	 %% Read a single line of a (multi-line) text response.
+	 %% A single period on a line has special meaning; return 'period'.
+	 %% Other periods at the beginning of the line are doubled.
+	 %% If the connection has been closed, return 'closed'.
 	 case TextSocket, getS($) of false then closed
 	 elseof "." then period
 	 elseof &.|(S=&.|_) then S
@@ -65,6 +85,7 @@ define
 	 end
       end
       meth getTextual($)
+	 %% Read a multi-line text response.
 	 case TextSocket, getTextLine($) of closed then
 	    {Exception.raiseError netdict(serverClosed unit)}
 	    {self.crash}
@@ -75,12 +96,17 @@ define
 	 end
       end
       meth expect(Ns ?N ?Rest)
+	 %% Read a status response from the server.
+	 %% A status response is a line starting with a three-digit
+	 %% response code.  Ns is a list of the handled response codes;
+	 %% return the actual response code in N and the rest of the
+	 %% line in Rest.
 	 case TextSocket, getS($) of false then
 	    {Exception.raiseError netdict(serverClosed unit)}
 	    {self.crash}
 	 elseof S=(A|_) andthen {Char.isDigit A} then
 	    N = {String.toInt {List.takeDropWhile S Char.isDigit $ ?Rest}}
-	    if N == 420 orelse N == 421 then
+	    if N == 420 orelse N == 421 then   % general error codes
 	       {Exception.raiseError netdict(serverClosed 'Error '#N)}
 	       {self.crash}
 	    elseif {Member N Ns} then skip
@@ -93,6 +119,9 @@ define
 	 end
       end
       meth writeLine(S)
+	 %% Write a command S to the server.
+	 %% Append the required return/linefeed character sequence.
+	 %% Raise an exception if the connection has been closed.
 	 try
 	    TextSocket, write(vs: S#'\r\n')
 	 catch system(os(os 4: Text ...) ...) then
@@ -101,6 +130,10 @@ define
 	 end
       end
    end
+
+   %%
+   %% Parsing a Status Response
+   %%
 
    local
       proc {GetArg S Quote ?Arg ?Rest}
@@ -151,6 +184,10 @@ define
       end
    end
 
+   %%
+   %% Escaping Strings in Commands
+   %%
+
    local
       fun {IsAtomChar C}
 	 case C of &" then false
@@ -179,10 +216,15 @@ define
       end
    end
 
+   %%
+   %% Main Class Encapsulating the DICT Protocol
+   %%
+
    class NetDictionary
       prop locking
       attr socket serverBanner
       meth init(Server <= unit Port <= DEFAULT_PORT)
+	 %% If Server is non-unit, open a connection to it at Port.
 	 socket <- unit
 	 serverBanner <- ""
 	 if Server \= unit then
@@ -190,6 +232,8 @@ define
 	 end
       end
       meth connect(Server <= DEFAULT_SERVER Port <= DEFAULT_PORT) Socket in
+	 %% Open a connection to Server at Port.
+	 %% If a connection is currently open, close it before.
 	 lock
 	    if @socket \= unit then
 	       NetDictionary, close()
@@ -207,12 +251,9 @@ define
 	    end
 	 end
       end
-      meth isConnected($)
-	 lock
-	    @socket \= unit
-	 end
-      end
       meth close()
+	 %% Close the current connection (if any).
+	 %% Send a QUIT command and wait for the status response.
 	 lock
 	    case @socket of unit then skip
 	    elseof Socket then
@@ -230,6 +271,7 @@ define
 	 socket <- unit
       end
       meth status($)
+	 %% Send a STATUS command and return the status response.
 	 lock
 	    case @socket of unit then
 	       {Exception.raiseError netdict(notConnected)} unit
@@ -240,6 +282,7 @@ define
 	 end
       end
       meth showServer(?Text)
+	 %% Send a SHOW SERVER command and return the text reponse.
 	 lock
 	    case @socket of unit then
 	       {Exception.raiseError netdict(notConnected)}
@@ -252,6 +295,7 @@ define
 	 end
       end
       meth showInfo(DBName ?Text)
+	 %% Send a SHOW INFO command and return the text reponse.
 	 lock
 	    case @socket of unit then
 	       {Exception.raiseError netdict(notConnected)}
@@ -264,6 +308,7 @@ define
 	 end
       end
       meth 'define'(Word db: DB <= '*' $)
+	 %% Query for definitions for Word in database DB.
 	 lock
 	    case @socket of unit then
 	       {Exception.raiseError netdict(notConnected)} unit
@@ -289,6 +334,7 @@ define
 	 end
       end
       meth match(Word db: DB <= '*' strategy: Strategy <= '.' $)
+	 %% Query for matches for Word in database DB using Strategy.
 	 lock
 	    case @socket of unit then
 	       {Exception.raiseError netdict(notConnected)} unit
@@ -302,6 +348,8 @@ define
 	 end
       end
       meth showDatabases($)
+	 %% Send a SHOW DATABASES command and return the text response.
+	 %% This consists of a list of pairs ID#Name.
 	 lock
 	    case @socket of unit then
 	       {Exception.raiseError netdict(notConnected)} unit
@@ -313,6 +361,8 @@ define
 	 end
       end
       meth showStrategies($)
+	 %% Send a SHOW STRATEGIES command and return the text response.
+	 %% This consists of a list of pairs ID#Name.
 	 lock
 	    case @socket of unit then
 	       {Exception.raiseError netdict(notConnected)} unit
@@ -338,6 +388,10 @@ define
 	 end
       end
    end
+
+   %%
+   %% Formatting Error Exceptions
+   %%
 
    {Error.registerFormatter netdict
     fun {$ E} T in
