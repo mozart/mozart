@@ -98,3 +98,13 @@ $(WHAT).xml: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
         nsgmls -c../catalog $< | $(OZDOC2XML) > $@
 $(WHAT).tex: $(WHAT).xml
         java -oss10000000 -classpath $(CLASSPATH):$(OZCLASSPATH)  com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc.xml $@
+
+TEXINPUTS       = $(shell echo $$TEXINPUTS)
+OZTEXINPUTS     = $(SRCDIR):$(TEXINPUTS)
+
+$(WHAT).dvi: $(WHAT).tex
+        TEXINPUTS=$(OZTEXINPUTS) latex $< || { rm $@; exit -1; }
+        TEXINPUTS=$(OZTEXINPUTS) latex $< || { rm $@; exit -1; }
+$(WHAT).ps: $(WHAT).dvi
+        TEXINPUTS=$(OZTEXINPUTS) dvips $< -o $@
+ps: $(WHAT).ps
