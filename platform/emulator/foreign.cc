@@ -8,6 +8,8 @@
   */
 
 
+#include <ctype.h>
+
 #include "oz.h"
 
 
@@ -196,6 +198,46 @@ char *OZ_normFloat(char *s)
 {
   replChar(s,'-','~');
   delChar(s,'+');
+}
+
+/*
+ * parse: [~]<int>.<digit>*[(e|E)<int>]
+ */
+char *OZ_parseFloat(char *s) {
+  char *p = OZ_parseInt(s);
+  if (!p || *p++ != '.') {
+    return NULL;
+  }
+  while (isdigit(*p)) {
+    p++;
+  }
+  switch (*p) {
+  case 'e':
+  case 'E':
+    p++;
+    break;
+  default:
+    return p;
+  }
+  return OZ_parseInt(p);
+}
+
+/*
+ * parse: [~]<digit>+
+ */
+char *OZ_parseInt(char *s)
+{
+  char *p = s;
+  if (*p == '~') {
+    p++;
+  }
+  if (!isdigit(*p++)) {
+    return NULL;
+  }
+  while (isdigit(*p)) {
+    p++;
+  }
+  return p;
 }
 
 char *OZ_intToCString(OZ_Term term)

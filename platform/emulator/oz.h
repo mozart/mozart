@@ -77,12 +77,14 @@ extern OZ_Term  OZ_CStringToInt  _PROTOTYPE((char *str));
 extern char *   OZ_intToCString  _PROTOTYPE((OZ_Term term));
 extern char *   OZ_intFloat      _PROTOTYPE((char *s));
 extern char *   OZ_normInt       _PROTOTYPE((char *s));
+extern char *   OZ_parseInt      _PROTOTYPE((char *s));
 
 extern OZ_Term  OZ_CToFloat        _PROTOTYPE((OZ_Float));
 extern OZ_Float OZ_floatToC        _PROTOTYPE((OZ_Term));
 extern OZ_Term  OZ_CStringToFloat  _PROTOTYPE((char *s));
 extern char *   OZ_floatToCString  _PROTOTYPE((OZ_Term term));
 extern char *   OZ_normFloat       _PROTOTYPE((char *s));
+extern char *   OZ_parseFloat      _PROTOTYPE((char *s));
 
 extern OZ_Term  OZ_CStringToNumber _PROTOTYPE((char *));
 
