@@ -391,7 +391,7 @@ public:
 inline
 Float *Float::newFloat(double val)
 {
-  Float *ret = (Float *) alignedMalloc(sizeof(Float),sizeof(double));
+  Float *ret = (Float *) doubleMalloc(sizeof(Float));
   ret->value = val;
   return ret;
 }
