@@ -41,15 +41,118 @@ define
       end
    end
 
+   CommandsMap = f('AA': &Å 'aa': &å
+		   'AE': &Æ 'ae': &æ
+		   'O': &Ø 'o': &ø
+		   'ss': &ß)
+
+   local
+      Accents = f(&À: "`A" &Á: "'A" &Â: "^A" &Ã: "~A" &Ä: "\"A"
+		  &Ç: "cC"
+		  &È: "`E" &É: "'E" &Ê: "^E" &Ë: "\"E"
+		  &Ì: "`I" &Í: "'I" &Î: "^I" &Ï: "\"I"
+		  &Ñ: "~N"
+		  &Ò: "`O" &Ó: "'O" &Ô: "^O" &Õ: "~O" &Ö: "\"O"
+		  &Ù: "`U" &Ú: "'U" &Û: "^U" &Ü: "\"U"
+		  &Ý: "'Y"
+		  &à: "`a" &á: "'a" &â: "^a" &ã: "~a" &ä: "\"a"
+		  &ç: "cc"
+		  &è: "`e" &é: "'e" &ê: "^e" &ë: "\"e"
+		  &ì: "`i" &í: "'i" &î: "^i" &ï: "\"i"
+		  &ñ: "~n"
+		  &ò: "`o" &ó: "'o" &ô: "^o" &õ: "~o" &ö: "\"o"
+		  &ù: "`u" &ú: "'u" &û: "^u" &ü: "\"u"
+		  &ý: "'y" &ÿ: "\"y")
+
+      D = {NewDictionary}
+   in
+      {Record.forAllInd Accents
+       proc {$ C [C1 C2]} D1 in
+	  if {Dictionary.member D C1} then
+	     D1 = {Dictionary.get D C1}
+	  else
+	     D1 = {NewDictionary}
+	     {Dictionary.put D C1 D1}
+	  end
+	  {Dictionary.put D1 C2 C}
+       end}
+
+      AccentsMap = {Record.mapInd {Dictionary.toRecord accentsMap D}
+		    fun {$ C1 D1}
+		       {Dictionary.toRecord {String.toAtom [C1]} D1}
+		    end}
+   end
+
+   fun {CopyBraceLevel S I}
+      case S of C|Cr then
+	 case C of &{ then C|{CopyBraceLevel Cr I + 1}
+	 [] &} then
+	    case I of 1 then {CleanLine Cr}
+	    else C|{CopyBraceLevel Cr I - 1}
+	    end
+	 else C|{CopyBraceLevel Cr I}
+	 end
+      [] nil then ""   % do not worry about missing closing brace(s)
+      end
+   end
+
+   fun {TranslateAccent C1 S}
+      case {CondSelect AccentsMap C1 unit} of unit then
+	 {Raise error} unit
+      elseof CharMap then Rest in
+	 Rest = {List.dropWhile S Char.isSpace}
+	 case Rest of C2|Rest1 then
+	    case {CondSelect CharMap C2 unit} of unit then
+	       case Rest of &{|C3|&}|Rest2 then
+		  case {CondSelect CharMap C3 unit} of unit then
+		     {Raise error} unit
+		  elseof NewC then NewC|{CopyBraceLevel Rest2 1}
+		  end
+	       else {Raise error} unit
+	       end
+	    elseof NewC then NewC|{CopyBraceLevel Rest1 1}
+	    end
+	 [] nil then {Raise error} unit
+	 end
+      end
+   end
+
+   fun {CleanLine S}
+      case S of C|Cr then
+	 case C of &{ then
+	    case Cr of &\\|Rest then Command Rest1 in
+	       {List.takeDropWhile Rest Char.isAlpha ?Command ?Rest1}
+	       case Command of "" then
+		  case Rest1 of C|Rest2 then
+		     try {TranslateAccent C Rest2}
+		     catch error then   %--** error: unrecognized accent
+			{CopyBraceLevel Cr 1}
+		     end
+		  [] nil then S   % do not worry about missing closing brace
+		  end
+	       else
+		  case {CondSelect CommandsMap {String.toAtom Command} unit}
+		  of unit then {CopyBraceLevel Rest 1}
+		  elseof NewC then NewC|{CopyBraceLevel Rest1 1}
+		  end
+	       end
+	    else {CopyBraceLevel Cr 1}
+	    end
+	 else C|{CleanLine Cr}
+	 end
+      [] nil then ""
+      end
+   end
+
    fun {ReadBib File Keys}
       case {File getS($)} of false then ""
       elseof S then
 	 case S of &%|S1 then Key Text in
 	    {List.takeDropWhile S1 fun {$ C} C \= &" end ?Key &"|?Text}
-	    {Dictionary.get Keys {String.toAtom Key}} = Text
+	    {Dictionary.get Keys {String.toAtom Key}} = {CleanLine Text}
 	    {ReadBib File Keys}
 	 else
-	    S#'\n'#{ReadBib File Keys}
+	    {CleanLine S}#'\n'#{ReadBib File Keys}
 	 end
       end
    end
