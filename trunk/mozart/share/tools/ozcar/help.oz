@@ -78,30 +78,30 @@ local
       ('You can browse a global variable by clicking ' #
        'on its type information.'))
      
-     StepButtonText #
+     StepButtonBitmap #
      ('Step' #
       ('Let the current thread continue to run until ' #
        'it reaches the next procedure call.'))
      
-     NextButtonText #
+     NextButtonBitmap #
      ('Next' #
       ('Let the current thread continue to run until ' #
        'it reaches the next procedure call in the current stack frame.'))
      
-     ContButtonText #
+     ContButtonBitmap #
      ('Continue' #
       ('Let the current thread continue to run until ' #
        'it terminates, blocks, reaches a breakpoint ' #
        'or raises an unhandled exception.'))
      
-     ForgetButtonText #
+     ForgetButtonBitmap #
      ('Forget' #
       ('Do not trace current thread anymore, let it ' #
        'continue to run, and remove it ' #
        'from the thread tree. It will come back when it reaches ' #
        'a breakpoint or raises an unhandled exception.'))
      
-     TermButtonText #
+     TermButtonBitmap #
      ('Terminate' #
       ('Terminate current thread and remove it from the thread tree.'))
      

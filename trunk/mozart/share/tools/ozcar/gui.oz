@@ -63,15 +63,7 @@ local
       else                              UnboundType
       end
    end
-   
-   TagCounter =
-   {New class 
-	   attr n
-	   meth clear n<-1000 end  % low integers are reserved for
-	                           % stack frame clicks
-	   meth get($) N=@n in n<-N+1 N end
-	end clear}
-   
+
    fun {MakeLines N}
       case N < 1 then nil
       else 10 | {MakeLines N-1} end
@@ -126,7 +118,7 @@ in
 						 delete:   self # off
 						 withdraw: true)}
 	 {Tk.batch [wm(iconname   self.toplevel IconName)
-		    wm(iconbitmap self.toplevel BitMap)
+		    wm(iconbitmap self.toplevel IconBitMap)
 		    wm(geometry   self.toplevel ToplevelGeometry)]}
 	 
 	 Menu,init
@@ -150,50 +142,61 @@ in
       
 	 %% the buttons
 	 local
-	    Bs = {Map [StepButtonText NextButtonText ContButtonText
-		       ForgetButtonText TermButtonText]
+	    Bs = {Map [StepButtonBitmap   # StepButtonColor
+		       NextButtonBitmap   # NextButtonColor
+		       ContButtonBitmap   # ContButtonColor
+		       StopButtonBitmap   # StopButtonColor
+		       ForgetButtonBitmap # ForgetButtonColor
+		       TermButtonBitmap   # TermButtonColor]
 		  fun {$ S}
+		     Bitmap # ForegroundColor = S
 		     B = {New Tk.button
-			  tkInit(parent: self.ButtonFrame
-				 text:   S
-				 padx:   PadXButton
-				 pady:   PadYButton
-				 font:   ButtonFont
-				 borderwidth: SmallBorderSize
-				 action: self # action(S))}
+			  tkInit(parent:           self.ButtonFrame
+				 bitmap:           LocalBitMapDir # Bitmap #
+				                               BitmapExtension
+				 fg:               ForegroundColor
+				 activeforeground: ForegroundColor
+				 padx:             PadXButton
+				 pady:             PadYButton
+				 relief:           raised
+				 borderwidth:      SmallBorderSize
+				 action:           self # action(Bitmap))}
 		  in
 		     {B tkBind(event:  HelpEvent
-			       action: self # help(S))}
+			       action: self # help(Bitmap))}
 		     B
 		  end}
 	    TkSusp TkRunChildren Susp RunChildren
 	 in
 	    {ForAll
-	     [TkSusp        # Susp        # IgnoreFeeds     # suspend
-	      TkRunChildren # RunChildren # IgnoreThreads   # runChildren]
+	     [TkSusp       #Susp       #IgnoreFeedsBitmap  #suspend    #1
+	      TkRunChildren#RunChildren#IgnoreThreadsBitmap#runChildren#1]
 	     proc {$ B}
-		M = B.4
+		V # C # Xbm # Action # Default = B
 	     in
-		B.1 = {New Tk.variable tkInit(0)} % emulator default
-		B.2 = {New Tk.checkbutton
-		       tkInit(parent:    self.ButtonFrame
-			      variable:  B.1
-			      text:      B.3
-			      relief:    raised
-			      font:      ButtonFont
-			      padx:      PadXButton
-			      pady:      PadYButton
-			      borderwidth: SmallBorderSize
-			      action:    self # M(B.1))}
-		{B.2 tkBind(event:  HelpEvent
-			    action: self # help(B.3))}
+		V = {New Tk.variable tkInit(Default)}
+		C = {New Tk.checkbutton
+		     tkInit(parent:           self.ButtonFrame
+			    %indicatoron:      false
+			    %selectcolor:      CheckButtonSelectColor
+			    fg:               ButtonForeground
+			    activeforeground: ButtonForeground
+			    variable:         V
+			    bitmap:           LocalBitMapDir # Xbm
+			    relief:           flat %raised
+			    width:            CheckButtonWidth
+			    height:           CheckButtonHeight
+			    borderwidth:      SmallBorderSize
+			    action:           self # Action(V))}
+		{C tkBind(event:  HelpEvent
+			  action: self # help(Xbm))}
 	     end}
 	     /*
 	    {RunChildren tk(conf state:disabled)}
 	     */
 	    self.tkRunChildren = TkRunChildren
 	    {Tk.batch [pack(b(Bs) side:left  padx:1)
-		       pack(Susp RunChildren side:right padx:2)]}
+		       pack(Susp RunChildren side:right padx:0)]}
 	 end
 
 	 %% border line
@@ -275,7 +278,7 @@ in
 		      {Widget tk(insert 'end'
 				 {PrintF ' ' # V.1 EnvVarWidth} # V.2 # NL)}
 		   else
-		      T = {TagCounter get($)}
+		      T  = {Widget newTag($)}
 		      Ac = {New Tk.action
 			    tkInit(parent: Widget
 				   action: proc {$}
@@ -335,7 +338,10 @@ in
 	    L = false
 	 end
 	 CurThr = @currentThread
-	 case L orelse CurThr == undef then skip else
+	 case L orelse CurThr == undef then skip
+	 elsecase
+	    {Dbg.checkStopped CurThr}
+	 then     % allow switching of stack frames only if thread is stopped
 	    FrameId       = F.id
 	    FrameNr       = F.nr
 	    SavedVars     = F.vars
@@ -356,6 +362,8 @@ in
 	       Gui,SelectStackFrame(0)
 	    end
 	    Gui,printEnv(frame:FrameNr vars:Vars)
+	 else %% thread is running -- do nothing
+	    skip
 	 end
       end
 
@@ -442,7 +450,7 @@ in
 		case Arg.1 == NoAction then
 		   {W tk(insert LineEnd ' ' # Arg.2 LineTag)}
 		else
-		   ArgTag    = {TagCounter get($)}
+		   ArgTag    = {W newTag($)}
 		   ArgAction =
 		   {New Tk.action
 		    tkInit(parent: W
@@ -570,7 +578,7 @@ in
 	 W = self.StatusText
       in
 	 case M == clear then
-	    Gui,Clear(W)
+	    Gui,ClearNoTags(W)
 	 else
 	    Gui,Enable(W)
 	 end
@@ -579,13 +587,30 @@ in
       end
 
       meth BlockedStatus(T A)
-	 Gui,doStatus('Thread #' # {Thread.id T} # ' is blocked,' #
+	 Gui,doStatus('Thread #' # {Thread.id T} # ' is blocked, ' #
 		      A # ' has no effect')
       end
 
       meth TerminatedStatus(T A)
-	 Gui,doStatus('Thread #' # {Thread.id T} # ' is dead,' #
+	 Gui,doStatus('Thread #' # {Thread.id T} # ' is dead, ' #
 		      A # ' has no effect')
+      end
+
+      meth StoppedStatus(I A)
+	 Gui,doStatus('Thread #' # I # ' is not running, ' #
+		      A # ' has no effect')
+      end
+
+      meth RunningStatus(I A)
+	 Gui,doStatus('Thread #' # I # ' is already running, ' #
+		      A # ' has no effect')
+      end
+      
+      meth markStack(How)
+	 case How
+	 of active   then {self.StackText tk(conf fg:DefaultForeground)}
+	 [] inactive then {self.StackText tk(conf fg:OldStackColor)}
+	 else skip end
       end
 
       meth action(A)
@@ -606,16 +631,19 @@ in
 			       ' ' # N # ' threads killed'
 			    end append)
 	       
-	    [] !StepButtonText then
+	    [] !StepButtonBitmap then
 	       T = @currentThread
 	    in
 	       case T == undef then
 		  Gui,doStatus(FirstSelectThread)
 	       else
-		  S = {Thread.state T}
+		  I = {Thread.id T}
+		  S = case {Dbg.checkStopped T} then
+			 {Thread.state T} else running end
 	       in
 		  case S
-		  of blocked    then Gui,BlockedStatus(T A)
+		  of running    then Gui,RunningStatus(I A)
+		  [] blocked    then Gui,BlockedStatus(T A)
 		  [] terminated then Gui,TerminatedStatus(T A)
 		  else
 		     % step never needs more time, does it?
@@ -625,19 +653,21 @@ in
 		  end
 	       end
 	       
-	    [] !NextButtonText then
+	    [] !NextButtonBitmap then
 	       T = @currentThread
 	    in
 	       case T == undef then
 		  Gui,doStatus(FirstSelectThread)
 	       else
-		  S = {Thread.state T}
+		  I = {Thread.id T}
+		  S = case {Dbg.checkStopped T} then
+			 {Thread.state T} else running end
 	       in
 		  case S
-		  of blocked    then Gui,BlockedStatus(T A)
+		  of running    then Gui,RunningStatus(I A)
+		  [] blocked    then Gui,BlockedStatus(T A)
 		  [] terminated then Gui,TerminatedStatus(T A)
 		  else
-		     I         = {Thread.id T}
 		     ThreadDic = ThreadManager,getThreadDic($)
 		     Stack     = try
 				    {Dget ThreadDic I}
@@ -655,35 +685,93 @@ in
 			else
 			   {Dbg.stepmode T false}
 			end
+			
+			{ForAll [resetReservedTags({Stack getSize($)})
+				 /*resetTags*/] self.StackText}
+			
 			Gui,markNode(I running)
+			Gui,markStack(inactive)
 			SourceManager,configureBar(running)
 			{Thread.resume T}
 		     end
 		  end
 	       end
 	       
-	    [] !ContButtonText then
+	    [] !ContButtonBitmap then
 	       T = @currentThread
 	    in
 	       case T == undef then
 		  Gui,doStatus(FirstSelectThread)
 	       else
-		  S = {Thread.state T}
+		  I = {Thread.id T}
+		  S = case {Dbg.checkStopped T} then
+			 {Thread.state T} else running end
 	       in
 		  case S
-		  of blocked    then Gui,BlockedStatus(T A)
+		  of running    then Gui,RunningStatus(I A)
+		  [] blocked    then Gui,BlockedStatus(T A)
 		  [] terminated then Gui,TerminatedStatus(T A)
 		  else
-		     {Dbg.stepmode T false}
-		     {Dbg.contflag T true}
-		  
-		     Gui,markNode({Thread.id T} running)
-		     SourceManager,configureBar(running)
-		     {Thread.resume T}
+		     ThreadDic = ThreadManager,getThreadDic($)
+		     Stack     = try
+				    {Dget ThreadDic I}
+				 catch
+				    system(kernel(dict ...) ...) then nil
+				 end
+		  in
+		     case Stack == nil then skip else
+			
+			{Dbg.stepmode T false}
+			{Dbg.contflag T true}
+
+			%% delete all tags
+			{ForAll [resetReservedTags({Stack getSize($)})
+				 resetTags] self.StackText}
+			
+			Gui,markNode({Thread.id T} running)
+			Gui,markStack(inactive)
+			Gui,doStatus('Continuing thread #' # I)
+			SourceManager,configureBar(running)
+			{Thread.resume T}
+		     end
+		  end
+	       end
+
+	    [] !StopButtonBitmap then
+	       T = @currentThread
+	    in
+	       case T == undef then skip else
+		  S = {Thread.state T}
+	       in
+		  case S == terminated then Gui,TerminatedStatus(T A) else
+		     I         = {Thread.id T}
+		     ThreadDic = ThreadManager,getThreadDic($)
+		     Stack     = try
+				    {Dget ThreadDic I}
+				 catch
+				    system(kernel(dict ...) ...) then nil
+				 end
+		  in
+		     case
+			Stack == nil then skip
+		     elsecase
+			{Dbg.checkStopped T} then Gui,StoppedStatus(I A)
+		     else
+			case S == blocked then
+			   {ForAll [rebuild(true) print] Stack}
+			   {Thread.suspend T}
+			   SourceManager,configureBar(S)
+			else
+			   {Stack rebuild(true)}
+			end
+			{Dbg.contflag T false}
+			{Dbg.stepmode T true}
+			Gui,doStatus('You have stopped thread #' # I)
+		     end
 		  end
 	       end
 	       
-	    [] !ForgetButtonText then
+	    [] !ForgetButtonBitmap then
 	       T = @currentThread
 	    in
 	       case T == undef then skip else
@@ -692,7 +780,7 @@ in
 		  ThreadManager,forget(T I)
 	       end
 	       
-	    [] !TermButtonText then
+	    [] !TermButtonBitmap then
 	       T = @currentThread
 	    in
 	       case T == undef then skip else
@@ -715,8 +803,14 @@ in
 	    end
 	 end
       end
-      
+
       meth Clear(Widget)
+	 {ForAll [resetTags
+		  tk(conf state:normal)
+		  tk(delete '0.0' 'end')] Widget}
+      end
+      
+      meth ClearNoTags(Widget)
 	 {ForAll [tk(conf state:normal)
 		  tk(delete '0.0' 'end')] Widget}
       end

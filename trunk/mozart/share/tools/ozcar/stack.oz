@@ -81,9 +81,6 @@ in
 	 Rebuild           % should we re-calculate the stack
                            % when the next 'step' message arrives?
 
-	 Sync    : _       % sync block/cont actions
-	 InDelay : false
-
 	 Exception : nil   % saved exception
 
 	 New : true        % the thread has not made any step yet...
@@ -114,20 +111,6 @@ in
 	 catch
 	    system(kernel(dict ...) ...) then nil
 	 end
-      end
-      
-      meth blockMsg(Ack)
-	 New in
-	 Sync  <- New = unit
-	 InDelay <- true
-	 {WaitOr New {Alarm TimeoutToBlock}}
-	 InDelay <- false
-	 case {IsDet New} then Ack = no else Ack = ok end
-      end
-      
-      meth contMsg(Ack)
-	 case @InDelay then Ack = no else Ack = ok end
-	 Sync <- _ = unit
       end
       
       meth rebuild(Flag)
