@@ -663,7 +663,7 @@ OZ_C_proc_begin(BIsystemTellSize,3)
       }
     case FDVariable:
     case BoolVariable:
-      return FAILED;
+      TypeErrorT(0,"Literal");
     default:
       OZ_suspendOn (makeTaggedRef(labelPtr));
     }
@@ -671,12 +671,16 @@ OZ_C_proc_begin(BIsystemTellSize,3)
     TypeErrorT(0,"Literal");
   }
 
+  Assert(labelTag == LITERAL);
+
   // Create record:
   switch (tag) {
   case LTUPLE:
+    return literalEq(label, AtomCons) ? PROCEED : FAILED;
   case LITERAL:
+    return literalEq(label, t) ? PROCEED : FAILED;
   case SRECORD:
-    return PROCEED;
+    return literalEq(label, tagged2SRecord(t)->getLabel()) ? PROCEED : FAILED;
   case CVAR:
     if (tagged2CVar(t)->getType()==OFSVariable) {
        OZ_Return ret=OZ_unify(tagged2GenOFSVar(t)->getLabel(),label);
@@ -752,12 +756,15 @@ OZ_C_proc_begin(BIrecordTell,2)
     TypeErrorT(0,"Literal");
   }
 
+  Assert(labelTag == LITERAL);
   // Create record:
   switch (tag) {
   case LTUPLE:
+    return literalEq(label, AtomCons) ? PROCEED : FAILED;
   case LITERAL:
+    return literalEq(label, t) ? PROCEED : FAILED;
   case SRECORD:
-    return PROCEED;
+    return literalEq(label, tagged2SRecord(t)->getLabel()) ? PROCEED : FAILED;
   case CVAR:
     if (tagged2CVar(t)->getType()==OFSVariable) {
        OZ_Return ret=OZ_unify(tagged2GenOFSVar(t)->getLabel(),label);
