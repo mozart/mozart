@@ -30,6 +30,10 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 				TaggedRef * tPtr, TaggedRef term,
 				Bool prop, Bool disp)
 {
+#ifdef SCRIPTDEBUG
+  printf(am.isInstallingScript() ? "bool installing script\n" : "bool NOT installing script\n"); fflush(stdout);
+#endif
+
   TypeOfTerm tTag = tagTypeOf(term);
   
   switch (tTag) {
@@ -39,7 +43,15 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
       if (term_val < 0 || 1 < term_val) {
 	return FALSE;
       }
-      if (prop) propagate(var, pc_propagator);
+
+      Bool isLocalVar = am.isLocalSVar(this);
+      Bool isNotInstallingScript = !am.isInstallingScript();
+
+#ifdef SCRIPTDEBUG
+      printf("bool-int %s\n", isLocalVar ? "local" : "global"); fflush(stdout);
+#endif
+
+      if (prop && (isNotInstallingScript || isLocalVar)) propagate(var);
 
       if (prop && am.isLocalSVar(this)) {
 	doBind(vPtr, term);
@@ -66,6 +78,10 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	  switch (varIsLocal + 2 * termIsLocal) {
 	  case TRUE + 2 * TRUE: // var and term are local
 	    {
+#ifdef SCRIPTDEBUG
+	      printf("bool-bool local local\n"); fflush(stdout);
+#endif
+
 	      if (heapNewer(vPtr, tPtr)) { // bind var to term
 		propagate(var, pc_cv_unif);
 		termvar->propagate(term, pc_cv_unif);
@@ -84,6 +100,10 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	    
 	  case TRUE + 2 * FALSE: // var is local and term is global
 	    {
+#ifdef SCRIPTDEBUG
+	      printf("bool-bool local global\n"); fflush(stdout);
+#endif
+
 	      if (isConstrained) {
 		termvar->propagate(term, pc_cv_unif);
 		propagate(var, pc_cv_unif);
@@ -96,6 +116,10 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	    
 	  case FALSE + 2 * TRUE: // var is global and term is local
 	    {
+#ifdef SCRIPTDEBUG
+	      printf("bool-bool global local\n"); fflush(stdout);
+#endif
+
 	      if (isConstrained) {
 		termvar->propagate(term, pc_cv_unif);
 		propagate(var, pc_cv_unif);
@@ -108,6 +132,10 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	    
 	  case FALSE + 2 * FALSE: // var and term is global
 	    {
+#ifdef SCRIPTDEBUG
+	      printf("bool-bool global global\n"); fflush(stdout);
+#endif
+
 	      GenBoolVariable * bool_var = new GenBoolVariable();
 	      TaggedRef * var_val = newTaggedCVar(bool_var);
 
@@ -138,7 +166,7 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	  if (intsct == -2) return FAILED;
 	  
 	  Bool isNotInstallingScript = ! am.isInstallingScript();
-	  Bool isConstrainedVar = isNotInstallingScript || (intsct < 2);
+	  Bool isConstrainedVar = isNotInstallingScript || (intsct != -1);
 	  Bool isConstrainedTerm = isNotInstallingScript; 
 
 	  Bool varIsLocal =  (prop && am.isLocalSVar(this));
@@ -147,6 +175,10 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	  switch (varIsLocal + 2 * termIsLocal) {
 	  case TRUE + 2 * TRUE: // var and term are local
 	    { 
+#ifdef SCRIPTDEBUG
+	      printf("bool-fd local local\n"); fflush(stdout);
+#endif
+
 	      if (intsct != -1) {
 		TaggedRef int_var = OZ_int(intsct);
 		termvar->propagate(term, fd_det, pc_cv_unif);
@@ -173,6 +205,10 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 
 	    case TRUE + 2 * FALSE: // var is local and term is global
 	      {
+#ifdef SCRIPTDEBUG
+	      printf("bool-fd local global\n"); fflush(stdout);
+#endif
+
 		if (intsct != -1) {
 		  TaggedRef int_var = OZ_int(intsct);
 		  if (isNotInstallingScript) 
@@ -193,6 +229,10 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 
 	    case FALSE + 2 * TRUE: // var is global and term is local
 	      {
+#ifdef SCRIPTDEBUG
+	      printf("bool-fd global local\n"); fflush(stdout);
+#endif
+
 		if(intsct != -1) {
 		  TaggedRef int_term = OZ_int(intsct);
 		  if (isNotInstallingScript) propagate(var, pc_cv_unif);
@@ -214,6 +254,10 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 
 	    case FALSE + 2 * FALSE: // var and term is global
 	      {
+#ifdef SCRIPTDEBUG
+	      printf("bool-fd global global\n"); fflush(stdout);
+#endif
+
 		if (intsct != -1){
 		  TaggedRef int_val = OZ_int(intsct);
 		  if (prop) {
