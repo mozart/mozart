@@ -319,6 +319,8 @@ TaggedRef oz_valueType(OZ_Term term) {
       return AtomLock;
     case Co_Class:
       return AtomClass;
+    case Co_Resource:
+      return AtomResource;
     default:
       Assert(0);
     }
@@ -817,7 +819,7 @@ void const2buffer(ostream &out, ConstTerm *c)
   case Co_Lock:       out << "<Lock>"; break;
   case Co_Array:      out << "<Array>"; break;
   case Co_Dictionary: out << "<Dictionary>"; break;
-
+  case Co_Resource:   out << "<Resource>"; break;
   case Co_Class:
   case Co_Object:
     if (*s == '_' && *(s+1) == 0) {
