@@ -89,20 +89,20 @@ void debugStreamEntry(OzDebug*, int);
 void debugStreamExit(OzDebug*, int);
 void debugStreamUpdate(Thread*);
 
-OZ_C_proc_proto(BIdebugmode)
-OZ_C_proc_proto(BIgetDebugStream)
-OZ_C_proc_proto(BIthreadUnleash)
-OZ_C_proc_proto(BIsetContFlag)
-OZ_C_proc_proto(BIsetStepFlag)
-OZ_C_proc_proto(BIsetTraceFlag)
-OZ_C_proc_proto(BIcheckStopped)
+OZ_C_proc_proto(BIdebugmode);
+OZ_C_proc_proto(BIgetDebugStream);
+OZ_C_proc_proto(BIthreadUnleash);
+OZ_C_proc_proto(BIsetContFlag);
+OZ_C_proc_proto(BIsetStepFlag);
+OZ_C_proc_proto(BIsetTraceFlag);
+OZ_C_proc_proto(BIcheckStopped);
 
-OZ_C_proc_proto(BIbreakpointAt)
-OZ_C_proc_proto(BIbreakpoint)
-OZ_C_proc_proto(BIdisplayCode)
-OZ_C_proc_proto(BIprocedureCode)
-OZ_C_proc_proto(BIprocedureCoord)
-OZ_C_proc_proto(BIlivenessX)
+OZ_C_proc_proto(BIbreakpointAt);
+OZ_C_proc_proto(BIbreakpoint);
+OZ_C_proc_proto(BIdisplayCode);
+OZ_C_proc_proto(BIprocedureCode);
+OZ_C_proc_proto(BIprocedureCoord);
+OZ_C_proc_proto(BIlivenessX);
 
 
 /* The Oz machine level debugger */
@@ -113,7 +113,7 @@ Bool ozd_trace(char *s,
 void ozd_tracerOn();
 void ozd_tracerOff();
 
-OZ_C_proc_proto(BIhalt)
+OZ_C_proc_proto(BIhalt);
 #endif
 
 #endif /* __DEBUGH */
