@@ -160,6 +160,11 @@ enum EmulatorPropertyIndex {
   PROP_PERDIO_VERSION,
   PROP_PERDIO_USEALTVARPROTOCOL,
   PROP_PERDIO_TIMEOUT,
+  PROP_PERDIO_TEMPRETRYCEILING,
+  PROP_PERDIO_TEMPRETRYFLOOR,
+  PROP_PERDIO_TEMPRETRYFACTOR,
+  PROP_PERDIO_MAXTCPCACHE,
+  PROP_PERDIO_CHECKALIVEINTERVAL,
   PROP_PERDIO,
   // DPTABLE
   PROP_DPTABLE_DEFAULTOWNERTABLESIZE,
@@ -445,6 +450,11 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_INT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
   CASE_INT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
   CASE_INT(PROP_PERDIO_TIMEOUT,ozconf.perdioTimeout);
+  CASE_INT(PROP_PERDIO_TEMPRETRYCEILING,ozconf.perdioTempRetryCeiling);
+  CASE_INT(PROP_PERDIO_TEMPRETRYFLOOR,ozconf.perdioTempRetryFloor);
+  CASE_INT(PROP_PERDIO_TEMPRETRYFACTOR,ozconf.perdioTempRetryFactor);
+  CASE_INT(PROP_PERDIO_MAXTCPCACHE,ozconf.perdioMaxTCPCache);
+  CASE_INT(PROP_PERDIO_CHECKALIVEINTERVAL,ozconf.perdioCheckAliveInterval);
   CASE_BOOL(PROP_PERDIO_MINIMAL,ozconf.perdioMinimal);
 
   case PROP_PERDIO_VERSION: return OZ_pair2(oz_int(PERDIOMAJOR),
@@ -461,8 +471,16 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	   SET_BOOL(oz_atomNoDup("minimal"), ozconf.perdioMinimal);
 	   SET_BOOL(oz_atomNoDup("seifHandler"), ozconf.perdioSeifHandler);
 	   SET_INT(oz_atomNoDup("debug"), ozconf.debugPerdio);
-	   SET_INT(oz_atomNoDup("flowbuffersize"), ozconf.perdioFlowBufferSize);
-	   SET_INT(oz_atomNoDup("flowbuffertime"), ozconf.perdioFlowBufferTime);
+	   SET_INT(oz_atomNoDup("flowbuffersize"),ozconf.perdioFlowBufferSize);
+	   SET_INT(oz_atomNoDup("flowbuffertime"),ozconf.perdioFlowBufferTime);
+	   SET_INT(oz_atomNoDup("tempRetryCeiling"), 
+		   ozconf.perdioTempRetryCeiling);
+	   SET_INT(oz_atomNoDup("tempRetryFloor"),ozconf.perdioTempRetryFloor);
+	   SET_INT(oz_atomNoDup("tempRetryFactor"), 
+		   ozconf.perdioTempRetryFactor);
+	   SET_INT(oz_atomNoDup("maxTCPCache"), ozconf.perdioMaxTCPCache);
+	   SET_INT(oz_atomNoDup("checkAliveInterval"), 
+		   ozconf.perdioCheckAliveInterval);
 	   SET_REC(oz_atomNoDup("version"), OZ_pair2(oz_int(PERDIOMAJOR),
 						oz_int(PERDIOMINOR)));
 	   );
@@ -757,13 +775,27 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_BOOL(PROP_PERDIO_SEIFHANDLER,ozconf.perdioSeifHandler);
     CASE_NAT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
     CASE_NAT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
+    CASE_NAT(PROP_PERDIO_TEMPRETRYCEILING,ozconf.perdioTempRetryCeiling);
+    CASE_NAT(PROP_PERDIO_TEMPRETRYFLOOR,ozconf.perdioTempRetryFloor);
+    CASE_NAT(PROP_PERDIO_TEMPRETRYFACTOR,ozconf.perdioTempRetryFactor);
+    CASE_NAT(PROP_PERDIO_MAXTCPCACHE,ozconf.perdioMaxTCPCache);
+    CASE_NAT(PROP_PERDIO_CHECKALIVEINTERVAL,ozconf.perdioCheckAliveInterval);
     CASE_NAT(PROP_PERDIO_TIMEOUT,ozconf.perdioTimeout);
     // PERDIO    
     CASE_REC(PROP_PERDIO,
 	     SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
 	     SET_NAT(oz_atomNoDup("flowbuffersize"),ozconf.perdioFlowBufferSize);
  	     SET_NAT(oz_atomNoDup("flowbuffertime"),ozconf.perdioFlowBufferTime);
-	     SET_BOOL(oz_atomNoDup("seifHandler"),ozconf.perdioSeifHandler);
+	     SET_NAT(oz_atomNoDup("seifHandler"),ozconf.perdioSeifHandler);
+	     SET_NAT(oz_atomNoDup("tempRetryCeiling"),
+		      ozconf.perdioTempRetryCeiling);
+	     SET_NAT(oz_atomNoDup("tempRetryFloor"),
+		      ozconf.perdioTempRetryFloor);
+	     SET_NAT(oz_atomNoDup("tempRetryFactor"),
+		      ozconf.perdioTempRetryFactor);
+	     SET_NAT(oz_atomNoDup("maxTCPCache"),ozconf.perdioMaxTCPCache);
+	     SET_NAT(oz_atomNoDup("checkAliveInterval"),
+		      ozconf.perdioCheckAliveInterval);
 	     SET_BOOL(oz_atomNoDup("useAltVarProtocol"),
 		      ozconf.perdioUseAltVarProtocol);
 	     DO_BOOL(oz_atomNoDup("minimal"),
@@ -1056,6 +1088,11 @@ static const struct prop_entry prop_entries[] = {
   {"perdio.flowbuffertime",PROP_PERDIO_FLOWBUFFERTIME},
   {"perdio.timeout",PROP_PERDIO_TIMEOUT},
   {"perdio.seifHandler",PROP_PERDIO_SEIFHANDLER},
+  {"perdio.tempRetryCeiling",PROP_PERDIO_TEMPRETRYCEILING},
+  {"perdio.tempRetryFloor",PROP_PERDIO_TEMPRETRYFLOOR},
+  {"perdio.tempRetryFactor",PROP_PERDIO_TEMPRETRYFACTOR},
+  {"perdio.maxTCPCache",PROP_PERDIO_MAXTCPCACHE},
+  {"perdio.checkAliveInterval",PROP_PERDIO_CHECKALIVEINTERVAL},
   {"perdio",PROP_PERDIO},
   // DPTABLE
   {"dpTable.defaultOwnerTableSize",
