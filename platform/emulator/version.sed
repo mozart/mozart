@@ -14,7 +14,7 @@ char *ozplatform = "OZPLATFORM";
 
 void version()
 {
-  printf("Mozart playing Oz3. Engine %s %s of %s.\n",
+  printf("Mozart playing Oz 3. Engine %s %s of %s.\n",
 	 AMVersion,ozplatform,AMDate);
   fflush(stdout);
 }
