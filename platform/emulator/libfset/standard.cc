@@ -208,6 +208,7 @@ OZ_Return FSetUnionPropagator::propagate(void)
     xt = x;  yt = y;  zt = z;
     
     if (z->isEmpty()) {
+      OZ_DEBUGPRINT(("z->isEmpty()"));
       OZ_FSetConstraint aux(fs_empty);
       FailOnInvalid(*x <<= aux);
       FailOnInvalid(*y <<= aux);
@@ -215,14 +216,17 @@ OZ_Return FSetUnionPropagator::propagate(void)
       return OZ_ENTAILED;
     }
     if (x->isSubsumedBy(*y)) {
+      OZ_DEBUGPRINT(("x->isSubsumedBy(*y)"));
       P.vanish();
       return replaceBy(_y, _z);
     }
     if (y->isSubsumedBy(*x)) {
+      OZ_DEBUGPRINT(("y->isSubsumedBy(*x)"));
       P.vanish();
       return replaceBy(_x, _z);
     }
     
+    OZ_DEBUGPRINT(("before"));
     FailOnInvalid(*x >= (*z & - *y)); // glb
     OZ_DEBUGPRINT(("x=%s",x->toString()));
     FailOnInvalid(*y >= (*z & - *x)); // glb

@@ -2487,7 +2487,7 @@ void FDIntervals::print(ostream &ofile, int idnt) const
 void OZ_FiniteDomainImpl::print(ostream &ofile, int idnt) const
 {
   if (getSize() == 0)
-    ofile << "{ empty }";
+    ofile << "{}";
   else switch (getType()) {
   case fd_descr:    
       ofile << '{';
