@@ -325,13 +325,9 @@ char *VAR;                                      \
  * -----------------------------------------------------------------------*/
 
 int  oz_raise(OZ_Term cat, OZ_Term key, const char * label, int arity, ...);
-void oz_typeErrorInternal(const int pos, const char * type);
+OZ_Return oz_typeErrorInternal(const int pos, const char * type);
 
-#define oz_typeError(pos,type)                  \
-{                                               \
-  oz_typeErrorInternal(pos,type);               \
-  return BI_TYPE_ERROR;                         \
-}
+#define oz_typeError(pos,type) return oz_typeErrorInternal(pos,type)
 
 OZ_Return typeError(int pos, char *comment, char *typeString);
 

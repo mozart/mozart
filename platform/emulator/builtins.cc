@@ -4116,10 +4116,11 @@ OZ_Return typeError(int Pos, char *Comment, char *TypeString)
   return BI_TYPE_ERROR;
 }
 
-void oz_typeErrorInternal(const int pos, const char * type) {
+OZ_Return oz_typeErrorInternal(const int pos, const char * type) {
   (void) oz_raise(E_ERROR,E_KERNEL,
                   "type",5,NameUnit,NameUnit,
                   OZ_atom(type),
                   makeTaggedSmallInt(pos+1),
                   OZ_string(""));
+  return BI_TYPE_ERROR;
 }
