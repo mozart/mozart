@@ -6622,12 +6622,10 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
   DoNatFeature(debugIP,     t, AtomDebugIP);
   DoNatFeature(debugPerdio, t, AtomDebugPerdio);
 
-  if (debugmode == 0) {
+  if (!debugmode) {
     am.unsetSFlag(DebugMode);
-    //printf("DebugMode turned OFF\n");
-  } else if (debugmode == 1) {
+  } else if (debugmode) {
     am.setSFlag(DebugMode);
-    //printf("DebugMode turned ON\n");
   }
 
   SetIfPos(ozconf.showSuspension,        suspension, 1);
