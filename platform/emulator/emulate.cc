@@ -598,7 +598,7 @@ Bool AM::hookCheckNeeded()
 
 #define SUSP_PC(TermPtr,RegsToSave,PC)          \
    e->pushTask(PC,Y,G,X,RegsToSave);            \
-   addSusp(TermPtr,e->mkSuspThread ());         \
+   addSusp(TermPtr,CTT);                        \
    goto LBLsuspendThread;
 
 
@@ -641,24 +641,12 @@ void AM::suspendOnVarList(Thread *thr)
   suspendVarList=makeTaggedNULL();
 }
 
-//
-//  Note that it yields a *suspended* thread,
-// so the current thread is marked as suspended when 'LBLsuspendThread'
-// is entered;
-inline
-Thread *AM::mkSuspThread ()
-{
-  currentThread->unmarkPropagated();
-  return currentThread;
-}
-
 void AM::suspendInline(int n, OZ_Term A,OZ_Term B,OZ_Term C)
 {
-  Thread *thr = mkSuspThread();
   switch(n) { /* no break's used!! */
-  case 3: { DEREF (C, ptr, _1); if (isAnyVar(C)) addSusp(ptr, thr); }
-  case 2: { DEREF (B, ptr, _1); if (isAnyVar(B)) addSusp(ptr, thr); }
-  case 1: { DEREF (A, ptr, _1); if (isAnyVar(A)) addSusp(ptr, thr); }
+  case 3: { DEREF (C, ptr, _1); if (isAnyVar(C)) addSusp(ptr, currentThread); }
+  case 2: { DEREF (B, ptr, _1); if (isAnyVar(B)) addSusp(ptr, currentThread); }
+  case 1: { DEREF (A, ptr, _1); if (isAnyVar(A)) addSusp(ptr, currentThread); }
     break;
   default:
     error("suspendInline");
@@ -1299,8 +1287,7 @@ LBLpopTask:
         case SUSPEND:
           {
             e->pushCFun(biFun,X,predArity);
-            Thread *thr = e->mkSuspThread ();
-            e->suspendOnVarList (thr);
+            e->suspendOnVarList(CTT);
             goto LBLsuspendThread;
           }
 
@@ -1350,7 +1337,6 @@ LBLpopTask:
 
           // suspend wait actor
           taskstack->setTop(topCache+2);
-          CTT->unmarkPropagated();
           goto LBLsuspendThread;
         }
 
@@ -1374,7 +1360,6 @@ LBLpopTask:
         }
 
         taskstack->setTop(topCache+2);
-        CTT->unmarkPropagated();
         goto LBLsuspendThread;
       }
     case C_SET_OOREGS:
@@ -1623,7 +1608,6 @@ LBLdiscardThread:
    * the toplevel, so, it has to handle everything correctly ...
    *
    *  Invariants:
-   *  - there must be a thread marked as suspended;
    *  - CBB must be alive;
    *
    */
@@ -1632,8 +1616,10 @@ LBLsuspendThread:
     Board *nb = 0;
 
     DebugTrace (trace("suspend runnable thread", CBB));
+
     Assert (CTT);
-    Assert (CTT->isSuspended ());
+    CTT->unmarkPropagated();
+
     Assert (CBB);
     Assert (!(CBB->isFailed ()));
     //  see the note for the 'LBLkillThread';
@@ -1785,7 +1771,7 @@ LBLdispatcher:
       switch (biFun(predArity, X)){
       case SUSPEND:
         e->pushTask(PC,Y,G,X,predArity);
-        e->suspendOnVarList(e->mkSuspThread ());
+        e->suspendOnVarList(CTT);
         goto LBLsuspendThread;
 
       case FAILED:
@@ -2090,7 +2076,7 @@ LBLdispatcher:
           Assert(!shallowCP);
           OZ_suspendOnInternal2(XPC(1),XPC(2));
           e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
-          e->suspendOnVarList(e->mkSuspThread());
+          e->suspendOnVarList(CTT);
           goto LBLsuspendThread;
 
       case FAILED:
@@ -2160,8 +2146,7 @@ LBLdispatcher:
       case SUSPEND:
         {
           e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
-          Thread *thr=e->mkSuspThread();
-          e->suspendOnVarList(thr);
+          e->suspendOnVarList(CTT);
           goto LBLsuspendThread;
         }
 
@@ -2197,7 +2182,7 @@ LBLdispatcher:
       case FAILED:  JUMP( getLabelArg(PC+3) );
       case SUSPEND:
         e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
-        addSusp (XPC(2), e->mkSuspThread ());
+        addSusp (XPC(2), CTT);
         goto LBLsuspendThread;
 
       case RAISE:
@@ -2223,13 +2208,12 @@ LBLdispatcher:
       case SUSPEND:
         {
           e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
-          Thread *thr = e->mkSuspThread ();
           OZ_Term A=XPC(2);
           OZ_Term B=XPC(3);
           DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
           Assert(isAnyVar(ATag) || isAnyVar(BTag));
-          if (isAnyVar (A)) addSusp (APtr, thr);
-          if (isAnyVar (B)) addSusp (BPtr, thr);
+          if (isAnyVar (A)) addSusp(APtr, CTT);
+          if (isAnyVar (B)) addSusp(BPtr, CTT);
           goto LBLsuspendThread;
         }
 
@@ -2257,8 +2241,7 @@ LBLdispatcher:
         int argsToSave = getPosIntArg(shallowCP+2);
         e->pushTask(shallowCP,Y,G,X,argsToSave);
         shallowCP = NULL;
-        Thread *thr = e->mkSuspThread();
-        e->reduceTrailOnShallow(thr);
+        e->reduceTrailOnShallow(CTT);
         goto LBLsuspendThread;
       }
     }
@@ -2435,11 +2418,10 @@ LBLdispatcher:
     /* INCFPC(3): dont do it */
     int argsToSave = getPosIntArg(PC+2);
     e->pushTask(PC,Y,G,X,argsToSave);
-    Thread *thr = e->mkSuspThread ();
     if (isCVar (tag)) {
-      (tagged2CVar (term))->addDetSusp (thr);
+      (tagged2CVar (term))->addDetSusp(CTT);
     } else {
-      addSusp (termPtr, thr);
+      addSusp (termPtr, CTT);
     }
     goto LBLsuspendThread;
   }
@@ -2684,8 +2666,7 @@ LBLdispatcher:
                    if (sh==makeTaggedNULL()) {
                      if (!isTailCall) e->pushTask(PC,Y,G);
                      e->pushCFun(biFun,X,predArity);
-                     Thread *thr=e->mkSuspThread();
-                     e->suspendOnVarList(thr);
+                     e->suspendOnVarList(CTT);
                      goto LBLsuspendThread;
                    }
                    predicate = tagged2Const(sh);
