@@ -4,6 +4,7 @@ SRCDIR          = @SRCDIR@
 VPATH           = @SRCDIR@
 PLATFORM	= @PLATFORM@
 LIB_DIR		= $(PREFIX)/cache/x-oz/system/gtk
+DOC_DIR		= $(PREFIX)/doc/add-ons/gtk
 EXAMPLES_DIR	= $(PREFIX)/examples/gtk
 
 VERSION		= 1.0
@@ -13,6 +14,7 @@ OZL             = @OZL@
 COMPILE		= $(OZC) -c
 LINK            = $(OZL)
 OZTOOL		= @OZTOOL@
+OZDOC		= @OZDOC@
 OZENGINE        = @OZENGINE@
 CPP             = @CPP@
 CPPFLAGS	= -undef -D__GNUC__ -std=c99 @CPPFLAGS@
@@ -208,10 +210,10 @@ $(NATCMPS):%.so-$(PLATFORM): %.o
 # Building
 #---------------------------------------------------------------------
 
-.PHONY: all install clean veryclean distclean bootstrap depend
+.PHONY: all doc install clean veryclean distclean bootstrap depend
 
 install: $(LIB_DIR) $(LIB_TARGETS) $(EXAMPLES_DIR) $(EXAMPLES_TARGETS) \
-	install_names
+	install_names doc
 install_names:
 	cp ClassNames.ozp $(LIB_DIR)/ClassNames.ozp
 
@@ -255,11 +257,14 @@ endif
 
 wrapper_files: $(GEN_TARGETS) $(CCMPS)
 
+doc:
+	$(OZDOC) --type=html-color --in $(SRCDIR)/doc/gtk.sgml --out=$(DOC_DIR)
+
 #---------------------------------------------------------------------
 # Installing
 #---------------------------------------------------------------------
 
-$(LIB_DIR) $(EXAMPLES_DIR):
+$(LIB_DIR) $(EXAMPLES_DIR) $(DOC_DIR):
 	$(INSTALL_DIR) $@
 
 $(LIB_DIR)/%.ozf: %.ozf
