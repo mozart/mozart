@@ -239,13 +239,12 @@ if test "${GXX}" = yes; then
 
     fi
 
-    oz_opt="-O3 -pipe"
+    oz_opt="-O3 -pipe -fstrict-aliasing"
     oz_om=
     if test "${platform}" = linux-i486
     then
-	oz_opt="$oz_opt -mpentium \
-	    -malign-loops=4 -malign-jumps=4 -malign-functions=4"
-	oz_om="-fomit-frame-pointer -fstrict-aliasing"
+	oz_opt="$oz_opt -mpentium"
+	oz_om="-fomit-frame-pointer"
     fi
     : ${oz_copt_optimize="$oz_opt $oz_om"}
     : ${oz_copt_profile="$oz_opt -pg -fno-inline -fno-default-inline"}
