@@ -64,12 +64,7 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
 
   PerdioVar *lVar = this;
 
-  if (isCVar(rVal)) {
-    if (tagged2CVar(rVal)->getType() != getType()) {
-      warning("PerdioVAR = other CVAR: not implemented");
-      return FALSE;
-    }
-
+  if (isPerdioVar(rVal)) {
     PerdioVar *rVar = tagged2PerdioVar(rVal);
 
     if (isObjectURL() || isObjectGName() || isURL()) {
@@ -121,6 +116,10 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
     bindPerdioVar(lVar,lPtr,rVal);
     return TRUE;
   } else {
+    if (isCVar(rVal)) {
+      warning("PerdioVAR = other CVAR: not implemented");
+      return FALSE;
+    }
     am.checkSuspensionList(lVal,pc_std_unif);
     am.doBindAndTrail(lVal, lPtr,rVal);
     return TRUE;
