@@ -5701,6 +5701,28 @@ State exchangeObjectInline(TaggedRef tobj, TaggedRef instate, TaggedRef &outstat
 DECLAREBI_USEINLINEFUN2(BIexchangeObject,exchangeObjectInline)
 
 
+State releaseObjectInline(TaggedRef instate, TaggedRef &outstate)
+{
+  outstate = instate;
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEFUN1(BIreleaseObject,releaseObjectInline)
+
+State getSelfInline(TaggedRef in, TaggedRef &out)
+{
+  out = in;
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEFUN1(BIgetSelf,getSelfInline)
+
+OZ_C_proc_begin(BIsetModeToDeep,0)
+{
+  return PROCEED;
+}
+OZ_C_proc_end
+
 
 /* cloneObjectRecord(in,nocopy,varOnHeap,out):
  *      "out" is a copy of record "in", except that for those arguments
@@ -6029,11 +6051,14 @@ BIspec allSpec[] = {
   {"makeClass",        8,BImakeClass,	       NO,0},
   {"makeObject",       4,BImakeObject,	       NO,0},
   {"cloneObjectRecord",4,BIcloneObjectRecord,  NO,0},
+  {"setModeToDeep",    0,BIsetModeToDeep,  NO,0},
   {"setMethApplHdl",   1,BIsetMethApplHdl,     NO,0},
   {"<<>>",             5,BImethApply,	       NO,0},
   {"getClass",         2,BIgetClass, 	       NO,(IFOR) getClassInline},
   {"hasFastBatch",     1,BIhasFastBatch,       NO,(IFOR) hasFastBatchInline},
   {"exchangeObject",   3,BIexchangeObject,     NO,(IFOR) exchangeObjectInline},
+  {"releaseObject",    2,BIreleaseObject,      NO,(IFOR) releaseObjectInline},
+  {"getSelf",          2,BIgetSelf,            NO,(IFOR) getSelfInline},
   {"Object.is",        2,BIisObjectB, 	       NO,(IFOR) BIisObjectBInline},
   {"isClass",          1,BIisClass,   	       NO,(IFOR) BIisClassInline},
   {"isClassB",         2,BIisClassB,	       NO,(IFOR) BIisClassBInline},
