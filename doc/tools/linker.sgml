@@ -122,14 +122,14 @@ Scheduling:
         <Synopsis><<--exclude=<Var/URL/,&ellipsis,<Var/URL/>>
         <Item>
            Exclude all functors whose URL matches one of the comma
-           separated URL prefices. Takes preference over both <<--include>>
-           and <<--relative>>.
+           separated URL prefices.
       </List>
     <P>
 
     <P>
       Note that multiple <<--include>> and <<--exclude>> directives
-      can be given on the commandline.
+      can be given on the commandline.  Earlier directives take
+      precedence over later ones.
     </P>
 
   </Section>
