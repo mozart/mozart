@@ -41,7 +41,7 @@ void AM::rebind(TaggedRef *refPtr, TaggedRef newRef)
 inline
 Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
 {
-  if (prop == NO) goto bomb;
+  if (!prop) goto bomb;
   
   {
     TaggedRef proto = currentUVarPrototype;
