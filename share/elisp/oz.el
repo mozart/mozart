@@ -31,9 +31,9 @@
 
 ;;{{{ Global Effects
 
-(or (member ".ozo" completion-ignored-extensions)
+(or (member ".ozp" completion-ignored-extensions)
     (setq completion-ignored-extensions
-	  (append '(".ozo" ".ozs") completion-ignored-extensions)))
+	  (append '(".ozp" ".ozf" ".oza") completion-ignored-extensions)))
 
 (or (assoc "\\.oz$" auto-mode-alist)
     (setq auto-mode-alist
