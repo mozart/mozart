@@ -17,7 +17,7 @@
 Bool gcProtect(TaggedRef *);
 Bool gcUnprotect(TaggedRef *);
 
-void protectInlineCache(ProgramCounter);
+void protectInlineCache(InlineCache *);
 
 OZ_C_proc_proto(BIdumpThreads)
 OZ_C_proc_proto(BIlistThreads)

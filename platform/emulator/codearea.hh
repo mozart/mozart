@@ -169,6 +169,7 @@ private:
   static Bool scanBool(CompStream *fd);
   void scanVariablename (CompStream *fd);
   void scanLiteral(CompStream *fd);
+  void scanFeature(CompStream *fd);
   TaggedRef parseFeature(CompStream *fd);
   TaggedRef parseLiteral(CompStream *fd);
   TaggedRef parseLiteral(CompStream *fd, int what);
@@ -210,6 +211,11 @@ public:
   {
     Assert(isLiteral(literal));
     return writeWord(literal,ptr);
+  }
+
+  static ProgramCounter writeTagged(TaggedRef t, ProgramCounter ptr)
+  {
+    return writeWord(t,ptr);
   }
 
   static ProgramCounter writeInt(TaggedRef i, ProgramCounter ptr)
@@ -334,6 +340,43 @@ inline ProgramCounter getLabelArg(ProgramCounter PC)
 void displayCode(ProgramCounter from, int ssize);
 
 
+/*
+ * Inline caching
+ */
+
+class InlineCache {
+  int32 key;
+  int32 value;
+
+public:
+  InlineCache() { key = value = 0; }
+
+  int lookup(SRecord *rec, TaggedRef feature)
+  {
+    if (key!=rec->getSRecordArity()) {
+      key   = rec->getSRecordArity();
+      value = rec->getIndex(feature); // is ok even if index==-1 !
+    }
+    return value;
+  }
+
+  Abstraction *lookup(Object *obj, TaggedRef meth, SRecordArity arity,RefsArray X)
+  {
+    ObjectClass *cla = obj->getClass();
+    if (ToInt32(cla) != key) {
+      Bool defaultsUsed;
+      Abstraction *ret = obj->getMethod(meth,arity,X,defaultsUsed);
+      if (!defaultsUsed) {
+        key   = ToInt32(cla);
+        value = ToInt32(ret);
+      }
+      return ret;
+    }
+    return (Abstraction*) ToPointer(value);
+  }
+
+  void invalidate() { key = value = 0; }
+};
 
 class GenCallInfoClass {
 public:
@@ -352,26 +395,25 @@ public:
     gcProtect(&mn);
   }
 
-  void dispose()
-  {
-    // gcUnprotect(&mn.realName);
-    // gcUnprotect(&mn.codedName);
-
-    delete this;
-  }
+  void dispose() { delete this; }
 };
 
 class ApplMethInfoClass {
 public:
   TaggedRef methName;
   SRecordArity arity;
+  InlineCache methCache;
+
   ApplMethInfoClass(TaggedRef mn, SRecordArity i)
   {
     arity = i;
     methName = mn;
     gcProtect(&methName);
+    protectInlineCache(&methCache);
   }
 };
+
+
 
 #ifdef FASTREGACCESS
 inline Reg regToInt(Reg N) { return (N / sizeof(TaggedRef)); }

@@ -180,12 +180,12 @@ const inlineCacheListBlockSize = 100;
 class InlineCacheList {
   InlineCacheList *next;
   int nextFree;
-  ProgramCounter block[inlineCacheListBlockSize];
+  InlineCache *block[inlineCacheListBlockSize];
 
 public:
   InlineCacheList(InlineCacheList *nxt) { nextFree=0; next=nxt; }
 
-  InlineCacheList *add(ProgramCounter ptr)
+  InlineCacheList *add(InlineCache *ptr)
   {
     if (nextFree < inlineCacheListBlockSize) {
       block[nextFree] = ptr;
@@ -202,7 +202,7 @@ public:
     InlineCacheList *aux = this;
     while(aux) {
       for (int i=0; i<aux->nextFree; i++) {
-        *(aux->block[i]) = 0;
+        aux->block[i]->invalidate();
       }
       aux = aux->next;
     }
@@ -212,9 +212,9 @@ public:
 
 static InlineCacheList *cacheList = new InlineCacheList(NULL);
 
-void protectInlineCache(ProgramCounter ptr)
+void protectInlineCache(InlineCache *cache)
 {
-  cacheList = cacheList->add(ptr);
+  cacheList = cacheList->add(cache);
 }
 
 

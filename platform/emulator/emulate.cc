@@ -23,49 +23,6 @@
 #include "dictionary.hh"
 #include "fdhook.hh"
 
-/*
- * Inline caching
- */
-
-class RecordCache {
-  int32 ar;    // was Arity *
-  int32 index;
-
-public:
-  int lookup(SRecord *rec, TaggedRef feature)
-  {
-    if (ar!=ToInt32(rec->getArity())) {
-      ar = ToInt32(rec->getArity());
-      index = rec->getIndex(feature); // is ok even if index==-1 !
-    }
-    return index;
-  }
-};
-
-int xCalled = 0;
-int xMiss = 0;
-
-class MethodCache {
-  int32 cl;      // was ObjectClass *
-  int32 abstr;   // was Abstraction *
-
-public:
-  Abstraction *lookup(Object *obj, TaggedRef meth, SRecordArity arity,RefsArray X)
-  {
-    ObjectClass *cla = obj->getClass();
-    if (ToInt32(cla)!=cl) {
-      Bool defaultsUsed;
-      Abstraction *ret = obj->getMethod(meth,arity,X,defaultsUsed);
-      if (!defaultsUsed) {
-        cl    = ToInt32(cla);
-        abstr = ToInt32(ret);
-      }
-      return ret;
-    }
-    return (Abstraction*) ToPointer(abstr);
-  }
-};
-
 
 /*
  * Object stuff
@@ -77,7 +34,7 @@ extern TaggedRef methApplHdl;
 
 inline
 Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
-                           MethodCache *cache, RefsArray X)
+                           InlineCache *cache, RefsArray X)
 {
   Assert(isFeature(label));
 
@@ -94,12 +51,11 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
 }
 
 inline
-Abstraction *getApplyMethod(Object *obj, TaggedRef label, SRecordArity arity,
-                            RefsArray X)
+Abstraction *getApplyMethod(Object *obj, ApplMethInfoClass *ami,
+                            SRecordArity arity, RefsArray X)
 {
-  Assert(isFeature(label));
-  Bool defaultsUsed;
-  return obj->getMethod(label,arity,X,defaultsUsed);
+  Assert(isFeature(ami->methName));
+  return ami->methCache.lookup(obj,ami->methName,arity,X);
 }
 
 inline
@@ -2144,7 +2100,7 @@ LBLsuspendThread:
       DEREF(rec,_1,_2);
       if (isSRecord(rec)) {
         SRecord *srec = tagged2SRecord(rec);
-        int index = ((RecordCache*)(PC+5))->lookup(srec,feature);
+        int index = ((InlineCache*)(PC+5))->lookup(srec,feature);
         if (index<0) {
           DORAISE(OZ_mkTupleC("type",5,
                               OZ_atom("."),
@@ -2195,7 +2151,7 @@ LBLsuspendThread:
       Assert(e->getSelf()!=NULL);
       SRecord *rec = e->getSelf()->getState();
       if (rec) {
-        int index = ((RecordCache*)(PC+4))->lookup(rec,fea);
+        int index = ((InlineCache*)(PC+4))->lookup(rec,fea);
         if (index>=0) {
           XPC(2) = rec->getArg(index);
           DISPATCH(6);
@@ -2212,7 +2168,7 @@ LBLsuspendThread:
 
       SRecord *rec = e->getSelf()->getState();
       if (rec) {
-        int index = ((RecordCache*)(PC+4))->lookup(rec,fea);
+        int index = ((InlineCache*)(PC+4))->lookup(rec,fea);
         if (index>=0) {
           Assert(isRef(*rec->getRef(index)) || !isAnyVar(*rec->getRef(index)));
           rec->setArg(index,XPC(2));
@@ -2577,7 +2533,7 @@ LBLsuspendThread:
     DEREF(object,objectPtr,_2);
     if (isObject(object)) {
       Object *obj      = (Object *) tagged2Const(object);
-      Abstraction *def = getSendMethod(obj,label,arity,(MethodCache*)(PC+4),X);
+      Abstraction *def = getSendMethod(obj,label,arity,(InlineCache*)(PC+4),X);
       if (def == NULL) {
         goto bombSend;
       }
@@ -2631,7 +2587,7 @@ LBLsuspendThread:
     if (!isObject(object)) {
       goto bombApply;
     }
-    def = getApplyMethod((Object *) tagged2Const(object),ami->methName,arity,X);
+    def = getApplyMethod((Object *) tagged2Const(object),ami,arity,X);
     if (def==NULL) {
       goto bombApply;
     }
