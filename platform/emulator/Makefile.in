@@ -172,13 +172,13 @@ parser.hh: parser.yy
 builtins.o: builtins.tbl builtins.dcl
 fdbuilti.o: fdbuilti.tbl fdbuilti.dcl
 builtins.tbl: bidecl.perl
-        $(SRCDIR)/bidecl.perl -ctable -exclude fd > $@
+        perl $(SRCDIR)/bidecl.perl -ctable -exclude fd > $@
 builtins.dcl: bidecl.perl
-        $(SRCDIR)/bidecl.perl -cdecl -exclude fd > $@
+        perl $(SRCDIR)/bidecl.perl -cdecl -exclude fd > $@
 fdbuilti.tbl: bidecl.perl
-        $(SRCDIR)/bidecl.perl -ctable -include fd > $@
+        perl $(SRCDIR)/bidecl.perl -ctable -include fd > $@
 fdbuilti.dcl: bidecl.perl
-        $(SRCDIR)/bidecl.perl -cdecl -include fd > $@
+        perl $(SRCDIR)/bidecl.perl -cdecl -include fd > $@
 
 # this special rule ensures that warnings issued in bison.simple
 # are not treated as errors:
