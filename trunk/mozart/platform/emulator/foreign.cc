@@ -889,7 +889,17 @@ OZ_Term OZ_newVariable()
 
 OZ_Bool OZ_readSelect(int fd,OZ_Term l,OZ_Term r)
 {
-  return am.readSelect(fd,l,r);
+  return am.select(fd,SEL_READ,l,r);
+}
+
+OZ_Bool OZ_writeSelect(int fd,OZ_Term l,OZ_Term r)
+{
+  return am.select(fd,SEL_WRITE,l,r);
+}
+
+void OZ_deSelect(int fd)
+{
+  am.deSelect(fd);
 }
 
 

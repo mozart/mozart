@@ -1417,11 +1417,12 @@ void AM::gc(int msgLevel)
 
   GCPROCMSG("ioNodes");
   for(int i = 0; i < osOpenMax(); i++) {
-    if (osIsWatchedReadFD(i)) {
-      if (i != compStream->csfileno()) {
-	gcTagged(ioNodes[i],ioNodes[i]);
-	if (ioNodes[i] == makeTaggedNULL()) {
-	  osClrWatchedReadFD(i);
+    for(int mode=SEL_READ; mode <= SEL_WRITE; mode++) {
+      if (osIsWatchedFD(i,mode) && i != compStream->csfileno()) {
+	TaggedRef &t = ioNodes[i].readwritepair[mode];
+        gcTagged(t,t);
+	if (t == makeTaggedNULL()) {
+	  osClrWatchedFD(i,mode);
 	  DebugCheckT(warning("selectNode discarded/failed"));
 	}
       }
