@@ -94,7 +94,7 @@ define
    FontSeparator={New Tk.font tkInit(size:8 family:courier)}
    FontSystem={New Tk.font tkInit(size:10 family:times)}
    
-   UsingBrowser={NewCell false} % A cell containing info if the client have netscape!
+   UsingBrowser={NewCell false} % A cell containing info if the client has a web browser!
 
    ClientGUISettings={NewCell ui(fontsize:8
 				 foreground:nil
@@ -147,6 +147,17 @@ define
       {Animate}
    end
 
+   CheckUnreadThread LastUnreadNum={NewCell 0}
+   proc{CheckUnread J}
+      Is={Map {Dictionary.items DB} fun{$ I} {I.widget getUnreadCount($)} end}
+      O UR={FoldR Is fun{$ N O} N+O end 0}
+   in
+      {Exchange LastUnreadNum O UR}
+      if UR\=0 orelse O\=UR then {SetWinHeader UR J} end
+      {Delay 1200}
+      {CheckUnread J+1}
+   end
+      
    /*
    LetterImage
    AwayImage
@@ -268,6 +279,8 @@ define
 	 if {Length @newmessages}>0 then {self haveUnreadMail(true)}
 	 else {self haveUnreadMail(false)} end
       end
+
+      meth getUnreadCount($) {Length @newmessages} end
       
       meth receiveMessage(message:M mid:MID sender:S date: D reply_to:Re status:T)=R O N in
 	 if T==new then
@@ -332,7 +345,7 @@ define
       end
 
       meth hasReadMail(mid: M) 
-	 sentCount <- {List.subtract @sentCount M }
+	 sentCount <- {List.subtract @sentCount M}
       end
       
       meth saveSent(message:M mid:Mid date:D reply_to:R incCount:IC<=false) O N in
@@ -590,6 +603,7 @@ define
    
    proc{Kill}
       try {Thread.terminate AnimateThread} catch _ then skip end
+      try {Thread.terminate CheckUnreadThread} catch _ then skip end
       {Client logout}
    end
 
@@ -642,6 +656,7 @@ define
    
    proc{Shutdown}
       try {Thread.terminate AnimateThread} catch _ then skip end
+      try {Thread.terminate CheckUnreadThread} catch _ then skip end
       if {IsDet GUIisStarted} then {Delay 500} {T tkClose} end % Delay to let eventual popup to close!
    end
    
@@ -865,6 +880,17 @@ define
       {Assign MyData I}
       {Tk.send wm(title T I.firstname#" "#I.lastname)}
    end
+
+   proc{SetWinHeader C J} I={Access MyData} in
+      if C==0 then {Tk.send wm(title T I.firstname#" "#I.lastname)}
+      else
+	 %% if {IsOdd J} then
+	 {Tk.send wm(title T "["#C#"] "#I.firstname#" "#I.lastname)}
+	 %% else
+	 %% {Tk.send wm(title T "["#C#"]")}
+	 %% end
+      end
+   end
    
    proc{Start C S CID M Settings}
       StatusL LogoL F StatusF %LogoI
@@ -928,7 +954,12 @@ define
 	 {Thread.setThisPriority low}
 	 {Animate}
       end
-
+      thread
+	 CheckUnreadThread={Thread.this}
+	 {Thread.setThisPriority low}
+	 {CheckUnread 0}
+      end
+      
       %% Set bindings
       local
 	 A=proc{$}
