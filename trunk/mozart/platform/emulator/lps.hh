@@ -16,7 +16,7 @@
 #pragma interface
 #endif
 
-#include "fdinterface.hh"
+#include "oz_cpi.hh"
 
 #ifdef OUTLINE
 #define inline
