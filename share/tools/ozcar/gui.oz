@@ -371,7 +371,7 @@ in
 			       {Dbg.frameVars CurThr FrameId}
 			    end
 	 in
-	    {OzcarMessage 'Selecting frame #' # FrameNr}
+	    {OzcarMessage 'selecting frame #' # FrameNr}
 	    case Highlight then
 	       SourceManager,delayedBar(file:F.file line:{Abs F.line})
 	       Gui,SelectStackFrame(FrameNr)
@@ -410,6 +410,7 @@ in
 	 W   = self.StackText
 	 LSF = @LastSelectedFrame
       in
+	 {OzcarMessage 'SelectStackFrame: LSF == ' # LSF # ', T == ' # T}
 	 case LSF \= T then
 	    case LSF > 0 then
 	       Gui,DeactivateLine(LSF)
@@ -425,6 +426,7 @@ in
 	 W   = self.StackText
 	 LSF = @LastSelectedFrame
       in
+	 {OzcarMessage 'UnselectStackFrame: LSF == ' # LSF}
 	 case LSF > 0 then
 	    Gui,DeactivateLine(LSF)
 	    LastSelectedFrame <- 0
@@ -529,9 +531,12 @@ in
 		  else                     % no, some fragments are there...
 		     Gui,Append(W
 				' There is not enough information to\n' #
-				' display the stack here.\n\n' #
-				' Try \'Browse\' from' #
-				' the \'Stack\' menu instead.')
+				' display the stack here.' #
+				' Try \'Browse\' from\n' #
+				' the \'Stack\' menu instead.\n\n' #
+				' This problem will be fixed after' #
+				' the re-design\n of Ozcar\'s' #
+				' stack view.')
 		  end
 		  Gui,Disable(W)
 		  Gui,clearEnv
@@ -850,6 +855,7 @@ in
 
       meth resetReservedTags(Size)
 	 {self.StackText resetReservedTags(Size)}
+	 LastSelectedFrame <- 0
       end
       
       meth DeactivateLine(Tag)
