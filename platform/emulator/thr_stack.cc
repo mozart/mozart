@@ -85,7 +85,10 @@ loop:
 
 
 TaggedRef TaskStack::findCatch(TaggedRef &out) {
-  out = nil();
+  if (ozconf.moreInfo)
+    out = nil();
+  else
+    out = NameUnit;
 
   Assert(this);
 
@@ -98,7 +101,8 @@ TaggedRef TaskStack::findCatch(TaggedRef &out) {
         ProgramCounter PC = getPC(C_CONT,topElem);
         RefsArray Y = (RefsArray) pop();
         RefsArray G = (RefsArray) pop();
-        out = cons(CodeArea::dbgGetDef(PC),out);
+        if (ozconf.moreInfo)
+          out = cons(CodeArea::dbgGetDef(PC),out);
       }
       break;
 
@@ -108,30 +112,34 @@ TaggedRef TaskStack::findCatch(TaggedRef &out) {
         RefsArray Y = (RefsArray) pop();
         RefsArray G = (RefsArray) pop();
         RefsArray X = (RefsArray) pop();
-        out = cons(CodeArea::dbgGetDef(PC),out);
+        if (ozconf.moreInfo)
+          out = cons(CodeArea::dbgGetDef(PC),out);
         break;
       }
 
     case C_ACTOR:
       pop();
-      out = cons(OZ_atom("actor"),out);
+      if (ozconf.moreInfo)
+        out = cons(OZ_atom("actor"),out);
       break;
 
     case C_CFUNC_CONT:
       {
         OZ_CFun biFun    = (OZ_CFun) pop();
         RefsArray X      = (RefsArray) pop();
-        out = cons(OZ_mkTupleC("builtin",2,
-                               OZ_atom(builtinTab.getName((void *) biFun)),
-                               OZ_toList(getRefsArraySize(X),X)),
-                   out);
+        if (ozconf.moreInfo)
+          out = cons(OZ_mkTupleC("builtin",2,
+                                 OZ_atom(builtinTab.getName((void *) biFun)),
+                                 OZ_toList(getRefsArraySize(X),X)),
+                     out);
         break;
       }
 
     case C_DEBUG_CONT:
       {
         OzDebug *deb = (OzDebug*) pop();
-        out = cons(OZ_atom("debug"),out);
+        if (ozconf.moreInfo)
+          out = cons(OZ_atom("debug"),out);
         break;
       }
 
@@ -139,9 +147,10 @@ TaggedRef TaskStack::findCatch(TaggedRef &out) {
       {
         TaggedRef pred = (TaggedRef) ToInt32(pop());
         RefsArray X = (RefsArray) pop();
-        out = cons(OZ_mkTupleC("apply",2,
-                               pred,OZ_toList(getRefsArraySize(X),X)),
-                   out);
+        if (ozconf.moreInfo)
+          out = cons(OZ_mkTupleC("apply",2,
+                                 pred,OZ_toList(getRefsArraySize(X),X)),
+                     out);
         break;
       }
 
@@ -157,14 +166,16 @@ TaggedRef TaskStack::findCatch(TaggedRef &out) {
         Object *newSelf = (Object *) pop();
         oldSelf->setDeepness(0); /* free the object */
         am.setSelf(newSelf);
-        out = cons(OZ_atom("setSelf"),out);
+        if (ozconf.moreInfo)
+          out = cons(OZ_atom("setSelf"),out);
         break;
       }
 
     case C_LTQ:
       {
         ThreadQueueImpl * ltq = (ThreadQueueImpl *) pop();
-        out = cons(OZ_atom("ltq"),out);
+        if (ozconf.moreInfo)
+          out = cons(OZ_atom("ltq"),out);
         break;
       }
     default:

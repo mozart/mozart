@@ -1543,6 +1543,7 @@ int AM::wakeUser()
 
 
 OZ_Term AM::dbgGetSpaces() {
+  if (!ozconf.moreInfo) return NameUnit;
   OZ_Term out = nil();
   Board *bb = currentBoard;
   while (!bb->isRoot()) {
