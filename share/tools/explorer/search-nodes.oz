@@ -120,7 +120,10 @@ local
 	 end
 	 
 	 meth findSpace($)
-	    case @copy of false then {self.mom FindSpace(self $)}
+	    case @copy of false then
+	       S={self.mom FindSpace(self $)}
+	    in
+	       {Wait {Space.ask S}} S
 	    elseof TaggedCopy then {Space.clone TaggedCopy.1}
 	    end
 	 end
@@ -432,7 +435,10 @@ local
 	 true
       end
       meth findSpace($)
-	 case @copy of false then {self.mom FindSpace(self $)}
+	 case @copy of false then
+	    S={self.mom FindSpace(self $)}
+	 in
+	    {Wait {Space.ask S}} S
 	 elseof TaggedCopy then {Space.clone TaggedCopy.1}
 	 end
       end
