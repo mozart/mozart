@@ -996,8 +996,11 @@ void engine()
     e->suspendEngine();
   }
 
+LBLinstallThread:
   e->currentThread = e->getFirstThread ();
   PC = NOCODE; // this is necessary for printing stacks (mm)
+
+  DebugTrace (trace("new thread"));
 
   // Debugger
   if (e->currentThread->stopped()) {
@@ -1005,7 +1008,6 @@ void engine()
     goto LBLstart;
   }
 
-  DebugTrace (trace("new thread"));
   //  now, we have *globally* am.currentThread;
 
   //
@@ -1100,13 +1102,14 @@ void engine()
       //  Note that *propagators* never yield 'SUSPEND';
     case FAILED:
       //ozstat.timeForPropagation.incf(osUserTime()-starttime);
-      HF_FAIL(OZ_mkTupleC("fail",2,
-			  OZ_atom(builtinTab.getName((void *)
-						     e->currentThread
-						     ->getPropagator()
-						     ->getSpawner())),
-			  e->currentThread->getPropagator()->getArguments()));
-
+      if (!e->isToplevel()) { goto LBLfailure; }
+      {
+	OZ_CFun spawner = e->currentThread->getPropagator()->getSpawner();
+	OZ_Term spawnerName = OZ_atom(builtinTab.getName((void *)spawner));
+	OZ_Term args = e->currentThread->getPropagator()->getArguments();
+	e->currentThread->propagatorToNormal();
+	DORAISE(OZ_mkTupleC("failPropagator",2,spawnerName,args));
+      }
 
     default:
       error ("Unexpected value returned from a propagator.");
@@ -2773,7 +2776,7 @@ LBLsuspendThread:
 
        if (!pred || !isProcedure(pred)) {
 	 pred = e->defaultExceptionHandler;
-	 e->currentThread->setValue(0);
+	 e->currentThread->setValue(nil());
        }
 
        /* mm2: exception is already in X[0],
@@ -2785,7 +2788,8 @@ LBLsuspendThread:
 	 argsArray[0]=X[0];
 	 e->currentThread->pushCall(pred,argsArray,1);
        } else {
-	 if (arity != 3) pred = e->defaultExceptionHandler;
+	 if (arity != 3) pred = e->biExceptionHandler;
+	 Assert(tagged2Const(pred)->getArity() == 3);
 	 RefsArray argsArray = allocateRefsArray(3,NO);
 	 argsArray[0]=X[0];
 	 argsArray[1]=e->dbgGetSpaces();
