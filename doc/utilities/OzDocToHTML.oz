@@ -25,7 +25,6 @@
 functor
 import
    %% System Modules
-   System(printError)
    OS(system localTime)
    Open(file)
    Narrator('class')
@@ -891,7 +890,8 @@ define
 	       of 'gif' then
 		  OzDocToHTML, PictureExtern("" M M.to $)
 	       [] 'ps' then To in
-		  {@MyPostScriptToGIF convertPostScript(M.to ?To)}
+		  {@MyPostScriptToGIF
+		   convertPostScript(M.to {CondSelect M info ''} ?To)}
 		  OzDocToHTML, PictureExtern(@OutputDirectory#'/' M To $)
 	       [] unit then
 		  %--** the notation should be derived from the file name

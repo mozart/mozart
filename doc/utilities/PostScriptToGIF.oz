@@ -3,6 +3,9 @@
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%   Tobias Mueller <tmueller@ps.uni-sb.de>
 %%%
+%%% Contributor:
+%%%   Christian Schulte <schulte@dfki.de>
+%%%
 %%% Copyright:
 %%%   Tobias Mueller and Leif Kornstaedt, 1998
 %%%
@@ -22,12 +25,34 @@
 
 functor
 import
-   OS(system)
+   OS(system tmpnam)
 export
    'class': PostScriptToGIFClass
 define
-   PS2GIF = 'ps2gif'
 
+   proc {PsToPpm PsName PpmName}
+      Stat = {OS.system ('(cat '#PsName#'; echo quit) | '#
+			 'gs -q -dNOPAUSE '#
+			 '-dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 '#
+			 '-sDEVICE=ppmraw -sOutputFile='#PpmName#' - 1>&2')}
+   in
+      if Stat\=0 then
+	 {Exception.raiseError ozDoc(gs(PsName) Stat)}
+      end
+   end
+
+   proc {PpmToGif PpmName Info GifName}
+      Stat = {OS.system ('pnmcrop < '#PpmName#' 2>/dev/null | '#
+			 if Info=='' then ''
+			 else 'pnmscale '#Info#'  2>/dev/null | '
+			 end #
+			 'ppmtogif -interlace -transparent rgbi:1/1/1 2>/dev/null > '#GifName)}
+   in
+      if Stat\=0 then
+	 {Exception.raiseError ozDoc(ppmtogif(GifName) Stat)}
+      end
+   end
+   
    class PostScriptToGIFClass
       attr
 	 DirName: unit
@@ -36,14 +61,14 @@ define
 	 DirName <- Dir
       end
 
-      meth convertPostScript(InFileName ?OutFileName)
-	 OutFileName = InFileName#'.gif'
-	 case
-	    {OS.system PS2GIF#' '#InFileName#' '#@DirName#'/'#OutFileName}
-	 of 0 then skip
-	 elseof I then
-	    {Exception.raiseError ozDoc(psToGif I)}
-	 end
+      meth convertPostScript(InName Info $)
+	 OutName = @DirName#'/'#InName#'.gif'
+	 PpmName = {OS.tmpnam}
+      in
+	 {PsToPpm InName PpmName}
+	 {PpmToGif PpmName Info OutName}
+	 OutName
       end
    end
 end
+
