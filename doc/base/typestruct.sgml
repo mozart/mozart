@@ -65,7 +65,7 @@
 	unrolling.
       <Para class=apropos><Title/Property Lists/
 	A <Def/property list/ is a list of pairs whose first component is a
-	literal.
+	feature, &ie;, a literal or an integer.
       <Para class=apropos><Title/Virtual Strings/
 	<Index/virtual string/<Def class=noindex/Virtual strings/ are used to
 	encode strings.  Virtual strings contain atoms, strings, byte strings,
@@ -116,7 +116,7 @@
 	  <TR/<TD/<<X Y Z>>/<TD/value//
 	  <TR/<TD/<<FI>>/<TD/number//
 	  <TR/<TD/<<LI>>/<TD/feature//
-	  <TR/<TD/<<AFI>>/<TD/atom, float or int//
+	  <TR/<TD/<<AFI>>/<TD/atom, float, or int//
 	  <TR/<TD/<<PO>>/<TD/unary procedure or object//
 	  <TR/<TD/<<Xs>>/<TD/lists of elements of type&nbsp;<<X>>//
 	</Table>

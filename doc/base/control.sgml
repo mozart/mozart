@@ -30,17 +30,25 @@
 	<Item>
 	  blocks until at least one of <<X>> or&nbsp;<<Y>> is determined.
 
+	<Entry><<!!>>
+	  <Index/<<Value>><And><<'!!'>>/
+	<Synopsis>
+	  <<{Value.'!!' ?_{X} ?_{Y}}>>
+	<Item>
+	  returns a <Def/future/&nbsp;<<Y>> for&nbsp;<<X>>, &ie;, a read-only
+	  placeholder for&nbsp;<<X>>.
+
 	<Entry><<byNeed>>
 	  <Index class=tails/<<Value>><And><<byNeed>>/
 	<Synopsis>
 	  <<{Value.byNeed ?+{P} ?_{X}}>>
 	<Item>
-	  creates a <Def/future/&nbsp;<<X>>, &ie;, a variable that cannot
-	  be assigned externally.  When <<X>> is <Span class=index/requested/
-	  (&ie;, some thread blocks on&nbsp;<<X>>), the unary
+	  creates a future&nbsp;<<X>>.  When <<X>> is <Span class=index
+	  /requested/ (&ie;, some thread blocks on&nbsp;<<X>>), the unary
 	  procedure&nbsp;<<P>> is applied to a fresh variable&nbsp;<<Y>>
 	  in a new thread.  When the application of&nbsp;<<P>> is fully
-	  reduced, <<X>>&nbsp;is bound to&nbsp;<<Y>>.
+	  reduced, the variable associated with&nbsp;<<X>> is bound
+	  to&nbsp;<<Y>>.
       </List>
 
   <Section>
