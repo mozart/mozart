@@ -24,10 +24,12 @@
 
 VPATH           = @srcdir@
 FSETDIR         = @srcdir@
-FDINCS          = -I.. -I$(FSETDIR)/..
-CFLAGS          = $(COPT) $(DEFS) $(INCS) $(FDINCS) $(CWARN) $(CUSR)
-CXXFLAGS        = $(CFLAGS)
-DEPEND          = @DEPEND@ $(DEFS) $(INCS) $(FDINCS)
+FSETINCS        = -I.. -I$(FSETDIR)/..
+CFLAGS          += $(FSETINCS)
+CPPFLAGS        += $(FSETINCS)
+CXXFLAGS        += $(FSETINCS)
+DEPEND          += $(FSETINCS)
+
 FSETTARGETS     = @FSETTARGETS@
 
 FSETLIBSRCS =   standard.cc telling.cc \
@@ -44,8 +46,7 @@ fsetlib.so: $(FSETLIBOBJS)
         $(DYNLD) -o $@ $(FSETLIBOBJS)
 
 libfset.a: $(FSETLIBOBJS)
-        $(AR) -rc $@ $(FSETLIBOBJS)
-        $(RANLIB) $@
+        $(AR) -rc $@ $(FSETLIBOBJS) && $(RANLIB) $@
 
 install: @INSTALL_PROP@
 
@@ -55,27 +56,7 @@ install-prop:
 depend: $(FSETLIBSRCS)
         $(DEPEND) `for f in $(FSETLIBSRCS); do echo $(FSETDIR)/$$f; done` >> Makefile
 
-tags:
-        etags --regex='/OZ_C[^(]+([     ]*\([^  ,)]+\)/\1/' -l c++ \
-        *c *h */*c */*h
+realclean::
+        $(RM) *.a *.so
 
-clean:
-        $(RM) *.o *~  *.bak *.obj
-
-realclean: clean
-        $(RM) *.a *.so Makefile
-
-veryclean: realclean
-
-.SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
-
-.cc.s:
-        $(CXX) $(CXXFLAGS) -S -o $@ $<
-
-.cc.E:
-        $(CXX) $(CXXFLAGS) -E -o $@ $<
-
-@tmphack_target@:
-        $(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && \
-                rcp /tmp/$$$$.o @tmphack_host@:`pwd`/$@; \
-                rm -f /tmp/$$$$.o
+include $(FSETDIR)/../Makefile.rules
