@@ -40,7 +40,7 @@
 ;;------------------------------------------------------------
 
 (defvar oz-gdb-autostart t
-  "In gdb mode: start emulator immediately or not.
+  "*In gdb mode: start emulator immediately or not.
 
 non-nil: Start emulator immediately.
 nil:     Don't start emulator (use command 'run').
@@ -51,7 +51,7 @@ nil:     Don't start emulator (use command 'run').
   "*Indentation of Oz statements with respect to containing block.")
 
 (defvar oz-wait-time nil
-  "wait for compiler startup (on linux use 15 sec)")
+  "*wait for compiler startup (on linux use 15 sec)")
 
 (defvar oz-mode-syntax-table nil)
 (defvar oz-mode-abbrev-table nil)
