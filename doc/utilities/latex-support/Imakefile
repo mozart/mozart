@@ -14,7 +14,7 @@ STY=ozbook.cls oz2tex.sty
 
 all:: $(BIN)
 raw2tex: raw2tex.c
-	$(CC) $(CFLAGS) -o raw2tex raw2tex.c -ll
+	$(CC) $(CFLAGS) -o raw2tex raw2tex.c
 raw2tex.c: raw2tex.lex
 	$(LEX) -oraw2tex.c raw2tex.lex
 clean::
