@@ -484,11 +484,11 @@ OZ_C_ioproc_begin(unix_fileDesc,2)
   
   int desc;
   if (!strcmp(OzFileDesc,"STDIN_FILENO")) {
-    desc=dup(STDIN_FILENO);
+    desc=osdup(STDIN_FILENO);
   } else if (!strcmp(OzFileDesc,"STDOUT_FILENO")) {
-    desc=dup(STDOUT_FILENO);    
+    desc=osdup(STDOUT_FILENO);    
   } else if (!strcmp(OzFileDesc,"STDERR_FILENO")) {
-    desc=dup(STDERR_FILENO);
+    desc=osdup(STDERR_FILENO);
   } else {
     return OZ_typeError(0,"enum(STDIN_FILENO STDOUT_FILENO STDERR_FILENO)");
   }
@@ -1588,9 +1588,9 @@ OZ_C_ioproc_begin(unix_pipe,4)
           close(i);
         }
       }
-      dup(sv[1]);
-      dup(sv[1]);
-      dup(sv[1]);
+      osdup(sv[1]);
+      osdup(sv[1]);
+      osdup(sv[1]);
       if (execvp(s,argv)  < 0) {
         RETURN_UNIX_ERROR;
       }

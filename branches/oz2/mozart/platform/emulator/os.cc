@@ -409,6 +409,7 @@ int WrappedHandle::nextno = wrappedHDStart;
 
 WrappedHandle *WrappedHandle::allHandles = NULL;
 
+
 int rawread(int fd, void *buf, int sz)
 {
   if (fd < wrappedHDStart)
@@ -419,10 +420,10 @@ int rawread(int fd, void *buf, int sz)
 
   HANDLE hd = WrappedHandle::find(fd)->hd;
   Assert(hd!=0);
-
   unsigned int ret;
   if (ReadFile(hd,buf,sz,&ret,0)==FALSE)
     return -1;
+
   return ret;
 }
 
@@ -449,7 +450,7 @@ Bool createReader(int fd);
 int _hdopen(int handle, int flags)
 {
   WrappedHandle *wh = WrappedHandle::getHandle((HANDLE)handle);
-  if ((flags&O_WRONLY)==0)
+  if ((flags&O_RDONLY)==0)
     createReader(wh->fd);
   return wh->fd;
 }
@@ -688,6 +689,25 @@ void watchParent()
 #endif
 
 
+#ifdef WINDOWS
+
+static int wrappedStdin = -1;
+
+int osdup(int fd)
+{
+  // no dup yet: conflicts with reader threads
+  return fd==STDIN_FILENO ? wrappedStdin : fd;
+}
+
+#else
+
+int osdup(int fd)
+{
+  return dup(fd);
+}
+#endif
+
+
 void osInit()
 {
   DebugCheck(CLOCK_TICK < 1000, error("CLOCK_TICK must be greater than 1 ms"));
@@ -720,6 +740,9 @@ void osInit()
   SYSTEMTIME st;
   GetSystemTime(&st);
   SystemTimeToFileTime(&st,&emuStartTime);
+
+  /* allow select on stdin */
+  wrappedStdin = _hdopen(STD_INPUT_HANDLE, O_RDONLY);
 #endif
 }
 
@@ -983,8 +1006,14 @@ int oswrite(int fd, void *buf, unsigned int len)
 int osclose(int fd)
 {
 #ifdef WINDOWS
+  // never close stdin on Windows, leads to problems
+  if (fd == wrappedStdin)
+    return 0;
+
+  Assert(fd!=STDIN_FILENO);
+
   if (isSocket(fd)) {
-    FD_CLR(fd,&socketFDs);
+    FD_CLR((unsigned int)fd,&socketFDs);
     return closesocket(fd);
   }
   
@@ -994,9 +1023,9 @@ int osclose(int fd)
   if (wh) { wh->close(); }
 #endif
 
-  FD_CLR(fd,&globalFDs[SEL_READ]); 
-  FD_CLR(fd,&globalFDs[SEL_WRITE]); 
-  FD_CLR(fd,&socketFDs);
+  FD_CLR((unsigned int)fd,&globalFDs[SEL_READ]); 
+  FD_CLR((unsigned int)fd,&globalFDs[SEL_WRITE]); 
+  FD_CLR((unsigned int)fd,&socketFDs);
 
 #ifdef WINDOWS
   if (wh) return 0;
@@ -1008,7 +1037,7 @@ int osopen(const char *path, int flags, int mode)
 {
   int ret = open(path,flags,mode);
   if (ret >= 0)
-    FD_CLR(ret,&socketFDs);
+    FD_CLR((unsigned int)ret,&socketFDs);
   return ret;
 }
 
