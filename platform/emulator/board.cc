@@ -146,9 +146,14 @@ OZ_Return Board::scheduleLPQ(void) {
 	
   while (!lpq.isEmpty() && !am.isSetSFlag()) {
     Propagator * prop = SuspToPropagator(lpq.dequeue());
+    // this is needed by first-class propagators when they are
+    // explicitly discarded. I am sorry that I have to destroy this
+    // invariant
+    // Assert(!prop->isDead());
+    if (prop->isDead())
+      continue;
     Propagator::setRunningPropagator(prop);
-    Assert(!prop->isDead());
-	   
+    	   
     switch (oz_runPropagator(prop)) {
     case SLEEP:
       oz_sleepPropagator(prop);
