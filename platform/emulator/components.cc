@@ -523,6 +523,7 @@ public:
  (act==URL_LOAD    )?"load":	\
  "<unknown action>")
 
+static
 void doRaise(TaggedRef controlvar, char *msg, const char *url,URLAction act)
 {
   ControlVarRaise(controlvar,
@@ -532,6 +533,7 @@ void doRaise(TaggedRef controlvar, char *msg, const char *url,URLAction act)
 				   oz_atom(url)));
 }
 
+static
 int pipeHandler(int, void *arg)
 {
   PipeInfo *pi = (PipeInfo *) arg;
@@ -614,6 +616,7 @@ public:
   }
 };
 
+static
 unsigned __stdcall fetchThread(void *p)
 {
   URLInfo *ui = (URLInfo *) p;
