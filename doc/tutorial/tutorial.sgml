@@ -30,7 +30,7 @@
 <!ENTITY % p.mix.local "|Em">
 <!ELEMENT Em - - (#PCDATA)>
 <!ENTITY amp "&">
-<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % proglang.values.local "|lambda|sh">
 <!ENTITY % author.class "author|author.extern|comic">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
 <!ELEMENT comic - O (%picture.element;)>
@@ -49,6 +49,7 @@
 <!ENTITY classes        SYSTEM  "10_classes.sgml">
 <!ENTITY objectscc      SYSTEM  "11_objectscc.sgml">
 <!ENTITY logicp         SYSTEM  "12_lp.sgml">
+<!ENTITY opi            SYSTEM  "opi.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY dot "." -- to distinguish it from periods -->
@@ -62,9 +63,11 @@
 
 <BOOK PROGLANG=OZ>
   <FRONT>
+    <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
     <!-- Splitting the document into different HTML nodes -->
     <Meta name="html.split" value="chapter.api">
     <Meta name="html.split" value="chapter.introduction">
+    <Meta name="html.split" value="chapter.opi">
     <Meta name="html.split" value="chapter.basics">
     <Meta name="html.split" value="chapter.equality">
     <Meta name="html.split" value="chapter.control">
@@ -138,6 +141,7 @@
   <BODY>
 
    &introduction;
+   &opi;
    &basics;
    &equality;
    &control;
@@ -157,4 +161,5 @@
     <Bib.Extern id="schulte98" to="bibliography.bib" key="schulte98">
     <Bib.Extern id="pvr97" to="bibliography.bib" key="pvr97">
     <Bib.Extern id="seif98" to="bibliography.bib" key="seif98">
+    <Bib.Extern id="stallman91" to="bibliography.bib" key="stallman91">
 </BOOK>
