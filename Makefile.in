@@ -41,8 +41,8 @@ CANVASDIR       = @CANVASDIR@
 
 BUILDDIR        = $(shell pwd)
 
-GTKFLAGS        = $(shell $(GTKCONFIG) --cflags)
-GTKLIBS         = $(shell $(GTKCONFIG) --libs)
+GTKFLAGS        = @GTK_CFLAGS@ @IMLIB_CFLAGS@
+GTKLIBS         = @GTK_LIBS@ @IMLIB_LIBS@
 
 ifeq ($(HAVE_CANVAS), yes)
 GTKCANVASFLAGS = -I$(CANVASDIR)/include
@@ -297,7 +297,7 @@ $(DOC_DIR)/%: doc-install/%
 #---------------------------------------------------------------------
 
 clean veryclean:
-	-$(RM) -f *~ *.ozf *.o *.so-*
+	-$(RM) -f *~ *.ozf *.o *.so-* lex.yy.* c.bison.* gtkraw.c gtkheader.c GDK.oz
 
 distclean: clean
 	-$(RM) config.cache config.log config.status Makefile
