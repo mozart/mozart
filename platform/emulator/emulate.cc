@@ -447,7 +447,7 @@ void Thread::makeRunning ()
      Y = NULL;									\
      G = gRegs;									\
      ProfileCode(Pred->getPred()->numCalled++);					\
-     ProfileCode(CTS->pushAbstr(ozstat.currAbstr);)				\
+     ProfileCode(if (Pred!=ozstat.currAbstr) CTS->pushAbstr(ozstat.currAbstr);)	\
      ProfileCode(ozstat.enterCall(Pred);)					\
      emulateHookCall(e,Pred,X,							\
 		     e->pushContX(Pred->getPC(),NULL,G,X,Pred->getArity()));
