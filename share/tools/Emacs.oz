@@ -30,7 +30,7 @@ import
    Error(formatLine msg)
    OS(getEnv stat tmpnam)
    Open(socket text file)
-   Compiler(genericInterface)
+   Listener('class')
 
 export
    getOPI:    GetOPI
@@ -159,14 +159,14 @@ define
 	 end
       end
    in
-      class CompilerInterfaceEmacs from Compiler.genericInterface
+      class CompilerInterfaceEmacs from Listener.'class'
 	 prop final
 	 attr
 	    Socket BarSync: _ BarLock: {NewLock} Trace: false Topped: false
 	    lastFile: unit lastLine: unit lastColumn: unit
 	 meth init(CompilerObject Host <= unit)
 	    lock Port in
-	       Compiler.genericInterface, init(CompilerObject Serve)
+	       Listener.'class', init(CompilerObject Serve)
 	       thread
 		  @Socket = {New TextSocket server(port: ?Port)}
 	       end
