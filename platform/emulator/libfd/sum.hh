@@ -252,6 +252,12 @@ public:
     : LinLessEqPropagator(a, x, d) {}
 };
 
+class LessEqOffsetN : public SumCLeqPropagator {
+public:
+  LessEqOffsetN(OZ_Term a, OZ_Term x, OZ_Term d) 
+  : SumCLeqPropagator(a, x, d) {}
+};
+
 class SumCLtPropagator : public LinLessEqPropagator {
 public:
   SumCLtPropagator(OZ_Term a, OZ_Term x, OZ_Term d) 

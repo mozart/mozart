@@ -31,15 +31,14 @@
 
 #define EXPECT(O, F, V, R) if (O.F(V, R)) return R;
 
-
 template <class RETURN, class EXPECT, class VAR1, class VAR2>
 RETURN make_lessEqOffset(RETURN r, EXPECT &pe, VAR1 x, VAR1 y, VAR2 c)
 {
-  EXPECT(pe, expectIntVarMinMax, x, r);
-  EXPECT(pe, expectIntVarMinMax, y, r);
+  EXPECT(pe, expectIntVarBounds, x, r);
+  EXPECT(pe, expectIntVarBounds, y, r);
   EXPECT(pe, expectInt, c, r);
   //
-  return pe.impose(new LessEqOffPropagator(x, y, OZ_intToC(c)));
+  return pe.impose(new LessEqOffset(x, y, OZ_intToC(c)));
 }
 
 
