@@ -38,33 +38,6 @@
 #include "space.hh"
 
 
-/*
- * Checking stability
- *
- */
-
-inline
-void checkStability(Thread * ct, Board * cb) {
-  if (cb->isRoot()) 
-    return;
-
-  Assert(!cb->isFailed() && !cb->isCommitted());
-
-  Board * pb = cb->getParent();
-
-  if (cb->decThreads() != 0) {
-    pb->decSolveThreads();
-    return;
-  }
-    
-  cb->checkStability();
-    
-  Assert(!pb->isCommitted());
-
-  pb->decSolveThreads();
-}
-
-
 inline
 int run_thread(Thread * ct) {
   am.restartThread(); // start a new time slice
@@ -169,7 +142,7 @@ void scheduler(void) {
 	if (am.debugmode() && ct->isTrace())
 	  debugStreamBlocked(ct);
       } else {
-	checkStability(ct,cb);
+	cb->checkStability();
       }
       
       break;
@@ -178,7 +151,8 @@ void scheduler(void) {
       Assert(!ct->isDead() && ct->isRunnable() && ct->isEmpty());
       cb->decSuspCount();
       oz_disposeThread(ct);
-      checkStability(ct,cb);
+      if (!cb->isRoot()) 
+        cb->checkStability();
       break;
       
     case T_FAILURE:
