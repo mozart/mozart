@@ -47,8 +47,8 @@ struct yy_buffer_state {
 #define YY_BUFFER_EOF_PENDING 2
 };
 
-#define OZ_declareBufferArg(ARG,VAR)			\
- OZ_declareForeignPointerArg(ARG,_Tmp);			\
+#define OZ_declareBufferIN(ARG,VAR)			\
+ OZ_declareForeignPointerIN(ARG,_Tmp);			\
  yy_buffer_state *VAR = (yy_buffer_state *) _Tmp;
 
 static void init_buffer(yy_buffer_state *p) {
@@ -59,13 +59,12 @@ static void init_buffer(yy_buffer_state *p) {
   p->yy_buffer_status = YY_BUFFER_NEW;
 }
 
-OZ_C_proc_begin(gump_createFromFile, 2)
+OZ_BI_define(gump_createFromFile, 1,1)
 {
-  OZ_declareVirtualStringArg(0, file);
-  OZ_declareArg(1, res);
+  OZ_declareVirtualStringIN(0, file);
+
   FILE *f = fopen(file, "rb");
-  if (f == NULL)
-    return OZ_unify(OZ_getCArg(1), OZ_int(0));
+  if (f == NULL) OZ_RETURN_INT(0);
 
   yy_buffer_state *p = new yy_buffer_state;
   p->yy_input_file = f;
@@ -77,14 +76,14 @@ OZ_C_proc_begin(gump_createFromFile, 2)
   p->yy_fill_buffer = 1;
   init_buffer(p);
 
-  return OZ_unify(res, OZ_makeForeignPointer(p));
+  OZ_RETURN(OZ_makeForeignPointer(p));
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(gump_createFromVirtualString, 2)
+OZ_BI_define(gump_createFromVirtualString, 1,1)
 {
-  OZ_declareVirtualStringArg(0, s);
-  OZ_declareArg(1, res);
+  OZ_declareVirtualStringIN(0, s);
+
   yy_size_t size = strlen(s);
 
   yy_buffer_state *p = new yy_buffer_state;
@@ -98,48 +97,48 @@ OZ_C_proc_begin(gump_createFromVirtualString, 2)
   p->yy_fill_buffer = 0;
   init_buffer(p);
 
-  return OZ_unify(res, OZ_makeForeignPointer(p));
+  OZ_RETURN(OZ_makeForeignPointer(p));
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(gump_setInteractive, 2)
+OZ_BI_define(gump_setInteractive, 2,0)
 {
-  OZ_declareBufferArg(0, p);
-  OZ_declareIntArg(1, b);
+  OZ_declareBufferIN(0, p);
+  OZ_declareIntIN(1, b);
   p->yy_is_interactive = b;
   return PROCEED;
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(gump_getInteractive, 2)
+OZ_BI_define(gump_getInteractive, 1,1)
 {
-  OZ_declareBufferArg(0, p);
-  return OZ_unify(OZ_getCArg(1), OZ_int(p->yy_is_interactive));
+  OZ_declareBufferIN(0, p);
+  OZ_RETURN_INT(p->yy_is_interactive);
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(gump_setBOL, 2)
+OZ_BI_define(gump_setBOL, 2,0)
 {
-  OZ_declareBufferArg(0, p);
-  OZ_declareIntArg(1, b);
+  OZ_declareBufferIN(0, p);
+  OZ_declareIntIN(1, b);
   p->yy_at_bol = b;
   return PROCEED;
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(gump_getBOL, 2)
+OZ_BI_define(gump_getBOL, 1,1)
 {
-  OZ_declareBufferArg(0, p);
-  return OZ_unify(OZ_getCArg(1), OZ_int(p->yy_at_bol));
+  OZ_declareBufferIN(0, p);
+  OZ_RETURN_INT(p->yy_at_bol);
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(gump_close, 1)
+OZ_BI_define(gump_close, 1,0)
 {
   // Must never be invoked twice on the same foreign pointer!
 #if 0
   // Makes the emulator crash under Linux??
-  OZ_declareBufferArg(0, p);
+  OZ_declareBufferIN(0, p);
 
   if (p->yy_input_file)
     fclose(p->yy_input_file);
@@ -150,4 +149,15 @@ OZ_C_proc_begin(gump_close, 1)
 
   return PROCEED;
 }
-OZ_C_proc_end
+OZ_BI_end
+
+OZ_C_proc_interface oz_interface[] = {
+  {"createFromFile",1,1,gump_createFromFile},
+  {"createFromVirtualString",1,1,gump_createFromVirtualString},
+  {"setInteractive",2,0,gump_setInteractive},
+  {"getInteractive",1,1,gump_getInteractive},
+  {"setBOL",2,0,gump_setBOL},
+  {"getBOL",1,1,gump_getBOL},
+  {"close",1,0,gump_close},
+  {0,0,0,0}
+};
