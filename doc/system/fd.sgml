@@ -771,6 +771,33 @@ it. If two variables become equal, the propagator fails,
 fail even if <<A>> is not determined.
 
 <entry>
+<index class=module/FD<and>distinctB/
+<<distinct>>
+<synopsis>
+<<<
+{FD.distinctB ?*{Dv}}
+>>>
+<item>
+All elements in ?_{Dv} are pairwise distinct. Uses bounds
+propagation, but does not use value propagation as
+<<FD.distinct>>. Also fails, if two variables are
+equal. Currently uses the quadratic algorithm for propagation by Puget
+described in <ptr to=puget.98>.
+
+
+<entry>
+<index class=module/FD<and>distinctD/
+<<distinct>>
+<synopsis>
+<<<
+{FD.distinctD ?*{Dv}}
+>>>
+<item>
+All elements in ?_{Dv} are pairwise distinct. Uses full domain
+propagation. Also fails, if two variables are
+equal. Is based on Régin's algorithm <ptr to=regin.94>.
+
+<entry>
 <index class=module/FD<and>distinctOffset/
 <<distinctOffset>>
 <synopsis>
