@@ -712,7 +712,8 @@ extern int	_FUNDECL(OZ_isForeignPointer,(OZ_Term));
 
 struct OZ_C_proc_interface {
   const char* name;
-  int         arity;
+  int         inArity;
+  int	      outArity;
 };
 
 /* Perdio related things */
