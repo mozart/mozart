@@ -947,9 +947,10 @@ define
 	       case {CondSelect M type unit}
 	       of 'gif' then
 		  OzDocToHTML, PictureExtern("" M M.to $)
-	       [] 'ps' then To in
+	       [] 'ps' then To DIR = {Property.get 'ozdoc.src.dir'} in
 		  {@MyPostScriptToGIF
-		   convertPostScript(M.to {CondSelect M info ''} ?To)}
+		   %% we should really use URL.resolve
+		   convertPostScript(DIR#'/'#M.to {CondSelect M info ''} ?To)}
 		  OzDocToHTML, PictureExtern(@OutputDirectory#'/' M To $)
 	       [] 'latex' then DIR FileName in
 		  DIR = {Property.get 'ozdoc.src.dir'}

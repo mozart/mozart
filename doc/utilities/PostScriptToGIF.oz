@@ -81,7 +81,7 @@ define
 	       {PsToPpm InName PpmName}
 	       {PpmToGif PpmName Info @DirName#'/'#OutName}
 	    finally
-	       {OS.unlink PpmName}
+	       try {OS.unlink PpmName} catch _ then skip end
 	    end
 	 end
       end
