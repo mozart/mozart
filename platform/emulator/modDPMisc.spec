@@ -35,6 +35,10 @@
 			     BI  => BIcrash,
 			     doesNotReturn=>1},
 
+     'getMsgCntr'       => { in  => [],
+			     out => ['+record'],
+			     BI  => BIgetMsgCntr},
+     
      'dvset'		=> { in  => ['+int','+int'],
 			     out => [],
 			     BI  => BIdvset},
@@ -55,4 +59,6 @@
 				  out => [],
 				  bi  => BIsockoptBroadcast}
      );
+
+
 
