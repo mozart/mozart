@@ -878,14 +878,14 @@ $builtins = {
 
     ###* Functions
 
-    'funReturn'         => { in  => ['+value'],
+    'funReturn'         => { in  => ['value'],
                              out => [],
-#                            doesNotReturn => 1,
+                             doesNotReturn => 1,
                              BI  => BIfunReturn,
                              native => false},
 
     'getReturn'         => { in  => [],
-                             out => ['+value'],
+                             out => ['value'],
                              BI  => BIgetReturn,
                              native => false},
 
