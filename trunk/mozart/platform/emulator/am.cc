@@ -409,8 +409,12 @@ Bool AM::installScript(Script &script)
 	break;
       }
     } else {
-      // mm2:
-      error("installScript: unify suspended: %d",res);
+      // mm2: instead of failing, this should corrupt the space
+      (void) am.emptySuspendVarList();
+      ret = NO;
+      if (!onToplevel()) {
+	break;
+      }
     }
   }
   installingScript = FALSE;
