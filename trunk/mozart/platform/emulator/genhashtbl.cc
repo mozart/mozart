@@ -65,13 +65,12 @@ int nextPrime2(int prime){
 
 
 inline void 
-GenHashTable::basic_htAdd(int ke,GenHashBaseKey* kb, GenHashEntry *en){
+GenHashTable::basic_htAddU(unsigned int ke,GenHashBaseKey* kb, GenHashEntry *en){
   int index=ke % tableSize;
   GenHashNode *main= &table[index];
   if(main->isEmpty()){
       main->set(ke,kb,en);
       return;}
-  Assert(!(kb==main->getBaseKey()));
   GenHashNode *ne=manager->newGenHashNode();
   ne->setWithNext(ke,kb,en,main->getNext());
   main->setNext(ne);}
@@ -82,15 +81,15 @@ inline void GenHashTable::rehash(GenHashNode *old,int size){
   GenHashNode *junk;
   for(i=0;i<size;i++){
     if(!(old[i].isEmpty())){
-      basic_htAdd(old[i].key,old[i].basekey,old[i].entry);
+      basic_htAddU(old[i].key,old[i].basekey,old[i].entry);
       try0=old[i].next;
       while(try0!=NULL){
-	basic_htAdd(try0->key,try0->basekey,try0->entry);
+	basic_htAddU(try0->key,try0->basekey,try0->entry);
 	junk=try0;
 	try0=try0->next;
 	manager->deleteGenHashNode(junk);}}}
   return;}
-
+ 
 void GenHashTable::calc_percents(){
   top_percent = (int) (MAXFULL * tableSize);
   bottom_percent= (int) (MINFULL * tableSize);
@@ -147,13 +146,13 @@ GenHashNode *GenHashTable::getElem(int i){
   if(table[i].isEmpty()) return NULL;
   return &table[i];}
 
-void GenHashTable::htAdd(int bigIndex,GenHashBaseKey* key,GenHashEntry *entry){
+void GenHashTable::htAddU(unsigned int bigIndex,GenHashBaseKey* key,GenHashEntry *entry){
   if (counter > top_percent) resize();  
   counter++;
-  basic_htAdd(bigIndex,key,entry);}
+  basic_htAddU(bigIndex,key,entry);}
 
-Bool GenHashTable::htSub(int bigIndex,GenHashNode *cur){
-  int index=bigIndex % tableSize; 
+Bool GenHashTable::htSubU(unsigned int bigIndex,GenHashNode *cur){
+  unsigned int index=bigIndex % tableSize; 
   counter--;
   GenHashNode *try0=&table[index];
   if(try0==cur){
@@ -183,9 +182,8 @@ void GenHashTable::deleteNonFirst(GenHashNode *before,GenHashNode *cur){
   before->next=cur->next;
   manager->deleteGenHashNode(cur);}  
 
-GenHashNode *GenHashTable::htFindFirst(int bigIndex){
-  int index=bigIndex % tableSize; 
-  Assert(index>=0);
+GenHashNode *GenHashTable::htFindFirstU(unsigned int bigIndex){
+  unsigned int index=bigIndex % tableSize; 
   if(table[index].isEmpty()) {return NULL;}
   if(table[index].key==bigIndex) {return &table[index];}
   GenHashNode *try0=&table[index];
@@ -206,7 +204,7 @@ GenHashNode *GenHashTable::getFirst(int &i){
   i=0;
   return getByIndex(i);}
 
-GenHashNode *GenHashTable::htFindNext(GenHashNode *try0,int bigIndex){
+GenHashNode *GenHashTable::htFindNextU(GenHashNode *try0,unsigned int bigIndex){
   Assert(try0!=NULL);
   try0=try0->next;
   while(try0!=NULL){
