@@ -32,6 +32,7 @@
 #include "dictionary.hh"
 #include "am.hh"
 #include "ozostream.hh"
+#include "builtins.hh"
 
 // Return true iff argument is zero or a power of two
 Bool isPwrTwo(dt_index s) {
@@ -635,3 +636,148 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
   delete arr;
   return out;
 }
+
+/*
+ * Builtins
+ */
+
+OZ_BI_define(BIdictionaryNew,0,1)
+{
+  OZ_RETURN(makeTaggedConst(new OzDictionary(oz_currentBoard())));
+} OZ_BI_end
+
+OZ_BI_define(BIdictionaryKeys,1,1)
+{
+  oz_declareDictionaryIN(0,dict);
+
+  OZ_RETURN(dict->keys());
+} OZ_BI_end
+
+
+OZ_BI_define(BIdictionaryMarkSafe,1,0)
+{
+  oz_declareDictionaryIN(0,dict);
+  dict->markSafe();
+  return PROCEED;
+} OZ_BI_end
+
+
+OZ_BI_define(BIdictionaryEntries,1,1)
+{
+  oz_declareDictionaryIN(0,dict);
+
+  OZ_RETURN(dict->pairs());
+} OZ_BI_end
+
+
+OZ_BI_define(BIdictionaryItems,1,1)
+{
+  oz_declareDictionaryIN(0,dict);
+
+  OZ_RETURN(dict->items());
+} OZ_BI_end
+
+
+OZ_BI_define(BIdictionaryClone,1,1)
+{
+  oz_declareDictionaryIN(0,dict);
+
+  OZ_RETURN(dict->clone(oz_currentBoard()));
+} OZ_BI_end
+
+
+OZ_BI_define(BIdictionaryToRecord,2,1) {
+  oz_declareNonvarIN(0, label);
+
+  if (!oz_isLiteral(label))
+    oz_typeError(0, "Literal");
+
+  oz_declareDictionaryIN(1,dict);
+
+  OZ_RETURN(dict->toRecord(label));
+} OZ_BI_end
+
+
+OZ_BI_define(BIdictionaryIsEmpty,1,1) {
+  oz_declareDictionaryIN(0,dict);
+
+  OZ_RETURN(dict->isEmpty() ? oz_true() : oz_false());
+} OZ_BI_end
+
+
+OZ_Return isDictionaryInline(TaggedRef t, TaggedRef &out)
+{
+  NONVAR( t, term);
+  out = oz_bool(oz_isDictionary(term));
+  return PROCEED;
+}
+OZ_DECLAREBI_USEINLINEFUN1(BIisDictionary,isDictionaryInline)
+
+
+#define GetDictAndKey(d,k,dict,key,checkboard)                  \
+  NONVAR(d,dictaux);                                            \
+  NONVAR(k,key);                                                \
+  if (!oz_isDictionary(dictaux)) { oz_typeError(0,"Dictionary"); }      \
+  if (!oz_isFeature(key))        { oz_typeError(1,"feature"); } \
+  OzDictionary *dict = tagged2Dictionary(dictaux);              \
+  if (checkboard) { CheckLocalBoard(dict,"dict"); }
+
+
+OZ_Return dictionaryMemberInline(TaggedRef d, TaggedRef k, TaggedRef &out)
+{
+  GetDictAndKey(d,k,dict,key,NO);
+  out = dict->member(key);
+  return PROCEED;
+}
+OZ_DECLAREBI_USEINLINEFUN2(BIdictionaryMember,dictionaryMemberInline)
+
+
+OZ_Return dictionaryGetInline(TaggedRef d, TaggedRef k, TaggedRef &out)
+{
+  GetDictAndKey(d,k,dict,key,NO);
+  if (dict->getArg(key,out) != PROCEED) {
+    return oz_raise(E_SYSTEM,E_KERNEL,"dict",2,d,k);
+  }
+  return PROCEED;
+}
+OZ_DECLAREBI_USEINLINEFUN2(BIdictionaryGet,dictionaryGetInline)
+
+
+OZ_Return dictionaryCondGetInline(TaggedRef d, TaggedRef k, TaggedRef deflt, TaggedRef &out)
+{
+  GetDictAndKey(d,k,dict,key,NO);
+  if (dict->getArg(key,out) != PROCEED) {
+    out = deflt;
+  }
+  return PROCEED;
+}
+OZ_DECLAREBI_USEINLINEFUN3(BIdictionaryCondGet,dictionaryCondGetInline)
+
+OZ_Return dictionaryPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
+{
+  GetDictAndKey(d,k,dict,key,OK);
+  dict->setArg(key,value);
+  return PROCEED;
+}
+
+OZ_DECLAREBI_USEINLINEREL3(BIdictionaryPut,dictionaryPutInline)
+
+OZ_Return dictionaryRemoveInline(TaggedRef d, TaggedRef k)
+{
+  GetDictAndKey(d,k,dict,key,OK);
+  dict->remove(key);
+  return PROCEED;
+}
+OZ_DECLAREBI_USEINLINEREL2(BIdictionaryRemove,dictionaryRemoveInline)
+
+
+OZ_BI_define(BIdictionaryRemoveAll,1,0)
+{
+  oz_declareNonvarIN(0,dict);
+  if (!oz_isDictionary(dict)) {
+    oz_typeError(0,"Dictionary");
+  }
+
+  tagged2Dictionary(dict)->removeAll();
+  return PROCEED;
+} OZ_BI_end

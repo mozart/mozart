@@ -2,11 +2,8 @@
  *  Authors:
  *    Christian Schulte (schulte@dfki.de)
  *
- *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
- *
  *  Copyright:
- *    Programming System Lab, DFKI GmbH
+ *    Christian Schulte, 1997
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -24,6 +21,7 @@
  *
  */
 
+#include "builtins.hh"
 #include "iso-ctype.hh"
 
 
@@ -111,3 +109,101 @@ const unsigned char iso_conv_tab[]
       240, 241, 242, 243, 244, 245, 246, 215, 248, 249, 250, 251, 252, 253, 254, 223,
       192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203,204, 205, 206, 207,
       208, 209, 210, 211, 212, 213, 214, 247, 216, 217, 218, 219, 220, 221, 222, 255};
+
+
+// ---------------------------------------------------------------------
+// Builtins
+// ---------------------------------------------------------------------
+
+#define OZ_FirstCharArg \
+ TaggedRef tc = OZ_in(0);           \
+ int i;                             \
+ { DEREF(tc, tc_ptr, tc_tag);       \
+ if (isVariableTag(tc_tag)) {            \
+   am.addSuspendVarList(tc_ptr);    \
+   return SUSPEND;                  \
+ }                                  \
+ if (!oz_isSmallInt(tc)) {             \
+   oz_typeError(1,"Char");          \
+ } else {                           \
+   i = smallIntValue(tc);           \
+   if ((i < 0) || (i > 255)) {      \
+     oz_typeError(1,"Char");        \
+   }                                \
+ } }
+
+#define OZ_TestChar(TEST)                                            \
+  OZ_FirstCharArg;                                                   \
+  OZ_RETURN(oz_bool(TEST ((unsigned char) i)));
+
+OZ_BI_define(BIcharIs,1,1) {
+ oz_declareNonvarIN(0,c);
+ c = oz_deref(c);
+ if (!oz_isSmallInt(c)) OZ_RETURN(oz_false());
+ int i = smallIntValue(c);
+ OZ_RETURN(oz_bool(i >=0 && i <= 255));
+} OZ_BI_end
+
+#define BI_TESTCHAR(Name,Arg) \
+OZ_BI_define(Name,1,1) { OZ_TestChar(Arg); } OZ_BI_end
+
+BI_TESTCHAR(BIcharIsAlNum,iso_isalnum)
+BI_TESTCHAR(BIcharIsAlpha,iso_isalpha)
+BI_TESTCHAR(BIcharIsCntrl,iso_iscntrl)
+BI_TESTCHAR(BIcharIsDigit,iso_isdigit)
+BI_TESTCHAR(BIcharIsGraph,iso_isgraph)
+BI_TESTCHAR(BIcharIsLower,iso_islower)
+BI_TESTCHAR(BIcharIsPrint,iso_isprint)
+BI_TESTCHAR(BIcharIsPunct,iso_ispunct)
+BI_TESTCHAR(BIcharIsSpace,iso_isspace)
+BI_TESTCHAR(BIcharIsUpper,iso_isupper)
+BI_TESTCHAR(BIcharIsXDigit,iso_isxdigit)
+
+
+OZ_BI_define(BIcharToLower,1,1) {
+  OZ_FirstCharArg;
+  OZ_RETURN_INT(iso_tolower((unsigned char) i));
+} OZ_BI_end
+
+OZ_BI_define(BIcharToUpper,1,1) {
+  OZ_FirstCharArg;
+  OZ_RETURN_INT(iso_toupper((unsigned char) i));
+} OZ_BI_end
+
+OZ_BI_define(BIcharToAtom,1,1) {
+  OZ_FirstCharArg;
+  if (i) {
+     char s[2]; s[0]= (char) i; s[1]='\0';
+     OZ_RETURN(oz_atom(s));
+  }
+  OZ_RETURN(AtomEmpty);
+} OZ_BI_end
+
+#define FirstCharIN                 \
+ TaggedRef tc = OZ_in(0);           \
+ int i;                             \
+ { DEREF(tc, tc_ptr, tc_tag);       \
+ if (isVariableTag(tc_tag)) {            \
+   am.addSuspendVarList(tc_ptr);    \
+   return SUSPEND;                  \
+ }                                  \
+ if (!oz_isSmallInt(tc)) {             \
+   oz_typeError(1,"Char");          \
+ } else {                           \
+   i = smallIntValue(tc);           \
+   if ((i < 0) || (i > 255)) {      \
+     oz_typeError(1,"Char");        \
+   }                                \
+ } }
+
+OZ_BI_define(BIcharType,1,1) {
+  OZ_FirstCharArg;
+  TaggedRef type;
+  if (iso_isupper(i))      type = AtomUpper;
+  else if (iso_islower(i)) type = AtomLower;
+  else if (iso_isdigit(i)) type = AtomDigit;
+  else if (iso_isspace(i)) type = AtomCharSpace;
+  else if (iso_ispunct(i)) type = AtomPunct;
+  else                     type = AtomOther;
+  OZ_RETURN(type);
+} OZ_BI_end
