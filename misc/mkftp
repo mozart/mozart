@@ -310,7 +310,7 @@ sub action_tar {
 	    my $rnum = $1;
 	    die "wrong release number on archive $name" unless $rnum eq $RELEASE_NUMBER;
 	    &do_system("cp -f $file $tardir/$name");
-	} elsif ($name =~ /^README\./) {
+	} elsif ($name =~ /^README-/) {
 	    &do_system("cp -f $file $tardir/$name");
 	} else {
 	    die "unrecognized archive $name";
