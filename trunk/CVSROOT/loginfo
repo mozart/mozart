@@ -1,4 +1,4 @@
-Hydra	mail -s "I have changed %s" mehl,scheidhr,tmueller
+Hydra	mail -s "I have changed %s" mehl,scheidhr,tmueller,popow
 Hydra/Compiler   mail -s "I have changed %s" henz
 Oz/lib	mail -s "I have changed %s" henz,wuertz
 Oz/lib/browser	mail -s "I have changed %s" latz
