@@ -106,6 +106,7 @@ private:
     Board *ref;
   } u;
   Script script;
+  Board * gcField; // Will go away, when new propagator model is active
 #ifdef PROP_MERGING
   PropagatorQueue * pq;
 #endif
