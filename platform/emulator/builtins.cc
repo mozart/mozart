@@ -48,6 +48,7 @@
 #include <time.h>
 #include <errno.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "runtime.hh"
 
