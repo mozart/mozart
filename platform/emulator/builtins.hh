@@ -273,12 +273,6 @@ public:
   TaggedRef getDBGHandler() {
     return suspHandler == makeTaggedNULL() ? nil() : suspHandler;
   }
-  Bool compare(Builtin *r) {
-    return (fun == r->fun &&
-            suspHandler == r->suspHandler &&
-            gRegs == r->gRegs);
-  }
-
   BuiltinTabEntry *getBITabEntry() {return fun;}
 };
 
