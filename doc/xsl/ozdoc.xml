@@ -598,7 +598,7 @@
 </xsl:call-template>
 </xsl:template>
 
-<xsl:template match="KBD">
+<xsl:template match="KBD|KEY">
 <xsl:call-template name="usecmd">
   <xsl:param name="cmd">texttt</xsl:param>
 </xsl:call-template>
