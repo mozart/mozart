@@ -83,13 +83,7 @@ Bool checkAddress(void *ptr) {
 // Linux-i486 (2.0.7-based) and Solaris-Sparc. And don't risk
 // otherwise...
 
-//#if !(defined(LINUX_I486) || defined(SOLARIS_SPARC))
-//#undef HAVE_MMAP
-//#endif
-
-// RS: mmap does not work under Linux 2.2.0 - 2.2.3 (at least)
-//     seems to be a bug in Linux 2.2 itself!
-#if !defined(SOLARIS_SPARC)
+#if !(defined(LINUX_I486) || defined(SOLARIS_SPARC))
 #undef HAVE_MMAP
 #endif
 
