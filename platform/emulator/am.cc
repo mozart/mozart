@@ -478,26 +478,11 @@ void AM::suspendEngine()
 
   while (1) {
 
-    if (isSetSFlag(UserAlarm)) {
-      handleUser();
-    }
+    Assert(!(isSetSFlag(StartGC)));
+    checkStatus(NO);
 
-    if (isSetSFlag(IOReady)) {
-      oz_io_handle();
-    }
-
-    if (isSetSFlag(TasksReady)) {
-      handleTasks();
-    }
-
-    if (isSetSFlag(ChildReady)) {
-      unsetSFlag(ChildReady);
-      if (oz_child_handle!=0) (*oz_child_handle)();
-    }
-
-    if (!threadsPool.threadQueuesAreEmpty()) {
+    if (!threadsPool.threadQueuesAreEmpty())
       break;
-    }
 
     // mm2: test if system is idle (not yet working: perdio test is missing)
 #ifdef TEST_IDLE
@@ -564,37 +549,39 @@ void AM::suspendEngine()
   osUnblockSignals();
 }
 
-void AM::checkStatus()
+void AM::checkStatus(Bool block)
 {
-  if (isSetSFlag(StartGC)) {
-    oz_deinstallPath(_rootBoard);
-    doGC();
-  }
-  if (isSetSFlag(UserAlarm)) {
-    oz_deinstallPath(_rootBoard);
-    osBlockSignals();
-    handleUser();
-    osUnblockSignals();
-  }
-  if (isSetSFlag(IOReady)) {
-    oz_deinstallPath(_rootBoard);
-    osBlockSignals();
-    oz_io_handle();
-    osUnblockSignals();
-  }
-  if (isSetSFlag(TasksReady)) {
+  if (!isSetSFlag())
+    return;
+
+  if (block) {
     oz_deinstallPath(oz_rootBoard());
     osBlockSignals();
+  }
+
+  if (isSetSFlag(StartGC))
+    doGC();
+
+  if (isSetSFlag(UserAlarm))
+    handleUser();
+
+  if (isSetSFlag(IOReady))
+    oz_io_handle();
+
+  if (isSetSFlag(TasksReady))
     handleTasks();
-    osUnblockSignals();
+
+  if (isSetSFlag(SigPending)) {
+    pushSignalHandlers();
+    unsetSFlag(SigPending);
   }
   if (isSetSFlag(ChildReady)) {
-    oz_deinstallPath(oz_rootBoard());
-    osBlockSignals();
     unsetSFlag(ChildReady);
     if (oz_child_handle!=0) (*oz_child_handle)();
-    osUnblockSignals();
   }
+
+  if (block)
+    osUnblockSignals();
 }
 
 //
@@ -699,7 +686,7 @@ void AM::checkTasks()
  * Signals
  * -------------------------------------------------------------------------*/
 
-void handlerUSR1()
+void handlerUSR1(int)
 {
   message("Error handler entered ****\n");
 
@@ -711,51 +698,46 @@ void handlerUSR1()
   message("Error handler exit ****\n");
 }
 
-void handlerINT()
+void handlerINT(int)
 {
-  prefixError();
-  message("SIG INT ****\n");
+  // prefixError();
+  //message("SIG INT ****\n");
   am.exitOz(1);
 }
 
-void handlerTERM()
+void handlerTERM(int)
 {
-  prefixError();
-  message("SIG TERM ****\n");
+  //prefixError();
+  //message("SIG TERM ****\n");
   am.exitOz(0);
 }
 
-void handlerMessage()
-{
-  message("SIGNAL inside signal handler ***\n");
-}
-
-void handlerSEGV()
+void handlerSEGV(int)
 {
   CodeArea::writeInstr();
   OZ_error("**** segmentation violation ****\n");
   am.exitOz(1);
 }
 
-void handlerBUS()
+void handlerBUS(int)
 {
   CodeArea::writeInstr();
   OZ_error("**** bus error ****\n");
   am.exitOz(1);
 }
 
-void handlerPIPE()
+void handlerPIPE(int)
 {
   //
   // kost@ : let's check for a dead machine;
   if (isDeadSTDOUT())
     am.exitOz(1);
   //
-  prefixError();
-  message("write on a pipe or other socket with no one to read it ****\n");
+  //prefixError();
+  //message("write on a pipe or other socket with no one to read it ****\n");
 }
 
-void handlerCHLD()
+void handlerCHLD(int)
 {
   DebugCheckT(message("a child process' state changed ****\n"));
   am.setSFlag(ChildReady);
@@ -765,24 +747,18 @@ void handlerCHLD()
   }
 }
 
-void handlerFPE()
-{
-  OZ_warning("signal: floating point exception");
-}
-
 //
 // Signal handler;
-void handlerALRM()
+void handlerALRM(int)
 {
   am.handleAlarm(CLOCK_TICK/1000);
 }
 
 //
 // 'USR2' serves right now only virtual sites;
-void handlerUSR2()
+void handlerUSR2(int)
 {
   am.handleUSR2();
-
 }
 
 /* -------------------------------------------------------------------------

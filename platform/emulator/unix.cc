@@ -1863,7 +1863,16 @@ OZ_BI_define(unix_srandom, 1,0)
 #endif
 
 
-#ifndef __MINGW32__
+#ifdef __MINGW32__
+
+OZ_BI_define(unix_getpwnam,1,1)
+{
+  return oz_raise(E_SYSTEM,E_SYSTEM,
+                  "limitExternal",1,OZ_atom("OS.getpwnam"));
+} OZ_BI_end
+
+#else
+
 #include <pwd.h>
 
 #include <sys/types.h>
@@ -1890,15 +1899,23 @@ retry:
     OZ_RETURN(R);
   }
 } OZ_BI_end
+
 #endif
 
 
-#ifdef __MINGW32__
 
-OZ_BI_define(unix_getpwnam,1,1)
+OZ_BI_define(unix_signalHandler, 2,0)
 {
-  return oz_raise(E_SYSTEM,E_SYSTEM,
-                  "limitExternal",1,OZ_atom("OS.getpwnam"));
-} OZ_BI_end
+  OZ_declareAtom(0,signo);
+  OZ_declareDetTerm(1,handler);
 
-#endif
+  if (!(OZ_isUnit(handler) ||
+        OZ_isProcedure(handler) && oz_procedureArity(oz_deref(handler)) == 1)) {
+    return OZ_typeError(1,"unary procedure or unit");
+  }
+
+  if (osSignal(signo,handler))
+    return PROCEED;
+
+  return OZ_typeError(0,"signal name");
+} OZ_BI_end

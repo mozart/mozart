@@ -51,7 +51,8 @@ typedef enum {
   UserAlarm     = 1 << 4, // Alarm handler has signaled User Alarm
   StartGC       = 1 << 5, // need a GC
   TasksReady    = 1 << 6,
-  ChildReady    = 1 << 7  // SIGCHLD raised
+  ChildReady    = 1 << 7, // SIGCHLD raised
+  SigPending    = 1 << 8  // some signal caught
 } StatusBit;
 
 /* -----------------------------------------------------------------------
@@ -429,7 +430,7 @@ public:
   void checkVersion();
   void exitOz(int status);
   void suspendEngine();
-  void checkStatus();
+  void checkStatus(Bool block);
 
   Bool isCritical() { return criticalFlag; }
 
