@@ -119,7 +119,7 @@ OBJS = $(SRCS:.cc=.o)
 
 .NOEXPORT: emulate.o @PROGRAMNAME@ peanuts.o
 .PHONY: all win win-install first install install-bin install-inc \
-        install-dir version depend tags clean distclean veryclean \
+        install-dir depend tags clean distclean veryclean \
         install-module
 
 all: $(TARGETS)
@@ -184,7 +184,7 @@ first: $(CREATEDFILES) $(SRCS)
 
 install:: install-bin install-inc $(MODULEINSTALL)
 
-install-bin: version $(TARGETS) $(BINDIR)
+install-bin: $(TARGETS) $(BINDIR)
         $(INSTALL_BIN) $(TARGETS) $(BINDIR)
 
 install-inc: $(INCDIR)
@@ -200,10 +200,7 @@ $(BINDIR) $(INCDIR):
 initffuns.cc oz.c: oz.h $(OZVERSION)
         $(SHELL) $(SRCDIR)/makeffuns $(SRCDIR) `$(OZVERSION)`
 
-version.cc: version.sed
-        $(MAKE) version
-
-version:
+version.cc: version.sed $(SRCS)
         sed -e "s/HEREGOESDATE/`date '+%h %d 19%y \(%T\)'`/" \
              -e "s/OZPLATFORM/$(PLATFORM)/" \
              $(SRCDIR)/version.sed > version.cc
