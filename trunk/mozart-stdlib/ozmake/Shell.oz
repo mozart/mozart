@@ -92,8 +92,9 @@ define
 	 end
 	 try {PGM close} catch _ then skip end
       else VS={ToProgramVS CMD} in
-      if {OS.system VS}\=0 then
-	 raise shell(VS) end
+	 if {OS.system VS}\=0 then
+	    raise shell(VS) end
+	 end
       end
    end
 end
