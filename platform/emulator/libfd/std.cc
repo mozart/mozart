@@ -761,12 +761,13 @@ OZ_Boolean Propagator_VI_VD_D::simplify(void)
 { 
   if (reg_sz) {
     DECL_DYN_ARRAY(OZ_Term,xd,reg_sz+1);
-    for(int j = reg_sz; j--; ) 
+    int j;
+    for(j = reg_sz; j--; ) 
       xd[j] = reg_x[j];
     xd[reg_sz] = reg_d;
     int *is = OZ_findEqualVars(reg_sz+1,xd);
     dpos = is[reg_sz];
-    for (int j = reg_sz; j--; ) {
+    for (j = reg_sz; j--; ) {
       if (is[j] == -1) {      // singleton in x
 	reg_c += int(OZ_intToC(reg_x[j]) * NUMBERCAST(reg_a[j]));
 	reg_x[j] = 0; 
