@@ -104,7 +104,6 @@ reification of <Math/X\neq Y/ &wrt; <Math/B/.
 <item>
 <<(X::0#10)=B>> creates a propagator for the
 reification of <Math/X\in0\#10/ &wrt; <Math/B/.
-
 <item>
 <<{FD.reified.distance X Y '=:' Z B}>> creates a
 propagator for the reification of
