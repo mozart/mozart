@@ -144,6 +144,7 @@
 	  ( AtomSiteWatcher,	"siteWatcher"),
 	  ( AtomNetWatcher,	"netWatcher"),
 	  ( AtomInjector,	"injector"),
+	  ( AtomSafeInjector,	"safeInjector"),
 
 	# Types
 	  ( AtomBool,        "bool"),

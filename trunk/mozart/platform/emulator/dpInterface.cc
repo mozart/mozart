@@ -210,6 +210,16 @@ void maybeDebugBufferGetStub(BYTE b) {}
 void maybeDebugBufferPutStub(BYTE b) {}
 #endif
 
+Bool distHandlerInstallStub(unsigned short x,unsigned short y,
+				 Thread* th,TaggedRef a,TaggedRef b){
+  OZ_error("'distHandlerInstall' called without DP library?");  
+  return PROCEED;}
+
+Bool distHandlerDeInstallStub(unsigned short x,unsigned short y,
+				   Thread* th,TaggedRef a,TaggedRef b){
+  OZ_error("'distHandlerDeInstall' called without DP library?");  
+  return PROCEED;}
+
 //
 // Link interface function pointers against stubs;
 
@@ -303,3 +313,15 @@ void (*maybeDebugBufferGet)(BYTE b)
 void (*maybeDebugBufferPut)(BYTE b)
   = maybeDebugBufferPutStub;
 #endif
+
+// distribution handlers
+
+Bool (*distHandlerInstall)(unsigned short,unsigned short,Thread*,
+				TaggedRef, TaggedRef)
+  = distHandlerInstallStub;
+
+Bool (*distHandlerDeInstall)(unsigned short,unsigned short,Thread*,
+				  TaggedRef, TaggedRef)
+  = distHandlerDeInstallStub;
+
+
