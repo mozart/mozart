@@ -140,7 +140,8 @@ local
 	    case {InvokeFlex FlexFile Rep} of 0 then
 	       {Rep startSubPhase('compiling scanner')}
 	       if {OS.system
-		   'g++ -fno-rtti -O3 '#
+		   %'g++ -fno-rtti -O3 '#
+		   'oztool c++ -O3 '#
 		   '-I'#{Property.get 'oz.home'}#'/include -I'#INCLUDEDIR#
 		   ' -c '#{MakeFileName T ".C"}#
 		   ' -o '#{MakeFileName T ".o"}} \= 0
