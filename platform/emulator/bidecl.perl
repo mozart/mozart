@@ -1337,50 +1337,6 @@ $builtins = {
 			     module=>'lazy',
 			     native => false},
 
-    ###* Metavar
-
-    'metaIsVar'		=> { in  => ['value'],
-			     out => [],
-			     BI  => BImetaIsVar,
-			     module=>'metavar',
-			     native => true},
-
-    'metaIsVarB'	=> { in  => ['value'],
-			     out => ['+bool'],
-			     BI  => BImetaIsVarB,
-			     module=>'metavar',
-			     native => true},
-
-    'metaWatchVar'	=> { in  => ['value','value'],
-			     out => [],
-			     BI  => BImetaWatchVar,
-			     module=>'metavar',
-			     native => true},
-    
-    'metaWatchVarB'	=> { in  => ['value','value','+bool'],
-			     out => [],
-			     BI  => BImetaWatchVarB,
-			     module=>'metavar',
-			     native => true},
-
-    'metaGetDataAsAtom'	=> { in  => ['value','atom'],
-			     out => [],
-			     BI  => BImetaGetDataAsAtom,
-			     module=>'metavar',
-			     native => true},
-
-    'metaGetNameAsAtom'	=> { in  => ['value','atom'],
-			     out => [],
-			     BI  => BImetaGetNameAsAtom,
-			     module=>'metavar',
-			     native => true},
-
-    'metaGetStrength'	=> { in  => ['value','value'],
-			     out => [],
-			     BI  => BImetaGetStrength,
-			     module=>'metavar',
-			     native => true},
-
     ###* GenCtVar
 
     'isCtVarB'	        => { in  => ['value'],

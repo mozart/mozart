@@ -1183,10 +1183,6 @@ GenCVariable * GenCVariable::gc(void) {
     to = new GenOFSVariable(*(GenOFSVariable*) this);
     break;
 
-  case MetaVariable:
-    to = new GenMetaVariable(*(GenMetaVariable*) this);
-    break;
-
   case PerdioVariable:
     if (((PerdioVar*)this)->isFuture()) {
       to = new Future(*(Future*) this);
@@ -1213,11 +1209,6 @@ GenCVariable * GenCVariable::gc(void) {
 
 void Future::gcFuture() {
   OZ_collectHeapTerm(requested,requested);
-}
-
-inline
-void GenMetaVariable::gcRecurse(void) {
-  OZ_collectHeapTerm(data,data);
 }
 
 inline
@@ -1258,8 +1249,6 @@ void GenCVariable::gcRecurse(void) {
   switch (getType()) {
   case OFSVariable:
     ((GenOFSVariable *) this)->gcRecurse(); break;
-  case MetaVariable:
-    ((GenMetaVariable *) this)->gcRecurse(); break;
   case PerdioVariable:
     ((PerdioVar *) this)->gcRecurse(); break;
   default:
