@@ -88,7 +88,6 @@ local
 	 elsecase {IsSpace X}            then SpaceType
 	 elsecase {FS.value.is X}        then FSValueType
 	 elsecase {Foreign.pointer.is X} then ForeignPointerType
-	 elsecase {Promise.is X}         then PromiseType
 	 else                                 UnknownType
 	 end
       elsecase {IsKinded X} then
@@ -97,7 +96,6 @@ local
 	 elsecase {IsRecordC X}          then KindedRecordType
 	 else                                 UnknownType
 	 end
-      elsecase {IsLazy X} then                LazyVarType
       else                                    {System.printName X}
       end
    end
