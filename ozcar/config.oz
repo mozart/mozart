@@ -194,7 +194,7 @@ TextCursor             = left_ptr
 MaxStackSize           = 40
 MaxStackBrowseSize     = 15
 
-TimeoutToCalcTree      = 180 % ms
+TimeoutToCalcTree      = 380 % ms
 TimeoutToBlock         = 470
 TimeoutToUpdateEnv     = 430
 TimeoutToUpdateScroll  = TimeoutToUpdateEnv
