@@ -377,7 +377,7 @@
 	  <Grammar.Rule>?={option record}
 	    <Grammar.Alt/<<optRec(1: ?={option list}>>/
 	    <Grammar.Alt/<<       ?={option name}: ?={value}>> &ellipsis;/
-	    <Grammar.Alt/<<       ?={option name}: ?={value}>>/
+	    <Grammar.Alt/<<       ?={option name}: ?={value})>>/
 	  </Grammar.Rule>
 	<SubSection class=unnumbered id="section.application.record.examples">
 	  <Title/Record Examples/
