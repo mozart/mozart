@@ -313,7 +313,7 @@ sub write_oz_bi_definition {
   #
   # Arguments
   #
-  print "\t" . clean_type($out) . " ret;\n" if $out;
+  print "\t" . clean_type($out) . " ret;\n" if $out; # C return value
 
   my $i = 0;
   foreach my $arg (@$in) {
