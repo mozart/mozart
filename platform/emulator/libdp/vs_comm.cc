@@ -542,7 +542,7 @@ GenHashNode* VSSiteHashTable::findNode(int hvalue, DSite *s)
   DSite *sf;
 
   while(aux) {
-    GenCast(aux->getEntry(), GenHashEntry*, sf, DSite*);
+    sf = (DSite*) aux->getEntry();
 
     //
     if (!s->compareSites(sf))
@@ -574,8 +574,8 @@ void VSSiteHashTable::enter(DSite *s)
 
   //
   // Actually we don't need keys...
-  GenCast(s, DSite*, ghn_bk, GenHashBaseKey*);
-  GenCast(s, DSite*, ghn_e, GenHashEntry*);
+  ghn_bk = (GenHashBaseKey*) s;
+  ghn_e = (GenHashEntry*) s;
   //
   htAdd(hvalue, ghn_bk, ghn_e);
 }
@@ -594,7 +594,7 @@ DSite *VSSiteHashTable::getFirst()
   DSite *s;
   seqGHN = GenHashTable::getFirst(seqIndex);
   if (seqGHN) {
-    GenCast(seqGHN->getEntry(), GenHashEntry*, s, DSite*);
+    s = (DSite*) seqGHN->getEntry();
   } else {
     s = (DSite *) 0;
   }
@@ -607,7 +607,7 @@ DSite *VSSiteHashTable::getNext()
   DSite *s;
   seqGHN = GenHashTable::getNext(seqGHN, seqIndex);
   if (seqGHN) {
-    GenCast(seqGHN->getEntry(), GenHashEntry*, s, DSite*);
+    s = (DSite*) seqGHN->getEntry();
   } else {
     s = (DSite *) 0;
   }

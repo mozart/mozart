@@ -49,7 +49,7 @@ MsgContainerManager::~MsgContainerManager()
   for(int i=0;i<l;i++) {
     f=getOne();
     Assert(f!=NULL);
-    GenCast(f,FreeListEntry*,msgC,MsgContainer*);
+    msgC = new (f) MsgContainer;
     delete msgC;
   }
   Assert(length()==0);

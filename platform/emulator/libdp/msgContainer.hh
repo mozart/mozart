@@ -65,6 +65,11 @@ struct msgField {
 //
 class MsgContainer : public CppObjMemory {
   friend class MsgContainerManager;
+public:
+  // for placement argument
+  void* operator new(size_t,void*p) { return p; }
+  void* operator new(size_t n) { return ::new char[n]; }
+
 private:
   MessageType mt;
   int flags;
