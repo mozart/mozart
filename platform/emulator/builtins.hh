@@ -249,7 +249,7 @@ char *VAR;                                                      \
       oz_suspendOn(_VAR2);                                      \
     }                                                           \
   }                                                             \
-  VAR = OZ_stringToC(_VAR1);                                    \
+  VAR = OZ_stringToC(_VAR1,0);                                  \
 }
 
 #define oz_declareProperStringIN(ARG,VAR)                       \
@@ -264,7 +264,7 @@ char *VAR;                                                      \
       oz_suspendOn(_VAR2);                                      \
     }                                                           \
   }                                                             \
-  VAR = OZ_stringToC(_VAR1);                                    \
+  VAR = OZ_stringToC(_VAR1,0);                                  \
 }
 
 #define oz_declareVirtualStringArg(ARG,VAR)     \
@@ -279,7 +279,7 @@ char *VAR;                                      \
       oz_suspendOn(_VAR2);                      \
     }                                           \
   }                                             \
-  VAR = OZ_virtualStringToC(_VAR1);             \
+  VAR = OZ_virtualStringToC(_VAR1,0);           \
 }
 
 #define oz_declareVirtualStringIN(ARG,VAR)      \
@@ -294,7 +294,7 @@ char *VAR;                                      \
       oz_suspendOn(_VAR2);                      \
     }                                           \
   }                                             \
-  VAR = OZ_virtualStringToC(_VAR1);             \
+  VAR = OZ_virtualStringToC(_VAR1,0);           \
 }
 
 

@@ -39,6 +39,8 @@
 #include "threadInterface.hh"
 #include "builtins.hh"
 
+#include "bytedata.hh"
+
 // forward decl
 static
 void term2Buffer(ostream &out, OZ_Term term, int depth=0);
@@ -50,6 +52,12 @@ void term2Buffer(ostream &out, OZ_Term term, int depth=0);
 OZ_Term OZ_deref(OZ_Term term)
 {
   return oz_deref(term);
+}
+
+int OZ_isBool(OZ_Term term)
+{
+  term = oz_deref(term);
+  return oz_isBool(term);
 }
 
 int OZ_isAtom(OZ_Term term)
@@ -153,6 +161,18 @@ int OZ_isThread(OZ_Term t)
 {
   t = oz_deref(t);
   return oz_isThread(t);
+}
+
+int OZ_isBitString(OZ_Term t)
+{
+  t = oz_deref(t);
+  return oz_isBitString(t);
+}
+
+int OZ_isByteString(OZ_Term t)
+{
+  t = oz_deref(t);
+  return oz_isByteString(t);
 }
 
 int OZ_isString(OZ_Term term,OZ_Term *var)
@@ -583,7 +603,10 @@ inline
 char *strAndDelete(ostrstream *out)
 {
   (*out) << ends;
-  char *ret = ozstrdup(out->str());
+  int n = out->pcount();
+  char *ret = new char[n+1];
+  memcpy((void*)ret,(void*)out->str(),n);
+  ret[n] = '\0';
   delete out;
   return ret;
 }
@@ -1132,6 +1155,12 @@ OZ_Term OZ_atom(const char *s)
   return oz_atom(s);
 }
 
+int OZ_boolToC(OZ_Term term)
+{
+  term = oz_deref(term);
+  return (literalEq(term,NameTrue))?1:0;
+}
+
 /* -----------------------------------------------------------------
  * virtual strings
  * -----------------------------------------------------------------*/
@@ -1178,7 +1207,7 @@ void string2buffer(ostream &out,OZ_Term list)
  * convert Oz string to C string
  * PRE: list is a proper string
  */
-char *OZ_stringToC(OZ_Term list)
+char *OZ_stringToC(OZ_Term list,int*len)
 {
   static char *tmpString = 0;
   if (tmpString) {
@@ -1190,6 +1219,7 @@ char *OZ_stringToC(OZ_Term list)
 
   string2buffer(*out,list);
 
+  if (len!=0) { *len = out->pcount(); }
   tmpString = strAndDelete(out);
   return tmpString;
 }
@@ -1291,8 +1321,9 @@ void virtualString2buffer(ostream &out,OZ_Term term)
  * convert Oz virtual string to C string
  * PRE: list is a virtual string
  */
-char *OZ_virtualStringToC(OZ_Term t)
+char *OZ_virtualStringToC(OZ_Term t,int*len)
 {
+  // tmpString is freed the next time OZ_virtualStringToC is called
   static char *tmpString = 0;
   if (tmpString) {
     delete tmpString;
@@ -1303,10 +1334,30 @@ char *OZ_virtualStringToC(OZ_Term t)
 
   virtualString2buffer(*out,t);
 
+  if (len!=0) { *len = out->pcount(); }
   tmpString = strAndDelete(out);
   return tmpString;
 }
 
+/* Here is an optimized version that checks for
+ * the common cases
+ */
+
+char* OZ_vsToC(OZ_Term t,int*n)
+{
+  char * s;
+  if (OZ_isAtom(t)) {
+    s = OZ_atomToC(t);
+    if (n!=0) *n = strlen(s);
+  } else if (OZ_isByteString(t)) {
+    ByteString*bs = tagged2ByteString(t);
+    s = (char*) bs->getData();
+    if (n!=0) *n = bs->getWidth();
+  } else {
+    s = OZ_virtualStringToC(t,n);
+  }
+  return s;
+}
 
 void OZ_printVirtualString(OZ_Term term)
 {
@@ -1788,7 +1839,9 @@ int oz_isVirtualString(OZ_Term vs, OZ_Term *var)
     }
   }
 
-  if (oz_isInt(vs) || oz_isFloat(vs) || oz_isAtom(vs))  return 1;
+  if (oz_isInt(vs) || oz_isFloat(vs) || oz_isAtom(vs) ||
+      oz_isByteString(vs))
+    return 1;
 
   if (oz_isPair(vs)) {
     SRecord *sr = tagged2SRecord(vs);

@@ -297,12 +297,13 @@ depend:: version.cc initffuns.cc $(CREATEDSRCS) $(ALLSRCS)
         $(MAKE) first
         $(DEPEND) $^ > Makefile.deps
 
+BUILDDIR=$(shell pwd)
 tags:   $(CREATEDFILES) version.cc
         etags \
         --regex='/OZ_BI_\(io\)?define([         ]*\([^  ,)]+\)/\2/' \
         --regex='/OZ_C_\(io\)?proc_begin([      ]*\([^  ,)]+\)/\2/' -l c++ \
         -o $(SRCDIR)/TAGS \
-        $(CREATEDFILES) \
+        $(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
         $(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/*/*c $(SRCDIR)/*/*h
 
 clean::

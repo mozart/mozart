@@ -135,6 +135,7 @@ extern void     _FUNDECL(OZ_main, (int argc,char **argv));
 extern OZ_Term  _FUNDECL(OZ_deref,(OZ_Term term));
 
 /* tests */
+extern int _FUNDECL(OZ_isBool,(OZ_Term));
 extern int _FUNDECL(OZ_isAtom,(OZ_Term));
 extern int _FUNDECL(OZ_isBigInt,(OZ_Term));
 extern int _FUNDECL(OZ_isCell,(OZ_Term));
@@ -161,6 +162,8 @@ extern int _FUNDECL(OZ_isTuple,(OZ_Term));
 extern int _FUNDECL(OZ_isUnit,(OZ_Term));
 extern int _FUNDECL(OZ_isValue,(OZ_Term));
 extern int _FUNDECL(OZ_isVariable,(OZ_Term));
+extern int _FUNDECL(OZ_isBitString,(OZ_Term));
+extern int _FUNDECL(OZ_isByteString,(OZ_Term));
 
 extern int _FUNDECL(OZ_isList,(OZ_Term, OZ_Term *));
 extern int _FUNDECL(OZ_isString,(OZ_Term, OZ_Term *));
@@ -236,11 +239,12 @@ extern char *  _FUNDECL(OZ_toC,(OZ_Term, int, int));
 extern int     _FUNDECL(OZ_termGetSize,(OZ_Term, int, int));
 
 extern OZ_Term _FUNDECL(OZ_string,(CONST char *));
-extern char *  _FUNDECL(OZ_stringToC,(OZ_Term t));
+extern char *  _FUNDECL(OZ_stringToC,(OZ_Term t,int*n));
 
 extern void    _FUNDECL(OZ_printVirtualString,(OZ_Term t));
 #define OZ_printVS(t) OZ_printVirtualString(t)
-extern char *  _FUNDECL(OZ_virtualStringToC,(OZ_Term t));
+extern char*   _FUNDECL(OZ_vsToC,(OZ_Term t,int*n));
+extern char *  _FUNDECL(OZ_virtualStringToC,(OZ_Term t,int*n));
 
 
 /* tuples */
@@ -487,7 +491,7 @@ OZ_Term VAR = OZ_in(ARG);                       \
        OZ_suspendOn(OZ_avar);                           \
      }                                                  \
    }                                                    \
-   VAR = OZ_stringToC(OZ_in(ARG));                      \
+   VAR = OZ_stringToC(OZ_in(ARG),0);                    \
  }
 
 #define OZ_declareVirtualStringIN(ARG,VAR)              \
@@ -501,7 +505,7 @@ OZ_Term VAR = OZ_in(ARG);                       \
        OZ_suspendOn(OZ_avar);                           \
      }                                                  \
    }                                                    \
-   VAR = OZ_virtualStringToC(OZ_in(ARG));               \
+   VAR = OZ_virtualStringToC(OZ_in(ARG),0);             \
  }
 
 #define OZ_declareForeignPointerIN(ARG,VAR)     \
@@ -601,7 +605,7 @@ OZ_Term VAR = OZ_getCArg(ARG);                  \
        OZ_suspendOn(OZ_avar);                           \
      }                                                  \
    }                                                    \
-   VAR = OZ_stringToC(OZ_getCArg(ARG));                 \
+   VAR = OZ_stringToC(OZ_getCArg(ARG),0);                       \
  }
 
 #define OZ_declareVirtualStringArg(ARG,VAR)             \
@@ -615,7 +619,7 @@ OZ_Term VAR = OZ_getCArg(ARG);                  \
        OZ_suspendOn(OZ_avar);                           \
      }                                                  \
    }                                                    \
-   VAR = OZ_virtualStringToC(OZ_getCArg(ARG));          \
+   VAR = OZ_virtualStringToC(OZ_getCArg(ARG),0);                \
  }
 
 #define OZ_declareForeignPointerArg(ARG,VAR)    \
