@@ -210,8 +210,8 @@ The client should
 be informed in finite time of a server problem
 by means of a new exception, <<server_error>>.
 
-<P> We assume that the system raises
-exceptions when we try to do operations
+<P> The system raises exceptions
+when it tries to do operations
 on entities that have problems.
 All distributed exceptions are of the
 form <<system(dp(C))>> where <<C>> is any fault state
@@ -297,8 +297,7 @@ proc {SafeSend Prt X}
       of permFail then
          raise server_error end
       [] tempFail then
-         {Delay 100}
-         {SafeSend Prt X}
+         {Delay 100} {SafeSend Prt X}
       else
          skip
       end
@@ -360,5 +359,11 @@ indefinitely, it must time out.
 We need a time out since the server
 drops a problematic client like a hot potato.
 The time out is an argument to <<SafeWait>>.
+
+<SUBSECTION><TITLE>Making fault-tolerant stationary objects</TITLE>
+
+<P> To be useful in practice,
+stationary objects must have well-defined behavior when
+there are faults.
 
 </CHAPTER>
