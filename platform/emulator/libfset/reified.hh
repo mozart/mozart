@@ -223,45 +223,6 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class PartitionProbingPropagator : public OZ_Propagator {
-protected:
-  static OZ_PropagatorProfile profile;
-
-  IndexSets * _i_sets;
-
-  int _size;
-
-  int _u_max_elem;
-
-  OZ_Term * _vd;
-  int _first;
-public:
-  PartitionProbingPropagator(OZ_Term vs, OZ_Term s, OZ_Term vd);
-
-  virtual OZ_Return propagate(void);
-
-  virtual size_t sizeOf(void) { return sizeof(PartitionProbingPropagator); }
-
-  virtual OZ_PropagatorProfile * getProfile(void) const {
-    return &profile;
-  }
-
-  virtual void updateHeapRefs(OZ_Boolean) {
-    // copy index sets
-    _i_sets = _i_sets->copy();
-
-    // copy bools
-    _vd = OZ_copyOzTerms(_size, _vd);
-
-  }
-  virtual OZ_Term getParameters(void) const {
-    return OZ_nil();
-  }
-
-};
-
-//-----------------------------------------------------------------------------
-
 class PartitionReified1Propagator : public PartitionReifiedPropagator {
 protected:
   static OZ_PropagatorProfile profile;
