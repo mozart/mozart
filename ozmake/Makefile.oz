@@ -635,8 +635,8 @@ define
 	 MAK.doc     := {self get_doc_targets($)}
 	 MAK.src     := {self get_src_targets($)}
 	 if Tar\=nil then MAK.tar := Tar end
-	 MAK.depends := {Dictionary.toRecord o @Target2Depends}
-	 MAK.rules   := {Record.map {Dictionary.toRecord o @Target2Rule}
+	 MAK.depends := {Utils.toRecord @Target2Depends}
+	 MAK.rules   := {Record.map {Utils.toRecord @Target2Rule}
 			 fun {$ R} Tool=R.tool in
 			    Tool(R.file R.options)
 			 end}

@@ -17,6 +17,7 @@ export
    IsVersion
    VersionCompare
    AuthorOK
+   ToRecord
 import
    Open Compiler OS URL
    Path at 'Path.ozf'
@@ -345,6 +346,15 @@ define
       {IsMogulID S} orelse
       local L={VS2S S} in
 	 {Not {Member &: L} orelse {Member &/ L}}
+      end
+   end
+
+   fun {ToRecord D}
+      if {IsDictionary D} then
+	 {Dictionary.toRecord o D}
+      elseif {IsRecord D} then D
+      else
+	 raise ozmake(toRecord:D) end
       end
    end
       
