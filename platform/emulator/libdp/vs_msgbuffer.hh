@@ -903,9 +903,9 @@ public:
   VSMsgBufferImported(VSMsgChunkPoolManagerImported *cpmIn,
                       key_t shmKey, int chunkIndex)
     : VSMsgBuffer(shmKey, chunkIndex), cpm(cpmIn) {
-    Assert(currentAddr = (VSMsgChunkImported *) 0);
-    Assert(posMB = (BYTE *) 0);
-    Assert(endMB = (BYTE *) 0);
+    Assert(currentAddr == (VSMsgChunkImported *) 0);
+    Assert(posMB == (BYTE *) 0);
+    Assert(endMB == (BYTE *) 0);
   }
   virtual ~VSMsgBufferImported() {
     OZ_error("VSMsgBufferImported destroyed?");
