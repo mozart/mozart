@@ -32,11 +32,41 @@
 #pragma interface
 #endif
 
+enum FlowControlKind{
+  FLOW_PORT,
+  FLOW_VAR};
+
+
 class FlowControlElement{
 public:
   FlowControlElement *next;
+  FlowControlKind kind;
   TaggedRef ele;
-  FlowControlElement(){}
+  DSite* site;
+  int index;
+
+  void *operator new(size_t size){
+    Assert(size==20);
+    return (FlowControlElement*) genFreeListManager->getOne_5();}
+
+  void free(){
+    genFreeListManager->putOne_5((FreeListEntry*) this);}
+
+  FlowControlElement(TaggedRef e){
+    ele=e;
+    next=NULL;
+    kind=FLOW_PORT;}
+
+  FlowControlElement(TaggedRef e,DSite* s,int i){
+    ele=e;
+    next=NULL;
+    site=s;
+    index=i;
+    kind=FLOW_VAR;}
+
+  Bool canSend();
+  void wakeUp();
+
 };
     
   
@@ -51,6 +81,7 @@ public:
     time = 0;} 
   
   void addElement(TaggedRef e);
+  void addElement(TaggedRef e,DSite*,int);
   
   Bool wakeUpCheck(unsigned int t){
     return first != NULL && t > time;}

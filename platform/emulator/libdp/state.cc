@@ -640,6 +640,3 @@ void cellLock_OK(int state,Tertiary* t){
 
 
 
-
-
-
