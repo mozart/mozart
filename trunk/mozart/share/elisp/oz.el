@@ -853,13 +853,10 @@ If FORCE is non-nil, kill it immediately."
 	(if oz-emulator-hook
 	    (funcall oz-emulator-hook)
 	  (setq oz-emulator-buffer "*Oz Emulator*")
-	  (cond (oz-win32
-		 (setq oz-read-emulator-output t)
-		 (make-comint "Oz Emulator" "ozemulator" nil "-E" "-u"
-			      "http://www.ps.uni-sb.de/ozhome/lib/OPI.ozc"))
-		(t
-		 (setq oz-read-emulator-output t)
-		 (make-comint "Oz Emulator" "oznc" nil "-E")))
+	  (setq oz-read-emulator-output t)
+	  (let ((emu-command (if  oz-win32 "ozemulator" "oznc")))
+	    (make-comint "Oz Emulator" emu-command nil "-E" "-u"
+			 "http://www.ps.uni-sb.de/ozhome/lib/OPI.ozc"))
 	  (oz-create-buffer oz-emulator-buffer 'emulator)
 	  (set-process-filter (get-buffer-process oz-emulator-buffer)
 			      'oz-emulator-filter)
