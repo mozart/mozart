@@ -10,7 +10,7 @@ define(installOz,
 $1:  OzLisp/$1.el
 
 OzLisp/$1.el:   $2$1.el
-	install -m 664 $< $@
+	install -m 444 $< $@
 )
 
 help:

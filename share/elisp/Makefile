@@ -22,7 +22,7 @@ Makefile: Makefile.m4
 oz:  /usr/share/gs/soft/oz/elisp/oz.el
 
 /usr/share/gs/soft/oz/elisp/oz.el:   oz.el
-	install -m 664 $< $@
+	install -m 444 $< $@
 
 	echo "(byte-compile-file \"/usr/share/gs/soft/oz/elisp/oz.el\")" > compile
 	lemacs -batch -load compile
