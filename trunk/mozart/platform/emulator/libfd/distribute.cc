@@ -86,6 +86,17 @@ void tell_dom(Board * bb, const TaggedRef a, const TaggedRef b) {
   t->pushCall(BI_DistributeTell,args,2);
 }
 
+inline
+void tell_eq(Board * bb, const TaggedRef a, const TaggedRef b) {
+  RefsArray args = allocateRefsArray(2, NO);
+  args[0] = a;
+  args[1] = b;
+
+  Thread * t = oz_newThreadInject(bb);
+  t->pushCall(BI_Unify,args,2);
+}
+
+
 class FdDistributor : public Distributor {
 protected:
   TaggedRef sync;
@@ -159,6 +170,25 @@ public:
     OZ_sCloneTerm(t->sel_val);
     t->vars = OZ_sCloneAllocBlock(size, t->vars);
     return t;
+  }
+
+};
+
+
+class FdAssigner : public FdDistributor {
+public:
+  FdAssigner(Board * b, TaggedRef * v, int s) :
+    FdDistributor(b,v,s) {}
+
+  virtual int commit(Board * bb, int l, int r) {
+    if (size > 0) {
+      Assert(l==1 && r==1);
+      tell_eq(bb,vars[sel_var],sel_val);
+      return 1;
+    } else {
+      tell_eq(bb,sync,makeTaggedSmallInt(0));
+      return 0;
+    }
   }
 
 };
@@ -298,7 +328,7 @@ class CLASS : public FdDistributor {              \
     if (size > 0) { VALSEL(); return 2;           \
     } else {                  return 1;           \
     }                                             \
-  };                                              \
+  }                                               \
 }
 
 DefFdDistClass(FdDist_Naive_Min,selectVarNaive,selectValMin);
@@ -331,6 +361,21 @@ DefFdDistClass(FdDist_NbSusps_Max,selectVarNbSusps,selectValMax);
 DefFdDistClass(FdDist_NbSusps_SplitMin,selectVarNbSusps,selectValSplitMin);
 DefFdDistClass(FdDist_NbSusps_SplitMax,selectVarNbSusps,selectValSplitMax);
 
+#define DefFdAssignClass(CLASS,VALSEL) \
+class CLASS : public FdAssigner {                 \
+  public:                                         \
+  CLASS(Board * b, TaggedRef * v, int s) :        \
+    FdAssigner(b,v,s) {}                          \
+  virtual int getAlternatives(void) {             \
+    selectVarNaive();                             \
+    if (size > 0) { VALSEL(); }                   \
+    return 1;                                     \
+  }                                               \
+}
+
+DefFdAssignClass(FdAssign_Min,selectValMin);
+DefFdAssignClass(FdAssign_Mid,selectValMid);
+DefFdAssignClass(FdAssign_Max,selectValMax);
 
 
 /*
@@ -481,6 +526,97 @@ OZ_BI_define(fdd_distribute, 3, 1) {
   
  bomb:
   oz_typeError(0,"vector of finite domains");
+}
+OZ_BI_end
+
+
+OZ_BI_define(fdd_assign, 2, 1) {
+  oz_declareNonvarIN(0,val_sel);
+  oz_declareNonvarIN(1,vv);
+
+  int n = 0;
+  TaggedRef * vars;
+  
+  if (oz_isLiteral(vv)) {
+    ;
+  } else if (oz_isCons(vv)) {
+    
+    TaggedRef vs = vv;
+
+    while (oz_isCons(vs)) {
+      TaggedRef v = oz_head(vs);
+      TestElement(v);
+      vs = oz_tail(vs);
+      DEREF(vs, vs_ptr, vs_tag);
+      if (isVariableTag(vs_tag))
+	oz_suspendOnPtr(vs_ptr);
+    }
+    
+    if (!oz_isNil(vs))
+      goto bomb;
+    
+  } else if (oz_isSRecord(vv)) {
+    
+    for (int i = tagged2SRecord(vv)->getWidth(); i--; ) {
+      TaggedRef v = tagged2SRecord(vv)->getArg(i);
+      TestElement(v);
+    }
+    
+  } else 
+    goto bomb;
+  
+  if (n == 0)
+    OZ_RETURN(NameUnit);
+
+  // This is inverse order!
+  vars = (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * n);
+
+  if (oz_isCons(vv)) {
+    TaggedRef vs = vv;
+    int i = n;
+    while (oz_isCons(vs)) {
+      TaggedRef v = oz_head(vs);
+      if (!oz_isSmallInt(oz_deref(v)))
+	vars[--i] = v;
+      vs = oz_deref(oz_tail(vs));
+    }
+  } else {
+    int j = 0;
+    for (int i = tagged2SRecord(vv)->getWidth(); i--; ) {
+      TaggedRef v = tagged2SRecord(vv)->getArg(i);
+      if (!oz_isSmallInt(oz_deref(v)))
+	vars[j++] = v;
+    }
+  }
+
+  if (oz_onToplevel())
+    OZ_RETURN(oz_newVar(oz_rootBoard()));
+
+  {
+    Board * bb = oz_currentBoard();
+
+    if (bb->getDistributor())
+      return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
+
+    FdDistributor * fdd;
+    
+    if (oz_eq(val_sel,AtomMin)) {
+      fdd = new FdAssign_Min(bb, vars, n);
+    } else if (oz_eq(val_sel,AtomMid)) {
+      fdd = new FdAssign_Mid(bb, vars, n);
+    } else if (oz_eq(val_sel,AtomMax)) {
+      fdd = new FdAssign_Max(bb, vars, n);
+    } else {
+      oz_typeError(0,"min/mid/max");
+    }
+
+    bb->setDistributor(fdd);
+    
+    OZ_RETURN(fdd->getSync());
+  }
+  
+ bomb:
+  oz_typeError(1,"vector of finite domains");
 }
 OZ_BI_end
 
