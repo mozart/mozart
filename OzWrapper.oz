@@ -26,7 +26,7 @@ import
    NativeEmitter(coreResultType)
    Open
    Util
-   System(show)
+   System(printName show)
 export
    'createFuncs'  : CreateFuncs
    'createFields' : CreateFields
@@ -496,6 +496,10 @@ define
       [] nil  then false
       end 
    end
+
+   fun {PrintName N}
+      if {IsName N} then {System.printName N} else N end
+   end
    
    class GtkClasses from TextFile
       attr
@@ -529,11 +533,27 @@ define
 			flags:[write create truncate])
 	 GtkClasses, collect({Filter @entries IsStruct})
 	 GtkClasses, emit
-	 GtkClasses, saveDict("GtkClasses.ozp")
+	 GtkClasses, saveDict("GtkClasses.ozp" "GtkClassesFull.ozp")
       end
-      meth saveDict(FileName)
+      meth saveDict(KeyFileName FullFileName)
 	 {Pickle.save {Dictionary.keys @classes}
-	  {ToS {OS.getCWD}#"/"#FileName}}
+	  {ToS {OS.getCWD}#"/"#KeyFileName}}
+	 GtkClasses, saveFullDict(FullFileName)
+      end
+      meth saveFullDict(FullFileName)
+	 ClassesList = {Record.toListInd {Dictionary.toRecord binding @classes}}
+	 ClassesFull = {List.map ClassesList
+			fun {$ Key#'class'(anchestor: Anchestor
+					   methods:   Methods)}
+			   {PrintName Key}#
+			   'class'(anchestor: {PrintName Anchestor}
+				   methods:   {List.map Methods
+					       fun {$ Name#_}
+						  {PrintName Name}
+					       end})
+			end}
+      in
+	 {Pickle.save ClassesFull {ToS {OS.getCWD}#"/"#FullFileName}}
       end
       meth resolve(S $)
 	 case {Dictionary.condGet @types S nil}
@@ -1034,7 +1054,7 @@ define
 			flags:[write create truncate])
 	 GdkClasses, collect({Filter @entries IsStruct})
 	 GtkClasses, emit
-	 GtkClasses, saveDict("GdkClasses.ozp")
+	 GtkClasses, saveDict("GdkClasses.ozp" "GdkClassesFull.ozp")
       end
       meth collect(Ss)
 	 {Cell.assign HintList nil}
@@ -1077,7 +1097,7 @@ define
 			flags:[write create truncate])
 	 CanvasClasses, collect(CanvasClassList)
 	 GtkClasses, emit
-	 GtkClasses, saveDict("GtkCanvasClasses.ozp")
+	 GtkClasses, saveDict("GtkCanvasClasses.ozp" "GtkCanvasClassesFull.ozp")
       end
       meth collect(Keys)
 	 case Keys
