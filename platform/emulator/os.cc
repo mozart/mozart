@@ -24,7 +24,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#ifndef WINDOWS
+#ifdef WINDOWS
+#include <time.h>
+#else
 #include <sys/times.h>
 #include <sys/wait.h>
 #include <sys/time.h>
@@ -58,7 +60,7 @@
 unsigned int osUserTime()
 {
 #ifdef WINDOWS
-  return 0;
+  return ((1000*clock())/CLOCKS_PER_SEC);
 #else
   struct tms buffer;
 
@@ -519,14 +521,34 @@ int osCheckIO()
 
 void osKillChildren()
 {
+#ifndef WINDOWS
   if (osHasJobControl()) {
     // terminate all our children
     OsSigFun *save=osSignal(SIGTERM,(OsSigFun*)SIG_IGN);
-#ifndef WINDOWS
     if (kill(-getpid(),SIGTERM) < 0) {
       ozpwarning("kill");
     }
-#endif
     osSignal(SIGTERM,save);
   }
+#endif
 }
+
+
+int osread(int fd, void *buf, unsigned int len)
+{
+#ifdef WINDOWS
+  HANDLE h = (HANDLE)_os_handle(fd);
+  if (GetFileType(h) == FILE_TYPE_PIPE) {
+    ;
+  }
+#endif
+  return read(fd, buf, len);
+}
+
+
+/* currently no wrapping for write */
+int oswrite(int fd, void *buf, unsigned int len)
+{
+  return write(fd, buf, len);
+}
+
