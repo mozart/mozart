@@ -104,6 +104,8 @@
 
 <!ENTITY % input.local "">
 %input.local;
+<!ENTITY % input.local.1 "">
+%input.local.1;
 
 <!--==================== PARAMETER ENTITIES =======================-->
 
@@ -127,6 +129,9 @@
 <!ENTITY % p.level "(p|para|div)">
 <!ENTITY % p.model "(p|para|div|index)*">
 <!ENTITY % p.chars.model "p.silent,(%p.model;)">
+
+<!ENTITY % input.local.2 "">
+%input.local.2;
 
 <!--==================== DOCUMENT STRUCTURE =======================-->
 
