@@ -65,6 +65,9 @@ nil:     Don't start emulator (use command 'run').
 (defvar oz-debug-mode nil
   "*Determines the way how feeding of code is done.")
 
+(defvar oz-auto-indent t
+  "*Determines whether automatic indenting is active.")
+
 (defvar oz-indent-chars 3
   "*Indentation of Oz statements with respect to containing block.")
 
@@ -607,10 +610,10 @@ the GDB commands `cd DIR' and `directory'."
   "Feeds the current paragraph."
   (interactive)
   (save-excursion
-	(forward-paragraph 1)
-	(let ((end (point)))
-	  (backward-paragraph 1)
-	  (oz-feed-region (point) end)))
+	(backward-paragraph 1)
+	(let ((start (point)))
+	  (forward-paragraph 1)
+	  (oz-feed-region start (point))))
   )
 
 (defun oz-send-string (string)
@@ -642,10 +645,10 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-electric-terminate-line ()
   "Terminate line and indent next line."
   (interactive)
-  (oz-indent-line)
+  (cond (oz-auto-indent (oz-indent-line)))
   (delete-horizontal-space) ; Removes trailing whitespaces
   (newline)
-  (oz-indent-line)
+  (cond (oz-auto-indent (oz-indent-line)))
 )
 
 ;;------------------------------------------------------------
