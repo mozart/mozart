@@ -513,7 +513,6 @@ int OZ_featureCmp(OZ_Term term1, OZ_Term term2)
  * PRINTING
  */
 
-inline
 void int2buffer(ostream &out, OZ_Term term)
 {
   if (isSmallInt(term)) {
@@ -534,12 +533,24 @@ void int2buffer(ostream &out, OZ_Term term)
 }
 
 inline
+char *strAndDelete(ostrstream *out)
+{
+  (*out) << ends;
+  char *ret = ozstrdup(out->str());
+  out->freeze(0);
+  delete out;
+  return ret;
+}
+
+
+
 void float2buffer(ostream &out, OZ_Term term)
 {
   double f = floatValue(term);
-  ostrstream tmp;
-  tmp << f << ends;
-  char *str = tmp.str();
+
+  ostrstream *tmp = new ostrstream;
+  (*tmp) << f;
+  char *str = strAndDelete(tmp);
 
   // normalize float
   Bool hasDot = NO;
@@ -1132,15 +1143,14 @@ char *OZ_toC(OZ_Term term, int depth,int width)
     delete tmpString;
   }
 
-  ostrstream out;
+  ostrstream *out = new ostrstream;
 
   int old=listWidth;
   listWidth = width;
-  value2buffer(out,term,depth);
+  value2buffer(*out,term,depth);
   listWidth = old;
 
-  out << ends;
-  tmpString = out.str();
+  tmpString = strAndDelete(out);
   return tmpString;
 }
 
@@ -1223,36 +1233,29 @@ void string2buffer(ostream &out,OZ_Term list)
  */
 char *OZ_stringToC(OZ_Term list)
 {
-  static char *tmpStr = 0;
-  if (tmpStr) {
-    delete tmpStr;
-    tmpStr = 0;
+  static char *tmpString = 0;
+  if (tmpString) {
+    delete tmpString;
+    tmpString = 0;
   }
 
-  ostrstream out;
+  ostrstream *out = new ostrstream;
 
-  string2buffer(out,list);
+  string2buffer(*out,list);
 
-  out << ends;
-  tmpStr = out.str();
-  return tmpStr;
+  tmpString = strAndDelete(out);
+  return tmpString;
 }
 
 void OZ_printString(OZ_Term term)
 {
-  static char *tmpStr = 0;
-  if (tmpStr) {
-    delete tmpStr;
-    tmpStr = 0;
-  }
+  ostrstream *out = new ostrstream;
 
-  ostrstream out;
+  string2buffer(*out,term);
 
-  string2buffer(out,term);
-
-  out << ends;
-  tmpStr = out.str();
-  printf("%s",tmpStr);
+  char *tmpString = strAndDelete(out);
+  printf("%s",tmpString);
+  delete tmpString;
 }
 
 void OZ_printAtom(OZ_Term t)
@@ -1326,19 +1329,18 @@ void virtualString2buffer(ostream &out,OZ_Term term)
  */
 char *OZ_virtualStringToC(OZ_Term t)
 {
-  static char *tmpStr = 0;
-  if (tmpStr) {
-    delete tmpStr;
-    tmpStr = 0;
+  static char *tmpString = 0;
+  if (tmpString) {
+    delete tmpString;
+    tmpString = 0;
   }
 
-  ostrstream out;
+  ostrstream *out = new ostrstream;
 
-  virtualString2buffer(out,t);
+  virtualString2buffer(*out,t);
 
-  out << ends;
-  tmpStr = out.str();
-  return tmpStr;
+  tmpString = strAndDelete(out);
+  return tmpString;
 }
 
 
