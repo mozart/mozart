@@ -596,7 +596,7 @@ ac_link='${CXX-g++} -o conftest $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $L
 cross_compiling=$ac_cv_prog_cxx_cross
 
 
-if test -d $OZHOME
+if test -n "$OZHOME" && test -d "$OZHOME";
 then
   ac_default_prefix=$OZHOME
 fi
