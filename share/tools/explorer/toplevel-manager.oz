@@ -192,7 +192,7 @@ local
 							 {Tk.string.toFloat X}
 							 {Tk.string.toFloat Y})}
 					   end)
-			    tkBind(event:  '<3>'
+			    tkBind(event:  '<Double-2>'
 				   args:   [x y]
 				   action: proc {$ X Y}
 					      {Manager
