@@ -357,6 +357,7 @@ extern "C" {
 
 const int OzMaxInt = INT_MAX>>tagSize;
 const int OzMinInt = -OzMaxInt;
+const unsigned long OzMaxUnsignedLong = ~0;
 
 
 inline
@@ -483,10 +484,12 @@ public:
 
   NO_DEFAULT_CONSTRUCTORS2(BigInt);
 
-  void init()            { gcForwardPtr = NULL; }
-  BigInt()               { init(); mpz_init(&value); }
-  BigInt(int i)          { init(); mpz_init_set_si(&value,i); }
-  BigInt(unsigned int i) { init(); mpz_init_set_ui(&value,i); }
+  void init()             { gcForwardPtr = NULL; }
+  BigInt()                { init(); mpz_init(&value); }
+  BigInt(long i)          { init(); mpz_init_set_si(&value,i); }
+  BigInt(unsigned long i) { init(); mpz_init_set_ui(&value,i); }
+  BigInt(int i)           { init(); mpz_init_set_si(&value,i); }
+  BigInt(unsigned int i)  { init(); mpz_init_set_ui(&value,i); }
 
   BigInt(char *s) {
     init();
@@ -522,6 +525,18 @@ public:
       return INT_MIN;
     } else {
       return mpz_get_si(&value);
+    }
+  }
+
+  /* make an 'unsigned long' if <Big> fits into it, else return 0,~0 */
+  unsigned long getUnsignedLong()
+  {
+    if (mpz_cmp_ui(&value,OzMaxUnsignedLong) > 0) {
+      return OzMaxUnsignedLong;
+    } else if (mpz_cmp_si(&value,0) < 0) {
+      return 0;
+    } else {
+      return mpz_get_ui(&value);
     }
   }
 
@@ -569,7 +584,7 @@ TaggedRef makeInt(int i)
 }
 
 inline
-TaggedRef makeUnsignedInt(unsigned int i)
+TaggedRef oz_unsignedInt(unsigned int i)
 {
   if (i > (unsigned int) OzMaxInt) 
     return makeTaggedBigInt(new BigInt(i));
