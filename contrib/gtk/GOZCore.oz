@@ -244,9 +244,6 @@ define
          meth signalEmit(Signal)
             {GOZSignal.signalEmit @object Signal}
          end
-         meth connectEvents
-            skip
-         end
          meth !WrapPointer(Ptr)
             @object = Ptr
          end

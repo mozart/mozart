@@ -498,8 +498,6 @@ define
          TextFile, putS({Util.indent 3}#ResStart#"{"#@module#"."#Name#" "#Self#CallStr#"}"#ResEnd)
          GtkClasses, handleOutArgs(CallArgs)
          if IsCont then TextFile, putS({Util.indent 3}#"children <- A0|@children") end
-         if IsNew then TextFile, putS({Util.indent 3}#"{self connectEvents}")
-         end
          TextFile, putS({Util.indent 2}#"end")
       end
       meth prepareArgs(InArgs I OutArgs $)

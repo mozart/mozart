@@ -33,8 +33,6 @@ define
          GTK.window, new(GTK.wINDOW_TOPLEVEL)
          GTK.window, setBorderWidth(10)
          GTK.window, setTitle("Canvas Events")
-      end
-      meth connectEvents
          {self signalConnect('destroy' destroyEvent _)}
       end
       meth destroyEvent(Event)
