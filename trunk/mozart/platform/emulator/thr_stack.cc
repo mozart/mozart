@@ -15,74 +15,9 @@
 
 #include "am.hh"
 
-/*
- * getSeqSize:
- *   calculate the size of the sequential part of the taskstack
- *   and update the tos ("remove" all sequential tasks)
- * NOTE: the entry must not be destroyed, because copySeq needs them
- */
-int TaskStack::getSeqSize()
-{
-  TaskStackEntry *oldTos=tos;
-
-  while (1) {
-    if (isEmpty()) {
-      tos=oldTos;
-      return -1;
-    }
-    TaskStackEntry entry=*(--tos);
-    ContFlag cFlag = getContFlag(ToInt32(entry));
-
-    if (cFlag == C_JOB) {
-      return oldTos-tos-1;
-    }
-    if (cFlag == C_SET_SELF) {
-      am.setSelf((Object*) *(tos-1));
-    }
-    tos = tos - frameSize(cFlag) + 1;
-  }
-}
-
-#ifdef DEBUG_CHECK
-int TaskStack::hasJobDebug ()
-{
-  TaskStackEntry *oldTos=tos;
-
-  while (1) {
-    if (isEmpty()) {
-      tos=oldTos;
-      return NO;
-    }
-    TaskStackEntry entry=*(--tos);
-    ContFlag cFlag = getContFlag(ToInt32(entry));
-
-    if (cFlag == C_JOB) {
-      tos=oldTos;
-      return OK;
-    }
-    tos = tos - frameSize(cFlag) + 1;
-  }
-}
-#endif
-
-/*
- * copySeq: copy the sequential part of newStack
- *  NOTE: the tos of newStack points to the JOB task
- */
-void TaskStack::copySeq(TaskStack *newStack,int len)
-{
-  TaskStackEntry *next=newStack->tos+1;
-
-  for (;len>0;len--) {
-    push(*next++);
-  }
-}
-
 int TaskStack::frameSize(ContFlag cFlag)
 {
   switch (cFlag){
-  case C_JOB:
-    return 1;
   case C_CONT: 
     return 3;      
   case C_XCONT:
@@ -101,6 +36,22 @@ int TaskStack::frameSize(ContFlag cFlag)
     Assert(0);
     return -1;
   }
+}
+
+int TaskStack::tasks()
+{
+  TaskStackEntry *oldTos=tos;
+  int len=0;
+
+  while (!isEmpty()) {
+    len++;
+
+    TaskStackEntry entry=*(--tos);
+    ContFlag cFlag = getContFlag(ToInt32(entry));
+    tos = tos - frameSize(cFlag) + 1;
+  }
+  tos=oldTos;
+  return len;
 }
 
 void TaskStack::checkMax()
@@ -142,9 +93,6 @@ TaggedRef TaskStack::findCatch(TaggedRef &out) {
     TaggedPC topElem = ToInt32(pop());
     ContFlag flag = getContFlag(topElem);
     switch (flag){
-    case C_JOB:
-      return 0;
-
     case C_CONT:
       {
         ProgramCounter PC = getPC(C_CONT,topElem);
@@ -226,3 +174,5 @@ TaggedRef TaskStack::findCatch(TaggedRef &out) {
 
   return 0;
 }
+
+

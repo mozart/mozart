@@ -93,7 +93,6 @@ public:
 #ifdef PROFILE
   /* these should alos use class StatCounter */
   int allocateCounter, deallocateCounter, procCounter,
-    waitCounter, askCounter,
     localVariableCounter, protectedCounter;
 #endif
 
@@ -127,7 +126,7 @@ public:
   long cvar;
   long dynamicTable, dynamicTableLen;
   long taskStack,taskStackLen;
-  long cCatch,cLocal,cJob,cCont,cXCont,cSetCaa,cDebugCont,cExceptHandler;
+  long cCatch,cLocal,cCont,cXCont,cSetCaa,cDebugCont,cExceptHandler;
   long cCallCont, cCFuncCont;
   long abstraction,deepObject,flatObject,cell,space,chunk;
   long builtin;

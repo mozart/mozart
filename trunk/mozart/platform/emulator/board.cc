@@ -141,7 +141,7 @@ Board::Board(Actor *a,int typ)
   if (a != (Actor *) NULL && a->isAskWait () == OK) {
     (AWActor::Cast (a))->addChild(this);
   }
-  suspCount=1;
+  suspCount=0;
   u.actor=a;
 }
 

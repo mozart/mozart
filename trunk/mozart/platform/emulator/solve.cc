@@ -133,7 +133,6 @@ SolveActor::SolveActor(Board *bb, int prio)
   solveBoard = new Board(this, Bo_Solve);
   solveVar   = makeTaggedRef(newTaggedUVar(solveBoard));
   bb->decSuspCount();         // don't count this actor!
-  solveBoard->decSuspCount(); // Initially there is no task!
 }
 
 // ------------------------------------------------------------------------

@@ -129,72 +129,6 @@ Bool Thread::isBelowFailed (Board *top)
 }
 
 /*
- * remove local tasks
- */
-void Thread::discardUpTo(Board *bb)
-{
-  TaskStack *ts;
-  TaskStackEntry *tos;
-  Object *obj = NULL;
-  Assert (hasStack ());
-
-  ts = &(item.threadBody->taskStack);
-  tos = ts->getTop();
-  while (TRUE) {
-    TaskStackEntry entry=*(--tos);
-    if (ts->isEmpty (entry)) {
-      ts->setTop(tos+1);
-      return;
-    }
-
-    ContFlag cFlag = getContFlag(ToInt32(entry));
-
-    switch (cFlag) {
-    case C_ACTOR:
-      {
-	AWActor *aa = (AWActor *) *(--tos);
-	if (aa->getBoardFast()==bb) {
-	  ts->setTop(tos+2);
-	  if (obj) {
-	    ts->pushSelf(obj);
-	  }
-	  return;
-	}
-	break;
-      }
-      /* have to take care that 'self' is set correctly
-	 after resuming thread! */
-    case C_SET_SELF:
-      obj = (Object*) *(--tos);
-      break;
-
-    case C_JOB:
-      {
-	DebugCode (ts->setTop (tos));
-	Bool hasJobs = ts->getJobFlagFromEntry(entry);
-	if (!hasJobs) unsetHasJobs();
-      }
-      break;
-
-    default:
-      tos = tos - ts->frameSize(cFlag) + 1;
-      break;
-    }
-  }
-}
-
-//
-//
-#ifdef DEBUG_CHECK
-Bool Thread::hasJobDebug ()
-{
-  Assert (hasStack ());
-
-  return (item.threadBody->taskStack.hasJobDebug ());
-}
-#endif
-
-/*
  * terminate a thread
  *  if not in deep guard: discard all tasks, return NO
  *  if in deep guard: don't discard any task, return OK
@@ -211,7 +145,6 @@ Bool Thread::terminate()
     TaskStackEntry entry=*(--tos);
     if (ts->isEmpty (entry)) {
       ts->setTop(tos+1);
-      unsetHasJobs();
       return NO;
     }
 
