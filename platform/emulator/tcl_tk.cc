@@ -118,6 +118,11 @@ public:
     buffer += len;
     ensure(0);
   }
+  void print(void) {
+    put('\0');
+    printf("%s", start);
+    back();
+  }
 };
 
 void StringBuffer::resize(void)
@@ -364,6 +369,72 @@ OZ_C_proc_begin(BIisTclFilter, 3) {
   }
   error("isTclFilter");
   return FAILED;
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIisTclReturn, 2) {
+  TaggedRef tcl = OZ_getCArg(0);
+  OZ_Return s   = PROCEED;
+
+  DEREF(tcl, tcl_ptr, tcl_tag);
+
+  // don't care about the label
+  if (isSTuple(tcl)) {
+    SRecord * sr = tagged2SRecord(tcl);
+
+    for (int i=0; i < sr->getWidth() - 1; i++) {
+      s = isTcl(sr->getArg(i));
+      if (s != PROCEED) goto exit;
+    }
+
+  } else if (isSRecord(tcl_tag)) {
+    SRecord * sr = tagged2SRecord(tcl);
+    TaggedRef as = sr->getArityList(); /* arity list is already deref'ed */
+
+    while (isCons(as)) {
+      TaggedRef a1  = head(as);
+      TaggedRef ar  = tail(as);
+
+      if (isSmallInt(a1)) {
+	if (isCons(ar)) {
+	  TaggedRef a2 = head(ar);
+
+	  if (isSmallInt(a2)) {
+	    s = isTcl(sr->getFeature(a1));
+	    if (s != PROCEED) goto exit;
+	  }
+
+	} else {
+	  s = PROCEED;
+	  goto exit;
+	}
+      } else if (isLiteral(a1) && tagged2Literal(a1)->isAtom()) {
+
+	s = isTcl(sr->getFeature(a1));
+	if (s != PROCEED) goto exit;
+
+      } else {
+	s = FAILED;
+	goto exit;
+      }
+
+      as = ar;
+    }
+    
+  } else {
+    s = FAILED;
+  }    
+
+exit:
+  switch (s) {
+  case FAILED:  
+    return OZ_unify(OZ_getCArg(1), NameFalse);
+  case PROCEED: 
+    return OZ_unify(OZ_getCArg(1), NameTrue);
+  default: 
+    return s;
+  }
+
 } OZ_C_proc_end
 
 
@@ -763,6 +834,88 @@ OZ_C_proc_begin(BItclWrite,3) {
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BItclWriteReturn,6) {  
+  OZ_declareIntArg(0, fd);
+  TaggedRef tcl_a = deref(OZ_getCArg(1));
+  TaggedRef tcl_b = deref(OZ_getCArg(2));
+  TaggedRef tcl   = deref(OZ_getCArg(3));
+  TaggedRef ret   = makeTaggedNULL();
+
+  tcl_buffer.reset();
+
+  tcl_put2('o', 'z');
+  tcl_put2('r', ' ');
+  tcl_put('[');
+
+  tcl2buffer(tcl_a);
+  tcl_put(' ');
+  tcl2buffer(tcl_b);
+  
+  if (isSTuple(tcl)) {
+    SRecord * sr = tagged2SRecord(tcl);
+
+    for (int i=1; i < sr->getWidth()-1; i++) {
+      tcl_put(' ');
+      tcl2buffer(sr->getArg(i));
+      
+    }
+
+    ret = sr->getArg(sr->getWidth()-1);
+
+  } else {
+    SRecord * sr = tagged2SRecord(tcl);
+    TaggedRef as = tail(sr->getArityList()); /* arity is already deref'ed */
+
+    while (isCons(as)) {
+      TaggedRef a1  = head(as);
+      TaggedRef ar  = tail(as);
+
+      if (isSmallInt(a1)) {
+	if (isCons(ar)) {
+	  TaggedRef a2 = head(ar);
+
+	  if (isSmallInt(a2)) {
+	    tcl_put(' ');
+	    tcl2buffer(sr->getFeature(a1));
+	  } else {
+	    ret = sr->getFeature(a1);
+	  }
+
+	} else {
+	  break;
+	}
+
+      } else {
+	Assert(isLiteral(a1) && tagged2Literal(a1)->isAtom());
+
+	tcl_put2(' ','-');
+	start_protect();
+	protect_atom2buffer(a1);
+	stop_protect();
+	tcl_put(' ');
+	tcl2buffer(sr->getFeature(a1));
+
+      }
+
+      as = ar;
+    }
+    
+  }
+
+exit:
+
+  tcl_put2(']','\n');
+
+  Assert(ret);
+
+  (void) OZ_unify(ret, OZ_getCArg(4));
+  
+  return tcl_write(fd, tcl_buffer.string(), tcl_buffer.size(), 
+		   OZ_getCArg(5));
+}
+OZ_C_proc_end
+
+
 OZ_C_proc_begin(BItclWriteBatch,3) {  
   OZ_declareIntArg(0, fd);
   TaggedRef batch = deref(OZ_getCArg(1));
@@ -1093,7 +1246,9 @@ BIspec tclTkSpec[] = {
   {"getTclName",       1, BIgetTclName,        0},
   {"isTcl",            2, BIisTcl,             0},
   {"isTclFilter",      3, BIisTclFilter,       0},
+  {"isTclReturn",      2, BIisTclReturn,       0},
   {"tclWrite",         3, BItclWrite,          0},
+  {"tclWriteReturn",   6, BItclWriteReturn,    0},
   {"tclWriteBatch",    3, BItclWriteBatch,     0},
   {"tclWriteTuple",    4, BItclWriteTuple,     0},
   {"tclWriteTagTuple", 5, BItclWriteTagTuple,  0},
