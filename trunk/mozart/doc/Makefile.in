@@ -46,9 +46,7 @@ SUBDIRS		= @SUBDIRS@
 .PHONY: all bootstrap check install clean veryclean distclean depend
 
 
-all:: $(CED)
-
-bootstrap:: all
+bootstrap all:: $(CED)
 
 check::
 
