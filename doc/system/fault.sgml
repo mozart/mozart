@@ -37,8 +37,9 @@ more information on what the operations do and how to use them.
 in the <<Fault>> module.
 <list>
 <entry/<code/Entity//
-<item>A reference to any Oz language entity
-that may be an object, cell, lock, port, or logic variable.
+<item>A reference to any Oz language entity that
+has distributed fault modes, namely any
+object, cell, lock, port, or logic variable.
 
 <entry/<code/Level//
 <item>One of <<global>>, <<site>>, or <<'thread'(T)>>,
@@ -107,6 +108,9 @@ appears in one or more of the following three ways:
 <P>A limitation of the current release is that if the problem
 was detected during an object operation, then the <<Entity>>
 argument is undefined.
+In the case of handlers and watchers, this limitation can
+be circumvented by putting a reference to the object in
+the handler or watcher.
 
 <section><title/Operations/
 
