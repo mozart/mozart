@@ -2641,19 +2641,41 @@ OZ_BI_define(BInewPort,1,1)
   return oz_unify(OZ_in(0),fut);
 } OZ_BI_end
 
-void doPortSend(PortWithStream *port,TaggedRef val)
-{
-  OZ_Term newFut = oz_newFuture(oz_currentBoard());
-  OZ_Term lt  = oz_cons(am.currentUVarPrototype(),newFut);
-  OZ_Term oldFut = port->exchangeStream(newFut);
+inline
+void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
+  if (home != (Board *) NULL) {
+    OZ_Term newFut = oz_newFuture(home);
+    OZ_Term newVar = oz_newVar(home);
+    OZ_Term lt     = oz_cons(newVar,newFut);
+    OZ_Term oldFut = port->exchangeStream(newFut);
 
-  DEREF(oldFut,ptr,_);
-  oz_bindFuture(ptr,lt);
-  OZ_unifyInThread(val,oz_head(lt)); // might raise exception if val is non exportable
+    Thread * t = oz_newThreadInject(home);
+    RefsArray args2 = allocateRefsArray(2, NO);
+    args2[0] = val;
+    args2[1] = oz_head(lt);
+    t->pushCall(BI_Unify,args2,2);
+    RefsArray args1 = allocateRefsArray(2, NO);
+    args1[0] = oldFut;
+    args1[1] = lt;
+    t->pushCall(BI_bindFuture,args1,2);
+  } else {
+    OZ_Term newFut = oz_newFuture(oz_currentBoard());
+    OZ_Term lt     = oz_cons(am.currentUVarPrototype(),newFut);
+    OZ_Term oldFut = port->exchangeStream(newFut);
+
+    DEREF(oldFut,ptr,_);
+    oz_bindFuture(ptr,lt);
+
+    // might raise exception if val is non exportable
+    OZ_unifyInThread(val,oz_head(lt));
+  }
 }
 
 #endif
 
+
+extern
+OZ_Return (*OZ_checkSituatedness)(Board *,TaggedRef *);
 
 
 OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
@@ -2662,12 +2684,33 @@ OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
 
   Port *port  = tagged2Port(prt);
 
-  CheckLocalBoard(port,"port");
+  Board * prt_home = port->getBoardInternal()->derefBoard();
 
-  if(port->isProxy()) {
-    return (*portSend)(port,val);
+  Bool sc_required = (prt_home != oz_currentBoard());
+
+  if (sc_required) {
+    // Perform situatedness check
+    OZ_Return ret = (*OZ_checkSituatedness)(prt_home,&val);
+    if (ret!=PROCEED)
+      return ret;
   }
-  doPortSend((PortWithStream*)port,val);
+
+  if (port->isProxy()) {
+    if (sc_required) {
+      // Fork a thread to redo the send
+      RefsArray args = allocateRefsArray(2, NO);
+      args[0] = prt;
+      args[1] = val;
+
+      Thread * t = oz_newThreadInject(prt_home);
+      t->pushCall(BI_send,args,2);
+      return PROCEED;
+    } else {
+      return (*portSend)(port,val);
+    }
+  }
+  doPortSend((PortWithStream*)port,val,
+             sc_required ? prt_home : NULL);
   return PROCEED;
 }
 

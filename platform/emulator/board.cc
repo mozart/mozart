@@ -631,3 +631,5 @@ void Board::unsetGlobalMarks(void) {
   }
 
 }
+
+OZ_Return (*OZ_checkSituatedness)(Board *,TaggedRef *);

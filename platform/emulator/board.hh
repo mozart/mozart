@@ -395,6 +395,7 @@ public:
 
 };
 
+
 #ifndef OUTLINE
 #include "board.icc"
 #endif
