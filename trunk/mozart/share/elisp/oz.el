@@ -4,6 +4,8 @@
 ;; $Id$
 
 ;; BUGS
+;; - oz-directive-on-region should write a \line directive at the start
+;;   of the file.
 ;; - `/*' ... `*/' style comments are ignored for purposes of indentation.
 ;;   (Nesting and line breaks are problematic.)
 ;; - Line breaks inside strings, quotes or backquote variables
@@ -255,10 +257,6 @@ All strings matching this regular expression are removed.")
 		    scr
 		    (list (cons 'name oz-old-frame-title))))
 		(visible-frame-list)))))
-
-(defun oz-window-system ()
-  "Return non-nil iff Emacs is running under X Windows."
-  window-system)
 
 
 ;;------------------------------------------------------------
@@ -825,8 +823,7 @@ the gdb commands `cd DIR' and `directory'."
   "Feed the current line to the Oz Compiler."
   (interactive)
   (let ((line (oz-line-pos)))
-    (oz-feed-region (car line) (cdr line)))
-  (oz-zmacs-stuff))
+    (oz-feed-region (car line) (cdr line))))
 
 (defun oz-feed-paragraph ()
   "Feed the current paragraph to the Oz Compiler.
@@ -1590,7 +1587,7 @@ if that value is non-nil."
 
   ;; font lock stuff
   (oz-set-font-lock-defaults)
-  (if (and oz-want-font-lock (oz-window-system))
+  (if (and oz-want-font-lock window-system)
       (font-lock-mode 1))
   (run-hooks 'oz-mode-hook))
 
@@ -1608,7 +1605,7 @@ Commands:
 
   ;; font lock stuff
   (ozm-set-font-lock-defaults)
-  (if (and oz-want-font-lock (oz-window-system))
+  (if (and oz-want-font-lock window-system)
       (font-lock-mode 1)))
 
 (defun oz-gump-mode ()
@@ -1631,7 +1628,7 @@ if that value is non-nil."
 
   ;; font lock stuff
   (oz-gump-set-font-lock-defaults)
-  (if (and oz-want-font-lock (oz-window-system))
+  (if (and oz-want-font-lock window-system)
       (font-lock-mode 1))
   (run-hooks 'oz-mode-hook))
 
@@ -1720,7 +1717,8 @@ and initial percent signs."
 ;; Fontification
 ;;------------------------------------------------------------
 
-(if (oz-window-system) (require 'font-lock))
+(if window-system
+    (require 'font-lock))
 
 (defconst oz-keywords
   '("declare" "local" "in" "end"
@@ -1763,17 +1761,17 @@ The first subexpression matches the keyword proper (for fontification).")
   "Regular expression matching non-identifier keywords.")
 
 (defconst oz-proc-fun-matcher
-  (concat "\\<\\(proc\\|fun\\)[ \t]*{"
+  (concat "\\<\\(proc\\|fun\\)[ \t]*{!?"
 	  "\\([A-Z][A-Za-z0-9_]*\\|`[^`\n]*`\\)")
   "Regular expression matching proc or fun definitions.
 The second subexpression matches the definition's identifier
 (if it is a variable) and is used for fontification.")
 
 (defconst oz-class-matcher
-  (concat "\\<class[ \t]+"
+  (concat "\\<class\\([ \t]+\\|[ \t]*!\\)"
 	  "\\([A-Z][A-Za-z0-9_]*\\|`[^`\n]*`\\)")
   "Regular expression matching class definitions.
-The first subexpression matches the definition's identifier
+The second subexpression matches the definition's identifier
 (if it is a variable) and is used for fontification.")
 
 (defconst oz-meth-matcher
@@ -1803,7 +1801,7 @@ and is used for fontification.")
   (append (list (list oz-proc-fun-matcher
 		      '(2 font-lock-function-name-face))
 		(list oz-class-matcher
-		      '(1 font-lock-type-face))
+		      '(2 font-lock-type-face))
 		(list oz-meth-matcher
 		      '(2 font-lock-function-name-face)))
 	  oz-font-lock-keywords-2)
@@ -1836,7 +1834,7 @@ and is used for fontification.")
       "inlineEqEq" "inlineDot" "inlineUparrow" "inlineAt" "inlineAssign"
       "genCall" "call" "tailCall" "fastCall" "fastTailCall" "genFastCall"
       "marshalledFastCall" "sendMsg" "tailSendMsg" "applMeth" "tailApplMeth"
-      "thread" "exHandler" "createCond" "nextClause" "shallowGuard"
+      "thread" "threadX" "exHandler" "createCond" "nextClause" "shallowGuard"
       "shallowTest[12]" "testConst" "testNumber" "testBool" "switchOnTerm"
       "getVariable" "getVarVar" "getVoid" "lockThread" "getSelf" "det"
       "weakDet" "debugInfo" "globalVarname" "localVarname" "clearY") "\\|")
@@ -1850,7 +1848,7 @@ and is used for fontification.")
     '("allocateL[1-9]" "allocateL10" "deAllocateL"
       "deAllocateL[1-9]" "deAllocateL10" "return" "popEx" "createOr"
       "createEnumOr" "createChoice" "clause" "emptyClause" "lastClause"
-      "shallowThen" "failure" "succeed" "wait" "waitTop" "ask")
+      "shallowThen" "failure" "succeed" "wait" "waitTop" "ask" "profileProc")
     "\\|")
    "\\)$"))
 
@@ -1994,7 +1992,7 @@ and is used for fontification.")
 
 (defun oz-fontify-buffer ()
   (interactive)
-  (if (oz-window-system) (font-lock-fontify-buffer)))
+  (if window-system (font-lock-fontify-buffer)))
 
 (defun oz-fontify (&optional arg)
   (interactive "P")
@@ -2099,16 +2097,13 @@ The rest of the output is then passed through the oz-filter."
 		(oz-show-buffer buf)
 		(save-excursion
 		  (set-buffer buf)
-		  (goto-char (point-max))
+		  (erase-buffer)
 		  (insert-file-contents file)
 		  (delete-file file)
-		  (cond ((not oz-want-font-lock) t)
-			((string-match "\\.ozc\\'" file)
-			 (oz-mode)
-			 (oz-fontify-buffer))
-			((string-match "\\.ozm\\'" file)
-			 (ozm-mode)
-			 (oz-fontify-buffer))))))
+		  (cond ((string-match "\\.ozc$" file)
+			 (oz-mode))
+			((string-match "\\.ozm$" file)
+			 (ozm-mode))))))
 
 	    ;; oz-bar information?
 	    (while (search-forward-regexp oz-bar-pattern nil t)
@@ -2266,7 +2261,7 @@ If it is, then remove it."
 
 (defun oz-to-coresyntax-region (start end)
    (interactive "r")
-   (oz-directive-on-region start end "\\core" ".ozc" t))
+   (oz-directive-on-region start end "\\core" ".ozc"))
 
 (defun oz-to-emulatorcode-buffer ()
   (interactive)
@@ -2287,9 +2282,9 @@ If it is, then remove it."
 
 (defun oz-to-emulatorcode-region (start end)
    (interactive "r")
-   (oz-directive-on-region start end "\\machine" ".ozm" nil))
+   (oz-directive-on-region start end "\\machine" ".ozm"))
 
-(defun oz-directive-on-region (start end directive suffix enter-oz-mode)
+(defun oz-directive-on-region (start end directive suffix)
   "Applies a directive to the region."
   (let ((file-1 (concat oz-temp-file ".oz"))
 	(file-2 (concat oz-temp-file suffix)))
@@ -2297,22 +2292,27 @@ If it is, then remove it."
 	(delete-file file-2))
     (write-region start end file-1)
     (message "")
-    (if (get-buffer oz-temp-buffer)
-	(progn (delete-windows-on oz-temp-buffer)
-	       (kill-buffer oz-temp-buffer)))
     (if oz-using-new-compiler
 	(oz-send-string (concat directive " '" file-1 "'"))
+      (let ((buf (get-buffer oz-temp-buffer)))
+	(if buf
+	    (save-excursion
+	      (set-buffer buf)
+	      (erase-buffer))))
       (shell-command (concat "touch " file-2))
       (start-process "Oz Temp" oz-temp-buffer "tail" "+1f" file-2)
       (message "")
       (oz-send-string (concat directive " '" file-1 "'"))
       (let ((buf (get-buffer oz-temp-buffer)))
 	(oz-show-buffer buf)
-	(if enter-oz-mode
-	    (save-excursion
-	      (set-buffer buf)
-	      (oz-mode)
-	      (oz-fontify-buffer)))))))
+	(cond ((string-match "\\.ozc$" file-2)
+	       (save-excursion
+		 (set-buffer buf)
+		 (oz-mode)))
+	      ((string-match "\\.ozm$" file-2)
+	       (save-excursion
+		 (set-buffer buf)
+		 (ozm-mode))))))))
 
 (defun oz-feed-region-browse (start end)
   "Feed the current region to the Oz Compiler.
