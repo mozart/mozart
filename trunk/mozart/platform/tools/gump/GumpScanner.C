@@ -151,13 +151,19 @@ OZ_BI_define(gump_close, 1,0)
 }
 OZ_BI_end
 
-OZ_C_proc_interface oz_interface[] = {
-  {"createFromFile",1,1,gump_createFromFile},
-  {"createFromVirtualString",1,1,gump_createFromVirtualString},
-  {"setInteractive",2,0,gump_setInteractive},
-  {"getInteractive",1,1,gump_getInteractive},
-  {"setBOL",2,0,gump_setBOL},
-  {"getBOL",1,1,gump_getBOL},
-  {"close",1,0,gump_close},
-  {0,0,0,0}
-};
+extern "C" OZ_C_proc_interface *oz_init_module(void);
+
+OZ_C_proc_interface *oz_init_module(void) {
+  static OZ_C_proc_interface oz_interface[] = {
+    {"createFromFile",1,1,gump_createFromFile},
+    {"createFromVirtualString",1,1,gump_createFromVirtualString},
+    {"setInteractive",2,0,gump_setInteractive},
+    {"getInteractive",1,1,gump_getInteractive},
+    {"setBOL",2,0,gump_setBOL},
+    {"getBOL",1,1,gump_getBOL},
+    {"close",1,0,gump_close},
+    {0,0,0,0}
+  };
+
+  return oz_interface;
+}
