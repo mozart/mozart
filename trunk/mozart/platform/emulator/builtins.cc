@@ -7685,7 +7685,7 @@ OZ_C_proc_begin(BIfinalize_setHandler,1)
 			  hdl);
   }
   if (!(isProcedure(hdl)||isObject(hdl)))
-    return oz_typeError(0,"Procedure|Object");
+    oz_typeError(0,"Procedure|Object");
   finalize_handler = hdl;
   return PROCEED;
 }
