@@ -237,10 +237,6 @@ void GenTraverser::doit()
 	break;
       }
 
-    case TAG_EXT:
-      processExtension(t);
-      break;
-
     case TAG_CONST:
       {
 	int ind = findTerm(t);
@@ -252,6 +248,10 @@ void GenTraverser::doit()
 	//
 	ConstTerm *ct = tagged2Const(t);
 	switch (ct->getType()) {
+
+	case Co_Extension:
+	  processExtension(t);
+	  break;
 
 	case Co_Float:
 	  processFloat(t);

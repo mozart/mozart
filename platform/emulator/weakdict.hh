@@ -16,7 +16,7 @@ private:
   friend void gCollectWeakDictionariesPreserve(void);
   friend void gCollectWeakDictionariesContent(void);
 public:
-  WeakDictionary();
+  WeakDictionary() : OZ_Extension() {}
   WeakDictionary(DynamicTable*t,OZ_Term s)
     : OZ_Extension(),table(t),stream(s) {}
   WeakDictionary(OZ_Term srm)
