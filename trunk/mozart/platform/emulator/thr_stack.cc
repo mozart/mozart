@@ -112,7 +112,7 @@ void TaskStack::checkMax()
 
 loop:
     prefixError();
-    printf("\n\n*** Stack maxsize exceeded. Increase from %d to %d? (y/n/b) ",
+    printf("\n\n*** Task stack maxsize exceeded. Increase from %d to %d? (y/n/b) ",
 	   ozconf.stackMaxSize,newMaxSize);
     fflush(stdout);
     char buf[1000];

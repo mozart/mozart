@@ -736,6 +736,8 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       DISPATCH();
     case SETCONSTANT: 
     case UNIFYCONSTANT:
+    case GLOBALVARNAME:
+    case LOCALVARNAME:
 	  /* ***type 5:    OP ConstantName  */
       {
 	TaggedRef literal = getLiteralArg(PC+1);
