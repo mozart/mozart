@@ -248,16 +248,22 @@ in
 	 [] exception(thr:T exc:X) then
 	    I = {Debug.getId T}
 	 in
-	    if ThreadManager,Exists(I $) then
-	       {OzcarMessage 'exception of attached thread'}
-	       Gui,markNode(I exc)
-	       Gui,markNode(I stopped)
-	       {{Dictionary.get self.ThreadDic I} printException(X)}
+	    case X of system(kernel(terminate) ...) then
+	       if ThreadManager,Exists(I $) then
+		  ThreadManager,remove(T I noKill)
+	       end
 	    else
-	       Q = {Debug.getParentId T}
-	    in
-	       {OzcarMessage 'exception of unattached thread'}
-	       ThreadManager,add(T I Q exc(X))
+	       if ThreadManager,Exists(I $) then
+		  {OzcarMessage 'exception of attached thread'}
+		  Gui,markNode(I exc)
+		  Gui,markNode(I stopped)
+		  {{Dictionary.get self.ThreadDic I} printException(X)}
+	       else
+		  Q = {Debug.getParentId T}
+	       in
+		  {OzcarMessage 'exception of unattached thread'}
+		  ThreadManager,add(T I Q exc(X))
+	       end
 	    end
 
 	 [] update(thr:T) then
