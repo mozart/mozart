@@ -32,6 +32,8 @@ X();  \
 
 
 int remoteSend(PortProxy *p, TaggedRef msg);
+int remoteClose(PortProxy *p);
+
 void networkSiteDec(int sd);
 
 #define tert2PortManager(t)   ((PortManager*) t)
