@@ -2,3 +2,4 @@
 *.ozo
 *.ozs
 Makefile
+touch
