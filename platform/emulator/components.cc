@@ -31,7 +31,6 @@
 #include "indexing.hh"
 #include "var_base.hh"
 #include "controlvar.hh"
-#include "gc.hh"
 #include "dictionary.hh"
 #include "genhashtbl.hh"
 #include "urlc.hh"
