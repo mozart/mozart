@@ -1023,7 +1023,7 @@ fi
         if expr "$oz_tmp" : egcs >/dev/null; then
           :
 
-        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]\+\)'`; then
+        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]*\)'`; then
 
           echo $ac_n "checking $CXX version is at least 2.7""... $ac_c" 1>&6
 echo "configure:1030: checking $CXX version is at least 2.7" >&5
@@ -1324,7 +1324,7 @@ else
   rm -rf conftest*
   
         for oz_tmp in $oz_inc_path; do
-          CPPFLAGS="$oz_tmp_cppflags -I$p"
+          CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
           cat > conftest.$ac_ext <<EOF
 #line 1330 "configure"
 #include "confdefs.h"
@@ -1336,7 +1336,7 @@ ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
   
-            oz_tmp_ok="-I$p"
+            oz_tmp_ok="-I$oz_tmp"
             break
 else
   echo "$ac_err" >&5
