@@ -26,6 +26,10 @@
 
 #include "standard.hh"
 
+// use generated filter functions
+#define GENERATED
+//#define NO_SIMPLIFICATION
+
 OZ_Return make_intersect_3(OZ_Expect * ope, OZ_Term x, OZ_Term y, OZ_Term z)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET "," OZ_EM_FSET);
@@ -155,6 +159,11 @@ OZ_BI_define(fsp_diff, 3, 0)
 }
 OZ_BI_end
 
+#ifdef GENERATED
+
+#include "/home/tmueller/papers/thesis/fs_programs/genfs_props.hh"
+
+#else
 
 //*****************************************************************************
 
@@ -172,6 +181,7 @@ SERVICE &filter_intersection(SERVICE & s,
   do {
     xt = x;  yt = y;  zt = z;
     //
+#ifndef NO_SIMPLIFICATION
     if (z->isEmpty()) {
       OZ_DEBUGPRINTTHIS("replace: (z empty)");
       return s.replace_propagator(new FSetDisjointPropagator(x, y));
@@ -190,6 +200,7 @@ SERVICE &filter_intersection(SERVICE & s,
       OZ_DEBUGPRINTTHIS("replace: (z = U)");
       return s.entail();
     }
+#endif
     //
     FailOnInvalid(*x <= -(- *z & *y)); // lub
     OZ_DEBUGPRINT(("x=%s",x->toString()));
@@ -235,7 +246,7 @@ OZ_Return FSetIntersectionPropagator::propagate(void)
 
   do {
     xt = x;  yt = y;  zt = z;
-    
+#ifndef NO_SIMPLIFICATION
     if (z->isEmpty()) {
       OZ_DEBUGPRINTTHIS("replace: (z empty)");
       P.vanish();
@@ -251,7 +262,7 @@ OZ_Return FSetIntersectionPropagator::propagate(void)
       P.vanish();
       return OZ_DEBUGRETURNPRINT(replaceBy(_y, _z));
     }
-    
+#endif
     FailOnInvalid(*x <= -(- *z & *y)); // lub
     OZ_DEBUGPRINT(("x=%s",x->toString()));
     FailOnInvalid(*y <= -(- *z & *x)); // lub
@@ -286,7 +297,7 @@ OZ_Return FSetUnionPropagator::propagate(void)
 
   do {
     xt = x;  yt = y;  zt = z;
-    
+#ifndef NO_SIMPLIFICATION
     if (z->isEmpty()) {
       OZ_DEBUGPRINT(("z->isEmpty()"));
       OZ_FSetConstraint aux(fs_empty);
@@ -305,7 +316,7 @@ OZ_Return FSetUnionPropagator::propagate(void)
       P.vanish();
       return replaceBy(_x, _z);
     }
-    
+#endif
     OZ_DEBUGPRINT(("before"));
     FailOnInvalid(*x >= (*z & - *y)); // glb
     OZ_DEBUGPRINT(("x=%s",x->toString()));
@@ -372,6 +383,45 @@ failure:
   OZ_DEBUGPRINTTHIS("failed ");
   return P.fail();
 }
+
+//--------------------------------------------------------------------
+// Set Difference Propagator (DENYS)
+
+OZ_Return FSetDiffPropagator::propagate(void)
+{
+  OZ_FSetVar x(_x),y(_y),z(_z);
+  PropagatorController_S_S_S P(x,y,z);
+  FSetTouched xt,yt,zt;
+
+  do {
+    xt=x; yt=y; zt=z;
+    // x-y=z
+    //	disjoint(y,z)
+    //	union(x,z)=union(y,z)
+    //
+    // disjoint(y,z)
+    //
+    FailOnInvalid(*y != *z);
+    FailOnInvalid(*z != *y);
+    //
+    // union(x,y)=union(y,z)
+    //	x subset union(y,z)
+    //	z = x-y
+    //	x supset z
+    //	y supset x-z
+    //
+    FailOnInvalid(*x <= (*y | *z));
+    FailOnInvalid(*z <<= (*x & - *y));
+    FailOnInvalid(*x >= *z);
+    FailOnInvalid(*y >= (*x & - *z));
+  } while (xt <= x || yt <= y || zt <= z);
+
+  return P.leave(1);
+failure:
+  return P.fail();
+}
+
+#endif
 
 OZ_Return FSetDistinctPropagator::propagate(void) 
 {
@@ -446,43 +496,6 @@ OZ_Return FSetDistinctPropagator::propagate(void)
   return P.leave();
   
  failure:
-  return P.fail();
-}
-
-//--------------------------------------------------------------------
-// Set Difference Propagator (DENYS)
-
-OZ_Return FSetDiffPropagator::propagate(void)
-{
-  OZ_FSetVar x(_x),y(_y),z(_z);
-  PropagatorController_S_S_S P(x,y,z);
-  FSetTouched xt,yt,zt;
-
-  do {
-    xt=x; yt=y; zt=z;
-    // x-y=z
-    //	disjoint(y,z)
-    //	union(x,z)=union(y,z)
-    //
-    // disjoint(y,z)
-    //
-    FailOnInvalid(*y != *z);
-    FailOnInvalid(*z != *y);
-    //
-    // union(x,y)=union(y,z)
-    //	x subset union(y,z)
-    //	z = x-y
-    //	x supset z
-    //	y supset x-z
-    //
-    FailOnInvalid(*x <= (*y | *z));
-    FailOnInvalid(*z <<= (*x & - *y));
-    FailOnInvalid(*x >= *z);
-    FailOnInvalid(*y >= (*x & - *z));
-  } while (xt <= x || yt <= y || zt <= z);
-
-  return P.leave(1);
-failure:
   return P.fail();
 }
 
