@@ -62,20 +62,18 @@ void freeListDispose(void * addr, size_t chunk_size)
   DebugCode(memset((char *)addr,0x5A,chunk_size));
 
 #ifdef DEBUG_MEM
-
-// clear mem, so every reference leads to strange errors
-// and turn off free list memory, do not reuse the memory
+  // clear mem, so every reference leads to strange errors
+  // and turn off free list memory, do not reuse the memory
   memset((char *)addr,0x5A,chunk_size);
-
-  void * aux = FreeList[chunk_size];
-  while (aux) {
-    if (aux == addr) 
-      warning("Entering chunk twice.");
-    aux = * (void **) aux;
-  }
-#endif
-
+    
   if (chunk_size < freeListMaxSize && chunk_size > 0) {
+    void * aux = FreeList[chunk_size];
+    while (aux) {
+      if (aux == addr) 
+	warning("Entering chunk twice.");
+      aux = * (void **) aux;
+    }
+#endif
     *(void **)addr =  FreeList[chunk_size];
     FreeList[chunk_size] = addr;
   }
