@@ -347,8 +347,6 @@ define
 				  action:toplevel#close)))} show(modal:true)}
 	 {LB set(selection:[true])} % select the first element
 	 {Wait Ok} % wait for the window to close
-	 {Show Ok}
-	 {Show {Access N}}
 	 if Ok andthen {Access N}>0 then
 	    ToInstall={List.nth Packages {Access N}}
 	 in

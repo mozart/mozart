@@ -9,8 +9,11 @@ import
    Pickle(load)
    Application(exit)
    System(showInfo:Print)
+   Resolve(localize)
 export
-   Run View
+   Run
+   View %% get information on external file
+   Info %% get information on an installed module
 define
    proc {Run}
       I L
@@ -58,14 +61,22 @@ define
    end
    %%
    fun {View Package}
-      A   = {New Archive.'class' init(Package)}
-      Tmp = {OS.tmpnam}
+      PackageResult A Tmp
    in
       try
+	 PackageResult={Resolve.localize Package}
+	 A   = {New Archive.'class' init(PackageResult.1)}
+	 Tmp = {OS.tmpnam}
 	 {A extract(FILEMFTPKL Tmp)}
 	 {Pickle.load Tmp} # {A lsla($)}
       finally
-	 try {OS.unlink Tmp} catch _ then skip end
+	 if {IsDet PackageResult} then
+	    case PackageResult of new(F) then {OS.unlink F}
+	    else skip end
+	 end
+	 if {IsDet Tmp} then
+	    try {OS.unlink Tmp} catch _ then skip end
+	 end
       end
    end
    %%
@@ -74,7 +85,7 @@ define
    in
       try
 	 for Entry in LocalDB do
-	    if Entry.id==id then raise found(Entry) end end
+	    if Entry.id==Id then raise found(Entry) end end
 	 end
 	 notFound
       catch found(E) then E end
