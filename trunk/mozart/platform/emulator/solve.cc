@@ -101,77 +101,75 @@ WaitActor* SolveActor::getDisWaitActor ()
   return ((WaitActor *) NULL);
 }
 
-TaggedRef SolveActor::genSolved ()
+TaggedRef SolveActor::genSolved()
 {
-  RefsArray contGRegs = allocateRefsArray (1);
-  STuple *stuple = STuple::newSTuple (solvedAtom, 1);
+  RefsArray contGRegs = allocateRefsArray(1);
+  STuple *stuple = STuple::newSTuple(solvedAtom, 1);
 
   Assert(solveBoard->isSolve());
-  contGRegs[0] = makeTaggedConst (solveBoard);
-  stuple->setArg (0, makeTaggedConst
-		  (new SolvedBuiltin (solvedBITabEntry, contGRegs,
-				      SolveContArity, entailedAtom)));
-  return (makeTaggedSTuple (stuple));
+  contGRegs[0] = makeTaggedConst(solveBoard);
+  stuple->setArg(0, makeTaggedConst
+		 (new SolvedBuiltin(solvedBITabEntry, contGRegs,
+				    SolveContArity, entailedAtom)));
+  return makeTaggedSTuple(stuple);
 }
 
-TaggedRef SolveActor::genStuck ()
+TaggedRef SolveActor::genStuck()
 {
-  RefsArray contGRegs = allocateRefsArray (1);
-  STuple *stuple = STuple::newSTuple (solvedAtom, 1);
+  RefsArray contGRegs = allocateRefsArray(1);
+  STuple *stuple = STuple::newSTuple(solvedAtom, 1);
 
   Assert(solveBoard->isSolve());
-  contGRegs[0] = makeTaggedConst (solveBoard);
-  stuple->setArg (0, makeTaggedConst
-		  (new SolvedBuiltin (solvedBITabEntry, contGRegs,
-				      SolveContArity, stableAtom)));
-  return (makeTaggedSTuple (stuple));
+  contGRegs[0] = makeTaggedConst(solveBoard);
+  stuple->setArg(0, makeTaggedConst
+		 (new SolvedBuiltin(solvedBITabEntry, contGRegs,
+				    SolveContArity, stableAtom)));
+  return makeTaggedSTuple(stuple);
 }
 
-TaggedRef SolveActor::genChoice (int noOfClauses)
+TaggedRef SolveActor::genChoice(int noOfClauses)
 {
-  STuple *stuple = STuple::newSTuple (choiceAtom, 2);
+  STuple *stuple = STuple::newSTuple(choiceAtom, 2);
   RefsArray contGRegs;
 
-  // left side: 
-  contGRegs = allocateRefsArray (1);
-  contGRegs[0] = makeTaggedConst (solveBoard);
-  stuple->setArg (0, makeTaggedConst
-		  (new OneCallBuiltin (solveContBITabEntry, contGRegs)));
+  contGRegs    = allocateRefsArray(1);
+  contGRegs[0] = makeTaggedConst(solveBoard);
+  stuple->setArg(0, makeTaggedConst
+		 (new OneCallBuiltin(solveContBITabEntry, contGRegs)));
+  stuple->setArg(1, makeTaggedSmallInt(noOfClauses));
 
-  stuple->setArg (1, makeTaggedSmallInt(noOfClauses));
-
-  return (makeTaggedSTuple (stuple));
+  return makeTaggedSTuple(stuple);
 }
 
 TaggedRef SolveActor::genFailed ()
 {
-  return (failedAtom);
+  return failedAtom;
 }
 
 TaggedRef SolveActor::genUnstable (TaggedRef arg)
 {
-  STuple *stuple = STuple::newSTuple (unstableAtom, 1);
-  stuple->setArg (0, arg);
-  return (makeTaggedSTuple (stuple));
+  STuple *stuple = STuple::newSTuple(unstableAtom, 1);
+  stuple->setArg(0, arg);
+  return makeTaggedSTuple (stuple);
 }
 
 // private members; 
-WaitActor* SolveActor::getTopWaitActor ()
+WaitActor* SolveActor::getTopWaitActor()
 {
-  return ((WaitActor *) orActors.getTop ());
+  return ((WaitActor *) orActors.getTop());
 }
 
-WaitActor* SolveActor::getNextWaitActor ()
+WaitActor* SolveActor::getNextWaitActor()
 {
-  return ((WaitActor *) orActors.getNext ());
+  return ((WaitActor *) orActors.getNext());
 }
 
 void SolveActor::unlinkLastWaitActor ()
 {
-  orActors.unlinkLast ();
+  orActors.unlinkLast();
 }
 
-Bool SolveActor::checkExtSuspList ()
+Bool SolveActor::checkExtSuspList()
 {
   SuspList *tmpSuspList = suspList;
 
@@ -179,8 +177,8 @@ Bool SolveActor::checkExtSuspList ()
   while (tmpSuspList) {
     Suspension *susp = tmpSuspList->getElem();
 
-    if (susp->isDead ()) {
-      tmpSuspList = tmpSuspList->dispose ();
+    if (susp->isDead()) {
+      tmpSuspList = tmpSuspList->dispose();
       continue;
     }
 
@@ -196,10 +194,10 @@ Bool SolveActor::checkExtSuspList ()
 
     if (bb == 0) {
       susp->markDead ();
-      tmpSuspList = tmpSuspList->dispose ();
+      tmpSuspList = tmpSuspList->dispose();
     } else {
       SuspList *helpList = tmpSuspList;
-      tmpSuspList = tmpSuspList->getNext ();
+      tmpSuspList = tmpSuspList->getNext();
       addSuspension (helpList);
     }
   }
@@ -215,44 +213,13 @@ SolveActor::SolveActor (Board *bb, int prio, int compMode,
    suspList (NULL), threads (1), stable_sl(NULL)
 {
   solveBoard = NULL;
-  solveVar= makeTaggedNULL();
+  solveVar   = makeTaggedNULL();
 }
 
 void SolveActor::setSolveBoard(Board *bb) {
   solveBoard = bb;
-  solveVar = makeTaggedRef(newTaggedUVar (solveBoard));
+  solveVar   = makeTaggedRef(newTaggedUVar(solveBoard));
 }
-
-SolveActor::~SolveActor()
-{
-  solveBoard = (Board *) NULL;
-  orActors.clear (); 
-  solveVar = (TaggedRef) NULL;
-  result = (TaggedRef) NULL;
-  guidance = (TaggedRef) NULL;
-  suspList = (SuspList *) NULL;
-  threads = 0; 
-}
-
-void SolveActor::printDebugKP(void)
-{
-  cout << endl << "solveActor @" << this << endl;
-  cout << "solveVar="; taggedPrint(solveVar); cout << endl;
-  cout << "result="; taggedPrint(result); cout << endl;
-  cout << "threads=" << threads << endl;
-  suspList->print(cout);
-  cout.flush();
-}
-
-
-Bool SolveActor::stable_wake(void) {
-  if (stable_sl) {
-    stable_sl = stable_sl->stable_wake();
-    return TRUE;
-  }
-  return FALSE;
-}
-
 
 void SolveActor::add_stable_susp(Suspension * s) {
   stable_sl = new SuspList(s, stable_sl);

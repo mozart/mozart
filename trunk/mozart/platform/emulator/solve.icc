@@ -22,25 +22,34 @@
    ------------------------------------------------------------------------ */
 
 inline
-void SolveActor::addSuspension (SuspList *l)
+void SolveActor::addSuspension(SuspList *l)
 {
-  l->setNext (suspList);
+  l->setNext(suspList);
   suspList = l;
 }
 
 inline
-void SolveActor::addSuspension (Suspension *susp)
+void SolveActor::addSuspension(Suspension *susp)
 {
-  suspList = new SuspList (susp, suspList);
+  suspList = new SuspList(susp, suspList);
 }
 
 inline
-Bool SolveActor::areNoExtSuspensions ()
+Bool SolveActor::areNoExtSuspensions()
 {
   if (suspList == NULL)
     return (OK);
   else
     return (checkExtSuspList ());
+}
+
+inline
+Bool SolveActor::stable_wake(void) {
+  if (stable_sl) {
+    stable_sl = stable_sl->stable_wake();
+    return TRUE;
+  }
+  return FALSE;
 }
 
 #endif  // __SOLVE_ICC_
