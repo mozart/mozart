@@ -1,7 +1,7 @@
 functor
 export
    'class' : URLClass
-   Is
+   Is Make
 prepare
    IS_URL = {NewName}
    VS2S = VirtualString.toString
