@@ -31,9 +31,9 @@ if [ ${OZHOME-xx} = xx ]
 then
   dir=`dirname $howcalled`
   OZHOME=`(cd $dir; cd ..; /bin/pwd)`
-  $doecho "Setting Oz installation directory to: $OZHOME"
+  $doecho "Setting Oz installation directory to: $OZHOME" >&2
 else
-  $doecho "Using Oz directory: $OZHOME"
+  $doecho "Using Oz directory: $OZHOME" >&2
 fi
 export OZHOME
 
@@ -44,7 +44,7 @@ export OZPLATFORM
 if [ ${OZEMULATOR-xx} = xx ]; then
     OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
 else
-    echo "Using $OZEMULATOR"
+    echo "Using $OZEMULATOR" >&2
 fi
 
 
