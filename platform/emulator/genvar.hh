@@ -26,6 +26,10 @@
 #include "term.hh"
 #include "indexing.hh"
 
+#ifdef OUTLINE
+#define inline
+#endif
+
 //-----------------------------------------------------------------------------
 //                       Generic Constrained Variable
 //-----------------------------------------------------------------------------
@@ -87,7 +91,9 @@ public:
 };
 
 
-#ifndef OUTLINE
+#ifdef OUTLINE
+#undef inline
+#else
 #include "genvar.icc"
 #endif
 

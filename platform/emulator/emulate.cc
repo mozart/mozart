@@ -164,7 +164,7 @@ void traceCall(Abstraction *def,int arity, TaggedRef *args);
 inline HookValue emulateHook(Abstraction *def, int arity, TaggedRef *args)
 {
 #ifdef DEBUG_DET
-  Alarm::Handle();   // simulate an alarm
+  Alarm::Handle(0);   // simulate an alarm
 #endif
 
   if (am.isSetSFlag()) {
