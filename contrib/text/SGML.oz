@@ -52,7 +52,7 @@ define
    end
 
    fun {IsOfClass M C}
-      {Member C {CondSelect M 'class' nil}}
+      {Member C {CondSelect M.attributes 'class' nil}}
    end
 
    fun {Transform E}
