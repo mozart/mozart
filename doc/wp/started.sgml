@@ -40,8 +40,8 @@
 
     <P>
       <Ptr to="figure.intro.start"> shows a screen dump of our first
-      graphical application.  It allows to enter text into the entry
-      field. Pressing the button toggles the capitalization of the
+      graphical application.  It allows to enter text into the <span class=index/entry
+      field/. Pressing the button toggles the capitalization of the
       text in that entry field.
 
     <p>
@@ -58,15 +58,15 @@
       The program for the small graphical application is concerned
       with the following three issues:
       <list>
-      <entry> widgets
+      <entry> <index/widget/widgets
       <item> Create the graphical entities called
              widgets. The application consists of three widgets:
       a toplevel widget (this is the outermost window), an entry for
       entering text, and a button.
-      <entry> geometry
+      <entry> <index/geometry/geometry
       <item> Arrange the entry and button such that they appear inside
       the toplevel widget.
-      <entry> actions
+      <entry> <index/action/actions
       <item> Attach an action to the button widget such that pressing
       the button changes the capitalization of the entry text.
       </list>
@@ -84,6 +84,9 @@
 
       <p>
         The following program fragment
+<index class=tails/<<Tk>><And><<toplevel>>/
+<index class=tails/<<Tk>><And><<entry>>/
+<index class=tails/<<Tk>><And><<button>>/
 <chunk><title/Widget creation/
 W={New Tk.toplevel tkInit(title:'Capitalization')}
 E={New Tk.entry    tkInit(parent:W)}
@@ -96,14 +99,15 @@ B={New Tk.button   tkInit(parent: W
         for the widget object.  We refer to the graphical image just as
         the widget.  Most often we do not distinguish between the object and
         its widget. All but the toplevel widget are linked by the
-        <<parent>> features: this defines a widget hierarchy for
+        <<parent>> features: this defines a <span class=index/widget hierarchy/ for
         closing widgets and geometry management.
 
     <subsection >
       <title/Geometry/
 
       <p>
-        Here we define the geometry for the entry and button widgets:
+        Here we define the <index/geometry/geometry for the entry and button widgets:
+<index class=tails/<<Tk>><And><<send>>/
 <chunk><title/Geometry management/
 {Tk.send pack(E B fill:x padx:4 pady:4)}
 </chunk>
@@ -125,7 +129,8 @@ end
         button is pressed. It retrieves the current content
         <<S>> from entry <code/E/, clears <code/E/, and reinserts
         <<S>> in <code/E/, but with toggled
-        capitalization. <code/tkReturn/ illustrates another important
+        capitalization. <index/<<tkReturn>>/
+<code/tkReturn/ illustrates another important
         issue: returning values from widgets.
 
 
@@ -135,7 +140,7 @@ end
     <p>
       <ptr to="figure.started.architecture"> shows a sketch of the
       architecture of the window interface in Mozart. Its core part is
-      the graphics engine. The graphics engine computes graphical
+      the graphics engine. The <index/graphics engine/graphics engine computes graphical
       output and displays it according to the input received.
 
       <figure id="figure.started.architecture">
@@ -162,9 +167,9 @@ end
       </figure>
 
     <p>
-      Initializing widgets with the method <<tkInit>> and applying
-      widgets to the <<tk>> method send messages to the graphics
-      engine. Additionally, the procedure <<Tk.send>> we used for
+      Initializing widgets with the method <span class=index/<<tkInit>>/ and applying
+      widgets to the <span class=index/<<tk>>/ method send messages to the graphics
+      engine. <index class=tails/<<Tk>><and><<send>>/Additionally, the procedure <<Tk.send>> we used for
       geometry management sends messages to the graphics engine. The
       graphics engine understands tickles, <<Tk.send>> in fact just
       takes a tickle and sends it to the engine. Also

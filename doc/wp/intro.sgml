@@ -36,8 +36,8 @@
 
   <p>
     In Mozart, the basic building blocks for window programming are
-    widgets: objects that represent graphical entities like labels,
-    buttons, and menus. Windows are described compositionally by
+    <index/widget/widgets: objects that represent graphical entities like labels,
+    buttons, and menus. <index/window/Windows are described compositionally by
     means of object hierarchies and are subject to dynamic and interactive
     modification. Other entities we will deal with are for example
     fonts and images. The appearance of widgets is managed by
@@ -59,7 +59,7 @@
     <Title/The Examples/
 
     <p>
-      The documents features a large number of examples which are
+      The documents features a large number of <index/examples/examples which are
       designed to be tried by the reader. All examples are contained
       in a <ref.extern to="WindowProgramming.oz"/demo file/ to be used
       with the <ptr.extern to="ozdoc:opi">.
@@ -70,7 +70,7 @@
 
     <p>
       One particular advantage of using Tk as graphics engine for
-      Mozart is the wealth of excellent documentation for Tcl and Tk.
+      Mozart is the wealth of excellent <index/documentation/documentation for Tcl and Tk.
 
     <p>
       A must read (or at least see or browse) in this particular
