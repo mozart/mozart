@@ -160,7 +160,7 @@ public:
   void addToplevel(ProgramCounter pc);
 
   Thread *createThread(int prio,int compMode);
-  void wakeUpThread(Thread *tt);
+  void cleanUpThread(Thread *tt);
 
   int catchError() { return setjmp(engineEnvironment); }
 public:
@@ -311,8 +311,6 @@ public:
   int wakeUser();
 
   Bool isStableSolve(SolveActor *sa);
-
-  void createTask();
 };
 
 extern AM am;
