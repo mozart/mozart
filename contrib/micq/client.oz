@@ -338,7 +338,7 @@ define
 	 %{System.printError "*** Linking a remote functor\n"}
 	 
 	 R = {New Remote.manager init(host: localhost fork:sh)}
-	 {R apply( Starter)}
+	 {R apply( Starter)} 
       end
       
       meth link(U execute:E<=proc{$ _} skip end module:F<=_ remote:R<=_)
