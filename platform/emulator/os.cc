@@ -558,11 +558,6 @@ extern "C" void __builtin_vec_delete (void *ptr)
 
 
 
-#ifdef HPUX_700
-#include <time.h>
-#endif
-
-
 #ifdef WINDOWS
 
 const int wrappedHDStart = 1000; /* hope that's enough (RS) */
@@ -678,11 +673,7 @@ int nonBlockSelect(int nfds, fd_set *readfds, fd_set *writefds)
   struct timeval timeout;
   timeout.tv_sec = 0;
   timeout.tv_usec = 0;
-#ifdef HPUX_700
-  return select(nfds,(int*)readfds,(int*)writefds,NULL,&timeout);
-#else
   return select(nfds,readfds,writefds,NULL,&timeout);
-#endif
 }
 
 
@@ -820,12 +811,7 @@ int osSelect(fd_set *readfds, fd_set *writefds, unsigned int *ptimeout)
     osUnblockSignals();
   }
 
-  /* The prototypes for select are wrong on HP-UX 9.x */
-#ifdef HPUX_700
-  int ret = select(openMax,(int*)readfds,(int*)writefds,NULL,timeoutptr);
-#else
   int ret = select(openMax,readfds,writefds,NULL,timeoutptr);
-#endif
 
   if (ptimeout != (unsigned int*) WAIT_NULL) {
     // kost@ : Note that effectively the time spent in wait 
@@ -1470,7 +1456,6 @@ TaggedRef osDlopen(char *filename, OZ_Term& ret)
 {
   OZ_Term err=NameUnit;
 
-#ifdef HAVE_DLOPEN
 #ifdef HPUX_700
   {
     shl_t handle;
@@ -1483,7 +1468,8 @@ TaggedRef osDlopen(char *filename, OZ_Term& ret)
     }
     ret = OZ_makeForeignPointer((void*)handle);
   }
-#else
+#endif
+#ifdef HAVE_DLOPEN
   {
     // RTLD_GLOBAL is important: it serves the same purpose
     // as -rdynamic for executables: newly loaded objects
@@ -1500,7 +1486,7 @@ TaggedRef osDlopen(char *filename, OZ_Term& ret)
   }
 #endif
 
-#elif defined(WINDOWS)
+#ifdef WINDOWS
   {
     void *handle = (void *)LoadLibrary(filename);
     if (!handle) {
