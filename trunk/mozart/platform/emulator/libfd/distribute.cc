@@ -23,6 +23,7 @@
 
 #include "../fdbuilti.hh"
 #include "../runtime.hh"
+#include "../builtins.hh"
 
 // ---------------------------------------------------------------------
 //                  Finite Domains Distribution Built-ins
