@@ -198,9 +198,9 @@ $(WHAT).pics: $(WHAT).xml
         $(JAVA) $(JAVACP) $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-picture.xsl $@
         for f in `cat $(WHAT).pics`; do $(MAKE) $$f.ps; done
 %.gif.ps: %.gif
-        giftopnm $< | pnmtops -rle -noturn > $@
+        giftopnm $< | pnmtops -rle -noturn -nosetpage > $@
 %.gif.ps: pictures/%.gif
-        giftopnm $< | pnmtops -rle -noturn > $@
+        giftopnm $< | pnmtops -rle -noturn -nosetpage > $@
 
 $(WHAT).code: $(WHAT).xml
         $(JAVA) $(JAVACP) $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/codereq.xsl $@
