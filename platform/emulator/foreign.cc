@@ -1868,13 +1868,7 @@ void OZ_addBISpec(OZ_BIspec *spec)
   }
 }
 
-OZ_Return OZ_raise(OZ_Term exc)
-{
-  if (OZ_isVariable(exc)) {
-    return oz_raise(E_ERROR,E_KERNEL,"instantiation",5,
-		    OZ_atom("raise"),cons(exc,nil()),
-		    OZ_atom("det"),OZ_int(1),OZ_string(""));
-  }
+OZ_Return OZ_raise(OZ_Term exc) {
   am.exception.value=exc;
   am.exception.info=NameUnit;
   am.exception.debug=FALSE;
