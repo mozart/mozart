@@ -1228,6 +1228,7 @@ urlc::http_req(int sockfd)
     int tot_len = 0;
     char* p = NULL;
     char* req_form[] = { "GET ", path, " HTTP/1.0\r\n",
+                         "Host: ", host , "\r\n",
                          "User-Agent: ", HTTP_USER_AGENT, "\r\n",
                          "From: tf@info.ucl.ac.be\r\n",
                          "\r\n",
