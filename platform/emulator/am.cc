@@ -1659,14 +1659,12 @@ void handlerSEGV()
 {
   CodeArea::writeInstr();
   message("**** segmentation violation ****\n");
-  longjmp(am.engineEnvironment,SEGVIO);
 }
 
 void handlerBUS()
 {
   CodeArea::writeInstr();
   message("**** bus error ****\n");
-  longjmp(am.engineEnvironment,BUSERROR);
 }
 
 void handlerPIPE()
