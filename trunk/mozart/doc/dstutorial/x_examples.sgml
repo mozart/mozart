@@ -552,9 +552,32 @@ active computations at each priority level.
 
 <P>This section gives some practical programming tips to
 improve the network performance of distributed applications:
+timing and memory problems,
 avoiding sending data that is not used at the destination
 and avoiding sending classes when sending objects across
 the network.
+
+<SUBSECTION><TITLE>Timing and memory problems</TITLE>
+
+<LIST>
+<ITEM>When a reference <<X>> is shared between sites and
+<<X>> refers to unused modules then the modules will be loaded into
+memory.  This is so even if they are never used.
+
+<ITEM>Relative timings between different parts of a program
+depend on the distribution structure.
+For example, unsynchronized producer/consumer threads
+may work fine if both are on the same site: it suffices
+to give the producer thread a slightly lower priority.
+If the threads are on different sites, the producer
+may run faster and cause a memory leak.
+
+<ITEM>If the same record is sent repeatedly to a site,
+then a new copy of the record will be created there each time.
+This is true because records don't have global names.
+The lack of global names
+makes it faster to send records across the network.
+</LIST>
 
 <SUBSECTION><TITLE>Avoiding sending useless data</TITLE>
 
