@@ -117,7 +117,7 @@
 (autoload 'oz-toggle-temp "mozart"
   "Toggle visibility of the Oz Temp window." t)
 (autoload 'run-oz "mozart"
-  "Start Mozart as a sub-process." t)
+  "Run Mozart as a sub-process." t)
 (autoload 'oz-halt "mozart"
   "Halt the Mozart sub-process." t)
 (autoload 'oz-breakpoint-at-point "mozart"
@@ -1135,7 +1135,7 @@ buffer."
      ("Emulator"           oz-toggle-emulator (get-buffer oz-emulator-buffer))
      ("Temporary Buffer"   oz-toggle-temp (get-buffer oz-temp-buffer)))
     ("-----")
-    ("Start Oz"            run-oz t)
+    ("Run Oz"              run-oz t)
     ("Halt Oz"             oz-halt t)))
   "Contents of the Oz menu.")
 
