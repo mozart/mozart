@@ -49,13 +49,12 @@ dnl *****************************************************************
 OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 : ${platform=`$PLATFORMSCRIPT`}
 
-
 dnl *********************************************************************
 dnl ** Perl
 dnl *********************************************************************
 
-AC_PATH_PROG(perlpath, perl)
-PERL=$perlpath
+AC_PATH_PROG(perl_path, perl)
+PERL=$perl_path
 AC_SUBST(PERL)
 AC_MSG_RESULT(ok)
 
@@ -63,44 +62,138 @@ dnl *********************************************************************
 dnl ** GLIB
 dnl *********************************************************************
 
-AC_PATH_PROG(glibpath, glib-config)
-if test -z $glibpath; then
-    AC_MSG_ERROR(You need the glib library to enable GTK support. It can be found at http://www.gtk.org)
+AC_PATH_PROG(glib_path, glib-config)
+if test -z $glib_path; then
+    AC_MSG_ERROR(You need the glib library to enable GTK+ support. It can be found at http://www.gtk.org)
 fi
 AC_MSG_CHECKING(for Glib compile flags)
-GLIB_CFLAGS=`$glibpath --cflags`
-GLIB_LIBS=`$glibpath --libs`
+GLIB_CFLAGS=`$glib_path --cflags`
+GLIB_LIBS=`$glib_path --libs`
 CFLAGS="$CFLAGS $GLIB_CFLAGS"
 LIBS="$LIBS $GLIB_LIBS"
 AC_MSG_RESULT(ok)
 
 dnl *********************************************************************
+dnl ** Gnome/GTK+ Canvas Stuff
+dnl *********************************************************************
+
+have_gnome=yes
+have_canvas=yes
+
+dnl Check if we have the gnome-config tool so that we can use it to
+dnl get the right paths, otherwise iterate through a list of standard
+dnl locations
+AC_PATH_PROG(gnome_config, gnome-config)
+if test -z $gnome_config; then
+    have_gnome_config="no"
+else
+    have_gnome_config="yes"
+fi
+
+dnl Check for the Gnome headers
+gnome_header="libgnomeui/gnome-canvas.h"
+gnome_header_paths="/usr/include /usr/local/include /opt/include /opt/gnome/include /usr/local/gnome/include"
+AC_MSG_CHECKING(for Gnome headers)
+if test x$have_gnome_config = xyes; then
+    gnome_header_path=`$gnome_config --includedir gnomeui`
+        AC_CHECK_FILE(${gnome_header_path}/${gnome_header},,
+                      have_gnome=no)
+else
+    for path in $gnome_headers_paths ; do
+        AC_CHECK_FILE(${path}/${gnome_header},
+            [gnome_header_path=$path; break])
+    done
+    if test -z $gnome_header_path; then
+        have_gnome=no
+    fi
+fi
+
+dnl Check for the Gnome libraries
+gnome_lib="libgnomeui.so"
+gnome_lib_paths="/usr/lib /usr/local/lib /opt/lib /opt/gnome/lib /usr/local/gnome/lib"
+AC_MSG_CHECKING(for Gnome libraries)
+if test x$have_gnome_config = xyes; then
+    gnome_lib_path=`$gnome_config --libdir gnomeui`
+    AC_CHECK_FILE(${gnome_lib_path}/${gnome_lib},, have_gnome=no)
+else
+    for path in $gnome_lib_paths ; do
+        AC_CHECK_FILE(${path}/${gnome_lib},
+            [gnome_lib_path=$path; break])
+    done
+    if test -z $gnome_lib_path; then
+        have_gnome=no
+    fi
+fi
+
+dnl Check for GTK+ Canvas if we have not found Gnome
+if test x$have_gnome = xno; then
+
+    AC_MSG_CHECKING(for GTK+ canvas library)
+    gtk_canvas_lib="libgtkcanvas.so"
+    gtk_canvas_lib_paths="/usr/lib /usr/local/lib /opt/lib /opt/gnome/lib /usr/local/gnome/lib /usr/lib/gtk-canvas /usr/local/lib/gtk-canvas /opt/lib/gtk-canvas"
+    for path in $gtk_canvas_lib_paths ; do
+        AC_CHECK_FILE(${path}/${gtk_canvas_lib},
+            [gtk_canvas_lib_path=$path; break])
+    done
+    if test -z $gtk_canvas_lib_path; then
+        have_canvas=no
+    fi
+
+    AC_CHECK_HEADER(gtk-canvas.h,, have_canvas=no)
+fi
+
+if test -z x$have_canvas=xno; then
+    AC_MSG_WARN(Canvas support will be disabled)
+fi
+
+dnl Substitutions
+if test x$have_canvas = xyes; then
+    if test x$have_gnome = xyes; then
+        canvas_header=${gnome_header_path}/${gnome_header}
+        canvas_lib=${gnome_lib_path}/${gnome_lib}
+    else
+        canvas_header="gtk-canvas.h"
+        canvas_lib=${gtk_canvas_lib_path}/${gtk_canvas_lib}
+    fi
+else
+    canvas_header=
+    canvas_lib=
+fi
+AC_SUBST(have_canvas)
+AC_SUBST(canvas_header)
+AC_SUBST(canvas_lib)
+
+dnl *********************************************************************
 dnl ** GTK
 dnl *********************************************************************
 
-AC_PATH_PROG(gtkpath, gtk-config)
-if test -z $gtkpath; then
+dnl Check for the GTK+ config tool
+AC_PATH_PROG(gtk_path, gtk-config)
+if test -z $gtk_path; then
     AC_MSG_ERROR(The gtk-config script, which is part of the GTK+ library, could no be found. Please make sure you have a working installation of GTK+ on your system, otherwise GTK+ support can not be enabled. GTK+ can be found at http://www.gtk.org)
 fi
 
+dnl Check for the right GTK+ version
 AC_MSG_CHECKING(for GTK+ version)
-GTK_VERSION=`$gtkpath --version`
+GTK_VERSION=`$gtk_path --version`
 case $GTK_VERSION in
     1.2.*) ;;
     *)     AC_MSG_ERROR(Your GTK+ library is too old, please update to version 1.2.x. The current version can be found at http://www.gtk.org)
 esac
-AC_MSG_RESULT(ok)
+AC_MSG_RESULT($GTK_VERSION is ok)
 
+dnl Set compiler flags
 AC_MSG_CHECKING(for GTK+ compile flags)
-GTK_CFLAGS=`$gtkpath --cflags`
-GTK_LIBS=`$gtkpath --libs`
-GTK_HDRS=`$gtkpath --prefix`/include/gtk
-GDK_HDRS=`$gtkpath --prefix`/include/gdk
+GTK_CFLAGS=`$gtk_path --cflags`
+GTK_LIBS=`$gtk_path --libs`
+GTK_HDRS=`$gtk_path --prefix`/include/gtk
+GDK_HDRS=`$gtk_path --prefix`/include/gdk
 CFLAGS="$CFLAGS $GTK_CFLAGS"
 LIBS="$LIBS $GTK_LIBS"
+AC_MSG_RESULT(ok)
+
 AC_SUBST(GTK_HDRS)
 AC_SUBST(GDK_HDRS)
-AC_MSG_RESULT(ok)
 
 dnl *********************************************************************
 dnl ** Glade
