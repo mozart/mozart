@@ -1281,9 +1281,9 @@ fi
 
 echo $ac_n "checking for --with-java-bin""... $ac_c" 1>&6
 echo "configure:1284: checking for --with-java-bin" >&5
-# Check whether --with-java or --without-java was given.
-if test "${with_java+set}" = set; then
-  withval="$with_java"
+# Check whether --with-java-bin or --without-java-bin was given.
+if test "${with_java_bin+set}" = set; then
+  withval="$with_java_bin"
   oz_java_bin=${with_java_bin}
 fi
 
