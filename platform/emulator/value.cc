@@ -56,27 +56,6 @@ TaggedRef
 
 Builtin *bi_raise, *bi_raiseError, *bi_raiseDebug;
 
-TaggedRef getUniqueName(const char *s)
-{
-  CHECK_STRPTR(s);
-  Literal *ret = addToNameTab(s);
-  ret->setFlag(Lit_isUniqueName);
-  return makeTaggedLiteral(ret);
-}
-
-void initLiterals()
-{
-  initAtomsAndNames();
-
-  NameTrue  = getUniqueName(NAMETRUE);
-  NameFalse = getUniqueName(NAMEFALSE);
-
-  RecordFailure = OZ_recordInitC("failure",
-				 oz_list(OZ_pairA("debug",NameUnit),0));
-
-  OZ_protect(&RecordFailure);
-}
-
 /*===================================================================
  * Literal
  *=================================================================== */
@@ -117,7 +96,6 @@ Name *Name::newName(Board *home)
   return ret;
 }
 
-
 NamedName *NamedName::newNamedName(const char *pn)
 {
   COUNT(numNewNamedName);
@@ -129,6 +107,13 @@ NamedName *NamedName::newNamedName(const char *pn)
   ret->setOthers(NameCurrentNumber += 1 << sizeOfCopyCount);
   ret->setFlag(Lit_isName|Lit_isNamedName);
   ret->printName = pn;
+  return ret;
+}
+
+NamedName *NamedName::newCopyableName(const char *pn)
+{
+  NamedName *ret = newNamedName(pn);
+  ret->setFlag(Lit_isCopyableName);
   return ret;
 }
 
@@ -157,6 +142,19 @@ void Name::import(GName *name)
   Assert(oz_isRootBoard(GETBOARD(this)));
   homeOrGName = ToInt32(name);
   setFlag(Lit_hasGName);
+}
+
+void initLiterals()
+{
+  initAtomsAndNames();
+
+  NameTrue  = oz_uniqueName(NAMETRUE);
+  NameFalse = oz_uniqueName(NAMEFALSE);
+
+  RecordFailure = OZ_recordInitC("failure",
+				 oz_list(OZ_pairA("debug",NameUnit),0));
+
+  OZ_protect(&RecordFailure);
 }
 
 /*===================================================================
