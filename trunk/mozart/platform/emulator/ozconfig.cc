@@ -96,6 +96,7 @@ void ConfigData::init() {
   tcpPacketSize = TCP_PACKET_SIZE;
 
   perdioSeifHandler = 1;
+  perdioUseAltVarProtocol = FALSE;
 
   dpTableDefaultOwnerTableSize = DEFAULT_OWNER_TABLE_SIZE;
   dpTableDefaultBorrowTableSize = DEFAULT_BORROW_TABLE_SIZE;
