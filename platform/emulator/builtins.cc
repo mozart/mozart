@@ -4593,7 +4593,7 @@ OZ_Return BIaccessCellInline(TaggedRef c, TaggedRef &out)
   }
   Tertiary *tert=tagged2Tert(rec);
   if(!tert->isLocal()){
-    TaggedRef out = oz_newVariable(); /* ATTENTION - clumsy */
+    out = oz_newVariable(); /* ATTENTION - clumsy */
     return cellDoAccess(tert,out);
   }
   CellLocal *cell = (CellLocal*)tert;
