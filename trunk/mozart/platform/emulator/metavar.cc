@@ -231,7 +231,7 @@ OZ_Term OZ_makeMetaTerm(OZ_MetaType t, OZ_Term d)
   return makeTaggedRef(newTaggedCVar(new GenMetaVariable((MetaTag *) t, d)));
 }
 
-OZ_Bool OZ_constrainMetaTerm(OZ_Term v, OZ_MetaType t, OZ_Term d)
+OZ_Return OZ_constrainMetaTerm(OZ_Term v, OZ_MetaType t, OZ_Term d)
 {
   TaggedRef v_deref = deref(v), metaterm = OZ_makeMetaTerm(t, d);
   
@@ -245,7 +245,7 @@ OZ_Bool OZ_constrainMetaTerm(OZ_Term v, OZ_MetaType t, OZ_Term d)
   return OZ_unify(v, metaterm);
 }  
 
-OZ_Bool OZ_suspendMetaProp(OZ_CFun OZ_self, OZ_Term * OZ_args, int OZ_arity)
+OZ_Return OZ_suspendMetaProp(OZ_CFun OZ_self, OZ_Term * OZ_args, int OZ_arity)
 {
   OZ_Thread thr = OZ_makeThread(OZ_self, OZ_args, OZ_arity);
   Bool suspNotAdded = TRUE;

@@ -926,7 +926,8 @@ RefsArray resize(RefsArray r, int s){
 // 
 // identity test
 //
-inline Bool sameTerm(TaggedRef t1, TaggedRef t2)
+inline
+Bool termEq(TaggedRef t1, TaggedRef t2)
 {
   DEREF(t1,t1Ptr,_1);
   DEREF(t2,t2Ptr,_2);
@@ -969,11 +970,8 @@ TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3,
 }
 
 inline
-OZ_Term mkTuple(int from, int to){
-  OZ_Term s = OZ_tuple(OZ_CToAtom("#"), 2);
-  OZ_putArg(s, 1, OZ_CToInt(from));
-  OZ_putArg(s, 2, OZ_CToInt(to));
-  return s;
+OZ_Term mkTuple(int from, int to) {
+  return OZ_pair2(OZ_int(from), OZ_int(to));
 }
 
 #endif

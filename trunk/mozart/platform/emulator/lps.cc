@@ -129,7 +129,7 @@ Bool LocalPropagationStore::propagate_locally () {
 	    am.currentThread->isNewPropagator ());
 
     OZ_Boolean isNewPropagator = thr->isNewPropagator();
-    OZ_Bool ret_val;
+    OZ_Return ret_val;
     
     if (isNewPropagator) {
       ret_val = thr->runNewPropagator();

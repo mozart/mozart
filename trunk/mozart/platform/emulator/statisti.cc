@@ -158,9 +158,9 @@ void Statistics::reset()
 
 static void recSetArg(OZ_Term record, char *feat, unsigned int val)
 {
-  OZ_Term t = OZ_getRecordArg(record, OZ_CToAtom(feat));
+  OZ_Term t = OZ_subtree(record, OZ_atom(feat));
   if (t == 0 || !OZ_unifyInt(t,val)) {
-    OZ_warning("recSetArg(%s,%s,%d) failed",OZ_toC(record),feat,val);
+    OZ_warning("recSetArg(%s,%s,%d) failed",toC(record),feat,val);
   }
 }
 
@@ -189,11 +189,11 @@ OZ_Term Statistics::getStatistics()
   OZ_Term c2=OZ_pairAI("c",solveClone.total);
   OZ_Term s2=OZ_pairAI("s",solveSolved.total);
   OZ_Term f2=OZ_pairAI("f",solveFailed.total);
-  OZ_Term e=OZ_pair(OZ_CToAtom("e"),
-		    OZ_recordInit(OZ_CToAtom("enum"),
-				  OZ_cons(a2,OZ_cons(c2,OZ_cons(s2,OZ_cons(f2,OZ_nil()))))));
+  OZ_Term e=OZ_pair2(OZ_atom("e"),
+		     OZ_recordInit(OZ_atom("enum"),
+				   OZ_cons(a2,OZ_cons(c2,OZ_cons(s2,OZ_cons(f2,OZ_nil()))))));
   
-  return OZ_recordInit(OZ_CToAtom("stat"),
+  return OZ_recordInit(OZ_atom("stat"),
 		       OZ_cons(r,OZ_cons(g,OZ_cons(l,OZ_cons(c,OZ_cons(h,OZ_cons(s,OZ_cons(u,OZ_cons(e,nil())))))))));
 
 }

@@ -108,14 +108,14 @@ Abstraction *getApplyMethod(Object *obj, TaggedRef label, SRecordArity arity)
 OZ_Term mkSTupleX(char *label,OZ_Term fun, RefsArray A,int n)
 {
   OZ_Term tmp=OZ_tupleC(label,n+1);
-  OZ_putArg(tmp,1,fun);
-  for (int i=0; i < n; i++) OZ_putArg(tmp,i+2,A[i]);
+  OZ_putArg(tmp,0,fun);
+  for (int i=0; i < n; i++) OZ_putArg(tmp,i+1,A[i]);
   return tmp;
 }
 
 OZ_Term mkSTupleX(char *label,char *fun, RefsArray A,int n)
 {
-  return mkSTupleX(label,OZ_CToAtom(fun),A,n);
+  return mkSTupleX(label,OZ_atom(fun),A,n);
 }
 
 OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
@@ -123,14 +123,14 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
   if (!isSTuple(tuple)) {
     Assert(OZ_isAtom(tuple));
     OZ_Term tmp=OZ_tuple(tuple,1);
-    OZ_putArg(tmp,1,arg);
+    OZ_putArg(tmp,0,arg);
     return tmp;
   } else {
     SRecord *st=tagged2SRecord(tuple);
     int len=st->getWidth();
     OZ_Term tmp=OZ_tuple(st->getLabel(),len+1);
-    OZ_putArg(tmp,1,arg);
-    for (int i=0; i < len; i++) OZ_putArg(tmp,i+2,st->getArg(i));
+    OZ_putArg(tmp,0,arg);
+    for (int i=0; i < len; i++) OZ_putArg(tmp,i+1,st->getArg(i));
     return tmp;
   }
 }
@@ -646,7 +646,7 @@ TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label, TaggedRef *X)
     return label;
   }
 
-  if (width == 2 && sameLiteral(label,AtomCons))
+  if (width == 2 && literalEq(label,AtomCons))
     return makeTaggedLTuple(new LTuple(X[0],X[1]));
 
   SRecord *tt;
@@ -659,7 +659,7 @@ TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label, TaggedRef *X)
     tt->setArg(i,X[i]);
   }
   TaggedRef ret = makeTaggedSRecord(tt);
-  //  message("makeMessage: %s\n",OZ_toC(ret));
+  //  message("makeMessage: %s\n",toC(ret));
   return ret;
 }
 
@@ -687,34 +687,34 @@ void printArg(OZ_Term arg)
     SRecord *st=tagged2SRecord(arg);
     int len=st->getWidth();
     TaggedRef lab=st->getLabel();
-    if (lab==OZ_CToAtom("proc")) {
-      message("In application { %s ",OZ_toC(st->getArg(0)));
+    if (lab==OZ_atom("proc")) {
+      message("Application { %s ",toC(st->getArg(0)));
       for (int i=1; i<len; i++) {
-	printf("%s ",OZ_toC(st->getArg(i)));
+	printf("%s ",toC(st->getArg(i)));
       }
-      printf("}.\n");
-    } else if (lab==OZ_CToAtom("instr")) {
-      message("In instruction %s(",OZ_toC(st->getArg(0)));
+      printf("} failed.\n");
+    } else if (lab==OZ_atom("instr")) {
+      message("Instruction %s(",toC(st->getArg(0)));
       for (int i=1; i<len; i++) {
-	printf("%s ",OZ_toC(st->getArg(i)));
+	printf("%s ",toC(st->getArg(i)));
       }
-      printf(").\n");
-    } else if (lab==OZ_CToAtom("vs")) {
+      printf(") failed.\n");
+    } else if (lab==OZ_atom("vs")) {
       for (int i=0; i<len; i++) {
 	message("");
 	OZ_printVS(st->getArg(i));
 	printf("\n");
       }
-    } else if (lab==OZ_CToAtom("pos")) {
-      message("For Argument #%s.\n",OZ_toC(st->getArg(0)));
-    } else if (lab==OZ_CToAtom("type")) {
-      message("Expected type '%s'.\n",OZ_toC(st->getArg(0)));
+    } else if (lab==OZ_atom("pos")) {
+      message("For Argument #%s.\n",toC(st->getArg(0)));
+    } else if (lab==OZ_atom("type")) {
+      message("Expected type '%s'.\n",toC(st->getArg(0)));
     } else {
-      message("%s.\n",OZ_toC(arg));
+      message("%s.\n",toC(arg));
     }
   } else {
-    if (arg != OZ_CToAtom("noInfo")) {
-      message("%s.\n",OZ_toC(arg));
+    if (arg != OZ_atom("noInfo")) {
+      message("%s.\n",toC(arg));
     }
   }
 }
@@ -726,18 +726,18 @@ void AM::defaultExceptionHandler(OZ_Term val, ProgramCounter PC,
   if (ozconf.errorVerbosity > 0) {
     errorHeader();
     if (OZ_isVariable(val) || !OZ_isRecord(val)) {
-      message("Exception '%s' caught.\n",OZ_toC(val));
+      message("Exception '%s' caught.\n",toC(val));
     } else {
       OZ_Term lab=OZ_label(val);
-      message("Exception '%s' caught.\n",OZ_toC(lab));
-      if (lab == OZ_CToAtom("noElse")) {
+      if (literalEq(lab,OZ_atom("noElse"))) {
 	message("Conditional without else failed.\n");
+      } else if (literalEq(lab,OZ_atom("toplevelThreadBlocked"))) {
+	message("The toplevel is blocked.\n");
       } else if (ozconf.errorVerbosity > 1) {
 	val=deref(val);
 	if (isSTuple(val)) {
 	  SRecord *st=tagged2SRecord(val);
 	  int len=st->getWidth();
-	  DebugCheckT(message("Arguments: %s.\n",OZ_toC(val)));
 	  for (int i=0; i<len; i++) {
 	    printArg(st->getArg(i));
 	  }
@@ -1095,9 +1095,9 @@ void engine()
     break;
 
   case SEGVIO:
-    DORAISE(OZ_CToAtom("segv"));
+    DORAISE(OZ_atom("segv"));
   case BUSERROR:
-    DORAISE(OZ_CToAtom("bus"));
+    DORAISE(OZ_atom("bus"));
   }
 #endif
   
@@ -1800,7 +1800,7 @@ LBLkillThread:
       if (nb) e->decSolveThreads (nb->getBoardFast ());
       //
       //  Note: there is no thread!
-      HF_FAIL(OZ_CToAtom("noInfo"));
+      HF_FAIL(OZ_atom("noInfo"));
     }
 
     error("never here");
@@ -1911,6 +1911,8 @@ LBLsuspendThread:
       e->rootThread = 
 	new Thread (e->currentThread->getPriority (), e->rootBoard);
       e->checkToplevel ();
+      e->currentThread->markPropagated();
+      DORAISE(OZ_atom("toplevelThreadBlocked"));
     }
 
     e->currentThread = (Thread *) NULL;
@@ -1986,7 +1988,7 @@ LBLsuspendThread:
       // marked already as non-propagated;
       //
       //  Note: there is no thread!
-      HF_FAIL(OZ_CToAtom("noInfo"));
+      HF_FAIL(OZ_atom("noInfo"));
 
     case CE_CONT:
       error ("Entailment of some guard during suspending a thread???");
@@ -2133,12 +2135,12 @@ LBLsuspendThread:
       case FAILED:
 	SHALLOWFAIL;
 	HF_FAIL(OZ_mkTupleC("proc",2,
-			OZ_CToAtom(entry->getPrintName()),
+			OZ_atom(entry->getPrintName()),
 			XPC(2)));
 
       case RAISE:
 	RAISE_BI(OZ_mkTupleC("proc",2,
-			 OZ_CToAtom(entry->getPrintName()),
+			 OZ_atom(entry->getPrintName()),
 			 XPC(2)));
 
       case SLEEP:
@@ -2172,12 +2174,12 @@ LBLsuspendThread:
       case FAILED:
 	SHALLOWFAIL;
 	HF_FAIL(OZ_mkTupleC("proc",3,
-			OZ_CToAtom(entry->getPrintName()),
+			OZ_atom(entry->getPrintName()),
 			XPC(2),XPC(3)));
 
       case RAISE:
 	RAISE_BI(OZ_mkTupleC("proc",3,
-			 OZ_CToAtom(entry->getPrintName()),
+			 OZ_atom(entry->getPrintName()),
 			 XPC(2),XPC(3)));
 
       case SLEEP:
@@ -2213,12 +2215,12 @@ LBLsuspendThread:
       case FAILED:
 	SHALLOWFAIL;
 	HF_FAIL(OZ_mkTupleC("proc",3,
-			OZ_CToAtom(entry->getPrintName()),
+			OZ_atom(entry->getPrintName()),
 			XPC(2),AtomVoid));
 
       case RAISE:
 	RAISE_BI(OZ_mkTupleC("proc",3,
-			 OZ_CToAtom(entry->getPrintName()),
+			 OZ_atom(entry->getPrintName()),
 			 XPC(2),AtomVoid));
 
       case SLEEP:
@@ -2234,7 +2236,7 @@ LBLsuspendThread:
 
       
       // note: XPC(4) is maybe the same as XPC(2) or XPC(3) !!
-      OZ_Bool ret = fun(XPC(2),XPC(3),XPC(4));
+      OZ_Return ret = fun(XPC(2),XPC(3),XPC(4));
       LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
       switch(ret) {
       case PROCEED:
@@ -2259,12 +2261,12 @@ LBLsuspendThread:
       case FAILED:
 	SHALLOWFAIL;
 	HF_FAIL(OZ_mkTupleC("proc",4,
-			OZ_CToAtom(entry->getPrintName()),
+			OZ_atom(entry->getPrintName()),
 			XPC(2),XPC(3),AtomVoid));
 
       case RAISE:
 	RAISE_BI(OZ_mkTupleC("proc",4,
-			 OZ_CToAtom(entry->getPrintName()),
+			 OZ_atom(entry->getPrintName()),
 			 XPC(2),XPC(3),AtomVoid));
 
       case SLEEP:
@@ -2288,7 +2290,7 @@ LBLsuspendThread:
 	DISPATCH(7);	
       }
       {
-	State ret = dotInline(XPC(1),feature,XPC(3));
+	OZ_Return ret = dotInline(XPC(1),feature,XPC(3));
 	LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 	switch(ret) {
 	case PROCEED: DISPATCH(7);
@@ -2309,7 +2311,7 @@ LBLsuspendThread:
 	  }
 
 	case RAISE:
-	  RAISE_BI(OZ_mkTupleC("proc",4,OZ_CToAtom("`.`"),XPC(1),feature,AtomVoid));
+	  RAISE_BI(OZ_mkTupleC("proc",4,OZ_atom("`.`"),XPC(1),feature,AtomVoid));
 
 	case SLEEP:
 	default:
@@ -2320,7 +2322,7 @@ LBLsuspendThread:
       SHALLOWFAIL;
       DORAISE(OZ_mkTupleC("typeError",1,
 		      OZ_mkTupleC("proc",4,
-			      OZ_CToAtom("`.`"),XPC(1),feature,AtomVoid)));
+			      OZ_atom("`.`"),XPC(1),feature,AtomVoid)));
     }
 
   Case(INLINEAT)
@@ -2338,8 +2340,8 @@ LBLsuspendThread:
       }
       DORAISE(OZ_mkTupleC("accessFailure",1,
 			  OZ_mkTupleC("proc",4,
-				      OZ_CToAtom("`@`"),
-				      rec?makeTaggedSRecord(rec):OZ_CToAtom("noattributes"),
+				      OZ_atom("`@`"),
+				      rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),
 				      fea,
 				      AtomVoid)));
     }
@@ -2360,8 +2362,8 @@ LBLsuspendThread:
       
       DORAISE(OZ_mkTupleC("assignFailure",1,
 			  OZ_mkTupleC("proc",4,
-				      OZ_CToAtom("`<-`"),
-				      rec?makeTaggedSRecord(rec):OZ_CToAtom("noattributes"),
+				      OZ_atom("`<-`"),
+				      rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),
 				      fea,
 				      XPC(2))));
     }
@@ -2370,7 +2372,7 @@ LBLsuspendThread:
     {
       LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 
-      State ret = uparrowInline(XPC(1),XPC(2),XPC(3));
+      OZ_Return ret = uparrowInline(XPC(1),XPC(2),XPC(3));
 
       switch(ret) {
       case PROCEED:
@@ -2380,7 +2382,7 @@ LBLsuspendThread:
 
       case SUSPEND:
 	  Assert(!shallowCP);
-	  OZ_suspendOnVar2(XPC(1),XPC(2));
+	  OZ_suspendOnInternal2(XPC(1),XPC(2));
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
 	  e->suspendOnVarList(e->mkSuspThread());
 	  CHECK_CURRENT_THREAD;
@@ -2388,10 +2390,10 @@ LBLsuspendThread:
       case FAILED:
         LOCAL_PROPAGATION(localPropStore.reset());
       localhack4:
-	HF_FAIL(OZ_mkTupleC("proc",4,OZ_CToAtom("`^`"),XPC(1),XPC(2),AtomVoid));
+	HF_FAIL(OZ_mkTupleC("proc",4,OZ_atom("`^`"),XPC(1),XPC(2),AtomVoid));
 
       case RAISE:
-	RAISE_BI(OZ_mkTupleC("proc",4,OZ_CToAtom("`^`"),XPC(1),XPC(2),AtomVoid));
+	RAISE_BI(OZ_mkTupleC("proc",4,OZ_atom("`^`"),XPC(1),XPC(2),AtomVoid));
 
       case SLEEP:
       default:
@@ -2431,12 +2433,12 @@ LBLsuspendThread:
       case FAILED:
 	SHALLOWFAIL;
 	HF_FAIL(OZ_mkTupleC("proc",5,
-			OZ_CToAtom(entry->getPrintName()),
+			OZ_atom(entry->getPrintName()),
 			XPC(2),XPC(3),XPC(4),AtomVoid));
 
       case RAISE:
 	RAISE_BI(OZ_mkTupleC("proc",5,
-			 OZ_CToAtom(entry->getPrintName()),
+			 OZ_atom(entry->getPrintName()),
 			 XPC(2),XPC(3),XPC(4),AtomVoid));
 
       case SLEEP:
@@ -2500,7 +2502,7 @@ LBLsuspendThread:
 
       case RAISE:
 	RAISE_BI(OZ_mkTupleC("proc",2,
-			 OZ_CToAtom(entry->getPrintName()),
+			 OZ_atom(entry->getPrintName()),
 			 XPC(1)));
 
       case SLEEP:
@@ -2533,7 +2535,7 @@ LBLsuspendThread:
 	}
 
       case RAISE:
-	RAISE_BI(OZ_mkTupleC("proc",3,OZ_CToAtom(entry->getPrintName()),
+	RAISE_BI(OZ_mkTupleC("proc",3,OZ_atom(entry->getPrintName()),
 			 XPC(1),XPC(2)));
 
       case SLEEP:
@@ -2598,7 +2600,7 @@ LBLsuspendThread:
 
   Case(FAILURE)
     {
-      HF_FAIL(OZ_mkTupleC("instr",1,OZ_CToAtom("failure")));
+      HF_FAIL(OZ_mkTupleC("instr",1,OZ_atom("failure")));
     }
 
 
@@ -2919,7 +2921,7 @@ LBLsuspendThread:
 	       }
 
 	       biFun=bi->getFun();
-	       OZ_Bool res = biFun(predArity, X);
+	       OZ_Return res = biFun(predArity, X);
 	       if (e->isSetSFlag(DebugMode)) {
 		 exitBuiltin(res,makeTaggedConst(bi),predArity,X);
 	       }
@@ -3101,7 +3103,7 @@ LBLsuspendThread:
      {
        DebugTrace(trace("solve cont",CBB));
        if (((OneCallBuiltin *)bi)->isSeen () == OK) {
-	 DORAISE(OZ_mkTupleC("solve",1,OZ_CToAtom("onceOnlyCalledTwice")));
+	 DORAISE(OZ_mkTupleC("solve",1,OZ_atom("onceOnlyCalledTwice")));
        }
 
        Board *solveBB =
@@ -3131,7 +3133,7 @@ LBLsuspendThread:
        }
 
        if ( !e->fastUnifyOutline(solveAA->getSolveVar(), X[0], OK) ) {
-	 HF_FAIL(OZ_CToAtom("solve"));
+	 HF_FAIL(OZ_atom("solve"));
        }
 
        if (isTailCall) {
@@ -3193,11 +3195,11 @@ LBLsuspendThread:
 	 }
 	 
 	 if ( !e->fastUnifyOutline(solveAA->getSolveVar(), X[0], OK) ) {
-	   HF_FAIL(OZ_CToAtom("solve"));
+	   HF_FAIL(OZ_atom("solve"));
 	 }
        } else {
 	 if ( !e->fastUnifyOutline(valueIn, X[0], OK) ) {
-	   HF_FAIL(OZ_CToAtom("solve"));
+	   HF_FAIL(OZ_atom("solve"));
 	 }
        }
 
@@ -3237,7 +3239,7 @@ LBLsuspendThread:
 
 	Bool ret = e->installScript(waitBoard->getScriptRef());
 	if (!ret) {
-	  HF_FAIL(OZ_CToAtom("commitClause"));
+	  HF_FAIL(OZ_atom("commitClause"));
 	}
 	Assert(ret!=NO);
 	DISPATCH(1);
@@ -3287,7 +3289,7 @@ LBLsuspendThread:
 
 	Bool ret = e->installScript(bb->getScriptRef());
 	if (!ret) {
-	  HF_FAIL(OZ_CToAtom("commitClause"));
+	  HF_FAIL(OZ_atom("commitClause"));
 	}
 
 	Assert(ret != NO);
@@ -3467,11 +3469,11 @@ LBLsuspendThread:
       int noArgs         = smallIntValue(getNumberArg(PC+5));
       /*
       printf("%s in line %d in file: %s\n",
-	     OZ_toC(comment),line,OZ_toC(filename));
+	     toC(comment),line,toC(filename));
       if (noArgs != -1) {
 	printf("\t");
 	for (int i=0; i<noArgs; i++) {
-	  printf("%s ",OZ_toC(X[i]));
+	  printf("%s ",toC(X[i]));
         }
       }
       printf("\n");
@@ -3499,7 +3501,7 @@ LBLsuspendThread:
 				     comment
 				     );
       if (!OZ_unify(dbgVar,dbgTuple)) {
-	warning("returnDebugVar(%s,%s) failed",OZ_toC(dbgVar),OZ_toC(dbgTuple));
+	warning("returnDebugVar(%s,%s) failed",toC(dbgVar),toC(dbgTuple));
 	e->currentBoard = b;
 	DISPATCH(6);
       }
@@ -3615,7 +3617,7 @@ LBLsuspendThread:
       }
 
     case CE_FAIL:
-      HF_FAIL(OZ_CToAtom("noInfo"));
+      HF_FAIL(OZ_atom("noInfo"));
 
     case CE_SUSPEND:
       Assert (e->currentThread);
