@@ -5328,6 +5328,35 @@ OZ_C_proc_begin(BIfindFunction,3)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIfindInterface,2)
+{
+  oz_declareIntArg(0,handle);
+  oz_declareArg(1,module);
+  OZ_C_proc_interface * I;
+  I = (OZ_C_proc_interface *) osDlsym((void*)handle,"oz_interface");
+  if (I==0)
+    return oz_raise(E_ERROR, oz_atom("foreign"), "cannotFindInterface", 2,
+                    OZ_getCArg(0),
+                    OZ_getCArg(1));
+  OZ_Term l = nil();
+  OZ_CFun func;
+  BuiltinTabEntry *bi;
+  while (I->name) {
+    func = (OZ_CFun) osDlsym((void*)handle,I->name);
+    if (func==0)
+      return oz_raise(E_ERROR, oz_atom("foreign"),
+                      "cannotFindInterfaceFunction", 1,
+                      oz_atom(I->name));
+    OZ_addBuiltin(ozstrdup(I->name),I->arity,*func);
+    bi = builtinTab.find(I->name);
+    Assert(bi!=htEmpty);
+    l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
+    I++;
+  }
+  return oz_unify(module,OZ_recordInit(AtomForeign,l));
+}
+OZ_C_proc_end
+
 /* ------------------------------------------------------------
  * Shutdown
  * ------------------------------------------------------------ */
@@ -7252,8 +7281,8 @@ BIspec allSpec[] = {
 
   {"dlOpen",2,          BIdlOpen,               0},
   {"dlClose",1,         BIdlClose,              0},
-
   {"findFunction",   3, BIfindFunction,         0},
+  {"findInterface",  2, BIfindInterface,        0},
   {"shutdown",       1, BIshutdown,             0},
 
   {"Alarm",          2, BIalarm,                0},

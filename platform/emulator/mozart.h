@@ -615,4 +615,10 @@ extern void*    _FUNDECL(OZ_getForeignPointer,(OZ_Term));
 extern int      _FUNDECL(OZ_isForeignPointer,(OZ_Term));
 #endif
 
+/* foreign function interface */
+struct OZ_C_proc_interface {
+  const char* name;
+  int         arity;
+};
+
 #endif /* __OZ_H__ */
