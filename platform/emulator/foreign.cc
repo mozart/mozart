@@ -156,11 +156,7 @@ OZ_Term OZ_termType(OZ_Term term)
 
 OZ_Term OZ_CToInt(int i)
 {
-  if (i > OzMaxInt || i < OzMinInt)
-    return makeTaggedBigInt(new BigInt(i));
-  else {
-    return newSmallInt(i);
-  }
+  return makeInt(i);
 }
 
 int OZ_intToC(OZ_Term term)
