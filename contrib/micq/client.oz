@@ -40,6 +40,7 @@ import
    Pickle(load)
    Module
    DisplayMess at 'messagedisplay.ozf'
+   Remote
    MManager(newSecureManager:NewSecureManager) at 'manager.ozf'
    Mobility(newStationary:NewStationary stationaryClass:StationaryClass) at 'mobility.ozf'
    NewAccountGui(start) at 'newaccountgui.ozf'
@@ -133,9 +134,19 @@ define
       meth haltApplication( application: Instance )
          if {Dictionary.member self.ticketDB Instance} then
             thread
+               M={Dictionary.get self.ticketDB Instance}.module
+               R={Dictionary.get self.ticketDB Instance}.remote
+            in
                try
-                  {{Dictionary.get self.ticketDB Instance}.module.stop}
+                  {M.stop}
                catch _ then skip end
+               {Delay 10000}
+               if R \= unit then
+                  try
+                     {R close}
+                  catch _ then skip end
+               end
+               {Dictionary.remove self.ticketDB Instance}
             end
          end
       end
@@ -147,14 +158,12 @@ define
       meth startapplication(id:I) A T F R in
          {@server S_getapplication(id:I application:A)}
          case {Label A} of url then
-            thread
-               try
-                  {self remoteLink(A.serverurl
-                                   execute:proc{$ M} {M.start user(id:@id name:@name) T} end
-                                   module:F
-                                   remote:R)}
-               catch X then {Browse application(name:A.name exception:X)} end
-            end
+            try ID=@id Name=@name in
+               {self remoteLink(A.serverurl
+                                execute:proc{$ M} {M.start user(id:ID name:Name) T} end
+                                module:F
+                                remote:R)}
+            catch X then {Browse application(name:A.name exception:X)} end
          elseof functors then
             T=ticket
          end
@@ -178,8 +187,8 @@ define
             {InviteClient S N D Ok}
             if Ok==true then
                try
-                  case {Label U} of url then
-                     {self remoteLink(U.1 execute:proc{$ M} {M.start user(name:@name id:@id) T} end)}
+                  case {Label U} of url then ID=@id Name=@name in
+                     {self remoteLink(U.1 execute:proc{$ M} {M.start user(name:Name id:ID) T} end)}
                   end
                catch X then {Browse exception(startAppClientFailed X)} end
             end
@@ -188,8 +197,8 @@ define
 
       %% Start a client to a server we are running
       meth startClient(application:AID)
-         try A={Dictionary.get self.ticketDB AID} in
-            {self remoteLink(A.clienturl execute:proc{$ M} {M.start user(name:@name id:@id) A.ticket} end)}
+         try A={Dictionary.get self.ticketDB AID} ID=@id Name=@name in
+            {self remoteLink(A.clienturl execute:proc{$ M} {M.start user(name:Name id:ID) A.ticket} end)}
          catch X then {Browse inviteUserToJoinFailed(AID X)} end
       end
 
@@ -235,30 +244,37 @@ define
       end
 
       meth remoteLink(U execute:E<=proc{$ _} skip end module:F<=_ remote: R<=_)
-        % Starter in
-        %  Starter = functor $
-%                  import
-%                     Module
-%                  export
-%                     stop:Stop
-%                  define
-%                     M={New Module.manager init}
-%                     Stop
-%                  in
-%                     proc {Stop}
-%                        {F.stop}
-%                        {Delay 3000}
-%                     end
-%                     F={M link(url:U $)}
-%                     {E F}
-%                  end
+         Starter = functor $
+                   import
+                      Module
+                      Browser(browse:Browse)
+                   export
+                      stop:Stop
+                   define
+                      SecureFunctor =
+                      \insert './manager.oz'
+                      proc {Stop}
+                         {F stop}
+                         {Delay 3000}
+                      end
 
-%        {System.printError "*** Linking a remote functor\n"}
+                      MM = {New Module.manager init}
+                      SM M
 
-%        R = {New Remote.manager init(host: localhost
-%                                       detach: false)}
-%        {R apply(url:'' Starter)}
-         {self link(U execute:E module:F remote:R)}
+                   in
+                      SM={MM apply(url:'' SecureFunctor $)}
+
+                      M={SM.newSecureManager}
+                      try
+                         F={M link(url:U $)}
+                         {E F}
+                      catch X then {Browse applicationExecption#X} end
+                   end
+      in
+         {System.printError "*** Linking a remote functor\n"}
+
+         R = {New Remote.manager init(host: localhost fork:sh)}
+         {R apply( Starter)}
       end
 
       meth link(U execute:E<=proc{$ _} skip end module:F<=_ remote:R<=_)
@@ -280,6 +296,7 @@ define
 
       meth notify(id:ID online:O)=M thread {ChangeStatus M} end end
    end
+
 
    proc{StartClient A}
       try
@@ -304,6 +321,7 @@ define
             raise X end
          end
       end
+
       {Wait WaitQuit}
       {Delay 3000}
    end
