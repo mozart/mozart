@@ -218,6 +218,7 @@ class GenFDVariable;
 class GenMetaVariable;
 class GenBoolVariable;
 class GenFSetVariable;
+class AVar;
 class DynamicTable;
 class SRecord;
 class Arity;
