@@ -743,10 +743,19 @@ protected:
 public:
   USEHEAPMEMORY;
 
-  Bool gcIsMarked(void);
-  void gcMark(ConstTerm *);
-  void ** gcGetMarkField(void);
-  ConstTerm * gcGetFwd(void);
+  Bool gcIsMarked(void) {
+    return GCISMARKED(ctu.tagged);
+  }
+  void gcMark(ConstTerm * fwd) {
+    ctu.tagged = GCMARK(fwd);
+  }
+  void ** gcGetMarkField(void) {
+    return (void **) &ctu.tagged;
+  }
+  ConstTerm * gcGetFwd(void) {
+    Assert(gcIsMarked());
+    return (ConstTerm *) GCUNMARK((int) ctu.tagged);
+  }
   ConstTerm *gcConstTerm(void);
   ConstTerm *gcConstTermSpec(void);
   void gcConstRecurse(void);
