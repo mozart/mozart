@@ -19,7 +19,7 @@
  *  WARRANTIES.
  */
 
-#include <startup.hh>
+#include "startup.hh"
 
 void normalizePath(char *path, bool toUnix)
 {
