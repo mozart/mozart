@@ -85,7 +85,7 @@ implementation-dependent.
 
 <Para><Title/Weight Specifications/ Weight specifications <<SpecW>>
 occur in conjunction with set constraints (see <Ptr
-to="sect.fs.distribution">) and are defined as follows.
+to="section.fs.distribution">) and are defined as follows.
 
         <Grammar.Rule>?{SpecW}
           <Grammar.Alt type=def><<nil>></Grammar.Alt>
