@@ -281,10 +281,10 @@ PRINT(DynamicTable)
 	    if (isAtom(tmplit)) nAtom++; else nName++;
 	}
     }
-    // Allocate array on heap as STuple, put Atoms in array:
-    STuple *stuple=STuple::newSTuple(AtomNil,nAtom);
-    TaggedRef *arr=stuple->getRef();
-    // TaggedRef *arr = new TaggedRef[nAtom];
+    // Allocate array on heap, put Atoms in array:
+    //STuple *stuple=STuple::newSTuple(AtomNil,nAtom);
+    //TaggedRef *arr=stuple->getRef();
+    TaggedRef *arr = new TaggedRef[nAtom+1]; // +1 since nAtom may be zero
     for (ai=0,di=0; di<size; di++) {
 	tmplit=table[di].ident;
 	if (tmplit && isAtom(tmplit)) arr[ai++]=tmplit;
@@ -312,8 +312,7 @@ PRINT(DynamicTable)
         }
     }
     // Deallocate array:
-    // (Done automatically as part of heap GC)
-    // delete arr;
+    delete arr;
     // Finish up the output:
     if (nonempty) stream << ' ';
     stream << "...)" ;
