@@ -30,6 +30,10 @@
 #pragma implementation "marshaler.hh"
 #endif
 
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
+
 #include "wsock.hh"
 
 #include <sys/types.h>
@@ -1319,6 +1323,8 @@ void marshalFullObjectAndClass(Object *o,MsgBuffer* bs){
 /*   SECTION 15: statistics                                            */
 /* *********************************************************************/
 
+#ifdef MISC_BUILTINS
+
 OZ_BI_define(BIperdioStatistics,0,1)
 {
   OZ_Term dif_send_ar=oz_nil();
@@ -1374,6 +1380,8 @@ OZ_BI_define(BIperdioStatistics,0,1)
   ar=oz_cons(oz_pairA("recv",recv),ar);
   OZ_RETURN(OZ_recordInit(oz_atom("perdioStatistics"),ar));
 } OZ_BI_end
+
+#endif
 
 /* *********************************************************************/
 /*   SECTION 16: initialization                                       */

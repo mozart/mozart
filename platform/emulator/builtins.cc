@@ -32,6 +32,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
+
 #include "wsock.hh"
 #include "builtins.hh"
 #include "perdio.hh"
@@ -317,6 +321,8 @@ typeError:
 
 OZ_DECLAREBI_USEINLINEFUN1(BIprocedureArity,procedureArityInline)
 
+#ifdef MISC_BUILTINS
+
 OZ_BI_define(BIprocedureEnvironment,1,1)
 {
   oz_declareNonvarIN(0,p);
@@ -343,6 +349,7 @@ OZ_BI_define(BIprocedureEnvironment,1,1)
   OZ_RETURN(t);
 } OZ_BI_end
 
+#endif
 
 OZ_Return isCellInline(TaggedRef cell)
 {
@@ -706,6 +713,8 @@ OZ_BI_define(BIinjectSpace, 2,0)
 } OZ_BI_end
 
 
+#ifdef MISC_BUILTINS
+
 #ifdef CS_PROFILE
 OZ_BI_define(BIgetCloneDiff, 1,1) {
   declareSpace();
@@ -715,6 +724,8 @@ OZ_BI_define(BIgetCloneDiff, 1,1) {
 
   OZ_RETURN(space->getSolveActor()->getCloneDiff());
 } OZ_BI_end
+
+#endif
 
 #endif
 
@@ -4181,6 +4192,8 @@ OZ_BI_define(BIstatisticsReset, 0,0)
 } OZ_BI_end
 
 
+#ifdef MISC_BUILTINS
+
 OZ_BI_define(BIstatisticsPrint, 1,0)
 {
   oz_declareVirtualStringIN(0,file);
@@ -4234,6 +4247,8 @@ OZ_BI_define(BIstatisticsPrintProcs, 0,0)
   PrTabEntry::printPrTabEntries();
   return PROCEED;
 } OZ_BI_end
+
+#endif
 
 OZ_BI_define(BIstatisticsGetProcs, 0,1)
 {
@@ -5130,6 +5145,8 @@ OZ_Return ooGetLockInline(TaggedRef val)
 OZ_DECLAREBI_USEINLINEREL1(BIooGetLock,ooGetLockInline)
 
 
+#ifdef MISC_BUILTINS
+
 /********************************************************************
  * Functions
  ******************************************************************** */
@@ -5146,6 +5163,8 @@ OZ_BI_define(BIgetReturn,0,1)
   warning("getReturn should never be called");
   return PROCEED;
 } OZ_BI_end
+
+#endif
 
 
 /********************************************************************
@@ -5434,6 +5453,8 @@ OZ_BI_define(BIdelAllFastGroup,1,1)
 } OZ_BI_end
 
 
+#ifdef MISC_BUILTINS
+
 /********************************************************************
  * Inspecting values (EXPERIMENTAL by mm)
  ******************************************************************** */
@@ -5509,6 +5530,7 @@ OZ_BI_define(BIinspect, 1, 1)
   OZ_RETURN(oz_inspect(t));
 } OZ_BI_end
 
+#endif
 
 void initObjectBuiltins(void) {
   dummyRecord = makeTaggedNULL();

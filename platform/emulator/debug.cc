@@ -26,6 +26,10 @@
 #pragma implementation "debug.hh"
 #endif
 
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
+
 #include <string.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -286,12 +290,16 @@ OZ_BI_define(BIprocedureCoord, 1,1)
     OZ_RETURN(NameUnit);
 } OZ_BI_end
 
+#ifdef MISC_BUILTINS
+
 OZ_BI_define(BIlivenessX, 1,1)
 {
   OZ_declareIntIN(0,pc);
 
   OZ_RETURN_INT(CodeArea::livenessX((ProgramCounter)ToPointer(pc),0,0));
 } OZ_BI_end
+
+#endif
 
 
 /*----------------------------------------------------------------------
@@ -530,11 +538,15 @@ Bool ozd_trace(char *info, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
   }
 }
 
+#ifdef MISC_BUILTINS
+
 // mm2: I need this builtin for debugging!
 OZ_BI_define(BIhalt, 0,0)
 {
   mode=OK;
   return PROCEED;
 } OZ_BI_end
+
+#endif
 
 #endif

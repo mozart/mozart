@@ -23,13 +23,15 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
+
 #include <string.h>
 
 #include "runtime.hh"
 #include "builtins.hh"
 #include "os.hh"
-
-#include "conf.h"
 
 #ifdef MODULES_LINK_STATIC
 #define DYNAMIC_MODULE(m) m
