@@ -38,3 +38,7 @@ int ThreadQueue::getRunnableNumber()
   while (ptr=iter.getNext()) ret=(*ptr)->getRunnableNumber();
   return ret;
 }
+
+void initLinkedQueueFreeList() {
+  LinkedQueueBlock::initFreeList();
+}
