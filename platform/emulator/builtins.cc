@@ -4915,6 +4915,96 @@ OZ_BI_define(BIwatcherInstall,3,0)
 } OZ_BI_end
 
 
+
+OZ_Return applyProc(TaggedRef proc, TaggedRef args)
+{
+  OZ_Term var;
+  if (!OZ_isList(args,&var)) {
+    if (var == 0) oz_typeError(1,"finite List");
+    oz_suspendOn(var);
+  }
+
+  int len = OZ_length(args);
+  RefsArray argsArray = allocateRefsArray(len);
+  for (int i=0; i < len; i++) {
+    argsArray[i] = OZ_head(args);
+    args=OZ_tail(args);
+  }
+  Assert(OZ_isNil(args));
+
+  if (!isProcedure(proc) && !isObject(proc)) {
+    oz_typeError(0,"Procedure or Object");
+  }
+
+  am.currentThread()->pushCall(proc,argsArray,len);
+  disposeRefsArray(argsArray);
+  return BI_REPLACEBICALL;
+}
+
+
+OZ_BI_define(BIcontrolVarHandler,1,0)
+{
+  OZ_Term varlist = deref(OZ_in(0));
+  for ( ; isCons(varlist); varlist = deref(tail(varlist))) {
+    TaggedRef car = deref(head(varlist));
+    if (oz_isVariable(car))
+      continue;
+    if (isLiteral(car) && literalEq(car,NameUnit))
+      return PROCEED;
+
+    if (!isSTuple(car))
+      goto bomb;
+
+    SRecord *tpl = tagged2SRecord(car);
+    TaggedRef label = tpl->getLabel();
+
+    if (literalEq(label,AtomUnify)) {
+      Assert(OZ_width(car)==2);
+      return OZ_unify(tpl->getArg(0),tpl->getArg(1));
+    }
+
+    if (literalEq(label,AtomException)) {
+      Assert(OZ_width(car)==1);
+      return OZ_raise(tpl->getArg(0));
+    }
+
+    if (literalEq(label,AtomApply)) {
+      Assert(OZ_width(car)==2);
+      return applyProc(tpl->getArg(0),tpl->getArg(1));
+    }
+
+    if (literalEq(label,AtomApplyList)) {
+      Assert(OZ_width(car)==1);
+      TaggedRef list = reverseC(deref(tpl->getArg(0)));
+      while(isCons(list)) {
+        TaggedRef car = head(list);
+        if (!OZ_isPair(car))
+          return oz_raise(E_ERROR,E_SYSTEM,"applyList: pair expected",1,car);
+        OZ_Return aux = applyProc(OZ_getArg(car,0),OZ_getArg(car,1));
+        if (aux != BI_REPLACEBICALL)
+          return aux;
+        list = deref(tail(list));
+      }
+      return BI_REPLACEBICALL;
+    }
+
+    goto bomb;
+  }
+
+bomb:
+  return oz_raise(E_ERROR,E_SYSTEM,"controlVarHandler: no action found",1,OZ_in(0));
+} OZ_BI_end
+
+
+// for debugging
+OZ_BI_define(BIcheckCVH,1,0)
+{
+  ControlVarNew(var);
+  OZ_unify(var,OZ_in(0));
+  return BI_CONTROL_VAR;
+} OZ_BI_end
+
+
 /********************************************************************
  *   Dictionaries
  ******************************************************************** */
@@ -5358,27 +5448,7 @@ OZ_BI_define(BIapply,2,0)
   oz_declareNonvarIN(0,proc);
   oz_declareIN(1,args);
 
-  OZ_Term var;
-  if (!OZ_isList(args,&var)) {
-    if (var == 0) oz_typeError(1,"finite List");
-    oz_suspendOn(var);
-  }
-
-  int len = OZ_length(args);
-  RefsArray argsArray = allocateRefsArray(len);
-  for (int i=0; i < len; i++) {
-    argsArray[i] = OZ_head(args);
-    args=OZ_tail(args);
-  }
-  Assert(OZ_isNil(args));
-
-  if (!isProcedure(proc) && !isObject(proc)) {
-    oz_typeError(0,"Procedure or Object");
-  }
-
-  am.currentThread()->pushCall(proc,argsArray,len);
-  disposeRefsArray(argsArray);
-  return BI_REPLACEBICALL;
+  return applyProc(proc, args);
 } OZ_BI_end
 
 // ------------------------------------------------------------------------
@@ -6654,6 +6724,7 @@ Builtin *BIinit()
   BI_Unify=makeTaggedConst(builtinTab.find("="));
   BI_Show=makeTaggedConst(builtinTab.find("Show"));
   BI_send=makeTaggedConst(builtinTab.find("Send"));
+  BI_controlVarHandler=makeTaggedConst(builtinTab.find("controlVarHandler"));
 
   // BIinitAssembler();
 

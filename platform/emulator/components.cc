@@ -498,21 +498,20 @@ public:
   int pid;
   char *file;
   char *url;
-  TaggedRef thread, out;
+  TaggedRef controlvar, out;
   URLAction action;
 
-  PipeInfo(int f, int p, char *tmpf, const char *u, TaggedRef o, Thread *t,
+  PipeInfo(int f, int p, char *tmpf, const char *u, TaggedRef o, TaggedRef var,
            URLAction act):
     fd(f), pid(p), file(tmpf), out(o), action(act)
   {
-    Assert(t);
-    thread = makeTaggedConst(t);
+    controlvar = var;;
     url = ozstrdup(u);
-    OZ_protect(&thread);
+    OZ_protect(&controlvar);
     OZ_protect(&out);
   }
   ~PipeInfo() {
-    OZ_unprotect(&thread);
+    OZ_unprotect(&controlvar);
     OZ_unprotect(&out);
     delete url;
   }
@@ -524,12 +523,13 @@ public:
  (act==URL_LOAD    )?"load":    \
  "<unknown action>")
 
-void doRaise(Thread *th, char *msg, const char *url,URLAction act)
+void doRaise(TaggedRef controlvar, char *msg, const char *url,URLAction act)
 {
-  threadRaise(th,OZ_makeException(E_SYSTEM,oz_atom("url"),
-                                  ACTION_STRING(act),2,
-                                  oz_atom(msg),
-                                  oz_atom(url)),1);
+  ControlVarRaise(controlvar,
+                  OZ_makeException(E_SYSTEM,oz_atom("url"),
+                                   ACTION_STRING(act),2,
+                                   oz_atom(msg),
+                                   oz_atom(url)));
 }
 
 int pipeHandler(int, void *arg)
@@ -539,18 +539,18 @@ int pipeHandler(int, void *arg)
   int n = osread(pi->fd,&retloc,sizeof(retloc));
   osclose(pi->fd);
 
-  Thread *th = pi->thread ? tagged2Thread(pi->thread) : 0;
+  TaggedRef controlvar = pi->controlvar;
 
 #ifndef WINDOWS
   int u = waitpid(pi->pid,NULL,0);
   if (u!=pi->pid) {
-    doRaise(th,OZ_unixError(errno),pi->url,pi->action);
+    doRaise(controlvar,OZ_unixError(errno),pi->url,pi->action);
     return NO;
   }
 #endif
 
   if (retloc!=URLC_OK) {
-    doRaise(th,urlcStrerror(retloc),pi->url,pi->action);
+    doRaise(controlvar,urlcStrerror(retloc),pi->url,pi->action);
     goto exit;
   }
 
@@ -558,39 +558,40 @@ int pipeHandler(int, void *arg)
   case URL_LOCALIZE:
     // this is only called when the file is remote, therefore
     // a local copy will be made into the file
-    pushUnify(th,pi->out,OZ_mkTupleC("new",1,oz_atom(pi->file)));
+    ControlVarUnify(controlvar,pi->out,OZ_mkTupleC("new",1,oz_atom(pi->file)));
     break;
   case URL_OPEN:
     {
       int fd = osopen(pi->file,O_RDONLY,0);
       if (fd < 0) {
-        doRaise(th,OZ_unixError(errno),pi->url,pi->action);
+        doRaise(controlvar,OZ_unixError(errno),pi->url,pi->action);
         goto exit;
       }
       unlink(pi->file);
-      pushUnify(th,pi->out,OZ_int(fd));
+      ControlVarUnify(controlvar,pi->out,OZ_int(fd));
       break;
     }
   case URL_LOAD:
     {
       int fd = osopen(pi->file, O_RDONLY,0);
       if (fd < 0) {
-        doRaise(th,OZ_unixError(errno),pi->url,pi->action);
+        doRaise(controlvar,OZ_unixError(errno),pi->url,pi->action);
         goto exit;
       }
       OZ_Term other = oz_newVariable();
       OZ_Return aux = loadFD(fd,other);
       if (aux==RAISE) {
-        threadRaise(th,am.getExceptionValue(),1);
+        ControlVarRaise(controlvar,am.getExceptionValue());
         goto exit;
       }
       Assert(aux==PROCEED);
       unlink(pi->file);
-      pushUnify(th,pi->out,other);
+      ControlVarUnify(controlvar,pi->out,other);
       break;
     }
   }
-  oz_resumeFromNet(th);
+
+  ControlVarResume(controlvar);
 
 exit:
   delete pi->file;
@@ -632,7 +633,8 @@ unsigned __stdcall fetchThread(void *p)
 
 
 
-void getURL(const char *url, TaggedRef out, URLAction act, Thread *th)
+static
+OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
 {
   //  warning("getURL: %s\n",url);
 
@@ -649,10 +651,8 @@ void getURL(const char *url, TaggedRef out, URLAction act, Thread *th)
 
   unsigned tid;
   HANDLE thrd = (HANDLE) _beginthreadex(NULL,0,&fetchThread,ui,0,&tid);
-  if (thrd==NULL) {
-    ozpwarning("getURL: start thread");
-    return;
-  }
+  if (thrd==NULL)
+    return oz_raise(E_ERROR,E_KERNEL,"getURL: start thread",1,oz_atom(url));
 
   int pid = 0;
 
@@ -660,8 +660,7 @@ void getURL(const char *url, TaggedRef out, URLAction act, Thread *th)
 
   int fds[2];
   if (pipe(fds)<0) {
-    perror("pipe");
-    return;
+    return oz_raise(E_ERROR,E_KERNEL,"pipe",1,oz_atom(url));
   }
 
   pid_t pid = fork();
@@ -674,8 +673,7 @@ void getURL(const char *url, TaggedRef out, URLAction act, Thread *th)
       exit(0);
     }
   case -1:
-    perror("fork");
-    return;
+    return oz_raise(E_ERROR,E_KERNEL,"fork",1,oz_atom(url));
   default:
     break;
   }
@@ -685,9 +683,10 @@ void getURL(const char *url, TaggedRef out, URLAction act, Thread *th)
   int rfd = fds[0];
 #endif
 
-  PipeInfo *pi = new PipeInfo(rfd,pid,tmpfile,url,out,th,act);
-  oz_suspendOnNet(th);
+  ControlVarNew(var);
+  PipeInfo *pi = new PipeInfo(rfd,pid,tmpfile,url,out,var,act);
   OZ_registerReadHandler(rfd,pipeHandler,pi);
+  return BI_CONTROL_VAR;
 }
 
 
@@ -748,8 +747,7 @@ url_local:
   }
 url_remote:
   out = OZ_newVariable();
-  getURL(url,out,act,am.currentThread());
-  return BI_PREEMPT;
+  return getURL(url,out,act);
 kaboom:
   return oz_raise(E_SYSTEM,oz_atom("url"),ACTION_STRING(act),2,
                   oz_atom(OZ_unixError(errno)),
@@ -776,14 +774,10 @@ OZ_BI_define(BIurl_load,1,1)
 
 OZ_C_proc_begin(BIload,2)
 {
-  RefsArray args = allocateRefsArray(2);
   OZ_Term loader = registry_get(AtomLoad);
-  args[0] = OZ_getCArg(0);
-  args[1] = OZ_getCArg(1);
-  Thread*tt=am.currentThread();
-  if (loader) tt->pushCall(loader,args,2);
-  else        tt->pushCall(BI_url_load,args,2);
-  disposeRefsArray(args);
+  if (loader==0)
+    loader = BI_url_load;
+  am.currentThread()->pushCall(loader,OZ_getCArg(0),OZ_getCArg(1));
   return BI_REPLACEBICALL;
 }
 OZ_C_proc_end

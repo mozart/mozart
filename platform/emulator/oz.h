@@ -612,6 +612,7 @@ extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
 #define BI_PREEMPT       1024
 #define BI_REPLACEBICALL 1025
 #define BI_TYPE_ERROR    1026
+#define BI_CONTROL_VAR   1027
 
 #define OZ_STATUS_OK(s) ((s)==PROCEED || (s)==BI_PREEMPT)
 #define OZ_BI_proto(Name) OZ_Return Name(OZ_Term OZ_args[],int OZ__LOC[]);
