@@ -1,5 +1,3 @@
-#define KOSTJA_MAGIC 0x6b6f7374
-
 #define COMPILER_TIMEOUT        100 /* ms */
 
 #define IO_BUF_SIZE             10000

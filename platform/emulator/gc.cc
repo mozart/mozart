@@ -1077,7 +1077,7 @@ Thread *Thread::gcDeadThread()
   GCNEWADDRMSG (newThread);
 
   gcTagged(cell,newThread->cell);
-  newThread->setBoard(am.rootBoard);
+  newThread->setBoardInternal(am.rootBoard);
   newThread->state.flags=0;
   newThread->item.threadBody=0;
 
@@ -1090,7 +1090,7 @@ void Thread::gcRecurse ()
 {
   GCMETHMSG("Thread::gcRecurse");
 
-  Board *newBoard = getBoard()->gcBoard ();
+  Board *newBoard = getBoardInternal()->gcBoard ();
   if (!newBoard) {
     //
     //  The following assertion holds because suspended threads
@@ -1102,8 +1102,8 @@ void Thread::gcRecurse ()
     //  Actually, there are two cases: for runnable threads with
     // a taskstack, and without it (note that the last case covers
     // also the GC'ing of propagators);
-    Board *notificationBoard=getBoard()->gcGetNotificationBoard();
-    setBoard(notificationBoard->gcBoard());
+    Board *notificationBoard=getBoardInternal()->gcGetNotificationBoard();
+    setBoardInternal(notificationBoard->gcBoard());
     if (hasStack()) {
 
       //
@@ -1111,11 +1111,7 @@ void Thread::gcRecurse ()
       //  it should happen only if this thread was local
       //  to some (deep) guard, and that guard was killed or cancelled;
 
-      discardUpTo(notificationBoard);
-
-      if (isEmpty()) {
-        getBoard()->incSuspCount();
-      }
+      getBoardInternal()->incSuspCount();
 
       //
       //  This assertion should hold for 'ask' actors, and does not
@@ -1126,7 +1122,7 @@ void Thread::gcRecurse ()
     } else {
       //
 
-      getBoard()->incSuspCount ();
+      getBoardInternal()->incSuspCount ();
 
       //
       //  Convert the thread to a 'wakeup' type, and just throw away
@@ -1135,7 +1131,7 @@ void Thread::gcRecurse ()
       item.threadBody = (RunnableThreadBody *) NULL;
     }
   } else {
-    setBoard(newBoard);
+    setBoardInternal(newBoard);
   }
 
   //
@@ -1879,8 +1875,6 @@ void TaskStack::gc(TaskStack *newstack)
       COUNT(cLocal);
       *(--newtop) = ((AWActor *) *(--oldtop))->gcActor();
       break;
-
-    case C_JOB:       COUNT(cJob);     break;
 
     case C_CONT:
       COUNT(cCont);

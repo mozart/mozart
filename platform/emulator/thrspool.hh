@@ -66,6 +66,7 @@ public:
   Thread *getFirstThread()
   {
     if (hiCounter < 0 && lowCounter < 0) {
+      Assert(hiQueue.isEmpty() && lowQueue.isEmpty());
       return midQueue.dequeue();
     }
 
@@ -76,6 +77,7 @@ public:
   Bool threadQueuesAreEmpty()
   {
     if (hiCounter < 0 && lowCounter < 0) {
+      Assert(hiQueue.isEmpty() && lowQueue.isEmpty());
       return midQueue.isEmpty();
     }
     return threadQueuesAreEmptyOutline();

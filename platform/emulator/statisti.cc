@@ -93,8 +93,8 @@ Statistics::Statistics()
 
 void Statistics::reset() {
 #ifdef PROFILE
-  allocateCounter = deallocateCounter = procCounter = waitCounter =
-    askCounter = protectedCounter = 0;
+  allocateCounter = deallocateCounter = procCounter =
+    protectedCounter = 0;
 #endif
   gcLastActive = 0;
 
@@ -218,7 +218,7 @@ void Statistics::initCount() {
   cvar=0;
   dynamicTable= dynamicTableLen=0;
   taskStack=taskStackLen=0;
-  cSolve=cCatch=cLocal=cJob=cCont=cXCont=cACont=cDebugCont=cExceptHandler=0;
+  cSolve=cCatch=cLocal=cCont=cXCont=cACont=cDebugCont=cExceptHandler=0;
   cCallCont= cCFuncCont=0;
   abstraction=deepObject=flatObject=cell=chunk=0;
   oneCallBuiltin=solvedBuiltin=builtin=0;
@@ -275,7 +275,6 @@ void Statistics::printCount() {
   printf("taskStackLen    %d (%dB)\n",taskStackLen,0);
   printf("cCatch          %d (%dB)\n",cCatch,4);
   printf("cLocal          %d (%dB)\n",cLocal,4);
-  printf("cJob            %d (%dB)\n",cJob,4);
   printf("cCont           %d (%dB)\n",cCont,12);
   printf("cXCont          %d (%dB)\n",cXCont,16);
   printf("cSetCaa         %d (%dB)\n",cSetCaa,8);

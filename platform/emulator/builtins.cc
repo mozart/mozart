@@ -2702,7 +2702,7 @@ OZ_C_proc_begin(BIthreadSetPriority,2)
     prio = HI_PRIORITY;
   } else {
   type_goof:
-    TypeErrorT(0,"Atom [low medium high]");
+    TypeErrorT(1,"Atom [low medium high]");
   }
 
   if (th->isDeadThread()) return PROCEED;
