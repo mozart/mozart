@@ -161,7 +161,7 @@ define
       {Dictionary.entries Dict}
    end
 
-   fun {Make VarTable PropTable Hist C}
+   fun {Make FailSet VarTable PropTable Hist C}
       [PropId] = {FS.reflect.lowerBoundList C}
       ReflC = PropTable.PropId
       LocC  = ReflC.location
@@ -175,14 +175,13 @@ define
       #" ["#PropId#"]"
 \endif      
    in
-      {System.show g}
       {Hist reset_mark}
       
       scg(graph:
 	     ("[l(\"cn<"#PropId
 	      #">\",n(\"\",["
 	      #"a(\"OBJECT\",\""#Name#"\\n"#Location#"\"),"
-	      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(ReflC.reference $)}
+	      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(ReflC.reference FailSet PropId $)}
 	      #"\"),"
 	      #{Hist get_prop_node_attr(PropId $)}
 	      #"a(\"_GO\",\""#Config.propNodeShape#"\"),"

@@ -10,7 +10,7 @@ import
 
    FS
    System
-   Config(propNodeShape edgeColour) 
+   Config(propNodeShape edgeColour)
 
 define
 
@@ -20,18 +20,18 @@ define
 \endif
       {FS.reflect.lowerBoundList {FS.intersect S1 S2}}
    end
-   
-   fun {MakeEdges Hist VarTable H T}
+
+   fun {MakeEdges FailSet Hist VarTable H T}
 \ifdef DEBUG
       {System.show makeEdges}
 \endif
-      
+
       if T == nil then ""
       else
 	 SharedVars = {ShareVars H.parameters T.1.parameters}
       in
 	 if SharedVars == nil then ""
-	 else 
+	 else
 	    "l(\"e<"#H.id#"|"#T.1.id#">\",e(\"\", [a(\"_DIR\",\"none\"),"
 	    #"a(\"EDGECOLOR\",\""#Config.edgeColour#"\"),"
 	    #"m(["
@@ -53,17 +53,17 @@ define
 	    #T.1.id#">\")))"
 	    #if T.2 == nil then "" else ","end
 	 end
-	 #{MakeEdges Hist VarTable H T.2}
+	 #{MakeEdges FailSet Hist VarTable H T.2}
       end
    end
-   
-   fun {MakeNode Ignore Hist VarTable PropTable H}
+
+   fun {MakeNode FailSet Ignore Hist VarTable PropTable H}
 \ifdef DEBUG
       {System.show makeNode}
 \endif
       Location = if H.location == unit then ""
 		 else H.location.file#":"#H.location.line
-		 end 
+		 end
 
       Name = H.name
 \ifdef SHOW_ID
@@ -72,59 +72,61 @@ define
    in
       "l(\"cn<"#H.id#">\",n(\"\",["
       #"a(\"OBJECT\",\""#Name#"\\n"#Location#"\"),"
-      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(H.reference $)}#"\"),"
+      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(H.reference FailSet H.id $)}#"\"),"
       #{Hist get_prop_node_attr(H.id $)}
       #"a(\"_GO\",\""#Config.propNodeShape#"\"),"
       #"m(["
       #{Hist insert_menu($)}
       #{Hist insert_menu_mark_prop(H.id H.name#" ("#Location#")" $)}
-      
+
       #"menu_entry(\"addconcg<"#H.id#">\",\"Add #"
       #{FS.card H.connected_props}#" propagator nodes connected to "
       #H.name#" ("#Location#")\")"
       #",blank"
-      
+
       #",menu_entry(\"scg<"#H.id#">\",\"Single propagator graph of "
       #H.name
       #if H.location == unit then ""
        else " ("#H.location.file#":"#H.location.line#")"
-       end 
+       end
       #"\")"
 
       #",menu_entry(\"cg<all>\",\"Propagator graph all propagators\")"
-      
+
       #",blank"
       #",menu_entry(\"corrvg\",\"Corresponding variable graph\")"
       #"])"
       #"],["
-      #{MakeEdges Hist VarTable H
+      #{MakeEdges FailSet Hist VarTable H
 	{FoldR {FS.reflect.lowerBoundList {FS.diff H.connected_props Ignore}}
 	 fun {$ L R} (PropTable.L)|R end nil}}#"]))"
    end
-   
-   fun {MakeNodes IgnoreIn Hist VarTable PropTable L}
+
+   fun {MakeNodes FailSet IgnoreIn Hist VarTable PropTable L}
       {System.printInfo '.'}
       if L == nil then ""
       else
 	 Ignore = {FS.union {FS.value.make L.1.id} IgnoreIn}
       in
-	 {MakeNode Ignore Hist VarTable PropTable L.1}#","
-	 #{MakeNodes Ignore Hist VarTable PropTable L.2}
+	 % tmueller:bug "," only if L.2 != nil
+	 {MakeNode FailSet Ignore Hist VarTable PropTable L.1}#","
+	 #{MakeNodes FailSet Ignore Hist VarTable PropTable L.2}
       end
    end
 
-   fun {Make VarTable PropTable Hist Ps}
+   fun {Make FailSet VarTable PropTable Hist Ps}
       {Hist reset_mark} % tmueller ?
-      
+
       cg(graph:
 	    case {FoldR {FS.reflect.lowerBoundList Ps}
 		  fun {$ L R} (PropTable.L)|R end nil}
 	    of nil then ""
 	    [] L then "["#{MakeNodes
+			   FailSet
 			   {FS.diff {FS.value.make 1#{Width PropTable}} Ps}
 			   Hist VarTable PropTable L}#"]"
 	    end
 	)
    end
-   
+
 end

@@ -23,7 +23,7 @@ define
       {FS.reflect.lowerBoundList {FS.intersect S1 S2}}
    end
    
-   fun {MakeEdges Hist PropTable H T}
+   fun {MakeEdges FailSet Hist PropTable H T}
 \ifdef DEBUG
       {System.show makeEdges}
 \endif
@@ -34,7 +34,8 @@ define
 	 if SharedProps == nil then ""
 	 else
 	    "l(\"e<"#H.id#"|"#T.1.id#">\",e(\"\", [a(\"_DIR\",\"none\"),"
-	    #"a(\"EDGECOLOR\",\""#Config.edgeColour#"\"),"
+%	    #"a(\"EDGEPATTERN\",\"thick\"),"
+	    #"a(\"EDGECOLOR\",\""#{Hist get_prop_edge_failed(FailSet SharedProps $)}#"\"),"
 	    
 	    #"m(["
 	    #{Hist insert_menu($)}
@@ -64,11 +65,11 @@ define
 	    #"])], r(\"vn<"#T.1.id#">\")))"
 	    #if T.2 == nil then "" else ","end
 	 end
-	 #{MakeEdges Hist PropTable H T.2}
+	 #{MakeEdges FailSet Hist PropTable H T.2}
       end
    end
    
-   fun {MakeNode Ignore Hist VarTable PropTable H}
+   fun {MakeNode FailSet Ignore Hist VarTable PropTable H}
 \ifdef DEBUG
       {System.show makeNode}
 \endif
@@ -98,12 +99,12 @@ define
       #",blank"
       #",menu_entry(\"corrcg\",\"Corresponding propagator graph\")"
       #"])],["
-      #{MakeEdges Hist PropTable H
+      #{MakeEdges FailSet Hist PropTable H
 	{FoldR {FS.reflect.lowerBoundList {FS.diff H.connected_vars Ignore}}
 	 fun {$ L R} (VarTable.L)|R end nil}}#"]))"
    end
    
-   fun {MakeNodes IgnoreIn Hist VarTable PropTable L}
+   fun {MakeNodes FailSet IgnoreIn Hist VarTable PropTable L}
 \ifdef DEBUG
       {System.show makeNodes}
 \endif
@@ -111,12 +112,12 @@ define
       else
 	 Ignore = {FS.union {FS.value.make L.1.id} IgnoreIn}
       in
-	 {MakeNode Ignore Hist VarTable PropTable L.1}#","
-	 #{MakeNodes Ignore Hist VarTable PropTable L.2} 
+	 {MakeNode FailSet Ignore Hist VarTable PropTable L.1}#","
+	 #{MakeNodes FailSet Ignore Hist VarTable PropTable L.2} 
       end
    end
    
-   fun {Make VarTable PropTable Hist Vs}
+   fun {Make FailSet VarTable PropTable Hist Vs}
       {Hist reset_mark}
 
       vg(graph:
@@ -125,7 +126,7 @@ define
 
 	    of nil then ""
 	    [] L   then
-	       "["#{MakeNodes
+	       "["#{MakeNodes FailSet
 		    {FS.diff {FS.value.make 1#{Width VarTable}} Vs}
 		    Hist VarTable PropTable L}#"]"
 	    end
