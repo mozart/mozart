@@ -62,6 +62,7 @@ public:
   void putRec(MsgContainer *msgC);
   MsgContainer *getRec(int num);
   void clearRec();
+  void clearCont();
 
   Bool hasNeed();
   Bool hasQueued();

@@ -459,16 +459,6 @@ private:
   CrazyDebug(void decDebugNODES() { debugNODES--; });
 
   //
-  // 'reset()' returns the traverser to the original state;
-  void reset() {
-    CrazyDebug(debugNODES = 0;);
-    DebugCode(opaque = (Opaque *) -1);
-    keepRunning = NO;
-    clear();
-    unwindGTIT();
-  }
-
-  //
   // When the builder receives a value from the stream, it either just
   // stores it somewhere, or, alternatively, passes it to some
   // emulator function. While in the first case it is sufficient just
@@ -495,9 +485,19 @@ protected:
 
   //
 public:
-  GenTraverser() {
+  //
+  // 'reset()' returns the traverser to the original state;
+  void reset() {
+    CrazyDebug(debugNODES = 0;);
+    DebugCode(proc = (ProcessNodeProc) -1;); // not used;
     DebugCode(opaque = (Opaque *) -1);
+    keepRunning = NO;
+    clear();
+    unwindGTIT();
   }
+
+  //
+  GenTraverser() { reset(); }
   virtual ~GenTraverser() {}
 
   //
@@ -565,9 +565,8 @@ public:
   // specify values to be marshaled with 'traverseOne()', and finish
   // with 'finishTraversing()':
   void prepareTraversing(Opaque *o) {
-    reset();
-    DebugCode(proc = (ProcessNodeProc) -1;); // not used;
-    DebugCode(keepRunning = NO;);            // not used;
+    Assert(proc == (ProcessNodeProc) -1);
+    Assert(keepRunning == NO);  // not used;
     Assert(opaque == (Opaque *) -1); // otherwise that's recursive;
     Assert(o != (Opaque *) -1);      // not allowed (limitation);
     opaque = o;
@@ -586,6 +585,8 @@ public:
   void finishTraversing() {
     Assert(isEmpty());
     DebugCode(opaque = (Opaque *) -1);
+    DebugCode(proc = (ProcessNodeProc) -1;); // not used;
+    keepRunning = NO;
   }
 
   //

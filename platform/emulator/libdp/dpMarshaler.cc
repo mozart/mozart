@@ -2360,6 +2360,7 @@ void DPMarshalers::dpReturnMarshaler(DPMarshaler* dpm)
 {
   for (int i = 0; i < musNum; i++) {
     if (mus[i].m == dpm) {
+      dpm->reset();
       Assert(mus[i].flags & MUMarshalerBusy);
       mus[i].flags = mus[i].flags & ~MUMarshalerBusy;
       return;
