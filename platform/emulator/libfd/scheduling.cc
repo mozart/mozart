@@ -1812,9 +1812,6 @@ OZ_Return CPIteratePropagatorCapUp::propagate(void)
   int cap_flag = 0;
   int mysup = OZ_getFDSup();
 
-  struct Min_max {
-    int min, max;
-  };
   DECL_DYN_ARRAY(Min_max, MinMax, ts);
   for (i=ts; i--;){
     MinMax[i].min = x[i]->getMinElem();
