@@ -15,8 +15,11 @@ class Gui from Menu Dialog
       LocalEnvText
    
       ApplFrame
+      ApplFileFrame
       ApplPrefix
       ApplText
+      ApplFilePrefix
+      ApplFileText
    
       StatusFrame
       StatusLabel
@@ -34,23 +37,25 @@ class Gui from Menu Dialog
       Menu,init
       Dialog,init
 
-      {ForAll [self.ButtonFrame self.ApplFrame self.StatusFrame]
+      {ForAll [self.ButtonFrame   self.ApplFrame
+	       self.ApplFileFrame self.StatusFrame]
        proc{$ F}
 	  F = {New Tk.frame tkInit(parent:self.toplevel
 				   bd:BorderSize
 				   relief:ridge)}
        end}
       
-      {Tk.batch [grid(self.menuBar     row:0 column:0 sticky:we columnspan:3)
-		 grid(self.ButtonFrame row:1 column:0 sticky:we columnspan:3)
-		 grid(self.ApplFrame   row:2 column:0 sticky:we columnspan:3)
-		 grid(self.StatusFrame row:6 column:0 sticky:we columnspan:3)
+      {Tk.batch [grid(self.menuBar       row:0 column:0 sticky:we columnspan:3)
+		 grid(self.ButtonFrame   row:1 column:0 sticky:we columnspan:3)
+		 grid(self.ApplFrame     row:2 column:0 sticky:we columnspan:2)
+		 grid(self.ApplFileFrame row:2 column:2 sticky:we columnspan:1)
+		 grid(self.StatusFrame   row:6 column:0 sticky:we columnspan:3)
 		]}
       
       %% the buttons
       local
 	 %% Tk has some problems printing centered text :-(
-	 Bs = {Map [' step' ' next' ' finish' ' cont' ' forget' ' stack']
+	 Bs = {Map [' step' ' next' ' finish' ' cont' ' forget' /*' stack'*/]
 	       fun {$ B}
 		  {New Tk.button tkInit(parent:      self.ButtonFrame
 					text:        B
@@ -68,14 +73,26 @@ class Gui from Menu Dialog
       self.ApplPrefix = {New Tk.label tkInit(parent: self.ApplFrame
 					     text:   ApplPrefixText)}
       self.ApplText   = {New Tk.text tkInit(parent: self.ApplFrame
-					    %height: 5
 					    height: 1
+					    width:  0
 					    bd:     SmallBorderSize
 					    cursor: TextCursor
 					    font:   DefaultFont
 					    bg:     DefaultBackground)}
+      self.ApplFilePrefix = {New Tk.label tkInit(parent: self.ApplFileFrame
+						 text:   ApplFilePrefixText)}
+      self.ApplFileText   = {New Tk.text tkInit(parent: self.ApplFileFrame
+						height: 1
+						width:  0
+						bd:     SmallBorderSize
+						cursor: TextCursor
+						font:   DefaultFont
+						bg:     DefaultBackground)}
+      
       {Tk.batch [pack(self.ApplPrefix side:left)
-		 pack(self.ApplText side:left fill:x expand:yes)]}
+		 pack(self.ApplText   side:left fill:x expand:yes)]}
+      {Tk.batch [pack(self.ApplFilePrefix side:left)
+		 pack(self.ApplFileText   side:left fill:x expand:yes)]}
       
       %% border line
       local
@@ -117,9 +134,9 @@ class Gui from Menu Dialog
 		 grid(self.GlobalEnvText row:4 column:2 sticky:nswe)
 		 grid(rowconfigure       self.toplevel 3 weight:1)
 		 grid(rowconfigure       self.toplevel 4 weight:1)
-		 grid(columnconfigure    self.toplevel 0 weight:1)
-		 grid(columnconfigure    self.toplevel 1 weight:2)
-		 grid(columnconfigure    self.toplevel 2 weight:2)
+		 grid(columnconfigure    self.toplevel 0 weight:4)
+		 grid(columnconfigure    self.toplevel 1 weight:1)
+		 grid(columnconfigure    self.toplevel 2 weight:1)
 		]}
    end
 
@@ -135,7 +152,7 @@ class Gui from Menu Dialog
 		      tkInit(parent: Widget
 			     action: proc{$}{Browse V.2}end)}
 	     in
-		{ForAll [tk(insert 'end' {PrintF ' ' # V.1 15})
+		{ForAll [tk(insert 'end' {PrintF ' ' # V.1 18})
 			 tk(insert 'end' AT # NL T)
 			 tk(tag bind T '<1>' Ac)
 			 tk(tag conf T font:BoldFont)] Widget}
@@ -165,16 +182,18 @@ class Gui from Menu Dialog
 	 {self.GlobalEnvText title(AltGlobalEnvTitle # I)}
       end
       
+      Gui,Clear(self.LocalEnvText)
+      Gui,Clear(self.GlobalEnvText)
+      
       case V == undef then
 	 skip
       else
-	 Gui,Clear(self.LocalEnvText)
-	 Gui,Clear(self.GlobalEnvText)
 	 Gui,DoPrintEnv(self.LocalEnvText  V.'Y' CV CP)
 	 Gui,DoPrintEnv(self.GlobalEnvText V.'G' CV CP)
-	 Gui,Disable(self.LocalEnvText)
-	 Gui,Disable(self.GlobalEnvText)
       end
+      
+      Gui,Disable(self.LocalEnvText)
+      Gui,Disable(self.GlobalEnvText)
    end
    
    meth frameClick(nr:I frame:F tag:T)
@@ -206,17 +225,18 @@ class Gui from Menu Dialog
 				{Label X} == 'proc'
 				% andthen X.name \= 'Toplevel abstraction'
 			     end}
+      SL = {List.length S}
    in
       case S == nil then
 	 {ForAll [tk(conf state:normal)
 		  tk(delete '0.0' 'end')
-		  tk(insert 'end' "  nil")
+		  %tk(insert 'end' "  nil")
 		  tk(conf state:disabled)] W}
 	 {self.StackText title(StackTitle)}
 	 Gui,printEnv(frame:0)
       else
 	 {self.StackText title(AltStackTitle # ThrID)}
-	 case Top then
+	 case Top orelse SL == 1 then
 	    Gui,printEnv(frame:1 vars:S.1.vars)
 	 else
 	    Gui,printEnv(frame:2 vars:S.2.1.vars)
@@ -237,11 +257,11 @@ class Gui from Menu Dialog
      	     {ForAll [tk(insert 'end'
 		      {PrintF ' ' # I # ' ' # case F.name == ''
 					      then '$' else F.name
-					      end 30} #
+					      end 35} #
 		      {StripPath F.file} # ' ' # F.line # NL T)
 		      tk(tag bind T '<1>' Ac)
 		      tk(tag conf T font:BoldFont)] W}
-	     case I == 1 andthen Top
+	     case I == 1 andthen (Top orelse SL == 1)
 		orelse I == 2 andthen {Not Top} then
 		LastSelectedFrame <- undef
 		Gui,SelectStackFrame(T)
@@ -251,11 +271,11 @@ class Gui from Menu Dialog
       end
    end
    
-   meth printAppl(id:I name:N args:A builtin:B)
+   meth printAppl(id:I name:N args:A builtin:B<=false
+		  file:F<=undef line:L<=undef)
       case N == undef orelse A == undef then
 	 {ForAll [tk(conf state:normal)
 		  tk(delete '0.0' 'end')
-		  tk(insert 'end' ApplLabelInit)
 		  tk(conf state:disabled)] self.ApplText}
       else
 	 W         = self.ApplText
@@ -263,10 +283,8 @@ class Gui from Menu Dialog
 	 ApplColor = case B then BuiltinColor else ProcColor end 
 	 T         = {TagCounter get($)}
       in
-	 {ForAll [tk(conf state:normal)
-		  %tk(insert 'end' NL # ' ' # I # ' {')
-		  tk(delete '0.0' 'end')
-		  tk(insert 'end' ' {')
+	 Gui,Clear(W)
+	 {ForAll [tk(insert 'end' ' {')
 		  tk(insert 'end' case N == '' then '$' else N end T)
 		  tk(tag conf T foreground:ApplColor)] W}
 	  
@@ -286,10 +304,16 @@ class Gui from Menu Dialog
 		      tk(tag bind T '<1>' Ac)
 		      tk(tag conf T font:BoldFont)] W}
 	  end}
-	  
-	 {ForAll [tk(insert 'end' '}')
-	          %tk(yview 'end')
-	          tk(conf state:disabled)] W}
+	 {W tk(insert 'end' '}')}
+	 Gui,Disable(W)
+
+	 case F \= undef then
+	    W = self.ApplFileText
+	 in
+	    Gui,Clear(W)
+	    {W tk(insert 'end' ' ' # {StripPath F} # ' ' # L)}
+	    Gui,Disable(W)
+	 else skip end
       end
    end
    

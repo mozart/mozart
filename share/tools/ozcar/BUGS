@@ -16,3 +16,6 @@ zu findendes File zu laden (fixed)
 
 Fri Jan 10 16:31:05 MET 1997
 Veraenderungen am Quellcode verursachen keinen Reload des Files
+
+Fri Jan 10 18:01:11 MET 1997
+Forget loescht fehlerhaft aus dem Thread-Baum, wenn Knoten kein Blatt ist.
