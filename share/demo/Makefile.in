@@ -4,7 +4,7 @@ SRCDIR		= @srcdir@
 SRCTOP		= @SRCTOP@
 
 PREFIX		= @prefix@
-OZDEMO		= $(PREFIX)/demo
+OZDEMO		= $(PREFIX)/doc/demo
 
 SHELL		= /bin/sh
 LN_S            = @LN_S@
@@ -25,9 +25,6 @@ COMPILE         = $(OZC) $(OZCFLAGS)
 # The list of demos
 #
 
-DIRS = \
-	concurrent constraints distributed
-
 CONSTRAINTS = \
 	job-shop animated-queens
 
@@ -39,98 +36,20 @@ DISTRIBUTED = \
 
 all::
 
-OZDIRS = $(DIRS:%=$(OZDEMO)/%)
-
-install:: $(OZDEMO) $(OZDIRS)
+install:: $(OZDEMO)
 
 $(OZDEMO):
 	$(INSTALL_DIR) $@
 
-$(OZDIRS):
-	$(INSTALL_DIR) $@
-	$(LN_S) $@/../demo.css $@
-	$(LN_S) $@/../demo.gif $@
 
-#
-# Web pages
-# 
-
-CONSTRAINTWEB  = $(CONSTRAINTS:%=constraints/%.html)
-CONCURRENTWEB  = $(CONCURRENT:%=concurrent/%.html)
-DISTRIBUTEDWEB = $(DISTRIBUTED:%=distributed/%.html)
-
-WEBPAGES = \
-	$(CONSTRAINTWEB) $(CONCURRENTWEB) $(DISTRIBUTEDWEB)
-
-CONSTRAINTWEBP  = $(CONSTRAINTS:%=constraints/%-html.ozp)
-CONCURRENTWEBP  = $(CONCURRENT:%=concurrent/%-html.ozp)
-DISTRIBUTEDWEBP = $(DISTRIBUTED:%=distributed/%-html.ozp)
-
-WEBC = \
-	$(CONSTRAINTWEBC) $(CONCURRENTWEBC) $(DISTRIBUTEDWEBC)
-
-all:: $(WEBPAGES) $(WEBC)
-
-ozp2html: ozp2html.oz
-	$(COMPILE) -x $< -o $@
-
-$(WEBPAGES): ozp2html
-
-OZENGINE=ozengine
-OZP2HTML=$(OZENGINE) ./ozp2html
-
-constraints/%.html: constraints/%-html.ozp
-	$(OZP2HTML) --ozp=$< > $@
-concurrent/%.html: concurrent/%-html.ozp
-	$(OZP2HTML) --ozp=$< > $@
-distributed/%.html: distributed/%-html.ozp
-	$(OZP2HTML) --ozp=$< > $@
-
-constraints/%-html.ozp: constraints/%-html.oz
-	$(COMPILE) -c $< -o $@
-concurrent/%-html.ozp: concurrent/%-html.oz
-	$(COMPILE) -c $< -o $@
-distributed/%-html.ozp: distributed/%-html.oz
-	$(COMPILE) -c $< -o $@
-
-clean:: 
-	-rm -f $(WEBC) ozp2html
-
-veryclean::
-	-rm -f $(WEBPAGES)
-
-
-ALLWEB = \
-	$(WEBPAGES) \
-	demo.css demo.gif \
-	index.html \
-	install.html netscape.gif
-
-OZALLWEB = $(ALLWEB:%=$(OZDEMO)/%)
-
-install:: $(OZALLWEB)
-
-$(OZDEMO)/%.html: %.html
-	$(INSTALL_FILE) $< $@
-$(OZDEMO)/%.css: %.css
-	$(INSTALL_FILE) $< $@
-$(OZDEMO)/%.gif: %.gif
-	$(INSTALL_FILE) $< $@
-
-$(OZDEMO)/constraints/%.html: constraints/%.html
-	$(INSTALL_FILE) $< $@
-$(OZDEMO)/concurrent/%.html: concurrent/%.html
-	$(INSTALL_FILE) $< $@
-$(OZDEMO)/distributed/%.html: distributed/%.html
-	$(INSTALL_FILE) $< $@
 
 #
 # Compiling the applets
 #
 
-CONSTRAINTAPPLETS  = $(CONSTRAINTS:%=constraints/%.oza)
-CONCURRENTAPPLETS  = $(CONCURRENT:%=concurrent/%.oza)
-DISTRIBUTEDAPPLETS = $(DISTRIBUTED:%=distributed/%.oza)
+CONSTRAINTAPPLETS  = $(CONSTRAINTS:%=%.oza)
+CONCURRENTAPPLETS  = $(CONCURRENT:%=%.oza)
+DISTRIBUTEDAPPLETS = $(DISTRIBUTED:%=%.oza)
 
 APPLETS = \
 	$(CONSTRAINTAPPLETS) \
@@ -139,11 +58,11 @@ APPLETS = \
 
 all:: $(APPLETS)
 
-constraints/%.oza: constraints/%.oz
+%.oza: constraints/%.oz
 	$(COMPILE) -c $< -o $@
-concurrent/%.oza: concurrent/%.oz
+%.oza: concurrent/%.oz
 	$(COMPILE) -c $< -o $@
-distributed/%.oza: distributed/%.oz
+%.oza: distributed/%.oz
 	$(COMPILE) -c $< -o $@
 
 JOBSHOP = \
@@ -165,11 +84,7 @@ OZAPPLETS = $(APPLETS:%=$(OZDEMO)/%)
 
 install:: $(OZAPPLETS)
 
-$(OZDEMO)/constraints/%.oza: constraints/%.oza
-	$(INSTALL_FILE) $< $@
-$(OZDEMO)/concurrent/%.oza: concurrent/%.oza
-	$(INSTALL_FILE) $< $@
-$(OZDEMO)/distributed/%.oza: distributed/%.oza
+$(OZDEMO)/%.oza: %.oza
 	$(INSTALL_FILE) $< $@
 
 
