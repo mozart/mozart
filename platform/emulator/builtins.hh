@@ -333,11 +333,8 @@ class SolvedBuiltin: public Builtin {
 public:
   USEHEAPMEMORY;
 
-  SolvedBuiltin(BuiltinTabEntry *fn, RefsArray gregs, Arity *arity, TaggedRef fea)
-  : Builtin (fn, (TaggedRef) 0, gregs, arity)
-  {
-    getRecord()->setArg(0,fea);
-  }
+  SolvedBuiltin(BuiltinTabEntry *fn, RefsArray gregs)
+    : Builtin (fn, (TaggedRef) 0, gregs) {}
 
   inline RefsArray &getGRegs() { return(gRegs); }
 };

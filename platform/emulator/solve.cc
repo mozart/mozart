@@ -42,8 +42,6 @@
 BuiltinTabEntry *solveContBITabEntry = NULL;
 BuiltinTabEntry *solvedBITabEntry    = NULL;
 
-Arity *SolveContArity                = NULL;
-
 TaggedRef solvedAtom;
 TaggedRef choiceAtom;
 TaggedRef entailedAtom;
@@ -57,9 +55,6 @@ void SolveActor::Init()
     = new BuiltinTabEntry("*once-only*", 1, BIsolveCont); // local Entry;
   solvedBITabEntry
     = new BuiltinTabEntry("*reflected*", 1, BIsolved);    // local Entry;
-
-  TaggedRef solveContFList = cons(makeTaggedAtom(SEARCH_STATUS),nil());
-  SolveContArity = aritytable.find(solveContFList);
 
   solvedAtom     = makeTaggedAtom (SEARCH_SOLVED);
   choiceAtom     = makeTaggedAtom (SEARCH_CHOICE);
@@ -104,26 +99,27 @@ WaitActor* SolveActor::getDisWaitActor ()
 TaggedRef SolveActor::genSolved()
 {
   RefsArray contGRegs = allocateRefsArray(1);
-  STuple *stuple = STuple::newSTuple(solvedAtom, 1);
+  STuple *stuple = STuple::newSTuple(solvedAtom, 2);
 
   Assert(solveBoard->isSolve());
   contGRegs[0] = makeTaggedConst(solveBoard);
   stuple->setArg(0, makeTaggedConst
-                 (new SolvedBuiltin(solvedBITabEntry, contGRegs,
-                                    SolveContArity, entailedAtom)));
+                 (new SolvedBuiltin(solvedBITabEntry, contGRegs)));
+  stuple->setArg(1, entailedAtom);
+
   return makeTaggedSTuple(stuple);
 }
 
 TaggedRef SolveActor::genStuck()
 {
   RefsArray contGRegs = allocateRefsArray(1);
-  STuple *stuple = STuple::newSTuple(solvedAtom, 1);
+  STuple *stuple = STuple::newSTuple(solvedAtom, 2);
 
   Assert(solveBoard->isSolve());
   contGRegs[0] = makeTaggedConst(solveBoard);
   stuple->setArg(0, makeTaggedConst
-                 (new SolvedBuiltin(solvedBITabEntry, contGRegs,
-                                    SolveContArity, stableAtom)));
+                 (new SolvedBuiltin(solvedBITabEntry, contGRegs)));
+  stuple->setArg(1, stableAtom);
   return makeTaggedSTuple(stuple);
 }
 
