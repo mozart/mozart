@@ -219,8 +219,6 @@ local
 	 {OE.'thread' set(E.'thread')}
 	 {OE.width    set(E.width)}
 	 {OE.depth    set(E.depth)}
-	 {OE.location set(E.location)}
-	 {OE.hints    set(E.hints)}
 	 {OP.width    set(P.width)}
 	 {OP.depth    set(P.depth)}
 	 {OM.gc       set(M.gc)}
@@ -612,21 +610,7 @@ in
 	       frame(text:    'Errors'
 		     feature: errors
 		     left:
-			[checkbutton(text:    'Show Location'
-				     feature: location
-				     state:   {Property.get errors}.location
-				     action:  proc {$ B}
-						 {Property.put errors
-						  errors(location:B)}
-					      end)
-			 checkbutton(text:    'Show Hints'
-				     feature: hints
-				     state:   {Property.get errors}.hints
-				     action:  proc {$ B}
-						 {Property.put errors
-						  errors(hints:B)}
-					      end)
-			 entry(text:    'Maximal Depth:'
+			[entry(text:    'Maximal Depth:'
 			       feature: depth
 			       action:  proc {$ N}
 					   {Property.put errors
@@ -651,8 +635,6 @@ in
 				action:  proc {$}
 					    {Property.put errors
 					     errors('thread': 10
-						    location: true
-						    hints:    true
 						    width:    10
 						    depth:    2)}
 					    {self update(false)}
@@ -735,7 +717,7 @@ in
 		 gc(min:unit max:unit free:unit tolerance:unit on:unit)
 		 messages(idle:unit gc:unit)
 		 print(depth:unit width:unit)
-		 errors(depth:unit hints:unit location:unit 'thread':unit)]
+		 errors(depth:unit width:unit 'thread':unit)]
 		proc {$ SS}
 		   {F write(vs:('{Property.put ' # {Label SS} # ' ' #
 				  {Value.toVirtualString
