@@ -53,6 +53,7 @@ see&nbsp;<ptr to=MuellerMueller.WLP.97>.
 <section id="section.fs.genral"><title/Finite Set Intervals/
 <p>
 <list>
+
 <entry>
 <index class=module/FS<and>inf<and>id/
 <<inf>>
@@ -63,6 +64,7 @@ see&nbsp;<ptr to=MuellerMueller.WLP.97>.
 An integer constant that denotes the smallest possible element of a
 set.  Its value is implementation-dependent.  In Mozart <<FS.inf>> is
 0.
+
 <entry>
 <index class=module/FS<and>sup<and>id/
 <<sup>>
@@ -73,6 +75,26 @@ set.  Its value is implementation-dependent.  In Mozart <<FS.inf>> is
 An integer constant that denotes the greatest possible element of a
 set.  Its value is implementation-dependent.  In Mozart <<FS.sup>> is
 134 217 726.
+
+<entry>
+<index class=module/FS<and>compl<and>id/
+<<compl>>
+<synopsis>
+<<<{FS.compl $M1 $M2}
+>>>
+<item>
+<math/\codeinline{oz}{M2} = \{\codeinline{oz}{FS.inf},\ldots,\codeinline{oz}{FS.sup}\}\setminus \codeinline{oz}{M1}/
+
+<entry>
+<index class=module/FS<and>complIn<and>id/
+<<complIn>>
+<synopsis>
+<<<{FS.complIn $M1 $M2 $M3}
+>>>
+<item>
+<math/\codeinline{oz}{M3} = \codeinline{oz}{M2} \setminus \codeinline{oz}{M1}/
+
+
 <entry>
 <index class=module/FS<and>include<and>id/
 <<include>>
@@ -81,6 +103,7 @@ set.  Its value is implementation-dependent.  In Mozart <<FS.sup>> is
 >>>
 <item>
 <math/\codeinline{oz}{D} \in \codeinline{oz}{M} \wedge \codeinline{oz}{FS.inf} \le \codeinline{oz}{D} \le \codeinline{oz}{FS.sup}/
+
 <entry>
 <index class=module/FS<and>exclude<and>id/
 <<exclude>>
@@ -89,6 +112,7 @@ set.  Its value is implementation-dependent.  In Mozart <<FS.sup>> is
 >>>
 <item>
 <math/\codeinline{oz}{D} \notin \codeinline{oz}{M}/
+
 <entry>
 <index class=module/FS<and>card<and>id/
 <<card>>
@@ -97,6 +121,7 @@ set.  Its value is implementation-dependent.  In Mozart <<FS.sup>> is
 >>>
 <item>
 <math/\codeinline{oz}{D} = \# {M}/
+
 <entry>
 <index class=module/FS<and>cardRange<and>id/
 <<cardRange>>
@@ -105,6 +130,7 @@ set.  Its value is implementation-dependent.  In Mozart <<FS.sup>> is
 >>>
 <item>
 <math/\codeinline{oz}{I1} \le \# {M} \le {I2}/
+
 <entry>
 <index class=module/FS<and>isIn<and>id/
 <<isIn>>
@@ -113,6 +139,7 @@ set.  Its value is implementation-dependent.  In Mozart <<FS.sup>> is
 >>>
 <item>
 <math/(\codeinline{oz}{E} \in \codeinline{oz}{M}) \rightarrow \codeinline{oz}{B}/
+
 <entry>
 <index class=module/FS<and>makeWeights<and>id/
 <<makeWeights>>
@@ -130,6 +157,7 @@ to <<FS.makeWeights>>.
 <section id="section.fs.integers"><title/Sets over Integers/
 <p>
 <list>
+
 <entry>
 <index class=module/FS<and>int<and>min/
 <<int.min>>
@@ -139,6 +167,7 @@ to <<FS.makeWeights>>.
 <item>
 <<D>> is the minimal element within <<M>>. 
    
+
 <entry>
 <index class=module/FS<and>int<and>max/
 <<int.max>>
@@ -148,6 +177,7 @@ to <<FS.makeWeights>>.
 <item>
 <<D>> is the maximal element within <<M>>. 
    
+
 <entry>
 <index class=module/FS<and>int<and>convex/
 <<int.convex>>
@@ -158,6 +188,7 @@ to <<FS.makeWeights>>.
 Whenever <<I1>> and <<I2>> are elements of <<M>>, then 
 every <<I>> between <<I1>> and <<I2>>, <<I1 < I < I2>>, 
 is also in <<M>>.
+
 <entry>
 <index class=module/FS<and>int<and>match/
 <<int.match>>
@@ -167,6 +198,7 @@ is also in <<M>>.
 <item>
 <<Dv>> is a vector of integer variables that denotes the elements of
 <<M>> in ascending order.
+
 <entry>
 <index class=module/FS<and>int<and>minN/
 <<int.minN>>
@@ -176,6 +208,7 @@ is also in <<M>>.
 <item>
 <<Dv>> is a vector of ?{n} integer variables that denotes the ?{n}
 minimal elements of <<M>> in ascending order.
+
 <entry>
 <index class=module/FS<and>int<and>maxN/
 <<int.maxN>>
@@ -186,6 +219,7 @@ minimal elements of <<M>> in ascending order.
 <<Dv>> is a vector of ?{n} integer variables that denotes the ?{n}
 maximal 
 elements of <<M>> in ascending order.
+
 <entry>
 <index class=module/FS<and>int<and>seq/
 <<int.seq>>
@@ -203,6 +237,7 @@ elements of <<M1>> are smaller than any element of <<M2>>.
 <section id="section.fs.standard"><title/Standard Propagators/
 <p>
 <list>
+
 <entry>
 <index class=module/FS<and>diff<and>id/
 <<diff>>
@@ -211,6 +246,7 @@ elements of <<M1>> are smaller than any element of <<M2>>.
 >>>
 <item>
 <math/\codeinline{oz}{M3} = \codeinline{oz}{M1} \setminus \codeinline{oz}{M2}/
+
 <entry>
 <index class=module/FS<and>intersect<and>id/
 <<intersect>>
@@ -219,6 +255,7 @@ elements of <<M1>> are smaller than any element of <<M2>>.
 >>>
 <item>
 <math/\codeinline{oz}{M3} = \codeinline{oz}{M1} \cap \codeinline{oz}{M2}/
+
 <entry>
 <index class=module/FS<and>intersectN<and>id/
 <<intersectN>>
@@ -227,6 +264,7 @@ elements of <<M1>> are smaller than any element of <<M2>>.
 >>>
 <item>
 <math/\codeinline{oz}{M} = \bigcap \{ \codeinline{oz}{M'} \mid \codeinline{oz}{M'} \in \codeinline{oz}{Mv}\}/
+
 <entry>
 <index class=module/FS<and>union<and>id/
 <<union>>
@@ -235,6 +273,7 @@ elements of <<M1>> are smaller than any element of <<M2>>.
 >>>
 <item>
 <math/\codeinline{oz}{M3} = \codeinline{oz}{M1} \cup \codeinline{oz}{M2}/
+
 <entry>
 <index class=module/FS<and>unionN<and>id/
 <<unionN>>
@@ -243,6 +282,7 @@ elements of <<M1>> are smaller than any element of <<M2>>.
 >>>
 <item>
 <math/\codeinline{oz}{M} = \bigcup \{ \codeinline{oz}{S} \mid \codeinline{oz}{S} \in \codeinline{oz}{Mv}\}/
+
 <entry>
 <index class=module/FS<and>subset<and>id/
 <<subset>>
@@ -251,6 +291,7 @@ elements of <<M1>> are smaller than any element of <<M2>>.
 >>>
 <item>
 <math/\codeinline{oz}{M1} \subseteq \codeinline{oz}{M2}/
+
 <entry>
 <index class=module/FS<and>disjoint<and>id/
 <<disjoint>>
@@ -259,6 +300,7 @@ elements of <<M1>> are smaller than any element of <<M2>>.
 >>>
 <item>
 <math/\codeinline{oz}{M1} \| \codeinline{oz}{M2}/
+
 <entry>
 <index class=module/FS<and>disjointN<and>id/
 <<disjointN>>
@@ -267,6 +309,7 @@ elements of <<M1>> are smaller than any element of <<M2>>.
 >>>
 <item>
 All elements of the vector ?{Mv} are pairwise disjoint. 
+
 <entry>
 <index class=module/FS<and>distinct<and>id/
 <<distinct>>
@@ -275,6 +318,7 @@ All elements of the vector ?{Mv} are pairwise disjoint.
 >>>
 <item>
 <math/\codeinline{oz}{M1} \neq \codeinline{oz}{M2}/
+
 <entry>
 <index class=module/FS<and>distinctN<and>id/
 <<distinctN>>
@@ -283,6 +327,7 @@ All elements of the vector ?{Mv} are pairwise disjoint.
 >>>
 <item>
 All elements of the vector ?{Mv} are pairwise distinct. 
+
 <entry>
 <index class=module/FS<and>partition<and>id/
 <<partition>>
@@ -300,6 +345,7 @@ union yields ?{M}.
 <section id="section.fs.vars"><title/Finite Set Interval Variables/
 <p>
 <list>
+
 <entry>
 <index class=module/FS<and>var<and>is/
 <<var.is>>
@@ -312,6 +358,7 @@ Tests whether <<M>> is a finite set variable.
 <subsection><title/Declaring a Single Variable/
 <p>
 <list>
+
 <entry>
 <index class=module/FS<and>var<and>decl/
 <<var.decl>>
@@ -320,6 +367,7 @@ Tests whether <<M>> is a finite set variable.
 >>>
 <item>
 <math/\emptyset \subseteq {\tt M} \subseteq \uniset/
+
 <entry>
 <index class=module/FS<and>var<and>upperBound/
 <<var.upperBound>>
@@ -328,6 +376,7 @@ Tests whether <<M>> is a finite set variable.
 >>>
 <item>
 <math/\emptyset \subseteq \codeinline{oz}{M} \subseteq \conv(\codeinline{oz}{Spec})/
+
 <entry>
 <index class=module/FS<and>var<and>lowerBound/
 <<var.lowerBound>>
@@ -336,6 +385,7 @@ Tests whether <<M>> is a finite set variable.
 >>>
 <item>
 <math/\conv({\tt Spec}) \subseteq \codeinline{oz}{M} \subseteq \uniset/
+
 <entry>
 <index class=module/FS<and>var<and>bounds/
 <<var.bounds>>
@@ -352,6 +402,7 @@ The following functions return a list <<Ms>> of length <<I>>
 and all its elements are constrained to finite set interval variables
 according to the following specifications.
 <list>
+
 <entry>
 <index class=module/FS<and>var<and>list<and>decl/
 <<var.list.decl>>
@@ -361,6 +412,7 @@ according to the following specifications.
 <item>
 For all elements <<M>> of <<Ms>>: 
 <math/\emptyset \subseteq \codeinline{oz}{M} \subseteq \uniset/
+
 <entry>
 <index class=module/FS<and>var<and>list<and>upperBound/
 <<var.list.upperBound>>
@@ -371,6 +423,7 @@ For all elements <<M>> of <<Ms>>:
 For all elements <<M>> of <<Ms>>: 
 <math/\emptyset \subseteq \codeinline{oz}{M} \subseteq
 \conv({\tt Spec})/
+
 <entry>
 <index class=module/FS<and>var<and>list<and>lowerBound/
 <<var.list.lowerBound>>
@@ -380,6 +433,7 @@ For all elements <<M>> of <<Ms>>:
 <item>
 For all elements <<M>> of <<Ms>>: 
 <math/\conv(\codeinline{oz}{Spec}) \subseteq \codeinline{oz}{M}\subseteq \uniset/
+
 <entry>
 <index class=module/FS<and>var<and>list<and>bounds/
 <<var.list.bounds>>
@@ -398,6 +452,7 @@ The following functions return a tuple <<Mt>> with label <<L>>
 and width <<I>> and all its elements are constrained to finite set
 interval variables according to the following specifications.
 <list>
+
 <entry>
 <index class=module/FS<and>var<and>tuple<and>decl/
 <<var.tuple.decl>>
@@ -408,6 +463,7 @@ interval variables according to the following specifications.
 For all elements <<M>> of <<Mt>>: 
 <math/\emptyset \subseteq {\tt M} \subseteq
 \uniset/
+
 <entry>
 <index class=module/FS<and>var<and>tuple<and>upperBound/
 <<var.tuple.upperBound>>
@@ -418,6 +474,7 @@ For all elements <<M>> of <<Mt>>:
 For all elements <<M>> of <<Mt>>: 
 <math/\emptyset \subseteq \codeinline{oz}{M} \subseteq
 \conv({\tt Spec})/
+
 <entry>
 <index class=module/FS<and>var<and>tuple<and>lowerBound/
 <<var.tuple.lowerBound>>
@@ -428,6 +485,7 @@ For all elements <<M>> of <<Mt>>:
 For all elements <<M>> of <<Mt>>: 
 <math/\conv(\codeinline{oz}{Spec}) \subseteq
 \codeinline{oz}{M}\subseteq \uniset/
+
 <entry>
 <index class=module/FS<and>var<and>tuple<and>bounds/
 <<var.tuple.bounds>>
@@ -445,6 +503,7 @@ The following functions return a record <<Mr>> with label <<L>>
 and the fields <<Ls>> and all its fields are constrained to finite set
 interval variables according to the following specifications.
 <list>
+
 <entry>
 <index class=module/FS<and>var<and>record<and>decl/
 <<var.record.decl>>
@@ -455,6 +514,7 @@ interval variables according to the following specifications.
 For all elements <<M>> of <<Mr>>: 
 <math/\emptyset \subseteq {\tt M} \subseteq
 \uniset/
+
 <entry>
 <index class=module/FS<and>var<and>record<and>upperBound/
 <<var.record.upperBound>>
@@ -465,6 +525,7 @@ For all elements <<M>> of <<Mr>>:
 For all elements <<M>> of <<Mr>>: 
 <math/\emptyset \subseteq \codeinline{oz}{M} \subseteq
 \conv({\tt Spec})/
+
 <entry>
 <index class=module/FS<and>var<and>record<and>lowerBound/
 <<var.record.lowerBound>>
@@ -475,6 +536,7 @@ For all elements <<M>> of <<Mr>>:
 For all elements <<M>> of <<Mr>>: 
 <math/\conv(\codeinline{oz}{Spec}) \subseteq
 \codeinline{oz}{M}\subseteq \uniset/
+
 <entry>
 <index class=module/FS<and>var<and>record<and>bounds/
 <<var.record.bounds>>
@@ -492,6 +554,7 @@ For all elements <<M>> of <<Mr>>: <math/{\tt M} \in
 <section id="section.fs.consts"><title/Finite Set Constants/
 <p>
 <list>
+
 <entry>
 <index class=module/FS<and>value<and>empty/
 <<value.empty>>
@@ -500,6 +563,7 @@ For all elements <<M>> of <<Mr>>: <math/{\tt M} \in
 >>>
 <item>
 Denotes <math/\emptyset/.
+
 <entry>
 <index class=module/FS<and>value<and>universal/
 <<value.universal>>
@@ -508,6 +572,7 @@ Denotes <math/\emptyset/.
 >>>
 <item>
 Denotes <math/\uniset/. 
+
 <entry>
 <index class=module/FS<and>value<and>singl/
 <<value.singl>>
@@ -516,6 +581,7 @@ Denotes <math/\uniset/.
 >>>
 <item>
 <math/{\tt M} = \{{\tt I}\}/
+
 <entry>
 <index class=module/FS<and>value<and>make/
 <<value.make>>
@@ -524,6 +590,7 @@ Denotes <math/\uniset/.
 >>>
 <item>
 <math/{\tt M} = \conv({\tt Spec})/
+
 <entry>
 <index class=module/FS<and>value<and>is/
 <<value.is>>
@@ -532,6 +599,7 @@ Denotes <math/\uniset/.
 >>>
 <item>
 Tests whether <<M>> is a finite set value or not.
+
 <entry>
 <index class=module/FS<and>value<and>toString/
 <<value.toString>>
@@ -587,6 +655,25 @@ Converts <<M>> to a string and returns it in <<M>>.
 <item>
 ?{D} reifies the equality of ?{S1} and ?{S2}. 
 
+<entry>
+<index class=module/FS<and>reified<and>partition/
+<<reified.partition>>
+<synopsis>
+<<<{FS.reified.partition +MVs +Is +MV $Ds}
+>>>
+<item>
+The propagator partitions the set value <<MV>> by selecting elements
+from the list of set values <<MVs>>.  The positive integers in <<Is>>
+denote the cost resp. benefit of the corresponding set value in
+<<MVs>> if it is selected for the partition. Each element of <<Ds>>
+is either <<0>> or the corresponding integer value in <<Is>>
+depending on whether the corresponding set value in <<MVs>> is part of
+the partition or not. Excluding a set value from the partition is done
+by constraining the corresponding element of <<Ds>> to <<0>>. An
+element in <<Ds>> not equal to <<0>> includes the corresponding set
+value in <<MVs>> in the partition. The propagator ensures a valid
+partition according to the values of <<Ds>>.
+
 </list>
 </section>
 
@@ -634,6 +721,7 @@ This procedure applies <<P/1>> to all elements of <<M>>.
 The result of a reflective procedure depends on the current state of the
 constraint store and is non-deterministic.
 <list>
+
 <entry>
 <index class=module/FS<and>reflect<and>card/
 <<reflect.card>>
@@ -653,6 +741,7 @@ cardinality of&nbsp;?{M}.
 <item>
 Returns a specification of the greatest lower bound that is 
 currently known about the set ?{M}. 
+
 <entry>
 <index class=module/FS<and>reflect<and>upperBound/
 <<reflect.upperBound>>
@@ -662,6 +751,7 @@ currently known about the set ?{M}.
 <item>
 Returns a specification of the least upper bound that is currently
 known about the set ?{M}.  
+
 <entry>
 <index class=module/FS<and>reflect<and>unknown/
 <<reflect.unknown>>
@@ -682,6 +772,7 @@ to included in ?{M} no excluded from ?{M}.
 Returns an expanded specification (&ie;, every individual element is
 represented) of the greatest lower bound that is currently known about
 the set ?{M}.
+
 <entry>
 <index class=module/FS<and>reflect<and>upperBoundList/
 <<reflect.upperBoundList>>
@@ -692,6 +783,7 @@ the set ?{M}.
 Returns an expanded specification (&ie;, every individual element is
 represented) of the least upper bound that is currently
 known about the set ?{M}.  
+
 <entry>
 <index class=module/FS<and>reflect<and>unknownList/
 <<reflect.unknownList>>
@@ -711,6 +803,7 @@ in ?{M} no excluded from ?{M}.
 >>>
 <item>
 Returns the cardinality of the current greatest lower bound for ?{M}. 
+
 <entry>
 <index class=module/FS<and>reflect<and>cardOf<and>upperBound/
 <<reflect.cardOf.upperBound>>
@@ -719,6 +812,7 @@ Returns the cardinality of the current greatest lower bound for ?{M}.
 >>>
 <item>
 Returns the cardinality of the current greatest lower bound for ?{M}. 
+
 <entry>
 <index class=module/FS<and>reflect<and>cardOf<and>unknown/
 <<reflect.cardOf.unknown>>
@@ -740,6 +834,7 @@ upperBound}({\tt M})/ denote the greatest lower bound and the least upper
 bound currently known for ?{M}.  Also define <math/{\it unknown}({\tt M}) =
 {\it upperBound}({\tt M}) \backslash {\it lowerBound}({\tt M})/.
 <list>  
+
 <entry>
 <index class=module/FS<and>distribute<and>id/
 <<distribute>>
