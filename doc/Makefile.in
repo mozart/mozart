@@ -37,6 +37,8 @@ LIBFILES	= $(addprefix $(DOCDIR)/,$(FILES))
 
 EMACS		= emacs
 
+SUBDIRS		= @SUBDIRS@
+
 .PHONY: all bootstrap check install clean veryclean distclean depend
 
 all: $(CED)
