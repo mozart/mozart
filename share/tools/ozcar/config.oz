@@ -47,6 +47,20 @@ GlobalEnvTitle         = 'Global Variables'
 StepInto               = 'step into'
 StepOver               = 'step over'
 
+IgnoreText             = 'Ignore'
+AttachText             = 'Attach'
+Unleash0Text           = 'Unleash 0'
+Unleash1Text           = 'Unleash 1'
+
+EmacsThreadsText       = 'Queries:'
+EmacsThreadsList       = [IgnoreText # UnleashButtonColor
+			  AttachText # StopButtonColor]
+SubThreadsText         = 'SubThreads:'
+SubThreadsList         = [IgnoreText   # UnleashButtonColor
+			  AttachText   # StopButtonColor
+			  Unleash0Text # NextButtonColor
+			  Unleash1Text # NextButtonColor]
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% error, warning & debug messages
@@ -117,9 +131,6 @@ EnvVarWidth            = fun {$}
 
 ScrollbarWidth         = 10
 
-CheckButtonWidth       = 60
-CheckButtonHeight      = 18
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Fonts
@@ -144,6 +155,7 @@ end
 
 ThreadTreeFont         = DefaultFont
 ThreadTreeBoldFont     = BoldFont
+ButtonFont             = '-adobe-helvetica-medium-r-normal-*-10-*-*-*-*-*-*-*'
 TitleFont              = '-adobe-helvetica-bold-r-normal-*-10-*-*-*-*-*-*-*'
 StatusFont             = TitleFont
 HelpTitleFont          = '-adobe-helvetica-bold-r-*-*-18-*-*-*-*-*-*-*'
@@ -313,18 +325,10 @@ end
 %% first, some initial values... (read from a config file someday?)
 
 ConfigVerbose              = false  %% debug messages in Emulator buffer?
-
 ConfigStepDotBuiltin       = false  %% step on builtin '.'?
 ConfigStepNewNameBuiltin   = false  %% step on builtin 'NewName'?
-
 ConfigEnvSystemVariables   = false  %% show system variables in Env Windows?
-
-ConfigEnvPrintTypes        = true   %% use builtin printer (instead of
-				    %%   System.valueToVirtualString
-
-ConfigEmacsThreads         = true   %% default value of Emulator
-ConfigSubThreads           = true   %% dito
-
+ConfigEnvPrintTypes        = true   %% use Ozcar's own type printer?
 ConfigUpdateEnv            = true   %% update env windows after each step?
 
 RunningStandAlone          = {System.get standalone}
@@ -349,22 +353,14 @@ Config =
 
     attr
        verbose :               ConfigVerbose
-
        stepDotBuiltin :        ConfigStepDotBuiltin
        stepNewNameBuiltin :    ConfigStepNewNameBuiltin
-
        envSystemVariables :    ConfigEnvSystemVariables
        envPrintTypes :         ConfigEnvPrintTypes
-
-       emacsThreads :          ConfigEmacsThreads
-       subThreads :            ConfigSubThreads
-
        updateEnv :             ConfigUpdateEnv
        useEmacsBar :           ConfigUseEmacsBar
-
        printWidth:             PrintWidth
        printDepth:             PrintDepth
-
        timeoutToSwitch:        TimeoutToSwitch
        timeoutToUpdateEnv:     TimeoutToUpdateEnv
 
