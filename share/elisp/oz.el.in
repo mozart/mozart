@@ -1131,6 +1131,16 @@ Point is left at the first character of the keyword."
 	  oz-variable-pattern "\\|" oz-char-pattern "\\|"
 	  oz-comment-pattern))
 
+(defconst oz-gump-regex-matcher
+  (concat
+   "\\<lex[^A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_<\n][^<\n]*"
+   "\\(<\\("
+   "\\[\\([^]\\]\\|\\\\.\\)+\\]" "\\|"
+   "\"[^\"\n]+\"" "\\|"
+   "\\\\." "\\|"
+   "[^]<>\"[\\\n]" "\\)+"
+   ">\\|<<EOF>>\\)"))
+
 (defconst oz-number-pattern
   (concat "~?\\(0[Xx][0-9A-Fa-f]+\\|0[bB][01]+\\|"
 	  "[0-9]+\\(\\.[0-9]*\\([eE]~?[0-9]+\\)?\\)?\\)")
@@ -2245,16 +2255,6 @@ and is used for fontification.")
 
 (defconst oz-gump-keywords
   '("lex" "mode" "parser" "prod" "scanner" "syn" "token"))
-
-(defconst oz-gump-regex-matcher
-  (concat
-   "\\<lex[^A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_<\n][^<\n]*"
-   "\\(<\\("
-   "\\[\\([^]\\]\\|\\\\.\\)+\\]" "\\|"
-   "\"[^\"\n]+\"" "\\|"
-   "\\\\." "\\|"
-   "[^]<>\"[\\\n]" "\\)+"
-   ">\\|<<EOF>>\\)"))
 
 (defconst oz-gump-keywords-matcher-1
   (concat "^\\(" (mapconcat 'identity oz-gump-keywords "\\|") "\\)\\>")
