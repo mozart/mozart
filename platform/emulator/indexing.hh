@@ -160,7 +160,7 @@ class IHashTable {
 };
 
 int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
-			IHashTable *table, TaggedRef *&sP);
+			IHashTable *table, TaggedRef *&sP, Bool isMatch);
 
 #endif
 

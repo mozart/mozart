@@ -504,6 +504,18 @@ outerLoop2:
       case GETRECORDX:
 	ISREAD(GETREGARG(PC+3));
 	break;
+      case GETRECORDVARSX:
+	ISREAD(GETREGARG(PC+3));
+	// fall through
+      case GETRECORDVARSY:
+      case GETRECORDVARSG:
+	{
+	  XRegisterIndexListClass *xlist = GetXList(PC+4);
+	  for (int i = 0; i < xlist->getLength(); i++) {
+	    ISWRITE(xlist->get(i));
+	  }
+	  break;
+	}
       case TESTLITERALX:
       case TESTBOOLX:
       case TESTNUMBERX:
@@ -569,10 +581,13 @@ outerLoop2:
 	break;
 
       case SWITCHONTERMX:
+      case MATCHX:
 	ISREAD(GETREGARG(PC+1));
 	// fall through
       case SWITCHONTERMY:
+      case MATCHY:
       case SWITCHONTERMG:
+      case MATCHG:
 	{
 	
 #define DOTABLE(TAB)						\

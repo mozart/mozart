@@ -114,9 +114,9 @@ undefine(`instruction')
 %type <tagged> ArityFeatures
 %type <tagged> ArityFeature
 %type <tagged> Registers
+%type <tagged> ARegister
 %type <tagged> LocIndices
 %type <tagged> LocIndex
-%type <tagged> ARegister
 
 %%
 
@@ -287,12 +287,6 @@ Builtinname	: Atom
 		    }
 		    codeArea->writeBuiltin(found);
 		  }
-		;
-
-RelBuiltinname	: Builtinname
-		;
-
-FunBuiltinname	: Builtinname
 		;
 
 Variablename	: Atom
@@ -554,30 +548,42 @@ Location	: LocIndices '#' LocIndices
 		    TaggedRef outs = $3;
 		    int inArity = fastlength(ins);
 		    int outArity = fastlength(outs);
-		    OZ_Location *loc
-                      = OZ_Location::newLocation(inArity,outArity);
+		    OZ_Location *loc =
+		      OZ_Location::newLocation(inArity,outArity);
 		    for (int i = 0; i < inArity; i++) {
 		      loc->in(i) = smallIntValue(head(ins));
 		      ins = tail(ins);
-                    }
+		    }
 		    for (int i = 0; i < outArity; i++) {
 		      loc->out(i) = smallIntValue(head(outs));
 		      outs = tail(outs);
-                    }
+		    }
 		    codeArea->writeAddress(loc);
-		  }
-
-LocIndices      : '[' LocIndex ']'
-                 {
-                   $$ = $2;
-                 }
-		| NIL
-		  {
-                    $$ = oz_nil();
 		  }
 		;
 
-LocIndex        : XREGISTER
+XRegisterIndexList
+		: LocIndices
+		  {
+		    TaggedRef xs = $1;
+		    int n = fastlength(xs);
+		    XRegisterIndexListClass *xlist =
+		      XRegisterIndexListClass::newXRegisterIndexList(n);
+		    for (int i = 0; i < n; i++) {
+		      xlist->set(i, smallIntValue(head(xs)));
+		      xs = tail(xs);
+		    }
+		    codeArea->writeAddress(xlist);
+		  }
+		;
+
+LocIndices	: '[' LocIndex ']'
+		  { $$ = $2; }
+		| NIL
+		  { $$ = oz_nil(); }
+		;
+
+LocIndex	: XREGISTER
 		  { $$ = OZ_cons(OZ_int($1),OZ_nil()); }
 		| XREGISTER LocIndex
 		  { $$ = OZ_cons(OZ_int($1),$2); }

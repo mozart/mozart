@@ -247,20 +247,25 @@ void deallocateY(RefsArray a)
 
 #define IMPOSSIBLE(INSTR) error("%s: impossible instruction",INSTR)
 
-#define DoSwitchOnTerm(indexTerm,table)					\
+#define DoSwitchOnTerm(indexTerm,table,isMatch)				\
       TaggedRef term = indexTerm;					\
       DEREF(term,termPtr,_2);						\
 									\
-      if (!isLTuple(term)) {						\
-	TaggedRef *sp = sPointer;					\
-	int offset = switchOnTermOutline(term,termPtr,table,sp);	\
-	sPointer = sp;							\
+      if (isLTuple(term)) {						\
+	int offset = table->listLabel;					\
+	sPointer = tagged2LTuple(term)->getRef();			\
 	JUMPRELATIVE(offset);						\
-      }									\
-									\
-      int offset = table->listLabel;					\
-      sPointer = tagged2LTuple(term)->getRef();				\
-      JUMPRELATIVE(offset);
+      } else {								\
+	TaggedRef *sp = sPointer;					\
+	int offset = switchOnTermOutline(term,termPtr,table,sp,isMatch);\
+	sPointer = sp;							\
+	if (offset) {							\
+	  JUMPRELATIVE(offset);						\
+	} else {							\
+	  int argsToSave = getPosIntArg(PC+3);				\
+	  SUSP_PC(termPtr,argsToSave,PC);				\
+	}								\
+      }
 
 
 inline
@@ -1006,7 +1011,7 @@ LBLdispatcher:
       IHashTable *table = entry->indexTable;
       if (table) {
 	PC = entry->getPC();
-	DoSwitchOnTerm(X[0],table);
+	DoSwitchOnTerm(X[0],table,OK);
       } else {
 	JUMPABSOLUTE(entry->getPC());
       }
@@ -3073,18 +3078,21 @@ LBLdispatcher:
 	  case TESTNUMBERX:
 	  case TESTBOOLX:
 	  case SWITCHONTERMX:
+	  case MATCHX:
 	    dbg->data = Xreg(getRegArg(PC+7));
 	    break;
 	  case TESTLITERALY:
 	  case TESTNUMBERY:
 	  case TESTBOOLY:
 	  case SWITCHONTERMY:
+	  case MATCHY:
 	    dbg->data = Yreg(getRegArg(PC+7));
 	    break;
 	  case TESTLITERALG:
 	  case TESTNUMBERG:
 	  case TESTBOOLG:
 	  case SWITCHONTERMG:
+	  case MATCHG:
 	    dbg->data = Greg(getRegArg(PC+7));
 	    break;
 	  default:

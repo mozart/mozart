@@ -374,6 +374,7 @@ inline void printNameTab()
 #define getPredArg(PC)   ((PrTabEntry *) getAdressArg(PC))
 #define getLabelArg(PC)  ((int) getWord(PC))
 #define GetLoc(PC)       ((OZ_Location*) getAdressArg(PC))
+#define GetXList(PC)     ((XRegisterIndexListClass*) getAdressArg(PC))
 #define GetBI(PC)        ((Builtin*) getAdressArg(PC))
 
 /*
@@ -452,6 +453,74 @@ public:
   }
 };
 
+class OZ_Location {
+private:
+  int inAr,outAr;
+  int map[0];
+public:
+  NO_DEFAULT_CONSTRUCTORS(OZ_Location);
+  static OZ_Location *newLocation(int inArity,int outArity)
+  {
+    int sz = sizeof(OZ_Location)+sizeof(int)*(inArity+outArity);
+    OZ_Location *loc = (OZ_Location *)new char[sz];
+    loc->inAr=inArity;
+    loc->outAr=outArity;
+    return loc;
+  }
+  int *mapping() { return map; }
+  int get(int n) {
+    Assert(n>=0 && n<inAr+outAr);
+    return map[n];
+  }
+  void set(int n,int i) {
+    Assert(n>=0 && n<inAr+outAr);
+    map[n]=i;
+  }
+  int &out(int n) {
+    Assert(n>=0 && n<outAr);
+    return map[inAr+n];
+  }
+  int &in(int n) {
+    Assert(n>=0 && n<inAr);
+    return map[n];
+  }
+  int getArity() { return inAr+outAr; }
+  int getInArity() { return inAr; }
+  int getOutArity() { return outAr; }
+  int max(int n) {
+    for (int i = inAr+outAr-1; i >= inAr; i--) {
+      if (get(i)>=n) {
+	n=get(i)+1;
+      }
+    }
+    return n;
+  }
+};
+
+class XRegisterIndexListClass {
+private:
+  int n;
+  int array[0];
+public:
+  NO_DEFAULT_CONSTRUCTORS(XRegisterIndexListClass);
+  static XRegisterIndexListClass *newXRegisterIndexList(int n)
+  {
+    int sz = sizeof(XRegisterIndexListClass)+sizeof(int)*n;
+    XRegisterIndexListClass *xlist = (XRegisterIndexListClass *)new char[sz];
+    xlist->n=n;
+    return xlist;
+  }
+  int getLength() { return n; }
+  int *getArray() { return array; }
+  int get(int i) {
+    Assert(i>=0 && i<n);
+    return array[i];
+  }
+  void set(int i, int j) {
+    Assert(i>=0 && i<n);
+    array[i] = j;
+  }
+};
 
 
 #ifdef FASTREGACCESS
