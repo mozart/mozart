@@ -58,6 +58,9 @@
     <Meta name="html.split"       value="chapter.m101">
     <Meta name="html.split"       value="chapter.m100">
 
+    <Meta name="html.split"       value="section.m110.changes">
+    <Meta name="html.split"       value="section.m110.fixes">
+
     <Meta name="html.split"       value="section.m100.general">
     <Meta name="html.split"       value="section.m100.syntax">
     <Meta name="html.split"       value="section.m100.base">
@@ -75,16 +78,218 @@ particular, it lists the changes from
       implementation Mozart).
     </Abstract>
   <Body>
+
     <chapter id="chapter.m110">
       <title/Changes between Mozart 1.0.1 and Mozart 1.1.0/
 
       <p>
-        Mozart 1.1.0 is a major maintenance
+        Mozart 1.1.0 is a maintenance
         release that features a completely new and
         improved implementation of pickling and a
-        massive redesign of constraint programming
-        support.
+        major
+        improvement of the
+        constraint programming primitives.
       </p>
+
+      <section id="section.m110.changes">
+        <title/Changes/
+
+        <subsection><title/Pickling/
+
+        <p>
+Due to some redesign of the instruction set and the pickling
+algorithm, the pickle format changed between Mozart 1.0.1 and
+Mozart 1.1.0.  A conversion tool has been made available however,
+see <Ptr.Extern to="ozdoc:tools" key="chapter.convert"> for
+documentation.
+        </p>
+
+        <subsection>
+          <title/Constraint Programming/
+
+        <list>
+         <entry>General improvements
+         <item>
+One of the main achievements in the 1.1.0 release is a fairly complete
+overhaul of the constraint programming functionality in Mozart. This
+makes the system leaner with respect to both code size and memory
+requirements and several even severe bugs have been fixed. In average,
+the refurbishment buys you a 20% speedup on constraint applications (up
+to 40% in rare cases).
+
+         <entry>Constructive disjunction removed
+         <item>
+            That's basically just for the records:
+            nobody used it. Since it was complicated and a constant
+            source of problems it has been
+            removed. In the rare case that you
+            used constructive disjunction, contact
+            us for help.
+
+         <entry><<FD>> and <<FS>> synchronization behavior corrected
+         <item>
+            All <<FD>> and <<FS>> propagators now
+            conform to their documentation as it
+            comes  to synchronization on their
+            arguments. Mozart 1.0.0 and 1.0.1 were
+            buggy in that execution did not block
+            even though the propagators required
+            their arguments to be finite domain or
+            finite set variables. Watch out! In
+            case your scripts that use finite
+            domain or finite set propagators just
+            block (they show a light (ugly) green
+            color in the Oz Explorer) this is a
+            likely cause! Fixing is easy: just
+            make sure that all variables supplied
+            to propagators are in fact constrained
+            to be finite domains or finite sets.
+
+         <entry><<Space>> and <<RecordC>> are
+                system modules
+         <item>
+            To achieve better factorization of
+            constraint programming support in
+            Mozart all constraint programming
+            modules are system modules rather than
+            modules in the base environment. This
+            results in a much smaller memory
+            footprint of the Mozart engine in case
+            the constraint programming facilities
+            are not needed.
+
+        </list>
+
+        <subsection>
+          <title/Distribution/
+
+<p>
+The distribution layer of Mozart has problems with fire-walls. From our
+point of view fire-walls defines all sub nets that restrict their
+traffic in some way. It has been impossible to connect to oz sites
+through any kind of fire-walls up till now. A naive solution is included
+in this release. It will only enable connections through the simplest of
+fire walls, but that is better than nothing.  We are working on a more
+general solution that will enable our sites to work over more complex
+fire-walls.
+<p>
+There were problems related to the shortcoming of fire-walls. When a
+Mozart sites needs to communicate it will try to open a connection. If
+it fails to reach the desired site it will time-out and retry unless it
+can deduce that the destination site is dead. The site will continue
+trying to open the connection until it succeeds or finds the site dead.
+This behavior can disturb fire-walls a lot. The time-out is now growing
+with a growth factor. There is now a way to alter the start time-out
+value, the growth factor and the timeout ceiling.
+
+
+        <subsection>
+          <title/Documentation/
+
+          <list>
+          <entry>Global Index
+          <item>The online documentation has been provided with a new index
+that encompasses all index entries from the individual
+documents.  It can be reached from the main documentation
+page, either using the link in the margin or the link
+under the Getting Started/Documentation
+          header. Caveat: Not all documents have a
+          useful index yet!
+
+          <entry>Postscript and PDF
+          <item> Is available now.
+          </list>
+
+      </section>
+
+      <section id="section.m110.fixes">
+        <title/Fixes/
+
+        <subsection>
+          <title/All Platforms/
+
+          <list>
+          <item> Return methods for classes in
+                 <<Tk.menuentry>> added.
+          <item>Added <<Class.getAttr>> to
+                 straightforwardly resolve
+                 multiple inheritance conflicts.
+          <item>Fixed printing of '~' for floats in
+                 virtual strings (bug 390).
+          <item>Code garbage collection bug fixed
+                 (bug 389).
+          <item>Bug in <<Record.dropWhile>> fixed,
+                 thanks to Benko Tamas (bug 383).
+          <item>Bug in <<FD.exactly>> fixed,
+                 thanks again to Benko Tamas (bug
+                 378)
+          <item>Bug in documentation of <<Append>>
+                 fixed (bugs 331, 372)
+          <item>Bug fix in <<ByNeed>> returning a
+                 variable (bugs 340, 370)
+          <item>Several bug fixes for networked
+                 file systems (aka interrupted
+                 system calls) (bug 360)
+          <item> Bug fix in handling <<X=X|X>> during
+                 garbage collection (bug 359)
+          <item> Bug fix in <<IsDet>> for distributed
+                 variables (bug 357)
+          <item> Added <<Pickle.pack>> and
+                 <<Pickle.unpack>> for pickling
+                 and unpickling from/to byte
+                 strings.
+          <item> Fixed bug for doing large number
+                 of http requests (bug 350)
+          <item> Bug fix for binding faulty distributed
+                 variables (bug 348)
+          <item> Several compiler bug fixes (bugs
+                 304, 305, 306, 344, 339)
+          <item> Bug fix in raising distributed
+                 programming exception (bug 341)
+          <item> Several fixes in unification
+                 (bugs 337)
+          <item> Some quirks in documentation
+                 fixed (bugs 257, 295, 302, 322, 327)
+          </list>
+
+
+        <subsection>
+          <title/Windows/
+
+          <list>
+          <item> Temporary files are put under
+                 <file/"C:\TEMP"/ by default
+                 (instead of <file/"C:\"/).
+                 Creating many files directly under "C:\" made
+                 Windows NT freeze.
+          <item> Subprocesses started from Mozart
+                 do not open new console windows.
+          <item> Mozart is not longer confused by
+                 other programs such as fortify by
+                 complete rewrite of communication
+                 between Mozart and Tk
+                 (bug 338)
+          </list>
+
+        <subsection>
+          <title/Linux/
+
+          <list>
+          <item> Memory management for Linux 2.2.x
+                 fixed (bugs 391, 403).
+          </list>
+
+
+        <subsection>
+          <title/Other Platforms/
+
+          <list>
+          <item> Initial support for Mac OS X.
+          <item> Compiles under FreeBSD (Bug 393).
+          </list>
+
+      </section>
+
 
     <chapter id="chapter.m101">
       <title/Changes between Mozart 1.0.0 and Mozart 1.0.1/
