@@ -40,8 +40,8 @@
 enum PV_TYPES {
   PV_MANAGER,
   PV_PROXY,
-  PV_OBJECT,      // class available
-  PV_OBJECTGNAME  // only the class's gname known
+  PV_OBJECTCLASSAVAIL,     // class available
+  PV_OBJECTCLASSNOTAVAIL   // only the class's gname known
 };
 
 class ProxyList {
@@ -105,40 +105,40 @@ public:
   }
 
   PerdioVar(Object *o) : GenCVariable(PerdioVariable) {
-    setpvType(PV_OBJECT);
+    setpvType(PV_OBJECTCLASSAVAIL);
     ptr = o;
   }
 
   void setClass(ObjectClass *cl) {
-    Assert(isObject());
+    Assert(isObjectClassAvail());
     u.aclass=cl;
   }
 
   void setGNameClass(GName *gn) {
-    setpvType(PV_OBJECTGNAME);
+    setpvType(PV_OBJECTCLASSNOTAVAIL);
     u.gnameClass=gn;
   }
 
   void globalize(int i) { setpvType(PV_MANAGER); ptr = ToPointer(i); }
 
-  Bool isManager()   { return getpvType()==PV_MANAGER; }
-  Bool isProxy()     { return getpvType()==PV_PROXY; }
-  Bool isObject()    { return getpvType()==PV_OBJECT; }
-  Bool isObjectGName() { return getpvType()==PV_OBJECTGNAME; }
+  Bool isManager()             { return getpvType()==PV_MANAGER; }
+  Bool isProxy()               { return getpvType()==PV_PROXY; }
+  Bool isObjectClassAvail()    { return getpvType()==PV_OBJECTCLASSAVAIL; }
+  Bool isObjectClassNotAvail() { return getpvType()==PV_OBJECTCLASSNOTAVAIL; }
+  Bool isObject() { return isObjectClassAvail() || isObjectClassNotAvail();}
 
   int getIndex() { return ToInt32(ptr); }
 
-  GName *getGName() { return 0; }
-  GName *getGNameClass() { Assert(isObjectGName()); return u.gnameClass; }
+  GName *getGNameClass() { Assert(isObjectClassNotAvail()); return u.gnameClass; }
   void setIndex(int i) {
-    Assert(!isObject() && !isObjectGName());
+    Assert(!isObject());
     ptr = ToPointer(i);
   }
 
   Bool valid(TaggedRef *varPtr, TaggedRef v);
   
-  Object *getObject() { Assert(isObject() || isObjectGName()); return (Object*)ptr; }
-  ObjectClass *getClass() { Assert(isObject()); return u.aclass; }
+  Object *getObject() { Assert(isObject()); return (Object*)ptr; }
+  ObjectClass *getClass() { Assert(isObjectClassAvail()); return u.aclass; }
 
   void registerSite(Site* sd) {
     Assert(isManager());
