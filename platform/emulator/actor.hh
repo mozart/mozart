@@ -173,7 +173,7 @@ public:
   Bool areNoExtSuspensions ();
   TaggedRef* getSolveVarRef () { return (&solveVar); }
   TaggedRef getSolveVar () { return (solveVar); }
-  TaggedRef getResult () { return (result); }
+  TaggedRef getResult () { return (makeTaggedRef (&result)); }
   void pushWaitActor (WaitActor *a);
   void pushWaitActorsStackOf (SolveActor *sa);
   WaitActor *getDisWaitActor ();
