@@ -335,7 +335,7 @@ public:
 }; // BIfdBodyManager
 
 
-#if !defined(OUTLINE) && !defined(FDOUTLINE)
+#ifndef OUTLINE
 #include "fdbuilti.icc"
 #endif
 

@@ -36,6 +36,10 @@
 
 #endif /* DEBUG_FSET */
 
+#ifdef OUTLINE
+#define inline
+#endif
+
 //*****************************************************************************
 
 extern int toTheLowerEnd[];
@@ -44,6 +48,7 @@ extern int toTheUpperEnd[];
 inline int div32(int n) { return n >> 5; }
 inline int mod32(int n) { return n & 0x1f; }
 
+inline
 unsigned char * initNumOfBitsInHalfWord(void)
 {
   const unsigned int maxHalfWord = 0xffff;
@@ -205,7 +210,8 @@ void printBits(ostream &o, int high, const int * bv, int neg = 0)
 
 //-----------------------------------------------------------------------------
 
-void FSetValue::init(const OZ_FSetImpl &fs)
+inline
+void FSetValue::init(const FSetConstraint &fs)
 {
   Assert(fs.isValue());
 
@@ -214,6 +220,7 @@ void FSetValue::init(const OZ_FSetImpl &fs)
     _in[i] = fs._in[i];
 }
 
+inline
 void FSetValue::init(const OZ_Term t)
 {
   for (int i = fset_high; i--; )
@@ -224,6 +231,7 @@ void FSetValue::init(const OZ_Term t)
   _card = findBitsSet(fset_high, _in);
 }
 
+inline
 void FSetValue::init(OZ_FSetState s)
 {
   switch(s) {
@@ -249,16 +257,19 @@ FSetValue::FSetValue(OZ_Term t)
   init(t);
 }
 
+inline
 FSetValue::FSetValue(OZ_FSetState s)
 {
   init(s);
 }
 
-FSetValue::FSetValue(const OZ_FSetImpl &s)
+
+FSetValue::FSetValue(const FSetConstraint &s)
 {
   init(s);
 }
 
+inline
 FSetValue::FSetValue(const int * in)
 {
   for (int i = fset_high; i--; )
@@ -267,6 +278,20 @@ FSetValue::FSetValue(const int * in)
   _card = findBitsSet(fset_high, _in);
 }
 
+
+inline
+OZ_Boolean FSetValue::operator == (const FSetValue &fs) const
+{
+  if (_card != fs._card)
+    return FALSE;
+
+  for (int i = fset_high; i--; ) {
+    if (_in[i] != fs._in[i])
+      return FALSE;
+  }
+
+  return TRUE;
+}
 
 OZ_Boolean FSetValue::unify(OZ_Term t)
 {
@@ -281,19 +306,7 @@ ostream &FSetValue::print2stream(ostream &o) const
   return o;
 }
 
-OZ_Boolean FSetValue::operator == (const FSetValue &fs) const
-{
-  if (_card != fs._card)
-    return FALSE;
-
-  for (int i = fset_high; i--; ) {
-    if (_in[i] != fs._in[i])
-      return FALSE;
-  }
-
-  return TRUE;
-}
-
+inline
 FSetValue FSetValue::operator & (const FSetValue &y) const
 {
   FSetValue z;
@@ -305,6 +318,7 @@ FSetValue FSetValue::operator & (const FSetValue &y) const
   return z;
 }
 
+inline
 FSetValue FSetValue::operator | (const FSetValue &y) const
 {
   FSetValue z;
@@ -316,6 +330,7 @@ FSetValue FSetValue::operator | (const FSetValue &y) const
   return z;
 }
 
+inline
 FSetValue FSetValue::operator - (const FSetValue &y) const
 {
   FSetValue z;
@@ -327,6 +342,7 @@ FSetValue FSetValue::operator - (const FSetValue &y) const
   return z;
 }
 
+inline
 FSetValue FSetValue::operator &= (const FSetValue &y)
 {
   for (int i = fset_high; i--; )
@@ -336,6 +352,7 @@ FSetValue FSetValue::operator &= (const FSetValue &y)
   return *this;
 }
 
+inline
 FSetValue FSetValue::operator |= (const FSetValue &y)
 {
   for (int i = fset_high; i--; )
@@ -345,6 +362,7 @@ FSetValue FSetValue::operator |= (const FSetValue &y)
   return *this;
 }
 
+inline
 FSetValue FSetValue::operator &= (const int y)
 {
   OZ_Boolean tb = testBit(_in, y);
@@ -357,6 +375,7 @@ FSetValue FSetValue::operator &= (const int y)
   return *this;
 }
 
+inline
 FSetValue FSetValue::operator += (const int y)
 {
   if (0 <= y && y < 32*fset_high)
@@ -366,6 +385,7 @@ FSetValue FSetValue::operator += (const int y)
   return *this;
 }
 
+inline
 FSetValue FSetValue::operator -= (const int y)
 {
   if (0 <= y && y < 32*fset_high)
@@ -375,6 +395,7 @@ FSetValue FSetValue::operator -= (const int y)
   return *this;
 }
 
+inline
 FSetValue FSetValue::operator - (void) const
 {
   FSetValue z;
@@ -386,17 +407,20 @@ FSetValue FSetValue::operator - (void) const
   return *this;
 }
 
+inline
 OZ_Term FSetValue::getKnownInList(void) const
 {
   return getAsList(_in);
 }
 
+inline
 OZ_Term FSetValue::getKnownNotInList(void) const
 {
   return getAsList(_in, 1);
 }
 
 // returns -1 if there is no min element
+inline
 int FSetValue::getMinElem(void) const
 {
   int v, i;
@@ -428,6 +452,7 @@ int FSetValue::getMinElem(void) const
 }
 
 // returns -1 if there is no max element
+inline
 int FSetValue::getMaxElem(void) const
 {
   int v, i;
@@ -458,6 +483,7 @@ int FSetValue::getMaxElem(void) const
   return -1;
 }
 
+inline
 int FSetValue::getNextLargerElem(int v) const
 {
   for (int new_v = v + 1; new_v <= 32 * fset_high - 1; new_v += 1)
@@ -467,6 +493,7 @@ int FSetValue::getNextLargerElem(int v) const
   return -1;
 }
 
+inline
 int FSetValue::getNextSmallerElem(int v) const
 {
   for (int new_v = v - 1; new_v >= 0; new_v -= 1)
@@ -478,7 +505,8 @@ int FSetValue::getNextSmallerElem(int v) const
 
 //-----------------------------------------------------------------------------
 
-OZ_FSetImpl::OZ_FSetImpl(int c_min, int c_max, OZ_Term ins, OZ_Term outs)
+
+FSetConstraint::FSetConstraint(int c_min, int c_max, OZ_Term ins, OZ_Term outs)
 {
   _card_min = c_min;
   _card_max = c_max;
@@ -502,7 +530,7 @@ OZ_FSetImpl::OZ_FSetImpl(int c_min, int c_max, OZ_Term ins, OZ_Term outs)
 }
 
 
-OZ_FSetImpl::OZ_FSetImpl(OZ_Term ins, OZ_Term outs)
+FSetConstraint::FSetConstraint(OZ_Term ins, OZ_Term outs)
 {
   int i;
   for (i = fset_high; i--; )
@@ -524,12 +552,83 @@ OZ_FSetImpl::OZ_FSetImpl(OZ_Term ins, OZ_Term outs)
   Assert(_card_min <= _card_max);
 }
 
-OZ_FSetImpl::OZ_FSetImpl(const OZ_FSetImpl &s)
+inline
+void FSetConstraint::init(void)
+{
+  _known_in = _known_not_in = 0;
+  _card_min = 0;
+  _card_max = fset_sup + 1;
+
+  for (int i = fset_high; i--; )
+    _in[i] = _not_in[i] = 0;
+}
+
+inline
+void FSetConstraint::init(const FSetValue &s)
+{
+  _known_in = _card_min = _card_max = s._card;
+  _known_not_in = 32 * fset_high - _known_in ;
+
+  for (int i = fset_high; i--; )
+    _not_in[i] = ~(_in[i] = s._in[i]);
+}
+
+inline
+void FSetConstraint::init(OZ_FSetState s)
+{
+  switch(s) {
+  case fs_empty: {
+    for (int i = fset_high; i--; )
+      _not_in[i] = ~(_in[i] = 0);
+    _card_min = _card_max = 0;
+    break;
+  }
+  case fs_full: {
+    for (int i = fset_high; i--; )
+      _in[i] = ~(_not_in[i] = 0);
+    _card_min = _card_max = 32*fset_high;
+    break;
+  }
+  default:
+    error("Unexpected case (%d) in \"FSetConstraint::init(OZ_FSetState\".", s);
+  }
+}
+
+inline
+void FSetConstraint::init(const FSetConstraint &s)
+{
+  for (int i = fset_high; i--; ) {
+    _in[i] = s._in[i];
+    _not_in[i] = s._not_in[i];
+  }
+
+  _known_in = s._known_in;
+  _known_not_in = s._known_not_in;
+
+  _card_min = s._card_min;
+  _card_max = s._card_max;
+}
+
+inline
+FSetConstraint::FSetConstraint(const FSetValue& s)
 {
   init(s);
 }
 
-OZ_FSetImpl &OZ_FSetImpl::operator = (const OZ_FSetImpl &s)
+inline
+FSetConstraint::FSetConstraint(void)
+{
+  init();
+}
+
+inline
+FSetConstraint::FSetConstraint(const FSetConstraint &s)
+{
+  init(s);
+}
+
+inline
+FSetConstraint &FSetConstraint::operator = (const FSetConstraint &s)
 {
   if (this != &s)
     init(s);
@@ -537,17 +636,20 @@ OZ_FSetImpl &OZ_FSetImpl::operator = (const OZ_FSetImpl &s)
   return *this;
 }
 
-void OZ_FSetImpl::printGlb(ostream &o) const
+inline
+void FSetConstraint::printGlb(ostream &o) const
 {
   printBits(o, fset_high, _in);
 }
 
-void OZ_FSetImpl::printLub(ostream &o) const
+inline
+void FSetConstraint::printLub(ostream &o) const
 {
   printBits(o, fset_high, _not_in, 1);
 }
 
-ostream &OZ_FSetImpl::print(ostream &o) const
+
+ostream &FSetConstraint::print(ostream &o) const
 {
   o << "{";
   printGlb(o);
@@ -562,13 +664,15 @@ ostream &OZ_FSetImpl::print(ostream &o) const
   return o;
 }
 
-void OZ_FSetImpl::printDebug(void) const
+inline
+void FSetConstraint::printDebug(void) const
 {
   print(cout);
   cout << endl << flush;
 }
 
-OZ_Boolean OZ_FSetImpl::normalize(void)
+inline
+OZ_Boolean FSetConstraint::normalize(void)
 {
   OZ_Boolean retval = OZ_FALSE;
 
@@ -617,7 +721,8 @@ end:
   return retval;
 }
 
-OZ_Boolean OZ_FSetImpl::valid(const FSetValue &fs) const
+
+OZ_Boolean FSetConstraint::valid(const FSetValue &fs) const
 {
   DEBUG_FSETIR("( " << *this << " valid " << fs << " ) = ");
 
@@ -640,11 +745,12 @@ failure:
   return OZ_FALSE;
 }
 
-OZ_FSetImpl OZ_FSetImpl::unify(const OZ_FSetImpl &y) const
+
+FSetConstraint FSetConstraint::unify(const FSetConstraint &y) const
 {
   DEBUG_FSETIR("( " << *this << " unify " << y << " ) = ");
 
-  OZ_FSetImpl z;
+  FSetConstraint z;
 
   z._card_min = max(_card_min, y._card_min);
   z._card_max = min(_card_max, y._card_max);
@@ -672,7 +778,8 @@ failure:
   return z;
 }
 
-OZ_Boolean OZ_FSetImpl::isWeakerThan(OZ_FSetImpl const &y) const
+
+OZ_Boolean FSetConstraint::isWeakerThan(FSetConstraint const &y) const
 {
   DEBUG_FSETIR("( " << *this << " IS WEAKER THAN " << y << " ) = ");
 
@@ -683,80 +790,32 @@ OZ_Boolean OZ_FSetImpl::isWeakerThan(OZ_FSetImpl const &y) const
   return ret_val;
 }
 
-void OZ_FSetImpl::init(void)
-{
-  _known_in = _known_not_in = 0;
-  _card_min = 0;
-  _card_max = fset_sup + 1;
-
-  for (int i = fset_high; i--; )
-    _in[i] = _not_in[i] = 0;
-}
-
-void OZ_FSetImpl::init(const FSetValue &s)
-{
-  _known_in = _card_min = _card_max = s._card;
-  _known_not_in = 32 * fset_high - _known_in ;
-
-  for (int i = fset_high; i--; )
-    _not_in[i] = ~(_in[i] = s._in[i]);
-}
-
-void OZ_FSetImpl::init(OZ_FSetState s)
-{
-  switch(s) {
-  case fs_empty: {
-    for (int i = fset_high; i--; )
-      _not_in[i] = ~(_in[i] = 0);
-    _card_min = _card_max = 0;
-    break;
-  }
-  case fs_full: {
-    for (int i = fset_high; i--; )
-      _in[i] = ~(_not_in[i] = 0);
-    _card_min = _card_max = 32*fset_high;
-    break;
-  }
-  default:
-    error("Unexpected case (%d) in \"OZ_FSetImpl::init(OZ_FSetState\".", s);
-  }
-}
-
-void OZ_FSetImpl::init(const OZ_FSetImpl &s)
-{
-  for (int i = fset_high; i--; ) {
-    _in[i] = s._in[i];
-    _not_in[i] = s._not_in[i];
-  }
-
-  _known_in = s._known_in;
-  _known_not_in = s._known_not_in;
-
-  _card_min = s._card_min;
-  _card_max = s._card_max;
-}
-
-OZ_Boolean OZ_FSetImpl::isIn(int i) const
+inline
+OZ_Boolean FSetConstraint::isIn(int i) const
 {
   return testBit(_in, i);
 }
 
-OZ_Boolean OZ_FSetImpl::isNotIn(int i) const
+inline
+OZ_Boolean FSetConstraint::isNotIn(int i) const
 {
   return testBit(_not_in, i);
 }
 
-OZ_Boolean OZ_FSetImpl::isEmpty(void) const
+inline
+OZ_Boolean FSetConstraint::isEmpty(void) const
 {
   return isValue() && (_card_min == 0);
 }
 
-OZ_Boolean OZ_FSetImpl::isFull(void) const
+inline
+OZ_Boolean FSetConstraint::isFull(void) const
 {
   return isValue() && (_card_min == (32*fset_high));
 }
 
-OZ_Boolean OZ_FSetImpl::isSubsumedBy(const OZ_FSetImpl &y) const
+inline
+OZ_Boolean FSetConstraint::isSubsumedBy(const FSetConstraint &y) const
 {
   DEBUG_FSETIR(*this << " IS SUBSUMED BY " << y << " = ");
 
@@ -781,17 +840,20 @@ end:
   return OZ_FALSE;
 }
 
-OZ_Term OZ_FSetImpl::getKnownInList(void) const
+inline
+OZ_Term FSetConstraint::getKnownInList(void) const
 {
   return getAsList(_in);
 }
 
-OZ_Term OZ_FSetImpl::getKnownNotInList(void) const
+inline
+OZ_Term FSetConstraint::getKnownNotInList(void) const
 {
   return getAsList(_not_in);
 }
 
-OZ_Term OZ_FSetImpl::getUnknownList(void) const
+inline
+OZ_Term FSetConstraint::getUnknownList(void) const
 {
   int unknown[fset_high];
 
@@ -801,19 +863,22 @@ OZ_Term OZ_FSetImpl::getUnknownList(void) const
   return getAsList(unknown);
 }
 
-OZ_Term OZ_FSetImpl::getLubList(void) const
+inline
+OZ_Term FSetConstraint::getLubList(void) const
 {
   return getAsList(_not_in, 1);
 }
 
-OZ_Term OZ_FSetImpl::getCardTuple(void) const
+inline
+OZ_Term FSetConstraint::getCardTuple(void) const
 {
   return ((_card_min == _card_max)
           ? OZ_int(_card_min)
           : mkTuple(_card_min, _card_max));
 }
 
-OZ_Boolean OZ_FSetImpl::putCard(int min_card, int max_card)
+inline
+OZ_Boolean FSetConstraint::putCard(int min_card, int max_card)
 {
   DEBUG_FSETIR(*this << " putCard [" << min_card << ',' << max_card << "] = ");
 
@@ -823,11 +888,12 @@ OZ_Boolean OZ_FSetImpl::putCard(int min_card, int max_card)
   return normalize();
 }
 
-OZ_FSetImpl OZ_FSetImpl::operator - (void) const
+inline
+FSetConstraint FSetConstraint::operator - (void) const
 {
   DEBUG_FSETIR("( - " << *this << ") = ");
 
-  OZ_FSetImpl z;
+  FSetConstraint z;
 
   for (int i = fset_high; i--; ) {
     z._in[i]     = _not_in[i];
@@ -838,7 +904,8 @@ OZ_FSetImpl OZ_FSetImpl::operator - (void) const
   return z;
 }
 
-OZ_Boolean OZ_FSetImpl::operator += (int i)
+inline
+OZ_Boolean FSetConstraint::operator += (int i)
 {
   DEBUG_FSETIR('(' << *this << " += " << i << ") = ");
 
@@ -849,7 +916,8 @@ OZ_Boolean OZ_FSetImpl::operator += (int i)
   return normalize();
 }
 
-OZ_Boolean OZ_FSetImpl::operator -= (int i)
+inline
+OZ_Boolean FSetConstraint::operator -= (int i)
 {
   DEBUG_FSETIR('(' << *this << " -= " << i << ") = ");
 
@@ -860,7 +928,8 @@ OZ_Boolean OZ_FSetImpl::operator -= (int i)
   return normalize();
 }
 
-OZ_Boolean OZ_FSetImpl::operator <<= (const OZ_FSetImpl& y)
+inline
+OZ_Boolean FSetConstraint::operator <<= (const FSetConstraint& y)
 {
   DEBUG_FSETIR('(' << *this << " <<= " << y << ") = ");
 
@@ -875,7 +944,8 @@ OZ_Boolean OZ_FSetImpl::operator <<= (const OZ_FSetImpl& y)
   return normalize();
 }
 
-OZ_Boolean OZ_FSetImpl::operator <= (const OZ_FSetImpl &y)
+inline
+OZ_Boolean FSetConstraint::operator <= (const FSetConstraint &y)
 {
   // since _*this_ is subsumed by _y_, _*this_ must contain at least
   // the amount of negative information as _y_ does
@@ -890,7 +960,8 @@ OZ_Boolean OZ_FSetImpl::operator <= (const OZ_FSetImpl &y)
   return normalize();
 }
 
-OZ_Boolean OZ_FSetImpl::operator >= (const OZ_FSetImpl &y)
+inline
+OZ_Boolean FSetConstraint::operator >= (const FSetConstraint &y)
 {
   // since _*this_ subsumes _y_, _*this_ must contain at least
   // the amount of positive information a _y_ does
@@ -905,7 +976,8 @@ OZ_Boolean OZ_FSetImpl::operator >= (const OZ_FSetImpl &y)
   return normalize();
 }
 
-OZ_Boolean OZ_FSetImpl::operator != (const OZ_FSetImpl &y)
+inline
+OZ_Boolean FSetConstraint::operator != (const FSetConstraint &y)
 {
   DEBUG_FSETIR('(' << *this << " != " << y << ") = ");
 
@@ -916,7 +988,8 @@ OZ_Boolean OZ_FSetImpl::operator != (const OZ_FSetImpl &y)
   return normalize();
 }
 
-OZ_Boolean OZ_FSetImpl::operator == (const OZ_FSetImpl &y) const
+inline
+OZ_Boolean FSetConstraint::operator == (const FSetConstraint &y) const
 {
   DEBUG_FSETIR('(' << *this << " != " << y << ") = ");
 
@@ -933,11 +1006,12 @@ OZ_Boolean OZ_FSetImpl::operator == (const OZ_FSetImpl &y) const
   return TRUE;
 }
 
-OZ_FSetImpl OZ_FSetImpl::operator & (const OZ_FSetImpl& y) const
+inline
+FSetConstraint FSetConstraint::operator & (const FSetConstraint& y) const
 {
   DEBUG_FSETIR(*this << " & " << y << " = ");
 
-  OZ_FSetImpl z;
+  FSetConstraint z;
 
   if (!isValid() || !y.isValid()) {
     z._card_min = -1;
@@ -959,11 +1033,12 @@ end:
   return z;
 }
 
-OZ_FSetImpl OZ_FSetImpl::operator | (const OZ_FSetImpl& y) const
+inline
+FSetConstraint FSetConstraint::operator | (const FSetConstraint& y) const
 {
   DEBUG_FSETIR(*this << " | " << y << " = ");
 
-  OZ_FSetImpl z;
+  FSetConstraint z;
 
   if (!isValid() || !y.isValid()) {
     z._card_min = -1;
@@ -985,11 +1060,12 @@ end:
   return z;
 }
 
-OZ_FSetImpl OZ_FSetImpl::operator - (const OZ_FSetImpl& y) const
+inline
+FSetConstraint FSetConstraint::operator - (const FSetConstraint& y) const
 {
   DEBUG_FSETIR(*this << " - " << y << " = ");
 
-  OZ_FSetImpl z;
+  FSetConstraint z;
 
   if (!isValid() || !y.isValid()) {
     z._card_min = -1;
@@ -1012,12 +1088,14 @@ end:
   return z;
 }
 
-FSetValue OZ_FSetImpl::getGlbSet(void) const
+inline
+FSetValue FSetConstraint::getGlbSet(void) const
 {
   return FSetValue(_in);
 }
 
-FSetValue OZ_FSetImpl::getLubSet(void) const
+inline
+FSetValue FSetConstraint::getLubSet(void) const
 {
   int i, lub[fset_high];
 
@@ -1027,7 +1105,8 @@ FSetValue OZ_FSetImpl::getLubSet(void) const
   return FSetValue(lub);
 }
 
-FSetValue OZ_FSetImpl::getUnknownSet(void) const
+inline
+FSetValue FSetConstraint::getUnknownSet(void) const
 {
   int i, unknown[fset_high];
 
@@ -1037,12 +1116,14 @@ FSetValue OZ_FSetImpl::getUnknownSet(void) const
   return FSetValue(unknown);
 }
 
-FSetValue OZ_FSetImpl::getNotInSet(void) const
+inline
+FSetValue FSetConstraint::getNotInSet(void) const
 {
   return FSetValue(_not_in);
 }
 
-OZ_Boolean OZ_FSetImpl::operator >= (const int ii)
+inline
+OZ_Boolean FSetConstraint::operator >= (const int ii)
 {
   int lower_word = div32(ii), lower_bit = mod32(ii);
 
@@ -1053,7 +1134,8 @@ OZ_Boolean OZ_FSetImpl::operator >= (const int ii)
   return normalize();
 }
 
-OZ_Boolean OZ_FSetImpl::operator <= (const int ii)
+inline
+OZ_Boolean FSetConstraint::operator <= (const int ii)
 {
   int upper_word = div32(ii), upper_bit = mod32(ii);
 
@@ -1073,7 +1155,7 @@ OZ_Boolean OZ_FSetImpl::operator <= (const int ii)
 
 OZ_FSetValue::OZ_FSetValue(const OZ_FSetConstraint &s)
 {
-  CASTTHIS->init(* (OZ_FSetImpl *) &s);
+  CASTTHIS->init(* (FSetConstraint *) &s);
 }
 
 OZ_FSetValue::OZ_FSetValue(const OZ_Term t)
@@ -1191,8 +1273,8 @@ char * OZ_FSetValue::toString() const
 #undef CASTTHIS
 
 
-#define CASTPTR (OZ_FSetImpl *)
-#define CASTREF * (OZ_FSetImpl *) &
+#define CASTPTR (FSetConstraint *)
+#define CASTREF * (FSetConstraint *) &
 #define CASTTHIS (CASTPTR this)
 
 OZ_FSetConstraint::OZ_FSetConstraint(const OZ_FSetValue &s)
@@ -1207,12 +1289,12 @@ OZ_FSetConstraint::OZ_FSetConstraint(OZ_FSetState s)
 
 OZ_FSetConstraint::OZ_FSetConstraint(const OZ_FSetConstraint &s)
 {
-  CASTTHIS->init(* (OZ_FSetImpl *) &s);
+  CASTTHIS->init(* (FSetConstraint *) &s);
 }
 
 OZ_FSetConstraint &OZ_FSetConstraint::operator = (const OZ_FSetConstraint &s)
 {
-  return CASTTHIS->operator = (* (OZ_FSetImpl *) &s);
+  return CASTTHIS->operator = (* (FSetConstraint *) &s);
 }
 
 void OZ_FSetConstraint::init(OZ_FSetState s)

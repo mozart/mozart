@@ -76,7 +76,7 @@ OZ_C_proc_begin(BIfsSet, 3)
   EXPECT_BLOCK(pe, 0, expectFSetDescr);
   EXPECT_BLOCK(pe, 1, expectFSetDescr);
 
-  OZ_FSetImpl fset(OZ_getCArg(0), OZ_getCArg(1));
+  FSetConstraint fset(OZ_getCArg(0), OZ_getCArg(1));
 
   if (! fset.isValid()) {
     TypeError(2, "Invalid set description");
@@ -105,7 +105,7 @@ OZ_C_proc_begin(BIfsClone, 2)
 
   return arg0tag == FSETVALUE ? OZ_unify(OZ_getCArg(0), OZ_getCArg(1))
     : tellBasicConstraint(OZ_getCArg(1),
-                          (OZ_FSetImpl *) &tagged2GenFSetVar(deref(OZ_getCArg(0)))->getSet());
+                          (FSetConstraint *) &tagged2GenFSetVar(deref(OZ_getCArg(0)))->getSet());
 }
 OZ_C_proc_end
 
@@ -337,8 +337,8 @@ OZ_C_proc_end
 // TMUELLER: already redundant
 OZ_C_proc_begin(BImkFSetVar, 5)
 {
-  OZ_FSetImpl fset(OZ_intToC(OZ_getCArg(0)), OZ_intToC(OZ_getCArg(1)),
-                   OZ_getCArg(2), OZ_getCArg(3));
+  FSetConstraint fset(OZ_intToC(OZ_getCArg(0)), OZ_intToC(OZ_getCArg(1)),
+                      OZ_getCArg(2), OZ_getCArg(3));
 
   return OZ_unify(OZ_getCArg(4), makeTaggedRef(newTaggedCVar(new GenFSetVariable(fset))));
 }

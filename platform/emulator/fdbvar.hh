@@ -20,7 +20,7 @@
 #include "fdomn.hh"
 #include "fdhook.hh"
 
-#if defined(OUTLINE) || defined(FDOUTLINE)
+#ifdef OUTLINE
 #define inline
 #endif
 
@@ -82,7 +82,7 @@ inline GenBoolVariable * tagged2GenBoolVar(TaggedRef term);
 inline void addSuspBoolVar(TaggedRef, Thread *);
 
 
-#if !defined(OUTLINE) && !defined(FDOUTLINE)
+#ifndef OUTLINE
 #include "fdbvar.icc"
 #else
 #undef inline

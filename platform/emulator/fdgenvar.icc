@@ -12,7 +12,7 @@
 #ifndef __FDGENVAR_ICC__
 #define __FDGENVAR_ICC__
 
-#if defined(INTERFACE) && !defined(OUTLINE) && !defined(FDOUTLINE)
+#if defined(INTERFACE) && !defined(OUTLINE)
 #pragma interface
 #endif
 

@@ -12,7 +12,7 @@
 #ifndef __FDBVAR_ICC__
 #define __FDBVAR_ICC__
 
-#if defined(INTERFACE) && !defined(OUTLINE) && !defined(FDOUTLINE)
+#if defined(INTERFACE) && !defined(OUTLINE)
 #pragma interface
 #endif
 

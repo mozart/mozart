@@ -576,7 +576,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
         tellBasicConstraint(makeTaggedRef(vptr), (OZ_FiniteDomain *) NULL);
       } else {
         Assert(type == FSetVariable);
-        tellBasicConstraint(makeTaggedRef(vptr), (OZ_FSet *) NULL);
+        tellBasicConstraint(makeTaggedRef(vptr), (OZ_FSetConstraint *) NULL);
       }
     }
   }

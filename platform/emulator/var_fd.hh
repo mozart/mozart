@@ -20,7 +20,7 @@
 #include "fdomn.hh"
 #include "fdhook.hh"
 
-#if defined(OUTLINE) || defined(FDOUTLINE)
+#ifdef OUTLINE
 #define inline
 #endif
 
@@ -101,7 +101,7 @@ public:
 void addSuspFDVar(TaggedRef, Thread *, OZ_FDPropState = fd_prop_any);
 OZ_Return tellBasicConstraint(OZ_Term, OZ_FiniteDomain *);
 
-#if !defined(OUTLINE) && !defined(FDOUTLINE)
+#ifndef OUTLINE
 #include "fdgenvar.icc"
 #else
 Bool isGenFDVar(TaggedRef term);

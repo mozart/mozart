@@ -450,7 +450,7 @@ proceed:
   return PROCEED;
 }
 
-#if defined(OUTLINE) || defined(FDOUTLINE)
+#ifdef OUTLINE
 #define inline
 #include "fdgenvar.icc"
 #undef inline
