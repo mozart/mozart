@@ -173,9 +173,8 @@ define
 
    class OzDocToHTML
       attr
-	 Align: ' align=justify'
 	 % fontification:
-	 IsColor: unit
+	 FontifyMode: unit
 	 MyFontifier: unit
 	 % constructing the output:
 	 OutputDirectory: unit CurrentNode: unit NodeCounter: unit
@@ -214,8 +213,8 @@ define
 	 % back matter:
 	 MyBibliographyDB: unit
 	 BibNode: unit
-      meth init(B SGML Args)
-	 IsColor <- B
+      meth init(Mode SGML Args)
+	 FontifyMode <- Mode
 	 StyleSheet <- case Args.stylesheet of "" then DEFAULTSTYLESHEET
 		       elseof SS then SS
 		       end
@@ -349,8 +348,10 @@ define
 		  OzDocToHTML, PopNode(X)
 	       end
 	       OzDocToHTML, EndNode()
-	       {@MyFontifier process(if @IsColor then 'html-color'
-				     else 'html-mono'
+	       {@MyFontifier process(case @FontifyMode
+				     of color then 'html-color'
+				     [] mono then 'html-mono'
+				     [] stylesheets then 'html-stylesheets'
 				     end)}
 	    %-----------------------------------------------------------
 	    % Front and Back Matter
@@ -370,7 +371,7 @@ define
 	       end
 	       case @Comic of unit then skip
 	       elseof M then
-		  Out <- @Out#'<P'#@Align#'>'
+		  Out <- @Out#'<P>'
 		  OzDocToHTML, Process(M)
 		  Out <- @Out#'</P>'
 	       end
@@ -522,14 +523,14 @@ define
 	    % Paragraphs
 	    %-----------------------------------------------------------
 	    [] p then
-	       Out <- @Out#'<P'#@Align#'>\n'
+	       Out <- @Out#'<P>\n'
 	       OzDocToHTML, Batch(M 1)
 	       Out <- @Out#'</P>\n'
 	    [] para then
 	       %--** check for class=apropos?
 	       Out <- @Out#'<P class=margin>'
 	       OzDocToHTML, Batch(M.1=title(...) 1)
-	       Out <- @Out#'</P>\n<P'#@Align#'>\n'
+	       Out <- @Out#'</P>\n<P>\n'
 	       OzDocToHTML, Batch(M 2)
 	       Out <- @Out#'</P>\n'
 	    [] 'div' then
@@ -552,7 +553,7 @@ define
 		  InDescription <- true
 		  OzDocToHTML, Batch(M 1)
 		  InDescription <- X
-		  Out <- @Out#'</DL><P'#@Align#'>\n'
+		  Out <- @Out#'</DL><P>\n'
 	       elseif {HasFeature M enum} then X Y in
 		  Out <- @Out#('</P><OL type='#@OLTypes.1#
 			       case {CondSelect M n unit} of unit then ""
@@ -565,7 +566,7 @@ define
 		  OzDocToHTML, Batch(M 1)
 		  OLTypes <- Y
 		  InDescription <- X
-		  Out <- @Out#'</OL><P'#@Align#'>\n'
+		  Out <- @Out#'</OL><P>\n'
 	       elseif {HasFeature M n} then
 		  {Exception.raiseError
 		   ozDoc(sgmlToHTML illegalAttributes M)}
@@ -575,7 +576,7 @@ define
 		  InDescription <- false
 		  OzDocToHTML, Batch(M 1)
 		  InDescription <- X
-		  Out <- @Out#'</UL><P'#@Align#'>\n'
+		  Out <- @Out#'</UL><P>\n'
 	       end
 	    [] entry then ClassName in
 	       Out <- @Out#'<DT>'
@@ -593,12 +594,10 @@ define
 		  Out <- @Out#'&nbsp;[<I>'#ClassName#'</I>]'
 	       end
 	       Out <- @Out#'</DT>'
-	    [] synopsis then X in
+	    [] synopsis then
 	       Out <- @Out#'<DD><BLOCKQUOTE>\n'
-	       X = @Align
-	       Align <- ""
+	       %--** suppress justification
 	       OzDocToHTML, Batch(M 1)
-	       Align <- X
 	       Out <- @Out#'</BLOCKQUOTE></DD>\n'
 	    [] item then
 	       if @InDescription then
@@ -631,7 +630,7 @@ define
 		   ozDoc(sgmlToHTML unsupportedMathNotation M)}   %--**
 	       end
 	       case Display of display then
-		  Out <- @Out#'</BLOCKQUOTE><P'#@Align#'>'
+		  Out <- @Out#'</BLOCKQUOTE><P>'
 	       [] inline then skip
 	       end
 	    [] 'math.extern' then
@@ -673,7 +672,7 @@ define
 		     if IAlign \= unit then
 			Out <- @Out#'</DIV>'
 		     end
-		     Out <- @Out#'<P'#@Align#'>\n'
+		     Out <- @Out#'<P>\n'
 		  [] inline then skip
 		  end
 	       [] unit then
@@ -698,7 +697,7 @@ define
 	       end
 	       OzDocToHTML, BatchCode(M 1)
 	       case M.display of display then
-		  Out <- @Out#'</BLOCKQUOTE><P'#@Align#'>'
+		  Out <- @Out#'</BLOCKQUOTE><P>'
 	       [] inline then skip
 	       end
 	    [] 'code.extern' then
@@ -711,7 +710,7 @@ define
 	       Out <- @Out#({@MyFontifier
 			     enqueueFile(@ProgLang.1 M.to '\n' $)})
 	       case M.display of display then
-		  Out <- @Out#'</PRE></BLOCKQUOTE><P'#@Align#'>'
+		  Out <- @Out#'</PRE></BLOCKQUOTE><P>'
 	       [] inline then
 		  Out <- @Out#'</CODE>'
 	       end
@@ -805,7 +804,7 @@ define
 	       else
 		  Out <- @Out#'</P>'
 		  OzDocToHTML, OutputFigure(M)
-		  Out <- @Out#'<P'#@Align#'>'
+		  Out <- @Out#'<P>'
 	       end
 	    [] caption then
 	       {Exception.raiseError ozDoc(sgmlToHTML internalError M)}
@@ -836,7 +835,7 @@ define
 	       GrammarAltType <- def
 	       OzDocToHTML, Batch(M 2)
 	       GrammarAltType <- X
-	       Out <- @Out#'</TABLE><P'#@Align#'>\n'
+	       Out <- @Out#'</TABLE><P>\n'
 	    [] 'grammar.head' then
 	       OzDocToHTML, Batch(M 1)
 	    [] 'grammar.alt' then
@@ -878,7 +877,7 @@ define
 			    if {SGML.isOfClass M dyptic} then 0 else 1 end#
 			    '>\n')
 	       OzDocToHTML, Batch(Mr 1)
-	       Out <- @Out#'</TABLE><P'#@Align#'>\n'
+	       Out <- @Out#'</TABLE><P>\n'
 	    [] tr then
 	       Out <- @Out#'<TR valign=top>\n'
 	       OzDocToHTML, Batch(M 1)
@@ -1082,7 +1081,7 @@ define
 	 OzDocToHTML, Batch(Mr2 1)
 	 case Caption of unit then skip
 	 else
-	    Out <- @Out#'<P'#@Align#'><STRONG>'#Number#':</STRONG> '
+	    Out <- @Out#'<P><STRONG>'#Number#':</STRONG> '
 	    OzDocToHTML, Batch(Caption.1 1)
 	    Out <- @Out#'</P>'
 	    OzDocToHTML, Batch(Caption 2)
@@ -1121,7 +1120,7 @@ define
       end
    end
 
-   proc {Translate IsColor Args}
-      {New OzDocToHTML init(IsColor {SGML.parse Args.'in'} Args) _}
+   proc {Translate Mode Args}
+      {New OzDocToHTML init(Mode {SGML.parse Args.'in'} Args) _}
    end
 end
