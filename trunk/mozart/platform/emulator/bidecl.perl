@@ -37,9 +37,18 @@
 ### this argument is determined (resp. kinded).
 ###
 ### Furthermore, there are builtins that overwrite their input arguments.
-### This should be indicated by the prefix `!' (which should come first).
-### Thus '!+value' indicates an argument for which the builtin will suspend
-### until it is determined and which may be overwriten by its execution.
+### This should be indicated by the prefix `!'. Thus '!+value' indicates
+### an argument for which the builtin will suspend until it is determined
+### and which may be overwriten by its execution.
+###
+### For most builtins it is OK if the output registers are not all distinct
+### from the input registers: the compiler takes advantage of the possibility
+### to eliminate certain moves.  However there are builtins that will not
+### function properly unless certain output registers are guaranteed to
+### be distinct from the input registers.  An output argument may be
+### annotated with ^ to indicate that it needs its own register.
+###
+### The annotations +,*,! and ^ may be given in arbitrary order.
 ###
 ### A type may be simple or complex:
 ###
@@ -118,6 +127,10 @@
 ### -include or -exclude.
 
 $builtins = {
+    'builtin'	=> { in  => ['+virtualString','+int'],
+		     out => ['+procedure'],
+		     BI  => BIbuiltin},
+
     '/'		=> { in  => ['+float','+float'],
 		     out => ['+float'],
 		     bi  => BIfdiv,
@@ -492,7 +505,8 @@ $builtins = {
 
     'crash'		=> { in  => [],
 			     out => [],
-			     BI  => BIcrash},
+			     BI  => BIcrash,
+			     doesNotReturn=>1},
 
     'InstallHandler'	=> { in  => ['+value','+value','value'],
 			     out => [],
@@ -700,7 +714,7 @@ $builtins = {
 			     out => ['+bool'],
 			     BI  => BIisString},
 
-    'IsVirtualString'	=> { in  => ['+value'],
+    'IsVirtualString'	=> { in  => ['!+value'],
 			     out => ['+bool'],
 			     BI  => BIvsIs},
 
@@ -831,7 +845,7 @@ $builtins = {
 			     out => [],
 			     BI  => BIwaitOr},
 
-    'virtualStringLength'=> { in  => ['virtualString','+int'],
+    'virtualStringLength'=> { in  => ['!virtualString','!+int'],
 			      out => ['+int'],
 			      BI  => BIvsLength},
 
@@ -1598,13 +1612,13 @@ $builtins = {
 			     BI  => BIgetCloneDiff,
 			     ifdef=>'CS_PROFILE'},
 
-    'SystemRegistry'	=> { in  => [],
-			     out => ['+dictionary'],
-			     BI  => BIsystem_registry},
-
-    'ServiceRegistry'	=> { in  => [],
-			     out => ['+dictionary'],
-			     BI  => BIsystem_registry},
+#    'SystemRegistry'	=> { in  => [],
+#			     out => ['+dictionary'],
+#			     BI  => BIsystem_registry},
+#
+#    'ServiceRegistry'	=> { in  => [],
+#			     out => ['+dictionary'],
+#			     BI  => BIsystem_registry},
 
     #-----------------------------------------------------------------
     # ASSEMBLE.CC
@@ -2508,6 +2522,7 @@ $builtins = {
     'OS.shutDown'	=> { in  => ['+int','+int'],
 			     out => [],
 			     BI  => unix_shutDown,
+			     doesNotReturn=>1,
 			     module=>'os'},
 
     'OS.send'		=> { in  => ['+int','+virtualString','+[atom]'],
@@ -2744,6 +2759,55 @@ $builtins = {
 			     BI  => BIputProperty,
 			     module=>'vprop'},
 
+    #-----------------------------------------------------------------
+    # COMPONENTS
+    #-----------------------------------------------------------------
+
+    'smartSave'		=> { in  => ['value','value','+virtualString'],
+			     out => [],
+			     BI  => BIsmartSave,
+			     module=>components},
+
+    'load'		=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BIload,
+			     module=>components},
+
+    'PID.get'		=> { in  => [],
+			     out => ['+record'],
+			     BI  => BIGetPID,
+			     module=>components},
+
+    'PID.received'	=> { in  => ['value'],
+			     out => [],
+			     BI  => BIReceivedPID,
+			     module=>components},
+
+    'PID.close'		=> { in  => [],
+			     out => [],
+			     BI  => BIClosePID,
+			     module=>components},
+
+    'PID.send'		=> { in  => ['+virtualString','+int','+int','value'],
+			     out => [],
+			     BI  => BISendPID,
+			     module=>components},
+
+    'URL.localize'	=> { in  => ['+virtualString'],
+			     out => ['+record'],
+			     BI  => BIurl_localize,
+			     module=>components},
+
+    'URL.open'		=> { in  => ['+virtualString'],
+			     out => ['+int'],
+			     BI  => BIurl_open,
+			     module=>components},
+
+    'URL.load'		=> { in  => ['+virtualString'],
+			     out => ['value'],
+			     BI  => BIurl_load,
+			     module=>components},
+
 };
 
 # this is the function that converts these descriptions to
@@ -2778,16 +2842,21 @@ sub CTABLE {
 
 sub argspec {
     my $spec = shift;
-    my ($mod,$det,$typ) = (0,'any','value');
+    my ($mod,$det,$typ,$own) = (0,'any','value',0);
+    my $again = 1;
 
-    # is the argument register side effected?
+    # first we handle the various annotations
 
-    if ($spec =~ /^\!/) { $spec=$'; $mod=1; }
-
-    # what is the determinacy condition on the argument?
-
-    if    ($spec =~ /^\+/) { $spec=$'; $det='det'; }
-    elsif ($spec =~ /^\*/) { $spec=$'; $det='detOrKinded'; }
+    while ($again) {
+	# is the argument register side effected?
+	if    ($spec =~ /^\!/) { $spec=$'; $mod=1; }
+	# what is the determinacy condition on the argument?
+	elsif ($spec =~ /^\+/) { $spec=$'; $det='det'; }
+	elsif ($spec =~ /^\*/) { $spec=$'; $det='detOrKinded'; }
+	# does it need its own register
+	elsif ($spec =~ /^\^/) { $spec=$'; $own=1; }
+	else { $again=0; }
+    }
 
     # now parse the type of the argument
 
@@ -2796,7 +2865,7 @@ sub argspec {
     elsif ($spec =~ /^(.+)\#(.+)$/    ) { $typ="pair($1 $2)"; }
     else                                { $typ=$spec; }
 
-    return ($mod,$det,$typ);
+    return ($mod,$det,$typ,$own);
 }
 
 # $style==0	old style
@@ -2809,20 +2878,23 @@ sub OZTABLE {
     my ($key,$info);
     while (($key,$info) = each %$builtins) {
 	next unless &included($info);
-	my (@imods,@idets,@ityps,$spec,$destroys);
+	my (@imods,@idets,@ityps,$spec,$destroys,@oowns);
 	foreach $spec (@{$info->{in}}) {
-	    my ($mod,$det,$typ) = &argspec($spec);
+	    my ($mod,$det,$typ,$own) = &argspec($spec);
 	    $destroys=1 if $mod;
 	    push @imods,($mod?'true':'false');
 	    push @idets,$det;
 	    push @ityps,$typ;
+	    die "found ^ annotation on input arg spec for builtin $key"
+		if $own;
 	}
 	my (@odets,@otyps);
 	foreach $spec (@{$info->{out}}) {
-	    my ($mod,$det,$typ) = &argspec($spec);
+	    my ($mod,$det,$typ,$own) = &argspec($spec);
 	    $det="any(det)" if $det eq 'det';
 	    push @odets,$det;
 	    push @otyps,$typ;
+	    push @oowns,($own?'true':'false');
 	}
 	print "'$key':\n\tbuiltin(\n";
 	if ($style>0) {
@@ -2850,6 +2922,11 @@ sub OZTABLE {
 		print "\t\timods:[",join(' ',@imods),"]\n";
 	    } else {
 		print "\t\timods:nil\n";
+	    }
+	    if (@oowns) {
+		print "\t\toowns:[",join(' ',@oowns),"]\n";
+	    } else {
+		print "\t\toowns:nil\n";
 	    }
 	}
 	if ($style<2) {

@@ -2127,7 +2127,6 @@ raise:
 }
 
 
-// COMPILE(.) inline [*(recordCOrChunk) +feature] -> any
 OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 {
   return genericDot(term,fea,&out,TRUE);
@@ -3785,7 +3784,6 @@ static OZ_Return suspendOnInts(TaggedRef A, TaggedRef B)
    Z = X op Y
    ----------------------------------- */
 
-// COMPILE(/) inline [+float +float] -> ?+float
 // Float x Float -> Float
 OZ_Return BIfdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
@@ -3884,7 +3882,6 @@ int multOverflow(int a, int b)
   return ((b!=0) && (absa >= OzMaxInt / absb));
 }
 
-// COMPILE(*) inline [+number +number] -> ?+number
 OZ_Return BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
@@ -3916,7 +3913,6 @@ OZ_Return BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 }
 
 
-// COMPILE(-) inline [+number +number] -> ?+number
 OZ_Return BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,_11);
@@ -3939,7 +3935,6 @@ OZ_Return BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   return suspendOnNumbers(A,B);
 }
 
-// COMPILE(+) inline [+number +number] -> ?+number
 OZ_Return BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,_11);
@@ -4031,7 +4026,6 @@ OZ_Return BIabsInline(TaggedRef A, TaggedRef &out)
   oz_typeError(0,"Number");
 }
 
-// COMPILE(+1) inline [+number] -> ?+number
 // add1(X) --> X+1
 OZ_Return BIadd1Inline(TaggedRef A, TaggedRef &out)
 {
@@ -4049,7 +4043,6 @@ OZ_Return BIadd1Inline(TaggedRef A, TaggedRef &out)
   return BIplusInline(A,makeTaggedSmallInt(1),out);
 }
 
-// COMPILE(-1) inline [+number] -> ?+number
 // sub1(X) --> X-1
 OZ_Return BIsub1Inline(TaggedRef A, TaggedRef &out)
 {
@@ -4220,8 +4213,6 @@ OZ_Return BIlessInline(TaggedRef A, TaggedRef B)
 }
 
 
-// COMPILE(<) inline shallow(<Rel) [+comparable +comparable] -> ?+bool
-// COMPILE(<Rel) inline [+comparable +comparable]
 OZ_Return BIlessInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   OZ_Return ret = BIlessInline(A,B);
@@ -5937,7 +5928,6 @@ OZ_Return doAssign(SRecord *r, TaggedRef fea, TaggedRef value)
   return PROCEED;
 }
 
-// COMPILE(<-) inline [+feature value]
 OZ_Return assignInline(TaggedRef fea, TaggedRef value)
 {
   Object *self = am.getSelf();
@@ -6040,7 +6030,6 @@ OZ_BI_define(BImakeClass,5,1)
 } OZ_BI_end
 
 
-// COMPILE(,) [+class +record]
 OZ_C_proc_begin(BIcomma,2) 
 {
   oz_declareNonvarArg(0,cl);
@@ -6741,12 +6730,12 @@ OZ_BI_define(BIfinalize_setHandler,1,0)
 //	registry_put(OZ_Term,OZ_Term)
 //	registry_put(char*s,OZ_Term)
 
-extern OZ_Term system_registry;	// moved to vprops.cc
-
-OZ_BI_define(BIsystem_registry,0,1)
-{
-  OZ_RETURN(system_registry);
-} OZ_BI_end
+// extern OZ_Term system_registry;	// moved to vprops.cc
+// 
+// OZ_BI_define(BIsystem_registry,0,1)
+// {
+//   OZ_RETURN(system_registry);
+// } OZ_BI_end
 
 
 /********************************************************************
