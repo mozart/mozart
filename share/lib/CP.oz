@@ -9,3 +9,41 @@
 \insert 'FD.oz'
 \insert 'FSET.oz'
 
+\ifdef SAVE
+declare
+   CP
+in
+
+CP = cp('Search':     Search
+	'SearchOne':  SearchOne
+	'SearchAll':  SearchAll
+	'SearchBest': SearchBest
+	'FD':         FD
+	`::`
+	`:::`
+
+	`GenSum`
+	`GenSumC`
+	`GenSumCN` 
+	`PlusRel`
+	`TimesRel`
+	`Lec`
+	`Gec`
+	`Nec`
+	`Lepc`
+	`Nepc`
+	`Neq`
+	`GenSumR`
+	`GenSumCR`
+	`GenSumCNR` 
+	`::R`
+	`:::R`
+
+	`CDHeader`
+	`CDBody`
+	`GenSumCD`
+	`GenSumCCD`
+	`GenSumCNCD`
+	`::CD`
+	`:::CD`
+	
