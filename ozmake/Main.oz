@@ -103,7 +103,9 @@ prepare
       exe(single type:atom(default no yes both multi))
       makepkgfile(single type:string)
 
-      fast(single type:bool)
+      '_speed'(single type:bool default:true)
+      fast(alias:['_speed'#true])
+      slow(alias:['_speed'#false])
       )
 
    OPTLIST =
@@ -161,7 +163,7 @@ prepare
     moguldir       # set_moguldir         # true
     mogulurl       # set_mogulurl         # true
     config         # set_config_action    # false
-    fast           # set_fast             # true
+    '_speed'       # set_fast             # true
     packageversion # set_want_version     # false
    ]
       
