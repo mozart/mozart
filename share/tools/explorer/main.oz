@@ -11,8 +11,6 @@ local
    
    \insert configure.oz
 
-   \insert shapes-and-images.oz
-   
    \insert menues.oz
    
    \insert manager.oz
