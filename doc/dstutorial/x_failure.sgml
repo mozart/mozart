@@ -81,65 +81,16 @@ This is because a site crucial to the entity
 has crashed.
 This fault state is permanent.
 </LIST>
-<P>The system cannot always determine
+<P>If the entity is currently
+not working, then it is guaranteed that
+the fault state will be either <<tempFail>> or <<permFail>>.
+The system cannot always determine
 whether a fault is temporary or permanent.
 In particular, a <<tempFail>> may hide a site crash.
 However, network failures can always
 be considered temporary since the
 system actively tries
 to reestablish another connection.
-
-<P>These three fault states pertain
-to whether an entity operation can be performed locally.
-An entity can also contain additional information.
-<LIST>
-<ITEM> On at least one remote site,
-the entity is not working
-(local fault state <<remoteProblem(I)>>, where <<I>>
-identifies the remote problem).
-For example, the current site waits for a variable binding,
-but the remote site that will do the binding has crashed.
-This is a permanent remote problem.
-It never goes away.
-A temporary remote problem can go away,
-just like a <<tempFail>>.
-</LIST>
-<P>If there is a remote problem,
-then it is not always possible to
-return a <<remoteProblem>> fault state.
-For example,
-if the owner site is inaccessible
-then it might not be possible to learn
-anything about the remote sites.
-But if there is no <<tempFail>>
-or <<permFail>>, then one will always
-be able to get a <<remoteProblem>> fault state.
-
-<P>The fault state <<remoteProblem(I)>> 
-identifies four different remote problems:
-<LIST>
-<ITEM> <<I=permSome>>: At least one of the other sites
-referencing the entity has crashed.
-<ITEM> <<I=permAll>>: All of the other sites referencing
-the entity have crashed.
-<ITEM> <<I=tempSome>>: At least one of the other sites
-referencing the entity is currently unreachable.
-<ITEM> <<I=tempAll>>: All of the other sites
-referencing the entity are currently unreachable.
-</LIST>
-
-<P>The complete fault state of an
-entity consists of at most one
-element from the set
-{<<tempFail>>, <<permFail>>}
-together with at most one element from the set
-{<<remoteProblem(permSome)>>,
-<<remoteProblem(permAll)>>,
-<<remoteProblem(tempSome)>>,
-<<remoteProblem(tempAll)>>}.
-Permanent remote problems mask temporary ones,
-i.e., if <<remoteProblem<<permSome>> is detected
-then <<remoteProblem<<tempSome>> cannot be detected.
 
 
 <SUBSECTION><TITLE>Temporary faults</TITLE>
@@ -178,6 +129,63 @@ The application might then pop up a window to ask the user whether
 to continue waiting or not.
 The important thing is that the network layer does not make this decision;
 the application is completely free to decide or to let the user decide.
+
+
+<SUBSECTION><TITLE>Remote faults</TITLE>
+
+<P>The local fault states <<ok>>, <<tempFail>>,
+and <<permFail>> say
+whether an entity operation can be performed locally.
+An entity can also contain information
+about the fault states on other sites.
+For example, say the current site is waiting for a variable binding,
+but the remote site that will do the binding has crashed.
+The current site can find this out.
+The following remote problems are identified:
+<LIST>
+<ITEM> At least one of the other sites
+referencing the entity has crashed
+(fault state <<remoteProblem(permSome)>>).
+<ITEM> All of the other sites referencing
+the entity have crashed
+(fault state <<remoteProblem(permAll)>>).
+<ITEM> At least one of the other sites
+referencing the entity is currently unreachable
+(fault state <<remoteProblem(tempSome)>>).
+<ITEM> All of the other sites
+referencing the entity are currently unreachable
+(fault state <<remoteProblem(tempAll)>>).
+</LIST>
+All of these cases are identified
+by the fault state <<remoteProblem(I)>>,
+where the argument <<I>> identifies the problem.
+A permanent remote problem never goes away.
+A temporary remote problem can go away,
+just like a <<tempFail>>.
+
+<P>Even if there exists a remote problem,
+it is not always possible to
+return a <<remoteProblem>> fault state.
+For example,
+if the owner site is inaccessible
+then it might not be possible to learn
+anything about the remote sites.
+But if there is no <<tempFail>>
+or <<permFail>>, then it is always possible
+to get a <<remoteProblem>> fault state.
+
+<P>The complete fault state of an
+entity consists of at most one
+element from the set
+{<<tempFail>>, <<permFail>>}
+together with at most one element from the set
+{<<remoteProblem(permSome)>>,
+<<remoteProblem(permAll)>>,
+<<remoteProblem(tempSome)>>,
+<<remoteProblem(tempAll)>>}.
+Permanent remote problems mask temporary ones,
+i.e., if <<remoteProblem<<permSome>> is detected
+then <<remoteProblem<<tempSome>> cannot be detected.
 
 
 <SECTION><TITLE>Basic model</TITLE>
