@@ -25,6 +25,7 @@
  *
  */
 
+#include <setjmp.h>
 #include "am.hh"
 #include "gname.hh"
 
@@ -812,7 +813,28 @@ void AM::handleTasks()
   }
 }
 
+// a variable that is set to 0 or to a pointer to a procedure
+// to check the status of children processes (see contrib/os/process.cc)
+
 void (*oz_child_handle)() = 0;
+
+// The engine goes to sleep by performing an indefinite select,
+// but we also want the engine to wake up when a child process
+// terminates.  The SIGCHLD signal does interrupt the select and
+// cause it to return, but, in order for this to happen, signals
+// must be unblocked: this is the 1st point.  The 2nd point is
+// that there is a race condition: the SIGCHLD signal may be
+// delivered between the time signals are reenabled and the
+// select call is performed, in which case the engine would go
+// to sleep for ever even though we should take care of the child
+// that has terminated.  The only solution I could think of is
+// to let the SIGCHLD handler perform a longjump out of this
+// critical region.
+// * where to longjmp to is stored in global variable wake_jmp
+// * whether to longjmp is indicated by global variable use_wake_jmp
+
+sigjmp_buf wake_jmp;
+volatile int use_wake_jmp = 0;
 
 void AM::suspendEngine()
 {
@@ -830,7 +852,7 @@ void AM::suspendEngine()
   // kost@ : Alarm timer will be reset later (and we don't need to
   // disturb 'select' when we know how long to wait in it).
   // Note also that the 'SIGALRM'-based scheme for aborting indefinite
-  // waiting does not work: the singal can arrive before 'select()'...
+  // waiting does not work: the signal can arrive before 'select()'...
   osSetAlarmTimer(0);
 
   while (1) {
@@ -869,12 +891,35 @@ void AM::suspendEngine()
     //
     unsigned int sleepTime = waitTime();
 
-    //
-    osBlockSelect(sleepTime);
-    // here 'sleepTime' contains #msecs really spent in waiting;
-
-    //
-    setSFlag(IOReady);
+    // here we set up wake_jmp so that we can longjmp out of a
+    // signal handler
+    if (sigsetjmp(wake_jmp,1)==0) {
+      // indicate to certain signal handlers that they should
+      // perform a siglongjump using wake_jmp
+      use_wake_jmp=1;
+      // reenable appropriate signal handlers
+      // i.e. all since alarm is disabled anyway
+      osUnblockSignals();
+      // now perform blocking select
+      osBlockSelect(sleepTime);
+      // it returned normally
+      // we block all signals again, but it is ok if we don't make
+      // it through because a signal handler is invoked and does
+      // a siglongjump that returns to the `else' below.  Either
+      // way the engine is going to be properly woken up.
+      osBlockSignals(NO);
+      use_wake_jmp=0;
+      // here 'sleepTime' contains #msecs really spent in waiting;
+      setSFlag(IOReady);
+    } else {
+      // siglongjmp'ed out of a signal handler
+      // note that the all blocking mask has been restored
+      use_wake_jmp=0;
+      // we must compute the time spent in waiting in sleepTime
+      // since it probably didn't get a chance to be updated by
+      // returning normally from osBlockSelect
+      sleepTime=(osTotalTime() - idle_start);
+    }
 
     //
     // kost@ : we have to simulate an effect of the alarm (since no
@@ -1057,6 +1102,10 @@ void handlerCHLD()
 {
   DebugCheckT(message("a child process' state changed ****\n"));
   am.setSFlag(ChildReady);
+  if (use_wake_jmp) {
+    use_wake_jmp=0;
+    siglongjmp(wake_jmp,1);
+  }
 }
 
 void handlerFPE()
