@@ -433,35 +433,7 @@ dnl *****************************************************************
 dnl *** zlib
 dnl *****************************************************************
 
-AC_MSG_CHECKING(for --with-zlib)
-AC_ARG_WITH(zlib,
-        [--with-zlib=<dir>  search zlib library and header in <dir> (default: yes)],
-    with_zlib=$withval,
-    with_zlib=yes)
-
-if test "$with_zlib" != no
-then
-    AC_MSG_RESULT(yes)
-
-    if test "${with_zlib}" != yes
-    then
-        oz_zlib_lib_dir=$with_zlib
-        oz_zlib_inc_dir=$with_zlib
-    fi
-
-    oz_inc_path="$oz_zlib_inc_dir $oz_inc_path"
-    oz_lib_path="$oz_zlib_lib_dir $oz_lib_path"
-
-else
-    AC_MSG_RESULT(no)
-fi
-
-OZ_CHECK_HEADER_PATH(zlib.h,,
-  AC_MSG_ERROR(required zlib include file not found))
-
-OZ_CHECK_LIB_PATH(z, zlibVersion, ,
-    OZ_CHECK_LIB_PATH(gz, zlibVersion, ,
-        AC_MSG_ERROR(required zlib lib not found)))
+OZ_LIB_ZLIB
 
 dnl *****************************************************************
 dnl ccmalloc
