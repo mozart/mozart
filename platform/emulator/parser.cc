@@ -1,5 +1,5 @@
 
-/*  A Bison parser, made from /home/duchier/mozart/platform/emulator/parser.yy
+/*  A Bison parser, made from /home/kornstae/mozart/platform/emulator/parser.yy
  by  GNU Bison version 1.27
   */
 
@@ -2537,7 +2537,7 @@ case 145:
 { yyval.t = yyvsp[-1].t; ;
     break;}
 case 146:
-{ yyval.t = newCTerm(PA_fSkip,pos()); ;
+{ yyval.t = newCTerm(PA_fNoElse,pos()); ;
     break;}
 case 147:
 { checkDeprecation(yyvsp[-3].t);
