@@ -151,6 +151,30 @@ SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FDM, P_PFDVAR, PFDVAR, ENGINE>::filt
   if (nb_failed_clauses == 3) {
     goto failure;
   }
+  // step 3.c
+  //   a clause is entailed if no prop fncts are left and
+  //   the basic constraints are subsumed
+  if (engine_cl1.hasNoPropsLeft() &&
+      x_init_card <= cl1_t1->getSize() &&
+      y_init_card <= cl1_t2->getSize() &&
+      o_init_card <= cl1_o->getSize()) {
+    CDM(("cl1 entailed\n"));
+    goto vanish;
+  }
+  if (engine_cl2.hasNoPropsLeft() &&
+      x_init_card <= cl2_t1->getSize() &&
+      y_init_card <= cl2_t2->getSize() &&
+      o_init_card <= cl2_o->getSize()) {
+    CDM(("cl2 entailed\n"));
+    goto vanish;
+  }
+  if (engine_cl3.hasNoPropsLeft() &&
+      x_init_card <= cl3_t1->getSize() &&
+      y_init_card <= cl3_t2->getSize() &&
+      o_init_card <= cl3_o->getSize()) {
+    CDM(("cl3 entailed\n"));
+    goto vanish;
+  }
   // 3.b step
   if (nb_failed_clauses == 2) {
     if (!engine_cl1.isFailed()) {
@@ -184,30 +208,6 @@ SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FDM, P_PFDVAR, PFDVAR, ENGINE>::filt
     }
     CDM(("oops 1\n"));
   } // step 3.b
-  // step 3.c
-  //   a clause is entailed if no prop fncts are left and
-  //   the basic constraints are subsumed
-  if (engine_cl1.hasNoPropsLeft() &&
-      x_init_card <= cl1_t1->getSize() &&
-      y_init_card <= cl1_t2->getSize() &&
-      o_init_card <= cl1_o->getSize()) {
-    CDM(("cl1 entailed\n"));
-    goto vanish;
-  }
-  if (engine_cl2.hasNoPropsLeft() &&
-      x_init_card <= cl2_t1->getSize() &&
-      y_init_card <= cl2_t2->getSize() &&
-      o_init_card <= cl2_o->getSize()) {
-    CDM(("cl2 entailed\n"));
-    goto vanish;
-  }
-  if (engine_cl3.hasNoPropsLeft() &&
-      x_init_card <= cl3_t1->getSize() &&
-      y_init_card <= cl3_t2->getSize() &&
-      o_init_card <= cl3_o->getSize()) {
-    CDM(("cl3 entailed\n"));
-    goto vanish;
-  }
   CDM(("propagation fix-point reached\n"));
   //  printf("gaga %s",(*s).toString());
   CDM(("leaving\n"));
