@@ -180,18 +180,18 @@ local
    in
       fun {CompileScanner Flex T Rep}
 	 case Flex of noLexer then noLexer
-	 else FlexFile = {MakeFileName T ".l"} in
+	 else FlexFile = {MakeFileNameGumpdir T ".l"} in
 	    {Rep startSubPhase('writing flex input file')}
 	    {WriteVSFile Flex FlexFile}
 	    {Rep startSubPhase('generating scanner tables')}
 	    case {InvokeFlex FlexFile Rep} of 0 then
 	       PLATFORM = {GetTargetPlatform Rep}
 	       Cmd1 = ({OZTOOL}#' c++ '#{OZTOOLINC}#
-		       ' -c '#{MakeFileName T ".C"}#
-		       ' -o '#{MakeFileName T ".o"})
+		       ' -c '#{MakeFileNameGumpdir T ".C"}#
+		       ' -o '#{MakeFileNameGumpdir T ".o"})
 	       Cmd2 = ({OZTOOL}#' ld '#
-		       ' -o '#{MakeFileName T ".so"}#'-'#PLATFORM#' '#
-		       {MakeFileName T ".o"})
+		       ' -o '#{MakeFileNameGumpdir T ".so"}#'-'#PLATFORM#' '#
+		       {MakeFileNameGumpdir T ".o"})
 	       Exit1 Exit2
 	    in
 	       {Rep startSubPhase('compiling scanner')}
@@ -537,7 +537,7 @@ in
 	    fSkip(unit)
 	 else Flex Local Locals LexMeth MakeLexer in
 	    {Rep startSubPhase('extracting lexical rules')}
-	    {Globals generate(Globals {MakeFileName T ".C"}
+	    {Globals generate(Globals {MakeFileNameGumpdir T ".C"}
 			      ?Flex ?Local|?Locals ?LexMeth)}
 	    MakeLexer = {CompileScanner Flex T Rep}
 	    case MakeLexer of stop then
