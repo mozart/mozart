@@ -104,6 +104,8 @@ public:
   void addSuspendVarList(TaggedRef * t);
   void suspendOnVarList(Thread *thr);
 
+  TaggedRef exception;
+
   void suspendInline(int n,
                      OZ_Term A,OZ_Term B=makeTaggedNULL(),OZ_Term C=makeTaggedNULL());
 
@@ -210,8 +212,8 @@ public:
   Bool isLocalCVar(TaggedRef var);
   Bool isLocalVariable(TaggedRef var);
 
-  void pushCall(Chunk *def, int arity, RefsArray args);
-  void pushDebug(Chunk *def, int arity, RefsArray args);
+  void pushCall(TaggedRef def, int arity, RefsArray args);
+  void pushDebug(TaggedRef def, int arity, RefsArray args);
   void pushTask(ProgramCounter pc,
                 RefsArray y,RefsArray g,RefsArray x=0,int i=0);
   void pushTaskOutline(ProgramCounter pc,
