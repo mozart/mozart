@@ -223,7 +223,7 @@ OZ_MetaType OZ_introMetaTerm(OZ_UnifyMetaDet unify_md,
 			    char * name_m)
 {
   return OZ_MetaType(::new MetaTag(unify_md, unify_mm,
-				   print_m, sgl_val_m, strdup(name_m)));
+				   print_m, sgl_val_m, ozstrdup(name_m)));
 }
 
 OZ_Term OZ_makeMetaTerm(OZ_MetaType t, OZ_Term d)

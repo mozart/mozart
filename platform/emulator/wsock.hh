@@ -19,7 +19,6 @@
 #define NOMINMAX
 #define Bool WinBool
 
-#define NOGDI
 #include <windows.h>
 #undef FAILED /* used in oz.h as well */
 

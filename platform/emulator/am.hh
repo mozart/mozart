@@ -12,10 +12,10 @@
 #ifndef __AMH
 #define __AMH
 
-#if !defined(OUTLINE)
-#define INLINE inline
-#else
+#if defined(OUTLINE)
 #define INLINE
+#else
+#define INLINE inline
 #endif
 
 #ifdef INTERFACE

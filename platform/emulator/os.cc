@@ -24,8 +24,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifdef _MSC_VER
+#define OPEN_MAX  20 /* !!!!!!!!!!!! */
+#endif
+
 #ifdef WINDOWS
 #include <time.h>
+#include <process.h>
 #else
 #include <sys/times.h>
 #include <sys/wait.h>
@@ -139,7 +144,9 @@ static
 OsSigFun *osSignal(int signo, OsSigFun *fun)
 {
 #ifdef WINDOWS
+#ifndef _MSC_VER
   signal(signo,(__sig_func)fun);
+#endif
   return NULL;
 #else
   struct sigaction act, oact;
@@ -720,4 +727,22 @@ int ossocket(int domain, int type, int protocol)
   if (ret >= 0)
     FD_SET(ret,&isSocket);
   return ret;
+}
+
+void ossleep(int secs)
+{
+#ifdef WINDOWS
+  Sleep(secs*1000);
+#else
+  sleep(secs);
+#endif
+}
+
+int osgetpid()
+{
+#ifdef WINDOWS
+  return 4711;
+#else
+  return getpid();
+#endif
 }
