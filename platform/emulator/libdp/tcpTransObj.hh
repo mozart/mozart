@@ -29,7 +29,7 @@ public:
 
   void setSite(DSite *site);
   void setOwner(ComObj *comObj);
-  void setUp(DSite *site,ComObj *comObj,OZ_Term settings);
+  OZ_Return setUp(DSite *site,ComObj *comObj,OZ_Term settings);
 
   Bool hasEmptyBuffers();
 

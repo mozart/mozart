@@ -29,7 +29,7 @@ public:
 
   virtual void setSite(DSite *site)=0;
   virtual void setOwner(ComObj *comObj)=0;
-  virtual void setUp(DSite *site,ComObj *comObj,OZ_Term settings)=0;
+  virtual OZ_Return setUp(DSite *site,ComObj *comObj,OZ_Term settings)=0;
 
   virtual Bool hasEmptyBuffers()=0;
 

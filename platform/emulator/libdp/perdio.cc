@@ -76,8 +76,8 @@ int  globalOSWriteCounter = 0;
 int  globalOSReadCounter = 0;
 int  globalContCounter = 0;
 
-OZ_Term defaultAcceptProcedure = 0;
-OZ_Term defaultConnectionProcedure = 0;
+extern OZ_Term defaultAcceptProcedure;
+extern OZ_Term defaultConnectionProcedure ;
 /* *********************************************************************/
 /*   init;                                                             */
 /* *********************************************************************/

@@ -177,7 +177,7 @@ Bool ComObj::openTimerExpired() {
     }
     else {
       PD((TCP_INTERFACE,"opentimerexpired with no need or remoteref %x",this));
-      printf("opentimerexpired %x\n",this);
+      printf("opentimerexpired %p\n",this);
       close(CLOSED);
     }
   }

@@ -63,8 +63,10 @@
 #ifdef USE_VS_MSGBUFFERS
 #include "virtual.hh"
 #endif
+
 OZ_Term defaultAcceptProcedure = 0;
 OZ_Term defaultConnectionProcedure = 0;
+
 extern
 int raiseUnixError(char *f,int n, char * e, char * g);
 
