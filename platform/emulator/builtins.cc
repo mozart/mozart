@@ -3189,12 +3189,17 @@ OZ_Return applyProc(TaggedRef proc, TaggedRef args)
   }
 
   int len = OZ_length(args);
-  RefsArray * argsArray = RefsArray::allocate(len,NO);
-  for (int i=0; i < len; i++) {
-    argsArray->setArg(i,OZ_head(args));
-    args=OZ_tail(args);
+  RefsArray * argsArray;
+  if (len) {
+    argsArray = RefsArray::allocate(len,NO);
+    for (int i=0; i < len; i++) {
+      argsArray->setArg(i,OZ_head(args));
+      args=OZ_tail(args);
+    }
+    Assert(OZ_isNil(args));
+  } else {
+    argsArray = (RefsArray *) 0;
   }
-  Assert(OZ_isNil(args));
 
   if (!oz_isProcedure(proc) && !oz_isObject(proc)) {
     oz_typeError(0,"Procedure or Object");
