@@ -74,7 +74,7 @@ Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy)
     Assert(!prop->getPropagator()->isMonotonic());
 
     WAKEUP_PROPAGATOR(prop->markRunnable();
-                      am.currentBoard()->addToNonMonoSuspList(prop));
+                      am.currentBoard()->addToNonMono(prop));
   }
 
   if (localPropStore.isUseIt()) {

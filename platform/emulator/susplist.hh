@@ -95,6 +95,7 @@ public:
 
   OrderedSuspList(Propagator * p, OrderedSuspList * l) :  _p(p), _n(l) {}
   OrderedSuspList * insert(Propagator *);
+  OrderedSuspList * merge(OrderedSuspList *);
   OZPRINT;
   OrderedSuspList * gc(void);
   OrderedSuspList * getNext(void) const { return _n; }

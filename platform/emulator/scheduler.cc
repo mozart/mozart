@@ -54,7 +54,7 @@ void oz_checkStability()
     // all possible reduction steps require this;
 
     // check for nonmonotonic propagators
-    oz_solve_scheduleNonMonoSuspList(solveBB);
+    solveBB->scheduleNonMono();
     if (!solveBB->isStable())
       return;
 

@@ -36,17 +36,9 @@ Bool oz_installScript(Script &script);
 
 InstType oz_installPath(Board *to);
 Bool oz_install(Board *bb);
-void oz_reduceTrailOnUnitCommit();
 void oz_reduceTrailOnSuspend();
 void oz_reduceTrailOnFail();
 void oz_reduceTrailOnEqEq();
-
-void oz_checkExtSuspension(Suspension susp, Board * home);
-
-#define CheckExtSuspension(susp)               \
-  if (((Suspension)susp).wasExtSuspension()) { \
-    GETBOARDOBJ((Suspension) susp)->checkSolveThreads();   \
-  }
 
 
 /* -------------------------------------------------------------------------

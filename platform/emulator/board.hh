@@ -98,6 +98,13 @@ public:
 private:
   int flags;
 
+  void setCommitted() { flags |= Bo_Committed;  }
+  void setCloneBoard() { flags |= Bo_Clone;      }
+  void setGlobalMark() { flags |= Bo_GlobalMark; }
+
+  void unsetGlobalMark() { flags &= ~Bo_GlobalMark; }
+  void unsetCloneBoard() { flags &= ~Bo_Clone;      }
+
 public:
   Bool isCommitted()    { return flags & Bo_Committed;  }
   Bool isFailed()       { return flags & Bo_Failed;     }
@@ -109,12 +116,8 @@ public:
   void setRoot()       { flags |= Bo_Root;       }
   void setInstalled()  { flags |= Bo_Installed;  }
   void setFailed()     { flags |= Bo_Failed;     }
-  void setGlobalMark() { flags |= Bo_GlobalMark; }
-  void setCloneBoard() { flags |= Bo_Clone;      }
 
   void unsetInstalled()  { flags &= ~Bo_Installed;  }
-  void unsetGlobalMark() { flags &= ~Bo_GlobalMark; }
-  void unsetCloneBoard() { flags &= ~Bo_Clone;      }
 
 
   //
@@ -185,11 +188,6 @@ private:
   Board * parent;
 
 public:
-  void setCommittedBoard(Board *s) {
-    Assert(!isInstalled() && !isCommitted());
-    flags |= Bo_Committed;
-    parent = s;
-  }
   Board *derefBoard() {
     Board *bb;
     for (bb=this; bb->isCommitted(); bb=bb->parent) {}
@@ -250,7 +248,6 @@ public:
   void setLocalPropagatorQueue(LocalPropagatorQueue * lpq) {
     localPropagatorQueue = lpq;
   }
-
   void resetLocalPropagatorQueue(void);
 
   //
@@ -261,17 +258,14 @@ private:
   OrderedSuspList * nonMonoSuspList;
 
 public:
-  void setNonMonoSuspList(OrderedSuspList * l) {
+  void setNonMono(OrderedSuspList * l) {
     nonMonoSuspList = l;
   }
-  OrderedSuspList *getNonMonoSuspList() {
+  OrderedSuspList *getNonMono() {
     return nonMonoSuspList;
   }
-
-  void addToNonMonoSuspList(Propagator *);
-  void mergeNonMonoSuspListWith(OrderedSuspList *);
-
-  void mergeNonMono(Board *bb);
+  void addToNonMono(Propagator *);
+  void scheduleNonMono(void);
 
   //
   // distributors
@@ -280,24 +274,22 @@ private:
   DistBag   *bag;
 
 public:
-  void addDistributor(Distributor * d) {
-    bag = bag->add(d);
-  }
-  void mergeDistributors(DistBag * db) {
-    bag = bag->merge(db);
-  }
-  DistBag * getBag() {
+  DistBag * getDistBag(void) {
     return bag;
   }
-
+  void setDistBag(DistBag * db) {
+    bag = db;
+  }
+  void addToDistBag(Distributor * d);
   void cleanDistributors(void);
   Distributor * getDistributor(void);
 
   //
   // Operations
   //
-  int commit(int left, int right);
-  void inject(TaggedRef proc);
+  int commit(int, int);
+  void inject(TaggedRef);
+  TaggedRef merge(Board *, Bool);
 
   //
   // Status variable
@@ -364,7 +356,12 @@ public:
 
 };
 
-void oz_solve_scheduleNonMonoSuspList(Board *);
+void oz_checkExtSuspension(Suspension, Board *);
+
+#define CheckExtSuspension(susp)               \
+  if (((Suspension)susp).wasExtSuspension()) { \
+    GETBOARDOBJ((Suspension) susp)->checkSolveThreads();   \
+  }
 
 #ifndef OUTLINE
 #include "board.icc"

@@ -2337,11 +2337,24 @@ public:
   Space(Board *h, Board *s) : Tertiary(h,Co_Space,Te_Local), solve(s) {};
   Space(int i, TertType t) : Tertiary(i,Co_Space,t) {}
 
-  Board *getSolveBoard() { return solve; }
-  void  merge() { solve = (Board *) 1; }
-  Bool isFailed();
-  Bool isMerged();
+  Bool isMarkedFailed(void) {
+    return !solve;
+  }
+
+  Bool isMarkedMerged(void) {
+    return (solve == (Board *) 1) ? OK : NO;
+  }
+
+  Board * getSpace(void) {
+    return solve;
+  }
+
+  void  markMerged(void) {
+    solve = (Board *) 1;
+  }
+
 };
+
 
 
 inline
@@ -2350,12 +2363,6 @@ Bool oz_isSpace(TaggedRef term)
   return oz_isConst(term) && tagged2Const(term)->getType() == Co_Space;
 }
 
-inline
-Space *tagged2Space(TaggedRef term)
-{
-  Assert(oz_isSpace(term));
-  return (Space *) tagged2Const(term);
-}
 
 /*===================================================================
  * PendThread  (only used for locks in centralized mozart

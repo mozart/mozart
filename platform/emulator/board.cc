@@ -104,30 +104,49 @@ Board::Board(Board * p)
 #endif
 }
 
+/*
+ * Routines for checking suspensions
+ *
+ */
 
+void oz_checkExtSuspension(Suspension susp, Board * varHome) {
 
-inline
-void Board::inject(TaggedRef proc) {
-  // thread creation for {proc root}
-  RefsArray args = allocateRefsArray(1, NO);
-  args[0] = getRootVar();
+  varHome=varHome->derefBoard();
 
-  Thread *it = oz_newThreadInject(this);
-  it->pushCall(proc, args, 1);
+  Board * bb = oz_currentBoard();
+
+  Bool wasFound = NO;
+
+  Assert(!varHome->isCommitted());
+
+  while (bb != varHome) {
+    Assert (!oz_isRootBoard(bb));
+    Assert (!bb->isCommitted() && !bb->isFailed());
+
+    bb->addSuspension(susp);
+    wasFound = OK;
+
+    bb = bb->getParent();
+  }
+
+  if (wasFound)
+    susp.setExtSuspension();
+
 }
 
-
 static
-Bool extParameters(OZ_Term list, Board * solve_board)
-{
-  while (OZ_isCons(list)) {
-    OZ_Term h = OZ_head(list);
+Bool extParameters(TaggedRef list, Board * solve_board) {
+
+  list = oz_deref(list);
+
+  while (oz_isCons(list)) {
+    TaggedRef h = oz_head(list);
 
     Bool found = FALSE;
 
-    if (OZ_isVariable(h)) {
+    DEREF(h, hptr, htag);
 
-      DEREF(h, hptr, htag);
+    if (oz_isVariable(h)) {
 
       Assert(!isUVar(htag));
 
@@ -142,21 +161,19 @@ Bool extParameters(OZ_Term list, Board * solve_board)
         if (tmp->isFailed())
           return FALSE;
 
-        tmp = tmp->derefBoard();
-
         if (tmp == home) {
           found = TRUE;
           break;
         }
       } while (!tmp->isRoot());
 
-    } else if (OZ_isCons(h)) {
+    } else if (oz_isCons(h)) {
       found = extParameters(h, solve_board);
     }
 
     if (found) return TRUE;
 
-    list = OZ_tail(list);
+    list = oz_tail(oz_deref(list));
   } // while
   return FALSE;
 }
@@ -231,6 +248,73 @@ void Board::clearSuspList(Suspension killSusp) {
 }
 
 
+/*
+ * Implementation of space operations
+ */
+
+inline
+void Board::inject(TaggedRef proc) {
+  // thread creation for {proc root}
+  RefsArray args = allocateRefsArray(1, NO);
+  args[0] = getRootVar();
+
+  Thread *it = oz_newThreadInject(this);
+  it->pushCall(proc, args, 1);
+}
+
+inline
+TaggedRef Board::merge(Board *bb, Bool sibling) {
+  // this is the board that gets merged
+  //   --- it is merged with bb
+
+  // First the things that must done even for merging with root board
+
+  // Merge propagators
+  bb->setLocalPropagatorQueue(getLocalPropagatorQueue()->
+                              merge(bb->getLocalPropagatorQueue()));
+
+  // Mark as merged
+  parent = bb;
+  setCommitted();
+
+  // Must be before script installation
+  bb->incSuspCount(getSuspCount());
+
+  // Merge constraints
+  if (!oz_installScript(this->getScriptRef()))
+    return makeTaggedNULL();
+
+  Assert(oz_isCurrentBoard(bb));
+
+  if (bb->isRoot()) {
+    scheduleNonMono();
+  } else {
+    // Update counters
+    if (sibling)
+      bb->incThreads(getThreads());
+
+    // Merge distributors
+    bb->setDistBag(bb->getDistBag()->merge(getDistBag()));
+
+    // Merge nonmonotonic propagators
+    bb->setNonMono(bb->getNonMono()->merge(getNonMono()));
+
+  }
+
+  return getRootVar();
+}
+
+inline
+int Board::commit(int left, int right) {
+  ozstat.incSolveAlt();
+
+  Assert(bag && bag->getDist()->isAlive());
+
+  return bag->getDist()->commit(this,left,right);
+
+}
+
+
 
 //
 // Status variable
@@ -272,25 +356,12 @@ TaggedRef Board::genUnstable(TaggedRef arg) {
   return makeTaggedSRecord(stuple);
 }
 
-//-----------------------------------------------------------------------------
-// support for nonmonotonic propagators
-
-void Board::addToNonMonoSuspList(Propagator * prop)
-{
-  nonMonoSuspList = nonMonoSuspList->insert(prop);
-}
-
-void Board::mergeNonMonoSuspListWith(OrderedSuspList * p)
-{
-  for (; p != NULL; p = p->getNext())
-    nonMonoSuspList = nonMonoSuspList->insert(p->getPropagator());
-}
 
 //-----------------------------------------------------------------------------
 
-void oz_solve_scheduleNonMonoSuspList(Board * b) {
+void Board::scheduleNonMono(void) {
 
-  for (OrderedSuspList * p = b->getNonMonoSuspList();
+  for (OrderedSuspList * p = getNonMono();
        p != NULL;
        p = p->getNext()) {
     Propagator * prop = p->getPropagator();
@@ -298,17 +369,18 @@ void oz_solve_scheduleNonMonoSuspList(Board * b) {
     oz_pushToLPQ(GETBOARD(prop),prop);
   }
 
-  b->setNonMonoSuspList(NULL);
+  setNonMono(NULL);
 
 }
 
 
 
-// ---------------------------------------------------------------------
+//
 // First class spaces (the builtin interface)
-// ---------------------------------------------------------------------
+//
 
-#define declareSpace()                                  \
+
+#define declareSpace                            \
   OZ_Term tagged_space = OZ_in(0);                      \
   DEREF(tagged_space, space_ptr, space_tag);            \
   if (isVariableTag(space_tag))                         \
@@ -317,36 +389,9 @@ void oz_solve_scheduleNonMonoSuspList(Board * b) {
     oz_typeError(0, "Space");                           \
   Space *space = (Space *) tagged2Const(tagged_space);
 
-
-
-inline
-OZ_Term oz_solve_merge(Board *solveBoard, Board *bb, int sibling) {
-
-  bb->setLocalPropagatorQueue(solveBoard->
-                              getLocalPropagatorQueue()->
-                              merge(bb->getLocalPropagatorQueue()));
-  solveBoard->setCommittedBoard(bb);
-  bb->incSuspCount(solveBoard->getSuspCount());
-
-  if (!oz_installScript(solveBoard->getScriptRef())) {
-    return makeTaggedNULL();
-  }
-
-  Assert(oz_isCurrentBoard(bb));
-
-  if (!bb->isRoot()) {
-    bb->mergeDistributors(solveBoard->getBag());
-
-    if (sibling)
-      bb->incThreads(solveBoard->getThreads());
-
-    solveBoard->mergeNonMono(bb);
-  }
-
-
-  return solveBoard->getRootVar();
-}
-
+#define isFailedSpace \
+  (space->isMarkedFailed() || \
+   (space->isMarkedMerged() ? NO : space->getSpace()->isFailed()))
 
 OZ_BI_define(BInewSpace, 1,1) {
   OZ_Term proc = OZ_in(0);
@@ -387,15 +432,15 @@ OZ_BI_define(BIisSpace, 1,1) {
 
 
 OZ_BI_define(BIaskSpace, 1,1) {
-  declareSpace();
+  declareSpace;
 
-  if (space->isFailed())
+  if (isFailedSpace)
     OZ_RETURN(AtomFailed);
 
-  if (space->isMerged())
+  if (space->isMarkedMerged())
     OZ_RETURN(AtomMerged);
 
-  TaggedRef answer = space->getSolveBoard()->getResult();
+  TaggedRef answer = space->getSpace()->getResult();
 
   DEREF(answer, answer_ptr, answer_tag);
 
@@ -411,16 +456,16 @@ OZ_BI_define(BIaskSpace, 1,1) {
 
 
 OZ_BI_define(BIaskVerboseSpace, 2,0) {
-  declareSpace();
+  declareSpace;
   oz_declareIN(1,out);
 
-  if (space->isFailed())
+  if (isFailedSpace)
     return oz_unify(out, AtomFailed);
 
-  if (space->isMerged())
+  if (space->isMarkedMerged())
     return oz_unify(out, AtomMerged);
 
-  if (space->getSolveBoard()->isBlocked()) {
+  if (space->getSpace()->isBlocked()) {
     SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
     stuple->setArg(0, am.currentUVarPrototype());
 
@@ -430,7 +475,7 @@ OZ_BI_define(BIaskVerboseSpace, 2,0) {
     OZ_in(1) = stuple->getArg(0);
   }
 
-  TaggedRef answer = space->getSolveBoard()->getResult();
+  TaggedRef answer = space->getSpace()->getResult();
 
   DEREF(answer, answer_ptr, answer_tag);
 
@@ -442,16 +487,16 @@ OZ_BI_define(BIaskVerboseSpace, 2,0) {
 
 
 OZ_BI_define(BIaskUnsafeSpace, 2,0) {
-  declareSpace();
+  declareSpace;
   oz_declareIN(1,out);
 
-  if (space->isFailed())
+  if (isFailedSpace)
     return oz_unify(out, AtomFailed);
 
-  if (space->isMerged())
+  if (space->isMarkedMerged())
     return oz_unify(out, AtomMerged);
 
-  if (space->getSolveBoard()->isBlocked()) {
+  if (space->getSpace()->isBlocked()) {
     SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
     stuple->setArg(0, am.currentUVarPrototype());
 
@@ -461,24 +506,24 @@ OZ_BI_define(BIaskUnsafeSpace, 2,0) {
     OZ_in(1) = stuple->getArg(0);
   }
 
-  TaggedRef answer = space->getSolveBoard()->getResult();
+  TaggedRef answer = space->getSpace()->getResult();
 
   return oz_unify(OZ_in(1), answer);
 } OZ_BI_end
 
 
 OZ_BI_define(BImergeSpace, 1,1) {
-  declareSpace();
+  declareSpace;
 
-  if (space->isMerged())
+  if (space->isMarkedMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
 
-  if (space->isFailed())
+  if (isFailedSpace)
     return FAILED;
 
   Board *CBB = oz_currentBoard();
-  Board *SBB = space->getSolveBoard()->derefBoard();
-  Board *SBP = SBB->getParent()->derefBoard();
+  Board *SBB = space->getSpace()->derefBoard();
+  Board *SBP = SBB->getParent();
 
   /* There can be two different situations during merging:
    *  1) SBB is subordinated to CBB:          CBB  <-+
@@ -495,8 +540,8 @@ OZ_BI_define(BImergeSpace, 1,1) {
 
   Assert(CBB == CBB->derefBoard());
 
-  Bool isSibling = (!oz_isRootBoard(CBB) &&
-                    CBB->getParent()->derefBoard() == SBP &&
+  Bool isSibling = (!CBB->isRoot() &&
+                    CBB->getParent() == SBP &&
                     CBB != SBB);
 
   if (!isSibling && CBB != SBP)
@@ -504,7 +549,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
 
   Assert(!oz_isBelow(CBB,SBB));
 
-  TaggedRef result = space->getSolveBoard()->getResult();
+  TaggedRef result = space->getSpace()->getResult();
 
   if (result == makeTaggedNULL())
     return FAILED;
@@ -517,7 +562,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
       case INST_OK: break;
       }
 
-      if (oz_unify(result, AtomMerged) == FAILED) // mm2
+      if (oz_unify(result, AtomMerged) == FAILED)
         return FAILED;
 
       switch (oz_installPath(CBB)) {
@@ -526,14 +571,15 @@ OZ_BI_define(BImergeSpace, 1,1) {
       }
 
     } else {
-      if (oz_unify(result, AtomMerged) == FAILED) // mm2
+      if (oz_unify(result, AtomMerged) == FAILED)
         return FAILED;
     }
+
   }
 
 
-  TaggedRef root = oz_solve_merge(space->getSolveBoard(), CBB, isSibling);
-  space->merge();
+  TaggedRef root = space->getSpace()->merge(CBB, isSibling);
+  space->markMerged();
 
   if (root == makeTaggedNULL())
     return FAILED;
@@ -543,17 +589,17 @@ OZ_BI_define(BImergeSpace, 1,1) {
 
 
 OZ_BI_define(BIcloneSpace, 1,1) {
-  declareSpace();
+  declareSpace;
 
-  if (space->isMerged())
+  if (space->isMarkedMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
 
   Board* CBB = oz_currentBoard();
 
-  if (space->isFailed())
+  if (isFailedSpace)
     OZ_RETURN(makeTaggedConst(new Space(CBB, (Board *) 0)));
 
-  TaggedRef result = space->getSolveBoard()->getResult();
+  TaggedRef result = space->getSpace()->getResult();
 
   DEREF(result, result_ptr, result_tag);
 
@@ -562,7 +608,7 @@ OZ_BI_define(BIcloneSpace, 1,1) {
 
   ozstat.incSolveCloned();
 
-  Board * copy = (Board *) space->getSolveBoard()->clone();
+  Board * copy = (Board *) space->getSpace()->clone();
 
 #ifdef CS_PROFILE
   copy->orig_start = cs_orig_start;
@@ -575,16 +621,16 @@ OZ_BI_define(BIcloneSpace, 1,1) {
 
 
 OZ_BI_define(BIcommitSpace, 2,0) {
-  declareSpace();
+  declareSpace;
   oz_declareIN(1,choice);
 
-  if (space->isMerged())
+  if (space->isMarkedMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
 
-  if (space->isFailed())
+  if (isFailedSpace)
     return PROCEED;
 
-  TaggedRef result = space->getSolveBoard()->getResult();
+  TaggedRef result = space->getSpace()->getResult();
 
   DEREF(result, result_ptr, result_tag);
   if (isVariableTag(result_tag))
@@ -620,10 +666,10 @@ OZ_BI_define(BIcommitSpace, 2,0) {
     oz_typeError(1, "Integer or pair of integers");
   }
 
-  if (!oz_isCurrentBoard(space->getSolveBoard()->getParent()))
+  if (!oz_isCurrentBoard(space->getSpace()->getParent()))
     return oz_raise(E_ERROR,E_KERNEL,"spaceParent",1,tagged_space);
 
-  Board * sb = space->getSolveBoard()->derefBoard();
+  Board * sb = space->getSpace()->derefBoard();
 
   Distributor * d = sb->getDistributor();
 
@@ -648,17 +694,17 @@ OZ_BI_define(BIcommitSpace, 2,0) {
 
 OZ_BI_define(BIinjectSpace, 2,0)
 {
-  declareSpace();
+  declareSpace;
   oz_declareIN(1,proc);
 
-  if (space->isMerged())
+  if (space->isMarkedMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
 
   // Check whether space is failed!
-  if (space->isFailed())
+  if (isFailedSpace)
     return PROCEED;
 
-  if (!oz_isCurrentBoard(space->getSolveBoard()->getParent()))
+  if (!oz_isCurrentBoard(space->getSpace()->getParent()))
     return oz_raise(E_ERROR,E_KERNEL,"spaceParent", 1, tagged_space);
 
   DEREF(proc, proc_ptr, proc_tag);
@@ -669,7 +715,7 @@ OZ_BI_define(BIinjectSpace, 2,0)
   if (!oz_isProcedure(proc))
     oz_typeError(1, "Procedure");
 
-  Board *sb = space->getSolveBoard();
+  Board *sb = space->getSpace();
 
   // clear status
   sb->clearResult();
@@ -679,6 +725,13 @@ OZ_BI_define(BIinjectSpace, 2,0)
 
   return BI_PREEMPT;
 } OZ_BI_end
+
+
+inline
+void Board::addToDistBag(Distributor * d) {
+  setDistBag(getDistBag()->add(d));
+}
+
 
 
 OZ_BI_define(BIregisterSpace, 1, 1) {
@@ -691,7 +744,7 @@ OZ_BI_define(BIregisterSpace, 1, 1) {
   } else {
     BaseDistributor * bd = new BaseDistributor(bb,i);
 
-    bb->addDistributor(bd);
+    bb->addToDistBag(bd);
 
     OZ_out(0) = bd->getVar();
   }
@@ -744,12 +797,12 @@ TaggedRef Board::getCloneDiff(void) {
 }
 
 OZ_BI_define(BIgetCloneDiff, 1,1) {
-  declareSpace();
+  declareSpace;
 
-  if (space->isMerged())
+  if (space->isMarkedMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
 
-  OZ_RETURN(space->getSolveBoard()->getCloneDiff());
+  OZ_RETURN(space->getSpace()->getCloneDiff());
 } OZ_BI_end
 
 #endif
