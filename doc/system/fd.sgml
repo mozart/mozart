@@ -728,7 +728,11 @@ The operational semantics is defined analogously to <<FD.sumAC>>.
 >>>
 <item>
 creates a propagator analogous to <<FD.sum>> but performs
-<em>domain-consistent</em> propagation.
+<em>domain-consistent</em> propagation. Note that only equality
+(?_{A} is <<'=:'>>) and disequality (?_{A} is <<'\=:'>>) are
+supported, as for inequalities domain and bounds propagation are
+equivalent.
+
 
 <entry>
 <index class=module/FD<and>sumCD/
@@ -739,7 +743,10 @@ creates a propagator analogous to <<FD.sum>> but performs
 >>>
 <item>
 creates a propagator analogous to <<FD.sumC>> but performs
-<em>domain-consistent</em> propagation.
+<em>domain-consistent</em> propagation. Note that only equality
+(?_{A} is <<'=:'>>) and disequality (?_{A} is <<'\=:'>>) are
+supported, as for inequalities domain and bounds propagation are
+equivalent.
 </list>
 </section>
 
