@@ -8,6 +8,7 @@ functor prop once
 import
    MOD @ 'gdbm.so{native}'
    Finalize
+   Error ErrorRegistry
 export
    'class': GDBM
 define
@@ -21,7 +22,7 @@ define
       FirstKey   = MOD.firstkey
       NextKey    = MOD.nextkey
       Close      = MOD.close
-      Error      = MOD.error
+      ERROR      = MOD.error
       Delete     = MOD.delete
       Reorganize = MOD.reorganize
       BitOr      = MOD.bitor
@@ -107,6 +108,39 @@ define
             else raise reorganizeFailed end
             end
          end
+      end
+      %%
+      %% Error Handlers
+      %%
+      local
+         fun {GdbmFormatter Exc}
+            E = {Error.dispatch Exc}
+            T = 'GDBM Error'
+         in
+            case E
+            of gdbm(Proc Errno Arg) then
+               case Errno
+               of alreadyClosed then
+                  {Error.format T
+                   'Database already closed'
+                   [hint(l:'Operation' m:Proc)]
+                   Exc}
+               elsecase {IsInt Errno} then
+                  Msg = {ERROR Errno}
+               in
+                  {Error.format T Msg
+                   [hint(l:'Operation' m:Proc)
+                    hint(l:'Using'     m:Arg)]
+                   Exc}
+               else
+                  {Error.formatGeneric T Exc}
+               end
+            else
+               {Error.formatGeneric T Exc}
+            end
+         end
+      in
+         {ErrorRegistry.put gdbm GdbmFormatter}
       end
    end
 end

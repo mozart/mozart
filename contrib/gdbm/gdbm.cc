@@ -98,7 +98,7 @@ OZ_BI_define(cgdbm_open,4,1)
   file = gdbm_open(c_name,c_block,z_flags,c_mode,NULL);
   free(c_name);
   if (file==NULL)
-    return OZ_raiseC("gdbm",1,OZ_int(gdbm_errno));
+    return OZ_raiseErrorC("gdbm",3,OZ_atom("open"),OZ_int(gdbm_errno),name);
   else {
     OZ_Term chunk = OZ_makeHeapChunk(sizeof(GDBM_FILE));
     char* s       = (char*) OZ_getHeapChunkData(chunk);
@@ -130,12 +130,13 @@ term2datum(OZ_Term in,datum& dat)
   return r;
 }
 
-#define CHECK_GDBM(x) {                                         \
+#define CHECK_GDBM(meth,x) {                                    \
   if (!OZ_isChunk(x)                                            \
       || OZ_getHeapChunkSize(x)!=sizeof(GDBM_FILE))             \
     return OZ_typeError(0,"HeapChunk(GDBM_FILE)");              \
   if (*(GDBM_FILE*)OZ_getHeapChunkData(x)==(GDBM_FILE)0)        \
-    return OZ_raiseErrorC("gdbm",2,OZ_atom("alreadyClosed"),x); \
+    return OZ_raiseErrorC("gdbm",3,OZ_atom(meth),               \
+                          OZ_atom("alreadyClosed"),x);          \
 }
 
 OZ_BI_define(cgdbm_fetch,2,1)
@@ -144,7 +145,7 @@ OZ_BI_define(cgdbm_fetch,2,1)
   OZ_declareNonvarIN(1,oz_key);
   datum val;
 
-  CHECK_GDBM(oz_db);
+  CHECK_GDBM("fetch",oz_db);
 
   /* the key string lives in a static area and won't need
      to be deallocated */
@@ -171,7 +172,7 @@ OZ_BI_define(cgdbm_store,4,1)
   datum key,val;
   int ret;
 
-  CHECK_GDBM(oz_db);
+  CHECK_GDBM("store",oz_db);
 
   if (OZ_isAtom(oz_key))                 t_key = 1;
   else if (OZ_isString(oz_key,0))        t_key = 2;
@@ -213,7 +214,7 @@ OZ_BI_define(cgdbm_firstkey,1,1)
   OZ_declareNonvarIN(0,oz_db);
   datum key;
 
-  CHECK_GDBM(oz_db);
+  CHECK_GDBM("firstkey",oz_db);
 
   key = gdbm_firstkey(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db));
   if (key.dptr==NULL) OZ_RETURN(OZ_unit());
@@ -236,7 +237,7 @@ OZ_BI_define(cgdbm_nextkey,2,1)
   // OZ_Term oz_key2 = OZ_getCArg(2);
   datum key,val;
 
-  CHECK_GDBM(oz_db);
+  CHECK_GDBM("nextkey",oz_db);
 
   if (OZ_isAtom(oz_key1))
     key.dptr = strdup(OZ_atomToC(oz_key1));
@@ -271,6 +272,9 @@ OZ_BI_define(cgdbm_close,1,0)
       || OZ_getHeapChunkSize(oz_db)!=sizeof(GDBM_FILE))
     return OZ_typeError(0,"HeapChunk(GDBM_FILE)");
 
+  if (*(GDBM_FILE*)OZ_getHeapChunkData(oz_db)==(GDBM_FILE)0)
+    return PROCEED;
+
   gdbm_close(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db));
   *(GDBM_FILE*)OZ_getHeapChunkData(oz_db) = (GDBM_FILE)0;
   return PROCEED;
@@ -291,7 +295,7 @@ OZ_BI_define(cgdbm_delete,2,1)
   OZ_declareNonvarIN(1,oz_key);
   datum key; int res;
 
-  CHECK_GDBM(oz_db);
+  CHECK_GDBM("delete",oz_db);
 
   if (OZ_isAtom(oz_key))
     key.dptr = OZ_atomToC(oz_key);
@@ -312,7 +316,7 @@ OZ_BI_define(cgdbm_reorganize,1,1)
   OZ_declareNonvarIN(0,oz_db);
   int res;
 
-  CHECK_GDBM(oz_db);
+  CHECK_GDBM("reorganize",oz_db);
 
   res = gdbm_reorganize(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db));
   OZ_RETURN_INT(res);
