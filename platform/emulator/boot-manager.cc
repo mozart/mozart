@@ -192,7 +192,7 @@ static ModuleEntry ext_module_table[] = {
   {"Timer",	      mod_int_Timer},
 #endif
 
-  {"Space",		mod_int_Space},
+  {"Space",	      mod_int_Space},
 
 #ifdef MODULES_LINK_STATIC
   {"FSP",             mod_int_FSP},
