@@ -216,7 +216,6 @@ case $platform in
 	;;
     solaris*)
         TOOLLDCMD="gcc -shared"
-	EMULDFLAGS="-Wl,-export-dynamic"
 	: ${oz_enable_modules_static=no}
 	;;
     irix*)
