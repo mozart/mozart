@@ -5395,38 +5395,6 @@ OZ_C_proc_begin(BInop,VarArity)
 }
 OZ_C_proc_end
 
-// ------------------------------------------------------------------------
-// load precompiled file
-// ------------------------------------------------------------------------
-
-OZ_C_proc_begin(BIloadFile,1)
-{
-  oz_declareVirtualStringArg(0,file);
-
-  CompStream *fd = CompStream::csopen(file);
-
-  if (fd == NULL) {
-    return oz_raise(E_ERROR,E_KERNEL,"loadFile",1,OZ_getCArg(0));
-  }
-
-  if (ozconf.showFastLoad) {
-    printf("Fast loading file '%s'\n",file);
-  }
-
-  // begin critical region
-  osBlockSignals();
-
-  am.loadQuery(fd);
-
-  fd->csclose();
-
-  osUnblockSignals();
-  // end critical region
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
 
 // ------------------------------------------------------------------------
 // --- Apply
@@ -6980,7 +6948,6 @@ BIspec allSpec[] = {
   {"==Rel",   2,BIeq,     0},
   {"\\=Rel",  2,BIneq,    0},
 
-  {"loadFile",       1, BIloadFile,             0},
   {"linkObjectFiles",2, BIlinkObjectFiles,      0},
   {"unlinkObjectFile",1,BIunlinkObjectFile,     0},
 
