@@ -33,6 +33,7 @@
 
 <!entity chapter.client.server.intro system "cs-intro.sgml">
 <!entity chapter.client.server.db system "cs-db.sgml">
+<!entity chapter.client.server.ozc system "cs-ozc.sgml">
 
 <!ENTITY chapter.hello       SYSTEM "hello.sgml">
 <!ENTITY chapter.development SYSTEM "devel.sgml">
@@ -62,6 +63,7 @@
 <meta name="html.split" value="part.client.server">
 <meta name="html.split" value="chapter.client.server.intro">
 <meta name="html.split" value="chapter.client.server.db">
+<meta name="html.split" value="chapter.client.server.ozc">
 <Title/Application Programming/
 <Author.Extern to="author.db" key="Denys.Duchier">
 <Author.Extern to="author.db" key="Leif.Kornstaedt">
@@ -77,6 +79,7 @@
       <title>Client/Server Applications</title>
       &chapter.client.server.intro;
       &chapter.client.server.db;
+      &chapter.client.server.ozc;
 </part>
 <PART id=part.managing.modules>
   <Title/Managing Modules/
