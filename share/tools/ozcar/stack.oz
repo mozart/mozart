@@ -87,11 +87,15 @@ in
       end
       
       meth print
-	 Frames = {Ditems self.D}
-	 Depth  = @Size
-	 Last   = case Depth > 0 then {Dget self.D Depth} else nil end
-      in
-	 {Ozcar printStack(id:self.I frames:Frames depth:Depth last:Last)}
+	 case @Rebuild then
+	    StackManager,ReCalculate
+	 else
+	    Frames = {Ditems self.D}
+	    Depth  = @Size
+	    Last   = case Depth > 0 then {Dget self.D Depth} else nil end
+	 in
+	    {Ozcar printStack(id:self.I frames:Frames depth:Depth last:Last)}
+	 end
       end
 
       meth getTop($)
