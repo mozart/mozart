@@ -322,6 +322,8 @@ static void signal_marshal(GtkObject *object, gpointer oz_id, guint n_args, GtkA
 
   /* Assign Result Type; this is fake because it ALWAYS indicates non-handling.
    * This should be changed later on but will work fine (but slowly) for now.
+   * CAUTION: Returning FALSE yields the destruction of GTK object hierarchy
+   * CAUTION: before the handler was actually executed in case of delete_event.
    */
   GtkArg result      = args[n_args + 1];
   result.type        = GTK_TYPE_BOOL;

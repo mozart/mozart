@@ -282,7 +282,7 @@ define
 	 {Member C Containers}
       end
    end
-   
+
    local
       fun {Search V Is}
 	 case Is
@@ -497,6 +497,10 @@ define
 	 end
 	 TextFile, putS({Util.indent 3}#ResStart#"{"#@module#"."#Name#" "#Self#CallStr#"}"#ResEnd)
 	 GtkClasses, handleOutArgs(CallArgs)
+	 if Name == "gtkWindowNew"
+	 then
+	    TextFile, putS({Util.indent 3}#"if A0 == WINDOW_TOPLEVEL then gcMode <- toplevel end")
+	 end
 	 if IsCont then TextFile, putS({Util.indent 3}#"children <- A0|@children") end
 	 TextFile, putS({Util.indent 2}#"end")
       end
