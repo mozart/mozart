@@ -1085,13 +1085,13 @@ OZ_BI_iodefine(unix_acceptInet,1,3)
   struct hostent *gethost = gethostbyaddr((char *) &from.sin_addr,
                                           fromlen, AF_INET);
   if (gethost) {
-    OZ_out(0) = OZ_int(ntohs(from.sin_port));
-    OZ_out(1) = OZ_string(gethost->h_name);
+    OZ_out(1) = OZ_int(ntohs(from.sin_port));
+    OZ_out(0) = OZ_string(gethost->h_name);
     OZ_out(2) = OZ_int(fd);
     return PROCEED;
   } else {
-    OZ_out(0) = OZ_int(ntohs(from.sin_port));
-    OZ_out(1) = OZ_string(inet_ntoa(from.sin_addr));
+    OZ_out(1) = OZ_int(ntohs(from.sin_port));
+    OZ_out(0) = OZ_string(inet_ntoa(from.sin_addr));
     OZ_out(2) = OZ_int(fd);
     return PROCEED;
   }
