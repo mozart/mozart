@@ -41,7 +41,10 @@ STATIC_MODULETARGETS=	$(MODULE_NAMES:%=lib%.a)
 DYNAMIC_MODULETARGETS=	$(MODULE_NAMES:%=%.so)
 
 CORE_MODULES=	DP Run OF FS FD CPI OS Space Store Mem Support
-#CORE_LIBS=	-L. ${CORE_MODULES:%=-l%}
+# mm2: spliting emulator into different libraries does not work,
+#      because some files are not linked into oz.emulator.bin, which
+#      are only required from dynamic modules
+# CORE_LIBS=	-L. ${CORE_MODULES:%=-l%}
 CORE_TARGETS=	${CORE_MODULES:%=lib%.a}
 
 LIBS=		$(CORE_LIBS) @LIBS@
@@ -150,7 +153,10 @@ SRCS= \
 	$(CPISRCS) $(FDSRCS) $(FSETSRCS) $(OFSRCS) \
 	$(DPSRCS)
 
-OBJS=   $(SRCS:%.cc=%.o) $(OTHERSRCS:%.cc=%.o)
+# mm2: if enabled CORE_LIBS uncomment the following
+COREOBJS=   $(SRCS:%.cc=%.o)
+
+OBJS=   $(COREOBJS) $(OTHERSRCS:%.cc=%.o)
 
 WIFSRCS=	wif.cc
 COMPILERSUPPORTSRCS=	compiler.cc
@@ -252,9 +258,10 @@ win: ozlib.lnk $(CREATEDFILES)
 
 PRGDEP=$(CREATEDFILES) $(OBJS) $(MODULETARGETS)
 
+# mm2
 # PRGDEP+=$(CORE_TARGETS)
 
-core: $(CORE_TARGETS)
+libs: $(CORE_TARGETS)
 
 first: $(CREATEDFILES)
 
