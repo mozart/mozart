@@ -248,22 +248,22 @@ in
 				     key:     h
 				     feature: toggle)
 			     separator
-			     command(label:   'Unhide All'
-				     action:  self # nodes(unhideTree)
-				     state:   disabled
-				     key:     u
-				     feature: all)
-			     separator
-			     command(label:   'Hide Failed Subtrees'
+			     command(label:   'Hide Failed'
 				     action:  self # nodes(hideFailed)
 				     state:   disabled
 				     key:     f
 				     feature: failed)
-			     command(label:   'Unhide All but Failed Subtrees'
+			     separator
+			     command(label:   'Unhide But Failed'
 				     action:  self # nodes(unhideButFailed)
 				     state:   disabled
-				     key:     ctrl(f)
+				     key:     u
 				     feature: butfailed)
+			     command(label:   'Unhide All'
+				     action:  self # nodes(unhideTree)
+				     state:   disabled
+				     key:     ctrl(u)
+				     feature: all)
 			    ]
 		      feature: hide)]
 	  nil}
