@@ -1022,56 +1022,10 @@ fi
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
-    # Extract the first word of "ozbatch", so it can be a program name with args.
-set dummy ozbatch; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1029: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_OZBATCH'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$OZBATCH" in
-  /*)
-  ac_cv_path_OZBATCH="$OZBATCH" # Let the user override the test with a path.
-  ;;
-  *)
-  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_OZBATCH="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac
-fi
-OZBATCH="$ac_cv_path_OZBATCH"
-if test -n "$OZBATCH"; then
-  echo "$ac_t""$OZBATCH" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-    OZBATCH=`echo $OZBATCH | sed -e "s|//|/|g"`
-    if test ! -n "$OZBATCH"
-    then
-        OZBATCH=undefined
-        OZBATCH=`pwd`lib/ozbatch
-    fi
-
-
-    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
     # Extract the first word of "ozc", so it can be a program name with args.
 set dummy ozc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1075: checking for $ac_word" >&5
+echo "configure:1029: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1103,12 +1057,12 @@ fi
     if test ! -n "$OZC"
     then
         OZC=undefined
-        OZC=`pwd`lib/ozc
+        OZC=`pwd`/lib/ozc
     fi
 
 
 echo $ac_n "checking for --enable-fun""... $ac_c" 1>&6
-echo "configure:1112: checking for --enable-fun" >&5
+echo "configure:1066: checking for --enable-fun" >&5
 # Check whether --enable-fun or --disable-fun was given.
 if test "${enable_fun+set}" = set; then
   enableval="$enable_fun"
@@ -1241,8 +1195,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "lib/Makefile lib/Makefile-lilo \
-    tools/Makefile tools/Makefile-lilo \
+trap 'rm -fr `echo "lib/Makefile tools/Makefile \
     demo/Makefile test/Makefile \
     examples/Makefile elisp/Makefile elisp/oz.el bin/Makefile Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
@@ -1292,7 +1245,6 @@ s%@M4@%$M4%g
 s%@PERL@%$PERL%g
 s%@THEEMACS@%$THEEMACS%g
 s%@OZPLATFORM@%$OZPLATFORM%g
-s%@OZBATCH@%$OZBATCH%g
 s%@OZC@%$OZC%g
 s%@COMPILER_FUN@%$COMPILER_FUN%g
 s%@COMPILER_BIG@%$COMPILER_BIG%g
@@ -1337,8 +1289,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"lib/Makefile lib/Makefile-lilo \
-    tools/Makefile tools/Makefile-lilo \
+CONFIG_FILES=\${CONFIG_FILES-"lib/Makefile tools/Makefile \
     demo/Makefile test/Makefile \
     examples/Makefile elisp/Makefile elisp/oz.el bin/Makefile Makefile"}
 EOF
