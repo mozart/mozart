@@ -285,6 +285,7 @@ public:
     TaggedRef getOpenArityList(TaggedRef*,Board*);
     TaggedRef getOpenArityList(TaggedRef*);
 
+    void addDetSusp(Suspension *susp);
     Bool unifyOFS(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
 
     // Return the feature value if feature exists, return NULL if it doesn't exist

@@ -88,6 +88,8 @@ public:
   void printLong(ostream &stream, int depth, int offset, TaggedRef v);
 
   void installPropagators(GenCVariable *, Bool prop);
+
+  void addDetSusp(Suspension *susp);
 };
 
 #include "fdgenvar.hh"
