@@ -178,8 +178,8 @@ PRINT(GenCVariable){
       stream << " ofs(" << me->getNumOfFeatures() << ')';
       
       stream << ' ';
-      me->getLabel().print(stream, 0);
-      me->getTable().print(stream, 0);
+      me->getLabel()->print(stream, 0);
+      me->getTable()->print(stream, 0);
       break;
     }
 
@@ -804,8 +804,8 @@ PRINTLONG(GenCVariable){
       stream << " ofs(" << me->getNumOfFeatures() << ')';
       
       stream << ' ';
-      me->getLabel().print(stream, 0);
-      me->getTable().print(stream, 0);
+      me->getLabel()->print(stream, 0);
+      me->getTable()->print(stream, 0);
       stream << endl;
     }
     break;
