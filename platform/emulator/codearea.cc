@@ -93,8 +93,27 @@ Literal *addToNameTab(char *str)
 
 AbstractionTable CodeArea::abstractionTab(4000);
 
+/*
+  AbstractionTable::defaultEntry: for bug fix. If you feed
+ 
+  declare P1 P2 Px
+ 
+  proc {P1 X} true end
+  proc {Px X} false end
+  Px=P1
+  proc {P2 X} true end
+ 
+  this gives toplevel failure. Afterwards feed
+   {P2 1}
+  this SEGV, since FASTCALL points to an unfilled AbstractionEntry.
+  Use defaultEntry for all newly created AbstractionEntry. Set by a builtin.
 
-AbstractionEntry *addAbstractionTab(int id)
+*/
+
+AbstractionEntry AbstractionTable::defaultEntry;
+
+
+AbstractionEntry *AbstractionTable::add(int id)
 {
   if (id == 0)
     return NULL;
@@ -106,6 +125,7 @@ AbstractionEntry *addAbstractionTab(int id)
   }
   
   found = new AbstractionEntry();
+  *found = AbstractionTable::defaultEntry;
   if (CodeArea::abstractionTab.aadd(found,id)) {
     return found;
   }
@@ -136,21 +156,12 @@ Opcode CodeArea::adressToOpcode(AdressOpcode adr)
 }
 
 #else /* THREADED */
-AdressOpcode CodeArea::opcodeToAdress(Opcode oc)
-{
-  return  oc;
-}
-
-
-Opcode CodeArea::adressToOpcode(AdressOpcode adr) 
-{
-  return adr;
-}
-
+AdressOpcode CodeArea::opcodeToAdress(Opcode oc)  { return  oc; }
+Opcode CodeArea::adressToOpcode(AdressOpcode adr) { return adr; }
 #endif /* THREADED */
 
 
-void AbstractionEntry::setPred(Abstraction *ab) 
+void AbstractionEntry::setPred(Abstraction *ab)
 { 
   abstr = ab; 
   pc    = abstr->getPC();
