@@ -165,7 +165,7 @@ void freeListChop(void * addr, size_t size) {
 #endif
 
 //
-#if !defined(CCMALLOC) && defined(HAVE_MMAP)
+#if defined(HAVE_MMAP)
 
 #if ( !defined(MAP_ANONYMOUS) && defined(MAP_ANON) )
 #define	MAP_ANONYMOUS	MAP_ANON
@@ -393,7 +393,7 @@ void *ozMalloc(size_t size)
   return (ret);  
 }
 
-#elif !defined(CCMALLOC) && defined(HAVE_SBRK)
+#elif defined(HAVE_SBRK)
 
 /* remember the last sbrk(0), if it changed --> malloc needs more
  * memory, so call fakeMalloc
@@ -574,68 +574,6 @@ void ozFree(char *p, size_t ignored)
 
 #else
 
-#ifdef WINDOWS
-
-/* Under Windows (at leaster under NT 4.0) calling
-
-     void *p1 = malloc(n);
-     free(p1)
-     void *p2 = malloc(n);
-
-   does not mean that p1==p2: p2 usually gets a higher address. Thus
-   after some time we run into an address space that has the top most
-   bits set. I fixed that such that under Windows we never ever really
-   free heap space by calinf free(3), but remember that space in a list
-   and use it for the next call to ozMalloc 
-   (RS)
-*/
-
-
-class MemList {
-public:
-  size_t sz;
-  char *mem;
-  static MemList *allchunks;
-  MemList *next;
-
-  MemList(size_t s, char *m, MemList *nxt): sz(s), mem(m), next(nxt) {}
- 
-  static char *find(size_t size)
-  {
-    MemList **aux = &allchunks;
-    while (*aux) {
-      if ((*aux)->sz==size) {
-	MemList *aux2 = *aux;
-	char *ret = aux2->mem;
-	*aux = aux2->next;
-	delete aux2;
-	return ret;
-      }
-      aux = &(*aux)->next;
-    }
-    return NULL;
-  }
-
-  static void add(char *m,size_t size) { allchunks = new MemList(size,m,allchunks); }
-};
-
-MemList *MemList::allchunks = NULL;
-
-void ozFree(char *addr, size_t ignored) {
-  MemList::add(addr,ignored);
-}
-
-void *ozMalloc(size_t size) {
-  void *ret = MemList::find(size);
-  if (ret == NULL) {
-    ret = malloc(size);
-  }
-  return ret;
-}
-
-
-#else
-
 void ozFree(char *addr, size_t ignored) {
   free(addr);
 }
@@ -643,8 +581,6 @@ void ozFree(char *addr, size_t ignored) {
 void *ozMalloc(size_t size) {
   return malloc(size);
 }
-
-#endif /* WINDOWS */
 
 #endif
 
@@ -731,6 +667,8 @@ void MemChunks::print()
 }
 
 
+
+
 void *heapMallocOutline(size_t chunk_size)
 {
   Assert((int) chunk_size <= HEAPBLOCKSIZE);
@@ -778,13 +716,20 @@ char *getMemFromOS(size_t sz) {
   // thisBlockSz -= (thisBlockSz%WordSize);  // round down to next word
 
   /* initialize with zeros */
+#ifdef WINDOWS
+  /* if we don't do that, the MIM (at least)
+   * gets a memory leak (have to debug this) (RS)
+   */
+  memset(heapEnd,0,thisBlockSz);
+#else
   DebugCheckT(memset(heapEnd,0,thisBlockSz));
+#endif
 
   heapTop = heapEnd+thisBlockSz;
 
   void *aux = tagValueOf(makeTaggedMiscp(heapTop));
   if (aux != heapTop) {
-    OZ_warning("Oz address space exhausted: %p != %p\n", aux, heapTop);
+    OZ_warning("Oz address space exhausted: %p != %p (%d)\n", aux, heapTop,sz);
     am.exitOz(1);
   }
   
