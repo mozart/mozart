@@ -23,26 +23,29 @@ functor $
 import
    Application
    System(show)
-   GOZCoreComponent('GOZCore' : GOZCore) at 'x-oz://system/gtk/GOZCore.ozf'
-   GDK     at 'x-oz://system/gtk/GDK.ozf'
-   GTK     at 'x-oz://system/gtk/GTK.ozf'
-   Canvas  at 'x-oz://system/gtk/GTKCANVAS.ozf'
+   GDK    at 'x-oz://system/gtk/GDK.ozf'
+   GTK    at 'x-oz://system/gtk/GTK.ozf'
+   Canvas at 'x-oz://system/gtk/GTKCANVAS.ozf'
 define
-   {Wait GOZCore}
-
+   %% Create Toplevel window class
    class CanvasToplevel from GTK.window
+      meth new
+	 GTK.window, new(GTK.wINDOW_TOPLEVEL)
+	 GTK.window, setBorderWidth(10)
+	 GTK.window, setTitle("Canvas Events")
+      end
       meth connectEvents
 	 {self signalConnect('destroy' destroyEvent _)}
       end
       meth destroyEvent(Event)
+	 %% This is to allow GC
+	 %% Toplevel is a container which recursively frees all its child widgets
+	 {self close}
 	 {Application.exit 0}
       end
    end
 
-   %% Configure Toplevel window
-   Toplevel = {New CanvasToplevel new(0)}
-   {Toplevel setBorderWidth(10)}
-   {Toplevel setTitle("Canvas Events")}
+   Toplevel = {New CanvasToplevel new}
  
    %% Setup the Colors
    %% 1. Obtain the system colormap
@@ -50,8 +53,8 @@ define
    %% 3. Try to alloc appropriate system colors, non-writeable and with best-match
    %% 4. Use colors black and white
    Colormap = {New GDK.colormap getSystem}
-   Black    = {GOZCore.allocColor 0 0 0}
-   White    = {GOZCore.allocColor 65535 65535 65535}
+   Black    = {New GDK.color new(0 0 0)}
+   White    = {New GDK.color new(65535 65535 65535)}
    {Colormap allocColor(Black 0 1 _)}
    {Colormap allocColor(White 0 1 _)}
 
@@ -70,7 +73,7 @@ define
 
    %% Assign Events to Rectangle Item
    proc {ItemEvent Event}
-      case {Label {GOZCore.getGdkEvent Event}}
+      case {Label {GDK.getEvent Event}}
       of 'GDK_EXPOSE'            then {System.show 'Got Expose Event'}
       [] 'GDK_MOTION_NOTIFY'     then {System.show 'Got Motion Event'}
       [] 'GDK_BUTTON_PRESS'      then {System.show 'Got ButtonPress Event'}
