@@ -111,6 +111,20 @@ AC_MSG_RESULT($oz_picklecompression)
 AC_SUBST(oz_picklecompression)
 
 dnl ******************************************************************
+dnl set list of directories to build
+dnl ******************************************************************
+
+SHAREDIRS="lib tools elisp test demo examples"
+case $platform in
+    win32*)
+	;;
+    *)
+	SHAREDIRS="bin $PLATFORMDIRS"
+	;;
+esac
+AC_SUBST(SHAREDIRS)
+
+dnl ******************************************************************
 dnl need GMP for test
 dnl ******************************************************************
 
