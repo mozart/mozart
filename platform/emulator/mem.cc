@@ -305,7 +305,7 @@ public:
       }
       entry = entry->getNext();
     }
-    error("mappedChunks: has not found a page for removal!");
+    OZ_error("mappedChunks: has not found a page for removal!");
   }
 };
 
