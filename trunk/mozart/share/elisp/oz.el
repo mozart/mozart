@@ -665,13 +665,13 @@ the GDB commands `cd DIR' and `directory'."
        "if" "or" "dis" "choice" "case" "then" "else" "elseif" "of" "elseof" "elsecase"
        "end"
        "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
-       "true" "false" "touch"
+       "true" "false" "touch" "unit"
        "div" "mod" "andthen" "orelse"
        "thread" "in"
        "condis" "not"
-       "try" "catch" "finally" "skip"
+       "try" "catch" "finally" "skip" "fail"
        ))
-    "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@"
+    "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@|\\,"
     ))
 
 (defconst oz-declare-pattern (oz-make-keywords-for-match '("declare")))
