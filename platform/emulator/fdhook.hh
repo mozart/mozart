@@ -24,9 +24,6 @@ void printBC(ostream &, Board *);
 void printBCDebug(Board * = NULL); 
 #endif
 
-SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home);
-SuspList * addSuspToList(SuspList * list, Thread * elem, Board * home);
-
 inline 
 Bool isUnifyCurrentPropagator () {
   Assert (am.currentThread->isPropagator ());

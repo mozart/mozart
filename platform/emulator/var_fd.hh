@@ -32,7 +32,6 @@ class GenFDVariable: public GenCVariable {
 
 friend class GenCVariable;
 friend class GenBoolVariable;
-friend inline void addSuspFDVar(TaggedRef, SuspList *, OZ_FDPropState);
 friend inline void addSuspFDVar(TaggedRef, Thread *, OZ_FDPropState);
   
 private:
@@ -95,15 +94,13 @@ public:
   void installPropagators(GenFDVariable *, Board *);
 
   void addDetSusp(Thread *susp) {
-    fdSuspList[fd_prop_singl] = addSuspToList(fdSuspList[fd_prop_singl], 
-				       new SuspList(susp,NULL), home);
+    AddSuspToList(fdSuspList[fd_prop_singl], susp, home);
   }
 };
 
 Bool isGenFDVar(TaggedRef term);
 Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
 GenFDVariable * tagged2GenFDVar(TaggedRef term);
-void addSuspFDVar(TaggedRef, SuspList *, OZ_FDPropState = fd_prop_any);
 void addSuspFDVar(TaggedRef, Thread *, OZ_FDPropState = fd_prop_any);
 OZ_Return tellBasicConstraint(OZ_Term, OZ_FiniteDomain *);
 

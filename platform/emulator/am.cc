@@ -842,7 +842,7 @@ void AM::reduceTrailOnSuspend()
       unBind(refPtr, value);
 
       // value is always global variable, so add always a thread;
-      taggedBecomesSuspVar(refPtr)->addSuspension (thr);
+      addSuspAnyVar(refPtr,thr);
 
     } // for 
   } // if
@@ -864,7 +864,7 @@ void AM::reduceTrailOnFail()
 inline void mkSusp(TaggedRef *ptr, Thread *t)
 {
   if (t) {
-    taggedBecomesSuspVar(ptr)->addSuspension(t);
+    addSuspAnyVar(ptr,t);
   } else {
     am.addSuspendVarList(ptr);
   }
