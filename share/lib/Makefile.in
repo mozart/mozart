@@ -24,11 +24,12 @@ TOUCH           = @TOUCH@
 ENV2TYPE        = @ENV2TYPE@
 
 OZFLAGS         =
-OZBATCH         = OZPATH=.:compiler:ozcar:$(SRCDIR) OZ_PI=1 @OZBATCH@
-COMPILE         = $(OZBATCH) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz -c
-EXEC            = $(OZBATCH) $(OZFLAGS)
-EXECWITHSTD     = $(OZBATCH) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz
-OZMA            = $(OZBATCH) $(OZFLAGS) --ozma
+OZBATCH         = @OZBATCH@
+OZBATCH1        = OZPATH=.:compiler:ozcar:$(SRCDIR) OZ_PI=1 $(OZBATCH)
+COMPILE         = $(OZBATCH1) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz -c
+EXEC            = $(OZBATCH1) $(OZFLAGS)
+EXECWITHSTD     = $(OZBATCH1) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz
+OZMA            = $(OZBATCH1) $(OZFLAGS) --ozma
 
 OZVERSION       = $(TOPDIR)/OZVERSION
 
@@ -240,7 +241,7 @@ $(OZBIN)/ozbatch: ozbatch
 %.typ: $(SRCDIR)/%.env
         $(ENV2TYPE) $< > $@
 
-%.tyc: %.typ
+%.tyc: %.typ $(DUMPINTRO)
         $(COMPILE) $< -o $@
 
 %.ozc:
