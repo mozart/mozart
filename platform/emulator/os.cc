@@ -1120,7 +1120,7 @@ char *osgetenv(char *var)
 	  FreeEnvironmentStrings(env);
 	  return buffer;
 	}
-      } else if (p[i] == '=' || var[i] != p[i]) {
+      } else if (p[i] == '=' || toupper(var[i]) != toupper(p[i])) {
 	p += i;
 	while (*p++ != '\0');
 	break;
