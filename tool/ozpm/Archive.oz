@@ -7,9 +7,9 @@ import
    URL(toVirtualStringExtended make isAbsolute)
    Resolve(expand)
    ZFile at 'zfile.so{native}'
-   OS(stat)
+   OS(stat unlink)
    Open(file)
-   FileUtils(withSlash:WithSlash fullName:FullName)
+   FileUtils(withSlash:WithSlash fullName:FullName exists:Exists)
 define
    fun {Encode F}
       case F
@@ -181,6 +181,13 @@ define
 	 {ZFile.seek @zfile F.offset 0}
 	 {ReadFile @zfile F.size To}
       end
+      meth extractAndReplace(From To)
+	 F = @toc.{VirtualString.toAtom From}
+      in
+	 {ZFile.seek @zfile F.offset 0}
+	 if {Exists To} then {OS.unlink To} end
+	 {ReadFile @zfile F.size To}
+      end	 
       meth ls($) {Arity @toc} end
       meth lsla($) {Record.toList @toc} end
       meth close

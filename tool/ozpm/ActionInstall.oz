@@ -5,7 +5,7 @@ import
    OS(unlink tmpnam)
    Archive('class')
    Global(fileMftPkl    : FILEMFTPKL
-	  localDB       : LOCALDB
+	  readDB        : READDB
 	  args          : Args
 	  dirPrefix     : DirPrefix
 	  pathLocalDB   : PATHLOCALDB)
@@ -17,6 +17,7 @@ import
    Pickle(load save)
 define
    fun {Install Package Force}
+      LOCALDB={READDB}
       PackageResult = {Resolve.localize Package}
       A
    in
@@ -54,7 +55,6 @@ define
 	 %%
 	 %% getting this far means the package can be installed
 	 %%
-	 {Print DirPrefix}
 	 for File in PInfo.filelist do
 	    {CreatePath {Dirname {AddToPath DirPrefix File}}}
 	    {A extract(File {AddToPath DirPrefix File})}
