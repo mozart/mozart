@@ -94,6 +94,23 @@ void Thread::checkExtThreadOutlined ()
   }
 }
 
+//
+void Thread::removeExtThreadOutlined ()
+{
+  Assert (wasExtThread ());
+  
+  Board *sb = (getBoardFast ())->getSolveBoard ();
+  AM *e = &am;
+  
+  while (sb) {
+    Assert (sb->isSolve());
+    
+    SolveActor *sa = SolveActor::Cast (sb->getActor ());
+    sa->clearSuspList(this);
+    sb = (sa->getBoardFast ())->getSolveBoard ();
+  }
+}
+
 /*
  * check if a thread's board is below a failed board
  */
