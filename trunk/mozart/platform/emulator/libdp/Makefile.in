@@ -56,19 +56,17 @@ CREATEDFILES = $(CREATEDCOREFILES)
 all:
 
 #
-../dp.so: $(COREOBJS)
+../DPB.so: $(COREOBJS)
 	$(DYNLD) -o $@ $(COREOBJS)
 
-../libdp.a: $(COREOBJS)
+../libDPB.a: $(COREOBJS)
 	$(AR) -rc $@ $(COREOBJS) && $(RANLIB) $@
 
 #
 pidModule.o: ../modPID-if.cc
 
-../PID.so: ../dp.so pidModule.o
-	rm -f dp.so
-	ln ../dp.so dp.so
-	$(DYNLD) -o $@ pidModule.o dp.so $(LIBS)
+../PID.so: pidModule.o
+	$(DYNLD) -o $@ pidModule.o $(LIBS)
 
 ../libPID.a: pidModule.o
 	$(AR) -rc $@ pidModule.o && $(RANLIB) $@
@@ -76,10 +74,8 @@ pidModule.o: ../modPID-if.cc
 #
 faultModule.o: ../modFault-if.cc
 
-../Fault.so: ../dp.so faultModule.o 
-	rm -f dp.so
-	ln ../dp.so dp.so
-	$(DYNLD) -o $@ faultModule.o dp.so $(LIBS)
+../Fault.so: faultModule.o 
+	$(DYNLD) -o $@ faultModule.o $(LIBS)
 
 ../libFault.a: faultModule.o
 	$(AR) -rc $@ faultModule.o && $(RANLIB) $@
@@ -87,19 +83,15 @@ faultModule.o: ../modFault-if.cc
 #
 dpMiscModule.o: ../modDPMisc-if.cc
 
-../DPMisc.so: ../dp.so dpMiscModule.o 
-	rm -f dp.so
-	ln ../dp.so dp.so
-	$(DYNLD) -o $@ dpMiscModule.o dp.so $(LIBS)
+../DPMisc.so: dpMiscModule.o 
+	$(DYNLD) -o $@ dpMiscModule.o $(LIBS)
 
 ../libDPMisc.a: dpMiscModule.o
 	$(AR) -rc $@ dpMiscModule.o && $(RANLIB) $@
 
 #
-../VirtualSite.so: ../dp.so $(VSOBJS)
-	rm -f dp.so
-	ln ../dp.so dp.so
-	$(DYNLD) -o $@ $(VSOBJS) dp.so $(LIBS)
+../VirtualSite.so: $(VSOBJS)
+	$(DYNLD) -o $@ $(VSOBJS) $(LIBS)
 
 ../libVirtualSite.a: $(VSOBJS)
 	$(AR) -rc $@ $(VSOBJS) && $(RANLIB) $@
