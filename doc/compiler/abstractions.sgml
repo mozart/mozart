@@ -1,0 +1,44 @@
+<Section id="section.reference.abstractions">
+  <Title/Provided Abstractions/
+  <P>
+    This section introduces useful abstractions to simplify the use of the
+    compiler for common tasks.
+  <SubSection>
+    <Title/Evaluating an Expression/
+      <P>
+        <Ptr to="program.evalExpression"> shows the abstraction
+        <Code display
+        >proc {Compiler.evalExpression VS Env ?Kill ?Result}</Code>
+        which evaluates an expression, given as a virtual string <<VS>>, in
+        a given environment <<Env>>, either returning the result <<Result>>
+        of the evaluation or raising an exception.  Furthermore, the variable
+        <<Kill>> is bound to a nullary procedure which, when applied,
+        interrupts compilation.
+        <Figure float id="program.evalExpression" class=program>
+          <Caption>The <<evalExpression>> abstraction.</Caption>
+          <P><!--**-->
+            <Code.Extern display to="EvalExpression.oz">
+        </Figure>
+  <SubSection>
+    <Title/Replacement for System.virtualStringToValue/
+      <P>
+        The procedure <<System.virtualStringToValue>>, which was available
+        in DFKI Oz as well as in older versions of Mozart, can be replaced
+        by another abstraction, which makes use of the preceding one.  This
+        abstraction is available as <<Compiler.virtualStringToValue>> and
+        is illustrated in <Ptr to="program.virtualStringToValue">.
+        <Figure float id="program.virtualStringToValue" class=program>
+          <Caption>The <<virtualStringToValue>> abstraction.</Caption>
+          <P><!--**-->
+            <Code.Extern display to="VirtualStringToValue.oz">
+        </Figure>
+      <P>
+        Note that this <Q/replacement/ is not identical to the original:
+        Besides that it is much more powerful, it can also prove to be much
+        less efficient.  Especially large manifest data structures can be much
+        slower to compile and the translation can require much more memory than
+        <<System.virtualStringToValue>>.  The modern (and <Q/politically
+        correct/) replacement to the duet <<System.valueToVirtualString>>
+        and <<System.virtualStringToValue>> is pickling and unpickling
+        of data structures.
+</Section>

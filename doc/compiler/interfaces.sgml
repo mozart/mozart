@@ -1,0 +1,87 @@
+<Chapter id="chapter.interfaces">
+  <Title/Compiler Interfaces/
+  <P>
+    A Compiler Engine is sufficient to instruct a compiler to do something,
+    but the possibilities to react to its output are still very limited.
+    This is the purpose of a <Def>Compiler Interface</Def>.
+  <P>
+    With each Compiler Engine <<E>> an arbitrary number of interfaces can
+    be registered.  All of <<E>>'s registered interfaces are notified of
+    its output or changes of its state.
+  <Section>
+    <Title/Registering an Interface/
+    <P>
+      What is actually registered with a Compiler Engine is an Oz port.
+      The Compiler Engine sends so-called <Def>notifications</Def> to
+      this port.  A port can simply be registered with the method
+      <<register(P)>> and unregistered with <<unregister(P)>>.  Note
+      that a single port can be registered several times with a single
+      Compiler Engine (it is then sent each notification as often as it
+      is registered); <<unregister(P)>> removes all occurrences of <<P>>
+      from the registration and does nothing if the port is not registered.
+    <P>
+      The method <<notify(M)>> allows one to send a notification to all
+      registered interfaces.  Because of this, interfaces should always
+      ignore unknown notification messages (also to allow for extensions
+      of the Compiler Engine).
+    <P>
+      A list of all the possible notifications is given in <Ptr
+      to="section.reference.notifications">.
+  <Section>
+    <Title/The Generic Interface/
+    <P>
+      The class <<Compiler.genericInterface>> is an abstraction
+      simplifying the creation of new interfaces.  The generic
+      interface takes over the registering and the unregistering,
+      automatically handling the creation and termination of the
+      interface's server thread.  New interfaces should be written by
+      subclassing the generic interface.
+    <P>
+      The <<init(E Serve)>> method takes as arguments a Compiler Engine
+      and the label of a unary method.  The interface creates a port,
+      registers this with <<E>> and creates a thread in which the
+      <<Serve>> method is applied to the port's stream.
+    <P>
+      The <<exit()>> method undoes all these effects:  The server thread
+      is terminated and the interface's port is unregistered.  After this
+      the no-op <<reset()>> method is invoked; subclasses may override
+      this method to perform individual cleanups.
+    <P>
+      Some methods provide access to the interface's state:
+      <<getCompiler(?E)>> returns the associated Compiler Engine,
+      <<getPort(?P)>> the port which the interface registered with it.
+      <<enqueue(M)>> simply forwards an enqueue request to the Compiler
+      Engine.
+  <Section>
+    <Title/Interfaces defined in the Mozart Library and Tools/
+    <P>
+      <List>
+        <Entry>The <Q/Quiet/ Interface
+        <Item>
+          <P.silent><!--**-->
+            See <Ptr to="program.quietInterface">.
+        <Entry>The Emacs Interface
+        <Item>
+          <P.silent><!--**-->
+            See <Ptr to="program.emacsInterface">.
+        <Entry>The Compiler Panel
+        <Item>
+          <P.silent><!--**-->
+            See <Ptr to="program.compilerPanel">.
+      </List>
+      <Figure float id="program.quietInterface" class=program>
+        <Caption>The <Q/Quiet/ Interface.</Caption>
+        <P><!--**-->
+          <Code.Extern display to="QuietInterface.oz">
+      </Figure>
+      <Figure float id="program.emacsInterface" class=program>
+        <Caption>The Emacs Interface.</Caption>
+        <P><!--**-->
+          <Code.Extern display to="EmacsInterface.oz">
+      </Figure>
+      <Figure float id="program.compilerPanel" class=program>
+        <Caption>The Compiler Panel.</Caption>
+        <P><!--**-->
+          <Code.Extern display to="CompilerPanel.oz">
+      </Figure>
+</Chapter>

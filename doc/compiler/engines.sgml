@@ -1,0 +1,83 @@
+<Chapter id="chapter.engines">
+  <Title/Compiler Engines/
+  <P>
+    A compiler engine is an instance of the final class <<Compiler.engine>>:
+    <Code display>E = {New Compiler.engine init()}</Code>
+    Each instance of this class is an active object encapsulating the
+    state of a compiler, consisting of a list of defined macro names,
+    the state of a number of boolean compiler switches, an environment,
+    and the query queue.  These are described in the following sections.
+  <Section>
+    <Title/Macro Definitions/
+    <P>
+      The list of macro names currently defined is used by the parser to
+      resolve macro directives such as <<\ifdef>>.  Note that the scope
+      of the <<\define>> and <<\undef>> macro directives is limited to a
+      single compilation and does not update this list.
+    <P>
+      Initially, this list only consists of macro names describing the
+      Oz version number, &eg;, when running Oz&nbsp;3.0.9, the list is
+      <<['Oz_3' 'Oz_3_0' 'Oz_3_0_9']>>.
+  <Section>
+    <Title/Compiler Switches/
+    <P>
+      The current state of the compiler switches is given by a mapping
+      from switch names to boolean values.  Each compiler engine manages
+      a stack of switch states, the top element of which is taken as the
+      active state.  This is useful to temporarily escape into a different
+      mode of compiler operation, execute some queries and pop back to the
+      saved state.
+    <P>
+      The available switches and their effects on the compilation process
+      are described in detail in <Ptr to="section.reference.switches">.
+  <Section>
+    <Title/The Environment/
+    <P>
+      An environment is a mapping from variable print names to arbitrary
+      Oz values.  Initially, the environment of a newly created Compiler
+      Engine contains the variables declared by the Oz Standard Modules as
+      well as the following backquote variable:
+      <List>
+        <Entry><<`Compiler`>>
+        <Item>
+          <P.silent><!--**-->
+            A reference to the Compiler Engine itself.
+        </List>
+    <P>
+      Environments are first class; that is, they may be enquired,
+      set or extended by records whose features are valid variable
+      print names, &eg;, <<env('Show': System.show)>>.
+  <Section>
+    <Title/The Query Queue/
+    <P>
+      The entries in the query queue are executed sequentially by
+      the object's internal thread.  A new query can be enqueued by
+      <Code display>{E enqueue(M)}</Code>
+      This operation blocks until the query <<M>> and its input arguments
+      are fully determined, then either raises an exception if it is an
+      unknown or ill-typed query, or immediately returns.  Internally,
+      each enqueued query is assigned a unique identification number which
+      is obtained by adding an output argument to the <<enqueue>> message:
+      <Code display>{E enqueue(M ?Id)}</Code>
+      The identification may be used later to remove the query from the
+      queue (unless its execution has already begun or terminated):
+      <Code display>{E dequeue(Id)}</Code>
+    <P>
+      The execution of the current query may be abandoned by use of the
+      <<interrupt()>> message and the whole remaining queue may be flushed
+      via <<clearQueue()>>.
+    <P>
+      The argument to enqueue may also be a <Em>list</Em> of queries:
+      These are guaranteed to be executed in sequence without other
+      queries interleaving.  The second argument then returns a list of
+      identification numbers.
+    <P>
+      Some queries request state information from the compiler engine.
+      The corresponding output variables only become bound when the query
+      is actually executed.  If binding an output variable raises an
+      exception, an error is reported through the registered interfaces
+      (see <Ptr to="chapter.interfaces">).
+    <P>
+      The queries understood by the compiler are listed in <Ptr
+      to="section.reference.queries">.
+</Chapter>
