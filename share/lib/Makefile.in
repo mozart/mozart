@@ -72,10 +72,19 @@ PEANUTSFUNCTORS = \
 
 SYSLETS = ozc ozserver ozvsserver
 
-.PHONY: all install clean
+.PHONY: all
 
 all: $(FUNCTORS) $(SYSLETS)
 
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
 
 #---------------------------------------------------------------------
 # Init
@@ -104,8 +113,6 @@ STANDARDSRC = $(STANDARDSRC1:%=standard/%) Standard.oz
 
 Standard.ozf: $(STANDARDSRC)
 	$(EXEC) Standard.oz
-
-
 
 #---------------------------------------------------------------------
 # Remaining functors
@@ -159,10 +166,10 @@ COMPILERSRC1 = \
 	CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
 	UnnestFD.oz Assembler.oz GenericInterface.oz QuietInterface.oz
 
+COMPILERSRCEXTRA = compiler-Builtins.oz compiler-Opcodes.oz compiler-Env.oz
+
 COMPILERSRCNOVER = \
-	$(COMPILERSRC1:%=compiler/%) \
-	compiler-Builtins.oz compiler-Opcodes.oz compiler-Env.oz \
-	Compiler.oz
+	$(COMPILERSRC1:%=compiler/%) $(COMPILERSRCEXTRA) Compiler.oz
 
 COMPILERSRC = $(COMPILERSRCNOVER) compiler-Version.oz
 
@@ -184,6 +191,40 @@ functor2env: $(RUNFUNCTORS) Standard.ozf MakeFunctorToEnv.oz
 compiler-Env.oz: $(RUNFUNCTORS) Standard.ozf functor2env
 	$(OZENGINE) functor2env -in=Standard.ozf -out=compiler-Env.oz
 
+FunMisc.ozf: compiler/Misc.oz $(STANDARD)
+
+FunBuiltins.ozf: compiler/Builtins.oz compiler-Builtins.oz $(STANDARD)
+
+FunSA.ozf: compiler/Misc-new.env compiler/POTypes.oz \
+	compiler/StaticAnalysis.oz $(STANDARD)
+
+FunCode.ozf: compiler/Misc-new.env compiler/CodeStore.oz \
+	compiler/CodeEmitter.oz compiler/CodeGen.oz $(STANDARD)
+
+FunCore.ozf: compiler/Misc-new.env compiler/Annotate.oz \
+	compiler/CoreLanguage.oz $(STANDARD)
+
+FunUnnest.ozf: compiler/Misc-new.env compiler/TupleSyntax.oz \
+	compiler/BindingAnalysis.oz compiler/UnnestFD.oz \
+	compiler/Unnester.oz $(STANDARD)
+
+FunAssembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz $(STANDARD)
+
+FunCompiler.ozf: compiler/Misc-new.env compiler-Env.oz \
+	compiler/FormatStrings.oz compiler/Reporter.oz compiler/ParseOz.oz \
+	compiler/CompilerClass.oz compiler/GenericInterface.oz \
+	compiler/QuietInterface.oz compiler-Version.oz $(STANDARD)
+
+COMPILER_BIG = @COMPILER_BIG@
+COMPILER_FUN = @COMPILER_FUN@
+
+$(COMPILER_BIG): $(COMPILERSRC)
+
+$(COMPILER_FUN): FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCode.ozf \
+	FunCore.ozf FunUnnest.ozf FunAssembler.ozf FunCompiler.ozf \
+	compiler/FunMake.oz Standard.ozf Pickle.ozf
+	$(COMPILE) -l Pickle=./Pickle.ozf compiler/FunMake.oz -o Compiler.ozf
+
 #---------------------------------------------------------------------
 # Syslets
 #---------------------------------------------------------------------
@@ -200,33 +241,19 @@ ozvsserver: Standard.ozf MakeOzVSServer.oz dp/VSServer.oz
 	$(EXECWITHSTD) MakeOzVSServer.oz
 
 #---------------------------------------------------------------------
-# Boot compiler
-#---------------------------------------------------------------------
-
-ozc.ozm:
-# Don't use this as target: compiler-Env.oz compiler-Opcodes.oz compiler-Builtins.oz 
-	$(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
-	mv -f /tmp/$$$$.ozm $@
-
-ozc.ozp: ozc.ozm
-	OZMAINIT="" OZMAFILE="-b $<" $(SRCDIR)/ozc.sh
-
-#---------------------------------------------------------------------
 # Installation
 #---------------------------------------------------------------------
+
+.PHONY: install install-stage install-main install-images install-cache
 
 LIBFUNCTORS = \
 	$(FUNCTORS:%=$(OZLIB)/%) $(OZLIB)/Init.ozp
 BINFILES = \
 	$(SYSLETS:%=$(OZBIN)/%)
 STAGEEXTRAFILES = \
-	$(OZLIB)/Standard.ozf $(OZLIB)/ozc.ozm \
-	$(OZLIB)/ozc.ozp
-
-.PHONY: install install-stage install-main install-images install-cache
+	$(OZLIB)/Standard.ozf $(OZLIB)/ozc.ozm $(OZLIB)/ozc.ozp
 
 install: install-main install-images install-cache
-
 
 install-stage: install-main $(STAGEEXTRAFILES)
 
@@ -272,53 +299,37 @@ $(OZBIN)/%: %
 	$(INSTALL_BIN) $< $@
 
 #---------------------------------------------------------------------
-# Automatic Makefile update
-#---------------------------------------------------------------------
-
-Makefile: Makefile.in ../config.status
-	cd .. && ./config.status
-
-../config.status: ../configure
-	cd .. && ./config.status --recheck
-
-
-#---------------------------------------------------------------------
 # Cleaning up
 #---------------------------------------------------------------------
 
-.PHONY: clean veryclean distclean tags
+.PHONY: clean veryclean distclean
 
 clean:
-	-rm -f *~ *.bak ./*/*~ ./*/*.bak
 	-rm -f compiler-Version.oz compiler-Builtins.oz
 	-rm -f compiler-Opcodes.oz
-	-rm -f module-Peanuts.oz
 	-rm -f envgen compiler-Env.oz
-	-rm -f $(FUNCTORS) Standard.ozf Init.ozp ozc.ozp
+	-rm -f module-Peanuts.oz
+	-rm -f Init.ozp ozc.ozp Standard.ozf $(FUNCTORS)
 	-rm -f $(SYSLETS)
 
 veryclean: clean
-	-rm -f -r TAGS $(STAGE1) $(STAGE2) $(STAGE2B) $(STAGE3) $(STAGE3B)
+	-rm -f -r TAGS $(STAGE1) $(STAGE2) $(STAGE2A) $(STAGE2B)
+	-rm -f -r $(STAGE3) $(STAGE3A) $(STAGE3B)
 
 distclean: veryclean
-	-rm -f Makefile
-
-tags:
-	etags --language=none \
-	--regex='/[ \t]*proc\>[^{\n]*{!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
-	--regex='/[ \t]*fun\>[^{\n]*{!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
-	--regex='/[ \t]*class[ \t]+!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
-	--regex='/[ \t]*meth\([ \t]+\|[ \t]*![ \t]*\)\([A-Za-z0-9][A-Za-z0-9_]*\|`.+`|'\''.+'\''\)/\2/' \
-	$(ALLSRCS)
+	-echo To really make distclean, please use \"cd ..; make distclean\".
 
 #---------------------------------------------------------------------
 # Bootstrapping and Testing Functors Locally
 #---------------------------------------------------------------------
-#    make check   or   make thorough-check
+#    make check
 # Test a new emulator with
 #    make check OZEMULATOR=$(HOME)/Oz/Emulator/oz.emulator.bin
+# Test changes to the compiler's code generation with
+#    make check-compiler
 
-.PHONY: bootstrap stage1 stage2 stage2b stage3 stage3b check thorough-check newozma
+.PHONY: bootstrap stage1 stage2 stage2a stage2b stage3 stage3a stage3b
+.PHONY: check check-compiler
 
 URL=http\\://www.ps.uni-sb.de/ozhome
 
@@ -332,8 +343,10 @@ bootstrap:
 
 STAGE1=./stage1
 STAGE2=./stage2
+STAGE2A=./stage2a
 STAGE2B=./stage2b
 STAGE3=./stage3
+STAGE3A=./stage3a
 STAGE3B=./stage3b
 
 # stage1: create the initial functors using the installed ones
@@ -345,96 +358,90 @@ stage2:
 	mv $(SRCDIR)/ozc.ozm ozc.ozm.save
 	trap "s=$$?;mv ozc.ozm.save $(SRCDIR)/ozc.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
 	$(MAKE) install-stage PREFIX=$(STAGE2) \
-	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:.:=\
+	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:.:= \
 	OZC=$(STAGE1)/bin/ozc \
 	OZINIT=$(STAGE1)/lib/Init.ozp
 
+# stage2a: recreate only the functors using the stage1 functors
+stage2a:
+	$(MAKE) install-main PREFIX=$(STAGE2A) \
+	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:.:= \
+	OZC=$(STAGE1)/bin/ozc \
+	OZINIT=$(STAGE1)/lib/Init.ozp
 
-# stage2b: recreate the functors and Ozma file using the stage2 functors
+# stage2b: recreate the functors and Ozma file using the stage2a functors
 stage2b:
 	mv $(SRCDIR)/ozc.ozm ozc.ozm.save
 	trap "s=$$?;mv ozc.ozm.save $(SRCDIR)/ozc.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
 	$(MAKE) install-stage PREFIX=$(STAGE2B) \
-	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE2)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
-	OZC=$(STAGE2)/bin/ozc \
-	OZINIT=$(STAGE2)/lib/Init.ozp
+	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE2A)/lib/:.:= \
+	OZC=$(STAGE2A)/bin/ozc \
+	OZINIT=$(STAGE2A)/lib/Init.ozp
 
 # stage3: recreate the functors and Ozma file using the stage2 Ozma file
 stage3:
 	$(MAKE) ozc.ozp install-stage PREFIX=$(STAGE3) \
-	OZ_LOAD=all=.:all=tyc/lib:all=tyc/tools:prefix=$(URL)/tools/=$(URL)/tools/:= \
+	OZ_LOAD=prefix== \
 	OZC=$(SRCDIR)/ozc.sh \
 	OZINIT=$(STAGE2)/lib/Init.ozp \
 	OZMAINIT=$(STAGE2)/lib/Init.ozp \
 	OZMAFILE="-u $(STAGE2)/lib/ozc.ozp"
 
-# stage3b: recreate the functorss and Ozma file using the stage3 functors
+# stage3a: recreate only the functors using the stage2b Ozma file
+stage3a:
+	$(MAKE) install-main PREFIX=$(STAGE3A) \
+	OZ_LOAD=prefix== \
+	OZC=$(SRCDIR)/ozc.sh \
+	OZINIT=$(STAGE2B)/lib/Init.ozp \
+	OZMAINIT=$(STAGE2B)/lib/Init.ozp \
+	OZMAFILE="-u $(STAGE2B)/lib/ozc.ozp"
+
+# stage3b: recreate the functors and Ozma file using the stage3a functors
 stage3b:
 	$(MAKE) install-stage PREFIX=$(STAGE3B) \
-	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE3)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
-	OZC=$(STAGE3)/bin/ozc \
-	OZINIT=$(STAGE3)/lib/Init.ozp
-
-# for making incompatible changes to instructions
-#  1. make newozma                 # create new ozc.ozm with old emulator
-#  2. make bootstrap OZEMULATOR=.. # bootstrap again with new emulator
-newozma:
-	$(MAKE) clean
-	$(MAKE) stage1 OZFLAGS="-DNO_ASSEMBLER"
-	$(MAKE) clean
-	$(MAKE) ozc.ozm \
-	 OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:.:=\
-	 OZC=$(STAGE1)/bin/ozc \
-	 OZINIT=$(STAGE1)/lib/Init.ozp
+	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE3A)/lib/:.:= \
+	OZC=$(STAGE3A)/bin/ozc \
+	OZINIT=$(STAGE3A)/lib/Init.ozp
 
 check:
-	$(MAKE) bootstrap stage1 && \
-	$(MAKE) clean stage2 && \
+	$(MAKE) clean bootstrap stage1 || exit 1
+	$(MAKE) clean stage2 || exit 1
 	$(MAKE) clean stage3
 
-thorough-check:
-	$(MAKE) clean bootstrap stage1 && \
-	$(MAKE) clean stage2 && \
-	$(MAKE) clean stage2b && \
-	$(MAKE) clean stage3 && \
+check-compiler:
+	$(MAKE) clean stage1 || exit 1
+	$(MAKE) clean stage2a || exit 1
+	$(MAKE) clean stage2b || exit 1
+	$(MAKE) clean stage3a || exit 1
 	$(MAKE) clean stage3b
+
+#---------------------------------------------------------------------
+# Boot compiler
+#---------------------------------------------------------------------
+
+.PHONY: new-ozma incompatible-ozma
+
+# Make sure you first make $(COMPILERSRCEXTRA)
+ozc.ozm:
+	$(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
+	mv -f /tmp/$$$$.ozm $@
+
+ozc.ozp: ozc.ozm
+	OZMAINIT="" OZMAFILE="-b $<" $(SRCDIR)/ozc.sh
+
+new-ozma:
+	rm -f ozc.ozm
+	$(MAKE) clean $(COMPILERSRCEXTRA) ozc.ozm
+
+# for making incompatible changes to instructions
+#  1. make incompatible-ozma       # create new ozc.ozm with old emulator
+#  2. make bootstrap OZEMULATOR=.. # bootstrap again with new emulator
+incompatible-ozma:
+	$(MAKE) clean stage1 OZFLAGS="-DNO_ASSEMBLER" || exit 1
+	$(MAKE) new-ozma \
+	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:.:=\
+	OZC=$(STAGE1)/bin/ozc \
+	OZINIT=$(STAGE1)/lib/Init.ozp
 
 # no suffixes needed
 .SUFFIXES:
-
-#---------------------------------------------------------------------
-# Compiler
-
-FunMisc.ozf: compiler/Misc.oz $(STANDARD)
-
-FunBuiltins.ozf: compiler/Builtins.oz compiler-Builtins.oz $(STANDARD)
-
-FunSA.ozf: compiler/Misc-new.env compiler/POTypes.oz \
-	compiler/StaticAnalysis.oz $(STANDARD)
-
-FunCode.ozf: compiler/Misc-new.env compiler/CodeStore.oz \
-	compiler/CodeEmitter.oz compiler/CodeGen.oz $(STANDARD)
-
-FunCore.ozf: compiler/Misc-new.env compiler/Annotate.oz \
-	compiler/CoreLanguage.oz $(STANDARD)
-
-FunUnnest.ozf: compiler/Misc-new.env compiler/TupleSyntax.oz \
-	compiler/BindingAnalysis.oz compiler/UnnestFD.oz \
-	compiler/Unnester.oz $(STANDARD)
-
-FunAssembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz $(STANDARD)
-
-FunCompiler.ozf: compiler/Misc-new.env compiler/FormatStrings.oz \
-	compiler/Reporter.oz compiler/ParseOz.oz \
-	compiler/CompilerClass.oz compiler/GenericInterface.oz \
-	compiler/QuietInterface.oz compiler-Version.oz $(STANDARD)
-
-COMPILER_BIG = @COMPILER_BIG@
-COMPILER_FUN = @COMPILER_FUN@
-
-$(COMPILER_BIG): $(COMPILERSRC)
-
-$(COMPILER_FUN): FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCode.ozf \
-	FunCore.ozf FunUnnest.ozf FunAssembler.ozf FunCompiler.ozf \
-	compiler/FunMake.oz Standard.ozf Pickle.ozf
-	$(COMPILE) -l Pickle=./Pickle.ozf compiler/FunMake.oz -o Compiler.ozf
