@@ -802,7 +802,7 @@ void initVirtualProperties()
   VirtualProperty::add("gc.free",PROP_GC_FREE);
   VirtualProperty::add("gc.tolerance",PROP_GC_TOLERANCE);
   VirtualProperty::add("gc.on",PROP_GC_ON);
-  VirtualProperty::add("gc.codeCyles",PROP_GC_CODE_CYLES);
+  VirtualProperty::add("gc.codeCycles",PROP_GC_CODE_CYLES);
   VirtualProperty::add("gc.threshold",PROP_GC_THRESHOLD);
   VirtualProperty::add("gc.size",PROP_GC_SIZE);
   VirtualProperty::add("gc.active",PROP_GC_ACTIVE);
