@@ -84,8 +84,8 @@ public:
     size = 0;
   }
   int getSize () { return (size); }
-  void printDebug ();
-  void printDebugLong ();
+
+  OZPRINT;
 };
 
 /*

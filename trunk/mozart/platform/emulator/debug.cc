@@ -284,14 +284,6 @@ OZ_C_proc_end
 
 #define MaxLine 100
 
-inline void printLong(TaggedRef term, int depth) {
-  taggedPrintLong(term, depth ? depth : ozconf.printDepth);
-}
-
-inline void printShort(TaggedRef term) {
-  taggedPrint(term);
-}
-
 static Bool mode=NO;
 
 void tracerOn()
@@ -318,7 +310,7 @@ Bool trace(char *s,Board *board,Actor *actor,
   if (PC != NOCODE) {
     CodeArea::display(PC, 1);
   }
-  board->printDebug();
+  board->print();
   if (actor) {
     printf(" -- ");
     actor->print();
@@ -371,13 +363,13 @@ Bool trace(char *s,Board *board,Actor *actor,
     case 'f':
       return NO;
     case 'p':
-      board->printLongDebug();
+      board->printLong();
       break;
     case 's':
       mode = OK;
       return OK;
     case 't':
-      am.currentThread()->printLong(cout,10,0);
+      am.currentThread()->printLong();
       break;
     case 'A':
       ozd_printAM();
@@ -457,34 +449,34 @@ Bool trace(char *s,Board *board,Actor *actor,
 	    int numb=0;
 	    sscanf(&command[1],"%d",&numb);
 	    printf ("G[%d] = ", numb);
-	    printShort(G[numb]);
+	    oz_print(G[numb]);
 	    printf ("\n");
 	  }
 	  break;
 	case 'G':
 	  {
-	    int numb=0,depth=0;
-	    sscanf(&command[1],"%d %d",&numb,&depth);
+	    int numb=0;
+	    sscanf(&command[1],"%d",&numb);
 	    printf ( "G[%d]:\n", numb);
-	    printLong(G[numb],depth);
+	    ozd_printLong(G[numb]);
 	    printf ( "\n");
 	  }
 	  break;
 	case 'x':
 	  {
-	    int numb=0,depth=0;
-	    sscanf(&command[1],"%d %d",&numb,&depth);
+	    int numb=0;
+	    sscanf(&command[1],"%d",&numb);
 	    printf ("X[%d] = ", numb);
-	    printShort(am.getX(numb));
+	    oz_print(am.getX(numb));
 	    printf ("\n");
 	  }
 	  break;
 	case 'X':
 	  {
-	    int numb=0,depth=0;
-	    sscanf(&command[1],"%d %d",&numb,&depth);
+	    int numb=0;
+	    sscanf(&command[1],"%d",&numb);
 	    printf ("X[%d]:\n", numb);
-	    printLong(am.getX(numb),depth);
+	    ozd_printLong(am.getX(numb));
 	  }
 	  break;
 	case 'y':
@@ -492,16 +484,16 @@ Bool trace(char *s,Board *board,Actor *actor,
 	    int numb=0;
 	    sscanf(&command[1],"%d",&numb);
 	    printf ("Y[%d] = ", numb);
-	    printShort(Y[numb]);
+	    oz_print(Y[numb]);
 	    printf ("\n");
 	  }
 	  break;
 	case 'Y':
 	  {
-	    int numb=0,depth=0;
-	    sscanf(&command[1],"%d %d",&numb,&depth);
+	    int numb=0;
+	    sscanf(&command[1],"%d",&numb);
 	    printf ("Y[%d]:\n", numb);
-	    printLong(Y[numb],depth);
+	    ozd_printLong(Y[numb]);
 	  }
 	  break;
 	default:

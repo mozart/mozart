@@ -39,6 +39,7 @@
 #include "machine.hh"
 #include "resources.hh"
 #include "config.h"
+#include "ozostream.hh"
 
 #include <string.h>
 
@@ -53,20 +54,29 @@ const unsigned int MB = KB*KB;
 
 const int WordSize = sizeof(void*);
 
-#define OZPRINT \
-  void print(ostream &stream=cout, int depth = 10, int offset = 0); \
-  void printDebug(void) {print(cerr,10,0); cerr << endl; cerr.flush();}
+// see print.cc
+#define OZPRINT								     \
+  void printStream(ostream &stream=cout, int depth = 10);    \
+  void printLongStream(ostream &stream=cout, int depth = 10, int offset = 0) \
+    { printStream(stream,depth); stream << endl; }		     \
+  void print(void)							     \
+    { printStream(cerr); cerr << endl; cerr.flush(); }		     \
+  void printLong(void)							     \
+    { printLongStream(cerr); cerr.flush(); }
 
-#define OZPRINTLONG \
-  void printLong(ostream &stream=cout, int depth = 10, int offset = 0); \
-  void printLongDebug(void) {printLong(cerr,10,0); cerr << endl; cerr.flush();}
+#define OZPRINTLONG							      \
+  void printStream(ostream &stream=cout, int depth = 10);     \
+  void printLongStream(ostream &stream=cout, int depth = 10, int offset = 0); \
+  void print(void)							      \
+    { printStream(cerr); cerr << endl; cerr.flush(); }		      \
+  void printLong(void)							      \
+    { printLongStream(cerr); cerr.flush(); }
 
 inline int min(int a, int b) {return a < b ? a : b;}
 inline int max(int a, int b) {return a > b ? a : b;}
 
 inline int ozabs(int a) {return a > 0 ? a : -a;}
 inline float ozabs(float a) {return a > 0 ? a : -a;}
-
 
 #define Swap(A,B,Type) { Type help=A; A=B; B=help; }
 
@@ -293,11 +303,7 @@ class GName;
 
 class IONode;
 
-
 void checkGC();
-
-// see foreign.cc
-char *toC(OZ_Term);
 
 // see version.sed
 void version();
@@ -322,11 +328,22 @@ void printBC(ostream &, Board *);
 void printBCDebug(Board * = NULL); 
 #endif
 
-// debug print (ozd_)
+// printing (see foreign.cc)
+void oz_printStream(OZ_Term term, ostream &out,
+		    int depth=-1, int width=-1);
+void oz_print(OZ_Term term);
+// see also OZ_toC();
+char *toC(OZ_Term);
+
+// debug print (see print.cc)
+void ozd_printStream(OZ_Term val, ostream &stream, int depth=20);
+void ozd_print(OZ_Term term);
+void ozd_printLongStream(OZ_Term val, ostream &stream,
+			 int depth = 20, int offset = 0);
+void ozd_printLong(OZ_Term term);
 void ozd_printBoards();
 void ozd_printThreads();
 void ozd_printAM();
-
 
 char *replChar(char *s,char from,char to);
 char *delChar(char *s,char c);
@@ -392,7 +409,5 @@ extern "C" {
 
 void errorHeader();
 void errorTrailer();
-
-#include "ozostream.hh"
 
 #endif

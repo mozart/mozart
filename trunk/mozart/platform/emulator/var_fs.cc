@@ -244,7 +244,7 @@ Bool GenFSetVariable::unifyFSet(OZ_Term * vptr, OZ_Term var,
 t:
 #ifdef DEBUG_FSUNIFY 
   
-  (*cpi_cout) << tagged2String(*vptr,1,1) << " true" << endl << flush;
+  (*cpi_cout) << toC(*vptr) << " true" << endl << flush;
 #endif
   return TRUE;
 
@@ -259,7 +259,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
 {
 #ifdef DEBUG_TELLCONSTRAINTS
   cout << "tellBasicConstraint - in - : ";
-  taggedPrint(v);
+  oz_print(v);
   if (fs) cout << " , " << *fs;
   cout << endl <<flush;
 #endif
@@ -354,7 +354,7 @@ proceed:
 
 #ifdef DEBUG_TELLCONSTRAINTS
   cout << "tellBasicConstraint - out - : ";
-  if (vptr) taggedPrint(*vptr); else taggedPrint(v);
+  if (vptr) oz_print(*vptr); else oz_print(v);
   if (fs) cout << " , " << *fs;
   cout << endl <<flush;
 #endif

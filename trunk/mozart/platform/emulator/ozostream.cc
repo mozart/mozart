@@ -44,7 +44,7 @@ ozostream &ozostream::operator << (const char *s)
 ozostream &ozostream::operator << (const void *p)
 {
   Assert(fd);
-  fprintf(fd,"0x%p",p);
+  fprintf(fd,"%p",p);
   return *this;
 }
 
@@ -91,7 +91,7 @@ ozostream &ozstrstream::operator << (const char *s)
 ozostream &ozstrstream::operator << (const void *p)  
 { 
   char buf[100];
-  sprintf(buf,"0x%p",p);
+  sprintf(buf,"%p",p);
   (*this) << buf;
   return *this;
 }

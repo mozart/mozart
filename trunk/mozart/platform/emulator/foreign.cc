@@ -40,6 +40,10 @@
 #include "os.hh"
 #include "builtins.hh"
 
+// forward decl
+static
+void term2Buffer(ostream &out, OZ_Term term, int depth=0);
+
 /* ------------------------------------------------------------------------ *
  * tests
  * ------------------------------------------------------------------------ */
@@ -559,8 +563,7 @@ char *strAndDelete(ostrstream *out)
   return ret;
 }
 
-
-
+static
 void float2buffer(ostream &out, OZ_Term term)
 {
   double f = floatValue(term);
@@ -826,20 +829,13 @@ void const2buffer(ostream &out, ConstTerm *c)
 }
 
 
-/* forward declaration */
-static
-void value2buffer(ostream &out, OZ_Term term, int depth=0);
-
 inline
 void feature2buffer(ostream &out, SRecord *sr, OZ_Term fea, int depth)
 {
-  value2buffer(out,fea);
+  term2Buffer(out,fea);
   out << ':';
-  value2buffer(out,sr->getFeature(fea),depth);
+  term2Buffer(out,sr->getFeature(fea),depth);
 }
-
-static
-int listWidth = 0;
 
 inline
 Bool isNiceHash(OZ_Term t, int width) {
@@ -868,17 +864,17 @@ Bool isNiceList(OZ_Term l, int width) {
 
 inline
 void record2buffer(ostream &out, SRecord *sr,int depth) {
-  if (isNiceHash(makeTaggedSRecord(sr), listWidth)) {
+  if (isNiceHash(makeTaggedSRecord(sr), ozconf.printWidth)) {
     int len = sr->getWidth();
     for (int i=0; i < len; i++) {
       OZ_Term arg = deref(sr->getArg(i));
-      if (isNiceHash(arg,listWidth) ||
-	  (isCons(arg) && !isNiceList(arg,listWidth))) {
+      if (isNiceHash(arg,ozconf.printWidth) ||
+	  (isCons(arg) && !isNiceList(arg,ozconf.printWidth))) {
 	out << '(';
-	value2buffer(out, sr->getArg(i), depth-1);
+	term2Buffer(out, sr->getArg(i), depth-1);
 	out << ')';
       } else {
-	value2buffer(out, sr->getArg(i), depth-1);
+	term2Buffer(out, sr->getArg(i), depth-1);
       }
       if (i+1!=len)
 	out << '#';
@@ -886,20 +882,20 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
     return;
   }
 
-  value2buffer(out,sr->getLabel());
+  term2Buffer(out,sr->getLabel());
   out << '(';
-  if (depth <= 0 || listWidth <= 0) {
+  if (depth <= 0 || ozconf.printWidth <= 0) {
     out << ",,,";
   } else {
     if (sr->isTuple()) {
-      int len = min(listWidth, sr->getWidth());
-      value2buffer(out,sr->getArg(0), depth-1);
+      int len = min(ozconf.printWidth, sr->getWidth());
+      term2Buffer(out,sr->getArg(0), depth-1);
       for (int i=1; i < len; i++) {
 	out << ' ';
-	value2buffer(out,sr->getArg(i),depth-1);
+	term2Buffer(out,sr->getArg(i),depth-1);
       }
       
-      if (sr->getWidth() > listWidth)
+      if (sr->getWidth() > ozconf.printWidth)
 	out << " ,,,";
     } else {
       OZ_Term as = sr->getArityList();
@@ -907,22 +903,22 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
 
       int next    = 1;
 
-      while (isCons(as) && next <= listWidth &&
+      while (isCons(as) && next <= ozconf.printWidth &&
 	     isSmallInt(head(as)) && 
 	     smallIntValue(head(as)) == next) {
-	value2buffer(out, sr->getFeature(head(as)), depth-1);
+	term2Buffer(out, sr->getFeature(head(as)), depth-1);
 	out << ' ';
 	as = tail(as);
 	next++;
       }
       Assert(isCons(as));
 
-      if (next <= listWidth) {
+      if (next <= ozconf.printWidth) {
 	
 	feature2buffer(out,sr,head(as),depth-1);
 	next++;
 	as = tail(as);
-	while (next <= listWidth && isCons(as)) {
+	while (next <= ozconf.printWidth && isCons(as)) {
 	  out << ' ';
 	  feature2buffer(out,sr,head(as),depth-1);
 	  as = tail(as);
@@ -930,7 +926,7 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
 	}
       }
 
-      if (sr->getWidth() > listWidth)
+      if (sr->getWidth() > ozconf.printWidth)
 	out << " ,,,";
     }
   }
@@ -939,7 +935,7 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
 
 inline
 void list2buffer(ostream &out, LTuple *list,int depth) {
-  int width = listWidth;
+  int width = ozconf.printWidth;
 
   if (width > 0 && depth > 0) {
 
@@ -947,7 +943,7 @@ void list2buffer(ostream &out, LTuple *list,int depth) {
       out << '[';
       OZ_Term l = makeTaggedLTuple(list);
       while (isCons(l)) {
-	value2buffer(out, head(l), depth-1);
+	term2Buffer(out, head(l), depth-1);
 	l = deref(tail(l));
 	if (isCons(l)) {
 	  out << ' ';
@@ -959,15 +955,15 @@ void list2buffer(ostream &out, LTuple *list,int depth) {
 
     while (width-- > 0) { 
       OZ_Term a=deref(list->getHead());
-      if (isCons(a) && !isNiceList(a,listWidth)) {
-	out << '('; value2buffer(out,list->getHead(),depth-1); out << ')';
+      if (isCons(a) && !isNiceList(a,ozconf.printWidth)) {
+	out << '('; term2Buffer(out,list->getHead(),depth-1); out << ')';
       } else {
-	value2buffer(out,list->getHead(),depth-1);
+	term2Buffer(out,list->getHead(),depth-1);
       }
       out << '|';
       OZ_Term t=deref(list->getTail());
       if (!isCons(t)) {
-	value2buffer(out,list->getTail(),depth);
+	term2Buffer(out,list->getTail(),depth);
 	return;
       }
       list = tagged2LTuple(t);
@@ -1006,9 +1002,9 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
 
   // Output the Atoms first, in order:
   for (ai=0; ai<nAtomOrInt; ai++) {
-    value2buffer(out,arr[ai],0);
+    term2Buffer(out,arr[ai],0);
     out << ':';
-    value2buffer(out,lookup(arr[ai]),depth);
+    term2Buffer(out,lookup(arr[ai]),depth);
     out << ' ';
   }
   // Output the Names last, unordered:
@@ -1016,9 +1012,9 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
     tmplit=table[di].ident;
     tmpval=table[di].value;
     if (tmpval!=makeTaggedNULL() && !(isAtom(tmplit)||isInt(tmplit))) {
-      value2buffer(out,tmplit,0);
+      term2Buffer(out,tmplit,0);
       out << ':';
-      value2buffer(out,tmpval,depth);
+      term2Buffer(out,tmpval,depth);
       out << ' ';
     }
   }
@@ -1061,7 +1057,7 @@ void cvar2buffer(ostream &out, const char *s, GenCVariable *cv, int depth)
   case OFSVariable:
     {
       GenOFSVariable* ofs = (GenOFSVariable *) cv;
-      value2buffer(out,ofs->getLabel(),0);
+      term2Buffer(out,ofs->getLabel(),0);
       out << '(';
       if (depth > 0) {
 	ofs->getTable()->newprint(out,depth-1);
@@ -1096,79 +1092,100 @@ void cvar2buffer(ostream &out, const char *s, GenCVariable *cv, int depth)
       if (f==0) out << "<lazy>";
       else {
 	out << "<lazy: ";
-	value2buffer(out,f,depth-1);
+	term2Buffer(out,f,depth-1);
 	out << ">";
       }
       break;
     }
   default:
-    OZ_warning("OZ_toC: Unknown variable type\n");
+    out << s << "<Unknown variable type: " << cv->getType() << ">";
     break;
   }
 }
 
+void oz_printStream(OZ_Term term, ostream &out, int depth, int width)
+{
+  int old;
+  if (width>=0) {
+    old = ozconf.printWidth;
+    ozconf.printWidth=width;
+  }
+  if (depth<0) {
+    depth = ozconf.printDepth;
+  }
+
+  term2Buffer(out,term,depth);
+
+  if (width>=0) {
+    ozconf.printWidth=old;
+  }
+}
+
+// for printing from gdb: no default args needed
+void oz_print(OZ_Term term) {
+  oz_printStream(term,cerr);
+  cerr << endl;
+  flush(cerr);
+}
+
 static
-void value2buffer(ostream &out, OZ_Term term, int depth)
+void term2Buffer(ostream &out, OZ_Term term, int depth)
 {
   if (!term) {
-    out << "<NULL>";
-  } else {
+    out << "<Null pointer>";
+    return;
+  }
 
-    DEREF(term,termPtr,tag);
-    switch(tag) {
-    case UVAR:
-    case SVAR:
-      {
-	const char *s = getVarName(makeTaggedRef(termPtr));
-	if (!*s) {
-	  out << '_';
-	} else {
-	  out << s;
-	}
+  DEREF(term,termPtr,tag);
+  switch(tag) {
+  case UVAR:
+  case SVAR:
+  case CVAR:
+    {
+      if (!termPtr) {
+	out << "<Dereferenced variable>";
+	break;
       }
-      break;
-    case CVAR:
-      {
-	const char *s = getVarName(makeTaggedRef(termPtr));
-	if (!*s) {
-	  s = "_";
-	}
-	if (isCVar(tag)) { cvar2buffer(out, s,tagged2CVar(term),depth); }
+      const char *s = getVarName(makeTaggedRef(termPtr));
+      if (isCVar(tag)) {
+	cvar2buffer(out, s,tagged2CVar(term),depth);
+      } else {
+	out << s;
       }
-      break;
-    case FSETVALUE:
-      fset2buffer(out, tagged2FSetValue(term));
-      break;
-    case SRECORD:
-      record2buffer(out,tagged2SRecord(term),depth);
-      break;
-    case LTUPLE:
-      list2buffer(out,tagged2LTuple(term),depth);
-      break;
-    case OZCONST:
-      const2buffer(out,tagged2Const(term));
-      break;
-    case LITERAL:
-      {
-	Literal *a = tagged2Literal(term);
-	if (a->isAtom()) {
-	  atom2buffer(out,a);
-	} else {
-	  name2buffer(out,a);
-	}
-      }
-      break;
-    case OZFLOAT:
-      float2buffer(out,term);
-      break;
-    case BIGINT:
-    case SMALLINT:
-      int2buffer(out,term);
-      break;
-    default:
-      OZ_warning("OZ_toC: unknown type");
       break;
     }
+  case FSETVALUE:
+    fset2buffer(out, tagged2FSetValue(term));
+    break;
+  case SRECORD:
+    record2buffer(out,tagged2SRecord(term),depth);
+    break;
+  case LTUPLE:
+    list2buffer(out,tagged2LTuple(term),depth);
+    break;
+  case OZCONST:
+    const2buffer(out,tagged2Const(term));
+    break;
+  case LITERAL:
+    {
+      Literal *a = tagged2Literal(term);
+      if (a->isAtom()) {
+	atom2buffer(out,a);
+      } else {
+	name2buffer(out,a);
+      }
+      break;
+    }
+  case OZFLOAT:
+    float2buffer(out,term);
+    break;
+  case BIGINT:
+  case SMALLINT:
+    int2buffer(out,term);
+    break;
+  default:
+    out << "<Unknown Tag: " << tag << ">";
+    break;
   }
 }
 
@@ -1181,23 +1198,25 @@ char *OZ_toC(OZ_Term term, int depth,int width)
 
   ostrstream *out = new ostrstream;
 
-  int old=listWidth;
-  listWidth = width;
-  value2buffer(*out,term,depth);
-  listWidth = old;
+  oz_printStream(term,*out,depth,width);
 
   tmpString = strAndDelete(out);
   return tmpString;
 }
 
+char *toC(OZ_Term term)
+{
+  return OZ_toC(term,ozconf.errorPrintDepth,ozconf.errorPrintWidth);
+}
+
 int OZ_termGetSize(OZ_Term term, int depth, int width)
 {
   ostrstream *out=new ostrstream;
-  int old=listWidth;
+  int old=ozconf.printWidth;
 
-  listWidth = width;
-  value2buffer(*out,term,depth);
-  listWidth = old;
+  ozconf.printWidth = width;
+  term2Buffer(*out,term,depth);
+  ozconf.printWidth = old;
 
   int ret = out->pcount ();
   delete out;
@@ -1852,10 +1871,12 @@ int OZ_unprotect(OZ_Term *t)
 inline
 int isVirtualString(OZ_Term vs, OZ_Term *var)
 {
-  DEREF(vs,vsPtr,vsTag);
-  if (isAnyVar(vsTag))  {
-    if (var) *var = makeTaggedRef(vsPtr);
-    return 0;
+  if (isRef(vs)) {
+    DEREF(vs,vsPtr,vsTag);
+    if (isAnyVar(vsTag))  {
+      if (var) *var = makeTaggedRef(vsPtr);
+      return 0;
+    }
   }
 
   if (isInt(vs) || isFloat(vs) || isAtom(vs))  return 1;
@@ -1876,7 +1897,7 @@ int isVirtualString(OZ_Term vs, OZ_Term *var)
       return 0;
     }
     if (var) *var = 0;
-    return ret!=NameFalse;
+    return ret==NameFalse ? 0 : 1;
   }
 
   return 0;
@@ -2015,7 +2036,7 @@ OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
   static int xxx=0;
   printf("Suspension(%d):",xxx++);
   for(int i=0; i<arity; i++) {
-    printf("%s, ",tagged2String(args[i],2));
+    printf("%s, ",toC(args[i]));
   }
   printf("\n");
 #endif
