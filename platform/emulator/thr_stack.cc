@@ -15,32 +15,6 @@
 
 #include "am.hh"
 
-void TaskStack::resize(int newsize)
-{
-  if (newsize < 20) {
-    newsize = 50;
-  }
-  Stack::resize(newsize);
-}
-
-void TaskStack::deallocate(StackEntry *p, int n)
-{
-  freeListDispose(p, n*sizeof(StackEntry));
-}
-
-StackEntry *TaskStack::reallocate(StackEntry *p, int oldsize, int newsize) 
-{
-  TaskStackEntry *ret = (TaskStackEntry *)freeListMalloc(newsize*sizeof(TaskStackEntry));
-  
-  for (int i=0; i < oldsize; i++) {
-    ret[i] = p[i];
-  }
-  
-  deallocate(array,oldsize);
-  return ret;
-}
-
-
 /*
  * getSeqSize:
  *   calculate the size of the sequential part of the taskstack

@@ -86,13 +86,8 @@ public:
     push(emptyTaskStackEntry,NO);
   }
 
-  TaskStack(int s): Stack(s,freeListMalloc) { makeEmpty(); }
-  ~TaskStack()               { error("~TaskStack called"); }
-
-  virtual void deallocate(StackEntry *p, int n);
-  virtual StackEntry *reallocate(StackEntry *p, int oldsize, int newsize);
-  void dispose () { deallocate(array,getMaxSize()); }
-  virtual void resize(int newSize);
+  TaskStack(int s): Stack(s,Stack_WithFreelist) { makeEmpty(); }
+  ~TaskStack()                  { error("~TaskStack called"); }
 
   void printTaskStack(ProgramCounter pc = NOCODE,
 		      Bool verbose = NO, int depth = 10000);
