@@ -171,8 +171,10 @@ OZ_Return LinEqAbsPropagator::propagate(void)
 	  }
 	} // for
 
-	bound1 = (dmin - summax) / double(reg_a[j]);
-	bound2 = (dmax - summin) / double(reg_a[j]);
+	if (reg_a[j]!=0) {
+	  bound1 = (dmin - summax) / double(reg_a[j]);
+	  bound2 = (dmax - summin) / double(reg_a[j]);
+	}
 	d_size = CLAUSE(x_aux_neg[j].getSize(), x_aux_pos[j].getSize());
 	
 	if (reg_a[j] < 0) {
@@ -295,7 +297,9 @@ OZ_Return LinLessEqAbsPropagator::propagate(void)
 			(reg_a[k] < 0 ? x[k]->getMaxElem() : x[k]->getMinElem()));
        }
      
-     bound1 = (dmax - summin) / double(reg_a[j]);
+     if (reg_a[j] != 0) {
+       bound1 = (dmax - summin) / double(reg_a[j]);
+     }
      d_size = x[j]->getSize();
      
      if (reg_a[j] < 0)
