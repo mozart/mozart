@@ -90,7 +90,7 @@ public:
     return (EVAR_STATUS_UNKNOWN);
   }
   virtual void          disposeV() {
-  Assert(isMarshaled); // AN! Why can't it not be marhaled and yet disposed?
+    Assert(isMarshaled);
     Assert(isEmptySuspList());
     freeListDispose(this, sizeof(ExportedManagerVar));
   }
