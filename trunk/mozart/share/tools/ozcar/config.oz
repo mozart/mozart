@@ -166,8 +166,8 @@ HelpFont               = '-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*'
 %% Files
 %%
 
-OzLibDir               = {System.get home} # '/lib/'
-OzBitmapDir            = '@' # OzLibDir # 'images/'
+OzToolsDir             = {System.get home} # '/tools/'
+OzBitmapDir            = '@' # OzToolsDir # 'images/'
 OzcarBitmapDir         = OzBitmapDir # 'ozcar/'
 IconBitMap             = OzcarBitmapDir # 'ozcar' # BitmapExtension
 BitmapExtension        = '.xbm'
