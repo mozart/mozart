@@ -153,16 +153,17 @@ enum ByteStreamType{
 #define MAXTCPCACHE 15
 
 enum ipReturn{
-  IP_OK= 0,
-  IP_BLOCK= -1,
-  IP_NO_MORE_TRIES= -2,
-  IP_TIMER= -3,
-  IP_CLOSE= -4,
-  IP_TIMER_EXCEPTION= -5,
-  IP_NET_CRASH= -6,
-  IP_TEMP_BLOCK= -7,
-  IP_PERM_BLOCK= -8,
-  IP_GARBAGE= -9
+  IP_OK              =   0,
+  IP_BLOCK           =  -1,
+  IP_NO_MORE_TRIES   =  -2,
+  IP_TIMER           =  -3,
+  IP_CLOSE           =  -4,
+  IP_TIMER_EXCEPTION =  -5,
+  IP_NET_CRASH       =  -6,
+  IP_TEMP_BLOCK      =  -7,
+  IP_PERM_BLOCK      =  -8,
+  IP_GARBAGE         =  -9,
+  IP_EOF             = -10
 };
 
 #define LOST -1
@@ -959,9 +960,6 @@ public:
   void close();
   void prmDwn();
   void closeConnection();
-
-
-
 };
 
 class WriteConnection:public Connection{
@@ -2201,6 +2199,11 @@ inline ipReturn readI(int fd,BYTE *buf)
       return IP_OK;
     }
 
+    if (ret==0) {
+      OZ_warning("connection lost");
+      return IP_EOF;
+    }
+
     if (errno == EINTR){
       PD((WEIRD,"readI interrupted"));
     } else {
@@ -2854,10 +2857,10 @@ static int tcpCloseHandler(int fd,void *r0){
 close_handler_read:
   if(ret!=IP_OK){ // crashed Connection site
     PD((ERROR_DET,"crashed Connection site %s error:%d",r->remoteSite->site->stringrep(), errno));
-    if(tcpError() == IP_TEMP_BLOCK)
-      r->connectionBlocked();
-    else
+    if(ret==IP_EOF || tcpError()!=IP_TEMP_BLOCK)
       r->connectionLost();
+    else
+      r->connectionBlocked();
     return 0;}
   if(msg==TCP_MSG_ACK_FROM_READER){
     PD((TCP,"Incomming Ack"));
