@@ -79,9 +79,12 @@ DefaultHistoryRange = 60000
 
 LoadWidth           = 240
 
-BoldFontFamily  = '-*-helvetica-bold-r-normal--*-'
-FontMatch       = '-*-*-*-*-*-*'
-ScaleFont       = BoldFontFamily#100#FontMatch
+BoldFontFamily   = '-*-helvetica-bold-r-normal--*-'
+MediumFontFamily = '-*-helvetica-medium-r-normal--*-'
+FontMatch        = '-*-*-*-*-*-*'
+BoldFont         = BoldFontFamily   # 120 # FontMatch
+MediumFont       = MediumFontFamily # 120 # FontMatch
+ScaleFont        = BoldFontFamily   # 100 # FontMatch
 
 ZeroTime     = time(copy:      0 
 		    gc:        0 
