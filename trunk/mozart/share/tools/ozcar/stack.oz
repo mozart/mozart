@@ -78,9 +78,10 @@ local
 			case Frame.kind of call then
 			   case {IsDet Data} then
 			      case Data == unit then 'unknown'
-			      elsecase {IsObject Data} then
+			      elsecase {IsProcedure Data} then
+				 {System.printName Data}
+			      else
 				 {System.valueToVirtualString Data 0 0}
-			      else {System.printName Data}
 			      end
 			   elsecase {IsLazy Data} then
 			      LazyVarType
