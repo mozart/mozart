@@ -4,7 +4,7 @@ import
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
    Browser(browse:Browse)
 define
-   MOGUL = "./" %"http://www.mozart-oz.org/mogul/"
+   MOGUL = "http://www.mozart-oz.org/mogul/" %"./"
    INFO  = "ozpm.info"
    Args = {Application.getArgs
 	   record(mogul(single type:string default:MOGUL))}
@@ -19,7 +19,7 @@ define
    L3 = {QTk.newLook}
    {L3.set label(fg:darkred bg:ivory)}
    L4 = {QTk.newLook}
-   {L4.set label(font: bg:ivory)}
+   {L4.set label(bg:ivory)}
    %%
    proc {GuiPkg P}
       {Browse P}
