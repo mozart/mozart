@@ -2,7 +2,7 @@
  *  Authors:
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Michael Mehl (mehl@dfki.de)
- *    Christian Schulte (schulte@dfki.de)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  *
  *  Copyright:
  *    Kostja Popow, 1998

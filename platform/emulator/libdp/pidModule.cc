@@ -3,7 +3,7 @@
  *    Per Brand (perbrand@sics.se)
  *    Michael Mehl (mehl@dfki.de)
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
- *    Christian Schulte <schulte@dfki.de>
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)

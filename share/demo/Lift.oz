@@ -1,7 +1,7 @@
 %%%
 %%% Authors:
 %%%   Martin Müller <mmueller@ps.uni-sb.de>
-%%%   Christian Schulte <schulte@dfki.de>
+%%%   Christian Schulte <schulte@ps.uni-sb.de>
 %%%
 %%% Copyright:
 %%%   Martin Müller, 1998

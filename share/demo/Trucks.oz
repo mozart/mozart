@@ -3,7 +3,7 @@
 %%%   Martin Mueller (mmueller@ps.uni-sb.de)
 %%%
 %%% Contributors:
-%%%   Christian Schulte (schulte@dfki.de)
+%%%   Christian Schulte <schulte@ps.uni-sb.de>
 %%%
 %%% Copyright:
 %%%   Martin Mueller, 1998

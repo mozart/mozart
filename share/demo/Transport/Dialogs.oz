@@ -1,6 +1,6 @@
 %%%
 %%% Authors:
-%%%   Christian Schulte (schulte@dfki.de)
+%%%   Christian Schulte <schulte@ps.uni-sb.de>
 %%%
 %%% Copyright:
 %%%   Christian Schulte, 1998
@@ -63,7 +63,7 @@ define
 
          Author = {New Tk.label tkInit(parent: self
                                        text: ('Christian Schulte\n' #
-                                              '(schulte@dfki.de)\n'))}
+                                              '<schulte@ps.uni-sb.de>\n'))}
       in
          {Tk.send pack(Title Author side:top expand:1 padx:BigPad pady:BigPad)}
          About,tkPack
