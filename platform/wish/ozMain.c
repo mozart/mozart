@@ -57,11 +57,13 @@ static Tk_Window mainWindow;	/* The main window for the application.  If
 				 * NULL then the application no longer
 				 * exists. */
 static Tcl_Interp *interp;	/* Interpreter for this application. */
+#ifndef Tk4
 char *tcl_RcFileName = NULL;	/* Name of a user-specific startup script
 				 * to source if the application is being run
 				 * interactively (e.g. "~/.wishrc").  Set
 				 * by Tcl_AppInit.  NULL means don't source
 				 * anything ever. */
+#endif
 static Tcl_DString command;	/* Used to assemble lines of terminal input
 				 * into Tcl commands. */
 static int tty;			/* Non-zero means standard input is a
