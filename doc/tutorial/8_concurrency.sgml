@@ -130,7 +130,7 @@ end
 
 <P><FIGURE ID="Threads" CLASS="Figure">
 <CAPTION>The Mozart Panel showing thread creation <<{Fib 26 X>></CAPTION>
-<PICTURE.EXTERN TO="Thread.ps" TYPE="ps">
+<PICTURE.EXTERN TO="Thread.ps" TYPE="ps" info="-width 400">
 </FIGURE>
 
 
