@@ -27,6 +27,8 @@ fun
    {$ IMPORT}
    \insert 'SP.env'
       = IMPORT.'SP'
+   \insert 'CP.env'
+      = IMPORT.'CP'
    \insert 'WP.env'
       = IMPORT.'WP'
    \insert 'Browser.env'
