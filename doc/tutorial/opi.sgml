@@ -70,26 +70,28 @@ select from the Oz menu <em>Show/Hide -&gt; Emulator</em>, we now see:
 development.
     <subsection>
         <title/Code Editing/
-      <p>The <code/oz-mode/ is a major mode for editing Oz code, and
+      <p proglang=elisp>The <code/oz-mode/ is a major mode for editing
+Oz code, and
 provides automatic indentation as well <code/font-lock/ support for
 code colorization.</p>
     </subsection>
     <subsection>
         <title/Key Bindings/
-      <p>You may interact with the underlying Mozart subprocess from
+      <p proglang=elisp>You may interact with the underlying Mozart
+subprocess from
 any buffer in <code/oz-mode/, not just from the <code/Oz/ buffer as
 demonstrated earlier.  Furthermore, all the actions that we carried
 out in the <em/Hello World/ example can be invoked more conveniently
 through key bindings instead of through the Oz menu.
       <table display>
-        <tr><td><Key/M-l/</td><td>Feed current line</td></tr>
-        <tr><td><Key/M-r/</td><td>Feed selected region</td></tr>
-        <tr><td><Key/M-RET/</td><td>Feed whole buffer</td></tr>
+        <tr><td><Key/C-. C-l/</td><td>Feed current line</td></tr>
+        <tr><td><Key/C-. C-r/</td><td>Feed selected region</td></tr>
+        <tr><td><Key/C-. C-b/</td><td>Feed whole buffer</td></tr>
         <tr><td><Key/M-C-x/</td><td>Feed current paragraph</td></tr>
-        <tr><td><Key/C-c C-p/</td><td><em/idem/</td></tr>
-        <tr><td><Key/C-c C-c/</td><td>Toggle display of
+        <tr><td><Key/C-. C-p/</td><td><em/idem/</td></tr>
+        <tr><td><Key/C-. c/</td><td>Toggle display of
 <code/*Oz Compiler*/ buffer</td></tr>
-        <tr><td><Key/C-c C-e/</td><td>Toggle display of
+        <tr><td><Key/C-. e/</td><td>Toggle display of
 <code/*Oz Emulator*/ buffer</td></tr>
       </table>
       a <q/paragraph/ is a region of text delimited by empty lines.
