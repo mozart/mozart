@@ -330,10 +330,10 @@
 	      ["buffer"      oz-print-buffer t]
 	      ["region"      oz-print-region t]
 	      )
-	     ("Kernel Code"
-	      ["buffer"      oz-pi-buffer t]
-	      ["region"      oz-pi-region t]
-	      ["line"        oz-pi-line   t]
+	     ("Kernel Syntax"
+	      ["buffer"      oz-ks-buffer t]
+	      ["region"      oz-ks-region t]
+	      ["line"        oz-ks-line   t]
 	      )
 	     ("Indent"
 	      ["line" oz-indent-line t]
@@ -375,9 +375,9 @@
 		(Show/hide\ compiler  . oz-toggle-compiler-window)
 		(Show/hide\ machine   . oz-toggle-machine-window)
 		(Show/hide\ errors    . oz-toggle-errors)
-		(Kernel\ Code\ Buffer . oz-pi-buffer)
-		(Kernel\ Code\ Region . oz-pi-region)
-		(Kernel\ Code\ Line   . oz-pi-line)
+		(Kernel\ Syntax\ Buffer . oz-ks-buffer)
+		(Kernel\ Syntax\ Region . oz-ks-region)
+		(Kernel\ Syntax\ Line   . oz-ks-line)
 		(Show\ Documentation  . oz-doc)
 		(Start\ Oz            . run-oz)
 		(Halt\ Oz             . halt-oz)
@@ -518,30 +518,31 @@ if that value is non-nil."
 
 (defvar oz-pretty-file (oz-make-temp-name "/tmp/ozpretty") "")
 
-(defun oz-pi-buffer()
+(defun oz-ks-buffer()
   (interactive)
-  (oz-pi-region (point-min) (point-max)))
+  (oz-ks-region (point-min) (point-max)))
 
-(defun oz-pi-line()
+(defun oz-ks-line()
   (interactive)
   (let ((line (oz-line-pos)))
-    (oz-pi-region (car line) (cdr line))))
+    (oz-ks-region (car line) (cdr line))))
 
 
-(defun oz-pi-region (start end)
+(defun oz-ks-region (start end)
   "Consults the region."
    (interactive "r")
    (oz-hide-errors)
    (shell-command-on-region start end (concat "cat > " oz-pretty-file))
    (message "")
-   (oz-pi-file oz-pretty-file)
+   (oz-ks-file oz-pretty-file)
    (sleep-for 2)
-   (let ((buf (get-buffer-create "*Oz Kernel Code*")))
+   (let ((buf (get-buffer-create "*Oz Kernel Syntax*")))
      (save-excursion
        (set-buffer buf)
        (delete-region (point-min) (point-max))
        (insert-file-contents (concat oz-pretty-file ".i"))
-       (display-buffer buf t))))
+       (display-buffer buf t)
+       (oz-fontify-buffer))))
 
 
 
@@ -561,7 +562,7 @@ if that value is non-nil."
   (oz-hide-errors)
   (oz-send-string (concat "!include '" file "'\n"))) 
 
-(defun oz-pi-file(file)
+(defun oz-ks-file(file)
   (oz-hide-errors)
   (oz-send-string (concat "!pi '" file "'\n")))
 
@@ -583,13 +584,13 @@ if that value is non-nil."
   (interactive)
   (setq oz-errors-found nil)
   (let ((show-machine (or (get-buffer-window "*Oz Machine*")
-			  (get-buffer-window "*Oz Kernel Code*")
+			  (get-buffer-window "*Oz Kernel Syntax*")
 			  (get-buffer-window "*Oz Compiler*")
 			  (get-buffer-window "*Oz Errors*"))))
     (if (get-buffer "*Oz Errors*") 
 	(delete-windows-on "*Oz Errors*"))
-    (if (get-buffer "*Oz Kernel Code*") 
-	(delete-windows-on "*Oz Kernel Code*"))
+    (if (get-buffer "*Oz Kernel Syntax*") 
+	(delete-windows-on "*Oz Kernel Syntax*"))
     (if (and oz-machine-visible show-machine)
 	(oz-show-buffer "*Oz Machine*"))))
 
