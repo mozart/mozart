@@ -2068,7 +2068,7 @@ public:
     posMB = buffer + 5;
     endMB = buffer + TCPOPENMSGBUFFER_SIZE;
     size = 0;}
-  void marshalEnd(){ size = buffer - posMB - 5;}
+  void marshalEnd(){ size = posMB - buffer  - 5;}
   void beginWrite(BYTE b){
     pos = buffer;
     *pos++=b;
@@ -2168,7 +2168,8 @@ retry:
       int ret=oswrite(fd,buf+written,bufSize-written);
       written += ret;
       if(written==bufSize) break;
-      if(ret<=0 && ret!=EINTR) {
+      /* ATTENTION EWOULDBLOCK is dangerous */
+      if(ret<=0 && ret!=EINTR && errno!=EWOULDBLOCK && errno!=EAGAIN ) {
         error("ip + should not happen 2");
         NETWORK_ERROR(("acceptHandler:write %d\n",errno));
       }
@@ -2974,7 +2975,8 @@ static int acceptHandler(int fd,void *unused)
     int ret=oswrite(newFD,buf+written,bufSize-written);
     written += ret;
     if(written==bufSize) break;
-    if(ret<=0 && ret!=EINTR) {
+    /* ATTENTION EWOULDBLOCK is dangerous */
+    if(ret<=0 && ret!=EINTR && errno!=EWOULDBLOCK && errno!=EAGAIN ) {
       delete buf;
       error("ip + should not happen 2");
       NETWORK_ERROR(("acceptHandler:write %d\n",errno));
