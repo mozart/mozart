@@ -285,7 +285,7 @@ OZ_Term OZ_termType(OZ_Term term)
     return oz_atom("fset");
   }
 
-  OZ_warning("OZ_termType: unknown type\n");
+  OZ_warning("OZ_termType: unknown type in 0x%x\n",term);
   return 0;
 }
 
