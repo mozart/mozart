@@ -8,7 +8,7 @@ export
 import
 
    FS
-   Config(paramColour edgeColour)
+   Config(paramColour paramNodeShape edgeColour)
    
 define
    
@@ -67,6 +67,7 @@ define
       "l(\"vn<"#H.id#">\",n(\"\",["
       #"a(\"OBJECT\",\""#VarStr#"\"),"
       #"a(\"COLOR\",\""#Config.paramColour#"\"),"
+      #"a(\"_GO\",\""#Config.paramNodeShape#"\"),"
       #{Hist get_param_node_attr(H.id $)}
       #"m(["
       #{Hist insert_menu($)}
