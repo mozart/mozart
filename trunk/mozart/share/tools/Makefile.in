@@ -15,7 +15,6 @@ SHELL		= /bin/sh
 INSTALL		= @INSTALL@
 INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_BIN	= $(INSTALL) -m 555
-INSTALL_SRC	= @INSTALL_SRC@
 INSTALL_DIR	= @INSTALL_DIR@
 
 OZFLAGS		=
@@ -179,13 +178,13 @@ $(OZBIN) $(OZTOOLS) $(TOOLSDIRS) $(IMAGESDIR) $(OZCARIMAGESDIR):
 	$(INSTALL_DIR) $@
 
 $(OZTOOLS)/%.oz: %.oz
-	$(INSTALL_SRC) $< $@
+	$(INSTALL_FILE) $< $@
 
 $(OZTOOLS)/%.ozf: %.ozf
 	$(INSTALL_FILE) $< $@
 
 $(OZTOOLS)/gump/examples/%: gump/examples/%
-	$(INSTALL_SRC) $< $@
+	$(INSTALL_FILE) $< $@
 
 $(IMAGESDIR)/%: images/%
 	$(INSTALL_FILE) $< $@
