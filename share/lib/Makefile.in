@@ -219,8 +219,7 @@ RunTime.ozf: compiler/RunTime.oz Standard.ozf StandardBuiltins.ozf
         $(OZC) -l Standard,StandardBuiltins -c $< -o $@
 
 Compiler.ozf: $(FUNFUNCTORS) ozar
-        $(OZENGINE) ozar --in=Main.ozf --out=Compiler.ozf \
-        --exclude=ProductionTemplates
+        $(OZENGINE) ozar --in=Main.ozf --out=Compiler.ozf
 
 #---------------------------------------------------------------------
 # Syslets
@@ -432,7 +431,7 @@ boot-init: $(BOOTINITTXT)
 # currently linked in the system: else the bytecode of these functors
 # may have been side-effected and may contains stateful stuff
 
-boot-ozc.ar: ozc
+boot-ozc.ar: ozc ozar Compiler.ozf Type.ozf
         OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=http\\://www.ps.uni-sb.de/ozhome/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh $(OZAR) --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates --in=$< --out=$@
 
 boot-init.ar: Init.ozf
