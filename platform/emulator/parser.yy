@@ -207,7 +207,7 @@ void xy_setParserExpect() {
   int i;
 }
 
-%token SWITCH SHOWSWITCHES LOCALSWITCHES PUSHSWITCHES POPSWITCHES
+%token SWITCH LOCALSWITCHES PUSHSWITCHES POPSWITCHES
 %token SWITCHNAME FILENAME
 %token OZATOM ATOM_LABEL OZFLOAT OZINT AMPER DOTINT STRING
 %token VARIABLE VARIABLE_LABEL
@@ -389,8 +389,6 @@ queries1        : directive queries
 
 directive       : SWITCH switchList
                   { $$ = newCTerm("dirSwitch",$2); }
-                | SHOWSWITCHES
-                  { $$ = newCTerm("dirShowSwitches"); }
                 | LOCALSWITCHES
                   { $$ = newCTerm("dirLocalSwitches"); }
                 | PUSHSWITCHES
