@@ -68,9 +68,6 @@ Bool isSocket(int fd)
   return (FD_ISSET(fd,&socketFDs));
 }
 
-static long openMax;
-
-
 #ifdef WINDOWS
 int runningUnderNT()
 {
@@ -450,8 +447,9 @@ Bool createReader(int fd);
 int _hdopen(int handle, int flags)
 {
   WrappedHandle *wh = WrappedHandle::getHandle((HANDLE)handle);
-  if ((flags&O_RDONLY)==0)
+  if ((flags&O_WRONLY)==0) {
     createReader(wh->fd);
+  }
   return wh->fd;
 }
 
@@ -552,7 +550,12 @@ void osSetAlarmTimer(int t, Bool interval)
 #endif
 }
 
+static long openMax;
+
+
 #ifndef WINDOWS
+
+
 int osGetAlarmTimer()
 {
 #ifdef DEBUG_DET
@@ -637,9 +640,8 @@ static fd_set globalFDs[2];     // mask of active read/write FDs
 int osOpenMax()
 {
 #ifdef WINDOWS
-  /* socket numbers can grow very large, AM::ioNodes then has problems */
-  return 1000;
-  //  return OPEN_MAX+FD_SETSIZE;
+  /* socket numbers may grow very large on Windows */
+  return 100000;
 #else
   int ret = sysconf(_SC_OPEN_MAX);
   if (ret == -1) {
@@ -771,10 +773,6 @@ void osClrWatchedFD(int fd, int mode)
 {
   CheckMode(mode);
   FD_CLR(fd,&globalFDs[mode]); 
-#ifdef WINDOWS
-  // Assert(mode==SEL_READ);
-  // deleteReader(fd);
-#endif
 }
 
 
@@ -785,19 +783,18 @@ Bool osIsWatchedFD(int fd, int mode)
 }
 
 
-/* do a select, that waits "ticks" ticks.
- * if "ticks" <= 0 do a blocking select
- * return number of ticks left
+/* do a select, that waits "ms".
+ * if "ms" <= 0 do a blocking select
+ * return number of ms left
  */
-int osBlockSelect(int ticks)
+int osBlockSelect(int ms)
 {
   fd_set copyFDs[2];
   copyFDs[SEL_READ]  = globalFDs[SEL_READ];
   copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
-  int wait = osClockTickToMs(ticks);
-  int ret = osSelect(&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],&wait);
-  int ticksleft = osMsToClockTick(wait);
-  return ticksleft;
+  int wait = ms;  
+  (void) osSelect(&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],&wait);
+  return wait;
 }
 
 /* osClearSocketErrors
@@ -883,10 +880,7 @@ int osFirstSelect()
 
 Bool osNextSelect(int fd, int mode)
 {
-#ifndef WINDOWS
-  /* socket numbers may grow larger on win32 */
   Assert(fd<openMax);
-#endif
   CheckMode(mode);
 
   if (FD_ISSET(fd,&tmpFDs[mode])) {

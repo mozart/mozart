@@ -70,14 +70,6 @@ enum InstType {
 };
 
 
-class IONode {
-public:
-  OZ_IOHandler handler[2];
-  void *readwritepair[2];
-};
-
-
-
 typedef int32 ChachedOORegs;
 
 inline
@@ -129,8 +121,6 @@ public:
 
   jmp_buf engineEnvironment;
 
-  IONode *ioNodes;		// node that must be waked up on io
-
 #ifdef DEBUG_CHECK
   Bool dontPropagate;
   // is used by consistency checking of a copy of a search tree; 
@@ -173,6 +163,7 @@ public:
 #endif
   Toplevel *toplevelQueue;
 
+  OzSleep *sleepQueue;
 
   void printBoards();
 
@@ -362,13 +353,10 @@ public:
 
   void handleAlarm();
   void handleUser();
-
-  void setUserAlarmTimer(int ticks) { userCounter=ticks; }
-  int getUserAlarmTimer() { return userCounter; } 
-
-  OzSleep *sleepQueue;
   void insertUser(int t,TaggedRef node);
-  int wakeUser();
+  void wakeUser();
+  int  nextUser();
+  Bool checkUser();
 
   Bool isStableSolve(SolveActor *sa);
 
