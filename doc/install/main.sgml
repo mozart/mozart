@@ -90,7 +90,7 @@
   <Author.Extern to="author.db" key="Christian.Schulte">
 
   <Part id=part.bin>
-    <Title/Installing Precompiled Distributions/
+    <Title/Click-and-Go Installation/
       &chapter.windows;
       &chapter.rpm;
       &chapter.tarball;
