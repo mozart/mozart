@@ -140,8 +140,8 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
     return x_items.addSuspFDish(OZ_self, OZ_args, OZ_arity);
   }
 
-  return x_items.spawnPropagator(fd_any, BIfdConstrDisj_body, 3, 
-				 b_tuple, v_tuple, vp_tuple);
+  return x_items.spawnPropagatorStabil(fd_any, BIfdConstrDisj_body, 3, 
+				       b_tuple, v_tuple, vp_tuple);
   //  FDcurrentTaskSusp->markStable();
 }
 OZ_C_proc_end 
