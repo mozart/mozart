@@ -4994,7 +4994,7 @@ DECLAREBI_USEINLINEREL1(BIprint,printInline)
 OZ_C_proc_begin(BIprintVS,1)
 {
   OZ_Term t=OZ_getCArg(0);
-  OZ_printVS(t);
+  OZ_printVirtualString(t);
   return PROCEED;
 }
 OZ_C_proc_end
