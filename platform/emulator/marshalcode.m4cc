@@ -61,8 +61,6 @@ define(opAction,
         $1,Literal,marshalTerm(getTaggedArg(PC++),bs);,
         $1,Feature,marshalTerm(getTaggedArg(PC++),bs);,
         $1,Constant,marshalTerm(getTaggedArg(PC++),bs);,
-        $1,RelBuiltinname,marshalBuiltin((Builtin*) getAdressArg(PC++),bs);,
-        $1,FunBuiltinname,marshalBuiltin((Builtin*) getAdressArg(PC++),bs);,
         $1,Builtinname,marshalBuiltin((Builtin*) getAdressArg(PC++),bs);,
         $1,Register,marshalNumber(regToInt(getRegArg(PC++)),bs);,
         $1,XRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
@@ -89,7 +87,7 @@ void marshalBuiltin(Builtin *entry,MsgBuffer *bs)
   if (entry->isNative()) {
     //warning("marshalling native builtin: %s",toC(entry->getName()));
   }
-  marshalTerm(entry->getName(),bs);
+  marshalTerm(makeTaggedConst(entry),bs);
 }
 
 inline
@@ -231,6 +229,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
   ProgramCounter PC = start;
 
   while (PC<ende) {
+
     Opcode op = CodeArea::getOpcode(PC++);
 
     if (op==GENFASTCALL) {
@@ -335,8 +334,6 @@ define(opAction,
         $1,Literal,PC=unmarshalTagged(PC,bs);,
         $1,Feature,PC=unmarshalTagged(PC,bs);,
         $1,Constant,PC=unmarshalTagged(PC,bs);,
-        $1,RelBuiltinname,PC=unmarshalBuiltin(PC,bs);,
-        $1,FunBuiltinname,PC=unmarshalBuiltin(PC,bs);,
         $1,Builtinname,PC=unmarshalBuiltin(PC,bs);,
         $1,Register,PC=unmarshalReg(PC,bs);,
         $1,XRegisterIndex,PC=unmarshalReg(PC,bs);,
@@ -381,19 +378,12 @@ ProgramCounter unmarshalTagged(ProgramCounter PC, MsgBuffer *bs)
 
 ProgramCounter unmarshalBuiltin(ProgramCounter PC, MsgBuffer *bs)
 {
-  TaggedRef name = unmarshalTerm(bs);
-  Assert(oz_isAtom(name));
+  TaggedRef builtin = unmarshalTerm(bs);
+  Assert(oz_isBuiltin(builtin));
 
   if (PC==NULL) return 0;
 
-  const char *biName = tagged2Literal(name)->getPrintName();
-  Builtin *found = (Builtin *)builtinTab.htFind(biName);
-
-  if (found == htEmpty) {
-    warning("[[builtin]](%s) not found", biName);
-    found = (Builtin *)builtinTab.htFind("fail");
-  }
-  return writeAddress(found,PC);
+  return writeAddress(tagged2Builtin(builtin),PC);
 }
 
 inline

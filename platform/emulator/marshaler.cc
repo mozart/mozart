@@ -624,8 +624,8 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       PD((MARSHAL_CT,"tag DIF_BUILTIN BYTES:1"));
       Builtin *bi= (Builtin *)t;
 
-      if (bi->isNative())
-        goto bomb;
+      // temporarily deactivated: otherwise prelude does not work
+      // if (bi->isNative()) goto bomb;
 
       marshalString(bi->getPrintName(),bs);
       break;
