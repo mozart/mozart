@@ -21,3 +21,4 @@ perdio.cc
 *-if.cc
 *.lo
 .gdbinit
+i386-mingw32-oztool
