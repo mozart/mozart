@@ -52,6 +52,18 @@ fi
 : ${oztool_ld="@TOOLLDCMD@ @LDFLAGS@"}
 : ${oztool_platform="@platform@"}
 
+if test $# -eq 0
+then
+  cat <<EOF
+Usage:
+	oztool [-verbose] [-gnu|-watcom|-msvc] c++ SourceFile
+	oztool [-verbose] [-gnu|-watcom|-msvc] cc  SourceFile
+	oztool [-verbose] [-gnu|-watcom|-msvc] ld -o TargetLib FileList
+	oztool platform
+EOF
+  exit 2
+fi
+
 cmd=$1
 shift
 
