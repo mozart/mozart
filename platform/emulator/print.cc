@@ -1400,10 +1400,14 @@ void FDIntervals::printLong(ostream &stream, int idnt) const
 {
   stream << endl << indent(idnt) << "high=" << endl;
   print(stream, idnt);
-  for (int i = 0; i < high; i += 1)
+  for (int i = 0; i < high; i += 1) {
     stream << endl << indent(idnt)
-          << "i_arr[" << i << "]@" << (const void*) &i_arr[i]
-          << " left=" << i_arr[i].left << " right=" << i_arr[i].right;
+           << "i_arr[" << i << "]@"
+#if !defined(DEBUG_CHECK) || !defined(DEBUG_FD)
+           << (const void*) &i_arr[i]
+#endif
+           << " left=" << i_arr[i].left << " right=" << i_arr[i].right;
+  }
   stream << endl;
 }
 
