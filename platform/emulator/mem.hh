@@ -106,7 +106,7 @@ inline unsigned int getAllocatedMemory() {
 void *heapMallocOutline(size_t chunk_size);
 
 
-inline void *mallocBody(int chunk_size)
+inline void *mallocBody(size_t chunk_size)
 {
   Assert(ToInt32(heapTop)%sizeof(int32) == 0);
 
@@ -124,7 +124,7 @@ inline void *mallocBody(int chunk_size)
 #define HeapTopAlign(align) heapTop = (char *)((long)heapTop & (-align));
 
 /* like malloc(3): return pointer aligned to void* */
-inline void *heapMalloc(int chunk_size)
+inline void *heapMalloc(size_t chunk_size)
 {
   if (sizeof(int32) != WordSize) {
     HeapTopAlign(WordSize);
@@ -133,14 +133,14 @@ inline void *heapMalloc(int chunk_size)
 }
 
 /* return pointer aligned to sizeof(int32) */
-inline int32 *int32Malloc(int chunk_size)
+inline int32 *int32Malloc(size_t chunk_size)
 {
   return (int32 *) mallocBody(chunk_size);
 }
 
 
 /* return "chunk_size" aligned to "align" */
-inline void *alignedMalloc(int chunk_size, int align)
+inline void *alignedMalloc(size_t chunk_size, int align)
 {
   HeapTopAlign(align);
   return (int32 *) mallocBody(chunk_size);
@@ -155,7 +155,7 @@ inline Bool heapNewer(void *ptr1, void *ptr2)
 
 
 // free list management
-const int freeListMaxSize = 500;
+const int freeListMaxSize = 1000;
 
 extern void *FreeList[freeListMaxSize];
 
