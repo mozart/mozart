@@ -137,6 +137,8 @@ OZ_C_proc_end
 OZ_C_proc_begin(gump_close, 1)
 {
   // Must never be invoked twice on the same foreign pointer!
+#if 0
+  // Makes the emulator crash under Linux??
   OZ_declareBufferArg(0, p);
 
   if (p->yy_input_file)
@@ -144,6 +146,7 @@ OZ_C_proc_begin(gump_close, 1)
   if (p->yy_is_our_buffer)
     delete[] p->yy_ch_buf;
   delete p;
+#endif
 
   return PROCEED;
 }
