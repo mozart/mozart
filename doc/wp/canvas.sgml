@@ -146,7 +146,10 @@ end
       <Figure id="figure.canvas.usebar">
         <Caption/Using a canvas for drawing barcharts./
         <P>
+               <picture.choice>
           <Picture.Extern to="barchart.gif" type=gif>
+          <Picture.extern to="pictures/canvas/barchart.eps.gz" type=ps>
+               </picture.choice>
 <index class=tails/<<Tk>><and><<scrollbar>>/
 <chunk class=anonymous><title/barchart/
 C={New BarCanvas    tkInit(parent:W bg:white width:300 height:120)}
@@ -220,7 +223,10 @@ R={New Tk.canvasTag tkInit(parent:C)}
       <figure id="figure.canvas.tags">
         <Caption/A canvas for creating rectangles and ovals./
         <P>
+               <picture.choice>
           <Picture.Extern to="tags.gif" type=gif>
+          <Picture.extern to="pictures/canvas/tags.eps.gz" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/tags interactive/
 C={New Tk.canvas    tkInit(parent:W width:300 height:200 bg:white)}
 R={New Tk.canvasTag tkInit(parent:C)}
@@ -352,7 +358,10 @@ end
       <figure id="figure.canvas.waitdone">
         <caption/A procedure for creating wait dialogs./
         <p>
+               <picture.choice>
           <Picture.Extern to="waitdone.gif" type=gif>
+          <Picture.extern to="pictures/canvas/waitdone.eps.gz" type=ps>
+               </picture.choice>
 <chunk class=anonymous><title/WaitDone/
 proc {WaitDone Done}
    W={New Tk.toplevel tkInit(withdraw:true)}
