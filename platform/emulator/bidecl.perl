@@ -2389,9 +2389,9 @@ $builtins = {
                              BI  => BIbreakpoint,
                              native => true},
 
-    'Debug.displayCode' => { in  => ['+int','+int'],
+    'Debug.displayDef'  => { in  => ['+int','+int'],
                              out => [],
-                             BI  => BIdisplayCode,
+                             BI  => BIdisplayDef,
                              native => true},
 
     'Debug.procedureCode'=> { in  => ['+procedure'],
