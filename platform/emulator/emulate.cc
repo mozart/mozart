@@ -2857,7 +2857,7 @@ Case(GETVOID)
 // --- end call/execute -----------------------------------------------------
 // --------------------------------------------------------------------------
 
-// #define EMULATE_NO_CONSCALL
+#define EMULATE_NO_CONSCALL
 // for kostja, until we can figure out a better way
 #ifndef EMULATE_NO_CONSCALL
   Case(DECONSCALLX)
@@ -2878,8 +2878,7 @@ Case(GETVOID)
       DEREF(taggedPredicate,predPtr);
       if (oz_isConst(taggedPredicate)) {
         predicate = tagged2Const(taggedPredicate);
-        TypeOfConst typ = predicate->getType();
-        switch (typ) {
+        switch (predicate->getType()) {
         case Co_Abstraction:
           {
             Abstraction *def = (Abstraction *) predicate;
@@ -2894,7 +2893,7 @@ Case(GETVOID)
               DEREF(taggedArgument,argPtr);
               if (oz_isSTuple(taggedArgument)) {
                 SRecord *srec = tagged2SRecord(taggedArgument);
-                int callerArity = srec->getWidth();
+                int callerArity = srec->getTupleWidth();
                 if (srec->getLabel() == AtomPair &&
                     callerArity == calleeArity - 1) {
                   int i = callerArity;
@@ -2917,30 +2916,26 @@ Case(GETVOID)
         case Co_Builtin:
           {
             Builtin *bi = (Builtin *) predicate;
-            int calleeArity = bi->getArity();
-            if (calleeArity == 2) {   // arity is correct
+            predArity = bi->getArity();
+            if (predArity == 2) {   // arity is correct
               if (!isTailCall) PC = PC+2;
-              predArity = 2;
               goto LBLcall;
             } else {   // deconstruct
               TaggedRef taggedArgument = XREGS[0];
               DEREF(taggedArgument,argPtr);
+              Assert(!oz_isRef(taggedArgument));
               if (oz_isSTuple(taggedArgument)) {
                 SRecord *srec = tagged2SRecord(taggedArgument);
-                int callerArity = srec->getWidth();
+                int callerArity = srec->getTupleWidth();
                 if (srec->getLabel() == AtomPair &&
-                    callerArity == calleeArity - 1) {
-                  int i = callerArity;
-                  XREGS[i] = XREGS[1];
-                  while (--i >= 0)
-                    XREGS[i] = srec->getArg(i);
+                    callerArity == predArity - 1) {
+                  XREGS[callerArity] = XREGS[1];
+                  while (--callerArity >= 0)
+                    XREGS[callerArity] = srec->getArg(callerArity);
                   if (!isTailCall) PC = PC+2;
-                  predArity = calleeArity;
                   goto LBLcall;
                 }
-              }
-              Assert(!oz_isRef(taggedArgument));
-              if (oz_isVarOrRef(taggedArgument)) {
+              } else if (oz_isVarOrRef(taggedArgument)) {
                 SUSP_PC(argPtr,PC);
               }
               RAISE_ARITY(taggedPredicate,OZ_toList(2,XREGS));
