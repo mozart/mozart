@@ -220,11 +220,13 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 
   Case(PUTNUMBERX)
   Case(PUTLITERALX)
+     Xreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
   Case(PUTCONSTANTX)
      Xreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
 
   Case(PUTNUMBERY)
   Case(PUTLITERALY)
+     Yreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
   Case(PUTCONSTANTY)
      Yreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
 
@@ -263,12 +265,21 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 
   Case(SETNUMBER)
   Case(SETLITERAL)
+    {
+      *sPointer++ = getTaggedArg(PC+1);
+      DISPATCH(2);
+    }
   Case(SETCONSTANT)
     {
       *sPointer++ = getTaggedArg(PC+1);
       DISPATCH(2);
     }
 
+  Case(SETPREDICATEREF)
+    {
+      *sPointer++ = OZ_makeForeignPointer(getAdressArg(PC+1));
+      DISPATCH(2);
+    }
 
   Case(SETVOID)
     {
@@ -320,6 +331,58 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
       sPointer = tagged2SRecord(term)->getRef();
       SetReadMode;
       DISPATCH(4);
+    }
+
+    SHALLOWFAIL;
+    HF_TELL(RegAccess(HelpReg,getRegArg(PC+3)),mkRecord(label,ff));
+  }
+
+  Case(GETRECORDVARSX) ONREG(GetRecordVars,X);
+  Case(GETRECORDVARSY) ONREG(GetRecordVars,Y);
+  Case(GETRECORDVARSG) ONREG(GetRecordVars,G);
+  {
+  GetRecordVars: asmLbl(GETRECORDVARS);
+    TaggedRef label = getLiteralArg(PC+1);
+    SRecordArity ff = (SRecordArity) getAdressArg(PC+2);
+
+    TaggedRef term = RegAccess(HelpReg,getRegArg(PC+3));
+    DEREF(term,termPtr,tag);
+
+    if (isAnyVar(term)) {
+      SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
+      srecord->initArgs();
+      XRegisterIndexListClass *xlist = GetXList(PC+4);
+      int *array = xlist->getArray();
+      sPointer = srecord->getRef();
+      for (int i = 0; i < xlist->getLength(); i++) {
+	Xreg(array[i]) = tagged2NonVariable(sPointer);
+	sPointer++;
+      }
+      if (isCVar(term)) {
+	TaggedRef srecordRef=makeTaggedSRecord(srecord);
+	if(tagged2CVar(term)->unifyOutline(termPtr, term, // mm_u
+					   &srecordRef, srecordRef,
+					   NOFLATGUARD)) {
+	  DISPATCH(5);
+	}
+      } else {
+	// mm_u
+	oz_bindToNonvar(termPtr, term,
+			makeTaggedSRecord(srecord), NOFLATGUARD);
+	DISPATCH(5);
+      }
+    }
+
+    if (isSRecord(tag) &&
+	tagged2SRecord(term)->compareSortAndArity(label,ff)) {
+      XRegisterIndexListClass *xlist = GetXList(PC+4);
+      int *array = xlist->getArray();
+      sPointer = tagged2SRecord(term)->getRef();
+      for (int i = 0; i < xlist->getLength(); i++) {
+	Xreg(array[i]) = tagged2NonVariable(sPointer);
+	sPointer++;
+      }
+      DISPATCH(5);
     }
 
     SHALLOWFAIL;
@@ -475,7 +538,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 	       }''
 	       )
 
-/* getListValVar(N,R,M) == getList(X[N]) unifyVal(R), unifyVar(X[M]) */
+/* getListValVar(N,R,M) == getList(X[N]) unifyVal(R) unifyVar(X[M]) */
   CaseOneReg(GETLISTVALVAR,
 		``{
 		 TaggedRef term = Xreg(getRegArg(PC+1));
@@ -529,7 +592,53 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 
 	       }''
 	       )
-  
+
+
+/* getListVarVar(R,N,M) == getList(R) unifyVar(X[N]) unifyVar(X[M]) */
+  CaseOneReg(GETLISTVARVAR,
+		``{
+		 TaggedRef term = Reg1(getRegArg(PC+1));
+		 DEREF(term,termPtr,tag);
+
+		 if (isAnyVar(term)) {
+		   register LTuple *ltuple = new LTuple();
+		   ltuple->setHead(e->currentUVarPrototype());
+		   ltuple->setTail(e->currentUVarPrototype());
+		   TaggedRef *argg = ltuple->getRef();
+		   Xreg(getRegArg(PC+2)) = tagged2NonVariable(argg);
+		   Xreg(getRegArg(PC+3)) = tagged2NonVariable(argg+1);
+
+		   if (isCVar(term)) {
+		     if (tagged2CVar(term)->unifyOutline(termPtr,  // mm_u
+							 term, NULL,
+							 makeTaggedLTuple(ltuple),
+							 NOFLATGUARD)) {
+		       DISPATCH(4);
+		     }
+		     SHALLOWFAIL;
+		     HF_TELL(Reg1(getRegArg(PC+1)), makeTaggedLTuple(ltuple));
+
+		   } else {
+		     // mm_u
+		     oz_bindToNonvar(termPtr, term,
+				     makeTaggedLTuple(ltuple), NOFLATGUARD);
+		     DISPATCH(4);
+		   }
+		 }
+
+		 if (isLTuple(term)) {
+		   TaggedRef *argg = tagged2LTuple(term)->getRef();
+		   Xreg(getRegArg(PC+2)) = tagged2NonVariable(argg);
+		   Xreg(getRegArg(PC+3)) = tagged2NonVariable(argg+1);
+		   DISPATCH(4);
+		 }
+
+		 SHALLOWFAIL;
+		 HF_TELL(Reg1(getRegArg(PC+1)),makeTaggedLTuple(new LTuple(e->currentUVarPrototype(),e->currentUVarPrototype())));
+
+	       }''
+	       )
+
 
   CaseOneReg( GETLIST,
 	       ``{
@@ -773,7 +882,15 @@ Case(UNIFYLITERAL)
       TaggedRef val     = Reg1(getRegArg(PC+1));
       IHashTable *table = (IHashTable *) getAdressArg(PC+2);
 
-      DoSwitchOnTerm(val,table);
+      DoSwitchOnTerm(val,table,NO);
+    })
+
+  CaseOneReg(MATCH,
+    {
+      TaggedRef val     = Reg1(getRegArg(PC+1));
+      IHashTable *table = (IHashTable *) getAdressArg(PC+2);
+
+      DoSwitchOnTerm(val,table,OK);
     })
 
   CaseOneReg( BRANCHONNONVAR,

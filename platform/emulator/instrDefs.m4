@@ -18,34 +18,35 @@ define(`PointerSize',    1)
 define(`ShortSize',      1)
 define(`DoubleWordSize', 2)
 
-CONST(`OpcodeSize',        ShortSize)
-CONST(`NumberSize',        PointerSize)
-CONST(`LiteralSize',       PointerSize)
-CONST(`FeatureSize',       PointerSize)
-CONST(`ConstantSize',      PointerSize)
-CONST(`BuiltinnameSize',   PointerSize)
-CONST(`RelBuiltinnameSize',PointerSize)
-CONST(`FunBuiltinnameSize',PointerSize)
-CONST(`VariablenameSize',  PointerSize)
-CONST(`RegisterSize',      ShortSize)
-CONST(`XRegisterIndexSize',ShortSize)
-CONST(`YRegisterIndexSize',ShortSize)
-CONST(`AritySize',         ShortSize)
-CONST(`LabelSize',         PointerSize)
-CONST(`CountSize',         ShortSize)
-CONST(`NLiveRegsSize',     ShortSize)
-CONST(`IsTailSize',        ShortSize)
-CONST(`ArityAndIsTailSize',ShortSize)
-CONST(`DummySize',         ShortSize)
-CONST(`PredicateRefSize',  PointerSize)
-CONST(`PredIdSize',        PointerSize)
-CONST(`HashTableRefSize',  PointerSize)
-CONST(`RecordAritySize',   PointerSize)
-CONST(`GenCallInfoSize',   PointerSize)
-CONST(`ApplMethInfoSize',  PointerSize)
-CONST(`GRegRefSize',       PointerSize)
-CONST(`LocationSize',      PointerSize)
-CONST(`CacheSize',         DoubleWordSize)
+CONST(`OpcodeSize',            ShortSize)
+CONST(`NumberSize',            PointerSize)
+CONST(`LiteralSize',           PointerSize)
+CONST(`FeatureSize',           PointerSize)
+CONST(`ConstantSize',          PointerSize)
+CONST(`BuiltinnameSize',       PointerSize)
+CONST(`RelBuiltinnameSize',    PointerSize)
+CONST(`FunBuiltinnameSize',    PointerSize)
+CONST(`VariablenameSize',      PointerSize)
+CONST(`RegisterSize',          ShortSize)
+CONST(`XRegisterIndexSize',    ShortSize)
+CONST(`YRegisterIndexSize',    ShortSize)
+CONST(`AritySize',             ShortSize)
+CONST(`LabelSize',             PointerSize)
+CONST(`CountSize',             ShortSize)
+CONST(`NLiveRegsSize',         ShortSize)
+CONST(`IsTailSize',            ShortSize)
+CONST(`ArityAndIsTailSize',    ShortSize)
+CONST(`DummySize',             ShortSize)
+CONST(`PredicateRefSize',      PointerSize)
+CONST(`PredIdSize',            PointerSize)
+CONST(`HashTableRefSize',      PointerSize)
+CONST(`RecordAritySize',       PointerSize)
+CONST(`GenCallInfoSize',       PointerSize)
+CONST(`ApplMethInfoSize',      PointerSize)
+CONST(`GRegRefSize',           PointerSize)
+CONST(`LocationSize',          PointerSize)
+CONST(`XRegisterIndexListSize',PointerSize)
+CONST(`CacheSize',             DoubleWordSize)
 
 dnl   how the old compiler encodes different registers
 
@@ -116,23 +117,15 @@ instruction(putConstant,Constant,writeArg(Register))
 instruction(setVariable,writeArg(Register))
 instruction(setValue,readArg(Register))
 instruction(setConstant,Constant)
+instruction(setPredicateRef,PredicateRef)
 instruction(setVoid,Count)
 
-instruction(getRecord,Literal,RecordArity,readArg(Register))
-instruction(getList,readArg(Register))
-instruction(getListValVar,readArg(XRegisterIndex),readArg(Register),writeArg(XRegisterIndex))
+instruction(getRecordVars,Literal,RecordArity,readArg(Register),
+			  XRegisterIndexList)
+instruction(getListVarVar,readArg(Register),
+			  writeArg(XRegisterIndex),writeArg(XRegisterIndex))
 instruction(getLiteral,Literal,readArg(Register))
 instruction(getNumber,Number,readArg(Register))
-
-instruction(unifyVariable,writeArg(Register))
-instruction(unifyValue,readArg(Register))
-instruction(unifyValVar,readArg(Register),writeArg(Register))
-instruction(unifyNumber,Number)
-instruction(unifyLiteral,Literal)
-instruction(unifyVoid,Count)
-instruction(getVariable,writeArg(Register))
-instruction(getVarVar,writeArg(Register),writeArg(Register))
-instruction(getVoid,Count)
 
 instruction(allocateL,Count)
 dnl   allocateL1 == allocateL(1)
@@ -158,8 +151,6 @@ instruction(deAllocateL7)
 instruction(deAllocateL8)
 instruction(deAllocateL9)
 instruction(deAllocateL10)
-
-instruction(callBuiltin,Builtinname,Arity)
 
 dnl   NOTE: The instructions genCall, call, tailCall, marshalledFastCall,
 dnl   genFastCall, fastCall and fastTailCall must all have the same size
@@ -194,8 +185,6 @@ instruction(inlineAssign,Feature,readArg(XRegisterIndex),NLiveRegs,Cache)
 
 instruction(branch,Label)
 
-instruction(weakDet,readArg(Register),NLiveRegs)
-
 instruction(wait)
 instruction(waitTop)
 instruction(ask)
@@ -218,50 +207,88 @@ instruction(return)
 instruction(nextClause,Label)
 instruction(lastClause)
 
-dnl   shallow guards
+dnl   conditionals
 instruction(shallowGuard,Label,NLiveRegs)
 instruction(shallowThen)
-dnl   if X = a then S1 else S2 end
+
 instruction(testLiteral,readArg(Register),Literal,Label,Label,NLiveRegs)
 instruction(testNumber,readArg(Register),Number,Label,Label,NLiveRegs)
+
 instruction(testBool,readArg(Register),Label,Label,Label,NLiveRegs)
-instruction(shallowTest1,RelBuiltinname,readArg(XRegisterIndex),
-			 Label,NLiveRegs)
-instruction(shallowTest2,RelBuiltinname,readArg(XRegisterIndex),
-			 readArg(XRegisterIndex),
-			 Label,NLiveRegs)
-instruction(testLess,readArg(XRegisterIndex),
-		     readArg(XRegisterIndex),
-		     Label,NLiveRegs)
-instruction(testLessEq,readArg(XRegisterIndex),
-		       readArg(XRegisterIndex),
-		       Label,NLiveRegs)
 
-instruction(switchOnTerm,readArg(Register),HashTableRef)
+instruction(match,readArg(Register),HashTableRef,NLiveRegs)
+instruction(getVariable,writeArg(Register))
+instruction(getVarVar,writeArg(Register),writeArg(Register))
+instruction(getVoid,Count)
 
-dnl   file x line x column x comment x nliveregs
+dnl   code annotations for the source-level debugger
+
+dnl   debug args: file x line x column x comment x nliveregs
 instruction(debugEntry,Literal,Number,Number,Literal,NLiveRegs)
 instruction(debugExit,Literal,Number,Number,Literal,NLiveRegs)
+
 instruction(globalVarname,Variablename)
 instruction(localVarname,Variablename)
+
 instruction(clearY,writeArg(YRegisterIndex))
 instruction(profileProc)
 
-dnl   inlining of builtins
+dnl   builtin applications
 
-instruction(inlineFun1,FunBuiltinname,readArg(XRegisterIndex),
-			writeArg(XRegisterIndex),NLiveRegs)
+instruction(callBI,Builtinname,Location,NLiveRegs)
 instruction(inlinePlus1,readArg(XRegisterIndex),
 		        writeArg(XRegisterIndex),NLiveRegs)
 instruction(inlineMinus1,readArg(XRegisterIndex),
 		         writeArg(XRegisterIndex),NLiveRegs)
-instruction(inlineFun2,FunBuiltinname,readArg(XRegisterIndex),
-			readArg(XRegisterIndex),
-			writeArg(XRegisterIndex),NLiveRegs)
 instruction(inlinePlus, readArg(XRegisterIndex),
 			readArg(XRegisterIndex),
 			writeArg(XRegisterIndex),NLiveRegs)
 instruction(inlineMinus,readArg(XRegisterIndex),
+			readArg(XRegisterIndex),
+			writeArg(XRegisterIndex),NLiveRegs)
+instruction(inlineDot,readArg(XRegisterIndex),Feature,
+			writeArg(XRegisterIndex),NLiveRegs,Cache)
+instruction(inlineUparrow,readArg(XRegisterIndex),readArg(XRegisterIndex),
+			writeArg(XRegisterIndex),NLiveRegs)
+
+instruction(testBI,Builtinname,Location,Label,NLiveRegs)
+instruction(testLT,readArg(XRegisterIndex),
+		   readArg(XRegisterIndex),
+		   writeArg(XRegisterIndex),
+		   Label,NLiveRegs)
+instruction(testLE,readArg(XRegisterIndex),
+		   readArg(XRegisterIndex),
+		   writeArg(XRegisterIndex),
+		   Label,NLiveRegs)
+
+dnl   instructions soon to be removed
+
+instruction(getRecord,Literal,RecordArity,readArg(Register))
+instruction(getList,readArg(Register))
+instruction(getListValVar,readArg(XRegisterIndex),readArg(Register),writeArg(XRegisterIndex))
+instruction(unifyVariable,writeArg(Register))
+instruction(unifyValue,readArg(Register))
+instruction(unifyValVar,readArg(Register),writeArg(Register))
+instruction(unifyNumber,Number)
+instruction(unifyLiteral,Literal)
+instruction(unifyVoid,Count)
+instruction(switchOnTerm,readArg(Register),HashTableRef)
+instruction(weakDet,readArg(Register),NLiveRegs)
+
+dnl   instructions only used by the old compiler
+
+instructionsUnneededForNewCompiler
+
+instruction(createNamedVariable,writeArg(Register),Variablename)
+instruction(branchOnNonVar,readArg(Register),Label)
+instruction(putNumber,Number,writeArg(Register))
+instruction(putLiteral,Literal,writeArg(Register))
+instruction(setNumber,Number)
+instruction(setLiteral,Literal)
+instruction(callBuiltin,Builtinname,Arity)
+instruction(inlineFun1,FunBuiltinname,readArg(XRegisterIndex),
+			writeArg(XRegisterIndex),NLiveRegs)
+instruction(inlineFun2,FunBuiltinname,readArg(XRegisterIndex),
 			readArg(XRegisterIndex),
 			writeArg(XRegisterIndex),NLiveRegs)
 instruction(inlineEqEq,FunBuiltinname,readArg(XRegisterIndex),
@@ -276,34 +303,17 @@ instruction(inlineRel2,RelBuiltinname,readArg(XRegisterIndex),
 instruction(inlineRel3,RelBuiltinname,readArg(XRegisterIndex),
 			readArg(XRegisterIndex),readArg(XRegisterIndex),
 			NLiveRegs)
-
-instruction(inlineDot,readArg(XRegisterIndex),Feature,
-			writeArg(XRegisterIndex),NLiveRegs,Cache)
-instruction(inlineUparrow,readArg(XRegisterIndex),readArg(XRegisterIndex),
-			writeArg(XRegisterIndex),NLiveRegs)
-
-instruction(callBI,Builtinname,Location,NLiveRegs)
-
-instruction(testBI,Builtinname,Location,Label,NLiveRegs)
-instruction(testLT,readArg(XRegisterIndex),
-		   readArg(XRegisterIndex),
-		   writeArg(XRegisterIndex),
-		   Label,NLiveRegs)
-instruction(testLE,readArg(XRegisterIndex),
-		   readArg(XRegisterIndex),
-		   writeArg(XRegisterIndex),
-		   Label,NLiveRegs)
-
-instructionsUnneededForNewCompiler
-
-dnl   instructions only used by the old compiler
-
-instruction(createNamedVariable,writeArg(Register),Variablename)
-instruction(branchOnNonVar,readArg(Register),Label)
-instruction(putNumber,Number,writeArg(Register))
-instruction(putLiteral,Literal,writeArg(Register))
-instruction(setNumber,Number)
-instruction(setLiteral,Literal)
+instruction(shallowTest1,RelBuiltinname,readArg(XRegisterIndex),
+			 Label,NLiveRegs)
+instruction(shallowTest2,RelBuiltinname,readArg(XRegisterIndex),
+			 readArg(XRegisterIndex),
+			 Label,NLiveRegs)
+instruction(testLess,readArg(XRegisterIndex),
+		     readArg(XRegisterIndex),
+		     Label,NLiveRegs)
+instruction(testLessEq,readArg(XRegisterIndex),
+		       readArg(XRegisterIndex),
+		       Label,NLiveRegs)
 
 dnl   dummy instructions to allow easy testing of new 
 dnl   instructions via assembler

@@ -2174,49 +2174,6 @@ Builtin *tagged2Builtin(TaggedRef term)
 }
 
 
-class OZ_Location {
-private:
-  int inAr,outAr;
-  int map[0];
-public:
-  NO_DEFAULT_CONSTRUCTORS(OZ_Location);
-  static OZ_Location *newLocation(int inArity,int outArity)
-  {
-    int sz = sizeof(OZ_Location)+sizeof(int)*(inArity+outArity);
-    OZ_Location *loc = (OZ_Location *)new char[sz];
-    loc->inAr=inArity;
-    loc->outAr=outArity;
-    return loc;
-  }
-  int *mapping() { return map; }
-  int get(int n) {
-    Assert(n>=0 && n<inAr+outAr);
-    return map[n];
-  }
-  void set(int n,int i) {
-    Assert(n>=0 && n<inAr+outAr);
-    map[n]=i;
-  }
-  int &out(int n) {
-    Assert(n>=0 && n<outAr);
-    return map[inAr+n];
-  }
-  int &in(int n) {
-    Assert(n>=0 && n<inAr);
-    return map[n];
-  }
-  int getArity() { return inAr+outAr; }
-  int getInArity() { return inAr; }
-  int getOutArity() { return outAr; }
-  int max(int n) {
-    for (int i = inAr+outAr-1; i >= inAr; i--) {
-      n=::max(n,get(i)+1);
-    }
-    return n;
-  }
-};
-  
-
 /*===================================================================
  * Cell
  * Unused third field from tertiary.
