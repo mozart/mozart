@@ -46,4 +46,12 @@
 			     out    => ['value'],
 			     BI     => BIloadWithHeader},
 
+    'pack'	        => { in     => ['+value'],
+                             out    => ['+byteString'],
+                             BI     => BIpicklePack},
+
+    'unpack'	        => { in     => ['+virtualString','value'],
+                             out    => [],
+                             BI     => BIpickleUnpack},
+
  );
