@@ -198,6 +198,15 @@ public:
 
 
 
+class Construct_4{
+  void* one;
+  void* two;
+  void* three;
+  void* four;
+public:
+  Construct_4(){one=NULL;two=NULL;three=NULL;four=NULL;}
+};
+
 class Construct_3{
   void* one;
   void* two;
@@ -213,10 +222,12 @@ public:
   Construct_2(){one=NULL;two=NULL;}
 };
 
+#define CUTOFF_4  500
 #define CUTOFF_3  500
 #define CUTOFF_2  500
 
 class GenFreeListManager{
+  FreeListManager* flm_4;
   FreeListManager* flm_3; // used for OwnerCreditExtennsion,BorrowCreditExtension, 
                           // InformElem, Chain
   FreeListManager* flm_2; // used for ChainElem
@@ -224,8 +235,15 @@ class GenFreeListManager{
 public:
   
   GenFreeListManager(){
+    flm_4=new FreeListManager(CUTOFF_4);
     flm_3=new FreeListManager(CUTOFF_3);
     flm_2=new FreeListManager(CUTOFF_2);}
+
+  void putOne_4(FreeListEntry *f){
+    if(flm_4->putOne(f)) return;
+    Construct_4 *tmp=(Construct_4*) f;
+    delete tmp;
+    return;}
 
   void putOne_3(FreeListEntry *f){
     if(flm_3->putOne(f)) return;
@@ -243,6 +261,11 @@ public:
     FreeListEntry* tmp=flm_3->getOne();
     if(tmp!=NULL) return tmp;
     return (FreeListEntry*) new Construct_3();}
+
+  FreeListEntry *getOne_4(){
+    FreeListEntry* tmp=flm_4->getOne();
+    if(tmp!=NULL) return tmp;
+    return (FreeListEntry*) new Construct_4();}
 
   FreeListEntry *getOne_2(){
     FreeListEntry* tmp=flm_2->getOne();
