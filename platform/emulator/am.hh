@@ -119,7 +119,7 @@ public:
 #endif
 
   TaggedRef suspCallHandler; 
-  TaggedRef *suspendVar;
+  TaggedRef suspendVarList;
 
   /* Threads */
   Thread *currentThread;
@@ -207,6 +207,7 @@ public:
   Bool emulateHookOutline(Abstraction *def=NULL,
 			  int arity=0, TaggedRef *arguments=NULL);
   Bool hookCheckNeeded();
+  void suspendBI(Board *bb,int prio,OZ_CFun fun,RefsArray args,int nArgs);
   Suspension *mkSuspension(Board *b, int prio, ProgramCounter PC,
 			   RefsArray Y, RefsArray G,
 			   RefsArray X, int argsToSave);
