@@ -61,8 +61,6 @@ enum TypeOfTerm {
 //  4 = 0100 unusable /
 };  
 
-extern char *TypeOfTermString[];
-
 // ---------------------------------------------------------------------------
 // --- TaggedRef: CLASS / BASIC ACCESS FUNCTIONS
 
@@ -459,24 +457,25 @@ TaggedRef makeTaggedSRecord(SRecord *s)
 
 
 inline
-TaggedRef makeTaggedAtom(char *s)
-{
-  CHECK_STRPTR(s);
-  return makeTaggedRef(LITERAL,addToAtomTab(s));
-}
-
-inline
-TaggedRef makeTaggedName(char *s)
-{
-  CHECK_STRPTR(s);
-  return makeTaggedRef(LITERAL,addToNameTab(s));
-}
-
-inline
 TaggedRef makeTaggedLiteral(Literal *s)
 {
   CHECK_POINTER(s);
   return makeTaggedRef(LITERAL,s);
+}
+
+extern Literal *addToAtomTab(char *str);
+extern Literal *addToNameTab(char *str);
+inline
+TaggedRef makeTaggedAtom(char *s)
+{
+  CHECK_STRPTR(s);
+  return makeTaggedLiteral(addToAtomTab(s));
+}
+inline
+TaggedRef makeTaggedName(char *s)
+{
+  CHECK_STRPTR(s);
+  return makeTaggedLiteral(addToNameTab(s));
 }
 
 inline
@@ -561,16 +560,6 @@ TaggedRef *newTaggedCVar(GenCVariable *c) {
 
 //-----------------------------------------------------------------------------
 // --- Useful functions make...
-
-
-inline
-TaggedRef mkTuple(int from, int to){
-  OZ_Term s = OZ_tuple(OZ_CToAtom("#"), 2);
-  OZ_putArg(s, 1, OZ_CToInt(from));
-  OZ_putArg(s, 2, OZ_CToInt(to));
-  return s;
-}
-
 
 
 // ---------------------------------------------------------------------------
@@ -978,73 +967,6 @@ inline Bool sameTerm(TaggedRef t1, TaggedRef t2)
   }
   return t1==t2;
 }
-
-
-extern void initTagged();
-
-class Continuation {
-protected:
-  ProgramCounter pc;
-  RefsArray yRegs, gRegs, xRegs;
-public:
-  USEFREELISTMEMORY
-
-  Continuation(void)
-  : pc(NOCODE), yRegs(NULL), gRegs(NULL) , xRegs(NULL) {}
-  Continuation(ProgramCounter p, RefsArray y, RefsArray g=0,
-	       RefsArray x=0, int i=0); 
-
-  void init (ProgramCounter p, RefsArray y, RefsArray g=0,
-	     RefsArray x=0, int i=0);
-
-  void defeat () { 
-    pc = NOCODE;
-    yRegs = NULL;
-    gRegs = NULL;
-    xRegs = NULL;
-    //  ... BTW, telemetric data tells us that this code 
-    // is never  used ;-))
-  }
-
-  void disposeRegs () {
-    //  kost@ : TODO ?!!
-    // RS tells me that "that's at your own risk!" ;-)
-    // freeListDispose (xRegs, getRefsArraySizE (xRegs));
-    // freeListDispose (yRegs, getRefsArraySizE (yRegs));
-    // freeListDispose (zRegs, getRefsArraySizE (zRegs));
-  }
-
-  void dispose () {
-    disposeRegs ();
-    //  kost@ : Is this really needed? ... 
-    freeListDispose (this, sizeof (*this));
-  }
-
-  ProgramCounter getPC(void) { return pc;}
-
-  void setPC(ProgramCounter p) { pc = p;}
-
-  RefsArray getY(void) { return yRegs;}
-  void setY(RefsArray Y);
-
-  RefsArray getG(void) {return gRegs;}
-  void setG(RefsArray G) { gRegs = G;}
-
-  int getXSize(void) {return xRegs ? getRefsArraySize(xRegs) : 0;}
-  RefsArray getX(void) { return xRegs;}
-  void getX(RefsArray x) {
-    if (xRegs) {
-      int i = getRefsArraySize(xRegs);
-      while ((--i) >= 0)
-	x[i] = xRegs[i];
-    }
-  }
-
-  void Continuation::setX(RefsArray x, int i);
-
-  void gcRecurse(void);
-  Continuation * gc();
-}; // Continuation
 
 inline
 TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2)

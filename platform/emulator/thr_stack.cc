@@ -16,6 +16,7 @@
 #include "tagged.hh"
 #include "stack.hh"
 
+#include "cont.hh"
 #include "taskstk.hh"
 
 // #include "debug.hh"

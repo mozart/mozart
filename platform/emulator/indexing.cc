@@ -14,9 +14,8 @@
 #endif
 
 #include "tagged.hh"
-#include "term.hh"
-
-#include "constter.hh"
+#include "value.hh"
+#include "cont.hh"
 #include "board.hh"
 
 #include "stack.hh"
@@ -26,9 +25,6 @@
 #include "susplist.hh"
 #include "variable.hh"
 
-#include "bignum.hh"
-
-// #include "codearea.hh"
 #include "indexing.hh"
 #include "genvar.hh"
 

@@ -21,8 +21,7 @@
 #include "fdprofil.hh"
 
 #include "tagged.hh"
-#include "bignum.hh"
-#include "constter.hh"
+#include "value.hh"
 #include "board.hh"
 
 char * ProfileData::print_msg1[no_high1] = {

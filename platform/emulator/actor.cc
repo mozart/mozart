@@ -16,8 +16,9 @@
 #endif
 
 #include "tagged.hh"
+#include "value.hh"
 
-#include "constter.hh"
+#include "cont.hh"
 #include "actor.hh"
 #include "board.hh"
 

@@ -106,7 +106,7 @@ DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize=(dt_index)(-1L)) {
 dt_index DynamicTable::fullhash(TaggedRef id, Bool *valid) {
     Assert(size==0 || isPwrTwo(size));
     Assert(isLiteral(id));
-    // Function 'hash' may eventually return the literal's seqNumber (see term.hh):
+    // Function 'hash' may eventually return the literal's seqNumber (see value.hh):
     if (size==0) { *valid=FALSE; return (dt_index) 0L; }
     dt_index size1=(size-1);
     dt_index i=size1 & ((dt_index) (tagged2Literal(id)->hash()));
