@@ -905,7 +905,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) INSTALL_DIR=`echo $INSTALL_DIR | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$INSTALL_DIR"
@@ -1001,7 +1001,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZPLATFORM=`echo $OZPLATFORM | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZPLATFORM"
@@ -1010,7 +1010,7 @@ fi
 	
     fi
     
-	PLATFORM=`$OZPLATFORM`
+	PLATFORM=`$OZPLATFORM || exit 1`
 	
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $PATH | sed -e 's/:://g'`
@@ -1056,7 +1056,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZTOOL=`echo $OZTOOL | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZTOOL"
@@ -1213,7 +1213,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZENGINE=`echo $OZENGINE | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZENGINE"
@@ -1267,7 +1267,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZDOC=`echo $OZDOC | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZDOC"
@@ -1348,7 +1348,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) JAVA=`echo $JAVA | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$JAVA"
@@ -1403,7 +1403,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) JAVAC=`echo $JAVAC | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$JAVAC"
@@ -1457,7 +1457,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) JAR=`echo $JAR | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$JAR"

@@ -1024,7 +1024,7 @@ fi
 	
     fi
     
-	PLATFORM=`$OZPLATFORM`
+	PLATFORM=`$OZPLATFORM || exit 1`
 	
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $PATH | sed -e 's/:://g'`
