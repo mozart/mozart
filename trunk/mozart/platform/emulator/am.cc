@@ -512,7 +512,7 @@ void AM::incSolveThreads (Board *bb)
       sa->incThreads ();
     }
     DebugCheck ((bb->isCommitted () == OK),
-		error ("committed board in loop in AM::decSolveThreads ()"));
+		error ("committed board in loop in AM::incSolveThreads ()"));
     bb = bb->getParentBoard ();
     while (bb != (Board *) NULL && bb->isCommitted () == OK)
       bb = bb->getBoard ();

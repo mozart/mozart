@@ -38,7 +38,6 @@ public:
   static Thread *GetTail();
   static Bool QueueIsEmpty();
   static Thread *GetFirst();
-  static void NewCurrent(int prio);
   static void ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp);
   static void ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp);
   static void ScheduleWakeup(Board *n, Bool wasExtSusp);
