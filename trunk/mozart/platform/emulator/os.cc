@@ -1493,6 +1493,45 @@ int osgetpid()
   return pid>0 ? pid : -pid;  // fucking Windows 95 returns negative pids
 }
 
+// "Enhanced" PID: pid mixed with timer (for site ID construction);
+int osgetEpid()
+{
+  unsigned int ms;
+#ifdef WINDOWS
+  // use GetSystemTime ?
+  SYSTEMTIME st;
+  GetSystemTime(&st);
+  // know nothing about granularity, so take it "as is":
+  ms = (unsigned int) st.wMilliseconds;
+#elif defined(SUNOS_SPARC)
+  struct timeval tp;
+  (void) gettimeofday(&tp, NULL);
+  // use the number of ticks instead:
+  ms = (unsigned int) ((tp.tv_usec / 1000) / sysconf(_SC_CLK_TCK));
+#else  // POSIX;
+  struct tms buffer;
+  clock_t b = times(&buffer);
+  // interested only in ticks within the last second:
+  ms = (unsigned int) (b % sysconf(_SC_CLK_TCK));
+#endif
+
+  // Now, transpose 'ms':
+  unsigned int bitM = 0x1;
+  int bitN = 0;
+  const int bits = sizeof(unsigned int) * 8;
+  unsigned int mix = 0;
+  do {
+    if (ms & bitM)
+      mix |= 1 << (bits-bitN-1);
+    bitM = bitM << 1;
+    bitN++;
+  } while (bitN < bits);
+
+  //
+  unsigned int pid = (unsigned int) osgetpid();
+  return (pid ^ mix);
+}
+
 /* fgets may return NULL under Solaris if 
  * interupted by the timer signal for example 
  */
