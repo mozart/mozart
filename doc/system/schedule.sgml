@@ -29,36 +29,36 @@
   <Title/Scheduling Support: <<Schedule>>/
 
 <p>
-This chapters contains the description of propagators and procedures,
-which are included for scheduling applications.
+This chapters describes propagators and distributors for scheduling
+applications.  More information on scheduling in Oz can be found
+in&nbsp;<ptr to=wuertz.96b> and&nbsp;<ptr to=wuertz.96c>. A tutorial
+account on scheduling can be found in <Ptr.extern to="ozdoc:fdt"
+key="chapter.scheduling">.
 
-<p>
-Except of <<Schedule.disjoint>>, the
-following conventions hold.  The argument ?{StartR} is a record of
-finite domain integers denoting start times of tasks. The argument
-?{DurR} is a record of integers denoting durations of tasks. The
-argument ?{UseR} is a record of integers denoting the resource usage
-of tasks. The arities of ?{StartR}, ?{DurR} and ?{UseR} must be
-equal.
-
-<p>
-For distribution procedures (see <Ptr
-to="section.schedule.distribute">), ?{StartR} must contain the feature
-<<pe>> denoting the task, which is to be scheduled last, &ie; the
-makespan of the schedule.  The integers and literals
-occurring in ?{TasksAvv} denote the tasks to be scheduled. Each element
-of ?{TasksAvv} must occur in the arity of ?{StartR}. The tasks
-occurring in the vectors <math/{\tt TasksA}_i/ are scheduled on the same
-resource. More information on scheduling in Oz can be found
-in&nbsp;<ptr to=wuertz.96b> and&nbsp;<ptr to=wuertz.96c>.
 
 <section id="section.schedule.unary">
   <title/Serialization for Unary Resources/
 
 <p>
-To serialize a unary resource which can execute at most one task
-simultaneously, means that the tasks must be scheduled non-overlapping
+<def/Serializing/ a unary resource which can execute at most one task
+simultaneously means that the tasks must be scheduled non-overlapping
 in time.
+
+<p>
+The following conventions hold.  The argument <<?{StartR}>> is a record of
+finite domain integers denoting start times of tasks. The argument
+<<?{DurR}>> is a record of integers denoting durations of tasks. The
+arities of <<?{StartR}>> and <<?{DurR}>> must be
+equal.
+
+<p>
+The integers and literals occurring in <<?{TasksLIvv}>> denote the tasks to
+be scheduled. Each element
+of <<?{TasksLIvv}>> must occur in the arity of <<?{StartR}>>. The tasks
+occurring in the vectors <<?{TasksLIv}>> are scheduled on the same
+resource.
+
+<p>
 
 <p>
 <list>
@@ -68,31 +68,67 @@ in time.
 <<serializedDisj>>
 <synopsis>
 <<<
-{Schedule.serializedDisj ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+{Schedule.serializedDisj ?+{TasksLIvv} ?+{StartR} ?+{DurR}}
 >>>
 <item>
-creates a propagator, which states that all tasks <math/{\tt TasksA}_i/
+creates a propagator, which states that all tasks <<?{TasksLIv}>>
 scheduled on the same resource
-must not overlap in time. The propagator does the same propagation as
+must not overlap in time.
+
+<p>
+The propagator does the same propagation as
 the conjunction of all reified  constraints modelling that two tasks
 must not overlap in time, &ie;
 <<<
 (?{StartR}.?{T1} + ?{DurR}.?{T1} =&lt;: ?{StartR}.?{T2}) +
 (?{StartR}.?{T2} + ?{DurR}.?{T2} =&lt;: ?{StartR}.?{T1}) =: 1
 >>>
-where ?{T1} and ?{T2? are two tasks out of ?{TasksAvv}.
+where <<?{T1}>> and <<?{T2}>> are two tasks out of <<?{TasksLIvv}>>.
+
+<p> Assume the following tasks and durations:
+<table>
+  <tr/ <th/Task/ <th/Resource/ <th/Duration//
+  <tr/ <td/<<a>>/ <td/<<r>>/ <td/<<4>>//
+  <tr/ <td/<<b>>/ <td/<<r>>/ <td/<<6>>//
+  <tr/ <td/<<c>>/ <td/<<r>>/ <td/<<7>>//
+  <tr/ <td/<<d>>/ <td/<<s>>/ <td/<<7>>//
+  <tr/ <td/<<e>>/ <td/<<s>>/ <td/<<4>>//
+</table>
+In addition let us assume that no further restriction on the start
+times is given.
+
+<p>
+Then
+<<<
+Dur   = dur(a:4 b:6 c:7 d:7 e:4)
+Start = {FD.record start [a b c d e]}
+Tasks = (a#b#c)#(d#e)
+{Schedule.serializedDisj Tasks Start Dur}
+>>>
+serializes the tasks for the resources <<r>> and <<s>> (for
+<<FD.record>> see <Ptr to="FD.record">). Note that the
+resources are kept anonymous, they are just reflected by the vector
+elements in <<Tasks>>. If we would like to make the resources more explicit we
+could use for <<Tasks>> the following:
+<<<
+Tasks = tasks(r:[a b c] s:[d e])
+>>>
+It also possible to use integers or names rather than atoms for the tasks.
 
 <entry>
 <index class=module/<<Schedule>><and><<serialized>>/
 <<serialized>>
 <synopsis>
 <<<
-{Schedule.serialized ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+{Schedule.serialized ?+{TasksLIvv} ?+{StartR} ?+{DurR}}
 >>>
 <item>
-creates a propagator, which states that all tasks <math/{\tt TasksA}_i/
+creates a propagator, which states that all tasks <<?{TasksLIv}>>
 scheduled on the same resource
-must not overlap in time. The propagator does stronger propagation than
+must not overlap in time.
+
+<p>
+The propagator does stronger propagation than
  <<Schedule.serializedDisj>> by using so-called edge-finding. This
 type of edge-finding is a generalization of a technique described in
 <ptr to=martin.96>.
@@ -102,12 +138,15 @@ type of edge-finding is a generalization of a technique described in
 <<taskIntervals>>
 <synopsis>
 <<<
-{Schedule.taskIntervals ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+{Schedule.taskIntervals ?+{TasksLIvv} ?+{StartR} ?+{DurR}}
 >>>
 <item>
-creates a propagator, which states that all tasks <math/{\tt TasksA}_i/
+creates a propagator, which states that all tasks <<?{TasksLIv}>>
 scheduled on the same resource
-must not overlap in time. The propagator does even stronger propagation than
+must not overlap in time.
+
+<p>
+The propagator does even stronger propagation than
  <<Schedule.serialized>> by using so-called
 task-intervals&nbsp;<ptr to=caseau.95>. The propagation of this propagator is
 slightly weaker than the propagation described in&nbsp;<ptr to=caseau.95>.
@@ -115,11 +154,14 @@ slightly weaker than the propagation described in&nbsp;<ptr to=caseau.95>.
 
 
 
-
-
-
 <section id="section.schedule.distribute">
   <title/Distribution/
+
+<p>
+In addition to the conventions used in <Ptr
+to="section.schedule.unary"> the record of start times <<?{StartR}>>
+must have the feature <<pe>>. This feature denotes the task which is
+to be scheduled last, &ie; the makespan of the schedule.
 
 <p>
 <list>
@@ -128,11 +170,14 @@ slightly weaker than the propagation described in&nbsp;<ptr to=caseau.95>.
 <<firstsDist>>
 <synopsis>
 <<<
-{Schedule.firstsDist ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+{Schedule.firstsDist ?+{TasksLIvv} ?+{StartR} ?+{DurR}}
 >>>
 <item>
-distributes  the tasks occurring in ?{TasksAvv}, such that every
-resource is serialized. More details can be found
+distributes  the tasks occurring in <<?{TasksLIvv}>>, such that every
+resource is serialized.
+
+<p>
+More details can be found
 in&nbsp;<ptr to=baptiste.95a>.
 
 <entry>
@@ -140,11 +185,14 @@ in&nbsp;<ptr to=baptiste.95a>.
 <<lastsDist>>
 <synopsis>
 <<<
-{Schedule.lastsDist ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+{Schedule.lastsDist ?+{TasksLIvv} ?+{StartR} ?+{DurR}}
 >>>
 <item>
-distributes  the tasks occurring in ?{TasksAvv}, such that every
-resource is serialized. More details can be found
+distributes  the tasks occurring in <<?{TasksLIvv}>>, such that every
+resource is serialized.
+
+<p>
+More details can be found
 in&nbsp;<ptr to=baptiste.95a>.
 
 <entry>
@@ -152,11 +200,14 @@ in&nbsp;<ptr to=baptiste.95a>.
 <<firstsLastsDist>>
 <synopsis>
 <<<
-{Schedule.firstsLastsDist ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+{Schedule.firstsLastsDist ?+{TasksLIvv} ?+{StartR} ?+{DurR}}
 >>>
 <item>
-distributes  the tasks occurring in ?{TasksAvv}, such that every
-resource is serialized. More details can be found
+distributes  the tasks occurring in <<?{TasksLIvv}>>, such that every
+resource is serialized.
+
+<p>
+More details can be found
 in&nbsp;<ptr to=baptiste.95a>.
 
 <entry>
@@ -164,12 +215,15 @@ in&nbsp;<ptr to=baptiste.95a>.
 <<taskIntervalsDistP>>
 <synopsis>
 <<<
-{Schedule.taskIntervalsDistP ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+{Schedule.taskIntervalsDistP ?+{TasksLIvv} ?+{StartR} ?+{DurR}}
 >>>
 <item>
-distributes  the tasks occurring in ?{TasksAvv}, such that every
+distributes  the tasks occurring in <<?{TasksLIvv}>>, such that every
 resource is serialized. This strategy is well suited for proving
-optimality.  More details can be found in&nbsp;<ptr to=caseau.95>. The
+optimality.
+
+<p>
+More details can be found in&nbsp;<ptr to=caseau.95>. The
 distribution strategy implemented in Oz differs slightly from the one
 described in&nbsp;<ptr to=caseau.95>.
 
@@ -178,12 +232,15 @@ described in&nbsp;<ptr to=caseau.95>.
 <<taskIntervalsDistO>>
 <synopsis>
 <<<
-{Schedule.taskIntervalsDistO ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+{Schedule.taskIntervalsDistO ?+{TasksLIvv} ?+{StartR} ?+{DurR}}
 >>>
 <item>
-distributes  the tasks occurring in ?{TasksAvv}, such that every
+distributes  the tasks occurring in <<?{TasksLIvv}>>, such that every
 resource is serialized. This strategy is well suited for finding good
-solutions in combination with local search techniques.  More details can
+solutions in combination with local search techniques.
+
+<p>
+More details can
 be found in&nbsp;<ptr to=caseau.95>. The
 distribution strategy implemented in Oz differs slightly from the one
 described in&nbsp;<ptr to=caseau.95>.
@@ -195,54 +252,106 @@ described in&nbsp;<ptr to=caseau.95>.
   <Title/Cumulative Scheduling/
 
 <p>
+The following conventions hold.  The argument <<?{StartR}>> is a record of
+finite domain integers denoting start times of tasks. The argument
+<<?{DurR}>> is a record of integers denoting durations of tasks. The
+argument <<?{UseR}>> is a record of integers denoting the resource
+usage of tasks.
+The arities of <<?{StartR}>>, <<?{DurR}>>, and <<?{UseR}>> must be
+equal.
+
+<p>
+The integers and literals
+occurring in <<?{TasksLIvv}>> denote the tasks to be scheduled. Each element
+of <<?{TasksLIvv}>> must occur in the arity of <<?{StartR}>>. The tasks
+occurring in the vectors <<?{TasksLIv}>> are scheduled on the same
+resource. The vector <<?{CapIv}>> is a vector of integers denoting the
+capacity of the resources. The number of elements in the vectors
+<<?{TasksLIvv}>>
+and <<?{CapIv}>> must be equal.
+
+<p>
 <list>
 <entry>
 <index class=module/<<Schedule>><and><<cumulative>>/
 <<cumulative>>
 <synopsis>
 <<<
-{Schedule.cumulative ?+{TasksAvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
+{Schedule.cumulative ?+{TasksLIvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
 >>>
 <item>
 creates a propagator, which states that for all resources <math/i/ and time
 instants <math/x/, the resource usage does not exceed the available capacity:
 <math display>
-\sum_{\hsmash{\{t \in {\tt TasksA}_i \mid {\tt StartR.}t \leq x &lt; {\tt StartR.}t +
-{\tt DurR.}t\}}} {\tt UseR.}t \leq {\tt CapI}_i
+\sum_{\hsmash{\{t \in \mbox{TasksA}_i \mid \mbox{StartR.}t \leq x &lt; \mbox{StartR.}t +
+\mbox{DurR.}t\}}} \mbox{UseR.}t \leq \mbox{CapI}_i
 </math>
-This propagator does not use edge-finding.
+
+<p>
+The propagator does not use edge-finding.
+
+<p>
+Assume that we have the following resources and tasks:
+<table>
+  <tr/ <th/Resource/ <th/Capacity//
+  <tr/ <td/<<r>>/    <td/<<5>>//
+  <tr/ <td/<<s>>/    <td/<<2>>//
+</table>
+<table>
+  <tr/ <th/Task/ <th/Resource/ <th/Duration/ <th/Usage//
+  <tr/ <td/<<a>>/ <td/<<r>>/ <td/<<5>>/ <th/<<5>>//
+  <tr/ <td/<<b>>/ <td/<<r>>/ <td/<<2>>/ <th/<<3>>//
+  <tr/ <td/<<c>>/ <td/<<s>>/ <td/<<7>>/ <th/<<2>>//
+  <tr/ <td/<<d>>/ <td/<<s>>/ <td/<<4>>/ <th/<<3>>//
+  <tr/ <td/<<e>>/ <td/<<s>>/ <td/<<9>>/ <th/<<5>>//
+</table>
+Provided that no limit on the start times of the tasks are given, the
+following
+<<<
+Tasks = tasks([a b] [c d e])
+Start = {FD.record start [a b c d e]}
+Dur   = dur(a:5 b:2 c:7 d:4 e:9)
+Use   = use(a:5 b:3 c:2 d:3 e:5)
+Cap   = cap(5 2)
+{Schedule.cumulative Tasks Start Dur Use Cap}
+>>>
+propagates that the resource usage does not exceed the resources'
+capacities (for <<FD.record>> see&nbsp;<ptr to="FD.record">).
 
 <entry>
 <index class=module/<<Schedule>><and><<cumulativeEF>>/
 <<cumulativeEF>>
 <synopsis>
 <<<
-{Schedule.cumulativeED ?+{TasksAvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
+{Schedule.cumulativeED ?+{TasksLIvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
 >>>
 <item>
 creates a propagator, which states that for all resources <math/i/ and time
 instants <math/x/, the resource usage does not exceed the available capacity:
 <math display>
-\sum_{\hsmash{\{t \in {\tt TasksA}_i \mid {\tt StartR.}t \leq x < {\tt StartR.}t +
-{\tt DurR.}t\}}} {\tt UseR.}t \leq {\tt CapI}_i
+\sum_{\hsmash{\{t \in \mbox{TasksA}_i \mid \mbox{StartR.}t \leq x < \mbox{StartR.}t +
+\mbox{DurR.}t\}}} \mbox{UseR.}t \leq \mbox{CapI}_i
 </math><p>
+
+<p>
 This propagator  generalizes the edge-finding propagation in
 <<Schedule.serialized>> to deal with non-unary resources.
 
 <entry>
 <index class=module/<<Schedule>><and><<cumulativeTI>>/
-<<schedule.cumulativeTI>>
+<<cumulativeTI>>
 <synopsis>
 <<<
-{Schedule.cumulativeTI ?+{TasksAvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
+{Schedule.cumulativeTI ?+{TasksLIvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
 >>>
 <item>
 creates a propagator, which states that for all resources <math/i/ and time
 instants <math/x/, the resource usage does not exceed the available capacity:
 <math display>
-\sum_{\hsmash{\{t \in {\tt TasksA}_i \mid {\tt StartR.}t \leq x < {\tt StartR.}t +
-{\tt DurR.}t\}}} {\tt UseR.}t \leq {\tt CapI}_i
+\sum_{\hsmash{\{t \in \mbox{TasksA}_i \mid \mbox{StartR.}t \leq x < \mbox{StartR.}t +
+\mbox{DurR.}t\}}} \mbox{UseR.}t \leq \mbox{CapI}_i
 </math>
+
 <p>
 This propagator generalizes the edge-finding propagation in
 <<Schedule.taskIntervals>> to deal with non-unary resources.
@@ -252,14 +361,14 @@ This propagator generalizes the edge-finding propagation in
 <<cumulativeUp>>
 <synopsis>
 <<<
-{Schedule.cumulativeUp ?+{TasksAvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
+{Schedule.cumulativeUp ?+{TasksLIvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
 >>>
 <item>
 creates a propagator, which states that for all resources <math/i/ and time
 instants <math/x/, the resource is at least as large as the available capacity:
 <math display>
-\sum_{\hsmash{\{t \in {\tt TasksA}_i \mid {\tt StartR.}t \leq x < {\tt StartR.}t +
-{\tt DurR.}t\}}} {\tt UseR.}t \geq {\tt CapI}_i
+\sum_{\hsmash{\{t \in \mbox{TasksA}_i \mid \mbox{StartR.}t \leq x < \mbox{StartR.}t +
+\mbox{DurR.}t\}}} \mbox{UseR.}t \geq \mbox{CapI}_i
 </math>
 </list>
 
@@ -271,18 +380,18 @@ instants <math/x/, the resource is at least as large as the available capacity:
 <list>
 <entry>
 <index class=module/<<Schedule>><and><<disjoint>>/
-<<schedule.disjoint>>
+<<disjoint>>
 <synopsis>
 <<<
 {Schedule.disjoint ?+{D1} ?+{I1} ?+{D2} ?+{I2}}
 >>>
 <item>
-creates a propagator for <math/{\tt D1}+{\tt I1}\leq{\tt D2} \;\vee\;
-{\tt D2}+{\tt I2}\leq{\tt D1}/.
+creates a propagator for <math/D1+I1\leq D2 \;\vee\;
+D2+I2\leq D1/.
 Its operational semantics is defined by
 <<<
-or D1+I1 =<: D2
-[] D2+I2 =<: D1
+or ?{D1} + ?{I1} =<: ?{D2}
+[] ?{D2} + ?{I2} =<: ?{D1}
 end
 >>>
 </list>

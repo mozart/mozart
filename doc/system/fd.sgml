@@ -46,23 +46,7 @@ equality between variables, <em/&eg;/ <<X=:Y>> is equivalent to <<X=Y>>.
 
 <para><title/relation symbols/
 There are generic procedures who take
-an atomic argument <<A>> to denote an arithmetic relation <math/
-~$~
-\newcommand{\hsmash}{\relax
-  \ifmmode\expandafter\mathpalette\expandafter\mathHSMASH
-  \else\expandafter\makeHSMASH\fi}
-\newcommand{\mathHSMASH}[2]{%
- #1 #2}
-%  \hbox to0pt{\hss$\m@th#1{#2}$\hss}}
-\newcommand{\makeHSMASH}[1]{%
- #1}
-%  \hbox to0pt{\hss\color@begingroup#1\color@endgroup\hss}}
-\newcommand{\empset}{\mbox{$\emptyset$}}
-\newcommand{\uniset}{\mbox{${\cal U}$}}
-\newcommand{\codeinline}[2]{ \mbox{\tt #2}}
-
-~$~
-\sim_A/. The
+an atomic argument <<A>> to denote an arithmetic relation <math/\sim_A/. The
 possible atoms and the associated relations are summarized below.
 <table>
 <tr/<td/<<A>>/<td/<<'=:'>> /<td/ <<'&gt;:'>> /<td/ <<'&gt;=:'>> /<td/ <<'&lt;:'>> /<td/ <<'=&lt;:'>> /<td/ <<'\\=:'>>//
@@ -204,7 +188,7 @@ tells the constraint store that
 ??{Dt} is a tuple of integers in ?+{Spec} of width ?+{I}
 and label ?+{L}.
 
-<entry>
+<entry id="FD.record">
 <index class=module/FD<and>record/
 <<record>>
 <synopsis>

@@ -95,9 +95,12 @@
 
 <BOOK  proglang=oz>
 <Title/System Modules/
-    <!-- Splitting the document into different HTML nodes -->
     <Meta name=latex.package value="pstricks">
     <Meta name=latex.package value="pifont">
+
+    <Meta name=latex.input value="system.tex">
+
+    <!-- Splitting the document into different HTML nodes -->
 
     <!-- Application programming -->
 
