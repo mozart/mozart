@@ -1,13 +1,12 @@
 dnl -*- sh -*-
 dnl
 dnl  Authors:
-dnl    Michael Mehl (mehl@dfki.de)
-dnl
-dnl  Contributors:
-dnl    optional, Contributor's name (Contributor's email address)
+dnl    Christian Schulte (2000)
+dnl    Andreas Simon (2000)
 dnl
 dnl  Copyright:
-dnl    Michael Mehl (1997)
+dnl    Christian Schulte (2000)
+dnl    Andreas Simon (2000)
 dnl
 dnl  Last change:
 dnl    $Date$ by $Author$
@@ -49,8 +48,17 @@ dnl platform
 dnl *****************************************************************
 
 OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-
 : ${platform=`$PLATFORMSCRIPT`}
+
+
+dnl *********************************************************************
+dnl ** Perl
+dnl *********************************************************************
+
+AC_PATH_PROG(perlpath, perl)
+PERL=$perlpath
+AC_SUBST(PERL)
+AC_MSG_RESULT(ok)
 
 dnl *********************************************************************
 dnl ** GLIB
