@@ -111,12 +111,3 @@ in
       end
    end
 end
-
-class TkExtEntry from Tk.entry
-%% the original widget doesn't have some important bindings
-   meth tkInit(...)=M
-      Tk.entry,M
-      {self tkBind(event: '<Control-u>'
-		   action: self # tk(delete 0 'end'))}
-   end
-end
