@@ -101,7 +101,7 @@ depend: Makefile $(CSRCS) $(OZSRCS) $(OZGSRCS)
         $(OZDEPEND) $(OZSRCS:%=$(SRCDIR)/%) $(OZGSRCS:%=$(SRCDIR)/%) \
         >> Makefile.deps
 
-clean:
+clean veryclean:
         $(RM) *.ozf
         $(RM) *.o
         $(RM) *.so-$(PLATFORM)
