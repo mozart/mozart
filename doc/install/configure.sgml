@@ -36,6 +36,7 @@ command line:
 % make install PREFIX=$HOME/mozart-install
 </code></item>
         <entry class=option><code>--with-inc-dir=?{d1},...,?{dn}</code></entry>
+        <entry class=variable><code>oz_with_inc_dir=</code></entry>
         <item>When you configure and attempt to build the Mozart
 system, you may discover that some library or package is missing, or
 that the installed version is too old, or that it happens to be
@@ -46,12 +47,13 @@ build a missing package using <code/--prefix=$HOME/, it will normally
 install its include files into <code>$HOME/include</code> and its
 libraries into <code>$HOME/lib</code>.  In that case, when you
 configure Mozart, you could supply the argument:
-<code display>--with--inc-dir=$HOME/include</code>
+<code display>--with-inc-dir=$HOME/include</code>
 to indicate where to look first find additional include files.  There
 are also specific options for specific packages, and they are
 documented later, but our experience is that putting everything in one
 <em/extra/ location is much more convenient.</item>
         <entry class=option><code>--with-lib-dir=?{d1},...,?{dn}</code></entry>
+        <entry class=variable><code>oz_with_lib_dir=</code></entry>
         <item>Similar to the above, but for libraries.</item>
       </list>
 </p>
@@ -121,13 +123,17 @@ debugging respectively.  Don't use these!  See
 Library/ also known as <file/gmp/.  You can set the variables to point
 to the directories where the library and the <file/gmp.h/ include file
 are to be found.  The command line option can be used to set both
-variables to the same directory argument.</item>
+variables to the same directory argument.
+However, see <code/--with-inc-dir/ and <code/--with-lib-dir/ for the
+more general method that we now recommend.
+</item>
 
         <entry class=option><code>--with-zlib=?{DIR}</code></entry>
         <entry class=variable><code>oz_zlib_lib_dir=</code></entry>
         <entry class=variable><code>oz_zlib_inc_dir=</code></entry>
         <item>Mozart needs <file/zlib/, the <em/General Purpose
-Compression Library/.  The details are as above.</item>
+Compression Library/.  The details are as above and we also recommend
+to use <code/--with-inc-dir/ and <code/--with-lib-dir/ instead.</item>
 
         <entry class=option/<code/--without-ccmalloc//
         <item>Option <code/--with-ccmalloc/ enables the use of the
@@ -139,7 +145,14 @@ debugging malloc library.  Only for developers.</item>
 <code/--enable-opt=debug/ for debugging the emulator,
 <code/--enable-opt=profile/ for profiling,
 <code/--enable-opt=rsp/ also for profiling, but only if you happen to
-be Ralf Scheidhauer.</item>
+be Ralf Scheidhauer.
+          <p>With <code/yes/, the emulator becomes marginally faster
+at the expense of greater compilation times (you might want to go out
+for coffee while compiling <file/emulate.cc/, which contains the
+bytecode emulation loop).  With <code/debug/, the emulator itself
+becomes much slower as there are no optimizations, no in-lining, and
+zillions of assertions are constantly being checked.
+        </item>
 
         <entry class=option/<code/--enable-threaded//
         <entry class=variable/<code/oz_enable_threaded=yes//
