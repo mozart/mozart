@@ -1,5 +1,3 @@
-Makefile
 config.log
 config.status
-*.ozf
-*.so-*
+Makefile
