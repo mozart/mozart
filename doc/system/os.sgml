@@ -180,7 +180,7 @@ Returns a record describing the status of the file ?+{PathV}.
 <p>
 ??{StatR} has features <<size>> and <<type>>. The
 subtree at the feature <<size>> is an integer that gives the size of
-the file ?+{PathV}. The subtree at the feature <<dir>> is one of the
+the file ?+{PathV}. The subtree at the feature <<type>> is one of the
 following atoms: <<reg>> (regular file), <<dir>> (directory), <<chr>>
 (character special file), <<blk>> (block special file), <<fifo>> (pipe
 or FIFO special file), <<unknown>> (something else).
