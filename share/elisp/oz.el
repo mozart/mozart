@@ -140,6 +140,8 @@
 ;;}}}
 ;;{{{ Customization
 
+(put 'oz 'custom-loads '("mozart"))
+
 (eval-and-compile
   (condition-case ()
       (require 'custom)
@@ -156,7 +158,8 @@
 (eval-and-compile
   (eval '(defgroup oz nil
 	   "Oz Programming Interface."
-	   :group 'languages)))
+	   :group 'languages
+	   :prefix "oz-")))
 
 (eval-and-compile
   (eval '(defcustom oz-mode-hook nil
