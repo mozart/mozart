@@ -5,12 +5,8 @@ import
    Path(make) at 'x-oz://duchier/sp/Path.ozf'
 define
    fun lazy {LoadDB F}
-      D = {NewDictionary}
-      L = try {Pickle.load F}
-	  catch _ then nil end
-   in
-      for X in L do {Dictionary.put D X.id X} end
-      D
+      try {Record.toDictionary {Pickle.load F}}
+      catch _ then {NewDictionary} end
    end
    %%
    class Database
@@ -29,7 +25,7 @@ define
       meth remove(K) {Dictionary.remove @db K} end
       meth member(K $) {Dictionary.member @db K} end
       meth save
-	 try {Pickle.save Database,items($) @file}
+	 try {Pickle.save {Dictionary.toRecord o @db} @file}
 	 catch _ then skip end
       end
    end
