@@ -176,6 +176,10 @@ $boot_module_name     = "FDP";
                      out => [],
                      bi  => fdp_distinct},
 
+ 'distinctB'    => { in  => ['+value'],
+                     out => [],
+                     bi  => fdp_distinctB},
+
  'distinctD'    => { in  => ['+value'],
                              out => [],
                              bi  => fdp_distinctD},
