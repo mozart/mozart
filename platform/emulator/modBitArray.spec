@@ -74,6 +74,10 @@
                              out => ['+bool'],
                              BI  => BIbitArray_disjoint},
 
+     'subsumes'         => { in  => ['+bitArray','+bitArray'],
+                             out => ['+bool'],
+                             BI  => BIbitArray_subsumes},
+
      'nimpl'            => { in  => ['+bitArray','+bitArray'],
                              out => [],
                              BI  => BIbitArray_nimpl},

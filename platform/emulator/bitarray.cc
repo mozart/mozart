@@ -104,6 +104,7 @@ public:
   void bor(const BitArray *);
   void band(const BitArray *);
   Bool disjoint(const BitArray *);
+  Bool subsumes(BitArray *);
   int card(void);
   void nimpl(const BitArray *);
   TaggedRef toList(void);
@@ -183,6 +184,18 @@ Bool BitArray::disjoint(const BitArray *b) {
   Assert(lowerBound == b->lowerBound && upperBound == b->upperBound);
   for (int i = getSize(); i--; )
     if ((array[i] & b->array[i]) != 0)
+      return NO;
+  return OK;
+}
+
+inline
+Bool BitArray::subsumes(BitArray *b) {
+  const int l = b->lowerBound;
+  const int u = b->upperBound;
+  if ((lowerBound > l) || (upperBound < u))
+    return NO;
+  for (int i = l; i <= u; i++)
+    if (b->test(i) && !test(i))
       return NO;
   return OK;
 }
@@ -375,6 +388,14 @@ OZ_BI_define(BIbitArray_disjoint,2,1)
     OZ_RETURN(oz_bool(b1->disjoint(b2)));
   } else
     return oz_raise(E_ERROR,E_KERNEL,"BitArray.binop",2,OZ_in(0),OZ_in(1));
+} OZ_BI_end
+
+
+OZ_BI_define(BIbitArray_subsumes,2,1)
+{
+  oz_declareBitArrayIN(0,b1);
+  oz_declareBitArrayIN(1,b2);
+  OZ_RETURN(oz_bool(b1->subsumes(b2)));
 } OZ_BI_end
 
 
