@@ -50,7 +50,7 @@ extern char xyFileName[];   // name of the current file, "" means stdin
 extern char xyhelpFileName[];
 extern OZ_Term xyFileNameAtom;
 
-extern int xy_gumpSyntax, xy_systemVariables;
+extern int xy_gumpSyntax, xy_allowDeprecated;
 extern OZ_Term xy_errorMessages;
 
 extern int xylino;
@@ -72,6 +72,11 @@ static inline int xycharno() {
   else
     return 0;
 }
+
+void checkDeprecation(OZ_Term coord, Bool isBooleanCase);
+void xyreportError(char *kind, char *msg, OZ_Term coord);
+void xyreportError(char *kind, char *msg,
+                   const char *file, int line, int column);
 
 
 //-----------------
@@ -212,7 +217,7 @@ void xy_setParserExpect() {
 %token OZATOM ATOM_LABEL OZFLOAT OZINT AMPER DOTINT STRING
 %token VARIABLE VARIABLE_LABEL
 %token DEFAULT CHOICE LDOTS
-%token attr body _case_ catch choice _class_ _condis_ declare dis
+%token attr body _case_ catch choice _class_ cond _condis_ declare dis
 %token _else_ elsecase elseif elseof end export fail false FALSE_LABEL
 %token feat finally _from_ _fun_ functor _if_ import _in_ local _lock_
 %token _meth_ not of or proc prop ozraise self skip then
@@ -273,6 +278,8 @@ void xy_setParserExpect() {
 %type <t>  optDots
 %type <t>  feature
 %type <t>  featureNoVar
+%type <t>  ifMain
+%type <t>  ifRest
 %type <t>  caseMain
 %type <t>  caseRest
 %type <t>  elseOfList
@@ -295,10 +302,10 @@ void xy_setParserExpect() {
 %type <t>  methHeadTerm
 %type <t>  methHeadColonPair
 %type <t>  methHeadDefaultEquation
-%type <t>  ifMain
-%type <t>  ifRest
-%type <t>  ifClauseList
-%type <t>  ifClause
+%type <t>  condMain
+%type <t>  condElse
+%type <t>  condClauseList
+%type <t>  condClause
 %type <t>  condisClauseList
 %type <t>  condisClause
 %type <t>  fdExpression
@@ -404,13 +411,17 @@ switchList      : /* empty */
                 ;
 
 switch          : '+' SWITCHNAME
-                  { if (!strcmp(xytext,"gump")) xy_gumpSyntax = 1;
-                    if (!strcmp(xytext,"system")) xy_systemVariables = 1;
+                  { if (!strcmp(xytext,"gump"))
+                      xy_gumpSyntax = 1;
+                    if (!strcmp(xytext,"allowdeprecated"))
+                      xy_allowDeprecated = 1;
                     $$ = newCTerm("on",newCTerm(xytext),pos());
                   }
                 | '-' SWITCHNAME
-                  { if (!strcmp(xytext,"gump")) xy_gumpSyntax = 0;
-                    if (!strcmp(xytext,"system")) xy_systemVariables = 0;
+                  { if (!strcmp(xytext,"gump"))
+                      xy_gumpSyntax = 0;
+                    if (!strcmp(xytext,"allowdeprecated"))
+                      xy_allowDeprecated = 0;
                     $$ = newCTerm("off",newCTerm(xytext),pos());
                   }
                 ;
@@ -534,6 +545,8 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                   { $$ = $1; }
                 | local coord sequence _in_ sequence end
                   { $$ = newCTerm("fLocal",$3,$5,$2); }
+                | _if_ ifMain
+                  { $$ = $2; }
                 | _case_ caseMain
                   { $$ = $2; }
                 | _lock_ coord inSequence end coord
@@ -554,7 +567,7 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                   { $$ = newCTerm("fFail",pos()); }
                 | not coord inSequence end coord
                   { $$ = newCTerm("fNot",$3,makeLongPos($2,$5)); }
-                | _if_ ifMain
+                | cond condMain
                   { $$ = $2; }
                 | or coord orClauseList end coord
                   { $$ = newCTerm("fOr",$3,newCTerm("for"),
@@ -745,13 +758,35 @@ featureNoVar    : atom
                   { $$ = $1; }
                 ;
 
-caseMain        : coord sequence then inSequence caseRest coord
+ifMain          : coord sequence then inSequence ifRest coord
                   { $$ = newCTerm("fBoolCase",$2,$4,$5,makeLongPos($1,$6)); }
+                ;
+
+ifRest          : elseif ifMain
+                  { $$ = $2; }
+                | elsecase coord caseMain
+                  { checkDeprecation($2,NO);
+                    $$ = $3;
+                  }
+                | _else_ inSequence end
+                  { $$ = $2; }
+                | end
+                  { $$ = newCTerm("fSkip",pos()); }
+                ;
+
+caseMain        : coord sequence then coord inSequence caseRest coord
+                  { checkDeprecation($4,OK);
+                    $$ = newCTerm("fBoolCase",$2,$5,$6,makeLongPos($1,$7));
+                  }
                 | coord sequence of elseOfList caseRest coord
                   { $$ = newCTerm("fCase",$2,$4,$5,makeLongPos($1,$6)); }
                 ;
 
-caseRest        : elsecase caseMain
+caseRest        : elseif coord ifMain
+                  { checkDeprecation($2,NO);
+                    $$ = $3;
+                  }
+                | elsecase caseMain
                   { $$ = $2; }
                 | _else_ inSequence end
                   { $$ = $2; }
@@ -918,25 +953,23 @@ methHeadDefaultEquation
                   { $$ = newCTerm("fMethArg",$1,newCTerm("fDefault",$4,$3)); }
                 ;
 
-ifMain          : coord ifClauseList ifRest coord
-                  { $$ = newCTerm("fIf",$2,$3,makeLongPos($1,$4)); }
+condMain        : coord condClauseList condElse end coord
+                  { $$ = newCTerm("fCond",$2,$3,makeLongPos($1,$5)); }
                 ;
 
-ifRest          : elseif ifMain
+condElse        : _else_ inSequence
                   { $$ = $2; }
-                | _else_ inSequence end
-                  { $$ = $2; }
-                | end
+                | /* empty */
                   { $$ = newCTerm("fNoElse",pos()); }
                 ;
 
-ifClauseList    : ifClause
+condClauseList  : condClause
                   { $$ = consList($1,nilAtom); }
-                | ifClause CHOICE ifClauseList
+                | condClause CHOICE condClauseList
                   { $$ = consList($1,$3); }
                 ;
 
-ifClause        : sequence then coord inSequence
+condClause      : sequence then coord inSequence
                   { $$ = newCTerm("fClause",newCTerm("fSkip",$3),$1,$4); }
                 | sequence _in_ sequence then inSequence
                   { $$ = newCTerm("fClause",$1,$3,$5); }
@@ -1390,14 +1423,30 @@ synProdCallParams
 
 %%
 
-void xyreportError(char *kind, char *msg, const char *file,
-                   int line, int column) {
-  OZ_Term pos = OZ_mkTupleC("pos",3,OZ_atom(file),OZ_int(line),OZ_int(column));
-  OZ_Term args = OZ_cons(OZ_pairA("coord",pos),
+void checkDeprecation(OZ_Term coord, Bool isBooleanCase) {
+  if (!xy_allowDeprecated) {
+    char *msg;
+    if (isBooleanCase) {
+      msg = "use `if' instead of `case' for boolean conditionals";
+    } else {
+      msg = "do not mix `case' and `if' conditionals";
+    }
+    xyreportError("deprecation error",msg,coord);
+  }
+}
+
+void xyreportError(char *kind, char *msg, OZ_Term coord) {
+  OZ_Term args = OZ_cons(OZ_pairA("coord",coord),
                          OZ_cons(OZ_pairAA("kind",kind),
                                  OZ_cons(OZ_pairAA("msg",msg),OZ_nil())));
   xy_errorMessages = OZ_cons(OZ_recordInit(OZ_atom("error"),args),
                              xy_errorMessages);
+}
+
+void xyreportError(char *kind, char *msg, const char *file,
+                   int line, int column) {
+  xyreportError(kind,msg,OZ_mkTupleC("pos",3,OZ_atom(file),
+                                     OZ_int(line),OZ_int(column)));
 }
 
 static void xyerror(char *s) {
@@ -1413,11 +1462,11 @@ static void xyerror(char *s) {
 static OZ_Term init_options(OZ_Term optRec) {
   OZ_Term x;
 
-  x = OZ_subtree(optRec, OZ_atom("gumpSyntax"));
+  x = OZ_subtree(optRec, OZ_atom("gump"));
   xy_gumpSyntax = x == 0? 0: OZ_eq(x, OZ_true());
 
-  x = OZ_subtree(optRec, OZ_atom("systemVariables"));
-  xy_systemVariables = x == 0? 1: OZ_eq(x, OZ_true());
+  x = OZ_subtree(optRec, OZ_atom("allowdeprecated"));
+  xy_allowDeprecated = x == 0? 1: OZ_eq(x, OZ_true());
 
   OZ_Term defines = OZ_subtree(optRec, OZ_atom("defines"));
   return defines? defines: OZ_nil();
