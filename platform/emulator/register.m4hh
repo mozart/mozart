@@ -111,6 +111,7 @@ define(M4INSTRTWOREGS,``''
 		 Reg1(getRegArg(PC+1)) =
 		   makeTaggedRef(newTaggedUVar(CBB));
 
+		 IncfProfCounter(localVariableCounter,sizeof(TaggedRef));
 	       ''
 	       DISPATCH(2);
 	       );
@@ -119,8 +120,10 @@ define(M4INSTRTWOREGS,``''
 	       ``{
 		 Reg1(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = 
 		     makeTaggedRef(newTaggedUVar(CBB));
-		 } ''
-		     DISPATCH(3);
+
+		 IncfProfCounter(localVariableCounter,sizeof(TaggedRef));
+ 	        } ''
+		 DISPATCH(3);
 	       );
   
   
