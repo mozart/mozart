@@ -2056,7 +2056,8 @@ void CellFrame::addPendBinding(Thread* th,TaggedRef val){
 
 void CellManager::setCurrent(Site *s, int nr){
   Assert(getChain()->siteListCheck());
-  getChain()->setCurrent(s,nr);}
+  getChain()->setCurrent(s,nr);
+  getChain()->installProbes();} /*ATTENTION*/
 
 Site* CellManager::getCurrent(){
   return getChain()->getCurrent();}
@@ -2082,7 +2083,8 @@ Bool LockManager::isOwnCurrent(){
 
 void LockManager::setCurrent(Site *s, int nr){
   Assert(getChain()->siteListCheck());
-  getChain()->setCurrent(s,nr);}
+  getChain()->setCurrent(s,nr);
+  getChain()->installProbes();} /* ATTENTION */ 
 
 Site* LockManager::getCurrent(){
   return getChain()->getCurrent();}
@@ -4323,7 +4325,8 @@ void chainSendQuestion(Site* toS,int mI,int accessNr){
   SendTo(toS,bs,M_CHAIN_QUESTION,toS,mI);}
 
 void chainSendAnswer(Site* toS, int mI, int accessNr, int ans){
-  OT->getOwner(mI)->getOneCreditOwner();
+  /* OT->getOwner(mI)->getOneCreditOwner(); */
+  BT->getBorrow(mI)->getOneMsgCredit();
   MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
   marshal_M_CHAIN_ANSWER(bs,mI,mySite, accessNr,ans);
   SendTo(toS,bs,M_CHAIN_ANSWER,toS,mI);}
@@ -4992,7 +4995,6 @@ void Site::communicationProblem(MessageType mt,Site*
 	returnSendCredit(storeSite,OTI);
 	return;}
       if(fc==COMM_FAULT_PERM_MAYBE_SENT){
-	msgBufferManager->dumpMsgBuffer((MsgBuffer*)fi);
 	return;}
       NOT_IMPLEMENTED;
       break;}
@@ -5005,7 +5007,6 @@ void Site::communicationProblem(MessageType mt,Site*
 	returnSendCredit(s1,OTI);
 	return;}
       if(fc==COMM_FAULT_PERM_MAYBE_SENT){
-	msgBufferManager->dumpMsgBuffer((MsgBuffer*)fi);
 	return;}
       NOT_IMPLEMENTED;	
       break;}
@@ -5018,7 +5019,6 @@ void Site::communicationProblem(MessageType mt,Site*
 	returnSendCredit(storeSite,OTI);
 	return;}
       if(fc==COMM_FAULT_PERM_MAYBE_SENT){
-	msgBufferManager->dumpMsgBuffer((MsgBuffer*)fi);
 	return;}
       NOT_IMPLEMENTED;	
       break;}
