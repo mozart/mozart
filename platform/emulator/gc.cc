@@ -904,7 +904,7 @@ OZ_Propagator * OZ_Propagator::gc(void)
   return p;
 }
 
-void OZ_gcTerm(OZ_Term &t)
+void OZ_updateHeapTerm(OZ_Term &t)
 {
   Assert(isRef(t) || !isAnyVar(t));
   gcTagged(t, t);
@@ -2505,7 +2505,7 @@ void performCopying(void)
     case PTR_ACTOR:     ((Actor *) ptr)->gcRecurse();            break;
     case PTR_THREAD:    ((Thread *) ptr)->gcRecurse();           break;
     case PTR_CONT:      ((Continuation*) ptr)->gcRecurse();      break;
-    case PTR_PROPAGATOR:((OZ_Propagator *) ptr)->gcRecurse();    break;
+    case PTR_PROPAGATOR:((OZ_Propagator *) ptr)->updateHeapRefs(opMode == IN_TC); break;
     case PTR_DYNTAB:    ((DynamicTable *) ptr)->gcRecurse();     break;
     case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcConstRecurse();   break;
     default:

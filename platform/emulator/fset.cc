@@ -58,7 +58,7 @@ FSetValue::FSetValue(OZ_FSetImpl &fs)
 {
   Assert(fs.isFSetValue());
 
-  _card = fs._card;
+  _card = fs._card_min;
   for (int i = fset_high; i--; )
     _in[i] = fs._in[i];
 }
@@ -102,7 +102,8 @@ OZ_Boolean FSetValue::operator == (const FSetValue &fs) const
 
 //-----------------------------------------------------------------------------
 
-OZ_FSetImpl::OZ_FSetImpl(int c, OZ_Term ins, OZ_Term outs) : _card(c)
+OZ_FSetImpl::OZ_FSetImpl(int c_min, int c_max, OZ_Term ins, OZ_Term outs) 
+  : _card_min(c_min), _card_max(c_max)
 {
   for (int i = fset_high; i--; )
     _in[i] = _not_in[i] = 0;
@@ -112,14 +113,14 @@ OZ_FSetImpl::OZ_FSetImpl(int c, OZ_Term ins, OZ_Term outs) : _card(c)
 
   for (int i = fset_high; i--; )
     if (_in[i] & _not_in[i]) {
-      _card = -1;
+      _card_min = -1;
       return;
     }
   
   _known_in = findBitsSet(fset_high, _in);
   _known_not_in = findBitsSet(fset_high, _not_in);
-  if (_card < _known_in)
-    _card = -1;
+  if (_card_max < _known_in || _card_max < _card_min)
+    _card_min = -1;
 }
 
 ostream &OZ_FSetImpl::print(ostream &o) const
@@ -128,14 +129,18 @@ ostream &OZ_FSetImpl::print(ostream &o) const
   printBits(o, fset_high, _in);
   o << ") not_in(";
   printBits(o, fset_high, _not_in);
-  o << ")}#" << _card;
+  o << ")}#";
+  if (_card_min == _card_max) 
+    o << '[' << _card_min << ',' << _card_max << ']';
+  else 
+    o << _card_min;
   
   return o;
 }
 
 OZ_Boolean OZ_FSetImpl::unify(const FSetValue &fs) const
 {
-  if (_card != fs._card) 
+  if (fs._card < _card_min || _card_max < fs._card) 
     return OZ_FALSE;
 
   for (int i = fset_high; i--; ) {
@@ -153,20 +158,26 @@ OZ_FSetImpl OZ_FSetImpl::unify(const OZ_FSetImpl &y) const
 {
   OZ_FSetImpl z;
   
-  if ((z._card = (_card == y._card) ? _card : -1) != -1) {
+  z._card_min = max(_card_min, y._card_min);
+  z._card_max = max(_card_max, y._card_max);
+
+  if (z._card_max < z._card_min) 
+    z._card_min = -1;
+
+  if (z._card_min != -1) {
     for (int i = fset_high; i--; ) {
       z._in[i] = _in[i] | y._in[i];
       z._not_in[i] = _not_in[i] | y._not_in[i];
       if (z._in[i] & z._not_in[i]) {
-	z._card = -1;
+	z._card_min = -1;
 	goto end;
       }
     }
   }
   z._known_in = findBitsSet(fset_high, z._in);
   z._known_not_in = findBitsSet(fset_high, z._not_in);
-  if (z._card < z._known_in)
-    z._card = -1;
+  if (z._card_min < z._known_in)
+    z._card_min = -1;
 end:
   return z;
 }
