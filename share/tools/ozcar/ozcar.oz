@@ -39,9 +39,10 @@ local
 	 {Tk.batch [update(idletasks)
 		    wm(deiconify self.toplevel)]}
 	 case {Cget emacsThreads} then
-	    {Compile '\\switch +debuginfo'}
+	    {EnqueueCompilerQuery setSwitch(debuginfo true)}
 	 else
-	    {Compile '\\switch +debuginfovarnames +debuginfocontrol'}
+	    {EnqueueCompilerQuery setSwitch(debuginfovarnames true)}
+	    {EnqueueCompilerQuery setSwitch(debuginfocontrol true)}
 	 end
 	 {Dbg.on}
 	 case @currentThread == unit then
@@ -52,7 +53,7 @@ local
       meth off
 	 {Dbg.off}
 	 {Tk.send wm(withdraw self.toplevel)}
-	 {Compile '\\switch -debuginfo'}
+	 {EnqueueCompilerQuery setSwitch(debuginfo false)}
 	 {Emacs removeBar}
       end
    end

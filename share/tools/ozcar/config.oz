@@ -329,7 +329,10 @@ ConfigEmacsThreads         = true   %% default value of Emulator
 ConfigSubThreads           = true   %% dito
 
 ConfigUpdateEnv            = true   %% update env windows after each step?
-ConfigUseEmacsBar          = {Not {System.get standalone}} % use Emacs?
+
+RunningStandAlone          = {System.get standalone}
+RunningWithOPI             = {Not RunningStandAlone}
+ConfigUseEmacsBar          = RunningWithOPI  % use Emacs?
 
 PrintWidth
 PrintDepth
