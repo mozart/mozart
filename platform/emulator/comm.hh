@@ -129,7 +129,7 @@ ProbeReturn deinstallProbe_RemoteSite(RemoteSite*,ProbeType);
 ProbeReturn probeStatus_RemoteSite(RemoteSite*,ProbeType &pt,int &frequncey,void* &storePtr);
 GiveUpReturn giveUp_RemoteSite(RemoteSite*);
 void discoveryPerm_RemoteSite(RemoteSite*);
-void discoveryTmp_RemoteSite(RemoteSite*);
+
 
 void initNetwork();
 
