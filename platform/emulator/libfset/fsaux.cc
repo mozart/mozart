@@ -28,6 +28,7 @@ OZ_C_proc_begin(fsp_init, 0)
 #elif OZ_PROFILE
   cout << "*** PROFILE-FSETLIB ***" << endl << flush;
 #endif
+  //  cout << "fsetlib " << __DATE__ << endl << flush;
   return PROCEED;
 }
 OZ_C_proc_end

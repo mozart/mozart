@@ -64,6 +64,8 @@ OZ_C_proc_begin(BIfsSup, 1)
 }
 OZ_C_proc_end
 
+//-----------------------------------------------------------------------------
+
 OZ_C_proc_begin(BIfsGetKnownIn, 2)
 {
   OZ_Term v = OZ_getCArg(0);
@@ -81,6 +83,26 @@ OZ_C_proc_begin(BIfsGetKnownIn, 2)
     return FAILED;
 }
 OZ_C_proc_end
+
+OZ_C_proc_begin(BIfsGetNumOfKnownIn, 2)
+{
+  OZ_Term v = OZ_getCArg(0);
+  DEREF(v, vptr, vtag);
+
+  if (isFSetValue(vtag)) {
+    OZ_FSetValue * fsetval = tagged2FSetValue(v);
+    return OZ_unify(OZ_getCArg(1), OZ_int(fsetval->getCard()));
+  } else if (isGenFSetVar(v, vtag)) {
+    OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
+    return OZ_unify(OZ_getCArg(1), OZ_int(fsetconstr->getKnownIn()));
+  } else if (isNotCVar(vtag)) {
+    return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+  }
+    return FAILED;
+}
+OZ_C_proc_end
+
+//-----------------------------------------------------------------------------
 
 OZ_C_proc_begin(BIfsGetKnownNotIn, 2)
 {
@@ -100,6 +122,26 @@ OZ_C_proc_begin(BIfsGetKnownNotIn, 2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIfsGetNumOfKnownNotIn, 2)
+{
+  OZ_Term v = OZ_getCArg(0);
+  DEREF(v, vptr, vtag);
+
+  if (isFSetValue(vtag)) {
+    OZ_FSetValue * fsetval = tagged2FSetValue(v);
+    return OZ_unify(OZ_getCArg(1), OZ_int(fsetval->getKnownNotIn()));
+  } else if (isGenFSetVar(v, vtag)) {
+    OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
+    return OZ_unify(OZ_getCArg(1), OZ_int(fsetconstr->getKnownNotIn()));
+  } else if (isNotCVar(vtag)) {
+    return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+  }
+    return FAILED;
+}
+OZ_C_proc_end
+
+//-----------------------------------------------------------------------------
+
 OZ_C_proc_begin(BIfsGetUnknown, 2)
 {
   OZ_Term v = OZ_getCArg(0);
@@ -116,6 +158,25 @@ OZ_C_proc_begin(BIfsGetUnknown, 2)
     return FAILED;
 }
 OZ_C_proc_end
+
+OZ_C_proc_begin(BIfsGetNumOfUnknown, 2)
+{
+  OZ_Term v = OZ_getCArg(0);
+  DEREF(v, vptr, vtag);
+
+  if (isFSetValue(vtag)) {
+    return OZ_unify(OZ_getCArg(1), OZ_int(0));
+  } else if (isGenFSetVar(v, vtag)) {
+    OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
+    return OZ_unify(OZ_getCArg(1), OZ_int(fsetconstr->getUnknown()));
+  } else if (isNotCVar(vtag)) {
+    return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
+  }
+    return FAILED;
+}
+OZ_C_proc_end
+
+//-----------------------------------------------------------------------------
 
 OZ_C_proc_begin(BIfsGetLub, 2)
 {
@@ -235,6 +296,9 @@ BIspec fdSpec[] = {
   {"fsGetLub", 2, BIfsGetLub},
   {"fsGetCard", 2, BIfsGetCard},
   {"fsCardRange", 3, BIfsCardRange},
+  {"fsGetNumOfKnownIn", 2, BIfsGetNumOfKnownIn},
+  {"fsGetNumOfKnownNotIn", 2, BIfsGetNumOfKnownNotIn},
+  {"fsGetNumOfUnknown", 2, BIfsGetNumOfUnknown},
 
   {"mkFSetVar", 5, BImkFSetVar},
 

@@ -148,6 +148,7 @@ public:
   OZ_FSetValue(void) {}
   OZ_FSetValue(const OZ_FSetConstraint&);
   int getCard(void) const { return _card; }
+  int getKnownNotIn(void) const { return 32 * fset_high - _card; }
   OZ_Boolean isIn(int) const;
   OZ_Boolean isNotIn(int) const;
   OZ_Term getKnownInList(void) const;
@@ -183,6 +184,10 @@ public:
 
   int getKnownIn(void) const { return _known_in; }
   int getKnownNotIn(void) const { return _known_not_in; }
+  int getUnknown(void) const {
+    return 32 * fset_high - _known_in - _known_not_in;
+  }
+
   int getCardSize(void) const { return _card_max - _card_min + 1; }
   int getCardMin(void) const { return _card_min; }
   int getCardMax(void) const { return _card_max; }

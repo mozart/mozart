@@ -9,6 +9,8 @@
   ------------------------------------------------------------------------
 */
 
+//#define FLAGS
+
 #ifndef __SUM_HH__
 #define __SUM_HH__
 
@@ -19,12 +21,47 @@
 //-----------------------------------------------------------------------------
 
 class LinEqPropagator : public Propagator_VI_VD_I {
+
+#ifdef FLAGS
+private:
+  int * _l, * _u;
+  void init_l_u(void)
+  {
+    _l = OZ_hallocCInts(reg_sz);
+    _u = OZ_hallocCInts(reg_sz);
+    for (int i = reg_sz; i--; ) {
+      _l[i] = -1; _u[i] = OZ_getFDSup() + 1;
+    }
+  }
+#endif
+
 private:
   static OZ_CFun spawner;
 public:
   LinEqPropagator(OZ_Term a, OZ_Term x, OZ_Term c,
                   OZ_Boolean is_lin = OZ_TRUE)
+#ifndef FLAGS
     : Propagator_VI_VD_I(a, x, c, is_lin) { };
+#else
+    : Propagator_VI_VD_I(a, x, c, is_lin) { init_l_u(); };
+
+  virtual size_t sizeOf(void) { return sizeof(LinEqPropagator); }
+  virtual void updateHeapRefs(OZ_Boolean d)
+  {
+    Propagator_VI_VD_I::updateHeapRefs(d);
+
+    int * __l = OZ_hallocCInts(reg_sz);
+    int * __u = OZ_hallocCInts(reg_sz);
+
+    for (int i = reg_sz; i--; ) {
+      __l[i] = _l[i];
+      __u[i] = _u[i];
+    }
+    _l = __l;
+    _u = __u;
+  }
+  #endif
+
   LinEqPropagator(const Propagator_VI_VD_I_D &o)
     : Propagator_VI_VD_I(o) {}
   LinEqPropagator(int sz, int sizes[], int single_var[],
