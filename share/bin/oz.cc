@@ -45,7 +45,7 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
     ozSetenv("OZPATH",buffer);
   }
 
-  sprintf(buffer,"%s;%s/platform/%s;%s",ozhome,ozhome,ozplatform,getenv("PATH"));
+  sprintf(buffer,"%s/bin;%s/platform/%s;%s",ozhome,ozhome,ozplatform,getenv("PATH"));
   ozSetenv("PATH",buffer);
 
   int console = 0;
@@ -92,7 +92,7 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
   PROCESS_INFORMATION pinf;
   BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,console,NULL,NULL,&si,&pinf);
   if (ret!=TRUE) {
-    OzPanic(1,"Cannot start Oz.\nError = %d.\nDid you run setup?",errno);
+    OzPanic(1,"Cannot run '%s' Oz.\nError = %d.\nDid you run setup?",buffer,errno);
   }
 #ifdef OZENGINE
   WaitForSingleObject(pinf.hProcess,INFINITE);

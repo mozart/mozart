@@ -37,7 +37,7 @@ INSTALL=	@INSTALL@
 INSTALL_DIR=	@INSTALL_DIR@
 INSTALL_BIN=	$(INSTALL) -m 555
 
-SCRIPTS=	oz ozplatform ozwindynld send-pr ozdynld
+SCRIPTS=	oz ozplatform send-pr ozdynld
 LINKS=		ozengine text2pickle pickle2text oldpickle2text oztool
 LIB_SCRIPTS=	$(addprefix $(BINDIR)/,$(SCRIPTS))
 LIB_LINKS=	$(addprefix $(BINDIR)/,$(LINKS))
@@ -58,8 +58,8 @@ ifeq ($(MSWIN),yes)
 
 install: $(WINEXES)
 	$(INSTALL_DIR) $(PREFIX)/winbin
-	$(INSTALL_BIN) oz.exe oz.ico setup.exe setup.ico ozc.bat ozengine.exe \
-			$(PREFIX)/winbin
+	$(INSTALL_BIN) ozwindynld oz.exe oz.ico setup.exe setup.ico\
+			ozc.bat ozengine.exe $(PREFIX)/winbin
 
 all: $(WINEXES)
 
