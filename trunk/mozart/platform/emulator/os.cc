@@ -1123,7 +1123,7 @@ int ossafewrite(int fd, char *buf, unsigned int len)
     if (ossockerrno()==EINTR) goto loop;
     return written;
   }
-  if (written<len) {
+  if ((unsigned)written<len) {
     buf += written;
     len -= written;
     goto loop;
