@@ -248,7 +248,7 @@ local
 
    local
       BarRelief = raised
-      AccSpace  = '  '
+      AccSpace  = ''
       AccCtrl   = 'C-'
       AccAlt    = 'A-'
       AccMeta   = 'M-'
@@ -1220,7 +1220,7 @@ local
 	 {List.toRecord images {Map Vs MkImg}}
       end
    end
-   
+
 in
 
    tkTools(error:       Error
