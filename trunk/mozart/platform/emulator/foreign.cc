@@ -1930,15 +1930,15 @@ OZ_Term OZ_newName()
  * 
  * -----------------------------------------------------------------*/
 
-int OZ_addBuiltin(const char *name, int arity, OZ_CFun fun)
+int OZ_addBuiltin(const char *name, int inArity, int outArity, OZ_CFun fun)
 {
-  return BIadd(name,arity,fun) == NULL ? 0 : 1;
+  return BIadd(name,inArity,outArity,fun) == NULL ? 0 : 1;
 }
 
 void OZ_addBISpec(OZ_BIspec *spec)
 {
   for (int i=0; spec[i].name; i++) {
-    OZ_addBuiltin(spec[i].name,spec[i].arity,spec[i].fun);
+    OZ_addBuiltin(spec[i].name,spec[i].inArity,spec[i].outArity,spec[i].fun);
   }
 }
 

@@ -430,7 +430,8 @@ OZ_Term oz_getLocation(Board *bb);
 // specification for builtins
 struct BIspec {
   char *name;
-  int arity;
+  int inArity;
+  int outArity;
   OZ_CFun fun;
   IFOR ifun;
 };
@@ -471,7 +472,7 @@ public:
 extern BuiltinTab builtinTab;
 
 // (see builtins.hh)
-Builtin *BIadd(const char *name,int arity,OZ_CFun fun,
+Builtin *BIadd(const char *name,int inArity,int outArity, OZ_CFun fun,
 		       IFOR infun=(IFOR) NULL);
 void BIaddSpec(BIspec *spec); // add specification to builtin table
 
