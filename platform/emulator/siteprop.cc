@@ -18,7 +18,10 @@ OZ_BI_define(BIsitePropertyGet,1,1)
   OZ_expectType(0,"Feature",OZ_isFeature);
   INIT;
   OZ_Term t = OZ_deref(OZ_in(0));
-  OZ_RETURN(tagged2Dictionary(site_dict)->getArg(t));
+  TaggedRef out=tagged2Dictionary(site_dict)->getArg(t);
+  if (!out)
+    return oz_raise(E_SYSTEM,E_KERNEL,"SitePropertyGet",1,OZ_in(0));
+  OZ_RETURN(out);
 }
 OZ_BI_end
 
