@@ -233,6 +233,9 @@ win32-i486: $(PACKDIR) $(PACKDIR)/mozart
 	 $(TAR) cf - $(FILES) bin cache/$(HOMECACHE)/share \
                      include share/Init.ozf share/elisp platform) | \
 	 (cd mozart-win32/base; $(TAR) xf -)
+	$(INSTALL_DIR) mozart-win32/doc/doc
+	$(INSTALL_FILE) $(SRCTOP)/doc/utilities/ozdoc-iexplorer.css \
+			mozart-win32/doc/doc/ozdoc.css
 	rm -rf /tmp/pack/mozart
 	rm -f mozart-win32.zip
 	$(ZIP) -r mozart-win32.zip mozart-win32
