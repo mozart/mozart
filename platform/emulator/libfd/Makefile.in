@@ -28,8 +28,6 @@ VPATH           = @srcdir@
 FDDIR           = @srcdir@
 INCS            = -I. -I$(FDDIR)/.. -I..
 
-FDTARGETS       = @FDTARGETS@
-
 FDLIBSRCS = arith.cc fdaux.cc bool.cc \
             card.cc cd.cc count.cc \
             rel.cc disjoint.cc std.cc \
@@ -48,7 +46,15 @@ SCHEDLIBSRCS = \
 SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.o)
 
 
-all: $(FDTARGETS)
+all:
+
+.PHONY: libfd.so libfd.a libschedule.a libschedule.so
+
+libfd.so: ../libfd.so
+libschedule.so: ../libschedule.so
+
+libfd.a: ../libfd.a
+libschedule.a: ../libschedule.a
 
 ../libfd.so: $(FDLIBOBJS)
         $(DYNLD) -o $@ $(FDLIBOBJS)
@@ -61,11 +67,6 @@ all: $(FDTARGETS)
 
 ../libschedule.a: $(SCHEDLIBOBJS)
         $(AR) -rc $@ $(SCHEDLIBOBJS) && $(RANLIB) $@
-
-install:: @FDINSTALL@
-
-install-fd:
-        $(INSTALL_BIN) $(FDTARGETS) $(BINDIR)
 
 depend:: Makefile $(FDLIBSRCS) $(SCHEDLIBSRCS)
         $(DEPEND) $(FDLIBSRCS:%=$(FDDIR)/%) $(SCHEDLIBSRCS:%=$(FDDIR)/%) \

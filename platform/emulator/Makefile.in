@@ -32,19 +32,15 @@ SRCDIR= @srcdir@
 
 include Makefile.vars
 
+MODULE_NAMES = libwif libfd libschedule libfset libparser
+STATIC_MODULETARGETS  = $(MODULE_NAMES:%=%.a)
+DYNAMIC_MODULETARGETS = $(MODULE_NAMES:%=%.so)
+
 INCS            = -I. -I$(SRCDIR)
 M4_D            = -DEMUDIR=$(SRCDIR)
-WIFTARGETS      = @WIFTARGETS@
-WIFINSTALL      = @WIFINSTALL@
-FDTARGETS       = @FDTARGETS@
-FDINSTALL       = @FDINSTALL@
-FSETTARGETS     = @FSETTARGETS@
-FSETINSTALL     = @FSETINSTALL@
-PARSERTARGETS   = @PARSERTARGETS@
-PARSERINSTALL   = @PARSERINSTALL@
-OZMATARGETS     = @OZMATARGETS@
-OZMAINSTALL     = @OZMAINSTALL@
 TARGETS         = @TARGETS@
+MODULETARGETS   = @MODULETARGETS@
+MODULEINSTALL   = @MODULEINSTALL@
 SUBDIRS         = libfd libfset
 OZVERSION       = $(SRCTOP)/OZVERSION
 
@@ -121,19 +117,20 @@ OBJS = $(SRCS:.cc=.o)
 .NOEXPORT: emulate.o @PROGRAMNAME@ peanuts.o
 .PHONY: all win win-install first install install-bin install-inc \
         install-dir version depend tags clean distclean veryclean \
-        ../libfd.a ../libschedule.a ../libfset.a \
-        ../libfd.so ../libschedule.so ../libfset.so \
-        install-wif install-fd install-fset install-parser
+        install-module
 
-all: $(TARGETS) $(FDTARGETS) $(FSETTARGETS) \
-        $(PARSERTARGETS) $(OZMATARGETS) $(WIFTARGETS)
+all: $(TARGETS)
+
+$(TARGETS): $(MODULETARGETS)
 
 bootstrap:: all
 
-$(FDTARGETS) $(FDINSTALL): libfd.dcl libfd.tbl libschedule.tbl libschedule.dcl
+libfd.a libfd.so libschedule.a libschedule.so: \
+        libfd libfd.dcl libfd.tbl libschedule.tbl libschedule.dcl
         cd libfd; $(MAKE) $@
 
-$(FSETTARGETS) $(FSETINSTALL): libfset.dcl libfset.tbl
+libfset.a libfset.so: \
+        libfset libfset.dcl libfset.tbl
         cd libfset; $(MAKE) $@
 
 
@@ -163,9 +160,7 @@ first: $(CREATEDFILES) $(SRCS)
          rcp $$tmp @oz_tmphack_host@:`pwd`/$@ && \
          rm -f $$tmp
 
-install:: install-bin install-inc \
-        $(WIFINSTALL) $(FDINSTALL) $(FSETINSTALL) \
-        $(PARSERINSTALL) $(OZMAINSTALL)
+install:: install-bin install-inc $(MODULEINSTALL)
 
 install-bin: version $(TARGETS) $(BINDIR)
         $(INSTALL_BIN) $(TARGETS) $(BINDIR)
@@ -174,14 +169,8 @@ install-inc: $(INCDIR)
         $(INSTALL_FILE) $(SRCDIR)/oz.h $(INCDIR)
         $(INSTALL_FILE) $(SRCDIR)/oz_cpi.hh $(INCDIR)
 
-install-wif: libwif.so $(BINDIR)
-        $(INSTALL_BIN) libwif.so $(BINDIR)
-
-install-parser: libparser.so $(BINDIR)
-        $(INSTALL_BIN) libparser.so $(BINDIR)
-
-install-ozma: libozma.so $(BINDIR)
-        $(INSTALL_BIN) libozma.so $(BINDIR)
+install-module: $(DYNAMIC_MODULETARGETS) $(BINDIR)
+        $(INSTALL_BIN) $(DYNAMIC_MODULETARGETS) $(BINDIR)
 
 $(BINDIR) $(INCDIR):
         $(INSTALL_DIR) $@

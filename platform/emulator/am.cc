@@ -369,7 +369,7 @@ void AM::init(int argc,char **argv)
 
     OZ_CFun f = 0;
 
-#ifndef STATIC_LIBOZMA
+#ifndef MODULES_LINK_STATIC
 
     char * libname = "/libozma.so";
     int n = strlen(ozconf.emuhome);

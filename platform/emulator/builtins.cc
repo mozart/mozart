@@ -4322,7 +4322,7 @@ TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I)
   return OZ_recordInit(AtomForeign,l);
 }
 
-#ifdef STATIC_LIBWIF
+#ifdef MODULES_LINK_STATIC
 #include "libwif.dcl"
 
 static OZ_C_proc_interface libwif_interface[] = {
@@ -4330,9 +4330,6 @@ static OZ_C_proc_interface libwif_interface[] = {
  {0,0,0,0}
 };
 
-#endif
-
-#ifdef STATIC_LIBFD
 #include "libfd.dcl"
 
 static OZ_C_proc_interface libfd_interface[] = {
@@ -4347,9 +4344,6 @@ static OZ_C_proc_interface libschedule_interface[] = {
  {0,0,0,0}
 };
 
-#endif
-
-#ifdef STATIC_LIBFSET
 #include "libfset.dcl"
 
 static OZ_C_proc_interface libset_interface[] = {
@@ -4357,9 +4351,6 @@ static OZ_C_proc_interface libset_interface[] = {
  {0,0,0,0}
 };
 
-#endif
-
-#ifdef STATIC_LIBPARSER
 #include "libparser.dcl"
 
 static OZ_C_proc_interface libparser_interface[] = {
@@ -4376,33 +4367,23 @@ OZ_BI_define(BIdlStaticLoad,1,1)
 
   OZ_C_proc_interface * I = 0;
 
-#ifdef STATIC_LIBWIF
+#ifdef MODULES_LINK_STATIC
   if (!strcmp(basename, "libwif.so")) {
      I = libwif_interface;
      goto success;
   }
-#endif
-
-#ifdef STATIC_LIBFD
   if (!strcmp(basename, "libfd.so")) {
      I = libfd_interface;
      goto success;
   }
-
   if (!strcmp(basename, "libschedule.so")) {
      I = libschedule_interface;
      goto success;
   }
-#endif
-
-#ifdef STATIC_LIBFSET
   if (!strcmp(basename, "libfset.so")) {
      I = libset_interface;
      goto success;
   }
-#endif
-
-#ifdef STATIC_LIBPARSER
   if (!strcmp(basename, "libparser.so")) {
      I = libparser_interface;
      goto success;

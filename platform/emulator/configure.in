@@ -545,70 +545,18 @@ AC_SUBST(PEANUTS)
 
 
 
-OZ_ENABLE_YES(linkwif,[ link libwif statically],
-        AC_MSG_RESULT(yes (-DSTATIC_LIBWIF))
-        AC_DEFINE(STATIC_LIBWIF)
-        WIFTARGETS="libwif.a"
-        LIBS="-lwif $LIBS"
+OZ_ENABLE_YES(modules-static,[ link modules statically],
+        AC_MSG_RESULT(yes (-DMODULES_LINK_STATIC))
+        AC_DEFINE(MODULES_LINK_STATIC)
+        MODULETARGETS="\$(STATIC_MODULETARGETS)"
+        LIBS="$LIBS \$(STATIC_MODULELIBS)"
         ,
-        AC_MSG_RESULT(no (-USTATIC_LIBWIF))
-        WIFTARGETS="libwif.so"
-        WIFINSTALL="install-wif"
+        AC_MSG_RESULT(no (-UMODULES_LINK_STATIC))
+        MODULETARGETS="\$(DYNAMIC_MODULETARGETS)"
+        MODULEINSTALL="install-module"
         )
-AC_SUBST(WIFTARGETS)
-AC_SUBST(WIFINSTALL)
-
-OZ_ENABLE_YES(linkfd,[ link libfd and libschedule statically],
-        AC_MSG_RESULT(yes (-DSTATIC_LIBFD))
-        AC_DEFINE(STATIC_LIBFD)
-        FDTARGETS="../libfd.a ../libschedule.a"
-        LIBS="-L. -lfd -lschedule $LIBS"
-        ,
-        AC_MSG_RESULT(no (-USTATIC_LIBFD))
-        FDTARGETS="../libfd.so ../libschedule.so"
-        FDINSTALL="install-fd"
-        )
-AC_SUBST(FDTARGETS)
-AC_SUBST(FDINSTALL)
-
-OZ_ENABLE_YES(linkfset,[ link libfset statically],
-        AC_MSG_RESULT(yes (-DSTATIC_LIBFSET))
-        AC_DEFINE(STATIC_LIBFSET)
-        FSETTARGETS="../libfset.a"
-        LIBS="-L. -lfset $LIBS"
-        ,
-        AC_MSG_RESULT(no (-USTATIC_LIBFSET))
-        FSETTARGETS="../libfset.so"
-        FSETINSTALL="install-fset"
-        )
-AC_SUBST(FSETTARGETS)
-AC_SUBST(FSETINSTALL)
-
-OZ_ENABLE_YES(linkparser,[ link libparser statically],
-        AC_MSG_RESULT(yes (-DSTATIC_LIBPARSER))
-        AC_DEFINE(STATIC_LIBPARSER)
-        PARSERTARGETS="libparser.a"
-        LIBS="-L. -lparser $LIBS"
-        ,
-        AC_MSG_RESULT(no (-USTATIC_LIBPARSER))
-        PARSERTARGETS="libparser.so"
-        PARSERINSTALL="install-parser"
-        )
-AC_SUBST(PARSERTARGETS)
-AC_SUBST(PARSERINSTALL)
-
-OZ_ENABLE_YES(linkozma,[ link libozma statically],
-        AC_MSG_RESULT(yes (-DSTATIC_LIBOZMA))
-        AC_DEFINE(STATIC_LIBOZMA)
-        OZMATARGETS="libozma.a"
-        LIBS="-L. -lozma $LIBS"
-        ,
-        AC_MSG_RESULT(no (-USTATIC_LIBOZMA))
-        OZMATARGETS="libozma.so"
-        OZMAINSTALL="install-ozma"
-        )
-AC_SUBST(OZMATARGETS)
-AC_SUBST(OZMAINSTALL)
+AC_SUBST(MODULETARGETS)
+AC_SUBST(MODULEINSTALL)
 
 
 dnl *****************************************************************
