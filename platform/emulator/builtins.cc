@@ -2153,7 +2153,7 @@ OZ_Return andInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
       out = B;
       return PROCEED;
     } else {
-      TypeErrorT(1,"Bool");
+      oz_typeError(1,"Bool");
     }
   } else if (literalEq(A,NameFalse)) {
     if (isAnyVar(B)) {
@@ -2162,12 +2162,12 @@ OZ_Return andInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
       out = NameFalse;
       return PROCEED;
     } else {
-      TypeErrorT(1,"Bool");
+      oz_typeError(1,"Bool");
     }
   } else if (isAnyVar(A)) {
     return SUSPEND;
   } else {
-    TypeErrorT(0,"Bool");
+    oz_typeError(0,"Bool");
   }
 }
 
@@ -2185,7 +2185,7 @@ OZ_Return orInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
       out = NameTrue;
       return PROCEED;
     } else {
-      TypeErrorT(1,"Bool");
+      oz_typeError(1,"Bool");
     }
   } else if (literalEq(A,NameFalse)) {
     if (isAnyVar(B)) {
@@ -2194,12 +2194,12 @@ OZ_Return orInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
       out = B;
       return PROCEED;
     } else {
-      TypeErrorT(1,"Bool");
+      oz_typeError(1,"Bool");
     }
   } else if (isAnyVar(A)) {
     return SUSPEND;
   } else {
-    TypeErrorT(0,"Bool");
+    oz_typeError(0,"Bool");
   }
 }
 
