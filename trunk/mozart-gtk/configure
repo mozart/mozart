@@ -2036,8 +2036,8 @@ esac
 GTKFLAGS=`$GTKCONFIG --cflags`
 GTKLIBS=`$GTKCONFIG --libs`
 
-CPPFLAGS="$LIBART_CFLAGS $GTKFLAGS $CPPFLAGS"
-LIBS="$LIBART_LIBS -lart_lgpl -lgdk_imlib $GTKLIBS $LIBS"
+CPPFLAGS="$IMLIB_CFLAGS $LIBART_CFLAGS $GTKFLAGS $CPPFLAGS"
+LIBS="$IMLIB_LIBS $LIBART_LIBS -lart_lgpl -lgdk_imlib $GTKLIBS $LIBS"
 
 EXPLICIT_CANVAS=no
 echo $ac_n "checking for --with-gtk-canvas-dir""... $ac_c" 1>&6
