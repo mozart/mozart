@@ -277,6 +277,9 @@ public:
     // Allocate & return _unsorted_ list containing all features:
     TaggedRef getKeys();
 
+    // Allocate & return _unsorted_ pair list
+    TaggedRef getPairs();
+
     // Convert table to Literal, SRecord or LTuple
     TaggedRef toRecord(TaggedRef lbl);
 

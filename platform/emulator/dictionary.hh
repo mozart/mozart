@@ -66,9 +66,12 @@ public:
     table = tab;
   }
 
-  TaggedRef keys() 
-  { 
+  TaggedRef keys() { 
     return table->getKeys();
+  }
+
+  TaggedRef pairs() { 
+    return table->getPairs();
   }
 
   TaggedRef toRecord(TaggedRef lbl) 
