@@ -34,43 +34,43 @@ define
    Return =
    future([
 	   adjoinAt(proc {$}
-		       Ts=[a(a:b)#{ByNeed RetA}#a#b
-			   a(a:b)#a#{ByNeed RetA}#b
-			   a(b:a)#a#b#{ByNeed RetA}]
+		       Ts=[a(a:b)#{ByNeedFuture RetA}#a#b
+			   a(a:b)#a#{ByNeedFuture RetA}#b
+			   a(b:a)#a#b#{ByNeedFuture RetA}]
 		    in
 		       {ForAll Ts proc {$ R#A1#A2#A3}
 				     true = {AdjoinAt A1 A2 A3} == R
 				  end}
 		    end
-		    keys:[future byNeed adjoin adjoinAt])
+		    keys:[future byNeedFuture adjoin adjoinAt])
 	 
 	   adjoinList(proc {$}
 			 Ts=[
-			     a#{ByNeed RetA}#nil
+			     a#{ByNeedFuture RetA}#nil
 			    ]
 		      in
 			 {ForAll Ts proc {$ R#A1#A2}
 				       true = {AdjoinList A1 A2} == R
 				    end}
 		      end
-		      keys:[future byNeed adjoin adjoinList])
+		      keys:[future byNeedFuture adjoin adjoinList])
 
 	   arity(proc {$}
 		    Ts=[
-			nil#{ByNeed RetA}
+			nil#{ByNeedFuture RetA}
 		       ]
 		 in
 		    {ForAll Ts proc {$ R#A}
 				  true = {Arity A} == R
 			       end}
 		 end
-		 keys:[future byNeed arity])
+		 keys:[future byNeedFuture arity])
 	   cycle(proc {$}
-		    A = {ByNeed fun {$} A end}
+		    A = {ByNeedFuture fun {$} A end}
 		 in
 		    skip
 		 end
-		 keys:[future byNeed cycle bug])		 
+		 keys:[future byNeedFuture cycle bug])		 
 	   space(proc {$}
 		    X Y S Go1 Go2
 		 in

@@ -130,7 +130,11 @@
 
      'byNeed'		=> { in  => ['value'],
 			     out => ['value'],
-			     BI  => BIbyNeed},
+			     BI  => BIbyNeedFuture},
+
+     'byNeedFuture'    	=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIbyNeedFuture},
 
      'byNeedDot'	=> { in  => ['value','+feature'],
 			     out => ['value'],

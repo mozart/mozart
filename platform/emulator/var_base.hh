@@ -449,12 +449,13 @@ VarStatus oz_check_var_status(OzVariable *cv)
   case OZ_VAR_SIMPLE_QUIET:
   case OZ_VAR_SIMPLE:
     return EVAR_STATUS_FREE;
-//    case OZ_VAR_READONLY_QUIET:
-//    case OZ_VAR_READONLY:
+  case OZ_VAR_READONLY_QUIET:
+  case OZ_VAR_READONLY:
+  case OZ_VAR_FAILED:
+    return EVAR_STATUS_UNKNOWN;   // this is temporary
+//      return EVAR_STATUS_DET;   // special value here
   case OZ_VAR_FUTURE:
     return EVAR_STATUS_FUTURE;
-//    case OZ_VAR_FAILED:
-//      return EVAR_STATUS_DET;   // special value here
   case OZ_VAR_OPT:
     return EVAR_STATUS_FREE;
   ExhaustiveSwitch();

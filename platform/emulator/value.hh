@@ -57,7 +57,6 @@ extern TaggedRef
   BI_unknown,
   BI_varToFuture,
   BI_varToReadOnly,
-  BI_readOnlyToVar,
   BI_raise,
 
   __UNUSED_DUMMY_END_MARKER;

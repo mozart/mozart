@@ -159,7 +159,7 @@ in
 	    in
 	       if {IsPrefix "future>" SearchS}                     then '<Fut>'
 	       elseif {IsPrefix "future byNeed: \'fail\'" SearchS} then '<Failed>'
-	       else '<ByNeed>'
+	       else '<ByNeedFuture>'
 	       end
 	    end
 	    meth createRep(PrintStr LengthStr)

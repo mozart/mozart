@@ -54,9 +54,6 @@ public:
   // raph: the variable must be quiet; makes it needed
   OZ_Return becomeNeeded();
 
-  // raph: use this method for adding demanding suspensions only
-  OZ_Return addSusp(TaggedRef*, Suspendable *);
-
   Bool valid(TaggedRef /* val */) { return TRUE; }
 
   void dispose(void) {

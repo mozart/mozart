@@ -80,7 +80,8 @@ prepare
    Min		= Boot_Value.min
    CondSelect	= Boot_Value.condSelect
    HasFeature	= Boot_Value.hasFeature
-   ByNeed	= Boot_Value.byNeed
+   ByNeed	= proc {$ P X} thread {WaitNeeded X} {P X} end end
+   ByNeedFuture	= Boot_Value.byNeedFuture
    
    %%
    %% Literal
@@ -348,6 +349,7 @@ export
    'CondSelect'	        : CondSelect
    'HasFeature'	        : HasFeature
    'ByNeed'		: ByNeed
+   'ByNeedFuture'	: ByNeedFuture
    %% Literal
    'Literal'		: Literal
    'IsLiteral'	        : IsLiteral
