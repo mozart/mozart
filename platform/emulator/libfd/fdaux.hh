@@ -184,6 +184,19 @@ public:
   OZ_expect_t expectProperRecordInt(OZ_Term t) {
     return expectProperRecord(t, (PropagatorExpectMeth) &PropagatorExpect::expectInt);
   }
+  OZ_expect_t expectLinearVectorIntVarSingl(OZ_Term t) {
+    collectVarsOff();
+    OZ_expect_t r =
+      expectVector(t, (PropagatorExpectMeth) &OZ_Expect::expectInt);
+    collectVarsOn();
+    if ((r.size - r.accepted) <= 1) {
+      return  expectVectorIntVarSingl(t);
+    }
+    return expectVector(t, (PropagatorExpectMeth) &OZ_Expect::expectInt);
+  }
+  OZ_expect_t expectVectorLinearVectorIntVarSingl(OZ_Term t) {
+    return expectVector(t, &PropagatorExpect::expectLinearVectorIntVarSingl);
+  }
 };
 
 //-----------------------------------------------------------------------------
