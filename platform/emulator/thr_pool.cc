@@ -31,14 +31,9 @@
 #include "thr_pool.hh"
 #include "board.hh"
 
-void ThreadsPool::setCurrentThread(Thread *th) { 
-  _currentThread=th; 
-  th->setBoardInternal(th->getBoardInternal()->derefBoard());
-}
-
-int ThreadsPool::getRunnableNumber()
-{
-  return hiQueue.getRunnableNumber()
+int ThreadsPool::getRunnableNumber() {
+  return 
+     hiQueue.getRunnableNumber()
     +midQueue.getRunnableNumber()
     +lowQueue.getRunnableNumber()
     +1; // for am.currentThread!
@@ -55,11 +50,9 @@ void ThreadsPool::initThreads ()
   lowQueue.allocate(QUEUEMINSIZE);
 #endif
 
-  hiCounter = -1;
-  lowCounter = -1;
+  hi  = ozconf.hiMidRatio;
+  mid = ozconf.midLowRatio;
 
-  // public part;
-  _currentThread = (Thread *) NULL;
   threadBodyFreeList = NULL;
 }
 
@@ -84,55 +77,3 @@ void ThreadsPool::rescheduleThread(Thread *th)
   scheduleThread(th);
 }
 
-Thread *ThreadsPool::getFirstThreadOutline()
-{
-  Assert(hiCounter>=0 || lowCounter>=0); // otherwise inline version
-  /*
-   * empty hiQueue
-   */
-  if (hiCounter < 0) {
-    Assert(hiQueue.isEmpty());
-    Assert(!lowQueue.isEmpty() || !midQueue.isEmpty());
-
-lowMid:
-    if (lowCounter == 0 || midQueue.isEmpty()) {
-      Assert(!lowQueue.isEmpty());
-      Thread *th = lowQueue.dequeue();
-      lowCounter = lowQueue.isEmpty() ? -1 : ozconf.midLowRatio;
-      return th;
-    }
-    lowCounter--;
-    return midQueue.dequeue();
-  }
-
-  /*
-   * use hiQueue, else mid/low
-   */
-  if (hiCounter > 0 || (lowCounter < 0 && midQueue.isEmpty())) {
-    Thread *th = hiQueue.dequeue();
-    hiCounter = hiQueue.isEmpty() ? -1 :
-      (hiCounter==0 ? ozconf.hiMidRatio : hiCounter-1);
-    return th;
-  }
-  Assert(hiCounter==0);
-  hiCounter=ozconf.hiMidRatio;
-
-  Assert(lowCounter>=0 || !midQueue.isEmpty());
-  goto lowMid;
-}
-
-Bool ThreadsPool::threadQueuesAreEmptyOutline()
-{
-  if (!midQueue.isEmpty()) return NO;
-  if (hiCounter >= 0) {
-    if (!hiQueue.isEmpty()) return NO;
-  } else {
-    Assert(hiQueue.isEmpty());
-  }
-  if (lowCounter >= 0) {
-    if (!lowQueue.isEmpty()) return NO;
-  } else {
-    Assert(lowQueue.isEmpty());
-  }
-  return OK;
-}
