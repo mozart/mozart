@@ -105,22 +105,22 @@ OZ_BI_define(BImakeProc,2,1)
   OZ_declareNonvarIN(1,globals);
   globals = oz_deref(globals);
 
-  int numglobals = OZ_length(globals);
-  RefsArray gRegs =
-    numglobals? allocateRefsArray(numglobals): (RefsArray) NULL;
-
-  for (int i = 0; i < numglobals; i++) {
-    gRegs[i] = head(globals);
-    globals = oz_deref(tail(globals));
-  }
-  Assert(oz_isNil(globals));
+  int numGlobals = OZ_length(globals);
 
   PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
 				   mkTupleWidth(0),nil(),0,NO);
+  pte->setGSize(numGlobals);
   pte->PC = code->getStart();
 
   Assert(am.onToplevel());
-  Abstraction *p = new Abstraction (pte, gRegs, am.currentBoard());
+  Abstraction *p = Abstraction::newAbstraction(pte,
+					       am.currentBoard());
+
+  for (int i = 0; i < numGlobals; i++) {
+    p->initG(i,head(globals));
+    globals = oz_deref(tail(globals));
+  }
+  Assert(oz_isNil(globals));
 
   OZ_RETURN(makeTaggedConst(p));
 } OZ_BI_end
@@ -381,11 +381,11 @@ OZ_BI_define(BIstoreGRegRef,2,0)
   NEW_declareCodeBlock(0,code);
   OZ_declareNonvarIN(1,globals);
   globals = oz_deref(globals);
-  int numglobals = OZ_length(globals);
+  int numGlobals = OZ_length(globals);
 
-  AssRegArray *gregs = new AssRegArray(numglobals);
+  AssRegArray *gregs = new AssRegArray(numGlobals);
 
-  for (int i = 0; i < numglobals; i++) {
+  for (int i = 0; i < numGlobals; i++) {
     SRecord *rec = tagged2SRecord(oz_deref(head(globals)));
     globals = oz_deref(tail(globals));
 

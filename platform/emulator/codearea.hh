@@ -37,7 +37,6 @@ class AbstractionEntry {
 private:  
   Abstraction *abstr;
   ProgramCounter pc;
-  RefsArray g;
   int arity;
 
   /* all entries are linked for GC */
@@ -57,7 +56,6 @@ public:
     indexTable = 0;
   }
   Abstraction *getAbstr() { return abstr; };
-  RefsArray getGRegs()    { return g; };
   ProgramCounter getPC()  { return pc; };
   int getArity()          { return arity; };
   void setPred(Abstraction *abs);
@@ -130,8 +128,8 @@ public:
 
   static ProgramCounter printDef(ProgramCounter PC,FILE *out=stderr);
   static TaggedRef dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
-			     int frameId, RefsArray Y, RefsArray G);
-  static TaggedRef getFrameVariables(ProgramCounter, RefsArray, RefsArray);
+			     int frameId, RefsArray Y, Abstraction *G);
+  static TaggedRef getFrameVariables(ProgramCounter, RefsArray, Abstraction *);
   static void getDefinitionArgs(ProgramCounter PC, Reg &reg,
 				int &next, TaggedRef &file,
 				TaggedRef &line, TaggedRef &column,
@@ -396,12 +394,12 @@ public:
 class OZ_Location {
 private:
   int inAr,outAr;
-  int map[0];
+  int map[1];
 public:
   NO_DEFAULT_CONSTRUCTORS(OZ_Location);
   static OZ_Location *newLocation(int inArity,int outArity)
   {
-    int sz = sizeof(OZ_Location)+sizeof(int)*(inArity+outArity);
+    int sz = sizeof(OZ_Location)+sizeof(int)*(inArity+outArity-1);
     OZ_Location *loc = (OZ_Location *)new char[sz];
     loc->inAr=inArity;
     loc->outAr=outArity;

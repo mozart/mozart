@@ -471,7 +471,7 @@ Bool AM::hookCheckNeeded()
 #define RAISE_THREAD				\
   e->exception.pc=PC;				\
   e->exception.y=Y;				\
-  e->exception.g=G;				\
+  e->exception.cap=CAP;				\
   e->shallowHeapTop = 0;			\
   return T_RAISE;
 
@@ -490,14 +490,15 @@ Bool AM::hookCheckNeeded()
 #define ChangeSelf(obj)				\
       e->changeSelf(obj);
 
-#define PushCont(PC,Y,G)  CTS->pushCont(PC,Y,G);
-#define PushContX(PC,Y,G,X,n)  pushContX(CTS,PC,Y,G,X,n)
+#define PushCont(PC,Y,CAP)  CTS->pushCont(PC,Y,CAP);
+#define PushContX(PC,Y,CAP,X,n)  pushContX(CTS,PC,Y,CAP,X,n)
 
 // outlined:
 void pushContX(TaskStack *stk, 
-	       ProgramCounter pc,RefsArray y,RefsArray g, RefsArray x, int n)
+	       ProgramCounter pc,RefsArray y,Abstraction *cap,
+	       RefsArray x, int n)
 {
-  stk->pushCont(pc,y,g); 
+  stk->pushCont(pc,y,cap); 
   stk->pushX(x,n);
 }
 
@@ -506,18 +507,18 @@ void pushContX(TaskStack *stk,
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,gRegs)					     \
-     Y = NULL;								     \
-     G = gRegs;								     \
-     emulateHookCall(e,PushContX(Pred->getPC(),NULL,G,X,Pred->getArity()));
+#define CallDoChecks(Pred)						    \
+     Y = NULL;								    \
+     CAP = Pred;							    \
+     emulateHookCall(e,PushContX(Pred->getPC(),NULL,CAP,X,Pred->getArity()));
 
-// load a continuation into the machine registers PC,Y,G,X
+// load a continuation into the machine registers PC,Y,CAP,X
 #define LOADCONT(cont)				\
   {						\
       Continuation *tmpCont = cont;		\
       PC = tmpCont->getPC();			\
       Y = tmpCont->getY();			\
-      G = tmpCont->getG();			\
+      CAP = tmpCont->getCAP();			\
       predArity = tmpCont->getXSize();		\
       tmpCont->getX(X);				\
   }
@@ -582,9 +583,10 @@ void pushContX(TaskStack *stk,
 #define LessIndex(I1,I2) (I1<=I2)
 #endif
 
+#define GREF (CAP->getGRef())
 #define Xreg(N) RegAccess(X,N)
 #define Yreg(N) RegAccess(Y,N)
-#define Greg(N) RegAccess(G,N)
+#define Greg(N) RegAccess(GREF,N)
 
 #define XPC(N) Xreg(getRegArg(PC+N))
 
@@ -671,7 +673,7 @@ extern void checkLiveness(ProgramCounter PC, int n, TaggedRef *X, int max);
 
 #define SUSP_PC(TermPtr,RegsToSave,PC)		\
    CheckLiveness(PC,RegsToSave);		\
-   PushContX(PC,Y,G,X,RegsToSave);		\
+   PushContX(PC,Y,CAP,X,RegsToSave);		\
    addSuspPtr(TermPtr,CTT);			\
    return T_SUSPEND;
 
@@ -878,7 +880,7 @@ int engine(Bool init)
   register RefsArray Y         Reg3 = NULL;
   register TaggedRef *sPointer Reg4 = NULL;
   register AM * const e	       Reg5 = &am;
-  register RefsArray G         Reg6 = NULL;
+  register Abstraction * CAP   Reg6 = NULL;
 
   Bool isTailCall              = NO;                NoReg(isTailCall);
   AWActor *CAA                 = NULL;
@@ -959,7 +961,7 @@ LBLdispatcher:
   CodeArea::recordInstr(PC);
 #endif
 
-  DebugTrace( if (!ozd_trace("emulate",PC,Y,G)) {
+  DebugTrace( if (!ozd_trace("emulate",PC,Y,CAP)) {
 		goto LBLfailure;
 	      });
 
@@ -986,7 +988,7 @@ LBLdispatcher:
 
   Case(FASTCALL)
     {
-      PushCont(PC+3,Y,G);   // PC+3 goes into a temp var (mm2)
+      PushCont(PC+3,Y,CAP);   // PC+3 goes into a temp var (mm2)
       // goto LBLFastTailCall; // is not optimized away (mm2)
     }
 
@@ -998,7 +1000,7 @@ LBLdispatcher:
 	(AbstractionEntry *)getAdressArg(PC+1);
       
       COUNT(fastcalls);
-      CallDoChecks(entry->getAbstr(),entry->getGRegs());
+      CallDoChecks(entry->getAbstr());
 
       IHashTable *table = entry->indexTable;
       if (table) {
@@ -1029,11 +1031,11 @@ LBLdispatcher:
       case BI_TYPE_ERROR: RAISE_TYPE_NEW(bi,loc);
 	 
       case SUSPEND:
-	PushContX(PC,Y,G,X,getPosIntArg(PC+3));
+	PushContX(PC,Y,CAP,X,getPosIntArg(PC+3));
 	SUSPENDONVARLIST;
 
       case BI_PREEMPT:
-	PushContX(PC+4,Y,G,X,loc->max(getPosIntArg(PC+3)));
+	PushContX(PC+4,Y,CAP,X,loc->max(getPosIntArg(PC+3)));
 	return T_PREEMPT;
 
       case BI_REPLACEBICALL: 
@@ -1074,7 +1076,7 @@ LBLdispatcher:
       case BI_TYPE_ERROR: RAISE_TYPE_NEW(bi,loc);
 	 
       case SUSPEND:
-	PushContX(PC,Y,G,X,loc->max(getPosIntArg(PC+4)));
+	PushContX(PC,Y,CAP,X,loc->max(getPosIntArg(PC+4)));
 	SUSPENDONVARLIST;
 
       case BI_PREEMPT:
@@ -1203,7 +1205,7 @@ LBLdispatcher:
 	    goto LBLsuspendShallow;
 	  }
 	  CheckLiveness(PC,getPosIntArg(PC+auxInt));
-	  PushContX(PC,Y,G,X,getPosIntArg(PC+auxInt));
+	  PushContX(PC,Y,CAP,X,getPosIntArg(PC+auxInt));
 	  suspendInline(CTT,auxTaggedA,auxTaggedB);
 	  return T_SUSPEND;
 	}
@@ -1240,7 +1242,7 @@ LBLdispatcher:
 	      goto LBLsuspendShallow;
 	    }
 	    CheckLiveness(PC,getPosIntArg(PC+4));
-	    PushContX(PC,Y,G,X,getPosIntArg(PC+4));
+	    PushContX(PC,Y,CAP,X,getPosIntArg(PC+4));
 	    suspendInline(CTT,A);
 	    return T_SUSPEND;
 	  }
@@ -1333,7 +1335,7 @@ LBLdispatcher:
 	  Assert(!shallowCP);
 	  OZ_suspendOnInternal2(XPC(1),XPC(2));
 	  CheckLiveness(PC,getPosIntArg(PC+4));
-	  PushContX(PC,Y,G,X,getPosIntArg(PC+4));
+	  PushContX(PC,Y,CAP,X,getPosIntArg(PC+4));
 	  SUSPENDONVARLIST;
 
       case FAILED:
@@ -1407,7 +1409,7 @@ LBLdispatcher:
       case SUSPEND:
 	{
 	  CheckLiveness(PC,getPosIntArg(PC+5));
-	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
+	  PushContX(PC,Y,CAP,X,getPosIntArg(PC+5));
 	  suspendInline(CTT,XPC(1),XPC(2));
 	  return T_SUSPEND;
 	}
@@ -1465,7 +1467,7 @@ LBLdispatcher:
 	e->emptySuspendVarList(); // mm2: done twice
 	int argsToSave = getPosIntArg(shallowCP+2);
 	CheckLiveness(shallowCP,argsToSave);
-	PushContX(shallowCP,Y,G,X,argsToSave);
+	PushContX(shallowCP,Y,CAP,X,argsToSave);
 	shallowCP = NULL;
 	e->shallowHeapTop = NULL;
 	e->reduceTrailOnShallow();
@@ -1529,7 +1531,7 @@ LBLdispatcher:
     DISPATCH(1);
 
   Case(EXHANDLER)
-    PushCont(PC+2,Y,G);
+    PushCont(PC+2,Y,CAP);
     e->currentThread()->pushCatch();
     JUMPRELATIVE(getLabelArg(PC+1));
 
@@ -1595,16 +1597,16 @@ LBLdispatcher:
     Assert(0);}
   
   got_lock:
-    PushCont(PC+lbl,Y,G);
+    PushCont(PC+lbl,Y,CAP);
     CTS->pushLock(t);
     DISPATCH(4);
   
   has_lock:
-    PushCont(PC+lbl,Y,G);
+    PushCont(PC+lbl,Y,CAP);
     DISPATCH(4);
   
   no_lock:
-    PushCont(PC+lbl,Y,G);
+    PushCont(PC+lbl,Y,CAP);
     CTS->pushLock(t);
     argsToSave = toSave;
     PC += 4;
@@ -1623,7 +1625,7 @@ LBLdispatcher:
 
       LBLpopTaskNoPreempt:
 	Assert(CTS==CTT->getTaskStackRef());
-	PopFrameNoDecl(CTS,PC,Y,G);
+	PopFrameNoDecl(CTS,PC,Y,CAP);
 	JUMPABSOLUTE(PC);
       }
 
@@ -1645,9 +1647,11 @@ LBLdispatcher:
       PrTabEntry *predd           = getPredArg(PC+3);
       AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
       AssRegArray *list           = (AssRegArray*) getAdressArg(PC+5);
+      int size = list->getSize();
 
       if (predd->getPC()==NOCODE) {
         predd->PC = PC+sizeOf(DEFINITION);
+	predd->setGSize(size);
       }
       
       predd->numClosures++;
@@ -1664,13 +1668,12 @@ LBLdispatcher:
 	predd = new PrTabEntry(predd->getName(), predd->getMethodArity(),
 			       predd->getFileName(), predd->getLine(), NO);
 	predd->PC = copyCode(preddPC,list,copyOnce==NO);
+	predd->setGSize(size);
       }
-      int size = list->getSize();
-      RefsArray gRegs = (size == 0) ? (RefsArray) NULL : allocateRefsArray(size);
 
-      Abstraction *p = new Abstraction (predd, gRegs, CBB);
+      Abstraction *p = Abstraction::newAbstraction(predd, CBB);
 
-      COUNT1(sizeClosures,sizeof(Abstraction)+(size+1)*sizeof(TaggedRef));
+      COUNT1(sizeClosures,sizeof(Abstraction)+size*sizeof(TaggedRef));
       COUNT(numClosures);
       COUNT1(sizeGs,size);
 
@@ -1680,9 +1683,9 @@ LBLdispatcher:
 
       for (int i = 0; i < size; i++) {
 	switch ((*list)[i].kind) {
-	case XReg: gRegs[i] = X[(*list)[i].number]; break;
-	case YReg: gRegs[i] = Y[(*list)[i].number]; break;
-	case GReg: gRegs[i] = G[(*list)[i].number]; break;
+	case XReg: p->initG(i, X[(*list)[i].number]); break;
+	case YReg: p->initG(i, Y[(*list)[i].number]); break;
+	case GReg: p->initG(i, CAP->getG((*list)[i].number)); break;
 	}
       }
       Xreg(reg) = makeTaggedConst(p);
@@ -1699,11 +1702,11 @@ LBLdispatcher:
   
   Case(TAILSENDMSGX) isTailCall = OK; ONREG(SendMethod,X);
   Case(TAILSENDMSGY) isTailCall = OK; ONREG(SendMethod,Y);
-  Case(TAILSENDMSGG) isTailCall = OK; ONREG(SendMethod,G);
+  Case(TAILSENDMSGG) isTailCall = OK; ONREG(SendMethod,GREF);
 
   Case(SENDMSGX) isTailCall = NO; ONREG(SendMethod,X);
   Case(SENDMSGY) isTailCall = NO; ONREG(SendMethod,Y);
-  Case(SENDMSGG) isTailCall = NO; ONREG(SendMethod,G);
+  Case(SENDMSGG) isTailCall = NO; ONREG(SendMethod,GREF);
 
  SendMethod:
   {
@@ -1724,9 +1727,9 @@ LBLdispatcher:
 	goto bombSend;
       }
 
-      if (!isTailCall) PushCont(PC+6,Y,G);
+      if (!isTailCall) PushCont(PC+6,Y,CAP);
       ChangeSelf(obj);
-      CallDoChecks(def,def->getGRegs());
+      CallDoChecks(def);
       COUNT(sendmsg);
       JUMPABSOLUTE(def->getPC());
     }
@@ -1751,11 +1754,11 @@ LBLdispatcher:
 
   Case(TAILAPPLMETHX) isTailCall = OK; ONREG(ApplyMethod,X);
   Case(TAILAPPLMETHY) isTailCall = OK; ONREG(ApplyMethod,Y);
-  Case(TAILAPPLMETHG) isTailCall = OK; ONREG(ApplyMethod,G);
+  Case(TAILAPPLMETHG) isTailCall = OK; ONREG(ApplyMethod,GREF);
 
   Case(APPLMETHX) isTailCall = NO; ONREG(ApplyMethod,X);
   Case(APPLMETHY) isTailCall = NO; ONREG(ApplyMethod,Y);
-  Case(APPLMETHG) isTailCall = NO; ONREG(ApplyMethod,G);
+  Case(APPLMETHG) isTailCall = NO; ONREG(ApplyMethod,GREF);
 
  ApplyMethod:
   {
@@ -1782,9 +1785,9 @@ LBLdispatcher:
       goto bombApply;
     }
     
-    if (!isTailCall) { PushCont(PC,Y,G); }
+    if (!isTailCall) { PushCont(PC,Y,CAP); }
     COUNT(applmeth);
-    CallDoChecks(def,def->getGRegs());
+    CallDoChecks(def);
     JUMPABSOLUTE(def->getPC());
 
 
@@ -1802,11 +1805,11 @@ LBLdispatcher:
 
   Case(CALLX) isTailCall = NO; ONREG(Call,X);
   Case(CALLY) isTailCall = NO; ONREG(Call,Y);
-  Case(CALLG) isTailCall = NO; ONREG(Call,G);
+  Case(CALLG) isTailCall = NO; ONREG(Call,GREF);
 
   Case(TAILCALLX) isTailCall = OK; ONREG(Call,X);
   Case(TAILCALLY) isTailCall = OK; ONREG(Call,Y);
-  Case(TAILCALLG) isTailCall = OK; ONREG(Call,G);
+  Case(TAILCALLG) isTailCall = OK; ONREG(Call,GREF);
 
  Call:
   asmLbl(TAILCALL);
@@ -1821,8 +1824,8 @@ LBLdispatcher:
          Abstraction *def = tagged2Abstraction(taggedPredicate);
 	 PrTabEntry *pte = def->getPred();
          CheckArity(pte->getArity(), taggedPredicate);
-         if (!isTailCall) { PushCont(PC+3,Y,G); }
-         CallDoChecks(def,def->getGRegs());
+         if (!isTailCall) { PushCont(PC+3,Y,CAP); }
+         CallDoChecks(def);
          JUMPABSOLUTE(pte->getPC());
        }
 
@@ -1869,9 +1872,9 @@ LBLdispatcher:
 	   def = (Abstraction *) predicate;
 	 }
 	 CheckArity(def->getArity(), makeTaggedConst(def));
-	 if (!isTailCall) { PushCont(PC,Y,G); }
+	 if (!isTailCall) { PushCont(PC,Y,CAP); }
        
-	 CallDoChecks(def,def->getGRegs());
+	 CallDoChecks(def);
 	 JUMPABSOLUTE(def->getPC());
        }
 
@@ -1894,7 +1897,7 @@ LBLdispatcher:
 	    
        case SUSPEND:
 	 {
-	   if (!isTailCall) PushCont(PC,Y,G);
+	   if (!isTailCall) PushCont(PC,Y,CAP);
 
 	   CTT->pushCall(makeTaggedConst(bi),X,predArity);
 	   SUSPENDONVARLIST;
@@ -1913,7 +1916,7 @@ LBLdispatcher:
 
        case BI_PREEMPT:
 	 if (!isTailCall) {
-	   PushCont(PC,Y,G);
+	   PushCont(PC,Y,CAP);
 	 }
 	 return T_PREEMPT;
 	 
@@ -1934,7 +1937,7 @@ LBLdispatcher:
    LBLreplaceBICall:
      {
        if (PC != NOCODE) {
-	 PushContX(PC,Y,G,X,argsToSave);
+	 PushContX(PC,Y,CAP,X,argsToSave);
        }
 
        e->pushPreparedCalls();
@@ -2002,7 +2005,7 @@ LBLdispatcher:
       }
 
     LBLsuspendBoard:
-      CBB->setBody(PC+1, Y, G,NULL,0);
+      CBB->setBody(PC+1, Y, CAP,NULL,0);
       Assert(CAA == AWActor::Cast(CBB->getActor()));
 
       e->deinstallCurrent();
@@ -2066,7 +2069,7 @@ LBLdispatcher:
 
       CAA = new AskActor(CBB,CTT,
 			 elsePC ? elsePC : NOCODE,
-			 NOCODE, Y, G, X, argsToSave);
+			 NOCODE, Y, CAP, X, argsToSave);
       CTS->pushActor(CAA,PC);
       CBB->incSuspCount(); 
       DISPATCH(3);
@@ -2074,7 +2077,7 @@ LBLdispatcher:
 
   Case(CREATEOR)
     {
-      CAA = new WaitActor(CBB, CTT, NOCODE, Y, G, X, 0, NO);
+      CAA = new WaitActor(CBB, CTT, NOCODE, Y, CAP, X, 0, NO);
       CTS->pushActor(CAA,PC);
       CBB->incSuspCount(); 
 
@@ -2085,7 +2088,7 @@ LBLdispatcher:
     {
       Board *bb = CBB;
 
-      CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, NO);
+      CAA = new WaitActor(bb, CTT, NOCODE, Y, CAP, X, 0, NO);
       CTS->pushActor(CAA,PC);
       CBB->incSuspCount(); 
 
@@ -2102,7 +2105,7 @@ LBLdispatcher:
     {
       Board *bb = CBB;
 
-      CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, OK);
+      CAA = new WaitActor(bb, CTT, NOCODE, Y, CAP, X, 0, OK);
       CTS->pushActor(CAA,PC);
       CBB->incSuspCount(); 
 
@@ -2143,7 +2146,7 @@ LBLdispatcher:
       Board *bb = new Board(CAA, Bo_Wait | Bo_Waiting);
       WaitActor::Cast(CAA)->addWaitChild(bb);
 
-      bb->setBody(PC+1, Y, G, NULL,0);
+      bb->setBody(PC+1, Y, CAP, NULL,0);
 
       goto LBLcheckFlat2;
     }
@@ -2172,7 +2175,7 @@ LBLdispatcher:
       COUNT(numThreads);
       RefsArray newY = Y==NULL ? (RefsArray) NULL : copyRefsArray(Y);
 
-      tt->getTaskStackRef()->pushCont(newPC,newY,G);
+      tt->getTaskStackRef()->pushCont(newPC,newY,CAP);
       tt->setSelf(e->getSelf());
       tt->setAbstr(ozstat.currAbstr);
 
@@ -2197,7 +2200,7 @@ LBLdispatcher:
 
       COUNT(numThreads);
 
-      tt->getTaskStackRef()->pushCont(newPC,0,G);
+      tt->getTaskStackRef()->pushCont(newPC,0,CAP);
       tt->getTaskStackRef()->pushX(X,n);
       tt->setSelf(e->getSelf());
       tt->setAbstr(ozstat.currAbstr);
@@ -2213,7 +2216,7 @@ LBLdispatcher:
 
   Case(TASKEMPTYSTACK)  
     {
-      Assert(Y==0 && G==0);
+      Assert(Y==0 && CAP==0);
       CTS->pushEmpty();   // mm2: is this really needed?
       DebugCode(e->cachedSelf=0);
       return T_TERMINATE;
@@ -2245,26 +2248,27 @@ LBLdispatcher:
   Case(TASKCALLCONT)
     {
       TaggedRef taggedPredicate = (TaggedRef)ToInt32(Y);
+      RefsArray args = (RefsArray) CAP;
+      Y = 0;
+      CAP = 0;
 
-      predArity = G ? getRefsArraySize(G) : 0;
+      predArity = args ? getRefsArraySize(args) : 0;
 
       DEREF(taggedPredicate,predPtr,predTag);
       if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
 	if (isVariableTag(predTag)) {
-	  CTS->pushCallNoCopy(makeTaggedRef(predPtr),G);
+	  CTS->pushCallNoCopy(makeTaggedRef(predPtr),args);
 	  addSuspPtr(predPtr,CTT);
 	  return T_SUSPEND;
 	}
-	RAISE_APPLY(taggedPredicate,OZ_toList(predArity,G));
+	RAISE_APPLY(taggedPredicate,OZ_toList(predArity,args));
       }
 
-      RefsArray tmpX = G;
-      Y = G = NULL;
       int i = predArity;
       while (--i >= 0) {
-	X[i] = tmpX[i];
+	X[i] = args[i];
       }
-      disposeRefsArray(tmpX);
+      disposeRefsArray(args);
       DebugTrace(ozd_trace("call cont task"));
       isTailCall = OK;
 
@@ -2327,8 +2331,9 @@ LBLdispatcher:
        // 
        // by kost@ : 'solve actors' are represented via a c-function; 
        OZ_CFun biFun = (OZ_CFun) (void*) Y;
-       RefsArray tmpX = G;
-       G = Y = NULL;
+       RefsArray tmpX = (RefsArray) CAP;
+       CAP = 0;
+       Y = 0;
        if (tmpX != NULL) {
 	 predArity = getRefsArraySize(tmpX);
 	 int i = predArity;
@@ -2455,7 +2460,7 @@ LBLdispatcher:
 	  execBreakpoint(e->currentThread());
 	}
 
-	OzDebug *dbg = new OzDebug(PC,Y,G);
+	OzDebug *dbg = new OzDebug(PC,Y,CAP);
 
 	TaggedRef kind = getTaggedArg(PC+4);
 	if (literalEq(kind,AtomDebugCallC) ||
@@ -2562,7 +2567,7 @@ LBLdispatcher:
 	  debugStreamEntry(dbg,CTT->getTaskStackRef()->getFrameId());
 	  int regsToSave = getPosIntArg(PC+5);
 	  INCFPC(6);
-	  PushContX(PC,Y,G,X,regsToSave);
+	  PushContX(PC,Y,CAP,X,regsToSave);
 	  return T_PREEMPT;
 	} else {
 	  CTT->pushDebug(dbg,DBG_NOSTEP);
@@ -2580,7 +2585,7 @@ LBLdispatcher:
 
       if (dbg != (OzDebug *) NULL) {
 	Assert(literalEq(getLiteralArg(dbg->PC+4),getLiteralArg(PC+4)));
-	Assert(dbg->Y == Y && dbg->G == G);
+	Assert(dbg->Y == Y && dbg->CAP == CAP);
 
 	if (dothis != DBG_EXIT
 	    && (literalEq(getLiteralArg(PC+4),AtomDebugCallC) ||
@@ -2606,7 +2611,7 @@ LBLdispatcher:
 	  dbg->PC = PC;
 	  CTT->pushDebug(dbg,DBG_EXIT);
 	  debugStreamExit(dbg,CTT->getTaskStackRef()->getFrameId());
-	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
+	  PushContX(PC,Y,CAP,X,getPosIntArg(PC+5));
 	  return T_PREEMPT;
 	}
 
@@ -2663,7 +2668,7 @@ LBLdispatcher:
       GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC+1);
       int arity = getPosIntArg(PC+2);
       Assert(arity==0); /* is filled in by procedure genCallInfo */
-      TaggedRef pred = G[gci->regIndex];
+      TaggedRef pred = CAP->getG(gci->regIndex);
       DEREF(pred,predPtr,_1);
       if (oz_isVariable(pred)) {
 	SUSP_PC(predPtr,getWidth(gci->arity),PC);
@@ -2783,7 +2788,7 @@ LBLdispatcher:
       goto LBLreplaceBICall;
     case SUSPEND:
       argsToSave=CodeArea::livenessX(PC,X);
-      PushContX(PC,Y,G,X,argsToSave);
+      PushContX(PC,Y,CAP,X,argsToSave);
       SUSPENDONVARLIST;
     case RAISE:
       RAISE_THREAD;
