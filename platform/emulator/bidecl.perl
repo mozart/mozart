@@ -1815,7 +1815,7 @@ $builtins = {
                              bi  => BIfdNextLarger,
                              module=>fd},
 
-    'fdTellConstraint'  => { in  => ['+value','int'],
+    'fdTellConstraint'  => { in  => ['int','+value'],
                              out => [],
                              bi  => BIfdTellConstraint,
                              module=>fd},
@@ -2406,7 +2406,7 @@ $builtins = {
                              module=>'os'},
 
     'OS.write'          => { in  => ['+int','+virtualString'],
-                             out => ['+int'],
+                             out => ['+value'],
                              BI  => unix_write,
                              module=>'os'},
 
@@ -2522,13 +2522,13 @@ $builtins = {
                              module=>'os'},
 
     'OS.send'           => { in  => ['+int','+virtualString','+[atom]'],
-                             out => ['+int'],
+                             out => ['+value'],
                              BI  => unix_send,
                              module=>'os'},
 
     'OS.sendTo'         => { in  => ['+int','+virtualString','+[atom]',
                                      '+virtualString','+int'],
-                             out => ['+int'],
+                             out => ['+value'],
                              BI  => unix_sendToInet,
                              module=>'os'},
 
