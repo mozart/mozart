@@ -62,6 +62,14 @@ enum ByteStreamType{
   BS_Unmarshal
 };
 
+inline
+Bool isResource(OZ_Term t)
+{
+  return (oz_isObject(t) || oz_isVariable(t) || oz_isLock(t) || 
+	  oz_isCell(t) || oz_isPort(t));
+}
+
+
 class ByteStream: public MsgBuffer {
   friend class ByteStreamManager;
   friend class CompBufferManager;
@@ -74,7 +82,19 @@ class ByteStream: public MsgBuffer {
   int totlen;  /* include header */
   int type;
 
+  OZ_Term  resources;
+
 public:  
+
+  virtual void visit(OZ_Term val)
+  {
+    OZ_Term t = val;
+    DEREF(t,_1,_2);
+    if (isResource(t))
+      resources = oz_cons(val,resources); 
+  }
+  virtual OZ_Term getResources()    { return resources; }
+
   DSite *getSite() { return ((DSite*) NULL); }
   Bool isPersistentBuffer() { return OK; }
 
@@ -190,8 +210,9 @@ public:
 
   /* init */
 
-  void init() { 
+  virtual void init() { 
     MsgBuffer::init(); 
+    resources = oz_nil(); 
     type=BS_None;first=NULL;last=NULL;pos=NULL; }
   ByteStream(){ init(); }
 
@@ -262,6 +283,43 @@ public:
     Assert(type==BS_Unmarshal);    
     type=BS_None;
     Assert(pos==NULL);}
+};
+
+class Exporter: public MsgBuffer {
+  OZ_Term resources, vars;
+
+public:  
+  virtual void marshalBegin() {}
+  virtual void marshalEnd() {}
+  virtual void unmarshalBegin() { Assert(0); }
+  virtual void unmarshalEnd() { Assert(0); }
+
+  virtual char* siteStringrep() {Assert(0); return 0; }
+  virtual DSite* getSite() {Assert(0); return 0; }
+  virtual Bool isPersistentBuffer() { return NO; }
+  virtual Bool globalize() { return NO; }
+  virtual BYTE getNext() {Assert(0); return 0; }
+  virtual void putNext(BYTE) {Assert(0); }
+
+  Exporter() {
+    posMB = endMB = 0;
+    MsgBuffer::init();
+    resources = oz_nil();
+    vars      = oz_nil();
+  }
+
+  OZ_Term getVars() { return vars; }
+
+  virtual void visit(OZ_Term val)
+  {
+    OZ_Term t = val;
+    DEREF(t,tPtr,_2);
+    if (isResource(t))
+      resources = oz_cons(val,resources); 
+    if (oz_isVariable(t))
+      vars = oz_cons(val,vars); 
+  }
+  virtual OZ_Term getResources()    { return resources; }
 };
 
 
