@@ -637,23 +637,29 @@ define(M4INSTRTWOREGS,``''
 
   INSTRUCTION(UNIFYVOID)
     {
+      int n = getPosIntArg(PC+1);
       switch(mode) {
       case WRITE:
         {
-          int n = getPosIntArg(PC+1);
           TaggedRef newVar = e->currentUVarPrototype;
           for (int i = 0; i < n; i++ ) {
             *sPointer++ = newVar;
           }
           DISPATCH(2);
         }
-//      case READ:
       default:
-        sPointer += getPosIntArg(PC+1);
+        sPointer += n;
         DISPATCH(2);
       }
     }
 
+  M4INSTRONEREG(SWITCHONTERM,
+    {
+      TaggedRef val    = Reg1(getRegArg(PC+1));
+      IHashTable *table = (IHashTable *) (PC+2);
+
+      DoSwitchOnTerm(val,table);
+    });
 
   M4INSTRONEREG( BRANCHONVAR,
                ``

@@ -684,7 +684,7 @@ const int RAFreed = 2; // means has been already deallocated
 
 inline Bool isDirtyRefsArray(RefsArray a)
 {
-  return (a && a[-1]&RADirty) ? OK : NO;
+  return (a[-1]&RADirty) ? OK : NO;
 }
 
 inline void markDirtyRefsArray(RefsArray a)
@@ -735,11 +735,11 @@ inline RefsArray allocateRefsArray(int n, Bool init=OK)
   return a;
 }
 
-inline RefsArray allocateY(int n, Bool init=OK)
+inline RefsArray allocateY(int n)
 {
   RefsArray a = ((RefsArray) freeListMalloc((n+1) * sizeof(TaggedRef)));
   a += 1;
-  initRefsArray(a,n,init);
+  initRefsArray(a,n,OK);
   return a;
 }
 

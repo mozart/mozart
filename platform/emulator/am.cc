@@ -834,10 +834,13 @@ void AM::pushTaskOutline(Board *n,ProgramCounter pc,
   pushTask(n, pc, y, g, x, i);
 }
 
+
 #ifdef OUTLINE
 #define inline
 #include "am.icc"
 #undef inline
 #endif
+
+
 
 // ---------------------------------------------------------------------

@@ -24,7 +24,6 @@
 #endif
 
 #include "term.hh"
-#include "indexing.hh"
 
 //-----------------------------------------------------------------------------
 //                       Generic Constrained Variable
