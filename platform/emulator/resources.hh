@@ -9,11 +9,11 @@
 
 #define TIME_SLICE              50  /* ms */
 
-#define MIN_PRIORITY            0
+#define OZMIN_PRIORITY          0
 #define DEFAULT_PRIORITY        50
 #define PROPAGATOR_PRIORITY     50
 #define SYSTEM_PRIORITY         100
-#define MAX_PRIORITY            100
+#define OZMAX_PRIORITY          100
 
 
 #define SHOW_FAST_LOAD          0

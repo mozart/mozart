@@ -143,11 +143,11 @@ public:
 
   //  priority;
   int getPriority() {
-    Assert ((int)state.pri >= MIN_PRIORITY && state.pri <= MAX_PRIORITY);
+    Assert ((int)state.pri >= OZMIN_PRIORITY && state.pri <= OZMAX_PRIORITY);
     return (state.pri);
   }
   void setPriority (int newPri) {
-    Assert ((int)state.pri >= MIN_PRIORITY && state.pri <= MAX_PRIORITY);
+    Assert ((int)state.pri >= OZMIN_PRIORITY && state.pri <= OZMAX_PRIORITY);
     state.pri = newPri;
   }
 
