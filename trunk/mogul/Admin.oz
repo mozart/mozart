@@ -145,18 +145,22 @@ define
       end
       meth get_css($) @css end
       meth 'css'(V) css<-V end
+      meth id_to_relurl(ID $)
+	 {URL.toString {Adjoin {URL.make ID}
+			url(scheme:unit absolute:false)}}
+      end
       meth id_to_href(ID $)
-	 S = {URL.toString {AdjoinAt {URL.make ID} scheme unit}}
+	 S = Admin,id_to_relurl(ID $)
       in
 	 @mogulTOP#'/info/'#S#'.html'
       end
       meth id_to_docdir_href(ID $)
-	 S = {URL.toString {AdjoinAt {URL.make ID} scheme unit}}
+	 S = Admin,id_to_relurl(ID $)
       in
 	 @mogulTOP#'/doc/'#S#'/'
       end
       meth id_to_pkgdir_href(ID $)
-	 S = {URL.toString {AdjoinAt {URL.make ID} scheme unit}}
+	 S = Admin,id_to_relurl(ID $)
       in
 	 @mogulTOP#'/pkg/'#S#'/'
       end
@@ -172,7 +176,7 @@ define
 	 end
       end
       meth id_to_html_filename(ID $)
-	 S = {URL.toString {AdjoinAt {URL.make ID} scheme unit}}
+	 S = Admin,id_to_relurl(ID $)
       in
 	 {RelativeTo @mogulDIR 'info/'#S#'.html'}
       end
