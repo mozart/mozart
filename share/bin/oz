@@ -4,7 +4,7 @@
 # to draw links from say /usr/local/bin to OZHOME/bin
 # see chapter "installation" in the users manual for more information
 
-# OZHOME=/usr/local/oz
+# OZHOME=/usr/local/mozart
 
 
 
