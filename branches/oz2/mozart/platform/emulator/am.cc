@@ -690,9 +690,9 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
   if (prop) {
     if (isSVar(var)) {
       checkSuspensionList(var, pc_std_unif);
-    }
-    if (isSVar(term)) {
-      checkSuspensionList(term, pc_std_unif);
+      if (isSVar(term)) {
+	checkSuspensionList(term, pc_std_unif);
+      }
     }
   }
 
@@ -840,6 +840,16 @@ void AM::reduceTrailOnSuspend()
       Assert(isAnyVar(value));
 
       bb->setScript(index,refPtr,*refPtr);
+
+      // change UVAR -> SVAR to allow further optimization of
+      // bind UVAR = SVAR: no check susp list needed
+      // NOTE: gc should never turn SVAR -> UVAR if suspList is empty!
+      TaggedRef vv= *refPtr;
+      DEREF(vv,vvPtr,_vvTag);
+      if (isUVar(vv)) {
+	SVariable *sv = new SVariable(tagged2VarHome(vv));
+	*vvPtr = makeTaggedSVar(sv);
+      }
 
       unBind(refPtr, value);
 
