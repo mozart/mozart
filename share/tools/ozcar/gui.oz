@@ -224,7 +224,8 @@ in
 	  in
 	     case CV orelse {Atom.toString V.1}.1 \= 96 then
 		case CP orelse AT \= ProcedureType then
-		   case AT == MagicAtom then
+		   case     AT == UnAllocatedType then skip
+		   elsecase AT == MagicAtom then
 		      {Widget tk(insert 'end'
 				 {PrintF ' '#V.1 EnvVarWidth} # V.2 # NL)}
 		   else

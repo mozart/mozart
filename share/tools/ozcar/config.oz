@@ -9,7 +9,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.1.4 (Mar 97)'
+Version                = '1.1.5 (Mar 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -261,8 +261,8 @@ ConfigVerbose              = false  %% debug messages in Emulator buffer?
 
 ConfigStepSystemProcedures = false  %% step on all system procedures (`...`)?
 ConfigStepRecordBuiltin    = false  %% step on builtin 'record'  ?
-ConfigStepDotBuiltin       = true   %% step on builtin '.'       ?
-ConfigStepWidthBuiltin     = true   %% step on builtin 'width'   ?
+ConfigStepDotBuiltin       = false  %% step on builtin '.'       ?
+ConfigStepWidthBuiltin     = false  %% step on builtin 'width'   ?
 ConfigStepNewNameBuiltin   = false  %% step on builtin 'NewName' ?
 ConfigStepSetSelfBuiltin   = false  %% step on builtin 'setSelf' ?
 
