@@ -66,6 +66,9 @@ extern int OZ_isVariable   _PROTOTYPE((OZ_Term));
 
 extern OZ_Term OZ_termType _PROTOTYPE((OZ_Term));
 
+extern void OZ_typeError   _PROTOTYPE((char *fun,int pos,char *type,
+                                       OZ_Term val));
+
 /* convert: C from/to Oz datastructure */
 
 extern char *   OZ_atomToC    _PROTOTYPE((OZ_Term));
@@ -209,20 +212,21 @@ void OZ_addSuspension _PROTOTYPE((OZ_Term, OZ_Suspension));
     OZ_C_proc_header(Name)                                                    \
        OZ_CFun OZ_self = Name;                                                \
        if (OZ_arity != Arity && Arity != VarArity) {                          \
-         OZ_warning("Wrong arity in C proc. '%s' Expected: %d, got %d",       \
+         OZ_warning("Wrong arity in C procedure '%s'. Expected: %d, got %d",  \
                     OZStringify(Name),Arity, OZ_arity);                       \
-           return FAILED;                                                     \
-         }
-
-
-#define OZ_C_ioproc_begin(Name,Arity)                                             \
-        OZ_C_proc_begin(Name,Arity)                                               \
-      if (!OZ_onToplevel()) {                                                     \
-         OZ_warning("Procedure '%s' only allowed on toplevel",OZStringify(Name)); \
-           return FAILED;                                                         \
-         }
+         return FAILED;                                                       \
+       }
 
 #define OZ_C_proc_end }
+
+
+#define OZ_C_ioproc_begin(Name,Arity)                                         \
+OZ_C_proc_begin(Name,Arity)                                                   \
+  if (!OZ_onToplevel()) {                                                     \
+    OZ_warning("Procedure '%s' only allowed on toplevel",OZStringify(Name));  \
+    return FAILED;                                                            \
+  }
+
 #define OZ_C_ioproc_end }
 
 
@@ -242,7 +246,7 @@ void OZ_addSuspension _PROTOTYPE((OZ_Term, OZ_Suspension));
  int VAR;                                                                     \
  OZ_nonvarArg(ARG);                                                           \
  if (! OZ_isInt(OZ_getCArg(ARG))) {                                           \
-   OZ_warning("%s : arg %d must be int",FUN,ARG+1);                           \
+   OZ_typeError(FUN,ARG,"Int",OZ_getCArg(ARG));                               \
    return FAILED;                                                             \
  } else {                                                                     \
    VAR = OZ_intToC(OZ_getCArg(ARG));                                          \
@@ -252,7 +256,7 @@ void OZ_addSuspension _PROTOTYPE((OZ_Term, OZ_Suspension));
  OZ_float VAR;                                                                \
  OZ_nonvarArg(ARG);                                                           \
  if (! OZ_isFloat(OZ_getCArg(ARG))) {                                         \
-   OZ_warning("%s : arg %d must be float",FUN,ARG+1);                         \
+   OZ_typeError(FUN,ARG,"Float",OZ_getCArg(ARG));                             \
    return FAILED;                                                             \
  } else {                                                                     \
    VAR = OZ_floatToC(OZ_getCArg(ARG));                                        \
@@ -262,7 +266,7 @@ void OZ_addSuspension _PROTOTYPE((OZ_Term, OZ_Suspension));
  char *VAR;                                                                   \
  OZ_nonvarArg(ARG);                                                           \
  if (! OZ_isAtom(OZ_getCArg(ARG))) {                                          \
-   OZ_warning("%s: arg %d must be string",FUN,ARG+1);                         \
+   OZ_typeError(FUN,ARG,"String",OZ_getCArg(ARG));                            \
    return FAILED;                                                             \
  } else {                                                                     \
    VAR = OZ_atomToC(OZ_getCArg(ARG));                                         \
