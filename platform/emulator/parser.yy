@@ -520,8 +520,10 @@ phrase2		: phrase2 add coord phrase2 %prec ADD
 		  { $$ = newCTerm("fRecord",$1,$3); }
 		| label '(' recordArguments LDOTS ')'
 		  { $$ = newCTerm("fOpenRecord",$1,$3); }
-		| '[' fixedListArgs ']'
-		  { $$ = $2; }
+		| '[' coord phrase fixedListArgs ']' coord
+		  { $$ = newCTerm("fRecord",newCTerm("fAtom",newCTerm("|"),
+						     makeLongPos($2,$6)),
+				  consList($3,consList($4,nilAtom))); }
 		| '{' coord phrase phraseList '}' coord
 		  { $$ = newCTerm("fApply",$3,$4,makeLongPos($2,$6)); }
 		| proc coord procFlags '{' phrase phraseList '}'
@@ -665,12 +667,8 @@ phraseList	: /* empty */
 		  { $$ = consList($1,$2); }
 		;
 
-fixedListArgs	: thisCoord phrase
-		  { $$ = newCTerm("fRecord",
-				  newCTerm("fAtom",newCTerm("|"),$1),
-				  consList($2,consList(newCTerm("fAtom",nilAtom,
-								$1),
-						       nilAtom))); }
+fixedListArgs	: thisCoord
+		  { $$ = newCTerm("fAtom",nilAtom,$1); }
 		| thisCoord phrase fixedListArgs
 		  { $$ = newCTerm("fRecord",
 				  newCTerm("fAtom",newCTerm("|"),$1),
