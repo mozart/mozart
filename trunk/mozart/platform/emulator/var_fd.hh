@@ -18,7 +18,7 @@
 
 #include "genvar.hh"
 #include "fdomn.hh"
-#include "fdAddOn.hh"
+#include "fdhook.hh"
 
 //-----------------------------------------------------------------------------
 //                           class GenFDVariable

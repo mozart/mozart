@@ -99,9 +99,9 @@ void Thread::Init()
 {
   Head = (Thread *) NULL;
   Tail = (Thread *) NULL;
-   am.currentThread = (Thread *) NULL;
-   am.rootThread = new Thread(am.conf.systemPriority);
-   am.currentTaskStack = NULL;
+  am.currentThread = (Thread *) NULL;
+  am.rootThread = new Thread(am.conf.systemPriority);
+  am.currentTaskStack = NULL;
 }
 
 /* for gdb debugging: cannot access static member data */
@@ -131,9 +131,11 @@ void Thread::ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp)
   t->schedule();
 }
 
-void Thread::ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp)
+void Thread::ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
+			       Suspension *s)
 {
   Thread *t=new Thread;
+  t->resSusp = s;
   t->flags = T_SuspCCont;
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     Board *nb = c->getNode ();
@@ -203,6 +205,7 @@ Thread::Thread(int prio)
   init();
   flags = T_Normal;
   priority = prio;
+  resSusp = NULL;
   u.taskStack = new TaskStack(am.conf.taskStackSize);
 }
 
@@ -275,6 +278,11 @@ int Thread::getPriority()
 {
   Assert(priority >= 0 && priority <= 100);
   return priority;
+}
+
+Suspension *Thread::getResSusp()
+{
+  return resSusp;
 }
 
 void Thread::setPriority(int prio)

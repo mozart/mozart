@@ -39,7 +39,8 @@ public:
   static Bool QueueIsEmpty();
   static Thread *GetFirst();
   static void ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp);
-  static void ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp);
+  static void ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
+				Suspension *s = NULL);
   static void ScheduleWakeup(Board *n, Bool wasExtSusp);
   static void ScheduleSolve (Board *b); 
 
@@ -55,6 +56,7 @@ private:
   } u;
   int priority;
   Board *notificationBoard; // SOLVE
+  Suspension *resSusp; // resident suspension (mainly for finite domains)
 public:
   Thread(int prio);
 
@@ -67,6 +69,7 @@ public:
 public:
   int getPriority();
   TaskStack *getTaskStack();
+  Suspension *getResSusp();
   Bool isNormal();
   Bool isNervous();
   Bool isSuspCont();
