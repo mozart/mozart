@@ -83,6 +83,12 @@ TaggedRef OzDebug::getFrameVariables() {
 
 // ------------------ debug stream messages ---------------------------
 
+void debugStreamBreakpoint(Thread *thread) {
+  TaggedRef pairlist =
+    cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
+  am.debugStreamMessage(OZ_recordInit(OZ_atom("breakpoint"), pairlist));
+}
+
 void debugStreamBlocked(Thread *thread) {
   TaggedRef pairlist = 
     cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
@@ -230,6 +236,7 @@ void execBreakpoint(Thread *t) {
   if (!t->getTrace() || !t->getStep()) {
     t->setTrace(OK);
     t->setStep(OK);
+    debugStreamBreakpoint(t);
   }
 }
 
