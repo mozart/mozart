@@ -11,17 +11,52 @@
 
 
 #include "am.hh"
-#include "genvar.hh"
+#include "cpi.hh"
 
 //-----------------------------------------------------------------------------
 // Introduce FD Built-ins to the Emulator
 
-OZ_C_proc_begin(BImkFSetValue, 2) 
+OZ_C_proc_begin(BIfsSetValue, 2) 
 {
+  ExpectedTypes(OZ_EM_FSETDESCR "," OZ_EM_FSETVAL);
+
+  ExpectOnly pe;
+  
+  EXPECT_BLOCK(pe, 0, expectSetDescr);
+
   return OZ_unify(OZ_getCArg(1),
 		  makeTaggedFSetValue(new FSetValue(OZ_getCArg(0))));
 }
 OZ_C_proc_end
+
+OZ_C_proc_begin(BIfsSet, 3) 
+{
+  ExpectedTypes(OZ_EM_FSETDESCR "," OZ_EM_FSETDESCR "," OZ_EM_FSET);
+  
+  
+  ExpectOnly pe;
+  
+  EXPECT_BLOCK(pe, 0, expectSetDescr);
+  EXPECT_BLOCK(pe, 1, expectSetDescr);
+  
+  OZ_FSetImpl fset(OZ_getCArg(0), OZ_getCArg(1));
+
+  if (! fset.isValidSet()) {
+    TypeError(2, "Invalid set description");
+    return FAILED;
+  }
+
+  return OZ_unify(OZ_getCArg(2), 
+		  makeTaggedRef(newTaggedCVar(new GenFSetVariable(fset))));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIfsSup, 1) 
+{
+  return OZ_unify(OZ_getCArg(0), OZ_int(fset_sup));
+}
+OZ_C_proc_end
+
 
 OZ_C_proc_begin(BImkFSetVar, 5) 
 {
@@ -36,7 +71,9 @@ static
 BIspec fdSpec[] = {
 
 // fsetcore.cc
-  {"mkFSetValue", 2, BImkFSetValue},
+  {"fsSetValue", 2, BIfsSetValue},
+  {"fsSet", 3, BIfsSet},
+  {"fsSup", 1, BIfsSup},
   {"mkFSetVar", 5, BImkFSetVar},
 
   {0,0,0,0}
