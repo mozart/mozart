@@ -1293,6 +1293,66 @@ echo "$as_me: error: oztool not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
 
+
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g' | sed -e 's/:$//g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    oz_for="$dummy_PATH:$SRCTOP/share/bin:$SRCTOP"
+    # Extract the first word of "ozdoc", so it can be a program name with args.
+set dummy ozdoc; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_OZDOC+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $OZDOC in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_OZDOC="$OZDOC" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $oz_for
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_OZDOC="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  ;;
+esac
+fi
+OZDOC=$ac_cv_path_OZDOC
+
+if test -n "$OZDOC"; then
+  echo "$as_me:$LINENO: result: $OZDOC" >&5
+echo "${ECHO_T}$OZDOC" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+    case "$host_os" in
+      cygwin*) ;;
+      *) OZDOC=`echo $OZDOC | sed -e "s|//|/|g"`;;
+    esac
+    if test ! -n "$OZDOC"
+    then
+	OZDOC=undefined
+	{ { echo "$as_me:$LINENO: error: ozdoc not found" >&5
+echo "$as_me: error: ozdoc not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+
 PLATFORM=`$OZTOOL platform || exit 1`
 
 
@@ -1394,7 +1454,7 @@ You may find a mirror archive closer to you by consulting:
   else
 
   echo $ac_n "checking for GNU make""... $ac_c" 1>&6
-echo "configure:1397: checking for GNU make" >&5
+echo "configure:1457: checking for GNU make" >&5
   MAKE=$oz_cv_MAKE
   echo "$as_me:$LINENO: result: (cached) $MAKE" >&5
 echo "${ECHO_T}(cached) $MAKE" >&6
@@ -2470,26 +2530,26 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
   else
 
   echo $ac_n "checking for C++ compiler""... $ac_c" 1>&6
-echo "configure:2473: checking for C++ compiler" >&5
+echo "configure:2533: checking for C++ compiler" >&5
   CXX=$oz_cv_CXX
   echo "$as_me:$LINENO: result: (cached) $CXX" >&5
 echo "${ECHO_T}(cached) $CXX" >&6
 
   echo $ac_n "checking whether we are using GNU C++""... $ac_c" 1>&6
-echo "configure:2479: checking whether we are using GNU C++" >&5
+echo "configure:2539: checking whether we are using GNU C++" >&5
   GXX=$oz_cv_GXX
   echo "$as_me:$LINENO: result: (cached) $GXX" >&5
 echo "${ECHO_T}(cached) $GXX" >&6
 
   echo $ac_n "checking for C++ preprocessor""... $ac_c" 1>&6
-echo "configure:2485: checking for C++ preprocessor" >&5
+echo "configure:2545: checking for C++ preprocessor" >&5
   CXXCPP=$oz_cv_CXXCPP
   echo "$as_me:$LINENO: result: (cached) $CXXCPP" >&5
 echo "${ECHO_T}(cached) $CXXCPP" >&6
     if test "${CXXFLAGS+set}" != set; then
 
   echo $ac_n "checking for default CXXFLAGS""... $ac_c" 1>&6
-echo "configure:2492: checking for default CXXFLAGS" >&5
+echo "configure:2552: checking for default CXXFLAGS" >&5
   CFLAGS=$oz_cv_CFLAGS
   echo "$as_me:$LINENO: result: (cached) $CFLAGS" >&5
 echo "${ECHO_T}(cached) $CFLAGS" >&6
@@ -3047,7 +3107,7 @@ You may find a mirror archive closer to you by consulting:
   else
 
   echo $ac_n "checking for GNU flex""... $ac_c" 1>&6
-echo "configure:3050: checking for GNU flex" >&5
+echo "configure:3110: checking for GNU flex" >&5
   LEX=$oz_cv_LEX
   echo "$as_me:$LINENO: result: (cached) $LEX" >&5
 echo "${ECHO_T}(cached) $LEX" >&6
@@ -3215,7 +3275,7 @@ You may find a mirror archive closer to you by consulting:
   else
 
   echo $ac_n "checking for GNU bison""... $ac_c" 1>&6
-echo "configure:3218: checking for GNU bison" >&5
+echo "configure:3278: checking for GNU bison" >&5
   YACC=$oz_cv_YACC
   echo "$as_me:$LINENO: result: (cached) $YACC" >&5
 echo "${ECHO_T}(cached) $YACC" >&6
@@ -5475,6 +5535,7 @@ s,@host_vendor@,$host_vendor,;t t
 s,@host_os@,$host_os,;t t
 s,@SRCDIR@,$SRCDIR,;t t
 s,@OZTOOL@,$OZTOOL,;t t
+s,@OZDOC@,$OZDOC,;t t
 s,@PLATFORM@,$PLATFORM,;t t
 s,@MAKE@,$MAKE,;t t
 s,@SET_MAKE@,$SET_MAKE,;t t
