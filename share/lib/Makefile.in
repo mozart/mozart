@@ -105,7 +105,7 @@ STANDARDSRC1 = \
 STANDARDSRC = $(STANDARDSRC1:%=standard/%) Standard.oz
 
 Standard.ozf: $(STANDARDSRC)
-	$(EXEC) Standard.oz
+	$(EXEC) -l Pickle Standard.oz
 
 #---------------------------------------------------------------------
 # Remaining functors

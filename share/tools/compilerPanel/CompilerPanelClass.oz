@@ -20,7 +20,7 @@
 %%%
 
 local
-   IsBuiltin = {`Builtin` 'Compiler.isBuiltin' 2}
+   IsBuiltin = CompilerSupport.isBuiltin
 
    local
       proc {EscapeVariableChar Hd C|Cr Tl}
