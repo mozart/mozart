@@ -947,7 +947,7 @@ fi
         if expr "$oz_tmp" : egcs >/dev/null; then
           :
 
-        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]\+\)'`; then
+        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]*\)'`; then
 
           echo $ac_n "checking $CC version is at least 2.7""... $ac_c" 1>&6
 echo "configure:954: checking $CC version is at least 2.7" >&5
@@ -1142,7 +1142,7 @@ echo "configure:1142: checking $YACC version is at least 1.25" >&5
   oz_tmp_ok=no
   if oz_tmp_version=`$YACC --version 2>/dev/null`; then
 
-    oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]\+\)'`
+    oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
 
     if test -n "$oz_tmp_version"; then
       
