@@ -3274,11 +3274,13 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   if(port->isProxy()) {
     return portSend(port,val);
   }
-  LTuple *lt = new LTuple(val,am.currentUVarPrototype());
+  LTuple *lt = new LTuple(am.currentUVarPrototype(),am.currentUVarPrototype());
 
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
 
   OZ_unifyInThread(old,makeTaggedLTuple(lt));
+  OZ_unifyInThread(val,lt->getHead()); // might raise exception if val is non exportable
+
   return PROCEED;
 }
 
