@@ -38,7 +38,7 @@ typedef struct Queue Queue;
 class PrioQueues {
 private:
   Queue qs[5];
-  MsgContainer *unackedList; // Sorted list of unacked msgCs
+  Queue unackedMsgs; // Sorted list of unacked msgCs
   MsgContainer *recList;     // Unsorted list of msgCs being received
 
   Queue *curq;               // Used when msg is partly delivered (only temp.)
