@@ -28,8 +28,6 @@
 <Chapter id="Chapter.Application">
   <Title/Application Programming/
 
-  <p>Now there is a bloody lot of content.
-
   <Section id="Section.Application.Application">
     <Title/Application Support: <<Application>>/
   </Section>
@@ -38,9 +36,12 @@
     <Title/Module Managers: <<Module>>/
 
     <P>
-      Module managers allow to link and execute applications composed
-      of functors. When an Oz application starts it starts with a module
-      mananager that executes the application's functor.
+      Module managers load pickled functors, link the obtained
+      functors, and execute them and return modules obtained by
+      functor execution. The Mozart virtual machine starts with a
+      single module manager that executes the functor to which the
+      virtual machine is applied. The module <<Module>> provides a
+      class from which new module managers can be created.
     </P>
 
     <Subsection id="Section.Application.Module.Basic">
@@ -48,24 +49,26 @@
 
       <P>
         A module manager maintains a module table, that maps URLs to
-        modules. A new entry to the managers module table is created
-        by linking a functor.
+        modules or futures. The URL identifies the functor that has
+        been used (or that will be used, in case of a future) to
+        compute the module.
       </P>
 
       <P>
         Linking a functor takes a URL ?_{U} as input and returns a
-        module ?_{M} (or a future to the module, as will be discussed
-        later) as output. If the module manager has an entry ?_{M} for
+        module ?_{M} (or a future to the module) as output. If the
+        module manager already has an entry for
         ?_{U} in its module table, it just returns this
-        entry. Otherwise, it creates a future ?_{M}, stores this
+        entry. Otherwise, it creates a future ?_{MF}, stores this
         future in the module table, and returns that future.
       </P>
 
       <P>
-        As soon as the future's value gets requested, the pickled
+        As soon as the future's value gets requested, the module
+        identified by ?_{U} is <Em/installed/ as follows. The pickled
         functor stored at URL ?_{U} gets loaded and applied to its
-        import modules obtained by linking. The module table ensures
-        that a functor is applied at most once.
+        argument modules. The future then is bound to the computed
+        modules.
       </P>
 
       <P>
@@ -79,33 +82,80 @@
         The behaviour of a module manager as it comes to loading
         pickled functors can be refined and customized by creating
         classes by inheritance that refine particular methods.
+      </P>
+
     </Subsection>
 
+    <Subsection id="Section.Application.Modules.Names">
+      <Title/Module Names and URLs/
+
+      <P>
+        As has been explained above, each module is refered to by a
+        URL, some of which are Oz specific in that they refer to
+        system modules. We just say that the module <Em/has the URL/.
+      </P>
+
+      <P>
+        A <Em/module name/ is a shortcut
+        for a module URL. System module or extension appended.
+      </P>
+
+    </Subsection>
 
     <Subsection id="Section.Application.Modules.Link">
       <Title/Using Module Managers/
 
       <P>
-        Module managers are instances of the class <<Module.manager>>
-        which provides the following methods.
-      </P>
-
-      <P>
         <List>
-          <Entry><Span class=index/<<offer>>/
-            <Index/<<Connection>><And><<offer>>/
+          <Entry><Span class=index/<<link>>/
+            <Index/<<Module>><And><<manager>><And><<link>>/
           <Synopsis>
-            <<{Connection.offer ?_{X} ?_{TicketA}}>>
+            <<<link(url:?+{UrlV} ?_{ModuleR} <= _)>>>
+            <<<link(name:?+{NameV} ?_{ModuleR} <= _)>>>
           <Item>
-            Returns the single-shot ticket ?_{TicketA} (an atom)
-            under which the value ?_{X} is offered.
+            Links the module identified either by a url ?_{UrlV} (a
+            virtual string) or a module name ?_{NameV} (a virtual
+            string). Returns the module ?_{ModuleR}, if it has been
+            already linked or a future to it.
           <P>
-            The value ?_{X} is exported immediately. An exception is
-            raised, if exportation of ?_{X} fails, because ?_{X}
-            refers to sited entities.
+            The argument for the module is optional, if it is omitted
+            the module is requested immediately.
 
-      </List>
+          <Entry><Span class=index/<<apply>>/
+            <Index/<<Module>><And><<manager>><And><<apply>>/
+          <Synopsis>
+            <<<link(url:?+{UrlV} ?+{Functor} ?_{ModuleR} <= _)>>>
+            <<<link(name:?+{NameV} ?+{Functor} ?_{ModuleR} <= _)>>>
+          <Item>
+            Applies the functor ?_{Functor}, where the url ?_{UrlV} (a
+            virtual string) or the module name ?_{NameV} (a virtual
+            string) serve as base URL for linking the functor's
+            import.
+          <P>
+            The argument for the module is optional.
+          <P>
+            Please note that the resulting module is <Em/not/ added to
+            the module table, the URL argument only serves as base URL
+            for the functor's import.
 
+          <Entry><Span class=index/<<enter>>/
+            <Index/<<Module>><And><<manager>><And><<enter>>/
+          <Synopsis>
+            <<<link(url:?+{UrlV} ?_{ModuleR})>>>
+            <<<link(name:?+{NameV} ?_{ModuleR})>>>
+          <Item>
+            Installs the module ?_{ModuleR} under the url ?_{UrlV} (a
+            virtual string) or the module name ?_{NameV} (a virtual
+            string).
+          <P>
+            Raises an exception if the module manager already has a
+            module under that particular URL installed.
+        </List>
+       </P>
+    </Subsection>
+
+    <Subsection id="Section.Application.Modules.Example">
+      <Title/An Example/
     </Subsection>
 
     <Subsection id="Section.Application.Modules.Inherit">
