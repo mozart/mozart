@@ -27,8 +27,6 @@
 \insert Errors.oz
 
 local
-   LexBase = {Foreign.load 'www.ps.uni-sb.de/ozhome/share/gump/GumpScanner.dl'}
-
    proc {FromFile FileName ?NewBufferState}
       NewBufferState = {LexBase.createFromFile FileName}
       if NewBufferState == 0 then
