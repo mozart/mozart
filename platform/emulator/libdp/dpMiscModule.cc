@@ -214,11 +214,12 @@ OZ_BI_define(BIgetBroadcastAddresses,0,1)
 {
   int bsize, nba, i;
   char *buff;
-  struct ifconf ifc;
-  struct ifreq *ifrp;
   OZ_Term lba = oz_nil();       // list of broadcast addresses;
 
 #if defined(SIOCGIFCONF) && defined(SIOCGIFFLAGS) && defined(SIOCGIFBRDADDR)
+  struct ifconf ifc;
+  struct ifreq *ifrp;
+
   WRAPCALL("socket", ossocket(PF_INET, SOCK_DGRAM, 0), desc);
 
   // how many interfaces can be there??! :-))
@@ -268,7 +269,9 @@ OZ_BI_define(BIgetBroadcastAddresses,0,1)
   free(buff);
 #else
   // last resort - just give '-1' away;
-  lba = oz_cons(oz_string(inet_ntoa((const struct in_addr) -1), lba));
+  struct in_addr ia;
+  ia.s_addr = (u_long) -1;
+  lba = oz_cons(OZ_string(inet_ntoa(ia)), lba);
 #endif
 
   //
@@ -283,8 +286,15 @@ OZ_BI_define(BIsockoptBroadcast,1,0)
   OZ_declareInt(0, desc);
   int on = 1;
   //
-  if (setsockopt(desc, SOL_SOCKET, SO_BROADCAST,
-                 (void *) &on, (socklen_t) sizeof(on)) < 0)
+  if (
+#ifndef WINDOWS
+      setsockopt(desc, SOL_SOCKET, SO_BROADCAST,
+                 (void *) &on, (socklen_t) sizeof(on))
+#else
+      setsockopt(desc, SOL_SOCKET, SO_BROADCAST,
+                 (const char *) &on, (int) sizeof(on))
+#endif
+      < 0)
     RETURN_UNIX_ERROR("setsockopt failed!");
 #endif
   return PROCEED;
