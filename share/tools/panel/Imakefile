@@ -13,7 +13,6 @@ BITMAPS = \
 	grid-25.xbm grid-50.xbm dash-line.xbm
 
 
-BITMAPFILES = ${BITMAPS:%=$(BITMAPDIR)/%}
 LOCALBITMAPFILES = ${BITMAPS:%=../bitmaps/%}
 
 LIBFILES = ${LOCALFILES:%.oz=$(OZPANEL)/%.oz}
@@ -29,7 +28,7 @@ clean::
 install:: $(OZPANEL) $(LIBFILES) bitmaps
 
 
-bitmaps: $(BITMAPFILES)
+bitmaps: $(LOCALBITMAPFILES)
 	$(INSTALL) -m 444 $(LOCALBITMAPFILES) $(OZLIB)/bitmaps
 
 $(OZPANEL):
