@@ -69,7 +69,7 @@ PEANUTS= \
 	statisti.cc fdgenvar.cc \
 	codearea.cc debug.cc lps.cc solve.cc \
 	variable.cc thrqueue.cc thrspool.cc \
-	perdiovar.cc lazyvar.cc \
+	perdiovar.cc \
 	print.cc
 
 CXXSRCS= \
