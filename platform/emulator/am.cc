@@ -290,7 +290,7 @@ void AM::checkVersion()
 void AM::exitOz(int status)
 {
   compStream->csclose();
-  osKillChildren();
+  osExit();
   exit(status);
 }
 

@@ -123,6 +123,7 @@ void osUnblockSignals()
     Linux & Solaris are not POSIX compatible:
      therefor we need casts to (OsSigFun *). look at HERE.
     */
+static
 OsSigFun *osSignal(int signo, OsSigFun *fun)
 {
 #ifdef WINDOWS
@@ -238,15 +239,26 @@ extern "C" void __builtin_delete (void *ptr)
 
 #ifdef WINDOWS
 
+/* select(2) emulation under windows:
+ *
+ *    - currently only works for read fds
+ *    - spawn a thread for each fd: it reads one single character and 
+ *      then sets event "char_avail" and waits for
+ *      event "char_consumed" to continue
+ *    - read(2) is wrapped by osread and reads in the rest
+ *     --> WILL NOT WORK IF ONLY EXACTLY ONE CHAR IS AVAILABLE
+ */
+
 class StreamReader {
 public:
   int fd;
-  HANDLE char_avail;
-  HANDLE char_consumed;
-  char chr;
+  HANDLE char_avail;      /* set iff char has been read*/
+  HANDLE char_consumed;   /* used to restart reader thread*/
+  char chr;               /* this is the char, that was read */
   Bool status;            /* true iff input is available */
   unsigned long thrd;     /* reader thread */
 };
+
 
 static StreamReader *readers;
 
@@ -278,6 +290,9 @@ unsigned __stdcall readerThread(void *arg)
 static 
 void deleteReader(int fd)
 {
+  TerminateThread(readers[fd].thrd);
+  readers[fd].thrd = 0;
+  
 }
 
 Bool createReader(int fd)
@@ -287,14 +302,14 @@ Bool createReader(int fd)
   if (sr->thrd != NULL)
     return OK;
 
-  sr->char_avail = CreateEvent(NULL, FALSE, FALSE, NULL);
+  sr->char_avail    = CreateEvent(NULL, FALSE, FALSE, NULL);
   sr->char_consumed = CreateEvent(NULL, FALSE, FALSE, NULL);
 
   if ((sr->char_consumed==NULL) || (sr->char_avail == NULL)) {
     goto err;
   }
   
-  unsigned thrid;    
+  unsigned thrid;
   sr->thrd = _beginthreadex(NULL,0,&readerThread,sr,0,&thrid);
   if (sr->thrd == NULL) {
     goto err;
@@ -304,6 +319,7 @@ Bool createReader(int fd)
   
 err:
   int id = GetLastError();
+  warning("createReader(%d) failed: %d\n",fd,id);
   CloseHandle(sr->char_consumed);
   CloseHandle(sr->char_avail);
   
@@ -494,18 +510,6 @@ void osInitSignals()
 #endif
 }
 
-Bool osHasJobControl()
-{
-#if defined(_POSIX_JOB_CONTROL)
-  return OK;
-#elif defined(_SC_JOB_CONTROL)
-  return sysconf(_SC_JOB_CONTROL)==-1:NO:OK;
-#else
-  return NO;
-#endif
-}
-
-
 
 /*********************************************************
  *       Sockets                                         *
@@ -534,17 +538,6 @@ void osInit()
   // easily terminate all our children
   if (setpgrp(getpid(),getpid()) < 0) {
     ozperror("setpgrp");
-  }
-#endif
-
-#ifndef WINDOWS
-  if (osHasJobControl()) {
-    /* start a new process group */
-    if (setpgid(0,0)<0) {
-      DebugCheckT(ozpwarning("setpgid(0,0)"));
-    }
-  } else {
-    DebugCheckT(warning("OS does not support POSIX job control\n"));
   }
 #endif
 
@@ -619,7 +612,7 @@ void osClearSocketErrors()
   for (int i = 0; i < openMax; i++) {
     for(int mode=SEL_READ; mode <= SEL_WRITE; mode++) {
       if (FD_ISSET(i,&globalFDs[mode]) && osTestSelect(i,mode) < 0) {
-	FD_CLR(i,&globalFDs[mode]);
+	osClrWatchedFD(i,mode);
       }
     }
   }
@@ -637,7 +630,7 @@ int osTestSelect(int fd, int mode)
   if (mode==SEL_WRITE)
     return 1;
 
-  /* hopefully a disk file, so input will not block */
+  /* for a disk file hopefully input will not block */
   HANDLE h = (HANDLE)_os_handle(fd);
   if (GetFileType(h) != FILE_TYPE_PIPE)
     return 1;
@@ -729,18 +722,48 @@ int osCheckIO()
 }
 
 
-void osKillChildren()
-{
-#ifndef WINDOWS
-  if (osHasJobControl()) {
-    // terminate all our children
-    OsSigFun *save=osSignal(SIGTERM,(OsSigFun*)SIG_IGN);
-    if (oskill(-getpid(),SIGTERM) < 0) {
-      ozpwarning("kill");
-    }
-    osSignal(SIGTERM,save);
+
+
+
+/*
+ *  we want to kill all our children on exit *
+ */
+
+
+class ChildProc {
+public:
+  pid_t pid;
+  ChildProc *next;
+  ChildProc(pid_t p, ChildProc *nxt) : next(nxt), pid(p) {}
+  static ChildProc *allchildren;
+  static void add(pid_t p)
+  {
+    allchildren = new ChildProc(p,allchildren);
   }
+};
+
+ChildProc *ChildProc::allchildren = NULL;
+
+
+void addChildProc(pid_t pid)
+{
+  ChildProc::add(pid);
+}
+
+
+void osExit()
+{
+  /* terminate all our children */
+  ChildProc *aux = ChildProc::allchildren;
+  while(aux) {
+#ifdef WINDOWS
+    TerminateProcess(aux->pid);
+#else
+    int ret = oskill(aux->pid,SIGTERM);
+    /* ignore return value */
 #endif
+    aux = aux->next;
+  }
 }
 
 
