@@ -73,7 +73,7 @@
 
 /* we use function pointers only when creating DLLs 
  * HAVE_CONFIG_H is defined when compiling the emulator */
-#if defined(OZWIN) && !defined(xHAVE_CONFIG_H)
+#if defined(OZWIN) && !defined(HAVE_CONFIG_H)
 #define OzFun(fun) (ozcdecl *fun)
 #else
 #define OzFun(fun) (ozcdecl fun)
