@@ -2,7 +2,70 @@ functor
 export
    list:List
 define
-   List = [
+Blues=[blue
+       dodgerblue
+       darkblue
+       blueviolet
+       mediumblue
+       royalblue
+       cadetblue
+       darkorchid
+       darkmagenta
+       darkslateblue
+       deepskyblue
+       purple
+       steelblue
+      ]
+
+Reds=[red
+      deeppink
+      magenta
+      coral
+      darkred
+      hotpink
+      indianred
+      sienna
+      tomato
+      violetred
+      orchid
+     ]
+
+Greens=[green
+	limegreen
+	darkcyan
+	darkgreen
+	darkseagreen
+	seagreen
+	turquoise
+	yellowgreen
+       ]
+
+Yellows=[gold
+	 brown
+	 chocolate
+	 darkorange
+	 darkgoldenrod
+	 darkkhaki
+	 firebrick
+	 orange
+	 orangered
+	 rosybrown
+	 saddlebrown
+	 tan
+	]
+
+Greys=[darkgrey
+       darkslategrey
+       dimgrey
+       ]
+
+fun{Comp _ _} true end
+
+%SortedColors={Append {Append {Append {Append Blues Reds} Greens} Yellows} Greys}
+List={Merge {Merge Blues {Append Greens Greys} Comp}
+      {Merge Reds Yellows Comp} Comp}
+
+/*   List = [
 	   c(0 0 255)
 	   c(0 255 0)
 	   c(255 0 0)
@@ -217,5 +280,5 @@ define
 	   c(153 255 153)
 	   c(255 153 153)
 	   c(153 153 153)
-	   c(102 255 0)]
+	   c(102 255 0)]*/
 end
