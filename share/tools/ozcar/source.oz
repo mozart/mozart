@@ -40,7 +40,6 @@ local
       end
       
       meth highlight(line:L color:C)
-	 {Show highlight#L#@CurrentLine}
 	 case @CurrentLine \= undef then
 	    {self tk(tag conf q(@CurrentLine)
 		     foreground:black
@@ -87,8 +86,7 @@ in
       end
       
       meth scrollbar(file:F line:L color:C)
-	 {Show scrollbar#F}
-	 case F == undef orelse F == '' orelse L == undef then
+	 case F == undef orelse F == '' orelse F == noDebugInfo then
 	    case @Current \= undef then
 	       {@Current highlight(line:undef color:undef)}
 	    else skip end

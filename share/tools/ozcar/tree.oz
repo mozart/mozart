@@ -58,7 +58,9 @@ local
 
       meth calculatePositions
 	 {WC init}
-	 {self DoCalculatePositions(1 1)}
+	 {self DoCalculatePositions(1 1)}  %% toplevel queries
+	 {WC inc(_)}
+	 {self DoCalculatePositions(0 1)}  %% threads with unknown parent
       end
 
       meth Nodegroup(Q $)
@@ -110,10 +112,8 @@ in
       end
       
       meth add(I Q)
-	 {Show treeAdd#I}
 	 %% each new thread is runnable, initially... (hope so?)
 	 nodes <- {New Node init(I Q RunningThreadColor)} | @nodes
-	 {Show nodesNow#{Map @nodes fun{$ X}{X get($)}.i end}}
 	 BaseTree,calculatePositions
       end
       
@@ -143,8 +143,6 @@ in
       end
       
       meth mark(I How)
-	 {Show mark(I How)}
-	 {Show {Map @nodes fun{$ X}{X get($)}.i end}}
 	 N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
       in
 	 case N == nil then
@@ -172,17 +170,19 @@ in
 	 {self tk(delete all)}
 	 {ForAll @nodes
 	  proc{$ N}
-	     X Y C DY I
+	     X Y C DY I Q
 	     CT = {New Tk.canvasTag tkInit(parent:{self w($)})}
 	  in
-	     node(x:X y:Y c:C dy:DY i:I ...) = {N get($)}
+	     node(x:X y:Y c:C dy:DY i:I q:Q ...) = {N get($)}
 	     {ForAll [tk(crea oval X*SF-OS Y*SF-OS X*SF+OS Y*SF+OS
 			 outline:C width:3 tags:CT
 			 fill:white)
 		      tk(crea line X*SF-OS Y*SF (X-1)*SF+OS Y*SF
-			 width:3)
-		      tk(crea line (X-1)*SF+OS Y*SF (X-1)*SF+OS (Y-DY)*SF
 			 width:3)] self}
+	     case Q > 0 then
+		{self tk(crea line (X-1)*SF+OS Y*SF (X-1)*SF+OS (Y-DY)*SF
+			 width:3)}
+	     else skip end
 	     case N == Sel then
 		{self tk(crea text X*SF+1 Y*SF text:I tags:CT
 			 font:ThreadTreeBoldFont)}

@@ -5,32 +5,35 @@
 \insert tk
 
 %% some builtins...
+Dbg = dbg( taskstack   : {`Builtin` taskstack 3}
+	   stream      : {`Builtin` globalThreadStream 1}
+	   stepmode    : {`Builtin` setStepMode 2}
+	   trace       : {`Builtin` traceThread 2}
+	   state       : {`Builtin` queryDebugState 2}
+	 )
 
-local
-   
-   TS  = {`Builtin` taskstack 3}
-   SS  = {`Builtin` globalThreadStream 1}
-   SM  = {`Builtin` setStepMode 2}
-   QDS = {`Builtin` queryDebugState 2}
-   
-in
-   
-   Dbg = dbg( taskstack      : TS
-	      stream         : SS
-	      stepmode       : SM
-	      state          : QDS
-	    )
-end
-
+%% some constants
+NL = [10]  %% newline
 
 %% send a warning/error message
 
 proc {OzcarMessage M}
    {System.showInfo OzcarMessagePrefix # M}
+   skip
 end
 
-fun {VS2A X}
+fun {VS2A X} %% virtual string to atom
    {String.toAtom {VirtualString.toString X}}
+end
+
+local
+   fun {MakeSpace N}
+      case N == 0 then nil else 32 | {MakeSpace N-1} end
+   end
+in
+   fun {PrintF S N}  %% Format S to have length N, fill up with spaces
+      S # {MakeSpace N-{VirtualString.length S}}
+   end
 end
 
 % transform an argument list
@@ -45,13 +48,16 @@ fun {ArgType X}
    case {IsDet X} then
       case     {IsUnit X}       then '<unit>'
       elsecase {IsArray X}      then '<array>'
-      elsecase {IsAtom X}       then '<atom>'
+      elsecase {IsAtom X}       then '<atom \''    # case X
+						     of nil then "nil"
+						     else        X      end
+						   # '\'>'
       elsecase {IsBool X}       then '<bool>'
       elsecase {IsCell X}       then '<cell>'
       elsecase {IsClass X}      then '<class>'
       elsecase {IsDictionary X} then '<dictionary>'
       elsecase {IsFloat X}      then '<float>'
-      elsecase {IsInt   X}      then '<int>'
+      elsecase {IsInt   X}      then '<int '       # X # '>'
       elsecase {IsList X}       then '<list>'
       elsecase {IsLiteral X}    then '<literal>'
       elsecase {IsLock X}       then '<lock>'

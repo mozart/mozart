@@ -12,12 +12,10 @@ proc {Scan T G1 G2 R}
       of green then G1=G2
       [] red then R=unit
       [] A#B then G in
-	 thread {Debug.breakpoint} {Scan A G1 G R} end
-	 thread {Debug.breakpoint} {Scan B G G2 R} end
+	 thread {Scan A G1 G R} end
+	 thread {Scan B G G2 R} end
       end
    end
 end
 
-{Debug.breakpoint}
 {Browse {AllGreen (green#(_#green))#(red#_)}}
-
