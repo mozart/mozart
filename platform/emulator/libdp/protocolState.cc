@@ -235,7 +235,7 @@ void cellReceiveDump(CellManager *cm,DSite *fromS){
     PD((WEIRD,"CELL dump not needed"));
     return;}
   TaggedRef tr=oz_newVariable();
-  (void) cellDoExchange((Tertiary *)cm,tr,tr,DummyThread,EXCHANGE);
+  (void) cellDoExchangeInternal((Tertiary *)cm,tr,tr,DummyThread,EXCHANGE);
   return;}
 
 void cellReceiveForward(BorrowEntry *be,DSite *toS,DSite* mS,int mI){

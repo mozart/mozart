@@ -3216,7 +3216,7 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   CheckLocalBoard(port,"port");
 
   if(port->isProxy()) {
-    return portSend(port,val);
+    return (*portSend)(port,val);
   } 
   LTuple *lt = new LTuple(am.currentUVarPrototype(),am.currentUVarPrototype());
     
@@ -3277,7 +3277,7 @@ OZ_BI_define(BIlockLock,1,0)
     ((LockManagerEmul *)t)->lock(oz_currentThread());
     return PROCEED;}
   case Te_Proxy:{
-    lockLockProxy(t, oz_currentThread());
+    (*lockLockProxy)(t, oz_currentThread());
     return PROCEED;}
   case Te_Frame:{
     ((LockFrameEmul *)t)->lock(oz_currentThread());
@@ -3333,7 +3333,7 @@ OZ_Return accessCell(OZ_Term cell,OZ_Term &out)
   Tertiary *tert=tagged2Tert(cell);
   if(!tert->isLocal()){
     out = oz_newVariable(); /* ATTENTION - clumsy */
-    return cellDoAccess(tert,out);
+    return (*cellDoAccess)(tert,out);
   }
   out = ((CellLocal*)tert)->getValue();
   return PROCEED;
@@ -3360,7 +3360,7 @@ OZ_Return exchangeCell(OZ_Term cell, OZ_Term newVal, OZ_Term &oldVal)
 	oldVal = old;
 	return PROCEED;}}
     oldVal = oz_newVariable();
-    return cellDoExchange(tert,oldVal,newVal);
+    return (*cellDoExchange)(tert,oldVal,newVal);
   }
 }
 
@@ -4183,14 +4183,14 @@ SRecord *getStateInline(RecOrCell state, Bool isAssign, Bool newVar,
 
   if (oz_onToplevel()) {
     if(isAssign) {
-      EmCode = cellAssignExchange(t,fea,val);
+      EmCode = (*cellAssignExchange)(t,fea,val);
     } else {
       if(newVar) val = oz_newVariable();
-      EmCode = cellAtExchange(t,fea,val);
+      EmCode = (*cellAtExchange)(t,fea,val);
     }
   } else {
     if(!isAssign) val = oz_newVariable();
-    EmCode = cellAtAccess(t,fea,val);
+    EmCode = (*cellAtAccess)(t,fea,val);
   }
 
   return NULL;

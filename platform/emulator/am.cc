@@ -344,7 +344,7 @@ void AM::init(int argc,char **argv)
 
 void AM::exitOz(int status)
 {
-  dpExit();
+  (*dpExit)();
   osExit(status);
 }
 
