@@ -20,7 +20,7 @@
 #include <stdio.h>
 
 #include "types.hh"
-#include "error.h"
+#include "error.hh"
 
 
 /*     Redefine the operator "new" in every class, that shall use memory
