@@ -197,20 +197,20 @@ new-base: $(BASESRC)
 $(FUNCTORS): Base.ozf
 
 %.ozf: sp/%.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: op/%.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: ap/%.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 Search.ozf: cp/Search.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 CpSupport.ozf: cp/CpSupport.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 %.ozf: cp/%.oz CpSupport.ozf Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 PARSEARCHFUNCTORS = \
 	ParBarChart.ozf ParFindLimit.ozf ParGetColor.ozf \
@@ -223,12 +223,12 @@ ParStatistics.ozf: ParBarChart.ozf
 ParManager.ozf: ParLogging.ozf
 ParSearchTmp.ozf: cp/par/ParSearch.oz \
 	ParServer.ozf 
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 ParWorkerTmp.ozf: cp/par/ParWorker.oz \
 	ParLogging.ozf ParTraceSpace.ozf ParServer.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 ParLoggingTmp.ozf: cp/par/ParLogging.oz
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 ParWorker.ozf: ParWorkerTmp.ozf ozl
 	$(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
 ParLogging.ozf: ParLoggingTmp.ozf ParStatistics.ozf ozl
@@ -236,29 +236,29 @@ ParLogging.ozf: ParLoggingTmp.ozf ParStatistics.ozf ozl
 ParSearch.ozf: ParSearchTmp.ozf ParProcess.ozf ParManager.ozf ozl
 	$(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
 %.ozf: cp/par/%.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 
 %.ozf: dp/%.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: wp/%.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: gtk/%.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: qtk/%.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: %.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: compiler/%.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: support/%.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 # support dependencies
 DefaultURL.ozf: URL.ozf
@@ -268,7 +268,7 @@ Open.ozf: op/HtmlTable.oz
 
 # wp dependencies
 Tk.ozf: wp/Tk.oz wp/TkInit.oz wp/TkOptions.oz
-	$(COMPILE) --norecordhoist $< -o $@
+	$(COMPILE) --norecordhoist $(shell $(CYGPATH) "$<") -o $@
 TkTools.ozf: DefaultURL.ozf
 
 # gtk dependencies and rules
@@ -329,10 +329,10 @@ endif
 
 
 QTkBare.ozf:qtk/QTk.oz qtk/Frame.oz qtk/QTkClipboard.oz qtk/QTkFont.oz qtk/QTkDialogbox.oz
-	$(COMPILE) --define=FULLLOAD $< -o $@
+	$(COMPILE) --define=FULLLOAD $(shell $(CYGPATH) "$<") -o $@
 
 QTkDevel.ozf:qtk/QTkDevel.oz
-	$(COMPILE) --define=DEBUG $< -o $@
+	$(COMPILE) --define=DEBUG $(shell $(CYGPATH) "$<") -o $@
 
 mini-down.xbm:qtk/mini-down.xbm
 	cp $< $@
@@ -352,7 +352,7 @@ QTkDropdownlistbox.ozf: \
 	qtk/QTkDropdownlistbox.oz \
 	QTkBare.ozf QTkImage.ozf QTkDevel.ozf \
 	QTkDropdownbutton_bitmap.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 QTkNumberentry_bitmap.ozf: \
 	QTkImageLibBoot.ozf $(QTKDEPS2) \
@@ -431,7 +431,7 @@ Main.ozf: compiler/Main.oz compiler/FormatStrings.oz \
 	Base.ozf
 
 RunTime.ozf: compiler/RunTime.oz Base.ozf
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 Compiler.ozf: $(FUNFUNCTORS) ozl
 	$(OZENGINE) ozl $(COMPRESSFLAGS) Main.ozf -o Compiler.ozf
