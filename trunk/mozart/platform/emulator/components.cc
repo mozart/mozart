@@ -509,37 +509,6 @@ OZ_Return loadFile(char *filename,OZ_Term out,OZ_Term triggerVar)
   return loadFD(fd,out,triggerVar);
 }
 
-// -------------------------------------------------------------------
-// URL Map Interface - Denys Duchier
-//
-// The idea is that there should be a record that maps urls to urls.
-// {GetURLMap Map}
-// {SetURLMap Map}
-//
-// loadURL effects this remapping before doing its actual job
-// -------------------------------------------------------------------
-
-
-
-OZ_C_proc_begin(BIperdioGetURLMap,1)
-{
-  if(!perdioInit()) return FAILED;
-  return OZ_unify(OZ_getCArg(0),(url_map==0)?OZ_unit():url_map);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIperdioSetURLMap,1)
-{
-  if(!perdioInit()) return FAILED;
-  OZ_Term map = OZ_getCArg(0);
-  if (!OZ_onToplevel())
-    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("setURLMap"));
-  if (!OZ_isRecord(map))
-    return OZ_typeError(0,"Record");
-  url_map = map;
-  return PROCEED;
-}
-OZ_C_proc_end
 
 char *newTempFile()
 {
@@ -883,12 +852,11 @@ OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
 }
 
 
+
+
 BIspec componentsSpec[] = {
   {"smartSave",    6, BIsmartSave, 0},
   {"load",         2, BIload, 0},
-
-  {"getURLMap",1,BIperdioGetURLMap,0},
-  {"setURLMap",1,BIperdioSetURLMap,0},
 
   {"getCachePath",1,BIgetCachePath,0},
   {"setCachePath",1,BIsetCachePath,0},

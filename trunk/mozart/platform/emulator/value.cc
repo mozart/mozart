@@ -66,6 +66,9 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomDebugIP, AtomDebugPerdio,
   // Atoms for NetError Handlers
   AtomTempBlocked, AtomPermBlocked,  
+  AtomTempMe, AtomPermMe,
+  AtomTempAllOthers, AtomPermAllOthers,
+  AtomTempSomeOther, AtomPermSomeOther,
   
   RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
@@ -206,8 +209,14 @@ void initLiterals()
   AtomDebugPerdio           = makeTaggedAtom("debugPerdio");
 
   // Atom Handlers
-  AtomTempBlocked             = makeTaggedAtom("permBlocked");
-  AtomPermBlocked             = makeTaggedAtom("tempBlocked");
+  AtomTempBlocked             = makeTaggedAtom("tempBlocked");
+  AtomPermBlocked             = makeTaggedAtom("permBlocked");
+  AtomTempMe                  = makeTaggedAtom("tempMe");
+  AtomPermMe                  = makeTaggedAtom("permMe");
+  AtomTempAllOthers           = makeTaggedAtom("tempAllOthers");
+  AtomPermAllOthers           = makeTaggedAtom("permAllOthers");
+  AtomTempSomeOther           = makeTaggedAtom("tempSomeOther");
+  AtomPermSomeOther           = makeTaggedAtom("permSomeOther");
 
 
 

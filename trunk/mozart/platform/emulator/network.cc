@@ -695,7 +695,7 @@ public:
   void dumpNetMsgBuffer(NetMsgBuffer* nb) {
     nb->dumpByteBuffers();
     deleteNetMsgBuffer(nb);}
-  
+
   NetMsgBuffer *getNetMsgBuffer(Site *s) {
     return newNetMsgBuffer(s);}
  
@@ -3500,11 +3500,8 @@ void initNetwork(){
 MsgBuffer* getRemoteMsgBuffer(Site* s){ 
   return netMsgBufferManager->getNetMsgBuffer(s);}
 
-
-
-
-  
-
+void dumpRemoteMsgBuffer(MsgBuffer *m){
+  netMsgBufferManager->dumpNetMsgBuffer((NetMsgBuffer*) m);}
 
 /**********************************************************************/
 /*   SECTION :: exported for debugging                                */

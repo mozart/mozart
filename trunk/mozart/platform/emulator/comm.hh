@@ -33,7 +33,6 @@ class RemoteSite;
 class VirtualSite;
 class Site;
 class SiteManager;
-class SiteExtensionManager;
 
 typedef unsigned short port_t;
 typedef unsigned long ip_address;
@@ -50,7 +49,6 @@ extern Site * mySite;
 /**********************************************************************/
 
 void siteZeroActiveRef(Site *);  
-void siteZeroPassiveRef(Site *);
 
 /**********************************************************************/
 /*   SECTION :: return codes                                          */
@@ -175,7 +173,6 @@ protected:
   time_t timestamp;
   port_t port;          
   unsigned short flags;
-  int refCtr;
 
   void init(ip_address ip,port_t p,time_t t){
     address=ip;
@@ -249,9 +246,10 @@ public:
 #define PERM_SITE             8
 #define SECONDARY_TABLE_SITE 16
 #define MY_SITE		     32
+#define GC_MARK		     64
 
 
-/* Sites -14  possibilities 
+/* Sites -14  possibilities  discounting gc
 
    
                     (REMOTE_SITE)              1  (REMOTE_SITE|CONNECTED)               5
@@ -272,41 +270,6 @@ public:
 */
 
 /**********************************************************************/
-/*   SECTION :: class SiteExtension                                   */
-/**********************************************************************/
-
-class SiteExtension{
-friend class Site;
-friend class SiteExtensionManager;
-  VirtualInfo *info;
-  unsigned int extension; // RemoteSite* or VirtualSite* or readCtr;
-
-protected:
-  SiteExtension(){}
-
-  void init(VirtualInfo *vi){
-    info=vi;
-    extension= (unsigned int) 0;}
-
-  void init(){
-    init(NULL);}
-
-  VirtualInfo* getVirtualInfoSE(){return info;}
-  void putVirtualInfoSE(VirtualInfo* vi){info=vi;}
-
-  VirtualSite* getVirtualSiteSE(){return (VirtualSite*) extension;}
-  void putVirtualSiteSE(VirtualSite* vs){extension = (unsigned int) vs;}
-  void dumpVirtualSiteSE(int readCtr){extension=(unsigned int) readCtr;}
-
-  RemoteSite* getRemoteSiteSE(){return (RemoteSite*) extension;}
-  void putRemoteSiteSE(RemoteSite* vs){extension= (unsigned int) vs;}
-  void dumpRemoteSiteSE(int readCtr){extension=(unsigned int)readCtr;}
-
-  int getReadCtrSE(){return (int) extension;}
-  void putReadCtrSE(int i){extension= (unsigned int) i;}
-};
-
-/**********************************************************************/
 /*   SECTION :: class Site                                     */
 /**********************************************************************/
 
@@ -322,7 +285,12 @@ friend class SiteHashTable;
 friend class RemoteSite; 
 friend class SiteManager;
 private:
-  unsigned int extension;
+  VirtualInfo *info;
+
+  union{
+  RemoteSite* rsite;
+  VirtualSite* vsite;
+  int readCtr; }uRVC;
 
   void setType(unsigned int i){flags=i;}
 
@@ -330,9 +298,6 @@ private:
 
   void disconnect(){
     flags &= (~CONNECTED);
-    if(flags & PERM_SITE){
-      disconnectInPerm();
-      return;}
     return;}
 
   Bool connect(){
@@ -341,13 +306,14 @@ private:
     if(t & CONNECTED) return OK;
     if(t & (PERM_SITE)) return NO;
     if(t & REMOTE_SITE){
-      RemoteSite *rs=createRemoteSite(this,getSiteExtension()->getReadCtrSE());
+      RemoteSite *rs=createRemoteSite(this,uRVC.readCtr);
       Assert(rs!=NULL);
-      getSiteExtension()->putRemoteSiteSE(rs);
+      uRVC.rsite=rs;
       PD((SITE,"connect; not connected yet, connecting to remote %d",rs));}
     else{
-      VirtualSite *vs=createVirtualSite(this,getSiteExtension()->getReadCtrSE());
-      getSiteExtension()->putVirtualSiteSE(vs);
+      VirtualSite *vs=createVirtualSite(this,uRVC.readCtr);
+      Assert(vs!=NULL);
+      uRVC.vsite=vs;
       PD((SITE,"connect; not connected yet, connecting to virtual %d",vs));}
     flags |= CONNECTED;    
     return OK;}    
@@ -355,34 +321,19 @@ private:
   void zeroActive(){
     if(getType() & CONNECTED){
       if(getType() & REMOTE_SITE){
-	//	zeroRefsToRemote(getRemoteSite());
+	zeroRefsToRemote(getRemoteSite());
 	return;}
       zeroRefsToVirtual(getVirtualSite());
-      return;}
-    siteZeroActiveRef(this);}
-
-  void zeroPassive(){return;}
-    //    siteZeroPassiveRef(this);}
+      return;}}
 
   void makePermConnected(){
-      flags |= PERM_SITE;
-      return;}              
+    flags |= PERM_SITE;
+    flags &= (~CONNECTED);
+    return;}              
   
   void makePerm(){
-    flags |= PERM_SITE;
-    disconnectInPerm();}
+    flags |= PERM_SITE;}
 
-
-  void putPassiveRefCtr(int i){
-    Assert(!(ActiveSite()));
-    extension = (unsigned int) i;}
-
-  int getPassiveRefCtr(){
-    Assert(!(ActiveSite()));
-    return (int) extension;}
-
-  void incPassiveRefCtr(){
-    putPassiveRefCtr(getPassiveRefCtr()+1);}
 
 protected:
 
@@ -390,17 +341,18 @@ protected:
 
   VirtualInfo* getVirtualInfo(){
     Assert(getType() & VIRTUAL_SITE);
-    return getSiteExtension()->getVirtualInfoSE();}
-
-  int getRefCtrS(){return refCtr;}
-  void putRefCtrS(int i){ refCtr=i;}
+    return info;}
 
 public:
 
   Site(){}
   Site(ip_address a,port_t p,time_t t):BaseSite(a,p,t){
-    extension=0;	
+    uRVC.readCtr=0;	
     setType(MY_SITE);}
+
+  void makeGCMarkSite(){flags |= GC_MARK;}
+  void removeGCMarkSite(){flags &= ~(GC_MARK);}
+  Bool isGCMarkedSite(){return flags & GC_MARK;}
 
   Bool ActiveSite(){
     if(getType() & (REMOTE_SITE|VIRTUAL_SITE)) return OK;
@@ -415,9 +367,6 @@ public:
     if(getType() & REMOTE_SITE) return OK;
     return NO;}
     
-  SiteExtension * getSiteExtension(){
-    return (SiteExtension*) extension;}
-
   void passiveToPerm(){
     Assert(!(ActiveSite()));
     flags |= PERM_SITE;
@@ -428,94 +377,58 @@ public:
   Bool isInSecondary(){
     if(getType() & SECONDARY_TABLE_SITE) return OK;
     return NO;}
-  
-  void inc() {
-    if(ActiveSite()){
-      int aux=getRefCtrS();
-      Assert(aux>=0);
-      if(aux!=0){
-	putRefCtrS(aux+1);	
-	return;}
-      putRefCtrS(1);
-      if(getType() & REMOTE_SITE){
-	nonZeroRefsToRemote(getRemoteSite());
-	return;}
-      nonZeroRefsToVirtual(getVirtualSite());
-      return;}
-    incPassiveRefCtr();}
-  
-  void dec(){
-    if(ActiveSite()){
-      int aux=getRefCtrS();
-      putRefCtrS(aux-1);
-      if(aux>1){return;}
-      zeroActive();
-      return;}
-    int aux=getPassiveRefCtr();
-    putPassiveRefCtr(aux-1);
-    if(aux>1) return;
-    zeroPassive();}
-  
-  void refCheck(){
-    if(ActiveSite()){
-      if(getRefCtrS()==0) {
-	zeroActive();
-	return;}
-      return;}
-    if(getPassiveRefCtr()==0){
-      zeroPassive();}
-    return;}
 
   Bool isPerm(){return getType() & PERM_SITE;}                   
 
-  void initMySiteR(SiteExtension *se){
-    refCtr=1; // can never be reclaimed
-    se->init(NULL);
-    extension = (unsigned int)se;
+  Bool canBeFreed(){
+    Assert(!isGCMarkedSite());
+    if(flags & MY_SITE) {return NO;}
+    if(ActiveSite()){
+      zeroActive();
+      return NO;}
+    return OK;}
+
+  void initMySiteR(){
+    info=NULL;
+    uRVC.readCtr=0;
     setType(MY_SITE);}
 
-  void initMySiteV(SiteExtension *se,VirtualInfo *v){
-    refCtr=1; // can never be reclaimed
-    se->init(v);
-    extension = (unsigned int)se;
+  void initMySiteV(VirtualInfo *v){
+    info=v;
+    uRVC.readCtr=0;    
     setType(MY_SITE|VIRTUAL_SITE);}
 
-  void initVirtual(SiteExtension *se,VirtualInfo *vi){
-    refCtr=0;
-    se->init(vi);
-    extension = (unsigned int)se;
+  void initVirtual(VirtualInfo *vi){
+    info=vi;
+    uRVC.readCtr=0;
     setType(VIRTUAL_SITE);}
     
-  void initVirtualRemote(SiteExtension* se,VirtualInfo *vi){
-    refCtr=0;
-    extension = (unsigned int)se;
-    se->init(vi);
+  void initVirtualRemote(VirtualInfo *vi){
+    info=vi;
+    uRVC.readCtr=0;
     setType(VIRTUAL_SITE|REMOTE_SITE);}
 
-  void initRemote(SiteExtension* se){
-    refCtr=0;
-    extension = (unsigned int)se;
-    se->init();
+  void initRemote(){
+    info=NULL;
+    uRVC.readCtr=0;
     setType(REMOTE_SITE);}
 
   void initPerm(){
-    refCtr=0;
-    extension=0;
+    info=NULL;
+    uRVC.readCtr=0;
     setType(PERM_SITE);}
 
   void initPassive(){
-    refCtr=0;
-    extension=0;
+    info=NULL;
+    uRVC.readCtr=0;
     setType(0);}
 
-  void makeActiveRemote(SiteExtension* se){
-    refCtr=getPassiveRefCtr();
-    extension= (unsigned int) se;
+  void makeActiveRemote(){
+    uRVC.readCtr=0;
     setType(REMOTE_SITE);}
 
-  void makeActiveVirtual(SiteExtension* se){
-    refCtr=getPassiveRefCtr();
-    extension= (unsigned int) se;
+  void makeActiveVirtual(){
+    uRVC.readCtr=0;
     setType(VIRTUAL_SITE);}
 
 // provided to network-comm
@@ -524,7 +437,7 @@ public:
     if(!connect()) {PD((SITE,"getRemoteSite not connected"));return NULL;}
     Assert(getType() & CONNECTED);
     Assert(getType() & REMOTE_SITE);
-    RemoteSite *rs = getSiteExtension()->getRemoteSiteSE(); 
+    RemoteSite *rs = uRVC.rsite;
     PD((SITE,"getRemoteSite returning the remote %d",rs));
     Assert(rs!=NULL);
     return  rs;}
@@ -533,8 +446,7 @@ public:
     Assert(getType() & CONNECTED);
     Assert(getType() & REMOTE_SITE);
     disconnect();
-    getSiteExtension()->dumpRemoteSiteSE(readCtr);
-    refCheck();}
+    uRVC.readCtr=readCtr;}
 
 // provided to virtual-comm
 
@@ -543,15 +455,14 @@ public:
     Assert(getType() & CONNECTED);
     Assert(getType() & VIRTUAL_SITE);
     Assert(!(getType() & REMOTE_SITE));
-    return getSiteExtension()->getVirtualSiteSE();}
+    return uRVC.vsite;}
 
   void dumpVirtualSite(int readCtr){
     Assert(getType() & CONNECTED);
     Assert(getType() & VIRTUAL_SITE);
     Assert(!(getType() & VIRTUAL_SITE));
     disconnect();    
-    getSiteExtension()->dumpVirtualSiteSE(readCtr);
-    refCheck();}
+    uRVC.readCtr=readCtr;}
 
   // for use by the network-comm and virtual-comm
   // ASSUMPTION: network-comm has reclaimed RemoteSite 
@@ -632,7 +543,7 @@ public:
       return probeStatus_VirtualSite(getVirtualSite(),pt,frequency,storePtr);}
     return PROBE_NONEXISTENT;}
     
-  GiveUpReturn giveUp(GiveUpInput flag){
+  GiveUpReturn giveUp(GiveUpInput flag){ // PERM case 1 user initiated 
     unsigned short t=getType();
     if(t & PERM_SITE) {return SITE_NOW_PERM;}
     if(flag==ALL_GIVEUP){
@@ -654,7 +565,8 @@ public:
   void marshalSite(MsgBuffer *); 
   void marshalPSite(MsgBuffer *buf);
 
-  void discoveryPerm(){
+// PERM case 2) discovered in unmarshaling or 3) in network
+  void discoveryPerm(){ 
     unsigned short t=getType();
     if(t==0) {
       flags |= PERM_SITE; 
@@ -664,11 +576,19 @@ public:
     if(t & CONNECTED){
       makePermConnected();
       if(t & REMOTE_SITE){
+	if(t & VIRTUAL_SITE) {
+	  dumpVirtualInfo(info);
+	  info=NULL;}
 	discoveryPerm_RemoteSite(getRemoteSite());
 	return;}
+      dumpVirtualInfo(info);      
+      info=NULL;
       discoveryPerm_VirtualSite(getVirtualSite());
       return;}
-    makePerm();}
+    makePerm();
+    if(t & VIRTUAL_SITE){
+      dumpVirtualInfo(info);}}
+
 
 // provided for network and virtual site comm-layers
 
@@ -678,21 +598,15 @@ public:
   
   void probeFault(ProbeReturn pr);
 
-    
   void sitePermProblem(){
-    if(getType() & PERM_SITE) {return;}
-    setType(getType()|PERM_SITE);
-    disconnectInPerm();}
+    discoveryPerm();}
 
   void monitorInvoke(MonitorReturn mt,int size,int noMsgs){
     Assert(0);
     error("not implemented");
     return;}
-
   
   void msgReceived(MsgBuffer *);
-
-  char* toString();
 };
 
 

@@ -65,6 +65,8 @@ public:
 MsgBuffer* getComponentMsgBuffer();
 MsgBuffer* getRemoteMsgBuffer(Site *);
 MsgBuffer* getVirtualMsgBuffer(Site *);
+void dumpRemoteMsgBuffer(MsgBuffer*);
+void dumpVirtualMsgBuffer(MsgBuffer*);
 
 class MsgBufferManager{
 public:
@@ -74,8 +76,17 @@ public:
 	return getRemoteMsgBuffer(s);}
       return getVirtualMsgBuffer(s);}
     return getComponentMsgBuffer();}
+
+  void dumpMsgBuffer(MsgBuffer *m){ // only for marshaled/write stuff (not read)
+    Site *s=m->getSite();
+    if(s->remoteComm){
+      dumpRemoteMsgBuffer(m);}
+    else{
+      Assert(s!=NULL);
+      dumpVirtualMsgBuffer(m);}}
 };
 
 extern MsgBufferManager *msgBufferManager;
+
 
 

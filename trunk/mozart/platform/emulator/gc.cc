@@ -1753,6 +1753,7 @@ void AM::gc(int msgLevel)
   gcGNameTable();
   performCopying();
 
+
 // -----------------------------------------------------------------------
 // ** second phase: the reference update stack has to checked now
   GCPROCMSG("updating references");
@@ -1761,6 +1762,7 @@ void AM::gc(int msgLevel)
   Assert(ptrStack.isEmpty());
 
   gcBorrowTable3();
+  gcSiteTable();
 
   exitCheckSpace();
 
@@ -2186,6 +2188,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Object:
     {
       Object *o = (Object *) this;
+      o->gcEntityInfo();
 
       switch(o->getTertType()) {
       case Te_Local:   o->setBoard(GETBOARD(o)->gcBoard()); break;
@@ -2229,6 +2232,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Cell:
     {
       Tertiary *t=(Tertiary*)this;
+      t->gcEntityInfo();
       switch(t->getTertType()){
       case Te_Local:{
 	CellLocal *cl=(CellLocal*)t;
@@ -2259,6 +2263,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Port:
     {
       Port *p = (Port*) this;
+      p->gcEntityInfo();
       switch(p->getTertType()){
       case Te_Local:{
 	p->setBoard(GETBOARD(p)->gcBoard()); /* ATTENTION */
@@ -2280,6 +2285,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Space:
     {
       Space *s = (Space *) this;
+      s->gcEntityInfo();
       if (!s->isProxy()) {
 	if (s->solve != (Board *) 1)
 	s->solve = s->solve->gcBoard();
@@ -2328,6 +2334,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Lock:
     {
       Tertiary *t=(Tertiary*)this;
+      t->gcEntityInfo();
       switch(t->getTertType()){
 
       case Te_Local:{
@@ -2376,6 +2383,23 @@ void ConstTerm::gcConstRecurse()
    if (opMode == IN_TC && !isLocalBoard(bb)) return this;	\
 }
 
+inline void EntityInfo::gcWatchers(){
+  Watcher **base=&watchers;
+  Watcher *w=*base;
+  while(w!=NULL){
+    Watcher* newW=(Watcher*) gcRealloc(w,sizeof(Watcher));
+    *base=newW;
+    newW->thread=newW->thread->gcThread();
+    gcTagged(newW->proc,newW->proc);
+    base= &(newW->next);
+    w=*base;}}
+
+inline void Tertiary::gcEntityInfo(){
+  if(info==NULL) return;
+  EntityInfo *newInfo = (EntityInfo *) gcRealloc(info,sizeof(EntityInfo));
+  info=newInfo;
+  info->gcWatchers();}
+
 ConstTerm *ConstTerm::gcConstTerm()
 {
   GCMETHMSG("ConstTerm::gcConstTerm");
@@ -2385,6 +2409,7 @@ ConstTerm *ConstTerm::gcConstTerm()
   GName *gn = NULL;
 
   size_t sz = 0;
+  
   switch (getType()) {
   case Co_HeapChunk: return ((HeapChunk *) this)->gc();
   case Co_Abstraction: 
@@ -2530,6 +2555,7 @@ ConstTerm *ConstTerm::gcConstTerm()
    but in gcConstTerm it is marked.
    Note- all other Tertiarys are marked in gcConstRecurse
 */
+
 
 ConstTerm* ConstTerm::gcConstTermSpec()
 {

@@ -51,6 +51,8 @@ void protectInlineCache(InlineCache *);
 OZ_C_proc_proto(BIdumpThreads)
 OZ_C_proc_proto(BIlistThreads)
 
+void gcSiteTable();
+
 #endif //__GC_H__
 
 
