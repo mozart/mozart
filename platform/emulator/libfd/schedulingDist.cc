@@ -181,7 +181,7 @@ TaskIntervalsProof::~TaskIntervalsProof(void)
 //////////
 OZ_C_proc_begin(sched_taskIntervalsProof, 5)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD \
                    "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_STREAM "," OZ_EM_INT);
 
   PropagatorExpect pe;
