@@ -79,6 +79,28 @@
           returns the module ?{M}.
       </list>
 
+  <section id="section.modman.lazy">
+    <title/Lazy Linking/
+
+    <p>
+      In the above section we have discussed that modules are subject
+      to lazy linking: Only when a module is requested, the functor to
+      compute that module gets loaded.
+
+    <p>
+      Lazy linking has dramatic effect on the startup time of an
+      application: applications can start small in the fraction of a
+      second and load additional functionality on demand. And all this
+      happens completely transparent.
+
+    <p>
+      System modules are also subject to dynamic linking. Even though
+      module managers give the impression that the system modules
+      are always there, they are also loaded on demand. An application
+      that takes good advantage of that fact is for example the Oz
+      Programming Interface which starts quickly even though it
+      imports all system modules.
+
   <section id="section.modman.import">
     <title/Import Specifications/
 
