@@ -105,13 +105,17 @@ Used as fallback if the environment variable OZHOME is not set."
       oz-prefix))
 
 (defvar oz-platform
-  (and *OZHOME*
-       (substring
-        (shell-command-to-string
-         (concat *OZHOME* "/bin/ozplatform")) 0 -1)))
+  (if (memq system-type '(ms-dos windows-nt)) "win32-i486"
+    (and *OZHOME*
+         (substring
+          (shell-command-to-string
+           (concat *OZHOME* "/bin/ozplatform")) 0 -1))))
 
 (defun oz-platform ()
   (cond (oz-platform)
+        ((memq system-type '(ms-dos windows-nt))
+         (setq oz-platform "win32-i486")
+         oz-platform)
         (*OZHOME*
          (setq oz-platform
                (substring
