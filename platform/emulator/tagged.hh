@@ -114,13 +114,13 @@ enum ltag_t {
 #define __ltag_int(t,lt) ((TaggedRef) ((((int) (t))<<LTAG_BITS)+(lt)))
 #define __stag_int(t,st) ((TaggedRef) ((((int) (t))<<STAG_BITS)+(st)))
 
-#define __unltag_ptr(c,t,lt)   ((c) ((t)-(lt)))
-#define __unstag_ptr(c,t,st)   ((c) ((t)-(st)))
+#define __unltag_ptr(c,t,lt)   ((c) (((TaggedRef)(t))-(lt)))
+#define __unstag_ptr(c,t,st)   ((c) (((TaggedRef)(t))-(st)))
 
-#define __tagged2stag(t) ((stag_t) ((t) & STAG_MASK))
+#define __tagged2stag(t) ((stag_t) (((TaggedRef)(t)) & STAG_MASK))
 #define __hasStag(t,st)  !(__unstag_ptr(int,t,st) & STAG_MASK)
 
-#define __tagged2ltag(t) ((ltag_t) ((t) & LTAG_MASK))
+#define __tagged2ltag(t) ((ltag_t) (((TaggedRef)(t)) & LTAG_MASK))
 #define __hasLtag(t,lt)  !(__unltag_ptr(int,t,lt) & LTAG_MASK)
 
 
@@ -236,7 +236,7 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
  *
  */
 
-#define SHIT_HAPPEN 1
+//#define SHIT_HAPPEN 1
 
 #if defined(DEBUG_CHECK) || defined(SHIT_HAPPEN)
 
@@ -365,17 +365,17 @@ TaggedRef makeTaggedSmallInt(int i) {
 
 #else
 
-#define makeTaggedRef(p)            ((TaggedRef) p)
-#define makeTaggedVar(p)            __stag_ptr(p,STAG_VAR)
-#define makePseudoTaggedVar(p)      __stag_ptr(p,STAG_VAR)
-#define makeTaggedLTuple(p)         __stag_ptr(p,STAG_LTUPLE)
-#define makeTaggedSRecord(p)        __stag_ptr(p,STAG_SRECORD)
-#define makeTaggedLiteral(p)        __ltag_ptr(p,LTAG_LITERAL)
-#define makeTaggedConst(p)          __stag_ptr(p,STAG_CONST)
-#define makeTaggedMarkPtr(p)        __stag_ptr(p,STAG_MARK)
-#define makeTaggedMarkInt(p)        __stag_int(p,STAG_MARK)
+#define makeTaggedRef(p)            ((TaggedRef) ((TaggedRef*)(p)))
+#define makeTaggedVar(p)            __stag_ptr(((OzVariable*)(p)),STAG_VAR)
+#define makePseudoTaggedVar(p)      __stag_ptr(((void*)(p)),STAG_VAR)
+#define makeTaggedLTuple(p)         __stag_ptr(((LTuple*)(p)),STAG_LTUPLE)
+#define makeTaggedSRecord(p)        __stag_ptr(((SRecord*)(p)),STAG_SRECORD)
+#define makeTaggedLiteral(p)        __ltag_ptr(((Literal*)(p)),LTAG_LITERAL)
+#define makeTaggedConst(p)          __stag_ptr(((ConstTerm*)(p)),STAG_CONST)
+#define makeTaggedMarkPtr(p)        __stag_ptr(((void*)(p)),STAG_MARK)
+#define makeTaggedMarkInt(p)        __stag_int(((int)(p)),STAG_MARK)
 #define makeTaggedMarkIntNOTEST(p)  __stag_int(p,STAG_MARK)
-#define makeTaggedSmallInt(p)       __ltag_int(p,LTAG_SMALLINT)
+#define makeTaggedSmallInt(p)       __ltag_int(((int)(p)),LTAG_SMALLINT)
 
 #endif
 
@@ -494,7 +494,7 @@ inline Bool oz_eq(TaggedRef t1, TaggedRef t2) {
 
 #else
 
-#define oz_eq(t1,t2) (((TaggedRef) (t1))==((TaggedRef) (t2)))
+#define oz_eq(t1,t2) ((Bool)(((TaggedRef) (t1))==((TaggedRef) (t2))))
 
 #endif
 
