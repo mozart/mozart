@@ -66,6 +66,7 @@ void OZ_error(OZ_CONST char *format, ...)
     fprintf(stderr, "\a");
 
 #ifdef DEBUG_CHECK
+  vfprintf(stderr,format,ap);
   fprintf(stderr, "\n(going to report an error in pid %d)", osgetpid());
   while (OK) {}
 #endif
