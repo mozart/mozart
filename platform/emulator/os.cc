@@ -1099,11 +1099,36 @@ int osread(int fd, void *buf, unsigned int len)
   return rawread(fd, buf, len);
 }
 
+int ossaferead(int fd, char *buf, unsigned int len)
+{
+ loop:
+  int ret = osread(fd,buf,len);
+  if (ret < 0 && ossockerrno()==EINTR)
+    goto loop;
+  return ret;
+}
+
 
 /* currently no wrapping for write */
 int oswrite(int fd, void *buf, unsigned int len)
 {
   return rawwrite(fd, buf, len);
+}
+
+int ossafewrite(int fd, char *buf, unsigned int len)
+{
+ loop:
+  int written = oswrite(fd,buf,len);
+  if (written < 0) {
+    if (ossockerrno()==EINTR) goto loop;
+    return written;
+  }
+  if (written<len) {
+    buf += written;
+    len -= written;
+    goto loop;
+  }
+  return written;
 }
 
 int osclose(int fd)
