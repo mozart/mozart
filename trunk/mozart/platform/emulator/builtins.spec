@@ -1394,6 +1394,12 @@ $cmode='stat';
 
     #* Distribution
 
+    'export'		=> { in  => ['value'],
+			     out => [],
+			     BI  => BIexport,
+			     module=>components,
+			     native => false},
+
     'PerdioVar.is'	=> { in  => ['value'],
 			     out => ['+bool'],
 			     BI  =>   PerdioVar_is,
@@ -1519,12 +1525,6 @@ $cmode='stat';
     'load'		=> { in  => ['value','value'],
 			     out => [],
 			     BI  => BIload,
-			     module=>components,
-			     native => false},
-
-    'export'		=> { in  => ['value'],
-			     out => [],
-			     BI  => BIexport,
 			     module=>components,
 			     native => false},
 
