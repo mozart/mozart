@@ -18,6 +18,7 @@
     <<<"Contains "#also#" numbers: "#(1#' '#2.045)>>>
     is a virtual string representing the string
     <<<"Contains also numbers: 1 2.045">>>
+
   <Section id="section.text.characters">
     <Title/Characters/
     <P>
@@ -159,7 +160,7 @@
 	  is zero, ?_{A}&nbsp;will be the empty atom&nbsp;<<''>>.
       </List>
 
-  <Section>
+  <Section id="section.text.strings">
     <Title/Strings/
     <P>
       The module <Span class=index/<<String>>/ contains procedures operating
@@ -250,7 +251,7 @@
 	  returns <<["a" "bb" "cc" "d"]>>.
       </List>
 
-  <Section>
+  <Section id="section.text.bytestrings">
     <Title/Byte Strings/
     <P>
       Module <Span class=index/<<ByteString>>/ provides an interface to a more
@@ -339,7 +340,7 @@
 	  <<false>> is returned instead.
       </List>
 
-  <Section>
+  <Section id="section.text.virtualstrings">
     <Title/Virtual Strings/
     <P>
       <Index/strings<And>virtual/

@@ -6,7 +6,7 @@
 
 <Chapter id="chapter.values">
   <Title/Values/
-  <Section>
+  <Section id="section.values.general">
     <Title/Values in General/
     <P>
       The module <Span class=index/<<Value>>/ contains procedures that can
@@ -45,7 +45,7 @@
 	  ?_{DepthI} and ?_{WidthI} are used to limit output of records
 	  in depth and width respectively.
       </List>
-  <Section>
+  <Section id="section.values.status">
     <Title/Variable Status/
     <P>
       The following procedures allow to inspect a variable's status.
@@ -108,7 +108,7 @@
 	  is of no standard primary type, but an implementation-dependent
 	  <Index/extensions/extension.
       </List>
-  <Section>
+  <Section id="section.values.comparison">
     <Title/Comparisons/
     <P>
       This section collects procedures to compare integers with integers,

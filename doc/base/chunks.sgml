@@ -6,7 +6,7 @@
 
 <Chapter id="chapter.chunks">
   <Title/Chunks/
-  <Section>
+  <Section id="section.chunks.general">
     <Title/Chunks in General/
     <P>
       The module <Span class=index/<<Chunk>>/ contains procedures operating
@@ -63,7 +63,7 @@
 	  tests whether ?_{C} has feature&nbsp;?_{F}.
       </List>
 
-  <Section>
+  <Section id="section.chunks.arrays">
     <Title/Arrays/
     <P>
       The module <Span class=index/<<Array>>/ contains procedures operating
@@ -130,7 +130,7 @@
 	  and with the corresponding fields.
       </List>
 
-  <Section>
+  <Section id="section.chunks.dictionaries">
     <Title/Dictionaries/
     <P>
       The module <Span class=index/<<Dictionary>>/ contains procedures
@@ -239,7 +239,7 @@
 	  ?_{Dictionary}.
       </List>
 
-  <Section>
+  <Section id="section.chunks.bitarrays">
     <Title/Bit Arrays/
     <P>
       The module <Span class=index/<<BitArray>>/ contains procedures operating
@@ -333,7 +333,7 @@ negated implication)./
       </list></p>
   </section>
 
-  <Section>
+  <Section id="section.chunks.ports">
     <Title/Ports/
     <P>
       The module <Span class=index/<<Port>>/ contains procedures operating on
@@ -363,7 +363,7 @@ negated implication)./
 	  and the pointer advances to the stream's new tail.
       </List>
 
-  <Section>
+  <Section id="section.chunks.locks">
     <Title/Locks/
     <P>
       The module <Span class=index/<<Lock>>/ contains procedures for locks.
@@ -383,7 +383,7 @@ negated implication)./
 	  creates and returns a new lock.
       </List>
 
-  <Section>
+  <Section id="section.chunks.classes">
     <Title/Classes/
     <P>
       The module <Span class=index/<<Class>>/ contains procedures operating
@@ -446,7 +446,7 @@ negated implication)./
 	  tests whether ?_{K} has class feature at&nbsp;?_{LI}.
       </List>
 
-  <Section>
+  <Section id="section.chunks.objects">
     <Title/Objects/
     <P>
       The module <Span class=index/<<Object>>/ contains procedures operating
@@ -542,7 +542,7 @@ negated implication)./
 	    raised.
 	</List>
 
-  <Section>
+  <Section id="section.chunks.functors">
     <Title/Functors/
     <P>
       The module <Span class=index/<<Functor>>/ contains procedures operating
