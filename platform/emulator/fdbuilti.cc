@@ -498,6 +498,31 @@ OZ_Bool BIfdHeadManager::spawnPropagator(FDPropState t,
   return PROCEED;
 }
 
+OZ_Bool BIfdHeadManager::spawnPropagatorStabil(FDPropState t, 
+					       OZ_CFun f, int a, 
+					       OZ_Term t1, ...)
+{
+  OZ_Term * x = (OZ_Term *) heapMalloc(a * sizeof(OZ_Term));
+
+  x[0] = t1;
+
+  va_list ap;
+  va_start(ap, t1);
+
+  for (int i = 1; i < a; i += 1)
+    x[i] = va_arg(ap, OZ_Term);
+
+  va_end(ap);
+
+  Suspension * s = createResSusp(f, a, x);
+  addResSusps(s, t);
+  FDcurrentTaskSusp->markStable();
+  FDcurrentTaskSusp = NULL;
+
+  localPropStore.push(s->getCCont(), s);
+  return PROCEED;
+}
+
 #ifdef FDBISTUCK
 
 OZ_Bool BIfdHeadManager::suspendOnVar(OZ_CFun, int, OZ_Term *,
