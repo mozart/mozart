@@ -402,8 +402,7 @@ void pushContX(TaskStack *stk,
 
 #define INCFPC(N) PC += N
 
-// #define WANT_INSTRPROFILE
-#if defined(WANT_INSTRPROFILE) && defined(__GNUC__)
+#if !defined(DISABLE_INSTRPROFILE) && defined(__GNUC__)
 #define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
 #define asmLbl(INSTR)
@@ -1266,7 +1265,6 @@ LBLdispatcher:
   switch (op) {
 #endif
 
-    
 // -------------------------------------------------------------------------
 // INSTRUCTIONS: TERM: MOVE/UNIFY/CREATEVAR/...
 // -------------------------------------------------------------------------
@@ -2049,6 +2047,7 @@ LBLdispatcher:
   }
 
   Case(RETURN)
+
     LBLpopTask:
       {
 	emulateHookPopTask(e);
@@ -2062,8 +2061,6 @@ LBLdispatcher:
 	PopFrameNoDecl(CTS,PC,Y,G);
 	JUMPABSOLUTE(PC);
       }
-
-
 
 // ------------------------------------------------------------------------
 // INSTRUCTIONS: Definition
@@ -2385,85 +2382,11 @@ LBLdispatcher:
        }
        goto LBLpopTask;
      }
-// ------------------------------------------------------------------------
-// --- Call: Builtin: raise
-// ------------------------------------------------------------------------
-
-   LBLraise:
-     {
-       DebugCheck(ozconf.stopOnToplevelFailure,
-		  DebugTrace(tracerOn();trace("raise")));
-
-       Assert(CTT && !CTT->isPropagator());
-
-       shallowCP         = 0; // failure in shallow guard can never be handled
-       e->shallowHeapTop = 0;
-
-       Bool foundHdl;
-
-       if (e->exception.debug) {
-
-	 OZ_Term traceBack;
-	 foundHdl =
-	   CTT->getTaskStackRef()->findCatch(PC,&traceBack,e->debugmode());
-	 
-	 OZ_Term loc = oz_getLocation(CBB);
-	 e->exception.value = formatError(e->exception.info,e->exception.value,
-					  traceBack,loc);
-
-       } else {
-	 foundHdl = CTT->getTaskStackRef()->findCatch();
-       }
-       
-       if (foundHdl) {
-	 if (e->debugmode() && CTT->getTrace())
-	   debugStreamUpdate(CTT);
-	 X[0] = e->exception.value;
-	 goto LBLpopTaskNoPreempt;
-       }
-
-       if (!e->onToplevel() &&
-	   OZ_eq(OZ_label(e->exception.value),OZ_atom("failure"))) {
-	 goto LBLfailure;
-       }
-
-       if (e->debugmode()) {
-	 OZ_Term exc = e->exception.value;
-	 // ignore system(kernel(terminate)) exception:
-	 if (OZ_isRecord(exc) &&
-	     OZ_eq(OZ_label(exc),OZ_atom("system")) &&
-	     tagged2SRecord(exc)->getFeature(OZ_int(1)) != makeTaggedNULL() &&
-	     OZ_eq(OZ_label(OZ_subtree(exc,OZ_int(1))),OZ_atom("kernel")) &&
-	     OZ_eq(OZ_subtree(OZ_subtree(exc,OZ_int(1)),OZ_int(1)),
-		   OZ_atom("terminate")))
-	   ;
-	 else {
-	   CTT->setTrace(OK);
-	   CTT->setStep(OK);
-	   debugStreamException(CTT,e->exception.value);
-	   goto LBLpreemption;
-	 }
-       }
-       // else
-       RefsArray argsArray = allocateRefsArray(1,NO);
-       argsArray[0] = e->exception.value;
-       if (e->defaultExceptionHdl) {
-	 CTT->pushCall(e->defaultExceptionHdl,argsArray,1);
-       } else {
-	 if (!am.isStandalone()) 
-	   printf("\021");
-	 printf("Exception raise:\n   %s\n",toC(argsArray[0]));
-	 fflush(stdout);
-       }
-       goto LBLpopTask; // changed from LBLpopTaskNoPreempt; -BL 26.3.97
-     }
    }
-
 // --------------------------------------------------------------------------
 // --- end call/execute -----------------------------------------------------
 // --------------------------------------------------------------------------
 
-  
 // -------------------------------------------------------------------------
 // INSTRUCTIONS: Actors/Deep Guards
 // -------------------------------------------------------------------------
@@ -2495,7 +2418,6 @@ LBLdispatcher:
       CBB->setWaitTop();
       goto LBLsuspendBoard;
     }
-
 
   Case(ASK)
     {
@@ -2578,7 +2500,6 @@ LBLdispatcher:
 	goto LBLsuspendThread;
       }
     }
-
 
   Case(CREATECOND)
     {
@@ -3273,6 +3194,7 @@ LBLshallowFail:
    *  - current thread must be runnable.
    */
 LBLfailure:
+   {
   asmLbl(DEEP_FAIL);
   DebugTrace(trace("fail",CBB));
 
@@ -3383,6 +3305,80 @@ LBLfailure:
   e->unsetCurrentThread();
 
   goto LBLstart;
+   }
+
+// ------------------------------------------------------------------------
+// --- Call: Builtin: raise
+// ------------------------------------------------------------------------
+
+   LBLraise:
+     {
+       DebugCheck(ozconf.stopOnToplevelFailure,
+		  DebugTrace(tracerOn();trace("raise")));
+
+       Assert(CTT && !CTT->isPropagator());
+
+       shallowCP         = 0; // failure in shallow guard can never be handled
+       e->shallowHeapTop = 0;
+
+       Bool foundHdl;
+
+       if (e->exception.debug) {
+
+	 OZ_Term traceBack;
+	 foundHdl =
+	   CTT->getTaskStackRef()->findCatch(PC,&traceBack,e->debugmode());
+	 
+	 OZ_Term loc = oz_getLocation(CBB);
+	 e->exception.value = formatError(e->exception.info,e->exception.value,
+					  traceBack,loc);
+
+       } else {
+	 foundHdl = CTT->getTaskStackRef()->findCatch();
+       }
+       
+       if (foundHdl) {
+	 if (e->debugmode() && CTT->getTrace())
+	   debugStreamUpdate(CTT);
+	 X[0] = e->exception.value;
+	 goto LBLpopTaskNoPreempt;
+       }
+
+       if (!e->onToplevel() &&
+	   OZ_eq(OZ_label(e->exception.value),OZ_atom("failure"))) {
+	 goto LBLfailure;
+       }
+
+       if (e->debugmode()) {
+	 OZ_Term exc = e->exception.value;
+	 // ignore system(kernel(terminate)) exception:
+	 if (OZ_isRecord(exc) &&
+	     OZ_eq(OZ_label(exc),OZ_atom("system")) &&
+	     tagged2SRecord(exc)->getFeature(OZ_int(1)) != makeTaggedNULL() &&
+	     OZ_eq(OZ_label(OZ_subtree(exc,OZ_int(1))),OZ_atom("kernel")) &&
+	     OZ_eq(OZ_subtree(OZ_subtree(exc,OZ_int(1)),OZ_int(1)),
+		   OZ_atom("terminate")))
+	   ;
+	 else {
+	   CTT->setTrace(OK);
+	   CTT->setStep(OK);
+	   debugStreamException(CTT,e->exception.value);
+	   goto LBLpreemption;
+	 }
+       }
+       // else
+       RefsArray argsArray = allocateRefsArray(1,NO);
+       argsArray[0] = e->exception.value;
+       if (e->defaultExceptionHdl) {
+	 CTT->pushCall(e->defaultExceptionHdl,argsArray,1);
+       } else {
+	 if (!am.isStandalone()) 
+	   printf("\021");
+	 printf("Exception raise:\n   %s\n",toC(argsArray[0]));
+	 fflush(stdout);
+       }
+       goto LBLpopTask; // changed from LBLpopTaskNoPreempt; -BL 26.3.97
+     }
 } // end engine
 
 #ifdef OUTLINE
