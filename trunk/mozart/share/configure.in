@@ -122,6 +122,7 @@ AC_OUTPUT(lib/Makefile tools/Makefile \
 
 
 errprint(ifdef([OZ_INIT],
- [],
+ [autoconf succeeded
+],
  [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
 ]))
