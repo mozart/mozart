@@ -713,6 +713,7 @@ SRecord *SRecord::gcSRecord()
     }
     break;
   default:
+    sz = 0;
     error("SRecord::gc: unknown type");
   }
 
@@ -1001,7 +1002,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
   GCPROCMSG("gcTagged");
   TaggedRef auxTerm = fromTerm;
 
-  TaggedRef *auxTermPtr;
+  TaggedRef *auxTermPtr = NULL;
 
 #ifdef DEBUG_GC
   auxTermPtr = NULL;
