@@ -3,8 +3,12 @@
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%   Benjamin Lorenz <lorenz@ps.uni-sb.de>
 %%%
+%%% Contributor:
+%%%   Christian Schulte
+%%%
 %%% Copyright:
 %%%   Leif Kornstaedt and Benjamin Lorenz, 1997-1998
+%%%   Christian Schulte, 1998
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -19,6 +23,27 @@
 %%% of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 %%%
 
+\ifdef LILO
+
+functor $
+
+import
+   SP.{System = 'System'
+       Print  = 'Print'
+       Error  = 'Error'}
+
+   OP.{OS   = 'OS'
+       Open = 'Open'}
+
+   Compiler
+
+export
+   'Emacs' : Emacs
+
+body
+
+\else
+
 fun instantiate {$ IMPORT}
    \insert 'SP.env'
    = IMPORT.'SP'
@@ -26,6 +51,8 @@ fun instantiate {$ IMPORT}
    = IMPORT.'OP'
    \insert 'Compiler.env'
    = IMPORT.'Compiler'
+
+\endif
 
    TimeoutToConfigBar = 100
    TimeoutToUpdateBar = TimeoutToConfigBar
@@ -242,6 +269,10 @@ fun instantiate {$ IMPORT}
 
    GetOPI = {`Builtin` getOPICompiler 1}
 
+\ifdef LILO
+in
+\endif
+   
    Emacs = emacs(getOPI: GetOPI
 		 condSend: condSend(interface:
 				       proc {$ M}
@@ -258,6 +289,10 @@ fun instantiate {$ IMPORT}
 					  end
 				       end)
 		 interface: CompilerInterfaceEmacs)
+
+\ifndef LILO
 in
    \insert 'Emacs.env'
+\endif
+   
 end
