@@ -862,6 +862,7 @@ loop:
         t = makeTaggedRef(tPtr);
         goto bomb;
       }
+      pvar->markExported();
       bs->addRes(makeTaggedRef(tPtr));
       marshalVariable(pvar,bs);
       break;

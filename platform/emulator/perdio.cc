@@ -116,7 +116,7 @@ class OwnerTable;
 class MsgBuffer;
 
 OZ_Return sendRedirect(Site* sd,int OTI,TaggedRef val);
-OZ_Return sendRedirect(ProxyList *pl,OZ_Term val, Site* ackSite,int OTI);
+OZ_Return sendRedirect(PerdioVar *,OZ_Term val, Site* ackSite,int OTI);
 void sendCreditBack(Site* sd,int OTI,Credit c);
 void sendPrimaryCredit(Site *sd,int OTI,Credit c);
 void sendSecondaryCredit(Site* s,Site* site,int index,Credit c);
@@ -3508,7 +3508,7 @@ void Site::msgReceived(MsgBuffer* bs)
         if (oe->hasFullCredit()) {
           PD((WEIRD,"SURRENDER: full credit"));
         }
-        sendRedirect(pv->getProxies(),v,rsite,OTI);
+        sendRedirect(pv,v,rsite,OTI);
       } else {
         PD((PD_VAR,"SURRENDER discard"));
         PD((WEIRD,"SURRENDER discard"));
@@ -3936,11 +3936,12 @@ void PerdioVar::redirect(OZ_Term val) {
     u.bindings=tmp;}
 }
 
-OZ_Return sendRedirect(ProxyList *pl,OZ_Term val, Site* ackSite, int OTI){
+OZ_Return sendRedirect(PerdioVar *pv,OZ_Term val, Site* ackSite, int OTI)
+{
+  ProxyList *pl = pv->getProxies();
   OZ_Return ret = PROCEED;
   OwnerEntry *oe = OT->getOwner(OTI);
-  //  if (pl==NULL && !oe->hasFullCredit()) {
-  if (pl==NULL) {
+  if (pl==NULL && pv->isExported()) {
     MsgBuffer *bs=msgBufferManager->getMsgBuffer(NULL);
     marshal_M_REDIRECT(bs,mySite,OTI,val);
     CheckNogoods(val,bs,"unify",);
@@ -3964,7 +3965,7 @@ OZ_Return bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
   if (pv->isManager()) {
     PD((PD_VAR,"bind manager o:%d v:%s",pv->getIndex(),toC(v)));
     OT->getOwner(pv->getIndex())->mkRef();
-    OZ_Return aux = sendRedirect(pv->getProxies(),v,mySite,pv->getIndex());
+    OZ_Return aux = sendRedirect(pv,v,mySite,pv->getIndex());
     if (aux == PROCEED)
       pv->primBind(lPtr,v);
     return aux;
