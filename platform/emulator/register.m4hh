@@ -401,7 +401,8 @@ Case(SETVOID):
 	  JUMP( getLabelArg(PC+3) );
 	}
 
-        if (isNotCVar(term)) {
+        if (isNotCVar(term) ||
+	    isCVar(term) && tagged2CVar(term)->valid(i)) {
 	  Suspension *susp=e->mkSuspension(CBB,CPP,
 					   PC,Y,G,X,getPosIntArg(PC+5));
 	  addSusp(termPtr,susp);
