@@ -200,6 +200,7 @@ define
 	 MathDisplay: unit
 	 MyMathToGIF: unit
 	 % for Picture:
+	 PictureDisplay: unit
 	 MyThumbnails: unit
 	 % for Figure:
 	 Floats: unit
@@ -617,8 +618,11 @@ define
 	    [] picture then
 	       {Exception.raiseError ozdoc(sgmlToHTML unsupported M)}   %--**
 	    [] 'picture.extern' then
-	       case {CondSelect M type unit} of 'gif' then IAlign in
-		  case M.display of display then
+	       case {CondSelect M type unit} of 'gif' then Display IAlign in
+		  Display = case @PictureDisplay of unit then M.display
+			    elseof X then X
+			    end
+		  case Display of display then
 		     Out <- @Out#'</P>\n'
 		     IAlign = if {SGML.isOfClass M left} then left
 			      elseif {SGML.isOfClass M right} then right
@@ -637,7 +641,7 @@ define
 		  else
 		     Out <- @Out#'<IMG src='#{MakeCDATA M.to}#'>'
 		  end
-		  case M.display of display then
+		  case Display of display then
 		     if IAlign \= unit then
 			Out <- @Out#'</DIV>'
 		     end
@@ -653,7 +657,9 @@ define
 		   ozDoc(sgmlToHTML unsupportedPictureNotation M)}   %--**
 	       end
 	    [] 'picture.choice' then
-	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
+	       PictureDisplay <- M.display
+	       OzDocToHTML, Process(M.1)   %--** make better choice
+	       PictureDisplay <- unit
 	    %-----------------------------------------------------------
 	    % Code
 	    %-----------------------------------------------------------
