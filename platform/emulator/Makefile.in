@@ -219,7 +219,7 @@ $(M4FILES): $(INSTRDEFS)
 
 tags:   $(M4FILES) version.cc
         etags --regex='/OZ_C[^(]+([     ]*\([^  ,)]+\)/\1/' -l c++ \
-        *c *h *//**/*c *//**/*h
+        *c *h */*c */*h
 
 clean+: clean
         $(RM) $(TARGETS)
