@@ -1,5 +1,6 @@
 PREFIX		= @prefix@
 VPATH		= @srcdir@
+SRCDIR		= @srcdir@
 SHDOCDIR	= $(PREFIX)/share/doc
 DOCDIR		= $(PREFIX)/doc
 BUILDDIR	= @BUILDDIR@
@@ -10,23 +11,49 @@ INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_DIR	= @INSTALL_DIR@
 HOMEURL         = @HOMEURL@
 
+JAVA_BIN	= @JAVA_BIN@
+JAVA_THREADS	= @JAVA_THREADS@
+JAVA		= $(JAVA_BIN)java  $(JAVA_THREADS)
+JAVAC		= $(JAVA_BIN)javac $(JAVA_THREADS)
+JAR		= $(JAVA_BIN)jar   $(JAVA_THREADS)
+COMPILE		= $(JAVAC) -classpath $(SRCDIR)/xsl.jar -d .
+
+LATEXHANDLER	= com/jclark/xsl/sax/LaTeXOutputHandler.class
+NXMLHANDLER	= com/jclark/xsl/sax/NXMLOutputHandler.class
+EXTEND_CLASSES	= TeX.class ID.class Msg.class Meta.class
+HANDLER_CLASSES	= $(LATEXHANDLER) $(NXMLHANDLER)
+CLASSES		= $(EXTEND_CLASSES) $(HANDLER_CLASSES)
+
 .PHONY: all quick bootstrap check install clean veryclean distclean depend bootquick
 
-all bootstrap:: TeX.class ID.class Msg.class Meta.class
+all bootstrap:: $(CLASSES)
 
 bootquick::
 
-CLASSPATH	= $(shell echo $$CLASSPATH)
-OZCLASSPATH	= $(SRCTOP)/doc/xsl/xt.jar:$(SRCTOP)/doc/xsl/xp.jar:$(SRCTOP)/doc/xsl/sax.jar:../xsl
+$(LATEXHANDLER): LaTeXOutputHandler.java
+	$(COMPILE) $<
+
+$(NXMLHANDLER): NXMLOutputHandler.java
+	$(COMPILE) $<
 
 %.class: %.java
-	javac -classpath $(CLASSPATH):$(OZCLASSPATH) -d . $<
+	$(COMPILE) $<
 
 Makefile: Makefile.in ../config.status
 	cd .. && ./config.status
 
 veryclean clean::
-	-rm -f *~ TeX.class
+	-rm -rf *~ *.class com org META-INF
 
 distclean:: veryclean
 	-rm -f Makefile
+
+xsl-jar: sax.jar xt.jar xp.jar
+	jar xf $(SRCDIR)/sax.jar
+	jar xf $(SRCDIR)/xt.jar
+	jar xf $(SRCDIR)/xp.jar
+	jar cf $(SRCDIR)/xsl.jar com org
+
+oz-jar: $(CLASSES)
+	jar xf $(SRCDIR)/xsl.jar
+	jar cf $(SRCDIR)/oz.jar com org $(EXTEND_CLASSES)
