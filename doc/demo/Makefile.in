@@ -89,10 +89,11 @@ DictClient/%.oz: $(SRCTOP)/share/demo/DictClient/%.oz
 $(SUBDIRS):
 	mkdir $@
 
-install:: $(SUBDIRS:%=$(DOCDIR)/%) $(SRCFILES:%=$(DOCDIR)/%)
+INSTALLDIRS = $(SUBDIRS:%=$(DOCDIR)/%)
+install::  $(INSTALLDIRS) $(SRCFILES:%=$(DOCDIR)/%)
 
 
-$(DOCDIR)/%:
+$(INSTALLDIRS):
 	$(INSTALL_DIR) $@
 $(DOCDIR)/%.oz: $(SRCTOP)/share/demo/%.oz
 	$(INSTALL_FILE) $< $@
