@@ -90,10 +90,14 @@ The Mozart installation structure:
       ozs  (link: ozserver)
       oza  (link: ozapplet)
     lib/
-    tools/
+      *.ozc
       images/
-        explorer/
-        ...
+    tools/
+      *.ozc
+      images/
+        ozcar/
+      gump/
+        examples/
     contrib/
     demo/
       images/
