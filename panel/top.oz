@@ -245,6 +245,7 @@ in
             {System.set time(detailled:true)}
             Config = {Dictionary.get O config}
             Tk.toplevel,tkInit(title:              TitleName
+                               'class':            'OzTools'
                                highlightthickness: 0
                                withdraw:           true)
             {Tk.batch [wm(iconname   self TitleName)
@@ -300,8 +301,6 @@ in
                                   feature: history)])
                      ]
                      nil}
-            {Menu.panel.menu   tk(conf tearoff:false)}
-            {Menu.options.menu tk(conf tearoff:false)}
             Frame = {New Tk.frame tkInit(parent: EventFrame
                                          highlightthickness: 0
                                          bd:                 4)}
