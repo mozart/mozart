@@ -2418,7 +2418,8 @@ LBLdispatcher:
          PushContX(PC,Y,G,X,predArity);
          CTS->pushFrame(auxPC,auxY,auxG);
        }
-#if 0  // don't like that much flickering for now ... -BL
+#if 0
+       // don't like that much flickering for now ... -BL
        if (e->debugmode() && CTT->getTrace())
          debugStreamUpdate(CTT);
 #endif
