@@ -1134,6 +1134,7 @@ typedef enum {
 } OFlag;
 
 #define DeepnessShift 3
+#define DeepnessMask  ((1<<DeepnessShift)-1)
 
 class Object: public ConstTerm {
   friend void ConstTerm::gcConstRecurse(void);
@@ -1161,6 +1162,11 @@ public:
   int getDeepness()     { return (deepness >> DeepnessShift);}
   int incDeepness()     { deepness += (1<<DeepnessShift); return getDeepness();}
   int decDeepness()     { deepness -= (1<<DeepnessShift); return getDeepness();}
+  void setDeepness(int newval)
+  {
+    int flags = deepness&DeepnessMask;
+    deepness = (newval<<DeepnessShift)|flags;
+  }
 
   Bool isClosedOrClassOrDeepOrLocked() { return (deepness!=0); }
 
