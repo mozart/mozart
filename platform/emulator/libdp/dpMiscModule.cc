@@ -240,7 +240,7 @@ OZ_BI_define(BIgetBroadcastAddresses,0,1)
   // how many interfaces can be there??! :-))
   bsize = sizeof(struct ifreq) * 16;
   buff = (char *) malloc(bsize);
-  if (buff < 0) {
+  if (buff==NULL) {
     close(desc);
     RETURN_UNIX_ERROR("virtual memory exhausted!");
   }
