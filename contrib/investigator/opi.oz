@@ -17,12 +17,8 @@ end
 {ExplorerPluginActivate}
 {BrowserPluginActivate}
 
+declare [R] = {Module.link ['x-oz://contrib/Reflect.ozf']}
 /*
-
-declare [M] = {Module.link ['http://www.ps.uni-sb.de/~tmueller/mozart/refl_constr.so{native}']}
-{Wait M}
-
-thread raise foo end end
 
 
 declare
@@ -67,6 +63,13 @@ in
 {InvestigateConstraints N11}
 {Browse N11}
 
+{Browse {R.spaceReflect N11}}
+
+declare
+ReflectTables = {R.spaceReflect S}
+
+
+{Browse ReflectTables}
 
 % propagators failed during propagation
 declare X Y Z in [X Y Z] ::: 1#10
@@ -87,6 +90,22 @@ B <: C
 
 {InvestigateConstraints A}
 
+
+\insert ~/Programming/Oz/coins.oz
 declare S in {Coins S}
-{Browse S}
+
+declare
+Tables = {R.spaceReflect S}
+
+% propagators failed during propagation
+declare A B C D in
+[A B C  D] ::: 1#10
+A <: B
+C <: D
+B <: C
+
+{InvestigateConstraints A}
+
+{Browse {R.spaceReflect A}}
+
 */

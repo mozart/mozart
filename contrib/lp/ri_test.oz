@@ -206,7 +206,7 @@ local
       of nil#nil then unit#unit
       [] (VH|VT)#(RVH|RVT) then
       % check for integrality
-         case RVH == {Round RVH}
+         if RVH == {Round RVH}
          then {SelectVar VT#RVT}
          else VH#RVH
          end
@@ -235,7 +235,7 @@ local
 
          V#DupV = {SelectVar Vs#DupVs}
 
-         case {IsDet V} then
+         if {IsDet V} then
             DupMaxProfit = MaxProfit
             DupVs        = Vs
          else
