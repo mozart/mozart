@@ -201,7 +201,7 @@ OZ_Term getAsList(const int * bv, int neg = 0, int other = 0)
     }
   }
 
-  return hd ? makeTaggedLTuple(hd) : OZ_nil();
+  return hd ? makeTaggedLTuple(hd) : oz_nil();
 }
 
 #ifndef BIGFSET

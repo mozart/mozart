@@ -831,7 +831,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     OZ_Term abstr_stack_entry =
       thr->getTaskStackRef()->findAbstrRecord();
 
-    if (debug_frame_raw != OZ_nil()) {
+    if (debug_frame_raw != oz_nil()) {
       OZ_Term debug_frame = OZ_head(debug_frame_raw);
 
       const char * fname = OZ_atomToC(OZ_subtree(debug_frame, AtomFile));
@@ -846,7 +846,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
                                     OZ_cons(AtomLine,
                                             OZ_cons(AtomColumn,
                                                     OZ_cons(AtomPath,
-                                                            OZ_nil()))))));
+                                                            oz_nil()))))));
       OZ_putSubtree(prop_loc, AtomPath, OZ_atom(dirname));
       OZ_putSubtree(prop_loc, AtomFile, OZ_atom(basename));
       OZ_putSubtree(prop_loc, AtomLine, OZ_subtree(debug_frame, AtomLine));

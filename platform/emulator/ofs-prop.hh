@@ -51,7 +51,7 @@ public:
   virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
   virtual OZ_Return propagate(void);
   virtual OZ_PropagatorProfile * getProfile(void) const {return &profile; }
-  virtual OZ_Term getParameters(void) const { return oz_nil(); }
+  virtual OZ_Term getParameters(void) const { return AtomNil; }
 };
 
 class MonitorArityPropagator : public OZ_Propagator {
@@ -69,7 +69,7 @@ public:
   virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
   virtual OZ_Return propagate(void);
   virtual OZ_PropagatorProfile * getProfile(void) const {return &profile; }
-  virtual OZ_Term getParameters(void) const { return OZ_nil(); }
+  virtual OZ_Term getParameters(void) const { return AtomNil; }
 };
 
 #endif

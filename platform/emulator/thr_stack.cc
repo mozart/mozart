@@ -172,7 +172,7 @@ TaggedRef TaskStack::findAbstrRecord(void)
                                                     OZ_cons(AtomColumn,
                                                             OZ_cons(AtomPath,
                                                                     OZ_cons(AtomInvoc,
-                                                                            OZ_nil()))))))));
+                                                                            oz_nil()))))))));
         //
         OZ_putSubtree(return_value, AtomName, abstr->getName());
         OZ_putSubtree(return_value, AtomPath, OZ_atom(dirname));

@@ -151,7 +151,7 @@ void WeakDictionary::close()
 {
   if (stream) {
     DEREF(stream,ptr,_);
-    oz_bindFuture(ptr,OZ_nil());
+    oz_bindFuture(ptr,oz_nil());
     stream=0;
   }
 }
