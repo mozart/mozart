@@ -165,7 +165,6 @@ public:
     // getSuspListLength() is intended as consistency check
     out << getSuspListLength() << endl;
   }
-#ifdef TMUELLER
   //
   void dropPropagator(Propagator * prop) {
     for (int i = getNoOfSuspLists(); i--; ) {
@@ -182,7 +181,6 @@ public:
   //
   // end of tagging ...
   //
-#endif
 };
 
 

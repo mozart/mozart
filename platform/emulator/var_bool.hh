@@ -42,16 +42,11 @@
 //-----------------------------------------------------------------------------
 
 class OzBoolVariable : public OzVariable {
-  
+
   friend class OzVariable;
   friend inline void addSuspBoolVar(TaggedRef, Suspendable *);
 
-#ifndef TMUELLER  
-private:
-  OZ_FiniteDomain * store_patch;
-#endif
-
-public:  
+public:
   OzBoolVariable(Board *bb) : OzVariable(OZ_VAR_BOOL,bb)
   {
     ozstat.fdvarsCreated.incf();
@@ -86,12 +81,6 @@ public:
   }
   void propagateUnify() { propagate(pc_cv_unif); }
 
-#ifndef TMUELLER
-  // needed to catch multiply occuring bool vars in propagators
-  void patchStoreBool(OZ_FiniteDomain * d) { store_patch = d; }
-  OZ_FiniteDomain * getStorePatchBool(void) { return store_patch; }
-#endif
-
   OZ_Return unify(TaggedRef*, TaggedRef*);
   OZ_Return bind(TaggedRef*, TaggedRef);
 
@@ -102,7 +91,6 @@ public:
 			int offset = 0) {
     printStream(out,depth); out << endl;
   }
-#ifdef TMUELLER
   //
   void dropPropagator(Propagator * prop) {
     suspList = suspList->dropPropagator(prop);
@@ -116,7 +104,6 @@ public:
   //
   // end of tagging ...
   //
-#endif
 };
 
 inline Bool isGenBoolVar(TaggedRef term);

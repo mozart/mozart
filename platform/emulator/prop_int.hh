@@ -54,7 +54,7 @@ Propagator * oz_newPropagator(OZ_Propagator * p)
 
   bb->incSuspCount();
 
-  /* checkDebug(th,bb); TMUELLER ask BENNI */
+  /* checkDebug(th,bb); tmueller ask BENNI */
 
   return prop;
 }
