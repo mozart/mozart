@@ -43,9 +43,8 @@ the cases above applies
 
 <Para><title/Comparison Procedures/ Oz provides a number of built-in tertiary
 procedures used for comparison. These include <<==>> that we have seen
-earlier as well as <<\=>>, <<=&lt;>>, <<&lt;>>, <<&gt;=>>, <<&gt;>>,
-<!-- DENYS: andthen and orelse are operators not procedures -->
-<<andthen>>, and <<orelse>>. Common to these procedures is that they
+earlier as well as <<\=>>, <<=&lt;>>, <<&lt;>>, <<&gt;=>>, and <<&gt;>>.
+Common to these procedures is that they
 are used as Boolean functions in an infix notation. The following
 example illustrates the use of an If-statement in conjunction with the
 greater-than operator <<&gt;>>.
@@ -99,18 +98,17 @@ proc {P X1 ... Xn} S end
 <SUBSECTION><TITLE>Semantics</TITLE>
 <P>Assume that the variable <<P>> is already introduced; executing the
 above statement will:
-<!-- DENYS: bad explanation -->
 
 <P><LIST>
 
- <ITEM>create a procedure, consisting of a unique name 
- &alfa and an abstraction &lambda;<<(?{X1} ... ?{Xn}).?{S}>>
+ <ITEM>create a unique closure which is essentially a 
+ uniquely named lambda expression &lambda;<<(?{X1} ... ?{Xn}).?{S}>>
 
- <ITEM>This pair is stored in node labeled by ?{P}.
+ <ITEM>The variable ?{P} is bound to the closure.
 
 </LIST>
 
-<P>A procedure in Oz has a unique identity, given by its name, and is
+<P>A procedure in Oz has a unique identity, given by its unique closure, and is
 distinct from all other procedures. Two procedure definitions are
 always different, even if they look similar. Procedures are the first
 Oz values that we encounter, whose equality is based on name
@@ -119,11 +117,10 @@ equality. Others include threads, cells, and chunks.
 
 <SECTION id=control.lexical><TITLE>On Lexical Scoping</TITLE>
 <P>In general, the statement ?{S} in a procedure definition will
-<!-- DENYS: aargh! variable identifier is syntax -->
-<!-- DENYS: `logic variable node' is data -->
-have many <EM>syntactic</EM> variable occurrences. A syntactic
-variable is called an identifier to distinguish it from the logic
-variable that is created at runtime. Some identifier occurrences in
+have many variable occurrences. A 
+variable that occures textually in a statement is called an identifier 
+to distinguish it from the logic
+variable that is a data structure created at runtime. Some identifier occurrences in
 ?{S} are <EM>syntactically bound</EM> while others are
 <EM>free</EM>. An identifier occurrence ?{X}<NOTE FOOT>This rule is 
 approximate, since class methods and patterns bind identifier 
@@ -151,8 +148,8 @@ end
 
 
 <SECTION id=control.anonymous><TITLE>Anonymous Procedures and Variable Initialization</TITLE>
-<P>One could ask why is a variable bound to a procedure in a way that
-is different from the variable being bound to record: 
+<P>One could ask why a variable is bound to a procedure in a way that
+is different from the variable being bound to a record: 
 <<X = ?{f(...)}>>? The answer is that what you see is just a syntactic
 variant of the equivalent form
 
