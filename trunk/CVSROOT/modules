@@ -37,8 +37,4 @@ rcsinfo		CVSROOT rcsinfo
 editinfo	CVSROOT editinfo
 
 # Add other modules here...
-CPS		CPS
-Oz		Oz
-OzPar		OzPar
 mozart		mozart
-stockhausen	stockhausen
