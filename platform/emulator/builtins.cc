@@ -5408,9 +5408,106 @@ OZ_BI_define(BIfindFunction,3,0)
   return PROCEED;
 } OZ_BI_end
 
+
+static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I) {
+  OZ_Term l = nil();
+
+  Builtin *bi;
+
+  while (I && I->name) {
+    bi = new Builtin(I->name,I->inArity,I->outArity,I->func,OK);
+    l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
+    I++;
+  }
+
+  return OZ_recordInit(AtomForeign,l);
+}
+
+#ifdef STATIC_LIBWIF
+#include "libwif.dcl"
+
+static OZ_C_proc_interface libwif_interface[] = {
+#include "libwif.tbl"
+ {0,0,0,0}
+};
+
+#endif
+
+#ifdef STATIC_LIBFD
+#include "libfd.dcl"
+
+static OZ_C_proc_interface libfd_interface[] = {
+#include "libfd.tbl"
+ {0,0,0,0}
+};
+
+#include "libschedule.dcl"
+
+static OZ_C_proc_interface libschedule_interface[] = {
+#include "libschedule.tbl"
+ {0,0,0,0}
+};
+
+#endif
+
+#ifdef STATIC_LIBFSET
+#include "libfset.dcl"
+
+static OZ_C_proc_interface libset_interface[] = {
+#include "libfset.tbl"
+ {0,0,0,0}
+};
+
+#endif
+
+#ifdef STATIC_LIBPARSER
+#include "libparser.dcl"
+
+static OZ_C_proc_interface libparser_interface[] = {
+#include "libparser.tbl"
+ {0,0,0,0}
+};
+
+#endif
+
+
+OZ_BI_define(BIdlStaticLoad,1,1)
+{
+  oz_declareVirtualStringIN(0,basename);
+
+  OZ_C_proc_interface * I = 0;
+
+#ifdef STATIC_LIBWIF
+  if (!strcmp(basename, "libwif.so"))
+     I = libwif_interface;
+#endif
+
+#ifdef STATIC_LIBFD
+  if (!strcmp(basename, "libfd.so"))
+     I = libfd_interface;
+
+  if (!strcmp(basename, "libschedule.so"))
+     I = libschedule_interface;
+#endif
+
+#ifdef STATIC_LIBFSET
+  if (!strcmp(basename, "libfset.so"))
+     I = libset_interface;
+#endif
+
+#ifdef STATIC_LIBPARSER
+  if (!strcmp(basename, "libparser.so"))
+     I = libparser_interface;
+#endif
+
+  OZ_RETURN(I ? ozInterfaceToRecord(I) : NameUnit);
+
+} OZ_BI_end
+
 OZ_BI_define(BIdlLoad,1,1)
 {
   oz_declareVirtualStringIN(0,filename);
+
   TaggedRef hdl;
   OZ_Return res = osDlopen(filename,hdl);
   if (res!=PROCEED) return res;
@@ -5420,14 +5517,8 @@ OZ_BI_define(BIdlLoad,1,1)
   if (I==0)
     return oz_raise(E_ERROR,AtomForeign, "cannotFindInterface", 1,
                     OZ_in(0));
-  OZ_Term l = nil();
-  Builtin *bi;
-  while (I->name) {
-    bi = new Builtin(I->name,I->inArity,I->outArity,I->func,OK);
-    l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
-    I++;
-  }
-  OZ_RETURN(oz_pair2(hdl,OZ_recordInit(AtomForeign,l)));
+
+  OZ_RETURN(oz_pair2(hdl,ozInterfaceToRecord(I)));
 } OZ_BI_end
 
 /* ------------------------------------------------------------

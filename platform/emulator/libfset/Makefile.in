@@ -33,7 +33,7 @@ FSETLIBSRCS =   standard.cc telling.cc \
                 testing.cc fsaux.cc \
                 intsets.cc monitor.cc \
                 reified.cc fsstd.cc \
-                std_n.cc
+                std_n.cc table.cc
 
 FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
@@ -45,10 +45,10 @@ libfset.so: $(FSETLIBOBJS)
 libfset.a: $(FSETLIBOBJS)
         $(AR) -rc $@ $(FSETLIBOBJS) && $(RANLIB) $@
 
-install:: @INSTALL_PROP@
+install:: @FSETINSTALL@
 
-install-prop:
-        $(INSTALL_BIN) $(FSETTARGETS) $(bindir)
+install-fset:
+        $(INSTALL_BIN) $(FSETTARGETS) $(BINDIR)
 
 depend:: Makefile $(FSETLIBSRCS)
         $(DEPEND) $(FSETLIBSRCS:%=$(FSETDIR)/%) > Makefile.deps

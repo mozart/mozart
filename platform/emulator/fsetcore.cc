@@ -344,10 +344,10 @@ OZ_C_proc_begin(BIfsCardRange, 3)
 }
 OZ_C_proc_end
 
-#include "fsbuilti.dcl"
+#include "fsetbuilti.dcl"
 static
 BIspec fdSpec[] = {
-#include "fsbuilti.tbl"
+#include "fsetbuilti.tbl"
   {0,0,0,0}
 };
 

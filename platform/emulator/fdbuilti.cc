@@ -1138,6 +1138,7 @@ OZ_C_proc_end
 // Introduce FD Built-ins to the Emulator
 
 #include "fdbuilti.dcl"
+
 static
 BIspec fdSpec[] = {
 #include "fdbuilti.tbl"

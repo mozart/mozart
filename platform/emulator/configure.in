@@ -541,22 +541,6 @@ OZ_ENABLE_YES(regopt,[   register optimization],
         AC_DEFINE(REGOPT)
         )
 
-OZ_ENABLE_YES(linkprop,[ link propagators statically],
-        AC_MSG_RESULT(yes (-UFOREIGNFDPROPS))
-        FDTARGETS="libfd.a libsched.a"
-        FSETTARGETS="libfset.a"
-        LIBS="-L./libfd -lfd -lsched -L./libfset -lfset $LIBS"
-        ,
-        AC_MSG_RESULT(no (-DFOREIGNFDPROPS))
-        AC_DEFINE(FOREIGNFDPROPS)
-        FDTARGETS="libfd.so libsched.so"
-        FSETTARGETS="libfset.so"
-        INSTALL_PROP="install-prop"
-        )
-AC_SUBST(FDTARGETS)
-AC_SUBST(FSETTARGETS)
-AC_SUBST(INSTALL_PROP)
-
 OZ_ENABLE_YES(peanuts,[  use peanuts file],
         AC_MSG_RESULT(yes)
         PEANUTS="\$(PEANUTSFILE)"
@@ -565,6 +549,60 @@ OZ_ENABLE_YES(peanuts,[  use peanuts file],
         PEANUTS="\$(PEANUTS)"
         )
 AC_SUBST(PEANUTS)
+
+
+
+OZ_ENABLE_YES(linkwif,[ link libwif statically],
+        AC_MSG_RESULT(yes (-DSTATIC_LIBWIF))
+        AC_DEFINE(STATIC_LIBWIF)
+        WIFTARGETS="libwif.a"
+        LIBS="-lwif $LIBS"
+        ,
+        AC_MSG_RESULT(no (-USTATIC_LIBWIF))
+        WIFTARGETS="libwif.so"
+        WIFINSTALL="install-wif"
+        )
+AC_SUBST(WIFTARGETS)
+AC_SUBST(WIFINSTALL)
+
+OZ_ENABLE_YES(linkfd,[ link libfd and libschedule statically],
+        AC_MSG_RESULT(yes (-DSTATIC_LIBFD))
+        AC_DEFINE(STATIC_LIBFD)
+        FDTARGETS="libfd.a libschedule.a"
+        LIBS="-L./libfd -lfd -lschedule $LIBS"
+        ,
+        AC_MSG_RESULT(no (-USTATIC_LIBFD))
+        FDTARGETS="libfd.so libschedule.so"
+        FDINSTALL="install-fd"
+        )
+AC_SUBST(FDTARGETS)
+AC_SUBST(FDINSTALL)
+
+OZ_ENABLE_YES(linkfset,[ link libfset statically],
+        AC_MSG_RESULT(yes (-DSTATIC_LIBFSET))
+        AC_DEFINE(STATIC_LIBFSET)
+        FSETTARGETS="libfset.a"
+        LIBS="-L./libfset -lfset $LIBS"
+        ,
+        AC_MSG_RESULT(no (-USTATIC_LIBFSET))
+        FSETTARGETS="libfset.so"
+        FSETINSTALL="install-fset"
+        )
+AC_SUBST(FSETTARGETS)
+AC_SUBST(FSETINSTALL)
+
+OZ_ENABLE_YES(linkparser,[ link libparser statically],
+        AC_MSG_RESULT(yes (-DSTATIC_LIBPARSER))
+        AC_DEFINE(STATIC_LIBPARSER)
+        PARSERTARGETS="libparser.a"
+        LIBS="-L. -lparser $LIBS"
+        ,
+        AC_MSG_RESULT(no (-USTATIC_LIBPARSER))
+        PARSERTARGETS="libparser.so"
+        PARSERINSTALL="install-parser"
+        )
+AC_SUBST(PARSERTARGETS)
+AC_SUBST(PARSERINSTALL)
 
 
 dnl *****************************************************************
