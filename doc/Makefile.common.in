@@ -38,19 +38,26 @@ Makefile: $(SRCDIR)/Makefile.in ../config.status
 $(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
         --type=html-stylesheets --stylesheet=ozdoc.css \
+        --bib-path=$(SRCDIR):$(SRCTOP)/doc \
+        --bst-path=$(SRCTOP)/doc/utilities \
         --xrefdb=../xref.db --xrefdir=$(WHAT) && \
         cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
         for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)); do cp -p $$i $(WHAT)-html; done
 
 $(WHAT)-tex/$(WHAT).ps: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
         $(DOCIFY) $(OZDOCTEXFLAGS) --in=$< --out=$(WHAT)-tex \
-        --type=latex && \
+        --type=latex \
+        --bib-path=$(SRCDIR):$(SRCTOP)/doc \
+        --bst-path=$(SRCTOP)/doc/utilities && \
         for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(TEXEXTRAFILES)); do cp -p $$i $(WHAT)-tex; done
 
 quick: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
         --type=html-stylesheets --stylesheet=ozdoc.css --keeppictures \
-        --latexdb=latex.db && \
+        --bib-path=$(SRCDIR):$(SRCTOP)/doc \
+        --bst-path=$(SRCTOP)/doc/utilities \
+        --latexdb=latex.db \
+        --xrefdb=../xref.db --xrefdir=$(WHAT) && \
         cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
         for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)); do cp -p $$i $(WHAT)-html; done
 
