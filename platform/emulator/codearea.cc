@@ -352,13 +352,13 @@ void AbstractionEntry::setPred(Abstraction * ab) {
 
 #ifdef DEBUG_CHECK
 
-void displayCode(ProgramCounter from, int ssize)
+extern "C" void displayCode(ProgramCounter from, int ssize)
 {
   CodeArea::display(from,ssize,stderr);
   fflush(stderr);
 }
 
-void displayDef(ProgramCounter from, int ssize)
+extern "C" void displayDef(ProgramCounter from, int ssize)
 {
   ProgramCounter start=CodeArea::printDef(from,stderr);
   if (start != NOCODE) CodeArea::display(start,ssize,stderr,from);

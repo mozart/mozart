@@ -436,8 +436,8 @@ int perdioInit();
 void initLiterals();
 
 // see codearea.cc
-void displayCode(ProgramCounter from, int ssize);
-void displayDef(ProgramCounter from, int ssize);
+extern "C" void displayCode(ProgramCounter from, int ssize);
+extern "C" void displayDef(ProgramCounter from, int ssize);
 
 // see builtins.cc
 Builtin *BIinit();
