@@ -85,12 +85,12 @@ in
 	    Gui,doStatus('There is no thread selected')
 	 else
 	    I = {Thread.id T}
-	    R = case {Dbg.checkStopped T} then stopped else running end
+	    R = case {Dbg.checkStopped T} then 'stopped' else 'not stopped' end
 	    S = {Thread.state T}
 	 in
 	    Gui,doStatus('Currently selected thread: #' # I # '/' #
 			 {Thread.parentId T} #
-			 ' (' # R # ' / ' # S # ')')
+			 ' (' # R # ', ' # S # ')')
 	 end
       end
 

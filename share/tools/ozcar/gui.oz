@@ -748,9 +748,7 @@ in
 	    elsecase A == StepButtonBitmap then
 	       T = @currentThread
 	    in
-	       case T == unit then
-		  Gui,doStatus(FirstSelectThread)
-	       else
+	       case T == unit then skip else
 		  I = {Thread.id T}
 		  S = {CheckState T}
 	       in
@@ -762,6 +760,12 @@ in
 		     TopFrame = {@currentStack getTop($)}
 		  in
 		     case TopFrame == unit then skip else
+			case TopFrame.dir == exit then skip else
+			   N = {@currentStack incStep($)} in
+			   Gui,status(N # ' step' #
+				      case N == 1 then '' else 's' end #
+				      ' into')
+			end
 			Gui,ContinueTo(T TopFrame)
 		     end
 		  end
@@ -770,9 +774,7 @@ in
 	    elsecase A == NextButtonBitmap then
 	       T = @currentThread
 	    in
-	       case T == unit then
-		  Gui,doStatus(FirstSelectThread)
-	       else
+	       case T == unit then skip else
 		  I = {Thread.id T}
 		  S = {CheckState T}
 	       in
@@ -784,9 +786,11 @@ in
 		     TopFrame = {@currentStack getTop($)}
 		  in
 		     case TopFrame == unit then skip else
-			case TopFrame.dir == exit then
-			   {OzcarMessage '`next\' on exit --> doing a `step\''}
-			else
+			case TopFrame.dir == exit then skip else
+			   N = {@currentStack incNext($)} in
+			   Gui,status(N # ' step' #
+				      case N == 1 then '' else 's' end #
+				      ' over')
 			   {Dbg.step T false}
 			end
 			Gui,ContinueTo(T TopFrame)
@@ -797,9 +801,7 @@ in
 	    elsecase A == UnleashButtonBitmap then
 	       T = @currentThread
 	    in
-	       case T == unit then
-		  Gui,doStatus(FirstSelectThread)
-	       else
+	       case T == unit then skip else
 		  I = {Thread.id T}
 		  S = {CheckState T}
 	       in
@@ -957,8 +959,8 @@ in
       end
 
       meth Append(Widget Text Color<=DefaultForeground)
-	 {ForAll [tk(insert 'end' Text)
-		  tk(conf fg:Color)] Widget}
+	 {Widget tk(insert 'end' Text)}
+	 {Widget tk(conf fg:Color)}
       end
 
       meth Disable(Widget)

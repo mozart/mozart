@@ -126,12 +126,23 @@ in
 
 	 Exception : nil   % saved exception
 
+	 Step : 1
+	 Next : 1
+
       meth init(thr:Thr id:ID)
 	 self.T = Thr
 	 self.I = ID
 	 self.D = {Dictionary.new}
 	 Size    <- 0
 	 Rebuild <- false
+      end
+
+      meth incStep($)
+	 Step <- @Step+1
+      end
+
+      meth incNext($)
+	 Next <- @Next+1
       end
 
       meth getFrame(Nr $)
