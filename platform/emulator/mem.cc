@@ -98,15 +98,15 @@ void initMemoryManagement(void)
 
 #if defined(USE_MMAP)
 
+#include <sys/mman.h>
+#include <fcntl.h>
+
 // kost@ : Linux has MAP_ANON(YMOUS), while e.g. Solaris does not.
 #if defined(MAP_ANON) && !defined(MAP_ANONYMOUS)
 #define MAP_ANONYMOUS   MAP_ANON
 #elif defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
 #define MAP_ANON        MAP_ANONYMOUS
 #endif
-
-#include <sys/mman.h>
-#include <fcntl.h>
 
 //
 void ozFree(char *addr, size_t size)
