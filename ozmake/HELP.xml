@@ -1006,6 +1006,10 @@ compiler), <tool>ld</tool> (C++ linker).  The default rules are:</p>
           <dleft><oz>executable</oz></dleft>
           <dright>make the result executable</dright>
         </dentry>
+	<dentry>
+	  <dleft><oz>'define'(S)</oz></dleft>
+	  <dright>define macro <oz>S</oz>.  Same as <cmd>-D<oz>S</oz></cmd> on the command line</dright>
+	</dentry>
       </dlist>
     </dright>
   </dentry>

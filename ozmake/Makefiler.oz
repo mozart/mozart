@@ -522,6 +522,10 @@ define
 		  for O in Rule.options do
 		     case O
 		     of executable then skip
+		     [] 'define'(S) then
+			if {Not {IsVirtualString S}} then
+			   raise ozmake(makefile:illegaltooloptionarg(ozc O)) end
+			end
 		     else raise ozmake(makefile:illegaltooloption(ozc O)) end end
 		  end
 	       [] ozl then

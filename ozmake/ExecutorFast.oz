@@ -11,12 +11,16 @@ import
 define
    class ExecutorFast
       meth exec_fast_ozc(FromFile ToFile
+			 defines    : Defines    <= nil
 			 debug      : Debug      <= false
 			 executable : Executable <= false
 			 gumpdir    : Gumpdir    <= unit)
 	 BatchCompiler = {New Compiler.engine init()}
 	 UI = {New Compiler.interface init(BatchCompiler auto)}
       in
+	 for D in Defines do
+	    {BatchCompiler enqueue(macroDefine(D))}
+	 end
 	 {BatchCompiler enqueue(setSwitch(showdeclares false))}
 	 {BatchCompiler enqueue(setSwitch(threadedqueries false))}
 	 if Gumpdir==unit then D={Path.dirname ToFile} in
