@@ -144,6 +144,33 @@
           <Td/integer/
           <Td/Time before a non responded ping defines temp in milliseconds./
         </Tr>
+        <Tr>
+          <Td/<<openTimeout>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Maximum time to wait for a response when establishing a
+              connection./
+        </Tr>
+        <Tr>
+          <Td/<<closeTimeout>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Maximum time to wait for a connection to close./
+        </Tr>
+        <Tr>
+          <Td/<<wfRemoteTimeout>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Maximum time to wait for a remote peer to reopen a connection
+              after being remotely closed due to lack of resources./
+        </Tr>
+        <Tr>
+          <Td/<<firewallReopenTimeout>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Time to wait before reopening a connection after being remotely
+              closed due to lack of resources when behind a firewall./
+        </Tr>
 <!--
         <Tr>
           <Td/<<isprobing>>/

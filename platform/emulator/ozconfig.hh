@@ -85,6 +85,11 @@ public:
   int dpProbeInterval;
   int dpProbeTimeout;
 
+  int dpOpenTimeout;
+  int dpCloseTimeout;
+  int dpWFRemoteTimeout;
+  int dpFirewallReopenTimeout;
+
   int dpTableDefaultOwnerTableSize;
   int dpTableDefaultBorrowTableSize;
   int dpTableLowLimit;

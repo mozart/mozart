@@ -99,6 +99,10 @@ void ConfigData::init() {
   dpTCPWeakLimit = DP_TCPWEAKLIMIT;
   dpProbeInterval = DP_PROBEINTERVAL;
   dpProbeTimeout = DP_PROBETIMEOUT;
+  dpOpenTimeout = DP_PROBETIMEOUT / 10;
+  dpCloseTimeout = DP_PROBETIMEOUT * 10;
+  dpWFRemoteTimeout = DP_PROBETIMEOUT * 100;
+  dpFirewallReopenTimeout = DP_PROBETIMEOUT / 10;
 
   dpTableDefaultOwnerTableSize = DEFAULT_OWNER_TABLE_SIZE;
   dpTableDefaultBorrowTableSize = DEFAULT_BORROW_TABLE_SIZE;
