@@ -61,6 +61,7 @@ Builtin *bi_raise, *bi_raiseError, *bi_raiseDebug;
  *=================================================================== */
 
 
+// mm2: what's the magic here?
 int Name::NameCurrentNumber = 0x200000;
 
 const char *Literal::getPrintName()
