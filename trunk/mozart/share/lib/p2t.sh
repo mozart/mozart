@@ -22,7 +22,7 @@ fi
 
 if test -z "$OZEMULATOR"
 then
-    echo Fatal error: oz.emulator.bin not found
+    echo Fatal error: oz.emulator.bin not found 1>&2
     exit 1
 fi
 
@@ -43,7 +43,7 @@ fi
 
 if test -z "$TEXT2PICKLE"
 then
-    echo Fatal error: text2pickle not found
+    echo Fatal error: text2pickle not found 1>&2
     exit 1
 fi
 
