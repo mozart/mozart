@@ -18,7 +18,7 @@ A multitasking system can host several sites.
 An Oz language entity has the same
 <index id=idx.languagesemantics/language semantics/
 <index id=idx.semanticslanguage/semantics<and>language/
-<index id=idx.semanticscentralized/semantics<and>centralized/
+<index see=idx.languagesemantics/centralized semantics/
 language semantics whether it is used on only one site
 or on several sites.
 We say that Mozart is
@@ -90,8 +90,8 @@ among the sites, giving everyone a fair share of the object use.
 
 <P>The site where the object is created
 is called its
-<index id=idx.ownersite/owner site/
-<index id=idx.siteowner/site<and>owner/
+<index/owner site/
+<index/site<and>owner/
 <EM>owner site</EM>.
 A reference to an object on its owner site
 is called an <EM>owner</EM> or <EM>owner node</EM>.
@@ -118,7 +118,7 @@ Once the class is on the site, no further copies are done.
 
 <ITEM> <EM>Stationary object (server)</EM>:
 <index id=stationaryobject/stationary object/
-<index id=objectstationary/object<and>stationary/
+<index/object<and>stationary/
 A stationary object remains on the site at which it was created.
 Each method invocation uses one message to start the method
 and one message to synchronize with the caller
@@ -237,7 +237,7 @@ are those that can be assigned only to one value:
 <ITEM> <EM>Logic variable</EM>:
 <index id=idx.logicvariable/logic variable/
 <index id=idx.variablelogic/variable<and>logic/
-<index see=idx.logicvariable/logic variable/
+<index see=idx.logicvariable/variable/
 Logic variables have two operations:
 they can be bound (i.e., assigned)
 or read (i.e., wait until bound).
