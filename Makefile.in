@@ -96,6 +96,9 @@ INSTALLDIRS=	$(PREFIX) $(DIRS:%=$(PREFIX)/%)
 
 all:: bootstrap
 
+platform:
+	(cd $@; make bootstrap)
+
 bootstrap clean veryclean depend distclean check install::
 	dirs="$(SUBDIRS)"; \
 	for i in $$dirs; do \
