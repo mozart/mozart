@@ -437,6 +437,7 @@ if that value is non-nil."
 
 
 
+(autoload 'gdb-machine "gdb" "" t)
 (defvar gdb-oz-machine "oz.machine.bin")
 
 (defun gdb-machine (tmpfile)
