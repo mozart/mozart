@@ -14,7 +14,7 @@
 
 #include "tagged.hh"
 
-char *TypeOfTermString[2<<tagSize];
+char *TypeOfTermString[1<<tagSize];
 
 
 void initTagged()
