@@ -1,3 +1,14 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
 #include "telling.hh"
 
 OZ_C_proc_begin(fsp_tellIsIn, 2)

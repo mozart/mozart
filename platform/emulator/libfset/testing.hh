@@ -9,8 +9,10 @@
   ------------------------------------------------------------------------
 */
 
-#include "fsstd.hh"
+#ifndef __TESTING_HH__
+#define __TESTING_HH__
 
+#include "fsstd.hh"
 
 class IsInPropagator : public Propagator_S_I_D {
 private:
@@ -25,3 +27,8 @@ public:
     return spawner;
   }
 };
+
+#endif /* __TESTING_HH__ */
+
+//-----------------------------------------------------------------------------
+// eof

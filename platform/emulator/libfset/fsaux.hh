@@ -1,4 +1,18 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
 #include "../oz_cpi.hh" // TMUELLER
+
+#ifndef __FSAUX_HH__
+#define __FSAUX_HH__
 
 //#define OZ_DEBUG
 
@@ -197,3 +211,8 @@ public:
     return OZ_FALSE;
   }
 };
+
+#endif /* __FSAUX_HH__ */
+
+//-----------------------------------------------------------------------------
+// eof
