@@ -1511,13 +1511,12 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
         OZ_CFun biFun    = (OZ_CFun) pop();
         Suspension* susp = (Suspension*) pop();
         RefsArray X      = (RefsArray) pop();
-        message("\tC_CFUNC_CONT: board=0x%x, biFun=0x%x, susp=0x%x\n",
-               n , biFun, susp);
-        if (X != NULL) {
-          printX(stdout,X);
-        } else {
-          message("\t\tNo arguments.\n");
+        message("\tBuiltin: {%s", builtinTab.getName((void *) biFun));
+        for(int i=0; i<getRefsArraySize(X); i++) {
+          printf(" ");
+          printf(OZ_toC(X[i]));
         }
+        printf("}\n");
         break;
       }
 
@@ -1532,9 +1531,9 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
       {
         SRecord *s = (SRecord *) pop();
         RefsArray X = (RefsArray) pop();
-        if (!verbose) break;
         message("\tC_DEBUG_CONT: board=0x%x, Pred=0x%x\n", n, s);
         printX(stdout,X);
+        if (!verbose) break;
         break;
       }
 
