@@ -98,8 +98,11 @@ define
 	       Key   = {VirtualString.toAtom Title}
 	    in
 	       chunk(OzDocToCode,Get(Key $))
-	    elsecase M of _|_ then M
-	    elsecase M of nil then nil end
+	    else
+	       case M of _|_ then M
+	       elsecase M of nil then nil
+	       end
+	    end
 	    # OzDocToCode,BatchCode(Node I+1 $)
 	 else nil end
       end
