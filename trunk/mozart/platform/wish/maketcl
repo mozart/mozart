@@ -2,8 +2,12 @@
 
 set -x
 
-TK=tk4.1
-TCL=tcl7.5
+TK=tk4.2
+TCL=tcl7.6
+
+TCLHOME=/project/ps/soft/$TCL
+
+############################################################
 
 cd $TCL/unix
 rm -rf dltest
@@ -19,8 +23,11 @@ make
 
 cd ../..
 
-LIBDIR=/project/ps/soft/$TCL/platform/`ozplatform`
+LIBDIR=$TCLHOME/platform/`ozplatform`
 mkdir -p $LIBDIR/lib
-cp $TCL/unix/libtcl7*5.a $LIBDIR/lib/libtcl.a
-cp $TK/unix/libtk4*1.a $LIBDIR/lib/libtk.a
+cp $TCL/unix/libtcl7*6.a $LIBDIR/lib/libtcl.a
+cp $TK/unix/libtk4*2.a $LIBDIR/lib/libtk.a
 ranlib $LIBDIR/lib/*.a
+
+mkdir -p $TCLHOME/include
+cp $TCL/generic/tcl.h $TK/generic/tk.h $TCLHOME/include
