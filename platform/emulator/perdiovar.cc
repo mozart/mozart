@@ -20,7 +20,7 @@
 // bind and inform sites
 
 // from perdio.cc
-int bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v);
+void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v);
 int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar);
 
 void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
@@ -56,14 +56,19 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef * lPtr, TaggedRef * rPtr, Bool prop)
 
     PerdioVar *rVar = tagged2PerdioVar(rVal);
 
+    PD(PD_VAR,"unify i:%d i:%d",lVar->getIndex(),rVar->getIndex());
+
     if (prop) {
       if (am.isLocalSVar(lVar)) {
         if (am.isLocalSVar(rVar)) {
           int cmp = compareNetAddress(lVar,rVar);
           Assert(cmp!=0);
-          return cmp<0
-            ? bindPerdioVar(lVar,lPtr,makeTaggedRef(rPtr))
-            : bindPerdioVar(rVar,rPtr,makeTaggedRef(lPtr));
+          if (cmp<0) {
+            bindPerdioVar(lVar,lPtr,makeTaggedRef(rPtr));
+          } else {
+            bindPerdioVar(rVar,rPtr,makeTaggedRef(lPtr));
+          }
+          return TRUE;
         }
         am.doBindAndTrail(rVal, rPtr,makeTaggedRef(lPtr));
         return TRUE;
@@ -75,7 +80,8 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef * lPtr, TaggedRef * rPtr, Bool prop)
 
   Assert(!isAnyVar(rVal));
   if (prop && am.isLocalSVar(lVar)) {
-    return bindPerdioVar(lVar,lPtr,rVal);
+    bindPerdioVar(lVar,lPtr,rVal);
+    return TRUE;
   } else {
     if (prop) am.checkSuspensionList(lVal,pc_std_unif);
     am.doBindAndTrail(lVal, lPtr,rVal);

@@ -4391,8 +4391,8 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   CheckLocalBoard(port,"port");
 
   if(tt==Te_Proxy) {
-    int ret=remoteSend((PortProxy*) port,val);
-    return ret;
+    remoteSend((PortProxy*) port,val);
+    return PROCEED;
   }
   LTuple *lt = new LTuple(val,am.currentUVarPrototype);
 
@@ -4427,8 +4427,8 @@ OZ_Return closePort(OZ_Term prt)
   CheckLocalBoard(port,"port");
 
   if(tt==Te_Proxy) {
-    int ret=remoteClose((PortProxy*) port);
-    return ret;
+    remoteClose((PortProxy*) port);
+    return PROCEED;
   }
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(nil());
 
