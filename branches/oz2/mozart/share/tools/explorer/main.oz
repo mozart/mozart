@@ -104,6 +104,13 @@ in
 	 end
       end
 
+      meth script(Solver Order <=false)
+	 lock
+	    ExplorerClass,Init
+	    {@MyManager query(proc {$ X} {Solver X} end Order)}
+	 end
+      end
+
       meth one(Solver Order <=false)
 	 lock
 	    ExplorerClass,solver(Solver Order)
