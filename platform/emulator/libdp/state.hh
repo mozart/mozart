@@ -156,6 +156,7 @@ public:
 
 class LockSec : public LockSecEmul {
 public:
+  USEHEAPMEMORY;
   NO_DEFAULT_CONSTRUCTORS2(LockSec)
   LockSec(Thread *t,PendThread *pt){ // on globalize
     Assert(sizeof(LockSecEmul) == sizeof(LockSec));

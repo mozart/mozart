@@ -126,8 +126,21 @@ public:
     return (Chain *)genFreeListManager->getOne_4();}    
 
   void free(){
+    // Must destruct all its sub element. 
+    while(first!=NULL){
+      ChainElem *tmp = first->next;
+      first->free();
+      first = tmp;
+    }
+    
+    while(inform!=NULL){
+      InformElem *tmp = inform->next;
+      inform->free();
+      inform = tmp;
+    }
+    
     genFreeListManager->putOne_4((FreeListEntry*) this);}    
-
+  
   Chain(DSite* s){
     ChainElem *e=new ChainElem(s);
     inform=NULL;
