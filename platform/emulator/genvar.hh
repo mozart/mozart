@@ -106,6 +106,7 @@ public:
   // methods relevant for term copying (gc and solve)
   GenCVariable * gc(void);
   void gcRecurse(void);
+  Bool dealloc(void);
 
   // unifies a generic variable with another generic variable
   // or a non-variable

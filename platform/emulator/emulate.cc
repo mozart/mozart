@@ -3529,6 +3529,8 @@ LBLfailure:
       Assert(0);
     }
 
+    saa->dealloc();
+
   } else if (CTT == AWActor::Cast(aa)->getThread()) {
     // pseudo flat guard
     Assert(CAA==aa);

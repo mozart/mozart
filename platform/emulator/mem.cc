@@ -55,8 +55,10 @@ char *heapEnd;
 
 void initMemoryManagement(void) {
   // init free store list
-  for(int i=0; i<freeListMaxSize; i++)
+  for(int i=freeListMaxSize; i--; )
     FreeList[i] = NULL;
+
+  nextChopSize = 8; // Do not change until you know what you are doing!
 
   // init heap memory
   heapTotalSizeBytes = heapTotalSize = 0;
@@ -72,21 +74,7 @@ void initMemoryManagement(void) {
 // free list memory
 
 void *FreeList[freeListMaxSize];
-
-void *freeListMallocOutline(size_t chunk_size)
-{
-  return freeListMalloc(chunk_size);
-}
-
-
-void freeListDisposeOutline(void *addr, size_t chunk_size)
-{
-#ifndef CS_PROFILE
-  freeListDispose(addr,chunk_size);
-#endif
-}
-
-
+size_t nextChopSize;
 
 void heapFree(void * /* addr */)
 {
@@ -94,8 +82,7 @@ void heapFree(void * /* addr */)
 }
 
 // count bytes free in FreeList memory
-unsigned int getMemoryInFreeList()
-{
+unsigned int getMemoryInFreeList() {
   unsigned int sum = 0;
   void *ptr;
 
@@ -106,17 +93,18 @@ unsigned int getMemoryInFreeList()
       ptr = *(void **)ptr;
     }
   }
+
   return sum;
 }
 
+#ifdef DEBUG_MEM
 // this function is intended to check the consistency of the free list
 // memory
-void scanFreeList(void)
-{
+void scanFreeList(void) {
   for (int i = freeListMaxSize; i--; )
     for (void * ptr = FreeList[i]; ptr; ptr = * (void **) ptr);
 }
-
+#endif
 
 // ----------------------------------------------------------------
 // mem from os with 2 alternatives

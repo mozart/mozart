@@ -60,6 +60,7 @@ public:
   }
 
   void gc(GenFSetVariable *);
+  void dealloc(void);
   void dispose(void);
 
   Bool unifyFSet(OZ_Term *, OZ_Term, OZ_Term *, OZ_Term,

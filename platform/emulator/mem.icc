@@ -33,47 +33,91 @@
 
 
 inline
-void * freeListMalloc(size_t chunk_size)
-{
-  Assert(((chunk_size & 3) == 0) && (chunk_size > 0));
+void * freeListMalloc(size_t size) {
+  Assert(((size & 3) == 0) && (size > 0));
 
-  void **freeListCache = FreeList;
-  void *aux = chunk_size < freeListMaxSize ? freeListCache[chunk_size] : NULL;
+  if (size < freeListMaxSize) {
 
-  //  DebugMem(aux = NULL);
+    register void ** fl = &(FreeList[size]);
+    register void * aux = *fl;
 
-  if (aux == NULL) {
-    aux = heapMalloc(chunk_size);
-  } else {
-    COUNT1(freeListAllocated,chunk_size);
-    freeListCache[chunk_size] = *(void **)aux;
+    if (aux) {
+      *fl = *((void **) aux);
+      DebugMem(memset((char *)aux,0x5A,size));
+      return aux;
+    }
+
   }
-  DebugMem(memset((char *)aux,0x5A,chunk_size));
+
+  register void * aux = heapMalloc(size);
+
+  DebugMem(memset((char *)aux,0x5A,size));
 
   return aux;
 }
 
+
+static void freeListChop(void * addr, size_t size);
+
 inline
-void freeListDispose(void * addr, size_t chunk_size)
-{
-  Assert((chunk_size & 3) == 0);
-  Assert(chunk_size > 0);
+void freeListDisposeNoClean(void * addr, size_t size) {
+  Assert((size & 3) == 0);
+  Assert(size > 0);
 
-  DebugCode(memset((char *)addr,0x5A,chunk_size));
+  register void ** fl;
 
-  if (chunk_size < freeListMaxSize) {
+  if (size < freeListMaxSize) {
+    fl = &(FreeList[size]);
 #ifdef DEBUG_MEM
-    void * aux = FreeList[chunk_size];
+    void * aux = *fl;
     while (aux) {
-      if (aux == addr)
-        warning("Entering chunk twice.");
+      Assert(aux != addr);
       aux = * (void **) aux;
     }
 #endif
-    *(void **)addr =  FreeList[chunk_size];
-    FreeList[chunk_size] = addr;
-    COUNT1(freeListDisposed,chunk_size);
+    *((void **) addr) = *fl;
+    *fl = addr;
+  } else {
+    freeListChop(addr, size);
   }
+
+}
+
+inline
+void freeListDispose(void * addr, size_t chunk_size) {
+
+  DebugCode(memset((char *)addr,0x5A,chunk_size));
+
+  freeListDisposeNoClean(addr, chunk_size);
+
+}
+
+
+static void freeListChop(void * addr, size_t size) {
+  // Chop the chunk into pieces of the likely sizes
+  // Likely sizes are between 8 and 32.
+
+  register size_t cs = nextChopSize;
+
+  if (nextChopSize > 32)
+    nextChopSize = 8;
+  else
+    nextChopSize += 4;
+
+  register size_t s     = size;
+  register void ** fl   = &(FreeList[cs]);
+  register void * prev  = *fl;
+  register void * small = addr;
+
+  do {
+    *((void **) small) = prev;
+    prev = small;
+    small = (void *) ((char *) small + cs);
+    s     -= cs;
+  } while (s > cs);
+
+  *fl = prev;
+
 }
 
 // return used kilo bytes on the heap

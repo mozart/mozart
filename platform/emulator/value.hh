@@ -1216,6 +1216,9 @@ public:
   OZPRINTLONG;
   NO_DEFAULT_CONSTRUCTORS(SRecord);
 
+  void dealloc(void);
+  void deallocRecurse(void);
+
   SRecord *gcSRecord();
 
   Bool isTuple() { return sraIsTuple(recordArity); }

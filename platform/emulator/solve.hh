@@ -67,6 +67,8 @@ public:
 
   void gcRecurse();
 
+  void dealloc();
+
   void incThreads() { threads++; }
   void incThreads(int n) { threads += n; }
   int  decThreads() { Assert (threads > 0); return (--threads); }
