@@ -146,10 +146,9 @@ void AM::init(int argc,char **argv)
 
   char *home = getenv("OZHOME");
   
-  if (!home) {
-    fprintf(stderr, "OZHOME must be set.\n");
-    osExit(1);
-  }
+  if (!home)
+    home ="unknown";
+
     
   ozconf.ozHome = home;
 
