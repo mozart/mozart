@@ -113,12 +113,27 @@ if [ \( "$cmd" = "oz" -o "$cmd" = "ozemacs" \) -a "${OZEMACS-0}" = 0 ]; then
 fi
 
 
-
 case "$cmd" in
 
    oz)
         echo "Using emacs '${OZEMACS}'"
-        exec $OZEMACS -l $OZHOME/lib/elisp/ozstartup.el $@
+        # store cmd line args starting from "-a" in $OZARGV
+        OZARGV=""
+        EMACSARGV=""
+        while [ $# -gt 0 ]
+        do
+           case "$1" in
+            -a) shift
+                while [ $# -gt 0 ]; do
+                   OZARGV="$OZARGV $1"
+                   shift
+                done;;
+            *) EMACSARGV="$EMACSARGV $1"
+               shift;;
+           esac
+        done
+        export OZARGV
+        exec $OZEMACS -l $OZHOME/lib/elisp/ozstartup.el $EMACSARGV
    ;;
 
    ozdemo)
@@ -143,9 +158,9 @@ case "$cmd" in
    oz.emulator)
         if [ X$1 = X"-emacs" ]; then
                 shift
-                exec $OZEMULATOR -E "$@"
+                exec $OZEMULATOR -E "$@" -a $OZARGV
         else
-                xterm -title 'Oz Emulator' -e $OZEMULATOR "$@" \
+                xterm -title 'Oz Emulator' -e $OZEMULATOR "$@" -a $OZARGV \
                         > /dev/null 2>&1 &
         fi
         exit 0
