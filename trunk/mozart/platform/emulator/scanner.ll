@@ -1162,7 +1162,7 @@ static void xy_init(OZ_Term defines) {
 
   hashTable = new XyScannerHashTable;
   while (OZ_isCons(defines)) {
-    char *x = OZ_virtualStringToC(OZ_head(defines));
+    char *x = OZ_virtualStringToC(OZ_head(defines),0);
     hashTable->insert(x);
     defines = OZ_tail(defines);
   }
