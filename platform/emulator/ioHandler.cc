@@ -56,17 +56,6 @@ IONode *findIONode(int fd)
   return ioNodes;
 }
 
-static
-int hasPendingSelect()
-{
-  IONode *aux = ioNodes;
-  while(aux) {
-    if (aux->handler[SEL_READ] || aux->handler[SEL_WRITE]) return OK;
-    aux = aux->next;
-  }
-  return NO;
-}
-
 void oz_io_select(int fd, int mode, OZ_IOHandler fun, void *val)
 {
   if (!oz_onToplevel()) {

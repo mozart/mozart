@@ -138,10 +138,6 @@ Site* unmarshalSite(MsgBuffer *buf)
 
   //
   int minor = buf->getMinor();
-  if (minor==0) {
-    MarshalTag tag = (MarshalTag) buf->get();
-    Assert(tag == DIF_PASSIVE || tag == DIF_SITE_PERM);
-  }
   tryS.unmarshalBaseSiteGName(buf,minor);
 
   //

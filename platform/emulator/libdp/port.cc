@@ -68,7 +68,6 @@ OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
   NetAddress *na = b->getNetAddress();
   DSite* site     = na->site;
   int index      = na->index;
-  int dummy;
   
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(site);
   b->getOneMsgCredit();
@@ -98,7 +97,6 @@ OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
 OZ_Return portSendImpl(Tertiary *p, TaggedRef msg) 
 {
   Assert(p->getTertType()==Te_Proxy);
-  OZ_Return ret;
   if(getEntityCond(p)!= ENTITY_NORMAL){
     //    printf("PortProblem %d at: %s",getEntityCond(p),myDSite->stringrep());
     //printf("from: %s\n",
