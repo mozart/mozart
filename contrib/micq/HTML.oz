@@ -21,28 +21,16 @@
 %%%
 
 functor
-
 import
    Open
-
 export
    out: HtmlOut
-
 prepare
-
-   fun {HtmlStd Title Body}
-      '#'('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">'
-          html(head(title(Title))
-
-               'body'(h1(Title)
-                      br
-                      Body)))
+   fun {HtmlStd Body}
+      '#'('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">\n' Body)
    end
-
-
 define
-
-   proc {HtmlOut Title Body}
+   proc {HtmlOut Body}
       {New class $
               from Open.html Open.file
               prop final
@@ -53,7 +41,6 @@ define
                  Open.file, close
               end
            end
-       tag({HtmlStd Title Body}) _}
+       tag({HtmlStd Body}) _}
    end
-
 end
