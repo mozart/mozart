@@ -353,26 +353,6 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter PC)
   }
 }
 
-void displayCode(ProgramCounter from, int ssize)
-{
-  CodeArea::display(from,ssize,stderr);
-  fflush(stderr);
-}
-
-void displayDef(ProgramCounter from, int ssize)
-{
-  ProgramCounter start=CodeArea::printDef(from,stderr);
-  if (start != NOCODE) CodeArea::display(start,ssize,stderr,from);
-}
-
-
-inline
-ProgramCounter computeLabelArg(ProgramCounter pc, ProgramCounter arg)
-{
-  return pc+getLabelArg(arg);
-}
-
-
 void CodeArea::getDefinitionArgs(ProgramCounter PC,
 				 XReg &reg, int &next,
 				 TaggedRef &file, int &line, int &colum,
@@ -394,6 +374,29 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
     predName = AtomEmpty;
   }
 }
+
+
+#ifdef DEBUG_CHECK
+
+void displayCode(ProgramCounter from, int ssize)
+{
+  CodeArea::display(from,ssize,stderr);
+  fflush(stderr);
+}
+
+void displayDef(ProgramCounter from, int ssize)
+{
+  ProgramCounter start=CodeArea::printDef(from,stderr);
+  if (start != NOCODE) CodeArea::display(start,ssize,stderr,from);
+}
+
+
+inline
+ProgramCounter computeLabelArg(ProgramCounter pc, ProgramCounter arg)
+{
+  return pc+getLabelArg(arg);
+}
+
 
 static
 void printLoc(FILE *ofile,Builtin * bi, OZ_Location *loc) {
@@ -1125,6 +1128,9 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 }
 
 #undef DISPATCH
+
+#endif
+
 
 ProgramCounter
   C_XCONT_Ptr,

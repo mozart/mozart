@@ -748,7 +748,6 @@ LBLdispatcher:
   });
 
   op = CodeArea::getOP(PC);
-  // displayCode(PC,1);
 
 #ifdef PROFILE_INSTR
   {
@@ -3631,11 +3630,7 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
       }
 
     default:
-#ifdef DEBUG_CHECK
-      displayCode(PC,1);
-      displayDef(PC,1);
       Assert(0);
-#endif
       goto exit;
     }
   }

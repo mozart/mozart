@@ -63,10 +63,11 @@ TaggedRef
 
 Builtin *bi_raise, *bi_raiseError;
 
+AssRegArray * AssRegArray::nullArray;
+
 /*===================================================================
  * Literal
  *=================================================================== */
-
 
 // mm2: what's the magic here?
 int Name::NameCurrentNumber = 0x200000;
