@@ -650,9 +650,9 @@ Bool isSorted(TaggedRef list)
   
 }
 
-inline
+static inline
 Bool order_taggedref_by_feat(const TaggedRef& a, const TaggedRef& b) {
-  return featureCmp(a,b) <= 0;
+  return featureCmp(a,b) < 0;
 }
 
 // mm2: optimize for already sorted list! (see isSorted)
