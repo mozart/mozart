@@ -46,7 +46,7 @@ GName *getGNameForUnify(TaggedRef val) {
   case Co_Abstraction:
   case Co_Object:
   case Co_Chunk:
-    return c->getGName1();
+    return ((ConstTermWithHome *)c)->getGName1();
   default:
     return 0;
   }
