@@ -1122,11 +1122,9 @@ GenCVariable * GenCVariable::gc(void) {
 
   GenCVariable * to;
 
-  int sz;
-
   switch (getType()){
   case FDVariable:
-    to = (GenCVariable *) freeListMalloc(sizeof(GenFDVariable));
+    to = new GenFDVariable(); // mm2: should not initialize anything!
     ((GenFDVariable *) to)->gc((GenFDVariable *) this);
     to->u        = u;
     to->suspList = sl;
@@ -1134,7 +1132,7 @@ GenCVariable * GenCVariable::gc(void) {
     return to;
 
   case BoolVariable:
-    to = (GenCVariable *) freeListMalloc(sizeof(GenBoolVariable));
+    to = new GenBoolVariable();
     ((GenBoolVariable *) to)->gc((GenBoolVariable *) this);
     to->u        = u;
     to->suspList = sl;
@@ -1142,7 +1140,7 @@ GenCVariable * GenCVariable::gc(void) {
     return to;
 
   case FSetVariable:
-    to = (GenCVariable *) freeListMalloc(sizeof(GenFSetVariable));
+    to = new GenFSetVariable();
     ((GenFSetVariable *) to)->gc((GenFSetVariable *) this);
     to->u        = u;
     to->suspList = sl;
@@ -1150,22 +1148,21 @@ GenCVariable * GenCVariable::gc(void) {
     return to;
 
   case OFSVariable:
-    sz = sizeof(GenOFSVariable);  break;
+    to = new GenOFSVariable(*(GenOFSVariable*) this);  break;
   case MetaVariable:
-    sz = sizeof(GenMetaVariable); break;
+    to = new GenMetaVariable(*(GenMetaVariable*) this); break;
   case PerdioVariable:
-    sz = ((PerdioVar*)this)->isFuture() ? sizeof(Future) : sizeof(PerdioVar);
+    if (((PerdioVar*)this)->isFuture()) {
+      to = new Future(*(Future*) this);
+    } else {
+      to = new PerdioVar(*(PerdioVar*) this);
+    }
     break;
-  case LazyVariable:
-    sz = sizeof(GenLazyVariable); break;
   default:
-    Assert(0);
+    to = gcV();
   }
 
   // The generic part
-
-  to = (GenCVariable *) OZ_hrealloc(this, sz);
-
   Assert(!isInGc || this->home != bb);
 
   gcStack.push(to, PTR_CVAR);
@@ -1174,15 +1171,6 @@ GenCVariable * GenCVariable::gc(void) {
   to->home     = bb;
 
   return to;
-}
-
-
-inline
-void GenLazyVariable::gcRecurse(void) {
-  if (function!=0) {
-    OZ_collectHeapTerm(function,function);
-    OZ_collectHeapTerm(result,result);
-  }
 }
 
 void Future::gcFuture() {
@@ -1236,9 +1224,8 @@ void GenCVariable::gcRecurse(void) {
     ((GenMetaVariable *) this)->gcRecurse(); break;
   case PerdioVariable:
     ((PerdioVar *) this)->gcRecurse(); break;
-  case LazyVariable:
-    ((GenLazyVariable*) this)->gcRecurse(); break;
   default:
+    gcRecurseV(); break;
     Assert(0);
   }
 
@@ -1769,7 +1756,6 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
     return;
 
   }
-
 }
 
 

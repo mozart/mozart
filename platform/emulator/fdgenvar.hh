@@ -57,7 +57,6 @@ private:
 
   GenBoolVariable * becomesBool(void);
 public:
-  NO_DEFAULT_CONSTRUCTORS2(GenFDVariable);
   GenFDVariable(OZ_FiniteDomain &fd) : GenCVariable(FDVariable) {
     ozstat.fdvarsCreated.incf();
     finiteDomain = fd;
@@ -108,9 +107,29 @@ public:
 
   void installPropagators(GenFDVariable *, Board *);
 
-  void addDetSusp(Thread *susp) {
-    AddSuspToList(fdSuspList[fd_prop_singl], susp, home);
+
+
+  OZ_Return unifyV(TaggedRef* vPtr,TaggedRef v,TaggedRef *tPtr,TaggedRef t,
+                   ByteCode*scp) {
+    return unifyFD(vPtr,v,tPtr,t,scp);
   }
+  OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
+    return valid(val);
+  }
+  OZ_Return hasFeatureV(TaggedRef val, TaggedRef *) {
+    return FAILED;
+  }
+  GenCVariable* gcV() { error("not impl"); return 0; }
+  void gcRecurseV() { error("not impl"); }
+  void addSuspV(Suspension susp, TaggedRef* ptr, int state) {
+    // mm2: addSuspFDVar(makeTaggedRef(ptr),susp,state);
+  }
+  Bool isKindedV() { return true; }
+  void disposeV(void) { dispose(); }
+  int getSuspListLengthV() { return getSuspListLength(); }
+  void printV() {}
+  void printLongV() {}
+
 };
 
 void addSuspFDVar(TaggedRef, Suspension, OZ_FDPropState = fd_prop_any);

@@ -248,7 +248,6 @@ Bool isCVar(TaggedRef term) {
  */
 
 #define _oz_isVariable(val)    (((TaggedRef) val&2)==0)       /* mask = 0010 */
-#define _isDirectVar(val) (((TaggedRef) val&3)==1)       /* mask = 0011 */
 #define _isNotCVar(val)   (((TaggedRef) val&6)==0)       /* mask = 0110 */
 #define _isUVar(val)      (((TaggedRef) val&14)==0)      /* mask = 1110 */
 #define _isLTuple(val)    (((TaggedRef) val&13)==0)      /* mask = 1101 */
@@ -293,13 +292,6 @@ Bool oz_isVariable(TaggedRef term) {
   return _oz_isVariable(term);
 }
 
-inline Bool isDirectVar(TypeOfTerm tag) { return _isDirectVar(tag); }
-
-inline
-Bool isDirectVar(TaggedRef term) {
-  return _isDirectVar(term);
-}
-
 inline Bool isNotCVar(TypeOfTerm tag) { return _isNotCVar(tag);}
 
 inline
@@ -314,7 +306,6 @@ Bool isNotCVar(TaggedRef term) {
 
 #define isVariableTag(term)    _oz_isVariable(term)
 #define oz_isVariable(term)    _oz_isVariable(term)
-#define isDirectVar(term)      _isDirectVar(term)
 #define isNotCVar(term)        _isNotCVar(term)
 #define isUVar(term)           _isUVar(term)
 #define isLTupleTag(term)      _isLTuple(term)

@@ -33,7 +33,9 @@
 
 
 inline
-OZ_Return GenCVariable::unify(TaggedRef * tptr1, TaggedRef *tptr2, TaggedRef term2, ByteCode *scp)
+OZ_Return GenCVariable::unify(TaggedRef * tptr1,
+                              TaggedRef *tptr2, TaggedRef term2,
+                              ByteCode *scp)
 {
   TaggedRef term1 = *tptr1;
 
@@ -46,36 +48,34 @@ OZ_Return GenCVariable::unify(TaggedRef * tptr1, TaggedRef *tptr2, TaggedRef ter
   break;
   case FSetVariable:
     {
-      if (! ((GenFSetVariable *)this)->unifyFSet(tptr1, term1, tptr2, term2, scp))
+      if (! ((GenFSetVariable *)this)
+          ->unifyFSet(tptr1, term1, tptr2, term2, scp))
         return FAILED;
     }
     break;
   case OFSVariable:
-    if (! ((GenOFSVariable *)this)->unifyOFS(tptr1, term1, tptr2, term2, scp)) {
+    if (! ((GenOFSVariable *)this)
+        ->unifyOFS(tptr1, term1, tptr2, term2, scp)) {
       return FAILED;
     }
     break;
   case MetaVariable:
     {
-      if (! ((GenMetaVariable *)this)->unifyMeta(tptr1, term1, tptr2, term2, scp))
+      if (! ((GenMetaVariable *)this)
+          ->unifyMeta(tptr1, term1, tptr2, term2, scp))
         return FAILED;
     }
     break;
   case BoolVariable:
     {
-      if (! ((GenBoolVariable *)this)->unifyBool(tptr1, term1, tptr2, term2,
-                                                 scp))
+      if (! ((GenBoolVariable *)this)
+          ->unifyBool(tptr1, term1, tptr2, term2, scp))
         return FAILED;
     }
     break;
   case PerdioVariable:
-    return ((PerdioVar *)this)->unifyPerdioVar(tptr1, tptr2==0?&term2:tptr2,
-                                               scp);
-
-  case LazyVariable:
-    if (! ((GenLazyVariable*)this)->unifyLazy(tptr1, term2,scp))
-      return FAILED;
-    break;
+    return ((PerdioVar *)this)
+      ->unifyPerdioVar(tptr1, tptr2==0?&term2:tptr2, scp);
 
   case CtVariable:
     if (! ((GenCtVariable*) this)->unifyCt(tptr1, term1, tptr2, term2, scp))
@@ -83,7 +83,8 @@ OZ_Return GenCVariable::unify(TaggedRef * tptr1, TaggedRef *tptr2, TaggedRef ter
     break;
 
   default:
-    Assert(0);
+    return unifyV(tptr1, term1, tptr2, term2, scp);
+
   }
 
   return PROCEED;
@@ -104,9 +105,8 @@ int GenCVariable::getSuspListLength(void)
   case FSetVariable:
     return ((GenFSetVariable *)this)->getSuspListLength();
   default:
-    break;
+    return getSuspListLengthV();
   }
-  return ((SVariable *)this)->getSuspList()->length()-1;
 }
 
 inline
@@ -119,10 +119,9 @@ Bool GenCVariable::valid(TaggedRef *ptr,TaggedRef val)
   case BoolVariable: return ((GenBoolVariable*)this)->valid(val);
   case FSetVariable: return ((GenFSetVariable*)this)->valid(val);
   case PerdioVariable: return ((PerdioVar *)this)->valid(ptr,val);
-  case LazyVariable: return ((GenLazyVariable*)this)->valid(val);
-  default: Assert(0); break;
+  case CtVariable: return FALSE;
+  default: return validV(ptr,val);
   }
-  return FALSE;
 }
 
 inline
@@ -131,7 +130,16 @@ int GenCVariable::hasFeature(TaggedRef fea,TaggedRef *out)
   switch (getType()){
   case FDVariable:   return FAILED;
   case OFSVariable:  return ((GenOFSVariable*)this)->hasFeature(fea,out);
-  default: return SUSPEND;
+
+  case MetaVariable:
+  case BoolVariable:
+  case FSetVariable:
+  case PerdioVariable:
+  case CtVariable:
+    return SUSPEND;
+
+  default:
+    return hasFeatureV(fea,out);
   }
 }
 
@@ -211,20 +219,6 @@ void GenCVariable::installPropagators(GenCVariable * glob_var)
   }
 }
 
-
-inline
-void GenCVariable::addDetSusp(Thread *thr, TaggedRef *tptr)
-{
-  switch (getType()){
-  case FDVariable:
-    ((GenFDVariable *)this)->addDetSusp(thr);
-    return;
-  default:
-    addSuspAnyVar(tptr,thr);
-    return;
-  }
-}
-
 inline
 void GenCVariable::dispose(void)
 {
@@ -238,13 +232,11 @@ void GenCVariable::dispose(void)
   case FSetVariable:
     ((GenFSetVariable *)this)->dispose();
     break;
-  case LazyVariable:
-    ((GenLazyVariable *)this)->dispose();
-    break;
   case PerdioVariable:
     ((PerdioVar *)this)->dispose();
     break;
   default:
+    disposeV();
     // mm2: why not handle other cases?
     break;
   }
@@ -259,11 +251,16 @@ void addSuspCVar(TaggedRef *v, Suspension susp, int unstable=TRUE)
   case PerdioVariable:
     ((PerdioVar*) cv)->addSuspPerdioVar(v, susp, unstable);
     break;
-  case LazyVariable:
-    ((GenLazyVariable*) cv)->addSuspLazy(susp, unstable);
+  case FDVariable:
+  case OFSVariable:
+  case MetaVariable:
+  case BoolVariable:
+  case FSetVariable:
+  case CtVariable:
+    cv->addSuspSVar(susp, unstable);
     break;
   default:
-    cv->addSuspSVar(susp, unstable);
+    cv->addSuspV(susp, v, unstable);
     break;
   }
 }

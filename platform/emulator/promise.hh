@@ -55,7 +55,6 @@ class Future: public PerdioVar {
   TaggedRef requested;
 
 public:
-  NO_DEFAULT_CONSTRUCTORS2(Future);
   void init();
   Future()       : PerdioVar(OK)    { init(); }
   Future(int bi, TaggedRef req) : PerdioVar(bi,OK) { requested = req; }

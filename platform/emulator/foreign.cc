@@ -34,6 +34,8 @@
 #include "runtime.hh"
 
 #include "genvar.hh"
+#include "lazyvar.hh"
+
 #include "ofgenvar.hh"
 
 #include "gmp.h"

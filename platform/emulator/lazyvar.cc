@@ -28,9 +28,7 @@
 #pragma implementation "lazyvar.hh"
 #endif
 
-#include "am.hh"
-#include "genvar.hh"
-#include "runtime.hh"
+#include "lazyvar.hh"
 
 // if `function' is a procedure or an object, we simply call it
 // with the variable itself as argument.
@@ -110,8 +108,10 @@ GenLazyVariable::kickLazy()
   OZ_warning("Lazy variable contains illegal spec");
 }
 
-int
-GenLazyVariable::unifyLazy(TaggedRef*vPtr,TaggedRef t,ByteCode*scp)
+OZ_Return
+GenLazyVariable::unifyV(TaggedRef *vPtr,TaggedRef v,
+                        TaggedRef *tPtr,TaggedRef t,
+                        ByteCode*scp)
 {
   // if x:lazy=y:var y<-x if x is global, then trail
   // ^^^DONE AUTOMATICALLY
@@ -119,12 +119,12 @@ GenLazyVariable::unifyLazy(TaggedRef*vPtr,TaggedRef t,ByteCode*scp)
 
   kickLazy();
 
-  oz_bind(vPtr,*vPtr,t);
-  return OK;
+  oz_bind(vPtr,*vPtr,oz_isVariable(t)?makeTaggedRef(tPtr):t);
+  return PROCEED;
 }
 
 void
-GenLazyVariable::addSuspLazy(Suspension susp, int unstable)
+GenLazyVariable::addSuspV(Suspension susp, TaggedRef *tPtr, int unstable)
 {
   kickLazy();
   addSuspSVar(susp, unstable);

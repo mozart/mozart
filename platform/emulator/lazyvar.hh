@@ -31,30 +31,37 @@
 #pragma interface
 #endif
 
-#include "am.hh"
 #include "genvar.hh"
-#include "tagged.hh"
 #include "value.hh"
-#include "mem.hh"
-#include "thread.hh"
 
 class GenLazyVariable: public GenCVariable {
 private:
   OZ_Term function;
   OZ_Term result;
 public:
-  NO_DEFAULT_CONSTRUCTORS(GenLazyVariable);
+  GenLazyVariable() : GenCVariable(LazyVariable) {}
   GenLazyVariable(OZ_Term fun,OZ_Term res)
-    :GenCVariable(LazyVariable),function(fun),result(res){}
-  void gcRecurse(void);
-  Bool unifyLazy(TaggedRef*,TaggedRef,ByteCode*);
-  // int hasFeature(TaggedRef fea,TaggedRef *out);
-  Bool valid(TaggedRef /* val */) { return TRUE; }
+    : GenCVariable(LazyVariable),function(fun),result(res){}
   OZ_Term getFunction() { return function; }
   void kickLazy();
-  void addSuspLazy(Suspension, int);
-  Bool isKinded() { return false; }
-  void dispose(void) { freeListDispose(this, sizeof(GenLazyVariable)); }
+
+  OZ_Return unifyV(TaggedRef* vPtr,TaggedRef v,TaggedRef *tPtr,TaggedRef t,
+                   ByteCode* scp);
+  OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef /* val */) { return TRUE; }
+  OZ_Return hasFeatureV(TaggedRef, TaggedRef *) { return SUSPEND; }
+  GenCVariable* gcV() { return new GenLazyVariable(*this); }
+  void gcRecurseV() {
+    if (function!=0) {
+      OZ_collectHeapTerm(function,function);
+      OZ_collectHeapTerm(result,result);
+    }
+  }
+  void addSuspV(Suspension, TaggedRef*, int);
+  Bool isKindedV() { return false; }
+  void disposeV(void) { freeListDispose(this, sizeof(GenLazyVariable)); }
+  int getSuspListLengthV() { return getSuspList()->length()-1; }
+  void printV() {}
+  void printLongV() {}
 };
 
 
