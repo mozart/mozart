@@ -123,7 +123,8 @@ starts the emulator under gdb")
 (defconst oz-remove-pattern
   (concat oz-error-string 
 	  "\\|" (char-to-string 18) "\\|" (char-to-string 19) "\\|
-")
+"
+	  "\\|\\\\line.*% fromemacs\n")
   "")
 
 (defconst oz-scrollbar-pattern
@@ -729,7 +730,7 @@ the GDB commands `cd DIR' and `directory'."
 			  (if (buffer-file-name)
 			      (buffer-file-name)
 			    "nofile")
-			  "'\n"
+			  "' % fromemacs\n"
 			  (buffer-substring start end)))
   (setq oz-last-fed-region-start (copy-marker start))
   (oz-zmacs-stuff))
