@@ -276,7 +276,7 @@ public:
   Bool next(int i, int &n) const;
   int nextBiggerElem(int v) const;
 
-  FDState checkDom(FiniteDomain &dom);
+  FDState checkAgainst(FiniteDomain &dom);
   
   int singl(void) const {
     DebugCheck(getSize() != 1, error("Domain must be singletons"));
@@ -298,9 +298,6 @@ public:
     bitArray = isRange() ? setRange(NULL) : new BitArray(bitArray);
   }
 
-  static FDState leftDom;
-  static FDState rightDom;
-  
 }; // FiniteDomain
 
 typedef FiniteDomain * FiniteDomainPtr;
