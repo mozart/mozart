@@ -1662,23 +1662,24 @@ if test "${enable_warnings+set}" = set; then
 fi
 
 
-    oz_warn_more="-Wall -pedantic-errors -W -Wtraditional -Wshadow \
-		-Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
-		-Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes \
-		-Wmissing-prototypes -Wmissing-declarations -Wredundant-decls \
-		-Wnested-externs -Winline -Woverloaded-virtual -Wsynth"
+#    oz_warn_more="-Wall -pedantic-errors -W -Wtraditional -Wshadow \
+#		-Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
+#		-Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes \
+#		-Wmissing-prototypes -Wmissing-declarations -Wredundant-decls \
+#		-Wnested-externs -Winline -Woverloaded-virtual -Wsynth"
 
-    if test -n "${enable_warnings}"
+    if test "${enable_warnings}" != no
     then
-      $oz_warn="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
+	echo "$ac_t""yes" 1>&6
+	oz_warn="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
 	    -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
 	    -Wnested-externs -Wsynth \
 	    -Wno-unused -Wno-reorder -Wno-uninitialized -Wno-sign-compare"
-      $oz_warn_error="-Werror"
-    fi
+	oz_warn_error="-Werror"
+    else
+	echo "$ac_t""no" 1>&6
 
-    : ${oz_warn=""}
-    : ${oz_warn_error=""}
+    fi
 
     oz_opt="-O3 -frisc -pipe"
     oz_om=
@@ -1735,7 +1736,7 @@ esac
 if test -n "$M4"
 then
     echo $ac_n "checking whether $M4 understands -E option""... $ac_c" 1>&6
-echo "configure:1739: checking whether $M4 understands -E option" >&5
+echo "configure:1740: checking whether $M4 understands -E option" >&5
     oz_tmp=`$M4 -E < /dev/null 2>&1`
     if test -n "$oz_tmp"
     then
@@ -1753,7 +1754,7 @@ fi
  	for ozm_opt in ""$oz_warn""
  	do
 	    echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:1757: checking compiler option $ozm_opt" >&5
+echo "configure:1758: checking compiler option $ozm_opt" >&5
 	    ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 	    if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1783,7 +1784,7 @@ oz_warn=$oz_a
  	for ozm_opt in ""$oz_warn_error""
  	do
 	    echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:1787: checking compiler option $ozm_opt" >&5
+echo "configure:1788: checking compiler option $ozm_opt" >&5
 	    ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 	    if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1813,7 +1814,7 @@ oz_warn_error=$oz_a
  	for ozm_opt in ""$oz_copt_disable_extension""
  	do
 	    echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:1817: checking compiler option $ozm_opt" >&5
+echo "configure:1818: checking compiler option $ozm_opt" >&5
 	    ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 	    if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1849,7 +1850,7 @@ CXXFLAGS="$CXXFLAGS $oz_a"
 #AC_SUBST(LD)
 
 echo $ac_n "checking for gethostbyaddr in -lnsl""... $ac_c" 1>&6
-echo "configure:1853: checking for gethostbyaddr in -lnsl" >&5
+echo "configure:1854: checking for gethostbyaddr in -lnsl" >&5
 ac_lib_var=`echo nsl'_'gethostbyaddr | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1857,7 +1858,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lnsl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1861 "configure"
+#line 1862 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -1871,7 +1872,7 @@ int main() {
 gethostbyaddr()
 ; return 0; }
 EOF
-if { (eval echo configure:1875: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1876: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -1899,7 +1900,7 @@ else
 fi
 
 echo $ac_n "checking for socket in -lsocket""... $ac_c" 1>&6
-echo "configure:1903: checking for socket in -lsocket" >&5
+echo "configure:1904: checking for socket in -lsocket" >&5
 ac_lib_var=`echo socket'_'socket | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1907,7 +1908,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lsocket  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1911 "configure"
+#line 1912 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -1921,7 +1922,7 @@ int main() {
 socket()
 ; return 0; }
 EOF
-if { (eval echo configure:1925: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1926: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -1949,7 +1950,7 @@ else
 fi
 
 echo $ac_n "checking for fabs in -lm""... $ac_c" 1>&6
-echo "configure:1953: checking for fabs in -lm" >&5
+echo "configure:1954: checking for fabs in -lm" >&5
 ac_lib_var=`echo m'_'fabs | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1957,7 +1958,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lm  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 1961 "configure"
+#line 1962 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -1971,7 +1972,7 @@ int main() {
 fabs()
 ; return 0; }
 EOF
-if { (eval echo configure:1975: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:1976: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -1999,7 +2000,7 @@ else
 fi
 
 echo $ac_n "checking for main in -lkernel32""... $ac_c" 1>&6
-echo "configure:2003: checking for main in -lkernel32" >&5
+echo "configure:2004: checking for main in -lkernel32" >&5
 ac_lib_var=`echo kernel32'_'main | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2007,14 +2008,14 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lkernel32  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2011 "configure"
+#line 2012 "configure"
 #include "confdefs.h"
 
 int main() {
 main()
 ; return 0; }
 EOF
-if { (eval echo configure:2018: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2019: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2042,7 +2043,7 @@ else
 fi
 
 echo $ac_n "checking for main in -lwsock32""... $ac_c" 1>&6
-echo "configure:2046: checking for main in -lwsock32" >&5
+echo "configure:2047: checking for main in -lwsock32" >&5
 ac_lib_var=`echo wsock32'_'main | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2050,14 +2051,14 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lwsock32  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2054 "configure"
+#line 2055 "configure"
 #include "confdefs.h"
 
 int main() {
 main()
 ; return 0; }
 EOF
-if { (eval echo configure:2061: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2062: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2085,7 +2086,7 @@ else
 fi
 
 echo $ac_n "checking for dlopen in -ldl""... $ac_c" 1>&6
-echo "configure:2089: checking for dlopen in -ldl" >&5
+echo "configure:2090: checking for dlopen in -ldl" >&5
 ac_lib_var=`echo dl'_'dlopen | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2093,7 +2094,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ldl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2097 "configure"
+#line 2098 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -2107,7 +2108,7 @@ int main() {
 dlopen()
 ; return 0; }
 EOF
-if { (eval echo configure:2111: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2112: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2150,7 +2151,7 @@ fi
 
 
 echo $ac_n "checking for --with-gmp""... $ac_c" 1>&6
-echo "configure:2154: checking for --with-gmp" >&5
+echo "configure:2155: checking for --with-gmp" >&5
 # Check whether --with-gmp or --without-gmp was given.
 if test "${with_gmp+set}" = set; then
   withval="$with_gmp"
@@ -2195,7 +2196,7 @@ echo "$ac_t""trying \"-L$oz_gmp_lib_dir -I$oz_gmp_inc_dir\"" 1>&6
 
 CPPFLAGS="-I$oz_gmp_inc_dir $CPPFLAGS"
 echo $ac_n "checking how to run the C++ preprocessor""... $ac_c" 1>&6
-echo "configure:2199: checking how to run the C++ preprocessor" >&5
+echo "configure:2200: checking how to run the C++ preprocessor" >&5
 if test -z "$CXXCPP"; then
 if eval "test \"`echo '$''{'ac_cv_prog_CXXCPP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2208,12 +2209,12 @@ ac_link='${CXX-g++} -o conftest $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $L
 cross_compiling=$ac_cv_prog_cxx_cross
   CXXCPP="${CXX-g++} -E"
   cat > conftest.$ac_ext <<EOF
-#line 2212 "configure"
+#line 2213 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2217: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2218: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   :
@@ -2233,17 +2234,17 @@ echo "$ac_t""$CXXCPP" 1>&6
 
 ac_safe=`echo "gmp.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for gmp.h""... $ac_c" 1>&6
-echo "configure:2237: checking for gmp.h" >&5
+echo "configure:2238: checking for gmp.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2242 "configure"
+#line 2243 "configure"
 #include "confdefs.h"
 #include <gmp.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2247: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2248: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2268,7 +2269,7 @@ fi
 
 LDFLAGS="-L$oz_gmp_lib_dir $LDFLAGS"
 echo $ac_n "checking for mpz_init in -lgmp""... $ac_c" 1>&6
-echo "configure:2272: checking for mpz_init in -lgmp" >&5
+echo "configure:2273: checking for mpz_init in -lgmp" >&5
 ac_lib_var=`echo gmp'_'mpz_init | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2276,7 +2277,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lgmp  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2280 "configure"
+#line 2281 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -2290,7 +2291,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:2294: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2295: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2322,7 +2323,7 @@ fi
 
 
 echo $ac_n "checking for --with-ccmalloc""... $ac_c" 1>&6
-echo "configure:2326: checking for --with-ccmalloc" >&5
+echo "configure:2327: checking for --with-ccmalloc" >&5
 # Check whether --with-ccmalloc or --without-ccmalloc was given.
 if test "${with_ccmalloc+set}" = set; then
   withval="$with_ccmalloc"
@@ -2334,7 +2335,7 @@ if test "$with_ccmalloc" = "yes"
 then
     echo "$ac_t""yes" 1>&6
     echo $ac_n "checking for main in -lccmalloc""... $ac_c" 1>&6
-echo "configure:2338: checking for main in -lccmalloc" >&5
+echo "configure:2339: checking for main in -lccmalloc" >&5
 ac_lib_var=`echo ccmalloc'_'main | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2342,14 +2343,14 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lccmalloc  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2346 "configure"
+#line 2347 "configure"
 #include "confdefs.h"
 
 int main() {
 main()
 ; return 0; }
 EOF
-if { (eval echo configure:2353: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2354: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2386,7 +2387,7 @@ fi
 
 
 echo $ac_n "checking for --enable-opt""... $ac_c" 1>&6
-echo "configure:2390: checking for --enable-opt" >&5
+echo "configure:2391: checking for --enable-opt" >&5
 # Check whether --enable-opt or --disable-opt was given.
 if test "${enable_opt+set}" = set; then
   enableval="$enable_opt"
@@ -2409,7 +2410,7 @@ EOF
  	for ozm_opt in ""$oz_copt_debug""
  	do
 	    echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:2413: checking compiler option $ozm_opt" >&5
+echo "configure:2414: checking compiler option $ozm_opt" >&5
 	    ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 	    if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2448,7 +2449,7 @@ EOF
  	for ozm_opt in ""$oz_copt_profile""
  	do
 	    echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:2452: checking compiler option $ozm_opt" >&5
+echo "configure:2453: checking compiler option $ozm_opt" >&5
 	    ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 	    if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2484,7 +2485,7 @@ EOF
  	for ozm_opt in ""-O""
  	do
 	    echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:2488: checking compiler option $ozm_opt" >&5
+echo "configure:2489: checking compiler option $ozm_opt" >&5
 	    ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 	    if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2515,7 +2516,7 @@ fi
  	for ozm_opt in ""$oz_copt_optimize""
  	do
 	    echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:2519: checking compiler option $ozm_opt" >&5
+echo "configure:2520: checking compiler option $ozm_opt" >&5
 	    ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
 	    if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2544,7 +2545,7 @@ esac
 
 
     echo $ac_n "checking for --enable-ozma""... $ac_c" 1>&6
-echo "configure:2548: checking for --enable-ozma" >&5
+echo "configure:2549: checking for --enable-ozma" >&5
     # Check whether --enable-ozma or --disable-ozma was given.
 if test "${enable_ozma+set}" = set; then
   enableval="$enable_ozma"
@@ -2572,7 +2573,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-threaded""... $ac_c" 1>&6
-echo "configure:2576: checking for --enable-threaded" >&5
+echo "configure:2577: checking for --enable-threaded" >&5
     # Check whether --enable-threaded or --disable-threaded was given.
 if test "${enable_threaded+set}" = set; then
   enableval="$enable_threaded"
@@ -2596,7 +2597,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-fastreg""... $ac_c" 1>&6
-echo "configure:2600: checking for --enable-fastreg" >&5
+echo "configure:2601: checking for --enable-fastreg" >&5
     # Check whether --enable-fastreg or --disable-fastreg was given.
 if test "${enable_fastreg+set}" = set; then
   enableval="$enable_fastreg"
@@ -2620,7 +2621,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-regopt""... $ac_c" 1>&6
-echo "configure:2624: checking for --enable-regopt" >&5
+echo "configure:2625: checking for --enable-regopt" >&5
     # Check whether --enable-regopt or --disable-regopt was given.
 if test "${enable_regopt+set}" = set; then
   enableval="$enable_regopt"
@@ -2644,7 +2645,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-linkprop""... $ac_c" 1>&6
-echo "configure:2648: checking for --enable-linkprop" >&5
+echo "configure:2649: checking for --enable-linkprop" >&5
     # Check whether --enable-linkprop or --disable-linkprop was given.
 if test "${enable_linkprop+set}" = set; then
   enableval="$enable_linkprop"
@@ -2678,7 +2679,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-peanuts""... $ac_c" 1>&6
-echo "configure:2682: checking for --enable-peanuts" >&5
+echo "configure:2683: checking for --enable-peanuts" >&5
     # Check whether --enable-peanuts or --disable-peanuts was given.
 if test "${enable_peanuts+set}" = set; then
   enableval="$enable_peanuts"
@@ -2705,7 +2706,7 @@ fi
 if test -z "$with_ccmalloc" 
 then
     echo $ac_n "checking for --with-malloc""... $ac_c" 1>&6
-echo "configure:2709: checking for --with-malloc" >&5
+echo "configure:2710: checking for --with-malloc" >&5
     # Check whether --with-malloc or --without-malloc was given.
 if test "${with_malloc+set}" = set; then
   withval="$with_malloc"
@@ -2729,7 +2730,7 @@ fi
 
 
 echo $ac_n "checking for --enable-tmphack""... $ac_c" 1>&6
-echo "configure:2733: checking for --enable-tmphack" >&5
+echo "configure:2734: checking for --enable-tmphack" >&5
 # Check whether --enable-tmphack or --disable-tmphack was given.
 if test "${enable_tmphack+set}" = set; then
   enableval="$enable_tmphack"
@@ -2768,7 +2769,7 @@ case $platform in
 	then
 	    
     echo $ac_n "checking for --enable-lstatic""... $ac_c" 1>&6
-echo "configure:2772: checking for --enable-lstatic" >&5
+echo "configure:2773: checking for --enable-lstatic" >&5
     # Check whether --enable-lstatic or --disable-lstatic was given.
 if test "${enable_lstatic+set}" = set; then
   enableval="$enable_lstatic"
@@ -2794,7 +2795,7 @@ esac
 
 
     echo $ac_n "checking for --enable-finalization""... $ac_c" 1>&6
-echo "configure:2798: checking for --enable-finalization" >&5
+echo "configure:2799: checking for --enable-finalization" >&5
     # Check whether --enable-finalization or --disable-finalization was given.
 if test "${enable_finalization+set}" = set; then
   enableval="$enable_finalization"
