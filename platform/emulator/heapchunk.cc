@@ -61,8 +61,12 @@ public:
   OZ_Term typeV() { return oz_atom("heapChunk"); }
 
   virtual
-  void printStreamV(ostream &stream, int depth) {
-    stream << "<heap chunk: " << (int)chunk_size << " @" << this << '>';
+  OZ_Term printV(int depth) {
+    return oz_pair2(oz_atom("<heap chunk: "),
+                    oz_pair2(oz_int((int)chunk_size),
+                             oz_pair2(oz_atom(" @"),
+                                      oz_pair2(oz_int((int)this),
+                                               oz_atom(">")))));
 /*
   char * data = chunk_data;
   for (int i = 0; i < chunk_size; i += 1)

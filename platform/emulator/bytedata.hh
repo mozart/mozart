@@ -106,9 +106,7 @@ public:
   virtual Bool isChunkV() { return NO; }
   virtual OZ_Return eqV(OZ_Term);
   virtual int marshalV(void*);
-  virtual void printStreamV(ostream &out,int depth = 10);
-  virtual void printLongStreamV(ostream &out,
-                                int depth=10,int offset=0);
+  virtual OZ_Term printV(int depth = 10);
   virtual OZ_Extension* gcV() { return clone(); }
   BitString operator=(const BitString&);
   BitString() : OZ_Extension() {}
@@ -193,9 +191,7 @@ public:
   virtual Bool isChunkV() { return NO; }
   virtual OZ_Return eqV(OZ_Term);
   virtual int marshalV(void*);
-  virtual void printStreamV(ostream &out,int depth = 10);
-  virtual void printLongStreamV(ostream &out,
-                                int depth=10,int offset=0);
+  virtual OZ_Term printV(int depth = 10);
   virtual OZ_Extension* gcV() { return clone(); }
   ByteString operator=(const ByteString&);
   ByteString() : OZ_Extension() {}
