@@ -30,7 +30,11 @@ require
        toAtom:  UrlToAtom
        toVs:    UrlToVs
        resolve: UrlResolve)
+   at '../URL.ozf'
 
+   DefaultURL(nameToUrl: ModNameToUrl)
+   at '../DefaultURL.ozf'
+   
 prepare
    
    \insert 'Print.oz'
