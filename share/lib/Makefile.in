@@ -110,7 +110,7 @@ ALLSRCS = \
         $(COMPILERSRC) $(MISCSRC)
 
 LIBFILES = \
-        $(ENVS:%=$(OZLIB)/%) \
+        $(ENVS1:%=$(OZLIB)/%) \
         $(TYCS:tyc/%=$(OZLIB)/%)
 
 COMPONENTS = \
