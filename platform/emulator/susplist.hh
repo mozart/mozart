@@ -99,7 +99,9 @@ public:
 
   OZPRINTLONG;
 
-
+#ifdef TMUELLER
+  SuspList * dropPropagator(Propagator * prop);
+#endif
 }; // SuspList
 
 

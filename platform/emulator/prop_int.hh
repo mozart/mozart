@@ -38,6 +38,8 @@
 #include "cpi_heap.hh"
 #include "var_base.hh"
 
+#include "trail.hh"
+
 inline
 Propagator * oz_newPropagator(OZ_Propagator * p)
 {
@@ -161,16 +163,18 @@ OZ_Return oz_runPropagator(Propagator * p)
 
 #ifdef DEBUG_PROPAGATORS
     OZ_PropagatorProfile * profile = ozprop->getProfile();
+    OZ_Term params = ozprop->getParameters();
     if (profile) {
       char * pn = profile->getPropagatorName();
       printf("<%s[%p] %s", pn, ozprop,
-             OZ_toC(ozprop->getParameters(), 10, 10));
+             OZ_toC(params, 10, 10));
       fflush(stdout);
     } else {
       printf("<CDSuppl"); fflush(stdout);
     }
     OZ_Return ret = (p->isActive() ? ozprop->propagate() : OZ_SLEEP);
-    printf(" -> %s>\n", RETVAL_TEXT(ret)); fflush(stdout);
+    printf(" -> %s (%s)>\n", RETVAL_TEXT(ret), OZ_toC(params, 10, 10));
+    fflush(stdout);
     return ret;
 #else
     return (p->isActive() ? ozprop->propagate() : OZ_SLEEP);

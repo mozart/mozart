@@ -44,6 +44,19 @@
 
 int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...);
 
+#ifdef TMUELLER
+void OzVariable::dropPropagator(Propagator * prop)
+{
+  switch (getType()){
+  case OZ_VAR_BOOL:    return ((OzBoolVariable*) this)->dropPropagator(prop);
+  case OZ_VAR_FD:      return ((OzFDVariable*) this)->dropPropagator(prop);
+  case OZ_VAR_FS:      return ((OzFSVariable*) this)->dropPropagator(prop);
+  case OZ_VAR_CT:      return ((OzCtVariable*) this)->dropPropagator(prop);
+  ExhaustiveSwitch();
+  }
+}
+#endif
+
 Bool oz_var_valid(OzVariable *ov,TaggedRef val) {
   switch (ov->getType()){
   case OZ_VAR_SIMPLE:  return ((SimpleVar *) ov)->valid(val);

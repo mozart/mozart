@@ -388,16 +388,20 @@ void Board::checkStability(void) {
           commit(1,1);
         } else {
           trail.popMark();
+          Assert(!oz_onToplevel() || trail.isEmptyChunk());
           am.setCurrent(pb);
           bindStatus(genAlt(n));
         }
+        Assert(!oz_onToplevel() || trail.isEmptyChunk());
 
       } else {
         // succeeded
         trail.popMark();
+        Assert(!oz_onToplevel() || trail.isEmptyChunk());
         am.setCurrent(pb);
 
         bindStatus(genSucceeded(getSuspCount() == 0));
+        Assert(!oz_onToplevel() || trail.isEmptyChunk());
       }
     }
 
@@ -405,6 +409,7 @@ void Board::checkStability(void) {
     int n = crt;
 
     setScript(trail.unwind(this));
+    Assert(!oz_onToplevel() || trail.isEmptyChunk());
     am.setCurrent(pb);
 
     if (n == 0) {
@@ -415,9 +420,8 @@ void Board::checkStability(void) {
       setStatus(newVar);
       pb->decRunnableThreads();
     }
-
+    Assert(!oz_onToplevel() || trail.isEmptyChunk());
   }
-
 }
 
 void Board::fail(void) {

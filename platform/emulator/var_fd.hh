@@ -72,7 +72,6 @@ public:
   void gCollect(Board *);
   void sClone(Board *);
 
-
   inline void dispose(void);
 
   // methods for trailing
@@ -123,6 +122,25 @@ public:
   void printLongStream(ostream &out, int depth = 10, int offset = 0) {
     printStream(out,depth); out << endl;
   }
+
+#ifdef TMUELLER
+  //
+  void dropPropagator(Propagator * prop) {
+    for (int i = fd_prop_any; i--; ) {
+      fdSuspList[i] = fdSuspList[i]->dropPropagator(prop);
+    }
+    suspList = suspList->dropPropagator(prop);
+  }
+  //
+  // tagging and untagging constrained variables
+  //
+  OZ_FDIntVar * getTag(void) {
+    return (OZ_FDIntVar *)  (u.var_type & ~u_mask);
+  }
+  //
+  // end of tagging ...
+  //
+#endif
 };
 
 void addSuspFDVar(TaggedRef, Suspendable *, OZ_FDPropState = fd_prop_any);

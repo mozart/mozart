@@ -1226,6 +1226,8 @@ const OZ_FiniteDomainImpl &OZ_FiniteDomainImpl::operator = (const OZ_FiniteDomai
     if (type == fd_descr) {
       setType(fd_descr);
     } else if (type == bv_descr) {
+      // optimization: check if there is already memory allocated and
+      // reuse if possible
       FDBitVector * item = newBitVector(fd.get_bv()->getHigh());
       *item = *fd.get_bv();
       setType(item);
@@ -2126,6 +2128,7 @@ OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator & (const OZ_FiniteDomainImpl &
     FDBitVector * z_b = newBitVector(min(x_b->getHigh(), y_b->getHigh()));
 
     z.size = z_b->intersect_bv(*x_b, *y_b);
+    // tmueller: dispose x_b and y_b in case extra memory has been allocated
     z.min_elem = z_b->findMinElem();
     z.max_elem = z_b->findMaxElem();
     z.setType(z_b);

@@ -27,6 +27,14 @@
 #ifndef __MOZART_CPI_HH__
 #define __MOZART_CPI_HH__
 
+#define TMUELLER
+
+#ifdef TMUELLER
+#define EXPLODE Assert(0)
+#else
+#define EXPLODE
+#endif
+
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -498,19 +506,63 @@ public:
 inline OZ_Propagator::OZ_Propagator(void) {}
 
 //-----------------------------------------------------------------------------
+// class OZ_CPIVar
+#ifdef TMUELLER
+class ozdeclspec OZ_CPIVar {
+  friend class OZ_Expect;
+private:
+  static int _first_run;
+  static OZ_Term _vars_removed;
+  static void add_vars_removed(OZ_Term *);
+  static int is_in_vars_removed(OZ_Term *);
+  static void reset_vars_removed(void);
+  static void set_vars_removed(void);
+protected:
+  int _nb_refs;
+  OZ_Term var, * varPtr;
+public:
+  OZ_CPIVar(void)
+    : _nb_refs(0) {}
+  void dropParameter(void);
+};
+#endif
+//-----------------------------------------------------------------------------
 // class OZ_FDIntVar
 
+#ifdef TMUELLER
+class ozdeclspec OZ_FDIntVar : public OZ_CPIVar {
+#else
 class ozdeclspec OZ_FDIntVar {
+#endif
 private:
+#ifdef TMUELLER
+  OZ_FiniteDomain _copy, _encap;
+  OZ_FiniteDomain * _domain;
+#else
   OZ_FiniteDomain dom;
   OZ_FiniteDomain * domPtr;
+#endif
+#ifndef TMUELLER
   OZ_Term var;
   OZ_Term * varPtr;
+#endif
   int initial_size, initial_width;
+#ifdef TMUELLER
+  enum State_e {empty_e = 0x00,
+                loc_e   = 0x01,
+                glob_e  = 0x02,
+                encap_e = 0x04,
+                sgl_e   = 0x08,
+                bool_e  = 0x10,
+                int_e   = 0x20} _state;
+  OZ_Boolean isSort(State_e s) const;
+  void setSort(State_e s);
+#else
   enum Sort_e {sgl_e = 1, bool_e = 2, int_e  = 3} sort;
   enum State_e {loc_e = 1, glob_e = 2, encap_e = 3} state;
   OZ_Boolean isSort(Sort_e s) const;
   void setSort(Sort_e s);
+#endif
   OZ_Boolean isState(State_e s) const;
   void setState(State_e s);
   OZ_Boolean tell(void);
@@ -531,7 +583,11 @@ public:
   OZ_FiniteDomain * operator -> (void);
 
   OZ_Boolean isTouched(void) const;
-
+#ifdef TMUELLER
+  OZ_Boolean operator == (OZ_FDIntVar &v) {
+    return (_domain == v._domain);
+  }
+#endif
   void ask(OZ_Term);
   int read(OZ_Term);
   int readEncap(OZ_Term);
@@ -540,26 +596,73 @@ public:
 };
 
 
+#ifdef TMUELLER
 inline
-OZ_Boolean OZ_FDIntVar::isSort(Sort_e s) const {return s == sort;}
+OZ_FDIntVar::OZ_FDIntVar(void)
+  : _state(empty_e), OZ_CPIVar() {}
 inline
-void OZ_FDIntVar::setSort(Sort_e s) {sort = s;}
+OZ_FDIntVar::OZ_FDIntVar(OZ_Term v)
+  : _state(empty_e), OZ_CPIVar() {
+  read(v);
+}
+inline
+OZ_FiniteDomain &OZ_FDIntVar::operator * (void) { return *_domain; }
+inline
+OZ_FiniteDomain * OZ_FDIntVar::operator -> (void) { return _domain; }
+inline
+OZ_Boolean OZ_FDIntVar::isTouched(void) const {
+  return initial_size > _domain->getSize();
+}
+
+inline
+OZ_Boolean OZ_FDIntVar::isState(State_e s) const {
+  return _state & s;
+}
+inline
+void OZ_FDIntVar::setState(State_e s) {
+  _state = State_e(_state | s);
+  Assert(!(isState(glob_e) && isState(loc_e)));
+}
+
+inline
+OZ_Boolean OZ_FDIntVar::isSort(State_e s) const {
+  return _state & s;
+}
+inline
+void OZ_FDIntVar::setSort(State_e s) {
+  _state = State_e(_state | s);
+  Assert(!(isSort(sgl_e) && isSort(bool_e) && isSort(int_e)));
+}
+
+////////////////////////////////////////////////////////////
+#else
+////////////////////////////////////////////////////////////
 inline
 OZ_Boolean OZ_FDIntVar::isState(State_e s) const {return s == state;}
 inline
 void OZ_FDIntVar::setState(State_e s) {state = s;}
+
+inline
+OZ_Boolean OZ_FDIntVar::isSort(Sort_e s) const {return s == sort;}
+inline
+void OZ_FDIntVar::setSort(Sort_e s) {sort = s;}
+
 inline
 OZ_FDIntVar::OZ_FDIntVar(void) {}
 inline
 OZ_FDIntVar::OZ_FDIntVar(OZ_Term v) { read(v); }
+
 inline
 OZ_FiniteDomain &OZ_FDIntVar::operator * (void) { return *domPtr; }
 inline
 OZ_FiniteDomain * OZ_FDIntVar::operator -> (void) { return domPtr; }
+
 inline
 OZ_Boolean OZ_FDIntVar::isTouched(void) const {
   return initial_size > domPtr->getSize();
 }
+#endif
+
 inline
 OZ_Boolean OZ_FDIntVar::leave(void) {
   return isSort(sgl_e) ? OZ_FALSE : tell();
@@ -568,17 +671,39 @@ OZ_Boolean OZ_FDIntVar::leave(void) {
 //-----------------------------------------------------------------------------
 // class OZ_FSetVar
 
+#ifdef TMUELLER
+class ozdeclspec OZ_FSetVar : public OZ_CPIVar {
+#else
 class ozdeclspec OZ_FSetVar {
+#endif
 private:
+#ifdef TMUELLER
+  OZ_FSetConstraint _copy, _encap;
+  OZ_FSetConstraint * _set;
+#else
   OZ_FSetConstraint set;
   OZ_FSetConstraint * setPtr;
+#endif
+#ifndef TMUELLER
   OZ_Term var;
   OZ_Term * varPtr;
+#endif
   int known_in, known_not_in, card_size;
+#ifdef TMUELLER
+  enum State_e {empty_e = 0x00,
+                loc_e   = 0x01,
+                glob_e  = 0x02,
+                encap_e = 0x04,
+                val_e   = 0x08,
+                var_e   = 0x10} _state;
+  OZ_Boolean isSort(State_e s) const;
+  void setSort(State_e s);
+#else
   enum Sort_e {val_e = 1, var_e = 2} sort;
   enum State_e {loc_e = 1, glob_e = 2, encap_e = 3} state;
   OZ_Boolean isSort(Sort_e s) const;
   void setSort(Sort_e s);
+#endif
   OZ_Boolean isState(State_e s) const;
   void setState(State_e s);
 
@@ -608,6 +733,41 @@ public:
   void fail(void);
 };
 
+#ifdef TMUELLER
+//////////////////////////////////////////////////////////////////////
+inline
+OZ_FSetVar::OZ_FSetVar(void)
+  : _state(empty_e), OZ_CPIVar() {}
+inline
+OZ_FSetVar::OZ_FSetVar(OZ_Term v)
+  : _state(empty_e), OZ_CPIVar() {
+  read(v);
+}
+inline
+OZ_FSetConstraint &OZ_FSetVar::operator * (void) {return *_set;}
+inline
+OZ_FSetConstraint * OZ_FSetVar::operator -> (void) {return _set;}
+
+inline
+OZ_Boolean OZ_FSetVar::isState(State_e s) const {
+  return s & _state;
+}
+inline
+void OZ_FSetVar::setState(State_e s) {
+  _state = State_e(_state | s);
+  Assert(!(isState(glob_e) && isState(loc_e)));
+}
+inline
+OZ_Boolean OZ_FSetVar::isSort(State_e s) const {
+  return _state & s;
+}
+inline
+void OZ_FSetVar::setSort(State_e s) {
+  _state = State_e(_state | s);
+}
+//////////////////////////////////////////////////////////////////////
+#else
+//////////////////////////////////////////////////////////////////////
 inline
 OZ_Boolean OZ_FSetVar::isSort(Sort_e s) const {return s == sort;}
 inline
@@ -624,6 +784,9 @@ inline
 OZ_FSetConstraint &OZ_FSetVar::operator * (void) {return *setPtr;}
 inline
 OZ_FSetConstraint * OZ_FSetVar::operator -> (void) {return setPtr;}
+//////////////////////////////////////////////////////////////////////
+#endif
+
 inline
 OZ_Boolean OZ_FSetVar::leave(void) {
   return isSort(val_e) ? OZ_FALSE : tell();
@@ -816,29 +979,50 @@ public:
 //-----------------------------------------------------------------------------
 // OZ_CtVar
 
+#ifdef TMUELLER
+class ozdeclspec OZ_CtVar : public OZ_CPIVar {
+#else
 class ozdeclspec OZ_CtVar {
+#endif
 private:
 
   OZ_CtProfile * _profile; // necessary ?
   OZ_CtDefinition * _definition;
 
+#ifdef TMUELLER
+  int _nb_refs;
+#endif
+#ifndef TMUELLER
   OZ_Term var;
   OZ_Term * varPtr;
-
+#endif
+#ifdef TMUELLER
+  enum State_e {empty_e = 0x00,
+                loc_e   = 0x01,
+                glob_e  = 0x02,
+                encap_e = 0x04,
+                val_e   = 0x08,
+                var_e   = 0x10} _state;
+  OZ_Boolean isSort(State_e s) const;
+  void setSort(State_e s);
+#else
   enum State_e {loc_e = 1, glob_e = 2, encap_e = 3} state;
+  enum Sort_e {val_e = 1, var_e = 2} sort;
+
+  OZ_Boolean isSort(Sort_e s) const;
+  void setSort(Sort_e s);
+#endif
   OZ_Boolean isState(State_e s) const;
   void setState(State_e s);
 
-  enum Sort_e {val_e = 1, var_e = 2} sort;
-  OZ_Boolean isSort(Sort_e s) const;
-  void setSort(Sort_e s);
-
   OZ_Boolean tell(void);
 
+#ifndef TMUELLER
+  OZ_Ct * ctSetEncapConstraint(OZ_Ct * c);
   void ctSetLocalConstraint(OZ_Ct * c);
   void ctSetGlobalConstraint(OZ_Ct * c);
-  OZ_Ct * ctSetEncapConstraint(OZ_Ct * c);
-  OZ_CtWakeUp ctGetWakeUpDescrptor(void);
+#endif
+  OZ_CtWakeUp ctGetWakeUpDescriptor(void);
 
 protected:
 
@@ -846,6 +1030,9 @@ protected:
 
   virtual OZ_Ct * ctRefConstraint(OZ_Ct *) = 0;
   virtual OZ_Ct * ctSaveConstraint(OZ_Ct *) = 0;
+#ifdef TMUELLER
+  virtual OZ_Ct * ctSaveEncapConstraint(OZ_Ct *) = 0;
+#endif
   virtual void ctRestoreConstraint() = 0;
   virtual void ctSetConstraintProfile(void) = 0;
   virtual OZ_CtProfile * ctGetConstraintProfile(void) = 0;
@@ -854,8 +1041,11 @@ protected:
 
 public:
 
+#ifdef TMUELLER
+  OZ_CtVar(void);
+#else
   OZ_CtVar(void) {}
-
+#endif
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
@@ -874,6 +1064,32 @@ public:
 };
 
 
+#ifdef TMUELLER
+inline
+OZ_CtVar::OZ_CtVar(void)
+  : OZ_CPIVar(), _state(empty_e) {}
+inline
+OZ_Boolean OZ_CtVar::isState(State_e s) const {
+  return s & _state;
+}
+inline
+void OZ_CtVar::setState(State_e s) {
+   _state = State_e(_state | s);
+   Assert(!(isState(glob_e) && isState(loc_e)));
+}
+inline
+OZ_Boolean OZ_CtVar::isSort(State_e s) const {
+  return s & _state;
+}
+inline
+void OZ_CtVar::setSort(State_e s) {
+  _state = State_e(_state | s);
+}
+inline
+OZ_CtWakeUp OZ_CtVar::ctGetWakeUpDescriptor(void) {
+  return ctGetConstraint()->getWakeUpDescriptor(ctGetConstraintProfile());
+}
+#else
 inline
 OZ_Boolean OZ_CtVar::isState(State_e s) const {return s == state;}
 inline
@@ -899,9 +1115,11 @@ OZ_Ct * OZ_CtVar::ctSetEncapConstraint(OZ_Ct * c) {
   return ctRefConstraint(ctSaveConstraint(c));
 }
 inline
-OZ_CtWakeUp OZ_CtVar::ctGetWakeUpDescrptor(void) {
+OZ_CtWakeUp OZ_CtVar::ctGetWakeUpDescriptor(void) {
   return ctGetConstraint()->getWakeUpDescriptor(ctGetConstraintProfile());
 }
+#endif
+
 inline
 OZ_Boolean OZ_CtVar::leave(void) { return isSort(val_e) ? OZ_FALSE : tell(); }
 
@@ -990,6 +1208,5 @@ OZ_Boolean OZ_Expect::isExceptional(OZ_expect_t r) {
 }
 
 #endif // __MOZART_CPI_HH__
-
 //
 //-----------------------------------------------------------------------------

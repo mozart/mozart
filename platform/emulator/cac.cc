@@ -1426,7 +1426,8 @@ TaskStack * TaskStack::_cac(void) {
 #ifdef G_COLLECT
       *Y = (RefsArray) ((OzDebug *) *Y)->gCollectOzDebug();
 #else
-      Assert(0);
+      //*Y = (RefsArray) ((OzDebug *) *Y)->gCollectOzDebug();
+      //Assert(0);
 #endif
     } else if (PC == C_CALL_CONT_Ptr) {
       oz_cacTerm(*((TaggedRef *) Y), *((TaggedRef *) Y));

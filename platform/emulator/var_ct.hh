@@ -165,6 +165,24 @@ public:
     // getSuspListLength() is intended as consistency check
     out << getSuspListLength() << endl;
   }
+#ifdef TMUELLER
+  //
+  void dropPropagator(Propagator * prop) {
+    for (int i = getNoOfSuspLists(); i--; ) {
+      _susp_lists[i]= _susp_lists[i]->dropPropagator(prop);
+    }
+    suspList = suspList->dropPropagator(prop);
+  }
+  //
+  // tagging and untagging constrained variables
+  //
+  OZ_CtVar * getTag(void) {
+    return (OZ_CtVar *)  (u.var_type & ~u_mask);
+  }
+  //
+  // end of tagging ...
+  //
+#endif
 };
 
 
