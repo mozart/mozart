@@ -315,7 +315,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (if (and (get-buffer-process oz-compiler-buffer)
 	   (get-buffer-process oz-emulator-buffer))
       (let ((i oz-halt-timeout))
-	(oz-send-string "\\halt \n")
+	(oz-send-string "\\halt ")
 	(while (and (or (get-buffer-process oz-compiler-buffer)
 			(get-buffer-process oz-emulator-buffer))
 		    (> i 0))
@@ -462,8 +462,7 @@ the GDB commands `cd DIR' and `directory'."
   "Consults the region."
    (interactive "r")   
    (oz-hide-errors)
-   (let ((contents (buffer-substring start end)))
-     (oz-send-string (concat contents "\n")))
+   (oz-send-string (buffer-substring start end))
    (if oz-lucid (setq zmacs-region-stays t)))
      
 
@@ -476,8 +475,12 @@ the GDB commands `cd DIR' and `directory'."
 
 (defun oz-send-string(string)
   (oz-check-running nil)
-  (comint-send-string (get-buffer-process oz-compiler-buffer) string)
-  (process-send-eof (get-buffer-process oz-compiler-buffer)))
+  (let ((proc (get-buffer-process oz-compiler-buffer)))
+;  (comint-send-string  proc string)
+;  (comint-send-string proc "\n")
+    (process-send-string proc string)
+    (process-send-string proc "\n")
+    (process-send-eof proc)))
 
 
 ;;------------------------------------------------------------
@@ -1162,7 +1165,7 @@ OZ compiler, emulator and error window")
      (write-region start end file-1)
      (message "")
      (oz-hide-errors)
-     (oz-send-string (concat directive " '" file-1 "'\n"))
+     (oz-send-string (concat directive " '" file-1 "'"))
      (sleep-for 2)
      (while (not (file-exists-p file-2))
        (sleep-for 2)
@@ -1184,7 +1187,7 @@ OZ compiler, emulator and error window")
   (interactive "r")
   (oz-hide-errors)
   (let ((contents (buffer-substring start end)))
-    (oz-send-string (concat "{Browse " contents "}\n"))))
+    (oz-send-string (concat "{Browse " contents "}"))))
 
 
 (defun oz-feed-region-browse-memory (start end)
@@ -1192,26 +1195,26 @@ OZ compiler, emulator and error window")
   (interactive "r")
   (oz-hide-errors)
   (let ((contents (buffer-substring start end)))
-    (oz-send-string (concat "{Browse.memory " contents "}\n"))))
+    (oz-send-string (concat "{Browse.memory " contents "}"))))
 
 
 (defun oz-feed-panel ()
   "Feed {Panel popup} into the Oz Compiler"
   (interactive)
   (oz-hide-errors)
-  (oz-send-string "{Panel popup}\n"))
+  (oz-send-string "{Panel popup}"))
 
 (defun oz-feed-file(file)
   "Feed an file into the Oz Compiler"
   (interactive "FFeed file: ")
   (oz-hide-errors)
-  (oz-send-string (concat "\\feed '" file "'\n"))) 
+  (oz-send-string (concat "\\feed '" file "'"))) 
 
 (defun oz-precompile-file(file)
   "precompile an Oz file"
   (interactive "FPrecompile file: ")
   (oz-hide-errors)
-  (oz-send-string (concat "\\precompile '" file "'\n"))) 
+  (oz-send-string (concat "\\precompile '" file "'"))) 
 
 
 
