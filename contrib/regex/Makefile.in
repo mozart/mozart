@@ -21,6 +21,7 @@ LIBS            = @LIBS@ -lc
 INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
+INSTALL_DLL     = $(INSTALL) -m 555
 
 TARGETS         = regex.ozf regex.so-$(PLATFORM)
 LIB_TARGETS     = $(LIB_DIR)/regex.ozf $(LIB_DIR)/regex.so-$(PLATFORM)
@@ -37,7 +38,7 @@ $(LIB_DIR)/regex.ozf: regex.ozf
         $(INSTALL_LIB) $< $@
 
 $(LIB_DIR)/regex.so-$(PLATFORM): regex.so-$(PLATFORM)
-        $(INSTALL_LIB) $< $@
+        $(INSTALL_DLL) $< $@
 
 regex.ozf: regex.oz
         $(COMPILE) $< -o $@

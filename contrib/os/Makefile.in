@@ -20,6 +20,7 @@ LIBS            = @LIBS@
 INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
+INSTALL_DLL     = $(INSTALL) -m 555
 
 FUNCTORS        = mode.ozf io.ozf process.ozf open.ozf
 NATIVES         = io.so-$(PLATFORM) process.so-$(PLATFORM)
@@ -39,7 +40,7 @@ $(LIB_FUNCTORS): $(LIB_DIR)/% : %
         $(INSTALL_LIB) $< $@
 
 $(LIB_NATIVES): $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
-        $(INSTALL_LIB) $< $@
+        $(INSTALL_DLL) $< $@
 
 %.ozf: %.oz
         $(OZC) -c $< -o $@
