@@ -173,7 +173,7 @@ extern "C" {
 */
 
 
-#ifdef GNUWIN32
+#ifdef XGNUWIN32
 #define INT_MAX    2147483647 
 #define INT_MIN    (-2147483647-1)
 #endif
