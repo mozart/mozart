@@ -45,7 +45,7 @@ OZ_C_proc_begin(BIfdIs, 2)
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, fdptr);
   
   return OZ_unify(OZ_getCArg(1),
-		  (OZ_isPosSmallInt(fd) || 
+		  (isPosSmallFDInt(fd) || 
 		   isGenFDVar(fd, fdtag) || 
 		   isGenBoolVar(fd, fdtag)) ? NameTrue : NameFalse);
 }
@@ -238,81 +238,9 @@ OZ_C_proc_begin(BIfdGetCardinality, 2)
 OZ_C_proc_end
 
 //-----------------------------------------------------------------------------
-// puts
+// tell finite domain constraint
 
-OZ_C_proc_begin(BIfdPutLe, 2)
-{
-  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
-  
-  OZ_getCArgDeref(1, n, nptr, ntag);
-
-  if (isAnyVar(ntag)) {
-    return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, nptr);
-  } else if (! isSmallInt(ntag)) {
-    TypeError(1, "");
-  }
-
-  OZ_getCArgDeref(0, var, varptr, vartag);
-
-  if (! (isGenFDVar(var,vartag) || isGenBoolVar(var,vartag) || 
-	 OZ_isPosSmallInt(var))) {
-    if (isNotCVar(vartag)) {
-      return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
-    } else {
-      TypeError(0, "");
-    }
-  }
-  
-  BIfdBodyManager x;
-
-  if (! x.introduce(OZ_getCArg(0))) {
-    error("Should never happen.");
-    return FAILED;
-  }
-  
-  FailOnEmpty(*x <= OZ_intToC(n));
-  
-  return x.releaseNonRes();
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdPutGe, 2)
-{
-  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
-  
-  OZ_getCArgDeref(1, n, nptr, ntag);
-
-  if (isAnyVar(ntag)) {
-    return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, nptr);
-  } else if (! isSmallInt(ntag)) {
-    TypeError(1, "");
-  }
-
-  OZ_getCArgDeref(0, var, varptr, vartag);
-
-  if (! (isGenFDVar(var,vartag) || isGenBoolVar(var,vartag) || 
-	 OZ_isPosSmallInt(var))) {
-    if (isNotCVar(vartag)) {
-      return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
-    } else {
-      TypeError(0, "");
-    }
-  }
-  
-  BIfdBodyManager x;
-
-  if (! x.introduce(OZ_getCArg(0))) {
-    error("Should never happen.");
-    return FAILED;
-  }
-  
-  FailOnEmpty(*x >= OZ_intToC(n));
-  
-  return x.releaseNonRes();
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdPutList, 2) 
+OZ_C_proc_begin(BIfdTellConstraint, 2) 
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_FDDESCR);
 
@@ -326,51 +254,9 @@ OZ_C_proc_begin(BIfdPutList, 2)
     return SUSPEND;
   }
   
-  BIfdBodyManager x;
-
-  if (! x.introduce(OZ_getCArg(0))) return FAILED;
-
   OZ_FiniteDomain aux(OZ_getCArg(1));
 
-  FailOnEmpty(*x &= aux);
-
-  return x.releaseNonRes();
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIfdPutNot, 2)
-{
-  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
-  
-  OZ_getCArgDeref(1, n, nptr, ntag);
-
-  if (isAnyVar(ntag)) {
-    return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, nptr);
-  } else if (! isSmallInt(ntag)) {
-    TypeError(1, "");
-  }
-
-  OZ_getCArgDeref(0, var, varptr, vartag);
-
-  if (! (isGenFDVar(var, vartag) || isGenBoolVar(var, vartag) || 
-	 OZ_isPosSmallInt(var))) {
-    if (isNotCVar(vartag)) {
-      return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
-    } else {
-      TypeError(0, "");
-    }
-  }
-
-  BIfdBodyManager x;
-
-  if (! x.introduce(OZ_getCArg(0))) {
-    error("Should never happen.");
-    return FAILED;
-  }
-  
-  FailOnEmpty(*x -= OZ_intToC(n));
-  
-  return x.releaseNonRes();
+  return tellBasicConstraint(OZ_getCArg(0), &aux);
 }
 OZ_C_proc_end
 
@@ -511,4 +397,5 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
   return (OZ_unify (OZ_getCArg(2), NameFalse));
 } OZ_C_proc_end     
 
+// end of file
 //-----------------------------------------------------------------------------

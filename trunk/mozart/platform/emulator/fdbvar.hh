@@ -51,6 +51,7 @@ public:
   Bool valid(TaggedRef val);
 
   void becomesSmallIntAndPropagate(TaggedRef * trPtr, OZ_FiniteDomain & fd);
+  void becomesSmallIntAndPropagate(TaggedRef * trPtr, int e);
 
   int getSuspListLength(void) { return suspList->length(); }
 

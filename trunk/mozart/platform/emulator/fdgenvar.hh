@@ -98,11 +98,12 @@ public:
   }
 };
 
-inline Bool isGenFDVar(TaggedRef term);
-inline Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
-inline GenFDVariable * tagged2GenFDVar(TaggedRef term);
-inline void addSuspFDVar(TaggedRef, SuspList *, OZ_FDPropState = fd_any);
-inline void addSuspFDVar(TaggedRef, Thread *, OZ_FDPropState = fd_any);
+Bool isGenFDVar(TaggedRef term);
+Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
+GenFDVariable * tagged2GenFDVar(TaggedRef term);
+void addSuspFDVar(TaggedRef, SuspList *, OZ_FDPropState = fd_any);
+void addSuspFDVar(TaggedRef, Thread *, OZ_FDPropState = fd_any);
+OZ_Return tellBasicConstraint(OZ_Term, OZ_FiniteDomain * = NULL);
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdgenvar.icc"

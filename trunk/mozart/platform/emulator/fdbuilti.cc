@@ -1143,10 +1143,7 @@ BIspec fdSpec[] = {
   {"fdGetNextSmaller", 3, BIfdNextSmaller},
   {"fdGetNextLarger", 3, BIfdNextLarger},
 
-  {"fdPutLe", 2, BIfdPutLe},
-  {"fdPutGe", 2, BIfdPutGe},
-  {"fdPutList", 2, BIfdPutList},
-  {"fdPutNot", 2, BIfdPutNot},
+  {"fdTellConstraint", 2, BIfdTellConstraint},
 
   {"fdWatchSize", 3, BIfdWatchSize},
   {"fdWatchMin", 3, BIfdWatchMin},
@@ -1155,11 +1152,7 @@ BIspec fdSpec[] = {
 // fdcd.cc
   {"fdConstrDisjSetUp", 4, BIfdConstrDisjSetUp},
   {"fdConstrDisj", 3, BIfdConstrDisj},
-
-  {"fdPutLeCD", 3, BIfdPutLeCD},
-  {"fdPutGeCD", 3, BIfdPutGeCD},
-  {"fdPutListCD", 3, BIfdPutListCD},
-  {"fdPutNotCD", 3, BIfdPutNotCD},
+  {"fdTellConstraintCD", 3, BIfdTellConstraintCD},
 
 #ifndef FOREIGNFDPROPS
   {"fdp_init", 0, fdp_init},

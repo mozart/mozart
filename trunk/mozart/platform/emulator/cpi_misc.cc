@@ -13,7 +13,7 @@
 
 OZ_Boolean OZ_isPosSmallInt(OZ_Term val)
 {
-  return IsPosSmallInt(val);
+  return isPosSmallInt(val);
 }
 
 #define OZMALLOC(T, S) (T *) freeListMalloc(S * sizeof(T))
