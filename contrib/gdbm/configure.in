@@ -1,6 +1,5 @@
 AC_INIT(gdbm.cc)
 . ../conf.all
-test "x$prefix" = xNONE && prefix=$oz_prefix
 AC_CANONICAL_HOST
 AC_PROG_CXX
 AC_PROG_CXXCPP
