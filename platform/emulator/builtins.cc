@@ -6303,16 +6303,24 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIsend,3)
 {
   oz_declareNonvarArg(1,cl);
-  cl = oz_deref(cl);
+  oz_declareNonvarArg(2,obj);
 
+  cl = oz_deref(cl);
   if (!oz_isClass(cl)) {
-    oz_typeError(0,"Class");
+    oz_typeError(1,"Class");
   }
 
-  TaggedRef fb = tagged2ObjectClass(cl)->getFallbackSend();
+  obj = oz_deref(obj);
+  if (!oz_isObject(obj)) {
+    oz_typeError(2,"Object");
+  }
+
+  TaggedRef fb = tagged2ObjectClass(cl)->getFallbackApply();
   Assert(fb);
 
-  am.prepareCall(fb,OZ_args[0],OZ_args[1],OZ_args[2]);
+  am.changeSelf(tagged2Object(obj));
+
+  am.prepareCall(fb,OZ_args[1],OZ_args[0]);
   am.emptySuspendVarList();
   return BI_REPLACEBICALL;
 }

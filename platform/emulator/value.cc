@@ -51,7 +51,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
   NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
   NameOoPrintName,NameOoLocking,NameOoFallback,NameOoId,
-  AtomNew, AtomSend, AtomApply, AtomApplyList,
+  AtomNew, AtomApply, AtomApplyList,
 
   NameUnit, NameGroupVoid,
   NameNonExportable,
@@ -154,7 +154,6 @@ void initLiterals()
   NameOoId          = getUniqueName("ooId");
 
   AtomNew           = makeTaggedAtom("new");
-  AtomSend          = makeTaggedAtom("send");
   AtomApply         = makeTaggedAtom("apply");
   AtomApplyList     = makeTaggedAtom("applyList");
 
@@ -608,22 +607,6 @@ TaggedRef ObjectClass::getFallbackNew() {
     return 0;
 
   return fbn;
-}
-
-TaggedRef ObjectClass::getFallbackSend() {
-  TaggedRef fbs = oz_deref(classGetFeature(NameOoFallback));
-
-  if (!oz_isSRecord(fbs))
-    return 0;
-
-  SRecord * sr = tagged2SRecord(fbs);
-
-  TaggedRef fbss = oz_deref(sr->getFeature(AtomSend));
-
-  if (!oz_isAbstraction(fbss) || tagged2Const(fbss)->getArity() != 3)
-    return 0;
-
-  return fbss;
 }
 
 TaggedRef ObjectClass::getFallbackApply() {
