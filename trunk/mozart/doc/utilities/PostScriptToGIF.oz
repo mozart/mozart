@@ -45,7 +45,7 @@ define
    end
 	 
    proc {PsToPpm PsName PpmName}
-      Basename#Extension = {FilenameExplode PsName}
+      _#Extension = {FilenameExplode PsName}
       PsCat = if Extension=="gz" then 'gzip -dc '#PsName
 	      elseif {Exists PsName#'.gz'} then 'gzip -dc '#PsName#'.gz'
 	      elseif {Exists PsName#'.eps.gz'} then 'gzip -dc '#PsName#'.eps.gz'
@@ -88,8 +88,8 @@ define
       end
       meth convertPostScript(InName Info ?OutName)
 	 Basename#_ = {FilenameExplode InName}
-	 !Outname = Basename#'.gif'
-	 FullName  = @DirName#'/'#OutName
+	 !OutName   = Basename#'.gif'
+	 FullName   = @DirName#'/'#OutName
       in
 	 if {Not @Keep andthen {Exists FullName}} then
 	    PpmName = {OS.tmpnam}
