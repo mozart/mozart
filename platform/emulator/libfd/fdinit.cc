@@ -29,6 +29,7 @@
 #include "bool.hh"
 #include "card.hh"
 #include "complalldist.hh"
+#include "boundsalldist.hh"
 #include "count.hh"
 #include "diffn.hh"
 #include "disjoint.hh"
@@ -75,6 +76,7 @@ void fdp_init(void)
   InBPropagator::profile =               "fdp_intR";
   CardBPropagator::profile =             "fdp_card";
   CompleteAllDistProp::profile =         "fdp_distinctD";
+  BoundsDistinctPropagator::profile =    "fdp_distinctB";
   ExactlyPropagator::profile =           "fdp_exactly";
   AtLeastPropagator::profile =           "fdp_atLeast";
   AtMostPropagator::profile =            "fdp_atMost";
