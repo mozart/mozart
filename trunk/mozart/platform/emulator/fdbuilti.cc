@@ -945,6 +945,8 @@ void BIinitFD(void)
   BIadd("fdNotEqOff_body", 3, BIfdNotEqOff_body);
   BIadd("fdAllDifferent", 1, BIfdAllDifferent);
   BIadd("fdAllDifferent_body", 2, BIfdAllDifferent_body);
+  BIadd("fdDistinctOffset", 2, BIfdDistinctOffset);
+  BIadd("fdDistinctOffset_body", 2, BIfdDistinctOffset_body);
   
 // fdbool.cc
   BIadd("fdAnd", 3, BIfdAnd);
