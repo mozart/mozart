@@ -24,8 +24,6 @@ BUILDDIR        = $(BUILDTOP)/share/demo
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 SRCTOP		= @SRCTOP@
-HOMEURL         = @HOMEURL@
-HOMECACHE       = @HOMECACHE@
 PLATFORM	= @PLATFORM@
 
 PREFIX		= @prefix@
@@ -238,7 +236,7 @@ lmf: lmf-server lmf-book.cgi lmf-process.cgi
 # Images
 #
 
-OZIMG = $(PREFIX)/cache/$(HOMECACHE)/$(OZDEMOSUFFIX)/images
+OZIMG = $(PREFIX)/cache/x-oz/$(OZDEMOSUFFIX)/images
 
 IMGDIRS = \
 	animated-queens lift transport trucks college dict-client
