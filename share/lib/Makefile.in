@@ -48,7 +48,8 @@ ENVS1 = \
         Base.env Standard.env SP.env OP.env CP.env WP.env DP.env \
         Compiler.env CompilerPanel.env Panel.env Browser.env Explorer.env \
         Emacs.env Ozcar.env Profiler.env
-ENVS = $(ENVS11:%.oz=$(SRCDIR)/%.oz)
+ENVS = $(ENVS1:%.env=$(SRCDIR)/%.env)
+TYPS = $(ENVS:%.env=%.typ)
 
 COMPONENTS = \
         Base.ozc Standard.ozc OPI.ozc SP.ozc OP.ozc CP.ozc WP.ozc DP.ozc \
@@ -102,23 +103,23 @@ install:: $(OZLIB) $(LIBFILES) $(OZBIN) $(BINFILES) bitmaps $(LIBCOMPONENTS)
 $(OZLIB) $(OZBIN):
         $(INSTALLDIR) $@
 clean::
-        $(RM) *.oz? ozbatch
+        $(RM) *.oz? ozbatch *.typ
 
-.SUFFIXES: .oz .ozc $(SUFFIXES)
+.SUFFIXES: .oz .ozc $(SUFFIXES) .env .typ
 
-$(OzLib)/%.oz: %.oz
+$(OZLIB)/%.oz: %.oz
         $(INSTALLSRC) $< $@
 
-$(OzLib)/%.ozc: %.ozc
+$(OZLIB)/%.ozc: %.ozc
         $(INSTALLFILE) $< $@
 
-$(OzLib)/%.env: %.env
+$(OZLIB)/%.env: %.env
         $(INSTALLSRC) $< $@
 
-$(OzBin)/ozbatch: ozbatch
+$(OZBIN)/ozbatch: ozbatch
         $(INSTALLPRG) $< $@
 
-Application.oz: $(ENVS) DumpSettings.oz
+Application.oz: $(TYPS) DumpSettings.oz
 
 DumpIntro.oz: Base.env Base.ozc Standard.env Standard.ozc
         $(TOUCH) DumpIntro.oz
@@ -127,7 +128,7 @@ OPI.ozc: DumpIntro.oz OPI.oz DumpOPI.oz SP.ozc OP.ozc Compiler.env
 
 SP.ozc: DumpIntro.oz SP.oz $(SPSRC) SP.env
 
-OP.ozc: DumpIntro.oz OP.oz $(OPSRC) SP.env OP.env
+OP.ozc: DumpIntro.oz OP.oz $(OPSRC) SP.env OP.env Application.oz
 
 CP.ozc: DumpIntro.oz CP.oz $(CPSRC) SP.env CP.env
 
@@ -164,3 +165,8 @@ config.status: $(SRCDIR)/configure
 
 .oz.ozc:
         $(COMPILE) -o $@ $<
+
+.env.typ:
+        env2type $< >$@
+
+TYP: $(TYPS)
