@@ -130,8 +130,8 @@ redo:
     goto redo;
   }
 
-  cs_copy_size = cs_orig_start - ((int32 *) heapTop);
-  cs_orig_start = (int32 *) heapTop;
+  cs_copy_size = cs_orig_start - ((int32 *) _oz_heap_cur);
+  cs_orig_start = (int32 *) _oz_heap_cur;
   cs_copy_start = (int32*) malloc(4 * cs_copy_size + 256);
 
   {
