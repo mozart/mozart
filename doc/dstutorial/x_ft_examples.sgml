@@ -410,7 +410,10 @@ startup time for each site.
 
 <SUBSUBSECTION id="guards"><TITLE>Guard definition</TITLE>
 
-<P>The procedure <<{Guard E FS S1 S2}>>
+<P>Guards allow to replace a statement <<S1>>
+by another statement <<S2>> if there is a fault.
+See <ptr to="guard.based"> for a precise specification.
+The procedure <<{Guard E FS S1 S2}>>
 first disables all exception raising on <<E>>.
 Then it executes <<S1>>
 with a local watcher <<W>> (see <ptr to="local.watcher">).
