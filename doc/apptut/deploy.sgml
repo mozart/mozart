@@ -46,7 +46,7 @@
       fashion: it is possible to collapse a collection of functors into
       a single equivalent one. The model that should be kept in mind,
       is that the newly created functor employs an internal, private
-      module manager that excutes the toplevel
+      module manager that executes the toplevel
       application functor together with all included functors.
 
     <P>

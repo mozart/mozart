@@ -47,7 +47,7 @@
       In addition to taking arguments from the command line,
       <kbd/Webget.oza/ should
       report problems by returning an error status to the operating
-      system shell. The error status is a number, where the value
+      system shell. The error status is an integer, where the value
       <<0>> means okay. Any other values signals an error.
 
   <section id="section.hello.structure">
@@ -236,7 +236,7 @@ end
     <para class=apropos><title/Terminating the application/
       Termination of the application is effected by invocation of
       <<Application.exit>> which takes the application status as
-      single integer argument. In our case a exit value of <<1>>
+      single integer argument. In our case an exit value of <<1>>
       indicates an error, otherwise <<0>> is returned to the operating
       system shell.
 <p>
