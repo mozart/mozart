@@ -219,9 +219,6 @@ SourceTextForeground    = black
 SourceTextInvForeground = white
 SourceTextBackground    = white
 
-ScrollbarColors         = colors(appl  : ScrollbarApplColor
-				 stack : ScrollbarStackColor)
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% the config object to read/write changeable options

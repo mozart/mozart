@@ -299,67 +299,63 @@ in
       in
 	 
 	 {OzcarMessage '  printing frame #' # FrameNr}
-	 
-	 case Delete then
-	    Gui,Enable(W)
-	    Gui,DeleteToEnd(W FrameNr+1)
-	    Gui,DeleteLine(W FrameNr)
-	 else skip end
-	 
-	 {W tk(insert LineEnd
-	       case Frame.dir == enter then
-		  ' -> '
-	       else
-		  ' <- '
-	       end # FrameNr #
-	       ' ' # BraceLeft #
-	       case FrameName == '' then '$' else FrameName end
-	       LineTag)}
 
-	 {ForAll FrameArgs
-	  proc {$ Arg}
-	     case Arg.1 == MagicAtom then
-		{W tk(insert LineEnd ' ' # Arg.2 LineTag)}
-	     else
-		ArgTag    = {TagCounter get($)}
-		ArgAction =
-		{New Tk.action
-		 tkInit(parent: W
-			action: proc {$}
-				   {Lck set}
-				   {Browse Arg.2}
-				   {Delay 150}
-				   {Lck unset}
-				end)}
-	     in
-		{ForAll [tk(insert LineEnd ' ' LineTag)
-			 tk(insert LineEnd Arg.1 q(LineTag ArgTag))
-			 tk(tag bind ArgTag '<1>' ArgAction)
-			 tk(tag conf ArgTag font:BoldFont)] W}
-	     end
-	  end}
+	 lock
+	    case Delete then
+	       Gui,Enable(W)
+	       Gui,DeleteToEnd(W FrameNr+1)
+	       Gui,DeleteLine(W FrameNr)
+	    else skip end
+	    
+	    {W tk(insert LineEnd
+		  case Frame.dir == enter then
+		     ' -> '
+		  else
+		     ' <- '
+		  end # FrameNr #
+		  ' ' # BraceLeft #
+		  case FrameName == '' then '$' else FrameName end
+		  LineTag)}
+	    
+	    {ForAll FrameArgs
+	     proc {$ Arg}
+		case Arg.1 == MagicAtom then
+		   {W tk(insert LineEnd ' ' # Arg.2 LineTag)}
+		else
+		   ArgTag    = {TagCounter get($)}
+		   ArgAction =
+		   {New Tk.action
+		    tkInit(parent: W
+			   action: proc {$}
+				      {Lck set}
+				      {Browse Arg.2}
+				      {Delay 150}
+				      {Lck unset}
+				   end)}
+		in
+		   {ForAll [tk(insert LineEnd ' ' LineTag)
+			    tk(insert LineEnd Arg.1 q(LineTag ArgTag))
+			    tk(tag bind ArgTag '<1>' ArgAction)
+			    tk(tag conf ArgTag font:BoldFont)] W}
+		end
+	     end}
 	 
-	 {ForAll [tk(insert LineEnd
-		     case Frame.builtin then
-			BraceRight # case Delete then NL else nil end
-		     else
-			BraceRight # '  ' # BracketLeft # FrameFile #
-			FileLineSeparator # FrameLine #
-			case UpToDate then nil else '(?)' end #
-			BracketRight # case Delete then NL else nil end
-		     end LineTag)
-		  tk(tag add  LineTag LineEnd) % extend tag to whole line
-		  tk(tag bind LineTag '<1>' LineAction)] W}
-	 /*
-	 case Size == 1 andthen FrameNr == 1 orelse FrameNr == 2 then
-	    LastSelectedFrame <- undef
-	    Gui,SelectStackFrame(LineTag)
-	    Gui,printEnv(frame:FrameNr vars:Frame.env)
-	 else skip end
-	 */
-	 case Delete then
-	    Gui,Disable(W)
-	 else skip end
+	    {ForAll [tk(insert LineEnd
+			case Frame.builtin then
+			   BraceRight # case Delete then NL else nil end
+			else
+			   BraceRight # '  ' # BracketLeft # FrameFile #
+			   FileLineSeparator # FrameLine #
+			   case UpToDate then nil else '(?)' end #
+			   BracketRight # case Delete then NL else nil end
+			end LineTag)
+		     tk(tag add  LineTag LineEnd) % extend tag to whole line
+		     tk(tag bind LineTag '<1>' LineAction)] W}
+	    
+	    case Delete then
+	       Gui,Disable(W)
+	    else skip end
+	 end
       end
 	 
       meth printStack(id:I frames:Frames depth:Depth ack:Ack<=unit)
@@ -372,73 +368,20 @@ in
 	    Gui,Disable(W)
 	 else
 	    {W title(AltStackTitle # I)}
-	    Gui,Clear(W)
-	    Gui,Append(W {MakeLines Depth})  % Tk is _really_ stupid...
-	    {ForAll Frames
-	     proc{$ Frame}
-		Gui,printStackFrame(frame:Frame delete:false)
-	     end}
-	    Gui,Disable(W)
+	    lock
+	       Gui,Clear(W)
+	       Gui,Append(W {MakeLines Depth})  % Tk is _really_ stupid...
+	       {ForAll Frames
+		proc{$ Frame}
+		   Gui,printStackFrame(frame:Frame delete:false)
+		end}
+	       Gui,Disable(W)
+	       Gui,printEnv(frame:0)  % clear environment windows
+	    end
 	 end
 	 case {IsDet Ack} then skip else Ack = unit end
       end
       
-      meth printAppl(id:I name:N args:A builtin:B<=false time:Time<=0
-		     file:F<=undef line:L<=undef)
-	 UpToDate = SourceManager,isUpToDate(Time $)
-	 W        = self.StackText
-      in
-	 Gui,Clear(W)
-	 case N == undef orelse A == undef then
-	    Gui,Disable(W)
-	 else
-	    Args      = {FormatArgs A}
-	    ApplColor = case B then BuiltinColor else ProcColor end 
-	    ColorTag  = {TagCounter get($)}
-	 in
-	    {ForAll [tk(insert 'end' ' ' # BraceLeft)
-		     tk(insert 'end' case N == '' then '$' else N end ColorTag)
-		     tk(tag conf ColorTag foreground:ApplColor)] W}
-	    
-	     {ForAll Args
-	      proc {$ Arg}
-		 case Arg.1 == MagicAtom then
-		    {W tk(insert 'end' ' ' # Arg.2)}
-		 else
-		    ArgTag    = {TagCounter get($)}
-		    ArgAction =
-		    {New Tk.action
-		     tkInit(parent: W
-			    action: proc {$} {Browse Arg.2} end)}
-		 in
-		    {ForAll [tk(insert 'end' ' ')
-			     tk(insert 'end' Arg.1 ArgTag)
-			     tk(tag bind ArgTag '<1>' ArgAction)
-			     tk(tag conf ArgTag font:BoldFont)] W}
-		 end
-	      end}
-	    {W tk(insert 'end' BraceRight)}
-	 end
-	 
-	 case F \= undef then
-	    S = ' ' # {StripPath F} # FileLineSeparator # {Abs L}
-	 in
-	    case UpToDate then
-	       {W tk(insert 'end' S)}
-	       {OzcarMessage 'mtime ok.'}
-	    else
-	       T = {TagCounter get($)}
-	    in
-	       {W tk(insert 'end' S # '(?)' T)}
-	       {W tk(tag conf T foreground:BuiltinColor)}
-	       {OzcarMessage 'mtime NOT ok.'}
-	    end 
-	 else skip end
-	 
-	 Gui,Disable(W)
-	 
-      end
-   
       meth selectNode(I)
 	 {self.ThreadTree select(I)}
       end

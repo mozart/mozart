@@ -23,6 +23,7 @@ local
       attr
 	 CurrentLine
 	 Time
+	 LastApplColor : ScrollbarApplColor
       
       meth init(parent:P file:F
 		width: Width <=SourceWindowTextSize.1
@@ -109,11 +110,14 @@ local
 	    {OzcarMessage 'Reloading file ' # self.filename}
 	    SourceWindow,Load(file:self.filename)
 	 else skip end
+	 case What == appl then
+	    LastApplColor <- C
+	 else skip end
 	 case @CurrentLine.What \= undef then
 	    Other         = case What == appl then stack else appl end
 	    NewColors     = case @CurrentLine.Other == @CurrentLine.What then
 			       SourceTextInvForeground #
-			       ScrollbarColors.Other
+			       @LastApplColor
 			    else
 			       SourceTextForeground #
 			       SourceTextBackground
