@@ -5,7 +5,7 @@ WHAT = wp
 MAIN = wp.sgml
 SGMLSRCS = \
 	intro.sgml started.sgml widgets-1.sgml geometry.sgml widgets-2.sgml \
-	tools.sgml tkreference.sgml
+	tools.sgml
 HTMLEXTRAFILES0 = \
 	button.gif check-and-radio-action.gif check-and-radio.gif dialog.gif \
 	entry.gif error.gif file.gif fonts.gif grid-span.gif grid-sticky.gif \
