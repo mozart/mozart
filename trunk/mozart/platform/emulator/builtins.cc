@@ -2914,7 +2914,7 @@ OZ_Return AM::eqeq(TaggedRef Ain,TaggedRef Bin)
   // simulate a shallow guard
   trail.pushMark();
   shallowHeapTop = heapTop;
-  Bool ret = oz_unify(Ain,Bin,(ByteCode*)1);
+  OZ_Return ret = oz_unify(Ain,Bin,(ByteCode*)1);
   shallowHeapTop = NULL;
 
   if (ret == PROCEED) {
@@ -2925,11 +2925,6 @@ OZ_Return AM::eqeq(TaggedRef Ain,TaggedRef Bin)
 
     reduceTrailOnEqEq();
     return SUSPEND;
-  }
-
-  if (ret == FAILED) {
-    reduceTrailOnFail();
-    return FAILED;
   }
 
   reduceTrailOnFail();
@@ -4425,26 +4420,8 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   LTuple *lt = new LTuple(val,am.currentUVarPrototype());
     
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
-  DEREF(old,oldPtr,_1);
 
-  // mm2: hack alert!
-  if(isAnyVar(old) && !isCVar(old)) {
-    oz_bindToNonvar(oldPtr,old,makeTaggedLTuple(lt));
-  } else {
-    old = makeTaggedRef(oldPtr);
-    /* respect port semantics:
-     *
-     * fun {NewPort S}
-     *   C={NewCell S}
-     * in
-     *   proc {$ Val}
-     *     {Exchange Cell Old T}
-     *     thread Old=H|T end         %% !!!
-     *   end
-     * end
-     */
-    OZ_unifyInThread(makeTaggedLTuple(lt),old);
-  }
+  OZ_unifyInThread(old,makeTaggedLTuple(lt));
   return PROCEED;
 }
 
@@ -5166,15 +5143,6 @@ no_suspend:
   
 bomb:
   return oz_raise(E_ERROR,E_SYSTEM,"controlVarHandler: no action found",1,OZ_in(0));
-} OZ_BI_end
-
-
-// for debugging
-OZ_BI_define(BIcheckCVH,1,0)
-{
-  ControlVarNew(var,oz_rootBoard());
-  oz_unify(var,OZ_in(0)); // mm_u
-  SuspendOnControlVar;
 } OZ_BI_end
 
 

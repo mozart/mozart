@@ -111,7 +111,8 @@ enum EmulatorPropertyIndex {
   PROP_INTERNAL_SUSPENSION,
   PROP_INTERNAL_STOP,
   PROP_INTERNAL_DEBUG_IP,
-  PROP_INTERNAL_DEBUG_PERDIO,
+  PROP_INTERNAL_PERDIO_DEBUG,
+  PROP_INTERNAL_PERDIO_DOCOMPATIBLE,
   PROP_INTERNAL_BROWSER,
   PROP_INTERNAL_APPLET,
   PROP_INTERNAL,
@@ -368,7 +369,8 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
   CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
   CASE_INT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
-  CASE_INT(PROP_INTERNAL_DEBUG_PERDIO,ozconf.debugPerdio);
+  CASE_INT(PROP_INTERNAL_PERDIO_DEBUG,ozconf.debugPerdio);
+  CASE_BOOL(PROP_INTERNAL_PERDIO_DOCOMPATIBLE,ozconf.perdiod0Compatiblity);
   CASE_BOOL(PROP_INTERNAL_BROWSER,ozconf.browser);
   CASE_BOOL(PROP_INTERNAL_APPLET,ozconf.applet);
   CASE_REC(PROP_INTERNAL,"internal",(2,AtomBrowser,AtomApplet),
@@ -617,7 +619,8 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
     CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
     CASE_NAT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
-    CASE_NAT(PROP_INTERNAL_DEBUG_PERDIO,ozconf.debugPerdio);
+    CASE_NAT(PROP_INTERNAL_PERDIO_DEBUG,ozconf.debugPerdio);
+    CASE_BOOL(PROP_INTERNAL_PERDIO_DOCOMPATIBLE,ozconf.perdiod0Compatiblity);
     CASE_BOOL(PROP_INTERNAL_BROWSER,ozconf.browser);
     CASE_BOOL(PROP_INTERNAL_APPLET,ozconf.applet);
     CASE_REC(PROP_INTERNAL,
@@ -628,6 +631,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 	     SET_BOOL(AtomStopOnToplevelFailure,ozconf.stopOnToplevelFailure);
 	     SET_NAT(AtomDebugIP,ozconf.debugIP);
 	     SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
+	     SET_BOOL(oz_atom("perdiod0Compatiblity"),ozconf.perdiod0Compatiblity);
 	     SET_BOOL(AtomBrowser,ozconf.browser);
 	     SET_BOOL(AtomApplet,ozconf.applet););
     CASE_BOOL_DO(PROP_STANDALONE,ozconf.runningUnderEmacs=!INT__);
@@ -861,7 +865,8 @@ void initVirtualProperties()
   VirtualProperty::add("internal.suspension",PROP_INTERNAL_SUSPENSION);
   VirtualProperty::add("internal.stop",PROP_INTERNAL_STOP);
   VirtualProperty::add("internal.ip.debug",PROP_INTERNAL_DEBUG_IP);
-  VirtualProperty::add("internal.perdio.debug",PROP_INTERNAL_DEBUG_PERDIO);
+  VirtualProperty::add("internal.perdio.debug",PROP_INTERNAL_PERDIO_DEBUG);
+  VirtualProperty::add("internal.perdio.d0Compatiblity",PROP_INTERNAL_PERDIO_DOCOMPATIBLE);
   VirtualProperty::add("internal.browser",PROP_INTERNAL_BROWSER);
   VirtualProperty::add("internal.applet",PROP_INTERNAL_APPLET);
   VirtualProperty::add("internal",PROP_INTERNAL);

@@ -35,7 +35,7 @@
 // bind and inform sites
 
 // from perdio.cc
-void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v);
+OZ_Return bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v);
 int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar);
 
 void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
@@ -57,7 +57,7 @@ void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
   }
 }
 
-Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
+OZ_Return PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
 {
   TaggedRef rVal = *rPtr;
   TaggedRef lVal = *lPtr;
@@ -72,7 +72,7 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
     if (isObject()) {
       if (rVar->isObject()) {
 	// both are objects --> token equality
-	return lVar==rVar ? PROCEED : FALSE;
+	return lVar==rVar ? PROCEED : FAILED;
       }
       if (!rVar->isObject()) {
 	/*
@@ -92,18 +92,17 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
       // in any kind of guard then bind and trail
       am.checkSuspensionList(lVal,pc_std_unif);
       am.doBindAndTrail(lVal, lPtr,makeTaggedRef(rPtr));
-      return TRUE;
+      return PROCEED;
     } else {
       // not in guard: distributed unification
       Assert(am.isLocalSVar(rVar));
       int cmp = compareNetAddress(lVar,rVar);
       Assert(cmp!=0);
       if (cmp<0) {
-	bindPerdioVar(lVar,lPtr,makeTaggedRef(rPtr));
+	return bindPerdioVar(lVar,lPtr,makeTaggedRef(rPtr));
       } else {
-	bindPerdioVar(rVar,rPtr,makeTaggedRef(lPtr));
+	return bindPerdioVar(rVar,rPtr,makeTaggedRef(lPtr));
       }
-      return TRUE;
     }
   } // both PVARs
 
@@ -111,17 +110,16 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
   // PVAR := non PVAR
   Assert(!isAnyVar(rVal));
 
-  if (!valid(lPtr,rVal)) return FALSE;
+  if (!valid(lPtr,rVal)) return FAILED;
 
   if (am.isLocalSVar(lVar)) {
     // onToplevel: distributed unification
-    bindPerdioVar(lVar,lPtr,rVal);
-    return TRUE;
+    return bindPerdioVar(lVar,lPtr,rVal);
   } else {
     // in guard: bind and trail
     am.checkSuspensionList(lVal,pc_std_unif);
     am.doBindAndTrail(lVal, lPtr,rVal);
-    return TRUE;
+    return PROCEED;
   }
 }
 

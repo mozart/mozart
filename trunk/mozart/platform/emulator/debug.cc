@@ -353,8 +353,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
     fflush(stdout);
     if (osfgets(command,MaxLine,stdin) == (char *) NULL) {
       printf("read no input\n");
-      printf("exit\n");
-      sprintf(command,"e\n");
+      sprintf(command,"s\n");
     } else if (feof(stdin)) {
       clearerr(stdin);
       printf("exit\n");
@@ -478,7 +477,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
 	    sscanf(&command[1],"%d",&numb);
 	    printf ("G[%d] = ", numb);
 	    fflush(stdout);
-	    oz_print(G[numb]);
+	    if (G) oz_print(G[numb]);
 	    printf ("\n");
 	  }
 	  break;
@@ -487,7 +486,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
 	    int numb=0;
 	    sscanf(&command[1],"%d",&numb);
 	    printf ( "G[%d]:\n", numb);
-	    ozd_printLong(G[numb]);
+	    if (G) ozd_printLong(G[numb]);
 	    printf ( "\n");
 	  }
 	  break;
@@ -515,7 +514,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
 	    sscanf(&command[1],"%d",&numb);
 	    printf ("Y[%d] = ", numb);
 	    fflush(stdout);
-	    oz_print(Y[numb]);
+	    if (Y) oz_print(Y[numb]);
 	    printf ("\n");
 	  }
 	  break;
@@ -524,7 +523,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
 	    int numb=0;
 	    sscanf(&command[1],"%d",&numb);
 	    printf ("Y[%d]:\n", numb);
-	    ozd_printLong(Y[numb]);
+	    if (Y) ozd_printLong(Y[numb]);
 	  }
 	  break;
 	default:

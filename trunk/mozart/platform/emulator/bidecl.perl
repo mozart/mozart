@@ -2061,11 +2061,6 @@ $builtins = {
 			     BI  => BIcontrolVarHandler,
 			     native => true},
 
-    'checkCVH'	        => { in  => ['+value'],
-			     out => [],
-			     BI  => BIcheckCVH,
-			     native => true},
-
     'dvset'		=> { in  => ['+int','+int'],
 			     out => [],
 			     BI  => BIdvset,

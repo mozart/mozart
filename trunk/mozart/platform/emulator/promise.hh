@@ -47,7 +47,7 @@ public:
     requested=oz_false();
   }
   void gcRecurse(void);
-  OZ_Return unifyPromise(TaggedRef*,TaggedRef*,ByteCode*);
+  OZ_Return unifyPromise(TaggedRef*);
   Bool valid(TaggedRef /* val */) { return TRUE; } // mm2
   void addSuspPromise(TaggedRef*,Thread*,int);
   Bool isKinded() { return false; } // mm2
