@@ -42,9 +42,13 @@
       SC += 1;                                                              \
   }
 
+#define _OZ_EM_FDINF    "0"
+#define _OZ_EM_FDSUP    "134 217 726"
+#define _OZ_EM_INTMAX   "134 217 727"
+
 #define OZ_EM_LIT       "literal"
-#define OZ_EM_INT       "integer"
-#define OZ_EM_FD        "finite domain integer"
+#define OZ_EM_INT       "integer (~"_OZ_EM_INTMAX" <= integer <= "_OZ_EM_INTMAX")"
+#define OZ_EM_FD        "fd integer (fd integer in {"_OZ_EM_FDINF"\\,...\\,"_OZ_EM_FDSUP"})"
 #define OZ_EM_FDDESCR   "description of finite domain integer"
 #define OZ_EM_VECT      "vector of "
 #define OZ_EM_TNAME     "truth name"
