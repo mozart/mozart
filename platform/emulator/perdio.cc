@@ -6225,13 +6225,13 @@ OZ_BI_define(BIsiteStatistics,0,1)
   while(node!=NULL){
     GenCast(node->getBaseKey(),GenHashBaseKey*,found,Site*);
 
-    time_t ts = found->getTimeStamp();
+    TimeStamp *ts = found->getTimeStamp();
     sitelist=
       oz_cons(OZ_recordInit(oz_atom("site"),
       oz_cons(oz_pairA("siteString", oz_atom(found->stringrep())),
       oz_cons(oz_pairAI("port",(int)found->getPort()),
-      oz_cons(oz_pairAI("timeint",(int)ts),
-      oz_cons(oz_pairA("timestr",oz_atom(ctime(&ts))),
+      oz_cons(oz_pairAI("timeint",(int)ts->start),
+      oz_cons(oz_pairA("timestr",oz_atom(ctime(&ts->start))),
       oz_cons(oz_pairAI("ipint",(unsigned int)found->getAddress()),
       oz_cons(oz_pairAI("hval",(int)found),
               oz_nil()))))))),sitelist);

@@ -184,6 +184,14 @@ void dumpVirtualInfo(VirtualInfo*);
 /*   SECTION :: class BaseSite                                       */
 /**********************************************************************/
 
+
+class TimeStamp {
+public:
+  time_t start;
+  int pid;
+  TimeStamp(time_t s, int p): start(s), pid(p) {}
+};
+
 //
 // kost@ : we don't really need a separte 'BaseSite';
 class BaseSite{
@@ -193,29 +201,29 @@ friend class SiteHashTable;
 private:
 protected:
   ip_address address;
-  time_t timestamp;
+  TimeStamp timestamp;
   port_t port;
   unsigned short flags;
 
-  void init(ip_address ip,port_t p,time_t t){
+  void init(ip_address ip,port_t p, TimeStamp *t){
     address=ip;
-    timestamp=t;
+    timestamp=*t;
     port=p;
     flags=0;}
 
-  void init(ip_address a,port_t p,time_t t,unsigned short ty){
+  void init(ip_address a,port_t p, TimeStamp *t,unsigned short ty){
     init(a,p,t);
     flags=ty;}
 
   unsigned short getType(){return flags;}
 
 public:
-  BaseSite(){}
-  BaseSite(ip_address a,port_t p,time_t t):address(a),port(p),timestamp(t){}
+  BaseSite(): timestamp(TimeStamp(0,0)) {}
+  BaseSite(ip_address a,port_t p,TimeStamp &t):address(a),port(p),timestamp(t){}
 
   ip_address getAddress(){return address;} // ATTENTION
   port_t getPort(){return port;} // ATTENTION
-  time_t getTimeStamp(){return timestamp;} // ATTENTION
+  TimeStamp *getTimeStamp(){return &timestamp;} // ATTENTION
   // kost@ : What attention??? Where??? $%$#% !@#$ @#$!!!!!
   int hashPrimary();
   int hashSecondary();
@@ -228,8 +236,10 @@ public:
     PD((MARSHAL,"base site address %d",address));
     marshalShort(port,buf);
     PD((MARSHAL,"base site port %d",port));
-    marshalNumber(timestamp,buf);
-    PD((MARSHAL,"base site timestamp %d",timestamp));}
+    marshalNumber(timestamp.start,buf);
+    marshalNumber(timestamp.pid,buf);
+    PD((MARSHAL,"base site timestamp %d/%d",timestamp.start,timestamp.pid));
+  }
 
   void unmarshalBaseSite(MsgBuffer* buf){
     PD((UNMARSHAL,"base site =>"));
@@ -237,8 +247,10 @@ public:
     PD((UNMARSHAL,"base site address %d",address));
     port=unmarshalShort(buf);
     PD((UNMARSHAL,"base site port %d",port));
-    timestamp=unmarshalNumber(buf);
-    PD((UNMARSHAL,"base site timestamp %d",timestamp));}
+    timestamp.start=unmarshalNumber(buf);
+    timestamp.pid=unmarshalNumber(buf);
+    PD((UNMARSHAL,"base site timestamp %d/%d",timestamp.start,timestamp.pid));
+  }
 
 
   int compareSitesNoTimestamp(BaseSite *s){
@@ -249,8 +261,16 @@ public:
     return 0;}
 
   int checkTimeStamp(time_t t){
-    if(t==timestamp) return 0;
-    if(t<timestamp) return 1;
+    if(t==timestamp.start) return 0;
+    if(t<timestamp.start) return 1;
+    return 0-1;}
+
+  int checkTimeStamp(TimeStamp *t){
+    int aux = checkTimeStamp(t->start);
+    if (aux!=0) return aux;
+
+    if (t->pid==timestamp.pid) return 0;
+    if (t->pid<timestamp.pid) return 1;
     return 0-1;}
 
   int compareSites(BaseSite *s){
@@ -258,9 +278,8 @@ public:
     if(s->address<address) return 1;
     if(port< s->port) return 0-1;
     if(s->port< port) return 1;
-    if(timestamp < s->timestamp) return 0-1;
-    if(s->timestamp < timestamp) return 1;
-    return 0;}
+    return checkTimeStamp(&s->timestamp);
+  }
 };
 
 /**********************************************************************/
@@ -389,7 +408,7 @@ protected:
 public:
 
   Site(){}
-  Site(ip_address a,port_t p,time_t t):BaseSite(a,p,t){
+  Site(ip_address a,port_t p,TimeStamp  &t):BaseSite(a,p,t){
     uRVC.readCtr=0;
     setType(MY_SITE);}
 
@@ -724,13 +743,13 @@ void msgReceived(MsgBuffer *);
 
 //
 // kost@ : that's a part of the boot-up procedure ('perdioInit()');
-Site* makeMySite(ip_address,port_t,time_t);
+Site* makeMySite(ip_address a, port_t p, TimeStamp &t);
 
 /**********************************************************************
  *   SECTION :: new gate support
  **********************************************************************/
 
 extern OZ_Term  GateStream;
-Site *findSite(ip_address a,int port,time_t stamp);
+Site *findSite(ip_address a,int port,TimeStamp &stamp);
 
 #endif // __COMM_HH
