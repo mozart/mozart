@@ -187,8 +187,9 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
 	the <Def/command/, whereas we refer to the
 	remaining values for the integer features
 	as <Def/arguments/.  For example, in the
-	message <<<tk(set active
-	background:purple)>>> <<set>> is the
+	message 
+        <<<tk(set active background:purple)>>> 
+        <<set>> is the
 	command, <<active>> is the single
 	argument, and <<background>> is an option
 	with value <<purple>>.
@@ -239,8 +240,8 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
 	      <TH/Mnemonic/
               <th/Used/
 	    <TR>
-	      <TD/<<o(10 12 fill:yellow)>>/
-	      <TD proglang=tcl/<<10 12 -fill yellow>>/
+	      <TD/<<o(10 12 fill:red)>>/
+	      <TD proglang=tcl/<<10 12 -fill red>>/
 	      <TD/option/
               <td/see <ptr to="figure.canvas.barchart">/
 	    <TR>
@@ -257,7 +258,7 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
 	      <TD/<<s(red green blue)>>/
 	      <TD proglang=tcl/<<"red green blue">>/
 	      <TD/string/
-              <td/string consisting of several tickles/
+              <td/string of tickles/
 	    <TR>
 	      <TD/<<p(4 7 linestart)>>/
 	      <TD proglang=tcl/<<{4.7 linestart}>>/
@@ -269,8 +270,8 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
 	      <TD/batch/
 	      <TD/see <ptr to="para.geometry.batch">/
 	    <TR>
-	      <TD/<<v(1#"\nno quotation")>>/
-	      <TD proglang=tcl/<<1\nno quotation>>/
+	      <TD/<<v(1#"\nno quote")>>/
+	      <TD proglang=tcl/<<1\nno quote>>/
 	      <TD/virtual string/
 	      <TD/verbatim virtual strings/
 	    <TR>
@@ -279,8 +280,8 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
 	      <TD/color/
 	      <TD/see <ptr to="figure.widgets-2.scales">/
 	    <TR>
-	      <TD/<<d(pack(grid weight:4))>>/
-	      <TD proglang=tcl/<<grid -weight 4>>/
+	      <TD/<<d(pack(grid row:4))>>/
+	      <TD proglang=tcl/<<grid -row 4>>/
 	      <TD/delete/
 	      <TD/skip record label/
 	  </Table>
@@ -580,7 +581,7 @@ L2={New Tk.label tkInit(parent:W text:'Labels: bitmaps and text')}
 	</Figure>
 
       <para class=apropos><title/bitmap colors/
-	Bitmaps have two colors, which can be configured with the
+	Bitmaps have two colors. These colors can be configured with the
 	<<foreground>> and <<background>> options.  The color of the bitmaps'
 	pixels is given by the foreground color. 
 

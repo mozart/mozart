@@ -98,7 +98,7 @@
 
     <p>
       I am grateful to Michael Mehl, who co-authored an earlier
-      version of this document. Peter Van Roy contributed the nice paragraph
+      version of this document. Peter Van Roy contributed the paragraph
       in <ptr to="section.widgets-2.return"> that explains why <<tkReturn>>
       is indeed asynchronous.
       
