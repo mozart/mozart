@@ -138,10 +138,4 @@ void oz_bindVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 }
 void oz_bind_global(TaggedRef var, TaggedRef term);
 
-/* -----------------------------------------------------------------------
- * Unification
- * -----------------------------------------------------------------------*/
-
-OZ_Return oz_unify(OZ_Term t1, OZ_Term t2, ByteCode *scp=0);
-
 #endif

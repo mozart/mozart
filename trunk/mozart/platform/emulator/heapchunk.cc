@@ -48,7 +48,7 @@ public:
   }
 
   virtual
-  HeapChunk * gcV(void) {
+  OZ_Extension *gcV(void) {
     HeapChunk * ret = new HeapChunk(chunk_size);
     ret->chunk_data = copyChunkData();
     return ret;

@@ -200,7 +200,8 @@ OZ_BI_define(BImarshalerPerf,2,0)
   // Now let's spin for a while. First, do marshaling speed:
   timeNow = osUserTime();
   heapNow = getUsedMemory();
-  for (int i = 0; i < count; i++) {
+  int i;
+  for (i = 0; i < count; i++) {
 #ifdef USE_VS_MSGBUFFERS
     buf = getCoreVirtualMsgBuffer((DSite *) 0);
 #else
@@ -223,7 +224,7 @@ OZ_BI_define(BImarshalerPerf,2,0)
   // ... new marshaler:
   timeNow = osUserTime();
   heapNow = getUsedMemory();
-  for (int i = 0; i < count; i++) {
+  for (i = 0; i < count; i++) {
 #ifdef USE_VS_MSGBUFFERS
     buf = getCoreVirtualMsgBuffer((DSite *) 0);
 #else
@@ -255,7 +256,7 @@ OZ_BI_define(BImarshalerPerf,2,0)
   //
   timeNow = osUserTime();
   heapNow = getUsedMemory();
-  for (int i = 0; i < count; i++) {
+  for (i = 0; i < count; i++) {
     buf->unmarshalBegin();
     result = unmarshalTermRT(buf);
     buf->unmarshalEnd();
@@ -281,7 +282,7 @@ OZ_BI_define(BImarshalerPerf,2,0)
   //
   timeNow = osUserTime();
   heapNow = getUsedMemory();
-  for (int i = 0; i < count; i++) {
+  for (i = 0; i < count; i++) {
     buf->unmarshalBegin();
     result = newUnmarshalTerm(buf);
     buf->unmarshalEnd();

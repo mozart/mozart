@@ -190,11 +190,11 @@ if (Cond) {					\
 #define NO_DEFAULT_CONSTRUCTORS2(aclass)	\
   ~aclass();					\
   aclass(const aclass &);			\
-  aclass &operator = (const aclass&)
+  aclass &operator = (const aclass&);
 
 #define NO_DEFAULT_CONSTRUCTORS1(aclass)	\
-  NO_DEFAULT_CONSTRUCTORS2(aclass);		\
-  aclass()
+  NO_DEFAULT_CONSTRUCTORS2(aclass)		\
+  aclass();
 
 #define NO_DEFAULT_CONSTRUCTORS(aclass) NO_DEFAULT_CONSTRUCTORS1(aclass)
 #else

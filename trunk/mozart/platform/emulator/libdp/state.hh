@@ -87,7 +87,7 @@ private:
   int holder; // mm2: on alpha sizeof(int) != sizeof(void *)
   void *dummy; // mm2
 public:
-  NO_DEFAULT_CONSTRUCTORS(CellProxy);
+  NO_DEFAULT_CONSTRUCTORS(CellProxy)
 
   CellProxy(int manager):Tertiary(manager,Co_Cell,Te_Proxy){  // on import
     holder = 0;}
@@ -99,7 +99,7 @@ class CellManager : public  CellManagerEmul {
   friend void ConstTerm::gcConstRecurse(void);
 public:
   CellSec* getCellSec(){return (CellSec*) getSec();}
-  NO_DEFAULT_CONSTRUCTORS2(CellManager);
+  NO_DEFAULT_CONSTRUCTORS2(CellManager)
   CellManager() {
     Assert(sizeof(CellManagerEmul) == sizeof(CellManager));
     Assert(0);}
@@ -159,7 +159,7 @@ public:
 
 class LockSec : public LockSecEmul {
 public:
-  NO_DEFAULT_CONSTRUCTORS2(LockSec);
+  NO_DEFAULT_CONSTRUCTORS2(LockSec)
   LockSec(Thread *t,PendThread *pt){ // on globalize
     Assert(sizeof(LockSecEmul) == sizeof(LockSec));
     state=Cell_Lock_Valid;
@@ -253,7 +253,7 @@ private:
   int holder; // mm2: on alpha sizeof(int) != sizeof(void *)
   void *dummy; // mm2
 public:
-  NO_DEFAULT_CONSTRUCTORS(LockProxy);
+  NO_DEFAULT_CONSTRUCTORS(LockProxy)
   LockProxy(int manager):OzLock(manager,Te_Proxy){  // on import
     holder = 0;}
 
