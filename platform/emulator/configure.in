@@ -939,7 +939,7 @@ OZ_ENABLE(fasterreg,[  even faster temporary register access],yes,
 	AC_DEFINE(FASTERREGACCESS)
 	)
 
-OZ_ENABLE(fastarith,[  use fast arithemtic (assembly), if available],yes,
+OZ_ENABLE(fastarith,[  use fast arithemtic (assembly), if available],no,
 	AC_MSG_RESULT(yes (-DFASTARITH))
 	AC_DEFINE(FASTARITH)
 	)
