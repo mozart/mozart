@@ -120,8 +120,8 @@ Bool AM::hf_raise_failure()
   return NO;
 }
 
-// mm: this macro is optimized such that the term T is only created
-//  when needed, so don't pass it as argument to functions.
+// This macro is optimized such that the term T is only created
+// when needed, so don't pass it as argument to functions.
 #define HF_RAISE_FAILURE(T)                             \
    if (e->hf_raise_failure())                           \
      return T_FAILURE;                                  \
@@ -129,9 +129,6 @@ Bool AM::hf_raise_failure()
    RAISE_THREAD;
 
 
-#define HF_FAIL       HF_RAISE_FAILURE(OZ_atom("fail"))
-#define HF_DIS        HF_RAISE_FAILURE(OZ_atom("fail"))
-#define HF_COND       HF_RAISE_FAILURE(OZ_atom("fail"))
 #define HF_EQ(X,Y)    HF_RAISE_FAILURE(OZ_mkTupleC("eq",2,X,Y))
 #define HF_TELL(X,Y)  HF_RAISE_FAILURE(OZ_mkTupleC("tell",2,X,Y))
 #define HF_APPLY(N,A) HF_RAISE_FAILURE(OZ_mkTupleC("apply",2,N,A))
@@ -1288,14 +1285,8 @@ LBLdispatcher:
 
 
 // ------------------------------------------------------------------------
-// INSTRUCTIONS: Shallow guards stuff
+// INSTRUCTIONS: Testing
 // ------------------------------------------------------------------------
-
-  Case(SHALLOWGUARD)
-    {
-      OZ_error("Emulate: SHALLOWGUARD instruction executed");
-      return T_ERROR;
-    }
 
 #define LT_IF(T) if (T) THEN_CASE else ELSE_CASE
 #define THEN_CASE { XPC(3)=oz_true(); DISPATCH(5); }
@@ -1387,12 +1378,6 @@ LBLdispatcher:
 #undef THEN_CASE
 #undef ELSE_CASE
 
-  Case(SHALLOWTHEN)
-    {
-      OZ_error("Emulate: SHALLOWTHEN instruction executed");
-      return T_ERROR;
-    }
-
 // -------------------------------------------------------------------------
 // INSTRUCTIONS: Environment
 // -------------------------------------------------------------------------
@@ -1441,7 +1426,7 @@ LBLdispatcher:
 
   Case(FAILURE)
     {
-      HF_FAIL;
+      HF_RAISE_FAILURE(OZ_atom("fail"));
     }
 
 
@@ -1892,79 +1877,24 @@ LBLdispatcher:
 // --- end call/execute -----------------------------------------------------
 // --------------------------------------------------------------------------
 
-// -------------------------------------------------------------------------
-// INSTRUCTIONS: Deep Guards
-// -------------------------------------------------------------------------
+// KOSTJA: THIS IS DEAD CS
 
+  Case(SHALLOWGUARD)
+  Case(SHALLOWTHEN)
   Case(WAIT)
-    {
-      OZ_error("Emulate: WAIT instruction executed");
-      return T_ERROR;
-    }
-
   Case(WAITTOP)
-    {
-      OZ_error("Emulate: WAITTOP instruction executed");
-      return T_ERROR;
-    }
-
   Case(ASK)
-    {
-      OZ_error("Emulate: ASK instruction executed");
-      return T_ERROR;
-    }
-
   Case(CREATECOND)
-    {
-      OZ_error("Emulate: CREATECOND instruction executed");
-      return T_ERROR;
-    }
-
   Case(CREATEOR)
-    {
-      OZ_error("Emulate: CREATEOR instruction executed");
-      return T_ERROR;
-    }
-
   Case(CREATEENUMOR)
-    {
-      OZ_error("Emulate: CREATEENUMOR instruction executed");
-      return T_ERROR;
-    }
-
   Case(CREATECHOICE)
-    {
-      OZ_error("Emulate: CREATECHOICE instruction executed");
-      return T_ERROR;
-    }
-
   Case(CLAUSE)
-    {
-      OZ_error("Emulate: CLAUSE instruction executed");
-      return T_ERROR;
-    }
-
   Case(EMPTYCLAUSE)
-    {
-      OZ_error("Emulate: EMPTYCLAUSE instruction executed");
-      return T_ERROR;
-    }
-
   Case(NEXTCLAUSE)
-    {
-      OZ_error("Emulate: NEXTCLAUSE instruction executed");
-      return T_ERROR;
-    }
-
   Case(LASTCLAUSE)
-    {
-      OZ_error("Emulate: LASTCLAUSE instruction executed");
-      return T_ERROR;
-    }
-
   Case(THREAD)
     {
-      OZ_error("Emulate: THREAD instruction executed");
+      OZ_error("DEPRECATED DEEP GUARD INSTRUCTION ENCOUNTERED.\n PLEASE RECOMPILE YOUR PROGRAMS!!!");
       return T_ERROR;
     }
 
