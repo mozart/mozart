@@ -10,8 +10,8 @@
 #   Leif Kornstaedt, 1998
 #
 # Last change:
-#   $Date: 1998/07/30 23:09:31 $ by $Author: kornstae $
-#   $Revision: 1.2 $
+#   $Date: 1998/09/02 09:03:01 $ by $Author: kornstae $
+#   $Revision: 1.3 $
 #
 # This file is part of Mozart, an implementation of Oz 3:
 #   $MOZARTURL$
@@ -23,14 +23,15 @@
 # WARRANTIES.
 #
 
-if [ $# -ne 2 ]
+if [ $# -ne 3 ]
 then
-    echo usage: `basename $0` \<input file\> \<output directory\> 1>&2
+    echo usage: `basename $0` \<input file\> \<count\> \<output dir\> 1>&2
     exit 2
 fi
 
 infile=$1
-outdir=$2
+count=$2
+outdir=$3
 
 tmpdir=/tmp/ps2gif.$$
 mkdir $tmpdir
@@ -41,18 +42,35 @@ cp $infile $tmpdir/x.tex
 latex x 1>&2 || exit 1
 dvips x.dvi -o x.ps 1>&2
 
-(cat x.ps; echo quit) |
-gs -q -dNOPAUSE \
--dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 \
--sDEVICE=ppmraw -sOutputFile=latex%d.ppm - 1>&2
+mkfifo moo
 
-for i in latex*.ppm; do
-    o=`basename $i .ppm`.gif
-    pnmcrop < $i | ppmtogif -interlace -transparent rgbi:1/1/1 > $o
-    echo Wrote $o 1>&2
-done)
-
-mv $tmpdir/latex*.gif $outdir
+gs -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 \
+-sDEVICE=ppmraw -sOutputFile=latex%d.ppm x.ps < moo |
+(
+    i=0
+    while [ $i -lt $count ]; do
+	exit=no
+	while [ $exit ]; do
+	    read line
+	    echo $line 1>&2
+	    case $line in
+	    *showpage*)
+		exit=""
+		;;
+	    *)
+		;;
+	    esac
+	done
+	i=`expr $i + 1`
+	pnmcrop < latex$i.ppm |
+	ppmtogif -interlace -transparent rgbi:1/1/1 > $outdir/latex$i.gif
+	rm latex$i.ppm
+	echo Wrote latex$i.gif 1>&2
+	echo
+    done
+    echo quit
+    ) > moo
+)
 
 rm -rf $tmpdir
 
