@@ -612,7 +612,7 @@ OzVariable * OzVariable::_cacVarInline(void) {
   }
 
   to->setHome(bb);
-  cacStack.push(&(to->suspList), PTR_SUSPLIST);
+  cacStack.pushSuspList(&(to->suspList));
 
   return (to);
 }
@@ -1699,12 +1699,12 @@ void Board::_cacRecurse() {
 
   OZ_cacBlock(&script,&script,3);
 
-  cacStack.push(&suspList, PTR_SUSPLIST);
+  cacStack.pushSuspList(&suspList);
   Distributor * d = getDistributor();
   if (d) {
     setDistributor(d->_cac());
   }
-  cacStack.push((SuspList **) &nonMonoSuspList, PTR_SUSPLIST);
+  cacStack.pushSuspList((SuspList **) &nonMonoSuspList);
 
 #ifdef CS_PROFILE
 #ifdef G_COLLECT
@@ -1780,50 +1780,51 @@ void LTuple::_cacRecurse() {
 }
 
 
+#define UTG_PTR(ptr,tag,type) ((type) (((unsigned int) (ptr)) - (tag)))
+
 void CacStack::_cacRecurse(void) {
 
   while (!isEmpty()) {
     StackEntry tp;
     pop1(tp);
-    void * ptr    = tagValueOf((TaggedRef) tp);
-    TypeOfPtr how = (TypeOfPtr) tagged2ltag((TaggedRef) tp);
+    ptrtag_t ptag = (ptrtag_t) (((unsigned int) tp) & PTR_MASK);
 
-    switch(how) {
+    switch (ptag) {
     case PTR_LTUPLE:
-      ((LTuple *) ptr)->_cacRecurse();
+      UTG_PTR(tp,PTR_LTUPLE,LTuple *)->_cacRecurse();
       break;
     case PTR_SRECORD:
-      ((SRecord *) ptr)->_cacRecurse();
+      UTG_PTR(tp,PTR_SRECORD,SRecord *)->_cacRecurse();
       break;
     case PTR_BOARD:
-      ((Board *) ptr)->_cacRecurse();
+      UTG_PTR(tp,PTR_BOARD,Board *)->_cacRecurse();
       break;
     case PTR_VAR:
-      ((OzVariable *) ptr)->_cacVarRecurse();
+      UTG_PTR(tp,PTR_VAR,OzVariable *)->_cacVarRecurse();
       break;
     case PTR_CONSTTERM:
-      ((ConstTerm *) ptr)->_cacConstRecurse();
+      UTG_PTR(tp,PTR_CONSTTERM,ConstTerm *)->_cacConstRecurse();
       break;
     case PTR_EXTENSION:
-      ((OZ_Extension *) ptr)->_cacRecurseV();
+      UTG_PTR(tp,PTR_EXTENSION,OZ_Extension *)->_cacRecurseV();
       break;
-    case PTR_SUSPLIST:
-      *((SuspList **) ptr) = (*(SuspList **) ptr)->_cacRecurse(NULL);
-      break;
-    case PTR_UNUSED2:
-      Assert(0);
-    default:
+    case PTR_SUSPLIST0:
+    case PTR_SUSPLIST1:
       {
-        Assert(how & PTR_LOCAL_SUSPLIST);
-
-        SuspList ** sl = (SuspList **) ptr;
+        SuspList ** slp = UTG_PTR(tp,PTR_SUSPLIST,SuspList **);
         StackEntry e;
         pop1(e);
-        Board    *  bb = (Board *) e;
 
-        for (int i = how - PTR_LOCAL_SUSPLIST; i--; )
-          sl[i] = sl[i]->_cacLocalRecurse(bb);
+        if (e) {
+          unsigned int n = ((unsigned int) e) & PTR_MASK;
+          Board * bb     = (Board *) (((unsigned int) e) - n);
 
+          for (int i = n; i--; )
+            slp[i] = slp[i]->_cacLocalRecurse(bb);
+        } else {
+          *slp = (*slp)->_cacRecurse(NULL);
+        }
+        break;
       }
     }
   }
