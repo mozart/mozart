@@ -338,15 +338,19 @@ dnl *****************************************************************
 dnl Checks for libraries.
 dnl *****************************************************************
 
-AC_CHECK_LIB(nsl, gethostbyaddr)
-OZ_NEEDS_FUNC(gethostbyaddr)
-AC_CHECK_LIB(socket, socket)
-OZ_NEEDS_FUNC(socket)
-AC_CHECK_LIB(m, fabs)
-OZ_NEEDS_FUNC(fabs)
-AC_CHECK_LIB(kernel32,main)
-AC_CHECK_LIB(wsock32,main)
-AC_CHECK_LIB(dl, dlopen)
+
+if test "$platform" != "win32-i486" ; then
+    AC_CHECK_LIB(nsl, gethostbyaddr)
+    OZ_NEEDS_FUNC(gethostbyaddr)
+    AC_CHECK_LIB(socket, socket)
+    OZ_NEEDS_FUNC(socket)
+    AC_CHECK_LIB(m, fabs)
+    OZ_NEEDS_FUNC(fabs)
+    AC_CHECK_LIB(dl, dlopen)
+else
+    AC_CHECK_LIB(kernel32,main)
+    AC_CHECK_LIB(wsock32,main)
+fi
 
 dnl *****************************************************************
 dnl Checks for library functions.
