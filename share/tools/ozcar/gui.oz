@@ -61,7 +61,8 @@ local
    TagCounter =
    {New class 
 	   attr n
-	   meth clear n<-0 end
+	   meth clear n<-1000 end  % low integers are reserved for
+	                           % stack frame clicks
 	   meth get($) N=@n in n<-N+1 N end
 	end clear}
    
@@ -237,7 +238,7 @@ in
 	 Gui,Disable(self.GlobalEnvText)
       end
    
-      meth frameClick(frame:F tag:T)
+      meth frameClick(frame:F highlight:Highlight<=true)
 	 L
       in
 	 {Delay 70} % > TIME_SLICE
@@ -245,18 +246,20 @@ in
 	 case L then skip else
 	    Ack
 	    FrameId       = F.id
+	    FrameNr       = F.nr
 	    CurrentThread = ThreadManager,getCurrentThread($)
 	    Vars          = {Dbg.frameVars CurrentThread FrameId}
 	 in
 	    {OzcarMessage 'Selecting frame #' # FrameId}
-	    thread
-	       SourceManager,scrollbar(file:F.file line:{Abs F.line} ack:Ack
-				       color:ScrollbarStackColor what:stack)
-	    end
-	    thread Gui,loadStatus(F.file Ack) end
-	    
-	    Gui,SelectStackFrame(T)
-	    Gui,printEnv(frame:F.nr vars:Vars)
+	    case Highlight then
+	       thread
+		  SourceManager,scrollbar(file:F.file line:{Abs F.line} ack:Ack
+					  color:ScrollbarStackColor what:stack)
+	       end
+	       thread Gui,loadStatus(F.file Ack) end
+	    else skip end
+	    Gui,SelectStackFrame(FrameNr)
+	    Gui,printEnv(frame:FrameNr vars:Vars)
 	    /*
 	    case {Cget verbose} then
 	       {Debug.displayCode F.'PC' 5}
@@ -269,17 +272,19 @@ in
 	 W   = self.StackText
 	 LSF = @LastSelectedFrame
       in
-	 case LSF \= undef andthen LSF \= T then
-	    {W tk(tag conf @LastSelectedFrame
-		  relief:flat borderwidth:0
-		  background: DefaultBackground
-		  foreground: DefaultForeground)}
+	 case LSF \= T then
+	    case LSF \= undef then
+	       {W tk(tag conf LSF
+		     relief:flat borderwidth:0
+		     background: DefaultBackground
+		     foreground: DefaultForeground)}
+	    else skip end
+	    {W tk(tag conf T
+		  relief:raised borderwidth:0
+		  background: SelectedBackground
+		  foreground: SelectedForeground)}
+	    LastSelectedFrame <- T
 	 else skip end
-	 {W tk(tag conf T
-	       relief:raised borderwidth:0
-	       background: SelectedBackground
-	       foreground: SelectedForeground)}
-	 LastSelectedFrame <- T
       end
 
       meth printStackFrame(frame:Frame delete:Delete<=true)
@@ -289,11 +294,11 @@ in
 	 FrameArgs  = {FormatArgs Frame.args}  % argument list
 	 FrameFile  = {StripPath  Frame.file}
 	 FrameLine  = {Abs Frame.line}
-	 LineTag    = {TagCounter get($)}
+	 LineTag    = FrameNr
 	 LineAction =
 	 {New Tk.action
 	  tkInit(parent: W
-		 action: Ozcar # frameClick(frame:Frame tag:LineTag))}
+		 action: Ozcar # frameClick(frame:Frame))}
 	 LineEnd    = FrameNr # DotEnd
 	 UpToDate   = SourceManager,isUpToDate(Frame.time $)
       in
@@ -349,12 +354,17 @@ in
 		     tk(tag bind LineTag '<1>' LineAction)] W}
 	    
 	    case Delete then
+	       FrameDir = Frame.dir
+	    in
 	       Gui,Disable(W)
+	       case FrameDir == enter then % should also work with 'leave' :-(
+		  Gui,frameClick(frame:Frame highlight:false)
+	       else skip end
 	    else skip end
 	 end
       end
 	 
-      meth printStack(id:I frames:Frames depth:Depth ack:Ack<=unit)
+      meth printStack(id:I frames:Frames depth:Depth last:LastFrame<=nil)
 	 W = self.StackText
       in
 	 {OzcarMessage 'printing complete stack of size ' # Depth}
@@ -362,20 +372,29 @@ in
 	    {W title(StackTitle)}
 	    Gui,Clear(W)
 	    Gui,Disable(W)
+	    Gui,printEnv(frame:0)
 	 else
 	    {W title(AltStackTitle # I)}
-	    lock
-	       Gui,Clear(W)
-	       Gui,Append(W {MakeLines Depth})  % Tk is _really_ stupid...
-	       {ForAll Frames
-		proc{$ Frame}
-		   Gui,printStackFrame(frame:Frame delete:false)
-		end}
+	    Gui,Clear(W)
+	    case Depth == 0 then
 	       Gui,Disable(W)
-	       Gui,printEnv(frame:0)  % clear environment windows
+	       Gui,printEnv(frame:0)
+	    else
+	       lock
+		  Gui,Append(W {MakeLines Depth})  % Tk is _really_ stupid...
+		  {ForAll Frames
+		   proc{$ Frame}
+		      Gui,printStackFrame(frame:Frame delete:false)
+		   end}
+		  Gui,Disable(W)
+		  case LastFrame == nil then
+		     {OzcarError 'printStack: LastFrame == nil ??'}
+		  else
+		     Gui,frameClick(frame:LastFrame highlight:false)
+		  end
+	       end
 	    end
 	 end
-	 case {IsDet Ack} then skip else Ack = unit end
       end
       
       meth selectNode(I)
@@ -467,7 +486,15 @@ in
 	       {Thread.resume T}
 	    
 	    elseof ' next' then
-	       {Dbg.stepmode T false}
+	       ThreadDic = ThreadManager,getThreadDic($)
+	       TopFrame  = {{Dget ThreadDic I} getTop($)}
+	       Dir = case TopFrame == nil then enter else TopFrame.dir end
+	    in
+	       case Dir == leave then
+		  {OzcarMessage NextOnLeave}
+	       else
+		  {Dbg.stepmode T false}
+	       end
 	       {Thread.resume T}
 	       
 	    elseof ' finish' then

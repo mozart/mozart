@@ -79,8 +79,15 @@ in
       meth print
 	 Frames = {Ditems self.D}
 	 Depth  = @Size
+	 Last   = case Depth > 0 then {Dget self.D Depth} else nil end
       in
-	 {Ozcar printStack(id:self.I frames:Frames depth:Depth)}
+	 {Ozcar printStack(id:self.I frames:Frames depth:Depth last:Last)}
+      end
+
+      meth getTop($)
+	 S = @Size
+      in
+	 case S == 0 then nil else {Dget self.D S} end
       end
 
       meth printTop
@@ -93,7 +100,7 @@ in
 	       TopFrame = {Dget self.D S}
 	    in
 	       {Ozcar printStackFrame(frame:TopFrame delete:true)}
-	       {Ozcar printEnv(frame:0)}
+	       %{Ozcar printEnv(frame:0)}
 	    end
 	 end
       end
@@ -109,7 +116,7 @@ in
       meth exit(FrameId)
 	 S = @Size
       in
-	 local
+	 case S == 0 then skip else
 	    Key   = case S == @SP then {Dremove self.D S} S-1 else S end
 	    Frame
 	    NewFrame
