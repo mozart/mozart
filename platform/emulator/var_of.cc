@@ -35,6 +35,31 @@
 //                               for class OzOFVariable
 //-------------------------------------------------------------------------
 
+#ifdef OUTLINE
+#define inline
+#endif
+
+inline 
+TaggedRef MonitorArityPropagator::getX(void) { 
+  return X; 
+}
+inline 
+TaggedRef MonitorArityPropagator::getK(void) { 
+  return K; 
+}
+inline 
+TaggedRef MonitorArityPropagator::getFH(void) { 
+  return FH; 
+}
+inline 
+TaggedRef MonitorArityPropagator::getFT(void) { 
+  return FT; 
+}
+inline
+void MonitorArityPropagator::setFH(TaggedRef FH1) { 
+  FH=FH1; 
+}
+
 /* Add list of features to each OFS-marked suspension list 'flist' has
  * three possible values: a single feature (literal or integer), a
  * nonempty list of features, or NULL (no extra features).
