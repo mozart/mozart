@@ -31,9 +31,9 @@ enum ContFlag {
   C_DEBUG_CONT = 3,  // a continuation for debugging
   C_CALL_CONT  = 4,  // an application
   C_JOB        = 5,  // job marker
-  C_SOLVE      = 6,  // the SOLVE combinator
-  C_LOCAL      = 7,  // a local computation space
-  C_EXCEPT_HANDLER = 8 
+  C_LOCAL      = 6,  // a local computation space
+  C_EXCEPT_HANDLER = 7, // 
+  C_SET_CAA    = 8   // supply the emulator with the CAA pointer;
 };
 
 
@@ -136,7 +136,6 @@ public:
     push(ToPointer(C_EXCEPT_HANDLER), NO);
   }
 
-  void pushSolve()   { push(ToPointer(C_SOLVE)); }
   void pushLocal()   { push(ToPointer(C_LOCAL)); }
 
   void pushCFunCont(OZ_CFun f, RefsArray  x, int i, Bool copy)
@@ -166,12 +165,13 @@ public:
     Assert(!g || MemChunks::areRegsInHeap(g,getRefsArraySize(g)));
 	       
     if (i > 0) { *newTop++ = copy ? copyRefsArray(x,i) : x; }
-    *newTop     = g;
-    *(newTop+1) = y; 
-    *(newTop+2) = ToPointer(makeTaggedPC(i>0 ? C_XCONT : C_CONT, pc));
+    *newTop++   = g;
+    *newTop++   = y; 
+    *newTop++   = ToPointer(makeTaggedPC(i>0 ? C_XCONT : C_CONT, pc));
     
-    tos = newTop + 3;
+    tos = newTop;
   }
+
   void pushCont(Continuation *cont) {
     pushCont(cont->getPC(),cont->getY(),cont->getG(),
 	     cont->getX(),cont->getXSize(),NO);
@@ -181,6 +181,12 @@ public:
   {
     push(deb);
     push(ToPointer(C_DEBUG_CONT));
+  }
+
+  void pushSetCaa (AskActor *aa)
+  {
+    push (aa);
+    push (ToPointer(C_SET_CAA));
   }
 
   static TaskStackEntry makeJobEntry(Bool hasJob)
