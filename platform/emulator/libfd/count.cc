@@ -31,6 +31,12 @@ OZ_C_proc_begin(fdp_exactly, 3)
 }
 OZ_C_proc_end
 
+ExactlyPropagator::~ExactlyPropagator(void) 
+{
+  OZ_hfreeCInts(reg_oldDomSizes, reg_l_sz);
+}
+
+
 OZ_Return ExactlyPropagator::propagate(void)
 {
   if (reg_l_sz == 0) return replaceByInt(reg_n, 0);
@@ -44,9 +50,20 @@ OZ_Return ExactlyPropagator::propagate(void)
 
   for (i = l_sz; i--; ) {
     l[i].read(reg_l[i]);
-    if (*l[i] == fd_singl && l[i]->getSingleElem() == v) tn += 1;
-    if (! l[i]->isIn(v)) tnn += 1;    
+    if (l[i]->getSize() < reg_oldDomSizes[i]) {
+      if (*l[i] == fd_singl && l[i]->getSingleElem() == v) 
+	tn += 1;
+      else { 
+	if (! l[i]->isIn(v)) 
+	  tnn += 1;    
+      }
+    }
   }
+
+  reg_tn += tn; 
+  reg_tnn += tnn;
+  tn = reg_tn;
+  tnn = reg_tnn;
 
   if (*n_var == fd_singl) {
     int n = n_var->getSingleElem();
@@ -55,11 +72,12 @@ OZ_Return ExactlyPropagator::propagate(void)
 	if (*l[i] != fd_singl)
 	  FailOnEmpty(*l[i] -= v);
       return P.vanish(); 
-    } else if (l_sz - tnn == n) {
+    } else if (oldSize - tnn == n) {
       for (i = l_sz; i--; )
 	if (l[i]->isIn(v))
 	  FailOnEmpty(*l[i] &= v);
-    } else if ( (l_sz - tnn < n) || (tn > n) ) {
+      return P.vanish();
+    } else if ( (oldSize - tnn < n) || (tn > n) ) {
       goto failure;
     }   
   } else {
@@ -69,22 +87,41 @@ OZ_Return ExactlyPropagator::propagate(void)
 	  FailOnEmpty(*l[i] -= v);
       FailOnEmpty(*n_var &= tn);
       return P.vanish(); 
-    } else if (l_sz - tnn == n_var->getMinElem()) {
+    } else if (oldSize - tnn == n_var->getMinElem()) {
       for (i = l_sz; i--; )
 	if (l[i]->isIn(v))
 	  FailOnEmpty(*l[i] &= v);
-      FailOnEmpty(*n_var &= l_sz - tnn);
-    } else if ( (l_sz - tnn < n_var->getMinElem()) || (tn > n_var->getMaxElem()) ) {
+      FailOnEmpty(*n_var &= oldSize - tnn);
+      P.vanish();
+    } else if ( (oldSize - tnn < n_var->getMinElem()) || (tn > n_var->getMaxElem()) ) {
       goto failure;
     }   
 
-    FailOnEmpty(*n_var <= l_sz - tnn);
+    FailOnEmpty(*n_var <= oldSize - tnn);
     FailOnEmpty(*n_var >= tn);
   }
+
+  int from, to;
+  for (from = 0, to = 0; from < l_sz; from += 1) {
+    if ((*l[from] == fd_singl) && (l[from]->getMinElem() == v)) {}
+    else {
+      if (!l[from]->isIn(v)) {}
+      else {
+	reg_oldDomSizes[to] = l[from]->getSize();
+	reg_l[to] = reg_l[from];
+	to++;
+      }
+    }
+  }
+  
+  l_sz = to;
+
 
   return P.leave();
 
 failure:
+
+   
   return P.fail();
 }
 
@@ -105,6 +142,11 @@ OZ_C_proc_begin(fdp_atLeast, 3)
 }
 OZ_C_proc_end
 
+AtLeastPropagator::~AtLeastPropagator(void) 
+{
+  OZ_hfreeCInts(reg_oldDomSizes, reg_l_sz);
+}
+
 OZ_Return AtLeastPropagator::propagate(void)
 {
   if (reg_l_sz == 0) return replaceByInt(reg_n, 0);
@@ -113,42 +155,68 @@ OZ_Return AtLeastPropagator::propagate(void)
   OZ_FDIntVar n_var(reg_n);
   DECL_DYN_ARRAY(OZ_FDIntVar, l, l_sz);
   PropagatorController_VV_V P(l_sz, l, n_var);
+
   int tn = 0, tnn = 0, i;
 
   for (i = l_sz; i--; ) {
     l[i].read(reg_l[i]);
-    if (*l[i] == fd_singl && l[i]->getSingleElem() == v) tn += 1;
-    if (! l[i]->isIn(v)) tnn += 1;    
+    if (l[i]->getSize() < reg_oldDomSizes[i]) {
+      if (*l[i] == fd_singl && l[i]->getSingleElem() == v) 
+	tn += 1;
+      else { 
+	if (! l[i]->isIn(v)) 
+	  tnn += 1;    
+      }
+    }
   }
+
+  reg_tn += tn; 
+  reg_tnn += tnn;
+  tn = reg_tn;
+  tnn = reg_tnn;
 
   if (*n_var == fd_singl) {
     int n = n_var->getSingleElem();
-    if (l_sz - tnn == n) {
+    if (oldSize - tnn == n) {
       for (i = l_sz; i--; ) 
 	if (l[i]->isIn(v))
 	  FailOnEmpty(*l[i] &= v);
       return P.vanish();
-    } else if  (l_sz - tnn < n) {
+    } else if  (oldSize - tnn < n) {
       goto failure;
     } else if (tn >= n) {
       return P.vanish();
     }
   } else {
-    if (l_sz - tnn == n_var->getMinElem()) {
+    if (oldSize - tnn == n_var->getMinElem()) {
       for (i = l_sz; i--; ) 
 	if (l[i]->isIn(v))
 	  FailOnEmpty(*l[i] &= v);
-      FailOnEmpty(*n_var <= l_sz - tnn);
+      FailOnEmpty(*n_var <= oldSize - tnn);
       return P.vanish();
-    } else if  (l_sz - tnn < n_var->getMinElem()) {
+    } else if  (oldSize - tnn < n_var->getMinElem()) {
       goto failure;
     } else if (tn >= n_var->getMaxElem()) {
       return P.vanish();
     }
   
-    FailOnEmpty(*n_var <= l_sz - tnn);
+    FailOnEmpty(*n_var <= oldSize - tnn);
   }
 
+  int from, to;
+  for (from = 0, to = 0; from < l_sz; from += 1) {
+    if ((*l[from] == fd_singl) && (l[from]->getMinElem() == v)) {}
+    else {
+      if (!l[from]->isIn(v)) {}
+      else {
+	reg_oldDomSizes[to] = l[from]->getSize();
+	reg_l[to] = reg_l[from];
+	to++;
+      }
+    }
+  }
+  
+  l_sz = to;
   return P.leave();
 
 failure:
@@ -172,6 +240,11 @@ OZ_C_proc_begin(fdp_atMost, 3)
 }
 OZ_C_proc_end
 
+AtMostPropagator::~AtMostPropagator(void) 
+{
+  OZ_hfreeCInts(reg_oldDomSizes, reg_l_sz);
+}
+
 OZ_Return AtMostPropagator::propagate(void)
 {
   if (reg_l_sz == 0) return PROCEED;
@@ -185,9 +258,20 @@ OZ_Return AtMostPropagator::propagate(void)
 
   for (i = l_sz; i--; ) {
     l[i].read(reg_l[i]);
-    if (*l[i] == fd_singl && l[i]->getSingleElem() == v) tn += 1;
-    if (! l[i]->isIn(v)) tnn += 1;    
+    if (l[i]->getSize() < reg_oldDomSizes[i]) {
+      if (*l[i] == fd_singl && l[i]->getSingleElem() == v) 
+	tn += 1;
+      else { 
+	if (! l[i]->isIn(v)) 
+	  tnn += 1;    
+      }
+    }
   }
+
+  reg_tn += tn; 
+  reg_tnn += tnn;
+  tn = reg_tn;
+  tnn = reg_tnn;
 
   if (*n_var == fd_singl) {
     int n = n_var->getSingleElem();
@@ -198,7 +282,7 @@ OZ_Return AtMostPropagator::propagate(void)
       return P.vanish();
     } else if  (tn > n) {
       goto failure;
-    } else if (l_sz - tnn <= n) {
+    } else if (oldSize - tnn <= n) {
       return P.vanish();
     }
   } else {
@@ -210,13 +294,28 @@ OZ_Return AtMostPropagator::propagate(void)
       return P.vanish();
     } else if  (tn > n_var->getMaxElem()) {
       goto failure;
-    } else if (l_sz - tnn <= n_var->getMinElem()) {
+    } else if (oldSize - tnn <= n_var->getMinElem()) {
       return P.vanish();
     }
     
     FailOnEmpty(*n_var >= tn);
   }
   
+  int from, to;
+  for (from = 0, to = 0; from < l_sz; from += 1) {
+    if ((*l[from] == fd_singl) && (l[from]->getMinElem() == v)) {}
+    else {
+      if (!l[from]->isIn(v)) {}
+      else {
+	reg_oldDomSizes[to] = l[from]->getSize();
+	reg_l[to] = reg_l[from];
+	to++;
+      }
+    }
+  }
+  
+  l_sz = to;
+
   return P.leave();
 
 failure:
