@@ -6,6 +6,7 @@ CYG_PREFIX	= $(shell $(CYGPATH) $(PREFIX))
 CYG_SRCDIR	= $(shell $(CYGPATH) $(SRCDIR))
 OZENGINE	= @VAR_OZE@
 BUILDDIR	= @BUILDDIR@
+CYG_BUILDDIR_OZMAKE = $(shell $(CYGPATH) $(BUILDDIR)/ozmake)
 
 all: build.ozmake
 	$(OZENGINE) ozmake/ozmake.ozf --prefix=$(CYG_PREFIX) --srcdir=$(CYG_SRCDIR)
@@ -15,6 +16,7 @@ build.ozmake:
 
 install: all
 	$(OZENGINE) ozmake/ozmake.ozf --prefix=$(CYG_PREFIX) --srcdir=$(CYG_SRCDIR) --install --nosavedb
+	$(OZENGINE) ozmake/ozmake.ozf --prefix=$(CYG_PREFIX) --srcdir=$(CYG_SRCDIR)/ozmake --builddir=$(CYG_BUILDDIR_OZMAKE) --install --nosavedb
 
 export CLEANDIR
 
