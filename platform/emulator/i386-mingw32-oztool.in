@@ -1,6 +1,6 @@
 #!/bin/sh
 
-plat=i386-mingw32
+target=@target@
 
 if test $# -eq 0
 then
@@ -33,8 +33,8 @@ if test "${OZTOOL_INCLUDES-NONE}" = NONE; then
 fi
 
 case "$cmd" in
-  c++)      exec ${plat}-g++ $OZTOOL_INCLUDES "$@" ;;
-  cc)       exec ${plat}-gcc $OZTOOL_INCLUDES "$@" ;;
+  c++)      exec ${target}-g++ $OZTOOL_INCLUDES "$@" ;;
+  cc)       exec ${target}-gcc $OZTOOL_INCLUDES "$@" ;;
   platform)
     case "$1" in
     -o) echo "win32-i486" > "$2";;
@@ -63,13 +63,13 @@ done
 
 defname=${libname}.def
 
-${plat}-dlltool --as ${plat}-as --output-def $defname \
-                --dllname $libname $args || exit 1
+${target}-dlltool --as ${target}-as --output-def $defname \
+                  --dllname $libname $args || exit 1
 
 exec \
-${plat}-dllwrap --dlltool-name ${plat}-dlltool \
-                --driver-name ${plat}-gcc \
-                --as ${plat}-as -s -o $libname --def $defname \
-                --dllname $libname $args \
-                @BUILDTOP@/platform/emulator/libemulator.a \
-                $libdirs
+${target}-dllwrap --dlltool-name ${target}-dlltool \
+                  --driver-name ${target}-gcc \
+                  --as ${target}-as -s -o $libname --def $defname \
+                  --dllname $libname $args \
+                  @BUILDTOP@/platform/emulator/libemulator.a \
+                  $libdirs
