@@ -63,7 +63,7 @@ OZ_BI_define(BIIdentifyParameter, 1, 1)
   int * ids = OZ_findEqualVars(length, vars);
 
   for (int i = length; i--; ) {
-    id_list = OZ_cons(OZ_int(ids[i]), id_list);
+    id_list = OZ_cons(ids[i] < 0 ? atom_novar : OZ_int(ids[i]), id_list);
   }
 
   DEBUGPRINT(("BIIdentifyParameter out\n"));
