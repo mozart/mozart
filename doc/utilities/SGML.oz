@@ -67,6 +67,7 @@ define
        process([File] ?Res
                catalog:{Property.get 'ozdoc.catalog'}
                casefold:lower
+               include:{Property.get 'ozdoc.include'}
                error:Errors)}
       if Errors \= nil then
          {OutputParseErrors Errors Reporter}

@@ -55,7 +55,9 @@ prepare
                  'bst-path'(single type: string default: unit)
                  'elisp-path'(single type: string default: unit)
                  'sbin-path'(single type: string default: unit)
-                 'catalog'(single type: string default: unit))
+                 'catalog'(single type: string default: unit)
+                 'include'(multiple type: string default: nil)
+                )
 define
    try
       Args = {Application.getCmdArgs Spec}
@@ -142,6 +144,13 @@ define
             elseof X then X end
          elseof X then X end
          {Property.put 'ozdoc.catalog' CATALOG}
+         INCLUDE =
+         case Args.'include' of unit then
+            case {OS.getEnv 'OZDOC_INCLUDE'} of false then
+               nil
+            elseof X then {String.tokens X &:} end
+         elseof X then X end
+         {Property.put 'ozdoc.include' INCLUDE}
          TEXINPUTS =
          '.:'#
          case {OS.getEnv 'OZDOC_TEXINPUTS'} of false then
