@@ -239,12 +239,15 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
   }    
 }
 
+void ProxyVar::redoStatus(TaggedRef val,TaggedRef status){
+  SiteUnify(status,oz_status(val));
+}
+
 void ProxyVar::redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
 {
   int BTI=getIndex();
   if(status!=0){
-    SiteUnify(status,val);}
-  TaggedRef stat=status;
+    redoStatus(val,status);}
   PD((TABLE,"REDIRECT - borrow entry hit b:%d",BTI));
   if (binding) {
     DebugCode(binding=0);
@@ -261,7 +264,7 @@ void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be)
 {
   int BTI=getIndex();
   if(status!=0){
-    SiteUnify(status,binding);}
+    redoStatus(binding,status);}
   PD((PD_VAR,"acknowledge"));
 
   EntityInfo* ei=info;
