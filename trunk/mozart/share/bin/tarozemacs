@@ -1,5 +1,5 @@
 #!/bin/sh
-OZHOME=/usr/share/gs/Oz
+OZHOME=/usr/share/gs/oz
 pwd=`pwd`
 
 cd $OZHOME
@@ -11,7 +11,7 @@ trap "rm -f $temp" 0 1 15
 echo "ozemacs/bin" > $temp
 
 #set -x
-tar -X $temp -cvf - Oz/ozemacs | compress > $pwd/ozemacs-common.tar.Z
+tar -X $temp -cvf - oz/ozemacs | compress > $pwd/ozemacs-common.tar.Z
 
 
 for plat in sunos-sparc--sparc-sun-sunos4.1.3 \
@@ -24,6 +24,6 @@ do
    platt=`echo $plat|sed -e 's/.*--//'`
    tarfile=ozemacs-$link.tar.Z
    echo "Creating $tarfile..."
-   tar -cf - Oz/ozemacs/bin/$platt Oz/ozemacs/bin/$link | compress > $pwd/$tarfile
+   tar -cf - oz/ozemacs/bin/$platt oz/ozemacs/bin/$link | compress > $pwd/$tarfile
 done
 
