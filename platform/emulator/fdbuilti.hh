@@ -695,6 +695,12 @@ public:
 //                           class BIfdBodyManager
 //-----------------------------------------------------------------------------
 
+enum fdbm_var_state {fdbm_local, fdbm_global, fdbm_speculative};
+char * fdbm_var_stat2char(fdbm_var_state s) {
+  static char * fdbm_var_state_names[3] = {"local", "global", "speculative"};
+  return fdbm_var_state_names[s];
+}
+
 inline
 int idx(int i, int j) {
   Assert(0 <= j && j < static_index_size[i]);
@@ -729,7 +735,7 @@ private:
   static Bool vars_left;
   static Bool glob_vars_touched;
   static Bool only_local_vars;
-  static Bool * bifdbm_is_local;
+  static fdbm_var_state * bifdbm_var_state;
 
 // backup data slots
   int backup_curr_num_of_vars1;
@@ -833,7 +839,7 @@ public:
 	 << ", dom=" << *bifdbm_dom[i]
 	 << ", @dom=" << bifdbm_dom[i]
 	 << ", init_dom_size=" << bifdbm_init_dom_size[i]
-	 << ", is_local=" << bifdbm_is_local[i] << endl;
+	 << ", var_state=" << fdbm_var_stat2char(bifdbm_var_state[i]) << endl;
     cerr.flush();
   }
 
@@ -965,7 +971,7 @@ public:
 	bifdbm_vartag[to] = bifdbm_vartag[from];
 	bifdbm_dom[to] = bifdbm_dom[from];
 	bifdbm_init_dom_size[to] = bifdbm_init_dom_size[from];
-	bifdbm_is_local[to] = bifdbm_is_local[from];
+	bifdbm_var_state[to] = bifdbm_var_state[from];
       }
       curr_num_of_vars -= (ts - new_ts);
     } 
