@@ -1015,39 +1015,36 @@ OZ_Bool OZ_suspendOnVar(OZ_Term var)
 {
   DEREF(var,varPtr,_1);
   Assert(isAnyVar(var));
-  am.suspendVarList=makeTaggedNULL();
-  am.addSuspendVarList(makeTaggedRef(varPtr));
+  am.addSuspendVarList(varPtr);
   return SUSPEND;
 }
 
 OZ_Bool OZ_suspendOnVar2(OZ_Term var1,OZ_Term var2)
 {
-  am.suspendVarList=makeTaggedNULL();
   DEREF(var1,varPtr1,_1);
   if (isAnyVar(var1)) {
-    am.addSuspendVarList(makeTaggedRef(varPtr1));
+    am.addSuspendVarList(varPtr1);
   }
   DEREF(var2,varPtr2,_2);
   if (isAnyVar(var2)) {
-    am.addSuspendVarList(makeTaggedRef(varPtr2));
+    am.addSuspendVarList(varPtr2);
   }
   return SUSPEND;
 }
 
 OZ_Bool OZ_suspendOnVar3(OZ_Term var1,OZ_Term var2,OZ_Term var3)
 {
-  am.suspendVarList=makeTaggedNULL();
   DEREF(var1,varPtr1,_1);
   if (isAnyVar(var1)) {
-    am.addSuspendVarList(makeTaggedRef(varPtr1));
+    am.addSuspendVarList(varPtr1);
   }
   DEREF(var2,varPtr2,_2);
   if (isAnyVar(var2)) {
-    am.addSuspendVarList(makeTaggedRef(varPtr2));
+    am.addSuspendVarList(varPtr2);
   }
   DEREF(var3,varPtr3,_3);
   if (isAnyVar(var3)) {
-    am.addSuspendVarList(makeTaggedRef(varPtr3));
+    am.addSuspendVarList(varPtr3);
   }
   return SUSPEND;
 }
