@@ -34,8 +34,11 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
+#ifdef _MSC_VER
+#include <direct.h>
+#else
 #include <dirent.h>
+#endif
 
 #ifndef WINDOWS
 #include <netdb.h>
@@ -47,7 +50,7 @@ extern int h_errno;
 #endif
 
 
-#ifdef __MINGW32__
+#ifdef WINDOWS
 #define S_IWGRP 0
 #define S_IXGRP 0
 #define S_IROTH 0
@@ -325,7 +328,7 @@ OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len,
   }
 
   if (*len == max_vs_length && c) {
-    *susp = OZ_string(string);
+    *susp = OZ_string((OZ_CONST char*)string);
     *rest = *susp;
     return SUSPEND;
   }
@@ -591,14 +594,14 @@ OZ_BI_iodefine(unix_stat,1,1)
     RETURN_UNIX_ERROR("stat");
   }
 
-#ifndef _MSC_VER
   if      (S_ISREG(buf.st_mode))  fileType = "reg";
   else if (S_ISDIR(buf.st_mode))  fileType = "dir";
   else if (S_ISCHR(buf.st_mode))  fileType = "chr";
+#ifndef WINDOWS
   else if (S_ISBLK(buf.st_mode))  fileType = "blk";
+#endif
   else if (S_ISFIFO(buf.st_mode)) fileType = "fifo";
   else 
-#endif
     fileType = "unknown";
 
   OZ_Term pairlist=
@@ -1310,8 +1313,8 @@ OZ_BI_iodefine(unix_receiveFromInet,5,3)
 
   if (oz_unify(localhead, hd) != PROCEED) return FAILED; // mm_u
   OZ_out(0) = OZ_string(gethost ?
-			gethost->h_name :
-			(const char*) inet_ntoa(from.sin_addr));
+			(OZ_CONST char*) gethost->h_name :
+			(OZ_CONST char*) inet_ntoa(from.sin_addr));
   OZ_out(1) = OZ_int(ntohs(from.sin_port));
   OZ_out(2) = OZ_int(ret);
   return PROCEED;

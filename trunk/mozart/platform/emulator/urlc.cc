@@ -98,7 +98,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <ctype.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <sys/types.h>

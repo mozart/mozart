@@ -30,7 +30,6 @@
 #endif
 
 #include <errno.h>
-#include <unistd.h>
 
 #include "ozostream.hh"
 #include "base.hh"

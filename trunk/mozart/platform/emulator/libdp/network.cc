@@ -65,10 +65,11 @@
    **************************************************************************
    **************************************************************************/
 
+#include "wsock.hh"
+
 #include "base.hh"
 #include "dpBase.hh"
 
-#include "wsock.hh"
 #ifndef WINDOWS
 #include <sys/types.h>
 #include <sys/time.h>
@@ -81,7 +82,6 @@
 #endif
 #include <errno.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
 

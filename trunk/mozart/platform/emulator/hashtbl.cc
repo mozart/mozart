@@ -31,7 +31,6 @@
 
 #include <math.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <stdio.h>
 
 #include "hashtbl.hh"
