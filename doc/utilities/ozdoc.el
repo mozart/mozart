@@ -55,7 +55,8 @@ STRING should be given if the last search was by `string-match' on STRING."
       (setf (aref table i) (char-to-string i)))
     (setf (aref table ?&) "&amp;"
           (aref table ?<) "&lt;"
-          (aref table ?>) "&gt;")
+          (aref table ?>) "&gt;"
+          (aref table ? ) "&nbsp;")
     table))
 
 (defun ozdoc-htmlize-protect (string)
