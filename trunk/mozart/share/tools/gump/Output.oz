@@ -155,8 +155,10 @@ local
       [] fFdIn(O S T _) then
 	 {DoOutput {Oz S 600}#' '#O#' '#{Oz T 601} P 600}
       [] fAt(T _) then {DoOutput '@'#{Oz T 1401} P 1400}
-      [] fAndThen(S T _) then {DoOutput {Oz S 401}#' andthen '#{Oz T 400} P 400}
-      [] fOrElse(S T _) then {DoOutput {Oz S 301}#' orelse '#{Oz T 300} P 300}
+      [] fAndThen(S T _) then
+	 {DoOutput {Oz S 401}#' andthen '#{Oz T 400} P 400}
+      [] fOrElse(S T _) then
+	 {DoOutput {Oz S 301}#' orelse '#{Oz T 300} P 300}
       [] fClass(T Ds Ms _) then
 	 'class '#{OutputOz T}#IN#NL#{LI {Map Ds OutputOz} NL}#NL#
 	 {LI {Map Ms OutputOz} NL}#EX#NL#'end'
@@ -173,8 +175,8 @@ local
       [] fDollar(_) then '$'
       [] fSelf(_) then 'self'
       [] fEq(S T _) then {DoOutput {Oz S 101}#' = '#{Oz T 100} P 100}
-      [] fIf(Clauses IfElse _) then
-	 PU#'if '#{LI {Map Clauses OutputOz} NL#'[] '}#
+      [] fCond(Clauses IfElse _) then
+	 PU#'cond '#{LI {Map Clauses OutputOz} NL#'[] '}#
 	 case IfElse of fNoElse(_) then ""
 	 else NL#'else'#IN#NL#{OzBlock IfElse}#EX
 	 end#NL#PO#'end'
@@ -183,7 +185,8 @@ local
 	 case T of fNoThen(_) then "" else ' then'#IN#NL#{OzBlock T}#EX end
       [] fCondis(Tss _) then
 	 PU#'condis '#IN#
-	 {LI {Map Tss fun {$ Ts} {LI {Map Ts OutputOz} GL} end} EX#NL#'[] '#IN}#
+	 {LI {Map Tss fun {$ Ts} {LI {Map Ts OutputOz} GL} end}
+	  EX#NL#'[] '#IN}#
 	 EX#NL#PO#'end'
       [] fOr(Clauses Type _) then
 	 PU#case Type of fchoice then 'choice '
@@ -191,7 +194,7 @@ local
 	    [] for then 'or '
 	    end#{LI {Map Clauses OutputOz} NL#'[] '}#NL#PO#'end'
       [] fBoolCase(E T1 T2 _) then
-	 PU#'case '#{OutputOz E}#' then'#IN#NL#{OzBlock T1}#EX#
+	 PU#'if '#{OutputOz E}#' then'#IN#NL#{OzBlock T1}#EX#
 	 case T2 of fNoElse(_) then ""
 	 else NL#'else'#IN#NL#{OzBlock T2}#EX
 	 end#NL#PO#'end'
