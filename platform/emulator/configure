@@ -3674,7 +3674,7 @@ EOF
         oz_enable_modules_static=yes
         if test "$target" = NONE
         then # compiling for mingw32 under cygwin
-            LD="$CC"
+            LD="$CXX"
             TOOLLDCMD="`cd .. && pwd`/mswindows/oztool -inc `pwd` ld"
         else # cross-compiling
             cat >> confdefs.h <<\EOF
@@ -3956,7 +3956,7 @@ else
 #line 3957 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 #include <ctype.h>
 #define ISLOWER(c) ('a' <= (c) && (c) <= 'z')
@@ -5888,7 +5888,7 @@ else
 #line 5889 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 class DoubleConv {
@@ -5942,7 +5942,7 @@ else
 #line 5943 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 class DoubleConv {
@@ -9586,7 +9586,7 @@ else
 #line 9587 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 #include <sys/types.h>
@@ -9789,7 +9789,7 @@ else
 #line 9790 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 #ifdef __GNUC__
@@ -9871,7 +9871,7 @@ else
 #line 9872 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 #ifdef __GNUC__
@@ -9953,7 +9953,7 @@ else
 #line 9954 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 class Tag {
@@ -9994,7 +9994,7 @@ else
 #line 9995 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 class Tag {
@@ -10045,7 +10045,7 @@ else
 #line 10046 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 class Tag {
