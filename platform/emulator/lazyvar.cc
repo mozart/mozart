@@ -23,11 +23,13 @@ OZ_C_proc_proto(BIload);
 void
 GenLazyVariable::kickLazy()
 {
+  static RefsArray args = allocateStaticRefsArray(20);
   if (function!=0) {
     if (OZ_isProcedure(function)||OZ_isObject(function))
       {
 	Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,home);
-	thr->pushCall(function,&result,1);
+	args[0] = result;
+	thr->pushCall(function,args,1);
 	am.scheduleThread(thr);
       }
     else if (OZ_isCons(function) ||
@@ -41,7 +43,8 @@ GenLazyVariable::kickLazy()
 	    // 1#P ==> thread {P ME} end
 	    {
 	      Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,home);
-	      thr->pushCall(snd,&result,1);
+	      args[0] = result;
+	      thr->pushCall(snd,args,1);
 	      am.scheduleThread(thr);
 	      break;
 	    }
@@ -56,7 +59,8 @@ GenLazyVariable::kickLazy()
 	    // 3#URL ==> thread {Load URL ME} end
 	    {
 	      Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,home);
-	      TaggedRef args[] = { snd , result };
+	      args[0] = snd;
+	      args[1] = result;
 	      thr->pushCFun(BIload,args,2,TRUE);
 	      am.scheduleThread(thr);
 	      break;
@@ -65,16 +69,12 @@ GenLazyVariable::kickLazy()
 	    // 4#call(P X1 ... Xn) ==> thread {P X1 ... Xn ME} end
 	    if (OZ_isTuple(snd)) {
 	      Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,home);
-	      TaggedRef args[20];
 	      int w = OZ_width(snd);
-	      if (w>20) {
-		OZ_warning("Lazy call has more than 20 args");
-		function = 0;
-		return;
-	      }
-	      for(int i=1;i<w;i++) args[i-1]=OZ_getArg(snd,i);
-	      args[w-1] = result;
-	      thr->pushCall(OZ_getArg(snd,0),args,w);
+	      RefsArray args2 = (w>20)?allocateRefsArray(w,NO):args;
+	      for(int i=1;i<w;i++) args2[i-1]=OZ_getArg(snd,i);
+	      args2[w-1] = result;
+	      thr->pushCall(OZ_getArg(snd,0),args2,w);
+	      if (w>20) disposeRefsArray(args2);
 	      am.scheduleThread(thr);
 	      break;
 	    }
@@ -116,7 +116,7 @@ GenLazyVariable::unifyLazy(TaggedRef*vPtr,TaggedRef*tPtr,ByteCode*scp)
   // else x.kick() x=y
   kickLazy(vPtr);
   Bool ret = am.performUnify(vPtr,tPtr,scp);
-  Assert(am.rebindTrail.isEmpty());
+  // Assert(am.rebindTrail.isEmpty());
   return ret;
 }
 
