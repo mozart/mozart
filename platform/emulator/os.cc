@@ -691,7 +691,6 @@ void osInit()
   DebugCheck(CLOCK_TICK < 1000, error("CLOCK_TICK must be greater than 1 ms"));
 
   openMax=osOpenMax();
-  DebugCheckT(printf("openMax: %d\n",openMax));
 
   FD_ZERO(&globalFDs[SEL_READ]);
   FD_ZERO(&globalFDs[SEL_WRITE]);

@@ -27,8 +27,16 @@ AM am;
 static
 void usage(int /* argc */,char **argv) {
   fprintf(stderr,
-	  "usage: %s [-E] [-S file | -f file] [-d] [-c compiler]\n",
+	  "usage: %s <options>\n",
 	  argv[0]);
+  fprintf(stderr, " -E: running under emacs\n");
+  fprintf(stderr, " -d: debugging on\n");
+  fprintf(stderr, " -quiet: no banner\n");
+  fprintf(stderr, " -c <compiler>: start the compiler\n");
+  fprintf(stderr, " -S <fifo>: connect to compiler via FIFO\n");
+  fprintf(stderr, " -u <url>: start a compute server\n");
+  fprintf(stderr, " -f <file>: execute precompiled file\n");
+  fprintf(stderr, " -a <args> ...: application arguments\n");
   osExit(1);
 }
 
@@ -37,6 +45,7 @@ char *getOptArg(int &i, int argc, char **argv)
 {
   i++;
   if (i == argc) {
+    fprintf(stderr,"Option '%s' requires argument.\n",argv[i-1]);
     usage(argc,argv);
     return NULL;
   }
@@ -143,7 +152,9 @@ void AM::init(int argc,char **argv)
 
   char *compilerFIFO = NULL;  // path name where to connect to
   char *precompiledFile = NULL;
+  char *url=0;
   Bool quiet = FALSE;
+  int moreThanOne = 0;
   
   /* process command line arguments */
   ozconf.argV = NULL;
@@ -162,15 +173,24 @@ void AM::init(int argc,char **argv)
       continue;
     }
     if (strcmp(argv[i],"-c")==0) {
+      moreThanOne++;
       compilerName = getOptArg(i,argc,argv);
       continue;
     }
     if (strcmp(argv[i],"-S")==0) {
+      moreThanOne++;
       compilerFIFO = getOptArg(i,argc,argv);
       continue;
     }
     if (strcmp(argv[i],"-f")==0) {
+      moreThanOne++;
       precompiledFile = getOptArg(i,argc,argv);
+      continue;
+    }
+
+    if (strcmp(argv[i],"-u")==0) {
+      moreThanOne++;
+      url = getOptArg(i,argc,argv);
       continue;
     }
 
@@ -180,38 +200,46 @@ void AM::init(int argc,char **argv)
       break;
     }
 
+    fprintf(stderr,"Unknown option '%s'.\n",argv[i]);
     usage(argc,argv);
   }
 
-  int moreThanOne = 0;
-  moreThanOne += (compilerFIFO != NULL);
-  moreThanOne += (precompiledFile != NULL);
   if (moreThanOne > 1) {
-     fprintf(stderr,"Specify only one of '-s' and '-f' and '-S'.\n");
-     usage(argc,argv);
+    fprintf(stderr,"Atmost one of '-u', '-f', '-S' allowed.\n");
+    usage(argc,argv);
    }
+
+#ifdef DEBUG_CHECK
+  if (!quiet)
+    ozconf.showIdleMessage=1;
+#endif
 
   if (quiet == FALSE) {
     printBanner();
   }
 
   isStandaloneF=NO;
-  if (compilerFIFO != NULL) {
-    compStream = connectCompiler(compilerFIFO);
-  } else if (precompiledFile != NULL) {
-    compStream = useFile(precompiledFile);
+  if (url) {
     isStandaloneF=OK;
   } else {
-    compStream = execCompiler(compilerName);
+    if (compilerFIFO) {
+      compStream = connectCompiler(compilerFIFO);
+    } else if (precompiledFile) {
+      compStream = useFile(precompiledFile);
+      isStandaloneF=OK;
+    } else if (compilerName) {
+      compStream = execCompiler(compilerName);
+    }
+
+    if (compStream == NULL) {
+      fprintf(stderr,"Cannot open code input\n");
+      ossleep(5);
+      osExit(1);
+    }
+
+    checkVersion();
   }
 
-  if (compStream == NULL) {
-    fprintf(stderr,"Cannot open code input\n");
-    ossleep(5);
-    osExit(1);
-  }
-
-  checkVersion();
 
   engine(OK);
 
@@ -273,8 +301,19 @@ void AM::init(int argc,char **argv)
   osInitSignals();
   osSetAlarmTimer(CLOCK_TICK/1000);
 
-  // --> make sure that we check for input from compiler
-  setSFlag(IOReady);
+  if (!url) {
+    // --> make sure that we check for input from compiler
+    setSFlag(IOReady);
+  } else {
+    OZ_Term v;
+    if (loadURL(url,v)!=PROCEED) {
+      fprintf(stderr,"Loading from URL %s failed\n",url);
+      exit(1);
+    }
+    Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, am.rootBoard);
+    tt->pushCall(v, 0, 0);
+    am.scheduleThread (tt);
+  }
 
 #ifdef DEBUG_CHECK
   dontPropagate = NO;
@@ -297,7 +336,7 @@ void AM::checkVersion()
 
 void AM::exitOz(int status)
 {
-  compStream->csclose();
+  if (compStream) compStream->csclose();
   osExit(status);
 }
 
@@ -1167,12 +1206,14 @@ void AM::handleIO()
   int numbOfFDs = osFirstSelect();
 
   /* check input from compiler */
-  if (osNextSelect(compStream->csfileno(),SEL_READ) || /* do this FIRST, sideeffect! */
-      !compStream->bufEmpty()) {
-    do {
-      loadQuery(compStream);
-    } while(!compStream->bufEmpty());
-    numbOfFDs--;
+  if (compStream) {
+    if (osNextSelect(compStream->csfileno(),SEL_READ) || /* do this FIRST, sideeffect! */
+	!compStream->bufEmpty()) {
+      do {
+	loadQuery(compStream);
+      } while(!compStream->bufEmpty());
+      numbOfFDs--;
+    }
   }
 
   // find the nodes to awake
@@ -1209,7 +1250,8 @@ void checkIO(){
 void AM::checkIO()
 {
   int numbOfFDs = osCheckIO();
-  if (!isCritical() && (numbOfFDs > 0 || !compStream->bufEmpty())) {
+  if (!isCritical() && (numbOfFDs > 0
+			|| (compStream && !compStream->bufEmpty()))) {
     setSFlag(IOReady);
   }
 }
