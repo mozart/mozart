@@ -633,7 +633,7 @@ OZ_BI_define(BIisCopyableProcedureRef,1,1)
 {
   OZ_declareForeignPointer(0,p);
   AbstractionEntry *entry = (AbstractionEntry *) p;
-  OZ_RETURN(oz_bool(entry->copyable));
+  OZ_RETURN(oz_bool(entry->isCopyable()));
 } OZ_BI_end
 
 

@@ -34,42 +34,65 @@
 #include "value.hh"
 #include "am.hh"
 
+#define AE_COPYABLE  1
+#define AE_COLLECTED 2
+#define AE_MASK      3
+
 class AbstractionEntry {
 private:  
   TaggedRef      abstr;
   ProgramCounter pc;
-  int arity;
-  AbstractionEntry *next;
-  Bool collected;
+  IHashTable *   indexTable;
+  Tagged2        next_flags;
 
-  static AbstractionEntry *allEntries;
+  static AbstractionEntry * allEntries;
 
 public:
 
-  Bool copyable;  // true iff may be copied with definitionCopy
-  IHashTable *indexTable;
-
+  AbstractionEntry * getNext(void) {
+    return (AbstractionEntry *) next_flags.getPtr();
+  }
+  void setNext(AbstractionEntry * n) {
+    next_flags.setPtr(n);
+  }
+  
+  int isCopyable(void) {
+    return next_flags.getTag() & AE_COPYABLE;
+  }
+  int isCollected(void) {
+    return next_flags.getTag() & AE_COLLECTED;
+  }
+  void setCollected(void) {
+    next_flags.borTag(AE_COLLECTED);
+  }
+  void unsetCollected(void) {
+    next_flags.bandTag(~AE_COLLECTED);
+  }
+  IHashTable * getIndexTable(void) {
+    return indexTable;
+  }
   AbstractionEntry(Bool fc) { 
     abstr      = makeTaggedNULL();
     pc         = NOCODE;
-    copyable   = fc;
-    collected  = NO;
-    indexTable = 0;
-    next       = allEntries;
+    indexTable = NULL;
+    next_flags.set(allEntries,fc);
     allEntries = this;
   }
-  Abstraction *getAbstr() { 
+
+  Abstraction * getAbstr(void) { 
     return abstr ? (Abstraction *) tagged2Const(abstr) : (Abstraction *) NULL; 
   };
-  ProgramCounter getPC()  { return pc; };
-  int getArity()          { return arity; };
-  void setPred(Abstraction *abs);
 
+  ProgramCounter getPC(void)  { 
+    return pc; 
+  };
+  
+
+  void setPred(Abstraction * abs);
   void gCollectAbstractionEntry(void);
 
   static void freeUnusedEntries();
 };
-
 
 /*****************************************************************************/
 
@@ -83,31 +106,27 @@ public:
 #endif
 
 
-class TaggedList {
-public:
-  TaggedRef *t;
-  TaggedList *next;
-
-  TaggedList(TaggedRef *tptr, TaggedList *nxt): t(tptr), next(nxt) {}
-  TaggedList *dispose() { 
-    TaggedList *ret = next;
-    delete this;
-    return ret;
-  }
-};
-
-/**************************************************
- *  Invalidating of inline caches
- **************************************************/
-
-typedef enum {C_TAGGED, C_INLINECACHE, C_ABSTRENTRY, C_FREE} GCListTag;
+#define C_TAGGED      0
+#define C_INLINECACHE 1 
+#define C_ABSTRENTRY  2 
+#define C_FREE        3
 
 const int codeGCListBlockSize = 10;
 
 class GCListEntry {
+private:
+  int    _tag;
+  void * _ptr;
 public:
-  GCListTag tag;
-  ProgramCounter pc;
+  void set(void * p, int t) {
+    _ptr = p; _tag = t;
+  }
+  int getTag(void) {
+    return _tag;
+  }
+  void * getPtr(void) {
+    return _ptr;
+  }
 };
 
 class CodeGCList {
@@ -128,15 +147,14 @@ public:
   }
     
 
-  CodeGCList *add(ProgramCounter ptr, GCListTag tag)
+  CodeGCList *add(ProgramCounter ptr, int tag)
   {
     if (this==NULL || nextFree >= codeGCListBlockSize) {
       CodeGCList *aux = new CodeGCList(this);
       return aux->add(ptr,tag);
     }
 
-    block[nextFree].tag = tag;
-    block[nextFree].pc  = ptr;
+    block[nextFree].set(ptr,tag);
     nextFree++;
     return this;
   }
@@ -145,7 +163,7 @@ public:
   CodeGCList *addTagged(ProgramCounter ptr) { return add(ptr,C_TAGGED); }
   CodeGCList *addAbstractionEntry(ProgramCounter ptr) { return add(ptr,C_ABSTRENTRY); }
 
-  void remove(GCListTag,TaggedRef *);
+  void remove(int,TaggedRef *);
 
   void collectGClist();
 };
@@ -200,7 +218,7 @@ public:
   }
 
   ByteCode *getStart() { return codeBlock; }
-  static int totalSize; /* total size of code allocated in bytes */
+  static int getTotalSize(void);
 
   CodeArea(int sz);
   ~CodeArea();

@@ -47,7 +47,6 @@ void CodeArea::recordInstr(ProgramCounter PC){
 
 HashTable CodeArea::atomTab(HT_CHARKEY,10000);
 HashTable CodeArea::nameTab(HT_CHARKEY,1000);
-int CodeArea::totalSize = 0; /* in bytes */
 CodeArea *CodeArea::allBlocks = NULL;
 
 #ifdef THREADED
@@ -141,12 +140,11 @@ AbstractionEntry *AbstractionEntry::allEntries = NULL;
 // kost@ : 'Abstraction' can be set only once!
 void AbstractionEntry::setPred(Abstraction *ab)
 {
-  Assert(!copyable && !abstr);
+  Assert(!isCopyable() && !abstr);
 
   Assert(ab);
   abstr = makeTaggedConst(ab);
   pc    = ab->getPC();
-  arity = ab->getArity();
 
   // indexing on X[0] optimized !!!
   if (pc != NOCODE &&
@@ -156,6 +154,13 @@ void AbstractionEntry::setPred(Abstraction *ab)
   } else {
     indexTable = NULL;
   }
+}
+
+int CodeArea::getTotalSize(void) {
+  int ts = 0;
+  for (CodeArea * ca = allBlocks; ca ; ca = ca->nextBlock)
+    ts += ca->size * sizeof(ByteCode);
+  return ts;
 }
 
 
@@ -767,16 +772,16 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case CALLPROCEDUREREF:
       {
 	AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
-	fprintf(ofile,"(%p[pc:%p n:%d] %d)\n",entry,
-		entry->getPC(),entry->getArity(),getPosIntArg(PC+2));
+	fprintf(ofile,"(%p[pc:%p] %d)\n",entry,
+		entry->getPC(),getPosIntArg(PC+2));
 	DISPATCH();
       }
 
     case SETPROCEDUREREF:
       {
 	AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
-	fprintf(ofile,"(%p[pc:%p n:%d])\n",entry,
-		entry->getPC(),entry->getArity());
+	fprintf(ofile,"(%p[pc:%p])\n",entry,
+		entry->getPC());
 	DISPATCH();
       }
 
@@ -1241,14 +1246,13 @@ CodeArea *CodeArea::findBlock(ProgramCounter PC)
 
 
 inline
-void CodeGCList::remove(GCListTag ltag, TaggedRef * t) {
+void CodeGCList::remove(int ltag, TaggedRef * t) {
   for (CodeGCList *aux = this; aux!=NULL; aux = aux->next) {
     for (int i=0; i<codeGCListBlockSize; i++) {
-      GCListEntry * bl = &(aux->block[i]);
+      GCListEntry & bl = aux->block[i];
       
-      if (bl->tag == ltag && (TaggedRef*) bl->pc == t) {
-	bl->pc  = NULL;
-	bl->tag = C_FREE;
+      if (bl.getTag() == ltag && (TaggedRef*) bl.getPtr() == t) {
+	bl.set(NULL,C_FREE);
 	return;
       }
     }
@@ -1281,7 +1285,6 @@ void CodeArea::allocateBlock(int sz)
   codeBlock  = new ByteCode[size]; /* allocation via malloc! */
   writeOpcode(ENDOFFILE,codeBlock+sz); /* mark the end, so that 
 					* displayCode and friends work */
-  totalSize += size * sizeof(ByteCode);
   wPtr       = codeBlock;
   nextBlock  = allBlocks;
   allBlocks  = this;
