@@ -58,12 +58,7 @@ Bool oz_cv_validINLINE(GenCVariable *cv,TaggedRef *ptr,TaggedRef val)
   }
 }
 
-/* workaround for bug in cygwin gcc od as or ld (RS) */
-#ifdef WINDOWS
-static
-#else
 inline
-#endif
 OZ_Return oz_cv_unifyINLINE(GenCVariable *cv,TaggedRef *ptr,TaggedRef val,
                             ByteCode *scp)
 {
