@@ -454,19 +454,3 @@ OZ_C_proc_end
 #undef inline
 #endif
 
-//-----------------------------------------------------------------------------
-
-#include "ctgenvar.dcl"
-static
-BIspec fdSpec[] = {
-#include "ctgenvar.tbl"
-  {0,0,0,0}
-};
-
-void BIinitCtVar(void)
-{
-  BIaddSpec(fdSpec);
-}
-
-// eof
-//-----------------------------------------------------------------------------

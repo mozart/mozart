@@ -624,11 +624,9 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       PD((MARSHAL_CT,"tag DIF_BUILTIN BYTES:1"));
       Builtin *bi= (Builtin *)t;
       
-      if (bi->isNative() && getenv("OZ_SEE_SITED_BUILTINS")) {
-	warning("Marshalling sited builtin: '%s'", bi->getPrintName());
-	// temporarily deactivated: otherwise prelude does not work
+      if (bi->isNative())
 	goto bomb;
-      }
+
       marshalString(bi->getPrintName(),bs);
       break;
     }
@@ -1270,8 +1268,8 @@ loop:
 	return;
       }
 
-      if (found->isNative() && getenv("OZ_SEE_SITED_BUILTINS")) {
-	warning("Unmarshalling sited builtin: '%s'", name);
+      if (found->isNative()) {
+	warning("Unpickling sited builtin: '%s'", name);
       }
 
       *ret = makeTaggedConst(found);

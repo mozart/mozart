@@ -84,7 +84,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   
   RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
-  BI_Unify,BI_portWait,BI_Show,BI_send,BI_probe,BI_Delay,BI_startTmp,
+  BI_Unify,BI_portWait,BI_send,BI_probe,BI_Delay,BI_startTmp,
   BI_load, BI_fail, BI_url_load,
   BI_dot,
   BI_exchangeCell,BI_assign,BI_atRedo,BI_lockLock,
