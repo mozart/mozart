@@ -116,8 +116,7 @@ public:
   static void printDef(ProgramCounter PC);
   static TaggedRef dbgGetDef(ProgramCounter PC, RefsArray G=NULL,
 			     RefsArray Y=NULL);
-  static TaggedRef globalVars(ProgramCounter PC, RefsArray G);
-  static TaggedRef localVars(ProgramCounter PC, RefsArray Y);
+  static TaggedRef varNames(ProgramCounter PC, RefsArray G, RefsArray Y);
   static TaggedRef argumentList(RefsArray X, int arity);
   static void getDefinitionArgs(ProgramCounter PC,
 				Reg &reg, ProgramCounter &next, TaggedRef &file,
