@@ -62,8 +62,8 @@ local
 		       grid(Scale  row:1 column:2 rowspan:2    sticky:ns)
 		       grid(ScrX   row:2 column:0              sticky:we)
 		       grid(Status row:3 column:0 columnspan:3 sticky:we)
-		       grid(columnconfigure self 0 weight:1.0)
-		       grid(rowconfigure    self 1 weight:1.0)
+		       grid(columnconfigure self 0 weight:1)
+		       grid(rowconfigure    self 1 weight:1)
 		       wm(deiconify self)]}
 	 end
       end
