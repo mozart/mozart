@@ -1,0 +1,47 @@
+<Chapter id="chapter.intro"><Title>Introduction
+<P>
+    The <SPAN CLASS=cite>Gump</SPAN>
+    is a fictional `creature' in the children's
+    novel <Q/The Marvelous Land of Oz/ by L.&nbsp;Frank Baum, sequel to
+    <REF TO="OzWizard" CLASS=bib><Q/The Wonderful Wizard of Oz/</REF>.
+    It is a living flying machine assembled by the main characters from
+    individually selected materials.  The Tin Woodman fastens a gump's head
+    to one end of the machine, explaining that it <Q/will show which is the
+    front end of the Thing./
+<P>
+    <SPAN CLASS=cite>Gump</SPAN>
+    is also the name of the specification language and
+    tool described in this handbook from the user's point of view.  Like
+    the gump's head in the novel, the language is used to specify front-ends
+    in Oz, in this case the lexical and phrase structure of a language.
+    The tool is the <Q/Powder of Life/ that generates executable programs
+    (Oz classes) from such specifications.
+<SECTION CLASS=unnumbered><TITLE>Overview
+<P>
+      This manual consists of two parts.  <PTR TO="chapter.scanner"
+      CLASS="Chapter"> describes the Gump Scanner Generator;
+      <PTR TO="chapter.parser" CLASS="Chapter"> the Gump Parser
+      Generator.  Each chapter is divided in two sections, the first
+      explaining the basic concepts by example and the second providing a
+      more detailed reference for the programmer.
+<SECTION CLASS=unnumbered><TITLE>Acknowledgements
+<P>
+      The specification language and the software tool have been designed and
+      implemented as the subject of my <REF TO="kornstaedt96"
+      CLASS=bib>Master's
+      Thesis</REF> which has been supervised by Prof.&nbsp;Dr.
+      Gert Smolka and Dipl.-Inform. Christian Schulte at the Programming
+      Systems Lab at the Universität des Saarlandes, as well as by
+      Prof.&nbsp;Dr. Hans-Wilm Wippermann at the University of Kaiserslautern.
+<P>
+      The software makes use of the GNU variants of
+      <SPAN CLASS=cite>lex</SPAN> and
+      <SPAN CLASS=cite>yacc</SPAN>,
+      called <REF TO="paxson95" CLASS=bib><SPAN CLASS=cite>flex</SPAN
+      ></REF> and <REF TO="donellystallman95" CLASS=bib><SPAN CLASS=cite
+      >bison</SPAN></REF> respectively.
+<P>
+      Oz is the name of a programming language developed at the Programming
+      Systems Lab at the Universität des Saarlandes.  Mozart is an
+      implementation of Oz.
+</Chapter>

@@ -1,0 +1,61 @@
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+<!-- EXTENSION TO THE DTD -->
+<!ENTITY % ozdoc.local SYSTEM "more.sgml">
+<!-- INCLUDE FILES -->
+<!ENTITY intro   SYSTEM "intro.sgml">
+<!ENTITY scanner SYSTEM "scanner.sgml">
+<!ENTITY parser  SYSTEM "parser.sgml">
+<!ENTITY syntax  SYSTEM "syntax.sgml">
+<!-- ABBREVIATIONS -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!-- PROCESSING INSTRUCTIONS -->
+<!ENTITY emdash   PI "PI:EMDASH">
+<!ENTITY endash   PI "PI:ENDASH">
+<!ENTITY nbsp     PI "PI:NBSP">
+<!ENTITY ie       PI "PI:I.E.">
+<!ENTITY IE       PI "PI:I.E.">
+<!ENTITY wrt      PI "PI:W.R.T.">
+<!ENTITY ellipsis PI "PI:ELLIPSIS">
+<!ENTITY Ellipsis PI "PI:ELLIPSIS">
+<!ENTITY EG       PI "PI:E.G.">
+<!ENTITY slash    PI "PI:SLASH">
+]>
+<BOOK>
+<FRONT>
+<META name=ozversion content="3.0">
+<META name=status content="revised">
+<!-- WHERE TO SPLIT THE DOCUMENT INTO HTML PAGES -->
+<META name=htmlfile content="chapter.intro">
+<META name=htmlfile content="chapter.scanner">
+<META name=htmlfile content="section.scanner.example">
+<META name=htmlfile content="section.scanner.reference">
+<META name=htmlfile content="chapter.parser">
+<META name=htmlfile content="section.parser.example">
+<META name=htmlfile content="section.parser.reference">
+<META name=htmlfile content="appendix.notation">
+<!-- -->
+<TITLE>Gump&emdash;A Front-End Generator for Oz</TITLE>
+<AUTHOR
+	INFO="WWW=http://www.ps.uni-sb.de/~kornstae/"
+>Leif Kornstaedt</AUTHOR>
+<ABSTRACT>
+<P>
+	This manual describes <Q/Gump/, the front-end generator for Oz.
+	It reads Oz files with embedded scanner and&slash;or parser definitions
+	and produces Oz files as output where these have been replaced by
+	classes implementing scanners and&slash;or parsers.  The semantic
+	actions in the specifications allow the full flexibility and
+	expressivity of Oz to be used.
+</ABSTRACT>
+<BODY>
+&intro;
+&scanner;
+&parser;
+&syntax;
+<BACK>
+<BIBENTRY ID="OzWizard"          bib="gump.bib" key="OzWizard">
+<BIBENTRY ID="paxson95"          bib="gump.bib" key="paxson95">
+<BIBENTRY ID="donellystallman95" bib="gump.bib" key="donellystallman95">
+<BIBENTRY ID="kornstaedt96"      bib="gump.bib" key="kornstaedt96">
+</BOOK>

@@ -1,0 +1,88 @@
+<Appendix ID="appendix.notation">
+  <Title>The Used Notation
+  <P>
+    This appendix describes the notation used to specify the syntax of the
+    Gump specification language as an extension of the Oz language.  It is
+    an extended Backus-Naur-Formalism built from the following parts:
+    <LIST>
+      <Item>
+	<P>
+	   terminals and nonterminals are enclosed in angle brackets
+	   <Math>\langle\ldots\rangle</Math>;
+      <Item>
+	<P>
+	  the left side is separated from the right side by either ::= or
+	  +=, where += adds productions to an existing nonterminal;
+      <Item>
+	<P>
+	  the vertical bar separates alternatives;
+      <Item>
+	<P>
+	  square brackets denote optional phrases;
+      <Item>
+	<P>
+	  curly braces enclose phrases that may be repeated 0 to <Math
+	  >n</Math>&nbsp;times;
+      <Item>
+	<P>
+	  curly braces with a suffixed&nbsp;+ enclose phrases that may be
+	  repeated 1 to <Math>n</Math>&nbsp;times;
+      <Item>
+	<P>
+	  literal strings are set in <Code>typewriter</Code>.
+    </LIST>
+  <Section><Title>Elements from the Oz Syntax
+    <PARA CLASS=apropos><TITLE/Lexical Conventions/
+      Since the tool's specification language is embedded into Oz, the same
+      lexical conventions apply as for Oz.  The only additional terminal type
+      is ?={regex}, described in <PTR TO="section.scanner.syntax"
+      CLASS="Section">.
+    <PARA CLASS=apropos><TITLE/Terminals/
+      The following terminals from the Oz syntax are used:
+      <LIST>
+	<ENTRY>?={atom}
+	<Item>
+	  <P>
+	    stands for an Oz atom (quoted or not).
+	<ENTRY>?={variable}
+	<Item>
+	  <P>
+	    denotes an Oz variable (backquoted or not).
+	<ENTRY>?={atom label}
+	<Item>
+	  <P>
+	    is an Oz atom that is immediately followed by a left parenthesis.
+	<ENTRY>?={variable label}
+	<Item>
+	  <P>
+	    is an Oz variable that is immediately followed by a left
+	    parenthesis.
+      </LIST>
+    <PARA CLASS=apropos><TITLE/Nonterminals/
+      Furthermore, the following nonterminals from the Oz syntax are used:
+      <LIST>
+	<ENTRY>?={escaped variable}
+	<Item>
+	  <P>
+	    stands for an Oz variable that may optionally be preceded by an
+	    exclamation mark, preventing its implicit declaration.
+	<ENTRY>?={phrase}
+	<Item>
+	  <P>
+	    is an Oz statement or expression.  This distinction is not made
+	    by the context-free syntax; it is stated informally in the
+	    descriptions instead.
+	<ENTRY>?={class descriptor}
+	<Item>
+	  <P>
+	    stands for a class descriptor, &IE;, one of <Code
+	    proglang="gump">from</Code>, <Code proglang="gump">prop</Code>,
+	    <Code
+	    proglang="gump">attr</Code> or <Code proglang="gump">feat</Code>.
+	<ENTRY>?={method}
+	<Item>
+	  <P>
+	    stands for a <Code proglang="gump">meth</Code> &Ellipsis; <Code
+	    proglang="gump">end</Code> definition.
+      </LIST>
+</Appendix>
