@@ -695,6 +695,9 @@ void AM::doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t)
   *vp = t;
 }
 
+/*
+ * ... and install propagators
+ */
 void AM::doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
 			     GenCVariable * lv, GenCVariable * gv,
 			     Bool prop)
