@@ -4102,20 +4102,22 @@ OZ_BI_define(BItablesExtract,0,1)
                 oz_cons(oz_pairA("list", borrowlist), oz_nil()))),
               oz_cons(OT->extract_info(), oz_nil())));
 } OZ_BI_end
-
 OZ_BI_define(BIsiteStatistics,0,1)
 {
   int indx;
   Site* found;
   GenHashNode *node = getPrimaryNode(NULL, indx);
   OZ_Term sitelist = oz_nil(); 
-  OZ_Term ownerlist = oz_nil();
-  OZ_Term borrowlist = oz_nil();
-  
+  int sent, received;
   Bool primary = TRUE;
   while(node!=NULL){
     GenCast(node->getBaseKey(),GenHashBaseKey*,found,Site*);  
-
+    if(found->remoteComm() && found->isConnected()){
+      received = getNORM_RemoteSite(found->getRemoteSite());
+      sent     = getNOSM_RemoteSite(found->getRemoteSite());}
+    else{
+      received = 0;
+      sent = 0;}
     TimeStamp *ts = found->getTimeStamp();
     sitelist=
       oz_cons(OZ_recordInit(oz_atom("site"),
@@ -4125,76 +4127,23 @@ OZ_BI_define(BIsiteStatistics,0,1)
       oz_cons(oz_pairA("timestr",oz_atom(ctime(&ts->start))),
       oz_cons(oz_pairAI("ipint",(unsigned int)found->getAddress()),
       oz_cons(oz_pairAI("hval",(int)found),
-	      oz_nil()))))))),sitelist);
+      oz_cons(oz_pairAI("sent",sent),
+      oz_cons(oz_pairAI("received",received),
+      oz_cons(oz_pairA("table", oz_atom(primary?"p":"s")),
+      oz_cons(oz_pairAI("strange",ts->pid),
+      oz_cons(oz_pairAI("type",(int)found->getType()),
+	      oz_nil())))))))))))),sitelist);
     if(primary){
       node = getPrimaryNode(node,indx);
       if(node!=NULL) {
-	printf("p:%s\n",found->stringrep());
 	continue;}
       else primary = FALSE;}
-    printf("s:%s\n",found->stringrep());
     node = getSecondaryNode(node,indx);}
-    
-   int limit=OT->getSize();
-   char *str;
-   for(int ctr = 0; ctr<limit;ctr++){
-     OwnerEntry *oe = OT->getEntry(ctr);
-     if(oe==NULL){continue;}
-     printf("Found something in owner\n");
-     Assert(oe!=NULL);
-     str = "unknown";
-     if(oe->isVar()){
-       str = "var";}
-    if(oe->isRef()){
-       str = "ref";}
-     if(oe->isTertiary())
-       switch (oe->getTertiary()->getType()){
-       case Co_Cell:{str = "cell";break; }
-       case Co_Lock:{str = "lock";break; }
-     case Co_Port:{str = "port";break; }
-     case Co_Object:{str = "object";break; }
-     case Co_Array:{str = "array";break; }
-     case Co_Dictionary:{str = "dictionary";
-     break; }
-     case Co_Class:{str = "class";break; }
-     default:str = "unknownTert";}
-     ownerlist=
-     oz_cons(OZ_recordInit(oz_atom("oe"),
-     oz_cons(oz_pairA("type", oz_atom(str)),
-     oz_cons(oz_pairAI("indx",ctr),oz_nil()))),ownerlist);
- }
- limit=BT->getSize();
- for(int ctr1 = 0; ctr1<limit;ctr1++){
-   BorrowEntry *be = BT->getEntry(ctr1);
-   if(be==NULL){continue;}
-   Assert(be!=NULL);
-   printf("Found something in borrow\n");
-   str = "unknown";
-   if(be->isVar()){
-     str = "var";}
-   if(be->isRef()){
-     str = "ref";}
-   if(be->isTertiary())
-     switch (be->getTertiary()->getType()){
-     case Co_Cell:{str = "cell";break; }
-     case Co_Lock:{str = "lock";break; }
-     case Co_Port:{str = "port";break; }
-     case Co_Object:{str = "object";break; }
-     case Co_Array:{str = "array";break; }
-     case Co_Dictionary:{str = "dictionary";
-     break; }
-     case Co_Class:{str = "class";break; }
-     default:str = "unknownTert";}
-    borrowlist=
-     oz_cons(OZ_recordInit(oz_atom("be"),
-     oz_cons(oz_pairA("type", oz_atom(str)),
-     oz_cons(oz_pairAI("siteHVal", (int) be->getSite()),
-     oz_cons(oz_pairAI("indx",be->getOTI()),oz_nil())))),borrowlist);}
- OZ_RETURN(oz_cons(sitelist,
-		   oz_cons(borrowlist,
-			   oz_cons(ownerlist,oz_nil()))));
-
+  OZ_RETURN(sitelist);
+  
 } OZ_BI_end
+
+
 
 #endif
 
