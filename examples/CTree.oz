@@ -33,12 +33,12 @@ define
       meth new
 	 N1
       in
-	 GTK.cTree, newWithTitles(2 0 {GTK.makeStrArr Titles})
-	 N1 = GTK.cTree, insertNode(unit unit {GTK.makeStrArr Row1}
+	 GTK.cTree, newWithTitles(2 0 Titles)
+	 N1 = GTK.cTree, insertNode(unit unit Row1
 				    0 unit unit unit unit false false $)
-	 GTK.cTree, insertNode(N1 unit {GTK.makeStrArr Row2}
+	 GTK.cTree, insertNode(N1 unit Row2
 			       0 unit unit unit unit false false _)
-	 GTK.cTree, insertNode(unit unit {GTK.makeStrArr Row3}
+	 GTK.cTree, insertNode(unit unit Row3
 			       0 unit unit unit unit false false _)
 	 GTK.cTree, signalConnect('tree-select-row' myEvent _)
       end

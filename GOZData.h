@@ -202,6 +202,35 @@ static inline GList *goz_export_glist(OZ_Term cons) {
 #define GOZ_makeGList(val) \
   goz_import_glist(val)
 
+/*
+ * String List Handling
+ */
+
+static inline int goz_list_length(OZ_Term cons) {
+  int n = 0;
+  while (OZ_isCons(cons)) {
+    n++;
+    cons = OZ_tail(cons);
+  }
+  return n;
+}
+
+static inline void goz_export_string_list(gchar **arr, OZ_Term cons) {
+  int n = 0;
+  while (OZ_isCons(cons)) {
+    OZ_Term hd = OZ_head(cons);
+    arr[n++] = GOZ_importString((gchar *) OZ_virtualStringToC(hd, NULL));
+    cons = OZ_tail(cons);
+  }
+  arr[n] = NULL;
+}
+
+#define GOZ_declareStringList(i, val) \
+  OZ_declareTerm(i, GOZ_(val)); \
+  int val ## len = goz_list_length(GOZ_(val)); \
+  gchar *val[val ## len + 1]; \
+  goz_export_string_list((gchar **) &val, GOZ_(val));
+
 /* Generic Argument Handling */
 #define GOZ_declareTerm(i, val) \
   OZ_declareTerm(i, val); \

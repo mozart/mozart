@@ -683,7 +683,7 @@ direct_declarator
 		$$ = $2;
 	}
 	| direct_declarator OBRACKET CBRACKET {
-		$$ = OZ_mkTuple(OZ_atom("pointer decl"), 2, OZ_atom("*"), $1);
+		$$ = OZ_mkTuple(OZ_atom("pointer decl"), 2, OZ_atom("[]"), $1);
 	}
 	| direct_declarator OBRACKET type_qualifier_list CBRACKET {
 		$$ = OZ_mkTuple(OZ_atom("decla[qual_list]"), 2, $1, $3);
