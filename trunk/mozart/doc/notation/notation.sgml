@@ -663,8 +663,9 @@
 	    <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={statement}
 	      [ <<then>> ?={in statement} ]//
 	  <Grammar.Rule/?={choice statement clause}
-	    <Grammar.Alt/[ [ ?={declaration part} <<in>> ] ?={statement}
-	      <<then>> ] ?={in statement}//
+	    <Grammar.Alt/[ [ ?={declaration part} <<in>> ]
+	      ?={statement} <<then>> ]
+	    <Grammar.Alt type=space/?={in statement}//
 	  <Grammar.Rule/?={condis clause}
 	    <Grammar.Alt/?={fd compare}/
 	    <Grammar.Alt/?={fd in}//
@@ -693,8 +694,9 @@
 	    <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={statement}
 	      <<then>> ?={in expression}//
 	  <Grammar.Rule/?={choice expression clause}
-	    <Grammar.Alt/[ [ ?={declaration part} <<in>> ] ?={statement}
-	      <<then>> ] ?={in expression}//
+	    <Grammar.Alt/[ [ ?={declaration part} <<in>> ]
+	      ?={statement} <<then>> ]/
+	    <Grammar.Alt type=space/?={in expression}//
 	  <Grammar.Rule/?={fd compare}
 	    <Grammar.Alt/?={expression} (
 	      <Q class=terminal/<<=:>>/ |
@@ -1372,6 +1374,20 @@ end>>/
 	  <Title/Operators/
 	<SubSection class=unnumbered>
 	  <Title/Records/
+	  <P>
+	    <Rewrite>?={expression}
+	      <Rewrite.From/<<[?{E1} &ellipsis; ?{En}]>>/
+	      <Rewrite.To/<<?{E1}|&ellipsis;|?{En}|nil)>>/
+	    </Rewrite>
+	    <Rewrite>?={expression}
+	      <Rewrite.From/<<?{E1}|?{E2}>>/
+	      <Rewrite.To/<<'|'(?{E1} ?{E2})>>/
+	    </Rewrite>
+	    <Rewrite>?={expression}
+	      <Rewrite.From/<<?{E1}#&ellipsis;#?{En}>>/
+	      <Rewrite.To/<<'#'(?{E1} &ellipsis; ?{En})>>/
+	    </Rewrite>
+	    <!--** missing: dots, omitted features -->
 	<SubSection class=unnumbered>
 	  <Title/Wildcard/
 	  <P>
@@ -1444,7 +1460,14 @@ end>>/
 	      <Rewrite.Condition/where the omitted parts of the exception
 		are implementation-dependent./
 	    </Rewrite>
-	    <!--** missing: clauses -->
+	    <Rewrite>?={dis statement clause}
+	      <Rewrite.From/[ <<?{D} in >> ] ?{S}/
+	      <Rewrite.To/[ <<?{D} in >> ] <<?{S} then skip>>/
+	    </Rewrite>
+	    <Rewrite>?={choice statement clause} ?={choice expression clause}
+	      <Rewrite.From/?{SE}/
+	      <Rewrite.To/<<skip then ?{SE}>>/
+	    </Rewrite>
       <Section>
 	<Title/Class Extensions/
 	<SubSection class=unnumbered>
