@@ -366,14 +366,13 @@ public:
     return value;
   }
 
-  Abstraction *lookup(Object *obj, TaggedRef meth, SRecordArity arity,RefsArray X)
+  Abstraction *lookup(ObjectClass *c, TaggedRef meth, SRecordArity arity,RefsArray X)
   {
-    ObjectClass *cla = obj->getClass();
-    if (ToInt32(cla) != key) {
+    if (ToInt32(c) != key) {
       Bool defaultsUsed;
-      Abstraction *ret = obj->getMethod(meth,arity,X,defaultsUsed);      
+      Abstraction *ret = c->getMethod(meth,arity,X,defaultsUsed);      
       if (!defaultsUsed) {
-	key   = ToInt32(cla);
+	key   = ToInt32(c);
 	value = ToInt32(ret);
       }
       return ret;

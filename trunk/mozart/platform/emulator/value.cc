@@ -420,11 +420,13 @@ int ObjectClass::getWidth()
 }
 
 
-Abstraction *Object::getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
+
+
+Abstraction *ObjectClass::getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
 			       Bool &defaultsUsed)
 {
   TaggedRef method;
-  if (getMethods()->getArg(label,method)!=PROCEED)
+  if (getfastMethods()->getArg(label,method)!=PROCEED)
     return NULL;
   
   DEREF(method,_1,_2);
@@ -439,7 +441,7 @@ Abstraction *Object::getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
   return lookupDefault(label,arity,X) ? abstr : (Abstraction*) NULL;
 }
 
-Bool Object::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X)
+Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X)
 {
   TaggedRef def;
   if (getDefMethods()->getArg(label,def)!=PROCEED)
@@ -1230,23 +1232,29 @@ char *toC(OZ_Term term)
 
 DbgInfo *allDbgInfos = NULL;
 
-ProfileCode(
+#ifdef HEAP_PROFILE
 
 PrTabEntry *PrTabEntry::allPrTabEntries = NULL;
 
 void PrTabEntry::printPrTabEntries()
 {
   PrTabEntry *aux = allPrTabEntries;
+  int heapTotal = 0, callsTotal = 0;
   while(aux) {
-    if (aux->numClosures || aux->numCalled) {
+    heapTotal  += aux->heapUsed;
+    callsTotal += aux->numCalled;
+    if (aux->numClosures || aux->numCalled || aux->heapUsed) {
       char *name = ozstrdup(toC(aux->printname)); // cannot have 2 toC in one line
-      printf("%20s Created: %5d Called: %6d %s, %d \n",
+      printf("%20s Created: %5d Called: %6d %s(%d), Heap: %5d KB\n",
 	     name,aux->numClosures,aux->numCalled,
-	     toC(aux->fileName),aux->lineno);
+	     toC(aux->fileName),aux->lineno,aux->heapUsed/KB);
       delete name;
     }
     aux = aux->next;
   }
+
+  printf("\n=============================================================\n\n");
+  printf("    Total calls: %d, total heap: %d KB\n\n",callsTotal,heapTotal/KB);
 }
 
 
@@ -1256,7 +1264,9 @@ void PrTabEntry::profileReset()
   while(aux) {
     aux->numClosures = 0;
     aux->numCalled   = 0;
+    aux->heapUsed    = 0;
     aux = aux->next;
   }
 }
-)
+
+#endif

@@ -26,15 +26,15 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
 			   InlineCache *cache, RefsArray X)
 {
   Assert(isFeature(label));
-  return cache->lookup(obj,label,arity,X);
+  return cache->lookup(obj->getClass(),label,arity,X);
 }
 
 inline
-Abstraction *getApplyMethod(Object *obj, ApplMethInfoClass *ami, 
+Abstraction *getApplyMethod(ObjectClass *cl, ApplMethInfoClass *ami, 
 			    SRecordArity arity, RefsArray X)
 {
   Assert(isFeature(ami->methName));
-  return ami->methCache.lookup(obj,ami->methName,arity,X);
+  return ami->methCache.lookup(cl,ami->methName,arity,X);
 }
 
 // -----------------------------------------------------------------------
@@ -199,11 +199,11 @@ Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
 
   Abstraction *abstr = NULL;
   if (gci->isMethAppl) {
-    if (!isObject(pred)) goto insertMethApply;
+    if (!isObjectClass(pred)) goto insertMethApply;
 
     Bool defaultsUsed;
-    abstr = tagged2Object(pred)->getMethod(gci->mn,gci->arity,
-					   am.xRegs,defaultsUsed);
+    abstr = tagged2ObjectClass(pred)->getMethod(gci->mn,gci->arity,
+						am.xRegs,defaultsUsed);
     /* fill cache and try again later */
     if (abstr==NULL) return NO;
     if (defaultsUsed) goto insertMethApply; 
@@ -429,8 +429,13 @@ void Thread::makeRunning ()
 #define ChangeSelf(obj)				\
       e->changeSelf(obj);
 
-#define SaveSelf				\
+#define SaveSelf					\
+      ProfileCode(if (ozstat.currAbstr) {		\
+                    CTS->pushAbstr(ozstat.currAbstr);	\
+                    ozstat.enterCall(NULL);		\
+                  })					\
       e->saveSelf();
+
 
 #define PushCont(PC,Y,G)  CTS->pushCont(PC,Y,G,0);
 
@@ -438,11 +443,14 @@ void Thread::makeRunning ()
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,gRegs)					    \
-     Y = NULL;								    \
-     G = gRegs;								    \
-     emulateHookCall(e,Pred,X,						    \
-		     e->pushContX(Pred->getPC(),NULL,G,X,Pred->getArity())); \
+#define CallDoChecks(Pred,gRegs)						\
+     Y = NULL;									\
+     G = gRegs;									\
+     ProfileCode(Pred->getPred()->numCalled++);					\
+     ProfileCode(CTS->pushAbstr(ozstat.currAbstr);)				\
+     ProfileCode(ozstat.enterCall(Pred);)					\
+     emulateHookCall(e,Pred,X,							\
+		     e->pushContX(Pred->getPC(),NULL,G,X,Pred->getArity()));
 
 // load a continuation into the machine registers PC,Y,G,X
 #define LOADCONT(cont)				\
@@ -1490,8 +1498,6 @@ LBLdispatcher:
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
 
       COUNT(fastcalls);
-      ProfileCode(entry->getAbstr()->getPred()->numCalled++);
-
       CallDoChecks(entry->getAbstr(),entry->getGRegs());
 
       IHashTable *table = entry->indexTable;
@@ -2326,7 +2332,6 @@ LBLdispatcher:
       ChangeSelf(obj);
       CallDoChecks(def,def->getGRegs());
       COUNT(sendmsg);
-      ProfileCode(def->getPred()->numCalled++);
       JUMP(def->getPC());
     }
 
@@ -2360,24 +2365,23 @@ LBLdispatcher:
   {
     ApplMethInfoClass *ami = (ApplMethInfoClass*) getAdressArg(PC+1);
     SRecordArity arity     = ami->arity;
-    TaggedRef origObject   = RegAccess(HelpReg,getRegArg(PC+2));
-    TaggedRef object       = origObject;
+    TaggedRef origCls   = RegAccess(HelpReg,getRegArg(PC+2));
+    TaggedRef cls       = origCls;
     Abstraction *def       = NULL;
 
     if (!isTailCall) PC = PC+3;
 
-    DEREF(object,objectPtr,objectTag);
-    if (!isObject(object)) {
+    DEREF(cls,clsPtr,clsTag);
+    if (!isObjectClass(cls)) {
       goto bombApply;
     }
-    def = getApplyMethod(tagged2Object(object),ami,arity,X);
+    def = getApplyMethod(tagged2ObjectClass(cls),ami,arity,X);
     if (def==NULL) {
       goto bombApply;
     }
     
     if (!isTailCall) { PushCont(PC,Y,G); }
     COUNT(applmeth);
-    ProfileCode(def->getPred()->numCalled++);
     CallDoChecks(def,def->getGRegs());
     JUMP(def->getPC());
 
@@ -2386,7 +2390,7 @@ LBLdispatcher:
     Assert(e->methApplHdl != makeTaggedNULL());
 
     X[1] = makeMessage(arity,ami->methName,X);
-    X[0] = origObject;
+    X[0] = origCls;
 
     predArity = 2;
     predicate = tagged2Const(e->methApplHdl);
@@ -2464,7 +2468,6 @@ LBLdispatcher:
 	 CheckArity(def->getArity(), makeTaggedConst(def));
 	 if (!isTailCall) { PushCont(PC,Y,G); }
        
-	 ProfileCode(def->getPred()->numCalled++);
 	 CallDoChecks(def,def->getGRegs());
 	 JUMP(def->getPC());
        }
@@ -2847,6 +2850,12 @@ LBLdispatcher:
     }
 
 
+  Case(TASKPROFILECALL)
+    {
+      ProfileCode(ozstat.leaveCall((Abstraction*)Y));
+      goto LBLpopTaskNoPreempt;
+    }
+
   Case(TASKCALLCONT)
     {
       TaggedRef taggedPredicate = (TaggedRef)ToInt32(Y);
@@ -3065,6 +3074,8 @@ LBLdispatcher:
 
   Case(TASKACTOR)
     {
+      ProfileCode(CTS->discardFrame(C_SET_ABSTR_Ptr);)
+
       AWActor *aw = (AWActor *) Y;
       Y = NULL;
 
