@@ -139,18 +139,16 @@ OZ_Return oz_runPropagator(Propagator * p)
 
 #ifdef DEBUG_PROPAGATORS
     OZ_PropagatorProfile * profile = prop;
-    if (profile) {
-      char * pn = profile->getPropagatorName();
-      printf("<%s[%p]", pn, ozprop); fflush(stdout);
-    } else {
-      printf("<CDSuppl"); fflush(stdout);
-    }
+    Assert(profile);
+    //
+    char * pn = profile->getPropagatorName();
+    printf("<%s[%p]", pn, ozprop); fflush(stdout);
 #endif
 
     OZ_Return ret = (p->isActive() ? ozprop->propagate() : OZ_SLEEP);
 
 #ifdef DEBUG_PROPAGATORS
-    printf(" -> %s>\n", RETVAL_TEXT(ret)); fflush(stdout);
+    printf(" -> %s>\n\n", RETVAL_TEXT(ret)); fflush(stdout);
 #endif
 
     int heapUsed = getUsedMemoryBytes() - heapNow;
@@ -164,16 +162,14 @@ OZ_Return oz_runPropagator(Propagator * p)
 #ifdef DEBUG_PROPAGATORS
     OZ_PropagatorProfile * profile = ozprop->getProfile();
     OZ_Term params = ozprop->getParameters();
-    if (profile) {
-      char * pn = profile->getPropagatorName();
-      printf("<%s[%p] %s", pn, ozprop,
-	     OZ_toC(params, 10, 10));
-      fflush(stdout);
-    } else {
-      printf("<CDSuppl"); fflush(stdout);
-    }
+    Assert(profile);
+    //    
+    char * pn = profile->getPropagatorName();
+    printf("<%s[%p] %s", pn, ozprop, OZ_toC(params, 10, 10));
+    fflush(stdout);
+    //
     OZ_Return ret = (p->isActive() ? ozprop->propagate() : OZ_SLEEP);
-    printf(" -> %s (%s)>\n", RETVAL_TEXT(ret), OZ_toC(params, 10, 10)); 
+    printf(" -> %s (%s)>\n\n", RETVAL_TEXT(ret), OZ_toC(params, 10, 10)); 
     fflush(stdout);
     return ret;
 #else
