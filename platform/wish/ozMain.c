@@ -165,6 +165,7 @@ main(argc, argv)
      * Initialize the Tk application.
      */
 
+#ifdef RS
     mainWindow = Tk_CreateMainWindow(interp, display, name, "Tk");
     if (mainWindow == NULL) {
 	fprintf(stdout, "w %s\n.\n", interp->result);
@@ -177,6 +178,7 @@ main(argc, argv)
 	XSynchronize(Tk_Display(mainWindow), True);
     }
     Tk_GeometryRequest(mainWindow, 200, 200);
+#endif
 
     /*
      * Make command-line arguments available in the Tcl variables "argc"
