@@ -127,6 +127,7 @@ if test "${enable_wincross}" = yes; then
 	with_sunpro=no
 	oz_gmp_lib_dir=$oz_wincross_gmp_lib_dir
 	oz_gmp_inc_dir=$oz_wincross_gmp_inc_dir
+	oz_enable_modules_static=yes
 	oz_malloc_obj=
 	oz_warn_error=
 	AC_DEFINE(GNUWIN32)
