@@ -2069,6 +2069,38 @@ Builtin *tagged2Builtin(TaggedRef term)
   return (Builtin *)tagged2Const(term);
 }
 
+
+class OZ_Location {
+private:
+  int inAr,outAr;
+  int map[0];
+public:
+  NO_DEFAULT_CONSTRUCTORS(OZ_Location);
+  static OZ_Location *newLocation(int inArity,int outArity)
+  {
+    int sz = sizeof(OZ_Location)+sizeof(int)*(inArity+outArity);
+    OZ_Location *loc = (OZ_Location *)new char[sz];
+    loc->inAr=inArity;
+    loc->outAr=outArity;
+    return loc;
+  }
+  int *mapping() { return map; }
+  int get(int n) { return map[n]; }
+  void set(int n,int i) { map[n]=i; }
+  int &out(int n) {
+    Assert(n<outAr);
+    return map[inAr+n];
+  }
+  int &in(int n) {
+    Assert(n<inAr);
+    return map[n];
+  }
+  int getArity() { return inAr+outAr; }
+  int getInArity() { return inAr; }
+  int getOutArity() { return outAr; }
+};
+  
+
 /*===================================================================
  * Cell
  * Unused third field from tertiary.

@@ -413,6 +413,39 @@ OZ_BI_define(BIstoreGRegRef,2,0)
 } OZ_BI_end
 
 
+OZ_BI_define(BIstoreLocation,2,0)
+{
+  NEW_declareCodeBlock(0,code);
+  OZ_declareNonvarIN(1,locs);
+  locs=deref(locs);
+  OZ_Term inLocs = deref(oz_left(locs));
+  OZ_Term outLocs = deref(oz_right(locs));
+  const int inArity = OZ_length(inLocs);
+  const int outArity = OZ_length(outLocs);
+
+  OZ_Location *loc = OZ_Location::newLocation(inArity,outArity);
+
+  for (int i = 0; i < inArity; i++) {
+    OZ_Term reg = deref(head(inLocs));
+    loc->in(i) = smallIntValue(deref(oz_arg(reg,0)));
+    inLocs = deref(tail(inLocs));
+  }
+
+  Assert(isNil(inLocs));
+
+  for (int i = 0; i < outArity; i++) {
+    OZ_Term reg = deref(head(outLocs));
+    loc->out(i) = smallIntValue(deref(oz_arg(reg,0)));
+    outLocs = deref(tail(outLocs));
+  }
+
+  Assert(isNil(outLocs));
+
+  code->writeAddress(loc);
+  return PROCEED;
+} OZ_BI_end
+
+
 OZ_BI_define(BIstoreCache,2,0)
 {
   NEW_declareCodeBlock(0,code);

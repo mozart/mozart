@@ -476,7 +476,6 @@ void pushContX(TaskStack *stk,
 #define Greg(N) RegAccess(G,N)
 
 #define XPC(N) Xreg(getRegArg(PC+N))
-#define GetBI(PC) ((Builtin*) getAdressArg(PC))
 
 #if defined(LINUX_I486) || defined(GNUWIN32) || defined(SOLARIS_I486) || defined(FREEBSD_I486)
 #define OZ_I486
@@ -818,6 +817,10 @@ int engine(Bool init)
   ConstTerm *predicate;	    NoReg(predicate);
   int predArity;    	    NoReg(predArity);
 
+  int argsToSave;  // replace bi call
+
+  OZ_Return tmpRet;  // optimized arithmetic
+
   TaggedRef auxTaggedA, auxTaggedB;
   int auxInt;
   char *auxString;
@@ -941,21 +944,100 @@ LBLdispatcher:
       case BI_TYPE_ERROR: RAISE_TYPE(bi);
 	 
       case SUSPEND:
-	predArity = getPosIntArg(PC+2);
-	PushContX(PC,Y,G,X,predArity);
+	PushContX(PC,Y,G,X,getPosIntArg(PC+2));
 	SUSPENDONVARLIST;
 
       case BI_PREEMPT:
-	predArity = getPosIntArg(PC+2);
-	PushContX(PC+3,Y,G,X,predArity);
+	PushContX(PC+3,Y,G,X,getPosIntArg(PC+2));
 	return T_PREEMPT;
 
       case BI_REPLACEBICALL: 
-	predArity = getPosIntArg(PC+2);
+	argsToSave = getPosIntArg(PC+2);
 	PC += 3;
 	goto LBLreplaceBICall;
 
       case SLEEP:
+      default:
+	Assert(0);
+      }
+    }
+
+
+  Case(CALLBI)
+    {
+      COUNT(bicalls);
+      Builtin* bi = GetBI(PC+1);
+      OZ_Location* loc = GetLoc(PC+2);
+
+      Assert(loc->getOutArity()==bi->getOutArity());
+      Assert(loc->getInArity()==bi->getInArity());
+
+      printf("callbi: %s\n",bi->getPrintName());
+#ifdef PROFILE_BI
+      bi->incCounter();
+#endif
+      switch (bi->getFun()(X,loc->mapping())) {
+
+      case PROCEED:	  DISPATCH(4);
+      case FAILED:	  HF_BI(bi);
+      case RAISE:	  RAISE_THREAD;
+      case BI_TYPE_ERROR: RAISE_TYPE(bi);
+	 
+      case SUSPEND:
+	PushContX(PC,Y,G,X,getPosIntArg(PC+3));
+	SUSPENDONVARLIST;
+
+      case BI_PREEMPT:
+	PushContX(PC+4,Y,G,X,getPosIntArg(PC+3));
+	return T_PREEMPT;
+
+      case BI_REPLACEBICALL: 
+	argsToSave = getPosIntArg(PC+3);
+	PC += 4;
+	goto LBLreplaceBICall;
+
+      case SLEEP:
+      default:
+	Assert(0);
+      }
+    }
+
+  Case(TESTBI)
+    {
+      COUNT(bicalls);
+      Builtin* bi = GetBI(PC+1);
+      OZ_Location* loc = GetLoc(PC+2);
+
+      printf("testbi: %s\n",bi->getPrintName());
+
+      Assert(loc->getInArity()==bi->getInArity());
+      Assert(bi->getOutArity()==1);
+      Assert(loc->getOutArity()==1);
+
+#ifdef PROFILE_BI
+      bi->incCounter();
+#endif
+      int ret = bi->getFun()(X,loc->mapping());
+      if (ret==PROCEED) {
+	if (literalEq(X[loc->out(0)],oz_true())) {
+	  DISPATCH(5);
+	} else {
+	  JUMPRELATIVE(getLabelArg(PC+3));
+	}
+      }
+
+      switch (ret) {
+      case RAISE:	  RAISE_THREAD;
+      case BI_TYPE_ERROR: RAISE_TYPE(bi);
+	 
+      case SUSPEND:
+	PushContX(PC,Y,G,X,getPosIntArg(PC+4));
+	SUSPENDONVARLIST;
+
+      case BI_PREEMPT:
+      case BI_REPLACEBICALL: 
+      case SLEEP:
+      case FAILED:
       default:
 	Assert(0);
       }
@@ -1045,7 +1127,7 @@ LBLdispatcher:
 	RAISE_THREAD;
 
       case BI_REPLACEBICALL: 
-	predArity = getPosIntArg(PC+4);
+	argsToSave = getPosIntArg(PC+4);
 	PC += 5;
 	goto LBLreplaceBICall;
 
@@ -1131,8 +1213,7 @@ LBLdispatcher:
       auxInt     = 4;
       auxString = "-";
 
-      // abuse predArity
-      predArity = (int) BIminusOrPlus(NO,A,B,XPC(3));
+      tmpRet = BIminusOrPlus(NO,A,B,XPC(3));
       goto LBLhandlePlusMinus;
     }
 
@@ -1158,8 +1239,7 @@ LBLdispatcher:
       auxInt     = 4;
       auxString = "+";
 
-      // abuse predArity
-      predArity = (int) BIminusOrPlus(OK,A,B,XPC(3));
+      tmpRet = BIminusOrPlus(OK,A,B,XPC(3));
       goto LBLhandlePlusMinus;
     }
 
@@ -1183,8 +1263,7 @@ LBLdispatcher:
       auxInt     = 3;
       auxString = "-1";
 
-      // abuse predArity
-      predArity = (int) BIminusOrPlus(NO,A,makeTaggedSmallInt(1),XPC(2));
+      tmpRet = BIminusOrPlus(NO,A,makeTaggedSmallInt(1),XPC(2));
       goto LBLhandlePlusMinus;
     }
 
@@ -1208,17 +1287,14 @@ LBLdispatcher:
       auxInt     = 3;
       auxString = "+1";
 
-      // abuse predArity
-      predArity = (int) BIminusOrPlus(OK,A,auxTaggedB,XPC(2));
+      tmpRet = BIminusOrPlus(OK,A,auxTaggedB,XPC(2));
       goto LBLhandlePlusMinus;
     }
 
 
   LBLhandlePlusMinus:
   {
-      OZ_Return res = (OZ_Return) predArity;
-
-      switch(res) {
+      switch(tmpRet) {
       case PROCEED:       DISPATCH(auxInt+1);
       case BI_TYPE_ERROR: RAISE_TYPE1_FUN(auxString, 
 					  cons(auxTaggedA,cons(auxTaggedB,nil())));
@@ -1279,7 +1355,7 @@ LBLdispatcher:
 	max(getRegArg(PC+OutReg)+1,getPosIntArg(PC+LivingRegs));
 
       case BI_REPLACEBICALL: 
-	predArity = MaxToSave(3,4);
+	argsToSave = MaxToSave(3,4);
 	PC += 5;
 	goto LBLreplaceBICall;
 
@@ -1333,7 +1409,7 @@ LBLdispatcher:
 	RAISE_THREAD;
 
       case BI_REPLACEBICALL: 
-	predArity = MaxToSave(4,5);
+	argsToSave = MaxToSave(4,5);
 	PC += 6;
 	goto LBLreplaceBICall;
 
@@ -1405,7 +1481,7 @@ LBLdispatcher:
       if (stateIsCell(state)) {
 	rec = getState(state,NO,fea,XPC(2));
 	if (rec==NULL) {
-	  predArity = MaxToSave(2,3);
+	  argsToSave = MaxToSave(2,3);
 	  PC += 6;
 	  goto LBLreplaceBICall;
 	}
@@ -1438,7 +1514,7 @@ LBLdispatcher:
       if (stateIsCell(state)) {
 	rec = getState(state,OK,fea,XPC(2));
 	if (rec==NULL) {
-	  predArity = getPosIntArg(PC+3);
+	  argsToSave = getPosIntArg(PC+3);
 	  PC += 6;
 	  goto LBLreplaceBICall;
 	}
@@ -1667,7 +1743,7 @@ LBLdispatcher:
 	  }
 	}
       }
-      predArity = (int) BILessOrLessEq(OK,XPC(1),XPC(2));
+      tmpRet = BILessOrLessEq(OK,XPC(1),XPC(2));
       auxString = "<";
       goto LBLhandleLess;
     }
@@ -1704,7 +1780,7 @@ LBLdispatcher:
 	  }
 	}
       }
-      predArity = (int) BILessOrLessEq(NO,XPC(1),XPC(2));
+      tmpRet = BILessOrLessEq(NO,XPC(1),XPC(2));
       auxString = "=<";
       goto LBLhandleLess;
 
@@ -1717,11 +1793,9 @@ LBLdispatcher:
       JUMPRELATIVE(getLabelArg(PC+3));
     }
 
-
   LBLhandleLess:
     {
-      OZ_Return res = (OZ_Return) predArity;
-      switch(res) {
+      switch(tmpRet) {
 	
       case PROCEED: goto LessThenCase;
       case FAILED:  goto LessElseCase;
@@ -1741,7 +1815,93 @@ LBLdispatcher:
 	Assert(0);
       }
     }
-    
+
+#define LT_IF(T) if (T) THEN_CASE else ELSE_CASE
+#define THEN_CASE { XPC(3)=oz_true(); DISPATCH(6); }
+#define ELSE_CASE { XPC(3)=oz_false(); JUMPRELATIVE(getLabelArg(PC+4)); }
+
+  Case(TESTLT)
+    {
+      COUNT(inlinecalls);
+      
+      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
+      TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+      
+      if (tagA == tagB) {
+	if (tagA == SMALLINT) {
+	  LT_IF(smallIntLess(A,B));
+	}
+	
+	if (isFloat(tagA)) {
+	  LT_IF(floatValue(A) < floatValue(B));
+	}
+	
+	if (tagA == LITERAL) {
+	  if (isAtom(A) && isAtom(B)) {
+	    LT_IF(strcmp(tagged2Literal(A)->getPrintName(),
+			 tagged2Literal(B)->getPrintName()) < 0);
+	  }
+	}
+      }
+      tmpRet = BILessOrLessEq(OK,XPC(1),XPC(2));
+      auxString = "<";
+      goto LBLhandleLT;
+    }
+
+  LBLhandleLT:
+    {
+      switch(tmpRet) {
+	
+      case PROCEED: THEN_CASE;
+      case FAILED:  ELSE_CASE;
+	
+      case SUSPEND:
+	{
+	  CheckLiveness(PC,getPosIntArg(PC+5));
+	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
+	  suspendInline(CTT,XPC(1),XPC(2));
+	  return T_SUSPEND;
+	}
+      
+      case BI_TYPE_ERROR:
+	RAISE_TYPE1(auxString,cons(XPC(1),cons(XPC(2),nil())));
+	
+      default:
+	Assert(0);
+      }
+    }
+
+  Case(TESTLE)
+    {
+      COUNT(inlinecalls);
+      
+      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
+      TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+      
+      if (tagA == tagB) {
+	if (tagA == SMALLINT) {
+	  LT_IF(smallIntLE(A,B));
+	}
+	
+	if (isFloat(tagA)) {
+	  LT_IF(floatValue(A) <= floatValue(B));
+	}
+	
+	if (tagA == LITERAL) {
+	  if (isAtom(A) && isAtom(B)) {
+	    LT_IF(strcmp(tagged2Literal(A)->getPrintName(),
+			 tagged2Literal(B)->getPrintName()) <= 0);
+	  }
+	}
+      }
+      tmpRet = BILessOrLessEq(NO,XPC(1),XPC(2));
+      auxString = "=<";
+      goto LBLhandleLT;
+    }
+
+#undef THEN_CASE
+#undef ELSE_CASE
+
   Case(SHALLOWTHEN)
     {
       if (e->trail.isEmptyChunk()) {
@@ -2227,6 +2387,7 @@ LBLdispatcher:
 	if (isTailCall) {
 	  PC=NOCODE;
 	}
+	argsToSave = predArity;
 	goto LBLreplaceBICall;
 
        default: Assert(0);
@@ -2241,7 +2402,7 @@ LBLdispatcher:
        if (PC != NOCODE) {
 	 PopFrame(CTS,auxPC,auxY,auxG);
 
-	 PushContX(PC,Y,G,X,predArity);
+	 PushContX(PC,Y,G,X,argsToSave);
 	 CTS->pushFrame(auxPC,auxY,auxG);
        }
 #if 0
@@ -2612,8 +2773,7 @@ LBLdispatcher:
     {
       RefsArray tmpX = Y;
       Y = NULL;
-      predArity = getRefsArraySize(tmpX);
-      int i = predArity;
+      int i = getRefsArraySize(tmpX);
       while (--i >= 0) {
 	X[i] = tmpX[i];
       }
@@ -2661,6 +2821,7 @@ LBLdispatcher:
        case BI_TYPE_ERROR: RAISE_TYPE(builtinTab.getEntry((void *) biFun));
 
        case BI_REPLACEBICALL: 
+	 argsToSave=predArity;
 	 PC = NOCODE;
 	 goto LBLreplaceBICall;
 

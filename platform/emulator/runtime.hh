@@ -55,6 +55,11 @@
 #define oz_isDictionary(t) isDictionary(t)
 #define oz_isThread(t) isThread(t)
 #define oz_isProcedure(t) isProcedure(t)
+#define oz_isTuple(t) isTuple(t)
+
+#define oz_true() NameTrue
+#define oz_false() NameFalse
+#define oz_unit() NameUnit
 
 #define oz_atom(s) makeTaggedAtom(s)
 
@@ -164,18 +169,26 @@ int oz_isPair2(OZ_Term term)
   return sr->getWidth()==2;
 }
 
+
+inline
+TaggedRef oz_arg(TaggedRef tuple, int i)
+{
+  Assert(oz_isTuple(tuple));
+  return tagged2SRecord(tuple)->getArg(i);
+}
+
 inline
 TaggedRef oz_left(TaggedRef pair)
 {
   Assert(oz_isPair2(pair));
-  return tagged2SRecord(pair)->getArg(0);
+  return oz_arg(pair,0);
 }
 
 inline
 TaggedRef oz_right(TaggedRef pair)
 {
   Assert(oz_isPair2(pair));
-  return tagged2SRecord(pair)->getArg(1);
+  return oz_arg(pair,1);
 }
 
 inline 
