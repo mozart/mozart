@@ -381,8 +381,8 @@ OZ_C_proc_begin(BIfdDistributeMinPairs, 5) {
 //                  Scheduling Distribution using Task Intervals
 // ---------------------------------------------------------------------
 
-#define MAXRESOURCES 10
-#define MAXJOBS 10
+#define MAXRESOURCES 20
+#define MAXJOBS 20
 #define PAR 4
 #define MaxSetsSize10 10000
 
@@ -438,6 +438,10 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
   TaggedRef rel3  = makeTaggedAtom("c>=:");
   TaggedRef sharp = makeTaggedAtom("#");
 
+  /*
+  for (int i=0; i<4; i++)
+    taggedPrint(deref(OZ_getCArg(i)));
+    */
 
   struct Set {
     int low, up, dur, extSize;
