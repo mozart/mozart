@@ -25,7 +25,5 @@ void setIPAddress__(int adr);
 int  getIPAddress();
 void setIPPort__(int port);
 int getIPPort();
-void setTransport(OZ_Term);
-OZ_Term getTransport();
 
 #endif

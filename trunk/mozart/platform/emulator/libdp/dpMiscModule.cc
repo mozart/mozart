@@ -36,6 +36,7 @@
 
 #include "builtins.hh"
 #include "os.hh"
+#include "value.hh"
 
 #ifndef WINDOWS
 #include <sys/errno.h>
@@ -62,7 +63,8 @@
 #ifdef USE_VS_MSGBUFFERS
 #include "virtual.hh"
 #endif
-
+OZ_Term defaultAcceptProcedure = 0;
+OZ_Term defaultConnectionProcedure = 0;
 extern
 int raiseUnixError(char *f,int n, char * e, char * g);
 
@@ -148,6 +150,8 @@ OZ_BI_define(BIclose,1,0)
   return PROCEED;
 } OZ_BI_end
 
+
+
 OZ_BI_define(BIinitIPConnection,1,1)
 {
   oz_declareNonvarIN(0,rec);
@@ -155,12 +159,18 @@ OZ_BI_define(BIinitIPConnection,1,1)
   OZ_Term ipf = oz_atom("ip");
   OZ_Term portf = oz_atom("port");
   OZ_Term fwf = oz_atom("firewall");
-  OZ_Term trf = oz_atom("transport");
+  OZ_Term apr = oz_atom("acceptProc");
+  OZ_Term cpr = oz_atom("connectProc");
   int ip,port;
   Bool fw;
 
-  if (oz_isLiteral(rec));    
-  else if (oz_isLTuple(rec));
+  if (oz_isLiteral(rec)){
+    oz_typeError(0,"Must specify Accept and Connect procedures");
+  }
+  else if (oz_isLTuple(rec))
+    {
+    oz_typeError(0,"Must specify Accept and Connect procedures");
+    }
   else if (oz_isSRecord(rec)) {
     SRecord *srec = tagged2SRecord(rec);
     int index = srec->getIndex(ipf);
@@ -189,13 +199,32 @@ OZ_BI_define(BIinitIPConnection,1,1)
       fw = OZ_boolToC(t);
       setFirewallStatus(fw);
     }
-    index = srec->getIndex(trf);
-    if (index>=0) { 
-      OZ_Term t = srec->getArg(index);
-      if(!oz_isAtom(t))
-	oz_typeError(-1,"Atom");
-      setTransport(t);
+    index = srec->getIndex(apr);
+    if (index>=0) {
+      OZ_Term  proc0 = srec->getArg(index);
+      NONVAR(proc0,proc);
+      if(!oz_isChunk(proc))
+	oz_typeError(-1,"Chunk");
+      defaultAcceptProcedure = proc;
+      oz_protect(&defaultAcceptProcedure);
     }
+    else
+      oz_typeError(0,"Must specify Accept procedure");
+    
+      
+    index = srec->getIndex(cpr);
+    if (index>=0) {
+      OZ_Term proc0 = srec->getArg(index);
+      NONVAR(proc0,proc);
+      if(!oz_isChunk(proc))
+	oz_typeError(-1,"Chunk");
+      defaultConnectionProcedure = proc;
+      oz_protect(&defaultConnectionProcedure);
+    }
+    else
+      oz_typeError(0,"Must specify Connect procedure");
+     
+    
   } else {
     oz_typeError(0,"Record");
   }
@@ -209,9 +238,7 @@ OZ_BI_define(BIinitIPConnection,1,1)
 				  , 
 				  oz_cons(oz_pairAI("port",getIPPort()),
 					  oz_cons(oz_pairA("firewall",oz_bool(getFireWallStatus())), 
-						  oz_cons(oz_pairA("transport",getTransport()),
-							  oz_nil())
-						  )
+						  oz_nil())
 					  )
 				  )
 			  )
@@ -335,6 +362,13 @@ OZ_BI_define(BIgetMsgCntr,0,1)
 			  oz_cons(oz_pairAI("cont",globalContCounter),
 				  oz_nil())))))));
 }OZ_BI_end   
+
+OZ_BI_define(BIgetConnectWstream,0,1)
+{
+  initDP();
+  OZ_RETURN(ConnectPortStream);
+}OZ_BI_end 
+
 
 #ifndef MODULES_LINK_STATIC
 

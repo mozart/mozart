@@ -6,7 +6,7 @@ void tcpTransObjReady(ComObj *comObj,TransObj *transObj);
 void tcpComObjDone(ComObj *comObj);
 Bool tcpInitAccept();
 void tcpDoDisconnect(void *info);
-
+void tcpListenPort(int, char*);
 #endif
 
 

@@ -142,8 +142,8 @@ public:
   Bool sendAck(Bool timerInvoked);
   Bool reopen();
 
-  // For connection.cc usage (DEVEL) remove with connection-proc impl.
-  void *infoelement;
+  // For connection.cc usage
+  OZ_Term connectVar;
 };
 
 void comController_acceptHandler(TransObj *);
