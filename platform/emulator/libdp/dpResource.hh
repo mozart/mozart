@@ -73,7 +73,9 @@ class ResourceHashTable: public GenHashTable{
   int hash(TaggedRef entity){
     int val = abs((int) entity) ;
     return val;}
+  void gcResourceTableRecurse(GenHashNode*, int);
   
+
 public:
   ResourceHashTable(int i):GenHashTable(i){}
   
@@ -86,8 +88,14 @@ public:
   int find(TaggedRef entity){
     int hvalue = hash(entity);
     GenHashNode *aux = htFindFirst(hvalue);
-    if(aux)
-      return (int)aux->getEntry();
+    while(aux){
+      int OTI = (int) aux->getEntry();
+      OwnerEntry *oe=OT->getEntry(OTI);
+      if(oe && (!oe->isFree()) &&oe->getRef()==entity){
+	return OTI;}
+      else{
+	if(htSub(hvalue,aux));}
+      aux = htFindNext(aux, hvalue);}
     return RESOURCE_NOT_IN_TABLE;
   }
   
