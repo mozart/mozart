@@ -39,9 +39,12 @@ in
 		    action:  self # action(ResetAction)
 		    key:     ctrl(r))
 		  separator
-		  C(label:   'Close'
+		  C(label:   'Suspend'
 		    action:  self # off
-		    key:     ctrl(x))])
+		    key:     ctrl(x))
+		  C(label:   'Close'
+		    action:  Ozcar # reInit
+		    key:     ctrl(d))])
 	   MB(text: 'Thread'
 	      menu:
 		 [C(label:  'Previous'

@@ -9,25 +9,22 @@ in
 
    class SourceManager
 
-      meth init
-	 skip
-      end
-
       meth bpAt(File Line YesNo)
 	 Succeeded   = {Debug.breakpointAt File Line YesNo}
-	 FileAndLine = {StripPath File} # ', line ' # Line
+	 P           = {StripPath File} # ', line ' # Line
       in
 	 case YesNo then
 	    case Succeeded then
-	       {Ozcar status('Breakpoint at ' # FileAndLine)}
+	       {Ozcar PrivateSend(status('Breakpoint at ' # P))}
 	    else
-	       {Ozcar status('Failed to set breakpoint at ' # FileAndLine)}
+	       {Ozcar PrivateSend(status('Failed to set breakpoint at ' # P))}
 	    end
 	 else
 	    case Succeeded then
-	       {Ozcar status('Deleted breakpoint at ' # FileAndLine)}
+	       {Ozcar PrivateSend(status('Deleted breakpoint at ' # P))}
 	    else
-	       {Ozcar status('Failed to delete breakpoint at ' # FileAndLine)}
+	       {Ozcar PrivateSend(status('Failed to delete breakpoint at ' #
+					 P))}
 	    end
 	 end
       end

@@ -26,7 +26,7 @@ local
       case S
       of H|T then
 	 {OzcarMessage 'readloop:'} {OzcarShow H}
-	 {Ozcar readStreamMessage(H)}
+	 {Ozcar PrivateSend(readStreamMessage(H))}
 	 {OzcarMessage 'preparing for next stream message...'}
 	 {OzcarReadEvalLoop T}
       end
@@ -40,31 +40,34 @@ in
 			       %% about debugged threads
 
       attr
-	 ReadLoopThread
+	 ReadLoopThread : unit
+	 DelayedThread  : unit
 
-	 currentThread : unit
-	 currentStack  : unit
+	 currentThread  : unit
+	 currentStack   : unit
 
-	 SkippedProcs  : nil
-	 SkippedThread : nil
-	 Breakpoint    : false
+	 SkippedProcs   : nil
+	 SkippedThread  : nil
+	 Breakpoint     : false
 
-	 SwitchSync    : _
+	 SwitchSync     : _
 
       meth init
 	 self.ThreadDic = {Dictionary.new}
-	 ThreadManager,reinit
-      end
-
-      meth reinit
-	 case {IsDet @ReadLoopThread} then
-	    {Thread.terminate @ReadLoopThread}
-	 else skip
-	 end
 	 thread
 	    ReadLoopThread <- {Thread.this}
 	    {OzcarReadEvalLoop {Dbg.stream}}
 	 end
+      end
+
+      meth destroy
+	 Gui,doStatus('Destroying myself -- byebye...')
+	 {Dbg.off}
+	 {Thread.terminate @ReadLoopThread}
+	 {Compile '\\switch -debuginfo'}
+	 {Emacs removeBar}
+	 {Delay 1500}
+	 {self.toplevel tkClose}
       end
 
       meth checkMe
@@ -115,18 +118,24 @@ in
 
 	    else
 	       Data = {CondSelect M data unit}
-	       ForMe = case {Not {IsDet Data}} orelse Data \= `ooSend` then
-			  false
-		       elsecase {CondSelect M args nil} of [_ _ Obj] then
-			  {IsDet Obj} andthen Obj == self
-		       else false
+	       ForMe = case {Not {IsDet Data}} then false
+		       else Data == Ozcar
 		       end
 	    in
 	       case ForMe then
+		  {OzcarMessage 'message for Ozcar detected.'}
+		  case @DelayedThread \= unit then
+		     {OzcarMessage 'killing delayed thread #' #
+		      {Thread.id @DelayedThread}}
+		     {Thread.terminate @DelayedThread}
+		     DelayedThread <- unit
+		  else
+		     {OzcarMessage 'no delayed thread killed'}
+		  end
+
 		  {Dbg.trace T false}
 		  {Dbg.stepmode T false}
 		  {Thread.resume T}
-		  {OzcarMessage 'message for Ozcar detected.'}
 
 	       elsecase {UnknownFile M.file} then
 		  {Dbg.trace T false}
@@ -183,6 +192,11 @@ in
 		end
 	    E = ThreadManager,Exists(I $)
 	 in
+	    {OzcarMessage 'parent is ' # case Q > 0 then
+					    'known'
+					 else
+					    'unknown'
+					 end}
 	    case E then
 	       Stack = {Dictionary.get self.ThreadDic I}
 	    in
@@ -194,6 +208,14 @@ in
 	       {OzcarMessage NewThread   # {ID I}}
 	       case Q == 0 orelse Q == 1 then   % unknown or root thread
 		  thread
+		     local
+			DT = {Thread.this}
+		     in
+			{OzcarMessage 'setting delayed thread to #' #
+			 {Thread.id DT}}
+			DelayedThread <- DT
+		     end
+
 		     case Q == 1 then   % root thread
 			SkippedThread <- T
 			{Thread.resume T}
@@ -208,9 +230,12 @@ in
 		     case {Thread.state T} == terminated then
 			{OzcarMessage EarlyThreadDeath # I}
 		     else
+			{OzcarMessage 'adding thread #' # I # ' after delay'}
 			ThreadManager,add(T I Q (Q == 0))
 		     end
 		  end
+		  %% give thread above a chance to run:
+		  {Thread.preempt {Thread.this}}
 	       else
 		  ThreadManager,add(T I Q false)
 	       end
@@ -451,6 +476,7 @@ in
 			 {Thread.id @currentThread} # '...')
 	    {Stack rebuild(true)}
 	    {Stack print}
+	    {Stack emacsBarToTop}
 	    Gui,doStatus(' done' append)
 	 end
       end
@@ -513,6 +539,7 @@ in
       meth toggleEmacsThreads(TkV)
 	 Value = case {TkV tkReturnInt($)} == 0 then false else true end
       in
+	 {OzcarMessage 'toggleEmacsThreads ' # {V2VS Value}}
 	 case {NewCompiler} then
 	    case Value then
 	       {Compile '\\switch +runwithdebugger'}
@@ -527,6 +554,7 @@ in
       meth toggleSubThreads(TkV)
 	 Value = {TkV tkReturnInt($)} \= 0
       in
+	 {OzcarMessage 'toggleSubThreads ' # {V2VS Value}}
 	 {Dbg.subThreads Value}
       end
 

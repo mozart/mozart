@@ -464,7 +464,7 @@ in
 	 LineAction  =
 	 {New Tk.action
 	  tkInit(parent: W
-		 action: Ozcar # frameClick(frame:Frame))}
+		 action: Ozcar # PrivateSend(frameClick(frame:Frame)))}
 	 LineEnd     = FrameNr # '.end'
 	 UpToDate    = 1 > 0 % {Emacs isUpToDate(Frame.time $)}
       in
