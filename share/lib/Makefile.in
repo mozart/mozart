@@ -12,6 +12,7 @@ SHELL		= /bin/sh
 LN_S		= @LN_S@
 M4		= @M4@
 PERL            = @PERL@
+GZIP		= @GZIP@
 
 INSTALL		= @INSTALL@
 INSTALL_FILE	= $(INSTALL) -m 444
@@ -244,8 +245,12 @@ LIBFUNCTORS = \
 	$(FUNCTORS:%=$(OZLIB)/%)
 BINFILES = \
 	$(SYSLETS:%=$(OZBIN)/%)
+
+BOOTINITTXT	= boot-init.ozt
+BOOTOZCTXT	= boot-ozc.ozt
+
 STAGEEXTRAFILES = \
-	$(OZLIB)/Standard.ozf $(OZLIB)/boot-init.txt $(OZLIB)/boot-ozc.txt
+	$(OZLIB)/Standard.ozf $(OZLIB)/$(BOOTINITTXT) $(OZLIB)/$(BOOOZCTXT)
 
 install: install-main install-images install-cache
 
@@ -307,7 +312,7 @@ CLEANFILES = \
 	functor2env compiler-Env.oz \
 	Standard.ozf StandardBuiltins.ozf \
 	$(FUNCTORS) $(FUNFUNCTORS) \
-	$(SYSLETS) boot-init boot-ozc
+	$(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc
 
 clean:
 	-rm -f $(CLEANFILES)
@@ -333,7 +338,7 @@ URL=http\\://www.ps.uni-sb.de/ozhome
 
 # use the boot compiler to create the functors
 bootstrap:
-	$(MAKE) boot-init boot-ozc all \
+	$(MAKE) boot-unzip boot-init boot-ozc all \
 	OZC=$(SRCDIR)/boot-ozc.sh \
 	OZENGINE=$(SRCDIR)/oze.sh \
 	OZINIT=Init.ozf \
@@ -350,9 +355,6 @@ stage1:
 
 # stage2: recreate the functors and boot compiler using the stage1 functors
 stage2:
-	mv $(SRCDIR)/boot-init.txt boot-init.SAVE; \
-	mv $(SRCDIR)/boot-ozc.txt  boot-ozc.SAVE; \
-	trap "s=$$?;mv boot-init.SAVE $(SRCDIR)/boot-init.txt;mv boot-ozc.SAVE $(SRCDIR)/boot-ozc.txt; trap 0 1 2 15; exit $$s" 0 1 2 15; \
 	$(MAKE) install-stage PREFIX=$(STAGE2) \
 	OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:.:= \
 	OZC="$(SRCDIR)/oze.sh $(STAGE1)/bin/ozc" \
@@ -363,16 +365,14 @@ stage2:
 # boot compiler -- we should compare the generated boot-*.txt files
 # but we don't have a stable comparator yet
 stage3:
-	mv $(SRCDIR)/boot-init.txt boot-init.SAVE; \
-	mv $(SRCDIR)/boot-ozc.txt  boot-ozc.SAVE; \
-	trap "s=$$?;mv boot-init.SAVE $(SRCDIR)/boot-init.txt;mv boot-ozc.SAVE $(SRCDIR)/boot-ozc.txt; trap 0 1 2 15; exit $$s" 0 1 2 15; \
-	$(MAKE) boot-init boot-ozc install-stage PREFIX=$(STAGE3) \
+	$(MAKE) boot-init boot-ozc install-stage \
+	PREFIX=$(STAGE3) \
 	OZ_LOAD=prefix=$(URL)/share/=./:.:prefix=/=/:= \
 	OZC=$(SRCDIR)/boot-ozc.sh \
 	OZINIT=Init.ozf \
 	OZAR=ozar \
-	BOOTINITTXT=$(STAGE2)/share/boot-init.txt \
-	BOOTOZCTXT=$(STAGE2)/share/boot-ozc.txt
+	BOOTINITFROM=$(STAGE2)/share/$(BOOTINITTXT) \
+	BOOTOZCTXTFROM=$(STAGE2)/share/$(BOOTOZCTXT)
 
 SAVE=./save
 
@@ -401,29 +401,35 @@ check:
 
 .PHONY: new-boot
 
-boot-init.txt:
-	$(MAKE) boot-init.ar
-	$(P2T) < boot-init.ar > boot-init.txt
+$(BOOTINITTXT):
+	$(MAKE) boot-init.ar && \
+	$(P2T) < boot-init.ar > $@ && \
 	rm -f boot-init.ar
 
-boot-ozc.txt:
-	$(MAKE) boot-ozc.ar
-	$(P2T) < boot-ozc.ar  > boot-ozc.txt
+$(BOOTOZCTXT):
+	$(MAKE) boot-ozc.ar && \
+	$(P2T) < boot-ozc.ar > $@ && \
 	rm -f boot-ozc.ar
 
 new-boot:
-	-mv -f $(SRCDIR)/boot-init.txt $(SRCDIR)/boot-init.txt.SAVE
-	-mv -f $(SRCDIR)/boot-ozc.txt  $(SRCDIR)/boot-ozc.txt.SAVE
-	$(MAKE) boot-init.txt boot-ozc.txt
+	$(MAKE) $(BOOTINITTXT) $(BOOTOZCTXT)
+	gzip $(BOOTINITTXT) $(BOOTOZCTXT)
 
-BOOTINITTXT	= boot-init.txt
-BOOTOZCTXT	= boot-ozc.txt
+boot-unzip:
+	rm -f $(BOOTINITTXT) $(BOOTOZCTXT)
+	$(GZIP) -d < $(SRCDIR)/$(BOOTINITTXT).gz > $(BOOTINITTXT)
+	$(GZIP) -d < $(SRCDIR)/$(BOOTOZCTXT).gz > $(BOOTOZCTXT)
 
-boot-ozc: $(BOOTOZCTXT)
-	$(T2P) < $< > $@
+BOOTINITTXTFROM	= $(BOOTINITTXT)
+BOOTOZCTXTFROM	= $(BOOTOZCTXT)
 
-boot-init: $(BOOTINITTXT)
-	$(T2P) < $< > $@
+boot-ozc: $(BOOTOZCTXTFROM)
+	$(T2P) < $< > $@ \
+	|| (rm -f $@; exit 1)
+
+boot-init: $(BOOTINITTXTFROM)
+	$(T2P) < $< > $@ \
+	|| (rm -f $@; exit 1)
 
 # OZMAKE_COPYALWAYS=yes causes the emulator to always copy functors
 # regardless of whether they have `prop once' or not.  This is required
