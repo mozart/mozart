@@ -2170,11 +2170,12 @@ and is used for fontification.")
       "callBI" "inlinePlus1?" "inlineMinus1?" "inlineDot" "inlineUparrow"
       "inlineAt" "inlineAssign" "genCall" "call" "tailCall" "fastCall"
       "fastTailCall" "genFastCall" "marshalledFastCall" "sendMsg"
-      "tailSendMsg" "applMeth" "tailApplMeth" "thread" "threadX" "exHandler"
+      "tailSendMsg" "applMeth" "tailApplMeth" "thread" "exHandler"
       "createCond" "nextClause" "shallowGuard" "testLiteral" "testNumber"
       "testRecord" "testList" "testBool" "testBI" "testLT" "testLE"
       "match" "getVariable" "getVarVar" "getVoid" "lockThread" "getSelf"
-      "debugEntry" "debugExit" "globalVarname" "localVarname" "clearY") "\\|")
+      "setSelf" "debugEntry" "debugExit" "globalVarname" "localVarname"
+      "clearY") "\\|")
    "\\)("))
 
 (defconst ozm-instr-matcher-2
