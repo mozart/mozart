@@ -8,6 +8,7 @@ import
    NetInfo(netInfo)
 export
    open:Start
+%   openNetInfo:OpenNetInfo
 define
    %%
    %%TODO:
@@ -21,11 +22,10 @@ define
    %% dpPane starts to get rid of accumulated information.
    %%
 
-
-
    MainLock = {NewLock}
    Running={NewCell false}
    RunSync = {NewCell unit}
+%   OpenNetInfo=GUI.OpenNetInfo
 
    proc {Start} O N in
       {Exchange Running O N}
