@@ -632,6 +632,10 @@ OZ_C_proc_end
 #define O_SYNC     0
 #endif
 
+#ifndef O_SYNC
+#define O_SYNC     0
+#endif
+
 
 OZ_C_ioproc_begin(unix_open,4)
 {
