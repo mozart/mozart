@@ -69,6 +69,7 @@ enum EmulatorPropertyIndex {
   PROP_SPACES_SUCCEEDED,
   PROP_SPACES,
   // ERRORS
+  PROP_ERRORS_HANDLER,
   PROP_ERRORS_LOCATION,
   PROP_ERRORS_DEBUG,
   PROP_ERRORS_HINTS,
@@ -300,6 +301,10 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
              SET_INT(AtomFailed,ozstat.solveFailed.total);
              SET_INT(AtomSucceeded,ozstat.solveSolved.total););
     // ERRORS
+  case PROP_ERRORS_HANDLER: {
+    TaggedRef ehdl = am.getDefaultExceptionHdl();
+    return ehdl ? ehdl : oz_nil();
+  }
     CASE_BOOL(PROP_ERRORS_LOCATION,ozconf.errorLocation);
     CASE_BOOL(PROP_ERRORS_DEBUG,ozconf.errorDebug);
     CASE_BOOL(PROP_ERRORS_HINTS,ozconf.errorHints);
@@ -587,6 +592,9 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_REC(PROP_FD,
              DO_NAT(AtomThreshold,reInitFDs(INT__)););
     // ERRORS
+  case PROP_ERRORS_HANDLER: {
+    am.setDefaultExceptionHdl(val);
+  }
     CASE_BOOL(PROP_ERRORS_LOCATION,ozconf.errorLocation);
     CASE_BOOL(PROP_ERRORS_HINTS,ozconf.errorHints);
     CASE_BOOL(PROP_ERRORS_DEBUG,ozconf.errorDebug);
@@ -820,6 +828,7 @@ void initVirtualProperties()
   VirtualProperty::add("spaces.succeeded",PROP_SPACES_SUCCEEDED);
   VirtualProperty::add("spaces",PROP_SPACES);
   // ERRORS
+  VirtualProperty::add("errors.handler",PROP_ERRORS_HANDLER);
   VirtualProperty::add("errors.location",PROP_ERRORS_LOCATION);
   VirtualProperty::add("errors.debug",PROP_ERRORS_DEBUG);
   VirtualProperty::add("errors.hints",PROP_ERRORS_HINTS);
