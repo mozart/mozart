@@ -1343,11 +1343,21 @@ char *OZ_virtualStringToC(OZ_Term t,int*len)
  * the common cases
  */
 
+inline char* dropConst(const char* s)
+{
+  union {
+    const char* s1;
+    char* s2;
+  } u;
+  u.s1 = s;
+  return u.s2;
+}
+
 char* OZ_vsToC(OZ_Term t,int*n)
 {
   char * s;
   if (OZ_isAtom(t)) {
-    s = OZ_atomToC(t);
+    s = dropConst(OZ_atomToC(t));
     if (n!=0) *n = strlen(s);
   } else if (OZ_isByteString(t)) {
     ByteString*bs = tagged2ByteString(t);
