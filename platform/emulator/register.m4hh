@@ -372,6 +372,10 @@ INSTRUCTION(CREATEVARIABLEX)
 	    isCVar(term) && tagged2CVar(term)->valid(atm)) {
 	  suspendOnVar(makeTaggedRef(termPtr),getPosIntArg(PC+5),
 		       CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
+	  if (e->currentThread->getMode() == ALLSEQMODE) {
+	    e->currentThread=0;
+	    goto LBLstart;
+	  }
 	  goto LBLpopTask;
 	}
 
@@ -399,6 +403,10 @@ INSTRUCTION(CREATEVARIABLEX)
 	    isCVar(term) && tagged2CVar(term)->valid(i)) {
 	  suspendOnVar(makeTaggedRef(termPtr),getPosIntArg(PC+5),
 		       CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
+	  if (e->currentThread->getMode() == ALLSEQMODE) {
+	    e->currentThread=0;
+	    goto LBLstart;
+	  }
 	  goto LBLpopTask;
 	}
 
