@@ -23,3 +23,7 @@ Thu Oct 23 00:27:38 MET DST 1997
 
 Thu Oct 23 01:01:01 MET DST 1997
 optionale alphabetische Sortierung des Environments
+
+Thu Oct 23 01:33:12 MET DST 1997
+Bei Tastatur-Selektion von Stackframes, die gerade nicht angezeigt werden,
+scrollt das Stackwidget nicht
