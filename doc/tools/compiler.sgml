@@ -9,77 +9,99 @@ compiled and evaluated and the resulting value is written (pickled)
 into file <file/Foo.ozf/.</p>
 
   <section id=section.compiler.modes>
-    <title/Compiler Modes/
-    <p>The compiler can operate in one of several mutually exclusive
+    <title/Batch Compiler Modes/
+    <p>The batch compiler can operate in one of several mutually exclusive
 modes selected by the options below:
 <list>
 
-	<entry/ <code/-h/, <code/-?/, <code/--help//
-	<item/Prints out information on all legal options, then exits/
+	<entry/<code/-h/, <code/-?/, <code/--help//
+	<item/Prints out information on all legal options, then exits./
 
 	<entry/<code/-c/, <code/--dump//
-	<synopsis/<code/ozc -c ?{FILE}.oz//
+	<synopsis/<code/ozc -c &ellipsis; ?{FILE}.oz &ellipsis;//
 	<item/Compiles and evaluates the expression in file
 <code/?{FILE}.oz/, then pickles the resulting value into the output
 file, <code/?{FILE}.ozf/ by default./
 
 	<entry/<code/-e/, <code/--feedtoemulator//
-	<synopsis/<code/ozc -e ?{FILE}.oz//
+	<synopsis/<code/ozc -e &ellipsis; ?{FILE}.oz &ellipsis;//
 	<item/Compiles and executes the statement in file
 <code/?{FILE}.oz/.  This is the default mode of operation./
 
 	<entry/<code/-E/, <code/--core//
-	<synopsis/<code/ozc -E ?{FILE}.oz//
+	<synopsis/<code/ozc -E &ellipsis; ?{FILE}.oz &ellipsis;//
 	<item/Translates the statement in file <code/?{FILE}.oz/ into
 the core language, then writes this expanded form into the output
 file, <code/?{FILE}.ozi/ by default./
 
-	<entry/<code/-S/, <code/--outputcode//
-	<synopsis/<code/ozc -S ?{FILE}.oz//
+	<entry/<code/-S/, <code/--scode//
+	<synopsis/<code/ozc -S &ellipsis; ?{FILE}.oz &ellipsis;//
 	<item/Compiles the statement in file <code/?{FILE}.oz/ into the
 assembly bytecode format, then writes it to the output file,
 <code/?{FILE}.ozm/ by default./
 
+	<entry/<code/-s/, <code/--ecode//
+	<synopsis/<code/ozc -s &ellipsis; ?{FILE}.oz &ellipsis;//
+	<item/Like <code/--scode/, except that the file is compiled as
+an expression instead of as a statement./
+
 	<entry/<code/-x/, <code/--executable//
-	<synopsis/<code/ozc -x ?{FILE}.oz//
+	<synopsis/<code/ozc -x &ellipsis; ?{FILE}.oz &ellipsis;//
 	<item/Much like <code/-c/, compiles and evaluates the
 expression in file <code/?{FILE}.oz/, then writes the resulting value
-into the output file, by default: <code/?{FILE}/ (no extension) under
+into the output file, by default <code/?{FILE}/ (without extension) under
 Unix or <code/?{FILE}.exe/ under Windows.
 Additionally, it makes the output file executable.  Thus, if
-<file/Foo.oz/ contains an application functor:
+<file/Foo.oz/ contains an application functor,
 <code display/ozc -x Foo.oz/
 creates the file <file/Foo/ (<file/Foo.exe/ under Windows), which is
-executable and can be invoked directly from the shell.  However, you can
-always run an application functor as follows:
-<code display/ozengine ?{url} ?{args} .../
+executable and can be invoked directly from the shell.  Note also that
+you can always run an application functor as follows:
+<code display/ozengine ?{url} ?{args} &ellipsis;/
 where ?{url} is a URL or pathname that references the application
 functor./
       </list></p>
   </section>
 
-  <section id=section.compiler.options>
-    <title/Compiler Options/
+  <section id=section.compiler.general>
+    <title/Options Valid in All Modes/
     <p><list>
 
 	<entry/<code/-v/, <code/--verbose//
-	<item/Display all compiler messages/
+	<item/Display all compiler messages./
 
 	<entry/<code/-q/, <code/--quiet//
-	<item/Inhibit compiler messages/
+	<item/Inhibit compiler messages./
 
 	<entry/<code/-M/, <code/--makedepend//
 	<item/Instead of executing, write a list of dependencies to
-stdout/
+stdout./
+
+      </list></p>
+
+  </section>
+
+  <section id=section.compiler.outputfiles>
+    <title/Options for Output Files/
+    <p><list>
 
 	<entry/<code/-o ?{FILE}/, <code/--outputfile=?{FILE}//
-	<item/Write output to ?{FILE} (<file/-/ for stdout)/
+	<item/Write output to ?{FILE} (<file/-/ for stdout).  If this option
+is given, then a single input file may be given.  Otherwise, an arbitrary
+number of input files can be processed./
+
+	<entry/<code/--unix/, <code/--target=unix//
+	<item/When invoked with <code/-x/, produce Unix executables even
+if running under Windows./
+
+	<entry/<code/--windows/, <code/--target=windows//
+	<item/When invoked with <code/-x/, produce Windows executables even
+if running under Unix./
 
 	<entry/<code/--execheader=?{STRING}//
-	<item>When invoked with option <code/-x/ the compiler first
-outputs a header so that the output file may be interpreted by
-the operating system as an executable.  Under Unix, the default behaviour
-is to use the following as header:
+	<item>When invoked with option <code/-x/, the compiler prepends
+a header to the output file so that it is interpreted as executable
+by the operating system.  Under Unix, the default header is as follows:
 <code display>
 #!/bin/sh
 exec ozengine $0 "$@"
@@ -96,41 +118,65 @@ header.</item>
 Under Windows, the default behaviour is to use the file provided in
 ?{ozhome}<file>/bin/ozwrapper.bin</file>, where ?{ozhome} is Mozart's
 installation folder.  <file/ozwrapper.bin/ is a Windows executable
-that launches <file/ozengine/.
+that launches <file/ozengine/, &ie;, a console application (CUI).
 
 	<entry/<code/--execwrapper=?{FILE}//
 	<item>Reads in ?{ozhome}<file>/bin/</file>?{FILE} and uses it
 as header for executable files.  Apart from <file/ozwrapper.bin/,
 an <file/ozwrapperw.bin/ is supplied that launches <file/ozenginew/
-instead of <file/ozengine/.  This option provides a convenient way to
-use this alternative wrapper.
-
-        <entry/<code/--target=unix/, <code/--unix//
-	<entry/<code/--target=windows/, <code/--windows//
-	<item/When creating an executable functor, do it for the specified
-target platform rather than for the current host platform./
+instead of <file/ozengine/, &ie;, a Windows application (GUI).  This
+option provides a convenient way to use this alternative wrapper.
 
 	<entry/<code/-z ?{N}/, <code/--compress=?{N}//
 	<item>Pickles may be written in a compressed format.  By
-default they are not compressed. <code/-z ?{N}/ selects a compression
-level: ?{N} is an integer between 1 and 9.  Compressing a pickle may
-improve loading/downloading time.</item>
+default they are not compressed. <code/-z ?{N}/ selects the compression
+level: ?{N} is an integer between 0 (uncompressed) and 9 (maximum compression).
+Compressing a pickle may improve loading/downloading time.</item>
+
+      </list></p>
+
+  </section>
+
+  <section id=section.compiler.state>
+    <title/Options to Set the Compiler State/
+    <p>For the following options, the order is important, and even
+in which order they are intermixed with the input files:  When an
+input file is processed, the compiler state is determined by all
+options preceding it.  Options may be overridden by other options
+given later on the command line.
+       
+  <subsection class=unnumbered>
+    <title/Macro Directives/
+    <p><list>
 
 	<entry/<code/-D ?{NAME}/, <code/--define=?{NAME}//
-	<item>Define macro ?{NAME}.  Code source may have
-<code proglang=oz/\ifdef ?{NAME}/ conditional directives that tests
-whether macro ?{NAME} is defined.</item>
+	<item>Define macro ?{NAME}.  Macros allow for conditional compilation
+using <code proglang=oz/\ifdef ?{NAME}/ and <code proglang=oz/\ifndef ?{NAME}/
+macro directives.</item>
 
 	<entry/<code/-U ?{NAME}/, <code/--undefine=?{NAME}//
-	<item/Undefines macro ?{NAME}/
+	<item/Undefines macro ?{NAME}./
+
+      </list></p>
+  </subsection>
+
+  <subsection class=unnumbered>
+    <title/Environment/
+    <p><list>
 
 	<entry/<code/-l ?{MODULES}/, <code/--environment=?{MODULES}//
-	<synopsis><code>ozc -l Baz=$HOME/baz.ozf -c Foo.oz</code></synopsis>
 	<item>Makes ?{MODULES}, a comma-separated list of pairs
 <code/?{VAR}=?{URL}/, available in the environment.  For each
 <code/?{VAR}=?{URL}/, the module available through the functor at
-?{URL} is obtained and ?{VAR} is bound to it.  The file <file/Foo.oz/
-being compiled can then reference variable ?{VAR}.</item>
+?{URL} is obtained and ?{VAR} is bound to it.  The source files
+then compiled can reference variable ?{VAR}.</item>
+
+      </list></p>
+  </subsection>
+
+  <subsection class=unnumbered>
+    <title/Inserting Files/
+    <p><list>
 
 	<entry/<code/-I ?{DIR}/, <code/--incdir=?{DIR}//
 	<item>Adds ?{DIR} to the head of <var env/OZPATH/ which is
@@ -138,42 +184,39 @@ used to locate files to <code proglang=oz/\insert/.</item>
 
 	<entry/<code/--include=?{FILE}//
 	<item>Compile and execute the statement in ?{FILE} before
-processing the remaining options.  This can be used &eg; to extend the
-compilation environment by executing a
+processing the remaining options.  For instance, this can be used to
+extend the compilation environment by executing a
 <code proglang=oz/declare/.</item>
-
-	<entry/<code/--maxerrors=?{N}//
-	<item/Limit the number of errors reported to ?{N}./
-
-	<entry/<code/--baseurl=?{STRING}//
-	<item/Set the base URL to resolve imports of computed functors
-to ?{STRING}./
 
       </list></p>
 
-  </section>
-
-  <section id=section.compiler.switches>
+  <subsection class=unnumbered>
     <title/Compiler Switches/
-    <p><list>
+    <p>Most of the compiler switches can be set via command line
+options.  Please refer to <Ptr.Extern to="ozdoc:compiler"
+key="appendix.switches"> for more detailed descriptions and defaults.
+      <list>
 
 	<entry/<code/-g/, <code proglang=sh/--(no)debuginfo//
 	<item/Emits code with debugging information.  Use this
-option if you want to take advantage of
-<ref.extern to="ozdoc:ozcar"/<em/The Mozart Debugger//.  The <code/-g/
+option if you want to use the
+<ref.extern to="ozdoc:ozcar"/Mozart Debugger/.  The <code/-g/
 option is actually an abbreviation for the combination of
 <code/--controlflowinfo/ and <code/--staticvarnames/./
 
 	<entry/<code/--(no)controlflowinfo//
-	<item/Include control flow information/
+	<item/Include control flow information./
 
 	<entry/<code/--(no)staticvarnames//
-	<item/Include static variable name information/
+	<item/Include static variable name information./
+
+	<entry/<code/--(no)dynamicvarnames//
+	<item/Attach print names to variables created at run-time./
 
 	<entry/<code/-p/, <code/--(no)profile//
 	<item/Emits code with profiling information.  Use this option
-if you want to take advantage of
-<ref.extern to="ozdoc:profiler"/<em/The Mozart Profiler//./
+if you want to use the
+<ref.extern to="ozdoc:profiler"/Mozart Profiler/./
 
 	<entry/<code/--(no)gump//
 	<item/Allow Gump definitions./
@@ -191,7 +234,7 @@ if you want to take advantage of
 	<item/Warn about unused variables and formals./
 
 	<entry/<code/--(no)warnforward//
-	<item/Warn about oo forward declarations./
+	<item/Warn about forward class declarations./
 
 	<entry/<code/--(no)warnopt//
 	<item/Warn about missed optimizations./
@@ -213,10 +256,26 @@ if you want to take advantage of
 
 	<entry/<code/--(no)debugtype//
 	<item/Annotate variable types in core output./
-
-	<entry/<code/--functionalpatterns//
-	<item/Use functional pattern-matching./
       </list></p>
+  </subsection>
+
+  <subsection class=unnumbered>
+    <title/Compiler Options/
+    <p><list>
+
+	<entry/<code/--maxerrors=?{N}//
+	<item/Limit the number of errors reported to ?{N}./
+
+	<entry/<code/--baseurl=?{STRING}//
+	<item/Set the base URL to resolve imports of computed functors
+to ?{STRING}./
+
+	<entry/<code/--gumpdirectory=?{STRING}//
+	<item/Set the directory where Gump output files are placed
+to ?{STRING}./
+
+      </list></p>
+  </subsection>
   </section>
 
 </chapter>
