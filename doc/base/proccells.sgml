@@ -150,8 +150,21 @@ choices,  the tuple <<succeeded(?{A})>> is returned.
 The atom ?{A} is either <<suspended>>, when ?_{Space} still contains threads, or <<entailed>> otherwise.
 <entry>succeeded
 <item>and there is at least one thread in ?_{Space} which
-synchronizes on a choice the tuple <<alternatives(?{I})>> is returned, where ?{I} gives the number of alternatives of the selected choice.
+synchronizes on a choice the tuple <<alternatives(?{I})>> is returned,
+where ?_{I} gives the number of alternatives of the selected choice.
 </list>
+<p>
+Note that execution of <<Space.askVerbose>> blocks until the space
+becomes stable, even though it possibly constrains it output before having
+completely reduced (in the case of blocked but not stable spaces). So
+a common pattern of usage is the following:
+<<<
+case
+   thread {Space.askVerbose ?{S}} end
+of blocked(R) then &ellipsis;
+[] &ellipsis;
+end
+>>>
 
 <entry><<merge>>
 <index class=tails/<<Space>><and><<merge>>/
