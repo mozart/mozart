@@ -55,6 +55,10 @@
                              out    => ['+byteString'],
                              BI     => BIpicklePack},
 
+    'packWithCells'	=> { in     => ['+value'],
+			     out    => ['+byteString'],
+			     BI     => BIpicklePackWithCells},
+
     'unpack'	        => { in     => ['+virtualString','value'],
                              out    => [],
                              BI     => BIpickleUnpack},
