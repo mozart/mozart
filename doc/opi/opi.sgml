@@ -895,7 +895,7 @@
             (<Key id="key.oz-open-compiler-panel"/C-. C-. c/)
           <Item>
             Open the Compiler Panel by feeding the statement <Code
-            proglang=oz>{New CompilerPanel.'class' init(`Compiler`) _}</Code
+            proglang=oz>{New CompilerPanel.'class' init(OPI.compiler) _}</Code
             > to the Oz Compiler.
         </List>
       <Para class=apropos><Title/<Span class=index/Debugger//
