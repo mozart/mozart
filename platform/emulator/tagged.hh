@@ -104,6 +104,12 @@ void *tagValueOf(TaggedRef ref)
 }
 
 inline
+Bool isNullPtr(TaggedRef p)
+{
+  return (p&~(tagMask)) == 0;
+}
+
+inline
 TaggedRef makeTaggedRef(TypeOfTerm tag, int32 i)
 {
 #ifdef LARGEADRESSES
