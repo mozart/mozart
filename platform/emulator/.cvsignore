@@ -13,6 +13,7 @@ components.cc
 marshalcode.cc
 marshaler.hh
 marshalMsg.cc
+atoms.hh atoms.cc
 config.status
 config.cache
 config.log
