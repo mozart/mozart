@@ -262,6 +262,10 @@ run the emulator when you issue the command `run' to gdb."
 (defvar oz-temp-buffer "*Oz Temp*"
   "Name of the Oz temporary buffer.")
 
+(defvar oz-buffered-send-string nil
+  "List of buffered calls to oz-send-string.
+These are performed only when the Oz Compiler is known to be running.")
+
 (defvar oz-emulator-hook nil
   "If non-nil, hook used for starting the Oz Emulator.
 This is set when gdb is active.")
@@ -834,6 +838,7 @@ If FORCE is non-nil, kill it immediately."
 	 (delete-windows-on oz-temp-buffer)
 	 (kill-buffer oz-temp-buffer)))
   (oz-bar-remove)
+  (setq oz-buffered-send-string nil)
   (message "Oz halted.")
   (oz-set-title oz-old-frame-title))
 
@@ -874,7 +879,12 @@ If FORCE is non-nil, kill it immediately."
   (set-process-filter (get-buffer-process oz-compiler-buffer)
 		      'oz-compiler-filter)
   (oz-show-buffer (get-buffer oz-compiler-buffer))
-  (bury-buffer oz-compiler-buffer))
+  (bury-buffer oz-compiler-buffer)
+  (let ((xs oz-buffered-send-string))
+    (setq oz-buffered-send-string nil)
+    (while xs
+      (oz-send-string (car (car xs)) (cdr (car xs)))
+      (setq xs (cdr xs)))))
 
 
 ;;------------------------------------------------------------
@@ -1053,8 +1063,10 @@ feed that many preceding paragraphs as well as the current paragraph."
   "Feed STRING to the Oz Compiler, restarting it if it died.
 If SYSTEM is non-nil, it is a command for the system and is to be
 compiled using a default set of switches."
+  (oz-check-running t)
   (if (not (get-buffer-process oz-compiler-buffer))
-      (error "Oz Compiler socket does not exist; maybe Oz is not running")
+      (setq oz-buffered-send-string
+	    (nconc oz-buffered-send-string (list (cons string system))))
     (let ((proc (get-buffer-process oz-compiler-buffer))
 	  (eof (concat (char-to-string 4) "\n")))
       (save-excursion
