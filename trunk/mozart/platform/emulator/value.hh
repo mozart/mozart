@@ -55,13 +55,17 @@ BI_send;
  * Literal
  *=================================================================== */
 
-const int sizeOfLitFlags = 4;
-const int litFlagsMask   = (1<<sizeOfLitFlags)-1;
 
-#define Lit_isName       1
-#define Lit_isNamedName  2
-#define Lit_hasGName     4
-#define Lit_isUniqueName 8
+/* any combination iof the following must be different from GCTAG,
+ * otherwise getRef() will not work
+ */
+#define Lit_isName        2
+#define Lit_isNamedName   4
+#define Lit_hasGName      8
+#define Lit_isUniqueName 16
+
+const int sizeOfLitFlags = 5;
+const int litFlagsMask   = (1<<sizeOfLitFlags)-1;
 
 class Literal {
   int32 flagsAndOthers;
@@ -82,6 +86,7 @@ public:
 
   Literal *gc();
 
+  TaggedRef *getRef() { return (TaggedRef*)&flagsAndOthers; }
   OZPRINT;
   OZPRINTLONG;
 
@@ -1303,7 +1308,7 @@ public:
   void setClass(ObjectClass *c) { aclass = ToInt32(c); }
 
   OzLock *getLock() { return (OzLock*)ToPointer(flagsAndLock&ObjFlagMask); }
-  OzLock *setLock(OzLock *l) { flagsAndLock |= ToInt32(l); }
+  void setLock(OzLock *l) { flagsAndLock |= ToInt32(l); }
 
   ObjectClass *getClass() { return (ObjectClass*) ToPointer(aclass); }
 

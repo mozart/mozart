@@ -235,6 +235,7 @@ typedef enum {
   DIF_REF, 
   DIF_OWNER, 
   DIF_PORT,		// NA CREDIT
+  DIF_LOCK,		// NA CREDIT
   DIF_CELL,               // NA CREDIT
   DIF_VAR,
   DIF_BUILTIN,
@@ -1996,11 +1997,7 @@ void PerdioVar::addSuspPerdioVar()
   }
   if (isURL() && suspList==NULL) {
     OZ_Term val;
-    TaggedRef t=getURL();
-    Literal *lit = tagged2Literal(t);
-    Assert(lit->isAtom());
-    char *s=lit->getPrintName();
-    int ret=loadURL(s,val);
+    int ret=loadURL(getURL(),val);
     if (ret != PROCEED) {
       warning("mm2: load URL failed not impl");
     } else {
@@ -2054,8 +2051,6 @@ void Tertiary::globalizeTert()
   case Co_Object:
     ((Object*) this)->globalize();
     break;
-  case Co_Port:
-    break;
   case Co_Cell:
     {
       PD((GLOBALIZING,"GLOBALIZING cell"));
@@ -2066,6 +2061,10 @@ void Tertiary::globalizeTert()
       cl->globalize(manI);
       return;
     }
+  case Co_Thread:
+  case Co_Space:
+  case Co_Port:
+    break;
   default:
     Assert(0);
   }
@@ -2142,9 +2141,6 @@ void Object::import()
 {
   Assert(getTertType()==Te_Proxy);
   Tertiary::import();
-  if (getClass()->supportsLocking()) {
-    setLock(new OzLock(am.currentBoard));
-  }
   PD((GLOBALIZING,"GLOBALIZING: importing object"));
 }
 
@@ -2627,9 +2623,8 @@ void marshallURL(GName *gname, TaggedRef t, ByteStream *bs) {
   PD((MARSHALL,"URL %s",toC(t)));
   bs->put(DIF_URL);
   marshallGName(gname,bs);
-  Literal *lit = tagged2Literal(t);
-  Assert(lit->isAtom());
-  marshallString(lit->getPrintName(),bs);
+  Assert(isAtom(t));
+  marshallTerm(0,t,bs);
 }
 
 Bool checkURL(GName *gname, ByteStream *bs) {
@@ -2731,9 +2726,9 @@ void unmarshallTertiary(ByteStream *bs, TaggedRef *ret, MarshallTag tag,
 
   Tertiary *tert = NULL;
   switch (tag) {
-  case DIF_PORT:   tert = new PortProxy(bi);       break;
-  case DIF_THREAD: tert = new Thread(bi,Te_Proxy); break;
-  case DIF_SPACE:  tert = new Space(bi,Te_Proxy);  break;
+  case DIF_PORT:   tert = new PortProxy(bi);        break;
+  case DIF_THREAD: tert = new Thread(bi,Te_Proxy);  break;
+  case DIF_SPACE:  tert = new Space(bi,Te_Proxy);   break;
   default:         Assert(0);
   }
 
@@ -2834,13 +2829,17 @@ OzDictionary *unmarshallDict(ByteStream *bs)
 void unmarshallObject(Object *o, ByteStream *bs)
 {
   SRecord *feat = unmarshallSRecord(bs);
-  OZ_Term t = unmarshallTerm(bs);
+  OZ_Term t     = unmarshallTerm(bs);
+  OZ_Term lock  = unmarshallTerm(bs);
   if (o==NULL)
     return;
 
   o->setFreeRecord(feat);
   if (o->getTertType()==Te_Proxy) o->import();
   o->setState(tagged2Tert(t));
+
+  // TODO: make locks work
+  o->setLock(isNil(lock) ? (OzLock*)NULL : new OzLock(am.rootBoard));
 }
 
 void unmarshallClass(Object *o, ByteStream *bs)
@@ -2866,7 +2865,11 @@ void marshallObject(Site *sd, Object *o, ByteStream *bs)
   marshallSRecord(sd,o->getFreeRecord(),bs);
   marshallTerm(sd,makeTaggedConst(getCell(o->getState())),bs);
   if (o->getLock()) {
-    warning("marshallObject: cannot handle locks (yet)");
+    warning("marshallObject(%s): cannot handle locks correctly (yet)",
+	    toC(makeTaggedConst(o)));
+    marshallTerm(sd,makeTaggedConst(o->getLock()),bs);
+  } else {
+    marshallTerm(sd,nil(),bs);
   }
 }
 
@@ -2905,24 +2908,23 @@ loop:
   case LITERAL:
     {
       Literal *lit = tagged2Literal(t);
+      if (checkCycle(*lit->getRef(),bs)) return;
+
       if (lit->isAtom()) {
 	bs->put(DIF_ATOM);
 	PD((MARSHALL_CT,"tag DIF_ATOM  BYTES:1"));
 	marshallString(lit->getPrintName(),bs);
 	PD((MARSHALL,"atom: %s",lit->getPrintName()));
-      	break;
-      }
-
-      if (lit->getFlags()&Lit_isUniqueName) {
+      } else if (lit->getFlags()&Lit_isUniqueName) {
 	bs->put(DIF_UNIQUENAME);
 	marshallString(lit->getPrintName(),bs);	
-	break;
+      } else {
+	bs->put(DIF_NAME);
+	GName *gname = ((Name*)lit)->globalize();
+	marshallGName(gname,bs);
+	marshallString(lit->getPrintName(),bs);
       }
-
-      bs->put(DIF_NAME);
-      GName *gname = ((Name*)lit)->globalize();
-      marshallGName(gname,bs);
-      marshallString(lit->getPrintName(),bs);
+      trailCycle(lit->getRef(),bs->refCounter++);
       break;
     }
 
@@ -2969,6 +2971,13 @@ loop:
 	bs->put(DIF_BUILTIN);
 	PD((MARSHALL_CT,"tag DIF_BUILTIN BYTES:1"));
 	marshallString(tagged2Builtin(t)->getPrintName(),bs);
+	break;
+      }
+
+      if (isLock(t)) {
+	// TODO: make locks work
+	PD((MARSHALL,"lock"));
+	bs->put(DIF_LOCK);
 	break;
       }
 
@@ -3115,6 +3124,7 @@ loop:
 	gnameTable->gnameAdd(gname,*ret);
       }
       delete printname;
+      gotRef(bs,*ret);
       return;
     }
 
@@ -3126,6 +3136,7 @@ loop:
 
       *ret = getUniqueName(printname);
       delete printname;
+      gotRef(bs,*ret);
       return;
     }
 
@@ -3135,6 +3146,7 @@ loop:
       PD((UNMARSHALL,"atom %s",aux));
       *ret = OZ_atom(aux);
       delete aux;
+      gotRef(bs,*ret);
       return;
     }
 
@@ -3232,25 +3244,20 @@ loop:
   case DIF_URL:
     {
       GName *gname;
-      int found=unmarshallGName(&gname,ret,bs);
-      char *url=unmarshallString(bs);
+      int found     = unmarshallGName(&gname,ret,bs);
+      TaggedRef url = unmarshallTerm(bs);
 
+      PD((UNMARSHALL,"url: %s",toC(url)));
       if (found) {
 	PD((UNMARSHALL,"url found"));
-	gotRef(bs,*ret);
-	delete url;
 	return;
-      }
+      } 
 
-      PD((UNMARSHALL,"url: %s",url));
-      PerdioVar *pvar = new PerdioVar(gname,oz_atom(url));
-      delete url;
-
+      PerdioVar *pvar = new PerdioVar(gname,url);
+      
       TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
       addGName(gname,val);
       *ret = val;
-
-      gotRef(bs,val);
       return;
     }
 
@@ -3439,6 +3446,13 @@ loop:
     {
       PD((UNMARSHALL,"dict"));
       *ret = makeTaggedConst(unmarshallDict(bs));
+      return;
+    }
+  case DIF_LOCK:
+    {
+      // TODO: make locks work
+      PD((UNMARSHALL,"lock"));
+      *ret = makeTaggedConst(new OzLock(am.rootBoard));
       return;
     }
   case DIF_BUILTIN:
@@ -4726,6 +4740,13 @@ OZ_C_proc_begin(BIsave,2)
 }
 OZ_C_proc_end
 
+int loadURL(TaggedRef url, OZ_Term &out)
+{
+  Literal *lit = tagged2Literal(url);
+  Assert(lit->isAtom());
+  char *s=lit->getPrintName();
+  return loadURL(s,out);
+}
 int loadURL(char *url, OZ_Term &out)
 {
   if (strncmp(url,"file:",5)!=0) {
