@@ -1,8 +1,9 @@
 Hydra	mail -s "I have changed %s" mehl,scheidhr,tmueller,popow
-Hydra/Compiler   mail -s "I have changed %s" henz
+Hydra/Compiler   mail -s "I have changed %s" henz,ibach
 Oz/lib	mail -s "I have changed %s" henz,wuertz
 Oz/lib/browser	mail -s "I have changed %s" latz
 Oz/elisp	mail -s "I have changed %s" scheidhr
+Oz/lib/graphic	mail -s "I have changed %s" zenner
 Oz/graphic/oz	mail -s "I have changed %s" wuertz,zenner
 GNU	/usr/share/gs/etc/cvs2news %s
 Hydra	/usr/share/gs/etc/cvs2news %s
