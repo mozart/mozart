@@ -1222,7 +1222,7 @@ void AM::pushDebug(Board *n, Chunk *def, int arity, RefsArray args)
 void AM::scheduleSuspCont(Board *bb, int prio, Continuation *c,
                           Bool wasExtSusp)
 {
-  Thread *th = newThread(prio,bb);
+  Thread *th = newThread(prio,bb,PARMODE);
   if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     incSolveThreads(bb);
     th->setNotificationBoard(bb);
@@ -1236,7 +1236,7 @@ void AM::scheduleSuspCCont(Board *bb, int prio,
                            CFuncContinuation *c, Bool wasExtSusp,
                            Suspension *s)
 {
-  Thread *th = newThread(prio,bb);
+  Thread *th = newThread(prio,bb,PARMODE);
   if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     incSolveThreads(bb);
     th->setNotificationBoard(bb);
@@ -1254,14 +1254,8 @@ void AM::scheduleSolve(Board *bb)
   // message("ScheduleSolve (@0x%x)\n", (void *) bb->getActor ());
 
   Actor *aa=bb->getActor();
-#ifdef NEWCOUNTER
-  Board *nb = bb;
-  Thread *th = newThread(aa->getPriority(),nb);
-  nb->incSuspCount();
-#else
   Thread *th = newThread(aa->getPriority(),bb);
   Board *nb = aa->getBoardFast()->getSolveBoard();
-#endif
   if (nb) incSolveThreads(nb);
   th->setNotificationBoard(nb);
   th->pushNervous(bb);
@@ -1274,7 +1268,7 @@ void AM::scheduleSolve(Board *bb)
 void AM::scheduleWakeup(Board *bb, Bool wasExtSusp)
 {
   Assert(!bb->isCommitted());
-  Thread *th = newThread(bb->getActor()->getPriority(),bb);
+  Thread *th = newThread(bb->getActor()->getPriority(),bb,PARMODE);
   if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     incSolveThreads(bb);
     th->setNotificationBoard(bb);
@@ -1284,9 +1278,10 @@ void AM::scheduleWakeup(Board *bb, Bool wasExtSusp)
   scheduleThread(th);
 }
 
-Thread *AM::createThread(int prio)
+Thread *AM::createThread(int prio,int compMode)
 {
-  Thread *tt = newThread(prio,currentBoard);
+  Thread *tt = newThread(prio,currentBoard,compMode);
+
 #ifdef NEWCOUNTER
   currentBoard->incSuspCount();
 #endif
@@ -1545,6 +1540,14 @@ void AM::pushTaskOutline(Board *n,ProgramCounter pc,
                          RefsArray y,RefsArray g,RefsArray x,int i)
 {
   pushTask(n,pc,y,g,x,i);
+}
+
+void AM::createTask()
+{
+  if (currentThread->getCompMode() != PARMODE) {
+    currentThread->switchCompMode();
+    currentThread->switchCompMode();
+  }
 }
 
 #ifdef OUTLINE

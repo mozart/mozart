@@ -52,7 +52,8 @@ private:
   SuspList * stable_sl;
   int threads;
 public:
-  SolveActor (Board *bb, int prio, TaggedRef resTR, TaggedRef guiTR=0);
+  SolveActor (Board *bb, int prio, int compMode,
+              TaggedRef resTR, TaggedRef guiTR=0);
   void setSolveBoard(Board *bb);
   Board *getSolveBoard() { return solveBoard; }
   ~SolveActor ();
@@ -81,8 +82,18 @@ public:
   Bool stable_wake(void);
   void add_stable_susp(Suspension *);
   void setBoard (Board *bb) { board = bb; }
-  void setBoardToInstall (Board *bb) { boardToInstall = bb; }
-  Board* getBoardToInstall () { return (boardToInstall); }
+  void setBoardToInstall (Board *bb, int compMode) {
+    boardToInstall = bb;
+    if (bb) {
+      bb->setCompModeHackForBoardToInstall(compMode);
+    }
+  }
+  Board* getBoardToInstall (int &compMode) {
+    if (boardToInstall) {
+      compMode=boardToInstall->getCompModeHackForBoardToInstall();
+    }
+    return (boardToInstall);
+  }
   TaggedRef genSolved();
   TaggedRef genStuck();
   TaggedRef genEnumed(Board *newSolveBB);
