@@ -151,8 +151,9 @@ in
 
 	    else %% this is a (not yet) attached thread
 	       Q = {Thread.parentId T}
+	       S = Gui,checkSubThreads($)
 	    in
-	       case {Cget subThreads} orelse
+	       case S == AttachText orelse
 		  {Not ThreadManager,Exists(Q $)} then
 		  case {UnknownFile M.file} then %% don't attach!
 		     {OzcarMessage 'ignoring new thread'}
@@ -160,9 +161,20 @@ in
 		  else %% yes, do attach!
 		     ThreadManager,add(T I Q)
 		  end
-	       else
+	       elsecase S
+	       of !IgnoreText then
 		  {OzcarMessage 'ignoring new subthread'}
 		  {Detach T}
+	       elseof U then
+		  ThreadManager,add(T I Q)
+		  {Dbg.step T false}
+		  case U
+		  of !Unleash0Text then
+		     {Dbg.unleash T 0}
+		  [] !Unleash1Text then
+		     {Dbg.unleash T 6}
+		  end
+		  {Thread.resume T}
 	       end
 	    end
 
@@ -530,19 +542,6 @@ in
 
 	 @switchDone = unit
 	 @detachDone = unit
-      end
-
-      meth toggleEmacsThreads
-	 {Ctoggle emacsThreads}
-	 case {Cget emacsThreads} then
-	    {EnqueueCompilerQuery setSwitch(runwithdebugger true)}
-	 else
-	    {EnqueueCompilerQuery setSwitch(runwithdebugger false)}
-	 end
-      end
-
-      meth toggleSubThreads
-	 {Ctoggle subThreads}
       end
    end
 end

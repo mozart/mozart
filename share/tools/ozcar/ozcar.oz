@@ -38,7 +38,7 @@ local
       meth on
 	 {Tk.batch [update(idletasks)
 		    wm(deiconify self.toplevel)]}
-	 case {Cget emacsThreads} then
+	 case {self.emacsThreadsMenu getCurrent($)} == AttachText then
 	    {EnqueueCompilerQuery setSwitch(debuginfo true)}
 	 else
 	    {EnqueueCompilerQuery setSwitch(debuginfovarnames true)}
