@@ -48,10 +48,8 @@ static void setEmptyBuffer(yyFlexLexer *i) {
 OZ_BI_define(yy_lexer_create, 0, 1)
 {
   yyFlexLexer *flexLexer = new yyFlexLexer();
-printf("%p\n",flexLexer);
   setEmptyBuffer(flexLexer);
   OZ_Term t = OZ_makeForeignPointer(flexLexer);
-printf("%s\n", OZ_toC(t,1,1));
   OZ_RETURN(t);
 }
 OZ_BI_end
