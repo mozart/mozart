@@ -63,6 +63,7 @@
 
 static void processUpdateStack(void);
 void performCopying(void);
+TaggedRef gcVariable(TaggedRef);
 
 
 /****************************************************************************
@@ -372,6 +373,20 @@ inline Bool isDirectVar(TaggedRef t)
   return (!isRef(t) && isAnyVar(t));
 }
 
+inline
+Board *gcGetVarHome(TaggedRef var)
+{
+  if (isUVar(var)) {
+    return tagged2VarHome(var)->derefBoard();
+  } 
+  if (isSVar(var)) {
+    return GETBOARD(tagged2SVar(var));
+  }
+  Assert(isCVar(var));
+  return GETBOARD(tagged2CVar(var));
+}  
+
+
 /****************************************************************************
  * copy from from-space to to-space
  ****************************************************************************/
@@ -593,7 +608,7 @@ public:
     while(aux) {
       if (aux->elem) {
 	ret = new ExtRefNode(aux->elem,ret);
-	gcTagged(*ret->elem, *ret->elem);
+	OZ_updateHeapTerm(*ret->elem);
       }
       aux = aux->next;
     }
@@ -914,8 +929,10 @@ void Script::gc()
 	} while (1);
       }
 #endif
-      gcTagged(first[i].left,  aux[i].left); 
-      gcTagged(first[i].right, aux[i].right);
+      Assert(!isDirectVar(first[i].left));
+      Assert(!isDirectVar(first[i].right));
+      OZ_updateHeapTerm(aux[i].left); 
+      OZ_updateHeapTerm(aux[i].right);
     }
 
     first = aux;
@@ -970,10 +987,11 @@ RefsArray gcRefsArray(RefsArray r)
   refsArrayMark(r,aux);
 
   for (int i = sz; i--; ) {
+    aux[i] = r[i];
     Assert(!isDirectVar(r[i]));
-    gcTagged(r[i],aux[i]);
+    OZ_updateHeapTerm(aux[i]);
   }
-
+  
   return aux;
 }
 
@@ -1018,12 +1036,6 @@ OZ_Propagator * OZ_Propagator::gc(void)
   return p;
 }
 
-void OZ_updateHeapTerm(OZ_Term &t)
-{
-  Assert(isRef(t) || !isAnyVar(t));
-  gcTagged(t, t);
-}
-
 //
 //  ... Continuation;
 inline
@@ -1056,11 +1068,23 @@ Continuation *Continuation::gc()
 /* collect LTuple, SRecord */
 
 inline
-void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int sz)
-{
+void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int sz) {
+  
+  Bool isInGc = (opMode != IN_TC);
+  
   for (int i = sz; i--; ) {
-    if (isDirectVar(oldBlock[i])) {
-      gcTagged(oldBlock[i],newBlock[i]);
+    TaggedRef from = oldBlock[i];
+
+    if (isDirectVar(from) && (isInGc || isLocalBoard(gcGetVarHome(from)))) {
+
+      Assert(!GCISMARKED(from));
+      Assert(newBlock[i] == from);
+
+      setVarCopied;
+	
+      storeForward((int *) oldBlock + i, newBlock + i);
+	
+      newBlock[i] = gcVariable(from);
     }
   }
 }
@@ -1327,20 +1351,25 @@ TaggedRef gcVariable(TaggedRef var)
 {
   GCPROCMSG("gcVariable");
   GCOLDADDRMSG(var);
-  if (var==nil()) { return nil(); }
+
+  if (var==nil()) 
+    return nil();
+
   if (isUVar(var)) {
     Board *bb = tagged2VarHome(var);
     bb = bb->gcBoard();
     if (!bb) return nil();
-    INTOSPACE (bb);
+    INTOSPACE(bb);
     TaggedRef ret= makeTaggedUVar(bb);
     COUNT(uvar);
     GCNEWADDRMSG(ret);
     return ret;
   }
+
   if (isSVar(var)) {
     SVariable *cv = tagged2SVar(var);
     INFROMSPACE(cv);
+
     if (GCISMARKED(ToInt32(cv->suspList))) {
       GCNEWADDRMSG(makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList))));
       return makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList)));
@@ -1348,7 +1377,9 @@ TaggedRef gcVariable(TaggedRef var)
 
     Board *bb = cv->home;
     bb=bb->gcBoard();
-    if (!bb) return nil();
+    
+    if (!bb) 
+      return nil();
 
     int cv_size;
     cv_size = sizeof(SVariable);
@@ -1359,9 +1390,9 @@ TaggedRef gcVariable(TaggedRef var)
     FDPROFILE_GC(cp_size_svar, cv_size);
 	
     storeForward(&cv->suspList, new_cv);
-      
+    
     new_cv->suspList = new_cv->suspList->gc();
-
+    
     Assert(opMode != IN_GC || new_cv->home != bb);
 
     new_cv->home = bb;
@@ -1370,21 +1401,26 @@ TaggedRef gcVariable(TaggedRef var)
   }
 
   Assert(isCVar(var));
+
   GenCVariable *gv = tagged2CVar(var);
 
   INFROMSPACE(gv);
+  
   if (GCISMARKED(ToInt32(gv->suspList))) {
     GCNEWADDRMSG(makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList))));
     return makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList)));
   }
 
   Board *bb = gv->home->gcBoard();
-  if (!bb) return nil();
+
+  if (!bb) 
+    return nil();
 
   int gv_size = gv->getSize();
 
   COUNT(cvar);
-  GenCVariable *new_gv = (GenCVariable*)gcRealloc(gv, gv_size);
+
+  GenCVariable *new_gv = (GenCVariable*) gcRealloc(gv, gv_size);
 
   storeForward(&gv->suspList, new_gv);
   
@@ -1436,21 +1472,21 @@ void GenLazyVariable::gc(void)
 {
   GCMETHMSG("GenLazyVariable::gc");
   if (function!=0) {
-    gcTagged(function,function);
-    gcTagged(result  ,result  );
+    OZ_updateHeapTerm(function);
+    OZ_updateHeapTerm(result);
   }
 }
 
 void GenMetaVariable::gc(void)
 {
   GCMETHMSG("GenMetaVariable::gc");
-  gcTagged(data, data);
+  OZ_updateHeapTerm(data);
 }
 
 void AVar::gcAVar(void)
 { 
   GCMETHMSG("AVar::gc");
-  gcTagged(value, value);
+  OZ_updateHeapTerm(value);
 }
 
 DynamicTable* DynamicTable::gc(void)
@@ -1487,8 +1523,8 @@ DynamicTable* DynamicTable::gc(void)
 void DynamicTable::gcRecurse() {
   for (dt_index i=size; i--; ) {
     if (table[i].ident != makeTaggedNULL()) {
-      gcTagged(table[i].ident, table[i].ident);
-      gcTagged(table[i].value, table[i].value);
+      OZ_updateHeapTerm(table[i].ident);
+      OZ_updateHeapTerm(table[i].value);
     }
   }
 }
@@ -1498,23 +1534,10 @@ void DynamicTable::gcRecurse() {
 void GenOFSVariable::gc(void)
 {
     GCMETHMSG("GenOFSVariable::gc");
-    gcTagged(label, label);
+    OZ_updateHeapTerm(label);
     // Update the pointer in the copied block:
     dynamictable=dynamictable->gc();
 }
-
-inline
-Board *gcGetVarHome(TaggedRef var)
-{
-  if (isUVar(var)) {
-    return tagged2VarHome(var)->derefBoard();
-  } 
-  if (isSVar(var)) {
-    return GETBOARD(tagged2SVar(var));
-  }
-  Assert(isCVar(var));
-  return GETBOARD(tagged2CVar(var));
-}  
 
 // ===================================================================
 // Finalization
@@ -1549,11 +1572,11 @@ void gc_finalize()
   // in the head of each cons
   for (OZ_Term l=guardian_list;!isNil(l);l=tail(l)) {
     LTuple *t = tagged2LTuple(l);
-    gcTagged(*t->getRefHead(),*t->getRefHead());
+    OZ_updateHeapTerm(*t->getRefHead());
   }
   for (OZ_Term l=finalize_list;!isNil(l);l=tail(l)) {
     LTuple *t = tagged2LTuple(l);
-    gcTagged(*t->getRefHead(),*t->getRefHead());
+    OZ_updateHeapTerm(*t->getRefHead());
   }
   // if the finalize_list is not empty, we must create a new
   // thread (at top level) to effect the finalization phase
@@ -1580,79 +1603,81 @@ void gc_finalize()
  * - if non-collected variables are dereferenced, the entry points into heap
  *   provided by them, have to be collected by 'gcVariable'
  */
-void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
-{
-  GCPROCMSG("gcTagged");
-  TaggedRef auxTerm = fromTerm;
+void OZ_updateHeapTerm(TaggedRef &to) {
+  GCPROCMSG("OZ_updateHeapTerm");
+  TaggedRef aux = to;
 
-  Assert(opMode==IN_TC || !fromSpace->inChunkChain(&toTerm));
+  Assert(opMode==IN_TC || !fromSpace->inChunkChain(&to));
 
   /* initalized but unused cell in register array */
-  if (auxTerm == makeTaggedNULL()) {
-    toTerm = makeTaggedNULL();
+  if (aux == makeTaggedNULL())
+    return;
+  
+  DEREF(aux, aux_ptr, aux_tag);
+
+  if (GCISMARKED(aux)) {
+    to = makeTaggedRef((TaggedRef*) GCUNMARK(aux));
     return;
   }
 
+  DebugGCT(NOTINTOSPACE(aux_ptr));
 
-  DEREF(auxTerm,auxTermPtr,auxTermTag);
+  switch (aux_tag) {
 
-  if (GCISMARKED(auxTerm)) {
-    toTerm = makeTaggedRef((TaggedRef*)GCUNMARK(auxTerm));
-    return;
-  }
+  case SMALLINT: 
+    to = aux; 
+    break;
 
-  DebugGCT(NOTINTOSPACE(auxTermPtr));
+  case FSETVALUE: 
+    to = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(aux))->gc()); 
+    break;
+    
+  case LITERAL:  
+    to = makeTaggedLiteral(tagged2Literal(aux)->gc()); 
+    break;
+    
+  case LTUPLE:   
+    to = makeTaggedLTuple(tagged2LTuple(aux)->gc()); 
+    break;
 
-  switch (auxTermTag) {
+  case SRECORD:  
+    to = makeTaggedSRecord(tagged2SRecord(aux)->gcSRecord()); 
+    break;
 
-  case SMALLINT: toTerm = auxTerm; break;
-  case FSETVALUE: toTerm = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(auxTerm))->gc()); break;
-  case LITERAL:  toTerm = makeTaggedLiteral(tagged2Literal(auxTerm)->gc()); break;
-  case LTUPLE:   toTerm = makeTaggedLTuple(tagged2LTuple(auxTerm)->gc()); break;
-  case SRECORD:  toTerm = makeTaggedSRecord(tagged2SRecord(auxTerm)->gcSRecord()); break;
-  case BIGINT:   toTerm = makeTaggedBigInt(tagged2BigInt(auxTerm)->gc()); break;
-  case OZFLOAT:  toTerm = makeTaggedFloat(tagged2Float(auxTerm)->gc());   break;
+  case BIGINT:   
+    to = makeTaggedBigInt(tagged2BigInt(aux)->gc()); 
+    break;
+
+  case OZFLOAT:  
+    to = makeTaggedFloat(tagged2Float(aux)->gc());   
+    break;
 
   case OZCONST:
     {
-      ConstTerm *con=tagged2Const(auxTerm)->gcConstTerm();
-      toTerm = con ? makeTaggedConst(con) : nil();
+      ConstTerm *con=tagged2Const(aux)->gcConstTerm();
+      to = con ? makeTaggedConst(con) : nil();
     }
     break;
 
   case SVAR:
   case UVAR:
   case CVAR:
-    setVarCopied;
-    if (auxTerm == fromTerm) {   // no DEREF needed
+    Assert(aux != to);
 
-      DebugGCT(toTerm = fromTerm); // otherwise 'makeTaggedRef' complains
-      if (opMode!=IN_TC || isLocalBoard(gcGetVarHome(auxTerm))) {
-	storeForward((int *) &fromTerm, &toTerm);
+    // put address of ref cell to be updated onto update stack    
+    if (opMode!=IN_TC || isLocalBoard(gcGetVarHome(aux))) {
+      setVarCopied;
 
-	// updating toTerm AFTER fromTerm:
-	toTerm = gcVariable(auxTerm);
-      } else {
-	toTerm = fromTerm;
-      }
-    } else {
-
-      // put address of ref cell to be updated onto update stack    
-      if (opMode!=IN_TC || isLocalBoard(gcGetVarHome(auxTerm))) {
-	updateStack.push(&toTerm);
-	gcVariable(auxTerm);
-	toTerm = makeTaggedRefToFromSpace(auxTermPtr);
-	Assert(auxTermPtr != 0);
-      } else {
-	toTerm = fromTerm;
-      }
+      updateStack.push(&to);
+      gcVariable(aux);
+      to = makeTaggedRefToFromSpace(aux_ptr);
+      Assert(aux_ptr != 0);
     }
     break;
   default:
     Assert(0);
   }
 }
-
 
 //*****************************************************************************
 //                               AM::gc            
@@ -1723,12 +1748,12 @@ void AM::gc(int msgLevel)
   
   suspendVarList=makeTaggedNULL(); /* no valid data */
 
-  gcTagged(aVarUnifyHandler,aVarUnifyHandler);
-  gcTagged(aVarBindHandler,aVarBindHandler);
+  OZ_updateHeapTerm(aVarUnifyHandler);
+  OZ_updateHeapTerm(aVarBindHandler);
 
-  gcTagged(defaultExceptionHdl,defaultExceptionHdl);
-  gcTagged(opiCompiler,opiCompiler);
-  gcTagged(debugStreamTail,debugStreamTail);
+  OZ_updateHeapTerm(defaultExceptionHdl);
+  OZ_updateHeapTerm(opiCompiler);
+  OZ_updateHeapTerm(debugStreamTail);
 
   gc_tcl_sessions();
 
@@ -1739,7 +1764,7 @@ void AM::gc(int msgLevel)
   PROFILE_CODE1(FDProfiles.gc());
 
 #ifdef FINALIZATION
-  gcTagged(finalize_handler,finalize_handler);
+  OZ_updateHeapTerm(finalize_handler);
   performCopying();
   gc_finalize();
 #endif
@@ -1901,10 +1926,6 @@ redo:
   toCopyBoard = fromCopyBoard->gcBoard();
   Assert(toCopyBoard);
 
-#if defined(DEBUG_CHECK) && (defined(DEBUG_FSET) || defined(DEBUG_FD))
-//  *cpi_cout << endl << "========== copying tree ==========" << endl << flush;
-#endif
-
   performCopying();
 
   processUpdateStack();
@@ -1983,11 +2004,11 @@ void Arity::gc()
     if (!aux->isTuple()) {
       for (int i = aux->getSize(); i--; ) {
 	if (aux->table[i].key) {
-	  gcTagged(aux->table[i].key,aux->table[i].key);
+	  OZ_updateHeapTerm(aux->table[i].key);
 	}
       }
     }
-    gcTagged(aux->list, aux->list);
+    OZ_updateHeapTerm(aux->list);
     aux = aux->next;
   }
 }
@@ -2007,8 +2028,8 @@ void PrTabEntry::gcPrTabEntry()
 {
   if (this == NULL) return;
 
-  gcTagged(info,info);
-  gcTagged(names,names);
+  OZ_updateHeapTerm(info);
+  OZ_updateHeapTerm(names);
 }
 
 void AbstractionEntry::gcAbstractionEntries()
@@ -2153,7 +2174,7 @@ void TaskStack::gc(TaskStack *newstack)
       /* tt might be a variable, so use this ugly construction */
       *(newtop-2) = Y; /* UGLYYYYYYYYYYYY !!!!!!!! */
       TaggedRef *tt = (TaggedRef*) (newtop-2);
-      gcTagged(*tt,*tt);
+      OZ_updateHeapTerm(*tt);
       Y = (RefsArray) ToPointer(*tt);
       G = gcRefsArray(G);
     } else if (PC == C_CFUNC_CONT_Ptr) {
@@ -2241,7 +2262,7 @@ void ConstTerm::gcConstRecurse()
       case Te_Local:{
 	CellLocal *cl=(CellLocal*)t;
 	cl->setBoard(GETBOARD(cl)->gcBoard()); 
-	gcTagged(cl->val,cl->val);
+	OZ_updateHeapTerm(cl->val);
 	break;}
       case Te_Proxy:{
 	t->gcProxy();
@@ -2272,7 +2293,7 @@ void ConstTerm::gcConstRecurse()
       case Te_Local:{
 	p->setBoard(GETBOARD(p)->gcBoard()); /* ATTENTION */
 	PortWithStream *pws = (PortWithStream *) this;
-	gcTagged(pws->strm,pws->strm);
+	OZ_updateHeapTerm(pws->strm);
 	break;}
       case Te_Proxy:{
 	p->gcProxy();
@@ -2280,7 +2301,7 @@ void ConstTerm::gcConstRecurse()
       case Te_Manager:{
 	p->gcManager();
 	PortWithStream *pws = (PortWithStream *) this;
-	gcTagged(pws->strm,pws->strm);
+	OZ_updateHeapTerm(pws->strm);
 	break;}
       default:{
 	Assert(0);}}
@@ -2303,7 +2324,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Chunk:
     {
       SChunk *c = (SChunk *) this;
-      gcTagged(c->value,c->value);
+      OZ_updateHeapTerm(c->value);
       c->gcConstTermWithHome();
       break;
     }
@@ -2320,7 +2341,7 @@ void ConstTerm::gcConstRecurse()
 						    sizeof(TaggedRef)*a->getWidth());
 	for (int i=a->getWidth(); i--; ) {
 	  Assert(!isDirectVar(oldargs[i]));
-	  gcTagged(oldargs[i],newargs[i]);
+	  OZ_updateHeapTerm(newargs[i]);
 	}
 	
 	a->setPtr(newargs);
@@ -2395,7 +2416,7 @@ inline void EntityInfo::gcWatchers(){
     Watcher* newW=(Watcher*) gcRealloc(w,sizeof(Watcher));
     *base=newW;
     newW->thread=newW->thread->gcThread();
-    gcTagged(newW->proc,newW->proc);
+    OZ_updateHeapTerm(newW->proc);
     base= &(newW->next);
     w=*base;}}
 
@@ -2801,9 +2822,9 @@ void SolveActor::gcRecurse () {
   Assert(solveBoard);
 
   if (opMode == IN_GC || !isGround())
-    gcTagged(solveVar, solveVar);
+    OZ_updateHeapTerm(solveVar);
   
-  gcTagged(result, result);
+  OZ_updateHeapTerm(result);
   suspList         = suspList->gc();
   cpb              = cpb->gc();
   localThreadQueue = localThreadQueue->gc();
@@ -2871,7 +2892,7 @@ void gcTaggedBlockRecurse(TaggedRef *block,int sz)
 {
   for (int i = sz; i--; ) {
     if (!isDirectVar(block[i])) {
-      gcTagged(block[i],block[i]);
+      OZ_updateHeapTerm(block[i]);
     }
   }
 }
@@ -2881,7 +2902,7 @@ inline
 void SRecord::gcRecurse()
 {
   GCMETHMSG("SRecord::gcRecurse");
-  gcTagged(label,label);
+  OZ_updateHeapTerm(label);
   gcTaggedBlockRecurse(getRef(),getWidth());
 }
 
@@ -2976,7 +2997,7 @@ OzDebug *OzDebug::gcOzDebug()
 
   ret->Y = gcRefsArray(ret->Y);
   ret->G = gcRefsArray(ret->G);
-  gcTagged(ret->data,ret->data);
+  OZ_updateHeapTerm(ret->data);
   ret->arguments = gcRefsArray(ret->arguments);
 
   return ret;
