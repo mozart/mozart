@@ -731,6 +731,7 @@ in
 		  [] attention() then skip
 		     {self.Book toTop(self.Messages)}
 		  [] pong() then skip
+		  [] pong(_) then skip
 		  [] insert(_ _) then skip
 		  else {self M}
 		  end
