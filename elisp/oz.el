@@ -624,7 +624,9 @@ variables oz-compiler-buffer and oz-emulator-buffer."
       (equal mode-name "Oz-Gump")
       (equal mode-name "Oz-Machine")
       (oz-new-buffer))
-  (oz-show-buffer (get-buffer oz-compiler-buffer)))
+  (if (and oz-use-new-compiler oz-emulator-hook)
+      (oz-show-buffer (get-buffer oz-emulator-buffer))
+    (oz-show-buffer (get-buffer oz-compiler-buffer))))
 
 (defun oz-halt (force)
   "Halt Oz Compiler and Emulator.
@@ -842,10 +844,13 @@ The emulator to use for debugging is set via \\[oz-set-emulator]."
     (setenv "OZ_PI" "1")
     (if (getenv "OZPLATFORM")
 	t
-      (message "OZPLATFORM not set, using fallback: solaris-sparc")
-      (setenv "OZPLATFORM" "solaris-sparc"))
+      (let ((res (shell-command-to-string
+		  (concat (oz-home) "/bin/ozplatform"))))
+	(string-match "[a-z0-9-]+" res)
+	(setenv "OZPLATFORM" (match-string 0 res))))
     (setenv "OZPATH"
 	    (concat (or (getenv "OZPATH") ".") ":"
+		    (oz-home) ":"
 		    (oz-home) "/lib" ":"
 		    (oz-home) "/platform/" (getenv "OZPLATFORM") ":"
 		    (oz-home) "/demo"))
@@ -2190,6 +2195,8 @@ splitting, the outputs are passed to the common oz-filter."
 		 (oz-show-buffer buffer))
 		((equal (point) start-of-output)
 		 (goto-char end-of-output)))
+	  (if (eq (process-buffer proc) buffer)
+	      (set-marker (process-mark proc) (point)))
 
 	  (save-selected-window
 	    (walk-windows
