@@ -4252,12 +4252,11 @@ OZ_C_proc_begin(BIstringToInt, 2)
   if (!str) return am.raise(E_ERROR,E_KERNEL,"stringNoInt",1,OZ_getCArg(0));
 
 
-  char *end = OZ_parseInt(str);
-  if (!end || *end != 0) {
+  OZ_Term res = OZ_CStringToInt(str);
+  if (res == 0)
     return am.raise(E_ERROR,E_KERNEL,"stringNoInt",1,OZ_getCArg(0));
-  }
-  OZ_Return ret = OZ_unify(out,OZ_CStringToInt(str));
-  return ret;
+  else
+    return oz_unify(out,res);
 }
 OZ_C_proc_end
 
