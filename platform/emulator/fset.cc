@@ -3035,7 +3035,7 @@ int FSetConstraint::getGlbCard(void) const
 {
 #ifdef BIGFSET
   if (_normal) 
-    return findBitsSet(fset_high, _in) + (_otherin)? size_of_other : 0;
+    return findBitsSet(fset_high, _in) + (_otherin ? size_of_other : 0);
   else 
     return _IN.getSize();
 #else
@@ -3048,8 +3048,8 @@ int FSetConstraint::getLubCard(void) const
 {
 #ifdef BIGFSET
   if (_normal) {
-    return fs_sup - findBitsSet(fset_high, _not_in) 
-                  - (_otherout)? size_of_other : 0;
+    return fs_sup + 1 - findBitsSet(fset_high, _not_in) 
+                  - (_otherout ? size_of_other : 0);
   }
   else 
     return fs_sup - _OUT.getSize();
@@ -3063,7 +3063,7 @@ int FSetConstraint::getNotInCard(void) const
 {
 #ifdef BIGFSET
   if (_normal) 
-    return findBitsSet(fset_high, _not_in) + (_otherout)? size_of_other : 0;
+    return findBitsSet(fset_high, _not_in) + (_otherout ? size_of_other : 0);
   else
     return _OUT.getSize();
 #else
@@ -3078,7 +3078,7 @@ int FSetConstraint::getUnknownCard(void) const
   if (_normal) 
     return fs_sup - findBitsSet(fset_high, _not_in)
       - findBitsSet(fset_high, _in)
-      - (_otherout | _otherin)? size_of_other : 0;
+      - ((_otherout | _otherin)? size_of_other : 0);
   else 
     return fs_sup - _IN.getSize() - _OUT.getSize();
 #else
