@@ -93,20 +93,6 @@ ChachedOORegs setObject(ChachedOORegs regs, Object *o)
   return (ToInt32(o)|(regs&0x3));
 }
 
-enum {
-  E_ERROR,
-  E_CONDITION
-};
-
-enum {
-  E_KERNEL,
-  E_OBJECT,
-  E_OPEN,
-  E_TK,
-  E_UNIX,
-  E_SYSTEM
-};
-
 // this class contains the central global data
 class AM : public ThreadsPool {
 friend void engine(Bool init);
@@ -158,7 +144,7 @@ public:
 
   void formatError(OZ_Term traceBack,OZ_Term loc);
   void formatFailure(OZ_Term traceBack,OZ_Term loc);
-  int raise(int cat, int key, char *label, int arity, ...);
+  int raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...);
   struct {
     int debug;
     TaggedRef value;

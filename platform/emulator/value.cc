@@ -43,7 +43,8 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomTotal,
   AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap,
   AtomDebugIP, AtomDebugPerdio,
-  RecordFailure;
+  RecordFailure,
+  E_ERROR, E_KERNEL, E_OBJECT, E_OPEN, E_TK, E_UNIX, E_SYSTEM;
 
 
 // Some often used constants
@@ -159,6 +160,15 @@ void initLiterals()
                             OZ_cons(OZ_atom("debug"),OZ_nil()));
   OZ_putSubtree(RecordFailure,OZ_atom("debug"),NameUnit);
   OZ_protect(&RecordFailure);
+
+  E_ERROR = makeTaggedAtom("error");
+  E_KERNEL= makeTaggedAtom("kernel");
+  E_OBJECT= makeTaggedAtom("object");
+  E_OPEN  = makeTaggedAtom("open");
+  E_TK    = makeTaggedAtom("tk");
+  E_UNIX  = makeTaggedAtom("unix");
+  E_SYSTEM= makeTaggedAtom("system");
+
 }
 
 

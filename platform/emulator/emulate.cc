@@ -82,34 +82,9 @@ void AM::formatError(OZ_Term traceBack,OZ_Term loc)
   exception.value=OZ_adjoinAt(exception.value,OZ_atom("debug"),d);
 }
 
-int AM::raise(int cat, int key, char *label,int arity,...)
+int AM::raise(OZ_Term cat, OZ_Term key, char *label,int arity,...)
 {
-  char *lab;
-  switch (key) {
-  case E_KERNEL:
-    lab="kernel";
-    break;
-  case E_OBJECT:
-    lab="object";
-    break;
-  case E_OPEN:
-    lab="open";
-    break;
-  case E_TK:
-    lab="tk";
-    break;
-  case E_UNIX:
-    lab="unix";
-    break;
-  case E_SYSTEM:
-    lab="system";
-    break;
-  default:
-    error("never here");
-    break;
-  }
-
-  OZ_Term exc=OZ_tuple(OZ_atom(lab),arity+1);
+  OZ_Term exc=OZ_tuple(key,arity+1);
   OZ_putArg(exc,0,OZ_atom(label));
 
   va_list ap;
@@ -121,26 +96,16 @@ int AM::raise(int cat, int key, char *label,int arity,...)
 
   va_end(ap);
 
-  switch (cat) {
-  case 0:
-    lab="error";
-    break;
-  case 1:
-    lab="system";
-    break;
-  default:
-    error("never here");
-  }
 
-  OZ_Term ret = OZ_record(OZ_atom(lab),
+  OZ_Term ret = OZ_record(cat,
                           cons(OZ_int(1),
                                cons(OZ_atom("debug"),OZ_nil())));
   OZ_putSubtree(ret,OZ_int(1),exc);
   OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
 
   exception.info = NameUnit;
+  exception.debug = OZ_eq(cat,E_ERROR) ? TRUE : ozconf.errorDebug;
   exception.value = ret;
-  exception.debug = TRUE;
   return RAISE;
 }
 
