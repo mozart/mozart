@@ -17,6 +17,7 @@
 
 #include "am.hh"
 
+#include "genvar.hh"
 #include "ofgenvar.hh"
 
 #include "StringBuffer.hh"
@@ -670,6 +671,7 @@ void const2buffer(ConstTerm *c)
     break;
   case Co_Chunk:
   case Co_Array:
+  case Co_Dictionary:
     TmpBuffer.put_string("<Chunk>");
     break;
   default:
