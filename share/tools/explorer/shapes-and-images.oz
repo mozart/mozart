@@ -94,7 +94,7 @@ local
 	 end
 	 meth finish
 	    <<ChooseImage tk(itemconf self.Tag
-			     fill:ChooseTermColor width:TermNodeBorderWidth)>>
+			     fill:ChooseTermColor width:ThickNodeBorderWidth)>>
 	 end
 	 meth clear
 	    <<ChooseImage tk(itemconf self.Tag
