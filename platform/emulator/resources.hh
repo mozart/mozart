@@ -151,6 +151,11 @@
 #define DP_PROBEINTERVAL             5000
 #define DP_PROBETIMEOUT              30000 /* ms */
 
+// distributed reference consistencey
+
+#define DP_TL_LEASE                  180000 //ms = 30 min
+#define DP_TL_UPDATE                  60000  //ms = 10 min
+#define DP_WRC_ALPHA                  10000 
 //
 // Distributed Oz - virtual sites
 #define PROBE_INTERVAL      1000 /* ms */

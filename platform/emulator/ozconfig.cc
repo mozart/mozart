@@ -115,6 +115,12 @@ void ConfigData::init() {
   dpLogConnectLog = FALSE;
   dpLogMessageLog = FALSE;
 
+  dpUseTimeLease = FALSE;
+  dpUseFracWRC  = TRUE; 
+  dp_wrc_alpha     = DP_WRC_ALPHA;
+  dp_tl_leaseTime  = DP_TL_LEASE;
+  dp_tl_updateTime = DP_TL_UPDATE; 
+  
   closetime = DEFAULT_CLOSE_TIME;
 
   /* set osname and cpu */
