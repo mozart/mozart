@@ -725,7 +725,7 @@ in
       meth close
 	 {self.manager PanelTopClosed}
 	 IsClosed <- true
-	 Tk.toplevel, close
+	 Tk.toplevel, tkClose
       end
       
    end

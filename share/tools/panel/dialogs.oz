@@ -14,9 +14,9 @@ local
       meth init(master:Master done:Done)
 	 TkTools.dialog,tkInit(master:  Master
 			       title:   TitleName#': About'
-			       buttons: ['Okay'#close(proc {$}
-							 Done = unit
-						      end)]
+			       buttons: ['Okay'#tkClose(proc {$}
+							   Done = unit
+							end)]
 			       focus:   1
 			       default: 1)
 	 Title = {New Tk.label tkInit(parent:     self
@@ -40,12 +40,12 @@ local
       meth init(master:Master done:Done)
 	 TkTools.dialog,tkInit(master:  Master
 			       title:   TitleName#': Shutdown'
-			       buttons: ['Okay'#close(proc {$}
-							 Done = true
-						      end)
-					 'Cancel'#close(proc {$}
-							   Done = false
-							end)]
+			       buttons: ['Okay'#tkClose(proc {$}
+							   Done = true
+							end)
+					 'Cancel'#tkClose(proc {$}
+							     Done = false
+							  end)]
 			       focus:   1
 			       default: 1)
 	 Bitmap  = {New Tk.label   tkInit(parent: self
@@ -83,17 +83,17 @@ local
 	    TkTools.dialog,tkInit(master:  Master
 				  title:   TitleName#': Update'
 				  buttons: ['Okay'   #
-					    close(proc {$}
-						     Next =
-						     {AdjoinAt
-						      {AdjoinAt Prev
-						       time
-						       {TimeScale get($)}}
-						      mouse
-						      {self GetMouse($)}}
-						  end)
-					    'Cancel' # close(proc {$}
-								Next = Prev
+					    tkClose(proc {$}
+						       Next =
+						       {AdjoinAt
+							{AdjoinAt Prev
+							 time
+							 {TimeScale get($)}}
+							mouse
+							{self GetMouse($)}}
+						    end)
+					    'Cancel' # tkClose(proc {$}
+								  Next = Prev
 							       end)]
 				  focus:   1
 				  default: 1)
@@ -141,13 +141,13 @@ local
 	    TkTools.dialog,tkInit(master:  Master
 				  title:   TitleName#': History'
 				  buttons: ['Okay'   #
-					    close(proc {$}
-						     Next = 
-						     {RangeScale get($)}
-						  end)
-					    'Cancel' # close(proc {$}
-								Next = Prev
-							     end)]
+					    tkClose(proc {$}
+						       Next = 
+						       {RangeScale get($)}
+						    end)
+					    'Cancel' # tkClose(proc {$}
+								  Next = Prev
+							       end)]
 				  focus:   1
 				  default: 1)
 	    RangeOuter = {New TkTools.textframe tkInit(parent: self
