@@ -1,0 +1,13 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+
+HTMLEXTRAFILES = 
+
+WHAT	= dstutorial
+MAIN	= dstutorial.sgml
+SGMLSRCS = 
+
+
+include ../Makefile.common
+ 
