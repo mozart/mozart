@@ -6987,6 +6987,9 @@ BIspec allSpec2[] = {
   {"ozparser_init",0,ozparser_init},
   {"ozparser_exit",0,ozparser_exit},
 
+  {"taskstack",   2, BItaskStack},
+  {"location",    2, BIlocation},
+
 
   {"getTermSize",4,BIgetTermSize},
 
