@@ -16,6 +16,8 @@
 #pragma interface
 #endif
 
+#include "types.hh"
+
 #ifdef HEAP_PROFILE
 # define ProfileCode(Code) Code
 #else
@@ -25,7 +27,7 @@
 extern int gcing;
 
 #define COUNTIT(WHAT,n) ozstat.WHAT += n
-#define COUNT1(WHAT,n) ProfileCode(if (gcing) {COUNTIT(WHAT,n);})
+#define COUNT1(WHAT,n) ProfileCode(if (1||gcing) {COUNTIT(WHAT,n);})
 #define COUNT(WHAT)    COUNT1(WHAT,1)
 #define CountMax(What,Value) ProfileCode(ozstat.What = max(ozstat.What,Value))
 
@@ -142,6 +144,10 @@ public:
   long numNewName, numNewNamedName;
   long numThreads;
 
+  Abstraction *currAbstr;
+  void enterCall(Abstraction *a)   { currAbstr = a; }
+  void leaveCall(Abstraction *old) { currAbstr = old; }
+  void heapAlloced(int sz);
 
   // those are also counted during GC
   long lenDeref, numDerefs, longestDeref;
