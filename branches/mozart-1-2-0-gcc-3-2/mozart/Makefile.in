@@ -296,11 +296,11 @@ files.doc:
 	(cd $(PREFIX); \
 	 find . \( -type f -o -type l \) -a \( \
 		-path './doc/*' -o \
-		-path './print/*' -o \
 		-path './cache/x-oz/system/gump/examples/*' -o \
 		-path './cache/x-oz/doc/*' -o \
 		-path './examples/*' \
-	\) -a \! \( -path './doc/Mozart.hh?' \) ) > $@
+	\) -a \! \( -path './doc/Mozart.hh?' -o \
+		    -path './doc/add-ons/*/*' \) ) > $@
 
 ######################################################################
 # standard library support
