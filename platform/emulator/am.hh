@@ -330,10 +330,10 @@ public:
   }
   TaggedRef currentUVarPrototype() {
     Assert(tagged2VarHome(_currentUVarPrototype)==_currentBoard);
-#ifdef OPT_VAR_IN_STRUCTURE
-    return _currentUVarPrototype;
-#else
+#if defined(DEBUG_NO_UVAR)
     return makeTaggedRef(newTaggedUVar(_currentUVarPrototype));
+#else
+    return _currentUVarPrototype;
 #endif
   }
 
@@ -545,7 +545,11 @@ OZ_Term oz_newChunk(OZ_Term val)
   return makeTaggedConst(new SChunk(oz_currentBoard(), val));
 }
 
+#ifdef DEBUG_NO_UVAR
 #define oz_newVar(bb)            makeTaggedRef(newTaggedUVar(bb))
+#else
+#define oz_newVar(bb)            makeTaggedRef(newTaggedUVar(bb))
+#endif
 #define oz_newVariable()         oz_newVar(oz_currentBoard())
 #define oz_newToplevelVariable() oz_newVar(oz_rootBoard())
 
