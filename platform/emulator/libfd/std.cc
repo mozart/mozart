@@ -498,7 +498,7 @@ OZ_Term Propagator_VD_VI_VI_I::getParameters(void) const
   TERMVECTOR2LIST(reg_l, reg_sz, l);
   INTVECTOR2LIST(reg_offset, reg_sz, offset);
   INTVECTOR2LIST(reg_use, reg_sz, use);
-  RETURN_LIST4(l, offset, use, reg_capacity);
+  RETURN_LIST4(l, offset, use, OZ_int(reg_capacity));
 }
 
 //-----------------------------------------------------------------------------
