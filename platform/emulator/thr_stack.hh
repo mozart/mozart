@@ -189,10 +189,11 @@ public:
     pushFrame(pc,y,g);
   }
 
+  void pushCall(TaggedRef pred, TaggedRef arg0, TaggedRef arg1, 
+		TaggedRef arg2, TaggedRef arg3, TaggedRef arg4);
+
   void pushCall(TaggedRef pred, RefsArray  x, int i)
   {
-    DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
-
     pushFrame(C_CALL_CONT_Ptr, ToPointer(pred), i>0 ? copyRefsArray(x, i) : NULL);
   }
 
