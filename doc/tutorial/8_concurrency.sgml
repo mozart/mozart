@@ -128,8 +128,12 @@ end
 >>>
 </FIGURE>
 
+<P><FIGURE ID="Threads" CLASS="Figure">
+<CAPTION>The Mozart Panel showing thread creation <<{Fib 26 X>></CAPTION>
+<PICTURE.EXTERN TO="Thread.ps" TYPE="ps">
+</FIGURE>
 
-<P CLASS=WARNING>** The Oz Panel Showing Thread Creation in  {Fib 26 X}
+
 
 <P>The whole idea of explicit thread creation in Oz is to enable the
 programmer to structure his/her application in a modular
