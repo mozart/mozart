@@ -1,7 +1,7 @@
 <!DOCTYPE Book SYSTEM "ozdoc.dtd" [
 
 <!-- Extension to the DTD -->
-<!ENTITY % proglang.values.local "|sh">
+<!ENTITY % proglang.values.local "|sh|fundamental">
 
 <!ENTITY % input.local.2 SYSTEM "tools.extra">
 <!ENTITY % p.mix.local "|Em|note.gui|menu">
@@ -56,6 +56,10 @@
     <Meta name="html.split"       value="section.explorer.object">
 
     <Meta name="html.split"       value="chapter.linker">
+    <Meta name="html.split"       value="section.linker.basic">
+    <Meta name="html.split"       value="section.linker.include">
+    <Meta name="html.split"       value="section.linker.pickling">
+    <Meta name="html.split"       value="section.linker.misc">
 
     <Meta name="html.split.bib"   value="">
     <Meta name="html.split.index" value="">

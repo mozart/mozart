@@ -8,8 +8,14 @@ EXPLORERSRCS = \
         actions interface menu status \
         tree invoke object summary
 
-SGMLSRCS = \
-        $(EXPLORERSRCS:%=e-%.sgml)
+OTHERSRCS = \
+        linker
+
+SGMLSRCS0 = \
+        $(EXPLORERSRCS:%=e-%) \
+        $(OTHERSRCS)
+
+SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
 
 HTMLEXTRAFILES0 = \
         note-gui-l1 note-gui-l2 \
