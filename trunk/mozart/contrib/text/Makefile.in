@@ -19,7 +19,7 @@ OZFLEX		= @OZFLEX@
 TARGETS		= XML.ozf XML_Scanner.so-$(PLATFORM) \
 		  XSL-ATTRIBUTE.ozf XSL_Scanner.so-$(PLATFORM) \
 		  XSL-ELEMENT.ozf XSL-MATCHING.ozf XSL-POSITION.ozf \
-		  XSL-SEARCH.ozf XSL-SELECTING.ozf
+		  XSL-SEARCH.ozf XSL-SELECTING.ozf XSL-READ.ozf
 LIB_TARGETS	= $(addprefix $(LIB_DIR)/,$(TARGETS))
 APPLICS		= ozxsl
 
