@@ -203,7 +203,11 @@
 <template match="PART|CHAPTER|APPENDIX|SECTION|SUBSECTION|SUBSUBSECTION|PARA">
   <txt:usemap><text>
 
-</text>\<value-of select="local-part(.)"/>{</txt:usemap>
+</text>\<value-of select="local-part(.)"/></txt:usemap>
+  <if test="@CLASS='UNNUMBERED'">
+    <txt:usemap>*</txt:usemap>
+  </if>
+  <txt:usemap>{</txt:usemap>
   <apply-templates select="TITLE | FRONT/TITLE" mode="ok"/>
   <txt:usemap>}</txt:usemap>
   <if test="@ID">
@@ -598,13 +602,37 @@ A Tutorial Introduction</when>
       </txt:usemap>
     </when>
     <otherwise>
-      <for-each select="TR[position()=1]/*">l</for-each>
+      <for-each select="TR[position()=1]/*">
+        <apply-templates mode="colspan" select="."/>
+      </for-each>
     </otherwise>
   </choose>
   <txt:usemap>}</txt:usemap>
   <apply-templates/>
   <txt:usemap>\end{tabular}</txt:usemap>
   <call-template name="maybe.display.end.table"/>
+</template>
+
+<template match="TD|TH" mode="colspan">
+  <call-template name="expand.colspan">
+    <with-param name="colspan">
+      <choose>
+        <when test="@COLSPAN"><value-of select="@COLSPAN"/></when>
+        <otherwise>1</otherwise>
+      </choose>
+    </with-param>
+  </call-template>
+</template>
+
+<template name="expand.colspan">
+  <param name="colspan" select="0"/>
+  <if test="$colspan &gt; 0">
+    <text>l</text>
+    <variable name="tmp"><value-of select="$colspan - 1"/></variable>
+    <call-template name="expand.colspan">
+      <with-param name="colspan" select="$tmp"/>
+    </call-template>
+  </if>
 </template>
 
 <template name="maybe.display.begin.table">
