@@ -2911,7 +2911,7 @@ OZ_C_proc_begin(BIthreadTaskStack,4)
     oz_typeError(2,"Bool");
 
   TaskStack *taskstack = thread->getTaskStackRef();
-  return OZ_unify(out, taskstack->getTaskStack(thread,doverbose,depth+1));
+  return OZ_unify(out, taskstack->getTaskStack(thread,doverbose,depth));
 }
 OZ_C_proc_end
 
