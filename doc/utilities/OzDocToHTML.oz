@@ -625,8 +625,13 @@ define
                {ForAll @ChunkLinks
                 proc {$ Name#LinkedTitle}
                    LinkedTitle =
-                   case {Dictionary.condGet @ChunkDefinitions Name nil}
-                   of nil then VERBATIM(Name)
+                   case {Dictionary.condGet @ChunkDefinitions Name unit}
+                   of unit then VS in
+                      VS = {Atom.toString Name}
+                      {@Reporter warn(kind: OzDocWarning
+                                      msg: 'Reference to undefined chunk'
+                                      items: [hint(l: 'Chunk title' m: VS)])}
+                      VERBATIM(Name)
                    elseof Tos then a(href: {List.last Tos} VERBATIM(Name))
                    end
                 end}
@@ -1752,7 +1757,7 @@ define
          SEQ({FoldL @Exercises
               proc {$ In ID#Number#See ?HTML}
                  case {Dictionary.condGet @Answers ID unit} of unit then VS in
-                    VS = {Value.toVirtualString ID 0 0}
+                    VS = {Atom.toString ID}
                     {@Reporter warn(kind: OzDocWarning
                                     msg: 'exercise has no answer'
                                     items: [hint(l: 'ID' m: VS)])}
