@@ -8,10 +8,14 @@ module typically has a number of private procedures that are not
 visible outside the module and a number of interface procedures that
 provides the external services of the module. The interface procedures
 provide the services of the module.
-<!-- DENYS: mozart supports functors -->
-In Oz, there is no syntactic
-support for modules or interfaces. Instead, the lexical scoping of the
-language and the record data-type suffices to construct modules. The
+In Oz there is syntactic support for module specification.
+The concept used is called <EM> functor </EM>.
+A functor specifies what are the components of a module.
+The Mozart system converts a functor to a module with the help of
+a module manager.
+
+<P>Let us first see what a module is, and then look to a corresponding
+functor that specifies the module. The
 general module construction looks as follows. Assume that we would
 like to construct a module called <<List>> that provides a number of
 interface procedures for appending, sorting and testing membership of
@@ -25,7 +29,7 @@ local
    proc {Sort ... } ... {MergeSort ...} ... end
    proc {Member ...} ... end
  in
-   List = list(append: Append
+   List = export(append: Append
                sort: Sort
                member: Member
                ... )
@@ -35,8 +39,27 @@ end
 <P>Access to <<Append>> procedure outside of the module <<List >>is
 done by using the field <<append>> from the <EM>record</EM> <<List>>:
 <<List.append>>. Notice that in the above example the procedure
-<<MergeSort>> is private to the module. Most of the library modules of
-DFKI Oz follow the above structure.
+<<MergeSort>> is private to the module. Most of the base library modules of
+Mozart follow the above structure.
+The above module can be create from a functor that looks as follow:
+<<<
+functor
+export
+  append:Append
+  sort:Sort
+  member:Member
+  ...
+define
+   proc {Append ... }  ... end
+   proc {MergeSort ...} ... end
+   proc {Sort ... } ... {MergeSort ...} ... end
+   proc {Member ...} ... end
+end
+>>>
+Assuming that this functor is stored, somehow, on the file '/home/xxx/list.ozf',the module can be created as follows:
+<<<
+declare [List]= {Module.link ['/home/xxx/list.ozf']}
+>>>
 
 <!-- DENYS: global makes sense only in the OPI -->
 <P>Often some of the procedures in a module are made global without
