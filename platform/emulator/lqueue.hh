@@ -277,7 +277,7 @@ public:
   void enqueue(T* x,int n = SIZE) { enqueueInternal(x,SIZE); }
   T* dequeue() { return (T*) dequeueInternal(); }
 
-  T** find(T* x) { return LinkedQueueImpl::find(x); }
+  T** find(T* x) { return (T**) LinkedQueueImpl::find(x); }
   void remove(T* x) { LinkedQueueImpl::remove(x); }
 
   // one possible type-safe merge method
