@@ -58,6 +58,7 @@ p CodeArea::printDef(PC)
 
 p am.currentThread->printTaskStack(PC,0,10)
 p am.currentThread->printTaskStack((ProgramCounter) -1,0,10)
+p printStack()
 
 p board->printDebug()
 p board->printLongDebug()
