@@ -1,0 +1,7 @@
+#!/bin/sh
+
+rm -f $2
+sed 's|$MOZARTURL\$|http://www.ps.uni-sb.de/mozart/|' < $1 | \
+sed 's|$LICENSEURL\$|http://www.ps.uni-sb.de/mozart/LICENSE.html|' \
+        | cat - > $2
+chmod 444 $2
