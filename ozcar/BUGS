@@ -1,27 +1,11 @@
 $Id$
 
-Thu Sep 19 01:40:54 MET DST 1996
-breakflag in am: Es koennte passieren, dass der falsche
-Thread angehalten wird -- wenn naemlich genau zwischen
-Builtin "breakpoint" und proc/builtin call eine Threadumschaltung
-stattfindet.
-
 Fri Dec 13 17:12:09 MET 1996
 thread E end unmittelbar nach {Debug.breakpoint} wird von Ozcar
 nicht erkannt (kein stepping moeglich)
 
-Tue Dec 17 18:38:36 MET 1996
-Klick auf Stack Frame bei Prelude Funktionen fuehrt zum Versuch, ein nicht
-zu findendes File zu laden (fixed)
-
-Fri Jan 10 16:31:05 MET 1997
-Veraenderungen am Quellcode verursachen keinen Reload des Files
-
 Fri Jan 10 18:01:11 MET 1997
 Forget loescht fehlerhaft aus dem Thread-Baum, wenn Knoten kein Blatt ist.
-
-Sat Jan 11 00:00:04 MET 1997
-Dialogboxen oeffnen nicht an Mausposition
 
 Tue Jan 14 18:25:50 MET 1997
 Erkennung von "veralteter" Codearea (wenn korrespondierendes
