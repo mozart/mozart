@@ -1520,6 +1520,7 @@ TaggedRef osDlopen(char *filename, void **hdl)
 
 #else
 
+  void *handle = 0; // otherwise the rest does not compile
   return oz_atom("osDlopen not supported");
 
 #endif
