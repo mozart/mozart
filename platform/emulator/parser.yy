@@ -1512,7 +1512,7 @@ static OZ_Term parse() {
   return OZ_pair2(yyoutput, xy_errorMessages);
 }
 
-extern Bool oz_isDictionary(TaggedRef term);
+//extern Bool oz_isDictionary(TaggedRef term);
 
 OZ_BI_define(parser_parseFile, 2, 1)
 {
@@ -1522,8 +1522,8 @@ OZ_BI_define(parser_parseFile, 2, 1)
   if (!OZ_isRecord(optRec))
     return OZ_typeError(1, "ParseOptions");
   OZ_Term defines = init_options(optRec);
-  if (!oz_isDictionary(defines))
-    return OZ_typeError(0, "ParseOptions");
+  //if (!oz_isDictionary(defines))
+  //  return OZ_typeError(0, "ParseOptions");
   if (!xy_init_from_file(file, defines))
     OZ_RETURN(OZ_pair2(OZ_atom("fileNotFound"), OZ_nil()));
   else
@@ -1539,8 +1539,8 @@ OZ_BI_define(parser_parseVirtualString, 2, 1)
   if (!OZ_isRecord(optRec))
     return OZ_typeError(1, "ParseOptions");
   OZ_Term defines = init_options(optRec);
-  if (!oz_isDictionary(defines))
-    return OZ_typeError(0, "ParseOptions");
+  //if (!oz_isDictionary(defines))
+  //  return OZ_typeError(0, "ParseOptions");
   xy_init_from_string(str, defines);
   OZ_RETURN(parse());
 }
