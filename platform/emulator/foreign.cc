@@ -19,7 +19,7 @@
 #include "cell.hh"
 #include "am.hh"
 
-int OZ_isInteger(OZ_Term term)
+int OZ_isInt(OZ_Term term)
 {
   DEREF(term,_1,tag);
   return (isInt(tag) == OK) ? 1 : 0;
