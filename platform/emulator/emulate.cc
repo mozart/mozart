@@ -451,17 +451,12 @@ Bool AM::hookCheckNeeded()
 #ifdef THREADED
 #define Case(INSTR) INSTR##LBL : asmLbl(INSTR);
 
-#ifdef XXLINUX
-#define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
-#else
-
 // let gcc fill in the delay slot of the "jmp" instruction:
 #define DISPATCH(INC) {                                                       \
   intlong aux = *(PC+INC);                                                    \
   INCFPC(INC);                                                                \
   goto* (void*) (aux|textBase);                                               \
 }
-#endif /* LINUX */
 
 #else /* THREADED */
 
@@ -1788,13 +1783,6 @@ LBLsuspendThread:
 
   JUMP( PC );
 
- LBLdispatcher:
-
-#if defined(THREADED) && defined(XXLINUX)
-  /* threaded code broken under linux */
-  goto* (void*) (*PC);
-#endif
-
 #ifdef SLOW_DEBUG_CHECK
   /* These tests make the emulator really sloooooww */
   osBlockSignals(OK);
@@ -1806,6 +1794,7 @@ LBLsuspendThread:
 #endif
 
 #ifndef THREADED
+LBLdispatcher:
   op = CodeArea::getOP(PC);
 #endif
 
