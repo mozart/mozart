@@ -138,73 +138,75 @@ SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FDM, P_PFDVAR, PFDVAR, ENGINE>::filt
            o_card > o->getSize());
 
   //--------------------------------------------------
-  _first = 0;
-  // 3. step
-  CDM(("all propagation queues are empty\n"));
-  int nb_failed_clauses = (engine_cl1.isFailed() +
-                           engine_cl2.isFailed() +
-                           engine_cl3.isFailed());
-  // 3.a step
-  if (nb_failed_clauses == 3) {
-    goto failure;
-  }
-  // step 3.c
-  //   a clause is entailed if no prop fncts are left and
-  //   the basic constraints are subsumed
-  if (engine_cl1.hasNoPropsLeft() &&
-      x->getSize() <= cl1_t1->getSize() &&
-      y->getSize() <= cl1_t2->getSize() &&
-      o->getSize() <= cl1_o->getSize()) {
-    CDM(("cl1 entailed\n"));
-    goto vanish;
-  }
-  if (engine_cl2.hasNoPropsLeft() &&
-      x->getSize() <= cl2_t1->getSize() &&
-      y->getSize() <= cl2_t2->getSize() &&
-      o->getSize() <= cl2_o->getSize()) {
-    CDM(("cl2 entailed\n"));
-    goto vanish;
-  }
-  if (engine_cl3.hasNoPropsLeft() &&
-      x->getSize() <= cl3_t1->getSize() &&
-      y->getSize() <= cl3_t2->getSize() &&
-      o->getSize() <= cl3_o->getSize()) {
-    CDM(("cl3 entailed\n"));
-    goto vanish;
-  }
-  // 3.b step
-  if (nb_failed_clauses == 2) {
-    if (!engine_cl1.isFailed()) {
-      CDM(("cl1 unit committed\n"));
-      // t1 + d1 > t2
-      int r;
-      make_lessEqOffset(r, *s, y, x, OZ_int(xd-1));
-      // t2 + d2 > t1
-      make_lessEqOffset(r, *s, x, y, OZ_int(yd-1));
-      // o = 1
-      FailOnEmpty(*o &= 1);
+  {
+    _first = 0;
+    // 3. step
+    CDM(("all propagation queues are empty\n"));
+    int nb_failed_clauses = (engine_cl1.isFailed() +
+                             engine_cl2.isFailed() +
+                             engine_cl3.isFailed());
+    // 3.a step
+    if (nb_failed_clauses == 3) {
+      goto failure;
+    }
+    // step 3.c
+    //   a clause is entailed if no prop fncts are left and
+    //   the basic constraints are subsumed
+    if (engine_cl1.hasNoPropsLeft() &&
+        x->getSize() == cl1_t1->getSize() &&
+        y->getSize() == cl1_t2->getSize() &&
+        o->getSize() == cl1_o->getSize()) {
+      CDM(("cl1 entailed\n"));
       goto vanish;
     }
-    if (!engine_cl2.isFailed()) {
-      CDM(("cl2 unit committed\n"));
-      // t1 + d1 <= t2
-      int r;
-      make_lessEqOffset(r, *s, x, y, OZ_int(-xd));
-      // o = 1
-      FailOnEmpty(*o &= 0);
+    if (engine_cl2.hasNoPropsLeft() &&
+        x->getSize() == cl2_t1->getSize() &&
+        y->getSize() == cl2_t2->getSize() &&
+        o->getSize() == cl2_o->getSize()) {
+      CDM(("cl2 entailed\n"));
       goto vanish;
     }
-    if (!engine_cl3.isFailed()) {
-      CDM(("cl3 unit committed\n"));
-      // t2 + d2 <= t1
-      int r;
-      make_lessEqOffset(r, *s, y, x, OZ_int(-yd));
-      // o = 1
-      FailOnEmpty(*o &= 0);
+    if (engine_cl3.hasNoPropsLeft() &&
+        x->getSize() == cl3_t1->getSize() &&
+        y->getSize() == cl3_t2->getSize() &&
+        o->getSize() == cl3_o->getSize()) {
+      CDM(("cl3 entailed\n"));
       goto vanish;
     }
-    CDM(("oops 1\n"));
-  } // step 3.b
+    // 3.b step
+    if (nb_failed_clauses == 2) {
+      if (!engine_cl1.isFailed()) {
+        CDM(("cl1 unit committed\n"));
+        // t1 + d1 > t2
+        int r;
+        make_lessEqOffset(r, *s, y, x, OZ_int(xd-1));
+        // t2 + d2 > t1
+        make_lessEqOffset(r, *s, x, y, OZ_int(yd-1));
+        // o = 1
+        FailOnEmpty(*o &= 1);
+        goto vanish;
+      }
+      if (!engine_cl2.isFailed()) {
+        CDM(("cl2 unit committed\n"));
+        // t1 + d1 <= t2
+        int r;
+        make_lessEqOffset(r, *s, x, y, OZ_int(-xd));
+        // o = 1
+        FailOnEmpty(*o &= 0);
+        goto vanish;
+      }
+      if (!engine_cl3.isFailed()) {
+        CDM(("cl3 unit committed\n"));
+        // t2 + d2 <= t1
+        int r;
+        make_lessEqOffset(r, *s, y, x, OZ_int(-yd));
+        // o = 1
+        FailOnEmpty(*o &= 0);
+        goto vanish;
+      }
+      CDM(("oops 1\n"));
+    } // step 3.b
+  }
   CDM(("propagation fix-point reached\n"));
   //  printf("gaga %s",(*s).toString());
   CDM(("leaving\n"));
