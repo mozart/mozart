@@ -96,8 +96,8 @@ local
    LS = 'file lookup: '
    fun {DoLookupFile F SearchList}
       case SearchList == nil then
-	 {OzcarError LS # F # ' NOT FOUND!'} % should not happen!
-	 nil
+	 %% must have been the name of an unsaved file or buffer in Emacs:
+	 F
       else Try = SearchList.1 # F in
 	 try
 	    {OS.stat Try _}
@@ -118,14 +118,9 @@ in
 	    else false end
    in
       case Abs then
-	 try                         % ...yes!
-	    {OS.stat F _}
-	    {OzcarMessage LS # F # ' found'}
-	    F
-	 catch system(...) then
-	    {OzcarError LS # F # ' NOT FOUND!'} % should not happen!
-	    nil
-	 end
+	 %% the file needs not exist, since it may be the name of an unsaved
+	 %% buffer or file in Emacs:
+	 F
       else                           % ...no!
 	 %% strip "./" or "././"
 	 Suffix = case S of &.|&/|T then
