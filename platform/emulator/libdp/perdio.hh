@@ -155,8 +155,12 @@ inline void perdio_msgReceived(MsgContainer *msgC,ByteBuffer *bb) {
 }
 
 // Message Statistics:
-extern int  globalWriteCounter;
-extern int  globalReadCounter;
+extern int  globalSendCounter;
+extern int  globalRecCounter;
+extern int  globalOSWriteCounter;
+extern int  globalOSReadCounter;
+extern int  globalContCounter;
+
 
 /* __PERDIOHH */
 #endif 
