@@ -1,5 +1,6 @@
 #include "weakdict.hh"
 #include "var_future.hh"
+#include "am.hh"
 
 static WeakDictionary* gcLinkedList;
 
