@@ -11,6 +11,10 @@
 */
 
 
+#ifdef __GNUC__
+#pragma implementation "actor.hh"
+#endif
+
 #include "actor.hh"
 #include "board.hh"
 

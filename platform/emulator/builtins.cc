@@ -8,6 +8,10 @@
   */
 
 
+#ifdef __GNUC__
+#pragma implementation "builtins.hh"
+#endif
+
 #include "builtins.hh"
 #include "am.hh"
 #include "bignum.hh"

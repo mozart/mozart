@@ -22,6 +22,10 @@
   ------------------------------------------------------------------------
 */
 
+#ifdef __GNUC__
+#pragma implementation "emulate.hh"
+#endif
+
 #include "../include/config.h"
 #include "types.hh"
 

@@ -12,6 +12,11 @@
 #ifndef __BOARDH
 #define __BOARDH
 
+#ifdef __GNUC__
+#pragma interface
+#endif
+
+
 #include "types.hh"
 
 #include "constr.hh"

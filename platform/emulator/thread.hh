@@ -16,6 +16,10 @@
 #define __THREADHH
 
 
+#ifdef __GNUC__
+#pragma interface
+#endif
+
 #include "types.hh"
 
 class Thread : public ConstTerm

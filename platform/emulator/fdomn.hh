@@ -12,6 +12,10 @@
 #ifndef __FDOMN__H__
 #define __FDOMN__H__
 
+#ifdef __GNUC__
+#pragma interface
+#endif
+
 #include "types.hh"
 #include "term.hh"
 #include "bignum.hh"
