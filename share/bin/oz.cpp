@@ -6,6 +6,9 @@
 
 #include "../include/config.h"
 
+#ifndef X_OK
+#define X_OK 0
+#endif
 
 BOOL getFileName(char *fname)
 {
@@ -75,7 +78,8 @@ char *getEmacsHome(char *path)
   MessageBox(NULL, 
 	     "When you start Oz for the first time,\nyou have to specify where the Emacs binary resides.\n", 
 	     "Cannot find Emacs",
-	     MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+	     MB_OK | MB_TASKMODAL | MB_SETFOREGROUND |
+	     MB_ICONINFORMATION);
 
   BOOL ret = getFileName(buf);
   if (ret == FALSE)
@@ -111,7 +115,6 @@ void ozSetenv(const char *var, const char *value)
 }
 
 
-/* Todo: version should not be wired. */
 char *reg_path = "SOFTWARE\\DFKI\\Oz\\" OZVERSION;
 
 char *getRegistry(char *path, char *var)
@@ -122,9 +125,7 @@ char *getRegistry(char *path, char *var)
   int rc = 0;
 
   HKEY hk;
-  if (RegOpenKey(HKEY_LOCAL_MACHINE,
-		 path,
-		 &hk) != ERROR_SUCCESS)
+  if (RegOpenKey(HKEY_LOCAL_MACHINE, path, &hk) != ERROR_SUCCESS)
     goto end;
 
   if (RegQueryValueEx(hk,
@@ -152,9 +153,7 @@ int setRegistry(char *var, const char *value)
 {
   HKEY hk;
 
-  int ret = RegCreateKey(HKEY_LOCAL_MACHINE,
-			 reg_path,
-			 &hk);
+  int ret = RegCreateKey(HKEY_LOCAL_MACHINE, reg_path, &hk);
   if (ret != ERROR_SUCCESS)
     return 0;
 
@@ -210,9 +209,9 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   /*
    * TCL/TK
    */
-  sprintf(buffer,"%s/ozwish/lib/tcl",ozhome);
+  sprintf(buffer,"%s/ozwish/lib/tcl7.5",ozhome);
   ozSetenv("TCL_LIBRARY",buffer);
-  sprintf(buffer,"%s/ozwish/lib/tk",ozhome);
+  sprintf(buffer,"%s/ozwish/lib/tk4.1",ozhome);
   ozSetenv("TK_LIBRARY",buffer);
 
 
@@ -222,7 +221,7 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   char *ehome = getenv("EMACSHOME");
   if (ehome==NULL && 
       (ehome=getRegistry("EMACSHOME"))==NULL &&
-      (ehome=getRegistry("SOFTWARE\\GNU\\Emacs\\","emacs_dir"))==NULL) {
+      (ehome=getRegistry("SOFTWARE\\GNU\\Emacs","emacs_dir"))==NULL) {
   getehome:
     ehome = getEmacsHome(buffer);
     if (ehome == NULL)
@@ -270,8 +269,6 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
 
   PROCESS_INFORMATION pinf;
 
-  sprintf(buffer,"%s/platform/%s/ozemulator.exe -f %s/demo/rundemo",
-	  ozhome,ozplatform,ozhome+2);
   if (stricmp(progname,"oz.exe")==0) {
     sprintf(buffer,"%s -l %s/lib/elisp/oz.elc -f run-oz",
 	    ebin,ozhome);
@@ -285,7 +282,7 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   }
 
   BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,
-			   0,NULL,NULL,&si,&pinf);
+			   DETACHED_PROCESS,NULL,NULL,&si,&pinf);
   
   if (ret!=TRUE) {
     OzPanic(1,"Cannot start Oz.\nError = %d.",errno);
