@@ -3,6 +3,36 @@
 
 local
 
+   fun {TreeNext L X I}
+      case X == nil then nil else
+	 case X.1 == I then
+	    case X.2 == nil then L.1
+	    else X.2.1 end
+	 else
+	    {TreeNext L X.2 I}
+	 end
+      end
+   end
+   
+   fun {TreePrev X I}
+      case X == nil then nil
+      elsecase X.2 == nil then X.1 else
+	 case X.2.1 == I then
+	    X.1
+	 else
+	    {TreePrev X.2 I}
+	 end
+      end
+   end
+
+   fun {GetColor State}
+      case State
+      of runnable then RunningThreadColor # RunningThreadText
+      [] blocked  then BlockedThreadColor # BlockedThreadText
+      [] dead     then DeadThreadColor    # DeadThreadText
+      end
+   end
+   
    class Node
       attr
 	 x  : 1                   %% xpos
@@ -117,8 +147,9 @@ in
       
       attr
 	 Selected       : undef
-	 SyncStreamCalc : _
-	 SyncStreamDraw : _
+	 LastSelected   : undef
+
+	 SyncCalc       : _
       
       meth tkInit(...)=M
 	 BaseTree,init
@@ -137,31 +168,59 @@ in
 
       meth syncCalc
 	 Old New in
-	 Old = SyncStreamCalc <- New
+	 Old = SyncCalc <- New
 	 Old = _ | New
 	 thread
-	    {WaitOr New {Alarm TimeoutToCalc}}
+	    {WaitOr New {Alarm TimeoutToCalcTree}}
 	    case {IsDet New} then skip else
-	       lock BaseTree,calculatePositions end
+	       lock
+		  BaseTree,calculatePositions
+		  Tree,display
+	       end
 	    end
 	 end
       end
       
       meth kill(I)
 	 nodes <- {List.filter @nodes fun {$ N} {N get($)}.i \= I end}
-	 BaseTree,calculatePositions
-	 Tree,display %% should be avoided, but... f*cking Tk...
+	 Tree,syncCalc
+      end
+
+      meth selectPrevious
+	 N = {TreeNext @nodes @nodes @Selected}
+      in
+	 case N == nil then skip else
+	    Tree,SwitchToThread({N get($)}.i)
+	 end
       end
       
-      meth select(I CT<=gaga)
+      meth selectNext
+	 N = {TreePrev @nodes @Selected}
+      in
+	 case N == nil then skip else
+	    Tree,SwitchToThread({N get($)}.i)
+	 end
+      end
+      
+      meth select(I)
 	 case I == 0 then
-	    Selected <- undef
+	    LastSelected <- undef
+	    Selected     <- undef
 	 else
-	    N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
+	    CT OldCT N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
 	 in
 	    case N \= nil then
+	       LastSelected <- @Selected
 	       Selected <- N.1
-	       %{self tk(itemconfigure CT font:ThreadTreeBoldFont)}
+
+	       case @LastSelected \= undef then
+		  node(ct:OldCT ...) = {@LastSelected get($)}
+		  ScrolledTitleCanvas,tk(itemconfigure OldCT
+					 font:ThreadTreeFont)
+	       else skip end
+	       
+	       node(ct:CT ...) = {@Selected get($)}
+	       ScrolledTitleCanvas,tk(itemconfigure CT font:ThreadTreeBoldFont)
 	    else
 	       {OzcarMessage 'Select unknown node?!'}
 	    end
@@ -169,33 +228,20 @@ in
       end
       
       meth mark(I How)
-	 N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
+	 CT N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
       in
 	 case N == nil then
 	    {OzcarMessage 'Mark unknown node?!'}
 	 else
-	    %CT
-	 %in
-	    %node(ct:CT ...) = {N.1 get($)}
-	    %ScrolledTitleCanvas,tk(itemconfigure CT outline:Color)
+	    CL = {GetColor How}
+	 in
+	    node(ct:CT ...) = {N.1 get($)}
+	    ScrolledTitleCanvas,tk(itemconfigure CT fill:CL.1 text:I#CL.2)
 	    {N.1 setState(How)}
-	    Tree,display %% should be avoided, but... f*cking Tk...
 	 end
       end
 
       meth display
-	 Old New in
-	 Old = SyncStreamDraw <- New
-	 Old = _ | New
-	 thread
-	    {WaitOr New {Alarm TimeoutToRedraw}}
-	    case {IsDet New} then skip else
-	       lock Tree,DoDisplay end
-	    end
-	 end
-      end
-      
-      meth DoDisplay
 	 SFX = ThreadTreeStretchX
 	 SFY = ThreadTreeStretchY
          OS  = ThreadTreeOffset
@@ -216,24 +262,17 @@ in
              else skip end
 
 	     local
-		CL = case S
-		     of     runnable then RunningThreadColor#RunningThreadText
-		     elseof blocked  then BlockedThreadColor#BlockedThreadText
-		     elseof dead     then DeadThreadColor   #DeadThreadText
-		     end
+		CL = {GetColor S}
 	     in
-		case N == Sel then
-		   {self tk(crea text X*SFX Y*SFY text:I#CL.2
-			    fill:CL.1 tags:CT
-			    anchor:w font:ThreadTreeBoldFont)}
-		else
-		   {self tk(crea text X*SFX Y*SFY text:I#CL.2
-			    fill:CL.1 tags:CT
-			    anchor:w font:ThreadTreeFont)}
-		   {CT tkBind(event:  '<1>'
- 			   %action: self # select(I CT))}
-			      action: self # SwitchToThread(I))}
-		end
+		{self tk(crea text X*SFX Y*SFY
+			 text:   I # CL.2
+			 fill:   CL.1
+			 tags:   CT
+			 anchor: w
+			 font:   case N == Sel then ThreadTreeBoldFont
+				 else               ThreadTreeFont end)}
+		{CT tkBind(event:  '<1>'
+			   action: self # SwitchToThread(I))}
 	     end
 	     {N setTag(CT)}
 	  end}
