@@ -62,3 +62,14 @@ in
       end
    end
 end
+
+fun {SpaceToProcedure S}
+   fun {$}
+      {Space.merge {Space.clone S}}
+   end
+end
+
+fun {SpaceToSpace S} S end
+
+SpaceToRoot = Space.merge
+

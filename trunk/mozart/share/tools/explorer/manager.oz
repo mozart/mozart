@@ -55,7 +55,7 @@ in
       attr
 	 IsBAB:   false
 	 root:    false
-	 query:   false
+	 script:  false
 	 order:   false
 	 PrevSol: false
 	 ToClose: nil
@@ -97,8 +97,8 @@ in
 
       meth reset
 	 lock
-	    case @query of false then skip elseof Query then
-	       Manager,query(Query @order)
+	    case @script of false then skip elseof Script then
+	       Manager,script(Script @order)
 	    end
 	 end
       end
@@ -194,17 +194,17 @@ in
 	 Manager,Layout
       end
 
-      meth query(Query Order)
+      meth script(Script Order)
 	 lock
 	    Manager,clear
 	    IsBAB   <- (Order\=false)
-	    query   <- Query
+	    script  <- Script
 	    order   <- Order
 	    curNode <- false
 	    PrevSol <- false
 	    {self.status setBAB(@IsBAB)}
 	    StatusManager,start(_)
-	    root <- {MakeRoot self Query Order}
+	    root <- {MakeRoot self Script Order}
 	    StatusManager,stop
 	    Manager,Layout
 	    Manager,SetCursor(@root)
@@ -496,9 +496,11 @@ in
       meth wake(Node KillId)
 	 lock
 	    case {self.status getKill(_ $)}==KillId then
-	       case Node.mom of !Sentinel then
+	       Mom = Node.mom
+	    in
+	       case Mom.sentinel then
 		  Manager,reset
-	       elseof Mom then
+	       else
 		  {Mom  removeLast(Manager,GetPrevSol($))}
 		  {Node deleteTree}
 		  {self.status removeBlocked}

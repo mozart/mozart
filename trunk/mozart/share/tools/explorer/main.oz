@@ -38,31 +38,10 @@ local
       end
    end
    
-   \insert misc.oz
-   
-   \insert configure.oz
+   \insert 'configure-dynamic.oz'
 
-   \insert manager.oz
+   \insert 'manager.oz'
 
-   NoLabel       = {NewName}
-   ManagerClosed = {NewName}
-   
-   ActionKinds   = [information compare statistics]
-   ActionTypes   = [root space procedure]
-   ActionArities = a(information: [2 3]
-		     compare:     [4 5]
-		     statistics:  [2 3])
-
-   fun {SpaceToProcedure S}
-      fun {$}
-	 {Space.merge {Space.clone S}}
-      end
-   end
-
-   fun {SpaceToSpace S} S end
-
-   SpaceToRoot = Space.merge
-   
 in
 
    class ExplorerClass
@@ -97,7 +76,7 @@ in
       meth script(Script Order <=false)
 	 lock
 	    ExplorerClass,Init
-	    {@MyManager query(proc {$ X} {Script X} end Order)}
+	    {@MyManager script(proc {$ X} {Script X} end Order)}
 	 end
       end
 
@@ -120,7 +99,7 @@ in
 \ifdef CS_SPECIAL
       meth sYnc(Script Order <= false)
 	 lock
-	    {@MyManager query(proc {$ X} {Script X} end Order)}
+	    {@MyManager script(proc {$ X} {Script X} end Order)}
 	    {@MyManager next}
 	    {Wait {Tk.return update(idletasks)}}
 	 end

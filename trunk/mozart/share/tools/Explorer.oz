@@ -20,48 +20,61 @@
 %%% WARRANTIES.
 %%%
 
-functor $
 
-import
-   System.{show
-	   get
-	   printName}
+local
 
-   Tk
-
-   TkTools
-
-   Browser.{browse}
-
-export
-   'ExplorerClass': ExplorerClass
-   'Explorer':      Explorer
-   'ExploreOne':    ExploreOne
-   'ExploreAll':    ExploreAll
-   'ExploreBest':   ExploreBest
-
-   'class':  ExplorerClass
-   'object': Explorer
-   'one':    ExploreOne
-   'all':    ExploreAll
-   'best':   ExploreBest
+   \insert 'explorer/configure-static.oz'
    
-body
-   
-   \insert 'explorer/main.oz'
-   
-   Explorer = {New ExplorerClass init}
+   \insert 'explorer/misc.oz'
 
-   proc {ExploreOne P}
-      {Explorer one(P)}
-   end
+   \insert 'explorer/combine-nodes.oz'
 
-   proc {ExploreAll P}
-      {Explorer all(P)}
-   end
+in
    
-   proc {ExploreBest P O}
-      {Explorer all(P O)}
+   functor $ prop once
+      
+   import
+      System.{show
+	      get
+	      printName}
+      
+      Tk
+      
+      TkTools
+      
+      Browser.{browse}
+      
+   export
+      'ExplorerClass': ExplorerClass
+      'Explorer':      Explorer
+      'ExploreOne':    ExploreOne
+      'ExploreAll':    ExploreAll
+      'ExploreBest':   ExploreBest
+      
+      'class':  ExplorerClass
+      'object': Explorer
+      'one':    ExploreOne
+      'all':    ExploreAll
+      'best':   ExploreBest
+      
+   body
+      
+      \insert 'explorer/main.oz'
+      
+      Explorer = {New ExplorerClass init}
+      
+      proc {ExploreOne P}
+	 {Explorer one(P)}
+      end
+      
+      proc {ExploreAll P}
+	 {Explorer all(P)}
+      end
+      
+      proc {ExploreBest P O}
+	 {Explorer all(P O)}
+      end
+      
    end
 
 end
