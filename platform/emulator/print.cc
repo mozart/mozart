@@ -604,7 +604,6 @@ PRINT(Suspension)
   if (isPropagated()) stream << 'P';
   if (isResistant()) stream << 'R';
   if (isExtSusp()) stream << 'E';
-    if (isSurvSusp()) stream << 'S';
   if (isUnifySusp()) stream << 'U';
   if (isLocalSusp()) stream << 'L';
   if (isTagged()) stream << 'T';
