@@ -1,25 +1,23 @@
-/*
- *  Authors:
- *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
- *
- *  Copyright:
- *    Leif Kornstaedt, 1997
- *
- *  Last change:
- *    $Date$ by $Author$
- *    $Revision$
- *
- *  This file is part of Mozart, an implementation
- *  of Oz 3:
- *     $MOZARTURL$
- *
- *  See the file "LICENSE" or
- *     $LICENSEURL$
- *  for information on usage and redistribution
- *  of this file, and for a DISCLAIMER OF ALL
- *  WARRANTIES.
- *
- */
+dnl
+dnl Author:
+dnl   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+dnl
+dnl Copyright:
+dnl   Leif Kornstaedt, 1997
+dnl
+dnl Last change:
+dnl   $Date$ by $Author$
+dnl   $Revision$
+dnl
+dnl This file is part of Mozart, an implementation of Oz 3:
+dnl   $MOZARTURL$
+dnl
+dnl See the file "LICENSE" or
+dnl   $LICENSEURL$
+dnl for information on usage and redistribution
+dnl of this file, and for a DISCLAIMER OF ALL
+dnl WARRANTIES.
+dnl
 
 %option noyywrap noreject nodefault
 
