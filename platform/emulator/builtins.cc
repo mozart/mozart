@@ -271,8 +271,6 @@ BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t)
   return(builtin);
 }
 
-BuiltinTabEntry *BIEchooseInternal;
-
 /*===================================================================
  * `builtin`
  *=================================================================== */
@@ -883,7 +881,7 @@ OZ_C_proc_begin(BIcloneSpace, 2) {
 } OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIchooseInternal, 2) {
+OZ_C_proc_begin(contChooseInternal, 2) {
   int left  = smallIntValue(OZ_getCArg(0)) - 1;
   int right = smallIntValue(OZ_getCArg(1)) - 1;
 
@@ -948,9 +946,7 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
 
   Thread *it = new Thread(am.currentThread->getPriority(), 
 			  space->getSolveBoard(), OK);
-  it->pushCall(makeTaggedConst(new Builtin(BIEchooseInternal, 
-					   makeTaggedNULL())),
-	       args, 2);
+  it->pushCFunCont(contChooseInternal, args, 2, NO);
   am.scheduleThread(it);
 
   return PROCEED;
@@ -6352,7 +6348,6 @@ BIspec allSpec[] = {
   {"Space.merge",         2, BImergeSpace,     0},
   {"Space.clone",         2, BIcloneSpace,     0},
   {"Space.choose",        2, BIchooseSpace,    0},
-  {"Space.choose (Task)", 2, BIchooseInternal, 0},
   {"Space.inject",        2, BIinjectSpace,    0},
 
   {"System.getPrintDepth", 2, BIgetPrintDepth, 0},
@@ -6397,10 +6392,6 @@ BuiltinTabEntry *BIinit()
   BIinitAVar();
   BIinitUnix();
   BIinitTclTk();
-
-
-  BIEchooseInternal = (BuiltinTabEntry *) 
-    builtinTab.htFind("Space.choose (Task)");
 
   return bi;
 }
