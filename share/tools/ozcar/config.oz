@@ -111,9 +111,12 @@ ThreadTreeOffset       = 4
 
 StackTextWidth         = 0
 EnvTextWidth           = 24
-					
+EnvVarWidth            = 16
+	
 SmallBorderSize        = 1
 BorderSize             = 2
+
+ScrollbarWidth         = 12
 
 /* end */
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -140,7 +143,7 @@ BitMap                 = '@' # BitMapDir # 'debugger.xbm'
 TextCursor             = left_ptr
 
 MaxStackSize           = 40
-MaxStackBrowseSize     = 10
+MaxStackBrowseSize     = 15
 
 TimeoutToMessage       = 500  % ms
 
@@ -233,9 +236,10 @@ SourceTextBackground    = white
 ConfigVerbose              = false  %% debug messages in Emulator buffer?
 
 ConfigStepSystemProcedures = false  %% step on all system procedures (`...`)?
-ConfigStepRecordBuiltin    = false  %% step on builtin 'record' ?
-ConfigStepDotBuiltin       = true   %% step on builtin '.'      ?
-ConfigStepWidthBuiltin     = true   %% step on builtin 'width'  ?
+ConfigStepRecordBuiltin    = false  %% step on builtin 'record'  ?
+ConfigStepDotBuiltin       = true   %% step on builtin '.'       ?
+ConfigStepWidthBuiltin     = true   %% step on builtin 'width'   ?
+ConfigStepNewNameBuiltin   = false  %% step on builtin 'NewName' ?
 
 ConfigEnvSystemVariables   = true   %% filter system variables in Env Window?
 ConfigEnvProcedures        = false  %% filter procedures in Env Window?
@@ -250,6 +254,7 @@ Config =
        stepRecordBuiltin :     ConfigStepRecordBuiltin
        stepDotBuiltin :        ConfigStepDotBuiltin
        stepWidthBuiltin :      ConfigStepWidthBuiltin
+       stepNewNameBuiltin :    ConfigStepNewNameBuiltin
        envSystemVariables :    ConfigEnvSystemVariables
        envProcedures :         ConfigEnvProcedures
     
@@ -273,4 +278,3 @@ end
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%% End of config.oz %%%%%%%%%%%%%%%%%%%%%%
-%%

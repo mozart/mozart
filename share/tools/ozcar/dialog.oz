@@ -14,8 +14,8 @@ local
                                default: 1)
 	 Title = {New Tk.label tkInit(parent: self
                                       text:
-					 "This is " # IconName #
-				         " V" # Version)}
+					 'This is ' # IconName #
+				         ' V' # Version)}
 
          Author = {New Tk.label tkInit(parent: self
                                        text: ('Benjamin Lorenz\n' #
