@@ -3,6 +3,7 @@
 * version 0.86
   complete rework of the computation of dependencies. e.g. to take
   into account the run-time dependencies of build-time dependencies.
+  fixed bug in package creation with circular imports.
 
 * version 0.85
   for autodepend to work as expected, the build rule for ozl needs to
