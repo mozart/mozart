@@ -86,69 +86,72 @@ SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FDM, P_PFDVAR, PFDVAR, ENGINE>::filt
   */
   while (1) {
     //--------------------------------------------------
-    // 1. step
-    if (not_first_iteration) {
-      FDM u_t1, u_t2, u_o;
-      u_t1.initEmpty(); u_t2.initEmpty(); u_o.initEmpty();
+    // 2. step
+    int _x_card, _y_card, _o_card;
+    do {
+      _x_card = x->getSize();
+      _y_card = y->getSize();
+      _o_card = o->getSize();
+      //
       if (!engine_cl1.isFailed()) {
-	u_t1 = u_t1 | *cl1_t1;
-	u_t2 = u_t2 | *cl1_t2;
-	u_o  = u_o  | *cl1_o;
+	CDM(("cl1 propagating to\n"));
+	if (!(cl1_t1.propagate_to(*x, _first) &
+	      cl1_t2.propagate_to(*y, _first) &
+	      cl1_o.propagate_to(*o, _first))) {
+	  CDM(("cl1 failed while propagating to clause\n"));
+	  engine_cl1.setFailed();
+	}
       }
       if (!engine_cl2.isFailed()) {
-	u_t1 = u_t1 | *cl2_t1;
-	u_t2 = u_t2 | *cl2_t2;
-	u_o  = u_o  | *cl2_o;
+	CDM(("cl2 propagating to\n"));
+	if (!(cl2_t1.propagate_to(*x, _first) &
+	      cl2_t2.propagate_to(*y, _first) &
+	      cl2_o.propagate_to(*o, _first))) {
+	  CDM(("cl2 failed while propagating to clause\n"));
+	  engine_cl2.setFailed();
+	}
       }
       if (!engine_cl3.isFailed()) {
-	u_t1 = u_t1 | *cl3_t1;
-	u_t2 = u_t2 | *cl3_t2;
-	u_o  = u_o  | *cl3_o;
+	CDM(("cl3 propagating to\n"));
+	if (!(cl3_t1.propagate_to(*x, _first) &
+	      cl3_t2.propagate_to(*y, _first) &
+	      cl3_o.propagate_to(*o, _first))) {
+	  CDM(("cl3 failed propagating to clause\n"));
+	  engine_cl3.setFailed();
+	}
       }
-      FailOnEmpty(*x &= u_t1);
-      FailOnEmpty(*y &= u_t2);
-      FailOnEmpty(*o  &= u_o);
-    }
-    not_first_iteration = 1;
     //--------------------------------------------------
-    // 2. step
-    if (!engine_cl1.isFailed()) {
-      CDM(("cl1 propagating to\n"));
-      if (!(cl1_t1.propagate_to(*x, _first) &
-	    cl1_t2.propagate_to(*y, _first) &
-	    cl1_o.propagate_to(*o, _first))) {
-	CDM(("cl1 failed while lifting\n"));
-	engine_cl1.setFailed();
+    // 1. step
+      if (1 || not_first_iteration) {
+	FDM u_t1, u_t2, u_o;
+	u_t1.initEmpty(); u_t2.initEmpty(); u_o.initEmpty();
+	if (!engine_cl1.isFailed()) {
+	  u_t1 = u_t1 | *cl1_t1;
+	  u_t2 = u_t2 | *cl1_t2;
+	  u_o  = u_o  | *cl1_o;
+	}
+	if (!engine_cl2.isFailed()) {
+	  u_t1 = u_t1 | *cl2_t1;
+	  u_t2 = u_t2 | *cl2_t2;
+	  u_o  = u_o  | *cl2_o;
+	}
+	if (!engine_cl3.isFailed()) {
+	  u_t1 = u_t1 | *cl3_t1;
+	  u_t2 = u_t2 | *cl3_t2;
+	  u_o  = u_o  | *cl3_o;
+	}
+	FailOnEmpty(*x &= u_t1);
+	FailOnEmpty(*y &= u_t2);
+	FailOnEmpty(*o  &= u_o);
       }
-    }
-    if (!engine_cl2.isFailed()) {
-      CDM(("cl2 propagating to\n"));
-      if (!(cl2_t1.propagate_to(*x, _first) &
-	    cl2_t2.propagate_to(*y, _first) &
-	    cl2_o.propagate_to(*o, _first))) {
-	CDM(("cl2 failed while lifting\n"));
-	engine_cl2.setFailed();
-      }
-    }
-    if (!engine_cl3.isFailed()) {
-      CDM(("cl3 propagating to\n"));
-      if (!(cl3_t1.propagate_to(*x, _first) &
-	    cl3_t2.propagate_to(*y, _first) &
-	    cl3_o.propagate_to(*o, _first))) {
-	CDM(("cl3 failed\n"));
-	engine_cl3.setFailed();
-      }
-    }
+    } while (_x_card > x->getSize() || 
+	     _y_card > y->getSize() ||
+	     _o_card > o->getSize());
+
+    //--------------------------------------------------
+    not_first_iteration = 1;
     _first = 0;
     // 3. step 
-    /*
-    // was soll das?, wir sind doch eager, oder?
-    if (!(engine_cl1.hasReachedFixPoint() &&
-	  engine_cl2.hasReachedFixPoint() &&
-	  engine_cl3.hasReachedFixPoint())) {
-      printf("gaga\n");
-    }
-    */
     if (engine_cl1.hasReachedFixPoint() &&
 	engine_cl2.hasReachedFixPoint() &&
 	engine_cl3.hasReachedFixPoint()) {
