@@ -1,0 +1,232 @@
+<CHAPTER ID="chapter.lp">
+<TITLE>Logic Programming</TITLE>
+
+<P>Many problems, especially frequent in the field of Artificial
+Intelligence, and also found elsewhere, e.g., in operations research,
+are currently solvable only by resorting to some form of search and
+<EM/constraint/ propagation. Such problems admit very concise
+solutions, if the programming language abstracts away the details of
+search by providing don't know nondeterminism. In this tutorial, we
+are not going to talk much about constraint solving. The reader may
+look to the companion document by [8]. We will
+only provide the basics needed to understand the logic and constraint
+programming part of Oz.
+
+
+<SECTION><TITLE/Constraint Store/
+<P>Oz threads share a store where variable bindings are stored in the
+form of equalities: <MATH>X_1=U_1, ..., X_n=U_n</MATH> where
+<MATH/X_i/ are variables and <MATH/U_i/ are either Oz entities or
+variables. If we restrict the Oz values to records, numbers, names or
+variables, the store can be considered as a conjunctive logical
+formula: <MATH>X_1=U_1 &and; ... &and; X_n=U_n</MATH>. The store is
+said to be a <EM>constraint store</EM>.
+
+
+<SECTION><TITLE/Computation Spaces/
+<P>A computation space consists in general of a constraint store and a
+number of threads executing in the space. This is what we have seen so
+far. When we are dealing with search we will need a more general
+structure where threads may have their own local computation
+spaces. This will result in a nested form of computation spaces. The
+general rules for computation spaces are as follows.
+
+<LIST>
+
+<ITEM>There is always a topmost computation space where threads can
+interact with the external world. Failure of a thread due to trying to
+add constraints (bindings) inconsistent with store of the space will
+lead to failure exception being raised.
+
+<ITEM>A thread may create a local computation space either directly or
+indirectly as will be shown in this section. The new computation space
+will be a child space and the current one the parent space. In general
+a hierarchy of computation spaces may be created.
+
+<ITEM>A thread belongs always to one computation space. Also,
+variables belong to only one computation space.
+
+<ITEM>A thread in a child space sees and may access variables
+belonging to its space as well as to all ancestor spaces. The converse
+is false. A thread in a parent space cannot see the variables of a
+child space, unless the child space is merged with the parent. In such
+a case, the child space disappears, and all its content is added to
+the parent space. The space merge operation may occur due to an
+explicit operation, or indirectly due to a language construct as will
+be seen in this section.
+
+<ITEM>A Thread in a child space my add constraints on variable visible
+to it. This means that it may bind variables belonging to its space or
+to its ancestor spaces. The binding will only be visible in the
+current space and all its children spaces if any.
+
+</LIST>
+
+
+<SECTION><TITLE/Constraint Entailment and Disentailment/
+<P>A condition ?{C} is entailed by the store if ?{C}, considered as a
+logical formula, is logically implied by the information in the
+store. Entailment of ?{C} means that adding ?{C} in the store does
+increase the information already there.
+
+<P>A condition ?{C} is disentailed by the store if the negation of
+?{C} is logically implied by the information in the store.
+
+
+<SUBSECTION><TITLE/Examples/
+
+<P>Consider the store: <IMG="Image63.gif">, the conditions:
+
+<LIST>
+
+<ITEM> <IMG="Image64.gif">. Since adding this binding does not
+increase the information in the store.
+
+<ITEM> <IMG="Image65.gif"> is also entailed. Adding this
+information does not increase our information. There is a ?{Z} that
+satisfies the above condition. Notice that we do not know which value
+?{Z} will assume. But whatever value assumed by ?{Z}, the condition
+would be still satisfied.
+
+<ITEM> <IMG="Image66.gif"> is not entailed by the store, since adding
+this equality will increase the information there, namely by
+<IMG="Image67.gif">.
+
+<ITEM><IMG="Image68.gif"> are both disentailed since they
+contradict information already there. They we normally lead to raised
+exceptions.
+
+</LIST>
+
+
+<SECTION><TITLE/Disjunctions/
+<P>Now we are in a position to understand the nondeterminate
+constructs of Oz. Oz provides several disjunctive constructs for
+<EM>nondeterminate choice</EM>, also known as <EM>don’t know
+choice</EM> statements.
+
+
+<SUBSECTION><TITLE/or statement/
+<P>In all the disjunctive statements we are going to use the notion of
+guard. A guard has the following form.
+
+<P><IMG="Image69.gif">
+
+<P>The first disjunctive statement has the following form:
+
+<<<
+or
+   ?{G1} then ?{S1}
+[] ?{G2} then ?{S2}
+   ...
+[] ?{GN} then ?{SN}
+end
+>>>
+
+<P>An <<or>>-statement has the following semantics. Assume a thread is
+executing the statement in space ?{SP}.
+
+<LIST>
+
+<ITEM>The thread is blocked.
+
+<ITEM>?{N} spaces are created ?{SP}<SUB>1</SUB>,…,?{SP}<SUB>N</SUB> with ?{N} new threads executing the guards ?{G}<SUB>1</SUB>,…, ?{G}<SUB>N</SUB>.
+
+<ITEM>Execution of the father thread will remain blocked until at most one of the constraint stores of the children spaces is not disentailed. We call a space with a disentailed store a failed space.
+
+<ITEM>If all children spaces are failed, the parent thread raises a failure exception.
+
+<ITEM>Otherwise, there is one space that is not failed that corresponds to the disjunct <IMG="Image71.gif"8018>. Assume also that ?{G}<SUB>i</SUB> has been reduced to the goal <IMG="Image72.gif"16> and the constraint <IMG="Image73.gif"1014>. In this case, the space is merged with the parent store with <IMG="Image74.gif"1014> added, <IMG="Image75.gif"16> executes in its own thread, and the suspending thread resumes executing the statement <IMG="Image76.gif"1318>
+
+</LIST>
+. The rule of execution is called <EM>unit commit</EM> in Oz because execution commits to one alternative disjunct.
+
+<P>Shorthand Notation
+
+<P><IMG="Image77.gif"116172>
+
+<P>Determinacy Driven Execution
+
+<P>The or-statement of Oz allows a pure logical form of programming style where computations are synchronized by determinacy conditions. Consider the following program.
+
+<<
+<P>proc {Ints N Xs}
+   or N = 0 Xs = nil
+   [] Xr in 
+      N > 0 = true Xs = N|Xr
+      {Inst N-1 Xr}
+   end 
+end
+local 
+   proc {Sum3 Xs N R}
+      or Xs = nil R = N
+      [] X|Xr = Xs in
+         {Sum3 Xr X+N R}
+      end
+   end
+in proc {Sum Xs R} {Sum3 Xs 0 R} end
+end
+local N S R in
+   thread {Ints N S} end
+   thread {Sum S {Browse}} end
+   N = 1000
+end
+
+>>
+<P>The thread executing <<Ints>> will suspend until <<N>> is known, because it cannot decide on which disjunct to take. Similarly, <<Sum3>> will wait until the list <<S>> is known. <<S>> will be defined incrementally and that will lead to the suspension and resumption of <<Sum3>>. Things will start to take off when the main thread binds <<N>> to <<1000>>. This shows clearly that determinacy driven execution gives the synchronization information need to mimic producer/consumer behavior.
+
+<P>More to come on logic programming.
+
+<P><"_Toc411617883">Conditionals</A>
+
+<P>Simple Conditionals. A statement having the following form:
+
+<P><IMG="Image78.gif"268>
+
+<P>where <IMG="Image79.gif"1617> is a sequence of simple equalities, is called a simple conditional. The subexpression <IMG="Image80.gif"185> is usually called a <EM>clause</EM>, and <IMG="Image81.gif"126> is the <EM>condition</EM> of the clause. A thread executing such as conditional will first check whether the condition:  "There are <IMG="Image82.gif"58> such that <IMG="Image83.gif"1617> is true" is satisfied or falsified by the current state of the store. If the condition is satisfied, statement <IMG="Image84.gif"17> is executed; if it is falsified, the thread executes <IMG="Image85.gif"18>; and if neither hold, the thread suspends. 
+
+<P>A simple equality has the general form <IMG="Image86.gif"3614>where <IMG="Image87.gif"1014> is a record or a variable. Examples of simple conditions follow. 
+
+<<
+<P>X = true              % X is bound to true in the store 
+Y Z in X = f(Y Z)     % X is bound to a tuple of 2 arguments
+X = Y        % X and Y label the same cell in the store
+
+>>
+<P>Comparison Procedures. Oz provides a number of built-in tertiary procedures used for comparison. These include <<==>> that we have seen earlier as well as <<\=>>, <<=&lt;, &lt;, &gt;=, &gt;,>> <<andthen>>, and <<orelse>>. Common to these procedures is that they are used as Boolean functions in an infix notation.  The following example illustrates the use of a conditional in conjunction with the greater-than operator <<&gt;>>. In this example <<Z>> is bound to the maximum of <<X>> and <<Y,>> i.e. to <<Y:
+
+>><<
+<P>local X Y F Z in
+   X = 5
+   Y = 10
+   F = X > Y
+   if F = true then Z = X
+   else Z = Y end
+end
+>><<
+<P>Parallel Conditional. A parallel conditional is of the from:
+
+>>
+<P><IMG="Image88.gif"11680>
+
+
+
+<P>A parallel conditional is executed by evaluating all conditions <IMG="Image89.gif"61> in an <EM>arbitrary</EM> order, possibly concurrently. If one of the conditions say <IMG="Image90.gif"17>is true, its corresponding statement <IMG="Image91.gif"17> is chosen. If all conditions are false, the else statement <IMG="Image92.gif"21> is chosen, otherwise the executing thread suspends. Parallel conditionals are useful mostly in concurrent programming, e.g. for programming time-out on certain events. However, it is often used in a deterministic manner with mutually exclusive conditions. So, the above example could be written as:
+
+<<
+<P>local X Y F Z in
+   X = 5
+   Y = 10
+   F = X &gt;= Y
+   if F = true then
+      Z = X
+   [] F = false then
+      Z = Y
+   end
+end
+
+>>
+<P>Notice that the <<else>> part is missing. This is just a shorthand notation for an <<else>> clause that raises an exception.
+<OL>
+
+</CHAPTER>

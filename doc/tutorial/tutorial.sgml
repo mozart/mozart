@@ -1,0 +1,87 @@
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % p.mix.local "|Em">
+<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY amp "&">
+<!ENTITY alfa "ALFA">
+<!ENTITY lambda "LAMBDA">
+
+
+<!-- Include Files -->
+<!ENTITY abstract	SYSTEM	"1_abstract.sgml">
+<!ENTITY introduction	SYSTEM	"2_introduction.sgml">
+<!ENTITY basics		SYSTEM	"3_basics.sgml">
+<!ENTITY equality	SYSTEM	"4_equality.sgml">
+<!ENTITY control	SYSTEM	"5_control.sgml">
+<!ENTITY functional	SYSTEM	"6_functional.sgml">
+<!ENTITY modules	SYSTEM	"7_modules.sgml">
+<!ENTITY concurrency	SYSTEM	"8_concurrency.sgml">
+<!ENTITY stateful	SYSTEM	"9_stateful.sgml">
+<!ENTITY classes	SYSTEM	"10_classes.sgml">
+<!ENTITY objectscc	SYSTEM	"11_objectscc.sgml">
+
+
+<!-- Abbreviations -->
+<!ENTITY dot "." -- to distinguish it from periods -->
+
+<!-- Processing Instructions -->
+<!ENTITY eg PI "eg">
+<!ENTITY ie PI "ie">
+<!ENTITY nbsp PI "nbsp">
+]>
+
+<BOOK PROGLANG=OZ>
+  <FRONT>
+    <!-- Splitting the document into different HTML nodes -->
+    <Meta name="html.split" value="chapter.introduction">
+    <Meta name="html.split" value="chapter.basics">
+    <Meta name="html.split" value="chapter.equality">
+    <Meta name="html.split" value="chapter.control">
+    <Meta name="html.split" value="chapter.functional">
+    <Meta name="html.split" value="chapter.modules">
+    <Meta name="html.split" value="chapter.concurrency">
+    <Meta name="html.split" value="chapter.stateful">
+    <Meta name="html.split" value="chapter.classes">
+    <Meta name="html.split" value="chapter.objectscc">
+    <Meta name="html.split.bib" value="">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=draft>
+
+    <TITLE>Tutorial of Oz</TITLE>
+    <Author.Extern to="author.db" key="Seif.Haridi">
+    <Author.Extern to="author.db" key="Nils.Franzen">
+
+    <ABSTRACT>
+     &abstract;
+    </ABSTRACT>
+  <BODY>
+   &introduction;
+   &basics;
+   &equality;
+   &control;
+   &functional;
+   &modules;
+   &concurrency;
+   &stateful;
+   &classes;
+   &objectscc;
+  </BODY> 
+
+  <BACK>
+    <Bib.Extern id="saraswat94" to="bibliography.bib" key="saraswat94">
+    <Bib.Extern id="smolka95" to="bibliography.bib" key="smolka95">
+    <Bib.Extern id="duchier98" to="bibliography.bib" key="duchier98">
+    <Bib.Extern id="schulte98" to="bibliography.bib" key="schulte98">
+    <Bib.Extern id="pvr97" to="bibliography.bib" key="pvr97">
+</BOOK>
+
+
+
+
+
+
+
+
+
