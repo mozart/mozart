@@ -521,7 +521,7 @@ void xy_setParserExpect() {
 %token T_SWITCH T_SWITCHNAME T_LOCALSWITCHES T_PUSHSWITCHES T_POPSWITCHES
 %token T_OZATOM T_ATOM_LABEL T_OZFLOAT T_OZINT T_AMPER T_DOTINT T_STRING
 %token T_VARIABLE T_VARIABLE_LABEL
-%token T_DEFAULT T_CHOICE T_LDOTS
+%token T_DEFAULT T_CHOICE T_LDOTS T_2DOTS
 %token T_attr T_at T_case T_catch T_choice T_class T_cond T_declare T_define
 %token T_dis T_else T_elsecase T_elseif T_elseof T_end T_export T_fail 
 %token T_false T_FALSE_LABEL T_feat T_finally T_from T_fun T_functor 
@@ -534,6 +534,7 @@ void xy_setParserExpect() {
 %token T_REGEX T_lex T_mode T_parser T_prod T_scanner T_syn T_token
 %token T_REDUCE T_SEP
 
+%nonassoc T_ITER
 %right    '='
 %right    T_OOASSIGN
 %right    T_orelse
@@ -556,6 +557,7 @@ void xy_setParserExpect() {
 %type <t>  switchList
 %type <t>  switch
 %type <t>  sequence
+%type <t>  optByPhrase
 %type <t>  phrase
 %type <t>  hashes
 %type <t>  phrase2
@@ -739,10 +741,54 @@ sequence	: phrase
 		  { $$ = newCTerm(PA_fAnd,$1,$2); }
 		;
 
+optByPhrase	: { $$ = 0; }
+		| ';' phrase2
+		  { $$ = $2; }
+		;
+
 phrase		: phrase '=' coord phrase
 		  { $$ = newCTerm(PA_fEq,$1,$4,$3); }
 		| phrase T_OOASSIGN coord phrase
 		  { $$ = newCTerm(PA_fAssign,$1,$4,$3); }
+		| phrase T_ITER coord phrase2 T_2DOTS phrase2 optByPhrase coord
+		  {
+		    /* <<for X 'from' E1 to E2 by E3>> */
+		    /* coord after T_ITER somehow avoids shift/reduce conflict,
+		       but serves no other purpose */
+		    $$ = newCTerm(PA_fMacro,
+				  oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
+					  $1,
+					  newCTerm(PA_fAtom,oz_atom("from"),NameUnit),
+					  $4,
+					  newCTerm(PA_fAtom,oz_atom("to"),NameUnit),
+					  $6,
+					  newCTerm(PA_fAtom,oz_atom("by"),NameUnit),
+					  ($7 == 0)?makeInt("1",NameUnit):$7,
+					  0),
+				  makeLongPos(OZ_subtree($1,newSmallInt(2)),$8));
+		  }
+		| phrase T_ITER coord phrase2 optByPhrase coord
+                  {
+		    /* <<for X 'in' L>>
+		       <<for X = E1 'then' E2>> */
+		    if ($5 == 0) {
+		      $$ = newCTerm(PA_fMacro,
+				    oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
+					    $1,
+					    newCTerm(PA_fAtom,oz_atom("in"),NameUnit),
+					    $4,
+					    0),
+				    makeLongPos(OZ_subtree($1,newSmallInt(2)),$6));
+		    } else {
+		      $$ = newCTerm(PA_fMacro,
+				    oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
+					    newCTerm(PA_fEq,$1,$4,NameUnit),
+					    newCTerm(PA_fAtom,oz_atom("next"),NameUnit),
+					    $5,
+					    0),
+				    makeLongPos(OZ_subtree($1,newSmallInt(2)),$6));
+		    }
+		  }
 		| phrase T_orelse coord phrase
 		  { $$ = newCTerm(PA_fOrElse,$1,$4,$3); }
 		| phrase T_andthen coord phrase
