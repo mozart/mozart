@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-2375
-64
+2229
+0
 7680
 9792
 2
@@ -42,7 +42,7 @@ VComponent
 WRect
 0
 0
-1469
+1460
 3968
 0
 0
@@ -56,9 +56,9 @@ oz.tgt
 VComponent
 14
 WRect
-1722
-0
-1362
+2092
+38
+1353
 4480
 0
 0
@@ -72,9 +72,9 @@ setup.tgt
 VComponent
 17
 WRect
-3231
+3766
 0
-2744
+2725
 4544
 0
 0
@@ -90,8 +90,8 @@ VComponent
 WRect
 0
 0
-5655
-4288
+1829
+4672
 0
 0
 21
@@ -100,4 +100,4 @@ WFileName
 ozsac.tgt
 0
 1
-19
+13

@@ -47,5 +47,5 @@ win-install:: setup.exe oz.exe ozdemo.exe ozsa.exe ozsac.exe
 
 
 clean::
-	rm -f *.exe *.sym *.map *.mk* *.lk* *.err oz.res setup.res ozdemo.cpp
+	rm -f *.obj *.exe *.sym *.map *.mk* *.lk* *.err oz.res setup.res ozdemo.cpp
 
