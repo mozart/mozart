@@ -13,7 +13,9 @@ define
       meth fork($)
 	 Args = {self get_args($)}
 	 Man = {New Manager.'class' init}
+	 OptList = {self get_optlist($)}
       in
+	 {Man set_optlist(OptList)}
 	 for Key#Set#_#OnFork in {self get_optlist($)} do
 	    if OnFork andthen {HasFeature Args Key} then
 	       {Man Set(Args.Key)}
