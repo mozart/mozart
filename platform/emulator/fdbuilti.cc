@@ -1201,6 +1201,7 @@ BIspec fdSpec[] = {
   {"fdp_distance", 4, fdp_distance},
   {"sched_cpIterate", 3, sched_cpIterate},
   {"sched_cpIterateCap", 5, sched_cpIterateCap},
+  {"sched_cumulativeTI", 5, sched_cumulativeTI},
   {"sched_cpIterateCapUp", 5, sched_cpIterateCapUp},
   {"sched_taskIntervals", 3, sched_taskIntervals},
   {"sched_disjunctive", 3, sched_disjunctive},
