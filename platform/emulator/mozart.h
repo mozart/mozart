@@ -159,10 +159,10 @@ extern OZ_Bool OZ_unify       _PROTOTYPE((OZ_Term, OZ_Term));
 /* create a new oz variable */
 extern OZ_Term OZ_newVariable();
 
-extern OZ_Term OZ_newChunk ();
+extern OZ_Term OZ_newChunk _PROTOTYPE((OZ_Term));
 
 /* cell */
-extern OZ_Term OZ_newCell ();
+extern OZ_Term OZ_newCell _PROTOTYPE((OZ_Term));
 /* exchangeCell, deepFeed */
 
 /* name */
