@@ -54,7 +54,7 @@ GTKFLAGS=`$GTKCONFIG --cflags`
 GTKLIBS=`$GTKCONFIG --libs`
 
 CPPFLAGS="$GTKFLAGS $CPPFLAGS"
-LIBS="$GTKLIBS $LIBS"
+LIBS="-lart_lgpl -lgdk_imlib $GTKLIBS $LIBS"
 
 dnl Checking for canvas
 AC_MSG_CHECKING(for --with-gtk-canvas-dir)
@@ -63,11 +63,11 @@ AC_ARG_WITH(gtk_canvas_dir,
     HAVE_CANVAS=yes
     CANVASDIR="$with_gtk_canvas_dir"
     AC_MSG_RESULT([canvas directory = ]$CANVASDIR),
-    HAVE_CANVAS=no)
+    HAVE_CANVAS=no
+    AC_MSG_RESULT(no))
 AC_SUBST(HAVE_CANVAS)
 
 if test "$HAVE_CANVAS" = no; then
-   AC_MSG_CHECKING(for gtk-canvas.h)
    CANVASDIR="/NONE"
    oz_inc_path_sav=$oz_inc_path
    oz_inc_path="$oz_inc_path /usr/local/include"
@@ -75,18 +75,15 @@ if test "$HAVE_CANVAS" = no; then
      HAVE_CANVAS=yes,
      HAVE_CANVAS=no
      oz_inc_path=$oz_inc_path_sav)
-   AC_MSG_RESULT($HAVE_CANVAS)
 fi
 
 if test "$HAVE_CANVAS" = yes; then
-   AC_MSG_CHECKING(for libgtk-canvas)
    oz_lib_path_sav=$oz_lib_path
    oz_lib_path="$oz_lib_path /usr/local/lib"
    OZ_CHECK_LIB_PATH(gtk-canvas,gtk_canvas_new,
      HAVE_CANVAS=yes,
      HAVE_CANVAS=no
      oz_lib_path=$oz_lib_path_sav)
-   AC_MSG_RESULT($HAVE_CANVAS)
 fi
 
 if test "$HAVE_CANVAS" = no; then
