@@ -113,7 +113,7 @@ define
 			then 1 else 0 end
 		     end
 		 FSVar1 = {MkFSetVar 7 7 [1 3 5 7 9 11] nil}
-		 R
+		 R 
 	      end}
 
 	     {MiscTest 9
