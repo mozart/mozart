@@ -2,17 +2,16 @@ ifdef(`instructionsUnneededForNewCompiler',,
 `define(`instructionsUnneededForNewCompiler',`')'
 )
 
-define(isReg,`ifelse($1,Register,1,0)')
-define(numOfRegs,`eval(isReg($1)+isReg($2)+isReg($3))')
+define(`isReg',`ifelse($1,Register,1,0)')
+define(`numOfRegs',`eval(isReg($1)+isReg($2)+isReg($3))')
 
-undefine(`incrop')
-define(incrop,`define(`OPCODE',eval(OPCODE+$1))')
+define(`incrop',`define(`OPCODE',eval(OPCODE+$1))')
 
 
 define(`TOUPPER',
        `translit($1,abcdefghijklmnopqrstuvwxyz,ABCDEFGHIJKLMNOPQRSTUVWXYZ)')
 
-define(CacheSize,2)
+define(`CacheSize',2)
 
 dnl
 dnl   Here come the instructions themselves
