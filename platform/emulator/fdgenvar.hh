@@ -91,7 +91,7 @@ OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef* &varPtr,
      
 
 
-#ifndef OUTLINE
+#if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdgenvar.icc"
 #endif
 
