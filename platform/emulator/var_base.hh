@@ -312,8 +312,11 @@ VarStatus _var_check_status(OzVariable *cv);
 OZ_Term   _var_status(OzVariable *cv);
 
 
-
+#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+static
+#else
 inline
+#endif
 VarStatus oz_check_var_status(OzVariable *cv)
 {
   switch (cv->getType()) {

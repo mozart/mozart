@@ -43,7 +43,11 @@
 // import from builtins
 int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...);
 
+#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+static
+#else
 inline
+#endif
 // mm2: should be OZ_Return
 Bool oz_var_validINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val)
 {
@@ -60,7 +64,11 @@ Bool oz_var_validINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val)
   }
 }
 
+#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+static
+#else
 inline
+#endif
 OZ_Return oz_var_unifyINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef *val,
                              ByteCode *scp)
 {
@@ -77,7 +85,11 @@ OZ_Return oz_var_unifyINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef *val,
   }
 }
 
+#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+static
+#else
 inline
+#endif
 OZ_Return oz_var_bindINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val,
                             ByteCode *scp)
 {
@@ -94,7 +106,11 @@ OZ_Return oz_var_bindINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val,
   }
 }
 
+#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+static
+#else
 inline
+#endif
 OZ_Return oz_var_forceBindINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val,
                             ByteCode *scp)
 {
@@ -111,7 +127,11 @@ OZ_Return oz_var_forceBindINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val,
   }
 }
 
+#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+static
+#else
 inline
+#endif
 void oz_var_disposeINLINE(OzVariable *ov)
 {
   switch (ov->getType()){
@@ -127,7 +147,11 @@ void oz_var_disposeINLINE(OzVariable *ov)
   }
 }
 
+#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+static
+#else
 inline
+#endif
 OZ_Return oz_var_addSuspINLINE(TaggedRef *v, Suspension susp,
                                int unstable = TRUE)
 {
