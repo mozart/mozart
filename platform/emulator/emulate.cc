@@ -449,22 +449,6 @@ Bool AM::hookCheckNeeded()
 // outlined auxiliary functions
 // ------------------------------------------------------------------------
 
-/*
- * create the suspension for a builtin returning SUSPEND
- */
-void AM::suspendBI(Board *bb,int prio,OZ_CFun fun,RefsArray args,int nArgs)
-{
-  Suspension *susp = mkSuspension(bb,prio,fun,args,nArgs);
-  TaggedRef varList=suspendVarList;
-  while (!isRef(varList)) {
-    Assert(isCons(varList));
-    taggedBecomesSuspVar(tagged2Ref(head(varList)))->addSuspension(susp);
-    varList=tail(varList);
-  }
-  taggedBecomesSuspVar(tagged2Ref(varList))->addSuspension(susp);
-  suspendVarList=makeTaggedNULL();
-}
-
 inline
 Suspension *AM::mkSuspension(Board *b, int prio, ProgramCounter PC,
                              RefsArray Y, RefsArray G,
@@ -517,6 +501,23 @@ Suspension *AM::mkSuspension(Board *b, int prio, OZ_CFun bi,
     return 0;
   }
 }
+
+/*
+ * create the suspension for a builtin returning SUSPEND
+ */
+void AM::suspendBI(Board *bb,int prio,OZ_CFun fun,RefsArray args,int nArgs)
+{
+  Suspension *susp = mkSuspension(bb,prio,fun,args,nArgs);
+  TaggedRef varList=suspendVarList;
+  while (!isRef(varList)) {
+    Assert(isCons(varList));
+    taggedBecomesSuspVar(tagged2Ref(head(varList)))->addSuspension(susp);
+    varList=tail(varList);
+  }
+  taggedBecomesSuspVar(tagged2Ref(varList))->addSuspension(susp);
+  suspendVarList=makeTaggedNULL();
+}
+
 
 void AM::suspendOnVar(TaggedRef A, int argsToSave, Board *b,
                       ProgramCounter PC,
