@@ -10,6 +10,10 @@
 */
 
 
+#ifdef __GNUC__
+#pragma implementation "genvar.hh"
+#endif
+
 #include "fdgenvar.hh"
 #include "am.hh"
 

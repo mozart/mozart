@@ -9,6 +9,10 @@
 */
 
 
+#ifdef __GNUC__
+#pragma implementation "indexing.hh"
+#endif
+
 
 #include "indexing.hh"
 

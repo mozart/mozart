@@ -19,6 +19,10 @@
 #ifndef __TAGGEDH
 #define __TAGGEDH
 
+#ifdef __GNUC__
+#pragma interface
+#endif
+
 #include "types.hh"
 #include "gc.hh"
 

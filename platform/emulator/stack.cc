@@ -7,6 +7,10 @@
   State: $State$
 */
 
+#ifdef __GNUC__
+#pragma implementation "stack.hh"
+#endif
+
 #include "stack.hh"
 
 void Stack::realloc(int n)

@@ -14,6 +14,10 @@
 #ifndef __BUILTINSH
 #define __BUILTINSH
 
+#ifdef __GNUC__
+#pragma interface
+#endif
+
 #include "types.hh"
 
 #include "term.hh"

@@ -9,6 +9,10 @@
   ------------------------------------------------------------------------
 */
 
+#ifdef __GNUC__
+#pragma implementation "board.hh"
+#endif
+
 
 #include "types.hh"
 
