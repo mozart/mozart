@@ -97,7 +97,6 @@ define
    end
    
    proc {MakeFrom File Files Home}
-      
 
       fun {FileInfo File}
 	 F = {FullName {Expand File} Home}
