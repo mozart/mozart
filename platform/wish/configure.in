@@ -147,7 +147,7 @@ if test -n "${with_tk}"
 then
     oz_tk_search="$with_tk $oz_tk_search"
 elif test -n "${oz_tk_aqua}"; then
-    oz_tk_search="${oz_tk_aqua}/Tk.framework/Resources $oz_tk_search"
+    oz_tk_search="${oz_tk_aqua}/Tk.framework/Resources ${oz_tk_aqua}/Tk.framework $oz_tk_search"
 fi
 
 TK_LIB_DIR=""
@@ -299,6 +299,7 @@ case ${platform} in
         if ! test -d MacOSX; then
             mkdir MacOSX
         fi
+        AC_CHECK_PROGS(PROJECTBUILD, xcodebuild pbxbuild, xcodebuild)
         TODO="$TODO MacOSX/OzWish.pbxproj/project.pbxproj"
         ;;
 esac

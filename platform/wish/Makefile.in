@@ -43,6 +43,7 @@ ifeq ($(IS_DARWIN),yes)
 OZWISHRELDIR    = OzWish.app/Contents/MacOS
 OZWISHDIR       = $(PLATFORMDIR)/$(OZWISHRELDIR)
 OZWISH          = $(OZWISHRELDIR)/OzWish
+PROJECTBUILD    = @PROJECTBUILD@
 else
 OZWISH          = tk.exe
 endif
@@ -64,7 +65,7 @@ ifeq ($(IS_DARWIN),yes)
 ######################################################################
 
 $(OZWISH): unixMain.cc MacOSX/OzWish.pbxproj/project.pbxproj MacOSX/OzWish.icns
-        cd MacOSX/OzWish.pbxproj && pbxbuild SYMROOT=$(BUILDTOP)/platform/wish
+        cd MacOSX/OzWish.pbxproj && $(PROJECTBUILD) SYMROOT=$(BUILDTOP)/platform/wish
 
 clean:
         -rm *~
@@ -76,7 +77,7 @@ distclean: veryclean
         -rm -f conf.h config.* Makefile MacOSX/OzWish.pbxproj/project.pbxproj
 
 install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS)
-        cd MacOSX/OzWish.pbxproj && pbxbuild SYMROOT=$(BUILDTOP)/platform/wish DSTROOT=/ install
+        cd MacOSX/OzWish.pbxproj && $(PROJECTBUILD) SYMROOT=$(BUILDTOP)/platform/wish DSTROOT=/ install
 
 else
 ######################################################################
