@@ -1,6 +1,6 @@
 <chapter id=chapter.misc>
   <title/Miscellaneous/
-  <section>
+  <section id="section.misc.bitstrings">
     <title/Bit Strings/
     <p>Module <span class=index/<<BitString>>/ provides an interface
 to a fast and economical representation for immutable bit sequences.

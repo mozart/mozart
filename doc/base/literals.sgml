@@ -6,7 +6,7 @@
 
 <Chapter id="chapter.literals">
   <Title/Literals/
-  <Section>
+  <Section id="section.literals.general">
     <Title/Literals in General/
     <P>
       The module <Span class=index/<<Literal>>/ contains procedures operating
@@ -20,7 +20,7 @@
           tests whether ?_{X} is a literal.
       </List>
 
-  <Section>
+  <Section id="section.literals.atoms">
     <Title/Atoms/
     <P>
       The module <Span class=index/<<Atom>>/ contains procedures operating
@@ -47,7 +47,7 @@
           yields as output <<[97 98 99]>>.
       </List>
 
-  <Section>
+  <Section id="section.literals.names">
     <Title/Names/
     <P>
       The module <Span class=index/<<Name>>/ contains procedures operating
@@ -68,7 +68,7 @@
           Creates a new name and binds ?_{N} to it.
       </List>
 
-  <Section>
+  <Section id="section.literals.bool">
     <Title/Truth Values/
     <P>
       The module <Span class=index/<<Bool>>/ contains procedures operating
@@ -118,7 +118,7 @@
           always applies <<P>>.
       </List>
 
-  <Section>
+  <Section id="section.literals.unit">
     <Title/The Value Unit/
     <P>
       The module <Span class=index/<<Unit>>/ contains procedures operating on

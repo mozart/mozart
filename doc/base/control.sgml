@@ -10,7 +10,7 @@
     This chapter contains control procedures which allow to block, suspend
     or terminate threads, and provide functionality dealing with loops,
     real-time programming and threads.
-  <Section>
+  <Section id="section.control.general">
     <Title/General/
     <P>
       The module <Span class=index/<<Value>>/ contains two general control
@@ -51,7 +51,7 @@
           to&nbsp;?_{Y}.
       </List>
 
-  <Section>
+  <Section id="section.control.loops">
     <Title/Loops/
     <P>
       The module <Span class=index/<<Loop>>/ contains procedures that
@@ -129,7 +129,7 @@
           yields the list <<[2#4 2#5 1#4 1#5]>> as output.
       </List>
 
-  <Section>
+  <Section id="section.control.time">
     <Title/Time/
     <P>
       The module <Span class=index/<<Time>>/ contains procedures for real-time
@@ -310,7 +310,7 @@ end>>>
             </List>
         </List>
 
-  <Section>
+  <Section id="section.control.threads">
     <Title/Threads/
     <P>
       The module <<Thread>> provides operations on first class threads.

@@ -6,7 +6,7 @@
 
 <Chapter id="chapter.numbers">
   <Title/Numbers/
-    <Section>
+    <Section id="section.numbers.general">
     <Title/Numbers in General/
       <P>
         The module <Span class=index/<<Number>>/ contains procedures operating
@@ -65,7 +65,7 @@
           returns the absolute value of&nbsp;?_{FI1}.
       </List>
 
-  <Section>
+  <Section id="section.numbers.integers">
     <Title/Integers/
     <P>
       The module <Span class=index/<<Int>>/ contains procedures operating
@@ -146,7 +146,7 @@ end>>>
           in &Oz; concrete syntax.
       </List>
 
-  <Section>
+  <Section id="section.numbers.floats">
     <Title/Floats/
     <P>
       The module <Span class=index/<<Float>>/ contains procedures operating

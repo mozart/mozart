@@ -51,21 +51,64 @@
     <Meta name="latex.package" value="pst-node">
 
     <Meta name="html.split" value="chapter.introduction">
+
     <Meta name="html.split" value="chapter.typestruct">
+
     <Meta name="html.split" value="chapter.values">
+    <Meta name="html.split" value="section.values.general">
+    <Meta name="html.split" value="section.values.status">
+    <Meta name="html.split" value="section.values.comparison">
+
     <Meta name="html.split" value="chapter.numbers">
+    <Meta name="html.split" value="section.numbers.general">
+    <Meta name="html.split" value="section.numbers.integers">
+    <Meta name="html.split" value="section.numbers.floats">
+
     <Meta name="html.split" value="chapter.literals">
+    <Meta name="html.split" value="section.literals.general">
+    <Meta name="html.split" value="section.literals.atoms">
+    <Meta name="html.split" value="section.literals.names">
+    <Meta name="html.split" value="section.literals.bool">
+    <Meta name="html.split" value="section.literals.unit">
+
     <Meta name="html.split" value="chapter.records">
     <Meta name="html.split" value="section.records.records">
     <Meta name="html.split" value="section.records.tuples">
     <Meta name="html.split" value="section.records.lists">
     <Meta name="html.split" value="section.records.features">
+
     <Meta name="html.split" value="chapter.text">
+    <Meta name="html.split" value="section.text.characters">
+    <Meta name="html.split" value="section.text.strings">
+    <Meta name="html.split" value="section.text.bytestrings">
+    <Meta name="html.split" value="section.text.virtualstrings">
+
     <Meta name="html.split" value="chapter.proccells">
+    <Meta name="html.split" value="section.proccells.procedures">
+    <Meta name="html.split" value="section.proccells.cells">
+    <Meta name="html.split" value="section.proccells.spaces">
+
     <Meta name="html.split" value="chapter.chunks">
+    <Meta name="html.split" value="section.chunks.general">
+    <Meta name="html.split" value="section.chunks.arrays">
+    <Meta name="html.split" value="section.chunks.dictionaries">
+    <Meta name="html.split" value="section.chunks.bitarrays">
+    <Meta name="html.split" value="section.chunks.ports">
+    <Meta name="html.split" value="section.chunks.locks">
+    <Meta name="html.split" value="section.chunks.classes">
+    <Meta name="html.split" value="section.chunks.objects">
+    <Meta name="html.split" value="section.chunks.functors">
+
     <Meta name="html.split" value="chapter.control">
+    <Meta name="html.split" value="section.control.general">
+    <Meta name="html.split" value="section.control.loops">
+    <Meta name="html.split" value="section.control.time">
+    <Meta name="html.split" value="section.control.threads">
+
     <Meta name="html.split" value="chapter.infix">
+
     <Meta name="html.split" value="chapter.misc">
+    <Meta name="html.split" value="section.misc.bitstrings">
 
     <Meta name="html.split.toc"   value="">
     <Meta name="html.split.bib"   value="">
