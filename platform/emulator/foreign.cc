@@ -294,18 +294,22 @@ inline
 TaggedRef oz_valueType(OZ_Term term) {
   Assert(!oz_isRef(term));
 
-  switch (tagTypeOf(term)) {
-  case TAG_VAR:
+  switch (tagged2ltag(term)) {
+  case LTAG_VAR0:
+  case LTAG_VAR1:
     return AtomVariable;
-  case TAG_SMALLINT:
+  case LTAG_SMALLINT:
     return AtomInt;
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     return tagged2Literal(term)->isAtom() ? AtomAtom : AtomName;
-  case TAG_LTUPLE:
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
     return AtomTuple;
-  case TAG_SRECORD:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     return tagged2SRecord(term)->isTuple() ? AtomTuple : AtomRecord;
-  case TAG_CONST:
+  case LTAG_CONST0:
+  case LTAG_CONST1:
     switch (tagged2Const(term)->getType()) {
     case Co_Extension:
       return tagged2Extension(term)->typeV();
@@ -1088,8 +1092,9 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
   }
 
   DEREF(term,termPtr);
-  switch(tagTypeOf(term)) {
-  case TAG_VAR:
+  switch (tagged2ltag(term)) {
+  case LTAG_VAR0:
+  case LTAG_VAR1:
     {
       if (!termPtr) {
         out << "<Oz_Dereferenced variable>";
@@ -1103,16 +1108,19 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
       }
       break;
     }
-  case TAG_SRECORD:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     record2buffer(out,tagged2SRecord(term),depth);
     break;
-  case TAG_LTUPLE:
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
     list2buffer(out,tagged2LTuple(term),depth);
     break;
-  case TAG_CONST:
+  case LTAG_CONST0:
+  case LTAG_CONST1:
     const2buffer(out,tagged2Const(term),'~',depth);
     break;
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     {
       Literal *a = tagged2Literal(term);
       if (a->isAtom()) {
@@ -1122,7 +1130,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
       }
       break;
     }
-  case TAG_SMALLINT:
+  case LTAG_SMALLINT:
     smallInt2buffer(out,term,'~');
     break;
   default:
@@ -1365,12 +1373,14 @@ OZ_Term OZ_label(OZ_Term term)
 {
   DEREF(term,termPtr);
 
-  switch (tagTypeOf(term)) {
-  case TAG_LTUPLE:
+  switch (tagged2ltag(term)) {
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
     return AtomCons;
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     return term;
-  case TAG_SRECORD:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     return tagged2SRecord(term)->getLabel();
   default:
     OZ_error("OZ_label: no record");
@@ -1382,12 +1392,14 @@ int OZ_width(OZ_Term term)
 {
   DEREF(term,termPtr);
 
-  switch (tagTypeOf(term)) {
-  case TAG_LTUPLE:
+  switch (tagged2ltag(term)) {
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
     return 2;
-  case TAG_SRECORD:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     return tagged2SRecord(term)->getWidth();
-  case TAG_LITERAL:
+  case LTAG_LITERAL:
     return 0;
   default:
     OZ_error("OZ_width: no record");
@@ -1634,8 +1646,9 @@ OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
   DEREF(term,termPtr);
   fea=oz_deref(fea);
 
-  switch (tagTypeOf(term)) {
-  case TAG_LTUPLE:
+  switch (tagged2ltag(term)) {
+  case LTAG_LTUPLE0:
+  case LTAG_LTUPLE1:
     {
       if (!oz_isSmallInt(fea)) return 0;
 
@@ -1649,10 +1662,12 @@ OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
       }
       return 0;
     }
-  case TAG_SRECORD:
+  case LTAG_SRECORD0:
+  case LTAG_SRECORD1:
     return tagged2SRecord(term)->getFeature(fea);
 
-  case TAG_CONST:
+  case LTAG_CONST0:
+  case LTAG_CONST1:
     {
       ConstTerm *ct = tagged2Const(term);
       switch (ct->getType()) {

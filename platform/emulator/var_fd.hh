@@ -147,7 +147,6 @@ OZ_Return tellBasicConstraint(OZ_Term, OZ_FiniteDomain *);
 #include "var_fd.icc"
 #else
 Bool isGenFDVar(TaggedRef term);
-Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
 OzFDVariable * tagged2GenFDVar(TaggedRef term);
 #undef inline
 #endif

@@ -1683,18 +1683,21 @@ Case(GETVOID)
 #endif
 
     retry:
-      switch (tagTypeOf(term)) {
-      case TAG_LTUPLE:
+      switch (tagged2ltag(term)) {
+      case LTAG_LTUPLE0:
+      case LTAG_LTUPLE1:
         sPointer = tagged2LTuple(term)->getRef();
         JUMPRELATIVE(table->lookupLTuple());
-      case TAG_SRECORD:
+      case LTAG_SRECORD0:
+      case LTAG_SRECORD1:
         sPointer = tagged2SRecord(term)->getRef();
         JUMPRELATIVE(table->lookupSRecord(term));
-      case TAG_LITERAL:
+      case LTAG_LITERAL:
         JUMPRELATIVE(table->lookupLiteral(term));
-      case TAG_SMALLINT:
+      case LTAG_SMALLINT:
         JUMPRELATIVE(table->lookupSmallInt(term));
-      case TAG_CONST:
+      case LTAG_CONST0:
+      case LTAG_CONST1:
         switch (tagged2Const(term)->getType()) {
         case Co_Float:
           JUMPRELATIVE(table->lookupFloat(term));
@@ -1703,19 +1706,20 @@ Case(GETVOID)
         default:
           JUMPRELATIVE(table->lookupElse());
         }
-      case TAG_REF:
-      case TAG_REF2:
-      case TAG_REF3:
-      case TAG_REF4:
-        termPtr = tagged2Ref(term);
-        term    = *termPtr;
-        goto retry;
-      case TAG_VAR:
+      case LTAG_VAR0:
+      case LTAG_VAR1:
         if (oz_isKinded(term) && table->disentailed(tagged2Var(term))) {
           JUMPRELATIVE(table->lookupElse());
         };
         Assert(termPtr);
         SUSP_PC(termPtr,PC);
+      case LTAG_REF00:
+      case LTAG_REF01:
+      case LTAG_REF10:
+      case LTAG_REF11:
+        termPtr = tagged2Ref(term);
+        term    = *termPtr;
+        goto retry;
       default:
         JUMPRELATIVE(table->lookupElse());
       }
@@ -1855,11 +1859,11 @@ Case(GETVOID)
                      : "=r" (A), "=r" (B) : "r" (PC));
 
       retryINLINEMINUSAF:
-        A = A ^ TAG_SMALLINT;
-        if (!(A & TAG_MASK)) {
+        A ^= LTAG_SMALLINT;
+        if (!(A & LTAG_MASK)) {
         retryINLINEMINUSBF:
-          B = B ^ TAG_SMALLINT;
-          if (!(B & TAG_MASK)) {
+          B ^= LTAG_SMALLINT;
+          if (!(B & LTAG_MASK)) {
 
             asm volatile("   subl %2,%1
                              jo   0f
@@ -1872,21 +1876,21 @@ Case(GETVOID)
                        "
                        :  /* OUTPUT */
                        :  /* INPUT  */
-                          "i" (TAG_SMALLINT),
+                          "i" (LTAG_SMALLINT),
                           "r" (A),
                           "r" (B),
                           "r" (PC)
                        );
 
           } else {
-            B = B ^ TAG_SMALLINT;
+            B ^= LTAG_SMALLINT;
             if (oz_isRef(B)) {
               B = oz_derefOne(B);
               goto retryINLINEMINUSBF;
             }
           }
         } else {
-          A = A ^ TAG_SMALLINT;
+          A ^= LTAG_SMALLINT;
           if (oz_isRef(A)) {
             A = oz_derefOne(A);
             goto retryINLINEMINUSAF;
@@ -1967,11 +1971,11 @@ Case(GETVOID)
                      : "r" (PC));
 
       retryINLINEPLUSAF:
-        A = A ^ TAG_SMALLINT;
-        if (!(A & TAG_MASK)) {
+        A ^= LTAG_SMALLINT;
+        if (!(A & LTAG_MASK)) {
         retryINLINEPLUSBF:
-          B = B ^ TAG_SMALLINT;
-          if (!(B & TAG_MASK)) {
+          B ^= LTAG_SMALLINT;
+          if (!(B & LTAG_MASK)) {
 
             asm volatile("
                              addl %2,%1
@@ -1985,21 +1989,21 @@ Case(GETVOID)
                        "
                        :  /* OUTPUT */
                        :  /* INPUT  */
-                          "i" (TAG_SMALLINT),
+                          "i" (LTAG_SMALLINT),
                           "r" (A),
                           "r" (B),
                           "r" (PC)
                        );
 
           } else {
-            B = B ^ TAG_SMALLINT;
+            B ^= LTAG_SMALLINT;
             if (oz_isRef(B)) {
               B = oz_derefOne(B);
               goto retryINLINEPLUSBF;
             }
           }
         } else {
-          A = A ^ TAG_SMALLINT;
+          A ^= LTAG_SMALLINT;
           if (oz_isRef(A)) {
             A = oz_derefOne(A);
             goto retryINLINEPLUSAF;
@@ -2073,8 +2077,8 @@ Case(GETVOID)
                      : "=r" (A) : "r" (PC));
 
       retryINLINEMINUS1:
-        A = A ^ TAG_SMALLINT;
-        if (!(A & TAG_MASK)) {
+        A ^= LTAG_SMALLINT;
+        if (!(A & LTAG_MASK)) {
           asm volatile("   addl $12,%3
                            movl -4(%3),%2
                            addl %0,%1
@@ -2086,14 +2090,14 @@ Case(GETVOID)
                            jmp *(%3)
                        "
                        :
-                       : "i" (TAG_SMALLINT - (1 << TAG_SIZE)),
+                       : "i" (LTAG_SMALLINT - (1 << LTAG_BITS)),
                          "r" (A),
                          "r" (T),
                          "r" (PC),
                          "m" (TaggedOzOverMinInt)
                        );
         } else {
-          A = A ^ TAG_SMALLINT;
+          A ^= LTAG_SMALLINT;
           if (oz_isRef(A)) {
             A = oz_derefOne(A);
             goto retryINLINEMINUS1;
@@ -2110,7 +2114,7 @@ Case(GETVOID)
       if (oz_isSmallInt(A)) {
         /* INTDEP */
         if (A != TaggedOzMinInt) {
-          XPC(2) = (int) A - (1<<TAG_SIZE);
+          XPC(2) = (int) A - (1 << LTAG_BITS);
           DISPATCH(3);
         } else {
           XPC(2) = TaggedOzOverMinInt;
@@ -2148,8 +2152,8 @@ Case(GETVOID)
                      : "=r" (A) : "r" (PC));
 
       retryINLINEPLUS1:
-        A = A ^ TAG_SMALLINT;
-        if (!(A & TAG_MASK)) {
+        A ^= LTAG_SMALLINT;
+        if (!(A & LTAG_MASK)) {
           asm volatile("   addl $12,%3
                            movl -4(%3),%2
                            addl %0,%1
@@ -2161,14 +2165,14 @@ Case(GETVOID)
                            jmp *(%3)
                        "
                        :
-                       : "i" ((1 << TAG_SIZE) + TAG_SMALLINT),
+                       : "i" (LTAG_SMALLINT + (1 << LTAG_BITS)),
                          "r" (A),
                          "r" (T),
                          "r" (PC),
                          "m" (TaggedOzOverMaxInt)
                        );
         } else {
-          A = A ^ TAG_SMALLINT;
+          A ^= LTAG_SMALLINT;
           if (oz_isRef(A)) {
             A = oz_derefOne(A);
             goto retryINLINEPLUS1;
@@ -2185,7 +2189,7 @@ Case(GETVOID)
       if (oz_isSmallInt(A)) {
         /* INTDEP */
         if (A != TaggedOzMaxInt) {
-          XPC(2) = (int) A + (1 << TAG_SIZE);
+          XPC(2) = (int) A + (1 << LTAG_BITS);
           DISPATCH(3);
         } else {
           XPC(2) = TaggedOzOverMaxInt;

@@ -186,8 +186,7 @@ public:
   // we don't use 'push' from Stack because we care about
   // space ourselves;
   void put(OZ_Term term) {
-    Assert(tagTypeOf(term) != TAG_GCMARK);
-    Assert(tagTypeOf(term) != TAG_VAR);
+    Assert(!oz_isMark(term) && !oz_isVar(term));
     checkConsistency();
     *tos++ = ToPointer(term);
   }
@@ -419,7 +418,7 @@ protected:
 inline
 int32 getTraverserTaskArg(OZ_Term taggedTraverserTask)
 {
-  Assert(oz_isGcMark(taggedTraverserTask));
+  Assert(oz_isMark(taggedTraverserTask));
   return tagged2UnmarkedInt(taggedTraverserTask);
 }
 //

@@ -146,7 +146,7 @@ public:
   }
 
   Bool cacIsMarked(void) {
-    return oz_isGcMark(homeOrGName);
+    return oz_isMark(homeOrGName);
   }
   void cacMark(Name * fwd) {
     homeOrGName = makeTaggedMarkPtr(fwd);
@@ -300,7 +300,7 @@ Bool smallIntLE(TaggedRef A, TaggedRef B)
 inline
 unsigned int smallIntHash(TaggedRef n)
 {
-  return ((int)n)>>TAG_SIZE;
+  return ((int)n)>>LTAG_BITS;
 }
 
 
@@ -315,7 +315,7 @@ Bool smallIntEq(TaggedRef a, TaggedRef b)
 
 #define smallIntLess(A,B) (((int) (A)) < ((int) (B)))
 #define smallIntLE(A,B)   (((int) (A)) <= ((int) (B)))
-#define smallIntHash(A)   (((int) (A)) >> TAG_SIZE)
+#define smallIntHash(A)   (((int) (A)) >> LTAG_BITS)
 #define smallIntEq(A,B)   ((A)==(B))
 
 #endif
@@ -349,7 +349,7 @@ public:
   }
 
   int cacIsMarked(void) {
-    return oz_isGcMark(args[0]);
+    return oz_isMark(args[0]);
   }
   void cacMark(LTuple * fwd) {
     args[0] = makeTaggedMarkPtr(fwd);

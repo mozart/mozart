@@ -128,7 +128,7 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
     if (oz_isSmallInt(t) || oz_isLiteral(t) || oz_isFSetValue(t)) {
       is[i] = -1;
     } else {
-      if (oz_isGcMark(t)) {
+      if (oz_isMark(t)) {
         is[i] = tagged2UnmarkedInt(*tptr);
       } else {
         Assert(oz_isVar(t));
