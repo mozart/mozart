@@ -56,7 +56,7 @@ TaggedRef
 
   __UNUSED_DUMMY_END_MARKER;
 
-Builtin *bi_raise, *bi_raiseError, *bi_raiseDebug;
+Builtin *bi_raise, *bi_raiseError;
 
 /*===================================================================
  * Literal
