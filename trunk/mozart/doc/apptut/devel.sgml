@@ -140,7 +140,7 @@ export
 </chunk>
 
     <p>
-      The shortcut to just use an variable identifier starting with a
+      The shortcut to just use a variable identifier starting with a
       capital letter, defines both the variable identifier as well as
       the feature. The feature is the variable identifier with its
       first character changed to lowercase.
