@@ -190,7 +190,11 @@ TaggedRef reverseC(TaggedRef l)
 
 TaggedRef Object::getArityList() 
 {
-  TaggedRef ret = getFreeRecord()->getArityList();
+  TaggedRef ret = nil();
+  
+  SRecord *feat=getFreeRecord();
+  if (feat) ret = feat->getArityList();
+
   if (!isClass()) {
     SRecord *rec=getClass()->getUnfreeRecord();
     if (rec) ret=append(ret,rec->getArityList());
@@ -908,6 +912,15 @@ SRecord *makeRecord(TaggedRef t)
   return ret;
 }
   
+
+/*===================================================================
+ * Group
+ *=================================================================== */
+
+void Group::setExceptionHandler(TaggedRef hdl) {
+  hdl = deref(hdl);
+  if (isProcedure(hdl)) exceptionHandler = hdl;
+}
 
 /*===================================================================
  * Space
