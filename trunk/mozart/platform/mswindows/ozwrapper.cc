@@ -44,15 +44,20 @@ int main(int argc, char **argv)
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
   PROCESS_INFORMATION pi;
-  BOOL ret = CreateProcess(NULL,cmdline,NULL,NULL,TRUE,0,NULL,NULL,&si,&pi);
-  if (ret == FALSE) {
+  if (!CreateProcess(NULL,cmdline,NULL,NULL,TRUE,0,NULL,NULL,&si,&pi)) {
     panic(true,"Cannot run '%s'.\n",cmdline);
   }
-  WaitForSingleObject(pi.hProcess,INFINITE);
+  CloseHandle(pi.hThread);
+
+  if (WaitForSingleObject(pi.hProcess,INFINITE) == WAIT_FAILED) {
+    panic(true,"Wait for subprocess failed.\n");
+  }
 
   DWORD code;
-  if (GetExitCodeProcess(pi.hProcess,&code) != FALSE)
-    return code;
-  else
-    return 0;
+  if (!GetExitCodeProcess(pi.hProcess,&code)) {
+    panic(true,"Could not get process exit code.\n");
+  }
+  CloseHandle(pi.hProcess);
+
+  return code;
 }
