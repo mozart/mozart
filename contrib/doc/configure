@@ -16,6 +16,8 @@ ac_help="$ac_help
 --with-inc-dir=d1,...,dn        add these dirs to CPPFLAGS"
 ac_help="$ac_help
 --with-lib-dir=d1,...,dn        add these dirs to LDFLAGS"
+ac_help="$ac_help
+--enable-compile-elisp whether to compile elisp files (default=yes)"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -527,7 +529,7 @@ fi
 
 
 echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:531: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:533: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -563,7 +565,7 @@ fi
 
 
   echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:567: checking for SRCTOP" >&5
+echo "configure:569: checking for SRCTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -597,7 +599,7 @@ echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
 
 
   echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:601: checking for BUILDTOP" >&5
+echo "configure:603: checking for BUILDTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -656,7 +658,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:660: checking host system type" >&5
+echo "configure:662: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -684,7 +686,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:688: checking for $ac_word" >&5
+echo "configure:690: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_MAKE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -753,13 +755,13 @@ You may find a mirror archive closer to you by consulting:
   else
 
   echo $ac_n "checking for GNU make""... $ac_c" 1>&6
-echo "configure:757: checking for GNU make" >&5
+echo "configure:759: checking for GNU make" >&5
   MAKE=$oz_cv_MAKE
   echo "$ac_t""(cached) $MAKE" 1>&6
   fi
 
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:763: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:765: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -788,7 +790,7 @@ fi
 
   if test "${INSTALL+set}" = set; then
     echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
-echo "configure:792: checking whether to unset broken INSTALL" >&5
+echo "configure:794: checking whether to unset broken INSTALL" >&5
 if eval "test \"`echo '$''{'oz_cv_unset_INSTALL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -819,7 +821,7 @@ echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:823: checking for a BSD compatible install" >&5
+echo "configure:825: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -886,7 +888,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:890: checking for $ac_word" >&5
+echo "configure:892: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -930,7 +932,7 @@ fi
 
 
   echo $ac_n "checking for oz version""... $ac_c" 1>&6
-echo "configure:934: checking for oz version" >&5
+echo "configure:936: checking for oz version" >&5
 if eval "test \"`echo '$''{'oz_cv_ozversion'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -982,7 +984,7 @@ echo "$ac_t""$oz_cv_ozversion" 1>&6
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:986: checking for $ac_word" >&5
+echo "configure:988: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1037,7 +1039,7 @@ fi
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1041: checking for $ac_word" >&5
+echo "configure:1043: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1083,7 +1085,7 @@ fi
   esac
 
   echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
-echo "configure:1087: checking for --with-inc-dir" >&5
+echo "configure:1089: checking for --with-inc-dir" >&5
   # Check whether --with-inc-dir or --without-inc-dir was given.
 if test "${with_inc_dir+set}" = set; then
   withval="$with_inc_dir"
@@ -1125,7 +1127,7 @@ fi
 
 
   echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:1129: checking for --with-lib-dir" >&5
+echo "configure:1131: checking for --with-lib-dir" >&5
   # Check whether --with-lib-dir or --without-lib-dir was given.
 if test "${with_lib_dir+set}" = set; then
   withval="$with_lib_dir"
@@ -1169,7 +1171,7 @@ fi
 
 
   echo $ac_n "checking for build date""... $ac_c" 1>&6
-echo "configure:1173: checking for build date" >&5
+echo "configure:1175: checking for build date" >&5
 if eval "test \"`echo '$''{'oz_cv_build_date'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1183,7 +1185,7 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
 
 
   echo $ac_n "checking for OZLOADSEP""... $ac_c" 1>&6
-echo "configure:1187: checking for OZLOADSEP" >&5
+echo "configure:1189: checking for OZLOADSEP" >&5
 if eval "test \"`echo '$''{'oz_cv_OZLOADSEP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1203,7 +1205,7 @@ echo "$ac_t""$oz_cv_OZLOADSEP" 1>&6
 
 
   echo $ac_n "checking for OZLOADWIN""... $ac_c" 1>&6
-echo "configure:1207: checking for OZLOADWIN" >&5
+echo "configure:1209: checking for OZLOADWIN" >&5
 if eval "test \"`echo '$''{'oz_cv_OZLOADWIN'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1251,7 +1253,7 @@ echo "$ac_t""$oz_cv_OZLOADWIN" 1>&6
     # Extract the first word of "ozc", so it can be a program name with args.
 set dummy ozc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1255: checking for $ac_word" >&5
+echo "configure:1257: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1305,7 +1307,7 @@ fi
     # Extract the first word of "ozl", so it can be a program name with args.
 set dummy ozl; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1309: checking for $ac_word" >&5
+echo "configure:1311: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1359,7 +1361,7 @@ fi
     # Extract the first word of "ozengine", so it can be a program name with args.
 set dummy ozengine; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1363: checking for $ac_word" >&5
+echo "configure:1365: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1402,12 +1404,34 @@ fi
     fi
 
 
+
+    echo $ac_n "checking for --enable-compile-elisp""... $ac_c" 1>&6
+echo "configure:1410: checking for --enable-compile-elisp" >&5
+    # Check whether --enable-compile-elisp or --disable-compile-elisp was given.
+if test "${enable_compile_elisp+set}" = set; then
+  enableval="$enable_compile_elisp"
+  :
+fi
+
+    : ${oz_enable_compile_elisp=yes}
+    if test -n "${enable_compile_elisp}"; then
+        oz_enable_compile_elisp=$enable_compile_elisp
+    fi
+    if test "${oz_enable_compile_elisp}" != no; then
+        COMPILE_ELISP=yes
+    else
+        COMPILE_ELISP=no
+    fi
+
+   echo "$ac_t""$COMPILE_ELISP" 1>&6
+
+if test "$COMPILE_ELISP" = yes; then
 for ac_prog in emacs xemacs
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1411: checking for $ac_word" >&5
+echo "configure:1435: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_THEEMACS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1437,6 +1461,10 @@ test -n "$THEEMACS" && break
 done
 test -n "$THEEMACS" || THEEMACS="emacs"
 
+else
+THEEMACS=emacs-not-configured
+
+fi
 SUBDIRS="code sgml"
 
 trap '' 1 2 15
@@ -1610,6 +1638,7 @@ s%@OZLOADWIN@%$OZLOADWIN%g
 s%@OZC@%$OZC%g
 s%@OZL@%$OZL%g
 s%@OZE@%$OZE%g
+s%@COMPILE_ELISP@%$COMPILE_ELISP%g
 s%@THEEMACS@%$THEEMACS%g
 s%@SUBDIRS@%$SUBDIRS%g
 
