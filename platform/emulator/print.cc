@@ -29,6 +29,7 @@
 #include "taskstack.hh"
 #include "thread.hh"
 #include "objects.hh"
+#include "ozdebug.hh"
 
 
 #define PRINT(C) \
@@ -964,17 +965,82 @@ PRINTLONG(BigInt)
 
 
 
-
-
 PRINT(TaskStack)
 {
+  stream << "<TaskStack>";
+}
+
+PRINTLONG(TaskStack)
+{
   if (isEmpty() == OK) {
-    stream << "*** empty ***";
-  } else {
-    for (void **i = tos - 1; i != array; i--) {
-      stream << "@" << *i << ",";
-    }
+    stream << "*** TaskStack is empty ***" << endl;
+    return;
   }
+  stream << "TaskStack" << endl;
+
+  TaskStackEntry *p = getTop();
+
+  while (!isEmpty() && depth-- > 0) {
+    TaggedBoard tb = (TaggedBoard) pop();
+    ContFlag flag = getContFlag(tb);
+    Board* n = getBoard(tb,flag);
+    switch (flag){
+    case C_CONT:
+      {
+        ProgramCounter PC = (ProgramCounter) pop();
+        RefsArray Y = (RefsArray) pop();
+        RefsArray G = (RefsArray) pop();
+        stream << "CONT\n";
+        n->print(stream,depth,offset);
+        CodeArea::display(CodeArea::definitionStart(PC),1,stdout);
+      }
+      break;
+    case C_XCONT:
+      {
+        ProgramCounter PC = (ProgramCounter) pop();
+        RefsArray Y = (RefsArray) pop();
+        RefsArray G = (RefsArray) pop();
+        RefsArray X = (RefsArray) pop();
+        stream << "XCONT\n";
+        n->print(stream,depth,offset);
+        CodeArea::display(CodeArea::definitionStart(PC),1,stdout);
+      }
+      break;
+    case C_NERVOUS:
+      stream << "WAKEUP\n";
+      n->print(stream,depth,offset);
+      break;
+    case C_CFUNC_CONT:
+      {
+        OZ_CFun biFun = (OZ_CFun) pop();
+        Suspension* susp = (Suspension*) pop();
+        RefsArray X = (RefsArray) pop();
+        stream << "CFUNC\n";
+      }
+      break;
+
+    case C_DEBUG_CONT:
+      {
+        OzDebug *deb = (OzDebug*) pop();
+        stream << "DEBUG\n";
+        deb->printCall();
+      }
+      break;
+    case C_CALL_CONT:
+      {
+        SRecord *s = (SRecord *) pop();
+        RefsArray X = (RefsArray) pop();
+        stream << "CCALL";
+      }
+      break;
+
+    default:
+      error("TaskStack::printLong: unexpected task found.");
+    } // switch
+  } // while
+
+  setTop(p);
+  stream << "End of TaskStack\n";
 }
 
 
