@@ -899,7 +899,7 @@ inline
 void list2buffer(ostream &out, LTuple *list,int depth) {
   int width = listWidth;
 
-  if (width > 0) {
+  if (width > 0 && depth > 0) {
 
     if (isNiceList(makeTaggedLTuple(list),width)) {
       out << '[';
