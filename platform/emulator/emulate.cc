@@ -942,9 +942,9 @@ void engine() {
     localhack0:
       HF_FAIL(applFailure(biFun), printArgs(X,XSize));
     case PROCEED:
+      killPropagatedCurrentTaskSusp();
       LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
                         goto localhack0;);
-      killPropagatedCurrentTaskSusp();
       goto LBLcheckEntailment;
     default:
       error("Unexpected return value by c-function.");
@@ -1092,9 +1092,9 @@ void engine() {
       localhack1:
         HF_FAIL(applFailure(fun), printArgs(X,arity));
       case PROCEED:
+        killPropagatedCurrentTaskSusp();
         LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
                           goto localhack1;);
-        killPropagatedCurrentTaskSusp();
         DISPATCH(3);
       default:
         error("Unexpected return value at CALLBUILTIN.");

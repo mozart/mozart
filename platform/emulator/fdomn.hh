@@ -63,6 +63,9 @@ public:
 
   const FDIntervals &operator = (const FDIntervals &);
 
+  size_t memory_required(int hi) { // used for profiling
+    return sizeof(int) + 2 * hi * sizeof(int);
+  }
   void * operator new (size_t s) {return freeListMalloc(s);}
   void * operator new (size_t s, int hi) {
     return heapMalloc(s + 2 * (hi - fd_iv_max_high) * sizeof(int));
@@ -73,6 +76,8 @@ public:
   void dispose(void) {
     if (high <= fd_iv_max_high) freeListDispose(this, sizeof(FDIntervals));
   }
+  int getHigh(void) { return high; }
+
   void print(ostream & = cout, int = 0) const;
   void printLong(ostream & = cout, int = 0) const;
   void printDebug(void) const;
@@ -133,6 +138,9 @@ public:
   }
   void dispose(void) {freeListDispose(this, sizeof(FDBitVector));}
 
+  size_t memory_required(void) { // used for profiling
+    return 4 * size_t(ceil(float(findMaxElem())/32));
+  }
   FDBitVector(void){}
   void print(ostream & = cout, int = 0) const;
   void printLong(ostream & = cout, int = 0) const;
@@ -214,6 +222,20 @@ public:
 
   FiniteDomain(void * d = NULL) {FiniteDomainInit(d);}
 
+  FiniteDomain(FDState state) {
+    switch (state) {
+    case fd_empty:
+      setEmpty();
+      break;
+    case fd_full:
+      setFull();
+      break;
+    default:
+      error("Unexpected FDState.");
+      break;
+    }
+  }
+
   FiniteDomain(const FiniteDomain &);
   const FiniteDomain &operator = (const FiniteDomain &fd);
   void gc(void);
@@ -241,6 +263,9 @@ public:
   Bool next(int i, int &n) const;
   int nextBiggerElem(int v) const;
   int constrainBool(void);
+  Bool isBool(void) {
+    return (min_elem == 0) && (max_elem == 1);
+  }
 
   // non-destructive operators
   FiniteDomain &operator & (const FiniteDomain &) const; // intersection
@@ -258,6 +283,8 @@ public:
 
   Bool operator == (const FDState) const;
   Bool operator != (const FDState) const;
+  Bool operator == (int) const;
+  Bool operator != (int) const;
 
   void print(ostream & = cout, int = 0) const;
   void printLong(ostream & = cout, int = 0) const;

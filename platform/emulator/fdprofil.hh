@@ -35,6 +35,58 @@ enum ProfileDataIndex {
   from_deep_to_home_misses, // always misses
   from_deep_to_deep_hits,
   from_deep_to_deep_misses,
+  no_calls_propagate_p,
+  susps_per_propagate_p,
+  no_calls_checksusplist,
+  susps_per_checksusplist,
+
+
+  cp_no_literal,
+  cp_size_literal,
+  cp_no_script,
+  cp_size_script,
+  cp_no_suspcont,
+  cp_size_suspcont,
+  cp_no_refsarray,
+  cp_size_refsarray,
+  cp_no_cfunccont,
+  cp_size_cfunccont,
+  cp_no_cont,
+  cp_size_cont,
+  cp_no_stuple,
+  cp_size_stuple,
+  cp_no_ltuple,
+  cp_size_ltuple,
+  cp_no_record,
+  cp_size_record,
+  cp_no_susp,
+  cp_size_susp,
+  cp_no_condsusplist,
+  cp_size_condsusplist,
+  cp_no_susplist,
+  cp_size_susplist,
+  cp_no_svar,
+  cp_size_svar,
+  cp_no_fdvar,
+  cp_size_fdvar,
+  cp_no_ofsvar,
+  cp_size_ofsvar,
+  cp_no_board,
+  cp_size_board,
+  cp_no_askactor,
+  cp_size_askactor,
+  cp_no_waitactor,
+  cp_size_waitactor,
+  cp_no_solveactor,
+  cp_size_solveactor,
+
+  fd_bool,
+  fd_bool_saved,
+  fd_bitvector,
+  fd_bitvector_saved,
+  fd_intervals,
+  fd_intervals_saved,
+
   no_high
 };
 
@@ -43,13 +95,15 @@ private:
   static char * print_msg[no_high];
   unsigned items[no_high];
 public:
-  ProfileData(void) {
-    for (int i = no_high; i--; ) items[i] = 0;
-  }
-  void inc_item(ProfileDataIndex i) { items[i] += 1; }
-  void print(void) {
-    for (int i = 0; i < no_high; i += 1)
-      cout << "\t" << print_msg[i] << " = " << items[i] << endl;
+  void init(void) { for (int i = no_high; i--; ) items[i] = 0; }
+  ProfileData(void) { init(); }
+  void inc_item(ProfileDataIndex i, int by) { items[i] += by; }
+  void print(void);
+  void operator += (ProfileData &y);
+  unsigned getItem(int i) {return items[i];}
+  static char * getPrintMsg(int i) {
+    if (i < 0 || i >= no_high) error("Index overflow.");
+    return print_msg[i];
   }
 };
 
@@ -73,10 +127,10 @@ private:
   ProfileList * head;
   ProfileList * tail;
   ProfileList * curr;
-  ProfileData average;
+  ProfileData total;
 public:
   ProfileHost(void) : head(NULL), tail(NULL), curr(NULL) { add(); }
-  void inc_item(ProfileDataIndex i) { tail->inc_item(i); }
+  void inc_item(ProfileDataIndex i, int by = 1) { tail->inc_item(i, by); }
 
   reset(void) { curr = head; }
   ProfileList * next(void) {
@@ -110,9 +164,7 @@ public:
     head = tail = curr = NULL;
     add();
   }
-  void get_average(void) {
-    cout << "Not implemented yet." << endl;
-  }
+  void print_total_average(void);
 };
 
 
@@ -123,7 +175,6 @@ public:
 # define _PROFILE_CODE1(CODE)
 # define PROFILE_CODE1(CODE)
 #endif
-
 
 extern ProfileHost FDProfiles;
 

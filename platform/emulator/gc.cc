@@ -573,6 +573,12 @@ Literal *Literal::gc()
     GCNEWADDRMSG (aux);
     ptrStack.push (aux, PTR_NAME);
     storeForward(&printName, aux);
+
+    PROFILE_CODE1(if (opMode == IN_TC) {
+                    FDProfiles.inc_item(cp_no_literal);
+                    FDProfiles.inc_item(cp_size_literal, sizeof(*this));
+                  })
+
     return (aux);
   } else {
     return (this);
@@ -628,6 +634,12 @@ void Script::gc()
     int sz = numbOfCons*sizeof(Equation);
     Equation *aux = (Equation*)gcRealloc(first,sz);
     GCNEWADDRMSG(aux);
+
+    PROFILE_CODE1(if (opMode == IN_TC) {
+                    FDProfiles.inc_item(cp_no_script);
+                    FDProfiles.inc_item(cp_size_script, sz);
+                  })
+
     for(int i = 0; i < numbOfCons; i++){
 #ifdef DEBUG_CHECK
       //  This is the very useful consistency check.
@@ -677,6 +689,11 @@ SuspContinuation *SuspContinuation::gcCont()
   GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_SUSPCONT);
 
+  PROFILE_CODE1(if (opMode == IN_TC) {
+                  FDProfiles.inc_item(cp_no_suspcont);
+                  FDProfiles.inc_item(cp_size_suspcont, sizeof(*this));
+                })
+
   DebugGC(opMode == IN_TC && (!isLocalBoard(board->gcGetBoardDeref ()) ||
                               !isInTree(board->gcGetBoardDeref ())),
           error ("non-local board in TC mode is being copied"));
@@ -725,7 +742,12 @@ RefsArray gcRefsArray(RefsArray r)
   RefsArray aux = allocateRefsArray(sz,NO);
   GCNEWADDRMSG(aux);
 
-  if (isDirtyRefsArray(r)) {
+  PROFILE_CODE1(if (opMode == IN_TC) {
+                  FDProfiles.inc_item(cp_no_refsarray);
+                  FDProfiles.inc_item(cp_size_refsarray, sz);
+                })
+
+    if (isDirtyRefsArray(r)) {
     markDirtyRefsArray(aux);
   }
 
@@ -759,6 +781,12 @@ CFuncContinuation *CFuncContinuation::gcCont(void)
   GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_CFUNCONT);
   storeForward(&cFunc, ret);
+
+  PROFILE_CODE1(if (opMode == IN_TC) {
+                  FDProfiles.inc_item(cp_no_cfunccont);
+                  FDProfiles.inc_item(cp_size_cfunccont, sizeof(*this));
+                })
+
   return ret;
 }
 
@@ -772,6 +800,11 @@ Continuation *Continuation::gc()
   GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_CONT);
   storeForward(&pc, ret);
+
+  PROFILE_CODE1(if (opMode == IN_TC) {
+                  FDProfiles.inc_item(cp_no_cont);
+                  FDProfiles.inc_item(cp_size_cont, sizeof(Continuation));
+                })
   return ret;
 }
 
@@ -822,6 +855,10 @@ STuple *STuple::gc()
   ptrStack.push(ret,PTR_STUPLE);
   storeForward((int *) &label, ret);
   gcTaggedBlock(getRef(),ret->getRef(),getSize());
+  PROFILE_CODE1(if (opMode == IN_TC) {
+                  FDProfiles.inc_item(cp_no_stuple);
+                  FDProfiles.inc_item(cp_size_stuple, sizeof(len));
+                })
   return ret;
 }
 
@@ -835,6 +872,11 @@ LTuple *LTuple::gc()
   LTuple *ret = (LTuple*) gcRealloc(this,sizeof(*this));
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_LTUPLE);
+
+  PROFILE_CODE1(if (opMode == IN_TC) {
+                  FDProfiles.inc_item(cp_no_ltuple);
+                  FDProfiles.inc_item(cp_size_ltuple, sizeof(*this));
+                })
 
   gcTaggedBlock(args,ret->args,2);
 
@@ -898,6 +940,12 @@ SRecord *SRecord::gcSRecord()
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_SRECORD);
   storeForward(&u.type, ret);
+
+  PROFILE_CODE1(if (opMode == IN_TC) {
+                  FDProfiles.inc_item(cp_no_record);
+                  FDProfiles.inc_item(cp_size_record, sz);
+                })
+
   return ret;
 }
 
@@ -958,6 +1006,9 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
     return NULL;
   }
 
+//  Assert(!tcFlag || !isPropagated()); // TM check what is wrong!!!
+//  if (tcFlag && isPropagated()) printDebug();
+
   Board *el = getBoard()->gcGetBoardDeref();
 
   if (el == NULL) {
@@ -971,6 +1022,11 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
 
   Suspension *newSusp = (Suspension *) gcRealloc(this, sizeof(*this));
   GCNEWADDRMSG(newSusp);
+
+  PROFILE_CODE1(if (opMode == IN_TC) {
+                  FDProfiles.inc_item(cp_no_susp);
+                  FDProfiles.inc_item(cp_size_susp, sizeof(*this));
+                })
 
   switch (flag & (S_cont|S_cfun)){
   case S_null:
@@ -1017,8 +1073,22 @@ SuspList * SuspList::gc(Bool tcFlag)
         gcTagged(((CondSuspList*)help)->getConds()[i].arg, auxConds[i].arg);
 
       ret = new CondSuspList(aux, ret, auxConds, auxNumOfConds);
+
+      PROFILE_CODE1(if (opMode == IN_TC) {
+                      FDProfiles.inc_item(cp_no_condsusplist);
+                      FDProfiles.inc_item(cp_size_condsusplist,
+                                          sizeof(CondSuspList)
+                                          + auxNumOfConds * sizeof(Condition));
+                    })
+
     } else {
       ret = new SuspList(aux, ret);
+
+      PROFILE_CODE1(if (opMode == IN_TC) {
+                      FDProfiles.inc_item(cp_no_susplist);
+                      FDProfiles.inc_item(cp_size_susplist, sizeof(SuspList));
+                    })
+
     }
   }
 
@@ -1084,6 +1154,11 @@ TaggedRef gcVariable(TaggedRef var)
 
       SVariable *new_cv = (SVariable*)gcRealloc(cv,cv_size);
 
+      PROFILE_CODE1(if (opMode == IN_TC) {
+                      FDProfiles.inc_item(cp_no_svar);
+                      FDProfiles.inc_item(cp_size_svar, cv_size);
+                    })
+
       storeForward(&cv->suspList, new_cv);
 
       if (opMode == IN_TC && new_cv->getHome () == fromCopyBoard)
@@ -1118,6 +1193,22 @@ TaggedRef gcVariable(TaggedRef var)
 
       GenCVariable *new_gv = (GenCVariable*)gcRealloc(gv, gv_size);
 
+
+      PROFILE_CODE1(if (opMode == IN_TC) {
+                      FDProfiles.inc_item(gv->getType() == FDVariable
+                                          ? cp_no_fdvar : cp_no_ofsvar);
+                      FDProfiles.inc_item(gv->getType() == FDVariable
+                                          ? cp_size_fdvar : cp_size_ofsvar,
+                                          gv_size);
+                    })
+      PROFILE_CODE1(if (opMode == IN_TC) {
+                      if (gv->getType() == FDVariable &&
+                          ((GenFDVariable *) gv)->getDom().isBool()) {
+                        FDProfiles.inc_item(fd_bool);
+                        FDProfiles.inc_item(fd_bool_saved, gv_size-12);
+                      }
+                    })
+
       storeForward(&gv->suspList, new_gv);
 
       if (opMode == IN_TC && new_gv->getHome () == fromCopyBoard)
@@ -1140,6 +1231,47 @@ TaggedRef gcVariable(TaggedRef var)
 }
 
 
+inline
+void FiniteDomain::gc(void)
+{
+  descr_type type = getType();
+  if (type == fd_descr) {
+    setType(fd_descr, NULL);
+  } else if (type == bv_descr) {
+    setType(get_bv()->copy());
+
+    PROFILE_CODE1(if (opMode == IN_TC) {
+                     FDProfiles.inc_item(fd_bitvector);
+                     FDProfiles.inc_item(fd_bitvector_saved,
+                                         sizeof(FDBitVector)-
+                                         get_bv()->memory_required());
+                   })
+    PROFILE_CODE1(if (opMode == IN_TC) {
+                     FDProfiles.inc_item(cp_size_fdvar, sizeof(FDBitVector));
+                   })
+
+  } else {
+    setType(get_iv()->copy());
+
+    PROFILE_CODE1(if (opMode == IN_TC) {
+                     FDProfiles.inc_item(fd_intervals);
+                     FDProfiles.inc_item(fd_intervals_saved,
+                                         max(sizeof(FDIntervals),
+                                             sizeof(FDIntervals) + 2
+                                         * (get_iv()->getHigh() -
+                                            fd_iv_max_high) * sizeof(int)-
+                                         get_iv()->memory_required(get_iv()->getHigh())));
+                   })
+    PROFILE_CODE1(if (opMode == IN_TC) {
+                     FDProfiles.inc_item(cp_size_fdvar,
+                                         sizeof(FDIntervals) + 2
+                                         * (get_iv()->getHigh() -
+                                            fd_iv_max_high) * sizeof(int));
+                   })
+
+  }
+}
+
 void GenFDVariable::gc(void)
 {
   GCMETHMSG("GenFDVariable::gc");
@@ -1147,10 +1279,10 @@ void GenFDVariable::gc(void)
 
   int i;
   if (opMode == IN_TC && getHome() == fromCopyBoard)
-    for (i = 0; i < fd_any; i++)
+    for (i = fd_any; i--; )
       fdSuspList[i] = fdSuspList[i]->gc(OK);
   else
-    for (i = 0; i < fd_any; i++)
+    for (i = fd_any; i--; )
       fdSuspList[i] = fdSuspList[i]->gc(NO);
 }
 
@@ -1163,6 +1295,11 @@ DynamicTable* DynamicTable::gc(void)
     // Copy the table:
     size_t len = (size-1)*sizeof(HashElement)+sizeof(DynamicTable);
     DynamicTable* ret = (DynamicTable*) gcRealloc(this,len);
+
+    PROFILE_CODE1(if (opMode == IN_TC) {
+                     FDProfiles.inc_item(cp_size_ofsvar, len);
+                   })
+
     GCNEWADDRMSG(ret);
     // Take care of all TaggedRefs in the table:
     ptrStack.push(ret,PTR_DYNTAB);
@@ -1524,7 +1661,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   if (isGround == (Bool *) NULL) {
     GCMETHMSG(" ********** AM::copyTree **********");
   } else {
-    GCMETHMSG(" ********** AM::copyTree (groundnes) **********");
+    GCMETHMSG(" ********** AM::copyTree (groundness) **********");
   }
   opMode = IN_TC;
   gcing = 0;
@@ -1882,6 +2019,12 @@ Board *Board::gcBoard1()
   }
   size_t sz = sizeof(Board);
   Board *ret = (Board *) gcRealloc(this,sz);
+
+  PROFILE_CODE1(if (opMode == IN_TC) {
+                   FDProfiles.inc_item(cp_no_board);
+                   FDProfiles.inc_item(cp_size_board, sz);
+                 })
+
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_BOARD);
   storeForward(getGCField(),ret);
@@ -1918,6 +2061,16 @@ Actor *Actor::gc()
     sz = sizeof (SolveActor);
   }
   Actor *ret = (Actor *) gcRealloc(this,sz);
+
+  PROFILE_CODE1(if (opMode == IN_TC) {
+                   FDProfiles.inc_item(isWait() ? cp_no_waitactor
+                                       : (isAsk() ? cp_no_askactor
+                                          : cp_no_solveactor));
+                   FDProfiles.inc_item(isWait() ? cp_size_waitactor
+                                       : (isAsk() ? cp_size_askactor
+                                          : cp_size_solveactor), sz);
+                 })
+
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_ACTOR);
   storeForward(getGCField(), ret);
@@ -1946,6 +2099,11 @@ void WaitActor::gcRecurse()
 
   int num = (int) childs[-1];
   Board **newChilds=(Board **) heapMalloc((num+1)*sizeof(Board *));
+
+  PROFILE_CODE1(if (opMode == IN_TC) {
+                   FDProfiles.inc_item(cp_size_waitactor, (num+1)*sizeof(Board *));
+                 })
+
   *newChilds++ = (Board *) num;
   for (int i=0; i < num; i++) {
     if (childs[i]) {
