@@ -60,6 +60,7 @@ void oz_resumeFromNet(Thread *th)
 
 int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...)
 {
+  Assert(!isRef(cat));
   OZ_Term exc=OZ_tuple(key,arity+1);
   OZ_putArg(exc,0,OZ_atom(label));
 
@@ -75,11 +76,12 @@ int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...)
 
   OZ_Term ret = OZ_record(cat,
 			  cons(OZ_int(1),
-			       cons(OZ_atom("debug"),OZ_nil())));
+			       cons(AtomDebug,OZ_nil())));
   OZ_putSubtree(ret,OZ_int(1),exc);
-  OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
+  OZ_putSubtree(ret,AtomDebug,NameUnit);
 
-  am.setException(ret,NameUnit,OZ_eq(cat,E_ERROR) ? TRUE : ozconf.errorDebug);
+  am.setException(ret,NameUnit,
+		  literalEq(cat,E_ERROR) ? TRUE : ozconf.errorDebug);
   return RAISE;
 }
 
