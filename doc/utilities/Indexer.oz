@@ -145,7 +145,7 @@ define
          DT = case Singles of nil then And.2
               else
                  SEQ(And.2|PCDATA(': ')|
-                     {List.foldRTail Singles
+                     {List.foldRTail {Reverse Singles}
                       fun {$ _#_#A|Ar In}
                          A|case Ar of _|_ then PCDATA(', ')
                            else EMPTY
