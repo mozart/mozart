@@ -30,7 +30,8 @@ enum ActorFlags {
   Ac_Wait	= 0x02,
   Ac_Solve      = 0x04,
   Ac_Committed	= 0x08,
-  Ac_Debug      = 0x10  // in disjunction with Ac_Solve
+  Ac_Debug      = 0x10, // in disjunction with Ac_Solve
+  Ac_Choice     = 0x20, // in disjunction with Ac_Wait
 };
 
 class Actor : public ConstTerm {
@@ -59,6 +60,7 @@ public:
   Bool isAskWait () { return ((flags & (Ac_Ask|Ac_Wait)) ? OK : NO); } 
   Bool isSolve () { return ((flags & Ac_Solve) ? OK : NO); }
   Bool isDebug() { return ((flags & Ac_Debug) ? OK : NO); }
+  Bool isChoice() { return ((flags & Ac_Choice) ? OK : NO); }
   void setCommitted() { flags |= Ac_Committed; }
   void setDebug() { flags |= Ac_Debug; }
 };
@@ -68,11 +70,10 @@ public:
 
 class AWActor : public Actor {
 public:
-  static AWActor *Cast(Actor *a)
-{
-  DebugCheck((a->isAskWait () == NO), error ("AWActor::Cast"));
-  return ((AWActor *) a);
-}
+  static AWActor *Cast(Actor *a) {
+    DebugCheck((a->isAskWait () == NO), error ("AWActor::Cast"));
+    return ((AWActor *) a);
+  }
 protected:
   Continuation next;
   int childCount;
@@ -127,8 +128,7 @@ private:
   Board **childs;
 public:
   WaitActor(Board *s,int prio,
-	    ProgramCounter p,RefsArray y,RefsArray g,RefsArray x,int i);
-  WaitActor(WaitActor *wa);  // without children; 
+	    ProgramCounter p,RefsArray y,RefsArray g,RefsArray x, int i, Bool d);
 
   USEFREELISTMEMORY;
 
@@ -140,10 +140,10 @@ public:
   // returns the first created child; this child is unlinked from the actor;
   Board *getChildRef() { return childs[0]; }
   // the same, but a child is not unlinked from the actor; 
-  Board *getChildRefAt(int i) { return childs[i]; }
-  /* see also: isLeaf() */
   int getChildCount() { return childCount; };
-  Bool hasOneChild() { return ((childCount == 1 && !hasNext()) ? OK : NO); }
+  Bool hasOneChild() { return ((childCount == 1 && 
+				!isChoice() && 
+				!hasNext()) ? OK : NO); }
   Bool hasNoChilds() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
   int selectOrFailChildren(int l, int r);
 
