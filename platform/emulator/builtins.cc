@@ -7,6 +7,10 @@
   State: $State$
   */
 
+#if defined(INTERFACE) && !defined(PEANUTS)
+#pragma implementation "builtins.hh"
+#endif
+
 #include "wsock.hh"
 
 #include "iso-ctype.hh"
@@ -296,8 +300,6 @@ DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 /********************************************************************
  * BuiltinTab
  ******************************************************************** */
-
-#ifdef BUILTINS2
 
 BuiltinTab builtinTab(750);
 
@@ -3068,9 +3070,6 @@ OZ_C_proc_begin(BIisString,2)
 }
 OZ_C_proc_end
 
-#endif /* BUILTINS2 */
-
-#ifdef BUILTINS1
 
 
 // ---------------------------------------------------------------------
@@ -3523,14 +3522,10 @@ OZ_Return BIarityInline(TaggedRef term, TaggedRef &out)
 DECLAREBI_USEINLINEFUN1(BIarity,BIarityInline)
 
 
-#endif /* BUILTINS1 */
-
-
 /* -----------------------------------------------------------------------
    Numbers
    ----------------------------------------------------------------------- */
 
-#ifdef BUILTINS1
 
 static OZ_Return bombArith(char *type)
 {
@@ -4324,12 +4319,11 @@ OZ_C_proc_begin(BIintToString, 2)
   TypeErrorT(0,"Int");
 }
 OZ_C_proc_end
-#endif
+
 
 /* -----------------------------------
    type X
    ----------------------------------- */
-#ifdef BUILTINS2
 
 OZ_Return BIisFloatInline(TaggedRef num)
 {
@@ -4375,11 +4369,6 @@ OZ_Return BIisNumberInline(TaggedRef num)
 DECLAREBI_USEINLINEREL1(BIisNumber,BIisNumberInline)
 DECLAREBOOLFUN1(BIisNumberB,BIisNumberBInline,BIisNumberInline)
 
-
-#endif
-
-
-#ifdef BUILTINS1
 
 /* -----------------------------------------------------------------------
    misc. floating point functions
@@ -5008,13 +4997,11 @@ OZ_C_proc_begin(BIdictionaryToRecord,3)
 OZ_C_proc_end
 
 
-#endif /* BUILTINS1 */
 
 /* -----------------------------------------------------------------
    dynamic link objects files
    ----------------------------------------------------------------- */
 
-#ifdef BUILTINS2
 
 #ifdef WINDOWS
 #define PATHSEP ';'
@@ -6382,9 +6369,12 @@ OZ_Return assignInline(TaggedRef fea, TaggedRef value)
 {
   DEREF(fea, _2, feaTag);
 
-  SRecord *r = am.getSelf()->getState();
+  Object *self = am.getSelf();
+  SRecord *r = self->getState();
 
   CheckSelf;
+  CheckLocalBoard(self,"object");
+
   if (!isFeature(fea)) {
     if (isAnyVar(fea)) {
       return SUSPEND;
@@ -6752,21 +6742,13 @@ OZ_C_proc_begin(BIprintLong,1)
 OZ_C_proc_end
 #endif
 
-#endif /* BUILTINS2 */
-
 
 /********************************************************************
  * Table of builtins
  ******************************************************************** */
 
 
-#ifdef BUILTINS2
-extern BIspec allSpec1[];
-#endif
-
-#ifdef BUILTINS1
-
-BIspec allSpec1[] = {
+BIspec allSpec[] = {
   {"/",   3, BIfdiv,     (IFOR) BIfdivInline},
   {"*",   3, BImult,     (IFOR) BImultInline},
   {"div", 3, BIdiv,      (IFOR) BIdivInline},
@@ -6879,13 +6861,6 @@ BIspec allSpec1[] = {
   {"Arity",           2, BIarity,            (IFOR) BIarityInline},
   {"AdjoinAt",        4, BIadjoinAt,         0},
 
-  {0,0,0,0}
-};
-#endif
-
-#ifdef BUILTINS2
-
-BIspec allSpec2[] = {
   {"IsNumber",        2, BIisNumberB,    (IFOR) BIisNumberBInline},
   {"IsInt"   ,        2, BIisIntB,       (IFOR) BIisIntBInline},
   {"IsFloat" ,        2, BIisFloatB,     (IFOR) BIisFloatBInline},
@@ -7141,8 +7116,7 @@ BuiltinTabEntry *BIinit()
   if (!bi)
     return bi;
 
-  BIaddSpec(allSpec1);
-  BIaddSpec(allSpec2);
+  BIaddSpec(allSpec);
 
   BIinitFD();
   BIinitAVar();
@@ -7152,4 +7126,3 @@ BuiltinTabEntry *BIinit()
   return bi;
 }
 
-#endif /* BUILTINS2 */
