@@ -1,6 +1,8 @@
 functor
 export
    'class' : Config
+import
+   Path at 'Path.ozf'
 prepare
    fun {Return X} X end
    fun {PadKey X}
@@ -27,22 +29,47 @@ define
 	 DB : unit
 
       meth config_read()
+	 %%
+	 %% old-style database:
+	 %%     ~/.oz/apps/ozmake/DATABASE.ozf
+	 %%     ~/.oz/apps/ozmake/DATABASE.txt
+	 %% new-style database:
+	 %%     ~/oz/apps/ozmake/config.db
+	 %%
 	 if @DB==unit then
 	    F = {self get_configfile($)}
-	    L = {self databaselib_read(F Return $)}
 	 in
-	    case L of E|_ then
-	       DB <- {Record.toDictionary E}
-	    else skip end
+	    if {Path.exists F} then
+	       DB <- {self databaselib_read(F $)}
+	    else
+	       F = {self get_configfile_oldstyle($)}
+	    in
+	       if {Path.exists F#'.ozf'} orelse {Path.exists F#'.txt'} then
+		  {self trace('detected old-style config database')}
+		  {self incr}
+		  case {self databaselib_read_oldstyle(F Return $)}
+		  of E|_ then
+		     DB<-{Record.toDictionary E}
+		     {self trace('replacing by new-style config database')}
+		     {self config_save}
+		     if {Path.exists F#'.ozf'} then
+			{self exec_rm(F#'.ozf')}
+		     end
+		     if {Path.exists F#'.txt'} then
+			{self exec_rm(F#'.txt')}
+		     end
+		  end
+		  {self decr}
+	       else
+		  DB <- {NewDictionary}
+	       end
+	    end
 	 end
       end
 
       meth config_save()
 	 if @DB\=unit then
-	    F = {self get_configfile($)}
-	    R = {Dictionary.toRecord o @DB}
-	 in
-	    {self databaselib_save(F Return [R])}
+	    {self databaselib_save({self get_configfile($)} @DB)}
 	 end
       end
 

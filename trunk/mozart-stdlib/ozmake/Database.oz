@@ -3,6 +3,7 @@ export
    'class' : Database
 import
    Utils at 'Utils.ozf'
+   Path  at 'Path.ozf'
 prepare
    VSToString = VirtualString.toString
    MakeByteString = ByteString.make
@@ -17,21 +18,59 @@ define
 	 {CondSelect @File2Package F unit}
       end
 
-      meth database_read
+      meth database_read()
 	 if @Mogul2Package==unit then
-	    F={self get_database($)}
-	    fun {FromTxt E}
-	       Database,ByteStringify(E $)
-	    end
-	    L={self databaselib_read(F FromTxt $)}
+	    %%
+	    %% old-style database:
+	    %%     ~/.oz/DATABASE.ozf
+	    %%     ~/.oz/DATABASE.txt
+	    %%
+	    %% new-style database:
+	    %%     ~/.oz/apps/ozmake/ozmake.db
+	    %%
+	    %% we need some AI to switch automatically from the old-style
+	    %% database to the new style.  If the new-style database is
+	    %% not found, then we look for an old-style database, convert
+	    %% it to new style, write the new one, and remove the old one.
+	    %%
+	    F1 = {self get_database($)}
 	 in
-	    if L\=unit then
-	       Database,Init(L)
+	    if {Path.exists F1} then
+	       Database,Init({self databaselib_read(F1 $)})
 	    elseif {self get_database_given($)} then
-	       raise ozmake(database:filenotfound(F#'.txt')) end
+	       raise ozmake(database:filenotfound(F1)) end
 	    else
-	       {self trace('no database')}
-	       Database,Init(nil)
+	       F2 = {self get_database_oldstyle($)}
+	    in
+	       if {Path.exists F2#'.ozf'} orelse {Path.exists F2#'.txt'} then
+		  {self trace('detected old-style database')}
+		  {self incr}
+		  fun {FromTxt E}
+		     Database,ByteStringify(E $)
+		  end
+		  L={self databaselib_read_oldstyle(F2 FromTxt $)}
+	       in
+		  if L\=unit then
+		     Database,Init(L)
+		     if {self get_savedb($)} then
+			{self trace('replacing by new-style database')}
+			{self database_save}
+			if {Path.exists F2#'.ozf'} then
+			   {self exec_rm(F2#'.ozf')}
+			end
+			if {Path.exists F2#'.txt'} then
+			   {self exec_rm(F2#'.txt')}
+			end
+		     end
+		  else
+		     {self trace('oh hum... ignoring database')}
+		     Database,Init(nil)
+		  end
+		  {self decr}
+	       else
+		  {self trace('no database')}
+		  Database,Init(nil)
+	       end
 	    end
 	 end
       end
@@ -183,18 +222,13 @@ define
 
       meth database_save
 	 if {self get_savedb($)} then
-	    Entries =
-	    {Map {Dictionary.items @Mogul2Package}
-	     fun {$ E}
-		if {IsDictionary E}
-		then {Dictionary.toRecord package E} else E end
-	     end}
-	    DB = {self get_database($)}
-	    fun {ToTxt E}
-	       Database,Stringify(E $)
-	    end
-	 in
-	    {self databaselib_save(DB ToTxt Entries)}
+	    {self databaselib_save(
+		     {self get_database($)}
+		     {Map {Dictionary.items @Mogul2Package}
+		      fun {$ E}
+			 if {IsDictionary E}
+			 then {Dictionary.toRecord package E} else E end
+		      end})}
 	 end
       end
 

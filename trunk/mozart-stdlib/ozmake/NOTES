@@ -28,7 +28,7 @@ ozmake --mogul=db -p MOG
 ozmake --mogul=db -p PKG
 ozmake --mogul=fix
 
-CURRENTLY:
+TODO:
 
-writing Message.oz to parse MOGUL entries and figure out stuff
-like what section entries to actually generate.
+1. need to modify MOGUL to take advantage of `category:' headers.
+

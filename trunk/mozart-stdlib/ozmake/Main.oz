@@ -28,9 +28,6 @@ prepare
       docroot(   single type:string)
       extractdir(single type:string)
       publishdir(single type:string)
-      mogulpkgurl(single type:string)
-      moguldocurl(single type:string)
-      moguldburl( single type:string)
       archive(   single type:string)
       tmpdir(    single type:string)
 
@@ -92,9 +89,13 @@ prepare
       sysincludedirs(single type:bool)
       syslibrarydirs(single type:bool)
 
+      mogulpkgurl(single type:string)
+      moguldocurl(single type:string)
+      moguldburl( single type:string)
       mogulpkgdir(single type:string)
       moguldocdir(single type:string)
       moguldbdir( single type:string)
+      mogulrootid(single type:string)
 
       exe(single type:atom(default no yes both multi))
       makepkgfile(single type:string)
@@ -157,6 +158,7 @@ prepare
     exe            # set_exe              # true
     makepkgfile    # set_makepkgfile      # true
     mogul          # set_mogul_action     # false
+    mogulrootid    # set_mogulrootid      # true
    ]
       
 define

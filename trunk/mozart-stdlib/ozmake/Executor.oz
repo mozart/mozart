@@ -3,10 +3,11 @@ export
    'class' : Executor
 import
    OS Property System(showError:Print) Open(file:OpenFile) URL Pickle
-   Path  at 'Path.ozf'
-   Utils at 'Utils.ozf'
-   Shell at 'Shell.ozf'
-   Fixes at 'Fixes.ozf'
+   Path    at 'Path.ozf'
+   Utils   at 'Utils.ozf'
+   Shell   at 'Shell.ozf'
+   Fixes   at 'Fixes.ozf'
+   Pickler at 'Pickler.ozf'
 define
    %% the Executor mediates the execution of commands and provides
    %% optionall tracing and optional dry runs
@@ -58,6 +59,12 @@ define
 	 if {self get_quiet($)} then skip
 	 elseif {self get_verbose($)} then {Print Executor,GetIndent($)#Msg}
 	 else {Print Msg} end
+      end
+      %% ptrace is like trace but with noindent
+      meth ptrace(Msg)
+	 if {self get_quiet($)} then skip
+	 elseif {self get_verbose($)} then {Print Msg}
+	 else skip end
       end
       meth print(Msg)
 	 if {self get_quiet($)} then skip
@@ -478,6 +485,16 @@ define
 	 end 
       end
 
+      meth exec_pickle_to_file(Data File)
+	 Executor,exec_mkdir({Path.dirname File})
+	 {self trace('writing '#File)}
+	 if {self get_justprint($)} then
+	    Executor,SimulatedTouch(File)
+	 else
+	    {Pickler.toFile Data File}
+	 end
+      end
+
       meth exec_writeTextDB(DB File)
 	 Executor,exec_mkdir({Path.dirname File})
 	 {self trace('writing '#File)}
@@ -487,6 +504,7 @@ define
 	    {Utils.writeTextDB DB File}
 	 end 
       end
+
 
    end
 

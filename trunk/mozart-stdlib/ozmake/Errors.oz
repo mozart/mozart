@@ -416,6 +416,15 @@ prepare
 	       msg  : 'ambiguous --mogul action'
 	       items: [hint(l:'Action' m:S)
 		       hint(l:'Choices' m:list(L ' '))])
+      [] ozmake(mogul:badrootid(V)) then
+	 error(kind : TITLE_MOGUL
+	       msg  : 'bad --mogulrootid, expected a MOGUL id'
+	       items: [hint(l:'Value' m:oz(V))])
+      [] ozmake(mogul:validate(ID1 ID2)) then
+	 error(kind : TITLE_MOGUL
+	       msg  : 'encountered MOGUL id not the namespace of your root MOGUL id'
+	       items: [hint(l:'Expected' m:ID1#'/...')
+		       hint(l:'Found' m:ID2)])
       [] ozmake(contact:filenotfound(F)) then
 	 error(kind : TITLE_CONTACT
 	       msg  : 'contact file not found'
