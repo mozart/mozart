@@ -26,7 +26,6 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown,
        AtomMin, AtomMax, AtomMid,
        AtomNaive, AtomSize, AtomConstraints,
-       AtomDistributed, AtomMobile, AtomFetched,
        NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
        NameOoDefaultVar,NameOoRequiredArg,
        NameUnit,
@@ -1492,33 +1491,7 @@ public:
 
 
 
-#define Mobile      0x1
-#define Distributed 0x2    /* exported to some other site */
-#define Fetched     0x4    /* was already brought to local site */
-
-class DistObject: public ConstTermWithHome {
-private:
-  int type;
-public:
-  DistObject();
-  ~DistObject();
-  DistObject(DistObject&);
-  DistObject(Board *b, TypeOfConst tc) : ConstTermWithHome(b,tc), type(0) {}
-
-  void setDistFlag(int f)   { type |= f;  }
-  void unsetDistFlag(int f) { type &= ~f; }
-
-  Bool getDistFlag(int f) { return (type&f); }
-
-  Bool isMobile()         { return getDistFlag(Mobile); }
-  Bool isDistributed()    { return getDistFlag(Distributed); }
-  Bool isFetched()        { return getDistFlag(Fetched); }
-
-  void distribute() { setDistFlag(Distributed); }
-};
-
-
-class Abstraction: public DistObject {
+class Abstraction: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 private:
 // DATA
@@ -1528,16 +1501,9 @@ public:
   Abstraction();
   ~Abstraction();
   Abstraction(Abstraction&);
-  Abstraction(PrTabEntry *prd, RefsArray gregs, Board *b, Bool mobile=OK)
-  : DistObject(b,Co_Abstraction), gRegs(gregs), pred(prd) 
-  {
-    setDistFlag(Fetched);
-    if (mobile)
-      setDistFlag(Mobile);
-  }
-
-  /* receiving a distributed procedure: */
-  Abstraction(Bool mobile);
+  Abstraction(PrTabEntry *prd, RefsArray gregs, Board *b)
+  : ConstTermWithHome(b,Co_Abstraction), gRegs(gregs), pred(prd) 
+  { }
 
   OZPRINT;
   OZPRINTLONG;
@@ -1550,14 +1516,6 @@ public:
   char *getPrintName()   { return pred->getPrintName(); }
   PrTabEntry *getPred()  { return pred; }
   TaggedRef getName()    { return pred->getName(); }
-
-  void makeStationary() { unsetDistFlag(Mobile); }
-  void nowFetched(RefsArray g, PrTabEntry *pte) 
-  {
-    setDistFlag(Fetched);
-    gRegs = g;
-    pred  = pte;
-  }
 
   TaggedRef DBGgetGlobals();
 };
@@ -1706,7 +1664,7 @@ Builtin *tagged2Builtin(TaggedRef term)
  * Cell
  *=================================================================== */
 
-class Cell: public DistObject {
+class Cell: public ConstTermWithHome {
 friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef val;
@@ -1714,15 +1672,7 @@ public:
   Cell();
   ~Cell();
   Cell(Cell&);
-  Cell(Board *b,TaggedRef v, Bool mobile=NO) : 
-    DistObject(b, Co_Cell), val(v) 
-  {
-    if (mobile)
-      setDistFlag(Mobile);
-  }
-
-  /* receiving a cell */
-  Cell(TaggedRef v, Bool mobile);
+  Cell(Board *b,TaggedRef v) : ConstTermWithHome(b, Co_Cell), val(v) {}
 
   OZPRINT;
   OZPRINTLONG;
@@ -1732,11 +1682,6 @@ public:
     TaggedRef ret = val;
     val = v;
     return ret;
-  }
-  TaggedRef distribute(TaggedRef v)
-  {
-    DistObject::distribute();
-    return exchangeValue(v);
   }
 };
 
@@ -1757,7 +1702,7 @@ Cell *tagged2Cell(TaggedRef term)
  * Ports
  *=================================================================== */
 
-class Port: public DistObject {
+class Port: public ConstTermWithHome {
 friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef strm;
@@ -1767,7 +1712,7 @@ public:
   ~Port();
   Port(Port&);
 
-  Port(Board *b,TaggedRef s) : DistObject(b, Co_Port), strm(s), addr(0) {}
+  Port(Board *b,TaggedRef s) : ConstTermWithHome(b, Co_Port), strm(s), addr(0) {}
   Port(NetAddress *na);
 
   TaggedRef exchangeStream(TaggedRef newStream)

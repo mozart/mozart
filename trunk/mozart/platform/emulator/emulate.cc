@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.355  1996/08/27 07:34:58  scheidhr
+  removed old distribution stuff
+
   Revision 1.354  1996/08/11 14:53:38  lorenz
   threads have a name now
   some work on toplevel vars and global vars
@@ -348,7 +351,11 @@ void genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
       return;
     }
   } else {
+#if 0
     if(!isAbstraction(pred) || tagged2Abstraction(pred)->isDistributed()) 
+#else
+    if(!isAbstraction(pred))
+#endif
       goto bombGenCall;
 
     abstr = tagged2Abstraction(pred);
@@ -2631,10 +2638,12 @@ LBLdispatcher:
 #endif
 	   } else {
 	     def = (Abstraction *) predicate;
+#if 0
 	     if (def->isDistributed() && !def->isFetched()) {
 	       def = dvarApply(def,predArity,X);
 	       predArity = 2;
 	     }
+#endif
 	     CheckArity(def->getArity(), makeTaggedConst(def));
 	     if (!isTailCall) { CallPushCont(PC); }
 	   }
