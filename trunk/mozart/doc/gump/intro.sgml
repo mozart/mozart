@@ -2,7 +2,8 @@
   <Title/Introduction/
   <P>
     The <Name type=creature>Gump</Name> is a fictional `creature' in the
-    children's novel <Q class=quotation>The Marvelous Land of Oz</Q> by
+    children's novel <Ref.Extern to="http://almond.srv.cs.cmu.edu/afs/cs.cmu.edu/user/rgs/mosaic/ozland-ftitle.html"
+    ><Q class=quotation>The Marvelous Land of Oz</Q></Ref.Extern> by
     L.&nbsp;Frank Baum, sequel to <Q class=title>The Wonderful Wizard of Oz</Q
     >&nbsp;<Ptr to="baum00">.  It is a living flying machine assembled by
     the main characters from individually selected materials.  The Tin Woodman
@@ -41,4 +42,6 @@
       &Oz; is the name of a programming language developed at the Programming
       Systems Lab at the Universität des Saarlandes.  Mozart is an
       implementation of &Oz;.
+    <P>
+      The cover illustration has been drawn by Andreas Schoch.
 </Chapter>
