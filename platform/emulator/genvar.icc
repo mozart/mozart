@@ -89,24 +89,6 @@ Bool GenCVariable::valid(TaggedRef *ptr,TaggedRef val)
   }
 }
 
-inline
-int GenCVariable::hasFeature(TaggedRef fea,TaggedRef *out)
-{
-  switch (getType()){
-  case FDVariable:   return FAILED;
-  case OFSVariable:  return ((GenOFSVariable*)this)->hasFeature(fea,out);
-
-  case BoolVariable:
-  case FSetVariable:
-  case PerdioVariable:
-  case CtVariable:
-    return SUSPEND;
-
-  default:
-    return hasFeatureV(fea,out);
-  }
-}
-
 // this is supposed to be the local variable 
 inline
 void GenCVariable::installPropagators(GenCVariable * glob_var)

@@ -41,19 +41,11 @@ public:
 
   OZ_Return unifyV(TaggedRef* vPtr, TaggedRef t, ByteCode* scp);
 
-  Bool isKindedV() { return NO; }
   OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef /* val */) { return OK; }
-  OZ_Return hasFeatureV(TaggedRef, TaggedRef *) { return SUSPEND; }
-
   GenCVariable* gcV() { return new SimpleVar(*this); }
   void gcRecurseV() {}
 
-  void addSuspV(Suspension susp, TaggedRef*, int unstable)
-  {
-    addSuspSVar(susp, unstable);
-  }
   void disposeV(void) { freeListDispose(this, sizeof(SimpleVar)); }
-  int getSuspListLengthV() { return getSuspListLengthS(); }
 
   void printStreamV(ostream &out,int depth = 10) {
     out << "<simple>";
