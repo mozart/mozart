@@ -27,37 +27,43 @@ class HTEntry {
       Literal *fname;
       SRecordArity arity;
     } functor;
-  };
+  } u;
 
  public:
 
   HTEntry(Literal *name, ProgramCounter lbl, HTEntry *nxt)
-    : label(lbl), next(nxt) { literal = name; };
+    : label(lbl), next(nxt) { u.literal = name; };
 
   HTEntry(TaggedRef num, ProgramCounter lbl, HTEntry *nxt)
     : label(lbl), next(nxt)
   {
-    number = num;
-    OZ_protect(&number);
+    u.number = num;
+    OZ_protect(&u.number);
   };
 
   HTEntry(Literal *name, SRecordArity arity, ProgramCounter lbl, HTEntry *nxt)
     : label(lbl), next(nxt) {
-    functor.fname = name;
-    functor.arity = arity;
+    u.functor.fname = name;
+    u.functor.arity = arity;
   };
 
   HTEntry* getNext(void) {return next;}
 
-  TaggedRef getNumber()  {return number;}
+  TaggedRef getNumber()  {return u.number;}
+  Literal *getLiteral()  {return u.literal;}
+  Literal *getFunctor(SRecordArity &a)
+  {
+    a = u.functor.arity;
+    return u.functor.fname;
+  }
 
-  /* look up an literal */
+  /* look up a literal */
   ProgramCounter lookup(Literal *name, ProgramCounter elseLabel)
   {
     ProgramCounter  ret = elseLabel;
 
     for (HTEntry *help = this; help != NULL; help = help->next) {
-      if (help->literal == name) {
+      if (help->u.literal == name) {
         ret = help->label;
         break;
       }
@@ -71,8 +77,8 @@ class HTEntry {
     ProgramCounter ret = elseLabel;
 
     for (HTEntry *help = this; help != NULL; help = help->next) {
-      if ( (help->functor.fname == name) &&
-           sameSRecordArity(help->functor.arity,arity) ) {
+      if ( (help->u.functor.fname == name) &&
+           sameSRecordArity(help->u.functor.arity,arity) ) {
         ret = help->label;
         break;
       }
@@ -87,7 +93,7 @@ class HTEntry {
     ProgramCounter ret = elseLabel;
 
     for (HTEntry *help = this; help != NULL; help = help->next) {
-      if (numberEq(help->number,term)) {
+      if (numberEq(help->u.number,term)) {
         ret = help->label;
         break;
       }
@@ -141,7 +147,7 @@ class IHashTable {
   int hash(int n) { return (n & hashMask); }  // return a value n with 0 <= n < size
   ProgramCounter getElse() { return elseLabel; }
 
-  ProgramCounter index(GenCVariable *var, ProgramCounter elseLabel);
+  Bool disentailed(GenCVariable *var);
 };
 
 #endif

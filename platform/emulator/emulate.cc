@@ -248,8 +248,8 @@ ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
     return offset;
   }
 
-  if (isCVar(term)) {
-    return (table->index(tagged2CVar(term),offset));
+  if (isCVar(term) && !table->disentailed(tagged2CVar(term))) {
+    return table->varLabel;
   }
 
   return offset;

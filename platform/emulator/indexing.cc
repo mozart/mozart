@@ -13,18 +13,7 @@
 #pragma implementation "indexing.hh"
 #endif
 
-#include "tagged.hh"
-#include "value.hh"
-#include "cont.hh"
-#include "board.hh"
-
-#include "stack.hh"
-#include "taskstk.hh"
 #include "am.hh"
-#include "thread.hh"
-#include "susplist.hh"
-#include "variable.hh"
-
 #include "indexing.hh"
 #include "genvar.hh"
 
@@ -68,21 +57,10 @@ void IHashTable::add(TaggedRef number, ProgramCounter label)
 
   switch (tagTypeOf(number)) {
 
-  case OZFLOAT:
-    hsh = tagged2Float(number)->hash() % size;
-    break;
-
-  case BIGINT:
-    hsh = tagged2BigInt(number)->hash() % size;
-    break;
-
-  case SMALLINT:
-    hsh = smallIntHash(number) % size;
-    break;
-
-  default:
-    error("Assertion failed in IHashTable::add: argument not a number");
-    return;
+  case OZFLOAT:  hsh = tagged2Float(number)->hash() % size;  break;
+  case BIGINT:   hsh = tagged2BigInt(number)->hash() % size; break;
+  case SMALLINT: hsh = smallIntHash(number) % size;          break;
+  default:       Assert(0);                                  return;
   }
 
   if (numberTable == NULL)
@@ -94,8 +72,6 @@ void IHashTable::add(TaggedRef number, ProgramCounter label)
 
 
 // - 'table' holds the code to branch to when indexing
-// - 'elseLabel' is the PC of the ELSE-branch, ie. in case there is no
-//   clause to switch to
 // How it works:
 // If none of the numbers is member of the domain, no guard can ever be
 // entailed therefore goto to the else-branch. Otherwise goto varLabel, which
@@ -104,25 +80,59 @@ void IHashTable::add(TaggedRef number, ProgramCounter label)
 // unifying two fd variables may result in a singleton (ie. determined term),
 // det-nodes are reentered and we achieve completeness.
 
-ProgramCounter IHashTable::index(GenCVariable *cvar, ProgramCounter elseLbl)
+Bool IHashTable::disentailed(GenCVariable *cvar)
 {
-  if (cvar->getType()==AVAR) return varLabel;
-
-  // if there are no integer guards goto else-branch
-  if (numberTable) {
-    HTEntry** aux_table = numberTable;
-    int tsize = size;
-
-    // if there is at least one integer member of the domain then goto varLabel
-    for (int i = 0; i < tsize; i++) {
-      HTEntry* aux_entry = aux_table[i];
-      while (aux_entry) {
-        if (cvar->valid(aux_entry->getNumber()))
-            return varLabel;
-        aux_entry = aux_entry->getNext();
+  switch (cvar->getType()) {
+  case FDVariable:
+  case BoolVariable:
+    {
+      /* if there are no integer guards goto else-branch */
+      if (!numberTable) {
+        return OK;
       }
-    }
-  }
 
-  return elseLbl;
+      // if there is at least one integer member of the domain then goto varLabel
+      for (int i = 0; i < size; i++) {
+        for (HTEntry* aux = numberTable[i]; aux!=NULL; aux=aux->getNext()) {
+          if (cvar->valid(aux->getNumber()))
+            return NO;
+        }
+      }
+
+      return OK;
+    }
+  case OFSVariable:
+    {
+      GenOFSVariable *ofsvar = (GenOFSVariable*) cvar;
+      if (literalTable) {
+        for (int i = 0; i < size; i++) {
+          for (HTEntry* aux = literalTable[i]; aux!=NULL; aux=aux->getNext()) {
+            if (!ofsvar->disentailed(aux->getLiteral(),(int)0))
+              return NO;
+          }
+        }
+      }
+
+      if (functorTable) {
+        for (int i = 0; i < size; i++) {
+          for (HTEntry* aux = functorTable[i]; aux!=NULL; aux=aux->getNext()) {
+            SRecordArity arity;
+            Literal *label = aux->getFunctor(arity);
+            if (sraIsTuple(arity)) {
+              if (!ofsvar->disentailed(label,getTupleWidth(arity)))
+                return NO;
+            } else {
+              if (!ofsvar->disentailed(label,getRecordArity(arity)))
+                return NO;
+            }
+          }
+        }
+      }
+      return OK;
+    }
+
+  case AVAR:
+  default:
+    return NO;
+  }
 }
