@@ -65,6 +65,8 @@ public:
     return (th);
   }
   void print(void);
+
+  Board * getHighestSolveDebug(void); // TMUELLER
 };
 
 class ThreadQueue : public ThreadQueueImpl {

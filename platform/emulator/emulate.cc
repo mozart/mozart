@@ -413,7 +413,7 @@ Bool AM::isNotPreemtiveScheduling(void)
     else
       return FALSE;
   }
-  return TRUE;
+  return !isSetSFlag(StartGC);
 }
 
 inline
@@ -1269,14 +1269,14 @@ LBLpopTask:
 	
 	unsigned int starttime = osUserTime();
 	Thread * backup_currentThread = e->currentThread;
-	
+
 	while (!ltq->isEmpty() && e->isNotPreemtiveScheduling()) {
 	  Thread * thr = e->currentThread = ltq->dequeue();
 	  
 	  Assert(!thr->isDeadThread());
 	  
 	  OZ_Return r = thr->runPropagator();
-	  
+
 	  if (r == SLEEP) {
 	    thr->suspendPropagator();
 	  } else if (r == PROCEED) {

@@ -102,6 +102,7 @@ public:
   OZPRINTLONG;
 
   void printTree();
+  Board * getHighestSolveDebug(void); 
 
   inline void incSuspCount(int n=1);
   void decSuspCount();

@@ -256,6 +256,7 @@ public:
   void fail(void);
 };
 
+/*
 class OZ_ToStream {
 public:
   OZ_Term term;
@@ -264,7 +265,7 @@ public:
 
 ostream& operator << (ostream&, const OZ_ToStream &); 
 inline OZ_ToStream OZ_toStream(OZ_Term t) { return OZ_ToStream(t); }
-
+*/
 //-----------------------------------------------------------------------------
 // Miscellaneous
 

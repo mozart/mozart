@@ -970,8 +970,7 @@ PRINT(Thread)
 
   stream << indent(offset) << 
     (isSuspended() ? "Suspended " : "Runnable ") <<
-    "Thread @" << this << endl << 
-    indent(offset+2) << " [prio: " << getPriority();
+    "Thread @" << this << " [prio: " << getPriority();
 
   switch (getThrType ()) {
   case S_RTHREAD:
@@ -1783,6 +1782,8 @@ void Board::printTree()
     off++;
     bb = aa->getBoardFast();
   }
+  bb->print(cout,1,off);
+  cout << endl;
 }
 
 void printWhere(ostream &stream,ProgramCounter PC)
