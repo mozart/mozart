@@ -2882,7 +2882,7 @@ LBLdispatcher:
 	break;
       }
       case DBG_STEP : {
-	if (CTT->isTraced() && !CTT->contFlag() && !am.runChildren) {
+	if (CTT->isTraced() && !CTT->contFlag()) {
 	  debugStreamExit(info);
 	  goto LBLpreemption;  
 	}
