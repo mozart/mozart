@@ -2367,11 +2367,6 @@ $builtins = {
 			     BI  => BIstoreBuiltinname,
 			     native => true},
 
-    'storeVariablename'	=> { in  => ['+int','+atom'],
-			     out => [],
-			     BI  => BIstoreVariablename,
-			     native => true},
-
     'storeRegisterIndex'=> { in  => ['+int','+int'],
 			     out => [],
 			     BI  => BIstoreRegisterIndex,
@@ -2397,8 +2392,8 @@ $builtins = {
 			     BI  => BIpredIdFlags,
 			     native => true},
 
-    'storePredId'	=> { in  => ['+int','+atom','+value','+atom',
-				     '+int','+int'],
+    'storePredId'	=> { in  => ['+int','+atom','+value','+record',
+				     '+value','+int'],
 			     out => [],
 			     BI  => BIstorePredId,
 			     native => true},

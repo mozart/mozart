@@ -52,7 +52,7 @@ int sizeOf(Opcode oc)
    include(EMUDIR/instrDefs.m4)
     
   default:
-    warning("sizeOf: unknown opcode: %d",oc);
+    error("sizeOf: unknown opcode: %d",oc);
     return 1;
   }
 

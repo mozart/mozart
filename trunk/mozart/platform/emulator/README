@@ -53,17 +53,29 @@ p board->printLongDebug()
 
 ----------------------------
 
-debug the bootstrap procedure under GDB:
+# debug bootstrap with new ozm/emu
 
-cd ~/Oz/lib
+make bootstrap OZEMULATOR=~/d-emu OZMAFILE=./ozbatch.ozm
+make stage1 OZEMULATOR=~/d-emu OZMAFILE=./ozbatch.ozm
+make clean
+make stage2 OZEMULATOR=~/d-emu
+make clean
+make stage3 OZEMULATOR=~/d-emu
+
+# debug the bootstrap procedure under GDB:
+
+cd ~/mozart/share/lib
 
 set env OZ_LOAD "root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=./"
 
-r -init '' -b ~/Oz/lib/ozbatch.ozm -a ~/Oz/lib/DumpInitial.oz
+r -init '' -b ozbatch.ozm -a ~/mozart/share/lib/DumpInitial.oz
 
-r -init '' -b ~/Oz/lib/ozbatch.ozm -a --include=DumpIntro.oz -c Init.oz
+r -init '' -b ozbatch.ozm -a --include=~/Oz/lib/DumpIntro.oz -c ~/Oz/lib/Init.oz
 
 r -init './Init.ozc' -b ~/Oz/lib/ozbatch.ozm -a --include=DumpIntro.oz -c -l AP OPI.oz -o OPI.ozc
 
 -----------------------------
 
+# run asm test
+
+r -d -init '' -b ~/Oz/test/asm/mini.ozm
