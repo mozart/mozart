@@ -66,10 +66,13 @@ fun {$ IMPORT}
 
 in
 
-   fd([multiply([all(equal(fun {$} {SearchAll Multiply} end
+   fd([multiply([
+		 all(equal(fun {$} {SearchAll Multiply} end
 			   MultiplySol)
 		     keys: [fd])
+		 all_entailed(entailed(proc {$} {SearchAll Multiply _} end)
+			      keys: [fd entailed])
 		])
       ])
-
+   
 end
