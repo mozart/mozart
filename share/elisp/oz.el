@@ -127,8 +127,8 @@ starts the emulator under gdb")
 	  "\\|\\\\line.*% fromemacs\n")
   "")
 
-(defconst oz-scrollbar-pattern
-  "\'oz-scrollbar \\([^ ]*\\) \\([^ ]*\\) \\([^ ]*\\)\'")
+(defconst oz-bar-pattern
+  "\'oz-bar \\([^ ]*\\) \\([^ ]*\\) \\([^ ]*\\)\'")
 
 (defvar oz-want-font-lock t
   "*If t means that font-lock mode is switched on")
@@ -434,57 +434,63 @@ starts the emulator under gdb")
       (message oz-breakpoint-error))))
 
 
-(make-face 'scrollbar-runnable)
-(make-face 'scrollbar-blocked)
-(make-face 'scrollbar-stack)
+(make-face 'bar-running)
+(make-face 'bar-runnable)
+(make-face 'bar-blocked)
 
 (let ((planes (x-display-planes)))
-  (modify-face 'scrollbar-runnable "white"
-	       (if (eq planes 1) "black" "#7070c0") ;; "#50a050"
+  (modify-face 'bar-running      "white"
+	       (if (eq planes 1) "black" "#afafff")
 	       nil nil nil nil)
-  (modify-face 'scrollbar-blocked  "white"
-	       (if (eq planes 1) "black" "#d05050")
-	       nil nil nil nil)
-  (modify-face 'scrollbar-stack    "white"
+  (modify-face 'bar-runnable     "white"
 	       (if (eq planes 1) "black" "#7070c0")
+	       nil nil nil nil)
+  (modify-face 'bar-blocked      "white"
+	       (if (eq planes 1) "black" "#d05050")
 	       nil nil nil nil))
 
-(defvar scrollbar-overlay nil)
+(defvar bar-overlay nil)
 
-(defun oz-scrollbar (file line what)
-  "Display scrollbar at given line, load file if necessary."
+(defun oz-bar (file line state)
+  "Display bar at given line, load file if necessary."
   (interactive)
-  (let* ((last-nonmenu-event t)
-	 (buffer (find-file-noselect file))
-	 (window (display-buffer buffer))
-	 (beg) (end)
-	 (oldpos))
-    (save-excursion
-      (set-buffer buffer)
-      (save-restriction
-	(widen)
-	(setq oldpos (point))
-	(goto-line line) (setq beg (point))
-	(end-of-line)    (setq end (+ (point) 1))
-
-	(or scrollbar-overlay (setq scrollbar-overlay (make-overlay beg end)))
-	(move-overlay scrollbar-overlay beg end (current-buffer))
+  (if (string-equal file "unchanged")
+      (oz-bar-configure state)
+    (let* ((last-nonmenu-event t)
+	   (buffer (find-file-noselect file))
+	   (window (display-buffer buffer))
+	   (beg) (end)
+	   (oldpos))
+      (save-excursion
+	(set-buffer buffer)
+	(save-restriction
+	  (widen)
+	  (setq oldpos (point))
+	  (goto-line line) (setq beg (point))
+	  (end-of-line)    (setq end (+ (point) 1))
+	  
+	  (or bar-overlay (setq bar-overlay (make-overlay beg end)))
+	  (move-overlay bar-overlay beg end (current-buffer))
+	  
+	  (oz-bar-configure state))
 	
-	(overlay-put scrollbar-overlay 'face
-		     (cond ((string-equal what "runnable")
-			    'scrollbar-runnable)
-			   ((string-equal what "blocked")
-			    'scrollbar-blocked)
-			   ((string-equal what "stack")
-			    'scrollbar-stack))))
+	(if (or (< beg (window-start)) (> beg (window-end)))
+	    (progn
+	      (widen)
+	      (goto-char beg))
+	  (goto-char oldpos)))
+      (set-window-point window beg))))
 
-      (if (or (< beg (window-start)) (> beg (window-end)))
-	  (progn
-	    (widen)
-	    (goto-char beg))
-	(goto-char oldpos)))
-    (set-window-point window beg)))
-
+(defun oz-bar-configure (state)
+  "Change color of bar, don't move it."
+  (interactive)
+  (overlay-put bar-overlay 'face
+	       (cond ((string-equal state "running")
+		      'bar-running)
+		     ((string-equal state "runnable")
+		      'bar-runnable)
+		     ((string-equal state "blocked")
+		      'bar-blocked))))
 
 ;;------------------------------------------------------------
 ;; Start/Stop oz
@@ -1461,16 +1467,16 @@ and initial semicolons."
             (while (search-forward-regexp oz-remove-pattern nil t)
               (replace-match "" nil t))
 
-            ;; oz-scrollbar information?
-            (while (search-forward-regexp oz-scrollbar-pattern nil t)
+            ;; oz-bar information?
+            (while (search-forward-regexp oz-bar-pattern nil t)
               (let ((file  (match-string 1))
 		    (line  (string-to-number (match-string 2)))
-		    (what (match-string 3)))
+		    (state (match-string 3)))
                 (replace-match "" nil t)
 		(if (string-equal file "undef")
-		    (if (not (eq scrollbar-overlay nil))
-			(overlay-put scrollbar-overlay 'face 'default))
-		  (oz-scrollbar file line what)))))
+		    (if (not (eq bar-overlay nil))
+			(overlay-put bar-overlay 'face 'default))
+		  (oz-bar file line state)))))
 	  
 	  (if (or moving errs-found) (goto-char (process-mark proc))))
       (set-buffer old-buffer))
