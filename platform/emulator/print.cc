@@ -883,8 +883,6 @@ PRINT(Actor)
     stream << "Wait";
   } else if (isSolve()) {
     stream << "Solve";
-  } else if (isDisWait()) {
-    stream << "DisWait";
   } else {
     stream << "Unknown";
   }
