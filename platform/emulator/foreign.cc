@@ -390,3 +390,9 @@ void OZ_addSuspension(OZ_Term *var, OZ_Suspension *s)
 
   svar->addSuspension(s);
 }
+
+
+OZ_Bool onToplevel()
+{
+  return am.isToplevel() == OK ? PROCEED : FAILED;
+}
