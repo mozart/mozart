@@ -44,7 +44,7 @@ DEMOAPPLETS = \
 	$(APPLETS:%=$(OZDEMO)/%)
 
 DIRS = \
-	JobShop Cutting Transport DictClient
+	JobShop Cutting Transport DictClient LMF
 
 all: dirs $(APPLETS)
 
@@ -139,6 +139,29 @@ $(APPLETS): DemoUrls.ozf
 
 %.ozf: %.oz
 	$(COMPILE) $< -o $@
+
+# Last Minute Flights
+
+LMF/%.ozf: LMF/%.oz
+	$(COMPILE) -b $(BUILDDIR)/LMF/ $< -o $@
+
+LMF1 = \
+	Abstractions HTML Server Book ProcessBook
+
+LMFFUN = $(LMF1:%=LMF/%.ozf)
+
+lmf-server: $(LMFFUN)
+	$(LINK) -x LMF/Server.ozf -o $@
+
+lmf-book.cgi: $(LMFFUN)
+	$(LINK) -x LMF/Book.ozf -o $@
+
+lmf-process.cgi: $(LMFFUN)
+	$(LINK) -x LMF/ProcessBook.ozf -o $@
+
+.PHONY: lmf
+
+lmf: lmf-server lmf-book.cgi lmf-process.cgi
 
 #
 # Images
