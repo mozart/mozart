@@ -26,14 +26,12 @@ functor
 import
    Browser(browse)
    DPStatistics(getTablesInfo)
-   DPB at 'x-oz://boot/DPB'
 export
    ownerTable:OwnerTable
    borrowTable:BorrowTable
    fetchInfo:FetchInfo
 
 define
-   {Wait DPB}
 
    class ColorAlloc
       feat
