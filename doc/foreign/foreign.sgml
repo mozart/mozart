@@ -528,7 +528,7 @@ The following data types are defined in the interface:
 <entry><<OZ_CFun>>
 <index class=module/OZ_CFun/
 <synopsis>
-<code >typedef OZ_Return (*OZ_CFun)(OZ_Term *,int *)</code>
+<code >typedef OZ_Return (*OZ_CFun)(OZ_Term * [])</code>
 <item>Signature of an interface function.
 <entry><<OZ_Term>>
 <index class=module/OZ_Term/
