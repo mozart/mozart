@@ -1,5 +1,14 @@
 -*-outline-*-
 
+* version 0.74
+** `requires' field now properly saved in mogul.db and is properly exported
+** pkg files are now compressed and much smaller
+** makefiles now support the `provides' feature to override the default
+   computed from the bin and lib features.  Note that the `provides' feature
+   of a makefile does not also override its submakefiles; each one should
+   supply its own `provides' if desired.  `provides:nil' is a simple way of
+   indicating that the makefile provides no public functors or executables.
+
 * version 0.73
 ** makefiles now support the 'contact' feature to specify MOGUL contact
    information:

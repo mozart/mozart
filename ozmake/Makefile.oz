@@ -14,7 +14,7 @@ prepare
 
    VALID_MAKEFILE_FEATURES = [bin lib doc src depends rules uri mogul author released clean veryclean
 			      blurb info_text info_html subdirs submakefiles requires categories version
-			      contact tar]
+			      contact tar provides]
 
 define
 
@@ -327,6 +327,35 @@ define
 	    {self set_lib_targets({Reverse {Stack.toList}})}
 	 end
 
+	 %% process provides feature
+
+	 local Stack={Utils.newStack} PRO={CondSelect R provides nil} in
+	    if {Not {IsList PRO}} then
+	       raise ozmake(makefile:badsectionvalue(provides PRO)) end
+	    end
+	    for F in PRO do U A in
+	       if {Not {IsVirtualString F}} then
+		  raise ozmake(makefile:badsectionentry(provides F)) end
+	       end
+	       %% must be a relative pathname
+	       U={Path.toURL F}
+	       if {Path.isAbsolute U} then
+		  raise ozmake(makefile:badsectiontarget(lib F)) end
+	       end
+	       %% check that it is actually a bin or lib target
+	       A={Path.toAtom U}
+	       case {CondSelect @Target2Section A unit}
+	       of unit then
+		  raise ozmake(makefile:unknownprovides(A)) end
+	       [] bin  then {Stack.push A}
+	       [] lib  then {Stack.push A}
+	       [] S    then
+		  raise ozmake(makefile:badprovides(S A)) end
+	       end
+	    end
+	    {self set_provides_targets({Reverse {Stack.toList}})}
+	 end
+
 	 %% process doc feature
 
 	 local Stack={Utils.newStack} DOC={CondSelect R doc nil} in
@@ -584,6 +613,7 @@ define
 	 Version   = {self get_version($)}
 	 Contact   = {self get_contact($)}
 	 Tar       = {self get_tar_targets($)}
+	 Provides  = {self get_provides_targets($)}
       in
 	 MAK.bin     := {self get_bin_targets($)}
 	 MAK.lib     := {self get_lib_targets($)}
@@ -595,6 +625,7 @@ define
 			 fun {$ R} Tool=R.tool in
 			    Tool(R.file R.options)
 			 end}
+	 if Provides\=unit then MAK.provides := Provides end
 	 %% if there are no targets, the uri is unnecessary
 	 if {self maybe_get_uri($)}\=unit
 	    orelse MAK.bin\=nil

@@ -43,6 +43,7 @@ define
 	 LibTargets : nil
 	 DocTargets : nil
 	 SrcTargets : nil
+	 ProvidesTargets : unit
 	 FullBuild  : false	% if true, also build targets in src
 	 Blurb      : unit
 	 InfoText   : unit
@@ -892,5 +893,8 @@ define
 
       meth set_tar_targets(L) TarTargets<-L end
       meth get_tar_targets($) @TarTargets end
+
+      meth set_provides_targets(L) ProvidesTargets<-L end
+      meth get_provides_targets($) @ProvidesTargets end
    end
 end
