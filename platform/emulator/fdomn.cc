@@ -164,15 +164,31 @@ void FDIntervals::initList(int list_len,
 }
 
 inline
-int FDIntervals::nextBiggerElem(int v, int max_elem) const
+int FDIntervals::nextSmallerElem(int v, int min_elem) const
 {
+  if (v <= min_elem) return -1;
+
+  for (int i = high; i--; ) {
+    if (i_arr[i].left < v && v-1 <= i_arr[i].right)
+      return v - 1;
+    if (v > i_arr[i].right)
+      return i_arr[i].right;
+  }
+
+  return -1;
+} 
+
+inline
+int FDIntervals::nextLargerElem(int v, int max_elem) const
+{
+  if (v >= max_elem) return -1;
+
   for (int i = 0; i < high; i += 1) {
-    if (i_arr[i].left <= v && i_arr[i].right < v)
+    if (i_arr[i].left <= v-1 && v < i_arr[i].right)
       return v + 1;
-    if (v <= i_arr[i].left)
+    if (v < i_arr[i].left)
       return i_arr[i].left;
   }
-  error ("no bigger element in domain");
   return -1;
 } 
 
@@ -712,13 +728,22 @@ void FDBitVector::setFromTo(int from, int to)
 }
 
 inline
-int FDBitVector::nextBiggerElem(int v, int max_elem) const
+int FDBitVector::nextSmallerElem(int v, int min_elem) const
+{
+  for (int new_v = v - 1; new_v >= min_elem; new_v -= 1)
+    if (contains(new_v))
+      return new_v;
+  
+  return -1;
+} 
+
+inline
+int FDBitVector::nextLargerElem(int v, int max_elem) const
 {
   for (int new_v = v + 1; new_v <= max_elem; new_v += 1)
     if (contains(new_v))
       return new_v;
   
-  error ("no bigger element in domain");
   return -1;
 } 
 
@@ -1395,19 +1420,36 @@ int OZ_FiniteDomainImpl::intersectWithBool(void)
 }
 
 inline
-int OZ_FiniteDomainImpl::nextBiggerElem(int v) const
+int OZ_FiniteDomainImpl::nextSmallerElem(int v) const
 {
   descr_type type = getType();
   if (type == fd_descr) {
-    if (v == max_elem) {
-      error("no bigger element in domain");
+    if (v <= min_elem) 
       return -1;
-    }
+    if (v > max_elem)
+      return max_elem;
+    return v - 1;
+  } else if (type == bv_descr) {
+    return get_bv()->nextSmallerElem(v, min_elem);
+  } else {
+    return get_iv()->nextSmallerElem(v, min_elem);
+  }
+} 
+
+inline
+int OZ_FiniteDomainImpl::nextLargerElem(int v) const
+{
+  descr_type type = getType();
+  if (type == fd_descr) {
+    if (v >= max_elem) 
+      return -1;
+    if (v < min_elem)
+      return min_elem;
     return v + 1;
   } else if (type == bv_descr) {
-    return get_bv()->nextBiggerElem(v, max_elem);
+    return get_bv()->nextLargerElem(v, max_elem);
   } else {
-    return get_iv()->nextBiggerElem(v, max_elem);
+    return get_iv()->nextLargerElem(v, max_elem);
   }
 } 
 
@@ -1962,9 +2004,14 @@ int OZ_FiniteDomain::next(int i) const
   return CASTTHIS->next(i);
 }
 
-int OZ_FiniteDomain::nextBiggerElem(int v) const
+int OZ_FiniteDomain::nextSmallerElem(int v) const
 {
-  return CASTTHIS->nextBiggerElem(v);
+  return CASTTHIS->nextSmallerElem(v);
+}
+
+int OZ_FiniteDomain::nextLargerElem(int v) const
+{
+  return CASTTHIS->nextLargerElem(v);
 }
 
 int OZ_FiniteDomain::constrainBool(void)
