@@ -157,7 +157,7 @@ PRINT(GenCVariable){
 	 << " @"
 	 << this;
   if (isEffectiveList(suspList) == OK)
-    stream << " a";
+    stream << " a" << suspList->length();
   
   switch(type){
   case FDVariable:
@@ -174,13 +174,13 @@ PRINT(GenCVariable){
 
 PRINT(GenFDVariable){
   if (isEffectiveList(fdSuspList[det]) == OK)
-    stream << " d";
+    stream << " d" << fdSuspList[det]->length();
   if (isEffectiveList(fdSuspList[bounds]) == OK)
-    stream << " b";
+    stream << " b" << fdSuspList[bounds]->length();
   if (isEffectiveList(fdSuspList[size]) == OK)
-    stream << " s";
+    stream << " s" << fdSuspList[size]->length();
   if (isEffectiveList(fdSuspList[eqvar]) == OK)
-    stream << " e";
+    stream << " e" << fdSuspList[eqvar]->length();
   stream << ' ';
   finiteDomain.print(stream, 0);
 } // PRINT(GenFDVariable)
