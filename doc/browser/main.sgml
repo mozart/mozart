@@ -97,7 +97,8 @@ are explained.
 <section><title/Invoking the Browser/
 
 <p>
-<index/Browse/
+<index/<<Browse>>/
+<index/<<Browser>><and><<browse>>/
 The Browser can be invoked by the predefined unary procedure
 <<Browse>>. For example,
 <<<
@@ -108,7 +109,6 @@ variable <<X>>.
 
 <p>
 <index class=menu/Browser<and>Close/
-<index class=module/close/
 A browser window can be closed via the <span class=menu/Close/ entry of the
 <span class=menu/Browser/ menu, or by the <kbd/C-x/ keyboard accelerator.
 
@@ -125,7 +125,7 @@ the Browser functionality, which are considered in the
 <section><title/The User Interface/
 
 <p>
-<index class=module/break/
+<index class=menu/Browser<and>Break/
 A Browser window (<ptr to=fig.browser.prime >) consists of a text
 widget in which browsed information is shown, a menubar and scrollbars.
 The red button on the right side of the menubar, called the <em/break/
@@ -163,18 +163,14 @@ modes.
 <section><title/Browser Module/
 
 <p>
-<index/<code/Browser.'class'//
-<index/<code/Browser.object//
-<index/<code/Browser.browse//
-<index/<code/Browser.close//
 The <code/Browser/ module exports the following values:
 <list>
 <entry><<Browser.'class'>>
-<index class=module/init/
-<index class=module/browse/
+<index class=module/Browser<and>'class'/
 <item> is an &Oz; class that implements the Browser.
 <entry><<Browser.object>>
-<item> is an instance of <<Browser.'class'>> <note foot/Actually,
+<index class=module/Browser<and>object/
+<item> is an instance of <<Browser.'class'>><note foot/Actually,
 two <em/distinct/ things are called 'Browser' here: first, this is the
 tool described in this chapter itself, and, second, this is a particular
 instance of the tool (a <<Browser.'class'>> object)./:
@@ -182,9 +178,10 @@ instance of the tool (a <<Browser.'class'>> object)./:
 BrowserObject = {New Browser.'class' init}
 </code>
 <entry><<Browser.browse>>
+<index/<<Browse>>/
+<index/<<Browser>><and><<browse>>/
 <item> is an unary procedure used to tell <<Browser.object>> to browse
 its argument. It is also available as procedure <code/Browse/ in the OPI:
-<index class=module/browse/
 <code display>
 Browse = proc {$ X} {Browser.object browse(X)} end
 </code>
@@ -308,11 +305,11 @@ Construction of the graph is stopped whet the set <math>\V</math> becomes empty.
 It is continued automatically when additional constraints are added to
 the store.
 <p>
-<index/Browser<and>terms/
+<index/terms/
 In the scope of this documentation, the textual representation of a
-(sub)graph is called <def/(sub)term/<note foot/Browser terms are similar
-to &Oz; (syntactic) terms as defined in <!--  <ptr to=notation> -->, but they have
-different origins./. A (sub)term can be <def/primitive/ or
+(sub)graph is called (sub)<def/term/<note foot/Browser terms are similar
+to &Oz; (syntactic) terms as defined in <Ptr.extern to="ozdoc:notation">,
+but they have different origins./. A (sub)term can be <def/primitive/ or
 <def/compound/, similarly to the &Oz; values.
 <p>
 Numbers and records are shown as one would expect. Procedures, cells,
@@ -359,7 +356,6 @@ is browsed in this case as <<_#ello>> <note foot/The string
 <em/e/, <em/l/, <em/l/ and <em/o/ respectively./. If the additional
 &Oz; line
 <index class=menu/Selection<and>Rebrowse/
-<index class=module/rebrowse/
 <code display>
   S = [72]#_
 </code>
@@ -398,9 +394,9 @@ The description is divided into the following issues:
 
 <p>
 <index/terms<and>viewing forms/
-<index/viewing forms<and>completely/
-<index/viewing forms<and>partially/
-<index/viewing forms<and>shrunken/
+<index/viewing form<and>completely/
+<index/viewing form<and>partially/
+<index/viewing form<and>shrunken/
 Each (sub)term is shown in a certain <def/viewing form/, namely, it can be
 drawn <def/completely/, <def/partially/ or it can be <def/shrunken/:
 
@@ -418,8 +414,8 @@ term are shown, the rest of them is replaced with '<<,,,>>';
 <item> means that the term is shown in the form '<<,,,>>'.
 </list>
 
-<index/options<and>display<and>width/
-<index/options<and>display<and>depth/
+<index class=tails/print<and>width/
+<index class=tails/print<and>depth/
 <index class=menu/Options<and>Display Parameters<and>Browse Limits/
 The form of each (sub)term is determined by values of the <def/width/
 and <def/depth browse limits/:
@@ -449,11 +445,11 @@ column if they don't fit in one row. However, this can be switched off
 via turning off the option <<Record Fields Aligned>> of the <<Layout>>
 submenu of the <<Options>> menu.
 <p>
-<index/viewing forms<and>completely/
-<index/viewing forms<and>partially/
-<index/viewing forms<and>shrunken/
-<index class=menu/Expand/
-<index class=menu/Shrink/
+<index/viewing form<and>completely/
+<index/viewing form<and>partially/
+<index/viewing form<and>shrunken/
+<index class=menu/Selection<and>Expand/
+<index class=menu/Selection<and>Shrink/
 A non-shrunken (sub)term can be <def/shrunken/ explicitly by means of
 the <<Shrink>> commands of the <<Selection>> menu. The command is applied
 to a selection, which is described in
@@ -477,8 +473,7 @@ are viewed, where <<Width>> is the Browser's expansion limit.
 
 <section><title/Controlling Browsing/
 <p>
-<index class=module/break/
-<index class=menu/Break/
+<index class=menu/Browser<and>Break/
 Browser draws terms sequentially, in the depth-first, left-to-right
 fashion, one term after each other. Drawing process can be stopped
 nearly all the time by pressing the <em/break/ button (or by using the
@@ -486,12 +481,9 @@ nearly all the time by pressing the <em/break/ button (or by using the
 (sub)term(s) yet to be drawn appear in shrunken form, and started but
 not yet completed (sub)term(s) appear partially.
 <p>
-<index/buffer/
 <index class=menu/Options<and>Buffer/
-<index class=menu/Clear/
-<index class=menu/Clear All But Last/
-<index class=module/clear/
-<index class=module/clearAllButLast/
+<index class=menu/Browser<and>Clear/
+<index class=menu/Browser<and>Clear All But Last/
 More than term can be shown simultaneously in a Browser window.  The
 Browser contains a first-in-first-out buffer where information about
 browsed terms is kept. The buffer size limits the number of
@@ -524,9 +516,6 @@ For example, the value of <math>X</math> determined by the expression
 is browsed as << <![RCDATA[C1=a(f1:C1 f2:<N: `N`> f3:<N: `N`>)]]> >>.
 
 <p>
-<index/representation<and>tree/
-<index/representation<and>graph/
-<index/representation<and>minimal graph/
 A textual representation of a value graph described in <ptr
 to=sec.browser.browsedInformation > is generated using the <Q/minimal
 graph/ representation option.  Informally speaking, in this mode equal
@@ -566,7 +555,7 @@ menu or by the keyboard accelerator, similarly to <<Expand>> and <<Shrink>>
 <section id=sec.browser.actions><title/Actions/
 <p>
 <index/selection/
-<index class=menu/Deselect/
+<index class=menu/Browser<and>Deselect/
 An arbitrary shown (sub)term can be <def/selected/. This is achieved by
 clicking the left mouse button. Deselection proceeds by clicking the
 right one.  Selected (sub)terms are shown in the text widget on a wheat
@@ -574,7 +563,6 @@ colored background.  Selected (sub)terms are targets for both
 pre-defined browser operations (like <<Shrink>> and <<Expand>> described
 in Section<ptr to=sec.browser.theOutputFormat >) and user-defined <def/actions/.
 <p>
-<index/actions/
 <index/actions<and>user-defined/
 <index class=menu/Selection<and>Set Action/
 The <em/Actions/ mechanism provide for application of unary procedures
@@ -582,9 +570,9 @@ with the current selection as an argument. There are two predefined
 actions: <<Show>> and <<Browse>>. There can be <def/user-defined actions/,
 which are added by means of the <<add>>, <<set>> and <<delete>> methods of
 <<BrowserClass>>:
-<index class=module/add/
-<index class=module/set/
-<index class=module/delete/
+<index class=module/Browser<and>'class'<and>add/
+<index class=module/Browser<and>'class'<and>set/
+<index class=module/Browser<and>'class'<and>delete/
 <code display>
   %%
   declare
@@ -633,10 +621,10 @@ subsequent selections:
 <p>
 Now we can set this action and browse, for instance, a list constructor
 with two variables:
-<index class=module/createWindow/
-<index class=module/add/
-<index class=module/set/
-<index class=module/option/
+<index class=module/Browser<and>'class'<and>createWindow/
+<index class=module/Browser<and>'class'<and>add/
+<index class=module/Browser<and>'class'<and>set/
+<index class=module/Browser<and>'class'<and>option/
 <code display>
   {Browser createWindow}
   {Browser add(UnifyAction)}
@@ -723,8 +711,7 @@ of browsing in local computation spaces.
 
 <section><title/Setting Options/
 <p>
-<index/options/
-<index class=module/option/
+<index class=module/Browser<and>'class'<and>option/
 Every Browser option that can be set by means of the <<Options>> menu can
 be set also by means of the <<option>> method of the <<BrowserClass>>. Its
 format is
@@ -790,43 +777,39 @@ section.
 
 <list>
 <entry><menu/About&ellipsis;/
+<index class=menu/Browser<and>About&ellipsis;/
 <item>
 Displays a small dialog containg information about the product.
 
 <entry><menu key="C-c"/Break/
-<index class=module/break/
-<index class=menu/Break/
+<index class=menu/Browser<and>Break/
 <item>
 Stops browsing as soon as possible.
 
 <entry><menu mouse=r1/Deselect/
 <index/selection/
-<index class=menu/Deselect/
+<index class=menu/Browser<and>Deselect/
 <item>
 Deselects the current selection, if any.
 
 <entry><menu key="C-u"/Clear/
 <index/buffer/
-<index class=module/clear/
-<index class=menu/Clear/
+<index class=menu/Browser<and>Clear/
 <item>
 Removes all browsed information from the Browser window, if any.
 
 <entry><menu key="C-w"/Clear All But Last/
 <index/buffer/
-<index class=menu/Clear All But Last/
-<index class=module/clearAllButLast/
+<index class=menu/Browser<and>Clear All But Last/
 <item>Removes all browsed information from the Browser window except the last
 term, if any.
 
 <entry><menu key="C-l"/Refine Layout/
-<index class=menu/Refine Layout/
-<index class=module/refineLayout/
+<index class=menu/Browser<and>Refine Layout/
 <item>Checks the current term layout and optimizes it whenever possible.
 
 <entry><menu key="C-x"/Close/
-<index class=menu/Close/
-<index class=module/close/
+<index class=menu/Browser<and>Close/
 <item>Closes the Browser.
 </list>
 </section>
@@ -835,7 +818,7 @@ term, if any.
 <p>
 <list>
 <entry><menu mouse=l2 key="e"/Expand/
-<index class=menu/Buffer/
+<index/buffer/
 <index class=menu/Selection<and>Expand/
 <item>Replaces the selected shrunken (sub)term <code/,,,/ by a subterm(s),
 or views further subterm(s) of a partially shown selected (sub)term.
@@ -852,7 +835,6 @@ exposes and selects the referenced (sub)term.
 
 <entry><menu key="C-b"/Rebrowse/
 <index class=menu/Selection<and>Rebrowse/
-<index class=module/rebrowse/
 <item>Removes and creates again a selected (sub)term.
 
 <entry><menu/SetAction/
@@ -927,7 +909,7 @@ objects is described.
 
 <section><title/Creating A Browser Object/
 <p>
-<index class=module/init/
+<index class=module/Browser<and>'class'<and>init/
 One can create Browser objects similarly to the pre-defined <<Browser>>
 one:
 <code display>
@@ -938,9 +920,9 @@ The plain <<init>> method makes a newly created Browser placed on its own
 toplevel widget. One can tell a Browser object to use a Tk frame
 (see <!--**  <ptr to=tk> --> for details) as its toplevel frame:
 
-<index class=module/createWindow/
-<index class=module/init/
-<index class=module/browse/
+<index class=module/Browser<and>'class'<and>createWindow/
+<index class=module/Browser<and>'class'<and>init/
+<index class=module/Browser<and>'class'<and>browse/
 <code display>
 declare W F BrowserObject in
 %%
@@ -983,14 +965,14 @@ toplevel widget.
 </picture.choice>
 </figure>
 
-<index class=module/createWindow/
-<index class=module/browse/
+<index class=module/Browser<and>'class'<and>createWindow/
+<index class=module/Browser<and>'class'<and>browse/
 Note that when a Browser object is created, either stand-alone or
 embedded, its window does not appear immediately.  This happens when
 either <<createWindow>> or <<browse>> methods are applied.
 <p>
-<index class=module/closeWindow/
-<index class=module/close/
+<index class=module/Browser<and>'class'<and>closeWindow/
+<index class=module/Browser<and>'class'<and>close/
 A Browser window can be closed by means of the <<closeWindow>> method.
 Each time a Browser window is closed its buffer is flushed.  A Browser
 object itself can be closed by means of the <<close>>  method, which
@@ -1001,15 +983,14 @@ which can be closed many times but never dies. Note that this behavior
 <em/is not/ <Q/re-creating/ since no new Browser object is created
 immediately.}.
 <p>
-<index class=module/closeWindow/
+<index class=module/Browser<and>'class'<and>closeWindow/
 Note that the <<closeWindow>> method has no effect for embedded
 application browsers.
 <p>
-<index class=module/close/
+<index class=module/Browser<and>'class'<and>close/
 An embedded browser and its frame should be closed by sending the
 <<close>> messages on the Browser object and on the frame object in that
 sequence. For instance, in our example it would be
-<index class=module/close/
 <code display>
    {BO close}
    {F close}
@@ -1018,29 +999,28 @@ sequence. For instance, in our example it would be
 
 <section><title/Browser Object Methods/
 <p>
-<index/application stand-alone/
-<index/application embedded/
+<index/application<and>stand-alone/
+<index/application<and>embedded/
 
 Browser objects are controlled by user through the Browser GUI, and by
 means of application of them to the <<BrowserClass>> methods. At the
 glance, there are the following public methods of a Browser object,
 where <<X>> and <<Y>> are certain internal default values:
 
-<index/BrowserClass<and>methods/
-<index class=module/init/
-<index class=module/createWindow/
-<index class=module/closeWindow/
-<index class=module/close/
-<index class=module/browse/
-<index class=module/break/
-<index class=module/clear/
-<index class=module/clearAllButLast/
-<index class=module/rebrowse/
-<index class=module/option/
-<index class=module/add/
-<index class=module/set/
-<index class=module/delete/
-<index class=module/refineLayout/
+<index class=module/Browser<and>'class'<and>init/
+<index class=module/Browser<and>'class'<and>createWindow/
+<index class=module/Browser<and>'class'<and>closeWindow/
+<index class=module/Browser<and>'class'<and>close/
+<index class=module/Browser<and>'class'<and>browse/
+<index class=module/Browser<and>'class'<and>break/
+<index class=module/Browser<and>'class'<and>clear/
+<index class=module/Browser<and>'class'<and>clearAllButLast/
+<index class=module/Browser<and>'class'<and>rebrowse/
+<index class=module/Browser<and>'class'<and>option/
+<index class=module/Browser<and>'class'<and>add/
+<index class=module/Browser<and>'class'<and>set/
+<index class=module/Browser<and>'class'<and>delete/
+<index class=module/Browser<and>'class'<and>refineLayout/
 <code display>
    meth init(origWindow: OrigWindow <= X)
    meth createWindow
