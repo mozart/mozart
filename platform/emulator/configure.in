@@ -32,6 +32,8 @@ dnl  Warnings pedwarn
 dnl  Windows support
 dnl  pmake support
 dnl  ensure that all needed programs are really found
+dnl  make all options as orthogonal as possible and print a warning if
+dnl   an option makes no sense (PGCC and debug)
 
 dnl *****************************************************************
 dnl INITIALIZE
@@ -75,7 +77,7 @@ dnl *****************************************************************
 
 AC_MSG_CHECKING(for --enable-wincross)
 AC_ARG_ENABLE(wincross,
-  [--enable-wincross   Windows cross compilation (default=no)])
+  [--enable-wincross  Windows cross compilation (default=no)])
 if test "x$enable_wincross" = xyes; then
         AC_MSG_RESULT(yes (-DGNUWIN32 -DWINDOWS))
 	WINCROSS="/project/ps/soft/cygwin-cross"
@@ -98,8 +100,61 @@ dnl *****************************************************************
 
 PATH=$TOPDIR/bin:$TOPDIR:$PATH
 
+AC_MSG_CHECKING(for --with-pgcc)
+AC_ARG_WITH(pgcc,
+    [--with-pgcc        use pgcc compiler (default: yes, if --enable-opt)])
+
+	if test "x$with_pgcc" = x
+	then
+	    case $enable_opt in
+		n*|d*)
+		    AC_MSG_RESULT(no)
+		    ;;
+		*)
+		    AC_MSG_RESULT(trying)
+		    AC_CHECK_PROGS(PGXX, pg++)
+		    if test -n "$PGXX"
+		    then
+			CC=pgcc
+			CXX=$PGXX
+		    fi
+		    ;;
+	    esac
+	else
+	if test "x$with_pgcc" = xyes; then
+            AC_MSG_RESULT(yes)
+	    AC_CHECK_PROGS(PGXX, pg++)
+	    if test -n "$PGXX"
+	    then
+		CC=pgcc
+		CXX=$PGXX
+	    else
+		AC_MSG_WARN(Ingnoring --with-pgcc)
+	    fi
+	else
+	    AC_MSG_RESULT(no)
+	fi
+	fi
+
+AC_MSG_CHECKING(for --with-sunpro)
+AC_ARG_WITH(sunpro,
+    [--with-sunpro      use sunpro compiler (default: no)])
+	if test "x$with_sunpro" = xyes; then
+            AC_MSG_RESULT(yes)
+	    AC_CHECK_PROGS(SUNPRO, CC)
+	    if test -n "$SUNPRO"; then
+		CC=cc
+		CXX=$SUNPRO
+	    else
+		AC_MSG_WARN(Ingnoring --with-sunpro!)
+	    fi
+	else
+	    AC_MSG_RESULT(no)
+	fi
+
 AC_PROG_CC
 AC_PROG_CXX
+
 AC_PROG_INSTALL
 AC_PROG_LEX
 AC_PROG_YACC
@@ -111,13 +166,17 @@ AC_CHECK_PROGS(M4, gm4 m4)
 AC_CHECK_PROGS(RM, rm)
 AC_CHECK_PROGS(SH, sh bash)
 AC_CHECK_PROGS(MV, mv)
-AC_CHECK_PROGS(ECHO, echo true)
+AC_CHECK_PROGS(ECHO, echo)
 AC_CHECK_PROGS(SED, gnused sed)
-AC_CHECK_PROGS(PGXX, pg++)
 AC_CHECK_PROGS(AR, ar)
 
 AC_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 AC_PATH_PROG(DYNLD, ozdynld)
+
+if test ! -n "$PLATFORMSCRIPT"
+then
+  AC_MSG_ERROR("required ozplatform script not found")
+fi
 
 M4_S="$M4"
 AC_SUBST(M4_S)
@@ -166,7 +225,7 @@ O_OPT="-O"
 G_OPT="-g"
 
 dnl mm2: test for SunPro
-if test "x$SunPro" = xyes; then
+if test "x$SUNPRO" != x; then
     O_OPT="-fast"
     DEPEND="$CXX -xM"
 fi
@@ -365,21 +424,14 @@ dnl ********************************
 
 	if test "x$platform" = xlinux-i486
 	then
-	  if test -n "$PGXX"; then
-	    AC_MSG_CHECKING(for   --with-pgcc)
-	    AC_ARG_WITH(pgcc,
-		[  --with-pgcc	     use pgcc compiler (if available)])
-	    if test "$with_pgcc" != xno; then
-	        AC_MSG_RESULT(yes)
-		CFLAGS="$CFLAGS -frisc -fno-rtti -Wno-sign-compare -mpentium"
-		CXX=$PGXX
+	    if test -n "$PGXX"
+	    then
+		CFLAGS="$CFLAGS -mpentium"
+		CFLAGS="$CFLAGS -frisc -fno-rtti -Wno-sign-compare"
 	    else
-		AC_MSG_RESULT(no)
 		CFLAGS="$CFLAGS -m486"
-		CFLAGS="$CFLAGS -malign-loops=4 -malign-jumps=4"
-		CFLAGS="$CFLAGS -malign-functions=4"
+		CFLAGS="$CFLAGS -malign-loops=4 -malign-jumps=4 -malign-functions=4"
 	    fi
-	  fi
 	fi
     ;;
 esac
@@ -465,7 +517,7 @@ dnl *****************************************************************
 AC_MSG_CHECKING(for --enable-finalization)
 AC_ARG_ENABLE(finalization,
   [--enable-finalization
-                      provide support for finalization (default=yes)])
+                   provide support for finalization (default=yes)])
 if test "x$enable_finalization" = xno; then
         AC_MSG_RESULT(no)
 	AC_DEFINE(NOFINALIZATION)
@@ -480,7 +532,7 @@ dnl *****************************************************************
 AC_MSG_CHECKING(for --enable-foreign-pointer)
 AC_ARG_ENABLE(foreign-pointer,
   [--enable-foreign-pointer,
-                      provide support for foreign pointers (default=yes)])
+                   provide support for foreign pointers (default=yes)])
 if test "x$enable_foreign_pointer" = xno; then
         AC_MSG_RESULT(no)
 	AC_DEFINE(NOFOREIGN_POINTER)
