@@ -314,36 +314,6 @@ typeError:
 
 OZ_DECLAREBI_USEINLINEFUN1(BIprocedureArity,procedureArityInline)
 
-#ifdef MISC_BUILTINS
-
-OZ_BI_define(BIprocedureEnvironment,1,1)
-{
-  oz_declareNonvarIN(0,p);
-
-  if (!oz_isProcedure(p)) {
-    oz_typeError(0,"Procedure");
-  }
-
-  OZ_Term t;
-
-  if (oz_isBuiltin(p)) {
-    t = OZ_atom("environment");
-  } else {
-    Abstraction *a=tagged2Abstraction(p);
-
-    int len=a->getPred()->getGSize();
-    if (len>0) {
-      t = OZ_tuple(OZ_atom("environment"),len);
-      for (int i=0; i<len; i++) OZ_putArg(t,i,a->getG(i));
-    } else {
-      t = OZ_atom("environment");
-    }
-  }
-  OZ_RETURN(t);
-} OZ_BI_end
-
-#endif
-
 OZ_Return isCellInline(TaggedRef cell)
 {
   NONVAR( cell, term);
@@ -1853,40 +1823,43 @@ OZ_Return BItermTypeInline(TaggedRef term, TaggedRef &out)
 
 OZ_DECLAREBI_USEINLINEFUN1(BItermType,BItermTypeInline)
 
-OZ_Return BIstatusInline(TaggedRef term, TaggedRef &out) {
+OZ_BI_define(BIstatus,1,1)
+{
+  oz_declareIN(0,term);
+
   DEREF(term, _1, tag);
 
   switch (tag) {
   case UVAR: 
   case SVAR: 
-    out = AtomFree; break;
-  case CVAR: {
-    SRecord *t = SRecord::newSRecord(AtomKinded, 1);
-    switch (tagged2CVar(term)->getType()) {
-    case FDVariable:
-    case BoolVariable:
-      t->setArg(0, AtomInt); break;
-    case FSetVariable:
-      t->setArg(0, AtomFSet); break;
-    case OFSVariable:
-      t->setArg(0, AtomRecord); break;
-    default:
-      t->setArg(0, AtomOther); break;
+    OZ_RETURN(AtomFree);
+  case CVAR:
+    if (oz_isFree(term)) {
+      OZ_RETURN(AtomFree);
+    } else {
+      SRecord *t = SRecord::newSRecord(AtomKinded, 1);
+      switch (tagged2CVar(term)->getType()) {
+      case FDVariable:
+      case BoolVariable:
+	t->setArg(0, AtomInt); break;
+      case FSetVariable:
+	t->setArg(0, AtomFSet); break;
+      case OFSVariable:
+	t->setArg(0, AtomRecord); break;
+      default:
+	t->setArg(0, AtomOther); break;
+      }
+      OZ_RETURN(makeTaggedSRecord(t));
     }
-    out = makeTaggedSRecord(t);
-    break;
-  }
-  default: {
-    SRecord *t = SRecord::newSRecord(AtomDet, 1);
-    t->setArg(0, OZ_termType(term));
-    out = makeTaggedSRecord(t);
-  }
+  default:
+    {
+      SRecord *t = SRecord::newSRecord(AtomDet, 1);
+      t->setArg(0, OZ_termType(term));
+      OZ_RETURN(makeTaggedSRecord(t));
+    }
   }
   return PROCEED;
-}
-
-OZ_DECLAREBI_USEINLINEFUN1(BIstatus,BIstatusInline)
-
+} OZ_BI_end
 
 // ---------------------------------------------------------------------
 // Builtins ==, \=, ==B and \=B
@@ -2244,7 +2217,6 @@ OZ_BI_define(BIadjoinAt,3,1)
       oz_suspendOnPtr(feaPtr);
     }
     if (isCVar(fea)) {
-      // mm2
       if (tagged2CVar(fea)->getType()!=OFSVariable ||
           tagged2GenOFSVar(fea)->getWidth()>0)
 	oz_typeError(1,"Feature");
@@ -2266,19 +2238,21 @@ OZ_BI_define(BIadjoinAt,3,1)
 
   case UVAR:
   case SVAR:
-  case CVAR: // mm2
-    if (recTag==CVAR && tagged2CVar(rec)->getType()!=OFSVariable)
-        oz_typeError(0,"Record");
-    if (oz_isFeature(fea) || oz_isFree(fea)) {
+  case CVAR:
+    if (!oz_isFree(rec) || tagged2CVar(rec)->getType()!=OFSVariable) {
+      oz_typeError(0,"Record");
+    } else if (oz_isFeature(fea) || oz_isFree(fea)) {
       oz_suspendOnPtr(recPtr);
-    }
-    if (isCVar(fea)) {
+    } else if (isCVar(fea)) {
       if (tagged2CVar(fea)->getType()!=OFSVariable ||
-          tagged2GenOFSVar(fea)->getWidth()>0)
+          tagged2GenOFSVar(fea)->getWidth()>0) {
 	oz_typeError(1,"Feature");
-      oz_suspendOnPtr(recPtr);
+      } else {
+	oz_suspendOnPtr(recPtr);
+      }
+    } else {
+      oz_typeError(1,"Feature");
     }
-    oz_typeError(1,"Feature");
 
   default:
     oz_typeError(0,"Record");
@@ -2352,9 +2326,8 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
       }
       goto typeError0;
     case CVAR:
-      // mm2
-      if (tagged2CVar(t0)->getType()!=OFSVariable)
-          goto typeError0;
+      if (!oz_isFree(t0) || tagged2CVar(t0)->getType()!=OFSVariable)
+	goto typeError0;
       if (recordFlag) {
 	return SUSPEND;
       }
@@ -2381,9 +2354,8 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
       out=makeTaggedRef(t0Ptr);
       return SUSPEND;
     case CVAR:
-      // mm2
-      if (tagged2CVar(t0)->getType()!=OFSVariable)
-          goto typeError0;
+      if (!oz_isFree(t0) || tagged2CVar(t0)->getType()!=OFSVariable)
+	goto typeError0;
       out=makeTaggedRef(t0Ptr);
       return SUSPEND;
     default:
@@ -2419,8 +2391,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
     out=makeTaggedRef(t0Ptr);
     return SUSPEND;
   case CVAR:
-    //mm2
-    if (tagged2CVar(t0)->getType()!=OFSVariable)
+    if (!oz_isFree(t0) || tagged2CVar(t0)->getType()!=OFSVariable)
         goto typeError0;
     out=makeTaggedRef(t0Ptr);
     return SUSPEND;
@@ -2484,8 +2455,7 @@ OZ_Return BIarityInline(TaggedRef term, TaggedRef &out)
   if (out) return PROCEED;
   if (oz_isFree(term)) return SUSPEND;
   if (isCVar(tag)) {
-    //mm2
-    if (tagged2CVar(term)->getType()!=OFSVariable)
+    if (!oz_isFree(term) || tagged2CVar(term)->getType()!=OFSVariable)
       oz_typeError(0,"Record");
     return SUSPEND;
   }
@@ -4998,10 +4968,6 @@ static int finalizable(OZ_Term& x)
 	return 2;
       case Co_Foreign_Pointer:
 	return 1;
-      case Co_Extended:
-	switch (((ExtendedConst*)xp)->getXType()) {
-	default: return 2;
-	}
 	// Tertiary Consts
       case Co_Thread:
 	b = ((Thread*)xp)->getBoardInternal(); break;
@@ -5081,87 +5047,6 @@ OZ_BI_define(BIfinalize_setHandler,1,0)
   finalize_handler = hdl;
   return PROCEED;
 } OZ_BI_end
-
-
-
-#ifdef MISC_BUILTINS
-
-/********************************************************************
- * Inspecting values (EXPERIMENTAL by mm)
- ******************************************************************** */
-
-/*
- * This function should subsume various other hacks,
- * e.g. BIprintname, BIstatus, BItermtype, ...
- * Inspect the toplevel of an Oz value
- *
- * returns:
- *  RET     = variable(printName:PN suspensions:SL kind:KIND)
- *          | ref(N RET)             N = length of reference chain
- *          | det
- *  PN      = print name
- *  SL      = length of susp list
- *  KIND    = uvar
- *          | svar
- *          | future(SUBKIND)
- *          | generic
- *  SUBKIND = byNeed(requested)
- *          | byNeed(FUN)
- *          | simple
- *  FUN     = an null-ary function
- */
-
-OZ_Term oz_inspect(OZ_Term t)
-{
-  int refCount=0;
-  if (oz_isRef(t)) {
-    OZ_Term *tptr;
-  loop:
-    tptr = tagged2Ref(t);
-    t = *tptr;
-    if (oz_isRef(t)) {
-      refCount++;
-      goto loop;
-    }
-    if (oz_isVariable(t)) {
-      OZ_Term kind;
-      int sl = 0;
-      if (isCVar(t)) {
-	kind = tagged2CVar(t)->inspectV();
-	sl = tagged2CVar(t)->getSuspListLengthV();
-      } else if (isSVar(t)) {
-	kind = OZ_atom("svar");
-	sl = tagged2SVar(t)->getSuspList()->length();
-      } else {
-	Assert(isUVar(t));
-	kind = OZ_atom("uvar");
-      }
-      const char *pn=VariableNamer::getName(makeTaggedRef(tptr));
-      OZ_Term pl = oz_list(OZ_pairAA("printName",pn),
-			   OZ_pairAI("suspensions",sl),
-			   OZ_pairA("kind",kind),
-			   0);
-      OZ_Term ret = OZ_recordInitC("variable",pl);
-      if (refCount!=0) {
-	ret=OZ_mkTupleC("ref",2,OZ_int(refCount),ret);
-      }
-      return ret;
-    }
-  }
-  OZ_Term ret=oz_atom("det");
-  if (refCount) {
-    ret = OZ_mkTupleC("ref",2,OZ_int(refCount),ret);
-  }
-  return ret;
-}
-
-OZ_BI_define(BIinspect, 1, 1)
-{
-  OZ_Term t = OZ_in(0);
-  OZ_RETURN(oz_inspect(t));
-} OZ_BI_end
-
-#endif
 
 /*
  * Exceptions
