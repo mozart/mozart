@@ -1123,49 +1123,8 @@ void engine() {
       InlineFun2 fun = (InlineFun2)entry->getInlineFun();
 
       OZ_Bool res = fun(XPC(2),XPC(3),XPC(4));
-
-      switch(res) {
-
-      case PROCEED:
-	DISPATCH(6);
-
-      case SUSPEND:
-	{
-	  TaggedRef A = XPC(2);
-	  TaggedRef B = XPC(3);
-
-	  TaggedRef newVar = makeTaggedRef(newTaggedUVar(CBB));
-	  int argsToSave = getPosIntArg(PC+5);
-
-	  XPC(4) = newVar;
-
-	  e->pushTaskOutline(CBB,PC+6,Y,G,X,argsToSave);
-
-	  X[0] = A;
-	  X[1] = B;
-	  X[2] = newVar;
-
-	  TaggedRef handler = getSuspHandlerBool(fun);
-	  if (handler != makeTaggedNULL()) {
-	    predicate = tagged2SRecord(handler);
-	    isExecute = OK;
-	    predArity = 3;
-	    goto LBLcall;
-	  }
-	  
-	  HANDLE_FAILURE(PC+6,
-			 message("System inconsisteny\n"),
-			 message("susp handler for ==B, \\=B not set\n")
-			 );
-	}
-
-#ifdef DEBUG_CHECK
-      case FAILED:
-	error("{`%s` %s %s} unexpectedly failed",
-	      entry->getPrintName(), OZ_toC(XPC(2)), OZ_toC(XPC(3)));
-	break;
-#endif
-      }
+      Assert(res == PROCEED);
+      DISPATCH(6);
     }
 
 
