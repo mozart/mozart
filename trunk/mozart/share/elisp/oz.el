@@ -49,6 +49,9 @@
 ;;        proc {$} ... end
 ;;        fasel:
 ;;   is indented incorrectly.
+;; - {Show [bla fasel
+;;              droehn
+;;   is indented incorrectly.
 
 (require 'comint)
 (require 'compile)
@@ -224,6 +227,10 @@ This variable should not be changed by the user.")
   "Keymap used in the *Oz Compiler* buffer.")
 (defvar oz-emulator-buffer-map nil
   "Keymap used in the *Oz Emulator* buffer.")
+
+(defvar oz-mode-abbrev-table nil
+  "Abbrev table in use in Oz mode.")
+(define-abbrev-table 'oz-mode-abbrev-table nil)
 
 (defvar oz-emulator-buffer "*Oz Emulator*"
   "Name of the Oz Emulator buffer.")
@@ -983,26 +990,31 @@ feed that many preceding paragraphs as well as the current paragraph."
     (oz-feed-region (car region) (cdr region))))
 
 
-(defun oz-send-string (string &optional threaded)
+(defun oz-send-string (string &optional system)
   "Feed STRING to the Oz Compiler, restarting it if it died.
-If THREADED is non-nil, set the threadedqueries switch beforehand."
+If SYSTEM is non-nil, it is a command for the system and is to be
+compiled using a default set of switches."
   (save-excursion
     (oz-check-running nil))
-  (let ((proc (get-buffer-process oz-emulator-buffer)))
-    (if threaded
-	(comint-send-string
-	 proc
-	 (concat "\\pushSwitches\n"
-		 "\\switch +threadedqueries -runwithdebugger\n"
-		 string "\n"
-		 "\\popSwitches"))
-      (comint-send-string proc string))
-    (comint-send-string proc "\n")
+  (let ((proc (get-buffer-process oz-emulator-buffer))
+	(eof (concat (char-to-string 4) "\n")))
     (save-excursion
       (set-buffer oz-compiler-buffer)
       (setq oz-compiler-output-start (point-max))
-      (comint-send-string proc (concat (char-to-string 4) "\n"))
-      (setq oz-next-error-marker nil))))
+      (setq oz-next-error-marker nil))
+    (if system
+	(progn
+	  (comint-send-string
+	   proc
+	   (concat "\\pushSwitches\n"
+		   "\\switch -expression +threadedqueries -runwithdebugger\n"
+		   eof))
+	  (comint-send-string proc string)
+	  (comint-send-string proc "\n\\popSwitches\n")
+	  (comint-send-string proc eof))
+      (comint-send-string proc string)
+      (comint-send-string proc "\n")
+      (comint-send-string proc eof))))
 
 
 ;;------------------------------------------------------------
@@ -1142,7 +1154,7 @@ Point is left at the first character of the keyword."
 	  oz-comment-pattern))
 
 (defconst oz-directive-pattern
-  "\\\\[a-zA-Z]+\\>")
+  "\\\\[a-zA-Z]+")
 (defconst oz-directives-to-indent
   "\\\\\\(in\\|ins\\|inse\\|inser\\|insert\\|l\\|li\\|lin\\|line\\)\\>")
 
@@ -1402,7 +1414,8 @@ Return a negative value if the indentation is not to be changed,
 else return the column up to where the line should be indented."
   (cond ((looking-at oz-declare-pattern)
 	 0)
-	((and (looking-at "\\\\") (not (looking-at oz-directives-to-indent)))
+	((and (looking-at oz-directive-pattern)
+	      (not (looking-at oz-directives-to-indent)))
 	 ;; directive
 	 0)
 	((looking-at "%%%")
@@ -1654,6 +1667,7 @@ Negative arg -N means kill N Oz expressions after the cursor."
 (oz-modify-syntax-entries 248 255 "w")
 
 (defun oz-mode-variables ()
+  (setq local-abbrev-table oz-mode-abbrev-table)
   (set-syntax-table oz-mode-syntax-table)
   (set (make-local-variable 'paragraph-start)
        "\f\\|$")
