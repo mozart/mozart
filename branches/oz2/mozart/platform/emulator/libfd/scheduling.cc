@@ -84,13 +84,15 @@ failure:
 static OZ_FDIntVar * xx;
 static int * dd;
 
-
-static int compareDescRel(const void *a, const void *b) {
-  return(xx[*(int*)b]->getMinElem()-xx[*(int*)a]->getMinElem());
+static int compareDescRel(const int &a, const int &b) {
+  if (xx[a]->getMinElem() > xx[b]->getMinElem()) return 1;
+  else return 0;
 }
 
-static int compareAscDue(const void *a, const void *b) {
-  return(xx[*(int*)a]->getMaxElem() + dd[*(int*)a] - xx[*(int*)b]->getMaxElem() - dd[*(int*)b]);
+static int compareAscDue(const int &a, const int &b) {
+  if (xx[a]->getMaxElem() + dd[a] < xx[b]->getMaxElem() + dd[b])
+    return 1;
+  else return 0;
 }
 
 // for cpIterate
@@ -100,99 +102,37 @@ struct StartDurTerms {
 };
 
 
-void myqsortDesc(int *my,int left, int right){
-  register int i,j;
-  int x,y;
-  i=left; j=right;
-  int middle;
-  x = my[(left+right)/2];
-  do {
-    while(xx[my[i]]->getMinElem() > xx[x]->getMinElem() && i < right) i++;
-    while(xx[x]->getMinElem() > xx[my[j]]->getMinElem() && j > left) j--;
-    if (i <= j) {
-      y = my[i];
-      my[i] = my[j];
-      my[j] = y;
-      i++; j--;
-    }
-  } while(i <= j);
-  if (left < j) myqsortDesc(my,left,j);
-  if (i < right) myqsortDesc(my,i,right);
-}
-
-void myqsortAsc(int *my,int left, int right){
-  register int i,j;
-  int x,y;
-  i=left; j=right;
-  int middle;
-  x = my[(left+right)/2];
-  do {
-    while(xx[my[i]]->getMaxElem()+dd[my[i]] < xx[x]->getMaxElem()+dd[x] && i < right) i++;
-    while(xx[x]->getMaxElem()+dd[x] < xx[my[j]]->getMaxElem()+dd[my[j]] && j > left) j--;
-    if (i <= j) {
-      y = my[i];
-      my[i] = my[j];
-      my[j] = y;
-      i++; j--;
-    }
-  } while(i <= j);
-  if (left < j) myqsortAsc(my,left,j);
-  if (i < right) myqsortAsc(my,i,right);
-}
-
-void myqsortDur(struct StartDurTerms *my,int left, int right){
-  register int i,j;
-  struct StartDurTerms x,y;
-  i=left; j=right;
-  int middle;
-  x = my[(left+right)/2];
-  do {
-    while(my[i].dur > x.dur && i < right) i++;
-    while(x.dur > my[j].dur && j > left) j--;
-    if (i <= j) {
-      y = my[i];
-      my[i] = my[j];
-      my[j] = y;
-      i++; j--;
-    }
-  } while(i <= j);
-  if (left < j) myqsortDur(my,left,j);
-  if (i < right) myqsortDur(my,i,right);
-}
-
-
-/*
-void myqsort(char *my, int left, int right, int w,   int (*compar)(const void * a, const void * b))
+template <class T>
+static void myqsort(T * my, int left, int right,   
+	     int (*compar)(const T &a, const T &b))
 {
-  register int i,j;
-  char *x,*y;
-  i=left; j=right;
-  int middle;
-  if ((left + right) % 2 == 0) middle = (left+right)/2;
-  else {
-    middle = (left+right)/2+1;
-  }
-  x=&my[middle*w];
+  register int i = left, j = right;
+  int middle = (left + right) / 2;
+  T x = my[middle];
+
   do {
-    while((*compar)(&my[i*w],x)   && (i < right)) i++;
-    while((*compar)(x,&my[j*w]) && j > left) j--;
+    while((*compar)(my[i], x) && (i < right)) i++;
+    
+    while((*compar)(x, my[j]) && j > left) j--;
     
     if (i <= j) {
-      y = &my[i*w];
-      my[i*w] = my[j*w];
-      my[j*w] = *y;
-      i++; j--;
+      T aux = my[i];
+      my[i] = my[j];
+      my[j] = aux;
+      i++; 
+      j--;
     }
   } while(i <= j);
   
-  if (left < j) myqsort(my,left,j,w,compar);
-  if (i < right) myqsort(my,i,right,w,compar);
+  if (left < j) myqsort(my, left, j, compar);
+  if (i < right) myqsort(my, i, right, compar);
 }
-*/
 
-int compareDurs(const void * a, const void * b) {
-  return ((StartDurTerms *) b)->dur - ((StartDurTerms *) a)->dur;
+int compareDurs(const StartDurTerms &a, const StartDurTerms &b) {
+  if ( a.dur > b.dur) return 1;
+  else return 0;
 }
+
 
 // for cpIterateCap
 struct StartDurUseTerms {
@@ -201,10 +141,12 @@ struct StartDurUseTerms {
   int use;
 };
 
-int compareDursUse(const void * a, const void * b) {
-  return ((StartDurUseTerms *) b)->dur * ((StartDurUseTerms *) b)->use
-    - ((StartDurUseTerms *) a)->dur * ((StartDurUseTerms *) a)->use;
+int compareDursUse(const StartDurUseTerms &a, const StartDurUseTerms &b) {
+  if (a.dur * a.use > b.dur * b.use) 
+    return 1;
+  else return 0;
 }
+
 
 CPIteratePropagator::CPIteratePropagator(OZ_Term tasks, 
 					 OZ_Term starts, 
@@ -226,9 +168,7 @@ CPIteratePropagator::CPIteratePropagator(OZ_Term tasks,
 
   OZ_ASSERT(i == reg_sz);
 
-//  qsort(sd, reg_sz, sizeof(StartDurTerms), compareDurs);
-myqsortDur(sd,0,reg_sz-1);
-//myqsort((char *)sd,0,reg_sz-1,sizeof(StartDurTerms), compareDurs);
+  myqsort(sd,0,reg_sz-1, compareDurs);
 
   for (i = reg_sz; i--; ) {
     reg_l[i]      = sd[i].start;
@@ -407,8 +347,7 @@ cploop:
   //////////  
   // sort by descending release date; ie. min(s1) > min(s2) > min(s3) etc.
   //////////  
-//  qsort(forCompSet0Up, ts, sizeof(int), compareDescRel);
-  myqsortDesc(forCompSet0Up, 0, ts-1);
+  myqsort(forCompSet0Up, 0, ts-1,compareDescRel );
 
   {
   for (int upTask=0; upTask < ts; upTask++) {
@@ -611,8 +550,7 @@ cploop:
   //////////  
   // sort by ascending due date; ie. max(s1)+dur(s1) < max(s2)+dur(s2)
   //////////  
-//  qsort(forCompSet0Down, ts, sizeof(int), compareAscDue);
-  myqsortAsc(forCompSet0Down, 0, ts-1);
+  myqsort(forCompSet0Down, 0, ts-1, compareAscDue);
 
 
   {
@@ -1010,16 +948,15 @@ struct Interval {
   int left, right, use;
 };
 
-int ozcdecl CompareIntervals(const void *In1, const void *In2) 
+int ozcdecl CompareIntervals(const Interval &Int1, const Interval &Int2) 
 {
-  Interval *Int1 = (Interval *)In1;
-  Interval *Int2 = (Interval *)In2;
-  int left1 = Int1->left;
-  int left2 = Int2->left;
-  if (left1 < left2) return -1;
+  int left1 = Int1.left;
+  int left2 = Int2.left;
+  if (left1 >= left2) return 0;
   else {
     if (left1 == left2) {
-      return Int1->right - Int2->right;
+      if (Int1.right < Int2.right) return 1;
+      else return 0;
     }
     else return 1;
   }
@@ -1034,8 +971,9 @@ inline int EnergyFunct(int t1, int t2, int dura, int usea, int ra, int da)
 			      t2 - da + dura))));
 }
 
-int ozcdecl CompareBounds(const void *Int1, const void *Int2) {
-  return *(int*)Int1 - *(int*)Int2;
+int ozcdecl CompareBounds(const int &Int1, const int &Int2) {
+  if (Int1 < Int2) return 1;
+  else return 0;
 }
 
 CPIteratePropagatorCap::CPIteratePropagatorCap(OZ_Term tasks, 
@@ -1064,7 +1002,7 @@ CPIteratePropagatorCap::CPIteratePropagatorCap(OZ_Term tasks,
 
   OZ_ASSERT(i == reg_sz);
 
-  qsort(sdu, reg_sz, sizeof(StartDurUseTerms), compareDursUse);
+  myqsort(sdu, 0, reg_sz-1, compareDursUse);
 
   for (i = reg_sz; i--; ) {
     reg_l[i]      = sdu[i].start;
@@ -1606,8 +1544,7 @@ cploop:
   //////////  
   // sort by descending release date; ie. min(s1) > min(s2) > min(s3) etc.
   //////////  
-  qsort(forCompSet0Up, ts, sizeof(int), compareDescRel);
-
+  myqsort(forCompSet0Up, 0, ts-1,compareDescRel );
   {
   for (int upTask=0; upTask < ts; upTask++) {
 
@@ -1749,7 +1686,7 @@ cploop:
   //////////
   // sort by ascending due date; ie. max(s1)+dur(s1) < max(s2)+dur(s2)
   //////////
-  qsort(forCompSet0Down, ts, sizeof(int), compareAscDue);
+  myqsort(forCompSet0Down, 0, ts-1, compareAscDue);
 
 
   {
@@ -1997,8 +1934,8 @@ capLoop:
     // sort the intervals lexicographically
     //////////
     Interval * intervals = Intervals;
-    qsort(intervals, interval_nb, sizeof(Interval), CompareIntervals)
-;
+    myqsort(intervals, 0, interval_nb-1, CompareIntervals);
+
     //////////
     // compute the set of all bounds of intervals
     //////////
@@ -2014,8 +1951,7 @@ capLoop:
     // sort the bounds in ascending order
     //////////
     int * intervalBounds = IntervalBounds;
-    qsort(intervalBounds, double_nb, sizeof(int), CompareBounds);
-
+    myqsort(intervalBounds, 0, double_nb-1, CompareBounds);
 
     //////////
     // compute the set of intervals, for which there is exclusion
@@ -2347,7 +2283,7 @@ CPIteratePropagatorCapUp::CPIteratePropagatorCapUp(OZ_Term tasks,
 
   OZ_ASSERT(i == reg_sz);
 
-  qsort(sdu, reg_sz, sizeof(StartDurUseTerms), compareDursUse);
+  myqsort(sdu, 0, reg_sz-1, compareDursUse);
 
   for (i = reg_sz; i--; ) {
     reg_l[i]      = sdu[i].start;
@@ -2468,8 +2404,7 @@ capLoop:
     
 
     Interval * intervals = Intervals;
-    qsort(intervals, interval_nb, sizeof(Interval), CompareIntervals);
-
+    myqsort(intervals, 0, interval_nb-1, CompareIntervals);
 
     // compute the set of all bounds of intervals
     int double_nb = interval_nb*2;
@@ -2481,7 +2416,7 @@ capLoop:
     }
     
     int * intervalBounds = IntervalBounds;
-    qsort(intervalBounds, double_nb, sizeof(int), CompareBounds);
+    myqsort(intervalBounds, 0, double_nb-1, CompareBounds);
 
     // compute the set of intervals, for which there is inclusion
     DECL_DYN_ARRAY(Interval, InclusionIntervals, double_nb);
