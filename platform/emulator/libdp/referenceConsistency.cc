@@ -332,7 +332,7 @@ void sendReferenceBack(DSite *entitysite,int entityOTI,int type, int val1, int v
   msgC = msgContainerManager->newMsgContainer(entitysite);
   msgC->put_M_OWNER_REF(entityOTI,type,val1,val2);
 
-  send(msgC,-1);
+  send(msgC);
 }
 
 
