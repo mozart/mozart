@@ -233,6 +233,7 @@ win32-i486: $(PACKDIR) $(PACKDIR)/mozart
                      include share/Init.ozf share/elisp platform) | \
          (cd mozart-win32/base; $(TAR) xf -)
         rm -rf /tmp/pack/mozart
+        rm -f mozart-win32.zip
         $(ZIP) -r mozart-win32.zip mozart-win32
         rm -rf mozart-win32
 
