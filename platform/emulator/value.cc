@@ -449,7 +449,7 @@ Bool Object::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X)
 
     for (int i=widthProvided; i<widthDefault; i++) {
       if (literalEq(deref(rec->getArg(i)),NameOoDefaultVar)) {
-        X[i] = makeTaggedRef(newTaggedUVar(am.currentBoard));
+        X[i] = oz_newVariable();
       } else {
         X[i] = rec->getArg(i);
       }
@@ -476,7 +476,7 @@ Bool Object::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X)
       auxX[argno] = X[argnoProvided];
       argnoProvided++;
     } else if (literalEq(value,NameOoDefaultVar)) {
-      auxX[argno] = makeTaggedRef(newTaggedUVar(am.currentBoard));
+      auxX[argno] = oz_newVariable();
     } else if (literalEq(value,NameOoRequiredArg)) {
       return NO;
     } else {

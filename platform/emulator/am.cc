@@ -310,7 +310,7 @@ void AM::init(int argc,char **argv)
       exit(1);
     }
 
-    OZ_Term v=makeTaggedRef(newTaggedUVar(am.currentBoard));
+    OZ_Term v=oz_newVariable();
     if (loadURL(url,v)!=PROCEED) {
       fprintf(stderr,"Loading from URL %s failed\n",url);
       exit(1);

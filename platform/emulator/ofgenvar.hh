@@ -333,13 +333,13 @@ private:
 public:
     GenOFSVariable(DynamicTable &dt)
     : GenCVariable(OFSVariable) {
-        label=makeTaggedRef(newTaggedUVar(am.currentBoard));
+        label=oz_newVariable();
         dynamictable= &dt;
     }
 
     GenOFSVariable()
     : GenCVariable(OFSVariable) {
-        label=makeTaggedRef(newTaggedUVar(am.currentBoard));
+        label=oz_newVariable();
         dynamictable=DynamicTable::newDynamicTable();
     }
 
@@ -353,7 +353,7 @@ public:
     // With new table of given size (must be pwr. of 2):
     GenOFSVariable(dt_index size)
     : GenCVariable(OFSVariable) {
-        label=makeTaggedRef(newTaggedUVar(am.currentBoard));
+        label=oz_newVariable();
         dynamictable=DynamicTable::newDynamicTable(size);
     }
 

@@ -214,7 +214,7 @@ static char* h_strerror(const int err) {
 { int sel = osTestSelect(FD,SEL_READ);                           \
   if (sel < 0)  { RETURN_UNIX_ERROR; }                           \
   if (sel == 0) {                                                \
-    TaggedRef t = makeTaggedRef(newTaggedUVar(am.currentBoard)); \
+    TaggedRef t = oz_newVariable(); \
     (void) OZ_readSelect(FD, NameUnit, t);                       \
     DEREF(t, t_ptr, t_tag);                                      \
     if (isAnyVar(t_tag)) {                                       \
@@ -228,7 +228,7 @@ static char* h_strerror(const int err) {
 { int sel = osTestSelect(FD,SEL_WRITE);                          \
   if (sel < 0)  { RETURN_UNIX_ERROR; }                           \
   if (sel == 0) {                                                \
-    TaggedRef t = makeTaggedRef(newTaggedUVar(am.currentBoard)); \
+    TaggedRef t = oz_newVariable(); \
     (void) OZ_writeSelect(FD, NameUnit, t);                      \
     DEREF(t, t_ptr, t_tag);                                      \
     if (isAnyVar(t_tag)) {                                       \
@@ -831,7 +831,7 @@ OZ_C_proc_begin(unix_readSelect, 1) {
   WRAPCALL(osTestSelect(fd,SEL_READ),sel);
 
   if (sel == 0) {
-    TaggedRef t = makeTaggedRef(newTaggedUVar(am.currentBoard));
+    TaggedRef t = oz_newVariable();
 
     (void) OZ_readSelect(fd, NameUnit, t);
     DEREF(t, t_ptr, t_tag);
@@ -853,7 +853,7 @@ OZ_C_proc_begin(unix_writeSelect,1) {
   WRAPCALL(osTestSelect(fd,SEL_WRITE),sel);
 
   if (sel == 0) {
-    TaggedRef t = makeTaggedRef(newTaggedUVar(am.currentBoard));
+    TaggedRef t = oz_newVariable();
 
     (void) OZ_writeSelect(fd, NameUnit, t);
     DEREF(t, t_ptr, t_tag);
@@ -876,7 +876,7 @@ OZ_C_proc_begin(unix_acceptSelect,1) {
 
   if (sel == 0) {
 
-    TaggedRef t = makeTaggedRef(newTaggedUVar(am.currentBoard));
+    TaggedRef t = oz_newVariable();
 
     (void) OZ_acceptSelect(fd, NameUnit, t);
     DEREF(t, t_ptr, t_tag);
