@@ -13,10 +13,7 @@
 class FileDescriptor: public SituatedExtension {
 public:
   int fd;
-  OZ_Term read_lock;
-  OZ_Term write_lock;
-  FileDescriptor(int FD,OZ_Term RD,OZ_Term WR)
-    :SituatedExtension(),fd(FD),read_lock(RD),write_lock(WR){}
+  FileDescriptor(int FD):SituatedExtension(),fd(FD){}
   FileDescriptor(FileDescriptor&);
   // Situated Extension
   static int id;
@@ -24,7 +21,6 @@ public:
   virtual OZ_Term typeV() { return OZ_atom("fileDescriptor"); }
   virtual void printStreamV(ostream &out,int depth = 10);
   virtual Extension* gcV();
-  virtual void gcRecurseV();
   //
   void doFree();
   void doClose();
@@ -64,13 +60,7 @@ void FileDescriptor::printStreamV(ostream &out,int depth = 10)
 
 Extension* FileDescriptor::gcV()
 {
-  return new FileDescriptor(fd,read_lock,write_lock);
-}
-
-void FileDescriptor::gcRecurseV()
-{
-  OZ_collectHeapTerm(read_lock,read_lock);
-  OZ_collectHeapTerm(write_lock,write_lock);
+  return new FileDescriptor(fd);
 }
 
 void FileDescriptor::doClose() {
@@ -78,6 +68,10 @@ void FileDescriptor::doClose() {
 }
 
 void FileDescriptor::doFree() { doClose(); }
+
+OZ_Term OZ_mkFileDescriptor(int fd) {
+  return oz_makeTaggedExtension(new FileDescriptor(fd));
+}
 
 //
 // Builtins
@@ -163,6 +157,7 @@ OZ_BI_define(io_write,3,1)
 OZ_BI_define(io_read,1,1)
 {
   OZ_declareFD(0,FD);
+  if (FD->fd < 0) OZ_RETURN(OZ_unit());
   CHECK_READ(FD->fd);
   static char buffer[IOBUFMAX];
   WRAPCALL("read",osread(FD->fd,buffer,IOBUFMAX),ret);
@@ -173,9 +168,7 @@ OZ_BI_define(io_read,1,1)
 OZ_BI_define(io_make,3,1)
 {
   OZ_declareInt(0,FD);
-  OZ_declareTerm(1,RD);
-  OZ_declareTerm(2,WR);
-  OZ_RETURN(oz_makeTaggedExtension(new FileDescriptor(FD,RD,WR)));
+  OZ_RETURN(OZ_mkFileDescriptor(FD));
 } OZ_BI_end
 
 OZ_BI_define(io_close,1,0)
@@ -190,18 +183,6 @@ OZ_BI_define(io_free,1,0)
   OZ_declareFD(0,FD);
   FD->doFree();
   return PROCEED;
-} OZ_BI_end
-
-OZ_BI_define(io_readLock,1,1)
-{
-  OZ_declareFD(0,FD);
-  OZ_RETURN(FD->read_lock);
-} OZ_BI_end
-
-OZ_BI_define(io_writeLock,1,1)
-{
-  OZ_declareFD(0,FD);
-  OZ_RETURN(FD->write_lock);
 } OZ_BI_end
 
 OZ_BI_define(io_open,3,1)
@@ -222,7 +203,7 @@ OZ_BI_define(io_open,3,1)
   int fd;
   fd = open(FILE,flags,(mode_t)MODE);
   if (fd<0) RETURN_UNIX_ERROR("open");
-  OZ_RETURN_INT(fd);
+  OZ_RETURN(OZ_mkFileDescriptor(fd));
 } OZ_BI_end
 
 OZ_BI_define(io_socketpair,0,2)
@@ -230,8 +211,8 @@ OZ_BI_define(io_socketpair,0,2)
   int sv[2];
   WRAPCALL("socketpair",socketpair(PF_UNIX,SOCK_STREAM,0,sv),ret);
   if (ret<0) RETURN_UNIX_ERROR("socketpair");
-  OZ_out(0) = OZ_int(sv[0]);
-  OZ_out(1) = OZ_int(sv[1]);
+  OZ_out(0) = OZ_mkFileDescriptor(sv[0]);
+  OZ_out(1) = OZ_mkFileDescriptor(sv[1]);
   return PROCEED;
 } OZ_BI_end
 
@@ -240,15 +221,7 @@ OZ_BI_define(io_dup,1,1)
   OZ_declareFD(0,FD);
   WRAPCALL("dup",dup(FD->fd),ret);
   if (ret<0) RETURN_UNIX_ERROR("dup");
-  OZ_RETURN_INT(ret);
-} OZ_BI_end
-
-OZ_BI_define(io_fork,0,1)
-{
-  pid_t pid;
-  pid = fork();
-  if (pid<0) RETURN_UNIX_ERROR("fork");
-  OZ_RETURN_INT(pid);
+  OZ_RETURN(OZ_mkFileDescriptor(ret));
 } OZ_BI_end
 
 OZ_BI_define(io_pipe,0,2)
@@ -256,8 +229,8 @@ OZ_BI_define(io_pipe,0,2)
   int sv[2];
   WRAPCALL("pipe",pipe(sv),ret);
   if (ret<0) RETURN_UNIX_ERROR("pipe");
-  OZ_out(0) = OZ_int(sv[0]);
-  OZ_out(1) = OZ_int(sv[1]);
+  OZ_out(0) = OZ_mkFileDescriptor(sv[0]);
+  OZ_out(1) = OZ_mkFileDescriptor(sv[1]);
   return PROCEED;
 } OZ_BI_end
 
@@ -292,15 +265,12 @@ extern "C"
       {"is"		,1,1,io_is},
       {"write"		,3,1,io_write},
       {"read"		,1,1,io_read},
-      {"make"		,1,3,io_make},
+      {"make"		,1,1,io_make},
       {"close"		,1,0,io_close},
       {"free"		,1,0,io_free},
-      {"readLock"	,1,1,io_readLock},
-      {"writeLock"	,1,1,io_writeLock},
       {"open"		,3,1,io_open},
       {"socketpair"	,0,2,io_socketpair},
       {"dup"		,1,1,io_dup},
-      {"fork"		,0,1,io_fork},
       {"pipe"		,0,2,io_pipe},
       {"getfd"		,1,1,io_getfd},
       {"lseek"		,3,1,io_lseek},
