@@ -371,6 +371,7 @@ void engine() {
   Suspension* &currentTaskSusp = FDcurrentTaskSusp;
   AWActor *CAA = NULL;
   Board *tmpBB = NULL;
+  Board *board = NULL;
   Board *&CBB = am.currentBoard;
 
   RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
@@ -475,17 +476,19 @@ void engine() {
       {
 	Thread *c = am.currentThread;
 	if (c->isNervous()) {
-	  tmpBB = c->popBoard()->getBoardDeref();
+	  board = c->popBoard();
+	  tmpBB = board->getBoardDeref();
 	  if (!tmpBB) {
-	    goto LBLfindWork;
+	    goto LBLTaskEmpty;
 	  }
 	  goto LBLTaskNervous;
 	}
 	if (c->isSuspCont()) {
 	  SuspContinuation *cont = c->popSuspCont();
-	  tmpBB = cont->getNode()->getBoardDeref();
+	  board = cont->getNode();
+	  tmpBB = board->getBoardDeref();
 	  if (!tmpBB) {
-	    goto LBLfindWork;
+	    goto LBLTaskEmpty;
 	  }
 	  PC = cont->getPC();
 	  Y = cont->getY();
@@ -496,9 +499,10 @@ void engine() {
 	}	  
 	if (c->isSuspCCont()) {
 	  CFuncContinuation *ccont = c->popSuspCCont();
-	  tmpBB = ccont->getNode()->getBoardDeref();
+	  board = ccont->getNode();
+	  tmpBB = board->getBoardDeref();
 	  if (!tmpBB) {
-	    goto LBLfindWork;
+	    goto LBLTaskEmpty;
 	  }
 	  biFun = ccont->getCFunc();
 	  // mm2: tm ??? currentTaskSusp = susp;
@@ -519,7 +523,8 @@ void engine() {
 	goto LBLTaskEmpty;
       }
       ContFlag cFlag = getContFlag(tb);
-      tmpBB = getBoard(tb,cFlag)->getBoardDeref();
+      board = getBoard(tb,cFlag);
+      tmpBB = board->getBoardDeref();
 
       switch (cFlag){
       case C_CONT:
@@ -583,7 +588,6 @@ void engine() {
 	goto LBLTaskNervous;
       case C_CFUNC_CONT:
 	// by kost@ : 'solve actors' are represented via the c-function; 
-	if (taskStack->isEmpty(e)) goto LBLTaskEmpty;
 	biFun = (BIFun) TaskStackPop(--topCache);
 	currentTaskSusp = (Suspension*) TaskStackPop(--topCache);
 	{
@@ -609,6 +613,9 @@ void engine() {
     }
 
   LBLTaskEmpty:
+    if (e->currentThread->isSolve () == OK) {
+      e->decSolveThreads (board);
+    }
     e->currentThread->dispose();
     e->currentThread=(Thread *) NULL;
     goto LBLstart;
@@ -1888,10 +1895,10 @@ void engine() {
 		    error ("Solve board in solve continuation builtin is gone"));
 	 DebugCheck((solveBB->getParentBoard () != NULL),
 		    error ("SolveCont: taken board is linked to computation tree?"));
-	 SolveActor *solveAA = CastSolveActor (solveBB->getActor ());
 
 	 Bool isGround;
 	 solveBB = (Board *) e->copyTree (solveBB, &isGround);
+	 SolveActor *solveAA = CastSolveActor (solveBB->getActor ());
 
 	 if (isGround == OK) {
 	   TaggedRef solveTRef = solveAA->getSolveVar ();  // copy of; 
