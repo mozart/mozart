@@ -42,20 +42,24 @@ extern void printSuspension(ProgramCounter pc);
 // TOPLEVEL FAILURE (HF = Handle Failure)
 
 
-#define HF_BODY(MSG_SHORT,MSG_LONG)				      	      \
-  if (e->conf.errorVerbosity > 0) {					      \
-    toplevelErrorHeader();						      \
-    {MSG_SHORT;}							      \
-    if (e->conf.errorVerbosity > 1) {					      \
-      message("\n");							      \
-      {MSG_LONG;}							      \
-    }									      \
-    errorTrailer();							      \
-  } else {								      \
-    message("Toplevel Failure\n");					      \
-  }									      \
-  if (e->conf.stopOnToplevelFailure) {					      \
-    tracerOn(); trace("toplevel failed");				      \
+#define HF_BODY(MSG_SHORT,MSG_LONG)                                           \
+  if (allowTopLevelFailureMsg) {                                              \
+    if (e->conf.errorVerbosity > 0) {                                         \
+      toplevelErrorHeader();                                                  \
+      {MSG_SHORT;}                                                            \
+      if (e->conf.errorVerbosity > 1) {                                       \
+        message("\n");                                                        \
+        {MSG_LONG;}                                                           \
+      }                                                                       \
+      errorTrailer();                                                         \
+    } else {                                                                  \
+      message("Toplevel Failure\n");                                          \
+    }                                                                         \
+  } else {                                                                    \
+    allowTopLevelFailureMsg = TRUE;                                           \
+  }                                                                           \
+  if (e->conf.stopOnToplevelFailure) {                                        \
+    tracerOn(); trace("toplevel failed");                                     \
   }
 
 
@@ -70,8 +74,8 @@ void failureUnify(AM *e, char *msgShort, TaggedRef arg1, TaggedRef arg2,
 }
 
 
-#define HF_UNIFY(MSG_SHORT,T1,T2,MSG_LONG) 				      \
-   if (!e->isToplevel()) { goto LBLfailure; }				      \
+#define HF_UNIFY(MSG_SHORT,T1,T2,MSG_LONG)                                    \
+   if (!e->isToplevel()) { goto LBLfailure; }                                 \
    failureUnify(e,MSG_SHORT,T1,T2,MSG_LONG);				      \
    goto LBLkillThread;
 
