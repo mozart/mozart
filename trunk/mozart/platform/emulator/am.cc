@@ -323,11 +323,8 @@ start:
   if (isCVar(tag1)) {
     return tagged2CVar(term1)->unify(termPtr1, term1, tag1,
 				     termPtr2, term2, tag2);
-  } 
-
-  LOCAL_PROPAGATION(if (localPropStore.isEnabled)
-		    return localPropStore.do_propagation());
-
+  }
+  
   bindToNonvar(termPtr1, term1, term2);
   return OK;
 
@@ -344,15 +341,11 @@ start:
     } else {
       bind(termPtr1, term1, termPtr2);
     }
-    LOCAL_PROPAGATION(if (localPropStore.isEnabled)
-		      return localPropStore.do_propagation());    
     return OK;
   }
   
   if (isNotCVar(tag2)) {
     bind(termPtr2, term2, termPtr1);
-    LOCAL_PROPAGATION(if (localPropStore.isEnabled)
-		      return localPropStore.do_propagation());
     return OK;
   }
 
@@ -569,7 +562,7 @@ void AM::decSolveThreads (Board *bb)
 SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
 				   SuspList * suspList,
 				   TaggedRef term, SVariable * rightVar,
-				   Bool unifyingVar)
+				   Bool calledByUnify)
 {
   SuspList * retSuspList = NULL;
 
@@ -597,16 +590,16 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
     // already propagated susps remain in suspList
     if (! susp->isPropagated()) {      
       if ((suspList->checkCondition(taggedvar, term)) &&
-	  (susp->wakeUp(var->getHome(), rightVar))) {
+	  (susp->wakeUp(var->getHome(), rightVar, calledByUnify))) {
         // dispose only non-resistant susps
 	if (! susp->isResistant()) {
 	  suspList = suspList->dispose();
 	  continue;
-	} else if (unifyingVar) {
+	} else if (calledByUnify) {
 	  susp->markUnifySusp();
 	}
       }
-    } else if (unifyingVar && ! susp->isUnifySusp())
+    } else if (calledByUnify && susp->isResistant() && ! susp->isUnifySusp())
       if (isBetween(susp->getNode(), var->getHome()))
 	susp->markUnifySusp();
     
@@ -658,7 +651,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
       (taggedBecomesSuspVar(termPtr)) : NULL;
     // variables are passed as references
     checkSuspensionList(var, svar ? makeTaggedRef(termPtr) : term,
-			svar, svar != NULL);
+			svar, TRUE);
 
 #ifdef DEBUG_CHECK
     Board *hb = (tagged2SuspVar(var)->getHome ())->getBoardDeref ();
