@@ -299,67 +299,73 @@ void Statistics::leaveCall(PrTabEntry  *newp)
 #include "ofgenvar.hh"
 
 #define PrintVar(Var) \
-  printf("%20s:          %8d\n",OZStringify(Var),Var)
+  fprintf(out,"%20s:          %8d\n",OZStringify(Var),(int)Var)
 
 #define PrintFloat(Var) \
-  printf("%20s:          %8.2f\n",OZStringify(Var),Var)
+  fprintf(out,"%20s:          %8.2f\n",OZStringify(Var),Var)
 
 #define PrintVarPercent(Var,Total) \
-  printf("%20s:          %8d (%5.2f%%)\n",OZStringify(Var),Var,((double)Var*100.0)/(double)Total)
+  fprintf(out,"%20s:          %8d (%5.2f%%)\n",OZStringify(Var),(int)Var,((double)Var*100.0)/(double)Total)
 
-void Statistics::printCount() {
-  printf("Heap after last GC:\n\n");
-  printf("values:\n");
-  printf("literal         %d (%dB)\n",literal,sizeof(Literal));
-  printf("ozfloat         %d (%dB)\n",ozfloat,sizeof(Float));
-  printf("bigInt          %d (%dB)\n",bigInt,sizeof(BigInt));
-  printf("sTupleLen       %d (%dB)\n",sTupleLen,sizeof(TaggedRef));
-  printf("lTuple          %d (%dB)\n",lTuple,sizeof(LTuple));
-  printf("sRecord         %d (%dB)\n",sRecord,sizeof(SRecord));
-  printf("sRecordLen      %d (%dB)\n",sRecordLen,sizeof(TaggedRef));
-  printf("abstraction     %d (%dB)\n",abstraction,sizeof(Abstraction));
-  printf("flatObject      %d (%dB)\n",flatObject,sizeof(Object));
-  printf("objectClass     %d (%dB)\n",objectClass,sizeof(ObjectClass));
-  printf("chunk           %d (%dB)\n",chunk,sizeof(SChunk));
-  printf("heapChunk       %d (%dB)\n",heapChunk,sizeof(HeapChunk));
+void Statistics::printCount(char *file) {
+
+  FILE *out = (strcmp(file,"-")==0) ? stdout : fopen(file,"w");
+  if (out==NULL) {
+    warning("cannot open '%s': %s\n",file,OZ_unixError(errno));
+    return;
+  }
+  fprintf(out,"Heap after last GC:\n\n");
+  fprintf(out,"values:\n");
+  fprintf(out,"literal         %ld (%dB)\n",literal,sizeof(Literal));
+  fprintf(out,"ozfloat         %ld (%dB)\n",ozfloat,sizeof(Float));
+  fprintf(out,"bigInt          %ld (%dB)\n",bigInt,sizeof(BigInt));
+  fprintf(out,"sTupleLen       %ld (%dB)\n",sTupleLen,sizeof(TaggedRef));
+  fprintf(out,"lTuple          %ld (%dB)\n",lTuple,sizeof(LTuple));
+  fprintf(out,"sRecord         %ld (%dB)\n",sRecord,sizeof(SRecord));
+  fprintf(out,"sRecordLen      %ld (%dB)\n",sRecordLen,sizeof(TaggedRef));
+  fprintf(out,"abstraction     %ld (%dB)\n",abstraction,sizeof(Abstraction));
+  fprintf(out,"flatObject      %ld (%dB)\n",flatObject,sizeof(Object));
+  fprintf(out,"objectClass     %ld (%dB)\n",objectClass,sizeof(ObjectClass));
+  fprintf(out,"chunk           %ld (%dB)\n",chunk,sizeof(SChunk));
+  fprintf(out,"heapChunk       %ld (%dB)\n",heapChunk,sizeof(HeapChunk));
   
-  printf("refsArray       %d (%dB)\n",refsArray,0);
-  printf("refsArrayLen    %d (%dB)\n",refsArrayLen,sizeof(TaggedRef));
+  fprintf(out,"refsArray       %ld (%dB)\n",refsArray,0);
+  fprintf(out,"refsArrayLen    %ld (%dB)\n",refsArrayLen,sizeof(TaggedRef));
 
-  printf("\nVariables:\n");
-  printf("uvar            %d (%dB)\n",uvar,sizeof(TaggedRef));
-  printf("svar            %d (%dB)\n",svar,sizeof(SVariable));
-  printf("cvar            %d (%dB)\n",cvar,sizeof(GenCVariable));
+  fprintf(out,"\nVariables:\n");
+  fprintf(out,"uvar            %ld (%dB)\n",uvar,sizeof(TaggedRef));
+  fprintf(out,"svar            %ld (%dB)\n",svar,sizeof(SVariable));
+  fprintf(out,"cvar            %ld (%dB)\n",cvar,sizeof(GenCVariable));
 
-  printf("\nLocal spaces\n");
-  printf("scriptLen       %d (%dB)\n",scriptLen,sizeof(Equation));
-  printf("board           %d (%dB)\n",board,sizeof(Board));
-  printf("askActor        %d (%dB)\n",askActor,sizeof(AskActor));
-  printf("waitActor       %d (%dB)\n",waitActor,sizeof(WaitActor));
-  printf("solveActor      %d (%dB)\n",solveActor,sizeof(SolveActor));
-  printf("waitChild       %d (%dB)\n",waitChild,sizeof(Board *));
+  fprintf(out,"\nLocal spaces\n");
+  fprintf(out,"scriptLen       %ld (%dB)\n",scriptLen,sizeof(Equation));
+  fprintf(out,"board           %ld (%dB)\n",board,sizeof(Board));
+  fprintf(out,"askActor        %ld (%dB)\n",askActor,sizeof(AskActor));
+  fprintf(out,"waitActor       %ld (%dB)\n",waitActor,sizeof(WaitActor));
+  fprintf(out,"solveActor      %ld (%dB)\n",solveActor,sizeof(SolveActor));
+  fprintf(out,"waitChild       %ld (%dB)\n",waitChild,sizeof(Board *));
 
-  printf("\nThreads\n");
-  printf("thread          %d (%dB)\n",thread,sizeof(Thread));
-  printf("taskStack       %d (%dB)\n",taskStack,sizeof(TaskStack));
-  printf("taskStackLen    %d (%dB)\n",taskStackLen,0);
-  printf("cCatch          %d (%dB)\n",cCatch,4);
-  printf("cLocal          %d (%dB)\n",cLocal,4);
-  printf("cCont           %d (%dB)\n",cCont,12);
-  printf("cXCont          %d (%dB)\n",cXCont,16);
-  printf("cSetCaa         %d (%dB)\n",cSetCaa,8);
-  printf("cDebugCont      %d (%dB)\n",cDebugCont,8);
-  printf("cExceptHandler  %d (%dB)\n",cExceptHandler,8);
-  printf("cCallCont       %d (%dB)\n",cCallCont,12);
+  fprintf(out,"\nThreads\n");
+  fprintf(out,"thread          %ld (%dB)\n",thread,sizeof(Thread));
+  fprintf(out,"taskStack       %ld (%dB)\n",taskStack,sizeof(TaskStack));
+  fprintf(out,"taskStackLen    %ld (%dB)\n",taskStackLen,0);
+  fprintf(out,"cCatch          %ld (%dB)\n",cCatch,4);
+  fprintf(out,"cLocal          %ld (%dB)\n",cLocal,4);
+  fprintf(out,"cCont           %ld (%dB)\n",cCont,12);
+  fprintf(out,"cXCont          %ld (%dB)\n",cXCont,16);
+  fprintf(out,"cSetCaa         %ld (%dB)\n",cSetCaa,8);
+  fprintf(out,"cDebugCont      %ld (%dB)\n",cDebugCont,8);
+  fprintf(out,"cExceptHandler  %ld (%dB)\n",cExceptHandler,8);
+  fprintf(out,"cCallCont       %ld (%dB)\n",cCallCont,12);
 
-  printf("continuation    %d (%dB)\n",continuation,sizeof(Continuation));
-  printf("suspList        %d (%dB)\n",suspList,sizeof(SuspList));
+  fprintf(out,"continuation    %ld (%dB)\n",continuation,sizeof(Continuation));
+  fprintf(out,"suspList        %ld (%dB)\n",suspList,sizeof(SuspList));
 
-  printf("\nOFS\n");
-  printf("dynamicTable    %d (%dB)\n",dynamicTable,sizeof(DynamicTable));
-  printf("dynamicTableLen %d (%dB)\n",dynamicTableLen,sizeof(HashElement));
+  fprintf(out,"\nOFS\n");
+  fprintf(out,"dynamicTable    %ld (%dB)\n",dynamicTable,sizeof(DynamicTable));
+  fprintf(out,"dynamicTableLen %ld (%dB)\n",dynamicTableLen,sizeof(HashElement));
 
-  printf("\nRS\n");
+  fprintf(out,"\nRS\n");
   PrintVar(freeListAllocated);
   PrintVar(freeListDisposed);
   PrintVar(totalAllocated);
@@ -396,12 +402,12 @@ void Statistics::printCount() {
   PrintVar(numNewNamedName);
   PrintVar(numThreads);
 
-  printDeref();
+  printDeref(out);
 
   //int totCalls = fastcalls+bicalls+nonoptcalls+inlinecalls+inlinedots+sendmsg+applmeth;
   int totCalls = fastcalls+bicalls+nonoptcalls+inlinecalls+sendmsg+applmeth;
 
-  printf("\nCalls\n");
+  fprintf(out,"\nCalls\n");
   PrintVar(totCalls);
   PrintVarPercent(fastcalls,totCalls);
   PrintVarPercent(nonoptcalls,totCalls);
@@ -413,22 +419,25 @@ void Statistics::printCount() {
   PrintVarPercent(applmeth,totCalls);
   PrintVar(inlinedots);
 
-  int userCalls = fastcalls+sendmsg+nonoptcalls-nonoptbicalls;
+  int userCalls = fastcalls+sendmsg+nonoptcalls+applmeth-nonoptbicalls;
   int envsPerUserCall = numEnvAllocs;
-  printf("\n");
+  fprintf(out,"\n");
   PrintVar(userCalls);
   PrintVarPercent(envsPerUserCall,userCalls);
+
+  if (out != stdout)
+    fclose(out);
 }
 
 
-void Statistics::printDeref()
+void Statistics::printDeref(FILE *out)
 {
-  printf("\n");
+  fprintf(out,"\n");
   PrintVar(numDerefs);
   PrintVar(longestDeref);
   for(int i=0; i<=maxDerefLength; i++) {
     if (lengthDerefs[i] || i==maxDerefLength)
-      printf("\tlengthDerefs[%s%d]=%9d (%4.2f%%)\n",
+      fprintf(out,"\tlengthDerefs[%s%d]=%9ld (%4.2f%%)\n",
 	     i==maxDerefLength ? ">=" : "",
 	     i,lengthDerefs[i],((double)lengthDerefs[i]*100)/(double)numDerefs);
   }
