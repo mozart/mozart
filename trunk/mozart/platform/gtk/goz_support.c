@@ -23,7 +23,7 @@
 
 #include <gtk/gtk.h>
 #include <mozart.h>
-/*#include <gozsupport.h>*/
+/*#include <goz_support.h>*/
 #define GOZ_DECLARE_GTKOBJECT(i, val)            OZ_declareForeignType (i, val, GtkObject*)
 
 OZ_Term signal_port;
