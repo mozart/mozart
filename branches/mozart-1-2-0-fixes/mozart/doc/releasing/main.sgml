@@ -251,6 +251,7 @@ make bin</code>
 
       </section>
     </chapter>
+
     <chapter proglang=sh>
       <title/Check-List For Release Managers/
       <p>This chapter is intended for release managers of the Mozart
