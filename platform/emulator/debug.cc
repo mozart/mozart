@@ -65,9 +65,8 @@ void debugStreamSuspend(ProgramCounter PC, Thread *tt,
 
   if (debugPC == NOCODE) {
 
-    if (!builtin) return;
+    //if (!builtin) return;
 
-    // else
     file    = OZ_atom("noDebugInfo");
     comment = OZ_atom("");
     line    = 1;

@@ -235,11 +235,7 @@ void CodeArea::printDef(ProgramCounter PC)
 
 TaggedRef CodeArea::dbgGetDef(ProgramCounter PC)
 {
-  TaggedRef file, comment;
-  int line, abspos;
-  ProgramCounter pc;
-
-  pc = definitionStart(PC);
+  ProgramCounter pc = definitionStart(PC);
 
   if (pc == NOCODE)
     return OZ_atom("toplevel");
@@ -250,6 +246,8 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC)
   ProgramCounter next;
   PrTabEntry *pred;
 
+  TaggedRef file;
+  int line;
   // file & line might be overwritten some lines later...
   getDefinitionArgs(pc,reg,next,file,line,pred);
 
