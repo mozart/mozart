@@ -20,6 +20,6 @@ SGMLFILES	= mogul.sgml
 
 default: all
 all:: all.doc
-all.doc:: $(HTMLSUBDIR)/index.html
+all.doc:: $(HTMLSUBDIR)/index.html $(addprefix $(HTMLSUBDIR)/,$(HTMLEXTRA))
 install.doc:: $(HTMLSUBDIR)/index.html
 	for i in $(HTMLSUBDIR)/* ; do $(INSTALL_FILE) $$i $(LIBDIR_DOC)/; done
