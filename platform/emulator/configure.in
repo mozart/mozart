@@ -454,4 +454,4 @@ dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf.h)
 
-AC_OUTPUT(Makefile FDLib/Makefile FSetLib/Makefile)
+AC_OUTPUT(Makefile Makefile.rules FDLib/Makefile FSetLib/Makefile)
