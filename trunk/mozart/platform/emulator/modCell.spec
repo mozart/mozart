@@ -40,6 +40,10 @@
 			     out => [],
 			     bi  => BIexchangeCell},
 
+     'exchangeFun'	=> { in  => ['+cell','value'],
+			     out => ['value'],
+			     bi  => BIexchangeCellFun},
+
      'access'		=> { in  => ['+cell'],
 			     out => ['value'],
 			     bi  => BIaccessCell},
