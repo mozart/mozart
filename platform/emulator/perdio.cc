@@ -2662,8 +2662,9 @@ void GNameTable::gcGNameTable()
     DebugCode(used--);
 
     /* code is never garbage collected */
-    if (gn->getGNameType()==GNT_CODE)
-      goto next_one;
+    if (gn->getGNameType()==GNT_CODE){
+      gn->site->makeGCMarkSite();
+      goto next_one;}
 
     if (gn->getGCMark()) {
       gn->resetGCMark();
@@ -2707,7 +2708,7 @@ void PerdioVar::gcRecurse(void)
       ProxyList *newPL = new ProxyList(pl->sd,0);
       *last = newPL;
       last = &newPL->next;}
-    *last = 0;} 
+    *last = 0;}
   else {
     Assert(isObject());
     gcBorrowNow(getObject()->getIndex());
@@ -2822,6 +2823,14 @@ void Tertiary::globalizeTert()
 	SRecord *r = getRecord(state);
 	Assert(r!=NULL);
 	Tertiary *cell = tagged2Tert(OZ_newCell(makeTaggedSRecord(r)));
+	Watcher *w, **ww = getWatcherBase();
+	if(ww!=NULL){
+	  w = *ww;
+	  *ww = NULL;
+	  cell->setMasterTert(o);
+	  while(w!=NULL){
+	    cell->insertWatcher(w);
+	  }}
 	cell->globalizeTert();
 	o->setState(cell);}
       break;
@@ -3855,13 +3864,23 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg, Thread *th) {
 
   OZ_Term nogoods = bs->getNoGoods();
   if (!literalEq(nil(),nogoods)) {
+    /* 
+       This should fix your problem 
+       with the portSend Ralph 
+       EK
+       */
+    int portIndex;
+    OZ_Term t;
+    unmarshal_M_PORT_SEND(bs,portIndex,t);
+    dumpRemoteMsgBuffer(bs);
+    
     return oz_raise(E_ERROR,OZ_atom("dp"),"portSend",3,
 		    oz_atom("nogoods"),
 		    makeTaggedTert(p),
 		    nogoods);
   }
 
-  // !!!!!!!! GC bs !!!!!!!
+
   SendTo(site,bs,M_PORT_SEND,site,index);
   if(wait) 
     portWait(th,site->getQueueStatus(dummy), 0, p);
@@ -4352,10 +4371,11 @@ OZ_Return CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,Thread* th,Ex
       if(c->errorIgnore()) return ret;
       break;}
     Assert(c->getTertType()==Te_Manager);
-    Site *toS=((CellManager*)c)->getChain()->setCurrent(mySite,c);
-    sendPrepOwner(index);
-    cellLockSendForward(toS,mySite,index);
-    if(c->errorIgnore()) return ret;
+    if(!((CellManager*)c)->getChain()->hasFlag(TOKEN_LOST)){
+      Site *toS=((CellManager*)c)->getChain()->setCurrent(mySite,c);
+      sendPrepOwner(index);
+      cellLockSendForward(toS,mySite,index);
+      if(c->errorIgnore()) return ret;}
     break;}
   default: Assert(0);
   }
