@@ -127,8 +127,7 @@ enum PO_FLAGS{
   PO_MASTER=4,
   PO_SLAVE=8,
   PO_GC_MARK=16,
-  PO_PERSISTENT=32,
-  PO_REQUESTED=64
+  PO_PERSISTENT=32
 };
 
 class ProtocolObject {
@@ -627,13 +626,8 @@ private:
 
 public:
 
-  Bool makeRequest(){
-    if(getFlags() & PO_REQUESTED) return TRUE;
-    addFlags(PO_REQUESTED);
-    return FALSE;}
-
   int getExtendFlags(){
-    return getFlags() & (~PO_GC_MARK|PO_EXTENDED|PO_REQUESTED);}
+    return getFlags() & (~PO_GC_MARK|PO_EXTENDED);}
 
   void print_entry(int);
   OZ_Term extract_info(int);
