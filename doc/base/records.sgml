@@ -549,9 +549,8 @@
           returns the list <<[1 2 3 4]>>>, whereas
           <<<{Append 1|2|nil 3|4}>>>
           returns <<1|2|(3|4)>>> which is not a
-          well formed list.
-
-
+          proper list, since <<3|4>> is not a
+          proper list.
 
         <Entry><Span class=index/<<Member>>/
           <Index/<<List>><And><<member>>/
