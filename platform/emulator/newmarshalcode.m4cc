@@ -275,7 +275,7 @@ Bool newMarshalCode(GenTraverser *gt, void *arg)
     Opcode op = CodeArea::getOpcode(PC++);
 
     //
-    if (op==GENFASTCALL) {
+    if (op==GENFASTCALL || op==CALLPROCEDUREREF) {
       op = (getNumberArg(PC+1) & 1)==0 ? FASTCALL : FASTTAILCALL;
     }
 
