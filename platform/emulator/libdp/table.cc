@@ -794,7 +794,9 @@ void BorrowTable::dumpProxies()
       }
     }
   }
-  //  printf("%d frames and %d proxies left\n", frames, proxies);
+//    fprintf(stderr, "%d frames and %d proxies left (pid %d)\n",
+//  	  frames, proxies, osgetpid());
+//    fflush(stderr);
 }
 
 int OwnerTable::notGCMarked() {
