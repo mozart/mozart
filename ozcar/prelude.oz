@@ -33,11 +33,12 @@ fun {VS2A X} %% virtual string to atom
 end
 
 %% Dictionary.xxx is too long, really...
-Dput   = Dictionary.put
-Dkeys  = Dictionary.keys
-Dget   = Dictionary.get
-Ditems = Dictionary.items
-Dremove= Dictionary.remove
+Dput     = Dictionary.put
+Dentries = Dictionary.entries
+Dkeys    = Dictionary.keys
+Dget     = Dictionary.get
+Ditems   = Dictionary.items
+Dremove  = Dictionary.remove
 
 local
    fun {MakeSpace N}
