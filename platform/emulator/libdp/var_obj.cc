@@ -126,6 +126,7 @@ void ObjectVar::gcRecurseV(void)
   obj = getObject()->gcObject();
   if (isObjectClassAvail()) {
     u.aclass = u.aclass->gcClass();}
+  setInfo(gcEntityInfoInternal(getInfo()));
 }
 
 void ObjectVar::disposeV()

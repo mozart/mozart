@@ -95,10 +95,13 @@ VSMailboxManagerCreated::VSMailboxManagerCreated(int memSizeIn)
 {
   memSize = memSizeIn;
   int restSize = memSize - sizeof(VSMailbox);
-  // add padding:
-  restSize = (restSize / sizeof(VSMailboxMsg)) * sizeof(VSMailboxMsg);
-  // one msg is allocated statically:
+  //
+#ifdef DEBUG_CHECK
+  // one msg is allocated statically (see vs_mailbox.hh):
   int msgsNum = restSize / sizeof(VSMailboxMsg) + 1;
+#else
+  int msgsNum = restSize / sizeof(VSMailboxMsg);
+#endif
   // There must be place for at least one message;
   Assert(msgsNum);
 
