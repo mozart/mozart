@@ -142,10 +142,7 @@ in
          {Constraints Start Dur}
          {Schedule.serialized TasksOnRes Start Dur}
          {Schedule.firstsDist TasksOnRes Start Dur}
-         choice skip end
-         {Record.forAll Start proc {$ S}
-                                 S={FD.reflect.min S}
-                              end}
+         {FD.assign min Start}
       end
    end
 end
