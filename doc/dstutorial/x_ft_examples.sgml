@@ -288,11 +288,12 @@ F=functor
   end
 >>>
 
-<P>Do not forget the <<import Fault>> clause!
+<P>Do not forget the "<<import Fault>>" clause!
 If it's left out, the system will try to use
 the local <<Fault>> on the remote site.
 This raises an exception since <<Fault>> is sited
-(technically, it is a <em>resource</em>).
+(technically, it is a <em>resource</em>,
+see <ptr to="sited.entities">).
 The <<import Fault>> clause ensures that
 installing the functor uses the <<Fault>>
 of the installation site.
