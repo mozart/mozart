@@ -5,6 +5,7 @@ import
    Compiler URL
    DefaultURL
    Path at 'Path.ozf'
+   Utils at 'Utils.ozf'
 prepare
    VS2A = VirtualString.toAtom
    DictKeys = Dictionary.keys
@@ -118,6 +119,28 @@ define
 	    end
 	 end
       end
+
+      meth get_depends_rec(T $)
+	 Table = {NewDictionary}
+	 Stack = {Utils.newStack}
+      in
+	 for X in {self get_depends(T $)} do
+	    {Stack.push X}
+	 end
+	 for while:{Not {Stack.isEmpty}} do
+	    T = {Stack.pop}
+	 in
+	    if {HasFeature Table T} then skip else
+	       Table.T := unit
+	       for X in {self get_depends(T $)} do
+		  {Stack.push X}
+	       end
+	       for X in {self get_autodepend_install(T $)} do
+		  {Stack.push X}
+	       end
+	    end
+	 end
+	 {DictKeys Table}
+      end
    end
-   
 end

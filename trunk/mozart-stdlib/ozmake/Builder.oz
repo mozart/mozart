@@ -26,6 +26,9 @@ define
 	 {self recurse(build_all)}
       end
 
+      %% input arg runtime indicates whether we should also build the
+      %% runtime dependencies.
+      
       meth build_target(T runtime:RunTime<=false)
 	 {self extend_resolver}
 	 {self trace('target '#T)}
@@ -34,10 +37,14 @@ define
 	    if {Not {self get_fullbuild($)}} andthen {self target_is_src(T $)} then
 	       {self make_src(T _)}
 	    else
-	       L={self get_depends(T $)}
 	       R={self get_rule(   T $)}
+	       L=if R.tool==ozl
+		 then {self get_depends_rec(T $)}
+		 else {self get_depends(    T $)} end
 	    in
-	       for D in L do Builder,build_target(D) end
+	       for D in L do
+		  Builder,build_target(D runtime:RunTime)
+	       end
 	       if Builder,Outdated(T L $) then
 		  {self exec_rule(T R)}
 		  if Builder,Outdated(T L $) then
