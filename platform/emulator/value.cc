@@ -95,7 +95,7 @@ int Literal::LiteralCurrentNumber = 0x200000;
 Literal::Literal(char *str, Bool flag)
 {
   printName = ozstrdup(str);
-  if (flag == OK)
+  if (flag)
     home = (Board *) ToPointer(ALLBITS);  // only top-level names;
   else
     home = (Board *) NULL;

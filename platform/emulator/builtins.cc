@@ -423,27 +423,26 @@ OZ_C_proc_begin(BIrecordC,1)
 
   switch (tag) {
   case LTUPLE:
-    return FAILED;
   case LITERAL:
   case SRECORD:
-    break;
+    return PROCEED;
   case CVAR:
     if (tagged2CVar(t)->getType()!=OFSVariable) return FAILED;
-    break;
+    return PROCEED;
   case UVAR:
   case SVAR:
     {
       // Create newofsvar with unbound variable as label:
       GenOFSVariable *newofsvar=new GenOFSVariable();
       // Unify newofsvar and term:
-      Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(tPtr));
+      Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+                       makeTaggedRef(tPtr));
       Assert(ok);
-      break;
+      return PROCEED;
     }
   default:
     return FAILED;
   }
-  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -466,13 +465,12 @@ OZ_C_proc_begin(BIrecordCSize,2)
 
   switch (tag) {
   case LTUPLE:
-    return FAILED;
   case LITERAL:
   case SRECORD:
-    break;
+    return PROCEED;
   case CVAR:
     if (tagged2CVar(t)->getType()!=OFSVariable) return FAILED;
-    break;
+    return PROCEED;
   case UVAR:
   case SVAR:
     {
@@ -481,12 +479,11 @@ OZ_C_proc_begin(BIrecordCSize,2)
       // Unify newofsvar and term:
       Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(tPtr));
       Assert(ok);
-      break;
+      return PROCEED;
     }
   default:
     return FAILED;
   }
-  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -498,7 +495,6 @@ State isRecordCInline(TaggedRef t)
   DEREF(t, tPtr, tag);
   switch (tag) {
   case LTUPLE:
-    return FAILED;
   case LITERAL:
   case SRECORD:
     break;
@@ -526,7 +522,6 @@ OZ_C_proc_begin(BIisRecordCVar,1)
   DEREF(t, tPtr, tag);
   switch (tag) {
   case LTUPLE:
-    return FAILED;
   case LITERAL:
   case SRECORD:
     break;
@@ -550,7 +545,6 @@ OZ_C_proc_begin(BIisRecordCVarB,2)
   DEREF(t, tPtr, tag);
   switch (tag) {
   case LTUPLE:
-    return FAILED;
   case LITERAL:
   case SRECORD:
     break;
@@ -812,7 +806,7 @@ State labelInline(TaggedRef term, TaggedRef &out)
   default:
     break;
   }
-  TypeError1("label",0,"NoNumber",term);
+  TypeError1("label",0,"Record",term);
 }
 
 DECLAREBI_USEINLINEFUN1(BIlabel,labelInline)
@@ -1057,7 +1051,8 @@ OZ_C_proc_begin(BIlabelC,2)
   TaggedRef thelabel=makeTaggedNULL();
   switch (tag) {
   case LTUPLE:
-    return FAILED;
+    thelabel=AtomCons;
+    break;
   case LITERAL:
     thelabel=term;
     break;
@@ -1082,11 +1077,11 @@ OZ_C_proc_begin(BIlabelC,2)
     }
   case CVAR:
     if (tagged2CVar(term)->getType()!=OFSVariable)
-        TypeError1("labelC",0,"NoNumber",term);
+        TypeError1("labelC",0,"Record",term);
     thelabel=tagged2GenOFSVar(term)->getLabel();
     break;
   default:
-    TypeError1("labelC",0,"NoNumber",term);
+    TypeError1("labelC",0,"Record",term);
   }
 
   // At this point, thelabel is term's label
@@ -1120,7 +1115,7 @@ OZ_C_proc_begin(BIpropFeat,5)
     // TaggedRef rec=OZ_getCArg(0);
     // DEREF(rec,_1,recTag);
     // if (!(recTag==CVAR && tagged2CVar(rec)->getType()==OFSVariable)) {
-    //     TypeError1("RecordC.monitorArity",0,"NoNumber",rec);
+    //     TypeError1("RecordC.monitorArity",0,"Record",rec);
     //     return FAILED;
     // }
 
@@ -1184,14 +1179,15 @@ OZ_C_proc_begin(BImonitorArity, 3)
     DEREF(tmprec,_2,recTag);
     switch (recTag) {
     case LTUPLE:
-        return FAILED;
+      return am.unify(arity,makeTupleArityList(2)) ? PROCEED : FAILED;
     case LITERAL:
-        // *** arity is nil
-        return (am.unify(arity,AtomNil)? PROCEED : FAILED);
+      // *** arity is nil
+      return (am.unify(arity,AtomNil)? PROCEED : FAILED);
     case SRECORD:
-      record:
-        // *** arity is known set of features of the SRecord
-        return (am.unify(arity,tagged2SRecord(tmprec)->getArityList())? PROCEED : FAILED);
+    record:
+      // *** arity is known set of features of the SRecord
+      return am.unify(arity,tagged2SRecord(tmprec)->getArityList())
+        ? PROCEED : FAILED;
     case UVAR:
     case SVAR:
         {
@@ -1209,13 +1205,13 @@ OZ_C_proc_begin(BImonitorArity, 3)
         }
     case CVAR:
         if (tagged2CVar(tmprec)->getType()!=OFSVariable) {
-            TypeError1("RecordC.monitorArity",0,"NoNumber",rec);
+            TypeError1("RecordC.monitorArity",0,"Record",rec);
             return FAILED;
         }
         // *** arity is calculated from the OFS; see below
         break;
     default:
-        TypeError1("RecordC.monitorArity",0,"NoNumber",rec);
+        TypeError1("RecordC.monitorArity",0,"Record",rec);
         return FAILED;
     }
     tmprec=OZ_getCArg(0);
@@ -1364,8 +1360,8 @@ LBLagain:
     goto typeError0;
   }
 typeError0:
-  if (dot)   TypeError2(".",0,"NoNumber and no Literal",term,fea);
-  TypeError2("subtree",0,"NoNumber",term,fea);
+  if (dot)   TypeError2(".",0,"Record and no Literal",term,fea);
+  TypeError2("subtree",0,"Record",term,fea);
 typeError1t:
   if (dot) TypeError2(".",1,"Int (and in range [1 .. width])",term,fea);
   TypeError2("subtree",1,"Int",term,fea);
@@ -1458,10 +1454,10 @@ OZ_C_proc_begin(BIsetC, 3)
     }
 
     // Error unless F is a literal:
-    if (!isLiteral(feaTag))
-        TypeError2("setC",1,"Literal",term,fea);
+    if (!isFeature(feaTag))
+        TypeError2("setC",1,"Feature",term,fea);
 
-    // At this point, X is OFS and F is literal.
+    // At this point, X is OFS and F is feature.
     GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
     // Destructively update the feature F:
     Bool updated=ofsvar->setFeatureValue(fea,val);
@@ -1496,7 +1492,7 @@ OZ_C_proc_end
 
 
 // {RemoveC X F}: destructively remove feature F of X
-// X must be undetermined record and F must be literal.
+// X must be undetermined record and F must be feature.
 // Non-monotonic built-in.
 OZ_C_proc_begin(BIremoveC, 2)
 {
@@ -1510,11 +1506,11 @@ OZ_C_proc_begin(BIremoveC, 2)
     if (termTag!=CVAR || tagged2CVar(term)->getType()!=OFSVariable)
         TypeError2("removeC",0,"undetermined record",term,fea);
 
-    // Error unless F is a literal:
-    if (!isLiteral(feaTag))
-        TypeError2("removeC",1,"Literal",term,fea);
+    // Error unless F is a Feature:
+    if (!isFeature(feaTag))
+        TypeError2("removeC",1,"Feature",term,fea);
 
-    // At this point, X is OFS and F is literal.
+    // At this point, X is OFS and F is feature.
     GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
     // Destructively remove the feature F:
     ofsvar->removeFeature(fea);
@@ -1524,7 +1520,8 @@ OZ_C_proc_end
 
 
 // {TestCB X F ?B}: B is boolean with truth value "X has feature F".
-// X must be undetermined record and F must be literal.  Non-monotonic built-in.
+// X must be undetermined record and F must be feature.
+// Non-monotonic built-in.
 OZ_C_proc_begin(BItestCB, 3)
 {
     OZ_Term term = OZ_getCArg(0);
@@ -1538,11 +1535,11 @@ OZ_C_proc_begin(BItestCB, 3)
     if (termTag!=CVAR || tagged2CVar(term)->getType()!=OFSVariable)
         TypeError2("testC",0,"undetermined record",term,fea);
 
-    // Error unless F is a literal:
-    if (!isLiteral(feaTag))
-        TypeError2("testC",1,"Literal",term,fea);
+    // Error unless F is a feature:
+    if (!isFeature(feaTag))
+        TypeError2("testC",1,"Feature",term,fea);
 
-    // At this point, X is OFS and F is literal.
+    // At this point, X is OFS and F is feature.
     GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
     // Test presence of feature F:
     if (ofsvar->getFeatureValue(fea)!=makeTaggedNULL())
@@ -1566,14 +1563,12 @@ State uparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
     // Constrain term to a record:
     switch (termTag) {
     case LTUPLE:
-        return FAILED;
     case LITERAL:
-        break;
     case SRECORD:
         break;
     case UVAR:
     case SVAR:
-        if (!isLiteral(feaTag)) {
+        if (!isFeature(feaTag)) {
             // Create newofsvar with unbound variable as label:
             GenOFSVariable *newofsvar=new GenOFSVariable();
             // Unify newofsvar and term:
@@ -1609,7 +1604,7 @@ State uparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
             return FAILED;
       }
     }
-    if (!isLiteral(feaTag)) goto typeError2;
+    if (!isFeature(feaTag)) goto typeError2;
 
     // Add feature and return:
     Assert(term!=makeTaggedNULL());
@@ -1679,10 +1674,11 @@ State uparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
       }
 
     case SRECORD:
+    case LTUPLE:
     record:
       {
         // Get the SRecord corresponding to term:
-        SRecord* termSRec=tagged2SRecord(term);
+        SRecord* termSRec=makeRecord(term);
 
         TaggedRef t=termSRec->getFeature(fea);
         if (t!=makeTaggedNULL()) {
@@ -1700,11 +1696,11 @@ State uparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
       return dotInline(term,fea,out);
     }
 typeError1:
-    TypeError1("subtreeC",0,"NoNumber",term);
+    TypeError1("subtreeC",0,"Record",term);
 typeError1t:
-    TypeError2("subtreeC",0,"NoNumber",term,fea);
+    TypeError2("subtreeC",0,"Record",term,fea);
 typeError2:
-    TypeError2("subtreeC",1,"Literal",term,fea);
+    TypeError2("subtreeC",1,"Feature",term,fea);
 }
 DECLAREBI_USEINLINEFUN2(BIuparrow,uparrowInline)
 
@@ -1742,7 +1738,7 @@ State widthInline(TaggedRef term, TaggedRef &out)
     break;
   }
 
-  TypeError1("width",0,"NoNumber",term);
+  TypeError1("width",0,"Record",term);
 }
 
 DECLAREBI_USEINLINEFUN1(BIwidth,widthInline)
@@ -1780,7 +1776,8 @@ State isBoolInline(TaggedRef t)
           DEREF(lbl,_1,lblTag);
           if (isLiteral(lblTag)) {
               if (isAtom(lbl)) {
-                  if (sameLiteral(term,NameTrue) || sameLiteral(term,NameFalse))
+                  if (sameLiteral(term,NameTrue) ||
+                      sameLiteral(term,NameFalse))
                       return SUSPEND;
                   else
                       return FAILED;
@@ -2422,10 +2419,10 @@ OZ_C_proc_begin(BIadjoinAt,4)
     if (isCVar(fea)) {
       if (tagged2CVar(fea)->getType()!=OFSVariable ||
           tagged2GenOFSVar(fea)->getWidth()>0)
-        TypeError3("adjoinAt",1,"Literal",rec,fea,value);
+        TypeError3("adjoinAt",1,"Feature",rec,fea,value);
       return OZ_suspendOnVar(makeTaggedRef(feaPtr));;
     }
-    TypeError3("adjoinAt",1,"Literal",rec,fea,value);
+    TypeError3("adjoinAt",1,"Feature",rec,fea,value);
 
   case SRECORD:
     {
@@ -2434,7 +2431,7 @@ OZ_C_proc_begin(BIadjoinAt,4)
         return OZ_suspendOnVar(makeTaggedRef(feaPtr));
       }
       if (!isFeature(tag1)) {
-        TypeError3("adjoinAt",1,"Literal",rec,fea,value);
+        TypeError3("adjoinAt",1,"Feature",rec,fea,value);
       }
       return OZ_unify(out,rec1->adjoinAt(fea,value));
     }
@@ -2444,16 +2441,16 @@ OZ_C_proc_begin(BIadjoinAt,4)
   case CVAR:
     if (tag0==CVAR && tagged2CVar(rec)->getType()!=OFSVariable)
         TypeError3("adjoinAt",0,"Record",rec,fea,value);
-    if (isLiteral(fea) || isNotCVar(fea)) {
+    if (isFeature(fea) || isNotCVar(fea)) {
       return OZ_suspendOnVar(makeTaggedRef(recPtr));
     }
     if (isCVar(fea)) {
       if (tagged2CVar(fea)->getType()!=OFSVariable ||
           tagged2GenOFSVar(fea)->getWidth()>0)
-        TypeError3("adjoinAt",1,"Literal",rec,fea,value);
+        TypeError3("adjoinAt",1,"Feature",rec,fea,value);
       return OZ_suspendOnVar(makeTaggedRef(recPtr));
     }
-    TypeError3("adjoinAt",1,"Literal",rec,fea,value);
+    TypeError3("adjoinAt",1,"Feature",rec,fea,value);
 
   default:
     TypeError3("adjoinAt",0,"Record",rec,fea,value);

@@ -87,7 +87,7 @@ DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize=(dt_index)(-1L)) {
         Bool valid;
         for(dt_index i=0; i<size; i++) {
             if (table[i].value!=makeTaggedNULL()) {
-                Assert(isLiteral(table[i].ident));
+                Assert(isFeature(table[i].ident));
                 ret->insert(table[i].ident, table[i].value, &valid);
                 Assert(valid);
             }
@@ -105,11 +105,11 @@ DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize=(dt_index)(-1L)) {
 // elements have been removed by making their value NULL.
 dt_index DynamicTable::fullhash(TaggedRef id, Bool *valid) {
     Assert(size==0 || isPwrTwo(size));
-    Assert(isLiteral(id));
+    Assert(isFeature(id));
     // Function 'hash' may eventually return the literal's seqNumber (see value.hh):
     if (size==0) { *valid=FALSE; return (dt_index) 0L; }
     dt_index size1=(size-1);
-    dt_index i=size1 & ((dt_index) (tagged2Literal(id)->hash()));
+    dt_index i=size1 & ((dt_index) featureHash(id));
     dt_index s=size1;
     // Rehash if necessary using semi-quadratic probing (quadratic is not covering)
     // Theorem: semi-quadratic probing is covering in size steps (proof: PVR+JN)
@@ -133,13 +133,13 @@ dt_index DynamicTable::fullhash(TaggedRef id, Bool *valid) {
 // ATTENTION: insert must only be done if the table has room for a new element.
 TaggedRef DynamicTable::insert(TaggedRef id, TaggedRef val, Bool *valid) {
     Assert(size==0 || isPwrTwo(size));
-    Assert(isLiteral(id));
+    Assert(isFeature(id));
     Assert(!fullTest());
     dt_index i=fullhash(id,valid);
     if (!*valid) return makeTaggedNULL();
     Assert(i<size);
     if (table[i].value!=makeTaggedNULL()) {
-        Assert(isLiteral(table[i].ident));
+        Assert(isFeature(table[i].ident));
         // Ident exists already; return value & don't insert
         return table[i].value;
     } else {
@@ -157,7 +157,7 @@ TaggedRef DynamicTable::insert(TaggedRef id, TaggedRef val, Bool *valid) {
 // Return NULL if nothing is found
 TaggedRef DynamicTable::lookup(TaggedRef id) {
     Assert(size==0 || isPwrTwo(size));
-    Assert(isLiteral(id));
+    Assert(isFeature(id));
     Bool valid;
     dt_index i=fullhash(id,&valid);
     Assert(!valid || i<size);
@@ -174,12 +174,12 @@ TaggedRef DynamicTable::lookup(TaggedRef id) {
 // Return TRUE if index id successfully updated, else FALSE
 Bool DynamicTable::update(TaggedRef id, TaggedRef val) {
     Assert(size==0 || isPwrTwo(size));
-    Assert(isLiteral(id));
+    Assert(isFeature(id));
     Bool valid;
     dt_index i=fullhash(id,&valid);
     Assert(!valid || i<size);
     if (valid && table[i].value!=makeTaggedNULL()) {
-        Assert(isLiteral(table[i].ident));
+        Assert(isFeature(table[i].ident));
         // Ident exists; update value & return TRUE:
         table[i].value=val;
         return TRUE;
@@ -193,7 +193,7 @@ Bool DynamicTable::update(TaggedRef id, TaggedRef val) {
 // return a smaller table that contains all its entries.  Otherwise, return same table.
 DynamicTable *DynamicTable::remove(TaggedRef id) {
     Assert(size==0 || isPwrTwo(size));
-    Assert(isLiteral(id));
+    Assert(isFeature(id));
     Bool valid;
     dt_index i=fullhash(id,&valid);
     Assert(!valid || i<size);
@@ -218,7 +218,7 @@ Bool DynamicTable::extraFeaturesIn(DynamicTable* dt) {
     Assert(size==0 || isPwrTwo(size));
     for (dt_index i=0; i<dt->size; i++) {
         if (dt->table[i].value!=makeTaggedNULL()) {
-            Assert(isLiteral(dt->table[i].ident));
+            Assert(isFeature(dt->table[i].ident));
             Bool exists=lookup(dt->table[i].ident);
             if (!exists) return TRUE;
         }
@@ -237,7 +237,7 @@ void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs) {
     Bool valid;
     for (dt_index i=0; i<size; i++) {
         if (table[i].value!=makeTaggedNULL()) {
-            Assert(isLiteral(table[i].ident));
+            Assert(isFeature(table[i].ident));
             if (dt->fullTest()) dt=dt->doubleDynamicTable();
             TaggedRef val=dt->insert(table[i].ident, table[i].value, &valid);
             if (!valid) {
@@ -269,7 +269,7 @@ Bool DynamicTable::srecordcheck(SRecord &sr, PairList* &pairs) {
     Assert(pairs->isempty());
     for (dt_index i=0; i<size; i++) {
         if (table[i].value!=makeTaggedNULL()) {
-            Assert(isLiteral(table[i].ident));
+            Assert(isFeature(table[i].ident));
             TaggedRef val=sr.getFeature(table[i].ident);
             if (val!=makeTaggedNULL()) {
                 // Feature found in srecord; add corresponding terms to list of pairs:
@@ -336,7 +336,7 @@ TaggedRef DynamicTable::getArityList(TaggedRef tail) {
         TaggedRef *arr=stuple->getRef();
         for (unsigned int ai=0,di=0; di<size; di++) {
             if (table[di].value!=makeTaggedNULL()) {
-               Assert(isLiteral(table[di].ident));
+               Assert(isFeature(table[di].ident));
                arr[ai] = table[di].ident;
                ai++;
             }
