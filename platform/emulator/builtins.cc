@@ -7710,7 +7710,7 @@ BIspec allSpec[] = {
   {"frameVariables", 3, BIframeVariables},
   {"location",       2, BIlocation},
 
-#ifdef MM_DEBUG
+#ifdef DEBUG_TRACE
   {"halt",0,BIhalt},
 #endif
 
