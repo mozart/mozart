@@ -42,7 +42,7 @@ static const char bits_in_byte[256] = {
   4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
 };
 
-int get_num_of_bits(const int m, const int * ia) {
+int get_num_of_bits(const int m, int * ia) {
   int s = 0;
 
   unsigned char * ca = (unsigned char *) ia;
