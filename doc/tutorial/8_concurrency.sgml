@@ -197,7 +197,7 @@ and storing it in your file <<PingPong.oz>>. Thereafter use the
 command:
 <<< ozc -x PingPong.oz >>>
 <P> Now type PingPong in your shell to start the program
-<NOTE>To terminate this program is the OS shell you have to
+<NOTE FOOT>To terminate this program in the OS shell you have to
 type CONTROL-C. We will see later how to terminate it properly</NOTE>.
 <P><FIGURE ID="pingpong1" CLASS="Figure">
 <CAPTION>A 'Ping Pong' program stand-alone</CAPTION>
