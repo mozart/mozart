@@ -5794,19 +5794,6 @@ OZ_BI_define(BIsiteStatistics,0,1)
 /*   SECTION 42:: Initialization                                      */
 /**********************************************************************/
 
-// BIspec perdioSpec[] = {
-//
-// #ifdef DEBUG_PERDIO
-//   {"dvset",    2, BIdvset, 0},
-// #endif
-//   {"NetCloseCon",      1, BIcloseCon, 0},
-//   {"startTmp",         2, BIstartTmp, 0},
-//   {"siteStatistics",   1, BIsiteStatistics, 0},
-//   {"printBorrowTable", 0, BIprintBorrowTable, 0},
-//   {"printOwnerTable",  0, BIprintOwnerTable, 0},
-//   {0,0,0,0}
-// };
-
 Bool perdioInit(){
   if(mySite!=NULL) return OK;
   initNetwork();
@@ -5823,8 +5810,6 @@ void BIinitPerdio()
   initComponents();
 
   creditSite=NULL;
-
-  // BIaddSpec(perdioSpec);
 
   genFreeListManager=new GenFreeListManager();
   ownerTable = new OwnerTable(DEFAULT_OWNER_TABLE_SIZE);

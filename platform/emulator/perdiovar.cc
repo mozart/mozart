@@ -139,20 +139,3 @@ OZ_BI_define(PerdioVar_is, 1,1)
 {
   OZ_RETURN(isPerdioVar(deref(OZ_in(0)))?NameTrue:NameFalse);
 } OZ_BI_end
-
-// ---------------------------------------------------------------------
-// Distributed stuff
-// ---------------------------------------------------------------------
-
-
-// static
-// BIspec pvarSpec[] = {
-//   {"PerdioVar.is",         2, PerdioVar_is},
-//
-//   {0,0,0,0}
-// };
-//
-// void BIinitPerdioVar()
-// {
-//   BIaddSpec(pvarSpec);
-// }

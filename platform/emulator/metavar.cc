@@ -509,24 +509,6 @@ OZ_C_proc_begin(BImetaWatchVarB, 3)
 OZ_C_proc_end
 
 
-// static
-// BIspec metaSpec[] = {
-//   {"metaIsVar", 1, BImetaIsVar},
-//   {"metaIsVarB", 2, BImetaIsVarB},
-//   {"metaWatchVar", 2, BImetaWatchVar},
-//   {"metaWatchVarB", 3, BImetaWatchVarB},
-//   {"metaGetDataAsAtom", 2, BImetaGetDataAsAtom},
-//   {"metaGetNameAsAtom", 2, BImetaGetNameAsAtom},
-//   {"metaGetStrength", 2, BImetaGetStrength},
-//   {0,0,0,0}
-// };
-
-
-// void BIinitMeta(void)
-// {
-//   BIaddSpec(metaSpec);
-// }
-
 #if defined(OUTLINE)
 #define inline
 #include "metavar.icc"

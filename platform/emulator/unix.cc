@@ -1486,8 +1486,6 @@ OZ_BI_define(unix_pipe,2,2)
   OZ_out(0) = OZ_int(pid);
   OZ_out(1) = rw;
   return PROCEED;
-  //return OZ_unifyInt(rpid,pid) == PROCEED
-  //&& OZ_unify(rwsock,rw) == PROCEED ? PROCEED : FAILED;
 } OZ_BI_end
 
 static OZ_Term mkAliasList(char **alias)
@@ -1777,54 +1775,8 @@ OZ_BI_define(unix_getpwnam,1,1)
   }
 } OZ_BI_end
 
-// OZ_BIspec spec[] = {
-//   {"OS.getDir",          2, unix_getDir},
-//   {"OS.stat",            2, unix_stat},
-//   {"OS.getCWD",          1, unix_getCWD},
-//   {"OS.open",            4, unix_open},
-//   {"OS.fileDesc",        2, unix_fileDesc},
-//   {"OS.close",           1, unix_close},
-//   {"OS.write",           3, unix_write},
-//   {"OS.read",            5, unix_read},
-//   {"OS.lSeek",           4, unix_lSeek},
-//   {"OS.unlink",          1, unix_unlink},
-//   {"OS.readSelect",      1, unix_readSelect},
-//   {"OS.writeSelect",     1, unix_writeSelect},
-//   {"OS.acceptSelect",    1, unix_acceptSelect},
-//   {"OS.deSelect",        1, unix_deSelect},
-//   {"OS.system",          2, unix_system},
-//   {"OS.getEnv",          2, unix_getEnv},
-//   {"OS.putEnv",          2, unix_putEnv},
-//   {"OS.time",            1, unix_time},
-//   {"OS.gmTime",          1, unix_gmTime},
-//   {"OS.localTime",       1, unix_localTime},
-//   {"OS.srand",           1, unix_srand},
-//   {"OS.rand",            1, unix_rand},
-//   {"OS.randLimits",      2, unix_randLimits},
-//   {"OS.socket",          4, unix_socket},
-//   {"OS.bind",            2, unix_bindInet},
-//   {"OS.listen",          2, unix_listen},
-//   {"OS.connect",         3, unix_connectInet},
-//   {"OS.accept",          4, unix_acceptInet},
-//   {"OS.shutDown",        2, unix_shutDown},
-//   {"OS.send",            4, unix_send},
-//   {"OS.sendTo",          6, unix_sendToInet},
-//   {"OS.receiveFrom",     8, unix_receiveFromInet},
-//   {"OS.getSockName",     2, unix_getSockName},
-//   {"OS.getHostByName",   2, unix_getHostByName},
-//   {"OS.pipe",            4, unix_pipe},
-//   {"OS.tmpnam",          1, unix_tmpnam},
-//   {"OS.wait",            2, unix_wait},
-//   {"OS.getServByName",   3, unix_getServByName},
-//   {"OS.uName",           1, unix_uName},
-//   {"OS.getpwnam",     2, unix_getpwnam},
-//   {0,0,0}
-// };
-
 void BIinitUnix()
 {
-  // OZ_addBISpec(spec);
-
 #ifdef WINDOWS
   WSADATA wsa_data;
   WORD req_version = MAKEWORD(1,1);
