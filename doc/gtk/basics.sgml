@@ -1,0 +1,5 @@
+    <Chapter id="chapter.basics">
+      <Title/GTK Basics/
+      <P>
+        <!--**-->
+        widgets, signals, properties

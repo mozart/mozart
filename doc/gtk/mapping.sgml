@@ -1,0 +1,19 @@
+    <Chapter id="chapter.mapping">
+      <Title/How the C API is mapped to Oz/
+<!--**
+- types
+    guint -> integer
+    gfloat -> float
+    gchar * -> virtual string
+    GList * -> list
+    GtkWidget * -> object
+    enumeration types and flags -> integer (with constants)
+- constants
+   - enumeration types
+   - flags
+- classes
+   - methods
+- toplevel functions
+- limitations
+   - varargs
+-->
