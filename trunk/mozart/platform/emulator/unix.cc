@@ -641,19 +641,80 @@ OZ_BI_iodefine(unix_stat,1,1)
 OZ_BI_iodefine(unix_uName,0,1) {
 #ifdef WINDOWS
 
-  OZ_Term unknown = OZ_string("unknown");
+  SYSTEM_INFO si;
+  GetSystemInfo(&si);
+
+  char machine[64];
+  switch (si.wProcessorArchitecture) {
+  case PROCESSOR_ARCHITECTURE_INTEL:
+    sprintf(machine,"i%d86",si.wProcessorLevel);
+    break;
+  case PROCESSOR_ARCHITECTURE_MIPS:
+    sprintf(machine,"mips");
+    break;
+  case PROCESSOR_ARCHITECTURE_ALPHA:
+    sprintf(machine,"alpha");
+    break;
+  case PROCESSOR_ARCHITECTURE_PPC:
+    sprintf(machine,"ppc");
+    break;
+#ifdef PROCESSOR_ARCHITECTURE_IA64
+  case PROCESSOR_ARCHITECTURE_IA64:
+    sprintf(machine,"ia64");
+    break;
+#endif
+#ifdef PROCESSOR_ARCHITECTURE_AMD64
+  case PROCESSOR_ARCHITECTURE_AMD64:
+    sprintf(machine,"amd64");
+    break;
+#endif
+  case PROCESSOR_ARCHITECTURE_UNKNOWN:
+  default:
+    sprintf(machine,"unknown");
+    break;
+  }
+
+  OSVERSIONINFO vi;
+  vi.dwOSVersionInfoSize = sizeof(vi);
+  BOOL b = GetVersionEx(&vi);
+  Assert(b==TRUE);
+
+  char *sysname;
+  switch (vi.dwPlatformId) {
+  case VER_PLATFORM_WIN32s:
+    sysname = "win32s";
+    break;
+  case VER_PLATFORM_WIN32_WINDOWS:
+    sysname = "win32_windows";
+    break;
+  case VER_PLATFORM_WIN32_NT:
+    sysname = "win32_nt";
+    break;
+  default:
+    sysname = "win32_unknown";
+    break;
+  }
+
+  char release[64];
+  sprintf(release,"%ld.%ld",vi.dwMajorVersion,vi.dwMinorVersion);
+
+  char version[196];
+  if (vi.szCSDVersion[0] != '\0')
+    sprintf(version,"Build %ld %s",vi.dwBuildNumber,vi.szCSDVersion);
+  else
+    sprintf(version,"Build %ld",vi.dwBuildNumber);
 
   OZ_MAKE_RECORD_S("utsname",5,
-		   { "machine"    OZ_COMMA
-		       "nodename" OZ_COMMA
-		       "release"  OZ_COMMA
-		       "sysname"  OZ_COMMA
-		       "version" },
-		   { unknown              OZ_COMMA
-		       OZ_string(oslocalhostname())  OZ_COMMA
-		       unknown            OZ_COMMA
-		       OZ_string("WIN32") OZ_COMMA
-		       unknown }, r);
+		   { "machine"   OZ_COMMA
+		     "nodename"  OZ_COMMA
+		     "release"   OZ_COMMA
+		     "sysname"   OZ_COMMA
+		     "version" },
+		   { OZ_string(machine)            OZ_COMMA
+		     OZ_string(oslocalhostname())  OZ_COMMA
+		     OZ_string(release)            OZ_COMMA
+		     OZ_string(sysname)            OZ_COMMA
+		     OZ_string(version) }, r);
 
 #else
 
