@@ -26,6 +26,8 @@ import
 export
    'class': AuthorDBClass
 define
+   AuthorDBError = 'author database error'
+
    DBPath = {ByNeed
 	     fun {$}
 		{String.tokens
@@ -60,7 +62,7 @@ define
 	 end
       end
    in
-      proc {ReadDB FileName ?DB} File in
+      proc {ReadDB FileName Reporter ?DB} File in
 	 File = {FindFile DBPath FileName}
 	 case File of unit then DB = unit
 	 else
@@ -69,8 +71,9 @@ define
 	     proc {$ Author}
 		case Author of author() then skip
 		elsecase {CondSelect Author key unit} of unit then
-		   {Exception.raiseError
-		    ozDoc(authorDB authorWithoutKey FileName)}
+		   {Reporter warn(kind: AuthorDBError
+				  msg: 'missing key in author database entry'
+				  items: [hint(l: 'Entry' m: oz(Author))])}
 		else
 		   {Dictionary.put DB {String.toAtom Author.key} Author}
 		end
@@ -81,16 +84,24 @@ define
    end
 
    class AuthorDBClass
-      attr DBs: unit
-      meth init()
+      attr DBs: unit Reporter: unit
+      meth init(Rep)
 	 DBs <- {NewDictionary}
+	 Reporter <- Rep
       end
       meth get(To Key ?Author) DB in
 	 AuthorDBClass, GetDB(To ?DB)
 	 case DB of unit then
-	    {Exception.raiseError ozDoc(authorDB nonExistentDB To)}
+	    {@Reporter error(kind: AuthorDBError
+			     msg: 'author database not found'
+			     items: [hint(l: 'File name' m: To)])}
+	    Author = author(firstname: Key)
 	 elsecase {Dictionary.condGet DB {String.toAtom Key} unit} of unit then
-	    {Exception.raiseError ozDoc(authorDB nonExistentKey To Key)}
+	    {@Reporter error(kind: AuthorDBError
+			     msg: 'author not found in database'
+			     items: [hint(l: 'File name' m: To)
+				     hint(l: 'Key' m: Key)])}
+	    Author = author(firstname: Key)
 	 elseof Entry then
 	    Author = Entry
 	 end
@@ -100,7 +111,7 @@ define
 	 if {Dictionary.member @DBs DBID} then
 	    DB = {Dictionary.get @DBs DBID}
 	 else
-	    DB = {ReadDB To}
+	    DB = {ReadDB To @Reporter}
 	    {Dictionary.put @DBs DBID DB}
 	 end
       end
