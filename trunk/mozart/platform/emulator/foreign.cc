@@ -270,92 +270,63 @@ int OZ_isVariable(OZ_Term term)
   return oz_isVariable(term);
 }
 
-TaggedRef oz_valueType(OZ_Term term)
-{
-  char *ret = 0;
-
+inline
+TaggedRef oz_valueType(OZ_Term term) {
   Assert(!oz_isRef(term));
 
   switch (tagTypeOf(term)) {
   case UVAR:
     // FUT
   case CVAR:
-    ret = "variable";
-    break;
+    return AtomVariable;
   case SMALLINT:
-    ret = "int";
-    break;
+    return AtomInt;
   case OZFLOAT:    
-    ret = "float";
-    break;
+    return AtomFloat;
   case LITERAL:
-    ret = tagged2Literal(term)->isAtom() ? "atom" : "name";
-    break;
+    return tagged2Literal(term)->isAtom() ? AtomAtom : AtomName;
   case LTUPLE:
-    ret = "tuple"; // "cons";
-    break;
+    return AtomTuple;
   case SRECORD:
-    if (tagged2SRecord(term)->isTuple()) {
-      // SRecord *sr=tagged2SRecord(term);
-      // if (oz_eq(sr->getLabel(),AtomPair) && sr->getWidth()>1)
-      //    ret = "pair";
-      // else
-      ret = "tuple";
-    } else {
-      ret = "record";
-    }
-    break;
+    return tagged2SRecord(term)->isTuple() ? AtomTuple : AtomRecord;
   case FSETVALUE:
-    ret = "fset";
-    break;
+    return AtomFSet;
   case EXT:
     return oz_tagged2Extension(term)->typeV();
   case OZCONST:
     switch (tagged2Const(term)->getType()) {
     case Co_BigInt:
-      ret = "int";
-      break;
+      return AtomInt;
     case Co_Foreign_Pointer:
-      ret = "foreignPointer";
-      break;
+      return AtomForeignPointer;
     case Co_Abstraction:
     case Co_Builtin:
-      ret = "procedure";
-      break;
+      return AtomProcedure;
     case Co_Cell:
-      ret = "cell";
-      break;
+      return AtomCell;
     case Co_Space:
-      ret = "space";
-      break;
+      return AtomSpace;
     case Co_Object:
-      ret = "object";
-      break;
+      return AtomObject;
     case Co_Port:
-      ret = "port";
-      break;
+      return AtomPort;
     case Co_Chunk:
-      ret = "chunk";
-      break;
+      return AtomChunk;
     case Co_Array:
-      ret = "array";
-      break;
+      return AtomArray;
     case Co_Dictionary:
-      ret = "dictionary";
-      break;
+      return AtomDictionary;
     case Co_Lock:
-      ret = "lock";
-      break;
+      return AtomLock;
     case Co_Class:
-      ret = "class";
-      break;
+      return AtomClass;
     default:
-      break;
+      Assert(0);
     }
   default:
-    break;
+    Assert(0);
   }
-  return ret ? oz_atom(ret) : 0;
+  return makeTaggedNULL();
 }
 
 OZ_Term OZ_termType(OZ_Term term)

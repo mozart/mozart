@@ -1784,7 +1784,7 @@ OZ_BI_define(BInewUniqueName,1,1)
 OZ_Return BItermTypeInline(TaggedRef term, TaggedRef &out)
 {
   out = OZ_termType(term);
-  if (oz_eq(out,oz_atom("variable"))) {
+  if (out == AtomVariable) {
     return SUSPEND;
   }
   return PROCEED;
