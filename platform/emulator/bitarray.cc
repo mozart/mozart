@@ -43,7 +43,7 @@ private:
   }
   int *allocate(int size) {
     size_t n = size * sizeof(int);
-    return (int *) doubleMalloc(n);
+    return (int *) oz_heapMalloc(n);
   }
 public:
   virtual

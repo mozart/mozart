@@ -43,7 +43,7 @@ void OzFDVariable::dispose(void) {
   DISPOSE_SUSPLIST(fdSuspList[fd_prop_bounds]);
 
   disposeS();
-  freeListDispose(this, sizeof(OzFDVariable));
+  oz_freeListDispose(this, sizeof(OzFDVariable));
 }
 
 inline

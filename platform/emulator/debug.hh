@@ -64,7 +64,7 @@ public:
     data      = d.data;
     arity     = d.arity;
     if (d.arity > 0) {
-      arguments = (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * d.arity);
+      arguments = (TaggedRef *) oz_freeListMalloc(sizeof(TaggedRef) * d.arity);
       for (int i=d.arity; i--; )
 	arguments[i] = d.arguments[i];
     } else {
@@ -74,7 +74,7 @@ public:
 
   void setSingleArgument(TaggedRef x) {
     arity        = 1;
-    arguments    = (TaggedRef *) freeListMalloc(sizeof(TaggedRef));
+    arguments    = (TaggedRef *) oz_freeListMalloc(sizeof(TaggedRef));
     arguments[0] = x;
   }
 
@@ -90,8 +90,8 @@ public:
 
   void dispose() {
     if (arity > 0)
-      freeListDispose(arguments, arity * sizeof(TaggedRef));
-    freeListDispose(this,sizeof(OzDebug));
+      oz_freeListDispose(arguments, arity * sizeof(TaggedRef));
+    oz_freeListDispose(this,sizeof(OzDebug));
   }
 };
 

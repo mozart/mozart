@@ -37,12 +37,12 @@
 // propagators use free list heap memory
 void * OZ_Propagator::operator new(size_t s)
 {
-  return freeListMalloc(s);
+  return oz_freeListMalloc(s);
 }
 
 void OZ_Propagator::operator delete(void * p, size_t s)
 {
-  freeListDispose(p, s);
+  oz_freeListDisposeUnsafe(p, s);
 }
 
 static void outputArgsList(ostream& o, OZ_Term args, Bool not_top) 

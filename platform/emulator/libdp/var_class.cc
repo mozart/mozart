@@ -88,7 +88,7 @@ void ClassVar::disposeV()
     delete dsl;
     dsl = ne;
   }
-  freeListDispose(this, sizeof(ClassVar));
+  oz_freeListDispose(this, sizeof(ClassVar));
 }
 
 //

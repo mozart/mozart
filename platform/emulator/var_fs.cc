@@ -47,7 +47,7 @@ void OzFSVariable::dispose(void) {
   DISPOSE_SUSPLIST(fsSuspList[fs_prop_glb]);
 
   disposeS();
-  freeListDispose(this, sizeof(OzFSVariable));
+  oz_freeListDispose(this, sizeof(OzFSVariable));
 }
 
 #ifdef DEBUG_FSET
