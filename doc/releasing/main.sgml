@@ -243,10 +243,10 @@ make bin</code>
 	directory you supplied as the second argument to
 	<file/create-rpm/:
 <list>
-<item><file>mozart-$VERSION-$DATE-$REVISION.src.rpm</file></item>
-<item><file>mozart-$VERSION-$DATE-$REVISION.i386.rpm</file></item>
-<item><file>mozart-contrib-$VERSION-$DATE-$REVISION.i386.rpm</file></item>
-<item><file>mozart-doc-$VERSION-$DATE-$REVISION.i386.rpm</file></item>
+<item><file>mozart-$VERSION.$DATE-$REVISION.src.rpm</file></item>
+<item><file>mozart-$VERSION.$DATE-$REVISION.i386.rpm</file></item>
+<item><file>mozart-contrib-$VERSION.$DATE-$REVISION.i386.rpm</file></item>
+<item><file>mozart-doc-$VERSION.$DATE-$REVISION.i386.rpm</file></item>
 </list>
 
       </section>
@@ -267,25 +267,38 @@ make bin</code>
 	You should check it out, cd to the directory of the checked
 	out version and issue the following command:
 	<code display/cvs tag -r mozart-1-2-3/</item>
+	<item>check out the standard library and also cut the same tag
+	in it</item>
 	<item>then you should configure, build and install the
 	release.  In particular, you should configure with option
-	<code/--with-documents=all/.</item>
+	<code/--with-documents=all/.  You can also supply
+	<code/--prefix=$PREFIX/ if you want to install elsewhere than
+	the default; this has no ill-effect.</item>
 	<item>As stated above, you should then <code/make/ followed by
 	<code/make install/.</item>
-	<item>Now you need to make the postscript and pdf
-	documentation.  cd to the build doc directory and invoke
-	<code/make ps/ followed by <code/make pdf/.  Finally do
-	<code/make installps/.</item>
+	<item>build and install the standard library: temporarily
+	change your <code/$PATH/ to contains also <code/ozengine/ and
+	<code/ozmake/.  Invoke:
+	<code display>ozmake --install --prefix=$PREFIX --nosavedb</code>
+	where <code/$PREFIX/ is the location where you installed the
+	release.  As a result, the standard library is compiled and
+	installed in the same cache.  Don't forget the <code/--prefix/
+        option, or else <code/ozmake/ will install into your own
+	cache.  Dont't forget the <code/--nosavedb/ option, or else
+	<code/ozmake/ will save the package database, which unfortunately is
+	not yet relocatable: i.e. this would cause problems when users
+	install the binary distribs.</item>
 	<item>cd back to the top build directory and now invoke
 	<code/make src doc bin/ in order to create all the necessary
-	tar files.  Note that you also need to create a <file/README/
-	file which describes the important points about linking:  This
-	can be done by using <code>ldd</code> on
-	<file>platform/emulator/emulator.exe</file> and on
-	<file>platform/wish/tk.exe</file>.  Note that depending on
+	tar files.  <code/make bin/ creates a file
+	<file/README-$VERSION.$DATE-$PLATFORM/ which describes the
+	important points about linking:  i.e. what libraries
+	<file/emulator.exe/ and <file/tk.exe/ are dynamically linked
+	against.  Note that, depending on
 	whether you used <code>--enable-static-linking</code> or not,
 	you should rename the tar and README files accordingly so that
-	they can be distinguished.  My own preference is to add
+	multiple offerings for the same platform but with different
+	linking policies can be distinguished.  My own preference is to add
 	<code/-dynfull/ when dynamic linking is used and
 	<code/-dynless/ when <code/--enable-static-linking/ (and
 	possibly <code/--enable-modules-static/ - I normally specify
@@ -295,10 +308,16 @@ make bin</code>
 	for release 1.2.3 for the dynamically linked version of the
 	mozart release for freebsd on the intel architecture:
 	<list>
-	  <item><file>README.freebsdelf-i486-dynfull</file></item>
+	  <item><file>README-1.2.3.20011121-freebsdelf-i486-dynfull</file></item>
 	  <item><file>mozart-1.2.3.20011121-freebsdelf-i486-dynfull-contrib.tar.gz</file></item>
 	  <item><file>mozart-1.2.3.20011121-freebsdelf-i486-dynfull.tar.gz</file></item>
 	</list>
+	</item>
+	<item>Now you must create the tarball for the standard
+	library.  Let's say that you checked out the standard library
+	into directory <code/$MYSTD/, then, staying in the mozart
+	built directory, you can simply invoke:
+	<code display>make STDLIB=$MYSTD std</code>
 	</item>
 	<item>now become root and invoke
 	<code>$SOURCE/misc/create-rpm $PWD $PWD</code>.  This creates
@@ -312,11 +331,19 @@ make bin</code>
 	    <item>this creates the directory structure for the
 	    release.  Use option <code/-n/ to see what <code/mkftp/
 	    would do without actually doing it.</item>
-	    <entry><code>perl $SOURCE/misc/mkftp --release=$VERSION --tar *.tar.gz README.*</code></entry>
+	    <entry><code>perl $SOURCE/misc/mkftp --release=$VERSION --tar *.tar.gz README-*</code></entry>
 	    <item>this will install the tar and README files appropriately.</item>
 	    <entry><code>perl $SOURCE/misc/mkftp --release=$VERSION --rpm=redhat *.rpm</code></entry>
 	    <item>install the source and binary RPMs.</item>
 	  </list>
+	</item>
+	<item>Now you need to make the postscript and pdf
+	documentation.  cd to the build doc directory and invoke
+	<code/make ps/ followed by <code/make pdf/.  Finally do
+	<code/make installps/ which installs the documentation
+	in the global <code/print/ directory of your installation.
+	Now propagate this documentation to the ftp directory:
+	<code display>perl $SOURCE/misc/mkftp --release=$VERSION --doc=$PREFIX</code>
 	</item>
       </list>
     </chapter>
