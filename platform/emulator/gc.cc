@@ -1892,7 +1892,6 @@ void AM::gc(int msgLevel)
   emptySuspendVarList();
 
   OZ_collectHeapTerm(defaultExceptionHdl,defaultExceptionHdl);
-  OZ_collectHeapTerm(opiCompiler,opiCompiler);
   OZ_collectHeapTerm(debugStreamTail,debugStreamTail);
 
   PrTabEntry::gcPrTabEntries();
