@@ -76,9 +76,9 @@ SUBDIRS=	@oz_subdirs@
 
 .PHONY: all bootstrap install clean veryclean distclean check
 
-all:: bootstrap
+bootstrap::
 
-bootstrap clean veryclean depend distclean check install::
+all bootstrap clean veryclean depend distclean check install::
 	dirs="$(SUBDIRS)"; \
 	for i in $$dirs; do \
 	  if (cd $$i && $(MAKE) $@); \
