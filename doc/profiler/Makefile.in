@@ -1,0 +1,12 @@
+# $Id$
+
+VPATH  = @srcdir@
+SRCDIR = @srcdir@
+
+WHAT = profiler
+MAIN = profiler.sgml
+SGMLSRCS =
+HTMLEXTRAFILES =
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
