@@ -4645,26 +4645,6 @@ static void divison_handler(int /* sig */,
 }
 
 
-/* ----------------------------------------------------------------------- *
- * limits
- * ----------------------------------------------------------------------- */
-
-OZ_C_proc_begin(BIsmallIntLimits,2)
-{
-  OZ_Term minV = OZ_getCArg(0);
-  OZ_Term maxV = OZ_getCArg(1);
-
-  OZ_Return ret;
-  if ((ret=OZ_unifyInt(minV,OzMinInt)) != PROCEED) {
-    return ret;
-  }
-  if ((ret=OZ_unifyInt(maxV,OzMaxInt)) != PROCEED) {
-    return ret;
-  }
-  return PROCEED;
-}
-OZ_C_proc_end
-
 /* -----------------------------------
    make non inline versions
    ----------------------------------- */
@@ -5963,17 +5943,6 @@ OZ_C_proc_end
  * System
  * --------------------------------------------------------------------- */
 
-OZ_C_proc_begin(BIprintError,1)
-{
-  prefixError();
-  OZ_Term args0 = OZ_getCArg(0);
-  taggedPrint(args0,ozconf.printDepth);
-  fflush(stdout);
-
-  return (PROCEED);
-}
-OZ_C_proc_end
-
 /* print and show are inline,
    because it prevents the compiler from generating different code
    */
@@ -7216,9 +7185,6 @@ BIspec allSpec1[] = {
   {"fPow",3,BIfPow, (IFOR) BIfPowInline},
   {"Float.atan2",3,BIatan2, (IFOR) BIatan2Inline},
 
-  /* what is a small int ? */
-  {"smallIntLimits", 2, BIsmallIntLimits, 0},
-
   /* conversion: float <-> int <-> virtualStrings */
   {"IntToFloat",2,BIintToFloat,  (IFOR) BIintToFloatInline},
   {"FloatToInt",2,BIfloatToInt,  (IFOR) BIfloatToIntInline},
@@ -7432,9 +7398,8 @@ BIspec allSpec2[] = {
   {"setAbstractionTabDefaultEntry", 1, BIsetAbstractionTabDefaultEntry, 0},
 
   {"showBuiltins",0,BIshowBuiltins},
-  {"Print",1,BIprint,  (IFOR) printInline},
-  {"printError",1,BIprintError},
-  {"Show",1,BIshow,  (IFOR) showInline},
+  {"Print", 1, BIprint,  (IFOR) printInline},
+  {"Show",  1, BIshow,   (IFOR) showInline},
 
   {"SystemGetThreads",    1, BISystemGetThreads},
   {"SystemGetPriorities", 1, BISystemGetPriorities},
