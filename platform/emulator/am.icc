@@ -50,13 +50,13 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B)
   if (proto == term1) {
     DEREF(term2,term2Ptr,_2);
     if (term2 != proto || term1Ptr != term2Ptr) {
-      doBind(term1Ptr,B);
+      doBind(term1Ptr,isAnyVar(term2) ? makeTaggedRef(term2Ptr) : term2);
     }
     return OK;
   } else {
     DEREF(term2,term2Ptr,_2);
     if (proto == term2) {
-      doBind(term2Ptr,A);
+      doBind(term2Ptr,isAnyVar(term1) ? makeTaggedRef(term1Ptr) : term1);
       return OK;
     }
   }
