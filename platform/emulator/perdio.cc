@@ -2924,8 +2924,9 @@ inline void maybeConvertCellProxyToFrame(Tertiary *t){
 
 PerdioVar *var2PerdioVar(TaggedRef *tPtr, Bool isFuture)
 {
-  if (isPerdioVar(*tPtr))
-    return tagged2PerdioVar(*tPtr);
+  if (isCVar(*tPtr)) {
+    return isPerdioVar(*tPtr) ? tagged2PerdioVar(*tPtr) : (PerdioVar*) NULL;
+  }
 
   OwnerEntry *oe;
   int i = ownerTable->newOwner(oe);
