@@ -119,7 +119,7 @@ public:
     if (found) {
       Assert(found->getEntity() == entity);
       Ext_OB_TIndex oti = found->getOTI();
-      OwnerEntry *oe = OT->extOTI2ownerEntry(oti);
+      OwnerEntry *oe = OT->getOE(oti);
 
       //
       if (oe && oe->isRef() && oe->getRef() == entity) {
