@@ -189,21 +189,18 @@ Compiler buffer")
 ;; Fonts
 ;;------------------------------------------------------------
 
-(defvar oz-small-font      '("-adobe-courier-" . "-*-*-*-100-*-*-*-*-*-*"))
-(defvar oz-default-font    '("-adobe-courier-" . "-*-*-*-120-*-*-*-*-*-*"))
-(defvar oz-large-font      '("-adobe-courier-" . "-*-*-*-140-*-*-*-*-*-*"))
-(defvar oz-very-large-font '("-adobe-courier-" . "-*-*-*-180-*-*-*-*-*-*"))
-
-(make-face 'oz-bold)
-(make-face 'oz-italic)
+(defvar oz-small-font      "-adobe-courier-medium-r-normal--*-100-*-*-m-*-iso8859-1")
+(defvar oz-std-font        "-adobe-courier-medium-r-normal--*-120-*-*-m-*-iso8859-1")
+(defvar oz-large-font      "-adobe-courier-medium-r-normal--*-140-*-*-m-*-iso8859-1")
+(defvar oz-very-large-font "-adobe-courier-medium-r-normal--*-180-*-*-m-*-iso8859-1")
 
 (defun oz-small-font()
   (interactive)
   (oz-set-font oz-small-font))
 
-(defun oz-default-font()
+(defun oz-std-font()
   (interactive)
-  (oz-set-font oz-default-font))
+  (oz-set-font oz-std-font))
 
 (defun oz-large-font()
   (interactive)
@@ -214,26 +211,9 @@ Compiler buffer")
   (oz-set-font oz-very-large-font))
 
 (defun oz-set-font(font)
-  (let ((scr (selected-screen)))
-    (if	oz-gnu19
-	(progn
-	  (modify-frame-parameters
-	   scr
-	   (list (cons 'font  (concat (car font) "medium-r" (cdr font)))))
-          (set-face-font 'oz-bold nil scr)
-	  (set-face-font 'oz-italic nil scr)
-	  (set-face-font 'oz-bold (concat (car font) "bold-r" (cdr font)) scr)
-	  (set-face-font 'oz-italic (concat (car font) "medium-o" (cdr font)) scr)))
-    (if oz-lucid
-	(progn
-	  (set-face-font 'default (concat (car font) "medium-r" (cdr font)) scr)
-	  (set-face-font 'oz-bold (concat (car font) "bold-r" (cdr font)) scr)
-	  (set-face-font 'oz-italic (concat (car font) "medium-o" (cdr font)) scr)
-	  )))
-  (setq font-lock-keyword-face 'oz-bold)
-  (setq font-lock-comment-face 'oz-italic))
+  (set-default-font font))
 
-(oz-default-font)
+; (oz-std-font)
 
 ;;------------------------------------------------------------
 ;; Menus
@@ -336,14 +316,14 @@ Compiler buffer")
     ("-----")
     ("Start Oz" . run-oz)
     ("Halt Oz"  . oz-halt)
-    )
-   ("Font"
-    ("Small"      . oz-small-font     )
-    ("Default"    . oz-default-font    )
-    ("Large"      . oz-large-font     )
-    ("Very Large" . oz-very-large-font)
-    )
-   ))
+    ("-----")    
+    ("Font"
+     ("Small"      . oz-small-font)
+     ("Normal"     . oz-std-font)
+     ("Large"      . oz-large-font)
+     ("Very Large" . oz-very-large-font)
+     )
+    )))
 
 
 ;;------------------------------------------------------------
@@ -401,14 +381,14 @@ Compiler buffer")
   (define-key map "\M-p"   'oz-previous-buffer)
   (define-key map "\C-c\C-e"    'oz-toggle-errors)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
-  (if oz-lucid
-      (progn
-	(define-key map [(control button1)]       'oz-feed-region-browse)
-	(define-key map [(control button3)]       'oz-feed-region-browse-memory)))
-  (if oz-gnu19
-      (progn
-	(define-key map [C-down-mouse-1]        'oz-feed-region-browse)
-	(define-key map [C-down-mouse-3]        'oz-feed-region-browse-memory)))
+;  (if oz-lucid
+;      (progn
+;	(define-key map [(control button1)]       'oz-feed-region-browse)
+;	(define-key map [(control button3)]       'oz-feed-region-browse-memory)))
+;  (if oz-gnu19
+;      (progn
+;	(define-key map [C-down-mouse-1]        'oz-feed-region-browse)
+;	(define-key map [C-down-mouse-3]        'oz-feed-region-browse-memory)))
   
   (if oz-lucid
       (progn
