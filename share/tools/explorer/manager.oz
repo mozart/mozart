@@ -100,7 +100,7 @@ in
       meth reset
 	 lock
 	    case @script of false then skip elseof Script then
-	       Manager,script(Script @order)
+	       Manager,script(Script @order 'skip')
 	    end
 	 end
       end
@@ -194,7 +194,7 @@ in
 	 Manager,Layout
       end
 
-      meth script(Script Order)
+      meth script(Script Order Action)
 	 lock
 	    Manager,clear
 	    IsBAB   <- (Order\=false)
@@ -209,6 +209,12 @@ in
 	    Manager,Layout
 	    Manager,SetCursor(@root)
 	    ToplevelManager,configurePointer(idle)
+	    if Action\='skip' then
+	       Resume <- resume(node:@root action:Action)
+	       if @root\=false andthen @root.kind==choose then
+		  Manager,Action
+	       end
+	    end
 	 end
       end
 
@@ -519,7 +525,11 @@ in
 	       end
 	       CurNode = @curNode
 	       if ToResume\=false andthen CurNode\=false then
-		  StartNode = ToResume.node
+		  StartNode = if ToResume.node==Node then
+				 CurNode
+			      else
+				 ToResume.node
+			      end
 		  Action    = ToResume.action
 	       in
 		  if
