@@ -35,12 +35,11 @@
 #include "thr_int.hh"
 
 // bind a future, don't care about the variable, e.g. for byNeed
-void oz_bindFuture(OZ_Term fut,OZ_Term val)
+void oz_bindFuture(OZ_Term *vPtr,OZ_Term val)
 {
-  DEREF(fut,vPtr,_);
-  Assert(isFuture(fut));
-  oz_bindVar(tagged2CVar(fut),vPtr,val);
+  oz_var_forceBind(tagged2CVar(*vPtr),vPtr,val);
 }
+
 
 // this builtin is only internally available
 OZ_BI_define(BIbyNeedAssign,2,0)
@@ -50,7 +49,7 @@ OZ_BI_define(BIbyNeedAssign,2,0)
   OZ_Term val = OZ_in(1);
 
   Assert(isFuture(var));
-  oz_bindVar(tagged2CVar(var),varPtr,val);
+  oz_bindFuture(varPtr,val);
   return PROCEED;
 } OZ_BI_end
 
@@ -79,6 +78,12 @@ OZ_Return Future::bind(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
 
   am.addSuspendVarList(vPtr);
   return SUSPEND;
+}
+
+OZ_Return Future::forceBind(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
+{
+  oz_bindVar(this,vPtr,t);
+  return PROCEED;
 }
 
 OZ_Return Future::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode*scp)
@@ -123,8 +128,7 @@ OZ_BI_define(VarToFuture,2,0)
   }
   OZ_Term f = OZ_in(1);
   DEREF(f,fPtr,_);
-  Assert(isFuture(f));
-  oz_bindVar(tagged2CVar(f),fPtr,v);
+  oz_bindFuture(fPtr,v);
   return PROCEED;
 } OZ_BI_end
 
@@ -193,7 +197,8 @@ OZ_Return sendPortF(OZ_Term prt, OZ_Term val)
   OZ_Term lt  = oz_cons(am.currentUVarPrototype(),newFut);
   OZ_Term oldFut = ((PortWithStream*)port)->exchangeStream(newFut);
 
-  oz_bindFuture(oldFut,lt);
+  DEREF(oldFut,ptr,_);
+  oz_bindFuture(ptr,lt);
   OZ_unifyInThread(val,oz_head(lt)); // might raise exception if val is non exportable
 
   return PROCEED;

@@ -85,7 +85,7 @@ Bool ozd_trace(char *info, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
     fflush(stdout);
     if (osfgets(command,MaxLine,stdin) == (char *) NULL) {
       printf("read no input\n");
-      sprintf(command,"s\n");
+      sprintf(command,"e\n");
     } else if (feof(stdin)) {
       clearerr(stdin);
       printf("exit\n");

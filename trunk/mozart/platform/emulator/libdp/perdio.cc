@@ -46,6 +46,7 @@
 #include "msgType.hh"
 #include "dpDebug.hh"  
 #include "var.hh"
+#include "var_obj.hh"
 #include "vs_comm.hh"
 #include "chain.hh"
 #include "state.hh"
@@ -550,7 +551,7 @@ void msgReceived(MsgBuffer* bs)
 	break;
       }
       Assert(be->isVar());
-      GET_VAR(be,Proxy)->proxyBind(be->getPtr(),val,be);
+      GET_VAR(be,Proxy)->redirect(be->getPtr(),val,be);
       break;
     }
 
@@ -569,7 +570,7 @@ void msgReceived(MsgBuffer* bs)
 	// mm2: bug: the new var may no be the correct one wrt.
         //           to variable ordering -> may introduce net cycle.
 	// ??: bug fixed: may be bound to a different perdio var
-	GET_VAR(oe,Manager)->managerBind(oe->getPtr(),v,oe,rsite);
+	GET_VAR(oe,Manager)->surrender(oe->getPtr(),v);
       } else {
 	PD((PD_VAR,"SURRENDER discard"));
 	PD((WEIRD,"SURRENDER discard"));
@@ -605,7 +606,7 @@ void msgReceived(MsgBuffer* bs)
       be->receiveCredit();
 
       Assert(be->isVar());
-      GET_VAR(be,Proxy)->proxyAck(be->getPtr(), be);
+      GET_VAR(be,Proxy)->acknowledge(be->getPtr(), be);
 
       break;
     }
