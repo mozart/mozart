@@ -1316,15 +1316,10 @@ OZ_BI_iodefine(unix_receiveFromInet,5,3)
 const int maxArgv = 100;
 static char* argv[maxArgv];
 
-OZ_BI_define(unix_pipe,2,2)
-{
-  OZ_declareVsIN(0, s);
-  OZ_declareIN(1, args);
-  // OZ_out(0) == rpid
-  // OZ_out(1) == rwsock
-
+static OZ_Return enter_exec_args(char * s, OZ_Term args, int &argno) {
   OZ_Term hd, tl, argl;
-  int argno = 0;
+  
+  argno = 0;
 
   argl=args;
   
@@ -1383,6 +1378,23 @@ OZ_BI_define(unix_pipe,2,2)
   
     argl = tl;
   }
+
+  return PROCEED;
+
+}
+
+OZ_BI_define(unix_pipe,2,2) {
+  OZ_declareVsIN(0, s);
+  OZ_declareIN(1, args);
+  // OZ_out(0) == rpid
+  // OZ_out(1) == rwsock
+
+  int argno;
+  OZ_Return status = enter_exec_args(s, args, argno);
+
+  if (status != PROCEED)
+    return status;
+  
 
 #ifdef WINDOWS
   int k;
@@ -1509,6 +1521,101 @@ OZ_BI_define(unix_pipe,2,2)
   OZ_out(0) = OZ_int(pid);
   OZ_out(1) = rw;
   return PROCEED;
+} OZ_BI_end
+
+
+OZ_BI_define(unix_exec,2,1){
+  OZ_declareVsIN(0, s);
+  OZ_declareIN(1, args);
+  // OZ_out(0) == rpid
+
+  int argno;
+  OZ_Return status = enter_exec_args(s, args, argno);
+
+  if (status != PROCEED)
+    return status;
+
+#ifdef WINDOWS
+  int k;
+  char buf[10000];
+  buf[0] = '\0';
+  for (k=0 ; k<argno; k++) {
+    strcat(buf,argv[k]);
+  }
+
+  SECURITY_ATTRIBUTES sa;
+  sa.nLength = sizeof(sa);
+  sa.lpSecurityDescriptor = NULL;
+  sa.bInheritHandle = TRUE;
+
+  STARTUPINFO si;
+  memset(&si,0,sizeof(si));
+  si.cb = sizeof(si);
+  si.dwFlags = STARTF_FORCEOFFFEEDBACK;
+
+  PROCESS_INFORMATION pinf;
+  
+  if (!CreateProcess(NULL,buf,&sa,NULL,TRUE,0,
+		     NULL,NULL,&si,&pinf)) {
+    return raiseUnixError("exec",0, "Cannot exec process.", 
+			  "os");
+  }
+
+  int pid = (int) pinf.hProcess;
+
+#else  /* !WINDOWS */
+
+
+  int pid =  fork();
+  switch (pid) {
+  case 0: // child
+    {
+
+#ifdef DEBUG_FORK_GROUP
+      /*
+       * create a new process group for child
+       *   this allows to press Control-C when debugging the emulator
+       */
+      if (setsid() < 0) {
+        RETURN_UNIX_ERROR("setsid");
+      }
+#endif
+
+      // the child process should not produce a core file -- otherwise
+      // we get a problem if all core files are just named 'core', because
+      // the emulator's core file gets overwritten immediately by wish's one...
+      struct rlimit rlim;
+      rlim.rlim_cur = 0;
+      rlim.rlim_max = 0;
+      if (setrlimit(RLIMIT_CORE, &rlim) < 0) {
+	RETURN_UNIX_ERROR("setrlimit");
+      }
+
+      for (int i = max(STDIN_FILENO,max(STDOUT_FILENO,STDERR_FILENO))+1; i < FD_SETSIZE; i++)
+	close(i);
+      
+      if (execvp(s,argv)  < 0) {
+        RETURN_UNIX_ERROR("execvp");
+      }
+
+      printf("execvp failed\n");
+      exit(-1);
+    }
+  case -1:
+    RETURN_UNIX_ERROR("fork");
+  default: // parent
+    break;
+  }
+
+#endif
+
+  int i;
+  for (i=1 ; i<argno ; i++)
+    free(argv[i]);
+    
+  addChildProc(pid);
+
+  OZ_RETURN(OZ_int(pid));
 } OZ_BI_end
 
 static OZ_Term mkAliasList(char **alias)
