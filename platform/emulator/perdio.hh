@@ -372,7 +372,7 @@ extern int tempTimeCtr;
 
 void startDangelingProbe();
 TaggedRef listifyWatcherCond(EntityCond);
-
+Thread *getDefaultThread();
 
 /* __PERDIOHH */
 #endif

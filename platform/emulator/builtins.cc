@@ -4842,60 +4842,115 @@ OZ_BI_define(BIrestop,1,0)
   return BI_PREEMPT;
 } OZ_BI_end
 
-OZ_BI_define(BIhandlerInstall,4,0)
-{
-  OZ_Term entity0   = OZ_in(0);
-  OZ_Term cond0     = OZ_in(1);
-  OZ_Term proc      = OZ_in(2);
+OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
+  EntityCond ec = PERM_BLOCKED;
+  Thread *th      = am.currentThread();
+  Bool Continue   = FALSE;
+  Bool Persistent = FALSE;
 
+  if(condStruct->hasFeature(OZ_atom("cond"))){
+    TaggedRef co = condStruct->getFeature(OZ_atom("cond"));
+    if(co == AtomPermBlocked || co == AtomPerm)
+      ec=PERM_BLOCKED;
+    else{
+      if(co == AtomTempBlocked || co == AtomTemp)
+        ec=TEMP_BLOCKED|PERM_BLOCKED;
+      else
+        return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
 
-  NONVAR(cond0,cond);
-  NONVAR(entity0,entity);
+  if(condStruct->hasFeature(OZ_atom("basis"))){
+    TaggedRef tht = condStruct->getFeature(OZ_atom("basis"));
+    if(tht == AtomPerThread)
+      th = am.currentThread();
+    else{
+      if(tht == AtomPerSite)
+        th = getDefaultThread();
+      else
+        return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
 
-  EntityCond ec;
-  if(cond==AtomPermBlocked) {ec=PERM_BLOCKED;}
-  else{
-    if(cond==AtomTempBlocked) {ec=TEMP_BLOCKED|PERM_BLOCKED;}
-    else {
-      return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
+  if(condStruct->hasFeature(OZ_atom("retry"))){
+    TaggedRef re = condStruct->getFeature(OZ_atom("retry"));
+    if(re == AtomYes)
+      Continue = TRUE;
+    else{
+      if(re == AtomNo)
+        Continue = FALSE;
+      else
+        return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
 
-  Bool Continue = FALSE;
-  /*  if(type == AtomContinue)
-    Continue = TRUE;
-  else
-    if(type!=AtomRetry)
-      return oz_raise(E_ERROR,E_SYSTEM,"invalid handler type condition",0);
-      */
-  Tertiary *tert = tagged2Tert(entity);
-  switch(tert->getType()){
+  if(condStruct->hasFeature(OZ_atom("once_only"))){
+    TaggedRef on = condStruct->getFeature(OZ_atom("once_only"));
+    if(on == AtomYes)
+      Persistent = FALSE;
+    else{
+      if(on == AtomNo)
+        Persistent = TRUE;
+      else
+        return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
+
+  Tertiary *lock, *cell;
+  switch(entity->getType()){
   case Co_Object:{
-    Object *o = (Object *)tert;
-    Tertiary *lock, *cell;
-    if(tert->getTertType()==Te_Local)
+    Object *o = (Object *)entity;
+    if(entity->getTertType()==Te_Local)
       return oz_raise(E_ERROR,E_SYSTEM,"handlers on Local Objects not implemented",0);;
     cell = getCell(o->getState());
     lock = o->getLock();
-    cell->setMasterTert(tert);
-    if(cell->installHandler(ec,proc,am.currentThread(),Continue)){
+    cell->setMasterTert(entity);
+    if(cell->installHandler(ec,proc,th,Continue,Persistent)){
       if(lock!=NULL){
-        o->getLock()->setMasterTert(tert);
-        if(!lock->installHandler(ec,proc,am.currentThread(),Continue)){
-          cell->deinstallHandler(am.currentThread());
+        o->getLock()->setMasterTert(entity);
+        if(!lock->installHandler(ec,proc,th,Continue,Persistent)){
+          cell->deinstallHandler(th);
           break;}}
       return PROCEED;}
     break;}
   case Co_Port:
-    if(tert->getTertType()!=Te_Proxy) return PROCEED;
+    if(entity->getTertType()!=Te_Proxy) return PROCEED;
   case Co_Lock:
-  case Co_Cell:
-    if(tert->installHandler(ec,proc,am.currentThread(),Continue)){
-      return PROCEED;}
+  case Co_Cell:{
+    if(entity->installHandler(ec,proc,th,Continue,Persistent))
+      return PROCEED;
+    break;}
   default:
     return oz_raise(E_ERROR,E_SYSTEM,"handlers on ? not implemented",0);}
   return oz_raise(E_ERROR,E_SYSTEM,"handler already installed",0);
-} OZ_BI_end
+}
+
 
 Bool translateWatcherCond(TaggedRef tr,EntityCond &ec, TypeOfConst toc){
+    if(tr==AtomPermHome){
+      ec|=PERM_ME;
+      return TRUE;}
+    if(tr==AtomTempHome) {
+      ec |= (TEMP_ME|PERM_ME);
+      return TRUE;}
+
+    if(tr==AtomPermForeign && toc!=Co_Port){
+      ec|=(PERM_SOME|PERM_ALL);
+      return TRUE;}
+    if(tr==AtomTempForeign && toc!=Co_Port) {
+      ec |= (TEMP_SOME|PERM_SOME|TEMP_ALL|PERM_ALL);
+      return TRUE;}
+
+    if(tr==AtomTempMe) {
+      ec |= (TEMP_ME|PERM_ME);
+      return TRUE;}
+    if(tr==AtomPermAllOthers && toc!=Co_Port){
+      ec |= PERM_ALL;
+      return TRUE;}
+    if(tr==AtomTempAllOthers && toc!=Co_Port){
+      ec |= (TEMP_ALL|PERM_ALL);
+      return TRUE;}
+    if(tr==AtomPermSomeOther && toc!=Co_Port){
+      ec |= PERM_SOME;
+      return TRUE;}
+    if(tr==AtomTempSomeOther  && toc!=Co_Port){
+      ec |= (TEMP_SOME|PERM_SOME);
+      return TRUE;}
+    return NO;}
+
+Bool translateWatcherConds(TaggedRef tr,EntityCond &ec, TypeOfConst toc){
   TaggedRef car;
   TaggedRef cdr=tr;
   ec=ENTITY_NORMAL;
@@ -4910,66 +4965,83 @@ Bool translateWatcherCond(TaggedRef tr,EntityCond &ec, TypeOfConst toc){
     if(isAnyVar(car)) {
       return NO;}
     cdr=tagged2LTuple(cdr)->getTail();
-    if(car==AtomPermMe){
-      ec|=PERM_ME;
-      continue;}
-    if(car==AtomTempMe) {
-      ec |= (TEMP_ME|PERM_ME);
-      continue;}
-    if(car==AtomPermAllOthers && toc!=Co_Port){
-      ec |= PERM_ALL;
-      continue;}
-    if(car==AtomTempAllOthers && toc!=Co_Port){
-      ec |= (TEMP_ALL|PERM_ALL);
-      continue;}
-    if(car==AtomPermSomeOther && toc!=Co_Port){
-      ec |= PERM_SOME;
-      continue;}
-    if(car==AtomTempSomeOther  && toc!=Co_Port){
-      ec |= (TEMP_SOME|PERM_SOME);
-      continue;}
-    return NO;}
+    if(!translateWatcherCond(car,ec,toc))
+      return NO;}
   if(ec==ENTITY_NORMAL) return NO;
   return ec;}
 
-OZ_BI_define(BIwatcherInstall,3,0)
-{
-  OZ_Term e        = OZ_in(0);
-  OZ_Term c        = OZ_in(1);
-  OZ_Term proc     = OZ_in(2);
+OZ_Return WatcherInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
+  EntityCond ec    = PERM_ME;
+  Bool Persistent  = FALSE;
 
+  if(condStruct->hasFeature(OZ_atom("cond"))){
+    TaggedRef cond = condStruct->getFeature(OZ_atom("cond"));
+    if(isCons(cond)){
+      if(!translateWatcherConds(cond,ec,entity->getType()))
+        return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
+    else{
+      if(!translateWatcherCond(cond,ec,entity->getType()))
+        return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
+  }
 
-  NONVAR(c, cond);
-  NONVAR(e, entity);
+  if(condStruct->hasFeature(OZ_atom("once_only"))){
+    TaggedRef once = condStruct->getFeature(OZ_atom("once_only"));
+    if(once == AtomYes)
+      Persistent = FALSE;
+    else
+      if(once == AtomNo)
+        Persistent = TRUE;
+      else
+        return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}
 
-  EntityCond ec;
-
-  Tertiary *tert = tagged2Tert(entity);
-
-  if(!translateWatcherCond(cond,ec,tert->getType())){
-    return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
-
-  switch(tert->getType()){
+  switch(entity->getType()){
   case Co_Object:{
-    Object *o = (Object *)tert;
+    Object *o = (Object *)entity;
     Tertiary *lock, *cell;
-    if(tert->getTertType()==Te_Local)
+    if(entity->getTertType()==Te_Local)
       return oz_raise(E_ERROR,E_SYSTEM,"handlers on Local Objects not implemented",0);;
     cell = getCell(o->getState());
     lock = o->getLock();
-    cell->setMasterTert(tert);
-    cell->installWatcher(ec,proc);
+    cell->setMasterTert(entity);
+    cell->installWatcher(ec,proc,Persistent);
     if(lock!=NULL){
-      lock->setMasterTert(tert);
-      lock->installWatcher(ec,proc);}
+      lock->setMasterTert(entity);
+      lock->installWatcher(ec,proc,Persistent);}
     break;}
   case Co_Port:
-    if(tert->getTertType()!=Te_Proxy) break;
+    if(entity->getTertType()!=Te_Proxy) break;
   case Co_Cell:
   case Co_Lock:{
-    tert->installWatcher(ec,proc);
+    entity->installWatcher(ec,proc,Persistent);
     break;}
   default: return oz_raise(E_ERROR,E_SYSTEM,"watchers on ? not implemented",0);}
+    return PROCEED;
+}
+
+OZ_BI_define(BIhwInstall,3,0){
+  OZ_Term e0        = OZ_in(0);
+  OZ_Term c0        = OZ_in(1);
+  OZ_Term proc      = OZ_in(2);
+
+
+  NONVAR(c0, c);
+  NONVAR(e0, e);
+  TaggedRef label;
+  SRecord  *condStruct;
+  if(isSRecord(c)){
+    condStruct = tagged2SRecord(c);
+    label = condStruct->getLabel();}
+  else
+    oz_raise(E_ERROR,E_SYSTEM,"???? is not a Srecord",0);
+
+  Tertiary *entity = tagged2Tert(e);
+
+  TaggedRef type = condStruct->getLabel();
+  if(type == AtomHandler)
+    return HandlerInstall(entity,condStruct,proc);
+  if(type == AtomWatcher)
+    return WatcherInstall(entity,condStruct,proc);
+  oz_raise(E_ERROR,E_SYSTEM,"label must be either handler or watcher",0);
   return PROCEED;
 }OZ_BI_end
 

@@ -71,7 +71,11 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomTempMe, AtomPermMe,
   AtomTempAllOthers, AtomPermAllOthers,
   AtomTempSomeOther, AtomPermSomeOther, AtomEntityNormal,
+  AtomPerm, AtomTemp,AtomTempHome,AtomTempForeign,
+  AtomPermHome,AtomPermForeign,
   AtomContinue, AtomRetry,
+  AtomYes,AtomNo,AtomPerSite,AtomPerThread,
+  AtomHandler,AtomWatcher,
 
   RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
@@ -231,10 +235,20 @@ void initLiterals()
   AtomTempSomeOther           = makeTaggedAtom("tempSomeOther");
   AtomPermSomeOther           = makeTaggedAtom("permSomeOther");
   AtomEntityNormal            = makeTaggedAtom("entityNormal");
-
+  AtomTemp                    = makeTaggedAtom("temp");
+  AtomTempHome                = makeTaggedAtom("tempHome");
+  AtomTempForeign             = makeTaggedAtom("tempForeign");
+  AtomPerm                    = makeTaggedAtom("perm");
+  AtomPermHome                = makeTaggedAtom("permHome");
+  AtomPermForeign             = makeTaggedAtom("permForeign");
   AtomContinue                = makeTaggedAtom("continue");
   AtomRetry                   = makeTaggedAtom("retry");
-
+  AtomYes                     = makeTaggedAtom("yes");
+  AtomNo                      = makeTaggedAtom("no");
+  AtomPerSite                 = makeTaggedAtom("perSite");
+  AtomPerThread               = makeTaggedAtom("perThread");
+  AtomHandler                 = makeTaggedAtom("handler");
+  AtomWatcher                 = makeTaggedAtom("watcher");
 
   RecordFailure = OZ_record(OZ_atom("failure"),
                             OZ_cons(OZ_atom("debug"),OZ_nil()));
