@@ -287,10 +287,11 @@ extern "C" {
 */
 
 
-const int OzMaxInt = INT_MAX>>tagSize;
-#ifdef __GNUC__
-const int OzMinInt = INT_MIN>>tagSize;
+#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__)
+#define OzMaxInt 134217727
+#define OzMinInt ~134217728
 #else
+const int OzMaxInt = INT_MAX>>tagSize;
 const int OzMinInt = -OzMaxInt;
 #endif
 

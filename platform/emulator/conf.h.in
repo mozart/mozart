@@ -65,6 +65,9 @@
 #undef FASTERREGACCESS
 #endif
 
+/* define if try to use assembly code for integer arithmetic */
+#undef FASTARITH
+
 /* define if use native register for am registers (requires GCC) */
 #undef REGOPT
 
