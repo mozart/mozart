@@ -1402,7 +1402,7 @@ Thread *Thread::gcDeadThread() {
   return (newThread);
 }
 
-inline
+
 OZ_Propagator * OZ_Propagator::gc(void) {
   OZ_Propagator * to = (OZ_Propagator *) OZ_hrealloc(this, sizeOf());
 

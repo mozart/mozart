@@ -1,10 +1,11 @@
 /*
  *  Authors:
- *    Kostja Popow (popow@ps.uni-sb.de)
+ *    Kostja Popov (popow@ps.uni-sb.de)
  *    Christian Schulte (schulte@dfki.de)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Kostja Popov, 1997
+ *    Christian Schulte, 1997, 1998
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -63,13 +64,23 @@ public:
   NO_DEFAULT_CONSTRUCTORS(SolveActor);
   SolveActor(Board *bb);
 
-  Board *getSolveBoard() { return solveBoard; }
+  Board *getSolveBoard() { 
+    return solveBoard; 
+  }
 
   void gcRecurse();
 
-  void incThreads(int = 1);
-  int  decThreads(void);
-  int  getThreads(void) { return threads; }
+  void incThreads(int n = 1) { 
+    threads += n; 
+  }
+  int decThreads()  { 
+    Assert (threads > 0); 
+    return (--threads); 
+  }
+
+  int getThreads(void) { 
+    return threads; 
+  }
 
   void addSuspension(Suspension); 
   void addSuspension(SuspList *);
@@ -140,7 +151,7 @@ public:
   void clearSuspList(Suspension killSusp);
 private:
   Bool checkExtSuspList () {
-    clearSuspList((Thread *) NULL);		// Christian's; (no spaces!);
+    clearSuspList((Thread *) NULL);		// Kostja: Christian's; (no spaces!);
     return (suspList == NULL);
   }
 };
