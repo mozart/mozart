@@ -22,13 +22,13 @@ graphical interface.</p>
   <usage>ozmake --help</usage>
   <usage>ozmake [--build] [TARGETS...]</usage>
   <usage>ozmake --install [TARGETS...]</usage>
-  <usage>ozmake --install --package=PKG</usage>
+  <usage>ozmake --install [--package=PKG]</usage>
   <usage>ozmake --uninstall [--package=PKG]</usage>
   <usage>ozmake --clean</usage>
   <usage>ozmake --veryclean</usage>
-  <usage>ozmake --create --package=FILE</usage>
+  <usage>ozmake --create [--package=FILE]</usage>
   <usage>ozmake --publish</usage>
-  <usage>ozmake --extract --package=PKG</usage>
+  <usage>ozmake --extract [--package=PKG]</usage>
   <usage>ozmake --list [--package=MOGUL]</usage>
   <usage>ozmake --config=(put|delete|list) ...</usage>
   <usage>ozmake --mogul=(put|delete|list|export) ...</usage>
@@ -621,11 +621,13 @@ one for mogul database entries.</item>
 <subsection><title>Create</title>
 
 <usagelist>
-  <usage>ozmake --create --package=<meta>FILE</meta></usage>
+  <usage>ozmake --create [--package=<meta>FILE</meta>]</usage>
   <item>
         create a package and save it in <meta>FILE</meta>.  the files
         needed for the package are automatically computed from the
-        makefile.
+        makefile.  If <opt>--package=<meta>FILE</meta></opt> is not supplied,
+	a default is computed using the mogul id (and possibly version number)
+	found in the makefile.
   </item>
 </usagelist>
 
