@@ -502,8 +502,10 @@ Suspension *AM::mkSuspension(Board *b, int prio, OZ_CFun bi,
   }
 }
 
-void AM::suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
-		      RefsArray X, RefsArray Y, RefsArray G, int prio)
+void AM::suspendOnVar(TaggedRef A, int argsToSave, Board *b,
+		      ProgramCounter PC,
+		      RefsArray X, RefsArray Y, RefsArray G,
+		      int prio)
 {
   DEREF(A,APtr,ATag);
   Assert(isAnyVar(ATag));
@@ -547,7 +549,8 @@ void AM::suspendInlineRel(TaggedRef A, TaggedRef B, int noArgs,
 #ifndef NEWCOUNTER
   currentBoard->incSuspCount();
 #endif
-  Suspension *susp=new Suspension(currentBoard,currentThread->getPriority(),
+  Suspension *susp=new Suspension(currentBoard,
+				  currentThread->getPriority(),
 				  fun,X,noArgs);
 
   DEREF(A,APtr,ATag);
@@ -586,7 +589,8 @@ void AM::suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C,
 #ifndef NEWCOUNTER
   currentBoard->incSuspCount();
 #endif
-  Suspension *susp=new Suspension(currentBoard,currentThread->getPriority(),
+  Suspension *susp=new Suspension(currentBoard,
+				  currentThread->getPriority(),
 				  fun,X,noArgs);
 
   DEREF(A,APtr,ATag);
@@ -601,9 +605,11 @@ void AM::suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C,
   }
 }
 
-void AM::suspendShallowTest2(TaggedRef A, TaggedRef B, int argsToSave,
+void AM::suspendShallowTest2(TaggedRef A, TaggedRef B,
+			     int argsToSave,
 			     Board *b,
-			     ProgramCounter PC, RefsArray X, RefsArray Y,
+			     ProgramCounter PC, RefsArray X,
+			     RefsArray Y,
 			     RefsArray G, int prio)
 {
   DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
@@ -692,7 +698,8 @@ void engine() {
   int XSize = 0; NoReg(XSize);
 
   Bool isTailCall = NO; NoReg(isTailCall);
-  Suspension* &currentTaskSusp = FDcurrentTaskSusp; NoReg(currentTaskSusp);
+  Suspension* &currentTaskSusp =
+    FDcurrentTaskSusp; NoReg(currentTaskSusp);
   AWActor *CAA = NULL;
   Board *tmpBB = NULL; NoReg(tmpBB);
 
@@ -793,7 +800,7 @@ void engine() {
     /* RS: Optimize most probable case:
      *  - do not handle C_CONT in switch --> faster
      *  - assume cFlag == C_CONT implies stack does not contain empty mark
-     *  - if tb==rootBoard then no need to call getBoardDeref
+     *  - if tb==rootBoard then no need to call getBoard
      *  - topCache maintained more efficiently
      */
     if (cFlag == C_CONT) {  
@@ -804,27 +811,24 @@ void engine() {
       taskstack->setTop(topCache-4);
       Board *auxBoard = getBoard(tb,C_CONT);
       if (!auxBoard->isRoot()) {
-	auxBoard = auxBoard->getBoardDeref();
-	if (auxBoard == NULL) {
-	  goto LBLpopTask;
-	}
-	auxBoard->decSuspCount();
+	auxBoard = auxBoard->getBoardFast();
       } else {
-	/* optimization: no need to maintain counter for rootBoard (RS) */
+	/* optimization: no need to deref
+	   [ and maintain counter (mm2)] (RS) */
       }
-      DebugCheck (((fsb = auxBoard->getSolveBoard ()) != NULL &&
-		   fsb->isReflected () == OK),
-		  error ("activity under reduced solve actor"));
-
+      Assert((fsb = auxBoard->getSolveBoard())==0 ||
+	     !fsb->isReflected ());
       INSTALLPATH(auxBoard);
-      
+#ifndef NEWCOUNTER
+      auxBoard->decSuspCount();
+#endif
       goto LBLemulate;
     }
       
     if (taskstack->isEmpty((TaskStackEntry) tb)) { // 
       if (e->currentThread->hasNotificationBoard () == OK) {
-	Board *nb = e->currentThread->getNotificationBoard ();
-	e->decSolveThreads (nb);
+	Board *nb = e->currentThread->notificationBoard->getBoardFast();
+	e->decSolveThreads(nb);
       }
       goto LBLkillThread;
     }
@@ -835,7 +839,7 @@ void engine() {
       e->currentThread->compMode=TaskStack::getCompMode(topElem);
       goto LBLpopTask;;
     }
-    tmpBB = getBoard(tb,cFlag)->getBoardDeref();
+    tmpBB = getBoard(tb,cFlag)->getBoardFast();
     switch (cFlag){
     case C_XCONT:
       PC = (ProgramCounter) TaskStackPop(--topCache);
@@ -851,16 +855,13 @@ void engine() {
 	disposeRefsArray(tmpX);
       }
       taskstack->setTop(topCache);
-      if (!tmpBB) {
-	goto LBLpopTask;
-      }
-      DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
-		   fsb->isReflected () == OK),
-		  error ("activity under reduced solve actor"));
 
-      tmpBB->decSuspCount();
-      
+      Assert((fsb = tmpBB->getSolveBoard())==0 ||
+	     !fsb->isReflected ());
       INSTALLPATH(tmpBB);
+#ifndef NEWCOUNTER
+      tmpBB->decSuspCount();
+#endif
 
       goto LBLemulate;
 
@@ -868,11 +869,6 @@ void engine() {
       {
 	OzDebug *ozdeb = (OzDebug *) TaskStackPop(--topCache);
 	taskstack->setTop(topCache);
-	if (!tmpBB) {
-	  goto LBLpopTask;
-	}
-	tmpBB->decSuspCount();
-	
 	if (CBB != tmpBB) {
 	  switch (e->installPath(tmpBB)) {
 	  case INST_REJECTED: exitCall(FAILED,ozdeb); goto LBLpopTask;
@@ -880,6 +876,9 @@ void engine() {
 	  case INST_OK:       break;
 	  }
 	}
+#ifndef NEWCOUNTER
+	tmpBB->decSuspCount();
+#endif	
 	
 	exitCall(PROCEED,ozdeb);
 	goto LBLcheckEntailment;
@@ -896,11 +895,11 @@ void engine() {
 	}
 	disposeRefsArray(tmpX);
 	taskstack->setTop(topCache);
-	if (!tmpBB) {
-	  goto LBLpopTask;
-	}
 	INSTALLPATH(tmpBB);
+#ifndef NEWCOUNTER
 	tmpBB->decSuspCount();
+#endif
+
 	isTailCall = OK;
 	goto LBLcall;
       }
@@ -909,13 +908,6 @@ void engine() {
         // by kost@ : 'SolveActor::Waker' can produce such task
         // (if the search problem is stable by its execution); 
         taskstack->setTop(topCache);
-	if (!tmpBB) {
-	  goto LBLpopTask;
-	}
-	DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
-		     fsb->isReflected () == OK),
-		    error ("activity under reduced solve actor"));
-
 	// nervous already done ?
         if (!tmpBB->isNervous()) {
 	  goto LBLpopTask;
@@ -946,25 +938,21 @@ void engine() {
 	  disposeRefsArray(tmpX);
 	}
 	taskstack->setTop(topCache);
-	if (!tmpBB) {
-	  currentTaskSusp = NULL;
-	  goto LBLpopTask;
-	}
-	DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
-		     fsb->isReflected () == OK),
-		    error ("activity under reduced solve actor"));
 	
-	tmpBB->decSuspCount();
-
 	if (currentTaskSusp != NULL && currentTaskSusp->isDead()) {
 	  currentTaskSusp = NULL;
 	  goto LBLpopTask;
 	}
 
+	Assert((fsb = tmpBB->getSolveBoard())==0 ||
+	       !fsb->isReflected ());
 	INSTALLPATH(tmpBB);
+#ifndef NEWCOUNTER
+	tmpBB->decSuspCount();
+#endif
 
 	LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
-    
+
 	switch (biFun(XSize, X)) {
 	case FAILED:
 	  killPropagatedCurrentTaskSusp();
@@ -995,13 +983,13 @@ void engine() {
 	    goto LBLcheckEntailment;
 	  }
 	default:
-	  Assert(NO);
+	  Assert(0);
 	  goto LBLerror;
 	} // switch
       }
 
     default:
-      Assert(NO);
+      Assert(0);
       goto LBLerror;
     }  // switch
 
@@ -1817,7 +1805,6 @@ void engine() {
        DebugCheck ((solveBB->isSolve () == NO),
 		   error ("no 'solve' blackboard  in solve continuation builtin"));
        DebugCheck((solveBB->isCommitted () == OK ||
-		   solveBB->isDiscarded () == OK ||
 		   solveBB->isFailed () == OK), 
 		  error ("Solve board in solve continuation builtin is gone"));
        SolveActor *solveAA = SolveActor::Cast (solveBB->getActor ()); 
@@ -1836,12 +1823,11 @@ void engine() {
 	 SolveActor::Cast (currentSolveBB->getActor ())->pushWaitActorsStackOf (solveAA);
        }
 
-       // install (i.e. perform 'unit commmit') 'board-to-install' if any;
+       // install (i.e. perform 'unit commit') 'board-to-install' if any;
        Board *boardToInstall = solveAA->getBoardToInstall ();
        if (boardToInstall != (Board *) NULL) {
 	 DebugCheck ((boardToInstall->isCommitted () == OK ||
-		      boardToInstall->isFailed () == OK ||
-		      boardToInstall->isDiscarded () == OK),
+		      boardToInstall->isFailed () == OK),
 		     error ("boardToInstall is already committed")); 
 	 boardToInstall->setCommitted (CBB);
 #ifdef DEBUG_CHECK
@@ -1908,7 +1894,6 @@ void engine() {
 	 // VERBMSG("solved",((void *) bi),((void *) solveBB));
 	 Assert(solveBB->isSolve());
 	 DebugCheck((solveBB->isCommitted () == OK ||
-		     solveBB->isDiscarded () == OK ||
 		     solveBB->isFailed () == OK), 
 		    error ("Solve board in solve continuation builtin is gone"));
 
@@ -1972,7 +1957,7 @@ void engine() {
 	Board *waitBoard = CBB;
 	e->reduceTrailOnUnitCommit();
         waitBoard->unsetInstalled();
-	e->setCurrent(aa->getBoard()->getBoardDeref());
+	e->setCurrent(aa->getBoardFast());
 
 	waitBoard->setCommitted(CBB);   // by kost@ 4.10.94
 	Bool ret = e->installScript(waitBoard->getScriptRef());
@@ -2001,10 +1986,12 @@ void engine() {
 
 	 tmpBB = CBB;
 
-	 e->setCurrent(CBB->getParentBoard()->getBoardDeref());
+	 e->setCurrent(CBB->getParentFast());
 	 tmpBB->unsetInstalled();
 	 tmpBB->setCommitted(CBB);
+#ifndef NEWCOUNTER
 	 CBB->decSuspCount();
+#endif
 
 	 goto LBLcheckEntailment;
        }
@@ -2015,7 +2002,7 @@ void engine() {
       if (aa->hasOneChild()) {
 	e->reduceTrailOnUnitCommit();
         bb->unsetInstalled();
-	e->setCurrent(aa->getBoard()->getBoardDeref());
+	e->setCurrent(aa->getBoardFast());
 
 	bb->setCommitted(CBB);    // by kost@ 4.10.94
 	Bool ret = e->installScript(bb->getScriptRef());
@@ -2040,7 +2027,7 @@ void engine() {
       if (e->entailment()) {
 	e->trail.popMark();
 	tmpBB = CBB;
-	e->setCurrent(CBB->getParentBoard()->getBoardDeref());
+	e->setCurrent(CBB->getParentFast());
 	tmpBB->unsetInstalled();
 	tmpBB->setCommitted(CBB);
 	CBB->decSuspCount();
@@ -2264,7 +2251,7 @@ void engine() {
 
       tmpBB = CBB;
 
-      e->setCurrent(CBB->getParentBoard()->getBoardDeref());
+      e->setCurrent(CBB->getParentFast());
       tmpBB->unsetInstalled();
       tmpBB->setCommitted(CBB);
 
@@ -2311,7 +2298,7 @@ void engine() {
 	// don't unlink the subtree from the computation tree;
 	e->trail.popMark ();
 	CBB->unsetInstalled ();
-	e->setCurrent ((CBB->getParentBoard ())->getBoardDeref ());
+	e->setCurrent (CBB->getParentFast());
 	CBB->decSuspCount ();
 
 	DebugCheckT (solveBB->setReflected ());
@@ -2328,7 +2315,7 @@ void engine() {
 	  // don't unlink the subtree from the computation tree; 
 	  e->trail.popMark ();
 	  CBB->unsetInstalled ();
-	  e->setCurrent ((CBB->getParentBoard ())->getBoardDeref ());
+	  e->setCurrent (CBB->getParentFast());
 	  CBB->decSuspCount ();
 
 	  DebugCheckT (solveBB->setReflected ());
@@ -2381,7 +2368,7 @@ void engine() {
 	    } else {
 	      e->trail.popMark ();
 	      CBB->unsetInstalled ();
-	      e->setCurrent ((CBB->getParentBoard ())->getBoardDeref ());
+	      e->setCurrent (CBB->getParentFast());
 	      CBB->decSuspCount ();
 
 	      waitBoard->setActor (wa);
@@ -2398,7 +2385,7 @@ void engine() {
 	    // 'proper' enumeration; 
 	    e->trail.popMark ();
 	    CBB->unsetInstalled ();
-	    e->setCurrent ((CBB->getParentBoard ())->getBoardDeref ());
+	    e->setCurrent (CBB->getParentFast());
 	    CBB->decSuspCount ();
 
 	    WaitActor *nwa = new WaitActor (wa);
@@ -2489,15 +2476,15 @@ void engine() {
  LBLfailure:
   {
     DebugTrace(trace("fail",CBB));
-    Assert(CBB->isInstalled() != NO);
+    Assert(CBB->isInstalled());
     Actor *aa=CBB->getActor();
     if (aa->isAskWait()) {
       (AWActor::Cast(aa))->failChild(CBB);
     }
-    CBB->flags |= Bo_Failed;
+    CBB->setFailed();
     e->reduceTrailOnFail();
     CBB->unsetInstalled();
-    e->setCurrent(aa->getBoard()->getBoardDeref());
+    e->setCurrent(aa->getBoardFast());
 
 // ------------------------------------------------------------------------
 // *** REDUCE Actor

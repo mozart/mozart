@@ -1,7 +1,7 @@
 /*
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
-  Author: tmueller
+  Author: tmueller, scheidhr, popow
   Last modified: $Date$ from $Author$
   Version: $Revision$
   State: $State$
@@ -54,7 +54,6 @@
 static void processUpdateStack (void);
 void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm);
 void performCopying(void);
-Bool inline isInTree(Board *b);
 
 
 /****************************************************************************
@@ -88,9 +87,9 @@ Bool inline isInTree(Board *b);
  * NOTE: this works only for chunk
  */
 
-#ifdef CHECKSPACE
+DebugCheckT(MemChunks *from);
 
-MemChunks *from;
+#ifdef CHECKSPACE
 
 #   define INITCHECKSPACE						      \
 {									      \
@@ -479,7 +478,7 @@ Bool gcUnprotect(TaggedRef *ref)
  ****************************************************************************/
 
 
-DebugGCT(static int updateStackCount = 0;)
+DebugCheckT(static int updateStackCount = 0;)
 
 class UpdateStack: public Stack {
 public:
@@ -498,13 +497,22 @@ public:
 UpdateStack updateStack;
 
 
-
 /****************************************************************************
- * TC: Path marks are used to decide if a board is local
+ * TC: Path marks
+ *  all nodes above search are marked
+ *  to test if a variable,cell,name,... is local:
+ *   check if the path mark is set in home board
  ****************************************************************************/
 
+/*
+ * Check if a variable, cell, procedure or name is local to the copy board.
+ *  The argument is the home pointer.
+ *
+ * NOTE: this doesn't work for suspension list entries.
+ */
+
 inline
-Bool isLocalBoard (Board* b)
+Bool isLocalBoard(Board* b)
 {
   return !b->isPathMark();
 }
@@ -513,20 +521,13 @@ Bool isLocalBoard (Board* b)
  * TC: before copying:  all nodes are marked, but node self
  */
 inline
-void setPathMarks (Board *bb)
+void setPathMarks(Board *bb)
 {
-  bb = bb->getParentBoard ();
-  while (OK) {
+  Assert(!bb->isRoot());
+  do {
+    bb = bb->getParentFast();
     bb->setPathMark();
-    if (bb->isRoot () == OK) {
-      return;
-    } else if (bb->isCommitted () == OK) {
-      bb = bb->getBoard ();
-    } else {
-      bb = bb->getParentBoard ();
-    }
-  }
-  error ("(gc) setPathMarks");
+  } while (!bb->isRoot());
 }
 
 /*
@@ -534,22 +535,32 @@ void setPathMarks (Board *bb)
  */
 
 inline
-void unsetPathMarks (Board *bb)
+void unsetPathMarks(Board *bb)
 {
-  bb = bb->getParentBoard ();
-  while (OK) {
+  Assert(!bb->isRoot());
+  do {
+    bb = bb->getParentFast();
     bb->unsetPathMark();
-    if (bb->isRoot () == OK) {
-      return;
-    } else if (bb->isCommitted () == OK) {
-      bb = bb->getBoard ();
-    } else {
-      bb = bb->getParentBoard ();
-    }
-  }
-  error ("(gc) unsetPathMarks");
+  } while (!bb->isRoot());
 }
 
+
+/*
+ * Check if an entry of a suspension list is local to the copyBoard.
+ */
+inline
+Bool isInTree(Board *b)
+{
+  Assert(opMode == IN_TC);
+  Assert(b);
+ loop:
+  Assert(!b->isCommitted());
+  if (b == fromCopyBoard) return OK;
+  if (!isLocalBoard(b)) return NO;
+  b = b->getParentAndTest();
+  if (!b) return NO;
+  goto loop;
+}
 
 /****************************************************************************
  * Collect all types of terms
@@ -559,17 +570,15 @@ void unsetPathMarks (Board *bb)
  * Literals:
  *   forward in 'printName'
  * NOTE:
- *   3 case: atom, optimized name, dynamic name
+ *   3 cases: atom, optimized name, dynamic name
  *   only dynamic names need to be copied
  */
 inline 
 Literal *Literal::gc()
 {
-  if (isDynName() == NO) {
-    return (this);
-  }
+  if (!isDynName()) return (this);
 
-  if (opMode == IN_GC || isLocalBoard (home) == OK) {
+  if (opMode == IN_GC || isLocalBoard(getBoardFast())) {
     GCMETHMSG("Literal::gc");
     CHECKCOLLECTED(ToInt32(printName), Literal *);
     varCount++;
@@ -596,14 +605,7 @@ void Literal::gcRecurse ()
   DebugGC((isDynName() == NO),
 	  error ("non-dynamic name is found in gcRecurse"));
   home = home->gcBoard();
-  if (home == (Board *) NULL) {
-    /*
-     * mm2
-     *  kludge: 'home' mayn't be (Board *) NULL;
-     *  therefore lets it be the rootBoard;
-     */
-    home = am.rootBoard;
-  }
+  Assert(home);
 }
 
 
@@ -677,35 +679,6 @@ void Script::gc()
   }
 }
 
-
-/* mm2: have to check for discarded node */
-inline
-SuspContinuation *SuspContinuation::gcCont()
-{
-  GCMETHMSG("SuspContinuation::gcCont");
-  if (this == NULL) return NULL;
-
-  if (pc != NOCODE) {
-    CHECKCOLLECTED(ToInt32(pc), SuspContinuation *)
-  }
-  
-  SuspContinuation *ret = (SuspContinuation*) gcRealloc(this, sizeof(*this));
-  GCNEWADDRMSG(ret);
-  ptrStack.push(ret, PTR_SUSPCONT);
-  
-  PROFILE_CODE1(if (opMode == IN_TC) {
-		  FDProfiles.inc_item(cp_no_suspcont);
-		  FDProfiles.inc_item(cp_size_suspcont, sizeof(*this));
-		})
-
-  DebugGC(opMode == IN_TC && (!isLocalBoard(board->gcGetBoardDeref ()) ||
-			      !isInTree(board->gcGetBoardDeref ())),
-	  error ("non-local board in TC mode is being copied"));
-
-  storeForward(&pc, ret);
-  return ret;
-}
-
 inline Bool refsArrayIsMarked(RefsArray r)
 {
   return GCISMARKED(r[-1]);
@@ -771,6 +744,7 @@ void CFuncContinuation::gcRecurse(void)
 	      error ("freed refs array in CFunContinuation::gcRecurse ()"));
   xRegs = gcRefsArray(xRegs);
   board = board->gcBoard();
+  Assert(board);
 }
 
 /* mm2: have to check for discarded node */
@@ -793,7 +767,6 @@ CFuncContinuation *CFuncContinuation::gcCont(void)
   return ret;
 }
 
-
 Continuation *Continuation::gc()
 {
   GCMETHMSG("Continuation::gc");
@@ -814,21 +787,44 @@ Continuation *Continuation::gc()
 inline
 void Continuation::gcRecurse(){
   GCMETHMSG("Continuation::gcRecurse");
-  DebugCheck (isFreedRefsArray (yRegs),
-	      error ("freed 'y' refs array in Continuation::gcRecurse ()"));
+  Assert(!isFreedRefsArray (yRegs));
   yRegs = gcRefsArray(yRegs);
-  DebugCheck (isFreedRefsArray (gRegs),
-	      error ("freed 'g' refs array in Continuation::gcRecurse ()"));
+  Assert(!isFreedRefsArray (gRegs));
   gRegs = gcRefsArray(gRegs);
-  DebugCheck (isFreedRefsArray (xRegs),
-	      error ("freed 'x' refs array in Continuation::gcRecurse ()"));
+  Assert(!isFreedRefsArray (xRegs));
   xRegs = gcRefsArray(xRegs);
+}
+
+inline
+SuspContinuation *SuspContinuation::gcCont()
+{
+  GCMETHMSG("SuspContinuation::gcCont");
+
+  // a special continuation for solve: FAILURE
+  if (pc != NOCODE) {
+    CHECKCOLLECTED(ToInt32(pc), SuspContinuation *)
+  }
+
+  SuspContinuation *ret = (SuspContinuation*) gcRealloc(this, sizeof(*this));
+  GCNEWADDRMSG(ret);
+  ptrStack.push(ret, PTR_SUSPCONT);
+  
+  PROFILE_CODE1(if (opMode == IN_TC) {
+		  FDProfiles.inc_item(cp_no_suspcont);
+		  FDProfiles.inc_item(cp_size_suspcont, sizeof(*this));
+		});
+
+  Assert(opMode != IN_TC || isInTree(board->getBoardFast()));
+
+  storeForward(&pc, ret);
+  return ret;
 }
 
 inline
 void SuspContinuation::gcRecurse(){
   GCMETHMSG("SuspContinuation::gcRecurse");
   board = board->gcBoard();
+  Assert(board);
   Continuation::gcRecurse();
 }
 
@@ -911,74 +907,25 @@ SRecord *SRecord::gcSRecord()
   return ret;
 }
 
-// kost@: we have to split suspension lists of variables which are quantified
-//        in "solve" board itself in two parts - "relevant" wrt copy and
-//        'irrelevant'; 
-inline
-Bool isInTree (Board *b)
-{
-  DebugGC((opMode == IN_GC), error ("'isInTree(Board *)' is called in GC"));
-  Board *rb = am.rootBoard;
-  while (b != (Board *)NULL) {
-    DebugCheck((b->isCommitted () == OK),
-	       error ("committed board in 'isInTree (Board *)'"));
-    if (b == fromCopyBoard)
-      return (OK);
-    if (isLocalBoard (b) == NO)
-      return (NO);
-    b = b->getParentBoard();
-    if (b != (Board *) NULL) 
-      b = b->gcGetBoardDeref();
-  }
-  return (NO);
-}
-
-inline
-Bool isInTree (Actor *a)
-{
-  DebugGC((opMode == IN_GC), error ("'isInTree(Actor *)' is called in GC"));
-  DebugCheck((a->isCommitted () == OK),
-	     error ("committed actor in isInTree(Actor *)"));
-  Board *b = a->getBoard ()->gcGetBoardDeref ();
-  Board *rb = am.rootBoard;
-  DebugCheck ((b == rb), error ("isInTree(Actor *): under root Board"));
-  while (b != (Board *) NULL && b != rb) {
-    if (b == fromCopyBoard)
-      return (OK);
-    if (isLocalBoard (b) == NO)
-      return (NO);
-    b = b->getParentBoard ();
-    if (b != (Board *) NULL)
-      b = b->gcGetBoardDeref ();
-  }
-  return (NO);
-}
-
 /* return NULL if contains pointer to discarded node */
 inline
 Suspension *Suspension::gcSuspension(Bool tcFlag)
 {
   GCMETHMSG("Suspension::gcSuspension");
-  if (this == NULL)
-    return ((Suspension *) NULL);
+  if (this == 0) return 0;
 
   CHECKCOLLECTED(ToInt32(item.cont), Suspension*);
   
-  if (isDead ()) {
-    return NULL;
+  if (isDead()) return 0;
+
+  Board *bb=getBoardFast();
+  if (!bb->gcIsAlive()) {
+    // mm2 warning("gcSuspension: dead\n");
+    return 0;
   }
 
-  Board *el = getBoard()->gcGetBoardDeref();
+  if (tcFlag && !isInTree(bb)) return 0;
 
-  if (el == NULL) {
-    return NULL;
-  }
-
-  // mm2: el may be a GCMARK'ed board
-  if (tcFlag == OK && isInTree(el) == NO) {
-    return ((Suspension *) NULL);
-  }
-  
   Assert(!tcFlag || !isPropagated());
 
   Suspension *newSusp = (Suspension *) gcRealloc(this, sizeof(*this));
@@ -992,20 +939,20 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
   switch (flag & (S_cont|S_cfun)){
   case S_null:
     newSusp->item.board = item.board->gcBoard();
+    Assert(newSusp->item.board);
     break;
   case S_cont:
     newSusp->item.cont = item.cont->gcCont();
+    Assert(newSusp->item.cont);
     break;
   case S_cont|S_cfun:
     newSusp->item.ccont = item.ccont->gcCont();
+    Assert(newSusp->item.ccont);
     break;
   default:
     error("Unexpected case in Suspension::gc().");
   }
   
-  DebugCheck(!getBoard()->gcGetBoardDeref(),
-	     warning("gc: adding dead node (3)"));
-
   storeForward(&item.cont, newSusp);
   return newSusp;
 }
@@ -1079,121 +1026,105 @@ void GenCVariable::gc(void)
 }
 
 
-// This procedure collects the entry points into heap provided by variables, 
-// without copying the tagged reference of the variable itself.
+/*
+ * This procedure collects the entry points into heap provided by variables, 
+ * without copying the tagged reference of the variable itself.
+ * NOTE: there is maybe junk in X/Y registers, so home node may be dead
+ */
 TaggedRef gcVariable(TaggedRef var)
 {
   GCPROCMSG("gcVariable");
   GCOLDADDRMSG(var);
-  TypeOfTerm varTag = tagTypeOf(var);
-
-  switch(varTag){
-
-  case UVAR:
-    {
-      Board *hom = tagged2VarHome(var);
-      INFROMSPACE(hom);
-      hom = hom->gcBoard();
-      INTOSPACE (hom);
-      GCNEWADDRMSG((hom ? makeTaggedUVar(hom) : makeTaggedUVar(am.rootBoard)));
-      // kludge: if its board is not alive, lets its board to be the root...
-      return hom ? makeTaggedUVar(hom) : makeTaggedUVar(am.rootBoard);
+  if (var==nil()) { return nil(); }
+  if (isUVar(var)) {
+    Board *bb = tagged2VarHome(var)
+    INFROMSPACE(bb);
+    bb = bb->gcBoard();
+    if (!bb) return nil();
+    INTOSPACE (bb);
+    TaggedRef ret= makeTaggedUVar(bb);
+    GCNEWADDRMSG(ret);
+    return ret;
+  }
+  if (isSVar(var)) {
+    SVariable *cv = tagged2SVar(var);
+    INFROMSPACE(cv);
+    if (GCISMARKED(ToInt32(cv->suspList))) {
+      GCNEWADDRMSG(makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList))));
+      return makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList)));
     }
-    
-  case SVAR:
-    {
-      SVariable *cv = tagged2SVar(var);
-      INFROMSPACE(cv);
-      if (GCISMARKED(ToInt32(cv->suspList))) {
-	GCNEWADDRMSG(makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList))));
-	return makeTaggedSVar((SVariable*)GCUNMARK(ToInt32(cv->suspList)));
-      }
 
-      Board *newBoard = cv->home->gcBoard();
-      if (!newBoard) {
-	GCNEWADDRMSG(makeTaggedUVar(am.rootBoard));
-	return makeTaggedUVar(am.rootBoard);
-      }
+    Board *bb = cv->home;
+    bb=bb->gcBoard();
+    if (!bb) return nil();
 
-      int cv_size;
-      cv_size = sizeof(SVariable);
+    int cv_size;
+    cv_size = sizeof(SVariable);
+
+    SVariable *new_cv = (SVariable*)gcRealloc(cv,cv_size);
       
-      SVariable *new_cv = (SVariable*)gcRealloc(cv,cv_size);
-      
-      PROFILE_CODE1(if (opMode == IN_TC) {
-	              FDProfiles.inc_item(cp_no_svar);
-		      FDProfiles.inc_item(cp_size_svar, cv_size);
-		    })
+    PROFILE_CODE1(if (opMode == IN_TC) {
+      FDProfiles.inc_item(cp_no_svar);
+      FDProfiles.inc_item(cp_size_svar, cv_size);
+    });
 	
-      storeForward(&cv->suspList, new_cv);
+    storeForward(&cv->suspList, new_cv);
       
-      if (opMode == IN_TC && new_cv->getHome () == fromCopyBoard)
-	new_cv->suspList = new_cv->suspList->gc(OK);
-      else
-	new_cv->suspList = new_cv->suspList->gc(NO);
-      
-      DebugGC((opMode == IN_GC && new_cv->home == newBoard),
-	      error ("home node of variable is not copied"));
+    if (opMode == IN_TC && new_cv->getBoardFast () == fromCopyBoard)
+      new_cv->suspList = new_cv->suspList->gc(OK);
+    else
+      new_cv->suspList = new_cv->suspList->gc(NO);
+    Assert(opMode != IN_GC || new_cv->home != bb);
 
-      new_cv->home = newBoard;
-      GCNEWADDRMSG(makeTaggedSVar(new_cv));
-      return makeTaggedSVar(new_cv);
+    new_cv->home = bb;
+    GCNEWADDRMSG(makeTaggedSVar(new_cv));
+    return makeTaggedSVar(new_cv);
+  }
+
+  Assert(isCVar(var));
+  GenCVariable *gv = tagged2CVar(var);
+
+  INFROMSPACE(gv);
+  if (GCISMARKED(ToInt32(gv->suspList))) {
+    GCNEWADDRMSG(makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList))));
+    return makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList)));
+  }
+
+  Board *bb = gv->home->gcBoard();
+  if (!bb) return nil();
+
+  int gv_size = gv->getSize();
+      
+  GenCVariable *new_gv = (GenCVariable*)gcRealloc(gv, gv_size);
+
+  PROFILE_CODE1(if (opMode == IN_TC) {
+    FDProfiles.inc_item(gv->getType() == FDVariable
+			? cp_no_fdvar : cp_no_ofsvar);
+    FDProfiles.inc_item(gv->getType() == FDVariable
+			? cp_size_fdvar : cp_size_ofsvar,
+			gv_size);
+  });
+  PROFILE_CODE1(if (opMode == IN_TC) {
+    if (gv->getType() == FDVariable &&
+	((GenFDVariable *) gv)->getDom().isBool()) {
+      FDProfiles.inc_item(fd_bool);
+      FDProfiles.inc_item(fd_bool_saved, gv_size-12);
     }
-  case CVAR:
-    {
-      GenCVariable *gv = tagged2CVar(var);
-
-      INFROMSPACE(gv);
-      if (GCISMARKED(ToInt32(gv->suspList))) {
-	GCNEWADDRMSG(makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList))));
-	return makeTaggedCVar((GenCVariable*)GCUNMARK(ToInt32(gv->suspList)));
-      }
-      
-      Board *newBoard = gv->home->gcBoard();
-      if (!newBoard) {
-	GCNEWADDRMSG(makeTaggedUVar(am.rootBoard));
-	return makeTaggedUVar(am.rootBoard);
-      }
-
-      int gv_size = gv->getSize();
-      
-      GenCVariable *new_gv = (GenCVariable*)gcRealloc(gv, gv_size);
-      
-      
-      PROFILE_CODE1(if (opMode == IN_TC) {
-	              FDProfiles.inc_item(gv->getType() == FDVariable
-					  ? cp_no_fdvar : cp_no_ofsvar);
-		      FDProfiles.inc_item(gv->getType() == FDVariable
-					  ? cp_size_fdvar : cp_size_ofsvar,
-					  gv_size);
-		    })
-      PROFILE_CODE1(if (opMode == IN_TC) {
-	              if (gv->getType() == FDVariable &&
-			  ((GenFDVariable *) gv)->getDom().isBool()) {
-			FDProfiles.inc_item(fd_bool);
-			FDProfiles.inc_item(fd_bool_saved, gv_size-12);
-		      }
-		    })
+  });
 	
-      storeForward(&gv->suspList, new_gv);
-      
-      if (opMode == IN_TC && new_gv->getHome () == fromCopyBoard)
-	new_gv->suspList = new_gv->suspList->gc(OK);
-      else
-	new_gv->suspList = new_gv->suspList->gc(NO);
-      new_gv->gc();
+  storeForward(&gv->suspList, new_gv);
+  
+  if (opMode == IN_TC && new_gv->getBoardFast () == fromCopyBoard)
+    new_gv->suspList = new_gv->suspList->gc(OK);
+  else
+    new_gv->suspList = new_gv->suspList->gc(NO);
+  new_gv->gc();
 
-      DebugGC((opMode == IN_GC && new_gv->home == newBoard),
-	      error ("home node of variable is not copied"));
+  Assert(opMode != IN_GC || new_gv->home != bb);
 
-      new_gv->home = newBoard;
-      GCNEWADDRMSG(makeTaggedCVar(new_gv));
-      return makeTaggedCVar(new_gv);
-    }
-  default:
-    error("gcVariable: only variables allowed here.");
-    return makeTaggedNULL();
-  } // switch
+  new_gv->home = bb;
+  GCNEWADDRMSG(makeTaggedCVar(new_gv));
+  return makeTaggedCVar(new_gv);
 }
 
 
@@ -1248,7 +1179,7 @@ void GenFDVariable::gc(void)
   finiteDomain.gc();
   
   int i;
-  if (opMode == IN_TC && getHome() == fromCopyBoard)
+  if (opMode == IN_TC && getBoardFast() == fromCopyBoard)
     for (i = fd_any; i--; )
       fdSuspList[i] = fdSuspList[i]->gc(OK);
   else
@@ -1311,54 +1242,42 @@ void GenOFSVariable::gc(void)
     dynamictable=dynamictable->gc();
 }
 
-
 inline
-Bool updateVar(TaggedRef var)
+Board *gcGetVarHome(TaggedRef var)
 {
-  GCPROCMSG("updateVar");
-  Board * varhome;
-  if (opMode == IN_TC) {
-    if (isUVar(var)) {
-      varhome = tagged2VarHome(var);
-    } else if (isSVar(var)) {
-      varhome = tagged2SVar(var)->getHome1();
-    } else {
-      varhome = tagged2CVar(var)->getHome1();
-    }
-
-    varhome = varhome->gcGetBoardDeref();
-    return (varhome != NULL && isLocalBoard(varhome));
+  if (isUVar(var)) {
+    return tagged2VarHome(var)->getBoardFast();
+  } 
+  if (isSVar(var)) {
+    return tagged2SVar(var)->getBoardFast();
   }
+  Assert(isCVar(var));
+  return tagged2CVar(var)->getBoardFast();
+}  
 
-  return OK;
-}
-
-
-// If an object has been copied, all slots of type 
-// 'TaggedRef' have to be 
-// treated particularly:
-// - references pointing to non-variables have to be derefenced
-// - references to variables have to be treated after the whole term structure
-//   has been collected and therefore the address of such a reference has to
-//   put on the update stack
-// - variables, which are part of the block being copied, have to be marked as
-//   copied
-// - if non-collected variables are dereferenced, the entry points into heap
-//   provided by them, have to be collected by 'gcVariable'
-
-
+/*
+ * If an object has been copied, all slots of type 
+ * 'TaggedRef' have to be 
+ * treated particularly:
+ * - references pointing to non-variables have to be derefenced
+ * - references to variables have to be treated after the whole term structure
+ *   has been collected and therefore the address of such a reference has to
+ *   put on the update stack
+ * - variables, which are part of the block being copied, have to be marked as
+ *   copied
+ * - if non-collected variables are dereferenced, the entry points into heap
+ *   provided by them, have to be collected by 'gcVariable'
+ */
 void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
 {
   GCPROCMSG("gcTagged");
   TaggedRef auxTerm = fromTerm;
 
-#ifdef DEBUG_GC
-  if (opMode == IN_GC && from->inChunkChain(&toTerm))
-    error ("having toTerm in FROM space");
-#endif
+  Assert(opMode != IN_GC || !from->inChunkChain(&toTerm));
 
+  /* initalized but unused cell in register array */
   if (auxTerm == makeTaggedNULL()) {
-    toTerm = auxTerm;
+    toTerm = makeTaggedNULL();
     return;
   }
 
@@ -1375,44 +1294,47 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
 
   case SMALLINT:
     toTerm = auxTerm;
-    return;
+    break;
 
   case LITERAL:
     toTerm = makeTaggedLiteral(tagged2Literal(auxTerm)->gc());
-    return;
+    break;
   
   case LTUPLE:
     toTerm = makeTaggedLTuple(tagged2LTuple(auxTerm)->gc());
-    return;
+    break;
 
   case STUPLE:
     toTerm = makeTaggedSTuple(tagged2STuple(auxTerm)->gc());
-    return;
+    break;
    
   case SRECORD:
     toTerm = makeTaggedSRecord(tagged2SRecord(auxTerm)->gcSRecord());
-    return;
+    break;
 
   case CONST:
-    toTerm = makeTaggedConst(tagged2Const(auxTerm)->gcConstTerm());
-    return;
+    {
+      ConstTerm *con=tagged2Const(auxTerm)->gcConstTerm();
+      toTerm = con ? makeTaggedConst(con) : nil();
+    }
+    break;
 
   case BIGINT:
     toTerm = makeTaggedBigInt(tagged2BigInt(auxTerm)->gc());
-    return;
+    break;
 
   case FLOAT:
     toTerm = makeTaggedFloat(tagged2Float(auxTerm)->gc());
-    return;
+    break;
 
   case SVAR:
   case UVAR:
   case CVAR:
     varCount++;
-    if (auxTerm == fromTerm) {   // (fd-)variable is component of this block
-      
+    if (auxTerm == fromTerm) {   // no DEREF needed
+
       DebugGCT(toTerm = fromTerm); // otherwise 'makeTaggedRef' complains
-      if (updateVar(auxTerm)) {
+      if (opMode!=IN_TC || isLocalBoard(gcGetVarHome(auxTerm))) {
 	storeForward((int *) &fromTerm, &toTerm);
 
 	// updating toTerm AFTER fromTerm:
@@ -1420,22 +1342,21 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
       } else {
 	toTerm = fromTerm;
       }
-      return;
-    }
-
-    // put address of ref cell to be updated onto update stack    
-    if (updateVar(auxTerm)) {
-      updateStack.push(&toTerm);
-      gcVariable(auxTerm);
-      toTerm = makeTaggedRefToFromSpace(auxTermPtr);
-      DebugGC((auxTermPtr == NULL), error ("auxTermPtr == NULL"));
     } else {
-      toTerm = fromTerm;
+
+      // put address of ref cell to be updated onto update stack    
+      if (opMode!=IN_TC || isLocalBoard(gcGetVarHome(auxTerm))) {
+	updateStack.push(&toTerm);
+	gcVariable(auxTerm);
+	toTerm = makeTaggedRefToFromSpace(auxTermPtr);
+	Assert(auxTermPtr != 0);
+      } else {
+	toTerm = fromTerm;
+      }
     }
-    return;
-  
+    break;
   default:
-    Assert(NO);
+    Assert(0);
   }
 }
 
@@ -1484,6 +1405,7 @@ void AM::gc(int msgLevel)
   rebindTrail.gc();
 
   rootBoard = rootBoard->gcBoard();   // must go first!
+  Assert(rootBoard);
   setCurrent(currentBoard->gcBoard(),NO);
 
   GCPROCMSG("Predicate table");
@@ -1491,8 +1413,9 @@ void AM::gc(int msgLevel)
 
   aritytable.gc ();
 
-  GCREF(currentThread);
-  GCREF(rootThread);
+  currentThread=currentThread->gcThread();
+  rootThread=rootThread->gcThread();
+  Assert(rootThread);
 
   if (FDcurrentTaskSusp != (Suspension *) NULL) {
     warning("FDcurrentTaskSusp must be NULL!");
@@ -1503,8 +1426,8 @@ void AM::gc(int msgLevel)
 #endif
   
   threadsFreeList = NULL;
-  GCREF(threadsHead);
-  GCREF(threadsTail);
+  threadsHead=threadsHead->gcThread();
+  threadsTail=threadsTail->gcThread();
 
   Assert(suspendVar==0);
   gcTagged(suspCallHandler,suspCallHandler);
@@ -1513,6 +1436,10 @@ void AM::gc(int msgLevel)
     if (osIsWatchedReadFD(i)) {
       if (i != compStream->csfileno()) {
 	ioNodes[i] = ioNodes[i]->gcBoard();
+	if (!ioNodes[i]) {
+	  osClrWatchedReadFD(i);
+	  DebugCheckT(warning("selectNode discarded/failed"));
+	}
       }
     }
   }
@@ -1557,58 +1484,48 @@ void processUpdateStack(void)
   
   while (!updateStack.isEmpty())
     {
-      TaggedRef *Term = updateStack.pop();
-      TaggedRef auxTerm     = *Term;
+      TaggedRef *tt = updateStack.pop();
+      TaggedRef auxTerm     = *tt;
       TaggedRef *auxTermPtr = NULL;
 
       while(IsRef(auxTerm)) {
-	if (auxTerm == (TaggedRef) NULL)
-          // kost@: Reachable variables can be quantified in dead boards too;
-	  goto loop;
+	Assert(auxTerm);
 	auxTermPtr = tagged2Ref(auxTerm);
 	auxTerm = *auxTermPtr;
       }
 
       if (GCISMARKED(auxTerm)) {
-	*Term = makeTaggedRef((TaggedRef*)GCUNMARK(auxTerm));
+	*tt = makeTaggedRef((TaggedRef*)GCUNMARK(auxTerm));
 	goto loop;
       }
 
       TaggedRef newVar = gcVariable(auxTerm);
 
-//      Assert(tagTypeOf(newVar) == tagTypeOf(auxTerm));
-      
-      if (newVar == makeTaggedNULL()) {
-	/*
-	 * mm2: I don't know if this is correct
-	 *   the handling of dead nodes should be reconsidered carefully
-	 */
-	*Term = newVar;
-	*auxTermPtr = newVar;
+      if (newVar == nil()) {
+	*tt = nil();
+	*auxTermPtr = nil();
       } else {
+	Assert(tagTypeOf(newVar) == tagTypeOf(auxTerm));
 	switch(tagTypeOf(newVar)){
 	case UVAR:
-	  *Term = makeTaggedRef(newTaggedUVar(tagged2VarHome(newVar)));
+	  *tt = makeTaggedRef(newTaggedUVar(tagged2VarHome(newVar)));
 	  break;
 	case SVAR:
-	  *Term = makeTaggedRef(newTaggedSVar(tagged2SVar(newVar)));
+	  *tt = makeTaggedRef(newTaggedSVar(tagged2SVar(newVar)));
 	  break;
 	case CVAR:
-	  *Term = makeTaggedRef(newTaggedCVar(tagged2CVar(newVar)));
+	  *tt = makeTaggedRef(newTaggedCVar(tagged2CVar(newVar)));
 	  break;
 	default:
 	  Assert(NO);
 	}
 	INFROMSPACE(auxTermPtr);
-	storeForward((int *) auxTermPtr,ToPointer(*Term));
+	storeForward((int *) auxTermPtr,ToPointer(*tt));
       }
     } // while
 
-  DebugGC(updateStackCount != 0,
-	  error ("updateStackCount != 0"));
+  Assert(updateStackCount==0);
 }
-
-
 
 
 /*
@@ -1634,18 +1551,19 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   varCount = 0;
   unsigned int starttime = osUserTime();
 
-  DebugGC ((bb->isCommitted () == OK), error ("committed board to be copied"));
+  Assert(!bb->isCommitted());
   fromCopyBoard = bb;
   setPathMarks(fromCopyBoard);
   toCopyBoard = fromCopyBoard->gcBoard();
-  // kost@ : FDcurrentTaskSusp ???
+  Assert(toCopyBoard);
+
+  // kost@ : FDcurrentTaskSusp ??? mm2
 
   performCopying();
 
   processUpdateStack();
 
-  if (!ptrStack.isEmpty())
-    error("ptrStack should be empty");
+  Assert(ptrStack.isEmpty());
   
   while (!savedPtrStack.isEmpty()) {
     int value = ToInt32(savedPtrStack.pop());
@@ -1704,6 +1622,11 @@ void ArityTable::gc()
 inline void AbstractionEntry::gc()
 {
   abstr = (Abstraction *) abstr->gcConstTerm();
+  if (!abstr) {
+    DebugCheckT(warning("abstraction entry dead\n")); // mm2;
+    g = 0;
+    return;
+  }
   g     = gcRefsArray(g);
 }
 
@@ -1749,12 +1672,12 @@ void TaskStack::gcRecurse()
       gcQueue(oldEntry);
       continue;
     }
-    Board *newBB = getBoard(tb, cFlag)->gcBoard();
 
-    if (newBB == NULL) {
+    Board *newBB = getBoard(tb, cFlag)->gcBoard();
+    if (!newBB) {
       switch (cFlag){
       case C_NERVOUS:    continue;
-      case C_COMP_MODE:       Assert(0);
+      case C_COMP_MODE:  Assert(0);
       case C_XCONT:      oldstack->pop(4); continue;
       case C_CONT:       oldstack->pop(3); continue;
       case C_DEBUG_CONT: oldstack->pop(1); continue;
@@ -1827,6 +1750,9 @@ void Chunk::gcRecurse()
     {
       Object *o      = (Object *) this;
       o->cell        = (Cell*)o->cell->gcConstTerm();
+      if (!o->cell) {
+	DebugCheckT(warning("cell in object is dead"));
+      }
       o->fastMethods = o->fastMethods->gcSRecord();
     }   // no break here!
     
@@ -1867,12 +1793,12 @@ void Chunk::gcRecurse()
     }
 	
   default:
-    Assert(NO);
+    Assert(0);
   }
 }
 
 
-void ConstTerm::gcRecurse()
+void ConstTerm::gcConstRecurse()
 {
   switch (typeOf()) {
   case Co_Chunk:
@@ -1892,18 +1818,12 @@ ConstTerm *ConstTerm::gcConstTerm()
 
   switch (typeOf()) {
   case Co_Board:
-    //: kost@ 22.12.94: work-around for current! register allocation;
-    //: return ((Board *) this)->gcBoard();
     { 
       Board *newBoard = ((Board *) this)->gcBoard();
-      if (newBoard == (Board *) NULL) {
-	return (opMode == IN_TC) ? toCopyBoard : am.rootBoard;
-      } else {
-	return (newBoard);
-      }
+      return newBoard;
     }
-  case Co_Actor:     return ((Actor *) this)->gc();
-  case Co_Thread:    return ((Thread *) this)->gc();
+  case Co_Actor:     return ((Actor *) this)->gcActor();
+  case Co_Thread:    return ((Thread *) this)->gcThread();
   case Co_HeapChunk: return ((HeapChunk *) this)->gc();
     
   case Co_Chunk:
@@ -1912,27 +1832,28 @@ ConstTerm *ConstTerm::gcConstTerm()
       switch(((Chunk*) this)->getCType()) {
       case C_ABSTRACTION: {
 	Abstraction *a = (Abstraction *) this;
-	if (opMode == IN_TC && !isLocalBoard(a->getBoard()))
-	  return this;
+	Board *bb=a->getBoardFast();
+	if (!bb->gcIsAlive()) return 0;
+	if (opMode == IN_TC && !isLocalBoard(bb)) return this;
 	sz = sizeof(Abstraction);
-//	DebugGCT(if (opMode == IN_GC) NOTINTOSPACE(a->getBoard(););
+//	DebugGCT(if (opMode == IN_GC) NOTINTOSPACE(bb));
 	break;
       }
       case C_OBJECT:
 	sz = sizeof(Object);
 	break;
       case C_CELL:
-	if (opMode == IN_TC && isLocalBoard(((Cell *) this)->getBoard()) == NO)
-	  return this;
-	sz = sizeof(Cell);
+	{
+	  Board *bb=((Cell *) this)->getBoardFast();
+	  if (!bb->gcIsAlive()) return 0;
+	  if (opMode == IN_TC && !isLocalBoard(bb)) return this;
+	  sz = sizeof(Cell);
+	}
 	break;
       case C_BUILTIN:
 	switch (((Builtin *) this)->getType()) {
 	case BIsolveCont:
 	  sz = sizeof(OneCallBuiltin);
-	  //: kost@ 21.12.94: not necessary any more;
-	  //: if (((OneCallBuiltin *) this)->isSeen())
-	  //:	((Builtin *) this)->gRegs = NULL;
 	  break;
 	case BIsolved:
 	  sz = sizeof(SolvedBuiltin);
@@ -1943,8 +1864,7 @@ ConstTerm *ConstTerm::gcConstTerm()
 	break;
       default:
 	error("ConstTerm::gcConstTerm: unexpected case");
-	sz=0;
-	break;
+	return 0;
       }
       Chunk *ret = (Chunk*) gcRealloc(this,sz);
       GCNEWADDRMSG(ret);
@@ -1972,10 +1892,26 @@ HeapChunk * HeapChunk::gc(void)
   return ret;
 }
 
-Thread *Thread::gc()
+/*
+ * NOTE: discarded threads must survive gc, because the solve counter
+ *       has to be updated.
+ * NOTE: if threads may be discarded,
+ *       then check for prev, next and threadsHead, threadsTail
+ */
+Thread *Thread::gcThread()
 {
   GCMETHMSG("Thread::gc");
+  if (this==0) return 0;
   CHECKCOLLECTED(*getGCField(), Thread *);
+
+#ifdef DEBUG_CHECK
+  //mm2
+  Board *bb=getBoardFast();
+  if (!bb->gcIsAlive()) {
+    warning("discarded thread detected ...");
+  }
+#endif
+
   size_t sz = sizeof(Thread);
   Thread *ret = (Thread *) gcRealloc(this,sz);  
   taskStack.gc(&ret->taskStack);
@@ -1985,96 +1921,76 @@ Thread *Thread::gc()
   return ret;
 }
 
-void Thread::gcRecurse()
+void Thread::gcThreadRecurse()
 {
+  Assert(opMode != IN_TC);
+
   GCMETHMSG("Thread::gcRecurse");
 
-  GCREF(next);
-  GCREF(prev);
+  next=next->gcThread();
+  prev=prev->gcThread();
   home=home->gcBoard();
+  // Assert(home);
 
-  DebugGC ((opMode == IN_TC), error ("thread is gc'ed in 'copy' mode?"));
   taskStack.gcRecurse();
-  DebugGCT(Board *sob = notificationBoard);
-  notificationBoard = (notificationBoard->gcGetNotificationBoard ())->gcBoard ();
-  DebugGC((sob != (Board *) NULL && notificationBoard == (Board *) NULL),
-	  error ("notification Board is removed in Thread::gcRecurse"));
+  DebugCheckT(Board *sob = notificationBoard);
+  notificationBoard = (notificationBoard->gcGetNotificationBoard ())->gcBoard();
+  Assert(sob == (Board *) NULL || notificationBoard != (Board *) NULL);
 }
 
-Board* Board::gcGetNotificationBoard ()
+/*
+ * notification board == home board of thread
+ * Although this may be discarded/failed, the solve actor must be announced.
+ * Therefor this procedures searches for another living board.
+ */
+Board* Board::gcGetNotificationBoard()
 {
   GCMETHMSG("Board::gcGetNotificationBoard");
-  Board *bb = this;
-  if (bb == NULL)
-    return (bb);
-  Board *nb = this;
-  Actor *auxActor; 
-  while (OK) {
-//    if (GCISMARKED(*getGCField())) warning("gcGetNotificationBoard");
-    if (GCISMARKED(*getGCField()) || bb->isRoot())
-      return (nb);
-    if (bb->isDiscarded() || bb->isFailed()) {
-      auxActor = bb->u.actor;
-      DebugGC(auxActor == NULL ||
-	      (auxActor->getType() != Co_Actor) &&
-	      !GCISMARKED(*auxActor->getGCField()),
-	      error ("non-actor is got in Board::gcGetNotificationBoard"));
-      bb = auxActor->getBoard();
-      nb = bb;   // probably not dead;
-      continue;
-    }
-    if (bb->isCommitted()) {
-      bb = bb->u.board;
-      continue;
-    } 
-    auxActor = bb->u.actor;
-    DebugGC(auxActor == NULL ||
-	    (auxActor->getType() != Co_Actor) &&
-	    !GCISMARKED(*auxActor->getGCField()),
-	    error ("non-actor is got in Board::gcGetNotificationBoard"));
-    bb = auxActor->getBoard ();
+  if (this == 0) return 0; // no notification board
+
+  Board *bb = this->getBoardFast();
+  Board *nb = bb;
+ loop:
+  if (GCISMARKED(*bb->getGCField()) || bb->isRoot())  return nb;
+  Assert(!bb->isCommitted());
+  Actor *aa=bb->getActor();
+  if (GCISMARKED(*aa->getGCField())) return nb;
+  if (bb->isFailed() || aa->isCommitted()) {
+    /*
+     * notification board must be changed
+     */
+    bb=aa->getBoardFast();
+    nb = bb;   // probably not dead;
+    goto loop;
   }
+  bb = aa->getBoardFast();
+  goto loop;
 }
 
-//  The idea:
-//  In canonical version of the Board::gcGetBoardDeref a node can be determined 
-// as living, though among its parents there is a dead one. It means, that 
-// gcGetBoardDeref is sound but not complete. There is an attempt to eliminate 
-// this problem.
-Board *Board::gcGetBoardDeref()
+/****************************************************************************
+ * Board collection 
+ ****************************************************************************/
+
+/*
+ * gcIsAlive(bb):
+ *   bb is marked collected, not failed
+ *   and all parents are alive
+ */
+
+Bool Board::gcIsAlive()
 {
-  GCMETHMSG("Board::gcGetBoardDeref");
-  Board *bb = this;
-  while (OK) {
-    if (!bb || GCISMARKED(*bb->getGCField())) {
-      return bb;
-    }
-    if (bb->isDiscarded() || bb->isFailed()) {
-      return NULL;
-    }
-    if (bb->isCommitted()) {
-      bb = bb->u.board;
-      continue;
-    } 
-    Board *retB = bb; 
-    while (OK) {
-      if (!bb || GCISMARKED(*bb->getGCField())) {
-	return retB;
-      }
-      if (bb->isDiscarded() || bb->isFailed()) {
-	return NULL;
-      }
-      if (bb->isCommitted()) {
-	bb = bb->u.board;
-      } else {
-	if (bb->isRoot () == OK) {
-	  return retB;
-	}
-	bb = bb->getParentBoard ();
-      }
-    }
-  }
-  error("Board::gcGetBoardDeref");
+  Board *bb=this;
+ loop:
+  Assert(!bb->isCommitted());
+  if (bb->isFailed()) return NO;
+  if (bb->isRoot() || GCISMARKED(*(bb->getGCField()))) return OK;
+  Actor *aa=bb->getActor();
+  if (aa->isCommitted()) return NO;
+  if (GCISMARKED(*(aa->getGCField()))) return OK;
+  if (opMode == IN_TC && aa->isWait() && WaitActor::Cast(aa)->hasUnsetBoard())
+    return NO;
+  bb=aa->getBoardFast();
+  goto loop;
 }
 
 // This procedure derefences cluster chains and collects only the object at 
@@ -2082,24 +1998,16 @@ Board *Board::gcGetBoardDeref()
 Board *Board::gcBoard()
 {
   GCMETHMSG("Board::gcBoard");
+  if (!this) return 0;
 
-  Board *bb = this->gcGetBoardDeref();
-
-  if (bb == NULL)
-    return NULL;
+  Board *bb = this->getBoardFast();
+  Assert(bb);
 
   CHECKCOLLECTED(*bb->getGCField(), Board *);
-  DebugGC (opMode == IN_TC && !isLocalBoard (bb),
-	    error ("non-local board is copied!")); 
-  // Kludge: because of allocation of 'y' registers a non-'isInTree' board
-  //         can be reached.
-  // Moreover: because of allocation of 'x' registers (for instance, a
-  // 'SuspContinuation' may containt in these registers any ***irrelevant***
-  // values) a non-'isInTree' board can be reached;
-  if (opMode == IN_TC && isInTree(bb) == NO) {
-    storeForward(bb->getGCField(),bb);
-    return bb;
-  }
+  if (!bb->gcIsAlive()) return 0;
+
+  Assert(opMode != IN_TC || isInTree(bb));
+
   size_t sz = sizeof(Board);
   Board *ret = (Board *) gcRealloc(bb,sz);
       
@@ -2117,19 +2025,23 @@ Board *Board::gcBoard()
 void Board::gcRecurse()
 {
   GCMETHMSG("Board::gcRecurse");
-  Assert(!isCommitted());
+  Assert(!isCommitted() && !isFailed());
   Assert(!isFreedRefsArray(body.getY ()));
   body.gcRecurse();
-  GCREF(u.actor);
+  u.actor=u.actor->gcActor();
 
   script.Script::gc();
 }
 
-Actor *Actor::gc()
+Actor *Actor::gcActor()
 {
+  if (this==0) return 0;
+
+  Assert(board->getBoardFast()->gcIsAlive());
+
   GCMETHMSG("Actor::gc");
   CHECKCOLLECTED(*getGCField(), Actor *);
-  // by kost@; flags are needed for getBoardDeref
+  // by kost@; flags are needed for getBoardFast
   size_t sz;
   if (isWait()) {
     sz = sizeof(WaitActor);
@@ -2170,9 +2082,10 @@ void Actor::gcRecurse()
 void WaitActor::gcRecurse()
 {
   GCMETHMSG("WaitActor::gcRecurse");
-  DebugCheck (isFreedRefsArray(next.getY ()),
-	      error ("freed 'y' regs in WaitActor::gcRecurse ()"));
-  board = board->gcBoard ();
+  Assert(!isFreedRefsArray(next.getY()));
+  board = board->gcBoard();
+  Assert(board);
+
   next.gcRecurse ();
 
   int32 num = ToInt32(childs[-1]);
@@ -2186,6 +2099,7 @@ void WaitActor::gcRecurse()
   for (int i=0; i < num; i++) {
     if (childs[i]) {
       newChilds[i] = childs[i]->gcBoard();
+      Assert(newChilds[i]);
     } else {
       newChilds[i] = (Board *) NULL;
     }
@@ -2200,6 +2114,7 @@ void AskActor::gcRecurse ()
 	      error ("freed 'y' regs in AskActor::gcRecurse ()"));
   next.gcRecurse ();
   board = board->gcBoard ();
+  Assert(board);
 }
 
 void SolveActor::gcRecurse ()
@@ -2207,8 +2122,11 @@ void SolveActor::gcRecurse ()
   GCMETHMSG("SolveActor::gcRecurse");
   if (opMode == IN_GC || solveBoard != fromCopyBoard) {
     board = board->gcBoard();
+    Assert(board);
   }
-  solveBoard = solveBoard->gcBoard ();
+  solveBoard = solveBoard->gcBoard();
+  Assert(solveBoard);
+
   boardToInstall = boardToInstall->gcBoard ();
   gcTagged (solveVar, solveVar);
   gcTagged (result, result);
@@ -2219,13 +2137,15 @@ void SolveActor::gcRecurse ()
 
 DLLStackEntry SolveActor::StackEntryGC (DLLStackEntry entry)
 {
-  if (((Actor *) entry)->isCommitted () == OK) {
-    return ((DLLStackEntry) NULL);
-  } else if (opMode == IN_TC && isInTree((Actor *) entry) == NO) {
-    return ((DLLStackEntry) NULL);
-  } else {
-    return ((DLLStackEntry) ((Actor *) entry)->gc ());
+  Actor *aa=(Actor *) entry;
+  if (aa->isCommitted()) return 0;
+  Board *bb=aa->getBoardFast();
+  if (!bb->gcIsAlive()) {
+    // mm2 warning("SolveActor::StackEntryGC: dead node\n");
+    return 0;
   }
+  if (opMode == IN_TC && !isInTree(bb)) return 0;
+  return ((DLLStackEntry) ((Actor *) entry)->gcActor());
 }
 
 void DLLStack::gc (DLLStackEntry (*f)(DLLStackEntry))
@@ -2310,9 +2230,9 @@ void performCopying(void)
     case PTR_SUSPCONT:  ((SuspContinuation*) ptr)->gcRecurse(); break;
     case PTR_CFUNCONT:  ((CFuncContinuation*) ptr)->gcRecurse(); break;      
     case PTR_ACTOR:     ((Actor *) ptr)->gcRecurse(); break;
-    case PTR_THREAD:    ((Thread *) ptr)->gcRecurse(); break;
+    case PTR_THREAD:    ((Thread *) ptr)->gcThreadRecurse(); break;
     case PTR_BOARD:     ((Board *) ptr)->gcRecurse(); break;
-    case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcRecurse(); break;
+    case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcConstRecurse(); break;
        
     default:
       Assert(NO);
@@ -2388,6 +2308,7 @@ Bool AM::idleGC()
 OzDebug *OzDebug::gcOzDebug()
 {
   pred = (Chunk *) pred->gcConstTerm();
+  Assert(pred);
   args = gcRefsArray(args);
   return this;
 }

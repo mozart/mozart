@@ -114,8 +114,7 @@ define(CaseTwoRegs,``''
     {
       int regIndex = getRegArg(PC+1);
       TaggedRef name   = getLiteralArg(PC+2);
-      DebugCheck(&Reg1(0)!= &(e->toplevelVars[0]),
-		 error("createNamedVar: e->toplevelVars expected"););
+      Assert(&Reg1(0)== &(e->toplevelVars[0]));
       TaggedRef newVar = e->createNamedVariable(regIndex,name);
       Y = e->toplevelVars;
       Reg1(regIndex) = newVar;
@@ -168,11 +167,7 @@ Case(CREATEVARIABLEMOVEG):
 				    Reg2(getRegArg(PC+2)),
 				    NOFLATGUARD())) {
 		   SHALLOWFAIL;
-		   HF_UNIFY("%s = %s failed\n",
-			    Reg1(getRegArg(PC+1)),
-			    Reg2(getRegArg(PC+2)),
-			    "In instruction UNIFY\n"
-			    );
+		   HF_UNIFY("%s = %s failed\n",  Reg1(getRegArg(PC+1)), Reg2(getRegArg(PC+2)),  "In instruction UNIFY\n" );
 		 }
 	       }''
 	       DISPATCH(3);
@@ -302,11 +297,7 @@ Case(SETVOID):
 		 }
 
 		 SHALLOWFAIL;
-		 HF_UNIFY("%s(...) = %s failed\n",
-			  getLiteralArg(PC+1),
-			  Reg1(getRegArg(PC+3)),
-			  "In instruction GETSTRUCTURE\n"
-			  );
+		 HF_UNIFY("%s(...) = %s failed\n", getLiteralArg(PC+1), Reg1(getRegArg(PC+3)), "In instruction GETSTRUCTURE\n" );
 	       }''
 	       )
 
@@ -351,11 +342,7 @@ Case(SETVOID):
 	   }
 
 	   SHALLOWFAIL;
-	   HF_UNIFY("%s(..:.. ...) = %s failed\n",
-		    getLiteralArg(PC+1),
-		    RegAccess(HelpReg,getRegArg(PC+3)),
-		    "In instruction GETRECORD\n"
-		    );
+	   HF_UNIFY("%s(..:.. ...) = %s failed\n", getLiteralArg(PC+1), RegAccess(HelpReg,getRegArg(PC+3)), "In instruction GETRECORD\n" );
 	 }
 
 
@@ -441,11 +428,7 @@ Case(SETVOID):
 		 }
 
 		 SHALLOWFAIL;
-		 HF_UNIFY("%s = %s failed\n",
-			  Reg1(getRegArg(PC+2)),
-			  getLiteralArg(PC+1),
-			  "In instruction GETCONSTANT\n"
-			  );
+		 HF_UNIFY("%s = %s failed\n", Reg1(getRegArg(PC+2)), getLiteralArg(PC+1), "In instruction GETCONSTANT\n" );
 	       }''
 	       )
 
@@ -474,11 +457,7 @@ Case(SETVOID):
 		 }
 
 		 SHALLOWFAIL;
-		 HF_UNIFY("%s = %s failed\n",
-			  Reg1(getRegArg(PC+2)),
-			  getNumberArg(PC+1),
-			  "In instruction GETINT\n"
-			  );
+		 HF_UNIFY("%s = %s failed\n", Reg1(getRegArg(PC+2)), getNumberArg(PC+1), "In instruction GETINT\n" );
 	       }''
 	       )
 
@@ -522,11 +501,7 @@ Case(SETVOID):
 		 }
 
 		 SHALLOWFAIL;
-		 HF_UNIFY("%s = %s|_ failed\n",
-			  Xreg(getRegArg(PC+1)),
-			  Reg1(getRegArg(PC+2)),
-			  "In instruction GETLISTVALVAR\n"
-			  );
+		 HF_UNIFY("%s = %s|_ failed\n", Xreg(getRegArg(PC+1)), Reg1(getRegArg(PC+2)), "In instruction GETLISTVALVAR\n" );
 	       }''
 	       )
   
@@ -564,11 +539,7 @@ Case(SETVOID):
 		 
 
 		 SHALLOWFAIL;
-		 HF_UNIFY("%s = _|_ failed\n",
-			  Reg1(getRegArg(PC+1)),
-			  makeTaggedNULL(),
-			  "In instruction GETLIST\n"
-			  );
+		 HF_UNIFY("%s = _|_ failed\n", Reg1(getRegArg(PC+1)), makeTaggedNULL(), "In instruction GETLIST\n" );
 	       }''
 	       )
 
@@ -631,11 +602,7 @@ Case(GETVOID):
 		     DISPATCH(2);
 		   }
 		   SHALLOWFAIL;
-		   HF_UNIFY("%s = %s failed\n",
-			    *(sPointer-1),
-			    Reg1(reg),
-			    "In instruction UNIFYVALUE\n"
-			    );
+		   HF_UNIFY("%s = %s failed\n", *(sPointer-1), Reg1(reg), "In instruction UNIFYVALUE\n" );
 		 }
 	       }''
 	       )
@@ -668,10 +635,7 @@ Case(GETVOID):
        if ( !e->fastUnify(RegAccess(HelpReg,reg), makeTaggedRef(sPointer),
 			  NOFLATGUARD()) ) {
 	 SHALLOWFAIL;
-	 HF_UNIFY("%s = %s failed\n",
-		  *sPointer,
-		  RegAccess(HelpReg,reg),
-		  "In instruction UNIFYVALVAR\n");
+	 HF_UNIFY("%s = %s failed\n", *sPointer, RegAccess(HelpReg,reg), "In instruction UNIFYVALVAR\n");
        }
 
        RegAccess(HelpReg2,getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
@@ -715,11 +679,7 @@ Case(UNIFYCONSTANT):
        }
 
        SHALLOWFAIL;
-       HF_UNIFY("%s = %s failed\n",
-		 getTaggedArg(PC+1),
-		 *(sPointer-1),
-		 "In instruction UNIFYCONSTANT\n"
-		 );
+       HF_UNIFY("%s = %s failed\n", getTaggedArg(PC+1), *(sPointer-1), "In instruction UNIFYCONSTANT\n" );
      }
 
   Case(UNIFYINT):
@@ -755,11 +715,7 @@ Case(UNIFYCONSTANT):
       }
 
       SHALLOWFAIL;
-      HF_UNIFY("%s = %s failed\n",
-	       getTaggedArg(PC+1),
-	       *(sPointer-1),
-	       "In instruction UNIFYINT\n"
-	       );
+      HF_UNIFY("%s = %s failed\n", getTaggedArg(PC+1), *(sPointer-1), "In instruction UNIFYINT\n" );
     }
 
 
