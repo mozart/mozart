@@ -344,8 +344,8 @@ OZ_Return CDPropagator::run(void)
 	maxsize = max(maxsize, x[idx_vp(c, v)].getSize());
 
     if (maxsize < v_v_size) {
-      OZ_FiniteDomain u;
-      u.initEmpty();
+      OZ_FiniteDomain u(fd_empty);
+
       for (c = clauses; c--; ) {
 	if (x[idx_b(c)] == 0) continue;
 	u = u | x[idx_vp(c, v)];
@@ -353,8 +353,8 @@ OZ_Return CDPropagator::run(void)
       x[idx_v(v)] &= u;
     }
   }
-
-  DebugCode(for (c = clauses; c--; ) Assert(x[idx_b(c)] != 1);;)
+  
+  DebugCode(for (c = clauses; c--; ) Assert(x[idx_b(c)] != 1);)
     
   return x.releaseReify(idx_b(0), idx_b(clauses - 1),
 			idx_v(0), idx_v(variables - 1));
@@ -516,7 +516,21 @@ OZ_Return CDSuppl::run(void)
     backup_currentThread->unmarkUnifyThread();
     ((Thread *) thr)->markUnifyThread();
   }
+
+  /*
+    // TMUELLER
+    cout << "in: cd(" << *((Thread *) thr)->getPropagator() << ')'
+    << endl << flush;
+    */
+
   OZ_Return ret_val = ((Thread *) thr)->runPropagator();
+
+  /*  
+      // TMUELLER
+      cout << "out: cd(" << *((Thread *) thr)->getPropagator() << ')'
+      << endl << flush;
+      */
+  
   am.currentThread = backup_currentThread;
 
   OZ_ASSERT(b->getMaxElem() >= 2);
