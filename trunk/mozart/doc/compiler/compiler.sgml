@@ -1,9 +1,27 @@
 <!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
 <!ENTITY % p.mix.local "|Em">
 <!ELEMENT Em - - (#PCDATA)>
+
+<!-- Include Files -->
+<!ENTITY engines SYSTEM "engines.sgml">
+<!ENTITY interfaces SYSTEM "interfaces.sgml">
+<!ENTITY switches SYSTEM "switches.sgml">
+<!ENTITY queries SYSTEM "queries.sgml">
+<!ENTITY notifications SYSTEM "notifications.sgml">
+<!ENTITY abstractions SYSTEM "abstractions.sgml">
+
+<!-- Abbreviations -->
+<!ENTITY dot "." -- to distinguish it from periods -->
+
+<!-- Processing Instructions -->
 <!ENTITY eg PI "eg">
+<!ENTITY ie PI "ie">
 <!ENTITY nbsp PI "nbsp">
+
 ]>
+
 <Book proglang=oz>
   <Front>
     <!-- Splitting the document into different HTML nodes -->
@@ -53,188 +71,13 @@
 	reference about the compiler switches, queries and notifications.
 	For most users, the provided abstractions described in <Ptr
 	to="section.reference.abstractions"> should prove sufficient.
-    <Chapter id="chapter.engines">
-      <Title/Compiler Engines/
-      <P>
-	A compiler engine is an instance of the final class
-	<<Compiler.engine>>:
-	<Code display>E = {New Compiler.engine init()}</Code>
-	Each instance of this class is an active object encapsulating the
-	state of a compiler, consisting of a list of defined macro names,
-	the state of a number of boolean compiler switches, an environment,
-	and the query queue.  These are described in the following sections.
-      <Section>
-	<Title/Macro Definitions/
-	<P>
-	  The list of macro names currently defined is used by the parser to
-	  resolve macro directives such as <<\ifdef>>.  Note that the scope
-	  of the <<\define>> and <<\undef>> macro directives is limited to a
-	  single compilation and does not update this list.
-	<P>
-	  Initially, this list only consists of macro names describing the
-	  Oz version number, &eg;, when running Oz&nbsp;3.0.9, the list is
-	  <<['Oz_3' 'Oz_3_0' 'Oz_3_0_9']>>.
-      <Section>
-	<Title/Compiler Switches/
-	<P>
-	  The current state of the compiler switches is given by a mapping
-	  from switch names to boolean values.  Each compiler engine manages
-	  a stack of switch states, the top element of which is taken as the
-	  active state.  This is useful to temporarily escape into a different
-	  mode of compiler operation, execute some queries and pop back to the
-	  saved state.
-	<P>
-	  The available switches and their effects on the compilation process
-	  are described in detail in <Ptr to="section.reference.switches">.
-      <Section>
-	<Title/The Environment/
-	<P>
-	  An environment is a mapping from variable print names to arbitrary
-	  Oz values.  Initially, the environment of a newly created Compiler
-	  Engine contains the variables declared by the Oz Standard Modules as
-	  well as the following backquote variable:
-	  <List>
-	    <Entry><<`Compiler`>>
-	    <Item>
-	      <P.silent><!--**-->
-		A reference to the Compiler Engine itself.
-	  </List>
-	<P>
-	  Environments are first class; that is, they may be enquired,
-	  set or extended by records whose features are valid variable
-	  print names, &eg;, <<env('Show': System.show)>>.
-      <Section>
-	<Title/The Query Queue/
-	<P>
-	  The entries in the query queue are executed sequentially by
-	  the object's internal thread.  A new query can be enqueued by
-	  <Code display>{E enqueue(M)}</Code>
-	  This operation blocks until the query <<M>> and its input arguments
-	  are fully determined, then either raises an exception if it is an
-	  unknown or ill-typed query, or immediately returns.  Internally,
-	  each enqueued query is assigned a unique identification number which
-	  is obtained by adding an output argument to the <<enqueue>> message:
-	  <Code display>{E enqueue(M ?Id)}</Code>
-	  The identification may be used later to remove the query from the
-	  queue (unless its execution has already begun or terminated):
-	  <Code display>{E dequeue(Id)}</Code>
-	<P>
-	  The execution of the current query may be abandoned by use of the
-	  <<interrupt()>> message and the whole remaining queue may be flushed
-	  via <<clearQueue()>>.
-	<P>
-	  The argument to enqueue may also be a <Em>list</Em> of queries:
-	  These are guaranteed to be executed in sequence without other
-	  queries interleaving.  The second argument then returns a list of
-	  identification numbers.
-	<P>
-	  Some queries request state information from the compiler engine.
-	  The corresponding output variables only become bound when the query
-	  is actually executed.  If binding an output variable raises an
-	  exception, an error is reported through the registered interfaces
-	  (see <Ptr to="chapter.interfaces">).
-	<P>
-	  The queries understood by the compiler are listed in <Ptr
-	  to="section.reference.queries">.
-    <Chapter id="chapter.interfaces">
-      <Title/Compiler Interfaces/
-      <P>
-	A Compiler Engine is sufficient to instruct a compiler to do something,
-	but the possibilities to react to its output are still very limited.
-	This is the purpose of a <Def>Compiler Interface</Def>.
-      <P>
-	With each Compiler Engine <<E>> an arbitrary number of interfaces can
-	be registered.  All of <<E>>'s registered interfaces are notified of
-	its output or changes of its state.
-      <Section>
-	<Title/Registering an Interface/
-	<P>
-	  What is actually registered with a Compiler Engine is an Oz port.
-	  The Compiler Engine sends so-called <Def>notifications</Def> to
-	  this port.  A port can simply be registered with the method
-	  <<register(P)>> and unregistered with <<unregister(P)>>.  Note
-	  that a single port can be registered several times with a single
-	  Compiler Engine (it is then sent each notification as often as it
-	  is registered); <<unregister(P)>> removes all occurrences of <<P>>
-	  from the registration and does nothing if the port is not registered.
-	<P>
-	  The method <<notify(M)>> allows one to send a notification to all
-	  registered interfaces.  Because of this, interfaces should always
-	  ignore unknown notification messages (also to allow for extensions
-	  of the Compiler Engine).
-	<P>
-	  A list of all the possible notifications is given in <Ptr
-	  to="section.reference.notifications">.
-      <Section>
-	<Title/The Generic Interface/
-	<P>
-	  The class <<Compiler.genericInterface>> is an abstraction
-	  simplifying the creation of new interfaces.  The generic
-	  interface takes over the registering and the unregistering,
-	  automatically handling the creation and termination of the
-	  interface's server thread.  New interfaces should be written by
-	  subclassing the generic interface.
-	<P>
-	  The <<init(E Serve)>> method takes as arguments a Compiler Engine
-	  and the label of a unary method.  The interface creates a port,
-	  registers this with <<E>> and creates a thread in which the
-	  <<Serve>> method is applied to the port's stream.
-	<P>
-	  The <<exit()>> method undoes all these effects:  The server thread
-	  is terminated and the interface's port is unregistered.  After this
-	  the no-op <<reset()>> method is invoked; subclasses may override
-	  this method to perform individual cleanups.
-	<P>
-	  Some methods provide access to the interface's state:
-	  <<getCompiler(?E)>> returns the associated Compiler Engine,
-	  <<getPort(?P)>> the port which the interface registered with it.
-	  <<enqueue(M)>> simply forwards an enqueue request to the Compiler
-	  Engine.
-      <Section>
-	<Title/Interfaces defined in the Mozart Library and Tools/
-	<P>
-	  <List>
-	    <Entry>The <Q/Quiet/ Interface
-	    <Item>
-	      <P.silent><!--**-->
-		See <Ptr to="program.quietInterface">.
-	    <Entry>The Emacs Interface
-	    <Item>
-	      <P.silent><!--**-->
-		See <Ptr to="program.emacsInterface">.
-	    <Entry>The Compiler Panel
-	    <Item>
-	      <P.silent><!--**-->
-		See <Ptr to="program.compilerPanel">.
-	  </List>
-	  <Figure float id="program.quietInterface" class=program>
-	    <Caption>The <Q/Quiet/ Interface.</Caption>
-	    <P> <!--**-->
-	      <Code.Extern display to="QuietInterface.oz">
-	  </Figure>
-	  <Figure float id="program.emacsInterface" class=program>
-	    <Caption>The Emacs Interface.</Caption>
-	    <P> <!--**-->
-	      <Code.Extern display to="EmacsInterface.oz">
-	  </Figure>
-	  <Figure float id="program.compilerPanel" class=program>
-	    <Caption>The Compiler Panel.</Caption>
-	    <P> <!--**-->
-	      <Code.Extern display to="CompilerPanel.oz">
-	  </Figure>
+    &engines;
+    &interfaces;
     <Chapter id="chapter.reference">
       <Title/Reference/
-      <Section id="section.reference.switches">
-	<Title/Compiler Switches/
-	<P>
-      <Section id="section.reference.queries">
-	<Title/Recognized Queries/
-	<P>
-      <Section id="section.reference.notifications">
-	<Title/Sent Notifications/
-	<P>
-      <Section id="section.reference.abstractions">
-	<Title/Provided Abstractions/
-	<P>
+      &switches;
+      &queries;
+      &notifications;
+      &abstractions;
   </Body>
 </Book>
