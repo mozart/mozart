@@ -125,6 +125,7 @@ enum EmulatorPropertyIndex {
   // APPLICATION
   PROP_APPLICATION_ARGS,
   PROP_APPLICATION_URL,
+  PROP_APPLICATION_GUI,
   PROP_APPLICATION,
   // PLATFORM
   PROP_PLATFORM_NAME,
@@ -400,8 +401,10 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     // APPLICATION
   case PROP_APPLICATION_ARGS: { return getApplicationArgs(); }
     CASE_ATOM(PROP_APPLICATION_URL,ozconf.url);
+    CASE_BOOL(PROP_APPLICATION_GUI,ozconf.gui==1);
     CASE_REC(PROP_APPLICATION,"application",
-	     (2,AtomArgs,AtomURL),
+	     (3,AtomArgs,AtomURL,AtomGUI),
+	     SET_BOOL(AtomGUI,ozconf.gui==1);
 	     SET_ATOM(AtomURL,ozconf.url);
 	     SET_REC(AtomArgs,getApplicationArgs()););
     // PLATFORM
@@ -1009,6 +1012,7 @@ void initVirtualProperties()
   // APPLICATION
   VirtualProperty::add("application.args",PROP_APPLICATION_ARGS);
   VirtualProperty::add("application.url",PROP_APPLICATION_URL);
+  VirtualProperty::add("application.gui",PROP_APPLICATION_GUI);
   VirtualProperty::add("application",PROP_APPLICATION);
   // PLATFORM
   VirtualProperty::add("platform.name", PROP_PLATFORM_NAME);
