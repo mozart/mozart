@@ -50,7 +50,7 @@ case $OZPLATFORM in
 	OZEMULATOR=`cygpath -w $OZEMULATOR`
 	OZINIT=`cygpath -w $OZBOOTINIT`
 	export OZEMULATOR OZINIT
-	exec $BUILDTOP/platform/mswindows/ozengine -u `cygpath -w $OZBOOTOZC` -- "$@"
+	exec $BUILDTOP/platform/mswindows/ozengine `cygpath -w $OZBOOTOZC` "$@"
 	;;
     *)
 	exec $OZEMULATOR -init $OZBOOTINIT -u $OZBOOTOZC -- "$@"
