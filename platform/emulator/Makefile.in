@@ -58,10 +58,10 @@ TARGETS=        emulator.exe text2pickle.exe $(DYNAMIC_MODULETARGETS)
 SUBDIRS=        libdp libfd libfset
 OZVERSION=      $(SRCTOP)/OZVERSION
 
-DENYS_EVENTS=no
+DENYS_EVENTS    = @DENYS_EVENTS@
 ifeq ($(DENYS_EVENTS),yes)
-DENYS_SPECS= Event
-DENYS_SRCS= event.cc
+DENYS_SPECS= Event Timer
+DENYS_SRCS= event.cc timer.cc
 DENYS_CPPFLAGS= -DDENYS_EVENTS
 else
 DENYS_SPECS=
