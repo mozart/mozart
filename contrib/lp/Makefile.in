@@ -34,11 +34,9 @@ USECPLEX =
 CFLAGS 		=  -O3
 CFLAGS  	+= -I/usr/local/oz/include
 CFLAGS  	+= -I$(VPATH)/../ri
-CFLAGS   	+= -I$(VPATH)/Lpsolve
 CFLAGS   	+= -Wall -Wno-unused -Wno-reorder -Wno-uninitialized
 
-LDFLAGS 	 = -L$(VPATH)
-LIBS     = -lc -lm -llpk-$(PLATFORM)
+#LDFLAGS 	= -L$(VPATH)
 
 
 
@@ -109,8 +107,8 @@ $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
 # Maintenance
 #----------------------------------------------------------------------
 
-depend: Makefile $(CSRCS) $(OZSRCS) $(OZGSRCS)
-	$(DEPEND) $(CSRCS:%=$(SRCDIR)/%) > Makefile.deps
+depend: Makefile $(CPPSRCS) $(OZSRCS) $(OZGSRCS)
+	$(DEPEND) $(CPPSRCS:%=$(SRCDIR)/%) > Makefile.deps
 	$(OZDEPEND) $(OZSRCS:%=$(SRCDIR)/%) $(OZGSRCS:%=$(SRCDIR)/%) \
 	>> Makefile.deps
 
