@@ -51,14 +51,14 @@
  *
  */
 
-class VarFix: public Stack {
+class VarFix: public FastStack {
 public:
-  VarFix() : Stack(1024, Stack_WithMalloc) {}
+  VarFix() : FastStack() {}
   ~VarFix() {}
 
   void defer(TaggedRef * var, TaggedRef * ref) {
     Assert(var);
-    Stack::push((StackEntry) ref);
+    FastStack::push1((StackEntry) ref);
     *ref = makeTaggedRef(var); 
   }
 
@@ -97,22 +97,21 @@ enum TypeOfPtr {
 
 typedef TaggedRef TypedPtr;
 
-class CacStack: public Stack {
+class CacStack: public FastStack {
 public:
-  CacStack() : Stack(1024, Stack_WithMalloc) {}
+  CacStack() : FastStack() {}
   ~CacStack() {}
   
   void push(void * ptr, TypeOfPtr type) {
-    Stack::push((StackEntry) makeTaggedRef2p((TypeOfTerm) type, ptr));
+    FastStack::push1((StackEntry) makeTaggedRef2p((TypeOfTerm) type, ptr));
   }
 
   void pushLocalSuspList(Board * bb, SuspList ** sl, int n) {
     Assert(n<8);
-    ensureFree(2);
-    Stack::push((StackEntry) bb, NO);
-    Stack::push((StackEntry) 
-		makeTaggedRef2p((TypeOfTerm) (PTR_LOCAL_SUSPLIST | n), 
-				(void *) sl), NO);
+    FastStack::push2((StackEntry) bb, 
+		     (StackEntry) 
+		     makeTaggedRef2p((TypeOfTerm) (PTR_LOCAL_SUSPLIST | n), 
+				     (void *) sl));
   }
 
   void gCollectRecurse(void);
