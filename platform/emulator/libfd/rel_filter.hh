@@ -31,9 +31,9 @@
 
 #define EXPECT(O, F, V, R) if (O.F(V, R)) return R;
 
-  
+
 template <class RETURN, class EXPECT, class VAR1, class VAR2>
-RETURN make_lessEqOffset(RETURN r, EXPECT &pe, VAR1 x, VAR1 y, VAR2 c) 
+RETURN make_lessEqOffset(RETURN r, EXPECT &pe, VAR1 x, VAR1 y, VAR2 c)
 {
   EXPECT(pe, expectIntVarMinMax, x, r);
   EXPECT(pe, expectIntVarMinMax, y, r);
@@ -46,7 +46,7 @@ RETURN make_lessEqOffset(RETURN r, EXPECT &pe, VAR1 x, VAR1 y, VAR2 c)
 template  <class SERVICE, class FDVAR>
 SERVICE &filter_lessEqOffset(SERVICE & s, FDVAR &x, FDVAR &y, int c)
 {
-  if (x == y) { 
+  if (x == y) {
     return  (0 <= c) ? s.entail() : s.fail();
   }
   //
