@@ -201,7 +201,7 @@ dnl ------------------------------------------------------------------
 AC_DEFUN(OZ_PROG_VERSION_CHECK,[
   AC_MSG_CHECKING([$2 version is at least $3])
   [$1]=no
-  if oz_tmp_version=`ifelse([$4],[],[$2 --version],[$4]) 2>/dev/null`; then
+  if oz_tmp_version=`ifelse([$4],[],[$2 --version],[$4]) 2>/dev/null | tr '\n' ' '`; then
 changequote(<,>)
     oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
 changequote([,])
