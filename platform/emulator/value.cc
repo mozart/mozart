@@ -44,7 +44,7 @@
 TaggedRef 
   RecordFailure,
 
-  NameTrue, NameFalse,
+  _NameTrue, _NameFalse,
 
   BI_Unify,BI_send,BI_Delay,
   BI_load, BI_fail, BI_url_load, BI_obtain_native,
@@ -151,8 +151,8 @@ void initLiterals()
 {
   initAtomsAndNames();
 
-  NameTrue  = oz_uniqueName(NAMETRUE);
-  NameFalse = oz_uniqueName(NAMEFALSE);
+  _NameTrue  = oz_uniqueName(NAMETRUE);
+  _NameFalse = oz_uniqueName(NAMEFALSE);
 
   RecordFailure = OZ_recordInitC("failure",
 				 oz_list(OZ_pairA("debug",NameUnit),0));
@@ -358,12 +358,12 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
     int widthDefault  = rec->getWidth();
     int widthProvided = getTupleWidth(arity);
     if (widthDefault < widthProvided || 
-	literalEq(oz_deref(rec->getArg(widthProvided)),NameOoRequiredArg))
+	oz_eq(oz_deref(rec->getArg(widthProvided)),NameOoRequiredArg))
       return NO;
 
     if (X) {
       for (int i=widthProvided; i<widthDefault; i++) {
-	if (literalEq(oz_deref(rec->getArg(i)),NameOoDefaultVar)) {
+	if (oz_eq(oz_deref(rec->getArg(i)),NameOoDefaultVar)) {
 	  X[i] = oz_newVariable();
 	} else {
 	  X[i] = rec->getArg(i);
@@ -392,10 +392,10 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
       if (X)
 	auxX[argno] = X[argnoProvided];
       argnoProvided++;
-    } else if (literalEq(value,NameOoDefaultVar)) {
+    } else if (oz_eq(value,NameOoDefaultVar)) {
       if (X)
 	auxX[argno] = oz_newVariable();
-    } else if (literalEq(value,NameOoRequiredArg)) {
+    } else if (oz_eq(value,NameOoRequiredArg)) {
       return NO;
     } else {
       if (X)

@@ -65,7 +65,7 @@ Bool Future::kick(TaggedRef *ptr)
     thr->pushCall(BI_ByNeedAssign,makeTaggedRef(ptr),newvar);
     thr->pushCall(function,newvar);
   } else {
-    Assert(oz_isTuple(function) && literalEq(OZ_label(function),AtomDot));
+    Assert(oz_isTuple(function) && oz_eq(OZ_label(function),AtomDot));
     OZ_Term fut=oz_arg(function,0);
     OZ_Term fea=oz_arg(function,1);
     Board *bb = GETBOARD(this);

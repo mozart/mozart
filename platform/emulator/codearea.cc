@@ -234,7 +234,7 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
     for (int i=0; getOpcode(aux) == LOCALVARNAME; i++) {
       if (Y) {
 	TaggedRef aux1 = getLiteralArg(aux+1);
-	if (!literalEq(aux1, AtomEmpty) && Y[i] != makeTaggedNULL()) {
+	if (!oz_eq(aux1, AtomEmpty) && Y[i] != makeTaggedNULL()) {
 	  locals = oz_cons(OZ_mkTupleC("#", 2, aux1, Y[i]), locals);
 	}
       }
@@ -246,7 +246,7 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
     if (gsize>0) {
       for (int i=0; getOpcode(aux) == GLOBALVARNAME; i++) {
 	TaggedRef aux1 = getLiteralArg(aux+1);
-	if (!literalEq(aux1, AtomEmpty)) {
+	if (!oz_eq(aux1, AtomEmpty)) {
 	  globals = oz_cons(OZ_mkTupleC("#", 2, aux1, CAP->getG(i)), globals);
 	}
 	aux += sizeOf(getOpcode(aux));

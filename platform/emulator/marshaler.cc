@@ -625,7 +625,7 @@ void unmarshalClass(ObjectClass *cl, MsgBuffer *bs)
   if (cl==NULL)  return;
 
   TaggedRef ff = feat->getFeature(NameOoUnFreeFeat);
-  Bool locking = literalEq(NameTrue,oz_deref(feat->getFeature(NameOoLocking)));
+  Bool locking = oz_isTrue(oz_deref(feat->getFeature(NameOoLocking)));
     
   cl->import(feat,
 	     tagged2Dictionary(feat->getFeature(NameOoFastMeth)),

@@ -35,7 +35,8 @@ SRecordArity getArity(TaggedRef arity)
 {
   if (oz_isSmallInt(arity)) {
     return mkTupleWidth(smallIntValue(arity));
-  } else if (oz_isList(arity)) {
+  } else {
+    Assert(oz_isSmallInt(oz_checkList(arity)));
     TaggedRef sortedarity = arity;
     if (!isSorted(arity)) {
       int len;
@@ -44,8 +45,6 @@ SRecordArity getArity(TaggedRef arity)
     }
     Arity *ari = aritytable.find(sortedarity);
     return (ari->isTuple())? mkTupleWidth(ari->getWidth()): mkRecordArity(ari);
-  } else {
-    return (SRecordArity) -1;
   }
 }
 
@@ -57,29 +56,6 @@ SRecordArity getArity(TaggedRef arity)
     name = getArity(__aux);				\
     if (name == (SRecordArity) -1) {			\
       return OZ_typeError(num,"RecordArity");		\
-    }							\
-  }
-
-
-inline
-Bool getBool(TaggedRef t)
-{
-  if (literalEq(t,NameTrue))
-    return OK;
-  else if (literalEq(t,NameFalse))
-    return NO;
-  else
-    return -1;
-}
-
-
-#define OZ_declareBoolIN(num,name)			\
-  Bool name;						\
-  {							\
-    oz_declareNonvarIN(num,__aux);			\
-    name = getBool(__aux);				\
-    if (name == -1) {					\
-      return OZ_typeError(num,"Bool");			\
     }							\
   }
 
@@ -300,17 +276,18 @@ OZ_BI_define(BIstorePredId,6,0)
   OZ_declareCodeBlockIN(0,code);
   oz_declareNonvarIN(1,name);
   if (!oz_isAtom(name)) {
-    return OZ_typeError(1,"Atom");
+    oz_typeError(1,"Atom");
   }
   OZ_declareRecordArityIN(2,arity);
   oz_declareNonvarIN(3,pos);
   if (!(OZ_isUnit(pos) || oz_isTuple(pos) && OZ_width(pos) == 3)) {
-    return OZ_typeError(3,"Coordinates");
+    oz_typeError(3,"Coordinates");
   }
   oz_declareNonvarIN(4,flags);
-  if (!oz_isList(flags)) {
-    return OZ_typeError(4,"List");
-  }
+  OZ_Term ret = oz_checkList(flags);
+  if (oz_isFalse(ret)) oz_typeError(4,"List");
+  if (oz_isRef(ret)) oz_suspendOn(ret);
+
   oz_declareIntIN(5,maxX);
 
   PrTabEntry *pte;
@@ -378,7 +355,7 @@ OZ_BI_define(BIstoreHTRecord,5,0)
   }
   oz_declareIntIN(4,label);
 
-  if (literalEq(reclabel,AtomCons) && sraIsTuple(arity) &&
+  if (oz_eq(reclabel,AtomCons) && sraIsTuple(arity) &&
       getTupleWidth(arity) == 2) {
     ht->addList(code->computeLabel(label));
   } else {
@@ -402,12 +379,12 @@ OZ_BI_define(BIstoreGenCallInfo,6,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,regindex);
-  OZ_declareBoolIN(2,isMethod);
+  oz_declareBoolIN(2,isMethod);
   oz_declareNonvarIN(3,name);
   if (!oz_isLiteral(name)) {
     return OZ_typeError(3,"Literal");
   }
-  OZ_declareBoolIN(4,isTail);
+  oz_declareBoolIN(4,isTail);
   OZ_declareRecordArityIN(5,arity);
 
   GenCallInfoClass *gci =
@@ -560,8 +537,7 @@ OZ_BI_define(BIisBuiltin,1,1)
 {
   oz_declareNonvarIN(0,val);
 
-  OZ_RETURN(oz_isBuiltin(val) && !tagged2Builtin(val)->isNative()?
-	    NameTrue: NameFalse);
+  OZ_RETURN(oz_bool(oz_isBuiltin(val) && !tagged2Builtin(val)->isNative()));
 } OZ_BI_end
 
 OZ_BI_define(BInameVariable,2,0)
@@ -589,15 +565,14 @@ OZ_BI_define(BInewCopyableName,1,1)
 OZ_BI_define(BIisCopyableName,1,1)
 {
   oz_declareNonvarIN(0,val);
-  OZ_RETURN((oz_isLiteral(val) && tagged2Literal(val)->isCopyableName())?
-	    NameTrue: NameFalse);
+  OZ_RETURN(oz_bool(oz_isLiteral(val) &&
+		    tagged2Literal(val)->isCopyableName()));
 } OZ_BI_end
 
 OZ_BI_define(BIisUniqueName,1,1)
 {
   oz_declareNonvarIN(0,val);
-  OZ_RETURN((oz_isLiteral(val) && tagged2Literal(val)->isUniqueName())?
-	    NameTrue: NameFalse);
+  OZ_RETURN(oz_bool(oz_isLiteral(val) && tagged2Literal(val)->isUniqueName()));
 } OZ_BI_end
 
 OZ_BI_define(BInewPredicateRef,0,1)
@@ -616,7 +591,7 @@ OZ_BI_define(BIisCopyablePredicateRef,1,1)
 {
   OZ_declareForeignPointerIN(0,p);
   AbstractionEntry *entry = (AbstractionEntry *) p;
-  OZ_RETURN(entry->copyable? NameTrue: NameFalse);
+  OZ_RETURN(oz_bool(entry->copyable));
 } OZ_BI_end
 
 
