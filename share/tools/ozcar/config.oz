@@ -2,9 +2,9 @@
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
 %declare
-Version      = "0.2 (Oct 96)"
-TitleName    = "Oz Debugger Interface"
-IconName     = "Ozcar"
+Version      = '0.3 (Nov 96)'
+TitleName    = 'Oz Debugger Interface'
+IconName     = 'Ozcar'
 
 StatusInit   =  TitleName # ' started.'
 StatusFont   = '-*-helvetica-*-r-*-*-12-*-*-*-*-*-*-*'
@@ -20,12 +20,14 @@ TextSize     = 80 # 24
 SmallBorderSize = 0
 BorderSize      = 2
 
-
-ThreadTreeWidth    = 200
-ThreadTreeHeight   = 400
+ThreadTreeHeight   = 300
+ThreadTreeWidth    = 250
 ThreadTreeFont     = fixed
 ThreadTreeBoldFont = '6x13bold'
 
-CallTraceTextWidth  = 70
-CallTraceTextHeight = 12
-CallTraceTextCursor = left_ptr
+StackTextWidth  = 30
+EnvTextWidth    = 20
+StackTextHeight = 10
+EnvTextHeight   = StackTextHeight
+
+TextCursor = left_ptr
