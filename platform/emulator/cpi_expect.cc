@@ -826,11 +826,6 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
   ozstat.propagatorsCreated.incf();
   
 #ifdef NAME_PROPAGATORS
-  /*
-  NEW_NAMER_DEBUG_PRINT(("imposed_propagator = %p (%s)\n", 
-			 imposed_propagator, 
-			 p->getProfile()->getPropagatorName()));
-  */
   if (am.isPropagatorLocation()) {
     Thread * thr = oz_currentThread();
     OZ_Term debug_frame 
@@ -853,6 +848,9 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     OZ_putSubtree(prop_loc, AtomColumn, OZ_subtree(debug_frame, AtomColumn));
 
     oz_propAddName(prop, prop_loc); 
+    
+    NEW_NAMER_DEBUG_PRINT(("added propLoc for = %p (%s)\n", 
+			   imposed_propagator, OZ_toC(prop_loc, 100, 100)));
   }
 #endif
 
