@@ -48,6 +48,8 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomDebugLockC, AtomDebugLockF, AtomDebugNameC, AtomDebugNameF,
   AtomException, AtomUnify,
 
+  AtomExport,
+
   NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
   NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
   NameOoPrintName,NameOoLocking,NameOoFallback,NameOoId,
@@ -137,6 +139,8 @@ void initLiterals()
 
   AtomUnify        = makeTaggedAtom("unify");
   AtomException    = makeTaggedAtom("exception");
+
+  AtomExport       = makeTaggedAtom("export");
 
   NameUnit          = getUniqueName("unit");
   NameGroupVoid     = getUniqueName("group(void)");

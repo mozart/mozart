@@ -81,8 +81,15 @@ UrlDefaults = \insert '../url-defaults.oz'
  functor prop once body
 
     IMPORT
+
     
-    'import'('System':        System
+    'import'(%% Boot modules
+	     'Parser':        Parser
+	     'FDP':           FDP
+	     'FSP':           FSP
+
+	     %% Plain functors
+	     'System':        System
 	     'Property':      Property
 	     'Foreign':       Foreign
 	     'Error':         Error
@@ -96,6 +103,17 @@ UrlDefaults = \insert '../url-defaults.oz'
 	     'Search':        Search)
     =IMPORT
 
+    local
+       StaticLoad = {`Builtin` 'BootManager'  2}
+    in
+       {ForAll ['Parser'# Parser
+		'FDP'#    FDP
+		'FSP'#    FSP]
+	proc {$ A#M}
+	   M={StaticLoad A}
+	end}
+    end
+    
     Compiler
 
     {ForAll [System        # NewSystem
@@ -116,6 +134,13 @@ UrlDefaults = \insert '../url-defaults.oz'
     
     Module = {NewModule}
 
+    {ForAll ['Parser'# Parser
+	     'FDP'#    FDP
+	     'FSP'#    FSP]
+     proc {$ A#M}
+	{Module.enter 'x-oz-boot:'#A M}
+     end}
+
     {ForAll ['System'#       System
 	     'Foreign'#      Foreign
 	     'Property'#     Property
@@ -128,7 +153,6 @@ UrlDefaults = \insert '../url-defaults.oz'
 	     'Open'#         Open
 	     'Pickle'#       Pickle
 	     'Compiler'#     Compiler]
-
      proc {$ A#M}
 	{Module.enter UrlDefaults.home#'lib/'#A#UrlDefaults.'functor' M}
      end}
