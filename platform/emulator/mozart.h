@@ -251,6 +251,9 @@ void       OZ_makeRunableThread    _PROTOTYPE((OZ_CFun, OZ_Term *, int));
 OZ_Thread  OZ_makeSuspendedThread  _PROTOTYPE((OZ_CFun, OZ_Term *, int));
 void       OZ_addThread            _PROTOTYPE((OZ_Term, OZ_Thread));
 
+#define OZ_makeSelfSuspendedThread() \
+  OZ_makeSuspendedThread(OZ_self, OZ_args,OZ_arity)
+
 /* for example
    OZ_Thread s = OZ_makeSuspendedThread(BIplus,OZ_args,OZ_arity);
    OZ_addThread(t1,s);
