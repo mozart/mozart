@@ -88,8 +88,8 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
   DEREF(ref,refPtr,tag)
   switch(tag) {
   case UVAR:
-    stream << "UV@"
-	   << refPtr;
+    stream << "_"
+	   << hex << (int) refPtr << dec;
     break;
   case SVAR:
     tagged2SVar(ref)->print(stream,depth,offset);
@@ -237,7 +237,7 @@ PRINT(SRecord)
 
   if (depth <= 0) {
     stream << "(...)";
-  } else if (type != R_ABSTRACTION && type != R_OBJECT) {
+  } else if (type == R_RECORD || type == R_CHUNK) {
     stream << "(";
     NEWLINE(offset+2);
     TaggedRef ar = getArityList();
@@ -325,7 +325,7 @@ PRINT(Atom)
   if (isXName()) {
     stream << "N:"
 	   << s
-	   << "-"
+//	   << "-"
 	   << seqNumber;
   } else {
 #define WELLFORMED
@@ -369,15 +369,15 @@ PRINT(Abstraction)
     return;
   }
   stream << "P:"
-	 << getPrintName() << "/" << getArity()
-	 << "@" << (void*) getId();
+	 << getPrintName() << "/" << getArity();
+//	 << "@" << (void*) getId();
 }
 
 PRINT(Builtin)
 {
   stream << "B:"
-	 << getPrintName() << "/" << getArity()
-	 << "@" << (void*) getId();
+	 << getPrintName() << "/" << getArity();
+//	 << "@" << (void*) getId();
 }
 
 
