@@ -426,7 +426,7 @@ Bool VSProbingObject::processProbes(unsigned long clock) {
 
         //
         // First check old pings;
-        if (vs->getTimeIsAliveSent() > lastPing &&
+        if (vs->getTimeIsAliveSent() >= lastPing &&
             vs->getTimeIsAliveSent() > vs->getTimeAliveAck()) {
           // effectively dead;
           s->probeFault(PROBE_PERM);
@@ -437,6 +437,7 @@ Bool VSProbingObject::processProbes(unsigned long clock) {
           if (sendTo_VirtualSite(vs, mb, M_SITE_IS_ALIVE, (Site *) 0, 0)
               != ACCEPTED)
             s->probeFault(PROBE_PERM);
+          vs->setTimeIsAliveSent(clock);
         }
       }
 
