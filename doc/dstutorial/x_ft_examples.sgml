@@ -244,8 +244,8 @@ This does not affect the continued execution of the server.
 </LIST>
 
 <P>We present two quite different ways of implementing
-this specification, one using guards and
-the other using exceptions.
+this specification, one using guards (<ptr to="guard.based">) and
+the other using exceptions (<ptr to="exception.based">).
 The guard-based technique is the shortest and simplest to understand.
 The exception-based technique is similar to what one would
 do in standard languages such as Java.
@@ -294,7 +294,7 @@ end
 </chunk>
 
 <P>The client raises an exception if there is
-a problem with the server.
+a problem with the server:
 <chunk><title/Client side/
 proc {StatP M}
    R W T
@@ -309,8 +309,8 @@ in
 end
 </chunk>
 
-<P>If there is a problem with a client,
-the server terminates the client request gracefully.
+<P>The server terminates the client request gracefully
+if there is a problem with a client:
 <chunk><title/Server side/
 thread
    {ForAll S
@@ -326,7 +326,7 @@ end
 </chunk>
 
 <P>There is a minor point related to the system default.
-This example calls <<Fault.enable>> in addition to <<Guard>>
+This example calls <<Fault.enable>> before <<Guard>>
 to guarantee
 that no exceptions are raised on <<R>>.
 This can be changed by using <<Fault.defaultEnable>> at
@@ -334,7 +334,7 @@ startup time for each site.
 
 <SUBSUBSECTION id="guards"><TITLE>Guard definition</TITLE>
 
-<P>The procedure <<Guard>> is defined in terms of a watcher.
+<P>The procedure <<Guard>> is defined in terms of watchers.
 It first disables all exception raising on <<E>>.
 Then it installs a watcher on <<E>> that
 waits for a fault in <<FS>>.
@@ -366,10 +366,10 @@ in
 end
 >>>
 
-<SUBSECTION><TITLE>Exception-based stationary objects</TITLE>
+<SUBSECTION id="exception.based"><TITLE>Exception-based stationary objects</TITLE>
 
 <P>We show how to implement <<NewSafeStat>>
-in the basic failure model.
+by means of exceptions only, i.e., using the basic failure model.
 First <<New>> makes
 an instance of the object
 and then <<MakeStat>> makes it stationary.
