@@ -33,6 +33,15 @@
 #include "threadInterface.hh"
 #include "debug.hh"
 #include "dpDebug.hh"
+#include "network.hh"
+
+//
+// This one is used by the 'Fault' library now;
+OZ_BI_define(BIcloseCon,1,1)
+{
+  OZ_declareIntIN(0,what);
+  OZ_RETURN(oz_int(openclose(what)));
+} OZ_BI_end
 
 #ifdef DEBUG_PERDIO
 
@@ -136,12 +145,6 @@ OZ_BI_define(BIdvset,2,0)
     DV->unset(what);
   }
   return PROCEED;
-} OZ_BI_end
-
-OZ_BI_define(BIcloseCon,1,1)
-{
-  OZ_declareIntIN(0,what);
-  OZ_RETURN(oz_int(openclose(what)));
 } OZ_BI_end
 
 #endif

@@ -44,4 +44,8 @@
                              out => ['value'],
                              BI  => BIgetEntityCond},
 
+    'tempSimulate'      => { in  => ['+int'],
+                             out => ['+int'],
+                             BI  => BIcloseCon},
+
  );

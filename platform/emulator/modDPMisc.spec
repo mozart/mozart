@@ -35,10 +35,6 @@
                              BI  => BIcrash,
                              doesNotReturn=>1},
 
-    'tempSimulate'      => { in  => ['+int'],
-                             out => ['+int'],
-                             BI  => BIcloseCon},
-
     'dvset'             => { in  => ['+int','+int'],
                              out => [],
                              BI  => BIdvset,
