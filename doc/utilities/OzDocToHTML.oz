@@ -241,6 +241,26 @@ define
       end
    end
 
+   local
+      fun {TheBetter C1 C2}
+         case C1.type#C2.type
+         of _#'HTML' then C2
+         [] 'HTML'#_ then C1
+         [] _#'LATEX' then C2
+         [] 'LATEX'#_ then C1
+         else C2 end
+      end
+      fun {Loop M I C}
+         if {HasFeature M I} then
+            {Loop M I+1 {TheBetter M.I C}}
+         else C end
+      end
+   in
+      fun {PickMathChoice M}
+         {Loop M 2 M.1}
+      end
+   end
+
    class OzDocToHTML from Narrator.'class'
       attr
          Reporter: unit
@@ -1084,7 +1104,7 @@ define
                unit
             [] 'math.choice' then HTML in
                MathDisplay <- M.display
-               OzDocToHTML, Process(M.1 ?HTML)   %--** make better choice
+               OzDocToHTML, Process({PickMathChoice M} ?HTML)   %--** make better choice
                MathDisplay <- unit
                HTML
             %-----------------------------------------------------------
