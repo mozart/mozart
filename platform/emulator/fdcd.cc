@@ -137,8 +137,7 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
       TypeError(1, "");
 
   if (suspend > 0) {
-    x_items.addForFDishSusps(createNonResSusp(OZ_self, OZ_args, OZ_arity));
-    return PROCEED;
+    return x_items.addSuspFDish();
   }
 
   TaggedRefPtr new_args = allocateRegs(b_tuple, v_tuple, vp_tuple);
