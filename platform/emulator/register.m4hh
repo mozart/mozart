@@ -150,11 +150,11 @@ define(M4INSTRTWOREGS,``''
                                     Reg2(getRegArg(PC+2)),
                                     NOFLATGUARD())) {
                    SHALLOWFAIL;
-                   HANDLE_FAILURE(message("%s = %s failed\n",
-                                          OZ_toC(Reg1(getRegArg(PC+1))),
-                                          OZ_toC(Reg2(getRegArg(PC+2)))),
-                                  message("In instruction UNIFY\n")
-                                  );
+                   HF_UNIFY("%s = %s failed\n",
+                            Reg1(getRegArg(PC+1)),
+                            Reg2(getRegArg(PC+2)),
+                            "In instruction UNIFY\n"
+                            );
                  }
                }''
                DISPATCH(3);
@@ -292,12 +292,11 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  SHALLOWFAIL;
-                 HANDLE_FAILURE(message("%s(..#%d..) = %s failed\n",
-                                        OZ_toC(getLiteralArg(PC+1)),
-                                        getPosIntArg(PC+2),
-                                        OZ_toC(Reg1(getRegArg(PC+3)))),
-                                message("In instruction GETSTRUCTURE\n");
-                                );
+                 HF_UNIFY("%s(...) = %s failed\n",
+                          getLiteralArg(PC+1),
+                          Reg1(getRegArg(PC+3)),
+                          "In instruction GETSTRUCTURE\n"
+                          );
                }''
                );
 
@@ -338,11 +337,11 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  SHALLOWFAIL;
-                 HANDLE_FAILURE(message("%s(..:.. ...) = %s failed\n",
-                                        OZ_toC(getLiteralArg(PC+1)),
-                                        OZ_toC(Reg1(getRegArg(PC+3)))),
-                                message("In instruction GETRECORD\n")
-                                );
+                 HF_UNIFY("%s(..:.. ...) = %s failed\n",
+                          getLiteralArg(PC+1),
+                          Reg1(getRegArg(PC+3)),
+                          "In instruction GETRECORD\n"
+                          );
                }''
                );
 
@@ -417,11 +416,11 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  SHALLOWFAIL;
-                 HANDLE_FAILURE(message("%s = %s failed\n",
-                                        OZ_toC(Reg1(getRegArg(PC+2))),
-                                        OZ_toC(getLiteralArg(PC+1))),
-                                message("In instruction GETCONSTANT\n")
-                                );
+                 HF_UNIFY("%s = %s failed\n",
+                          Reg1(getRegArg(PC+2)),
+                          getLiteralArg(PC+1),
+                          "In instruction GETCONSTANT\n"
+                          );
                }''
                );
 
@@ -450,11 +449,11 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  SHALLOWFAIL;
-                 HANDLE_FAILURE(message("%s = %s failed\n",
-                                        OZ_toC(Reg1(getRegArg(PC+2))),
-                                        OZ_toC(getNumberArg(PC+1))),
-                                message("In instruction GETINT\n")
-                                );
+                 HF_UNIFY("%s = %s failed\n",
+                          Reg1(getRegArg(PC+2)),
+                          getNumberArg(PC+1),
+                          "In instruction GETINT\n"
+                          );
                }''
                );
 
@@ -498,11 +497,11 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  SHALLOWFAIL;
-                 HANDLE_FAILURE(message("%s = %s|_ failed\n",
-                                        OZ_toC(Xreg(getRegArg(PC+1))),
-                                        OZ_toC(Reg1(getRegArg(PC+2)))),
-                                message("In instruction GETLISTVALVAR\n")
-                                );
+                 HF_UNIFY("%s = %s|_ failed\n",
+                          Xreg(getRegArg(PC+1)),
+                          Reg1(getRegArg(PC+2)),
+                          "In instruction GETLISTVALVAR\n"
+                          );
                }''
                );
 
@@ -540,10 +539,11 @@ define(M4INSTRTWOREGS,``''
 
 
                  SHALLOWFAIL;
-                 HANDLE_FAILURE(message("%s = _|_ failed\n",
-                                        OZ_toC(Reg1(getRegArg(PC+1)))),
-                                message("In instruction GETLIST\n")
-                                );
+                 HF_UNIFY("%s = _|_ failed\n",
+                          Reg1(getRegArg(PC+1)),
+                          makeTaggedNULL(),
+                          "In instruction GETLIST\n"
+                          );
                }''
                );
 
@@ -612,11 +612,11 @@ define(M4INSTRTWOREGS,``''
                      DISPATCH(2);
                    }
                    SHALLOWFAIL;
-                   HANDLE_FAILURE(message("%s = %s failed\n",
-                                          OZ_toC(*(sPointer-1)),
-                                          OZ_toC(Reg1(reg))),
-                                  message("In instruction UNIFYVALUE\n")
-                                  );
+                   HF_UNIFY("%s = %s failed\n",
+                            *(sPointer-1),
+                            Reg1(reg),
+                            "In instruction UNIFYVALUE\n"
+                            );
                  }
                }''
                );
@@ -639,11 +639,11 @@ define(M4INSTRTWOREGS,``''
                    if ( !e->fastUnify(Reg1(reg), makeTaggedRef(sPointer),
                                       NOFLATGUARD()) ) {
                      SHALLOWFAIL;
-                     HANDLE_FAILURE(message("%s = %s failed\n",
-                                            OZ_toC(*sPointer),
-                                            OZ_toC(Reg1(reg))),
-                                    message("In instruction UNIFYVALVAR\n")
-                                    );
+                     HF_UNIFY("%s = %s failed\n",
+                              *sPointer,
+                              Reg1(reg),
+                              "In instruction UNIFYVALVAR\n"
+                              );
                    }
 
                    Reg2(getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
@@ -670,11 +670,11 @@ define(M4INSTRTWOREGS,``''
         }
 
         SHALLOWFAIL;
-        HANDLE_FAILURE(message("%s = %s failed\n",
-                               OZ_toC(getLiteralArg(PC+1)),
-                               OZ_toC(*(sPointer-1))),
-                       message("In instruction UNIFYCONSTANT\n")
-                       );
+        HF_UNIFY("%s = %s failed\n",
+                 getLiteralArg(PC+1),
+                 *(sPointer-1),
+                 "In instruction UNIFYCONSTANT\n"
+                 );
       }
     }
 
@@ -693,11 +693,11 @@ define(M4INSTRTWOREGS,``''
         }
 
         SHALLOWFAIL;
-        HANDLE_FAILURE(message("%s = %s failed\n",
-                               OZ_toC(getNumberArg(PC+1)),
-                               OZ_toC(*(sPointer-1))),
-                       message("In instruction UNIFYINT\n")
-                       );
+        HF_UNIFY("%s = %s failed\n",
+                 getNumberArg(PC+1),
+                 *(sPointer-1),
+                 "In instruction UNIFYINT\n"
+                 );
       }
     }
 
