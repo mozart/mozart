@@ -125,7 +125,8 @@ starts the emulator under gdb")
 (defconst oz-remove-pattern
   (concat oz-error-string 
 	  "\\|" (char-to-string 18) "\\|" (char-to-string 19) "\\|
-")
+"
+	  "\\|\\\\line.*% fromemacs\n")
   "")
 
 
@@ -360,8 +361,6 @@ starts the emulator under gdb")
     ("-----")    
     ("Start Oz" . run-oz)
     ("Halt Oz"  . oz-halt)
-;;    ("-----")
-;;    ("Debugger" . oz-debug-start)
     ))
 
   "The contents of the Oz menu")
@@ -370,33 +369,6 @@ starts the emulator under gdb")
   "Load the definitions for communication from Oz to Emacs" t)
 
 (oz-make-menu oz-menu)
-
-;;------------------------------------------------------------
-;; Debugger stuff
-;;------------------------------------------------------------
-
-(defun oz-debug-start()
-  "Start the debugger."
-  (interactive)
-  (oz-insert-file "tools/ozcar/main.oz")
-  (oz-send-string "\\sw -optimize +debuginfo"))
-
-(defun oz-debug-stop()
-  "Stop the debugger."
-  (interactive)
-  (oz-debug-cont)
-  (oz-send-string "{Ozcar exit}")
-  (oz-send-string "\\sw +optimize -debuginfo"))
-  
-(defun oz-debug-step()
-  "Activate step mode."
-  (interactive)
-  (setq oz-step-mode t))
-
-(defun oz-debug-cont()
-  "Deactivate step mode."
-  (interactive)
-  (setq oz-step-mode nil))
 
 
 ;;------------------------------------------------------------
@@ -408,7 +380,6 @@ starts the emulator under gdb")
 Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (interactive)
   (oz-check-running t)
-  (oz-debug-cont) ;; be sure the debugger is _off_ on startup
   (if (not (equal mode-name "Oz"))
       (oz-new-buffer))
   (oz-show-buffer (get-buffer oz-compiler-buffer)))
@@ -638,7 +609,16 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-feed-region (start end)
   "Feeds the region."
   (interactive "r")
-  (oz-send-string (buffer-substring start end))
+
+  (oz-send-string (concat "\\line "
+			  (+ 1 (count-lines (point-min) start))
+			  " '"
+			  (if (buffer-file-name)
+			      (buffer-file-name)
+			    "nofile")
+			  "' % fromemacs\n"
+			  (buffer-substring start end)))
+
   (setq oz-last-fed-region-start (copy-marker start))
   (oz-zmacs-stuff))
 
@@ -1128,11 +1108,6 @@ the GDB commands `cd DIR' and `directory'."
     (define-key map "\C-c\C-b"     'oz-feed-region-browse)
     (define-key map "\M-n"         'oz-next-buffer)
     (define-key map "\M-p"         'oz-previous-buffer)
-    (define-key map "\C-c\C-d\C-r" 'oz-debug-start)
-    (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
-    (define-key map "\C-c\C-d\C-s" 'oz-debug-step)
-    (define-key map "\C-c\C-d\C-c" 'oz-debug-cont)
-
     )
 
   (define-key map "\M-\C-x"	'oz-feed-paragraph)
@@ -1563,10 +1538,7 @@ OZ compiler, emulator and error window")
 
 (defun oz-insert-file (file)
   "insert an file into the Oz Compiler"
-  (if oz-step-mode
-      (progn (write-region 1 1 "/tmp/ozdebugmagic")
-	     (oz-send-string (concat "\\threadedfeed '" file "'")))
-    (oz-send-string (concat "\\threadedfeed '" file "'"))))
+  (oz-send-string (concat "\\threadedfeed '" file "'")))
 
 (defun oz-precompile-file (file)
   "precompile an Oz file"
