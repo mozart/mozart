@@ -53,7 +53,7 @@ export
 
 body
 
-   TimeoutToConfigBar = 100
+   TimeoutToConfigBar = 200
    TimeoutToUpdateBar = TimeoutToConfigBar
 
    fun {UnknownFile F}
