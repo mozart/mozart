@@ -73,7 +73,11 @@ in
 
    PrivateSend = {NewName}
 
+\ifdef LILO
+   !Ozcar =
+\else
    Ozcar =
+\endif
    {New class
 
 	   prop

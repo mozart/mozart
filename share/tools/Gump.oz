@@ -2,8 +2,12 @@
 %%% Author:
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%
+%%% Contributor:
+%%%   Christian Schulte <schulte@dfki.de>
+%%%
 %%% Copyright:
-%%%   Leif Kornstaedt, 1998
+%%%   Leif Kornstaedt, 1997
+%%%   Christian Schulte, 1998
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -18,6 +22,30 @@
 %%% of this file, and for a DISCLAIMER OF ALL
 %%% WARRANTIES.
 %%%
+
+\ifdef LILO
+
+functor $
+
+import
+   SP.{System  = 'System'
+       Foreign = 'Foreign'}
+
+   OP.{Open = 'Open'
+       OS   = 'OS'}
+
+export
+   'Gump': Gump
+   
+body
+   \insert gump/Main.oz
+in
+   Gump = gump(makeProductionTemplates: MakeProductionTemplates
+	       transformScanner: TransformScanner
+	       transformParser: TransformParser)
+end
+
+\else
 
 fun instantiate {$ IMPORT}
    \insert 'SP.env'
@@ -35,3 +63,6 @@ in
       \insert Gump.env
    end
 end
+
+\endif
+

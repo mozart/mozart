@@ -2,8 +2,12 @@
 %%% Author:
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%
+%%% Contributor:
+%%%   Christian Schulte <schulte@dfki.de>
+%%%
 %%% Copyright:
-%%%   Leif Kornstaedt, 1998
+%%%   Leif Kornstaedt, 1997
+%%%   Christian Schulte, 1998
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -19,6 +23,24 @@
 %%% WARRANTIES.
 %%%
 
+\ifdef LILO
+
+functor $
+
+import
+   SP.{System   = 'System'}
+
+export
+   'GumpParser': GumpParser
+
+body
+
+   \insert gump/GumpParserClass
+
+end
+
+\else
+
 fun instantiate {$ IMPORT}
    \insert 'SP.env'
    = IMPORT.'SP'
@@ -30,3 +52,5 @@ in
       \insert GumpParser.env
    end
 end
+
+\endif

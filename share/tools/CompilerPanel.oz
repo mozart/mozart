@@ -19,6 +19,45 @@
 %%% WARRANTIES.
 %%%
 
+\ifdef LILO
+
+functor $
+
+import
+   SP.{System  = 'System'
+       Error   = 'Error'
+       Foreign = 'Foreign'
+       Show    = 'Show'}
+
+   CP.{FS = 'FS'}
+
+   OP.{Open      = 'Open'
+       Load      = 'Load'
+       Component = 'Component'}
+
+   WP.{Tk      = 'Tk'
+       TkTools = 'TkTools'}
+
+   Compiler.{RealCompiler = 'Compiler'}
+
+   Browser.{Browse = 'Browse'}
+
+   Emacs.{RealEmacs = 'Emacs'}
+
+export
+   'CompilerPanel': CompilerPanel
+
+body
+   Compiler = RealCompiler
+   Emacs    = RealEmacs
+in
+   \insert compilerPanel/CompilerPanelClass
+
+end
+
+\else
+
+
 fun instantiate {$ IMPORT}
    \insert 'SP.env'
    = IMPORT.'SP'
@@ -41,3 +80,6 @@ in
       \insert 'CompilerPanel.env'
    end
 end
+
+
+\endif
