@@ -376,74 +376,51 @@ extern void oz_forceWakeUp(SuspList **);
 /*
  * This is the definitive casting table
  *
- *  L=    R=| OPT   | SI    | FU    | EX    | OF    | CT    | FS    | BOOL  | FD    |
- *  ---------------------------------------------------------------------------------
- *  OPT     | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- *  ---------------------------------------------------------------------------------
- *  SI      | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- *  ---------------------------------------------------------------------------------
- *  FU      | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- *  ---------------------------------------------------------------------------------
- *  EX      | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- *  ---------------------------------------------------------------------------------
- *  OF      | R->OF | R->OF | SUSP  | SUSP  | NOOP  | CLASH | CLASH | CLASH | CLASH |
- *  ---------------------------------------------------------------------------------
- *  CT      | R->CT | R->CT | SUSP  | SUSP  | CLASH | NOOP  | CLASH | CLASH | CLASH |
- *  ---------------------------------------------------------------------------------
- *  FS      | R->FS | R->FS | SUSP  | SUSP  | CLASH | CLASH | NOOP  | CLASH | CLASH |
- *  ---------------------------------------------------------------------------------
- *  BOOL    | R->BO | R->BO | SUSP  | SUSP  | CLASH | CLASH | CLASH | NOOP  | NOOP  |
- *  ---------------------------------------------------------------------------------
- *  FD      | R->FD | R->FD | SUSP  | SUSP  | CLASH | CLASH | CLASH | NOOP  | NOOP  |
- *  ---------------------------------------------------------------------------------
+ * (SIQU=SIMPLE_QUIET, ROQU=READONLY_QUIET, RO=READONLY, FAIL=FAILED)
  *
- * Comments (kost@):
+ * L=  R=| OPT   | SIQU  | SI    | EXT   | ROQU  | RO    | FU    | FAIL  | OF    | CT    | FS    | BOOL  | FD    |
+ * ---------------------------------------------------------------------------------------------------------------
+ * OPT   | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * ---------------------------------------------------------------------------------------------------------------
+ * SIQU  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * ---------------------------------------------------------------------------------------------------------------
+ * SI    | R->SI | R->SI | NOOP  | NOOP  | R->RO | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * ---------------------------------------------------------------------------------------------------------------
+ * EXT   | R->SI | R->SI | NOOP  | NOOP  | R->RO | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * ---------------------------------------------------------------------------------------------------------------
+ * ROQU  | NOOP  | NOOP  | NOOP  | NOOP  | R->RO | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * ---------------------------------------------------------------------------------------------------------------
+ * RO    | R->SI | R->SI | NOOP  | NOOP  | R->RO | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * ---------------------------------------------------------------------------------------------------------------
+ * FU    | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * ---------------------------------------------------------------------------------------------------------------
+ * FAIL  | NOOP  | NOOP  | NOOP  | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * ---------------------------------------------------------------------------------------------------------------
+ * OF    | R->OF | R->OF | R->OF | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | CLASH | CLASH | CLASH |
+ * ---------------------------------------------------------------------------------------------------------------
+ * CT    | R->CT | R->CT | R->CT | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | CLASH | NOOP  | CLASH | CLASH | CLASH |
+ * ---------------------------------------------------------------------------------------------------------------
+ * FS    | R->FS | R->FS | R->FS | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | CLASH | CLASH | NOOP  | CLASH | CLASH |
+ * ---------------------------------------------------------------------------------------------------------------
+ * BOOL  | R->BO | R->BO | R->BO | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | CLASH | CLASH | CLASH | NOOP  | NOOP  |
+ * ---------------------------------------------------------------------------------------------------------------
+ * FD    | R->FD | R->FD | R->FD | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | CLASH | CLASH | CLASH | NOOP  | NOOP  |
+ * ---------------------------------------------------------------------------------------------------------------
+ *
+ * Comments (kost@, raph+fsp):
+ * -  The transitions R->SI and R->RO actually reflect the fact that the
+ *    right-hand side becomes needed.
  * -  Ext -> *      is ignored here: that's the business of that ext var itself!
  *                  Notably, the distribution one;
  * -  Future -> *   is, and has to be, handled by the Future::bind. Don't return 
  *                  'SUSPEND' here!
+ * -  ReadOnly -> * idem
  * -  Ct -> Future  cannot proceed: unification of Ct"s require a Ct or a non-variable
  *                  at the right hand side, which is not possible due to the nature.
  * -  Ct -> Ext     cannot proceed either: don't know how to make a Ct out of it!
+ * -  Ct -> Failed  actually suspends on the right-hand side.  This forces
+ *                  the failed value to raise its exception.
  *
- *
- * raph+fsp: We added new cases, namely quiet variables and read-onlys
- *
- *  L=    R=| OPT   | SI    | FU    | EX    | OF    | CT    | FS    | BOOL  | FD    |
- *  ---------------------------------------------------------------------------------
- *  SIQU    | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- *  ---------------------------------------------------------------------------------
- *  ROQU    | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- *  ---------------------------------------------------------------------------------
- *  RO      | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- *  ---------------------------------------------------------------------------------
- *
- *  L=    R=| SIQU  | ROQU  | RO    |
- *  ---------------------------------
- *  OPT     | NOOP  | NOOP  | NOOP  |
- *  ---------------------------------
- *  SIQU    | NOOP  | NOOP  | NOOP  |
- *  ---------------------------------
- *  SI      | R->SI | R->RO | NOOP  |
- *  ---------------------------------
- *  ROQU    | NOOP  | R->RO | NOOP  |
- *  ---------------------------------
- *  RO      | NOOP  | R->RO | NOOP  |
- *  ---------------------------------
- *  FU      | NOOP  | NOOP  | NOOP  |
- *  ---------------------------------
- *  EX      | NOOP  | NOOP  | NOOP  |
- *  ---------------------------------
- *  OF      | R->OF | SUSP  | SUSP  |
- *  ---------------------------------
- *  CT      | R->CT | SUSP  | SUSP  |
- *  ---------------------------------
- *  FS      | R->FS | SUSP  | SUSP  |
- *  ---------------------------------
- *  BOOL    | R->BO | SUSP  | SUSP  |
- *  ---------------------------------
- *  FD      | R->FD | SUSP  | SUSP  |
- *  ---------------------------------
  */
 
 #define VARTP(T1,T2) ((T1<<4)|T2)
@@ -498,19 +475,21 @@ OZ_Return oz_var_cast(TaggedRef * & fp, Board * fb, TypeOfVariable tt) {
     tv = new OzOFVariable(fb);
     break;
 
-  case VTP(SIMPLE,SIMPLE_QUIET):
-    ((SimpleVar *) fv)->becomeNeeded();
-    return PROCEED;
-
+  case VTP(SIMPLE,OPT): case VTP(SIMPLE,SIMPLE_QUIET):
   case VTP(SIMPLE,READONLY_QUIET):
-    ((ReadOnly *) fv)->becomeNeeded();
-    return PROCEED;
-
+  case VTP(EXT,OPT): case VTP(EXT,SIMPLE_QUIET):
+  case VTP(EXT,READONLY_QUIET):
   case VTP(READONLY_QUIET,READONLY_QUIET):
+  case VTP(READONLY,OPT): case VTP(READONLY,SIMPLE_QUIET):
   case VTP(READONLY,READONLY_QUIET):
-    // this makes the unification of readonlys a demanding operation
-    ((ReadOnly *) fv)->becomeNeeded();
-    return PROCEED;
+    // makes the right-hand side needed
+    // Note: The unification of readonlys is a demanding operation
+    return oz_var_makeNeeded(fp);
+
+  case VTP(OF,FAILED): case VTP(CT,FAILED): case VTP(FS,FAILED):
+  case VTP(BOOL,FAILED): case VTP(FD,FAILED):
+    // forces the failed value to raise its exception
+    return oz_var_addSusp(fp, oz_currentThread());
 
   default:
     return PROCEED;
