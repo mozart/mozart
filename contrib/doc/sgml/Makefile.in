@@ -17,6 +17,8 @@ LIB_TARGETS	= $(addprefix $(LIB_DIR)/,$(TARGETS))
 NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib/doc/sgml
 NEW_TARGETS	= $(addprefix $(NEWCACHEDIR)/,$(TARGETS))
 
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+
 all:		$(TARGETS)
 install:	$(NEWCACHEDIR) $(NEW_TARGETS)
 
@@ -30,7 +32,7 @@ $(NEW_TARGETS): $(NEWCACHEDIR)/% : %
 	$(INSTALL_LIB) $< $@
 
 %.ozf: %.oz
-	$(OZC) -z 9 -c $< -o $@
+	$(OZC) -z 9 -c $(shell $(CYGPATH) "$<") -o $@
 
 clean veryclean:
 	-rm -f *~ *.ozf
