@@ -154,28 +154,28 @@ no fault detection at that level.
 
 <list>
 <entry/<code/{Fault.defaultEnable FStates ??{B}}//
-<item>Set the default fault detection to <<FStates>> on the current site.
+<item>Sets the default fault detection to <<FStates>> on the current site.
 When an operation is attempted on an entity and
 there is no fault detection on the site or thread level for
 the entity, then the default fault detection is used.
 This always succeeds.
 
 <entry/<code/{Fault.defaultDisable ??{B}}//
-<item>Set the default fault detection to <<nil>> on the current site.
+<item>Sets the default fault detection to <<nil>> on the current site.
 This always succeeds.
 
 <entry/<code/{Fault.enable Entity Level FStates ??{B}}//
-<item>Enable fault detection on a given entity
+<item>Enables fault detection on a given entity
 at a given level for a given set of fault states.
 An exception is raised if a fault is detected
 when an operation is attempted on the entity.
 
 <entry/<code/{Fault.disable Entity Level ??{B}}//
-<item>Disable fault detection on a given entity
+<item>Disables fault detection on a given entity
 at a given level.
 
 <entry/<code/{Fault.install Entity Level FStates HandlerProc ??{B}}//
-<item>Install a handler for fault detection on a given entity
+<item>Installs a handler for fault detection on a given entity
 at a given level for a given set of fault states.
 The handler <<{HandlerProc Entity AFStates OP}>> is called
 if a fault is detected when an operation is attempted on the entity.
@@ -185,11 +185,11 @@ handlers installed on variables always retry
 the operation after they return.
 
 <entry/<code/{Fault.deInstall Entity Level ??{B}}//
-<item>Deinstall a handler for fault detection on a given
+<item>Deinstalls a handler for fault detection on a given
 entity at a given level.
 
 <entry/<code/{Fault.installWatcher Entity FStates WatcherProc}//
-<item>Install a watcher for fault detection on a given entity
+<item>Installs a watcher for fault detection on a given entity
 for a given set of fault states.
 Any number of watchers can be installed on an entity.
 Therefore this call always succeeds.
@@ -197,7 +197,7 @@ The watcher <<{WatcherProc Entity AFStates}>> is called
 in its own thread as soon as the site detects a fault.
 
 <entry/<code/{Fault.deInstallWatcher Entity WatcherProc}//
-<item>Deinstall the given watcher on a given entity.
+<item>Deinstalls the given watcher on a given entity.
 This call succeeds if <<WatcherProc>> was installed
 on the entity.
 If there is more than one instance of <<WatcherProc>>
