@@ -265,20 +265,23 @@ void AM::init(int argc,char **argv)
   statusReg    = (StatusBit)0;
   criticalFlag = NO;
 
-  rootBoard = new Board(NULL,Bo_Root);
-  rootBoard->setInstalled();
-  currentBoard = NULL;
+  _rootBoard = new Board(NULL,Bo_Root);
+  _rootBoard->setInstalled();
+  _currentBoard = NULL;
   cachedStack  = NULL;
   cachedSelf   = NULL;
   shallowHeapTop = NULL;
-  setCurrent(rootBoard,OK);
-  currentSolveBoard = (Board *) NULL; 
+  setCurrent(_rootBoard,OK);
+  _currentSolveBoard = (Board *) NULL; 
   wasSolveSet = NO; 
 
   lastThreadID    = 0;
   debugStreamTail = OZ_newVariable();
 
   initThreads();
+  ozstat.createdThreads.incf();
+  _rootThread = mkRunnableThread(DEFAULT_PRIORITY, _rootBoard);
+
   toplevelQueue = (Toplevel *) NULL;
 
   // builtins
@@ -323,9 +326,9 @@ void AM::init(int argc,char **argv)
       fprintf(stderr,"Maybe recompilation needed?\n");
       exit(1);
     }
-    Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, am.rootBoard);
+    Thread *tt = mkRunnableThread(DEFAULT_PRIORITY, _rootBoard);
     tt->pushCall(v, 0, 0);
-    am.scheduleThread(tt);
+    scheduleThread(tt);
   }
 
 #ifdef DEBUG_CHECK
@@ -373,13 +376,13 @@ Bool AM::isLocalUVarOutline(TaggedRef var, TaggedRef *varPtr)
     bb=bb->derefBoard();
     *varPtr=makeTaggedUVar(bb);
   }
-  return  bb == currentBoard;
+  return isCurrentBoard(bb);
 }
 
 Bool AM::isLocalSVarOutline(SVariable *var)
 {
   Board *home = var->getHomeUpdate();
-  return home == currentBoard;
+  return isCurrentBoard(home);
 }
 
 
@@ -391,7 +394,7 @@ Bool AM::installScript(Script &script)
   for (int index = 0; index < script.getSize(); index++) {
     if (!unify(script[index].getLeft(),script[index].getRight())) {
       ret = NO;
-      if (!isToplevel()) {
+      if (!onToplevel()) {
 	break;
       }
     }
@@ -419,10 +422,7 @@ Board *getVarBoard(TaggedRef var)
 
   if (isUVar(var))
     return tagged2VarHome(var);
-  if (isSVar(var))
-    return tagged2SVar(var)->getHome1();
-
-  return taggedCVar2SVar(var)->getHome1();
+  return tagged2SVarPlus(var)->getHome1();
 }  
 
 
@@ -597,11 +597,6 @@ loop:
       goto next;
     goto fail;
 
-  case OZCONST:
-    if (tagged2Const(term1)->unify(term2,scp))
-      goto next;
-    goto fail;
-
   case LTUPLE:
     {
       COUNT(recRecUnify);
@@ -638,8 +633,9 @@ loop:
       goto next;
     goto fail;
     
+  case OZCONST:
   case LITERAL:
-    /* literals unify if their pointers are equal */
+    /* literals and constants unify if their pointers are equal */
   default:
     goto fail;
   }
@@ -690,7 +686,7 @@ exit:
 BFlag AM::isBetween(Board *to, Board *varHome)
 {
   while (1) {
-    if (to == currentBoard) return B_BETWEEN;
+    if (isCurrentBoard(to)) return B_BETWEEN;
     if (to == varHome) return B_NOT_BETWEEN;
     to = to->getParentAndTest();
     if (!to) return B_DEAD;
@@ -701,7 +697,7 @@ Bool AM::isBelow(Board *below, Board *above)
 {
   while (1) {
     if (below == above) return OK;
-    if (below == rootBoard) return NO;
+    if (isRootBoard(below)) return NO;
     below = below->getParent();
   }
 }
@@ -769,7 +765,7 @@ Bool AM::wakeUpBoard(Thread *tt, Board *home)
   // Note that we don't need to schedule the wakeup for the board
   // because in both cases there is a thread which will check 
   // entailment for us;
-  if (bb == currentBoard || bb->isNervous ()) {
+  if (isCurrentBoard(bb) || bb->isNervous ()) {
 #ifdef DEBUG_CHECK
     // because of assertions in decSuspCount and getSuspCount
     if (bb->isFailed()) {
@@ -801,7 +797,7 @@ Bool AM::wakeUpBoard(Thread *tt, Board *home)
   //  General case;
   switch (isBetween(bb, home)) {
   case B_BETWEEN:
-    Assert(!currentBoard->isSolve() || currentSolveBoard);
+    Assert(!currentBoard()->isSolve() || isBelowSolveBoard());
     wakeupToRunnable(tt);
     scheduleThread(tt);
     return OK;
@@ -870,8 +866,8 @@ SuspList * AM::checkSuspensionList(SVariable * var,
 
 PROFILE_CODE1
   (
-   if (GETBOARD(var) == currentBoard) {
-     if (GETBOARD(thr) == currentBoard)
+   if (isCurrentBoard(GETBOARD(var))) {
+     if (isCurrentBoard(GETBOARD(thr)))
        FDProfiles.inc_item(from_home_to_home_hits); 
      else
        FDProfiles.inc_item(from_home_to_deep_hits);
@@ -932,19 +928,19 @@ static
 Board *varHome(TaggedRef val) {
   if (isUVar(val)) {
     return tagged2VarHome(val);
-  } else if (isSVar(val)) {
-    return GETBOARD(tagged2SVar(val));
   } else {
-    return GETBOARD(taggedCVar2SVar(val));
+    return GETBOARD(tagged2SVarPlus(val));
   }
 }
+#endif
 
+#ifdef DEBUG_CHECK
 static
 Bool checkHome(TaggedRef *vPtr) {
   TaggedRef val = deref(*vPtr);
 
   return !isAnyVar(val) ||
-    am.isBelow(am.currentBoard,varHome(val));
+    am.isBelow(am.currentBoard(),varHome(val));
 }
 #endif
 
@@ -1032,7 +1028,7 @@ InstType AM::installPath(Board *to)
     return INST_OK;
   }
 
-  Assert(to != rootBoard);
+  Assert(!isRootBoard(to));
 
   Board *par=to->getParentAndTest();
   if (!par) {
@@ -1065,7 +1061,7 @@ void AM::reduceTrailOnSuspend()
 {
   if (!trail.isEmptyChunk()) {
     int numbOfCons = trail.chunkSize();
-    Board * bb = currentBoard;
+    Board * bb = currentBoard();
     bb->newScript(numbOfCons);
 
     //
@@ -1109,22 +1105,7 @@ void AM::reduceTrailOnFail()
   trail.popMark();
 }
 
-inline void mkSusp(TaggedRef *ptr, Thread *t)
-{
-  if (t) {
-    addSuspAnyVar(ptr,t);
-  } else {
-    am.addSuspendVarList(ptr);
-  }
-}
-
-/*
- * shallow guards sometimes do not bind variables but only push them
- * if thread is NULL then we are called from '==':
- * return the list of variable in am.suspendVarList otherwise
- * add "thread" to susplist
- */
-void AM::reduceTrailOnShallow(Thread *thread)
+void AM::reduceTrailOnShallow()
 {
   suspendVarList = makeTaggedNULL();
 
@@ -1140,14 +1121,42 @@ void AM::reduceTrailOnShallow(Thread *thread)
 
     unBind(refPtr,value);
 
-    /* test if only trailed to create thread and not bound ? */
+    /*
+     * shallow guards don't bind variables always.
+     *  in INLINEREL/FUNs they are only pushed (pushIfVar) onto the trail
+     */
     if (refPtr!=ptrOldVal) {
       if (isAnyVar(oldVal)) {
-	mkSusp(ptrOldVal,thread);
+	addSuspAnyVar(ptrOldVal,currentThread());
       }
     }
 
-    mkSusp(refPtr,thread);
+    addSuspAnyVar(refPtr,currentThread());
+  }
+  trail.popMark();
+}
+
+void AM::reduceTrailOnEqEq()
+{
+  suspendVarList = makeTaggedNULL();
+
+  while(!trail.isEmptyChunk()) {
+    TaggedRef *refPtr;
+    TaggedRef value;
+    trail.popRef(refPtr,value);
+
+    Assert(isAnyVar(value));
+
+    TaggedRef oldVal = makeTaggedRef(refPtr);
+    DEREF(oldVal,ptrOldVal,_1);
+
+    unBind(refPtr,value);
+
+    if (isAnyVar(oldVal)) {
+      addSuspendVarList(ptrOldVal);
+    }
+
+    addSuspendVarList(refPtr);
   }
   trail.popMark();
 }
@@ -1260,7 +1269,7 @@ int AM::awakeIO(int, void *var) {
 
 void AM::awakeIOVar(TaggedRef var)
 {
-  Assert(isToplevel());
+  Assert(onToplevel());
   Assert(isCons(var));
 
   if (OZ_unify(OZ_head(var),OZ_tail(var)) != PROCEED) {
@@ -1276,24 +1285,24 @@ static Board *oldSolveBoard = (Board *) NULL;
 void AM::setCurrent(Board *c, Bool checkNotGC)
 {
   Assert(!c->isCommitted() && !c->isFailed());
-  Assert(!checkNotGC || oldBoard == currentBoard);
+  Assert(!checkNotGC || isCurrentBoard(oldBoard));
 
-  currentBoard = c;
+  _currentBoard = c;
   _currentUVarPrototype = makeTaggedUVar(c);
   DebugCheckT(oldBoard=c);
 
   if (c->isSolve ()) {
-    Assert(!checkNotGC || oldSolveBoard == currentSolveBoard);
+    Assert(!checkNotGC || oldSolveBoard == _currentSolveBoard);
 
-    currentSolveBoard = c;
+    _currentSolveBoard = c;
     wasSolveSet = OK; 
     DebugCode (oldSolveBoard = c); 
   } else if (wasSolveSet == OK) {
-    Assert(!checkNotGC || oldSolveBoard == currentSolveBoard);
+    Assert(!checkNotGC || oldSolveBoard == _currentSolveBoard);
 
-    currentSolveBoard = c->getSolveBoard();
+    _currentSolveBoard = c->getSolveBoard();
     wasSolveSet = NO;
-    DebugCode (oldSolveBoard = currentSolveBoard); 
+    DebugCode (oldSolveBoard = _currentSolveBoard); 
   }
 }
 
@@ -1322,7 +1331,7 @@ Bool AM::loadQuery(CompStream *fd)
 void AM::select(int fd, int mode, OZ_IOHandler fun, void *val)
 {
   Assert(fd<osOpenMax());
-  if (!isToplevel()) {
+  if (!onToplevel()) {
     warning("select only on toplevel");
     return;
   }
@@ -1334,7 +1343,7 @@ void AM::select(int fd, int mode, OZ_IOHandler fun, void *val)
 
 void AM::acceptSelect(int fd, OZ_IOHandler fun, void *val)
 {
-  if (!isToplevel()) {
+  if (!onToplevel()) {
     warning("select only on toplevel");
     return;
   }
@@ -1346,7 +1355,7 @@ void AM::acceptSelect(int fd, OZ_IOHandler fun, void *val)
 
 int AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
 {
-  if (!isToplevel()) {
+  if (!onToplevel()) {
     warning("select only on toplevel");
     return OK;
   }
@@ -1361,7 +1370,7 @@ int AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
 
 void AM::acceptSelect(int fd,TaggedRef l,TaggedRef r)
 {
-  if (!isToplevel()) {
+  if (!onToplevel()) {
     warning("acceptSelect only on toplevel");
     return;
   }
@@ -1445,6 +1454,77 @@ void AM::checkIO()
   }
 }
 
+void AM::suspendEngine()
+{
+  deinstallPath(_rootBoard);
+
+  ozstat.printIdle(stdout);
+
+  osBlockSignals(OK);
+
+  while (1) {
+
+    if (isSetSFlag(UserAlarm)) {
+      handleUser();
+    }
+
+    if (isSetSFlag(IOReady) || (compStream && !compStream->bufEmpty())) {
+      handleIO();
+    }
+    
+    if (!threadQueuesAreEmpty()) {
+      break;
+    }
+
+    if (compStream && isStandalone() && !compStream->cseof()) {
+      loadQuery(compStream);
+      continue;
+    }
+    Assert(!compStream || compStream->bufEmpty());
+
+    int ticksleft = osBlockSelect(userCounter);
+    setSFlag(IOReady);
+
+    if (userCounter>0 && ticksleft==0) {
+      handleUser();
+      continue;
+    }
+
+    setUserAlarmTimer(ticksleft);
+  }
+
+  ozstat.printRunning(stdout);
+  
+  // restart alarm
+  osSetAlarmTimer(CLOCK_TICK/1000);
+
+  osUnblockSignals();
+}
+
+void AM::checkStatus()
+{
+  if (isSetSFlag(StartGC)) {
+      deinstallPath(_rootBoard);
+      doGC();
+  }
+  if (isSetSFlag(StopThread)) {
+    unsetSFlag(StopThread);
+  }
+  if (isSetSFlag(UserAlarm)) {
+    deinstallPath(_rootBoard);
+    osBlockSignals();
+    handleUser();
+    osUnblockSignals();
+  }
+  if (isSetSFlag(IOReady)) {
+    deinstallPath(_rootBoard);
+    osBlockSignals();
+    handleIO();
+    osUnblockSignals();
+  }
+}
+
+
 /* -------------------------------------------------------------------------
  * Search
  * -------------------------------------------------------------------------*/
@@ -1467,7 +1547,7 @@ void AM::checkIO()
 int AM::incSolveThreads(Board *bb)
 {
   int ret = NO;
-  while (!bb->isRoot()) {
+  while (!isRootBoard(bb)) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
       ret = OK;
@@ -1488,7 +1568,7 @@ int AM::incSolveThreads(Board *bb)
 
 void AM::decSolveThreads(Board *bb)
 {
-  while (!bb->isRoot()) {
+  while (!isRootBoard(bb)) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
       SolveActor *sa = SolveActor::Cast(bb->getActor());
@@ -1516,7 +1596,7 @@ void AM::decSolveThreads(Board *bb)
  */
 Bool AM::isInSolveDebug (Board *bb)
 {
-  while (!bb->isRoot()) {
+  while (!isRootBoard(bb)) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
       SolveActor *sa = SolveActor::Cast(bb->getActor());
@@ -1535,7 +1615,7 @@ Bool AM::isStableSolve(SolveActor *sa)
 {
   if (sa->getThreads() != 0) 
     return NO;
-  if (sa->getSolveBoard() == currentBoard &&
+  if (isCurrentBoard(sa->getSolveBoard()) &&
       !trail.isEmptyChunk())
     return NO;
   // simply "don't worry" if in all other cases it is too weak;
@@ -1570,13 +1650,13 @@ public:
  */
 void AM::pushToplevel(ProgramCounter pc)
 {
-  Assert(rootThread->isEmpty());
+  Assert(rootThread()->isEmpty());
   // kost@ : MOD!!! TODO?
   // rootBoard->incSuspCount();
-  rootThread->getTaskStackRef()->pushCont(pc,toplevelVars,NULL);
-  if (rootThread!=currentThread && !isScheduledSlow(rootThread)) {
-    Assert(rootThread->isRunnable());
-    scheduleThread(rootThread);
+  rootThread()->getTaskStackRef()->pushCont(pc,toplevelVars,NULL);
+  if (rootThread()!=currentThread() && !isScheduledSlow(rootThread())) {
+    Assert(rootThread()->isRunnable());
+    scheduleThread(rootThread());
   }
 }
 
@@ -1600,7 +1680,7 @@ void AM::checkToplevel()
 
 void AM::addToplevel(ProgramCounter pc)
 {
-  if (rootThread->isEmpty() && rootThread->isRunnable()) {
+  if (rootThread()->isEmpty() && rootThread()->isRunnable()) {
     // Verbose((VERB_THREAD,"addToplevel: push\n"));
     pushToplevel(pc);
   } else {
@@ -1806,32 +1886,16 @@ int AM::wakeUser()
 
 
 
-OZ_Term AM::dbgGetLoc(Board *bb) {
-  OZ_Term out = nil();
-  while (!bb->isRoot()) {
-    if (bb->isSolve()) {
-      out = cons(OZ_atom("space"),out);
-    } else if (bb->isAsk()) {
-      out = cons(OZ_atom("cond"),out);
-    } else if (bb->isWait()) {
-      out = cons(OZ_atom("dis"),out);
-    } else {
-      out = cons(OZ_atom("???"),out);
-    }
-    bb=bb->getParent();
-  }
-  return out;
-}
 
 
 void AM::checkDebugOutline(Thread *tt)
 {
   Assert(debugmode());
-  if (currentThread && tt->getThrType() == S_RTHREAD)
-    if (currentThread == rootThread && ozconf.addEmacsThreads ||
-	currentThread->getTrace() && ozconf.addSubThreads) {
+  if (currentThread() && tt->getThrType() == S_RTHREAD)
+    if (currentThread() == rootThread() && ozconf.addEmacsThreads ||
+	currentThread()->getTrace() && ozconf.addSubThreads) {
 
-      debugStreamThread(tt,currentThread);
+      debugStreamThread(tt,currentThread());
 
       tt->setTrace(OK);
       tt->setStep(OK);
@@ -1846,7 +1910,7 @@ Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
   th->setBody(allocateBody());
   bb->incSuspCount();
   checkDebug(th);
-  Assert(bb == currentBoard);
+  Assert(isCurrentBoard(bb));
   Assert(isInSolveDebug(bb));
 
   incSolveThreads(bb);
@@ -1857,46 +1921,10 @@ Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
   return th;
 }
 
-// mm2: stop/resume has to be overhauled
-void AM::stopThread(Thread *th)
-{
-  if (th->pStop()==0) {
-    if (th==currentThread) {
-      setSFlag(StopThread);
-    }
-    if (!debugmode())
-      th->setStop(OK);
-    if (th->isRunnable())
-      th->unmarkRunnable();
-  }
-}
-
-void AM::resumeThread(Thread *th)
-{
-  if (th->pCont()==0) {
-    if (!debugmode())
-      th->setStop(NO);
-
-    if (!th->isDeadThread()) {
-      if (th == currentThread) {
-	Assert(isSetSFlag(StopThread));
-	unsetSFlag(StopThread);
-      } else {
-	suspThreadToRunnable(th);
-	if (!isScheduledSlow(th))
-	  scheduleThread(th);
-      }
-    }
-  }
-}
-
-
-Board *rootBoard() { return am.rootBoard; }
-
 int AM::commit(Board *bb, Thread *tt)
 {
-  Assert(!currentBoard->isCommitted());
-  Assert(bb->getParent()==currentBoard);
+  Assert(!currentBoard()->isCommitted());
+  Assert(isCurrentBoard(bb->getParent()));
 
   AWActor *aw = AWActor::Cast(bb->getActor());
 
@@ -1904,18 +1932,18 @@ int AM::commit(Board *bb, Thread *tt)
 
   Continuation *cont=bb->getBodyPtr();
 
-  bb->setCommitted(currentBoard);
-  currentBoard->incSuspCount(bb->getSuspCount()-1);
+  bb->setCommitted(currentBoard());
+  currentBoard()->incSuspCount(bb->getSuspCount()-1);
 
   if (bb->isWait()) {
     Assert(bb->isWaiting());
 
     WaitActor *wa = WaitActor::Cast(aw);
 
-    if (currentBoard->isWait()) {
-      WaitActor::Cast(currentBoard->getActor())->mergeChoices(wa->getCpb());
-    } else if (currentBoard->isSolve()) {
-      SolveActor::Cast(currentBoard->getActor())->mergeChoices(wa->getCpb());
+    if (currentBoard()->isWait()) {
+      WaitActor::Cast(currentBoard()->getActor())->mergeChoices(wa->getCpb());
+    } else if (currentBoard()->isSolve()) {
+      SolveActor::Cast(currentBoard()->getActor())->mergeChoices(wa->getCpb());
     } else {
       // forget the choice stack when committing to a conditional
     }
@@ -1950,19 +1978,19 @@ int AM::commit(Board *bb, Thread *tt)
 // see variable.hh
 void checkExtThread(Thread *elem, Board *home)
 {
-  if (am.currentSolveBoard) {
+  if (am.isBelowSolveBoard()) {
     am.setExtThreadOutlined(elem,home->derefBoard());
   }
 }
 
 void AM::setExtThreadOutlined(Thread *tt, Board *varHome)
 {
-  Board *bb = currentBoard;
+  Board *bb = currentBoard();
   Bool wasFound = NO;
   Assert (!varHome->isCommitted());
 
   while (bb != varHome) {
-    Assert (!bb->isRoot());
+    Assert (!isRootBoard(bb));
     Assert (!bb->isCommitted() && !bb->isFailed());
     if (bb->isSolve()) {
       SolveActor *sa = SolveActor::Cast(bb->getActor());

@@ -153,16 +153,16 @@ public:
   void setVal(OZ_Term t) {
     Assert(isProxy());
     Assert(u.bindings==0);
-    oz_stop(oz_currentThread);
-    PD((THREAD_D,"stop thread setVal %x",oz_currentThread));
-    u.bindings=new PendBinding(t,oz_currentThread,0);
+    oz_suspendOnNet(am.currentThread());
+    PD((THREAD_D,"stop thread setVal %x",am.currentThread()));
+    u.bindings=new PendBinding(t,am.currentThread(),0);
   }
   void pushVal(OZ_Term t) {
     Assert(isProxy());
     Assert(u.bindings!=0);
-    oz_stop(oz_currentThread);
-    PD((THREAD_D,"stop thread pushVal %x",oz_currentThread));
-    u.bindings->next=new PendBinding(t,oz_currentThread,u.bindings->next);
+    oz_suspendOnNet(am.currentThread());
+    PD((THREAD_D,"stop thread pushVal %x",am.currentThread()));
+    u.bindings->next=new PendBinding(t,am.currentThread(),u.bindings->next);
   }
   void redirect(OZ_Term val);
   void acknowledge(OZ_Term *ptr);

@@ -27,16 +27,21 @@ private:
   int hiCounter;
   int lowCounter;
 
-public:
+protected:
   //  formerly in AM;
-  Thread *currentThread;
-  Thread *rootThread;
   //
-  //  used by thread constructors;
+  Thread *_currentThread;
+  Thread *_rootThread;
   RunnableThreadBody *threadBodyFreeList;
-
+public:
   ThreadsPool () {};
   ~ThreadsPool () {};
+
+  Thread *currentThread()           { return _currentThread; }
+  void unsetCurrentThread()         { _currentThread=0; }
+  void setCurrentThread(Thread *th) { _currentThread=th; }
+  Thread *rootThread()              { return _rootThread; }
+
   void initThreads();
 
   // in print.cc; 

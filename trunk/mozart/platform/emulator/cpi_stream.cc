@@ -67,7 +67,7 @@ OZ_Boolean OZ_Stream::leave(void)
   OZ_Term t = tail;
   DEREF(t, tailptr, tailtag);
 
-  addSuspAnyVar(tailptr, am.currentThread);
+  addSuspAnyVar(tailptr, am.currentThread());
   return TRUE;
 }
 

@@ -145,7 +145,7 @@ Bool Board::checkAlive()
 loop:
   Assert(!bb->isCommitted());
   if (bb->isFailed()) return NO;
-  if (bb->isRoot()) return OK;
+  if (bb->_isRoot()) return OK;
   Actor *aa=bb->getActor();
   if (aa->isCommitted()) return NO;
   bb=GETBOARD(aa);
@@ -157,7 +157,7 @@ Board * Board::getHighestSolveDebug(void)
 {
   Board * r = NULL;
   
-  for (Board * c = this; !c->isRoot(); c = c->getParent())
+  for (Board * c = this; !c->_isRoot(); c = c->getParent())
     if (c->isSolve())
       r = c;
 

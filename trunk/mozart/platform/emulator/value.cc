@@ -241,7 +241,8 @@ NamedName *NamedName::newNamedName(const char *pn)
 
   NamedName *ret = (NamedName*) malloc(sizeof(NamedName));
   ret->init();
-  ret->homeOrGName = ToInt32(am.rootBoard);
+  Assert(am.onToplevel());
+  ret->homeOrGName = ToInt32(am.currentBoard());
   ret->setOthers(NameCurrentNumber++);
   ret->setFlag(Lit_isName|Lit_isNamedName);
   ret->printName = pn;
@@ -252,7 +253,7 @@ NamedName *NamedName::newNamedName(const char *pn)
 GName *Name::globalize()
 {
   if (!hasGName()) {
-    Assert(GETBOARD(this)==am.rootBoard);
+    Assert(am.isRootBoard(GETBOARD(this)));
     homeOrGName = ToInt32(newGName(makeTaggedLiteral(this),GNT_NAME));
     setFlag(Lit_hasGName);
   }
@@ -261,7 +262,7 @@ GName *Name::globalize()
 
 void Name::import(GName *name)
 {
-  Assert(GETBOARD(this)==am.rootBoard);
+  Assert(am.isRootBoard(GETBOARD(this)));
   homeOrGName = ToInt32(name);
   setFlag(Lit_hasGName);
 }
@@ -325,7 +326,7 @@ void Tertiary::setBoard(Board *b)
   if (getTertType() == Te_Local) {
     setPointer(b);
   } else {
-    Assert(b==NULL || b==am.rootBoard);
+    Assert(b==NULL || am.isRootBoard(b));
   }
 }
 

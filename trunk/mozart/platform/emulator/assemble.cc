@@ -103,7 +103,8 @@ OZ_C_proc_begin(BImakeProc,3)
 				   mkTupleWidth(0),nil(),0);
   pte->PC = code->getStart();
 
-  Abstraction *p = new Abstraction (pte, gRegs, am.rootBoard);
+  Assert(am.onToplevel());
+  Abstraction *p = new Abstraction (pte, gRegs, am.currentBoard());
 
   return OZ_unify(ret,makeTaggedConst(p));
 }

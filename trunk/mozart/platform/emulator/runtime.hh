@@ -14,6 +14,7 @@
 
 #include "am.hh"
 
+
 /* -----------------------------------------------------------------------
  * equality, unification
  * -----------------------------------------------------------------------*/
@@ -41,14 +42,14 @@
 
 #define oz_atom(s) makeTaggedAtom(s)
 
-#define oz_newName() makeTaggedLiteral(Name::newName(am.currentBoard))
+#define oz_newName() makeTaggedLiteral(Name::newName(am.currentBoard()))
 
 #define oz_newPort(val) \
-  makeTaggedConst(new PortWithStream(am.currentBoard, (val)))
+  makeTaggedConst(new PortWithStream(am.currentBoard(), (val)))
 
 #define oz_sendPort(p,v) sendPort(p,v)
 
-#define oz_newCell(val) makeTaggedConst(new CellLocal(am.currentBoard, (val)))
+#define oz_newCell(val) makeTaggedConst(new CellLocal(am.currentBoard(), (val)))
   // access, assign
 
 #define oz_float(f)       newTaggedFloat((f))
@@ -60,17 +61,14 @@ OZ_Term oz_newChunk(OZ_Term val)
 {
   Assert(val==deref(val));
   Assert(isRecord(val));
-  return makeTaggedConst(new SChunk(am.currentBoard, val));
+  return makeTaggedConst(new SChunk(am.currentBoard(), val));
 }
 
-#define oz_newVariable() makeTaggedRef(newTaggedUVar(am.currentBoard))
+#define oz_newVariable() makeTaggedRef(newTaggedUVar(am.currentBoard()))
 
 // stop thread: {Wait v}
-#define oz_currentThread        am.currentThread
-#define oz_stop(th)   am.stopThread(th);
-#define oz_resume(th) am.resumeThread(th);
-
-#define return_stop   return BI_PREEMPT;
+void oz_suspendOnNet(Thread *th);
+void oz_resumeFromNet(Thread *th);
 
 /* -----------------------------------------------------------------------
  * # - tuples
@@ -257,7 +255,7 @@ char *VAR;					\
  * exceptions
  * -----------------------------------------------------------------------*/
 
-#define oz_raise am.raise
+int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...);
 
 #define oz_typeError(pos,type)			\
 {						\
@@ -268,6 +266,12 @@ char *VAR;					\
 		  OZ_string(""));		\
   return BI_TYPE_ERROR;				\
 }
+
+/* -----------------------------------------------------------------------
+ * MISC
+ * -----------------------------------------------------------------------*/
+
+OZ_Term oz_getLocation(Board *bb);
 
 /* -----------------------------------------------------------------------
  * TODO

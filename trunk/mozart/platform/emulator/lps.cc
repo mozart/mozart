@@ -59,8 +59,8 @@ Bool LocalPropagationStore::checkIsPropagator (Thread *thr)
 #endif
 
 Bool LocalPropagationStore::propagate_locally () {
-  Board *currentBoard = am.currentBoard;
-  Thread *savedCurrentThread = am.currentThread;
+  Board *currentBoard = am.currentBoard();
+  Thread *savedCurrentThread = am.currentThread();
   RefsArray args;
 
   /*
@@ -74,15 +74,15 @@ Bool LocalPropagationStore::propagate_locally () {
   Assert (currentBoard->getSuspCount () >= getSize ());
 	 
   while (!(isEmpty ())) {
-    Thread *thr = am.currentThread = pop ();
-
-    Assert (am.currentThread != (Thread *) NULL);
-    Assert (am.currentBoard == GETBOARD(thr));
+    Thread *thr = pop ();
+    am.setCurrentThread(thr);
+    Assert(thr != (Thread *) NULL);
+    Assert(am.isCurrentBoard(GETBOARD(thr)));
     //
     //  No 'runnable' threads are allowed here, 
     // because only true propagators are in the LPS;
-    Assert (!(am.currentThread->isDeadThread ()));
-    Assert (am.currentThread->isPropagator ());
+    Assert (!(am.currentThread()->isDeadThread ()));
+    Assert (am.currentThread()->isPropagator ());
 
     OZ_Return ret_val;
     
@@ -90,7 +90,7 @@ Bool LocalPropagationStore::propagate_locally () {
 
     switch (ret_val) {
     case FAILED:
-      if (am.currentBoard->isRoot ()) {
+      if (am.onToplevel()) {
 	errorHeader();
 
 	ostrstream buf; 
@@ -99,8 +99,8 @@ Bool LocalPropagationStore::propagate_locally () {
 	message("Propagator %s failed\n", str);
 	delete str;
       }
-      am.closeDonePropagator(am.currentThread);
-      am.currentThread = savedCurrentThread;
+      am.closeDonePropagator(am.currentThread());
+      am.setCurrentThread(savedCurrentThread);
       return reset();
 
     case RAISE:
@@ -110,20 +110,20 @@ Bool LocalPropagationStore::propagate_locally () {
       error ("propagate_locally: 'SUSPEND' is returned?\n");
 
     case SLEEP:
-      am.suspendPropagator(am.currentThread);
+      am.suspendPropagator(am.currentThread());
       break;
 
     case SCHEDULED:
-      am.scheduledPropagator(am.currentThread);
+      am.scheduledPropagator(am.currentThread());
       break;
 
     case PROCEED:
-      am.closeDonePropagator(am.currentThread);
+      am.closeDonePropagator(am.currentThread());
       break;
     }
     
   }
-  am.currentThread = savedCurrentThread;
+  am.setCurrentThread(savedCurrentThread);
   return (TRUE);
 }
 

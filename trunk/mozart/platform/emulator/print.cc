@@ -850,7 +850,7 @@ PRINT(Board)
     return;
   }
 
-  if (isRoot()) {
+  if (_isRoot()) {
     stream << "Root";
   } else if (isWait()) {
     stream << "Wait";
@@ -881,7 +881,7 @@ PRINTLONG(Board)
   stream << indent(offset) << "Flags: " << (void *) flags << endl;
   stream << indent(offset) << "Script: " << endl;
   script.printLong(stream,DEC(depth),offset+2);
-  if (isRoot()) return;
+  if (_isRoot()) return;
   if (isCommitted()) {
     stream << indent(offset) << "Board:" << endl;
     u.ref->printLong(stream,DEC(depth),offset+2);
@@ -987,10 +987,10 @@ void ThreadsPool::printThreads()
 {
   cout << "Threads" << endl
        << "  running: ";
-  currentThread->print(cout,-1,0);
+  _currentThread->print(cout,-1,0);
   cout << endl
        << "  toplevel:    ";
-  rootThread->print(cout,-1,0);
+  _rootThread->print(cout,-1,0);
   cout << endl
        << "  runnable:" << endl;
 
@@ -1016,9 +1016,9 @@ void ThreadQueue::printThreads()
   for (; i; i--) {
     Thread *th = dequeue();
     th->print (cout,-1,4);
-    if (th == am.currentThread)
+    if (th == am.currentThread())
       cout << " RUNNING ";
-    if (th == am.rootThread)
+    if (th == am.rootThread())
       cout << " ROOT ";
     cout << endl;
     enqueue(th);
@@ -1029,11 +1029,13 @@ void ozd_printBoards()
 {
   cout << "class Board" << endl
        << "  currentBoard: ";
-  am.currentBoard->print(cout,-1,0);
-  cout << endl
-       << "  rootBoard:    ";
+  am.currentBoard()->print(cout,-1,0);
+  cout << endl;
+#ifdef NOMORE
+  cout << "  rootBoard:    ";
   am.rootBoard->print(cout,-1,0);
   cout << endl;
+#endif
 }
 
 void ozd_printThreads()
@@ -1659,7 +1661,7 @@ void Board::printTree()
   Board *bb = this;
   Actor *aa;
   int off=0;
-  while (bb!=am.rootBoard) {
+  while (!am.isRootBoard(bb)) {
     bb->print(cout,1,off);
     cout << endl;
     Assert(!bb->isCommitted());

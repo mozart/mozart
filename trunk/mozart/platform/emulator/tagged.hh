@@ -730,10 +730,10 @@ SVariable *tagged2SVar(TaggedRef ref)
 
 
 inline
-SVariable *taggedCVar2SVar(TaggedRef ref) {
+SVariable *tagged2SVarPlus(TaggedRef ref) {
   GCDEBUG(ref);
-  CHECKTAG(CVAR);
-  return (SVariable *) tagValueOf2(CVAR,ref);
+  Assert(isCVar(ref)||isSVar(ref));
+  return (SVariable *) tagValueOf(ref);
 }
 
 inline
