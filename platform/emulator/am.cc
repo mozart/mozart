@@ -114,8 +114,7 @@ char *getOptArg(int &i, int argc, char **argv)
 }
 
 
-
-void AM::init(int argc,char **argv)
+static void printBanner()
 {
   version();
 
@@ -163,8 +162,10 @@ void AM::init(int argc,char **argv)
   printf("Not using threaded code.\n");
 #endif
 #endif
+}
 
-
+void AM::init(int argc,char **argv)
+{
   conf.init();
 
 #ifdef MAKEANEWPGRP
@@ -176,9 +177,6 @@ void AM::init(int argc,char **argv)
 #endif
 
   int c;
-
-  extern char *optarg;
-  extern int optind, opterr;
 
   char *compilerFile;
   if (!(compilerFile = getenv("OZCOMPILER"))) {
@@ -197,6 +195,7 @@ void AM::init(int argc,char **argv)
 
   char *comPath = NULL;  // path name where to create AF_UNIX socket
   char *queryFileName = NULL;
+  Bool quiet = FALSE;
 
   /* process command line arguments */
   conf.argV = NULL;
@@ -208,6 +207,10 @@ void AM::init(int argc,char **argv)
     }
     if (strcmp(argv[i],"-d")==0) {
       tracerOn();
+      continue;
+    }
+    if (strcmp(argv[i],"-quiet")==0) {
+      quiet = TRUE;
       continue;
     }
     if (strcmp(argv[i],"-c")==0) {
@@ -239,6 +242,10 @@ void AM::init(int argc,char **argv)
      fprintf(stderr,"Specify only one of '-s' and '-f' and '-S'.\n");
      usage(argc,argv);
    }
+
+  if (quiet == FALSE) {
+    printBanner();
+  }
 
   IO::initQuery(comPath,queryFileName,compilerFile);
 
