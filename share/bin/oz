@@ -15,6 +15,8 @@ then
   OZHOME=`(cd $dir; cd ..; /bin/pwd)`
   echo "Setting Oz installation directory to: $OZHOME"
   export OZHOME
+else
+  echo "Using Oz directory: $OZHOME"
 fi
 
 # determine machine architecture and OS version
@@ -22,11 +24,22 @@ fi
 #echo $OZPLATFORM
 export OZPLATFORM
 
-: ${OZCOMPILER=$OZHOME/platform/$OZPLATFORM/oz.compiler.bin}
-#echo "OZCOMPILER = $OZCOMPILER"
+setOZC() {
+if [ ${OZCOMPILER-xx} = xx ]; then
+	OZCOMPILER=$OZHOME/platform/$OZPLATFORM/oz.compiler.bin
+else
+	echo "Using Oz Compiler: $OZCOMPILER"
+fi
+}
 
-: ${OZMACHINE=$OZHOME/platform/$OZPLATFORM/oz.machine.bin}
-#echo "OZMACHINE = $OZMACHINE"
+
+setOZE() {
+if [ ${OZEMULATOR-xx} = xx ]; then
+	OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.machine.bin
+else
+	echo "Using Oz Emulator: $OZEMULATOR"
+fi
+}
 
 # set OZPATH & PATH
 if [ ${OZ_PI-xx} = xx ]; then
@@ -34,11 +47,11 @@ if [ ${OZ_PI-xx} = xx ]; then
 	: ${OZPATH=.}
 	OZPATH=${OZPATH}:${OZHOME}/lib:${OZHOME}/platform/${OZPLATFORM}:${OZHOME}/demo
 	export OZPATH
-#echo "OZPATH = $OZPATH"
+	#echo "OZPATH = $OZPATH"
 	# increment path
 	PATH=${OZHOME}/bin:${OZHOME}/platform/${OZPLATFORM}:${PATH}
 	export PATH
-#echo "PATH = $PATH"
+	#echo "PATH = $PATH"
         OZ_PI=1
 	export OZ_PI
 fi
@@ -92,37 +105,41 @@ case "$cmd" in
    ;;
 
    oz.compiler)
-
-       if [ X$1 = X"-emacs" ]; then
+	setOZC
+        if [ X$1 = X"-emacs" ]; then
 	  shift
           exec $OZCOMPILER +E `echo $* |  sed -e 's/-/+/g'`
-       else
+        else
           exec xterm -name "OzCompiler" \
                -T "Oz Compiler Input Window" \
 	       -e $ILE $OZCOMPILER `echo $* |  sed -e 's/-/+/g'`
-       fi
+        fi
    ;;
 
-   oz.machine)
-
-      if [ X$1 = X"-emacs" ]; then
-	shift
-        exec $OZMACHINE -E "$@"
-      else
-        xterm -title 'Oz Machine' -e $OZMACHINE "$@" > /dev/null 2>&1 &
-      fi
-      exit 0
+   oz.machine|oz.emulator)
+	setOZE
+	if [ X$1 = X"-emacs" ]; then
+		shift
+		exec $OZEMULATOR -E "$@"
+	else
+		xterm -title 'Oz Emulator' -e $OZEMULATOR "$@" \
+			> /dev/null 2>&1 &
+	fi
+	exit 0
    ;;
 
-   ozsa)  # satndalone system
-        exec $OZMACHINE -E "$@"
+   ozsa)  # standalone system
+	setOZE
+        exec $OZEMULATOR -E "$@"
    ;;
 
    oz-)
+	setOZC
 	exec $ILE $OZCOMPILER "$@"
    ;;
 
    ozc)
+	setOZC
 	set -e
         for file in $@; do
             # +p /dev/null --> do not load ~/.ozrc
@@ -132,6 +149,7 @@ case "$cmd" in
    ;;
 
    ozsac)
+	setOZC
         if [ $# -ne 2 ]; then
 	   echo "Usage: $0 infile outfile"
 	   exit 1
