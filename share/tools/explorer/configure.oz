@@ -128,7 +128,8 @@ BlockedColor         #
 PartialFailedColor   #
 LineColor            #
 BackColor            #
-CursorColor          = case Tk.isColor then
+CursorColor          #
+PopupBgColor         = case Tk.isColor then
 			  'lightskyblue3'   # % ChooseColor
 			  'LightSlateBlue'  # % ChooseTermColor
 			  'MediumSeaGreen'  # % EntailedColor
@@ -138,7 +139,8 @@ CursorColor          = case Tk.isColor then
 			  'purple1'         # % PartialFailedColor
 			  black             # % LineColor
 			  white             # % BackColor
-			  gray60              % CursorColor
+			  gray60            # % CursorColor
+			  ivory               % PopupBgColor
 		       else
 			  white # % ChooseColor
 			  white # % ChooseTermColor
@@ -149,5 +151,11 @@ CursorColor          = case Tk.isColor then
 			  white # % PartialFailedColor
 			  black # % LineColor
 			  white # % BackColor
-			  black   % CursorColor 
+			  black # % CursorColor
+			  white   % PopupBgColor
 		       end
+
+PopUpDelay = 2000
+
+
+   
