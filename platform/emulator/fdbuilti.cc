@@ -1192,6 +1192,7 @@ BIspec fdSpec[] = {
   {"fdp_inter", 3, fdp_inter},
   {"fdp_union", 3, fdp_union},
   {"fdp_distinct", 1, fdp_distinct},
+  {"fdp_distinctStream", 2, fdp_distinctStream},
   {"fdp_distinctOffset", 2, fdp_distinctOffset},
   {"fdp_disjoint", 4, fdp_disjoint},
   {"sched_disjoint_card", 4, sched_disjoint_card},
