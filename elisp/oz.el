@@ -396,7 +396,7 @@ if that value is non-nil."
   (if (get-process "Oz Compiler")
       (error "Oz already running")
     (start-oz-process)
-    (oz-new-buffer)))
+    (if (not (eq major-mode 'oz-mode)) (oz-new-buffer))))
 
 
 (defun ensure-oz-process ()
@@ -1104,6 +1104,11 @@ if that value is non-nil."
   (concat oz-status-string "\\|" oz-warn-string "\\|" oz-error-string)
   "")
 
+(defvar oz-error-chars
+  (concat oz-warn-string "\\|" oz-error-string)
+  "")
+
+
 (defvar oz-errors-found nil)
 
 (defun oz-filter (proc string state-string)
@@ -1141,13 +1146,13 @@ if that value is non-nil."
     (select-window old-win)
 
     ;; error output
-    (if (or oz-errors-found (string-match oz-error-string string))   ; contains errors ?
+    (if (or oz-errors-found (string-match oz-error-chars string))   ; contains errors ?
 	(progn
 	  (setq oz-errors-found t)
 	  (oz-show-error string)))
 
     ;; reset error output if we have another message prefix than error
-    (if (and (not (string-match oz-error-string string))
+    (if (and (not (string-match oz-error-chars string))
 	     (string-match oz-escape-chars string))
 	(setq oz-errors-found nil))))
 
@@ -1167,8 +1172,9 @@ if that value is non-nil."
       ;; remove other than error messages
       (goto-char old-point)
       (while (search-forward-regexp 
-	      (concat oz-error-string "\\|" oz-status-string ".*\n") nil t)
-	(replace-match "" nil t)))
+	      (concat oz-status-string ".*\n") nil t)
+	(replace-match "" nil t))
+      )
 
     (oz-show-buffer buf)))
 
