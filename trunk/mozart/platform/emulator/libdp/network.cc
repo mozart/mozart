@@ -1494,6 +1494,7 @@ public:
 /************************************************************/
 
 void RemoteSite::zeroReferences(){
+  return; //EK fix this!!!
   PD((SITE,"Zero references to site %s",site->stringrep()));
   if(writeConnection == NULL)  return;
   if(writeConnection -> goodCloseCand())
@@ -2025,12 +2026,8 @@ Bool WriteConnection::shouldSendFromUser(){
     //printf("Sending on probing con %d\n", (int) this);
     tcpCache->remove(this);
     clearProbing();
-    if(tcpCache->canAddWrite())
-      open();
-    else{
-      //printf("Clogged tcpCache %d\n",(int)this);
-      setMyInitiative();
-      tcpCache->add(this); }
+    setMyInitiative();
+    tcpCache->add(this); 
     return FALSE;}
   Assert(fd!=LOST);
   return TRUE;}
@@ -2794,7 +2791,9 @@ static int acceptHandler(int fd,void *unused)
   int fromlen = sizeof(from);
   int newFD=osaccept(fd,(struct sockaddr *) &from, &fromlen);
 
-  if (newFD < 0) {NETWORK_ERROR(("acceptHandler:accept %d\n",errno));}
+  if (newFD < 0) {
+    OZ_warning("acceptHandler:accept");
+    return 0;}
 
   if (!tcpCache->Accept()|| !tcpCache->CanOpen()){
     PD((TCP_INTERFACE,"Connection Refused"));
@@ -3101,10 +3100,6 @@ static ipReturn tcpOpen(RemoteSite *remoteSite,WriteConnection *r)
 {
   port_t aport;
   
-  if(!tcpCache->CanOpen()){
-    r->connectionBlocked();
-    return IP_TEMP_BLOCK;}
-  
   aport=remoteSite->getPort();
   PD((TCP,"open s:%s",remoteSite->site->stringrep()));
   
@@ -3114,22 +3109,22 @@ static ipReturn tcpOpen(RemoteSite *remoteSite,WriteConnection *r)
   addr.sin_port = htons(aport);
   
   int tries=OZConnectTries;
-  int fd;
+  int fd  = -1;
   int one = 1;
+  
+  if(!tcpCache->CanOpen()){goto  ipOpenNoAnswer;}
   
 retry:
   PD((TCP,"Opening connection t:%d",tries));
   fd=ossocket(PF_INET,SOCK_STREAM,0);
   if (fd < 0) {
-    if(errno==ENOBUFS){
-      r->connectionBlocked();
-      return IP_TEMP_BLOCK;}
-    r->connectionLost();
+    if(errno==ENOBUFS){goto  ipOpenNoAnswer;}
+    //fprintf(stderr,"fd < 0 = %d  - interpreted as perm:%d \n",fd,ossockerrno());
+	r->connectionLost();
     return IP_PERM_BLOCK;}
   
   if(setsockopt(fd,IPPROTO_TCP,TCP_NODELAY,(char*) &one,sizeof(one))<0){
-    r->connectionBlocked();
-    return IP_TEMP_BLOCK;}
+    goto  ipOpenNoAnswer;}
   
   // EK!!
 #ifndef __MINGW32__
@@ -3144,15 +3139,25 @@ retry:
     return IP_OK;}
   
   tries--;
-  if(tries<=0){
-    r->connectionBlocked();
-    return IP_TEMP_BLOCK;}
-  if(ossockerrno() == ECONNREFUSED || ossockerrno() == EADDRNOTAVAIL       ){
-    r->connectionLost();
-    DebugCode(fprintf(stderr,"cannot open - interpreted as perm:%d \n",ossockerrno()));
+  if(tries<=0){goto  ipOpenNoAnswer;}
+  if(ossockerrno() == ECONNREFUSED) {
+    //fprintf(stderr,"ECONREF letsTryLater %s %s\n",r->remoteSite->site->stringrep(),myDSite->stringrep());
+    goto  ipOpenNoAnswer;}
+  if(ossockerrno() == EADDRNOTAVAIL){
+    //fprintf(stderr,"cannot open - interpreted as perm:%d %d \n",EADDRNOTAVAIL,ossockerrno());
+    r->connectionLost(); 
     return IP_PERM_BLOCK;}
   addr.sin_port = htons(aport);
-  goto retry;}
+  goto retry;
+
+ ipOpenNoAnswer:
+  tcpCache->remove(r);
+  r->clearOpening();
+  if(fd >= 0) osclose(fd);
+  r->setHisInitiative();
+  tcpCache->add(r);
+  return IP_OK;
+}
 
 
 int tcpConnectionHandler(int fd,void *r0){
@@ -3492,7 +3497,7 @@ int RemoteSite::readRecMsgCtr(){
 /************************************************************/
 
 void RemoteSite::sitePrmDwn(){
-  //  printf("Site prm %d %d %s\n",(int)writeConnection, (int) readConnection,site->stringrep());
+  // printf("Site prm %d %d %s\n",(int)writeConnection, (int) readConnection,site->stringrep());
   status = SITE_PERM;
   if(readConnection!=NULL && readConnection->isReading()){
     readConnection->setCrashed();
@@ -3541,6 +3546,7 @@ void ReadConnection::prmDwn(){
 
 void WriteConnection::prmDwn(){
   if(fd!=LOST)  osclose(fd);
+  //fprintf(stderr,"WriteConDead %s %s \n",this->remoteSite->site->stringrep(),myDSite->stringrep());
   PD((TCP,"WriteConnection is taken down fd: %d %d",fd,getFD()));
   tcpCache->remove(this);
   if(isProbingPrm()){
@@ -3865,6 +3871,7 @@ storeS,msg,storeInd);
     if(fd == IP_OK){ 
       PD((TCP_INTERFACE,"is opened %s",site->stringrep()));
       goto ipBlockSend;}
+    /* This Code should be removed EK */
     if(fd==IP_TEMP_BLOCK){
       PD((TCP_INTERFACE,"is blocked opened %s",site->stringrep()));
       goto tmpdwnsend;}
