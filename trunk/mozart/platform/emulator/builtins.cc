@@ -3216,8 +3216,15 @@ OZ_BI_define(BIarrayNew,3,1)
   oz_declareIntIN(1,ihigh);
   oz_declareIN(2,initValue);
 
-  OZ_RETURN(makeTaggedConst(new OzArray(oz_currentBoard(),
-					ilow,ihigh,initValue)));
+  if (!oz_isSmallInt(OZ_deref(OZ_in(0)))) { oz_typeError(0,"smallInteger"); }
+  if (!oz_isSmallInt(OZ_deref(OZ_in(1)))) { oz_typeError(1,"smallInteger"); }
+
+  OzArray *array = new OzArray(oz_currentBoard(),ilow,ihigh,initValue);
+  if (array==NULL || array->getWidth()==-1) {
+    return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("not enough memory"));
+  }
+    
+  OZ_RETURN(makeTaggedConst(array));
 } OZ_BI_end
 
 
