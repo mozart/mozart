@@ -1156,7 +1156,7 @@ void xy_exit() {
 
 int xylex() {
   int next = xymylex();
-  if (cond() || next == 0)
+  if (cond() || next == 0 || next == ENDOFFILE)
     return next;
   else
     return xylex();
