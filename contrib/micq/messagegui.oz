@@ -133,6 +133,11 @@ define
       {Tk.addYScrollbar TB SY}
 
       if Type==read then
+         if Arg.su==true then
+            FAQB={New Tk.button tkInit(parent:T text:"Reply to FAQ" action:Browse#faq)}
+         in
+            {Tk.send grid(FAQB row:30 column:0 columnspan:3 sticky:we)}
+         end
          {Tk.batch [grid(DT row:1 column:0 sticky:e)
                     grid(DE row:1 column:1 sticky:we)]}
       end
