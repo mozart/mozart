@@ -214,12 +214,12 @@ local
 in
    
    class PanelTop
-      from Tk.toplevel
+      from Tk.toplevel DialogClass
       prop
 	 locking
 	 final
       feat
-	 manager
+	 manager options
 	 notebook
 	 menu
 	 threads memory opi ps
@@ -231,7 +231,7 @@ in
 	 DelayStamp:    0
 	 InfoVisible:   false
       
-      meth init(manager:Manager)
+      meth init(manager:Manager options:O)
 	 lock
 	    Tk.toplevel,tkInit(title:              TitleName
 			       highlightthickness: 0
@@ -580,6 +580,13 @@ in
 	    {EventFrame tkBind(event:'<Enter>' action:self # enter)}
 	    {EventFrame tkBind(event:'<Leave>' action:self # leave)}
 	    PanelTop, tkWM(deiconify)
+	    self.options = O
+	    RequireMouse <- {Dictionary.get O mouse}
+	    UpdateTime   <- {Dictionary.get O time}
+	    HistoryRange <- {Dictionary.get O history}
+	    case {Dictionary.get O config}==@InfoVisible then skip else
+	       PanelTop, toggleInfo
+	    end
 	 end
 	 PanelTop, delay(0)
       end
@@ -610,7 +617,7 @@ in
 
       meth shutdown
 	 {self.menu.panel.shutdown tk(entryconf state:disabled)}
-	 case {DoShutdown self} then {System.shutDown exit}
+	 case DialogClass, shutdown($) then {System.shutDown exit}
 	 else skip
 	 end
 	 {self.menu.panel.shutdown tk(entryconf state:normal)}
@@ -618,13 +625,14 @@ in
 
       meth about
 	 {self.menu.panel.about tk(entryconf state:disabled)}
-	 {Wait {DoAbout self}}
+	 DialogClass, about
 	 {self.menu.panel.about tk(entryconf state:normal)}
       end
 
       meth toggleInfo
 	 lock
 	    InfoVisible <- {Not @InfoVisible}
+	    {Dictionary.put self.options config @InfoVisible}
 	    case @InfoVisible then {self.notebook add(self.opi)}
 	    else {self.notebook remove(self.opi)}
 	    end
@@ -674,10 +682,31 @@ in
 	    end
 	 end
       end
-      
-      meth setUpdate(time:T mouse:M)
+
+      meth setSlice
+	 S = (LoadWidth * @UpdateTime) div @HistoryRange
+	 STO = self.threads.options
+      in
+	 {self.memory.options.usage.load slice(S)}
+	 {STO.threads.load               slice(S)}
+	 {STO.runtime.curLoad            slice(S)}
+      end
+
+      meth updateAfterOption
 	 case
 	    lock
+	       O = self.options
+	       H = {Dictionary.get O history}
+	       M = {Dictionary.get O mouse}
+	       T = {Dictionary.get O time}
+	    in
+	       case {Dictionary.get O config}==@InfoVisible then skip else
+		  PanelTop, toggleInfo
+	       end
+	       case H==@HistoryRange then skip else
+		  HistoryRange <- H
+		  PanelTop,setSlice
+	       end
 	       {Max case @RequireMouse==M then ~1
 		    else
 		       RequireMouse <- M
@@ -700,50 +729,19 @@ in
 	 elseof DS then {self delay(DS)}
 	 end
       end
-
+      
       meth optionUpdate
-	 T    = @UpdateTime
-	 M    = @RequireMouse
-	 Next
-      in
 	 {self.menu.options.update tk(entryconf state:disabled)}
-	 Next = {DoOptionUpdate self setUpdate(time:T mouse:M)}
-	 {Wait Next}
+	 DialogClass, update
 	 {self.menu.options.update tk(entryconf state:normal)}
-	 {self Next}
-      end
-
-      meth setSlice
-	 lock
-	    S = (LoadWidth * @UpdateTime) div @HistoryRange
-	    STO = self.threads.options
-	 in
-	    {self.memory.options.usage.load    slice(S)}
-	    {STO.threads.load slice(S)}
-	    {STO.runtime.curLoad slice(S)}
-	 end
-      end
-
-      meth setHistory(H)
-	 lock
-	    case H==@HistoryRange then skip else
-	       HistoryRange <- H
-	       PanelTop,setSlice
-	    end
-	 end
+	 PanelTop, updateAfterOption
       end
 
       meth optionHistory
-	 H = @HistoryRange
-      in
 	 {self.menu.options.history tk(entryconf state:disabled)}
-	 thread
-	    Next = {DoOptionHistory self H}
-	 in
-	    {Wait Next}
-	    {self.menu.options.history tk(entryconf state:normal)}
-	    {self setHistory(Next)}
-	 end
+	 DialogClass, history
+	 {self.menu.options.history tk(entryconf state:normal)}
+	 PanelTop, updateAfterOption
       end
 
       meth clear
