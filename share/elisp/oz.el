@@ -668,6 +668,7 @@ the GDB commands `cd DIR' and `directory'."
        "div" "mod" "andthen" "orelse"
        "thread" "job" "conc" "in"
        "condis" "not"
+       "try" "catch" "finally"
        ))
     "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@"
     ))
@@ -677,7 +678,7 @@ the GDB commands `cd DIR' and `directory'."
 (defconst oz-begin-pattern
       (oz-make-keywords-for-match 
 	         '(
-		   "proc" "fun"
+		   "proc" "fun" "try"
 		   "local"
 		   "if" "or" "dis" "choice" "case"
 		   "class" "create" "meth" "extern"
@@ -693,11 +694,15 @@ the GDB commands `cd DIR' and `directory'."
 
 (defconst oz-between-pattern 
       (concat (oz-make-keywords-for-match
-	       '("from" "attr" "feat" "with"))))
+	       '("from" "attr" "feat" "with"
+		 ))))
 
 (defconst oz-middle-pattern 
   (concat (oz-make-keywords-for-match
-	   '("in" "then" "else" "elseif" "of" "elseof" "elsecase"))
+	   '(
+	     "in" "then" "else" "elseif" "of" "elseof" "elsecase"
+	     "catch" "finally"
+	     ))
 	  "\\|" "\\[\\]"))
 
 (defconst oz-feat-end-pattern
