@@ -45,8 +45,8 @@
         <tr/<th/Package Name/ <th/Content//
         <tr/<td/<file/mozart// <td/The base system. Contains all you need to
         run demos and develop Oz programs with Mozart.//
-        <tr/<td/<file/mozart-doc// <td/The Mozart documentation. Also the package
-        uses quite some disk space, you are very much encouraged to
+        <tr/<td/<file/mozart-doc// <td/The Mozart documentation. Although the package
+        takes up a lot of disk space, you are very much encouraged to
         install it.//
         <tr/<td/<file/mozart-contrib// <td/Mozart Contributions. Software
         packages that are not in the core of the system, but might
