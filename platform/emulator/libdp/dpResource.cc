@@ -58,7 +58,7 @@ ResourceHashTable *resourceTable;
 // so nodes need to be inserted anew;
 struct GCRTEntry {
   OZ_Term term;
-  OB_TIndex oti;
+  Ext_OB_TIndex oti;
 };
 
 //
@@ -90,8 +90,8 @@ void ResourceHashTable::gcResourceTable()
       // If 'te' is NOT marked as GC"ed, then both terms will be
       // [pointer] unequal even we collect 'te'.
       if (isGCMarkedTerm(te)) {
-        OB_TIndex oti = n->getOTI();
-        OwnerEntry *oe = ownerIndex2ownerEntry(oti);
+        Ext_OB_TIndex oti = n->getOTI();
+        OwnerEntry *oe = OT->extOTI2ownerEntry(oti);
 
         //
         if (oe && oe->isRef()) {

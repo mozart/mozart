@@ -51,7 +51,6 @@ public:
   NO_DEFAULT_CONSTRUCTORS(DistResource)
   DistResource(OB_TIndex p)
     : Tertiary(OB_TIndex2Ptr(p),Co_Resource,Te_Proxy) {}
-
 };
 
 /************************************************************/
@@ -66,23 +65,23 @@ class RHTNode : public GenDistEntryNode<RHTNode>,
                 public CppObjMemory {
 private:
   OZ_Term entity;
-  OB_TIndex oti;
+  Ext_OB_TIndex oti;
 
 public:
-  RHTNode(OZ_Term entityIn, OB_TIndex otiIn)
+  RHTNode(OZ_Term entityIn, Ext_OB_TIndex otiIn)
     : entity(entityIn), oti(otiIn) {}
   RHTNode(OZ_Term entityIn)
-    : entity(entityIn) { DebugCode(oti = (OB_TIndex) -1;); }
+    : entity(entityIn) { DebugCode(oti = (Ext_OB_TIndex) -1;); }
   ~RHTNode() {
     DebugCode(entity = (OZ_Term) -1;);
-    DebugCode(oti = (OB_TIndex) -1;);
+    DebugCode(oti = (Ext_OB_TIndex) -1;);
   }
 
   unsigned int value4hash() { return ((unsigned int) entity); }
   int compare(RHTNode *n) { return (((int) entity) - ((int) n->entity)); }
 
   OZ_Term getEntity() { return (entity); }
-  OB_TIndex getOTI() { return (oti); }
+  Ext_OB_TIndex getOTI() { return (oti); }
 };
 
 //
@@ -94,14 +93,14 @@ public:
   ~ResourceHashTable() {}
 
   //
-  void add(OZ_Term entity, OB_TIndex oti) {
+  void add(OZ_Term entity, Ext_OB_TIndex oti) {
     // kost@ : this is what we can deal with: values or refs to vars;
     Assert((!oz_isRef(entity) && !oz_isVar(entity)) ||
            (oz_isRef(entity) && oz_isVar(*tagged2Ref(entity))));
     // there can be at most one entry for a given 'entity':
-    Assert(find(entity) == (OB_TIndex) RESOURCE_NOT_IN_TABLE);
+    Assert(find(entity) == (Ext_OB_TIndex) RESOURCE_NOT_IN_TABLE);
     // the owner entry must be of the type 'ref':
-    DebugCode(OwnerEntry *oe = ownerIndex2ownerEntry(oti););
+    DebugCode(OwnerEntry *oe = OT->extOTI2ownerEntry(oti););
     Assert(oe && oe->isRef());
     //
     RHTNode *n = new RHTNode(entity, oti);
@@ -109,7 +108,7 @@ public:
   }
 
   //
-  OB_TIndex find(TaggedRef entity) {
+  Ext_OB_TIndex find(TaggedRef entity) {
     Assert((!oz_isRef(entity) && !oz_isVar(entity)) ||
            (oz_isRef(entity) && oz_isVar(*tagged2Ref(entity))));
     //
@@ -119,8 +118,8 @@ public:
     //
     if (found) {
       Assert(found->getEntity() == entity);
-      OB_TIndex oti = found->getOTI();
-      OwnerEntry *oe = ownerIndex2ownerEntry(oti);
+      Ext_OB_TIndex oti = found->getOTI();
+      OwnerEntry *oe = OT->extOTI2ownerEntry(oti);
 
       //
       if (oe && oe->isRef() && oe->getRef() == entity) {
@@ -128,11 +127,11 @@ public:
       } else {
         htDel(found);           // something's changed;
         delete found;
-        return ((OB_TIndex) RESOURCE_NOT_IN_TABLE);
+        return ((Ext_OB_TIndex) RESOURCE_NOT_IN_TABLE);
       }
       Assert(0);
     } else {
-      return ((OB_TIndex) RESOURCE_NOT_IN_TABLE);
+      return ((Ext_OB_TIndex) RESOURCE_NOT_IN_TABLE);
     }
     Assert(0);
   }
