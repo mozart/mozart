@@ -870,6 +870,8 @@ echo "configure:869: checking for --with-inc-dir" >&5
 if test "${with_inc_dir+set}" = set; then
   withval="$with_inc_dir"
   oz_cv_with_inc_dirs=$with_inc_dir
+else
+  : ${oz_cv_with_inc_dirs=$oz_with_inc_dir}
 fi
 
   echo "$ac_t""$with_inc_dir" 1>&6
@@ -905,11 +907,13 @@ fi
 
   
   echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:909: checking for --with-lib-dir" >&5
+echo "configure:911: checking for --with-lib-dir" >&5
   # Check whether --with-lib-dir or --without-lib-dir was given.
 if test "${with_lib_dir+set}" = set; then
   withval="$with_lib_dir"
   oz_cv_with_lib_dirs=$with_lib_dir
+else
+  : ${oz_cv_with_lib_dirs=$oz_with_lib_dir}
 fi
 
   echo "$ac_t""$with_lib_dir" 1>&6
@@ -956,7 +960,7 @@ fi
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:960: checking for $ac_word" >&5
+echo "configure:964: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -994,7 +998,7 @@ fi
 
 
 echo $ac_n "checking for --enable-contrib""... $ac_c" 1>&6
-echo "configure:998: checking for --enable-contrib" >&5
+echo "configure:1002: checking for --enable-contrib" >&5
 # Check whether --enable-contrib or --disable-contrib was given.
 if test "${enable_contrib+set}" = set; then
   enableval="$enable_contrib"
@@ -1011,7 +1015,7 @@ else
 fi
 
 echo $ac_n "checking for --enable-doc""... $ac_c" 1>&6
-echo "configure:1015: checking for --enable-doc" >&5
+echo "configure:1019: checking for --enable-doc" >&5
 # Check whether --enable-doc or --disable-doc was given.
 if test "${enable_doc+set}" = set; then
   enableval="$enable_doc"
@@ -1030,7 +1034,7 @@ fi
 : ${oz_subdirs="platform share $oz_enable_contrib $oz_enable_doc"}
 
 echo $ac_n "checking for --enable-subdirs""... $ac_c" 1>&6
-echo "configure:1034: checking for --enable-subdirs" >&5
+echo "configure:1038: checking for --enable-subdirs" >&5
 # Check whether --enable-subdirs or --disable-subdirs was given.
 if test "${enable_subdirs+set}" = set; then
   enableval="$enable_subdirs"
