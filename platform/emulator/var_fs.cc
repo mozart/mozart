@@ -75,9 +75,8 @@ OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term)
 
   Bool isLocalVar = oz_isLocalVar(this);
 
-  if (!am.inEqEq()) {
-    propagate(fs_prop_val);
-  }
+  propagate(fs_prop_val);
+
   if (isLocalVar) {
     bindLocalVarToValue(vptr, term);
     dispose();
@@ -222,6 +221,7 @@ OZ_Return OzFSVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
       //
       // left variable is global and right variable is local
       //
+      // swap variables to be unified and recurse
       return unify(right_varptr, left_varptr);
     } else if (!left_var_is_local && !right_var_is_local) {
       DEBUG_CONSTRAIN_CVAR(("global-global"));
