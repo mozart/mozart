@@ -8,10 +8,14 @@ PREFIX		= @prefix@
 PLATFORM	= @PLATFORM@
 
 OZBIN		= $(PREFIX)/bin
-OZTOOLS		= $(PREFIX)/share
-OZPATH		= .:$(PREFIX)/share
-IMAGESDIR	= $(OZTOOLS)/images
-NEWCACHEDIR	= $(PREFIX)/cache/x-oz/system
+OZEX		= $(PREFIX)/examples
+OZEXGUMP	= $(OZEX)/gump
+OZLOADSEP	= @OZLOADSEP@
+
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+CYG_SRCDIR	= $(shell $(CYGPATH) $(SRCDIR))
+export OZPATH	= .$(OZLOADSEP)$(CYG_SRCDIR)
+CACHEDIR	= $(PREFIX)/cache/x-oz/system
 
 SHELL		= /bin/sh
 
@@ -29,11 +33,11 @@ OZC		= @OZC@
 OZLFLAGS	= $(COMPRESSFLAGS)
 OZL		= @OZL@
 
-LN_S		= @LN_S@
+EXE_EXT		= @EXE_EXT@
 
 COMPILENOMODE	= $(OZC) $(OZCFLAGS)
 COMPILE		= $(COMPILENOMODE) -c
-COMPILEEXEC	= $(COMPILENOMODE) -x
+COMPILEEXEC	= $(COMPILENOMODE) -x @OZEXECFILE@
 LINK		= $(OZL) $(OZLFLAGS)
 
 COMPILERPANELSRC1 = \
@@ -50,7 +54,7 @@ DISTRIBUTIONPANELSRC1 = \
 	Widgets.oz Colour.oz FieldDisplay.oz Graph.oz NetInfo.oz TableInfo.oz \
 	AdvancedListBox.oz TitleGraph.oz DistributionPanel.oz
 DISTRIBUTIONPANELSRC = $(DISTRIBUTIONPANELSRC1:%=dpanel/%)
-DISTRIBUTIONPANELOBJS = $(DISTRIBUTIONPANELSRC1:%=%f)
+DISTRIBUTIONPANELOBJS = $(DISTRIBUTIONPANELSRC1:%.oz=%.ozf)
 
 BROWSERSRC1 = \
 	XResources.oz browserObject.oz browserTerm.oz \
@@ -79,13 +83,10 @@ OZCARSRC1 = \
 	stack.oz source.oz menu.oz dialog.oz gui.oz ozcar.oz
 OZCARSRC = $(OZCARSRC1:%=ozcar/%) Ozcar.oz
 
-OZCARIMAGESDIR = $(IMAGESDIR)/ozcar
+OZCARIMAGESDIR = $(CACHEDIR)/images/ozcar
 OZCARIMAGES1 = \
 	step.xbm next.xbm unleash.xbm stop.xbm detach.xbm term.xbm 
 OZCARIMAGES = $(OZCARIMAGES1:%=$(OZCARIMAGESDIR)/%)
-
-NEWOZCARIMAGESDIR = $(NEWCACHEDIR)/images/ozcar
-NEWOZCARIMAGES = $(OZCARIMAGES1:%=$(NEWOZCARIMAGESDIR)/%)
 
 PROFILERSRC1 = \
 	prof-gui.oz prof-prelude.oz prof-tk.oz \
@@ -106,10 +107,9 @@ PRODUCTIONTEMPLATESSRC1 = ProductionTemplates.ozg
 PRODUCTIONTEMPLATESSRC = $(PRODUCTIONTEMPLATESSRC1:%=gump/%) \
 	ProductionTemplates.oz
 
-GUMPEXAMPLES = \
+GUMPEXAMPLEFILES = \
 	Examples.oz Lambda.in LambdaParser.ozg LambdaScanner.ozg \
 	OzParser.ozg OzScanner.ozg OzFrontend.oz
-
 
 INSPECTORTOPSRC = \
 	InspectorOptions InspectorMain TreeWidget
@@ -151,24 +151,12 @@ INSPECTORTWDODEPSRC0 = \
 	draw/ContDrawObjects
 INSPECTORTWDODEPSRC = $(INSPECTORTWDODEPSRC0:%=inspector/treewidget/%.oz)
 
-INSPECTORIMAGESDIR = $(IMAGESDIR)/inspector
+INSPECTORIMAGESDIR = $(CACHEDIR)/images/inspector
 INSPECTORIMAGES1 = \
 	depth.xbm width.xbm stop.xbm sep.xbm
 INSPECTORIMAGES = $(INSPECTORIMAGES1:%=$(INSPECTORIMAGESDIR)/%)
 
-NEWINSPECTORIMAGESDIR = $(NEWCACHEDIR)/images/inspector
-NEWINSPECTORIMAGES = $(INSPECTORIMAGES1:%=$(NEWINSPECTORIMAGESDIR)/%)
-
-TOOLSDIRS1 = gump gump/examples
-TOOLSDIRS = $(TOOLSDIRS1:%=$(OZTOOLS)/%)
-
-NEWTOOLSDIRS = $(TOOLSDIRS1:%=$(NEWCACHEDIR)/%)
-
-
-TOOLSFILES = \
-	$(GUMPEXAMPLES:%=$(OZTOOLS)/gump/examples/%)
-NEWTOOLSFILES = \
-	$(GUMPEXAMPLES:%=$(NEWCACHEDIR)/gump/examples/%)
+EXAMPLEFILES = $(GUMPEXAMPLEFILES:%=$(OZEXGUMP)/%)
 
 FUNCTORS = \
 	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
@@ -177,26 +165,25 @@ FUNCTORS = \
 	EvalDialog.ozf Inspector.ozf OPIServer.ozf DistributionPanel.ozf \
 	DistributionPanelSrc.ozf
 
-TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
-NEWTOOLSFUNCTORS = $(FUNCTORS:%=$(NEWCACHEDIR)/%)
+TOOLSFUNCTORS = $(FUNCTORS:%=$(CACHEDIR)/%)
 
 IMAGES1 = \
 	compiler.xbm compilermask.xbm \
 	lines-lr.xbm lines-rl.xbm grid-25.xbm grid-50.xbm \
 	browserMIcon.xbm browserIcon.xbm stop.xbm
+IMAGESDIR = $(CACHEDIR)/images
 IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
-NEWIMAGESDIR = $(NEWCACHEDIR)/images
-NEWIMAGES = $(IMAGES1:%=$(NEWIMAGESDIR)/%)
 
-SYSLETS = ozd
+SYSLETS0 = ozd
+SYSLETS = $(SYSLETS0:%=%$(EXE_EXT))
 
 .PHONY: all install bootstrap check depend
-.PHONY: install-main install-images install-cache
+.PHONY: install-main install-cache
 .PHONY: clean veryclean distclean tags
 
 all: Makefile $(FUNCTORS) $(SYSLETS)
 
-include $(SRCTOP)/share/Makefile.boot
+include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 
@@ -205,7 +192,7 @@ bootstrap: boot-all
 #---------------------------------------------------------------------
 
 %.ozf: %.oz
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 EvalDialog.ozf: EvalDialog.oz
 
@@ -235,7 +222,6 @@ GumpScanner.ozf: $(GUMPSCANNERSRC)
 GumpParser.ozf: $(GUMPPARSERSRC)
 
 ProductionTemplates.ozf: $(PRODUCTIONTEMPLATESSRC)
-	$(COMPILE) $(BUILDDIR)/ProductionTemplates.oz -o $@
 
 CreateObjects.ozf: $(INSPECTORTWCODEPSRC)
 LayoutObjects.ozf: $(INSPECTORTWLODEPSRC)
@@ -244,14 +230,14 @@ TreeWidget.ozf:    $(INSPECTORTREEWIDGETOBJS)
 InspectorMain.ozf: $(INSPECTORTOPDEPSRC)
 
 %.ozf: inspector/treewidget/%.oz
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 %.ozf: inspector/%.oz
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 Inspector.ozf: $(INSPECTOROBJS)
 	$(LINK) InspectorMain.ozf -o $@
 
 %.ozf: dpanel/%.oz
-	$(COMPILE) $< -o $@
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 DistributionPanelSrc.ozf: $(DISTRIBUTIONPANELSRC1:%=%f)
 	$(LINK) Main.ozf -o $@
 
@@ -259,8 +245,8 @@ DistributionPanelSrc.ozf: $(DISTRIBUTIONPANELSRC1:%=%f)
 # Syslets
 #---------------------------------------------------------------------
 
-ozd: ozcar/ozd.oz
-	$(COMPILEEXEC) $< -o $@
+ozd$(EXE_EXT): ozcar/ozd.oz
+	$(COMPILEEXEC) $(shell $(CYGPATH) "$<") -o $@
 
 #---------------------------------------------------------------------
 # Installation
@@ -269,36 +255,31 @@ ozd: ozcar/ozd.oz
 BINFILES = \
 	$(SYSLETS:%=$(OZBIN)/%)
 
-install: install-main install-images install-cache
+install: install-main install-cache
 
 install-main: all \
-	$(OZBIN) $(BINFILES)
+	$(OZBIN) $(BINFILES) \
+	$(OZEX) $(OZEXGUMP) $(EXAMPLEFILES)
 
-install-images:
-
-#install-images: \
-#	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES) \
-#	$(INSPECTORIMAGESDIR) $(INSPECTORIMAGES)
-
-$(OZTOOLS) $(TOOLSDIRS) $(OZBIN):
+$(OZBIN) $(OZEX) $(OZEXGUMP):
 	$(INSTALL_DIR) $@
-
-$(IMAGESDIR) $(OZCARIMAGESDIR) $(INSPECTORIMAGESDIR):
-	$(INSTALL_DIR) $@
-
-$(OZTOOLS)/%.oz: %.oz
-	$(INSTALL_FILE) $< $@
-
-$(OZTOOLS)/%.ozf: %.ozf
-	$(INSTALL_FILE) $< $@
-
-$(OZTOOLS)/gump/examples/%: gump/examples/%
-	$(INSTALL_FILE) $< $@
 
 $(OZBIN)/%: %
 	$(INSTALL_BIN) $< $@
 
-$(IMAGESDIR)/%: images/%
+$(OZEXGUMP)/%: gump/examples/%
+	$(INSTALL_FILE) $< $@
+
+install-cache: \
+	$(CACHEDIR) $(IMAGESDIR) \
+	$(TOOLSFUNCTORS) $(IMAGES) \
+	$(OZCARIMAGESDIR) $(OZCARIMAGES) \
+	$(INSPECTORIMAGESDIR) $(INSPECTORIMAGES)
+
+$(CACHEDIR) $(IMAGESDIR) $(OZCARIMAGESDIR) $(INSPECTORIMAGESDIR):
+	$(INSTALL_DIR) $@
+
+$(CACHEDIR)/%: %
 	$(INSTALL_FILE) $< $@
 
 $(OZCARIMAGESDIR)/%: ozcar/images/%
@@ -307,50 +288,13 @@ $(OZCARIMAGESDIR)/%: ozcar/images/%
 $(INSPECTORIMAGESDIR)/%: inspector/images/%
 	$(INSTALL_FILE) $< $@
 
-HOMECACHE = @HOMECACHE@
-CACHEDIR  = $(PREFIX)/cache/$(HOMECACHE)
-
-install-cache: \
-	$(NEWCACHEDIR) \
-	$(NEWOZCARIMAGESDIR) $(NEWOZCARIMAGES) \
-	$(NEWINSPECTORIMAGESDIR) $(NEWINSPECTORIMAGES) \
-	$(NEWTOOLSDIRS) $(NEWTOOLSFILES) $(NEWTOOLSFUNCTORS) \
-	$(NEWIMAGESDIR) $(NEWIMAGES)
-
-$(NEWCACHEDIR) $(NEWOZCARIMAGESDIR) $(NEWINSPECTORIMAGESDIR) $(NEWTOOLSDIRS) $(NEWIMAGESDIR):
-	$(INSTALL_DIR) $@
-
-$(NEWCACHEDIR)/% : %
-	$(INSTALL_FILE) $< $@
-
-$(NEWOZCARIMAGESDIR)/%: ozcar/images/%
-	$(INSTALL_FILE) $< $@
-
-$(NEWINSPECTORIMAGESDIR)/%: inspector/images/%
-	$(INSTALL_FILE) $< $@
-
-$(NEWCACHEDIR)/gump/% : %
-	$(INSTALL_FILE) $< $@
-
-$(NEWCACHEDIR)/ozcar/% : ozcar/images/%
-	$(INSTALL_FILE) $< $@
-
-$(NEWCACHEDIR)/inspector/% : inspector/images/%
-	$(INSTALL_FILE) $< $@
-
-$(CACHEDIR):
-	$(INSTALL_DIR) $(CACHEDIR)
-	-rm -rf $(CACHEDIR)
-	$(LN_S) ../../.. $(CACHEDIR)
-
 #---------------------------------------------------------------------
 # Cleaning up
 #---------------------------------------------------------------------
 
 clean:
 	rm -f *~ *.bak ./*/*~ ./*/*/*~ ./*/*.bak ./*/*/*.bak
-	rm -f $(FUNCTORS) $(INSPECTOROBJS) \
-	$(DISTRIBUTIONPANELOBJS) $(SYSLETS)
+	rm -f $(FUNCTORS) $(INSPECTOROBJS) $(DISTRIBUTIONPANELOBJS) $(SYSLETS)
 
 veryclean: clean
 	rm -f -r TAGS
@@ -363,9 +307,6 @@ distclean: veryclean
 #---------------------------------------------------------------------
 
 Makefile: Makefile.in ../config.status
-	cd .. && ./config.status
-
-ProductionTemplates.oz.in: ProductionTemplates.oz ../config.status
 	cd .. && ./config.status
 
 ../config.status: ../configure

@@ -2,7 +2,7 @@
 
 case `uname -s` in
     CYGWIN*)
-	cygpath -w -s "$1" | sed 's|\\|/|g'
+	cygpath -w "$1" | sed 's|\\|/|g'
 	;;
     *)
 	echo "$1"

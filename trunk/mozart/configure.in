@@ -91,12 +91,12 @@ AC_MSG_RESULT($oz_subdirs)
 
 AC_SUBST(oz_subdirs)
 
-AC_CONFIG_SUBDIRS($oz_subdirs)
+AC_CONFIG_SUBDIRS($oz_subdirs misc)
 
 AC_OUTPUT(Makefile)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded.
 ],
- [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+ [autoconf failed: use 'autoconf -l .' to include ./aclocal.m4.
 ]))

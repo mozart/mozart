@@ -42,7 +42,7 @@ INCFILES = \
 
 all: Makefile subdirs GumpScanner.so-$(PLATFORM)
 
-include $(SRCTOP)/share/Makefile.boot
+include $(BUILDTOP)/share/Makefile.boot
 bootstrap: cboot-all
 
 subdirs:

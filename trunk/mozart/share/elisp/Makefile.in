@@ -21,6 +21,7 @@
 #  WARRANTIES.
 #
 
+SRCTOP		= @SRCTOP@
 BUILDTOP=	@BUILDTOP@
 PREFIX=		@prefix@
 
@@ -40,6 +41,9 @@ LIBFILES = \
 	$(ELISPDIR)/oz-extra.el $(ELISPDIR)/oz-extra.elc \
 	$(ELISPDIR)/oz-server.el $(ELISPDIR)/oz-server.elc
 
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+CYG_SRCDIR	= $(shell $(CYGPATH) $(SRCDIR))
+
 .PHONY: bootstrap all install clean veryclean distclean tags check depend
 
 all: oz.elc mozart.elc oz-extra.elc oz-server.elc
@@ -58,7 +62,7 @@ mozart.el: mozart.el.in ../config.status
 mozart.elc: oz.elc
 
 oz.elc mozart.elc oz-extra.elc oz-server.elc: %.elc : %.el
-	$(EMACS) --eval "(setq load-path (cons \"$(SRCDIR)\" load-path))" -q -batch -f batch-byte-compile $< && \
+	$(EMACS) --eval "(setq load-path (cons \"$(CYG_SRCDIR)\" load-path))" -q -batch -f batch-byte-compile $(shell $(CYGPATH) "$<") && \
 	if [ $<c != $@ ]; then mv $<c $@; fi
 
 install: all $(ELISPDIR) $(LIBFILES)
