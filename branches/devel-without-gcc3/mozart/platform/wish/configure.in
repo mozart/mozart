@@ -1,0 +1,286 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Michael Mehl (mehl@dfki.de)
+dnl    Christian Schulte <schulte@ps.uni-sb.de>
+dnl
+dnl  Contributors:
+dnl    Marco Kuhlmann <kuhlmann@ps.uni-sb.de>
+dnl
+dnl  Copyright:
+dnl    Michael Mehl (1997)
+dnl    Marco Kuhlmann, 2001
+dnl    Christian Schulte, 2000
+dnl
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl
+dnl  This file is part of Mozart, an implementation
+dnl  of Oz 3:
+dnl     http://www.mozart-oz.org
+dnl
+dnl  See the file "LICENSE" or
+dnl     http://www.mozart-oz.org/LICENSE.html
+dnl  for information on usage and redistribution
+dnl  of this file, and for a DISCLAIMER OF ALL
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+dnl *****************************************************************
+dnl INITIALIZE
+dnl *****************************************************************
+
+AC_INIT(unixMain.cc)
+OZ_INIT
+
+OZ_CC_CHOOSE
+OZ_CXX_CHOOSE
+
+AC_PROG_LN_S
+
+# PLATFORM is defined by OZ_INIT
+: ${platform=$PLATFORM}
+
+case "$platform" in
+    win32*)
+	EXTRALDFLAGS="-mwindows -s"
+	SRCS="winMain.cc"
+	WITH_TCLTK=$with_tcl/lib
+	INSTALLWINDLLS=installwindlls
+	: ${WINDLLDIR=$windlldir}
+	for i in tcl83.dll tk83.dll msvcrt.dll; do
+	  dll=$WINDLLDIR/$i
+	  AC_MSG_CHECKING(for DLL $dll)
+	  if test -f $dll
+	  then AC_MSG_RESULT(yes)
+	  else AC_MSG_ERROR(required DLL $dll not found)
+	  fi
+	done
+    ;;
+
+    *)
+	WINDLLDIR=""
+	INSTALLWINDLLS=""
+	SRCS="unixMain.cc"
+    ;;
+esac
+
+AC_SUBST(EXTRALDFLAGS)
+AC_SUBST(CPPFLAGS)
+AC_SUBST(SRCS)
+AC_SUBST(WINDLLDIR)
+AC_SUBST(INSTALLWINDLLS)
+
+dnl ****************************************************************
+dnl   For MacOS X: maybe build with AquaTk
+dnl ****************************************************************
+
+AC_MSG_CHECKING([whether to build with AquaTk])
+AC_ARG_WITH(tk-aqua,
+    [--with-tk-aqua=DIR
+     build with AquaTk (default: no)],
+    : ${oz_tk_aqua="$with_tk_aqua"}
+    $oztmp="yes using $oz_tk_aqua",
+    : ${oz_tk_aqua=""}
+    $oztmp="no")
+AC_MSG_RESULT($oztmp)
+
+dnl ****************************************************************
+dnl   Places where to look for configuration scripts...
+dnl ****************************************************************
+
+: ${oz_tcltk_search="$WITH_TCLTK $WITH_TCLTK/lib  $prefix/lib /usr/lib /usr/local/lib /usr/pkg /usr/X11R6/lib /usr/X11/lib /opt/X11R6/lib /opt/X11/lib"}
+: ${oz_tcl_search="$oz_tcltk_search /usr/local/lib/tcl8.3 /usr/lib/tcl8.3 /usr/local/lib/tcl8.2 /usr/lib/tcl8.2 /usr/local/lib/tcl8.0 /usr/lib/tcl8.0"}
+: ${oz_tk_search="$oz_tcltk_search /usr/local/lib/tk8.3 /usr/lib/tk8.3 /usr/local/lib/tk8.2 /usr/lib/tk8.2 /usr/local/lib/tk8.0 /usr/lib/tk8.0"}
+
+dnl ****************************************************************
+dnl   Look for tcl configuration script...
+dnl ****************************************************************
+
+AC_MSG_CHECKING(for tclConfig.sh)
+AC_ARG_WITH(tcl,
+    [--with-tcl=<dir>
+    search tclConfig.sh in <dir> (default: $oz_tcl_search)])
+
+if test -n "${with_tcl}"
+then
+    oz_tcl_search="$with_tcl $oz_tcl_search"
+    echo kost: $oz_tcl_search
+fi
+
+TCL_LIB_DIR=""
+for d in $oz_tcl_search ; do
+    if test -r "$d/tclConfig.sh"; then
+	TCL_LIB_DIR=$d
+	break
+    fi
+done
+
+if test -z "$TCL_LIB_DIR"; then
+   AC_MSG_ERROR(Can't find tcl. Use --with-tcl to specify the directory which contains tclConfig.sh)
+fi
+
+AC_MSG_RESULT($TCL_LIB_DIR/tclConfig.sh)
+
+. $TCL_LIB_DIR/tclConfig.sh
+
+AC_SUBST(TCL_VERSION)
+AC_SUBST(TCL_PREFIX)
+AC_SUBST(TCL_LIBS)
+AC_SUBST(TCL_LIB_SPEC)
+
+dnl ****************************************************************
+dnl   Look for tk configuration script...
+dnl ****************************************************************
+
+
+AC_MSG_CHECKING(for tkConfig.sh)
+AC_ARG_WITH(tk,
+    [--with-tk=<dir>
+    search tkConfig.sh in <dir> (default: $oz_tk_search)])
+
+if test -n "${with_tk}"
+then
+    oz_tk_search="$with_tk $oz_tk_search"
+fi
+
+TK_LIB_DIR=""
+for d in $oz_tk_search ; do
+    if test -r "$d/tkConfig.sh"; then
+	TK_LIB_DIR=$d
+	break
+    fi
+done
+
+if test -z "$TK_LIB_DIR"; then
+   AC_MSG_ERROR(Can't find tk. Use --with-tk to specify the directory which contains tkConfig.sh)
+fi
+
+AC_MSG_RESULT($TK_LIB_DIR/tkConfig.sh)
+
+. $TK_LIB_DIR/tkConfig.sh
+
+AC_SUBST(TK_VERSION)
+AC_SUBST(TK_PREFIX)
+AC_SUBST(TK_LIBS)
+AC_SUBST(TK_LIB_SPEC)
+AC_SUBST(TK_XINCLUDES)
+
+dnl check if we have the combination of an old style Xlib.h and gcc
+PERMISSIVEOPT=
+if test "$GCC" = yes; then
+OZ_CXX_OPTIONS(-fpermissive,PERMISSIVEOPT)
+if test -n "$PERMISSIVEOPT"; then
+AC_MSG_CHECKING([whether we need -fpermissive for Xlib.h])
+AC_CACHE_VAL(ac_cv_xlib_permissive,
+  save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$TK_XINCLUDES $CPPFLAGS"
+  AC_LANG_SAVE
+  AC_LANG_CPLUSPLUS
+  AC_TRY_COMPILE([
+#include <X11/Xlib.h>
+],[
+void foo() {}
+],[
+  ac_cv_xlib_permissive=no
+],[
+  ac_cv_xlib_permissive=yes
+])
+  AC_LANG_RESTORE
+CPPFLAGS="$save_CPPFLAGS")
+AC_MSG_RESULT($ac_cv_xlib_permissive)
+else
+PERMISSIVEOPT=
+fi
+fi
+AC_SUBST(PERMISSIVEOPT)
+
+dnl *****************************************************************
+dnl where to look for the public header files
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for Tcl public headers)
+
+AC_ARG_WITH(tclinclude, [ --with-tclinclude      directory containing the public Tcl header files.], with_tclinclude=${withval})
+
+if test x"${with_tclinclude}" != x ; then
+    if test -f "${with_tclinclude}/tcl.h" ; then
+      TCL_INCLUDES=${with_tclinclude}
+    else
+      AC_MSG_ERROR([${with_tclinclude} directory does not contain Tcl public header file tcl.h])
+    fi
+else
+    for i in $TCL_PREFIX/include $TCL_PREFIX/include/tcl$TCL_VERSION ; do
+        if test -f "$i/tcl.h" ; then
+            TCL_INCLUDES=$i
+          break
+      fi
+    done
+fi
+
+if test x"$TCL_INCLUDES" = x ; then
+    AC_MSG_ERROR(tcl.h not found.  Please specify its location with --with-tclinclude.)
+else
+    AC_MSG_RESULT($TCL_INCLUDES)
+fi
+
+AC_SUBST(TCL_INCLUDES)
+
+AC_MSG_CHECKING(for Tk public headers)
+
+AC_ARG_WITH(tkinclude, [ --with-tkinclude      directory containing the public Tk header files.], with_tkinclude=${withval})
+
+if test x"${with_tkinclude}" != x ; then
+    if test -f "${with_tkinclude}/tk.h" ; then
+      TK_INCLUDES=${with_tkinclude}
+    else
+      AC_MSG_ERROR([${with_tkinclude} directory does not contain Tk public header file tk.h])
+    fi
+else
+    for i in $TK_PREFIX/include $TK_PREFIX/include/tcl$TK_VERSION ; do
+        if test -f "$i/tk.h" ; then
+          TK_INCLUDES=$i
+          break
+      fi
+    done
+fi
+
+if test x"$TK_INCLUDES" = x ; then
+    AC_MSG_ERROR(tk.h not found.  Please specify its location with --with-tkinclude.)
+else
+    AC_MSG_RESULT($TK_INCLUDES)
+fi
+
+AC_SUBST(TK_INCLUDES)
+
+
+dnl *****************************************************************
+dnl copy libs
+dnl *****************************************************************
+
+OZ_ENABLE(copy-tcl-libs,
+  [Copy tcl libraries (rather than drawing a link)],
+  [yes],
+  [AC_MSG_RESULT(yes)
+   PROVIDETCLLIBS="provide-copy"],
+  [AC_MSG_RESULT(no)
+   : ${PROVIDETCLLIBS="provide-link"}])
+
+AC_SUBST(PROVIDETCLLIBS)
+
+dnl *****************************************************************
+dnl FINALIZE
+dnl *****************************************************************
+
+AC_CONFIG_HEADER(conf.h)
+
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../aclocal.m4.
+]))

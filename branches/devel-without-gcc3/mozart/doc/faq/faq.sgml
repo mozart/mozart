@@ -1,0 +1,390 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+
+<!ENTITY % proglang.values.local "|sh|makefile|fundamental">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY ie PI "ie">
+<!ENTITY eg PI "eg">
+<!ENTITY le "<">
+<!ENTITY gt ">">
+<!entity amp "&">
+<!entity etc PI "ellipsis">
+]>
+<book>
+  <front>
+    <meta name="html.split" value="chapter.general.info">
+    <meta name="html.split" value="chapter.programming">
+    <meta name="html.split" value="chapter.language">
+    <title/The Mozart FAQ/
+    <author.Extern to="author.db" key="Denys.Duchier">
+  </front>
+  <body>
+    <chapter id=chapter.general.info>
+	<title/General Information/
+
+      <section>
+	  <title/What is Mozart?/
+	<p>Mozart is a programming system providing state-of-the-art
+support especially in two areas: constraint-based problem solving and
+open distributed computing.  Mozart implements the Oz language and
+provides libraries, tools, and a complete development environment.</p>
+      </section>
+
+      <section>
+	  <title/What is Oz?/
+	<p>Oz is a concurrent object-oriented programming language
+with dataflow synchronization.  Like Java, it is <q/write once, run
+everywhere/ and provides automatic local and distributed garbage
+collection.  Oz is based on the concurrent constraint programming
+paradigm.  Aarghh! I don't want to write this entry...</p>
+      </section>
+
+      <section>
+	  <title/Why is it called Oz (resp. Mozart)?/
+	<p>???</p>
+      </section>
+
+      <section>
+	  <title/Is there a WWW page for Mozart?/
+	<p>Yes, the primary WWW site for Mozart is located at the
+Programming Systems Lab of the the university of the Saarland in
+Germany:
+<ref.extern
+to="http://www.mozart-oz.org/">http://www.mozart-oz.org/</ref.extern>
+Another site is located at SICS, the Swedish Institute of COmputer
+Science:
+<ref.extern
+to="http://www.sics.se/mozart/">http://www.sics.se/mozart/</ref.extern></p>
+      </section>
+
+      <section id=get.doc>
+	  <title/How do I get documentation on Mozart?/
+	<p>There is a lot of documentation for Mozart: tutorials,
+demos, and reference manuals.  This documentation is available on-line
+from the Mozart sites, see &eg; <ref.extern to
+="http://www.mozart-oz.org/documentation/"
+>http://www.mozart-oz.org/documentation/</ref.extern>.</p>
+	<p>You can also download the full documentation package and
+install it on your computer.  See the on-line
+<ref.extern to="http://www.mozart-oz.org/download/index.html"
+>Dowload Instructions</ref.extern> for details.</p>
+      </section>
+
+      <section>
+	  <title/Is the documentation available on the WWW/
+	<p>Yes it is, see <ptr to=get.doc></p>
+      </section>
+
+      <section>
+	  <title/How to I download and install the system?/
+	<p>The Mozart system is available (1) as binary tarballs for
+various Unix platforms, (2) as a self-extracting archive for Windows
+95/98/NT, (3) as RPM packages for Linux, (4) as source tarballs, (5)
+as source obtained directly from our anonymous CVS server. Please
+consult the on-line
+<ref.extern to="http://www.mozart-oz.org/download/index.html"
+>Dowload Instructions</ref.extern> for details.</p>
+      </section>
+
+      <section>
+	  <title/What platforms are supported?/
+	<p>The Mozart system is known to run on most flavors of Unix
+as well as on Windows 95/98/NT.  It has been successfully built and
+installed on the following platforms:
+
+</p>
+      </section>
+
+      <section>
+	  <title/Are there newgroups or mailing-lists devoted to
+Mozart?/
+	<p>
+</p>
+      </section>
+
+      <section>
+	  <title/Is there a CVS server for Mozart?/
+	<p>Yes, there is.  All our sources are accessible through our
+anonymous CVS server.  First you need to login with CVS password
+<code proglang=sh/anoncvs/:
+<code display proglang=fundamental>
+% cvs -d :pserver:anoncvs@ps.uni-sb.de:/CVS login
+(Logging in to anoncvs@ps.uni-sb.de)
+CVS password: anoncvs
+</code>
+You only need to do this once since cvs then correspondingly updates
+your <file>~/.cvspass</file> file.  Then you cvan retrieve the
+complete sources with the command below:
+<code display proglang=sh>
+% cvs -d :pserver:anoncvs@ps.uni-sb.de:/CVS get mozart
+</code>
+Further instructions about getting the sources from CVS, configuring,
+and building the distribution are available in <ptr.extern
+to="ozdoc:install">.</p>
+      </section>
+
+      <section>
+	  <title/Are there licensing or copyright restrictions on
+Mozart?/
+	<p>No, Mozart is released with a very liberal license.  You
+can basically do anything you want with it and, as usual, we decline
+any responsibility.  Please consult the <ref.extern
+to="http://www.mozart-oz.org/LICENSE.html">License
+Statemen</ref.extern> for precise wording.</p>
+      </section>
+
+      <section>
+	  <title/What is Mozart good for?/
+	<p>Mozart particularly excels in two domains:
+<list enum>
+	    <item><em/Constraint-Based Problem Solving:/
+Mozart is the result of 10 years of research and
+development in concurrent constraint programming. It implements
+Oz , a powerful constraint language with logic variables,
+record constraints, finite domains, and finite sets. The
+system is competitive in performance with state-of-the-art
+commercial solutions, but is much more expressive
+and flexible, providing 1st-class computation spaces, programmable
+search strategies, a GUI for the interactive exploration of search
+trees, and allows to implement efficient constraint systems from
+scratch.</item>
+
+	    <item><em/Open Distributed Computing:/
+Mozart is the result of 3 years of research and development in open
+distributed computing, involving an international collaboration
+between the German Research Center for Artificial Intelligence (DFKI),
+the University of the Saarland in Germany, the Swedish
+Institute for Computer Science (SICS), and the Universite catholique
+de Louvain (at Louvain-la-Neuve) in Belgium.
+<p>
+The Mozart system is an ideal platform for open distributed computing:
+it makes the network completely transparent. The illusion of a common
+store is extended across multiple sites and automatically supported by
+very efficient protocols. In addition, full control is retained over
+network communication patterns, permitting very efficient use of
+network resources. Furthermore, reliable, fault tolerant applications
+can easily be developed.</p>
+	    </item>
+	  </list>
+Mozart is also excellent at general programming tasks.  For example,
+all our documentation is processed by <code proglang=sh/ozdoc/ which
+is written in Oz.
+</p>
+      </section>
+
+    </chapter>
+
+    <chapter id=chapter.programming>
+	<title/Programming with Mozart/
+
+      <section>
+	  <title/Is there a source code level debugger with
+breakpoints, etc?/
+	<p>Yes, the debugger is called ozcar and is documented in
+<ptr.extern to="ozdoc:ozcar">.  It has a graphical interface and
+uses the Emacs editor to display and highlight the source code that is
+being executed.</p>
+      </section>
+
+      <section>
+	  <title/What GUI toolkits are available?/
+	<p>Mozart comes with a high-level object-oriented interface to
+Tcl/Tk.</p>
+      </section>
+
+      <section>
+	  <title/Can modules mutually import each other?/
+	<p>Yes, there is no problem.  Modules are loaded by need and
+concurrently.</p>
+      </section>
+
+      <section>
+	  <title/Are there database interfaces?/
+	<p>Yes, so far we offer two interfaces as <q/contributions/:
+(1) a GDBM interface and (2) a PostgresSQL interface.  Feel free to
+contribute more or better interfaces.</p>
+      </section>
+    </chapter>
+
+    <chapter id=chapter.language>
+	<title/Language and design issues/
+
+      <section>
+	  <title/Why is the syntax so weird?/
+	<p>The most unusual thing about the syntax is the choice of
+curly braces for procedure application. Once you get used to that you
+can be rather comfortably puzzled by other things.</p>
+      </section>
+
+      <section>
+	  <title/Does Oz have garbage collection?/
+	<p>Yes, Oz has automatic garbage collection (2 space copying
+GC).  For open distributed computing applications, it also implements
+automatic distributed GC, but, at present, not all distributed cyclic
+datastructures can be collected successfully.</p>
+      </section>
+
+      <section>
+	  <title/What is constraint programming?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Can I also have state?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What is multi-paradigm programming?/
+	<p>Multi-paradigm programming is the freedom to choose and mix
+programming paradigms according to your tastes and needs.  Unlike most
+other programming languages which lock you into a single programming
+paradigm, Oz unifies into one simple and coherent framework the
+functional, object-oriented, and logic flavors of programming. This is
+possible due to the very general and powerful underlying paradigm of
+concurrent constraint programming.</p>
+      </section>
+
+      <section proglang=oz>
+	  <title/Does Oz support object-oriented programming?/
+	<p>Yes, Oz supports the class/instance model for
+object-oriented programming.  A class is created &eg; as follows:
+<code display>
+declare
+class Foo
+   attr val
+   meth init(V) val<-V end
+   meth show {Show foo(val: @val)} end
+end
+</code>
+An instance is created using procedure <code/New/ applied to class
+<code/Foo/ and initial message <code/init(12)/ for example:
+<code display/declare O = {New Foo init(12)}/
+Object <code/O/ can be applied to message <code/show/ as follows:
+<code display/{O show}/
+which, in this case causes <code/foo(val: 12)/ to be printed.</p>
+<p>A point of terminology:
+we speak of object application rather than of message sending.
+</p>
+      </section>
+
+      <section>
+	  <title/Does Oz support functional programming?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Does Oz support logic programming?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Does Oz support modular programming?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Does Oz support concurrent programming?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Does Oz support distributed programming?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Can I do backtracking?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What is a computation space?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/How do I program a search problem?/
+	<p></p>
+      </section>
+
+      <section>
+	<title/Why is <code proglang=oz/[]/ not the empty list/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What is the meaning of the <code proglang=oz/$/
+marker/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What is the meaning of the <code proglang=oz/,/
+marker/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What datatypes does Oz provide?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What is a basic constraint?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What is a non-basic constraint?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What is a propagator?/
+	<p></p>
+      </section>
+
+    </chapter>
+
+  </body>
+</book>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "../book.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

@@ -1,0 +1,75 @@
+# -*- Makefile -*-
+
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl, 1998
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+##########################################################################
+# TARGETS
+##########################################################################
+
+.PHONY:	install bootstrap clean cleaner veryclean distclean depend
+
+install bootstrap clean cleaner veryclean distclean depend::
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do \
+	  if (cd $$i && $(MAKE) $@); \
+          then true; \
+          else exit 1; \
+          fi; \
+        done
+
+veryclean::
+	$(MAKE) clean SUBDIRS=
+
+distclean::
+	$(MAKE) veryclean SUBDIRS=
+
+cleaner::
+	$(MAKE) clean SUBDIRS=
+
+clean::
+	-rm -f *.o *.lo *~  *.bak *.obj *.so *.a
+
+##########################################################################
+# RULES
+##########################################################################
+
+.SUFFIXES: .cc .m4cc .hh .m4hh .s .i .sed .perl .lo
+
+.cc.o:
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+.cc.lo:
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CDYNOPT) -c -o $@.o $< && mv $@.o $@
+
+.cc.s:
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S -o $@ $<
+
+.cc.i:
+	$(CXXCPP) $(CPPFLAGS) -o $@ $<
+
+.m4cc.cc:
+	$(M4) $(M4_S) $(M4_D) $< > $@ || (rm -f $@; exit 1)
+
+.m4hh.hh:
+	$(M4) $(M4_S) $(M4_D) $< > $@ || (rm -f $@; exit 1)

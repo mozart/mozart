@@ -1,0 +1,97 @@
+### NOTES:
+###	configure should really look for mozart.h and substitute the
+###	appropriate dependency
+
+@SET_MAKE@
+
+VPATH		= @srcdir@
+BUILDTOP	= @BUILDTOP@
+PREFIX		= @prefix@
+PLATFORM	= @platform@
+SRCDIR		= @srcdir@
+SRCTOP		= @SRCTOP@
+BUILDTOP	= @BUILDTOP@
+SUBDIRS		= ozflex ozbison
+
+RM		= @RM@ -f
+LNS             = @LN_S@
+OZTOOL		= @OZTOOL@
+CXX		= OZTOOL_CXX="@CXX@" $(OZTOOL) c++ $(WINOZTOOLCXXFLAGS)
+DYNLD		= OZTOOL_LD="@CXX@" $(OZTOOL) ld $(WINOZTOOLLDFLAGS)
+CPPFLAGS	= -I$(SRCDIR) -I. -I$(BUILDTOP)/platform/emulator -I$(SRCTOP)/platform/emulator @CPPFLAGS@
+CXXFLAGS	= @CXXFLAGS@ $(CFLAGS)
+
+INSTALL		= @INSTALL@
+INSTALLPRG	= $(INSTALL) -m 555
+INSTALLFILE	= $(INSTALL) -m 444
+INSTALLDLL	= $(INSTALL) -m 555
+MKINSTALLDIRS	= @INSTALL_DIR@
+
+SHAREDIR = $(PREFIX)/share
+SHAREFILES = \
+	$(SHAREDIR)/GumpScanner.so-$(PLATFORM) \
+	$(SHAREDIR)/Bison.so-$(PLATFORM)
+PLATFORMDIR = $(PREFIX)/platform/$(PLATFORM)
+PLATFORMFILES = \
+	$(PLATFORMDIR)/flex.exe
+NEWCACHEDIR = $(PREFIX)/cache/x-oz/system
+NEWCACHEFILES = $(SHAREFILES:$(SHAREDIR)/%=$(NEWCACHEDIR)/%)
+INCDIR = $(PREFIX)/include
+INCFILES = \
+	$(INCDIR)/FlexLexer.h $(INCDIR)/lexer.h
+
+all: Makefile subdirs GumpScanner.so-$(PLATFORM)
+
+include $(BUILDTOP)/share/Makefile.boot
+bootstrap: cboot-all
+
+subdirs:
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do \
+	  if (cd $$i && $(MAKE) all); \
+          then true; \
+          else exit 1; \
+          fi; \
+        done
+
+GumpScanner.so-$(PLATFORM): GumpScanner.C $(SRCTOP)/platform/emulator/mozart.h
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o GumpScanner.o && \
+	$(DYNLD) -o $@ GumpScanner.o
+
+install: all \
+	$(PLATFORMDIR) $(PLATFORMFILES) \
+	$(INCDIR) $(INCFILES) \
+	$(NEWCACHEDIR) $(NEWCACHEFILES)
+
+$(SHAREDIR) $(PLATFORMDIR) $(INCDIR) $(NEWCACHEDIR):
+	$(MKINSTALLDIRS) $@
+
+$(NEWCACHEDIR)/GumpScanner.so-$(PLATFORM): GumpScanner.so-$(PLATFORM)
+	$(INSTALLDLL) $< $@
+$(NEWCACHEDIR)/Bison.so-$(PLATFORM): ozbison/Bison.so-$(PLATFORM)
+	$(INSTALLDLL) $< $@
+
+$(PLATFORMDIR)/flex.exe: ozflex/flex.exe
+	$(INSTALLPRG) $< $@
+
+$(INCDIR)/%: %
+	$(INSTALLFILE) $< $@
+
+clean veryclean:
+	$(RM) *~ *.o *.so-$(PLATFORM)
+	for i in $(SUBDIRS); do (cd $$i && $(MAKE) clean); done
+
+distclean: clean
+	$(RM) Makefile config.*
+	for i in $(SUBDIRS); do (cd $$i && $(MAKE) distclean); done
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
+check:
+
+depend:
+

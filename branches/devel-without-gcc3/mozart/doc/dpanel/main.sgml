@@ -1,0 +1,71 @@
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+
+<!-- Extension to the DTD -->
+<!ENTITY amp "&">
+<!ENTITY % proglang.values.local "|sh|makefile|java|fundamental|lambda">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+
+<!-- Include Files -->
+<!ENTITY chapter1 SYSTEM "chapter1.sgml">
+<!ENTITY remote SYSTEM "remote.sgml">
+<!ENTITY chapter2 SYSTEM "chapter2.sgml">
+
+
+<!-- Abbreviations -->
+<!ENTITY dot "." -- to distinguish it from periods -->
+
+<!-- Processing Instructions -->
+<!ENTITY eg PI "eg">
+<!ENTITY ie PI "ie">
+<!ENTITY nbsp PI "nbsp">
+<!entity resp PI "resp">
+]>
+
+<BOOK PROGLANG=OZ>
+  <FRONT>
+    <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
+    <!-- Splitting the document into different HTML nodes -->
+    <Meta name="html.split" value="chapter.chapter1">
+    <Meta name="html.split" value="chapter.remote">
+    <Meta name="html.split" value="chapter.chapter2">
+    <Meta name="html.split.bib" value="">
+    <Meta name="latex.picture.width" arg1="basic.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="Cframe.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="DSframe.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="EEframe.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="IEframe.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="MSframe.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="RCframeGCbar.gif" arg2="0.5\linewidth">
+     <Meta name="latex.picture.width" arg1="StrangeRTT.gif" arg2="0.5\linewidth">
+     <Meta name="latex.picture.width" arg1="TicketPort.gif" arg2="0.5\linewidth">
+     <Meta name="latex.picture.width" arg1="UxpctExports.gif" arg2="0.5\linewidth">
+    <Meta name=ozversion value="1.1.0">
+    <Meta name=status value=draft>
+    <Meta name=latex.package value="pstricks">
+
+    <TITLE>Distribution Panel</TITLE>
+    <Author.Extern to="../author.db" key="Erik.Klintskog">
+    <Author.Extern to="../author.db" key="Anna.Neiderud">
+    <ABSTRACT>
+       The Distribution Panel is a tool for monitoring the behavior of
+       the distribution part of a Mozart engine. With its help it is
+       possible to obtain an understanding of what is happening under
+       the surface of your Mozart engine. It is useful to tune
+       applications and detect unexpected behavior. To fully
+       understand the information that the Distribution panel
+       displays, good comprehension of the Mozart distribution model
+       is required. See Seif and Peter's upcoming book.
+    </ABSTRACT>
+  <BODY>
+  &chapter1
+  &remote
+  &chapter2
+  </BODY> 
+</BOOK>
+
+
+

@@ -1,0 +1,76 @@
+Working with QTk
+
+This section will present some methodology that can be applied to QTk.
+
+When you want to create a GUI, first of all try to figure out the window you'll want to see at the end. This window is composed of widgets organized in rectangular areas.
+
+For example, a spreadsheet application is composed of a menu bar, a toolbar, a spreadsheet display and a status bar. These 4 rectangular areas expand from top to bottom. At this step, we don't take into account how these parts are glued. So we have so far :
+
+td(Menubar
+   Toolbar
+   Spreadsheet
+   Statusbar)
+
+These areas can in turn be decomposed into smaller components, and recursively up to the composing widgets :
+
+td(lr(menubutton(text:"File")
+      menubutton(text:"Edit"))
+   lr(tbcommand(text:"Load")
+      tbcommand(text:"Save")
+      tbcommand(text:"Cut")
+      tbcommand(text:"Copy")
+      tbcommand(text:"Paste"))
+   canvas(tdscrollbar:true lrscrollbar:true)
+   label(text:"Status"))
+
+As you can see, the widgets aren't at all fully defined, what is defined is just enough to have a first idea of the visual aspect of the window. It is now easy to build that window, show it and resize it. Resizing the window gives many hints on how the widgets have to be glued :
+
+td(lr(menubutton(text:"File")
+      menubutton(text:"Edit"))
+   lr(tbcommand(text:"Load")
+      tbcommand(text:"Save")
+      tbcommand(text:"Cut")
+      tbcommand(text:"Copy")
+      tbcommand(text:"Paste"))
+   canvas(tdscrollbar:true lrscrollbar:true)
+   label(text:"Status"))
+
+In this example, many widgets of the same type have the same glue parameter. A very efficient way of managing that if to group the glue information by using looks :
+
+Look={QTk.newLook}
+{Look.set  ... }
+td(lr(menubutton(text:"File")
+      menubutton(text:"Edit"))
+   lr(tbcommand(text:"Load")
+      tbcommand(text:"Save")
+      tbcommand(text:"Cut")
+      tbcommand(text:"Copy")
+      tbcommand(text:"Paste"))
+   canvas(tdscrollbar:true lrscrollbar:true)
+   label(text:"Status"))
+
+Looks can also define the default visual aspect of the widgets :
+
+...
+
+Now the window should have the required visual aspect. It is time to make these widgets alive by using handles and actions :
+
+...
+
+
+Computing a GUI.
+----------------
+
+A very nice property of QTk is its ability to compute a GUI from a record. This allows the programmer to compute a GUI on the fly very easily. For example, one can display a data structure by using a function that will map it to a record that can be used by QTk to build a window. For example, say we have a dictionary containing strings. It will be very easy to display all the dictionary by a function like :
+
+fun{DictToQTk D}
+...
+end
+
+It is also very easy to create an editor by using entries instead of labels, modifying an entry placing the new string in the dictionary :
+
+fun{EditDict D}
+...
+end
+
+Having the ability of easily computing a user interface is a very strong point of QTk.

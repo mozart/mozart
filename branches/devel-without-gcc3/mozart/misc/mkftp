@@ -1,0 +1,370 @@
+#! /usr/bin/perl
+#
+# The purpose of mkftp is to ease the process of creating and populating
+# the ftp directory of a mozart release.
+#
+# SYNOPSIS
+# 	mkftp --release=RELEASE OPTIONS ACTION FILES...
+#
+# OPTIONS
+#	--just-print, -n
+#		don't actually perform the commands, but just show
+#		which ones would be performed
+#
+#	--verbose, -v
+#		display each command before executing it
+#
+# ACTIONS
+# 	--create
+#		create the skeleton directory for a new release
+#		if RELEASE does not contain a data tag, one will
+#		be added using the current date.
+#
+#	--documentation=PREFIX
+#		PREFIX/print should contain the printable documentation
+#
+#	--rpm=DISTRIB RPMFILES...
+#		DISTRIB should be the name of a distribution such as
+#		redhat-7.2
+#
+#	--windows EXES...
+#		install some self-extracting archives for Windows
+#
+#	--tar TARFILES-and-READMES...
+#		install tarballs
+
+
+use Getopt::Long;
+Getopt::Long::Configure ("bundling");
+
+my $RELEASE;
+my $ACTION_NEW;
+my $ACTION_RPM;
+my $ACTION_DOC;
+my $ACTION_WIN;
+my $ACTION_TAR;
+my $ACTION_MAC;
+my $ACTION_DEB;
+my $JUSTPRINT;
+my $VERBOSE;
+my $ACTION_HELP;
+
+my $FTPDIR = "/home/ftp/pub/mozart";
+my $RELDIR;
+
+# when running on my laptop:
+$FTPDIR = "/home/denys/Mozart/mozart-ftp/mozart"
+    if `hostname` eq "fox\n";
+
+my $result = GetOptions
+    (
+     'release|r=s'     => \$RELEASE,
+     'create|new|c+'   => \$ACTION_NEW,
+     'rpm|linux=s'     => \$ACTION_RPM,
+     'documentation=s' => \$ACTION_DOC,
+     'windows+'        => \$ACTION_WIN,
+     'tar+'            => \$ACTION_TAR,
+     'macosx'          => \$ACTION_MAC,
+     'debian'	       => \$ACTION_DEB,
+     'just-print|n+'   => \$JUSTPRINT,
+     'verbose|v+'      => \$VERBOSE,
+     'help|h+'         => \$ACTION_HELP,
+     );
+
+if ($ACTION_HELP) {
+    print <<EOF;
+The purpose of mkftp is to ease the process of creating and populating
+the ftp directory of a mozart release.
+
+SYNOPSIS
+	mkftp --release=RELEASE OPTIONS ACTION FILES...
+
+OPTIONS
+	--just-print, -n
+		don\'t actually perform the commands, but just show
+		which ones would be performed
+
+	--verbose, -v
+		display each command before executing it
+
+ACTIONS
+	--create
+		create the skeleton directory for a new release
+		if RELEASE does not contain a data tag, one will
+		be added using the current date.
+
+	--documentation=PREFIX
+		PREFIX/print should contain the printable documentation
+
+	--rpm=DISTRIB RPMFILES...
+		DISTRIB should be the name of a distribution such as
+		redhat-7.2
+
+	--windows EXES...
+		install some self-extracting archives for Windows
+
+	--tar TARFILES-and-READMES...
+		install tarballs
+
+	--mac PKGFILES-and-READMES...
+		install MacOS X packages
+
+	--debian FILES...
+		install debian packages
+
+EOF
+    exit 0;
+}
+
+# check that only one action was specified
+
+{
+    my $action;
+    $action++ if $ACTION_NEW;
+    $action++ if $ACTION_RPM;
+    $action++ if $ACTION_DOC;
+    $action++ if $ACTION_WIN;
+    $action++ if $ACTION_TAR;
+    $action++ if $ACTION_MAC;
+    $action++ if $ACTION_DEB;
+    die "exactly 1 action must be specified" unless $action == 1;
+}
+
+# check that --version was given
+
+die "--release option is mandatory" unless $RELEASE;
+
+# check if it exists and set the RELDIR
+
+sub nondirname {
+    my $path = shift;
+    $path = $1 if $path =~ m|/([^/]+)$|;
+    return $path;
+}
+
+my $SHOW = $VERBOSE || $JUSTPRINT;
+my $DO   = !$JUSTPRINT;
+
+sub do_mkdir {
+    my $dir = shift;
+    print "mkdir $dir\n" if $SHOW;
+    mkdir $dir if $DO && ! -d $dir;
+}
+
+sub do_system {
+    my $cmd = shift;
+    print "$cmd\n" if $SHOW;
+    system($cmd) if $DO;
+}
+
+sub action_create {
+    &do_mkdir($RELDIR);
+    &do_mkdir("$RELDIR/tar");
+    &do_mkdir("$RELDIR/rpm");
+    &do_mkdir("$RELDIR/windows");
+    &do_mkdir("$RELDIR/print");
+    &do_mkdir("$RELDIR/macosx");
+    &do_mkdir("$RELDIR/debian");
+}
+
+{
+    die "illegal --release argument: $RELEASE"
+	unless $RELEASE =~ /^\d+\.\d+\.\d+(\.\d{8})?$/;
+    my $dir = glob "$FTPDIR/$RELEASE*";
+    if (-d $dir) {
+	$RELEASE = nondirname($dir);
+	$RELDIR = $dir;
+	die "release already exists: $RELEASE" if $ACTION_NEW;
+    } elsif ($ACTION_NEW) {
+	if ($RELEASE =~ /^\d+\.\d+\.\d+$/) {
+	    $RELEASE .= '.' . `date +%Y%m%d`;
+	    chop($RELEASE);
+	}
+	$RELDIR = "$FTPDIR/$RELEASE";
+	&action_create;
+	exit 0;
+    } else {
+	die "non existent release: invoke --create first";
+    }
+}
+
+sub do_unlink {
+    my $file = shift;
+    print "unlink $file\n" if $SHOW;
+    unlink $file if $DO;
+}
+
+sub gzip_file {
+    my $file = shift;
+    my $filegz = "$file.gz";
+    &do_unlink($filegz) if -e $filegz;
+    &do_system("gzip -9 -c < $file > $filegz");
+}
+
+sub zip_file {
+    my $file = shift;
+    my $filezip = "$file.zip";
+    &do_unlink($filezip) if -e $filezip;
+    &do_system("zip -q -9 -r - $file > $filezip");
+}
+
+sub install_dir_ext {
+    my $fromdir = shift;
+    my $todir   = shift;
+    my $ext     = shift;
+    foreach $f (glob "$fromdir/*.$ext") {
+	my $name = &nondirname($f);
+	my $tofile = "$todir/$name";
+	&do_system("cp -f $f $tofile");
+	&gzip_file("$tofile");
+	&zip_file("$tofile");
+    }
+}
+
+sub install_doc_dir {
+    my $fromdir = shift;
+    my $todir   = shift;
+    return unless -d $fromdir;
+    &do_mkdir($todir) unless -d $todir;
+    &install_dir_ext($fromdir,$todir,'ps');
+    &install_dir_ext($fromdir,$todir,'pdf');
+}
+
+sub action_doc {
+    my $docdir = "$ACTION_DOC/print";
+    my $printdir = "$RELDIR/print";
+    if (-d $docdir) {
+	foreach $from ('other','reference','tools','tutorial') {
+	    my $fromdir = "$docdir/$from";
+	    my $todir   = "$printdir/$from";
+	    &install_doc_dir($fromdir,$todir);
+	}
+	# create `all' archives
+	my $arc = "$printdir/all-ps.tar.gz";
+	&do_unlink($arc) if -e $arc;
+	$arc = "$printdir/all-ps.zip";
+	&do_unlink($arc) if -e $arc;
+	$arc = "$printdir/all-pdf.tar.gz";
+	&do_unlink($arc) if -e $arc;
+	$arc = "$printdir/all-pdf.zip";
+	&do_unlink($arc) if -e $arc;
+	&do_system("cd $RELDIR && tar -c -f - print/*/*.ps  | gzip -c -9 > print/all-ps.tar.gz");
+	&do_system("cd $RELDIR && tar -c -f - print/*/*.pdf | gzip -c -9 > print/all-pdf.tar.gz");
+	&do_system("cd $RELDIR && zip -q -9 -r all-ps  print/*/*.ps  && mv all-ps.zip  print/");
+	&do_system("cd $RELDIR && zip -q -9 -r all-pdf print/*/*.pdf && mv all-pdf.zip print/");
+    } else {
+	die "source print directory not found: $docdir";
+    }
+}
+
+&action_doc if $ACTION_DOC;
+
+my $RELEASE_NUMBER;
+my $RELEASE_DATE;
+
+if ($RELEASE =~ /^(\d+\.\d+\.\d+)\.(\d{8})$/) {
+    $RELEASE_NUMBER = $1;
+    $RELEASE_DATE   = $2;
+} else {
+    die "bad release name: $RELEASE";
+}
+
+sub action_rpm {
+    my $rpmdir = "$RELDIR/rpm/$ACTION_RPM";
+    foreach $file (@ARGV) {
+	my $name = &nondirname($file);
+	if ($name =~ /^mozart-(|contrib-|doc-)(\d+\.\d+\.\d+)\.\d{8}(?:-\d+)?\.(.*)\.rpm/) {
+	    my $type = $1;
+	    my $rnum = $2;
+	    my $spec = $3;
+	    die "wrong release number on rpm $name" unless $rnum eq $RELEASE_NUMBER;
+	    if ($spec eq 'src') {
+		die "unexpected $type in $name" if $type;
+		&do_system("cp -f $file $RELDIR/rpm/$name");
+	    } else {
+		&do_mkdir($rpmdir) unless -d $rpmdir;
+		&do_system("cp -f $file $rpmdir/$name");
+	    }
+	} else {
+	    die "unrecognized rpm $name";
+	}
+    }
+}
+
+&action_rpm if $ACTION_RPM;
+
+sub action_windows {
+    my $windir = "$RELDIR/windows";
+    foreach $file (@ARGV) {
+	my $name = &nondirname($file);
+	if ($name =~ /^mozart-(\d+\.\d+\.\d+)(?:rc\d+)?\.\d{8}\.(exe|msi)$/) {
+	    my $rnum = $1;
+	    die "wrong release number on exe $name" unless $rnum eq $RELEASE_NUMBER;
+	    &do_system("cp -f $file $windir/$name");
+	} else {
+	    die "unrecognized exe or msi: $name";
+	}
+    }
+}
+
+&action_windows if $ACTION_WIN;
+
+sub action_tar {
+    my $tardir = "$RELDIR/tar";
+    foreach $file (@ARGV) {
+	my $name = &nondirname($file);
+	if ($name =~ /^mozart-(\d+\.\d+\.\d+)\.\d{8}-(.*)\.tar\.gz/) {
+	    my $rnum = $1;
+	    die "wrong release number on archive $name" unless $rnum eq $RELEASE_NUMBER;
+	    &do_system("cp -f $file $tardir/$name");
+	} elsif ($name =~ /^README[.-]/) {
+	    &do_system("cp -f $file $tardir/$name");
+	} else {
+	    die "unrecognized archive $name";
+	}
+    }
+}
+
+&action_tar if $ACTION_TAR;
+
+sub action_macosx {
+    my $macdir = "$RELDIR/macosx";
+    foreach $file (@ARGV) {
+	my $name = &nondirname($file);
+	if ($name =~ /^mozart-(\d+\.\d+\.\d+)\.\d{8}-(.*)\.pkg\.t?gz$/) {
+	    die "wrong release number on $name" unless $1 eq $RELEASE_NUMBER;
+	    &do_system("cp -f $file $macdir/$name");
+	} elsif ($name =~ /^README-(\d+\.\d+\.\d+)\.\d{8}-(.*)$/) {
+	    die "wrong release number on $name" unless $1 eq $RELEASE_NUMBER;
+	    &do_system("cp -f $file $macdir/$name");
+	} else {
+	    die "unrecognized macos package $name";
+	}
+    }
+}
+
+&action_macosx if $ACTION_MAC;
+
+sub action_debian {
+    my $debdir = "$RELDIR/debian";
+    foreach $file (@ARGV) {
+	my $name = &nondirname($file);
+	if ($name =~ /^mozart-contrib_(\d+\.\d+\.\d+)\.\d{8}-\d+_(.*)\.deb$/ ||
+	    $name =~ /^mozart-doc-html_(\d+\.\d+\.\d+)\.\d{8}-\d+_all\.deb$/ ||
+	    $name =~ /^mozart_(\d+\.\d+\.\d+)\.\d{8}-\d+_(.*)\.deb$/ ||
+	    $name =~ /^mozart_(\d+\.\d+\.\d+)\.\d{8}\.orig.tar.gz$/ ||
+	    $name =~ /^mozart_(\d+\.\d+\.\d+)\.\d{8}-\d+\.diff\.gz$/ ||
+	    $name =~ /^mozart_(\d+\.\d+\.\d+)\.\d{8}-\d+\.dsc$/ ||
+	    $name =~ /^mozart_(\d+\.\d+\.\d+)\.\d{8}-\d+_(.*)\.changes$/ ||
+	    $name eq "Release" ||
+	    $name eq "Packages.gz")
+	{
+	    die "wrong release number on $name" unless !$1 || $1 eq $RELEASE_NUMBER;
+	    &do_system("cp -f $file $debdir/$name");
+	} else {
+	    die "unrecognized debian package $name";
+	}
+    }
+}
+
+&action_debian if $ACTION_DEB;

@@ -1,0 +1,1 @@
+<ITEM> <<lrscrollbar:B>> : Determines whether the widget has got a horizontal bar below. This option can be specified at creation time only. <<B>> must be a boolean.

@@ -1,0 +1,195 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -   Peter Van Roy <pvr@info.ucl.ac.be>
+  -
+  - Copyright:
+  -   Christian Schulte, 1999
+  -   Peter Van Roy, 1999
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh|fundamental">
+
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Include Files -->
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY dot "." -- to distinguish it from periods -->
+<!ENTITY Oz "Oz">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
+<!ENTITY eg PI "eg">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+    <Title/Mozart System Limitations/
+  <Body>
+<chapter class=unnumbered><title/Limitations/
+<P>In general, Mozart has very few system limitations.
+Memory allocation is dynamic.
+The number of record fields, the size of arrays and dictionaries,
+the number of characters in an atom,
+the number of threads, integer precision, etc.,
+are all limited only by available memory.
+Memory is requested from the operating system according to need.
+The allocation strategy is user-customizable
+(see <ptr.extern to="ozdoc:system" key="chapter.property">).
+If memory use decreases, then all
+unused memory is eventually returned
+to the operating system.
+
+<p>
+However, a few limits remain.
+
+<section class=unnumbered><title/Maximum Memory Size/
+
+<p>
+Mozart has been ported to 32-bit and 64-bit
+architectures.  On 32-bit architectures, a
+program can use all available memory (that is 4GB) which in
+the worst case (due to copying garbage collection) means that
+Mozart can have an active heap (that is alive data structures) of
+2GB. This is currently also shared with 64-bit architectures.
+<p>
+A crude but effective way to go beyond this limit
+is to use the <<Remote>> module to create new
+sites (i.e., OS processes).  This is especially
+effective if communication to the new processes is
+by shared memory.  For more information on
+<<Remote>>, see <ptr.extern to="ozdoc:system"
+key="chapter.remote">.
+
+<section class=unnumbered><title/Garbage Collection/
+
+<p>
+All memory areas of the virtual machine are
+garbage collected except for the atom table and
+the table of record arities.  In particular, the
+area used to store program instructions is garbage
+collected.
+<p>
+We recommend to avoid as much as possible
+dynamically creating atoms (with <<String.toAtom>>
+or <<VirtualString.toAtom>>) or records with new
+arities (for example, with <<Record.filter>>).
+Tuples do not have entries in the arity table, so
+they are not subject to this restriction.
+
+<section class=unnumbered><title/Cloning/
+
+<p>
+Arities of records are not cloned. This is typically correct.
+Only if the arity contains names that are local to a subordinated
+space this is incorrect.
+
+<section class=unnumbered><title/Choice Points/
+
+<p>
+The number of alternatives of a choice point must be
+less than <math/2^{27}-2/ (i.e., 134217726).
+
+<section class=unnumbered><title/Constraint Variables Across Spaces/
+
+<p>
+The following restriction is very, very, very small!  The
+implementation does currently not support that a so-far
+unconstrained variable is locally (inside a local computation
+space or inside a guard of a combinator) constrained to a
+constraint-variable (for example, a finite domain variable). This
+can be avoided by constraining the variable globally to a
+constraint-variable.
+
+<p>
+For example, instead of 
+<<<local X in or X::1#2 [] X::3#4 end end>>>
+one should always use
+<<<local X={FD.decl} in or X::1#2 [] X::3#4 end end>>>
+
+<section class=unnumbered><title/Record Arities/
+
+<p>
+Arities of records are not cloned. This is typically correct.
+Only if the arity contains names that are local to a subordinated
+space this is incorrect.
+
+<section class=unnumbered><title/Procedures/
+
+<p>
+Procedures can have no more than 4096 arguments.
+
+<section class=unnumbered><title/Finite Domains and Finite Sets/
+
+<p>
+The range of a finite domain variable
+is from <math/0/ to <math/2^{27}-2/ (i.e., 134217726).
+<p>
+The range of a finite set domain variable
+is from <math/\{\}/ to <math/\{0, ..., 2^{27}-2\}/.
+
+<section class=unnumbered><title/Integers and Floats/
+
+<p>Integers of 28-bit or less precision are stored in registers. 
+Floating-point numbers and
+integers needing more than 28-bit precision are stored on the heap.
+<p>
+This means that calculations are significantly
+faster and memory-efficient
+when done with small integers rather than
+with floating-point numbers or big integers.
+
+<section class=unnumbered><title/Compiler/
+
+<p>
+The compiler is part of the interactive run-time system.
+It may use large amounts of memory
+on large programs or programs that access large
+data structures in the run-time environment.
+This memory use is temporary.
+After the compiler completes,
+the memory is eventually returned to the operating system.
+
+<section class=unnumbered><title/Distribution/
+
+<p>
+See the distribution tutorial <ptr.extern to="ozdoc:dstutorial">
+for a list of
+limitations related to distribution and fault tolerance.
+
+</Book>
+
+
