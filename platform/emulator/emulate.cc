@@ -677,17 +677,17 @@ void printArg(OZ_Term arg)
     int len=st->getWidth();
     TaggedRef lab=st->getLabel();
     if (lab==OZ_atom("proc")) {
-      message("Application { %s ",toC(st->getArg(0)));
+      message("Application {%s",toC(st->getArg(0)));
       for (int i=1; i<len; i++) {
-        printf("%s ",toC(st->getArg(i)));
+        printf(" %s",toC(st->getArg(i)));
       }
       printf("} failed.\n");
     } else if (lab==OZ_atom("instr")) {
-      message("Instruction %s(",toC(st->getArg(0)));
+      message("Instruction '%s",toC(st->getArg(0)));
       for (int i=1; i<len; i++) {
-        printf("%s ",toC(st->getArg(i)));
+        printf(" %s",toC(st->getArg(i)));
       }
-      printf(") failed.\n");
+      printf("' failed.\n");
     } else if (lab==OZ_atom("vs")) {
       for (int i=0; i<len; i++) {
         message("");
