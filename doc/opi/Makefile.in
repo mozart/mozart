@@ -17,6 +17,10 @@ INSTALL_DIR     = @INSTALL_DIR@
 
 SGMLSRCS = \
         opi.sgml
+ELSRCS = \
+        oz.el
+GIFSRCS = \
+        menu.gif
 
 .PHONY: all validate install clean veryclean distclean
 
@@ -29,8 +33,9 @@ bootstrap: boot-all
 Makefile: Makefile.in ../config.status
         cd .. && ./config.status
 
-opi-html: $(SGMLSRCS)
-        $(DOCIFY) --in=$(SRCDIR)/opi.sgml --out=$@ --type=html-stylesheets
+opi-html: $(SGMLSRCS) $(ELSRCS) $(GIFSRCS)
+        $(DOCIFY) --in=$(SRCDIR)/opi.sgml --out=$@ --type=html-stylesheets && \
+        cp -p $(addprefix $(SRCDIR)/,$(GIFSRCS)) $@
 
 opi-tex: $(SGMLSRCS)
         $(DOCIFY) --in=$(SRCDIR)/opi.sgml --out=opi-tex --type=latex
