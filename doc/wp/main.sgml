@@ -1,6 +1,5 @@
 <!--
   - Authors:
-  -   Michael Mehl <mehl@dfki.de>
   -   Christian Schulte <schulte@dfki.de>
   -
   - Contributors:
@@ -8,7 +7,6 @@
   -   Andy Walter <anwalt@ps.uni-sb.de>
   -
   - Copyright:
-  -   Michael Mehl, 1998
   -   Christian Schulte, 1998
   -
   - Last change:
@@ -127,8 +125,8 @@
     <Meta name=latex.package value="pifont">
 
     <Title/Window Programming in Mozart/
-      <Author.Extern to="author.db" key="Michael.Mehl">
       <Author.Extern to="author.db" key="Christian.Schulte">
+      <Author.Extern to="author.db" key="Michael.Mehl">
     <Comic>
       <Picture.Choice>
         <Picture.Extern to="wp.gif" type=gif>
