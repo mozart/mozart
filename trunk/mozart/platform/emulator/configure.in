@@ -317,6 +317,10 @@ case $platform in
         TOOLLDCMD="ld -Bshareable"
 	oz_enable_modules_static=yes
         ;;
+    openbsd*)
+	TOOLLDCMD="ld -Bshareable"
+	: ${oz_enable_modules_static=no}
+	;;
     win32*)
 	AC_DEFINE(WINDOWS)
 	oz_enable_modules_static=yes
@@ -932,6 +936,10 @@ dnl *****************************************************************
 : ${oz_lib_path="/usr/local/lib"}
 
 OZ_LIB_GMP
+if test "$OZ_GMP_MAJOR" -gt 3 || \
+   (test "$OZ_GMP_MAJOR" -eq 3 && test "$OZ_GMP_MINOR" -gt 1); then
+  AC_DEFINE_UNQUOTED(GMP_NEEDS_CPLUSPLUS)
+fi
 
 dnl *****************************************************************
 dnl *** zlib
