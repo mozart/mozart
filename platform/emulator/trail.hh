@@ -24,16 +24,17 @@
 
 class  Trail: public Stack {
 private:
-  StackEntry* lastMark;
+  const StackEntry trailMark = (StackEntry) -1l;
 
 public:
   void gc();
 
-  Trail (int sizeInit = 200): Stack(sizeInit) { lastMark = tos; }
+  Trail (int sizeInit = 200): Stack(sizeInit) { }
 
   void pushRef(TaggedRef *val, TaggedRef old)
   {
     ensureFree(2);
+    Assert(trailMark != val && trailMark != ToPointer(old));
     Stack::push((StackEntry) val,NO);
     Stack::push((StackEntry) ToPointer(old),NO);
   }
@@ -50,20 +51,27 @@ public:
     if (isAnyVar(A)) { pushRef(Aptr,A); }
   }
 
-  void pushMark()
+  void pushMark() { Stack::push(trailMark); }
+
+  int chunkSize()
   {
-    Stack::push((StackEntry)(tos-lastMark));
-    lastMark = tos-1;
+    int ret = 0;
+    StackEntry *top = tos-1;
+    while(*top != trailMark) {
+      top = top-2;
+      ret++;
+      Assert(top>=array);  /* there MUST be a mark on the trail! */
+    }
+    return ret;
   }
-
-  void popMark() {
-    Assert(lastMark == tos-1);
-    lastMark -= (unsigned intlong) Stack::pop();
-  }
-
-  int chunkSize()     { return (tos-1-lastMark)/2; }
-  Bool isEmptyChunk() { return (lastMark == tos-1); }
+  Bool isEmptyChunk() { return (trailMark == *(tos-1)); }
   virtual void resize(int newSize);
+  void popMark()
+  {
+    Assert(isEmptyChunk());
+    (void)Stack::pop();
+  }
+
 };
 
 

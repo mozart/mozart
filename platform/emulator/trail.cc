@@ -20,9 +20,6 @@
 
 void Trail::resize(int newSize)
 {
-  DebugCheckT(message("resizing trail from %d to %d\n",
-                      getMaxSize (), newSize));
-  int oldMark = tos-lastMark;
+  DebugCheckT(message("resizing trail from %d to %d\n", getMaxSize (), newSize));
   Stack::resize(newSize);
-  lastMark = tos-oldMark;
 }
