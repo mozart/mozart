@@ -667,7 +667,7 @@ the GDB commands `cd DIR' and `directory'."
        "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
        "true" "false" "touch"
        "div" "mod" "andthen" "orelse"
-       "thread" "job" "conc" "in"
+       "thread" "in"
        "condis" "not"
        "try" "catch" "finally" "skip"
        ))
@@ -683,7 +683,7 @@ the GDB commands `cd DIR' and `directory'."
 		   "local"
 		   "if" "or" "dis" "choice" "case"
 		   "class" "create" "meth" "extern"
-		   "not" "thread" "job" "conc"
+		   "not" "thread"
 		   "condis"
 		   )))
 
