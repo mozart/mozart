@@ -56,6 +56,10 @@
     <Meta name="html.split" value="chapter.numbers">
     <Meta name="html.split" value="chapter.literals">
     <Meta name="html.split" value="chapter.records">
+    <Meta name="html.split" value="section.records.records">
+    <Meta name="html.split" value="section.records.tuples">
+    <Meta name="html.split" value="section.records.lists">
+    <Meta name="html.split" value="section.records.features">
     <Meta name="html.split" value="chapter.text">
     <Meta name="html.split" value="chapter.proccells">
     <Meta name="html.split" value="chapter.chunks">
