@@ -16,6 +16,11 @@ local
 	 end
       end
    end
+
+   proc {MagicEmacsScrollbar F L C}
+      {Print {VS2A 'oz-scrollbar ' # F # ' ' # L # ' ' # C}}
+      {Delay 2} %% needed for Emacs
+   end
    
    class SourceWindow from Tk.text
       feat
@@ -230,13 +235,19 @@ in
       meth scrollbar(file:F line:L color:C what:What<=appl ack:Ack<=unit)
 	 M = {Cget scrollbar}
       in
-	 SourceManager,M(file:F line:L color:C what:What ack:Ack)
+	 lock
+	    SourceManager,M(file:F line:L color:C what:What ack:Ack)
+	 end
       end
       
       meth emacsScrollbar(file:F line:L color:C what:What ack:Ack)
 	 case {IsDet Ack} then skip else Ack = unit end
-         case {UnknownFile F} then skip else
-            {Print {VS2A 'oz-arrow ' # {LookupFile F} # ' ' # L}}
+         case {UnknownFile F} then
+	    case What == stack then skip else
+	       {MagicEmacsScrollbar undef 0 hide}
+	    end
+	 else
+	    {MagicEmacsScrollbar {LookupFile F} L ColorMeaning.C}
          end
       end
       
