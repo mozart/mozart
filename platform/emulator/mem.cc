@@ -339,8 +339,14 @@ void *ozMalloc(size_t size)
   }
 #endif
 
-  //
-  size = (size / pagesize) * pagesize;
+  // mm2: the interface of ozMalloc is wrong
+  //  when allocating more memory than is really used
+  //  the memory of the remainder of the page is not used.
+  //  ozMalloc should return the size allocated.
+  if (size % pagesize != 0) {
+    // OZ_warning("*** WEIRD: ozMalloc: pagesize alignment problem ***\n");
+    size = (size / pagesize) * pagesize + pagesize;
+  }
 #if !defined(USE_AUTO_PLACEMENT)
   char *nextAddr = mappedChunks.reservePlace(size);
 #endif
@@ -665,7 +671,7 @@ void *heapMallocOutline(size_t chunk_size)
 
 
 char *getMemFromOS(size_t sz) {
-  int thisBlockSz = max(HEAPBLOCKSIZE, (int) sz);
+  int thisBlockSz = max(HEAPBLOCKSIZE, (int) sz+WordSize);
 
   heapTotalSize      += thisBlockSz/KB;
   heapTotalSizeBytes += thisBlockSz;
@@ -698,6 +704,8 @@ char *getMemFromOS(size_t sz) {
 
   /* align heapEnd to word boundaries */
   while(ToInt32(heapEnd)%WordSize != 0) {
+    // OZ_warning("*** WEIRD: getMemFromOS: alignment problem***\n");
+    thisBlockSz--;
     heapEnd++;
   }
 
