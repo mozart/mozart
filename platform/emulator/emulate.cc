@@ -1734,7 +1734,7 @@ void engine() {
 	 goto LBLreduce;
        }
 
-      /* unit commit */
+      /* unit commit for WAITTOP */
       WaitActor *aa = CastWaitActor(CBB->getActor());
       Board *bb = CBB;
       if (aa->hasOneChild()) {
@@ -1749,6 +1749,7 @@ void engine() {
 	goto LBLreduce;
       }
 
+      /* suspend WAITTOP */
       CBB->setWaitTop();
       CBB->setWaiting();
       goto LBLsuspendBoardWaitTop;
@@ -1758,17 +1759,12 @@ void engine() {
     {
       // entailment ?
       if (e->entailment()) {
-
-        // continue if entailed
 	e->trail.popMark();
-
 	tmpBB = CBB;
-
 	Board::SetCurrent(CBB->getParentBoard()->getBoardDeref());
 	tmpBB->unsetInstalled();
 	tmpBB->setCommitted(CBB);
 	CBB->removeSuspension();
-
 	DISPATCH(1);
       }
 
