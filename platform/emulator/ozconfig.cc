@@ -54,8 +54,6 @@ void ConfigData::init() {
   errorPrintWidth	= ERROR_PRINT_WIDTH;
   errorThreadDepth    	= ERROR_THREAD_DEPTH;
   errorDebug   	        = ERROR_DEBUG;
-  errorLocation   	= ERROR_LOCATION;
-  errorHints     	= ERROR_HINTS;
 
   showIdleMessage	= SHOW_IDLE_MESSAGE;
   showSuspension	= SHOW_SUSPENSION;

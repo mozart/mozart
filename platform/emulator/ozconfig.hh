@@ -40,8 +40,6 @@ public:
   int errorPrintDepth; 
   int errorPrintWidth;
   int errorThreadDepth; // int, how many tasks are printed    
-  int errorLocation;    // bool, print location
-  int errorHints;       // bool, print hints
   int errorDebug;       // bool, add debug information
 
   int showIdleMessage;	// show message on idle
