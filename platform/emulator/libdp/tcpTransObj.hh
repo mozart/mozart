@@ -23,13 +23,13 @@ private:
   inline enum unmarshalReturn unmarshal();
 public:
   void init();
-  void *close();
+  void close();
   void deliver();
   void readyToReceive();
 
-  void setFD(int fd);
   void setSite(DSite *site);
   void setOwner(ComObj *comObj);
+  void setUp(DSite *site,ComObj *comObj,OZ_Term settings);
 
   Bool hasEmptyBuffers();
 

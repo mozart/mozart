@@ -864,6 +864,7 @@ OZ_BI_iodefine(unix_write, 2,1)
                            OZ_mkByteString(write_buff+ret,len-ret));
       }
     } else {
+
       Assert(status == SUSPEND);
       if (len == ret) {
         NEW_RETURN_SUSPEND(OZ_int(ret), susp, rest);
@@ -1015,7 +1016,7 @@ OZ_BI_iodefine(unix_socket,3,1)
     proto = getprotobyname(OzProtocol);
 
     if (!proto) {
-      return OZ_typeError(0,"enum protocol");
+      return OZ_typeError(2,"enum protocol");
     }
 
     protocol = proto->p_proto;
@@ -1078,20 +1079,32 @@ OZ_BI_iodefine(unix_listen,2,0)
 OZ_BI_define(unix_connectInet,3,0)
 {
   OZ_declareInt(0, s);
-  OZ_declareVsIN(1, host);
+  OZ_declareTerm(1, host);
+//    OZ_declareVsIN(1, host);
   OZ_declareInt(2, port);
 
-  struct hostent *hostaddr;
-
-  if ((hostaddr = gethostbyname(host)) == NULL) {
-    RETURN_NET_ERROR("gethostbyname");
-  }
-
   struct sockaddr_in addr;
-  memset((char *)&addr, 0, sizeof (addr));
-  addr.sin_family = AF_INET;
-  memcpy(&addr.sin_addr,hostaddr->h_addr_list[0],sizeof(addr.sin_addr));
-  addr.sin_port = htons ((unsigned short) port);
+
+  void *junk;
+
+  if(OZ_isInt(host)) {
+    addr.sin_addr.s_addr=htonl(OZ_intToC(host));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons ((unsigned short) port);
+  }
+  else if(OZ_isVirtualString(host,(OZ_Term *) junk)){
+    struct hostent *hostaddr;
+    if ((hostaddr = gethostbyname(OZ_virtualStringToC(host,(int *) junk))) == NULL) {
+      RETURN_NET_ERROR("gethostbyname");
+    }
+
+    memset((char *)&addr, 0, sizeof (addr));
+    addr.sin_family = AF_INET;
+    memcpy(&addr.sin_addr,hostaddr->h_addr_list[0],sizeof(addr.sin_addr));
+    addr.sin_port = htons ((unsigned short) port);
+  }
+  else
+    OZ_typeError(1,"VirtualString");
 
   int ret = osconnect(s,(struct sockaddr *) &addr,sizeof(addr));
   if (ret<0) {

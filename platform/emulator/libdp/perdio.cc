@@ -76,6 +76,8 @@ int  globalOSWriteCounter = 0;
 int  globalOSReadCounter = 0;
 int  globalContCounter = 0;
 
+OZ_Term defaultAcceptProcedure = 0;
+OZ_Term defaultConnectionProcedure = 0;
 /* *********************************************************************/
 /*   init;                                                             */
 /* *********************************************************************/
@@ -112,6 +114,16 @@ static void initGateStream()
   }
 }
 
+OZ_Term ConnectPortStream;
+OZ_Term ConnectPort;
+
+static void initConnectWstream()
+{
+  ConnectPortStream = oz_newVariable();
+  ConnectPort = oz_newPort(ConnectPortStream);
+  OZ_protect(&ConnectPort);
+  OZ_protect(&ConnectPortStream);
+}
 //
 static void initDPCore();
 
@@ -1204,6 +1216,7 @@ void initDPCore()
   Assert(sizeof(PortManager)==sizeof(PortLocal));
   Assert(sizeof(PortProxy)<=SIZEOFPORTPROXY);
   initGateStream();
+  initConnectWstream();
   dealWithDeferredWatchers();
 }
 

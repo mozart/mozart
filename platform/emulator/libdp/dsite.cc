@@ -177,7 +177,8 @@ GenHashNode *getSecondaryNode(GenHashNode* node, int &indx){
 inline void primaryToSecondary(DSite *s, int hvalue) {
   primarySiteTable->removePrimary(s,hvalue);
   int hvalue2=s->hashSecondary();
-  s->discoveryPerm();
+//    printf("primarytoSec discoveryperm\n");
+//    s->discoveryPerm(); // AN!
   s->putInSecondary();
   secondarySiteTable->insertSecondary(s,hvalue2);}
 
@@ -194,6 +195,7 @@ DSite* unmarshalDSiteInternal(MarshalerBuffer *buf, DSite *tryS, MarshalTag mt)
     if(mt==DIF_SITE_PERM){
       if(s->isPerm()){
         return s;}
+//        printf("unmarshaldsiteinte discoveryperm\n");
       s->discoveryPerm();
       return s;}
 
@@ -483,7 +485,7 @@ void dumpVirtualInfo(VirtualInfo* vi)
 /**********************************************************************/
 
 //
-DSite* myDSite;
+DSite* myDSite =  NULL;
 
 //
 // kost@ : that's a part of the boot-up procedure ('perdioInit()');

@@ -44,7 +44,6 @@ void ComObj::init(DSite *site, int recCtr) {
   nosm=norm=0;
 
   queues.init();
-  infoelement=(void *) 0x0;
 }
 
 void ComObj::send(MsgContainer *msgC,int priority) {
@@ -178,6 +177,7 @@ Bool ComObj::openTimerExpired() {
     }
     else {
       PD((TCP_INTERFACE,"opentimerexpired with no need or remoteref %x",this));
+      printf("opentimerexpired %x\n",this);
       close(CLOSED);
     }
   }

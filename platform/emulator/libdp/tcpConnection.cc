@@ -3,6 +3,12 @@
 #include "base.hh"
 #include "dpBase.hh"
 
+// ERIK added as a hack
+#include "perdio.hh"
+#include "thr_int.hh"
+
+//
+
 #ifndef WINDOWS
 #include <sys/types.h>
 #include <sys/time.h>
@@ -50,186 +56,14 @@ void osSetNonBlocking(int fd, Bool onoff) {
 // Network parameters
 unsigned int  ipPortNumber  = OZReadPortNumber;
 int  ipIpNumber    = 0; // Zero indicates that the default should be used.
-
+/*
 class MySiteInfo{
 public:
   int        tcpFD;    // the file descriptor of the port
   int        maxNrAck;
   int        maxSizeAck;
 }mySiteInfo;
-
-class InfoElement{
-public:
-  ComObj *comObj;
-  TransObj *transObj;
-  int fd;
-};
-
-int connectionFixReadHandler(int fd,void *info) {
-  BYTE b;
-  int ret;
-
-  Assert(((InfoElement *) info)->fd == fd);
-  Assert(info == ((InfoElement *) info)->comObj->infoelement);
-
-  ComObj *comObj=((InfoElement *) info)->comObj;
-  TransObj *transObj=((InfoElement *) info)->transObj;
-  comObj->infoelement=(void *) 0x0;
-  delete (InfoElement *) info;
-
-  ret = osread(fd,&b,1);
-  PD((TCP_INTERFACE,"fixReadHandler %d",fd));
-  if(ret<=0) {
-    OZ_unregisterRead(fd);
-    osclose(fd);
-    handback(comObj,transObj);
-
-    DSite *site=comObj->getSite();
-    site->discoveryPerm();
-    site->probeFault(PROBE_PERM);
-
-    return 0;
-  }
-  else {
-    transObj->setSite(comObj->getSite());
-    transObj->setOwner(comObj);
-    tcptransController->addRunning(comObj);
-    ((TCPTransObj *) transObj)->setFD(fd);
-    if(comObj->handover(transObj))
-      return 0; // handover generates another register read on this fd
-                // return 1 deregisters that one...
-    else {
-      handback(comObj,transObj);
-
-      return 0;
-    }
-  }
-}
-
-void tcpTransObjReady(ComObj *comObj,TransObj *transObj) {
-  DSite *site=comObj->getSite();
-  port_t aport=site->getPort();
-  struct sockaddr_in addr;
-  addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr=htonl(site->getAddress());
-  addr.sin_port = htons(aport);
-
-  int tries = OZConnectTries;
-  int fd    = -1;
-  int one   =  1;
-
-retry:
-  fd=ossocket(PF_INET,SOCK_STREAM,0);
-  if (fd < 0) {
-    if(ossockerrno()==ENOBUFS){
-      goto  ipOpenNoAnswer;
-    }
-    printf("No socket\n");
-    handback(comObj,transObj);
-    site->discoveryPerm();
-    site->probeFault(PROBE_PERM);
-    return;
-  }
-
-  if(setsockopt(fd,IPPROTO_TCP,TCP_NODELAY,(char*) &one,sizeof(one))<0){
-    goto  ipOpenNoAnswer;
-  }
-
-#ifndef WINDOWS
-  fcntl(fd,F_SETFL,O_NDELAY);
-#endif
-  if(osconnect(fd,(struct sockaddr *) &addr,sizeof(addr))==0
-     || ossockerrno()==EINPROGRESS) {
-
-#ifdef WINDOWS
-    // do this later on Windows otherwise it doesn't work
-    osSetNonBlocking(fd,OK);
-#endif
-    //    printf("open success p:%d fd:%d\n",aport,fd);
-    InfoElement *ie=new InfoElement();
-    ie->transObj=transObj;
-    ie->comObj=comObj;
-    ie->fd=fd;
-    comObj->infoelement=(void *) ie;
-    OZ_registerReadHandler(fd,connectionFixReadHandler,(void *) ie);
-    return;
-  }
-
-  tries--;
-  if(tries<=0) {
-    goto  ipOpenNoAnswer;
-  }
-  if((ossockerrno() == EADDRNOTAVAIL) || (ossockerrno() == ECONNREFUSED)){
-//      printf("Connection failed\n");
-    handback(comObj,transObj);
-    site->discoveryPerm();
-    site->probeFault(PROBE_PERM);
-    return;
-  }
-  addr.sin_port = htons(aport);
-  goto retry;
-
- ipOpenNoAnswer:
-  printf("ipOpenNoAnswer\n");
-  if(fd >= 0) osclose(fd);
-  handback(comObj,transObj);
-  site->discoveryPerm();
-  site->probeFault(PROBE_PERM);
-  return;
-}
-
-void tcpComObjDone(ComObj *comObj) {
-  InfoElement *ie=(InfoElement *) comObj->infoelement;
-  if(ie!=NULL) { // Waiting for fixreadhandler
-      TransObj *transObj=ie->transObj;
-      OZ_unregisterRead(ie->fd);
-      osclose(ie->fd);
-      comObj->infoelement=(void *) 0x0;
-      delete ie;
-      handback(comObj,transObj);
-  }
-}
-
-int acceptHandler(int fd,void *unused) {
-  TCPTransObj *tcptransObj=(TCPTransObj *) tcptransController->getTransObj();
-  if(tcptransObj==NULL) {
-    PD((TCP_INTERFACE,"No transobj avail for accept\n"));
-    return 0;
-  }
-
-  struct sockaddr_in from;
-  int fromlen = sizeof(from);
-  int newFD=osaccept(fd,(struct sockaddr *) &from, &fromlen);
-  if (newFD < 0) {
-    tcptransController->transObjFreed(NULL,tcptransObj);
-    return 0;
-  }
-
-  int one=1;
-  if(setsockopt(newFD,IPPROTO_TCP,TCP_NODELAY,(char*) &one,sizeof(one))<0){
-    tcptransController->transObjFreed(NULL,tcptransObj);
-    return 0;
-  }
-
-#ifdef WINDOWS
-  osSetNonBlocking(newFD,OK);
-#else
-  fcntl(newFD,F_SETFL,O_NDELAY);
-#endif
-
-  // FIX
-  BYTE b=0xff;
-  if(oswrite(newFD,&b,1)<0) {
-    printf("CONNECTION weird error SHOULD NOT HAPPEN\n");
-    tcptransController->transObjFreed(NULL,tcptransObj);
-    return 0;
-  }
-
-  tcptransObj->setFD(newFD);
-  comController_acceptHandler(tcptransObj);
-
-  return 0 ;
-}
+*/
 
 inline Bool createTcpPort_RETRY(){
   if(ossockerrno()==ENOENT) return TRUE;
@@ -325,9 +159,9 @@ Bool tcpInitAccept() {
     return FALSE;
   }
   TimeStamp timestamp(time(0),osgetpid());
-  mySiteInfo.tcpFD=tcpFD;
-  mySiteInfo.maxNrAck = 100;
-  mySiteInfo.maxSizeAck = 10000;
+  //  mySiteInfo.tcpFD=tcpFD;
+  //mySiteInfo.maxNrAck = 100;
+  //mySiteInfo.maxSizeAck = 10000;
   Assert(myDSite==NULL);
   if(ipIpNumber!=0)
     ip = ipIpNumber;
@@ -336,8 +170,48 @@ Bool tcpInitAccept() {
   ipPortNumber = p;
   myDSite = makeMyDSite(ip, p, timestamp);
   Assert(myDSite!=NULL);
-  OZ_registerAcceptHandler(tcpFD,acceptHandler,NULL);
+  // ERIK
+  // Jag provar bara har anna, for att se om saker funkar.
+
+  // OZ_registerAcceptHandler(tcpFD,acceptHandler,NULL);
+  /*
+    Thread *tt = oz_newThreadToplevel();
+    tt->pushCall(defaultAcceptProcedure,oz_int(tcpFD));
+  */
   return TRUE;
+}
+void tcpListenPort(int port, char* nodename){
+  // mySiteInfo could probably be removed.
+
+  //mySiteInfo.maxNrAck = 100;
+  //mySiteInfo.maxSizeAck = 10000;
+
+  // Here should the parameter of the engine be set.
+
+  // Klippt fran createTcpPort
+  struct sockaddr_in addr;
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  if(nodename==0) {
+    NETWORK_ERROR(("createTcpPort"));
+  }
+  struct hostent *hostaddr;
+  hostaddr=gethostbyname(nodename);
+  if (hostaddr==NULL) {
+    nodename = "localhost";
+    hostaddr=gethostbyname(nodename);
+    OZ_warning("Unable to reach the net, using localhost instead\n");
+  }
+
+  struct in_addr tmp;
+  memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
+  ip_address ip=ntohl(tmp.s_addr);
+
+  // Klipp klart
+
+  TimeStamp timestamp(time(0),osgetpid());
+  myDSite = makeMyDSite(ip, port, timestamp);
+  Assert(myDSite!=NULL);
 }
 
 void tcpDoDisconnect(void *info) {

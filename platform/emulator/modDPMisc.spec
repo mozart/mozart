@@ -57,5 +57,29 @@
 
      'sockoptBroadcast'      => { in  => ['+int'],
                                   out => [],
-                                  bi  => BIsockoptBroadcast}
-     );
+                                  bi  => BIsockoptBroadcast},
+
+     'getConnGrant'          => { in  => ['+value','+value','+bool','value'],
+                                  out => [],
+                                  BI  => BIgetConnGrant},
+
+     'freeConnGrant'         => { in  => ['+value','+value'],
+                                  out => [],
+                                  BI  => BIfreeConnGrant},
+
+     'handover'              => { in => ['+value','+value','+value'],
+                                  out => [],
+                                  BI => BIhandover},
+
+     'getConnectWstream'     => { in => [],
+                                  out => ['value'],
+                                  BI => BIgetConnectWstream},
+
+     'setListenPort'         => { in => ['+int','+string'],
+                                  out => [],
+                                  BI  => BIsetListenPort},
+
+     'connFailed'            => { in => ['+int','+atom'],
+                                  out => [],
+                                  BI  => BIconnFailed}
+);
