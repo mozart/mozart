@@ -306,8 +306,8 @@ OZ_BI_define(fdp_divD, 3, 0)
 
   OZ_EXPECT(pe, 1, expectInt);
 
-  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarAny, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarAny, susp_count);
 
   if (susp_count > 1) 
     return pe.suspend();
@@ -423,8 +423,8 @@ OZ_BI_define(fdp_modD, 3, 0)
 
   OZ_EXPECT(pe, 1, expectInt);
 
-  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarAny, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarAny, susp_count);
 
   if (susp_count > 1) 
     return pe.suspend();
@@ -710,9 +710,9 @@ OZ_BI_define(fdp_plusD, 3, 0)
   PropagatorExpect pe;
   int susp_count = 0;
 
-  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarAny, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarAny, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarAny, susp_count);
 
   if (susp_count > 1) 
     return pe.suspend();
@@ -773,9 +773,9 @@ OZ_BI_define(fdp_timesD, 3, 0)
   PropagatorExpect pe;
   int susp_count = 0;
 
-  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarAny, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarAny, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarAny, susp_count);
 
   if (susp_count > 1) 
     return pe.suspend();
