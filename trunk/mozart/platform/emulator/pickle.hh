@@ -174,4 +174,6 @@ void marshalLabelDef(char *lbl, MsgBuffer *bs);
 void marshalTermDef(int lbl, MsgBuffer *bs);
 void marshalTermRef(int lbl, MsgBuffer *bs);
 
+OZ_Term digOutVars(OZ_Term);
+
 #endif /* __PICKLEH */
