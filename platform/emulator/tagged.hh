@@ -841,10 +841,20 @@ inline
 RefsArray allocateRefsArray(int n, Bool init=OK)
 {
   Assert(n > 0);
-  RefsArray a = ((RefsArray) heapMalloc((n+1) * sizeof(TaggedRef)));
+  RefsArray a = ((RefsArray) freeListMalloc((n+1) * sizeof(TaggedRef)));
   a += 1;
   initRefsArray(a,n,init);
   return a;
+}
+
+inline
+void disposeRefsArray(RefsArray a)
+{
+  if (a) {
+    int sz = getRefsArraySize(a);
+    a -= 1;
+    freeListDispose(a, (sz+1) * sizeof(TaggedRef));
+  }
 }
 
 inline
