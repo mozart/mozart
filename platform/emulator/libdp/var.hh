@@ -97,6 +97,7 @@ public:
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
   void receiveStatus(TaggedRef);
   OZ_Return addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE);
+  void redoStatus(TaggedRef,TaggedRef);
 
   void redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be);
   void acknowledge(TaggedRef *vPtr, BorrowEntry *be);
