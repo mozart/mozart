@@ -49,7 +49,13 @@ define
     "export"
     "   MakeArg"
     "   GetArg"
-    "   FreeArg"]
+    "   FreeArg"
+    "   AllocStr"
+    "   GetStr"
+    "   AllocStrArr"
+    "   MakeStrArr"
+    "   GetStrArr"
+    "   FreeStrArr"]
 
    GdkFilePrepend =
    ["%%"
@@ -118,6 +124,24 @@ define
     "      end"
     "   end"
     "   proc {FreeArg Val}"
+    "      {GOZCore.freeData Val _}"
+    "   end"
+    "   fun {AllocStr N}"
+    "      {GOZCore.allocStr N}"
+    "   end"
+    "   fun {GetStr}"
+    "      {GOZCore.getStr}"
+    "   end"
+    "   fun {AllocStrArr N}"
+    "      {GOZCore.allocStrArr N}"
+    "   end"
+    "   fun {MakeStrArr Ss}"
+    "      {GOZCore.makeStrArr ({Length Ss} + 1) Ss}"
+    "   end"
+    "   fun {GetStrArr Val}"
+    "      {GOZCore.getStrArr Val}"
+    "   end"
+    "   proc {FreeStrArr Val}"
     "      {GOZCore.freeData Val _}"
     "   end"
     "   \\insert 'GTKFIELDS.oz'"
@@ -312,6 +336,7 @@ define
    local
       Constrs = ["new"           %% Default
                  "newWithLabel"  %% GtkButton(Box)
+                 "newWithTitles" %% GtkCList
                  "newWithValues" %% GdkGC
                  "load"          %% GkdFont
                  "getSystem"     %% GdkColormap
