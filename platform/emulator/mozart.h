@@ -100,6 +100,9 @@ extern char *   OZ_toC       _PROTOTYPE((OZ_Term));
 extern OZ_Term  OZ_CToString _PROTOTYPE((char *));
 extern char *   OZ_stringToC _PROTOTYPE((OZ_Term t));
 
+extern void     OZ_printVS   _PROTOTYPE((OZ_Term t));
+extern OZ_Term  OZ_termToVS  _PROTOTYPE((OZ_Term t));
+
 /* tuples */
 extern OZ_Term OZ_label     _PROTOTYPE((OZ_Term));
 extern int     OZ_width     _PROTOTYPE((OZ_Term));
