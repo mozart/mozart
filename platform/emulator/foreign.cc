@@ -1310,11 +1310,8 @@ char* OZ_vsToC(OZ_Term t,int*n)
   if (OZ_isAtom(t)) {
     s = dropConst(OZ_atomToC(t));
     if (n!=0) *n = strlen(s);
-  } else if (OZ_isByteString(t)) {
-    ByteString*bs = tagged2ByteString(oz_deref(t));
-    s = (char*) bs->getData();
-    if (n!=0) *n = bs->getWidth();
   } else {
+    // Do not use bytestring directly, they are not null terminated! CS
     s = OZ_virtualStringToC(t,n);
   }
   return s;
