@@ -1156,10 +1156,7 @@ OZ_CONST char *OZ_atomToC(OZ_Term term)
   return (OZ_CONST char *)a->getPrintName();
 }
 
-OZ_Term OZ_atom(OZ_CONST char *s)
-{
-  return oz_atom(s);
-}
+/* OZ_atom is defined in codearea.cc */
 
 int OZ_boolToC(OZ_Term term)
 {

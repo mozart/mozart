@@ -79,7 +79,7 @@ inline Literal *addToLiteralTab(const char *str, HashTable *table, Bool isName)
 }
 
 
-OZ_Term oz_atom(const char *str)
+OZ_Term OZ_atom(const char *str)
 {
   CHECK_STRPTR(str);
   Literal *lit=addToLiteralTab(str,&CodeArea::atomTab,NO);

@@ -30,8 +30,7 @@
 
 #define WAKEUP_PROPAGATOR(CALL_WAKEUP_FUN)	\
 {						\
-  Board * bb = GETBOARD(prop);			\
-  switch (oz_isBetween(bb, home)) {		\
+  switch (oz_isBetween(prop->getBoardInternal(), home)) { \
   case B_BETWEEN:				\
 						\
     if (calledBy)				\
@@ -130,7 +129,7 @@ SuspList * oz_installPropagators(SuspList * local_list, SuspList * glob_list,
     if (!susp.isDead() && 
 	susp.isPropagator() &&
 	!susp.isTagged() && 
-	oz_isBetween(GETBOARDOBJ(susp), glob_home) == B_BETWEEN) {
+	oz_isBetween(susp.getBoardInternal(), glob_home) == B_BETWEEN) {
       ret_list = new SuspList(susp, ret_list);
     }
     
