@@ -105,6 +105,7 @@ prepare
 
    MakeBS = ByteString.make
    DictRemove = Dictionary.remove
+   DictEntries = Dictionary.entries
    RecToDict = Record.toDictionary
    VS2A = VirtualString.toAtom
    VS2S = VirtualString.toString
@@ -258,6 +259,7 @@ prepare
 	 Line         : 1	% current line in current file
 	 Stack        : nil	% stack of interrupted inputs
 	 EntityTable  : unit	% table mapping entity names to values
+	 PrivateEntityTable : unit
 	 Coord        : unit	% coord(@Filename @Line) saved for reuse in same line
 	 SavedCoord   : unit
 	 SavedToken   : unit
@@ -278,8 +280,34 @@ prepare
 	 keepNamespaceDeclarations : false
 
       meth init() skip end
+
+      meth putEntity(Key Def)
+	 if @PrivateEntityTable==unit then
+	    PrivateEntityTable={NewDictionary}
+	 end
+	 @PrivateEntityTable.Key := Def
+      end
       
       meth setSpaceManager(M) STRIP<-M end
+      meth getSpaceManager($)
+	 if @STRIP==unit then
+	    STRIP<-{New SpaceManager init}
+	 end
+	 @STRIP
+      end
+      meth stripSpace(URI Tag)
+	 if @STRIP==unit then
+	    STRIP<-{New SpaceManager init}
+	 end
+	 {@STRIP stripSpace(URI Tag)}
+      end
+      meth preserveSpace(URI Tag)
+	 if @STRIP==unit then
+	    STRIP<-{New SpaceManager init}
+	 end
+	 {@STRIP preserveSpace(URI Tag)}
+      end
+      
       meth setKeepComments(B<=true) keepComments<-B end
       meth setKeepNamespaceDeclarations(B<=true) keepNamespaceDeclarations<-B end
 
@@ -310,6 +338,11 @@ prepare
 	 SavedCoord   <- unit
 	 SavedToken   <- unit
 	 EntityTable  <- {RecToDict DefaultEntityRecord}
+	 if @PrivateEntityTable==unit then skip else
+	    for Key#Val in {DictEntries @PrivateEntityTable} do
+	       @EntityTable.Key := Val
+	    end
+	 end
       end
 
       meth Parse(?L)
