@@ -51,7 +51,7 @@ ozdeclspec int ozcdecl OZ_linkFF(char *version, void** funs)
   int i=0;
 
   if (strcmp(OZVERSION,version)!=0) {
-    fprintf(stderr,"*** version mismatch in 'OZ_linkFF' (%s,%s)\n",
+    fprintf(stderr,"*** version mismatch in 'OZ_linkFF' (%s != %s) recompilation needed\n",
             OZVERSION,version);
     return 0;
   }

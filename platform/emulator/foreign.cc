@@ -175,6 +175,18 @@ int OZ_isBitString(OZ_Term t)
   return oz_isBitString(t);
 }
 
+
+OZ_Boolean OZ_BitStringGet(OZBitString bs,int index)
+{
+  return ((BitString*)bs)->get(index) ? OZ_TRUE : OZ_FALSE;
+}
+
+OZBitString OZ_getBitString(OZ_Term bs)
+{
+  return tagged2BitString(bs);
+}
+
+
 int OZ_isByteString(OZ_Term t)
 {
   t = oz_deref(t);
