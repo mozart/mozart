@@ -83,7 +83,7 @@ case "$cmd" in
 	;;
 
    oztool)
-	exec sh $OZHOME/platform/$OZPLATFORM/$cmd "$@"
+	exec sh $OZHOME/platform/$OZPLATFORM/oztool.sh "$@"
 	;;
    text2pickle)
 	exec $OZHOME/platform/$OZPLATFORM/$cmd "$@"
