@@ -214,6 +214,7 @@ export CFLAGS CXXFLAGS
 make
 
 %install
+rm -rf \$RPM_BUILD_ROOT
 PREFIX=\$RPM_BUILD_ROOT$OZHOME
 # config files
 mkdir -p \$RPM_BUILD_ROOT/etc/profile.d
@@ -234,33 +235,33 @@ make install
 # Strip binaries and shared objects
 find \$PREFIX -type f -name '*.so*' -exec strip '{}' ';'
 find \$PREFIX -type f -name '*.exe' -exec strip '{}' ';'
+# Create file lists
+PLTFRM=\`\$PREFIX/bin/ozplatform\`
+make files.base files.base-\${PLTFRM}
+make files.contrib files.contrib-\${PLTFRM}
+make files.doc
+cat files.base files.base-\${PLTFRM} | \
+    sed 's|^./|$OZHOME/|g' > mfiles.base
+cat files.contrib files.contrib-\${PLTFRM} | \
+    sed 's|^./|$OZHOME/|g' > mfiles.contrib
+cat files.doc | \
+    sed 's|^./|$OZHOME/|g' > mfiles.doc
 
 %clean
 rm -rf \$RPM_BUILD_ROOT
-%files
+%files -f mfiles.base
 %doc README LICENSE LICENSE.html LICENSE.rtf
 %config /etc/profile.d/oz.sh
 %config /etc/profile.d/oz.csh
-$OZHOME/LICENSE
-$OZHOME/LICENSE.html
-$OZHOME/LICENSE.rtf
-$OZHOME/bin
-$OZHOME/cache
-$OZHOME/include
-$OZHOME/platform
-$OZHOME/share
-%files doc
-$OZHOME/doc
-$OZHOME/examples
-%files contrib
-$OZHOME/contrib
+%files doc -f mfiles.doc
+%files contrib -f mfiles.contrib
 EOF
 
 #
 # No we have all what we need, go and build rpms
 #
 
-rpm -ba --clean ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
+rpm -ba ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
 rm -f ${RPMSPEC}/${SPEC}
 rm -f ${RPMSRC}/${SRCTAR}
 rm -f ${RPMSRC}/${DOCTAR}
