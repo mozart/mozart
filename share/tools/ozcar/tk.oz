@@ -77,35 +77,28 @@ in
       feat
 	 TagBase
       attr
-	 CurTag
+	 NextTag
 
       meth tkInit(...)=M
 	 self.widget  = Tk.text
-	 self.TagBase = 1000 % low integers are reserved for stack frame clicks
-	 CurTag <- self.TagBase
+	 self.TagBase = ~1
+	 NextTag <- self.TagBase
 	 ScrolledTitleWidget,M
       end
 
       meth newTag($)
-	 CurTag <- @CurTag + 1
+	 NextTag <- @NextTag - 1
       end
 
       meth resetTags
-	 ScrolledTitleText,DeleteTags(CurTag <- self.TagBase)
+	 ScrolledTitleText,DeleteTags(NextTag <- self.TagBase)
       end
 
-      meth resetReservedTag(N)
-	 {self tk(tag delete N)}
-      end
-
-      meth resetReservedTags(N)
-	 ScrolledTitleText,DeleteTags(N 0)
-      end
-
-      meth DeleteTags(N Base<=self.TagBase)
-	 case N < Base then skip else
-	    {self tk(tag delete N)}
-	    ScrolledTitleText,DeleteTags(N-1 Base)
+      meth DeleteTags(N)
+	 case N >= self.TagBase then skip else
+	    N1 = N + 1 in
+	    {self tk(tag delete N1)}
+	    ScrolledTitleText,DeleteTags(N1)
 	 end
       end
    end

@@ -88,7 +88,8 @@ in
 	    R = case {Dbg.checkStopped T} then stopped else running end
 	    S = {Thread.state T}
 	 in
-	    Gui,doStatus('Currently selected thread: #' # I #
+	    Gui,doStatus('Currently selected thread: #' # I # '/' #
+			 {Thread.parentId T} #
 			 ' (' # R # ' / ' # S # ')')
 	 end
       end
@@ -125,8 +126,7 @@ in
 	       end
 
 	    else %% this is a (not yet) attached thread
-	       Data = {CondSelect M data unit}
-	       Q    = {Thread.parentId T}
+	       Q = {Thread.parentId T}
 	    in
 	       case {Cget subThreads} orelse
 		  {Not ThreadManager,Exists(Q $)} then
@@ -181,17 +181,10 @@ in
 	    I = {Thread.id T}
 	 in
 	    case ThreadManager,Exists(I $) then
+	       {OzcarMessage 'blocking of attached thread'}
 	       ThreadManager,blocked(thr:T id:I)
 	    else
-	       thread
-		  {OzcarMessage WaitForThread}
-		  {Delay TimeoutToBlock} % thread should soon be added
-		  case ThreadManager,Exists(I $) then
-		     ThreadManager,blocked(thr:T id:I)
-		  else
-		     {OzcarError 'Unknown suspending thread'}
-		  end
-	       end
+	       {OzcarError 'Unknown suspending thread'}
 	    end
 
 	 [] ready(thr:T) then
@@ -215,20 +208,13 @@ in
 	    I = {Thread.id T}
 	 in
 	    case ThreadManager,Exists(I $) then
+	       {OzcarMessage 'exception of attached thread'}
 	       {{Dictionary.get self.ThreadDic I} printException(X)}
 	    else
-	       thread
-		  {OzcarMessage 'exception of unknown thread -- waiting...'}
-		  {Delay 320}
-		  case ThreadManager,Exists(I $) then
-		     {OzcarMessage 'ok, got it -- printException'}
-		     {Delay 140}
-		     {{Dictionary.get self.ThreadDic I} printException(X)}
-		  else
-		     {OzcarMessage 'still not known -- adding...'}
-		     ThreadManager,add(T I exc(X))
-		  end
-	       end
+	       Q = {Thread.parentId T}
+	    in
+	       {OzcarMessage 'exception of unattached thread -- adding...'}
+	       ThreadManager,add(T I Q exc(X))
 	    end
 
 	 [] update(thr:T) then
@@ -262,12 +248,12 @@ in
 			  fun {$ F} F.2 \= I end}
       end
 
-      meth add(T I Q)
+      meth add(T I Q Exc<=unit)
 	 Stack = {New StackManager init(thr:T id:I)}
       in
 	 {Dictionary.put self.ThreadDic I Stack}
-	 case Q of exc(X) then     %% exception
-	    Gui,addNode(I 0)
+	 case Exc of exc(X) then   %% exception
+	    Gui,addNode(I Q)
 	    ThreadManager,switch(I false)
 	    {Stack printException(X)}
 	 else                      %% Q is the ID of the parent thread
@@ -277,6 +263,9 @@ in
 	    case Q == 1 then       %% all compiler threads have id #1
 	       ThreadManager,switch(I)
 	       Gui,status('Got new query, selecting thread #' # I)
+	    elsecase @currentThread == unit then
+	       ThreadManager,switch(I)
+	       Gui,status('Selecting new thread #' # I)
 	    else skip end
 	 end
       end
@@ -438,7 +427,7 @@ in
 	 in
 
 	    case @currentStack == unit then skip else
-	       Gui,resetReservedTags({@currentStack getSize($)})
+	       Gui,resetLastSelectedFrame
 	    end
 
 	    currentThread <- T
