@@ -652,7 +652,7 @@ those using client resources.
 
 <SUBSECTION><TITLE>A compute server with functors</TITLE>
 
-The solution of the previous section
+<P> The solution of the previous section
 is reasonable when the client and server
 are independent computations that connect.
 Let's now think of the case when the
