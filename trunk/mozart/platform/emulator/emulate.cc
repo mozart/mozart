@@ -3017,7 +3017,7 @@ Case(GETVOID)
 	if (oz_eq(kind,AtomDebugCallC) ||
 	    oz_eq(kind,AtomDebugCallF)) {
 	  // save abstraction and arguments:
-	  int arity = -1;
+	  Bool copyArgs = NO;
 	  switch (CodeArea::getOpcode(PC+5)) {
 	  case CALLBI:
 	    {
@@ -3047,15 +3047,18 @@ Case(GETVOID)
 	    break;
 	  case CALLX:
 	    dbg->data = Xreg(getRegArg(PC+6));
-	    arity = getPosIntArg(PC+7);
+	    dbg->arity = getPosIntArg(PC+7);
+	    copyArgs = OK;
 	    break;
 	  case CALLY:
 	    dbg->data = Yreg(getRegArg(PC+6));
-	    arity = getPosIntArg(PC+7);
+	    dbg->arity = getPosIntArg(PC+7);
+	    copyArgs = OK;
 	    break;
 	  case CALLG:
 	    dbg->data = Greg(getRegArg(PC+6));
-	    arity = getPosIntArg(PC+7);
+	    dbg->arity = getPosIntArg(PC+7);
+	    copyArgs = OK;
 	    break;
 	  case GENFASTCALL:
 	  case FASTCALL:
@@ -3063,21 +3066,22 @@ Case(GETVOID)
 	      Abstraction *abstr =
 		((AbstractionEntry *) getAdressArg(PC+6))->getAbstr();
 	      dbg->data = makeTaggedConst(abstr);
-	      arity = abstr->getArity();
+	      dbg->arity = abstr->getArity();
+	      copyArgs = OK;
 	    }
 	    break;
 	  case MARSHALLEDFASTCALL:
 	    dbg->data = getTaggedArg(PC+6);
-	    arity = getPosIntArg(PC+7) >> 1;
+	    dbg->arity = getPosIntArg(PC+7) >> 1;
+	    copyArgs = OK;
 	    break;
 	  default:
 	    break;
 	  }
-	  dbg->arity = arity;
-	  if (arity > 0) {
+	  if (copyArgs && dbg->arity > 0) {
 	    dbg->arguments =
-	      (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * arity);
-	    for (int i = arity; i--; )
+	      (TaggedRef *) freeListMalloc(sizeof(TaggedRef) * dbg->arity);
+	    for (int i = dbg->arity; i--; )
 	      dbg->arguments[i] = Xreg(intToReg(i));
 	  }
 	} else if (oz_eq(kind,AtomDebugLockC) ||
