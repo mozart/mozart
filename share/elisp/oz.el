@@ -72,7 +72,7 @@ For example
   (setq oz-emulator-hook 'oz-start-gdb-emulator)
 starts the emulator under gdb")
 
-(defvar OZ-HOME "/usr/share/gs/oz"
+(defvar OZ-HOME "/project/ps/oz"
   "The directory where oz is installed")
 
 (defun oz-home ()
@@ -80,6 +80,7 @@ starts the emulator under gdb")
     (if ret
 	ret
       (message "OZHOME not set using fallback: %s" OZ-HOME)
+      (setenv "OZHOME" OZ-HOME)
       OZ-HOME)))
 
 (defvar oz-doc-dir (concat (oz-home) "/doc/")
@@ -224,8 +225,18 @@ starts the emulator under gdb")
 	   (cons name (oz-make-menu-lucid rest)))))
      (oz-make-menu-lucid (cdr list)))))
 
+(defun oz-dup-list(l)
+  (if (or (null l) 
+	  (not (listp l)))
+      l
+    (cons (oz-dup-list (car l)) (oz-dup-list (cdr l)))))
+
 
 (defun oz-make-menu-gnu19 (map list)
+  ;; for some unknown reason Emacs corrupts the input list
+  (oz-make-menu-gnu19-1 map (oz-dup-list list)))
+
+(defun oz-make-menu-gnu19-1 (map list)
   (if (eq list nil)
       nil
     (let* ((entry (car list))
@@ -240,8 +251,8 @@ starts the emulator under gdb")
 	    (define-key map (vector aname)
 	      (cons name
 		    newmap))
-	    (oz-make-menu-gnu19 newmap (reverse rest))))))
-    (oz-make-menu-gnu19 map (cdr list))))
+	    (oz-make-menu-gnu19-1 newmap (reverse rest))))))
+    (oz-make-menu-gnu19-1 map (cdr list))))
 
 (defvar oz-menu
  '(("Oz"
@@ -291,6 +302,8 @@ starts the emulator under gdb")
      ("Emulator"      . oz-toggle-emulator)
      )
     ("-----")
+    ("Connect Oz to Emacs" . oz-emacs-connect)
+    ("---")    
     ("Start Oz" . run-oz)
     ("Halt Oz"  . oz-halt)
     ("-----")    
@@ -298,6 +311,8 @@ starts the emulator under gdb")
 
   "The contents of the Oz menu")
 
+(autoload 'oz-emacs-connect "$OZHOME/tools/oztoemacs/oztoemacs"
+  "Load the definitions for communication from Oz to Emacs" t)
 
 (oz-make-menu oz-menu)
 
