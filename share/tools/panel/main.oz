@@ -108,7 +108,7 @@ in
 		  else true
 		  end
 	       elsecase
-		  What==configurable andthen {List.sub {Arity OM} [1 2]}
+		  What==configure andthen {List.sub {Arity OM} [1 2]}
 	       then 
 		  case {HasFeature OM 2} then C=OM.2 in
 		     case {IsBool C} then {Dictionary.put O config C} true
