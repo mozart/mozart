@@ -2,6 +2,10 @@
   - Authors:
   -   Christian Schulte <schulte@ps.uni-sb.de>
   -
+  - Contributors:
+  -   Denys Duchier <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
   - Copyright:
   -   Christian Schulte, 1998
   -
@@ -54,6 +58,7 @@
   <Front>
     <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
 
+    <meta name="html.split"       value="chapter.m125">
     <meta name="html.split"       value="chapter.m124">
     <meta name="html.split"       value="chapter.m123">
     <meta name="html.split"       value="chapter.m122">
@@ -93,6 +98,27 @@ particular, it lists the changes from
       implementation Mozart).
     </Abstract>
   <Body>
+
+  <chapter id="chapter.m125">
+    <title/Mozart 1.2.5/
+    <p>Mozart 1.2.5 is a bug-fix and maintenance release.
+    <section id="sec.m125.windows">
+      <title/Windows/
+      <p>changes and fixes that concern the Windows platform:
+      <list>
+	<item><code proglang=sh/oztool/ now uses <code proglang=sh/gcc-2/
+	  and <code proglang=sh/g++-2/ as default when invoked with the
+	  <code proglang=sh/-gnu/ option.  This can be configured as
+	  described in <ptr.extern to="ozdoc:tools" key="section.oztool-env">
+      </list>
+
+    <section id="sec.m125.vm">
+      <title/Virtual Machine/
+      <p>changes and fixes that concern the virtual machine:
+      <list>
+	<item>several fixes in the support for execution of <ref.extern
+	  to="http://www.ps.uni-sb.de/alice/"/Alice/ programs
+      </list>
 
   <chapter id="chapter.m124">
     <title/Mozart 1.2.4/
