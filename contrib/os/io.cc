@@ -114,8 +114,8 @@ while ((RET = CALL) < 0) {                              \
   if (sel == 0) {                                       \
     TaggedRef t = oz_newVariable();                     \
     (void) OZ_writeSelect(FD, NameUnit, t);             \
-    DEREF(t, t_ptr, t_tag);                             \
-    if (oz_isVariable(t_tag)) {                         \
+    DEREF(t, t_ptr);                                    \
+    if (oz_isVar(t)) {                                  \
       am.addSuspendVarList(t_ptr);                      \
       return SUSPEND;                                   \
     }                                                   \
@@ -150,8 +150,8 @@ OZ_BI_define(io_write,3,1)
   if (sel == 0) {                                       \
     TaggedRef t = oz_newVariable();                     \
     (void) OZ_readSelect(FD, NameUnit, t);              \
-    DEREF(t, t_ptr, t_tag);                             \
-    if (oz_isVariable(t_tag)) {                         \
+    DEREF(t, t_ptr);                                    \
+    if (oz_isVar(t)) {                                  \
       am.addSuspendVarList(t_ptr);                      \
       return SUSPEND;                                   \
     }                                                   \
