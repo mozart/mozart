@@ -51,6 +51,7 @@ private:
   static int LiteralCurrentNumber;
   //
   char *printName;
+  int  printLength;
   Board *home;
   // home can be: NULL: an atom;
   //              ALLBITS: optimized (static) top-level name;
@@ -84,7 +85,7 @@ public:
 
   // name access
   char* getPrintName() { return printName; }
-  int getSize() { return strlen(printName); }
+  int getSize() { return printLength; }
 
   int getSeqNumber() { return (seqNumber); }
 
