@@ -322,7 +322,10 @@ in
 			    [] blocked  then ScrollbarBlockedColor
 			    end
 			 what:appl)
-	    else skip end
+	    else
+	       SourceManager,scrollbar(file:undef line:undef
+				       color:undef what:appl)
+	    end
 	    SourceManager,scrollbar(file:undef line:undef
 				    color:undef what:stack)
 	    Gui,printAppl(id:I name:N args:A builtin:B file:F line:L time:Time)
