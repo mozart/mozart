@@ -304,6 +304,7 @@ public:
   void setInEqEq(Bool b) { _inEqEq=b; }
 
   TaggedRef getX(int i) { return xRegs[i]; }
+  TaggedRef * getXRef(void) { return &xRegs[0]; }
   TaggedRef getDefaultExceptionHdl() { return defaultExceptionHdl; }
   void setDefaultExceptionHdl(TaggedRef pred) {
     defaultExceptionHdl = pred;
