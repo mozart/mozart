@@ -1,3 +1,4 @@
-Hydra	mail -s "Hydra-Dir changed: %s" mehl
-Hydra	mail -s "Hydra-Dir changed: %s" scheidhr
-Hydra	mail -s "Hydra-Dir changed: %s" tmueller
+Hydra	mail -s "I have changed Hydra/*: %s" mehl
+Hydra	mail -s "I have changed Hydra/*: %s" scheidhr
+Hydra	mail -s "I have changed Hydra/*: %s" tmueller
+Hydra/Compiler   mail -s "I have changed Hydra/Compiler/*: %s" henz
