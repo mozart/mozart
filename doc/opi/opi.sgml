@@ -4,6 +4,7 @@
 <!ENTITY % proglang.values.local "|sh">
 
 <!-- Abbreviations -->
+<!ENTITY amp "&">
 <!ENTITY OPI "OPI">
 
 <!-- Processing Instructions -->
@@ -11,6 +12,8 @@
 <!ENTITY slash PI "slash">
 <!ENTITY nbsp PI "nbsp">
 <!ENTITY eg PI "eg">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
 
 ]>
 
@@ -211,10 +214,6 @@
               <P><!--**-->
                 <Picture.Extern GIF display to="menu.gif">
             </Figure>
-          <Para class=apropos><Title/Key Bindings/
-            A short description of the current major mode and its key
-            bindings can be obtained through Emacs' <Key/M-x describe-mode/
-            (usually bound to <Key/C-h m/).
           <Para class=apropos><Title/Emacs Conventions/
             The Oz modes conform to the following Emacs conventions:
             <List>
@@ -236,6 +235,10 @@
                   <Key/M-x describe-function/ (<Key/C-h f/); if a command
                   is bound to a key, you can examine its documentation
                   string with <Key/M-x describe-key/ (<Key/C-h k/).
+              <Item>
+                <P.silent><!--**-->
+                  The &OPI; provides the feature <File/oz/.  See Emacs'
+                  <<require>> function for more details.
             </List>
           <Para class=apropos><Title/Customization/
             New Emacsen offer a feature called <Def/customization/, which
@@ -245,29 +248,247 @@
             /Programming/&slash;<Name type=buffer/Languages/&slash;<Name
             type=buffer/Oz/.  You can also access this group directly via
             <Key/M-x customize RET oz/.
-<!--** oz-pc-keys -->
+          <Para class=apropos><Title/Key Bindings/
+            A short description of the current major mode and its key
+            bindings can be obtained through Emacs' <Key/M-x describe-mode/
+            (usually bound to <Key/C-h m/).  In this manual, the key sequences
+            a command is bound to by default will always be shown in
+            parenthesis following the command name.  The following variable
+            affects which key bindings are installed by default.
+            <List>
+              <Entry class=variable><<oz-pc-keys>> (default: <<nil>>)
+              <Item>
+                <P.silent><!--**-->
+                  If non-<<nil>>, use only <Q class=quasi/politically correct/
+                  key bindings.  This means that <Key/M-l/ and <Key/M-r/ are
+                  not locally rebound in Oz buffers, and that no command will
+                  be bound to <Key/C-c/ followed by a letter.  Note that this
+                  variable must be set before the <File/oz/ library is loaded.
+              <Entry class=variable><<oz-mode-map>>
+              <Item>
+                <P.silent><!--**-->
+                  Keymap used in the Oz modes.
+            </List>
     <Chapter id="chapter.editing">
       <Title/Editing Oz Code/
-      <P>
-<!--**
- Managing Oz buffers
- - oz-new-buffer.  Note: a buffer without associated file name, so
-   quitting Emacs will kill this buffer without warning
- - oz-previous-buffer, oz-next-buffer
- Indentation
- - TAB, RET, DEL, oz-auto-indent, oz-indent-chars, oz-electric-terminate-line,
-   oz-indent-line, oz-indent-region, indent-oz-expr
- Fontification
- - oz-pedantic-spaces, oz-remove-annoying-spaces, the three levels of
-   fontification, oz-fontify-buffer
- Comments
- - oz-fill-paragraph, oz-comment-region, oz-uncomment-region
- Block Commands
- - forward-oz-expr, backward-oz-expr, mark-oz-expr, transpose-oz-exprs,
-   kill-or-expr, backward-kill-oz-expr, oz-beginning-of-defun, oz-end-of-defun
- Abbreviation Expansion
- - see ~/.emacs
--->
+      <Section>
+        <Title/Managing Oz Buffers/
+          <P>
+            The Oz modes support some useful functions for creating new
+            interactive buffers and navigating between Oz buffers:
+            <List>
+              <Entry class=command><<oz-new-buffer>> (<Key/C-c C-n/)
+              <Item>
+                <P.silent><!--**-->
+                  Create a new buffer and enters the Oz major mode.
+                  Note that this buffer has no associated file name,
+                  so quitting Emacs will kill it without warning.
+              <Entry class=command><<oz-previous-buffer>> (<Key/M-p/)
+              <Item>
+                <P.silent><!--**-->
+                  Switch to the previous buffer in the buffer list that
+                  runs in an Oz mode.  If no buffer is in Oz mode, an error
+                  is signalled.
+              <Entry class=command><<oz-next-buffer>> (<Key/M-n/)
+              <Item>
+                <P.silent><!--**-->
+                  Switch to the next buffer in the buffer list that runs
+                  in an Oz mode.  If no buffer is in Oz mode, an error is
+                  signalled.
+            </List>
+      <Section>
+        <Title/Indentation/
+          <P>
+            The preferred indentation style can currently be customized
+            through the following variable:
+            <List>
+              <Entry class=variable><<oz-indent-chars>> (default: <<3>>)
+              <Item>
+                <P.silent><!--**-->
+                  Number of columns that statements are indented &wrt;
+                  the block containing them.
+            </List>
+            Several commands assist in indenting existing Oz code.
+            <List>
+              <Entry class=command><<oz-indent-line &amp;optional ARG>>
+                (<Key/TAB/)
+              <Item>
+                <P.silent><!--**-->
+                  Indent the current line.  If <<ARG>> is given, reindent
+                  that many lines above and below point as well.
+              <Entry class=command><<oz-indent-region>>
+              <Item>
+                <P.silent><!--**-->
+                  Indent all lines at least partly covered by the current
+                  region.
+              <Entry class=command><<oz-indent-buffer>>
+              <Item>
+                <P.silent><!--**-->
+                  Indent every line in the buffer.
+              <Entry class=command><<indent-oz-expr>> (<Key/M-C-q/)
+              <Item>
+                <P.silent><!--**-->
+                  Indent all lines at least partly covered by the Oz
+                  expression following point.
+            </List>
+            The following command assists in authoring Oz code.
+            <List>
+              <Entry class=command><<oz-electric-terminate-line>> (<Key/RET/)
+              <Item>
+                <P.silent><!--**-->
+                  Terminate the current line, &ie;, delete all whitespace
+                  around and break the line at point.  If the variable
+                  <<oz-auto-indent>> is non-<<nil>>, indent both lines.
+              <Entry class=variable><<oz-auto-indent>> (default: <<t>>)
+              <Item>
+                <P.silent><!--**-->
+                  See <<oz-electric-terminate-line>>.
+            </List>
+            Additionally, <Key/DEL/ is bound to the Emacs command
+            <<backward-delete-char-untabify>>.
+      <Section>
+        <Title/Fontification/
+          <P>
+            <Def/Fontification/ is the term used in Emacs for displaying
+            text in different faces, depending on syntactical properties,
+            to ease reading code.  For example, comments and strings may
+            be displayed in different colors.
+          <P>
+            Many major modes in Emacs provide several levels of fontification
+            with increasing use of colours, but also increasing resource
+            consumption.  In the Oz modes, there are three levels.  You can
+            select one using the <<font-lock-maximum-decoration>> variable,
+            &eg;, add the following line to your <File/.emacs/:
+            <<<(setq font-lock-maximum-decoration t)>>>
+          <P>
+            The following variable and command control automatic
+            fontification in the &OPI;:
+            <List>
+              <Entry class=variable><<oz-want-font-lock>> (default: <<t>>)
+              <Item>
+                <P.silent><!--**-->
+                  If non-<<nil>>, automatically enter <<font-lock-mode>> for
+                  the Oz modes.
+              <Entry class=command><<oz-fontify-buffer &amp;optional ARG>>
+                (<Key/M-l/)
+              <Item>
+                <P.silent><!--**-->
+                  Center point in window, redisplay frame and re-fontify
+                  buffer.  The <<ARG>> is interpreted just as with the
+                  <<recenter>> command (usually bound to <Key/C-l/).
+            </List>
+            You might like the following variable and command if you care
+            about superfluous (invisible) spaces:
+            <List>
+              <Entry class=variable><<oz-pedantic-spaces>> (default: <<nil>>)
+              <Item>
+                <P.silent><!--**-->
+                  If non-nil, highlight ill-placed whitespace.  Note that this
+                  variable must be set before the <File/oz/ library is loaded.
+              <Entry class=face><<oz-space-face>>
+              <Item>
+                <P.silent><!--**-->
+                  The face in which ill-placed whitespace is highlighted.
+              <Entry class=command><<oz-remove-annoying-spaces>>
+              <Item>
+                <P.silent><!--**-->
+                  Remove all ill-placed whitespace from the current buffer.
+                  This is all the whitespace that is hightlighted in
+                  <<oz-space-face>>.
+            </List>
+      <Section>
+        <Title/Comments/
+          <P>
+            <List>
+              <Entry class=command><<oz-fill-paragraph>>
+              <Item>
+                <P.silent><!--**-->
+                  Like the <<fill-paragraph>> command, but handles Oz comments.
+                  If any of the current line is a comment, fill the comment
+                  or the paragraph of it that point is in, preserving the
+                  comment's indentation and initial percent signs.
+              <Entry class=command>
+                <<oz-comment-region START END &amp;optional ARG>>
+              <Item>
+                <P.silent><!--**-->
+                  Comment or uncomment each line in the region.  With just
+                  <Key/C-u/ as prefix argument, uncomment each line in region.
+                  A numeric prefix argument <<ARG>> means use <<ARG>> comment
+                  characters.  If <<ARG>> is negative, delete that many
+                  comment characters instead.  Blank lines do not get
+                  comments.
+              <Entry class=command>
+                <<oz-uncomment-region START END &amp;optional ARG>>
+              <Item>
+                <P.silent><!--**-->
+                  Comment or uncomment each line in the region.  See the
+                  <<oz-comment-region>> command for more information; note
+                  that the prefix argument is negated.
+            </List>
+      <Section>
+        <Title/Expression-Level Commands/
+          <P>
+            In this section, we use the term <Def/Oz definition/ to stand
+            for the text from a <<proc>>, <<fun>>, <<class>> or <<meth>>
+            keyword up to its matching <<end>>.  Also, we use the term
+            <Def/Oz expression/ to stand for the text corresponding to
+            either a bracketed Oz construct (such as <<proc &ellipsis; end>>
+            or <<local &ellipsis end>>) or a single word.
+            <List>
+              <Entry class=command><<forward-oz-expr &amp;optional ARG>>
+                (<Key/M-C-f/)
+              <Item>
+                <P.silent><!--**-->
+                  Move forward one balanced Oz expression.  With <<ARG>>, do
+                  it that many times.  Negative <<ARG>> means backwards.
+              <Entry class=command><<backward-oz-expr &amp;optional ARG>>
+                (<Key/M-C-b/)
+              <Item>
+                <P.silent><!--**-->
+                  Move backward one balanced Oz expression.  With <<ARG>>, do
+                  it that many times.  <<ARG>> must be positive.
+              <Entry class=command><<mark-oz-expr ARG>>
+                (<Key/M-C-@/, <Key/M-C-SPC/)
+              <Item>
+                <P.silent><!--**-->
+                  Set mark <<ARG>> balanced Oz expressions from point.  The
+                  place mark goes to is the same place the <<forward-oz-expr>>
+                  command would move to with the same argument.
+              <Entry class=command><<transpose-oz-exprs ARG>> (<Key/M-C-t/)
+              <Item>
+                <P.silent><!--**-->
+                  Like the <<transpose-words>> command (usually bound to
+                  <Key/M-t/) but applies to balanced Oz expressions.  Caveat:
+                  This might not work well in all cases.
+              <Entry class=command><<kill-oz-expr ARG>> (<Key/M-C-k/)
+              <Item>
+                <P.silent><!--**-->
+                  Kill the balanced Oz expression following point.  With
+                  <<ARG>>, kill that many Oz expressions after point.
+                  Negative <<ARG>> means kill <<-ARG>> Oz expressions before
+                  point.
+              <Entry class=command><<backward-kill-oz-expr ARG>>
+                (<Key/M-C-DEL/)
+              <Item>
+                <P.silent><!--**-->
+                  Kill the balanced Oz expression preceding point.  With
+                  <<ARG>>, kill that many Oz expressions before point.
+                  Negative <<ARG>> means kill <<-ARG>> Oz expressions after
+                  point.
+              <Entry class=command><<oz-beginning-of-defun>> (<Key/M-C-a/)
+              <Item>
+                <P.silent><!--**-->
+                  Move to the start of the Oz definition point is in.
+                  If point is not inside an Oz definition, move to start of
+                  buffer.  Returns <<t>> unless search stops due to beginning
+                  or end of buffer.
+              <Entry class=command><<oz-end-of-defun>> (<Key/M-C-e/)
+              <Item>
+                <P.silent><!--**-->
+                  Move to the end of the Oz definition point is in.
+                  If point is not inside an Oz definition, move to end of
+                  buffer.
+            </List>
     <Chapter id="chapter.running">
       <Title/Running Mozart from the &OPI;/
       <P>
