@@ -275,7 +275,7 @@ COMPILERSRC1 = \
 	StaticAnalysis.oz POTypes.oz PatternMatching.oz CodeGen.oz \
 	CodeStore.oz CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz \
 	Unnester.oz UnnestFD.oz Assembler.oz Interface.oz Abstractions.oz \
-	Errors.oz RunTime.oz
+	Errors.oz RunTime.oz ForLoop.oz
 
 COMPILERSRCEXTRA = compiler-Builtins.oz
 
@@ -302,7 +302,8 @@ compiler-Builtins.oz: $(BIMODFILES)
 
 FUNFUNCTORS = PrintName.ozf Builtins.ozf Unnester.ozf Core.ozf \
 	StaticAnalysis.ozf CodeGen.ozf Assembler.ozf \
-	Main.ozf RunTime.ozf Annotate.ozf GroundZip.ozf
+	Main.ozf RunTime.ozf Annotate.ozf GroundZip.ozf \
+	ForLoop.ozf
 
 PrintName.ozf: compiler/PrintName.oz
 
