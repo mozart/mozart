@@ -596,7 +596,7 @@ public:
 //     the site.
 class VirtualInfo {
 #ifdef VIRTUALSITES
-  friend DSite::initVirtualInfoArg(VirtualInfo *vi);
+  friend void DSite::initVirtualInfoArg(VirtualInfo *vi);
 #endif
 private:
   // The "street address" of the master virtual site
