@@ -145,15 +145,15 @@ OZ_BI_define(PerdioVar_is, 1,1)
 // ---------------------------------------------------------------------
 
 
-static
-BIspec pvarSpec[] = {
-  {"PerdioVar.is",	      2, PerdioVar_is},
-
-  {0,0,0,0}
-};
-
-void BIinitPerdioVar()
-{
-  BIaddSpec(pvarSpec);
-}
+// static
+// BIspec pvarSpec[] = {
+//   {"PerdioVar.is",	      2, PerdioVar_is},
+// 
+//   {0,0,0,0}
+// };
+// 
+// void BIinitPerdioVar()
+// {
+//   BIaddSpec(pvarSpec);
+// }
 
