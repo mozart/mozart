@@ -24,7 +24,7 @@
 %%% WARRANTIES.
 %%%
 
-functor $
+functor
 
 import
    System
@@ -34,23 +34,19 @@ import
    Tk
    TkTools
    Error
-   Browser.{browse}
 
-   Emacs.{getOPI
-          condSend}
+   Browser(browse)
 
-   Compiler.{engine
-             quietInterface}
+   Emacs(getOPI condSend)
 
-   Debug
-      from 'x-oz://boot/Debug'
+   Debug at 'x-oz://boot/Debug'
 
 export
    'object': Ozcar
    'open':   OpenOzcar
    'close':  CloseOzcar
 
-body
+define
    \insert 'ozcar/config'
    \insert 'ozcar/prelude'
 
