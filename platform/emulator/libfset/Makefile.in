@@ -24,17 +24,18 @@
 
 srcdir          = @srcdir@
 VPATH           = @srcdir@
+FSDIR           = @srcdir@
 FDINCS          = -I.. -I$(srcdir)/..
 CFLAGS          = $(COPT) $(DEFS) $(INCS) $(FDINCS) $(CWARN) $(CUSR)
 CXXFLAGS        = $(CFLAGS)
 DEPEND          = @DEPEND@ $(DEFS) $(INCS) $(FDINCS)
 TARGETS         = libfset.a
 
-FSETLIBSRCS =   standard.cc telling.cc \
-                testing.cc fsaux.cc \
-                intsets.cc monitor.cc \
-                reified.cc fsstd.cc \
-                std_n.cc
+FSETLIBSRCS =   $(FSDIR)/standard.cc $(FSDIR)/telling.cc \
+                $(FSDIR)/testing.cc $(FSDIR)/fsaux.cc \
+                $(FSDIR)/intsets.cc $(FSDIR)/monitor.cc \
+                $(FSDIR)/reified.cc $(FSDIR)/fsstd.cc \
+                $(FSDIR)/std_n.cc
 
 FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 

@@ -3257,7 +3257,7 @@ fi
 
 if test "x$enable_peanuts" != xno; then
         echo "$ac_t""yes" 1>&6
-        PEANUTS="peanuts.cc"
+        PEANUTS="\$(PEANUTSFILE)"
 else
         echo "$ac_t""no" 1>&6
         PEANUTS="\$(PEANUTS)"
