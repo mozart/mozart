@@ -250,7 +250,7 @@ about 500000, which makes computation
 twice as fast.
 <para class=apropos><title/statistics/
 To find out about this, pop
-up the <ref.extern to="ozdoc:tools" key="chapter.panel"/Oz Panel/ and
+up the <ref.extern to="ozdoc:panel"/Oz Panel/ and
 reset the statistics.  Also 
 switch on the status message feature and pop up
 the emulator buffer.  Now enter the statement
