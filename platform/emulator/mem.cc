@@ -278,7 +278,8 @@ void *ozMalloc(int chunk_size)
     void *old = sbrk(0);
     void *ret_val = sbrk(chunk_size);
     if (ret_val == (caddr_t) - 1) {
-      error("Memory exhausted");
+      message("Virtual memory exhausted");
+      exitOz(1);
     }
 
     SbrkMemory *newMem = (SbrkMemory *) ret_val;
@@ -355,7 +356,9 @@ void printChunkChain(void *Chain)
 void getMemFromOS(size_t sz)
 {
   if (sz > heapMaxSize) {
-    error("heapMalloc: Required memory bigger than chunk size");
+    message("memory exhausted: required chunk bigger thank max size");
+    message(" hint: look for an endless recursion");
+    exitOz(1);
   }
 
 
@@ -379,8 +382,8 @@ void getMemFromOS(size_t sz)
 
 //  message("heapEnd: 0x%x\n maxPointer: 0x%x\n",heapEnd,maxPointer+1);
   if (heapEnd > (char*)maxPointer) {
-    error("Addressable heap space exhausted\nCan only address %d MB",
-          ((maxPointer+1)&~mallocBase)>>20);
+    message("Virtual memory exhausted");
+    exitOz(1);
   }
 
   heapEnd -= sizeof(char *);
