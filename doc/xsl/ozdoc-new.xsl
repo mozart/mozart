@@ -102,7 +102,8 @@
   <txt:defmap name="code">
     <call-template name="declare.map.common"/>
     <txt:enter char=" ">\mozartSPACE{}</txt:enter>
-    <txt:enter char="&#10;">\mozartNEWLINE{}</txt:enter>
+    <txt:enter char="&#10;">\mozartNEWLINE
+</txt:enter>
   </txt:defmap>
 </template>
 
@@ -216,6 +217,11 @@
     <value-of select="@ID"/>
     <txt:usemap>}</txt:usemap>
   </if>
+  <apply-templates select="FRONT/TITLE//NOTE[@FOOT='FOOT']
+                          |      TITLE//NOTE[@FOOT='FOOT']
+                          |FRONT/TITLE//REF.EXTERN
+                          |      TITLE//REF.EXTERN"
+		   mode="footnotetext"/>
   <txt:usemap><text>
 
 </text></txt:usemap>
@@ -431,9 +437,16 @@
 
 <template match="REF.EXTERN">
   <apply-templates/>
-  <txt:usemap>\footnote{</txt:usemap>
-  <call-template name="ref.extern" select="."/>
-  <txt:usemap>}</txt:usemap>
+  <choose>
+    <when test="ancestor::TITLE">
+      <txt:usemap>\protect\footnotemark</txt:usemap>
+    </when>
+    <otherwise>
+      <txt:usemap>\footnote{</txt:usemap>
+      <call-template name="ref.extern" select="."/>
+      <txt:usemap>}</txt:usemap>
+    </otherwise>
+  </choose>
 </template>
 
 <template match="PTR.EXTERN">
@@ -547,7 +560,7 @@
 </template>
 
 <template name="ref.to.id">
-  <txt:usemap>~\ref{</txt:usemap>
+  <txt:usemap>~\REF{</txt:usemap>
   <value-of select="@ID"/>
   <txt:usemap>}</txt:usemap>
 </template>
@@ -563,7 +576,7 @@
 </template>
 
 <template name="pageref.to.id">
-  <txt:usemap> (page~\pageref{</txt:usemap>
+  <txt:usemap> (page~\PAGEREF{</txt:usemap>
   <value-of select="@ID"/>
   <txt:usemap>})</txt:usemap>
 </template>
@@ -871,6 +884,24 @@
 
 <!-- notes and footnotes -->
 
+<template match="NOTE[@FOOT='FOOT']" mode="footnotetext">
+  <txt:usemap>
+\footnotetext{</txt:usemap>
+  <apply-templates/>
+  <txt:usemap>}</txt:usemap>
+</template>
+
+<template match="REF.EXTERN" mode="footnotetext">
+  <txt:usemap>
+\footnotetext{</txt:usemap>
+  <call-template name="ref.extern" select="."/>
+  <txt:usemap>}</txt:usemap>
+</template>
+
+<template match="TITLE//NOTE[@FOOT='FOOT']" priority="3.0">
+  <txt:usemap>\protect\footnotemark{}</txt:usemap>
+</template>
+
 <template match="NOTE[@FOOT='FOOT']" priority="2.0">
   <txt:usemap>\footnote{</txt:usemap>
   <apply-templates/>
@@ -893,6 +924,7 @@
     <when test="@ICON='note-gui-m2.gif'">mouse-M2</when>
     <when test="@ICON='note-gui-r1.gif'">mouse-R1</when>
     <when test="@ICON='note-gui-r2.gif'">mouse-R2</when>
+    <when test="@ICON='note-gui-lm1.gif'">mouse-LM1</when>
     <otherwise>
       <if test="msg:say('UNKNOWN NOTE.GUI ICON: ') and msg:saynl(string(@ICON))"/>
       <text>!!!UNKNOWN NOTE.GUI ICON!!!</text>
@@ -984,6 +1016,26 @@
 
 <template match="REWRITE.CONDITION">
   <txt:usemap>\REWRITECONDITION{</txt:usemap>
+  <apply-templates/>
+  <txt:usemap>}</txt:usemap>
+</template>
+
+<!-- DTD doc support -->
+
+<template match="TAG|NAME[@CLASS and @CLASS='TAG']|NAME[@TYPE and @TYPE='TAG']">
+  <txt:usemap>\DTDTAG{</txt:usemap>
+  <apply-templates/>
+  <txt:usemap>}</txt:usemap>
+</template>
+
+<template match="ATTRIB">
+  <txt:usemap>\DTDATTRIB{</txt:usemap>
+  <apply-templates/>
+  <txt:usemap>}</txt:usemap>
+</template>
+
+<template match="NAME[@TYPE and @TYPE='PI']">
+  <txt:usemap>\DTDPI{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
 </template>
