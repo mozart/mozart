@@ -463,11 +463,33 @@ PRINT(Space)
   stream << "Space@" << this;
 }
 
+PRINT(OzArray)
+{
+  CHECKDEPTH;
+  depth--;
+  stream << "Array@" << this << "[ ";
+  for (int i=getLow(); i<=getHigh(); i++) {
+    stream << i << ": ";
+    TaggedRef t;
+    getArg(i,t);
+    tagged2Stream(t,stream, depth,offset);
+    stream << " ";
+  }
+  stream << "]";
+}
+
+PRINTLONG(OzArray)
+{
+  CHECKDEPTHLONG;
+  print(stream,depth+1,offset);
+}
+
 PRINT(SChunk)
 {
   CHECKDEPTH;
   stream << "Chunk@" << this;
 }
+
 
 PRINT(Abstraction)
 {
@@ -670,7 +692,7 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
 PRINTLONG(ConstTerm)
 {
   CHECKDEPTHLONG;
-  switch (typeOf()) {
+  switch (getType()) {
   case Co_Board:        ((Board *) this)->printLong(stream, depth, offset);      break;
   case Co_Actor:        ((Actor *) this)->printLong(stream, depth, offset);      break;
   case Co_HeapChunk:    ((HeapChunk *) this)->printLong(stream, depth, offset);  break;
@@ -679,6 +701,7 @@ PRINTLONG(ConstTerm)
   case Co_Cell:	        ((Cell *) this)->printLong(stream,depth,offset);         break;
   case Co_Space:	((Space *) this)->printLong(stream,depth,offset);         break;
   case Co_Chunk:	((SChunk *) this)->printLong(stream,depth,offset);       break;
+  case Co_Array:	((OzArray *) this)->printLong(stream,depth,offset);       break;
   case Co_Builtin:	((Builtin *) this)->printLong(stream,depth,offset);      break;
   default: 	        Assert(NO);
   }
@@ -687,7 +710,7 @@ PRINTLONG(ConstTerm)
 PRINT(ConstTerm)
 {
   CHECKDEPTH;
-  switch (typeOf()) {
+  switch (getType()) {
   case Co_Board:       ((Board *) this)->print(stream, depth, offset);       break;
   case Co_Actor:       ((Actor *) this)->print(stream, depth, offset);       break;
   case Co_HeapChunk:   ((HeapChunk *) this)->print(stream, depth, offset);   break;
@@ -696,6 +719,7 @@ PRINT(ConstTerm)
   case Co_Cell:        ((Cell *) this)->print(stream,depth,offset);          break;
   case Co_Space:       ((Space *) this)->print(stream,depth,offset);         break;
   case Co_Chunk:       ((SChunk *) this)->print(stream,depth,offset);        break;
+  case Co_Array:       ((OzArray *) this)->print(stream,depth,offset);        break;
   case Co_Builtin:     ((Builtin *) this)->print(stream,depth,offset);       break;
   default:              Assert(NO);
   }
