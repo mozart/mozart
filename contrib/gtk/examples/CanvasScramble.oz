@@ -291,8 +291,6 @@ define
 	 GTK.window, add(Notebook)
 	 {Notebook setShowTabs(1)}
 	 {Notebook appendPage(Scramble {New GTK.label new("Fifteen")})}
-      end
-      meth connectEvents
 	 {self signalConnect('destroy' destroyEvent _)}
       end
       meth destroyEvent(Event)
