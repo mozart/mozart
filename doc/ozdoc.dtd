@@ -46,7 +46,7 @@
   -->
 <!ENTITY % common.attr "
         id      ID      #IMPLIED        -- document-wide unique id --
-        class   CDATA   #IMPLIED        -- space separated list of classes --
+        class   NAMES   #IMPLIED        -- space separated list of classes --
         info    CDATA   #IMPLIED        -- arbitrary stuff --
         %lang.attr;
         %proglang.attr;
@@ -77,10 +77,38 @@
         key CDATA #IMPLIED
 ">
 
+<!--==================== USER EXTENSIONS ==========================-->
+<!--
+
+     For a particular document, it may be desirable to slightly modify
+     or extend the DTD.  You can do this by defining input.local as a
+     SYSTEM entity refering to a file containg the required
+     definitions.  This file is read after the generic attribute
+     entities have been declared, but before the remaining entities
+     having to do with content models.  Thus the file can contain
+     additional elements that can take advantage of the generic
+     attribute entities, and it can override the content model
+     parameter entities if necessary.
+
+     That should never be necessary.  At the most, you should consider
+     adding some phrasal elements.  This can be done simply by
+     defining parameter entity p.mix.local:
+
+        <!ENTITY % p.mix.local "| foo | bar">
+
+     Note the leading vertical bar: this is required because
+     p.mix.local is concatenated to the end of a disjunction of
+     elements.
+
+  -->
+
+<!ENTITY % input.local "">
+%input.local;
+
 <!--==================== PARAMETER ENTITIES =======================-->
 
 <!ENTITY % index.class  "index|index.begin|index.end">
-
+<!ENTITY % p.mix.local "">
 <!ENTITY % p.mix "
           file    | kbd            | key        | samp
         | q       | span           | def        | name
@@ -92,6 +120,7 @@
         | list
         | figure  | note
         | table   | grammar.rule
+        %p.mix.local;
 ">
 <!ENTITY % p.chars.mix "#PCDATA|%p.mix;">
 
@@ -127,14 +156,14 @@
 <!ATTLIST abstract
         %common.attr;
 >
-<!ELEMENT back - O (meta|bibentry)*>
+<!ELEMENT back - O (meta|bib.extern)*>
 <!ATTLIST back
         %common.attr;
 >
-<!ELEMENT bibentry - O EMPTY>
-<!ATTLIST bibentry
+<!ELEMENT bib.extern - O EMPTY>
+<!ATTLIST bib.extern
         %common.attr;
-        bib CDATA #REQUIRED
+        to  CDATA #REQUIRED
         key CDATA #REQUIRED
 >
 
@@ -662,6 +691,8 @@
 <!ATTLIST (index|and)
         %common.attr;
         sort.as CDATA #IMPLIED
+        scope IDREFS #IMPLIED
+        see IDREF #IMPLIED
 >
 
 <!--==================== BNF MARKUP ===============================-->
