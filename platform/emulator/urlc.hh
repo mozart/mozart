@@ -24,18 +24,43 @@ int localizeUrl(const char* Url, char** fnp);
 
 #define     URLC_OK 0
 
-#define     URLC_EALLOC        -1 /* allocation error */
-#define     URLC_EPARSE        -2 /* parse error */
-#define     URLC_EINVAL        -3 /* invalid parameter/reply */
-#define     URLC_ESOCK         -4 /* socket manipulation error */
-#define     URLC_ERESP         -5 /* error in response */
-#define     URLC_EFILE         -6 /* file manipulation error */
-#define     URLC_EUNKNOWN      -7 /* unknown error, none of this list */
-#define     URLC_EEMPTY        -8 /* empty resource */
-#define     URLC_EAUTH         -9 /* authentication failure */
-#define     URLC_AGAIN        -10 /* try again */
-#define     URLC_INTERM       -11 /* intermediate state */
-#define     URLC_LATER        -12 /* try later */
-#define     URLC_REDIRECT     -13 /* resource redirect */
-#define     URLC_UNLINK       -14 /* unlink hint */
-#define     URLC_ETOOLONG     -15 /* string too long */
+#define     URLC_EALLOC        -1
+#define     URLC_EPARSE        -2
+#define     URLC_EINVAL        -3
+#define     URLC_ESOCK         -4
+#define     URLC_ERESP         -5
+#define     URLC_EFILE         -6
+#define     URLC_EUNKNOWN      -7
+#define     URLC_EEMPTY        -8
+#define     URLC_EAUTH         -9
+#define     URLC_AGAIN        -10
+#define     URLC_INTERM       -11
+#define     URLC_LATER        -12
+#define     URLC_REDIRECT     -13
+#define     URLC_UNLINK       -14
+#define     URLC_ETOOLONG     -15
+
+
+inline
+char *urlcStrerror(int err)
+{
+  switch (err) {
+  case URLC_EALLOC:   return "allocation error";
+  case URLC_EPARSE:   return "parse error";
+  case URLC_EINVAL:   return "invalid parameter/reply";
+  case URLC_ESOCK:    return "socket manipulation error";
+  case URLC_ERESP:    return "error in response";
+  case URLC_EFILE:    return "file manipulation error";
+  case URLC_EEMPTY:   return "empty resource";
+  case URLC_EAUTH:    return "authentication failure";
+  case URLC_AGAIN:    return "try again";
+  case URLC_INTERM:   return "intermediate state";
+  case URLC_LATER:    return "try later";
+  case URLC_REDIRECT: return "resource redirect";
+  case URLC_UNLINK:   return "unlink hint";
+  case URLC_ETOOLONG: return "string too long";
+  case URLC_EUNKNOWN:
+  default:
+    return "unknown urlc error";
+  }
+}
