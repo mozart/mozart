@@ -2755,6 +2755,30 @@ OZ_BI_define(BIthreadGetRaiseOnBlock,1,1)
   OZ_RETURN(thread->getNoBlock()? NameTrue: NameFalse);
 } OZ_BI_end
 
+OZ_BI_define(BIthreadCreate,1,0)
+{
+  oz_declareNonvarIN(0,p);
+
+  if (!oz_isAbstraction(p)) {
+    oz_typeError(0,"Abstraction");
+  }
+
+  Abstraction *a = tagged2Abstraction(p);
+  if (a->getArity() != 0) {
+    oz_typeError(0,"Nullary Abstraction");
+  }
+  
+  int prio   = min(am.currentThread()->getPriority(),DEFAULT_PRIORITY);
+  Thread *tt = am.mkRunnableThreadOPT(prio,am.currentBoard());
+  
+  tt->getTaskStackRef()->pushCont(a->getPC(),NULL,a);
+  tt->setAbstr(a->getPred());
+  
+  am.scheduleThread (tt);
+
+  return PROCEED;
+} OZ_BI_end
+
 // ------------------ explore a thread's taskstack ---------------------------
 
 OZ_BI_define(BIthreadTaskStack,3,1)
