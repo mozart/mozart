@@ -232,18 +232,26 @@ otherwise the empty set.
 
 <List proglang=cc>
 
+<Entry class="member function"><<init>>
+<Index class=proglang><<OZ_FSetValue>>and<<init>></Index>
+<Synopsis><<void init(const OZ_FSetState state);>>
+
+<Item> Initializes a Finite Set Value according to <<state>> (<<fs_empty>>
+or <<fs_full>>).
+
+
 <Entry class="constant member function"><<isIn>>
 <Index class=proglang><<OZ_FSetValue>><And><<isIn>></Index>
 <Synopsis><<OZ_Boolean isIn(int i) const;>>
 
-<Item> Returns <<OZ_True>> if i is in <<*this>>.
+<Item> Returns <<OZ_True>> if <<i>> is in <<*this>>.
 
 
 <Entry class="constant member function"><<isNotIn>>
 <Index class=proglang><<OZ_FSetValue>><And><<isNotIn>></Index>
 <Synopsis><<OZ_Boolean isNotIn(int) const;>>
 
-<Item> Returns <<OZ_True>> if i is not in <<*this>>.
+<Item> Returns <<OZ_True>> if <<i>> is not in <<*this>>.
 
 
 <Entry class="constant member function"><<getCard>>
