@@ -29,7 +29,17 @@ void GenFSetVariable::dispose(void) {
 
 #ifdef DEBUG_FSET
 #define DEBUG_FSUNIFY
-#define DEBUG_TELLCONSTRAINTS
+//#define DEBUG_TELLCONSTRAINTS
+#endif
+
+#ifdef FSET_FILE_PRINT
+#include <fstream.h>
+#endif
+
+#ifdef FSET_FILE_PRINT
+extern ofstream * fscout;
+#else
+extern ostream * fscout;
 #endif
 
 Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
@@ -37,26 +47,21 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
                                 Bool prop, /* propagate */
                                 Bool disp  /* dispose */)
 {
-#ifdef DEBUG_FSUNIFY
-  cout << "entering fs unify" << endl << flush;
-  taggedPrint(makeTaggedRef(vptr));
-  taggedPrint(makeTaggedRef(tptr));
-#endif
-
   TypeOfTerm ttag = tagTypeOf(term);
 
   switch (ttag) {
   case FSETVALUE:
     {
 #ifdef DEBUG_FSUNIFY
-      cout << "fs = fs val" << endl << flush;
+      (*fscout) << "fsunify: (" << _fset << " = "
+                << *((FSetValue *)tagged2FSetValue(term)) << " )";
 #endif
 
       if (! ((OZ_FSetImpl *) &_fset)->unify(*(FSetValue *)tagged2FSetValue(term)))
         goto f;
 
 #ifdef DEBUG_FSUNIFY
-      cout << "succeeded" << endl << flush;
+      (*fscout) << " -> " <<  _fset;
 #endif
 
       Bool isLocalVar = am.isLocalSVar(this);
@@ -79,20 +84,22 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
       switch(tagged2CVar(term)->getType()) {
       case FSetVariable:
         {
-#ifdef DEBUG_FSUNIFY
-          cout << "fs = fs" << endl << flush;
-#endif
           GenFSetVariable * term_var = tagged2GenFSetVar(term);
           OZ_FSetImpl * t_fset = (OZ_FSet *) &term_var->getSet();
           OZ_FSetImpl * fset = (OZ_FSet *) &getSet();
           OZ_FSetImpl new_fset;
 
+#ifdef DEBUG_FSUNIFY
+          (*fscout) << "fsunify: (" << *fset << " = " << *t_fset << " )";
+#endif
+
           if ((new_fset = t_fset->unify(*fset)).getCardMin() == -1)
             goto f;
 
 #ifdef DEBUG_FSUNIFY
-          cout << "succeeded" << endl << flush;
+          (*fscout) << " -> " << new_fset;
 #endif
+
           Bool var_is_local = (prop && am.isLocalSVar(this));
           Bool term_is_local = (prop && am.isLocalSVar(term_var));
           Bool is_not_installing_script = !am.isInstallingScript();
@@ -228,19 +235,13 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
   }
 t:
 #ifdef DEBUG_FSUNIFY
-  cout << "leaving fs unify (true)" << flush;
-  taggedPrint(makeTaggedRef(vptr));
-  taggedPrint(makeTaggedRef(tptr));
-  cout << endl << flush;
+  (*fscout) << " true" << endl << flush;
 #endif
   return TRUE;
 
 f:
 #ifdef DEBUG_FSUNIFY
-  cout << "leaving fs unify (false)" << flush;
-  taggedPrint(makeTaggedRef(vptr));
-  taggedPrint(makeTaggedRef(tptr));
-  cout << endl << flush;
+  (*fscout) << "false" << endl << flush;
 #endif
   return FALSE;
 }

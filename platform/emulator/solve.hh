@@ -96,6 +96,7 @@ public:
   void pushToLTQ(Thread * thr, Board * b);
 
   void resetLocalThreadQueue(void) {
+    localThreadQueue->getLTQThread()->getTaskStackRef()->makeEmpty();
     Assert(localThreadQueue);
     localThreadQueue->dispose ();
     localThreadQueue = NULL;

@@ -39,6 +39,16 @@ void OZ_hfreeCInts(int * is, int n)
   if (n) OZDISPOSE(int, n, is);
 }
 
+char * OZ_hallocChars(int n)
+{
+  return n == 0 ? (char *) NULL : OZMALLOC(char, n);
+}
+
+void OZ_hfreeChars(char * is, int n)
+{
+  if (n) OZDISPOSE(char, n, is);
+}
+
 #define FDTAG               OZCONST
 #define MAKETAGGEDINDEX(I)  makeTaggedRef(FDTAG,(int32) (I<<2))
 #define GETINDEX(T)         (ToInt32(tagValueOfVerbatim(T))>>2);
@@ -95,9 +105,9 @@ OZ_Boolean OZ_isEqualVars(OZ_Term v1, OZ_Term v2)
   return isAnyVar(vtag1) && (vptr1 == vptr2);
 }
 
-OZ_Return OZ_typeError(OZ_CFun OZ_self, OZ_Term OZ_args[],
-                       int OZ_arity, char * __typeString,
-                       int pos, char * comment)
+OZ_Return OZ_typeError(char * __typeString,
+                       int pos,
+                       char * comment)
 {
   TypeError(pos, comment);
 }

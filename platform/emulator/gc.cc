@@ -2524,7 +2524,7 @@ void performCopying(void)
     case PTR_ACTOR:     ((Actor *) ptr)->gcRecurse();            break;
     case PTR_THREAD:    ((Thread *) ptr)->gcRecurse();           break;
     case PTR_CONT:      ((Continuation*) ptr)->gcRecurse();      break;
-    case PTR_PROPAGATOR:((OZ_Propagator *) ptr)->updateHeapRefs(opMode == IN_TC); break;
+    case PTR_PROPAGATOR:((OZ_Propagator *) ptr)->updateHeapRefs(opMode == IN_GC); break;
     case PTR_DYNTAB:    ((DynamicTable *) ptr)->gcRecurse();     break;
     case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcConstRecurse();   break;
     default:

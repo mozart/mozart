@@ -21,7 +21,17 @@
 //*****************************************************************************
 #ifdef DEBUG_FSET
 
-#define _DEBUG_FSETIR(CODE) cout << CODE << flush;
+#ifdef FSET_FILE_PRINT
+#include <fstream.h>
+#endif
+
+#ifdef FSET_FILE_PRINT
+extern ofstream * fscout;
+#else
+extern ostream * fscout;
+#endif
+
+#define _DEBUG_FSETIR(CODE) (*fscout) << CODE << flush;
 #define DEBUG_FSETIR(CODE) _DEBUG_FSETIR(CODE)
 
 #else

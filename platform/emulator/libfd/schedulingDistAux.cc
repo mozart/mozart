@@ -159,9 +159,7 @@ OZ_C_proc_end
 
 void FirstsLasts::updateHeapRefs(OZ_Boolean duplicate)
 {
-
-
-  if (duplicate)
+  if (!duplicate)
     reg_durs[-1] = (int *) int(reg_durs[-1]) + 1;
 
   OZ_updateHeapTerm(stream);
