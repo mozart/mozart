@@ -78,7 +78,7 @@ define(M4INSTRTWOREGS,``''
 
 
   // move X[i] --> Y[j], X[k] --> Y[l]
-  INSTRUCTION(MOVEMOVEXY)
+  INSTRUCTION(MOVEMOVEXYXY)
     {
       Yreg(getRegArg(PC+2)) = Xreg(getRegArg(PC+1));
       Yreg(getRegArg(PC+4)) = Xreg(getRegArg(PC+3));
@@ -86,9 +86,25 @@ define(M4INSTRTWOREGS,``''
     }
 
   // move Y[i] --> X[j], Y[k] --> X[l]
-  INSTRUCTION(MOVEMOVEYX)
+  INSTRUCTION(MOVEMOVEYXYX)
     {
       Xreg(getRegArg(PC+2)) = Yreg(getRegArg(PC+1));
+      Xreg(getRegArg(PC+4)) = Yreg(getRegArg(PC+3));
+      DISPATCH(5);
+    }
+
+  // move Y[i] --> X[j], X[k] --> Y[l]
+  INSTRUCTION(MOVEMOVEYXXY)
+    {
+      Xreg(getRegArg(PC+2)) = Yreg(getRegArg(PC+1));
+      Yreg(getRegArg(PC+4)) = Xreg(getRegArg(PC+3));
+      DISPATCH(5);
+    }
+
+  // move X[i] --> Y[j], Y[k] --> X[l]
+  INSTRUCTION(MOVEMOVEXYYX)
+    {
+      Yreg(getRegArg(PC+2)) = Xreg(getRegArg(PC+1));
       Xreg(getRegArg(PC+4)) = Yreg(getRegArg(PC+3));
       DISPATCH(5);
     }
@@ -120,7 +136,7 @@ define(M4INSTRTWOREGS,``''
                  // and bind the reference in X reg to it.
 
                  Reg1(getRegArg(PC+1)) =
-                   makeTaggedRef(newTaggedUVar(CBB));
+                   makeTaggedRef(newTaggedUVar(e->currentUVarPrototype));
 
                  IncfProfCounter(localVariableCounter,sizeof(TaggedRef));
                ''
@@ -130,7 +146,7 @@ define(M4INSTRTWOREGS,``''
   M4INSTRONEREG( CREATEVARIABLEMOVE,
                ``{
                  Reg1(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) =
-                     makeTaggedRef(newTaggedUVar(CBB));
+                     makeTaggedRef(newTaggedUVar(e->currentUVarPrototype));
 
                  IncfProfCounter(localVariableCounter,sizeof(TaggedRef));
                 } ''
