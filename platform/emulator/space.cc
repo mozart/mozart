@@ -36,9 +36,7 @@ void unBind(TaggedRef *p, TaggedRef t)
   *p = t;
 }
 
-inline
-// static
-Bool oz_installScriptOPT(Script &script)
+Bool oz_installScript(Script &script)
 {
   Bool ret = OK;
   am.setInstallingScript(); // mm2: special hack ???
@@ -69,11 +67,6 @@ Bool oz_installScriptOPT(Script &script)
     script.dealloc();
 #endif
   return ret;
-}
-
-Bool oz_installScript(Script &script)
-{
-  return oz_installScriptOPT(script);
 }
 
 Bool oz_isBelow(Board *below, Board *above)
@@ -149,7 +142,7 @@ InstType oz_installPath(Board *to)
   to->setInstalled();
 
   am.trail.pushMark();
-  if (!oz_installScriptOPT(to->getScriptRef())) {
+  if (!oz_installScript(to->getScriptRef())) {
     return INST_FAILED;
   }
   return INST_OK;
@@ -361,13 +354,202 @@ Bool oz_isInSolveDebug (Board *bb)
 }
 #endif
 
+static
+Bool extParameters(OZ_Term list, Board * solve_board)
+{
+  while (OZ_isCons(list)) {
+    OZ_Term h = OZ_head(list);
+    
+    Bool found = FALSE;
+
+    if (OZ_isVariable(h)) {
+
+#ifdef DEBUG_PROP_STABILTY_TEST
+      oz_print(h);
+#endif
+
+      DEREF(h, hptr, htag);
+
+      Assert(!isUVar(htag));
+
+      Board  * home = GETBOARD(tagged2SVarPlus(h)); 
+      Board * tmp = solve_board;
+
+      // from solve board go up to root; if you step over home 
+      // then the variable is external otherwise it must be a local one
+      do {
+	tmp = tmp->getParent();
+
+	Assert (!(tmp->isCommitted()) && !(tmp->isFailed()));
+	
+	if (tmp == home) { 
+	  found = TRUE;
+	  break;
+	}
+      } while (!tmp->_isRoot());
+      
+    } else if (OZ_isCons(h)) {
+      found = extParameters(h, solve_board);
+    }
+
+    if (found) return TRUE;
+
+    list = OZ_tail(list);
+  } // while
+  return FALSE;
+}
+
+static
+void solve_clearSuspList(SolveActor *sa,Suspension killSusp)
+{
+  SuspList * tmpSuspList = sa->unlinkSuspList();
+
+  while (tmpSuspList) {
+    Suspension susp = tmpSuspList->getSuspension();
+
+    /*
+     *  kost@
+     *  Note that i've preserved here a limitation of stability 
+     * check: no propagators (i.e. former "resistant" suspensions") 
+     * might suspend on global variables; otherwise, no stability 
+     * will be reached (precisely speaking, they must go away - 
+     * then stability can be reached);
+     *  This limitation was introduced with the "resistant" 
+     * suspensions (Hi, Tobias!). 
+     *
+     */
+
+    if (susp.isDead() ||
+	killSusp == susp ||
+	(susp.isRunnable() && !susp.isPropagator())) {
+      tmpSuspList = tmpSuspList->dispose ();
+      continue;
+    }
+
+    Board * bb = GETBOARDOBJ(susp);
+
+    // find suspensions, which occured in a failed nested search space
+    while (1) {
+      bb = bb->getSolveBoard();
+      if (bb == sa->getSolveBoard()) break;
+      if (bb == 0) break;
+      bb = bb->getParentAndTest();
+      if (bb == 0) break;
+    }
+
+    if (susp.isPropagator()) {
+      Propagator * prop = susp.getPropagator();
+      
+#ifdef DEBUG_PROP_STABILTY_TEST
+      cout << "SolveActor::clearSuspList : Found propagator." << endl 
+	   << prop->toString() << endl
+	   << "\tbb = " << bb << endl << flush;
+#endif
+
+      if (bb) {
+	// if propagator suspends on external variable then keep its
+	// thread in the list to avoid stability
+	if (extParameters(prop->getPropagator()->getParameters(), sa->getSolveBoard())) {
+#ifdef DEBUG_PROP_STABILTY_TEST
+	  cout << "\tExt parameter found!" << endl << flush;
+#endif
+	  SuspList * helpList = tmpSuspList;
+	  sa->addSuspension (helpList);
+	} 
+#ifdef DEBUG_PROP_STABILTY_TEST
+	else {
+	  cout << "\tNo ext parameter found!" << endl << flush;
+	}
+#endif
+
+      }
+      tmpSuspList = tmpSuspList->getNext ();
+    } else {
+      Assert(susp.isThread());
+      
+      Thread * thr = susp.getThread();
+
+      if (bb == 0) {
+	oz_disposeThread(thr);
+	tmpSuspList = tmpSuspList->dispose ();
+      } else {
+	SuspList *helpList = tmpSuspList;
+	tmpSuspList = tmpSuspList->getNext();
+	sa->addSuspension (helpList);
+      }
+    }
+  }
+}
+
+void oz_removeExtThread(Thread *tt)
+{
+  Assert(tt->wasExtThread());
+  
+  Board *sb = GETBOARD(tt)->getSolveBoard ();
+  
+  while (sb) {
+    Assert (sb->isSolve());
+    
+    SolveActor *sa = SolveActor::Cast(sb->getActor());
+    solve_clearSuspList(sa,tt);
+    sb = GETBOARD(sa)->getSolveBoard();
+  }
+}
+
+void oz_checkExtSuspension(Suspension susp, Board * varHome)
+{
+  if (am.isBelowSolveBoard()) {
+    Board * bb = oz_currentBoard();
+    Bool wasFound = NO;
+    Assert (!varHome->isCommitted());
+
+    while (bb != varHome) {
+      Assert (!oz_isRootBoard(bb));
+      Assert (!bb->isCommitted() && !bb->isFailed());
+      if (bb->isSolve()) {
+	SolveActor *sa = SolveActor::Cast(bb->getActor());
+	sa->addSuspension(susp);
+	wasFound = OK;
+      }
+      bb = bb->getParent();
+    }
+  
+    if (wasFound) susp.setExtSuspension();
+  }
+}
+
+void _checkExtSuspension(Suspension susp)
+{
+  Assert(susp.wasExtSuspension());
+
+  Board *sb = GETBOARDOBJ(susp)->getSolveBoard();
+
+  while (sb) {
+    Assert(sb->isSolve());
+    
+    SolveActor * sa = SolveActor::Cast(sb->getActor());
+    if (oz_isStableSolve(sa)) {
+      oz_newThreadInject(sb); // mm2: maybe OPT
+    }
+    sb = GETBOARD(sa)->getSolveBoard();
+  }
+}
+
 inline
-Bool oz_solve_areNoExtSuspensions(SolveActor *sa)
+Bool solve_checkExtSuspList (SolveActor *sa)
+{
+  // Kostja: Christian's; (no spaces!);
+  solve_clearSuspList(sa,(Thread *) NULL);
+  return sa->isEmptySuspList();
+}
+
+inline
+Bool solve_areNoExtSuspensions(SolveActor *sa)
 {
   if (sa->isEmptySuspList())
     return (OK);
   else
-    return (oz_solve_checkExtSuspList(sa));
+    return (solve_checkExtSuspList(sa));
 }
 
 Bool oz_isStableSolve(SolveActor *sa)
@@ -378,7 +560,7 @@ Bool oz_isStableSolve(SolveActor *sa)
       !am.trail.isEmptyChunk())
     return NO;
   // simply "don't worry" if in all other cases it is too weak;
-  return oz_solve_areNoExtSuspensions(sa); 
+  return solve_areNoExtSuspensions(sa); 
 }
 
 

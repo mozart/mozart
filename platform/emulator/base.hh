@@ -389,7 +389,7 @@ void handlerFPE();
 void handlerALRM();
 void handlerUSR2();
 
-void oz_checkExtSuspension(Suspension susp, Board * home);
+void oz_checkExtSuspension(Suspension susp, Board *varHome);
 
 OZ_Return oz_unify(OZ_Term t1, OZ_Term t2, ByteCode *scp=0);
 
@@ -478,6 +478,8 @@ void * OZ_hrealloc(void *, size_t);
 // builtins.cc
 OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val);
 
+// var_simple.cc
+OzVariable *oz_newSimpleVar(Board *bb);
 
 /* Ultrix does not have 'strdup' */
 inline char *ozstrdup(const char *s)

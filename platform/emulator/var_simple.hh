@@ -60,6 +60,4 @@ public:
   }
 };
 
-OzVariable *oz_getVar(TaggedRef *v);
-
 #endif /* __SIMPLEVAR__H__ */
