@@ -110,7 +110,7 @@ OZ_C_proc_end
 
 #ifdef PROPAGATOR_CD
 
-#include "../FDLib/aux.hh"
+#include "../FDLib/fdaux.hh"
 
 class CDPropagator : public OZ_Propagator {
 protected:

@@ -143,7 +143,8 @@ ostream& operator << (ostream& o, const OZ_Propagator &p);
 //-----------------------------------------------------------------------------
 // class OZ_PropagatorExpect, etc.
 
-struct OZ_expect_t {
+class OZ_expect_t {
+public:
   int size, accepted;
   OZ_expect_t(int s, int a) : size(s), accepted(a) {}
 };
@@ -153,6 +154,10 @@ enum OZ_PropagatorFlags {
    OFS_flag,
    CD_flag
 };
+
+class OZ_PropagatorExpect;
+
+typedef OZ_expect_t (OZ_PropagatorExpect::* FDExpectFun) (OZ_Term);
 
 class OZ_PropagatorExpect {
 private:
@@ -181,8 +186,7 @@ public:
   OZ_expect_t expectIntVarAny(OZ_Term t) {return expectIntVar(t, fd_any);}
   OZ_expect_t expectInt(OZ_Term);
   OZ_expect_t expectTruthVar(OZ_Term);
-  OZ_expect_t expectTuple(OZ_Term,
-                          OZ_expect_t (OZ_PropagatorExpect::*) (OZ_Term));
+  OZ_expect_t expectTuple(OZ_Term, FDExpectFun);
 
   OZ_Boolean isSuspending(OZ_expect_t r) {
     return (r.accepted == 0 || (0 < r.accepted && r.accepted < r.size));
@@ -196,7 +200,7 @@ public:
 // class OZ_FDIntVar, etc.
 
 class OZ_VarState {
-private:
+protected:
   enum State_e {loc_e = 1, glob_e = 2, spec_e = 3} state;
 public:
   OZ_Boolean isState(State_e s) {return s == state;}
