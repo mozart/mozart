@@ -12,9 +12,10 @@
 
 if test -z "$OZEMULATOR"
 then
-    for d in $OZPREFIX/platform/$OZPLATFORM \
+    for d in \
 	$SRCDIR/../../platform/emulator \
-	$SRCDIR/../../platform/emulator/$OZPLATFORM
+	$SRCDIR/../../platform/emulator/$OZPLATFORM \
+	$OZPREFIX/platform/$OZPLATFORM
     do
 	if test -x $d/oz.emulator.bin
 	then

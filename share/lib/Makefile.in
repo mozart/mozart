@@ -1,3 +1,4 @@
+BUILDTOP	= @BUILDTOP@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 TOPDIR		= @TOPDIR@
