@@ -45,7 +45,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomMin, AtomMax, AtomMid,
   AtomNaive, AtomSize, AtomNbSusps,
   AtomDebugCallC, AtomDebugCallF, AtomDebugCondC, AtomDebugCondF,
-  AtomDebugLockC, AtomDebugLockF,
+  AtomDebugLockC, AtomDebugLockF, AtomDebugNameC, AtomDebugNameF,
   AtomException, AtomUnify,
 
   NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
@@ -129,6 +129,8 @@ void initLiterals()
   AtomDebugCondF   = makeTaggedAtom("conditional/f");
   AtomDebugLockC   = makeTaggedAtom("lock/c");
   AtomDebugLockF   = makeTaggedAtom("lock/f");
+  AtomDebugNameC   = makeTaggedAtom("name generation/c");
+  AtomDebugNameF   = makeTaggedAtom("name generation/f");
 
   AtomUnify        = makeTaggedAtom("unify");
   AtomException    = makeTaggedAtom("exception");

@@ -2486,7 +2486,7 @@ LBLdispatcher:
 	  // save the lock:
 	  switch (CodeArea::getOpcode(PC+5)) {
 	  case LOCKTHREAD:
-	    dbg->data = Xreg(getRegArg(PC+7));
+	    dbg->setSingleArgument(Xreg(getRegArg(PC+7)));
 	    break;
 	  default:
 	    break;
@@ -2501,7 +2501,7 @@ LBLdispatcher:
 	  case TESTLISTX:
 	  case TESTBOOLX:
 	  case MATCHX:
-	    dbg->data = Xreg(getRegArg(PC+6));
+	    dbg->setSingleArgument(Xreg(getRegArg(PC+6)));
 	    break;
 	  case TESTLITERALY:
 	  case TESTNUMBERY:
@@ -2509,7 +2509,7 @@ LBLdispatcher:
 	  case TESTLISTY:
 	  case TESTBOOLY:
 	  case MATCHY:
-	    dbg->data = Yreg(getRegArg(PC+6));
+	    dbg->setSingleArgument(Yreg(getRegArg(PC+6)));
 	    break;
 	  case TESTLITERALG:
 	  case TESTNUMBERG:
@@ -2517,7 +2517,18 @@ LBLdispatcher:
 	  case TESTLISTG:
 	  case TESTBOOLG:
 	  case MATCHG:
-	    dbg->data = Greg(getRegArg(PC+6));
+	    dbg->setSingleArgument(Greg(getRegArg(PC+6)));
+	    break;
+	  default:
+	    break;
+	  }
+	} else if (literalEq(kind,AtomDebugNameC) ||
+		   literalEq(kind,AtomDebugNameF)) {
+	  switch (CodeArea::getOpcode(PC+5)) {
+	  case PUTCONSTANTX:
+	  case PUTCONSTANTY:
+	  case PUTCONSTANTG:
+	    dbg->setSingleArgument(getTaggedArg(PC+6));
 	    break;
 	  default:
 	    break;
