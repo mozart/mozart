@@ -227,7 +227,7 @@ in
 	    else
 	       Gui,status(I terminated)
 	    end
-	    Gui,printStack(id:0 frames:nil depth:0)
+	    Gui,printStack(id:I frames:nil depth:0)
 	 else skip end
 	 case {Dkeys self.ThreadDic} == nil then
 	    {OzcarMessage 'no more threads to debug.'}
@@ -251,12 +251,12 @@ in
       in
 	 {Stack step(name:N args:A builtin:B file:F line:L
 		     time:Time frame:FrameId)}
-	 case T == @currentThread then Ack in
+	 case T == @currentThread then
 	    case {UnknownFile F} then
 	       {OzcarMessage NoFileInfo # I}
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
 	       {Thread.resume @currentThread}
-	    else
+	    else Ack in
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
 	       thread
 		  SourceManager,scrollbar(file:F line:L ack:Ack
@@ -277,12 +277,16 @@ in
 	    case {UnknownFile F} then
 	       {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
-	    else
-	       SourceManager,scrollbar(file:F line:L
-				       color:ScrollbarBlockedColor what:appl)
+	    else Ack in
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
+	       thread
+		  SourceManager,scrollbar(file:F line:L ack:Ack
+					  color:ScrollbarBlockedColor
+					  what:appl)
+	       end
+	       thread Gui,loadStatus(F Ack) end
 	    end
-	    {ForAll [rebuild(true) printTop] Stack}
+	    thread {ForAll [rebuild(true) printTop] Stack} end
 	 else skip end
       end
       
@@ -302,11 +306,10 @@ in
 	    Gui,status(I S)
 	    Gui,selectNode(I)
 	    Gui,displayTree
-	    Gui,printEnv(frame:0)  % clear environment windows
 	    
 	    case S == terminated then
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:appl)
-	       Gui,printStack(id:0 frames:nil depth:0)
+	       Gui,printStack(id:I frames:nil depth:0)
 	    else Ack in
 	       thread
 		  SourceManager,

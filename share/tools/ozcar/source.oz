@@ -113,30 +113,35 @@ local
 	 case What == appl then
 	    LastApplColor <- C
 	 else skip end
-	 case @CurrentLine.What \= undef then
-	    Other         = case What == appl then stack else appl end
-	    NewColors     = case @CurrentLine.Other == @CurrentLine.What then
-			       SourceTextInvForeground #
-			       @LastApplColor
-			    else
-			       SourceTextForeground #
-			       SourceTextBackground
-			    end
-	 in
-	    {self tk(tag conf q(@CurrentLine.What)
-		     foreground:NewColors.1
-		     background:NewColors.2)}
-	 else skip end
-	 case L \= undef then
-	    {OzcarMessage 'highlight line ' # L #
-	     ' of file ' # {StripPath self.filename}}
-	    {ForAll [tk(tag conf q(L)
-			foreground: SourceTextInvForeground
-			background: C)
-		     tk(see L#'.0')] self}
-	    SourceWindow,Update(What L)
+	 case L == @CurrentLine.What then
+	    {OzcarMessage 'no need to highlight line ' # L # ' again.'}
 	 else
-	    SourceWindow,Update(What undef)
+	    case @CurrentLine.What \= undef then
+	       Other         = case What == appl then stack else appl end
+	       NewColors     =
+	       case @CurrentLine.Other == @CurrentLine.What then
+		  SourceTextInvForeground #
+		  @LastApplColor
+	       else
+		  SourceTextForeground #
+		  SourceTextBackground
+	       end
+	    in
+	       {self tk(tag conf q(@CurrentLine.What)
+			foreground:NewColors.1
+			background:NewColors.2)}
+	    else skip end
+	    case L \= undef then
+	       {OzcarMessage 'highlight line ' # L #
+		' of file ' # {StripPath self.filename}}
+	       {ForAll [tk(tag conf q(L)
+			   foreground: SourceTextInvForeground
+			   background: C)
+			tk(see L#'.0')] self}
+	       SourceWindow,Update(What L)
+	    else
+	       SourceWindow,Update(What undef)
+	    end
 	 end
       end
    end
@@ -232,8 +237,10 @@ in
       end
       
       meth ToTop(entry:E line:L color:C what:What)
-	 case @CurrentWindow.What \= undef then
-	    {@CurrentWindow.What highlight(line:undef color:undef what:What)}
+	 CW = @CurrentWindow.What
+      in
+	 case CW \= undef andthen CW \= E.1 then
+	    {CW highlight(line:undef color:undef what:What)}
 	 else skip end
 	 SourceManager,Update(What E.1)
 	 {self.NoteBook toTop(E.2)}
