@@ -546,38 +546,6 @@ void ByteStream::dumpByteBuffers(){
   removeSingle();
 }
 
-ByteStream *ByteStream::makeByteStream(OZ_Datum *d) 
-{
-  ByteStream *ret = bufferManager->getByteStream();
-  ret->getSingle();
-
-  int max;
-  BYTE *pos = ret->initForRead(max);
-
-  int total = 0;
-  while (TRUE) {
-    for (int i=0; i < max; i++) {
-      pos[i] = d->data[total++];
-      if (total >= d->size) {
-	ret->afterRead(i);
-	break;
-      }
-    }
-
-    ret->afterRead(max);
-    pos = ret->beginRead(max);
-  }
-
-  return ret;
-}
-
-
-void ByteStream::getDatum(OZ_Datum *d) 
-{
-}
-
-
-
 /* BufferManager */
 
 ByteStream* BufferManager::getByteStream(){
@@ -5600,22 +5568,34 @@ void saveHeader(ByteStream *bs)
   bs->put(PERDIOMAGICSTART);
 }
 
+// ===================================================================
+// class ByteSink
+// ===================================================================
 
-OZ_Return saveFile(OZ_Term in,char *filename,OZ_Term url, 
-		   OZ_Term dosave, OZ_Term urls,
-		   OZ_Term resources)
+OZ_Return
+ByteSink::putBytes(BYTE*pos,int n)
+{
+  Assert(0);
+  return FAILED;
+}
+
+OZ_Return
+ByteSink::allocateBytes(int n)
+{
+  Assert(0);
+  return FAILED;
+}
+
+OZ_Return
+ByteSink::putTerm(OZ_Term in,
+		  OZ_Term url,
+		  OZ_Term dosave,
+		  OZ_Term urls,
+		  OZ_Term resources)
 {
   INIT_IP(0);
 
-  int fd = open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
-  if (fd < 0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",3,
-		    oz_atom("open"),
-		    oz_atom(OZ_unixError(errno)),
-		    oz_atom(filename));
-  }
-
-  ByteStream *bs = bufferManager->getByteStreamMarshal();
+  ByteStream* bs = bufferManager->getByteStreamMarshal();
   saveHeader(bs);
 
   MarshallInfo mi(dosave,urls);
@@ -5627,35 +5607,119 @@ OZ_Return saveFile(OZ_Term in,char *filename,OZ_Term url,
   bs->incPosAfterWrite(tcpHeaderSize);
 
   int total=bs->calcTotLen();
-  while (total){
+  allocateBytes(total);
+  while (total) {
     Assert(total>0);
     int len=bs->getWriteLen();
     BYTE* pos=bs->getWritePos();
-    total -=len;
-  again:
-    int ret=oswrite(fd,pos,len);
-    if (ret < 0) {
-      if (errno==EINTR) goto again;
-      close(fd);
-      return oz_raise(E_ERROR,OZ_atom("perdio"),"save",3,
-		      oz_atom("write"),
-		      oz_atom(OZ_unixError(errno)),
-		      oz_atom(filename));
+    total -= len;
+    OZ_Return result = putBytes(pos,len);
+    if (result!=PROCEED) {
+      bufferManager->freeByteStream(bs);
+      return result;
     }
     bs->sentFirst();
   }
   bs->writeCheck();
-  bufferManager->freeByteStream(bs); 
+  bufferManager->freeByteStream(bs);
 
-  close(fd);
-  
   if (!literalEq(deref(urls),NameUnit) && !OZ_unify(urls,mi.urlsFound))
     return FAILED;
 
   return OZ_unify(resources,mi.resources) ? PROCEED : FAILED;
 }
 
+// ===================================================================
+// class ByteSinkFD
+// ===================================================================
 
+OZ_Return
+ByteSinkFD::allocateBytes(int n) { return PROCEED; }
+
+OZ_Return
+ByteSinkFD::putBytes(BYTE*pos,int len)
+{
+  if (oswrite(fd,pos,len)<0)
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",3,
+		    oz_atom("write"),
+		    oz_atom(OZ_unixError(errno)),
+		    oz_int(fd));
+  return PROCEED;
+}
+
+// ===================================================================
+// class ByteSinkFile
+// ===================================================================
+
+OZ_Return
+ByteSinkFile::allocateBytes(int n)
+{
+  fd = open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
+  if (fd < 0)
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",3,
+		    oz_atom("open"),
+		    oz_atom(OZ_unixError(errno)),
+		    oz_atom(filename));
+  return PROCEED;
+}
+
+OZ_Return
+ByteSinkFile::putBytes(BYTE*pos,int len)
+{
+  if (oswrite(fd,pos,len)<0)
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",3,
+		    oz_atom("write"),
+		    oz_atom(OZ_unixError(errno)),
+		    oz_atom(filename));
+  return PROCEED;
+}
+
+// ===================================================================
+// class ByteSinkDatum
+// ===================================================================
+
+OZ_Return
+ByteSinkDatum::allocateBytes(int n)
+{
+  dat.size = n;
+  dat.data = (char*) malloc(n);
+  if (dat.data==0)
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",3,
+		    oz_atom("malloc"),
+		    oz_atom(OZ_unixError(errno)),
+		    oz_atom("datum"));
+  return PROCEED;
+}
+
+OZ_Return
+ByteSinkDatum::putBytes(BYTE*pos,int len)
+{
+  memcpy(&(dat.data[idx]),pos,len);
+  idx += len;
+  return PROCEED;
+}
+
+OZ_Return saveFile(OZ_Term in,char *filename,OZ_Term url, 
+		   OZ_Term dosave, OZ_Term urls,
+		   OZ_Term resources)
+{
+  ByteSinkFile sink(filename);
+  return sink.putTerm(in,url,dosave,urls,resources);
+}
+
+OZ_Return
+saveDatum(OZ_Term in,OZ_Datum& dat,OZ_Term url, 
+	  OZ_Term dosave, OZ_Term urls,
+	  OZ_Term resources)
+{
+  ByteSinkDatum sink;
+  OZ_Return result = sink.putTerm(in,url,dosave,urls,resources);
+  if (result==PROCEED) dat=sink.dat;
+  else {
+    if (sink.dat.data!=0) free(sink.dat.data);
+  }
+  return result;
+}
 
 OZ_C_proc_begin(BIsmartSave,6)
 {
@@ -5687,49 +5751,43 @@ int loadURL(TaggedRef url, OZ_Term out)
   return loadURL(s,out);
 }
 
+// ===================================================================
+// class ByteSource
+// ===================================================================
 
-OZ_Return loadFD(int fd, OZ_Term out)
+OZ_Return
+ByteSource::maybeSkipHeader()
 {
-  if (skipHeader(fd)==NO) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",1,
-		    oz_atom("magicHeaderNotFound"));
-  }
+  Assert(0);
+  return FAILED;
+}
 
-  ByteStream *bs=bufferManager->getByteStream();
-  bs->getSingle();
+OZ_Return
+ByteSource::getBytes(BYTE*pos,int&max,int&got)
+{
+  Assert(0);
+  return FAILED;
+}
 
-  int max;
-  int len=0;
-  BYTE *pos=bs->initForRead(max);
+char*
+ByteSource::emptyMsg()
+{
+  Assert(0);
+  return "emptyByteSource";
+}
 
-  while (TRUE) {
-    int ret=osread(fd,pos,max);
-    if (ret < 0) {
-      if (errno==EINTR) continue;
-      close(fd);
-      return oz_raise(E_ERROR,OZ_atom("perdio"),"load",2,
-		      oz_atom("read"),
-		      oz_atom(OZ_unixError(errno)));
-    }
-    len+=ret;
-    if (ret < max) {
-      bs->afterRead(ret);
-      break;
-    }
-    bs->afterRead(max);
-    pos=bs->beginRead(max);
-  }
-
-  close(fd);
-
-  if (len==0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",1,
-		    oz_atom("fileEmpty"));
-  }
-  bs->beforeInterpret(0);
-  bs->unmarshalBegin();
-
-  char *versiongot = unmarshallString(bs);
+OZ_Return
+ByteSource::getTerm(OZ_Term out)
+{
+  OZ_Return result;
+  result = maybeSkipHeader();
+  if (result!=PROCEED) return result;
+  ByteStream * stream;
+  result = makeByteStream(stream);
+  if (result!=PROCEED) return result;
+  stream->beforeInterpret(0);
+  stream->unmarshalBegin();
+  char *versiongot = unmarshallString(stream);
   if (strcmp(PERDIOVERSION,versiongot)!=0) {
     OZ_Term vergot = oz_atom(versiongot);
     delete versiongot;
@@ -5738,19 +5796,98 @@ OZ_Return loadFD(int fd, OZ_Term out)
 		    oz_atom(PERDIOVERSION),
 		    vergot);
   }
-
   delete versiongot;
-
   refTable->reset();
-  OZ_Term val = unmarshallTerm(bs);
-
-  bs->unmarshalEnd();
-
-  bs->afterInterpret();    
-
-  bufferManager->freeByteStream(bs);
+  OZ_Term val = unmarshallTerm(stream);
+  stream->unmarshalEnd();
+  stream->afterInterpret();    
+  bufferManager->freeByteStream(stream);
   SiteUnify(val,out);
   return PROCEED;
+}
+
+OZ_Return
+ByteSource::makeByteStream(ByteStream*& stream)
+{
+  stream = bufferManager->getByteStream();
+  stream->getSingle();
+  int max,got;
+  int total = 0;
+  BYTE *pos = stream->initForRead(max);
+  while (TRUE) {
+    OZ_Return result = getBytes(pos,max,got);
+    if (result!=PROCEED) return result;
+    total += got;
+    stream->afterRead(got);
+    if (got<max) break;
+    pos = stream->beginRead(max);
+  }
+  if (total==0)
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",1,
+		    oz_atom(emptyMsg()));
+  return PROCEED;
+}
+
+// ===================================================================
+// class ByteSourceFD
+// ===================================================================
+
+char*
+ByteSourceFD::emptyMsg() { return "emptyFile"; }
+
+OZ_Return
+ByteSourceFD::maybeSkipHeader() {
+  if (skipHeader(fd)==NO) {
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",1,
+		    oz_atom("magicHeaderNotFound"));
+  }
+  return PROCEED;
+}
+
+OZ_Return
+ByteSourceFD::getBytes(BYTE*pos,int&max,int&got)
+{
+loop:
+  got = osread(fd,pos,max);
+  if (got < 0) {
+    if (errno==EINTR) goto loop;
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",2,
+		    oz_atom("read"),
+		    oz_atom(OZ_unixError(errno)));
+  }
+  return PROCEED;
+}
+
+// ===================================================================
+// class ByteSourceDatum
+// ===================================================================
+
+char*
+ByteSourceDatum::emptyMsg() { return "emptyDatum"; }
+
+OZ_Return
+ByteSourceDatum::maybeSkipHeader() { return PROCEED; }
+
+OZ_Return
+ByteSourceDatum::getBytes(BYTE*pos,int&max,int&got)
+{
+  if (idx >= dat.size) {
+    got = 0;
+    return PROCEED;
+  }
+  got = dat.size - idx;
+  if (got >= max) {
+    got = max;
+  }
+  memcpy(pos,&(dat.data[idx]),got);
+  idx += got;
+  return PROCEED;
+}
+
+OZ_Return loadFD(int fd, OZ_Term out)
+{
+  ByteSourceFD src(fd,true);
+  return src.getTerm(out);
 }
 
 OZ_Return loadFile(char *filename,OZ_Term out)
@@ -5762,7 +5899,6 @@ OZ_Return loadFile(char *filename,OZ_Term out)
 		    oz_atom(OZ_unixError(errno)),
 		    oz_atom(filename));
   }
-
   return loadFD(fd,out);
 }
 
@@ -5792,6 +5928,7 @@ OZ_C_proc_begin(BIperdioSetURLMap,1)
   if (!OZ_isRecord(map))
     return OZ_typeError(0,"Record");
   url_map = map;
+  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -5807,7 +5944,7 @@ int loadURL(char *url, OZ_Term out)
     OZ_Term oldURL=currentURL;
     OZ_Term newURL;
     int notTooMany = 100;
-    while (newURL=OZ_subtree(url_map,oldURL)) {
+    while ((newURL=OZ_subtree(url_map,oldURL))) {
       if (!OZ_isAtom(newURL))
 	return OZ_raiseC("loadURL",2,OZ_atom("badUrlInMap"),newURL);
       oldURL=newURL;
