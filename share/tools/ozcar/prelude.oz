@@ -29,7 +29,6 @@ Dbg = dbg(on:           proc {$}
 	  off:          proc {$}
 			   {System.set internal(debug:false)}
 			end
-	  mode:         {`Builtin` 'Debug.mode' 1}
 	  stream:       {`Builtin` 'Debug.getStream' 1}
 	  step:         {`Builtin` 'Debug.setStepFlag' 2}
 	  trace:        {`Builtin` 'Debug.setTraceFlag' 2}
@@ -103,8 +102,7 @@ in
 end
 
 fun {UnknownFile F}
-   case F == '' then {OzcarError 'Warning: empty file name'} else skip end
-   F == nofile orelse F == ''
+   F == ''
 end
 
 fun {StripPath File}

@@ -87,7 +87,7 @@ local
       end
       frame(nr:      Nr   % frame counter
 	    dir:     {Label Frame}   % 'entry' or 'exit'
-	    file:    {CondSelect Frame file nofile}
+	    file:    {CondSelect Frame file ''}
 	    line:    {CondSelect Frame line unit}
 	    column:  {CondSelect Frame column unit}
 	    time:    Frame.time
@@ -180,7 +180,7 @@ in
 	 case {HasFeature X debug} andthen {HasFeature X.debug stack} then
 	    Stack = X.debug.stack
 	    F#L#C#Time = case Stack of Frame|_ then
-			    {CondSelect Frame file nofile}#
+			    {CondSelect Frame file ''}#
 			    case X of error(kernel(noElse Line ...) ...) then
 			       %% correct the line number
 			       Line
@@ -189,7 +189,7 @@ in
 			    end#
 			    {CondSelect Frame column unit}#
 			    Frame.time
-			 else nofile#unit#unit#999999999
+			 else ''#unit#unit#999999999
 			 end
 	    S = entry(kind: exception thr: self.T
 		      file: F line: L column: C time: Time
@@ -360,7 +360,7 @@ in
 	 S = @Size
       in
 	 case S == 0 then
-	    F = nofile
+	    F = ''
 	    L = unit
 	    C = unit
 	 else
