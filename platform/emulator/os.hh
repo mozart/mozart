@@ -130,11 +130,8 @@ void osExit(int status);
 #define SIGQUIT SIGINT
 #endif
 
-#ifdef WINDOWS
-#define oskill(pid,sig) raise(sig)
-#else
-#define oskill(pid,sig) kill(pid,sig)
-#endif
+int oskill(int pid, int sig);
+
 
 /* abstract acess to OS file handles */
 int osread(int fd, void *buf, unsigned int len);
@@ -187,6 +184,8 @@ extern int _hdopen(int, int flags);
 TaggedRef osDlopen(char *filename, void **out);
 int osDlclose(void* handle);
 void *osDlsym(void *handle,const char *name);
+
+int atomToSignal(const char *signame);
 
 Bool osSignal(const char *signame, OZ_Term proc);
 void pushSignalHandlers();

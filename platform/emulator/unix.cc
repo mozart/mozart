@@ -1706,6 +1706,7 @@ OZ_BI_iodefine(unix_system,1,1)
   OZ_RETURN_INT(ret);
 } OZ_BI_ioend
 
+
 OZ_BI_iodefine(unix_wait,0,2)
 {
   // OZ_out(0) == rpid
@@ -1949,6 +1950,14 @@ OZ_BI_define(unix_signalHandler, 2,0)
     return PROCEED;
   
   return OZ_typeError(0,"signal name");
+} OZ_BI_end
+
+
+OZ_BI_define(unix_kill, 2,0)
+{
+  OZ_declareInt(0,pid);
+  OZ_declareAtom(1,signo);
+  OZ_RETURN_INT(oskill(pid,atomToSignal(signo)));
 } OZ_BI_end
 
 
