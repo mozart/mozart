@@ -92,3 +92,64 @@ char *mess_names[M_LAST] = {
 
   "conn_clearreference"
 };
+
+int default_mess_priority[M_LAST] = {
+  MSG_PRIO_MEDIUM, //none
+    
+  MSG_PRIO_MEDIUM, //port_send
+  MSG_PRIO_MEDIUM, //update_reference
+  MSG_PRIO_MEDIUM, //ref_to_owner
+  MSG_PRIO_MEDIUM, //ref_to_borrow
+
+  MSG_PRIO_MEDIUM, //register
+  MSG_PRIO_MEDIUM, //redirect
+  MSG_PRIO_MEDIUM, //acknowledge
+  MSG_PRIO_MEDIUM, //surrender
+
+  MSG_PRIO_MEDIUM, //cell_lock_get
+  MSG_PRIO_MEDIUM, //cell_lock_forward
+  MSG_PRIO_MEDIUM, //cell_lock_dump
+  MSG_PRIO_MEDIUM, //cell_contents
+
+  MSG_PRIO_MEDIUM, //cell_read
+  MSG_PRIO_MEDIUM, //cell_remoteread
+  MSG_PRIO_MEDIUM, //cell_readans
+  MSG_PRIO_MEDIUM, //cell_cantput
+  MSG_PRIO_MEDIUM, //lock_token
+
+  MSG_PRIO_MEDIUM, //lock_cantput
+  MSG_PRIO_MEDIUM, //chain_ack
+  MSG_PRIO_MEDIUM, //chain_question
+  MSG_PRIO_MEDIUM, //chain_answer
+  MSG_PRIO_MEDIUM, //ask_error
+
+  MSG_PRIO_MEDIUM, //tell_error
+  MSG_PRIO_MEDIUM, //get_lazy
+  MSG_PRIO_MEDIUM, //send_lazy
+
+  MSG_PRIO_MEDIUM, //unask_error
+
+  MSG_PRIO_MEDIUM, //get_status
+  MSG_PRIO_MEDIUM, //send_status
+
+  MSG_PRIO_MEDIUM, //requested
+  MSG_PRIO_MEDIUM, //deregister
+  MSG_PRIO_MEDIUM, //send_ping
+  MSG_PRIO_HIGH, //ping
+
+  MSG_PRIO_EAGER, //conn_first_NOT_A_VALID_MESSAGETYPE
+
+  MSG_PRIO_EAGER, //conn_present
+  MSG_PRIO_EAGER, //conn_negotiate
+  MSG_PRIO_EAGER, //conn_negotiate_answer
+
+  MSG_PRIO_EAGER, //conn_ack
+  MSG_PRIO_EAGER, //conn_set_ack_properties
+
+  MSG_PRIO_EAGER, //conn_close_hard
+  MSG_PRIO_EAGER, //conn_close_weak
+  MSG_PRIO_EAGER, //conn_close_accept
+  MSG_PRIO_EAGER, //conn_close_reject
+  
+  MSG_PRIO_EAGER, //conn_clearreference
+};
