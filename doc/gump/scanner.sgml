@@ -37,7 +37,7 @@
         <Figure float id="program.scanner.example" class=program>
           <Caption>The <<LambdaScanner>> scanner specification.</Caption>
           <P> <!--**-->
-            <Code.Extern to="LambdaScanner.ozg" class=linenumbers>
+            <Code.Extern display to="LambdaScanner.ozg" class=linenumbers>
         </Figure>
       <Para class=apropos><Title/Class Descriptors/
         At the first glance the scanner specification closely resembles a
@@ -152,7 +152,7 @@
         <Figure float id="program.scanner.test" class=program>
           <Caption>A program making use of the generated scanner.</Caption>
           <P>
-            <Code.Extern to="TestScanner.ozg">
+            <Code.Extern display to="TestScanner.ozg">
         </Figure>
       <P>
         The generated <<LambdaScanner>> class is instantiated as <<MyScanner>>.

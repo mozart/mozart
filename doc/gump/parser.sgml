@@ -39,7 +39,7 @@
         <Figure float id="program.parser.example" class=program>
           <Caption>The <<LambdaParser>> parser specification.</Caption>
           <P>
-            <Code.Extern to="LambdaParser.ozg" class=linenumbers>
+            <Code.Extern display to="LambdaParser.ozg" class=linenumbers>
         </Figure>
       <Para class=apropos><Title/Class Descriptors/
         Again, a &Gump; specification resembles a class definition introduced
@@ -204,7 +204,7 @@
         <Figure float id="program.parser.test" class=program>
           <Caption>A program making use of the generated parser.</Caption>
           <P>
-            <Code.Extern to="TestParser.ozg">
+            <Code.Extern display to="TestParser.ozg">
         </Figure>
       <Para class=apropos><Title/Initialization/
         First, the scanner and parser classes are loaded.  After instantiating
