@@ -69,7 +69,6 @@ OzcarErrorPrefix       = 'Ozcar ERROR: '
 
 NoFileInfo             = ('step message without line number information, ' #
 			  'continuing thread #')
-EarlyTermThread        = 'Early terminating thread'
 FirstSelectThread      = 'You must select a thread first!'
 
 StackAction            = {NewName}
@@ -98,6 +97,7 @@ ProcedureType          = '<proc>'
 TupleType              = '<tuple>'
 RecordType             = '<record>'
 ChunkType              = '<chunk>'
+SpaceType              = '<space>'
 UnknownType            = '<???>'
 UnboundType            = '_'
 

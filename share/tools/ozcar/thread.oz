@@ -171,12 +171,11 @@ in
 
 	 elseof term(thr:T) then
 	    I = {Thread.id T}
-	    E = ThreadManager,Exists(I $)
 	 in
-	    case E then
+	    case ThreadManager,Exists(I $) then
 	       ThreadManager,remove(T I noKill)
 	    else
-	       {OzcarMessage EarlyTermThread}
+	       {OzcarMessage 'term message of unattached thread -- ignoring'}
 	    end
 
 	 [] blocked(thr:T) then
@@ -203,7 +202,7 @@ in
 		  Gui,markNode(I running)
 	       end
 	    else
-	       {OzcarError 'Unknown woken thread'}
+	       {OzcarMessage 'ready message of unattached thread -- ignoring'}
 	    end
 
 	 [] exception(thr:T exc:X) then
@@ -383,13 +382,18 @@ in
 
       meth blocked(thr:T id:I)
 	 Gui,markNode(I blocked)
+/*
+	 case {CondSelect {@currentStack getTop($)} dir entry} of exit then
+	    ThreadManager,rebuildCurrentStack
+	 else skip end
+ */
       end
 
       meth rebuildCurrentStack
 	 Stack = @currentStack
       in
 	 case Stack == unit then
-	    %Gui,doStatus(FirstSelectThread)
+%	    Gui,doStatus(FirstSelectThread)
 	    skip
 	 else
 %	    Gui,doStatus('Re-calculating stack of thread #' #
