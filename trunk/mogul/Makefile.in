@@ -208,3 +208,59 @@ clean::
 distclean::
 	-rm -f config.cache config.log config.status Makefile
 
+#=====================================================================
+# CREATE A MOGUL ARCHIVE STRUCTURE
+#=====================================================================
+
+MOGUL_DATABASE	= MOGUL.DB
+MOGUL_DIRECTORY	= $$HOME/public_html/mogul
+MOGUL_ROOT_URL	= http://www.ps.uni-sb.de/~duchier/mogul/db
+MOGUL_LIBRARIAN	= $(OZE) $(URL_TOP)/Librarian.exe	\
+	--verbose 					\
+	--mogul-url=$(MOGUL_ROOT_URL)			\
+	--root-url=mogul-root.mogul			\
+	--open-db=$(MOGUL_DATABASE)			\
+	--mogul-dir=$(MOGUL_DIRECTORY)
+
+MOGUL_DATABASE_OPTIONS	=	\
+	--update-info		\
+	--update-provided	\
+	--update-categories	\
+	--update-package-list	\
+	--save-db
+MOGUL_ARCHIVE_OPTIONS	=	\
+	--update-pub
+MOGUL_HTML_OPTIONS	=	\
+	--update-html		\
+	--update-categories-html \
+	--update-package-list-html
+
+mogul-update: mogul-database mogul-archive mogul-html
+
+mogul-database:
+	$(MOGUL_LIBRARIAN) $(MOGUL_DATABASE_OPTIONS) --print-reports
+
+MOGUL_ARCHIVE_DIRS = $(addprefix $(MOGUL_DIRECTORY)/,pkg doc)
+MOGUL_HTML_DIRS    = $(addprefix $(MOGUL_DIRECTORY)/,info info/category)
+MOGUL_INFO_DIR     = $(MOGUL_DIRECTORY)/info
+MOGUL_CAT_DIR      = $(MOGUL_DIRECTORY)/info/category
+MOGUL_INFO_FILES   = $(addprefix $(MOGUL_INFO_DIR)/,$(HTMLEXTRA))
+MOGUL_CAT_FILES    = $(addprefix $(MOGUL_CAT_DIR)/,$(HTMLEXTRA))
+
+$(MOGUL_ARCHIVE_DIRS) $(MOGUL_HTML_DIRS):
+	$(INSTALL_DIR) $@
+$(MOGUL_INFO_FILES): $(MOGUL_INFO_DIR)/% : % $(MOGUL_INFO_DIR)
+	$(INSTALL_FILE) $< $@
+$(MOGUL_CAT_FILES): $(MOGUL_CAT_DIR)/% : % $(MOGUL_CAT_DIR)
+	$(INSTALL_FILE) $< $@
+
+mogul-archive: $(MOGUL_ARCHIVE_DIRS)
+	$(MOGUL_LIBRARIAN) $(MOGUL_ARCHIVE_OPTIONS) --print-reports
+
+mogul-html: $(MOGUL_INFO_FILES) $(MOGUL_CAT_FILES)
+	$(MOGUL_LIBRARIAN) $(MOGUL_HTML_OPTIONS) --print-reports
+
+.PHONY: mogul-update mogul-database mogul-archive mogul-html
+
+veryclean:: clean
+	-rm -f $(MOGUL_DATABASE)
