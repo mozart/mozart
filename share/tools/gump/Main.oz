@@ -23,8 +23,6 @@ local
    local
       OZHOME      = {Property.get 'oz.home'}
    in
-      PLATFORM    = {Property.get 'platform.name'}
-      PLATFORMDIR = OZHOME#'/platform/'#PLATFORM
       %% include dirs for testing in bootstrap mode:
       %%	mozart/platform/emulator mozart/platform/tools/gump
       %% {OZTOOL} returns a vs naming the oztool executable
@@ -45,7 +43,8 @@ local
       fun {OZFLEX}
 	 case {Property.condGet 'oz.exe.flex' unit} of unit
 	 then case {OS.getEnv 'OZFLEX'} of false
-	      then PLATFORMDIR#'/flex.exe'
+	      then
+		 OZHOME#'/platform/'#{Property.get 'platform.name'}#'/flex.exe'
 	      elseof X then X end
 	 elseof X then X end
       end
