@@ -326,7 +326,7 @@
           boolean function&nbsp;?_{P} is applied with the current index as
           first actual argument.
 
-        <Entry><<filter}>>
+        <Entry><<filter>>
           <Index class=tails/<<Record>><And><<filter>>/
         <Synopsis>
           <<{Record.filter ?+{R1} ?+{P} ??{R2}}>>
