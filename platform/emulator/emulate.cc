@@ -198,7 +198,6 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
      DORAISE(R);                                \
    }
 
-
 #define HF_BI                                                           \
    HF_FAIL(OZ_mkTupleC("hf",2,                                          \
                        OZ_atom(builtinTab.getName((void *) biFun)),     \
@@ -1463,21 +1462,30 @@ LBLkillToplevelThread:
       goto LBLstart;
     } else {
 
+#if 0
       // Tell the debugger about termination of current thread
-      TaggedRef dbgVar = e->currentThread->getDebugVar();
-      if (OZ_isVariable(dbgVar)) {
-        OZ_Term dbgTuple = OZ_mkTupleC("debugInfo",
-                                       5,
-                                       OZ_atom("nofile"),
-                                       OZ_int(0),
-                                       OZ_atom("finished"),
-                                       OZ_atom(""),
-                                       OZ_atom("")
-                                       );
-        OZ_unify(dbgVar,dbgTuple);
+      if (e->currentThread->traceMode()) {
+        Board *b = e->currentBoard;
+        e->currentBoard = e->rootBoard;
+
+        TaggedRef var = e->currentThread->getStreamVar();
+        OZ_Term newVar = OZ_newVariable();
+
+        OZ_Term debugInfo = OZ_mkTupleC("debugInfo",
+                                        3,
+                                        OZ_atom("nofile"),
+                                        OZ_int(0),
+                                        OZ_atom("finished")
+                                        );
+
+        e->currentThread->setStreamVar(OZ_cons(var,newVar));
+
+        OZ_unify(newVar,debugInfo);
+        e->currentBoard = b;
       }
 
-      // DebugCheckT(printf("toplevel thread finished\n"));
+      //DebugCheckT(printf("thread finished\n"));
+#endif
 
       e->currentThread->disposeRunnableThread ();
       e->currentThread = (Thread *) NULL;
@@ -1536,8 +1544,6 @@ LBLkillThread:
     Assert (tmpThread->isInSolve () || !e->currentSolveBoard);
     Assert (e->currentSolveBoard || !(tmpThread->isInSolve ()));
     asmLbl(killThread);
-
-    // DebugCheckT(printf("thread finished\n"));
 
     e->currentThread = (Thread *) NULL;
     tmpThread->disposeRunnableThread ();
@@ -3132,6 +3138,27 @@ LBLsuspendThread:
       tt->pushCont(newPC,Y,G,NULL,0);
       e->scheduleThread (tt);
 
+#if 0
+      if (e->currentThread->traceMode()) {
+
+        Board *b = e->currentBoard;
+        e->currentBoard = e->rootBoard;
+
+        TaggedRef var = e->currentThread->getStreamVar();
+
+        OZ_Term varForNewThread = OZ_newVariable();
+        tt->setStreamVar(varForNewThread);
+        tt->startTraceMode(); // parent is being traced, so we are, too!
+
+        OZ_Term newVar = OZ_newVariable();
+        e->currentThread->setStreamVar(OZ_cons(var,newVar));
+
+        OZ_Term debugInfo = OZ_mkTupleC("newThread", 1, varForNewThread);
+        OZ_unify(newVar, debugInfo);
+        e->currentBoard = b;
+      }
+#endif
+
       JUMP(contPC);
     }
 
@@ -3161,36 +3188,30 @@ LBLsuspendThread:
       TaggedRef comment  = getLiteralArg(PC+4);
       int noArgs         = smallIntValue(getNumberArg(PC+5));
 
-      TaggedRef dbgVar = e->currentThread->getDebugVar();
-      if (! OZ_isVariable(dbgVar)) {  // don't debug me, pleeease!
+      if (!e->currentThread->traceMode())
         DISPATCH(6);
-      }
+
+      // else
 
       Board *b = e->currentBoard;
       e->currentBoard = e->rootBoard;
 
-      OZ_Term waitFor   = OZ_newVariable();
+      TaggedRef var = e->currentThread->getStreamVar();
 
-      OZ_Term newDbgVar = OZ_newVariable();
-      e->currentThread->setDebugVar(newDbgVar);
+      OZ_Term newVar = OZ_newVariable();
+      e->currentThread->setStreamVar(OZ_cons(var,newVar));
 
-      OZ_Term dbgTuple = OZ_mkTupleC("debugInfo",
-                                     5,
+      OZ_Term debugInfo = OZ_mkTupleC("debugInfo",
+                                     3,
                                      filename,
                                      makeInt(line),
-                                     comment,
-                                     waitFor,
-                                     newDbgVar
+                                     comment
                                      );
 
-      if (!OZ_unify(dbgVar,dbgTuple)) {
-        warning("returnDebugVar(%s,%s) failed",toC(dbgVar),toC(dbgTuple));
-        e->currentBoard = b;
-        DISPATCH(6);
-      }
+      OZ_unify(newVar,debugInfo);
 
       e->currentBoard = b;
-      SUSP_PC(waitFor,noArgs,PC+6);
+      //SUSP_PC(waitFor,noArgs,PC+6);
     }
 
   Case(JOB)

@@ -255,8 +255,15 @@ public:
   static OZ_Term list()
   {
     OZ_Term out = OZ_nil();
-    for (ThreadList *aux = allthreads; aux; aux=aux->next)
-      out = OZ_cons(aux->elem->getDebugVar(), out);
+    AM *e = &am;
+
+    for (ThreadList *aux = allthreads; aux; aux=aux->next) {
+      out =
+        OZ_cons(makeTaggedConst(new
+                                OzThread(e->currentBoard,aux->elem,
+                                         aux->elem->dbgGetTaskStack(NOCODE))),
+                    out);
+    }
     return out;
   }
 
@@ -853,7 +860,7 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
   taskStack.gc(&ret->taskStack);
 
   ret->u.self = ret->u.self->gcObject();
-  gcTagged(ret->debugVar,ret->debugVar);
+  gcTagged(ret->streamVar,ret->streamVar);
 
   return (ret);
 }
@@ -1971,6 +1978,13 @@ void ConstTerm::gcConstRecurse()
       break;
     }
 
+  case Co_Thread:
+    {
+      OzThread *thread = (OzThread *) this;
+      thread->t = thread->t->gcThread();
+      break;
+    }
+
   case Co_Group:
     {
       Group *gr = (Group *) this;
@@ -2052,6 +2066,11 @@ ConstTerm *ConstTerm::gcConstTerm()
   case Co_Dictionary:
     CheckLocal((Cell *) this);
     sz = sizeof(OzDictionary);
+    break;
+
+  case Co_Thread:
+    CheckLocal((Cell *) this);
+    sz = sizeof(OzThread);
     break;
 
   case Co_Group:

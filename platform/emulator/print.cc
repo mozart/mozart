@@ -399,6 +399,16 @@ PRINT(Space)
   stream << "Space@" << this;
 }
 
+PRINT(OzThread)
+{
+  stream << "Thread";
+}
+
+PRINTLONG(OzThread)
+{
+  stream << "Thread";
+}
+
 PRINT(OzArray)
 {
   CHECKDEPTH;
@@ -630,18 +640,19 @@ PRINTLONG(ConstTerm)
 {
   CHECKDEPTHLONG;
   switch (getType()) {
-  case Co_Board:        ((Board *) this)->printLong(stream, depth, offset);      break;
-  case Co_Actor:        ((Actor *) this)->printLong(stream, depth, offset);      break;
-  case Co_HeapChunk:    ((HeapChunk *) this)->printLong(stream, depth, offset);  break;
-  case Co_Abstraction:  ((Abstraction *) this)->printLong(stream,depth,offset);  break;
-  case Co_Object:       ((Object *) this)->printLong(stream,depth,offset);       break;
-  case Co_Cell:         ((Cell *) this)->printLong(stream,depth,offset);         break;
-  case Co_Space:        ((Space *) this)->printLong(stream,depth,offset);        break;
-  case Co_Chunk:        ((SChunk *) this)->printLong(stream,depth,offset);       break;
-  case Co_Array:        ((OzArray *) this)->printLong(stream,depth,offset);      break;
-  case Co_Dictionary:   ((OzDictionary *) this)->printLong(stream,depth,offset); break;
-  case Co_Builtin:      ((Builtin *) this)->printLong(stream,depth,offset);      break;
-  default:              Assert(NO);
+  case Co_Board:      ((Board *) this)->printLong(stream, depth, offset);     break;
+  case Co_Actor:      ((Actor *) this)->printLong(stream, depth, offset);     break;
+  case Co_HeapChunk:  ((HeapChunk *) this)->printLong(stream, depth, offset); break;
+  case Co_Abstraction:((Abstraction *) this)->printLong(stream,depth,offset); break;
+  case Co_Object:     ((Object *) this)->printLong(stream,depth,offset);      break;
+  case Co_Cell:       ((Cell *) this)->printLong(stream,depth,offset);        break;
+  case Co_Space:      ((Space *) this)->printLong(stream,depth,offset);       break;
+  case Co_Chunk:      ((SChunk *) this)->printLong(stream,depth,offset);      break;
+  case Co_Array:      ((OzArray *) this)->printLong(stream,depth,offset);     break;
+  case Co_Dictionary: ((OzDictionary *) this)->printLong(stream,depth,offset);break;
+  case Co_Thread:     ((OzThread *) this)->printLong(stream,depth,offset);    break;
+  case Co_Builtin:    ((Builtin *) this)->printLong(stream,depth,offset);     break;
+  default:            Assert(NO);
   }
 }
 
@@ -649,18 +660,19 @@ PRINT(ConstTerm)
 {
   CHECKDEPTH;
   switch (getType()) {
-  case Co_Board:       ((Board *) this)->print(stream, depth, offset);       break;
-  case Co_Actor:       ((Actor *) this)->print(stream, depth, offset);       break;
-  case Co_HeapChunk:   ((HeapChunk *) this)->print(stream, depth, offset);   break;
-  case Co_Abstraction: ((Abstraction *) this)->print(stream,depth,offset);   break;
-  case Co_Object:      ((Object *) this)->print(stream,depth,offset);        break;
-  case Co_Cell:        ((Cell *) this)->print(stream,depth,offset);          break;
-  case Co_Space:       ((Space *) this)->print(stream,depth,offset);         break;
-  case Co_Chunk:       ((SChunk *) this)->print(stream,depth,offset);        break;
-  case Co_Array:       ((OzArray *) this)->print(stream,depth,offset);       break;
-  case Co_Dictionary:  ((OzDictionary *) this)->print(stream,depth,offset);  break;
-  case Co_Builtin:     ((Builtin *) this)->print(stream,depth,offset);       break;
-  default:              Assert(NO);
+  case Co_Board:       ((Board *) this)->print(stream, depth, offset);     break;
+  case Co_Actor:       ((Actor *) this)->print(stream, depth, offset);     break;
+  case Co_HeapChunk:   ((HeapChunk *) this)->print(stream, depth, offset); break;
+  case Co_Abstraction: ((Abstraction *) this)->print(stream,depth,offset); break;
+  case Co_Object:      ((Object *) this)->print(stream,depth,offset);      break;
+  case Co_Cell:        ((Cell *) this)->print(stream,depth,offset);        break;
+  case Co_Space:       ((Space *) this)->print(stream,depth,offset);       break;
+  case Co_Chunk:       ((SChunk *) this)->print(stream,depth,offset);      break;
+  case Co_Array:       ((OzArray *) this)->print(stream,depth,offset);     break;
+  case Co_Dictionary:  ((OzDictionary *) this)->print(stream,depth,offset);break;
+  case Co_Thread:      ((OzThread *) this)->print(stream,depth,offset);    break;
+  case Co_Builtin:     ((Builtin *) this)->print(stream,depth,offset);     break;
+  default:             Assert(NO);
   }
 }
 

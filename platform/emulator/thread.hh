@@ -60,6 +60,11 @@ enum ThreadFlag {
 
   T_ltq    = 0x000800,   // designates local thread queue
 
+  // debugger
+  T_G_trace= 0x010000,   // thread is being traced
+  T_G_step = 0x020000,   // step mode turned on
+  T_G_stop = 0x040000,   // no permission to run
+
   //
   T_max    = 0x800000      // MAXIMAL FLAG;
 };
@@ -229,6 +234,39 @@ public:
     state.flags = T_p_thr | T_prop | T_unif;
   }
 
+  // debugger
+  Bool traceMode() {
+    return (state.flags & T_G_trace);
+  }
+  Bool stepMode() {
+    return (state.flags & T_G_step);
+  }
+  Bool stopped() {
+    return (state.flags & T_G_stop);
+  }
+
+  void startTraceMode() {
+    state.flags = state.flags | T_G_trace;
+  }
+  void stopTraceMode() {
+    state.flags = state.flags & ~T_G_trace;
+  }
+
+  void startStepMode() {
+    state.flags = state.flags | T_G_step;
+  }
+  void stopStepMode() {
+    state.flags = state.flags & ~T_G_step;
+  }
+
+  void runPermission() {
+    state.flags = state.flags & ~T_G_stop;
+  }
+  void noRunPermission() {
+    state.flags = state.flags | T_G_stop;
+  }
+
+
   int getThrType () { return (state.flags & S_TYPE_MASK); }
 
   //
@@ -314,8 +352,8 @@ private:
     Object *self;              /* the self object pointer     */
     RunnableThreadBody *next;  /* for linking in the freelist */
   } u;
-  TaggedRef debugVar;          /* variable will be instantiated,
-                                  if thread is being debugged */
+  TaggedRef streamVar;     // holds a stream of debug messages
+                           // when thread is being debugged
 public:
   USEHEAPMEMORY;
   //
@@ -331,8 +369,9 @@ public:
 
   void setSelf(Object *o) { Assert(u.self==NULL); u.self = o; }
   void makeRunning();
-  TaggedRef getDebugVar()       { return debugVar; }
-  void setDebugVar(TaggedRef v) { debugVar = v; }
+
+  TaggedRef getStreamVar()         { return streamVar; }
+  void setStreamVar(TaggedRef v)   { streamVar = v; }
 
   void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
   {
@@ -437,8 +476,8 @@ public:
   void setBoard (Board *bp) { board = bp; }
   void setSelf(Object *o);
 
-  TaggedRef getDebugVar();
-  void setDebugVar(TaggedRef v);
+  TaggedRef getStreamVar();
+  void setStreamVar(TaggedRef v);
 
   OZ_Propagator * swapPropagator(OZ_Propagator * p) {
     OZ_Propagator * r = item.propagator;

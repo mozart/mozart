@@ -512,7 +512,9 @@ enum TypeOfConst {
   Co_Chunk,
   Co_Array,
   Co_Dictionary,
-  Co_Group
+  Co_Thread,
+  Co_Group,
+  Dummy      // GCTAG
 };
 
 
@@ -1283,6 +1285,49 @@ inline
 Bool isChunk(TaggedRef t)
 {
   return isConst(t) && tagged2Const(t)->isChunk();
+}
+
+/*===================================================================
+ * Threads
+ *=================================================================== */
+
+class OzThread: public ConstTermWithHome {
+  friend void ConstTerm::gcConstRecurse(void);
+private:
+  Thread* t;
+  TaggedRef value;
+
+public:
+  OzThread(Board *b, Thread *th, OZ_Term st) : ConstTermWithHome(b,Co_Thread)
+  {
+    t = th;
+
+    OZ_Term pairlist= OZ_cons(OZ_pairA("stack",st), OZ_nil());
+    value = OZ_recordInit(OZ_atom("thread"),pairlist);
+  }
+
+  Thread  *th() { return t; }
+
+  OZPRINT;
+  OZPRINTLONG;
+
+  TaggedRef getValue() { return value; }
+  TaggedRef getFeature(TaggedRef fea) { return OZ_subtree(value,fea); }
+  TaggedRef getArityList() { return ::getArityList(value); }
+  Board *getBoardFast();
+};
+
+inline
+Bool isThread(TaggedRef term)
+{
+  return isConst(term) && tagged2Const(term)->getType() == Co_Thread;
+}
+
+inline
+OzThread *tagged2Thread(TaggedRef term)
+{
+  Assert(isThread(term));
+  return (OzThread *) tagged2Const(term);
 }
 
 /*===================================================================
