@@ -622,9 +622,9 @@ in
       %% Method-provided User Functionality
       %%
 
-      meth init(CompilerObject)
+      meth init(CompilerObject Iconified <= false)
 	 Compiler.genericInterface, init(CompilerObject Serve)
-	 CompilerPanel, DoInit()
+	 CompilerPanel, DoInit(Iconified)
       end
       meth exit()
 	 thread   % so that we don't kill ourselves ;-)
@@ -781,7 +781,7 @@ in
       %% GUI-Provided User Functionality
       %%
 
-      meth DoInit()
+      meth DoInit(Iconified)
 	 fun {MkAction M}
 	    Compiler.genericInterface, getPort($)#M
 	 end
@@ -1245,8 +1245,12 @@ in
 		    pack(%--** self.SuspendButton
 			 self.DequeueQueryButton self.ClearQueueButton
 			 side: left fill: x expand: true)
-		    update(idletasks)
-		    wm(deiconify self.TopLevel)]}
+		    update(idletasks)]}
+	 case Iconified then
+	    {Tk.send wm(iconify self.TopLevel)}
+	 else
+	    {Tk.send wm(deiconify self.TopLevel)}
+	 end
 	 ColoringIsEnabled <- Tk.isColor
 	 LastFeededVS <- ""
 	 LastURL <- ""
