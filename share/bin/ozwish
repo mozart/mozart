@@ -1,6 +1,6 @@
 #!/bin/sh
-OZWISHHOME=$OZHOME/ozwish
-OZWISH=$OZWISHHOME/platform/$OZPLATFORM/ozwish
+: ${OZWISHHOME=$OZHOME/ozwish}
+: ${OZWISH=$OZWISHHOME/platform/$OZPLATFORM/ozwish}
 if [ -f  $OZWISH ]
 then
   TCL_LIBRARY=$OZWISHHOME/tcl/lib/tcl
