@@ -178,7 +178,8 @@ public:
 
     // Is X=val still valid, i.e., is val a feature and is width(ofs)==0 (see OzFDVariable::valid)
   Bool valid(TaggedRef val);
-  OZ_Return unify(TaggedRef *vPtr, TaggedRef term, ByteCode *scp);
+  OZ_Return bind(TaggedRef *vPtr, TaggedRef term, ByteCode *scp);
+  OZ_Return unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode *scp);
 
   int hasFeature(TaggedRef fea,TaggedRef *out) {
     TaggedRef t = getFeatureValue(fea);

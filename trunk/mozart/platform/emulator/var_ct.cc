@@ -33,221 +33,208 @@
 #include "builtins.hh"
 #include "thr_int.hh"
 
+OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
+{
+  // bind temporarily to avoid looping in unification on cyclic terms
+  OZ_Term trail = *vptr;
+  *vptr = term;
+
+  OZ_Boolean result_unify = _constraint->unify(term);
+
+  // undo binding
+  *vptr = trail;
+
+  if (! result_unify)
+    return FAILED;
+
+  {
+    Bool isLocalVar = am.isLocalSVar(this);
+    Bool isNotInstallingScript = !am.isInstallingScript();
+      
+    if (scp == 0 && (isNotInstallingScript || isLocalVar)) {
+      propagateUnify();
+    }
+    if (isLocalVar) {
+      doBind(vptr, term);
+      dispose();
+    } else {
+      am.doBindAndTrail(vptr, term);
+    }
+  }
+  return PROCEED;
+}
+
 // `var' and `vptr' belongs to `this', i.e., is a `OzCtVariable
 // `term' and `tptr' are either values or other constrained variable
 // (preferably `OzCtVariable' of the right kind. Unification is
 // implemented such, that `OzCtVariable's of the sam ekind are
 // compatible with each other.
-OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
+OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
 {
-  TypeOfTerm ttag = tagTypeOf(term);
-  
   Assert(vptr);
 
-  if (! oz_isRef(ttag)) {
-    // `term' and `tptr' refer to a value
+  OZ_Term term = *tptr;
+  OzVariable *cv = tagged2CVar(term);
+  if (cv->getType() != OZ_VAR_CT) return FAILED;
 
-    // bind temporarily to avoid looping in unification on cyclic terms
-    OZ_Term trail = *vptr;
-    *vptr = term;
-
-    OZ_Boolean result_unify = _constraint->unify(term);
-
-    // undo binding
-    *vptr = trail;
-
-    if (! result_unify)
-      goto f;
-
-    {
-      Bool isLocalVar = am.isLocalSVar(this);
-      Bool isNotInstallingScript = !am.isInstallingScript();
-      
-      if (scp == 0 && (isNotInstallingScript || isLocalVar)) {
-	propagateUnify();
-      }
-      if (isLocalVar) {
-	doBind(vptr, term);
-	dispose();
-      } else {
-	am.doBindAndTrail(vptr, term);
-      }
-    }
-    goto t;
-  } else {
-    OZ_Term  * tptr = tagged2Ref(term);
-    term = *tptr;
-    OzVariable *cv = tagged2CVar(term);
-    if (cv->getType() == OZ_VAR_CT) {
-      // `t' and `tptr' refer to another `OzCtVariable'
+  // `t' and `tptr' refer to another `OzCtVariable'
     
-      OzCtVariable * term_var = (OzCtVariable *)cv;
-      OZ_Ct * t_constr = term_var->getConstraint();
-      OZ_Ct * constr = getConstraint();
+  OzCtVariable * term_var = (OzCtVariable *)cv;
+  OZ_Ct * t_constr = term_var->getConstraint();
+  OZ_Ct * constr = getConstraint();
 
-      // bind temporarily to avoid looping in unification on cyclic terms
-      OZ_Term trail = *vptr;
-      *vptr = term;
-      OZ_Ct * new_constr = constr->unify(t_constr);
+  // bind temporarily to avoid looping in unification on cyclic terms
+  OZ_Term trail = *vptr;
+  *vptr = term;
+  OZ_Ct * new_constr = constr->unify(t_constr);
     
-      // undo binding
-      *vptr = trail;
+  // undo binding
+  *vptr = trail;
 
-      if (! new_constr->isValid())
-	goto f;
+  if (! new_constr->isValid()) return FAILED;
     
-      Bool var_is_local  = am.isLocalSVar(this);
-      Bool term_is_local = am.isLocalSVar(term_var);
-      Bool is_not_installing_script = !am.isInstallingScript();
-      Bool var_is_constrained = (is_not_installing_script ||
-				 (constr->isWeakerThan(new_constr)));
-      Bool term_is_constrained = (is_not_installing_script ||
-				  (t_constr->isWeakerThan(new_constr)));
+  Bool var_is_local  = am.isLocalSVar(this);
+  Bool term_is_local = am.isLocalSVar(term_var);
+  Bool is_not_installing_script = !am.isInstallingScript();
+  Bool var_is_constrained = (is_not_installing_script ||
+			     (constr->isWeakerThan(new_constr)));
+  Bool term_is_constrained = (is_not_installing_script ||
+			      (t_constr->isWeakerThan(new_constr)));
    
-      switch (var_is_local + 2 * term_is_local) {
-      case TRUE + 2 * TRUE: // var and term are local
-	{
-	  if (new_constr->isValue()) {
-	    // `new_constr' designates a value
-	    OZ_Term new_value = new_constr->toValue();
+  switch (var_is_local + 2 * term_is_local) {
+  case TRUE + 2 * TRUE: // var and term are local
+    {
+      if (new_constr->isValue()) {
+	// `new_constr' designates a value
+	OZ_Term new_value = new_constr->toValue();
+	term_var->propagateUnify();
+	propagateUnify();
+	doBind(vptr, new_value);
+	doBind(tptr, new_value);
+	dispose(); 
+	term_var->dispose(); 
+      } else if (heapNewer(vptr, tptr)) { // bind var to term
+	term_var->copyConstraint(new_constr);
+	propagateUnify();
+	term_var->propagateUnify();
+	relinkSuspListTo(term_var);
+	doBind(vptr, makeTaggedRef(tptr));
+	dispose();
+      } else { // bind term to var
+	copyConstraint(new_constr);
+	term_var->propagateUnify();
+	propagateUnify();
+	term_var->relinkSuspListTo(this);
+	doBind(tptr, makeTaggedRef(vptr));
+	term_var->dispose();
+      }
+    } // TRUE + 2 * TRUE:
+    break;
+
+  case TRUE + 2 * FALSE: // var is local and term is global
+    {
+      if (t_constr->isWeakerThan(new_constr)) {
+	if (new_constr->isValue()) {
+	  // `new_constr' designates a value
+	  OZ_Term new_value = new_constr->toValue();
+	  if (is_not_installing_script) 
 	    term_var->propagateUnify();
+	  if (var_is_constrained) 
 	    propagateUnify();
-	    doBind(vptr, new_value);
-	    doBind(tptr, new_value);
-	    dispose(); 
-	    term_var->dispose(); 
-	  } else if (heapNewer(vptr, tptr)) { // bind var to term
-	    term_var->copyConstraint(new_constr);
-	    propagateUnify();
+	  doBind(vptr, new_value);
+	  am.doBindAndTrail(tptr, new_value);
+	  dispose();
+	} else {
+	  copyConstraint(new_constr);
+	  if (is_not_installing_script) 
 	    term_var->propagateUnify();
-	    relinkSuspListTo(term_var);
-	    doBind(vptr, makeTaggedRef(tptr));
-	    dispose();
-	  } else { // bind term to var
-	    copyConstraint(new_constr);
-	    term_var->propagateUnify();
+	  if (var_is_constrained) 
 	    propagateUnify();
-	    term_var->relinkSuspListTo(this);
-	    doBind(tptr, makeTaggedRef(vptr));
-	    term_var->dispose();
-	  }
-	} // TRUE + 2 * TRUE:
-      break;
+	  DoBindAndTrailAndIP(tptr, makeTaggedRef(vptr),
+			      this, term_var);
+	}
+      } else {
+	if (is_not_installing_script) 
+	  term_var->propagateUnify();
+	if (var_is_constrained) 
+	  propagateUnify();
+	relinkSuspListTo(term_var, TRUE);
+	doBind(vptr, makeTaggedRef(tptr));
+	dispose();
+      }
+    } // TRUE + 2 * FALSE:
+    break;
 
-      case TRUE + 2 * FALSE: // var is local and term is global
-	{
-	  if (t_constr->isWeakerThan(new_constr)) {
-	    if (new_constr->isValue()) {
-	      // `new_constr' designates a value
-	      OZ_Term new_value = new_constr->toValue();
-	      if (is_not_installing_script) 
-		term_var->propagateUnify();
-	      if (var_is_constrained) 
-		propagateUnify();
-	      doBind(vptr, new_value);
-	      am.doBindAndTrail(tptr, new_value);
-	      dispose();
-	    } else {
-	      copyConstraint(new_constr);
-	      if (is_not_installing_script) 
-		term_var->propagateUnify();
-	      if (var_is_constrained) 
-		propagateUnify();
-	      DoBindAndTrailAndIP(tptr, makeTaggedRef(vptr),
-				  this, term_var);
-	    }
-	  } else {
-	    if (is_not_installing_script) 
-	      term_var->propagateUnify();
-	    if (var_is_constrained) 
-	      propagateUnify();
-	    relinkSuspListTo(term_var, TRUE);
-	    doBind(vptr, makeTaggedRef(tptr));
-	    dispose();
-	  }
-	} // TRUE + 2 * FALSE:
-      break;
+  case FALSE + 2 * TRUE: // var is global and term is local
+    {
+      if (constr->isWeakerThan(new_constr)) {
+	if(new_constr->isValue()) {
+	  // `new_constr' designates a value
+	  OZ_Term new_value = new_constr->toValue();
+	  if (is_not_installing_script) 
+	    propagateUnify();
+	  if (term_is_constrained) 
+	    term_var->propagateUnify();
+	  doBind(tptr, new_value);
+	  am.doBindAndTrail(vptr, new_value);
+	  term_var->dispose();
+	} else {
+	  term_var->copyConstraint(new_constr);
+	  if (is_not_installing_script) 
+	    propagateUnify();
+	  if (term_is_constrained) 
+	    term_var->propagateUnify();
+	  DoBindAndTrailAndIP(vptr, makeTaggedRef(tptr),
+			      term_var, this);
+	}
+      } else {
+	if (term_is_constrained) 
+	  term_var->propagateUnify();
+	if (is_not_installing_script) 
+	  propagateUnify();
+	term_var->relinkSuspListTo(this, TRUE);
+	doBind(tptr, makeTaggedRef(vptr));
+	term_var->dispose();
+      }
+    } // FALSE + 2 * TRUE:
+    break;
 
-      case FALSE + 2 * TRUE: // var is global and term is local
-	{
-	  if (constr->isWeakerThan(new_constr)) {
-	    if(new_constr->isValue()) {
-	      // `new_constr' designates a value
-	      OZ_Term new_value = new_constr->toValue();
-	      if (is_not_installing_script) 
-		propagateUnify();
-	      if (term_is_constrained) 
-		term_var->propagateUnify();
-	      doBind(tptr, new_value);
-	      am.doBindAndTrail(vptr, new_value);
-	      term_var->dispose();
-	    } else {
-	      term_var->copyConstraint(new_constr);
-	      if (is_not_installing_script) 
-		propagateUnify();
-	      if (term_is_constrained) 
-		term_var->propagateUnify();
-	      DoBindAndTrailAndIP(vptr, makeTaggedRef(tptr),
-				  term_var, this);
-	    }
-	  } else {
-	    if (term_is_constrained) 
-	      term_var->propagateUnify();
-	    if (is_not_installing_script) 
-	      propagateUnify();
-	    term_var->relinkSuspListTo(this, TRUE);
-	    doBind(tptr, makeTaggedRef(vptr));
-	    term_var->dispose();
-	  }
-	} // FALSE + 2 * TRUE:
-      break;
+  case FALSE + 2 * FALSE: // var and term is global
+    {
+      if (new_constr->isValue()){
+	// `new_constr' designates a value
+	OZ_Term new_value = new_constr->toValue();
+	if (scp == 0) {
+	  if (var_is_constrained)
+	    propagateUnify();
+	  if (term_is_constrained)
+	    term_var->propagateUnify();
+	}
+	am.doBindAndTrail(vptr, new_value);
+	am.doBindAndTrail(tptr, new_value);
+      } else { 
+	OzCtVariable * cv = new OzCtVariable(new_constr, getDefinition(),
+					     oz_currentBoard());
+	OZ_Term * cvar = newTaggedCVar(cv);
+	if (scp == 0) {
+	  if (var_is_constrained)
+	    propagateUnify();
+	  if (term_is_constrained)
+	    term_var->propagateUnify();
+	}
+	DoBindAndTrailAndIP(vptr, makeTaggedRef(cvar),
+			    cv, this);
+	DoBindAndTrailAndIP(tptr, makeTaggedRef(cvar),
+			    cv, term_var);
+      }
+    } // FALSE + 2 * FALSE: 
+    break;
 
-      case FALSE + 2 * FALSE: // var and term is global
-	{
-	  if (new_constr->isValue()){
-	    // `new_constr' designates a value
-	    OZ_Term new_value = new_constr->toValue();
-	    if (scp == 0) {
-	      if (var_is_constrained)
-		propagateUnify();
-	      if (term_is_constrained)
-		term_var->propagateUnify();
-	    }
-	    am.doBindAndTrail(vptr, new_value);
-	    am.doBindAndTrail(tptr, new_value);
-	  } else { 
-	    OzCtVariable * cv = new OzCtVariable(new_constr, getDefinition(),
-						   oz_currentBoard());
-	    OZ_Term * cvar = newTaggedCVar(cv);
-	    if (scp == 0) {
-	      if (var_is_constrained)
-		propagateUnify();
-	      if (term_is_constrained)
-		term_var->propagateUnify();
-	    }
-	    DoBindAndTrailAndIP(vptr, makeTaggedRef(cvar),
-				cv, this);
-	    DoBindAndTrailAndIP(tptr, makeTaggedRef(cvar),
-				cv, term_var);
-	  }
-	} // FALSE + 2 * FALSE: 
-      break;
-
-      default:
-	error("unexpected case in unifyCt");
-	break;
-      } // switch (varIsLocal + 2 * termIsLocal) 
-      goto t;
-
-    }// if (! is_ct variable(ttag))
-  }
-  goto f;
-
-t:
-  return TRUE;
-  
-f:
-  return FALSE;
+  default:
+    error("unexpected case in unifyCt");
+    break;
+  } // switch (varIsLocal + 2 * termIsLocal) 
+  return PROCEED;
 }
 
 OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
