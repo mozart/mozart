@@ -97,7 +97,7 @@ PRODUCTIONTEMPLATESSRC = $(PRODUCTIONTEMPLATESSRC1:%=gump/%) \
 
 GUMPEXAMPLES = \
 	Examples.oz Lambda.in LambdaParser.ozg LambdaScanner.ozg \
-	OzParser.ozg OzScanner.ozg
+	OzParser.ozg OzScanner.ozg OzFrontend.oz
 
 INSPECTORSRC1 = \
 	InspectorOptions.oz InspectorMain.oz
