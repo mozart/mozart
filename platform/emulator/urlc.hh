@@ -38,4 +38,4 @@ int localizeUrl(const char* Url, char** fnp);
 #define     URLC_LATER        -12 /* try later */
 #define     URLC_REDIRECT     -13 /* resource redirect */
 #define     URLC_UNLINK       -14 /* unlink hint */
-#define     URLC_ETOOLONG     -15 /* ??? */
+#define     URLC_ETOOLONG     -15 /* string too long */
