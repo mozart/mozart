@@ -1,0 +1,73 @@
+@SET_MAKE@
+BUILDTOP        = @BUILDTOP@
+SRCTOP          = @SRCTOP@
+PREFIX          = @prefix@
+SRCDIR          = @srcdir@
+VPATH           = @srcdir@
+HOMEURL         = @HOMEURL@
+LIB_DIR         = $(PREFIX)/contrib/micq
+OZC             = @OZC@
+OZL             = @OZL@
+INSTALL         = @INSTALL@
+INSTALL_DIR     = @INSTALL_DIR@
+INSTALL_LIB     = $(INSTALL) -m 444
+APPLETS         = server.oza client.oza
+
+all:            $(APPLETS)
+%.ozf: %.oz
+        $(OZC) -c $< -o $@
+install:        $(LIB_DIR) $(addprefix $(LIB_DIR)/,$(APPLETS))
+$(LIB_DIR):
+        $(INSTALL_DIR) $@
+$(LIB_DIR)/%.ozf: %.ozf
+        $(INSTALL_LIB) $< $@
+
+server.oza: micq
+        $(OZL) $< -o $@
+client.oza: client
+        $(OZL) $< -o $@
+
+micq: startserver.oz server.ozf defaultsettings.ozf
+        $(OZC) -x $< -o $@
+
+client: client.ozf startclient.oz
+        $(OZC) -x $< -o $@
+
+server.ozf: methods.ozf database.ozf mobility.ozf newaccountgui.ozf \
+        log.ozf server.oz sysadm.ozf
+        $(OZL) -c $< -o $@
+
+addapplicationgui.ozf: addapplicationgui.oz methods.ozf
+        $(OZC) -c $< -o $@
+sysadm.ozf: sysadm.oz addapplicationgui.ozf editapplicationgui.ozf
+        $(OZC) -c $< -o $@
+client.ozf : client.oz methods.ozf clientgui.ozf newfriendsgui.ozf \
+        defaultsettings.ozf dialoggui.ozf mobility.ozf
+        $(OZC) -c $< -o $@
+clientgui.ozf : clientgui.oz messagedisplay.ozf manager.ozf \
+        defaultsettings.ozf popup.ozf messagegui.ozf editaccount.ozf \
+        draganddrop.ozf addapplicationgui.ozf configureclient.ozf \
+        editapplicationgui.ozf
+        $(OZC) -c $< -o $@
+messagegui.ozf : messagegui.oz popup.ozf
+        $(OZC) -c $< -o $@
+
+clean veryclean:
+        -rm *~ *.ozf *.oza micq client
+
+distclean: veryclean
+        -rm Makefile config.*
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+        ./config.status
+
+config.status: configure
+        ./config.status --recheck
