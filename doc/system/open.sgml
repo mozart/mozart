@@ -592,16 +592,25 @@ while <<receive>> signals the same for read.
 
 <entry> <<close>> <synopsis>
 <code display>
-close
+close(?+{KillB}<=false)
 </code><item>
 <index class=module/Open<AND>pipe<AND>close /
 
 Closes the object. 
+
 <p>
-If the started process is still running, it is killed by sending the
-<file/SIGTERM/<index/<file/SIGTERM// signal. However, note that
-the inverse direction is not supported, which means the object is not
+If ?_{KillB} is <<false>> (the default) the method blocks until all 
+pending read and 
+write requests have been executed. If the started process is still
+running, it is killed by sending the
+<file/SIGTERM/<index/<file/SIGTERM// signal. However, note that the
+inverse direction is not supported, which means the object is not
 automatically closed if the process terminates.
+
+<p> If ?_{KillB} is <<true>> the possibly running process is
+immediately terminated by sending the
+<file/SIGKILL/<index/<file/SIGKILL// signal.
+
 <p>
 See also <file/wait(2)/ and <file/kill(1)/.
 
