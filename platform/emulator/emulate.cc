@@ -12,7 +12,6 @@
 */
 
 // Ozcar special...
-//#define STEPWITHDEBUGINFO
 //#define DEBUGMAGIC
 
 #ifdef DEBUGMAGIC
@@ -284,42 +283,18 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def,
   }
 
   if (def && debugmode() && currentThread->stepMode()) {
-    //enterCall(currentBoard,makeTaggedConst(def),arity,arguments);
-#ifndef STEPWITHDEBUGINFO
-    //Board *b = am.currentBoard;
-    //am.currentBoard = am.rootBoard;
     
-    // this finds the debuginfo _after_ the call, but who cares? :-)
-    ProgramCounter dbg = CodeArea::nextDebugInfo(PC);
+    // this finds the debuginfo _after_ the call
+    ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
-    if (dbg != NOCODE) {
-
-      TaggedRef tail    = threadStreamTail;
-      TaggedRef newTail = OZ_newVariable();
-    
-      TaggedRef file, comment;
-      int line, abspos;
-
-      currentThread->stop();
-      CodeArea::getDebugInfoArgs(dbg,file,line,abspos,comment);
-      
-      TaggedRef pairlist = 
-	OZ_cons(OZ_pairA("thr",
-			 OZ_mkTupleC("#",2,makeTaggedConst(currentThread),
-				     OZ_int(currentThread->getID()))),
-		OZ_cons(OZ_pairA("file", file),
-			OZ_cons(OZ_pairAI("line", line),
-				OZ_nil())));
-      
-      TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
-      OZ_unify(tail, OZ_cons(entry, newTail));
-      threadStreamTail = newTail;
-
-      //am.currentBoard = b;
-      
+    if (debugPC != NOCODE) {
+      debugStreamCall(debugPC, def->getPrintName(), arity, arguments);
+/*
+      xx= new OzDebug(...,pairlist);
+      am.currentTaskStack->pushDebug(xx);
+*/
       return TRUE;
     }
-#endif
   }
 
   return FALSE;
@@ -2297,43 +2272,17 @@ LBLdispatcher:
        }
 
        if (e->debugmode() && e->currentThread->stepMode()) {
-	 //enterCall(CBB,makeTaggedConst(bi),predArity,X);
-#ifndef STEPWITHDEBUGINFO
-	 //Board *b = e->currentBoard; 
-	 //e->currentBoard = e->rootBoard;
-      
-	 ProgramCounter dbg = CodeArea::nextDebugInfo(PC);
-	 if (dbg != NOCODE) {
+	 ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
-	   TaggedRef tail    = e->threadStreamTail;
-	   TaggedRef newTail = OZ_newVariable();
-	   
-	   TaggedRef file, comment;
-	   int line, abspos;
-		   
-	   e->currentThread->stop();
-	   CodeArea::getDebugInfoArgs(dbg,file,line,abspos,comment);
+	 if (debugPC != NOCODE) {
+	   char *name = builtinTab.getName((void *) bi->getFun());
+	   debugStreamCall(debugPC, name, predArity, X);
       
-	   TaggedRef pairlist = 
-	     OZ_cons(OZ_pairA("thr",
-			      OZ_mkTupleC("#",2,makeTaggedConst(CTT),
-					  OZ_int(CTT->getID()))),
-		     OZ_cons(OZ_pairA("file", file),
-			     OZ_cons(OZ_pairAI("line", line),
-				     OZ_nil())));
-	   
-	   TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
-	   OZ_unify(tail, OZ_cons(entry, newTail));
-	   e->threadStreamTail = newTail;
-	   
-	   //e->currentBoard = b;
-	   
 	   if (!isTailCall) e->pushTask(PC,Y,G);
 	   e->pushCFun(bi->getFun(),X,predArity);     
 
 	   goto LBLpreemption;
 	 }
-#endif
        }
 
        biFun=bi->getFun();
@@ -2694,6 +2643,9 @@ LBLdispatcher:
       OzDebug *ozdeb = (OzDebug *) Y;
       Y = NULL;
       exitCall(PROCEED,ozdeb);
+      /*
+      CHECK HERE!!!!!!!!
+      */
       goto LBLpopTaskNoPreempt;
     }
 
