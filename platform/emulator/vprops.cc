@@ -621,6 +621,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
              SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
              SET_BOOL(AtomBrowser,ozconf.browser);
              SET_BOOL(AtomApplet,ozconf.applet););
+    CASE_BOOL_DO(PROP_STANDALONE,ozconf.runningUnderEmacs=!INT__);
   default:
     return PROP__NOT__WRITABLE;
   }
