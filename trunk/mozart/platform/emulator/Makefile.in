@@ -288,7 +288,7 @@ install-inc: $(INCDIR)
 	$(INSTALL_FILE) $(SRCDIR)/mozart.h $(INCDIR)
 	$(INSTALL_FILE) $(SRCDIR)/extension.hh $(INCDIR)
 	$(INSTALL_FILE) $(BUILDDIR)/mozart.c $(INCDIR)
-	$(INSTALL_FILE) $(SRCDIR)/oz_cpi.hh $(INCDIR)
+	$(INSTALL_FILE) $(SRCDIR)/mozart_cpi.hh $(INCDIR)
 
 install-module: $(DYNAMIC_MODULETARGETS) $(BINDIR)
 	$(INSTALL_BIN) $(DYNAMIC_MODULETARGETS) $(BINDIR)

@@ -124,7 +124,7 @@ before running configure the following variables can be set
 	components, ...
 
     include/
-	oz.h oz_cpi.hh
+	mozart.h mozart_cpi.hh
 
     platform/<platform>/
 	binaries
