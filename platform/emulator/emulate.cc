@@ -1439,6 +1439,12 @@ void engine() {
 
 
   /* det(X) wait until X will be ground */
+#define DETBUGGY
+#ifdef DETBUGGY
+  Case(DETX): ONREG(WeakDet,X);
+  Case(DETY): ONREG(WeakDet,Y);
+  Case(DETG): ONREG(WeakDet,G);
+#else
   Case(DETX): ONREG(Det,X);
   Case(DETY): ONREG(Det,Y);
   Case(DETG): ONREG(Det,G);
@@ -1460,7 +1466,7 @@ void engine() {
     }
     CHECKSEQ;
   }
-
+#endif
 
   Case(TAILSENDMSGX): isTailCall = OK; ONREG(SendMethod,X);
   Case(TAILSENDMSGY): isTailCall = OK; ONREG(SendMethod,Y);
