@@ -1497,6 +1497,37 @@ OZ_BI_define(BIwif_getNames,0,3) {
 } OZ_BI_end
 
 
+/*
+ * Groups
+ */
+
+
+OZ_BI_define(BIaddFastGroup,2,1)
+{
+  OZ_nonvarIN(0);
+  TaggedRef group = oz_deref(OZ_in(0)); 
+
+  if (oz_isCons(group)) {
+    TaggedRef member = oz_cons(OZ_in(1),findAliveEntry(oz_tail(group)));
+    tagged2LTuple(group)->setTail(member);
+    OZ_RETURN(member);
+  }
+  return OZ_typeError(0,"List");
+} OZ_BI_end 
+
+
+OZ_BI_define(BIdelFastGroup,1,0)
+{
+  TaggedRef member = oz_deref(OZ_in(0));
+
+  if (oz_isCons(member)) {
+    tagged2LTuple(member)->setHead(NameGroupVoid);
+    tagged2LTuple(member)->setTail(findAliveEntry(oz_tail(member)));
+  }
+
+  return PROCEED;
+} OZ_BI_end 
+
 
 /*
  * The builtin table
