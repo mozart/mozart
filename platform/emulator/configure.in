@@ -310,12 +310,12 @@ case $platform in
 	then # compiling for mingw32 under cygwin
 	    OZ_CXX_OPTIONS(-mno-cygwin,oz_cxx_mingw)
 	    CXX="$CXX $oz_cxx_mingw"
-	    OZ_CXX_OPTIONS(-fnative-struct,oz_cxx_native_struct)
-	    CXX="$CXX $oz_cxx_native_struct"
+#	    OZ_CXX_OPTIONS(-fnative-struct,oz_cxx_native_struct)
+#	    CXX="$CXX $oz_cxx_native_struct"
 	    OZ_CC_OPTIONS(-mno-cygwin,oz_cc_mingw)
 	    CC="$CC $oz_cc_mingw"
-	    OZ_CC_OPTIONS(-fnative-struct,oz_cc_native_struct)
-	    CC="$CC $oz_cc_native_struct"
+#	    OZ_CC_OPTIONS(-fnative-struct,oz_cc_native_struct)
+#	    CC="$CC $oz_cc_native_struct"
 	    LD="$CC"
 	    TOOLLDCMD="$LD -shared"
 	else # cross-compiling
