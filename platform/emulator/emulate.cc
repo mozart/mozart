@@ -269,7 +269,7 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
     
     OzDebug *dbg = new OzDebug(DBG_NEXT,dinfo);
     currentThread->pushDebug(dbg);
-    currentThread->stopStepMode();
+
     return TRUE;
   }
   

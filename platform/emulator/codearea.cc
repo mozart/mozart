@@ -239,9 +239,11 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
   ProgramCounter pc;
 
   pc = definitionStart(PC);
-  if (pc == NOCODE) {
+
+  if (pc == NOCODE)
     return OZ_atom("toplevel");
-  }
+  if (pc == NOCODE_GLOBALVARNAME) 
+    return nil();
 
   TaggedRef globals, locals;
 
@@ -259,8 +261,37 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
   ProgramCounter next;
   PrTabEntry *pred;
   
+  // file & line might be overwritten some lines later...
   getDefinitionArgs(pc,reg,next,file,line,pred);
 
+  // if we are lucky there's some debuginfo and we can determine
+  // the exact position inside the procedure application
+  TaggedRef dbgFile=nil(), dbgComment;
+  int dbgLine=0, dbgAbspos;
+  ProgramCounter dbgPC = PC - sizeOf(DEBUGINFO);
+
+  TaggedRef tmpFile;
+  int       tmpLine;
+
+  do {
+    dbgPC += sizeOf(DEBUGINFO);
+    dbgPC = CodeArea::nextDebugInfo(dbgPC);
+    if (dbgPC != NOCODE) {
+      CodeArea::getDebugInfoArgs(dbgPC,tmpFile,tmpLine,dbgAbspos,dbgComment);
+      if (!strstr(toC(dbgComment),"Thread")) {
+	dbgFile = tmpFile;
+	dbgLine = tmpLine;
+      }
+    }
+    else
+      break;
+  } while (strstr(toC(dbgComment),"exit"));
+  
+  if (dbgFile != nil()) {
+    file = dbgFile;
+    line = dbgLine;
+  }
+  
   TaggedRef pairlist = 
     OZ_cons(OZ_pairA("G", globals),
 	    OZ_cons(OZ_pairAA("Y", "unknown"),
@@ -309,7 +340,8 @@ TaggedRef CodeArea::argumentList(RefsArray X, int arity)
 ProgramCounter CodeArea::definitionStart(ProgramCounter from)
 {
   ProgramCounter ret = definitionEnd(from);
-  return (ret == NOCODE) ? ret : getLabelArg(ret+1);
+  return (ret == NOCODE || 
+	  ret == NOCODE_GLOBALVARNAME) ? ret : getLabelArg(ret+1);
 }
 
 
@@ -346,11 +378,13 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter from)
   while (1) {
     Opcode op = getOpcode(PC);
     switch (op) {
-    case CREATENAMEDVARIABLEX: 
-    case CREATENAMEDVARIABLEY: 
-    case CREATENAMEDVARIABLEG: 
-    case GLOBALVARNAME:
+    case CREATENAMEDVARIABLEX:
+    case CREATENAMEDVARIABLEY:
+    case CREATENAMEDVARIABLEG:
       return NOCODE;
+      
+    case GLOBALVARNAME:    // last instr in CodeArea::init
+      return NOCODE_GLOBALVARNAME;
 
     case DEFINITION:
       {
@@ -469,11 +503,12 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       {
 	TaggedRef filename,comment;
 	int line, abspos;
+	char cs[50];
 
 	getDebugInfoArgs(PC,filename,line,abspos,comment);
 	
-	fprintf(ofile,"(%s, line: %d, file: %s)\n",
-		toC(comment),line,toC(filename));
+	strcpy(cs, toC(comment));   // we must save this, blame toC()!
+	fprintf(ofile,"(%s, line: %d, file: %s)\n",cs,line,toC(filename));
 	DISPATCH();
       }
     case PUTLISTX: 
