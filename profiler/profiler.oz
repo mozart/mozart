@@ -5,11 +5,9 @@ Profiler =
 {New class
         from
            Gui
-           SourceManager
 
         meth init
            Gui,init
-           SourceManager,init
         end
 
         meth off
