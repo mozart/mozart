@@ -373,7 +373,7 @@ define
 		proc {$ L#(N#T)}
 		   if {IsFree N} then
 		      N = {Dictionary.condGet @DefaultNodes L
-			   'file:///dev/null'}#"#"#L
+			   'file:///dev/null'}
 		      T = PCDATA('*')
 		   end
 		end}
@@ -1223,9 +1223,14 @@ define
 	    [] kbd then HTML in
 	       HTML = kbd(OzDocToHTML, Batch(M 1 $))
 	       OzDocToHTML, MakeDisplay(M HTML $)
-	    [] key then HTML in
+	    [] key then HTML HTML2 in
 	       HTML = span('class': [key] OzDocToHTML, Batch(M 1 $))
-	       OzDocToHTML, MakeDisplay(M HTML $)
+	       HTML2 = if {HasFeature M id} then
+			  OzDocToHTML, ID(M.id @CurrentNode HTML)
+			  a(name: M.id HTML)
+		       else HTML
+		       end
+	       OzDocToHTML, MakeDisplay(M HTML2 $)
 	    [] samp then HTML in
 	       HTML = code(OzDocToHTML, Batch(M 1 $))
 	       OzDocToHTML, MakeDisplay(M HTML $)
