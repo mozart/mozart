@@ -252,9 +252,8 @@ starts the emulator under gdb")
     ("Compile file"           . oz-precompile-file)
     ("-----")
     ("Find"
-     ("Demo file"
-      ("Oz Documentation"      . oz-find-docdemo-file)
-      ("Oz Demos"              . oz-find-demo-file))
+     ("Documentation Demos"      . oz-find-docdemo-file)
+     ("Other Demos"              . oz-find-demo-file)
      ("Library file"           . oz-find-lib-file)
 ;     ("Documentation (Text)"          . oz-find-docu-file)
      ("Documentation (DVI)"           . oz-find-dvi-file)
