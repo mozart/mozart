@@ -54,6 +54,8 @@ void debugStreamSuspend(ProgramCounter PC, Thread *tt,
   TaggedRef file, comment;
   int line, abspos;
 
+  time_t feedtime;
+
   if (debugPC == NOCODE) {
     file    = OZ_atom("noDebugInfo");
     comment = OZ_atom("");
@@ -62,6 +64,8 @@ void debugStreamSuspend(ProgramCounter PC, Thread *tt,
   }
   else
     CodeArea::getDebugInfoArgs(debugPC,file,line,abspos,comment);
+
+  feedtime = CodeArea::findTimeStamp(debugPC);
 
   TaggedRef pairlist =
     cons(OZ_pairA("thr",
@@ -73,7 +77,8 @@ void debugStreamSuspend(ProgramCounter PC, Thread *tt,
                         cons(OZ_pairA("args",args),
                              cons(OZ_pairA("builtin",
                                            builtin ? OZ_true() : OZ_false()),
-                             nil()))))));
+                                  cons(OZ_pairAI("time", feedtime),
+                             nil())))))));
 
   TaggedRef entry = OZ_recordInit(OZ_atom("susp"), pairlist);
   OZ_unify(tail, OZ_cons(entry, newTail));
