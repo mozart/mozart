@@ -22,5 +22,8 @@ the University of the Saarland,
 UCL (the Université catholique de Louvain),
 and others.
 
-<P CLASS=WARNING> The material in this document is still incomplete and
-subject to change from day to day.
+<P CLASS=WARNING> The material in this document is incomplete.  This
+document will eventually be superseded by a complete document.  In the
+meantime, we recommend looking at the Distributed Programming (dp)
+category of the MOGUL archive and reading Chapter 11 of the book
+'Concepts, Techniques, and Models of Computer Programming'.

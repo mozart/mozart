@@ -63,9 +63,9 @@
    &introduction;
    &x_dist;
    &x_examples;
-   &x_agentexamples;
+<!--   &x_agentexamples; -->
    &x_failure;
-   &x_ft_examples;
+<!--   &x_ft_examples;   -->
    &x_limits;
   </BODY>
   <!-- Hallo -->
