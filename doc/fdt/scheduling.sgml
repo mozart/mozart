@@ -1,0 +1,1191 @@
+<chapter id=chapter.scheduling><title/Scheduling/
+<p>
+In this section we will consider examples of scheduling
+problems. Scheduling in this tutorial means to compute a timetable for
+tasks competing for a given set of resources. We assume that no task can
+be interrupted (no preemption is allowed).
+
+<section><title/Building a House/
+<p>
+We first consider the problem to build a house (in a simplified way). We
+will successively refine the problem specification, the model and the
+distribution strategy in order to solve more and more demanding
+problems. 
+
+<para><title>Problem Specification</title> 
+The task names, their description, duration (in days) 
+and the company in charge are given in <ptr to=table.hausbau>. For
+example, ?{B} denotes the task involved with  the carpentry for the
+roof. This task lasts for 3 
+days. Task ?{A} must be finished before the work for task ?{B} is
+started (indicated by the column <em/Predecessor/). The company in
+charge for task ?{B} is <em/House Inc/. The overall goal is to build the
+house as quickly as possible. 
+
+<figure class="Table" id=table.hausbau>
+<caption/Building a house/ 
+<table>
+<tr/<td/Task /<td/ Description /<td/ Duration /<td/ Predecessor /<td/ Company//
+<tr/<td/?{A} /<td/ Erecting Walls /<td/ 7 /<td/ _ /<td/ Construction Inc. //
+<tr/<td/?{B} /<td/ Carpentry for Roof  /<td/ 3 /<td/ ?{A} /<td/ House Inc. //
+<tr/<td/?{C} /<td/ Roof      /<td/ 1 /<td/ ?{B} /<td/ House Inc. //
+<tr/<td/?{D} /<td/ Installations   /<td/ 8 /<td/ ?{A} /<td/ Construction Inc. //
+<tr/<td/?{E} /<td/ Facade Painting       /<td/ 2 /<td/ $C, D$ /<td/ Construction Inc. //
+<tr/<td/?{F} /<td/ Windows          /<td/ 1 /<td/ $C, D$ /<td/ House Inc. //
+<tr/<td/?{G} /<td/ Garden   /<td/ 1 /<td/ $C, D$ /<td/ House Inc. //
+<tr/<td/?{H} /<td/ Ceilings /<td/ 3 /<td/ ?{A} /<td/ Construction Inc. //
+<tr/<td/?{I} /<td/ Painting     /<td/ 2 /<td/ $F, H$ /<td/ Builder Corp. //
+<tr/<td/?{J} /<td/ Moving in         /<td/ 1 /<td/ ?{I} /<td/ Builder Corp. //
+</table>
+</figure>
+
+<subsection id=sec.precedence><title/Building a House: Precedence Constraints/
+<p>
+For the first model we do not consider the companies in charge
+for the tasks. 
+
+<para><title>Model.</title> The model introduces for each task  a variable
+which stands for the start time of the task. In the
+sequel we will identify a task and its corresponding variable. The end
+time of each task is its start time plus its duration.  For the
+time origin we assume 0. A trivial upper bound for the time to build the
+house can be obtained by summing up all durations of tasks. Here,  we
+obtain 29. 
+<para><title/precedence constraints/
+From the predecessor relation we can
+derive a set of so-called <def/precedence constraints/:
+<p><math>
+\left\{
+\begin{array}{c}
+A+7 \leq B, \qquad B+3 \leq C, \qquad A+7 \leq D, \qquad C+1 \leq E,\\
+D+8 \leq E, \qquad C+1\leq F, \qquad D+8\leq F, \qquad C+1\leq G,\\
+D+8\leq G, \qquad A+7 \leq H, \qquad F+1\leq I, \qquad H+3 \leq I,\\
+I+2 \leq J.
+\end{array}
+\right\}
+</math><p>
+<para><title/makespan/
+For example, the constraint <math>A+7\leq B</math> means that the earliest start
+time of ?{B} is 7 days after ?{A} has been started. We assume an
+additional task ?{PE} modeling the project end for the problem. All
+other tasks precede ?{PE}. The start time of ?{PE} is called
+the <def/makespan/ of the schedule. 
+
+<para><title>Distribution Strategy.</title> 
+If all propagators have become stable,
+it is sufficient to determine each variable to the current
+minimal value in its domain  to obtain a solution. This is due
+to the fact that we only  use constraints of the form <math>x + c \leq y</math>
+where ?{c} is an integer. Hence, we do not need a distributor at
+all. Note that this fact remains true if we also consider constraints of the
+form <math>x+c=y</math> (this will be needed later). 
+
+<para><title>Script.</title> 
+The problem specification which is a direct
+implementation of <ptr to=table.hausbau> is given in
+<ptr to=fig.data.hausbau>. 
+The field under the feature <<taskSpec>> contains the 
+specification as a list of tuples. Each tuple  contains a task name, its
+duration, the list of preceding tasks and the company
+ in charge (or <<noResource>> if no
+company is in charge). We will ignore the company here. 
+The task <<pe>> denotes the additional task representing the
+project end. 
+
+<figure class="Figure" id=fig.data.hausbau>
+<caption/The specifiation to build a house/
+<<<
+House = house(taskSpec:
+		 [a  # 7 # nil   # constructionInc
+		  b  # 3 # [a]   # houseInc
+		  c  # 1 # [b]   # houseInc
+		  d  # 8 # [a]   # constructionInc
+		  e  # 2 # [c d] # constructionInc
+		  f  # 1 # [c d] # houseInc
+		  g  # 1 # [c d] # houseInc
+		  h  # 3 # [a]   # constructionInc
+		  i  # 2 # [f h] # builderCorp
+		  j  # 1 # [i]   # builderCorp
+		  pe # 0 # [j]   # noResource
+		 ])
+>>>
+<para><title/scheduling compiler/
+In <ptr to=fig.script1.hausbau> a function is shown which returns a
+script for our scheduling problem. Such a function is called a 
+<def/scheduling compiler/ because it processes the problem specification
+and returns 
+a procedure which can be run by a procedure like <<SearchOne>> or the
+Explorer.  Hence, the scheduling compiler <Q/compiles/ the problem
+specification into an <Q/executable/ for a search engine. 
+<p>
+The durations and start times of tasks are stored in the records <<Dur>>
+and <<Start>>, respectively. The record <<Start>> is the root variable of
+the script returned by the function <<CompileHouse1>>. First, the
+propagators for the precedence constraints are created. After the space
+has become stable, the start times are determined. 
+<p>
+The statement  
+<<{Explorer script({CompileHouse1 House})}>> will run the script. The
+makespan of the schedule is 19.  By
+construction this solution is the one with the smallest makespan. 
+
+<figure class="Figure" id=fig.script1.hausbau>
+<caption/A scheduling compiler to build a script/
+<<<
+proc {Precedences TaskSpecs Start Dur}
+   {ForAll TaskSpecs
+    proc {$ Task#_#Preds#_}
+       {ForAll Preds
+	proc {$ Pred}
+	   Start.Pred + Dur.Pred =<: Start.Task
+	end}
+    end}
+end
+
+fun {CompileHouse1 Specification}
+   TaskSpecs = Specification.taskSpec
+   MaxTime   = {FoldL TaskSpecs fun {$ In _#D#_#_} D+In end 0}
+   Tasks     = {Map TaskSpecs fun {$ T#_#_#_} T end}
+   Dur       = {MakeRecord dur Tasks}
+in
+   {ForAll TaskSpecs proc {$ T#D#_#_} Dur.T = D end}
+   proc {$ Start}
+      Start = {FD.record start Tasks 0#MaxTime}
+      {Precedences TaskSpecs Start Dur}
+      choice
+	 {Record.forAll Start proc {$ S} S = {FD.reflect.min S} end}
+      end
+   end
+end 
+>>>
+</figure>
+</subsection>
+
+<subsection id=sec.bahCC><title/Building a House: Capacity Constraints/
+<p>
+In this section we take the companies into account which are in charge
+for the tasks. We assume that each company cannot handle two tasks
+simultaneously. That is, the execution of two tasks handled by the same
+company must not overlap in time.
+
+<para><title>Model.</title> For each company (which we also call a 
+<def/resource/ because the companies are consumed by a task) we must
+ find a <def/serialization/ of the handled
+tasks, &ie; for each task pair 
+<math/(A,B)/ we must decide whether ?{A} is finished before ?{B} starts or vice
+versa. Assume two tasks with start times <math>S_1</math> and <math>S_2</math> and the
+durations <math>D_1</math> and <math>D_2</math>, respectively. 
+<para><title/capacity constraints/
+Then the constraint
+<p><math>S_1 + D_1 \leq S_2 \quad \vee \quad S_2 + D_2 \leq S_1 </math><p>
+states that the corresponding tasks do not overlap in time. Such a
+constraint is also known as a <def/capacity constraint/,
+because the capacity of the resource must not be exceeded.  The capacity constraints
+can be modeled by reified constraints for each pair of tasks handled by
+the same resource (company).  But this leads to a number of propagators
+which increases quadratically in the number of tasks on a resource. This
+is not a feasible approach for problems with many tasks. Thus, we will
+use a single propagator in the script providing the same propagation
+as the quadratic number of reified constraints.
+
+<para><title>Distribution Strategy.</title> Because of the capacity constraints
+we have to provide a distribution strategy. We use the standard
+first-fail strategy. 
+
+<para id=page.tasksOnRes><title>Script.</title> We extend the scheduling compiler in
+<ptr to=fig.script1.hausbau> to extract the tasks handled by a
+common resource. This can be done as follows. 
+<<<
+TasksOnRes
+= {FoldL TaskSpecs
+   fun {$ In Task#_#_#Resource}
+      case Resource == noResource
+      then In
+      else TaskOnResource = {CondSelect In Resource 
+                             nil}
+      in
+	 {AdjoinAt In Resource Task|TaskOnResource}
+      end
+   end tasksOnResources}
+>>>
+<p>
+<<TasksOnRes>> is a record where the features are the companies
+given in <ptr to=fig.data.hausbau>. A field under a certain feature
+contains all tasks handled by the corresponding company.  
+The script returned by the modified scheduling compiler will use
+<<<
+{FD.schedule.serializedDisj TasksOnRes Start Dur}
+>>>
+This statement creates for each resource a single propagator for the
+capacity constraints as described in the model above  (note that the full
+script can be found in the shipped demo file). 
+<p>
+\begin{exercise}
+Write a procedure which implements the capacity constraints of the
+problem by reified constraints. 
+\end{exercise}
+<p>
+\begin{solution}
+A possible solution is as follows.
+<<<
+proc {CapacityConstraints TasksOnRes Start Dur}
+   {Record.forAll TasksOnRes
+    proc {$ Tasks}
+       {ForAllTail Tasks
+	proc {$ T1|Tr}
+	   {ForAll Tr
+	    proc {$ T2}
+	       (Start.T1 + Dur.T1 =<: Start.T2)
+	       + (Start.T2 + Dur.T2 =<: Start.T1) =: 1
+	    end}
+	end}
+    end}
+end
+>>>
+\end{solution}
+<p>
+But we are not only interested in the first solution but in the best
+solution. For our problem we are interested in the solution with the
+smallest makespan.
+<p>
+For our example we define the order relation
+<<<
+proc {Order Old New}
+   Old.pe >: New.pe
+end
+>>>
+stating that the makespan of the new alternative solution must be strictly
+smaller than the makespan of the already found solution. We assume that
+the refined scheduling compiler is the procedure <<CompileHouse2>>.
+Thus, the best 
+solution for our problem can be found by the following statement. 
+<<<
+{ExploreBest {CompileHouse2 House} Order}
+>>>
+The first solution which is also the optimal one  has a makespan of 21. 
+</subsection>
+
+<subsection id=sec.serializers><title/Building a House: Serializers/ 
+<p>
+So far we have used only distribution strategies where  a variable is
+selected first and then the domain is further restricted by a basic constraint.
+Scheduling applications lead to distribution strategies where we
+distribute not only with basic constraints but with propagators. 
+
+<para><title/serializers/
+In the previous section we have seen that it is necessary to
+<def/serialize/ all tasks on a common resource to satisfy all capacity
+constraints. This leads to the idea to use a distributor to serialize
+the tasks. Such a distributor is called a 
+<def/serializer/. Thus, we refine the scheduling compiler of 
+the previous section by formulating a new distribution strategy.
+<p>
+Note that we have to refine the notion of distribution here. In
+<ptr to=sec.dast> we have distributed a finite domain problem ?{P}
+only with constraints ?{C} and <math>\neg C</math>. 
+But we can refine the concept of distribution by distributing 
+with constraints <math/C_1/ and <math/C_2/
+whenever <math>P \models C_1 \vee C_2</math> holds.  
+By this condition we are sure that
+no solution is lost.  For a serializer we distribute with constraints
+<math>S_1 + D_1 \leq S_2</math> and <math>S_2 + D_2 \leq S_1</math> where we assume two tasks
+with start times <math>S_1</math> and <math>S_2</math> and the durations <math>D_1</math> and <math/D_2/,
+respectively. In the presence of capacity constraints the required
+condition holds by construction, &ie; <math>P \models S_1 + D_1 \leq S_2
+\vee S_2 + D_2 \leq S_1</math>.
+ 
+<para><title>Distribution Strategy.</title>
+We replace the first-fail distribution strategy by a strategy consisting
+of two phases. In the first phase we serialize all tasks on common
+resources and in the second phase we determine the start
+times of the variables.  The serialization is achieved by distributing
+for each pair of tasks <math>T_1</math> and <math>T_2</math> either with the constraint that
+task <math>T_1</math> is finished before <math>T_2</math> starts or that task <math/T_2/ is
+finished before task <math/T_1/ starts. 
+<para><title/ordering of tasks/
+If such a distribution step takes
+place we say that the two concerned tasks are
+<def/ordered/. After the serialization we have only
+constraints of the form <math>x + c \leq y</math>. Thus, it is sufficient for the
+second phase to determine each variable to the smallest value in its
+domain.
+
+<para><title>Script.</title> The script for the third version of our problem
+refines the one in the previous section by the application 
+<<<
+{DistributeRes {Record.toList TasksOnRes} Start Dur} 
+>>>
+which replaces the first-fail distributor. The procedure
+<<DistributeRes>> is defined as follows. 
+<<<
+proc {DistributeRes AllTasks Start Dur}
+   {ForAll AllTasks
+    proc {$ Tasks}
+       {ForAllTail Tasks
+	proc{$ T1|Tr}
+	   {ForAll Tr
+	    proc{$ T2}
+	       choice Start.T1 + Dur.T1 =<: Start.T2
+	       [] Start.T2 + Dur.T2 =<: Start.T1
+	       end
+	    end}
+	end}
+    end}
+end
+>>>
+<p>
+The choice statement <<choice S1 [] S2 end>> is an
+abbreviation for
+<<<
+choice S1 then skip
+[] S2 then skip
+end	
+>>>
+<p>
+If we assume the refined scheduling compiler to be <<CompileHouse3>> (see
+the shipped demo file), the
+optimal 
+solution can be found by 
+<<<
+{ExploreBest {CompileHouse3 House} Order}
+>>>
+with 28 choice nodes and 3 solution nodes. Thus, for this problem the
+use of a 
+serializer results in a larger search tree than the first-fail
+distributor. In the following section we will tackle a harder problem
+and we will show that the first-fail strategy as well as the naive
+serializer of this section completely fail to compute the optimal
+solution of this more difficult problem.
+</subsection>
+</section>
+
+<section><title/Constructing a Bridge/
+<p>
+The following problem is taken from <ptr to=bartusch.83> and is used as a
+benchmark in the constraint programming community. The problem is to
+schedule the construction of the bridge shown  in
+<ptr to=fig.bridgeProblem>. 
+
+<figure class="Figure" id=fig.bridgeProblem>
+<caption/The Bridge Problem./
+<picture.choice>
+<picture.extern to="pictures/bridge.eps" type=ps>
+</picture.choice>
+</figure>
+
+<para><title>Problem Specification.</title> 
+The problem is specified as shown in
+<ptr to=fig.bridgeTable>. From this table we derive precedence and
+capacity constraints as in the sections before. We also
+assume that a resource cannot handle more than one activity at a
+time. Such a kind of resource is also known as a {\em unary
+resource}. 
+<para><title/unary resources/
+Due to some peculiarities of the problem, we have the following additional
+constraints. 
+
+<list>
+<item> The time between the completion of the formwork and the completion
+of the corresponding concrete foundation is at most 4 days.
+<item> Between the end of a particular foundation and the beginning of 
+the corresponding formwork can at most 3 days elapse.
+<item> The erection of the temporary housing must begin at least six days
+before each formwork. 
+<item> The removal of the temporary housing can start at most two days
+before the end of the last masonry. 
+<item> The delivery of the preformed bearers occurs exactly 30 days after
+the beginning of the project. 
+</list>
+
+<para><title>Model.</title> 
+A trivial upper bound of the makespan is the sum of all durations of the
+tasks. For the bridge construction problem we have 271 as the upper
+bound. We adopt the model of the house problem including capacity
+constraints. The additional constraints can be modeled with propagators
+for the following constraints over the problem variables (<math/
+\newcommand{\Dur}[0]{dur}
+\Dur{T}/
+denotes the duration of a task ?{T}). 
+<list>
+<item> <math/\newcommand{\Dur}[0]{dur}
+(Bi + \Dur{Bi}) - (Si+\Dur{Si}) \leq 4, \quad 1 \leq i \leq 6/
+<item> <picture latex>
+\newcommand{\Dur}[0]{dur}
+
+       \parbox[t]{10cm}{
+		$Si - (Ai+\Dur{Ai}) \leq 3,  \quad i \in \{1,2,5,6\}$\\
+		$S3-(P1+\Dur{P1}) \leq 3 \qquad S4-(P2+\Dur{P2}) \leq 3$}
+	</picture>
+<item> <math/\mbox{\sl UE} + 6 \leq Si, \quad 1 \leq i \leq 6/
+<item> <math/(Mi+\Dur{Mi}) - 2 \leq \mbox{\sl UA}, \quad 1 \leq i \leq 6/
+<item> <math/L = \mbox{\sl PA} + 30/
+</list>
+
+<para><title>Distribution Strategy.</title>
+We first try the distribution strategy of <ptr to=sec.bahCC>, &ie;
+the first-fail strategy. The first solution of the problem is found
+with 97&nbsp;949 choice nodes and has a makespan of 133. After 500&nbsp;000 choice
+nodes no better solution is found. This is very unsatisfactory if we
+know that the optimal makespan is 104. 
+<p>
+Thus, we try  the distributor described in
+<ptr to=sec.serializers>, &ie; the naive serializer. Now we find
+the first solution with makespan 120 with only 77 choice nodes. With 95
+choice nodes we find a solution with makespan 112. After 500&nbsp;000 choice
+nodes no better solution is found.
+<p>
+In order to solve the problem we combine the ideas of first-fail and of
+serializers. The idea behind first-fail is to distribute first with a
+variable which has the smallest domain. This variable should occur in
+many constraints and should lead to much constraint
+propagation. The variable with the smallest domain acts as a bottleneck
+for the problem. This idea can be transferred to scheduling problems. A
+simple criterion for a resource to be a bottleneck is the sum of the
+durations of tasks to be scheduled on that resource. 
+Hence, we will serialize first the tasks on a resource 
+where the sum of durations is maximal. 
+
+<para><title>Script.</title> 
+<ptr to=fig.bridgeCompiler> shows the scheduling
+compiler to compute a script for the bridge problem. Note that we have
+additionally parameterized the scheduling compiler with the procedures
+providing the capacity constraints and the serializer. This makes it
+straightforward to solve the bridge problem with stronger techniques
+(see below). 
+To deal with the
+additional constraints we refine the record containing the specification
+of the problem. We add a field under the feature <<constraints>> which
+contains a procedure parameterized by the records containing the start
+times and the durations of tasks (see <ptr to=fig.bridgeSpec>). 
+This procedure is applied by the computed script. 
+The procedure <<SortTasks>> sorts the tasks on resources according to our
+bottleneck criterion. 
+The procedure <<ExtractTasksOnRes>> extracts the tasks handled by a
+common resource (see also <ptr to=page.tasksOnRes>).
+<p>
+The optimal solution can be found by 
+<<<
+{ExploreBest {CompileBridge Bridge
+              FD.schedule.serializedDisj
+	         DistributeResSort} Order}
+>>>
+The full search tree consists of 1&nbsp;268 choice nodes and 8 solution
+nodes (see <Ptr to="fig.scheduling.bridge">).
+<Figure class="Figure maxi" id="fig.scheduling.bridge">
+<caption/A search tree for the bridge problem./
+<picture.extern to="pictures/bridgeXWPICK.eps" type=ps>
+</figure>
+
+<figure class="Figure" id=fig.bridgeCompiler>
+<caption/A scheduling compiler for the bridge problem./
+<<<
+fun {SortTasks Tasks Dur}
+   SumUp = fun {$ Xs}
+	      {FoldL Xs fun {$ In X} In + Dur.X end 0}
+	   end
+in 
+   {Sort {Record.toList Tasks}
+    fun {$ Tasks1 Tasks2}
+       {SumUp Tasks1} > {SumUp Tasks2}
+    end}
+end
+
+proc {DistributeResSort AllTasks Start Dur}
+   SortedTasks = {SortTasks AllTasks Dur}
+in
+   {DistributeRes SortedTasks Start Dur}
+end
+
+fun {CompileBridge Specification CapacityConstraints Serializer}
+   TaskSpecs   = Specification.taskSpec
+   Constraints = Specification.constraints
+   MaxTime     = {FoldL TaskSpecs fun {$ In _#D#_#_} D+In end 0}
+   Tasks       = {Map TaskSpecs fun {$ T#_#_#_} T end}
+   Dur         = {MakeRecord dur Tasks}
+   {ForAll TaskSpecs proc {$ T#D#_#_} Dur.T = D end}
+   TasksOnRes  = {ExtractTasksOnRes TaskSpecs}
+in
+   proc {$ Start}
+      Start = {FD.record start Tasks 0#MaxTime}
+      {Precedences TaskSpecs Start Dur}
+      {Constraints Start Dur}
+      {CapacityConstraints TasksOnRes Start Dur}
+      {Serializer TasksOnRes Start Dur}
+      choice
+	 {Record.forAll Start proc {$ S} S = {FD.reflect.min S} end}
+      end
+   end
+end 
+>>>
+</figure>
+<figure class="Figure" id=fig.bridgeSpec>
+<caption/The specification to construct the bridge./
+<<<
+Bridge =
+bridge(taskSpec:
+	  [pa # 0  # nil  # noResource
+	   a1 # 4  # [pa] # excavator
+           ...
+	   ua # 10 # nil # noResource
+	   v1 # 15 # [t1] # caterpillar
+	   v2 # 10 # [t5] # caterpillar
+	   pe # 0 # [t2 t3 t4 v1 v2 ua] # noResource
+	  ]
+       constraints:
+	  proc {$ Start Dur}
+	     {ForAll [s1#b1 s2#b2 s3#b3 s4#b4 s5#b5 s6#b6]
+	      proc {$ A#B}
+		 (Start.B + Dur.B) - (Start.A + Dur.A) =<: 4 
+	      end}
+	     {ForAll [a1#s1 a2#s2 a5#s5 a6#s6 p1#s3 p2#s4]
+	      proc{$ A#B}
+		 Start.B - (Start.A + Dur.A) =<: 3
+	      end}
+	     {ForAll [s1 s2 s3 s4 s5 s6]
+	      proc{$ A}
+		 Start. A >=: Start.ue + 6
+	      end}
+	     {ForAll [m1 m2 m3 m4 m5 m6]
+	      proc{$ A}
+		 (Start.A + Dur.A) - 2 =<: Start.ua
+	      end}
+	     Start.l =: Start.pa + 30
+	     Start.pa = 0
+	  end)
+>>>
+</figure>
+<p>
+The optimal solution can be visualized by a kind of  Gantt-chart (see
+<ptr to=fig.gantt>). The makespan of the schedule (104 in this case)
+is indicated by a dashed line. Rectangles denote tasks. The left border
+of the rectangle indicates the start time of the task and the width of
+the rectangle indicates the duration of the task. Tasks scheduled on the
+same resource have the same texture. 
+
+<figure class="Figure" id=fig.bridgeTable>
+<caption/The Data for the bridge construction./
+<table>
+<tr/<th/N /<th/ Name /<th/ Description /<th/ Duration /<th/ Predecessors /<th/ Resource//
+<tr/<td/ 1 /<td/ pa /<td/ beginning of project/<td/ 0  /<td/ --  /<td/ noResource //
+<tr/<td/ 2 /<td/ a1 /<td/ excavation (abutment 1) /<td/ 4  /<td/ pa /<td/ excavator//
+<tr/<td/ 3/<td/ a2 /<td/ excavation (pillar 1) /<td/ 2  /<td/ pa /<td/ excavator//
+<tr/<td/4/<td/a3 /<td/ excavation (pillar 2) /<td/ 2  /<td/ pa /<td/ excavator//
+<tr/<td/5/<td/a4 /<td/ excavation (pillar 3) /<td/ 2  /<td/ pa /<td/ excavator//
+<tr/<td/6/<td/a5 /<td/ excavation (pillar 4) /<td/ 2  /<td/ pa /<td/ excavator//
+<tr/<td/7/<td/a6 /<td/ excavation (abutment 2) /<td/ 5  /<td/ pa /<td/ excavator//
+<tr/<td/8/<td/p1 /<td/ foundation piles 2 /<td/ 20 /<td/ a3 /<td/ pile driver//
+<tr/<td/9/<td/p2 /<td/ foundation piles 3 /<td/ 13 /<td/ a4 /<td/ pile driver//
+<tr/<td/10/<td/ue /<td/ erection of temporary housing /<td/ 10 /<td/ pa /<td/ noResource//
+<tr/<td/11/<td/s1 /<td/formwork (abutment 1) /<td/  8  /<td/ a1 /<td/ carpentry//
+<tr/<td/12/<td/s2 /<td/ formwork (pillar 1) /<td/ 4  /<td/ a2 /<td/ carpentry//
+<tr/<td/13/<td/s3 /<td/ formwork (pillar 2) /<td/4  /<td/ p1 /<td/ carpentry//
+<tr/<td/14/<td/s4 /<td/ formwork (pillar 3) /<td/4  /<td/ p2 /<td/ carpentry//
+<tr/<td/15/<td/s5 /<td/ formwork (pillar 4) /<td/4  /<td/ a5 /<td/ carpentry//
+<tr/<td/16/<td/s6 /<td/ formwork (abutment 2) /<td/10 /<td/ a6 /<td/ carpentry//
+<tr/<td/17/<td/b1 /<td/ concrete foundation (abutment 1) /<td/ 1  /<td/ s1 /<td/ concrete mixer//
+<tr/<td/18/<td/b2 /<td/ concrete foundation (pillar 1) /<td/ 1  /<td/ s2 /<td/ concrete mixer//
+<tr/<td/19/<td/b3 /<td/ concrete foundation (pillar 2) /<td/ 1  /<td/ s3 /<td/ concrete mixer//
+<tr/<td/20/<td/b4 /<td/ concrete foundation (pillar 3) /<td/ 1  /<td/ s4 /<td/ concrete mixer//
+<tr/<td/21/<td/b5 /<td/ concrete foundation (pillar 4) /<td/ 1  /<td/ s5 /<td/ concrete mixer//
+<tr/<td/22/<td/b6 /<td/ concrete foundation (abutment 2) /<td/ 1  /<td/ s6 /<td/ concrete mixer//
+<tr/<td/23/<td/ab1 /<td/ concrete setting time (abutment 1) /<td/ 1 /<td/ b1 /<td/ noResource//
+<tr/<td/24/<td/ab2 /<td/ concrete setting time (pillar 1) /<td/ 1 /<td/ b2 /<td/ noResource//
+<tr/<td/25/<td/ab3 /<td/ concrete setting time (pillar 2) /<td/ 1 /<td/ b3 /<td/ noResource//
+<tr/<td/26/<td/ab4 /<td/ concrete setting time (pillar 3) /<td/ 1 /<td/ b4 /<td/ noResource//
+<tr/<td/27/<td/ab5 /<td/ concrete setting time (pillar 4) /<td/ 1 /<td/ b5 /<td/ noResource//
+<tr/<td/28/<td/ab6 /<td/ concrete setting time (abutment 2) /<td/ 1 /<td/ b6 /<td/ noResource//
+<tr/<td/29/<td/m1 /<td/ masonry work (abutment 1) /<td/ 16 /<td/ ab1/<td/ bricklaying//
+<tr/<td/30/<td/m2 /<td/ masonry work (pillar 1) /<td/ 8 /<td/ ab2 /<td/ bricklaying//
+<tr/<td/31/<td/m3 /<td/ masonry work (pillar 2) /<td/8 /<td/ ab3 /<td/ bricklaying//
+<tr/<td/32/<td/m4 /<td/ masonry work (pillar 3) /<td/8 /<td/ ab4 /<td/ bricklaying//
+<tr/<td/33/<td/m5 /<td/ masonry work (pillar 4) /<td/ 8 /<td/ ab5 /<td/ bricklaying//
+<tr/<td/34/<td/m6 /<td/ masonry work (abutment 2) /<td/20 /<td/ ab6/<td/ bricklaying//
+<tr/<td/35/<td/l  /<td/ delivery of the preformed bearers /<td/ 2  /<td/ --  /<td/ crane//
+<tr/<td/36/<td/t1 /<td/ positioning (preformed bearer 1) /<td/ 12 /<td/ m1, m2, l /<td/ crane//
+<tr/<td/37/<td/t2 /<td/  positioning (preformed bearer 2) /<td/ 12 /<td/ m2, m3, l /<td/ crane//
+<tr/<td/38/<td/t3 /<td/  positioning (preformed bearer 3) /<td/ 12 /<td/ m3, m4, l /<td/ crane//
+<tr/<td/39/<td/t4 /<td/  positioning (preformed bearer 4) /<td/ 12 /<td/ m4, m5, l /<td/ crane//
+<tr/<td/40/<td/t5 /<td/  positioning (preformed bearer 5) /<td/ 12 /<td/ m5, m6, l /<td/ crane//
+<tr/<td/41/<td/ua /<td/ removal of the temporary housing /<td/ 10 /<td/ -- /<td/ noResource//
+<tr/<td/42/<td/v1 /<td/ filling 1 /<td/ 15 /<td/ t1 /<td/ caterpillar//
+<tr/<td/43/<td/v2 /<td/ filling 2 /<td/ 10 /<td/ t5 /<td/ caterpillar//
+<tr/<td/44/<td/pe /<td/ end of project /<td/ 0 /<td/ \begin{minipage}{2cm}t2, t3, t4, v1, v2, ua \end{minipage}/<td/ noResource//
+</table></figure>
+
+<figure class="Figure maxi" id=fig.gantt>
+<caption/The Gantt-chart for the bridge problem./
+<picture.choice>
+<picture.extern to="pictures/gantt.ps" type=ps>
+</picture.choice>
+</figure>
+<p>
+The way we can solve scheduling problems by now seems to be
+satisfactory. But the current approach has two major flaws. First, the
+propagation of capacity constraint is rather weak. If we want to
+solve more demanding scheduling problems (like some benchmark problems
+from Operations Research) we need stronger
+propagation. Second, the bottleneck criterion of the serializer is
+rather coarse. We need more subtle techniques to solve more demanding
+problems. Furthermore, we need <math>(n \cdot (n-1))/2</math> ordering decisions
+for ?{n} tasks on the same resource which may result in deep search
+trees. This is not feasible for larger problems. Both problems will be
+solved in forthcoming sections. 
+</section>
+
+<section id=sec.edgeFinding><title/Strong Propagators for Capacity Constraints
+<p>
+In this section we introduce the ideas for stronger propagation employed
+for capacity constraints in Oz.
+<p>
+First we show the weakness of the propagators we have introduced so
+far. We consider three tasks ?{A}, ?{B} and ?{C}, each with duration 8 and
+with the domain <math/1\#10/. If we state for the pairs <math>(A,B)</math>, <math>(A,C)</math> and
+<math>(B,C)</math> that the contained tasks must not overlap in time by using reified
+constraints or by applying <<FD.schedule.serializedDisj>>, no further
+propagation will take place. This is due to the local reasoning on task
+pairs. For each pair no value in the corresponding domains can be
+discarded.  On the other hand, the tasks must be scheduled between time
+point 1 and 18 (the latest completion time of either ?{A}, ?{B} or
+?{C}). But because the overall duration is 24, this is impossible.
+<p>
+Hence, we will use stronger propagators reasoning simultaneously on the whole
+set of tasks on a resource.
+The principal ideas behind this reasoning  are simple but very 
+powerful. First, for an arbitrary set of tasks ?{S} to be scheduled on the same
+resource, the available time must be sufficient (see the example above).
+ Furthermore, we check whether a task ?{T} in ?{S} must be scheduled
+as the first or last task of ?{S} (and analogously if ?{T} is not in
+?{S}). 
+We introduce the following abbreviations for a task ?{T}.
+<table class=dyptic>
+<tr/<td/ <math/~$~\newcommand{\Est}[1]{{\mbox{est}(#1)}}~$~
+\Est{T}/ /<td/ least possible start time for for ?{T}//
+<tr/<td/<math/~$~\newcommand{\Lst}[1]{{\mbox{lst}(#1)}}~$~
+\Lst{T}/ /<td/ largest possible start time for ?{T}//
+<tr/<td/<math/~$\newcommand{\Ect}[1]{{\mbox{ect}(#1)}}~$~
+\Ect{T}/ /<td/ earliest completion time for ?{T}, &ie; <math/\Ect{T} = \Est{T} + \Dur{T}///
+<tr/<td/<math/~$~ \newcommand{\Lct}[1]{{\mbox{lct}(#1)}} ~$~
+\Lct{T}/ /<td/ latest possible completion time for ?{T}, &ie;, <math/\Lct{T} =\Lst{T} + \Dur{T}///
+</table>
+<p>
+For a set ?{S} of tasks we define 
+
+<table class=dyptic>
+<tr/<td/<math/\Est{S} =  \min(\{\Est{T}|\ T \in S\})///
+<tr/<td/<math/\Lct{S} = \max(\{\Lct{T}|\ T \in S\})///
+<tr/<td/<math/\Dur{S} = \sum\limits_{T \in S} \Dur{S}///
+</table>
+<p>
+
+If the condition 
+<math>
+\Lct{S} - \Est{S} > \Dur{S}
+</math>
+holds, no schedule of the tasks in ?{S} can exist. A strong propagator
+for capacity constraints will fail in this case. 
+<p>
+Now we introduce some domain reductions by considering a task ?{T} and a
+set of tasks ?{S} where ?{T} does not occur in ?{S}. Assume that we can
+show that ?{T} cannot be scheduled after all tasks in ?{S} and that ?{T}
+canot be scheduled between two tasks in ?{S} (if ?{S} contains at least
+two tasks).  In this case we can conclude that ?{T} must be scheduled
+before all tasks in ?{S}.  
+<p>
+More formally, if
+<math>\Lct{S} - \Est{S} < \Dur{S} + \Dur{T}</math>
+holds, ?{T} cannot be be scheduled between \Lct{S} and \Est{S} (it cannot be
+scheduled between two tasks of ?{S} if ?{S} contains at least two tasks). If 
+<math>\Lct{T} - \Est{S} < \Dur{S} + \Dur{T}</math>
+holds, 
+?{T} cannot be scheduled after all tasks in ?{S}.
+Hence, if both conditions hold, ?{T} must be scheduled before all tasks
+of ?{S}  and corresponding
+propagators can  be imposed, 
+narrowing the domains of variables. 
+<p>
+Analogously, if 
+<math>\Lct{S} - \Est{S} < \Dur{S}+ \Dur{T}</math>
+and 
+<math>\Lct{S} - \Est{T} <  \Dur{S}+ \Dur{T}</math> 
+holds, ?{T} must be last. 
+
+<para><title/edge-finding/
+Similar rules can be formulated if ?{T} is contained in ?{S}.  For this
+kind of reasoning,  the term <def/edge-finding/ was coined in
+<ptr to=applegate.91>.  There are several variations of this idea in
+<ptr to=carlier.89>,<ptr to=applegate.91>,<ptr to=carlier.94>,
+<ptr to=martin.96> for the Operations Research community and in
+<ptr to=nuijten.94>,<ptr to=caseau.94a>,<ptr to=baptiste.95a>,
+<ptr to=wuertz.96b> for the  constraint programming community; 
+they differ in the amount of propagation and which 
+sets ?{S} are considered for edge-finding.
+The resulting propagators do a lot of propagation,
+but are also more expensive than &eg;&fsp;reified constraints. Depending on
+the problem, one has to choose an appropriate propagator.
+<p>
+For unary resources Oz provides two propagators employing edge-finding
+to implement capacity constraints. The propagator
+<<FD.schedule.serialize>> is an improved version of an algorithm
+described in <ptr to=martin.96>. A single propagation step has complexity
+<math/O(n^2)/ where ?{n} is the number of tasks the propagator is reasoning
+on, &ie; the number of tasks on the resource considered by the
+propagator. Because the propagator runs until propagation reaches a
+fixed-point, we have the overall complexity of <math/O(k \cdot n^3)/ when ?{k}
+is the size of the largest domain of a task's start time (at most <math/k
+\cdot n/ values can be deleted from the domains of task variables).
+<p>
+The propagator
+<<FD.schedule.taskIntervals>> provides a slightly weaker 
+propagation than the propagator described in&nbsp;<ptr to=caseau.94a> but
+provides stronger propagation than <<FD.schedule.serialize>>. While a
+single propagation step has complexity <math/O(n^3)/, the overall complexity
+is <math/O(k \cdot n^4)/. 
+<p>
+Now we can solve the bridge construction problem with a propagator using
+edge-finding. By the statement
+<<<
+{ExploreBest {CompileBridge Bridge 
+              FD.schedule.serialized
+	      DistributeResSort} Order}
+>>>
+we compute the optimal solution in a full search tree with 508
+choice nodes instead of 1 268 as in the section before. 
+
+<para><title/proof of optimality/
+The improvement by strong propagation becomes even more dramatic if we
+constrain the bridge problem further by stating that the makespan must
+be strictly smaller than 104. Since we know that 104 is the optimal
+solution we, thus, prove optimality of this makespan. The
+modified problem specification is
+<<<
+ModifiedBridge = 
+bridge(taskSpec: Bridge.taskSpec
+       constraints:
+	  proc {$ Start Dur}
+	     {Bridge.constraints Start Dur}
+	     Start.pe <: 104
+	  end)
+>>>
+<p>
+Solving the modified problem with the simple propagator by
+<<<
+{ExploreBest {CompileBridge ModifiedBridge 
+              FD.schedule.serializedDisj
+	      DistributeResSort} Order}
+>>>
+we obtain a search tree with 342 choice nodes. Using  the edge-finding
+propagator <<FD.schedule.serialized>> instead we obtain a search tree
+with only 22 choice nodes.  By using <<FD.schedule.taskIntervals>> the
+search tree shrinks further to the size of 17 choice nodes.
+<p>
+Note that for the proof of optimality the domains of the start times are
+rather narrow. If we start with an unconstrained problem, the domains
+are rather wide. But if the domains are more narrow compared to the
+durations of the tasks, the conditions we have described above are more
+likely to become true and propagation may take place. This is the reason
+why edge-finding turns out to be a stronger improvement for the proof of
+optimality. 
+</section>
+
+<section id=sec.strongSer><title/Strong Serializers/
+<p>
+So far we only have considered serializers which  result
+in a search tree which depth grows quadratically in the number of
+tasks on a resource. In this section we will introduce a serializer
+where the depth of a search tree grows only linear
+in the number of tasks. In each choice node we will order several tasks
+not only two tasks. 
+each choice node but several of them. This is done by stating that a
+single task must precede all other tasks on a resource.
+<p>
+A further disadvantage of the bottleneck serializer considered in
+<ptr to=sec.edgeFinding> is its static bottleneck
+criterion. Instead we take the changing size of domains during run
+time into account to select a resource which should be serialized. This
+is also the approach chosen for the first-fail distribution strategy.
+
+<para><title/supply/
+We start with a better criterion to select a resource. Let ?{S} be the
+set of tasks on a resource ?{r}.  The available time to schedule all the
+tasks in ?{S} is <math/\Lct{S}-\Est{S}/. This value is called the
+<def/supply/ of ?{r}. The overall time needed to
+schedule the tasks in ?{S} is \Dur{S}. 
+
+<para><title/demand, global slack/
+This value is called the <def/demand/ of ?{r}.  
+The difference between supply and
+demand is called <def/global slack/ of ?{r} (<math/{\sl slack}^r_g/)
+and denotes the free space on the resource. The smaller the value of the
+global slack the more critical is the resource (the tasks on it can
+be shifted only in a very limited way). 
+<p>
+Hence, one could use the global slack as a criterion to select a
+resource. But a small example reveals that this criterion has still an
+important flaw: it is too coarse-grained. Assume ?{S} to be the set
+<math/\{A,B,C\}/ described in the following table.
+<table>
+  <tr/ <th/task/ <th/domain/       <th/<math/\Dur{t}///
+  <tr/ <td/A/    <td/<math/0\#18// <td/2//
+  <tr/ <td/B/    <td/<math/1\#7//  <td/5//
+  <tr/ <td/C/    <td/<math/2\#9//  <td/4//
+</table>
+<p>
+The global slack is <math/\Lct{S} - \Est{S} - \Dur{S} = 20 - 0 - 11 = 9/. But
+now consider the set <math>S'=\{B,C\}</math>. We obtain <math>\Lct{S'} - \Est{S'} -
+\Dur{S'} = 13 - 1 - 9 = 3</math>. This means that for ?{B} and ?{C} we have far
+less free place to shift the tasks than it is indicated by the global slack.
+Thus, we refine our criterion as follows. 
+
+<para><title/task interval/
+Let <math/T_1/ and <math/T_2/ be two tasks on the same resource ?{r} and ?{S} the
+set of all tasks running on ?{r}. If <math/\Est{T_1} \leq \Est{T_2}/ and
+<math/\Lct{T_1} \leq \Lct{T_2}/, we call the set
+<math>I(T_1,T_2) = \{ T\ |\ T \in S,\ \Est{T_1} \leq \Est{T},\ \Lct{T} \leq
+\Lct{T_2}\} 
+</math>
+the <def/task interval/ defined by <math/T_1/ and <math>T_2</math>
+(see also&nbsp;<ptr to=caseau.94a>). Intuitively, a task interval is the set of
+tasks which must be scheduled between <math/\Est{T_1}/ and <math/\Lct{T_2}/. Let <math/I_r/
+be the set of all task intervals on the resource ?{r}. 
+<para><title/local slack/
+The <def/local slack/ of ?{r} (<math/{\it slack}^r_l/) is now
+defined as
+<math>\min(\{\Lct{I}-\Est{I}-\Dur{I}|I \in I_r\})
+</math>.
+
+<para><title/critical resource/
+If two resources have the same local slack, we use the global slack
+to break this tie. Thus, we select the resource next for serialization
+which is minimal according to the lexicographic order <math/({\it
+slack}^r_l,{\it slack}^r_g)/. The selected resource is called the 
+<def/critical resource/. Note that a local slack of a resource with ?{n} tasks can be computed in <math>O(n^3)</math> time. 
+<p>
+Next we will determine the constraints to distribute with. Let <math>u(r)</math> be the
+set of tasks on the critical resource ?{r} which are not ordered with all
+other tasks on ?{r} yet. Using the ideas of edge-finding we compute the
+set ?{F} of all tasks in <math>u(r)</math> which can be scheduled first:
+<math> F = \{T \ |\ T \in u(r), \Lct{u(r) \backslash
+\{T\}} - \Est{T} \geq \Dur{u(r)}\}.
+</math>
+In a distribution step each of the tasks in ?{F}, say ?{T}, may be
+scheduled before all others and ?{T} can be deleted from <math>u(r)</math>.  The
+task in ?{F} which is smallest according to the lexicographic order
+<math/(\Est{T},\Lst{T})/ is first selected for distribution.
+By this choice we leave as much space left for the
+remaining tasks to be scheduled on the resource. We now distribute with
+the constraints that ?{T} precedes all other tasks in <math>u(r)</math>:
+<math>\forall T' \in u(r)\backslash \{T\}:\ T + \Dur{T} \leq T'.
+</math>
+If this choice leads to a failed computation space, the next task in ?{F}
+is tried according to our criterion. 
+<p>
+The overall strategy is as follows. We select a critical resource
+according to our criterion developed above. Then we serialize the
+critical resource by successively selecting tasks to be scheduled before
+all others. After the critical resource is serialized, the next critical
+resource is selected for serialization. This process is repeated until
+all resources are serialized.
+<p>
+The described serializer follows the ideas of&nbsp;<ptr to=baptiste.95a> which in turn
+adopts ideas of&nbsp;<ptr to=carlier.89>.  The serializer is available
+through <<FD.schedule.firstsDist>>. 
+<p>
+We immediately apply our new distributor to the bridge problem. 
+<<<
+{ExploreBest {CompileBridge Bridge 
+              FD.schedule.serialized
+	      FD.schedule.firstsDist} Order}
+>>>
+The optimal solution can be found and its optimality can be proven with
+only 90 choice nodes. Now the proof of optimality (problem
+<<ModifiedBridge>>) needs only   22 choice nodes. 
+<p>
+But we can do better. In addition to the set ?{F} of tasks we can compute
+the set ?{L} of tasks which may be scheduled after all other tasks (see
+also <ptr to=sec.edgeFinding>). In this case the task ?{T} which is
+tried first to be scheduled after all the others is the one which is
+maximal according to the lexicographic order <math/(\Lct{T},\Ect{T})/. A
+further serializer computes both ?{F} and ?{L}. Then it selects the set
+which has the smallest cardinality. This serializer is available
+through <<FD.schedule.firstsLastsDist>>. 
+<p>
+Using <<FD.schedule.firstsLastsDist>> we can find the optimal solution
+and  prove its optimality with only 30 choice nodes (see
+<Ptr to="fig.scheduling.bridgStronge2">). Note that in contrast to
+<Ptr to="fig.scheduling.bridge"> where we have needed 8 solutions to
+reach the optimal one, we now find the optimal solution immediately. The
+size of the search tree is reduced by more than an order of magnitude. 
+<figure class="Figure Maxi" id="fig.scheduling.bridgStronge2">
+<caption/A search tree for the bridge problem./
+<picture.extern to="pictures/bridgeStrongXWPICK.eps" type=ps>
+</figure>
+The optimality of the problem
+can be proven with only 4 choice nodes.
+<p>
+Let ?{m} be the number of resources to consider in a scheduling
+problem and let ?{n} be the maximal number of tasks on a common
+resource. Then the described serializer has a run time complexity of
+<math/O(m \cdot n^3)/ if a resource has to be selected and <math/O(n)/ if only the
+set ?{F} or ?{L} has to be computed. 
+
+<para><title/resource-oriented/
+Because this kind of serializer successively serializes all resources,
+we call it <def/resource-oriented serializer/. 
+</section>
+
+<section><title/Solving Hard Scheduling Problems/
+<p>
+In this section we tackle more difficult scheduling problems. To this
+aim we will also develop a new serializer. 
+<p>
+We consider two problems in this section. Both are used as standard
+benchmark problems for scheduling. The first one is called ABZ6 and was
+introduced in&nbsp;<ptr to=adams.88>. The second one is the famous MT10 and was
+introduced in&nbsp;<ptr to=muth.63>. MT10 was considered as an especially hard
+problem for several years. It took more than 25 years that the
+optimality of a found makespan was proven <ptr to=carlier.89>. 
+<p>
+These problems belong to the class of so-called job-shop problems (see
+<ptr to=garey.79> or a good text book on scheduling). We slightly simplify
+the definition for our purposes. A job-shop problem consists of ?{n} jobs
+of tasks. Each job ?{j} consists of ?{m} tasks <math>t^j_1</math> through <math>t^j_m</math>
+such that each task of the job is scheduled on a different (unary)
+resource. Thus, we have ?{m} resources. Furthermore, we have the
+constraint <math/t^j_i + \Dur{t^j_i} \leq t^j_{i+1}/ for all tasks
+of  job ?{j}, &ie; the tasks in a job are serialized. The latter
+constraints are already known as precedence constraints (see&nbsp;
+<ptr to=sec.precedence>). 
+
+<subsection><title/The Problem ABZ6/
+<p>
+We will consider problem ABZ6 first. The specification is given in
+&nbsp;<ptr to=fig.problemABZ6>. The problem consists of 10 jobs and 10
+resources. We first search for the optimal solution and prove its
+optimality:
+<<<
+{ExploreBest {CompileBridge ABZ6
+              FD.schedule.serialized
+	      FD.schedule.firstsLastsDist} Order}
+>>>
+The resulting search tree contains 2&nbsp;424 choice nodes. The optimal
+makespan is 943. 
+<figure class="Figure" id=fig.problemABZ6>
+<caption/Problem ABZ6./
+<<<
+ABZ6 = 
+abz6(taskSpec:
+	[% task # duration # preceding tasks # resources
+	 pa # 0  # nil  # noResource
+	 a1#62#[pa]#m7 a2#24#[a1]#m8 a3#25#[a2]#m5 a4#84#[a3]#m3
+         a5#47#[a4]#m4 a6#38#[a5]#m6 a7#82#[a6]#m2 a8#93#[a7]#m0
+         a9#24#[a8]#m9 a10#66#[a9]#m1
+	 b1#47#[pa]#m5 b2#97#[b1]#m2 b3#92#[b2]#m8 b4#22#[b3]#m9
+	 b5#93#[b4]#m1 b6#29#[b5]#m4 b7#56#[b6]#m7 b8#80#[b7]#m3
+	 b9#78#[b8]#m0 b10#67#[b9]#m6
+         c1#45#[pa]#m1 c2#46#[c1]#m7 c3#22#[c2]#m6 c4#26#[c3]#m2
+         c5#38#[c4]#m9 c6#69#[c5]#m0 c7#40#[c6]#m4 c8#33#[c7]#m3
+         c9#75#[c8]#m8 c10#96#[c9]#m5
+	 d1#85#[pa]#m4 d2#76#[d1]#m8 d3#68#[d2]#m5 d4#88#[d3]#m9
+	 d5#36#[d4]#m3 d6#75#[d5]#m6 d7#56#[d6]#m2 d8#35#[d7]#m1
+	 d9#77#[d8]#m0 d10#85#[d9]#m7
+         e1#60#[pa]#m8 e2#20#[e1]#m9 e3#25#[e2]#m7 e4#63#[e3]#m3
+         e5#81#[e4]#m4 e6#52#[e5]#m0 e7#30#[e6]#m1 e8#98#[e7]#m5
+         e9#54#[e8]#m6 e10#86#[e9]#m2
+	 f1#87#[pa]#m3 f2#73#[f1]#m9 f3#51#[f2]#m5 f4#95#[f3]#m2
+	 f5#65#[f4]#m4 f6#86#[f5]#m1 f7#22#[f6]#m6 f8#58#[f7]#m8
+	 f9#80#[f8]#m0 f10#65#[f9]#m7
+         g1#81#[pa]#m5 g2#53#[g1]#m2 g3#57#[g2]#m7 g4#71#[g3]#m6
+         g5#81#[g4]#m9 g6#43#[g5]#m0 g7#26#[g6]#m4 g8#54#[g7]#m8
+         g9#58#[g8]#m3 g10#69#[g9]#m1
+	 h1#20#[pa]#m4 h2#86#[h1]#m6 h3#21#[h2]#m5 h4#79#[h3]#m8
+	 h5#62#[h4]#m9 h6#34#[h5]#m2 h7#27#[h6]#m0 h8#81#[h7]#m1
+	 h9#30#[h8]#m7 h10#46#[h9]#m3
+         i1#68#[pa]#m9 i2#66#[i1]#m6 i3#98#[i2]#m5 i4#86#[i3]#m8
+         i5#66#[i4]#m7 i6#56#[i5]#m0 i7#82#[i6]#m3 i8#95#[i7]#m1
+         i9#47#[i8]#m4 i10#78#[i9]#m2
+	 j1#30#[pa]#m0 j2#50#[j1]#m3 j3#34#[j2]#m7 j4#58#[j3]#m2
+	 j5#77#[j4]#m1 j6#34#[j5]#m5 j7#84#[j6]#m8 j8#40#[j7]#m4
+	 j9#46#[j8]#m9 j10#44#[j9]#m6
+         pe#0#[ j10 i10 h10 g10 f10 e10 d10 c10 b10 a10 ]#noResource ]
+     constraints: proc{$ Start Dur}
+		     skip
+		  end)
+>>>
+<p>
+We now only want to prove the optimality of the makespan 943. To this
+aim we declare a modified problem as follows. 
+<<<
+ModifiedABZ6 = 
+abz6(taskSpec: ABZ6.taskSpec
+     constraints:
+	proc {$ Start Dur}
+	   Start.pe <: 943
+	end)
+>>>
+<p>
+For the proof of optimality we need 761 choice nodes. 
+<p>
+Hence, the problem ABZ6 seems to be rather easy to solve and we
+can try our previous bottleneck serializer <<DistributeResSort>>.
+To find the optimal solution and to prove its optimality a search
+tree is computed which contains more than 1.2 million choice
+nodes. Therefore, the problem <em/is/ difficult for our simpler
+strategies and the gain by our new serializer is dramatic. 
+<p>
+But we can do still better. To this aim we introduce a new
+serializer. This serializer will not serialize one resource after the
+other as the previous serializer. Instead a resource ?{r} is selected
+first. Then two tasks are selected which are running on ?{r} and it is
+distributed with a certain ordering. For the resource selection a
+criterion is used which combines the global slack and the local slack of
+each resource. For the task ordering the sets ?{F} and ?{L} are computed
+as shown in the previous section. From these sets two tasks are selected
+according to a subtle criterion (see <ptr to=caseau.94a>). After an
+ordering decision is made by distribution the process is repeated until
+all resources are serialized. In contrast to the strategy in
+<ptr to=sec.strongSer>, a task pair on a resource may be ordered
+without that the resource which was previously considered needs to be
+serialized. 
+<para><title/task-oriented/
+Thus, we call such a serializer a
+<def/task-oriented serializer/ The strategy implemented in Oz is very similar to the one
+suggested in <ptr to=caseau.94a>.
+<p>
+Since we have to compute local slacks, the serializer has a run time
+complexity of <math/O(m \cdot n^3)/ in each step. Thus, it is more expensive
+than the resource-oriented serializer of the previous
+section. Furthermore, the use of this serializer might result in very
+deep search trees because we order only two tasks at each choice
+node. But the presented task-oriented serializer has a very important
+operational behavior besides the fact that it is used for
+distribution. While it is computing the local slacks of the resources it
+additionally employs edge-finding for the task intervals considered
+during this computation. In this way, the serializer may detect several
+orderings which must hold by the edge-finding rules presented in
+<ptr to=sec.edgeFinding>. This information is exploited at each
+choice node by additionally creating the corresponding
+propagators. Thus, the serializer orders two tasks by distribution and
+simultaneously adds orderings which are detected deterministically. By
+this approach the search tree may be reduced dramatically if edge-finding
+can be applied. As we have seen before, this is the case when the
+domains are rather narrow, &ie; for example when we want to prove
+optimality.
+<p>
+Oz provides the serializer <<FD.schedule.taskIntervalsDistP>> which has
+the described behavior. To prove optimality for ABZ6 we now only need
+145 choice nodes.
+<p>
+This serializer is especially designed for proving optimality. Hence, do
+not use this strategy when you want to find the optimal solution from
+scratch. If we search for the optimal solution the search tree becomes
+rather deep (a depth greater than 450) (including the
+proof of optimality) and the full tree contains more
+than 47&nbsp;000 choice nodes.
+<p>
+A variant of this task-oriented serializer is especially designed to
+find good solutions.  To this aim Oz provides
+<<FD.schedule.taskIntervalsDistO>> (see also <ptr to=caseau.95>). To find
+the optimal solution and to prove its optimality with this
+strategy we need 2&nbsp;979 choice nodes. But be aware that the use of this strategy may also lead to deep
+search trees which result in high memory consumption. This
+serializer is used in a tool presented in the following section. 
+</subsection>
+
+<subsection><title/The MT10 Problem/
+<p>
+<figure class="Figure" id=fig.problemMT10>
+<caption/Problem MT10./
+<<<
+MT10 =
+mt10(taskSpec: 
+	[% task # duration # preceding tasks # resources
+	 pa # 0  # nil  # noResource
+	 a1#29#[pa]#m1 a2#78#[a1]#m2 a3#9#[a2]#m3 a4#36#[a3]#m4
+	 a5#49#[a4]#m5 a6#11#[a5]#m6 a7#62#[a6]#m7 a8#56#[a7]#m8
+	 a9#44#[a8]#m9 a10#21#[a9]#m10
+	 b1#43#[pa]#m1 b2#90#[b1]#m3 b3#75#[b2]#m5 b4#11#[b3]#m10
+	 b5#69#[b4]#m4 b6#28#[b5]#m2 b7#46#[b6]#m7 b8#46#[b7]#m6
+	 b9#72#[b8]#m8 b10#30#[b9]#m9
+	 c1#91#[pa]#m2 c2#85#[c1]#m1 c3#39#[c2]#m4 c4#74#[c3]#m3
+	 c5#90#[c4]#m9 c6#10#[c5]#m6 c7#12#[c6]#m8 c8#89#[c7]#m7
+	 c9#45#[c8]#m10 c10#33#[c9]#m5
+	 d1#81#[pa]#m2 d2#95#[d1]#m3 d3#71#[d2]#m1 d4#99#[d3]#m5
+	 d5#9#[d4]#m7 d6#52#[d5]#m9 d7#85#[d6]#m8 d8#98#[d7]#m4
+	 d9#22#[d8]#m10 d10#43#[d9]#m6
+	 e1#14#[pa]#m3 e2#6#[e1]#m1 e3#22#[e2]#m2 e4#61#[e3]#m6
+	 e5#26#[e4]#m4 e6#69#[e5]#m5 e7#21#[e6]#m9 e8#49#[e7]#m8
+	 e9#72#[e8]#m10 e10#53#[e9]#m7
+	 f1#84#[pa]#m3 f2#2#[f1]#m2 f3#52#[f2]#m6 f4#95#[f3]#m4
+	 f5#48#[f4]#m9 f6#72#[f5]#m10 f7#47#[f6]#m1 f8#65#[f7]#m7
+	 f9#6#[f8]#m5 f10#25#[f9]#m8
+	 g1#46#[pa]#m2 g2#37#[g1]#m1 g3#61#[g2]#m4 g4#13#[g3]#m3
+	 g5#32#[g4]#m7 g6#21#[g5]#m6 g7#32#[g6]#m10 g8#89#[g7]#m9
+	 g9#30#[g8]#m8 g10#55#[g9]#m5
+	 h1#31#[pa]#m3 h2#86#[h1]#m1 h3#46#[h2]#m2 h4#74#[h3]#m6
+	 h5#32#[h4]#m5 h6#88#[h5]#m7 h7#19#[h6]#m9 h8#48#[h7]#m10
+	 h9#36#[h8]#m8 h10#79#[h9]#m4
+	 i1#76#[pa]#m1 i2#69#[i1]#m2 i3#76#[i2]#m4 i4#51#[i3]#m6
+	 i5#85#[i4]#m3 i6#11#[i5]#m10 i7#40#[i6]#m7 i8#89#[i7]#m8
+	 i9#26#[i8]#m5 i10#74#[i9]#m9
+	 j1#85#[pa]#m2 j2#13#[j1]#m1 j3#61#[j2]#m3 j4#7#[j3]#m7
+	 j5#64#[j4]#m9 j6#76#[j5]#m10 j7#47#[j6]#m6 j8#52#[j7]#m4
+	 j9#90#[j8]#m5
+	 j10#45#[j9]#m8
+	 pe#0#[a10 b10 c10 d10 e10 f10 g10 h10 i10 j10]#noResource 
+	]
+     constraints: 
+	proc {$ Start Dur}
+           skip	
+	end)
+>>>
+</figure>
+
+In this section we tackle MT10 problem shown in
+&nbsp;<ptr to=fig.problemMT10>. From the literature we know that 930 is the optimal makespan
+and we can define a script (<<ModifiedMT10>>) which
+can be used for proving optimality. The proof of optimality can be done with 1&nbsp;850 choice
+nodes (see also the shipped demo file):
+<<<
+{ExploreBest {CompileBridge ModifiedMT10
+              FD.schedule.serialized
+	      FD.schedule.taskIntervalsDistP} Order}
+>>>
+
+Note that the depth of the search
+tree is only 39. This emphasizes the fact that many orderings can be
+determined by edge-finding which is employed by the task-oriented
+serializer. 
+
+To find the optimal solution we better use the serializer
+<<FD.schedule.firstsLastsDist>>:
+<<<
+{ExploreBest {CompileBridge MT10
+              FD.schedule.serialized
+	      FD.schedule.firstsLastsDist} Order}
+>>>
+The full search tree to find the optimal solution and to prove its
+optimality is shown in <Ptr to="fig.scheduling.mt10Solve">. It 
+contains 16&nbsp;786 choice nodes and has depth&nbsp;91.
+
+<figure class="Figure maxi" id="fig.scheduling.mt10Solve">
+<caption/The full search tree for MT10./
+<picture.extern to="mt10XWPICK.gif" type=gif>
+</figure>
+
+<para><title/Oz Scheduler/
+To find good or optimal solutions you can also use a demo which is shipped with
+the Oz system. This demo is available if you select in your Oz
+Programming Interface first the menu entry <span class=menu/Find/,
+then the menu
+entry <span class=menu/Stand-alone Demo/ and then the file
+<span class=menu/scheduler.oz/. This demo os called the
+<def/Oz Scheduler/ <ptr to=wuertz.96b>.
+The Oz Scheduler allows you to combine different scheduling
+techniques to solve many different problems (MT10 is included). It also
+employs a special technique (based on iterative improvement) to find
+good solutions for job-shop problems very quickly (see also
+<ptr to=caseau.95>).  This technique uses the serializer
+<<FD.schedule.taskIntervalsDistO>> presented in the previous section. 
+</section>
+</chapter>
+

@@ -1,0 +1,17 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = fdt
+MAIN = main.sgml
+
+SGMLSRCS0 = \
+ bab constraints elimination golden-rules intro main minimizing packing problem propagators scheduling scripts traps user-defined
+
+SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
+
+HTMLEXTRAFILES = 
+
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
+

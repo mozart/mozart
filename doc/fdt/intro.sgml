@@ -1,0 +1,135 @@
+<chapter id=chapter.intro>
+<title/Introduction/<p>
+ 
+This document is a first introduction to
+constraint-based problem solving and its
+implementation in Oz.  We restrict our
+attention to combinatorial problems that can be stated
+with variables ranging over finite sets of nonnegative
+integers.  Problems in this class range from puzzles
+to real world applications as diverse as scheduling,
+ware house allocation, configuration and placement.
+<p>
+The two basic techniques of constraint programming
+are constraint propagation and constraint
+distribution.  Constraint propagation is an efficient
+inference mechanism obtained with concurrent
+propagators accumulating information in a constraint
+store.  Constraint distribution splits a problem
+into complementary cases once constraint propagation
+cannot advance further.  By iterating propagation and
+distribution, propagation will eventually determine
+the solutions of a problem.
+<p>
+Constraint distribution can easily lead to an
+exponential growth of the number of subproblems to
+be considered.  Fortunately, this potential
+combinatorial explosion can often be contained by
+combining strong propagation mechanisms with
+problem specific heuristics for selecting
+distribution steps.
+<p>
+The following puzzles give a first idea of the
+combinatorial problems we will solve in this
+document:
+
+<para><title/Money./
+The Send More Money Problem
+consists in finding distinct digits for the letters
+?{D}, ?{E}, ?{M}, ?{N}, ?{O}, ?{R}, ?{S}, ?{Y} such that&fsp;
+<math>~$~
+\newcommand{\showqueen}[2]{
+\rput(#1,#2){\rput(.5,.5){\mbox{\epsfxsize=1.4em
+\epsffile{/home/ps-home/hydra/handbook/dumps/Primer/large-queen.ps}}
+}}}
+~$~
+S,M\neq0
+</math>
+(no leading zeros) and the equation
+<math>  SEND\;+\;MORE\;=\;MONEY </math>
+is satisfied.  The unique solution of the problem
+is <math/9567+1085=10652/.
+
+<para><title/Safe./
+The code of Professor Smart's safe is
+a sequence of 9 distinct nonzero digits 
+<math/C_1,\ldots,C_9/
+such that the following equations and inequations are
+satisfied:
+<p>
+<math>
+~$\begin{eqnarray*}
+&   C_4 - C_6 = C_7\\
+&   C_1 * C_2 * C_3 = C_8 + C_9\\
+&   C_2 + C_3 + C_6 < C_8\\
+&   C_9 < C_8\\
+&   C_1\neq 1,\ldots, C_9\neq 9
+\end{eqnarray*}$~
+</math><p>
+Can you determine the code?
+
+<para><title/Coloring./
+Given a map showing the West
+European countries Netherlands, Belgium, France,
+Spain, Portugal, Germany, Luxemburg, Switzerland,
+Austria, and Italy, find a coloring such that
+neighboring countries have different color and a
+minimal number of colors is used.
+
+<para><title/Grocery./
+A kid goes into a grocery
+store and buys four items.  The cashier charges
+$7.11, the kid pays and is about to leave when
+the cashier calls the kid back, and says <q/Hold on,
+I multiplied the four items instead of adding them;
+I'll try again; Hah, with adding them the price
+still comes to $7.11/. What were the prices of
+the four items?
+
+<para><title/Queens./
+Place 8 queens on a chess board such that no two
+queens attack each other.
+<p>
+The problems have in common that they can be stated
+with variables that are a priori constrained to
+finite sets of nonnegative integers.  Consequently,
+the problems could be solved by simply checking all
+possible combinations of the values of the
+variables.  This naive generate and test method is
+however unfeasible for most realistic problems
+since there are just too many possible
+combinations.
+
+
+<para><title/The Demos./
+<p>
+This paper contains quite a number of examples and exercises. It is
+recommended to read this paper and try the examples and exercises while
+reading. For this purpose, the Oz system is shipped with two files.
+<p>
+The file <file/FDTutorial.oz/ contains all demos, and
+<file/FDTutorialSolutions.oz/ contains the solutions to the exercises. The files
+can be found in the directory
+<p><file>${OZHOME}/demos/documentation/</file>,
+<p>where 
+<file/${OZHOME}/ is the directory where the Oz system has been
+installed<note foot/For more information on this topic,
+see&nbsp;<!--**<Ptr to="oz.doc.system">-->./. For convenience you can choose the
+appropriate submenu entry of the menu entry <span class=menu/Find/ in your
+Oz Programming Interface to find the files.
+<p>
+In the presentation of the paper the necessary declarations of variables
+are left out for readability. In the demo file you find the
+declarations in place.
+
+<para><title/More Information/
+While this tutorial tries to be as self-contained as possible for
+constraint programming in Oz, it is
+expected that the reader has already a working knowledge of functional
+Oz programming. As an introduction for functional and object-oriented
+programming in Oz we suggest&nbsp;<Ptr to="ozdoc.tutorial">. For a brief overview
+over the concepts of Oz see&nbsp;<Ptr to="ozdoc.tips">. The full functionality of
+Oz provided for constraint programming is included in the
+document&nbsp;<ptr to="ozdoc.modules">.
+</chapter>
+
