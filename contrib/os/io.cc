@@ -267,6 +267,23 @@ OZ_BI_define(io_getfd,1,1)
   OZ_RETURN_INT(FD->fd);
 } OZ_BI_end
 
+OZ_BI_define(io_lseek,3,1)
+{
+  OZ_declareFD(0,FD);
+  OZ_declareInt(1,OFF);
+  OZ_declareInt(2,WHENCE);
+  int whence;
+  switch (WHENCE) {
+  case 0: whence=SEEK_SET; break;
+  case 1: whence=SEEK_CUR; break;
+  case 2: whence=SEEK_END; break;
+  default: whence=-1; break;
+  }
+  off_t point = lseek(FD->fd,OFF,whence);
+  if (point<0) RETURN_UNIX_ERROR("lseek");
+  OZ_RETURN_INT(point);
+} OZ_BI_end
+
 extern "C"
 {
   OZ_C_proc_interface * oz_init_module(void)
@@ -286,6 +303,7 @@ extern "C"
       {"fork"		,0,1,io_fork},
       {"pipe"		,0,2,io_pipe},
       {"getfd"		,1,1,io_getfd},
+      {"lseek"		,3,1,io_lseek},
       {0,0,0,0}
     };
     FileDescriptor::id = oz_newUniqueId();

@@ -21,6 +21,11 @@ local
 	  fun {$ B X} {BitString.disj B {Encode X}} end None}
       else FlagTable.Spec end
    end
+   FLAG = flag(read	:fun {$ B} {BitString.get B 0} end
+	       write	:fun {$ B} {BitString.get B 1} end
+	       append	:fun {$ B} {BitString.get B 2} end
+	       create	:fun {$ B} {BitString.get B 3} end
+	       truncate	:fun {$ B} {BitString.get B 4} end)
 in
    functor
    import
@@ -42,11 +47,12 @@ in
 	 ) @ 'io.so{native}'
       PROC @ 'process'
       MODE @ 'mode'
-      Finalize
+      Finalize URL Resolve Exception OS
    export
       is	: IS
       Make Write Read ReadAsString Open Close SocketPair Dup
       Fork Run Pipe DevNull Getfd
+      Stdin Stdout Stderr
    define
 
       fun {Getfd X} {GETFD X} end
@@ -90,13 +96,14 @@ in
 	 end
       in
 	 %% acquire and hold the read lock until all input has eventually
-	 %% be (lazily) read.
+	 %% been (lazily) read.
 	 thread lock {READLOCK FD} then {Wait UNLOCK} end end
 	 {Loop}
       end
 
       proc {Open Spec ?FD}
 	 File  = Spec.1
+	 Url   = {Resolve.expand {URL.make File}}
 	 Mode  = {MODE.make {CondSelect Spec mode 0644}}
 	 Flags = {BitString.disj
 		  {Encode {CondSelect Spec flags nil}}
@@ -107,8 +114,24 @@ in
 		  [] file   then None
 		  end}
       in
-	 FD = {Make {OPEN File Flags Mode}}
-	 {Finalize.register FD FREE}
+	 if {CondSelect Url scheme unit}\=unit andthen
+	    ({FLAG.write    Flags} orelse
+	     {FLAG.append   Flags} orelse
+	     {FLAG.truncate Flags})
+	 then
+	    {Raise {Exception.system
+		    open(urlIsReadOnly Spec)}}
+	 else
+	    R  = {Resolve.localize Url}
+	 in
+	    FD = try {Make {OPEN R.1 Flags Mode}}
+		 finally
+		    if new=={Label R} then
+		       try {OS.unlink R.1} catch _ then skip end
+		    end
+		 end
+	    {Finalize.register FD FREE}
+	 end
       end
 
       proc {SocketPair FD1 FD2}
@@ -168,6 +191,10 @@ in
 	 if ERR==unit then L3=L2 else L3=({GETFD ERR}#2)|L2 end
 	 IOMAP= L3
       in {PROC.make CMD ARGS IOMAP} end
+
+      Stdin  = {Make 0}
+      Stdout = {Make 1}
+      Stderr = {Make 2}
 
    end
 end
