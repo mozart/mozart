@@ -45,7 +45,7 @@ BROWSERSRC1 = \
 	bufsAndStreams.oz constants.oz controlObject.oz core.oz \
 	errors.oz managerObject.oz reflect.oz repManager.oz \
 	store.oz tcl-interface.oz termObject.oz \
-	termsStore.oz undefs.oz windowManager.oz
+	termsStore.oz windowManager.oz
 BROWSERSRC = $(BROWSERSRC1:%=browser/%) Browser.oz
 
 EXPLORERSRC1 = \
