@@ -56,19 +56,24 @@ in
 		    event:  '<Right>')
 		  separator
 		  C(label:  'Step'
-		    action: self # action(StepButtonText)
+		    action: self # action(StepButtonBitmap)
 		    key:    s)
 		  C(label:  'Next'
-		    action: self # action(NextButtonText)
+		    action: self # action(NextButtonBitmap)
 		    key:    n)
+		  separator
 		  C(label:  'Continue'
-		    action: self # action(ContButtonText)
+		    action: self # action(ContButtonBitmap)
 		    key:    c)
+		  C(label:  'Stop'
+		    action: self # action(StopButtonBitmap)
+		    key:    z)
+		  separator
 		  C(label:  'Forget'
-		    action: self # action(ForgetButtonText)
+		    action: self # action(ForgetButtonBitmap)
 		    key:    f)
 		  C(label:  'Terminate'
-		    action: self # action(TermButtonText)
+		    action: self # action(TermButtonBitmap)
 		    key:    t)])
 	   MB(text: 'Stack'
 	      menu:

@@ -15,7 +15,7 @@ end
 %% Text
 %%
 
-Version                = 'Jul 10 1997'
+Version                = \insert version.oz
 TitleName              = 'Oz Debugger'
 IconName               = 'Ozcar'
 
@@ -94,12 +94,6 @@ BracketRight           = ']'
 
 DotEnd                 = '.end'
 
-StepButtonText         = ' step'
-NextButtonText         = ' next'
-ContButtonText         = ' cont'
-ForgetButtonText       = ' forget'
-TermButtonText         = ' term'
-
 StackAction            = {NewName}
 ResetAction            = {NewName}
 
@@ -162,6 +156,9 @@ PadYButton             = 3
 
 ScrollbarWidth         = 10
 
+CheckButtonWidth       = 60
+CheckButtonHeight      = 18
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Fonts
@@ -216,8 +213,21 @@ in
    OzPath = {PathList OzRawPath}
 end
 
-BitMapDir              = {System.get home} # '/lib/bitmaps/'
-BitMap                 = '@' # BitMapDir # 'debugger.xbm'
+GlobalBitMapDir        = '@' # {System.get home} # '/lib/bitmaps/'
+LocalBitMapDir         = GlobalBitMapDir # 'ozcar/'
+BitmapExtension        = '.xbm'
+
+IconBitMap             = GlobalBitMapDir # debugger # BitmapExtension
+
+StepButtonBitmap       = step
+NextButtonBitmap       = next
+ContButtonBitmap       = cont
+StopButtonBitmap       = stop
+ForgetButtonBitmap     = forget
+TermButtonBitmap       = term
+
+IgnoreFeedsBitmap      = {VS2A queries  # BitmapExtension}
+IgnoreThreadsBitmap    = {VS2A children # BitmapExtension}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -226,8 +236,8 @@ BitMap                 = '@' # BitMapDir # 'debugger.xbm'
 
 TextCursor             = left_ptr
 
-MaxStackSize           = 40
-MaxStackBrowseSize     = 15
+MaxStackSize           = 500 % note there are lots of OzDebug stack frames...
+MaxStackBrowseSize     = 50
 
 %% the timeout variables have critical values --
 %% you should know what you are doing when changing them...
@@ -253,17 +263,33 @@ DefaultBackground
 DefaultForeground
 SelectedBackground
 SelectedForeground
+
+ButtonForeground
+CheckButtonSelectColor
+
+StepButtonColor
+NextButtonColor
+ContButtonColor
+StopButtonColor
+ForgetButtonColor
+TermButtonColor
+
 RunnableThreadColor
 RunningThreadColor
+
 BlockedThreadColor
 DeadThreadColor
+
 ZombieThreadColor
 TrunkColor
+
 RunnableThreadText
 BlockedThreadText
 DeadThreadText
+
 ProcColor
 BuiltinColor
+OldStackColor
 
 case Tk.isColor andthen Platform \= WindowsPlatform then
    %% main window
@@ -271,7 +297,17 @@ case Tk.isColor andthen Platform \= WindowsPlatform then
    DefaultForeground       = black
    SelectedBackground      = '#7070c0'
    SelectedForeground      = white
+
+   ButtonForeground        = grey40
+   CheckButtonSelectColor  = grey70
    
+   StepButtonColor         = SelectedBackground
+   NextButtonColor         = SelectedBackground
+   ContButtonColor         = RunnableThreadColor
+   StopButtonColor         = BlockedThreadColor
+   ForgetButtonColor       = DefaultForeground
+   TermButtonColor         = DefaultForeground
+
    %% thread forest window
    RunnableThreadColor     = '#00a500'
    RunningThreadColor      = '#f0c000'
@@ -289,12 +325,23 @@ case Tk.isColor andthen Platform \= WindowsPlatform then
    %% application trace window
    ProcColor               = '#0000c0'
    BuiltinColor            = '#c00000'
+   OldStackColor           = grey50
 else
    %% main window
    DefaultBackground       = white
    DefaultForeground       = black
    SelectedBackground      = black
    SelectedForeground      = white
+
+   ButtonForeground        = black
+   CheckButtonSelectColor  = black
+   
+   StepButtonColor         = black
+   NextButtonColor         = black
+   ContButtonColor         = black
+   StopButtonColor         = black
+   ForgetButtonColor       = black
+   TermButtonColor         = black
 
    %% thread forest window
    RunnableThreadColor     = black
@@ -311,6 +358,7 @@ else
    %% application trace window
    ProcColor               = black
    BuiltinColor            = black
+   OldStackColor           = black
 end
 
 

@@ -12,8 +12,5 @@ kann es passieren, dass faelschlicherweise das Setzen eines Breakpoints
 als erfolgreich bestaetigt wird, obwohl es (im aktuell gefeedeten Code) 
 gar nicht geklappt hat.
 
-Tue Apr  1 14:49:21 MET DST 1997
-Tags werden nicht geloescht aus Stack/Env Fenster
-
 Thu Jul 10 16:04:43 MET DST 1997
 spy-flag reaktivieren: value.hh:class PrTabEntry

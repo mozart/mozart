@@ -17,6 +17,7 @@ Ozcar =
 	meth off
 	   {Debug.off}
 	   {Tk.send wm(withdraw self.toplevel)}
+	   SourceManager,removeBar
 	   {Compile "\\sw -debuginfo"}
 	end
 	

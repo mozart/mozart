@@ -13,6 +13,7 @@ Dbg = dbg( taskstack   : {`Builtin` taskstack 3}
 	   contflag    : {`Builtin` setContFlag 2}
 	   stepmode    : {`Builtin` setStepMode 2}
 	   trace       : {`Builtin` traceThread 2}
+	   checkStopped: {`Builtin` checkStopped 2}
 	 )
 
 %% some constants

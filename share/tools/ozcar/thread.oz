@@ -3,12 +3,6 @@
 
 local
 
-   proc {PrepareBlockedThread T}
-      {Dbg.contflag T false}
-      {Dbg.stepmode T true}
-      {Thread.suspend T}
-   end
-
    fun {AppOK Name}
       ({Cget stepRecordBuiltin}  orelse Name \= 'record')
       andthen
@@ -144,6 +138,7 @@ in
 	       {Thread.resume T}
 	    else
 	       Gui,markNode(I runnable) % thread is not running anymore
+	       Gui,markStack(active)    % stack view has up-to-date content
 	       case T == @currentThread then
 		  F L
 		  Stack = {Dget self.ThreadDic I}
@@ -210,65 +205,34 @@ in
 	    
 	 [] block(thr:T#I file:F line:L name:N args:A builtin:B time:Time) then
 	    case ThreadManager,Exists(I $) then
-	       StackObj = {Dget self.ThreadDic I}
-	       Ack
-	    in
-	       thread
-		  {OzcarMessage
-		   'checking if blocking of thread #'#I#' is persistent...'}
-		  {StackObj blockMsg(Ack)}
-		  case Ack == ok then
-		     lock
-			{OzcarMessage '...yes!'}
-			{PrepareBlockedThread T}
-			ThreadManager,block(thr:T id:I file:F line:L name:N
-					    args:A builtin:B time:Time)
-		     end
-		  else
-		     {OzcarMessage 'blocking of thread #'#I#' was temporary'}
-		     {Thread.resume T}
-		  end
-	       end
-	       lock
-		  {Delay 20}
-	       end
+	       ThreadManager,block(thr:T id:I file:F line:L)
 	    else
-	       {OzcarMessage WaitForThread}
-	       {Delay TimeoutToBlock} % thread should soon be added
-	       case ThreadManager,Exists(I $) then
-		  {PrepareBlockedThread T}
-		  ThreadManager,block(thr:T id:I file:F line:L name:N
-				      args:A builtin:B time:Time)
-	       else
-		  {OzcarError UnknownSuspThread}
+	       thread
+		  {OzcarMessage WaitForThread}
+		  {Delay TimeoutToBlock} % thread should soon be added
+		  case ThreadManager,Exists(I $) then
+		     ThreadManager,block(thr:T id:I file:F line:L)
+		  else
+		     {OzcarError UnknownSuspThread}
+		  end
 	       end
 	    end
 	    
 	 [] cont(thr:T#I) then
-	    E = ThreadManager,Exists(I $)
-	 in
-	    case E then
-	       StackObj = {Dget self.ThreadDic I}
-	       Ack
-	    in
-	       lock
-		  {OzcarMessage 'serving cont message'}
-		  {StackObj contMsg(Ack)}
-		  case Ack == ok then
-		     Gui,markNode(I runnable)
-		     case T == @currentThread then
-			F L in
-			{ForAll [rebuild(true) getPos(file:F line:L)
-				 print] StackObj}
-			Gui,status('Thread #' # I # ' is runnable again')
-			SourceManager,bar(file:F line:L state:runnable)
-		     else skip end
+	    case ThreadManager,Exists(I $) then
+	       case {Dbg.checkStopped T} then
+		  Gui,markNode(I runnable)
+		  case T == @currentThread then
+		     SourceManager,configureBar(runnable)
+		     %Gui,doStatus('Thread #' # I # ' is runnable again')
 		  else skip end
+	       else
+		  Gui,markNode(I running)
 	       end
 	    else
 	       {OzcarError UnknownWokenThread}
 	    end
-
+	    
 	 [] exception(thr:T#I exc:X) then
 	    case ThreadManager,Exists(I $) then
 	       {{Dget self.ThreadDic I} printException(X)}
@@ -413,6 +377,7 @@ in
 	 Stack = {Dget self.ThreadDic I}
       in
 	 Gui,markNode(I runnable) % thread is not running anymore
+	 Gui,markStack(active)    % stack view has up-to-date content
 	 {Stack step(name:N args:A builtin:B file:F line:L
 		     time:Time frame:FrameId)}
 	 case T == @currentThread then
@@ -427,24 +392,17 @@ in
 	 else skip end
       end
       
-      meth block(thr:T id:I file:F line:L name:N args:A builtin:B time:Time)
-	 Stack
-      in
-	 try
-	    Stack = {Dget self.ThreadDic I}
-	    {Stack rebuild(true)}
-	    Gui,markNode(I blocked)
-	    case T == @currentThread then
-	       case {UnknownFile F} then
-		  {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
-		  SourceManager,removeBar
-	       else
-		  SourceManager,bar(file:F line:L state:blocked)
-	       end
-	       Gui,status('Thread #' # I # ' is blocked')
-	       {Stack printTop} 
-	    else skip end
-	 catch system(kernel(dict ...) ...) then skip end
+      meth block(thr:T id:I file:F line:L)
+	 Gui,markNode(I blocked)
+	 case T == @currentThread then
+	    case {UnknownFile F} then
+	       {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
+	       SourceManager,removeBar
+	    else
+	       SourceManager,bar(file:F line:L state:running)
+	    end
+	    %Gui,doStatus('Thread #' # I # ' is blocked')
+	 else skip end
       end
       
       meth rebuildCurrentStack
@@ -479,8 +437,8 @@ in
 	 case I == 1 then skip else
 	    Stack = {Dget self.ThreadDic I}
 	    T     = {Stack getThread($)}
-	    S     = {Thread.state T} %% TODO: should differentiate between
-	                             %%       `running' and `runnable'
+	    S     = case {Dbg.checkStopped T} then
+		       {Thread.state T} else running end
 	 in
 	    currentThread <- T
 	    currentStack  <- Stack
@@ -498,6 +456,9 @@ in
 		  in
 		     {ForAll [print getPos(file:F line:L)] Stack}
 		     case Exc == nil then
+			case S == running then
+			   Gui,markStack(inactive)
+			else skip end
 			SourceManager,bar(file:F line:L state:S)
 		     else
 			SourceManager,bar(file:F line:L state:blocked)
@@ -511,7 +472,7 @@ in
 
       meth suspend(TkV)
 	 Value = {TkV tkReturnInt($)}
-	 Arg   = case Value == 0 then false else true end
+	 Arg   = case Value == 0 then true else false end
       in
 	 {OzcarMessage 'Dbg.suspend called with argument ' # Value}
 	 {Dbg.suspend Arg}
@@ -519,7 +480,7 @@ in
 
       meth runChildren(TkV)
 	 Value = {TkV tkReturnInt($)}
-	 Arg   = case Value == 0 then false else true end
+	 Arg   = case Value == 0 then true else false end
       in
 	 {OzcarMessage 'Dbg.runChildren called with argument ' # Value}
 	 {Dbg.runChildren Arg}
