@@ -72,6 +72,13 @@
  *     IDEA: create OS threads
  *           communicate via shared memory
  *   FAILURE handling
+ *   statistics
+ *     average message size
+ *     #messages
+ *     #var send
+ *     #proc send
+ *     #classes send
+ *     #content moves
  * -----------------------------------------------------------------------*/
 
 #ifdef PERDIO
@@ -5359,7 +5366,7 @@ OZ_C_proc_begin(BIsetLoadHook,1)
     oz_typeError(0,"Procedure/2 (no builtin)");
   }
 
-  if (loadHook) {
+  if (0&&loadHook) { // mm2
     return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
 		    oz_atom("setLoadHook"));
   }
@@ -5383,13 +5390,18 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIloadFile,3)
 {
   OZ_declareVirtualStringArg(0,filename);
-  OZ_declareVirtualStringArg(0,url);
-  OZ_declareArg(1,out);
+  char *fn=ozstrdup(filename);
+
+  OZ_declareVirtualStringArg(1,url);
+  currentURL=oz_atom(url);
+
+  OZ_declareArg(2,out);
 
   INIT_IP(0);
 
-  currentURL=oz_atom(url);
-  return loadFile(filename,out);
+  int ret=loadFile(fn,out);
+  delete fn;
+  return ret;
 }
 OZ_C_proc_end
 
