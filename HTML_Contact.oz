@@ -18,7 +18,7 @@ define
 	       'border': '0'
 	       {self formatHeader('type' "contact" $)}
 	       {self formatHeader('id' tt({HtmlQuote @id}) $)}
-	       {self formatHeader('name' {HtmlQuote @name})}
+	       {self formatHeader('name' {HtmlQuote @name} $)}
 	       if @email==unit then "" else
 		  {self formatHeader(
 			   'email'
