@@ -38,8 +38,6 @@
 
 inline
 int run_thread(Thread * ct) {
-  am.restartThread(); // start a new time slice
-
   am.setCurrentThread(ct);
 
   ozstat.leaveCall(ct->getAbstr());
