@@ -7,7 +7,11 @@
 
 \ifdef NEWSAVE
 declare
-fun {NewPanel Standard Tk TkTools}
+fun
+\ifdef NEWCOMPILER
+   instantiate
+\endif
+   {NewPanel Standard Tk TkTools}
 \insert 'Standard.env'
    = Standard
 in

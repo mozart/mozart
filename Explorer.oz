@@ -17,7 +17,11 @@ declare
 in
 
 \ifdef SAVE
-fun {NewExplorer
+fun
+\ifdef NEWCOMPILER
+   instantiate
+\endif
+   {NewExplorer
 \ifdef NEWSAVE
      Standard
 \endif

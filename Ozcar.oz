@@ -11,7 +11,11 @@ NewOzcar
 in
 
 \ifdef SAVE
-proc {NewOzcar
+proc
+\ifdef NEWCOMPILER
+   instantiate
+\endif
+   {NewOzcar
 \ifdef NEWSAVE
       Standard
 \endif
