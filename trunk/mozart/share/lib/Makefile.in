@@ -25,6 +25,7 @@ ENV2TYPE	= $(PERL) $(SRCDIR)/env2type
 
 OZFLAGS		=
 OZBATCH		= @OZBATCH@
+OZFC            = $(OZBATCH) -DLILO --include=DumpIntro.oz -c
 
 COMPILE		= $(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -c
 EXEC		= $(OZBATCH) $(OZFLAGS)
@@ -120,6 +121,10 @@ COMPONENTS = \
 	Compiler.ozc Misc.ozc StandardModules.ozc StandardSubModules.ozc \
 	Tools.ozc
 
+FUNCTORS = \
+	SP.ozf OP.ozf AP.ozf CP.ozf WP.ozf DP.ozf \
+	Compiler.ozf Misc.ozf
+
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 CACHECOMPONENTS = $(COMPONENTS:%=$(CACHEDIR)/%)
 CACHETYCS	= $(ENVS:%.env=$(CACHEDIR)/%.tyc)
@@ -133,9 +138,11 @@ IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
 STANDARD = Base.ozc Standard.ozc Base.env Standard.env
 DUMPINTRO = DumpIntro.oz $(STANDARD)
 
-.PHONY: all
+.PHONY: all lilo
 
 all: $(COMPONENTS) $(SYSLETS)
+
+lilo: $(FUNCTORS)
 
 Makefile: Makefile.in ../config.status
 	cd .. && ./config.status
@@ -197,6 +204,26 @@ CP.ozc: $(DUMPINTRO) $(CPSRC) SP.env CP.env Init.ozc
 WP.ozc: $(DUMPINTRO) $(WPSRC) SP.env OP.env WP.env Init.ozc
 
 Misc.ozc: $(DUMPINTRO) $(MISCSRC) Misc.env Init.ozc
+
+%.ozf: %.oz
+	$(OZFC) $< -o $@
+
+SP.ozf: $(DUMPINTRO) $(SPSRC) SP.env Init.ozc
+
+OP.ozf: $(DUMPINTRO) $(OPSRC) SP.env OP.env Init.ozc
+
+AP.ozf: $(DUMPINTRO) $(APSRC) SP.env OP.env AP.env Init.ozc
+
+DP.ozf: $(DUMPINTRO) $(DPSRC) OP.env Init.ozc
+
+CP.ozf: $(DUMPINTRO) $(CPSRC) SP.env CP.env Init.ozc
+
+WP.ozf: $(DUMPINTRO) $(WPSRC) SP.env OP.env WP.env Init.ozc
+
+Misc.ozf: $(DUMPINTRO) $(MISCSRC) Misc.env Init.ozc
+
+
+	
 
 # dependencies removed to avoid automatic recreation
 #ozbatch.ozm: MakeAssembly.oz \
