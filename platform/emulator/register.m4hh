@@ -124,24 +124,42 @@ define(M4INSTRTWOREGS,``''
     DISPATCH(3);
     );
 
-  M4INSTRONEREG( CREATEVARIABLE,
-    ``
-       Reg1(getRegArg(PC+1)) = makeTaggedRef(newTaggedUVar(e->currentUVarPrototype));
 
-       IncfProfCounter(localVariableCounter,sizeof(TaggedRef));
-     ''
+#define MakeVar makeTaggedRef(newTaggedUVar(e->currentUVarPrototype))
+
+INSTRUCTION(CREATEVARIABLEX)
+   {
+     Xreg(getRegArg(PC+1)) = MakeVar;
      DISPATCH(2);
-     );
+   }
+  INSTRUCTION(CREATEVARIABLEY)
+   {
+     Yreg(getRegArg(PC+1)) = MakeVar;
+     DISPATCH(2);
+   }
+  INSTRUCTION(CREATEVARIABLEG)
+   {
+     error("CREATEVARIABLEG: impossible");
+     DISPATCH(2);
+   }
 
-  M4INSTRONEREG( CREATEVARIABLEMOVE,
-               ``{
-                 Reg1(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) =
-                     makeTaggedRef(newTaggedUVar(e->currentUVarPrototype));
+  INSTRUCTION(CREATEVARIABLEMOVEX)
+   {
+     Xreg(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = MakeVar;
+     DISPATCH(3);
+   }
+  INSTRUCTION(CREATEVARIABLEMOVEY)
+   {
+     Yreg(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = MakeVar;
+     DISPATCH(3);
+   }
+  INSTRUCTION(CREATEVARIABLEMOVEG)
+   {
+     error("CREATEVARIABLEMOVEG: impossible");
+     DISPATCH(3);
+   }
 
-                 IncfProfCounter(localVariableCounter,sizeof(TaggedRef));
-                } ''
-                 DISPATCH(3);
-               );
+#undef MakeVar
 
 
   M4INSTRTWOREGS(UNIFY,
@@ -174,18 +192,20 @@ define(M4INSTRTWOREGS,``''
                );
 
 
-  M4INSTRONEREG( PUTRECORD,
-               ``
-                 TaggedRef label = getLiteralArg(PC+1);
-                 Arity *ff = (Arity *) getAdressArg(PC+2);
-                 SRecord *srecord = new SRecord(ff,label,-1,NO);
+  INSTRUCTION(PUTRECORDX) ONREG(PutRecord,X);
+  INSTRUCTION(PUTRECORDY) ONREG(PutRecord,Y);
+  INSTRUCTION(PUTRECORDG) ONREG(PutRecord,G);
+         PutRecord:
+          {
+            TaggedRef label = getLiteralArg(PC+1);
+            Arity *ff = (Arity *) getAdressArg(PC+2);
+            SRecord *srecord = new SRecord(ff,label,-1,NO);
 
-                 Reg1(getRegArg(PC+3)) = makeTaggedSRecord(srecord);
-                 sPointer = srecord->getRef();
+            RegAccess(HelpReg,getRegArg(PC+3)) = makeTaggedSRecord(srecord);
+            sPointer = srecord->getRef();
 
-                 DISPATCH(4);''
-               );
-
+            DISPATCH(4);
+          }
 
   M4INSTRONEREG( PUTCONSTANT,
                ``
@@ -268,9 +288,9 @@ define(M4INSTRTWOREGS,``''
                    STuple *stuple = STuple::newSTuple(label,arity);
 
                    if (isCVar(term)) {
-                     if (tagged2CVar(term)->unify(termPtr, term, NULL,
-                                                  makeTaggedSTuple(stuple),
-                                                  NOFLATGUARD())) {
+                     if (tagged2CVar(term)->unifyOutline(termPtr, term, NULL,
+                                                         makeTaggedSTuple(stuple),
+                                                         NOFLATGUARD())) {
                        DISPATCH(4);
                      }
                    } else {
@@ -301,49 +321,50 @@ define(M4INSTRTWOREGS,``''
                );
 
 
-  M4INSTRONEREG( GETRECORD,
-               ``{
-                 TaggedRef label = getLiteralArg(PC+1);
-                 Arity *ff = (Arity *) getAdressArg(PC+2);
+  INSTRUCTION(GETRECORDX) ONREG(GetRecord,X);
+  INSTRUCTION(GETRECORDY) ONREG(GetRecord,Y);
+  INSTRUCTION(GETRECORDG) ONREG(GetRecord,G);
+      GetRecord:
+         {
+           TaggedRef label = getLiteralArg(PC+1);
+           Arity *ff = (Arity *) getAdressArg(PC+2);
 
-                 TaggedRef term = Reg1( getRegArg(PC+3) );
-                 DEREF(term,termPtr,tag);
+           TaggedRef term = RegAccess(HelpReg,getRegArg(PC+3));
+           DEREF(term,termPtr,tag);
 
-                 if (isAnyVar(term)) {
-                   SRecord *srecord = new SRecord(ff,label,am.currentUVarPrototype); // fill w/unb. var.
-                   if(isCVar(term) == OK){
-                     TaggedRef srecordRef=makeTaggedSRecord(srecord);
-                     if(tagged2CVar(term)->unify(termPtr, term,
-                                                 &srecordRef, srecordRef,NOFLATGUARD())) {
-                       sPointer = srecord->getRef();
-                       mode = READ;
-                       DISPATCH(4);
-                     }
-                   } else {
+           if (isAnyVar(term)) {
+             SRecord *srecord = new SRecord(ff,label,am.currentUVarPrototype); // fill w/unb. var.
+             if(isCVar(term) == OK){
+               TaggedRef srecordRef=makeTaggedSRecord(srecord);
+               if(tagged2CVar(term)->unifyOutline(termPtr, term,
+                                                  &srecordRef, srecordRef,NOFLATGUARD())) {
+                 sPointer = srecord->getRef();
+                 mode = READ;
+                 DISPATCH(4);
+               }
+             } else {
+               e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord),NOFLATGUARD());
 
-                     e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord),NOFLATGUARD());
+               sPointer = srecord->getRef();
+               mode = WRITE;
+               DISPATCH(4);
+             }
+           }
 
-                     sPointer = srecord->getRef();
-                     mode = WRITE;
-                     DISPATCH(4);
-                   }
-                 }
+           if (isSRecord(tag) &&
+               tagged2SRecord(term)->compareSortAndArity(label,ff)) {
+             sPointer = tagged2SRecord(term)->getRef();
+             mode = READ;
+             DISPATCH(4);
+           }
 
-                 if (isSRecord(tag) &&
-                     tagged2SRecord(term)->compareSortAndArity(label,ff)) {
-                   sPointer = tagged2SRecord(term)->getRef();
-                   mode = READ;
-                   DISPATCH(4);
-                 }
-
-                 SHALLOWFAIL;
-                 HF_UNIFY("%s(..:.. ...) = %s failed\n",
-                          getLiteralArg(PC+1),
-                          Reg1(getRegArg(PC+3)),
-                          "In instruction GETRECORD\n"
-                          );
-               }''
-               );
+           SHALLOWFAIL;
+           HF_UNIFY("%s(..:.. ...) = %s failed\n",
+                    getLiteralArg(PC+1),
+                    RegAccess(HelpReg,getRegArg(PC+3)),
+                    "In instruction GETRECORD\n"
+                    );
+         }
 
 
   M4INSTRONEREG(TESTCONST,
@@ -412,8 +433,8 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  if (isCVar(term)) {
-                   if (tagged2CVar(term)->unify(termPtr,term,NULL,
-                                                atm,NOFLATGUARD())) {
+                   if (tagged2CVar(term)->unifyOutline(termPtr,term,NULL,
+                                                       atm,NOFLATGUARD())) {
                      DISPATCH(3);
                    }
                    term = *termPtr;  // Note: 'term' may be disposed
@@ -445,8 +466,8 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  if (isCVar(term)) {
-                   if (tagged2CVar(term)->unify(termPtr,term,NULL,
-                                                i,NOFLATGUARD())) {
+                   if (tagged2CVar(term)->unifyOutline(termPtr,term,NULL,
+                                                       i,NOFLATGUARD())) {
                      DISPATCH(3);
                    }
                    term = *termPtr;  // Note: 'term' may be disposed
@@ -476,9 +497,9 @@ define(M4INSTRTWOREGS,``''
                    LTuple *ltuple = new LTuple(Reg1(reg2),e->currentUVarPrototype);
 
                    if (isCVar(term) == OK) {
-                     if (tagged2CVar(term)->unify(termPtr, term, NULL,
-                                                  makeTaggedLTuple(ltuple),
-                                                  NOFLATGUARD())) {
+                     if (tagged2CVar(term)->unifyOutline(termPtr, term, NULL,
+                                                         makeTaggedLTuple(ltuple),
+                                                         NOFLATGUARD())) {
                        DISPATCH(4);
                      }
                    } else {
@@ -520,9 +541,9 @@ define(M4INSTRTWOREGS,``''
                  if(isAnyVar(term)) {
                    LTuple *ltuple = new LTuple();
                    if (isCVar(term) == OK) {
-                     if(tagged2CVar(term)->unify(termPtr, term, NULL,
-                                                 makeTaggedLTuple(ltuple),
-                                                 NOFLATGUARD())) {
+                     if(tagged2CVar(term)->unifyOutline(termPtr, term, NULL,
+                                                        makeTaggedLTuple(ltuple),
+                                                        NOFLATGUARD())) {
                        DISPATCH(2);
                      }
                      term = *termPtr;  // Note: 'term' may be disposed
@@ -627,36 +648,41 @@ define(M4INSTRTWOREGS,``''
 
 
 
-  M4INSTRTWOREGS( UNIFYVALVAR,
-               ``{
-                 Reg reg = getRegArg(PC+1);
+  INSTRUCTION(UNIFYVALVARXX) ONREG2(UnifyValVar,X,X);
+  INSTRUCTION(UNIFYVALVARXY) ONREG2(UnifyValVar,X,Y);
+  INSTRUCTION(UNIFYVALVARXG) ONREG2(UnifyValVar,X,G);
+  INSTRUCTION(UNIFYVALVARYX) ONREG2(UnifyValVar,Y,X);
+  INSTRUCTION(UNIFYVALVARYY) ONREG2(UnifyValVar,Y,Y);
+  INSTRUCTION(UNIFYVALVARYG) ONREG2(UnifyValVar,Y,G);
+  INSTRUCTION(UNIFYVALVARGX) ONREG2(UnifyValVar,G,X);
+  INSTRUCTION(UNIFYVALVARGY) ONREG2(UnifyValVar,G,Y);
+  INSTRUCTION(UNIFYVALVARGG) ONREG2(UnifyValVar,G,G);
+   UnifyValVar:
+     {
+       Reg reg = getRegArg(PC+1);
 
-                 if (mode == WRITE) {
-                   *sPointer = Reg1(reg);
+       if (mode == WRITE) {
+         *sPointer = RegAccess(HelpReg,reg);
 
-                   *(sPointer+1) = e->currentUVarPrototype;
-                   Reg2(getRegArg(PC+2)) = makeTaggedRef(sPointer+1);
+         *(sPointer+1) = e->currentUVarPrototype;
+         RegAccess(HelpReg2,getRegArg(PC+2)) = makeTaggedRef(sPointer+1);
 
-                   sPointer += 2;
-                   DISPATCH(3);
-                 } else {
-                   if ( !e->fastUnify(Reg1(reg), makeTaggedRef(sPointer),
-                                      NOFLATGUARD()) ) {
-                     SHALLOWFAIL;
-                     HF_UNIFY("%s = %s failed\n",
-                              *sPointer,
-                              Reg1(reg),
-                              "In instruction UNIFYVALVAR\n"
-                              );
-                   }
+         sPointer += 2;
+         DISPATCH(3);
+       }
+       if ( !e->fastUnify(RegAccess(HelpReg,reg), makeTaggedRef(sPointer), NOFLATGUARD()) ) {
+         SHALLOWFAIL;
+         HF_UNIFY("%s = %s failed\n",
+                  *sPointer,
+                  RegAccess(HelpReg,reg),
+                  "In instruction UNIFYVALVAR\n");
+       }
 
-                   Reg2(getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
+       RegAccess(HelpReg2,getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
 
-                   sPointer += 2;
-                   DISPATCH(3);
-                 }
-               }''
-               );
+       sPointer += 2;
+       DISPATCH(3);
+     }
 
 
   INSTRUCTION(UNIFYCONSTANT)
@@ -713,7 +739,7 @@ define(M4INSTRTWOREGS,``''
       case WRITE:
         {
           TaggedRef newVar = e->currentUVarPrototype;
-          for (int i = 0; i < n; i++ ) {
+          for (int i = n-1; i >=0; i-- ) {
             *sPointer++ = newVar;
           }
           DISPATCH(2);
