@@ -146,8 +146,6 @@ public:
   void unsetNervous() { flags &= ~Bo_Nervous; }
   void unsetNervousSolve() { flags &= ~Bo_NervousSolve; }
   void unsetPathMark() { flags &= ~Bo_PathMark; }
-  // special for solve combinator: checks whether 'false' stays in body;
-  Bool isFailureInBody ();
 };
 
 #ifdef OUTLINE
