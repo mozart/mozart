@@ -29,7 +29,7 @@
 #define PEANUTS
 #ifdef INTERFACE
 
-#pragma implementation "debug.hh"
+#pragma implementation "trace.hh"
 #pragma implementation "perdiovar.hh"
 #pragma implementation "fdgenvar.hh"
 #pragma implementation "fdhook.hh"
@@ -50,7 +50,7 @@
 
 #include "am.cc"
 #include "codearea.cc"
-#include "debug.cc"
+#include "trace.cc"
 #include "perdiovar.cc"
 #include "fdgenvar.cc"
 #include "fdhook.cc"
