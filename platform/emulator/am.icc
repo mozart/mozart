@@ -33,7 +33,7 @@ void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var,
   // most probable case first: local UVar
   // if (isUVar(var) && currentBoard == tagged2VarHome(var)) {
   // more efficient:
-  if (var == currentUVarPrototype() && scp==0) {
+  if (currentUVarPrototypeEq(var) && scp==0) {
     doBind(varPtr,a);
   } else {
     genericBind(varPtr,var,NULL,a);
@@ -58,7 +58,7 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B, ByteCode *scp)
   DEREF0(term2,term2Ptr,_2);
   
   if (!isAnyVar(term2)) {
-    if (currentUVarPrototype() == term1 && scp==0) {
+    if (currentUVarPrototypeEq(term1) && scp==0) {
       COUNT(varNonvarUnify);
       doBind(term1Ptr,term2);
       goto exit;
@@ -66,7 +66,7 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B, ByteCode *scp)
     if (term1==term2) {
       goto exit;
     }
-  } else if (!isAnyVar(term1) && currentUVarPrototype()==term2 && scp==0) {
+  } else if (!isAnyVar(term1) && currentUVarPrototypeEq(term2) && scp==0) {
     COUNT(varNonvarUnify);
     doBind(term2Ptr,term1);
     goto exit;
@@ -107,7 +107,7 @@ Bool AM::isLocalUVar(TaggedRef var,TaggedRef *varPtr)
   // variables are usually bound 
   // in the node where they are created
   ShallowCheckLocal(varPtr);
-  if (var == currentUVarPrototype()) return OK;
+  if (currentUVarPrototypeEq(var)) return OK;
   return isLocalUVarOutline(var,varPtr);
 }
 
