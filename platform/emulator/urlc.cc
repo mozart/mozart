@@ -324,8 +324,10 @@ urlc::tcpip_open(const char* h, int p)
       return (URLC_ESOCK);
     }
 
+#ifndef WINDOWS
     if(-1 == fcntl(fd, F_SETFL, O_NONBLOCK))
-        URLC_PERROR("fcntl");
+      URLC_PERROR("fcntl");
+#endif
 
     // save local address for later use (esp. ftp PORT)
     int lin_len = sizeof(lin);
@@ -1048,8 +1050,10 @@ urlc::get_ftp(char *file)
         return (URLC_EAUTH);
     }
 
+#ifndef WINDOWS
     if(-1 == fcntl(newsockfd, F_SETFL, O_NONBLOCK))
         URLC_PERROR("fcntl");
+#endif
 
     ofd = tmp_file_open(file);
     if(0 > ofd)
