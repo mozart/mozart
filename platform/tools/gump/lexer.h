@@ -45,128 +45,114 @@ static void setEmptyBuffer(yyFlexLexer *i) {
   i->yy_switch_to_buffer(p);
 }
 
-OZ_C_proc_begin(yy_lexer_create, 1)
+OZ_BI_define(yy_lexer_create, 0, 1)
 {
   yyFlexLexer *flexLexer = new yyFlexLexer();
+printf("%p\n",flexLexer);
   setEmptyBuffer(flexLexer);
-  return OZ_unify(OZ_getCArg(0), OZ_int((int) flexLexer));
+  OZ_Term t = OZ_makeForeignPointer(flexLexer);
+printf("%s\n", OZ_toC(t,1,1));
+  OZ_RETURN(t);
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(yy_lexer_delete, 1)
+OZ_BI_define(yy_lexer_delete, 1, 0)
 {
-  OZ_declareIntArg(0, i)
-  yyFlexLexer *obj = (yyFlexLexer *) i;
-  if (obj)
-    delete obj;
+  OZ_declareForeignPointerIN(0, p);
+  delete (yyFlexLexer *) p;
   return PROCEED;
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(yy_lexer_getNextMatch, 2)
+OZ_BI_define(yy_lexer_getNextMatch, 1, 1)
 {
-  OZ_declareIntArg(0, i)
-  yyFlexLexer *obj = (yyFlexLexer *) i;
-
-  return OZ_unify(OZ_getCArg(1), OZ_int(obj->yylex()));
+  OZ_declareForeignPointerIN(0, p);
+  OZ_RETURN_INT(((yyFlexLexer *) p)->yylex());
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(yy_lexer_getAtom, 2)
+OZ_BI_define(yy_lexer_getAtom, 1, 1)
 {
-  OZ_declareIntArg(0, i)
-  yyFlexLexer *obj = (yyFlexLexer *) i;
-
-  return OZ_unify(OZ_getCArg(1), OZ_atom((char *) obj->YYText()));
+  OZ_declareForeignPointerIN(0, p);
+  OZ_RETURN_ATOM((char *) ((yyFlexLexer *) p)->YYText());
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(yy_lexer_getString, 2)
+OZ_BI_define(yy_lexer_getString, 1, 1)
 {
-  OZ_declareIntArg(0, i)
-  yyFlexLexer *obj = (yyFlexLexer *) i;
-  const char *yytext;
-  OZ_Term str;
-
-  // this does not use OZ_string because we don't necessarily want to
-  // stop at the first NUL:
-  i = obj->YYLeng();
-  yytext = obj->YYText();
-  str = OZ_nil();
+  // this does not use OZ_string because we don't necessarily want
+  // to stop at the first NUL
+  OZ_declareForeignPointerIN(0, p);
+  yyFlexLexer *obj = (yyFlexLexer *) p;
+  int i = obj->YYLeng();
+  const char *yytext = obj->YYText();
+  OZ_Term str = OZ_nil();
   for (i--; i >= 0; i--)
     str = OZ_cons(OZ_int(yytext[i]), str);
-  return OZ_unify(OZ_getCArg(1), str);
+  OZ_RETURN(str);
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(yy_lexer_getLength, 2)
+OZ_BI_define(yy_lexer_getLength, 1, 1)
 {
-  OZ_declareIntArg(0, i)
-  yyFlexLexer *obj = (yyFlexLexer *) i;
-  return OZ_unify(OZ_getCArg(1), OZ_int(obj->YYLeng()));
+  OZ_declareForeignPointerIN(0, p);
+  OZ_RETURN_INT(((yyFlexLexer *) p)->YYLeng());
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(yy_lexer_switchToBuffer, 2)
+OZ_BI_define(yy_lexer_switchToBuffer, 2, 0)
 {
-  OZ_declareIntArg(0, i)
-  OZ_declareIntArg(1, j)
-  if (i) {
-    if (j)
-      ((yyFlexLexer *) i)->yy_switch_to_buffer((yy_buffer_state *) j);
-    else
-      setEmptyBuffer((yyFlexLexer *) i);
-    return PROCEED;
-  } else
-    return FAILED;
+  OZ_declareForeignPointerIN(0, p);
+  OZ_declareForeignPointerIN(1, q);
+  ((yyFlexLexer *) p)->yy_switch_to_buffer((yy_buffer_state *) q);
+  return PROCEED;
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(yy_lexer_setMode, 2)
+OZ_BI_define(yy_lexer_setMode, 2, 0)
 {
-  OZ_declareIntArg(0, i);
-  OZ_declareIntArg(1, j);
-  if (i) {
-    yyFlexLexer *flexLexer = (yyFlexLexer *) i;
-    flexLexer->yy_start = j * 2 + 1;
-    return PROCEED;
-  } else
-    return FAILED;
+  OZ_declareForeignPointerIN(0, p);
+  OZ_declareIntIN(1, i);
+  ((yyFlexLexer *) p)->yy_start = i * 2 + 1;
+  return PROCEED;
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(yy_lexer_currentMode, 2)
+OZ_BI_define(yy_lexer_currentMode, 1, 1)
 {
-  OZ_declareIntArg(0, i);
-  if (i) {
-    yyFlexLexer *flexLexer = (yyFlexLexer *) i;
-    return OZ_unify(OZ_int((flexLexer->yy_start - 1) / 2), OZ_getCArg(1));
-  } else
-    return FAILED;
+  OZ_declareForeignPointerIN(0, p);
+  OZ_RETURN_INT((((yyFlexLexer *) p)->yy_start - 1) / 2);
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(yy_lexer_input, 2)
+OZ_BI_define(yy_lexer_input, 1, 1)
 {
-  OZ_declareIntArg(0, i);
-  if (i) {
-    yyFlexLexer *flexLexer = (yyFlexLexer *) i;
-    return OZ_unify(OZ_int(flexLexer->yyinput()), OZ_getCArg(1));
-  } else
-    return FAILED;
+  OZ_declareForeignPointerIN(0, p);
+  OZ_RETURN_INT(((yyFlexLexer *) p)->yyinput());
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(yy_lexer_unput, 2)
+OZ_BI_define(yy_lexer_unput, 2, 0)
 {
-  OZ_declareIntArg(0, i);
-  OZ_declareIntArg(1, j);
-  if (i) {
-    char c = j;
-    yyFlexLexer *flexLexer = (yyFlexLexer *) i;
-    flexLexer->yyunput(1, &c);
-    return PROCEED;
-  } else
-    return FAILED;
+  OZ_declareForeignPointerIN(0, p);
+  OZ_declareIntIN(1, j);
+  char c = j;
+  ((yyFlexLexer *) p)->yyunput(1, &c);
+  return PROCEED;
 }
-OZ_C_proc_end
+OZ_BI_end
+
+OZ_C_proc_interface oz_interface[] = {
+  {yy_PREFIX "_lexer_create", 0, 1},
+  {yy_PREFIX "_lexer_delete", 1, 0},
+  {yy_PREFIX "_lexer_getNextMatch", 1, 1},
+  {yy_PREFIX "_lexer_getAtom", 1, 1},
+  {yy_PREFIX "_lexer_getString", 1, 1},
+  {yy_PREFIX "_lexer_getLength", 1, 1},
+  {yy_PREFIX "_lexer_switchToBuffer", 2, 0},
+  {yy_PREFIX "_lexer_setMode", 2, 0},
+  {yy_PREFIX "_lexer_currentMode", 1, 1},
+  {yy_PREFIX "_lexer_input", 1, 1},
+  {yy_PREFIX "_lexer_unput", 2, 0},
+  {0,0,0}
+};

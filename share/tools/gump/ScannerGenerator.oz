@@ -401,22 +401,35 @@ in
 	    else Descrs Meths in
 	       {Rep logSubPhase('building class definition ...')}
 	       case MakeLexer of continue then
-		  Label = {String.toAtom
-			   {VirtualString.toString
-			    {Globals getFlag(prefix $)}#'_'#lexer}}
-		  Lexer = Label(create: 1 delete: 1
-				getNextMatch: 2
-				getAtom: 2 getString: 2 getLength: 2
-				switchToBuffer: 2
-				setMode: 2 currentMode: 2
-				input: 2 unput: 2)
 		  LexerO = {MakeFileName T ".dl"}
-		  LexerLoad = fApply(fOpApply('.'
-					      [fVar('Foreign' unit)
-					       fAtom('require' unit)]
-					      unit)
-				     [fAtom(LexerO unit) {ValueToAST Lexer}]
-				     unit)
+% {List.toRecord lexer
+%  {List.zip
+%   [create currentMode delete getAtom getLength getNextMatch getString
+%    input setMode switchToBuffer unput]
+%   {Record.toList {Foreign.load "MyScanner.dl"}}
+%   fun {$ F X} F#X end}}
+LexerLoad =
+fApply(fOpApply('.' [fVar('List' unit) fAtom('toRecord' unit)] unit)
+       [fAtom(lexer unit)
+	fApply(fOpApply('.' [fVar('List' unit) fAtom('zip' unit)] unit)
+	       [fRecord(fAtom('|' unit) [fAtom(create unit)
+		fRecord(fAtom('|' unit) [fAtom(currentMode unit)
+		fRecord(fAtom('|' unit) [fAtom(delete unit)
+		fRecord(fAtom('|' unit) [fAtom(getAtom unit)
+		fRecord(fAtom('|' unit) [fAtom(getLength unit)
+		fRecord(fAtom('|' unit) [fAtom(getNextMatch unit)
+		fRecord(fAtom('|' unit) [fAtom(getString unit)
+		fRecord(fAtom('|' unit) [fAtom(input unit)
+		fRecord(fAtom('|' unit) [fAtom(setMode unit)
+		fRecord(fAtom('|' unit) [fAtom(switchToBuffer unit)
+		fRecord(fAtom('|' unit) [fAtom(unput unit)
+		fAtom(nil unit)])])])])])])])])])])])
+		fApply(fOpApply('.' [fVar('Record' unit) fAtom('toList' unit)] unit)
+		       [fApply(fOpApply('.' [fVar('Foreign' unit) fAtom('load' unit)] unit)
+			       [fAtom(LexerO unit)] unit)] unit)
+		fFun(fDollar(unit) [fVar('F' unit) fVar('X' unit)]
+		     fRecord(fAtom('#' unit) [fVar('F' unit) fVar('X' unit)])
+		     nil unit)] unit)] unit)
 	       in
 		  {Globals enterFeat([fAtom(lexer unit)#LexerLoad])}
 	       [] noLexer then skip
