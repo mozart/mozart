@@ -615,7 +615,7 @@ OZ_BI_define(BIatomToString, 1, 1)
 
   if (!oz_isAtom(t)) oz_typeError(0,"atom");
   
-  OZ_RETURN(OZ_string(tagged2Literal(t)->getPrintName()));
+  OZ_RETURN(OZ_string((OZ_CONST char*)tagged2Literal(t)->getPrintName()));
 } OZ_BI_end
 
 OZ_BI_define(BIstringToAtom,1,1)
@@ -3416,14 +3416,14 @@ OZ_BI_define(BIgetPrintName,1,1)
       case Co_Abstraction:
 	OZ_RETURN(((Abstraction *) rec)->getName());
       case Co_Class:
-	OZ_RETURN_ATOM(((ObjectClass *) rec)->getPrintName());
+	OZ_RETURN_ATOM((OZ_CONST char*)((ObjectClass *) rec)->getPrintName());
       default:
 	break;
       }
       break;
     }
   case UVAR: case CVAR: // FUT
-    OZ_RETURN_ATOM(oz_varGetName(OZ_in(0)));
+    OZ_RETURN_ATOM((OZ_CONST char*)oz_varGetName(OZ_in(0)));
   case LITERAL:
     {
       const char *s = tagged2Literal(t)->getPrintName();
