@@ -736,6 +736,20 @@ If FORCE is non-nil, kill it immediately."
 	(oz-set-title oz-frame-title)
 	(message "Oz started."))))
 
+(defun oz-attach ()
+  (let (host port buffer)
+    (cond ((>= (length command-line-args-left) 1)
+	   (setq host oz-default-host
+		 port (string-to-number (car command-line-args-left)))
+	   (setq command-line-args-left (cdr command-line-args-left))))
+    (setq buffer (generate-new-buffer oz-emulator-buffer))
+    (save-excursion
+      (set-buffer buffer)
+      (comint-mode))
+    (comint-exec buffer (buffer-name buffer) (cons host port) nil nil)
+    (set-process-filter (get-buffer-process buffer) 'oz-emulator-filter)
+    (bury-buffer buffer)))
+
 (defun oz-socket (host port)
   (let ((bs oz-compiler-buffers) (newbs nil))
     (while bs
