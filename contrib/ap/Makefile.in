@@ -14,7 +14,7 @@ FUNCTORS	= OptionSheet.ozf
 
 all:		$(FUNCTORS)
 %.ozf: %.oz
-	$(OZC) -c $< -o $@
+	$(OZC) -z 9 -c $< -o $@
 install:	$(LIB_DIR) $(addprefix $(LIB_DIR)/,$(FUNCTORS))
 $(LIB_DIR):
 	$(INSTALL_DIR) $@

@@ -63,7 +63,7 @@ all:     $(TARGETS)
 install: $(LIB_TARGETS)
 
 Investigator.ozf: $(OZFNCTS)
-	$(OZL) Main.ozf -o $@
+	$(OZL) -z 9 Main.ozf -o $@
 
 $(LIB_DIR)/Investigator.ozf: Investigator.ozf
 	$(INSTALL_LIB) $< $@
