@@ -489,6 +489,10 @@ PRINT(Object)
   stream << "<O:" << getPrintName()
          << ", ";
   getRecord()->print(stream,depth,offset);
+  if (unfreeFeatures) {
+    stream << ", ";
+    unfreeFeatures->print(stream,depth,offset);
+  }
   stream << ", State: ";
   tagged2Stream(getCell(),stream,depth,offset);
   stream << ">";
