@@ -22,6 +22,8 @@
  */
 
 %{
+#include "resources.hh"
+
 #ifdef OZMA
 
 #undef OZMA_DEBUG
@@ -56,7 +58,7 @@ static SRecordArity getArity(TaggedRef arity) {
     return mkTupleWidth(smallIntValue(arity));
   }
 
-  int len = length(arity);
+  int len = fastlength(arity);
   arity = sortlist(arity,len);
   Arity *ari = aritytable.find(arity);
   return (ari->isTuple())? mkTupleWidth(ari->getWidth()): mkRecordArity(ari);
@@ -372,7 +374,7 @@ HashTableRef    : HT '(' DefLabel '[' HashTableEntries ']' ')'
                   {
                     TaggedRef elseLabel = $3;
                     TaggedRef entries = $5;
-                    int size = length(entries);
+                    int size = fastlength(entries);
                     ht = new IHashTable(size,0);
                     lookupLabel(elseLabel,&ht->elseLabel);
                     for (int i = 0; i < size; i++) {
@@ -474,7 +476,7 @@ ApplMethInfo    : AMI '(' ALiteral ARecordArity ')'
 GRegRef         : '[' Registers ']'
                   {
                     TaggedRef globals = $2;
-                    int numglobals = length(globals);
+                    int numglobals = fastlength(globals);
                     AssRegArray *gregs = new AssRegArray(numglobals);
                     for (int i = 0; i < numglobals; i++) {
                       SRecord *rec = tagged2SRecord(deref(head(globals)));

@@ -24,6 +24,9 @@
 %option noyywrap noreject nodefault
 
 %{
+
+#include "resources.hh"
+
 #ifdef OZMA
 
 #include "tagged.hh"
