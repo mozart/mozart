@@ -77,7 +77,7 @@ FD = \
         conference configuration donald family fraction \
         grocery kalotan knights magic-sequence \
         magic-square map-coloring money multiply photo \
-        pythagoras queens safe srat \
+        pythagoras queens safe srat golomb \
         warehouses zebra graphics/Knights graphics/Queens
 
 GR = \
