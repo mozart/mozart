@@ -170,7 +170,8 @@ BIMODSPECS = \
 	Boot Array Atom BitArray Bool Cell Char Chunk Class \
 	Dictionary Exception Float ForeignPointer Int Literal \
 	Lock Name Number Object Port Procedure Record Space \
-	String Thread Time Tuple Unit Value VirtualString
+	String Thread Time Tuple Unit Value VirtualString \
+	BitString ByteString
 
 EMUSRCDIR=$(SRCDIR)/../../platform/emulator
 BIDECL=$(EMUSRCDIR)/bidecl.perl
