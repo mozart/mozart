@@ -212,18 +212,19 @@ OZ_BI_define(BIbyNeed,1,1)
 
 OZ_BI_define(BIbyNeedDot,2,1)
 {
-  oz_declareDerefIN(0,fut);
+  oz_declareSafeDerefIN(0,fut);
   oz_declareNonvarIN(1,fea);
   if (!oz_isFeature(fea)) oz_typeError(1,"Feature");
-  if (oz_isVariable(fut)) {
+  if (oz_isRef(fut)) {
     Future *newFut = new Future(oz_currentBoard(),
 				OZ_mkTuple(AtomDot,2,fut,fea));
     OZ_RETURN(makeTaggedRef(newTaggedCVar(newFut)));
+  } else {
+    OZ_Term aux=0;
+    OZ_Return ret=dotInline(fut,fea,aux);
+    OZ_result(aux);
+    Assert(ret!=SUSPEND);
+    return ret;
   }
-  OZ_Term aux=0;
-  OZ_Return ret=dotInline(fut,fea,aux);
-  OZ_result(aux);
-  Assert(ret!=SUSPEND);
-  return ret;
 } OZ_BI_end
 
