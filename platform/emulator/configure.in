@@ -263,7 +263,7 @@ dnl ********************************
                 [  --with-pgcc       use pgcc compiler (if available)])
             if test "$with_pgcc" != xno; then
                 AC_MSG_RESULT(yes)
-                COPT="$C_OPT -frisc -fno-rtti -Wno-sign-compare -mpentium"
+                COPT="$COPT -frisc -fno-rtti -Wno-sign-compare -mpentium"
                 CXX=$PGXX
             else
                 AC_MSG_RESULT(no)
