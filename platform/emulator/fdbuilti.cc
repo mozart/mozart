@@ -408,7 +408,7 @@ void BIfdBodyManager::processFromTo(int from, int to)
             TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
             doBindAndTrailAndIP(bifdbm_var[i], bifdbm_varptr[i],
                                 makeTaggedRef(newtaggedfdvar),
-                                newfdvar, tagged2GenFDVar(bifdbm_var[i]));
+                                newfdvar, tagged2GenFDVar(bifdbm_var[i]), NO);
             newfdvar->setTag();
             glob_vars_touched = TRUE;
           } else {
@@ -488,7 +488,7 @@ void BIfdBodyManager::processNonRes(void)
         TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
         doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
                             makeTaggedRef(newtaggedfdvar),
-                            newfdvar, tagged2GenFDVar(bifdbm_var[0]));
+                            newfdvar, tagged2GenFDVar(bifdbm_var[0]), NO);
         newfdvar->setTag();
         glob_vars_touched = TRUE;
       } else {

@@ -117,14 +117,14 @@ Bool GenCVariable::valid(TaggedRef val)
 
 // this is supposed to be the local variable
 inline
-void GenCVariable::installPropagators(GenCVariable * glob_var)
+void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
 {
   Assert(getType()==FDVariable ||
          getType()==OFSVariable ||
          getType()==MetaVariable );
 
   Assert(getType() == glob_var->getType());
-  Assert(isLocalVariable() && ! glob_var->isLocalVariable());
+  Assert(prop==NO || isLocalVariable() && ! glob_var->isLocalVariable());
 
   Board * glob_home = glob_var->getHome();
   suspList = ::installPropagators(suspList, glob_var->getSuspList(),

@@ -90,7 +90,7 @@ public:
   void print(ostream &stream, int depth, int offset, TaggedRef v);
   void printLong(ostream &stream, int depth, int offset, TaggedRef v);
 
-  void installPropagators(GenCVariable *);
+  void installPropagators(GenCVariable *, Bool prop);
 };
 
 #include "fdgenvar.hh"
