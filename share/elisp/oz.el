@@ -248,6 +248,7 @@ starts the emulator under gdb")
     ("Feed Buffer"            . oz-feed-buffer)
     ("Feed Region"            . oz-feed-region)
     ("Feed Line"              . oz-feed-line)
+    ("Feed Paragraph"         . oz-feed-paragraph)
     ("Feed File"              . oz-feed-file)
     ("Compile File"           . oz-precompile-file)
     ("-----")
@@ -458,6 +459,9 @@ the GDB commands `cd DIR' and `directory'."
 ;; Feeding the compiler
 ;;------------------------------------------------------------
 
+(defun oz-zmacs-stuff()
+  (if oz-lucid (setq zmacs-region-stays t)))
+
 (defun oz-feed-buffer ()
   "Feeds the entire buffer."
   (interactive)
@@ -467,23 +471,34 @@ the GDB commands `cd DIR' and `directory'."
 	(oz-feed-region (point-min) (point-max))
       (oz-feed-file file))
     (switch-to-buffer cur))
-  (if oz-lucid (setq zmacs-region-stays t)))
-
+  (oz-zmacs-stuff))
 
 
 (defun oz-feed-region (start end)
-  "Consults the region."
+  "Feeds the region."
    (interactive "r")   
    (oz-send-string (buffer-substring start end))
-   (if oz-lucid (setq zmacs-region-stays t)))
+  (oz-zmacs-stuff))
      
 
 (defun oz-feed-line ()
-  "Consults one line."
+  "Feeds one line."
    (interactive)
    (let* ((line (oz-line-pos)))
      (oz-feed-region (car line) (cdr line)))
-   (if oz-lucid (setq zmacs-region-stays t)))
+  (oz-zmacs-stuff))
+
+
+(defun oz-feed-paragraph ()
+  "Feeds the current paragraph."
+  (interactive)
+  (save-excursion
+	(forward-paragraph 1)
+	(let ((end (point)))
+	  (backward-paragraph 1)
+	  (oz-feed-region (point) end)))
+  (oz-zmacs-stuff))
+
 
 (defun oz-send-string(string)
   (oz-check-running nil)
@@ -922,10 +937,11 @@ the GDB commands `cd DIR' and `directory'."
 )
 
 (defun oz-mode-commands (map)
-  (define-key map "\t"      'oz-indent-line)
-  (define-key map "\M-\C-m" 'oz-feed-buffer)
-  (define-key map "\M-r"    'oz-feed-region)
-  (define-key map "\M-l"    'oz-feed-line)
+  (define-key map "\t"       'oz-indent-line)
+  (define-key map "\M-\C-m"  'oz-feed-buffer)
+  (define-key map "\M-r"     'oz-feed-region)
+  (define-key map "\M-l"     'oz-feed-line)
+  (define-key map "\C-c\C-p" 'oz-feed-paragraph)
   (define-key map "\C-cb" 'oz-feed-line-browse)
   (define-key map "\C-c\C-b"    'oz-feed-region-browse)
   (define-key map "\M-n"   'oz-next-buffer)
