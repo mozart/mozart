@@ -46,6 +46,7 @@
 #include "var_base.hh"
 #include "var_ext.hh"
 #include "var_of.hh"
+#include "var_future.hh"
 #include "solve.hh"
 #include "mozart_cpi.hh"
 #include "dictionary.hh"
@@ -239,7 +240,7 @@ OZ_Return isChunkInline(TaggedRef t)
 }
 OZ_DECLAREBOOLFUN1(BIisChunkB,isChunkInline)
 
-OZ_BI_define(BIisExtension, 1,1)
+OZ_BI_define(BIisExtension, 1, 1)
 {
   oz_declareNonvarIN(0,t);
   OZ_RETURN(oz_isExtensionPlus(t) ? oz_true() : oz_false());
@@ -262,13 +263,6 @@ OZ_Return isCellInline(TaggedRef cell)
   return oz_isCell(term) ? PROCEED : FAILED;
 }
 OZ_DECLAREBOOLFUN1(BIisCellB,isCellInline)
-
-OZ_Return isPortInline(TaggedRef port)
-{
-  NONVAR( port, term );
-  return oz_isPort(term) ? PROCEED : FAILED;
-}
-OZ_DECLAREBOOLFUN1(BIisPortB,isPortInline)
 
 // ---------------------------------------------------------------------
 // Spaces
@@ -1741,31 +1735,24 @@ OZ_BI_define(BIstatus,1,1)
     // FUT
     OZ_RETURN(AtomFree);
   case CVAR:
-    switch (oz_var_status(tagged2CVar(term))) {
-    case OZ_FREE:
-      OZ_RETURN(AtomFree);
-    case OZ_FUTURE:
-      OZ_RETURN(AtomFuture);
-    case OZ_OTHER:
-      OZ_RETURN(AtomOther);
-    case OZ_KINDED:
-      {
-	SRecord *t = SRecord::newSRecord(AtomKinded, 1);
-	switch (tagged2CVar(term)->getType()) {
-	case OZ_VAR_FD:
-	case OZ_VAR_BOOL:
-	  t->setArg(0, AtomInt); break;
-	case OZ_VAR_FS:
-	  t->setArg(0, AtomFSet); break;
-	case OZ_VAR_OF:
-	  t->setArg(0, AtomRecord); break;
-	default:
-	  t->setArg(0, AtomOther); break;
-	}
-	OZ_RETURN(makeTaggedSRecord(t));
+    {
+      OZ_Term status = oz_var_status(tagged2CVar(term));
+      if (!literalEq(status,AtomKinded)) {
+	OZ_RETURN(status);
       }
-    default:
-      Assert(0);
+      SRecord *t = SRecord::newSRecord(AtomKinded, 1);
+      switch (tagged2CVar(term)->getType()) {
+      case OZ_VAR_FD:
+      case OZ_VAR_BOOL:
+	t->setArg(0, AtomInt); break;
+      case OZ_VAR_FS:
+	t->setArg(0, AtomFSet); break;
+      case OZ_VAR_OF:
+	t->setArg(0, AtomRecord); break;
+      default:
+	t->setArg(0, AtomOther); break;
+      }
+      OZ_RETURN(makeTaggedSRecord(t));
     }
   default:
     {
@@ -3200,12 +3187,31 @@ OZ_DECLAREBI_USEINLINEFUN1(BIsub1,BIsub1Inline)
 // Ports
 // ---------------------------------------------------------------------
 
+OZ_BI_define(BIisPort, 1, 1)
+{
+  oz_declareNonvarIN(0,t);
+  OZ_RETURN(oz_isPort(t) ? oz_true() : oz_false());
+} OZ_BI_end
+
+// use VARS or FUTURES for ports
+#ifdef VAR_PORT
+
 OZ_BI_define(BInewPort,1,1)
 {
   oz_declareIN(0,val);
 
   OZ_RETURN(oz_newPort(val));
 } OZ_BI_end
+
+void doPortSend(PortWithStream *port,TaggedRef val)
+{
+  LTuple *lt = new LTuple(am.currentUVarPrototype(),am.currentUVarPrototype());
+    
+  OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
+
+  OZ_unifyInThread(old,makeTaggedLTuple(lt));
+  OZ_unifyInThread(val,lt->getHead()); // might raise exception if val is non exportable
+}
 
 OZ_Return sendPort(OZ_Term prt, OZ_Term val)
 {
@@ -3218,16 +3224,10 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   if(port->isProxy()) {
     return (*portSend)(port,val);
   } 
-  LTuple *lt = new LTuple(am.currentUVarPrototype(),am.currentUVarPrototype());
-    
-  OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
-
-  OZ_unifyInThread(old,makeTaggedLTuple(lt));
-  OZ_unifyInThread(val,lt->getHead()); // might raise exception if val is non exportable
+  doPortSend((PortWithStream*)port,val);
 
   return PROCEED;
 }
-
 
 OZ_BI_define(BIsendPort,2,0)
 {
@@ -3240,6 +3240,59 @@ OZ_BI_define(BIsendPort,2,0)
 
   return sendPort(prt,val);
 } OZ_BI_end
+
+#else
+
+// PORTS with Futures
+
+OZ_BI_define(BInewPort,1,1)
+{
+  OZ_Term fut = oz_newFuture(oz_currentBoard());
+  OZ_Term port = oz_newPort(fut);
+  
+  OZ_out(0)= port;
+  return oz_unify(OZ_in(0),fut);
+} OZ_BI_end
+
+// export
+void doPortSend(PortWithStream *port,TaggedRef val)
+{
+  OZ_Term newFut = oz_newFuture(oz_currentBoard());
+  OZ_Term lt  = oz_cons(am.currentUVarPrototype(),newFut);
+  OZ_Term oldFut = port->exchangeStream(newFut);
+
+  DEREF(oldFut,ptr,_);
+  oz_bindFuture(ptr,lt);
+  OZ_unifyInThread(val,oz_head(lt)); // might raise exception if val is non exportable
+}
+
+OZ_Return sendPort(OZ_Term prt, OZ_Term val)
+{
+  Assert(oz_isPort(prt));
+
+  Port *port  = tagged2Port(prt);
+
+  CheckLocalBoard(port,"port");
+
+  if(port->isProxy()) {
+    return (*portSend)(port,val);
+  } 
+  doPortSend((PortWithStream*)port,val);
+  return PROCEED;
+}
+
+OZ_BI_define(BIsendPort,2,0)
+{
+  oz_declareNonvarIN(0,prt);
+  oz_declareIN(1,val);
+
+  if (!oz_isPort(prt)) {
+    oz_typeError(0,"Port");
+  }
+
+  return sendPort(prt,val);
+} OZ_BI_end
+#endif
 
 // ---------------------------------------------------------------------
 // Locks

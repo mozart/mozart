@@ -35,13 +35,6 @@
 #include "unify.hh"
 #include "thr_int.hh"
 
-// bind a future, don't care about the variable, e.g. for byNeed
-void oz_bindFuture(OZ_Term *vPtr,OZ_Term val)
-{
-  oz_var_forceBind(tagged2CVar(*vPtr),vPtr,val);
-}
-
-
 // this builtin is only internally available
 OZ_BI_define(BIbyNeedAssign,2,0)
 {
@@ -49,7 +42,6 @@ OZ_BI_define(BIbyNeedAssign,2,0)
   DEREF(var,varPtr,_);
   OZ_Term val = OZ_in(1);
 
-  Assert(isFuture(var));
   oz_bindFuture(varPtr,val);
   return PROCEED;
 } OZ_BI_end
@@ -134,10 +126,6 @@ OZ_BI_define(VarToFuture,2,0)
   return PROCEED;
 } OZ_BI_end
 
-OZ_Term oz_newFuture(Board *bb) {
-  return makeTaggedRef(newTaggedCVar(new Future(bb)));
-}
-
 OZ_BI_define(BIfuture,1,1)
 {
   OZ_Term v = OZ_in(0);
@@ -155,9 +143,21 @@ OZ_BI_define(BIfuture,1,1)
   OZ_RETURN(v);
 } OZ_BI_end
 
-OZ_BI_define(BIwaitQuiet,1,0)
+OZ_BI_define(BIwaitQuiet,1,1)
 {
-  return PROCEED;
+  OZ_Term v = OZ_in(0);
+  v = oz_safeDeref(v);
+  if (oz_isRef(v)) {
+    OZ_Term f = oz_newFuture(oz_currentBoard());
+    RefsArray args = allocateRefsArray(2, NO);
+    args[0]=v;
+    args[1]=f;
+    Thread *thr = oz_newThreadSuspended();
+    thr->pushCFun(VarToFuture,args,2);
+    addSuspAnyVar(tagged2Ref(v),thr);
+    OZ_RETURN(f);
+  }
+  OZ_RETURN(v);
 } OZ_BI_end
 
 OZ_BI_define(BIbyNeed,1,1)
@@ -167,50 +167,4 @@ OZ_BI_define(BIbyNeed,1,1)
     oz_typeError(0,"Unary Procedure");
   }
   OZ_RETURN(makeTaggedRef(newTaggedCVar(new Future(p,oz_currentBoard()))));
-} OZ_BI_end
-
-// PORTS with Futures
-
-OZ_BI_define(BInewPortF,0,2)
-{
-  OZ_Term fut = oz_newFuture(oz_currentBoard());
-  OZ_Term port = oz_newPort(fut);
-  
-  OZ_out(0)= fut;
-  OZ_out(1)= port;
-  return PROCEED;
-} OZ_BI_end
-
-OZ_Return sendPortF(OZ_Term prt, OZ_Term val)
-{
-  Assert(oz_isPort(prt));
-
-  Port *port  = tagged2Port(prt);
-
-  CheckLocalBoard(port,"port");
-
-  if(port->isProxy()) {
-    return (*portSend)(port,val);
-  } 
-  OZ_Term newFut = oz_newFuture(oz_currentBoard());
-  OZ_Term lt  = oz_cons(am.currentUVarPrototype(),newFut);
-  OZ_Term oldFut = ((PortWithStream*)port)->exchangeStream(newFut);
-
-  DEREF(oldFut,ptr,_);
-  oz_bindFuture(ptr,lt);
-  OZ_unifyInThread(val,oz_head(lt)); // might raise exception if val is non exportable
-
-  return PROCEED;
-}
-
-OZ_BI_define(BIsendPortF,2,0)
-{
-  oz_declareNonvarIN(0,prt);
-  oz_declareIN(1,val);
-
-  if (!oz_isPort(prt)) {
-    oz_typeError(0,"Port");
-  }
-
-  return sendPortF(prt,val);
 } OZ_BI_end

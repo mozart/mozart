@@ -303,8 +303,10 @@ SimpleVar *tagged2SimpleVar(TaggedRef t) {
  * Kinded/Free
  * ------------------------------------------------------------------------- */
 
+OZ_Term _var_status(OzVariable *cv);
+
 inline
-VariableStatus oz_var_status(OzVariable *cv)
+OZ_Term oz_var_status(OzVariable *cv)
 {
   switch (cv->getType()) {
   case OZ_VAR_FD:
@@ -312,27 +314,28 @@ VariableStatus oz_var_status(OzVariable *cv)
   case OZ_VAR_OF:
   case OZ_VAR_FS:
   case OZ_VAR_CT:
-    return OZ_KINDED;
+    return AtomKinded;
   case OZ_VAR_SIMPLE:
-    return OZ_FREE;
+    return AtomFree;
   case OZ_VAR_FUTURE:
-    return OZ_FUTURE;
+    return AtomFuture;
   default:
-    return OZ_OTHER;
+    return _var_status(cv);
   }
 }
 
-// isKinded || isFree || isFuture || isOther
+// isKinded || isFree || isFuture
 inline
 int oz_isFree(TaggedRef r)
 {
-  return isUVar(r) || (isCVar(r) && oz_var_status(tagged2CVar(r))==OZ_FREE);
+  return isUVar(r) ||
+    (isCVar(r) && literalEq(oz_var_status(tagged2CVar(r)),AtomFree));
 }
 
 inline
 int oz_isKinded(TaggedRef r)
 {
-  return isCVar(r) && oz_var_status(tagged2CVar(r))==OZ_KINDED;
+  return isCVar(r) && literalEq(oz_var_status(tagged2CVar(r)),AtomKinded);
 }
 
 inline
@@ -345,7 +348,7 @@ int oz_isNonKinded(TaggedRef r)
 inline
 int oz_isFuture(TaggedRef r)
 {
-  return isCVar(r) && oz_var_status(tagged2CVar(r))==OZ_FUTURE;
+  return isCVar(r) && literalEq(oz_var_status(tagged2CVar(r)),AtomFuture);
 }
 
 /* -------------------------------------------------------------------------
