@@ -1033,6 +1033,20 @@ void ThreadsPool::printThreads()
   }
 }
 
+#ifdef LINKED_QUEUES
+void ThreadQueue::printThreads()
+{
+  cout << " #" << size << " threads" << endl;
+  ThreadQueueIterator iter(this);
+  Thread*ptr;
+  while ((ptr=iter.getNext())) {
+    ptr->printStream(cout,-1);
+    if (ptr==oz_currentThread())
+      cout << " RUNNING";
+    cout << endl;
+  }
+}
+#else
 void ThreadQueue::printThreads()
 {
   int i = getSize();
@@ -1047,6 +1061,7 @@ void ThreadQueue::printThreads()
     enqueue(th);
   }
 }
+#endif /* !LINKED_QUEUES */
 
 void ozd_printBoards()
 {
