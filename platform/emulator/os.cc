@@ -68,9 +68,14 @@ void osBlockSignals(Bool check)
 {
   sigset_t s,sOld;
   sigfillset(&s);
-  /* SOME SIGNALS SHOULD NOT BE BLOCKED (RS) */
-  // sigdelset(&s,SIGINT);
+
+  /* some signals should not be blocked */
+  sigdelset(&s,SIGINT);
+  sigdelset(&s,SIGHUP);
+  sigdelset(&s,SIGTERM);
+
   sigprocmask(SIG_SETMASK,&s,&sOld);
+
 #ifdef DEBUG_CHECK
   if (check) {
     sigemptyset(&s);
