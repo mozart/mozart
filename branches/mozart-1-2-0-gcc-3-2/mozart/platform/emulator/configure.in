@@ -343,8 +343,10 @@ case $platform in
 	oz_enable_modules_static=yes
         ;;
     netbsd*)
-        TOOLLDCMD="ld -Bshareable"
-	oz_enable_modules_static=yes
+	# mail by Yu Wang indicated that "ld -Bshareable" did
+	# not work (anymore?) but "gcc -shared" worked
+	TOOLLDCMD="gcc -shared"
+	: ${oz_enable_modules_static=no}
         ;;
     openbsd*)
 	TOOLLDCMD="ld -Bshareable"
