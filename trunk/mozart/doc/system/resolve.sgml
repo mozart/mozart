@@ -15,10 +15,10 @@
   -
   - This file is part of Mozart, an implementation
   - of Oz 3
-  -    http://mozart.ps.uni-sb.de
+  -    http://www.mozart-oz.org
   -
   - See the file "LICENSE" or
-  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  -    http://www.mozart-oz.org/LICENSE.html
   - for information on usage and redistribution
   - of this file, and for a DISCLAIMER OF ALL
   - WARRANTIES.
@@ -71,7 +71,7 @@ normally have to double each escape character.</p>
 	<item>The last component in the input url is extracted and
 looked up in the location supplied as the methods argument.  If the
 input url is
-<file>http://mozart.ps.uni-sb.de/home/share/Foo.ozf</file>, then we
+<file>http://www.mozart-oz.org/home/share/Foo.ozf</file>, then we
 try to look up  <file>/usr/local/oz/share/Foo.ozf</file> instead.
 	<entry><code>root=~/lib/oz</code></entry>
 	<item>This applies only to a relative pathname: it is
@@ -85,27 +85,27 @@ as <code>~/lib/oz</code>
 	<item>Applies only to a full url: it is transformed into a
 relative pathname and looked up in the specified location.  If the
 input url is:
-<file>http://mozart.ps.uni-sb.de/home/share/Foo.ozf</file>, then
-<file>/usr/local/oz/cache/http/mozart.ps.uni-sb.de/home/share/Foo.ozf</file>
+<file>http://www.mozart-oz.org/home/share/Foo.ozf</file>, then
+<file>/usr/local/oz/cache/http/www.mozart-oz.org/home/share/Foo.ozf</file>
 is looked up instead.  This method is typically used to permit local
 caching of often used functors.  The cache location could also be the
 url of some sort of mirroring server.
-	<entry><code>prefix=http://mozart.ps.uni-sb.de/home/=~/oz/</code></entry>
+	<entry><code>prefix=http://www.mozart-oz.org/home/=~/oz/</code></entry>
 	<item>This method has the form <code/prefix=LOC1=LOC2/.
 Whenever the input url begins with the string <code/LOC1/, this prefix
 is replaced by <code/LOC2/ and the result is looked for instead.
 Thus, if the input url is
-<file>http://mozart.ps.uni-sb.de/home/share/Foo.ozf</file>, we would
+<file>http://www.mozart-oz.org/home/share/Foo.ozf</file>, we would
 look for <file>~/oz/share/Foo.ozf</file>.
-	<entry><code>pattern=http://mozart.&qmrk;{x}/home/&qmrk;{y}=ftp://ftp.&qmrk;{x}/oz/&qmrk;{y}</code></entry>
+	<entry><code>pattern=http://www.&qmrk;{x}/home/&qmrk;{y}=ftp://ftp.&qmrk;{x}/oz/&qmrk;{y}</code></entry>
 	<item>The <code/pattern/ method is more general than the
 <code/prefix/ method.  <code/LOC1/ can contain match variables, such
 as <code/&qmrk;{x}/ and <code/&qmrk;{y}/ that should match arbitrary
 sequences of characters, and <code/LOC2/ can also mention these
 variables to denote the value they have been assigned by the match.
 Thus, if the input url is
-<file>http://mozart.ps.uni-sb.de/home/share/Foo.ozf</file>, we would
-look for <file>ftp://ftp.ps.uni-sb.de/oz/share/Foo.ozf</file>.
+<file>http://www.mozart-oz.org/home/share/Foo.ozf</file>, we would
+look for <file>ftp://ftp.mozart-oz.org/oz/share/Foo.ozf</file>.
 	<entry/<code/=//
 	<item>Normally, the default handler is implicitly appended
 to your search methods.  This is the handler that simply looks up the

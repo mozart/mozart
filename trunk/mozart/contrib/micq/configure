@@ -455,7 +455,7 @@ echo > confdefs.h
 
 # A filename unique to this package, relative to the directory that
 # configure is in, which we can look for to find out if srcdir is correct.
-ac_unique_file=methods.oz
+ac_unique_file=manager.oz
 
 # Find the source files, if location was not specified.
 if test -z "$srcdir"; then
@@ -850,8 +850,8 @@ fi
 	
     fi
     
-  HOMEURL="http://mozart.ps.uni-sb.de/home"
-  HOMECACHE="http/mozart.ps.uni-sb.de/home"
+  HOMEURL="http://www.mozart-oz.org/home"
+  HOMECACHE="http/www.mozart-oz.org/home"
   
   
   
