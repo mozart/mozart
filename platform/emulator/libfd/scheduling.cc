@@ -1205,7 +1205,8 @@ cploop:
     //////////
     // compute set S0 
     //////////
-    for (int l=0; l<ts; l++) {
+    int l;
+    for (l=0; l<ts; l++) {
       int dl = dur[l];
       int xlMin = MinMax[l].min;
       int xlMaxDL = MinMax[l].max + dl;
