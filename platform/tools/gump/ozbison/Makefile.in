@@ -12,7 +12,7 @@ RM              = @RM@ -f
 
 OZTOOL          = @OZTOOL@
 
-CC              = $(OZTOOL) cc $(WINOZTOOLCXXFLAGS)
+OZTOOLCC        = $(OZTOOL) cc $(WINOZTOOLCXXFLAGS)
 DYNLD           = $(OZTOOL) ld $(WINOZTOOLLDFLAGS)
 CFLAGS          = @CFLAGS@
 INCLUDES        = -I$(SRCTOP)/platform/emulator @CPPFLAGS@
@@ -27,7 +27,7 @@ include $(BUILDTOP)/share/Makefile.boot
 bootstrap: cboot-all
 
 %.o: %.c
-        $(CC) $(CFLAGS) $(CDYNOPT) $(INCLUDES) -c $< -o $*.o
+        $(OZTOOLCC) $(CFLAGS) $(CDYNOPT) $(INCLUDES) -c $< -o $*.o
 
 Bison.so-$(PLATFORM): $(OBJS)
         $(DYNLD) -o $@ $(OBJS)
