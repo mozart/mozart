@@ -142,7 +142,7 @@
    &propagators;
    &reified;
    &userdefined; 
-   &bab; 
+   &bab;
    &scheduling; 
    &traps; 
    &goldenrules; 
