@@ -85,6 +85,7 @@ TaggedRef newObjectProxy(Object *o, GName *gnobj,
 static
 void sendRequest(MessageType mt,BorrowEntry *be)
 {
+  be->getOneMsgCredit();
   NetAddress* na=be->getNetAddress();
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
   switch (mt) {
@@ -172,9 +173,10 @@ void ObjectVar::sendObject(DSite* sd, int si, ObjectFields& of,
   Assert(be->isVar());
   oz_bindLocalVar(this,be->getPtr(),makeTaggedConst(o));
   be->changeToRef();
-  (void) BT->maybeFreeBorrowEntry(o->getIndex());
+  int index=o->getIndex();
   maybeHandOver(info,makeTaggedConst(o));
   o->localize();
+  (void) BT->maybeFreeBorrowEntry(index);
 }
 
 void ObjectVar::sendObjectAndClass(ObjectFields& of, BorrowEntry *be)
@@ -190,9 +192,10 @@ void ObjectVar::sendObjectAndClass(ObjectFields& of, BorrowEntry *be)
   Assert(be->isVar());
   oz_bindLocalVar(this,be->getPtr(),makeTaggedConst(o));
   be->changeToRef();
-  (void) BT->maybeFreeBorrowEntry(o->getIndex());
+  int index=o->getIndex();
   maybeHandOver(savedInfo,makeTaggedConst(o));
   o->localize(); 
+  (void) BT->maybeFreeBorrowEntry(index);
 }
 
 // failure stuff
