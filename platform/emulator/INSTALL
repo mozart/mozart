@@ -3,6 +3,10 @@ DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT
 INSTALLATION INSTRUCTIONS FOR THE MOZART ENGINE
 ===============================================
 
+- Requirements
+
+    GNU gmp library
+
 - Single platform
 
 ./configure [<Configure options>]

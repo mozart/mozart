@@ -26,8 +26,6 @@ dnl
 #include "conf.h"
 #include "resources.hh"
 
-#ifdef OZMA
-
 #include "tagged.hh"
 #include "value.hh"
 #include "ozma.hh"
@@ -240,5 +238,3 @@ undefine(`instruction')
 void ozmaerror(const char *message) {
   fprintf(stderr,"Ozma error in line %d: %s\n",ozma_lineno,message);
 }
-
-#endif

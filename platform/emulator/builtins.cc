@@ -52,34 +52,6 @@
 #include <errno.h>
 #include <ctype.h>
 
-#if defined(LINUX) || defined(SOLARIS) || defined(SUNOS_SPARC) || defined(IRIX) || defined(OSF1_ALPHA) || defined(FREEBSD) || defined(NETBSD) || defined(IRIX6)
-#   define DLOPEN 1
-#if defined(FREEBSD)
-#define RTLD_NOW 1
-#endif
-#endif
-
-#ifdef DLOPEN
-#ifdef SUNOS_SPARC
-#define RTLD_NOW 1
-extern "C" void * dlopen(char *, int);
-extern "C" char * dlerror(void);
-extern "C" void * dlsym(void *, char *);
-extern "C" int dlclose(void *);
-#else
-#include <dlfcn.h>
-#endif
-#endif
-
-#ifdef IRIX
-#include <bstring.h>
-#include <sys/time.h>
-#endif
-
-#ifdef HPUX_700
-#include <dl.h>
-#endif
-
 #include "runtime.hh"
 
 #include "genvar.hh"
@@ -5299,72 +5271,12 @@ OZ_C_proc_end
    dynamic link objects files
    ----------------------------------------------------------------- */
 
-
-#ifdef _MSC_VER
-#define F_OK 00
-#endif
-
 OZ_C_proc_begin(BIdlOpen,2)
 {
   oz_declareVirtualStringArg(0,filename);
   oz_declareArg(1,out);
 
-  OZ_Term err=NameUnit;
-  OZ_Term ret=NameUnit;
-
-  // filename = expandFileName(filename,ozconf.linkPath);
-
-  // if (!filename) {
-  //  err = oz_atom("expand filename failed");
-  //  goto raise;
-  // }
-
-  if (ozconf.showForeignLoad) {
-    message("Linking file %s\n",filename);
-  }
-
-#ifdef DLOPEN
-#ifdef HPUX_700
-  {
-    shl_t handle;
-    handle = shl_load(filename,
-                      BIND_IMMEDIATE | BIND_NONFATAL |
-                      BIND_NOSTART | BIND_VERBOSE, 0L);
-
-    if (handle == NULL) {
-      goto raise;
-    }
-    ret = oz_int(ToInt32(handle));
-  }
-#else
-  {
-    void *handle=dlopen(filename, RTLD_NOW);
-
-    if (!handle) {
-      err=oz_atom(dlerror());
-      goto raise;
-    }
-    ret = oz_int(ToInt32(handle));
-  }
-#endif
-
-#elif defined(WINDOWS)
-  {
-    void *handle = (void *)LoadLibrary(filename);
-    if (!handle) {
-      err=oz_int(GetLastError());
-      goto raise;
-    }
-    ret = oz_int(ToInt32(handle));
-  }
-#endif
-
-  return oz_unify(out,ret);
-
-raise:
-
-  return oz_raise(E_ERROR,oz_atom("foreign"),"dlOpen",2,
-                  OZ_getCArg(0),err);
+  return osDlopen(filename,out);
 }
 OZ_C_proc_end
 
@@ -5372,69 +5284,20 @@ OZ_C_proc_begin(BIdlClose,1)
 {
   oz_declareIntArg(0,handle);
 
-#ifdef DLOPEN
-  if (dlclose((void *)handle)) {
-    goto raise;
-  }
-#endif
-
-#ifdef WINDOWS
-  FreeLibrary((void *) handle);
-#endif
-
-  return PROCEED;
-
-raise:
-  return oz_raise(E_ERROR,oz_atom("foreign"),"dlClose",1,OZ_int(handle));
+  return osDlclose(handle);
 }
 OZ_C_proc_end
-
-#if defined(DLOPEN)
-#define Link(handle,name) dlsym(handle,name)
-#elif defined(HPUX_700)
-void *ozdlsym(void *handle,char *name)
-{
-  void *symaddr;
-
-  int symbol = shl_findsym((shl_t*)&handle, name, TYPE_PROCEDURE, &symaddr);
-  if (symbol != 0) {
-    return NULL;
-  }
-
-  return symaddr;
-}
-
-#define Link(handle,name) ozdlsym(handle,name)
-
-#elif defined(WINDOWS)
-
-FARPROC winLink(HMODULE handle, const char *name)
-{
-  FARPROC ret = GetProcAddress(handle,name);
-  if (ret == NULL) {
-    // try prepending a "_"
-    char buf[1000];
-    sprintf(buf,"_%s",name);
-    ret = GetProcAddress(handle,buf);
-  }
-  return ret;
-}
-
-#define Link(handle,name) winLink(handle,name)
-
-#endif
 
 /* findFunction(+fname,+farity,+handle) */
 OZ_C_proc_begin(BIfindFunction,3)
 {
-#if defined(DLOPEN) || defined(HPUX_700) || defined(WINDOWS)
   oz_declareVirtualStringArg(0,functionName);
   oz_declareIntArg(1,functionArity);
   oz_declareIntArg(2,handle);
 
   // get the function
   OZ_CFun func;
-  if ((func = (OZ_CFun) Link((void *) handle,functionName)) == 0) {
+  if ((func = (OZ_CFun) osDlsym((void *) handle,functionName)) == 0) {
 #ifdef WINDOWS
     OZ_warning("error=%d\n",GetLastError());
 #endif
@@ -5446,9 +5309,6 @@ OZ_C_proc_begin(BIfindFunction,3)
 
   OZ_addBuiltin(ozstrdup(functionName),functionArity,*func);
   return PROCEED;
-#else
-  not ported
-#endif
 }
 OZ_C_proc_end
 
