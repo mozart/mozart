@@ -235,6 +235,9 @@ OZ_Return CPIteratePropagator::propagate(void)
   int &ts  = reg_sz;
   int * dur = reg_offset;
 
+  // if we have no tasks the prop returns trivially true
+  if (ts == 0) return PROCEED;
+
   DECL_DYN_ARRAY(OZ_FDIntVar, x, ts);
   PropagatorController_VV P(ts, x);
   
@@ -889,6 +892,9 @@ OZ_Return DisjunctivePropagator::propagate(void)
   int &ts  = reg_sz;
   int * dur = reg_offset;
 
+  // if we have no tasks the prop returns trivially true
+  if (ts == 0) return PROCEED;
+
   DECL_DYN_ARRAY(OZ_FDIntVar, x, ts);
   PropagatorController_VV P(ts, x);
   
@@ -1104,6 +1110,9 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
   int * dur    = reg_offset;
   int * use    = reg_use;
   int capacity = reg_capacity;
+
+  // if we have no tasks the prop returns trivially true
+  if (ts == 0) return PROCEED;
 
   DECL_DYN_ARRAY(OZ_FDIntVar, x, ts);
 
@@ -2095,6 +2104,9 @@ OZ_Return CPIteratePropagatorCapUp::propagate(void)
   int * dur    = reg_offset;
   int * use    = reg_use;
   int capacity = reg_capacity;
+
+  // if we have no tasks the prop returns trivially true
+  if (ts == 0) return PROCEED;
 
   DECL_DYN_ARRAY(OZ_FDIntVar, x, ts);
 
