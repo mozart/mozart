@@ -32,8 +32,8 @@
 #include "am.hh"
 #include "board.hh"
 
+//
 GNameTable gnameTable;
-
 FatInt *idCounter;
 
 int GNameTable::hash(GName *gname)
@@ -78,9 +78,6 @@ void GNameTable::remove(GName *name)
   }
 }
 
-
-
-
 inline TaggedRef findGName(GName *gn) {
   return GT.find(gn);
 }
@@ -95,8 +92,20 @@ inline void addGName(GName *gn) {
   GT.add(gn);
 }
 
-void addGName(GName *gn, TaggedRef t) {
+void addGName(GName *gn, TaggedRef t)
+{
   gn->setValue(t);
+  addGName(gn);
+}
+
+//
+// The distribution's lazy protocols involve (atomic) changing a
+// gname's binding from a proxy to a proper entity. So, we have:
+void overwriteGName(GName *gn, TaggedRef t)
+{
+  gn->setValue(t);
+  if(findGName(gn))
+    GT.remove(gn);
   addGName(gn);
 }
 
@@ -106,13 +115,6 @@ GName *newGName(TaggedRef t, GNameType gt)
   addGName(ret);
   return ret;
 }
-
-void deleteGName(GName *gn)
-{
-  GT.remove(gn);
-  delete gn;
-}
-
 
 static
 Bool checkGName(GName *gn)
@@ -160,6 +162,16 @@ void GNameTable::gCollectGNameTable()
   compactify();
 }
 
+//
+void GName::gcMaybeOff()
+{
+  if (!value) {
+    Assert(!findGName(this));
+    gcMark = 1;
+  } else {
+    Assert(findGName(this));
+  }
+}
 
 /**********************************************************************/
 /*   SECTION 19 :: Globalizing       stateless BASIC otherwise entity */

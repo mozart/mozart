@@ -32,6 +32,7 @@
 #include "gentraverser.hh"
 #include "pickle.hh"
 #include "cac.hh"
+#include "gname.hh"
 
 //
 // Just 'gCollectTerm' all the entries in it;
@@ -721,7 +722,7 @@ repeat:
       SChunk *sc = new SChunk(am.currentBoard(), 0);
       sc->setGName(gname);
       chunkTerm = makeTaggedConst(sc);
-      addGName(gname, chunkTerm);
+      overwriteGName(gname, chunkTerm);
       sc->import(value);
 
       //
@@ -757,6 +758,15 @@ repeat:
 		 feat->getFeature(NameOoDefaults),
 		 flags);
 
+      //
+      // Observe: it can overwrite the gname's binding even without
+      // any lazy protocols, just due to the concurrency & suspendable
+      // unmarshaling!! The same holds of course for other "named"
+      // data structures, notably - objects and procedures.
+      GName *gn = cl->getGName();
+      OZ_Term ct = makeTaggedConst(cl);
+      overwriteGName(gn, ct);
+      gn->gcOn();
       //
       value = makeTaggedConst(cl);
       GetBTTaskTypeNoDecl(frame, type);
@@ -796,6 +806,7 @@ repeat:
 	(OzLock *) NULL : (OzLock *) tagged2Const(lockTerm);
       Object *o = new Object(oz_rootBoard(), gname, state, feat, lock);
       OZ_Term objTerm = makeTaggedConst(o);
+      overwriteGName(gname, objTerm);
       if (doMemo) {
 	GetBTFrameArg2(frame, int, memoIndex);
 	set(objTerm, memoIndex);
@@ -850,7 +861,7 @@ repeat:
       Abstraction *pp = Abstraction::newAbstraction(pr, am.currentBoard());
       procTerm = makeTaggedConst(pp);
       pp->setGName(gname);
-      addGName(gname, procTerm);
+      overwriteGName(gname, procTerm);
 
       //
       if (doMemo) {
