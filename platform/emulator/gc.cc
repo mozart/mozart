@@ -343,25 +343,6 @@ TaggedRef makeTaggedRefToFromSpace(TaggedRef *s)
   return (TaggedRef) ToInt32(s);
 }
 
-//*****************************************************************************
-//                        Consistency checks of trails
-//*****************************************************************************
-
-inline
-void RebindTrail::gc()
-{
-  Assert(isEmpty());
-}
-
-
-// cursor points to next free position
-inline
-void Trail::gc()
-{
-  Assert(isEmpty());
-}
-
-
 
 /****************************************************************************
  * The pointer stack is the recursion stack for garbage collection
@@ -676,7 +657,7 @@ Literal *Literal::gc()
     CHECKCOLLECTED(ToInt32(printName), Literal *);
     COUNT(literal);
     varCount++;
-    Name *aux = (Name *) gcRealloc (this,sizeof (*this));
+    Literal *aux = (Literal *) gcRealloc (this,sizeof (*this));
     GCNEWADDRMSG (aux);
     ptrStack.push (aux, PTR_NAME);
     storeForward(&printName, aux);
@@ -1518,8 +1499,8 @@ void AM::gc(int msgLevel)
 // colouring root pointers grey
 //-----------------------------------------------------------------------------
 
-  trail.gc();
-  rebindTrail.gc();
+  Assert(trail.isEmpty());
+  Assert(rebindTrail.isEmpty());
 
   rootBoard = rootBoard->gcBoard();   // must go first!
   setSelf(getSelf()->gcObject());

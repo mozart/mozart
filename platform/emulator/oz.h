@@ -32,7 +32,6 @@ extern "C" {
  * ------------------------------------------------------------------------ */
 
 typedef unsigned int OZ_Term;
-typedef double OZ_Float;
 
 typedef enum {
   FAILED,
@@ -41,124 +40,142 @@ typedef enum {
   SLEEP,
   SCHEDULED,
   RAISE
-} OZ_Bool;
-  
-typedef int OZ_Boolean;
-#define OZ_FALSE 0
-#define OZ_TRUE  1
-
+} OZ_Return;
 
 typedef void *OZ_Thread;
+typedef void *OZ_Arity;
 
-typedef OZ_Bool (*OZ_CFun) _PROTOTYPE((int, OZ_Term *));
+typedef OZ_Return (*OZ_CFun) _PROTOTYPE((int, OZ_Term *));
+
+
+/* for tobias */
+typedef int OZ_Boolean;
+#define OZ_FALSE 0
+#define OZ_TRUE 1
+
 
 /* ------------------------------------------------------------------------ *
  * II. function prototypes
  * ------------------------------------------------------------------------ */
 
+extern void OZ_main        _PROTOTYPE((int argc,char **argv));
+
+
+extern OZ_Term OZ_deref    _PROTOTYPE((OZ_Term term));
+
 /* tests */
 extern int OZ_isAtom       _PROTOTYPE((OZ_Term));
 extern int OZ_isCell       _PROTOTYPE((OZ_Term));
 extern int OZ_isChunk      _PROTOTYPE((OZ_Term));
-extern int OZ_isCons       _PROTOTYPE((OZ_Term));
 extern int OZ_isFloat      _PROTOTYPE((OZ_Term));
 extern int OZ_isInt        _PROTOTYPE((OZ_Term));
 extern int OZ_isLiteral    _PROTOTYPE((OZ_Term));
 extern int OZ_isName       _PROTOTYPE((OZ_Term));
-extern int OZ_isNil        _PROTOTYPE((OZ_Term));
 extern int OZ_isProcedure  _PROTOTYPE((OZ_Term));
 extern int OZ_isRecord     _PROTOTYPE((OZ_Term));
 extern int OZ_isTuple      _PROTOTYPE((OZ_Term));
 extern int OZ_isValue      _PROTOTYPE((OZ_Term));
 extern int OZ_isVariable   _PROTOTYPE((OZ_Term));
+extern int OZ_isCons       _PROTOTYPE((OZ_Term));
+extern int OZ_isSmallInt   _PROTOTYPE((OZ_Term));
+extern int OZ_isBigInt     _PROTOTYPE((OZ_Term));
+extern int OZ_isTrue       _PROTOTYPE((OZ_Term));
+extern int OZ_isFalse      _PROTOTYPE((OZ_Term));
+extern int OZ_isNil        _PROTOTYPE((OZ_Term));
+extern int OZ_isPair       _PROTOTYPE((OZ_Term));
+extern int OZ_isPair2      _PROTOTYPE((OZ_Term));
+extern int OZ_isObject     _PROTOTYPE((OZ_Term));
 
+extern OZ_Return OZ_isList          _PROTOTYPE((OZ_Term));
+extern OZ_Return OZ_isString        _PROTOTYPE((OZ_Term));
+extern OZ_Return OZ_isVirtualString _PROTOTYPE((OZ_Term));
+
+/*
+ * mm2: should we support this ?
+ */
 extern OZ_Term OZ_termType _PROTOTYPE((OZ_Term));
-
-extern OZ_Bool OZ_typeError   _PROTOTYPE((int pos,char *type));
 
 /* convert: C from/to Oz datastructure */
 
-extern char *   OZ_atomToC    _PROTOTYPE((OZ_Term));
-extern char *   OZ_literalToC _PROTOTYPE((OZ_Term));
-extern OZ_Term  OZ_CToAtom    _PROTOTYPE((char *));
+extern char *   OZ_atomToC         _PROTOTYPE((OZ_Term));
+extern OZ_Term  OZ_atom            _PROTOTYPE((char *));
+extern int	OZ_featureCmp      _PROTOTYPE((OZ_Term,OZ_Term));
 
-extern int      OZ_getMinPrio    _PROTOTYPE((void));
-extern int      OZ_getMaxPrio    _PROTOTYPE((void));
-extern int      OZ_getMinInt     _PROTOTYPE((void));
-extern int      OZ_getMaxInt     _PROTOTYPE((void));
-extern OZ_Term  OZ_getNameFalse  _PROTOTYPE((void));
-extern OZ_Term  OZ_getNameTrue   _PROTOTYPE((void));
-extern OZ_Term  OZ_CToInt        _PROTOTYPE((int));
-extern int      OZ_intToC        _PROTOTYPE((OZ_Term));
-extern OZ_Term  OZ_CStringToInt  _PROTOTYPE((char *str));
-extern char *   OZ_intToCString  _PROTOTYPE((OZ_Term term));
-extern char *   OZ_intFloat      _PROTOTYPE((char *s));
-extern char *   OZ_normInt       _PROTOTYPE((char *s));
-extern char *   OZ_parseInt      _PROTOTYPE((char *s));
+extern int      OZ_smallIntMin     _PROTOTYPE((void));
+extern int      OZ_smallIntMax     _PROTOTYPE((void));
+extern OZ_Term  OZ_false 	   _PROTOTYPE((void));
+extern OZ_Term  OZ_true 	   _PROTOTYPE((void));
+extern OZ_Term  OZ_int             _PROTOTYPE((int));
+extern int      OZ_getMinPrio      _PROTOTYPE((void));
+extern int      OZ_getMaxPrio      _PROTOTYPE((void));
+extern int      OZ_intToC          _PROTOTYPE((OZ_Term));
+extern char *   OZ_intToCString    _PROTOTYPE((OZ_Term));
+extern OZ_Term  OZ_CStringToInt    _PROTOTYPE((char *str));
+extern char *   OZ_parseInt        _PROTOTYPE((char *s));
 
-extern OZ_Term  OZ_CToFloat        _PROTOTYPE((OZ_Float));
-extern OZ_Float OZ_floatToC        _PROTOTYPE((OZ_Term));
+extern OZ_Term  OZ_float           _PROTOTYPE((double));
+extern double   OZ_floatToC        _PROTOTYPE((OZ_Term));
+
 extern OZ_Term  OZ_CStringToFloat  _PROTOTYPE((char *s));
-#define OZ_floatToCString(f) OZ_floatToCStringPretty(f)
-extern char *   OZ_floatToCStringLong    _PROTOTYPE((OZ_Term term));
-extern char *   OZ_floatToCStringInt     _PROTOTYPE((OZ_Term term));
-extern char *   OZ_floatToCStringPretty  _PROTOTYPE((OZ_Term term));
-extern char *   OZ_normFloat       _PROTOTYPE((char *s));
+extern char *   OZ_floatToCString  _PROTOTYPE((OZ_Term term));
 extern char *   OZ_parseFloat      _PROTOTYPE((char *s));
-#define OZ_CfloatToCString(F) OZ_normFloat(OZ_floatToCString(OZ_CToFloat(F)))
-
 
 extern OZ_Term  OZ_CStringToNumber _PROTOTYPE((char *));
 
-extern char *   OZ_toC       _PROTOTYPE((OZ_Term));
-extern char *   OZ_toC1      _PROTOTYPE((OZ_Term, int));
+extern char *   OZ_toC       _PROTOTYPE((OZ_Term, int));
 
-extern OZ_Term  OZ_CToString _PROTOTYPE((char *));
+extern OZ_Term  OZ_string    _PROTOTYPE((char *));
 extern char *   OZ_stringToC _PROTOTYPE((OZ_Term t));
 
 extern void     OZ_printVS   _PROTOTYPE((OZ_Term t));
+
+/* mm2: impl? */
 extern OZ_Term  OZ_termToVS  _PROTOTYPE((OZ_Term t));
 
 /* tuples */
 extern OZ_Term OZ_label     _PROTOTYPE((OZ_Term));
 extern int     OZ_width     _PROTOTYPE((OZ_Term));
 extern OZ_Term OZ_tuple     _PROTOTYPE((OZ_Term, int));
-#define OZ_tupleC(s,n) OZ_tuple(OZ_CToAtom(s),n)
+#define OZ_tupleC(s,n) OZ_tuple(OZ_atom(s),n)
 extern OZ_Term OZ_mkTuple   _PROTOTYPE((OZ_Term label,int arity,...));
 extern OZ_Term OZ_mkTupleC  _PROTOTYPE((char *label,int arity,...));
 
-extern int     OZ_putArg    _PROTOTYPE((OZ_Term, int, OZ_Term));
-extern OZ_Term OZ_getArg    _PROTOTYPE((OZ_Term , int));
+extern void    OZ_putArg  _PROTOTYPE((OZ_Term, int, OZ_Term));
+extern OZ_Term OZ_getArg  _PROTOTYPE((OZ_Term, int));
 extern OZ_Term OZ_nil       _PROTOTYPE(());
 extern OZ_Term OZ_cons      _PROTOTYPE((OZ_Term ,OZ_Term));
 extern OZ_Term OZ_head      _PROTOTYPE((OZ_Term));
 extern OZ_Term OZ_tail      _PROTOTYPE((OZ_Term));
 extern int     OZ_length    _PROTOTYPE((OZ_Term list));
 
-extern OZ_Term OZ_pair      _PROTOTYPE((OZ_Term t1,OZ_Term t2));
 
-#define OZ_pairA(s1,t)      OZ_pair(OZ_CToAtom(s1),t)
-#define OZ_pairAI(s1,i)     OZ_pair(OZ_CToAtom(s1),OZ_CToInt(i))
-#define OZ_pairAA(s1,s2)    OZ_pair(OZ_CToAtom(s1),OZ_CToAtom(s2))
-#define OZ_pairAS(s1,s2)    OZ_pair(OZ_CToAtom(s1),OZ_CToString(s2))
+extern OZ_Term OZ_pair      _PROTOTYPE((int));
+extern OZ_Term OZ_pair2     _PROTOTYPE((OZ_Term t1,OZ_Term t2));
+
+#define OZ_pairA(s1,t)      OZ_pair2(OZ_atom(s1),t)
+#define OZ_pairAI(s1,i)     OZ_pair2(OZ_atom(s1),OZ_int(i))
+#define OZ_pairAA(s1,s2)    OZ_pair2(OZ_atom(s1),OZ_atom(s2))
+#define OZ_pairAS(s1,s2)    OZ_pair2(OZ_atom(s1),OZ_string(s2))
 
 
 /* records */
+extern OZ_Arity OZ_makeArity     _PROTOTYPE((OZ_Term list));
 extern OZ_Term OZ_record         _PROTOTYPE((OZ_Term, OZ_Term));
 extern OZ_Term OZ_recordInit     _PROTOTYPE((OZ_Term, OZ_Term));
-extern void OZ_putRecordArg      _PROTOTYPE((OZ_Term, OZ_Term, OZ_Term));
-extern OZ_Term OZ_getRecordArg   _PROTOTYPE((OZ_Term, OZ_Term));
-extern OZ_Term OZ_getRecordArity _PROTOTYPE((OZ_Term));
+extern void OZ_putSubtree        _PROTOTYPE((OZ_Term, OZ_Term, OZ_Term));
+extern OZ_Term OZ_subtree        _PROTOTYPE((OZ_Term, OZ_Term));
+extern OZ_Term OZ_arityList      _PROTOTYPE((OZ_Term));
 
-#define OZ_getRecordArgA(t,s)    OZ_getRecordArg(t,OZ_CToAtom(s))
-#define OZ_putRecordArgA(t,s,v)  OZ_putRecordArg(t,OZ_CToAtom(s),v)
+#define OZ_getRecordArgA(t,s)    OZ_getRecordArg(t,OZ_atom(s))
+#define OZ_putRecordArgA(t,s,v)  OZ_putRecordArg(t,OZ_atom(s),v)
 
 /* unification */
-extern OZ_Bool OZ_unify       _PROTOTYPE((OZ_Term, OZ_Term));
+extern OZ_Return OZ_unify    _PROTOTYPE((OZ_Term, OZ_Term));
+extern int OZ_eq                 _PROTOTYPE((OZ_Term, OZ_Term));
 
-#define OZ_unifyFloat(t1,f)      OZ_unify(t1, OZ_CToFloat(f))
-#define OZ_unifyInt(t1,i)        OZ_unify(t1, OZ_CToInt(i))
-#define OZ_unifyString(t1,s)     OZ_unify(t1, OZ_CToAtom(s))
+#define OZ_unifyFloat(t1,f)      OZ_unify(t1, OZ_float(f))
+#define OZ_unifyInt(t1,i)        OZ_unify(t1, OZ_int(i))
+#define OZ_unifyAtom(t1,s)       OZ_unify(t1, OZ_atom(s))
 
 /* create a new oz variable */
 extern OZ_Term OZ_newVariable();
@@ -172,9 +189,6 @@ extern OZ_Term OZ_newCell _PROTOTYPE((OZ_Term));
 /* name */
 extern OZ_Term OZ_newName ();
 
-/* string storage */
-extern void OZ_free _PROTOTYPE((char *));
-
 /* print warning */
 extern void OZ_warning _PROTOTYPE((char * ...));
 
@@ -184,13 +198,22 @@ char *OZ_unixError _PROTOTYPE((int err));
 /* check for toplevel */
 extern int OZ_onToplevel ();
 
-/* replace new builtins */
 extern int OZ_addBuiltin _PROTOTYPE((char *, int, OZ_CFun));
+
+/* replace new builtins */
+struct OZ_BIspec {
+  char *name;
+  int arity;
+  OZ_CFun fun;
+};
+
+/* add specification to builtin table */
+void OZ_addBISpec _PROTOTYPE((OZ_BIspec *spec));
 
 /* IO */
 
-extern OZ_Bool OZ_readSelect  _PROTOTYPE((int, OZ_Term, OZ_Term));
-extern OZ_Bool OZ_writeSelect _PROTOTYPE((int, OZ_Term, OZ_Term));
+extern OZ_Return OZ_readSelect  _PROTOTYPE((int, OZ_Term, OZ_Term));
+extern OZ_Return OZ_writeSelect _PROTOTYPE((int, OZ_Term, OZ_Term));
 extern void    OZ_deSelect    _PROTOTYPE((int));
 
 /* garbage collection */
@@ -198,8 +221,8 @@ extern int OZ_protect         _PROTOTYPE((OZ_Term *));
 extern int OZ_unprotect       _PROTOTYPE((OZ_Term *));
 
 /* raise exception */
-
-OZ_Bool OZ_raise	      _PROTOTYPE((OZ_Term));
+extern OZ_Return OZ_typeError   _PROTOTYPE((int pos,char *type));
+extern OZ_Return OZ_raise	    _PROTOTYPE((OZ_Term));
 
 /* Suspending builtins */
 
@@ -215,9 +238,16 @@ void       OZ_addThread       _PROTOTYPE((OZ_Term, OZ_Thread));
 /* suspend self */
 #define OZ_makeSelfThread()   OZ_makeThread(OZ_self,OZ_args,OZ_arity)
 
-OZ_Bool OZ_suspendOnVar  _PROTOTYPE((OZ_Term));
-OZ_Bool OZ_suspendOnVar2 _PROTOTYPE((OZ_Term,OZ_Term));
-OZ_Bool OZ_suspendOnVar3 _PROTOTYPE((OZ_Term,OZ_Term,OZ_Term));
+void OZ_suspendOnInternal  _PROTOTYPE((OZ_Term));
+void OZ_suspendOnInternal2 _PROTOTYPE((OZ_Term,OZ_Term));
+void OZ_suspendOnInternal3 _PROTOTYPE((OZ_Term,OZ_Term,OZ_Term));
+
+#define OZ_suspendOn(t1) \
+   { OZ_suspendOnInternal(t1); return SUSPEND; }
+#define OZ_suspendOn2(t1,t2) \
+   { OZ_suspendOnInternal2(t1,t2); return SUSPEND; }
+#define OZ_suspendOn3(t1,t2,t3) \
+   { OZ_suspendOnInternal3(t1,t2,t3); return SUSPEND; }
 
 /* ------------------------------------------------------------------------ *
  * III. macros
@@ -236,15 +266,15 @@ OZ_Bool OZ_suspendOnVar3 _PROTOTYPE((OZ_Term,OZ_Term,OZ_Term));
 #ifdef __cplusplus
 
 #define OZ_C_proc_proto(Name)						      \
-    extern "C" OZ_Bool Name(int OZ_arity, OZ_Term OZ_args[]);
+    extern "C" OZ_Return Name(int OZ_arity, OZ_Term OZ_args[]);
 
 #define OZ_C_proc_header(Name)						      \
-    OZ_Bool Name(int OZ_arity, OZ_Term OZ_args[]) {
+    OZ_Return Name(int OZ_arity, OZ_Term OZ_args[]) {
 
 #else
 
 #define OZ_C_proc_proto(Name) 						      \
-  OZ_Bool Name(OZ_arity, OZ_args)
+  OZ_Return Name(OZ_arity, OZ_args)
 
 #define OZ_C_proc_header(Name)						      \
   int OZ_arity; OZ_Term OZ_args[]; {
@@ -286,7 +316,7 @@ OZ_C_proc_begin(Name,Arity) 				          	      \
 #define OZ_nonvarArg(ARG)						      \
 {									      \
   if (OZ_isVariable(OZ_getCArg(ARG))) {					      \
-    return OZ_suspendOnVar(OZ_getCArg(ARG));				      \
+    OZ_suspendOn(OZ_getCArg(ARG));				      \
   }									      \
 }
 
@@ -300,7 +330,7 @@ OZ_C_proc_begin(Name,Arity) 				          	      \
  }
 
 #define OZ_declareFloatArg(ARG,VAR) 					      \
- OZ_Float VAR; 								      \
+ double VAR; 								      \
  OZ_nonvarArg(ARG); 							      \
  if (! OZ_isFloat(OZ_getCArg(ARG))) {					      \
    return OZ_typeError(ARG,"Float");					      \
@@ -317,6 +347,19 @@ OZ_C_proc_begin(Name,Arity) 				          	      \
    return OZ_typeError(ARG,"Atom");					      \
  } else {								      \
    VAR = OZ_atomToC(OZ_getCArg(ARG));					      \
+ }
+
+#define OZ_declareStringArg(ARG,VAR)		\
+ char *VAR;					\
+ {						\
+   OZ_Return ret = OZ_isString(OZ_getCArg(ARG));	\
+   if (ret == PROCEED) {			\
+     VAR = OZ_stringToC(OZ_getCArg(ARG));	\
+   } else if (ret == FAILED) {			\
+     return OZ_typeError(ARG,"Atom");		\
+   } else {					\
+     return ret;				\
+   }						\
  }
 
 /* ------------------------------------------------------------------------ *
@@ -392,14 +435,14 @@ extern int OZ_getHeapChunkSize       _PROTOTYPE((OZ_Term t));
 extern int OZ_isHeapChunk            _PROTOTYPE((OZ_Term t));
 extern int OZ_isMetaTerm              _PROTOTYPE((OZ_Term t));
 extern int OZ_isSingleValue          _PROTOTYPE((OZ_Term t));
-extern OZ_Bool OZ_constrainMetaTerm   _PROTOTYPE((OZ_Term v,
+extern OZ_Return OZ_constrainMetaTerm   _PROTOTYPE((OZ_Term v,
 						 OZ_MetaType t,
 						 OZ_Term d));
 
 extern int OZ_areIdentVars           _PROTOTYPE((OZ_Term v1,
 						 OZ_Term v2));
 
-extern OZ_Bool OZ_suspendMetaProp    _PROTOTYPE((OZ_CFun, OZ_Term *, int));
+extern OZ_Return OZ_suspendMetaProp    _PROTOTYPE((OZ_CFun, OZ_Term *, int));
 
 #define OZ_MetaPropSuspend OZ_suspendMetaProp(OZ_self, OZ_args, OZ_arity)
 
@@ -407,7 +450,7 @@ extern OZ_Bool OZ_suspendMetaProp    _PROTOTYPE((OZ_CFun, OZ_Term *, int));
 }
 #endif
 
-#endif // __OZ_H__
+#endif /* __OZ_H__ */
 
 
 

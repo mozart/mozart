@@ -26,14 +26,6 @@ AM am;
  * Init and exit AM
  * -------------------------------------------------------------------------*/
 
-int main (int argc,char **argv)
-{
-  am.init(argc,argv);
-  engine();
-  am.exitOz(0);
-  return 0;  // to make CC quiet
-}
-
 static
 void usage(int /* argc */,char **argv) {
   fprintf(stderr,
@@ -122,6 +114,7 @@ extern void bigIntInit(); /* from value.cc */
 
 void AM::init(int argc,char **argv)
 {  
+  Assert(makeTaggedNULL() == 0);
   ozconf.init();
   osInit();
   bigIntInit();
@@ -982,8 +975,8 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
                     Assert(isLTuple(flist));
                     TaggedRef tmplist=flist;
                     while (tmplist!=AtomNil) {
-                        xregs[3]=cons(head(tmplist),xregs[3]);
-                        tmplist=tail(tmplist);
+                        xregs[3]=OZ_cons(OZ_head(tmplist),xregs[3]);
+                        tmplist=OZ_tail(tmplist);
                     }
                 }
             }
@@ -1017,7 +1010,7 @@ void AM::awakeIOVar(TaggedRef var)
   Assert(isToplevel());
   Assert(isCons(var));
 
-  if (OZ_unify(head(var),tail(var)) != PROCEED) {
+  if (OZ_unify(OZ_head(var),OZ_tail(var)) != PROCEED) {
     warning("select or sleep failed");
   }
 }
@@ -1069,16 +1062,16 @@ Bool AM::loadQuery(CompStream *fd)
   return ret;
 }
 
-OZ_Bool AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
+int AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
 {
   if (!isToplevel()) {
     warning("select only on toplevel");
-    return PROCEED;
+    return OK;
   }
   if (osTestSelect(fd,mode)==1) return OZ_unify(l,r);
   ioNodes[fd].readwritepair[mode]=cons(l,r);
   osWatchFD(fd,mode);
-  return PROCEED;
+  return OK;
 }
 
 void AM::deSelect(int fd)
@@ -1478,44 +1471,6 @@ void AM::pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
 }
 
 
-
-/*
- * list processing
- *
- * return length
- *   -1 [suspend, save variable in am.suspendVarList]
- *   -2 [fail]
- */
-
-int isList(OZ_Term l, Bool suspend, Bool checkChar)
-{
-  int len = 0;
-  while (1) {
-    DEREF(l,lPtr,_2);
-    if (isAnyVar(l)) {
-      if (suspend) am.addSuspendVarList(lPtr);
-      return -1;   // suspend
-    }
-    if (isLTuple(l)) {
-      if (checkChar) {
-	OZ_Term h = head(l);
-	DEREF(h,hPtr,_4);
-	if (isAnyVar(h)) {
-	  if (suspend) am.addSuspendVarList(hPtr);
-	  return -1; // suspend
-	}
-	if (!isSmallInt(h)) return -2; // failed
-	int i=smallIntValue(h);
-	if (i<0 || i>255) return -2; // failed
-      }
-      len += 1;
-      l = tail(l);
-      continue;
-    }
-    if (isNil(l)) return len;
-    return -2; // failed
-  }
-}
 
 #ifdef OUTLINE
 #define inline

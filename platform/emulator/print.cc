@@ -140,9 +140,7 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
   case SMALLINT:
     {
       char *s = OZ_intToCString(ref);
-      OZ_normInt(s);
       stream << s;
-      OZ_free(s);
     }
     break;
   case OZCONST:
@@ -163,16 +161,6 @@ void printTerm(TaggedRef t, ostream &stream, int depth = 10, int offset= 0){
   tagged2Stream(t, stream, depth, offset);
 }
     
-
-char *getVarName(TaggedRef v)
-{
-  TaggedRef n = VariableNamer::getName(v);
-  DEREF(n,_1,_2);
-  if (!OZ_isAtom(n)) {
-    n = AtomVoid;
-  }
-  return tagged2Literal(n)->getPrintName();
-}
 
 void SVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 {
@@ -437,17 +425,20 @@ static Bool isWellFormed(char *s)
   return OK;
 }
 
+extern
+char *literalToC(OZ_Term term);
+
 PRINT(Literal)
 {
   CHECKDEPTH;
   if (!isAtom()) {
-    stream << OZ_literalToC(makeTaggedLiteral(this));
+    stream << literalToC(makeTaggedLiteral(this));
     return;
   }
   
   char *s = getPrintName();
   if (isWellFormed(s)) {
-    stream << OZ_atomToC(makeTaggedLiteral(this));
+    stream << s;
   } else {
     ppLiteral(stream,s);
   }
@@ -457,9 +448,7 @@ PRINT(Float)
 {
   CHECKDEPTH;
   char *s = OZ_floatToCString(makeTaggedFloat(this));
-  OZ_normFloat(s);
   stream << s;
-  OZ_free(s);
 }
 
 PRINT(Cell)
@@ -730,7 +719,7 @@ PRINT(ObjectClass)
   fastMethods->print(stream,depth,offset);
   stream << ", printName: ";
   printName->print(stream,depth,offset);
-  stream << ", slowMethods: " << OZ_toC(slowMethods) << ", send: ";
+  stream << ", slowMethods: " << toC(slowMethods) << ", send: ";
   send->print(stream,depth,offset);
   stream << ",";
   if (unfreeFeatures) {
@@ -747,7 +736,7 @@ PRINTLONG(ObjectClass)
   fastMethods->printLong(stream,depth,offset);
   stream << ", printName: ";
   printName->printLong(stream,depth,offset);
-  stream << ", slowMethods: " << OZ_toC(slowMethods) << ", send: ";
+  stream << ", slowMethods: " << toC(slowMethods) << ", send: ";
   send->printLong(stream,depth,offset);
   stream << ")";
 }
@@ -1063,9 +1052,11 @@ PRINT(Thread)
   if ((getFlags ()) & T_S_tag)       stream << 'T';
   if ((getFlags ()) & T_S_stable)    stream << 'W';
   stream << ">]" << endl;
-  
-  stream << indent(offset+2) << "in board: ";
-  getBoardFast()->print(stream, DEC(depth));
+
+  if (board) {
+    stream << indent(offset+2) << "in board: ";
+    getBoardFast()->print(stream, DEC(depth));
+  }
 }
 
 PRINTLONG(Thread)
@@ -1434,7 +1425,7 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 	message("\tBuiltin: {%s", builtinTab.getName((void *) biFun));
 	for(int i=0; i<getRefsArraySize(X); i++) {
 	  printf(" ");    
-	  printf(OZ_toC(X[i]));
+	  printf(toC(X[i]));
 	}
 	printf("}\n");
 	break;
@@ -1443,7 +1434,7 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
     case C_EXCEPT_HANDLER:
       {
 	TaggedRef pred = (TaggedRef) pop();
-	message("\tException handler: %s\n",OZ_toC(pred));
+	message("\tException handler: %s\n",toC(pred));
 	break;
       }
 

@@ -249,14 +249,14 @@ public:
   DebugCode (Bool isInSolveDebug (Board *bb);)
 
   // debugging --> see file ../builtins/debug.C
-  State getValue(TaggedRef feature, TaggedRef out);
-  State setValue(TaggedRef feature, TaggedRef value);
+  int getValue(TaggedRef feature, TaggedRef out);
+  int setValue(TaggedRef feature, TaggedRef value);
 
   void restartThread();
 
   void handleIO();
   Bool loadQuery(CompStream *fd);
-  OZ_Bool select(int fd,int mode,TaggedRef l,TaggedRef r);
+  int select(int fd,int mode,TaggedRef l,TaggedRef r);
   void deSelect(int fd);
   void checkIO();
 

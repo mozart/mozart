@@ -63,7 +63,7 @@ OZ_C_proc_begin(BIspy, 1)
   OZ_declareArg(0,predd);
   DEREF(predd,_1,_2);
   if (!isAbstraction(predd)) {
-    OZ_warning("spy: abstraction expected, got: %s",OZ_toC(predd));
+    OZ_warning("spy: abstraction expected, got: %s",toC(predd));
     return FAILED;
   }
 
@@ -89,7 +89,7 @@ OZ_C_proc_begin(BInospy, 1)
   OZ_declareArg(0,predd);
   DEREF(predd,_1,_2);
   if (!isAbstraction(predd)) {
-    OZ_warning("nospy: abstraction expected, got: %s",OZ_toC(predd));
+    OZ_warning("nospy: abstraction expected, got: %s",toC(predd));
     return FAILED;
   }
 
@@ -395,7 +395,7 @@ void enterCall(Board *b, TaggedRef def, int arity, TaggedRef *args)
 
 
 
-void exitCall(OZ_Bool bol, OzDebug *deb)
+void exitCall(OZ_Return bol, OzDebug *deb)
 { 
   if (skipMode == NO &&
       stepMode == NO &&
@@ -415,7 +415,7 @@ void exitCall(OZ_Bool bol, OzDebug *deb)
   delete deb;
 }
 
-void exitBuiltin(OZ_Bool bol, TaggedRef bi, int arity, TaggedRef *args)
+void exitBuiltin(OZ_Return bol, TaggedRef bi, int arity, TaggedRef *args)
 {
   if (stepMode == OK && am.isSetSFlag(DebugMode)) {
     exitCall(bol, new OzDebug(bi,arity,args));

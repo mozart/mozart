@@ -22,15 +22,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomChunk,
   AtomRecord, AtomAtom, AtomName, AtomUnknown,
   AtomClosed, AtomVariable,
-  NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl,
-  NameGroupVoid,
-  NameTclName,
-  AtomTclOption, AtomTclList, AtomTclPosition,
-  AtomTclQuote, AtomTclString, AtomTclVS,
-  AtomTclBatch,
-  AtomError,
-  AtomDot, AtomTagPrefix, AtomVarPrefix, AtomImagePrefix;
-
+  NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl;
 
 // Some often used constants
 void initLiterals()
@@ -62,22 +54,6 @@ void initLiterals()
 
   NameTrue         = makeTaggedName(NAMETRUE);
   NameFalse        = makeTaggedName(NAMEFALSE);
-  NameGroupVoid    = makeTaggedName(NAMEGROUPVOID);
-
-  NameTclName      = makeTaggedName("TclName");
-  AtomTclOption    = makeTaggedAtom("o");
-  AtomTclList      = makeTaggedAtom("l");
-  AtomTclPosition  = makeTaggedAtom("p");
-  AtomTclQuote     = makeTaggedAtom("q");
-  AtomTclString    = makeTaggedAtom("s");
-  AtomTclVS        = makeTaggedAtom("v");
-  AtomTclBatch     = makeTaggedAtom("b");
-  AtomError        = makeTaggedAtom("error");
-  
-  AtomDot          = makeTaggedAtom(".");
-  AtomTagPrefix    = makeTaggedAtom("t");
-  AtomVarPrefix    = makeTaggedAtom("v");
-  AtomImagePrefix  = makeTaggedAtom("i");
 }
 
 
@@ -104,7 +80,11 @@ Literal::Literal(char *str, Bool flag)
 Literal::Literal (Board *hb)
 {
   printName = "";
-  home = hb;
+  if (hb == am.rootBoard) {
+    home = (Board *) ToPointer(ALLBITS);
+  } else {
+    home = hb;
+  }
   /* gcc bug workaround on linux: this was before
          seqNumber = LiteralCurrentNumber;
          LiteralCurrentNumber += sizeof(Literal);
@@ -315,9 +295,9 @@ TaggedRef insertlist(TaggedRef ins, TaggedRef old)
   CHECK_NONVAR(ins);
 
   while (isCons(ins)) {
-    old = insert(headDeref(ins),old);
+    old = insert(deref(head(ins)),old);
     CHECK_DEREF(old);
-    ins = tailDeref(ins);
+    ins = deref(tail(ins));
     CHECK_NONVAR(ins);
   }
 
@@ -541,12 +521,12 @@ Arity::Arity ( TaggedRef entrylist , Bool isTupleFlag )
   DebugCheckT(numberofentries = 0);
   DebugCheckT(numberofcollisions = 0);
   if (isTupleFlag) {
-    width=lengthOfList(entrylist);
+    width=length(entrylist);
     DebugCheckT(indextable=0);
     DebugCheckT(keytable=0);
     return;
   }
-  size = nextpowerof2((unsigned int)(lengthOfList(entrylist)*1.5));
+  size = nextpowerof2((unsigned int)(length(entrylist)*1.5));
   width = 0;
   hashmask = size-1;
   indextable = ::new int[size];
@@ -748,7 +728,7 @@ TaggedRef SRecord::adjoinList(TaggedRef arityList,TaggedRef proplist)
   Arity *newArity = aritytable.find(newArityList);
 
   SRecord *newrec = SRecord::newSRecord(getLabel(),newArity);
-  Assert(lengthOfList(newArityList) == newrec->getWidth());
+  Assert(length(newArityList) == newrec->getWidth());
 
   TaggedRef ar = getArityList();
   CHECK_DEREF(ar);
@@ -773,7 +753,7 @@ void SRecord::setFeatures(TaggedRef proplist)
     TaggedRef pair = head(proplist);
     DEREF(pair,_3,_4);
     CHECK_NONVAR(pair);
-    proplist = tailDeref(proplist);
+    proplist = deref(tail(proplist));
     CHECK_NONVAR(proplist);
 
     TaggedRef fea = left(pair);
@@ -783,7 +763,7 @@ void SRecord::setFeatures(TaggedRef proplist)
 #ifdef DEBUG_CHECK
     if (!setFeature(fea, right(pair))) {
       error("SRecord::setFeatures: improper feature: %s",
-	    OZ_toC(leftDeref(pair)));
+	    toC(left(pair)));
     }
 #else
     setFeature(fea, right(pair));
@@ -857,3 +837,4 @@ SRecord *makeRecord(TaggedRef t)
 /*===================================================================
  * 
  *=================================================================== */
+

@@ -28,7 +28,7 @@ void GenBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr,
 						  OZ_FiniteDomain & fd)
 {
   if (isSmallInt(*trPtr)) return;
-  TaggedRef si_val = OZ_CToInt(fd.singl());
+  TaggedRef si_val = OZ_int(fd.singl());
   propagate(*trPtr);
   doBind(trPtr, si_val);
   dispose();

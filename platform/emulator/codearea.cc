@@ -206,7 +206,7 @@ void CodeArea::printDef(ProgramCounter PC)
   if (pc != NOCODE) {
     getDebugInfoArgs(pc,file,line,abspos,comment);
     message("\tnext application: file '%s', line %d, offset: %d, comment: %s, PC=%ld)\n",
-	    OZ_toC(file),line,abspos,OZ_toC(comment),PC);
+	    toC(file),line,abspos,toC(comment),PC);
     return;  
   }
 
@@ -224,7 +224,7 @@ void CodeArea::printDef(ProgramCounter PC)
 
   message("\tIn procedure '%s' (File %s, line %d, PC=%ld)\n",
 	  pred ? pred->getPrintName() : "???",
-	  OZ_toC(file),line,PC);
+	  toC(file),line,PC);
 }
 
 ProgramCounter CodeArea::definitionStart(ProgramCounter from)
@@ -381,7 +381,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	getDebugInfoArgs(PC,filename,line,abspos,comment);
 	
 	fprintf(ofile,"(%s, line: %d, file: %s)\n",
-		OZ_toC(comment),line,OZ_toC(filename));
+		toC(comment),line,toC(filename));
 	DISPATCH();
       }
     case PUTLISTX: 
@@ -462,7 +462,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	fprintf (ofile,
 		 "(%d,%s,0x%x,0x%x,%d)\n",
 		 regToInt(getRegArg(PC+1)),
-		 OZ_toC(literal),
+		 toC(literal),
 		 getLabelArg(PC+3),
 		 getLabelArg(PC+4),
 		 getPosIntArg(PC+5));
@@ -539,7 +539,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	fprintf (ofile,
 		 "(X[%d],%s,X[%d])\n",
 		 regToInt(getRegArg(PC+1)),
-		 OZ_toC(literal),
+		 toC(literal),
 		 regToInt(getRegArg(PC+3)));
       }
       DISPATCH();
@@ -550,7 +550,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	TaggedRef literal = getLiteralArg(PC+1);
 	fprintf (ofile,
 		 "(%s,X[%d])\n",
-		 OZ_toC(literal),
+		 toC(literal),
 		 regToInt(getRegArg(PC+2)));
       }
       DISPATCH();
@@ -607,7 +607,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	TaggedRef literal       = ami->methName;
 	int arity               = ami->arity;
 	Reg reg                 = regToInt(getRegArg(PC+2));
-	fprintf(ofile, "(%s,%d,%d)\n", OZ_toC(literal),arity,reg);
+	fprintf(ofile, "(%s,%d,%d)\n", toC(literal),arity,reg);
 	DISPATCH();
       }
     case SENDMSGX:
@@ -620,7 +620,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	TaggedRef literal = getLiteralArg(PC+1);
 	Reg reg        = regToInt(getRegArg(PC+2));
 	int arity      = getPosIntArg(PC+3);
-	fprintf(ofile, "(%s,%d,%d)\n", OZ_toC(literal),reg,arity);
+	fprintf(ofile, "(%s,%d,%d)\n", toC(literal),reg,arity);
 	DISPATCH();
       }
     case CALLX:
@@ -657,7 +657,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	if (b == makeTaggedNULL())
 	  fprintf(ofile, "(NULL)");
 	else
-	  fprintf(ofile, "%s", OZ_toC(b));
+	  fprintf(ofile, "%s", toC(b));
 	fprintf(ofile, ")\n");
       }
       DISPATCH();
@@ -674,7 +674,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	if (b == makeTaggedNULL())
 	  fprintf(ofile, "(NULL)");
 	else
-	  fprintf(ofile, "%s", OZ_toC(b));
+	  fprintf(ofile, "%s", toC(b));
 	fprintf(ofile, ",%d)\n", regToInt(getRegArg(PC+2)));
       }
       DISPATCH();
@@ -729,7 +729,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       {
 	TaggedRef literal = getLiteralArg(PC+1);
 
-	fprintf(ofile, "(%s)\n", OZ_toC(literal));
+	fprintf(ofile, "(%s)\n", toC(literal));
       }
       DISPATCH();
     case DEFINITION:
@@ -744,7 +744,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
 	fprintf(ofile, "(X%d,0x%x,%s,%s,%d,[",reg,next,
 		pred ? pred->getPrintName() : "(NULL)",
-		OZ_toC(file), line);
+		toC(file), line);
 
 	AssRegArray &list = pred->gRegs;
 	
@@ -771,7 +771,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	TaggedRef literal = getLiteralArg(PC+1);
 	int n = getPosIntArg(PC+2);
 
-	fprintf(ofile, "(%s,%i,%d)\n", OZ_toC(literal),
+	fprintf(ofile, "(%s,%i,%d)\n", toC(literal),
 		 n, regToInt(getRegArg(PC+3)));
       }
       DISPATCH();
@@ -785,7 +785,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       {
 	TaggedRef literal = getLiteralArg(PC+1);
 
-	fprintf(ofile, "(%s,%d)\n", OZ_toC(literal),
+	fprintf(ofile, "(%s,%d)\n", toC(literal),
 		 regToInt(getRegArg(PC+2)));
       }
       DISPATCH();
@@ -797,7 +797,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       {
 	TaggedRef literal = getLiteralArg(PC+2);
 
-	fprintf(ofile, "(%s,%d)\n", OZ_toC(literal),
+	fprintf(ofile, "(%s,%d)\n", toC(literal),
 		 regToInt(getRegArg(PC+1)));
       }
       DISPATCH();

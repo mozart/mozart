@@ -139,7 +139,7 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	  case TRUE + 2 * TRUE: // var and term are local
 	    { 
 	      if (intsct != -1) {
-		TaggedRef int_var = OZ_CToInt(intsct);
+		TaggedRef int_var = OZ_int(intsct);
 		termvar->propagate(term, fd_det, pc_cv_unif);
 		propagate(var, pc_cv_unif);
 		doBind(vPtr, int_var);
@@ -165,7 +165,7 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	    case TRUE + 2 * FALSE: // var is local and term is global
 	      {
 		if (intsct != -1) {
-		  TaggedRef int_var = OZ_CToInt(intsct);
+		  TaggedRef int_var = OZ_int(intsct);
 		  termvar->propagate(term, fd_det, pc_cv_unif);
 		  propagate(var, pc_cv_unif);
 		  doBind(vPtr, int_var);
@@ -183,7 +183,7 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	    case FALSE + 2 * TRUE: // var is global and term is local
 	      {
 		if(intsct != -1) {
-		  TaggedRef int_term = OZ_CToInt(intsct);
+		  TaggedRef int_term = OZ_int(intsct);
 		  propagate(var, pc_cv_unif);
 		  termvar->propagate(term, fd_det, pc_cv_unif);
 		  doBind(tPtr, int_term);
@@ -202,7 +202,7 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	    case FALSE + 2 * FALSE: // var and term is global
 	      {
 		if (intsct != -1){
-		  TaggedRef int_val = OZ_CToInt(intsct);
+		  TaggedRef int_val = OZ_int(intsct);
 		  if (prop) {
 		    propagate(var, pc_cv_unif);
 		    termvar->propagate(term, fd_det, pc_cv_unif);
