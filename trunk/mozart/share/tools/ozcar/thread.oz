@@ -149,7 +149,7 @@ in
 	    case E then
 	       Stack = {Dget self.ThreadDic I}
 	    in
-	       Gui,rawStatus('Breakpoint reached by thread #' # I)
+	       Gui,rawStatus('Thread #' # I # ' has reached a breakpoint')
 	       {OzcarMessage KnownThread # {ID I}}
 	       {Stack rebuild(true)}
 	    else
