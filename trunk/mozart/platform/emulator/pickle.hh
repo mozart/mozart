@@ -48,39 +48,50 @@ private:
   Bool cc;			// cloneCells;
 
 public:
-  virtual ~Pickler() {}
+  ~Pickler() {}
   void init(Bool ccIn) {
     cc = ccIn;
   }
 
   //
-  virtual void processSmallInt(OZ_Term siTerm);
-  virtual void processFloat(OZ_Term floatTerm);
-  virtual void processLiteral(OZ_Term litTerm);
-  virtual void processExtension(OZ_Term extensionTerm);
-  virtual void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
-  virtual void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
-  virtual void processLock(OZ_Term lockTerm, Tertiary *lockTert);
-  virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
-  virtual void processResource(OZ_Term resTerm, Tertiary *tert);
-  virtual Bool processNoGood(OZ_Term resTerm, Bool trail);
-  virtual void processVar(OZ_Term cv, OZ_Term *varTerm);
-  virtual void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
-  virtual Bool processLTuple(OZ_Term ltupleTerm);
-  virtual Bool processSRecord(OZ_Term srecordTerm);
-  virtual Bool processFSETValue(OZ_Term fsetvalueTerm);
-  virtual Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
-  virtual Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
-  virtual Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
-  virtual Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
-  virtual Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
-  virtual Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
-  virtual Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
-  virtual void processSync();
+  void processSmallInt(OZ_Term siTerm);
+  void processFloat(OZ_Term floatTerm);
+  void processLiteral(OZ_Term litTerm);
+  void processExtension(OZ_Term extensionTerm);
+  void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
+  void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
+  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
+  void processPort(OZ_Term portTerm, Tertiary *portTert);
+  void processResource(OZ_Term resTerm, Tertiary *tert);
+  Bool processNoGood(OZ_Term resTerm, Bool trail);
+  void processVar(OZ_Term cv, OZ_Term *varTerm);
+  void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
+  Bool processLTuple(OZ_Term ltupleTerm);
+  Bool processSRecord(OZ_Term srecordTerm);
+  Bool processFSETValue(OZ_Term fsetvalueTerm);
+  Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
+  Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
+  Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
+  Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
+  Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
+  void processSync();
+
+  //
+  void doit();			// actual processor;
+  //
+  void traverse(OZ_Term t);
+  void resume(Opaque *o);
 
   //
   Bool cloneCells() { return (cc); }
 };
+
+//
+#define	TRAVERSERCLASS	Pickler
+#include "gentraverserLoop.hh"
+#undef	TRAVERSERCLASS
 
 //
 // Extract resources & nogoods from a term into lists;
@@ -97,42 +108,53 @@ private:
 
   //
 public:
-  virtual ~ResourceExcavator() {}
+  ~ResourceExcavator() {}
   void init(Bool ccIn) {
     cc = ccIn;
     resources = nogoods = oz_nil();
   }
 
   //
-  virtual void processSmallInt(OZ_Term siTerm);
-  virtual void processFloat(OZ_Term floatTerm);
-  virtual void processLiteral(OZ_Term litTerm);
-  virtual void processExtension(OZ_Term extensionTerm);
-  virtual void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
-  virtual void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
-  virtual void processLock(OZ_Term lockTerm, Tertiary *lockTert);
-  virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
-  virtual void processResource(OZ_Term resTerm, Tertiary *tert);
-  virtual Bool processNoGood(OZ_Term resTerm, Bool trail);
-  virtual void processVar(OZ_Term cv, OZ_Term *varTerm);
-  virtual void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
-  virtual Bool processLTuple(OZ_Term ltupleTerm);
-  virtual Bool processSRecord(OZ_Term srecordTerm);
-  virtual Bool processFSETValue(OZ_Term fsetvalueTerm);
-  virtual Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
-  virtual Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
-  virtual Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
-  virtual Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
-  virtual Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
-  virtual Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
-  virtual Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
-  virtual void processSync();
+  void processSmallInt(OZ_Term siTerm);
+  void processFloat(OZ_Term floatTerm);
+  void processLiteral(OZ_Term litTerm);
+  void processExtension(OZ_Term extensionTerm);
+  void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
+  void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
+  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
+  void processPort(OZ_Term portTerm, Tertiary *portTert);
+  void processResource(OZ_Term resTerm, Tertiary *tert);
+  Bool processNoGood(OZ_Term resTerm, Bool trail);
+  void processVar(OZ_Term cv, OZ_Term *varTerm);
+  void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
+  Bool processLTuple(OZ_Term ltupleTerm);
+  Bool processSRecord(OZ_Term srecordTerm);
+  Bool processFSETValue(OZ_Term fsetvalueTerm);
+  Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
+  Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
+  Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
+  Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
+  Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
+  void processSync();
+
+  //
+  void doit();			// actual processor;
+  //
+  void traverse(OZ_Term t);
+  void resume(Opaque *o);
 
   // (from former MarshalerBuffer's 'visit()' business;)
   Bool cloneCells() { return (cc); }
   OZ_Term getResources()      { return (resources); }
   OZ_Term getNoGoods()        { return (nogoods); }
 };
+
+//
+#define	TRAVERSERCLASS	ResourceExcavator
+#include "gentraverserLoop.hh"
+#undef	TRAVERSERCLASS
 
 //
 // Blocking factor for binary areas: how many Oz values a binary area

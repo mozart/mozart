@@ -318,39 +318,44 @@ private:
   // Instead, a pool of standard 'DPMarshaler's is kept.
   Bool doToplevel;
 #if defined(DEBUG_CHECK)
-  OZ_Term mValue;
   MsgTermSnapshotImpl *mts;
 #endif
 
   //
 public:
   DPMarshaler() : doToplevel(FALSE) {}
+  ~DPMarshaler() {}
 
   //
-  virtual ~DPMarshaler() {}
-  virtual void processSmallInt(OZ_Term siTerm);
-  virtual void processFloat(OZ_Term floatTerm);
-  virtual void processLiteral(OZ_Term litTerm);
-  virtual void processExtension(OZ_Term extensionTerm);
-  virtual void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
-  virtual void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
-  virtual Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
-  virtual void processLock(OZ_Term lockTerm, Tertiary *lockTert);
-  virtual Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
-  virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
-  virtual void processResource(OZ_Term resTerm, Tertiary *tert);
-  virtual Bool processNoGood(OZ_Term resTerm, Bool trail);
-  virtual void processVar(OZ_Term cv, OZ_Term *varTerm);
-  virtual void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
-  virtual Bool processLTuple(OZ_Term ltupleTerm);
-  virtual Bool processSRecord(OZ_Term srecordTerm);
-  virtual Bool processFSETValue(OZ_Term fsetvalueTerm);
-  virtual Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
-  virtual Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
-  virtual Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
-  virtual Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
-  virtual Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
-  virtual void processSync();
+  void processSmallInt(OZ_Term siTerm);
+  void processFloat(OZ_Term floatTerm);
+  void processLiteral(OZ_Term litTerm);
+  void processExtension(OZ_Term extensionTerm);
+  void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
+  void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
+  Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
+  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  void processPort(OZ_Term portTerm, Tertiary *portTert);
+  void processResource(OZ_Term resTerm, Tertiary *tert);
+  Bool processNoGood(OZ_Term resTerm, Bool trail);
+  void processVar(OZ_Term cv, OZ_Term *varTerm);
+  void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
+  Bool processLTuple(OZ_Term ltupleTerm);
+  Bool processSRecord(OZ_Term srecordTerm);
+  Bool processFSETValue(OZ_Term fsetvalueTerm);
+  Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
+  Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
+  Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
+  Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
+  Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
+  void processSync();
+
+  //
+  void doit();			// actual processor;
+  //
+  void traverse(OZ_Term t);
+  void resume(Opaque *o);
 
   //
   // Support for lazy protocols: next marshaling will generate a full
@@ -360,10 +365,6 @@ public:
 
   //
 #if defined(DEBUG_CHECK)
-  void traverse(OZ_Term t) {
-    mValue = t;
-    GenTraverser::traverse(t);
-  }
   void prepareTraversing(Opaque *o, MsgTermSnapshot *mtsIn) {
     mts = (MsgTermSnapshotImpl *) mtsIn;
     GenTraverser::prepareTraversing(o);
@@ -376,6 +377,12 @@ private:
   Bool marshalObjectStub(OZ_Term objTerm, ConstTerm *objConst);
   Bool marshalFullObject(OZ_Term objTerm, ConstTerm *objConst);
 };
+
+//
+#define	TRAVERSERCLASS	DPMarshaler
+#include "gentraverserLoop.hh"
+#undef	TRAVERSERCLASS
+
 
 //
 // Extract variables from a term into a list (former '::digOutVars()'
@@ -391,33 +398,39 @@ private:
 
   //
 public:
-  virtual ~VariableExcavator() {}
+  ~VariableExcavator() {}
   void init(Bool full) { vars = oz_nil(); doToplevel = full; }
 
   //
-  virtual void processSmallInt(OZ_Term siTerm);
-  virtual void processFloat(OZ_Term floatTerm);
-  virtual void processLiteral(OZ_Term litTerm);
-  virtual void processExtension(OZ_Term extensionTerm);
-  virtual void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
-  virtual void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
-  virtual void processLock(OZ_Term lockTerm, Tertiary *lockTert);
-  virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
-  virtual void processResource(OZ_Term resTerm, Tertiary *tert);
-  virtual Bool processNoGood(OZ_Term resTerm, Bool trail);
-  virtual void processVar(OZ_Term cv, OZ_Term *varTerm);
-  virtual void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
-  virtual Bool processLTuple(OZ_Term ltupleTerm);
-  virtual Bool processSRecord(OZ_Term srecordTerm);
-  virtual Bool processFSETValue(OZ_Term fsetvalueTerm);
-  virtual Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
-  virtual Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
-  virtual Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
-  virtual Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
-  virtual Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
-  virtual Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
-  virtual Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
-  virtual void processSync();
+  void processSmallInt(OZ_Term siTerm);
+  void processFloat(OZ_Term floatTerm);
+  void processLiteral(OZ_Term litTerm);
+  void processExtension(OZ_Term extensionTerm);
+  void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
+  void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
+  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
+  void processPort(OZ_Term portTerm, Tertiary *portTert);
+  void processResource(OZ_Term resTerm, Tertiary *tert);
+  Bool processNoGood(OZ_Term resTerm, Bool trail);
+  void processVar(OZ_Term cv, OZ_Term *varTerm);
+  void processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber);
+  Bool processLTuple(OZ_Term ltupleTerm);
+  Bool processSRecord(OZ_Term srecordTerm);
+  Bool processFSETValue(OZ_Term fsetvalueTerm);
+  Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
+  Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
+  Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
+  Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
+  Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
+  void processSync();
+
+  //
+  void doit();			// actual processor;
+  //
+  void traverse(OZ_Term t);
+  void resume(Opaque *o);
 
   //
   // This guy is capable of re-mapping the DPMarshaler's task
@@ -431,6 +444,11 @@ public:
   //
   OZ_Term getVars()      { return (vars); }
 };
+
+//
+#define	TRAVERSERCLASS	VariableExcavator
+#include "gentraverserLoop.hh"
+#undef	TRAVERSERCLASS
 
 
 //
@@ -463,9 +481,8 @@ OZ_Term extractVars(OZ_Term in, Bool full)
 //  OZ_Term extractVars(DPMarshaler *dpm)
 //  {
 //    ve.init();
-//    ve.prepareTraversing((Opaque *) 0);
 //    ve.copyStack(dpm);
-//    ve.traverse();
+//    ve.resume((Opaque *) 0);
 //    ve.finishTraversing();
 //    return (ve.getVars());
 //  }
