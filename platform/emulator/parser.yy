@@ -15,6 +15,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+#define YYDEBUG 1
+
 #ifdef WINDOWS
 #include <malloc.h>
 #undef SP_ERROR
@@ -232,8 +234,6 @@ static TermNode *terms[DEPTH];
 static CTerm decls[DEPTH];
 
 %}
-
-%token_table
 
 %union {
   CTerm t;
