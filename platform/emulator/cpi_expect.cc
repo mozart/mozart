@@ -169,7 +169,7 @@ OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t,
     
     addSpawn(def, w, tptr);
     return expectProceed(1, 1);
-  } else if (oz_isFree(t)) {
+  } else if (oz_isNonKinded(t)) {
     addSuspend(def, w, tptr);
     return expectSuspend(1, 0);
   }
@@ -207,7 +207,7 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
     level = 3;
   }
 
-  if (oz_isFree(descr)) {
+  if (oz_isNonKinded(descr)) {
     addSuspend(descr_ptr);
     return expectSuspend(1, 0);
   } else if (isPosSmallFDInt(descr) && (level >= 1)) { // (1)
@@ -258,7 +258,7 @@ OZ_expect_t OZ_Expect::expectIntVar(OZ_Term t, OZ_FDPropState ps)
   } else if (isGenBoolVar(t, ttag) || isGenFDVar(t, ttag)) {
     addSpawn(ps, tptr);
     return expectProceed(1, 1);
-  } else if (oz_isFree(t)) {
+  } else if (oz_isNonKinded(t)) {
     addSuspend(ps, tptr);
     return expectSuspend(1, 0);
   }
@@ -309,7 +309,7 @@ OZ_expect_t OZ_Expect::_expectFSetDescr(OZ_Term descr, int level)
 {
   DEREF(descr, descr_ptr, descr_tag);
   
-  if (oz_isFree(descr)) {
+  if (oz_isNonKinded(descr)) {
     addSuspend(descr_ptr);
     return expectSuspend(1, 0);
   } else if (isPosSmallSetInt(descr) && (level == 1 || level == 2)) { // (1)
@@ -362,7 +362,7 @@ OZ_expect_t OZ_Expect::expectFSetVar(OZ_Term t, OZ_FSetPropState ps)
   } else if (isGenFSetVar(t, ttag)) {
     addSpawn(ps, tptr);
     return expectProceed(1, 1);
-  } else if (oz_isFree(t)) {
+  } else if (oz_isNonKinded(t)) {
     addSuspend(ps, tptr);
     return expectSuspend(1, 0);
   }
@@ -406,7 +406,7 @@ OZ_expect_t OZ_Expect::expectRecordVar(OZ_Term t)
   } else if (isGenOFSVar(t, ttag)) {
     addSpawn(fd_prop_any, tptr);
     return expectProceed(1, 1);
-  } else if (oz_isFree(t)) {
+  } else if (oz_isNonKinded(t)) {
     addSuspend(tptr);
     return expectSuspend(1, 0);
   }
@@ -634,7 +634,7 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
 
   DEREF(st, stptr, sttag);
 
-  if (oz_isFree(st)) {
+  if (oz_isNonKinded(st)) {
     addSpawn(fd_prop_any, stptr);
     return expectProceed(1, 1);
   } else if (oz_isNil(st)) { 
@@ -651,7 +651,7 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
     
     if (oz_isNil(st)) {
       return expectProceed(len, len);
-    } else if (oz_isFree(st)) {
+    } else if (oz_isNonKinded(st)) {
       addSpawn(fd_prop_any, stptr);
       return expectProceed(len, len);
     } 
@@ -703,7 +703,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     TypeOfGenCVariable type = staticSuspendVars[i].expected_type;
 
     Assert(type == FDVariable || type == FSetVariable || type == CtVariable);
- 
+
     if (oz_isFree(v)) {
 
       if (type == FDVariable) {
@@ -718,6 +718,8 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
 			    staticSuspendVars[i].state.ct.def);
 
       }
+    } else { 
+      Assert(oz_isKinded(v));
     }
   }
 
