@@ -460,14 +460,18 @@ void updateExtSuspension(Board *varHome, Suspension *susp)
 
 Bool AM::setExtSuspension (Board *varHome, Suspension *susp)
 {
-  Board *bb = currentSolveBoard;
+  Board *bb = currentBoard;
   Bool wasFound = NO;
-  while (bb != (Board *) NULL && bb != varHome) {
+  DebugCheck ((varHome->isCommitted () == OK),
+	      error ("committed board as the varHome in AM::setExtSuspension"));
+  while (bb != varHome) {
     DebugCheck ((bb == rootBoard),
 		error ("the root board is reached in AM::setExtSuspensions"));
-    bb->addSuspension (susp);
-    wasFound = OK;
-    bb = (bb->getParentBoard ())->getSolveBoard ();
+    if (bb->isSolve () == OK) {
+      bb->addSuspension (susp);
+      wasFound = OK;
+    }
+    bb = (bb->getParentBoard ())->getBoardDeref ();
   }
   return (wasFound);
 }
