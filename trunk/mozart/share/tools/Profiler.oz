@@ -5,15 +5,17 @@ declare
    NewProfiler
 in
 
-proc
+fun
 \ifdef NEWCOMPILER
    instantiate
 \endif
-   {NewProfiler
-      Standard
-      Compile Tk TkTools Browse ?Profiler}
-\insert 'Standard.env'
-   = Standard
+   {NewProfiler IMPORT}
+   \insert 'Standard.env'
+      = IMPORT.'Standard'
+   \insert 'WP.env'
+      = IMPORT.'WP'
+   \insert 'Browser.env'
+      = IMPORT.'Browser'
 
    \insert 'profiler/prof-config'
    \insert 'profiler/prof-prelude'
@@ -24,8 +26,10 @@ proc
    \insert 'profiler/prof-help'
    \insert 'profiler/prof-gui'
 
-in
-
    \insert 'profiler/profiler'
 
+in
+
+   \insert 'Profiler.env'
+   
 end

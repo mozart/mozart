@@ -14,10 +14,14 @@ fun
 \ifdef NEWCOMPILER
    instantiate
 \endif
-   {NewExplorer Standard Tk TkTools Browse}
+   {NewExplorer IMPORT}
 
-\insert 'Standard.env'
-   = Standard
+   \insert 'Standard.env'
+       = IMPORT.'Standard'
+   \insert 'WP.env'
+       = IMPORT.'WP'
+   \insert 'Browser.env'
+       = IMPORT.'Browser'
    
    \insert 'explorer/main.oz'
 
