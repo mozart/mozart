@@ -525,11 +525,18 @@
         </Tr>
         <Tr>
           <Td/<<int.max>>/
-          <Td/yes/
+          <Td/no/
           <Td/<<Int>>/
           <Td/The largest integer that can be represented efficiently
           (that is, by a single word in memory)
           by the engine./
+        </Tr>
+        <Tr>
+          <Td/<<bytecode.xregisters>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/The number of X&nbsp;registers this engine is able to handle
+          in the bytecode./
         </Tr>
       </Table>
     </P>
