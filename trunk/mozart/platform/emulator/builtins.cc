@@ -6468,9 +6468,26 @@ NEW_DECLAREBI_USEINLINEREL1(BIooGetLock,ooGetLockInline)
 
 
 /********************************************************************
- * Exceptions
+ * Functions
  ******************************************************************** */
 
+OZ_BI_define(BIfunReturn,1,0) 
+{
+  warning("funReturn should never be called");
+  return PROCEED;
+} OZ_BI_end
+
+
+OZ_BI_define(BIgetReturn,0,1) 
+{
+  warning("getReturn should never be called");
+  return PROCEED;
+} OZ_BI_end
+
+
+/********************************************************************
+ * Exceptions
+ ******************************************************************** */
 OZ_BI_define(BIsetDefaultExceptionHandler,1,0)
 {
   oz_declareNonvarIN(0,hdl);

@@ -160,6 +160,19 @@ Case(SETSELF)
      }
 
 
+CaseOneReg(GETRETURN,``
+     {
+       Reg1(getRegArg(PC+1)) = GetFunReturn();
+       DISPATCH(2);
+     }'')
+
+CaseOneReg(FUNRETURN,``
+     {
+       SetFunReturn(Reg1(getRegArg(PC+1)));
+       goto LBLpopTaskNoPreempt;
+     }'')
+
+
 CaseOneRegGImpossible(CREATEVARIABLE,
    ``{
        ProfileCode(if(&(Reg1(0))==&Y[0]){COUNT1(sizeStackVars,sizeof(TaggedRef));});

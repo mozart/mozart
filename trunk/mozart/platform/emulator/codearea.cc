@@ -494,6 +494,9 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case PUTLISTX:
     case PUTLISTY:
     case PUTLISTG:
+    case FUNRETURNX:
+    case FUNRETURNY:
+    case FUNRETURNG:
     case SETVALUEX:
     case SETVALUEY:
     case SETVALUEG:
@@ -512,6 +515,9 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case UNIFYVARIABLEX:
     case UNIFYVARIABLEY:
     case UNIFYVARIABLEG:
+    case GETRETURNX:
+    case GETRETURNY:
+    case GETRETURNG:
     case CREATEVARIABLEX:
     case CREATEVARIABLEY:
     case CREATEVARIABLEG:
