@@ -69,6 +69,10 @@ public:
 
   int gcFlag;                 // request GC to run
   int gcVerbosity;            // GC verbosity level
+  heapMaxSize;
+  heapMargin;
+  heapIncrement;
+  heapIdleMargin;
 
   char *ozPath;
   char *linkPath;
@@ -154,7 +158,7 @@ public:
 
   void gc(int msgLevel);  // ###
   void doGC();
-  Bool smallGC();
+  Bool idleGC();
 // coping of trees (and terms);
   Board* copyTree (Board* node, Bool *isGround);
 
