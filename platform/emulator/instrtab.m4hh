@@ -36,19 +36,11 @@ define(instruction,
 
 #ifdef AS_CAN_INLINE_OPCODE_MAP
 
-/* trick GCC into believing that we actually need the FAKE_... labels */
-
-#define INSTR(instr) case instr: goto FAKE_##instr;
-switch (MaybeJumpHere) {
-include(EMUDIR/instrDefs.m4)
-default: break;
-}
-#undef INSTR
-
 /* trick GCC into believing that bytecode may actually contain refs
    to the FAKE_... labels - therefore, that, not only are the bytecode
    instruction emulation blocks needed, but that can be reached from
    any DISPATCH point. */
+
 #define INSTR(instr) && FAKE_##instr,
 {
   static void* fakeInstrTable[OZERROR+1] = {
@@ -68,20 +60,21 @@ asm("movl $TRUE_"#instr",%0" : "=m" (*ptr))
 #error platform not supported
 #endif
 
-#define INSTR(instr) \
-  LOAD_LABEL(instr); \
-  ++ptr;
-
-#define INSTR_FINISH }
-
+#define INSTR(instr) LOAD_LABEL(instr); ++ptr;
 static void* instrTable[OZERROR+1];
-{ void** ptr = instrTable;
+{
+   void** ptr = instrTable;
+   include(EMUDIR/instrDefs.m4)
+}
+#undef INSTR
 
 #else /* AS_CAN_INLINE_OPCODE_MAP */
 
 #define INSTR(instr) && TRUE_ ##instr,
-#define INSTR_FINISH 0};
 static void *instrTable[OZERROR+1] = {
+   include(EMUDIR/instrDefs.m4)
+   0};
+#undef INSTR
 
 #endif
 
@@ -91,17 +84,9 @@ static void *instrTable[OZERROR+1] = {
 	__asm mov instrTable[eax], OFFSET instr 	\
 	__asm add eax,4					\
       }
-#define INSTR_FINISH
-
 static void *instrTable[OZERROR+1];
-
-   _asm mov eax,0
+_asm mov eax,0
+include(EMUDIR/instrDefs.m4)
+#undef INSTR
 
 #endif
-
-include(EMUDIR/instrDefs.m4)
-
-INSTR_FINISH
-
-#undef INSTR
-#undef INSTR_FINISH

@@ -409,10 +409,19 @@ void pushContX(TaskStack *stk,
 
 #ifdef AS_CAN_INLINE_OPCODE_MAP
 
-// used to fool gcc into believing that we might actually jump
-// to the FAKE_... labels (see the if (init) { ... } section of engine())
+// The globalFakeInstrTable points to a table in which we have stored
+// the addresses of all FAKE_... labels (see instrtab.m4hh).  This is
+// necessary in order to fool gcc into believing that these labels can
+// be jumped to from any DISPATCH point.
+//
+// Before this, I tried a different alternative using a global int variable
+// MaybeJumpHere and a switch with an explicit jump to the corresponding
+// FAKE_ label for each case.  However, that was not sufficient because gcc
+// was clever enough to infer that these were the only points from which
+// these labels could be reached.  The DISPATCH points didn't really count
+// since (as far as gcc knew), the bytecode could not refer to the FAKE_
+// labels and thus could never jump to them.
 
-int MaybeJumpHere = -1;
 void ** globalFakeInstrTable;
 
 #define REPEAT_FOR_ALIGNMENT(S) S;S;S;S
