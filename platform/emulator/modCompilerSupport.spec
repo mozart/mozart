@@ -28,6 +28,10 @@
 (
     ##* CompilerSupport
 
+    'chunkArity'                => { in  => ['+chunk'],
+				     out => ['+[feature]'],
+				     BI  => BIchunkArity},
+
     'featureLess'		=> { in  => ['+feature','+feature'],
 				     out => ['+bool'],
 				     BI  => BIfeatureLess},

@@ -518,6 +518,25 @@ OZ_BI_define(BIstoreCache,2,0)
  * builtins for the compiler
  ******************************************************************** */
 
+OZ_BI_define(BIchunkArity,1,1)
+{
+  oz_declareNonvarIN(0,ch);
+  if (!oz_isChunk(ch)) {
+    oz_typeError(0,"Chunk");
+  }
+
+  switch (tagged2Const(ch)->getType()) {
+  case Co_Class:
+    OZ_RETURN(tagged2ObjectClass(ch)->getArityList());
+  case Co_Object:
+    OZ_RETURN(tagged2Object(ch)->getArityList());
+  case Co_Chunk:
+    OZ_RETURN(tagged2SChunk(ch)->getArityList());
+  default:
+    OZ_RETURN(oz_nil());
+  }
+} OZ_BI_end
+
 OZ_BI_define(BIfeatureLess,2,1)
 {
   oz_declareNonvarIN(0,f1);
