@@ -131,6 +131,7 @@ in
 	       {OzcarMessage 'breakpoint reached by attached thread ' # I}
 	       Gui,status(M)
 	       {S rebuild(true)}
+	       {S setAtBreakpoint(true)}
 	    else
 	       {OzcarMessage ('`breakpoint\' message of unattached' #
 			      ' thread -- ignoring')}
@@ -185,7 +186,7 @@ in
 	       SkippedProcs  <- {Filter @SkippedProcs fun {$ F} F \= Key end}
 	       {Thread.resume T}
 	    else
-	       Gui,markNode(I runnable) % thread is not running anymore
+	       Gui,markNode(I stopped)  % thread is not running anymore
 	       Gui,markStack(active)    % stack view has up-to-date content
 	       case T == @currentThread then
 		  Stack = {Dictionary.get self.ThreadDic I}
@@ -223,14 +224,11 @@ in
 	    I = {Debug.getId T}
 	 in
 	    case ThreadManager,Exists(I $) then
-	       case {Dbg.checkStopped T} then
-		  Gui,markNode(I runnable)
-		  case T == @currentThread then
-		     {SendEmacs configureBar(runnable)}
-		     %Gui,status('Thread ' # I # ' is runnable again')
-		  else skip end
-	       else
-		  Gui,markNode(I running)
+	       Gui,markNode(I runnable)
+	       case {Dbg.checkStopped T} andthen
+		  T == @currentThread then
+		  {SendEmacs configureBar(runnable)}
+		  %Gui,status('Thread ' # I # ' is runnable again')
 	       end
 	    else
 	       {OzcarMessage
@@ -242,6 +240,7 @@ in
 	 in
 	    case ThreadManager,Exists(I $) then
 	       {OzcarMessage 'exception of attached thread'}
+	       Gui,markNode(I exc)
 	       {{Dictionary.get self.ThreadDic I} printException(X)}
 	    else
 	       Q = {Debug.getParentId T}
@@ -290,6 +289,7 @@ in
 	 {OzcarMessage 'attaching thread ' # I # '/' # Q}
 	 case Exc of exc(X) then   %% exception
 	    Gui,addNode(I Q)
+	    Gui,markNode(I exc)
 	    ThreadManager,switch(I false)
 	    {Stack printException(X)}
 	 else
@@ -434,7 +434,7 @@ in
 	 I     = {Debug.getId T}
 	 Stack = {Dictionary.get self.ThreadDic I}
       in
-	 Gui,markNode(I runnable) % thread is not running anymore
+	 Gui,markNode(I stopped)  % thread is not running anymore
 	 Gui,markStack(active)    % stack view has up-to-date content
 	 {Stack entry(Frame)}
 	 case T == @currentThread then
@@ -442,7 +442,11 @@ in
 	    L = {CondSelect Frame line unit}
 	    C = {CondSelect Frame column unit}
 	 in
-	    {SendEmacs bar(file:F line:L column:C state:runnable)}
+	    if {Stack atBreakpoint($)} then
+	       {SendEmacs bar(file:F line:L column:C state:blocked)}
+	    else
+	       {SendEmacs bar(file:F line:L column:C state:runnable)}
+	    end
 	    {Stack printTop}
 	 else skip end
       end
@@ -520,11 +524,15 @@ in
 	    in
 	       {Stack print}
 	       {Stack getPos(file:?F line:?L column:?C)}
-	       case Exc == nil then
-		  {SendEmacs bar(file:F line:L column:C state:S)}
+	       if Exc == nil then
+		 if {Stack atBreakpoint($)} then
+		    {SendEmacs bar(file:F line:L column:C state:blocked)}
+		 else
+		    {SendEmacs bar(file:F line:L column:C state:S)}
+		 end
 	       else
 		  {SendEmacs bar(file:F line:L column:C state:blocked)}
-		  Gui,status(Exc clear BlockedThreadColor)
+		  Gui,status(Exc clear ExcThreadColor)
 	       end
 	    end
 	 else skip end

@@ -64,21 +64,12 @@ local
       end
    end
 
-   fun {GetColor State}
-      case State
-      of runnable then RunnableThreadColor # RunnableThreadText
-      [] running  then RunningThreadColor  # RunnableThreadText
-      [] blocked  then BlockedThreadColor  # BlockedThreadText
-      [] dead     then DeadThreadColor     # DeadThreadText
-      end
-   end
-
    class Node
       attr
 	 x  : 1                   %% xpos
 	 y  : 1                   %% ypos
 	 r  : false               %% root node?
-	 s  : runnable            %% state
+	 s  : unit                %% state
 	 ct : unit                %% canvas tag
 	 dy : 0                   %% distance to upper sibling
 
@@ -238,9 +229,8 @@ in
       end
 
       meth add(I Q)
-	 %% each new thread is runnable, initially... (hope so?)
 	 lock
-	    nodes <- {New Node init(I Q runnable)} | @nodes
+	    nodes <- {New Node init(I Q stopped#runnable)} | @nodes
 	    Tree,syncCalc
 	 end
       end
@@ -291,17 +281,18 @@ in
 	    LastSelected <- unit
 	    Selected     <- unit
 	 else
-	    CT OldCT N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
+	    CT OldCT OldI
+	    N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
 	 in
 	    case N \= nil then
 	       LastSelected <- @Selected
 	       Selected <- N.1
 	       case @LastSelected \= unit then
-		  node(ct:OldCT ...) = {@LastSelected get($)}
-		  {self tk(itemconfigure OldCT font:ThreadTreeFont)}
+		  node(ct:OldCT i:OldI ...) = {@LastSelected get($)}
+		  {self tk(itemconfigure OldCT text:OldI)}
 	       else skip end
 	       node(ct:CT ...) = {@Selected get($)}
-	       {self tk(itemconfigure CT font:ThreadTreeBoldFont)}
+	       {self tk(itemconfigure CT text:I#' *')}
 	    else
 	       {OzcarError 'attempt to select unknown node ' # I}
 	    end
@@ -309,16 +300,31 @@ in
       end
 
       meth mark(I How)
-	 CT N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
+	 N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
       in
 	 case N == nil then
 	    {OzcarError 'attempt to mark unknown node ' # I}
-	 else
-	    CL = {GetColor How}
-	 in
-	    node(ct:CT ...) = {N.1 get($)}
-	    {self tk(itemconfigure CT fill:CL.1 text:I#CL.2)}
-	    {N.1 setState(How)}
+	 else node(ct:CT s:S ...) = {N.1 get($)} in
+	    case How
+	    of running then
+	       {self tk(itemconfigure CT font:ThreadTreeBoldFont)}
+	       {N.1 setState(How#S.2)}
+	    [] stopped then
+	       {self tk(itemconfigure CT font:ThreadTreeFont)}
+	       {N.1 setState(How#S.2)}
+	    [] runnable then
+	       {self tk(itemconfigure CT fill:RunnableThreadColor)}
+	       {N.1 setState(S.1#How)}
+	    [] blocked then
+	       {self tk(itemconfigure CT fill:BlockedThreadColor)}
+	       {N.1 setState(S.1#How)}
+	    [] exc then
+	       {self tk(itemconfigure CT fill:ExcThreadColor)}
+	       {N.1 setState(S.1#How)}
+	    [] dead then
+	       {self tk(itemconfigure CT fill:DeadThreadColor)}
+	       {N.1 setState(S.1#How)}
+	    end
 	 end
       end
 
@@ -349,19 +355,23 @@ in
 			 width:2 capstyle:projecting fill:TrunkColor)}
 	     end
 
-	     local
-		CL = {GetColor S}
-	     in
-		{self tk(crea text X*SFX Y*SFY
-			 text:   I # CL.2
-			 fill:   CL.1
-			 tags:   CT
-			 anchor: w
-			 font:   case N == Sel then ThreadTreeBoldFont
-				 else               ThreadTreeFont end)}
-		{CT tkBind(event:  '<1>'
-			   action: self # SwitchToThread(I))}
-	     end
+	     {self tk(crea text X*SFX Y*SFY
+		      text:   I # if N == Sel then ' *' else '' end
+		      fill:   case S.2
+			      of runnable then RunnableThreadColor
+			      [] blocked  then BlockedThreadColor
+			      [] exc      then ExcThreadColor
+			      [] dead     then DeadThreadColor
+			      end
+		      font:   if S.1 == running then
+				 ThreadTreeBoldFont
+			      else
+				 ThreadTreeFont
+			      end
+		      tags:   CT
+		      anchor: w)}
+	     {CT tkBind(event:  '<1>'
+			action: self # SwitchToThread(I))}
 	     {N setTag(CT)}
 	  end}
 	 local
