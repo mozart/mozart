@@ -98,7 +98,7 @@ void printBanner()
 
   printf("\n");
 
-#ifdef PROFILE
+#ifdef PROFILE_EMULATOR
   printf("Compiled to support gprof-profiling.\n");
 #ifdef DEBUG_DET
   printf("Deterministic scheduling.\n");
