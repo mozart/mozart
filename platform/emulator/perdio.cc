@@ -322,7 +322,7 @@ Chain * tertiaryGetChain(Tertiary*t){
   return ((LockManager*)t)->getChain();}
 
 inline CellSec* getCellSecFromFrameOrManager(Tertiary *t){
-  if(t->getTertType()==Te_Frame){
+  if(t->isFrame()){
     return ((CellFrame*)t)->getSec();}
   return ((CellManager*)t)->getSec();}
 
@@ -612,6 +612,15 @@ public:
 
   void makeGCMark(){addFlags(PO_GC_MARK);}
   Bool isGCMarked(){ return (getFlags() & PO_GC_MARK); }
+
+  void gcPO(Tertiary *newval) {
+    if (isGCMarked())
+      return;
+    makeGCMark();
+
+    Assert(isTertiary() && !inToSpace(u.tert) && inToSpace(newval));
+    u.tert = newval;
+  }
 
   void gcPO() {
     if (isGCMarked())
@@ -2041,12 +2050,12 @@ int getStateFromLockOrCell(Tertiary*t){
   if(t->getType()==Co_Cell){
     if(t->isManager()){
       return ((CellManager*)t)->getSec()->getState();}
-    Assert(t->getTertType()==Te_Frame);
+    Assert(t->isFrame());
     return ((CellFrame*)t)->getSec()->getState();}
   Assert(t->getType()==Co_Lock);
   if(t->isManager()){
     return ((LockManager*)t)->getSec()->getState();}
-  Assert(t->getTertType()==Te_Frame);
+  Assert(t->isFrame());
   return ((LockFrame*)t)->getSec()->getState();}
 
 /* ******************************************************************* */
@@ -2189,7 +2198,7 @@ inline Bool tokenLostCheckManager(Tertiary *t){
 /* ******************************************************************* */
 
 Tertiary* getOtherTertFromObj(Tertiary* o, Tertiary* lockORcell){
-  Assert(o->getTertType()!=Te_Local);
+  Assert(!o->isLocal());
   Assert(o->getType()==Co_Object);
   Object *object = (Object *) o;
   if(object->getLock()==NULL && object->getLock()==lockORcell)
@@ -2320,7 +2329,7 @@ void Tertiary::gcProxy(){
   return;}
 
 void Tertiary::gcManager(){
-  Assert(getTertType()!=Te_Frame);
+  Assert(!isFrame());
   int i=getIndex();
   OwnerEntry *oe=OT->getOwner(i);
   if(oe->isGCMarked()){
@@ -2328,8 +2337,7 @@ void Tertiary::gcManager(){
     return;
   }
   PD((GC,"relocate owner:%d old%x new %x",i,oe,this));
-  //  oe->mkTertiary(this,oe->getFlags());
-  oe->gcPO();}
+  oe->gcPO(this);}
 
 void gcPendThread(PendThread **pt){
   PendThread *tmp;
@@ -2406,8 +2414,7 @@ void CellManager::gcCellManager(){
   int i=getIndex();
   PD((GC,"relocate cellManager:%d",i));
   OwnerEntry* oe=OT->getOwner(i);
-  //  oe->mkTertiary(this,oe->getFlags());
-  oe->gcPO();
+  oe->gcPO(this);
   CellFrame *cf=(CellFrame*)this;
   sec->gcCellSec();}
 
@@ -2432,38 +2439,8 @@ void LockManager::gcLockManager(){
   int i=getIndex();
   PD((GC,"relocate lockManager:%d",i));
   OwnerEntry* oe=OT->getOwner(i);
-  //  oe->mkTertiary(this,oe->getFlags());
-  oe->gcPO();
+  oe->gcPO(this);
   sec->gcLockSec();}
-
-void Tertiary::gcTertiary()
-{
-  Assert(0);
-
-  switch (getTertType()) {
-  case Te_Local:
-    return;
-  case Te_Proxy:
-    {
-      int i=getIndex();
-      BorrowEntry *be = borrowTable->getBorrow(i);
-      be->makeGCMark();
-      PD((GC,"relocate borrow:%d old %x new %x",i,be,this));
-      be->mkTertiary(this,be->getFlags());
-      return;
-    }
-  case Te_Manager:
-    {
-      int i=getIndex();
-      OwnerEntry *oe=OT->getOwner(i);
-      PD((GC,"relocate owner:%d old%x new %x",i,oe,this));
-      oe->mkTertiary(this,oe->getFlags());
-      return;
-    }
-  case Te_Frame:
-    Assert(0);
-  }
-}
 
 /*--------------------*/
 
@@ -2540,7 +2517,7 @@ void BorrowTable::gcBorrowTableRoots()
 }
 
 void BorrowEntry::gcBorrowUnusedFrame(int i) {
-  if(isTertiary() && getTertiary()->getTertType()==Te_Frame)
+  if(isTertiary() && getTertiary()->isFrame())
     {u.tert= (Tertiary*) u.tert->gcConstTermSpec();}}
 
 void BorrowTable::gcBorrowTableUnusedFrames()
@@ -2550,7 +2527,7 @@ void BorrowTable::gcBorrowTableUnusedFrames()
   for(i=0;i<size;i++) {
     BorrowEntry *b=getBorrow(i);
     if(!b->isFree()){
-      Assert((b->isVar()) || (b->getTertiary()->getTertType()==Te_Frame)
+      Assert((b->isVar()) || (b->getTertiary()->isFrame())
              || (b->getTertiary()->isProxy()));
       if(!(b->isGCMarked())) {b->gcBorrowUnusedFrame(i);}}}
 }
@@ -2562,7 +2539,7 @@ void BorrowTable::gcFrameToProxy(){
     BorrowEntry *b=getBorrow(i);
     if((!b->isFree()) && (!b->isVar())){
       Tertiary *t=b->getTertiary();
-      if(t->getTertType()==Te_Frame) {
+      if(t->isFrame()) {
         if((t->getType()==Co_Cell) && ((CellFrame*)t)->getState()==Cell_Lock_Invalid){
           ((CellFrame*)t)->convertToProxy();}
         else{
@@ -2606,7 +2583,7 @@ void BorrowTable::gcBorrowTableFinal()
         b->removeGCMark(); // marks owner site too
         PD((GC,"BT b:%d mark tertiary found",i));
 
-        if(t->getTertType()==Te_Frame) {
+        if(t->isFrame()) {
           switch(t->getType()){
           case Co_Cell:{
             CellFrame *cf=(CellFrame *)t;
@@ -3104,12 +3081,12 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
       break;
     case DIF_CELL:{
       Tertiary *t=ob->getTertiary(); // mm2: bug: ob is 0 if I am the owner
-      if((t->getType()==Co_Cell) && (t->getTertType()==Te_Frame)){
+      if((t->getType()==Co_Cell) && (t->isFrame())){
         ((CellFrame *)t)->resetDumpBit();}
       break;}
     case DIF_LOCK:{
       Tertiary *t=ob->getTertiary();
-      if((t->getType()==Co_Lock) && (t->getTertType()==Te_Frame)){
+      if((t->getType()==Co_Lock) && (t->isFrame())){
         ((LockFrame *)t)->resetDumpBit();}
       break;}
     case DIF_OBJECT:
@@ -3745,7 +3722,7 @@ Bool Tertiary::startHandlerPort(Thread* th, Tertiary* t, TaggedRef msg, EntityCo
         w->invokeHandler(ec,this,th,0);}
       else{
         w->invokeWatcher(ec,this);}
-       if(!w->xxisPersistent()){
+       if(!w->isPersistent()){
          releaseWatcher(w);
          *base=w->next;
          w=*base;}
@@ -4155,7 +4132,7 @@ void cellReceiveDump(CellManager *cm,Site *fromS){
 
 void cellReceiveForward(BorrowEntry *be,Site *toS,Site* mS,int mI){
   CellFrame *cf=(CellFrame*) be->getTertiary();
-  Assert(cf->getTertType()==Te_Frame);
+  Assert(cf->isFrame());
   Assert(cf->getType()==Co_Cell);
   CellSec *sec=cf->getSec();
   TaggedRef val;
@@ -4182,7 +4159,7 @@ void cellReceiveContentsManager(OwnerEntry *oe,TaggedRef val,int mI){
 void cellReceiveContentsFrame(BorrowEntry *be,TaggedRef val,Site *mS,int mI){
   CellFrame *cf=(CellFrame*) be->getTertiary();
   Assert(cf->getType()==Co_Cell);
-  Assert(cf->getTertType()==Te_Frame);
+  Assert(cf->isFrame());
   if(tokenLostCheckProxy(cf)) return; // ERROR-HOOK ATTENTION
   be->getOneMsgCredit();
   chainSendAck(mS,mI);
@@ -4195,7 +4172,7 @@ void cellReceiveContentsFrame(BorrowEntry *be,TaggedRef val,Site *mS,int mI){
 
 void cellReceiveRemoteRead(BorrowEntry *be,Site* mS,int mI,Site* fS){
   Tertiary* t=be->getTertiary();
-  Assert(t->getTertType()==Te_Frame);
+  Assert(t->isFrame());
   Assert(t->getType()==Co_Cell);
   CellSec *sec=((CellFrame*)t)->getSec();
   be->getOneMsgCredit();
@@ -4218,7 +4195,7 @@ void cellReceiveRead(OwnerEntry *oe,Site* fS){
   cellSendRemoteRead(ch->getCurrent(),mySite,cm->getIndex(),fS);}
 
 void cellReceiveReadAns(Tertiary* t,TaggedRef val){
-  Assert((t->isManager())|| (t->getTertType()==Te_Frame));
+  Assert((t->isManager())|| (t->isFrame()));
   getCellSecFromFrameOrManager(t)->secReceiveReadAns(val);}
 
 /**********************************************************************/
@@ -4354,7 +4331,7 @@ OZ_Return CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,Thread* th,Ex
     Assert(isRealThread(th) || th==DummyThread);
     ret = pendThreadAddToEnd(&pending,th,old,nw,exKind,c->getBoardInternal());
     int index=c->getIndex();
-    if(c->getTertType()==Te_Frame){
+    if(c->isFrame()){
       BorrowEntry* be=BT->getBorrow(index);
       be->getOneMsgCredit();
       cellLockSendGet(be);
@@ -4419,7 +4396,7 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
 
   if (!ask)
     goto exit;
-  if(c->getTertType()==Te_Frame) {
+  if(c->isFrame()) {
     BorrowEntry *be=BT->getBorrow(index);
     be->getOneMsgCredit();
     cellSendRead(be,mySite);
@@ -4772,7 +4749,7 @@ void lockReceiveTokenManager(OwnerEntry* oe,int mI){
 void lockReceiveTokenFrame(BorrowEntry* be, Site *mS,int mI){
   LockFrame *lf=(LockFrame*) be->getTertiary();
   Assert(lf->getType()==Co_Lock);
-  Assert(lf->getTertType()==Te_Frame);
+  Assert(lf->isFrame());
   if(tokenLostCheckProxy(lf)) return; // ERROR-HOOK ATTENTION
   be->getOneMsgCredit();
   chainSendAck(mS,mI);
@@ -4785,7 +4762,7 @@ void lockReceiveTokenFrame(BorrowEntry* be, Site *mS,int mI){
 void lockReceiveForward(BorrowEntry *be,Site *toS,Site* mS,int mI){
   LockFrame *lf= (LockFrame*) be->getTertiary();
   lf->resetDumpBit();
-  Assert(lf->getTertType()==Te_Frame);
+  Assert(lf->isFrame());
   Assert(lf->getType()==Co_Lock);
   LockSec* sec=lf->getSec();
   if(!sec->secForward(toS)) return;
@@ -4812,7 +4789,7 @@ void LockProxy::lock(Thread *t){
 
 void secLockToNext(LockSec* sec,Tertiary* t,Site* toS){
   int index=t->getIndex();
-  if(t->getTertType()==Te_Frame){
+  if(t->isFrame()){
     BorrowEntry *be=BT->getBorrow(index);
     be->getOneMsgCredit();
     NetAddress *na=be->getNetAddress();
@@ -4826,7 +4803,7 @@ void secLockToNext(LockSec* sec,Tertiary* t,Site* toS){
 void secLockGet(LockSec* sec,Tertiary* t,Thread* th){
   int index=t->getIndex();
   sec->makeRequested();
-  if(t->getTertType()==Te_Frame){
+  if(t->isFrame()){
     BorrowEntry *be=BT->getBorrow(index);
     be->getOneMsgCredit();
     cellLockSendGet(be);
@@ -5162,9 +5139,9 @@ Bool Tertiary::installHandler(EntityCond wc,TaggedRef proc,Thread* th, Bool Cont
   PD((NET_HANDLER,"Handler installed on tertiary:%x",this));
   Watcher *w=new Watcher(proc,th,wc);
   insertWatcher(w);
-  if(pr)w->xxsetPersistent();
+  if(pr)w->setPersistent();
   if(Continue) w->setContinueHandler();
-  if(this->getTertType() == Te_Local){
+  if(this->isLocal()){
     return TRUE;}
   if(wc & TEMP_BLOCKED && (getType()!=Co_Port)){
     Assert(wc==TEMP_BLOCKED|PERM_BLOCKED);
@@ -5199,8 +5176,8 @@ void Tertiary::installWatcher(EntityCond wc,TaggedRef proc, Bool pr){
   PD((NET_HANDLER,"Watcher installed on tertiary %x",this));
   Watcher *w=new Watcher(proc,wc);
   insertWatcher(w);
-  if(pr) w->xxsetPersistent();
-  if(getTertType() == Te_Local) return;
+  if(pr) w->setPersistent();
+  if(isLocal()) return;
   if(w->isTriggered(getEntityCond()) ||
      (getType()==Co_Port && w->isTriggered(getEntityCondPort(this)))){
     entityProblem();
@@ -5265,13 +5242,13 @@ Bool Tertiary::threadIsPending(Thread* th){
   switch(getType()){
   case Co_Cell: {
     if(isProxy()) {return NO;}
-    if(getTertType()==Te_Frame){
+    if(isFrame()){
       return ((CellFrame*)this)->getSec()->threadIsPending(th);}
     Assert(isManager());
     return ((CellManager*)this)->getSec()->threadIsPending(th);}
   case Co_Lock:{
   if(isProxy()) {return NO;}
-    if(getTertType()==Te_Frame){
+    if(isFrame()){
       return ((LockFrame*)this)->getSec()->threadIsPending(th);}
     Assert(isManager());
   return ((LockManager*)this)->getSec()->threadIsPending(th);}
@@ -5346,12 +5323,12 @@ void Tertiary::entityProblem(){
     pd = NULL;
   else{
     if(getType()==Co_Cell){
-      if(getTertType()==Te_Frame)
+      if(isFrame())
         pd = *(((CellFrame *)this)->getSec()->getPendBase());
       else
         pd = *(((CellManager *)this)->getSec()->getPendBase());}
     if(getType()==Co_Lock){
-      if(getTertType()==Te_Frame)
+      if(isFrame())
         pd = *(((LockFrame *)this)->getSec()->getPendBase());
       else
         pd = *(((LockManager *)this)->getSec()->getPendBase());}}
@@ -5379,7 +5356,7 @@ void Tertiary::entityProblem(){
         w->invokeHandler(ec,obj,cThread,pd->controlvar);
       else
         w->invokeHandler(ec,this,cThread,pd->controlvar);
-      if(!w->xxisPersistent()){
+      if(!w->isPersistent()){
         if(obj && other) other->deinstallHandler(cThread,AtomAny);
         *ww = w->next;
         releaseWatcher(w);}
@@ -5400,7 +5377,7 @@ void Tertiary::entityProblem(){
         if(other) other->deinstallWatcher(w->watchcond,w->proc);}
       else
         w->invokeWatcher(ec,this);
-      if(w->xxisPersistent()){
+      if(w->isPersistent()){
         Mec &= ~(w->getWatchCond() & (TEMP_BLOCKED|TEMP_ME|TEMP_SOME));
         base= &(w->next);
         w=*base;}
