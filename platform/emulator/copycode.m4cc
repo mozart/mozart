@@ -141,7 +141,7 @@ SRecordArity checkSRA(SRecordArity sra, HashTable *ht)
     list = tail(list);
   }
 
-  aux = mkRecordArity(aritytable.find(newlist));
+  aux = mkRecordArity(aritytable.find(reverseC(newlist)));
   ht->htAdd(sra,ToPointer(aux));
   return aux;
 }
