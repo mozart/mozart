@@ -1221,8 +1221,8 @@ public:
     Assert(!isFree());
     return(pendLink!=NULL);}
 
-  void gcBorrow(int i);
-  void gcBorrowRoot(int);
+  void gcBorrow1(int);
+  void gcBorrow2(int);
 
   inline void copyBorrow(BorrowEntry* from,int i){
     setCredit(from->getCredit());
@@ -1545,8 +1545,9 @@ public:
     no_used=0;
     hshtbl = new NetHashTable();  }
 
-  void gcBorrowTableRoots();
-  void gcBorrowTable();
+  void gcBorrowTable1();
+  void gcBorrowTable2();
+  void gcBorrowTable3();
   void gcFrameToProxy();
 
   BorrowEntry* find(NetAddress *na)  {
@@ -1844,12 +1845,13 @@ void NetHashTable::print(){
 
 /* OBS: ---------- interface to gc.cc ----------*/
 
-void gcOwnerTable()      { ownerTable->gcOwnerTable();}
-void gcBorrowTable() { borrowTable->gcBorrowTable();}
-void gcBorrowTableRoots() { borrowTable->gcBorrowTableRoots();}
-void gcGNameTable()  { theGNameTable.gcGNameTable();}
+void gcOwnerTable()       { ownerTable->gcOwnerTable();}
+void gcBorrowTable3()     { borrowTable->gcBorrowTable3();}
+void gcBorrowTable2()     { borrowTable->gcBorrowTable2();}
+void gcBorrowTable1()     { borrowTable->gcBorrowTable1();}
+void gcGNameTable()       { theGNameTable.gcGNameTable();}
 void gcGName(GName* name) { if (name) name->gcGName(); }
-void gcFrameToProxy()  {borrowTable->gcFrameToProxy();}
+void gcFrameToProxy()     {borrowTable->gcFrameToProxy();}
 
 
 void Tertiary::gcProxy(){
@@ -2023,20 +2025,36 @@ void OwnerTable::gcOwnerTable()
   return;
 }
 
-
-void BorrowEntry::gcBorrowRoot(int i) {
-  if(isVar()){
-    PD((GC,"BT b:%d variable found",i));
+void BorrowEntry::gcBorrow1(int i) {
+  if (isVar()) {
+    PD((GC,"BT1 b:%d variable found",i));
     PerdioVar *pv=getVar();
-    if (pv->isProxy() && pv->hasVal()) {
-      PD((WEIRD,"BT b:%d pending unmarked var found",i));
-      gcPO();}
-    return;}
+    if (pv->getSuspList() || (pv->isProxy() && pv->hasVal())) {
+      PD((WEIRD,"BT1 b:%d pending unmarked var found",i));
+      makeMark();
+      gcPO();
+    }
+    return;
+  }
+}
+
+void BorrowTable::gcBorrowTable1()
+{
+  PD((GC,"borrowTable1 gc"));
+  int i;
+  for(i=0;i<size;i++) {
+    BorrowEntry *b=getBorrow(i);
+    if (!b->isFree()){
+      if (!b->isMarked()) {b->gcBorrow1(i);}}
+  }
+}
+
+void BorrowEntry::gcBorrow2(int i) {
   if(getTertiary()->getTertType()==Te_Frame)
     {u.tert= (Tertiary*) u.tert->gcConstTermSpec();}
 }
 
-void BorrowTable::gcBorrowTableRoots()
+void BorrowTable::gcBorrowTable2()
 {
   PD((GC,"borrow gc roots"));
   int i;
@@ -2045,7 +2063,7 @@ void BorrowTable::gcBorrowTableRoots()
     if(!b->isFree()){
       Assert((b->isVar()) || (b->getTertiary()->getTertType()==Te_Frame)
              || (b->getTertiary()->getTertType()==Te_Proxy));
-      if(!(b->isMarked())) {b->gcBorrowRoot(i);}}
+      if(!(b->isMarked())) {b->gcBorrow2(i);}}
   }
 }
 
@@ -2069,7 +2087,7 @@ void BorrowTable::gcFrameToProxy()
 extern TaggedRef gcTagged1(TaggedRef in);
 
 /* OBSERVE - this must done at the end of other gc */
-void BorrowTable::gcBorrowTable()
+void BorrowTable::gcBorrowTable3()
 {
   PD((GC,"borrow gc"));
   int i;
@@ -2149,8 +2167,10 @@ void PerdioVar::gcPerdioVar(void)
   if (isProxy()) {
     PD((GC,"PerdioVar b:%d",i));
     BorrowEntry *be=borrowTable->getBorrow(i);
-    be->gcPO();
-    be->makeMark();
+    if (!be->isMarked()) { // this condition is necessary gcBorrow1
+      be->makeMark();
+      be->gcPO();
+    }
 
     PendBinding **last = &u.bindings;
     for (PendBinding *bl = u.bindings; bl; bl = bl->next) {

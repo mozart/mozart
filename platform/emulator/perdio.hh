@@ -44,9 +44,10 @@ void networkSiteDec(int sd);
 #define tert2PortProxy(t)     ((PortProxy*) t)
 
 void gcOwnerTable();
-void gcBorrowTable();
+void gcBorrowTable1();
+void gcBorrowTable2();
+void gcBorrowTable3();
 void gcFrameToProxy();
-void gcBorrowTableRoots();
 void gcPortProxy(PortProxy* );
 void gcPortManager(PortManager* );
 void gcPendThread(PendThread **);

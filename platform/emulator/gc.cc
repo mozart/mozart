@@ -1571,6 +1571,8 @@ void AM::gc(int msgLevel)
 
   gc_tcl_sessions();
 
+  gcBorrowTable1();
+
   performCopying();
 
   GCPROCMSG("toplevelVars");
@@ -1583,18 +1585,18 @@ void AM::gc(int msgLevel)
 
 #ifdef PERDIO
   performCopying();
-  gcBorrowTableRoots();
+  gcBorrowTable2();
   gcGNameTable();
 #endif
 
 // -----------------------------------------------------------------------
 // ** second phase: the reference update stack has to checked now
   GCPROCMSG("updating references");
-  processUpdateStack ();
+  processUpdateStack();
 
   Assert(ptrStack.isEmpty());
 
-  gcBorrowTable();
+  gcBorrowTable3();
 
   exitCheckSpace();
 
