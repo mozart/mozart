@@ -119,14 +119,14 @@ FUNCTION {output.bibitem}
   label write$
   "]</A>" write$
   newline$
-  "<DD>" write$
+  "<DD><P>" write$
   ""
   before.all 'output.state :=
 }
 
 FUNCTION {fin.entry}
 { add.period$
-  write$
+  "</P>" * write$
   newline$
 }
 
