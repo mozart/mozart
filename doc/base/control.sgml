@@ -42,7 +42,9 @@
 	<Synopsis>
 	  <<{Value.wait ?+{X}}>>
 	<Item>
-	  blocks until ?_{X} is determined.
+	  blocks until ?_{X} is determined.  If ?_{X} is a future, it
+	  is requested.  If ?_{X} is or becomes bound to a failed future,
+	  then its encapsulated exception is raised.
 
 	<Entry><Span class=index/<<WaitOr>>/
 	  <Index/<<Value>><And><<waitOr>>/
@@ -50,6 +52,16 @@
 	  <<{Value.waitOr ?_{X} ?_{Y}}>>
 	<Item>
 	  blocks until at least one of ?_{X} or&nbsp;?_{Y} is determined.
+
+	<Entry><Span class=index/<<waitQuiet>>/
+	  <Index/<<Value>><And><<waitQuiet>>/
+	<Synopsis>
+	  <<{Value.waitQuiet ?+{X}}>>
+	<Item>
+	  blocks until ?_{X} is determined or failed.  Contrary to <code/Wait/,
+	  if ?_{X} is a future, <code/Value.waitQuiet/ does not request it.
+	  Also, if ?_{X} is or becomes bound to a failed future, no exception
+	  is raised.
 
 	<Entry><Span class=index/<<!!>>/
 	  <Index/<<Value>><And><<'!!'>>/
