@@ -138,7 +138,7 @@ void taggedPrintLong(TaggedRef ref, int depth = 10, int offset = 0);
 #define CHECK_NONVAR(term) Assert(isRef(term) || !isAnyVar(term))
 #define CHECK_ISVAR(term)  Assert(isAnyVar(term))
 #define CHECK_DEREF(term)  Assert(!isRef(term) && !isAnyVar(term))
-#define CHECK_NONNULL(s)   Assert(s != NULL)
+#define CHECK_POINTER(s)   Assert(s != NULL && !((int) s & 3) )
 #define CHECKTAG(Tag)      Assert(tagTypeOf(ref) == Tag)
 
 
@@ -378,7 +378,7 @@ inline TaggedRef makeTaggedMisc(int s)
 
 inline TaggedRef makeTaggedRef(TaggedRef *s)
 {
-  CHECK_NONNULL(s);
+  CHECK_POINTER(s);
   DebugGC(gcing == 0 && !inChunkChain (heapGetStart (), (void *)s),
 	  error ("making TaggedRef pointing to 'from' space"));
   return (TaggedRef)s;
@@ -386,49 +386,49 @@ inline TaggedRef makeTaggedRef(TaggedRef *s)
 
 inline TaggedRef makeTaggedUVar(Board *s)
 {
-  CHECK_NONNULL(s);
+  CHECK_POINTER(s);
   return makeTaggedRef(UVAR,s);
 }
 
 inline TaggedRef makeTaggedSVar(SVariable *s)
 {
-  CHECK_NONNULL(s);
+  CHECK_POINTER(s);
   return makeTaggedRef(SVAR,s);
 }
 
 inline TaggedRef makeTaggedCVar(GenCVariable *s) {
-  CHECK_NONNULL(s);
+  CHECK_POINTER(s);
   return makeTaggedRef(CVAR, s);
 }
 
 inline TaggedRef makeTaggedSTuple(STuple *s)
 {
-  CHECK_NONNULL(s);
+  CHECK_POINTER(s);
   return makeTaggedRef(STUPLE,s);
 }
 
 inline TaggedRef makeTaggedLTuple(LTuple *s)
 {
-  CHECK_NONNULL(s);
+  CHECK_POINTER(s);
   return makeTaggedRef(LTUPLE,s);
 }
 
 inline TaggedRef makeTaggedSRecord(SRecord *s)
 {
-  CHECK_NONNULL(s);
+  CHECK_POINTER(s);
   return makeTaggedRef(SRECORD,s);
 }
 
 
 inline TaggedRef makeTaggedAtom(char *s)
 {
-  CHECK_NONNULL(s);
+  CHECK_POINTER(s);
   return makeTaggedRef(ATOM,addToAtomTab(s));
 }
 
 inline TaggedRef makeTaggedAtom(Atom *s)
 {
-  CHECK_NONNULL(s);
+  CHECK_POINTER(s);
   return makeTaggedRef(ATOM,s);
 }
 
@@ -439,20 +439,20 @@ inline TaggedRef makeTaggedSmallInt(unsigned int s)
 
 inline TaggedRef makeTaggedBigInt(BigInt *s)
 {
-  CHECK_NONNULL(s);
+  CHECK_POINTER(s);
   return makeTaggedRef(BIGINT,s);
 }
 
 inline TaggedRef makeTaggedFloat(Float *s)
 {
-  CHECK_NONNULL(s);
+  CHECK_POINTER(s);
   return makeTaggedRef(FLOAT,s);
 }
 
 
 inline TaggedRef makeTaggedConst(ConstTerm *s)
 {
-  CHECK_NONNULL(s);
+  CHECK_POINTER(s);
   return makeTaggedRef(CONST,s);
 }
 
