@@ -213,6 +213,7 @@ oz3:
 
 
 win32-i486: $(PACKDIR) $(PACKDIR)/mozart
+        rm -rf /tmp/pack/mozart
         ( cd $(PREFIX); \
           $(TAR) cf - \
                    $(FILES) \
