@@ -115,7 +115,7 @@ public:
   long taskStack,taskStackLen;
   long cNervous,cSolve,cLocal,cJob,cCont,cXCont,cDebugCont,cExceptHandler;
   long cCallCont, cCFuncCont;
-  long abstraction,deepObject,flatObject,cell;
+  long abstraction,deepObject,flatObject,cell,chunk;
   long oneCallBuiltin,solvedBuiltin,builtin;
   long heapChunk,thread;
   long board,objectClass;
