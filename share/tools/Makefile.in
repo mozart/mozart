@@ -1,7 +1,7 @@
 BUILDTOP	= @BUILDTOP@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
-TOPDIR		= @TOPDIR@
+SRCTOP		= @SRCTOP@
 
 PREFIX		= @prefix@
 
@@ -12,21 +12,16 @@ IMAGESDIR	= $(OZTOOLS)/images
 CACHEDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/tools
 CACHEBINDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/bin
 
-SHELL		= @SH@
-RM		= @RM@ -f
-MKDIR		= @MKDIR@
-ECHO		= @ECHO@
-TRUE		= @TRUE@
+SHELL		= /bin/sh
 
 INSTALL		= @INSTALL@
-INSTALLFILE	= $(INSTALL) -m 444
-INSTALLPRG	= $(INSTALL) -m 555
-INSTALLSRC	= @INSTALLSRC@
-MKINSTALLDIRS	= @MKINSTALLDIRS@
-INSTALLDIR	= $(MKINSTALLDIRS)
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_SRC	= @INSTALL_SRC@
+INSTALL_DIR	= @INSTALL_DIR@
 
 PERL		= @PERL@
-ENV2TYPE	= $(PERL) $(SRCDIR)/../lib/env2type
+ENV2TYPE	= $(PERL) $(SRCTOP)/share/lib/env2type
 
 OZFLAGS		=
 OZBATCH		= @OZBATCH@
@@ -141,31 +136,16 @@ Makefile: Makefile.in ../config.status
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
 
-include ../Makefile.boot
-##---------------------------------------------------------------------
-## Bootstraping
-##	use the local emulator and local libraries
-##---------------------------------------------------------------------
-#
-#URL=http\\://www.ps.uni-sb.de/ozhome
-#BOOTLIB=`pwd`/../lib
-#BOOTCOM=`pwd`/../../platform/emulator/oz.emulator.bin -u $(BOOTLIB)/ozbatch -a
-#export OZBATCH
-#export OZINIT
-#export OZ_LOAD
-#
-#bootstrap:
-#	$(MAKE) all \
-#	OZBATCH="$(BOOTCOM)" \
-#	OZINIT=$(BOOTLIB)/Init.ozc \
-#	OZ_LOAD=root=.:prefix=/=/:prefix=$(URL)/=$(BOOTLIB)/tyc/:prefix=$(URL)/lib/=$(BOOTLIB)/:=
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
 
 #---------------------------------------------------------------------
 # Components
 #---------------------------------------------------------------------
 
 tyc/%.typ: %.env
-	@$(MKDIR) tyc 2> /dev/null || $(TRUE)
+	@-mkdir tyc
 	$(ENV2TYPE) $< > $@
 
 tyc/%.tyc: tyc/%.typ
@@ -187,12 +167,13 @@ Emacs.ozc: $(EMACSSRC) Emacs.env
 Ozcar.ozc: $(OZCARSRC) Browser.env Emacs.env Ozcar.env
 
 ozcar-version.oz: $(OZCARSRCNOVER)
-	$(ECHO) \'`date '+%b %d'`\' > $@
+	echo \'`date '+%b %d'`\' > $@
 
 Profiler.ozc: $(PROFILERSRC) Browser.env Emacs.env Profiler.env
 
-Gump.ozc: $(GUMPSRC) ../lib/compiler/TupleSyntax.oz ../lib/compiler/Misc.oz \
-	../lib/compiler/FormatStrings.oz Gump.env
+Gump.ozc: $(GUMPSRC) $(SRCTOP)/share/lib/compiler/TupleSyntax.oz \
+	$(SRCTOP)/share/lib/compiler/Misc.oz \
+	$(SRCTOP)/share/lib/compiler/FormatStrings.oz Gump.env
 
 GumpScanner.ozc: $(GUMPSCANNERSRC) GumpScanner.env
 
@@ -217,63 +198,60 @@ install-images: \
 	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES)
 
 $(OZBIN) $(OZTOOLS) $(TOOLSDIRS) $(IMAGESDIR) $(OZCARIMAGESDIR):
-	$(INSTALLDIR) $@
+	$(INSTALL_DIR) $@
 
 $(OZTOOLS)/%.oz: %.oz
-	$(INSTALLSRC) $< $@
+	$(INSTALL_SRC) $< $@
 
 $(OZTOOLS)/%.ozc: %.ozc
-	$(INSTALLFILE) $< $@
+	$(INSTALL_FILE) $< $@
 
 $(OZTOOLS)/gump/examples/%: gump/examples/%
-	$(INSTALLSRC) $< $@
+	$(INSTALL_SRC) $< $@
 
 $(IMAGESDIR)/%: images/%
-	$(INSTALLFILE) $< $@
+	$(INSTALL_FILE) $< $@
 
 $(OZCARIMAGESDIR)/%: ozcar/images/%
-	$(INSTALLFILE) $< $@
+	$(INSTALL_FILE) $< $@
 
 $(OZTOOLS)/%.env: %.env
-	$(INSTALLSRC) $< $@
+	$(INSTALL_SRC) $< $@
 
 $(OZTOOLS)/%.tyc: tyc/%.tyc
-	$(INSTALLFILE) $< $@
+	$(INSTALL_FILE) $< $@
 
 $(OZBIN)/%: %
-	$(INSTALLPRG) $< $@
+	$(INSTALL_BIN) $< $@
 
 install-cache: $(CACHEDIR) $(CACHECOMPONENTS) $(CACHETYCS) $(CACHELETS)
 $(CACHEDIR) $(CACHEBINDIR):
-	$(MKINSTALLDIRS) $@
+	$(INSTALL_DIR) $@
 $(CACHECOMPONENTS): $(CACHEDIR)/%.ozc : %.ozc
-	$(INSTALLFILE) $< $@
+	$(INSTALL_FILE) $< $@
 $(CACHETYCS): $(CACHEDIR)/%.tyc : tyc/%.tyc
-	$(INSTALLFILE) $< $@
+	$(INSTALL_FILE) $< $@
 $(CACHELETS): $(CACHEBINDIR)/% : % $(CACHEBINDIR)
-	$(INSTALLPRG) $< $@
+	$(INSTALL_BIN) $< $@
 
 #---------------------------------------------------------------------
 # Cleaning up
 #---------------------------------------------------------------------
 
-.PHONY: clean realclean veryclean distclean tags
+.PHONY: clean veryclean distclean tags
 
 clean:
-	$(RM) *~ *.bak
-	$(RM) ozcar-version.oz
-	$(RM) -r tyc
-	$(RM) $(COMPONENTS)
-	$(RM) opi
+	rm -f *~ *.bak
+	rm -f ozcar-version.oz
+	rm -f -r tyc
+	rm -f $(COMPONENTS)
+	rm -f opi
 
-realclean: clean
-	$(RM) -r $(STAGE1)
-
-veryclean: realclean
-	$(RM) TAGS
+veryclean: clean
+	rm -f -r $(STAGE1) TAGS
 
 distclean: veryclean
-	$(RM) Makefile
+	rm -f Makefile
 
 tags:
 	etags --language=none \
@@ -294,3 +272,5 @@ STAGE1=./stage1
 # stage1: create the components using the installed ones
 stage1:
 	$(MAKE) install-main PREFIX=$(STAGE1)
+
+check:

@@ -1,26 +1,31 @@
-.PHONY:	tags clean+ clean realclean veryclean
+# -*- Makefile -*-
+##########################################################################
+# TARGETS
+##########################################################################
 
-install clean realclean depend distclean::
-	dirs="$(SUBDIRS)"; for i in $$dirs; do (cd $$i && $(MAKE) $@); done
+.PHONY:	install bootstrap clean veryclean distclean depend
 
-realclean::
+install bootstrap clean veryclean distclean depend::
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do \
+	  if (cd $$i && $(MAKE) $@); \
+          then true; \
+          else exit 1; \
+          fi; \
+        done
+
+veryclean::
 	$(MAKE) clean SUBDIRS=
 
 distclean::
-	$(MAKE) realclean SUBDIRS=
+	$(MAKE) veryclean SUBDIRS=
 
 clean::
-	$(RM) *.o *~  *.bak *.obj *.so *.a
+	-rm -f *.o *~  *.bak *.obj *.so *.a
 
-veryclean: realclean
-
-tags::
-	etags \
-	--regex='/OZ_BI_\(io\)?define([ 	]*\([^ 	,)]+\)/\2/' \
-	--regex='/OZ_C_\(io\)?proc_begin([ 	]*\([^ 	,)]+\)/\2/' -l c++ \
-	-o $(SRCDIR)/TAGS \
-	$(CREATEDFILES) \
-	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/*/*c $(SRCDIR)/*/*h
+##########################################################################
+# RULES
+##########################################################################
 
 .SUFFIXES: .cc .m4cc .hh .m4hh .s .i .sed
 
@@ -31,17 +36,14 @@ tags::
 	$(CXXCPP) $(CPPFLAGS) -o $@ $<
 
 .m4cc.cc:
-	$(M4) $(M4_S) $(M4_D) $< > $@ || ($(RM) $@; exit 1)
+	$(M4) $(M4_S) $(M4_D) $< > $@ || (rm -f $@; exit 1)
 
 .m4hh.hh:
-	$(M4) $(M4_S) $(M4_D) $< > $@ || ($(RM) $@; exit 1)
+	$(M4) $(M4_S) $(M4_D) $< > $@ || (rm -f $@; exit 1)
 
 @oz_tmphack_target@:
 	tmp=/tmp/ozobj$$$$.o; \
-	trap "$(RM) $$tmp; exit 1" 1 2 15; \
+	trap "rm -f $$tmp; exit 1" 1 2 15; \
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $$tmp $< && \
 		rcp $$tmp @oz_tmphack_host@:`pwd`/$@ && \
 		rm -f $$tmp
-
-%.d: %.cc
-	$(DEPEND) $< | sed "s/$*.o/& $@/g" > $@
