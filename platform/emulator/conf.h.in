@@ -98,6 +98,10 @@
 /* Define if you have the mmap system call.  */
 #undef HAVE_MMAP
 
+/* do we have setpgid? */
+#undef HAVE_SETPGID
+
+
 /* Define if dlopen needs a leading underscore. */
 #undef DLOPEN_UNDERSCORE
 
