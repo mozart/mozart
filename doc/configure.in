@@ -31,7 +31,7 @@ AC_SUBST(OZENGINE)
 AC_SUBST(OZDOC)
 
 AC_MSG_CHECKING(for --with-java-bin)
-AC_ARG_WITH(java,
+AC_ARG_WITH(java-bin,
   [--with-java-bin='DIR'
        directory where java executables/wrappers reside],
   oz_java_bin=${with_java_bin})
