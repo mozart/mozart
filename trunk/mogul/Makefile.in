@@ -46,7 +46,7 @@ MAIN_DEPS = Text.ozf Message.ozf Admin.ozf \
 	Section.ozf Externalizable.ozf GetSlot.ozf Wget.ozf \
 	ContactName.ozf Entry.ozf HTML_Entry.ozf HTML_Contact.ozf \
 	HTML_Section.ozf Author.ozf HTML_Package.ozf Category.ozf \
-	MogulID.ozf Directory.ozf
+	MogulID.ozf Directory.ozf HTML_ByAuthor.ozf HTML_Navigation.ozf
 TARGETS_TOP	= Librarian.exe
 TARGETS_SUB	=
 TARGETS_BIN	=
@@ -136,7 +136,8 @@ COMMONSOURCES	= Makefile.in configure install-sh mkinstalldirs \
 	Section.oz Externalizable.oz GetSlot.oz Wget.oz \
 	ContactName.oz Entry.oz HTML_Entry.oz HTML_Contact.oz \
 	HTML_Section.oz Author.oz HTML_Package.oz Category.oz \
-	Main.oz mogul.css page.gif mogul.sgml
+	HTML_ByAuthor.oz HTML_Navigation.oz Main.oz \
+	mogul.css page.gif mogul.sgml
 SOURCES		=
 SOURCEAPIDIR	= $(SRCDIR)/API
 TARSOURCES	= $(COMMONSOURCES) $(SOURCES)
@@ -230,13 +231,15 @@ MOGUL_DATABASE_OPTIONS	=	\
 	--update-provided	\
 	--update-categories	\
 	--update-package-list	\
+	--update-author-list	\
 	--save-db
 MOGUL_ARCHIVE_OPTIONS	=	\
 	--update-pub
 MOGUL_HTML_OPTIONS	=	\
 	--update-html		\
 	--update-categories-html \
-	--update-package-list-html
+	--update-package-list-html \
+	--update-author-list-html
 
 mogul-update: mogul-database mogul-archive mogul-html
 
