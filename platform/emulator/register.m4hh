@@ -147,7 +147,9 @@ define(M4INSTRTWOREGS,``''
   M4INSTRTWOREGS(UNIFY,
                ``{
                  if ( !e->fastUnify(Reg1(getRegArg(PC+1)),
-                                    Reg2(getRegArg(PC+2)))) {
+                                    Reg2(getRegArg(PC+2)),
+                                    NOFLATGUARD())) {
+                   SHALLOWFAIL;
                    HANDLE_FAILURE(PC+3,
                                   message("unify: %s = %s",
                                           OZ_toC(Reg1(getRegArg(PC+1))),
@@ -267,13 +269,14 @@ define(M4INSTRTWOREGS,``''
 
                    if (isCVar(term)) {
                      if (tagged2CVar(term)->unify(termPtr, term, NULL,
-                                                  makeTaggedSTuple(stuple), OK)) {
+                                                  makeTaggedSTuple(stuple),
+                                                  NOFLATGUARD())) {
                        DISPATCH(4);
                      }
 
                    } else {
 
-                     e->bindToNonvar(termPtr, term,makeTaggedSTuple(stuple),OK);
+                     e->bindToNonvar(termPtr,term,makeTaggedSTuple(stuple),NOFLATGUARD());
 
                      sPointer = stuple->getRef();
                      mode = WRITE;
@@ -287,6 +290,8 @@ define(M4INSTRTWOREGS,``''
                    mode = READ;
                    DISPATCH(4);
                  }
+
+                 SHALLOWFAIL;
                  HANDLE_FAILUREX(PC+4,
                                 STuple *stuple = newSTupleOutline(label,arity);
                                 mode = WRITE;
@@ -312,14 +317,14 @@ define(M4INSTRTWOREGS,``''
                    if(isCVar(term) == OK){
                      TaggedRef srecordRef=makeTaggedSRecord(srecord);
                      if(tagged2CVar(term)->unify(termPtr, term,
-                                                 &srecordRef, srecordRef, OK)) {
+                                                 &srecordRef, srecordRef,NOFLATGUARD())) {
                        sPointer = srecord->getRef();
                        mode = READ;
                        DISPATCH(4);
                      }
                    } else {
 
-                     e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord),OK);
+                     e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord),NOFLATGUARD());
 
                      sPointer = srecord->getRef();
                      mode = WRITE;
@@ -334,6 +339,7 @@ define(M4INSTRTWOREGS,``''
                    DISPATCH(4);
                  }
 
+                 SHALLOWFAIL;
                  HANDLE_FAILUREX(PC+4,
                                 SRecord *srecord = newSRecordOutline(ff,label);
                                 mode = WRITE;
@@ -399,7 +405,7 @@ define(M4INSTRTWOREGS,``''
                  DEREF(term,termPtr,tag);
 
                  if (isNotCVar(tag)) {
-                   e->bindToNonvar(termPtr, term, atm, OK);
+                   e->bindToNonvar(termPtr, term, atm, NOFLATGUARD());
                    DISPATCH(3);
                  }
 
@@ -408,7 +414,7 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  if (isCVar(term) &&
-                     tagged2CVar(term)->unify(termPtr, term, NULL, atm, OK)) {
+                     tagged2CVar(term)->unify(termPtr,term,NULL,atm,NOFLATGUARD())) {
                    DISPATCH(3);
                  }
 
@@ -416,7 +422,7 @@ define(M4INSTRTWOREGS,``''
                  HANDLE_FAILURE(PC+3,
                                 message("getconstant %s = %s",
                                         OZ_toC(atm),
-                                        OZ_toC(*termPtr)),
+                                        OZ_toC(term)),
                                 );
                }''
                );
@@ -431,7 +437,7 @@ define(M4INSTRTWOREGS,``''
                  DEREF(term,termPtr,tag);
 
                  if (isNotCVar(tag)) {
-                   e->bind(termPtr, term, &i, OK);
+                   e->bind(termPtr, term, &i, NOFLATGUARD());
                    DISPATCH(3);
                  }
 
@@ -440,7 +446,7 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  if (isCVar(term) &&
-                     tagged2CVar(term)->unify(termPtr,term,NULL,i,OK)) {
+                     tagged2CVar(term)->unify(termPtr,term,NULL,i,NOFLATGUARD())) {
                    DISPATCH(3);
                  }
 
@@ -469,11 +475,11 @@ define(M4INSTRTWOREGS,``''
 
                    if (isCVar(term) == OK) {
                      if (tagged2CVar(term)->unify(termPtr, term, NULL,
-                                                  makeTaggedLTuple(ltuple), OK)) {
+                                                  makeTaggedLTuple(ltuple),NOFLATGUARD())) {
                        DISPATCH(4);
                      }
                    } else {
-                     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple), OK);
+                     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),NOFLATGUARD());
                      Xreg(reg3) = makeTaggedRef(ltuple->getRef()+1);
 
                      DISPATCH(4);
@@ -482,13 +488,14 @@ define(M4INSTRTWOREGS,``''
 
                  if (isLTuple(term)) {
                    TaggedRef *argg = tagged2LTuple(term)->getRef();
-                   if (e->fastUnify(Reg1(reg2),makeTaggedRef(argg))) {
+                   if (e->fastUnify(Reg1(reg2),makeTaggedRef(argg),NOFLATGUARD())) {
                      Xreg(reg3) = tagged2NonVariable(argg+1);
 
                      DISPATCH(4);
                    }
                  }
 
+                 SHALLOWFAIL;
                  HANDLE_FAILUREX(PC+4,
                                  LTuple *ltuple
                                  = new LTuple(Reg1(reg2),
@@ -513,16 +520,11 @@ define(M4INSTRTWOREGS,``''
                    LTuple *ltuple = new LTuple();
                    if (isCVar(term) == OK) {
                      if(tagged2CVar(term)->unify(termPtr, term, NULL,
-                                                 makeTaggedLTuple(ltuple), OK)) {
+                                                 makeTaggedLTuple(ltuple),NOFLATGUARD())) {
                        DISPATCH(2);
                      }
                    } else {
-#ifdef FASTSS
-                     e->fastUnify(termPtr?makeTaggedRef(termPtr):term,
-                                  makeTaggedLTuple(ltuple));
-#else
-                     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),OK);
-#endif
+                     e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),NOFLATGUARD());
                      sPointer = ltuple->getRef();
                      mode = WRITE;
                      DISPATCH(2);
@@ -536,6 +538,7 @@ define(M4INSTRTWOREGS,``''
                  }
 
 
+                 SHALLOWFAIL;
                  HANDLE_FAILUREX(PC+2,
                                  LTuple *ltuple = new LTuple();
                                  mode = WRITE;
@@ -606,14 +609,16 @@ define(M4INSTRTWOREGS,``''
 
 //               case READ:
                  default:
-                   if ( !e->fastUnify(Reg1(reg), makeTaggedRef(sPointer++)) ) {
-                     HANDLE_FAILURE(PC+2,
-                                    message("unifyvalue %s = %s",
-                                            OZ_toC(*(sPointer-1)),
-                                            OZ_toC(Reg1(reg))),
-                                            );
+                   if (e->fastUnify(Reg1(reg), makeTaggedRef(sPointer++),
+                                    NOFLATGUARD()) ) {
+                     DISPATCH(2);
                    }
-                   DISPATCH(2);
+                   SHALLOWFAIL;
+                   HANDLE_FAILURE(PC+2,
+                                  message("unifyvalue %s = %s",
+                                          OZ_toC(*(sPointer-1)),
+                                          OZ_toC(Reg1(reg))),
+                                  );
                  }
                }''
                );
@@ -633,7 +638,9 @@ define(M4INSTRTWOREGS,``''
                    sPointer += 2;
                    DISPATCH(3);
                  } else {
-                   if ( !e->fastUnify(Reg1(reg), makeTaggedRef(sPointer) ) ) {
+                   if ( !e->fastUnify(Reg1(reg), makeTaggedRef(sPointer),
+                                      NOFLATGUARD()) ) {
+                     SHALLOWFAIL;
                      HANDLE_FAILURE(PC+3,
                                     message("unifyvalvar %s = %s",
                                             OZ_toC(*sPointer),
@@ -658,15 +665,18 @@ define(M4INSTRTWOREGS,``''
         DISPATCH(2);
 //      case READ:
       default:
-        if ( !e->fastUnify(makeTaggedRef(sPointer++),
-                           getAtomArg(PC+1)) ) {
-          HANDLE_FAILURE(PC+2,
-                         message("unifyconst %s = %s",
-                                 OZ_toC(getAtomArg(PC+1)),
-                                 OZ_toC(*(sPointer-1))),
-                         );
+        if (e->fastUnify(makeTaggedRef(sPointer++),
+                         getAtomArg(PC+1),
+                         NOFLATGUARD()) ) {
+          DISPATCH(2);
         }
-        DISPATCH(2);
+
+        SHALLOWFAIL;
+        HANDLE_FAILURE(PC+2,
+                       message("unifyconst %s = %s",
+                                 OZ_toC(getAtomArg(PC+1)),
+                               OZ_toC(*(sPointer-1))),
+                       );
       }
     }
 
@@ -679,14 +689,17 @@ define(M4INSTRTWOREGS,``''
         DISPATCH(2);
 //      case READ:
       default:
-        if ( !e->fastUnify(makeTaggedRef(sPointer++),getNumberArg(PC+1)) ) {
-          HANDLE_FAILURE(PC+2,
-                         message("unifyint %s = %s",
-                                 OZ_toC(getNumberArg(PC+1)),
-                                 OZ_toC(*(sPointer-1))),
-                         );
+        if ( e->fastUnify(makeTaggedRef(sPointer++),getNumberArg(PC+1),
+                           NOFLATGUARD()) ) {
+          DISPATCH(2);
         }
-        DISPATCH(2);
+
+        SHALLOWFAIL;
+        HANDLE_FAILURE(PC+2,
+                       message("unifyint %s = %s",
+                               OZ_toC(getNumberArg(PC+1)),
+                               OZ_toC(*(sPointer-1))),
+                       );
       }
     }
 

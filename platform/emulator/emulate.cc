@@ -75,8 +75,11 @@ if (e->isToplevel()) {                                                        \
   goto LBLfailure;                                                            \
 }
 
+
+#define NOFLATGUARD()   (shallowCP==NULL)
+
 #define SHALLOWFAIL                                                           \
-  if (shallowCP) {                                                            \
+  if (!NOFLATGUARD()) {                                                       \
     e->reduceTrailOnFail();                                                   \
     ProgramCounter nxt = getLabelArg(shallowCP+1);                            \
     shallowCP = NULL;                                                         \
@@ -1319,7 +1322,7 @@ void engine() {
 
       Abstraction *p = new Abstraction (predd, gRegs, new Name(e->currentBoard));
       TaggedRef term = RegAccess(HelpReg1,reg);
-      if (!e->fastUnify(term,makeTaggedSRecord(p))) {
+      if (!e->fastUnify(term,makeTaggedSRecord(p),OK)) {
         HANDLE_FAILURE(nxt,
                        message("definition %s/%d = %s\n",
                                p->getPrintName(),p->getArity(),OZ_toC(term)),);
@@ -1811,7 +1814,7 @@ void engine() {
        // NB2:
        //    CBB can not become reducible after the applying of solveCont,
        //    since its childCount can not become smaller.
-       if ( !e->fastUnify (solveAA->getSolveVar (), X[0]) ) {
+       if ( !e->fastUnify(solveAA->getSolveVar(), X[0], OK) ) {
          warning ("unification of variable in solveCont failed");
          HANDLE_FAILURE (NULL, ,);
        }
@@ -1863,12 +1866,12 @@ void engine() {
          DebugCheck (((newSolveBB->getScriptRef ()).getSize () != 0),
                      error ("non-empty script in solve blackboard"));
 
-         if ( !e->fastUnify (solveAA->getSolveVar (), X[0]) ) {
+         if ( !e->fastUnify(solveAA->getSolveVar(), X[0], OK) ) {
            warning ("unification of variable in solved failed");
            HANDLE_FAILURE (NULL, ,);
          }
        } else {
-         if ( !e->fastUnify (valueIn, X[0]) ) {
+         if ( !e->fastUnify(valueIn, X[0], OK) ) {
            warning ("unification of variable in solved failed");
            HANDLE_FAILURE (NULL, ,);
          }
@@ -2215,7 +2218,7 @@ void engine() {
         // 'solved';
         // don't unlink the subtree from the computation tree;
         DebugCheckT (solveBB->setReflected ());
-        if ( !e->fastUnify (solveAA->getResult (), solveAA->genSolved ()) ) {
+        if ( !e->fastUnify(solveAA->getResult(), solveAA->genSolved(), OK) ) {
           warning ("unification of solved tuple with variable has failed");
           HANDLE_FAILURE (NULL, ,);
         }
@@ -2226,7 +2229,7 @@ void engine() {
           // "stuck" (stable without distributing waitActors);
           // don't unlink the subtree from the computation tree;
           DebugCheckT (solveBB->setReflected ());
-          if ( !e->fastUnify (solveAA->getResult (), solveAA->genStuck ()) ) {
+          if ( !e->fastUnify(solveAA->getResult(), solveAA->genStuck(), OK) ) {
             warning ("unification of solved tuple with variable has failed");
             HANDLE_FAILURE (NULL, ,);
           }
@@ -2251,7 +2254,7 @@ void engine() {
             ((AWActor *) wa)->addChild (waitBoard);
             solveAA->setBoardToInstall (waitBoard);
             DebugCheckT (solveBB->setReflected ());
-            if ( !e->fastUnify (solveAA->getResult (), solveAA->genEnumedFail () )) {
+            if ( !e->fastUnify(solveAA->getResult(), solveAA->genEnumedFail() ,OK)) {
               warning ("unification of distributed tuple with variable has failed");
               HANDLE_FAILURE (NULL, ,);
             }
@@ -2309,8 +2312,9 @@ void engine() {
             DebugCheckT (newSolveBB->setReflected ());
             // ... and now there are two proper branches of search problem;
 
-            if ( !e->fastUnify (solveAA->getResult (),
-                                solveAA->genEnumed (newSolveBB) )) {
+            if ( !e->fastUnify (solveAA->getResult(),
+                                solveAA->genEnumed(newSolveBB),
+                                OK)) {
               warning ("unification of distributed tuple with variable has failed");
               HANDLE_FAILURE (NULL, ,);
             }
@@ -2423,8 +2427,9 @@ void engine() {
       // the result variable;
       aa->setCommitted();
       CBB->removeSuspension();
-      if ( !e->fastUnify (SolveActor::Cast (aa)->getResult (),
-                          SolveActor::Cast (aa)->genFailed ()) ) {
+      if ( !e->fastUnify(SolveActor::Cast(aa)->getResult(),
+                         SolveActor::Cast(aa)->genFailed(),
+                         OK) ) {
         warning ("unification of atom 'failed' with variable has failed");
         HANDLE_FAILURE (NULL, ,);
       }
