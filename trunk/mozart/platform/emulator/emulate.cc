@@ -1457,7 +1457,9 @@ void engine() {
       DISPATCH(3);
     }
     int argsToSave = getPosIntArg(PC+2);
-    INCFPC(3); /* suspend on next instruction! */
+    /* INCFPC(3); // suspend on next instruction!
+     * mm: bug fixed: do not suspend on next instruktion (var - var binding)
+     */
     Suspension *susp = e->mkSuspension(CBB,CPP,PC,Y,G,X,argsToSave);
     if (isCVar(tag)) {
       tagged2CVar(term)->addDetSusp(susp);
