@@ -174,7 +174,7 @@
 
 #ifdef PROFILE_EMULATOR
 
-#define WANT_INSTRPROFILE
+// #define DISABLE_INSTRPROFILE
 #define DEBUG_DET
 // #define HEAP_PROFILE
 // #define PROFILE_INSTR
