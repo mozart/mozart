@@ -876,7 +876,7 @@ OZ_C_proc_begin(BICloseGate,0)
 }
 OZ_C_proc_end
 
-extern sendPort(OZ_Term port, OZ_Term val);
+extern int sendPort(OZ_Term port, OZ_Term val);
 
 void sendGate(OZ_Term t) {
   if (gatePort) {
