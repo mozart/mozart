@@ -109,14 +109,7 @@ local
 	    kind:    Kind
 	    granul:  Granul
 	    data:    Data
-	    args:    case Kind of 'lock' then [Frame.data]
-		     [] 'conditional' then
-			case {IsDet Data} andthen Data == unit then unit
-			else [Data]
-			end
-		     else
-			{CondSelect Frame args unit}
-		     end
+	    args:    {CondSelect Frame args unit}
 	    frameID: {CondSelect Frame frameID unit}
 	    vars:    {CondSelect Frame vars unit})
    end
