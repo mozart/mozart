@@ -719,7 +719,7 @@ OZ_Term OZ_getRecordArg(OZ_Term term, OZ_Term fea)
 
 OZ_Bool OZ_unify(OZ_Term t1, OZ_Term t2)
 {
-  return am.fastUnify(t1, t2) ? PROCEED : FAILED;
+  return am.fastUnify(t1,t2,OK) ? PROCEED : FAILED;
 }
 
 OZ_Term OZ_newVariable()
