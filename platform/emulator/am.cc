@@ -1258,6 +1258,9 @@ void AM::wakeUpThread(Thread *tt)
 {
   scheduleThread(tt);
   tt->unsetSuspended();
+  if (currentSolveBoard) {
+    incSolveThreads(currentSolveBoard);
+  }
 }
 
 /*
