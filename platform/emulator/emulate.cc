@@ -2762,9 +2762,14 @@ LBLdispatcher:
        // local thread queue is empty
        SolveActor * sa = SolveActor::Cast(e->currentBoard->getActor());
        LocalThreadQueue * ltq = sa->getLocalThreadQueue();
-	
+
+#ifdef DEBUG_LTQ
+       cout << "sa=" << sa << " emu " << " thr=" 
+	    << e->currentThread << endl << flush;
+#endif
+
        Assert(!ltq->isEmpty());
-	
+
        unsigned int starttime = osUserTime();
        Thread * backup_currentThread = CTT;
 
@@ -2797,9 +2802,16 @@ LBLdispatcher:
 	
        if (ltq->isEmpty()) {
 	 sa->resetLocalThreadQueue();
+#ifdef DEBUG_LTQ
+	 cout << "sa emu sa=" << sa << " EMPTY" << endl << flush;
+#endif
 	 goto LBLpopTask;
        } else {
+#ifdef DEBUG_LTQ
+	 cout << "sa emu sa=" << sa << " PREEMPTIVE" << endl << flush;
+#endif
 	 CTS->restoreFrame();
+	 Assert(sa->getLocalThreadQueue());
 	 goto LBLpreemption;
        }
      }
