@@ -683,7 +683,7 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
       case OBJECT_AND_CLASS:
 	{
 	  ObjectVar *ov = (ObjectVar *) GET_VAR(be, Lazy);
-	  Assert(ov->getType() == OZ_VAR_EXT);
+	  Assert(extVar2Var(ov)->getType() == OZ_VAR_EXT);
 	  Assert(ov->getIdV() == OZ_EVAR_LAZY);
 	  Assert(ov->getLazyType() == LT_OBJECT);
 
@@ -693,8 +693,8 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
 	  OZ_Term cvt = ov->getClassProxy();
 	  DEREF(cvt, cvtp);
 	  Assert(cvtp);
-	  ClassVar *cv = (ClassVar *) tagged2Var(cvt);
-	  Assert(cv->getType() == OZ_VAR_EXT);
+	  ClassVar *cv = (ClassVar *) oz_getExtVar(cvt);
+	  Assert(extVar2Var(cv)->getType() == OZ_VAR_EXT);
 	  Assert(cv->getIdV() == OZ_EVAR_LAZY);
 	  Assert(cv->getLazyType() == LT_CLASS);
 	  cv->transfer(t, cvtp);
@@ -704,7 +704,7 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
       case OBJECT:
 	{
 	  ObjectVar *ov = (ObjectVar *) GET_VAR(be, Lazy);
-	  Assert(ov->getType() == OZ_VAR_EXT);
+	  Assert(extVar2Var(ov)->getType() == OZ_VAR_EXT);
 	  Assert(ov->getIdV() == OZ_EVAR_LAZY);
 	  Assert(ov->getLazyType() == LT_OBJECT);
 

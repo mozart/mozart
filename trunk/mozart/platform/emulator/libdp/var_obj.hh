@@ -53,7 +53,7 @@ public:
   // var type:
   virtual void sendRequest();
   // New (extended) format;
-  virtual OzVariable * gCollectV() { return new ObjectVar(*this); }
+  virtual ExtVar * gCollectV() { return new ObjectVar(*this); }
   virtual void gCollectRecurseV(void);
 
   virtual void disposeV(void);
@@ -69,7 +69,7 @@ public:
     if (oz_isVar(cl)) {
       OzVariable *var = tagged2Var(cl);
       Assert(var->getType() == OZ_VAR_EXT);
-      ExtVar *evar = (ExtVar *) var;
+      ExtVar *evar = var2ExtVar(var);
       Assert(evar->getIdV() == OZ_EVAR_LAZY);
       LazyVar *lvar = (LazyVar *) evar;
       Assert(lvar->getLazyType() == LT_CLASS);
@@ -90,7 +90,7 @@ public:
     if (oz_isVar(cl)) {
       OzVariable *var = tagged2Var(cl);
       Assert(var->getType() == OZ_VAR_EXT);
-      ExtVar *evar = (ExtVar *) var;
+      ExtVar *evar = var2ExtVar(var);
       Assert(evar->getIdV() == OZ_EVAR_LAZY);
       LazyVar *lvar = (LazyVar *) evar;
       Assert(lvar->getLazyType() == LT_CLASS);

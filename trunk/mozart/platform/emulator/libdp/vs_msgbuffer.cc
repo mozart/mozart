@@ -369,13 +369,12 @@ VirtualSite* VSSegmentImportersRegister::find(VirtualSite *vs)
   GenHashNode *aux = htFindFirst(hvalue);
   while(aux) {
     VirtualSite *auxVS;
-    GenCast(aux->getBaseKey(), GenHashBaseKey*, auxVS, VirtualSite*);
+    auxVS = (VirtualSite*) aux->getBaseKey();
 
     //
     if (vs == auxVS) {
       VirtualSite *fvs;
-      GenCast(aux->getEntry(), GenHashEntry*,
-	      fvs, VirtualSite*);
+      fvs = (VirtualSite*) aux->getEntry();
       return (fvs);
     }
 
@@ -395,8 +394,8 @@ void VSSegmentImportersRegister::insert(VirtualSite *vs)
   unsigned int hvalue = hash(vs);
 
   //
-  GenCast(vs, VirtualSite*, ghn_bk, GenHashBaseKey*);
-  GenCast(vs, VirtualSite*, ghn_e, GenHashEntry*);
+  ghn_bk = (GenHashBaseKey*) vs;
+  ghn_e = (GenHashEntry*) vs;
   //
   htAdd(hvalue, ghn_bk, ghn_e);
 }
@@ -409,7 +408,7 @@ void VSSegmentImportersRegister::retract(VirtualSite *vs)
   GenHashNode *ghn = htFindFirst(hvalue);
   while (ghn) {
     VirtualSite *auxVS;
-    GenCast(ghn->getBaseKey(), GenHashBaseKey*, auxVS, VirtualSite*);
+    auxVS = (VirtualSite*) ghn->getBaseKey();
 
     //
     if (vs == auxVS) {
@@ -428,8 +427,7 @@ VirtualSite *VSSegmentImportersRegister::getFirst()
   VirtualSite *vs;
   seqGHN = GenHashTable::getFirst(seqIndex);
   if (seqGHN) {
-    GenCast(seqGHN->getEntry(), GenHashEntry*,
-	    vs, VirtualSite*);
+    vs = (VirtualSite*) seqGHN->getEntry();
   } else {
     vs = (VirtualSite *) 0;
   }
@@ -442,8 +440,7 @@ VirtualSite* VSSegmentImportersRegister::getNext()
   VirtualSite *vs;
   seqGHN = GenHashTable::getNext(seqGHN, seqIndex);
   if (seqGHN) {
-    GenCast(seqGHN->getEntry(), GenHashEntry*,
-	    vs, VirtualSite*);
+    vs = (VirtualSite*) seqGHN->getEntry();
   } else {
     vs = (VirtualSite *) 0;
   }
@@ -664,13 +661,12 @@ VSMsgChunkPoolSegmentManagerImported* VSChunkPoolRegister::find(key_t key)
   GenHashNode *aux = htFindFirst(hvalue);
   while(aux) {
     key_t auxKey;
-    GenCast(aux->getBaseKey(), GenHashBaseKey*, auxKey, key_t);
+    auxKey = (key_t) aux->getBaseKey();
 
     //
     if (key == auxKey) {
       VSMsgChunkPoolSegmentManagerImported *msgChunkPoolManager;
-      GenCast(aux->getEntry(), GenHashEntry*,
-	      msgChunkPoolManager, VSMsgChunkPoolSegmentManagerImported*);
+      msgChunkPoolManager = (VSMsgChunkPoolSegmentManagerImported*) aux->getEntry();
       return (msgChunkPoolManager);
     }
 
@@ -688,8 +684,8 @@ void VSChunkPoolRegister::add(key_t key, VSMsgChunkPoolSegmentManagerImported *p
   int hvalue = hash(key);
 
   //
-  GenCast(key, key_t, ghn_bk, GenHashBaseKey*);
-  GenCast(pool, VSMsgChunkPoolSegmentManager*, ghn_e, GenHashEntry*);
+  ghn_bk = (GenHashBaseKey*) key;
+  ghn_e = (GenHashEntry*) pool;
   htAdd(hvalue, ghn_bk, ghn_e);
 }
 
@@ -700,7 +696,7 @@ void VSChunkPoolRegister::remove(key_t key)
   GenHashNode *aux = htFindFirst(hvalue);
   while(aux) {
     key_t auxKey;
-    GenCast(aux->getBaseKey(), GenHashBaseKey*, auxKey, key_t);
+    auxKey = (key_t) aux->getBaseKey();
 
     //
     if (key == auxKey) {

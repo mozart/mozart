@@ -37,6 +37,11 @@ class TimerElement;
 
 class TransObj {
   friend class TransController;
+public:
+  // for placement argument
+  void* operator new(size_t,void*p) { return p; }
+  void* operator new(size_t n) { return ::new char[n]; }
+
 protected:
   ComObj *comObj;
   DSite *site;
