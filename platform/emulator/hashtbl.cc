@@ -59,7 +59,6 @@ int nextPrime(int prime)
 
 HashTable::HashTable(hashType typ, int s)
 {
-  DebugCheck(s==0, error("HashTable initialized with zero size"););
   s = nextPrime(s);
   tableSize = s;
   type = typ;
