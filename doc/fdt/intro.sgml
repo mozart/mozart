@@ -2,7 +2,6 @@
   - Authors:
   -   Christian Schulte <schulte@dfki.de>
   -   Gert Smolka <smolka@dfki.de>
-  -   Jörg Würtz
   -
   - Contributors:
   -   Daniel Simon <dansim@ps.uni-sb.de>
@@ -11,7 +10,6 @@
   - Copyright:
   -   Christian Schulte, 1998
   -   Gert Smolka, 1998
-  -   Jörg Würtz, 1997
   -
   - Last change:
   -   $Date$ by $Author$
@@ -170,6 +168,14 @@ contained in the following <Ref.extern
 to="FiniteDomainTutorial.oz"/file/. Oz programs for some solutions to
 the exercises are contained in the following <Ref.extern
 to="FiniteDomainTutorialSolutions.oz"/file/.
+
+<section class=unnumbered>
+  <title/Acknowledgements/
+
+<p>
+The tutorial is based on the document ``Finite Domain Constraint
+Programming in Oz. A Tutorial'' by Gert Smolka, Christian Schulte, and
+Jörg Würtz for a previous version of Oz. 
 
 </chapter>
 
