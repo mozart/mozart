@@ -293,7 +293,6 @@ urlc::tcpip_open(const char* h, int p)
       URLC_PERROR("connect");
       return (URLC_ESOCK);
     }
-    osUnblockSignals();
 
     if(-1 == fcntl(fd, F_SETFL, O_NONBLOCK))
 	URLC_PERROR("fcntl");
