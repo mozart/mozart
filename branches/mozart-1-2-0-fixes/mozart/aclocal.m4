@@ -850,9 +850,13 @@ changequote([,])
     else
       oz_tmp_ok=no
     fi
+    oz_cv_gmp_version_major=$OZ_GMP_MAJOR
+    oz_cv_gmp_version_minor=$OZ_GMP_MINOR
     AC_MSG_RESULT($oz_tmp_ok)
   else
     oz_tmp_ok=$oz_cv_gmp_version_ok
+    OZ_GMP_MAJOR=$oz_cv_gmp_version_major
+    OZ_GMP_MINOR=$oz_cv_gmp_version_minor
     AC_MSG_RESULT([(cached) $oz_tmp_ok])
   fi
   oz_gmp_version_ok=$oz_tmp_ok
