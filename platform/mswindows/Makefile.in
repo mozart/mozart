@@ -94,6 +94,5 @@ ozwrapperw.exe: ozwrapperw.o
 version.h: $(SRCTOP)/OZVERSION
 	echo "#define OZVERSION \"`$<`\"" > $@
 
-oz.o ozengine.o oztool.o ozwrapperw.o: misc.cc version.h
-
-ozengine.cc ozenginew.cc: oz.cc
+oz.o oztool.o ozwrapperw.o: misc.cc version.h
+ozengine.o ozenginew.o: oz.cc misc.cc version.h
