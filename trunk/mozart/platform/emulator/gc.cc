@@ -969,7 +969,7 @@ SRecord *SRecord::gcSRecord()
 
 /* return NULL if contains pointer to discarded node */
 inline
-Suspension *Suspension::gcSuspension(Bool tcFlag)
+Suspension *Suspension::gcSuspension()
 {
   GCMETHMSG("Suspension::gcSuspension");
   if (this == 0) return 0;
@@ -983,10 +983,6 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
     // mm2 warning("gcSuspension: dead\n");
     return 0;
   }
-
-  if (tcFlag && !isInTree(bb)) return 0;
-
-  Assert(!tcFlag || !isPropagated());
 
   Suspension *newSusp = (Suspension *) gcRealloc(this, sizeof(*this));
   GCNEWADDRMSG(newSusp);
@@ -1028,14 +1024,14 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
 /* we reverse the order of the list,
  * but this should be no problem
  */
-SuspList * SuspList::gc(Bool tcFlag)
+SuspList * SuspList::gc()
 {
   GCMETHMSG("SuspList::gc");
 
   SuspList *ret = NULL;
 
   for(SuspList* help = this; help != NULL; help = help->next) {
-    Suspension *aux = help->getSusp()->gcSuspension(tcFlag);
+    Suspension *aux = help->getSusp()->gcSuspension();
     if (!aux) {
       continue;
     }
@@ -1134,10 +1130,8 @@ TaggedRef gcVariable(TaggedRef var)
 	
     storeForward(&cv->suspList, new_cv);
       
-    if (opMode == IN_TC && new_cv->getBoardFast () == fromCopyBoard)
-      new_cv->suspList = new_cv->suspList->gc(OK);
-    else
-      new_cv->suspList = new_cv->suspList->gc(NO);
+    new_cv->suspList = new_cv->suspList->gc();
+
     Assert(opMode != IN_GC || new_cv->home != bb);
 
     new_cv->home = bb;
@@ -1163,10 +1157,8 @@ TaggedRef gcVariable(TaggedRef var)
 
   storeForward(&gv->suspList, new_gv);
   
-  if (opMode == IN_TC && new_gv->getBoardFast () == fromCopyBoard)
-    new_gv->suspList = new_gv->suspList->gc(OK);
-  else
-    new_gv->suspList = new_gv->suspList->gc(NO);
+  new_gv->suspList = new_gv->suspList->gc();
+
   new_gv->gc();
 
   Assert(opMode != IN_GC || new_gv->home != bb);
@@ -1197,12 +1189,9 @@ void GenFDVariable::gc(void)
   finiteDomain.gc();
   
   int i;
-  if (opMode == IN_TC && getBoardFast() == fromCopyBoard)
-    for (i = fd_any; i--; )
-      fdSuspList[i] = fdSuspList[i]->gc(OK);
-  else
-    for (i = fd_any; i--; )
-      fdSuspList[i] = fdSuspList[i]->gc(NO);
+  for (i = fd_any; i--; )
+    fdSuspList[i] = fdSuspList[i]->gc();
+
 }
 
 
@@ -1421,7 +1410,7 @@ void AM::gc(int msgLevel)
 
   if (FDcurrentTaskSusp != (Suspension *) NULL) {
     warning("FDcurrentTaskSusp must be NULL!");
-    FDcurrentTaskSusp = FDcurrentTaskSusp->gcSuspension (NO);
+    FDcurrentTaskSusp = FDcurrentTaskSusp->gcSuspension();
   }
 #ifdef DEBUG_STABLE
   board_constraints = board_constraints->gc(NO);
@@ -2169,8 +2158,8 @@ void SolveActor::gcRecurse ()
   gcTagged (solveVar, solveVar);
   gcTagged (guidance, guidance);
   gcTagged (result, result);
-  suspList = suspList->gc(NO);
-  stable_sl = stable_sl->gc(NO);
+  suspList  = suspList->gc();
+  stable_sl = stable_sl->gc();
   orActors.gc (SolveActor::StackEntryGC);   // higher order :))
 }
 
