@@ -50,7 +50,7 @@ const int sizeOfLitFlags = 3;
 const int litFlagsMask   = (1<<sizeOfLitFlags)-1;
 
 #define Lit_isName       1
-#define Lit_isNamedName 2
+#define Lit_isNamedName  2
 #define Lit_hasGName     4
 
 class Literal {
