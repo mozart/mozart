@@ -2,11 +2,18 @@
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
 declare
+Ozcar
+\ifdef SAVE
+NewOzcar
+\endif
+in
 
-   Ozcar
-
+\ifdef SAVE
+proc {NewOzcar Compile Error Tk TkTools Browse ?Ozcar}
+\else
 local
-   
+\endif   
+
    \insert 'ozcar/config'
    \insert 'ozcar/prelude'
 
@@ -26,3 +33,8 @@ in
    \insert 'ozcar/ozcar'
 
 end
+
+\ifdef SAVE   
+Ozcar = {NewOzcar Compile Error Tk TkTools Browse}
+\endif
+
