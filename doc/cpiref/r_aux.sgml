@@ -140,7 +140,8 @@ returned array holds one of the following values.
 <tr> <td/<math/i// <td/This is the first occurrence of a variable
   stored in the array at position <math/i/./
 <tr> <td/<math/j \neq i// <td/This is a repeated occurrence of a
-  variable stored at position <math/j/ in the array. The first occurrence can
+  variable stored at position <math/j/ in the array./
+<tr> <td/<P.silent>/ <td/The first occurrence can
   be found at position <math/j/. / 
 </table>
 <p>
@@ -181,11 +182,11 @@ overridden on every invocation.
 <Entry class="function"><<OZ_typeErrorCPI>>
 <Index class=proglang><<OZ_typeErrorCPI>></Index>
 <Synopsis> 
-<<
+<<<
 OZ_Return OZ_typeErrorCPI(char * __typeString,
                           int pos, 
                           char * comment);
->>
+>>>
 
 <Item>
 The return value of this function indicates the runtime system that an

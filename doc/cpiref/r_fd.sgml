@@ -39,9 +39,9 @@ of the class <<OZ_FiniteDomain>> or in conjunction with operators
 <p>
 <table>
 <tr> <th/value/ <th/explanation/
-<tr> <td/<<fd_empty>>/ <td/The domain does not contain any element/
-<tr> <td/<<fd_full>>/ <td/The domain contains all elements possible,
-&ie <math/0, \ldots, \mbox{\tt OZ\_getFDSup()}/
+<tr> <td/<<fd_empty>>/ <td/The domain does not contain any element./
+<tr> <td/<<fd_full>>/ <td/The domain contains all elements possible,/
+<tr> <td/<P.silent>/<td/&ie <math/0, \ldots, \mbox{\tt OZ\_getFDSup()}./
 <tr> <td/<<fd_bool>>/ <td/The domain contains <math/0/ and <math/1/./
 <tr> <td/<<fd_singl>>/ <td/The domain contains a single element./
 </table>
@@ -114,7 +114,8 @@ the domain they initialised.
 <Synopsis> <<int OZ_FiniteDomain::initRange(int l, int u);>>
 
 <Item> Initialises an instance of class <<OZ_FiniteDomain>> to the
-domain <math/\{l, \ldots, u\}/. In case <<l>> &gt; <<u>>, the domain
+domain <math/\{l, \ldots, u\}/. 
+<P> In case <<l>> &gt; <<u>>, the domain
 is set to be empty.
 
 
@@ -318,16 +319,17 @@ represented by <<y>> and <<*this>>.
 <Item>
 This member function returns the negation of the finite domain
 represented by <<*this>>. The negation is computed by removing all
-elements contained in <<*this>> from <math/\{0, \ldots, \mbox{\tt
+elements in <<*this>> from <math/\{0, \ldots, \mbox{\tt
 OZ\_getFDSup()}\}/.
 
 
 <Entry class="operator member function"><<operator &amp;=>>
 <Index class=proglang><<OZ_FiniteDomain>><And><<operator &amp;=>></Index>
-<Synopsis> <<
+<Synopsis> 
+<<<
 int operator &= (const OZ_FiniteDomain &amp;y);
 int operator &= (const int y);
->>
+>>>
 
 <Item> This member function computes the intersection of the finite domains
 represented by <<y>> and <<*this>> and assigns the result to
