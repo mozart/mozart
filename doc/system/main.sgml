@@ -88,12 +88,12 @@
 
 <!-- System programming -->
 
-<!ENTITY chapter.system        SYSTEM "system.sgml">
-<!ENTITY chapter.pickle        SYSTEM "pickle.sgml">
-<!ENTITY chapter.finalize      SYSTEM "finalize.sgml">
-<!ENTITY chapter.error         SYSTEM "error.sgml">
-<!ENTITY chapter.errorregistry SYSTEM "errorregistry.sgml">
-<!ENTITY chapter.property      SYSTEM "property.sgml">
+<!ENTITY chapter.system          SYSTEM "system.sgml">
+<!ENTITY chapter.pickle          SYSTEM "pickle.sgml">
+<!ENTITY chapter.finalize        SYSTEM "finalize.sgml">
+<!ENTITY chapter.error           SYSTEM "error.sgml">
+<!ENTITY chapter.errorformatters SYSTEM "errorformatters.sgml">
+<!ENTITY chapter.property        SYSTEM "property.sgml">
 
 <!-- Window programming -->
 
@@ -168,7 +168,7 @@
     <Meta name="html.split"       value="section.property.platform">  
 
     <Meta name="html.split"       value="chapter.error">
-    <Meta name="html.split"       value="chapter.errorregistry">
+    <Meta name="html.split"       value="chapter.errorformatters">
     <Meta name="html.split"       value="chapter.finalize">
     <Meta name="html.split"       value="chapter.system">
 
@@ -257,7 +257,7 @@
     &chapter.pickle;
     &chapter.property;
     &chapter.error;
-    &chapter.errorregistry;
+    &chapter.errorformatters;
     &chapter.finalize;
     &chapter.system;
   </Part>
