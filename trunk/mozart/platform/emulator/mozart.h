@@ -401,16 +401,6 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
    OZ_result(v) assigns v to output register 0 (the usual case)
    */
 
-/*
- * special return values for builtins moved from base.hh
- */
-#define BI_PREEMPT       1024
-#define BI_REPLACEBICALL 1025
-#define BI_TYPE_ERROR    1026
-#define BI_CONTROL_VAR   1027
-
-#define OZ_STATUS_OK(s) ((s)==PROCEED || (s)==BI_PREEMPT)
-
 #ifdef __cplusplus
 #define OZ_BI_proto(Name) \
   extern "C" OZ_Return _FUNDECL(Name,(OZ_Term [],int []));
