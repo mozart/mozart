@@ -336,15 +336,15 @@ void AM::init(int argc,char **argv)
     }
 
     OZ_Term v=oz_newVariable();
-    OZ_Return ret = loadURL(url,v,makeTaggedNULL());
-    if (ret!=PROCEED) {
+    Thread *tt = mkRunnableThread(DEFAULT_PRIORITY, _rootBoard);
+    OZ_Return ret = loadURL(url,v,makeTaggedNULL(),tt);
+    if (ret!=PROCEED && ret!=BI_PREEMPT) {
       char *aux = (ret==RAISE) ? toC(exception.value) : "unknown error";
       prefixError();
       fprintf(stderr,"Loading from URL '%s' failed: %s\n",url,aux);
       fprintf(stderr,"Maybe recompilation needed?\n");
       exit(1);
     }
-    Thread *tt = mkRunnableThread(DEFAULT_PRIORITY, _rootBoard);
     tt->pushCall(v, 0, 0);
     scheduleThread(tt);
   }

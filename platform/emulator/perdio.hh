@@ -322,8 +322,8 @@ void gcGName(GName *);
 /*  SECTION ::  provided by components                                      */
 /* ************************************************************************ */
 
-int loadURL(const char *,OZ_Term,OZ_Term);
-int loadURL(TaggedRef,OZ_Term,OZ_Term);
+int loadURL(TaggedRef url, OZ_Term out, OZ_Term triggerVar, Thread *th);
+int loadURL(const char *,OZ_Term,OZ_Term, Thread *th);
 void initComponents();
 
 /* ************************************************************************ */
