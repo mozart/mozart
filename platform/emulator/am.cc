@@ -63,6 +63,12 @@ ConfigData::ConfigData() {
 
   gcFlag                = GC_FLAG;
   gcVerbosity           = GC_VERBOSITY;
+  heapMaxSize           = HEAPMAXSIZE;
+  heapMargin            = HEAPMARGIN;
+  heapIncrement         = HEAPINCREMENT;
+  heapIdleMargin        = HEAPIDLEMARGIN;
+
+
   timeSlice             = TIME_SLICE;
   defaultPriority       = DEFAULT_PRIORITY;
   systemPriority        = SYSTEM_PRIORITY;
@@ -266,173 +272,176 @@ Bool AM::unify(TaggedRef *ref1, TaggedRef *ref2)
   return result;
 }
 
+
+/* we prefer binding of newer variables to older ones */
+inline Bool heapNewer(TaggedRef *termPtr1, TaggedRef *termPtr2)
+{
+  return termPtr1 > termPtr2;
+}
+
+#define Swap(A,B,Type) { Type help=A; A=B; B=help; }
+
 Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2)
 {
-  int currArg;
+  int argSize;
+  RefsArray args1, args2;
+  Bool istl = isToplevel();
+  Bool ret = OK;
+
+start:
 
   DEREFPTR(termPtr1,term1,tag1);
   DEREFPTR(termPtr2,term2,tag2);
 
-// detect identical variables or equal terms
-  if ( isUVar(tag1) ) {  // distinct variables created in the
-                         // same blackboard have the same image !!!!
-                         // (the same home pointer), that's why
-    if (termPtr1 == termPtr2) // check the location.
-      return OK;
-  } else
-    if ( term1 == term2 ) {   // CVars and other terms can be uniquely
-                              // identified by their value.
-      return OK;
+  // identical terms ?
+  if (term1 == term2 &&
+      (!isUVar(term1) || termPtr1 == termPtr2)) {
+    return ret;
   }
 
-// unify destinct variables
-  if ( isNotCVar(tag1) ) {
-    if ( isNotCVar(tag2) && isLocalVariable(term2) ) {
-      /* if the second reference is local unbound VARiable,   */
-      /* then bind this var to the first reference.           */
-
-      /* if we want to bind two local variables to each other
-       * we bind the newer one to the older one. So variable names
-       * look nicer: help variables are bound more likely to
-       * pretty variables.
-       * Note also, that this helps shorten reference chains !!!!
-       *
-       * (term2 < term1) since we allocate upwards in memory chunks
-       */
-
-// !!! check here mm2
-      if ((termPtr2 < termPtr1) && isLocalVariable(term1)) {
-        bind ( termPtr1, term1, termPtr2);
-      } else {
-        bind ( termPtr2, term2, termPtr1);
-      }
+  if (isAnyVar(term1)) {
+    if (isAnyVar(term2)) {
+      goto var_var;
     } else {
-      /* ... the first ref is unbound ref; bind it.      */
-      bind ( termPtr1, term1, termPtr2);
-    } // ( isNotCVar(tag2) && isLocalVariable(term2) )
-    return OK;
-  } // ( isNotCVar(tag1) )
-
-  if ( isNotCVar (tag2) ) {
-    bind ( termPtr2, term2, termPtr1);
-    return OK;
+      goto var_nonvar;
+    }
+  } else {
+    if (isAnyVar(term2)) {
+      Swap(term1,term2,TaggedRef);
+      Swap(termPtr1,termPtr2,TaggedRef*);
+      Swap(tag1,tag2,TypeOfTerm);
+      goto var_nonvar;
+    } else {
+      goto nonvar_nonvar;
+    }
   }
 
 
-// unification involving at least one generic variable
-  if(tag2 == CVAR)
-    return tagged2CVar(term2)->unify(termPtr2, term2, tag2,
-                                     termPtr1, term1, tag1);
+ /*************/
+ var_nonvar:
 
-  if(tag1 == CVAR)
-    return tagged2CVar(term1)->unify(termPtr1, term1, tag1,
-                                     termPtr2, term2, tag2);
+  if (isCVar(tag1)) {
+    return ret && tagged2CVar(term1)->unify(termPtr1, term1, tag1,
+                                            termPtr2, term2, tag2);
+  }
 
-// unify non-variable terms
-      /* At this point there are two refs which point to a non-ref    */
-      /* structures. We try to unify them.                            */
-      /* There is the following assumption: we exchange the structure */
-      /* at the higher address to the one at the lower address.       */
+  bindToNonvar(termPtr1, term1, term2);
+  return ret;
 
+
+
+ /*************/
+ var_var:
+
+  /* prefer binding nonCVars to CVars */
+  if (isNotCVar(tag1)) {
+    if ( isNotCVar(tag2) && isLocalVariable(term2) &&
+         (!isLocalVariable(term1) || heapNewer(termPtr2,termPtr1))) {
+      bind(termPtr2, term2, termPtr1);
+    } else {
+      bind(termPtr1, term1, termPtr2);
+    }
+    return ret;
+  }
+
+  if (isNotCVar(tag2)) {
+    bind(termPtr2, term2, termPtr1);
+    return ret;
+  }
+
+  Assert(isCVar(tag1) && isCVar(tag2));
+  return ret && tagged2CVar(term1)->unify(termPtr1, term1, tag1,
+                                          termPtr2, term2, tag2);
+
+
+
+ /*************/
+ nonvar_nonvar:
 
   if (tag1 != tag2) {
-// #define TESTGEN
-#ifdef TESTGEN
-    if (tag1 == CONST) {
-      ConstTerm *gen = tagged2Const(term1);
-      return gen->unify(term2);
-    }
-
-    if (tag2 == CONST) {
-      ConstTerm *gen = tagged2Const(term2);
-      return gen->unify(term1);
-    }
-#endif
     return NO;
   }
 
-// rational unification needs rebinding
-  rebind (termPtr2, term1);
-
   switch ( tag1 ) {
+
   case CONST:
-    {
-      ConstTerm *gen = tagged2Const(term1);
-      return gen->unify(term2);
-    }
+    return ret && tagged2Const(term1)->unify(term2);
+
   case LTUPLE:
     {
-      TaggedRef *arg1 = tagged2LTuple(term1)->getRef();
-      TaggedRef *arg2 = tagged2LTuple(term2)->getRef();
-      if (!performUnify(arg1,arg2)) {
-        if (isToplevel()) {
-          performUnify(arg1+1,arg2+1);
-        }
-        return NO;
-      }
-      return performUnify(arg1+1,arg2+1);
+      args1 = tagged2LTuple(term1)->getRef();
+      args2 = tagged2LTuple(term2)->getRef();
+      argSize = 2;
+      goto unify_args;
     }
 
   case STUPLE:
     {
-      if ( ! tagged2STuple(term1)->compareFunctor(tagged2STuple(term2))) {
-        /* i.e. there are different functors.    */
+      STuple *st1 = tagged2STuple(term1);
+      STuple *st2 = tagged2STuple(term2);
+
+      if ( ! st1->compareFunctor(st2) ) {
         return NO;
       }
 
-      /* ... now we must reset the ref and try to unify args.       */
-      int end = tagged2STuple(term1)->getSize ();
-      Bool ret = OK;
-      for ( currArg = 0;
-            currArg < end;
-            currArg++ ) {
-        if ( !performUnify (tagged2STuple(term1)->getRef(currArg),
-                            tagged2STuple(term2)->getRef(currArg))) {
-          ret = NO;
-          if (!isToplevel()) {
-            break;
-          }
-        }
-      }
-      return ret;
+      argSize = st1->getSize();
+      args1 = st1->getRef();
+      args2 = st2->getRef();
+
+      goto unify_args;
     }
+
   case SRECORD:
     {
-      if ( ! tagged2SRecord(term1)->compareFunctor(tagged2SRecord(term2))) {
-        /* i.e. there are different functors.    */
+      SRecord *sr1 = tagged2SRecord(term1);
+      SRecord *sr2 = tagged2SRecord(term2);
+
+      if (! sr1->compareFunctor(sr2)) {
         return NO;
       }
-      /* ... now we must reset the ref and try to unify args.       */
-      int end = tagged2SRecord(term1)->getArgsSize();
-      Bool ret = OK;
-      for ( currArg = 0;
-            currArg < end;
-            currArg++ ) {
-        if ( !performUnify ( tagged2SRecord(term1)->getRef(currArg),
-                             tagged2SRecord(term2)->getRef(currArg))) {
-          ret = NO;
-          if (!isToplevel()) {
-            break;
-          }
-        }
-      }
-      return ret;
+
+      argSize = sr1->getArgsSize();
+      args1 = sr1->getRef();
+      args2 = sr2->getRef();
+
+      goto unify_args;
     }
+
   case ATOM:
-    // atom unify if there pointers are equal
+    /* atoms unify if their pointers are equal */
     return NO;
 
   case FLOAT:
   case BIGINT:
   case SMALLINT:
-    /* numberEq assumes, that both arguments have the same tag !! */
-    return numberEq(term1,term2);
+    return ret && numberEq(term1,term2);
 
   default:
-        // every unification of other data types fails
     return NO;
   }
+
+
+ /*************/
+ unify_args:
+
+  rebind (termPtr2, term1);
+
+  for (int i = 0; i < argSize-1; i++ ) {
+    ret = ret && performUnify(args1+i,args2+i);
+    if (!ret && !istl) {
+      return NO;
+    }
+  }
+
+  /* tail recursion optimization */
+  termPtr1 = args1+argSize-1;
+  termPtr2 = args2+argSize-1;
+  goto start;
 }
+
+
+
+
 
 // mm2: has to be optimzed: ask rs
 Bool AM::isBetween(Board *to, Board *varHome)
