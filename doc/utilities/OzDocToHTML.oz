@@ -56,6 +56,18 @@ define
 		   macro#'macro'
 		   variable#'variable' command#'command']
 
+   fun {CollapseSpaces S DropSpace}
+      case S of C|Cr then
+	 if {Char.isSpace C} then
+	    if DropSpace then {CollapseSpaces Cr true}
+	    else & |{CollapseSpaces Cr true}
+	    end
+	 else C|{CollapseSpaces Cr false}
+	 end
+      [] nil then ""
+      end
+   end
+
    fun {InitialCapital S}
       case S of C|Cr then {Char.toUpper C}|Cr
       [] nil then ""
@@ -263,7 +275,8 @@ define
       meth BatchSub(M I $)
 	 if {HasFeature M I} then
 	    case M.I of S=_|_ then
-	       PCDATA(S)|OzDocToHTML, BatchSub(M I + 1 $)
+	       PCDATA({CollapseSpaces S false})|
+	       OzDocToHTML, BatchSub(M I + 1 $)
 	    [] nil then
 	       OzDocToHTML, BatchSub(M I + 1 $)
 	    elseof N then
@@ -1008,9 +1021,9 @@ define
 			       type: 'text/css'
 			       href: @StyleSheet))
 		     'body'(COMMON: @BodyCommon
-			    %--** navigation panel
 			    BodyContents
 			    OzDocToHTML, FlushFloats($)
+			    %--** include a next-pointer if necessary
 			    hr()
 			    address(case @Authors of nil then EMPTY
 				    else As in
