@@ -420,7 +420,8 @@ PRINT(ArityTable)
 
 
 
-PRINT(SuspList){
+PRINT(SuspList)
+{
   if (isEffectiveList(this) == NO) {
     stream << indent(offset) << "- empty -" << endl;
     return;
@@ -434,27 +435,35 @@ PRINT(SuspList){
 	     << ((CondSuspList*)sl)->getCondNum() << " conds";
     else 
       stream << indent(offset) << "true";
-
-    stream << " [";
-    if (sl->getSusp()->isDead()) stream << 'D';
-    if (sl->getSusp()->isPropagated()) stream << 'P';
-    if (sl->getSusp()->isResistant()) stream << 'R';
-    if (sl->getSusp()->isExtSusp()) stream << 'E';
-    if (sl->getSusp()->isSurvSusp()) stream << 'S';
-    if (sl->getSusp()->isEqvSusp()) stream << 'V';
-    
-    stream << "] -> ";
-    if (sl->getSusp()->getCont())
-      stream << "cont ";
-    else if (sl->getSusp()->getCCont())
-      stream  << "ccont = (*" << (void*) sl->getSusp()->getCCont()->getCFunc()
-	      << ")(), ";
-    else
-      stream << "board ";
-    sl->getSusp()->getNode()->print(stream, 0);
+    sl->getSusp()->print(stream);
     stream << endl;
   } // for
 }
+
+PRINT(Suspension)
+{
+    stream << indent(offset) << " [";
+    if (isDead()) stream << 'D';
+    if (isPropagated()) stream << 'P';
+    if (isResistant()) stream << 'R';
+    if (isExtSusp()) stream << 'E';
+    if (isSurvSusp()) stream << 'S';
+    if (isEqvSusp()) stream << 'V';
+    stream << "] -> ";
+
+    if (getCont())
+      stream << "cont ";
+    else if (getCCont()) {
+      stream  << "ccont = "
+	      << builtinTab.getName((void *)getCCont()->getCFunc())
+	      << '(' << getCCont()->getXSize() << ", "
+	      << (void *) getCCont()->getX() << "[]), ";
+    } else {
+      stream << "board ";
+    }
+    getNode()->print(stream, 0);
+}
+
 
 // ----------------------------------------------------------------
 // PRINT LONG
@@ -606,35 +615,18 @@ PRINT(Board)
     stream << "Solve";
   }
 
-  stream << "Board @" << this << " [";
+  stream << "Board @" << this->getBoardDeref() << " [";
 
-  if (isCommitted()) {
-    stream << 'C';
-  }
-  if (isReflected()) {
-    stream << 'R';
-  }
-  if (isInstalled()) {
-    stream << 'I';
-  }
-  if (isNervous()) {
-    stream << 'N';
-  }
-  if (isWaitTop()) {
-    stream << 'T';
-  }
-  if (isPathMark()) {
-    stream << 'P';
-  }
-  if (isFailed()) {
-    stream << 'F';
-  }
-  if (isDiscarded()) {
-    stream << 'D';
-  }
-  if (isWaiting()) {
-    stream << 'W';
-  }
+  if (isCommitted()) stream << 'C';
+  if (isReflected()) stream << 'R';
+  if (isInstalled()) stream << 'I';
+  if (isNervous())   stream << 'N';
+  if (isWaitTop())   stream << 'T';
+  if (isPathMark())  stream << 'P';
+  if (isFailed())    stream << 'F';
+  if (isDiscarded()) stream << 'D';
+  if (isWaiting())   stream << 'W';
+  
   stream << " #" << suspCount;
   stream << ']';
 }
