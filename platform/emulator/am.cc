@@ -1027,14 +1027,15 @@ void AM::setCurrent(Board *c, Bool checkNotGC)
 
     currentSolveBoard = c;
     wasSolveSet = OK;
-    DebugCheckT (oldSolveBoard = c);
+    DebugCode (oldSolveBoard = c);
   } else if (wasSolveSet == OK) {
     Assert(!checkNotGC || oldSolveBoard == currentSolveBoard);
 
     currentSolveBoard = c->getSolveBoard();
     wasSolveSet = NO;
-    DebugCheckT (oldSolveBoard = currentSolveBoard);
+    DebugCode (oldSolveBoard = currentSolveBoard);
   }
+  Assert (!currentSolveBoard || !(currentSolveBoard->isReflected ()));
 }
 
 Bool AM::loadQuery(CompStream *fd)
@@ -1135,14 +1136,14 @@ void AM::incSolveThreads(Board *bb)
     if (bb->isSolve()) {
       Assert(!bb->isReflected());
       SolveActor *sa = SolveActor::Cast(bb->getActor());
-      if (!sa->isCommitted()) { // notification board below failed solve
-        sa->incThreads ();
-        Assert (!isStableSolve(sa));
-#ifdef DEBUG_CHECK
-      } else {
-        Assert (bb->isFailed ());
-#endif
-      }
+      //
+      Assert (!sa->isCommitted());
+
+      //
+      sa->incThreads ();
+
+      //
+      Assert (!(isStableSolve (sa)));
     }
     bb = bb->getParentFast();
   }
@@ -1155,17 +1156,17 @@ void AM::decSolveThreads(Board *bb)
     if (bb->isSolve()) {
       Assert(!bb->isReflected());
       SolveActor *sa = SolveActor::Cast(bb->getActor());
-      if (!sa->isCommitted()) { // notification board below failed solve
-        // local optimization - check for threads first;
-        if (sa->decThreads () == 0) {
-          if (isStableSolve(sa)) {
-            scheduleThread (new Thread (sa->getPriority (), bb, OK));
-          }
+
+      //
+      // local optimization - check for threads first;
+      if (sa->decThreads () == 0) {
+        //
+        // ... first - notification board below the failed solve board;
+        if (!(sa->isCommitted ()) && isStableSolve (sa)) {
+          scheduleThread (new Thread (sa->getPriority (), bb, OK));
         }
-#ifdef DEBUG_CHECK
       } else {
-        Assert (bb->isFailed ());
-#endif
+        Assert (sa->getThreads () > 0);
       }
     }
     bb = bb->getParentFast();
