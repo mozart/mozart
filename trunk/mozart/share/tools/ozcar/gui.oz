@@ -2,22 +2,32 @@
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
 local
-   
-   fun {IsDefList X}
-      S = {Space.new fun {$} {IsList X} end}
-      V = thread {Space.askVerbose S} end
+
+   local
+      fun {IsPerhapsList Xs}
+	 case Xs of _|Xr then
+	    case Xr of _|_ then true else Xr==nil end
+	 else
+	    Xs==nil
+	 end
+      end
    in
-      case V
-      of succeeded(entailed)
-      then
-	 {Space.merge S}
-      [] blocked(_)
-      then
-	 {Space.inject S proc {$ _} fail end}
-	 false
+      fun {IsDefList X}
+	 S = {Space.new fun {$} {IsPerhapsList X} end}
+	 V = thread {Space.askVerbose S} end
+      in
+	 case V
+	 of succeeded(entailed)
+	 then
+	    {Space.merge S}
+	 [] blocked(_)
+	 then
+	    {Space.inject S proc {$ _} fail end}
+	    false
+	 end
       end
    end
-   
+
    fun {FormatArgs A}
       {Map A
        fun {$ X}
@@ -108,8 +118,9 @@ in
 
       meth init
 	 %% create the main window, but delay showing it
-	 self.toplevel = {New Tk.toplevel tkInit(title:TitleName
-						 withdraw:true)}
+	 self.toplevel = {New Tk.toplevel tkInit(title:    TitleName
+						 delete:   self # off
+						 withdraw: true)}
 	 {Tk.batch [wm(iconname   self.toplevel IconName)
 		    wm(iconbitmap self.toplevel BitMap)
 		    wm(geometry   self.toplevel ToplevelGeometry)]}
@@ -136,7 +147,7 @@ in
 	 local
 	    %% Tk has some problems printing centered text :-(
 	    Bs = {Map [' step' ' next'  ' cont' ' forget'
-		       ' term' ' clear' ' stack' ]
+		       ' term' ' reset' /* ' stack' */ ]
 		  fun {$ B}
 		     {New Tk.button tkInit(parent: self.ButtonFrame
 					   text:   B
@@ -149,7 +160,7 @@ in
 	    TkSusp TkRunChildren Susp RunChildren
 	 in
 	    {ForAll
-	     [TkSusp        # Susp        # 'Suspend'           # suspend
+	     [TkSusp        # Susp        # 'Ignore Queries' # suspend
 	      TkRunChildren # RunChildren # 'Start Threads' # runChildren]
 	     proc {$ B}
 		M = B.4
@@ -542,7 +553,7 @@ in
 	    elseof ' term' then
 	       ThreadManager,kill(T I)
 
-	    elseof ' clear' then
+	    elseof ' reset' then
 	       ThreadManager,killAll
 	       
 	    elseof ' stack' then  %% will go away, someday...
