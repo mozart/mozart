@@ -1892,8 +1892,8 @@ LBLdispatcher:
          X[0] = makeTaggedConst(o->getClass());
          predArity = 2;
          if (!isTailCall) { PushCont(PC); }
+         ChangeSelf(o);
          CallDoChecks(def);
-         am.changeSelf(o);
          JUMPABSOLUTE(def->getPC());
        }
 
