@@ -22,7 +22,7 @@ INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
 
-FUNCTORS	= mode.ozf io.ozf process.ozf
+FUNCTORS	= mode.ozf io.ozf process.ozf open.ozf
 NATIVES		= io.so process.so
 
 LIB_FUNCTORS	= $(addprefix $(LIB_DIR)/,$(FUNCTORS))
