@@ -1495,7 +1495,7 @@ TaggedRef TaskStack::dbgFrameVariables(int frameId)
     if (PC==C_DEBUG_CONT_Ptr) {
       if (match) continue;
       OzDebug *ozdeb = (OzDebug *) Y;
-      int curId = OZ_intToC(ozdeb->info);
+      int curId = OZ_intToC(OZ_head(ozdeb->info));
       if (frameId == curId)
         match = OK;
       continue;

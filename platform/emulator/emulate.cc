@@ -259,7 +259,11 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
     OzDebug *dbg;
     int frameId   = ++lastFrameID % MAX_ID;
 
-    OZ_Term dinfo = OZ_int(frameId);
+    OZ_Term dinfo = nil();
+    for (int i=def->getArity()-1; i>=0; i--) {
+      dinfo = cons(arguments[i],dinfo);
+    }
+    dinfo = cons(OZ_int(frameId),dinfo);
 
     if (currentThread->stepMode() || def->getPred()->getSpyFlag()) {
       debugStreamCall(PC, def->getPrintName(), def->getArity(),
