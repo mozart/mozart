@@ -1,10 +1,35 @@
-%%% read a stylesheet and build a representation for it
+%%% reads a stylesheet from a file and returns a representation for it:
+%%%
+%%% stylesheet(id	: ID
+%%%            space	: SPACE
+%%%            constants: CONSTANTS
+%%%            templates: TEMPLATES)
+%%%
+%%% ID is a list of pairs A#E where A is an atom naming an attribute and
+%%% E is either unit or an atom naming an element type.  This list
+%%% indicates which attributes should be considered ID attributes.
+%%%
+%%% SPACE is a list where each element is either strip(E) or preserve(E),
+%%% where E is an atom naming an element type.  It indicates what to do
+%%% with chunks of whitespace.
+%%%
+%%% CONSTANTS is a list of pairs C#V where C is an atom naming a constant
+%%% and V is the string that is assigned as its value.
+%%%
+%%% TEMPLATES is a list of template elements.
+%%%
 functor
 import
-   XML
+   XML('class')
    Parse(pattern expression) at 'XSL-ATTRIBUTE.ozf'
+export
+   ParseFile
 define
-   Parser = {ByNeed fun {$} {New XML init} end}
+   fun {ParseFile File}
+      {Internalize {PreProcess {FromFile File}}}
+   end
+   %%
+   Parser = {ByNeed fun {$} {New XML.'class' init} end}
    fun {FromFile File} {Parser parseFile(File $)} end
    %%
    %% {PreProcess XmlTree XslTree}
@@ -17,10 +42,16 @@ define
    fun {PreProcess Node}
       case Node of element(type:T attribute:A content:C) then
 	 if {List.isPrefix "xsl:" {Atom.toString T}} then
-	    xsl(type:T attribute:A content:{DoAll C})
+	    xsl(type	  : T
+		attribute : {Record.map A PreProcess}
+		content   : {Map C PreProcess})
 	 else
-	    elt(type:T attribute:A content:{DoAll C})
+	    elt(type	  : T
+		attribute : {Record.map A PreProcess}
+		content   : {Map C PreProcess})
 	 end
+      elseof root(L) then root({Map L PreProcess})
+      elseof attribute(name:_ value:V) then V
       else Node end
    end
    %%
@@ -40,7 +71,7 @@ define
 	 if {IsSpaces Top} then skip
 	 elsecase Top of xsl(type:'xsl:stylesheet' ...) then
 	    {DoStyleSheet Top}
-	 else raise(illegalAtTopLevel Top) end end
+	 else raise xsl(illegalAtTopLevel Top) end end
       end
       proc {DoStyleSheet Top}
 	 {ForAll Top.content DoSSTop}
@@ -76,25 +107,25 @@ define
       end
       proc {DoId E}
 	 {NoContent E}
-	 A = {AttributeGet E 'attribute'}
-	 E = {AttributeCondGet E 'element' unit}
+	 Att = {AttributeGet E 'attribute'}
+	 Elt = {AttributeCondGet E 'element' unit}
 	 L
       in
-	 {Exchange AccId L (A#E)|L}
+	 {Exchange AccId L (Att#Elt)|L}
       end
       proc {DoStripSpace E}
 	 {NoContent E}
-	 E = {AttributeGet E 'element'}
+	 Elt = {AttributeGet E 'element'}
 	 L
       in
-	 {Exchange AccSpace L strip(E)|L}
+	 {Exchange AccSpace L strip(Elt)|L}
       end
       proc {DoPreserveSpace E}
 	 {NoContent E}
-	 E = {AttributeGet E 'element'}
+	 Elt = {AttributeGet E 'element'}
 	 L
       in
-	 {Exchange AccSpace L preserve(E)|L}
+	 {Exchange AccSpace L preserve(Elt)|L}
       end
       proc {DoDefineMacro E} raise xsl(notImplemented E) end end
       proc {DoDefineAttributeSet E} raise xsl(notImplemented E) end end
@@ -106,12 +137,14 @@ define
       in
 	 {Exchange AccConst L (N#V)|L}
       end
-      proc {DoTemplate E}
-	 xsl(type      : 'xsl:template'
-	     attribute : o(match:{Parse.pattern {AttributeGet X 'match'}})
-	     content   : {DoTemplateBatch E.contents})
+      proc {DoTemplate E} L in
+	 {Exchange AccTempl L
+	  xsl(type      : 'xsl:template'
+	      attribute : o(match:{Parse.pattern {AttributeGet E 'match'}})
+	      content   : {DoTemplateBatch E.content})
+	  |L}
       end
-      proc {DoTemplateBatch L}
+      fun {DoTemplateBatch L}
 	 case L of nil then nil
 	 [] H|T then
 	    if {IsSpaces H} then {DoTemplateBatch T}
@@ -130,16 +163,16 @@ define
 		  else raise xsl(unknown H) end end
 	       elseof elt(type:T attribute:A content:C) then
 		  elt(type      : T
-		      attribute : {Record.map A DoTemplateAttribute}
+		      attribute : {Record.mapInd A DoTemplateAttribute}
 		      content   : {DoTemplateBatch C})
 	       else H end
 	       |{DoTemplateBatch T}
 	    end
 	 end
       end
-      proc {DoNumber E}
+      fun {DoNumber E}
 	 {NoContent E}
-	 L = {String.toAtom {AttributeCondGet X 'level' "single"}}
+	 L = {String.toAtom {AttributeCondGet E 'level' "single"}}
 	 if L=='single' orelse L=='multi' orelse L=='any' then skip
 	 else raise xsl(illegalAttribute E 'level') end end
 	 C = case {AttributeCondGet E 'count' unit} of unit then unit
@@ -147,12 +180,80 @@ define
 	 F = case {AttributeCondGet E 'from'  unit} of unit then unit
 	     elseof S then {Parse.pattern S} end
       in
-	 xsl(type      : 'xsl:number'
-	     attribute : o(level:L count:C 'from':F)
-	     content   : nil)
+	 xsl(type	: 'xsl:number'
+	     attribute	: o(level:L count:C 'from':F)
+	     content	: nil)
+      end
+      fun {DoText E}
+	 xsl(type	: 'xsl:text'
+	     attribute	: o
+	     content	: E.content)
+      end
+      fun {DoProcessChildren E}
+	 {NoContent E}
+      in
+	 xsl(type	: 'xsl:process-children'
+	     attribute	: o
+	     content	: nil)
+      end
+      fun {DoProcess E}
+	 {NoContent E}
+      in
+	 xsl(type	: 'xsl:process'
+	     attribute	: o(select:{Parse.pattern {AttributeGet E select}})
+	     content	: nil)
+      end
+      fun {DoForEach E}
+	 xsl(type	: 'xsl:for-each'
+	     attribute	: o(select:{Parse.pattern {AttributeGet E select}})
+	     content	: {DoTemplateBatch E.content})
+      end
+      fun {DoIf E}
+	 xsl(type	: 'xsl:if'
+	     attribute	: o(test:{Parse.pattern {AttributeGet E select}})
+	     content	: {DoTemplateBatch E.content})
+      end
+      fun {DoChoose E}
+	 xsl(type	: 'xsl:choose'
+	     attribute	: o
+	     content	: {DoChooseBatch E.content})
+      end
+      fun {DoChooseBatch L}
+	 case L of nil then nil
+	 [] H|T then
+	    case H.type
+	    of 'xsl:otherwise' then
+	       if T\=nil then raise xsl(illegalChoose L) end else
+		  [xsl(type	: 'xsl:otherwise'
+		       attribute: o
+		       content	: {DoTemplateBatch H.content})]
+	       end
+	    [] 'xsl:when'      then
+	       xsl(type		: 'xsl:when'
+		   attribute	: o(test:{Parse.pattern
+					  {AttributeGet H select}})
+		   content	: {DoTemplateBatch H.content})
+	       |{DoChooseBatch T}
+	    end
+	 end
+      end
+      fun {DoValueOf E}
+	 {NoContent E}
+	 xsl(type	: 'xsl:value-of'
+	     attribute	: o(expr:{Parse.expression {AttributeGet E expr}})
+	     content	: nil)
+      end
+      fun {DoInvoke E} raise xsl(notImplemented E) end end
+      fun {DoTemplateAttribute A Value}
+	 try {DoAttributeValue Value}
+	 catch bad then raise xsl(attributeValueTemplate A#Value) end end
       end
    in
-
+      {DoRoot Root}
+      stylesheet(id		: {Reverse {Access AccId}}
+		 space		: {Reverse {Access AccSpace}}
+		 constants	: {Reverse {Access AccConst}}
+		 templates	: {Reverse {Access AccTempl}})
    end
    CharIsSpace = Char.isSpace
    fun {IsSpaces X}
@@ -165,5 +266,24 @@ define
    end
    fun {AttributeCondGet E A D}
       {CondSelect E.attribute A D}
+   end
+   TakeDropWhile = List.takeDropWhile
+   fun {NotLBrace C} C==&{ end
+   fun {NotRBrace C} C==&} end
+   fun {DoAttributeValue S}
+      if S==nil then nil else S1 S2 in
+	 {TakeDropWhile S NotLBrace S1 S2}
+	 if S1==nil then {DoAttributeExpr S2}
+	 else string(S1)|{DoAttributeExpr S2} end
+      end
+   end
+   fun {DoAttributeExpr S}
+      case S of nil then nil
+      elseof &{|S then S1 S2 in
+	 {TakeDropWhile S NotRBrace S1 S2}
+	 case S2 of &}|S2 then
+	    eval({Parse.expression S1})|{DoAttributeValue S2}
+	 else raise bad end end
+      else raise bad end end
    end
 end
