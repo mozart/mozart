@@ -65,12 +65,13 @@ in
 	 case @ToClose of nil then true elseof POs then
 	    {ForAll POs
 	     proc {$ PO}
-		case {System.isVar PO} then true
-		elsecase {Object.is PO} then
-		   thread {PO close} end
-		elsecase
-		   {Procedure.is PO} andthen {Procedure.arity PO}==0
-		then thread {PO} end
+		case {IsDet PO} then 
+		   case {Object.is PO} then
+		      thread {PO close} end
+		   elsecase
+		      {Procedure.is PO} andthen {Procedure.arity PO}==0
+		   then thread {PO} end
+		   end
 		else true
 		end
 	     end}

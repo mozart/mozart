@@ -288,7 +288,7 @@ local
 	 meth NextLocal(Break PrevSol CurDepth InfoDist
 			CurSearchDist SearchDist CurNs CurCopy
 			?Sol ?IsDirty ?DecChoices)
-	    case @toDo\=nil andthen {System.isVar Break} then
+	    case @toDo\=nil andthen {IsFree Break} then
 	       NewNode Information
 	       NextDist NextNs NextCopy
 	    in

@@ -165,7 +165,7 @@ local
 	 end
 	 
 	 meth drawTree(Break MomTree MomX MyY Scale Font)
-	    case {System.isVar Break} then
+	    case {IsFree Break} then
 	       NewOffset   = @offset.1
 	       MyX         = MomX + NewOffset
 	       ScaledWidth = Scale * CircleWidthF

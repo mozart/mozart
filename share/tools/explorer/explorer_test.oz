@@ -171,17 +171,17 @@ V=1
 declare U
 {ExploreOne proc {$ X}
 	       choice
-		  case {System.isVar U} then
+		  case {IsFree U} then
 		     choice X=11 [] X=12 end
 		  else false
 		  end
 	       []
-		  case {System.isVar U} then
+		  case {IsFree U} then
 		     choice X=11 [] X=12 end
 		  else false
 		  end
 	       []
-		  case {System.isVar U} then
+		  case {IsFree U} then
 		     choice X=11 [] X=12 end
 		  else false
 		  end
