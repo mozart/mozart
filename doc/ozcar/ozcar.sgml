@@ -57,7 +57,7 @@
       <section>
         <title/Invocation from the OPI/
         <p>
-        To <def>start Ozcar</def> from the OPI, you have to apply the elisp
+        To start Ozcar from the OPI, you have to apply the elisp
         function <span proglang=elisp><<oz-debugger>></span>, which is
         bound to the key sequence <Key/C-. C-. d/ by default. Executed
         with prefix argument (<Key/C-u C-. C-. d/), the Ozcar window
