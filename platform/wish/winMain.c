@@ -9,7 +9,11 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#ifdef __WATCOMC__
+#ifndef cdecl
+#define cdecl __cdecl
+#endif
+
+#if defined(__WATCOMC__) || defined(__MINGW32__)
 #pragma aux (cdecl) Tk_MainWindow;
 #pragma aux (cdecl) Tcl_AppendResult;
 #pragma aux (cdecl) Tcl_CreateCommand;
@@ -44,11 +48,12 @@
 #pragma aux (cdecl) asyncHandler;
 #endif
 
-#ifdef _MSC_VER
+#ifdef __MINGW32__
 #define _hdopen(file,flags) _open_osfhandle(file,flags)
 #endif
 
 #include <windows.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <io.h>
@@ -211,7 +216,8 @@ void watchParent()
   if (handle==0) {
     WishPanic("OpenProcess(%d) failed",pid);
   } else {
-    _beginthreadex(0,0,watchEmulatorThread,handle,0,&thrid);
+    CreateThread(0,0,watchEmulatorThread,handle,0,&thrid);
+    //_beginthreadex(0,0,watchEmulatorThread,handle,0,&thrid);
   }
 }
 
@@ -399,7 +405,7 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
       info->toplevelThread = GetCurrentThreadId();
       info->cmd            = NULL;
 
-      thread =_beginthreadex(NULL,0,readerThread,info,0,&tid);
+      thread = (unsigned long) CreateThread(NULL,0,readerThread,info,0,&tid);
       if (thread==0) {
         fprintf(outstream, "w reader thread creation failed\n.\n");
         fflush(outstream); /* added mm */
