@@ -39,6 +39,7 @@ prepare
 		 'out'(single char: &o type: string optional: false)
 		 'autoindex'(rightmost type: bool default: false)
 		 %% HTML options
+		 'top'(single type: string default: unit)
 		 'stylesheet'(single type: string default: unit)
 		 'latextogif'(rightmost type: bool default: true)
 		 'latexdb'(single type: string default: unit)
@@ -195,7 +196,8 @@ define
 	  '--include=A1,...,An Assume `<!ENTITY & Ai "INCLUDE">\'.\n'#
 	  '\n'#
 	  'HTML options\n'#
-	  '--stylesheet=<URL>  What style sheet to use for generated pages.\n'#
+	  '--top=<RURL>        What to link `Top\' to.\n'#
+	  '--stylesheet=<RURL> What style sheet to use for generated pages.\n'#
 	  '--(no)latextogif    Generate GIF files from LaTeX code.\n'#
 	  '--latexdb=<File>    Reuse GIFs generated from LaTeX code.\n'#
 	  '--(no)split         Split the document into several nodes.\n'#
