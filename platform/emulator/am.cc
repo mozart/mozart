@@ -311,6 +311,7 @@ void AM::init(int argc,char **argv)
   wasSolveSet = NO; 
 
   lastThreadID    = 0;
+  debugMode       = NO;
   debugStreamTail = OZ_newVariable();
 
   initThreads();
@@ -2079,7 +2080,6 @@ char flagChar(StatusBit flag)
   case IOReady:      return 'I';
   case UserAlarm:    return 'U';
   case StartGC:      return 'G';
-  case DebugMode:    return 'D';
   default:           return 'X';
   }
 }
@@ -2169,3 +2169,20 @@ void AM::suspendOnVarList(Thread *thr)
     _suspendVarList=tail(_suspendVarList);
   }
 }
+
+Bool AM::emulateHookOutline() {
+  // without signal blocking;
+  if (isSetSFlag(ThreadSwitch)) {
+    if (threadQueuesAreEmpty()) {
+      restartThread();
+    } else {
+      return TRUE;
+    }
+  }
+  if (isSetSFlag((StatusBit)(StartGC|UserAlarm|IOReady))) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
