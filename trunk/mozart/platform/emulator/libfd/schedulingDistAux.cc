@@ -322,33 +322,6 @@ OZ_Return FirstsLasts::propagate(void)
 	      all_fds[i][j].read(reg_fds[rStart+j]);
 	    considered_resources[nb_considered_resources++] = i;
 
-	    /*
-	    for (j=0; j<ct; j++) {
-	      int jMin = all_fds[i][j]->getMinElem();
-	      int jDue = all_fds[i][j]->getMaxElem() + reg_durs[i][j];
-	      for (k=0; k<ct; k++) {
-		int kMin = all_fds[i][k]->getMinElem();
-		int kDue = all_fds[i][k]->getMaxElem() + reg_durs[i][k];
-		if ( (jMin <= kMin) && (jDue <= kDue) ) {
-		  int demand = 0;
-		  for (l=0; l<ct; l++) {
-		    int lMin = all_fds[i][l]->getMinElem();
-		    int lDue = all_fds[i][l]->getMaxElem() + reg_durs[i][l];
-		    if ( (jMin <= lMin) && (lDue <= kDue) )
-		      demand = demand + reg_durs[i][l];
-		  }
-		  int supply = kDue - jMin;
-		  if (supply - demand < current_slack)
-		    current_slack = supply - demand;
-		}
-	      }
-	    }
-
-	    if (current_slack < best_slack) {
-	      best_slack = current_slack;
-	      best_resource = i;
-	    }
-	    */
 	    int globmin = fd_sup;
 	    int globmax = 0;
 	    int globdur = 0;
