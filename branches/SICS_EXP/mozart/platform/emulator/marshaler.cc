@@ -405,6 +405,7 @@ void unmarshalGName1(GName *gname, MsgBuffer *bs)
 
 GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
 {
+  PD((UNMARSHAL,"gname"));
   misc_counter[MISC_GNAME].recv();
   GName gname;
   unmarshalGName1(&gname,bs);
@@ -415,14 +416,7 @@ GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
     return 0;
   }
   GName *gn=new GName(gname);
-  
-  OZ_warning("gnameMark not invoked");
-  // EK
-  // Per, the info field in the bs is not set yet. 
-  // bs->setMarshalInfo has not been done yet.
-  //bs->gnameMark(gn);
-  
-
+  bs->gnameMark(gn);
   return gn;
 }
 
@@ -496,6 +490,7 @@ inline void trailCycle(OZ_Term *t, MsgBuffer *bs,int n)
 }
 
 void marshalClosure(Abstraction *a,MsgBuffer *bs) {
+  PD((MARSHAL,"closure"));
   RefsArray globals = a->getGRegs();
   int gs = globals ? a->getGSize() : 0;
   marshalNumber(gs,bs);
@@ -580,6 +575,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     }
   case Co_Chunk:
     {
+      PD((MARSHAL,"chunk"));
       SChunk *ch=(SChunk *) t;
       GName *gname=ch->getGName();
       if (checkURL(gname,bs)) return;
@@ -591,6 +587,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     }
   case Co_Class:
     {
+      PD((MARSHAL,"class"));
       ObjectClass *cl = (ObjectClass*) t;
       cl->globalize();
       if (checkURL(cl->getGName(),bs)) return;
@@ -599,6 +596,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     }
   case Co_Abstraction:
     {
+      PD((MARSHAL,"abstraction"));
       Abstraction *pp=(Abstraction *) t;
       GName *gname=pp->getGName();
       if (checkURL(gname,bs)) return;
@@ -615,12 +613,15 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       ProgramCounter pc = pp->getPC();
       trailCycle(t->getRef(),bs,5);
       marshalClosure(pp,bs);
+      PD((MARSHAL,"code begin"));
       marshalCode(pc,bs);
+      PD((MARSHAL,"code end"));
       return;
     }
 
   case Co_Object:
     {
+      PD((MARSHAL,"object"));
       Object *o = (Object*) t;
       ObjectClass *oc = o->getClass();
       oc->globalize();
@@ -629,22 +630,27 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       return;
     }
   case Co_Lock:
+    PD((MARSHAL,"lock"));
     bs->addRes(makeTaggedConst(t));
     if (marshalTertiary((Tertiary *) t,DIF_LOCK,bs)) return;
     break;
   case Co_Thread:
+    PD((MARSHAL,"thread"));
     bs->addRes(makeTaggedConst(t));
     if (marshalTertiary((Tertiary *) t,DIF_THREAD,bs)) return;
     break;
   case Co_Space:
+    PD((MARSHAL,"space"));
     bs->addRes(makeTaggedConst(t));
     if (marshalTertiary((Tertiary *) t,DIF_SPACE,bs)) return;
     break;
   case Co_Cell:
+    PD((MARSHAL,"cell"));
     bs->addRes(makeTaggedConst(t));
     if (marshalTertiary((Tertiary *) t,DIF_CELL,bs)) return;
     break;
   case Co_Port:
+    PD((MARSHAL,"port"));
     bs->addRes(makeTaggedConst(t));
     if (marshalTertiary((Tertiary *) t,DIF_PORT,bs)) return;
     break;
@@ -662,30 +668,32 @@ loop:
   switch(tTag) {
 
   case GCTAG: {
+    PD((MARSHAL,"gctag for cycle"));
     Bool b = checkCycle(t,bs);
     Assert(b);
     break;}
 
   case SMALLINT:
+    PD((MARSHAL,"small int: %d",smallIntValue(t)));
     marshalDIF(bs,DIF_SMALLINT);
     marshalNumber(smallIntValue(t),bs);
-    PD((MARSHAL,"small int: %d",smallIntValue(t)));
     break;
 
   case OZFLOAT:
+    PD((MARSHAL,"float"));
     marshalDIF(bs,DIF_FLOAT);
     marshalFloat(tagged2Float(t)->getValue(),bs);
-    PD((MARSHAL,"float"));
     break;
 
   case BIGINT:
+    PD((MARSHAL,"bigint"));
     marshalDIF(bs,DIF_BIGINT);
     marshalString(toC(t),bs);
-    PD((MARSHAL,"big int"));
     break;
 
   case LITERAL:
     {
+      PD((MARSHAL,"literal"));
       Literal *lit = tagged2Literal(t);
       if (checkCycle(*lit->getRef(),bs)) return;
 
@@ -715,6 +723,7 @@ loop:
 
   case LTUPLE:
     {
+      PD((MARSHAL,"ltuple"));
       LTuple *l = tagged2LTuple(t);
       if (checkCycle(*l->getRef(),bs)) return;
       marshalDIF(bs,DIF_LIST);
@@ -738,6 +747,7 @@ loop:
 
   case SRECORD:
     {
+      PD((MARSHAL,"srecord"));
       SRecord *rec = tagged2SRecord(t);
       if (checkCycle(*rec->getCycleAddr(),bs)) return;
       TaggedRef label = rec->getLabel();
@@ -814,6 +824,7 @@ loop:
 void unmarshalDict(MsgBuffer *bs, TaggedRef *ret)
 {
   int size = unmarshalNumber(bs);
+  PD((UNMARSHAL,"dict size:%d",size));
   OzDictionary *aux = new OzDictionary(am.currentBoard,size);
   aux->markSafe();
   *ret = makeTaggedConst(aux);
@@ -910,7 +921,7 @@ void unmarshalTerm(MsgBuffer *bs, OZ_Term *ret)
 {
 loop:
   MarshalTag tag = (MarshalTag) bs->get();
-  PD((UNMARSHAL_CT,"tag %c BYTES:1",tag));
+  PD((UNMARSHAL,"term tag:%s",dif_names[(int) tag]));
 
   dif_counter[tag].recv();
   switch(tag) {
@@ -928,6 +939,7 @@ loop:
   case DIF_NEWNAME:
     {
       *ret = makeTaggedLiteral(Name::newName(am.currentBoard));
+      PD((UNMARSHAL,"newName"));
       gotRef(bs,*ret);
       return;
     }
@@ -1187,9 +1199,13 @@ loop:
 
       RefsArray globals = unmarshalClosure(bs);
       if (pp) {
+	PD((UNMARSHAL,"code begin"));
 	pp->import(globals,unmarshalCode(bs,NO));
+	PD((UNMARSHAL,"code end"));
       } else {
+	PD((UNMARSHAL,"code begin"));
 	(void) unmarshalCode(bs,OK);
+	PD((UNMARSHAL,"code end"));
       }
       return;
     }
@@ -1280,12 +1296,14 @@ void marshalVariable(PerdioVar *pvar, MsgBuffer *bs)
 /* *********************************************************************/
 
 void marshalFullObject(Object *o,MsgBuffer* bs){
+  PD((MARSHAL,"full object"));
   marshalSRecord(o->getFreeRecord(),bs);
   marshalTerm(makeTaggedConst(getCell(o->getState())),bs);
   if (o->getLock()) {marshalTerm(makeTaggedConst(o->getLock()),bs);}
   else {marshalTerm(nil(),bs);}}
   
 void marshalFullObjectAndClass(Object *o,MsgBuffer* bs){
+  PD((MARSHAL,"full object and class"));
   marshalFullObject(o,bs);
   marshalClass(o->getClass(),bs);}
 

@@ -2575,7 +2575,7 @@ inline Message* newReadCur(Message *m,NetMsgBuffer *bs,
 			   tcpMessageType type,int rem){
   if(m==NULL){
     PD((WEIRD,"newReadCur r:%x",r));
-    Message *m=messageManager->allocMessage(bs,type,rem);}
+    m=messageManager->allocMessage(bs,type,rem);}
   else{
     PD((WEIRD,"oldReadCur r:%x",r));
     m->setType(type);

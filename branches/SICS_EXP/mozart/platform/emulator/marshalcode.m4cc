@@ -39,24 +39,26 @@ define(instruction,
 	  break;')
 
 define(opAction,
-`ifelse($1,Atomname,marshalTerm(getTaggedArg(PC++),bs);,
-        $1,Variablename,marshalTerm(getTaggedArg(PC++),bs);,
-        $1,Integer,marshalTerm(getTaggedArg(PC++),bs);,
+`ifelse($1,Number,marshalTerm(getTaggedArg(PC++),bs);,
+        $1,Literal,marshalTerm(getTaggedArg(PC++),bs);,
         $1,Feature,marshalTerm(getTaggedArg(PC++),bs);,
+        $1,Constant,marshalTerm(getTaggedArg(PC++),bs);,
         $1,Builtinname,marshalBuiltinTabEntry((BuiltinTabEntry*) getAdressArg(PC++),bs);,
-        $1,Posint,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
+        $1,Variablename,marshalTerm(getTaggedArg(PC++),bs);,
         $1,Register,marshalNumber(regToInt(getRegArg(PC++)),bs);,
-        $1,RegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
+        $1,XRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
+        $1,YRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
         $1,Arity,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,Label,marshalLabel(getLabelArg(PC++),start,bs);,
-        $1,RecordArity,marshalRecordArity((SRecordArity) getAdressArg(PC++),bs);,
+        $1,Posint,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,PredicateRef,marshalPredicateRef((AbstractionEntry*) getAdressArg(PC++),bs);,
-        $1,GenCallInfo,marshalGenCallInfo((GenCallInfoClass*)getAdressArg(PC++),bs);,
-        $1,ApplMethInfo,marshalApplMethInfo((ApplMethInfoClass*)getAdressArg(PC++),bs);,
         $1,PredId,marshalPredId((PrTabEntry*)getAdressArg(PC++),bs);,
         $1,HashTableRef,marshalHashTableRef(start,(IHashTable *)getAdressArg(PC++),bs);,
+        $1,RecordArity,marshalRecordArity((SRecordArity) getAdressArg(PC++),bs);,
+        $1,GenCallInfo,marshalGenCallInfo((GenCallInfoClass*)getAdressArg(PC++),bs);,
+        $1,ApplMethInfo,marshalApplMethInfo((ApplMethInfoClass*)getAdressArg(PC++),bs);,
         $1,GRegRef,marshalGRegRef((AssRegArray*)getAdressArg(PC++),bs);,
-        $1,Cache,PC += CacheSize;,)')
+        $1,Cache,PC += CacheSize;)')
 
 
 inline
@@ -98,10 +100,12 @@ void marshalRecordArity(SRecordArity ar,MsgBuffer *bs)
 
 void marshalPredId(PrTabEntry *p,MsgBuffer *bs) 
 { 
+  PD((MARSHAL,"pred id begin"));
   marshalTerm(p->getName(),bs);
   marshalRecordArity(p->getMethodArity(),bs);
   marshalTerm(p->getFileName(),bs);
   marshalNumber(p->getLine(),bs);
+  PD((MARSHAL,"pred id end"));
 }
 
 void marshalGenCallInfo(GenCallInfoClass *gci,MsgBuffer *bs)
@@ -179,6 +183,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
   int codesize = (ende-start)*sizeof(ByteCode);
 
   marshalNumber(codesize,bs);
+  PD((MARSHAL,"codesize %d",codesize));
   
   ProgramCounter PC = start;
 
@@ -193,6 +198,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC);
       Abstraction *abstr = entry->getAbstr();
       if (!entry->dupOnload) {
+	PD((MARSHAL,"marshalledfastcall"));
 	bs->put(MARSHALLEDFASTCALL);
 	marshalTerm(makeTaggedConst(abstr),bs);
 	Bool istailcall = (op==FASTTAILCALL);
@@ -204,6 +210,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
     }
 
     bs->put(op);
+    PD((MARSHAL,"op put %d",op));    
     switch(op) {
 
     include(`../include/instrDefs.m4')
@@ -213,6 +220,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
   }
 
   bs->put(ENDOFFILE);
+  PD((MARSHAL,"end of file put %d"));    
 }
 
 void marshalHashTableRef(ProgramCounter start, IHashTable *table,MsgBuffer *bs)
@@ -277,24 +285,26 @@ undefine(`opAction')
 undefine(`marshaling')
 
 define(opAction,
-`ifelse($1,Atomname,PC=unmarshalTagged(PC,bs);,
-        $1,Variablename,PC=unmarshalTagged(PC,bs);,
-        $1,Integer,PC=unmarshalTagged(PC,bs);,
+`ifelse($1,Number,PC=unmarshalTagged(PC,bs);,
+        $1,Literal,PC=unmarshalTagged(PC,bs);,
         $1,Feature,PC=unmarshalTagged(PC,bs);,
+        $1,Constant,PC=unmarshalTagged(PC,bs);,
         $1,Builtinname,PC=unmarshalBuiltinTabEntry(PC,bs);,
-        $1,Posint,PC=unmarshalNum(PC,bs);,
+        $1,Variablename,PC=unmarshalTagged(PC,bs);,
         $1,Register,PC=unmarshalReg(PC,bs);,
-        $1,RegisterIndex,PC=unmarshalReg(PC,bs);,
+        $1,XRegisterIndex,PC=unmarshalReg(PC,bs);,
+        $1,YRegisterIndex,PC=unmarshalReg(PC,bs);,
         $1,Arity,PC=unmarshalNum(PC,bs);,
         $1,Label,PC=unmarshalLabel(PC,start,bs);,
-        $1,RecordArity,PC=unmarshalRecordArity(PC,bs);,
+        $1,Posint,PC=unmarshalNum(PC,bs);,
         $1,PredicateRef,PC=unmarshalPredicateRef(PC,bs);,
-        $1,GenCallInfo,PC=unmarshalGenCallInfo(PC,bs);,
-        $1,ApplMethInfo,PC=unmarshalApplMethInfo(PC,bs);,
         $1,PredId,PC=unmarshalPredId(PC,lastPC,bs);,
         $1,HashTableRef,PC=unmarshalHashTableRef(PC,start,bs);,
+        $1,RecordArity,PC=unmarshalRecordArity(PC,bs);,
+        $1,GenCallInfo,PC=unmarshalGenCallInfo(PC,bs);,
+        $1,ApplMethInfo,PC=unmarshalApplMethInfo(PC,bs);,
         $1,GRegRef,PC=unmarshalGRegRef(PC,bs);,
-        $1,Cache,PC=unmarshalCache(PC,bs);,)')
+        $1,Cache,PC=unmarshalCache(PC,bs);)')
 
 
 inline
@@ -498,6 +508,7 @@ Bool changeMarshaledFastCall(ProgramCounter PC,TaggedRef pred, int tailcallAndAr
 ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
 {
   int codesize = unmarshalNumber(bs);  // this is in Bytes!!!
+  PD((UNMARSHAL,"codesize %d",codesize));
   
   ProgramCounter start, PC, lastPC;
   CodeArea *code    = NULL;
@@ -511,17 +522,20 @@ ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
   while (OK) {    
     lastPC = PC;
     Opcode op = (Opcode) bs->get();
+    PD((UNMARSHAL,"in code op %d",op));
     if (op == ENDOFFILE)
       break;
 
     //    Assert(op!=GENFASTCALL && op!=FASTCALL && op!=FASTTAILCALL);
     Assert(op!=GENFASTCALL);
-
+  
     if (discard==NO) {
       PC = CodeArea::writeOpcode(op,PC);
     }
 
     if (0 && op==MARSHALLEDFASTCALL) {
+
+      PD((UNMARSHAL,"marshaled  fast call"));
       TaggedRef pred       = unmarshalTerm(bs);
       int tailcallAndArity = unmarshalNumber(bs);
       if (PC) {
@@ -530,7 +544,7 @@ ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
 	  PC = CodeArea::writeInt(tailcallAndArity,PC);
 	}
       }
-      goto next;
+      continue;
     }
 
     switch(op) {
@@ -539,12 +553,6 @@ ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
 
     default: Assert(0); break;
     }
-
-  next:
-PD((WEIRD,"Strange case."));
-    // EKS 
-//  Per check this out!!!
-//PERDIO_DEBUG_DO1(UNMARSHAL,displayCode(lastPC,1));
   }
   
   Assert(discard==OK || CodeArea::getOpcode(start)==DEFINITION);
