@@ -10,8 +10,8 @@ part of the &moz3; distribution) and can be accessed either by
 <<<declare [LP RI] = {Module.link ['x-oz://contrib/LP' 'x-oz://contrib/RI']}>>
  or by
 <<<
-import RI @ 'x-oz://contrib/RI'
-       LP @ 'x-oz://contrib/LP'>>>
+import RI at 'x-oz://contrib/RI'
+       LP at 'x-oz://contrib/LP'>>>
 as part of a functor definition.
 
 
