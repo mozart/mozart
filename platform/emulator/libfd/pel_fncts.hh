@@ -28,6 +28,7 @@
 #define __PEL_FNCTS_HH__
 
 #include "pel_engine.hh"
+#include "rel_filter.hh"
 
 //-----------------------------------------------------------------------------
 
@@ -89,19 +90,15 @@ void make_PEL_GreaterOffset(ENGINE &engine,
   engine.impose(new PEL_GreaterOffset<ENGINE,FDVAR,PFDVAR>(x, c, y));
 }
 
-#include "rel.hh"
-#include "rel_filter.hh"
-#include "pel_fncts.hh"
-
-typedef  _PropagatorController_V_V<int,
-  PEL_FDIntVar,pf_entailed,pf_failed,pf_sleep> PEL_ParamIterator_V_V;
-
+template <class FDVAR>
 class PEL_Service {
 private:
   int _r;
-  PEL_ParamIterator_V_V * _iter;
+  _PropagatorController_V_V<int,
+    FDVAR,pf_entailed,pf_failed,pf_sleep> * _iter;
 public:
-  PEL_Service(PEL_ParamIterator_V_V &iter) : _iter(&iter), _r(-1) {}
+  PEL_Service(_PropagatorController_V_V<int,
+    FDVAR,pf_entailed,pf_failed,pf_sleep> &iter) : _iter(&iter), _r(-1) {}
   PEL_Service &entail(void) {
     CDM(("PEL_Service::entail()\n"));
     _r = _iter->vanish();
@@ -128,8 +125,9 @@ pf_return_t PEL_LessEqOffset<ENGINE, FDVAR, PFDVAR>::propagate(PEL_Engine &e)
   int c = _c;
   FDVAR &y = *(FDVAR *) e[_y];
   //
-  PEL_ParamIterator_V_V iter(x, y);
-  PEL_Service s(iter);
+  _PropagatorController_V_V<int,
+    FDVAR,pf_entailed,pf_failed,pf_sleep> iter(x, y);
+  PEL_Service<FDVAR> s(iter);
   //
   return filter_lessEqOffset(s, x, y, c)();
 }
