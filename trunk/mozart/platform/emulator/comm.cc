@@ -77,6 +77,7 @@ class SiteManager: public FreeListManager{
 
   Site* newSite(){
     Site* s;
+    PD((SITE,"New Site allocated"));
     return new Site();
     FreeListEntry *f=getOne();
     if(f==NULL) {s=new Site();}
@@ -86,7 +87,7 @@ class SiteManager: public FreeListManager{
     return s;}
 
   void deleteSite(Site *s){
-    s->init(0,0,0);
+    PD((SITE,"Site deleted %x %s",s,s->stringrep()));
     FreeListEntry *f;
     GenCast(s,Site*,f,FreeListEntry*);
     if(putOne(f)) {return;}
@@ -190,23 +191,30 @@ void SiteHashTable::cleanup(){
   ghn=getFirst(i);
   while(ghn!=NULL){
     GenCast(ghn->getBaseKey(),GenHashBaseKey*,s,Site*);
+
     if(!(s->isGCMarkedSite())){
+      PD((SITE,"Head: Not Marked Site %x %s",s, s->stringrep()));
       if(s->canBeFreed()){
 	siteManager.freeSite(s);
 	deleteFirst(ghn);
 	ghn=getByIndex(i);
 	continue;}}
     else{
+      PD((SITE,"Head: Marked Site %x %s",s, s->stringrep()));
       s->removeGCMarkSite();}
     ghn1=ghn->getNext();
     while(ghn1!=NULL){
       GenCast(ghn1->getBaseKey(),GenHashBaseKey*,s,Site*);
       if(s->isGCMarkedSite()){
+	PD((SITE,"      : Marked Site %x %s",s, s->stringrep()));
 	s->removeGCMarkSite();}
       else{
 	if(s->canBeFreed()){
+	  PD((SITE,"      : Not Marked Site %x %s",s, s->stringrep()));
 	  siteManager.freeSite(s);
-	  deleteNonFirst(ghn,ghn1);}}
+	  deleteNonFirst(ghn,ghn1);
+	  ghn1=ghn->getNext();
+	  continue;}}
       ghn=ghn1;
       ghn1=ghn1->getNext();}
     i++;
