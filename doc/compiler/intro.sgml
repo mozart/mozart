@@ -53,13 +53,12 @@
     The remainder of this chapter will describe what the state of the Mozart
     Compiler consists of, and what additional parameters compilation takes
     into account.  <Ptr to="chapter.directives"> describes what programs
-    the compiler accepts as input.  <Ptr to="chapter.ozbatch"> and <Ptr
-    to="chapter.panel"> explain how to use two applications of the compiler,
-    respectively the batch compiler, which is invoked from the command line,
-    and the compiler panel, which is a graphical interface to the compiler's
-    state.  Both of these are implemented using the compiler's Application
-    Programmer's Interface, which is described in detail in <Ptr
-    to="chapter.api">.
+    the compiler accepts as input.  <Ptr to="chapter.applications">
+    describes two applications of the compiler, namely the batch compiler,
+    which is invoked from the command line, and the compiler panel, which
+    is a graphical interface to the compiler's state.  Both of these are
+    implemented using the compiler's Application Programmer's Interface,
+    which is described in detail in <Ptr to="chapter.api">.
   <P>
     Note that there is another widely used application of the compiler,
     namely the <Def/Oz Programming Interface/.  See <Ptr.Extern
