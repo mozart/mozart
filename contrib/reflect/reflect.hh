@@ -116,12 +116,16 @@ OZ_Term atom_var, atom_any, atom_type, atom_fd, atom_fs, atom_bool,
   atom_bounds, atom_val, atom_glb, atom_lub, atom_flat, atom_local, atom_ask,
   atom_wait, atom_waittop, atom_oops, atom_prop, atom_params, atom_name,
   atom_space, atom_susp, atom_thread, atom_ct, atom_susplists, atom_ref,
-  atom_id, atom_loc;
+  atom_id, atom_loc, atom_vars, atom_props, atom_reflect;
 
 //-----------------------------------------------------------------------------
 
 #ifdef DEBUG
-#define DEBUGPRINT(A) printf A; fflush(stdout)
+#define DEBUGPRINT(A)                           \
+printf A;                                       \
+printf("\n");                                   \
+fflush(stdout)
+
 #else
 #define DEBUGPRINT(A)
 #endif

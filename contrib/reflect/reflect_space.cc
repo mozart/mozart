@@ -33,6 +33,8 @@ void _reflect_space_params(ReflectStack &rec_stack,
                            OZ_Term      params,
                            OZ_Term      &term_params)
 {
+  DEBUGPRINT(("_reflect_space_params (in)"));
+
   DEREF(params, paramsptr, paramstag);
 
   if (isUVar(paramstag) || isCVar(paramstag)) {
@@ -77,15 +79,20 @@ void _reflect_space_params(ReflectStack &rec_stack,
                             OZ_subtree(params, OZ_head(al)),
                             term_params);
   }
+  DEBUGPRINT(("_reflect_space_params (out)"));
 }
 
 OZ_Term reflect_space_params(ReflectStack &rec_stack,
                              VarTable     &vtable,
                              OZ_Term      params)
 {
+  DEBUGPRINT(("reflect_space_params (in)"));
+
   OZ_Term term_params = OZ_nil();
 
   _reflect_space_params(rec_stack, vtable, params, term_params);
+
+  DEBUGPRINT(("reflect_space_params (out)"));
 
   return term_params;
 }
@@ -99,16 +106,22 @@ OZ_Term reflect_space_prop(ReflectStack &rec_stack,
                            PropTable    &ptable,
                            Propagator   * prop)
 {
-  Bool is_reflected;
-  int id = ptable.add(prop, is_reflected);
-  if (is_reflected)
-    return OZ_int(id);
-  ptable.reflected(prop);
+  DEBUGPRINT(("reflect_space_prop (in)"));
 
+  Bool is_reflected;
+  DEBUGPRINT(("ptable.add(%p)", prop));
+  int id = ptable.add(prop, is_reflected);
+  OZ_Term term_id = OZ_int(id);
+  if (is_reflected) {
+    DEBUGPRINT(("reflect_space_prop (out)"));
+    return OZ_int(id);
+  }
+  ptable.reflected(prop);
 
   OZ_Propagator * p = prop->getPropagator();
 
   OZ_Term arity_def[] = {
+    {OZ_pair2(atom_id,     term_id)},
     {OZ_pair2(atom_ref,    propagator2Term(prop))},
     {OZ_pair2(atom_params, reflect_space_params(rec_stack,
                                                 vtable,
@@ -122,6 +135,8 @@ OZ_Term reflect_space_prop(ReflectStack &rec_stack,
 
   ADD_TO_LIST(prop_list, OZ_recordInit(atom_prop, arity));
 
+  DEBUGPRINT(("reflect_space_prop (out)"));
+
   return oz_int(id);
 }
 
@@ -132,6 +147,8 @@ OZ_Term reflect_space_susplist(ReflectStack &rec_stack,
                                PropTable    &ptable,
                                SuspList     * susplist)
 {
+  DEBUGPRINT(("reflect_space_susplist (in)"));
+
   OZ_Term term_props = OZ_nil();
 
   for (SuspList * p = susplist; p != NULL; p = p->getNext()) {
@@ -141,14 +158,18 @@ OZ_Term reflect_space_susplist(ReflectStack &rec_stack,
       Propagator * prop = susp.getPropagator();
 
       Bool is_reflected;
+      DEBUGPRINT(("ptable.add(%p)", prop));
       int id = ptable.add(prop, is_reflected);
 
       ADD_TO_LIST(term_props, OZ_int(id));
+
       if (!is_reflected) {
         rec_stack.push(prop);
       }
     }
   }
+
+  DEBUGPRINT(("reflect_space_susplist (out)"));
 
   return term_props;
 }
@@ -162,6 +183,8 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
                                PropTable    &ptable,
                                OZ_Term      var)
 {
+  DEBUGPRINT(("reflect_space_variable (in)"));
+
   OZ_Term var_itself = var;
   DEREF(var, varptr, vartag);
 
@@ -170,11 +193,15 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
   OZ_Term term_type     = OZ_nil();
 
   if (oz_isFree(var)) {
+    DEBUGPRINT(("reflect_space_variable (free)"));
 
     Bool is_reflected;
     int id = vtable.add(varptr, is_reflected);
-    if (is_reflected)
-      return OZ_int(id);
+    term_id = OZ_int(id);
+    if (is_reflected) {
+      DEBUGPRINT(("reflect_space_variable (out -1-)"));
+      return term_id;
+    }
     vtable.reflected(varptr);
 
     term_type = atom_any;
@@ -193,12 +220,18 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     term_susplist = OZ_recordInit(atom_susplists, susp_arity);
 
   } else if (isGenFDVar(var,vartag)) {
+    DEBUGPRINT(("reflect_space_variable (a)"));
 
     Bool is_reflected;
     int id = vtable.add(varptr, is_reflected);
-    if (is_reflected)
-      return OZ_int(id);
+    term_id = OZ_int(id);
+    if (is_reflected) {
+      DEBUGPRINT(("reflect_space_variable (out -2-)"));
+      return term_id;
+    }
+    DEBUGPRINT(("reflect_space_variable (b)"));
     vtable.reflected(varptr);
+    DEBUGPRINT(("reflect_space_variable (c)"));
 
     term_type = atom_fd;
 
@@ -217,17 +250,24 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
                                        getSuspList(fd_prop_singl)))},
       {(OZ_Term) 0}
     };
+    DEBUGPRINT(("reflect_space_variable (d)"));
 
     MKARITY(susp_arity, susp_arity_def);
+    DEBUGPRINT(("reflect_space_variable (e)"));
 
     term_susplist = OZ_recordInit(atom_susplists, susp_arity);
+    DEBUGPRINT(("reflect_space_variable (f)"));
 
   } else if (isGenBoolVar(var,vartag)) {
+    DEBUGPRINT(("reflect_space_variable (bool)"));
 
     Bool is_reflected;
     int id = vtable.add(varptr, is_reflected);
-    if (is_reflected)
-      return OZ_int(id);
+    term_id = OZ_int(id);
+    if (is_reflected) {
+      DEBUGPRINT(("reflect_space_variable (out -3-)"));
+      return term_id;
+    }
     vtable.reflected(varptr);
 
     term_type = atom_bool;
@@ -244,11 +284,15 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     term_susplist = OZ_recordInit(atom_susplists, susp_arity);
 
   } else if (isGenFSetVar(var,vartag)) {
+    DEBUGPRINT(("reflect_space_variable (fs)"));
 
     Bool is_reflected;
     int id = vtable.add(varptr, is_reflected);
-    if (is_reflected)
-      return OZ_int(id);
+    term_id = OZ_int(id);
+    if (is_reflected) {
+      DEBUGPRINT(("reflect_space_variable (out -4-)"));
+      return term_id;
+    }
     vtable.reflected(varptr);
 
     term_type = atom_fs;
@@ -277,11 +321,15 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     term_susplist = OZ_recordInit(atom_susplists, susp_arity);
 
   } else if (isGenCtVar(var, vartag)) {
+    DEBUGPRINT(("reflect_space_variable (ct)"));
 
     Bool is_reflected;
     int id = vtable.add(varptr, is_reflected);
-    if (is_reflected)
-      return OZ_int(id);
+    term_id = OZ_int(id);
+    if (is_reflected) {
+      DEBUGPRINT(("reflect_space_variable (out -5-)"));
+      return term_id;
+    }
     vtable.reflected(varptr);
 
     term_type = atom_ct;
@@ -324,11 +372,12 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
 
     ADD_TO_LIST(var_list, OZ_recordInit(atom_var, arity));
 
-    DEBUGPRINT(("reflect_variable out (adding reflected var)\n"));
+    DEBUGPRINT(("reflect_variable (out -- adding reflected var)\n"));
+
+    return term_id;
   }
 
-
-  DEBUGPRINT(("reflect_variable out (not adding reflected var)\n"));
+  DEBUGPRINT(("reflect_variable (out -- not adding reflected var)\n"));
 
   return OZ_unit();
 }
@@ -353,17 +402,20 @@ OZ_Term reflect_space(OZ_Term v)
 
     switch (what) {
     case Entry_Propagator:
+      DEBUGPRINT(("reflect_space -- switch entry propagator\n"));
       {
         Propagator * prop = (Propagator *) ptr;
         (void) reflect_space_prop(rec_stack,
-                                  var_list,
+                                  prop_list,
                                   vtable,
                                   ptable,
                                   prop);
 
       }
       break;
+
     case Entry_Variable:
+      DEBUGPRINT(("reflect_space -- switch entry variable\n"));
       {
         OZ_Term * varptr = (OZ_Term *) ptr;
         (void) reflect_space_variable(rec_stack,
@@ -373,9 +425,19 @@ OZ_Term reflect_space(OZ_Term v)
                                       (OZ_Term) varptr);
       }
       break;
+
     default:
       break;
     }
   } // while
 
+  OZ_Term arity_def[] = {
+    {OZ_pair2(atom_vars,  var_list)},
+    {OZ_pair2(atom_props, prop_list)},
+    {(OZ_Term) 0}
+  };
+
+  MKARITY(term_arity, arity_def);
+
+  return OZ_recordInit(atom_reflect, term_arity);
 }

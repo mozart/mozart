@@ -98,7 +98,7 @@ $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
 
 depend: Makefile $(CSRCS) $(OZSRCS) $(OZGSRCS)
         $(DEPEND) $(CSRCS:%=$(SRCDIR)/%) > Makefile.deps
-        $(OZDEPEND) $(OZSRCS:%=$(SRCDIR)/%) $(OZGSRCS:%=$(SRCDIR)/%) \
+#       $(OZDEPEND) $(OZSRCS:%=$(SRCDIR)/%) $(OZGSRCS:%=$(SRCDIR)/%) \
         >> Makefile.deps
 
 clean:
