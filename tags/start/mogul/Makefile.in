@@ -1,0 +1,210 @@
+@SET_MAKE@
+#=====================================================================
+# DIRECTORIES
+#=====================================================================
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+PREFIX		= @prefix@
+OZDIR		= $(PREFIX)
+CACHE		= $(OZDIR)/cache
+DOCDIR		= $(OZDIR)/doc
+BINDIR		= $(OZDIR)/bin
+TARDIR		= $(OZDIR)/tar
+SUBDIRS		=
+#=====================================================================
+# TOOLS
+#=====================================================================
+OZTOOL		= @VAR_OZTOOL@
+OZE		= @VAR_OZE@
+OZC		= $(OZE) @VAR_OZC@
+OZL		= $(OZE) @VAR_OZL@
+INSTALL		= @INSTALL@
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_DIR	= @VAR_INSTALL_DIR@
+CFLAGS		= @CFLAGS@
+OZCFLAGS	= -z 9
+OZLFLAGS	= -z 9
+PLATFORM	= $(shell $(OZTOOL) platform)
+OZHOME		= @OZHOME@
+OZDOC		= @VAR_OZDOC@
+#=====================================================================
+# RULES
+#
+# sometimes a contribution has a main module, say Foo.ozf, and
+# a bunch of auxiliary modules that it is preferable to isolate in
+# a subdirectory, e.g. foo_lib/utils.ozf foo_lib/counter.ozf.  This
+# is why we have both TARGETS_TOP and TARGETS_SUB: they will be
+# installed respectively in URL_TOP and and URL_SUB (see later).
+# TARGETS_BIN are for executables that it is desirable to put in a
+# bin directory searched by the shell.  Note that this is only for
+# the user's convenience since any application can be run by
+# invoking ozengine with a url argument.
+#=====================================================================
+MAIN_DEPS = Text.ozf Message.ozf Admin.ozf \
+	Contact.ozf Database.ozf Except.ozf Package.ozf \
+	Section.ozf Externalizable.ozf GetSlot.ozf Wget.ozf \
+	ContactName.ozf Entry.ozf HTML_Entry.ozf HTML_Contact.ozf \
+	HTML_Section.ozf Author.ozf HTML_Package.ozf Category.ozf
+TARGETS_TOP	= Librarian.exe
+TARGETS_SUB	=
+TARGETS_BIN	=
+HTMLSUBDIR	= mogul-html
+HTMLEXTRA	= mogul.css page.gif
+TARGETS_DOC	= $(HTMLSUBDIR)/index.html $(HTMLEXTRA)
+all:: Makefile $(TARGETS_TOP) $(TARGETS_SUB) $(TARGETS_BIN) $(TARGETS_DOC)
+distclean:: clean
+all clean distclean install install.top install.sub install.bin install.doc::
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do \
+	  if (cd $$i && $(MAKE) $@); \
+          then true; \
+          else exit 1; \
+          fi; \
+        done
+%.so-$(PLATFORM): %.o
+	$(OZTOOL) ld $< -o $@
+%.o: %.cc
+	$(OZTOOL) c++ $(CFLAGS) -c $< -o $@
+%.ozf: %.oz
+	$(OZC) $(OZCFLAGS) -c $< -o $@
+%.exe: %.ozf
+	$(OZL) $(OZLFLAGS) -x $< -o $@
+Librarian.exe: Main.ozf $(MAIN_DEPS)
+	$(OZL) $(OZLFLAGS) -x $< -o $@
+#=====================================================================
+# URL
+#
+# URL_TOP is the base url for the main modules of the contribution.
+# URL_SUB is the base url for auxiliary modules that it is preferable
+# to hide in a sub directory.
+#=====================================================================
+URL_TOP		= x-ozlib://duchier/mogul
+URL_SUB		= $(URL_TOP)/sex
+URLDIR_TOP	= $(subst //,/,$(subst :/,/,$(URL_TOP)))
+URLDIR_SUB	= $(subst //,/,$(subst :/,/,$(URL_SUB)))
+#=====================================================================
+# INSTALLATION
+#=====================================================================
+LIBDIR_TOP	= $(CACHE)/$(URLDIR_TOP)
+LIBDIR_SUB	= $(CACHE)/$(URLDIR_SUB)
+LIBDIR_DOC	= $(DOCDIR)/$(URLDIR_TOP)
+LIBDIR_API	= $(LIBDIR_DOC)/API
+LIBDIR_BIN	= $(BINDIR)
+LIBFILES_TOP	= $(addprefix $(LIBDIR_TOP)/,$(TARGETS_TOP))
+LIBFILES_SUB	= $(addprefix $(LIBDIR_SUB)/,$(TARGETS_SUB))
+LIBFILES_BIN	= $(addprefix $(LIBDIR_BIN)/,$(TARGETS_BIN))
+LIBFILES_DOC    = $(LIBDIR_DOC)/index.html $(LIBDIR_DOC)/mogul.css $(LIBDIR_DOC)/page.gif
+SRCFILES_API	= $(wildcard $(SRCDIR)/API/*)
+LIBFILES_API	= $(patsubst $(SRCDIR)/API/%,$(LIBDIR_API)/%,$(SRCFILES_API))
+install:: $(LIBFILES_TOP) $(LIBFILES_SUB) $(LIBFILES_BIN) $(LIBFILES_DOC) $(LIBFILES_API)
+install.top:: $(LIBFILES_TOP)
+install.sub:: $(LIBFILES_SUB)
+install.bin:: $(LIBFILES_BIN)
+install.doc:: $(LIBDIR_DOC) $(LIBFILES_DOC)
+$(LIBDIR_DOC)/mogul.css $(LIBDIR_DOC)/page.gif: $(LIBDIR_DOC)/% : % $(LIBDIR_DOC)
+	$(INSTALL_FILE) $< $@
+$(LIBDIR_DOC)/index.html: $(LIBDIR_DOC) mogul-html/index.html
+	$(INSTALL_FILE) $(wildcard mogul-html/*) $(LIBDIR_DOC)
+$(LIBFILES_TOP): $(LIBDIR_TOP)/% : % $(LIBDIR_TOP)
+	$(INSTALL_FILE) $< $@
+$(LIBFILES_SUB): $(LIBDIR_SUB)/% : % $(LIBDIR_SUB)
+	$(INSTALL_FILE) $< $@
+$(LIBFILES_BIN): $(LIBDIR_BIN)/% : % $(LIBDIR_BIN)
+	$(INSTALL_BIN) $< $@
+$(LIBFILES_API): $(LIBDIR_API)/% : API/% $(LIBDIR_API)
+	$(INSTALL_FILE) $< $@
+$(LIBDIR_TOP) $(LIBDIR_SUB) $(LIBDIR_BIN) $(LIBDIR_DOC) $(LIBDIR_API) $(TARDIR):
+	$(INSTALL_DIR) $@
+#=====================================================================
+# AUTOMATICALLY REMAKE MAKEFILE WHEN NECESSARY
+# =====================================================================
+Makefile: Makefile.in
+	./config.status
+#=====================================================================
+# SOURCE TAR BALL
+#
+# add your sources files to variable SOURCES
+#=====================================================================
+TARNAME		= duchier-mogul
+TARFILE		= $(TARNAME).tgz
+COMMONSOURCES	= Makefile.in configure install-sh mkinstalldirs \
+	config.sub config.guess \
+	Text.oz Message.oz Admin.oz \
+	Contact.oz Database.oz Except.oz Package.oz \
+	Section.oz Externalizable.oz GetSlot.oz Wget.oz \
+	ContactName.oz Entry.oz HTML_Entry.oz HTML_Contact.oz \
+	HTML_Section.oz Author.oz HTML_Package.oz Category.oz \
+	Main.oz mogul.css page.gif mogul.sgml
+SOURCES		=
+SOURCEAPIDIR	= $(SRCDIR)/API
+TARSOURCES	= $(COMMONSOURCES) $(SOURCES)
+APISOURCES	= $(wildcard $(SOURCEAPIDIR)/*)
+distrib: $(TARFILE)
+$(TARFILE): $(TARSOURCES) $(APISOURCES)
+	-rm -rf $(TARNAME)
+	-mkdir $(TARNAME)
+	-cp -a $(addprefix $(SRCDIR)/,$(TARSOURCES)) $(TARNAME)
+	-{ test -d $(SOURCEAPIDIR) && cp -a $(SOURCEAPIDIR) $(TARNAME); } || true
+	-tar zcf $(TARFILE) $(TARNAME)
+	-rm -rf $(TARNAME)
+update: $(TARFILE) $(TARDIR)
+	$(INSTALL_FILE) $(TARFILE) $(TARDIR)/
+#=====================================================================
+# APIFILES should be the list of functors to hand to ozh for creating
+# the API documentation
+#=====================================================================
+APIFILES	=
+api:
+	-rm -rf $(SOURCEAPIDIR)
+	OZLOAD=all=$(SRCDIR):cache=${HOME}/.oz/cache:cache=/usr/local/oz/cache \
+	ozh -o $(SOURCEAPIDIR) $(APIFILES)
+
+#=====================================================================
+# TESTS
+#=====================================================================
+MOGUL	= http://fox.ps.uni-sb.de/~denys/mogul/db
+ROOT	= mogul-root.mogul
+SAVE1	= save1.bin
+TEST	= ozengine Librarian.exe -v --mogul-url=$(MOGUL) --root-url=$(ROOT) \
+	--open-db=$(SAVE1) --mogul-dir=$$HOME/public_html/mogul
+
+# test1: all
+# 	$(TEST) --update-info
+# test2: all
+# 	$(TEST) --update-info --save-db
+# test3: all
+# 	$(TEST) --print-db
+# test4: all
+# 	$(TEST) --update-info --print-reports
+# test5: all
+# 	$(TEST) --update-info --update-pub
+# test6: all
+# 	$(TEST) --update-html
+# test7: all
+# 	$(TEST) --update-provided --print-provided
+# test8: all
+# 	$(TEST) --update-info --update-provided --save-db
+# test9: all
+# 	$(TEST) --print-provided
+test1: all
+	-rm -f $(SAVE1)
+	$(TEST) --update-info --update-provided --update-categories --update-package-list --save-db
+test2: all
+	$(TEST) --update-html --update-categories-html --update-package-list-html
+
+SGMLFILES	= mogul.sgml
+$(HTMLSUBDIR)/index.html: $(SGMLFILES)
+	$(OZDOC) --in=$< --out=$(HTMLSUBDIR) \
+	--type=html-stylesheets --stylesheet=mogul.css
+
+#=====================================================================
+# CLEANING UP
+#=====================================================================
+clean::
+	-rm -f *~ *.o *.so-* *.ozf confdefs.h *.exe
+	-rm -rf $(TARNAME) $(TARFILE)
+	-rm -rf $(HTMLSUBDIR)
+distclean::
+	-rm -f config.cache config.log config.status Makefile
+
