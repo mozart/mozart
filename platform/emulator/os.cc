@@ -519,14 +519,27 @@ Bool osSignal(const char *signo, OZ_Term proc)
 int oskill(int pid, int sig)
 {
 #ifdef WINDOWS
-  if (pid==0)
-    return raise(sig);
+  if (pid == 0) { // send to every process in process group
+    if (sig == SIGTERM) { // function `raise' ignores signal SIGTERM
+      osExit(sig|0x80);
+    } else {
+      //--** send to all process in ChildProc::allchildren as well
+      return raise(sig) ? -1 : 0;
+    }
+  }
 
   switch (sig) {
   case SIGTERM:
   case SIGINT:
-    return TerminateProcess((HANDLE)pid,0)==TRUE ? 0 : -1;
-  default: // dont know how to sent other signals (RS)
+    {
+      HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, 0, pid);
+      if (hProcess) {
+        return TerminateProcess(hProcess,sig|0x80) != FALSE ? 0 : -1;
+      } else {
+        return -1;
+      }
+    }
+  default: // dont know how to send other signals (RS)
     return -1;
   }
 #else
