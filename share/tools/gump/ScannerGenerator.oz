@@ -126,6 +126,7 @@ local
 	 catch _ then
 	    {Rep error(kind: 'scanner generator'
 		       msg: 'invocation of flex.exe failed')}
+	    1
 	 finally
 	    {Debug.setRaiseOnBlock T RaiseOnBlock}
 	 end
