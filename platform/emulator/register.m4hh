@@ -155,7 +155,16 @@ Case(GETSELF)
 
 Case(SETSELF)
      {
-       ChangeSelf(tagged2Object(oz_deref(XPC(1))));
+       TaggedRef term = XPC(1);
+       if (oz_isRef(term)) {
+         DEREF(term,termPtr,tag);
+         if (oz_isVariable(term)) {
+          PushContX(PC);
+          addSuspPtr(termPtr, CTT);
+          return T_SUSPEND;
+         }
+       }
+       ChangeSelf(tagged2Object(term));
        DISPATCH(2);
      }
 
