@@ -1403,6 +1403,11 @@ void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
   if (line < 0)
     return;
 
+  if (file[0] == '\0') {
+    append("\n%**\n");
+    return;
+  }
+
   append("%**     in file \"");
   append(file);
   append("\", line ");
@@ -1410,8 +1415,6 @@ void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
   append(", column ");
   append(offset);
 
-  if (!strcmp(file,"/"))
-    return;
   FILE *pFile = fopen(file,"r");
   if (pFile == NULL) {
     append("\n%**\n");
