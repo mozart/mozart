@@ -16,6 +16,13 @@
       (append '(".ozo" ".ozs")
 	      completion-ignored-extensions))
 
+
+;; automatically switch into Oz-Mode when loading
+;; files ending in ".oz"
+(setq auto-mode-alist (cons '("\.oz$" . oz-mode)
+			    auto-mode-alist))
+
+
 ;; ---------------------------------------------------------------------
 ;; lemacs and gnu19 support
 ;; ---------------------------------------------------------------------
