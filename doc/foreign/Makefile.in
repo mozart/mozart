@@ -4,8 +4,8 @@ VPATH  = @srcdir@
 SRCDIR = @srcdir@
 
 WHAT = foreign
-MAIN = toc.sgml
-SGMLSRCS = foreign.bib foreign.sgml
+MAIN = foreign.sgml
+SGMLSRCS = foreign.bib
 HTMLEXTRAFILES = danger.gif
 OZDOCHTMLFLAGS = --autoindex
 
