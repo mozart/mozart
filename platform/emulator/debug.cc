@@ -32,39 +32,18 @@ void dbgPrint(TaggedRef t)
   taggedPrint(t,ozconf.printDepth);
 }
 
-static void toggleBoard() {
-  static Board *saved = am.rootBoard;
-  Board *b;
+static Board* gotoRootBoard() {
+  Board *b = am.currentBoard;
+  am.currentBoard = am.rootBoard;
+  return b;
+}
 
-  b = am.currentBoard;
-/*
-  am.installPath(saved); gives the following loop:
-#50205 0x10c2dc in AM::mkWakeupThread (this=0x1c82b8, bb=0x6b8ee8)
-    at am.icc:305
-#50206 0x108ed0 in AM::reduceTrailOnSuspend (this=0x1c82b8) at am.cc:802
-#50207 0x10b994 in AM::deinstallCurrent (this=0x1c82b8) at am.icc:89
-#50208 0x10ba98 in AM::deinstallPath (this=0x1c82b8, top=0x66a518)
-    at am.icc:100
-#50209 0x108ba0 in AM::installPath (this=0x1c82b8, to=0x66a518) at am.cc:737
-#50210 0x1147c8 in toggleBoard () at debug.cc:40
-#50211 0x114a38 in debugStreamThread (tt=0x6b8ebc, p=0x6c32ac) at debug.cc:81
-#50212 0x122a5c in Thread::Thread (this=0x6b8ebc, flags=0, prio=1, bb=0x6b8ee8)
-    at thread.icc:85
-#50213 0x10c2dc in AM::mkWakeupThread (this=0x1c82b8, bb=0x6b8ee8)
-    at am.icc:305
-#50214 0x108ed0 in AM::reduceTrailOnSuspend (this=0x1c82b8) at am.cc:802
-#50215 0x10b994 in AM::deinstallCurrent (this=0x1c82b8) at am.icc:89
-#50216 0x6560c in engine (init=0) at emulate.cc:2508
-#50217 0x6c988 in OZ_main (argc=3, argv=0xeffff164) at foreign.cc:1975
-#50218 0x48270 in main (argc=3, argv=0xeffff164) at main.cc:5
-*/
-
-  am.currentBoard = saved;
-  saved = b;
+static void gotoBoard(Board *b) {
+  am.currentBoard = b;
 }
 
 void debugStreamSuspend(Thread *tt) {
-  toggleBoard();
+  Board *bb = gotoRootBoard();
 
   TaggedRef tail    = am.threadStreamTail;
   TaggedRef newTail = OZ_newVariable();
@@ -78,11 +57,11 @@ void debugStreamSuspend(Thread *tt) {
   TaggedRef entry = OZ_recordInit(OZ_atom("susp"), pairlist);
   OZ_unify(tail, OZ_cons(entry, newTail));
   am.threadStreamTail = newTail;
-  toggleBoard();
+  gotoBoard(bb);
 }
 
 void debugStreamCont(Thread *tt) {
-  toggleBoard();
+  Board *bb = gotoRootBoard();
 
   TaggedRef tail    = am.threadStreamTail;
   TaggedRef newTail = OZ_newVariable();
@@ -96,11 +75,11 @@ void debugStreamCont(Thread *tt) {
   TaggedRef entry = OZ_recordInit(OZ_atom("cont"), pairlist);
   OZ_unify(tail, OZ_cons(entry, newTail));
   am.threadStreamTail = newTail;
-  toggleBoard();
+  gotoBoard(bb);
 }
 
 void debugStreamThread(Thread *tt, Thread *p) {
-  toggleBoard();
+  Board *bb = gotoRootBoard();
 
   TaggedRef tail    = am.threadStreamTail;
   TaggedRef newTail = OZ_newVariable();
@@ -126,11 +105,11 @@ void debugStreamThread(Thread *tt, Thread *p) {
   OZ_unify(tail, OZ_cons(entry, newTail));
   am.threadStreamTail = newTail;
 
-  toggleBoard();
+  gotoBoard(bb);
 }
 
 void debugStreamTerm(Thread *tt) {
-  toggleBoard();
+  Board *bb = gotoRootBoard();
 
   TaggedRef tail    = am.threadStreamTail;
   TaggedRef newTail = OZ_newVariable();
@@ -144,30 +123,33 @@ void debugStreamTerm(Thread *tt) {
   TaggedRef entry = OZ_recordInit(OZ_atom("term"), pairlist);
   OZ_unify(tail, OZ_cons(entry, newTail));
   am.threadStreamTail = newTail;
-  toggleBoard();
+
+  gotoBoard(bb);
 }
 
-void debugStreamCall(ProgramCounter PC, char *name,
-                     int arity, TaggedRef *arguments, bool builtin) {
+void debugStreamCall(ProgramCounter PC, char *name, int arity,
+                     TaggedRef *arguments, bool builtin) {
 
-  toggleBoard();
+  Board *bb = gotoRootBoard();
 
   TaggedRef tail    = am.threadStreamTail;
   TaggedRef newTail = OZ_newVariable();
+
+  ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
   TaggedRef file, comment;
   int line, abspos;
 
   am.currentThread->stop();
 
-  if (PC == NOCODE) {
-    file = OZ_atom("");
-    line = 1;
-    abspos = 1;
+  if (debugPC == NOCODE) {
+    file    = OZ_atom("noDebugInfo");
     comment = OZ_atom("");
+    line    = 1;
+    abspos  = 1;
   }
   else
-    CodeArea::getDebugInfoArgs(PC,file,line,abspos,comment);
+    CodeArea::getDebugInfoArgs(debugPC,file,line,abspos,comment);
 
   TaggedRef arglist = CodeArea::argumentList(arguments, arity);
 
@@ -186,7 +168,7 @@ void debugStreamCall(ProgramCounter PC, char *name,
   TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
   OZ_unify(tail, OZ_cons(entry, newTail));
   am.threadStreamTail = newTail;
-  toggleBoard();
+  gotoBoard(bb);
 }
 
 // ------------------ explore a thread's taskstack ---------------------------

@@ -275,7 +275,7 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
 
 TaggedRef CodeArea::globalVars(ProgramCounter PC, RefsArray G)
 {
-  static TaggedRef ret;
+  TaggedRef ret;
   ProgramCounter aux = definitionEnd(PC);
   aux += sizeOf(getOpcode(aux));
 
@@ -290,7 +290,7 @@ TaggedRef CodeArea::globalVars(ProgramCounter PC, RefsArray G)
 
 TaggedRef CodeArea::localVars(ProgramCounter PC, RefsArray Y)
 {
-  static TaggedRef ret;
+  TaggedRef ret;
   ret = nil();
   for(int i=getRefsArraySize(Y)-1; i>=0; i--)
     ret = cons(Y[i], ret);
@@ -299,7 +299,7 @@ TaggedRef CodeArea::localVars(ProgramCounter PC, RefsArray Y)
 
 TaggedRef CodeArea::argumentList(RefsArray X, int arity)
 {
-  static TaggedRef ret;
+  TaggedRef ret;
   ret = nil();
   for(--arity; arity>=0; arity--)
     ret = cons(X[arity], ret);
