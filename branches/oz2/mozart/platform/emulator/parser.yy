@@ -27,6 +27,8 @@ static unsigned int parseVirtualString(char *str);
 #include "../include/config.h"
 #include "oz.h"
 
+#include "types.hh"
+
 typedef OZ_Term CTerm;
 
 static CTerm nilAtom;
@@ -34,12 +36,15 @@ static CTerm nilAtom;
 extern int xy_showInsert, xy_gumpSyntax, xy_systemVariables;
 extern CTerm xy_errorMessages;
 
+static int initialized = 0;
+
 OZ_C_proc_begin(ozparser_init, 0)
 {
   nilAtom = OZ_nil();
   xy_showInsert = xy_gumpSyntax = 0;
   xy_systemVariables = 1;
   parserInit();
+  initialized = 1;
   return PROCEED;
 }
 OZ_C_proc_end
@@ -65,7 +70,8 @@ OZ_C_proc_begin(ozparser_parseFile, 2)
   OZ_declareVirtualStringArg(0, str);
   xy_errorMessages = OZ_nil();
   CTerm res = parseFile(str);
-  printf("%s",OZ_virtualStringToC(xy_errorMessages));
+  if (xy_errorMessages != OZ_nil())
+    printf("%s%c",OZ_virtualStringToC(xy_errorMessages),MSG_ERROR);
   return OZ_unify(OZ_getCArg(1), res);
 }
 OZ_C_proc_end
@@ -75,7 +81,8 @@ OZ_C_proc_begin(ozparser_parseVirtualString, 2)
   OZ_declareVirtualStringArg(0, str);
   xy_errorMessages = OZ_nil();
   CTerm res = parseVirtualString(str);
-  printf("%s",OZ_virtualStringToC(xy_errorMessages));
+  if (xy_errorMessages != OZ_nil())
+    printf("%s%c",OZ_virtualStringToC(xy_errorMessages),MSG_ERROR);
   return OZ_unify(OZ_getCArg(1), res);
 }
 OZ_C_proc_end
@@ -117,6 +124,21 @@ OZ_C_proc_begin(ozparser_parseVirtualStringAtomic, 6)
     return OZ_unify(OZ_getCArg(5), xy_errorMessages);
   else
     return res;
+}
+OZ_C_proc_end
+
+char *xy_expand_file_name(char *file);
+
+OZ_C_proc_begin(ozparser_fileExists, 2)
+{
+  OZ_declareVirtualStringArg(0, str);
+  OZ_declareArg(1, res);
+  char *fullname = xy_expand_file_name(str);
+  if (fullname != NULL) {
+    delete[] fullname;
+    return OZ_unify(res, OZ_true());
+  } else
+    return OZ_unify(res, OZ_false());
 }
 OZ_C_proc_end
 
@@ -281,8 +303,8 @@ static CTerm decls[DEPTH];
   int i;
 }
 
-%token HELP SWITCH SHOWSWITCHES FEED THREADEDFEED
-%token CORE OZMACHINE TOPVARS
+%token HALT HELP SWITCH SHOWSWITCHES FEED THREADEDFEED
+%token CORE OZMACHINE
 %token SWITCHNAME FILENAME
 %token OZATOM ATOM_LABEL OZFLOAT OZINT AMPER DOTINT STRING
 %token VARIABLE VARIABLE_LABEL
@@ -424,7 +446,7 @@ static CTerm decls[DEPTH];
 
 file		: queries ENDOFFILE
 		  { if (yynerrs) {
-		      yyoutput = newCTerm("parseError");
+		      yyoutput = newCTerm("parseErrors",OZ_int(yynerrs));
 		      YYABORT;
 		    } else {
 		      yyoutput = $1;
@@ -433,7 +455,7 @@ file		: queries ENDOFFILE
 		  }
 		| prodClauseList ENDOFFILE
 		  { if (yynerrs) {
-		      yyoutput = newCTerm("parseError");
+		      yyoutput = newCTerm("parseErrors",OZ_int(yynerrs));
 		      YYABORT;
 		    } else {
 		      yyoutput = newCTerm("fSynTopLevelProductionTemplates",$1);
@@ -441,7 +463,7 @@ file		: queries ENDOFFILE
 		    }
 		  }
 		| error
-		  { yyoutput = newCTerm("parseError");
+		  { yyoutput = newCTerm("parseErrors",OZ_int(yynerrs));
 		    YYABORT;
 		  }
 		;
@@ -463,7 +485,9 @@ queries1	: directive queries
 		  { $$ = nilAtom; }
 		;
 
-directive	: HELP
+directive	: HALT
+		  { $$ = newCTerm("dirHalt"); }
+		| HELP
 		  { $$ = newCTerm("dirHelp"); }
 		| SWITCH switchList
 		  { $$ = newCTerm("dirSwitch",$2); }
@@ -477,8 +501,6 @@ directive	: HELP
 		  { $$ = newCTerm("dirCore",newCTerm(xyhelpFileName)); }
 		| OZMACHINE FILENAME
 		  { $$ = newCTerm("dirMachine",newCTerm(xyhelpFileName)); }
-		| TOPVARS FILENAME
-		  { $$ = newCTerm("dirTopVars",newCTerm(xyhelpFileName)); }
 		;
 
 switchList	: /* empty */
@@ -1376,17 +1398,19 @@ void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
   if (strcmp(kind,"warning"))
     yynerrs++;
 
-  char s[256];
-  sprintf(s,"\n%c",MSG_ERROR);
-
   append("\n%************ ");
   append(kind);
   append(" **********\n%**\n%**     ");
   append(msg);
-  append(s);
+  append("\n");
 
   if (line < 0)
     return;
+
+  if (file[0] == '\0') {
+    append("\n%**\n");
+    return;
+  }
 
   append("%**     in file \"");
   append(file);
@@ -1412,6 +1436,7 @@ void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
   }
 
   append(":\n%**\n%**     ");
+  char s[256];
   int col = 0, curoff = 0, n = -1;
   do {				/* print the line (including '\n') */
     if (curoff == offset)
@@ -1435,8 +1460,9 @@ void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
     while(n)
       s[--n] = ' ';
     append(s);
-    append("^-- *** here\n%**\n");
+    append("^-- *** here\n");
   }
+  append("%**\n");
 }
 
 static void xyerror(char *s) {
@@ -1456,6 +1482,8 @@ static void parserInit() {
 }
 
 static CTerm parse() {
+  Assert(initialized);
+
   // in case there was a syntax error during the last parse, delete garbage:
   for (int i = 0; i < DEPTH; i++) {
     prodKey[i] = prodKeyBuffer[i];
@@ -1480,16 +1508,12 @@ static CTerm parse() {
 static CTerm parseFile(char *file) {
   if (!xy_init_from_file(file))
     return newCTerm("fileNotFound");
-  strncpy(xyFileName,file,99);
-  xyFileNameAtom = OZ_atom(xyFileName);
   CTerm res = parse();
   fclose(xyin);
   return res;
 }
 
 static CTerm parseVirtualString(char *str) {
-  strcpy(xyFileName,"/");
-  xyFileNameAtom = OZ_atom(xyFileName);
   xy_init_from_string(str);
   return parse();
 }
