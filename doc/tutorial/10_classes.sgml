@@ -646,7 +646,7 @@ definition:
 <<<
 local A = {NewName} in
    class C from ...
-      meth A(X) ... end
+      meth !A(X) ... end
       meth a(...) {self A(5)} ... end
       ...
    end

@@ -7,7 +7,7 @@
   for Artificial Intelligent),
   Seif Haridi at SICS (the Swedish Institute
   of Computer Science),
-  and Peter Van Roy at UCL (the Universite catholique de Louvain).
+  and Peter Van Roy at UCL (the Université catholique de Louvain).
 
   <P>Oz is in essence a concurrent constraint programming language, see
   <PTR TO="saraswat94">. A good exposition of the programming model underlying
@@ -57,7 +57,7 @@
   programs in any existing language, we quickly find ourselves confined
   by the concepts of the underlying paradigm. Oz solves this
   problem by a coherent design that combines the programming
-  abstractions of various paradigms in clean and simple way.
+  abstractions of various paradigms in a clean and simple way.
 
   <P>So, before answering the above question, let us see what Oz
   is. This is again a difficult question to answer in a few
@@ -189,7 +189,8 @@ until their first argument refers to a procedure. State is created
 explicitly by <EM>NewCell</EM>, which creates a cell, an updateable
 pointer into the variable store. Cells are updated by
 <EM>Exchange</EM> and read by <EM>Access</EM>. Conditionals use the
-keyword <<if>> and block until the condition is <<true>> or <<false>>
+keyword <<if>> and block until the condition variable ?{B} is <<true>>
+or <<false>>
 in the variable store. Threads are created explicitly with the
 <<thread>> statement. Exception handling is dynamically scoped and
 uses the <<try>> and <<raise>> statements.

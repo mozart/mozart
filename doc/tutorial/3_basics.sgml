@@ -57,7 +57,7 @@
   type hierarchy of Oz. Any variable, if it ever gets a value, will be
   bound to a value of one of these types. Most of the types seem
   familiar to experienced programmers, except probably <EM>Chunk</EM>,
-  <EM>Cell</EM> <EM>Space</EM>, <EM>FDInt</EM> and <EM>Name</EM>. We
+  <EM>Cell</EM>, <EM>Space</EM>, <EM>FDInt</EM> and <EM>Name</EM>. We
   will discuss all of these types in due course. For the impatient
   reader here are some hints. The <EM>Chunk</EM> data type allows users
   to introduce new abstract data types. <EM>Cell</EM> introduces the
@@ -94,8 +94,9 @@
   <P>It will print the string 'Hello World' in your standard output. In
   fact, the main reason for showing this program is to get you
   accustomed with one of the unconventional syntactic aspects of Oz,
-  namely the syntax of <EM>procedure calls/applications</EM>. <<{Show
-  'Hello World'}>> is a procedure application of <<Show>> on the single
+  namely the syntax of <EM>procedure calls/applications</EM>.
+  <<{Show 'Hello World'}>> is a procedure application of <<Show>> on
+  the single
   atom argument <<'Hello World'>>. <<Show>> is actually a pre-declared
   global variable in your initial environment that got bound to the
   printing procedure when the <<System>> module was loaded at the start

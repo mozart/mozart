@@ -30,10 +30,10 @@ local
    proc {Sort ... } ... {MergeSort ...} ... end
    proc {Member ...} ... end
  in
-   List = export(append: Append
-               sort: Sort
-               member: Member
-               ... )
+   List = 'export'(append: Append
+                   sort: Sort
+                   member: Member
+                   ... )
 end
 >>>
 
