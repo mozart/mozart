@@ -326,6 +326,8 @@ public:
   OZ_FSetValue(int, int);
   OZ_FSetValue(const OZ_FiniteDomain &);
 
+  void init(const OZ_FSetState);
+
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
