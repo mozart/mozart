@@ -770,7 +770,11 @@ define
             [] samp then
                code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
             [] name then
-               span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+               case type of buffer then
+                  code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+               else
+                  span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+               end
             [] q then
                %--** use different quotes, depending on class and/or lang?
                if {SGML.isOfClass M terminal} then
