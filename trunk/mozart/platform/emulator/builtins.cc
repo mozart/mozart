@@ -123,7 +123,7 @@ OZ_BI_define(Name,3,0)					\
 #define NEW_DECLAREBI_USEINLINEFUN1(Name,InlineName)	\
 OZ_BI_define(Name,1,1)					\
 {							\
-  OZ_Term aux;						\
+  OZ_Term aux=0;					\
   oz_declareIN(0,arg1);					\
   OZ_Return state = InlineName(arg1,aux);		\
   OZ_result(aux);					\
@@ -137,7 +137,7 @@ OZ_BI_define(Name,1,1)					\
 #define NEW_DECLAREBI_USEINLINEFUN2(Name,InlineName)	\
 OZ_BI_define(Name,2,1)					\
 {							\
-  OZ_Term aux;						\
+  OZ_Term aux=0;					\
   oz_declareIN(0,arg0);					\
   oz_declareIN(1,arg1);					\
   OZ_Return state=InlineName(arg0,arg1,aux);		\
@@ -152,7 +152,7 @@ OZ_BI_define(Name,2,1)					\
 #define NEW_DECLAREBI_USEINLINEFUN3(Name,InlineName)	\
 OZ_BI_define(Name,3,1)					\
 {							\
-  OZ_Term aux;						\
+  OZ_Term aux=0;					\
   oz_declareIN(0,arg0);					\
   oz_declareIN(1,arg1);					\
   oz_declareIN(2,arg2);					\
