@@ -26,10 +26,7 @@
 %% -- is it possible to attach to a running Emacs instead of starting
 %%    a new one?
 %% -- provide for a means to start ozd from the OPI
-%% -- synchronize environment of created compiler with Ozcar's stack display
-%% -- the environment of the created compiler should be richer (cf. OPI),
-%%    especially, it is not yet possible to set breakpoints since this
-%%    requires the variable `Ozcar'
+%% -- synchronize environment of created compiler with Ozcar's stack display?
 %%
 
 functor
