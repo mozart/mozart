@@ -9,7 +9,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.0.4 (Feb 97)'
+Version                = '1.1.0 (Feb 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -164,9 +164,8 @@ TextCursor             = left_ptr
 MaxStackSize           = 40
 MaxStackBrowseSize     = 15
 
-TimeoutToMessage       = 500  % ms
-
-CurrentTime            = 950 * 1000 * 1000
+TimeoutToMessage       = 350   % ms
+TimeoutToRedraw        = 180
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Colors and colormodel related stuff

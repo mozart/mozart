@@ -91,9 +91,10 @@ in
       feat
 	 toplevel
 	 menuBar
+	 tkRunChildren
       
 	 ButtonFrame
-      
+
 	 ThreadTree
 	 StackText
 	 GlobalEnvText
@@ -134,7 +135,8 @@ in
 	 %% the buttons
 	 local
 	    %% Tk has some problems printing centered text :-(
-	    Bs = {Map [' step' ' next' ' cont' ' forget' ' term' ' stack' ]
+	    Bs = {Map [' step' ' next'  ' cont' ' forget'
+		       ' term' ' clear' ' stack' ]
 		  fun {$ B}
 		     {New Tk.button tkInit(parent: self.ButtonFrame
 					   text:   B
@@ -144,20 +146,29 @@ in
 					   borderwidth: SmallBorderSize
 					   action: self # action(B))}
 		  end}
-	    TkSusp = {New Tk.variable tkInit(0)} % emulator default
-	    Susp   = {New Tk.checkbutton
-		      tkInit(parent:    self.ButtonFrame
-			     variable:  TkSusp
-			     text:      'Suspend'
-			     relief:    raised
-			     font:      ButtonFont
-			     padx:      PadXButton
-			     pady:      PadYButton
-			     borderwidth: SmallBorderSize
-			     action:    self # suspend(TkSusp))}
+	    TkSusp TkRunChildren Susp RunChildren
 	 in
+	    {ForAll
+	     [TkSusp        # Susp        # 'Suspend'           # suspend
+	      TkRunChildren # RunChildren # 'Start Threads' # runChildren]
+	     proc {$ B}
+		M = B.4
+	     in
+		B.1 = {New Tk.variable tkInit(0)} % emulator default
+		B.2 = {New Tk.checkbutton
+		       tkInit(parent:    self.ButtonFrame
+			      variable:  B.1
+			      text:      B.3
+			      relief:    raised
+			      font:      ButtonFont
+			      padx:      PadXButton
+			      pady:      PadYButton
+			      borderwidth: SmallBorderSize
+			      action:    self # M(B.1))}
+	     end}
+	    self.tkRunChildren = TkRunChildren
 	    {Tk.batch [pack(b(Bs) side:left  padx:1)
-		       pack(Susp  side:right padx:2)]}
+		       pack(Susp RunChildren side:right padx:2)]}
 	 end
       
 	 %% status line
@@ -529,6 +540,9 @@ in
 
 	    elseof ' term' then
 	       ThreadManager,kill(T I)
+
+	    elseof ' clear' then
+	       ThreadManager,killAll
 	       
 	    elseof ' stack' then  %% will go away, someday...
 	       {Browse {Dbg.taskstack T MaxStackBrowseSize}}

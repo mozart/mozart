@@ -215,7 +215,6 @@ in
 	       else
 		  {self NewFile(file:RealF line:L color:C what:What)}
 	       end
-	       case {IsDet Ack} then skip else Ack = unit end
 	    end
 	    case @WithDrawn then
 	       {Tk.batch [wm(geometry  self SourceWindowGeometry)
@@ -225,6 +224,7 @@ in
 	       WithDrawn <- false
 	    else skip end
 	 end
+	 case {IsDet Ack} then skip else Ack = unit end
       end
       
       meth NewFile(file:F line:L color:C what:What)
