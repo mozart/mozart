@@ -113,7 +113,7 @@ define(M4INSTRTWOREGS,``''
     ``
     {
       int regIndex = getRegArg(PC+1);
-      Atom *name   = getAtomArg(PC+2);
+      TaggedRef name   = getAtomArg(PC+2);
       DebugCheck(&Reg1(0)!= &(e->toplevelVars[0]),
                  error("createNamedVar: e->toplevelVars expected"););
       Reg1(regIndex) = createNamedVariable(regIndex,name,e,Y);
@@ -172,7 +172,7 @@ define(M4INSTRTWOREGS,``''
 
   M4INSTRONEREG( PUTRECORD,
                ``
-                 TaggedRef label = makeTaggedAtom(getAtomArg(PC+1));
+                 TaggedRef label = getAtomArg(PC+1);
                  Arity *ff = (Arity *) getAdressArg(PC+2);
                  SRecord *srecord = new SRecord(ff,label,-1,NO);
 
@@ -185,7 +185,7 @@ define(M4INSTRTWOREGS,``''
 
   M4INSTRONEREG( PUTCONSTANT,
                ``
-               Reg1(getRegArg(PC+2)) = makeTaggedAtom(getAtomArg(PC+1));
+               Reg1(getRegArg(PC+2)) = getAtomArg(PC+1);
                DISPATCH(3);
                ''
                );
@@ -229,7 +229,7 @@ define(M4INSTRTWOREGS,``''
 
   INSTRUCTION(SETCONSTANT)
     {
-      *sPointer++ = makeTaggedAtom(getAtomArg(PC+1));
+      *sPointer++ = getAtomArg(PC+1);
       DISPATCH(2);
     }
 
@@ -254,14 +254,14 @@ define(M4INSTRTWOREGS,``''
 
   M4INSTRONEREG( GETSTRUCTURE,
                ``{
-                 Atom *atom = getAtomArg(PC+1);
-                 int arity = getPosIntArg(PC+2);
+                 TaggedRef label = getAtomArg(PC+1);
+                 int arity       = getPosIntArg(PC+2);
 
                  TaggedRef term = Reg1( getRegArg(PC+3) );
                  DEREF(term,termPtr,tag);
 
                  if (isAnyVar(term)) {
-                   STuple *stuple = STuple::newSTuple(atom,arity);
+                   STuple *stuple = STuple::newSTuple(label,arity);
 
                    if (isCVar(term)) {
                      if (tagged2CVar(term)->unify(termPtr, term, tag, NULL,
@@ -280,17 +280,17 @@ define(M4INSTRTWOREGS,``''
                  }
 
                  if (isSTuple(tag) &&
-                     tagged2STuple(term)->compareSortAndSize(atom,arity)) {
+                     tagged2STuple(term)->compareSortAndSize(label,arity)) {
                    sPointer = tagged2STuple(term)->getRef();
                    mode = READ;
                    DISPATCH(4);
                  }
                  HANDLE_FAILURE(PC+4,
-                                STuple *stuple = newSTupleOutline(atom,arity);
+                                STuple *stuple = newSTupleOutline(label,arity);
                                 mode = WRITE;
                                 sPointer = stuple->getRef();
                                 message("getstructure %s/%d = %s",
-                                        atom->getPrintName(),arity,
+                                        tagged2String(label),arity,
                                         tagged2String(term))
                                 );
                }''
@@ -299,8 +299,7 @@ define(M4INSTRTWOREGS,``''
 
   M4INSTRONEREG( GETRECORD,
                ``{
-                 Atom *atom = getAtomArg(PC+1);
-                 TaggedRef label = makeTaggedAtom(atom);
+                 TaggedRef label = getAtomArg(PC+1);
                  Arity *ff = (Arity *) getAdressArg(PC+2);
 
                  TaggedRef term = Reg1( getRegArg(PC+3) );
@@ -335,7 +334,7 @@ define(M4INSTRTWOREGS,``''
                                 mode = WRITE;
                                 sPointer = srecord->getRef();
                                 message("getrecord %s/%d = %s",
-                                        atom->getPrintName(),ff,
+                                        tagged2String(label),ff,
                                         tagged2String(term))
                                 );
                }''
@@ -345,16 +344,16 @@ define(M4INSTRTWOREGS,``''
   M4INSTRONEREG(TESTCONST,
     ``{
         TaggedRef term = Reg1(getRegArg(PC+1));
-        TaggedRef atom = makeTaggedAtom(getAtomArg(PC+2));
+        TaggedRef atm  = getAtomArg(PC+2);
 
         DEREF(term,termPtr,tag);
 
-        if (sameAtom(atom,term)) {
+        if (sameAtom(atm,term)) {
           JUMP( getLabelArg(PC+3) );
         }
 
         if (isNotCVar(term) ||
-            isCVar(term) && tagged2CVar(term)->valid(atom)) {
+            isCVar(term) && tagged2CVar(term)->valid(atm)) {
           suspendOnVar(makeTaggedRef(termPtr),getPosIntArg(PC+5),
                        CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
           goto LBLcheckEntailment;
@@ -389,31 +388,30 @@ define(M4INSTRTWOREGS,``''
 
   M4INSTRONEREG( GETCONSTANT,
                ``{
-                 Atom *atom = getAtomArg(PC+1);
+                 TaggedRef atm = getAtomArg(PC+1);
 
                  TaggedRef term = Reg1( getRegArg(PC+2) );
                  DEREF(term,termPtr,tag);
 
                  if (isNotCVar(tag)) {
-                   e->bindToNonvar(termPtr, term, makeTaggedAtom(atom));
+                   e->bindToNonvar(termPtr, term, atm);
                    DISPATCH(3);
                  }
 
-                 if ( isLiteral(tag) &&
-                      tagged2Atom(term) == atom ) {
+                 if ( isLiteral(tag) && sameAtom(term,atm) ) {
                    DISPATCH(3);
                  }
 
                  if (isCVar(term) &&
                      tagged2CVar(term)->unify(termPtr, term, tag,
-                                              NULL, makeTaggedAtom(atom), ATOM)) {
+                                              NULL, atm, ATOM)) {
                    DISPATCH(3);
                  }
 
                  SHALLOWFAIL;
                  HANDLE_FAILURE(PC+3,
                                 message("getconstant %s = %s",
-                                        atom->getPrintName(),
+                                        tagged2String(atm),
                                         tagged2String(term)));
                }''
                );
@@ -649,15 +647,15 @@ define(M4INSTRTWOREGS,``''
     {
       switch(mode) {
       case WRITE:
-        *sPointer++ = makeTaggedAtom(getAtomArg(PC+1));
+        *sPointer++ = getAtomArg(PC+1);
         DISPATCH(2);
 //      case READ:
       default:
         if ( !e->fastUnify(makeTaggedRef(sPointer++),
-                           makeTaggedAtom(getAtomArg(PC+1))) ) {
+                           getAtomArg(PC+1)) ) {
           HANDLE_FAILURE(PC+2,
                          message("unifyconst %s = %s",
-                                 getAtomArg(PC+1)->getPrintName(),
+                                 tagged2String(getAtomArg(PC+1)),
                                  tagged2String(*(sPointer-1)))
                                  );
         }
