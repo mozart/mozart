@@ -153,18 +153,16 @@ OZ_BI_define(BIinitIPConnection,1,1)
   OZ_Term ipf = oz_atom("ip");
   OZ_Term portf = oz_atom("port");
   OZ_Term fwf = oz_atom("firewall");
-  OZ_Term apr = oz_atom("acceptProc");
   OZ_Term cpr = oz_atom("connectProc");
   int ip,port;
   Bool fw;
 
   if (oz_isLiteral(rec)){
-;//      oz_typeError(0,"Must specify Accept and Connect procedures");
+    ;
   }
-  else if (oz_isLTuple(rec))
-    {
-;//      oz_typeError(0,"Must specify Accept and Connect procedures");
-    }
+  else if (oz_isLTuple(rec)) {
+    ;
+  }
   else if (oz_isSRecord(rec)) {
     SRecord *srec = tagged2SRecord(rec);
     int index = srec->getIndex(ipf);
@@ -174,7 +172,7 @@ OZ_BI_define(BIinitIPConnection,1,1)
 	oz_typeError(-1,"String");
       */
       char *s=oz_str2c(t);
-      ip = (int)inet_addr(s);
+      ip = (int)ntohl(inet_addr(s));
       setIPAddress(ip);
     }
     index = srec->getIndex(portf);
@@ -193,19 +191,6 @@ OZ_BI_define(BIinitIPConnection,1,1)
       fw = OZ_boolToC(t);
       setFirewallStatus(fw);
     }
-    index = srec->getIndex(apr);
-    if (index>=0) {
-      OZ_Term  proc0 = srec->getArg(index);
-      NONVAR(proc0,proc);
-      if(!oz_isChunk(proc))
-	oz_typeError(-1,"Chunk");
-      defaultAcceptProcedure = proc;
-      oz_protect(&defaultAcceptProcedure);
-    }
-//      else
-//        oz_typeError(0,"Must specify Accept procedure");
-    
-      
     index = srec->getIndex(cpr);
     if (index>=0) {
       OZ_Term proc0 = srec->getArg(index);
@@ -215,16 +200,12 @@ OZ_BI_define(BIinitIPConnection,1,1)
       defaultConnectionProcedure = proc;
       oz_protect(&defaultConnectionProcedure);
     }
-//      else
-//        oz_typeError(0,"Must specify Connect procedure");
-     
-    
   } else {
     oz_typeError(0,"Record");
   }
 
   initDP();
-  ip = ntohl(getIPAddress());
+  ip = getIPAddress();
   int *pip= &ip;
   OZ_RETURN(OZ_recordInit(oz_atom("ipInfo"),
 			  oz_cons(

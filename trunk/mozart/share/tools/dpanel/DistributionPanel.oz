@@ -2,7 +2,6 @@ functor
 import
    Main(server:Mserver open:Mopen openNetInfo:MnetInfo)  at 'x-oz://system/DistributionPanelSrc.ozf'
    DPPane(siteStatistics) at 'x-oz://boot/DPPane'
-   Connection
 export
    Open
    OpenNetInfo
@@ -19,12 +18,12 @@ define
 	 serverPort
 	 site
 	 
-      meth init(Tick)
+      meth init(ServerPort)
 	 S P = {NewPort S}
 	 Site = {Filter {DPPane.siteStatistics} fun{$ M} M.state == mine end}.1
       in
 	 self.site = site(ip:Site.ip port:Site.port pid:Site.pid)
-	 self.serverPort = {Connection.take Tick}
+	 self.serverPort = ServerPort
 	 {Send self.serverPort connecting(P self.site Site.siteid)}
 	 thread {ForAll S self} end
       end
@@ -58,8 +57,8 @@ define
       end
    end
    
-   proc{Client Tick}
-      _ = {New DPclient init(Tick)}
+   proc{Client ServerPort}
+      _ = {New DPclient init(ServerPort)}
    end
    
    
