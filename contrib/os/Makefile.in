@@ -50,7 +50,7 @@ $(LIB_NATIVES): $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
 	$(INSTALL_DLL) $< $@
 
 %.ozf: %.oz
-	$(OZC) -c $< -o $@
+	$(OZC) -z 9 -c $< -o $@
 
 %.so-$(PLATFORM): %.o
 	$(OZTOOL) ld $< -o $@ $(LDFLAGS) $(LIBS)

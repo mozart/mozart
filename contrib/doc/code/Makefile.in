@@ -31,7 +31,7 @@ $(ELIB_TARGETS): $(ELIB_DIR)/% : %
 	$(INSTALL_LIB) $< $@
 
 %.ozf: %.oz
-	$(OZC) -c $< -o $@
+	$(OZC) -z 9 -c $< -o $@
 
 %.elc: %.el
 	$(EMACS) -q -batch -f batch-byte-compile $<
