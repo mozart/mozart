@@ -549,14 +549,14 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 
 
-\\switch                       { BEGIN(SWITCHDIR); return SWITCH; }
-\\pushSwitches                 { BEGIN(DIRECTIVE); return PUSHSWITCHES; }
-\\popSwitches                  { BEGIN(DIRECTIVE); return POPSWITCHES; }
-\\localSwitches                { BEGIN(DIRECTIVE); return LOCALSWITCHES; }
+\\switch                       { BEGIN(SWITCHDIR); return T_SWITCH; }
+\\pushSwitches                 { BEGIN(DIRECTIVE); return T_PUSHSWITCHES; }
+\\popSwitches                  { BEGIN(DIRECTIVE); return T_POPSWITCHES; }
+\\localSwitches                { BEGIN(DIRECTIVE); return T_LOCALSWITCHES; }
 
 \\line                         { if (get_cond()) BEGIN(LINE); }
 \\insert                       { BEGIN(INSERT); }
@@ -583,7 +583,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
   <<EOF>>                      { BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 }
 <DIRECTIVE>{
@@ -600,7 +600,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
   <<EOF>>                      { BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 }
 <LINE>{
@@ -633,13 +633,13 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 }
 <SWITCHDIR>{
   "+"                          { return '+'; }
   "-"                          { return '-'; }
-  [A-Za-z0-9]+                 { return SWITCHNAME; }
+  [A-Za-z0-9]+                 { return T_SWITCHNAME; }
   {BLANK}                      ;
   .                            { errorFlag = 1; }
   \n                           { if (errorFlag && get_cond())
@@ -653,7 +653,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
   <<EOF>>                      { BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 }
 
@@ -667,7 +667,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						   OZ_int(xylino),
 						   OZ_int(xycharno()));
 				     xy_errorMessages =
-				       OZ_cons(OZ_mkTupleC("logInsert",2,
+				       oz_cons(OZ_mkTupleC("logInsert",2,
 							   OZ_atom(fullname),
 							   coord),
 					       xy_errorMessages);
@@ -708,7 +708,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 }
 
@@ -716,7 +716,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
   {VARIABLE}                   { if (get_cond()) {
 				   trans('`');
 				   OZ_Term key = OZ_atom(xytext);
-				   defines->setArg(key, OZ_true());
+				   defines->setArg(key, NameTrue);
 				   BEGIN(DIRECTIVE);
 				 } else
 				   BEGIN(INITIAL);
@@ -738,7 +738,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 }
 <UNDEF>{
@@ -766,7 +766,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 }
 <IFDEF>{
@@ -792,7 +792,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 }
 <IFNDEF>{
@@ -818,7 +818,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 }
 <SCANNERPREFIX>{
@@ -843,7 +843,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 }
 <PARSEREXPECT>{
@@ -867,27 +867,27 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 }
 
-<LEX>"<<EOF>>"                 { BEGIN(INITIAL); return REGEX; }
-<LEX>"<"{REGEXCHAR}+">"        { BEGIN(INITIAL); stripRegex(); return REGEX; }
+<LEX>"<<EOF>>"                 { BEGIN(INITIAL); return T_REGEX; }
+<LEX>"<"{REGEXCHAR}+">"        { BEGIN(INITIAL); stripRegex(); return T_REGEX; }
 
-"[]"                           { return CHOICE; }
-"..."                          { return LDOTS; }
-"<-"                           { return OOASSIGN; }
-"<="                           { return DEFAULT; }
-"=>"                           { return REDUCE; }
-"!!"                           { return DEREFF; }
-"//"                           { return SEP; }
-{ADD}                          { return ADD; }
-{FDMUL}                        { return FDMUL; }
-{OTHERMUL}                     { return OTHERMUL; }
-{OTHERMUL}/\(                  { return OTHERMUL; }
-"=="|{COMPARE}                 { return COMPARE; }
-{FDIN}                         { return FDIN; }
-("="|{COMPARE})":"             { return FDCOMPARE; }
+"[]"                           { return T_CHOICE; }
+"..."                          { return T_LDOTS; }
+"<-"                           { return T_OOASSIGN; }
+"<="                           { return T_DEFAULT; }
+"=>"                           { return T_REDUCE; }
+"!!"                           { return T_DEREFF; }
+"//"                           { return T_SEP; }
+{ADD}                          { return T_ADD; }
+{FDMUL}                        { return T_FDMUL; }
+{OTHERMUL}                     { return T_OTHERMUL; }
+{OTHERMUL}/\(                  { return T_OTHERMUL; }
+"=="|{COMPARE}                 { return T_COMPARE; }
+{FDIN}                         { return T_FDIN; }
+("="|{COMPARE})":"             { return T_FDCOMPARE; }
 
 "."({SPACE}|\n)*[0-9]+         { // Hack to avoid strange parsing of X.1.1:
 				 // If "." is followed by integer, then
@@ -897,142 +897,142 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 // where the last one is a float.
 				 // Caveat: Comments are not allowed
 				 //         between . and number.
-				 stripDot(); return DOTINT; }
+				 stripDot(); return T_DOTINT; }
 
 {INT}/\.\.\.                   { // Hack to avoid parsing error for a(b:1...):
 				 // If int is followed by ..., int is returned.
 				 // If this rule would not be there, the rule
 				 // for floats would match and an error would
 				 // occur.
-				 return OZINT; }
+				 return T_OZINT; }
 
-{OZINT}                        { return OZINT; }
+{OZINT}                        { return T_OZINT; }
 
-~?{INT}\.{DIGIT}*((e|E)~?{INT})? { return OZFLOAT; }
+~?{INT}\.{DIGIT}*((e|E)~?{INT})? { return T_OZFLOAT; }
 
-"unit"/\(                      { return UNIT_LABEL; }
-"true"/\(                      { return TRUE_LABEL; }
-"false"/\(                     { return FALSE_LABEL; }
+"unit"/\(                      { return T_UNIT_LABEL; }
+"true"/\(                      { return T_TRUE_LABEL; }
+"false"/\(                     { return T_FALSE_LABEL; }
 
-"andthen"                      { return andthen; }
-"andthen"/\(                   { return andthen; }
-"at"                           { return at; }
-"at"/\(                        { return at; }
-"attr"                         { return attr; }
-"attr"/\(                      { return attr; }
-"case"                         { return _case_; }
-"case"/\(                      { return _case_; }
-"catch"                        { return catch; }
-"catch"/\(                     { return catch; }
-"choice"                       { return choice; }
-"choice"/\(                    { return choice; }
-"class"                        { return _class_; }
-"class"/\(                     { return _class_; }
-"cond"                         { return cond; }
-"cond"/\(                      { return cond; }
-"declare"                      { return declare; }
-"declare"/\(                   { return declare; }
-"define"                       { return define; }
-"define"/\(                    { return define; }
-"dis"                          { return dis; }
-"dis"/\(                       { return dis; }
-"else"                         { return _else_; }
-"else"/\(                      { return _else_; }
-"elsecase"                     { return elsecase; }
-"elsecase"/\(                  { return elsecase; }
-"elseif"                       { return elseif; }
-"elseif"/\(                    { return elseif; }
-"elseof"                       { return elseof; }
-"elseof"/\(                    { return elseof; }
-"end"                          { return end; }
-"end"/\(                       { return end; }
-"export"                       { return export; }
-"export"/\(                    { return export; }
-"fail"                         { return fail; }
-"fail"/\(                      { return fail; }
-"false"                        { return false; }
-"feat"                         { return feat; }
-"feat"/\(                      { return feat; }
-"finally"                      { return finally; }
-"finally"/\(                   { return finally; }
-"from"                         { return _from_; }
-"from"/\(                      { return _from_; }
-"fun"                          { return _fun_; }
-"fun"/\(                       { return _fun_; }
-"functor"                      { return functor; }
-"functor"/\(                   { return functor; }
-"if"                           { return _if_; }
-"if"/\(                        { return _if_; }
-"import"                       { return import; }
-"import"/\(                    { return import; }
-"in"                           { return _in_; }
-"in"/\(                        { return _in_; }
-"lex"                          { if (xy_gumpSyntax) { BEGIN(LEX); return lex; } else return OZATOM; }
-"lex"/\(                       { if (xy_gumpSyntax) { BEGIN(LEX); return lex; } else return ATOM_LABEL; }
-"local"                        { return local; }
-"local"/\(                     { return local; }
-"lock"                         { return _lock_; }
-"lock"/\(                      { return _lock_; }
-"meth"                         { return _meth_; }
-"meth"/\(                      { return _meth_; }
-"mode"                         { return xy_gumpSyntax? _mode_: OZATOM; }
-"mode"/\(                      { return xy_gumpSyntax? _mode_: ATOM_LABEL; }
-"not"                          { return not; }
-"not"/\(                       { return not; }
-"of"                           { return of; }
-"of"/\(                        { return of; }
-"or"                           { return or; }
-"or"/\(                        { return or; }
-"orelse"                       { return orelse; }
-"orelse"/\(                    { return orelse; }
-"parser"                       { return xy_gumpSyntax? _parser_: OZATOM; }
-"parser"/\(                    { return xy_gumpSyntax? _parser_: ATOM_LABEL; }
-"prepare"                      { return prepare; }
-"prepare"/\(                   { return prepare; }
-"proc"                         { return proc; }
-"proc"/\(                      { return proc; }
-"prod"                         { return xy_gumpSyntax? prod: OZATOM; }
-"prod"/\(                      { return xy_gumpSyntax? prod: ATOM_LABEL; }
-"prop"                         { return prop; }
-"prop"/\(                      { return prop; }
-"raise"                        { return _raise_; }
-"raise"/\(                     { return _raise_; }
-"require"                      { return require; }
-"require"/\(                   { return require; }
-"scanner"                      { return xy_gumpSyntax? _scanner_: OZATOM; }
-"scanner"/\(                   { return xy_gumpSyntax? _scanner_: ATOM_LABEL; }
-"self"                         { return self; }
-"self"/\(                      { return self; }
-"skip"                         { return skip; }
-"skip"/\(                      { return skip; }
-"syn"                          { return xy_gumpSyntax? syn: OZATOM; }
-"syn"/\(                       { return xy_gumpSyntax? syn: ATOM_LABEL; }
-"then"                         { return then; }
-"then"/\(                      { return then; }
-"token"                        { return xy_gumpSyntax? token: OZATOM; }
-"token"/\(                     { return xy_gumpSyntax? token: ATOM_LABEL; }
-"thread"                       { return thread; }
-"thread"/\(                    { return thread; }
-"true"                         { return true; }
-"try"                          { return try; }
-"try"/\(                       { return try; }
-"unit"                         { return unit; }
+"andthen"                      { return T_andthen; }
+"andthen"/\(                   { return T_andthen; }
+"at"                           { return T_at; }
+"at"/\(                        { return T_at; }
+"attr"                         { return T_attr; }
+"attr"/\(                      { return T_attr; }
+"case"                         { return T_case; }
+"case"/\(                      { return T_case; }
+"catch"                        { return T_catch; }
+"catch"/\(                     { return T_catch; }
+"choice"                       { return T_choice; }
+"choice"/\(                    { return T_choice; }
+"class"                        { return T_class; }
+"class"/\(                     { return T_class; }
+"cond"                         { return T_cond; }
+"cond"/\(                      { return T_cond; }
+"declare"                      { return T_declare; }
+"declare"/\(                   { return T_declare; }
+"define"                       { return T_define; }
+"define"/\(                    { return T_define; }
+"dis"                          { return T_dis; }
+"dis"/\(                       { return T_dis; }
+"else"                         { return T_else; }
+"else"/\(                      { return T_else; }
+"elsecase"                     { return T_elsecase; }
+"elsecase"/\(                  { return T_elsecase; }
+"elseif"                       { return T_elseif; }
+"elseif"/\(                    { return T_elseif; }
+"elseof"                       { return T_elseof; }
+"elseof"/\(                    { return T_elseof; }
+"end"                          { return T_end; }
+"end"/\(                       { return T_end; }
+"export"                       { return T_export; }
+"export"/\(                    { return T_export; }
+"fail"                         { return T_fail; }
+"fail"/\(                      { return T_fail; }
+"false"                        { return T_false; }
+"feat"                         { return T_feat; }
+"feat"/\(                      { return T_feat; }
+"finally"                      { return T_finally; }
+"finally"/\(                   { return T_finally; }
+"from"                         { return T_from; }
+"from"/\(                      { return T_from; }
+"fun"                          { return T_fun; }
+"fun"/\(                       { return T_fun; }
+"functor"                      { return T_functor; }
+"functor"/\(                   { return T_functor; }
+"if"                           { return T_if; }
+"if"/\(                        { return T_if; }
+"import"                       { return T_import; }
+"import"/\(                    { return T_import; }
+"in"                           { return T_in; }
+"in"/\(                        { return T_in; }
+"lex"                          { if (xy_gumpSyntax) { BEGIN(LEX); return T_lex; } else return T_OZATOM; }
+"lex"/\(                       { if (xy_gumpSyntax) { BEGIN(LEX); return T_lex; } else return T_ATOM_LABEL; }
+"local"                        { return T_local; }
+"local"/\(                     { return T_local; }
+"lock"                         { return T_lock; }
+"lock"/\(                      { return T_lock; }
+"meth"                         { return T_meth; }
+"meth"/\(                      { return T_meth; }
+"mode"                         { return xy_gumpSyntax? T_mode: T_OZATOM; }
+"mode"/\(                      { return xy_gumpSyntax? T_mode: T_ATOM_LABEL; }
+"not"                          { return T_not; }
+"not"/\(                       { return T_not; }
+"of"                           { return T_of; }
+"of"/\(                        { return T_of; }
+"or"                           { return T_or; }
+"or"/\(                        { return T_or; }
+"orelse"                       { return T_orelse; }
+"orelse"/\(                    { return T_orelse; }
+"parser"                       { return xy_gumpSyntax? T_parser: T_OZATOM; }
+"parser"/\(                    { return xy_gumpSyntax? T_parser: T_ATOM_LABEL; }
+"prepare"                      { return T_prepare; }
+"prepare"/\(                   { return T_prepare; }
+"proc"                         { return T_proc; }
+"proc"/\(                      { return T_proc; }
+"prod"                         { return xy_gumpSyntax? T_prod: T_OZATOM; }
+"prod"/\(                      { return xy_gumpSyntax? T_prod: T_ATOM_LABEL; }
+"prop"                         { return T_prop; }
+"prop"/\(                      { return T_prop; }
+"raise"                        { return T_raise; }
+"raise"/\(                     { return T_raise; }
+"require"                      { return T_require; }
+"require"/\(                   { return T_require; }
+"scanner"                      { return xy_gumpSyntax? T_scanner: T_OZATOM; }
+"scanner"/\(                   { return xy_gumpSyntax? T_scanner: T_ATOM_LABEL; }
+"self"                         { return T_self; }
+"self"/\(                      { return T_self; }
+"skip"                         { return T_skip; }
+"skip"/\(                      { return T_skip; }
+"syn"                          { return xy_gumpSyntax? T_syn: T_OZATOM; }
+"syn"/\(                       { return xy_gumpSyntax? T_syn: T_ATOM_LABEL; }
+"then"                         { return T_then; }
+"then"/\(                      { return T_then; }
+"token"                        { return xy_gumpSyntax? T_token: T_OZATOM; }
+"token"/\(                     { return xy_gumpSyntax? T_token: T_ATOM_LABEL; }
+"thread"                       { return T_thread; }
+"thread"/\(                    { return T_thread; }
+"true"                         { return T_true; }
+"try"                          { return T_try; }
+"try"/\(                       { return T_try; }
+"unit"                         { return T_unit; }
 
-{OZATOM}                       { stripTrans('\''); return OZATOM; }
-"'"[^']*"'"                    { if (get_cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return OZATOM;}
-{OZATOM}/\(                    { stripTrans('\''); return ATOM_LABEL; }
-"'"[^']*"'"/\(                 { if (get_cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return ATOM_LABEL;}
-{VARIABLE}                     { trans('`'); return VARIABLE; }
-"`"[^`]*"`"                    { if (get_cond()) xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return VARIABLE;}
-{VARIABLE}/\(                  { trans('`'); return VARIABLE_LABEL; }
-"`"[^`]*"`"/\(                 { if (get_cond()) xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return VARIABLE;}
-{STRING}                       { stripTrans('\"'); return STRING; }
-"\""[^\"]*"\""                 { if (get_cond()) xyreportError("lexical error","illegal string syntax",xyFileName,xylino,xycharno()); return STRING;}
+{OZATOM}                       { stripTrans('\''); return T_OZATOM; }
+"'"[^']*"'"                    { if (get_cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return T_OZATOM;}
+{OZATOM}/\(                    { stripTrans('\''); return T_ATOM_LABEL; }
+"'"[^']*"'"/\(                 { if (get_cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return T_ATOM_LABEL;}
+{VARIABLE}                     { trans('`'); return T_VARIABLE; }
+"`"[^`]*"`"                    { if (get_cond()) xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return T_VARIABLE;}
+{VARIABLE}/\(                  { trans('`'); return T_VARIABLE_LABEL; }
+"`"[^`]*"`"/\(                 { if (get_cond()) xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return T_VARIABLE;}
+{STRING}                       { stripTrans('\"'); return T_STRING; }
+"\""[^\"]*"\""                 { if (get_cond()) xyreportError("lexical error","illegal string syntax",xyFileName,xylino,xycharno()); return T_STRING;}
 
 "&"{ANYCHAR}                   { int i = 0;
 				 int j = 1;
 				 transBody(0, xytext, i, j);
-				 return AMPER;
+				 return T_AMPER;
 			       }
 
 "{"|"}"|"("|")"|"["|"]"|"|"|"#"|":"|"="|"."|"^"|"@"|"$"|"!"|"~"|"_"|"," {
@@ -1059,7 +1059,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 <<EOF>>                        { BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 
 %%
@@ -1082,8 +1082,8 @@ int xy_init_from_file(char *file, OZ_Term defines) {
   char *fullname = scExpndFileName(file, NULL);
   if (fullname == NULL)
     return 0;
-  xy_errorMessages = OZ_cons(OZ_mkTupleC("logInsert",1,OZ_atom(fullname)),
-			     OZ_nil());
+  xy_errorMessages = oz_cons(OZ_mkTupleC("logInsert",1,OZ_atom(fullname)),
+			     AtomNil);
   xyin = fopen(fullname, "r");
   if (xyin == NULL)
     return 0;
@@ -1097,7 +1097,7 @@ int xy_init_from_file(char *file, OZ_Term defines) {
 }
 
 void xy_init_from_string(char *str, OZ_Term defines) {
-  xy_errorMessages = OZ_nil();
+  xy_errorMessages = AtomNil;
   xyFileName[0] = '\0';
   xyFileNameAtom = OZ_atom(xyFileName);
   xyin = NULL;
