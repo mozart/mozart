@@ -214,7 +214,7 @@ TkTools.ozf: DefaultURL.ozf
 # compiler dependencies
 COMPILERSRC1 = \
         CompilerClass.oz PrintName.oz ParseOz.oz FormatStrings.oz \
-        CheckTupleSyntax.oz Builtins.oz Core.oz Annotate.oz \
+        CheckTupleSyntax.oz GroundZip.oz Builtins.oz Core.oz Annotate.oz \
         StaticAnalysis.oz POTypes.oz PatternMatching.oz CodeGen.oz \
         CodeStore.oz CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz \
         Unnester.oz UnnestFD.oz Assembler.oz Interface.oz Abstractions.oz \
@@ -252,7 +252,9 @@ FUNFUNCTORS = PrintName.ozf Builtins.ozf Unnester.ozf Core.ozf \
 
 PrintName.ozf: compiler/PrintName.oz
 
-Builtins.ozf: compiler/Builtins.oz compiler-Builtins.oz
+GroundZip.ozf: compiler/GroundZip.oz
+
+Builtins.ozf: compiler/Builtins.oz GroundZip.ozf compiler-Builtins.oz
 
 Unnester.ozf: compiler/Unnester.oz compiler/TupleSyntax.oz \
         compiler/BindingAnalysis.oz compiler/UnnestFD.oz
