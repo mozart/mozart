@@ -27,20 +27,10 @@ void DynamicTable::init(dt_index s) {
     Assert(isPwrTwo(s));
     numelem=0;
     size=s;
-    for (dt_index i=0; i<s; i++) table[i].ident=makeTaggedNULL();
-}
-
-// Create a copy of an existing dynamictable
-DynamicTable* DynamicTable::copyDynamicTable() {
-    Assert(isPwrTwo(size));
-    Assert(numelem<size);
-    Assert(size>0);
-    size_t memSize = sizeof(DynamicTable) + sizeof(HashElement)*(size-1);
-    DynamicTable* ret = (DynamicTable *) heapMalloc(memSize);
-    ret->numelem=numelem;
-    ret->size=size;
-    for (dt_index i=0; i<ret->size; i++) ret->table[i]=table[i];
-    return ret;
+    for (dt_index i=0; i<s; i++) {
+        table[i].ident=makeTaggedNULL();
+        table[i].value=makeTaggedNULL();
+    }
 }
 
 // Test whether the current table has too little room for one new element:
@@ -55,13 +45,32 @@ Bool DynamicTable::fullTest() {
 // that contains the same elements:
 // ATTENTION: Should be called before insert if the table is full.
 DynamicTable* DynamicTable::doubleDynamicTable() {
+    return copyDynamicTable(size<<1);
+}
+
+// Return a copy of the current table that has size newSize and all contents
+// of the current table.  The current table's contents MUST fit in the copy!
+DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize=(-1)) {
+    if (newSize==(-1)) newSize=size;
     Assert(isPwrTwo(size));
-    int newSize=size<<1;
-    DynamicTable* ret=newDynamicTable(newSize);
-    for(dt_index i=0; i<size; i++) {
-        if (table[i].ident!=makeTaggedNULL()) {
-            Assert(isLiteral(table[i].ident));
-            ret->insert(table[i].ident, table[i].value);
+    Assert(numelem<size);
+    Assert(numelem<newSize);
+    Assert(size>0);
+    DynamicTable* ret;
+    if (size==newSize) {
+        // Optimize case where copy has same size as original:
+        size_t memSize = sizeof(DynamicTable) + sizeof(HashElement)*(size-1);
+        ret = (DynamicTable *) heapMalloc(memSize);
+        ret->numelem=numelem;
+        ret->size=size;
+        for (dt_index i=0; i<ret->size; i++) ret->table[i]=table[i];
+    } else {
+        ret=newDynamicTable(newSize);
+        for(dt_index i=0; i<size; i++) {
+            if (table[i].value!=makeTaggedNULL()) {
+                Assert(isLiteral(table[i].ident));
+                ret->insert(table[i].ident, table[i].value);
+            }
         }
     }
     return ret;
@@ -78,7 +87,7 @@ TaggedRef DynamicTable::insert(TaggedRef id, TaggedRef val) {
     Assert(!fullTest());
     dt_index i=fullhash(id);
     Assert(i<size);
-    if (table[i].ident!=makeTaggedNULL()) {
+    if (table[i].value!=makeTaggedNULL()) {
         Assert(isLiteral(table[i].ident));
         // Ident exists already; return value & don't insert
         return table[i].value;
@@ -100,8 +109,7 @@ TaggedRef DynamicTable::lookup(TaggedRef id) {
     Assert(isLiteral(id));
     dt_index i=fullhash(id);
     Assert(i<size);
-    if (table[i].ident==id) {
-        Assert(isLiteral(table[i].ident));
+    if (table[i].ident==id && table[i].value!=makeTaggedNULL()) {
         // Val is found
         return table[i].value;
     } else {
@@ -110,13 +118,51 @@ TaggedRef DynamicTable::lookup(TaggedRef id) {
     }
 }
 
+// Destructively update index id with new value val, if index id already has a value
+// Return TRUE if index id successfully updated, else FALSE
+Bool DynamicTable::update(TaggedRef id, TaggedRef val) {
+    Assert(isPwrTwo(size));
+    Assert(isLiteral(id));
+    dt_index i=fullhash(id);
+    Assert(i<size);
+    if (table[i].value!=makeTaggedNULL()) {
+        Assert(isLiteral(table[i].ident));
+        // Ident exists; update value & return TRUE:
+        table[i].value=val;
+        return TRUE;
+    } else {
+        // Ident doesn't exist; return FALSE:
+        return FALSE;
+    }
+}
+
+// Remove index id from table.  Reclaim memory: if the table becomes too sparse then
+// return a smaller table that contains all its entries.  Otherwise, return same table.
+DynamicTable *DynamicTable::remove(TaggedRef id) {
+    Assert(isPwrTwo(size));
+    Assert(isLiteral(id));
+    dt_index i=fullhash(id);
+    Assert(i<size);
+    DynamicTable* ret=this;
+    if (table[i].value!=makeTaggedNULL()) {
+        // Remove the element
+        numelem--;
+        table[i].value=makeTaggedNULL();
+        // Shrink table if it becomes too sparse
+        if (numelem<=(((size>>1)+(size>>2))>>1)) {
+            ret=copyDynamicTable(size>>1);
+        }
+    }
+    return ret;
+}
+
 // Return TRUE iff there are features in an external dynamictable that
 // are not in the current dynamictable
 // This routine is currently not needed
 Bool DynamicTable::extraFeaturesIn(DynamicTable* dt) {
     Assert(isPwrTwo(size));
     for (dt_index i=0; i<dt->size; i++) {
-        if (dt->table[i].ident!=makeTaggedNULL()) {
+        if (dt->table[i].value!=makeTaggedNULL()) {
             Assert(isLiteral(dt->table[i].ident));
             Bool exists=lookup(dt->table[i].ident);
             if (!exists) return TRUE;
@@ -133,7 +179,7 @@ void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs) {
     pairs=new PairList();
     Assert(pairs->isempty());
     for (dt_index i=0; i<size; i++) {
-        if (table[i].ident!=makeTaggedNULL()) {
+        if (table[i].value!=makeTaggedNULL()) {
             Assert(isLiteral(table[i].ident));
             if (dt->fullTest()) dt = dt->doubleDynamicTable();
             TaggedRef val=dt->insert(table[i].ident, table[i].value);
@@ -160,7 +206,7 @@ Bool DynamicTable::srecordcheck(SRecord &sr, PairList* &pairs) {
     pairs=new PairList();
     Assert(pairs->isempty());
     for (dt_index i=0; i<size; i++) {
-        if (table[i].ident!=makeTaggedNULL()) {
+        if (table[i].value!=makeTaggedNULL()) {
             Assert(isLiteral(table[i].ident));
             TaggedRef val=sr.getFeature(table[i].ident);
             if (val!=makeTaggedNULL()) {
@@ -189,7 +235,8 @@ TaggedRef DynamicTable::getOpenArityList(TaggedRef* ftail, Board* home)
     TaggedRef thetail=thehead;
 
     for (dt_index i=0; i<size; i++) {
-        if (table[i].ident!=makeTaggedNULL()) {
+        if (table[i].value!=makeTaggedNULL()) {
+            Assert(isLiteral(table[i].ident));
             thehead=makeTaggedLTuple(new LTuple(table[i].ident,thehead));
         }
     }
@@ -202,7 +249,8 @@ TaggedRef DynamicTable::extraFeatures(DynamicTable* &dt) {
     TaggedRef flist=AtomNil;
     for (dt_index i=0; i<size; i++) {
         TaggedRef feat=table[i].ident;
-        if (feat!=makeTaggedNULL() && !dt->lookup(feat)) {
+        TaggedRef val=table[i].value;
+        if (val!=makeTaggedNULL() && !dt->lookup(feat)) {
             flist=makeTaggedLTuple(new LTuple(feat,flist));
         }
     }
@@ -230,7 +278,8 @@ TaggedRef DynamicTable::getArity() {
         STuple *stuple=STuple::newSTuple(AtomNil,numelem);
         TaggedRef *arr=stuple->getRef();
         for (int ai=0,di=0; di<size; di++) {
-            if (table[di].ident) {
+            if (table[di].value!=makeTaggedNULL()) {
+               Assert(isLiteral(table[di].ident));
                arr[ai] = table[di].ident;
                ai++;
             }
@@ -666,3 +715,5 @@ void inplace_quicksort(TaggedRef* first, TaggedRef* last) {
   inplace_quicksort(first, i-1);
   inplace_quicksort(i+1, last);
 }
+
+// ---------------------------------------------------------------------

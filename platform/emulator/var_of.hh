@@ -105,6 +105,12 @@ public:
 // added to facilitate unification of GenOFSVariables, which are built on
 // top of a DynamicTable.
 
+// Three possibilities for an entry:
+// ident: fea value: val   filled entry
+// ident: fea value: 0     empty entry (emptied by removeC)
+// ident: 0   value: 0     empty entry (empty from the start)
+// Emptiness check: table[i].value==makeTaggedNULL()
+
 typedef unsigned long dt_index;
 
 
@@ -143,16 +149,13 @@ public:
     DynamicTable* gc(void); // See definition in gc.cc
     void gcRecurse(void);
 
-    DynamicTable() { error("do not use DynamicTable"); }
+    DynamicTable() { error("use newDynamicTable instead of new DynamicTable"); }
 
     // Create an initially empty dynamictable of size s
     static DynamicTable* newDynamicTable(dt_index s=4);
 
     // Initialize an elsewhere-allocated dynamictable of size s
     void init(dt_index s=1);
-
-    // Create a copy of an existing dynamictable
-    DynamicTable* copyDynamicTable();
 
     // Test whether the current table has too little room for one new element:
     // ATTENTION: Calls to insert should be preceded by fullTest.
@@ -162,6 +165,10 @@ public:
     // that contains the same elements:
     // ATTENTION: Should be called before insert if the table is full.
     DynamicTable* doubleDynamicTable();
+
+    // Return a copy of the current table that has size newSize and all contents
+    // of the current table.  The current table's contents MUST fit in the copy!
+    DynamicTable* copyDynamicTable(dt_index newSize);
 
     // Insert val at index id
     // Return NULL if val is successfully inserted (id did not exist)
@@ -174,6 +181,14 @@ public:
     // Return val if it is found
     // Return NULL if nothing is found
     TaggedRef lookup(TaggedRef id);
+
+    // Destructively update index id with new value val, if index id already has a value
+    // Return TRUE if index id successfully updated, else FALSE
+    Bool update(TaggedRef id, TaggedRef val);
+
+    // Remove index id from table.  To reclaim memory, if the table becomes too sparse then
+    // return a smaller table that contains all its entries.  Otherwise, return same table.
+    DynamicTable *remove(TaggedRef id);
 
     // Return TRUE iff there are features in an external dynamictable that
     // are not in the current dynamictable
@@ -209,6 +224,7 @@ public:
 private:
 
     // Hash and rehash until the element or an empty slot is found
+    // Return i such that (table[i].ident==id || table[i].ident==makeTaggedNULL())
     // Returns index of slot; the slot is empty or contains the element
     dt_index fullhash(TaggedRef id) {
         Assert(isPwrTwo(size));
@@ -226,11 +242,10 @@ private:
     }
 
     // Return true iff argument is a power of two:
-    static Bool isPwrTwo(dt_index s)
-    {
+    static Bool isPwrTwo(dt_index s) {
         Assert(s>0);
-        while ((s&1)==0) s=(s>>1);
-        return (s==1);
+        return (s & (s-1))==0;
+        // while ((s&1)==0) s=(s>>1); return (s==1);
     }
 };
 
@@ -257,6 +272,13 @@ public:
     : GenCVariable(OFSVariable) {
         label=makeTaggedRef(newTaggedUVar(am.currentBoard));
         dynamictable=DynamicTable::newDynamicTable();
+    }
+
+    // Create new table of given size (pwr. of 2) in given space:
+    GenOFSVariable(Board* home, dt_index size)
+    : GenCVariable(OFSVariable,home) {
+        label=makeTaggedRef(newTaggedUVar(home));
+        dynamictable=DynamicTable::newDynamicTable(size);
     }
 
     // GenOFSVariable(TaggedRef lbl)
@@ -302,7 +324,7 @@ public:
         Assert(isLiteral(feature));
         if (dynamictable->fullTest()) dynamictable=dynamictable->doubleDynamicTable();
         TaggedRef prev=dynamictable->insert(feature,term);
-        // (a future optimization: a second suspList only waiting on features)
+        // (future optimization: a second suspList only waiting on features)
         if (prev==makeTaggedNULL()) {
             // propagate(makeTaggedCVar(this), suspList, makeTaggedCVar(this), pc_propagator);
             am.addFeatOFSSuspensionList(makeTaggedCVar(this),suspList,feature,FALSE);
@@ -310,6 +332,19 @@ public:
         } else {
             return FALSE;
         }
+    }
+
+    // Destructively update feature's value, if feature exists
+    // Return TRUE if feature exists, FALSE if it does not
+    Bool setFeatureValue(TaggedRef feature, TaggedRef term) {
+        Assert(isLiteral(feature));
+        return dynamictable->update(feature,term);
+    }
+
+    // Remove the feature from the OFS
+    // Reclaims memory if table becomes too sparse
+    void removeFeature(TaggedRef feature) {
+        dynamictable=dynamictable->remove(feature);
     }
 
     // Used in conjunction with addFeatureValue to propagate suspensions:
