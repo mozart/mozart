@@ -1,0 +1,129 @@
+<section ID="chapter.widgets.entry">
+  <TITLE>Entry widget</TITLE>
+
+<subsection> <TITLE>Description</TITLE>
+
+<P>
+An entry is a widget that displays a one-line text string and allows that string to be edited using widget commands described below, which are typically bound to keystrokes and mouse actions. When first created, an entry's string is empty. A portion of the entry may be selected as described below. If an entry is exporting its selection (see the <<exportselection>> option), then it will observe the standard X11 protocols for handling the selection. When an entry has the input focus it displays an insertion cursor to indicate where new characters will be inserted. 
+</P>
+<P>
+Entries are capable of displaying strings that are too long to fit entirely within the widget's window. In this case, only a portion of the string will be displayed; commands described below may be used to change the view in the window. Entries use the standard <<lrscrollbar>> mechanism. They also support scanning, as described below. 
+</P>
+<P>
+<EM>Indices</EM>
+</P>
+<P>
+Many of the widget methods for entry take one or more indices as arguments. An index specifies a particular character of the entry, in any of the following ways: 
+<LIST>
+
+<ITEM> integer : Specifies the character as a numerical index, where 0 corresponds to the first character in the string. 
+
+<ITEM> <<anchor>> : Indicates the anchor point for the selection, which is set with the select from and select adjust widget commands. 
+
+<ITEM> <<'end'>> : Indicates the character just after the last one in the entry's string. This is equivalent to specifying a numerical index equal to the length of the entry's string. 
+
+<ITEM> <<insert>> :  Indicates the character adjacent to and immediately following the insertion cursor.  
+
+<ITEM> <<'sel.first'>> : Indicates the first character in the selection. It is an error to use this form if the selection isn't in the entry window. 
+
+<ITEM> <<'self.last'>> : Indicates the character just after the last one in the selection. It is an error to use this form if the selection isn't in the entry window. 
+
+<ITEM> <<'@'#X>> : In this form, <<X>> is treated as an x-coordinate in the entry's window; the character spanning that x-coordinate is used. For example, <<'@'#0>> indicates the left-most character in the window. 
+
+</LIST>
+<subsection> <TITLE>Parameters</TITLE>
+
+<P>
+<LIST>
+<ITEM> <<1:VS>> : Specifies the text displayed inside the widget (same as text). This parameter can be only used with the <<set()>> and <<get()>> methods.
+
+&param_init_text;
+
+<ITEM> <<return:V>> : When the window is closed, <<V>> is bound to the contents of the entry. <<V>> must be a free variable.
+
+&param_background;
+&param_borderwidth;
+&param_cursor;
+&param_exportselection;
+&param_font;
+&param_foreground;
+&param_highlightbackground;
+&param_highlightcolor;
+&param_highlightthickness;
+&param_insertbackground;
+&param_insertborderwidth;
+&param_insertofftime;
+&param_insertontime;
+&param_insertwidth;
+&param_justify;
+&param_relief;
+&param_selectbackground;
+&param_selectborderwidth;
+&param_selectforeground;
+&param_takefocus;
+
+<ITEM> <<show:VS>> : If this option is specified, then the true contents of the entry are not displayed in the window. Instead, each character in the entry's value will be displayed as the first character in the value of this option, such as <<*>>. This is useful, for example, if the entry is to be used to enter a password. If characters in the entry are selected and copied elsewhere, the information copied will be what is displayed, not the true contents of the entry. <<VS>> must be a virtual string.
+
+<ITEM> <<state:A>> : Specifies one of two states for the button: <<normal>> or <<disabled>>. If the entry is disabled then the value may not be changed using widget commands and no insertion cursor will be displayed, even if the input focus is in the widget. <<A>> must be one of these two atoms : <<normal>> or <<disabled>>.
+
+<ITEM> <<width:I>> : Specifies an integer value indicating the desired width of the entry window, in average-size characters of the widget's font. If the value is less than or equal to zero, the widget picks a size just large enough to hold its current text. <<I>> must be a valid index.
+
+<ITEM> <<action:C>> : Specifies an action to execute juste after the user modified the entry. <<C>> can take several different forms (see <ptr to="basics.events">).
+
+&param_lrscrollbar;
+&param_scrollwidth;
+
+<ITEM> <<selectionfrom:I>> : Set the selection anchor point to just before the character given by <<I>>. Doesn't change the selection. Can be used only with the <<set()>> method. <<I>> must be a valid index.
+
+<ITEM> <<selectionto:I>> : If <<I>> is before the anchor point, set the selection to the characters from <<I>> up to but not including the anchor point. If <<I>> is the same as the anchor point, do nothing. If <<I>> is after the anchor point, set the selection to the characters from the anchor point up to but not including <<I>>. The anchor point is determined by the most recent <<selectfrom>>. If the selection isn't in this widget then a new selection is created using the most recent anchor point specified for the widget. Can be used only with the <<set()>> method. <<I>> must be a valid index.
+
+&param_glue;
+&param_padx;
+&param_pady;
+&param_feature;
+&param_handle;
+&param_tooltips;
+
+
+</LIST>
+
+</P>
+
+<subsection> <TITLE>Interface</TITLE>
+
+<P>
+The object you get by an handle on the widget implements the following methods :
+
+<LIST>
+
+&interface_set;
+&interface_get;
+&interface_bind;
+&interface_getFocus;
+&interface_setGrab;
+&interface_releaseGrab;
+&interface_getGrabStatus;
+&interface_raise;
+&interface_lower;
+&interface_winfo;
+
+<ITEM> <<icursor(I)>> : Arrange for the insertion cursor to be displayed just before the character given by <<I>>. <<I>> must be an integer.
+
+<ITEM> <<scan(...)>> : This command is used to implement scanning on entries. It has two forms, depending on option: 
+<LIST>
+<ITEM> <<scan(mark X Y)>> : Records X and Y and the entry's current view; used in conjunction with later <<scan(dragto ...)>> commands. Typically this command is associated with a mouse button press in the widget and <<X>> and <<Y>> are the coordinates of the mouse. <<X>> and <<Y>> must be valid distances (see <ptr to="misc.distance">).
+
+<ITEM> <<scan(dragto X Y)>> : This command computes the difference between its <<X>> and <<Y>> arguments (which are
+        typically mouse coordinates) and the <<X>> and <<Y>> arguments to the last <<scan(mark ...)>>
+        command for the widget. It then adjusts the view by 10 times the difference in
+        coordinates. This command is typically associated with mouse motion events in the
+        widget, to produce the effect of dragging the listbox at high speed through its
+        window.
+
+</LIST>
+
+<ITEM> <<index(A I)>> : Binds I to an integer giving index value that corresponds to <<A>>. 
+
+</LIST>
+
+</section>

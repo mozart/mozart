@@ -1,0 +1,86 @@
+<section ID="chapter.widgets.label">
+  <TITLE>Label widget</TITLE>
+
+<subsection> <TITLE>Description</TITLE>
+
+<P>
+A label is a widget that displays a textual string, bitmap or image. If text is displayed, it must all be in a
+single font, but it can occupy multiple lines on the screen (if it contains newlines or if wrapping occurs
+because of the wrapLength option) and one of the characters may optionally be underlined using the
+underline option. The label can be manipulated in a few simple ways, such as changing its relief or
+text, using the commands described below. 
+
+<subsection> <TITLE>Parameters</TITLE>
+
+<P>
+<LIST>
+<ITEM> <<1:VS>> : Specifies the text displayed inside the widget (same as text). This parameter can be only used with the <<set()>> and <<get()>> methods.
+
+&param_init_text;
+
+<ITEM> <<return:V>> : When the window is closed, <<V>> is bound to the contents of the label. <<V>> must be a free variable.
+
+&param_anchor;
+&param_background;
+&param_bitmap;
+&param_borderwidth;
+&param_cursor;
+&param_font;
+&param_foreground;
+&param_highlightbackground;
+&param_highlightcolor;
+&param_highlightthickness;
+&param_image;
+&param_justify;
+&param_relief;
+&param_takefocus;
+&param_text;
+&param_underline;
+
+<ITEM> <<width:I>> : Specifies a desired width for the label. If an image or bitmap is being displayed in the label then
+    the value is in screen units (see <ptr to="misc.distance">); for text it is in
+    characters. If this option isn't specified, the label's desired width is computed from the size of the
+    image or bitmap or text being displayed in it. 
+
+<ITEM> <<height:I>> : Specifies a desired height for the label. If an image or bitmap is being displayed in the label then
+    the value is in screen units (see <ptr to="misc.distance">); for text it is in
+    lines of text. If this option isn't specified, the label's desired width is computed from the size of the
+    image or bitmap or text being displayed in it. 
+
+&param_wraplength;
+&param_ipadx;
+&param_ipady;
+
+&param_glue;
+&param_padx;
+&param_pady;
+&param_feature;
+&param_handle;
+&param_tooltips;
+
+
+</LIST>
+
+</P>
+
+<subsection> <TITLE>Interface</TITLE>
+
+<P>
+The object you get by an handle on the widget implements the following methods :
+
+<LIST>
+
+&interface_set;
+&interface_get;
+&interface_bind;
+&interface_getFocus;
+&interface_setGrab;
+&interface_releaseGrab;
+&interface_getGrabStatus;
+&interface_raise;
+&interface_lower;
+&interface_winfo;
+
+</LIST>
+
+</section>

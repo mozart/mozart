@@ -1,0 +1,139 @@
+<section ID="chapter.widgets.listbox">
+  <TITLE>Listbox widget</TITLE>
+
+<subsection> <TITLE>Description</TITLE>
+
+<P>
+A listbox is a widget that displays a list of strings, one per line. When first created, a new listbox has no elements. Elements may be added or deleted using widget commands described below. In addition, one or more elements may be selected as described below. If a listbox is exporting its selection (see <<exportselection>> option), then it will observe the standard X11 protocols for handling the selection. 
+</P>
+<P>
+It is not necessary for all the elements to be displayed in the listbox window at once; commands
+described below may be used to change the view in the window. Listboxes allow scrolling in both
+directions using the standard <<lrscrollbar>> and <<tdscrollbar>> options. They also support
+scanning, as described below. 
+</P>
+<P>
+<EM>Indices</EM>
+</P>
+<P>
+Many of the widget methods for listboxes take one or more indices as arguments. An index specifies a particular element of the listbox, in any of the following ways: 
+<LIST>
+
+<ITEM> integer : Specifies the element as a numerical index, where 0 corresponds to the first element in the listbox.
+
+<ITEM> <<active>> : Indicates the element that has the location cursor. This element will be displayed with an underline when the listbox has the keyboard focus, and it is specified with the activate widget method. 
+
+<ITEM> <<anchor>> : Indicates the anchor point for the selection, which is set with the selection <<anchor>> method.
+
+<ITEM> <<end>> :  Indicates the end of the listbox. For some commands this means just after the last element; for other commands it means the last element. 
+
+<ITEM> <<'@'#X#','#Y>> :  Indicates the element that covers the point in the listbox window specified by X and Y (in pixel coordinates). If no element covers that point, then the closest element to that point is used. 
+</LIST>
+
+</P>
+
+<subsection> <TITLE>Parameters</TITLE>
+
+<P>
+<LIST>
+<ITEM> <<1:LVS>> : Specifies a list of virtual strings that represents the items in the listbox.  This parameter can be only used with the <<set()>> and <<get()>> methods. <<LVS>> must be a list of virtual strings.
+
+<ITEM> <<init:LVS>> : Specifies a list of virtual strings that represents the items in the listbox.  This parameter can be only used at creation time. <<LVS>> must be a list of virtual strings.
+
+<ITEM> <<return:V>> : When the window is closed, <<V>> is bound to a list of virtual strings representing the items in the listbox. <<V>> must be a free variable.
+
+<ITEM> <<reload:V>> : This parameter can be only used with the <<get()>> method and returns a list of virtual strings that represents the contents of the listbox. This is the same as the <<1>> option except that it is slower. However if you use weird methods for modifying the contents of the list (using the <<tk>> method for example) and bypassing the methods described here, you may find cases where you need to use the <<reload>> parameter to resynchronize the states of Tk and QTk.
+
+<ITEM> <<listselection:LB>> : Specifies a list of booleans. This list contains as many booleans as there are items in the listbox. For each item, the corresponding boolean in the list is true if the item is selected, false otherwise. <<LB>> must be a list of booleans.
+
+<ITEM> <<firstselection:V>> : Can be used with the <<get()>> method only. Binds V to the number of the first selected item.
+
+&param_background;
+&param_borderwidth;
+&param_cursor;
+&param_exportselection;
+&param_font;
+
+<ITEM> <<height:I>> : Specifies the desired height for the window, in lines. If zero or less, then the desired height for the window is made just large enough to hold all the elements in the listbox. <<I>> must be an integer.
+
+&param_highlightbackground;
+&param_highlightcolor;
+&param_highlightthickness;
+&param_relief;
+&param_selectbackground;
+&param_selectborderwidth;
+&param_selectforeground;
+&param_setgrid;
+&param_takefocus;
+
+<ITEM> <<width:I>> : Specifies the desired width for the window in characters. If the font doesn't have a uniform width then the width of the character ``0'' is used in translating from character units to screen units. If zero or less, then the desired width for the window is made just large enough to hold all the elements in the listbox.  <<I>> must be an integer.
+
+<ITEM> <<selectmode:A>> : Specifies one of several styles for manipulating the selection. The value of <<A>> may be arbitrary, but the default bindings expect it to be either one of the following atoms : <<single>>, <<browse>>, <<multiple>>, or <<extended>>; the default value is <<browse>>. 
+
+<ITEM> <<action:C>> : Specifies an action to execute juste after the user changed the selection. <<C>> can take several different forms (see <ptr to="basics.events">).
+
+&param_lrscrollbar;
+&param_tdscrollbar;
+&param_scrollwidth;
+&param_glue;
+&param_padx;
+&param_pady;
+&param_feature;
+&param_handle;
+&param_tooltips;
+
+
+</LIST>
+
+</P>
+
+<subsection> <TITLE>Interface</TITLE>
+
+<P>
+The object you get by an handle on the widget implements the following methods :
+
+<LIST>
+
+&interface_set;
+&interface_get;
+&interface_bind;
+&interface_getFocus;
+&interface_setGrab;
+&interface_releaseGrab;
+&interface_getGrabStatus;
+&interface_raise;
+&interface_lower;
+&interface_winfo;
+
+<ITEM> <<activate(I)>> : Sets the active element to the one indicated by <<I>>. The active element is drawn with an underline when the widget has the input focus.
+
+<ITEM> <<bbox(I V)>> : Binds <<V>> to a list of four numbers describing the bounding box of the text in the element given by <<I>>. The first two elements of the list give the x and y coordinates of the upper-left corner of the screen area covered by the text (specified in pixels relative to the widget) and the last two elements give the width and height of the area, in pixels. If no part of the element given by index is visible on the screen then the result is an empty list; if the element is partially visible, the result gives the full area of the element, including any parts that are not visible. 
+
+<ITEM> <<delete(I ?J)>> : Deletes one or more elements of the listbox. <<I>> and <<J>> are indices specifying the first and last elements in the range to delete. If <<J>> isn't specified it defaults to <<I>>, i.e. a single element is deleted. 
+
+<ITEM> <<index(A I)>> : Binds I to an integer giving index value that corresponds to <<A>>.
+
+<ITEM> <<insert(I LVS)>> : Inserts the list of virtual strings <<LVS>> just before the element at position <<I>>. If <<I>> is the atom <<end>>, the list is inserted after all elements.
+
+<ITEM> <<nearest(I V)>> : Given <<I>>, a y-coordinate within the listbox window, this command binds <<V>> to the index of the (visible) listbox element nearest to that y-coordinate. 
+
+<ITEM> <<scan(...)>> : This command is used to implement scanning on listboxes. It has two forms, depending on option: 
+<LIST>
+<ITEM> <<scan(mark X Y)>> : Records X and Y and the listbox's current view; used in conjunction with later <<scan(dragto ...)>> commands. Typically this command is associated with a mouse button press in the widget and <<X>> and <<Y>> are the coordinates of the mouse. <<X>> and <<Y>> must be valid distances (see <ptr to="misc.distance">).
+
+<ITEM> <<scan(dragto X Y)>> : This command computes the difference between its <<X>> and <<Y>> arguments (which are
+        typically mouse coordinates) and the <<X>> and <<Y>> arguments to the last <<scan(mark ...)>>
+        command for the widget. It then adjusts the view by 10 times the difference in
+        coordinates. This command is typically associated with mouse motion events in the
+        widget, to produce the effect of dragging the listbox at high speed through its
+        window.
+
+</LIST>
+
+<ITEM> <<see(I)>> : Adjust the view in the listbox so that the element given by <<I>> is visible. If the element is already visible then the command has no effect; if the element is near one edge of the window then the listbox scrolls to bring the element into view at the edge; otherwise the listbox scrolls to center the element. 
+
+<ITEM> <<size(V)>> : Binds <<V>> to an integer indicating the total number of elements in the listbox. 
+
+</LIST>
+
+</section>
