@@ -807,113 +807,6 @@ OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
   return loadDatum(d,t);
 }
 
-#define OZ_GATE
-#ifdef OZ_GATE
-OZ_Term gatePort=0;
-
-OZ_BI_define(BIGateId,0,1)
-{
-  // ozgate://hostname:port/timestamp";
-  static char url[100];
-  ip_address a = mySite->getAddress();
-  short unsigned int port = mySite->getPort();
-  time_t stamp = mySite->getTimeStamp();
-
-  // mm2: use inet_ntoa seems to be a better abstraction
-  sprintf(url,"ozgate://%lu.%lu.%lu.%lu:%u/",
-          (a/(256*256*256))%256,
-          (a/(256*256))%256,
-          (a/256)%256,
-          a%256,
-          port
-          );
-  char *s=url+strlen(url);
-  while (stamp) {
-    *s++ = 'a'+(stamp % 26);
-    stamp = stamp/26;
-  }
-  *s++ = 0;
-  OZ_RETURN_ATOM(url);
-} OZ_BI_end
-
-OZ_BI_define(BIOpenGate,1,0)
-{
-  oz_declareIN(0,stream);
-
-  if (gatePort) return oz_raise(E_ERROR,E_SYSTEM,"gateAlreadyOpen",0);
-
-  gatePort = oz_newPort(stream);
-  OZ_protect(&gatePort);
-
-  return PROCEED;
-} OZ_BI_end
-
-OZ_BI_define(BICloseGate,0,0)
-{
-  if (gatePort) {
-    OZ_unprotect(&gatePort);
-    gatePort = 0;
-  }
-  return PROCEED;
-} OZ_BI_end
-
-OZ_BI_define(BISendGate,2,0)
-{
-  oz_declareVirtualStringIN(0,url);
-  oz_declareIN(1,val);
-
-  if (strncmp(url,"ozgate://",9)!=0)
-    goto bomb;
-  url += 9;
-
-  char *p;
-  p = strchr(url,':');
-  if (!p) goto bomb;
-  *p = 0;
-
-  struct hostent *hostaddr;
-  hostaddr = gethostbyname(url);
-  struct in_addr tmp;
-  memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
-  ip_address addr;
-  addr = ntohl(tmp.s_addr);
-  url = p+1;
-
-  int port;
-  port = strtol(url,&p,10);
-  if (*p!='/') goto bomb;
-  url = p+1;
-
-  time_t stamp;
-  stamp=0;
-  unsigned char *s;
-  s = (unsigned char *)(url+strlen(url));
-  while (s>(unsigned char *)url) {
-    int c = *(--s)-'a';
-    if (c<0||c>25) goto bomb;
-    stamp = stamp*26+c;
-  }
-
-  Site *site;
-  site = findSite(addr,port,stamp);
-
-  if (!site) goto bomb;
-
-  MsgBuffer *bs;
-  bs = msgBufferManager->getMsgBuffer(site);
-  marshal_M_SEND_GATE(bs,val);
-  int ret;
-  ret = site->sendTo(bs,M_SEND_GATE,0,0);
-  Assert(ret == ACCEPTED);
-  return PROCEED;
-
-bomb:
-  return oz_raise(E_ERROR,E_SYSTEM,"sendGate",2,OZ_in(0),val);
-} OZ_BI_end
-#endif
-
-#define OZ_PID
-#ifdef OZ_PID
 static
 OZ_Term pidPort=0;
 
@@ -1008,45 +901,25 @@ OZ_BI_define(BISendPID,4,0)
   Assert(ret == ACCEPTED);
   return PROCEED;
 } OZ_BI_end
-#endif
+
 
 extern int sendPort(OZ_Term port, OZ_Term val);
 
 void sendGate(OZ_Term t) {
-#ifdef OZ_GATE
-  if (gatePort) {
-    sendPort(gatePort,t);
-  }
-#endif
-#ifdef OZ_PID
   if (pidPort) {
     sendPort(pidPort,t);
   }
-#endif
 }
 
 BIspec componentsSpec[] = {
   {"smartSave",    3, BIsmartSave, 0},
   {"load",         2, BIload, 0},
 
-#ifdef OZ_GATE
-  {"GateId",       1, BIGateId},
-  {"OpenGate",     1, BIOpenGate},
-  {"CloseGate",    0, BICloseGate},
-  {"SendGate",     2, BISendGate},
-
-  {"Gate.id",       1, BIGateId},
-  {"Gate.open",     1, BIOpenGate},
-  {"Gate.close",    0, BICloseGate},
-  {"Gate.send",     2, BISendGate},
-#endif
-
-#ifdef OZ_PID
   {"PID.get",       1, BIGetPID},
   {"PID.received",  1, BIReceivedPID},
   {"PID.close",     0, BIClosePID},
   {"PID.send",      4, BISendPID},
-#endif
+
   {"URL.localize", 2, BIurl_localize},
   {"URL.open",     2, BIurl_open},
   {"URL.load",     2, BIurl_load},
