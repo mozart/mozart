@@ -1940,6 +1940,7 @@ BIspec fdSpec[] = {
   {"fdp_distanceLeq", 3, fdp_distanceLeq},
   {"fdp_distanceGeq", 3, fdp_distanceGeq},
   {"fdp_distanceNeq", 3, fdp_distanceNeq},
+  {"fdp_cpIterate", 2, fdp_cpIterate},
 #endif
 #ifdef DEBUG_STABLE
   {"debugStable", 0, debugStable},
