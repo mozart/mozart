@@ -477,4 +477,92 @@ then the server gives up attempting to communicate with it.
 This does not affect the continued execution of the server.
 </LIST>
 
+<chunk><title/Making stationary objects/
+declare
+proc {NewStat Class Init Object}
+   Object={MakeStat {New Class Init}}
+end
+
+declare
+proc {MakeStat PO ?StatP}
+   S P={NewPort S}
+   N={NewName}
+in
+   <chunk.ref/Synchronize with the server/
+   <chunk.ref/Client call to the server/
+   <chunk.ref/Communicate with the client/
+   <chunk.ref/Main server loop/
+end
+</chunk>
+
+<chunk><title/Synchronize with the server/
+   proc {EndLoop R}
+      try
+         if R==N then skip else raise R end end
+      catch system(dp(C)) then
+         case C
+         of permFail(...) then
+            raise server_error end
+         [] remoteProblem(permFail:_ ...) then
+            raise server_error end
+         [] tempFail(...) then
+            {Delay 100} {EndLoop R}
+         [] remoteProblem(tempFail:_ ...) then
+            {Delay 100} {EndLoop R}
+         else skip end
+      end
+   end
+</chunk>
+
+<chunk><title/Client call to the server/
+   proc {StatP M}
+      R in
+      try
+         {Send P M#R}
+      catch system(dp(C)) then
+         case C
+         of permFail(...) then
+            raise server_error end
+         [] tempFail(...) then
+            {Delay 100}
+            {StatP M}
+         else skip end
+      end
+      {EndLoop R}
+   end
+</chunk>
+
+<chunk><title/Communicate with the client/
+   proc {TryToBind Count R N}
+      if Count==0 then skip
+      else
+         try
+            R=N
+         catch system(dp(tempFail(...))) then
+            {Delay 2000}
+            {TryToBind Count-1 R N}
+         end
+      end
+   end
+</chunk>
+
+<chunk><title/Main server loop/
+   thread
+      {ForAll S
+       proc {$ M#R}
+          thread
+             try
+                {PO M}
+                {TryToBind 10 R N}
+             catch X then
+                try
+                   {TryToBind 10 R X}
+                catch Y then skip end
+             end
+          end
+       end}
+   end
+</chunk>
+
+
 </CHAPTER>
