@@ -156,7 +156,9 @@
 <!ATTLIST meta
         %common.attr;
         name    NAME    #REQUIRED       -- property --
-        value   CDATA   #REQUIRED       -- value --
+        value   CDATA   #IMPLIED        -- value, if unary prop --
+        arg1    CDATA   #IMPLIED        -- first argument, if binary prop --
+        arg2    CDATA   #IMPLIED        -- second argument, if binary prop --
 >
 <!ELEMENT abstract - O (%p.chars.model;)*>
 <!ATTLIST abstract
