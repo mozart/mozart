@@ -4,5 +4,9 @@
 <!ENTITY ellipsis PI "ellipsis">
 ]>
 <BOOK>
+<Title/Application Programming/
+<Author.Extern to="author.db" key="Denys.Duchier">
+<Author.Extern to="author.db" key="Leif.Kornstaedt">
+<Author.Extern to="author.db" key="Christian.Schulte">
 &part.native;
 </BOOK>
