@@ -87,7 +87,7 @@ local
 	 elsecase {IsChunk X}            then ChunkType
 	 elsecase {IsSpace X}            then SpaceType
 	 elsecase {FS.value.is X}        then FSValueType
-	 elsecase {Foreign.pointer.is X} then ForeignPointerType
+	 elsecase {ForeignPointer.is X}  then ForeignPointerType
 	 else                                 UnknownType
 	 end
       elsecase {IsKinded X} then
