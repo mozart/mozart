@@ -631,11 +631,14 @@ OZ_BI_iodefine(unix_stat,1,1)
   else 
     fileType = "unknown";
 
-  OZ_MAKE_RECORD_S("stat",3,
-		   {"type" OZ_COMMA "size" OZ_COMMA "mtime"},
+  OZ_MAKE_RECORD_S("stat",5,
+		   {"type" OZ_COMMA "size" OZ_COMMA "mtime"
+		      OZ_COMMA "ino" OZ_COMMA "dev"},
 		   {oz_atom(fileType) OZ_COMMA 
 		      oz_int(buf.st_size) OZ_COMMA
-		      oz_int(buf.st_mtime)}, r);
+		      oz_int(buf.st_mtime) OZ_COMMA
+		      oz_int(buf.st_ino) OZ_COMMA
+		      oz_int(buf.st_dev)}, r);
 
   OZ_RETURN(r);
 } OZ_BI_ioend
@@ -2153,6 +2156,12 @@ OZ_BI_iodefine(unix_getHostByName, 1,1)
 
 
 // Misc stuff
+
+OZ_BI_iodefine(unix_rmDir,1,0) {
+  OZ_declareVsIN(0,path);
+  WRAPCALL("rmdir",rmdir(path),ret);
+  return PROCEED;
+} OZ_BI_ioend
 
 OZ_BI_iodefine(unix_unlink, 1,0) {
   OZ_declareVsIN(0,path);
