@@ -180,6 +180,7 @@
 // #define PROFILE_INSTR
 // #define PROFILE_BI
 // #define CS_PROFILE
+#define OUTLINE
 #endif
 
 // avoid inlining some functions
