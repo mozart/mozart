@@ -1,8 +1,8 @@
 functor
 import
-   Narrator SGML ErrorListener
+   Narrator SGML ErrorListener Open(file)
 export
-   GetChunk
+   GetChunk ProcessSpecs
 define
    class OzDocToCode from Narrator.'class'
       attr Reporter Defs Refs
@@ -10,7 +10,7 @@ define
 	 Reporter <- Narrator.'class',init($)
 	 {@Reporter setLogPhases(true)}
       end
-      meth getChunk(File Title Chunk)
+      meth processFile(File)
 	 {@Reporter startBatch()}
 	 {@Reporter startPhase('parsing SGML input')}
 	 Node = {SGML.parse File @Reporter}
@@ -26,8 +26,8 @@ define
 	     proc {$ Key#Code}
 		{Dictionary.get @Defs Key Code}
 	     end}
-	    {@Reporter startPhase('looking up target chunk')}
-	    OzDocToCode,get(Title Chunk)
+	    %{@Reporter startPhase('looking up target chunk')}
+	    %OzDocToCode,get(Title Chunk)
 	    if {@Reporter hasSeenError($)} then
 	       {@Reporter endBatch(rejected)}
 	    else
@@ -36,8 +36,27 @@ define
 	    {@Reporter tell(done())}
 	 end
       end
+      meth getChunk(File Title Chunk)
+	 OzDocToCode,processFile(File)
+	 OzDocToCode,getOneChunk(Title Chunk)
+      end
       meth get(Title $)
 	 {Dictionary.get @Defs {VirtualString.toAtom Title}}
+      end
+      meth getOneChunk(Title Chunk)
+	 {@Reporter startPhase('getting chunk: <'#Title#'>')}
+	 OzDocToCode,get(Title Chunk)
+      end
+      meth processSpec(Spec Sep)
+	 Title File Code IndentedCode F
+      in
+	 {String.token Spec Sep Title File}
+	 OzDocToCode,getOneChunk(Title Code)
+	 {@Reporter startSubPhase('writing into file: '#File)}
+	 {New Indentor init(Code IndentedCode) _}
+	 F = {New Open.file init(name:File flags:[create write truncate])}
+	 {F write(vs:IndentedCode)}
+	 {F close}
       end
       %%
       %% obtain a (uninstantiated) reference to a code chunk
@@ -132,6 +151,20 @@ define
       {Wait Sync}
       if {L hasErrors($)} then raise error end end
       {New Indentor init(Code IndentedCode) _}
+   end
+   %%
+   proc {ProcessSpecs File Specs Sep}
+      O = {New OzDocToCode init}
+      Sync
+      L = {New MyListener init(O Sync)}
+   in
+      {O processFile(File)}
+      {Wait Sync}
+      if {L hasErrors($)} then raise error end end
+      {ForAll Specs
+       proc {$ Spec}
+	  {O processSpec(Spec Sep)}
+       end}
    end
    %%
    class Indentor
