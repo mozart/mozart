@@ -76,7 +76,7 @@ enum BoardFlags {
   Bo_Discarded  = 0x0400,
   Bo_Waiting    = 0x0800,
   Bo_Reflected  = 0x1000,       // for debugging of solve combinator;
-  Bo_NervousSolve= 0x2000,
+  Bo_NervousSolve= 0x2000
 };
 
 class Board : public ConstTerm {
