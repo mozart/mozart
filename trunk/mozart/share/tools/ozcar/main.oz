@@ -1,13 +1,6 @@
 %%% $Id$
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
-
-%% turn the compiler/emulator into debug mode
-
-\sw -optimize +debuginfo
-
-{Debug.on}
-
 declare
 
    Ozcar
@@ -26,5 +19,10 @@ local
 in
 
    \insert ozcar
+
+   %% turn the emulator into debug mode
+   %% (compiler switches are set in oz.el)
+
+   {Debug.on}
 
 end

@@ -39,7 +39,7 @@ class Frontend from Dialog
 	menubutton(text: "File"
 		   menu:
 		      [command(label:   "Quit"
-			       action:  self # shutdown
+			       action:  self # exit
 			       key:     ctrl(c)
 			       feature: quit)]
 		   feature: file)
@@ -113,8 +113,12 @@ class Frontend from Dialog
       T = {Dbg.threadByID Id}
    in
       CurrentThread <- T
-      {self.StatusLabel tk(conf text:"Current Thread:  #" # Id #
-			   " (state: " # {Thread.state T} # ")")}
+      Frontend,printStatus("Current Thread:  #" # Id #
+			   " (state: " # {Thread.state T} # ")")
+   end
+
+   meth printStatus(S)
+      {self.StatusLabel tk(conf text:S)}
    end
    
    meth stack(T)

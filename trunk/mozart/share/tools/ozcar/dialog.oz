@@ -7,12 +7,14 @@ local
       meth init(master:Master)
          TkTools.dialog,tkInit(master:  Master
                                title:   IconName#': About'
-                               buttons: ['Okay'#tkClose]
+                               buttons: ['Ok'#tkClose]
                                focus:   1
                                pack:    false
                                default: 1)
          Title = {New Tk.label tkInit(parent: self
-                                      text:   TitleName)}
+                                      text:
+					 "This is " # IconName #
+				         " V" # Version)}
 
          Author = {New Tk.label tkInit(parent: self
                                        text: ('Benjamin Lorenz\n' #
