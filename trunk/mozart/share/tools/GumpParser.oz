@@ -28,10 +28,11 @@
 functor $
 
 import
-   SP.{System   = 'System'}
+   System.{showError}
 
 export
    'GumpParser': GumpParser
+   'class':      GumpParser
 
 body
 

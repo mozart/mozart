@@ -417,7 +417,11 @@ in
       end
 
       meth ProcessClick(V)
+\ifdef LILO
+	 {Browser.browse V}
+\else
 	 {Browse V}
+\endif
 	 LastClicked <- V
       end
 

@@ -29,31 +29,28 @@
 functor $
 
 import
-   SP.{Show    = 'Show'
-       Foreign = 'Foreign'
-       Error   = 'Error'
-       System  = 'System'
-       Debug   = 'Debug'}
-
-   CP.{FD = 'FD'
-       FS = 'FS'}
-
-   WP.{Tk      = 'Tk'
-       TkTools = 'TkTools'}
-
-   Browser.{Browse = 'Browse'}
-
-   Emacs.{RealEmacs = 'Emacs'}
-
-   Compiler.{RealCompiler = 'Compiler'}
+   System
+   Foreign
+   Debug
+   FD
+   FS
+   Tk
+   TkTools
+   Error
+   Browser.{browse}
    
+   Emacs.{getOPI
+	  condSend}
+   
+   Compiler.{engine
+	     quietInterface}
+
 export
    'Ozcar': Ozcar
+   
+   'object': Ozcar
 
 body
-   Emacs    = RealEmacs
-   Compiler = RealCompiler
-   
    \insert 'ozcar/config'
    \insert 'ozcar/prelude'
 
@@ -69,8 +66,6 @@ body
    \insert 'ozcar/gui'
 
    \insert 'ozcar/ozcar'
-in
-   skip
 end
 
 \else

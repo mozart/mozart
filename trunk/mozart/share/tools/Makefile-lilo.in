@@ -24,10 +24,10 @@ PERL		= @PERL@
 ENV2TYPE	= $(PERL) $(SRCTOP)/share/lib/env2type
 
 OZFLAGS		= -DLILO
-OZBATCH		= @OZBATCH@
+OZC		= @OZC@
 
-COMPILE		= $(OZBATCH) $(OZFLAGS) -c
-EXEC		= $(OZBATCH) $(OZFLAGS)
+COMPILE		= $(OZC) $(OZFLAGS) -c
+EXEC		= $(OZC) $(OZFLAGS)
 
 COMPILERPANELSRC1 = \
 	CompilerPanelClass.oz
@@ -134,7 +134,7 @@ all: Makefile-lilo $(FUNCTORS) $(SYSLETS)
 	$(COMPILE) $< -o $@
 
 opi: MakeOPI.oz $(TYCS)
-	$(EXEC) -l AP $<
+	$(EXEC) -l Application $<
 
 
 
@@ -147,6 +147,9 @@ Browser.ozf: $(BROWSERSRC) Browser.env
 Explorer.ozf: $(EXPLORERSRC) Browser.env Explorer.env
 
 Emacs.ozf: $(EMACSSRC) Emacs.env
+
+ozcar-version.oz: $(OZCARSRCNOVER)
+	echo \'`date '+%b %d'`\' > $@
 
 Ozcar.ozf: $(OZCARSRC) Browser.env Emacs.env Ozcar.env
 
