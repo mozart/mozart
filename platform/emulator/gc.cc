@@ -2610,8 +2610,7 @@ void TaskStack::gc(TaskStack *newstack) {
     } else if (PC == C_XCONT_Ptr) {
       // mm2: opt: only the top task can/should be xcont!!
       ProgramCounter pc   = (ProgramCounter) *(oldtop-1);
-      // if (isInGc)
-	(void)CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
+      (void) CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
       Y = gcRefsArray(Y); // X
     } else if (PC == C_LOCK_Ptr) {
       Y = (RefsArray) ((OzLock *) Y)->gcConstTerm();
