@@ -1130,7 +1130,9 @@ parserRules	: synClause
 		  { $$ = consList($1,$2); }
 		;
 
-tokenClause	: token tokenList
+tokenClause	: /* empty */
+		  { $$ = newCTerm("fToken",nilAtom); }
+		| token tokenList
 		  { $$ = newCTerm("fToken",$2); }
 		;
 
