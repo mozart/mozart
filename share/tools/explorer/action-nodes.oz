@@ -65,10 +65,10 @@ local
    
 in
 
-   ActionNodes=c(succeeded: Leaf
-		 failed:    Leaf
-		 blocked:   Leaf
-		 choose:    Choose
-		 sentinel:  EmptyClass)
+   ActionNodes=c(succeeded: !Leaf
+		 failed:    !Leaf
+		 blocked:   !Leaf
+		 choose:    !Choose
+		 sentinel:  !EmptyClass)
 
 end
