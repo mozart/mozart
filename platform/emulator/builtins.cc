@@ -1541,7 +1541,7 @@ OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea, TaggedRef &out)
 #define declareUnmergedSpace()			\
   declareSpace()				\
   if (space->isMerged())			\
-    return OZ_raiseC("spaceMerged",0);
+    return OZ_raiseC("spaceMerged",1,tagged_space);
   
 #define declareStableSpace()						\
   declareUnmergedSpace();						\
@@ -1646,7 +1646,7 @@ OZ_C_proc_begin(BImergeSpace, 2) {
   declareUnmergedSpace();
 
   if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
-    return OZ_raiseC("spaceSuper",0);
+    return OZ_raiseC("spaceSuper",1,tagged_space);
       
   if (space->isFailed())
     return FAILED;
@@ -1737,10 +1737,8 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
   }
 
   if (am.currentBoard != space->getSolveBoard()->getParentFast()) 
-    return OZ_raiseC("spaceSuper",0);
+    return OZ_raiseC("spaceParent",1,tagged_space);
     
-  //  if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
-
   space->getSolveActor()->unsetGround();
   space->getSolveActor()->clearResult(space->getBoardFast());
 
@@ -1767,7 +1765,7 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
     return PROCEED;
 
   if (am.currentBoard != space->getSolveBoard()->getParentFast()) 
-    return OZ_raiseC("spaceSuper",0);
+    return OZ_raiseC("spaceParent", 1, tagged_space);
 
   OZ_Term proc = OZ_getCArg(1);
 
@@ -1792,6 +1790,10 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
   return PROCEED;
 } OZ_C_proc_end
 
+
+#undef declareSpace
+#undef declareUnmergedSpace
+#undef declareStableSpace
 
 
 // ---------------------------------------------------------------------
