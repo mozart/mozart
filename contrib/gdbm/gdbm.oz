@@ -45,7 +45,7 @@ in
 	 ) at 'gdbm.so{native}'
       Finalize(register	:Register)
       Resolve( expand	:Expand) URL
-      Error ErrorRegistry
+      ErrorRegistry
       MODE at 'x-oz://contrib/os/mode'
    export
       is	: IS
@@ -146,22 +146,21 @@ in
 
       %% Error Formatting
 
-      fun {GdbmFormatter Exc}
-	 E = {Error.dispatch Exc}
+      fun {GdbmFormatter E}
 	 T = 'GDBM Error'
       in
 	 case E
 	 of gdbm(Proc Args Msg) then
-	    {Error.format T
-	     case Msg
-	     of 'alreadyClosed' then 'database already closed'
-	     [] 'keyNotFound'   then 'key not found'
-	     else Msg end
-	     [hint(l:'Operation' m:Proc)
-	      hint(l:'Input Args' m:oz(Args))]
-	     Exc}
+	    error(kind: T
+		  msg: case Msg
+		       of 'alreadyClosed' then 'database already closed'
+		       [] 'keyNotFound'   then 'key not found'
+		       else Msg end
+		  items: [hint(l:'Operation' m:Proc)
+			  hint(l:'Input Args' m:oz(Args))])
 	 else
-	    {Error.formatGeneric T Exc}
+	    error(kind: T
+		  items: [line(oz(E))])
 	 end
       end
 

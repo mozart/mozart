@@ -22,23 +22,18 @@
 %%% WARRANTIES.
 %%%
 
-local
-   T = 'Gump Scanner error'
-in
-   {ErrorRegistry.put gump
-    fun {$ Exc}
-       case {Error.dispatch Exc} of gump(fileNotFound FileName) then
-	  {Error.format T
-	   'Could not open file'
-	   [hint(l: 'File name' m: oz(FileName))]
-	   Exc}
-       elseof gump(fatalError VS) then
-	  {Error.format T
-	   VS
-	   nil
-	   Exc}
-       else
-	  {Error.formatGeneric T Exc}
-       end
-    end}
-end
+{ErrorRegistry.put gump
+ fun {$ E} T in
+    T = 'Gump Scanner error'
+    case E of gump(fileNotFound FileName) then
+       error(kind: T
+	     msg: 'Could not open file'
+	     items: [hint(l: 'File name' m: oz(FileName))])
+    elseof gump(fatalError VS) then
+       error(kind: T
+	     msg: VS)
+    else
+       error(kind: T
+	     items: [line(oz(E))])
+    end
+ end}

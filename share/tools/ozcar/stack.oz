@@ -27,7 +27,7 @@ local
 
       fun {FormatFeature R F D}
 	 case {CondSelect R F unit} of unit then nil
-	 elseof X then {Error.formatLine X} # D
+	 elseof X then {Error.extendedVSToVS X} # D
 	 end
       end
 
@@ -50,7 +50,7 @@ local
 		case L
 		of hint(...)  then {CheckNil A} # {FormatLR L}
 		[] pos(X Y _) then {CheckNil A} # 'Pos: ' # X # ', line ' # Y
-		[] line(X)    then {CheckNil A} # {Error.formatLine X}
+		[] line(X)    then {CheckNil A} # {Error.extendedVSToVS X}
 		[] unit       then A
 		else {OzcarError 'wrong error message format'} A
 		end
@@ -205,7 +205,7 @@ in
 		      file: F line: L column: C time: Time
 		      args: [X]) | Stack
 	 in
-	    Status = {FormatExceptionLine {Error.formatExc X}}
+	    Status = {FormatExceptionLine {Error.exceptionToMessage X}}
 	    {Ozcar PrivateSend(status(Status clear ExcThreadColor))}
 	    {SendEmacs bar(file:F line:L column:C state:blocked)}
 	    StackManager,ReCalculate({Reverse S})

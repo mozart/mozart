@@ -27,7 +27,6 @@
 functor
 import
    ErrorRegistry(put)
-   Error(dispatch format formatGeneric)
    Open(socket text)
 export
    'class': NetDictionary
@@ -340,59 +339,49 @@ define
       end
    end
 
-   local
-      T = 'net dictionary error'
-   in
-      {ErrorRegistry.put netdict
-       fun {$ Exc}
-	  case {Error.dispatch Exc}
-	  of netdict(serverClosed Reason) then
-	     {Error.format T
-	      'Server closed connection'
-	      case Reason of unit then nil
-	      else [hint(l: 'Reason' m: Reason)]
-	      end
-	      Exc}
-	  elseof netdict(illegalArgString ArgString) then
-	     {Error.format T
-	      'Illegal argument string received from server'
-	      [hint(l: 'Got' m: ArgString)]
-	      Exc}
-	  elseof netdict(serverError Response) then
-	     {Error.format T
-	      'Server error'
-	      [hint(l: 'Response' m: Response)]
-	      Exc}
-	  elseof netdict(notConnected) then
-	     {Error.format T
-	      'Not connected'
-	      nil
-	      Exc}
-	  elseof netdict(unexpectedResponse Expected N Response) then
-	     {Error.format T
-	      'Unexpected response from server'
-	      [case Expected of I1|Ir then
-		  hint(l: 'Expected one of'
-		       m: {FoldL Ir fun {$ In I} In#' or '#I end I1})
-	       else hint(l: 'Expected' m: Expected)
-	       end
-	       hint(l: 'Response' m: case N of unit then Response
-				     else N#' '#Response
-				     end)]
-	      Exc}
-	  elseof netdict(malformedDefinition Rest) then
-	     {Error.format T
-	      'Malformed definition response'
-	      [hint(l: 'Response' m: Rest)]
-	      Exc}
-	  elseof netdict(malformedPair String) then
-	     {Error.format T
-	      'Malformed pair'
-	      [hint(l: 'Got' m: String)]
-	      Exc}
-	  else
-	     {Error.formatGeneric T Exc}
-	  end
-       end}
-   end
+   {ErrorRegistry.put netdict
+    fun {$ E} T in
+       T = 'net dictionary error'
+       case E of netdict(serverClosed Reason) then
+	  error(kind: T
+		msg: 'Server closed connection'
+		items: case Reason of unit then nil
+		       else [hint(l: 'Reason' m: Reason)]
+		       end)
+       elseof netdict(illegalArgString ArgString) then
+	  error(kind: T
+		msg: 'Illegal argument string received from server'
+		items: [hint(l: 'Got' m: ArgString)])
+       elseof netdict(serverError Response) then
+	  error(kind: T
+		msg: 'Server error'
+		items: [hint(l: 'Response' m: Response)])
+       elseof netdict(notConnected) then
+	  error(kind: T
+		msg: 'Not connected')
+       elseof netdict(unexpectedResponse Expected N Response) then
+	  error(kind: T
+		msg: 'Unexpected response from server'
+		items: [case Expected of I1|Ir then
+			   hint(l: 'Expected one of'
+				m: {FoldL Ir
+				    fun {$ In I} In#' or '#I end I1})
+			else hint(l: 'Expected' m: Expected)
+			end
+			hint(l: 'Response' m: case N of unit then Response
+					      else N#' '#Response
+					      end)])
+       elseof netdict(malformedDefinition Rest) then
+	  error(kind: T
+		msg: 'Malformed definition response'
+		items: [hint(l: 'Response' m: Rest)])
+       elseof netdict(malformedPair String) then
+	  error(kind: T
+		msg: 'Malformed pair'
+		items: [hint(l: 'Got' m: String)])
+       else
+	  error(kind: T
+		items: [line(oz(E))])
+       end
+    end}
 end
