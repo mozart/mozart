@@ -18,6 +18,10 @@
                      out => ['+value'],
                      BI  => weakdict_get },
 
+     'condGet'  => { in  => ['+value','+feature','value'],
+                     out => ['value'],
+                     BI  => weakdict_condGet },
+
      'close'    => { in  => ['+value'],
                      out => [],
                      BI  => weakdict_close }
