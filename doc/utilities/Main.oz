@@ -37,7 +37,7 @@ prepare
                  'type'(single char: &t type: string optional: false)
                  'html'(alias: 'type'#"html-stylesheets")
                  'out'(single char: &o type: string optional: false)
-                 'autoindex'(single type: bool default: false)
+                 'autoindex'(rightmost type: bool default: false)
                  %% HTML options
                  'stylesheet'(single type: string default: unit)
                  'latextogif'(rightmost type: bool default: true)
@@ -169,7 +169,8 @@ define
           '\n'#
           'HTML options\n'#
           '--stylesheet=<URL>  What style sheet to use for generated pages.\n'#
-          '--(no)latexmath     Generate GIF files from LaTeX math.\n'#
+          '--(no)latextogif    Generate GIF files from LaTeX code.\n'#
+          '--latexdb=<File>    Reuse GIFs generated from LaTeX code.\n'#
           '--(no)split         Split the document into several nodes.\n'#
           '--(no)abstract      Generate an abstract.html auxiliary file.\n'#
           '\n'#
@@ -180,7 +181,8 @@ define
           '--bst-path=<Search Path>\n'#
           '--sbin-path=<Search Path>\n'#
           '                    Where to look for author databases,\n'#
-          '                    bib files, bst files, and ozdoc scripts.\n'}
+          '                    bib files, bst files, and ozdoc scripts.\n'#
+          '--catalog           Specify the catalog file to use for parsing.\n'}
          {Application.exit 2}
       elseof error then
          {Application.exit 1}
