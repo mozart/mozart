@@ -3820,14 +3820,16 @@ OZ_BI_define(BIbiPrint, 0,0)
 {
   unsigned long sum = 0;
 
-  SRecord * sr = tagged2SRecord(builtinRecord);
-  
-  for (int i = sr->getWidth(); i--; ) {
-    Builtin * abit = tagged2Builtin(sr->getArg(i));
-
-    sum += abit->getCounter();
-    if (abit->getCounter()!=0) {
-      printf("%010lu x %s\n",abit->getCounter(),abit->getPrintName());
+  extern TaggedRef dictionary_of_builtins;
+  OzDictionary * d = tagged2Dictionary(dictionary_of_builtins);
+  for (int i=d->getFirst(); i>=0; i=d->getNext(i)) {
+    TaggedRef v = d->getValue(i);
+    if (v && oz_isBuiltin(v)) {
+      Builtin * abit = tagged2Builtin(v);
+      sum += abit->getCounter();
+      if (abit->getCounter()!=0) {
+	printf("%010lu x %s\n",abit->getCounter(),abit->getPrintName());
+      }
     }
   }
   printf("----------\n%010lu\n",sum);
