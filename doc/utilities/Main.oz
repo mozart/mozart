@@ -48,6 +48,7 @@ prepare
                  'xrefdb'(single type: string default: unit)
                  'xrefdir'(single type: string default: unit)
                  'xreftree'(single type: string default: '../')
+                 'indexdb'(single type: string default: unit)
                  'keeppictures'(rightmost type: bool default: false)
                  %% Path names
                  'ozdoc-home'(single type: string default: unit)
@@ -210,6 +211,7 @@ define
           '                    whole documentation installation directory.\n'#
           '--xreftree=<RelURL> How to get to whole doc installation from\n'#
           '                    the directory where this document goes.\n'#
+          '--indexdb=<File>    Where to look up resp. store index entries.\n'#
           '\n'#
           'Parametrization\n'#
           '--ozdoc-home=<DIR>  ozdoc installation directory.\n'#
