@@ -2483,8 +2483,6 @@ void TaskStack::gc(TaskStack *newstack) {
       Y = gcRefsArray(Y); // X
     } else if (PC == C_LOCK_Ptr) {
       Y = (RefsArray) ((OzLock *) Y)->gcConstTerm();
-    } else if (PC == C_LPQ_Ptr) {
-      Y = (RefsArray) ((Board *) Y)->gcBoard();
     } else if (PC == C_SET_SELF_Ptr) {
       Y = (RefsArray) (Y ? (((Object*)Y)->gcConstTerm()) : 0);
     } else if (PC == C_SET_ABSTR_Ptr) {

@@ -52,6 +52,7 @@ extern TaggedRef
   BI_dot,
   BI_exchangeCell,BI_assign,BI_atRedo,
   BI_controlVarHandler,
+  BI_PROP_LPQ,
   BI_unknown,
 
   __UNUSED_DUMMY_END_MARKER;
