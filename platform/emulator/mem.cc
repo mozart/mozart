@@ -26,7 +26,7 @@ const heapBlockSize = 1 * MB;
 
 MemChunks *MemChunks::list = NULL;
 
-int heapTotalSize;
+unsigned int heapTotalSize;
 
 #ifndef HEAPTOPINTOREGISTER
 char *heapTop;

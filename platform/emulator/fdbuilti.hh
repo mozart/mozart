@@ -41,7 +41,8 @@ if (FORCE_ALL || COND) { \
 #define FD_DEBUG_TTI(TEXT, SIZE, T1, T2, I, COND) \
 if (FORCE_ALL || COND) { \
   cout << TEXT << endl; \
-  for (int _i = 0; _i < SIZE; _i += 1) \
+  int _i; \
+  for (_i = 0; _i < SIZE; _i += 1) \
     cout << "a[" << _i << "]=", taggedPrint(T1[_i]), cout << endl; \
   for (_i = 0; _i < SIZE; _i += 1) \
     cout << "x[" << _i << "]=", taggedPrint(T2[_i]), cout << endl; \

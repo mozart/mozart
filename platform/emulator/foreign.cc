@@ -678,8 +678,9 @@ OZ_Term OZ_tail(OZ_Term list)
 int OZ_length(OZ_Term list)
 {
   int len = 0;
+  OZ_Term tmp;
 
-  for (OZ_Term tmp= list; OZ_isCons(tmp); tmp=OZ_tail(tmp)) {
+  for (tmp = list; OZ_isCons(tmp); tmp=OZ_tail(tmp)) {
     len++;
   }
 

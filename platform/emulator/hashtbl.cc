@@ -77,7 +77,7 @@ HashTable::~HashTable() {
 
 // M e t h o d s
 
-inline int HashTable::hashFunc(int i) {
+inline int HashTable::hashFunc(intlong i) {
   return i % tableSize;
 }
 
@@ -87,7 +87,7 @@ inline int HashTable::hashFunc(char *s) {
   unsigned h = 0, g;
   for(; *p; p++) {
     h = (h << 4) + (*p);
-    if (g = h & 0xf0000000) {
+    if ((g = h & 0xf0000000)) {
       h = h ^ (g >> 24);
       h = h ^ g;
     }
@@ -131,10 +131,11 @@ void HashTable::resize()
   HashNode* neu = new HashNode[tableSize];
   HashNode* old = table;    
   table = neu;
-  for (int i=0;i<tableSize;i++) 
+  int i;
+  for (i=0; i<tableSize; i++) 
     neu[i].setEmpty();
   if (type == INTTYPE) {
-    for (i=0;i<oldSize;i++) {
+    for (i=0; i<oldSize; i++) {
       if (! old[i].isEmpty()) 
 	aadd(old[i].value,old[i].key.fint,NO);
     }
@@ -169,7 +170,7 @@ inline int HashTable::findIndex(char *s)
   return key;
 }
 
-inline int HashTable::findIndex(int i)
+inline int HashTable::findIndex(intlong i)
 {
   int key = hashFunc(i);
   while (! table[key].isEmpty() && table[key].key.fint != i) {
@@ -204,7 +205,7 @@ Bool HashTable::aadd(void *d, char *s, Bool replace)
   return OK;
 }
 
-Bool HashTable::aadd(void *d, int i, Bool replace)
+Bool HashTable::aadd(void *d, intlong i, Bool replace)
 {
   if (counter > percent)
     resize();
@@ -231,7 +232,7 @@ void *HashTable::ffind(char *s)
     ? htEmpty : table[key].value;
 }
 
-void *HashTable::ffind(int i)
+void *HashTable::ffind(intlong i)
 {
   int key = findIndex(i);
   return (table[key].isEmpty())

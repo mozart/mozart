@@ -54,7 +54,8 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
   }
 
   // constrain Bi to {0..Pi+2} if Bi is an uvar
-  for (int i = clauses; i--; ) {
+  int i;
+  for (i = clauses; i--; ) {
     TaggedRef bi = makeTaggedRef(&b[i]);
     DEREF(bi, bi_ptr, bi_tag);
     if (isNotCVar(bi_tag)) {
@@ -112,7 +113,8 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
   // suspend until global variables are constrained to finite domains
   BIfdHeadManager x_items(variables);
 
-  for (int suspend = 0, i = variables; i--; ) 
+  int suspend, i;
+  for (suspend = 0, i = variables; i--; ) 
     if (! x_items.expectFDish(i, makeTaggedRef(&v[i]), suspend))
       TypeError(1, "");
 
@@ -177,13 +179,15 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
   
   // introduce Bs
   x.add(0, clauses);
-  for (int c = clauses; c--; ) {
+  int c;
+  for (c = clauses; c--; ) {
     x.introduce(idx_b(c), makeTaggedRef(&_b[c]));
   }
   
   // introduce Vs
   x.add(1, variables);
-  for (int v = variables; v--; ) {
+  int v;
+  for (v = variables; v--; ) {
     x.introduce(idx_v(v), makeTaggedRef(&_v[v]));
   }
   

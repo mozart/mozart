@@ -411,7 +411,7 @@ PRINT(LTuple)
 static void ppLiteral(ostream &stream, char *s) {
   stream << "'";
   char c;
-  while (c = *s) {
+  while ((c = *s)) {
     switch (c) {
     case '\'':
       stream << "\\'";

@@ -1067,7 +1067,7 @@ SuspList * SuspList::gc(Bool tcFlag)
       unsigned int auxNumOfConds = ((CondSuspList*)help)->getCondNum();
       auxConds = (Condition*) gcRealloc(auxConds,
 					auxNumOfConds * sizeof(Condition));
-      for (int i = 0; i < auxNumOfConds; i++)
+      for (unsigned int i = 0; i < auxNumOfConds; i++)
 	gcTagged(((CondSuspList*)help)->getConds()[i].arg, auxConds[i].arg);
       
       ret = new CondSuspList(aux, ret, auxConds, auxNumOfConds);
@@ -2374,7 +2374,7 @@ void AM::doGC()
   gc(conf.gcVerbosity);
 
   /* calc upper limits for next gc */
-  int used = getUsedMemory();
+  unsigned int used = getUsedMemory();
   if (used > (conf.heapMaxSize*conf.heapMargin)/100) {
     conf.heapMaxSize = conf.heapMaxSize*(100+conf.heapIncrement)/100;
   }
