@@ -133,9 +133,9 @@ define
 	 @Prefix
       end
 
-      meth set_dir(D) Dir<-{Path.expand D} end
+      meth set_dir(D) Dir<-{Path.expandInCWD D} end
 
-      meth set_tmpdir(D) TmpDir<-{Path.expand D} end
+      meth set_tmpdir(D) TmpDir<-{Path.expandInCWD D} end
       meth get_tmpdir($) @TmpDir end
       meth get_tmpnam($) F={OS.tmpnam} in
 	 if @TmpDir==unit then F else U={Path.toURL F} in
@@ -143,7 +143,7 @@ define
 	 end
       end
 
-      meth set_builddir(D) BuildDir<-{Path.expand D} end
+      meth set_builddir(D) BuildDir<-{Path.expandInCWD D} end
       meth get_builddir($)
 	 if @BuildDir==unit then
 	    if @Superman\=unit then
@@ -151,13 +151,13 @@ define
 	    elseif @Dir\=unit then
 	       BuildDir<-@Dir
 	    else
-	       BuildDir<-nil
+	       BuildDir<-{Path.expandInCWD nil}
 	    end
 	 end
 	 @BuildDir
       end
 
-      meth set_srcdir(D) SrcDir<-{Path.expand D} end
+      meth set_srcdir(D) SrcDir<-{Path.expandInCWD D} end
       meth get_srcdir($)
 	 if @SrcDir==unit then
 	    if @Superman\=unit then
@@ -167,7 +167,7 @@ define
 	    elseif @MakeFile\=unit then
 	       SrcDir<-{Path.dirname @MakeFile}
 	    else
-	       SrcDir<-nil
+	       SrcDir<-{Path.expandInCWD nil}
 	    end
 	 end
 	 @SrcDir
@@ -312,7 +312,7 @@ define
       end
 
       meth set_makefile(F)
-	 MakeFile<-{Path.expand F}
+	 MakeFile<-{Path.expandInCWD F}
 	 MakeFileGiven<-true
       end
       meth get_makefile($)
