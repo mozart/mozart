@@ -287,7 +287,6 @@ end
 <p> The implementation in <ptr to="portCellChunk"> does not protect
 the stream of the port. Protection of the stream is done using
 future as follows.
-</FIGURE>
 
 <P><FIGURE ID="portCellChunkF" CLASS="Figure">
 <CAPTION>Implementation of Ports by Cells and Chunks</CAPTION>
