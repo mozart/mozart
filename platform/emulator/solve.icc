@@ -88,6 +88,7 @@ TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
       if (sa->getLocalThreadQueue()) {
 	for ( ; !localThreadQueue->isEmpty(); 
 	      sa->getLocalThreadQueue()->enqueue(localThreadQueue->dequeue()));
+	resetLocalThreadQueue();
       } else {
 	sa->setLocalThreadQueue(localThreadQueue);
       }
@@ -106,9 +107,7 @@ TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
       }
       
       // empty taskstack of ltq thread and dispose ltq
-      localThreadQueue->getLTQThread()->getTaskStackRef()->makeEmpty();
-      localThreadQueue->dispose ();
-      localThreadQueue = NULL;
+      resetLocalThreadQueue();
     }
   }
   

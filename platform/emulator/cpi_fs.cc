@@ -180,7 +180,7 @@ OZ_Boolean OZ_FSetVar::tell(void)
 	am.doBindAndTrail(var, varPtr, 
 			  makeTaggedFSetValue(new OZ_FSetValue(setvalue)));
       }
-      goto t;
+      goto f;
     } else {
       if (known_in < setPtr->getKnownIn())
 	tagged2GenFSetVar(var)->propagate(var, fs_prop_glb);

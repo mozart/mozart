@@ -56,36 +56,36 @@ OZ_CFun FSetCardPropagator::spawner = fsp_card;
 
 OZ_Return TellIsInPropagator::run(void)
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  _OZ_DEBUGPRINT("in: " << *this);
   
   OZ_FSetVar v(_v);
   
   FailOnInvalid(*v += _i);
 
-  OZ_DEBUGPRINT("out: "<< *this);
+  _OZ_DEBUGPRINT("out: "<< *this);
   v.leave(); 
   return ENTAILED;
 
 failure:
-  OZ_DEBUGPRINT("fail: "<< *this);
+  _OZ_DEBUGPRINT("fail: "<< *this);
   v.fail();
   return FAILED;
 }
 
 OZ_Return TellIsNotInPropagator::run(void)
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  _OZ_DEBUGPRINT("in: " << *this);
   
   OZ_FSetVar v(_v);
   
   FailOnInvalid(*v -= _i);
 
-  OZ_DEBUGPRINT("out: "<< *this);
+  _OZ_DEBUGPRINT("out: "<< *this);
   v.leave();
   return ENTAILED;
 
 failure:
-  OZ_DEBUGPRINT("fail: "<< *this);
+  _OZ_DEBUGPRINT("fail: "<< *this);
   v.fail();
   return FAILED;
 }
