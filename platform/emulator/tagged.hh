@@ -128,7 +128,7 @@ TaggedRef makeTaggedRef(TypeOfTerm tag, int32 i)
 inline
 TaggedRef makeTaggedRef(TypeOfTerm tag, void *ptr)
 {
-  return makeTaggedRef(tag,ToInt32(ptr));
+  return makeTaggedRef(tag,(int32)ToInt32(ptr));
 }
 
 
