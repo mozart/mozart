@@ -1363,12 +1363,11 @@ to handle lines like 'attr a:'."
     (let* ((last-nonmenu-event t)
 	   (buffer (oz-find-buffer-or-file file))
 	   (window (display-buffer buffer))
-	   start1 end1 start2 end2 oldpos)
+	   start1 end1 start2 end2)
       (save-excursion
 	(set-buffer buffer)
 	(save-restriction
 	  (widen)
-	  (setq oldpos (point))
 	  (goto-line line)
 	  (setq start1 (point))
 	  (save-excursion
@@ -1401,17 +1400,15 @@ to handle lines like 'attr a:'."
 		 (set-extent-endpoints
 		  oz-bar-overlay-here start2 end2 (current-buffer))))
 	  (or (string-equal state "unchanged")
-	      (oz-bar-configure state)))
-	(if (and (>= start2 (window-start)) (< start2 (window-end)))
-	    (goto-char oldpos)
-	  (widen)
-	  (goto-char start2)))
-      (set-window-point window start2)
-      (if (not (pos-visible-in-window-p start2 window))
-	  (let ((old-window (selected-window)))
-	    (select-window window)
-	    (recenter)
-	    (select-window old-window))))))
+	      (oz-bar-configure state))))
+      (let ((old-window (selected-window)))
+	(select-window window)
+	(if (not (pos-visible-in-window-p start2))
+	    (save-restriction
+	      (widen)
+	      (goto-char start2)
+	      (recenter (/ (1+ (window-height)) 2))))
+	(select-window old-window)))))
 
 (defun oz-bar-configure (state)
   "Change color of bar while not moving it."
