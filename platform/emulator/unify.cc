@@ -46,7 +46,6 @@ static
 Bool wakeup_Thread(Thread * tt, Board *home, PropCaller calledBy)
 {
   Assert (tt->isSuspended());
-  Assert (tt->isRThread());
 
   switch (oz_isBetween(tt->getBoardInternal(), home)) {
   case B_BETWEEN:
@@ -75,106 +74,6 @@ Bool wakeup_Thread(Thread * tt, Board *home, PropCaller calledBy)
   }
 }
 
-inline
-static
-void wakeup_Wakeup(Thread *tt)
-{
-  // RECHECK-CS
-  Assert(tt->isSuspended());
-
-  tt->markRunnable();
-  am.threadsPool.scheduleThread(tt);
-
-  Board * bb = GETBOARD(tt);
-  
-  if (!bb->isRoot() || tt->isExtThread())
-    bb->incSolveThreads();
-  
-}
-
-inline
-static 
-Bool wakeup_Board(Thread *tt, Board *home, PropCaller calledBy)
-{
-  Assert(tt->isSuspended());
-  Assert(tt->getThrType() == S_WAKEUP);
-
-  //
-  //  Note:
-  //  We use here the dereferenced board pointer, because:
-  // - normally, there should be a *single* "wakeup" suspension
-  //   per guard (TODO);
-  // - when "unit commit" takes place, the rest of (suspended?) threads
-  //   from that guard belong to the guard just above 
-  //   (or toplevel, of course) - we have to update 
-  //   the threads counter there;
-  // - garbage collector moves the pointer anyway.
-  // 
-  //  It's relevant (should be) for unit commits *only*;
-  //  Implicitly move the thread upstairs - the threads counter 
-  // should be already updated before (during unit committing);
-  Board *bb=GETBOARD(tt);
-
-  //
-  //  Do not propagate to the current board, but discard it;
-  //  Do not propagate to the board which has a runnable 
-  // "wakeup" thread;
-  // 
-  // Note that we don't need to schedule the wakeup for the board
-  // because in both cases there is a thread which will check 
-  // entailment for us;
-  if (oz_isCurrentBoard(bb)) {
-#ifdef DEBUG_CHECK
-    // because of assertions in decSuspCount and getSuspCount
-    if (bb->isFailed()) {
-      tt->markDeadThread();
-      CheckExtSuspension(tt);
-      return OK;
-    }
-#endif
-    bb->decSuspCount();
-
-    Assert(bb->getSuspCount() > 0);
-    tt->markDeadThread();
-    // checkExtThread(); // don't check here !
-    return OK;
-  }
-
-  // 
-  //  Don't propagate to the variable's home board (again, 
-  // this can happen only in the case of unit commit), but we have 
-  // to schedule a wakeup for the new thread's home board, 
-  // because it could be the last thread in it - check entailment!
-  if (bb == home && bb->getSuspCount() == 1) {
-    wakeup_Wakeup(tt);
-    return OK;
-  }
-
-  // 
-  //  General case;
-  switch (oz_isBetween(bb, home)) {
-  case B_BETWEEN:
-    wakeup_Wakeup(tt);
-    return OK;
-
-  case B_NOT_BETWEEN:
-    if (calledBy==pc_all) {
-      wakeup_Wakeup(tt);
-      return OK;
-    }
-    return NO;
-
-  case B_DEAD:
-    tt->markDeadThread();
-    CheckExtSuspension(tt);
-    return OK;
-
-  default:
-    Assert(0);
-    return NO;
-  }
-}
-
 //
 //  Generic 'wakeUp';
 //  Since this method is used at the only one place, it's inlined;
@@ -185,15 +84,8 @@ Bool wakeup_Suspension(Suspension susp, Board * home, PropCaller calledBy)
   if (susp.isThread()) {
     Thread * tt = susp.getThread();
     
-    switch (tt->getThrType()) {
-    case S_RTHREAD: 
-      return wakeup_Thread(tt,home,calledBy);
-    case S_WAKEUP:
-      return wakeup_Board(tt,home,calledBy);
-    default:
-      Assert(0);
-      return FALSE;
-    }
+    return wakeup_Thread(tt,home,calledBy);
+    
   } else {
     Assert(susp.isPropagator());
     

@@ -38,7 +38,7 @@ void debugStreamReady(Thread*);
 
 inline
 Thread * _newThread(int prio, Board *bb) {
-  Thread *th = new Thread(S_RTHREAD,prio,bb,oz_newId());
+  Thread *th = new Thread(0,prio,bb,oz_newId());
   th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
   oz_checkDebug(th,bb);
@@ -82,11 +82,10 @@ Thread * oz_newThreadSuspended(int prio) {
   return _newThread(prio,oz_currentBoard());
 }
 
-Thread * oz_newThreadPropagate(Board *bb) 
-{
-  Thread *th = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,oz_newId());
-  bb->incSuspCount();
-  return th;
+Thread * oz_newThreadPropagate(Board *bb) {
+  Thread *tt = _newThread(DEFAULT_PRIORITY,bb);
+  tt->pushCall(BI_skip,0,0);
+  return tt;
 }
 
 
@@ -97,17 +96,7 @@ void oz_disposeThread(Thread *tt) {
   if (am.debugmode() && tt->getTrace())
     debugStreamTerm(tt);
   
-  switch (tt->getThrType()) {
-  case S_RTHREAD: 
-    am.threadsPool.freeThreadBody(tt);
-    break;
-    
-  case S_WAKEUP: 
-    break;
-    
-  default: 
-    Assert(0);
-  }
+  am.threadsPool.freeThreadBody(tt);
 }
 
 void oz_wakeupThread(Thread *tt) {

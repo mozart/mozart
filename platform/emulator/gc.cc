@@ -1205,12 +1205,17 @@ inline
 void Thread::gcRecurse() {
 
   if (getBoardInternal()->gcIsAlive()) {
+
     setBoardInternal(getBoardInternal()->gcBoard());    
+
+    item.threadBody = item.threadBody->gcRTBody();
+    setSelf(getSelf()->gcObject());
+
   } else {
     //  The following assertion holds because suspended threads
     // which home board is dead are filtered out during 
     // 'Thread::gcThread ()';
-    Assert (isRunnable ());
+    Assert(isRunnable());
       
     //  Actually, there are two cases: for runnable threads with 
     // a taskstack, and without it (note that the last case covers 
@@ -1219,30 +1224,13 @@ void Thread::gcRecurse() {
 
     setBoardInternal(notificationBoard->gcBoard());
       
+    setBody(am.threadsPool.allocateBody());
     getBoardInternal()->incSuspCount();
-      
-    //  Convert the thread to a 'wakeup' type, and just throw away
-    // the body;
-    setWakeUpTypeGC ();
-    item.threadBody = (RunnableThreadBody *) NULL;
-    return;
+    
+    pushCall(BI_skip,0,0);
+
   } 
   
-  //
-  switch (getThrType ()) {
-  case S_RTHREAD:
-    item.threadBody = item.threadBody->gcRTBody ();
-    setSelf(getSelf()->gcObject());
-    break; 
-
-  case S_WAKEUP: 
-    //  should not contain any reference;
-    Assert(item.threadBody == (RunnableThreadBody *) NULL);
-    break;
-
-  default:
-    Assert(0);
-  }
 }
 
 ForeignPointer * ForeignPointer::gc(void) {

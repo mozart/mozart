@@ -192,11 +192,6 @@ public:
     return (state.flags & T_tag);
   }
 
-  Bool isWakeup() { 
-    Assert(!isDeadThread());
-    return getThrType() == S_WAKEUP;
-  }
-  
   void setBody(RunnableThreadBody *rb) { item.threadBody=rb; }
   RunnableThreadBody *getBody()        { return item.threadBody; }
 
@@ -217,9 +212,6 @@ public:
     Assert(state.pri >= LOW_PRIORITY && state.pri <= HI_PRIORITY);
     state.pri = newPri;
   }
-
-  /* check if thread has a stack */
-  Bool isRThread() { return (state.flags & S_TYPE_MASK) == S_RTHREAD; }
 
   Bool isDeadThread() { return state.flags & T_dead; }
 
@@ -288,30 +280,6 @@ public:
   Bool getStop()  { return (state.flags & T_G_stop); }
 
   
-  int getThrType() { return (state.flags & S_TYPE_MASK); }
-
-  // 
-  //  Convert a thread of any type to a 'wakeup' thread (without a stack).
-  //  That's used in GC because thread with a dead home board
-  // might not dissappear during GC, but moved to a first alive board,
-  // and killed in the emulator.
-  void setWakeUpTypeGC() {
-    state.flags = (state.flags & ~S_TYPE_MASK) | S_WAKEUP;
-  }
-
-  Bool hasStack() { 
-    Assert(!isDeadThread());
-    return (state.flags & T_stack);
-  }
-  Bool hadStack() { 
-    Assert(isDeadThread ());
-    return (state.flags & T_stack);
-  }
-  void setHasStack() { 
-    Assert(isRunnable());
-    state.flags = state.flags | T_stack; 
-  }
-
   void reInit() {  // for the root thread only;
     setRunnable();
     item.threadBody->reInit();
@@ -361,11 +329,11 @@ public:
   }
 
   Bool isEmpty() {
-    return hasStack() ? item.threadBody->taskStack.isEmpty() : NO;
+    return item.threadBody->taskStack.isEmpty();
   }
 
   void printTaskStack(int depth) {
-    if (!isDeadThread() && hasStack()) {
+    if (!isDeadThread()) {
       item.threadBody->taskStack.printTaskStack(depth);
     } else {
       message("\tEMPTY\n");
@@ -375,7 +343,6 @@ public:
 
 
   TaskStack *getTaskStackRef() {
-    Assert(hasStack());
     return &(item.threadBody->taskStack);
   }
 

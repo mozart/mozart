@@ -123,14 +123,6 @@ LBLstart:
 
   Assert(CTT->isRunnable());
 
-  //
-  //  Note that this test covers also the case when a runnable thread
-  // was suspended in a sequential mode: it had already a stack, 
-  // so we don't have to do anything now;
-  if (CTT->isWakeup()) goto LBLterminate;
-
-  Assert(CTT->getThrType() == S_RTHREAD);
-
   e->restartThread(); // start a new time slice
   // fall through
 
@@ -205,7 +197,7 @@ LBLterminate:
     Assert(CTT);
     Assert(!CTT->isDeadThread());
     Assert(CTT->isRunnable());
-    Assert(CTT->isWakeup() || CTT->isEmpty());
+    Assert(CTT->isEmpty());
 
     //  Note that during debugging the thread does not carry 
     // the board pointer (== NULL) wenn it's running;

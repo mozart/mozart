@@ -48,24 +48,14 @@
 
 #include "thr_class.hh"
 
-int Thread::getRunnableNumber()
-{
-  switch (getThrType()) {
-  case S_RTHREAD:
-    {
-      TaskStack * taskstack = getTaskStackRef();
-      if (taskstack->isEmpty()) return 0;
-      Frame *tos = taskstack->getTop();
-      GetFrame(tos,PC,Y,G);
-      if (PC!=C_LPQ_Ptr)
-	return 1;
+int Thread::getRunnableNumber() {
+  TaskStack * taskstack = getTaskStackRef();
+  if (taskstack->isEmpty()) return 0;
+  Frame *tos = taskstack->getTop();
+  GetFrame(tos,PC,Y,G);
 
-      return 0;
-    }
-  case S_WAKEUP:
-    return 0;
-  default:
-    Assert(0);
-    return 0;
-  }
+  if (PC!=C_LPQ_Ptr)
+    return 1;
+  
+  return 0;
 }
