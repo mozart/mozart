@@ -164,6 +164,18 @@ void Statistics::print(FILE *fd)
   fprintf(fd,"******************************\n\n");
 }
 
+int Statistics::getAtomMemory() {
+  return CodeArea::atomTab.memRequired(sizeof(Literal));
+}
+
+int Statistics::getNameMemory() {
+  return CodeArea::nameTab.memRequired(sizeof(Literal));
+}
+
+int Statistics::getCodeMemory() {
+  return CodeArea::totalSize;
+}
+
 Statistics::Statistics()
 {
   reset();
@@ -171,8 +183,7 @@ Statistics::Statistics()
   timeUtime.idle();
 }
 
-void Statistics::reset()
-{
+void Statistics::reset() {
 #ifdef PROFILE
   allocateCounter = deallocateCounter = procCounter = waitCounter = 
     askCounter = protectedCounter = 0;
@@ -203,93 +214,7 @@ void Statistics::reset()
 
 //----------------------------------------------------------------------
 
-
-static void recSetArg(OZ_Term record, char *feat, unsigned int val)
-{
-  OZ_Term t = OZ_subtree(record, OZ_atom(feat));
-  if (t == 0 || !OZ_unifyInt(t,val)) {
-    OZ_warning("recSetArg(%s,%s,%d) failed",toC(record),feat,val);
-  }
-}
-
-
-OZ_Term Statistics::getThreads() {
-  OZ_Term created  = OZ_pairAI("created",  createdThreads.total);
-  OZ_Term runnable = OZ_pairAI("runnable", 0);
-  
-  return OZ_recordInit(OZ_atom("threads"),
-		       OZ_cons(created,
-			       OZ_cons(runnable,nil())));
-}
-
-OZ_Term Statistics::getTime() {
-  unsigned int timeNow = osUserTime();
-
-  OZ_Term copy      = OZ_pairAI("copy",      timeForCopy.total);
-  OZ_Term gc        = OZ_pairAI("gc",        timeForGC.total);
-  OZ_Term load      = OZ_pairAI("load",      timeForLoading.total);
-  OZ_Term propagate = OZ_pairAI("propagate", timeForPropagation.total);
-  OZ_Term run       = OZ_pairAI("run",       timeNow-(timeForGC.total +
-						      timeForLoading.total +
-						      timeForPropagation.total +
-						      timeForCopy.total));
-  OZ_Term system    = OZ_pairAI("system",    osSystemTime());
-  OZ_Term user      = OZ_pairAI("user",      timeNow);
-  
-  return OZ_recordInit(OZ_atom("time"),
-		       OZ_cons(copy,OZ_cons(gc,
-			 OZ_cons(load,OZ_cons(propagate,
-			   OZ_cons(run,OZ_cons(system,
-                             OZ_cons(user,nil()))))))));
-}
-
-OZ_Term Statistics::getMemory() {
-  OZ_Term atoms    = OZ_pairAI("atoms",
-			       CodeArea::atomTab.memRequired(sizeof(Literal)));
-  OZ_Term names    = OZ_pairAI("names",    
-			       CodeArea::nameTab.memRequired(sizeof(Literal)));
-  OZ_Term builtins = OZ_pairAI("builtins", builtinTab.memRequired());
-  OZ_Term freelist = OZ_pairAI("freelist", getMemoryInFreeList());
-  OZ_Term code     = OZ_pairAI("code",     CodeArea::totalSize);
-  
-  return OZ_recordInit(OZ_atom("memory"),
-		       OZ_cons(atoms, OZ_cons(builtins,
-			 OZ_cons(code, OZ_cons(freelist,
-                           OZ_cons(names, nil()))))));
-}
-
-OZ_Term Statistics::getSpaces() {
-  OZ_Term chosen  = OZ_pairAI("chosen",    solveAlt.total);
-  OZ_Term cloned  = OZ_pairAI("cloned",    solveCloned.total);
-  OZ_Term created = OZ_pairAI("created",   solveCreated.total);
-  OZ_Term failed  = OZ_pairAI("failed",    solveFailed.total);
-  OZ_Term solved  = OZ_pairAI("succeeded", solveSolved.total);
-  
-  return OZ_recordInit(OZ_atom("spaces"),
-		       OZ_cons(chosen,OZ_cons(cloned,
-			 OZ_cons(created,OZ_cons(failed,
-                           OZ_cons(solved,nil()))))));
-}
-
-OZ_Term Statistics::getFD() {
-  OZ_Term variables   = OZ_pairAI("variables",   fdvarsCreated.total);
-  OZ_Term propagators = OZ_pairAI("propagators", propagatorsCreated.total);
-  OZ_Term invoked     = OZ_pairAI("invoked",     propagatorsInvoked.total);
-  OZ_Term runs        = OZ_pairAI("runs",        
-				  (timeForPropagation.total>0) ?
-				  ((int) (1000*double(propagatorsInvoked.total)/
-					  timeForPropagation.total)) :
-				  0);
-  
-  return OZ_recordInit(OZ_atom("fd"),
-		       OZ_cons(variables,
-			       OZ_cons(propagators,
-				       OZ_cons(invoked,
-					       OZ_cons(runs,nil())))));
-}
-
-void Statistics::printRunning(FILE *fd)
-{
+void Statistics::printRunning(FILE *fd) {
   if (ozconf.showIdleMessage) {
     fprintf(fd,"running...\n");
     fflush(fd);
