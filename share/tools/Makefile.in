@@ -203,6 +203,7 @@ $(CACHEDIR):
 	$(INSTALL_DIR) $(CACHEDIR)
 
 $(CACHELINK): $(CACHEDIR)
+	rm -f $(CACHELINK)
 	$(LN_S)  $(PREFIX) $(CACHELINK)
 
 #---------------------------------------------------------------------
