@@ -121,12 +121,14 @@ int Board::checkSituatedness(TaggedRef * x, TaggedRef *f,TaggedRef *b) {
   scStack.init();
 
   setGlobalMarks();
+  setMarkOne();
 
   checkSituatedBlock(x,1);
 
   scStack.check();
 
   unsetGlobalMarks();
+  unsetMarkOne();
 
   scTrail.unwind();
 

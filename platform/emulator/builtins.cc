@@ -2609,6 +2609,7 @@ OZ_BI_define(BIisPort, 1, 1)
 
 // use VARS or FUTURES for ports
 // #define VAR_PORT
+
 #ifdef VAR_PORT
 
 OZ_BI_define(BInewPort,1,1)
@@ -2617,6 +2618,7 @@ OZ_BI_define(BInewPort,1,1)
 
   OZ_RETURN(oz_newPort(val));
 } OZ_BI_end
+
 
 void doPortSend(PortWithStream *port,TaggedRef val)
 {
@@ -2628,37 +2630,7 @@ void doPortSend(PortWithStream *port,TaggedRef val)
   OZ_unifyInThread(val,lt->getHead()); // might raise exception if val is non exportable
 }
 
-OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
-{
-  Assert(oz_isPort(prt));
-
-  Port *port  = tagged2Port(prt);
-
-  CheckLocalBoard(port,"port");
-
-  if(port->isProxy()) {
-    return (*portSend)(port,val);
-  } 
-  doPortSend((PortWithStream*)port,val);
-
-  return PROCEED;
-}
-
-OZ_BI_define(BIsendPort,2,0)
-{
-  oz_declareNonvarIN(0,prt);
-  oz_declareIN(1,val);
-
-  if (!oz_isPort(prt)) {
-    oz_typeError(0,"Port");
-  }
-
-  return oz_sendPort(prt,val);
-} OZ_BI_end
-
 #else
-
-// PORTS with Futures
 
 OZ_BI_define(BInewPort,1,1)
 {
@@ -2669,7 +2641,6 @@ OZ_BI_define(BInewPort,1,1)
   return oz_unify(OZ_in(0),fut);
 } OZ_BI_end
 
-// export
 void doPortSend(PortWithStream *port,TaggedRef val)
 {
   OZ_Term newFut = oz_newFuture(oz_currentBoard());
@@ -2681,6 +2652,10 @@ void doPortSend(PortWithStream *port,TaggedRef val)
   OZ_unifyInThread(val,oz_head(lt)); // might raise exception if val is non exportable
 }
 
+#endif
+
+
+
 OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
 {
   Assert(oz_isPort(prt));
@@ -2707,7 +2682,7 @@ OZ_BI_define(BIsendPort,2,0)
 
   return oz_sendPort(prt,val);
 } OZ_BI_end
-#endif
+
 
 // ---------------------------------------------------------------------
 // Locks
