@@ -46,12 +46,10 @@ OZMA		= $(OZBATCH) $(OZFLAGS) --ozma
 
 OZVERSION	= $(TOPDIR)/OZVERSION
 
-OZLIBDIRS = \
-	$(OZLIB)/Standard $(OZLIB)/Init $(OZLIB)/SP $(OZLIB)/OP \
-	$(OZLIB)/AP $(OZLIB)/CP $(OZLIB)/WP $(OZLIB)/DP \
-	$(OZLIB)/compiler $(OZLIB)/panel $(OZLIB)/browser \
-	$(OZLIB)/explorer $(OZLIB)/ozcar $(OZLIB)/profiler \
-	$(OZLIB)/gump
+OZLIBDIRS1 = \
+	Standard Init SP OP AP CP WP DP \
+	compiler panel browser explorer ozcar profiler gump gump/examples
+OZLIBDIRS = $(OZLIBDIRS1:%=$(OZLIB)/%)
 OZCARBITMAPDIR = $(BITMAPDIR)/ozcar
 
 STANDARDSRC1 = \
@@ -145,6 +143,10 @@ GUMPSCANNERSRC = $(GUMPSCANNERSRC1:%=gump/%) GumpScanner.oz
 GUMPPARSERSRC1 = GumpParserClass.oz
 GUMPPARSERSRC = $(GUMPPARSERSRC1:%=gump/%) GumpParser.oz
 
+GUMPEXAMPLES = \
+	Examples.oz Lambda.in LambdaParser.ozg LambdaScanner.ozg \
+	OzParser.ozg OzScanner.ozg
+
 ALLSRCS = \
 	$(STANDARDSRC) $(INITSRC) \
 	$(SPSRC) $(OPSRC) $(APSRC) $(CPSRC) $(DPSRC) $(WPSRC) \
@@ -167,6 +169,7 @@ TYCS = $(TYPS:%.typ=tyc/%.tyc)
 
 LIBFILES = \
 	$(ALLSRCS:%=$(OZLIB)/%) \
+	$(GUMPEXAMPLES:%=$(OZLIB)/gump/examples/%) \
 	$(ENVS1:%=$(OZLIB)/%) \
 	$(TYCS:tyc/%=$(OZLIB)/%)
 
@@ -249,6 +252,9 @@ $(OZLIB)/%.oz: %.oz
 $(OZLIB)/%.ozc: %.ozc
 	$(INSTALLFILE) $< $@
 
+$(OZLIB)/gump/examples/%: gump/examples/%
+	$(INSTALLSRC) $< $@
+
 $(BITMAPDIR)/%: bitmaps/%
 	$(INSTALLFILE) $< $@
 
@@ -268,7 +274,7 @@ $(OZBIN)/ozbatch: ozbatch
 	$(ENV2TYPE) $< > $@
 
 tyc/%.tyc: %.typ $(DUMPINTRO) Init.ozc
-	@if test ! -d tyc; then $(MKDIR) tyc; fi
+	@$(MKDIR) tyc 2>/dev/null || $(TRUE)
 	$(COMPILE) $< -o $@
 
 %.ozc:
@@ -277,20 +283,17 @@ tyc/%.tyc: %.typ $(DUMPINTRO) Init.ozc
 Init.ozc: $(DUMPINTRO) $(INITSRC)
 	OZMAINIT="" $(COMPILE) Init.oz
 
-OPI.ozc: $(DUMPINTRO) OPI.oz Init.ozc SP.ozc OP.ozc AP.ozc \
-	Compiler.env $(TYCS)
+OPI.ozc: $(DUMPINTRO) OPI.oz Init.ozc SP.ozc OP.ozc AP.ozc Compiler.env $(TYCS)
 
 SP.ozc: $(DUMPINTRO) $(SPSRC) SP.env Init.ozc
 
 OP.ozc: $(DUMPINTRO) $(OPSRC) SP.env OP.env Init.ozc
 
-AP.ozc: $(DUMPINTRO) $(APSRC) SP.env OP.env \
-	AP.env Init.ozc
+AP.ozc: $(DUMPINTRO) $(APSRC) SP.env OP.env AP.env Init.ozc
 
 CP.ozc: $(DUMPINTRO) $(CPSRC) SP.env CP.env Init.ozc
 
-WP.ozc: $(DUMPINTRO) $(WPSRC) SP.env OP.env \
-	WP.env Init.ozc
+WP.ozc: $(DUMPINTRO) $(WPSRC) SP.env OP.env WP.env Init.ozc
 
 DP.ozc: $(DUMPINTRO) $(DPSRC) SP.env OP.env \
 	AP.env WP.env DP.env Init.ozc
@@ -298,17 +301,15 @@ DP.ozc: $(DUMPINTRO) $(DPSRC) SP.env OP.env \
 Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) SP.env \
 	CP.env Gump.env Compiler.env Init.ozc
 
-compiler-Version.oz: $(COMPILERSRCNOVER) $(OZVERSION) \
-	compiler/Opcodes.m4oz
+compiler-Version.oz: $(COMPILERSRCNOVER) $(OZVERSION) compiler/Opcodes.m4oz
 	($(ECHO) 'OZVERSION = '\'`$(OZVERSION)`\'; \
 	$(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\') > $@
 
 compiler-Opcodes.oz: compiler/Opcodes.m4oz $(TOPDIR)/Emulator/instrDefs.m4
 	$(M4) -DEMUDIR=$(TOPDIR)/Emulator < $< > $@
 
-CompilerPanel.ozc: $(DUMPINTRO) $(COMPILERPANELSRC) SP.env \
-	OP.env WP.env Compiler.env \
-	Browser.env CompilerPanel.env Init.ozc
+CompilerPanel.ozc: $(DUMPINTRO) $(COMPILERPANELSRC) SP.env OP.env WP.env \
+	Compiler.env Browser.env CompilerPanel.env Init.ozc
 
 Panel.ozc: $(DUMPINTRO) $(PANELSRC) SP.env OP.env \
 	WP.env Panel.env Init.ozc
@@ -319,12 +320,10 @@ Browser.ozc: $(DUMPINTRO) $(BROWSERSRC) SP.env CP.env \
 Explorer.ozc: $(DUMPINTRO) $(EXPLORERSRC) SP.env WP.env \
 	Browser.env Explorer.env Init.ozc
 
-Emacs.ozc: $(DUMPINTRO) $(EMACSSRC) SP.env OP.env \
-	Emacs.env Init.ozc
+Emacs.ozc: $(DUMPINTRO) $(EMACSSRC) SP.env OP.env Emacs.env Init.ozc
 
 Ozcar.ozc: $(DUMPINTRO) $(OZCARSRC) SP.env WP.env \
-	Browser.env Emacs.env Compiler.env \
-	Ozcar.env Init.ozc
+	Browser.env Emacs.env Compiler.env Ozcar.env Init.ozc
 
 ozcar-version.oz: $(OZCARSRCNOVER)
 	echo \'`date '+%b %d'`\' > $@
@@ -333,14 +332,12 @@ Profiler.ozc: $(DUMPINTRO) $(PROFILERSRC) SP.env OP.env \
 	WP.env Browser.env Emacs.env \
 	Compiler.env Profiler.env Init.ozc
 
-Gump.ozc: $(DUMPINTRO) $(GUMPSRC) SP.env OP.env \
-	Gump.env
+Gump.ozc: $(DUMPINTRO) $(GUMPSRC) compiler/TupleSyntax.oz compiler/Misc.oz \
+	compiler/FormatStrings.oz SP.env OP.env Gump.env
 
-GumpScanner.ozc: $(DUMPINTRO) $(GUMPSCANNERSRC) SP.env \
-	GumpScanner.env
+GumpScanner.ozc: $(DUMPINTRO) $(GUMPSCANNERSRC) SP.env GumpScanner.env
 
-GumpParser.ozc: $(DUMPINTRO) $(GUMPPARSERSRC) SP.env \
-	GumpParser.env
+GumpParser.ozc: $(DUMPINTRO) $(GUMPPARSERSRC) SP.env GumpParser.env
 
 Makefile: Makefile.in config.status
 	./config.status
@@ -358,4 +355,3 @@ tags:
 
 bootstrap: ${OZMA_LIB}
 	make Init.ozc all OZBATCH=$(SRCDIR)/ozbatch.sh
-
