@@ -1,81 +1,167 @@
 <Section id="section.api.engines">
   <Title/Compiler Engines/
   <P>
-    A compiler engine is an instance of the final class <<Compiler.engine>>:
-    <<<E = {New Compiler.engine init()}>>>
-    Each instance of this class is an active object encapsulating the
-    state of a compiler, consisting of a list of defined macro names,
-    the state of a number of boolean compiler switches, an environment,
-    and the query queue.  These are described in the following sections.
+    Instances of the <<Compiler.engine>> class are active objects called
+    <Def/compiler engines/.  The object's thread processes all <Def/queries/
+    inside its <Def/query queue/ sequentially.
+  <P>
+    The final class <<Compiler.engine>> is a subclass of <<Narrator.'class'>>.
+    As such, it understands all methods of this class, described in
+    <Ptr to="appendix.narrator">.
   <SubSection>
-    <Title/Macro Definitions/
+    <Title/Methods of the <<Compiler.engine>> Class/
     <P>
-      The list of macro names currently defined is used by the
-      parser to resolve macro directives such as <<\ifdef>> (see
-      <Ptr to="section.directives.macro">).
-    <P>
-      Initially, this list only consists of macro names describing the
-      Oz version number, &eg;, when running Oz&nbsp;3.0.10, the list is
-      <<['Oz_3' 'Oz_3_0' 'Oz_3_0_10']>>.
-  <SubSection>
-    <Title/Compiler Switches/
-    <P>
-      The current state of the compiler switches is given by a mapping
-      from switch names to boolean values.  Each compiler engine manages
-      a stack of switch states, the top element of which is taken as the
-      active state.  This is useful to temporarily escape into a different
-      mode of compiler operation, execute some queries and pop back to the
-      saved state.
-    <P>
-      The available switches and their effects on the compilation process
-      are described in detail in <Ptr to="appendix.switches">.
-  <SubSection>
-    <Title/The Environment/
-    <P>
-      An environment is a mapping from variable print names to arbitrary
-      Oz values.  Initially, the environment of a newly created Compiler
-      Engine contains the variables declared by the Oz Standard Modules as
-      well as the following backquote variable:
       <List>
-        <Entry><<`Compiler`>>
+        <Entry><<enqueue>>
+        <Synopsis>
+          <<enqueue(?+{T} ??{I} &lt;= _)>>
+        <Synopsis>
+          <<enqueue(?+{Ts} ??{Is} &lt;= _)>>
         <Item>
-          A reference to the Compiler Engine itself.
-        </List>
-    <P>
-      Environments are first class; that is, they may be enquired,
-      set or extended by records whose features are valid variable
-      print names, &eg;, <<env('Show': System.show)>>.
+          appends a new query&nbsp;?_{T} to the query queue.  If ?_{T} is
+          an unknown query, an exception is raised immediately.  All of
+          the query's input arguments (the subtrees of&nbsp;?_{T}) are
+          type-checked before it is enqueued.
+        <P>
+          Internally, each enqueued query is assigned a unique identification
+          number&nbsp;?_{I}.  This may be used later to remove the query from
+          the queue (unless its execution has already begun or terminated).
+        <P>
+          The argument to enqueue may also be a <Em/list/ of queries:
+          These are guaranteed to be executed in sequence without other
+          queries interleaving.  The second argument then returns a list
+          of identification numbers.
+
+        <Entry><<dequeue>>
+        <Synopsis>
+          <<dequeue(?+{I})>>
+        <Item>
+          dequeues the query with identification number&nbsp;?_{I}, if such
+          a query is still waiting in the query queue for execution, else
+          does nothing.
+
+        <Entry><<interrupt>>
+        <Synopsis>
+          <<interrupt()>>
+        <Item>
+          interrupts execution of the current query.  Does not affect the
+          remaining queue.
+
+        <Entry><<clearQueue>>
+        <Synopsis>
+          <<clearQueue()>>
+        <Item>
+          flushes the whole remaining queue.  Does not affect the currently
+          processed query (if any).
+      </List>
   <SubSection>
-    <Title/The Query Queue/
+    <Title/Queries/
     <P>
-      The entries in the query queue are executed sequentially by
-      the object's internal thread.  A new query can be enqueued by
-      <Code display>{E enqueue(M)}</Code>
-      This operation blocks until the query <<M>> and its input arguments
-      are fully determined, then either raises an exception if it is an
-      unknown or ill-typed query, or immediately returns.  Internally,
-      each enqueued query is assigned a unique identification number which
-      is obtained by adding an output argument to the <<enqueue>> message:
-      <Code display>{E enqueue(M ?Id)}</Code>
-      The identification may be used later to remove the query from the
-      queue (unless its execution has already begun or terminated):
-      <Code display>{E dequeue(Id)}</Code>
-    <P>
-      The execution of the current query may be abandoned by use of the
-      <<interrupt()>> message and the whole remaining queue may be flushed
-      via <<clearQueue()>>.
-    <P>
-      The argument to enqueue may also be a <Em>list</Em> of queries:
-      These are guaranteed to be executed in sequence without other
-      queries interleaving.  The second argument then returns a list of
-      identification numbers.
+      This chapter documents the queries understood by the Mozart Compiler.
     <P>
       Some queries request state information from the compiler engine.
       The corresponding output variables only become bound when the query
       is actually executed.  If binding an output variable raises an
       exception, an error is reported through the registered interfaces
       (see <Ptr to="section.api.interfaces">).
-    <P>
-      The queries understood by the compiler are listed in <Ptr
-      to="appendix.queries">.
+    <Para class=apropos><Title/Macro Definitions/
+      <List>
+        <Entry><<macroDefine(?+{V})>>
+        <Item>
+          Add ?_{V} to the set of defined macro names.
+        <Entry><<macroUndef(?+{V})>>
+        <Item>
+          Remove ?_{V} from the set of defined macro names.
+        <Entry><<getDefines(??{PrintNames})>>
+        <Item>
+          Return all currently defined macro names as a list, in no
+          particular order.
+      </List>
+    <Para class=apropos><Title/Compiler Switches/
+      <List>
+        <Entry><<setSwitch(?+{SwitchName} ?+{B})>>
+        <Item>
+          Set the state of the given switch to either <Q class=quasi
+          /on/, if <<?_{B} == true>>, or to <Q class=quasi/off/, if
+          <<?_{B} == false>>.
+        <Entry><<getSwitch(?+{SwitchName} ??{B})>>
+        <Item>
+          Return the state of the given switch.
+        <Entry><<pushSwitches()>>
+        <Item>
+          Save the current settings of all switches onto the internal switch
+          state stack.
+        <Entry><<popSwitches()>>
+        <Item>
+          Restore all switch settings from the topmost element of the
+          internal switch state stack, provided it is not empty, else do
+          nothing.
+        <Entry><<setMaxNumberOfErrors(?+{I})>>
+        <Item>
+          Set the maximal number of errors to report for any one compilation
+          before aborting it to&nbsp;?_{I}.  A negative value means never to
+          abort.
+        <Entry><<getMaxNumberOfErrors(??{I})>>
+        <Item>
+          Return the maximal number of errors to report for any one
+          compilation before aborting it.
+      </List>
+    <Para class=apropos><Title/The Environment/
+      <List>
+        <Entry><<addToEnv(?+{PrintName} ?_{X})>>
+        <Item>
+          Add a binding for a variable with the given print name, and
+          bound to&nbsp;?_{X}, to the environment.
+        <Entry><<lookupInEnv(?+{PrintName} ?_{X})>>
+        <Item>
+          Look up the binding for the variable with the given print name
+          (specified as an atom ?_{PrintName}) in the environment and
+          bind ?_{X} to the value it's bound to.  If it does not exist,
+          report an error.
+        <Entry><<removeFromEnv(?+{PrintName})>>
+        <Item>
+          Remove the binding for the variable with the given print name
+          (specified as an atom ?_{PrintName}) from the environment if it
+          exists.
+        <Entry><<putEnv(?+{Env})>>
+        <Item>
+          Replace the current environment by the one given by ?_{Env}.
+        <Entry><<mergeEnv(?+{Env})>>
+        <Item>
+          Adjoin ?_{Env} to the current environment, overwriting already
+          existing bindings.
+        <Entry><<getEnv(??{Env})>>
+        <Item>
+          Return the current environment.
+      </List>
+    <Para class=apropos><Title/Feeding Source Text/
+      <List>
+        <Entry><<feedVirtualString(?+{V})>>
+        <Item>
+          Evaluate the Oz source code given by the virtual string&nbsp;?_{V}.
+        <Entry><<feedVirtualString(?+{V} ?+{R})>>
+        <Item>
+          Evaluate the Oz source code given by the virtual string&nbsp;?_{V},
+          returning the resulting value in <<?_{R}.result>> (if the
+          <Code><Span class=ignore>\switch +</Span>expression</Code>
+          switch is set).
+        <Entry><<feedFile(?+{V})>>
+        <Item>
+          Evaluate the Oz source code contained in the file with
+          name&nbsp;?_{V}.
+        <Entry><<feedFile(?+{V} ?+{R})>>
+        <Item>
+          Evaluate the Oz source code contained in the file with
+          name&nbsp;?_{V}, returning the resulting value in
+          <<?_{R}.result>> (if the <Code><Span class=ignore
+          /\switch +/expression</Code> switch is set).
+      </List>
+    <Para class=apropos><Title/Synchronization/
+      <List>
+        <Entry><<ping(??{U})>>
+        <Item>
+          Bind the variable ?_{U} to <<unit>> on execution of this
+          query.  This allows to synchronize on the work of the compiler,
+          &eg;, to be informed when a compilation is finished.
+      </List>
 </Section>

@@ -19,7 +19,7 @@ SGMLSRCS = \
         compiler.sgml \
         intro.sgml directives.sgml ozbatch.sgml panel.sgml \
         api.sgml engines.sgml interfaces.sgml \
-        switches.sgml queries.sgml notifications.sgml
+        switches.sgml narrator.sgml
 OZSRCS = \
         QuietInterface.oz EmacsInterface.oz CompilerPanel.oz
 

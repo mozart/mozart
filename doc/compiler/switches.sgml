@@ -17,8 +17,9 @@
           (default: <<false>>)
         <Item>
           Show the names of files as they get inserted by the <<\insert>>
-          macro directive, after their name has been resolved by means of
-          the environment variable <Var type=env/OZPATH/.
+          macro directive, after their name has been resolved by means
+          of the environment variable <Var type=env/OZPATH/ (see <Ptr
+          to="section.directives.macro">).
         <Entry><Code><Span class=ignore/\switch +/echoqueries</Code>
           (default: <<true>>)
         <Item>
@@ -58,7 +59,7 @@
         <Entry><Code><Span class=ignore/\switch +/warnforward</Code>
           (default: <<false>>)
         <Item>
-          Warn about uses of features, attributes or methods which are not
+          Warn about uses of features, attributes, or methods which are not
           known to be declared in the enclosing class.
         <Entry><Code><Span class=ignore/\switch +/warnopt</Code>
           (default: <<false>>)
@@ -81,7 +82,8 @@
         <Item>
           Compile expressions, not statements.  The result of an evaluated
           expression can be obtained through an output argument of the
-          enqueued query (see <Ptr to="appendix.queries">).
+          enqueued query (see <Ptr to="section.api.engines">) or the variable
+          ?_{`result`}.
         <Entry><Code><Span class=ignore/\switch +/allowdeprecated</Code>
           (default: <<true>>)
         <Item>
@@ -94,7 +96,7 @@
           Allow Gump definitions.  If this switch is off, Gump keywords are
           parsed as ordinary atoms.
       </List>
-      The remaining Gump-related switches are described in <Ptr
+      The remaining Gump-related switches are described in&nbsp;<Ptr
       to="mozart-gump">.
   <Section class=unnumbered>
     <Title/II&dot; Static Analysis/
@@ -103,8 +105,8 @@
         <Entry><Code><Span class=ignore/\switch +/staticanalysis</Code>
           (default: <<true>>)
         <Item>
-          Perform static analysis.  Switching this off has severe impact
-          on optimization.
+          Perform static analysis.  Switching this off has severe impacts
+          on optimization and error reporting.
       </List>
   <Section class=unnumbered>
     <Title/III&dot; Core Output/
@@ -139,7 +141,7 @@
         <Entry><Code><Span class=ignore/\switch +/outputcode</Code>
           (default: <<false>>)
         <Item>
-          Output the generated code as human-readable assembler code.
+          Output the generated code as human-readable assembly code.
       </List>
   <Section class=unnumbered>
     <Title/V&dot; Feeding to the Emulator/
@@ -152,7 +154,7 @@
         <Entry><Code><Span class=ignore/\switch +/threadedqueries</Code>
           (default: <<true>>)
         <Item>
-          Execute each piece of generated code in a seperate thread without
+          Execute each piece of generated code in a separate thread without
           waiting for it to terminate before proceeding to the next query.
         <Entry><Code><Span class=ignore/\switch +/profile</Code>
           (default: <<false>>)
@@ -162,11 +164,12 @@
   <Section class=unnumbered>
     <Title/VI&dot; Debugging/
     <P>
+      <!--** reference to Ozcar manual -->
       <List>
         <Entry><Code><Span class=ignore/\switch +/runwithdebugger</Code>
           (default: <<false>>)
         <Item>
-          Place a static breakpoint on the first statement of each each
+          Place a static breakpoint on the first statement of each
           compiled query.
         <Entry><Code><Span class=ignore/\switch +/debuginfocontrol</Code>
           (default: <<false>>)
