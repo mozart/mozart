@@ -126,9 +126,11 @@
 /* ## distant socket read. keeps changes in a single place */
 int urlc_read_from_socket(int sockfd, char* buf, int len)
 {
-    int n = 0;
+  int n;
+  do {
     n = osread(sockfd, buf, len);
-    return (n);
+  } while (n<0 && ossockerrno()==EWOULDBLOCK);
+  return n;
 }
 
 

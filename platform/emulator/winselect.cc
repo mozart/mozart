@@ -168,8 +168,6 @@ void deleteReader(IOChannel *ch)
   ch->thrd = 0;
 }
 
-static int maxfd = 0; /* highest fd for which we ever created a reader */
-
 Bool createReader(int fd)
 {
   IOChannel *sr = findChannel(fd);
@@ -183,7 +181,6 @@ Bool createReader(int fd)
   unsigned thrid;
   sr->thrd = CreateThread(0,10000,&readerThread,sr,0,&thrid);
   if (sr->thrd != 0) {
-    maxfd = max(fd+1,maxfd);
     return OK;
   }
 
@@ -201,12 +198,15 @@ int splitFDs(fd_set *in, fd_set *out)
 {
   FD_ZERO(out);
 
+  /* hack: optimized scanning "in" by using definition of adt "fd_set" */
   int ret=0;
-  for (int i=0; i <= maxSocket; i++) {
-    if (isSocket(i) && FD_ISSET(i,in)) {
+  fd_set copyin = *in;
+  for (int i = 0; i < copyin.fd_count ; i++) {
+    int fd = copyin.fd_array[i];
+    if (isSocket(fd)) {
       ret++;
-      OZ_FD_CLR(i,in);
-      OZ_FD_SET(i,out);
+      OZ_FD_CLR(fd,in);
+      OZ_FD_SET(fd,out);
     }
   }
   return ret;
@@ -226,10 +226,10 @@ int getAvailFDs(fd_set *rfds, fd_set *wfds)
   if (numsockets>0) {
     ret += nonBlockSelect(maxSocket+1,&rselectfds,&wselectfds);
     if (ret<0) {
-      return ret;
       //message("ret<0: %d,%d,%d\n",maxSocket+1,WSAGetLastError(),numsockets);
       //printfds(&rselectfds);
       //printfds(&socketFDs);
+      return ret;
     }
   }
 

@@ -574,12 +574,66 @@ void ozFree(char *p, size_t ignored)
 
 #else
 
+#ifdef WINDOWS
+
+class MemList {
+public:
+  size_t sz;
+  char *mem;
+  static MemList *allchunks;
+  MemList *next;
+
+  MemList(size_t s, char *m, MemList *nxt): sz(s), mem(m), next(nxt) {}
+
+  static char *find(size_t size)
+  {
+    MemList *aux = allchunks;
+    if (aux==NULL) return NULL;
+    if (aux->sz==size) {
+      allchunks = aux->next;
+      char *ret = aux->mem;
+      delete aux;
+      return ret;
+    }
+    while (aux->next) {
+      if (aux->next->sz==size) {
+        MemList *aux2 = aux->next;
+        char *ret = aux2->mem;
+        aux->next = aux2->next;
+        delete aux2;
+        return ret;
+      }
+    }
+    return NULL;
+  }
+
+  static void add(char *m,size_t size) { allchunks = new MemList(size,m,allchunks); }
+};
+
+MemList *MemList::allchunks = NULL;
+
+#endif
+
 void ozFree(char *addr, size_t ignored) {
+#ifdef WINDOWS
+  message("free = 0x%p\n",addr);
+  MemList::add(addr,ignored);
+#else
   free(addr);
+#endif
 }
 
 void *ozMalloc(size_t size) {
+#ifdef WINDOWS
+  void *ret = MemList::find(size);
+  if (ret == NULL) {
+    ret = malloc(size);
+    message("malloc(%d)=0x%p\n",size,ret);
+  }
+  return ret;
+#else
   return malloc(size);
+#endif
 }
 
 #endif
@@ -701,6 +755,7 @@ char *getMemFromOS(size_t sz) {
 
   if (heapEnd == NULL) {
     fprintf(stderr,"Virtual memory exceeded\n");
+    message("mem exhausted2(%d)\n",sz);
     am.exitOz(1);
   }
 
