@@ -234,7 +234,7 @@ OZ_Term * OZ_getOzTermVector(OZ_Term t, OZ_Term * v)
 
     ;
 
-  } if (oz_isCons(t)) {
+  } else if (oz_isCons(t)) {
 
     do {
       v[i++] = oz_head(t);
