@@ -116,12 +116,20 @@
 /* do we have setpgid? */
 #undef HAVE_SETPGID
 
+/* do we have .byte V and .p2align N,V */
+#undef AS_HAS_BYTE_AND_P2ALIGN
+
+/* do we have .byte V and .align N,V */
+#undef AS_HAS_BYTE_AND_ALIGN
+
 /* does .align n align to 1<<n */
 #undef AS_HAS_POWER_ALIGN
 
 /* does .align n align to n */
 #undef AS_HAS_MULTIPLE_ALIGN
 
+/* does the assembler support the trick of inlining the opcode map */
+#undef AS_CAN_INLINE_OPCODE_MAP
 
 /* Define if dlopen needs a leading underscore. */
 #undef DLOPEN_UNDERSCORE
