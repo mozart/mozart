@@ -214,46 +214,54 @@ TaggedRef TaskStack::findAbstrRecord(void)
 {
   Frame * frame = getTop();
   PrTabEntry * abstr = NULL;
+  OZ_Term return_value = NameUnit;
 
   while (1) {
     GetFrame(frame,PC,Y,G);
-
+    //
     if (PC == C_EMPTY_STACK) {
       frame = NULL;
-      return NameUnit;
+      return return_value;
     }
-
     if (PC == C_DEBUG_CONT_Ptr) {
       OzDebug *dbg = (OzDebug *) Y;
       abstr = dbg->CAP->getPred();
     }
-
-    if (PC == C_SET_ABSTR_Ptr && abstr != NULL) {
+    //
+    if (PC == C_SET_ABSTR_Ptr && abstr != NULL &&
+        strcmp(abstr->getPrintName(), "")) {
       unsigned invoc_counter = (unsigned) G;
-
-
-      const char * fname = OZ_atomToC(abstr->getFile());
-      char * dirname, * basename;
-
-      splitfname(fname, dirname, basename);
-
-      OZ_Term prop_loc =
-        OZ_record(AtomPropInvoc,
-                  OZ_cons(AtomName,
-                          OZ_cons(AtomFile,
-                                  OZ_cons(AtomLine,
-                                          OZ_cons(AtomColumn,
-                                                  OZ_cons(AtomPath,
-                                                          OZ_cons(AtomInvoc,
-                                                                  OZ_nil())))))));
-      OZ_putSubtree(prop_loc, AtomName, abstr->getName());
-      OZ_putSubtree(prop_loc, AtomPath, OZ_atom(dirname));
-      OZ_putSubtree(prop_loc, AtomFile, OZ_atom(basename));
-      OZ_putSubtree(prop_loc, AtomLine, OZ_int(abstr->getLine()));
-      OZ_putSubtree(prop_loc, AtomColumn, OZ_int(abstr->getColumn()));
-      OZ_putSubtree(prop_loc, AtomInvoc, OZ_int(invoc_counter));
-
-      return prop_loc;
+      //
+      if (return_value == NameUnit) {
+        // retrieve information for enclosing procedure
+        const char * fname = OZ_atomToC(abstr->getFile());
+        char * dirname, * basename;
+        //
+        splitfname(fname, dirname, basename);
+        //
+        return_value =
+          OZ_record(AtomPropInvoc,
+                    OZ_cons(AtomName,
+                            OZ_cons(AtomCallerInvoc,
+                                    OZ_cons(AtomFile,
+                                            OZ_cons(AtomLine,
+                                                    OZ_cons(AtomColumn,
+                                                            OZ_cons(AtomPath,
+                                                                    OZ_cons(AtomInvoc,
+                                                                            OZ_nil()))))))));
+        //
+        OZ_putSubtree(return_value, AtomName, abstr->getName());
+        OZ_putSubtree(return_value, AtomPath, OZ_atom(dirname));
+        OZ_putSubtree(return_value, AtomFile, OZ_atom(basename));
+        OZ_putSubtree(return_value, AtomLine, OZ_int(abstr->getLine()));
+        OZ_putSubtree(return_value, AtomColumn, OZ_int(abstr->getColumn()));
+        OZ_putSubtree(return_value, AtomInvoc, OZ_int(invoc_counter));
+        OZ_putSubtree(return_value, AtomCallerInvoc, NameUnit);
+      } else {
+        // retrieve information for procedure calling enclosing procedure
+        OZ_putSubtree(return_value, AtomCallerInvoc, OZ_int(invoc_counter));
+        return return_value;
+      }
     }
   }
 }
