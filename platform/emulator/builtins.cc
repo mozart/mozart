@@ -507,8 +507,7 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
             TaggedRef dt = oz_deref(tf);
             if (oz_isName(dt) && oz_eq(dt,NameOoFreeFlag))
               goto no_feature;
-          } else {
-            goto no_feature;
+            return PROCEED;
           }
         }
         goto no_feature;
