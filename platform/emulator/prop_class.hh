@@ -41,6 +41,7 @@ enum PropagatorFlag {
   P_ofs      = 0x000040,
   P_ext      = 0x000080,
   P_unify    = 0x000100,
+  P_failed   = 0x000200,
   P_max      = 0x800000
 };
 
@@ -99,6 +100,13 @@ public:
     return _b;
   }
   
+  Bool isFailed(void) {
+    return ISMARKEDFLAG(P_failed);
+  }
+  void markFailed(void) {
+    MARKFLAG(P_failed);
+  }
+
   Bool isDeadPropagator(void) {
     return ISMARKEDFLAG(P_dead);
   }
