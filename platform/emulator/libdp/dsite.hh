@@ -48,7 +48,10 @@
 // and (re-)transmit virtual info, thus, 'key_t' data.
 // The following definition is safe in the current implementation
 // since marshaler/unmarshaler already assumes that;
-typedef unsigned int key_t;
+// CS CS CS: LOOK KOSTJA
+#include <sys/ipc.h>
+#include <sys/shm.h>
+// typedef unsigned int key_t;
 #endif
 
 /**********************************************************************/
