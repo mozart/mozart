@@ -211,6 +211,10 @@ error include resources.hh before mozart.h
 
 //#define SLOW_DEBUG_CHECK
 //#define DEBUG_GC
+//#define DEBUG_MEM
+#if defined(DEBUG_GC) && !defined(DEBUG_MEM)
+#define DEBUG_MEM
+#endif
 //#define DEBUG_VERBOSE
 #define RECINSTRFETCH 500
 
@@ -224,7 +228,6 @@ error include resources.hh before mozart.h
 #define DEBUG_DET       // use counter instead of alarm timer for scheduling
 
 //#define PROFILE_FD
-//#define DEBUG_MEM
 
 #define OUTLINE         // do not inline functions
 

@@ -273,6 +273,8 @@ void AM::init(int argc,char **argv)
   _currentBoard = NULL;
   cachedStack  = NULL;
   cachedSelf   = NULL;
+  gcStep = OddGCStep;
+  copyStep = 0;
   setInEqEq(FALSE);
   setCurrent(_rootBoard, _rootBoard->getOptVar());
 

@@ -64,8 +64,10 @@ Board::Board()
     status(taggedVoidValue), rootVar(taggedVoidValue),
     script(taggedVoidValue), parent(NULL), flags(BoTag_Root)
 {
+  Assert((int) OddGCStep == 0x0 && (int) EvenGCStep == (int) BoTag_EvenGC);
   optVar = makeTaggedVar(new OptVar(this));
   lpq.init();
+  setGCStep(oz_getGCStep());
 }
 
 
@@ -78,6 +80,7 @@ Board::Board(Board * p)
   status  = oz_newFuture(p);
   optVar = makeTaggedVar(new OptVar(this));
   rootVar = makeTaggedRef(newTaggedOptVar(optVar));
+  setGCStep(oz_getGCStep());
   lpq.init();
 #ifdef CS_PROFILE
   orig_start  = (int32 *) NULL;

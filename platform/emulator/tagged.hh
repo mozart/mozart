@@ -74,11 +74,17 @@ enum TypeOfTerm {
 #define TAG_LOWERMASK 3
 #define TAG_PTRBITS   2
 
+// '!'
+#define TAG_NEW_MASK    0x7
+//
+// double- and singe-word aligned references.
+#define isDWAligned(ptr)  (((int32)ToInt32(ptr) & TAG_NEW_MASK) == TAG_REF)
+#define isSWAligned(ptr)  (((int32)ToInt32(ptr) & TAG_NEW_MASK) == TAG_REF2)
+
 /*
  * Basic macros
  *
  */
-
 
 #define _tagTypeOf(ref)          ((TypeOfTerm)(ref&TAG_MASK))
 

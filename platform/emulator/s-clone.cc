@@ -75,6 +75,7 @@ Board * Board::clone(void) {
   cpTrail.init();
   vf.init();
   cacStack.init();
+  am.nextCopyStep();
 
 #ifdef CS_PROFILE
   across_redid  = NO;

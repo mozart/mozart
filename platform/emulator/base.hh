@@ -136,6 +136,11 @@ enum PropCaller {
   pc_all = 3
 };
 
+enum GCStep {
+  OddGCStep     = 0x0,
+  EvenGCStep    = 0x10
+};
+
 typedef OZ_Return (*InlineRel1)(TaggedRef In1);
 typedef OZ_Return (*InlineRel2)(TaggedRef In1, TaggedRef In2);
 typedef OZ_Return (*InlineRel3)(TaggedRef In1, TaggedRef In2, TaggedRef In3);

@@ -1003,6 +1003,7 @@ void AM::gCollect(int msgLevel) {
   gCollectWeakDictionariesInit();
   vf.init();
   cacStack.init();
+  am.nextGCStep();
 
   (*gCollectPerdioStart)();
 

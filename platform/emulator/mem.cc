@@ -797,15 +797,15 @@ Bool MemChunks::isInHeap(TaggedRef term)
     return NO;
   }
   if (!oz_isRef(term)) {
-    switch (tagTypeOf (term)) {
+    switch (tagTypeOf(term)) {
       // kost@ : let's debug variables as well..  I see though no
       // system here: what is debugged and what is not.
-    case VAR:
-    case LTUPLE:
-    case OZCONST:
+    case TAG_VAR:
+    case TAG_LTUPLE:
+    case TAG_CONST:
       if (oz_isBuiltin(term)) return OK;
       // no break
-    case SRECORD:
+    case TAG_SRECORD:
       if (!list->inChunkChain(tagValueOf(term))) {
         return NO;
       }
@@ -885,7 +885,6 @@ void _oz_getNewHeapChunk(const size_t raw_sz) {
 #ifdef CS_PROFILE
   across_chunks = OK;
 #endif
-
 }
 
 /*
