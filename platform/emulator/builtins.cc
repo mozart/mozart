@@ -7075,7 +7075,7 @@ OZ_C_proc_begin(BIbiExceptionHandler,1)
   OZ_Term arg=OZ_getCArg(0);
 
   errorHeader();
-  message("UNCATCHED EXCEPTION: %s\n",toC(arg));
+  message("UNCAUGHT EXCEPTION: %s\n",toC(arg));
   errorTrailer();
 
   return am.isToplevel() ? PROCEED : FAILED;
