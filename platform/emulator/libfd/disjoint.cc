@@ -195,7 +195,9 @@ protected:
   void * alloc(int n) { return OZ_hallocChars(n); }
   virtual void _gc(void) = 0;
 public:
-  void gc(void) { _gc(); }
+  void gc(void) {
+    _gc();
+  }
 };
 
 class PropAlloc {
@@ -690,6 +692,7 @@ public:
       _el[i].gc();
     }
   }
+  virtual size_t sizeOf(void) { return sizeof(TasksOverlapPropagator); }
 };
 
 //-----------------------------------------------------------------------------
@@ -976,9 +979,9 @@ OZ_Return TasksOverlapPropagator::propagate(void)
     //
   end:
     ;
-  } while (_prop_queue_cl1.isEmpty() &&
-           _prop_queue_cl2.isEmpty() &&
-           _prop_queue_cl3.isEmpty());
+  } while (!_prop_queue_cl1.isEmpty() ||
+           !_prop_queue_cl2.isEmpty() ||
+           !_prop_queue_cl3.isEmpty());
   // lift common information
   {
     OZ_FiniteDomain u_t1(fd_empty), u_t2(fd_empty), u_o(fd_empty);
