@@ -72,6 +72,7 @@ define
          [] K|Kr then
             case K
             of "__extension__"              then ""
+            [] "((noreturn));"              then ""
             [] "__ssize_t"                  then "unsigned int"
             [] "(__const"                   then "(const"
             [] "__const"                    then "const"
@@ -83,6 +84,7 @@ define
             [] "__attribute__((format"      then {IncCounter} ";"
             [] "__attribute__(("            then {IncCounter} ""
             [] "__attribute__((__cdecl__))" then ""
+            [] "__attribute__((dllimport))" then ""
             [] "dllimport"                  then ""
             [] "))"                         then
                if {DecCounter} then "" else "))" end
