@@ -1315,22 +1315,6 @@ $cmode='stat';
     ######
     ###* Foreign Pointers
 
-    'isForeignPointer'	=> { in  => ['+value'],
-			     out => ['+bool'],
-			     BI  => BIisForeignPointer ,
-			     native => false},
-
-    'ForeignPointerToInt'=> { in  => ['+foreignPointer'],
-			      out => ['+int'],
-			      BI  => BIForeignPointerToInt,
-			      native => false},
-
-
-    'onToplevel'	=> { in  => [],
-			     out => ['+bool'],
-			     BI  => BIonToplevel,
-			     native => false},
-
     'setDefaultExceptionHandler'=> { in  => ['+procedure/1'],
 				     out => [],
 				     BI  => BIsetDefaultExceptionHandler,
