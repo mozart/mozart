@@ -366,10 +366,18 @@ void GenTraverser::doit()
       break;
 
     case TAG_UVAR:
-      // marshaled&exported UVar"s become CVar"s, so:
-      Assert(findVarLocation(tPtr) < 0);
-      processUVar(t, tPtr);
-      break;
+      {
+	// e.g. variable excavators are not required to convert uvar"s
+	// to cvar"s, so there can be repetitions for them as well:
+	int ind = findVarLocation(tPtr);
+	if (ind >= 0) {
+	  processRepetition(t, tPtr, ind);
+	  break;
+	} else {
+	  processUVar(t, tPtr);
+	  break;
+	}
+      }
 
     case TAG_CVAR:
       {
@@ -380,11 +388,10 @@ void GenTraverser::doit()
 	if (ind >= 0) {
 	  processRepetition(t, tPtr, ind);
 	  break;
+	} else {
+	  processCVar(t, tPtr);
+	  break;
 	}
-
-	//
-	processCVar(t, tPtr);
-	break;
       }
 
     case TAG_GCMARK:
