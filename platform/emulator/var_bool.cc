@@ -35,6 +35,34 @@
 
 #ifdef TMUELLER
 //-----------------------------------------------------------------------------
+OZ_Return OzBoolVariable::bind(OZ_Term * vPtr, OZ_Term term)
+{
+  Assert(!oz_isRef(term));
+
+  if (!oz_isSmallInt(term)) {
+    return FAILED;
+  }
+  int term_val = smallIntValue(term);
+  if (term_val < 0 || 1 < term_val) {
+    return FAILED;
+  }
+
+  Bool isLocalVar = oz_isLocalVar(this);
+
+  if (!am.inEqEq() && isLocalVar) {
+    propagate();
+  }
+  if (oz_isLocalVar(this)) {
+    bindLocalVarToValue(vPtr, term);
+    dispose();
+  } else {
+    bindGlobalVarToValue(vPtr, term);
+  }
+
+  return PROCEED;
+}
+//-----------------------------------------------------------------------------
+#else
 OZ_Return OzBoolVariable::bind(TaggedRef * vPtr, TaggedRef term)
 {
   Assert(!oz_isRef(term));
@@ -59,34 +87,6 @@ OZ_Return OzBoolVariable::bind(TaggedRef * vPtr, TaggedRef term)
     dispose();
   } else {
     DoBindAndTrail(vPtr, term);
-  }
-
-  return PROCEED;
-}
-//-----------------------------------------------------------------------------
-#else
-OZ_Return OzBoolVariable::bind(OZ_Term * vPtr, OZ_Term term)
-{
-  Assert(!oz_isRef(term));
-
-  if (!oz_isSmallInt(term)) {
-    return FAILED;
-  }
-  int term_val = smallIntValue(term);
-  if (term_val < 0 || 1 < term_val) {
-    return FAILED;
-  }
-
-  Bool isLocalVar = oz_isLocalVar(this);
-
-  if (!am.inEqEq() && isLocalVar) {
-    propagate();
-  }
-  if (oz_isLocalVar(this)) {
-    bindLocalVarToValue(vPtr, term);
-    dispose();
-  } else {
-    bindGlobalVarToValue(vPtr, term);
   }
 
   return PROCEED;
