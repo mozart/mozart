@@ -70,3 +70,5 @@ veryclean::
         -rm -f *.a *.so Makefile.deps
 
 dpMarshaler.hh marshalMsg.cc: msgFormat.m4
+
+$(DPLIBOBJS): dpMarshaler.hh
