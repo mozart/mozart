@@ -23,6 +23,8 @@ HTMLEXTRAFILES = propagatorstates.gif \
 		mks_fd_explorer.gif \
 		mks_lp_explorer.gif \
 		mks_fdlp_explorer.gif
+HTMLEXTRASUPPORTFILES = \
+	danger.gif
 
 OZDOCHTMLFLAGS =
 
