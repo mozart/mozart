@@ -218,7 +218,7 @@ void xy_setParserExpect() {
 %token dis _else_ elsecase elseif elseof end export fail false FALSE_LABEL
 %token feat finally _from_ _fun_ functor _if_ import _in_ local _lock_
 %token _meth_ not of or prepare proc prop _raise_ require self skip then
-%token thread true TRUE_LABEL try unit UNIT_LABEL with
+%token thread true TRUE_LABEL try unit UNIT_LABEL
 
 %token ENDOFFILE
 
@@ -552,8 +552,6 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                   { $$ = newCTerm("fTry",$3,$4,$5,makeLongPos($2,$7)); }
                 | _raise_ coord inSequence end coord
                   { $$ = newCTerm("fRaise",$3,makeLongPos($2,$5)); }
-                | _raise_ coord inSequence with inSequence end coord
-                  { $$ = newCTerm("fRaiseWith",$3,$5,makeLongPos($2,$7)); }
                 | skip
                   { $$ = newCTerm("fSkip",pos()); }
                 | fail

@@ -1019,8 +1019,6 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "try"                          { return try; }
 "try"/\(                       { return try; }
 "unit"                         { return unit; }
-"with"                         { return with; }
-"with"/\(                      { return with; }
 
 {OZATOM}                       { stripTrans('\''); return OZATOM; }
 "'"[^']*"'"                    { if (get_cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return OZATOM;}
