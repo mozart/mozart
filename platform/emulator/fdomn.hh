@@ -171,6 +171,8 @@ private:
   descr_type getType(void) const {return (descr_type)(((int) descr) & 3);}
   void setType(descr_type t) {descr = (void *) (((int) descr & ~3) | t);}
   void setType(descr_type t, void * p) {descr = (void *) (((int) p) | t);}
+  void setType(FDBitVector * p) {descr = (void *) (((int) p) | bv_descr);}
+  void setType(FDIntervals * p) {descr = (void *) (((int) p) | iv_descr);}
   void set_iv(void * p) {descr = (void *) (((int) p) | iv_descr);}
   FDIntervals * get_iv(void) const {return (FDIntervals *)(((int)descr) & ~3);}
   void set_bv(void * p) {descr = p;}
