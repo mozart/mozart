@@ -176,8 +176,11 @@ define
 					   end#Port}}
 	    end
 	 end
-	 meth getSocket($)   %--** should be replaced by readQuery
-	    @Socket
+	 meth readQueries() VS0 VS in
+	    {@Socket readQuery(?VS0)}
+	    VS = case VS0 of ""#'\n'#VS1 then VS1 else VS0 end
+	    {Listener.'class', getNarrator($) enqueue(feedVirtualString(VS))}
+	    CompilerInterfaceEmacs, readQueries()
 	 end
 	 meth Serve(Ms)
 	    case Ms of M|Mr then
