@@ -35,8 +35,7 @@ a Web server and a servlet.
 <p>A servlet is a program that accepts an input and calculates a result.
 To be precise, it does the following steps:
 <list>
-<item>Get the arguments with which the servlet has been invoked
-by calling <<Application.getCgiArgs>>.
+<item>Get the arguments for the servlet by calling <<Application.getCgiArgs>>.
 A standard application would call <<Application.getCmdArgs>>
 for this purpose.
 The former is used in exactly the same way as the latter,
@@ -62,7 +61,7 @@ The <<Open.html>> class has support for this (see example below).
 It uses a class <<Open.html>> to generate HTML code on the fly.
 You can test it by sending a URL that looks like this:
 <<<
-'http://www.yourdomain.edu/~yourname/small.cgi?number=3D10&amp;text=3DHi+Guys'
+'http://www.you.edu/~you/small.cgi?number=10&amp;text=Hi'
 >>>
 <p>In this example,
 the value <<10>> is passed
