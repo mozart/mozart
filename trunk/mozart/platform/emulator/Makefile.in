@@ -287,6 +287,7 @@ PRGDEP=$(CREATEDFILES) $(OBJS) $(STATIC_MODULETARGETS)
 libs: $(CORE_TARGETS)
 
 first: $(CREATEDFILES)
+	for d in $(SUBDIRS); do (cd $$d; $(MAKE) first); done
 
 emulator.exe: $(PRGDEP)
 	$(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
