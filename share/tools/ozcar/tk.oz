@@ -91,16 +91,16 @@ in
 	 NextTag <- @NextTag - 1
       end
 
-      meth resetTags
-	 ScrolledTitleText,DeleteTags(NextTag <- self.TagBase)
-      end
-
-      meth DeleteTags(N)
-	 case N >= self.TagBase then skip else
-	    N1 = N + 1 in
-	    {self tk(tag delete N1)}
-	    ScrolledTitleText,DeleteTags(N1)
+      meth resetTags($)
+	 W = {self w($)}
+	 fun {MakeBatchList N L}
+	    case N >= self.TagBase then L else
+	       N1 = N + 1 in
+	       {MakeBatchList N1 o(W tag delete N1)|L}
+	    end
 	 end
+      in
+	 {MakeBatchList NextTag<-self.TagBase nil}
       end
    end
 
