@@ -1653,7 +1653,7 @@ int osDlclose(void* handle)
 #endif
 
 #ifdef WINDOWS
-  FreeLibrary(handle);
+  FreeLibrary((HMODULE)handle);
 #endif
 
   return 0;
