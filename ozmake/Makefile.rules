@@ -30,3 +30,6 @@ install-prebuilt:
 	$(INSTALL_FILE) ozmake.ozf $(PKGDIR)/ozmake.ozf
 	$(INSTALL_FILE) ozmake $(PKGDIR)/ozmake
 	$(INSTALL_FILE) ozmake.exe $(PKGDIR)/ozmake.exe
+	$(INSTALL_FILE) ozmake.ozf $(PKGDIR)/ozmake-$(VERSION).ozf
+	$(INSTALL_FILE) ozmake $(PKGDIR)/ozmake-$(VERSION)
+	$(INSTALL_FILE) ozmake.exe $(PKGDIR)/ozmake-$(VERSION).exe
