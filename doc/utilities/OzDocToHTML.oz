@@ -193,6 +193,7 @@ define
 	 OutputDirectory: unit CurrentNode: unit NodeCounter: unit
 	 ToWrite: unit
 	 Split: unit
+	 Threading: unit
 	 SomeSplit: unit
 	 % managing common attributes:
 	 Common: unit BodyCommon: unit
@@ -246,17 +247,19 @@ define
 			   {New MathToGIF.'class' init(@OutputDirectory)}
 			else unit
 			end
-	 Split <- Args.'split'
-	 SomeSplit <- false
 	 CurrentNode <- 'index.html'
 	 NodeCounter <- 0
 	 ToWrite <- nil
+	 Split <- Args.'split'
+	 SomeSplit <- false
+	 Threading <- nil
 	 ProgLang <- Fontifier.noProgLang
 	 Labels <- {NewDictionary}
 	 ToGenerate <- nil
 	 AutoIndex <- Args.'autoindex'
 	 OzDocToHTML, Process(SGML unit)
 	 OzDocToHTML, GenerateLabels()
+	 OzDocToHTML, DoThreading({Reverse @Threading})
 	 {ForAll {Dictionary.items @Labels}
 	  proc {$ N#T}
 	     if {IsFree N} then N#T = 'file:///dev/null'#PCDATA('???') end
@@ -404,16 +407,13 @@ define
 			  ToGenerate <- Label|@ToGenerate
 			  TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
 			  @BibNode = @CurrentNode
+			  Threading <- sect(@CurrentNode Label)|@Threading
 			  HTML = SEQ([HTML1
 				      h1(a(name: Label Title))
 				      VERBATIM(VS)])   %--** VERBATIM?
 			  OzDocToHTML, FinishNode(Title X HTML $)
 		       end
 		       IndexHTML]
-	       TopTOC = if @SomeSplit then EMPTY
-			else SEQ([hr() {FormatTOC @TOC} hr()])
-			end
-	       OzDocToHTML, MakeNode(@TopTitle SEQ(HTML))
 	       {@MyFontifier process(case @FontifyMode
 				     of color then 'html-color'
 				     [] mono then 'html-mono'
@@ -426,11 +426,16 @@ define
 			      ToGenerate <- Label|@ToGenerate
 			      TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
 			      @IdxNode = @CurrentNode
+			      Threading <- sect(@CurrentNode Label)|@Threading
 			      HTML = SEQ([HTML1
 					  h1(a(name: Label Title))
 					  {@MyIndexer process($)}])
 			      OzDocToHTML, FinishNode(Title X HTML $)
 			   end
+	       OzDocToHTML, MakeNode(@TopTitle SEQ(HTML))
+	       TopTOC = if @SomeSplit then EMPTY
+			else SEQ([hr() {FormatTOC @TOC} hr()])
+			end
 	       unit
 	    %-----------------------------------------------------------
 	    % Front and Back Matter
@@ -1026,6 +1031,7 @@ define
 	 else
 	    ToGenerate <- TheLabel|@ToGenerate
 	 end
+	 Threading <- sect(@CurrentNode TheLabel)|@Threading
 	 Res = a(name: TheLabel NodeTitle)
 	 if {SGML.isOfClass M unnumbered} then
 	    if Title == unit then
@@ -1075,6 +1081,18 @@ define
 	 else
 	    L = A
 	    Next = In + 1
+	 end
+      end
+      meth DoThreading(Ts)
+	 case Ts of sect(_ _)|Rest then
+	    OzDocToHTML, DoThreading(Rest)
+	 elseof nav(HTML)|sect(Node Label)|Rest then
+	    HTML = table('class': [nav] border: 1 align: center
+			 tr(td(a(href: Node#"#"#Label PCDATA('Next >>')))))
+	    OzDocToHTML, DoThreading(Rest)
+	 elseof nil then skip
+	 else
+	    {ForAll Ts proc {$ nav(HTML)} HTML = EMPTY end}
 	 end
       end
       meth PrepareNode(M ?X ?HTML)
@@ -1157,8 +1175,8 @@ define
 	    Res
 	 end
       end
-      meth MakeNode(Title BodyContents) Node in
-	 %--** convert Title to simple text (it might contain tags!)
+      meth MakeNode(Title BodyContents) NextHTML Node in
+	 Threading <- nav(NextHTML)|@Threading
 	 Node = html(head(title(thread {HTML.clean Title} end)
 			  link(rel: stylesheet
 			       type: 'text/css'
@@ -1166,8 +1184,8 @@ define
 		     'body'(COMMON: @BodyCommon
 			    BodyContents
 			    OzDocToHTML, FlushFloats($)
+			    NextHTML
 			    OzDocToHTML, FlushFootNotes(1 $)
-			    %--** include a next-pointer if necessary
 			    hr()
 			    address(case @Authors of nil then EMPTY
 				    else As in
