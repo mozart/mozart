@@ -6,11 +6,13 @@ declare [RI] = {Module.link ['x-oz://contrib/RI.ozf']}
 %{Browse FCP_FD}
 
 {Wait Propagator}
+{Show Propagator}
 %{Browse Propagator}
 
 declare X Y P in [X Y]:::0#10
 {FCP_FD.'`LessEqOff`' X Y 5 P}
 
+/*
 cond X Y P in
    [X Y]:::0#10
    {FCP_FD.'`LessEqOff`' X Y 5 P}
@@ -19,7 +21,7 @@ cond X Y P in
 then {Show show(yes)}
 else {Show show(no)}
 end
-
+*/
 {Show show(P)}
 
 /*
@@ -29,6 +31,7 @@ declare Ps = {Propagator.getParameter P}{Show show(Ps)}
 {Show show({Propagator.isDiscarded P})}
 {Show show({Propagator.is P})}
 {Propagator.discard P}
+{Show show({Propagator.isDiscarded P})}
 
 declare
 X Y Is
@@ -36,6 +39,7 @@ in
 {FS.var.list.upperBound 2 [1 2 3]  [X Y]}
 Is = {Propagator.identifyParameter [X Y 1 X 2 y Y]}
 {Show show(Is)}
+{Show show([X Y])}
 
 declare
 X Y Is
