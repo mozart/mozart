@@ -303,6 +303,7 @@ public:
     byteStreamM= new ByteStreamManager();}
 
   ByteStream* getByteStream();
+  ByteStream* getByteStreamMarshal();
   void freeByteStream(ByteStream *bs);
   ByteBuffer* getByteBuffer();
   void freeByteBuffer(ByteBuffer *bb);
@@ -324,10 +325,18 @@ extern BufferManager *bufferManager;
 void gcGNameTable();
 void gcGName(GName*);
 void getCode(ProcProxy*);
-GName *newGName(TaggedRef t);
-GName *newGName(PrTabEntry *);
 void addGName(GName *, PrTabEntry *);
 GName *copyGName(GName*);
+
+enum GNameType {
+  GNT_NAME,
+  GNT_PROC,
+  GNT_CODE,
+  GNT_CHUNK
+};
+
+GName *newGName(TaggedRef t, GNameType gt);
+GName *newGName(PrTabEntry *);
 
 PrTabEntry *findCodeGName(GName *);
 

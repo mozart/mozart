@@ -165,6 +165,7 @@ public:
   TaggedRef aVarBindHandler;
 
   TaggedRef methApplHdl;
+  TaggedRef sendHdl;
 
   TaggedRef defaultExceptionHandler;
 
