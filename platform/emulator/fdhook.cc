@@ -106,7 +106,7 @@ void printBC(ostream &ofile, Board * b)
     Suspension * s = sl->getSusp();
     if (s->isDead())
       continue;
-    if (s->getNode()->getBoardDeref() == NULL)
+    if (s->getBoard()->getBoardDeref() == NULL)
       continue;
     
     if (sl->isCondSusp())
