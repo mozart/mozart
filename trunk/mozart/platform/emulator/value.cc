@@ -1208,3 +1208,34 @@ char *toC(OZ_Term term)
  *=================================================================== */
 
 DbgInfo *allDbgInfos = NULL;
+
+ProfileCode(
+
+PrTabEntry *PrTabEntry::allPrTabEntries = NULL;
+
+void PrTabEntry::printPrTabEntries()
+{
+  PrTabEntry *aux = allPrTabEntries;
+  while(aux) {
+    if (aux->numClosures || aux->numCalled) {
+      char *name = ozstrdup(toC(aux->printname)); // cannot have 2 toC in one line
+      printf("%20s Created: %5d Called: %6d %s, %d \n",
+	     name,aux->numClosures,aux->numCalled,
+	     toC(aux->fileName),aux->lineno);
+      delete name;
+    }
+    aux = aux->next;
+  }
+}
+
+
+void PrTabEntry::profileReset()
+{
+  PrTabEntry *aux = allPrTabEntries;
+  while(aux) {
+    aux->numClosures = 0;
+    aux->numCalled   = 0;
+    aux = aux->next;
+  }
+}
+)
