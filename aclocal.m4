@@ -24,7 +24,7 @@ AC_DEFUN(OZ_INIT, [
     ])
 
 AC_DEFUN(OZ_PATH_PROG, [
-    AC_PATH_PROG($1,$2,,$PATH:$oz_topdira/bin:$oz_topdira)
+    AC_PATH_PROG($1,$2,,$PATH:$oz_topdira/share/bin:$oz_topdira)
     if test ! -n "$$1"
     then
         $1=undefined
