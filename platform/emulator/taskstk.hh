@@ -202,7 +202,7 @@ public:
     pushFrame(C_CALL_CONT_Ptr, ToPointer(pred), x);
   }
 
-  void pushLTQ(SolveActor *sa)   { pushFrame(C_LTQ_Ptr,sa,0); }
+  void pushLTQ(Board * sb)       { pushFrame(C_LTQ_Ptr, sb, 0); }
   void pushLock(OzLock *lck)     { pushFrame(C_LOCK_Ptr,lck,0); }
   void pushCatch()               { pushFrame(C_CATCH_Ptr,0,0); }
   void discardCatch()            { discardFrame(C_CATCH_Ptr); }

@@ -135,6 +135,20 @@ public:
   }
 
   Thread * getLTQThread(void) { return ltq_thr; }
+
+  LocalThreadQueue * merge(LocalThreadQueue * tq) {
+    if (this == NULL) {
+      // this == NULL and tq != NULL OR this == NULL  and tq == NULL
+      return tq;
+    } else if (tq != NULL) { 
+      // this != NULL and tq != NULL
+      while (!isEmpty())
+        tq->enqueue(dequeue());
+      return tq;
+    }
+    // tq == NULL && this != NULL
+    return this;
+  }
 };
 
 #ifdef PROP_MERGING
