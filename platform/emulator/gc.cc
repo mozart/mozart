@@ -1973,16 +1973,8 @@ void AbstractionEntry::gcAbstractionEntry()
   abstr = gcAbstraction(abstr);
 }
 
-void ThreadsPool::doGC () {
-  // Assert(_currentThread==NULL); // TMUELLER
-  threadBodyFreeList = (RunnableThreadBody *) NULL;
-
-  hiQueue.gc();
-  midQueue.gc();
-  lowQueue.gc();
-}
-
 #ifdef LINKED_QUEUES
+
 void ThreadQueue::gc() {
   ThreadQueueIterator iter(this);
   Thread*ptr;
@@ -1990,7 +1982,10 @@ void ThreadQueue::gc() {
   head_index=tail_index=size=0;
   while ((ptr=iter.getNext())) enqueue(ptr->gcThread());
 }
+
 #else
+
+
 void ThreadQueue::gc() {
   int newsize = suggestNewSize();
   Thread ** newqueue =
@@ -2013,6 +2008,15 @@ void ThreadQueue::gc() {
    tail    = size - 1;
 }
 #endif /* !LINKED_QUEUES */
+
+void ThreadsPool::doGC() {
+  threadBodyFreeList = (RunnableThreadBody *) NULL;
+
+  hiQueue.gc();
+  midQueue.gc();
+  lowQueue.gc();
+}
+
 
 #ifdef LINKED_QUEUES
 LocalPropagatorQueue * LocalPropagatorQueue::gc() {

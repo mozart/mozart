@@ -41,30 +41,17 @@ private:
   ThreadQueue midQueue;
   ThreadQueue lowQueue;
 
-  int hiCounter;
-  int lowCounter;
+  int hi;
+  int mid;
 
 protected:
-  //  formerly in AM;
-  //
-  Thread *_currentThread;
   RunnableThreadBody *threadBodyFreeList;
-public:
-  ThreadsPool () {};
-  ~ThreadsPool () {};
 
-  Thread *currentThread()           {
-    return _currentThread;
-  }
-  void unsetCurrentThread()         {
-    _currentThread=0;
-  }
-  void setCurrentThread(Thread *);
+public:
+  ThreadsPool() {};
+  ~ThreadsPool() {};
 
   void initThreads();
-
-  // in print.cc;
-  void printThreads ();
 
   //
   void doGC ();
@@ -72,17 +59,15 @@ public:
   void scheduleThread(Thread *th) {
     Assert(!isScheduledSlow(th));
 
-    int pri = th->getPriority();
-
-    if (pri == MID_PRIORITY) {
-      midQueue.enqueue(th);
-    } else if (pri == HI_PRIORITY) {
-      hiQueue.enqueue(th);
-      if (hiCounter<0) hiCounter=ozconf.hiMidRatio;
-    } else {
+    switch (th->getPriority()) {
+    case MID_PRIORITY:
+      midQueue.enqueue(th); break;
+    case HI_PRIORITY:
+      hiQueue.enqueue(th);  break;
+    default:
       lowQueue.enqueue(th);
-      if (lowCounter<0) lowCounter=ozconf.midLowRatio;
     }
+
   }
 
   void rescheduleThread(Thread *th);
@@ -90,33 +75,44 @@ public:
 
   Bool isScheduledSlow(Thread *thr);
 
-  Thread *getFirstThreadOutline();
-  Thread *getFirstThread()
-  {
-    if (hiCounter < 0 && lowCounter < 0) {
-      Assert(hiQueue.isEmpty() && lowQueue.isEmpty());
-      return midQueue.dequeue();
-    }
-
-    return getFirstThreadOutline();
-  }
-
-  Bool threadQueuesAreEmptyOutline();
-  Bool threadQueuesAreEmpty()
-  {
-    if (hiCounter < 0 && lowCounter < 0) {
-      Assert(hiQueue.isEmpty() && lowQueue.isEmpty());
-      return midQueue.isEmpty();
-    }
-    return threadQueuesAreEmptyOutline();
-  }
   int getRunnableNumber();
 
-  Thread * getNext() {
-    if (threadQueuesAreEmpty())
-      return (Thread *) NULL;
+  Bool isEmpty() {
+    return (midQueue.isEmpty() &&
+            hiQueue.isEmpty() &&
+            lowQueue.isEmpty());
+  }
 
-    return getFirstThread();
+  Thread * getNext() {
+
+    Bool hiIsMt, midIsMt;
+
+    do {
+
+      hiIsMt = hiQueue.isEmpty();
+
+      if (!hiIsMt && hi > 0) {
+        hi--;
+        return hiQueue.dequeue();
+      }
+
+      hi = ozconf.hiMidRatio;
+
+      midIsMt = midQueue.isEmpty();
+
+      if (!midIsMt && mid > 0) {
+        mid--;
+        return midQueue.dequeue();
+      }
+
+      mid = ozconf.midLowRatio;
+
+      if (!lowQueue.isEmpty())
+        return lowQueue.dequeue();
+
+    } while (!hiIsMt || !midIsMt);
+
+    return (Thread *) NULL;
   }
 
   //
@@ -141,6 +137,11 @@ public:
     threadBodyFreeList = it;
     tt->freeThreadBodyInternal();
   }
+
+
+  // in print.cc;
+  void printThreads ();
+
 
 };
 

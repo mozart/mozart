@@ -945,11 +945,7 @@ void Equation::printStream(ostream &stream, int depth)
 
 void ThreadsPool::printThreads()
 {
-  cout << "Threads" << endl
-       << "  running: ";
-  _currentThread->printStream(cout,-1);
-  cout << endl
-       << "  runnable:" << endl;
+  cout << "Threads" << endl;
 
   if (!hiQueue.isEmpty()) {
     cout << "   prio = HI";

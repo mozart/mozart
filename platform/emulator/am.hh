@@ -213,8 +213,9 @@ friend int engine(Bool init);
 friend void scheduler();
 
 private:
-  Board *_currentBoard;
-  Board *_rootBoard;
+  Board  *_currentBoard;
+  Board  *_rootBoard;
+  Thread *_currentThread;
 
   // source level debugger
   TaggedRef debugStreamTail;
@@ -294,8 +295,9 @@ public:
 
   AM() {};
 
-  Board *currentBoard()  { return _currentBoard; }
-  Board *rootBoard()     { return _rootBoard; }
+  Board *currentBoard()   { return _currentBoard; }
+  Thread *currentThread() { return _currentThread; }
+  Board *rootBoard()      { return _rootBoard; }
 
   Bool inEqEq()          { return _inEqEq; }
   void setInEqEq(Bool b) { _inEqEq=b; }
@@ -439,6 +441,9 @@ public:
     _currentBoard         = c;
     _currentUVarPrototype = makeTaggedUVar(c);
   }
+  void setCurrentThread(Thread * t) {
+    _currentThread = t;
+  }
 
   void gc(int msgLevel);  // ###
   void doGC();
@@ -499,7 +504,7 @@ inline Board *oz_currentBoard() { return am.currentBoard(); }
 inline Bool oz_isRootBoard(Board *bb) { return oz_rootBoard() == bb; }
 inline Bool oz_isCurrentBoard(Board *bb) { return oz_currentBoard() == bb; }
 inline Bool oz_onToplevel() { return oz_currentBoard() == oz_rootBoard(); }
-inline Thread *oz_currentThread() { return am.threadsPool.currentThread(); }
+inline Thread *oz_currentThread() { return am.currentThread(); }
 inline OZ_Term oz_newName()
 {
   return makeTaggedLiteral(Name::newName(oz_currentBoard()));
@@ -522,7 +527,7 @@ OZ_Term oz_newVariable() { return oz_newVar(oz_currentBoard()); }
 #define oz_isRootBoard(bb)    (oz_rootBoard()    == (bb))
 #define oz_isCurrentBoard(bb) (oz_currentBoard() == (bb))
 #define oz_onToplevel()       (oz_currentBoard() == oz_rootBoard())
-#define oz_currentThread()    (am.threadsPool.currentThread())
+#define oz_currentThread()    (am.currentThread())
 
 #define oz_newName() makeTaggedLiteral(Name::newName(oz_currentBoard()))
 #define oz_newPort(val) \
