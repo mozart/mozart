@@ -230,12 +230,6 @@ Board *Object::getBoard()
 }
 
 inline
-Board *SChunk::getBoard()
-{
-  return ((Board *) getPtr())->derefBoard();
-}
-
-inline
 Board *ConstTermWithHome::getBoard() {
   return home->derefBoard();
 }

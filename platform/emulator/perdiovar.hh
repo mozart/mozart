@@ -23,6 +23,7 @@
 enum PV_TYPES {
   PV_MANAGER,
   PV_PROXY,
+  PV_TERTPROXY,
 };
 
 class ProxyList {
@@ -65,6 +66,7 @@ class PerdioVar: public GenCVariable {
   union {
     PendBinding *bindings;
     ProxyList *proxies;
+    Tertiary *tert;
   } u;
 public:
   PerdioVar() : GenCVariable(PerdioVariable) {
@@ -78,10 +80,17 @@ public:
     tagged.setIndex(i);
   }
 
+  PerdioVar(Tertiary *t, int i) : GenCVariable(PerdioVariable) {
+    u.tert = t;
+    tagged.setType(PV_TERTPROXY);
+    tagged.setIndex(i);
+  }
+
   void globalize(int i) { tagged.setType(PV_MANAGER); tagged.setIndex(i); }
 
-  Bool isManager() { return tagged.getType()==PV_MANAGER; }
-  Bool isProxy() { return tagged.getType()==PV_PROXY; }
+  Bool isManager()   { return tagged.getType()==PV_MANAGER; }
+  Bool isProxy()     { return tagged.getType()==PV_PROXY; }
+  Bool isTertProxy() { return tagged.getType()==PV_TERTPROXY; }
 
   int getIndex() { return tagged.getIndex(); }
   void setIndex(int i) { tagged.setIndex(i); }
@@ -89,6 +98,9 @@ public:
   Bool valid(TaggedRef *varPtr, TaggedRef v);
 
   size_t getSize(void) { return sizeof(PerdioVar); }
+
+  Tertiary *getTertiary() { Assert(isTertProxy()); return u.tert; };
+  GName *getGName();
 
   void registerSite(Site* sd) {
     Assert(isManager());
@@ -123,6 +135,8 @@ public:
   void acknowledge(OZ_Term *ptr);
 
   ProxyList *getProxies() { Assert(isManager()); return u.proxies; }
+
+  void addSuspPerdioVar();
 
   void gcPerdioVar(void);
 };

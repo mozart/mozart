@@ -6121,6 +6121,7 @@ OZ_C_proc_begin(BIglobals,2)
   oz_declareNonvarArg(0,proc);
   oz_declareArg(1,out);
 
+redo:
   DEREF(proc,ptr,tag);
   if (isConst(proc)) {
     ConstTerm *cc = tagged2Const(proc);
@@ -6130,8 +6131,9 @@ OZ_C_proc_begin(BIglobals,2)
     case Co_Abstraction:
       return oz_unify(out, ((Abstraction *) cc)->DBGgetGlobals());
     case Co_Object:
-      return oz_unify(out,
-                      ((Object *) cc)->getAbstraction()->DBGgetGlobals());
+      proc = am.sendHdl;
+      goto redo;
+
     default:
       break;
     }
@@ -6414,24 +6416,20 @@ Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla,
 }
 
 
-OZ_C_proc_begin(BImakeClass,9)
+OZ_C_proc_begin(BImakeClass,7)
 {
   OZ_Term fastmeth   = OZ_getCArg(0); { DEREF(fastmeth,_1,_2); }
   OZ_Term printname  = OZ_getCArg(1); { DEREF(printname,_1,_2); }
-  OZ_Term slowmeth   = OZ_getCArg(2); { DEREF(slowmeth,_1,_2); }
-  OZ_Term send       = OZ_getCArg(3); { DEREF(send,_1,_2); }
-  OZ_Term features   = OZ_getCArg(4); { DEREF(features,_1,_2); }
-  OZ_Term ufeatures  = OZ_getCArg(5); { DEREF(ufeatures,_1,_2); }
-  OZ_Term defmethods = OZ_getCArg(6); { DEREF(defmethods,_1,_2); }
-  OZ_Term locking    = OZ_getCArg(7); { DEREF(locking,_1,_2); }
-  OZ_Term out        = OZ_getCArg(8);
+  OZ_Term features   = OZ_getCArg(2); { DEREF(features,_1,_2); }
+  OZ_Term ufeatures  = OZ_getCArg(3); { DEREF(ufeatures,_1,_2); }
+  OZ_Term defmethods = OZ_getCArg(4); { DEREF(defmethods,_1,_2); }
+  OZ_Term locking    = OZ_getCArg(5); { DEREF(locking,_1,_2); }
+  OZ_Term out        = OZ_getCArg(6);
 
   SRecord *methods = NULL;
 
   if (!isDictionary(fastmeth))   { oz_typeError(0,"dictionary"); }
   if (!isLiteral(printname))     { oz_typeError(1,"literal"); }
-  if (!isDictionary(slowmeth))   { oz_typeError(2,"dictionary"); }
-  if (!isAbstraction(send))      { oz_typeError(3,"abstraction"); }
   if (!isRecord(features))       { oz_typeError(4,"record"); }
   if (!isRecord(ufeatures))      { oz_typeError(5,"record"); }
   if (!isDictionary(defmethods)) { oz_typeError(6,"dictionary"); }
@@ -6440,8 +6438,6 @@ OZ_C_proc_begin(BImakeClass,9)
 
   ObjectClass *cl = new ObjectClass(tagged2Dictionary(fastmeth),
                                     tagged2Literal(printname),
-                                    tagged2Dictionary(slowmeth),
-                                    tagged2Abstraction(send),
                                     uf,
                                     tagged2Dictionary(defmethods),
                                     locking==NameTrue);
@@ -6465,11 +6461,20 @@ OZ_C_proc_begin(BIsetMethApplHdl,1)
     oz_typeError(0,"abstraction");
   }
 
-  if (am.methApplHdl != makeTaggedNULL()) {
-    // warning("setMethApplHdl called twice (hint: prelude may not be fed twice)");
+  am.methApplHdl = preed;
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIsetSendHdl,1)
+{
+  OZ_Term preed = OZ_getCArg(0); DEREF(preed,_1,_2);
+  if (! isAbstraction(preed)) {
+    oz_typeError(0,"abstraction");
   }
 
-  am.methApplHdl = preed;
+  am.sendHdl = preed;
   return PROCEED;
 }
 OZ_C_proc_end
@@ -6546,7 +6551,6 @@ OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
               NO,
               am.currentBoard);
 
-  //  out->setLocked();
   return makeTaggedConst(out);
 }
 
@@ -7037,15 +7041,16 @@ BIspec allSpec[] = {
   {"@",               2,BIat,                  (IFOR) atInline},
   {"<-",              2,BIassign,              (IFOR) assignInline},
   {"copyRecord",      2,BIcopyRecord,          0},
-  {"makeClass",        9,BImakeClass,          0},
-  {"setMethApplHdl",   1,BIsetMethApplHdl,     0},
-  {"getClass",         2,BIgetClass,           (IFOR) getClassInline},
-  {"ooGetLock",        1,BIooGetLock,          (IFOR) ooGetLockInline},
-  {"newObject",        2,BInewObject,          (IFOR) newObjectInline},
-  {"getOONames",       5,BIgetOONames,         0},
-  {"getSelf",          1,BIgetSelf,            0},
-  {"setSelf",          1,BIsetSelf,            0},
-  {"ooExch",           3,BIooExch,             (IFOR) ooExchInline},
+  {"makeClass",       7,BImakeClass,           0},
+  {"setMethApplHdl",  1,BIsetMethApplHdl,      0},
+  {"setSendHdl",      1,BIsetSendHdl,          0},
+  {"getClass",        2,BIgetClass,            (IFOR) getClassInline},
+  {"ooGetLock",       1,BIooGetLock,           (IFOR) ooGetLockInline},
+  {"newObject",       2,BInewObject,           (IFOR) newObjectInline},
+  {"getOONames",      5,BIgetOONames,          0},
+  {"getSelf",         1,BIgetSelf,            0},
+  {"setSelf",         1,BIsetSelf,            0},
+  {"ooExch",          3,BIooExch,             (IFOR) ooExchInline},
 
   {"Space.new",           2, BInewSpace,        0},
   {"IsSpace",             2, BIisSpace,         0},

@@ -685,8 +685,8 @@ public:
 
   void setIndex(int i) { tagged.setIndex(i); }
   int getIndex() { return tagged.getIndex(); }
-  void setPointer (void *p) { Assert(isLocal()); tagged.setPtr(p); }
-  void *getPointer() { Assert(isLocal()); return tagged.getPtr(); }
+  void setPointer (void *p) { tagged.setPtr(p); }
+  void *getPointer()        { return tagged.getPtr(); }
 
   Bool checkTertiary(TypeOfConst s,TertType t){
     return (s==getType() && t==getTertType());}
@@ -701,6 +701,7 @@ public:
 
   void globalize();
   void localize();
+  void import();
 
   void gcProxy();
   void gcManager();
@@ -1173,23 +1174,17 @@ class ObjectClass {
 private:
   OzDictionary *fastMethods;
   Literal *printName;
-  OzDictionary *slowMethods;
   OzDictionary *defaultMethods;
-  Abstraction *send;
   SRecord *unfreeFeatures;
   TaggedRef ozclass;    /* the class as seen by the Oz user */
   Bool locking;
 public:
   USEHEAPMEMORY;
 
-  ObjectClass(OzDictionary *fm, Literal *pn, OzDictionary *sm,
-              Abstraction *snd, SRecord *uf,
-              OzDictionary *dm, Bool lck)
+  ObjectClass(OzDictionary *fm,Literal *pn,SRecord *uf,OzDictionary *dm,Bool lck)
   {
     fastMethods    = fm;
     printName      = pn;
-    slowMethods    = sm;
-    send           = snd;
     unfreeFeatures = uf;
     defaultMethods = dm;
     ozclass        = AtomNil;
@@ -1198,10 +1193,8 @@ public:
 
   Bool supportsLocking() { return locking; }
 
-  OzDictionary *getSlowMethods() { return slowMethods; }
   OzDictionary *getDefMethods()  { return defaultMethods; }
   OzDictionary *getfastMethods() { return fastMethods; }
-  Abstraction *getAbstraction()  { return send; }
   char *getPrintName()           { return printName->getPrintName(); }
   TaggedRef getOzClass()         { return ozclass; }
   void setOzClass(TaggedRef cl)  { ozclass = cl; }
@@ -1278,8 +1271,6 @@ public:
   Bool lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X);
   SRecord *getState()           { return (SRecord*) ToPointer(state); }
   void setState(SRecord *s)     { state = ToInt32(s); }
-  Abstraction *getAbstraction() { return getClass()->getAbstraction(); }
-  OzDictionary *getSlowMethods() { return getClass()->getSlowMethods(); }
   OzDictionary *getDefMethods()  { return getClass()->getDefMethods(); }
   TaggedRef getOzClass()        { return getClass()->getOzClass(); }
   Board *getBoard();
@@ -1385,13 +1376,14 @@ public:
   SChunk(Board *b,TaggedRef v) : Tertiary(b,Co_Chunk,Te_Local), value(v) {
     Assert(isRecord(v));
     Assert(b);
-    setPtr(b);
+    setGName(0);
   };
 
-  SChunk(int i, TertType tertType) : Tertiary(0,Co_Chunk,tertType)
+  SChunk(int i, GName *gn) : Tertiary(0,Co_Chunk,Te_Proxy)
   {
     setIndex(i);
     value = makeTaggedNULL();
+    setGName(gn);
   }
 
   OZPRINT;
@@ -1401,15 +1393,11 @@ public:
   TaggedRef getFeature(TaggedRef fea) { return OZ_subtree(value,fea); }
   TaggedRef getArityList() { return ::getArityList(value); }
   int getWidth () { return ::getWidth(value); }
-  Board *getBoard();
 
-  TaggedRef fetchValue();
-  void localize(TaggedRef val);
+  void import(TaggedRef val);
 
-  TaggedRef checkProxy()
-  {
-    return (isProxy()) ? fetchValue() : makeTaggedNULL();
-  }
+  GName *getGName() { return (GName*) getPtr(); }
+  void setGName(GName *gn) { setPtr(gn); }
 };
 
 
@@ -1616,7 +1604,7 @@ public:
 
   void gcPrTabEntry();
 
-  GName *globalize();
+  void globalize();
   GName *getGName() { return gname; }
   void setGName(GName *gn) { Assert(gname==NULL); gname = gn; }
 };
@@ -1653,7 +1641,7 @@ public:
 
   GName *getGName() { return (GName*) getPtr(); }
   void setGName(GName *gn) { setPtr(gn); }
-  GName *globalize();
+  void globalize();
 };
 
 inline
@@ -1706,7 +1694,7 @@ public:
 
   TaggedRef getSuspvar();
 
-  void localize(RefsArray g, ProgramCounter pc);
+  void import(RefsArray g, ProgramCounter pc);
 };
 
 

@@ -2278,9 +2278,7 @@ LBLdispatcher:
 
 
   bombApply:
-    if (e->methApplHdl == makeTaggedNULL()) {
-      error("no apply handler");
-    }
+    Assert(e->methApplHdl != makeTaggedNULL());
 
     X[1] = makeMessage(arity,ami->methName,X);
     X[0] = origObject;
@@ -2343,9 +2341,10 @@ LBLdispatcher:
                          OZ_toList(predArity,X));
            }
            CheckArity(1,makeTaggedConst(o));
-           def = o->getAbstraction();
-           /* {Obj Msg} --> {Send Msg Methods Obj} */
-           X[predArity++] = makeTaggedConst(o->getSlowMethods());
+           Assert(e->sendHdl != makeTaggedNULL());
+           def = tagged2Abstraction(e->sendHdl);
+           /* {Obj Msg} --> {Send Msg Class Obj} */
+           X[predArity++] = o->getOzClass();
            X[predArity++] = makeTaggedConst(o);
            if (!isTailCall) {
              CallPushCont(PC);

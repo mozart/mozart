@@ -23,6 +23,14 @@
 void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v);
 int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar);
 
+GName *PerdioVar::getGName()
+{
+  switch (u.tert->getType()) {
+  case Co_Chunk: return ((SChunk *) u.tert)->getGName();
+  default: Assert(0); return 0;
+  }
+}
+
 void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
 {
   setSuspList(am.checkSuspensionList(this, getSuspList(), pc_std_unif));
@@ -39,12 +47,15 @@ void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
   doBind(lPtr, v);
 }
 
-Bool PerdioVar::unifyPerdioVar(TaggedRef * lPtr, TaggedRef * rPtr, Bool prop)
+Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, Bool prop)
 {
   TaggedRef rVal = *rPtr;
   TaggedRef lVal = *lPtr;
 
   Assert(!isNotCVar(rVal));
+
+  if (isTertProxy())
+    return FALSE;
 
   PerdioVar *lVar = this;
 
@@ -93,7 +104,7 @@ Bool PerdioVar::valid(TaggedRef *varPtr, TaggedRef v)
 {
   Assert(!isRef(v) && !isAnyVar(v));
 
-  return TRUE;
+  return isTertProxy() ? FALSE : TRUE;
 }
 
 //-----------------------------------------------------------------------------

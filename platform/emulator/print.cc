@@ -791,8 +791,6 @@ PRINT(ObjectClass)
   fastMethods->print(stream,depth,offset);
   stream << ", printName: ";
   printName->print(stream,depth,offset);
-  stream << ", slowMethods: " << toC(makeTaggedConst(getSlowMethods())) << ", send: ";
-  send->print(stream,depth,offset);
   stream << ",";
   if (unfreeFeatures) {
     stream << ", ";
@@ -809,8 +807,6 @@ PRINTLONG(ObjectClass)
   fastMethods->printLong(stream,depth,offset);
   stream << ", printName: ";
   printName->printLong(stream,depth,offset);
-  stream << ", slowMethods: " << toC(makeTaggedConst(getSlowMethods())) << ", send: ";
-  send->printLong(stream,depth,offset);
   stream << ")";
 }
 
