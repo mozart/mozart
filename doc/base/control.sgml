@@ -99,7 +99,7 @@
         <Entry><Span class=index/<<For>>/
           <Index/<<Loop>><And><<for>>/
         <Synopsis>
-          <<{Loop.for ?+{I1} ?+{I2} ?+{I3} ?+{P}}>>
+          <<{Loop.'for' ?+{I1} ?+{I2} ?+{I3} ?+{P}}>>
         <Item>
           applies the unary procedure&nbsp;?_{P} to integers from ?_{I1}
           to&nbsp;?_{I2} proceeding in steps of size&nbsp;?_{I3}.  For example,
