@@ -140,7 +140,8 @@ void ProxyVar::gcRecurseV(void)
   PD((GC,"ProxyVar b:%d",getIndex()));
   Assert(getIndex()!=BAD_BORROW_INDEX);
   BT->getBorrow(getIndex())->gcPO();
-  OZ_collect(&binding);
+  if (binding)
+    OZ_collect(&binding);
   setInfo(gcEntityInfoInternal(getInfo()));
 } 
 

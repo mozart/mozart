@@ -49,6 +49,16 @@
 #include "var.hh"
 #include "var_obj.hh"
 
+// GARBAGE COLLECTION HACK
+inline
+void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
+  if (frm)
+    OZ_collectHeapTerm(frm,to);
+  else
+    to=frm;
+}
+
+
 Twin *usedTwins;
 Watcher* globalWatcher;
 
@@ -313,13 +323,13 @@ TaggedRef detOp(Tertiary* t,PendThread* pd){
 	return mkOp1("objectAccess",pd->old);
     default:
       Assert(0);}
-    return makeTaggedNULL();
+    return 0;
   case Co_Lock:
     return AtomLock;
   case Co_Port:
     return mkOp1("send",pd->old);
   default: Assert(0);}
-  return makeTaggedNULL();
+  return 0;
 }
 
   
@@ -1169,7 +1179,7 @@ void EntityInfo::gcWatchers(){
     Watcher* newW=(Watcher*) oz_hrealloc(w,sizeof(Watcher));
     *base=newW;
     newW->thread=nth;
-    OZ_collectHeapTerm(newW->proc,newW->proc);
+    OZ_collectHeapTermUnsafe(newW->proc,newW->proc);
     base= &(newW->next);
     w=*base;}
 }
@@ -1177,7 +1187,7 @@ void EntityInfo::gcWatchers(){
 void gcGlobalWatcher(){
   if(globalWatcher==NULL) return;
   globalWatcher = (Watcher*) oz_hrealloc(globalWatcher,sizeof(Watcher));
-  OZ_collectHeapTerm(globalWatcher->proc,globalWatcher->proc);}
+  OZ_collectHeapTermUnsafe(globalWatcher->proc,globalWatcher->proc);}
 
 // called from gc
 void maybeUnask(Tertiary* t){
