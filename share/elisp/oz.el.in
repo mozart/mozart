@@ -1918,7 +1918,6 @@ buffer."
 
   (define-key map (oz-kbd "C-c C-m")     'oz-set-other)
   (define-key map (oz-kbd "C-c C-o")     'oz-other)
-  (define-key map (oz-kbd "C-c C-g")     'oz-gdb)
 
   (if (not oz-pc-keys)
       (progn
