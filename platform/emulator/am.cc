@@ -1281,6 +1281,16 @@ void AM::pushPreparedCalls(Thread *thr)
   }
 }
 
+void AM::emptyPreparedCalls()
+{
+  while(preparedCalls) {
+    CallList *aux = preparedCalls;
+    preparedCalls = aux->next;
+    aux->dispose();
+  }
+}
+
+
 void AM::suspendOnVarList(Thread *thr)
 {
   while (oz_isCons(_suspendVarList)) {
