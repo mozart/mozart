@@ -1,8 +1,6 @@
 functor
 import
-   Remote(manager)
-   Module(manager)
-   OS(uName)
+   TestMisc
 export
    Return
 define
@@ -10,10 +8,6 @@ define
    Times = 50
    Sites = 3
 
-   \insert TestMisc.oz
-   MM = {New Module.manager init}
-   TestMisc = {MM apply(url:'' FTestMisc $)}
-   
    proc {Start} Managers in
       try
 	 local
