@@ -1295,9 +1295,10 @@ define
       local
 	 Sep   = {Property.get 'path.separator'}
 	 Home  = {Property.get 'oz.home'}
+	 User  = {Property.get 'user.home'}
       in
 	 ImRes = {Resolve.makeResolver image
-		  vs('all=.'#[Sep]#'root='#Home#[Sep]#'cache='#Home#'/cache')}
+		  vs('all=.'#[Sep]#'root='#Home#[Sep]#'cache='#User#'/.oz/cache'#[Sep]#'cache='#Home#'/cache')}
       end
 
       PathStore = {New class $
