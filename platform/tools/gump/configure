@@ -1253,56 +1253,10 @@ fi
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
-    # Extract the first word of "ozinstallsrc", so it can be a program name with args.
-set dummy ozinstallsrc; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1260: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_INSTALLSRC'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$INSTALLSRC" in
-  /*)
-  ac_cv_path_INSTALLSRC="$INSTALLSRC" # Let the user override the test with a path.
-  ;;
-  *)
-  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_INSTALLSRC="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac
-fi
-INSTALLSRC="$ac_cv_path_INSTALLSRC"
-if test -n "$INSTALLSRC"; then
-  echo "$ac_t""$INSTALLSRC" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-    INSTALLSRC=`echo $INSTALLSRC | sed -e "s|//|/|g"`
-    if test ! -n "$INSTALLSRC"
-    then
-        INSTALLSRC=undefined
-
-    fi
-
-
-    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1306: checking for $ac_word" >&5
+echo "configure:1260: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_PLATFORMSCRIPT'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1348,7 +1302,7 @@ fi
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1352: checking for $ac_word" >&5
+echo "configure:1306: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_MKINSTALLDIRS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1395,7 +1349,7 @@ fi
         for ozm_opt in ""$oz_copt_disable_extension""
         do
             echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:1399: checking compiler option $ozm_opt" >&5
+echo "configure:1353: checking compiler option $ozm_opt" >&5
             ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
             if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1584,7 +1538,6 @@ s%@CXX@%$CXX%g
 s%@CXXCPP@%$CXXCPP%g
 s%@RM@%$RM%g
 s%@DYNLD@%$DYNLD%g
-s%@INSTALLSRC@%$INSTALLSRC%g
 s%@PLATFORMSCRIPT@%$PLATFORMSCRIPT%g
 s%@MKINSTALLDIRS@%$MKINSTALLDIRS%g
 s%@platform@%$platform%g
