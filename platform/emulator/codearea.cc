@@ -1081,8 +1081,7 @@ CodeArea *CodeArea::findBlock(ProgramCounter PC)
 
 void CodeArea::unprotect(TaggedRef* t)
 {
-  CodeArea *code = findBlock((ProgramCounter)t);
-  code->gclist->remove(t);
+  gclist->remove(t);
 }
 
 

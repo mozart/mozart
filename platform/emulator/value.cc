@@ -1303,6 +1303,15 @@ void PrTabEntry::patchFileAndLine()
   colum = colu;
 }
 
+CodeArea *PrTabEntry::getCodeBlock() 
+{
+  if (codeBlock == NULL) {
+    codeBlock = CodeArea::findBlock(getPC());
+  }
+  return codeBlock;
+}
+
+
 int featureEqOutline(TaggedRef a, TaggedRef b)
 {
   Assert(a != b); // already check in featureEq
