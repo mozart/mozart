@@ -83,10 +83,10 @@ OZ_C_proc_proto(BIisFdVarB)
 OZ_C_proc_proto(BIfdIs)
 OZ_C_proc_proto(BIgetFDLimits)
 OZ_C_proc_proto(BIfdMin)
+OZ_C_proc_proto(BIfdMid)
 OZ_C_proc_proto(BIfdMax)
 OZ_C_proc_proto(BIfdGetAsList)
 OZ_C_proc_proto(BIfdGetCardinality)
-OZ_C_proc_proto(BIfdNextTo)
 OZ_C_proc_proto(BIfdPutLe)
 OZ_C_proc_proto(BIfdPutGe)
 OZ_C_proc_proto(BIfdPutList)
@@ -152,6 +152,9 @@ OZ_C_proc_proto(BIfdWatchDom3)
 OZ_C_proc_proto(BIfdWatchBounds1)
 OZ_C_proc_proto(BIfdWatchBounds2)
 OZ_C_proc_proto(BIfdWatchBounds3)
+
+// fddist.cc
+OZ_C_proc_proto(BIfdDistribute)
 
 // body prototypes
 OZ_C_proc_proto(BIfdPlus_body)

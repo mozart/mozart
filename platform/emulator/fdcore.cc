@@ -97,6 +97,29 @@ OZ_C_proc_begin(BIfdMax,2)
 }
 OZ_C_proc_end     
 
+OZ_C_proc_begin(BIfdMid,2)
+{
+  ExpectedTypes("FiniteDomain,SmallInt");
+  
+  OZ_getCArgDeref(0, var, varptr, vartag);
+
+  if(isSmallInt(vartag)) {
+    return OZ_unify(var, OZ_getCArg(1));   
+  } else if (isGenFDVar(var,vartag)) {
+    OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
+    return OZ_unify(OZ_int(fdomain.next((fdomain.minElem() + 
+					 fdomain.maxElem()) / 2)), 
+		    OZ_getCArg(1));   
+  } else if (isGenBoolVar(var,vartag)) {
+    return OZ_unify(OZ_int(0), OZ_getCArg(1));   
+  } else if (isNotCVar(vartag)) {
+    return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
+  } else {
+    TypeError(0, "");
+  }
+}
+OZ_C_proc_end     
+
 
 OZ_C_proc_begin(BIfdGetAsList, 2)
 {
@@ -143,39 +166,6 @@ OZ_C_proc_begin(BIfdGetCardinality,2)
 }
 OZ_C_proc_end
 
-
-
-OZ_C_proc_begin(BIfdNextTo, 3)
-{
-  ExpectedTypes("FiniteDomain,SmallInt,SmallInt or Tuple");
-  
-  OZ_getCArgDeref(1, n, nptr, ntag);
-
-  if (isAnyVar(ntag)) {
-    return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, nptr);
-  } else if (! isSmallInt(ntag)) {
-    TypeError(1, "");
-  }
-
-  OZ_getCArgDeref(0, var, varptr, vartag);
-
-  if (OZ_isPosSmallInt(var)) {
-    return OZ_unify(OZ_getCArg(2), var);
-  } else if (isGenFDVar(var,vartag)) {
-    int next_val, n_val = OZ_intToC(n);
-    return (tagged2GenFDVar(var)->getDom().next(n_val, next_val))
-      ? OZ_unify(OZ_getCArg(2), mkTuple(next_val, 2 * n_val - next_val))
-      : OZ_unify(OZ_getCArg(2), OZ_int(next_val));
-  } else if (isGenBoolVar(var,vartag)) {
-    int val = OZ_intToC(n);
-    return OZ_unify(OZ_getCArg(2), OZ_int(val >= 1 ? 1 : 0));
-  } else if (isNotCVar(vartag)) {
-    return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
-  } else {
-    TypeError(0, "");
-  }
-}
-OZ_C_proc_end
 
 
 OZ_C_proc_begin(BIfdPutLe, 2)
