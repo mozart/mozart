@@ -186,6 +186,7 @@ in
 	 self.BarCanvas =
 	 {New YScrolledTitleCanvas tkInit(parent: self.toplevel
 					  title:  BarCanvasTitle
+					  bd:     1
 					  relief: sunken
 					  width:  BarCanvasWidth
 					  bg:     DefaultBackground)}
