@@ -239,7 +239,7 @@ elements of <<M1>> are smaller than any element of <<M2>>.
 <index class=module/FS<and>unionN<and>id/
 <<unionN>>
 <synopsis>
-<<<{FS.unionN *Mv *M}
+<<<{FS.unionN $Mv $M}
 >>>
 <item>
 <math/\codeinline{oz}{M} = \bigcup \{ \codeinline{oz}{S} \mid \codeinline{oz}{S} \in \codeinline{oz}{Mv}\}/
@@ -287,7 +287,7 @@ All elements of the vector ?{Mv} are pairwise distinct.
 <index class=module/FS<and>partition<and>id/
 <<partition>>
 <synopsis>
-<<<{FS.partition *MV *M}
+<<<{FS.partition $MV $M}
 >>>
 <item>
 ?{Mv} is a partition of ?{M}; that is,
