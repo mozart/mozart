@@ -620,6 +620,26 @@ OZ_BI_define(BIisCopyablePredicateRef,1,1)
 } OZ_BI_end
 
 
+/* special version of isDet, that does not suspend,
+ *  i.e. does not start a network request 
+ */
+OZ_BI_define(BIisLocalDet,1,1)
+{
+  oz_declareDerefIN(0,var);
+  if (isUVar(var))
+    OZ_RETURN(oz_false());
+
+  if (!isCVar(var))
+    OZ_RETURN(oz_true());
+
+  if (oz_check_var_status(tagged2CVar(var))==EVAR_STATUS_DET) {
+    OZ_RETURN(oz_true());
+  } else {
+    OZ_RETURN(oz_false());
+  }
+} OZ_BI_end
+
+
 /*
  * The builtin table
  */
