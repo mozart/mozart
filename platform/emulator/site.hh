@@ -40,7 +40,7 @@
 #include <time.h>
 
 typedef unsigned short port_t;
-typedef unsigned long ip_address;
+typedef unsigned int ip_address;
 
 //
 //
