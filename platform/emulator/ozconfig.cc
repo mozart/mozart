@@ -104,6 +104,10 @@ void ConfigData::init() {
   dpCloseTimeout = DP_PROBETIMEOUT * 10;
   dpWFRemoteTimeout = DP_PROBETIMEOUT * 100;
   dpFirewallReopenTimeout = DP_PROBETIMEOUT / 10;
+  dpDefaultBufferSize = DP_DEF_BYTEBUFFER_SIZE;
+  dpDefaultMaxBufferSize = DP_DEF_MAX_BYTEBUFFER_SIZE;
+  dpBufferSize = DP_DEF_BYTEBUFFER_SIZE;
+  dpMaxBufferSize = DP_DEF_MAX_BYTEBUFFER_SIZE;
 
   dpTableDefaultOwnerTableSize = DEFAULT_OWNER_TABLE_SIZE;
   dpTableDefaultBorrowTableSize = DEFAULT_BORROW_TABLE_SIZE;

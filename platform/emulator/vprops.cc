@@ -168,6 +168,10 @@ enum EmulatorPropertyIndex {
   PROP_DP_CLOSETIMEOUT,
   PROP_DP_WFREMOTETIMEOUT,
   PROP_DP_FIREWALLREOPENTIMEOUT,
+  PROP_DP_DEFAULTBUFFERSIZE,
+  PROP_DP_DEFAULTMAXBUFFERSIZE,
+  PROP_DP_BUFFERSIZE,
+  PROP_DP_MAXBUFFERSIZE,
   PROP_DP,
   // DPTABLE
   PROP_DPTABLE_DEFAULTOWNERTABLESIZE,
@@ -477,13 +481,17 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_INT(PROP_DP_CLOSETIMEOUT,ozconf.dpCloseTimeout);
   CASE_INT(PROP_DP_WFREMOTETIMEOUT,ozconf.dpWFRemoteTimeout);
   CASE_INT(PROP_DP_FIREWALLREOPENTIMEOUT,ozconf.dpFirewallReopenTimeout);
+  CASE_INT(PROP_DP_DEFAULTBUFFERSIZE,ozconf.dpDefaultBufferSize);
+  CASE_INT(PROP_DP_DEFAULTMAXBUFFERSIZE,ozconf.dpDefaultMaxBufferSize);
+  CASE_INT(PROP_DP_BUFFERSIZE,ozconf.dpBufferSize);
+  CASE_INT(PROP_DP_MAXBUFFERSIZE,ozconf.dpMaxBufferSize);
 
   case PROP_DP_VERSION: return OZ_pair2(oz_int(PERDIOMAJOR),
 					    oz_int(PERDIOMINOR));
 
   CASE_BOOL(PROP_DP_USEALTVARPROTOCOL,ozconf.dpUseAltVarProtocol);
   CASE_REC(PROP_DP,"dp",
-	   (17,oz_atomNoDup("useAltVarProtocol"),
+	   (21,oz_atomNoDup("useAltVarProtocol"),
 	    oz_atomNoDup("seifHandler"),oz_atomNoDup("debug"),
 	    oz_atomNoDup("flowBufferSize"),oz_atomNoDup("flowBufferTime"),
 	    oz_atomNoDup("version"),oz_atomNoDup("retryTimeCeiling"),
@@ -492,7 +500,11 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	    oz_atomNoDup("probeInterval"),oz_atomNoDup("probeTimeout"),
 	    oz_atomNoDup("openTimeout"),oz_atomNoDup("closeTimeout"),
 	    oz_atomNoDup("wfRemoteTimeout"),
-	    oz_atomNoDup("firewallReopenTimeout")),
+	    oz_atomNoDup("firewallReopenTimeout"),
+	    oz_atomNoDup("defaultBufferSize"),
+	    oz_atomNoDup("defaultMaxBufferSize"),
+	    oz_atomNoDup("bufferSize"),
+	    oz_atomNoDup("maxBufferSize")),
 	   SET_BOOL(oz_atomNoDup("useAltVarProtocol"),
 		    ozconf.dpUseAltVarProtocol);
 	   SET_BOOL(oz_atomNoDup("seifHandler"), ozconf.dpSeifHandler);
@@ -518,6 +530,14 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 		   ozconf.dpWFRemoteTimeout);
 	   SET_INT(oz_atomNoDup("firewallReopenTimeout"), 
 		   ozconf.dpFirewallReopenTimeout);
+	   SET_INT(oz_atomNoDup("defaultBufferSize"),
+		   ozconf.dpDefaultBufferSize);
+	   SET_INT(oz_atomNoDup("defaultMaxBufferSize"),
+		   ozconf.dpDefaultMaxBufferSize);
+	   SET_INT(oz_atomNoDup("bufferSize"),
+		   ozconf.dpBufferSize);
+	   SET_INT(oz_atomNoDup("maxBufferSize"),
+		   ozconf.dpMaxBufferSize);
 	   SET_REC(oz_atomNoDup("version"), OZ_pair2(oz_int(PERDIOMAJOR),
 						oz_int(PERDIOMINOR)));
 	   );
@@ -822,6 +842,15 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_NAT(PROP_DP_CLOSETIMEOUT,ozconf.dpCloseTimeout);
     CASE_NAT(PROP_DP_WFREMOTETIMEOUT,ozconf.dpWFRemoteTimeout);
     CASE_NAT(PROP_DP_FIREWALLREOPENTIMEOUT,ozconf.dpFirewallReopenTimeout);
+    CASE_NAT_DO(PROP_DP_BUFFERSIZE,{
+      if (INT__ <= ozconf.dpMaxBufferSize)
+	ozconf.dpBufferSize = INT__;
+    });
+    CASE_NAT_DO(PROP_DP_MAXBUFFERSIZE,{
+      ozconf.dpMaxBufferSize = INT__;
+      ozconf.dpBufferSize = min(ozconf.dpBufferSize, INT__);
+    });
+
     // DP    
     CASE_REC(PROP_DP,
 	     SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
@@ -848,6 +877,14 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 		      ozconf.dpWFRemoteTimeout);
 	     SET_NAT(oz_atomNoDup("firewallReopenTimeout"),
 		      ozconf.dpFirewallReopenTimeout);
+	     DO_NAT(oz_atomNoDup("bufferSize"),{
+	       if (INT__ <= ozconf.dpMaxBufferSize)
+		 ozconf.dpBufferSize = INT__;
+	     });
+	     DO_NAT(oz_atomNoDup("maxBufferSize"),{
+	       ozconf.dpMaxBufferSize = INT__;
+	       ozconf.dpBufferSize = min(ozconf.dpBufferSize, INT__);
+	     });
 	     SET_BOOL(oz_atomNoDup("useAltVarProtocol"),
 		      ozconf.dpUseAltVarProtocol););
     // DPTABLE
@@ -1168,6 +1205,10 @@ static const struct prop_entry prop_entries[] = {
   {"dp.closeTimeout",PROP_DP_CLOSETIMEOUT},
   {"dp.wfRemoteTimeout",PROP_DP_WFREMOTETIMEOUT},
   {"dp.firewallReopenTimeout",PROP_DP_FIREWALLREOPENTIMEOUT},
+  {"dp.defaultBufferSize",PROP_DP_DEFAULTBUFFERSIZE},
+  {"dp.defaultMaxBufferSize",PROP_DP_DEFAULTMAXBUFFERSIZE},
+  {"dp.bufferSize",PROP_DP_BUFFERSIZE},
+  {"dp.maxBufferSize",PROP_DP_MAXBUFFERSIZE},
   {"dp",PROP_DP},
   // DPTABLE
   {"dpTable.defaultOwnerTableSize",

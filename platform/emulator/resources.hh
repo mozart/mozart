@@ -133,15 +133,15 @@
 // Distributed Oz - general;
 
 /* dp tables default values */
-#define DEFAULT_CLOSE_TIME      1000
-#define DEFAULT_OWNER_TABLE_SIZE    100
-#define DEFAULT_BORROW_TABLE_SIZE   100
-#define DP_TABLE_LOW_LIMIT          20
-#define DP_TABLE_EXPAND_FACTOR      200
-#define DP_TABLE_BUFFER             50
-#define DP_TABLE_WORTHWHILE_REALLOC 200
-#define DP_FLOWBUFFERSIZE            10000   /* lower limit on nof msg for 
-						flowcontrol */
+#define DEFAULT_CLOSE_TIME           1000
+#define DEFAULT_OWNER_TABLE_SIZE     100
+#define DEFAULT_BORROW_TABLE_SIZE    100
+#define DP_TABLE_LOW_LIMIT           20
+#define DP_TABLE_EXPAND_FACTOR       200
+#define DP_TABLE_BUFFER              50
+#define DP_TABLE_WORTHWHILE_REALLOC  200
+// lower limit on nof msg for flowcontrol
+#define DP_FLOWBUFFERSIZE            10000
 #define DP_FLOWBUFFERTIME            1000
 #define DP_RETRYTIMECEILING          200000
 #define DP_RETRYTIMEFLOOR            500
@@ -150,6 +150,10 @@
 #define DP_TCPWEAKLIMIT              30
 #define DP_PROBEINTERVAL             5000
 #define DP_PROBETIMEOUT              30000 /* ms */
+#define DP_DEF_BYTEBUFFER_SIZE	     8192
+// 128kB is sufficient to fully load a 100mbit network with I/O
+// operations every 10ms;
+#define DP_DEF_MAX_BYTEBUFFER_SIZE   131072
 
 // distributed reference consistencey
 
