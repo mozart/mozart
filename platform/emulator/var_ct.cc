@@ -1,12 +1,13 @@
 /*
  *  Authors:
- *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ *    Tobias Müller (tmueller@ps.uni-sb.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Tobias Müller, 1999
+ *    Christian Schulte, 1999
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -401,48 +402,41 @@ OZ_BI_define(BIIsGenCtVarB, 1,1)
   OZ_RETURN(oz_bool(isGenCtVar(v, vtag)));
 } OZ_BI_end
 
-OZ_C_proc_begin(BIGetCtVarConstraintAsAtom, 2)
+OZ_BI_define(BIGetCtVarConstraintAsAtom, 1, 1)
 {
   ExpectedTypes("OzCtVariable<ConstraintData>,Atom");
 
-  OZ_getCArgDeref(0, var, varptr, vartag);
+  OZ_getINDeref(0, var, varptr, vartag);
 
-  if(! oz_isVariable(vartag)) {
-    return OZ_unify(var, OZ_getCArg(1));
+  if (!oz_isVariable(vartag)) {
+    OZ_RETURN(var);
   } else if (isGenCtVar(var, vartag)) {
-    return OZ_unify(oz_atom(((OzCtVariable *) tagged2CVar(var))->getConstraint()->toString(ozconf.printDepth)),
-                    OZ_getCArg(1));
+    OZ_RETURN(oz_atom(((OzCtVariable *) tagged2CVar(var))->getConstraint()->toString(ozconf.printDepth)));
   } else if (oz_isNonKinded(var)) {
-    OZ_addThread(makeTaggedRef(varptr),
-                 OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
-    return PROCEED;
+    oz_suspendOnPtr(varptr);
   } else {
     TypeError(0, "");
   }
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(BIGetCtVarNameAsAtom, 2)
+OZ_BI_define(BIGetCtVarNameAsAtom, 1, 1)
 {
   ExpectedTypes("OzCtVariable<ConstraintData>,Atom");
 
-  OZ_getCArgDeref(0, var, varptr, vartag);
+  OZ_getINDeref(0, var, varptr, vartag);
 
-  if(! oz_isVariable(vartag)) {
-    return OZ_unify(var, OZ_getCArg(1));
+  if (!oz_isVariable(vartag)) {
+    OZ_RETURN(var);
   } else if (isGenCtVar(var, vartag)) {
-    return
-      OZ_unify(oz_atom(((OzCtVariable*)tagged2CVar(var))->getDefinition()->getName()),
-               OZ_getCArg(1));
+    OZ_RETURN(oz_atom(((OzCtVariable*)tagged2CVar(var))->getDefinition()->getName()));
   } else if (oz_isNonKinded(var)) {
-    OZ_addThread(makeTaggedRef(varptr),
-                 OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
-    return PROCEED;
+    oz_suspendOnPtr(varptr);
   } else {
     TypeError(0, "");
   }
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 

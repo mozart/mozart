@@ -27,16 +27,16 @@
     (
      #* Constraint variables
 
-     'isB'                => { in  => ['value'],
-                               out => ['+bool'],
-                               BI  => BIIsGenCtVarB},
+     'isB'                 => { in  => ['value'],
+                                out => ['+bool'],
+                                BI  => BIIsGenCtVarB},
 
-    'getConstraintAsAtom' => { in  => ['value','atom'],
-                               out => [],
-                               BI  => BIGetCtVarConstraintAsAtom},
+     'getConstraintAsAtom' => { in  => ['value'],
+                                out => ['+atom'],
+                                BI  => BIGetCtVarConstraintAsAtom},
 
-     'getNameAsAtom'      => { in  => ['value','atom'],
-                               out => [],
-                               BI  => BIGetCtVarNameAsAtom},
+     'getNameAsAtom'       => { in  => ['value'],
+                                out => ['+atom'],
+                                BI  => BIGetCtVarNameAsAtom},
 
      );

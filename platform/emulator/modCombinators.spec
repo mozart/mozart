@@ -22,8 +22,8 @@
 
 %builtins_all =
 (
-    'reflect'   => { in  => ['*int','+[value]'],
-                     out => [],
+    'reflect'   => { in  => ['*int'],
+                     out => ['+[value]'],
                      bi  => BIfdGetAsList},
 
     'tell'      => { in  => ['+value', 'int'],
