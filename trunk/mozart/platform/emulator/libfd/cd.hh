@@ -24,8 +24,8 @@
  *
  */
 
-#include "fdaux.hh"
 #include "base.hh"
+#include "fdaux.hh"
 
 #ifdef FDCD
 class CDSuppl : public OZ_Propagator {
