@@ -1,6 +1,7 @@
 ;; Major mode for editing Oz, and for running Oz under Emacs
 ;; Copyright (C) 1993 DFKI GmbH
 ;; Author: Ralf Scheidhauer and Michael Mehl ([scheidhr|mehl]@dfki.uni-sb.de)
+;; $Id$
 
 ;; TODO
 ;; - state message: Should we use the mode-line ???
