@@ -157,6 +157,16 @@ AC_ARG_ENABLE(contrib-reflect,
 AC_MSG_RESULT($oz_cv_enable_contrib_reflect)
 OZ_ADDTO_CONTRIBDIRS(reflect)
 
+AC_MSG_CHECKING([for --enable-contrib-investigator])
+AC_ARG_ENABLE(contrib-investigator,
+  [--enable-contrib-investigator
+	whether to build the investigator contribution (default: yes)],
+  [oz_cv_enable_contrib_investigator=$enableval],
+  [: ${oz_cv_enable_contrib_investigator:=$oz_enable_contrib_investigator}
+   : ${oz_cv_enable_contrib_investigator:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_investigator)
+OZ_ADDTO_CONTRIBDIRS(investigator)
+
 AC_MSG_CHECKING([for --enable-contrib-psql])
 AC_ARG_ENABLE(contrib-psql,
   [--enable-contrib-psql
