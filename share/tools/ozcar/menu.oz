@@ -34,7 +34,7 @@ in
 	      menu:
 		 [C(label:   'Close'
 		    action:  self # off
-		    key:     ctrl(c)
+		    key:     ctrl(x)
 		    feature: quit)]
 	      feature: file)
 	   /*
@@ -52,7 +52,7 @@ in
 		     variable: TkStepSystemProcedures
 		     action:   Config # toggle(stepSystemProcedures)
 		     feature:  stepSystemProcedures)
-		  CC(label:    'Step on Builtin...'
+		  CC(label:    'Step on Builtin'
 		     menu:
 			[CB(label:    '\'record\''
 			    variable: TkStepRecordBuiltin

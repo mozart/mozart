@@ -207,10 +207,27 @@ in
 	    E = {Ozcar exists(I $)}
 	 in
 	    case E then
-	       ThreadManager,block(thr:T id:I file:F line:L name:N args:A
-				   builtin:B time:Time)
+	       StackObj = {Dget self.ThreadDic I}
+	       Ack
+	    in
+	       thread
+		  {StackObj blockMsg(Ack)}
+		  {OzcarMessage
+		   'checking if blocking of thread #'#I#' is persistent...'}
+		  case Ack == ok then
+		     {OzcarMessage '...yes!'}
+		     {Dbg.contflag T false}
+		     {Dbg.stepmode T true}
+		     {Thread.suspend T}
+		     ThreadManager,block(thr:T id:I file:F line:L name:N
+					 args:A builtin:B time:Time)
+		  else
+		     {OzcarMessage 'blocking of thread #'#I#' was temporary'}
+		     {Thread.resume T}
+		  end
+	       end
 	    else
-	       {OzcarMessage UnknownSuspThread}
+	       {OzcarError UnknownSuspThread}
 	    end
 	    
 	 [] cont then
@@ -219,14 +236,28 @@ in
 	    E = {Ozcar exists(I $)}
 	 in
 	    case E then
+	       /*
 	       case T == @currentThread andthen
 		  {self.tkRunChildren tkReturnInt($)} == 0 then
 		  skip
 		  %Gui,status(I runnable)
 	       else skip end
-	       Gui,markNode(I runnable)
+	       */ 
+	       StackObj = {Dget self.ThreadDic I}
+	       Ack
+	    in
+	       {StackObj contMsg(Ack)}
+	       case Ack == ok then
+		  Gui,markNode(I runnable)
+		  case T == @currentThread then
+		     F L in
+		     {StackObj getPos(file:F line:L)}
+		     SourceManager,scrollbar(file:F line:L what:appl
+					     color:ScrollbarApplColor)
+		  else skip end
+	       else skip end
 	    else
-	       {OzcarMessage UnknownWokenThread}
+	       {OzcarError UnknownWokenThread}
 	    end
 
 	 [] exception then
@@ -241,7 +272,10 @@ in
 	    in
 	       {StackObj printException(X#S)}
 	    else
-	       ThreadManager,add(T I X#S false)
+	       thread
+		  {Delay 280}
+		  ThreadManager,add(T I X#S false)
+	       end
 	    end
 	    
 	 else
