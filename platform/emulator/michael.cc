@@ -95,23 +95,23 @@ OZ_BI_define(BIdebugRef, 0,0)
 
 OZ_BI_define(BIlivenessX, 1,1)
 {
-  OZ_declareIntIN(0,pc);
+  OZ_declareInt(0,pc);
 
   OZ_RETURN_INT(CodeArea::livenessX((ProgramCounter)ToPointer(pc),0,0));
 } OZ_BI_end
 
 OZ_BI_define(BIdisplayDef, 2,0)
 {
-  OZ_declareIntIN(0,pc);
-  OZ_declareIntIN(1,size);
+  OZ_declareInt(0,pc);
+  OZ_declareInt(1,size);
   displayDef((ProgramCounter)ToPointer(pc),size);
   return PROCEED;
 } OZ_BI_end
 
 OZ_BI_define(BIdisplayCode, 2,0)
 {
-  OZ_declareIntIN(0,pc);
-  OZ_declareIntIN(1,size);
+  OZ_declareInt(0,pc);
+  OZ_declareInt(1,size);
   displayCode((ProgramCounter)ToPointer(pc),size);
   return PROCEED;
 } OZ_BI_end
