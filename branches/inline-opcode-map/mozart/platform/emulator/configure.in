@@ -1677,6 +1677,7 @@ asm("movl \$LABEL"OP##N##_STRING",%0" : "=m" (*ptr))
 #define LOAD_LABEL(N) \
 { void* reg; asm("sethi %%hi(LABEL"OP##N##_STRING"), %0\n\tor %0, %%lo(LABEL"OP##N##_STRING"), %0" : "=r" (reg)); *ptr=reg; }
 #elif defined(ARCH_PPC) || defined(ARCH_DARWIN)
+#define LOAD_LABEL(N) \
 { void* reg; asm("lis %0, \$LABEL"OP##N##_STRING"@ha\n\taddi %0,%0,\$LABEL"OP##N##_STRING"@l" : "=r" (reg)); *ptr=reg; }
 #else
 #error this platform does not currently support the inline opcode map trick
