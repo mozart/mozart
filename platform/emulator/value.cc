@@ -1348,6 +1348,18 @@ void PrTabEntry::profileReset()
   }
 }
 
+
+void PrTabEntry::patchFileAndLine()
+{
+  Reg reg;
+  ProgramCounter next;
+  TaggedRef file, line, column, comment, predName;
+  CodeArea::getDefinitionArgs(PC-sizeOf(DEFINITION),reg,next,file,line,column,predName);
+  lineno = smallIntValue(line);
+  fileName = file;
+}
+
+
 int featureEqOutline(TaggedRef a, TaggedRef b)
 {
   Assert(a != b); // already check in featureEq
