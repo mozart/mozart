@@ -4706,8 +4706,9 @@ OZ_C_proc_begin(BInewPort,2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_proto(BIfail);
 
-OZ_C_proc_begin(BIputPort,2)
+OZ_C_proc_begin(BIsendPort,2)
 {
   OZ_Term prt1 = OZ_getCArg(0);
   OZ_Term msg = OZ_getCArg(1);
@@ -4724,11 +4725,11 @@ OZ_C_proc_begin(BIputPort,2)
   TaggedRef newStream = OZ_newVariable();
   TaggedRef old = port->exchangeStream(newStream);
   
-  if (OZ_isList(old,NULL)) {
-    return (OZ_unify(OZ_head(old),msg) == PROCEED && 
-	    OZ_unify(OZ_tail(old),newStream) == PROCEED) ? PROCEED : FAILED;
-  }
-  return OZ_unify(cons(msg,newStream),old);
+  OZ_Return ret = OZ_unify(cons(msg,newStream),old);
+  if (ret != FAILED) return ret;
+
+  OZ_makeRunnableThread(BIfail,0,0);
+  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -7135,6 +7136,11 @@ OZ_C_proc_begin(BIbiExceptionHandler,1)
 }
 OZ_C_proc_end
 
+/********************************************************************
+ * PERDIO
+ ******************************************************************** */
+
+
 
 #endif /* BUILTINS2 */
 
@@ -7231,7 +7237,7 @@ BIspec allSpec1[] = {
   {"Dictionary.keys",   2, BIdictionaryKeys,    0},
 
   {"Port.new",	      2,BInewPort,	 0},
-  {"Port.put",	      2,BIputPort,	 0},
+  {"Port.send",	      2,BIsendPort,	 0},
 
   {"NewCell",	      2,BInewCell,	 0},
   {"Exchange",        3,BIexchangeCell, (IFOR) BIexchangeCellInline},

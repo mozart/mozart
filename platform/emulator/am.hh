@@ -103,6 +103,8 @@ public:
   Board *currentSolveBoard;       // current 'solve' board or NULL if none;
   Bool wasSolveSet; 
 
+  int siteFD;
+
   CompStream *compStream;
   Bool isStandaloneF;
   Bool isStandalone() { return isStandaloneF; }
@@ -355,6 +357,8 @@ extern AM am;
 #include "debug.hh"
 #include "os.hh"
 #include "verbose.hh"
+
+#include "perdio.hh"
 
 #ifndef OUTLINE
 #include "am.icc"
