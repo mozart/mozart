@@ -32,21 +32,11 @@
  ****************************************************************************/
 
 
-#ifdef LINUX
-/* FD_ISSET missing */
-#include <sys/time.h>
-#endif
-
 #include "gc.hh"
-
 #include "perdio.hh"
-
 #include "genvar.hh"
-
 #include "fdhook.hh"
-
 #include "fdomn.hh"
-
 #include "dictionary.hh"
 #include "os.hh"
 #include "value.hh"
