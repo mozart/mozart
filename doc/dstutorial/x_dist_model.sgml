@@ -44,7 +44,9 @@ We define the distributed semantics for each
 type of language entity and then we explain
 how to build distributed applications.
 
-<SECTION><TITLE>Objects</TITLE>
+<SECTION><TITLE>Language entities</TITLE>
+
+<SUBSECTION><TITLE>Objects</TITLE>
 
 <P>The most critical entities
 in terms of network efficiency are the objects.
@@ -127,7 +129,7 @@ semantics in Oz.
 We give examples of some of them
 later in the tutorial.
 
-<SECTION><TITLE>Other stateful entities</TITLE>
+<SUBSECTION><TITLE>Other stateful entities</TITLE>
 
 <P>The other stateful language entities have the following
 distributed semantics:
@@ -182,7 +184,7 @@ This implements a standard distributed mutual
 exclusion algorithm.
 </LIST>
 
-<SECTION><TITLE>Single-assignment entities</TITLE>
+<SUBSECTION><TITLE>Single-assignment entities</TITLE>
 
 <P>An important category of language entities
 are those that can be assigned only to one value:
@@ -259,7 +261,7 @@ messages from different threads.
 
 </LIST>
 
-<SECTION><TITLE>Stateless entities</TITLE>
+<SUBSECTION><TITLE>Stateless entities</TITLE>
 
 <P>Stateless entities never
 change, i.e., they do not have any internal state whatsoever.
@@ -330,7 +332,7 @@ Functors are chunks that contain a function
 taking modules as arguments and returning a module,
 where a module is a record.
 
-<SECTION><TITLE>Sited entities</TITLE>
+<SUBSECTION><TITLE>Sited entities</TITLE>
 
 <P>Entities that can be used only on one site
 are called <EM>sited</EM>.
@@ -398,7 +400,9 @@ Some commonly-used system modules are
 <<OS>> and <<Property>> (the OS and emulator),
 and so forth.
 
-<SECTION id="section.distmodel.shutdown"><TITLE>Controlled system shutdown</TITLE>
+<SECTION><TITLE>Sites</TITLE>
+
+<SUBSECTION id="section.distmodel.shutdown"><TITLE>Controlled system shutdown</TITLE>
 
 <P>A site can be stopped in two ways: normally or abnormally.
 The normal way is a controlled shutdown initiated
@@ -423,7 +427,7 @@ moved to the owner site before shutting down.
 If the owner node is on the shutting-down site,
 then that entity will no longer work.
 
-<SECTION><TITLE>Distributed memory management</TITLE>
+<SUBSECTION><TITLE>Distributed memory management</TITLE>
 
 <P>All memory management in Mozart is automatic;
 the programmer does not have to worry about when
