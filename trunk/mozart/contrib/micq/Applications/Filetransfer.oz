@@ -194,7 +194,7 @@ define
 					end
 				     else %Ss={ByteString.toString X.1} in
 					{SaveData X.1} %Ss}
-					X.2=unit
+					thread X.2=unit end
 					{Progress {ByteString.length X.1}} %{Length Ss}}
 				     end
 				  end}
