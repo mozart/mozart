@@ -83,11 +83,6 @@ void OZ_error(const char *format, ...)
   DebugCheckT(osUnblockSignals());
 
   //
-  // kost@ : *i want* to halt the program at the point of an error!!!
-#if defined(DEBUG_CHECK)
-  // just get a synchronous signal on the same thread;
-  *((int *) 0) = 0;
-#else
   // send a signal to all forked processes, including the emulator itself
   oskill(0,ozconf.dumpCore?SIGQUIT:SIGUSR1);
 #endif
