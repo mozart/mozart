@@ -732,10 +732,13 @@ OZ_CHECK_HEADER_PATH(gmp.h,
 
 if test "$oz_gmp_inc_found" = yes; then
   OZ_CHECK_LIB_PATH(gmp, mpz_init,
-    [oz_gmp_lib_found=yes],[oz_gmp_lib_found=no])
+    oz_gmp_lib_found=gmp,
+    OZ_CHECK_LIB_PATH(gmp2, mpz_init,
+    oz_gmp_lib_found=gmp2,
+    oz_gmp_lib_found=no))
 fi
 
-if test "$oz_gmp_lib_found" = yes; then
+if test "$oz_gmp_lib_found" != no; then
   AC_MSG_CHECKING(gmp version is at least OZ_VERSION_GMP)
   if test -z "$oz_cv_gmp_version_ok"; then
     cat > conftest.$ac_ext <<EOF
@@ -776,10 +779,10 @@ to build the system.  It can be retrieved from:
 
         ftp://ftp.gnu.org/pub/gnu/
 
-The latest version at this time is ??? and is available
+The latest version at this time is 2.0.2 and is available
 packaged as the following archive:
 
-        ???
+        ftp://ftp.gnu.org/pub/gnu/gmp/gmp-2.0.2.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
