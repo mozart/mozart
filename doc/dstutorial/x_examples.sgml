@@ -43,6 +43,8 @@ virtual strings inside Oz.
 
 <SUBSECTION><TITLE>Connecting applications by means of tickets</TITLE>
 
+<index/<<Connection>> module<and>example/
+<index/example<and>using <<Connection>> module/
 <P>Let's say Application 1 has a stream that
 it wants others to access.
 It can do this by creating a ticket
@@ -111,7 +113,8 @@ then Application 2's browse window will show the bindings.
 
 <SUBSECTION><TITLE>Persistent data structures</TITLE>
 
-<index/pickle<and>example/
+<index/<<Pickle>> module<and>example/
+<index/example<and>using <<Pickle>> module/
 <P>An application can save
 any stateless data structure
 in a file and load it again from a file.
@@ -151,6 +154,8 @@ cannot be pickled.
 
 <SUBSECTION><TITLE>Remote computations and functors</TITLE>
 
+<index/<<Remote>> module<and>example/
+<index/example<and>using <<Remote>> module/
 <index/remote computation<and>example/
 <P>An application can start a computation
 on a remote host
