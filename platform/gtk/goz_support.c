@@ -32,13 +32,13 @@
  *****************************************************************************/
 
 /* Signal ports for event processing */
-OZ_Term signal_port = NULL;
-OZ_Term signal_port_sml = NULL;
+OZ_Term signal_port = 0;
+OZ_Term signal_port_sml = 0;
 
 OZ_BI_define (ozgtk_initialize_signal_port, 1, 0)
 {
   OZ_declareTerm (0, port);
-  if (signal_port == NULL) {
+  if (signal_port == 0) {
     OZ_protect(&signal_port); /* prevent GC of port anchor */
   }
   signal_port = port;
@@ -134,7 +134,7 @@ OZ_BI_define (ozgtk_free_gdk_color, 1, 0)
 OZ_BI_define (ozgtk_initialize_signal_port_sml, 1, 0)
 {
   OZ_declareTerm (0, port);
-  if (signal_port_sml == NULL) {
+  if (signal_port_sml == 0) {
     OZ_protect(&signal_port_sml); /* prevent GC of port anchor */
   }
   signal_port_sml = port;
