@@ -41,15 +41,14 @@
 #include "trail.hh"
 
 inline
-Propagator * oz_newPropagator(OZ_Propagator * p)
-{
+Propagator * oz_newPropagator(OZ_Propagator * p) {
   Board * bb = oz_currentBoard();
   Propagator * prop = new Propagator(p, bb);
   prop->setRunnable();
   prop->setUnify();
   prop->setActive();
 
-  if (! p->isMonotonic())
+  if (!p->isMonotonic())
     prop->setNMO();
 
   bb->incSuspCount();
@@ -59,51 +58,16 @@ Propagator * oz_newPropagator(OZ_Propagator * p)
   return prop;
 }
 
-//
-//  Terminate a propagator thread which is (still) marked as runnable
-// (was: 'killPropagatedCurrentTaskSusp' with some variations);
-//
-//  This might be used only from the local propagation queue,
-// because it doesn't check for entaiment, stability, etc. 
-// Moreover, such threads are NOT counted in solve actors
-// and are not marked as "inSolve" EVEN in the "running" state!
-//
-//  Philosophy (am i right, Tobias?):
-// When some propagator returns 'PROCEED' and still has the 
-// 'runnable' flag set, then it's done.
-//
-//  Close up a propagator which is done;
-//  Actually, terminating a thread should be done through 
-// 'LBLkillxxxx' in emulate.cc, but one cannot jump from the local 
-// propagation queue there;
 inline
-void oz_closeDonePropagator(Propagator * prop)
-{
+void oz_closeDonePropagator(Propagator * prop) {
   Assert(prop);
   Assert(!prop->isDead());
   Assert(oz_isCurrentBoard(GETBOARD(prop)));
 
-  prop->dispose();	// kost@: TODO? optimize;
+  prop->dispose();
   prop->setDead();
 
-  Board * cb = oz_currentBoard();
-  //
-  //  Actually, the current board can be alive or not - 
-  // so, in the last case it's redundant;
-  cb->decSuspCount();
-
-  //
-  //  ... again to the 'SolveActor::checkExtSuspList':
-  // there is a limitation in the implementation that no stability
-  // can be achieved before a propagator on a global variable(s) 
-  // completely disappears. Therefore, we make the check here;
-  if (prop->isExternal())
-    cb->checkSolveThreads();
-
-  //
-  //  An ESSENTIAL invariant:
-  //  If entailment/whatever is reached somewhere, that's a bad news.
-  //  I don't know how to check this assertion right now;
+  oz_currentBoard()->decSuspCount();
 }
 
 #ifdef DEBUG_PROPAGATORS
@@ -124,8 +88,11 @@ void oz_closeDonePropagator(Propagator * prop)
 #endif
 
 inline
-OZ_Return oz_runPropagator(Propagator * p)
-{
+OZ_Return oz_runPropagator(Propagator * p) {
+
+  if (!p->isActive())
+    return OZ_SLEEP;
+
   ozstat.propagatorsInvoked.incf();
 
   CpiHeap.reset();
@@ -145,7 +112,7 @@ OZ_Return oz_runPropagator(Propagator * p)
     printf("<%s[%p]", pn, ozprop); fflush(stdout);
 #endif
 
-    OZ_Return ret = (p->isActive() ? ozprop->propagate() : OZ_SLEEP);
+    OZ_Return ret = ozprop->propagate();
 
 #ifdef DEBUG_PROPAGATORS
     printf(" -> %s>\n\n", RETVAL_TEXT(ret)); fflush(stdout);
@@ -168,12 +135,12 @@ OZ_Return oz_runPropagator(Propagator * p)
     printf("<%s[%p] %s", pn, ozprop, OZ_toC(params, 10, 10));
     fflush(stdout);
     //
-    OZ_Return ret = (p->isActive() ? ozprop->propagate() : OZ_SLEEP);
+    OZ_Return ret = ozprop->propagate();
     printf(" -> %s (%s)>\n\n", RETVAL_TEXT(ret), OZ_toC(params, 10, 10)); 
     fflush(stdout);
     return ret;
 #else
-    return (p->isActive() ? ozprop->propagate() : OZ_SLEEP);
+    return ozprop->propagate();
 #endif
   }
 }
@@ -191,18 +158,10 @@ void oz_preemptedPropagator(Propagator * prop) {
   } else {
     oz_currentBoard()->addToLPQ(prop);
   }
-
 }
 
-//  
-//  (re-)Suspend a propagator again; (was: 'reviveCurrentTaskSusp');
-//  It does not take into account 'solve threads', i.e. it must 
-// be done externally - if needed;
-//
-//  (re-)Suspend the propagator again (former 'reviveCurrentTaskSusp');
 inline
-void oz_sleepPropagator(Propagator * prop)
-{
+void oz_sleepPropagator(Propagator * prop) {
   Assert(prop);
   Assert(!prop->isDead());
   Assert(oz_isCurrentBoard(GETBOARD(prop)));
