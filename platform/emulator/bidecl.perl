@@ -142,11 +142,6 @@
 ### is non-exportable.
 
 
-require "bidecl.all";
-
-$builtins = { %builtins_all };
-
-
 # this is the function that converts these descriptions to
 # an array of declarations appropriate for the emulator
 
@@ -345,6 +340,7 @@ while (@ARGV) {
     elsif ($option eq '-structure')   { $choice='structure'; }
     elsif ($option eq '-include')    { push @include,split(/\,/,shift); }
     elsif ($option eq '-exclude')    { push @exclude,split(/\,/,shift); }
+    elsif ($option eq '-file')       { push @files,shift; }
     else { die "unrecognized option: $option"; }
 }
 
@@ -357,10 +353,18 @@ foreach $option (@exclude) { $exclude{$option} = 1; }
 
 $includedefault = 0 if @include!=0;
 
-if    ($choice eq 'ctable' )    { &CTABLE;  }
-elsif ($choice eq 'cdecl'  )    { &CDECL;   }
-elsif ($choice eq 'cdyntable' ) { &CDYNTABLE;   }
-elsif ($choice eq 'oztable')    { &OZTABLE; }
-elsif ($choice eq 'sortnativeness') { &SORTNATIVENESS; }
-elsif ($choice eq 'structure')   { &STRUCTURE; }
-else { die "must specify one of: -ctable -cdecl -oztable -structure -sortnativeness"; }
+foreach $file (@files) {
+    require $file;
+    $builtins = { %builtins_all };
+
+    if ($choice eq 'ctable' )    {
+        if ($cmode eq 'dyn') { &CDYNTABLE; }
+        elsif ($cmode eq 'stat') { &CTABLE; }
+        else { die "must specify on of cmode=dyn or cmode=stat"; }
+    }
+    elsif ($choice eq 'cdecl'  )    { &CDECL;   }
+    elsif ($choice eq 'oztable')    { &OZTABLE; }
+    elsif ($choice eq 'sortnativeness') { &SORTNATIVENESS; }
+    elsif ($choice eq 'structure')   { &STRUCTURE; }
+    else { die "must specify one of: -ctable -cdecl -oztable -structure -sortnativeness"; }
+}

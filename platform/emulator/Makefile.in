@@ -252,55 +252,11 @@ builtins.o: \
         libfset.tbl libfset.dcl \
         libparser.tbl libparser.dcl
 
+%.tbl: %.spec
+        perl $(SRCDIR)/bidecl.perl -file $< -ctable > $@
 
-builtins.tbl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -ctable \
-        -exclude wif,fd,libfd,libschedule,fset,libfset,libparser > $@
-builtins.dcl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdecl \
-        -exclude wif,fd,libfd,libschedule,fset,libfset,libparser > $@
-
-ctgenvar.tbl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -ctable -include ct > $@
-ctgenvar.dcl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdecl -include ct > $@
-
-fdbuilti.tbl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -ctable -include fd > $@
-fdbuilti.dcl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdecl -include fd > $@
-
-fsetbuilti.tbl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -ctable -include fset > $@
-fsetbuilti.dcl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdecl -include fset > $@
-
-libwif.tbl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdyntable -include wif > $@
-libwif.dcl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdecl -include wif > $@
-
-libfd.tbl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdyntable -include libfd > $@
-libfd.dcl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdecl -include libfd > $@
-
-libschedule.tbl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdyntable -include libschedule > $@
-libschedule.dcl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdecl -include libschedule > $@
-
-libfset.tbl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdyntable -include libfset > $@
-libfset.dcl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdecl -include libfset > $@
-
-libparser.tbl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdyntable -include libparser > $@
-libparser.dcl: bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -cdecl -include libparser > $@
-
-
+%.dcl: %.spec
+        perl $(SRCDIR)/bidecl.perl -file $< -cdecl > $@
 
 # this special rule ensures that warnings issued in bison.simple
 # are not treated as errors:
@@ -425,7 +381,7 @@ include Makefile.rules
 veryclean::
         -rm -f version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
                 ozlib.lnk *.exe *.map *.imp *.sym \
-                $(CREATEDFILES) TAGS
+                $(CREATEDFILES) TAGS Makefile.deps
 
 distclean::
         -rm -f CONF.h conf.h config.cache config.log config.status \

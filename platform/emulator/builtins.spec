@@ -1,3 +1,5 @@
+$cmode='stat';
+
 %builtins_all =
 (
     #* Access to all of them: the Builtin 'builtin'
@@ -946,11 +948,10 @@
                              native => false},
 
 
-    'Thread.create'     => { in  => ['+procedure'],
-                             out => [],
-                             BI  => BIthreadCreate,
-                             native => false},
-
+    'Thread.create'    => { in  => ['+procedure'],
+                            out => [],
+                            BI  => BIthreadCreate,
+                            native => false},
 
     ###* Foreign Pointers
 
@@ -1158,99 +1159,7 @@
 
     ##* Diffent Kinds of Special Variables
 
-    ###* Promise
-
-    'Promise.new'       => { in  => [],
-                             out => ['value'],
-                             BI  => BIPromiseNew,
-                             module=>'promise',
-                             native => false},
-
-    'Promise.is'        => { in  => ['value'],
-                             out => ['+bool'],
-                             BI  => BIPromiseIs,
-                             module=>'promise',
-                             native => false},
-    'Promise.assign'    => { in  => ['value','value'],
-                             out => [],
-                             BI  => BIPromiseAssign,
-                             module=>'promise',
-                             native => false},
-    'Promise.access'    => { in  => ['value'],
-                             out => ['value'],
-                             BI  => BIPromiseAccess,
-                             module=>'promise',
-                             native => false},
-    'Promise.waitRequest'=> { in  => ['value'],
-                             out => [],
-                             BI  => BIPromiseWaitRequest,
-                             module=>'promise',
-                             native => false},
-    ###* ByNeed
-
-    'ByNeed'            => { in  => ['value','value'],
-                             out => [],
-                             BI  => BIbyNeed,
-                             module=>'future',
-                             native => false},
-
-    ###* Lazy
-
-    'Lazy.new'          => { in  => ['value','value'],
-                             out => [],
-                             BI  => BILazyNew,
-                             module=>'lazy',
-                             native => false},
-
-    'Lazy.is'           => { in  => ['value'],
-                             out => ['+bool'],
-                             BI  => BILazyIs,
-                             module=>'lazy',
-                             native => false},
-
-    ###* GenCtVar
-
-    'isCtVarB'          => { in  => ['value'],
-                             out => ['+bool'],
-                             BI  => BIIsGenCtVarB,
-                             module =>  ct,
-                             native => true},
-
-    'getCtVarConstraintAsAtom' => { in  => ['value','atom'],
-                             out => [],
-                             BI  => BIGetCtVarConstraintAsAtom,
-                             module => ct,
-                             native => true},
-
-    'getCtVarNameAsAtom'   => { in  => ['value','atom'],
-                             out => [],
-                             BI  => BIGetCtVarNameAsAtom,
-                             module =>  ct,
-                             native => true},
-
     #* System Stuff
-
-    ##* Virtual Properties
-
-    'GetProperty'       => { in  => ['+literal'],
-                             out => ['value'],
-                             BI  => BIgetProperty,
-                             module=> 'vprop',
-                             native => false},
-
-    'CondGetProperty'   => { in  => ['+literal','value'],
-                             out => ['value'],
-                             BI  => BIcondGetProperty,
-                             module=> 'vprop',
-                             native => false},
-
-    'PutProperty'       => { in  => ['+literal','value'],
-                             out => [],
-                             BI  => BIputProperty,
-                             module=>'vprop',
-                             native => true},
-
-
 
     ##* Printing
 
@@ -1447,6 +1356,608 @@
                              out => [],
                              bi  => BIgetConstraints,
                              native => true},
+
+
+    #* Dynamic Linking
+
+    'dlOpen'            => { in  => ['+virtualString'],
+                             out => ['+foreignPointer'],
+                             BI  => BIdlOpen,
+                             native => true},
+
+    'dlClose'           => { in  => ['+foreignPointer'],
+                             out => [],
+                             BI  => BIdlClose,
+                             native => true},
+
+    'findFunction'      => { in  => ['+virtualString','+int',
+                                     '+foreignPointer'],
+                             out => [],
+                             BI  => BIfindFunction,
+                             native => true},
+
+    'dlLoad'            => { in  => ['+virtualString'],
+                             out => ['+foreignPointer#record'],
+                             BI  => BIdlLoad,
+                             native => true},
+
+    'dlStaticLoad'      => { in  => ['+virtualString'],
+                             out => ['+record'],
+                             BI  => BIdlStaticLoad,
+                             native => true},
+
+    #* Distribution
+
+    'PerdioVar.is'      => { in  => ['value'],
+                             out => ['+bool'],
+                             BI  =>   PerdioVar_is,
+                             module=> 'perdiovar',
+                             native => false},
+
+    'probe'             => { in  => ['value'],
+                             out => [],
+                             BI  => BIprobe,
+                             native => true},
+
+    'crash'             => { in  => [],
+                             out => [],
+                             BI  => BIcrash,
+                             doesNotReturn=>1,
+                             native => true},
+
+    'installHW'         => { in  => ['value','value','value'],
+                             out => [],
+                             BI  => BIhwInstall,
+                             native => true},
+
+    'deInstallHW'       =>  { in  => ['value','value','value'],
+                             out => [],
+                             BI  => BIhwDeInstall,
+                             native => true},
+
+
+
+    'setNetBufferSize'  =>  { in  => ['+value'],
+                             out => [],
+                             BI  => BIsetNetBufferSize,
+                             native => true},
+
+    'getNetBufferSize'  =>  { in  => [],
+                             out => ['value'],
+                             BI  => BIgetNetBufferSize,
+                             native => true},
+
+    'getEntityCond'     =>  { in  => ['value'],
+                             out => ['value'],
+                             BI  => BIgetEntityCond,
+                             native => true},
+
+
+
+    'controlVarHandler' => { in  => ['+value'],
+                             out => [],
+                             BI  => BIcontrolVarHandler,
+                             native => true},
+
+    'dvset'             => { in  => ['+int','+int'],
+                             out => [],
+                             BI  => BIdvset,
+                             ifdef=>DEBUG_PERDIO,
+                             module=>'perdio',
+                             native => true},
+
+    'tempSimulate'      => { in  => ['+int'],
+                             out => ['+int'],
+                             BI  => BIcloseCon,
+                             module=>'perdio',
+                             native => true},
+
+    'startTmp'          => { in  => ['+int','+int'],
+                             out => [],
+                             BI  => BIstartTmp,
+                             module=>'perdio',
+                             native => true},
+
+    'siteStatistics'    => { in  => [],
+                             out => ['+[value]'],
+                             BI  => BIsiteStatistics,
+                             module=>'perdio',
+                             native => true},
+
+    'printBorrowTable'  => { in  => [],
+                             out => [],
+                             BI  => BIprintBorrowTable,
+                             module=>'perdio',
+                             native => true},
+
+    'printOwnerTable'   => { in  => [],
+                             out => [],
+                             BI  => BIprintOwnerTable,
+                             module=>'perdio',
+                             native => true},
+
+
+    'portWait'         =>  { in  => ['+port','+int'],
+                             out => [],
+                             BI  => BIportWait,
+                             module=>'perdio',
+                             native => true},
+
+
+    'perdioStatistics'  => { in  => [],
+                             out => ['+record'],
+                             BI  => BIperdioStatistics,
+                             module=>'perdio' ,
+                             native => true},
+
+
+     'atRedo'           => { in  => ['+feature', 'value'],
+                             out => [],
+                             bi  => BIatRedo,
+                             native => true},
+
+    'slowNet'           => { in  => ['+int', '+int'],
+                             out => [],
+                             bi  => BIslowNet,
+                             native => true},
+
+
+    #* Pickles
+
+    'save'              => { in  => ['value','+virtualString'],
+                             out => [],
+                             BI  => BIsave,
+                             module=>components,
+                             native => false},
+
+    'load'              => { in  => ['value','value'],
+                             out => [],
+                             BI  => BIload,
+                             module=>components,
+                             native => false},
+
+    'export'            => { in  => ['value'],
+                             out => [],
+                             BI  => BIexport,
+                             module=>components,
+                             native => false},
+
+    #* Connection
+
+    'PID.get'           => { in  => [],
+                             out => ['+record'],
+                             BI  => BIGetPID,
+                             module=>components,
+                             native => false},
+
+    'PID.received'      => { in  => ['value'],
+                             out => [],
+                             BI  => BIReceivedPID,
+                             module=>components,
+                             native => false},
+
+    'PID.close'         => { in  => [],
+                             out => [],
+                             BI  => BIClosePID,
+                             module=>components,
+                             native => false},
+
+    'PID.send'          => { in  => ['+virtualString','+int','+int','+int','+int','value'],
+                             out => [],
+                             BI  => BISendPID,
+                             module=>components,
+                             native => false},
+
+    'PID.toPort'        => { in  => ['+virtualString','+int','+int','+int'],
+                             out => ['+port'],
+                             BI  => BITicket2Port,
+                             module=>components,
+                             native => false},
+
+    #* URL
+
+    'URL.localize'      => { in  => ['+virtualString'],
+                             out => ['+record'],
+                             BI  => BIurl_localize,
+                             module=>components,
+                             native => true},
+
+    'URL.open'          => { in  => ['+virtualString'],
+                             out => ['+int'],
+                             BI  => BIurl_open,
+                             module=>components,
+                             native => true},
+
+    'URL.load'          => { in  => ['+virtualString'],
+                             out => ['value'],
+                             BI  => BIurl_load,
+                             module=>components,
+                             native => true},
+
+    #* Virtual Sites
+
+    'VirtualSite.newMailbox' => { in     => [],
+                                  out    => ['+string'],
+                                  BI     => BIVSnewMailbox,
+                                  module => vs,
+                                  native => true},
+
+    'VirtualSite.initServer' => { in     => ['+string'],
+                                  out    => [],
+                                  BI     => BIVSinitServer,
+                                  module => vs,
+                                  native => true},
+
+    'VirtualSite.removeMailbox' => { in     => ['+string'],
+                                  out    => [],
+                                  BI     => BIVSremoveMailbox,
+                                  module => vs,
+                                  native => true},
+
+    #* Tools
+
+
+    ##* Debugger
+
+
+    ###* Debugger Internal
+
+    'Debug.getStream'   => { in  => [],
+                             out => ['value'],
+                             BI  => BIgetDebugStream,
+                             native => true},
+
+    'Debug.setStepFlag' => { in  => ['+thread','+bool'],
+                             out => [],
+                             BI  => BIsetStepFlag,
+                             native => true},
+
+    'Debug.setTraceFlag'=> { in  => ['+thread','+bool'],
+                             out => [],
+                             BI  => BIsetTraceFlag,
+                             native => true},
+
+    'Debug.checkStopped'=> { in  => ['+thread'],
+                             out => ['+bool'],
+                             BI  => BIcheckStopped,
+                             native => true},
+
+    'Debug.print'       => { in  => ['value','+int'],
+                             out => [],
+                             BI  => BIdebugPrint,
+                             ifdef=>'DEBUG_PRINT',
+                             native => true},
+
+    'Debug.printLong'   => { in  => ['value','+int'],
+                             out => [],
+                             BI  => BIdebugPrintLong,
+                             ifdef=>'DEBUG_PRINT',
+                             native => true},
+
+    'procedureEnvironment'=> { in  => ['+procedure'],
+                               out => ['+tuple'],
+                               BI  => BIprocedureEnvironment,
+                               native => true},
+
+    'chunkArity'        => { in  => ['+chunk'],
+                             out => ['+[feature]'],
+                             BI  => BIchunkArity,
+                             native => true},
+
+    ###* Debugger External
+
+    'Debug.prepareDumpThreads'  => { in  => [],
+                                     out => [],
+                                     BI  => BIprepareDumpThreads,
+                                     native => true},
+
+    'Debug.dumpThreads' => { in  => [],
+                             out => [],
+                             BI  => BIdumpThreads,
+                             native => true},
+
+    'Debug.listThreads' => { in  => [],
+                             out => ['+[thread]'],
+                             BI  => BIlistThreads,
+                             native => true},
+
+    'Debug.breakpointAt'=> { in  => ['+atom','+int','+bool'],
+                             out => ['+bool'],
+                             BI  => BIbreakpointAt,
+                             native => true},
+
+    'Debug.breakpoint'  => { in  => [],
+                             out => [],
+                             BI  => BIbreakpoint,
+                             native => true},
+
+    'Debug.displayDef'  => { in  => ['+int','+int'],
+                             out => [],
+                             BI  => BIdisplayDef,
+                             native => true},
+
+    'Debug.displayCode' => { in  => ['+int','+int'],
+                             out => [],
+                             BI  => BIdisplayCode,
+                             native => true},
+
+    'Debug.procedureCode'=> { in  => ['+procedure'],
+                              out => ['+int'],
+                              BI  => BIprocedureCode,
+                              native => true},
+
+    'Debug.procedureCoord'=> { in  => ['+procedure'],
+                               out => ['+record'],
+                               BI  => BIprocedureCoord,
+                               native => true},
+
+    'Debug.livenessX'   => { in  => ['+int'],
+                             out => ['+int'],
+                             BI  => BIlivenessX,
+                             native => true},
+
+
+    ##* Compiler
+    ###* OPI
+
+    'setOPICompiler'    => { in  => ['+object'],
+                             out => [],
+                             BI  => BIsetOPICompiler,
+                             native => true},
+
+    'getOPICompiler'    => { in  => [],
+                             out => ['+value'],
+                             BI  => BIgetOPICompiler,
+                             native => true},
+
+    ###* Misc
+
+    'concatenateAtomAndInt' => { in  => ['+atom','+int'],
+                                 out => ['+atom'],
+                                 BI  => BIconcatenateAtomAndInt,
+                                 native => false},
+
+    'getProcInfo' => { in  => ['+procedure'],
+                       out => ['value'],
+                       BI  => BIgetProcInfo,
+                       native => false},
+
+    'setProcInfo' => { in  => ['+procedure','value'],
+                       out => [],
+                       BI  => BIsetProcInfo,
+                       native => false},
+
+    'isBuiltin' => { in  => ['+value'],
+                     out => ['+bool'],
+                     BI  => BIisBuiltin,
+                     native => false},
+
+    'getBuiltinName' => { in  => ['+value'],
+                          out => ['+atom'],
+                          BI  => BIgetBuiltinName,
+                          native => false},
+
+    'nameVariable' => { in  => ['value','+atom'],
+                        out => [],
+                        BI  => BInameVariable,
+                        native => true},
+
+    'newNamedName' => { in  => ['+atom'],
+                        out => ['+literal'],
+                        BI  => BInewNamedName,
+                        native => true},
+
+    'newCopyableName' => { in  => ['+atom'],
+                           out => ['+literal'],
+                           BI  => BInewCopyableName,
+                           native => true},
+
+    'isCopyableName' => { in  => ['+value'],
+                          out => ['+bool'],
+                          BI  => BIisCopyableName,
+                          native => true},
+
+    'isUniqueName' => { in  => ['+value'],
+                        out => ['+bool'],
+                        BI  => BIisUniqueName,
+                        native => true},
+
+    'newPredicateRef' => { in  => [],
+                           out => ['+foreignPointer'],
+                           BI  => BInewPredicateRef,
+                           native => true},
+
+    'newCopyablePredicateRef' => { in  => [],
+                                   out => ['+foreignPointer'],
+                                   BI  => BInewCopyablePredicateRef,
+                                   native => true},
+
+    'isCopyablePredicateRef' => { in  => ['+foreignPointer'],
+                                  out => ['+bool'],
+                                  BI  => BIisCopyablePredicateRef,
+                                  native => true},
+
+    ###* Assembler
+
+    'newCodeBlock'      => { in  => ['+int'],
+                             out => ['+int'],
+                             BI  => BInewCodeBlock,
+                             native => true},
+
+    'getOpcode'         => { in  => ['+atom'],
+                             out => ['+int'],
+                             BI  => BIgetOpcode,
+                             native => true},
+
+    'getInstructionSize'=> { in  => ['+atom'],
+                             out => ['+int'],
+                             BI  => BIgetInstructionSize,
+                             native => true},
+
+    'makeProc'          => { in  => ['+int','+[value]'],
+                             out => ['+procedure/0'],
+                             BI  => BImakeProc,
+                             native => true},
+
+    'addDebugInfo'      => { in  => ['+int','+atom','+int'],
+                             out => [],
+                             BI  => BIaddDebugInfo,
+                             native => true},
+
+    'storeOpcode'       => { in  => ['+int','+int'],
+                             out => [],
+                             BI  => BIstoreOpcode,
+                             native => true},
+
+    'storeNumber'       => { in  => ['+int','+number'],
+                             out => [],
+                             BI  => BIstoreNumber,
+                             native => true},
+
+    'storeLiteral'      => { in  => ['+int','+literal'],
+                             out => [],
+                             BI  => BIstoreLiteral,
+                             native => true},
+
+    'storeFeature'      => { in  => ['+int','+feature'],
+                             out => [],
+                             BI  => BIstoreFeature,
+                             native => true},
+
+    'storeConstant'     => { in  => ['+int','+value'],
+                             out => [],
+                             BI  => BIstoreConstant,
+                             native => true},
+
+    'storeBuiltinname'  => { in  => ['+int','+procedure'],
+                             out => [],
+                             BI  => BIstoreBuiltinname,
+                             native => true},
+
+    'storeRegisterIndex'=> { in  => ['+int','+int'],
+                             out => [],
+                             BI  => BIstoreRegisterIndex,
+                             native => true},
+
+    'storeInt'          => { in  => ['+int','+int'],
+                             out => [],
+                             BI  => BIstoreInt,
+                             native => true},
+
+    'storeLabel'        => { in  => ['+int','+int'],
+                             out => [],
+                             BI  => BIstoreLabel,
+                             native => true},
+
+    'storePredicateRef' => { in  => ['+int','+value'],
+                             out => [],
+                             BI  => BIstorePredicateRef,
+                             native => true},
+
+    'predIdFlags'       => { in  => [],
+                             out => ['+int','+int'],
+                             BI  => BIpredIdFlags,
+                             native => true},
+
+    'storePredId'       => { in  => ['+int','+atom','+value','+record',
+                                     '+value','+int'],
+                             out => [],
+                             BI  => BIstorePredId,
+                             native => true},
+
+    'newHashTable'      => { in  => ['+int','+int','+int'],
+                             out => ['+int'],
+                             BI  => BInewHashTable,
+                             native => true},
+
+    'storeHTScalar'     => { in  => ['+int','+int','+value','+int'],
+                             out => [],
+                             BI  => BIstoreHTScalar,
+                             native => true},
+
+    'storeHTRecord'     => { in  => ['+int','+int','+literal','+value','+int'],
+                             out => [],
+                             BI  => BIstoreHTRecord,
+                             native => true},
+
+    'storeRecordArity'  => { in  => ['+int','+value'],
+                             out => [],
+                             BI  => BIstoreRecordArity,
+                             native => true},
+
+    'storeGenCallInfo'  => { in  => ['+int','+int','+bool','+literal',
+                                     '+bool','+value'],
+                             out => [],
+                             BI  => BIstoreGenCallInfo,
+                             native => true},
+
+    'storeApplMethInfo' => { in  => ['+int','+literal','+value'],
+                             out => [],
+                             BI  => BIstoreApplMethInfo,
+                             native => true},
+
+    'storeGRegRef'      => { in  => ['+int','+[tuple]'],
+                             out => [],
+                             BI  => BIstoreGRegRef,
+                             native => true},
+
+    'storeLocation'     => { in  => ['+int','+list#list'],
+                             out => [],
+                             BI  => BIstoreLocation,
+                             native => true},
+
+    'storeCache'        => { in  => ['+int','+value'],
+                             out => [],
+                             BI  => BIstoreCache,
+                             native => true},
+
+
+    #* Unclassified
+
+    ##* Constraints
+
+    'System.nbSusps'    => { in  => ['value'],
+                             out => ['+int'],
+                             BI  => BIconstraints,
+                             native => true},
+
+    'ozma_readProc'     => { in     => ['+virtualString'],
+                             out    => ['+value'],
+                             BI     => ozma_readProc,
+                             ifdef  => STATIC_LIBOZMA,
+                             native => true},
+
+#    'SystemRegistry'   => { in  => [],
+#                            out => ['+dictionary'],
+#                            BI  => BIsystem_registry,
+#                            native => true},
+#
+#    'ServiceRegistry'  => { in  => [],
+#                            out => ['+dictionary'],
+#                            BI  => BIsystem_registry,
+#                            native => true},
+
+
+    ##* Virtual Properties
+
+    'GetProperty'       => { in  => ['+literal'],
+                             out => ['value'],
+                             BI  => BIgetProperty,
+                             module=> 'vprop',
+                             native => false},
+
+    'CondGetProperty'   => { in  => ['+literal','value'],
+                             out => ['value'],
+                             BI  => BIcondGetProperty,
+                             module=> 'vprop',
+                             native => false},
+
+    'PutProperty'       => { in  => ['+literal','value'],
+                             out => [],
+                             BI  => BIputProperty,
+                             module=>'vprop',
+                             native => true},
+
 
 
     #* OS interface
@@ -1700,1562 +2211,54 @@
                              module=>'os',
                              native => true},
 
-    #* Dynamic Linking
+    ###* Promise
 
-    'dlOpen'            => { in  => ['+virtualString'],
-                             out => ['+foreignPointer'],
-                             BI  => BIdlOpen,
-                             native => true},
-
-    'dlClose'           => { in  => ['+foreignPointer'],
-                             out => [],
-                             BI  => BIdlClose,
-                             native => true},
-
-    'findFunction'      => { in  => ['+virtualString','+int',
-                                     '+foreignPointer'],
-                             out => [],
-                             BI  => BIfindFunction,
-                             native => true},
-
-    'dlLoad'            => { in  => ['+virtualString'],
-                             out => ['+foreignPointer#record'],
-                             BI  => BIdlLoad,
-                             native => true},
-
-    'dlStaticLoad'      => { in  => ['+virtualString'],
-                             out => ['+record'],
-                             BI  => BIdlStaticLoad,
-                             native => true},
-
-    #* Distribution
-
-    'PerdioVar.is'      => { in  => ['value'],
-                             out => ['+bool'],
-                             BI  =>   PerdioVar_is,
-                             module=> 'perdiovar',
-                             native => false},
-
-    'probe'             => { in  => ['value'],
-                             out => [],
-                             BI  => BIprobe,
-                             native => true},
-
-    'crash'             => { in  => [],
-                             out => [],
-                             BI  => BIcrash,
-                             doesNotReturn=>1,
-                             native => true},
-
-    'installHW'         => { in  => ['value','value','value'],
-                             out => [],
-                             BI  => BIhwInstall,
-                             native => true},
-
-    'deInstallHW'       =>  { in  => ['value','value','value'],
-                             out => [],
-                             BI  => BIhwDeInstall,
-                             native => true},
-
-
-
-    'setNetBufferSize'  =>  { in  => ['+value'],
-                             out => [],
-                             BI  => BIsetNetBufferSize,
-                             native => true},
-
-    'getNetBufferSize'  =>  { in  => [],
+    'Promise.new'       => { in  => [],
                              out => ['value'],
-                             BI  => BIgetNetBufferSize,
-                             native => true},
+                             BI  => BIPromiseNew,
+                             module=>'promise',
+                             native => false},
 
-    'getEntityCond'     =>  { in  => ['value'],
+    'Promise.is'        => { in  => ['value'],
+                             out => ['+bool'],
+                             BI  => BIPromiseIs,
+                             module=>'promise',
+                             native => false},
+    'Promise.assign'    => { in  => ['value','value'],
+                             out => [],
+                             BI  => BIPromiseAssign,
+                             module=>'promise',
+                             native => false},
+    'Promise.access'    => { in  => ['value'],
                              out => ['value'],
-                             BI  => BIgetEntityCond,
-                             native => true},
-
-
-
-    'controlVarHandler' => { in  => ['+value'],
+                             BI  => BIPromiseAccess,
+                             module=>'promise',
+                             native => false},
+    'Promise.waitRequest'=> { in  => ['value'],
                              out => [],
-                             BI  => BIcontrolVarHandler,
-                             native => true},
+                             BI  => BIPromiseWaitRequest,
+                             module=>'promise',
+                             native => false},
+    ###* Lazy
 
-    'dvset'             => { in  => ['+int','+int'],
+    'Lazy.new'          => { in  => ['value','value'],
                              out => [],
-                             BI  => BIdvset,
-                             ifdef=>DEBUG_PERDIO,
-                             module=>'perdio',
-                             native => true},
-
-    'tempSimulate'      => { in  => ['+int'],
-                             out => ['+int'],
-                             BI  => BIcloseCon,
-                             module=>'perdio',
-                             native => true},
-
-    'startTmp'          => { in  => ['+int','+int'],
-                             out => [],
-                             BI  => BIstartTmp,
-                             module=>'perdio',
-                             native => true},
-
-    'siteStatistics'    => { in  => [],
-                             out => ['+[value]'],
-                             BI  => BIsiteStatistics,
-                             module=>'perdio',
-                             native => true},
-
-    'printBorrowTable'  => { in  => [],
-                             out => [],
-                             BI  => BIprintBorrowTable,
-                             module=>'perdio',
-                             native => true},
-
-    'printOwnerTable'   => { in  => [],
-                             out => [],
-                             BI  => BIprintOwnerTable,
-                             module=>'perdio',
-                             native => true},
-
-
-    'portWait'         =>  { in  => ['+port','+int'],
-                             out => [],
-                             BI  => BIportWait,
-                             module=>'perdio',
-                             native => true},
-
-
-    'perdioStatistics'  => { in  => [],
-                             out => ['+record'],
-                             BI  => BIperdioStatistics,
-                             module=>'perdio' ,
-                             native => true},
-
-
-     'atRedo'           => { in  => ['+feature', 'value'],
-                             out => [],
-                             bi  => BIatRedo,
-                             native => true},
-
-    'slowNet'           => { in  => ['+int', '+int'],
-                             out => [],
-                             bi  => BIslowNet,
-                             native => true},
-
-
-    #* Pickles
-
-    'save'              => { in  => ['value','+virtualString'],
-                             out => [],
-                             BI  => BIsave,
-                             module=>components,
+                             BI  => BILazyNew,
+                             module=>'lazy',
                              native => false},
 
-    'load'              => { in  => ['value','value'],
-                             out => [],
-                             BI  => BIload,
-                             module=>components,
-                             native => false},
-
-    'export'            => { in  => ['value'],
-                             out => [],
-                             BI  => BIexport,
-                             module=>components,
-                             native => false},
-
-    #* Connection
-
-    'PID.get'           => { in  => [],
-                             out => ['+record'],
-                             BI  => BIGetPID,
-                             module=>components,
-                             native => false},
-
-    'PID.received'      => { in  => ['value'],
-                             out => [],
-                             BI  => BIReceivedPID,
-                             module=>components,
-                             native => false},
-
-    'PID.close'         => { in  => [],
-                             out => [],
-                             BI  => BIClosePID,
-                             module=>components,
-                             native => false},
-
-    'PID.send'          => { in  => ['+virtualString','+int','+int','+int','+int','value'],
-                             out => [],
-                             BI  => BISendPID,
-                             module=>components,
-                             native => false},
-
-    'PID.toPort'        => { in  => ['+virtualString','+int','+int','+int'],
-                             out => ['+port'],
-                             BI  => BITicket2Port,
-                             module=>components,
-                             native => false},
-
-    #* URL
-
-    'URL.localize'      => { in  => ['+virtualString'],
-                             out => ['+record'],
-                             BI  => BIurl_localize,
-                             module=>components,
-                             native => true},
-
-    'URL.open'          => { in  => ['+virtualString'],
-                             out => ['+int'],
-                             BI  => BIurl_open,
-                             module=>components,
-                             native => true},
-
-    'URL.load'          => { in  => ['+virtualString'],
-                             out => ['value'],
-                             BI  => BIurl_load,
-                             module=>components,
-                             native => true},
-
-    #* Virtual Sites
-
-    'VirtualSite.newMailbox' => { in     => [],
-                                  out    => ['+string'],
-                                  BI     => BIVSnewMailbox,
-                                  module => vs,
-                                  native => true},
-
-    'VirtualSite.initServer' => { in     => ['+string'],
-                                  out    => [],
-                                  BI     => BIVSinitServer,
-                                  module => vs,
-                                  native => true},
-
-    'VirtualSite.removeMailbox' => { in     => ['+string'],
-                                  out    => [],
-                                  BI     => BIVSremoveMailbox,
-                                  module => vs,
-                                  native => true},
-
-    #* Tools
-
-    ##* WIF (Wish InterFace)
-
-    'wifInit'           => { in     => ['value','value','value'],
-                             out    => [],
-                             BI     => BIwif_init,
-                             module => 'wif',
-                             native => true},
-
-    'wifWrite'          => { in     => ['!value'],
-                             out    => [],
-                             BI     => BIwif_write,
-                             module => 'wif',
-                             native => true},
-
-    'wifWriteReturn'    => { in     => ['!value','value','value'],
-                             out    => [],
-                             BI     => BIwif_writeReturn,
-                             module => 'wif',
-                             native => true},
-
-    'wifWriteReturnMess'=> { in     => ['!value','value','value','value'],
-                             out    => [],
-                             BI     => BIwif_writeReturnMess,
-                             module => 'wif',
-                             native => true},
-
-    'wifWriteBatch'     => { in     => ['!value'],
-                             out    => [],
-                             BI     => BIwif_writeBatch,
-                             module => 'wif',
-                             native => true},
-
-    'wifWriteTuple'     => { in     => ['!value','value'],
-                             out    => [],
-                             BI     => BIwif_writeTuple,
-                             module => 'wif',
-                             native => true},
-
-    'wifWriteTagTuple'  => { in     => ['!value','value','value'],
-                             out    => [],
-                             BI     => BIwif_writeTagTuple,
-                             module => 'wif',
-                             native => true},
-
-    'wifWriteFilter'    => { in     => ['!value','value','value',
-                                        'value','value'],
-                             out    => [],
-                             BI     => BIwif_writeFilter,
-                             module => 'wif',
-                             native => true},
-
-    'wifClose'          => { in     => ['!value','value'],
-                             out    => [],
-                             BI     => BIwif_close,
-                             module => 'wif',
-                             native => true},
-
-    'wifGenTopName'     => { in     => [],
-                             out    => ['value'],
-                             BI     => BIwif_genTopName,
-                             module => 'wif',
-                             native => true},
-
-    'wifGenWidgetName'  => { in     => ['value'],
-                             out    => ['value'],
-                             BI     => BIwif_genWidgetName,
-                             module => 'wif',
-                             native => true},
-
-    'wifGenTagName'     => { in     => [],
-                             out    => ['value'],
-                             BI     => BIwif_genTagName,
-                             module => 'wif',
-                             native => true},
-
-    'wifGenVarName'     => { in     => [],
-                             out    => ['value'],
-                             BI     => BIwif_genVarName,
-                             module => 'wif',
-                             native => true},
-
-    'wifGenImageName'   => { in     => [],
-                             out    => ['value'],
-                             BI     => BIwif_genImageName,
-                             module => 'wif',
-                             native => true},
-
-    'wifGetNames'       => { in     => [],
-                             out    => ['value','value','value'],
-                             BI     => BIwif_getNames,
-                             module => 'wif',
-                             native => true},
-
-    ##* Debugger
-
-
-    ###* Debugger Internal
-
-    'Debug.getStream'   => { in  => [],
-                             out => ['value'],
-                             BI  => BIgetDebugStream,
-                             native => true},
-
-    'Debug.setStepFlag' => { in  => ['+thread','+bool'],
-                             out => [],
-                             BI  => BIsetStepFlag,
-                             native => true},
-
-    'Debug.setTraceFlag'=> { in  => ['+thread','+bool'],
-                             out => [],
-                             BI  => BIsetTraceFlag,
-                             native => true},
-
-    'Debug.checkStopped'=> { in  => ['+thread'],
+    'Lazy.is'           => { in  => ['value'],
                              out => ['+bool'],
-                             BI  => BIcheckStopped,
-                             native => true},
-
-    'Debug.print'       => { in  => ['value','+int'],
-                             out => [],
-                             BI  => BIdebugPrint,
-                             ifdef=>'DEBUG_PRINT',
-                             native => true},
-
-    'Debug.printLong'   => { in  => ['value','+int'],
-                             out => [],
-                             BI  => BIdebugPrintLong,
-                             ifdef=>'DEBUG_PRINT',
-                             native => true},
-
-    'procedureEnvironment'=> { in  => ['+procedure'],
-                               out => ['+tuple'],
-                               BI  => BIprocedureEnvironment,
-                               native => true},
-
-    'chunkArity'        => { in  => ['+chunk'],
-                             out => ['+[feature]'],
-                             BI  => BIchunkArity,
-                             native => true},
-
-    ###* Debugger External
-
-    'Debug.prepareDumpThreads'  => { in  => [],
-                                     out => [],
-                                     BI  => BIprepareDumpThreads,
-                                     native => true},
-
-    'Debug.dumpThreads' => { in  => [],
-                             out => [],
-                             BI  => BIdumpThreads,
-                             native => true},
-
-    'Debug.listThreads' => { in  => [],
-                             out => ['+[thread]'],
-                             BI  => BIlistThreads,
-                             native => true},
-
-    'Debug.breakpointAt'=> { in  => ['+atom','+int','+bool'],
-                             out => ['+bool'],
-                             BI  => BIbreakpointAt,
-                             native => true},
-
-    'Debug.breakpoint'  => { in  => [],
-                             out => [],
-                             BI  => BIbreakpoint,
-                             native => true},
-
-    'Debug.displayDef'  => { in  => ['+int','+int'],
-                             out => [],
-                             BI  => BIdisplayDef,
-                             native => true},
-
-    'Debug.displayCode' => { in  => ['+int','+int'],
-                             out => [],
-                             BI  => BIdisplayCode,
-                             native => true},
-
-    'Debug.procedureCode'=> { in  => ['+procedure'],
-                              out => ['+int'],
-                              BI  => BIprocedureCode,
-                              native => true},
-
-    'Debug.procedureCoord'=> { in  => ['+procedure'],
-                               out => ['+record'],
-                               BI  => BIprocedureCoord,
-                               native => true},
-
-    'Debug.livenessX'   => { in  => ['+int'],
-                             out => ['+int'],
-                             BI  => BIlivenessX,
-                             native => true},
-
-
-    ##* Compiler
-    ###* OPI
-
-    'setOPICompiler'    => { in  => ['+object'],
-                             out => [],
-                             BI  => BIsetOPICompiler,
-                             native => true},
-
-    'getOPICompiler'    => { in  => [],
-                             out => ['+value'],
-                             BI  => BIgetOPICompiler,
-                             native => true},
-
-    ###* Misc
-
-    'concatenateAtomAndInt' => { in  => ['+atom','+int'],
-                                 out => ['+atom'],
-                                 BI  => BIconcatenateAtomAndInt,
-                                 native => false},
-
-    'getProcInfo' => { in  => ['+procedure'],
-                       out => ['value'],
-                       BI  => BIgetProcInfo,
-                       native => false},
-
-    'setProcInfo' => { in  => ['+procedure','value'],
-                       out => [],
-                       BI  => BIsetProcInfo,
-                       native => false},
-
-    'isBuiltin' => { in  => ['+value'],
-                     out => ['+bool'],
-                     BI  => BIisBuiltin,
-                     native => false},
-
-    'getBuiltinName' => { in  => ['+value'],
-                          out => ['+atom'],
-                          BI  => BIgetBuiltinName,
-                          native => false},
-
-    'nameVariable' => { in  => ['value','+atom'],
-                        out => [],
-                        BI  => BInameVariable,
-                        native => true},
-
-    'newNamedName' => { in  => ['+atom'],
-                        out => ['+literal'],
-                        BI  => BInewNamedName,
-                        native => true},
-
-    'newCopyableName' => { in  => ['+atom'],
-                           out => ['+literal'],
-                           BI  => BInewCopyableName,
-                           native => true},
-
-    'isCopyableName' => { in  => ['+value'],
-                          out => ['+bool'],
-                          BI  => BIisCopyableName,
-                          native => true},
-
-    'isUniqueName' => { in  => ['+value'],
-                        out => ['+bool'],
-                        BI  => BIisUniqueName,
-                        native => true},
-
-    'newPredicateRef' => { in  => [],
-                           out => ['+foreignPointer'],
-                           BI  => BInewPredicateRef,
-                           native => true},
-
-    'newCopyablePredicateRef' => { in  => [],
-                                   out => ['+foreignPointer'],
-                                   BI  => BInewCopyablePredicateRef,
-                                   native => true},
-
-    'isCopyablePredicateRef' => { in  => ['+foreignPointer'],
-                                  out => ['+bool'],
-                                  BI  => BIisCopyablePredicateRef,
-                                  native => true},
-
-    ###* Parser
-
-    'parser_parseFile'          => { in     => ['+virtualString','+record'],
-                                     out    => ['+value'],
-                                     bi     => parser_parseFile,
-                                     module => libparser,
-                                     native => true},
-
-    'parser_parseVirtualString' => { in     => ['+virtualString','+record'],
-                                     out    => ['+value'],
-                                     bi     => parser_parseVirtualString,
-                                     module => libparser,
-                                     native => true},
-
-    ###* Assembler
-
-    'newCodeBlock'      => { in  => ['+int'],
-                             out => ['+int'],
-                             BI  => BInewCodeBlock,
-                             native => true},
-
-    'getOpcode'         => { in  => ['+atom'],
-                             out => ['+int'],
-                             BI  => BIgetOpcode,
-                             native => true},
-
-    'getInstructionSize'=> { in  => ['+atom'],
-                             out => ['+int'],
-                             BI  => BIgetInstructionSize,
-                             native => true},
-
-    'makeProc'          => { in  => ['+int','+[value]'],
-                             out => ['+procedure/0'],
-                             BI  => BImakeProc,
-                             native => true},
-
-    'addDebugInfo'      => { in  => ['+int','+atom','+int'],
-                             out => [],
-                             BI  => BIaddDebugInfo,
-                             native => true},
-
-    'storeOpcode'       => { in  => ['+int','+int'],
-                             out => [],
-                             BI  => BIstoreOpcode,
-                             native => true},
-
-    'storeNumber'       => { in  => ['+int','+number'],
-                             out => [],
-                             BI  => BIstoreNumber,
-                             native => true},
-
-    'storeLiteral'      => { in  => ['+int','+literal'],
-                             out => [],
-                             BI  => BIstoreLiteral,
-                             native => true},
-
-    'storeFeature'      => { in  => ['+int','+feature'],
-                             out => [],
-                             BI  => BIstoreFeature,
-                             native => true},
-
-    'storeConstant'     => { in  => ['+int','+value'],
-                             out => [],
-                             BI  => BIstoreConstant,
-                             native => true},
-
-    'storeBuiltinname'  => { in  => ['+int','+procedure'],
-                             out => [],
-                             BI  => BIstoreBuiltinname,
-                             native => true},
-
-    'storeRegisterIndex'=> { in  => ['+int','+int'],
-                             out => [],
-                             BI  => BIstoreRegisterIndex,
-                             native => true},
-
-    'storeInt'          => { in  => ['+int','+int'],
-                             out => [],
-                             BI  => BIstoreInt,
-                             native => true},
-
-    'storeLabel'        => { in  => ['+int','+int'],
-                             out => [],
-                             BI  => BIstoreLabel,
-                             native => true},
-
-    'storePredicateRef' => { in  => ['+int','+value'],
-                             out => [],
-                             BI  => BIstorePredicateRef,
-                             native => true},
-
-    'predIdFlags'       => { in  => [],
-                             out => ['+int','+int'],
-                             BI  => BIpredIdFlags,
-                             native => true},
-
-    'storePredId'       => { in  => ['+int','+atom','+value','+record',
-                                     '+value','+int'],
-                             out => [],
-                             BI  => BIstorePredId,
-                             native => true},
-
-    'newHashTable'      => { in  => ['+int','+int','+int'],
-                             out => ['+int'],
-                             BI  => BInewHashTable,
-                             native => true},
-
-    'storeHTScalar'     => { in  => ['+int','+int','+value','+int'],
-                             out => [],
-                             BI  => BIstoreHTScalar,
-                             native => true},
-
-    'storeHTRecord'     => { in  => ['+int','+int','+literal','+value','+int'],
-                             out => [],
-                             BI  => BIstoreHTRecord,
-                             native => true},
-
-    'storeRecordArity'  => { in  => ['+int','+value'],
-                             out => [],
-                             BI  => BIstoreRecordArity,
-                             native => true},
-
-    'storeGenCallInfo'  => { in  => ['+int','+int','+bool','+literal',
-                                     '+bool','+value'],
-                             out => [],
-                             BI  => BIstoreGenCallInfo,
-                             native => true},
-
-    'storeApplMethInfo' => { in  => ['+int','+literal','+value'],
-                             out => [],
-                             BI  => BIstoreApplMethInfo,
-                             native => true},
-
-    'storeGRegRef'      => { in  => ['+int','+[tuple]'],
-                             out => [],
-                             BI  => BIstoreGRegRef,
-                             native => true},
-
-    'storeLocation'     => { in  => ['+int','+list#list'],
-                             out => [],
-                             BI  => BIstoreLocation,
-                             native => true},
-
-    'storeCache'        => { in  => ['+int','+value'],
-                             out => [],
-                             BI  => BIstoreCache,
-                             native => true},
-
-    #* Finite Domains
-
-    # Internal stuff (always included)
-
-    'fdReset'           => { in     => [],
-                             out    => [],
-                             bi     => BIfdReset,
-                             ifdef  => PROFILE_FD,
-                             module => fd,
-                             native => true},
-
-    'fdDiscard'         => { in     => [],
-                             out    => [],
-                             bi     => BIfdDiscard,
-                             ifdef  => PROFILE_FD,
-                             module => fd,
-                             native => true},
-
-    'fdGetNext'         => { in  => ['value'],
-                             out => [],
-                             bi  => BIfdGetNext,
-                             ifdef=>PROFILE_FD,
-                             module => fd,
-                             native => true},
-
-    'fdPrint'           => { in  => [],
-                             out => [],
-                             bi  => BIfdPrint,
-                             ifdef=>PROFILE_FD,
-                             module => fd,
-                             native => true},
-
-    'fdTotalAverage'    => { in  => [],
-                             out => [],
-                             bi  => BIfdTotalAverage,
-                             ifdef=>PROFILE_FD,
-                             module => fd,
-                             native => true},
-
-    'fdIs'              => { in  => ['*value','bool'],
-                             out => [],
-                             bi  => BIfdIs,
-                             module => fd,
+                             BI  => BILazyIs,
+                             module=>'lazy',
                              native => false},
 
-    'fdIsVar'           => { in  => ['value'],
+    ###* ByNeed
+
+    'ByNeed'            => { in  => ['value','value'],
                              out => [],
-                             BI  => BIisFdVar,
-                             module => fd,
+                             BI  => BIbyNeed,
+                             module=>'future',
                              native => false},
 
-    'fdIsVarB'          => { in  => ['value'],
-                             out => ['+bool'],
-                             BI  => BIisFdVarB,
-                             module => fd,
-                             native => false},
-
-    'fdGetLimits'       => { in  => [],
-                             out => ['+int','+int'],
-                             BI  => BIgetFDLimits,
-                             module => fd,
-                             native => true},
-
-    'fdGetMin'          => { in  => ['*int','int'],
-                             out => [],
-                             bi  => BIfdMin,
-                             module => fd,
-                             native => true},
-
-    'fdGetMid'          => { in  => ['*int','int'],
-                             out => [],
-                             bi  => BIfdMid,
-                             module => fd,
-                             native => true},
-
-    'fdGetMax'          => { in  => ['*int','int'],
-                             out => [],
-                             bi  => BIfdMax,
-                             module => fd,
-                             native => true},
-
-    'fdGetDom'          => { in  => ['*int','+[value]'],
-                             out => [],
-                             bi  => BIfdGetAsList,
-                             module => fd,
-                             native => true},
-
-    'fdGetCard'         => { in  => ['*int','int'],
-                             out => [],
-                             bi  => BIfdGetCardinality,
-                             module => fd,
-                             native => true},
-
-    'fdGetNextSmaller'  => { in  => ['+int','*int','int'],
-                             out => [],
-                             bi  => BIfdNextSmaller,
-                             module => fd,
-                             native => true},
-
-    'fdGetNextLarger'   => { in  => ['+int','*int','int'],
-                             out => [],
-                             bi  => BIfdNextLarger,
-                             module => fd,
-                             native => true},
-
-    'fdTellConstraint'  => { in  => ['int','+value'],
-                             out => [],
-                             bi  => BIfdTellConstraint,
-                             module => fd,
-                             native => true},
-
-    'fdWatchSize'       => { in  => ['*int','+int','bool'],
-                             out => [],
-                             bi  => BIfdWatchSize,
-                             module => fd,
-                             native => true},
-
-    'fdWatchMin'        => { in  => ['*int','+int','bool'],
-                             out => [],
-                             bi  => BIfdWatchMin,
-                             module => fd,
-                             native => true},
-
-    'fdWatchMax'        => { in  => ['*int','+int','bool'],
-                             out => [],
-                             bi  => BIfdWatchMax,
-                             module => fd,
-                             native => true},
-
-    'fdConstrDisjSetUp' => { in  => ['+value','+value','+value','+value'],
-                             out => [],
-                             bi  => BIfdConstrDisjSetUp,
-                             module => fd,
-                             native => true},
-
-    'fdConstrDisj'      => { in  => ['+value','+value','+value'],
-                             out => [],
-                             bi  => BIfdConstrDisj,
-                             module => fd,
-                             native => true},
-
-    'fdTellConstraintCD'=> { in  => ['value','value','value'],
-                             out => [],
-                             bi  => BIfdTellConstraintCD,
-                             module => fd,
-                             native => true},
-
-    'debugStable'       => { in  => [],
-                             out => [],
-                             bi  => debugStable,
-                             ifdef =>DEBUG_STABLE,
-                             module => fd,
-                             native => true},
-
-
-    'resetStable'       => { in  => [],
-                             out => [],
-                             bi  => resetStable,
-                             ifdef =>DEBUG_STABLE,
-                             module => fd,
-                             native => true},
-
-    # External stuff (might be loaded dynamically)
-    'fdd_selVarNaive'   => { in     => ['+tuple'],
-                             out    => ['*int'],
-                             bi     => BIfdd_selVarNaive,
-                             module => libfd,
-                             native => true},
-
-    'fdd_selVarSize'    => { in     => ['+tuple'],
-                             out    => ['*int'],
-                             bi     => BIfdd_selVarSize,
-                             module => libfd,
-                             native => true},
-
-    'fdd_selVarMin'     => { in     => ['+tuple'],
-                             out    => ['*int'],
-                             bi     => BIfdd_selVarMin,
-                             module => libfd,
-                             native => true},
-
-    'fdd_selVarMax'     => { in     => ['+tuple'],
-                             out    => ['*int'],
-                             bi     => BIfdd_selVarMax,
-                             module => libfd,
-                             native => true},
-
-    'fdd_selVarNbSusps' => { in     => ['+tuple'],
-                             out    => ['*int'],
-                             bi     => BIfdd_selVarNbSusps,
-                             module => libfd,
-                             native => true},
-
-    'fdp_sum'           => { in  => ['+value','+atom','int'],
-                             out => [],
-                             bi  => fdp_sum,
-                             module => libfd,
-                             native => true},
-
-    'fdp_sumC'          => { in  => ['+value','+value','+atom','int'],
-                             out => [],
-                             bi  => fdp_sumC,
-                             module => libfd,
-                             native => true},
-
-    'fdp_sumCN'         => { in  => ['+value','+value','+atom','int'],
-                             out => [],
-                             bi  => fdp_sumCN,
-                             module => libfd,
-                             native => true},
-
-    'fdp_sumR'          => { in  => ['+value','+atom','*int','*int'],
-                             out => [],
-                             bi  => fdp_sumR,
-                             module => libfd,
-                             native => true},
-
-    'fdp_sumCR'         => { in  => ['+value','+value','+atom','*int','*int'],
-                             out => [],
-                             bi  => fdp_sumCR,
-                             module => libfd,
-                             native => true},
-
-    'fdp_sumCNR'        => { in  => ['+value','+value','+atom','*int','*int'],
-                             out => [],
-                             bi  => fdp_sumCNR,
-                             module => libfd,
-                             native => true},
-
-    'fdp_sumCD'         => { in  => ['+value','+atom','*int','*int'],
-                             out => [],
-                             bi  => fdp_sumCD,
-                             module => libfd,
-                             native => true},
-
-    'fdp_sumCCD'        => { in  => ['+value','+value','+atom','*int','*int'],
-                             out => [],
-                             bi  => fdp_sumCCD,
-                             module => libfd,
-                             native => true},
-
-    'fdp_sumCNCD'       => { in  => ['+value','+value','+atom','*int','*int'],
-                             out => [],
-                             bi  => fdp_sumCNCD,
-                             module => libfd,
-                             native => true},
-
-    'fdp_plus'          => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_plus,
-                             module => libfd,
-                             native => true},
-
-    'fdp_minus'         => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_minus,
-                             module => libfd,
-                             native => true},
-
-    'fdp_times'         => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_times,
-                             module => libfd,
-                             native => true},
-
-    'fdp_power'         => { in  => ['int','+int','int'],
-                             out => [],
-                             bi  => fdp_power,
-                             module => libfd,
-                             native => true},
-
-    'fdp_divD'          => { in  => ['int','+int','int'],
-                             out => [],
-                             bi  => fdp_divD,
-                             module => libfd,
-                             native => true},
-
-    'fdp_divI'          => { in  => ['int','+int','int'],
-                             out => [],
-                             bi  => fdp_divI,
-                             module => libfd,
-                             native => true},
-
-    'fdp_modD'          => { in  => ['int','+int','int'],
-                             out => [],
-                             bi  => fdp_modD,
-                             module => libfd,
-                             native => true},
-
-    'fdp_modI'          => { in  => ['int','+int','int'],
-                             out => [],
-                             bi  => fdp_modI,
-                             module => libfd,
-                             native => true},
-
-    'fdp_conj'          => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_conj,
-                             module => libfd,
-                             native => true},
-
-    'fdp_disj'          => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_disj,
-                             module => libfd,
-                             native => true},
-
-    'fdp_exor'          => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_exor,
-                             module => libfd,
-                             native => true},
-
-    'fdp_impl'          => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_impl,
-                             module => libfd,
-                             native => true},
-
-    'fdp_equi'          => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_equi,
-                             module => libfd,
-                             native => true},
-
-    'fdp_nega'          => { in  => ['int','int'],
-                             out => [],
-                             bi  => fdp_nega,
-                             module => libfd,
-                             native => true},
-
-    'fdp_intR'          => { in  => ['int','+value','int'],
-                             out => [],
-                             bi  => fdp_intR,
-                             module => libfd,
-                             native => true},
-
-    'fdp_card'          => { in  => ['+value','int','int','int'],
-                             out => [],
-                             bi  => fdp_card,
-                             module => libfd,
-                             native => true},
-
-    'fdp_exactly'       => { in  => ['int','+value','+int'],
-                             out => [],
-                             bi  => fdp_exactly,
-                             module => libfd,
-                             native => true},
-
-    'fdp_atLeast'       => { in  => ['int','+value','+int'],
-                             out => [],
-                             bi  => fdp_atLeast,
-                             module => libfd,
-                             native => true},
-
-    'fdp_atMost'        => { in  => ['int','+value','+int'],
-                             out => [],
-                             bi  => fdp_atMost,
-                             module => libfd,
-                             native => true},
-
-    'fdp_element'       => { in  => ['int','+value','int'],
-                             out => [],
-                             bi  => fdp_element,
-                             module => libfd,
-                             native => true},
-
-    'fdp_lessEqOff'     => { in  => ['int','int','+int'],
-                             out => [],
-                             bi  => fdp_lessEqOff,
-                             module => libfd,
-                             native => true},
-
-    'fdp_minimum'       => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_minimum,
-                             module => libfd,
-                             native => true},
-
-    'fdp_maximum'       => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_maximum,
-                             module => libfd,
-                             native => true},
-
-    'fdp_inter' => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_inter,
-                             module => libfd,
-                     native => true},
-
-    'fdp_union' => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_union,
-                             module => libfd,
-                     native => true},
-
-    'fdp_distinct'      => { in  => ['+value'],
-                             out => [],
-                             bi  => fdp_distinct,
-                             module => libfd,
-                             native => true},
-
-    'fdp_distinctD'     => { in  => ['+value'],
-                             out => [],
-                             bi  => fdp_distinctD,
-                             module => libfd,
-                             native => true},
-
-    'fdp_distinctStream'=> { in  => ['+value','value'],
-                             out => [],
-                             bi  => fdp_distinctStream,
-                             module => libfd,
-                             native => true},
-
-    'fdp_distinctOffset'=> { in  => ['+value','+value'],
-                             out => [],
-                             bi  => fdp_distinctOffset,
-                             module => libfd,
-                             native => true},
-
-    'fdp_disjoint'=> { in  => ['int','+int','int','+int'],
-                             out => [],
-                             bi  => fdp_disjoint,
-                             module => libfd,
-                       native => true},
-
-    'sched_disjoint_card'=> { in  => ['int','+int','int','+int'],
-                             out => [],
-                             bi  => sched_disjoint_card,
-                             module => libschedule,
-                              native => true},
-
-    'fdp_disjointC'=> { in  => ['int','+int','int','+int','int'],
-                             out => [],
-                             bi  => fdp_disjointC,
-                             module => libfd,
-                        native => true},
-
-    'fdp_distance'      => { in  => ['int','int','+atom','int'],
-                             out => [],
-                             bi  => fdp_distance,
-                             module => libfd,
-                             native => true},
-
-    'fdp_distinct2'     => { in  => ['+value','+value','+value','+value'],
-                             out => [],
-                             bi  => fdp_distinct2,
-                             module => libfd,
-                             native => true},
-
-    'sched_cpIterate'   => { in  => ['+value','+value','+value'],
-                             out => [],
-                             bi  => sched_cpIterate,
-                             module => libschedule,
-                             native => true},
-
-    'sched_cpIterateCap'=> { in  => ['+value','+value','+value',
-                                     '+value','+value','+int'],
-                             out => [],
-                             bi  => sched_cpIterateCap,
-                             module => libschedule,
-                             native => true},
-
-    'sched_cumulativeTI'=> { in  => ['+value','+value','+value',
-                                     '+value','+value'],
-                             out => [],
-                             bi  => sched_cumulativeTI,
-                             module => libschedule,
-                             native => true},
-
-    'sched_cpIterateCapUp'=> { in  => ['+value','+value','+value',
-                                       '+value','+value'],
-                             out => [],
-                             bi  => sched_cpIterateCapUp,
-                             module => libschedule,
-                               native => true},
-
-    'sched_taskIntervals'=> { in  => ['+value','+value','+value'],
-                             out => [],
-                             bi  => sched_taskIntervals,
-                             module => libschedule,
-                              native => true},
-
-    'sched_disjunctive' => { in  => ['+value','+value','+value'],
-                             out => [],
-                             bi  => sched_disjunctive,
-                             module => libschedule,
-                             native => true},
-
-    'sched_disjunctiveStream'=> { in  => ['+value','+value','value'],
-                             out => [],
-                             bi  => sched_disjunctiveStream,
-                             module => libschedule,
-                                  native => true},
-
-    'fdp_subset'        => { in  => ['int','int'],
-                             out => [],
-                             bi  => fdp_subset,
-                             module => libfd,
-                             native => true},
-
-    'fdp_dsum'          => { in  => ['+value','+atom','int'],
-                             out => [],
-                             bi  => fdp_dsum,
-                             module => libfd,
-                             native => true},
-
-    'fdp_dsumC'         => { in  => ['+value','+value','+atom','int'],
-                             out => [],
-                             bi  => fdp_dsumC,
-                             module => libfd,
-                             native => true},
-
-    'fdp_sumAC'         => { in  => ['+value','+value','+atom','int'],
-                             out => [],
-                             bi  => fdp_sumAC,
-                             module => libfd,
-                             native => true},
-
-    'counter'           => { in  => ['int','value'],
-                             out => [],
-                             bi  => fdtest_counter,
-                             module => libfd,
-                             native => true},
-
-    'firstFail'         => { in  => ['+value','value'],
-                             out => [],
-                             bi  => fdtest_firstFail,
-                             module => libfd,
-                             native => true},
-
-    'sched_taskIntervalsProof'=> { in  => ['value','value','value','value',
-                                           'value'],
-                             out => [],
-                             bi  => sched_taskIntervalsProof,
-                             module => libschedule,
-                                   native => true},
-
-    'sched_firstsLasts' => { in  => ['value','value','value','value',
-                                     'value'],
-                             out => [],
-                             bi  => sched_firstsLasts,
-                             module => libschedule,
-                             native => true},
-
-    'spawnLess'         => { in  => ['int','int'],
-                             out => [],
-                             bi  => fdtest_spawnLess,
-                             module => libfd,
-                             native => true},
-
-    'dplus'             => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdtest_plus,
-                             module => libfd,
-                             native => true},
-
-    'sumac'             => { in  => ['value','value','int'],
-                             out => [],
-                             bi  => fdtest_sumac,
-                             module => libfd,
-                             native => true},
-
-    'testgensum'        => { in  => ['value','int'],
-                             out => [],
-                             bi  => fdtest_gensum,
-                             module => libfd,
-                             native => true},
-
-    'testsum'           => { in  => ['value','int'],
-                             out => [],
-                             bi  => fdtest_sum,
-                             ifdef =>ALLDIFF,
-                             module => libfd,
-                             native => true},
-
-    'inqueens'          => { in  => ['value'],
-                             out => [],
-                             bi  => fdtest_inqueens,
-                             ifdef =>INPROP,
-                             module => libfd,
-                             native => true},
-
-    #* Finite Sets
-
-    'fsValueToString'   => { in  => ['+fset'],
-                             out => ['+string'],
-                             BI  => BIfsValueToString,
-                             module=>fset ,
-                             native => true},
-
-    'fsIsVarB'          => { in  => ['value'],
-                             out => ['+bool'],
-                             BI  => BIfsIsVarB,
-                             module=>fset ,
-                             native => false},
-
-    'fsIsValueB'        => { in  => ['+value','bool'],
-                             out => [],
-                             bi  => BIfsIsValueB,
-                             module=>fset ,
-                             native => false},
-
-    'fsSetValue'        => { in  => ['+value','fset'],
-                             out => [],
-                             bi  => BIfsSetValue,
-                             module=>fset ,
-                             native => true},
-
-    'fsSet'             => { in  => ['+value','+value','fset'],
-                             out => [],
-                             bi  => BIfsSet,
-                             module=>fset ,
-                             native => true},
-
-    'fsSup'             => { in  => [],
-                             out => ['+int'],
-                             BI  => BIfsSup,
-                             module=>fset ,
-                             native => true},
-
-    'fsGetKnownIn'      => { in  => ['fset','value'],
-                             out => [],
-                             bi  => BIfsGetKnownIn,
-                             module=>fset ,
-                             native => true},
-
-    'fsGetKnownNotIn'   => { in  => ['fset','value'],
-                             out => [],
-                             bi  => BIfsGetKnownNotIn,
-                             module=>fset ,
-                             native => true},
-
-    'fsGetUnknown'      => { in  => ['fset','value'],
-                             out => [],
-                             bi  => BIfsGetUnknown,
-                             module=>fset ,
-                             native => true},
-
-    'fsGetGlb'          => { in  => ['fset','value'],
-                             out => [],
-                             bi  => BIfsGetKnownIn,
-                             module=>fset ,
-                             native => true},
-
-    'fsGetLub'          => { in  => ['fset','value'],
-                             out => [],
-                             bi  => BIfsGetLub,
-                             module=>fset ,
-                             native => true},
-
-    'fsGetCard'         => { in  => ['fset','value'],
-                             out => [],
-                             bi  => BIfsGetCard,
-                             module=>fset ,
-                             native => true},
-
-    'fsCardRange'       => { in  => ['int','int','fset'],
-                             out => [],
-                             bi  => BIfsCardRange,
-                             module=>fset ,
-                             native => true},
-
-    'fsGetNumOfKnownIn' => { in  => ['fset','int'],
-                             out => [],
-                             bi  => BIfsGetNumOfKnownIn,
-                             module=>fset ,
-                             native => true},
-
-    'fsGetNumOfKnownNotIn'=> { in  => ['fset','int'],
-                               out => [],
-                               bi  => BIfsGetNumOfKnownNotIn,
-                               module=>fset,
-                               native => true},
-
-    'fsGetNumOfUnknown' => { in  => ['fset','int'],
-                             out => [],
-                             bi  => BIfsGetNumOfUnknown,
-                             module=>fset ,
-                             native => true},
-
-    'fsClone'           => { in  => ['fset','fset'],
-                             out => [],
-                             bi  => BIfsClone,
-                             module=>fset ,
-                             native => true},
-
-    'fsp_init'          => { in  => [],
-                             out => ['+atom'],
-                             BI  => fsp_init,
-                             module => libfset,
-                             native => true},
-
-    'fsp_isIn'          => { in  => ['int','fset','bool'],
-                             out => [],
-                             bi  => fsp_isIn,
-                             module => libfset,
-                             native => true},
-
-    'fsp_equalR'        => { in  => ['fset','fset','bool'],
-                             out => [],
-                             bi  => fsp_equalR,
-                             module => libfset,
-                             native => true},
-
-    'fsp_isInR'         => { in  => ['int','fset','int'],
-                             out => [],
-                             bi  => fsp_isInR,
-                             module => libfset,
-                             native => true},
-
-    'fsp_include'       => { in  => ['int','fset'],
-                             out => [],
-                             bi  => fsp_include,
-                             module => libfset,
-                             native => true},
-
-    'fsp_exclude'       => { in  => ['int','fset'],
-                             out => [],
-                             bi  => fsp_exclude,
-                             module => libfset,
-                             native => true},
-
-    'fsp_match'         => { in  => ['fset','+value'],
-                             out => [],
-                             bi  => fsp_match,
-                             module => libfset,
-                             native => true},
-
-    'fsp_seq'           => { in  => ['+value'],
-                             out => [],
-                             bi  => fsp_seq,
-                             module => libfset,
-                             native => true},
-
-    'fsp_minN'          => { in  => ['fset','+value'],
-                             out => [],
-                             bi  => fsp_minN,
-                             module => libfset,
-                             native => true},
-
-    'fsp_maxN'          => { in  => ['fset','+value'],
-                             out => [],
-                             bi  => fsp_maxN,
-                             module => libfset,
-                             native => true},
-
-    'fsp_card'          => { in  => ['fset','int'],
-                             out => [],
-                             bi  => fsp_card,
-                             module => libfset,
-                             native => true},
-
-    'fsp_union'         => { in  => ['fset','fset','fset'],
-                             out => [],
-                             bi  => fsp_union,
-                             module => libfset,
-                             native => true},
-
-    'fsp_intersection'  => { in  => ['fset','fset','fset'],
-                             out => [],
-                             bi  => fsp_intersection,
-                             module => libfset,
-                             native => true},
-
-    'fsp_subsume'       => { in  => ['fset','fset'],
-                             out => [],
-                             bi  => fsp_subsume,
-                             module => libfset,
-                             native => true},
-
-    'fsp_disjoint'      => { in  => ['fset','fset'],
-                             out => [],
-                             bi  => fsp_disjoint,
-                             module => libfset,
-                             native => true},
-
-    'fsp_distinct'      => { in  => ['fset','fset'],
-                             out => [],
-                             bi  => fsp_distinct,
-                             module => libfset,
-                             native => true},
-
-    'fsp_monitorIn'     => { in  => ['fset','value'],
-                             out => [],
-                             bi  => fsp_monitorIn,
-                             module => libfset,
-                             native => true},
-
-    'fsp_min'           => { in  => ['fset','int'],
-                             out => [],
-                             bi  => fsp_min,
-                             module => libfset,
-                             native => true},
-
-    'fsp_max'           => { in  => ['fset','int'],
-                             out => [],
-                             bi  => fsp_max,
-                             module => libfset,
-                             native => true},
-
-    'fsp_convex'        => { in  => ['fset'],
-                             out => [],
-                             bi  => fsp_convex,
-                             module => libfset,
-                             native => true},
-
-    'fsp_diff'          => { in  => ['fset','fset','fset'],
-                             out => [],
-                             bi  => fsp_diff,
-                             module => libfset,
-                             native => true},
-
-    'fsp_includeR'      => { in  => ['int','fset','int'],
-                             out => [],
-                             bi  => fsp_includeR,
-                             module => libfset,
-                             native => true},
-
-    'fsp_bounds'        => { in  => ['+fset','fset','int','int','int'],
-                             out => [],
-                             bi  => fsp_bounds,
-                             module => libfset,
-                             native => true},
-
-    'fsp_boundsN'       => { in  => ['+value','+value','+value',
-                                     '+value','+value'],
-                             out => [],
-                             bi  => fsp_boundsN,
-                             module => libfset,
-                             native => true},
-
-    'fsp_disjointN'     => { in  => ['+value'],
-                             out => [],
-                             bi  => fsp_disjointN,
-                             module => libfset,
-                             native => true},
-
-    'fsp_unionN'        => { in  => ['+value','fset'],
-                             out => [],
-                             bi  => fsp_unionN,
-                             module => libfset,
-                             native => true},
-
-    'fsp_partition'     => { in  => ['+value','fset'],
-                             out => [],
-                             bi  => fsp_partition,
-                             module => libfset,
-                             native => true},
-
-    'fsp_partitionReified'=> { in  => ['+value','fset','+value'],
-                             out => [],
-                             bi  => fsp_partitionReified,
-                             module => libfset,
-                             native => true},
-
-    'fsp_partitionProbing'=> { in  => ['+value','fset','+value'],
-                               out => [],
-                               bi  => fsp_partitionProbing,
-                               module => libfset,
-                               native => true},
-
-    'fsp_partitionReified1'=> { in  => ['+value','fset','+value','int'],
-                                out => [],
-                                bi  => fsp_partitionReified1,
-                                module => libfset,
-                                native => true},
-
-
-
-    #* Unclassified
-
-    ##* Constraints
-
-    'System.nbSusps'    => { in  => ['value'],
-                             out => ['+int'],
-                             BI  => BIconstraints,
-                             native => true},
-
-    'ozma_readProc'     => { in     => ['+virtualString'],
-                             out    => ['+value'],
-                             BI     => ozma_readProc,
-                             ifdef  => STATIC_LIBOZMA,
-                             native => true},
-
-#    'SystemRegistry'   => { in  => [],
-#                            out => ['+dictionary'],
-#                            BI  => BIsystem_registry,
-#                            native => true},
-#
-#    'ServiceRegistry'  => { in  => [],
-#                            out => ['+dictionary'],
-#                            BI  => BIsystem_registry,
-#                            native => true},
-
-
- );
-
-1;;
+);
