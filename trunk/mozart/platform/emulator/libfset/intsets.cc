@@ -67,7 +67,11 @@ OZ_Return FSetsMinPropagator::propagate(void)
     
     // i in s ==> min(d) <= i
     // `d' is less or equal to the smallest element of `glb(s)'
-    FailOnEmpty(*d <= s->getGlbMinElem());
+    {
+      int i = s->getGlbMinElem();
+      // i==-1 if glb(s) is still empty
+      if (i>=0) { FailOnEmpty(*d <= i); }
+    }
     
     // DENYS: i not in s ==> d=/=i
     // all elements being _not_ in `s' are not in `d'
