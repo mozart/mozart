@@ -1,0 +1,262 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: popow, mehl
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __AM_ICC
+#define __AM_ICC
+
+#ifndef OUTLINE
+#pragma interface
+#endif
+
+#include "thread.hh"
+#include "unify.hh"
+#include "genvar.hh"
+
+// optimize: inline ....
+inline
+void AM::rebind(TaggedRef *refPtr, TaggedRef newRef)
+/* (re)bind Ref *ref to Term *ptr;                     */
+/* We need this procedure for the rational unification */
+/* algorithm;                                          */
+{
+  rebindTrail.pushCouple(refPtr, *refPtr);   /* always;   */
+  doBind(refPtr,newRef);
+}
+
+/* specially optimized unify: test two most probable cases first:
+ *
+ *     1. bind a variable
+ *     2. test two non-variables
+ *     3. but don't forget to check identical variables
+ */
+
+inline
+Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
+{
+
+  if (prop == NO) return unify(A,B,NO);
+  
+  TaggedRef proto = currentUVarPrototype;
+  TaggedRef term1 = A;
+  TaggedRef term2 = B;
+
+  DEREF(term1,term1Ptr,_1);
+
+  if (proto == term1) {
+    DEREF(term2,term2Ptr,_2);
+    if (term2 != proto || term1Ptr != term2Ptr) {
+      doBind(term1Ptr,isAnyVar(term2) ? makeTaggedRef(term2Ptr) : term2);
+    }
+    return OK;
+  } else {
+    DEREF(term2,term2Ptr,_2);
+    if (proto == term2) {
+      doBind(term2Ptr,isAnyVar(term1) ? makeTaggedRef(term1Ptr) : term1);
+      return OK;
+    }
+  }
+
+  return unify(A,B);
+}
+
+inline
+void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef a, Bool prop) 
+{
+  // most probable case first: local UVar
+  // if (isUVar(var) && currentBoard == tagged2VarHome(var)) {
+  // more efficient:
+  if (var == currentUVarPrototype && prop) {
+    doBind(varPtr,a);
+  } else {
+    genericBind(varPtr,var,NULL,a,prop);
+  }
+}
+
+inline
+void AM::deinstallPath(Board *top)
+{
+  DebugCheck(top->isCommitted(),
+	     error("AM::deinstallPath: top already commited");
+	     return;);
+  
+  while (currentBoard != top) {
+    deinstallCurrent();
+    DebugCheck(currentBoard == rootBoard
+	       && top != rootBoard,
+	       error("AM::deinstallPath: root node reached"));
+  }
+}
+
+inline
+void AM::deinstallCurrent()
+{
+  reduceTrailOnSuspend();
+  currentBoard->unsetInstalled();
+  setCurrent(currentBoard->getParentBoard()->getBoardDeref());
+}
+
+inline
+Bool AM::installScript(Script &script)
+{
+  Bool ret = OK;
+  for (int index = 0; index < script.getSize(); index++) {
+    if (!unify(script[index].getLeft(),script[index].getRight())) {
+      ret = NO;
+      if (!isToplevel()) {
+	break;
+      }
+    }
+  }
+#ifndef DEBUG_CHECK
+  script.dealloc();
+#else
+  if (ret == OK) 
+    script.dealloc ();
+#endif
+  return ret;
+}
+
+inline
+TaskStack *AM::ensureTaskStack()
+{
+  TaskStack *ret = currentTaskStack;
+  if (ret==NULL) {
+    ret = currentTaskStack = currentThread->makeTaskStack();
+  }
+  return ret;
+}
+
+
+inline
+void AM::pushTask(Board *n,ProgramCounter pc,
+			 RefsArray y,RefsArray g,
+			 RefsArray x,int i)
+{
+  n->incSuspCount();
+  ensureTaskStack()->pushCont(n,pc,y,g,x,i);
+}
+
+inline
+void AM::pushCFun(Board *n, OZ_CFun f, RefsArray x, int i)
+{
+  n->incSuspCount();
+  ensureTaskStack()->pushCont (n, f, (Suspension *) NULL, x, i);
+}
+
+inline
+Bool AM::entailment ()
+{
+  return (!currentBoard->hasSuspension()
+	  // First test: no subtrees;
+	  && trail.isEmptyChunk()
+	  // second test: is this node stable?
+	  ? OK : NO);
+}
+
+inline
+void AM::bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr, Bool prop)
+{
+  genericBind(varPtr,var,termPtr, *termPtr, prop);
+}
+
+/*
+ *   Procedure what checks whether one node is in subtree of another;
+ *
+ */
+inline
+Bool AM::isInScope (Board *above, Board* node) {
+  while (node != rootBoard) {
+    if (node == above)
+      return (OK);
+    node = node->getParentBoard()->getBoardDeref();
+  }
+  return (NO);
+}
+
+
+inline
+Bool AM::isLocalUVar(TaggedRef var)
+{
+  return (var == currentUVarPrototype ||
+	  // variables are usually bound 
+	  // in the node where they are created
+	  tagged2VarHome(var)->getBoardDeref() == currentBoard )
+    ? OK : NO;
+}
+
+inline
+Bool AM::isLocalSVar(TaggedRef var) {
+  Board *home = tagged2SVar(var)->getHome1();
+
+  return (home == currentBoard ||
+	  home->getBoardDeref() == currentBoard )
+    ? OK : NO;
+}
+
+inline
+Bool AM::isLocalCVar(TaggedRef var) {
+  Board *home = tagged2CVar(var)->getHome1();
+
+  return (home == currentBoard ||
+          home->getBoardDeref() == currentBoard )
+    ? OK : NO;
+}
+
+inline
+Bool AM::isLocalVariable(TaggedRef var)
+{
+  CHECK_ISVAR(var);
+
+  if (isUVar(var))
+    return isLocalUVar(var);
+  if (isSVar(var))
+    return isLocalSVar(var);
+
+  return isLocalCVar(var);
+}
+
+inline 
+void updateExtSuspension(Board *varHome, Suspension *susp)
+{
+  if (am.currentSolveBoard != (Board *) NULL) {
+    am.setExtSuspension (varHome, susp);
+  }
+}
+
+inline
+void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
+			     PropCaller calledBy)
+{
+  SVariable * var = tagged2SuspVar(taggedvar);
+  var->setSuspList(checkSuspensionList(var, taggedvar, var->getSuspList(),
+				       term, calledBy));
+}
+
+inline
+Bool AM::isEmptyTrailChunk ()
+{
+  return (trail.isEmptyChunk ());
+}
+
+inline
+Bool AM::isToplevel() {
+  return currentBoard == rootBoard ? OK : NO;
+}
+
+// unset the ThreadSwitch flag and reset the processCounter
+inline
+void AM::RestartProcess()
+{
+  unsetSFlag(ThreadSwitch);
+  ProcessCounter=msToClockTick(conf.timeSlice);
+}
+
+#endif  // __AM_ICC

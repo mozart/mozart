@@ -1,0 +1,101 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: tmueller
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __genvar_icc__
+#define __genvar_icc__
+
+#if defined(__GNUC__) && !defined(OUTLINE)
+#pragma interface
+#endif
+
+
+inline
+void GenCVariable::relinkSuspListTo(GenCVariable * lv, Bool reset_local) {
+  suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
+}
+
+inline
+Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
+			 TaggedRef * tptr2, TaggedRef term2,
+			 Bool prop)
+{
+  Assert(getType()==FDVariable || getType()==OFSVariable);
+  LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
+			   localPropStore.isInLocalPropagation()));
+
+  switch (getType()){
+  case FDVariable:
+    {
+      if (! ((GenFDVariable *)this)->unifyFD(tptr1, term1, tptr2, term2, prop))
+	return FALSE;
+    }
+    break;
+  case OFSVariable:
+    if (! ((GenOFSVariable *)this)->unifyOFS(tptr1, term1, tptr2, term2, prop)) {
+      return FALSE;
+    }
+    break;
+  default:
+    return FALSE;
+  }
+      
+  LOCAL_PROPAGATION(if (! localPropStore.isInLocalPropagation())
+		    if (! localPropStore.do_propagation()) return FALSE;)
+  return TRUE;
+} 
+
+inline
+int GenCVariable::getSuspListLength(void)
+{
+  Assert(getType()==FDVariable || getType()==OFSVariable);
+  switch (getType()){
+  case FDVariable:
+    return ((GenFDVariable *)this)->getSuspListLength();
+  case OFSVariable:
+    return ((GenOFSVariable *)this)->getSuspListLength();
+  default:
+    break;
+  }
+  return -1;
+}
+
+inline
+size_t GenCVariable::getSize(void)
+{
+  Assert(getType()==FDVariable || getType()==OFSVariable);
+  switch (getType()){
+  case FDVariable:
+    return ((GenFDVariable*)this)->getSize();
+  case OFSVariable:
+    return ((GenOFSVariable*)this)->getSize();
+  default:
+    break;
+  }
+  return 0;
+} 
+
+inline
+Bool GenCVariable::valid(TaggedRef val)
+{
+  Assert(getType()==FDVariable || getType()==OFSVariable);
+  switch (getType()){
+  case FDVariable:
+    return ((GenFDVariable*)this)->valid(val);
+  case OFSVariable:
+    return ((GenOFSVariable*)this)->valid(val);
+  default:
+    break;
+  }  
+  return NO;
+}
+
+#endif //__genvar_icc__
+
