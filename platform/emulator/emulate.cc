@@ -548,21 +548,22 @@ void Thread::makeRunning()
 #define asmLbl(INSTR)
 #endif
 
-
-/* threaded code broken on linux, leads to memory leek,
- * this is a workaround
- * seems to work under 2.7.x
- */
-
 #ifdef THREADED
 #define Case(INSTR) INSTR##LBL : asmLbl(INSTR);
 
+#ifdef DELAY_SLOT
 // let gcc fill in the delay slot of the "jmp" instruction:
-#define DISPATCH(INC) {                                                       \
-  intlong aux = *(PC+INC);                                                    \
-  INCFPC(INC);                                                                \
-  goto* (void*) (aux|textBase);                                               \
+#define DISPATCH(INC) {                         \
+  intlong aux = *(PC+INC);                      \
+  INCFPC(INC);                                  \
+  goto* (void*) (aux|textBase);                 \
 }
+#else
+#define DISPATCH(INC) {                         \
+  INCFPC(INC);                                  \
+  goto* (void*) ((*PC)|textBase);               \
+}
+#endif
 
 #else /* THREADED */
 
