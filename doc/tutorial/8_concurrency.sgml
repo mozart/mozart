@@ -533,7 +533,7 @@ local
       end
    end
    proc {Consumer N Xs}
-      if N=<0 then skip
+      if N=<0 then Xs=nil
       else X|Xr = Xs in
          if X == volvo then
             if N mod 1000 == 0 then
