@@ -32,6 +32,9 @@
 #include "objects.hh"
 
 
+void printWhere(ostream cout,ProgramCounter PC);
+
+
 #define PRINT(C) \
      void C::print(ostream &stream, int depth, int offset)
 
@@ -972,7 +975,84 @@ PRINTLONG(BigInt)
 
 PRINT(TaskStack)
 {
-  stream << "<TaskStack>";
+  int counter=1;
+  stream << "*traceback*" << endl;
+  if (this && !isEmpty()) {
+
+    TaskStackEntry *p = getTop();
+
+    while (!isEmpty()) {
+      TaggedBoard tb = (TaggedBoard) pop();
+      ContFlag flag = getContFlag(tb);
+      Board* n = getBoard(tb,flag);
+      switch (flag){
+      case C_CONT:
+        {
+          ProgramCounter PC = (ProgramCounter) pop();
+          RefsArray Y = (RefsArray) pop();
+          RefsArray G = (RefsArray) pop();
+
+          stream << "  #" << counter << "  ";
+          printWhere(stream,PC);
+          stream << endl;
+        }
+        break;
+      case C_XCONT:
+        {
+          ProgramCounter PC = (ProgramCounter) pop();
+          RefsArray Y = (RefsArray) pop();
+          RefsArray G = (RefsArray) pop();
+          RefsArray X = (RefsArray) pop();
+
+          stream << "  #" << counter << "  ";
+          printWhere(stream,PC);
+          stream << endl;
+        }
+        break;
+      case C_NERVOUS:
+        {
+          stream << "NERVOUS ";
+          stream << endl;
+        }
+        break;
+      case C_CFUNC_CONT:
+        {
+          OZ_CFun biFun = (OZ_CFun) pop();
+          Suspension* susp = (Suspension*) pop();
+          RefsArray X = (RefsArray) pop();
+
+          stream << "  CFUNC_CONT ";
+          stream << endl;
+        }
+        break;
+
+      case C_DEBUG_CONT:
+        {
+          OzDebug *deb = (OzDebug*) pop();
+
+          stream << "  DEBUG_CONT ";
+          stream << endl;
+        }
+        break;
+      case C_CALL_CONT:
+        {
+          SRecord *s = (SRecord *) pop();
+          RefsArray X = (RefsArray) pop();
+
+          stream << "  CALL_CONT ";
+          stream << endl;
+        }
+        break;
+
+      default:
+        error("unexpected task found.");
+      }
+      counter++;
+    }
+
+    setTop(p);
+  }
+  stream << "*bottom*" << endl;
 }
 
 PRINTLONG(TaskStack)
@@ -1119,5 +1199,35 @@ void Board::printTree()
       off++;
       bb = aa->getBoard();
     }
+  }
+}
+
+void printSuspension(ProgramCounter pc)
+{
+  cout << "Suspension in ";
+  printWhere(cout,pc);
+  cout << endl;
+  if (am.conf.showSuspension > 1) {
+    am.currentTaskStack->print(cout);
+  }
+}
+
+void printWhere(ostream stream,ProgramCounter PC)
+{
+  PC = CodeArea::definitionStart(PC);
+
+  if (PC == NOCODE) {
+    stream << "on toplevel";
+  } else {
+    TaggedRef file      = getLiteralArg(PC+3);
+    TaggedRef line      = getNumberArg(PC+4);
+    PrTabEntry *pred    = getPredArg(PC+5);
+
+    stream << "procedure "
+           << (pred ? pred->getPrintName() : "(NULL)")
+           << " in file "
+           << OZ_atomToC(file)
+           << " at line "
+           << OZ_intToC(line);
   }
 }

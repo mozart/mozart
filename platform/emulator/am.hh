@@ -65,6 +65,7 @@ public:
   int showForeignLoad;  // show message on load
   int showFastLoad;     // show message on fast load
   int showIdleMessage;  // show message on idle
+  int showSuspension;   // show message when a suspension is created
 
   int stopOnToplevelFailure;  // enter the debugger on TOPLEVEL FAILURE
 

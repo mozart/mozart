@@ -71,6 +71,7 @@ void ConfigData::init() {
   showFastLoad          = SHOW_FAST_LOAD;
   showForeignLoad       = SHOW_FOREIGN_LOAD;
   showIdleMessage       = SHOW_IDLE_MESSAGE;
+  showSuspension        = SHOW_SUSPENSION;
 
   stopOnToplevelFailure = STOP_ON_TOPLEVEL_FAILURE;
 
