@@ -1299,7 +1299,7 @@ TaggedRef PrTabEntry::getProfileStats()
 
   {
     OZ_CFunHeader *aux = OZ_CFunHeader::getFirst();
-    TaggedRef noname = oz_atom("");
+    TaggedRef noname = oz_atom("nofile");
     while(aux) {
       if (aux->getSamples() || aux->getCalls()) {
         SRecord *rec = SRecord::newSRecord(ps,arity);
@@ -1307,7 +1307,7 @@ TaggedRef PrTabEntry::getProfileStats()
         rec->setFeature(calls,oz_int(aux->getCalls()));
         rec->setFeature(heap,oz_int(0));
         rec->setFeature(closures,oz_int(0));
-        rec->setFeature(line,oz_int(0));
+        rec->setFeature(line,oz_int(1));
         rec->setFeature(name,oz_atom(builtinTab.getName((void *)(aux->getHeaderFunc()))));
         rec->setFeature(file,noname);
         ret = cons(makeTaggedSRecord(rec),ret);

@@ -454,7 +454,14 @@ public:
     ozstat.propagatorsInvoked.incf();
     extern char * ctHeap, * ctHeapTop;
     ctHeap = ctHeapTop;
-    return item.propagator->propagate();
+    if (am.profileMode) {
+      ozstat.enterProp(item.propagator->getHeader());
+      OZ_Return ret = item.propagator->propagate();
+      ozstat.leaveProp();
+      return ret;
+    } else {
+      return item.propagator->propagate();
+    }
   }
   OZ_Propagator * getPropagator(void) {
     Assert(isPropagator());
