@@ -95,7 +95,7 @@ Makefile: Makefile.in ../config.status
 # Init
 #---------------------------------------------------------------------
 
-INITSRC0 = Init Resolve Prop Module
+INITSRC0 = Init Resolve Prop Module ModuleAbstractions
 
 INITSRC = $(INITSRC0:%=init/%.oz)
 
