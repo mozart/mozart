@@ -341,7 +341,7 @@ void AM::suspendEngine()
     userCounter = ticksleft;
   }
 
-  if (DebugCheckT(1||) ozconf.showIdleMessage) {
+  if (ozconf.showIdleMessage) {
     printf("running...\n");
   }
   
