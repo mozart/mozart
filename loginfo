@@ -23,7 +23,7 @@ Oz/Emulator	mail -s "I have changed %s" scheidhr,tmueller
 Oz/Compiler	mail -s "I have changed %s" henz,scheidhr
 Oz/Toto		mail -s "I have changed %s" henz,reiter
 Oz/include	mail -s "I have changed %s" scheidhr,tmueller,henz
-Oz/lib		mail -s "I have changed %s" henz,wuertz,popow,schulte
+Oz/lib		mail -s "I have changed %s" henz,wuertz,popow,schulte,tmueller
 Oz/demo		mail -s "I have changed %s" schulte
 Oz/elisp	mail -s "I have changed %s" scheidhr
 Oz		/usr/share/gs/etc/cvs2news %s
