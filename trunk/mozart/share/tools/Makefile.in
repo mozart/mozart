@@ -46,7 +46,7 @@ PANELSRC = $(PANELSRC1:%=panel/%) Panel.oz
 DISTRIBUTIONPANELSRC1 = \
 	GUI.oz Main.oz MessageInfo.oz SiteInfo.oz \
 	Widgets.oz Colour.oz FieldDisplay.oz Graph.oz NetInfo.oz TableInfo.oz \
-	DistributionPanelSrc.oz
+	DistributionPanelSrc.oz AdvancedListBox.oz TitleGraph.oz
 DISTRIBUTIONPANELSRC = $(DISTRIBUTIONPANELSRC1:%=dpanel/%)
 
 BROWSERSRC1 = \

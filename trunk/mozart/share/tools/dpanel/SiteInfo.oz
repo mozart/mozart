@@ -144,6 +144,8 @@ define
       meth sent(G) sent <- @sent + G deltaSent <- G end
       meth getReceived($) @deltaReceived end
       meth received(G) received <- @received + G deltaReceived <- G end
+      meth getTotReceived($) @received end
+      meth getTotSent($) @sent end
       meth setLastRTT(RTT) lastRTT<-{IntToFloat RTT} end
       meth getLastRTT($) @lastRTT end
       meth setGraphKey(K) graphKey<-K end
@@ -218,8 +220,7 @@ define
 	 self.GUI = G
       end
 
-      meth Update(active:ActiveEntries)
-	 SiteStats = {DPPane.siteStatistics}
+      meth Update(active:ActiveEntries site_stats:SiteStats)
 	 NewEntries = {FilterNew SiteStats self.sd}
 	 !ActiveEntries = {FilterActive SiteStats self.sd}
 	 DeleteEntries = {FilterOld SiteStats NewEntries self.sd}
@@ -232,12 +233,18 @@ define
 	 {Map DeleteEntries proc{$ X Y} {self.sd removeSite(X Y)} end _}
       end
 
-      meth display
+      meth display(I <= none)
 	 AS
+	 SST
       in
 	 lock
 	    Generation<-(@Generation + 1) mod 100
-	    SiteInfo,Update(active:AS)
+	    if I == none then
+	       SST = {DPPane.siteStatistics}
+	    else
+	       SST = I
+	    end
+	    SiteInfo,Update(active:AS site_stats:SST)
 	    SiteInfo,activeSites(AS)
 	 end
       end
