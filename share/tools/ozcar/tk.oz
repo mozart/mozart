@@ -39,6 +39,7 @@ local
 	    SY     = {New Tk.scrollbar
 		      tkInit(parent: self
 			     width:  ScrollbarWidth
+			     borderwidth: SmallBorderSize
 			     elementborderwidth: SmallBorderSize)}
 	 in
 	    {Tk.addYScrollbar self.W SY}
