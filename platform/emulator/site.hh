@@ -70,10 +70,10 @@ protected:
 public:
   // never create these...
   void* operator new(size_t) {
-    error("BaseSite is created???"); return (0);
+    OZ_error("BaseSite is created???"); return (0);
   }
   void* operator new(size_t, void *) {
-    error("BaseSite is created???"); return (0);
+    OZ_error("BaseSite is created???"); return (0);
   }
 
   //

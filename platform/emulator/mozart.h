@@ -335,8 +335,9 @@ typedef struct {
 extern OZ_Return _FUNDECL(OZ_valueToDatum,(OZ_Term  t, OZ_Datum* d));
 extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
 
-/* print warning */
+/* print warnings/errors */
 extern void _FUNDECL(OZ_warning,(CONST char *, ...));
+extern void _FUNDECL(OZ_error,(CONST char *, ...));
 
 /* generate the unix error string from an errno (see perror(3)) */
 extern char * _FUNDECL(OZ_unixError,(int err));

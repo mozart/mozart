@@ -508,7 +508,7 @@ OZ_Return WidthPropagator::propagate(void)
             // BIGINT case: fail
             result = FAILED; break;
         } else {
-            error("unexpected wrong type for width in determined widthC");
+	  OZ_error("unexpected wrong type for width in determined widthC");
         }
         result = PROCEED;
         break;
@@ -537,7 +537,7 @@ OZ_Return WidthPropagator::propagate(void)
             // BIGINT case: fail
             result = FAILED; break;
         } else {
-            error("unexpected wrong type for width in undetermined widthC");
+	  OZ_error("unexpected wrong type for width in undetermined widthC");
         }
         // 2. Convert representation if necessary
         // 2a. Find size and value (latter is valid only if goodsize==TRUE):
@@ -564,7 +564,7 @@ OZ_Return WidthPropagator::propagate(void)
                 if (recwidth==0) {
                     // Convert to LITERAL:
 		  Bool res=oz_unify(rawrec,lbl); // mm2
-		  if (!res) error("unexpected failure of Literal conversion");
+		  if (!res) OZ_error("unexpected failure of Literal conversion");
 		} else {
                     // Convert to SRECORD or LTUPLE:
                     // (Two efficiency problems: 1. Creates record & then unifies,

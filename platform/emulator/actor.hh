@@ -102,7 +102,7 @@ public:
 class AWActor : public Actor {
 public:
   static AWActor *Cast(Actor *a) {
-    DebugCheck((a->isAskWait () == NO), error ("AWActor::Cast"));
+    DebugCheck((a->isAskWait () == NO), OZ_error ("AWActor::Cast"));
     return ((AWActor *) a);
   }
 protected:
@@ -150,7 +150,7 @@ public:
 class AskActor : public AWActor {
 public:
   static AskActor *Cast(Actor *a)
-  { DebugCheck(!a->isAsk(),error("AskActor::Cast")); return (AskActor *) a; }
+  { DebugCheck(!a->isAsk(),OZ_error("AskActor::Cast")); return (AskActor *) a; }
 private:
   ProgramCounter elsePC;
 public:

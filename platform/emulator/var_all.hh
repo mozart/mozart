@@ -53,7 +53,7 @@ Bool oz_var_validINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val)
   case OZ_VAR_FS:      return ((OzFSVariable*) ov)->valid(val);
   case OZ_VAR_CT:      return ((OzCtVariable*) ov)->valid(val);
   case OZ_VAR_EXT:     return ((ExtVar *) ov)->validV(val);
-  default: error("not impl"); return FAILED;
+  default: OZ_error("not impl"); return FAILED;
   }
 }
 
@@ -70,7 +70,7 @@ OZ_Return oz_var_unifyINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef *val,
   case OZ_VAR_FS:      return ((OzFSVariable*) ov)->unify(ptr,val,scp);
   case OZ_VAR_CT:      return ((OzCtVariable*) ov)->unify(ptr,val,scp);
   case OZ_VAR_EXT:     return ((ExtVar *) ov)->unifyV(ptr,val);
-  default:  error("not impl"); return FAILED;
+  default:  OZ_error("not impl"); return FAILED;
   }
 }
 
@@ -87,7 +87,7 @@ OZ_Return oz_var_bindINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val,
   case OZ_VAR_FS:      return ((OzFSVariable*) ov)->bind(ptr,val,scp);
   case OZ_VAR_CT:      return ((OzCtVariable*) ov)->bind(ptr,val,scp);
   case OZ_VAR_EXT:     return ((ExtVar *) ov)->bindV(ptr,val);
-  default:  error("not impl"); return FAILED;
+  default:  OZ_error("not impl"); return FAILED;
   }
 }
 
@@ -104,7 +104,7 @@ OZ_Return oz_var_forceBindINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val,
   case OZ_VAR_FS:      return ((OzFSVariable*) ov)->bind(ptr,val,scp);
   case OZ_VAR_CT:      return ((OzCtVariable*) ov)->bind(ptr,val,scp);
   case OZ_VAR_EXT:     return ((ExtVar *) ov)->forceBindV(ptr,val);
-  default:  error("not impl"); return FAILED;
+  default:  OZ_error("not impl"); return FAILED;
   }
 }
 
@@ -120,7 +120,7 @@ void oz_var_disposeINLINE(OzVariable *ov)
   case OZ_VAR_FS:      ((OzFSVariable*) ov)->dispose(); break;
   case OZ_VAR_CT:      ((OzCtVariable*) ov)->dispose(); break;
   case OZ_VAR_EXT:     ((ExtVar *) ov)->disposeV(); break;
-  default:  error("not impl");
+  default:  OZ_error("not impl");
   }
 }
 

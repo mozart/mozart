@@ -67,11 +67,11 @@ int BaseSite::hash() {
 static ip_address getMySiteIP()
 {
   char *nodename = oslocalhostname();
-  if(nodename==0) { error("getMySiteIP: don't know local hostname"); }
+  if(nodename==0) { OZ_error("getMySiteIP: don't know local hostname"); }
   struct hostent *hostaddr;
   hostaddr=gethostbyname(nodename);
   if(hostaddr==0) {
-    error("getMySiteIP: can't resolve local hostname (%s)", nodename);
+    OZ_error("getMySiteIP: can't resolve local hostname (%s)", nodename);
   }
   free(nodename);
   struct in_addr tmp;

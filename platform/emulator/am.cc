@@ -715,14 +715,14 @@ void handlerMessage()
 void handlerSEGV()
 {
   CodeArea::writeInstr();
-  error("**** segmentation violation ****\n");
+  OZ_error("**** segmentation violation ****\n");
   am.exitOz(1);
 }
 
 void handlerBUS()
 {
   CodeArea::writeInstr();
-  error("**** bus error ****\n");
+  OZ_error("**** bus error ****\n");
   am.exitOz(1);
 }
 

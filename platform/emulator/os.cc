@@ -800,7 +800,7 @@ int osdup(int fd) { return dup(fd); }
 
 void osInit()
 {
-  DebugCheck(CLOCK_TICK < 1000, error("CLOCK_TICK must be greater than 1 ms"));
+  DebugCheck(CLOCK_TICK < 1000, OZ_error("CLOCK_TICK must be greater than 1 ms"));
 
   openMax=osOpenMax();
 

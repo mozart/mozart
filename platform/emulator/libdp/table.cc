@@ -167,7 +167,7 @@ void OwnerTable::resize(){
 		size,no_used,newsize));
   array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
   if(array==NULL){
-    error("Memory allocation: Owner Table growth not possible");}
+    OZ_error("Memory allocation: Owner Table growth not possible");}
   init(size, newsize);  
   size=newsize;
   PD((TABLE2,"TABLE:resize owner complete"));
@@ -960,7 +960,7 @@ void BorrowTable::resize()
   BorrowEntry *oldarray=array;
   array = (BorrowEntry*) malloc(newsize*sizeof(BorrowEntry));
   if(array==NULL){
-    error("Memory allocation: Borrow Table growth not possible");}
+    OZ_error("Memory allocation: Borrow Table growth not possible");}
   int oldsize=size;
   size=newsize;
   copyBorrowTable(oldarray,oldsize);
