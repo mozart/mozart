@@ -5125,8 +5125,9 @@ char **arrayFromList(OZ_Term list, char **array, int size)
   return array;
 
  bomb:
-  while (i>=0) {
-    char *f = array[i--];
+  while (i>0) {
+    i--;
+    char *f = array[i];
     delete [] f;
   }
   return NULL;
