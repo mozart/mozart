@@ -86,7 +86,8 @@ define
                 end
              end}
             {File write(vs: ('\\pagestyle{empty}\n'#
-                             '\\begin{document}\n'))}
+                             '\\begin{document}\n'#
+                             '\\vsize=100cm\n'))}
             Outs = {FoldR @Keys
                     fun {$ X#N In}
                        {File write(vs: X#'\n\\clearpage\n')}
@@ -108,7 +109,7 @@ define
                    end}
                end
             finally
-               {OS.unlink FileName}
+               try {OS.unlink FileName} catch _ then skip end
                if @DB \= unit then
                   {Gdbm.close @DB}
                end
