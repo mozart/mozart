@@ -262,20 +262,22 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
 
   TaggedRef tmpFile;
   int       tmpLine;
+  char      *cs;
 
   do {
     dbgPC += sizeOf(DEBUGINFO);
     dbgPC = CodeArea::nextDebugInfo(dbgPC);
     if (dbgPC != NOCODE) {
       CodeArea::getDebugInfoArgs(dbgPC,tmpFile,tmpLine,dbgAbspos,dbgComment);
-      if (!strstr(toC(dbgComment),"Thread")) {
+      cs = toC(dbgComment);
+      if (!strstr(cs,"Thread")) {
         dbgFile = tmpFile;
         dbgLine = tmpLine;
       }
     }
     else
       break;
-  } while (strstr(toC(dbgComment),"exit"));
+  } while (strstr(cs," exit") || strstr(cs," end"));
 
   if (dbgFile != nil()) {
     file = dbgFile;
