@@ -177,6 +177,9 @@ in
 			      borderwidth: SmallBorderSize
 			      action:    self # M(B.1))}
 	     end}
+	    % /*
+	    {RunChildren tk(conf state:disabled)}
+	    % */
 	    self.tkRunChildren = TkRunChildren
 	    {Tk.batch [pack(b(Bs) side:left  padx:1)
 		       pack(Susp RunChildren side:right padx:2)]}
