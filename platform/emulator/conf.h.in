@@ -96,3 +96,6 @@
 
 /* Define if you have <dlfcn.h>.  */
 #undef HAVE_DLFCN_H
+
+/* Define if you have the mmap system call.  */
+#undef HAVE_MMAP

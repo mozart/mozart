@@ -83,11 +83,13 @@ enum TypeOfTerm {
 #define TaggedToPointer(t)       ((void*) (mallocBase|t))
 
 #ifdef LARGEADRESSES
-#define _tagValueOf2(tag,ref)  TaggedToPointer((ref>>(tagSize-2)) - ((tag)>>2))
-#define _tagValueOf(ref)         TaggedToPointer(((ref) >> (tagSize-2))&~3)
-#define _tagValueOfVerbatim(ref) ((void*)(((ref) >> (tagSize-2))&~3))
-#define _makeTaggedRef2(tag,i)   ((i << (tagSize-2)) | tag)
+#define lostPtrBits (tagSize-2)
+#define _tagValueOf2(tag,ref)  TaggedToPointer((ref>>lostPtrBits) - ((tag)>>2))
+#define _tagValueOf(ref)         TaggedToPointer(((ref) >> lostPtrBits)&~3)
+#define _tagValueOfVerbatim(ref) ((void*)(((ref) >> lostPtrBits)&~3))
+#define _makeTaggedRef2(tag,i)   ((i << lostPtrBits) | tag)
 #else
+#define lostPtrBits tagSize
 #define _tagValueOf(ref)         TaggedToPointer((ref) >> tagSize)
 #define _tagValueOf2(tag,ref)    tagValueOf(ref)
 #define _tagValueOfVerbatim(ref) ((ref) >> tagSize)
