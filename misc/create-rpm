@@ -27,16 +27,17 @@ RPMSPEC=$RPMROOT/SPECS
 TMPDIR=/tmp
 
 #
-# Dinf destination dir
+# Read dir
 #
-if test $# -lt 3
+if test $# -lt 2
 then
-   echo "usage: create-rpm <src-tar> <doc-tar> <dst-dir>" 1>&2;
+   echo "usage: create-rpm <src-dir> <dst-dir>" 1>&2;
    exit 1;
 fi
-SRCTAR=$1
-DOCTAR=$2
-DSTDIR=$3
+BUILDDIR=$1
+SRCTAR=`ls ${BUILDDIR}/mozart-*-*-src.tar.gz`
+DOCTAR=`ls ${BUILDDIR}/mozart-*-*-doc.tar.gz`
+DSTDIR=$2
 
 #
 # Find version
@@ -119,7 +120,7 @@ Contributed stuff (gdbm, regex, ...)
 
 %build
 cd mozart
-CFLAGS="-O0" CXXFLAGS="-O0" ./configure --prefix=\$RPM_BUILD_ROOT/usr/local/mozart
+CFLAGS="\$RPM_OPT_FLAGS" CXXFLAGS="\$RPM_OPT_FLAGS" ./configure --prefix=\$RPM_BUILD_ROOT/usr/local/mozart
 
 make
 
@@ -128,7 +129,7 @@ PREFIX=\$RPM_BUILD_ROOT/usr/local/mozart
 rm -rf \$PREFIX
 mkdir -p \$PREFIX
 # install docs
-cp -a doc \$PREFIX
+(cd mozart;cp -a doc \$PREFIX)
 # Generic install
 (cd mozart && make install)
 
@@ -139,6 +140,10 @@ cp -a doc \$PREFIX
 (cd \$PREFIX/platform/linux-i486 && \
 	strip *.exe && \
 	strip *.so )
+
+(cd \$PREFIX/contrib && \
+	strip ./*/*.so-linux-i486 && \
+	strip *.so-linux-i486 )
 
 %endif
 
@@ -180,5 +185,8 @@ rm -f ${RPMSRC}/mozart-profiles.tar.gz
 # Move the created rpms to destination
 #
 
-mv ${RPMROOT}/RPMS/i386/mozart-$VERSION-$BUILD.i386.rpm ${DESTDIR}
-mv ${RPMROOT}/SRPMS/mozart-$VERSION-$BUILD.src.rpm ${DESTDIR}
+mv ${RPMROOT}/RPMS/i386/mozart-{,doc-,contrib-}$VERSION-$BUILD.i386.rpm ${DSTDIR}
+mv ${RPMROOT}/SRPMS/mozart-$VERSION-$BUILD.src.rpm ${DSTDIR}
+
+
+
