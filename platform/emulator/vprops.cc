@@ -606,7 +606,7 @@ if (!oz_isSmallInt(val) ||			\
 
 #define CHECK_REC				\
 if (!oz_isSRecord(val))			        \
-{oz_typeError(1,"SRecord")}			\
+{oz_typeError(1,"SRecord");}			\
 else REC__=tagged2SRecord(val);
 
 // Handle the case of an indexed property P that should be a record,
