@@ -28,17 +28,17 @@ export OZARCH
 
 
 # where Oz searches for files:
-: ${OZPATH=.:${OZHOME}:${OZHOME}/lib:${OZHOME}/demo}; export OZPATH
+: ${OZPATH=.:${OZHOME}:${OZHOME}/lib:${OZHOME}/lib/${OZARCH}:${OZHOME}/demo}; export OZPATH
 
 
 # increment path
-PATH=${PATH}:$OZHOME/bin; export PATH
+PATH=${PATH}:${OZHOME}/bin; export PATH
 
 
 # where is lucid emacs?
 if [ ${LEMACS-0} = 0 ]; then
-  if [ -f $OZHOME/lemacs/lemacs ]; then
-     LEMACS=$OZHOME/lemacs/lemacs
+  if [ -f ${OZHOME}/lemacs/lemacs ]; then
+     LEMACS=${OZHOME}/lemacs/lemacs
   elif [ -f /usr/share/dfki/gnu/bin/lemacs ]; then
      LEMACS=/usr/share/dfki/gnu/bin/lemacs
   else
@@ -49,8 +49,8 @@ export LEMACS
 
 
 # load fonts
-if [ -d $OZHOME/demo/fonts ]; then 
-   xset +fp $OZHOME/demo/fonts
+if [ -d ${OZHOME}/lib/fonts ]; then 
+   xset +fp ${OZHOME}/lib/fonts
 fi
 
 
