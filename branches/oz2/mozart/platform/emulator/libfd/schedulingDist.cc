@@ -424,7 +424,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	      if (constraintsSize + reg_max_nb_tasks*4
 		  > constraintLimit) {
 		int newLimit = constraintsSize + reg_max_nb_tasks*4;
-		printf("limit reached \n",constraintLimit);
+//		printf("limit reached \n",constraintLimit);
 		if (constraintLimit > INITIALSIZE)
 		  ::delete [] constraintsExtension;
 		constraintsExtension = ::new int[newLimit];
