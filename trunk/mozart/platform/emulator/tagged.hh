@@ -434,17 +434,6 @@ TaggedRef makeTaggedRef(TaggedRef *s)
 }
 
 inline
-TaggedRef makeTaggedRefToFromSpace(TaggedRef *s)
-{
-  CHECK_POINTER(s);
-/*  DebugGCT(extern MemChunks * from);
-  DebugGC(gcing == 0 && !from->inChunkChain ((void *)s),
-	  error ("making TaggedRef pointing to 'to' space"));
-	  */
-  return (TaggedRef) ToInt32(s);
-}
-
-inline
 TaggedRef makeTaggedUVar(Board *s)
 {
   CHECK_POINTER(s);
