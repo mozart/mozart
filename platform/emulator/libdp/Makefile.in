@@ -125,4 +125,4 @@ veryclean::
 #
 # special dependencies...
 dpMarshaler.hh marshalMsg.cc: msgFormat.m4
-$(CORELIBOBJS): dpMarshaler.hh
+$(COREOBJS): dpMarshaler.hh
