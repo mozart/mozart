@@ -214,7 +214,7 @@ literals. Literals are divided into atoms and names. An Atom is
 symbolic entity that has an identity made up of a sequence of
 alphanumeric characters starting with a lower case letter, or
 arbitrary printable characters enclosed in quotes. For example:
-<<<a   foo   '='   ':='   'OZ 2.0'   'Hello World'>>>
+<<<a   foo   '='   ':='   'OZ 3.0'   'Hello World'>>>
 
 <P>Atoms have an ordering based on lexicographic ordering.  
 
@@ -421,7 +421,7 @@ called <EM>strings</EM>, e.g.
 
 <P>or equivalently
 
-<<<[&amp;O &amp;Z &amp;  &amp;2 &amp;. &amp;0]>>>
+<<<[&amp;O &amp;Z &amp;  &amp;3 &amp;. &amp;0]>>>
 
 <SECTION><TITLE>Virtual Strings</TITLE>
 <P>A virtual string is a special tuple that represents a string with
