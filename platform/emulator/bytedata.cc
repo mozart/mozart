@@ -340,11 +340,9 @@ void ByteString_init() {
 }
 
 OZ_Term ByteString::printV(int depth = 10) {
-  int w = getWidth();
-  OZ_Term tup=OZ_tupleC("#",w);
-  for (int i=0; i<w; i++) OZ_putArg(tup,i,oz_int(get(i)));
   return oz_pair2(oz_atom("<ByteString \""),
-                  oz_pair2(tup,oz_atom("\">")));
+                  oz_pair2(oz_makeTaggedExtension(this),
+                           oz_atom("\">")));
 }
 
 ByteString* ByteString::clone() {
