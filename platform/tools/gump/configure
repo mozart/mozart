@@ -1196,6 +1196,10 @@ done
 
 subdirs="ozflex"
 
+
+: ${platform=$PLATFORM}
+
+
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
@@ -1357,6 +1361,7 @@ s%@PLATFORM@%$PLATFORM%g
 s%@LN_S@%$LN_S%g
 s%@RM@%$RM%g
 s%@subdirs@%$subdirs%g
+s%@platform@%$platform%g
 
 CEOF
 EOF

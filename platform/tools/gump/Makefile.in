@@ -7,7 +7,7 @@
 VPATH           = @srcdir@
 BUILDTOP        = @BUILDTOP@
 PREFIX          = @prefix@
-PLATFORM        = @PLATFORM@
+PLATFORM        = @platform@
 SRCDIR          = @srcdir@
 SRCTOP          = @SRCTOP@
 BUILDTOP        = @BUILDTOP@
