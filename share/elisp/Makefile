@@ -1,6 +1,9 @@
 SHELL = /bin/sh
 
+.SUFFIXES: .el .elc
 
+ELS  = comint.el oz.el ozstartup.el blink-paren.el
+ELCS = $(ELS:.el=.elc)
 
 
 
@@ -19,11 +22,17 @@ Makefile: Makefile.m4
 	m4 Makefile.m4 > Makefile
 
 
-oz:  /usr/share/gs/soft/oz/elisp/oz.el
+elcs:    $(ELCS)
 
-/usr/share/gs/soft/oz/elisp/oz.el:   oz.el
-	install -m 444 $< $@
+install: elcs
+	install -m 444 $(ELS) $(ELCS) /usr/share/gs/soft/oz/elisp
 
-	echo "(byte-compile-file \"/usr/share/gs/soft/oz/elisp/oz.el\")" > compile
-	lemacs -batch -load compile
-	rm compile
+oz.el: comint.el
+
+blink-paren.elc: blink-paren.el
+
+.el.elc:
+	@echo "(setq load-path (cons \".\" load-path))\
+               (byte-compile-file \"$<\")" >> compile
+	lemacs -batch -f batch-byte-compile $<
+#	rm -f compile

@@ -1,17 +1,15 @@
 SHELL = /bin/sh
 
+.SUFFIXES: .el .elc
+
+ELS  = comint.el oz.el ozstartup.el blink-paren.el
+ELCS = $(ELS:.el=.elc)
 
 define(OzDir,/usr/share/gs/soft/oz)
 define(OzLib,OzDir/lib)
 define(OzInc,OzDir/`include')
 define(OzLisp,OzDir/elisp)
 
-define(installOz,
-$1:  OzLisp/$1.el
-
-OzLisp/$1.el:   $2$1.el
-	install -m 444 $< $@
-)
 
 help:
 	@echo ""
@@ -24,7 +22,17 @@ Makefile: Makefile.m4
 	m4 Makefile.m4 > Makefile
 
 
-installOz(oz)
-	echo "(byte-compile-file \"OzLisp/oz.el\")" > compile
-	lemacs -batch -load compile
-	rm compile
+elcs:    $(ELCS)
+
+install: elcs
+	install -m 444 $(ELS) $(ELCS) OzLisp
+
+oz.el: comint.el
+
+blink-paren.elc: blink-paren.el
+
+.el.elc:
+	@echo "(setq load-path (cons \".\" load-path))\
+               (byte-compile-file \"$<\")" >> compile
+	lemacs -batch -f batch-byte-compile $<
+#	rm -f compile
