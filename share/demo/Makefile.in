@@ -41,8 +41,10 @@ APPLETS = \
 DEMOAPPLETS = \
         $(APPLETS:%=$(OZDEMO)/%)
 
+DIRS = \
+        JobShop Transport
 
-all:: $(APPLETS)
+all:: dirs $(APPLETS)
 
 #
 # Applet installation
