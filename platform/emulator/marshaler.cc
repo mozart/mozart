@@ -1304,8 +1304,9 @@ void marshalFullObject(Object *o,MsgBuffer* bs){
   
 void marshalFullObjectAndClass(Object *o,MsgBuffer* bs){
   PD((MARSHAL,"full object and class"));
+  ObjectClass *oc=o->getClass();
   marshalFullObject(o,bs);
-  marshalClass(o->getClass(),bs);}
+  marshalClass(oc,bs);}
 
 /* *********************************************************************/
 /*   SECTION 15: statistics                                            */
