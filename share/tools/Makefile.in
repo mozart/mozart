@@ -245,17 +245,16 @@ $(OZCARIMAGESDIR)/%: ozcar/images/%
 $(INSPECTORIMAGESDIR)/%: inspector/images/%
 	$(INSTALL_FILE) $< $@
 
-CACHEDIR  = $(PREFIX)/cache/http/mozart.ps.uni-sb.de
-CACHELINK = $(CACHEDIR)/home
+HOMECACHE = @HOMECACHE@
+CACHEDIR  = $(PREFIX)/cache/$(HOMECACHE)
 
-install-cache: $(CACHEDIR) $(CACHELINK)
+install-cache: \
+	$(CACHEDIR)
 
 $(CACHEDIR):
 	$(INSTALL_DIR) $(CACHEDIR)
-
-$(CACHELINK): $(CACHEDIR)
-	rm -f $(CACHELINK)
-	$(LN_S)  $(PREFIX) $(CACHELINK)
+	-rm -rf $(CACHEDIR)
+	$(LN_S) $(PREFIX) $(CACHEDIR)
 
 #---------------------------------------------------------------------
 # Cleaning up
