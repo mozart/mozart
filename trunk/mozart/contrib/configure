@@ -991,7 +991,52 @@ fi
 
   
   
-#OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+  
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    # Extract the first word of "oztool", so it can be a program name with args.
+set dummy oztool; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1006: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$OZTOOL" in
+  /*)
+  ac_cv_path_OZTOOL="$OZTOOL" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_OZTOOL="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+OZTOOL="$ac_cv_path_OZTOOL"
+if test -n "$OZTOOL"; then
+  echo "$ac_t""$OZTOOL" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    OZTOOL=`echo $OZTOOL | sed -e "s|//|/|g"`
+    if test ! -n "$OZTOOL"
+    then
+	OZTOOL=undefined
+	OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"
+    fi
+    
 
 
 CONTRIBDIRS="tk ap"
@@ -999,7 +1044,7 @@ CONTRIBDIRS="tk ap"
 
 
 echo $ac_n "checking for --enable-contrib-gdbm""... $ac_c" 1>&6
-echo "configure:1003: checking for --enable-contrib-gdbm" >&5
+echo "configure:1048: checking for --enable-contrib-gdbm" >&5
 # Check whether --enable-contrib-gdbm or --disable-contrib-gdbm was given.
 if test "${enable_contrib_gdbm+set}" = set; then
   enableval="$enable_contrib_gdbm"
@@ -1016,7 +1061,7 @@ echo "$ac_t""$oz_cv_enable_contrib_gdbm" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-regex""... $ac_c" 1>&6
-echo "configure:1020: checking for --enable-contrib-regex" >&5
+echo "configure:1065: checking for --enable-contrib-regex" >&5
 # Check whether --enable-contrib-regex or --disable-contrib-regex was given.
 if test "${enable_contrib_regex+set}" = set; then
   enableval="$enable_contrib_regex"
@@ -1033,7 +1078,7 @@ echo "$ac_t""$oz_cv_enable_contrib_regex" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-doc""... $ac_c" 1>&6
-echo "configure:1037: checking for --enable-contrib-doc" >&5
+echo "configure:1082: checking for --enable-contrib-doc" >&5
 # Check whether --enable-contrib-doc or --disable-contrib-doc was given.
 if test "${enable_contrib_doc+set}" = set; then
   enableval="$enable_contrib_doc"
@@ -1050,7 +1095,7 @@ echo "$ac_t""$oz_cv_enable_contrib_doc" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-os""... $ac_c" 1>&6
-echo "configure:1054: checking for --enable-contrib-os" >&5
+echo "configure:1099: checking for --enable-contrib-os" >&5
 # Check whether --enable-contrib-os or --disable-contrib-os was given.
 if test "${enable_contrib_os+set}" = set; then
   enableval="$enable_contrib_os"
@@ -1067,7 +1112,7 @@ echo "$ac_t""$oz_cv_enable_contrib_os" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-text""... $ac_c" 1>&6
-echo "configure:1071: checking for --enable-contrib-text" >&5
+echo "configure:1116: checking for --enable-contrib-text" >&5
 # Check whether --enable-contrib-text or --disable-contrib-text was given.
 if test "${enable_contrib_text+set}" = set; then
   enableval="$enable_contrib_text"
@@ -1084,7 +1129,7 @@ echo "$ac_t""$oz_cv_enable_contrib_text" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-dpanel""... $ac_c" 1>&6
-echo "configure:1088: checking for --enable-contrib-dpanel" >&5
+echo "configure:1133: checking for --enable-contrib-dpanel" >&5
 # Check whether --enable-contrib-dpanel or --disable-contrib-dpanel was given.
 if test "${enable_contrib_dpanel+set}" = set; then
   enableval="$enable_contrib_dpanel"
@@ -1105,7 +1150,7 @@ subdirs="$CONTRIBDIRS"
 
 
 echo $ac_n "checking for --enable-contrib-gdbm""... $ac_c" 1>&6
-echo "configure:1109: checking for --enable-contrib-gdbm" >&5
+echo "configure:1154: checking for --enable-contrib-gdbm" >&5
 # Check whether --enable-contrib-ri_lp or --disable-contrib-ri_lp was given.
 if test "${enable_contrib_ri_lp+set}" = set; then
   enableval="$enable_contrib_ri_lp"
@@ -1275,6 +1320,7 @@ s%@INSTALL_DATA@%$INSTALL_DATA%g
 s%@INSTALL_DIR@%$INSTALL_DIR%g
 s%@HOMEURL@%$HOMEURL%g
 s%@HOMECACHE@%$HOMECACHE%g
+s%@OZTOOL@%$OZTOOL%g
 s%@CONTRIBDIRS@%$CONTRIBDIRS%g
 s%@subdirs@%$subdirs%g
 
