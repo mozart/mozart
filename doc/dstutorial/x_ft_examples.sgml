@@ -27,7 +27,7 @@ by means of a new exception, <<serverError>>.
 when it tries to do operations
 on entities that have problems.
 All distributed exceptions are of the
-form <<system(dp(condition:FS ...) ...)>> where
+form <<system(dp(conditions:FS ...) ...)>> where
 <<FS>> is the list of actual fault states
 as defined before, except for <<ok>> since it
 is not wrong behavior.
@@ -37,7 +37,7 @@ is not wrong behavior.
 and raises the exception <<serverError>>
 if this is permanently impossible.
 <<{SafeWait X T}>> waits until <<X>> is
-instantiated, raises the exception
+instantiated and raises the exception
 <<serverError>> if this is permanently impossible
 or if the time <<T>> is exceeded.
 We first show how to use these abstractions
@@ -63,9 +63,7 @@ proc {Srv X}
    {SafeSend Prt X}
 end
 
-{Pickle.save
- {Connection_many Srv}
- "http://www.sics.se/~pvr/hw"}
+{Pickle.save {Connection_many Srv} "http://www.sics.se/~pvr/hw"}
 >>>
 
 <P>This server does one distributed operation,
@@ -111,11 +109,9 @@ proc {SafeSend Prt X}
    catch system(dp(conditions:FS) ...) then
       if {Fault.member permFail FS} then
          raise serverError end
-      else if {Fault.member tempFail FS} then
+      elseif {Fault.member tempFail FS} then
          {Delay 100} {SafeSend Prt X}
-      else
-         skip
-      end
+      else skip end
    end
 end
 >>>
@@ -136,15 +132,11 @@ local
          [] {Wait Time} then raise serverError end
          end
       catch system(dp(conditions:FS ...) ...) then
-         if {Fault.member permFail FS} orelse
-            {Fault.member remoteProblem(permSome)} then
+         if {Fault.someOf [permFail,remoteProblem(permSome)] FS} then
             raise serverError end
-         if {Fault.member tempFail FS} orelse
-            {Fault.member remoteProblem(tempSome) FS} then
+         if {Fault.someOf [tempFail,remoteProblem(tempSome)] FS} then
             {Delay 100} {InnerSafeWait X Time}
-         else
-            skip
-         end
+         else skip end
       end
    end
 in
@@ -153,6 +145,8 @@ in
       if TimeOut\=infinity then
          thread {Delay TimeOut} Time=done end
       end
+      {Fault.enable X thread(this)
+         [permFail,remoteProblem(permSome),tempFail,remoteProblem(tempSome)] _}
       {InnerSafeWait X Time}
    end
 end
@@ -242,11 +236,10 @@ send, then wait 100 ms and try again.
       R in
       try
          {Send P M#R}
-      catch system(dp(C)) then
-         case C
-         of permFail(...) then
+      catch system(dp(conditions:FS ...) ...) then
+         if {Fault.member permFail FS} then
             raise remoteObjectError end
-         [] tempFail(...) then
+         elseif {Fault.member tempFail FS} then
             {Delay 100}
             {StatP M}
          else skip end
@@ -263,17 +256,14 @@ If there is a temporary failure, then
 wait 100 ms and try again.
 <chunk><title/Client synchronizes with the server/
    proc {EndLoop R}
+      {Fault.enable R thread(this)
+         [permFail,remoteProblem(permSome),tempFail,remoteProblem(tempSome)] _}
       try
          if R==N then skip else raise R end end
-      catch system(dp(C)) then
-         case C
-         of permFail(...) then
+      catch system(dp(conditions:FS ...) ...) then
+         if {Fault.someOf [permFail,remoteProblem(permSome)] FS} then
             raise remoteObjectError end
-         [] remoteProblem(permFail:_ ...) then
-            raise remoteObjectError end
-         [] tempFail(...) then
-            {Delay 100} {EndLoop R}
-         [] remoteProblem(tempFail:_ ...) then
+         elseif {Fault.someOf [tempFail,remoteProblem(tempSome)] FS} then
             {Delay 100} {EndLoop R}
          else skip end
       end
@@ -311,9 +301,11 @@ up after 10 tries.
       else
          try
             R=N
-         catch system(dp(tempFail(...))) then
-            {Delay 2000}
-            {TryToBind Count-1 R N}
+         catch system(dp(conditions:FS ...) ...) then
+            if {Fault.member tempFail FS} then
+               {Delay 2000}
+               {TryToBind Count-1 R N}
+            else skip end
          end
       end
    end
