@@ -130,10 +130,7 @@ void AM::init(int argc,char **argv)
   aVarUnifyHandler=makeTaggedNULL();
   aVarBindHandler=makeTaggedNULL();
 
-  char *compilerName;
-  if (!(compilerName = getenv("OZCOMPILER"))) {
-    compilerName = OzCompiler;
-  }
+  char *compilerName = OzCompiler;
 
   char *tmp;
   if ((tmp = getenv("OZPATH"))) {
