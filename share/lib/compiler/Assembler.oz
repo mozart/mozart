@@ -37,14 +37,13 @@
 
 functor
 import
-   System(printName show)
+   System(printName)
    CompilerSupport at 'x-oz://boot/CompilerSupport'
    Builtins(getInfo)
 export
    InternalAssemble
    Assemble
 define
-
    InstructionSizes = {CompilerSupport.getInstructionSizes}
 
    local
@@ -268,7 +267,7 @@ define
 	 meth load(Globals $)
 	    AssemblerClass, MarkEnd()
 	    {CompilerSupport.storeInstructions
-	     @Size Globals @InstrsHd @LabelDict} 
+	     @Size Globals @InstrsHd @LabelDict}
 	 end
 	 meth MarkEnd()
 	    @InstrsTl = nil
