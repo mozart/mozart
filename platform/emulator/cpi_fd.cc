@@ -56,9 +56,10 @@ void OZ_FDIntVar::ask(OZ_Term v)
 {
   Assert(oz_isRef(v) || !oz_isVariable(v));
 
-  _DEREF(v, varPtr, vtag);
+  DEREF(v, _vptr, vtag);
   var = v;
-
+  varPtr = _vptr;
+  //
   if (isSmallIntTag(vtag)) {
     initial_size = dom.initSingleton(smallIntValue(v));
     domPtr = &dom;
@@ -88,9 +89,10 @@ int OZ_FDIntVar::read(OZ_Term v)
 {
   Assert(oz_isRef(v) || !oz_isVariable(v));
 
-  _DEREF(v, varPtr, vtag);
+  DEREF(v, _vptr, vtag);
   var = v;
-
+  varPtr = _vptr;
+  //
   if (isSmallIntTag(vtag)) {
 
     initial_size = dom.initSingleton(smallIntValue(v));
@@ -172,7 +174,6 @@ int OZ_FDIntVar::read(OZ_Term v)
       } else {
       global_fd:
 
-#ifdef CORRECT_UNIFY
         if (isState(glob_e)) {
           dom = ((OzFDVariable *) cvar)->getDom();
           domPtr = &dom;
@@ -182,11 +183,7 @@ int OZ_FDIntVar::read(OZ_Term v)
           }
           domPtr = &((OzFDVariable *) cvar)->getDom();
         }
-#else
-        if (isState(glob_e) || oz_onToplevel())
-          dom = ((OzFDVariable *) cvar)->getDom();
-        domPtr = &((OzFDVariable *) cvar)->getDom();
-#endif
+
         initial_size = domPtr->getSize();
         initial_width = ((OZ_FiniteDomainImpl *)domPtr)->getWidth();
         setSort(int_e);
@@ -204,9 +201,10 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
 {
   Assert(oz_isRef(v) || !oz_isVariable(v));
 
-  _DEREF(v, varPtr, vtag);
+  DEREF(v, _vptr, vtag);
   var = v;
-
+  varPtr= _vptr;
+  //
   if (isSmallIntTag(vtag)) {
     initial_size = dom.initSingleton(smallIntValue(v));
     initial_width = 0;
@@ -256,7 +254,6 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
    (initial_width > ((OZ_FiniteDomainImpl *)domPtr)->getWidth()         \
      ? fd_prop_bounds : fd_prop_any)
 
-#ifdef CORRECT_UNIFY
 OZ_Boolean OZ_FDIntVar::tell(void)
 {
   DEBUG_CONSTRAIN_CVAR(("OZ_FDIntVar::tell "));
@@ -358,66 +355,6 @@ OZ_Boolean OZ_FDIntVar::tell(void)
   DEBUG_CONSTRAIN_CVAR(("TRUE\n"));
   return OZ_TRUE;
 }
-#else
-OZ_Boolean OZ_FDIntVar::tell(void)
-{
-  if (!oz_isVariable(*varPtr))
-    return OZ_FALSE;
-
-  if (testReifiedFlag(var))
-    unpatchReifiedFD(var, isSort(bool_e));
-
-  if (!testResetStoreFlag(var)) {
-    return OZ_FALSE;
-  } else if(!isTouched()) {
-    return OZ_TRUE;
-  } else if (isSort(int_e)) { // finite domain variable
-    if (*domPtr == fd_singl) {
-      if (isState(loc_e)) {
-        tagged2GenFDVar(var)->becomesSmallIntAndPropagate(varPtr);
-      } else {
-        int singl = domPtr->getSingleElem();
-        *domPtr = dom;
-        tagged2GenFDVar(var)->propagate(fd_prop_singl);
-        DoBindAndTrail(varPtr, newSmallInt(singl));
-      }
-    } else if (*domPtr == fd_bool) {
-      if (isState(loc_e)) {
-        tagged2GenFDVar(var)->becomesBoolVarAndPropagate(varPtr);
-      } else {
-        *domPtr = dom;
-        tagged2GenFDVar(var)->propagate(CHECK_BOUNDS);
-        OzBoolVariable * newboolvar = new OzBoolVariable(oz_currentBoard());
-        OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
-        DoBindAndTrailAndIP(varPtr, makeTaggedRef(newtaggedboolvar),
-                            newboolvar, tagged2GenBoolVar(var));
-      }
-      return OZ_TRUE;
-    } else {
-      tagged2GenFDVar(var)->propagate(CHECK_BOUNDS);
-      if (isState(glob_e)) {
-        OzFDVariable * locfdvar
-          = new OzFDVariable(*domPtr,oz_currentBoard());
-        OZ_Term * loctaggedfdvar = newTaggedCVar(locfdvar);
-        *domPtr = dom;
-        DoBindAndTrailAndIP(varPtr, makeTaggedRef(loctaggedfdvar),
-                            locfdvar, tagged2GenFDVar(var));
-      }
-      return OZ_TRUE;
-    }
-  } else {
-    Assert(isSort(bool_e) && *domPtr == fd_singl); // boolean variable
-
-    if (isState(loc_e)) {
-      tagged2GenBoolVar(var)->becomesSmallIntAndPropagate(varPtr, *domPtr);
-    } else {
-      tagged2GenBoolVar(var)->propagate();
-      DoBindAndTrail(varPtr, newSmallInt(domPtr->getSingleElem()));
-    }
-  }
-  return OZ_FALSE;
-}
-#endif
 
 void OZ_FDIntVar::fail(void)
 {

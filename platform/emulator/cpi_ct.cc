@@ -66,9 +66,10 @@ void OZ_CtVar::ask(OZ_Term v)
 {
   Assert(oz_isRef(v) || !oz_isVariable(v));
 
-  _DEREF(v, varPtr, vtag);
+  DEREF(v, _vptr, vtag);
   var = v;
-
+  varPtr = _vptr;
+  //
   if (oz_isVariable(vtag)) {
     ctSetLocalConstraint(tagged2GenCtVar(v)->getConstraint());
     setSort(var_e);
@@ -83,9 +84,10 @@ void OZ_CtVar::read(OZ_Term v)
 {
   Assert(oz_isRef(v) || !oz_isVariable(v));
 
-  _DEREF(v, varPtr, vtag);
+  DEREF(v, _vptr, vtag);
   var = v;
-
+  varPtr = _vptr;
+  //
   if (oz_isVariable(vtag)) {
     // `v' designates a variable
 
@@ -118,22 +120,14 @@ void OZ_CtVar::read(OZ_Term v)
 
       OZ_Ct * constr = ctvar->getConstraint();
 
-#ifdef CORRECT_UNIFY
-        if (isState(glob_e)) {
-          ctRefConstraint(ctSaveConstraint(constr));
-        } else {
-          if (oz_onToplevel()) {
-            ctSaveConstraint(constr);
-          }
-          ctRefConstraint(constr);
-        }
-#else
-      if (isState(glob_e) || oz_onToplevel()) {
-        ctSetGlobalConstraint(constr);
+      if (isState(glob_e)) {
+        ctRefConstraint(ctSaveConstraint(constr));
       } else {
-        ctSetLocalConstraint(constr);
+        if (oz_onToplevel()) {
+          ctSaveConstraint(constr);
+        }
+        ctRefConstraint(constr);
       }
-#endif
 
       ctSetConstraintProfile();
     }
@@ -156,9 +150,10 @@ void OZ_CtVar::readEncap(OZ_Term v)
 {
   Assert(oz_isRef(v) || !oz_isVariable(v));
 
-  _DEREF(v, varPtr, vtag);
+  DEREF(v, _vptr, vtag);
   var = v;
-
+  varPtr = _vptr;
+  //
   if (oz_isVariable(v)) {
     //`v' designates a variable
     Assert(isCVar(vtag));
@@ -202,8 +197,6 @@ void OZ_CtVar::readEncap(OZ_Term v)
   }
 }
 
-#ifdef CORRECT_UNIFY
-//-----------------------------------------------------------------------------
 OZ_Boolean OZ_CtVar::tell(void)
 {
   DEBUG_CONSTRAIN_CVAR(("OZ_CtVar::tell "));
@@ -277,74 +270,6 @@ OZ_Boolean OZ_CtVar::tell(void)
   DEBUG_CONSTRAIN_CVAR(("TRUE\n"));
   return OZ_TRUE;
 }
-//-----------------------------------------------------------------------------
-#else
-OZ_Boolean OZ_CtVar::tell(void)
-{
-  if (!oz_isVariable(*varPtr))
-    return OZ_FALSE;
-
-  if (testReifiedFlag(var))
-    unpatchReifiedCt(var);
-
-  if (!testResetStoreFlag(var)) {
-    goto f;
-  } else if(!isTouched()) {
-    goto t;
-  } else {
-    Assert(isSort(var_e)); // must be constraint variable
-
-    OzCtVariable * ctvar = tagged2GenCtVar(var);
-    OZ_Ct * constr = ctGetConstraint();
-
-    if (constr->isValue()) {
-      // a variable has been constrained to a value
-
-      if (isState(loc_e)) {
-        // a _local_ variable becomes a value
-
-        ctvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
-        DoBind(varPtr, constr->toValue());
-
-      } else {
-        // a _global_ variable becomes a value
-
-        ctvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
-        DoBindAndTrail(varPtr, constr->toValue());
-
-        ctRestoreConstraint();
-      }
-
-      goto f;
-    } else {
-
-      OZ_CtWakeUp wakeup_descr = ctGetWakeUpDescrptor();
-
-      ctvar->propagate(wakeup_descr, pc_propagator);
-
-      if (isState(glob_e)) {
-        OzCtVariable * locctvar = new OzCtVariable(constr,
-                                                     ctvar->getDefinition(),
-                                                     oz_currentBoard());
-        OZ_Term * loctaggedctvar = newTaggedCVar(locctvar);
-
-        ctRestoreConstraint();
-
-        DoBindAndTrailAndIP(varPtr, makeTaggedRef(loctaggedctvar),
-                            locctvar, ctvar);
-      }
-
-      goto t;
-    }
-  }
-
-t:
-  return OZ_TRUE;
-
-f:
-  return OZ_FALSE;
-}
-#endif /* CORRECT_UNIFY */
 
 void OZ_CtVar::fail(void)
 {

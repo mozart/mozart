@@ -56,9 +56,10 @@ void OZ_FSetVar::ask(OZ_Term v)
 {
   Assert(oz_isRef(v) || !oz_isVariable(v));
 
-  _DEREF(v, varPtr, vtag);
+  DEREF(v, _vptr, vtag);
   var = v;
-
+  varPtr = _vptr;
+  //
   if (isFSetValueTag(vtag)) {
     set = *tagged2FSetValue(v);
     setPtr = &set;
@@ -77,9 +78,10 @@ void OZ_FSetVar::read(OZ_Term v)
 {
   Assert(oz_isRef(v) || !oz_isVariable(v));
 
-  _DEREF(v, varPtr, vtag);
+  DEREF(v, _vptr, vtag);
   var = v;
-
+  varPtr = _vptr;
+  //
   if (isFSetValueTag(vtag)) {
     set = *tagged2FSetValue(v);
     setPtr = &set;
@@ -117,21 +119,15 @@ void OZ_FSetVar::read(OZ_Term v)
       OzFSVariable * fsvar = tagged2GenFSetVar(v);
       setState(oz_isLocalVar(fsvar) ? loc_e : glob_e);
 
-#ifdef CORRECT_UNIFY
-        if (isState(glob_e)) {
-          set = fsvar->getSet();
-          setPtr = &set;
-        } else {
-          if (oz_onToplevel()) {
-            set = fsvar->getSet();
-          }
-          setPtr = &(fsvar->getSet());
-        }
-#else
-      if (isState(glob_e) || oz_onToplevel())
+      if (isState(glob_e)) {
         set = fsvar->getSet();
-      setPtr = &fsvar->getSet();
-#endif
+        setPtr = &set;
+      } else {
+        if (oz_onToplevel()) {
+          set = fsvar->getSet();
+        }
+        setPtr = &(fsvar->getSet());
+      }
 
       known_in = setPtr->getKnownIn();
       known_not_in = setPtr->getKnownNotIn();
@@ -148,9 +144,10 @@ void OZ_FSetVar::readEncap(OZ_Term v)
 {
   Assert(oz_isRef(v) || !oz_isVariable(v));
 
-  _DEREF(v, varPtr, vtag);
+  DEREF(v, _vptr, vtag);
   var = v;
-
+  varPtr = _vptr;
+  //
   if (isFSetValueTag(vtag)) {
     set = *tagged2FSetValue(v);
     setPtr = &set;
@@ -191,8 +188,6 @@ void OZ_FSetVar::readEncap(OZ_Term v)
   }
 }
 
-#ifdef CORRECT_UNIFY
-//-----------------------------------------------------------------------------
 OZ_Boolean OZ_FSetVar::tell(void)
 {
   DEBUG_CONSTRAIN_CVAR(("OZ_FSetVar::tell "));
@@ -271,74 +266,6 @@ oz_true:
   DEBUG_CONSTRAIN_CVAR(("TRUE\n"));
   return OZ_TRUE;
 }
-//-----------------------------------------------------------------------------
-#else
-OZ_Boolean OZ_FSetVar::tell(void)
-{
-#ifdef DEBUG_TELLCONSTRAINTS
-  cout << "tell_fs: " << *setPtr << endl << flush;
-#endif
-
-  if (!oz_isVariable(*varPtr))
-    return OZ_FALSE;
-
-  if (testReifiedFlag(var))
-    unpatchReifiedFSet(var);
-
-  if (!testResetStoreFlag(var)) {
-    goto f;
-  } else if(!isTouched()) {
-    goto t;
-  } else {
-    Assert(isSort(var_e)); // must be finite set variable
-
-    if (setPtr->isValue()) {
-      if (isState(loc_e)) {
-        tagged2GenFSetVar(var)->becomesFSetValueAndPropagate(varPtr);
-      } else {
-        OZ_FSetValue setvalue = *setPtr;
-        *setPtr = set;
-        tagged2GenFSetVar(var)->propagate(fs_prop_val);
-        DoBindAndTrail(varPtr,
-                       makeTaggedFSetValue(new OZ_FSetValue(setvalue)));
-      }
-      goto f;
-    } else {
-      if (known_in < setPtr->getKnownIn())
-        tagged2GenFSetVar(var)->propagate(fs_prop_glb);
-
-      if (known_not_in < setPtr->getKnownNotIn())
-        tagged2GenFSetVar(var)->propagate(fs_prop_lub);
-
-      if (card_size > setPtr->getCardSize())
-        tagged2GenFSetVar(var)->propagate(fs_prop_val);
-
-      if (isState(glob_e)) {
-        OzFSVariable * locfsvar
-          = new OzFSVariable(*setPtr,oz_currentBoard());
-        OZ_Term * loctaggedfsvar = newTaggedCVar(locfsvar);
-        *setPtr = set;
-        DoBindAndTrailAndIP(varPtr, makeTaggedRef(loctaggedfsvar),
-                            locfsvar, tagged2GenFSetVar(var));
-      }
-      goto t;
-    }
-  }
-t:
-#ifdef DEBUG_TELLCONSTRAINTS
-  oz_print(makeTaggedRef(varPtr));
-  cout << "(t)" << endl << flush;
-#endif
-  return OZ_TRUE;
-
-f:
-#ifdef DEBUG_TELLCONSTRAINTS
-  oz_print(makeTaggedRef(varPtr));
-  cout << "(f)" << endl << flush;
-#endif
-  return OZ_FALSE;
-}
-#endif
 
 void OZ_FSetVar::fail(void)
 {

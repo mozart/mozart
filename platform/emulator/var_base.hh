@@ -36,9 +36,7 @@
 #pragma interface
 #endif
 
-#define CORRECT_UNIFY
-
-#if defined(DEBUG_CONSTRAINT_UNIFY) && defined(CORRECT_UNIFY)
+#if defined(DEBUG_CONSTRAINT_UNIFY)
 
 #define DEBUG_CONSTRAIN_CVAR(ARGS) printf ARGS; fflush(stdout);
 
@@ -469,7 +467,6 @@ OZ_FiniteDomain * unpatchReifiedFD(OZ_Term t, Bool isBool)
   return v->getReifiedPatch();
 }
 
-#ifdef CORRECT_UNIFY
 // dealing with global variables
 void bindGlobalVar(OZ_Term *, OZ_Term *);
 void bindGlobalVarToValue(OZ_Term *, OZ_Term);
@@ -486,7 +483,6 @@ void castLocalVar(OZ_Term *, OZ_Term *);
 void constrainLocalVar(OZ_Term *, OZ_FiniteDomain &);
 void constrainLocalVar(OZ_Term *, OZ_FSetConstraint &);
 void constrainLocalVar(OZ_Term *, OZ_Ct *, OZ_CtDefinition *);
-#endif
 
 #include "namer.hh"
 

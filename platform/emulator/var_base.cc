@@ -321,7 +321,6 @@ VarStatus _var_check_status(OzVariable *cv) {
   return ((ExtVar*)cv)->checkStatusV();
 }
 
-#ifdef CORRECT_UNIFY
 // dealing with global variables
 // add assertions that right sides of bin and cast are global or values!
 void bindGlobalVarToValue(OZ_Term * varptr, OZ_Term value)
@@ -386,21 +385,3 @@ void bindLocalVar(OZ_Term * varptr_left, OZ_Term * varptr_right)
   DEBUG_CONSTRAIN_CVAR(("bindLocalVar\n"));
   DoBind(varptr_left, makeTaggedRef(varptr_right));
 }
-/*
-void castLocalVar(OZ_Term *, OZ_Term *)
-{
-}
-
-void constrainLocalVar(OZ_Term *, OZ_FiniteDomain &)
-{
-}
-
-void constrainLocalVar(OZ_Term *, OZ_FSetConstraint &)
-{
-}
-
-void constrainLocalVar(OZ_Term *, OZ_Ct *, OZ_CtDefinition *)
-{
-}
-*/
-#endif

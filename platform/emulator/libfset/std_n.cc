@@ -71,47 +71,46 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
   PropagatorController_VS P(_vs_size, vs);
   int i;
 
-
   for (i = _vs_size; i--; ) {
     vs[i].read(_vs[i]);
     vst[i] = vs[i];
   }
 
-  if (hasEqualVars())
+  if (hasEqualVars()) {
     goto failure;
-
+  }
   {
-  OZ_FSetValue u = _u;
+    OZ_FSetValue u = _u;
 
-  for (i = _vs_size; i--; ) {
-    OZ_FSetValue vsi_glb(vs[i]->getGlbSet());
+    for (i = _vs_size; i--; ) {
+      OZ_FSetValue vsi_glb(vs[i]->getGlbSet());
 
-    if ((u & vsi_glb).getCard() > 0)
-      goto failure;
+      if ((u & vsi_glb).getCard() > 0)
+        goto failure;
 
-    u |= vsi_glb;
-  }
+      u |= vsi_glb;
+    }
 
-  if (u.getCard() > 0) {
-    OZ_Boolean doagain;
+    if (u.getCard() > 0) {
+      OZ_Boolean doagain;
 
-    do {
-      doagain = OZ_FALSE;
+      do {
+        doagain = OZ_FALSE;
 
-      for (i = _vs_size; i--; ) {
-        OZ_FSetValue vsi_glb(vs[i]->getGlbSet());
+        for (i = _vs_size; i--; ) {
+          OZ_FSetValue vsi_glb(vs[i]->getGlbSet());
 
-        FailOnInvalid(*vs[i] != (u - vsi_glb));
+          FailOnInvalid(*vs[i] != (u - vsi_glb));
 
-        if (vst[i] <= vs[i]) {
-          doagain = OZ_TRUE;
-          vst[i] = vs[i];
-          u |= vsi_glb;
+          if (vst[i] <= vs[i]) {
+            doagain = OZ_TRUE;
+            vst[i] = vs[i];
+            u |= vsi_glb;
+          }
         }
-      }
 
-    } while (doagain);
-  }
+      } while (doagain);
+    }
   }
   {
     OZ_Return r = P.leave();
@@ -134,7 +133,7 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
     return r;
   }
 
-failure:
+ failure:
   OZ_DEBUGPRINTTHIS("failed");
   return P.fail();
 }

@@ -140,12 +140,10 @@ Bool Suspendable::_wakeup_outline(Board * home, PropCaller calledBy) {
 void oz_checkAnySuspensionList(SuspList ** suspList,
                                Board * home,
                                PropCaller calledBy) {
-#ifdef CORRECT_UNIFY
-  if (am.inEqEq() || Board::mustIgnoreWakeUp())
-#else
-  if (am.inEqEq())
-#endif
+
+  if (am.inEqEq() || Board::mustIgnoreWakeUp()) {
     return;
+  }
 
   home = home->derefBoard();
 
@@ -264,13 +262,12 @@ Bool Suspendable::_wakeupLocal(Board * sb, PropCaller calledBy) {
 }
 
 void oz_checkLocalSuspensionList(SuspList ** suspList,
-                                 PropCaller calledBy) {
-#ifdef CORRECT_UNIFY
-  if (am.inEqEq() || Board::mustIgnoreWakeUp())
-#else
-  if (am.inEqEq())
-#endif
+                                 PropCaller calledBy)
+{
+
+  if (am.inEqEq() || Board::mustIgnoreWakeUp()) {
     return;
+  }
 
   SuspList ** p = suspList;
 
