@@ -74,10 +74,22 @@ cmd=`basename $howcalled`
 case "$cmd" in
 
    oz)
-        # where is lucid emacs?
+        # where is Emacs?
         if [ ${OZEMACS-0} = 0 ]; then
-          if [ -f ${OZHOME}/emacs/emacs ]; then
-             OZEMACS=${OZHOME}/emacs/emacs
+
+           if [ -f ${OZHOME}/ozemacs/bin/$OZPLATFORM/emacs ]; then
+
+              OZEMACS=${OZHOME}/ozemacs/bin/$OZPLATFORM/emacs
+              EHOME=$OZHOME/ozemacs
+              EMACSLOADPATH=$EHOME/common/lisp:$EHOME/common/site-lisp
+              EMACSDATA=$EHOME/common/data
+              EMACSDOC=$EMACSDATA
+              INFOPATH=$EHOME/info
+              EMACSLOCKDIR=$EHOME/lock/
+              EMACSPATH=$EHOME/bin/$OZPLATFORM/etc
+              export EMACSLOADPATH EMACSDATA EMACSDOC
+              export INFOPATH EMACSLOCKDIR EMACSPATH
+
           else
 
              IFS="${IFS=   }"; saveifs="$IFS"; IFS="$IFS:"
