@@ -1292,7 +1292,7 @@ void gcDirectVar(TaggedRef * frm, TaggedRef * to) {
     
   default:
     Assert(0);
-    return makeTaggedNULL();
+    break;
   }
 }
 
