@@ -93,7 +93,7 @@ OZ_BI_define(BIwaitOrF,1,1)
   oz_declareNonvarIN(0,a);
 
   if (!oz_isRecord(a)) oz_typeError(0,"Record");
-  if (oz_isLiteral(a)) OZ_RETURN(oz_int(0));
+  if (oz_isLiteral(a)) oz_typeError(0,"ProperRecord");
 
   TaggedRef arity=OZ_arityList(a);
   while (!OZ_isNil(arity)) {
