@@ -318,7 +318,7 @@ void ozd_tracerOff()
   mode = NO;
 }
 
-Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
+Bool ozd_trace(char *info, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
 {
   static char command[MaxLine];
   static int skip=0;
@@ -329,6 +329,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
   if (PC != NOCODE) {
     displayCode(PC, 1);
   } else {
+    printf("%s: ",info);
     am.currentBoard()->print();
   }
 
@@ -345,7 +346,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
       }
       printf("]");
     }
-    printf(" %s> ",s);
+    printf("> ");
     fflush(stdout);
     if (osfgets(command,MaxLine,stdin) == (char *) NULL) {
       printf("read no input\n");
