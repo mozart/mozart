@@ -390,10 +390,12 @@ Bool LockSec::secForward(DSite* toS){
       state=Cell_Lock_Invalid;
       return OK;}
     state=Cell_Lock_Valid|Cell_Lock_Next;
+    pendThreadAddMoveToEnd(getPendBase());
     next=toS;
     return NO;}
   Assert(state==Cell_Lock_Requested);
   state= Cell_Lock_Requested|Cell_Lock_Next;
+  pendThreadAddMoveToEnd(getPendBase());
   next=toS;
   return NO;
 }
@@ -425,7 +427,8 @@ void lockReceiveDump(LockManager* lm,DSite *fromS){
     PD((WEIRD,"WEIRD- LOCK dump not needed"));
     return;}
   Assert(sec->getState()==Cell_Lock_Invalid);
-  sec->lockComplex(NULL,lm);
+  pendThreadAddDummyToEnd(sec->getPendBase());
+  secLockGet(sec,lm,NULL);
   return;
 }
 

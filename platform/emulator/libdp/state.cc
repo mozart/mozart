@@ -400,10 +400,7 @@ void LockSec::lockComplex(Thread *th,Tertiary* t){
   Assert(th==oz_currentThread());
   Assert(t->getBoardInternal()==oz_rootBoard());
   switch(state){
-  case Cell_Lock_Valid|Cell_Lock_Next:{
-    Assert(getLocker()!=th);
-    Assert(getLocker()!=NULL);
-    pendThreadAddMoveToEnd(getPendBase());}
+  case Cell_Lock_Valid|Cell_Lock_Next:
   case Cell_Lock_Valid:{
     Assert(getLocker()!=th);
     Assert(getLocker()!=NULL);
@@ -453,10 +450,13 @@ void LockSec::unlockComplex(Tertiary* tert){
       pendThreadRemoveFirst(getPendBase());
       unlockComplex(tert);
       return;}
-
     locker=pendThreadResumeFirst(getPendBase());
     return;}
-  if(pending!=NULL){
+  while(TRUE){
+    if(pending==NULL) return;
+    if(pending->exKind==DUMMY){
+      pendThreadRemoveFirst(getPendBase());
+      continue;}
     locker=pendThreadResumeFirst(getPendBase());
     return;}
   return;
