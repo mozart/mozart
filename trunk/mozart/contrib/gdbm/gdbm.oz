@@ -4,7 +4,8 @@
 %%%
 
 proc {$ IMPORTS GDBM}
-   FLoad = IMPORTS.'SP'.'Foreign'.load
+   FLoad    = IMPORTS.'SP'.'Foreign'.load
+   Register = IMPORTS.'SP'.'Finalize'.register
 in
    %% open a new `local' to protect redefinitions of
    %% variables already in Base
@@ -58,7 +59,9 @@ in
 	 {FoldL Rights
 	  fun {$ N Right} {BitOr N MAP.Right} end N}
       end
-   
+      proc {FREE DB}
+	 try {Close DB} catch _ then skip end
+      end
    in
       class GDBM from BaseObject
 	 attr DB
@@ -71,6 +74,7 @@ in
 	    ZMode  = {ModesToInt Mode}
 	 in
 	    DB<-{Open Name ZFlags ZMode Block}
+	    {Register @DB FREE}
 	 end
 	 meth put(Key Val replace:Rep <= true)
 	    case {Store @DB Key Val Rep} of
