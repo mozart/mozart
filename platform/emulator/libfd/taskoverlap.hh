@@ -41,7 +41,7 @@ private:
   //
   static OZ_PropagatorProfile profile;
   //
-  FilterTasksOverlap<OZ_Service, OZ_FDIntVar, OZ_FiniteDomain, PEL_PersistentFDIntVar, PEL_FDIntVar, PEL_PersistentEngine> tasksoverlap;
+  FilterTasksOverlap<OZ_Service<OZ_Propagator>, OZ_FDIntVar, OZ_FiniteDomain, PEL_PersistentFDIntVar, PEL_FDIntVar, PEL_PersistentEngine> tasksoverlap;
   //
 public:
   //
