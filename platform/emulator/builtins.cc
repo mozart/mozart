@@ -329,9 +329,9 @@ Board *oz_solve_clone(SolveActor *sa, Board *bb) {
   }
 
 #ifdef CS_PROFILE
-  ca->orig_start = sa->orig_start;
-  ca->copy_start = sa->copy_start;
-  ca->copy_size  = sa->copy_size;
+  ca->orig_start = cs_orig_start;
+  ca->copy_start = cs_copy_start;
+  ca->copy_size  = cs_copy_size;
 #endif
 
   return copy;
@@ -678,8 +678,6 @@ OZ_BI_define(BIinjectSpace, 2,0)
 } OZ_BI_end
 
 
-#ifdef MISC_BUILTINS
-
 #ifdef CS_PROFILE
 OZ_BI_define(BIgetCloneDiff, 1,1) {
   declareSpace();
@@ -689,8 +687,6 @@ OZ_BI_define(BIgetCloneDiff, 1,1) {
 
   OZ_RETURN(space->getSolveActor()->getCloneDiff());
 } OZ_BI_end
-
-#endif
 
 #endif
 
