@@ -554,10 +554,15 @@
   {\begin{list}{}{\leftmargin\mozart@displaymargin}\item[]\ignorespaces}
   {\end{list}}
 
+\newcommand{\mozart@code@smaller}{%
+  \ifx\@currsize\small		\scriptsize\else
+  \ifx\@currsize\normalsize	\small\fi\fi}
+
 \newcommand{\mozart@code@font}{%
   \fontencoding{\encodingdefault}%
   \fontfamily{\familydefault}%
-  \fontshape{\shapedefault}\ttfamily\selectfont}
+  \fontshape{\shapedefault}\ttfamily\selectfont
+  \mozart@code@smaller}
 \newcommand{\@CODEINLINE}[1]{\mozart@code@font\mozart@specials@code@inline#1\egroup}
 \DeclareRobustCommand{\CODEINLINE}{\bgroup\let\FACETEXT\INLINEFACETEXT\@CODEINLINE}
 \newcommand{\CODEEXTERN}[1]{%
