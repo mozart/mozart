@@ -141,7 +141,7 @@ define
 	       case H
 	       of     &\\ then &\\|{Unescape T}
 	       elseof &n  then &\n|{Unescape T}
-	       elsecase {IsOctalDigit H} then
+	       elseif {IsOctalDigit H} then
 		  H2|H3|L = T
 	       in
 		  (H3-&0+(H2-&0)*8+(H-&0)*16)
@@ -282,7 +282,7 @@ define
       meth init skip end
       meth process(Files Document
 		   program:P<=unit catalog:C<=unit casefold:F<=none
-		   error:ERR<=_ )
+		   include:I<=nil error:ERR<=_ )
 	 Pgm = case P of unit then {Access ParamProgram} else P end
 	 Cat = case C of unit then {Access ParamCatalog} else C end
 	 Fld = case F of unit then {Access ParamCaseFold}else F end
@@ -292,7 +292,9 @@ define
 	 [] upper then CaseFoldUpper
 	 [] lower then CaseFoldLower end
 	 event(error:!ERR get:GET)
-	 = {MakeEventGenerator Pgm '-c'#Cat|Files CaseNormalize}
+	 = {MakeEventGenerator Pgm
+	    '-c'#Cat|{FoldR I fun {$ E L} '-i'#E | L end Files}
+	    CaseNormalize}
       in
 	 {Parse GET CaseNormalize Document}
       end
