@@ -129,6 +129,9 @@ public:
                      OZ_Term A,OZ_Term B=makeTaggedNULL(),
                      OZ_Term C=makeTaggedNULL(),OZ_Term D=makeTaggedNULL());
 
+
+  TaggedRef aVarUnifyHandler;
+  TaggedRef aVarBindHandler;
   Toplevel *toplevelQueue;
 
   void printBoards();
