@@ -4,8 +4,6 @@
 ;; $Id$
 
 ;; BUGS
-;; - oz-directive-on-region should write a \line directive at the start
-;;   of the file.
 ;; - `/*' ... `*/' style comments are ignored for purposes of indentation.
 ;;   (Nesting and line breaks are problematic.)
 ;; - Line breaks inside strings, quotes or backquote variables
@@ -14,7 +12,7 @@
 ;; - An ampersand as the last character in a string or before a
 ;;   backslash-escaped double quote in a string messes up fontification.
 ;; - The use of non-escaped double quotes in Oz-Gump regular expression
-;;   tokens confuses fontification
+;;   tokens confuses fontification.
 ;; - Oz-Gump regular expressions are not ignored for indentation.
 ;; - Some indentation rules do not work correctly with infix operators, e.g.:
 ;;      feat
@@ -286,6 +284,11 @@ Positions are returned as a pair ( START . END )."
 	     (backward-paragraph (1- arg))
 	     (setq end (point))))
       (cons start end))))
+
+(defun oz-get-region (start end)
+  (concat "\\line " (1+ (count-lines 1 start))
+	  " '" (or (buffer-file-name) "nofile") "' % fromemacs\n"
+	  (buffer-substring start end)))
 
 
 ;;------------------------------------------------------------
@@ -837,10 +840,7 @@ the gdb commands `cd DIR' and `directory'."
 (defun oz-feed-region (start end)
   "Feed the current region to the Oz Compiler."
   (interactive "r")
-  (oz-send-string
-   (concat "\\line " (1+ (count-lines 1 start))
-	   " '" (or (buffer-file-name) "nofile") "' % fromemacs\n"
-	   (buffer-substring start end)))
+  (oz-send-string (oz-get-region start end))
   (setq oz-last-fed-region-start (copy-marker start))
   (oz-zmacs-stuff))
 
@@ -2328,8 +2328,12 @@ If it is, then remove it."
 	(file-2 (concat oz-temp-file suffix)))
     (if (file-exists-p file-2)
 	(delete-file file-2))
-    (write-region start end file-1)
-    (message nil)
+    (save-excursion
+      (let ((string (oz-get-region start end)))
+	(set-buffer (generate-new-buffer oz-temp-buffer))
+	(insert string)
+	(write-region (point-min) (point-max) file-1 nil 'quiet)
+	(kill-buffer (current-buffer))))
     (if oz-using-new-compiler
 	(oz-send-string (concat directive " '" file-1 "'"))
       (let ((buf (get-buffer oz-temp-buffer)))
