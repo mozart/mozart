@@ -3967,42 +3967,6 @@ OZ_Return BIlessInline(TaggedRef A, TaggedRef B)
 
 
 
-OZ_Return BInumeqInline(TaggedRef A, TaggedRef B)
-{
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
-
-  if (tagA == tagB) {
-    if (isSmallInt(tagA)) if (smallIntEq(A,B)) goto proceed; goto failed;
-    if (isFloat(tagA))    if (floatEq(A,B))    goto proceed; goto failed;
-    if (isBigInt(tagA))   if (bigIntEq(A,B))   goto proceed; goto failed;
-  }
-
-  return suspendOnNumbers(A,B);
-
- failed:
-  return FAILED;
-
- proceed:
-  return PROCEED;
-}
-
-
-OZ_Return BInumeqInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
-{
-  switch (BInumeqInline(A,B)) {
-  case PROCEED:
-    out = NameTrue;
-    return PROCEED;
-  case FAILED:
-    out = NameFalse;
-    return PROCEED;
-  case SUSPEND:
-  default:
-    return SUSPEND;
-  }
-}
-
 OZ_Return BInumneqInline(TaggedRef A, TaggedRef B)
 {
   DEREF(A,_1,tagA);
@@ -4430,8 +4394,6 @@ DECLAREBI_USEINLINEREL2(BIless,BIlessInline)
 DECLAREBI_USEINLINEREL2(BIle,BIleInline)
 DECLAREBI_USEINLINEREL2(BIgreat,BIgreatInline)
 DECLAREBI_USEINLINEREL2(BIge,BIgeInline)
-DECLAREBI_USEINLINEREL2(BInumeq,BInumeqInline)
-DECLAREBI_USEINLINEREL2(BInumneq,BInumneqInline)
 
 DECLAREBI_USEINLINEFUN2(BIplus,BIplusInline)
 DECLAREBI_USEINLINEFUN2(BIminus,BIminusInline)
@@ -4451,8 +4413,6 @@ DECLAREBI_USEINLINEFUN2(BIlessFun,BIlessInlineFun)
 DECLAREBI_USEINLINEFUN2(BIleFun,BIleInlineFun)
 DECLAREBI_USEINLINEFUN2(BIgreatFun,BIgreatInlineFun)
 DECLAREBI_USEINLINEFUN2(BIgeFun,BIgeInlineFun)
-DECLAREBI_USEINLINEFUN2(BInumeqFun,BInumeqInlineFun)
-DECLAREBI_USEINLINEFUN2(BInumneqFun,BInumneqInlineFun)
 
 DECLAREBI_USEINLINEFUN1(BIintToFloat,BIintToFloatInline)
 DECLAREBI_USEINLINEFUN1(BIfloatToInt,BIfloatToIntInline)
@@ -6597,20 +6557,6 @@ OZ_Return BIisObjectInline(TaggedRef t)
 DECLAREBI_USEINLINEREL1(BIisObject,BIisObjectInline)
 DECLAREBOOLFUN1(BIisObjectB,BIisObjectBInline,BIisObjectInline)
 
-OZ_Return BIisClassInline(TaggedRef t)
-{
-  DEREF(t,_1,_2);
-  if (isAnyVar(t)) return SUSPEND;
-  if (!isObject(t)) {
-    return FAILED;
-  }
-  Object *obj = (Object *) tagged2Const(t);
-  return obj->isClass() ? PROCEED : FAILED;
-}
-
-DECLAREBI_USEINLINEREL1(BIisClass,BIisClassInline)
-DECLAREBOOLFUN1(BIisClassB,BIisClassBInline,BIisClassInline)
-
 
 /* getClass(t) returns class of t, if t is an object
  * otherwise return t!
@@ -6844,15 +6790,11 @@ BIspec allSpec[] = {
   {"=<",   3, BIleFun,     (IFOR) BIleInlineFun},
   {">",    3, BIgreatFun,  (IFOR) BIgreatInlineFun},
   {">=",   3, BIgeFun,     (IFOR) BIgeInlineFun},
-  {"=:=",  2, BInumeqFun,  (IFOR) BInumeqInlineFun},
-  {"=\\=", 2, BInumneqFun, (IFOR) BInumneqInlineFun},
 
   {"=<Rel",   2, BIle,     (IFOR) BIleInline},
   {"<Rel",    2, BIless,   (IFOR) BIlessInline},
   {">=Rel",   2, BIge,     (IFOR) BIgeInline},
   {">Rel",    2, BIgreat,  (IFOR) BIgreatInline},
-  {"=:=Rel",  2, BInumeq,  (IFOR) BInumeqInline},
-  {"=\\=Rel", 2, BInumneq, (IFOR) BInumneqInline},
 
   {"~",  2, BIuminus,   (IFOR) BIuminusInline},
   {"+1", 2, BIadd1,     (IFOR) BIadd1Inline},
@@ -6960,7 +6902,6 @@ BIspec allSpec[] = {
   {"IsChunk",         2, BIisChunkB,     (IFOR) isChunkBInline},
   {"IsRecordC",       2, BIisRecordCB,   (IFOR) isRecordCBInline},
   {"IsObject",        2, BIisObjectB,    (IFOR) BIisObjectBInline},
-  {"IsClass",         2, BIisClassB,     (IFOR) BIisClassBInline},
   {"IsString",        2, BIisString,     0},
   {"IsVirtualString", 2, BIvsIs,         0},
   {"IsFree",          2, BIisFree,       (IFOR) isFreeInline},
@@ -6983,7 +6924,6 @@ BIspec allSpec[] = {
   {"isUnitRel",      1, BIisUnit,      (IFOR) isUnitInline},
   {"isChunkRel",     1, BIisChunk,     (IFOR) isChunkInline},
   {"isRecordCRel",   1, BIisRecordC,   (IFOR) isRecordCInline},
-  {"isClassRel",     1, BIisClass,     (IFOR) BIisClassInline},
   {"isObjectRel",    1, BIisObject,    (IFOR) BIisObjectInline},
   {"IsFreeRel",      1, BIisFreeRel,   (IFOR) isFreeRelInline},
   {"IsKindedRel",    1, BIisKindedRel, (IFOR) isKindedRelInline},
