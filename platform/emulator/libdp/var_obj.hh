@@ -61,7 +61,7 @@ public:
   }
 
   int getIdV() { return OZ_EVAR_OBJECT; }
-  VariableStatus statusV() { return OZ_OTHER; } // mm2: OZ_LAZY!
+  OZ_Term statusV() { return OZ_atom("unknown"); }
   OZ_Term isDetV() { return OZ_true(); }
   void addSuspV(TaggedRef *v, Suspension susp, int unstable);
   Bool validV(TaggedRef v) { return FALSE; }

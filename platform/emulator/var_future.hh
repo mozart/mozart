@@ -69,4 +69,16 @@ public:
   void kick(TaggedRef *);
 };
 
+inline
+OZ_Term oz_newFuture(Board *bb) {
+  return makeTaggedRef(newTaggedCVar(new Future(bb)));
+}
+
+// bind a future, don't care about the variable, e.g. for byNeed
+inline
+void oz_bindFuture(OZ_Term *vPtr,OZ_Term val)
+{
+  oz_var_forceBind(tagged2CVar(*vPtr),vPtr,val);
+}
+
 #endif /* __BYNEED__HH__ */
