@@ -628,7 +628,8 @@ With ARG, start it instead."
 (defun oz-bar (file line state)
   "Display bar at given line, load file if necessary."
   (if (string-equal file "unchanged")
-      (oz-bar-configure state)
+      (if oz-bar-overlay
+	  (oz-bar-configure state))
     (let* ((last-nonmenu-event t)
 	   (buffer (oz-find-buffer-or-file file))
 	   (window (display-buffer buffer))
