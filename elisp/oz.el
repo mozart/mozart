@@ -977,7 +977,9 @@ if that value is non-nil."
 	      (errs-found (string-match oz-error-chars string)))
 	  
 	  (if errs-found
-	      (delete-windows-on newbuf))
+	      (if oz-gnu19
+		  (delete-windows-on newbuf t)
+		(delete-windows-on newbuf)))
 	  (set-buffer newbuf)
 	  (setq moving (or errs-found
 			   (= (point) (process-mark proc))))
