@@ -32,6 +32,7 @@
 <!ENTITY api SYSTEM "api.sgml">
 <!ENTITY engines SYSTEM "engines.sgml">
 <!ENTITY interfaces SYSTEM "interfaces.sgml">
+<!ENTITY examples SYSTEM "examples.sgml">
 <!ENTITY switches SYSTEM "switches.sgml">
 <!ENTITY narrator SYSTEM "narrator.sgml">
 <!ENTITY syntax SYSTEM "syntax.sgml">
