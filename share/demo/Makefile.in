@@ -132,7 +132,7 @@ DemoUrls.ozf: DemoUrls.oz
 
 %.ozf: DemoUrls.ozf
 
-$(APPLETS): DemoUrls.ozf
+$(APPLETS) Transport/Configure.ozf DictClient/TkDictionary.ozf: DemoUrls.ozf
 
 %.oza: %.oz
         $(ZCOMPILE) $< -o $@
