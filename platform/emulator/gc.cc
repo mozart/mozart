@@ -35,7 +35,6 @@
 
 #include "gc.hh"
 #include "genvar.hh"
-#include "fdhook.hh"
 #include "fdomn.hh"
 #include "dictionary.hh"
 #include "os.hh"
@@ -51,6 +50,8 @@
 #include "simplevar.hh"
 #include "extvar.hh"
 #include "threadInterface.hh"
+#include "solve.hh"
+#include "debug.hh"
 #include "pointer-marks.hh"
 #include "dpInterface.hh"
 #include "gname.hh"
@@ -2326,8 +2327,8 @@ ConstTerm *ConstTerm::gcConstTerm() {
         ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellManagerEmul));
         break;
       case Te_Frame:{
-        ConstTerm *aux;
-        if (aux = auxGcDistCell((Tertiary *) this))
+        ConstTerm *aux = auxGcDistCell((Tertiary *) this);
+        if (aux)
           return (aux);
         else
           ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellFrameEmul));
@@ -2394,8 +2395,8 @@ ConstTerm *ConstTerm::gcConstTerm() {
         ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockLocal));
         break;
       case Te_Frame:{
-        ConstTerm *aux;
-        if (aux = auxGcDistLock((Tertiary *) this))
+        ConstTerm *aux = auxGcDistLock((Tertiary *) this);
+        if (aux)
           return (aux);
         else
           ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockLocal));
