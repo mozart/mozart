@@ -10,54 +10,51 @@
 howcalled=$0
 cmd=`basename $howcalled`
 
+# keep quiet on emacs and standalone systems
+case "$cmd" in
+   ozemacs|ozsa) doecho=true ;;
+   *)            doecho=echo ;;
+esac
+
+
 if [ ${OZHOME-xx} = xx ]
 then
   dir=`dirname $howcalled`
   OZHOME=`(cd $dir; cd ..; /bin/pwd)`
-  if [ $cmd != "ozemacs" ]; then
-     echo "Setting Oz installation directory to: $OZHOME"
-  fi
+  $doecho "Setting Oz installation directory to: $OZHOME"
   export OZHOME
 else
-  echo "Using Oz directory: $OZHOME"
+  $doecho "Using Oz directory: $OZHOME"
 fi
 
 # determine machine architecture and OS version
 : ${OZPLATFORM=`$OZHOME/bin/ozplatform`}
-#echo $OZPLATFORM
 export OZPLATFORM
 
 # set OZCOMPILER
 if [ ${OZCOMPILER-xx} = xx ]; then
-        OZCOMPILER=$OZHOME/platform/$OZPLATFORM/oz.compiler.bin
-#else
-#       echo "Using Oz Compiler: $OZCOMPILER"
+   OZCOMPILER=$OZHOME/platform/$OZPLATFORM/oz.compiler.bin
 fi
-
 
 # set OZEMULATOR
 if [ ${OZEMULATOR-xx} = xx ]; then
-        OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
-#else
-#       echo "Using Oz Emulator: $OZEMULATOR"
+   OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
 fi
 
 
 # set OZPATH & PATH
 if [ ${OZ_PI-xx} = xx ]; then
-        # where Oz searches for files:
-        : ${OZPATH=.}
-        OZPATH=${OZPATH}:${OZHOME}/lib:${OZHOME}/platform/${OZPLATFORM}:${OZHOME}/demo
-        export OZPATH
-        #echo "OZPATH = $OZPATH"
-        # increment path
-        PATH=${OZHOME}/bin:${OZHOME}/platform/${OZPLATFORM}:${PATH}
-        export PATH
-        #echo "PATH = $PATH"
-        MANPATH=${OZHOME}/man:${MANPATH}
-        export MANPATH
-        OZ_PI=1
-        export OZ_PI
+  # where Oz searches for files:
+  : ${OZPATH=.}
+  OZPATH=${OZPATH}:${OZHOME}/lib:${OZHOME}/platform/${OZPLATFORM}:${OZHOME}/demo
+  export OZPATH
+  # increment path
+  PATH=${OZHOME}/bin:${OZHOME}/platform/${OZPLATFORM}:${PATH}
+  export PATH
+  MANPATH=${OZHOME}/man:${MANPATH}
+  export MANPATH
+  OZ_PI=1
+  export OZ_PI
 fi
 
 # load fonts
@@ -195,7 +192,7 @@ case "$cmd" in
         if [ $? -ne 0 ]; then exit 1; fi
         (echo "#!/bin/sh";
          echo ": \${OZHOME=$OZHOME}";
-         echo "exec \$OZHOME/bin/ozsa -f \$0 -a \$@";
+         echo "exec \$OZHOME/bin/ozsa -quiet -f \$0 -a \$@";
          echo "###";
          cat $tempfile) > $outfile
         chmod +x $outfile
