@@ -6,6 +6,7 @@
  *  Contributors:
  *    Michael Mehl (mehl@dfki.de)
  *    Christian Schulte (schulte@dfki.de)
+ *    Denys Duchier (duchier@ps.uni-sb.de)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
