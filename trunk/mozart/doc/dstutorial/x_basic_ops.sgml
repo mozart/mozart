@@ -11,7 +11,7 @@ For example, procedure code is transferred to sites
 immediately, so that sites never need ask for
 procedure code.
 In the other cases, e.g., for objects, the developer can
-specify what distribution behavior he wants, e.g.,
+specify the desired distribution behavior, e.g.,
 mobile (cached) objects, stationary objects,
 stationary single-threaded objects.
 
@@ -19,14 +19,13 @@ stationary single-threaded objects.
 
 <P> The most critical entities in a distributed application
 in terms of network efficiency are the objects.
-Objects have a state that is updated in a
+Objects have a state that has to be updated in a
 globally consistent way.
-This can be more or less efficient
-in certain cases,
-depending on the object's distributed behavior.
-Many distribution behaviors are possible for objects.
-Here are some of the more useful ones
-that the system provides:
+The efficiency of this operation depends
+on the object's distributed behavior.
+Many distribution behaviors are possible,
+providing a range of trade-offs for the developer.
+Here are some of the more useful ones:
 <LIST>
 <ITEM> <EM>Cached object</EM>:
 Objects and cells are cached by default--we also call
@@ -37,6 +36,8 @@ After this, no further messages are needed as long
 as the object stays on the site.
 If many sites use the object, then it will travel
 among the sites, giving everyone a fair share of the object use.
+Object execution is always in the thread that invoked
+the method.
 
 <P>The class of a cached object is copied to each
 site that calls the object.
@@ -47,10 +48,14 @@ Once the class is on the site, no further copies are done.
 <ITEM> <EM>Stationary object</EM>:
 A stationary object remains on the site at which it was created.
 Each method invocation uses one message to start the method
-and one message to synchronize when the method is finished.
-Each method executes in its own thread on the object's site.
-Threads in Mozart are extremely efficient, millions can be
-created on one machine, so this is reasonable.
+and one message to synchronize with the caller
+when the method is finished.
+Exceptions are raised in the caller's thread.
+Each method executes in a new thread created
+for it on the object's site.
+This is reasonable
+since threads in Mozart are extremely lightweight 
+(millions can be created on one machine).
 
 <ITEM> <EM>Server (sequential asynchronous object)</EM>:
 A server is a stripped-down stationary object.
@@ -58,12 +63,15 @@ Each method invocation uses one message only and does not
 wait until the method is finished.
 All method invocations execute in the same thread,
 so the object is executed in a completely sequential way.
+Non-caught exceptions in a method are ignored by the caller.
 </LIST>
 <P> Deciding between these three behaviors is done
 when the object is created from its class.
 A cached object is created with <<New>>,
 a stationary object is created with <<NewStat>>,
 and a server is created with <<NewServer>>.
+It is easy to program other distribution
+behaviors in Oz.
 
 <SUBSECTION><TITLE>Other stateful entities</TITLE>
 
@@ -71,8 +79,7 @@ and a server is created with <<NewServer>>.
 distribution behaviors:
 <LIST>
 <ITEM> <EM>Thread</EM>:
-A thread is an entity
-that actively executes a sequence of instructions.
+A thread actively executes a sequence of instructions.
 The thread is stationary on the site it is created.
 Threads communicate through shared data and
 block when the data is unavailable, i.e.,
@@ -94,7 +101,8 @@ A cell is an updatable pointer to any other entity,
 i.e., it is analogous to a standard updatable variable
 in imperative languages such as C and Java.
 Cells have the same distribution behavior
-as cached objects, i.e., updating the pointer
+as cached objects.
+Updating the pointer
 may need up to three network messages,
 but once the cell is local, then further
 updates do not use the network any more.
@@ -102,9 +110,9 @@ updates do not use the network any more.
 <ITEM> <EM>Thread-reentrant lock</EM>:
 A thread-reentrant lock allows only a single
 thread to enter a given program region.
-These locks can be created dynamically
+The locks can be created dynamically
 and nested recursively.
-These locks have the same distribution behavior
+The locks have the same distribution behavior
 as cached objects and cells.
 </LIST>
 
@@ -114,7 +122,8 @@ as cached objects and cells.
 are those that can be assigned only to one value:
 <LIST>
 <ITEM> <EM>Logic variable</EM>:
-A logic variable is a kind of single-assignment variable.
+A logic variable resembles a single-assignment variable,
+e.g., a <<final>> variable in Java.
 It is more than that because two logic variables can
 be bound together even before they are assigned,
 and because a variable can be assigned more than
@@ -126,10 +135,24 @@ Often, variables are just used like placeholders, that is,
 they will be assigned only once.
 It would be highly inefficient in a distributed system
 to create a cell for that case.
+<P> When a logic variable is bound,
+the value is sent to its owner site
+(the site on which it was created),
+which then multicasts it to all the
+sites that have the variable.
+The current release implements
+the multicast as a sequence of message sends.
+That is, if the variable is on <EM>n</EM> sites,
+then a maximum of <EM>n</EM>+1 messages are
+used to bind the variable.
+When a variable arrives on a site
+for the first time, it is immediately
+registered with the owner site.
+This takes one message.
 <ITEM> They can be used to improve latency tolerance.
 A logic variable can be passed in a message
 or stored in a data structure
-even before it is assigned its value.
+before it is assigned a value.
 When the value is there, then
 it is sent to all sites that need it.
 <ITEM> They are the basic mechanism
@@ -148,18 +171,6 @@ programmed explicitly.
 The reader is advised not to take
 the above numbers too seriously.
 </LIST>
-<P> When a logic variable is bound,
-the value is sent to its owner site
-(the site on which it was created),
-which then multicasts it to all the
-sites that have the variable.
-That is, if the variable is on <EM>n</EM> sites,
-then a maximum of <EM>n</EM>+1 messages are
-used to bind the variable.
-When a variable arrives on a site
-for the first time, it is immediately
-registered with the owner site.
-This takes one message.
 
 <ITEM> <EM>Stream</EM>:
 A stream is an asynchronous one-to-many communication channel.
