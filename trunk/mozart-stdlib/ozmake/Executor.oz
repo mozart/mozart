@@ -173,14 +173,20 @@ define
 	    L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
 	    L3 = if {Member executable Options} then '-x'|L2 else '-c'|L2 end
 	    L4 = if DIR\=nil andthen HaveGumpdir then '--gumpdir='#DIR|L3 else L3 end
+	    L5 = {Append L4
+		  for O in Options collect:C do
+		     case O
+		     of 'define'(S) then {C '-D'#S}
+		     else skip end
+		  end}
 	 in
-	    {self xtrace({Utils.listToVS ozc|L4})}
+	    {self xtrace({Utils.listToVS ozc|L5})}
 	    if {self get_justprint($)} then
 	       %% record time of simulated build
 	       Executor,SimulatedTouch(DST)
 	    else
 	       try {Shell.executeProgram
-		    {self get_oz_engine($)}|{self get_oz_ozc($)}|L4}
+		    {self get_oz_engine($)}|{self get_oz_ozc($)}|L5}
 	       catch shell(CMD) then
 		  raise ozmake(build:shell(CMD)) end
 	       end
@@ -223,16 +229,28 @@ define
 	    L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
 	    L3 = if {Member executable Options} then '-x'|L2 else '-c'|L2 end
 	    L4 = if DIR\=nil andthen HaveGumpdir then '--gumpdir='#DIR|L3 else L3 end
+	    L5 = {Append L4
+		  for O in Options collect:C do
+		     case O
+		     of 'define'(S) then {C '-D'#S}
+		     else skip end
+		  end}
+	    Defines       = for O in Options collect:C do
+			       case O
+			       of 'define'(S) then {C S}
+			       else skip end
+			    end
 	    ArgDebug      = {self get_optlevel($)}==debug
 	    ArgExecutable = {Member executable Options}
 	    ArgGumpdir    = if DIR\=nil andthen HaveGumpdir then DIR else unit end
 	 in
-	    {self xtrace({Utils.listToVS ozc|L4})}
+	    {self xtrace({Utils.listToVS ozc|L5})}
 	    if {self get_justprint($)} then
 	       %% record time of simulated build
 	       Executor,SimulatedTouch(DST)
 	    else
 	       {self exec_fast_ozc(SRCBase DSTBase
+				   defines    : Defines
 				   debug      : ArgDebug
 				   executable : ArgExecutable
 				   gumpdir    : ArgGumpdir)}
