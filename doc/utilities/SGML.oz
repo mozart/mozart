@@ -144,6 +144,7 @@ define
       meth init(FileVS)
 	 File <- FileVS
 	 ErrFile <- {OS.tmpnam}
+	 %--** add includes (nsgmls -i...)?
 	 Pipe <- {New TextPipe init(cmd: 'nsgmls'
 				    args: ['-c'#{Property.get 'oz.home'}#
 					   '/share/doc/catalog' &-|&f|@ErrFile
