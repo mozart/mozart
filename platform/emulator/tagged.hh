@@ -104,6 +104,17 @@ void *tagValueOf(TaggedRef ref)
 }
 
 inline
+void *tagValueOfVerbatim(TaggedRef ref) 
+{ 
+  GCDEBUG(ref);
+#ifdef LARGEADRESSES
+  return (void *) ((ref >> (tagSize-2))&~3);
+#else
+  return (void *) (ref >> tagSize);
+#endif
+}
+
+inline
 Bool isNullPtr(TaggedRef p)
 {
   return (p&~(tagMask)) == 0;
