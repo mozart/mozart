@@ -267,20 +267,17 @@ O={New Tk.canvasTag tkInit(parent:C)}
       binding for all items referred to by the tag. The following
       example creates an event binding for all oval items.
 <chunk class=anonymous><title/tags event/
-Colors = {New class $ from BaseObject
-                 attr cs:(Cs=red|green|blue|yellow|orange|Cs
-                             in
-                          Cs)
-                 meth get(?C)
-                    Cr
-                 in
-                    C|Cr = (cs <- Cr)
-                 end
-              end noop}
+Colors={New class $ from BaseObject
+               attr cs:(Cs=red|green|blue|yellow|orange|Cs
+                           in
+                        Cs)
+               meth get(?C)
+                  Cr in C|Cr = (cs <- Cr)
+               end
+            end noop}
 {O tkBind(event:  '<3>'
           action: proc {$}
-                     {O tk(itemconfigure
-                           fill: {Colors get($)})}
+                     {O tk(itemconfigure fill:{Colors get($)})}
                   end)}
 </chunk>
     <p>
