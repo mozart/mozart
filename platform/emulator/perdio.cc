@@ -227,8 +227,6 @@ void lockSendDump(BorrowEntry*,LockFrame*);
 #define BTOI(A) BT->getOriginIndex(A)
 
 OZ_C_proc_proto(BIapply);
-extern TaggedRef BI_Unify;
-extern TaggedRef BI_Show;
 
 void pushUnify(Thread *t, TaggedRef t1, TaggedRef t2)
 {
