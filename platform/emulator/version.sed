@@ -1,6 +1,6 @@
 /* -*- C++ -*- */
 #include <stdio.h>
-#include "../include/config.h"
+#include "config.h"
 
 #define AMVersion OZVERSION
 #define AMDate "HEREGOESDATE"

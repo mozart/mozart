@@ -38,7 +38,7 @@
 #include "genvar.hh"
 #include "ofgenvar.hh"
 
-#include "../include/gmp.h"
+#include "gmp.h"
 
 /* ------------------------------------------------------------------------ *
  * tests

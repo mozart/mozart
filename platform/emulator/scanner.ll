@@ -30,7 +30,7 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 
-#include "../include/config.h"
+#include "config.h"
 #include "oz.h"
 
 typedef OZ_Term CTerm;

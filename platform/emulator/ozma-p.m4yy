@@ -94,7 +94,7 @@ define(readArg,$1)
 define(writeArg,$1)
 define(instruction,%token `T_$1')
 define(instructionsUnneededForNewCompiler,`divert(-1)')
-include(`../include/instrDefs.m4')
+include(OZINCDIR/instrDefs.m4)
 undefine(`instruction')
 
 %type <tagged> DefLabel
@@ -200,7 +200,7 @@ Instruction     : LBL '(' DefLabel ')'
                     }
                     labelDict->setArg($3,OZ_int(offset));
                   }
-include(`../include/instrDefs.m4')
+include(OZINCDIR/instrDefs.m4)
 undefine(`instruction')
                 ;
 

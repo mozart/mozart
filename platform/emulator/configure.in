@@ -34,6 +34,11 @@ dnl  PS-LAB: prefix and rcp/mv
 dnl  VPATH
 dnl  pmake support
 
+if test -d $OZHOME
+then
+  ac_default_prefix=$OZHOME
+fi
+
 dnl *****************************************************************
 dnl INITIALIZE
 dnl *****************************************************************
@@ -56,6 +61,7 @@ AC_PROG_LEX
 AC_PROG_YACC
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
+AC_PROG_RANLIB
 
 AC_CHECK_PROGS(M4, gm4 m4)
 AC_CHECK_PROGS(RM, rm)
@@ -64,12 +70,15 @@ AC_CHECK_PROGS(MV, mv)
 AC_CHECK_PROGS(ECHO, echo true)
 AC_CHECK_PROGS(SED, gnused sed)
 AC_CHECK_PROGS(PGXX, pg++)
-AC_CHECK_PROGS(PLATFORMSCRIPT, ozplatform ../bin/ozplatform)
-AC_CHECK_PROGS(DYNLD, ozdynld ../bin/ozdynld)
+AC_CHECK_PROGS(AR, ar)
+
+OZPATH=$PATH:../bin:../../bin
+AC_PATH_PROG(PLATFORMSCRIPT, ozplatform, grummel, $OZPATH)
+AC_PATH_PROG(DYNLD, ozdynld, grummel, $OZPATH)
 
 M4_S="$M4"
 
-AC_CHECK_PROGS(DEPEND, makedepend)
+AC_PATH_PROG(DEPEND, makedepend)
 
 dnl *****************************************************************
 dnl configurable variables
@@ -82,8 +91,11 @@ AC_SUBST(PLATFORM)
 AC_SUBST(PEANUTS)
 AC_SUBST(PROGRAMNAME)
 AC_SUBST(TARGETS)
+AC_SUBST(FDTARGETS)
+AC_SUBST(INSTALLFDTARGETS)
 AC_SUBST(COPT)
 AC_SUBST(LD)
+AC_SUBST(AR)
 AC_SUBST(M4_S)
 AC_SUBST(DEPEND)
 AC_SUBST(DYNLD)
@@ -95,8 +107,6 @@ dnl *****************************************************************
 platform=`$PLATFORMSCRIPT`
 PROGRAMNAME=oz.emulator.bin
 TARGETS="$PROGRAMNAME"
-psdir=/project/ps
-libs="$psdir/lib/$platform $HOME/lib/$platform"
 
 PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
 AC_DEFINE_UNQUOTED($PLATFORM)
@@ -162,7 +172,9 @@ AC_CHECK_LIB(nsl, main)
 AC_CHECK_LIB(socket, main)
 AC_CHECK_LIB(m, main)
 
-for p in $libs
+dnl Special hack for our local configuration
+ps="$HOME/lib/$platform $PSDIR/lib/$platform"
+for p in $ps
 do
   AC_MSG_CHECKING(for dir $p)
   if test -d $p
@@ -330,10 +342,11 @@ AC_ARG_ENABLE(linkprop,
   [--enable-linkprop  link propagators statically (default=yes)])
 if test "x$enable_linkprop" != xno; then
         AC_MSG_RESULT(yes)
-        PROPOBJS="\$(ALLPROPOBJS)"
+        FDTARGETS="libfd.a libsched.a libfset.a"
+        LIBS="-L./FDLib -lfd -lsched -L./FSetLib -lfset $LIBS"
 else
-        PROPOBJS=""
-        TARGETS="$TARGETS \$(FDLIB) \$(SCHEDLIB) \$(FSETLIB)"
+        FDTARGETS="fdlib.so schedlib.so fsetlib.so"
+        INSTALLFDTARGETS="\$FDTARGETS"
         AC_DEFINE(FOREIGNFDPROPS)
         AC_MSG_RESULT(no)
 fi
@@ -356,22 +369,17 @@ dnl *****************************************************************
 
 dnl rs: Have to use our own malloc/free: brain dead libc 5.12 returns
 dnl both pointers in which top most bits are set and not set.
-
 case $host_os in
     linux*)
-        if test -r $psdir/lib/linux-i486/gmalloc.o
+        AC_MSG_CHECKING(for gmalloc)
+        if test -r $PSDIR/lib/linux-i486/gmalloc.o
         then
-            AC_MSG_CHECKING(for --enable-lmalloc)
-            AC_ARG_ENABLE(lmalloc,
-                [--enable-lmalloc   use other alloc for linux (default=yes)])
-            if test "x$enable_lmalloc" != xno; then
-                AC_MSG_RESULT(yes)
-                LIBS="$LIBS $psdir/lib/linux-i486/gmalloc.o"
-            else
-                AC_MSG_RESULT(no)
-            fi
-         fi
-         ;;
+            AC_MSG_RESULT(yes)
+            LIBS="$LIBS $psdir/lib/linux-i486/gmalloc.o"
+        else
+            AC_MSG_RESULT(no)
+        fi
+        ;;
 esac
 
 dnl *****************************************************************
@@ -380,4 +388,4 @@ dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf.h)
 
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile FDLib/Makefile FSetLib/Makefile)

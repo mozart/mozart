@@ -57,5 +57,5 @@ define(twoRegs,
 
 static void *instrTable[] = {
 
-  include(`../include/instrDefs.m4')
+  include(OZINCDIR/instrDefs.m4)
 0};

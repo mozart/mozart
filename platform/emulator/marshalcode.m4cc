@@ -236,7 +236,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
     PD((MARSHAL,"op put %d",op));
     switch(op) {
 
-    include(`../include/instrDefs.m4')
+    include(OZINCDIR/instrDefs.m4)
 
     default: Assert(0); break;
     }
@@ -583,7 +583,7 @@ ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
 
     switch(op) {
 
-      include(`../include/instrDefs.m4')
+      include(OZINCDIR/instrDefs.m4)
 
     default: Assert(0); break;
     }

@@ -50,7 +50,7 @@ define(instruction,
 int sizeOf(Opcode oc)
 {
   switch(oc) {
-   include(`../include/instrDefs.m4')
+   include(OZINCDIR/instrDefs.m4)
 
   default:
     warning("sizeOf: unknown opcode: %d",oc);

@@ -37,7 +37,7 @@
 #include "genhashtbl.hh"
 #include "perdio_debug.hh"
 #include "runtime.hh"
-#include "../include/config.h"
+#include "config.h"
 
 #define PERDIOMINOR      "7"
 #define PERDIOMAJOR      OZVERSION
