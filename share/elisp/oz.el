@@ -624,11 +624,10 @@ the GDB commands `cd DIR' and `directory'."
     (comint-send-string proc "\n")
     (save-excursion
        (set-buffer oz-compiler-buffer)
-       (setq compilation-parsing-end (point))
 ;       (comint-send-eof)
        (comint-send-string proc "") ;; works under win32 as well
-       (erase-buffer)
-       (setq compilation-parsing-end (point-min)))
+       (setq compilation-parsing-end (point))
+       )
     ))
 
 ;;------------------------------------------------------------
