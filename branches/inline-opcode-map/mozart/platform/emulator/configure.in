@@ -1599,7 +1599,10 @@ OZ_ENABLE(miscbuiltins,[   include misc builtins],no,
 
 dnl ******************************************************************
 dnl check that we can use the assembler code trick in order to inline
-dnl the opcode map.
+dnl the opcode map.  This is done using a small program that implements
+dnl a threaded bytecode emulator and runs a bytecode program whose
+dnl sole purpose is to check that it executes correctly and that the
+dnl inline opcode map trick actually works.
 dnl ******************************************************************
 
 AC_CACHE_CHECK([whether the opcode map can be inlined],
@@ -1617,12 +1620,20 @@ AC_TRY_RUN([
 int engine(void**);
 bool equal(int,int);
 
-static void* program[6];
+static void* program[6]; /* the bytecode program which we will execute */
+void* globalFakeInstrTable[6];
+volatile bool which = true;
 
 int main()
 {
+  /* initialize the engine and load the bytecode program */
+
   (void) engine(0);
-  return engine(program);
+
+  /* variable "which" is always going to be true, but gcc doesn't know
+     that since we declared it volatile */
+
+  return engine(which ? program : globalFakeInstrTable);
 }
 
 #define OP0_VALUE 0
@@ -1656,23 +1667,27 @@ FAKE_ ##N :\
 REPEAT_FOR_ALIGNMENT(asm(".byte " OP##N##_STRING)); \
 asm("LABEL" OP##N##_STRING":");
 
-/*
- * appear to use the C++ label
- * but really store ASM label
- */
+/* LOAD_LABEL(xxx) is the platform-specific asm code to store the address of
+   label LABELxxx at location *ptr */
 
 #if defined(ARCH_I486)
 #define LOAD_LABEL(N) \
 asm("movl \$LABEL"OP##N##_STRING",%0" : "=m" (*ptr))
 #elif defined(ARCH_SPARC)
 #define LOAD_LABEL(N) \
-{ void* reg; asm("sethi %%hi(LABEL"OP##N##_STRING"), %0\nor %0, %%lo(LABEL"OP##N##_STRING"), %0" : "=r" (reg)); *ptr=reg; }
+{ void* reg; asm("sethi %%hi(LABEL"OP##N##_STRING"), %0\n\tor %0, %%lo(LABEL"OP##N##_STRING"), %0" : "=r" (reg)); *ptr=reg; }
+#elif defined(ARCH_PPC) || defined(ARCH_DARWIN)
+{ void* reg; asm("lis %0, \$LABEL"OP##N##_STRING"@ha\n\taddi %0,%0,\$LABEL"OP##N##_STRING"@l" : "=r" (reg)); *ptr=reg; }
 #else
-#error platform not supported
+#error this platform does not currently support the inline opcode map trick
 #endif
 
-#define LOAD(N) \
-LOAD_LABEL(N); ++ptr;
+/* LOAD(N) additional moves ptr 1 forward */
+
+#define LOAD(N) LOAD_LABEL(N); ++ptr;
+
+/* check that we actually jumped to the expected case and that
+   the opcode is present in the byte that precedes the jump label */
 
 #define DO(N) \
 if (N!=n-- || !equal(OP##N##_VALUE,((char*)*(bytecode-1))[-1])) return 1
@@ -1680,15 +1695,17 @@ if (N!=n-- || !equal(OP##N##_VALUE,((char*)*(bytecode-1))[-1])) return 1
 #if defined(ARCH_SPARC)
 /* otherwise gcc delays incrementation of bytecode until too late
    in the branch we jump too.  The asm instruction makes gcc believe
-   that the new value of bytecode is needed at this point */
+   that the new value of bytecode is needed at this point.
+   NOT SURE THAT I STILL NEED THIS HACK */
 #define DISPATCH { void * where = *bytecode; ++bytecode; asm("" : : "g" (bytecode)); goto *where; }
 #else
 #define DISPATCH goto **bytecode++
 #endif
 
-#define HERE(N) case N: goto FAKE_##N
+/* the FAKE_n labels are stored in a global table, thus fooling gcc into
+   believing that they might actually appear in a bytecode sequence */
 
-int MaybeJumpHere = -1;
+#define FAKE(N) globalFakeInstrTable[N] = && FAKE_##N;
 
 int engine(void**bytecode)
 {
@@ -1698,15 +1715,12 @@ int engine(void**bytecode)
   if (! init) 
     {
       init = 1;
-      switch (MaybeJumpHere) {
-      HERE(0);
-      HERE(1);
-      HERE(2);
-      HERE(3);
-      HERE(4);
-      HERE(5);
-      default: break;
-      }
+      FAKE(0);
+      FAKE(1);
+      FAKE(2);
+      FAKE(3);
+      FAKE(4);
+      FAKE(5);
     }
 
   if (! bytecode)
