@@ -42,6 +42,7 @@
 #include "var_future.hh"
 #include "var_ext.hh"
 #include "dpInterface.hh"
+#include "ozconfig.hh"
 
 int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...);
 
@@ -172,35 +173,38 @@ void oz_var_dispose(OzVariable *ov) {
 
 void oz_var_printStream(ostream &out, const char *s, OzVariable *cv, int depth)
 {
-  switch (cv->getType()) {
-  case OZ_VAR_OPT:
+  if (ozconf.printVerbose)
+    switch (cv->getType()) {
+    case OZ_VAR_OPT:
+      out << s;
+      ((OptVar *) cv)->printStream(out, depth); return;
+    case OZ_VAR_SIMPLE:
+      out << s;
+      ((SimpleVar *)cv)->printStream(out,depth); return;
+    case OZ_VAR_FUTURE:
+      out << s;
+      ((Future *)cv)->printStream(out,depth); return;
+    case OZ_VAR_BOOL:
+      out << s;
+      ((OzBoolVariable*)cv)->printStream(out,depth); return;
+    case OZ_VAR_FD:
+      out << s;
+      ((OzFDVariable*)cv)->printStream(out,depth); return;
+    case OZ_VAR_OF:
+      ((OzOFVariable*)cv)->printStream(out,depth); return;
+    case OZ_VAR_FS:
+      out << s;
+      ((OzFSVariable*)cv)->printStream(out,depth); return;
+    case OZ_VAR_CT:
+      out << s;
+      ((OzCtVariable*)cv)->printStream(out,depth); return;
+    case OZ_VAR_EXT:
+      out << s;
+      ((ExtVar *)cv)->printStreamV(out,depth); return;
+      ExhaustiveSwitch();
+    }
+  else
     out << s;
-    ((OptVar *) cv)->printStream(out, depth); return;
-  case OZ_VAR_SIMPLE:
-    out << s;
-    ((SimpleVar *)cv)->printStream(out,depth); return;
-  case OZ_VAR_FUTURE:
-    out << s;
-    ((Future *)cv)->printStream(out,depth); return;
-  case OZ_VAR_BOOL:
-    out << s;
-    ((OzBoolVariable*)cv)->printStream(out,depth); return;
-  case OZ_VAR_FD:
-    out << s;
-    ((OzFDVariable*)cv)->printStream(out,depth); return;
-  case OZ_VAR_OF:
-    ((OzOFVariable*)cv)->printStream(out,depth); return;
-  case OZ_VAR_FS:
-    out << s;
-    ((OzFSVariable*)cv)->printStream(out,depth); return;
-  case OZ_VAR_CT:
-    out << s;
-    ((OzCtVariable*)cv)->printStream(out,depth); return;
-  case OZ_VAR_EXT:
-    out << s;
-    ((ExtVar *)cv)->printStreamV(out,depth); return;
-  ExhaustiveSwitch();
-  }
 }
 
 int oz_var_getSuspListLength(OzVariable *cv)

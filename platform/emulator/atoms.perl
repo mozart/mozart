@@ -123,6 +123,7 @@
 	  ( AtomUser,        "user"),
 	  ( AtomVariables,   "variables"),
 	  ( AtomWidth,       "width"),
+	  ( AtomVerbose,     "verbose"),
 	  ( AtomHeap,        "heap"),
 	  ( AtomDetailed,    "detailed"),
 	  ( AtomBrowser,     "browser"),
