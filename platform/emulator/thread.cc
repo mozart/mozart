@@ -174,14 +174,22 @@ int Thread::getRunnableNumber()
       if (PC!=C_LTQ_Ptr)
         return 1;
 
+#ifdef COUNT_PROPAGATORS
       SolveActor *sa = (SolveActor *) Y;
       ThreadQueueImpl *ltq = sa->getLocalThreadQueue();
       return ltq->getSize();
+#else
+      return 0;
+#endif
     }
   case S_WAKEUP:
     return 0;
   case S_PR_THR:
+#ifdef COUNT_PROPAGATORS
     return 1;
+#else
+    return 0;
+#endif
   default:
     Assert(0);
     return 0;
