@@ -50,6 +50,7 @@ case "$cmd" in
 	    echo "$0: platform $system not supported"
 	    exit 1
 	esac
+	;;
   *  )
   echo "oztool: unknown command $cmd" 1>&2
   exit 1
