@@ -180,7 +180,7 @@ define
                %% they occupy AreaL
                {FD.sumC SizeToArea MN '=:' AreaL}
                %% which must fit the left of the cut
-               AreaL =<: (XY1-Cut) * DYX
+               AreaL =<: (Cut-XY0) * DYX
                %% not all squares must go to the left
                AreaL  <: Area
                %% position the squares
@@ -304,23 +304,12 @@ define
          SqsX0.1=0 SqsY0.1=0
 
          %% Remove permutations of equally-sized squares by ordering them
-         {For 1 N-1 1 if DY>DX then
-                         proc {$ I}
-                            I1 = I+1
-                         in
-                            if SqsSize.I==SqsSize.I1 then
-                               %% This is respected by the no overlap
-                               SqsY0.I =<: SqsY0.I1
-                            end
-                         end
-                      else
-                         proc {$ I}
-                            I1 = I+1
-                         in
-                            if SqsSize.I==SqsSize.I1 then
-                               %% This is respected by the no overlap
-                               SqsX0.I =<: SqsX0.I1
-                            end
+         {For 1 N-1 1 proc {$ I}
+                         I1=I+1
+                      in
+                         if SqsSize.I==SqsSize.I1 then
+                            %% This is respected by the no overlap
+                            SqsX0.I =<: SqsX0.I1
                          end
                       end}
 
