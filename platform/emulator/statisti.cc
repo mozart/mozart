@@ -79,8 +79,8 @@ void Statistics::print(FILE *fd) {
   printMem(fd, ".\n    Hashtable for built-ins is ",
            builtinTab.memRequired());
 
-  static unsigned int utime    = usertime();
-  static unsigned int systime  = systemtime();
+  unsigned int utime    = usertime();
+  unsigned int systime  = systemtime();
 
   fprintf(fd, ".\n\n  Process resources consumed:");
   printTime(fd,"\n    User time is ", utime);
