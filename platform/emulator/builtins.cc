@@ -5793,6 +5793,21 @@ OZ_BI_define(BIdelay,1,0) {
 } OZ_BI_end
 
 
+OZ_BI_define(BItimeTime,0,1) {
+  time_t ttt;
+
+  time(&ttt);
+  
+  struct tm * t = gmtime(&ttt);
+
+  int tt = (t->tm_yday * 86400 +
+	    t->tm_hour * 3600  +
+	    t->tm_min  * 60 +
+	    t->tm_sec);
+
+  OZ_RETURN(makeTaggedSmallInt(tt));
+} OZ_BI_end
+
 /* ------------------------------------------------------------
  * Garbage Collection
  * ------------------------------------------------------------ */
