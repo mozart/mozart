@@ -141,9 +141,6 @@
     ### Tobias's private stuff
     ###
 
-    'getConstraints'    => { in  => ['+value','+[value]'],
-			     out => [],
-			     bi  => BIgetConstraints},
 
     ###
     ### Michael's private stuff
