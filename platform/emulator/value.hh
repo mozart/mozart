@@ -2210,7 +2210,7 @@ public:
   int getOutArity() { return outAr; }
   int max(int n) {
     for (int i = inAr+outAr-1; i >= inAr; i--) {
-      n=max(n,get(i)+1);
+      n=::max(n,get(i)+1);
     }
     return n;
   }
