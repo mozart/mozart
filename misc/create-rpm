@@ -73,81 +73,69 @@ rm -f oz.sh oz.csh
 cat > ${RPMSRC}/mozart.xpm <<EOF
 /* XPM */
 static char * mozart_xpm[] = {
-"80 34 40 1",
+"69 30 32 1",
 "       c None",
 ".      c #FFFFFF",
-"+      c #FFFFCC",
-"@      c #FFFF99",
-"#      c #FFCCFF",
-"$      c #FFCCCC",
-"%      c #FFCC99",
-"&      c #FFCC66",
-"*      c #FFCC33",
-"=      c #FF9999",
-"-      c #FF9966",
-";      c #FF9933",
-">      c #CCCCFF",
-",      c #CCCCCC",
-"'      c #CCCC99",
-")      c #CC9933",
-"!      c #CC6633",
-"~      c #99CCCC",
-"{      c #9999CC",
-"]      c #999999",
-"^      c #999966",
-"/      c #999933",
-"(      c #996633",
-"_      c #993333",
-":      c #669999",
-"<      c #666699",
-"[      c #666666",
-"}      c #666633",
-"|      c #666600",
-"1      c #663333",
-"2      c #663300",
-"3      c #333366",
-"4      c #333333",
-"5      c #333300",
-"6      c #330033",
-"7      c #330000",
-"8      c #003333",
-"9      c #003300",
-"0      c #000033",
-"a      c #000000",
-"                                                                                ",
-"                                     ;;;                                        ",
-"                                   =;&-;                                        ",
-"                                  ;;  ;;;                                       ",
-"                                ;;    %-;                                       ",
-"                              ;;      ;;;-                                      ",
-"                            $;%       ;;;;$                                     ",
-"                           ;;;-  ;;   ;;;;;                                     ",
-"                         ---;;;+;;;   ;;;;;;                                    ",
-"                       -;7a1;;;;;-;   ;;;;;-                                 ,  ",
-"                     -;aaaaaa4-;-;;   ;-- &;;                              aaa  ",
-"                    ;;aaaaaaaa5;-;-   ;+   -;$                             aaa  ",
-"                  --;aaa;;;aaaa;;;;       %;;;                             aaa  ",
-"aaa4>aaaa  aaaa  &;;;aaa;;;;aaaa;;-      ;aa;;;        aaaaaa,   ]aa4aa4 aaaaaaa",
-"aaa4aaaaaaaaaaaa  ;-;aaa-;--aaaa;;%    ;)aaa4;;       aaaaaaaa[  ]aa4aa4 aaaaaaa",
-"aaaaa,aaaaa]aaaa,  ;;aaaa;;;-aaa;;-  ;-aaaaa(;-;     aaa4  aaaa  ]aaaaa4 aaaaaaa",
-"aaaa   aaa   aaa[  -;aaaa;-;;aaa-;;;;aaaaaaa;---      [a    aaa  ]aaaa    ,aaa  ",
-"aaaa   aaa   aaa]   --aaaa;;;aaa;-;;-aaa;aaa;;;-;       ,aaaaaa  [aaa     ]aaa  ",
-"aaaa   aaa   aaa]   ;;7aaaa5aaa;--;;-a;-;aaa;;;;;-    aaaaaaaaa  [aaa     ]aaa  ",
-"aaaa   aaa   aaa]    ;;aaaaaaa!-;;--;;;-;aaa;;-;;;   aaaa   aaa  <aaa     {aaa  ",
-"aaaa   aaa   aaa]    +;;;aaaa%     -;-;;-aaa;;;;;;;  aaa    aaa  <aaa     {aaa  ",
-"aaaa   aaa   aaa]     ;;--;-        ;;;;-aaa;;aaa-;  aaa   aaaa  <aaa     ,aaa  ",
-"aaaa   aaa   aaa]      ;;-;&  -;-    ;;--aaaaaaaa;;  aaaaaaaaaa  <aaa      aaaaa",
-"aaaa   aaa   aaa]      ;;;-   ;;--    ;;-aaaaaa;;    ]aaaaa aaa  <aaa      aaaaa",
-"                        ;;;   ;;;-    -;}aaaa5;+                                ",
-"                        &--   --;;;   ;;;aaa;*                                  ",
-"                         --    ;-;-   ;;;;;;                                    ",
-"                          -;    ;-;   --;;                                      ",
-"                          ;;     -%  +;;                                        ",
-"                           -;        ;%                                         ",
-"                           ;;;     &;                                           ",
-"                            ;;;;;;-                                             ",
-"                            +;;-;                                               ",
-"                             ;;&                                                "};
+"+      c #FFE69E",
+"@      c #FBF6E9",
+"#      c #F7E7B8",
+"$      c #FAD466",
+"%      c #FBCE4A",
+"&      c #FFDE7C",
+"*      c #FFF3D2",
+"=      c #F0D688",
+"-      c #E3BA42",
+";      c #61501F",
+">      c #100F0A",
+",      c #000000",
+"'      c #392E0F",
+")      c #B29030",
+"!      c #777777",
+"~      c #484848",
+"{      c #A7A7A7",
+"]      c #282828",
+"^      c #D7D7D7",
+"/      c #201B08",
+"(      c #A18F59",
+"_      c #8F8F8F",
+":      c #896F25",
+"<      c #725C1E",
+"[      c #D3AC3E",
+"}      c #C0B185",
+"|      c #514215",
+"1      c #606060",
+"2      c #BFBFBF",
+"3      c #C2A34C",
+"                                #@                                   ",
+"                              *$%&                                   ",
+"                            *&&*%%*                                  ",
+"                           +$*  #%$                                  ",
+"                         #$#    #%%#                                 ",
+"                       *$&      #%%%                                 ",
+"                     @=%%$  #=  +%%%+                                ",
+"                    #%%%%%=$%#  &%%%%*                               ",
+"                  #-;>,')%%%%#  $%%+%&                         !~~   ",
+"                *&)>,,,,,;%%%*  %=@ &%*                        ~,,   ",
+"              @+%%>,')',,,)%%*  *   #%$                        ~,,   ",
+"~~~{],]_^~,,~@+%%),,)%%/,,/%%     @(>[%#      _],,>~^  !~~!>~_~>,,~~ ",
+",,,,,,,,>,,,,~@%%:,,<%%[,,,[%    }',,|%%@    1,,,,,,>^ ~,,,,~!,,,,,, ",
+",,,]!>,,,!~,,, #%:,,>%%%',,[%# #;,,,,'%%+   ^,,>{^],,_ ~,,,,~_~,,,~~ ",
+",,,2 !,,1 @,,,  $[,,,;%%:,,[%%3>,,>,,<%%%*  @2!2 ^],,! ~,,>{   ,,,   ",
+",,,2 !,,!  ,,,  #%|,,,:[',/%%%%/>)[,,:%%%&   @!],,,,,! ~,,!    ,,,   ",
+",,,  !,,!  ,,,   &%/,,,,,,)$%%%[%%),,)%%%%# @>,,]1],,! ~,,_    ,,,   ",
+",,,  !,,!  ,,,   *%%',,,~2   #%%%%:,,[%%:%$ _,,]@ ~,,! ~,,2    ,,,   ",
+",,,  !,,!  ,,,    +%%[[=      *%%%;,,[:>,:%#!,,~ ^>,,! ~,,2    ,,,_2@",
+",,,  !,,!  ,,,     %%%%  *&#   #%%',,/,,,:$*_,,,],,,,! ~,,2    ],,,,2",
+",,,  !,,!  ,,,     #%%=  #%%*   %%/,,,,'3#   ~,,,~!,,! ~,,2    {>,,,2",
+"                    $%#  #%%$   =%/,,/)=@     ^2^                22^ ",
+"                    *%&   $%%#  #%)>:$*                              ",
+"                     &%   *%%+  &%%-#                                ",
+"                     *%#   *=*  %%+                                  ",
+"                      +%*      =&@                                   ",
+"                       %%#   *+*                                     ",
+"                       #%%%%%#                                       ",
+"                        $%%+                                         ",
+"                        *&*                                          "};
 EOF
 
 cp ${SRCTAR} ${DOCTAR} ${RPMSRC}
@@ -189,7 +177,9 @@ placement and configuration, in natural language and knowledge
 representation, multi-agent systems and sophisticated collaborative
 tools.
 
-Mozart has been jointly developed by DFKI, SICS, and Université de Louvain.
+Mozart has been jointly developed by the Programming Systems Lab at
+DFKI and Universität des Saarlandes, the Swedish Institute of Computer
+Science, and Université de Louvain.
 
 This package contains all you need to run and develop Oz programs with
 Mozart.
@@ -198,45 +188,17 @@ Summary: Mozart documentation
 Group: Development/Languages
 requires: mozart
 %description doc
-The Mozart system provides state-of-the-art support in two areas: open
-distributed computing and constraint-based inference. Mozart
-implements Oz, a concurrent object-oriented language with dataflow
-synchronization. Oz combines concurrent and distributed programming
-with logical constraint-based inference, making it a unique choice for
-developing multi-agent systems. Mozart is an ideal platform for both
-general-purpose distributed applications as well as for hard problems
-requiring sophisticated optimization and inferencing abilities. We
-have developed applications in scheduling and time-tabling, in
-placement and configuration, in natural language and knowledge
-representation, multi-agent systems and sophisticated collaborative
-tools.
-
-Mozart has been jointly developed by DFKI, SICS, and Université de Louvain.
-
-This package contains the extensive online documentation as a set of
+This package contains the extensive Mozart online documentation as a set of
 HTML pages. It also contains demo applications that can directly be
-started the pages.
+started from the pages.
 %package contrib
 Summary: Mozart contributions
 Group: Development/Languages
 requires: mozart
 %description contrib
-The Mozart system provides state-of-the-art support in two areas: open
-distributed computing and constraint-based inference. Mozart
-implements Oz, a concurrent object-oriented language with dataflow
-synchronization. Oz combines concurrent and distributed programming
-with logical constraint-based inference, making it a unique choice for
-developing multi-agent systems. Mozart is an ideal platform for both
-general-purpose distributed applications as well as for hard problems
-requiring sophisticated optimization and inferencing abilities. We
-have developed applications in scheduling and time-tabling, in
-placement and configuration, in natural language and knowledge
-representation, multi-agent systems and sophisticated collaborative
-tools.
-
-Mozart has been jointly developed by DFKI, SICS, and Université de Louvain.
-
-This package contains a collection of contributed software packages that might come in handy for applications like a regular expression package, data base interfaces, and so on.
+This package contains a collection of contributed software packages
+fro Mozart that might come in handy for applications like a regular
+expression package, data base interfaces, and so on.
 %prep
 rm -rf \$RPM_BUILD_DIR/mozart-${VERSION}
 %setup -c -D -T -a 0
