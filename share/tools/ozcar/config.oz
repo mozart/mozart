@@ -14,8 +14,11 @@ SourceWindowIcon       = 'Ozcar Source'
 TreeTitle              = 'Thread Tree'
 StackTitle             = 'Stack'
 AltStackTitle          = 'Stack of Thread  #'
-EnvTitle               = 'Environment'
-AltEnvTitle            = 'Environment of Frame  #'
+
+LocalEnvTitle          = 'Local Environment'
+GlobalEnvTitle         = 'Global Environment'
+AltLocalEnvTitle       = 'Local Environment of Frame  #'
+AltGlobalEnvTitle      = 'Global Environment of Frame  #'
 
 StatusInitText         = 'No current thread'
 StatusEndText          = 'See you again...'
@@ -40,19 +43,20 @@ end end end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry
 %%
-ToplevelGeometry       = '600x420+3+100'
-SourceWindowGeometry   = '501x549+620+100'  %% I really hate hardcoding this
+ToplevelGeometry       = '590x420+7+100'
+SourceWindowGeometry   = '501x549+612+100'  %% I really hate hardcoding this
                                             %% but window managers seem
                                             %% to be f*cking stupid :-((
 SourceWindowTextSize   = 80 # 50
 
 ThreadTreeWidth        = 120
 ThreadTreeStretchX     = 11
-ThreadTreeStretchY     = 13
+ThreadTreeStretchY     = 14
 ThreadTreeOffset       = 4
 
-TextWidth              = 50
-
+StackTextWidth         = 0
+EnvTextWidth           = 24
+					
 SmallBorderSize        = 0
 BorderSize             = 2
 
@@ -62,8 +66,8 @@ BorderSize             = 2
 SmallFont              = '6x10'
 DefaultFont            = '7x13'
 BoldFont               = '7x13bold'
-ThreadTreeFont         = fixed
-ThreadTreeBoldFont     = '6x13bold'
+ThreadTreeFont         = DefaultFont
+ThreadTreeBoldFont     = BoldFont
 ButtonFont             = '-adobe-helvetica-medium-r-normal-*-10-*-*-*-*-*-*-*'
 TitleFont              = '-adobe-helvetica-bold-r-normal-*-10-*-*-*-*-*-*-*'
 
@@ -84,6 +88,9 @@ TextCursor             = left_ptr
 /* hi, emacs! end*/
 
 DefaultBackground
+DefaultForeground
+SelectedBackground
+SelectedForeground
 ScrollbarApplColor
 ScrollbarBlockedColor
 ScrollbarStackColor
@@ -101,14 +108,17 @@ BuiltinColor
 case Tk.isColor then
    %% main window
    DefaultBackground       = '#f0f0f0'
-
+   DefaultForeground       = black
+   SelectedBackground      = ScrollbarStackColor
+   SelectedForeground      = white
+   
    %% source window
    ScrollbarApplColor      = '#00a000'
    ScrollbarBlockedColor   = BlockedThreadColor
-   ScrollbarStackColor     = '#7070f0'
+   ScrollbarStackColor     = '#7070c0'
 
    %% thread forest window
-   RunningThreadColor      = '#00b000'
+   RunningThreadColor      = ScrollbarApplColor
    BlockedThreadColor      = '#e07070'
    DeadThreadColor         = '#505050'
    ZombieThreadColor       = '#f000f0'
@@ -124,6 +134,9 @@ case Tk.isColor then
 else
    %% main window
    DefaultBackground       = white
+   DefaultForeground       = black
+   SelectedBackground      = black
+   SelectedForeground      = white
 
    %% source window
    ScrollbarApplColor      = black
