@@ -1,21 +1,20 @@
 ;;;
 ;;; Authors:
-;;;   Ralf Scheidhauer (scheihr@ps.uni-sb.de)
-;;;   Michael Mehl (mehl@ps.uni-sb.de)
-;;;   Leif Kornstaedt (kornstae@ps.uni-sb.de)
+;;;   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+;;;   Michael Mehl <mehl@ps.uni-sb.de>
+;;;   Ralf Scheidhauer <scheihr@ps.uni-sb.de>
 ;;;
 ;;; Contributors:
-;;;   Benjamin Lorenz (lorenz@ps.uni-sb.de)
+;;;   Benjamin Lorenz <lorenz@ps.uni-sb.de>
 ;;;
 ;;; Copyright:
-;;;   Ralf Scheidhauer, Michael Mehl and Leif Kornstaedt, 1993-1997
+;;;   Leif Kornstaedt, Michael Mehl and Ralf Scheidhauer, 1993-1997
 ;;;
 ;;; Last change:
 ;;;   $Date$ by $Author$
 ;;;   $Revision$
 ;;;
-;;; This file is part of Mozart, an implementation
-;;; of Oz 3:
+;;; This file is part of Mozart, an implementation of Oz 3:
 ;;;    $MOZARTURL$
 ;;;
 ;;; See the file "LICENSE" or
@@ -570,10 +569,7 @@ the variable `oz-pedantic-spaces' is non-nil."
   "Start the Oz debugger.
 With ARG, stop it instead."
   (interactive "P")
-  (oz-send-string
-   (if arg
-       "\\switch +threadedqueries\n{Ozcar off}"
-     "\\switch +threadedqueries\n{Ozcar on}")))
+  (oz-send-string (if arg "{Ozcar off}" "{Ozcar on}") t))
 
 (defun oz-debug-stop (arg)
   "Stop the Oz debugger.
@@ -622,7 +618,7 @@ With ARG, set it instead."
       (oz-send-string
        (concat "{Ozcar bpAt('"
 	       (or (buffer-file-name) (buffer-name))
-	       "' " line flag ")}")))))
+	       "' " line flag ")}") t))))
 
 
 ;;------------------------------------------------------------
@@ -633,10 +629,7 @@ With ARG, set it instead."
   "Start the profiler.
 With ARG, stop it instead."
   (interactive "P")
-  (oz-send-string
-   (if arg
-       "\\switch +threadedqueries\n{Profiler off}"
-     "\\switch +threadedqueries\n{Profiler on}")))
+  (oz-send-string (if arg "{Profiler off}" "{Profiler on}") t))
 
 (defun oz-profiler-stop (arg)
   "Stop the profiler.
@@ -990,12 +983,20 @@ feed that many preceding paragraphs as well as the current paragraph."
     (oz-feed-region (car region) (cdr region))))
 
 
-(defun oz-send-string (string)
-  "Feed STRING to the Oz Compiler, restarting it if it died."
+(defun oz-send-string (string &optional threaded)
+  "Feed STRING to the Oz Compiler, restarting it if it died.
+If THREADED is non-nil, set the threadedqueries switch beforehand."
   (save-excursion
     (oz-check-running nil))
   (let ((proc (get-buffer-process oz-emulator-buffer)))
-    (comint-send-string proc string)
+    (if threaded
+	(comint-send-string
+	 proc
+	 (concat "\\pushSwitches\n"
+		 "\\switch +threadedqueries -runwithdebugger\n"
+		 string "\n"
+		 "\\popSwitches"))
+      (comint-send-string proc string))
     (comint-send-string proc "\n")
     (save-excursion
       (set-buffer oz-compiler-buffer)
@@ -1328,9 +1329,9 @@ and the following line."
   (interactive)
   (delete-horizontal-space) ; Removes trailing whitespace
   (open-line 1)
-  (cond (oz-auto-indent (oz-indent-line t)))
+  (cond (oz-auto-indent (oz-indent-line-sub t)))
   (forward-line 1)
-  (cond (oz-auto-indent (oz-indent-line))))
+  (cond (oz-auto-indent (oz-indent-line-sub))))
 
 (defun oz-indent-buffer ()
   "Indent every line in the current buffer."
@@ -1346,19 +1347,40 @@ and the following line."
 	  (end-line (count-lines 1 end)))
       (while (< current-line end-line)
 	(message "Indenting line %s ..." current-line)
-	(oz-indent-line t)
+	(oz-indent-line-sub t)
 	(setq current-line (1+ current-line))
 	(forward-line 1)))
     (message nil)
     (goto-line old-line)))
 
-(defun oz-indent-line (&optional dont-change-empty-lines)
+(defun oz-indent-line (&optional arg)
+  "Indent the current line.
+If ARG is given, reindent that many lines above and before point as well."
+  (interactive "P")
+  (save-excursion
+    (let* ((current-line (1+ (count-lines 1 (point))))
+	   (n (abs (if arg (prefix-numeric-value arg) 0)))
+	   (start-line (max (- current-line n) 1))
+	   (nlines (- current-line start-line)))
+      (forward-line (- nlines))
+      (while (> nlines 0)
+	(oz-indent-line-sub t)
+	(setq nlines (1- nlines))
+	(forward-line 1))))
+  (oz-indent-line-sub nil)
+  (save-excursion
+    (let ((nlines (abs (if arg (prefix-numeric-value arg) 0))))
+      (while (> nlines 0)
+	(if (= (forward-line 1) 0)
+	    (oz-indent-line-sub t))
+	(setq nlines (1- nlines))))))
+
+(defun oz-indent-line-sub (&optional dont-change-empty-lines)
   "Indent the current line.
 If DONT-CHANGE-EMPTY-LINES is non-nil and the current line is empty
 save for whitespace, then its indentation is not changed.  If the
 point was inside the line's leading whitespace, then it is moved to
 the end of this whitespace after indentation."
-  (interactive)
   (let ((case-fold-search nil))   ; respect case
     (unwind-protect
 	(save-excursion
@@ -2501,12 +2523,12 @@ of the procedure Browse."
 (defun oz-view-panel ()
   "Feed `{Panel open}' to the Oz Compiler."
   (interactive)
-  (oz-send-string "{Panel open}"))
+  (oz-send-string "{Panel open}" t))
 
 (defun oz-compiler-panel ()
-  "Feed `{`Compiler` openPanel()}' to the Oz Compiler."
+  "Feed `{New CompilerPanel init(`Compiler`) _}' to the Oz Compiler."
   (interactive)
-  (oz-send-string "\\switch +threadedqueries\n{`Compiler` openPanel()}"))
+  (oz-send-string "{New CompilerPanel init(`Compiler`) _}" t))
 
 (defun oz-feed-file (file)
   "Feed a file to the Oz Compiler."
