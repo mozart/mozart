@@ -68,7 +68,7 @@ void BIfdHeadManager::initStaticData(void) {
 
 Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
 				   TaggedRef tagged_xtc, int &s,
-				   OZ_CFun func, RefsArray xregs, int arity)
+				   OZ_CFun f, RefsArray x, int a)
 {
   DebugCheck(i < 0 || i >= curr_num_of_items, error("index overflow"));
 
@@ -140,16 +140,32 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
     return TRUE;
   case 2:
     s += 1;
+#ifdef FDBISTUCK
     am.addSuspendVarList(prev_fdvarptr);
     am.addSuspendVarList(last_fdvarptr);
+#else
+    {
+      OZ_Thread th = OZ_makeSuspension(f, x, a);
+      OZ_addSuspension(makeTaggedRef(prev_fdvarptr), th);
+      OZ_addSuspension(makeTaggedRef(last_fdvarptr), th);
+    }
+#endif
     return TRUE;
   case 3:
     s += 1;
+#ifdef FDBISTUCK
     am.addSuspendVarList(varptr);
+#else 
+    OZ_addSuspension(makeTaggedRef(varptr), OZ_makeSuspension(f, x, a));
+#endif
     return TRUE;
   case 4:
     s += 1;
+#ifdef FDBISTUCK
     am.addSuspendVarList(varptr);
+#else 
+    OZ_addSuspension(makeTaggedRef(varptr), OZ_makeSuspension(f, x, a));
+#endif
     return TRUE;
   case 5:
     return FALSE;
@@ -321,15 +337,25 @@ OZ_Bool checkDomDescr(OZ_Term descr,
   deref(descr, descr_ptr, descr_tag);
   
   if (isNotCVar(descr_tag)) {
+#ifdef FDBISTUCK
     am.addSuspendVarList(descr_ptr);
-    return SUSPEND;
+#else 
+    OZ_addSuspension(makeTaggedRef(descr_ptr), 
+		     OZ_makeSuspension(cfun, args, arity));
+#endif
+    return SUSPEND; // checkDomDescr
   } else if (isSmallInt(descr_tag) && (expect >= 1)) { // (1)
     return PROCEED;
   } else if (AtomSup == descr && (expect >= 1)) { // (1)
     return PROCEED;
   } else if (isGenFDVar(descr, descr_tag) && (expect >= 1)) {
+#ifdef FDBISTUCK
     am.addSuspendVarList(descr_ptr);
-    return SUSPEND;
+#else 
+    OZ_addSuspension(makeTaggedRef(descr_ptr), 
+		     OZ_makeSuspension(cfun, args, arity));
+#endif
+    return SUSPEND; // checkDomDescr
   } else if (AtomBool == descr && (expect >= 2)) { // (1)
     return PROCEED;
   } else if (isSTuple(descr_tag) && (expect >= 2)) {
@@ -494,7 +520,7 @@ void BIfdBodyManager::_introduce(int i, TaggedRef v)
   } else if (vtag == pm_fd) {
     GenFDVariable * fdvar = tagged2GenFDVar(v);
     Bool var_state = bifdbm_var_state[i] = (am.isLocalCVar(v) ? fdbm_local : fdbm_global);
-    bifdbm_domain[i].FiniteDomainInit();
+    bifdbm_domain[i].FiniteDomainInit(NULL);
     if (var_state == fdbm_local) {
       bifdbm_dom[i] = &fdvar->getDom();
     } else {
@@ -547,7 +573,7 @@ OZ_Bool BIfdBodyManager::checkAndIntroduce(int i, TaggedRef v)
   } else if (vtag == pm_fd) {
     GenFDVariable * fdvar = tagged2GenFDVar(v);
     fdbm_var_state var_state = bifdbm_var_state[i] = (am.isLocalCVar(v) ? fdbm_local : fdbm_global);
-    bifdbm_domain[i].FiniteDomainInit();
+    bifdbm_domain[i].FiniteDomainInit(NULL);
     if (var_state == fdbm_local) {
       bifdbm_dom[i] = &fdvar->getDom();
     } else {
@@ -558,7 +584,7 @@ OZ_Bool BIfdBodyManager::checkAndIntroduce(int i, TaggedRef v)
     saveDomainOnTopLevel(i);
     Assert(bifdbm_init_dom_size[i] > 1 && *bifdbm_dom[i] != fd_bool);
   } else if (vtag == pm_uvar || vtag == pm_svar) {
-    return SUSPEND;
+    return SUSPEND; // checkAndIntroduce 
   } else {
     return FAILED;
   }
@@ -877,12 +903,12 @@ int BIfdBodyManager::simplifyBody(int ts, STuple &a, STuple &x,
       bifdbm_varptr[to] = varptr_from;
       bifdbm_vartag[to] = bifdbm_vartag[from];
       bifdbm_dom[to] = bifdbm_dom[from];
-      sign_bits[to] = sign_bits[from];
       bifdbm_init_dom_size[to] = bifdbm_init_dom_size[from];
       bifdbm_var_state[to] = bifdbm_var_state[from];
       a[to] = a[from];
       x[to] = x[from];
     }
+    sign_bits[to] = getSign(coeffs_from);
     to += 1;
   } 
   
