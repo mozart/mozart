@@ -4979,6 +4979,23 @@ OZ_C_proc_begin(BIinstructionsPrint, 0)
 OZ_C_proc_end
 #endif
 
+#ifdef PROFILE_BI
+OZ_C_proc_begin(BIbiPrint, 0)
+{
+  unsigned long sum = 0;
+  for (HashNode *hn = builtinTab.getFirst(); hn; hn = builtinTab.getNext(hn)) {
+    BuiltinTabEntry *abit = (BuiltinTabEntry *) hn->value;
+    sum += abit->getCounter();
+    if (abit->getCounter()!=0) {
+      printf("%010ud x %s\n",abit->getCounter(),abit->getPrintName());
+    }
+  }
+  printf("----------\n%010ud\n",sum);
+  return PROCEED;
+}
+OZ_C_proc_end
+#endif
+
 
 OZ_C_proc_begin(BIstatisticsPrintProcs, 0)
 {
@@ -7721,6 +7738,10 @@ BIspec allSpec[] = {
   {"setProfileMode",      1, BIsetProfileMode},
 #ifdef PROFILE_INSTR
   {"instructionsPrint",   0, BIinstructionsPrint},
+#endif
+
+#ifdef PROFILE_BI
+  {"biPrint",   0, BIbiPrint},
 #endif
 
   {"traceBack",0,BItraceBack},

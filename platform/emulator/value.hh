@@ -1754,6 +1754,9 @@ private:
   int arity;
   OZ_CFun fun;
   IFOR inlineFun;
+#ifdef PROFILE_BI
+  unsigned long counter;
+#endif
 
 public:
 
@@ -1765,6 +1768,9 @@ public:
   : arity(arty),fun(fn), inlineFun(infun), ConstTerm(Co_Builtin)
   {
     printname = makeTaggedAtom(s);
+#ifdef PROFILE_BI
+    counter = 0;
+#endif
   }
 
   ~BuiltinTabEntry () {}
@@ -1777,6 +1783,11 @@ public:
   char *getPrintName() { return tagged2Literal(printname)->getPrintName(); }
   TaggedRef getName() { return printname; }
   IFOR getInlineFun() { return inlineFun; }
+
+#ifdef PROFILE_BI
+  void incCounter() { counter++; }
+  long getCounter() { return counter; }
+#endif
 };
 
 
