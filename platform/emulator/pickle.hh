@@ -121,6 +121,7 @@ const struct {MarshalTag tag; char *name;} dif_names[] = {
   { DIF_SITE_PERM,    "SITE_PERM"},
   { DIF_PASSIVE,      "PASSIVE"},
   { DIF_COPYABLENAME, "COPYABLENAME"},
+  { DIF_EXTENSION,    "EXTENSION"},
   { DIF_LAST,         "LAST"}
 };
 

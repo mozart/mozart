@@ -86,6 +86,14 @@ void oz_registerExtension(int type, oz_unmarshalProcType f)
     }
     if (unmarshalRoutine) delete [] unmarshalRoutine;
     unmarshalRoutine = n;
+    unmarshalRoutineArraySize = type+100;
   }
   unmarshalRoutine[type] = f;
+}
+
+void initExtensions() {
+  extern void BitString_init();
+  extern void ByteString_init();
+  BitString_init();
+  ByteString_init();
 }

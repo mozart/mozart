@@ -150,7 +150,11 @@ void BitString::printLongStreamV(ostream &out,
 }
 
 void BitString_init() {
-  oz_registerExtension(OZ_E_BITSTRING,unmarshalBitString);
+  static int done = 0;
+  if (!done) {
+    done = 1;
+    oz_registerExtension(OZ_E_BITSTRING,unmarshalBitString);
+  }
 }
 
 BitString* BitString::clone() {
@@ -328,7 +332,11 @@ OZ_Term unmarshalByteString(MsgBuffer*bs) {
 }
 
 void ByteString_init() {
-  oz_registerExtension(OZ_E_BYTESTRING,unmarshalByteString);
+  static int done = 0;
+  if (! done) {
+    done = 1;
+    oz_registerExtension(OZ_E_BYTESTRING,unmarshalByteString);
+  }
 }
 
 void ByteString::printStreamV(ostream &out,int depth = 10) {
