@@ -24,7 +24,7 @@ fun {SpreadFiles Files DiskCap}
 
       Disks = {Map Ds
                fun {$ D}
-                  Disk = {TellRecord diskette}
+                  Disk = {RecordC.tell diskette}
                in
                   {ForAll {FS.monitorIn D}
                    proc {$ E}
@@ -32,7 +32,7 @@ fun {SpreadFiles Files DiskCap}
                    in
                       Disk^(F.name) = F.size
                    end}
-                  {WidthC Disk} = {FS.card D}
+                  {RecordC.width Disk} = {FS.card D}
                   Disk
                end}
    end
