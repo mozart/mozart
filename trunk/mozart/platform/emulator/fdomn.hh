@@ -34,7 +34,7 @@
 #include "tagged.hh"
 #include "value.hh"
 
-#include "oz_cpi.hh"
+#include "mozart_cpi.hh"
 
 #include "fddebug.hh"
 #include "fset.hh"

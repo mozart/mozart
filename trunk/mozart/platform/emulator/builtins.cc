@@ -47,7 +47,7 @@
 #include "var_ext.hh"
 #include "var_of.hh"
 #include "solve.hh"
-#include "oz_cpi.hh"
+#include "mozart_cpi.hh"
 #include "dictionary.hh"
 #include "dpInterface.hh"
 #include "bytedata.hh"
