@@ -3526,6 +3526,10 @@ sub OZTABLE {
         print "\t\tdoesNotReturn: true\n" if $info->{doesNotReturn};
         my $negated = $info->{negated};
         print "\t\tnegated: '$negated'\n" if $negated;
+        my $native = $info->{native};
+        if ($native eq "true") {
+            print "\t\tsited: true\n";
+        }
         print "\t)\n";
     }
 }
