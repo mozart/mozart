@@ -72,7 +72,8 @@
     Bo_Discarded
     */    
 
-void Board::Init() {
+void Board::Init()
+{
   am.rootBoard = new Board(NULL,Bo_Root);
   am.rootBoard->setInstalled();
   am.currentBoard = NULL;
