@@ -112,7 +112,12 @@ Bool AM::installScript(ConsList &script)
       }
     }
   }
+#ifndef DEBUG_CHECK
   script.dealloc();
+#else
+  if (ret == OK) 
+    script.dealloc ();
+#endif
   return ret;
 }
 
