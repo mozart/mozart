@@ -577,7 +577,6 @@ int osSystem(char *cmd)
 extern "C" void * __builtin_new (size_t sz)
 {
   void *p;
-
   /* malloc (0) is unpredictable; avoid it.  */
   if (sz == 0)
     sz = 1;
@@ -1199,7 +1198,7 @@ void osClearSocketErrors()
 {
   fd_set auxFDs[2];
 
-  /* osClrWatchedFD will change globalFDs, such that the next
+  /* osClrWatchedFD might change globalFDs, such that the next
    * call to FD_ISSET on globalFDs might fail */
   auxFDs[SEL_READ]  = globalFDs[SEL_READ];
   auxFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
@@ -1283,7 +1282,9 @@ int osFirstSelect()
 
 Bool osNextSelect(int fd, int mode)
 {
+#ifndef WINDOWS
   Assert(fd<openMax);
+#endif
   CheckMode(mode);
 
   if (FD_ISSET(fd,&tmpFDs[mode])) {
