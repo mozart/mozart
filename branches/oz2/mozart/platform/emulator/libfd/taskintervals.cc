@@ -90,7 +90,6 @@ OZ_C_proc_begin(sched_taskIntervals, 3)
 	return OZ_typeError(expectedType, 0, "Scheduling applications expect that all task symbols are features of the records denoting the start times and durations.");
       pe.expectIntVarMinMax(OZ_subtree(starts, task));
     }
-
     OZ_Return r = pe.impose(new TaskIntervalsPropagator(tasks, starts, durs),
 			    OZ_getLowPrio());
 
@@ -112,7 +111,7 @@ OZ_Return TaskIntervalsPropagator::propagate(void)
   int * dur = reg_offset;
 
   struct Set {
-    int low, up, dur, extSize;
+    int low, up, dur, extSize, lst, ect;
     int * ext;
     // extension for tasks inside task intervals
     int max, min;
@@ -156,7 +155,6 @@ OZ_Return TaskIntervalsPropagator::propagate(void)
 tiloop:
 
 
-
   /////////
   // Initialize task intervals, cubic complexity
   ////////
@@ -165,12 +163,20 @@ tiloop:
       struct Set *cset = &taskints[left][right];
       cset->low        = MinMax[left].min;
       cset->up         = MinMax[right].max + dur[right];
-      
-      cset->max        = MinMax[left].max + dur[left];
-      cset->min        = MinMax[right].min;
+
+      if (left == right) {
+	cset->min = fd_sup;
+	cset->max = 0;
+      }
+      else {
+	cset->max        = MinMax[left].max + dur[left];
+	cset->min        = MinMax[right].min;
+      }
 
       int cdur = 0;
       int csize = 0;
+      int maxEct = 0;
+      int minLst = fd_sup;
       if ( (cset->low <= MinMax[right].min)
 	   && (MinMax[left].max + dur[left] <= cset->up)
 	   ) 
@@ -184,7 +190,9 @@ tiloop:
 		 && (dueL <= cset->up) ) {
 	      cdur += durL;
 	      cset->ext[csize++] = l;
-
+	      maxEct = intMax(maxEct, releaseL+durL);
+	      minLst = intMin(minLst, dueL-durL);
+	    
 	      if ( (l!=left) && (l!=right) ) {
 		cset->max = intMax(cset->max, dueL);
 		cset->min = intMin(cset->min, releaseL);
@@ -195,6 +203,8 @@ tiloop:
 	}
       cset->dur     = cdur;
       cset->extSize = csize;
+      cset->lst     = minLst;
+      cset->ect     = maxEct;
       
       if ( (csize > 0) && (cset->up - cset->low < cdur) ) {
 	goto failure;
@@ -220,22 +230,30 @@ tiloop:
 	  int releaseI = MinMax[i].min;
 	  int dueI     = maxI + durI;
 	  int durAll, tdurTI, treleaseTI, tdueTI;
+	  int inside   = 0;
 	  if ( (releaseI >= releaseTI) && (dueI <= dueTI) ) {
 	    // I is in TI
+            inside = 1;
  	    durAll = durTI;
 	    tdurTI = durTI - durI; 
-	    if (i==left) {
+	    if ( (i==left) && (i==right) ) {
 	      treleaseTI = cset->min;
-	      tdueTI = dueTI;
+	      tdueTI = cset->max;
 	    }
 	    else {
-	      if (i==right) {
-		tdueTI = cset->max;
-		treleaseTI = releaseTI;
+	      if (i==left) {
+		treleaseTI = cset->min;
+		tdueTI = dueTI;
 	      }
 	      else {
-		treleaseTI = releaseTI;
-		tdueTI = dueTI;
+		if (i==right) {
+		  tdueTI = cset->max;
+		  treleaseTI = releaseTI;
+		}
+		else {
+		  treleaseTI = releaseTI;
+		  tdueTI = dueTI;
+		}
 	      }
 	    }
 	  }
@@ -247,6 +265,7 @@ tiloop:
 	    durAll     = durI + durTI;
 	  }
 	  
+	  int val = 0;
 	  int tmax = 0;
 	  int tmin = fd_sup;
 	  for (k=0; k<setSize; k++) {
@@ -295,15 +314,22 @@ tiloop:
 		  loopFlag = 1;
 		  FailOnEmpty( *x[i] <= maxi-durI);
 		}
-	      }
+	      } 
 	    }
 	  }
 	  else {
 	    if (tdueTI - releaseI < durAll) {
 	      // I cannot be first and not inside --> I must be last
-	      if (releaseI < treleaseTI + tdurTI) {
+ 	      if (inside == 1) {
+		// we cannot use ect because this might come from I
+		val = treleaseTI + tdurTI;
+	      }
+	      else {
+		val = intMax(treleaseTI + tdurTI,cset->ect); 
+	      }
+	      if (releaseI < val) {
 		loopFlag = 1;
-		FailOnEmpty( *x[i] >= treleaseTI + tdurTI);
+		FailOnEmpty( *x[i] >= val);
 	      }
 	      // all others in TI must be finished before I starts
 	      for (j = 0; j < setSize; j++) {
@@ -317,9 +343,16 @@ tiloop:
 	    }
 	    if (dueI - treleaseTI < durAll) {
 	      // I cannot be last and not inside --> I must be first
-	      if (maxI > tdueTI - tdurTI - durI) {
+  	      if (inside == 1) {
+		// we cannot use lst because this might come from I
+                val = tdueTI - tdurTI - durI;
+	      }
+	      else {
+		val = intMin(tdueTI - tdurTI - durI, cset->lst);
+	      }
+	      if (maxI > val) {
 		loopFlag = 1;
-		FailOnEmpty( *x[i] <= tdueTI - tdurTI - durI);
+		FailOnEmpty( *x[i] <= val);
 	      }
 	      // all others in TI must start after I has finished
 	      for (j = 0; j < setSize; j++) {
@@ -390,7 +423,6 @@ reifiedloop:
     disjFlag = 0;
     goto reifiedloop;
   }
-
 
   for (i=0; i<ts; i++) 
     for (j=0; j<ts; j++) 
@@ -604,7 +636,7 @@ OZ_Return CPIteratePropagatorCumTI::propagate(void)
 
   /*
   DECL_DYN_ARRAY(int, set0, ts);
-  DECL_DYN_ARRAY(int, compSet0, ts);
+  DECL_DYN_ARRAY(int, compSet0, ts); 
   DECL_DYN_ARRAY(int, forCompSet0Up, ts);
   DECL_DYN_ARRAY(int, forCompSet0Down, ts);
   DECL_DYN_ARRAY(int, outSide, ts);
@@ -642,7 +674,7 @@ OZ_Return CPIteratePropagatorCumTI::propagate(void)
     taskints[i] = ::new TISet[ts];
   }
   
-  int left,right,tiFlag;
+  int left,right,tiFlag=0;
 
 
   // memory is automatically disposed when propagator is left
