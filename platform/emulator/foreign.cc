@@ -31,7 +31,10 @@
 
 #include "iso-ctype.hh"
 
+#ifdef HAVE_CONFIG_H
 #include "conf.h"
+#endif
+
 #include "oz.h"
 
 #include "runtime.hh"
