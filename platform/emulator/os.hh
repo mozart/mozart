@@ -229,6 +229,7 @@ int oswrite(int fd, void *buf, unsigned int len);
 int osclose(int fd);
 void ossleep(int sec);
 int osgetpid();
+int osgetEpid();
 int ossockerrno();
 int osopen(const char *path, int flags, int mode);
 int ossocket(int domain, int type, int protocol);

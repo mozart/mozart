@@ -155,7 +155,7 @@ SiteHashTable* siteTable = 0;
 void initSite()
 {
   ip_address myIP = getMySiteIP();
-  TimeStamp timestamp(time(0), osgetpid());
+  TimeStamp timestamp(time(0), osgetEpid());
   // RS: should also use the port for making it more unique
   mySite = new Site(myIP, (port_t) 0, timestamp);
   //
