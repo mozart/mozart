@@ -71,9 +71,9 @@ void usage()
 {
   fprintf(stderr,
 	  "Usage:\n"
-	  "\toztool [-verbose] [-gnu|-msvc|-watcom] c++ SourceFile\n"
-	  "\toztool [-verbose] [-gnu|-msvc|-watcom] cc SourceFile\n"
-	  "\toztool [-verbose] [-gnu|-msvc|-watcom] ld -o TargetLib FileList\n"
+	  "\toztool [-verbose] [-gnu|-msvc|-watcom] c++ -c SourceFile\n"
+	  "\toztool [-verbose] [-gnu|-msvc|-watcom] cc  -c SourceFile\n"
+	  "\toztool [-verbose] [-gnu|-msvc|-watcom] ld  -o TargetLib FileList\n"
 	  "\toztool platform\n");
   exit(2);
 }
@@ -203,7 +203,7 @@ int main(int argc, char** argv)
   if ((!strcmp(argv[1],"cc") || !strcmp(argv[1],"c++")) && argc > 2) {
     int cxx = !strcmp(argv[1],"c++");
     int r = 0;
-    char **wc = new char*[argc + 2];
+    char **wc = new char*[argc + 5];
     switch (sys) {
     case SYS_GNU:
       if (cxx)
@@ -232,8 +232,8 @@ int main(int argc, char** argv)
     wc[r++] = "-DWINDOWS";
     for (int i = 2; i < argc; i++) {
       if (sys == SYS_MSVC && !strcmp(argv[i],"-o")) {
-	wc[r++] = concat("/Fo",argv[++i]);
-      }else {
+	wc[r++] = concat("-Fo",argv[++i]);
+      } else {
 	wc[r++] = argv[i];
       }
     }
@@ -311,7 +311,7 @@ int main(int argc, char** argv)
 	libCmd[5] = NULL;
 	int r = execute(libCmd);
 	if (!r) {
-	  char **linkCmd = new char *[argc + 1];
+	  char **linkCmd = new char *[argc + 3];
 	  r = 0;
 	  linkCmd[r++] = "link.exe";
 	  linkCmd[r++] = "/nologo";
@@ -320,6 +320,8 @@ int main(int argc, char** argv)
 	  for (int i = 4; i < argc; i++)
 	    linkCmd[r++] = argv[i];
 	  linkCmd[r++] = tmpfile1lib;
+	  linkCmd[r++] = "/nodefaultlib:libc.lib";
+	  linkCmd[r++] = "/defaultlib:msvcrt.lib";
 	  linkCmd[r] = NULL;
 	  r = execute(linkCmd);
 	}
