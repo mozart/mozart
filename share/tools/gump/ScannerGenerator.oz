@@ -73,7 +73,8 @@ local
 	    stop
 	 else
 	    {Rep logSubPhase('compiling scanner ...')}
-	    case {OS.system 'g++ -O6 -I'#{System.get home}#
+	    case {OS.system
+		  'g++ -fno-rtti -fno-excetions -O3 -I'#{System.get home}#
 		  '/include -I'#INCLUDEDIR#
 		  ' -c '#{MakeFileName T ".C"}#
 		  ' -o '#{MakeFileName T ".o"}} \= 0 then
