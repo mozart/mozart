@@ -1,31 +1,32 @@
-This tutorial introduces the programming language Oz and the Mozart
-programming system. Oz is a multi-paradigm programming language. It is
-a high level programming language that is designed for advanced,
+This tutorial introduces the Oz programming language and the Mozart
+programming system.
+Oz is a multi-paradigm language that is designed for advanced,
 concurrent, networked, soft real-time, and reactive applications. Oz
-combines the salient features of object-oriented programming by
-providing state, abstract data types, classes, objects and
-inheritance. It provides features of functional programming by
-providing compositional syntax, first-class procedures/functions, and
-lexical scoping. It provides the salient features of logic and
-constraint programming such as logic variables, constraints,
-disjunction constructs, and programmable search mechanisms. Oz is a
-concurrent language where users can create dynamically any number of
-sequential threads.
-<!-- DENYS: very unclear -->
-Oz threads are data-flow threads in the sense that
+provides the salient features of object-oriented programming including
+state, abstract data types, objects, classes, and inheritance.
+It provides the salient features of functional programming including
+compositional syntax, first-class procedures/functions, and
+lexical scoping.
+It provides the salient features of logic and
+constraint programming including logic variables, constraints,
+disjunction constructs, and programmable search mechanisms.
+It allows users to dynamically create any number of sequential threads.
+The threads are data-flow threads in the sense that
 a thread executing an operation will suspend until
-all operands needed have a well defined value.
+all operands needed have a well-defined value.
 
 <P>The tutorial covers most of the concepts of Oz in an informal
 way. It is suitable as first reading for programmers who want to be
-able to start quickly writing programs without any particular
-theoretical background. The document is deliberately informal and,
+able to quickly start writing programs without any particular
+theoretical background. The document is deliberately informal and
 thus complements other Oz documentation.
 
-<P>The programming system of Oz is called Mozart and has been
-developed by several researchers from DFKI (the German Research Center
-Artificial Intelligent), SICS (the Swedish Institute of Computer
-Science), Saarland university,
+<P>The Mozart programming system has been
+developed by researchers from
+DFKI (the German Research Center for Artificial Intelligence),
+SICS (the Swedish Institute of Computer Science),
+the University of the Saarland,
+UCL (the Universite catholique de Louvain),
 and others.
 
 <P CLASS=WARNING>The material in this document is still incomplete and
