@@ -23,6 +23,7 @@ export
    pathLocalDB      : PATHLOCALDB
    localDB          : LOCALDB
    mogulDB          : MOGULDB
+   readDB           : READDB
    
 define
    FILEPKGDFT       = 'ozpm.dsc'
@@ -77,19 +78,20 @@ define
 		'update'(single type:bool default:false)
 	       )}
 
-   DIRPREFIX       = {CondSelect Args prefix DIRPREFIXDFT}
+   DIRPREFIX   = {CondSelect Args prefix DIRPREFIXDFT}
    PATHLOCALDB = {AddToPath DIRPREFIX FILELOCALDB}
-   LOCALDB     = {ByNeed
-		   fun {$}
-		      Ret
-		   in
-		      try
-			 Ret={Pickle.load PATHLOCALDB}
-		      catch error(url(load ...) ...) then
-			 {CreatePath {Dirname PATHLOCALDB}}
-			 {Pickle.save nil PATHLOCALDB}
-			 Ret=nil
-		      end
-		      Ret
-		   end}
+   READDB      = fun {$}
+		    Ret
+		 in
+		    try
+		       Ret={Pickle.load PATHLOCALDB}
+		    catch error(url(load ...) ...) then
+		       {CreatePath {Dirname PATHLOCALDB}}
+		       {Pickle.save nil PATHLOCALDB}
+		       Ret=nil
+		    end
+		    Ret
+		 end
+   LOCALDB     = {ByNeed READDB}
+
 end
