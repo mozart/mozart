@@ -41,7 +41,7 @@ protected:
   TypeOfGenCVariable type;
   // takes the suspensionlist of var and  appends it to the
   // suspensionlist of leftVar
-  void relinkSuspListTo(GenCVariable * lv);
+  void relinkSuspListTo(GenCVariable * lv, Bool reset_local = FALSE);
 
   void propagate(TaggedRef, SuspList * &, TaggedRef, PropCaller);
 
