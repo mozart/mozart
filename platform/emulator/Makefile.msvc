@@ -87,7 +87,7 @@ SRCS= \
         libfd/schedtable.cc libfd/schedinit.cc \
         libdp/dpMarshaler.cc     libdp/network.cc         libdp/var_obj.cc\
         libdp/dpMiscModule.cc    libdp/perdio.cc          libdp/virtual.cc\
-        libdp/dpPaneModule.cc    libdp/pidModule.cc       libdp/vs_comm.cc\
+        libdp/dpStatisticsModule.cc    libdp/pidModule.cc       libdp/vs_comm.cc\
         libdp/dpResource.cc      libdp/port.cc            libdp/vs_interface.cc\
         libdp/dsite.cc           libdp/protocolCredit.cc  libdp/vs_mailbox.cc\
         libdp/fail.cc            libdp/protocolFail.cc    libdp/vs_msgbuffer.cc\

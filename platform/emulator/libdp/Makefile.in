@@ -52,7 +52,7 @@ REALVSSRCS = virtual.cc vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc
 VSSRCS = $(REALVSSRCS)
 VSOBJS = $(VSSRCS:.cc=.lo)
 
-MODULESRCS = pidModule.cc faultModule.cc dpMiscModule.cc dpPaneModule.cc
+MODULESRCS = pidModule.cc faultModule.cc dpMiscModule.cc dpStatisticsModule.cc
 MODULEOBJS = $(MODULESRCS:.cc=.lo)
 
 REALSRCS = $(REALCORESRCS) $(REALVSSRCS) $(MODULESRCS)
@@ -99,12 +99,12 @@ dpMiscModule.lo: ../modDPMisc-if.cc
 
 #
 
-dpPaneModule.lo: ../modDPPane-if.cc $(CREATEDFILES)
+dpStatisticsModule.lo: ../modDPStatistics-if.cc $(CREATEDFILES)
 
-../DPPane.so: dpPaneModule.lo
+../DPStatistics.so: dpStatisticsModule.lo
         $(DYNLD) -o $@ $<
 
-../libDPPane.a: dpPaneModule.lo
+../libDPStatistics.a: dpStatisticsModule.lo
         $(AR) -rc $@ $< && $(RANLIB) $@
 
 #

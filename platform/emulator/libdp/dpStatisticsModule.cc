@@ -269,6 +269,6 @@ OZ_BI_define(BIperdioStatistics,0,1)
 
 #ifndef MODULES_LINK_STATIC
 
-#include "modDPPane-if.cc"
+#include "modDPStatistics-if.cc"
 
 #endif

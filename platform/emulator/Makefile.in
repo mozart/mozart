@@ -33,7 +33,8 @@ SRCDIR= @srcdir@
 include Makefile.vars
 
 MODULE_NAMES =                                                  \
-        PID Fault DPMisc DPB VirtualSite DPPane Tk Schedule FDP FSP Parser \
+        PID Fault DPMisc DPB VirtualSite DPStatistics Tk Schedule FDP FSP \
+        Parser \
         CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
         Win32 System Profile OsTime Assembler
 
@@ -67,7 +68,7 @@ MODSPECS= \
         PID URL FDB FSB CTB RecordC Space System CTB \
         CompilerSupport Compat Win32 Profile \
         Debug Fault Browser Misc DPMisc \
-        VirtualSite Application DPPane OsTime \
+        VirtualSite Application DPStatistics OsTime \
         Assembler \
         $(BIMODSPECS) \
         $(DENYS_SPECS)
@@ -245,8 +246,8 @@ libFault.a Fault.so:
 libDPMisc.a DPMisc.so:
         cd libdp; $(MAKE) ../$@
 
-.PHONY: libDPPane.a DPPane.so
-libDPPane.a DPPane.so:
+.PHONY: libDPStatistics.a DPStatistics.so
+libDPStatistics.a DPStatistics.so:
         cd libdp; $(MAKE) ../$@
 
 .PHONY: libVirtualSite.a VirtualSite.so
