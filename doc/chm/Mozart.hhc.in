@@ -276,6 +276,11 @@
 	      <PARAM name="ImageNumber" value="13">
 	    </OBJECT>
 	  <LI><OBJECT type="text/sitemap">
+	      <PARAM name="Name" value="MOGUL Archive">
+	      <PARAM name="Local" value="http://www.mozart-oz.org/mogul/">
+	      <PARAM name="ImageNumber" value="13">
+	    </OBJECT>
+	  <LI><OBJECT type="text/sitemap">
 	      <PARAM name="Name" value="License Information">
 	      <PARAM name="Local" value="http://www.mozart-oz.org/license.html">
 	      <PARAM name="ImageNumber" value="13">
