@@ -325,20 +325,22 @@ it prints a message on the display of the Browser.
 fun {Producer N}
    if N > 0 then
       volvo|{Producer N-1}
-   else then nil end
+   else nil end
 end
 local
    proc {Consumer Ls N}
-      case Ls
-      of nil then skip
+      case Ls of nil then skip
       [] volvo|Lr then
          if N mod 1000 == 0 then
-           {Browse 'riding a new volvo'}
+            {Browse 'riding a new volvo'}
          end
-         {Consumer Lr N+1}
-      else {Consumer Lr N} end
+         {ConsumerN Lr N+1}
+      else
+         {ConsumerN {List.drop Ls 1} N}
+      end
    end
-in proc {Consumer Ls} {Consumer Ls 1} end
+in
+   proc {Consumer Ls} {ConsumerN Ls 1} end
 end
 >>>
 </FIGURE>
@@ -447,7 +449,7 @@ operations pertinent to threads. Some of these are summarized in
   <TD><<{Property.get priorities ?Pr }>></TD>
   <TD>Gets system-priority ratios </TD>
 </TR><TR>
-  <TD><<{Property.set priorities(high:+X medium:+Y)}>></TD>
+  <TD><<{Property.put priorities(high:+X medium:+Y)}>></TD>
   <TD>Sets system-priority ratios</TD>
 </TR>
 </TABLE>
@@ -455,14 +457,14 @@ operations pertinent to threads. Some of these are summarized in
 
 <P>Oz has three priority levels. The system procedure
 
-<<<{Property.set priorities(high:X medium:Y)}>>>
+<<<{Property.put priorities(high:X medium:Y)}>>>
 
 <P>sets the processor-time ratio to <<X:1>> between high-priority
 threads and medium-priority thread. It also sets the processor-time
 ratio to <<Y:1>> between medium-priority threads and low-priority
 thread. <<X>> and <<Y>> are integers. So, if we execute
 
-<<<{Property.set priorities(high:+10 medium:+10)}>>>
+<<<{Property.put priorities(high:10 medium:10)}>>>
 
 <P>for each <<10>> time-slices allocated to runnable high-priority
 threads, the system will allocate one time-slice for medium-priority
@@ -474,7 +476,7 @@ priority, and the consumer high. We also set the priority ratios to
 
 <<<
 local L in
-   {Property.set priorities(high:+10 medium:+10)}
+   {Property.put threads priorities(high:10 medium:10)}
    thread
      {Thread.setThisPriority low}
       L = {Producer 5000000}
