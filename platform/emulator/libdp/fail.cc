@@ -601,7 +601,7 @@ void Chain::shortcutCrashCell(CellManager* cm,TaggedRef val){
     CellSec *sec=cm->getCellSec();
     ChainElem *ce=*base;
     ce->reinit(myDSite);
-    Assert(sec->state=Cell_Lock_Invalid);
+    Assert(sec->state==Cell_Lock_Invalid);
     sec->state=Cell_Lock_Valid;
     sec->contents=val;
     return;}
