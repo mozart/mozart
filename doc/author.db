@@ -4,6 +4,12 @@ firstname:      Denys
 www:            http://www.ps.uni-sb.de/~duchier/
 email:          duchier@ps.uni-sb.de
 
+key:            Martin.Henz
+lastname:       Henz
+firstname:      Martin
+www:            http://www.iscs.nus.edu.sg/~henz
+email:          henz@iscs.nus.sg
+
 key:            Leif.Kornstaedt
 lastname:       Kornstaedt
 firstname:      Leif
@@ -11,23 +17,30 @@ middlename:     Tobias
 www:            http://www.ps.uni-sb.de/~kornstae/
 email:          kornstae@ps.uni-sb.de
 
-key:            Tobias.Mueller
-lastname:       Müller
-firstname:      Tobias
-www:            http://www.ps.uni-sb.de/~tmueller/
-email:          tmueller@ps.uni-sb.de
-
-key:            Martin.Henz
-lastname:       Henz
-firstname:      Martin
-www:            http://www.ps.uni-sb.de/~henz/
-email:          henz@ps.uni-sb.de
+key:            Michael.Mehl
+lastname:       Mehl
+firstname:      Michael
+www:            http://www.ps.uni-sb.de/~mehl/
+email:          mehl@dfki.de
 
 key:            Martin.Mueller
 lastname:       Müller
 firstname:      Martin
 www:            http://www.ps.uni-sb.de/~mmueller/
 email:          mmueller@ps.uni-sb.de
+
+key:            Tobias.Mueller
+lastname:       Müller
+firstname:      Tobias
+www:            http://www.ps.uni-sb.de/~tmueller/
+email:          tmueller@ps.uni-sb.de
+
+key:            Konstantin.Popov
+lastname:       Popov
+firstname:      Konstantin
+middlename:     Evgeniewitsch
+www:            http://www.sics.se/~kost/
+email:          kost@sics.se
 
 key:            Christian.Schulte
 lastname:       Schulte
@@ -39,17 +52,4 @@ key:            Joerg.Wuertz
 lastname:       Würtz
 firstname:      Jörg
 www:            http://www.ps.uni-sb.de/~wuertz/
-email:          wuertz@ps.uni-sb.de
-
-key:            Konstantin.Popov
-lastname:       Popov
-firstname:      Konstantin
-middlename:     Evgeniewitsch
-www:            http://www.sics.se/~kost/
-email:          kost@sics.se
-
-key:            Michael.Mehl
-lastname:       Mehl
-firstname:      Michael
-www:            http://www.ps.uni-sb.de/~mehl/
-email:          mehl@dfki.de
+email:          wuertz@de.ibm.com
