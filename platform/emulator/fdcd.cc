@@ -46,7 +46,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
   if (isLiteral(v_tupletag)) {
     // reduce to sum(b) >= 1
     int p_size = p.getSize();
-    TaggedRef tone = newSmallInt(1), tmone = newSmallInt(-1);
+    TaggedRef tone = OZ_CToInt(1), tmone = OZ_CToInt(-1);
     STuple * st = STuple::newSTuple(p.getLabel(), p_size);
 
     for (int i = 0; i < p_size; i++) (*st)[i] = tmone;
@@ -74,7 +74,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
     DEREF(bi, bi_ptr, bi_tag);
     if (isNotCVar(bi_tag)) {
       GenFDVariable * fdvar = new GenFDVariable();
-      fdvar->getDom().init(0, smallIntValue(deref(p[i])) + 2);
+      fdvar->getDom().init(0, OZ_intToC(p[i]) + 2);
       doBind(bi_ptr, makeTaggedRef(newTaggedCVar(fdvar)));
     } else {
       error("Unexpected CVar found.");
@@ -364,7 +364,7 @@ OZ_C_proc_end
 
 
 //-----------------------------------------------------------------------------
-// BIfdGenLessEqCD
+// Propagators
 
 OZ_Bool cd_wrapper_a(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
 {
@@ -538,6 +538,9 @@ OZ_C_proc_begin(BIfdNotEqCD_body, 3)
 OZ_C_proc_end
 
 
+//-----------------------------------------------------------------------------
+// Built-ins
+
 OZ_Bool cd_wrapper_b(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
 {
   int last_index = OZ_arity - 1;
@@ -621,8 +624,8 @@ OZ_C_proc_begin(BIfdCDSched_body, 4)
 
   const int x = 0, y = 1;
 
-  int xd = smallIntValue(deref(OZ_getCArg(2)));
-  int yd = smallIntValue(deref(OZ_getCArg(3)));
+  int xd = OZ_intToC(OZ_getCArg(2));
+  int yd = OZ_intToC(OZ_getCArg(3));
 
   int xl = a[x].minElem(), xu = a[x].maxElem();
   int yl = a[y].minElem(), yu = a[y].maxElem();
@@ -634,14 +637,14 @@ OZ_C_proc_begin(BIfdCDSched_body, 4)
     return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
                                               OZ_getCArg(y),
                                               OZ_getCArg(x),
-                                              newSmallInt(-yd));
+                                              OZ_CToInt(-yd));
   }
 
   if (yl + yd > xu) {
     return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
                                               OZ_getCArg(x),
                                               OZ_getCArg(y),
-                                              newSmallInt(-xd));
+                                              OZ_CToInt(-xd));
   }
 
   LocalFD la, lb, lc, ld, l1, l2;
@@ -681,8 +684,8 @@ OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
 
   const int x = 0, y = 1, control = 2;
 
-  int xd = smallIntValue(deref(OZ_getCArg(2)));
-  int yd = smallIntValue(deref(OZ_getCArg(3)));
+  int xd = OZ_intToC(OZ_getCArg(2));
+  int yd = OZ_intToC(OZ_getCArg(3));
 
   int xl = a[x].minElem(), xu = a[x].maxElem();
   int yl = a[y].minElem(), yu = a[y].maxElem();
@@ -702,7 +705,7 @@ OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
     return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
                                               OZ_getCArg(y),
                                               OZ_getCArg(x),
-                                              newSmallInt(-yd));
+                                              OZ_CToInt(-yd));
   }
 
   if (yl + yd > xu){
@@ -711,7 +714,7 @@ OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
     return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
                                               OZ_getCArg(x),
                                               OZ_getCArg(y),
-                                              newSmallInt(-xd));
+                                              OZ_CToInt(-xd));
   }
 
   if (a[control] == fd_singleton) {
@@ -719,14 +722,14 @@ OZ_C_proc_begin(BIfdCDSchedControl_body, 5)
       return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
                                                 OZ_getCArg(x),
                                                 OZ_getCArg(y),
-                                                newSmallInt(-xd));
+                                                OZ_CToInt(-xd));
     }
 
     else {
       return BIfdBodyManager::replacePropagator(BIfdLessEqOff_body, 3,
                                                 OZ_getCArg(y),
                                                 OZ_getCArg(x),
-                                                newSmallInt(-yd));
+                                                OZ_CToInt(-yd));
     }
   }
 

@@ -130,16 +130,16 @@ FDIntervals::FDIntervals(const FDIntervals &iv) {
 }
 
 
-Bool FDIntervals::isConsistent(void) const {
-  if (high < 0) return FALSE;
+OZ_Boolean FDIntervals::isConsistent(void) const {
+  if (high < 0) return OZ_FALSE;
   int i;
   for (i = 0; i < high; i++) {
-    if (i_arr[i].left > i_arr[i].right) return FALSE;
-    if ((i + 1 < high) && (i_arr[i].right >= i_arr[i + 1].left)) return FALSE;
+    if (i_arr[i].left > i_arr[i].right) return OZ_FALSE;
+    if ((i + 1 < high) && (i_arr[i].right >= i_arr[i + 1].left)) return OZ_FALSE;
   }
   for (i = 0; i < high - 1; i++)
-    if (! ((i_arr[i].right + 1) < i_arr[i + 1].left)) return FALSE;
-  return TRUE;
+    if (! ((i_arr[i].right + 1) < i_arr[i + 1].left)) return OZ_FALSE;
+  return OZ_TRUE;
 }
 
 
@@ -187,18 +187,18 @@ int FDIntervals::findPossibleIndexOf(int i) const
 }
 
 inline
-Bool FDIntervals::contains(int i) const
+OZ_Boolean FDIntervals::contains(int i) const
 {
   int index = findPossibleIndexOf(i);
   return (i_arr[index].left <= i && i <= i_arr[index].right);
 }
 
 inline
-Bool FDIntervals::next(int i, int &n) const
+OZ_Boolean FDIntervals::next(int i, int &n) const
 {
   if (contains(i)) {
     n = i;
-    return FALSE;
+    return OZ_FALSE;
   }
 
   int j;
@@ -211,10 +211,10 @@ Bool FDIntervals::next(int i, int &n) const
 
   if ((r - i) == (i - l)) {
     n = l;
-    return TRUE;
+    return OZ_TRUE;
   } else {
     n = ((r - i) < (i - l)) ? r : l;
-    return FALSE;
+    return OZ_FALSE;
   }
 }
 
@@ -237,7 +237,7 @@ OZ_Term FDIntervals::getAsList(void) const
 
   for (int i = 0; i < high; i += 1)
       l_ptr = (i_arr[i].left == i_arr[i].right)
-        ? mkListEl(hd, l_ptr, newSmallInt(i_arr[i].left))
+        ? mkListEl(hd, l_ptr, OZ_CToInt(i_arr[i].left))
         : mkListEl(hd, l_ptr, mkTuple(i_arr[i].left, i_arr[i].right));
 
   return makeTaggedLTuple(hd);
@@ -441,7 +441,7 @@ int FDIntervals::union_iv(const FDIntervals &x, const FDIntervals &y)
       y_c += 1;
     }
 
-    for (Bool cont = TRUE; cont; )
+    for (OZ_Boolean cont = OZ_TRUE; cont; )
       if (x_c < x.high &&
           x.i_arr[x_c].left <= r + 1 && r <= x.i_arr[x_c].right) {
         r = x.i_arr[x_c].right;
@@ -451,7 +451,7 @@ int FDIntervals::union_iv(const FDIntervals &x, const FDIntervals &y)
         r = y.i_arr[y_c].right;
         y_c += 1;
       } else {
-        cont = FALSE;
+        cont = OZ_FALSE;
       }
 
     for (; x_c < x.high && x.i_arr[x_c].right <= r; x_c += 1);
@@ -556,9 +556,9 @@ int FDIntervals::subtract_iv(FDIntervals &z, const FDIntervals &y)
 // calls FDBitVector ----------------------------------------------------------
 
 inline
-Bool FDBitVector::contains(int i) const {
+OZ_Boolean FDBitVector::contains(int i) const {
   return (i > fd_bv_max_elem || i < 0)
-    ? FALSE : (b_arr[div32(i)] & (1 << (mod32(i))));
+    ? OZ_FALSE : (b_arr[div32(i)] & (1 << (mod32(i))));
 }
 
 // 0 <= i <= fd_bv_max_elem
@@ -721,11 +721,11 @@ int FDBitVector::nextBiggerElem(int v, int max_elem) const
 }
 
 inline
-Bool FDBitVector::next(int i, int &n) const
+OZ_Boolean FDBitVector::next(int i, int &n) const
 {
   if (contains(i)) {
     n = i;
-    return FALSE;
+    return OZ_FALSE;
   }
 
   // find lower neighbour
@@ -748,11 +748,11 @@ Bool FDBitVector::next(int i, int &n) const
 
   if (u - i == i - l) {
     n = l;
-    return TRUE;
+    return OZ_TRUE;
   }
 
   n = (u - i < i - l) ? u : l;
-  return FALSE;
+  return OZ_FALSE;
 }
 
 inline
@@ -794,7 +794,7 @@ OZ_Term FDBitVector::getAsList(void) const
 
   for (int i = 0; i < len; i += 1)
     if (fd_bv_left_conv[i] == fd_bv_right_conv[i])
-      l_ptr = mkListEl(hd, l_ptr, newSmallInt(fd_bv_left_conv[i]));
+      l_ptr = mkListEl(hd, l_ptr, OZ_CToInt(fd_bv_left_conv[i]));
     else
       l_ptr = mkListEl(hd, l_ptr, mkTuple(fd_bv_left_conv[i],
                                           fd_bv_right_conv[i]));
@@ -920,7 +920,7 @@ int FiniteDomain::findSize(void) const {
 }
 
 inline
-Bool FiniteDomain::isSingleInterval(void) const {
+OZ_Boolean FiniteDomain::isSingleInterval(void) const {
   return size == (max_elem - min_elem + 1);
 }
 
@@ -993,8 +993,8 @@ FDIntervals * FiniteDomain::asIntervals(void) const
   }
 }
 
-Bool FiniteDomain::isConsistent(void) const {
-  if (size == 0) return TRUE;
+OZ_Boolean FiniteDomain::isConsistent(void) const {
+  if (size == 0) return OZ_TRUE;
   descr_type type = getType();
   if (type == fd_descr)
     return findSize() == size;
@@ -1005,10 +1005,10 @@ Bool FiniteDomain::isConsistent(void) const {
 }
 
 inline
-Bool FiniteDomain::contains(int i) const
+OZ_Boolean FiniteDomain::contains(int i) const
 {
   if (size == 0) {
-    return FALSE;
+    return OZ_FALSE;
   } else {
     descr_type type = getType();
     if (type == fd_descr)
@@ -1085,7 +1085,7 @@ unsigned FiniteDomain::getDescrSize() {
   }
 }
 
-Bool FiniteDomain::isIn(int i) const
+OZ_Boolean FiniteDomain::isIn(int i) const
 {
   return contains(i);
 }
@@ -1291,14 +1291,14 @@ int FiniteDomain::init(OZ_Term d)
   DEREF(d, d_ptr, d_tag);
 
   if (isSmallInt(d_tag)) {
-    return initSingleton(smallIntValue(d));
+    return initSingleton(OZ_intToC(d));
   } else if (AtomSup == d) {
     return initSingleton(fd_sup);
   } else if (isSTuple(d_tag)) {
     STuple &t = *tagged2STuple(d);
     OZ_Term t0 = deref(t[0]), t1 = deref(t[1]);
-    return init(AtomSup == t0 ? fd_sup : smallIntValue(t0),
-                AtomSup == t1 ? fd_sup : smallIntValue(t1));
+    return init(AtomSup == t0 ? fd_sup : OZ_intToC(t0),
+                AtomSup == t1 ? fd_sup : OZ_intToC(t1));
   } else if (AtomBool == d) {
     return init(0, 1);
   } else if (isNil(d)) {
@@ -1315,7 +1315,7 @@ int FiniteDomain::init(OZ_Term d)
       DEREF(val, valptr, valtag);
 
       if (isSmallInt(valtag)) {
-        int v = smallIntValue(val);
+        int v = OZ_intToC(val);
         if (v < fd_inf || fd_sup < v) goto for_loop;
 
         left_arr[len_arr] = right_arr[len_arr] = v;
@@ -1339,8 +1339,8 @@ int FiniteDomain::init(OZ_Term d)
         STuple &t = *tagged2STuple(val);
         OZ_Term t0 = deref(t[0]), t1 = deref(t[1]);
 
-        int l = max(0, AtomSup == t0 ? fd_sup : smallIntValue(t0));
-        int r = min(fd_sup, AtomSup == t1 ? fd_sup : smallIntValue(t1));
+        int l = max(0, AtomSup == t0 ? fd_sup : OZ_intToC(t0));
+        int r = min(fd_sup, AtomSup == t1 ? fd_sup : OZ_intToC(t1));
 
         if (l > r) goto for_loop;
 
@@ -1384,20 +1384,20 @@ int FiniteDomain::nextBiggerElem(int v) const
   }
 }
 
-Bool FiniteDomain::next(int i, int &n) const
+OZ_Boolean FiniteDomain::next(int i, int &n) const
 {
   if (i <= min_elem) {
     n = min_elem;
-    return FALSE;
+    return OZ_FALSE;
   } else if (i >= max_elem) {
     n = max_elem;
-    return FALSE;
+    return OZ_FALSE;
   }
 
   descr_type type = getType();
   if (type == fd_descr) {
     n = i;
-    return FALSE;
+    return OZ_FALSE;
   } else if (type == bv_descr) {
     return get_bv()->next(i, n);
   } else {
@@ -1421,27 +1421,27 @@ OZ_Term FiniteDomain::getAsList(void) const
 
 int FiniteDomain::operator &= (const int i)
 {
-  DEBUG_FD_IR(FALSE, cout << *this << " &= " << i << " = ");
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << " &= " << i << " = ");
   if (contains(i)) {
     initSingleton(i);
     AssertFD(isConsistent());
-    DEBUG_FD_IR(FALSE, cout << *this << endl);
+    DEBUG_FD_IR(OZ_FALSE, cout << *this << endl);
     return 1;
   } else {
     initEmpty();
     AssertFD(isConsistent());
-    DEBUG_FD_IR(FALSE, cout << *this << endl);
+    DEBUG_FD_IR(OZ_FALSE, cout << *this << endl);
     return 0;
   }
 }
 
 int FiniteDomain::operator <= (const int leq)
 {
-  DEBUG_FD_IR(FALSE, cout << *this  << " <= " << leq << " = ");
+  DEBUG_FD_IR(OZ_FALSE, cout << *this  << " <= " << leq << " = ");
 
   if (leq < min_elem) {
     AssertFD(isConsistent());
-    DEBUG_FD_IR(FALSE, cout << "{ - empty -}" << endl);
+    DEBUG_FD_IR(OZ_FALSE, cout << "{ - empty -}" << endl);
     return initEmpty();
   } else if (leq < max_elem) {
     descr_type type = getType();
@@ -1462,17 +1462,17 @@ int FiniteDomain::operator <= (const int leq)
   }
   if (isSingleInterval()) setType(fd_descr);
   AssertFD(isConsistent());
-  DEBUG_FD_IR(FALSE, cout << *this << endl);
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << endl);
   return size;
 }
 
 int FiniteDomain::operator >= (const int geq)
 {
-  DEBUG_FD_IR(FALSE, cout << *this  << " >= " << geq << " = ");
+  DEBUG_FD_IR(OZ_FALSE, cout << *this  << " >= " << geq << " = ");
 
   if (geq > max_elem) {
     AssertFD(isConsistent());
-    DEBUG_FD_IR(FALSE, cout << "{ - empty -}" << endl);
+    DEBUG_FD_IR(OZ_FALSE, cout << "{ - empty -}" << endl);
     return initEmpty();
   } else if (geq > min_elem) {
     descr_type type = getType();
@@ -1491,13 +1491,13 @@ int FiniteDomain::operator >= (const int geq)
   }
   if (isSingleInterval()) setType(fd_descr);
   AssertFD(isConsistent());
-  DEBUG_FD_IR(FALSE, cout << *this << endl);
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << endl);
   return size;
 }
 
 int FiniteDomain::operator -= (const int take_out)
 {
-  DEBUG_FD_IR(FALSE, cout << *this << " -= " << take_out << " = ");
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << " -= " << take_out << " = ");
   if (contains(take_out)) {
     descr_type type = getType();
     if (type == fd_descr) {
@@ -1534,20 +1534,20 @@ int FiniteDomain::operator -= (const int take_out)
     if (isSingleInterval()) setType(fd_descr);
   }
   AssertFD(isConsistent());
-  DEBUG_FD_IR(FALSE, cout << *this << endl);
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << endl);
   return size;
 }
 
 int FiniteDomain::operator -= (const FiniteDomain &y)
 {
-  DEBUG_FD_IR(FALSE, cout << *this << " -= " << y << " = ");
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << " -= " << y << " = ");
   if (y != fd_empty) {
     descr_type x_type = getType(), y_type = y.getType();
     if (x_type == fd_descr) {
       if (y_type == fd_descr) {
         if (y.max_elem < min_elem || max_elem < y.min_elem) {
           AssertFD(isConsistent());
-          DEBUG_FD_IR(FALSE, cout << *this << endl);
+          DEBUG_FD_IR(OZ_FALSE, cout << *this << endl);
           return size;
         } else if (y.min_elem <= min_elem && max_elem <= y.max_elem) {
           size = 0;
@@ -1601,13 +1601,13 @@ int FiniteDomain::operator -= (const FiniteDomain &y)
     if (isSingleInterval()) setType(fd_descr);
   }
   AssertFD(isConsistent());
-  DEBUG_FD_IR(FALSE, cout << *this << endl);
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << endl);
   return size;
 }
 
 int FiniteDomain::operator += (const int put_in)
 {
-  DEBUG_FD_IR(FALSE, cout << *this << " += " << put_in << " = ");
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << " += " << put_in << " = ");
 
   if (put_in < fd_inf || fd_sup < put_in) return size;
 
@@ -1670,13 +1670,13 @@ int FiniteDomain::operator += (const int put_in)
   if (isSingleInterval()) setType(fd_descr);
 
   AssertFD(isConsistent());
-  DEBUG_FD_IR(FALSE, cout << *this << endl);
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << endl);
   return size;
 }
 
 FiniteDomain FiniteDomain::operator ~ (void) const
 {
-  DEBUG_FD_IR(FALSE, cout << *this << " = ~ ");
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << " = ~ ");
 
   FiniteDomain y; y.setEmpty();
 
@@ -1723,14 +1723,14 @@ FiniteDomain FiniteDomain::operator ~ (void) const
   }
 
   AssertFD(y.isConsistent());
-  DEBUG_FD_IR(FALSE, cout << y << endl);
+  DEBUG_FD_IR(OZ_FALSE, cout << y << endl);
 
   return y;
 }
 
 FiniteDomain FiniteDomain::operator | (const FiniteDomain &y) const
 {
-  DEBUG_FD_IR(FALSE, cout << *this << " | " << y << " =  ");
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << " | " << y << " =  ");
 
   FiniteDomain z; z.setEmpty();
 
@@ -1758,19 +1758,19 @@ FiniteDomain FiniteDomain::operator | (const FiniteDomain &y) const
   if (z.isSingleInterval()) z.setType(fd_descr);
 
   AssertFD(z.isConsistent());
-  DEBUG_FD_IR(FALSE, cout << z << endl);
+  DEBUG_FD_IR(OZ_FALSE, cout << z << endl);
 
   return z;
 }
 
 int FiniteDomain::operator &= (const FiniteDomain &y)
 {
-  DEBUG_FD_IR(FALSE, cout << *this << " &= " << y << " = ");
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << " &= " << y << " = ");
 
   if (*this == fd_empty || y == fd_empty) {
     initEmpty();
     AssertFD(isConsistent());
-    DEBUG_FD_IR(FALSE, cout << "{ - empty -}" << endl);
+    DEBUG_FD_IR(OZ_FALSE, cout << "{ - empty -}" << endl);
     return 0;
   } else if (getType() == fd_descr && y.getType() == fd_descr) {
     if (max_elem < y.min_elem || y.max_elem < min_elem) {
@@ -1802,20 +1802,20 @@ int FiniteDomain::operator &= (const FiniteDomain &y)
   if (isSingleInterval()) setType(fd_descr);
 
   AssertFD(isConsistent());
-  DEBUG_FD_IR(FALSE, cout << *this << endl);
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << endl);
 
   return size;
 }
 
 FiniteDomain FiniteDomain::operator & (const FiniteDomain &y) const
 {
-  DEBUG_FD_IR(FALSE, cout << *this << " & " << y << " = ");
+  DEBUG_FD_IR(OZ_FALSE, cout << *this << " & " << y << " = ");
 
   FiniteDomain z; z.setEmpty();
 
   if (*this == fd_empty || y == fd_empty) {
     AssertFD(z.isConsistent());
-    DEBUG_FD_IR(FALSE, cout << "{ - empty -}" << endl);
+    DEBUG_FD_IR(OZ_FALSE, cout << "{ - empty -}" << endl);
     return z;
   } else if (getType() == fd_descr && y.getType() == fd_descr) {
     if (max_elem < y.min_elem || y.max_elem < min_elem) {
@@ -1848,7 +1848,7 @@ FiniteDomain FiniteDomain::operator & (const FiniteDomain &y) const
   if (z.isSingleInterval()) z.setType(fd_descr);
 
   AssertFD(z.isConsistent());
-  DEBUG_FD_IR(FALSE, cout << z << endl);
+  DEBUG_FD_IR(OZ_FALSE, cout << z << endl);
 
   return z;
 }

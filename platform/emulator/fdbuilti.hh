@@ -16,15 +16,19 @@
 #pragma interface
 #endif
 
-#include "oz.h"
-
-#include "am.hh"
-
-#include "fdhook.hh"
-#include "genvar.hh"
+// include oz.h
+#include "fdomn.hh"
 #include "fdprofil.hh"
+
+// have to vanish
+//#include "fdhook.hh"
+//#include "genvar.hh"
+
+
+// do not include any file
 #include "fdproto.hh"
 #include "fdheads.hh"
+#include "fddebug.hh"
 
 enum Recalc_e {lower, upper};
 
@@ -33,65 +37,7 @@ enum Recalc_e {lower, upper};
 //-----------------------------------------------------------------------------
 
 #if defined(DEBUG_CHECK)
-#define FORCE_ALL 0
-
-#define FD_DEBUG_T(TEXT, SIZE, T, COND) \
-if (FORCE_ALL || COND) { \
-  cout << TEXT << endl; \
-  for (int _i = 0; _i < SIZE; _i += 1) \
-    cout << "x[" << _i << "]=", taggedPrint(T[_i]), cout << endl; \
-  cout.flush(); \
-}
-#define FD_DEBUG_TTI(TEXT, SIZE, T1, T2, I, COND) \
-if (FORCE_ALL || COND) { \
-  cout << TEXT << endl; \
-  int _i; \
-  for (_i = 0; _i < SIZE; _i += 1) \
-    cout << "a[" << _i << "]=", taggedPrint(T1[_i]), cout << endl; \
-  for (_i = 0; _i < SIZE; _i += 1) \
-    cout << "x[" << _i << "]=", taggedPrint(T2[_i]), cout << endl; \
-  cout << "c=" << I  << endl; \
-  cout.flush(); \
-}
-#define FD_DEBUG_ITI(TEXT, SIZE, I1, T, I2, COND) \
-if (FORCE_ALL || COND) { \
-  cout << TEXT << endl; \
-  cout << "n=" << I1  << endl; \
-  for (int _i = 0; _i < SIZE; _i += 1) \
-    cout << "l[" << _i << "]=", taggedPrint(T[_i]), cout << endl; \
-  cout << "v=" << I2  << endl; \
-  cout.flush(); \
-}
-#define FD_DEBUG_XYZ(TEXT, X, Y, Z, COND) \
-if (FORCE_ALL || COND) { \
-  cout << TEXT << endl; \
-  cout << "x="; taggedPrint(X); cout << endl; \
-  cout << "y="; taggedPrint(Y); cout << endl; \
-  cout << "z="; taggedPrint(Z); cout << endl; \
-  cout.flush(); \
-}
-#define FD_DEBUG_XYC(TEXT, X, Y, C, COND) \
-if (FORCE_ALL || COND) { \
-  cout << TEXT << endl; \
-  cout << "x="; taggedPrint(X); cout << endl; \
-  cout << "y="; taggedPrint(Y); cout << endl; \
-  cout << "c=" << C << endl; \
-  cout.flush(); \
-}
-#define FD_DEBUG_XY(TEXT, X, Y, COND) \
-if (FORCE_ALL || COND) { \
-  cout << TEXT << endl; \
-  cout << "x="; taggedPrint(X); cout << endl; \
-  cout << "y="; taggedPrint(Y); cout << endl; \
-  cout.flush(); \
-}
 #else
-#define FD_DEBUG_T(TEXT, SIZE, T1, COND)
-#define FD_DEBUG_TTI(TEXT, SIZE, T1, T2, I, COND)
-#define FD_DEBUG_ITI(TEXT, SIZE, I1, T, I2, COND)
-#define FD_DEBUG_XYZ(TEXT, X, Y, Z, COND)
-#define FD_DEBUG_XYC(TEXT, X, Y, C, COND)
-#define FD_DEBUG_XY(TEXT, X, Y, COND)
 #endif
 
 //-----------------------------------------------------------------------------
@@ -116,6 +62,27 @@ if (FORCE_ALL || COND) { \
   } \
 }
 
+#undef PURE
+#ifdef PURE
+// temporary changes
+class Suspension;
+class STuple {
+public:
+  int getSize(void);
+  OZ_Term &operator [] (int);
+};
+
+OZ_Term deref(OZ_Term);
+OZ_Term makeTaggedRef(OZ_Term *);
+STuple * tagged2STuple(OZ_Term);
+
+#define SimplifyOnUnify(EQ01, EQ02, EQ12)
+
+#else
+
+#include "fdhook.hh"
+#include "genvar.hh"
+
 #define SimplifyOnUnify(EQ01, EQ02, EQ12) \
   if (isUnifyCurrentTaskSusp()) { \
     OZ_getCArgDeref(0, x, xPtr, xTag); \
@@ -132,59 +99,24 @@ if (FORCE_ALL || COND) { \
     } \
   }
 
+#endif
+
+//-----------------------------------------------------------------------------
+// pm_
+
 enum pm_term_type {pm_none = 0x0, pm_singl = 0x1,
                    pm_bool = 0x2, pm_fd = 0x4,
                    pm_svar = 0x8, pm_uvar = 0x10,
                    pm_tuple = 0x20, pm_literal = 0x40};
 
 inline
-Bool pm_is_var(pm_term_type t) {
+OZ_Boolean pm_is_var(pm_term_type t) {
   return t & (pm_bool | pm_fd | pm_svar | pm_uvar);
 }
 
 inline
-Bool pm_is_noncvar(pm_term_type t) {
+OZ_Boolean pm_is_noncvar(pm_term_type t) {
   return t & (pm_svar | pm_uvar);
-}
-
-inline
-char * pm_term_type2string(int t) {
-  switch (t) {
-  case pm_none: return "pm_none";
-  case pm_singl: return "pm_singl";
-  case pm_bool: return "pm_bool";
-  case pm_fd:  return "pm_fd";
-  case pm_svar: return "pm_svar";
-  case pm_uvar: return "pm_uvar";
-  case pm_tuple: return "pm_tuple";
-  case pm_literal: return "pm_literal";
-  default:  return "unexpected";
-  }
-}
-
-inline
-TaggedRef deref(TaggedRef &tr, TaggedRef * &ptr, pm_term_type &tag)
-{
-  TaggedRef tr1=tr;
-  DEREF(tr1,ptr1,tag1);
-  tr=tr1;
-  ptr=ptr1;
-  switch (tag1) {
-  case SMALLINT: tag = pm_singl; break;
-  case CVAR:
-    switch (tagged2CVar(tr1)->getType()) {
-    case FDVariable: tag = pm_fd; break;
-    case BoolVariable: tag = pm_bool; break;
-    default: tag = pm_none; break;
-    }
-    break;
-  case SVAR: tag = pm_svar; break;
-  case UVAR: tag = pm_uvar; break;
-  case STUPLE: tag = pm_tuple; break;
-  case LITERAL: tag = pm_literal; break;
-  default: tag = pm_none; break;
-  }
-  return tr1;
 }
 
 //-----------------------------------------------------------------------------
@@ -192,12 +124,12 @@ TaggedRef deref(TaggedRef &tr, TaggedRef * &ptr, pm_term_type &tag)
 
 extern double static_coeff_double[MAXFDBIARGS];
 extern int static_coeff_int[MAXFDBIARGS];
-extern Bool static_sign_bit[MAXFDBIARGS];
-extern TaggedRef static_var[MAXFDBIARGS];
-extern TaggedRefPtr static_varptr[MAXFDBIARGS];
+extern OZ_Boolean static_sign_bit[MAXFDBIARGS];
+extern OZ_Term static_var[MAXFDBIARGS];
+extern OZ_Term * static_varptr[MAXFDBIARGS];
 extern pm_term_type static_vartag[MAXFDBIARGS];
-extern Bool static_bool_a[MAXFDBIARGS];
-extern Bool static_bool_b[MAXFDBIARGS];
+extern OZ_Boolean static_bool_a[MAXFDBIARGS];
+extern OZ_Boolean static_bool_b[MAXFDBIARGS];
 extern int static_int_a[MAXFDBIARGS];
 extern int static_int_b[MAXFDBIARGS];
 extern double static_double_a[MAXFDBIARGS];
@@ -210,77 +142,14 @@ extern int static_index_size[MAXFDBIARGS];
 // Auxiliary stuff
 //-----------------------------------------------------------------------------
 
-inline
-Bool isPosSmallInt(TaggedRef val)
-{
-  if (isSmallInt(val))
-    return smallIntValue(val) >= 0;
-
-  return FALSE;
-}
-
-inline
-Bool isBoolSmallInt(TaggedRef val)
-{
-  if (isSmallInt(val)) {
-    int ival = smallIntValue(val);
-    return (ival == 0 || ival == 1);
-  }
-  return NO;
-}
+OZ_Boolean isPosSmallInt(OZ_Term val);
 
 // return TRUE if i is not negative
-inline
-Bool getSign(int i) {
-  return i >= 0;
-}
-
-inline
-Bool getSign(double  i) {
-  return i >= 0.0;
-}
-
-inline
-void getSignbit(int i, int n) {
-  static_sign_bit[i] = getSign(n);
-}
-
-inline
-void getDoubleCoeff(int i, TaggedRef v) {
-  int n =  smallIntValue(deref(v));
-  static_coeff_double[i] = (double) n;
-  getSignbit(i, n);
-}
-
-inline
-void getIntCoeff(int i, TaggedRef v) {
-  int n =  smallIntValue(deref(v));
-  static_coeff_int[i] = n;
-  getSignbit(i, n);
-}
-
-//-----------------------------------------------------------------------------
-// Suspension Creation Functions
-
-inline
-Suspension * createNonResSusp(OZ_CFun func, RefsArray xregs, int arity)
-{
-  return (Suspension *) OZ_makeThread(func, xregs, arity);
-}
-
-
-inline
-Suspension * createResSusp(OZ_CFun func, int arity, RefsArray xregs)
-{
-  Suspension * s = makeHeadSuspension(func, xregs, arity);
-
-  s->headInit();
-
-  Assert(FDcurrentTaskSusp == NULL);
-
-  FDcurrentTaskSusp = s;
-  return s;
-}
+OZ_Boolean getSign(int i);
+OZ_Boolean getSign(double  i);
+void getSignbit(int i, int n);
+void getDoubleCoeff(int i, OZ_Term v);
+void getIntCoeff(int i, OZ_Term v);
 
 //-----------------------------------------------------------------------------
 // fd built-ins don't cause stuck threads, but may cause their minds, therefore
@@ -303,13 +172,11 @@ Suspension * createResSusp(OZ_CFun func, int arity, RefsArray xregs)
 
 class BIfdHeadManager {
 private:
-  static TaggedRef * bifdhm_var;
-  static TaggedRefPtr * bifdhm_varptr;
+  static OZ_Term * bifdhm_var;
+  static OZ_Term ** bifdhm_varptr;
   static pm_term_type * bifdhm_vartag;
   static int * bifdhm_coeff;
   static int curr_num_of_items;
-
-  int simplifyHead(int ts, STuple &a, STuple &x);
 
   int global_vars;
 
@@ -317,81 +184,38 @@ private:
   void addResSusps(Suspension * susp, FDPropState target);
 
 public:
-  BIfdHeadManager(int s) : global_vars(0) {
-    DebugCheck(s < 0 || s > MAXFDBIARGS, error("too many items"));
-    curr_num_of_items = s;
-  }
+  BIfdHeadManager(int s);
 
-  void increaseSizeBy(int s) {
-    curr_num_of_items += s;
-    DebugCheck(curr_num_of_items < 0 || curr_num_of_items > MAXFDBIARGS,
-               error("too many items"));
-  }
+  void increaseSizeBy(int s);
 
-  static
-  void initStaticData(void);
+  static void initStaticData(void);
 
-  Bool expectFDish(int i, TaggedRef v, int &s);
-  Bool expectInt(int i, TaggedRef v, int &s);
-  Bool expectNonLin(int i, STuple &at, STuple &xt, TaggedRef tagged_xtc,
-                    int &s, OZ_CFun func, RefsArray xregs, int arity);
+  OZ_Boolean expectFDish(int i, OZ_Term v, int &s);
+  OZ_Boolean expectInt(int i, OZ_Term v, int &s);
+  OZ_Boolean expectNonLin(int i, STuple &at, STuple &xt, OZ_Term tagged_xtc,
+                    int &s, OZ_CFun func, OZ_Term * xregs, int arity);
 
-  OZ_Bool addSuspFDish(OZ_CFun, RefsArray, int);
-  OZ_Bool addSuspSingl(OZ_CFun, RefsArray, int);
-  Bool addSuspXorYdet(OZ_CFun, RefsArray, int);
+  OZ_Bool addSuspFDish(OZ_CFun, OZ_Term *, int);
+  OZ_Bool addSuspSingl(OZ_CFun, OZ_Term *, int);
+  OZ_Boolean addSuspXorYdet(OZ_CFun, OZ_Term *, int);
 
-  int simplify(STuple &a, STuple &x) {
-    return curr_num_of_items = simplifyHead(curr_num_of_items, a, x);
-  }
-  int allOne(void) {
-    for (int i = curr_num_of_items; i--; )
-      if (bifdhm_coeff[i] != 1 && bifdhm_coeff[i] != -1)
-        return FALSE;
-    return TRUE;
-  }
+  int getCoeff(int i);
 
-  int getCoeff(int i) {
-    DebugCheck(i < 0 || i >= curr_num_of_items, error("index overflow"));
-    return bifdhm_coeff[i];
-  }
-  pm_term_type getTag(int i) {
-    DebugCheck(i < 0 || i >= curr_num_of_items, error("index overflow"));
-    return bifdhm_vartag[i];
-  }
+  pm_term_type getTag(int i);
+
   int getCurrNumOfItems(void) {return curr_num_of_items;}
 
   OZ_Bool spawnPropagator(FDPropState, OZ_CFun, int, OZ_Term *);
   OZ_Bool spawnPropagator(FDPropState, FDPropState, OZ_CFun, int, OZ_Term *);
   OZ_Bool spawnPropagator(FDPropState, OZ_CFun, int, OZ_Term, ...);
-  static
-  OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *,
-                       OZ_Term *);
-  static
-  OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *,
-                       OZ_Term *, OZ_Term *);
-  static
-  OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *,
-                       OZ_Term *, OZ_Term *, OZ_Term *);
+  static OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *);
+  static OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *);
+  static OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *, OZ_Term *);
 
-  Bool areIdentVar(int a, int b) {
-    DebugCheck((a < 0 || a >= curr_num_of_items) ||
-               (b < 0 || b >= curr_num_of_items),
-               error("index overflow."));
-    return (bifdhm_varptr[a] == bifdhm_varptr[b] &&
-            isAnyVar(bifdhm_var[a]));
-  }
+  OZ_Boolean areIdentVar(int a, int b);
 
-  void printDebug(void) {
-    for (int i = 0; i < curr_num_of_items; i += 1)
-      printDebug(i);
-  }
-  void printDebug(int i) {
-    cerr << '[' << i << "]: var=" << (void *) bifdhm_var[i]
-         << ", varptr=" << (void *) bifdhm_varptr[i]
-         << ", vartag=" << pm_term_type2string(bifdhm_vartag[i])
-         << ", coeff=" << bifdhm_coeff[i] << endl;
-    cerr.flush();
-  }
+  void printDebug(void);
+  void printDebug(int i);
 };
 
 
@@ -408,9 +232,10 @@ char * fdbm_var_stat2char(fdbm_var_state s) {
 
 inline
 int idx(int i, int j) {
-  Assert(0 <= j && j < static_index_size[i]);
-  Assert(0 <= static_index_offset[i] + j &&
-         static_index_offset[i] + j < MAXFDBIARGS);
+  AssertFD(0 <= j && j < static_index_size[i]);
+  AssertFD(0 <= static_index_offset[i] + j &&
+           static_index_offset[i] + j < MAXFDBIARGS);
+
   return static_index_offset[i] + j;
 }
 
@@ -423,8 +248,8 @@ extern FiniteDomain __CDVoidFiniteDomain;
 class BIfdBodyManager {
 private:
 // data slots in charge
-  static TaggedRef * bifdbm_var;
-  static TaggedRefPtr * bifdbm_varptr;
+  static OZ_Term * bifdbm_var;
+  static OZ_Term ** bifdbm_varptr;
   static pm_term_type * bifdbm_vartag;
 
   static FiniteDomainPtr * bifdbm_dom;
@@ -437,80 +262,46 @@ private:
   static int * index_offset;
   static int * index_size;
 
-  static Bool vars_left;
-  static Bool only_local_vars;
+  static OZ_Boolean vars_left;
+  static OZ_Boolean only_local_vars;
   static fdbm_var_state * bifdbm_var_state;
 
 // backup data slots
   int backup_count;
   int backup_curr_num_of_vars1;
-  Bool backup_vars_left1;
-  Bool backup_only_local_vars1;
+  OZ_Boolean backup_vars_left1;
+  OZ_Boolean backup_only_local_vars1;
   Suspension * backup_FDcurrentTaskSusp1;
 
 // private methods
-  Bool isTouched(int i) {
-    return bifdbm_init_dom_size[i] > bifdbm_dom[i]->getSize() ||
-      bifdbm_vartag[i] == pm_svar;
-  }
+  OZ_Boolean isTouched(int i);
 
   void process(void);
   void processFromTo(int, int);
-  void processLocal(void) {
-    processLocalFromTo(0, curr_num_of_vars);
-  }
+  void processLocal(void) {processLocalFromTo(0, curr_num_of_vars);}
 
   void processLocalFromTo(int, int);
   void processNonRes(void);
 
-  void _introduce(int i, TaggedRef v);
-  void introduceLocal(int i, TaggedRef v);
-  void saveDomainOnTopLevel(int i) {
-    if (am.currentBoard->isRoot()) {
-      if (bifdbm_vartag[i] == pm_fd)
-        bifdbm_domain[i] = tagged2GenFDVar(bifdbm_var[i])->getDom();
-    }
-  }
+  void _introduce(int i, OZ_Term v);
+  void introduceLocal(int i, OZ_Term v);
+  void saveDomainOnTopLevel(int i);
   int simplifyBody(int ts, STuple &a, STuple &x,
-                   Bool sign_bits[], double coeffs[]);
+                   OZ_Boolean sign_bits[], double coeffs[],
+                   OZ_Term ct, int &c);
   void _propagate_unify_cd(int clauses, int variables, STuple &st);
 
   enum {cache_slot_size = 4};
 
   void setSpeculative(int i);
 public:
-  BIfdBodyManager(int s) {
-    DebugCode(backup_count = 0;)
-    if (s == -1) {
-      curr_num_of_vars = 0;
-      only_local_vars = FALSE;
-    } else {
-      DebugCheck(s < 0 || s > MAXFDBIARGS, error("too many variables."));
-      curr_num_of_vars = s;
-      Assert(FDcurrentTaskSusp);
-      only_local_vars = FDcurrentTaskSusp->isLocalSusp();
-    }
-  }
+  BIfdBodyManager(int s);
 
-  DebugCode(~BIfdBodyManager() {if (backup_count) error("backup_count!=0");})
+  OZ_Boolean setCurr_num_of_vars(int i);
 
-  Bool setCurr_num_of_vars(int i) {
-    if (i < 0 || i > MAXFDBIARGS)
-      return TRUE;
-    curr_num_of_vars = i;
-   return FALSE;
-  }
+  OZ_Boolean indexIsInvalid(int i) {return (i < 0) || (i >= curr_num_of_vars);}
 
-  Bool indexIsInvalid(int i) {return (i < 0) || (i >= curr_num_of_vars);}
-
-  void add(int i, int size) {
-    curr_num_of_vars += size;
-    DebugCheck(curr_num_of_vars < 0 || curr_num_of_vars > MAXFDBIARGS,
-               error("too many variables."));
-    if (i == 0) index_offset[0] = 0;
-    index_offset[i + 1] = index_offset[i] + size;
-    index_size[i] = size;
-  }
+  void add(int i, int size);
 
   int getCurrNumOfVars(void) {return curr_num_of_vars;}
 
@@ -518,232 +309,90 @@ public:
   int getCacheSlotFrom(int i) {return cache_from[i];}
   int getCacheSlotTo(int i) {return cache_to[i];}
 
-  Bool allVarsAreLocal(void) {return only_local_vars;}
+  OZ_Boolean allVarsAreLocal(void) {return only_local_vars;}
 
-  static
-  void initStaticData(void);
+  static void initStaticData(void);
 
   void backup(void);
   void restore(void);
 
-  FiniteDomain &operator [](int i) {
-    DebugCheck(i < 0 || i >= curr_num_of_vars, error("index overflow."));
-    return *bifdbm_dom[i];
-  }
+  FiniteDomain &operator [](int i);
 
-  FiniteDomain &operator ()(int i, int j) {
-    return operator [](idx(i, j));
-  }
+  FiniteDomain &operator ()(int i, int j);
 
-  void printDebug(void) {
-    for (int i = 0; i < curr_num_of_vars; i += 1)
-      printDebug(i);
-  }
+  void printDebug(void);
+  void printDebug(int i);
+  void printTerm(void);
+  void printTerm(int i);
 
-  void printDebug(int i) {
-    if (bifdbm_dom[i]) {
-      cerr << '[' << i << "]: v=" << (void *) bifdbm_var[i]
-           << ", vptr=" << (void *) bifdbm_varptr[i]
-           << ", vtag=" << pm_term_type2string(bifdbm_vartag[i])
-           << ", dom=" << *bifdbm_dom[i]
-           << ", ids=" << bifdbm_init_dom_size[i]
-           << ", var_state=" << fdbm_var_stat2char(bifdbm_var_state[i])
-           << endl << flush;
-    } else {
-      cerr << "unvalid field" << endl << flush;
-    }
-  }
+  void introduceDummy(int i);
+  void introduce(int i, OZ_Term v);
+  void introduce(int i, int j, OZ_Term v);
+  void introduceSpeculative(int i, OZ_Term v);
 
-  void printTerm(void) {
-    for (int i = 0; i < curr_num_of_vars; i += 1)
-      printTerm(i);
-  }
+  OZ_Bool checkAndIntroduce(int i, OZ_Term v);
 
-  void printTerm(int i) {
-    if (*bifdbm_varptr[i] == bifdbm_var[i]) {
-      cout << "index=" << i << endl;
-      taggedPrintLong(makeTaggedRef(bifdbm_varptr[i]));
-      cout << endl << flush;
-    } else {
-      cout << "ATTENTION *bifdbm_varptr[i]!=bifdbm_var[i]. index="
-           << i << endl;
-      cout << "bifdbm_varptr";
-      taggedPrintLong(makeTaggedRef(bifdbm_varptr[i]));
-      cout << endl << flush;
-      cout << "bifdbm_var";
-      taggedPrintLong(bifdbm_var[i]);
-      cout << endl << flush;
-    }
-  }
+  void reintroduce(int i, OZ_Term v);
 
-  void introduceDummy(int i) { bifdbm_dom[i] = NULL; }
-
-  void introduce(int i, TaggedRef v) {
-    if (only_local_vars) {
-      introduceLocal(i, v);
-    } else {
-      _introduce(i, v);
-    }
-    // if current board is the top-level then save domains for
-    // restoration on failure
-    saveDomainOnTopLevel(i);
-  }
-
-  void introduceSpeculative(int i, TaggedRef v);
-
-  OZ_Bool checkAndIntroduce(int i, TaggedRef v);
-
-  void reintroduce(int i, TaggedRef v) {
-    int aux = bifdbm_init_dom_size[i];
-    introduce(i, v);
-    bifdbm_init_dom_size[i] = aux;
-  }
-
-  void introduce(int i, int j, TaggedRef v) {
-    int index = idx(i, j);
-    Assert(index_offset[i] <= index && index < index_offset[i + 1]);
-    if (only_local_vars) {
-      introduceLocal(index, v);
-    } else {
-      _introduce(index, v);
-    }
-    saveDomainOnTopLevel(index);
-  }
 
   void process(int i) {processFromTo(i, i+1);}
 
-  OZ_Bool entailment(void) {
-    if (only_local_vars) {
-      processLocal();
-    } else {
-      process();
-    }
-    return EntailFD;
-  }
+  OZ_Bool entailment(void);
 
   OZ_Bool entailmentClause(int from_b, int to_b,
                            int from, int to,
                            int from_p, int to_p);
 
-  OZ_Bool entailmentClause(int from_b, int to_b) {
-    processLocalFromTo(from_b, to_b+1);
+  OZ_Bool entailmentClause(int from_b, int to_b);
 
-    return EntailFD;
-  }
+  OZ_Bool release(int from, int to);
 
-  OZ_Bool release(int from, int to) {
+  OZ_Bool releaseReify(int from_b, int to_b, int from, int to);
 
-    if (only_local_vars) {
-      processLocalFromTo(from, to+1);
-      if (vars_left) reviveCurrentTaskSusp();
-    } else {
-      processFromTo(from, to+1);
-      if (vars_left)
-        reviveCurrentTaskSusp();
-    }
+  OZ_Bool release(void) {return release(0, curr_num_of_vars - 1);}
 
-    return vars_left ? SuspendFD : EntailFD;
-  }
+  // used by square and twice
+  OZ_Bool release1(void);
+  // used by putList, putNot, putLe, putGe
+  OZ_Bool releaseNonRes(void);
 
-  OZ_Bool releaseReify(int from_b, int to_b, int from, int to) {
+  int simplifyOnUnify(STuple &a, OZ_Boolean sign_bits[],
+                      double coeffs[], STuple &x,
+                      OZ_Term * ct, int &c);
 
-    processLocalFromTo(from_b, to_b+1);
+  int simplifyOnUnify(int ts, STuple &a, OZ_Boolean sign_bits[],
+                      double coeffs[], STuple &x,
+                      OZ_Term * ct, int &c);
 
-    return release(from, to);
-  }
+  OZ_Boolean _unifiedVars(void);
+  OZ_Boolean unifiedVars(void);
 
-  OZ_Bool release(void) {
-    return release(0, curr_num_of_vars - 1);
-  }
+  void propagate_unify_cd(int cl, int vars, STuple &st);
 
-  OZ_Bool release1(void) { // used by square and twice
-    process();
-    return EntailFD;
-  }
+  OZ_Boolean isNotCDVoid(int i) {return bifdbm_dom[i] != &__CDVoidFiniteDomain;}
 
-  OZ_Bool releaseNonRes(void) { // used by putList, putNot, putLe, putGe
-    processNonRes();
-    return EntailFD;
-  }
-
-  int simplifyOnUnify(STuple &a, Bool sign_bits[], double coeffs[], STuple &x) {
-    if (isUnifyCurrentTaskSusp())
-      curr_num_of_vars =
-        simplifyBody(curr_num_of_vars, a, x, sign_bits, coeffs);
-    return curr_num_of_vars;
-  }
-
-  int simplifyOnUnify(int ts, STuple &a, Bool sign_bits[], double coeffs[],
-                      STuple &x) {
-    if (isUnifyCurrentTaskSusp()) {
-      Assert(curr_num_of_vars >= ts);
-      int new_ts = simplifyBody(ts, a, x, sign_bits, coeffs);
-      for (int to = new_ts, from = ts; from < curr_num_of_vars; to++, from++) {
-        coeffs[to] = coeffs[from];
-        sign_bits[to] = sign_bits[from];
-        bifdbm_var[to] = bifdbm_var[from];
-        bifdbm_varptr[to] = bifdbm_varptr[from];
-        bifdbm_vartag[to] = bifdbm_vartag[from];
-        bifdbm_dom[to] = bifdbm_dom[from];
-        bifdbm_init_dom_size[to] = bifdbm_init_dom_size[from];
-        bifdbm_var_state[to] = bifdbm_var_state[from];
-      }
-      curr_num_of_vars -= (ts - new_ts);
-    }
-    return curr_num_of_vars;
-  }
-
-  Bool _unifiedVars(void);
-  Bool unifiedVars(void) {
-    if (! isUnifyCurrentTaskSusp()) return FALSE;
-    return _unifiedVars();
-  }
-
-  void propagate_unify_cd(int cl, int vars, STuple &st) {
-    if (isUnifyCurrentTaskSusp())
-      _propagate_unify_cd(cl, vars, st);
-  }
-
-  Bool isNotCDVoid(int i) {return bifdbm_dom[i] != &__CDVoidFiniteDomain;}
-
-  Bool areIdentVar(int a, int b) {
-    DebugCheck((a < 0 || a >= curr_num_of_vars) ||
-               (b < 0 || b >= curr_num_of_vars),
-               error("index overflow."));
-    if (! isUnifyCurrentTaskSusp()) return FALSE;
-    return bifdbm_varptr[a] == bifdbm_varptr[b] && isAnyVar(bifdbm_var[a]);
-  }
+  OZ_Boolean areIdentVar(int a, int b);
 
   FiniteDomainPtr * getDoms(void) {return bifdbm_dom;}
 
 // exactly one variable is regarded
   BIfdBodyManager(void) {backup_count = 0; curr_num_of_vars = 1;}
 
-  Bool introduce(TaggedRef v);
+  OZ_Boolean introduce(OZ_Term v);
 
   FiniteDomain &operator *(void) {return *bifdbm_dom[0];}
 
-  static void restoreDomainOnToplevel(void) {
-    if (am.currentBoard->isRoot()) {
-      for (int i = curr_num_of_vars; i--; )
-        if (bifdbm_vartag[i] == pm_fd)
-          tagged2GenFDVar(bifdbm_var[i])->getDom() = *bifdbm_dom[i];
-    }
-  }
-  static
-  OZ_Bool replacePropagator(OZ_CFun, int, OZ_Term *);
-  static
-  OZ_Bool replacePropagator(OZ_CFun, int, OZ_Term, ...);
-  static
-  OZ_Bool replacePropagator(OZ_Term, OZ_Term);
+  static void restoreDomainOnToplevel(void);
+
+  static OZ_Bool replacePropagator(OZ_CFun, int, OZ_Term *);
+  static OZ_Bool replacePropagator(OZ_CFun, int, OZ_Term, ...);
+  static OZ_Bool replacePropagator(OZ_Term, OZ_Term);
 }; // BIfdBodyManager
 
 
 //-----------------------------------------------------------------------------
 
-OZ_Bool checkDomDescr(OZ_Term descr,
-                      OZ_CFun cfun, OZ_Term * args, int arity,
-                      int expect = 3);
+OZ_Bool checkDomDescr(OZ_Term, OZ_CFun, OZ_Term *, int, int = 3);
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdbuilti.icc"

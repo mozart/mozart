@@ -33,11 +33,11 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
   switch (tTag){
   case SMALLINT:
     {
-      if (! finiteDomain.isIn(smallIntValue(term))) {
+      if (! finiteDomain.isIn(OZ_intToC(term))) {
         PROFILE_CODE1(FDProfiles.inc_item(no_failed_fdunify_vars);)
         return FALSE;
       }
-      if (prop) propagate(var, fd_det, pc_propagator);
+      if (prop) propagateUnify(var);
 
       if (prop && am.isLocalSVar(this)) {
         doBind(vPtr, term);
@@ -66,128 +66,120 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
             PROFILE_CODE1(FDProfiles.inc_item(no_failed_fdunify_vars);)
               return FALSE;
           }
-          FDPropState l_dom = intsct.checkAgainst(finiteDomain);
-          FDPropState r_dom = intsct.checkAgainst(termDom);
 
-          PROFILE_CODE1(if (l_dom != fd_any)
-                        if (FDVarsTouched.add(var))
-                        FDProfiles.inc_item(no_touched_vars);
-                        if (r_dom != fd_any)
-                        if (FDVarsTouched.add(term))
-                        FDProfiles.inc_item(no_touched_vars);
-                        FDProfiles.inc_item(no_succ_fdunify_vars);
-                        )
-            // bind - trail - propagate
-            Bool varIsLocal =  (prop && am.isLocalSVar(this));
-            Bool termIsLocal = (prop && am.isLocalSVar(termVar));
-            switch (varIsLocal + 2 * termIsLocal) {
-            case TRUE + 2 * TRUE: // var and term are local
-              {
-                if (intsct == fd_singleton) {
-                  TaggedRef int_var = newSmallInt(intsct.singl());
-                  termVar->propagate(term, r_dom, pc_cv_unif);
-                  propagate(var, l_dom, pc_cv_unif);
-                  doBind(vPtr, int_var);
-                  doBind(tPtr, int_var);
-                  if (disp) { dispose(); termVar->dispose(); }
-                } else if (heapNewer(vPtr, tPtr)) { // bind var to term
-                  termVar->setDom(intsct);
-                  propagate(var, l_dom, pc_cv_unif);
-                  termVar->propagate(term, r_dom, pc_cv_unif);
-                  relinkSuspListTo(termVar);
-                  doBind(vPtr, makeTaggedRef(tPtr));
-                  if (disp) dispose();
-                } else { // bind term to var
-                  setDom(intsct);
-                  termVar->propagate(term, r_dom, pc_cv_unif);
-                  propagate(var, l_dom, pc_cv_unif);
-                  termVar->relinkSuspListTo(this);
-                  doBind(tPtr, makeTaggedRef(vPtr));
-                  if (disp) termVar->dispose();
-                }
-                break;
+          // bind - trail - propagate
+          Bool varIsLocal =  (prop && am.isLocalSVar(this));
+          Bool termIsLocal = (prop && am.isLocalSVar(termVar));
+          switch (varIsLocal + 2 * termIsLocal) {
+          case TRUE + 2 * TRUE: // var and term are local
+            {
+              if (intsct == fd_singleton) {
+                TaggedRef int_var = OZ_CToInt(intsct.singl());
+                termVar->propagateUnify(term);
+                propagateUnify(var);
+                doBind(vPtr, int_var);
+                doBind(tPtr, int_var);
+                if (disp) { dispose(); termVar->dispose(); }
+              } else if (heapNewer(vPtr, tPtr)) { // bind var to term
+                termVar->setDom(intsct);
+                propagateUnify(var);
+                termVar->propagateUnify(term);
+                relinkSuspListTo(termVar);
+                doBind(vPtr, makeTaggedRef(tPtr));
+                if (disp) dispose();
+              } else { // bind term to var
+                setDom(intsct);
+                termVar->propagateUnify(term);
+                propagateUnify(var);
+                termVar->relinkSuspListTo(this);
+                doBind(tPtr, makeTaggedRef(vPtr));
+                if (disp) termVar->dispose();
               }
-            case TRUE + 2 * FALSE: // var is local and term is global
-              {
-                if (intsct.getSize() != termDom.getSize()){
-                  if (intsct == fd_singleton) {
-                    TaggedRef int_var = newSmallInt(intsct.singl());
-                    termVar->propagate(term, r_dom, pc_cv_unif);
-                    propagate(var, l_dom, pc_cv_unif);
-                    doBind(vPtr, int_var);
-                    am.doBindAndTrail(term, tPtr, int_var);
-                    if (disp) dispose();
-                  } else {
-                    setDom(intsct);
-                    termVar->propagate(term, r_dom, pc_cv_unif);
-                    propagate(var, l_dom, pc_cv_unif);
-                    am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
-                                           this, termVar, prop);
-                  }
-                } else {
-                  termVar->propagate(term, r_dom, pc_cv_unif);
-                  propagate(var, l_dom, pc_cv_unif);
-                  relinkSuspListTo(termVar, TRUE);
-                  doBind(vPtr, makeTaggedRef(tPtr));
-                  if (disp) dispose();
-                }
-                break;
-              }
-            case FALSE + 2 * TRUE: // var is global and term is local
-              {
-                if (intsct.getSize() != finiteDomain.getSize()){
-                  if(intsct == fd_singleton) {
-                    TaggedRef int_term = newSmallInt(intsct.singl());
-                    propagate(var, l_dom, pc_cv_unif);
-                    termVar->propagate(term, r_dom, pc_cv_unif);
-                    doBind(tPtr, int_term);
-                    am.doBindAndTrail(var, vPtr, int_term);
-                    if (disp) termVar->dispose();
-                  } else {
-                    termVar->setDom(intsct);
-                    propagate(var, l_dom, pc_cv_unif);
-                    termVar->propagate(term, r_dom, pc_cv_unif);
-                    am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
-                                           termVar, this, prop);
-                  }
-                } else {
-                  termVar->propagate(term, r_dom, pc_cv_unif);
-                  propagate(var, l_dom, pc_cv_unif);
-                  termVar->relinkSuspListTo(this, TRUE);
-                  doBind(tPtr, makeTaggedRef(vPtr));
-                  if (disp) termVar->dispose();
-                }
-                break;
-              }
-            case FALSE + 2 * FALSE: // var and term is global
-              {
-                if (intsct == fd_singleton){
-                  TaggedRef int_val = newSmallInt(intsct.singl());
-                  if (prop) {
-                    propagate(var, l_dom, pc_cv_unif);
-                    termVar->propagate(term, r_dom, pc_cv_unif);
-                  }
-                  am.doBindAndTrail(var, vPtr, int_val);
-                  am.doBindAndTrail(term, tPtr, int_val);
-                } else {
-                  GenCVariable * c_var = (intsct == fd_bool) ? new GenBoolVariable() : new GenFDVariable(intsct);
-                  TaggedRef * var_val = newTaggedCVar(c_var);
-                  if (prop) {
-                    propagate(var, l_dom, pc_cv_unif);
-                    termVar->propagate(term, r_dom, pc_cv_unif);
-                  }
-                  am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
-                                         c_var, this, prop);
-                  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
-                                         c_var, termVar, prop);
-                }
-                break;
-              }
-            default:
-              error("unexpected case in unifyFD");
               break;
-            } // switch
-            return TRUE;
+            }
+          case TRUE + 2 * FALSE: // var is local and term is global
+            {
+              if (intsct.getSize() != termDom.getSize()){
+                if (intsct == fd_singleton) {
+                  TaggedRef int_var = OZ_CToInt(intsct.singl());
+                  termVar->propagateUnify(term);
+                  propagateUnify(var);
+                  doBind(vPtr, int_var);
+                  am.doBindAndTrail(term, tPtr, int_var);
+                  if (disp) dispose();
+                } else {
+                  setDom(intsct);
+                  termVar->propagateUnify(term);
+                  propagateUnify(var);
+                  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
+                                         this, termVar, prop);
+                }
+              } else {
+                termVar->propagateUnify(term);
+                propagateUnify(var);
+                relinkSuspListTo(termVar, TRUE);
+                doBind(vPtr, makeTaggedRef(tPtr));
+                if (disp) dispose();
+              }
+              break;
+            }
+          case FALSE + 2 * TRUE: // var is global and term is local
+            {
+              if (intsct.getSize() != finiteDomain.getSize()){
+                if(intsct == fd_singleton) {
+                  TaggedRef int_term = OZ_CToInt(intsct.singl());
+                  propagateUnify(var);
+                  termVar->propagateUnify(term);
+                  doBind(tPtr, int_term);
+                  am.doBindAndTrail(var, vPtr, int_term);
+                  if (disp) termVar->dispose();
+                } else {
+                  termVar->setDom(intsct);
+                  propagateUnify(var);
+                  termVar->propagateUnify(term);
+                  am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
+                                         termVar, this, prop);
+                }
+              } else {
+                termVar->propagateUnify(term);
+                propagateUnify(var);
+                termVar->relinkSuspListTo(this, TRUE);
+                doBind(tPtr, makeTaggedRef(vPtr));
+                if (disp) termVar->dispose();
+              }
+              break;
+            }
+          case FALSE + 2 * FALSE: // var and term is global
+            {
+              if (intsct == fd_singleton){
+                TaggedRef int_val = OZ_CToInt(intsct.singl());
+                if (prop) {
+                  propagateUnify(var);
+                  termVar->propagateUnify(term);
+                }
+                am.doBindAndTrail(var, vPtr, int_val);
+                am.doBindAndTrail(term, tPtr, int_val);
+              } else {
+                GenCVariable * c_var =
+                  (intsct == fd_bool) ? new GenBoolVariable()
+                  : new GenFDVariable(intsct);
+                TaggedRef * var_val = newTaggedCVar(c_var);
+                if (prop) {
+                  propagateUnify(var);
+                  termVar->propagateUnify(term);
+                }
+                am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
+                                       c_var, this, prop);
+                am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
+                                       c_var, termVar, prop);
+              }
+              break;
+            }
+          default:
+            error("unexpected case in unifyFD");
+            break;
+          } // switch
+          return TRUE;
         }
       case BoolVariable:
         {
@@ -210,7 +202,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 Bool GenFDVariable::valid(TaggedRef val)
 {
   Assert(!isRef(val));
-  return (isSmallInt(val) && finiteDomain.isIn(smallIntValue(val)));
+  return (isSmallInt(val) && finiteDomain.isIn(OZ_intToC(val)));
 }
 
 

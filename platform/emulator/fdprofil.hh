@@ -16,10 +16,8 @@
 #pragma interface
 #endif
 
-#include <iostream.h>
-#include <limits.h>
+#include "oz.h"
 
-#include "tagged.hh"
 
 enum ProfileDataIndex1 {
   no_props1 = 0,
@@ -77,32 +75,16 @@ private:
   unsigned items1[no_high1];
   struct {unsigned no; unsigned size;} items2[no_high2];
 public:
-  void init(void) {
-    { for (int i = no_high1; i--; ) items1[i] = 0; }
-    { for (int i = no_high2; i--; ) items2[i].no = items2[i].size = 0; }
-  }
+  void init(void);
   ProfileData(void) { init(); }
 
-  void inc_item(int i) {
-    if (i < 0 || no_high1 <= i) error("index");
-    items1[i] += 1;
-  }
-  void inc_item(int i, int by) {
-    if (i < 0 || no_high2 <= i) error("index");
-    items2[i].size += by;
-    items2[i].no += 1;
-  }
+  void inc_item(int i);
+  void inc_item(int i, int by);
 
   void print(void);
 
-  static char * getPrintMsg1(int i) {
-    if (i < 0 || i >= no_high1) error("Index overflow.");
-    return print_msg1[i];
-  }
-  static char * getPrintMsg2(int i) {
-    if (i < 0 || i >= no_high2) error("Index overflow.");
-    return print_msg2[i];
-  }
+  static char * getPrintMsg1(int i);
+  static char * getPrintMsg2(int i);
 };
 
 
@@ -111,18 +93,12 @@ private:
   unsigned min2[no_high2], max2[no_high2];
 public:
   ProfileDataTotal(void) {init();}
-
-  void init(void) {
-    ProfileData::init();
-    for (int i = no_high2; i--; ) {
-      max2[i] = 0;
-      min2[i] = UINT_MAX;
-    }
-  }
-
+  void init(void);
   void printTotal(unsigned n);
   void operator += (ProfileData &y);
 };
+
+class Board;
 
 class ProfileList : public ProfileData {
 private:
@@ -130,13 +106,10 @@ private:
   int id;
   Board * board;
 public:
-  ProfileList(Board * b, int ident) : board(b), next(NULL), id(ident) {}
+  ProfileList(Board * b, int ident);
   void set_next(ProfileList * n) { next = n; }
   ProfileList * get_next(void) { return next; }
-  void print(void) {
-    cout << "Distribution " << id << " Board (" << board << "):" << endl;
-    ProfileData::print();
-  }
+  void print(void);
   int get_id(void) { return id; }
 
   Board * getBoard(void) { return board; }
@@ -152,52 +125,19 @@ private:
   ProfileList * curr;
   ProfileDataTotal total;
 public:
-  ProfileHost(void) : head(NULL), tail(NULL), curr(NULL) { add(); }
+  ProfileHost(void);
 
   void inc_item(int i) { tail->inc_item(i); }
   void inc_item(int i, int by) { tail->inc_item(i, by); }
 
   void reset(void) { curr = head; }
-  ProfileList * next(void) {
-    if (curr == tail)
-      return NULL;
-    return curr = curr ? curr->get_next() : head;
-  }
-  void print(void) {
-    if (curr)
-      curr->print();
-    else
-      cout << "curr == NULL" << endl;
-  }
-
+  ProfileList * next(void);
+  void print(void);
   void setBoard(Board * b) { tail->setBoard(b); }
 
-  void add(Board * bb = NULL) {
-    if (head) {
-      ProfileList * aux = new ProfileList(bb, tail->get_id() + 1);
-      tail->set_next(aux);
-      tail = aux;
-    } else {
-      head = tail = new ProfileList(NULL, 0);
-    }
-  }
-  void discard(void) {
-    ProfileList * aux = head;
-    while (aux) {
-      ProfileList * aux_next = aux->get_next();
-      delete(aux);
-      aux = aux_next;
-    }
-    head = tail = curr = NULL;
-    add();
-  }
-  void gc(void) {
-    ProfileList * aux = head;
-    while (aux) {
-      aux->gc();
-      aux = aux->get_next();
-    }
-  }
+  void add(Board * bb);
+  void discard(void);
+  void gc(void);
   void print_total_average(void);
   void printBoardStat(Board * b);
 };
@@ -217,16 +157,11 @@ class TaggedRefSet {
 private:
   static TaggedRefSet * root;
   TaggedRefSet * left, * right;
-  TaggedRef item;
+  OZ_Term item;
 public:
-  TaggedRefSet(void) {
-    if (root) {
-      cout << "Previous set was not dicarded." << endl;
-      discard();
-    }
-  }
-  TaggedRefSet(TaggedRef t) : item(t), left(NULL), right(NULL) {}
-  Bool add(TaggedRef t, TaggedRefSet * &st = root);
+  TaggedRefSet(void);
+  TaggedRefSet(OZ_Term t);
+  OZ_Boolean add(OZ_Term t, TaggedRefSet * &st = root);
   void discard(TaggedRefSet * st = root);
   void print(TaggedRefSet * st = root);
 };
