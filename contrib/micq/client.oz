@@ -121,7 +121,6 @@ define
       
       meth startgui(settings:S<=nil) H in
 	 H = {self load($)}
-	 {System.show H}
 	 try
 	    {StartGUI self.this @server @id H S}
 	 catch X then {Browse exception(startgui X)} end
