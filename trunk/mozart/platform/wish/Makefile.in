@@ -1,0 +1,40 @@
+OZHOME		= @prefix@
+PLATFORM	= @PLATFORM@
+INSTALL		= @INSTALL@
+INSTALL_BIN	= $(INSTALL) -m 555
+MKINSTALLDIRS	= @MKINSTALLDIRS@
+CC		= @CC@
+
+LIBS    	= @LIBS@
+CPPFLAGS	= @CPPFLAGS@
+CFLAGS		= @CFLAGS@
+LDFLAGS		= @LDFLAGS@
+RM		= @RM@ -f
+
+OZWISH		= oz.wish.bin
+SRCS		= ozMain.c ozAppInit.c
+OBJS		= ${SRCS:.c=.o}
+
+
+all: $(OZWISH)
+
+$(OZWISH): $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+clean:
+	$(RM) $(OBJS)
+
+veryclean: clean
+	$(RM) $(OZWISH)
+
+realclean: veryclean
+
+distclean: veryclean
+	$(RM) config.* Makefile
+
+install: $(OZHOME)/platform/$(PLATFORM) $(OZWISH)
+	$(INSTALL_BIN) $(OZWISH) $(OZHOME)/platform/$(PLATFORM)
+
+$(OZHOME)/platform/$(PLATFORM):
+	$(MKINSTALLDIRS) $@
+
