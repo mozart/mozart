@@ -37,6 +37,10 @@
 #include "board.hh"
 #include "am.hh"
 
+#ifdef OUTLINE
+#define inline
+#endif
+
 /* ------------------------------------------------------------------------
  * class SolveActor
  * ------------------------------------------------------------------------ */
@@ -123,5 +127,9 @@ void SolveActor::clearResult(Board* bb) {
 extern int existingLTQs;
 #endif
 
+
+#ifdef OUTLINE
+#undef inline
+#endif
 
 #endif  // __SOLVE_ICC_

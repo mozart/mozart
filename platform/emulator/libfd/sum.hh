@@ -48,6 +48,7 @@ private:
   }
 #endif
 
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -99,6 +100,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class LinNotEqPropagator : public Propagator_VI_VD_I {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -126,6 +128,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class LinLessEqPropagator : public Propagator_VI_VD_I {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -159,6 +162,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class NonLinEqPropagatorP : public Propagator_VI_VVD_I {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -173,6 +177,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class NonLinLessEqPropagatorP : public Propagator_VI_VVD_I {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:

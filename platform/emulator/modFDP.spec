@@ -1,3 +1,5 @@
+$module_init_fun_name = "fdp_init";
+
 %builtins_all =
 (
 

@@ -504,14 +504,14 @@ failure:
 //-----------------------------------------------------------------------------
 // static members
 
-OZ_PropagatorProfile NotEqOffPropagator::profile = "fdp_notEqOff";
-OZ_PropagatorProfile LessEqOffPropagator::profile = "fdp_lessEqOff";
-OZ_PropagatorProfile MinimumPropagator::profile = "fdp_minimum";
-OZ_PropagatorProfile MaximumPropagator::profile = "fdp_maximum";
-OZ_PropagatorProfile IntersectionPropagator::profile = "fdp_inter";
-OZ_PropagatorProfile UnionPropagator::profile = "fdp_union";
-OZ_PropagatorProfile DistinctPropagator::profile = "fdp_distinct";
-OZ_PropagatorProfile DistinctOffsetPropagator::profile = "fdp_distinctOffset";
-OZ_PropagatorProfile SubSetPropagator::profile  = "fdp_subset";
+OZ_PropagatorProfile NotEqOffPropagator::profile;
+OZ_PropagatorProfile LessEqOffPropagator::profile;
+OZ_PropagatorProfile MinimumPropagator::profile;
+OZ_PropagatorProfile MaximumPropagator::profile;
+OZ_PropagatorProfile IntersectionPropagator::profile;
+OZ_PropagatorProfile UnionPropagator::profile;
+OZ_PropagatorProfile DistinctPropagator::profile;
+OZ_PropagatorProfile DistinctOffsetPropagator::profile;
+OZ_PropagatorProfile SubSetPropagator::profile;
 
 //-----------------------------------------------------------------------------

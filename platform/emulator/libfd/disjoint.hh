@@ -32,6 +32,7 @@
 //-----------------------------------------------------------------------------
 
 class SchedCDPropagator : public Propagator_D_I_D_I {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -43,6 +44,7 @@ public:
 };
 
 class SchedCDBPropagator : public Propagator_D_I_D_I_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:

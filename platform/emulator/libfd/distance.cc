@@ -468,7 +468,7 @@ failure:
 //-----------------------------------------------------------------------------
 // static member
 
-OZ_PropagatorProfile DistancePropagatorLeq::profile = "fdp_distance";
-OZ_PropagatorProfile DistancePropagatorGeq::profile = "fdp_distance";
-OZ_PropagatorProfile DistancePropagatorEq::profile = "fdp_distance";
-OZ_PropagatorProfile DistancePropagatorNeq::profile = "fdp_distance";
+OZ_PropagatorProfile DistancePropagatorLeq::profile;
+OZ_PropagatorProfile DistancePropagatorGeq::profile;
+OZ_PropagatorProfile DistancePropagatorEq::profile;
+OZ_PropagatorProfile DistancePropagatorNeq::profile;

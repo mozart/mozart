@@ -29,6 +29,7 @@
 //-----------------------------------------------------------------------------
 
 class NotEqOffPropagator : public Propagator_D_D_I {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -42,6 +43,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class LessEqOffPropagator : public Propagator_D_D_I {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -55,6 +57,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class MinimumPropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -68,6 +71,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class MaximumPropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -81,6 +85,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class IntersectionPropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -94,6 +99,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class UnionPropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -107,6 +113,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class SubSetPropagator : public Propagator_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -120,6 +127,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class DistinctPropagator : public Propagator_VD {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -142,6 +150,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class DistinctOffsetPropagator : public Propagator_VD_VI {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:

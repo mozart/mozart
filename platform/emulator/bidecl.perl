@@ -81,6 +81,12 @@
 ### permits selective inclusion or exclusion through command line options
 ### -include or -exclude.
 ###
+### In case the variable `module_init_fun_name' is defined in the module
+### specification (e.g. `$module_init_fun_name = "fdp_init";' in modFDP.spec),
+### the appropriate call to this function will be included in the module
+### initialization function. That allows to initialize modules explicitely.
+
+
 
 sub INTERFACE {
 
@@ -93,7 +99,11 @@ sub INTERFACE {
         print "OZ_C_proc_proto($bi);\n";
     }
 
-    print "\n/* INTERFACE */\n";
+    $init_fun_name = $_[1];
+
+    if ($init_fun_name) {
+        print ("\nvoid $init_fun_name(void);\n\n");
+    }
 
     $mod_name = $_[0];
 
@@ -101,7 +111,10 @@ sub INTERFACE {
     $mod_name =~ s/^mod//o;
     $mod_name =~ s/\.spec//o;
 
-    print("OZ_C_proc_interface mod_int_$mod_name\[\] = \{\n");
+    print ("extern \"C\"\n\{\n");
+    print ("  OZ_C_proc_interface * mod_int_$mod_name(void)\n");
+    print ("  {\n");
+    print ("    static OZ_C_proc_interface i_table\[\] = \{\n");
 
     while (($key,$info) = each %$builtins) {
         next unless &included($info);
@@ -114,12 +127,21 @@ sub INTERFACE {
         foreach $macro (@ifdef)  { print "#ifdef $macro\n"; }
         foreach $macro (@ifddef) { print "#ifndef $macro\n"; }
         $BI = $info->{bi} unless $BI;
-        print "  {\"$key\",\t$inArity,\t$outArity,$BI},\n";
+        print "      {\"$key\",\t$inArity,\t$outArity,$BI},\n";
         foreach $macro (@ifddef) { print "#endif\n"; }
         foreach $macro (@ifdef)  { print "#endif\n"; }
     }
 
-    print "  {0,0,0,0}\n\};\n\n"
+    print ("      {0,0,0,0}\n");
+    print ("    \};\n\n");
+
+    if ($init_fun_name) {
+        print ("    $init_fun_name();\n\n");
+    }
+
+    print ("    return i_table;\n");
+    print ("  \} /* mod_int_$mod_name(void) */\n");
+    print ("\} /* extern \"C\" */\n\n");
 
 }
 
@@ -231,8 +253,9 @@ $includedefault = 0 if @include!=0;
 foreach $file (@files) {
     require $file;
     $builtins = { %builtins_all };
+    $init_fun_name = $module_init_fun_name;
 
-    if ($choice eq 'interface' )    { &INTERFACE($file); }
+    if ($choice eq 'interface' )    { &INTERFACE($file, $init_fun_name); }
     elsif ($choice eq 'oztable')    { &OZTABLE; }
     else { die "must specify one of: -interface -oztable"; }
 }

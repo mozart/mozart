@@ -629,6 +629,10 @@ int min(int a, int b) { return a < b ? a : b; }
 inline
 int max(int a, int b) { return a > b ? a : b; }
 
+#define INIT_FUNC(F_NAME) void F_NAME(void)
+
+INIT_FUNC(fsp_init);
+
 #endif /* __FSAUX_HH__ */
 
 //-----------------------------------------------------------------------------

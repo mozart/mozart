@@ -224,7 +224,7 @@ void TaskIntervalsProof::updateHeapRefs(OZ_Boolean duplicate)
 // SPAWNER
 //////////
 
-OZ_PropagatorProfile TaskIntervalsProof::profile = "sched_taskIntervalsProof";
+OZ_PropagatorProfile TaskIntervalsProof::profile;
 
 
 //////////

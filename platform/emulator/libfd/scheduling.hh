@@ -24,14 +24,15 @@
  *
  */
 
-#ifndef __SCHED_HH__
-#define __SCHED_HH__
+#ifndef __SCHEDULING_HH__
+#define __SCHEDULING_HH__
 
 #include "std.hh"
 
 //-----------------------------------------------------------------------------
 
 class SchedCardPropagator : public Propagator_D_I_D_I {
+  friend INIT_FUNC(sched_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -46,6 +47,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class CPIteratePropagator : public Propagator_VD_VI {
+  friend INIT_FUNC(sched_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -68,6 +70,7 @@ public:
 
 //-----------------------------------------------------------------------------
 class CPIteratePropagatorCap : public Propagator_VD_VI_VI_I {
+  friend INIT_FUNC(sched_init);
 private:
   // signals whether edge finding is used (1) or not (0)
   int reg_flag;
@@ -95,6 +98,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class CPIteratePropagatorCapUp : public Propagator_VD_VI_VI_I {
+  friend INIT_FUNC(sched_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -121,6 +125,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class DisjunctivePropagator : public Propagator_VD_VI {
+  friend INIT_FUNC(sched_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -143,4 +148,4 @@ public:
 
 //-----------------------------------------------------------------------------
 
-#endif // __SCHED_HH__
+#endif // __SCHEDULING_HH__

@@ -588,12 +588,12 @@ PartitionReifiedPropagator::PartitionReifiedPropagator(OZ_Term vs, OZ_Term s, OZ
 }
 
 
-OZ_PropagatorProfile IsInRPropagator::profile = "fsp_isInR";
-OZ_PropagatorProfile BoundsPropagator::profile = "fsp_bounds";
-OZ_PropagatorProfile BoundsNPropagator::profile = "fsp_boundsN";
-OZ_PropagatorProfile PartitionReifiedPropagator::profile = "fsp_partitionReified";
+OZ_PropagatorProfile IsInRPropagator::profile;
+OZ_PropagatorProfile BoundsPropagator::profile;
+OZ_PropagatorProfile BoundsNPropagator::profile;
+OZ_PropagatorProfile PartitionReifiedPropagator::profile;
+OZ_PropagatorProfile EqualRPropagator::profile;
+OZ_PropagatorProfile IncludeRPropagator::profile;
 
-OZ_PropagatorProfile EqualRPropagator::profile = "fsp_equalR";
-OZ_PropagatorProfile IncludeRPropagator::profile = "fsp_includeR";
 //-----------------------------------------------------------------------------
 // eof

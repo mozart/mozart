@@ -1,9 +1,7 @@
+$module_init_fun_name = "fsp_init";
+
 %builtins_all =
 (
-    'init'              => { in  => [],
-                             out => ['+atom'],
-                             BI  => fsp_init},
-
     'isIn'              => { in  => ['int','fset','bool'],
                              out => [],
                              bi  => fsp_isIn},

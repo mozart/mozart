@@ -318,7 +318,10 @@ private:
 
 public:
   OZ_PropagatorProfile(void) {}
+
   OZ_PropagatorProfile(char * propagator_name);
+
+  void operator = (char * propagator_name);
 
   char * getPropagatorName()      { return _propagator_name; }
   void incSamples(void)           { _samples++; }

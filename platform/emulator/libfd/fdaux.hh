@@ -31,7 +31,7 @@
 #include <malloc.h>
 #include <string.h>
 
-#include "oz_cpi.hh" // TMUELLER
+#include "oz_cpi.hh"
 
 //-----------------------------------------------------------------------------
 // debug macros
@@ -533,6 +533,11 @@ public:
 /* cannot handle sometimes arrays of size 0 correctly */
 #define DECL_DYN_ARRAY(Type,Var,Size) \
 _DECL_DYN_ARRAY(Type,Var,Size==0?1:Size)
+
+#define INIT_FUNC(F_NAME) void F_NAME(void)
+
+INIT_FUNC(fdp_init);
+INIT_FUNC(sched_init);
 
 //-----------------------------------------------------------------------------
 #endif

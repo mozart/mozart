@@ -78,4 +78,4 @@ failure:
   return FAILED;
 }
 
-OZ_PropagatorProfile IsInPropagator::profile = "fsp_isIn";
+OZ_PropagatorProfile IsInPropagator::profile;

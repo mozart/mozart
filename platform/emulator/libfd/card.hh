@@ -32,6 +32,7 @@
 //-----------------------------------------------------------------------------
 
 class LinEqBPropagator : public Propagator_VI_VD_I_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -47,6 +48,7 @@ public:
 };
 
 class LinNotEqBPropagator : public Propagator_VI_VD_I_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -62,6 +64,7 @@ public:
 };
 
 class LinLessEqBPropagator : public Propagator_VI_VD_I_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -223,6 +226,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class InBPropagator : public  Propagator_D_FD_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -236,6 +240,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class CardBPropagator : public Propagator_VD_D_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:

@@ -349,9 +349,9 @@ failure:
   return P.fail();
 }
 
-OZ_PropagatorProfile FSetIntersectionPropagator::profile = "fsp_intersection";
-OZ_PropagatorProfile FSetUnionPropagator::profile = "fsp_union";
-OZ_PropagatorProfile FSetSubsumePropagator::profile = "fsp_subsume";
-OZ_PropagatorProfile FSetDisjointPropagator::profile = "fsp_disjoint";
-OZ_PropagatorProfile FSetDistinctPropagator::profile = "fsp_distinct";
-OZ_PropagatorProfile FSetDiffPropagator::profile = "fsp_diff";
+OZ_PropagatorProfile FSetIntersectionPropagator::profile;
+OZ_PropagatorProfile FSetUnionPropagator::profile;
+OZ_PropagatorProfile FSetSubsumePropagator::profile;
+OZ_PropagatorProfile FSetDisjointPropagator::profile;
+OZ_PropagatorProfile FSetDistinctPropagator::profile;
+OZ_PropagatorProfile FSetDiffPropagator::profile;

@@ -36,9 +36,7 @@
 #include "variable.hh"
 
 #ifdef OUTLINE
-#define inline
 #include "solve.icc"
-#undef inline
 #endif
 
 /*

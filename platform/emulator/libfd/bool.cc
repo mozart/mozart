@@ -409,9 +409,9 @@ failure:
 // static member
 
 
-OZ_PropagatorProfile ConjunctionPropagator::profile = "fdp_conj";
-OZ_PropagatorProfile DisjunctionPropagator::profile = "fdp_disj";
-OZ_PropagatorProfile XDisjunctionPropagator::profile = "fdp_exor";
-OZ_PropagatorProfile ImplicationPropagator::profile = "fdp_impl";
-OZ_PropagatorProfile EquivalencePropagator::profile = "fdp_equi";
-OZ_PropagatorProfile NegationPropagator::profile = "fdp_nega";
+OZ_PropagatorProfile ConjunctionPropagator::profile;
+OZ_PropagatorProfile DisjunctionPropagator::profile;
+OZ_PropagatorProfile XDisjunctionPropagator::profile;
+OZ_PropagatorProfile ImplicationPropagator::profile;
+OZ_PropagatorProfile EquivalencePropagator::profile;
+OZ_PropagatorProfile NegationPropagator::profile;

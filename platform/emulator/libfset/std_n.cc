@@ -33,6 +33,23 @@
 
 //-----------------------------------------------------------------------------
 
+#ifdef EXPERIMENT
+#include <stdlib.h>
+int sortVarsOrder(const void * _a, const void  * _b) {
+  OZ_FSetVar a, b;
+  a.ask(* (const OZ_Term *) _a);
+  b.ask(* (const OZ_Term *) _b);
+  return a->getKnownNotIn() -  b->getKnownNotIn();
+}
+
+void sortVars(FSetUnionNPropagator  &p)
+{
+  qsort(p._vs, p._vs_size, sizeof(OZ_Term), sortVarsOrder);
+}
+#endif
+
+//-----------------------------------------------------------------------------
+
 OZ_C_proc_begin(fsp_disjointN, 1)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSET);
@@ -432,9 +449,9 @@ failure:
 
 }
 
-OZ_PropagatorProfile FSetUnionNPropagator::profile    = "fsp_unionN";
-OZ_PropagatorProfile FSetDisjointNPropagator::profile = "fsp_disjointN";
-OZ_PropagatorProfile FSetPartitionPropagator::profile = "fsp_partition";
+OZ_PropagatorProfile FSetUnionNPropagator::profile;
+OZ_PropagatorProfile FSetDisjointNPropagator::profile;
+OZ_PropagatorProfile FSetPartitionPropagator::profile;
 
 // eof
 //-----------------------------------------------------------------------------

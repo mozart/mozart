@@ -1962,8 +1962,8 @@ failure:
 //-----------------------------------------------------------------------------
 // static member
 
-OZ_PropagatorProfile SchedCardPropagator::profile = "sched_disjoint_card";
-OZ_PropagatorProfile CPIteratePropagator::profile = "sched_cpIterate";
-OZ_PropagatorProfile CPIteratePropagatorCap::profile = "sched_cpIterateCap";
-OZ_PropagatorProfile CPIteratePropagatorCapUp::profile = "sched_cpIterateCapUp";
-OZ_PropagatorProfile DisjunctivePropagator::profile = "sched_disjunctive";
+OZ_PropagatorProfile SchedCardPropagator::profile;
+OZ_PropagatorProfile CPIteratePropagator::profile;
+OZ_PropagatorProfile CPIteratePropagatorCap::profile;
+OZ_PropagatorProfile CPIteratePropagatorCapUp::profile;
+OZ_PropagatorProfile DisjunctivePropagator::profile;

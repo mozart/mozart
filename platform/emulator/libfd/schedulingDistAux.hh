@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef __SCHED_HH__
-#define __SCHED_HH__
+#ifndef __SCHEDULING_DIST_AUX_HH__
+#define __SCHEDULING_DIST_AUX_HH__
 
 #include "std.hh"
 
@@ -33,6 +33,7 @@
 // FIrsts and Lasts
 //////////
 class FirstsLasts : public OZ_Propagator {
+  friend INIT_FUNC(sched_init);
 private:
 
   // The finite domains
@@ -75,4 +76,4 @@ public:
 
 
 
-#endif // __SCHED_HH__
+#endif // __SCHEDULING_DIST_AUX_HH__

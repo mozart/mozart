@@ -642,19 +642,19 @@ do_leave:
 }
 
 //-----------------------------------------------------------------------------
-OZ_PropagatorProfile isumEqProp::profile = "fdp_dsum";
-OZ_PropagatorProfile isumNEqProp::profile = "fdp_dsum";
-OZ_PropagatorProfile isumLeqProp::profile = "fdp_dsum";
-OZ_PropagatorProfile isumLtProp::profile = "fdp_dsum";
-OZ_PropagatorProfile isumGeqProp::profile = "fdp_dsum";
-OZ_PropagatorProfile isumGtProp::profile = "fdp_dsum";
+OZ_PropagatorProfile isumEqProp::profile;
+OZ_PropagatorProfile isumNEqProp::profile;
+OZ_PropagatorProfile isumLeqProp::profile;
+OZ_PropagatorProfile isumLtProp::profile;
+OZ_PropagatorProfile isumGeqProp::profile;
+OZ_PropagatorProfile isumGtProp::profile;
 
-OZ_PropagatorProfile isumcEqProp::profile = "fdp_dsumC";
-OZ_PropagatorProfile isumcNEqProp::profile = "fdp_dsumC";
-OZ_PropagatorProfile isumcLeqProp::profile = "fdp_dsumC";
-OZ_PropagatorProfile isumcLtProp::profile = "fdp_dsumC";
-OZ_PropagatorProfile isumcGeqProp::profile = "fdp_dsumC";
-OZ_PropagatorProfile isumcGtProp::profile = "fdp_dsumC";
+OZ_PropagatorProfile isumcEqProp::profile;
+OZ_PropagatorProfile isumcNEqProp::profile;
+OZ_PropagatorProfile isumcLeqProp::profile;
+OZ_PropagatorProfile isumcLtProp::profile;
+OZ_PropagatorProfile isumcGeqProp::profile;
+OZ_PropagatorProfile isumcGtProp::profile;
 
 //-----------------------------------------------------------------------------
 // eof

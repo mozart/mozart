@@ -437,5 +437,5 @@ failure:
 //-----------------------------------------------------------------------------
 // static member
 
-OZ_PropagatorProfile DisjunctivePropagatorStream::profile = "sched_disjunctiveStream";
-OZ_PropagatorProfile DistinctPropagatorStream::profile = "fdp_distinctStream";
+OZ_PropagatorProfile DisjunctivePropagatorStream::profile;
+OZ_PropagatorProfile DistinctPropagatorStream::profile;

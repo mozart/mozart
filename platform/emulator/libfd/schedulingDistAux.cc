@@ -81,7 +81,7 @@ static int CompareLasts(const void *x, const void *y)
 //////////
 
 FirstsLasts::FirstsLasts(OZ_Term tasks, OZ_Term start,
-                         OZ_Term durs, OZ_Term st, int flag)
+                               OZ_Term durs, OZ_Term st, int flag)
 {
   stream = st;
   int i,j;
@@ -166,7 +166,7 @@ OZ_C_proc_begin(sched_firstsLasts, 5)
   OZ_EXPECT(pe, 4, expectInt);
 
   return pe.impose(new FirstsLasts(OZ_args[0], OZ_args[1], OZ_args[2],
-                                   OZ_args[3], OZ_intToC(OZ_args[4])));
+                                      OZ_args[3], OZ_intToC(OZ_args[4])));
 }
 OZ_C_proc_end
 
@@ -193,7 +193,7 @@ void FirstsLasts::updateHeapRefs(OZ_Boolean duplicate)
 // SPAWNER
 //////////
 
-OZ_PropagatorProfile FirstsLasts::profile = "sched_firstsLasts";
+OZ_PropagatorProfile FirstsLasts::profile;
 
 
 //////////
