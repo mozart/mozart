@@ -117,18 +117,17 @@ WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
   sprintf(buffer,
 	  "%s/bin/runemacs.exe -L \"%s/share/elisp\" -l oz.elc -f run-oz",
 	  emacshome,ozhome);
-#endif
-#if defined(OZENGINE) || defined(OZENGINEW)
-#ifdef OZENGINEW
+#else
+# ifdef OZENGINEW
   int argc    = _argc;
   char **argv = _argv;
-  console = DETACHED_PROCESS;
-#endif
+  console = DETACHED_PROCESS | CREATE_SUSPENDED;
+# endif
   if (argc < 2) {
     panic(0,"Usage: ozengine"
-#ifdef OZENGINEW
+# ifdef OZENGINEW
 	  "w"
-#endif
+# endif
 	  " url <args>");
   }
   char *ozemulator = getEmulator(ozhome);
@@ -150,40 +149,46 @@ WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
   HANDLE rh,wh;
   {
     SECURITY_ATTRIBUTES sa;
+    ZeroMemory(&sa,sizeof(sa));
     sa.nLength = sizeof(sa);
     sa.lpSecurityDescriptor = NULL;
     sa.bInheritHandle = TRUE;
     if (CreatePipe(&rh,&wh,&sa,0) == FALSE) {
       panic(1,"Could not create pipe.\n");
     }
+    // Is it OK not to initialize hStdInput?
+    // Is it OK to pass the same handle twice?
     si.dwFlags |= STARTF_USESTDHANDLES;
     si.hStdOutput = wh;
     si.hStdError  = wh;
   }
 #endif
 
+  // Why make the pi.hProcess handle inheritable?
   SECURITY_ATTRIBUTES sa;
+  ZeroMemory(&sa,sizeof(sa));
   sa.nLength = sizeof(sa);
   sa.lpSecurityDescriptor = NULL;
   sa.bInheritHandle = TRUE;
-  PROCESS_INFORMATION pinf;
+  PROCESS_INFORMATION pi;
   BOOL ret = CreateProcess(NULL,buffer,&sa,NULL,TRUE,
-			   console,NULL,NULL,&si,&pinf);
+			   console,NULL,NULL,&si,&pi);
 
-  if (ret==FALSE) {
+  if (ret == FALSE) {
     panic(1,"Cannot run '%s'.",buffer);
   }
 
 #ifdef OZENGINEW
   DWORD thrid;
   CreateThread(0,10000,&readerThread,rh,0,&thrid);
+  ResumeThread(pi.hThread);
 #endif
 
-  WaitForSingleObject(pinf.hProcess,INFINITE);
+  WaitForSingleObject(pi.hProcess,INFINITE);
 
 #ifdef OZENGINEW
   DWORD code;
-  if (GetExitCodeProcess(pinf.hProcess,&code) == TRUE && code !=0) {
+  if (GetExitCodeProcess(pi.hProcess,&code) != FALSE && code != 0) {
     sprintf(buffer,"Emulator exited abnormally with status: %d",code);
     EnterCriticalSection(&lock);
     MessageBox(NULL, buffer, "Emulator died:",
