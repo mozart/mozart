@@ -37,10 +37,12 @@ Makefile: $(SRCDIR)/Makefile.in ../config.status
         cd .. && ./config.status
 
 $(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
+        rm -f latex.db && \
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
         --type=html-stylesheets --stylesheet=ozdoc.css \
         --bib-path=$(SRCDIR):$(SRCTOP)/doc \
         --bst-path=$(SRCTOP)/doc/utilities \
+        --latexdb=latex.db \
         --xrefdb=../xref.db --xrefdir=$(WHAT) && \
         cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
         for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)) NONE; \
