@@ -1,3 +1,4 @@
+VPATH		= @srcdir@
 OZHOME		= @prefix@
 SRCDIR		= @srcdir@
 SRCDIRA		= @srcdira@
@@ -27,6 +28,9 @@ OZFLAGS		=
 OZBATCH		= @OZBATCH@
 OZMAINIT	= Init.ozc
 export OZMAINIT
+
+OZ_EMULATOR_DIR = @OZ_EMULATOR_DIR@
+
 OZPATH		= .:compiler:ozcar:$(SRCDIR)
 export OZPATH
 OZ_PI		= 1
@@ -353,3 +357,8 @@ tags:
 	--regex='/[ \t]*class[ \t]+!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
 	--regex='/[ \t]*meth\([ \t]+\|[ \t]*![ \t]*\)\([A-Za-z0-9][A-Za-z0-9_]*\|`.+`|'\''.+'\''\)/\2/' \
 	$(ALLSRCS)
+
+bootstrap: ${OZMA_LIB}
+	make Init.ozc all \
+	 OZBATCH="OZ_EMULATOR_DIR=$(OZ_EMULATOR_DIR) $(SRCDIR)/ozbatch.sh" 
+
