@@ -3977,7 +3977,11 @@ OZ_BI_define(BIconstraints,1,1)
    */
 OZ_Return printInline(TaggedRef term)
 {
-  oz_printStream(term,cout,ozconf.printDepth,ozconf.printWidth);
+  //  oz_printStream(term,cout,ozconf.printDepth,ozconf.printWidth);
+  char *s = OZ_toC(term,ozconf.printDepth,ozconf.printWidth);
+  if (ossafewrite(STDOUT_FILENO,s,strlen(s)) < 0)
+    return oz_raise(E_ERROR,E_KERNEL,"writeFailed",1,OZ_unixError(ossockerrno()));
+
   return PROCEED;
 }
 
