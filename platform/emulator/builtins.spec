@@ -1582,48 +1582,6 @@ $cmode='stat';
                              ifdef  => MODULES_LINK_STATIC,
                              native => true},
 
-    ###* Promise
-
-    'Promise.new'       => { in  => [],
-                             out => ['value'],
-                             BI  => BIPromiseNew,
-                             module=>'promise',
-                             native => false},
-
-    'Promise.is'        => { in  => ['value'],
-                             out => ['+bool'],
-                             BI  => BIPromiseIs,
-                             module=>'promise',
-                             native => false},
-    'Promise.assign'    => { in  => ['value','value'],
-                             out => [],
-                             BI  => BIPromiseAssign,
-                             module=>'promise',
-                             native => false},
-    'Promise.access'    => { in  => ['value'],
-                             out => ['value'],
-                             BI  => BIPromiseAccess,
-                             module=>'promise',
-                             native => false},
-    'Promise.waitRequest'=> { in  => ['value'],
-                             out => [],
-                             BI  => BIPromiseWaitRequest,
-                             module=>'promise',
-                             native => false},
-    ###* Lazy
-
-    'Lazy.new'          => { in  => ['value','value'],
-                             out => [],
-                             BI  => BILazyNew,
-                             module=>'lazy',
-                             native => false},
-
-    'Lazy.is'           => { in  => ['value'],
-                             out => ['+bool'],
-                             BI  => BILazyIs,
-                             module=>'lazy',
-                             native => false},
-
     ###* ByNeed
 
     'ByNeed'            => { in  => ['value'],
