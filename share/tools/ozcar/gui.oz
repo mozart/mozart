@@ -369,6 +369,10 @@ class Gui from Menu Dialog
                               end)}
    end
 
+   meth rawStatus(S)
+      {self.StatusLabel tk(conf text:S)}
+   end
+
    meth action(A)
       T = @currentThread
       I
