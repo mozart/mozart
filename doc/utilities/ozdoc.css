@@ -60,6 +60,10 @@ SPAN.type         { color: #228B22; }
 SPAN.variablename { color: #B8860B; }
 SPAN.reference    { color: #5F9EA0; }
 
+TH {
+  text-align: left;
+}
+
 .margin {
   position: absolute;
   left: 10px;
