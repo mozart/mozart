@@ -209,8 +209,8 @@ Bool GenFSetVariable::unifyFSet(OZ_Term * vptr, OZ_Term var,
               if (new_fset.isValue()){
                 OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
                 if (scp==0) {
-                  propagateUnify(var);
-                  term_var->propagateUnify(term);
+                  if (var_is_constrained) propagateUnify(var);
+                  if (term_is_constrained) term_var->propagateUnify(term);
                 }
                 am.doBindAndTrail(var, vptr, new_fset_var);
                 am.doBindAndTrail(term, tptr, new_fset_var);
@@ -218,8 +218,8 @@ Bool GenFSetVariable::unifyFSet(OZ_Term * vptr, OZ_Term var,
                 GenCVariable *c_var = new GenFSetVariable(new_fset);
                 TaggedRef * var_val = newTaggedCVar(c_var);
                 if (scp==0) {
-                  propagateUnify(var);
-                  term_var->propagateUnify(term);
+                  if (var_is_constrained) propagateUnify(var);
+                  if (term_is_constrained) term_var->propagateUnify(term);
                 }
                 am.doBindAndTrailAndIP(var, vptr, makeTaggedRef(var_val),
                                        c_var, this);
