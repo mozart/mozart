@@ -61,6 +61,7 @@ public:
   ConsList &getScriptRef();
   Board *getBoard();
   Board *getBoardDeref();
+  Board *gcGetBoardDeref();
   int getSuspCount(void);
   Bool hasSuspension();
   Bool isAsk();
