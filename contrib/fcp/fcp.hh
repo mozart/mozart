@@ -35,7 +35,7 @@
 extern Propagator * imposed_propagator;
 extern int is_active;
 inline
-__first_class_prop(OZ_Return ret, OZ_Term fcp) {
+OZ_Return __first_class_prop(OZ_Return ret, OZ_Term fcp) {
   if (ret == OZ_FALSE) {
     return OZ_FALSE;
   } else {
