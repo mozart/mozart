@@ -693,7 +693,7 @@ inline Bool refsArrayIsMarked(RefsArray r)
 
 inline void refsArrayMark(RefsArray r, void *ptr)
 {
-  storeForward(&r[-1],(void*)((int)ptr|GCBIT),NO);
+  storeForward((int *) &r[-1],(void*)((int)ptr|GCBIT),NO);
 }
 
 inline RefsArray refsArrayUnmark(RefsArray r)
@@ -819,7 +819,7 @@ STuple *STuple::gc()
   STuple *ret = (STuple*) gcRealloc(this,len);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_STUPLE);
-  storeForward(&label, ret);
+  storeForward((int *) &label, ret);
   gcTaggedBlock(getRef(),ret->getRef(),getSize());
   return ret;
 }
@@ -837,7 +837,7 @@ LTuple *LTuple::gc()
 
   gcTaggedBlock(args,ret->args,2);
 
-  storeForward(&args[0], ret);
+  storeForward((int *) &args[0], ret);
   return ret;
 }
 
@@ -1299,7 +1299,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
 
       DebugGCT(toTerm = fromTerm); // otherwise 'makeTaggedRef' complains
       if (updateVar(auxTerm)) {
-        storeForward(&fromTerm, (void *)makeTaggedRef(&toTerm));
+        storeForward((int *) &fromTerm, (void *)makeTaggedRef(&toTerm));
 
         // updating toTerm AFTER fromTerm:
         toTerm = gcVariable(auxTerm);
@@ -1496,7 +1496,7 @@ void processUpdateStack(void)
           error("processUpdateStack: variable expected here.");
         } // switch
         INFROMSPACE(auxTermPtr);
-        storeForward(auxTermPtr,(void*)*Term);
+        storeForward((int *) auxTermPtr,(void*)*Term);
       }
     } // while
 
