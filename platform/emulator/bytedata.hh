@@ -117,8 +117,8 @@ public:
   virtual void sCloneRecurseV(void) {}
   virtual void gCollectRecurseV(void) {}
   BitString operator=(const BitString&);
-  BitString() : OZ_Extension() {}
-  BitString(int w) : OZ_Extension(), BitData(w) {}
+  BitString() : OZ_Extension(oz_rootBoard()) {}
+  BitString(int w) : OZ_Extension(oz_rootBoard()), BitData(w) {}
   BitString *clone();
 };
 
@@ -207,8 +207,8 @@ public:
   virtual void sCloneRecurseV(void) {}
   virtual void gCollectRecurseV(void) {}
   ByteString operator=(const ByteString&);
-  ByteString() : OZ_Extension() {}
-  ByteString(int w) : OZ_Extension(), ByteData(w) {}
+  ByteString() : OZ_Extension(oz_rootBoard()) {}
+  ByteString(int w) : OZ_Extension(oz_rootBoard()), ByteData(w) {}
   ByteString *clone();
 };
 
