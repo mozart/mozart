@@ -2763,7 +2763,6 @@ tcpPreFailure:
 
 static int tcpReadHandler(int fd,void *r0)
 {
-  printf("tcpReadH\n");
   PD((TCP,"tcpReadHandler Invoked"));
   ReadConnection *r = (ReadConnection*) r0;
 
@@ -3116,7 +3115,6 @@ tcpConPermLost:
 /************************************************************/
 
 int tcpWriteHandler(int fd,void *r0){
-  printf("tcpWriteH\n");
   WriteConnection *r=(WriteConnection *)r0;
   Message *m;
   ipReturn ret;
@@ -3199,7 +3197,6 @@ writeHerrorBlock:
 
 
 static int tcpCloseHandler(int fd,void *r0){
-  printf("tcpCloseH\n");
   WriteConnection *r=(WriteConnection *)r0;
   BYTE msg;
   ipReturn ret;
