@@ -280,11 +280,6 @@ void AM::init(int argc,char **argv)
 
   initBuiltins();
 
-#ifdef WINDOWS
-  extern initWinSockets();
-  initWinSockets();
-#endif
-
   initVirtualProperties();
 
   extern void initTagged();
