@@ -221,7 +221,7 @@ FUNCTION {format.names}
   s num.names$ 'numnames :=
   numnames 'namesleft :=
     { namesleft #0 > }
-    { s nameptr "{ff~}{vv~}{ll}{, jj}" format.name$ 't :=
+    { s nameptr "{ff{&nbsp;} }{vv{&nbsp;} }{ll}{, jj}" format.name$ 't :=
       nameptr #1 >
         { namesleft #1 >
             { ", " * t * }
@@ -263,38 +263,29 @@ FUNCTION {format.editors}
   if$
 }
 
+FUNCTION {cleanup.braces}
+{ 't :=
+  ""
+    { t empty$ not }
+    { t #1 #1 substring$ duplicate$ "{" = swap$ "}" = or
+        {}
+        { t #1 #1 substring$ * }
+      if$
+      t #2 global.max$ substring$ 't :=
+    }
+  while$
+}
+
 FUNCTION {format.title}
 { title empty$
     { "" }
-    { title "t" change.case$ }
+    { title "t" change.case$ cleanup.braces }
   if$
 }
 
 %--**
 FUNCTION {n.dashify}
-{ 't :=
-  ""
-    { t empty$ not }
-    { t #1 #1 substring$ "-" =
-        { t #1 #2 substring$ "--" = not
-            { "--" *
-              t #2 global.max$ substring$ 't :=
-            }
-            {   { t #1 #1 substring$ "-" = }
-                { "-" *
-                  t #2 global.max$ substring$ 't :=
-                }
-              while$
-            }
-          if$
-        }
-        { t #1 #1 substring$ *
-          t #2 global.max$ substring$ 't :=
-        }
-      if$
-    }
-  while$
-}
+{}
 
 FUNCTION {format.date}
 { year empty$
@@ -314,7 +305,7 @@ FUNCTION {format.date}
 }
 
 FUNCTION {format.btitle}
-{ title emphasize
+{ title cleanup.braces emphasize
 }
 
 FUNCTION {tie.or.space.connect}
@@ -369,8 +360,8 @@ FUNCTION {format.edition}
 { edition empty$
     { "" }
     { output.state mid.sentence =
-        { edition "l" change.case$ " edition" * }
-        { edition "t" change.case$ " edition" * }
+        { edition "l" change.case$ cleanup.braces " edition" * }
+        { edition "t" change.case$ cleanup.braces " edition" * }
       if$
     }
   if$
@@ -435,7 +426,7 @@ FUNCTION {format.chapter.pages}
     'format.pages
     { type empty$
         { "chapter" }
-        { type "l" change.case$ }
+        { type "l" change.case$ cleanup.braces }
       if$
       chapter tie.or.space.connect
       pages empty$
@@ -471,7 +462,7 @@ FUNCTION {format.thesis.type}
 { type empty$
     'skip$
     { pop$
-      type "t" change.case$
+      type "t" change.case$ cleanup.braces
     }
   if$
 }
@@ -482,7 +473,7 @@ FUNCTION {format.tr.number}
     'type
   if$
   number empty$
-    { "t" change.case$ }
+    { "t" change.case$ cleanup.braces }
     { number tie.or.space.connect }
   if$
 }
@@ -503,7 +494,7 @@ FUNCTION {format.article.crossref}
 }
 
 FUNCTION {format.crossref.editor}
-{ editor #1 "{vv~}{ll}" format.name$
+{ editor #1 "{vv{&nbsp;} }{ll}" format.name$
   editor num.names$ duplicate$
   #2 >
     { pop$ " et&nbsp;al." * }
@@ -511,7 +502,7 @@ FUNCTION {format.crossref.editor}
         'skip$
         { editor #2 "{ff }{vv }{ll}{ jj}" format.name$ "others" =
             { " et&nbsp;al." * }
-            { " and " * editor #2 "{vv~}{ll}" format.name$ * }
+            { " and " * editor #2 "{vv{&nbsp;} }{ll}" format.name$ * }
           if$
         }
       if$
@@ -545,6 +536,7 @@ FUNCTION {format.book.crossref}
     }
     { format.crossref.editor * }
   if$
+%--**
   " \cite{" * crossref * "}" *
 }
 
@@ -942,7 +934,7 @@ READ
 
 FUNCTION {sortify}
 { purify$
-  "l" change.case$
+  "l" change.case$ cleanup.braces
 }
 
 INTEGERS { len }
