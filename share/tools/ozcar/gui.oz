@@ -126,6 +126,11 @@ in
 	 LastClicked : unit
 
       meth resetLastSelectedFrame
+	 LSF = @LastSelectedFrame
+      in
+	 case LSF > 0 then
+	    Gui,DeactivateLine(LSF)
+	 else skip end
 	 LastSelectedFrame <- 0
       end
 
@@ -353,6 +358,8 @@ in
       end
 
       meth DoPrintEnv(Widget Vars SV)
+	 ThisThread = {Thread.this}
+      in
 	 {ForAll Vars
 	  proc{$ V}
 	     Name # Value = V
@@ -375,6 +382,11 @@ in
 		{Widget tk(tag bind T '<1>' Ac)}
 		{Widget tk(tag conf T font:BoldFont)}
 	     else skip end
+
+	     %% enable "interleaved" filling of both environment windows
+	     %% (keeps time short while one window is completely empty,
+	     %%  thus avoiding too much flickering)
+	     {Thread.preempt ThisThread}
 	  end}
       end
 
@@ -402,19 +414,23 @@ in
 		  {Reverse V.'Y'} # {Reverse V.'G'}
 	       end
       in
-	 Gui,Clear(self.LocalEnvText)
-	 Gui,Clear(self.GlobalEnvText)
-
-	 {self.LocalEnvText  tk(conf foreground:DefaultForeground)}
-	 {self.GlobalEnvText tk(conf foreground:DefaultForeground)}
-
-	 case V == unit then skip else
-	    Gui,DoPrintEnv(self.LocalEnvText  Y SV)
-	    Gui,DoPrintEnv(self.GlobalEnvText G SV)
+	 %% use two threads to reduce flickering
+	 thread
+	    Gui,Clear(self.LocalEnvText)
+	    {self.LocalEnvText tk(conf foreground:DefaultForeground)}
+	    case V == unit then skip else
+	       Gui,DoPrintEnv(self.LocalEnvText Y SV)
+	    end
+	    Gui,Disable(self.LocalEnvText)
 	 end
-
-	 Gui,Disable(self.LocalEnvText)
-	 Gui,Disable(self.GlobalEnvText)
+	 thread
+	    Gui,Clear(self.GlobalEnvText)
+	    {self.GlobalEnvText tk(conf foreground:DefaultForeground)}
+	    case V == unit then skip else
+	       Gui,DoPrintEnv(self.GlobalEnvText G SV)
+	    end
+	    Gui,Disable(self.GlobalEnvText)
+	 end
       end
 
       meth frameClick(frame:F highlight:Highlight<=true)
@@ -498,68 +514,64 @@ in
 		       tkInit(parent: W
 			      action: self # frameClick(frame:Frame))}
 	 LineEnd     = p(FrameNr 'end')
-	 UpToDate    = 1 > 0 % {Emacs isUpToDate(Frame.time $)}
+	 UpToDate    = 1 > 0 %{Emacs isUpToDate(Frame.time $)}
       in
-	 lock
-	    case Delete then
-	       Gui,Enable(W)
-	       Gui,DeleteToEnd(W FrameNr+1)
-	       Gui,DeleteLine(W FrameNr)
-	    else skip end
-	    {W tk(insert LineEnd
-		  case Frame.dir == entry then ' -> ' else ' <- ' end #
-		  FrameNr #
-		  case {IsSpecialFrameName FrameName} then
-		     ' ' # FrameName
-		  else
-		     ' {' # case FrameName
-			    of ''  then '$'
-			    [] nil then "nil"
-			    [] '#' then "#"
-			    else FrameName end
-		  end
-		  q(StackTag LineActTag LineColTag))}
-	    case FrameArgs of unit then
-	       case {IsSpecialFrameName FrameName} then skip
-	       else {W tk(insert LineEnd ' ...'
-			  q(StackTag LineActTag LineColTag))}
+	 case Delete then
+	    Gui,Enable(W)
+	    Gui,DeleteToEnd(W FrameNr+1)
+	    Gui,DeleteLine(W FrameNr)
+	 else skip end
+	 {W tk(insert LineEnd
+	       case Frame.dir == entry then ' -> ' else ' <- ' end #
+	       FrameNr #
+	       case {IsSpecialFrameName FrameName} then
+		  ' ' # FrameName
+	       else
+		  ' {' # case FrameName
+			 of ''  then '$'
+			 [] nil then "nil"
+			 [] '#' then "#"
+			 else FrameName end
 	       end
-	    else
-	       {ForAll FrameArgs
-		proc {$ Arg}
-		   P # V     = Arg
-		   ArgTag    = {W newTag($)}
-		   ArgAction = {New Tk.action
-				tkInit(parent: W
-				       action: proc {$}
-						  {Browse V}
-						  LastClicked <- V
-					       end)}
-		in
-		   {W tk(insert LineEnd ' '
-			 q(StackTag LineActTag LineColTag))}
-		   {W tk(insert LineEnd P
-			 q(StackTag LineColTag ArgTag))}
-		   {W tk(tag bind ArgTag '<1>' ArgAction)}
-		   {W tk(tag conf ArgTag font:BoldFont)}
-		end}
+	       q(StackTag LineActTag LineColTag))}
+	 case FrameArgs of unit then
+	    case {IsSpecialFrameName FrameName} then skip
+	    else {W tk(insert LineEnd ' ...'
+		       q(StackTag LineActTag LineColTag))}
 	    end
-
-	    {W tk(insert LineEnd
-		  case {IsSpecialFrameName FrameName} then '' else '}' end #
-		  case UpToDate then nil else ' (source has changed)' end #
-		  case Delete then '\n' else "" end
-		  q(StackTag LineActTag LineColTag))}
-	    {W tk(tag add  LineActTag LineEnd)} % extend tag to whole line
-	    {W tk(tag add  LineColTag LineEnd)} % dito
-	    {W tk(tag bind LineActTag '<1>' LineAction)}
-
-	    case Delete then
-	       Gui,Disable(W)
-	       {W tk(yview 'end')}
-	       Gui,frameClick(frame:Frame highlight:false)
-	    else skip end
+	 else
+	    {ForAll FrameArgs
+	     proc {$ Arg}
+		P # V     = Arg
+		ArgTag    = {W newTag($)}
+		ArgAction = {New Tk.action
+			     tkInit(parent: W
+				    action: proc {$}
+					       {Browse V}
+					       LastClicked <- V
+					    end)}
+	     in
+		{W tk(insert LineEnd ' '
+		      q(StackTag LineActTag LineColTag))}
+		{W tk(insert LineEnd P
+		      q(StackTag LineColTag ArgTag))}
+		{W tk(tag bind ArgTag '<1>' ArgAction)}
+		{W tk(tag conf ArgTag font:BoldFont)}
+	     end}
 	 end
+	 {W tk(insert LineEnd
+	       case {IsSpecialFrameName FrameName} then '' else '}' end #
+	       case UpToDate then nil else ' (source has changed)' end #
+	       case Delete then '\n' else "" end
+	       q(StackTag LineActTag LineColTag))}
+	 {W tk(tag add  LineActTag LineEnd)} % extend tag to whole line
+	 {W tk(tag add  LineColTag LineEnd)} % dito
+	 {W tk(tag bind LineActTag '<1>' LineAction)}
+	 case Delete then
+	    Gui,Disable(W)
+	    {W tk(yview 'end')}
+	    Gui,frameClick(frame:Frame highlight:false)
+	 else skip end
       end
 
       meth printStack(id:I frames:Frames depth:Depth last:LastFrame<=nil)
@@ -573,25 +585,23 @@ in
 	    Gui,clearEnv
 	 else
 	    {W title(AltStackTitle # I)}
-	    lock
-	       Gui,Clear(W)
-	       case Depth == 0 then
-		  Gui,Append(W ' The stack is empty.')
-		  Gui,Disable(W)
-		  Gui,clearEnv
+	    Gui,Clear(W)
+	    case Depth == 0 then
+	       Gui,Append(W ' The stack is empty.')
+	       Gui,Disable(W)
+	       Gui,clearEnv
+	    else
+	       Gui,Append(W {MakeLines Depth})  % Tk is _really_ stupid...
+	       {ForAll Frames
+		proc{$ Frame}
+		   Gui,printStackFrame(frame:Frame delete:false)
+		end}
+	       {W tk(yview 'end')}
+	       Gui,Disable(W)
+	       case LastFrame == nil then
+		  {OzcarError 'printStack: LastFrame == nil ?!'}
 	       else
-		  Gui,Append(W {MakeLines Depth})  % Tk is _really_ stupid...
-		  {ForAll Frames
-		   proc{$ Frame}
-		      Gui,printStackFrame(frame:Frame delete:false)
-		   end}
-		  {W tk(yview 'end')}
-		  Gui,Disable(W)
-		  case LastFrame == nil then
-		     {OzcarError 'printStack: LastFrame == nil ?!'}
-		  else
-		     Gui,frameClick(frame:LastFrame highlight:false)
-		  end
+		  Gui,frameClick(frame:LastFrame highlight:false)
 	       end
 	    end
 	 end
@@ -856,7 +866,7 @@ in
 	       case T == unit then skip else
 		  I = {Thread.id T}
 	       in
-		  ThreadManager,detach(T I)
+		  lock UserActionLock then ThreadManager,detach(T I) end
 	       end
 
 	    elsecase A == TermButtonBitmap then

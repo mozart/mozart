@@ -128,12 +128,22 @@ local
 		      enqueue(feedVirtualString('declare `result` = (\n' #
 						V # '\n)'))}
 		  else
+		     %% declare `result` in
+		     %% local
+		     %%    class Class1
+		     %%       meth eval($)
+		     %% 	 <V>
+		     %%       end
+		     %%    end
+		     %% in
+		     %%    {`send` eval(`result`) Class1 `self`}
+		     %% end
 		     {@CurComp enqueue(mergeEnv(env('`self`': Self)))}
-		     {@CurComp enqueue(setSwitch(selfallowedanywhere true))}
 		     {@CurComp
-		      enqueue(feedVirtualString('declare `result` = (\n' #
-						'{`ooSetSelf` `self`}\n' #
-						V # '\n)'))}
+		      enqueue(feedVirtualString('declare `result` =\n' #
+						'{`send` eval($) ' #
+						'class meth eval($)\n' #
+						V # '\nend end `self`}'))}
 		  end
 		  {Wait {@CurComp enqueue(ping($))}}
 		  Sync = unit
