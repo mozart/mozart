@@ -13,6 +13,10 @@ ac_default_prefix=/usr/local
 # Any additions from configure.in:
 ac_default_prefix=/usr/local/oz
 ac_help="$ac_help
+--with-inc-dir=d1,...,dn        add these dirs to CPPFLAGS"
+ac_help="$ac_help
+--with-lib-dir=d1,...,dn        add these dirs to LDFLAGS"
+ac_help="$ac_help
 --with-regex-inc=DIR    where to find regex.h"
 ac_help="$ac_help
 --with-regex-lib=DIR    where to find libregex"
@@ -537,7 +541,7 @@ fi
 
 
   echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:541: checking for SRCTOP" >&5
+echo "configure:545: checking for SRCTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -570,7 +574,7 @@ echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
 
 
   echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:574: checking for BUILDTOP" >&5
+echo "configure:578: checking for BUILDTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -627,7 +631,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:631: checking for $ac_word" >&5
+echo "configure:635: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_MAKE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -695,13 +699,13 @@ You may find a mirror archive closer to you by consulting:
   else
 
   echo $ac_n "checking for GNU make""... $ac_c" 1>&6
-echo "configure:699: checking for GNU make" >&5
+echo "configure:703: checking for GNU make" >&5
   MAKE=$oz_cv_MAKE
   echo "$ac_t""(cached) $MAKE" 1>&6
   fi
 
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:705: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:709: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -730,7 +734,7 @@ fi
 
   if test "${INSTALL+set}" = set; then
     echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
-echo "configure:734: checking whether to unset broken INSTALL" >&5
+echo "configure:738: checking whether to unset broken INSTALL" >&5
 if eval "test \"`echo '$''{'oz_cv_unset_INSTALL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -759,7 +763,7 @@ echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:763: checking for a BSD compatible install" >&5
+echo "configure:767: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -819,7 +823,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:823: checking for $ac_word" >&5
+echo "configure:827: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -858,6 +862,88 @@ fi
   HOMECACHE="http/mozart.ps.uni-sb.de/home"
 
 
+
+  echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
+echo "configure:868: checking for --with-inc-dir" >&5
+  # Check whether --with-inc-dir or --without-inc-dir was given.
+if test "${with_inc_dir+set}" = set; then
+  withval="$with_inc_dir"
+  oz_cv_with_inc_dirs=$with_inc_dir
+fi
+
+  echo "$ac_t""$with_inc_dir" 1>&6
+  oz_tmp_IFS="$IFS"
+  IFS=","
+  # reverse the list of dirs
+  oz_tmp_dirs=""
+  for oz_tmp in $oz_cv_with_inc_dirs DONE; do
+    if test "$oz_tmp" != DONE; then
+      oz_tmp_dirs="$oz_tmp${oz_tmp_dirs:+ }$oz_tmp_dirs"
+    fi
+  done
+  # add them to CPPFLAGS and oz_inc_path
+  IFS=$oz_tmp_IFS
+  : ${oz_inc_path="/usr/local/include"}
+  for oz_tmp1 in $oz_tmp_dirs DONE; do
+    if test "$oz_tmp1" != DONE; then
+
+  if test "-I$oz_tmp1" != yes && test "-I$oz_tmp1" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $CPPFLAGS NONE; do
+      if test "$oz_tmp" = "-I$oz_tmp1"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }-I$oz_tmp1"
+  fi
+
+      oz_inc_path="$oz_tmp1${oz_inc_path:+ }$oz_inc_path"
+    fi
+  done
+
+
+  echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
+echo "configure:908: checking for --with-lib-dir" >&5
+  # Check whether --with-lib-dir or --without-lib-dir was given.
+if test "${with_lib_dir+set}" = set; then
+  withval="$with_lib_dir"
+  oz_cv_with_lib_dirs=$with_lib_dir
+fi
+
+  echo "$ac_t""$with_lib_dir" 1>&6
+  oz_tmp_IFS="$IFS"
+  IFS=","
+  # reverse the list of dirs
+  oz_tmp_dirs=""
+  for oz_tmp in $oz_cv_with_lib_dirs DONE; do
+    if test "$oz_tmp" != DONE; then
+      oz_tmp_dirs="$oz_tmp${oz_tmp_dirs:+ }$oz_tmp_dirs"
+    fi
+  done
+  # add them to LDFLAGS and oz_lib_path
+  IFS=$oz_tmp_IFS
+  : ${oz_lib_path="/usr/local/lib"}
+  for oz_tmp1 in $oz_tmp_dirs DONE; do
+    if test "$oz_tmp1" != DONE; then
+
+  if test "-L$oz_tmp1" != yes && test "-L$oz_tmp1" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $LDFLAGS NONE; do
+      if test "$oz_tmp" = "-L$oz_tmp1"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && LDFLAGS="-L$oz_tmp1${LDFLAGS:+ }$LDFLAGS"
+  fi
+
+      oz_lib_path="$oz_tmp1${oz_lib_path:+ }$oz_lib_path"
+    fi
+  done
+
+
+
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 
 
@@ -871,7 +957,7 @@ fi
     # Extract the first word of "ozc", so it can be a program name with args.
 set dummy ozc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:875: checking for $ac_word" >&5
+echo "configure:961: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -917,7 +1003,7 @@ fi
     # Extract the first word of "ozl", so it can be a program name with args.
 set dummy ozl; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:921: checking for $ac_word" >&5
+echo "configure:1007: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -963,7 +1049,7 @@ fi
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:967: checking for $ac_word" >&5
+echo "configure:1053: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1022,7 +1108,7 @@ cross_compiling=$ac_cv_prog_cxx_cross
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1026: checking for $ac_word" >&5
+echo "configure:1112: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1060,7 +1146,7 @@ fi
 
 
 echo $ac_n "checking for --with-regex-inc""... $ac_c" 1>&6
-echo "configure:1064: checking for --with-regex-inc" >&5
+echo "configure:1150: checking for --with-regex-inc" >&5
 # Check whether --with-regex-inc or --without-regex-inc was given.
 if test "${with_regex_inc+set}" = set; then
   withval="$with_regex_inc"
@@ -1073,7 +1159,7 @@ fi
 echo "$ac_t""$oz_cv_with_regex_inc" 1>&6
 
 echo $ac_n "checking for --with-regex-lib""... $ac_c" 1>&6
-echo "configure:1077: checking for --with-regex-lib" >&5
+echo "configure:1163: checking for --with-regex-lib" >&5
 # Check whether --with-regex-lib or --without-regex-lib was given.
 if test "${with_regex_lib+set}" = set; then
   withval="$with_regex_lib"
@@ -1086,7 +1172,7 @@ fi
 echo "$ac_t""$oz_cv_with_regex_lib" 1>&6
 
 echo $ac_n "checking for --with-regex-ldflags""... $ac_c" 1>&6
-echo "configure:1090: checking for --with-regex-ldflags" >&5
+echo "configure:1176: checking for --with-regex-ldflags" >&5
 # Check whether --with-regex-ldflags or --without-regex-ldflags was given.
 if test "${with_regex_ldflags+set}" = set; then
   withval="$with_regex_ldflags"
@@ -1117,7 +1203,7 @@ if test "$oz_cv_with_regex_inc" != NONE; then
   oz_inc_path="$oz_cv_with_regex_inc${oz_inc_path:+ }$oz_inc_path"
 fi
 echo $ac_n "checking how to run the C++ preprocessor""... $ac_c" 1>&6
-echo "configure:1121: checking how to run the C++ preprocessor" >&5
+echo "configure:1207: checking how to run the C++ preprocessor" >&5
 if test -z "$CXXCPP"; then
 if eval "test \"`echo '$''{'ac_cv_prog_CXXCPP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1130,12 +1216,12 @@ ac_link='${CXX-g++} -o conftest $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $L
 cross_compiling=$ac_cv_prog_cxx_cross
   CXXCPP="${CXX-g++} -E"
   cat > conftest.$ac_ext <<EOF
-#line 1134 "configure"
+#line 1220 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1139: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1225: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   :
@@ -1155,7 +1241,7 @@ echo "$ac_t""$CXXCPP" 1>&6
 
 
   echo $ac_n "checking for regex.h""... $ac_c" 1>&6
-echo "configure:1159: checking for regex.h" >&5
+echo "configure:1245: checking for regex.h" >&5
 if eval "test \"`echo '$''{'oz_cv_header_regex_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1166,12 +1252,12 @@ else
       for oz_tmp in $oz_inc_path; do
         CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
         cat > conftest.$ac_ext <<EOF
-#line 1170 "configure"
+#line 1256 "configure"
 #include "confdefs.h"
 #include "regex.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1175: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1261: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1187,12 +1273,12 @@ rm -f conftest*
       done
       if test "$oz_tmp_ok" = no; then
         cat > conftest.$ac_ext <<EOF
-#line 1191 "configure"
+#line 1277 "configure"
 #include "confdefs.h"
 #include "regex.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1196: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1282: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1238,13 +1324,13 @@ oz_inc_path=$oz_saved_inc_path
 
 
 echo $ac_n "checking for regex_t and regmatch_t""... $ac_c" 1>&6
-echo "configure:1242: checking for regex_t and regmatch_t" >&5
+echo "configure:1328: checking for regex_t and regmatch_t" >&5
 if eval "test \"`echo '$''{'oz_cv_regex_header_ok'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
 
   cat > conftest.$ac_ext <<EOF
-#line 1248 "configure"
+#line 1334 "configure"
 #include "confdefs.h"
 
 #include <sys/types.h>
@@ -1260,7 +1346,7 @@ int n3 = m.rm_eo;
 
 ; return 0; }
 EOF
-if { (eval echo configure:1264: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:1350: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   oz_cv_regex_header_ok=yes
 else
