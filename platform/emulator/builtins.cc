@@ -4724,7 +4724,7 @@ OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
       th = am.currentThread();
     else{
       if(tht == AtomPerSite)
-        th = getDefaultThread();
+        th = DefaultThread;
       else
         return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
 
@@ -4788,7 +4788,7 @@ OZ_Return HandlerDeInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc)
       th = am.currentThread();
     else{
       if(tht == AtomPerSite)
-        th = getDefaultThread();
+        th = DefaultThread;
       else
         return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
 

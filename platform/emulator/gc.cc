@@ -2333,7 +2333,9 @@ inline void EntityInfo::gcWatchers(){
   Watcher *w=*base;
   if(object) object=((Object *)object)->gcObject();
   while(w!=NULL){
-    Thread *th=w->thread->gcThread();
+    Thread *th;
+    if(w->thread != DefaultThread)
+      th=w->thread->gcThread();
     if(w->isHandler() && th==NULL){
       *base= w->next;
       w=*base;

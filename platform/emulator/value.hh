@@ -119,6 +119,8 @@ enum EntityCondFlags{
 
 typedef unsigned int EntityCond;
 
+#define DefaultThread ((Thread*)0x3)
+
 class EntityInfo{
   friend class Tertiary;
 protected:
