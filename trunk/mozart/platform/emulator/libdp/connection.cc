@@ -105,7 +105,8 @@ inline OZ_Return parseRequestor(OZ_Term requestor,
 
       // The comObj might be returned and not used which is checked with valid,
       // or it may be reused which is checked by comparing the sites.
-      if(comController->valid(comObj)) {
+      if(comController->valid(comObj) && 
+	 comObj->getState()==CLOSED_WF_HANDOVER) {
 	DSite *site=comObj->getSite();
 	if(site==NULL) { // this comObj has been reused for accept
 //  	  fprintf(stderr,"reused for accept\n");
