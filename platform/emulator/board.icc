@@ -251,13 +251,15 @@ void Board::inject(TaggedRef proc, int arity) {
 }
 
 inline
-OZ_Return Board::merge(Board *bb, Bool sibling) {
+OZ_Return Board::merge(Board *bb) {
   // this is the board that gets merged
   //   --- it is merged with bb
 
   // First the things that must done even for merging with root board
 
   // Mark as merged
+  Board * p = getParent();
+
   setCommitted(bb);
 
   // Must be before script installation
@@ -276,24 +278,17 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
   if (bb->isRoot()) {
     scheduleNonMono();
   } else {
-    // Update counters
-    if (sibling) {
-      if (crt > 0) {
-	bb->crt += crt;
-	(bb->getParent()->crt)--;
-      }
-      Assert(bb->getParent()->isRoot() || bb->getParent()->crt > 0);
-      Assert(bb->crt >= 0);
-    } else {
-      if (crt > 0) {
-	bb->crt += crt-1;
-      }
+    // p looses a runnable space
+    if (crt > 0) {
+      (p->crt)--;
+      Assert(p->crt > 0); // remains runnable (bb is subordinated to p)
+      // bb acquires new runnable threads
+      bb->crt += crt;
       Assert(bb->crt > 0);
     }
-
     // Merge nonmonotonic propagators
     bb->setNonMono(bb->getNonMono()->merge(getNonMono()));
-
+    
   }
 
   return ret;
