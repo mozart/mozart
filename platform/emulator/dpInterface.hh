@@ -62,8 +62,8 @@ extern OZ_Term (*unmarshalTertiary)(MsgBuffer *bs, MarshalTag tag);
 extern OZ_Term (*unmarshalOwner)(MsgBuffer *bs,MarshalTag mt);
 //
 extern OZ_Term (*unmarshalVar)(MsgBuffer*,Bool,Bool);
-extern Bool (*marshalVariable)(TaggedRef*, MsgBuffer*);
-extern void (*marshalObject)(ConstTerm *t, MsgBuffer *bs);
+extern Bool (*marshalVariable)(TaggedRef*, MsgBuffer*, GenTraverser *gt);
+extern void (*marshalObject)(ConstTerm *t, MsgBuffer *bs, GenTraverser *gt);
 extern void (*marshalSPP)(TaggedRef term, MsgBuffer *bs,Bool trail);
 
 //
