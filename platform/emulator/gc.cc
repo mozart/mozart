@@ -1853,7 +1853,16 @@ LocalThreadQueue * LocalThreadQueue::gc()
   new_ltq->ltq_thr = ltq_thr->gcThread();
 
   // gc and copy entries
+#ifdef  LOCAL_THREAD_STACK
+  Thread * tmp;
+
+  initReadOutFromBottom();
+
+  while (tmp = readOutFromBottom())
+    new_ltq->enqueue(tmp->gcThread());
+#else
   for ( ; !isEmpty(); new_ltq->enqueue(dequeue()->gcThread()));
+#endif
 
   return new_ltq;
 }
