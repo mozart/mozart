@@ -144,6 +144,8 @@ public:
   void gcStart() { if (msgTS) mtsStartGC(msgTS); }
   void gcFinish() { if (msgTS) mtsFinishStartGC(msgTS); }
 
+  void resetMarshaling();
+
   // includes MessageType-specific get_,put_,marshal,unmarshal,gcMsgC
 #include "msgContainer_marshal.hh"
 };

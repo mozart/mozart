@@ -102,8 +102,7 @@ int ByteBuffer::getUsed() {
 }
 
 int ByteBuffer::getWriteParameters(BYTE *&buf) {
-  Assert(mode==BYTE_MODE_NONE||mode==BYTE_MODE_WRITING);
-  //  mode=BYTE_MODE_WRITING;
+  Assert(mode==BYTE_MODE_NONE);
   buf = getptr;
   if (getptr<putptr)
     return putptr-getptr;
@@ -114,7 +113,6 @@ int ByteBuffer::getWriteParameters(BYTE *&buf) {
 }
 
 void ByteBuffer::clearWrite(int sizeWritten) {
-  //  Assert(mode==BYTE_MODE_WRITING);
   Assert(sizeWritten+getptr<=endMB+1);
   Assert(sizeWritten+getptr<=putptr ||
 	 putptr<getptr ||
@@ -217,7 +215,6 @@ void ByteBuffer::getEnd() {
 // For receiving
 int ByteBuffer::getReadParameters (BYTE *&buf) {
   Assert(mode == BYTE_MODE_NONE);
-  //  mode = BYTE_MODE_READING;
   buf = putptr;
   int ret;
   if (putptr>getptr || (putptr==getptr && used==0))
@@ -231,7 +228,6 @@ int ByteBuffer::getReadParameters (BYTE *&buf) {
 }
 
 void ByteBuffer::hasRead(int sizeRead) {
-  //  Assert(mode == BYTE_MODE_READING);
   Assert(sizeRead+putptr<=endMB+1);
   Assert(sizeRead<=size-used);
   Assert(sizeRead+putptr<=getptr ||

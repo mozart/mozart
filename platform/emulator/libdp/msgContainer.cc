@@ -77,6 +77,17 @@ void MsgContainer::deleteSnapshot() {
   }
 }
 
+void MsgContainer::resetMarshaling() {
+  if(checkFlag(MSG_HAS_MARSHALCONT) && cont!=0) {
+    transController->returnMarshaler((DPMarshaler *) cont);
+    cont=0;
+  }
+  else if(checkFlag(MSG_HAS_UNMARSHALCONT) && cont!=0) {
+    transController->returnUnmarshaler((Builder *) cont);
+    cont=0;
+  }
+}
+
 // includes MessageType-specific get_,put_,marshal_,unmarshal_,gcMsgC_
 #include "msgContainer_marshal.cc"
 
