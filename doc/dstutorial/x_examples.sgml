@@ -545,7 +545,7 @@ the server to add a new
 method that returns the number of
 active computations at each priority level.
 
-<SECTION><TITLE>Practical tips</TITLE>
+<SECTION id="practical.tips"><TITLE>Practical tips</TITLE>
 
 <P>This section gives some practical programming tips to
 improve the network performance of distributed applications:
