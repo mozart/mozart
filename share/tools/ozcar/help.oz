@@ -148,7 +148,6 @@ local
 			       root:    pointer
 			       title:   HelpTitle % self.topic
 			       buttons: [OkButtonText # tkClose]
-			       focus:   1
 			       bg:      DefaultBackground
 			       pack:    false
 			       default: 1)

@@ -121,15 +121,10 @@ fun {UnknownFile F}
 end
 
 fun {StripPath File}
-   case {UnknownFile File} then
-      '???'
-   else
-      S = {Str.rchr {Atom.toString File} &/}
+   case {UnknownFile File} then '???' else
+      F = {Atom.toString File}
+      S = {Str.rchr F &/}
    in
-      case S of _|Rest then
-	 Rest
-      else
-	 '???'
-      end
+      case S of _|R then R else F end
    end
 end
