@@ -456,6 +456,12 @@ public:
       dothis = DBG_EXIT;
     }
   }
+  void pushCall(TaggedRef pred, TaggedRef arg0=0, TaggedRef arg1=0, 
+		TaggedRef arg2=0, TaggedRef arg3=0, TaggedRef arg4=0)
+  {
+    item.threadBody->taskStack.pushCall(pred, arg0,arg1,arg2,arg3,arg4);
+  }
+
   void pushCall(TaggedRef pred, RefsArray  x, int n) {
     item.threadBody->taskStack.pushCall(pred, x, n);
   }

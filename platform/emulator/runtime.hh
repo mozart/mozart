@@ -268,6 +268,37 @@ Arity *oz_makeArity(OZ_Term list)
 }
 
 /* -----------------------------------------------------------------------
+ * control variables
+ * -----------------------------------------------------------------------*/
+
+#define ControlVarNew(var)			\
+OZ_Term var = oz_newVariable();			\
+am.addSuspendVarList(var);
+
+
+#define __ControlVarUnify(var,val) 			\
+{OZ_Return _cvaraux = oz_unify(var,val); Assert(_cvaraux==PROCEED); }
+
+
+#define ControlVarResume(var)			\
+__ControlVarUnify(var,NameUnit)
+
+
+#define ControlVarRaise(var,exc) 			\
+__ControlVarUnify(var,OZ_mkTuple(AtomException,1,exc))
+
+#define ControlVarUnify(var,A,B) 			\
+__ControlVarUnify(var,OZ_mkTuple(AtomUnify,2,A,B))
+
+#define ControlVarApply(var,P,Args)			\
+__ControlVarUnify(var,OZ_mkTuple(AtomApply,2,P,Args))
+
+#define ControlVarApplyList(var,PairList)			\
+__ControlVarUnify(var,OZ_mkTuple(AtomApplyList,1,PairList))
+
+
+
+/* -----------------------------------------------------------------------
  * argument declaration for builtins
  * -----------------------------------------------------------------------*/
 
