@@ -6,8 +6,8 @@ ELCS = $(ELS:.el=.elc)
 help:
 	@echo ""
 	@echo "The following targets are available"
-	@echo "(use 'make <target>' for installation)"
 	@echo "	install		{scheidhr,mehl}@dfki.uni-sb.de"
+	@echo "	  set OZHOME before installing"
 	@echo ""
 
 install: $(ELCS)
