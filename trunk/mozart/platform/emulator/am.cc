@@ -1670,8 +1670,12 @@ void AM::suspendEngine()
     }
 #endif
 
+    unsigned long idle_start = osTotalTime();
+
     int msleft = osBlockSelect(nextUser());
     setSFlag(IOReady);
+
+    ozstat.timeIdle += (osTotalTime() - idle_start);
 
     wakeUser();
   }
