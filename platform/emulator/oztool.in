@@ -15,7 +15,10 @@ shift
 case "$cmd" in
   c++) cmd=$oztool_cxx;;
   cc ) cmd=$oztool_cc;;
-  ld ) cmd=$oztool_ld;;
+  ld ) case $oztool_platform in
+         netbsd*) cmd="ld -Bshareable";;
+               *) cmd=$oztool_ld
+       esac;;
   platform )
     echo "$oztool_platform"
     exit 0;;
