@@ -121,3 +121,7 @@
 
 /* for virtual sites */
 #undef key_t
+
+/* type check */
+#undef HAVE_SOCKLEN_T
+
