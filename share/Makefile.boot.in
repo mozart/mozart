@@ -106,7 +106,7 @@ export OZTOOL_INCLUDES
 endif
 
 ifdef OZFLEX
-ifneq (OZFLEX,)
+ifneq ($(OZFLEX),)
 export OZFLEX
 endif
 endif
