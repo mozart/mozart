@@ -82,6 +82,14 @@ proglang=c/regexec/ for further details.
       <synopsis><code/{Regex.eflags.get ??{SPEC}}/
       <item>Set or get the current ?_{EFLAGS} defaults, &EG; used by
 <code/Regex.search/.
+      <entry/<code/Regex.replace//
+      <synopsis/<code/{Regex.replace ?+{TXT} ?+{RE} ?+{FUN} ??{RES}}//
+      <item/Replace every occurrence of ?_{RE} in ?_{TXT} with the result
+of applying ?_{FUN} to the current ?_{TXT} and the current match./
+      <entry/<code/Regex.replaceRegion//
+      <synopsis/<code/{Regex.replaceRegion ?+{TXT} ?+{LO} ?+{HI} ?+{RE} ?+{FUN} ??{RES}}//
+      <item/Same as above, but only operate on the region starting at ?_{LO} inclusive
+and ending at ?_{HI} exclusive./
 </list></p>
 </chapter>
 <!--
