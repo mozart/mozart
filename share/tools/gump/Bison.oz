@@ -38,7 +38,13 @@ in
       else
 	 lock L then
 	    case {IsFree BisonModule} then
-	       BisonModule = {Foreign.load 'www.ps.uni-sb.de/ozhome/share/gump/ozbison.dl'}
+	       T = {Thread.this}
+	       RaiseOnBlock = {Thread.getRaiseOnBlock T}
+	    in
+	       {Thread.setRaiseOnBlock T false}
+	       BisonModule =
+	       {Foreign.load 'www.ps.uni-sb.de/ozhome/share/gump/ozbison.dl'}
+	       {Thread.setRaiseOnBlock T RaiseOnBlock}
 	    else skip
 	    end
 	 end
