@@ -123,18 +123,10 @@ local
    AccCtrl   = 'C-'
    AccAlt    = 'A-'
 
-   local
-      fun {MakeFree Fs}
-	 case Fs of nil then nil
-	 [] F|Fr then F#`ooFreeFlag`|{MakeFree Fr}
-	 end
-      end
-   in
-      fun {MakeClass Class Features}
-	 case Features of nil then Class
-	 else
-	    {`class` [Class] nil {MakeFree Features} nil nil '' `send`}
-	 end
+   
+   fun {MakeClass C Fs}
+      case Fs of nil then Class else
+	 {Class.extendFeatures C f Fs}
       end
    end
 
