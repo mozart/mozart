@@ -1037,6 +1037,11 @@ void ConstTerm::_cacConstRecurse(void) {
   case Co_Class:
     {
       ObjectClass *cl = (ObjectClass *) this;
+#ifdef G_COLLECT
+      GName * gn = cl->getGName1();
+      if (gn) 
+	gCollectGName(gn);
+#endif
       OZ_cacBlock(&(cl->features), &(cl->features), 4);
       break;
     }
@@ -1046,6 +1051,9 @@ void ConstTerm::_cacConstRecurse(void) {
       Abstraction *a = (Abstraction *) this;
 #ifdef G_COLLECT
       gCollectCode(a->getPred()->getCodeBlock());
+      GName * gn = a->getGName1();
+      if (gn) 
+	gCollectGName(gn);
 #endif
       OZ_cacBlock(a->getGRef(),a->getGRef(),
 		  a->getPred()->getGSize());
@@ -1095,6 +1103,11 @@ void ConstTerm::_cacConstRecurse(void) {
   case Co_Array:
     {
       OzArray *a = (OzArray*) this;
+#ifdef G_COLLECT
+      GName * gn = a->getGName1();
+      if (gn) 
+	gCollectGName(gn);
+#endif
       int aw = a->getWidth();
       if (aw > 0) {
 	TaggedRef *newargs = (TaggedRef*) heapMalloc(sizeof(TaggedRef) * aw);
