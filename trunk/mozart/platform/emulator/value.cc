@@ -30,7 +30,8 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomDistributed, AtomMobile, AtomFetched,
   NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
   NameOoDefaultVar,NameOoRequiredArg,
-  NameUnit;
+  NameUnit,
+  AtomActive, AtomAtoms, AtomBuiltins, AtomCellHack, AtomChosen, AtomCloned, AtomCode, AtomCopy, AtomCreated, AtomDebug, AtomDepth, AtomFeed, AtomForeign, AtomFree, AtomFreelist, AtomGC, AtomHigh, AtomHints, AtomIdle, AtomIdleFree, AtomInt, AtomInvoked, AtomLimits, AtomLoad, AtomLocation, AtomMiddle, AtomNames, AtomOn, AtomPropagate, AtomPropagators, AtomRun, AtomRunnable, AtomRuns, AtomShowSuspension, AtomStackMaxSize, AtomStopOnToplevelFailure, AtomSystem, AtomThread, AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth;
 
 
 // Some often used constants
@@ -82,6 +83,57 @@ void initLiterals()
   AtomMobile      = makeTaggedAtom("mobile");
   AtomFetched     = makeTaggedAtom("fetched");
   AtomDistributed = makeTaggedAtom("distributed");
+
+  // For system set and get
+  AtomActive                = makeTaggedAtom("active");
+  AtomAtoms                 = makeTaggedAtom("atoms");
+  AtomBuiltins              = makeTaggedAtom("builtins");
+  AtomCellHack              = makeTaggedAtom("cellHack");
+  AtomChosen                = makeTaggedAtom("chosen");
+  AtomCloned                = makeTaggedAtom("cloned");
+  AtomCode                  = makeTaggedAtom("code");
+  AtomCopy                  = makeTaggedAtom("copy");
+  AtomCreated               = makeTaggedAtom("created");
+  AtomDebug                 = makeTaggedAtom("debug");
+  AtomDepth                 = makeTaggedAtom("depth");
+  // AtomFailed
+  AtomFeed                  = makeTaggedAtom("feed");
+  AtomForeign               = makeTaggedAtom("foreign");
+  AtomFree                  = makeTaggedAtom("free");
+  AtomFreelist              = makeTaggedAtom("freelist");
+  AtomGC                    = makeTaggedAtom("gc");
+  AtomHigh                  = makeTaggedAtom("high");
+  AtomHints                 = makeTaggedAtom("hints");
+  AtomIdle                  = makeTaggedAtom("idle");
+  AtomIdleFree              = makeTaggedAtom("idleFree");
+  AtomInt                   = makeTaggedAtom("int");
+  AtomInvoked               = makeTaggedAtom("invoked");
+  AtomLimits                = makeTaggedAtom("limits");
+  AtomLoad                  = makeTaggedAtom("load");
+  AtomLocation              = makeTaggedAtom("location");
+  // AtomMax
+  AtomMiddle                = makeTaggedAtom("middle");
+  // AtomMin
+  AtomNames                 = makeTaggedAtom("names");
+  AtomOn                    = makeTaggedAtom("on");
+  AtomPropagate             = makeTaggedAtom("propagate");
+  AtomPropagators           = makeTaggedAtom("propagators");
+  AtomRun                   = makeTaggedAtom("run");
+  AtomRunnable              = makeTaggedAtom("runnable");
+  AtomRuns                  = makeTaggedAtom("runs");
+  AtomShowSuspension        = makeTaggedAtom("showSuspension");
+  // AtomSize
+  AtomStackMaxSize          = makeTaggedAtom("stackMaxSize");
+  AtomStopOnToplevelFailure = makeTaggedAtom("stopOnToplevelFailure");
+  // AtomSucceeded
+  AtomSystem                = makeTaggedAtom("system");
+  AtomThread                = makeTaggedAtom("thread");
+  AtomThreshold             = makeTaggedAtom("threshold");
+  AtomTolerance             = makeTaggedAtom("tolerance");
+  AtomUser                  = makeTaggedAtom("user");
+  AtomVariables             = makeTaggedAtom("variables");
+  AtomWidth                 = makeTaggedAtom("width");
+
 }
 
 

@@ -29,7 +29,8 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomDistributed, AtomMobile, AtomFetched,
        NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
        NameOoDefaultVar,NameOoRequiredArg,
-       NameUnit;
+       NameUnit,
+  AtomActive, AtomAtoms, AtomBuiltins, AtomCellHack, AtomChosen, AtomCloned, AtomCode, AtomCopy, AtomCreated, AtomDebug, AtomDepth, AtomFeed, AtomForeign, AtomFree, AtomFreelist, AtomGC, AtomHigh, AtomHints, AtomIdle, AtomIdleFree, AtomInt, AtomInvoked, AtomLimits, AtomLoad, AtomLocation, AtomMiddle, AtomNames, AtomOn, AtomPropagate, AtomPropagators, AtomRun, AtomRunnable, AtomRuns, AtomShowSuspension, AtomStackMaxSize, AtomStopOnToplevelFailure, AtomSystem, AtomThread, AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth;
 
 /*===================================================================
  * Literal
