@@ -78,7 +78,7 @@ CPSRC1  = Search FD FS Combinator RecordC
 CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Discovery Remote RemoteServer Fault URL DPMisc $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools
-GTKSRC  = GTK
+GTKSRC  = GTK GDK
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
 MACSRC	= Macro BackquoteMacro LoopMacro
 
@@ -233,7 +233,8 @@ GDKSPECS = $(VPATH)/gtk/gdk/*.spec
 BUILDER  = $(PERL) $(VPATH)/gtk/builder.perl
 
 GTK.ozf: gtkclasses.oz gtkexports.oz
-#GDK.ozf: gdkclasses.oz gdkexports.oz
+
+GDK.ozf: gdkclasses.oz gdkexports.oz
 
 gtkclasses.oz: $(GTKSPECS)
 	$(BUILDER) --oz-classes $(GTKSPECS) > $@
