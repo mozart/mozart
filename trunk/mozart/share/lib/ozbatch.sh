@@ -28,4 +28,6 @@ fi
 OZINIT=${OZMAINIT}
 export OZINIT
 
+echo "Using OZMAFILE: $OZMAFILE"
+
 exec $OZEMULATOR $OZQUIET $OZMA_LIB -b $OZMAFILE -a "$@"
