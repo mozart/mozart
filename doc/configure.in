@@ -43,7 +43,7 @@ else
 fi
 AC_SUBST(PSGML)
 AC_SUBST(CED)
-SUBDIRS="utilities gump pickles"
+SUBDIRS="utilities gump ozdoc"
 AC_SUBST(SUBDIRS)
 AC_CONFIG_SUBDIRS($SUBDIRS)
 AC_OUTPUT(Makefile catalog ced.el)
