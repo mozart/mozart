@@ -77,11 +77,6 @@
 ;; Variables
 ;;------------------------------------------------------------
 
-
-
-(if lucid-emacs
-    (load "blink-paren"))
-
 (defvar oz-indent-chars 3
 "*Indentation of Oz statements with respect to containing block.")
 
