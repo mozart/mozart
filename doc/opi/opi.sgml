@@ -758,7 +758,7 @@
                   a compilation error message (if the click went into the
                   Compiler buffer).
             </List>
-      <Section proglang=oz>
+      <Section proglang=oz id="section.mozart">
         <Title/Seeing the &OPI; from Mozart/
         <Para class=apropos><Title/Startup/
           When the <File/OPI.ozf/ file is applied, a <Span class=index

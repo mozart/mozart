@@ -80,7 +80,7 @@
     <Para class=apropos><Title/Kinded Variable/
       A variable&nbsp;<<X>> is <Def/kinded/  if it is neither free nor
       determined.
-  <Section>
+  <Section id="section.typestruct.format">
     <Title/Description Format/
     <P>
       Every standard procedure has an associated signature of the form
