@@ -86,7 +86,6 @@ then
 case "$cmd" in
 
    oz)
-	echo "Using emacs '${OZEMACS}'"
 	# store cmd line args starting from "-a" in $OZARGV
 	OZARGV=""
 	EMACSARGV=""
