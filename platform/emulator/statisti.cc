@@ -115,8 +115,8 @@ void Statistics::print(FILE *fd)
   printCount();
 #endif
 
-  fprintf(fd,"  Finite variables created: %d\n", fdvarsCreated.total);
-  fprintf(fd,"  Propagators created:      %d\n\n", propagatorsCreated.total);
+  fprintf(fd,"  Finite domain variables created: %d\n", fdvarsCreated.total);
+  fprintf(fd,"  Propagators created:             %d\n\n", propagatorsCreated.total);
 
   fprintf(fd,"******************************\n");
   fprintf(fd,"***   End of Statistics    ***\n");
