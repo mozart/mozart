@@ -698,41 +698,57 @@ Bool AM::hasOFSSuspension(SuspList *suspList)
 // Add list of features to each OFS-marked suspension list
 // 'flist' has three possible values: a single feature (literal), a nonempty list of
 // features, or NULL (no extra features).  'determined'==TRUE iff the unify makes the
-// OFS determined.
-// This routine is inspired by am.checkSuspensionList.
-void AM::addFeatOFSSuspensionList(SuspList *suspList, TaggedRef flist, Bool determined)
+// OFS determined.  'var' (which must be deref'ed) is used to make sure that
+// features are added only to variables that are indeed waiting for features.
+// This routine is inspired by am.checkSuspensionList, and must track all changes to it.
+void AM::addFeatOFSSuspensionList(TaggedRef var,
+                                  SuspList* suspList,
+				  TaggedRef flist,
+				  Bool determined)
 {
     while (suspList) {
         Suspension *susp=suspList->getElem();
 
         if (susp->isDead()) {
-            // suspList = suspList->dispose();
-            suspList = suspList->getNext();
+            suspList=suspList->getNext();
             continue;
         }
 
         // suspension points to an already reduced branch of the computation tree
         if (! susp->getBoard()->getBoardDeref()) {
-            // susp->markDead();
-            // checkExtSuspension(susp);
-            // suspList = suspList->dispose();
-            suspList = suspList->getNext();
+            suspList=suspList->getNext();
             continue;
         }
 
         if (susp->isOFSSusp()) {
-            // Add the feature or list to the diff. list in xRegs[1] and xRegs[2]
             CFuncContinuation *cont=susp->getCCont();
-            RefsArray xregs=cont->getX();
+            RefsArray xRegs=cont->getX();
+
+	    // Only add features if var and fvar are the same:
+	    TaggedRef fvar=xRegs[0];
+	    DEREF(fvar,_1,_2);
+	    if (var!=fvar) {
+                suspList=suspList->getNext();
+                continue;
+	    }
+	    // Only add features if the 'kill' variable is undetermined:
+	    TaggedRef kill=xRegs[1];
+	    DEREF(kill,_,killTag);
+	    if (!isAnyVar(killTag)) {
+                suspList=suspList->getNext();
+                continue;
+	    }
+
+            // Add the feature or list to the diff. list in xRegs[3] and xRegs[4]:
             if (flist) {
                 if (isLiteral(flist))
-                    xregs[1]=cons(flist,xregs[1]);
+                    xRegs[3]=cons(flist,xRegs[3]);
                 else {
                     // flist must be a list
                     Assert(isLTuple(flist));
                     TaggedRef tmplist=flist;
                     while (tmplist!=AtomNil) {
-                        xregs[1]=cons(head(tmplist),xregs[1]);
+                        xRegs[3]=cons(head(tmplist),xRegs[3]);
                         tmplist=tail(tmplist);
                     }
                 }
@@ -740,8 +756,8 @@ void AM::addFeatOFSSuspensionList(SuspList *suspList, TaggedRef flist, Bool dete
             if (determined) {
                 // FS is det.: tail of list must be bound to nil: (always succeeds)
 		// Do *not* use unification to do this binding!
-                TaggedRef tl=xregs[2];
-		DEREF(tl,tailPtr,tailTag);
+                TaggedRef tail=xRegs[4];
+		DEREF(tail,tailPtr,tailTag);
 		switch (tailTag) {
 		case LITERAL:
 		    Assert(tl==AtomNil);
@@ -752,8 +768,6 @@ void AM::addFeatOFSSuspensionList(SuspList *suspList, TaggedRef flist, Bool dete
 		default:
 		    Assert(FALSE);
 		}
-                // Bool ok=am.unify(xregs[2],AtomNil);
-                // Assert(ok);
             }
         }
         suspList = suspList->getNext();
