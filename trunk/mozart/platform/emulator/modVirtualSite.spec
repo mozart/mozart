@@ -23,17 +23,37 @@
 ###
 
 %builtins_all =
-(
-    'newMailbox' => { in     => [],
-				  out    => ['+string'],
-				  BI     => BIVSnewMailbox},
+    (
+     'newMailbox'	=> { in    => [],
+			     out   => ['+string'],
+			     BI    => BIVSnewMailbox},
 
-    'initServer' => { in     => ['+string'],
-				  out    => [],
-				  BI     => BIVSinitServer},
+     'initServer'	=> { in    => ['+string'],
+			     out   => [],
+			     BI    => BIVSinitServer},
 
-    'removeMailbox' => { in     => ['+string'],
-				  out    => [],
-				  BI     => BIVSremoveMailbox},
+     'removeMailbox'	=> { in    => ['+string'],
+			     out   => [],
+			     BI    => BIVSremoveMailbox},
 
- );
+     'processMailbox'	=> { in    => [],
+			     out   => ['+bool'],
+			     BI    => BIVSprocess_mailbox,
+			     ifdef => DENYS_EVENTS },
+
+     'processMessageQ'	=> { in    => [],
+			     out   => ['+bool'],
+			     BI    => BIVSprocess_messageq,
+			     ifdef => DENYS_EVENTS },
+
+     'processProbes'	=> { in    => [],
+			     out   => ['+bool'],
+			     BI    => BIVSprocess_probes,
+			     ifdef => DENYS_EVENTS },
+
+     'processGC'	=> { in    => [],
+			     out   => ['+bool'],
+			     BI    => BIVSprocess_gc,
+			     ifdef => DENYS_EVENTS }
+     
+     );
