@@ -319,12 +319,13 @@ local
 	 in
 	    R.{GetFeature L}=L1
 	    grid(F sticky:ens column:0 row:N) |
-	    pack(L1 side:top pady:40) | TclR
+	    pack(L1 side:top) | TclR
 	 [] load then
 	    L1 = {New Load init(parent:  P
 				colors:  L.colors
 				stipple: L.stipple
-				maxy:    5.0
+				miny:    {CondSelect L miny 5.0}
+				maxy:    {CondSelect L maxy 5.0}
 				dim:     {CondSelect L dim ''})}
 	 in
 	    R.{GetFeature L}=L1

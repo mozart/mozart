@@ -30,41 +30,44 @@ ThresholdColor   # ThresholdStipple #
 SizeColor        # SizeStipple      #
 ActiveColor      # ActiveStipple    #
 TimeColors       # TimeStipple      # 
-AboutColor       = case Tk.isColor then
-		      wheat #
-		      lightslateblue   # '' #
-		      lightslateblue   # '' #
-		      mediumvioletred  # '' #
-		      mediumaquamarine # '' #
-		      color(run:  lightslateblue 
-			    'prop': mediumvioletred
-			    copy: mediumaquamarine
-			    gc:   mediumseagreen
-			    load: wheat) #
-		      stipple(run:  ''
-			      'prop': ''
-			      copy: ''
-			      gc:   ''
-			      load: '') #
-		      blue
-		   else
-		      white #
-		      black # (BitMapDir # 'grid-50.xbm')  #
-		      black # (BitMapDir # 'grid-25.xbm')  #
-		      black # (BitMapDir # 'grid-50.xbm') #
-		      black # '' #
-		      color(run:  black
-			    'prop': black
-			    copy: black
-			    gc:   black
-			    load: black) #
-		      stipple(run:  BitMapDir # 'grid-25.xbm'
-			      'prop': BitMapDir # 'grid-50.xbm'
-			      copy: BitMapDir # 'lines-lr.xbm'
-			      gc:   BitMapDir # 'lines-rl.xbm'
-			      load: BitMapDir # 'zig-zag.xbm') #
-		      blue
-		   end
+AboutColor       # CurLoadColor     =
+case Tk.isColor then
+   wheat #
+   lightslateblue   # '' #
+   lightslateblue   # '' #
+   mediumvioletred  # '' #
+   mediumaquamarine # '' #
+   color(run:  yellow4
+	 'prop': mediumvioletred
+	 copy: mediumaquamarine
+	 gc:   mediumseagreen
+	 load: wheat) #
+   stipple(run:    ''
+	   'prop': ''
+	   copy:   ''
+	   gc:     ''
+	   load:   '') #
+   blue #
+   lightslateblue 
+else
+   white #
+   black # (BitMapDir # 'grid-50.xbm')  #
+   black # (BitMapDir # 'grid-25.xbm')  #
+   black # (BitMapDir # 'grid-50.xbm') #
+   black # '' #
+   color(run:  black
+	 'prop': black
+	     copy: black
+	     gc:   black
+	     load: black) #
+   stipple(run:  BitMapDir # 'grid-25.xbm'
+	   'prop': BitMapDir # 'grid-50.xbm'
+	       copy: BitMapDir # 'lines-lr.xbm'
+	       gc:   BitMapDir # 'lines-rl.xbm'
+	       load: BitMapDir # 'zig-zag.xbm') #
+   black #
+   black
+end
 
 AboutFont       = '-Adobe-times-bold-r-normal--*-240*'
 
@@ -91,5 +94,13 @@ BoldFontFamily  = '-*-helvetica-bold-r-normal--*-'
 FontMatch       = '-*-*-*-*-*-*'
 ScaleFont       = BoldFontFamily#100#FontMatch
 
+ZeroTime     = time(copy:      0 
+		    gc:        0 
+		    load:      0
+		    propagate: 0 
+		    run:       0
+		    system:    0
+		    user:      0
+		    total:     0)
 
 

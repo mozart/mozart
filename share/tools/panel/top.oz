@@ -20,10 +20,12 @@ local
 	 {self.top update(false)}
       end
    end
-	 
+
    class ThreadPage from UpdatePage
       prop final
-      attr InfoVisible: false
+      attr
+	 InfoVisible: false
+	 PrevRuntime: ZeroTime
 
       meth update(What)
 	 O   = self.options
@@ -33,9 +35,16 @@ local
 	 T   = {System.get threads}
 	 P   = {System.get priorities}
 	 R   = {System.get time}
+	 PR  = @PrevRuntime
       in
 	 case What==nosample then skip else
-	    {OT.load        display([{IntToFloat T.runnable}])}
+	    DiffUsed  = R.user + R.system - PR.user - PR.system
+	    DiffTotal = R.total - PR.total
+	 in
+	    {OT.load    display([{IntToFloat T.runnable}])}
+	    {OR.curLoad display([{IntToFloat DiffUsed} /
+				 {IntToFloat DiffTotal}])}
+	    PrevRuntime <- R
 	 end
 	 case What==sample then skip else
 	    {OR.timebar     display(R)}
@@ -66,6 +75,8 @@ local
 	 {OR.copy        clear}
 	 {OR.propagation clear}
 	 {OR.load        clear}
+	 {OR.curLoad     clear}
+	 PrevRuntime <- {System.get time}
       end
       meth toggleInfo
 	 O = self.options
@@ -148,7 +159,7 @@ local
       in
 	 {OS.created   set(S.created)}
 	 {OS.cloned    set(S.cloned)}
-	 {OS.chosen    set(S.chosen)}
+	 {OS.committed set(S.committed)}
 	 {OS.failed    set(S.failed)}
 	 {OS.succeeded set(S.succeeded)}
 	 {OF.propc     set(F.propagators)}
@@ -162,7 +173,7 @@ local
       in
 	 {OS.created   clear}
 	 {OS.cloned    clear}
-	 {OS.chosen    clear}
+	 {OS.committed clear}
 	 {OS.failed    clear}
 	 {OS.succeeded clear}
 	 {OF.propc     clear}
@@ -269,39 +280,7 @@ in
 	    Book  = {New TkTools.notebook tkInit(parent: Frame)}
 	    Threads =
 	    {MakePage ThreadPage 'Threads' Book self true
-	     [frame(text:    'Threads'
-		    left:
-		       [number(text:    'Created:')
-			number(text:    'Runnable:'
-			       color:   RunnableColor
-			       stipple: RunnableStipple)]
-		    right:
-		       [load(feature: load
-			     colors:  [RunnableColor]
-			     stipple: [RunnableStipple])])
-	      frame(text:    'Priorities'
-		    pack:    false
-		    left:
-		       [scale(text:    'High / Medium:'
-			      state:   {System.get priorities}.high
-			      feature: high
-			      action:  proc {$ N}
-					  {System.set priorities(high:N)}
-				       end)
-			scale(text: 'Medium / Low:'
-			      state:   {System.get priorities}.medium
-			      feature: medium
-			      action:  proc {$ N}
-					  {System.set priorities(medium:N)}
-				       end)]
-		    right:
-		       [button(text: 'Default'
-			       action: proc {$}
-					  {System.set priorities(high:   10
-								 medium: 10)}
-					  {self update(false)}
-				       end)])
-	      frame(text:    'Runtime'
+	     [frame(text:    'Runtime'
 		    left:
 		       [time(text:    'Run:'
 			     color:   TimeColors.run
@@ -320,7 +299,44 @@ in
 			     color:   TimeColors.load
 			     stipple: TimeStipple.load)]
 		    right:
-		       [timebar(feature: timebar)])]}
+		       [load(feature: curLoad
+			     colors:  [CurLoadColor]
+			     stipple: ['']
+			     maxy:    1.0
+			     miny:    1.0)
+			timebar(feature: timebar)])
+	      frame(text:    'Threads'
+		    left:
+		       [number(text:    'Created:')
+			number(text:    'Runnable:'
+			       color:   RunnableColor
+			       stipple: RunnableStipple)]
+		    right:
+		       [load(feature: load
+			     colors:  [RunnableColor]
+			     stipple: [RunnableStipple])])
+	      frame(text:    'Priorities'
+		    pack:    false
+		    left:
+		       [scale(text:    'High / Medium:'
+			      state:   {System.get priorities}.high
+			      feature: high
+			      action:  proc {$ N}
+					  {System.set priorities(high:N)}
+				       end)
+			scale(text:    'Medium / Low:'
+			      state:   {System.get priorities}.medium
+			      feature: medium
+			      action:  proc {$ N}
+					  {System.set priorities(medium:N)}
+				       end)]
+		    right:
+		       [button(text: 'Default'
+			       action: proc {$}
+					  {System.set priorities(high:   10
+								 medium: 10)}
+					  {self update(false)}
+				       end)])]}
 	    Memory =
 	    {MakePage MemoryPage 'Memory' Book self true
 	     [frame(text:    'Heap Usage'
@@ -451,20 +467,58 @@ in
 				      feature: propi)]
 		     right:   nil)
 	       frame(text:    'Spaces'
-		     left:    [number(text:    'Spaces created:'
-				      feature: created)
-			       number(text:    'Spaces cloned:'
-				      feature: cloned)
-			       number(text:    'Spaces failed:'
-				      feature: failed)
-			       number(text:    'Spaces succeeded:'
-				      feature: succeeded)
-			       number(text:    'Alternatives chosen:'
-				      feature: chosen)]
+		     left:    [number(text: 'Created:')
+			       number(text: 'Cloned:')
+			       number(text: 'Failed:')
+			       number(text: 'Succeeded:')
+			       number(text: 'Committed:')]
 		     right:   nil)]}
 	     OPI =
 	     {MakePage OpiPage 'Programming Interface' Book self false
-	      [frame(text:    'Errors'
+	      [frame(text:    'Status Messages'
+		     feature: messages
+		     left:
+			[checkbutton(text:    'Idle'
+				     feature: time
+				     state:  {System.get messages}.idle
+				     action: proc {$ B}
+						{System.set messages(idle:B)}
+					     end)
+			 checkbutton(text:    'Garbage collection'
+				     feature: gc
+				     state:  {System.get messages}.gc
+				     action: proc {$ B}
+						{System.set messages(gc:B)}
+					     end)]
+		     right:
+			[button(text:  'Default'
+				action: proc {$}
+					   {System.set messages(idle: false
+								gc:   true)}
+					   {self update(false)}
+					end)])
+	       frame(text:    'Output'
+		     left:
+			[entry(text:    'Maximal print width:'
+			       feature: width
+			       action:  proc {$ N}
+					   {System.set print(width: N)}
+					end
+			       top:     self)
+			 entry(text:    'Maximal print depth:'
+			       feature: depth
+			       action:  proc {$ N}
+					   {System.set print(depth: N)}
+					end
+			       top:     self)]
+		     right:
+			[button(text:  'Default'
+				action: proc {$}
+					   {System.set print(width: 10
+							     depth: 2)}
+					   {self update(false)}
+					end)])
+	       frame(text:    'Errors'
 		     left:
 			[checkbutton(text:    'Show location'
 				     feature: location
@@ -507,51 +561,7 @@ in
 						   width:    10
 						   depth:    2)}
 					   {self update(false)}
-					end)])
-	       frame(text:    'Output'
-		     left:
-			[entry(text:    'Maximal print width:'
-			       feature: width
-			       action:  proc {$ N}
-					   {System.set print(width: N)}
-					end
-			       top:     self)
-			 entry(text:    'Maximal print depth:'
-			       feature: depth
-			       action:  proc {$ N}
-					   {System.set print(depth: N)}
-					end
-			       top:     self)]
-		     right:
-			[button(text:  'Default'
-				action: proc {$}
-					   {System.set print(width: 10
-							     depth: 2)}
-					   {self update(false)}
-					end)])
-	       frame(text:    'Status Messages'
-		     feature: messages
-		     left:
-			[checkbutton(text:    'Idle'
-				     feature: time
-				     state:  {System.get messages}.idle
-				     action: proc {$ B}
-						{System.set messages(idle:B)}
-					     end)
-			 checkbutton(text:    'Garbage collection'
-				     feature: gc
-				     state:  {System.get messages}.gc
-				     action: proc {$ B}
-						{System.set messages(gc:B)}
-					     end)]
-		     right:
-			[button(text:  'Default'
-				action: proc {$}
-					   {System.set messages(idle: false
-								gc:   true)}
-					   {self update(false)}
 					end)])]}
-	  
          in
 	    {Tk.batch [pack(Menu side:top fill:x)
 		       pack(Book)
@@ -710,9 +720,11 @@ in
       meth setSlice
 	 lock
 	    S = (LoadWidth * @UpdateTime) div @HistoryRange
+	    STO = self.threads.options
 	 in
 	    {self.memory.options.usage.load    slice(S)}
-	    {self.threads.options.threads.load slice(S)}
+	    {STO.threads.load slice(S)}
+	    {STO.runtime.curLoad slice(S)}
 	 end
       end
 

@@ -39,7 +39,9 @@ local
       end
    in
       fun {GetLimit N}
-	 case N=<5.0 then 5.0
+	 case N=<0.25 then 0.25
+	 elsecase N=<1.0 then 1.0
+	 elsecase N=<5.0 then 5.0
 	 else
 	    {Floor
 	     {Shrink N
@@ -55,6 +57,7 @@ in
    class Load
       from Tk.canvas
       feat
+	 MinY
 	 BothTag
 	 TextTag
 	 CoverTag
@@ -72,8 +75,8 @@ in
 	 CurLimit:     0.0
 	 Slice:        (LoadWidth * DefaultUpdateTime) div DefaultHistoryRange
       
-      meth init(parent:P maxy:Y dim:Dim colors:Cs stipple:Ss)
-	 Limit = {GetLimit Y}
+      meth init(parent:P maxy:Y miny:MY dim:Dim colors:Cs stipple:Ss)
+	 Limit = {GetLimit {Max MY Y}}
       in
 	 Tk.canvas,tkInit(parent:             P
 			  width:              LoadWidth+LeftWidth+1
@@ -95,6 +98,7 @@ in
 	 CurLimit  <- Limit
 	 LeftMaxY  <- Y
 	 RightMaxY <- 0.0
+	 self.MinY = MY
 	 Tk.canvas,tk(crea rectangle 0 0 LoadWidth ~Height fill:ActiveColor)
 	 Load,DrawTicks(5 ~ Height div 5)
 	 Tk.canvas,tk(crea rectangle
@@ -103,7 +107,7 @@ in
 		      fill:    {TclGetConf self bg}
 		      tags:    self.CoverTag)
 	 Tk.canvas,tk(crea rectangle 0 0 LoadWidth ~Height)
-	 Load,DrawLabel(5 ~ Height div 5 Limit / 5.0)
+	 Load,DrawLabel(5 ~ Height div 5 Limit / 5.0 Limit=<1.0)
       end
 
       meth DrawTicks(N D)
@@ -111,14 +115,20 @@ in
 	 case N>0 then Load,DrawTicks(N-1 D) else skip end
       end
       
-      meth DrawLabel(N D Y)
+      meth DrawLabel(N D Y IsFrac)
 	 Load,tk(crea text 0 D*N
 		 font: TickFont
-		 text: N*{FloatToInt Y}#' '#self.Dimension
+		 text: case IsFrac then
+			  case N*{FloatToInt Y*10.0}
+			  of 10 then '1.0'
+			  elseof M then '0.'#M
+			  end
+		       else N*{FloatToInt Y}
+		       end #' '#self.Dimension
 		 anchor: e
 		 tags:   self.TextTag)
 	 Load,tk('raise' self.TextTag)
-	 case N>0 then Load,DrawLabel(N-1 D Y) else skip end
+	 case N>0 then Load,DrawLabel(N-1 D Y IsFrac) else skip end
       end
       
       meth DisplayLoads(Y1s Y2s X1 X2 Cs Ss T)
@@ -149,11 +159,11 @@ in
 	 Tk.canvas,tk(scale self.BothTag 0 0 1 NewScale / @CurScale)
 	 CurScale <- NewScale
 	 {self.TextTag tk(delete)}
-	 Load,DrawLabel(5 ~Height div 5 NewLimit / 5.0)
+	 Load,DrawLabel(5 ~Height div 5 NewLimit / 5.0 NewLimit=<1.0)
       end
 
       meth clear
-	 NewLimit = {GetLimit {FoldL @PrevYs Max 0.0}}
+	 NewLimit = {GetLimit {FoldL @PrevYs Max self.MinY}}
       in
 	 {@LeftTag  tk(delete)}
 	 {@RightTag tk(delete)}
@@ -185,7 +195,7 @@ in
 	    LeftTag  <- @RightTag
 	    RightTag <- TmpTag
 	    case NeedsScale then skip
-	    else RightLimit = {GetLimit @RightMaxY} in
+	    else RightLimit = {GetLimit {Max @RightMaxY self.MinY}} in
 	       case RightLimit < L then
 		  Load,ReScale(RightLimit)
 		  CurLimit  <- RightLimit
@@ -197,7 +207,7 @@ in
 	 else skip
 	 end
 	 %% Check whether display needs to be rescaled
-	 case NeedsScale then NewLimit = {GetLimit Y} in
+	 case NeedsScale then NewLimit = {GetLimit {Max Y self.MinY}} in
 	    Load,ReScale(NewLimit)
 	    CurLimit <- NewLimit
 	 else skip
