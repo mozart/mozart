@@ -56,15 +56,15 @@ TARGETS		= Reflect.ozf reflect.so-$(PLATFORM)
 LIB_TARGETS	= $(TARGETS:%=$(LIB_DIR)/%)
 
 all:     $(TARGETS)
-install: $(LIB_TARGETS)
+install: $(LIB_DIR) $(LIB_TARGETS)
 
 $(LIB_DIR):
 	$(INSTALL_DIR) $@
 
-$(LIB_DIR)/Reflect.ozf: Reflect.ozf
+$(LIB_DIR)/%.ozf: %.ozf
 	$(INSTALL_LIB) $< $@
 
-$(LIB_DIR)/reflect.so-$(PLATFORM): reflect.so-$(PLATFORM)
+$(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
 	$(INSTALL_DLL) $< $@
 
 #----------------------------------------------------------------------
