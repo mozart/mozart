@@ -78,6 +78,7 @@ void OZ_error(const char *format, ...)
 	   );
   vfprintf(stderr,format,ap);
   fprintf( stderr, "\n");
+  fflush(stderr);
 
   va_end(ap);
 
@@ -102,6 +103,7 @@ void OZ_warning(const char *format, ...)
   fprintf( stderr, "*** Warning: ");
   vfprintf(stderr,format,ap);
   fprintf( stderr, "\n");
+  fflush(stderr);
 
   va_end(ap);
 }
