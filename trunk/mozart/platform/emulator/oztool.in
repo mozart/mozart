@@ -7,12 +7,12 @@
 
 # determine oztool includes
 if test "${oztool_includes-NONE}" = NONE; then
-  if test -n "$OZHOME" && test -e "$OZHOME/include/mozart.h"; then
+  if test -n "$OZHOME" && test -r "$OZHOME/include/mozart.h"; then
     oztool_includes="-I$OZHOME/include"
   else
     oz_tmp=`dirname $0`
     oz_tmp=`cd $oz_tmp/.. & pwd`
-    if test -e "$oz_tmp/include/mozart.h"; then
+    if test -r "$oz_tmp/include/mozart.h"; then
       oztool_includes="-I$oz_tmp/include"
     else
       oztool_includes="-I@prefix@/include";
