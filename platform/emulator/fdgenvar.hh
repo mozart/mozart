@@ -28,26 +28,26 @@
 class GenFDVariable: public GenCVariable {
 
 friend class GenCVariable;
-friend void addSuspFDVar(TaggedRef, SuspList *, FDState);
+friend void addSuspFDVar(TaggedRef, SuspList *, FDPropState);
 friend void addSuspFDVar(TaggedRef, SuspList *);
 
 private:
   FiniteDomain finiteDomain;
-  SuspList * fdSuspList[any];
+  SuspList * fdSuspList[fd_any];
 
 public:
   GenFDVariable(FiniteDomain &fd, TaggedRef pn = AtomVoid)
   : GenCVariable(FDVariable, pn) {
     finiteDomain = fd;
-    fdSuspList[det] = fdSuspList[bounds] = NULL;
-    fdSuspList[size] = fdSuspList[eqvar] = NULL;
+    fdSuspList[fd_det] = fdSuspList[fd_bounds] = NULL;
+    fdSuspList[fd_size] = fdSuspList[fd_eqvar] = NULL;
   }
 
   GenFDVariable(TaggedRef pn = AtomVoid)
   : GenCVariable(FDVariable, pn) {
     finiteDomain.setFull();
-    fdSuspList[det] = fdSuspList[bounds] = NULL;
-    fdSuspList[size] = fdSuspList[eqvar] = NULL;
+    fdSuspList[fd_det] = fdSuspList[fd_bounds] = NULL;
+    fdSuspList[fd_size] = fdSuspList[fd_eqvar] = NULL;
   }
 
   // methods relevant for term copying (gc and solve)
@@ -68,11 +68,16 @@ public:
 
   void relinkSuspList(GenFDVariable * leftVar);
 
-  void propagate(TaggedRef var, FDState state,
+  void propagate(TaggedRef var, FDPropState state,
                  TaggedRef term, Bool prop_eq = FALSE);
-  void propagate(TaggedRef var, FDState state,
+  void propagate(TaggedRef var, FDPropState state,
                  TaggedRef * tPtr, Bool prop_eq = FALSE);
 
+  int getSuspListLength(void) {
+    return suspList->length() +
+      fdSuspList[fd_det]->length() + fdSuspList[fd_bounds]->length() +
+      fdSuspList[fd_size]->length() + fdSuspList[fd_eqvar]->length();
+  }
 };
 
 
@@ -80,9 +85,9 @@ Bool isGenFDVar(TaggedRef term);
 GenFDVariable * tagged2GenFDVar(TaggedRef term);
 
 
-void addSuspFDVar(TaggedRef v, SuspList * el, FDState l)
+void addSuspFDVar(TaggedRef v, SuspList * el, FDPropState l)
 {
-  DebugCheck(l > eqvar, error("list index out of range."));
+  DebugCheck(l > fd_eqvar, error("list index out of range."));
 
   GenFDVariable * fv = tagged2GenFDVar(v);
   fv->fdSuspList[l] = addSuspToList(fv->fdSuspList[l], el, fv->home);

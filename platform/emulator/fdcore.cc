@@ -24,13 +24,21 @@ OZ_C_proc_begin(BIisFdVar,1)
 OZ_C_proc_end
 
 
+#ifdef BETA
+OZ_C_proc_begin(BIgetFDLimits,2)
+{
+  return (OZ_unify(newSmallInt(0), OZ_getCArg(0)) &&
+    OZ_unify(newSmallInt(fd_iv_max_elem), OZ_getCArg(1))) ? PROCEED : FAILED;
+}
+OZ_C_proc_end
+#else
 OZ_C_proc_begin(BIgetFDLimits,2)
 {
   return (OZ_unify(newSmallInt(fdMinBA), OZ_getCArg(0)) &&
     OZ_unify(newSmallInt(fdMaxBA), OZ_getCArg(1))) ? PROCEED : FAILED;
 }
 OZ_C_proc_end
-
+#endif
 
 OZ_C_proc_begin(BIfdMin, 2)
 {
@@ -153,7 +161,7 @@ OZ_C_proc_begin(BIfdNextTo, 3)
 #endif
     int next_val, n_val = smallIntValue(n);
     return (tagged2GenFDVar(var)->getDom().next(n_val, next_val))
-      ? OZ_unify(OZ_getCArg(2), makeRangeTuple(next_val, 2 * n_val - next_val))
+      ? OZ_unify(OZ_getCArg(2), mkTuple(next_val, 2 * n_val - next_val))
       : OZ_unify(OZ_getCArg(2), newSmallInt(next_val));
   } else if (isNotCVar(vartag)) {
     return addNonResSuspForCon(var, varptr, vartag,
@@ -211,7 +219,7 @@ OZ_C_proc_begin(BIfdPutGe, 2)
 }
 OZ_C_proc_end
 
-
+#ifdef BETA
 OZ_C_proc_begin(BIfdPutList, 3)
 {
   OZ_getCArgDeref(2, s, sptr, stag); // sign
@@ -220,7 +228,113 @@ OZ_C_proc_begin(BIfdPutList, 3)
     return addNonResSuspForDet(s, sptr, stag,
                                createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else if (! isSmallInt(stag)) {
-    warning("BIfdPutLe: Expected small integer, got 0x%x.", stag);
+    warning("BIfdPutList: Expected small integer, got 0x%x.", stag);
+    return FAILED;
+  }
+
+  OZ_getCArgDeref(1, list, listptr, listtag);
+
+  if (isNotCVar(listtag)) {
+    return addNonResSuspForDet(list, listptr, listtag,
+                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+  } else if (! isLTuple(listtag)) {
+    warning("BIfdPutList: Expected list tuple, got 0x%x.", listtag);
+    return FAILED;
+  }
+
+  int * left_arr = static_int_a, * right_arr = static_int_b;
+  int min_arr = fd_iv_max_elem, max_arr = 0;
+
+  for (int len_arr = 0; isLTuple(list) && len_arr < MAXFDBIARGS;) {
+    TaggedRef val = tagged2LTuple(list)->getHead();
+
+    DEREF(val, valptr, valtag);
+
+    if (isSmallInt(valtag)) {
+      int v = smallIntValue(val);
+      if (0 <= v && v <= fd_iv_max_elem) {
+        left_arr[len_arr] = right_arr[len_arr] = v;
+        min_arr = min(min_arr, left_arr[len_arr]);
+        max_arr = max(max_arr, right_arr[len_arr]);
+        len_arr += 1;
+      }
+    } else if (isSTuple(valtag)) {
+      STuple * t = tagged2STuple(val);
+
+      if (t->getSize() != 2) {
+        warning("BIfdPutList: Expected 2-tuple");
+        return FAILED;
+      }
+      TaggedRef t_l = (*t)[0];
+      DEREF(t_l, t_lptr, t_ltag);
+      if (isSmallInt(t_ltag)) {
+        left_arr[len_arr] = smallIntValue(t_l);
+      } else if (isAnyVar(t_ltag)) {
+        return addNonResSuspForDet(t_l, t_lptr, t_ltag,
+                                   createNonResSusp(OZ_self,OZ_args,OZ_arity));
+      } else {
+        warning("BIfdPutList: Expected tuple of small ints, got 0x%x", t_ltag);
+        return FAILED;
+      }
+
+      TaggedRef t_r = (*t)[1];
+      DEREF(t_r, t_rptr, t_rtag);
+      if (isSmallInt(t_rtag)) {
+        right_arr[len_arr] = smallIntValue(t_r);
+      } else if (isAnyVar(t_rtag)) {
+        return addNonResSuspForDet(t_r, t_rptr, t_rtag,
+                                   createNonResSusp(OZ_self,OZ_args,OZ_arity));
+      } else {
+        warning("BIfdPutList: Expected tuple of small ints, got 0x%x", t_rtag);
+        return FAILED;
+      }
+
+      if (0 <= left_arr[len_arr] &&
+          left_arr[len_arr] <= right_arr[len_arr] &&
+          right_arr[len_arr] <= fd_iv_max_elem) {
+        min_arr = min(min_arr, left_arr[len_arr]);
+        max_arr = max(max_arr, right_arr[len_arr]);
+        len_arr += 1;
+      }
+    } else if (isNotCVar(valtag)) {
+      return addNonResSuspForDet(val, valptr, valtag,
+                                 createNonResSusp(OZ_self, OZ_args, OZ_arity));
+    } else {
+      warning("BIfdPutList: Expected list of small ints or small int 2-tuple,"
+              " got 0x%x.", valtag);
+      return FAILED;
+    }
+
+    list = tagged2LTuple(list)->getTail();
+    while(isRef(list)) list = *TaggedRefPtr(list);
+  }
+
+  if (len_arr >= MAXFDBIARGS)
+    warning("BIfdPutList: Probably elements of description are ignored");
+
+  BIfdBodyManager x;
+
+  if (! x.introduce(OZ_getCArg(0))) return FAILED;
+
+  LocalFD aux; aux.initList(len_arr, left_arr, right_arr, min_arr, max_arr);
+
+  if (smallIntValue(s) != 0) aux = ~aux;
+
+  if ((*x &= aux) == 0) return FAILED;
+
+  return x.releaseNonRes(OZ_arity, OZ_args, OZ_self);
+}
+OZ_C_proc_end
+#else
+OZ_C_proc_begin(BIfdPutList, 3)
+{
+  OZ_getCArgDeref(2, s, sptr, stag); // sign
+
+  if (isAnyVar(stag)) {
+    return addNonResSuspForDet(s, sptr, stag,
+                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+  } else if (! isSmallInt(stag)) {
+    warning("BIfdPutList: Expected small integer, got 0x%x.", stag);
     return FAILED;
   }
 
@@ -230,16 +344,15 @@ OZ_C_proc_begin(BIfdPutList, 3)
     return addNonResSuspForCon(list, listptr, listtag,
                                createNonResSusp(OZ_self, OZ_args, OZ_arity));
   } else if (! isLTuple(listtag)) {
-    warning("BIfdPutLe: Expected list tuple, got 0x%x.", listtag);
+    warning("BIfdPutList: Expected list tuple, got 0x%x.", listtag);
     return FAILED;
   }
-
 
   int list_array[fdMaxBA - fdMinBA + 1];
   BitArray bitArray;
   bitArray.empty();
 
-  for (int list_len = 0; isLTuple(list); list_len += 1) {
+  for (int list_len = 0, list_array_index = 0; isLTuple(list); list_len += 1) {
     TaggedRef ival = tagged2LTuple(list)->getHead();
 
     while(isRef(ival)) ival = * TaggedRefPtr(ival);
@@ -250,8 +363,9 @@ OZ_C_proc_begin(BIfdPutList, 3)
       return FAILED;
     } else {
       int v = smallIntValue(ival);
-      if (! bitArray.contains(v)) {
-        list_array[list_len] = v;
+      if (!bitArray.contains(v) && fdMinBA <= v && v <= fdMaxBA) {
+        Assert(list_array_index < fdMaxBA - fdMinBA + 1);
+        list_array[list_array_index++] = v;
         bitArray.setBit(v);
       }
     }
@@ -273,7 +387,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
   return x.releaseNonRes(OZ_arity, OZ_args, OZ_self);
 }
 OZ_C_proc_end
-
+#endif
 
 OZ_C_proc_begin(BIfdPutNot, 2)
 {

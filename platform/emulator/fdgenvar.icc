@@ -17,34 +17,34 @@
 #endif
 
 inline
-void GenFDVariable::propagate(TaggedRef var, FDState state,
+void GenFDVariable::propagate(TaggedRef var, FDPropState state,
                               TaggedRef term, Bool prop_eq)
 {
 #ifdef DEBUG_FD
   if ((int)this != var >> 4)
-    error("this and var should be the same variable.");
+    error("variable expected");
 #endif
 
   switch (state) {
-  case det:
-    GenCVariable::propagate(var, fdSuspList[det], term);
-  case bounds:
-    GenCVariable::propagate(var, fdSuspList[bounds], term);
-  case size:
-    GenCVariable::propagate(var, fdSuspList[size], term);
-  case any:
+  case fd_det:
+    GenCVariable::propagate(var, fdSuspList[fd_det], term);
+  case fd_bounds:
+    GenCVariable::propagate(var, fdSuspList[fd_bounds], term);
+  case fd_size:
+    GenCVariable::propagate(var, fdSuspList[fd_size], term);
+  case fd_any:
     GenCVariable::propagate(var, term);
     break;
   default:
-    error("Unexpected case in GenFDVariable::propagate.");
+    error("unexpected case");
   }
   if (prop_eq)
-    GenCVariable::propagate(var, fdSuspList[eqvar], term);
+    GenCVariable::propagate(var, fdSuspList[fd_eqvar], term);
 }
 
 
 inline
-void GenFDVariable::propagate(TaggedRef var, FDState state,
+void GenFDVariable::propagate(TaggedRef var, FDPropState state,
                               TaggedRef * tPtr, Bool prop_eq) {
   propagate(var, state, makeTaggedRef(tPtr), prop_eq);
 }
@@ -71,7 +71,7 @@ inline
 void GenFDVariable::relinkSuspList(GenFDVariable * leftVar)
 {
   GenCVariable::relinkSuspList(leftVar); // any
-  for (int i = 0; i < any; i++)
+  for (int i = 0; i < fd_any; i++)
   leftVar->fdSuspList[i] = concSuspList(leftVar->fdSuspList[i], fdSuspList[i]);
 }
 
@@ -79,12 +79,12 @@ inline
 void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
 {
 #ifdef DEBUG_FD
-  if (! (finiteDomain == singleton))
-    error("Singleton expected.");
+  if (! (finiteDomain == fd_singleton))
+    error("singleton expected");
 #endif
 
   TaggedRef si_val = newSmallInt(finiteDomain.singl());
-  propagate(*trPtr, det, si_val);
+  propagate(*trPtr, fd_det, si_val);
   *trPtr = si_val;
 }
 
@@ -109,7 +109,7 @@ GenFDVariable * tagged2GenFDVar(TaggedRef term)
   GCDEBUG(term);
 #ifdef DEBUG_FD
   if(isGenFDVar(term) == NO)
-    error("GenFDVariable expected at %s:%d", __FILE__, __LINE__);
+    error("fd variable expected");
 #endif
   return (GenFDVariable*) tagged2CVar(term);
 }
