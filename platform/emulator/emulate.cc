@@ -185,28 +185,6 @@ static void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP);
 static ThreadReturn debugEntry(ProgramCounter PC, RefsArray Y, Abstraction *CAP);
 static ThreadReturn debugExit(ProgramCounter PC, RefsArray Y, Abstraction *CAP);
 
-// -----------------------------------------------------------------------
-// *** ???
-// -----------------------------------------------------------------------
-
-#define DoSwitchOnTerm(indexTerm,table)                                 \
-      TaggedRef term = indexTerm;                                       \
-      DEREF(term,termPtr,_2);                                           \
-      if (oz_isLTuple(term)) {                                          \
-        Assert(table->listLabel);                                       \
-        sPointer = tagged2LTuple(term)->getRef();                       \
-        JUMPRELATIVE(table->listLabel);                                 \
-      } else {                                                          \
-        TaggedRef *sp = sPointer;                                       \
-        int offset = table->switchOnTerm(term,sp);                      \
-        sPointer = sp;                                                  \
-        if (offset) {                                                   \
-          JUMPRELATIVE(offset);                                         \
-        } else {                                                        \
-          SUSP_PC(termPtr,PC);                                          \
-        }                                                               \
-      }
-
 
 // most probable case first: local UVar
 // if (oz_isUVar(var) && isCurrentBoard(tagged2VarHome(var))) {
@@ -477,6 +455,7 @@ void pushContX(TaskStack *stk,
 #endif
 
 #define JUMPRELATIVE(offset) Assert(offset!=0); DISPATCH(offset)
+#define JUMPPC(N) JUMPRELATIVE(getLabelArg(PC+N))
 #define JUMPABSOLUTE(absaddr) PC=absaddr; DISPATCH(0)
 
 
@@ -770,58 +749,26 @@ LBLdispatcher:
 // -------------------------------------------------------------------------
 
   Case(MOVEXX)
-    {
-      XPC(2) = XPC(1);
-      DISPATCH(3);
-    }
+    XPC(2) = XPC(1); DISPATCH(3);
   Case(MOVEXY)
-    {
-      YPC(2) = XPC(1);
-      DISPATCH(3);
-    }
-
+    YPC(2) = XPC(1); DISPATCH(3);
   Case(MOVEYX)
-    {
-      XPC(2) = YPC(1);
-      DISPATCH(3);
-    }
+    XPC(2) = YPC(1); DISPATCH(3);
   Case(MOVEYY)
-    {
-      YPC(2) = YPC(1);
-      DISPATCH(3);
-    }
-
+    YPC(2) = YPC(1); DISPATCH(3);
   Case(MOVEGX)
-    {
-      XPC(2) = GPC(1);
-      DISPATCH(3);
-    }
+    XPC(2) = GPC(1); DISPATCH(3);
   Case(MOVEGY)
-    {
-      YPC(2) = GPC(1);
-      DISPATCH(3);
-    }
+    YPC(2) = GPC(1); DISPATCH(3);
 
   Case(MOVEMOVEXYXY)
-    {
-      YPC(2) = XPC(1); YPC(4) = XPC(3);
-      DISPATCH(5);
-    }
+    YPC(2) = XPC(1); YPC(4) = XPC(3); DISPATCH(5);
   Case(MOVEMOVEYXYX)
-    {
-      XPC(2) = YPC(1); XPC(4) = YPC(3);
-      DISPATCH(5);
-    }
+    XPC(2) = YPC(1); XPC(4) = YPC(3); DISPATCH(5);
   Case(MOVEMOVEYXXY)
-    {
-      XPC(2) = YPC(1); YPC(4) = XPC(3);
-      DISPATCH(5);
-    }
+    XPC(2) = YPC(1); YPC(4) = XPC(3); DISPATCH(5);
   Case(MOVEMOVEXYYX)
-    {
-      YPC(2) = XPC(1); XPC(4) = YPC(3);
-      DISPATCH(5);
-    }
+    YPC(2) = XPC(1); XPC(4) = YPC(3); DISPATCH(5);
 
   Case(CLEARY)
     {
@@ -885,7 +832,7 @@ LBLdispatcher:
 
   Case(UNIFYXY) SETAUX(YPC(2)); goto Unify;
   Case(UNIFYXG) SETAUX(GPC(2)); goto Unify;
-  Case(UNIFYXX) SETAUX(XPC(2)); /* fall through */
+  Case(UNIFYXX) SETAUX(XPC(2));
   {
   Unify:
     const TaggedRef A   = XPC(1);
@@ -1074,7 +1021,7 @@ LBLdispatcher:
       if (oz_isCVar(term) &&
           !oz_var_valid(tagged2CVar(term),atm)) {
         // fail
-        JUMPRELATIVE( getLabelArg(PC+3) );
+        JUMPPC(3);
       }
       SUSP_PC(termPtr,PC);
     }
@@ -1082,7 +1029,7 @@ LBLdispatcher:
       DISPATCH(4);
     }
     // fail
-    JUMPRELATIVE( getLabelArg(PC+3) );
+    JUMPPC(3);
   }
 
   Case(TESTBOOLG) SETAUX(GPC(1)); goto testBool;
@@ -1098,7 +1045,7 @@ LBLdispatcher:
     }
 
     if (oz_eq(term,oz_false())) {
-      JUMPRELATIVE(getLabelArg(PC+2));
+      JUMPPC(2);
     }
 
     // mm2: kinded and ofs handling missing
@@ -1106,7 +1053,7 @@ LBLdispatcher:
       SUSP_PC(termPtr, PC);
     }
 
-    JUMPRELATIVE( getLabelArg(PC+3) );
+    JUMPPC(3);
   }
 
   Case(TESTNUMBERG) SETAUX(GPC(1)); goto testNumber;
@@ -1124,7 +1071,7 @@ LBLdispatcher:
       if (smallIntEq(term,i)) {
         DISPATCH(4);
       }
-      JUMPRELATIVE(getLabelArg(PC+3));
+      JUMPPC(3);
     }
 
     if (oz_numberEq(i,term)) {
@@ -1135,12 +1082,12 @@ LBLdispatcher:
       if (oz_isKinded(term) &&
           !oz_var_valid(tagged2CVar(term),i)) {
         // fail
-        JUMPRELATIVE( getLabelArg(PC+3) );
+        JUMPPC(3);
       }
       SUSP_PC(termPtr,PC);
     }
     // fail
-    JUMPRELATIVE( getLabelArg(PC+3) );
+    JUMPPC(3);
   }
 
 
@@ -1169,7 +1116,7 @@ LBLdispatcher:
           Literal *lit = tagged2Literal(label);
           if (sraIsTuple(sra) && ofsvar->disentailed(lit,getTupleWidth(sra)) ||
               !sraIsTuple(sra) && ofsvar->disentailed(lit,getRecordArity(sra))) {
-            JUMPRELATIVE(getLabelArg(PC+4));
+            JUMPPC(4);
           }
           SUSP_PC(termPtr,PC);
         }
@@ -1177,7 +1124,7 @@ LBLdispatcher:
       // fall through
     }
     // fail
-    JUMPRELATIVE(getLabelArg(PC+4));
+    JUMPPC(4);
   }
 
 
@@ -1200,7 +1147,7 @@ LBLdispatcher:
         if (cvar->getType() == OZ_VAR_OF) {
           OzOFVariable *ofsvar = (OzOFVariable *) cvar;
           if (ofsvar->disentailed(tagged2Literal(AtomCons),2)) {
-            JUMPRELATIVE(getLabelArg(PC+2));
+            JUMPPC(2);
           }
           SUSP_PC(termPtr,PC);
         }
@@ -1208,7 +1155,7 @@ LBLdispatcher:
       // fall through
     }
     // fail
-    JUMPRELATIVE(getLabelArg(PC+2));
+    JUMPPC(2);
   }
 
 
@@ -1721,25 +1668,56 @@ Case(GETVOID)
       DISPATCH(2);
     }
 
-  Case(MATCHX)
+  Case(MATCHG) SETTMPA(GPC(1)); goto match;
+  Case(MATCHY) SETTMPA(YPC(1)); goto match;
+  Case(MATCHX) SETTMPA(XPC(1)); /* fall through */
+  match:
     {
-      TaggedRef val     = XPC(1);
-      IHashTable *table = (IHashTable *) getAdressArg(PC+2);
-      DoSwitchOnTerm(val,table);
-    }
-  Case(MATCHY)
-    {
-      TaggedRef val     = YPC(1);
-      IHashTable *table = (IHashTable *) getAdressArg(PC+2);
-      DoSwitchOnTerm(val,table);
-    }
-  Case(MATCHG)
-    {
-      TaggedRef val     = GPC(1);
-      IHashTable *table = (IHashTable *) getAdressArg(PC+2);
-      DoSwitchOnTerm(val,table);
-    }
+      TaggedRef term     = GETTMPA();
+      IHashTable * table = (IHashTable *) getAdressArg(PC+2);
 
+      TaggedRef * termPtr;
+#ifdef DEBUG_CHECK
+      termPtr = 0;
+#endif
+
+    retry:
+      switch (tagTypeOf(term)) {
+      case TAG_LTUPLE:
+        Assert(table->listLabel);
+        sPointer = tagged2LTuple(term)->getRef();
+        JUMPRELATIVE(table->lookupLTuple());
+      case TAG_SRECORD:
+        sPointer = tagged2SRecord(term)->getRef();
+        JUMPRELATIVE(table->lookupSRecord(term));
+      case TAG_LITERAL:
+        JUMPRELATIVE(table->lookupLiteral(term));
+      case TAG_SMALLINT:
+        JUMPRELATIVE(table->lookupSmallInt(term));
+      case TAG_FLOAT:
+        JUMPRELATIVE(table->lookupFloat(term));
+      case TAG_CONST:
+        JUMPRELATIVE(table->lookupConst(term));
+      case TAG_REF:
+      case TAG_REF2:
+      case TAG_REF3:
+      case TAG_REF4:
+        termPtr = tagged2Ref(term);
+        term    = *termPtr;
+        goto retry;
+      case TAG_CVAR:
+        if (oz_isKinded(term) && table->disentailed(tagged2CVar(term))) {
+          JUMPRELATIVE(table->getElse());
+        };
+        /* fall through */
+      case TAG_UVAR:
+        Assert(termPtr);
+        SUSP_PC(termPtr,PC);
+      default:
+        JUMPRELATIVE(table->getElse());
+      }
+
+    }
 
 // ------------------------------------------------------------------------
 // INSTRUCTIONS: (Fast-) Call/Execute Inline Funs/Rels
@@ -1747,24 +1725,35 @@ Case(GETVOID)
 
   Case(FASTCALL)
     {
-      PushCont(PC+3);   // PC+3 goes into a temp var (mm2)
-      // goto LBLFastTailCall; // is not optimized away (mm2)
+      PushCont(PC+3);
+      AbstractionEntry *entry = (AbstractionEntry *)getAdressArg(PC+1);
+
+      CallDoChecks(entry->getAbstr());
+
+      IHashTable *table = entry->getIndexTable();
+      PC = entry->getPC();
+      if (table && oz_isLTuple(XREGS[0])) {
+        sPointer = tagged2LTuple(XREGS[0])->getRef();
+        JUMPRELATIVE(table->lookupLTuple());
+      } else {
+        DISPATCH(0);
+      }
     }
 
 
   Case(FASTTAILCALL)
-    //  LBLFastTailCall:
     {
       AbstractionEntry *entry = (AbstractionEntry *)getAdressArg(PC+1);
 
       CallDoChecks(entry->getAbstr());
 
       IHashTable *table = entry->getIndexTable();
-      if (table) {
-        PC = entry->getPC();
-        DoSwitchOnTerm(XREGS[0],table);
+      PC = entry->getPC();
+      if (table && oz_isLTuple(XREGS[0])) {
+        sPointer = tagged2LTuple(XREGS[0])->getRef();
+        JUMPRELATIVE(table->lookupLTuple());
       } else {
-        JUMPABSOLUTE(entry->getPC());
+        DISPATCH(0);
       }
     }
 
@@ -1823,7 +1812,7 @@ Case(GETVOID)
           DISPATCH(4);
         } else {
           Assert(oz_isFalse(loc->getOutValue(bi,0)));
-          JUMPRELATIVE(getLabelArg(PC+3));
+          JUMPPC(3);
         }
       }
 
@@ -2359,8 +2348,8 @@ Case(GETVOID)
 // ------------------------------------------------------------------------
 
 #define LT_IF(T) if (T) THEN_CASE else ELSE_CASE
-#define THEN_CASE { XPC(3)=oz_true(); DISPATCH(5); }
-#define ELSE_CASE { XPC(3)=oz_false(); JUMPRELATIVE(getLabelArg(PC+4)); }
+#define THEN_CASE { XPC(3)=oz_true();  DISPATCH(5); }
+#define ELSE_CASE { XPC(3)=oz_false(); JUMPPC(4);   }
 
   Case(TESTLT)
     {
@@ -2494,7 +2483,7 @@ Case(GETVOID)
   Case(EXHANDLER)
     PushCont(PC+2);
     oz_currentThread()->pushCatch();
-    JUMPRELATIVE(getLabelArg(PC+1));
+    JUMPPC(1);
 
   Case(POPEX)
     {
@@ -2506,84 +2495,100 @@ Case(GETVOID)
     }
 
   Case(LOCKTHREAD)
-{
-  int lbl = getLabelArg(PC+1);
-  TaggedRef aux      = XPC(2);
+    {
+      int lbl = getLabelArg(PC+1);
+      TaggedRef aux      = XPC(2);
 
-  DEREF(aux,auxPtr,_1);
-  if (oz_isVariable(aux)) {
-    SUSP_PC(auxPtr,PC);}
+      DEREF(aux,auxPtr,_1);
+      if (oz_isVariable(aux)) {
+        SUSP_PC(auxPtr,PC);
+      }
 
-  if (!oz_isLock(aux)) {
-    /* arghhhhhhhhhh! fucking exceptions (RS) */
-    (void) oz_raise(E_ERROR,E_KERNEL,"type",5,
-                    NameUnit,
-                    NameUnit,
-                    oz_atomNoDup("Lock"),
-                    oz_int(1),
-                    oz_nil());
-    RAISE_TYPE1("lock",oz_mklist(aux));
-  }
+      if (!oz_isLock(aux)) {
+        (void) oz_raise(E_ERROR,E_KERNEL,"type",5,
+                        NameUnit,
+                        NameUnit,
+                        oz_atomNoDup("Lock"),
+                        makeTaggedSmallInt(1),
+                        oz_nil());
+        RAISE_TYPE1("lock",oz_mklist(aux));
+      }
 
-  OzLock *t = (OzLock*) tagged2Const(aux);
-  Thread *th=oz_currentThread();
+      OzLock *t = (OzLock*) tagged2Const(aux);
+      Thread *th=oz_currentThread();
 
-  if(t->isLocal()){
-    if(!oz_onToplevel()){
-      if (!oz_isCurrentBoard(GETBOARD((LockLocal*)t))) {
+      if (t->isLocal()) {
+        if (!oz_onToplevel()) {
+          if (!oz_isCurrentBoard(GETBOARD((LockLocal*)t))) {
+            (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
+            RAISE_THREAD;
+          }
+        }
+        if (((LockLocal*)t)->hasLock(th))
+          goto has_lock;
+        if (((LockLocal*)t)->lockB(th))
+          goto got_lock;
+        goto no_lock;
+      }
+
+      if (!oz_onToplevel()) {
         (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
-        RAISE_THREAD;}}
-    if(((LockLocal*)t)->hasLock(th)) {goto has_lock;}
-    if(((LockLocal*)t)->lockB(th)) {goto got_lock;}
-    goto no_lock;}
+        RAISE_THREAD;
+      }
 
-  if(!oz_onToplevel()){
-    (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
-    RAISE_THREAD;
-  }
+      LockRet ret;
 
-  LockRet ret;
+      switch (t->getTertType()) {
+      case Te_Frame:
+        {
+          if (((LockFrameEmul *)t)->hasLock(th))
+            goto has_lock;
+          ret = ((LockFrameEmul *)t)->lockB(th);
+          break;
+        }
+      case Te_Proxy:
+        {
+          (*lockLockProxy)(t, th);
+          goto no_lock;
+        }
+      case Te_Manager:
+        {
+          if (((LockManagerEmul *)t)->hasLock(th))
+            goto has_lock;
+          ret=((LockManagerEmul *)t)->lockB(th);
+          break;
+        }
+      default:
+        Assert(0);
+      }
 
-  switch(t->getTertType()){
-  case Te_Frame:{
-    if(((LockFrameEmul *)t)->hasLock(th)) {goto has_lock;}
-    ret = ((LockFrameEmul *)t)->lockB(th);
-    break;}
-  case Te_Proxy:{
-    (*lockLockProxy)(t, th);
-    goto no_lock;}
-  case Te_Manager:{
-    if(((LockManagerEmul *)t)->hasLock(th)) {goto has_lock;}
-    ret=((LockManagerEmul *)t)->lockB(th);
-    break;}
-  default:
-    Assert(0);}
+      if (ret==LOCK_GOT)
+        goto got_lock;
+      if (ret==LOCK_WAIT)
+        goto no_lock;
 
-  if(ret==LOCK_GOT) goto got_lock;
-  if(ret==LOCK_WAIT) goto no_lock;
+      PushCont(PC+lbl); // failure preepmtion
+      PC += 3;
+      Assert(!e->isEmptyPreparedCalls());
+      goto LBLreplaceBICall;
 
-  PushCont(PC+lbl); // failure preepmtion
-  PC += 3;
-  Assert(!e->isEmptyPreparedCalls());
-  goto LBLreplaceBICall;
+    got_lock:
+      PushCont(PC+lbl);
+      CTS->pushLock(t);
+      DISPATCH(3);
 
-  got_lock:
-    PushCont(PC+lbl);
-    CTS->pushLock(t);
-    DISPATCH(3);
+    has_lock:
+      PushCont(PC+lbl);
+      DISPATCH(3);
 
-  has_lock:
-    PushCont(PC+lbl);
-    DISPATCH(3);
+    no_lock:
+      PushCont(PC+lbl);
+      CTS->pushLock(t);
+      PC += 3;
+      Assert(!e->isEmptyPreparedCalls());
+      goto LBLreplaceBICall;
 
-  no_lock:
-    PushCont(PC+lbl);
-    CTS->pushLock(t);
-    PC += 3;
-    Assert(!e->isEmptyPreparedCalls());
-    goto LBLreplaceBICall;
-
-  }
+    }
 
   Case(RETURN)
 
@@ -2612,7 +2617,6 @@ Case(GETVOID)
 
     LBLDefinition:
     {
-      int nxt                     = getLabelArg(PC+2);
       PrTabEntry *predd           = getPredArg(PC+3);
       AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
       AssRegArray *list           = (AssRegArray*) getAdressArg(PC+5);
@@ -2651,7 +2655,7 @@ Case(GETVOID)
         }
       }
       XPC(1) = makeTaggedConst(p);
-      JUMPRELATIVE(nxt);
+      JUMPPC(2);
     }
 
 // -------------------------------------------------------------------------
@@ -2659,7 +2663,7 @@ Case(GETVOID)
 // -------------------------------------------------------------------------
 
   Case(BRANCH)
-    JUMPRELATIVE( getLabelArg(PC+1) );
+    JUMPPC(1);
 
 
   Case(TAILSENDMSGX)
@@ -2669,12 +2673,12 @@ Case(GETVOID)
   Case(TAILSENDMSGG)
     isTailCall = OK; SETAUX(GPC(2)); goto SendMethod;
 
-  Case(SENDMSGX)
-    isTailCall = NO; SETAUX(XPC(2)); goto SendMethod;
   Case(SENDMSGY)
     isTailCall = NO; SETAUX(YPC(2)); goto SendMethod;
   Case(SENDMSGG)
     isTailCall = NO; SETAUX(GPC(2)); goto SendMethod;
+  Case(SENDMSGX)
+    isTailCall = NO; SETAUX(XPC(2)); /* fall through */
 
  SendMethod:
   {
@@ -2725,10 +2729,10 @@ Case(GETVOID)
   Case(CALLG)
     isTailCall = NO; SETAUX(GPC(1)); goto Call;
 
-  Case(TAILCALLX)
-    isTailCall = OK; SETAUX(XPC(1)); goto Call;
   Case(TAILCALLG)
     isTailCall = OK; SETAUX(GPC(1)); goto Call;
+  Case(TAILCALLX)
+    isTailCall = OK; SETAUX(XPC(1)); /* fall through */
 
  Call:
   asmLbl(TAILCALL);
