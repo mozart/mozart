@@ -191,7 +191,8 @@ public:
   Twin* cellTwin(){
     kind |= W_CELL;
     Assert(twin==NULL);
-    twin = new Twin();}
+    twin = new Twin();
+    return twin;}
 
   void lockTwin(Twin* tw){
     Assert(twin==NULL);
@@ -275,7 +276,7 @@ inline Bool addEntityCond(Tertiary *t, EntityCond c){
   return info->addEntityCond(c);}
 
 inline Bool addEntityCondMsg(Tertiary *t, EntityCond c){
-  addEntityCond(t,msgEntityCond(c));}
+  return addEntityCond(t,msgEntityCond(c));}
 
 inline void subEntityCond(Tertiary *t, EntityCond c){
   EntityInfo* info = t->getInfo();
