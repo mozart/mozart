@@ -83,7 +83,7 @@ in
       in
 	 if B==unit then nil else STRING MORE in
 	    {ByteString.toStringWithTail B MORE STRING}
-	    {ReadS FD MORE}
+	    {ReadSLazy FD MORE}
 	    STRING
 	 end
       end
