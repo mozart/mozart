@@ -1664,8 +1664,7 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
   args[1] = right;
 
   Thread *it = am.mkRunnableThread(am.currentThread->getPriority(), 
-				   space->getSolveBoard(),
-				   OK);
+				   space->getSolveBoard());
   it->pushCFun(contChooseInternal, args, 2, NO);
   am.scheduleThread(it);
 
