@@ -682,7 +682,7 @@ static OZ_Return vs_check(OZ_Term vs, OZ_Term *rest) {
 	*rest = cdr;
 	oz_suspendOn(makeTaggedRef(car_ptr));
       } else if (!isSmallIntTag(car_tag) ||
-		 (smallIntValue(car) < 0) ||
+		 (smallIntValue(car) <= 0) ||
 		 (smallIntValue(car) > 255)) {
 	return FAILED;
       } else {
