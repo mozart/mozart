@@ -8,17 +8,17 @@
 ;;;   Benjamin Lorenz <lorenz@ps.uni-sb.de>
 ;;;
 ;;; Copyright:
-;;;   Leif Kornstaedt, Michael Mehl and Ralf Scheidhauer, 1993-1998
+;;;   Leif Kornstaedt, Michael Mehl, and Ralf Scheidhauer, 1993-1998
 ;;;
 ;;; Last change:
 ;;;   $Date$ by $Author$
 ;;;   $Revision$
 ;;;
 ;;; This file is part of Mozart, an implementation of Oz 3:
-;;;    http://mozart.ps.uni-sb.de
+;;;   http://mozart.ps.uni-sb.de
 ;;;
 ;;; See the file "LICENSE" or
-;;;    http://mozart.ps.uni-sb.de/LICENSE.html
+;;;   http://mozart.ps.uni-sb.de/LICENSE.html
 ;;; for information on usage and redistribution
 ;;; of this file, and for a DISCLAIMER OF ALL
 ;;; WARRANTIES.
@@ -108,7 +108,8 @@
 
 (eval-and-compile
   (eval '(defgroup oz nil
-	   "DFKI Oz Programming Interface.")))
+	   "DFKI Oz Programming Interface."
+	   :group 'languages)))
 
 (eval-and-compile
   (eval '(defcustom OZ-HOME "@prefix@"
@@ -161,6 +162,16 @@ Note that this variable is only checked once when oz.el is loaded."
 	   :group 'oz)))
 (put 'oz-pedantic-spaces 'variable-interactive
      "XHighlight ill-spaced whitespace? (t or nil): ")
+
+(eval-and-compile
+  (eval '(defcustom oz-pc-keys nil
+	   "*If non-nil, use only politically-correct keybindings.
+This means that M-l and M-r are not locally rebound in Oz buffers,
+and that C-c C-d and C-c C-f are not used as command prefixes."
+	   :type 'boolean
+	   :group 'oz)))
+(put 'oz-pc-keys 'variable-interactive
+     "XUse only politically-correct key bindings? (t or nil): ")
 
 (eval-and-compile
   (eval '(defcustom oz-change-title t
@@ -255,14 +266,6 @@ run the emulator when you issue the command `run' to gdb."
 (put 'oz-halt-timeout 'variable-interactive
      "nNumer of seconds to wait for shutdown of the Oz system: ")
 
-(eval-and-compile
-  (eval '(defcustom oz-previewer "xdvi"
-	   "*Viewer command for Oz documentation files."
-	   :type 'string
-	   :group 'oz)))
-(put 'oz-previewer 'variable-interactive
-     "sViewer command for Oz documentation files: ")
-
 ;;}}}
 ;;{{{ win32 Support
 
@@ -310,9 +313,6 @@ This is set when gdb is active.")
 (defvar oz-emulator-filter-hook nil
   "If non-nil, hook used as second process filter for the Oz Emulator.
 This is set when gdb is active.")
-
-(defvar oz-doc-dir (concat (oz-home) "/doc/")
-  "Directory containing the Oz documentation.")
 
 (defconst oz-error-string (char-to-string 17)
   "Regex to recognize error messages from Oz Compiler and Emulator.
@@ -381,14 +381,6 @@ All strings matching this regular expression are removed.")
 
 ;;}}}
 ;;{{{ Utilities
-
-(defvar oz-temp-counter 0
-  "Internal counter for gensym.")
-
-(defun oz-make-temp-name (prefix)
-  ;; gensym implementation.
-  (setq oz-temp-counter (1+ oz-temp-counter))
-  (format "%s%d" (make-temp-name prefix) oz-temp-counter))
 
 (defun oz-line-region (arg)
   ;; Return starting and ending positions of ARG lines surrounding point.
@@ -471,11 +463,12 @@ All strings matching this regular expression are removed.")
     string))
 
 (defun oz-match-string (num &optional string)
-  "Return string of text matched by last search.
-NUM specifies which parenthesized expression in the last regexp.
- Value is nil if NUMth pair didn't match, or there were less than NUM pairs.
-Zero means the entire text matched by the whole regexp or whole string.
-STRING should be given if the last search was by `string-match' on STRING."
+  ;; Return string of text matched by last search.
+  ;; NUM specifies which parenthesized expression in the last regexp.
+  ;; Value is nil if NUMth pair didn't match, or there were less than NUM
+  ;; pairs.  Zero means the entire text matched by the whole regexp or whole
+  ;; string.  STRING should be given if the last search was by `string-match'
+  ;; on STRING.
   (if (match-beginning num)
       (if string
 	  (substring string (match-beginning num) (match-end num))
@@ -532,6 +525,13 @@ the variable `oz-pedantic-spaces' is non-nil."
 	(oz-lucid-emacs
 	 (setq oz-menubar (car (oz-make-menu-lucid list))))))
 
+(defvar oz-temp-counter 0
+  "Internal counter for gensym.")
+
+(defun oz-make-temp-name (prefix)
+  (setq oz-temp-counter (1+ oz-temp-counter))
+  (format "%s%d" (make-temp-name prefix) oz-temp-counter))
+
 (defun oz-make-menu-gnu (map list)
   (if list
       (progn
@@ -577,8 +577,7 @@ the variable `oz-pedantic-spaces' is non-nil."
     ("Feed File"           oz-feed-file t)
     ("-----")
     ("Find" nil
-     ("Documentation Demo" oz-find-docdemo-file t)
-     ("Other Demo"         oz-find-demo-file t)
+     ("Demo"               oz-find-demo-file t)
      ("Modules File"       oz-find-modules-file t))
     ("Print" nil
      ("Buffer"             ps-print-buffer-with-faces t)
@@ -641,23 +640,23 @@ With ARG, start it instead."
   "Set breakpoint at current line.
 With ARG, delete it instead."
   (interactive "P")
-  (oz-breakpoint (if arg " false" " true")))
+  (oz-breakpoint (not arg)))
 
 (defun oz-breakpoint-key-delete (arg)
   "Delete breakpoint at current line.
 With ARG, set it instead."
   (interactive "P")
-  (oz-breakpoint (if arg " true" " false")))
+  (oz-breakpoint arg))
 
 (defun oz-breakpoint-mouse-set (event)
   "Set breakpoint at line where mouse points to."
   (interactive "e")
-  (oz-breakpoint-mouse event " true"))
+  (oz-breakpoint-mouse event t))
 
 (defun oz-breakpoint-mouse-delete (event)
   "Delete breakpoint at line where mouse points to."
   (interactive "e")
-  (oz-breakpoint-mouse event " false"))
+  (oz-breakpoint-mouse event nil))
 
 (defun oz-breakpoint-mouse (event flag)
   (save-excursion
@@ -678,7 +677,7 @@ With ARG, set it instead."
       (oz-send-string
        (concat "{Ozcar bpAt('"
 	       (or (buffer-file-name) (buffer-name))
-	       "' " line flag ")}") t))))
+	       "' " line (if flag " true" " false") ")}") t))))
 
 ;;}}}
 ;;{{{ Interacting with the Oz Profiler
@@ -887,11 +886,11 @@ The emulator to use for debugging is set via \\[oz-set-emulator]."
 	 (message "gdb enabled: %s" oz-emulator))))
 
 (defun oz-start-gdb-emulator ()
-  "Run the Oz Emulator under gdb.
-This is hooked into the variable `oz-emulator-hook' via \\[oz-gdb].
-The directory containing FILE becomes the initial working directory
-and source-file directory for gdb.  If you wish to change this, use
-the gdb commands `cd DIR' and `directory'."
+  ;; Run the Oz Emulator under gdb.
+  ;; This is hooked into the variable `oz-emulator-hook' via \\[oz-gdb].
+  ;; The directory containing FILE becomes the initial working directory
+  ;; and source-file directory for gdb.  If you wish to change this, use
+  ;; the gdb commands `cd DIR' and `directory'.
   (let ((old-buffer (current-buffer))
 	(init-str (concat "set args -u " oz-root-functor "\n")))
     (cond ((get-buffer oz-emulator-buffer)
@@ -910,11 +909,6 @@ the gdb commands `cd DIR' and `directory'."
 	 (get-buffer-process oz-emulator-buffer)
 	 "run\n"))
     (switch-to-buffer old-buffer)))
-
-(defun oz-continue ()
-  "Resume execution of the Oz Emulator under gdb after an error."
-  (interactive)
-  (comint-send-string (get-buffer-process oz-emulator-buffer) "c\n"))
 
 ;;}}}
 ;;{{{ Feeding to the Compiler
@@ -958,7 +952,6 @@ feed that many preceding paragraphs as well as the current paragraph."
   (interactive "p")
   (let ((region (oz-paragraph-region arg)))
     (oz-feed-region (car region) (cdr region))))
-
 
 (defun oz-send-string (string &optional system)
   "Feed STRING to the Oz Compiler, restarting it if it died.
@@ -1204,9 +1197,9 @@ point is not moved."
     ret))
 
 (defun oz-is-directive ()
-  "Return non-nil iff the point is one position after the start of a directive.
-That means, if the point is at a keyword-lookalike and preceded by a
-backslash.  If yes, the point is moved to the backslash."
+  ;; Return non-nil iff the point is one char after the start of a directive.
+  ;; That means, if the point is at a keyword-lookalike and preceded by a
+  ;; backslash.  If yes, the point is moved to the backslash.
   (let ((p (point)))
     (if (= p (point-min))
 	t
@@ -1217,8 +1210,8 @@ backslash.  If yes, the point is moved to the backslash."
       nil)))
 
 (defun oz-is-box ()
-  "Return non-nil if point is at the second character of a `[]' token.
-In this case, move point to the first character of this token."
+  ;; Return non-nil if point is at the second character of a `[]' token.
+  ;; In this case, move point to the first character of this token.
   (let ((p (point)))
     (if (= p (point-min))
 	t
@@ -1371,7 +1364,7 @@ to handle lines like 'attr a:'."
 (defvar oz-bar-overlay-here nil)
 
 (defun oz-bar (file line column state)
-  "Display bar at given line, load file if necessary."
+  ;; Display bar at given line, load file if necessary.
   (if (string-equal file "")
       (oz-bar-remove)
     (let* ((buffer (oz-find-buffer-or-file file))
@@ -1430,7 +1423,7 @@ to handle lines like 'attr a:'."
 	  (set-buffer old-buffer))))))
 
 (defun oz-bar-configure (state)
-  "Change color of bar while not moving it."
+  ;; Change color of bar while not moving it.
   (let ((face
 	 (car (read-from-string (concat "bar-" state))))
 	(face-here
@@ -1443,6 +1436,7 @@ to handle lines like 'attr a:'."
 	   (set-extent-face oz-bar-overlay-here face-here)))))
 
 (defun oz-bar-remove ()
+  "Remove the bar marking an Oz source line."
   (interactive)
   (cond (oz-bar-overlay
 	 (cond (oz-gnu-emacs
@@ -1480,7 +1474,7 @@ and the following line."
     (goto-char start)
     (let ((current-line (count-lines 1 start))
 	  (end-line (count-lines 1 end)))
-      (while (< current-line end-line)
+      (while (<= current-line end-line)
 	(message "Indenting line %s ..." current-line)
 	(oz-indent-line-sub t)
 	(setq current-line (1+ current-line))
@@ -1511,11 +1505,11 @@ If ARG is given, reindent that many lines above and before point as well."
 	(setq nlines (1- nlines))))))
 
 (defun oz-indent-line-sub (&optional dont-change-empty-lines)
-  "Indent the current line.
-If DONT-CHANGE-EMPTY-LINES is non-nil and the current line is empty
-save for whitespace, then its indentation is not changed.  If the
-point was inside the line's leading whitespace, then it is moved to
-the end of this whitespace after indentation."
+  ;; Indent the current line.
+  ;; If DONT-CHANGE-EMPTY-LINES is non-nil and the current line is empty
+  ;; save for whitespace, then its indentation is not changed.  If the
+  ;; point was inside the line's leading whitespace, then it is moved to
+  ;; the end of this whitespace after indentation.
   (let ((case-fold-search nil))   ; respect case
     (unwind-protect
 	(save-excursion
@@ -1531,10 +1525,10 @@ the end of this whitespace after indentation."
 	  (skip-chars-forward " \t")))))
 
 (defun oz-calc-indent ()
-  "Calculate the required indentation for the current line.
-The point must be at the beginning of the current line.
-Return a negative value if the indentation is not to be changed,
-else return the column up to where the line should be indented."
+  ;; Calculate the required indentation for the current line.
+  ;; The point must be at the beginning of the current line.
+  ;; Return a negative value if the indentation is not to be changed,
+  ;; else return the column up to where the line should be indented.
   (cond ((looking-at oz-declare-pattern)
 	 0)
 	((and (looking-at oz-directive-pattern)
@@ -1605,11 +1599,11 @@ else return the column up to where the line should be indented."
 	   ret))))
 
 (defun oz-is-record-start ()
-  "Return non-nil iff the token preceding the point is a record label.
-This serves for the following indentation rule: in records with the
-label at the end of the line, the subtrees should be indented relative
-to the label.
-If this is the case, move the point to the start of the label."
+  ;; Return non-nil iff the token preceding the point is a record label.
+  ;; This serves for the following indentation rule: in records with the
+  ;; label at the end of the line, the subtrees should be indented relative
+  ;; to the label.
+  ;; If this is the case, move the point to the start of the label.
   (let ((old (point)))
     (if (and (progn
 	       (oz-backward-begin)
@@ -1626,11 +1620,11 @@ If this is the case, move the point to the start of the label."
       nil)))
 
 (defun oz-is-field-value ()
-  "Return non-nil iff the token preceding the point is a colon.
-This serves for the following indentation rule: in records with a feature
-on one line and the corresponding subtree expression on another, the
-subtree should be indented relative to the feature.
-If this is the case, move the point to the beginning of the feature."
+  ;; Return non-nil iff the token preceding the point is a colon.
+  ;; This serves for the following indentation rule: in records with a feature
+  ;; on one line and the corresponding subtree expression on another, the
+  ;; subtree should be indented relative to the feature.
+  ;; If this is the case, move the point to the beginning of the feature.
   (let ((old (point)))
     (if (and (progn
 	       (skip-chars-backward "? \n\t\r\v\f")
@@ -1650,8 +1644,8 @@ If this is the case, move the point to the beginning of the feature."
       nil)))
 
 (defun oz-get-column-of-next-nonwhite ()
-  "Return the column number of the first non-white character to follow point.
-If there is none until the end of line, return the column of point."
+  ;; Return the column number of the first non-white character to follow point.
+  ;; If there is none until the end of line, return the column of point.
   (let ((col (current-column)))
     (if (oz-is-right)
 	col
@@ -1659,17 +1653,17 @@ If there is none until the end of line, return the column of point."
       (1- (current-column)))))
 
 (defun oz-is-left ()
-  "Return non-nil iff the point is only preceded by whitespace in the line."
+  ;; Return non-nil iff the point is only preceded by whitespace in the line.
   (save-excursion
     (skip-chars-backward " \t")
     (= (current-column) 0)))
 
 (defun oz-is-right ()
-  "Return non-nil iff the point is only followed by whitespace in the line."
+  ;; Return non-nil iff the point is only followed by whitespace in the line.
   (looking-at "[ \t]*$"))
 
 (defun oz-is-empty ()
-  "Return non-nil iff the current line is empty save for whitespace."
+  ;; Return non-nil iff the current line is empty save for whitespace.
   (and (oz-is-left) (oz-is-right)))
 
 ;;}}}
@@ -1779,6 +1773,43 @@ Negative arg -N means kill N Oz expressions after the cursor."
     (forward-oz-expr (- arg))
     (kill-region pos (point))))
 
+(defun indent-oz-expr (&optional endpos)
+  "Indent each line of the balanced Oz expression starting just after point.
+If optional arg ENDPOS is given, indent each line, stopping when ENDPOS is
+encountered."
+  (interactive "P")
+  (save-excursion
+    (let ((pos (point)))
+      (forward-oz-expr)
+      (oz-indent-region pos (if endpos (min (point) endpos) (point))))))
+
+(defconst oz-defun-pattern
+  (oz-make-keywords-for-match '("proc" "fun" "class" "meth")))
+
+(defun oz-beginning-of-defun ()
+  "Move to the start of the proc/fun/class/meth definition point is in.
+If point is not inside a proc/fun/class definition, move to start of buffer.
+Returns t unless search stops due to beginning or end of buffer."
+  (interactive)
+  (let ((continue t) ret)
+    (while continue
+      (oz-backward-begin)
+      (cond ((looking-at oz-defun-pattern)
+	     (setq continue nil ret t))
+	    ((= (point) (point-min))
+	     (setq continue nil ret nil))))
+    ret))
+
+(defun oz-end-of-defun ()
+  "Move to the end of the proc/fun/class definition point is in.
+If point is not inside a proc/fun/class definition, move to end of buffer."
+  (interactive)
+  (cond ((oz-beginning-of-defun)
+	 (oz-forward-end)
+	 (goto-char (match-end 0)))
+	(t
+	 (goto-char (point-max)))))
+
 ;;}}}
 ;;{{{ oz-mode
 
@@ -1844,31 +1875,23 @@ Negative arg -N means kill N Oz expressions after the cursor."
   (define-key map "\177"         'backward-delete-char-untabify)
 
   (define-key map "\M-\C-m"      'oz-feed-buffer)
-  (define-key map "\M-r"         'oz-feed-region)
-  (define-key map "\M-l"         'oz-feed-line)
   (define-key map "\C-c\C-p"     'oz-feed-paragraph)
   (define-key map "\M-\C-x"      'oz-feed-paragraph)
-
   (define-key map "\C-cb"        'oz-feed-line-browse)
   (define-key map "\C-c\C-b"     'oz-feed-region-browse)
+
   (define-key map "\M-n"         'oz-next-buffer)
   (define-key map "\M-p"         'oz-previous-buffer)
 
   (define-key map "\C-cc"        'oz-compiler-panel)
 
-  (define-key map "\C-c\C-d\C-r" 'oz-debug-start)
-  (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
   (define-key map "\C-x "        'oz-breakpoint-key-set)
-  (define-key map "\C-c\C-d\C-b" 'oz-breakpoint-key-set)
-  (define-key map "\C-c\C-d\C-d" 'oz-breakpoint-key-delete)
   (cond (oz-gnu-emacs
 	 (define-key map [(meta shift mouse-1)] 'oz-breakpoint-mouse-set)
 	 (define-key map [(meta shift mouse-3)] 'oz-breakpoint-mouse-delete))
 	(oz-lucid-emacs
 	 (define-key map [(meta shift button1)] 'oz-breakpoint-mouse-set)
 	 (define-key map [(meta shift button3)] 'oz-breakpoint-mouse-delete)))
-  (define-key map "\C-c\C-f\C-r" 'oz-profiler-start)
-  (define-key map "\C-c\C-f\C-h" 'oz-profiler-stop)
 
   (define-key map "\C-c\C-c"     'oz-toggle-compiler)
   (define-key map "\C-c\C-e"     'oz-toggle-emulator)
@@ -1887,12 +1910,28 @@ Negative arg -N means kill N Oz expressions after the cursor."
   (define-key map "\M-\C-b"      'backward-oz-expr)
   (define-key map "\M-\C-k"      'kill-oz-expr)
   (define-key map "\M-\C-@"      'mark-oz-expr)
+  (define-key map "\M-\C-q"      'indent-oz-expr)
+  (define-key map "\M-\C-a"      'oz-beginning-of-defun)
+  (define-key map "\M-\C-e"      'oz-end-of-defun)
   (define-key map [(meta control space)] 'mark-oz-expr)
   (define-key map [(meta control backspace)] 'backward-kill-oz-expr)
   (define-key map [(meta control delete)] 'backward-kill-oz-expr)
   (define-key map "\M-\C-t"      'transpose-oz-exprs)
 
-  (define-key map "\C-x`"        'oz-goto-next-error))
+  (define-key map "\C-x`"        'oz-goto-next-error)
+
+  (if (not oz-pc-keys)
+      (progn
+	(define-key map "\M-r"         'oz-feed-region)
+	(define-key map "\M-l"         'oz-feed-line)
+
+	(define-key map "\C-c\C-d\C-r" 'oz-debug-start)
+	(define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
+	(define-key map "\C-c\C-d\C-b" 'oz-breakpoint-key-set)
+	(define-key map "\C-c\C-d\C-d" 'oz-breakpoint-key-delete)
+
+	(define-key map "\C-c\C-f\C-r" 'oz-profiler-start)
+	(define-key map "\C-c\C-f\C-h" 'oz-profiler-stop))))
 
 (oz-mode-commands oz-mode-map)
 
@@ -1952,7 +1991,7 @@ if that value is non-nil."
   (run-hooks 'oz-mode-hook))
 
 (defun oz-set-lucid-menu ()
-  "Add the Oz menu to the menu bar."
+  ;; Add the Oz menu to the menu bar.
   (if oz-lucid-emacs
       (progn
 	(setq mode-popup-menu (cons "Oz Mode Menu" (cdr oz-menubar)))
@@ -2581,53 +2620,80 @@ If it is, then remove it."
 ;;}}}
 ;;{{{ Misc Goodies
 
-(defun oz-comment-region (start end arg)
+(defun oz-comment-region (start end &optional arg)
+  "Comment or uncomment each line in the region.
+With just C-u prefix arg, uncomment each line in region.
+Numeric prefix arg ARG means use ARG comment characters.
+If ARG is negative, delete that many comment characters instead.
+Comments are terminated on each line, even for syntax in which newline does
+not end the comment.  Blank lines do not get comments."
   (interactive "r\np")
   (comment-region start end arg))
 
-(defun oz-uncomment-region (start end arg)
+(defun oz-uncomment-region (start end &optional arg)
+  "Comment or uncomment each line in the region.
+See \\[oz-comment-region] for more information; note that the
+prefix ARG is negated."
   (interactive "r\np")
-  (comment-region start end (if (= arg 0) -1 (- arg))))
+  (comment-region start end (if (and arg (/= arg 0)) (- arg) -1)))
 
 (defun oz-to-coresyntax-buffer ()
+  "Ask the Oz Compiler to produce core syntax output for the current buffer."
   (interactive)
   (oz-to-coresyntax-region (point-min) (point-max)))
 
+(defun oz-to-coresyntax-region (start end)
+  "Ask the Oz Compiler to produce core syntax output for the current region."
+  (interactive "r")
+  (oz-directive-on-region start end "+core -codegen"))
+
 (defun oz-to-coresyntax-line (arg)
+  "Ask the Oz Compiler to produce core syntax output for the current line.
+With ARG, feed that many lines.  If ARG is negative, feed that many
+preceding lines as well as the current line."
   (interactive "p")
   (let ((region (oz-line-region arg)))
     (oz-to-coresyntax-region (car region) (cdr region))))
 
 (defun oz-to-coresyntax-paragraph (arg)
+  "Ask the Oz Compiler to produce core syntax output for the current paragraph.
+If the point is exactly between two paragraphs, feed the preceding
+paragraph.  With ARG, feed that many paragraphs.  If ARG is negative,
+feed that many preceding paragraphs as well as the current paragraph."
   (interactive "p")
   (let ((region (oz-paragraph-region arg)))
     (oz-to-coresyntax-region (car region) (cdr region))))
 
-(defun oz-to-coresyntax-region (start end)
-  (interactive "r")
-  (oz-directive-on-region start end "+core -codegen"))
-
 (defun oz-to-emulatorcode-buffer ()
+  "Ask the Oz Compiler to produce emulator code for the current buffer."
   (interactive)
   (oz-to-emulatorcode-region (point-min) (point-max)))
 
+(defun oz-to-emulatorcode-region (start end)
+  "Ask the Oz Compiler to produce emulator code for the current region."
+  (interactive "r")
+  (oz-directive-on-region
+   start end "-core +codegen +outputcode -feedtoemulator"))
+
 (defun oz-to-emulatorcode-line (arg)
+  "Ask the Oz Compiler to produce emulator code for the current line.
+With ARG, feed that many lines.  If ARG is negative, feed that many
+preceding lines as well as the current line."
   (interactive "p")
   (let ((region (oz-line-region arg)))
     (oz-to-emulatorcode-region (car region) (cdr region))))
 
 (defun oz-to-emulatorcode-paragraph (arg)
+  "Ask the Oz Compiler to produce emulator code for the current paragraph.
+If the point is exactly between two paragraphs, feed the preceding
+paragraph.  With ARG, feed that many paragraphs.  If ARG is negative,
+feed that many preceding paragraphs as well as the current paragraph."
   (interactive "p")
   (let ((region (oz-paragraph-region arg)))
     (oz-to-emulatorcode-region (car region) (cdr region))))
 
-(defun oz-to-emulatorcode-region (start end)
-  (interactive "r")
-  (oz-directive-on-region
-   start end "-core +codegen +outputcode -feedtoemulator"))
-
 (defun oz-directive-on-region (start end switches)
-  "Applies a directive to the region."
+  ;; Applies a directive to the region.
   (oz-send-string (concat "\\localSwitches\n"
 			  "\\switch " switches "\n"
 			  (oz-get-region start end))))
@@ -2644,7 +2710,9 @@ of the procedure Browse."
 (defun oz-feed-line-browse (arg)
   "Feed the current line to the Oz Compiler.
 Assuming it to contain an expression, it is enclosed by an application
-of the procedure Browse."
+of the procedure Browse.
+With ARG, feed that many lines.  If ARG is negative, feed that many
+preceding lines as well as the current line."
   (interactive "p")
   (let ((region (oz-line-region arg)))
     (oz-feed-region-browse (car region) (cdr region))))
@@ -2664,33 +2732,15 @@ of the procedure Browse."
   (interactive "fFeed file: ")
   (oz-send-string (concat "\\insert '" file "'")))
 
-(defun oz-find-dvi-file ()
-  "View a file from the Oz documentation directory."
-  (interactive)
-  (let ((name (read-file-name "View documentation file: " oz-doc-dir nil t)))
-    (if (file-exists-p name)
-	(start-process "Oz Doc" "*Preview*" oz-previewer name)
-      (error "File %s does not exist" name))))
-
-(defun oz-find-docu-file ()
-  "Find a text in the Oz documentation directory."
-  (interactive)
-  (oz-find-file "Find doc file: " "doc/"))
-
 (defun oz-find-demo-file ()
   "Find an Oz file in the demo directory."
   (interactive)
   (oz-find-file "Find demo file: " "demo/"))
 
-(defun oz-find-docdemo-file ()
-  "Find an Oz file in the demo/documentation directory."
-  (interactive)
-  (oz-find-file "Find demo file: " "demo/documentation/"))
-
 (defun oz-find-modules-file ()
   "Find an Oz file in the lib directory."
   (interactive)
-  (oz-find-file "Find modules file: " "lib/"))
+  (oz-find-file "Find modules file: " "share/"))
 
 (defun oz-find-file (prompt file)
   (find-file (read-file-name prompt (concat (oz-home) "/" file) nil t nil)))
@@ -2698,20 +2748,6 @@ of the procedure Browse."
 ;;}}}
 ;;{{{ Locating Errors
 
-;; The compile.el stuff is used only a little bit; it cannot be made
-;; working, if an error message does not contain file information,
-;; as is the case with oz-feed-region.
-;;
-;; Functionality:
-;; oz-goto-next-error (C-x ` in compiler, emulator and *.oz buffers)
-;; Visit next compilation error message and corresponding source code.
-;; Applies to most recent compilation, started with one of the feed
-;; commands.  However, if called in compiler or emulator buffer, it
-;; visits the next error message following point (no matter whether
-;; that came from the latest compilation or not).
-
-;; In the compiler and emulator buffers, button shift mouse-2 invokes
-;; oz-mouse-goto-error as well:
 (defun oz-set-mouse-error-key (map)
   (cond (oz-gnu-emacs
 	 (define-key map [(shift mouse-2)] 'oz-mouse-goto-error))
@@ -2719,6 +2755,7 @@ of the procedure Browse."
 	 (define-key map [(shift button2)] 'oz-mouse-goto-error))))
 
 (defun oz-mouse-goto-error (event)
+  "Visit the source code associated with the error message clicked on."
   (interactive "e")
   (set-buffer (cond (oz-gnu-emacs
 		     (window-buffer (posn-window (event-end event))))
@@ -2732,7 +2769,6 @@ of the procedure Browse."
       (eq (current-buffer) (get-buffer oz-emulator-buffer))
       (error "Neither in compiler buffer nor in emulator buffer"))
   (oz-goto-next-error))
-
 
 (defun oz-goto-next-error ()
   "Visit next compilation error message and corresponding source code.
@@ -2818,9 +2854,9 @@ When in emulator buffer, visit place indicated in next callstack line."
 	(beginning-of-line)
 	(list (point-marker) file lineno-string column-string))))
 
-;; if point is in the middle of an error message (in the compiler buffer),
-;; then it is moved to the start of the message.
 (defun oz-goto-error-start ()
+  ;; if point is in the middle of an error message (in the compiler buffer),
+  ;; then it is moved to the start of the message.
   (let ((errstart
 	 (save-excursion
 	   (beginning-of-line)
