@@ -57,18 +57,22 @@ define
 	 if {Dictionary.member self.colorDict S} then
 	    C#I = {Dictionary.get self.colorDict S}
 	 else
-	    {self.getCol S C}
-	    case @freeIndexList
-	    of X|Xr then
-	       I = X
-	       freeIndexList <- Xr
-	    [] nil then
-	       I = @nextIndex
-	       nextIndex <- I+1
+	    try
+	       {self.getCol S C}
+	       case @freeIndexList
+	       of X|Xr then
+		  I = X
+		  freeIndexList <- Xr
+	       [] nil then
+		  I = @nextIndex
+		  nextIndex <- I+1
+	       end
+	       {Dictionary.put self.colorDict S C#I}
+	       {self.guiActive addGraph(key:I col:C stp:'' )}
+	       {self.guiNumber addGraph(key:I col:C stp:'')}
+	    catch _ then % Key not found
+	       skip
 	    end
-	    {Dictionary.put self.colorDict S C#I}
-	    {self.guiActive addGraph(key:I col:C stp:'' )}
-	    {self.guiNumber addGraph(key:I col:C stp:'')}
 	 end
       end
       
