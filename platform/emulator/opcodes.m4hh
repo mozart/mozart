@@ -29,6 +29,13 @@
 
 #include "base.hh"
 
+/* FASTCALL is defined in cygwin W32API package version >= 2.1
+ * Not undefining yields a parse error
+ */
+#ifdef FASTCALL
+#undef FASTCALL
+#endif
+
 typedef enum {
 
 define(`OPCODE',0) dnl
