@@ -1006,7 +1006,7 @@ compiled using a default set of switches."
   (concat (oz-make-keywords-for-match
 	   '("in" "then" "else" "of" "elseof" "elsecase" "elseif"
 	     "catch" "finally" "with" "require" "prepare" "import" "export"
-	     "body" "define"))
+	     "define"))
 	  "\\|" "\\[\\]"))
 (defconst oz-gump-middle-pattern
   "//")
@@ -1022,7 +1022,7 @@ compiled using a default set of switches."
   "[][(){}]")
 
 (defconst oz-any-pattern
-  (concat "\\<\\(at\\|attr\\|body\\|case\\|catch\\|class\\|choice\\|cond\\|"
+  (concat "\\<\\(at\\|attr\\|case\\|catch\\|class\\|choice\\|cond\\|"
 	  "condis\\|declare\\|define\\|dis\\|else\\|elsecase\\|elseif\\|"
 	  "elseof\\|end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|"
 	  "if\\|in\\|import\\|local\\|lock\\|meth\\|not\\|of\\|or\\|prepare\\|"
@@ -1030,7 +1030,7 @@ compiled using a default set of switches."
 	  "\\[\\]\\|"
 	  oz-left-or-right-pattern))
 (defconst oz-gump-any-pattern
-  (concat "\\<\\(at\\|attr\\|body\\|case\\|catch\\|class\\|choice\\|cond\\|"
+  (concat "\\<\\(at\\|attr\\|case\\|catch\\|class\\|choice\\|cond\\|"
 	  "condis\\|declare\\|define\\|dis\\|else\\|elsecase\\|elseif\\|"
 	  "elseof\\|end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|"
 	  "if\\|in\\|import\\|lex\\|local\\|lock\\|meth\\|mode\\|not\\|of\\|"
@@ -2120,7 +2120,7 @@ and initial percent signs."
 (defconst oz-keywords
   '("declare" "local" "in" "end"
     "proc" "fun"
-    "functor" "require" "prepare" "import" "export" "body" "define" "at"
+    "functor" "require" "prepare" "import" "export" "define" "at"
     "case" "then" "else" "of" "elseof" "elsecase"
     "if" "elseif"
     "class" "from" "prop" "attr" "feat" "meth" "self"
