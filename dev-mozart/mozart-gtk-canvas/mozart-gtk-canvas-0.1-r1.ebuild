@@ -4,6 +4,7 @@ HOMEPAGE="http://www.mozart-oz.org/"
 KEYWORDS="x86 ppc sparc hppa"
 DEPEND="
   =x11-libs/gtk+-1.2*
+  gnome-base/gnome-libs
 "
 RDEPEND="
   =x11-libs/gtk+-1.2*
