@@ -103,8 +103,8 @@ void sendRequest(MessageType mt,BorrowEntry *be)
 OZ_Return ObjectVar::addSuspV(TaggedRef * v, Suspension susp, int unstable)
 {
   if(!errorIgnore()){
-    //    if(failurePreemption()) return BI_REPLACECALL; mm3
-  }
+    if(failurePreemption()) return BI_REPLACEBICALL;}
+
   addSuspSVar(susp, unstable);
   if (!requested) {
     requested = 1;
@@ -196,6 +196,8 @@ void ObjectVar::sendObjectAndClass(ObjectFields& of, BorrowEntry *be)
 Bool ObjectVar::failurePreemption(){
   Bool hit=FALSE;
   Assert(info!=NULL);
+  if(info->meToBlocked()){
+    info->dealWithWatchers(getTaggedRef(),info->getEntityCond());}
   EntityCond oldC=info->getSummaryWatchCond();
   if(varFailurePreemption(getTaggedRef(),info,hit)){
     EntityCond newC=info->getSummaryWatchCond();

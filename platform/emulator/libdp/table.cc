@@ -31,6 +31,7 @@
 #include "table.hh"
 #include "value.hh"
 #include "var.hh"
+#include "var_obj.hh"
 #include "msgbuffer.hh"
 #include "dpMarshaler.hh"
 #include "state.hh"
@@ -881,9 +882,13 @@ void BorrowEntry::copyBorrow(BorrowEntry* from,int i){
     mkTertiary(from->getTertiary(),from->getFlags());
     from->getTertiary()->setIndex(i);
   } else if (from->isVar()) {
-    // mm2
     mkVar(from->getRef(),from->getFlags());
-    ((ProxyManagerVar*)oz_getExtVar(*(from->getPtr())))->gcSetIndex(i);
+    VarKind vk=typeOfBorrowVar(from);
+    if(vk==VAR_PROXY){
+      GET_VAR(from,Proxy)->gcSetIndex(i);}
+    else{
+      Assert(vk==VAR_OBJECT);
+      GET_VAR(from,Object)->getObject()->setIndex(i);}
   } else {
     Assert(from->isRef());
     mkRef(from->getRef(),from->getFlags());
@@ -948,6 +953,7 @@ void BorrowTable::init(int beg,int end)
 }
 
 void BorrowTable::compactify(){
+  Assert(notGCMarked());
   if(no_used / size >= TABLE_LOW_LIMIT) return;
   Assert(size>=DEFAULT_BORROW_TABLE_SIZE);
   if(size==DEFAULT_BORROW_TABLE_SIZE) return;
@@ -965,10 +971,12 @@ void BorrowTable::compactify(){
   size=newsize;
   copyBorrowTable(oldarray,oldsize);
   PD((TABLE,"compactify borrow complete"));
+  Assert(notGCMarked());
   return;}
 
 void BorrowTable::resize()
 {
+  Assert(notGCMarked());
 #ifdef BTRESIZE_CRITICAL
   OZ_warning("BorrowTable::resize: maybe incorrect");
 #endif
@@ -983,6 +991,7 @@ void BorrowTable::resize()
   size=newsize;
   copyBorrowTable(oldarray,oldsize);
   PD((TABLE,"resize borrow complete"));
+  Assert(notGCMarked());
   return;}
 
 int BorrowTable::newSecBorrow(DSite *creditSite,Credit c,DSite * sd,int off){
@@ -1079,7 +1088,7 @@ void OwnerTable::gcOwnerTableRoots()
 {
   PD((GC,"owner gc"));
   for(int i=0;i<size;i++) {
-    OwnerEntry* o = getOwner(i); // PER-LOOK
+    OwnerEntry* o = getOwner(i);
     if(!o->isFree()) {
       PD((GC,"OT o:%d",i));
       o->gcPO();
