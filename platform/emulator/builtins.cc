@@ -149,37 +149,6 @@ OZ_C_proc_begin(Name,3)					\
 OZ_C_proc_end
 
 
-// When InlineName suspends, then Name creates thread containing BlockName
-#define DECLAREBINOBLOCK_USEINLINEFUN2(Name,BlockName,InlineName) \
-OZ_C_proc_begin(Name,3)					          \
-{							          \
-  OZ_Term help;						          \
-							          \
-  OZ_Term arg0 = OZ_getCArg(0);				          \
-  OZ_Term arg1 = OZ_getCArg(1);				          \
-  OZ_Return state=InlineName(arg0,arg1,help);		          \
-  switch (state) {					          \
-  case SUSPEND:						          \
-    {                                                             \
-      RefsArray x=allocateRefsArray(3, NO);                       \
-      x[0]=OZ_getCArg(0);                                         \
-      x[1]=OZ_getCArg(1);                                         \
-      x[2]=OZ_getCArg(2);                                         \
-      OZ_Thread thr=OZ_makeSuspendedThread(BlockName,x,3);        \
-      OZ_addThread(arg0,thr);                                     \
-      OZ_addThread(arg1,thr);                                     \
-      return PROCEED;                                             \
-    }                                                             \
-  case PROCEED:						          \
-    return(OZ_unify(help,OZ_getCArg(2)));		          \
-  default:						          \
-    return state;					          \
-  }							          \
-							          \
-}							          \
-OZ_C_proc_end 
-
-
 #define DECLAREBI_USEINLINEFUN3(Name,InlineName)	\
 OZ_C_proc_begin(Name,4)					\
 {							\
@@ -659,45 +628,6 @@ OZ_Return isChunkInline(TaggedRef t)
 }
 DECLAREBI_USEINLINEREL1(BIisChunk,isChunkInline)
 DECLAREBOOLFUN1(BIisChunkB,isChunkBInline,isChunkInline)
-
-OZ_Return isNaryInline(TaggedRef procedure, TaggedRef arity)
-{
-  DEREF( procedure, pterm, ptag );
-  DEREF( arity, aterm, atag );
-
-  if (isProcedure(procedure)) {
-    if (isSmallInt(arity)) {
-      int i = smallIntValue(arity);
-      ConstTerm *rec = tagged2Const(procedure);
-
-      switch (rec->getType()) {
-      case Co_Abstraction:
-	return ((Abstraction *) rec)->getArity()==i ? PROCEED : FAILED;
-      case Co_Builtin:
-	return ((Builtin *) rec)->getArity()==i ? PROCEED : FAILED;
-      default:
-	goto typeError0;
-      }
-    }
-    if (isAnyVar(arity)) return SUSPEND;
-    if (isBigInt(arity)) return FAILED;
-    goto typeError1;
-  }
-
-  if (isAnyVar(procedure)) {
-    if (isBigInt(arity)) return FAILED;
-    if (isSmallInt(arity) && isAnyVar(arity)) return SUSPEND;
-    goto typeError1;
-  }
-  goto typeError0;
-
-typeError0:
-  TypeErrorT(0,"Procedure");
-typeError1:
-  TypeErrorT(1,"Int");
-}
-DECLAREBI_USEINLINEREL2(BIisNary,isNaryInline)
-DECLAREBOOLFUN2(BIisNaryB,isNaryBInline,isNaryInline)
 
 OZ_Return procedureArityInline(TaggedRef procedure, TaggedRef &out)
 {
@@ -1610,13 +1540,10 @@ LBLagain:
 	break;
       case Co_Array:
       case Co_Dictionary:
+      default:
 	// no public known features
 	t = 0;
 	break;
-      default:
-	warning("subtree: chunk type %d not impl.",
-		tagged2Const(term)->getType());
-	t = 0;
       }
       if (t == makeTaggedNULL()) {
 	if (dot) { goto typeError1r; }
@@ -1927,11 +1854,6 @@ typeError1:
 typeError2:
     TypeErrorT(1,"Feature");
 }
-// Block on suspension:
-// DECLAREBI_USEINLINEFUN2(BIBlockuparrow,uparrowInline)
-// Create thread on suspension:
-// DECLAREBINOBLOCK_USEINLINEFUN2(BIuparrow,BIBlockuparrow,uparrowInline)
-
 DECLAREBI_USEINLINEFUN2(BIuparrow,uparrowInline)
 
 
@@ -2131,6 +2053,7 @@ OZ_C_proc_begin(BIstringToAtom,2)
   OZ_declareStringArg(0,str);
   OZ_Term out = OZ_getCArg(1);
 
+  if (!str) return OZ_typeError(0,"String as Atom");
 
   OZ_Return ret = OZ_unifyAtom(out,str);
 
@@ -2362,10 +2285,9 @@ OZ_C_proc_begin(BIchunkArity,2)
     return OZ_unify(out,tagged2SChunk(ch)->getArityList());
   case Co_Dictionary:
   case Co_Array:
-    return OZ_unify(out,nil());
   default:
-    warning("chunkArity: not impl");
-    return FAILED;
+    // no features
+    return OZ_unify(out,nil());
   }
 }
 OZ_C_proc_end
@@ -3826,6 +3748,8 @@ OZ_C_proc_begin(BIstringToFloat, 2)
   OZ_declareStringArg(0,str);
   OZ_declareArg(1,out);
 
+  if (!str) return OZ_typeError(0,"String as Float");
+
   char *end = OZ_parseFloat(str);
   if (!end || *end != 0) {
     return FAILED;
@@ -3839,6 +3763,8 @@ OZ_C_proc_begin(BIstringIsFloat, 2)
 {
   OZ_declareStringArg(0,str);
   OZ_declareArg(1,out);
+
+  if (!str) return OZ_unify(out,NameFalse);
 
   char *end = OZ_parseFloat(str);
 
@@ -3854,6 +3780,9 @@ OZ_C_proc_begin(BIstringToInt, 2)
 {
   OZ_declareStringArg(0,str);
   OZ_declareArg(1,out);
+
+  if (!str) return OZ_typeError(0,"String as Int");
+
   char *end = OZ_parseInt(str);
   if (!end || *end != 0) {
     return FAILED;
@@ -3867,6 +3796,8 @@ OZ_C_proc_begin(BIstringIsInt, 2)
 {
   OZ_declareStringArg(0,str);
   OZ_declareArg(1,out);
+
+  if (!str) return OZ_unify(out,NameFalse);
 
   char *end = OZ_parseInt(str);
 
@@ -4119,6 +4050,58 @@ DECLAREBI_USEINLINEFUN1(BIsub1,BIsub1Inline)
     am.currentBoard->incSuspCount();								\
     return PROCEED;										\
   }
+
+/*
+ * Groups
+ */
+
+OZ_C_proc_begin(BInewGroup,2)
+{
+  OZ_Term proc = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+
+  DEREF(proc,procPtr,_1);
+  if (isAnyVar(proc)) OZ_suspendOn(makeTaggedRef(procPtr));
+  if (!isProcedure(proc)) {
+    TypeErrorT(0,"Procedure");
+  }
+
+  Group *gr = new Group(am.currentThread->getGroup());
+  Thread *tt = new Thread (am.currentThread->getPriority(),am.currentBoard);
+  tt->setGroup(makeTaggedConst(gr));
+  tt->pushCall(proc,0,0);
+  am.scheduleThread(tt);
+  return OZ_unify(out,makeTaggedConst(gr));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BInewGroupHdl,3)
+{
+  OZ_Term proc = OZ_getCArg(0);
+  OZ_Term hdl = OZ_getCArg(1);
+  OZ_Term out = OZ_getCArg(2);
+
+  DEREF(proc,procPtr,_1);
+  if (isAnyVar(proc)) OZ_suspendOn(makeTaggedRef(procPtr));
+  if (!isProcedure(proc)) {
+    TypeErrorT(0,"Procedure");
+  }
+
+  DEREF(hdl,hdlPtr,_2);
+  if (isAnyVar(hdl)) OZ_suspendOn(makeTaggedRef(hdlPtr));
+  if (!isProcedure(hdl)) {
+    TypeErrorT(1,"Procedure");
+  }
+
+  Group *gr = new Group(am.currentThread->getGroup());
+  gr->setExceptionHandler(hdl);
+  Thread *tt = new Thread (am.currentThread->getPriority(),am.currentBoard);
+  tt->setGroup(makeTaggedConst(gr));
+  tt->pushCall(proc,0,0);
+  am.scheduleThread(tt);
+  return OZ_unify(out,makeTaggedConst(gr));
+}
+OZ_C_proc_end
 
 // ---------------------------------------------------------------------
 // Cell
@@ -5239,18 +5222,6 @@ OZ_C_proc_begin(BIconstraints,2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIpushExHdl,1)
-{
-  OZ_Term pred = OZ_getCArg(0);
-  DEREF(pred,_1,_2);
-  if (!isProcedure(pred)) {
-    TypeErrorT(0,"Procedure");
-  }
-  am.currentThread->pushExceptionHandler(pred);
-  return PROCEED;
-}
-OZ_C_proc_end
-
 // ---------------------------------------------------------------------------
 // linguistic reflection
 // ---------------------------------------------------------------------------
@@ -5471,11 +5442,12 @@ OZ_C_proc_begin(BIgetPrintName,2)
       switch (rec->getType()) {
       case Co_Builtin:      return OZ_unify(out, ((Builtin *) rec)->getName());
       case Co_Abstraction:  return OZ_unify(out, ((Abstraction *) rec)->getName());
-      case Co_Object:  	   return OZ_unifyAtom(out, ((Object*) rec)->getPrintName());
-      case Co_Cell: 	   return OZ_unifyAtom(out,"_");	
-      case Co_Dictionary:  return OZ_unifyAtom(out,"_");	
-      case Co_Array: 	   return OZ_unifyAtom(out,"_");	
-      default:    	   break;
+      case Co_Object:  	    return OZ_unifyAtom(out, ((Object*) rec)->getPrintName());
+
+      case Co_Cell:
+      case Co_Dictionary:
+      case Co_Array:
+      default:    	   return OZ_unifyAtom(out,"_");
       }
     }
     break;
@@ -6330,6 +6302,9 @@ BIspec allSpec1[] = {
   {"Dictionary.member", 3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
   {"Dictionary.keys",   2, BIdictionaryKeys,    0},
 
+  {"NewGroup",	        2,BInewGroup,    0},
+  {"NewGroupHdl",       3,BInewGroupHdl, 0},
+
   {"NewCell",	      2,BInewCell,	 0},
   {"Exchange",        3,BIexchangeCell, (IFOR) BIexchangeCellInline},
 
@@ -6383,11 +6358,6 @@ BIspec allSpec2[] = {
   {"IsObject", 2,BIisObjectB, 	  (IFOR) BIisObjectBInline},
   {"IsClass", 2,BIisClassB,	  (IFOR) BIisClassBInline},
   {"IsString", 2,BIisString,      0},
-
-
-  {"Procedure.isNary",3,BIisNaryB, (IFOR) isNaryBInline},
-
-  {"isNary",2,BIisNary,           (IFOR) isNaryInline},
 
   {"Wait",1,BIisValue,            (IFOR) isValueInline},
 
@@ -6503,8 +6473,6 @@ BIspec allSpec2[] = {
   {"getLingEof",     1, BIgetLingEof,		0},
   {"getOzEof",       1, BIgetLingEof,		0},
   {"constraints",    2, BIconstraints,		0},
-
-  {"pushExHdl",      1, BIpushExHdl,		0},
 
   {"setAbstractionTabDefaultEntry", 1, BIsetAbstractionTabDefaultEntry, 0},
 

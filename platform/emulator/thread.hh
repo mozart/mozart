@@ -97,6 +97,8 @@ private:
   } state;
 
 protected:
+  TaggedRef group;
+
   //  Note that other flags are removed;
   void markDeadThread () { 
     state.flags = state.flags | T_dead;
@@ -110,16 +112,27 @@ public:
   //  Initialisation;
   //  Note that a thread is made alive and suspended, and with 
   // some undefined priority (needs further initialisation!);
-  ThreadState () {
+  ThreadState () { 
+    group = 0;
     state.flags = T_null;
   }
   ThreadState (int inFlags) {
+    group = 0;
     state.flags = inFlags;
   }
   ThreadState (int inFlags, int inPri) {
+    group = 0;
     state.pri = inPri;
     state.flags = inFlags;
   }
+
+  TaggedRef getExceptionHandler()
+  {
+    return group ? tagged2Group(group)->getExceptionHandler() : 0;
+  }
+
+  void setGroup(TaggedRef gr) { Assert(isGroup(gr)); group = gr; }
+  TaggedRef getGroup() { return group; }
 
   //  priority;
   int getPriority() { 
@@ -496,8 +509,6 @@ public:
   //
   //  Runnable (running) threads;
   Bool discardLocalTasks();
-  //
-  int findExceptionHandler(TaggedRef &pred, TaskStackEntry *&oldTos);
   // 
   //  The iterative procedure which cleans up all the tasks 
   // up to the 'current' board, and sets the 'current' to the 
@@ -545,8 +556,6 @@ public:
     ThreadState::unsetHasJobs ();
   }
 #endif
-
-  void pushExceptionHandler (TaggedRef pred);
 
   //
   TaskStack *getTaskStackRef ();

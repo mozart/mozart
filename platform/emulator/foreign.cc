@@ -657,16 +657,12 @@ inline
 void const2buffer(ostream &out, ConstTerm *c)
 {
   char *s = c->getPrintName();
+  int arity = c->getArity();
 
   switch (c->getType()) {
   case Co_Abstraction:
   case Co_Builtin:
     {
-      int arity = 
-	(c->getType() == Co_Abstraction)
-	? ((Abstraction *) c)->getArity()
-	: ((Builtin *) c)->getArity();
-
       out << "<P/" << arity;
       if (*s != 0) {
 	out << ' ' << s;
@@ -1015,7 +1011,7 @@ char *OZ_stringToC(OZ_Term list)
   for (OZ_Term tmp = deref(list); isCons(tmp); tmp=deref(tail(tmp))) {
     OZ_Term hh = deref(head(tmp));
     int i = smallIntValue(hh);
-    if (i < 0 || i > 255) return 0;
+    if (i <= 0 || i > 255) return 0;
     out << (char) i;
   }
   out << ends;
