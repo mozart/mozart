@@ -48,6 +48,15 @@ On Solaris and Linux there are two,
 namely <<ipcs>> and <<ipcrm>>.
 </list>
 
+<item>The code of functions, procedures, classes, and functors
+(but not objects) is always inserted in messages,
+even if the code is already present at the destination.
+In future releases, the code will be copied
+across the network only
+if it is not present on the destination site.
+In both current and future releases, at most a single copy
+of the code can exist per site.
+
 <item>The distributed garbage collection
 algorithm reclaims all unused entities
 except those forming a reference cycle
@@ -59,15 +68,6 @@ then they will never be reclaimed.
 It is up to the programmer to break the cycle
 by updating one of the objects to no longer
 reference the other.
-
-<item>The code of functions, procedures, classes, and functors
-(but not objects) is always inserted in messages,
-even if the code is already present at the destination.
-In future releases, the code will be copied
-across the network only
-if it is not present on the destination site.
-In both current and future releases, at most a single copy
-of the code can exist per site.
 
 <item>If a site crashes that has references to entities created on
 other sites, then these entities are not garbage-collected.
