@@ -30,7 +30,6 @@ OZ_Term signal_port;
 
 OZ_BI_define (ozgtk_initialize_signal_port, 1, 0)
 {
-  OZ_warning ("native entered");
   OZ_declareTerm (0, port);
   signal_port = port;
   return OZ_ENTAILED;
@@ -60,7 +59,7 @@ signal_marshal (GtkObject * object,
      object, n_args, (guint) oz_id, args); */
   /* insert signal into the Oz signal queue */
   OZ_send (signal_port, OZ_int ((guint) oz_id));
-  OZ_warning ("Marshaller sent signal %i to port", (guint) oz_id);
+  /*  OZ_warning ("Marshaller sent signal %i to port", (guint) oz_id); */
 }
 
 OZ_BI_define (ozgtk_signal_connect, 3, 1)
