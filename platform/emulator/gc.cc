@@ -1803,14 +1803,24 @@ void TaskStack::gcRecurse()
       break;
 
     case C_EXCEPT_HANDLER:
-      COUNT(cExceptHandler);
-      gcQueue(((Chunk *) oldstack->pop())->gcConstTerm());
+      {
+        COUNT(cExceptHandler);
+        TaggedRef tt=deref((TaggedRef) oldstack->pop());
+        Assert(!isAnyVar(tt));
+        gcTagged(tt,tt);
+        gcQueue(ToPointer(tt));
+      }
       break;
 
     case C_CALL_CONT:
-      COUNT(cCallCont);
-      gcQueue(((ConstTerm *) oldstack->pop())->gcConstTerm());
-      gcQueue(gcRefsArray((RefsArray) oldstack->pop()));
+      {
+        COUNT(cCallCont);
+        TaggedRef tt=deref((TaggedRef) oldstack->pop());
+        Assert(!isAnyVar(tt));
+        gcTagged(tt,tt);
+        gcQueue(ToPointer(tt));
+        gcQueue(gcRefsArray((RefsArray) oldstack->pop()));
+      }
       break;
 
     case C_CFUNC_CONT:
@@ -1835,15 +1845,14 @@ void TaskStack::gcRecurse()
 //                           NODEs
 //*********************************************************************
 
-void Chunk::gcRecurse()
+void ConstTerm::gcConstRecurse()
 {
-  setRecord(getRecord()->gcSRecord());
   switch(getType()) {
-
   case Co_Object:
     {
       Object *o = (Object *) this;
       o->setClass(o->getClass()->gcClass());
+      o->setFreeRecord(o->getFreeRecord()->gcSRecord());
       if (o->isDeep()){
         ((DeepObject*)o)->home = o->getBoardFast()->gcBoard();
       }
@@ -1860,9 +1869,9 @@ void Chunk::gcRecurse()
       a->home = a->home->gcBoard();
       varCount++;
 
-      DebugGC((a->home == (Board *) ToPointer(ALLBITS) ||
-               a->home == NULL),
-              error ("non-dynamic name is met in Abstraction::gcRecurse"));
+      Assert(a->home != (Board *) ToPointer(ALLBITS) &&
+             a->home != NULL);
+
       INTOSPACE(a->home);
       break;
     }
@@ -1875,6 +1884,17 @@ void Chunk::gcRecurse()
       varCount++;
 
       gcTagged(c->val,c->val);
+      break;
+    }
+
+  case Co_Chunk:
+    {
+      SChunk *c = (SChunk *) this;
+
+      c->home = c->home->gcBoard();
+      varCount++;
+
+      c->setPtr(c->getRecord()->gcSRecord());
       break;
     }
 
@@ -1893,15 +1913,9 @@ void Chunk::gcRecurse()
 }
 
 
-void ConstTerm::gcRecurse()
-{
-  Assert(isConstChunk(this));
-  ((Chunk *) this)->gcRecurse();
-}
-
-#define CheckLocal(chunk)                                       \
+#define CheckLocal(CONST)                                       \
 {                                                               \
-   Board *bb=(chunk)->getBoardFast();                           \
+   Board *bb=(CONST)->getBoardFast();                           \
    if (!bb->gcIsAlive()) return NULL;                           \
    if (opMode == IN_TC && !isLocalBoard(bb)) return this;       \
 }
@@ -1912,65 +1926,64 @@ ConstTerm *ConstTerm::gcConstTerm()
   if (this == NULL) return NULL;
   CHECKCOLLECTED(*getGCField(), ConstTerm *);
 
+  size_t sz;
   switch (typeOf()) {
   case Co_Board:     return ((Board *) this)->gcBoard();
   case Co_Actor:     return ((Actor *) this)->gcActor();
   case Co_Class:     return ((ObjectClass *) this)->gcClass();
   case Co_HeapChunk: return ((HeapChunk *) this)->gc();
+  case Co_Abstraction:
+    CheckLocal((Abstraction *) this);
+    sz = sizeof(Abstraction);
+    COUNT(abstraction);
+    // DebugGCT(if (opMode == IN_GC) NOTINTOSPACE(bb));
+    break;
 
-  default:
+  case Co_Object:
     {
-      Assert(isConstChunk(this));
-      size_t sz;
-      switch(((Chunk*) this)->getType()) {
-      case Co_Abstraction:
-          CheckLocal((Abstraction *) this);
-          sz = sizeof(Abstraction);
-          COUNT(abstraction);
-          // DebugGCT(if (opMode == IN_GC) NOTINTOSPACE(bb));
-          break;
-
-      case Co_Object:
-        {
-          Object *o = (Object *) this;
-          CheckLocal(o);
-          sz = o->isDeep() ? sizeof(DeepObject): sizeof(Object);
-          COUNT1(deepObject,o->isDeep()?1:0);
-          COUNT1(flatObject,o->isDeep()?0:1);
-          break;
-        }
-      case Co_Cell:
-          CheckLocal((Cell *) this);
-          sz = sizeof(Cell);
-          COUNT(cell);
-          break;
-
-      case Co_Builtin:
-        switch (((Builtin *) this)->getType()) {
-        case BIsolveCont:
-          sz = sizeof(OneCallBuiltin);
-          COUNT(oneCallBuiltin);
-          break;
-        case BIsolved:
-          sz = sizeof(SolvedBuiltin);
-          COUNT(solvedBuiltin);
-          break;
-        default:
-          sz = sizeof(Builtin);
-          COUNT(builtin);
-        }
-        break;
-      default:
-        Assert(0);
-        return 0;
-      }
-      Chunk *ret = (Chunk*) gcRealloc(this,sz);
-      GCNEWADDRMSG(ret);
-      ptrStack.push(ret,PTR_CONSTTERM);
-      storeForward(getGCField(), ret);
-      return ret;
+      Object *o = (Object *) this;
+      CheckLocal(o);
+      sz = o->isDeep() ? sizeof(DeepObject): sizeof(Object);
+      COUNT1(deepObject,o->isDeep()?1:0);
+      COUNT1(flatObject,o->isDeep()?0:1);
+      break;
     }
+  case Co_Cell:
+    CheckLocal((Cell *) this);
+    sz = sizeof(Cell);
+    COUNT(cell);
+    break;
+
+  case Co_Chunk:
+    CheckLocal((SChunk *) this);
+    sz = sizeof(SChunk);
+    COUNT(chunk);
+    break;
+
+  case Co_Builtin:
+    switch (((Builtin *) this)->getType()) {
+    case BIsolveCont:
+      sz = sizeof(OneCallBuiltin);
+      COUNT(oneCallBuiltin);
+      break;
+    case BIsolved:
+      sz = sizeof(SolvedBuiltin);
+      COUNT(solvedBuiltin);
+      break;
+    default:
+      sz = sizeof(Builtin);
+      COUNT(builtin);
+    }
+    break;
+  default:
+    Assert(0);
+    return 0;
   }
+  ConstTerm *ret = (ConstTerm *) gcRealloc(this,sz);
+  GCNEWADDRMSG(ret);
+  ptrStack.push(ret,PTR_CONSTTERM);
+  storeForward(getGCField(), ret);
+  return ret;
 }
 
 HeapChunk * HeapChunk::gc(void)
@@ -2305,7 +2318,7 @@ void performCopying(void)
     case PTR_CONT:      ((Continuation*) ptr)->gcRecurse();      break;
     case PTR_CFUNCONT:  ((CFuncContinuation*) ptr)->gcRecurse(); break;
     case PTR_DYNTAB:    ((DynamicTable *) ptr)->gcRecurse();     break;
-    case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcRecurse();        break;
+    case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcConstRecurse();   break;
     default:
       Assert(NO);
     }
@@ -2369,8 +2382,9 @@ Bool AM::idleGC()
 
 OzDebug *OzDebug::gcOzDebug()
 {
-  pred = (Chunk *) pred->gcConstTerm();
-  Assert(pred);
+  pred=deref(pred);
+  Assert(!isAnyVar(pred));
+  gcTagged(pred,pred);
   args = gcRefsArray(args);
   return this;
 }

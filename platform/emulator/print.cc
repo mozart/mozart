@@ -481,6 +481,12 @@ PRINT(Cell)
   stream << "C@" << this;
 }
 
+PRINT(SChunk)
+{
+  CHECKDEPTH;
+  stream << "Chunk@" << this;
+}
+
 PRINT(Abstraction)
 {
   CHECKDEPTH;
@@ -494,7 +500,7 @@ PRINT(Object)
   CHECKDEPTH;
   stream << "<O:" << getPrintName()
          << ", ";
-  getRecord()->print(stream,depth,offset);
+  getFreeRecord()->print(stream,depth,offset);
   stream << ", State: ";
   tagged2Stream(getCell(),stream,depth,offset);
   stream << ">";
@@ -504,9 +510,7 @@ PRINT(Builtin)
 {
   CHECKDEPTH;
   stream << "B:"
-         << getPrintName() << "/" << getArity() << "[+ ";
-  getRecord()->print(stream,depth,offset);
-  stream << " ]";
+         << getPrintName() << "/" << getArity();
 }
 
 
@@ -689,6 +693,7 @@ PRINTLONG(ConstTerm)
   case Co_Abstraction:  ((Abstraction *) this)->printLong(stream,depth,offset);  break;
   case Co_Object:       ((Object *) this)->printLong(stream,depth,offset);       break;
   case Co_Cell:         ((Cell *) this)->printLong(stream,depth,offset);         break;
+  case Co_Chunk:        ((SChunk *) this)->printLong(stream,depth,offset);       break;
   case Co_Builtin:      ((Builtin *) this)->printLong(stream,depth,offset);      break;
   default:              Assert(NO);
   }
@@ -705,6 +710,7 @@ PRINT(ConstTerm)
   case Co_Abstraction: ((Abstraction *) this)->print(stream,depth,offset);   break;
   case Co_Object:      ((Object *) this)->print(stream,depth,offset);        break;
   case Co_Cell:        ((Cell *) this)->print(stream,depth,offset);          break;
+  case Co_Chunk:       ((SChunk *) this)->print(stream,depth,offset);        break;
   case Co_Builtin:     ((Builtin *) this)->print(stream,depth,offset);       break;
   default:              Assert(NO);
   }
@@ -1227,7 +1233,7 @@ PRINTLONG(Object)
          << "Object: "
          << getPrintName() << endl
          << "Features: ";
-  getRecord()->printLong(stream,depth,offset);
+  getFreeRecord()->printLong(stream,depth,offset);
   stream << endl;
   stream << "State: ";
   tagged2StreamLong(getCell(),stream,depth,offset);
@@ -1295,6 +1301,16 @@ PRINTLONG(Cell)
          << indent(offset)
          << " value:"<<endl;
   tagged2StreamLong(val,stream,depth,offset+2);
+}
+
+PRINTLONG(SChunk)
+{
+  CHECKDEPTHLONG;
+  stream << indent(offset)
+         << "Chunk@id" << this << endl
+         << indent(offset)
+         << " value:"<<endl;
+  getRecord()->printLong(stream,depth,offset+2);
 }
 
 PRINTLONG(SRecord)
@@ -1429,9 +1445,8 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 
     case C_EXCEPT_HANDLER:
       {
-        message("\tException handler: ");
-        Chunk *pred = (Chunk*) pop();
-        pred->print();
+        TaggedRef pred = (TaggedRef) pop();
+        message("\tException handler: %s\n",OZ_toC(pred));
         break;
       }
 
