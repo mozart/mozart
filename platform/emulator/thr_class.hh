@@ -100,11 +100,7 @@ public:
   void reInit ();               // for the root thread only;
 
   //  gc methods;
-#ifdef NEW_STACK
-  RunnableThreadBody() : taskStack() { }
-#else
   RunnableThreadBody(int sz) : taskStack(sz) { }
-#endif
   RunnableThreadBody *gcRTBody();
 };
 
@@ -155,9 +151,7 @@ private:
 
   PrTabEntry *abstr;
 
-#ifdef PERDIO
   int stopCount;
-#endif
 
   //  special allocator for thread's bodies;
   void freeThreadBody ();
@@ -360,10 +354,8 @@ public:
     return (state.flags & T_G_cont);
   }
 
-#ifdef PERDIO
   int pStop() { return stopCount++; }
   int pCont() { return --stopCount; }
-#endif
 
   int getThrType () { return (state.flags & S_TYPE_MASK); }
 
@@ -558,10 +550,6 @@ public:
   void pushCFun(OZ_CFun f, RefsArray  x, int n, Bool copyF) {
     item.threadBody->taskStack.pushCFun(f, x, n, copyF);
   }
-  void pushCont(ProgramCounter pc, RefsArray y, RefsArray g, RefsArray x) {
-    item.threadBody->taskStack.pushCont(pc,y,g,x);
-  }
-
 
   Bool hasCatchFlag() { return (state.flags & T_catch); }
   void setCatchFlag() { state.flags = state.flags|T_catch; }
@@ -581,10 +569,6 @@ public:
 
   //
   TaskStack *getTaskStackRef ();
-#ifdef MM2
-  TaskStackEntry *getTop ();
-  TaskStackEntry pop ();
-#endif
 
   /*
    *  propagators special;

@@ -1525,9 +1525,8 @@ void AM::gc(int msgLevel)
 #ifdef VERBOSE
   verbReopen ();
 #endif
-#ifdef PERDIO
+
   gcFrameToProxy();
-#endif
 
   GCMETHMSG(" ********** AM::gc **********");
   opMode = IN_GC;
@@ -1924,35 +1923,21 @@ void TaskStack::gc(TaskStack *newstack)
 
   TaskStack *oldstack = this;
 
-#ifdef NEW_STACK
-  Frame **newtop=&newstack->tos;
-#else
   newstack->allocate(suggestNewSize());
   Frame *oldtop = oldstack->getTop();
   int offset    = oldstack->getUsed();
   Frame *newtop = newstack->array + offset;
-#endif
 
-#ifdef NEW_STACK
-  for (Frame *oldtop = oldstack->getTop(); oldtop; oldtop=oldtop->next) {
-    ProgramCounter PC=oldtop->getPC();
-    RefsArray Y=oldtop->getY();
-    RefsArray G=oldtop->getG();
-#else
   while (1) {
     GetFrame(oldtop,PC,Y,G);
-#endif
 
     if (PC == C_EMPTY_STACK) {
-#ifdef NEW_STACK
-#else
       *(--newtop) = PC;
       *(--newtop) = Y;
       *(--newtop) = G;
       Assert(newstack->array == newtop);
       newstack->setTop(newstack->array+offset);
       return;
-#endif
     } else if (PC == C_CATCH_Ptr) {
     } else if (PC == C_ACTOR_Ptr) {
       Y = (RefsArray) ((AWActor *) Y)->gcActor();
@@ -1982,15 +1967,9 @@ void TaskStack::gc(TaskStack *newstack)
       G = gcRefsArray(G);
     }
 
-#ifdef NEW_STACK
-    Frame *fr=new Frame(PC,Y,G,0);
-    *newtop=fr;
-    newtop=&fr->next;
-#else
     *(--newtop) = PC;
     *(--newtop) = Y;
     *(--newtop) = G;
-#endif
   } // while not task stack is empty
 }
 

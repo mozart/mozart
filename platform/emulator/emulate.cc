@@ -474,17 +474,18 @@ void Thread::makeRunning ()
       e->saveSelf();
 
 
-#define PushCont(PC,Y,G)  CTS->pushCont(PC,Y,G,0);
+#define PushCont(PC,Y,G)  CTS->pushCont(PC,Y,G);
+#define PushContX(PC,Y,G,X,n)  { CTS->pushCont(PC,Y,G); CTS->pushX(X,n); }
 
 /* NOTE:
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,gRegs)                                                \
-     Y = NULL;                                                                  \
-     G = gRegs;                                                                 \
-     emulateHookCall(e,Pred,X,                                                  \
-                     e->pushContX(Pred->getPC(),NULL,G,X,Pred->getArity()));
+#define CallDoChecks(Pred,gRegs)                                             \
+     Y = NULL;                                                               \
+     G = gRegs;                                                              \
+     emulateHookCall(e,Pred,X,                                               \
+                     PushContX(Pred->getPC(),NULL,G,X,Pred->getArity()));
 
 // load a continuation into the machine registers PC,Y,G,X
 #define LOADCONT(cont)                          \
@@ -633,7 +634,7 @@ void Thread::makeRunning ()
 // ------------------------------------------------------------------------
 
 #define SUSP_PC(TermPtr,RegsToSave,PC)          \
-   e->pushContX(PC,Y,G,X,RegsToSave);           \
+   PushContX(PC,Y,G,X,RegsToSave);              \
    addSusp(TermPtr,CTT);        \
    goto LBLsuspendThread;
 
@@ -1425,7 +1426,7 @@ LBLdispatcher:
       case BI_TYPE_ERROR: RAISE_TYPE;
 
       case SUSPEND:
-        e->pushContX(PC,Y,G,X,predArity);
+        PushContX(PC,Y,G,X,predArity);
         e->suspendOnVarList(CTT);
         goto LBLsuspendThread;
 
@@ -1458,7 +1459,7 @@ LBLdispatcher:
           e->trail.pushIfVar(XPC(2));
           goto LBLsuspendShallow;
         }
-        e->pushContX(PC,Y,G,X,getPosIntArg(PC+3));
+        PushContX(PC,Y,G,X,getPosIntArg(PC+3));
         e->suspendInline(1,XPC(2));
         goto LBLsuspendThread;
       case FAILED:
@@ -1497,7 +1498,7 @@ LBLdispatcher:
             goto LBLsuspendShallow;
           }
 
-          e->pushContX(PC,Y,G,X,getPosIntArg(PC+4));
+          PushContX(PC,Y,G,X,getPosIntArg(PC+4));
           e->suspendInline(2,XPC(2),XPC(3));
           goto LBLsuspendThread;
         }
@@ -1542,7 +1543,7 @@ LBLdispatcher:
             goto LBLsuspendShallow;
           }
 
-          e->pushContX(PC,Y,G,X,getPosIntArg(PC+5));
+          PushContX(PC,Y,G,X,getPosIntArg(PC+5));
           e->suspendInline(3,XPC(2),XPC(3),XPC(4));
           goto LBLsuspendThread;
         }
@@ -1586,7 +1587,7 @@ LBLdispatcher:
             e->trail.pushIfVar(A);
             goto LBLsuspendShallow;
           }
-          e->pushContX(PC,Y,G,X,getPosIntArg(PC+4));
+          PushContX(PC,Y,G,X,getPosIntArg(PC+4));
           e->suspendInline(1,A);
           goto LBLsuspendThread;
         }
@@ -1632,7 +1633,7 @@ LBLdispatcher:
             e->trail.pushIfVar(B);
             goto LBLsuspendShallow;
           }
-          e->pushContX(PC,Y,G,X,getPosIntArg(PC+5));
+          PushContX(PC,Y,G,X,getPosIntArg(PC+5));
           e->suspendInline(2,A,B);
           goto LBLsuspendThread;
         }
@@ -1683,7 +1684,7 @@ LBLdispatcher:
               e->trail.pushIfVar(A);
               goto LBLsuspendShallow;
             }
-            e->pushContX(PC,Y,G,X,getPosIntArg(PC+4));
+            PushContX(PC,Y,G,X,getPosIntArg(PC+4));
             e->suspendInline(1,A);
             goto LBLsuspendThread;
           }
@@ -1773,7 +1774,7 @@ LBLdispatcher:
       case SUSPEND:
           Assert(!shallowCP);
           OZ_suspendOnInternal2(XPC(1),XPC(2));
-          e->pushContX(PC,Y,G,X,getPosIntArg(PC+4));
+          PushContX(PC,Y,G,X,getPosIntArg(PC+4));
           e->suspendOnVarList(CTT);
           goto LBLsuspendThread;
 
@@ -1817,7 +1818,7 @@ LBLdispatcher:
             e->trail.pushIfVar(C);
             goto LBLsuspendShallow;
           }
-          e->pushContX(PC,Y,G,X,getPosIntArg(PC+6));
+          PushContX(PC,Y,G,X,getPosIntArg(PC+6));
           e->suspendInline(3,A,B,C);
           goto LBLsuspendThread;
         }
@@ -1844,7 +1845,7 @@ LBLdispatcher:
       if (res==PROCEED) { DISPATCH(6); }
 
       Assert(res==SUSPEND);
-      e->pushContX(PC,Y,G,X,getPosIntArg(PC+5));
+      PushContX(PC,Y,G,X,getPosIntArg(PC+5));
       e->suspendOnVarList(CTT);
       goto LBLsuspendThread;
     }
@@ -1874,7 +1875,7 @@ LBLdispatcher:
       switch(res) {
 
       case SUSPEND:
-        e->pushContX(PC,Y,G,X,getPosIntArg(PC+4));
+        PushContX(PC,Y,G,X,getPosIntArg(PC+4));
         addSusp (XPC(2), CTT);
         goto LBLsuspendThread;
 
@@ -1902,7 +1903,7 @@ LBLdispatcher:
 
       case SUSPEND:
         {
-          e->pushContX(PC,Y,G,X,getPosIntArg(PC+5));
+          PushContX(PC,Y,G,X,getPosIntArg(PC+5));
           OZ_Term A=XPC(2);
           OZ_Term B=XPC(3);
           DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
@@ -1938,7 +1939,7 @@ LBLdispatcher:
       {
         e->emptySuspendVarList();
         int argsToSave = getPosIntArg(shallowCP+2);
-        e->pushContX(shallowCP,Y,G,X,argsToSave);
+        PushContX(shallowCP,Y,G,X,argsToSave);
         shallowCP = NULL;
         e->shallowHeapTop = NULL;
         e->reduceTrailOnShallow(CTT);
@@ -1969,7 +1970,7 @@ LBLdispatcher:
   Case(ALLOCATEL9)  { Y =  allocateY(9); DISPATCH(1); }
   Case(ALLOCATEL10) { Y = allocateY(10); DISPATCH(1); }
 
-  Case(DEALLOCATEL1)    { deallocateY(Y,1);  Y=0; DISPATCH(1); }
+  Case(DEALLOCATEL1)  { deallocateY(Y,1);  Y=0; DISPATCH(1); }
   Case(DEALLOCATEL2)  { deallocateY(Y,2);  Y=0; DISPATCH(1); }
   Case(DEALLOCATEL3)  { deallocateY(Y,3);  Y=0; DISPATCH(1); }
   Case(DEALLOCATEL4)  { deallocateY(Y,4);  Y=0; DISPATCH(1); }
@@ -2081,7 +2082,7 @@ LBLdispatcher:
       no_lock:
         PushCont(lbl,Y,G);
         CTS->pushLock(t);
-        e->pushContX((PC+4),Y,G,X,toSave);      /* ATTENTION */
+        PushContX((PC+4),Y,G,X,toSave);      /* ATTENTION */
         goto LBLsuspendThread;
 
     }
@@ -2191,7 +2192,7 @@ LBLdispatcher:
     }
     /* INCFPC(3): dont do it */
     int argsToSave = getPosIntArg(PC+2);
-    e->pushContX(PC,Y,G,X,argsToSave);
+    PushContX(PC,Y,G,X,argsToSave);
     if (isCVar (tag)) {
       tagged2CVar(term)->addDetSusp(CTT,termPtr);
     } else {
@@ -2459,7 +2460,7 @@ LBLdispatcher:
        if (PC != NOCODE) {
          PopFrame(CTS,auxPC,auxY,auxG);
 
-         e->pushContX(PC,Y,G,X,predArity);
+         PushContX(PC,Y,G,X,predArity);
          CTS->pushFrame(auxPC,auxY,auxG);
        }
        if (e->suspendVarList) {
@@ -2731,7 +2732,7 @@ LBLdispatcher:
         }
       }
 
-      tt->pushCont(newPC,newY,G,NULL);
+      tt->getTaskStackRef()->pushCont(newPC,newY,G);
       tt->setSelf(e->getSelf());
       tt->setAbstr(ozstat.currAbstr);
 
