@@ -347,9 +347,12 @@ OZ_BI_define(BIwidthC, 2, 0)
 	  }
 
 	case EVAR_STATUS_FUTURE:
+	case EVAR_STATUS_FAILED:
 	case EVAR_STATUS_DET:
 	case EVAR_STATUS_UNKNOWN:
 	  // kost@ : wait until the picture gets clear;
+	  // raph: the following is fine for failed values, because the
+	  // attempt to suspend will raise the failed value's exception.
 	  oz_suspendOn(rawwid);
 
 	case EVAR_STATUS_KINDED:

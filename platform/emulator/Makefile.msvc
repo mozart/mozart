@@ -41,7 +41,8 @@ SRCS= \
 	dictionary.cc extension.cc bits.cc bitarray.cc \
 	ozthread.cc heapchunk.cc bytedata.cc\
 	susplist.cc susp_queue.cc suspendable.cc\
-	var_base.cc var_ext.cc var_simple.cc var_future.cc var_opt.cc \
+	var_base.cc var_ext.cc var_simple.cc \
+	var_readonly.cc var_failed.cc var_opt.cc \
 	namer.cc \
 	am.cc unify.cc indexing.cc codearea.cc \
 	trail.cc emulate.cc scheduler.cc \

@@ -230,7 +230,7 @@ public:
 
   inline void localize(TaggedRef *vPtr);
   Bool isFuture(){ // mm3
-    return (getOrigVar()->getType()==OZ_VAR_FUTURE);
+    return oz_isFuture(origVar);
   }
 
   // for failure
@@ -334,7 +334,6 @@ public:
 
 void sendRedirect(DSite*, OB_TIndex, TaggedRef);
 OZ_Term unmarshalVar(MarshalerBuffer*, Bool, Bool);
-Bool triggerVariable(TaggedRef *);
 
 /* ---------------------------------------------------------------------- */
 

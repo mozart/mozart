@@ -109,7 +109,7 @@ local
 	     'Port'#Green 'Lock'#Green
 	     'Thread'#Orange 'Space'#Orange
 	     'Finite Set Value'#Red 'Foreign Pointer'#Red
-	     'Free'#Gray 'Kinded'#Gray 'Future'#Gray
+	     'Free'#Gray 'Kinded'#Gray 'Future'#Gray 'Failed'#Green
 	     'Extension'#HotPink 'Chunk Extension'#HotPink
 	     'Unknown'#HotPink]
 
@@ -143,6 +143,7 @@ local
 	  [] kinded(_) then 'Kinded'
 	  [] free then 'Free'
 	  [] future then 'Future'
+	  [] failed then 'Failed'
 	  else 'Unknown'
 	  end
       o(TextWidget tag configure q(PrintName)
