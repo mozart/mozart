@@ -64,6 +64,9 @@
 (defvar oz-machine "oz.machine.csh"
   "Oz machine used by run-oz")
 
+(defvar time-wait 10
+  "Time the machine needs to bind the socket")
+
 (defvar oz-dir (concat (or (getenv "OZDIR") "/usr/share/gs/soft/oz") "/")
   "The directory where oz is installed")
 
@@ -226,7 +229,7 @@ if that value is non-nil."
   (start-process "Oz Machine" nil oz-machine port)
 ;  (make-comint "Oz Machine" oz-machine nil port)
 ;; wait a little bit until machine has bind it's socket
-  (sleep-for 10)
+  (sleep-for time-wait)
 )
 
 (defun oz-doc ()
