@@ -243,6 +243,14 @@ OZ_BI_define(BIbreakpoint, 0,0)
   return PROCEED;
 } OZ_BI_end
 
+OZ_BI_define(BIdisplayDef, 2,0)
+{
+  OZ_declareIntIN(0,pc);
+  OZ_declareIntIN(1,size);
+  displayDef((ProgramCounter)ToPointer(pc),size);
+  return PROCEED;
+} OZ_BI_end
+
 OZ_BI_define(BIdisplayCode, 2,0)
 {
   OZ_declareIntIN(0,pc);
