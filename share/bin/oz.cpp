@@ -27,17 +27,21 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   char *progname = getProgname(buffer);
 
   char *ozhome = getRegistry("OZHOME");
-#ifdef OZSA
-  char *ebin = "unused";
-#else
-  char *ehome  = getRegistry("EMACSHOME");
-  if (ehome==NULL || ozhome==NULL) {
-    OzPanic(1,"Installation incorrect.\nDid you run setup?");
+  if (ozhome==NULL) {
+    OzPanic(1,"Oz home not found.\nDid you run setup?");
   }
 
-  sprintf(buffer,"%s/bin/runemacs.exe",ehome);
-  char *ebin = strdup(buffer);
-#endif
+  char *ebin;
+  if (stricmp(progname,"oz.exe")!=0) {
+    ebin = "unused";
+  } else {
+    char *ehome  = getRegistry("EMACSHOME");
+    if (ehome==NULL) {
+      OzPanic(1,"Emacs home not found.\nDid you run setup?");
+    }
+    sprintf(buffer,"%s/bin/runemacs.exe",ehome);
+    ebin = strdup(buffer);
+  }
 
   ozSetenv("OZPLATFORM",ozplatform);
   ozSetenv("OZHOME",ozhome);
@@ -48,10 +52,8 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
     ozSetenv("OZPATH",buffer);
   }
 
-  sprintf(buffer,"%s/platform/%s;%s",
-	  ozhome,ozplatform,getenv("PATH"));
+  sprintf(buffer,"%s/platform/%s;%s",ozhome,ozplatform,getenv("PATH"));
   ozSetenv("PATH",buffer);
-
 
   /*
    * TCL/TK
@@ -73,30 +75,16 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
 
   int console = 0;
   if (stricmp(progname,"oz.exe")==0) {
-    sprintf(buffer,"%s -l %s/lib/elisp/oz.elc -f run-oz",
-	    ebin,ozhome);
-  } else if (stricmp(progname,"ozemacs.exe")==0) {
-    sprintf(buffer,"%s",ebin);
+    sprintf(buffer,"%s -l %s/lib/elisp/oz.elc -f run-oz",ebin,ozhome);
   } else if (stricmp(progname,"ozdemo.exe")==0) {
     sprintf(buffer,"%s/platform/%s/ozemulator -f %s/demo/rundemo",
 	    ozhome,ozplatform,ozhome);
-#ifdef CONSOLEAPP
-  } else if (stricmp(progname,"ozsac.exe")==0) {
-    if (argc!=3) {
-      fprintf(stderr,"usage: ozsac infile outfile\n");
-      exit(1);
-    }
-    sprintf(buffer,"%s/platform/%s/ozcompiler +p /dev/null +c %s +dn %s",
-	    ozhome,ozplatform,argv[1],argv[2]);
-#else
-  } else if (stricmp(progname,"ozsa.exe")==0 ||
-	     stricmp(progname,"ozsaw.exe")==0) {
+  } else if (stricmp(progname,"ozengine.exe")==0) {
     char *rest = splitFirstArg(lpszCmdLine);
-    sprintf(buffer,"%s/platform/%s/ozemulator -E -quiet -f %s %s %s",
-	    ozhome,ozplatform,lpszCmdLine,((*rest)==0) ? "" : "-a", rest);
-    if (stricmp(progname,"ozsaw.exe")==0)
-      console = DETACHED_PROCESS;
-#endif
+    char *url = lpszCmdLine;
+    sprintf(buffer,"%s/platform/%s/ozemulator -u %s -a %s",
+	    ozhome,ozplatform,url,rest);
+    //    console = DETACHED_PROCESS;
   } else {
     OzPanic(1,"Unknown invocation: %s", progname);
   }

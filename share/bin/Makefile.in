@@ -36,7 +36,7 @@ LINKS   = ozdo ozapplet ozengine
 
 .PHONY: all install clean distclean win-install
 
-all:
+all: version.h
 
 install: $(BINDIR)
 	$(INSTALL_BIN) $(SCRIPTS:%=$(SRCDIR)/%) $(BINDIR)
@@ -50,16 +50,19 @@ install: $(BINDIR)
 $(BINDIR):
 	$(MKINSTALLDIRS) $@
 
-ozdemo.exe: oz.exe
+ozdemo.exe ozengine.exe: oz.exe
 	cp oz.exe ozdemo.exe
+	cp oz.exe ozengine.exe
 
-win-install: setup.exe oz.exe ozdemo.exe ozsaw.exe ozsa.exe ozsac.exe
-	$(INSTALL_BIN) setup.exe oz.exe ozdemo.exe $(PREFIX)
-	$(INSTALL_BIN) ozsaw.exe ozsa.exe ozsac.exe \
-		$(PREFIX)/platform/win32-i486
+version.h: ../OZVERSION
+	echo "#define OZVERSION \"`$<`\"" > $@
+
+
+win-install: setup.exe oz.exe ozdemo.exe ozengine.exe
+	$(INSTALL_BIN) setup.exe oz.exe ozdemo.exe ozengine.exe $(PREFIX)
 
 clean:
-	$(RM) *.exe *.sym *.map *.mk* *.lk* *.err oz.res setup.res ozdemo.cpp
+	$(RM) *.exe *.obj *.sym *.map *.mk* *.lk* *.err oz.res setup.res ozdemo.cpp version.h
 
 distclean: clean
 	$(RM) Makefile config.cache config.log config.status
