@@ -19,6 +19,8 @@ SGMLSRCS = \
         opi.sgml
 ELSRCS = \
         oz.el
+MISCSRCS = \
+        opi.bib
 GIFSRCS = \
         menu.gif
 
@@ -33,14 +35,14 @@ bootstrap: boot-all
 Makefile: Makefile.in ../config.status
         cd .. && ./config.status
 
-opi-html: $(SGMLSRCS) $(ELSRCS) $(GIFSRCS)
+opi-html: $(SGMLSRCS) $(ELSRCS) $(MISCSRCS) $(GIFSRCS)
         $(DOCIFY) --in=$(SRCDIR)/opi.sgml --out=$@ --type=html-stylesheets \
         --autoindex \
         --bib-path=$(SRCDIR):$(SRCTOP)/doc \
         --bst-path=$(SRCTOP)/doc/utilities && \
         cp -p $(addprefix $(SRCDIR)/,$(GIFSRCS)) $@
 
-opi-tex: $(SGMLSRCS)
+opi-tex: $(SGMLSRCS) $(ELSRCS) $(MISCSRCS)
         $(DOCIFY) --in=$(SRCDIR)/opi.sgml --out=$@ --type=latex --autoindex
 
 validate: opi-html
