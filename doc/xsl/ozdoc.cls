@@ -26,7 +26,8 @@
 \LoadClass[a4paper,11pt]{book}
 \RequirePackage{verbatim}
 \RequirePackage{float}
-\RequirePackage{epsfig}
+\RequirePackage[dvips]{graphicx}
+\RequirePackage[dvips]{epsfig}
 \RequirePackage{alltt}
 \RequirePackage{isolatin1}
 \RequirePackage{color}
@@ -632,7 +633,8 @@
 \newenvironment{PICEXTDISPLAY}
   {\begin{center}\begin{minipage}{\linewidth}}
   {\end{minipage}\end{center}}
-\newcommand{\PICEXTFULL}[1]{\epsfig{file=#1.ps,width=\linewidth}}
+\newcommand{\PICEXTFULL}[1]{{\mozart@specials@other
+  \epsfig{file=#1.ps,width=\linewidth}}}
 \def\PICEXTUNGIF/#1.gif/{\PICEXT{#1.ps}}
 
 % grammar stuff
