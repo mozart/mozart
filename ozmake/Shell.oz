@@ -21,7 +21,7 @@ export
    ExecuteCommand
    QuoteUsing
    ToUserVS
-import System
+import% System
    Property(get)     at 'x-oz://system/Property.ozf'
    OS(system getEnv) at 'x-oz://system/OS.ozf'
    Open(pipe)        at 'x-oz://system/Open.ozf'
