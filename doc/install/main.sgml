@@ -33,6 +33,7 @@
 <!entity etc PI "ellipsis">
 <!entity chapter.src.get system "src-get.sgml">
 <!entity chapter.src.make system "src-make.sgml">
+<!entity chapter.bin system "bin.sgml">
 <!entity section.configure system "configure.sgml">
 ]>
 <book proglang=sh>
@@ -52,6 +53,7 @@
 
     <part id=part.bin>
       <title/Binary Distribution/
+      &chapter.bin;
     </part>
 
     <part id=part.src>
