@@ -1353,6 +1353,7 @@ occupied by this term, which leads to memory faults. &Oz; provides functions
 to explicitly inform the garbage collector about external references
 to the heap.
 <list>
+
 <entry><<OZ_protect>>
 <index class=module/OZ_protect/
 <synopsis>
@@ -1361,6 +1362,7 @@ to the heap.
     and may be moved. Therefore <code /tp/ must be a <em/pointer/ to a
     term.  The location where <code /tp/ points to is modified by the
     garbage collector.
+
 <entry><<OZ_unprotect>>
 <index class=module/OZ_unprotect/
 <synopsis>
@@ -1368,6 +1370,22 @@ to the heap.
 <item>This is the inverse function to <code /OZ_protect/ informing the
     garbage collector that the reference to the heap is no longer
     used.
+
+<entry><<OZ_gCollect>>
+<index class=module/OZ_gCollect/
+<synopsis>
+  <code >int OZ_gCollect(OZ_Term *tp)</code>
+<item>This function causes the Oz term referred to by <<tp>> to be updated
+during garbage collection.
+
+<entry><<OZ_sClone>>
+<index class=module/OZ_sClone/
+<synopsis>
+  <code >int OZ_sClone(OZ_Term *tp)</code>
+<item>This function causes the Oz term referred to by <<tp>> to be updated
+during cloning.
+
+
 </list>
 </section>
 
