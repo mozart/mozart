@@ -31,7 +31,7 @@ Platform               = {Property.get 'platform.os'}
 WindowsPlatform        = 'win32'
 
 NameOfBenni            = 'Benjamin Lorenz'
-EmailOfBenni           = 'lorenz@ps.uni-sb.de'
+EmailOfBenni           = 'Please send bug reports to bugs@mozart-oz.org'
 
 TreeTitle              = 'Thread Forest'
 StackTitle             = 'Stack'
@@ -77,9 +77,7 @@ NoThreads              = 'There is no thread attached'
 %%
 
 ArrayType              = '<array>'
-BitArrayType           = '<bitarray>'
 ThreadType             = '<thread>'
-%CellType               = '<cell>'
 ClassType              = '<class>'
 DictionaryType         = '<dict>'
 BigFloatType           = '<bigfloat>'
@@ -96,10 +94,9 @@ RecordType             = '<record>'
 KindedRecordType       = '<recordc>'
 ChunkType              = '<chunk>'
 SpaceType              = '<space>'
-FSValueType            = '<fs val>'
 FSVarType              = '<fs var>'
 FDVarType              = '<fd var>'
-ForeignPointerType     = '<foreign>'
+FutureType             = '<future>'
 UnboundType            = '_'
 UnknownType            = '<???>'
 
@@ -110,7 +107,6 @@ UnknownType            = '<???>'
 
 ToplevelGeometry       = '510x360'
 ToplevelMinSize        = 459 # 324   %%  10% less than the default
-ToplevelMaxSize        = 765 # 540   %%  50% more...
 
 ThreadTreeWidth        = 120
 ThreadTreeStretchX     = 11
@@ -356,8 +352,6 @@ Config =
 
     meth toggle(What)
        What <- {Not @What}
-       {OzcarMessage 'Config: setting `' # What #
-	'\' to value `' # {V2VS @What} # '\''}
        if What == updateEnv andthen @What == true then
 	  {Ozcar PrivateSend(What)}
        end
@@ -365,8 +359,6 @@ Config =
 
     meth set(What Value)
        What <- Value
-       {OzcarMessage 'Config: setting `' # What #
-	'\' to value `' # {V2VS Value} # '\''}
        if What == envPrintTypes then
 	  {Ozcar PrivateSend(rebuildCurrentStack)}
        end

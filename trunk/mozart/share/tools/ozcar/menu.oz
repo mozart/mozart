@@ -43,13 +43,16 @@ in
 		 (C(label:   'About...'
 		    action:  self # about)|
 		  separator|
+		  C(label:   'Start Server'
+		    action:  self # startServer)|
+		  separator|
 		  if {Property.get 'oz.standalone'} then
 		     [C(label:   'Close'
 			action:  self # off
 			key:     ctrl(x))]
 		  else
 		     [C(label:   'Destroy'
-			action:  Ozcar # reInit)
+			action:  Ozcar # init)
 		      C(label:   'Suspend'
 			action:  self # off
 			key:     ctrl(x))]
@@ -120,10 +123,10 @@ in
 		    key:    'Down'
 		    event:  '<Down>')
 		  separator
-		  C(label:  'Re-Calculate'
+		  C(label:  'Recalculate'
 		    action: self # rebuildCurrentStack
 		    key:    ctrl(l))
-		  C(label:  'Update Env'
+		  C(label:  'Update Environment'
 		    action: self # updateEnv
 		    key:    v)
 		  separator

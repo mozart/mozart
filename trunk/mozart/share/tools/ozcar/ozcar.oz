@@ -44,7 +44,7 @@ local
 	    {EnqueueCompilerQuery setSwitch(controlflowinfo true)}
 	    {EnqueueCompilerQuery setSwitch(staticvarnames true)}
 	 end
-	 {Dbg.on}
+	 {Primitives.setMode true}
 	 if @currentThread == unit then
 	    Gui,status('Ready to attach threads')
 	 end
@@ -52,7 +52,7 @@ local
 
       meth off
 	 case {Cget closeAction} of unit then
-	    {Dbg.off}
+	    {Primitives.setMode false}
 	    {Tk.send wm(withdraw self.toplevel)}
 	    {EnqueueCompilerQuery setSwitch(debuginfo false)}
 	    {SendEmacs removeBar}
@@ -61,14 +61,13 @@ local
       end
 
       meth conf(...)=M
-	 {Record.forAllInd M
-	  proc {$ F V}
-	     if {Config confAllowed(F $)} then
-		{Config set(F V)}
-	     else
-		raise ozcar(badConfigFeature(F)) end
-	     end
-	  end}
+	 for F in {Arity M} do
+	    if {Config confAllowed(F $)} then
+	       {Config set(F M.F)}
+	    else
+	       {Exception.raiseError ozcar(badConfigFeature F M.F)}
+	    end
+	 end
       end
    end
 
@@ -87,10 +86,6 @@ in
 	      MyOzcar : unit
 
 	   meth init
-	      skip
-	   end
-
-	   meth reInit
 	      lock
 		 if @MyOzcar \= unit then
 		    {@MyOzcar destroy}
@@ -124,6 +119,4 @@ in
 	   end
 
 	end init}
-
-   {Ozcar reInit}
 end
