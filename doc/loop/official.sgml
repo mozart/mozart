@@ -21,33 +21,60 @@
   -
   -->
 <chapter id=chapter.official>
-  <title>Official Features</title>
+  <title>Official Loop Notation</title>
   <p>In order to provide convenient syntax for loops, two new keywords
 have been introduced in Mozart&nbsp;1.1.0: <code/for/ and <code/do/.
 Thus, a new statement is introduced in the Oz language and its syntax is:
-<code display/for ?{Iterators} do ... end/
-where ?{Iterators} is a sequence of 1 or more iterators.  An iterator
-has the form:
-<code>?{X} in ?{Generator}</code>
+<code display/for ?{Declarations} do ... end/
+where ?{Declarations} is a sequence of 0 or more iterator and feature
+declarations.   An iterator has the form:
+<code>?{Pat} in ?{Generator}</code>
 where ?{Generator} describes how to generate the successive values for
-variable ?{X}, which is a variable local to the loop.  The loop
+pattern ?{Pat} whose variables are local to the loop.  The loop
 terminates as soon as one of the generators runs out of values.
 </p>
-  <para><title/Iterators/
-These are the iterators officially supported in Mozart&nbsp;1.1.0.
+  <section><title/Iterators/
+    <p>These are the iterators officially supported in Mozart&nbsp;1.1.1.
 <list>
-        <entry><code/X in ?{L}/
-        <item>iterates over the elements of list ?{L}.  At each
+      <entry><code/X in ?{L}/
+      <item>iterates over the elements of list ?{L}.  At each
 iteration, <code/X/ is bound to the next element in ?{L}.  The
 generator runs out when all elements in ?{L} have been consumed.
-        <entry><code/X in ?{I}..?{J}/
-        <item>iterates over the integers from ?{I} to ?{J} (both
-inclusive).  At each iteration <code/X/ is bound to the next integer
-in this sequence.  More precisely, the sequence starts at ?{I} and
-proceeds by increments of 1 as long as it remains less than or equal
-to ?{J}.
-    </list>
-</para>
+      <entry/<code/X in ?{E1};?{E2};?{E3}//
+      <item/this iterator is intended to have a C-like flavor.  ?{E1}
+is the initial value, ?{E2} is the boolean condition, and ?{E3} is the
+next value.  The iterator runs out when ?{E2} evaluates to <code/false/./
+      <entry/<code/X in ?{E1}..?{E2};?{E3}//
+      <item/iterate over the integers from ?{E1} up to ?{E2} inclusive, by
+increment of ?{E3}.  ?{E1}, ?{E2} and ?{E3} are evaluated only once prior
+to starting the loop.
+      <entry/<code/X in ?{E1}..?{E2}//
+      <item/same as above, but with increment of 1./
+      <entry/<code/X in ?{E1};?{E2}//
+      <item/shorthand for <code/X in ?{E1};true;?{E2}//
+    </list></p>
+  </section>
+  <section><title/Features/
+    <p>Additional loop functionality is made available through the new
+notion of loop <q/features/.  For example, in C, it is possible to <code
+proglang=cc/break/ or <code proglang=cc/continue/ the current loop.  We
+generalize this idea by making the <q/break/ and <q/continue/ capabilities
+first-class using nullary procedures: thus you can break or continue any loop
+from any arbitrary level of dynamic nesting.
+<list>
+      <entry/<code/break:B//
+      <item/binds <code/B/ to a nullary procedure which, when invoked
+immediately breaks out of the corresponding loop.  This is currently
+implemented using an exception, but may change in the future, which means
+that (1) if you indiscriminately catch all exceptions you may break this
+functionality, (2) if your code relies on catching <q/break/ exceptions,
+it may not work in a future release./
+      <entry/<code/continue:C//
+      <item/binds <code/C/ to a nullary procedure which, when invoked
+immediately goes on to the next iteration of the loop.  The same warning
+applies as above./
+    </list></p>
+  </section>
 </chapter>
 <!--
 Local Variables:
