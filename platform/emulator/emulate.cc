@@ -2950,7 +2950,7 @@ LBLcheckEntailment:
       e->setCurrent(aa->getBoardFast());
       e->currentThread->home=CBB;
       Assert(CBB);
-      e->currentThread->notificationBoard=CBB;
+      if (e->currentSolveBoard) e->currentThread->notificationBoard=CBB;
       CBB->incSuspCount();
     } else
 #endif
