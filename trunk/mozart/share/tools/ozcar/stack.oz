@@ -27,7 +27,8 @@ local
 	    file    : File
 	    line    : Line
 	    time    : Time
-	    name    : Name
+	    name    : case Name == xcont orelse Name == actor then
+			 suspension else Name end
 	    args    : Args
 	    vars    : Vars
 	    builtin : Builtin)
@@ -176,7 +177,9 @@ in
 	    {Ozcar printStack(id:self.I frames:Frames depth:Depth last:Last)}
 	    case {CheckState self.T} == running then
 	       {Ozcar markStack(inactive)}
-	    else skip end
+	    else
+	       {Ozcar markStack(active)}
+	    end
 	 end
       end
 

@@ -451,6 +451,11 @@ in
 	    T     = {Stack getThread($)}
 	    S     = {CheckState T}
 	 in
+
+	    case @currentStack == undef then skip else
+	       Gui,resetReservedTags({@currentStack getSize($)})
+	    end
+
 	    currentThread <- T
 	    currentStack  <- Stack
 
