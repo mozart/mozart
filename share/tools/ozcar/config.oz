@@ -49,7 +49,6 @@ EmailOfBenni           = 'lorenz@ps.uni-sb.de'
 TreeTitle              = 'Thread Forest'
 StackTitle             = 'Stack'
 AltStackTitle          = 'Stack of Thread  #'
-
 LocalEnvTitle          = 'Local Variables'
 GlobalEnvTitle         = 'Global Variables'
 
@@ -73,14 +72,6 @@ OzcarErrorPrefix       = 'Ozcar ERROR: '
 NoFileInfo             = ('step message without line number information, ' #
 			  'continuing thread #')
 NoThreads              = 'There is no thread attached'
-
-
-DetachAllAction        = {NewName}
-DetachAllButCurAction  = {NewName}
-DetachAllDeadAction    = {NewName}
-
-TermAllAction          = {NewName}
-TermAllButCurAction    = {NewName}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -192,16 +183,23 @@ TextCursor             = left_ptr
 
 %% the timeout variables have critical values --
 %% you should know what you are doing when changing them...
-TimeoutToMark          = 100 % ms
-TimeoutToStatus        = 200
-TimeoutToSwitch        = 300
-TimeoutToUpdateEnv     = 400
-TimeoutToCalcTree      = 500
+TimeoutToSwitch        = 0 % ms
+TimeoutToUpdateEnv     = 0
+TimeoutToMark          = 100
+TimeoutToStatus        = TimeoutToMark
+TimeoutToCalcTree      = 250
 
 HelpEvent              = '<3>'
 
 BigFloat               = {Int.toFloat 10 * 1000}
 BigInt                 = 1000 * 1000 * 1000
+
+DetachAllAction        = {NewName}
+DetachAllButCurAction  = {NewName}
+DetachAllDeadAction    = {NewName}
+
+TermAllAction          = {NewName}
+TermAllButCurAction    = {NewName}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
