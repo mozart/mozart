@@ -427,19 +427,6 @@ echo "blurb:   $(PKG_BLURB)"     >> $(OZPMINFO)
 endef
 endif
 
-OZPM	= $(OZE) x-ozlib://duchier/tools/ozpm/ozpm.exe
-
-$(PKG_FILE): pkg
-pkg::
-	@rm -rf $(TMP_DIR)
-	@mkdir $(TMP_DIR)
-	$(PKG_INFO)
-	make install PREFIX=$(TMP_DIR)/INSTALL
-	$(OZPM) --create --in=$(OZPMINFO) \
-	--prefix=$(TMP_DIR)/INSTALL --out=$(PKG_FILE)
-
-update-pkg:: $(PKG_FILE_DST)
-
 clean::
 	-rm -f $(PKG_FILE)
 
