@@ -363,9 +363,9 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 	(setq oz-emulator-buffer "*Oz Emulator*")
 	(if oz-wait-time (sleep-for oz-wait-time))
 	(make-comint "Oz Emulator" "oz.emulator" nil "-emacs" "-S" file)
+	(oz-create-buffer oz-emulator-buffer nil)
 	(set-process-filter (get-buffer-process oz-emulator-buffer)
 			    'oz-emulator-filter)
-	(oz-create-buffer oz-emulator-buffer nil)
 	)
 
       (bury-buffer oz-emulator-buffer)
@@ -1096,39 +1096,39 @@ and initial semicolons."
   (oz-filter proc string))
 
 (defun oz-filter (proc string)
-  (let ((newbuf (process-buffer proc))
-	old-point
-	index
+;; see elisp manual: "Filter Functions"
+  (let ((old-buffer (current-buffer))
+	(newbuf (process-buffer proc))
 	(errs-found (and oz-popup-on-error (string-match oz-error-string string))))
-      ;(if errs-found
-	;  (if oz-gnu19
-	 ;     (delete-windows-on newbuf t)
-	  ;  (delete-windows-on newbuf)))
-    (save-excursion
-      (set-buffer newbuf)
-      
-      ;; Insert the text, moving the process-marker.
-      (goto-char (process-mark proc))
-      (setq old-point (point))
-      (goto-char (point-max))
+    (unwind-protect
+	(let (moving ol-point index)
+	  (set-buffer newbuf)
+	  (setq moving (= (point) (process-mark proc)))
+	  (save-excursion
 
-      ;; Irix outputs garbage, when sending EOF
-      (setq index (string-match "\\^D" string))
-      (if index
-	  (setq string (concat (substring string 0 index)
-			       (substring string (+ 4 index)))))
+	    ;; Insert the text, moving the process-marker.
+	    (goto-char (process-mark proc))
 
-      (insert-before-markers string)
-      ;; mm2: (set-marker (process-mark proc) (point))
+	    (setq old-point (point))
+	    (goto-char (point-max))
 
-      ;; remove escape characters
-      (goto-char old-point)
-      (while (search-forward-regexp oz-remove-pattern nil t)
-	(replace-match "" nil t)))
-    (if errs-found
-	(progn (oz-show-buffer newbuf)
-	       (set-window-point (get-buffer-window newbuf)
-				 (process-mark proc))))))
+	    ;; Irix outputs garbage, when sending EOF
+	    (setq index (string-match "\\^D" string))
+	    (if index
+		(setq string (concat (substring string 0 index)
+				     (substring string (+ 4 index)))))
+
+	    (insert-before-markers string)
+	    (set-marker (process-mark proc) (point))
+
+	    ;; remove escape characters
+	    (goto-char old-point)
+	    (while (search-forward-regexp oz-remove-pattern nil t)
+	      (replace-match "" nil t)))
+	  (if (or moving errs-found) (goto-char (process-mark proc))))
+      (set-buffer old-buffer))
+
+    (if errs-found (oz-show-buffer newbuf))))
 
 
 ;;------------------------------------------------------------
