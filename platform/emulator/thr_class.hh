@@ -363,8 +363,10 @@ class RunnableThreadBody {
 friend class Thread;
 private:
   TaskStack taskStack;
-  Object *self;               /* the self object pointer */
+  Object *self;              /* the self object pointer */
   RunnableThreadBody *next;  /* for linking in the freelist */
+  TaggedRef debugVar;        /* variable will be instantiated,
+                                if thread is being debugged */
 public:
   USEHEAPMEMORY;
   //
@@ -379,12 +381,14 @@ public:
   void reInit ();               // for the root thread only;
 
   //  gc methods;
-  RunnableThreadBody(int sz) : taskStack(sz), self(NULL) {}
+  RunnableThreadBody(int sz) : taskStack(sz) { }
   RunnableThreadBody *gcRTBody();
   void gcRecurse();
 
   void setSelf(Object *o) { Assert(self==NULL); self = o; }
   void makeRunning();
+  TaggedRef getDebugVar()       { return debugVar; }
+  void setDebugVar(TaggedRef v) { debugVar = v; }
 };
 
 //
@@ -529,6 +533,9 @@ public:
   DebugCode (Board *getBoard () { return (board); })
   void setBoard (Board *bp) { board = bp; }
   void setSelf(Object *o);
+
+  TaggedRef getDebugVar();
+  void setDebugVar(TaggedRef v);
 
   void setNewPropagator(OZ_Propagator * p) {
     Assert(isNewPropagator());

@@ -74,7 +74,8 @@ extern TaggedRef methApplHdl;
 #define StateLocked ((Abstraction*) -1l)
 
 inline
-Abstraction *getSendMethod(Object *obj, TaggedRef label, int arity, MethodCache *cache)
+Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
+                           MethodCache *cache)
 {
   Assert(isFeature(label));
 
@@ -91,7 +92,7 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, int arity, MethodCache 
 }
 
 inline
-Abstraction *getApplyMethod(Object *obj, TaggedRef label, int arity)
+Abstraction *getApplyMethod(Object *obj, TaggedRef label, SRecordArity arity)
 {
   Assert(isFeature(label));
   return obj->getMethod(label,arity);
@@ -203,7 +204,7 @@ ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
                                    TaggedRef *&sP)
 {
   ProgramCounter offset = table->getElse();
-  if (isSTuple(term)) {
+  if (isSRecord(term)) {
     if (table->functorTable) {
       SRecord *rec = tagged2SRecord(term);
       Literal *lname = rec->getLabelLiteral();
@@ -278,8 +279,7 @@ Bool Board::isFailureInBody ()
 // genCallInfo: self modifying code!
 
 static
-void genCallInfo(GenCallInfoClass *gci, int arity, TaggedRef pred,
-                 ProgramCounter PC, RefsArray X)
+void genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
 {
   static int gencall = 0;
   static int gencallmethfailed = 0;
@@ -292,8 +292,8 @@ void genCallInfo(GenCallInfoClass *gci, int arity, TaggedRef pred,
   if (gci->isMethAppl) {
     if (!isObject(pred) ||
         NULL == (abstr = getApplyMethod((Object *) tagged2Const(pred),
-                                        gci->lit,arity))) {
-      ApplMethInfoClass *ami = new ApplMethInfoClass(gci->lit,arity);
+                                        gci->lit,gci->arity))) {
+      ApplMethInfoClass *ami = new ApplMethInfoClass(gci->lit,gci->arity);
       CodeArea::writeOpcode(gci->isTailCall ? TAILAPPLMETHG : APPLMETHG, PC);
       CodeArea::writeAddress(ami, PC+1);
       CodeArea::writeRegIndex(gci->regIndex, PC+2);
@@ -304,7 +304,7 @@ void genCallInfo(GenCallInfoClass *gci, int arity, TaggedRef pred,
     if(!isAbstraction(pred)) goto bombGenCall;
 
     abstr = tagged2Abstraction(pred);
-    if (abstr->getArity() != arity)
+    if (abstr->getArity() != getWidth(gci->arity))
       goto bombGenCall;
   }
 
@@ -319,6 +319,7 @@ void genCallInfo(GenCallInfoClass *gci, int arity, TaggedRef pred,
 bombGenCall:
   gencallfailed++;
   CodeArea::writeRegIndex(gci->regIndex,PC+1);
+  CodeArea::writeArity(getWidth(gci->arity), PC+2);
   CodeArea::writeOpcode(gci->isTailCall ? TAILCALLG : CALLG,PC);
   return;
 }
@@ -644,21 +645,28 @@ void AM::suspendInline(int n, OZ_Term A,OZ_Term B,OZ_Term C)
 
 
 static
-TaggedRef makeMessage(int arity, TaggedRef label, TaggedRef *X)
+TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label, TaggedRef *X)
 {
-  if (arity == 0) {
+  int width = getWidth(srecArity);
+  if (width == 0) {
     return label;
-  } else {
-    if (arity == 2 && sameLiteral(label,AtomCons)) {
-      return makeTaggedLTuple(new LTuple(X[0],X[1]));
-    } else {
-      OZ_Term tt = OZ_tuple(label,arity);
-      for (int i = arity-1;i >= 0; i--) {
-        OZ_putArg(tt,i+1,X[i]);
-      }
-      return tt;
-    }
   }
+
+  if (width == 2 && sameLiteral(label,AtomCons))
+    return makeTaggedLTuple(new LTuple(X[0],X[1]));
+
+  SRecord *tt;
+  if(sraIsTuple(srecArity)) {
+    tt = SRecord::newSRecord(label,width);
+  } else {
+    tt = SRecord::newSRecord(label,getRecordArity(srecArity));
+  }
+  for (int i = width-1;i >= 0; i--) {
+    tt->setArg(i,X[i]);
+  }
+  TaggedRef ret = makeTaggedSRecord(tt);
+  //  message("makeMessage: %s\n",OZ_toC(ret));
+  return ret;
 }
 
 TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
@@ -2716,14 +2724,14 @@ LBLsuspendThread:
 
  SendMethod:
   {
-    TaggedRef label   = getLiteralArg(PC+1);
-    TaggedRef origObj = RegAccess(HelpReg,getRegArg(PC+2));
-    TaggedRef object  = origObj;
-    int arity         = getPosIntArg(PC+3);
+    TaggedRef label    = getLiteralArg(PC+1);
+    TaggedRef origObj  = RegAccess(HelpReg,getRegArg(PC+2));
+    TaggedRef object   = origObj;
+    SRecordArity arity = (SRecordArity) getAdressArg(PC+3);
 
     /* compiler ensures: if object is in X[n], then n == arity+1,
      * so in case we have to suspend we save one additional argument */
-    Assert(HelpReg!=X || arity==regToInt(getRegArg(PC+2)));
+    Assert(HelpReg!=X || getWidth(arity)==regToInt(getRegArg(PC+2)));
 
     DEREF(object,objectPtr,_2);
     if (isObject(object)) {
@@ -2739,12 +2747,12 @@ LBLsuspendThread:
       SaveSelf(e,obj,OK);
       Assert(obj->getDeepness()==0);
       obj->incDeepness();
-      CallDoChecks(def,def->getGRegs(),arity);
+      CallDoChecks(def,def->getGRegs(),getWidth(arity));
       JUMP(def->getPC());
     }
 
     if (isAnyVar(object)) {
-      SUSP_PC(objectPtr,arity+1,PC);
+      SUSP_PC(objectPtr,getWidth(arity)+1,PC);
     }
 
     if (isProcedure(object))
@@ -2775,7 +2783,7 @@ LBLsuspendThread:
   {
     ApplMethInfoClass *ami = (ApplMethInfoClass*) getAdressArg(PC+1);
     TaggedRef label        = ami->methName;
-    int arity              = ami->arity;
+    SRecordArity arity     = ami->arity;
     TaggedRef origObject   = RegAccess(HelpReg,getRegArg(PC+2));
     TaggedRef object       = origObject;
     Abstraction *def       = NULL;
@@ -2792,7 +2800,7 @@ LBLsuspendThread:
     }
 
     if (!isTailCall) { CallPushCont(PC); }
-    CallDoChecks(def,def->getGRegs(),arity);
+    CallDoChecks(def,def->getGRegs(),getWidth(arity));
     JUMP(def->getPC());
 
 
@@ -3460,12 +3468,12 @@ LBLsuspendThread:
 
   Case(DEBUGINFO)
     {
-      /*
       TaggedRef filename = getLiteralArg(PC+1);
       int line           = smallIntValue(getNumberArg(PC+2));
       int absPos         = smallIntValue(getNumberArg(PC+3));
-      int comment        = getLiteralArg(PC+4);
+      TaggedRef comment  = getLiteralArg(PC+4);
       int noArgs         = smallIntValue(getNumberArg(PC+5));
+      /*
       printf("%s in line %d in file: %s\n",
              OZ_toC(comment),line,OZ_toC(filename));
       if (noArgs != -1) {
@@ -3476,7 +3484,36 @@ LBLsuspendThread:
       }
       printf("\n");
       */
-      DISPATCH(6);
+
+      TaggedRef dbgVar = e->currentThread->getDebugVar();
+      if (! OZ_isVariable(dbgVar)) {
+        DISPATCH(6);
+      }
+
+      Board *b = e->currentBoard;
+      e->currentBoard = e->rootBoard;
+
+      OZ_Term waitFor   = OZ_newVariable();
+
+      OZ_Term newDbgVar = OZ_newVariable();
+      e->currentThread->setDebugVar(newDbgVar);
+
+      OZ_Term dbgTuple = OZ_mkTupleC("dbgInfo",
+                                     5,
+                                     makeInt(line),
+                                     makeInt(absPos),
+                                     waitFor,
+                                     newDbgVar,
+                                     comment
+                                     );
+      if (!OZ_unify(dbgVar,dbgTuple)) {
+        warning("returnDebugVar(%s,%s) failed",OZ_toC(dbgVar),OZ_toC(dbgTuple));
+        e->currentBoard = b;
+        DISPATCH(6);
+      }
+
+      e->currentBoard = b;
+      SUSP_PC(waitFor,noArgs,PC+6);
     }
 
   Case(JOB)
@@ -3493,12 +3530,13 @@ LBLsuspendThread:
     {
       GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC+1);
       int arity = getPosIntArg(PC+2);
+      Assert(arity==0); /* is filled in by procedure genCallInfo */
       TaggedRef pred = G[gci->regIndex];
       DEREF(pred,predPtr,_1);
       if (isAnyVar(pred)) {
-        SUSP_PC(predPtr,arity,PC);
+        SUSP_PC(predPtr,getWidth(gci->arity),PC);
       }
-      genCallInfo(gci,arity,pred,PC,X);
+      genCallInfo(gci,pred,PC);
       gci->dispose();
       DISPATCH(0);
     }
