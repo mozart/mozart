@@ -111,8 +111,8 @@ dnl *****************************************************************
 dnl *** X11
 dnl *****************************************************************
 
-: ${oz_inc_path="/usr/local/include /usr/pkg/include"}
-: ${oz_lib_path="/usr/local/lib /usr/pkg/lib"}
+: ${oz_inc_path="/usr/local/include /usr/pkg/include /usr/X11R6/include /usr/X11/include /opt/X11R6/include /opt/X11/include"}
+: ${oz_lib_path="/usr/local/lib /usr/pkg/lib /usr/X11R6/lib /usr/X11/lib /opt/X11/lib /opt/X11R6/lib"}
 
 AC_ARG_WITH(x11,
     [--with-x11=<dir>
@@ -141,9 +141,6 @@ if test -n "${with_x11_include}"
 then
     oz_x11_inc_dir=$with_x11_include
 fi
-
-: ${oz_x11_inc_dir="/usr/X11R6/include /usr/X11/include /opt/X11R6/include /opt/X11/include"}
-: ${oz_x11_lib_dir="/usr/X11R6/lib /usr/X11/lib /opt/X11/lib /opt/X11R6/lib"}
 
 oz_inc_path="$oz_x11_inc_dir $oz_inc_path"
 oz_lib_path="$oz_x11_lib_dir $oz_lib_path"
@@ -199,8 +196,6 @@ then
     oz_tcl_lib_tcl_dir=$with_tcl_lib_tcl
 fi
 
-: ${oz_tcl_lib_dir=/usr/lib}
-: ${oz_tcl_inc_dir=/usr/include}
 : ${oz_tcl_lib_tcl_dir=/usr/lib/tcl8.0}
 
 oz_inc_path="$oz_tcl_inc_dir $oz_inc_path"
@@ -255,12 +250,10 @@ then
     oz_tk_lib_tcl_dir=$with_tk_lib_tcl
 fi
 
-: ${oz_tk_lib_dir=$oz_tcl_lib_dir}
-: ${oz_tk_inc_dir=$oz_tcl_inc_dir}
 : ${oz_tk_lib_tcl_dir=/usr/lib/tk8.0}
 
 oz_inc_path="$oz_tk_inc_dir $oz_inc_path"
-oz_lib_path="$oz_tk_lib_dir $oz_inc_path"
+oz_lib_path="$oz_tk_lib_dir $oz_lib_path"
 
 OZ_CHECK_HEADER_PATH(tk8.0.h,
     AC_DEFINE(HAVE_TK8_0_H),
