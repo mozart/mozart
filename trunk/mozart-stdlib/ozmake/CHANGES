@@ -1,5 +1,9 @@
 -*-outline-*-
 
+* version 0.86
+  complete rework of the computation of dependencies. e.g. to take
+  into account the run-time dependencies of build-time dependencies.
+
 * version 0.85
   for autodepend to work as expected, the build rule for ozl needs to
   consider all the recursive dependencies.
