@@ -923,7 +923,7 @@ public:
   
   void storeSentMessage(Message* bs);
 
-  time_t getTimeStamp(){return site->timestamp;}
+  TimeStamp *getTimeStamp(){return &site->timestamp;}
   port_t getPort(){return site->port;}
   ip_address getAddress(){return site->address;}
   int getTmpSessionNr(){return tSn;}
@@ -2588,7 +2588,7 @@ static int acceptHandler(int fd,void *unused)
 
   *auxbuf = TCP_CONNECTION;
   auxbuf++;
-  int2net(auxbuf,mySite->getTimeStamp());
+  int2net(auxbuf,mySite->getTimeStamp()->start);
   auxbuf += netIntSize;
   int2net(auxbuf, accHbufSize - 9);
   auxbuf += netIntSize;
@@ -3694,7 +3694,7 @@ void initNetwork()
     PD((WEIRD,"timer"));
     Assert(ret==IP_TIMER);
     return;}
-  time_t timestamp=time(0);
+  TimeStamp timestamp(time(0),osgetpid());
   mySiteInfo.tcpFD=tcpFD;
   mySiteInfo.maxNrAck = 100;
   mySiteInfo.maxSizeAck = 10000;

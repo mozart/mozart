@@ -2035,13 +2035,13 @@ $builtins = {
 			     module=>components,
 			     native => false},
 
-    'PID.send'		=> { in  => ['+virtualString','+int','+int','value'],
+    'PID.send'		=> { in  => ['+virtualString','+int','+int','+int','+int','value'],
 			     out => [],
 			     BI  => BISendPID,
 			     module=>components,
 			     native => false},
 
-    'PID.toPort'	=> { in  => ['+virtualString','+int','+int'],
+    'PID.toPort'	=> { in  => ['+virtualString','+int','+int','+int'],
 			     out => ['+port'],
 			     BI  => BITicket2Port,
 			     module=>components,

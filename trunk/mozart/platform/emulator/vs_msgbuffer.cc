@@ -44,7 +44,7 @@ key_t vsTypeToKey(int type)
   //
   return((key_t) ((PERDIO_ID << idOffset) |
 		  (type << typeOffset) |
-		  (((int) getpid()) & seqMask)));
+		  ((osgetpid()) & seqMask)));
 }
 
 //
