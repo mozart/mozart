@@ -1433,7 +1433,7 @@ $builtins = {
 			     bi  => BIgetClass,
 			     ibi => getClassInline},
 
-    'ooGetLock'		=> { in  => ['+lock'],
+    'ooGetLock'		=> { in  => ['lock'],
 			     out => [],
 			     bi  => BIooGetLock,
 			     ibi => ooGetLockInline},
