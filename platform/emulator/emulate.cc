@@ -462,15 +462,26 @@ void AM::checkStatus()
 
 
 #define PushCont(PC,Y,G)  CTS->pushCont(PC,Y,G);
-#define PushContX(PC,Y,G,X,n)  { CTS->pushCont(PC,Y,G); CTS->pushX(X,n); }
+#define PushContX(PC,Y,G,X,n)  pushContX(CTS,PC,Y,G,X,n)
 
-#define PushDummyDebug(PC)                                              \
-  if (e->debugmode() && e->currentThread->stepMode()) {                 \
-    time_t feedtime = CodeArea::findTimeStamp(PC);                      \
-    OZ_Term dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));       \
-    OzDebug *dbg  = new OzDebug(DBG_STEP,dinfo);                        \
-    CTS->pushDebug(dbg);                                                \
+// outlined:
+void pushContX(TaskStack *stk,
+               ProgramCounter pc,RefsArray y,RefsArray g, RefsArray x, int n)
+{
+  stk->pushCont(pc,y,g);
+  stk->pushX(x,n);
+}
+
+
+void pushDummyDebug(TaskStack *stk, ProgramCounter PC)
+{
+  if (am.debugmode() && am.currentThread->stepMode()) {
+    time_t feedtime = CodeArea::findTimeStamp(PC);
+    OZ_Term dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));
+    OzDebug *dbg  = new OzDebug(DBG_STEP,dinfo);
+    stk->pushDebug(dbg);
   }
+}
 
 /* NOTE:
  * in case we have call(x-N) and we have to switch process or do GC
@@ -673,7 +684,8 @@ void AM::suspendOnVarList(Thread *thr)
 
 void AM::suspendInline(int n, OZ_Term A,OZ_Term B,OZ_Term C)
 {
-  switch(n) { /* no break's used!! */  case 3: { DEREF (C, ptr, _1); if (isAnyVar(C)) addSusp(ptr, currentThread); }
+  switch(n) { /* no break's used!! */
+  case 3: { DEREF (C, ptr, _1); if (isAnyVar(C)) addSusp(ptr, currentThread); }
   case 2: { DEREF (B, ptr, _1); if (isAnyVar(B)) addSusp(ptr, currentThread); }
   case 1: { DEREF (A, ptr, _1); if (isAnyVar(A)) addSusp(ptr, currentThread); }
     break;
@@ -1458,6 +1470,11 @@ LBLdispatcher:
 
       OZ_Return res = rel(XPC(2));
       if (res==PROCEED) { DISPATCH(4); }
+      if (res==FAILED) {
+        SHALLOWFAIL;
+        HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
+                 cons(XPC(2),nil()));
+      }
 
       switch(res) {
       case SUSPEND:
@@ -1468,10 +1485,6 @@ LBLdispatcher:
         PushContX(PC,Y,G,X,getPosIntArg(PC+3));
         e->suspendInline(1,XPC(2));
         goto LBLsuspendThread;
-      case FAILED:
-        SHALLOWFAIL;
-        HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
-                 cons(XPC(2),nil()));
 
       case RAISE:
         goto LBLraise;
@@ -1495,24 +1508,28 @@ LBLdispatcher:
       OZ_Return res = rel(XPC(2),XPC(3));
       if (res==PROCEED) { DISPATCH(5); }
 
-      switch(res) {
-
-      case SUSPEND:
-        {
-          if (shallowCP) {
-            e->trail.pushIfVar(XPC(2));
-            e->trail.pushIfVar(XPC(3));
-            goto LBLsuspendShallow;
-          }
-
-          PushContX(PC,Y,G,X,getPosIntArg(PC+4));
-          e->suspendInline(2,XPC(2),XPC(3));
-          goto LBLsuspendThread;
-        }
-      case FAILED:
+      if (res==FAILED) {
         SHALLOWFAIL;
         HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
                  cons(XPC(2),cons(XPC(3),nil())));
+      }
+
+      switch(res) {
+
+      case SUSPEND:
+        if (shallowCP) {
+          e->trail.pushIfVar(XPC(2));
+          e->trail.pushIfVar(XPC(3));
+          goto LBLsuspendShallow;
+        }
+
+        PushContX(PC,Y,G,X,getPosIntArg(PC+4));
+        e->suspendInline(2,XPC(2),XPC(3));
+        goto LBLsuspendThread;
+
+      case BI_PREEMPT:
+        PushContX(PC+5,Y,G,X,getPosIntArg(PC+4));
+        goto LBLsuspendThread;
 
       case RAISE:
         goto LBLraise;
@@ -1540,25 +1557,24 @@ LBLdispatcher:
 
       OZ_Return res = rel(XPC(2),XPC(3),XPC(4));
       if (res==PROCEED) { DISPATCH(6); }
-
-      switch(res) {
-      case SUSPEND:
-        {
-          if (shallowCP) {
-            e->trail.pushIfVar(XPC(2));
-            e->trail.pushIfVar(XPC(3));
-            e->trail.pushIfVar(XPC(4));
-            goto LBLsuspendShallow;
-          }
-
-          PushContX(PC,Y,G,X,getPosIntArg(PC+5));
-          e->suspendInline(3,XPC(2),XPC(3),XPC(4));
-          goto LBLsuspendThread;
-        }
-      case FAILED:
+      if (res==FAILED) {
         SHALLOWFAIL;
         HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
                  cons(XPC(2),cons(XPC(3),cons(XPC(4),nil()))));
+      }
+
+      switch(res) {
+      case SUSPEND:
+        if (shallowCP) {
+          e->trail.pushIfVar(XPC(2));
+          e->trail.pushIfVar(XPC(3));
+          e->trail.pushIfVar(XPC(4));
+          goto LBLsuspendShallow;
+        }
+
+        PushContX(PC,Y,G,X,getPosIntArg(PC+5));
+        e->suspendInline(3,XPC(2),XPC(3),XPC(4));
+        goto LBLsuspendThread;
 
       case RAISE:
         goto LBLraise;
@@ -1650,6 +1666,10 @@ LBLdispatcher:
 
       case RAISE:
         goto LBLraise;
+
+      case BI_PREEMPT:
+        PushContX(PC+6,Y,G,X,getPosIntArg(PC+5));
+        goto LBLsuspendThread;
 
       case BI_REPLACEBICALL:
         predArity = getPosIntArg(PC+5);
@@ -2188,7 +2208,7 @@ LBLdispatcher:
     INCFPC(3); /* suspend on NEXT instructions: WeakDET suspensions are
                   woken up always, even if variable is bound to another var */
 
-    PushDummyDebug(PC);
+    pushDummyDebug(CTS,PC);
     SUSP_PC(termPtr,argsToSave,PC);
   }
 
@@ -2679,7 +2699,7 @@ LBLdispatcher:
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
 
-      PushDummyDebug(PC);
+      pushDummyDebug(CTS,PC);
       CAA = new AskActor(CBB,CTT,
                          elsePC ? elsePC : NOCODE,
                          NOCODE, Y, G, X, argsToSave);
@@ -2690,7 +2710,7 @@ LBLdispatcher:
 
   Case(CREATEOR)
     {
-      PushDummyDebug(PC);
+      pushDummyDebug(CTS,PC);
       CAA = new WaitActor(CBB, CTT, NOCODE, Y, G, X, 0, NO);
       CTS->pushActor(CAA,PC);
       CBB->incSuspCount();
@@ -2702,7 +2722,7 @@ LBLdispatcher:
     {
       Board *bb = CBB;
 
-      PushDummyDebug(PC);
+      pushDummyDebug(CTS,PC);
       CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, NO);
       CTS->pushActor(CAA,PC);
       CBB->incSuspCount();
@@ -2720,7 +2740,7 @@ LBLdispatcher:
     {
       Board *bb = CBB;
 
-      PushDummyDebug(PC);
+      pushDummyDebug(CTS,PC);
       CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, OK);
       CTS->pushActor(CAA,PC);
       CBB->incSuspCount();
