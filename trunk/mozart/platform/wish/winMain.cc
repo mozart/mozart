@@ -11,12 +11,14 @@
 
 
 #include <windows.h>
+#include <winsock.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <io.h>
 #include <process.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "tk.h"
 
@@ -25,7 +27,7 @@
 #endif
 
 static void cdecl WishPanic(char *x,...);
-static unsigned __stdcall readerThread(void *arg);
+static DWORD __stdcall readerThread(void *arg);
 static int cdecl asyncHandler(ClientData cd, Tcl_Interp *i, int code);
 
 #define xxDEBUG
@@ -38,7 +40,6 @@ static int cdecl asyncHandler(ClientData cd, Tcl_Interp *i, int code);
 
 DebugCode(FILE *dbgout = NULL; FILE *dbgin = NULL;)
 
-FILE *outstream;
 
 /*
  * Global variables used by the main program:
@@ -47,30 +48,32 @@ FILE *outstream;
 static Tcl_Interp *interp;	/* Interpreter for this application. */
 static char argv0[255];		/* Buffer used to hold argv0. */
 
-/*
- * Command-line options:
- */
+int outstream = -1;
 
-static char *fileName = NULL;
+void sendToEngine(char *s)
+{
+  int ret;
+  int len = strlen(s);
+  while(1) {
+    ret = send(outstream, s, len, 0);
+    if (ret < 0) {
+      WishPanic("send failed");
+  }
+    if (ret=len)
+      return;
 
-static Tk_ArgvInfo argTable[] = {
-    {(char *) NULL, TK_ARGV_END, (char *) NULL, (char *) NULL,
-	(char *) NULL}
-};
+    len -= ret;
+    s += ret;
+  }
+}
 
 int
-PutsCmd(clientData, inter, argc, argv)
-    ClientData clientData;		/* ConsoleInfo pointer. */
-    Tcl_Interp *inter;			/* Current interpreter. */
-    int argc;				/* Number of arguments. */
-    char **argv;			/* Argument strings. */
+PutsCmd(ClientData clientData, Tcl_Interp *inter, int argc, char **argv)
 {
-    FILE *f;
-    int i, newline;
     char *fileId;
 
-    i = 1;
-    newline = 1;
+    int i = 1;
+    int newline = 1;
     if ((argc >= 2) && (strcmp(argv[1], "-nonewline") == 0)) {
       newline = 0;
       i++;
@@ -89,22 +92,13 @@ PutsCmd(clientData, inter, argc, argv)
 	i++;
     }
 
-    f = outstream;
-
-    clearerr(f);
-    fputs(argv[i], f);
+    sendToEngine(argv[i]);
     if (newline) {
-      fputc('\n', f);
+      sendToEngine("\n");
     }
-    fflush(f);
 
     DebugCode(fprintf(dbgout,"********puts(%d):\n%s\n",inter,argv[i]); fflush(dbgout));
 
-    if (ferror(f)) {
-      WishPanic("Connection to engine lost");
-      ExitProcess(1);
-      return TCL_ERROR;
-    }
     return TCL_OK;
 }
 
@@ -115,13 +109,14 @@ typedef struct {
   int cmdlen;
   DWORD toplevelThread;
   Tcl_AsyncHandler ash;
+  int fd;
 } ReaderInfo;
 
 
 /* THE TWO FOLLOWING FUNCTIONS HAVE BEEN COPIED FROM EMULATOR */
 
 
-unsigned __stdcall watchEmulatorThread(void *arg)
+DWORD __stdcall watchEmulatorThread(void *arg)
 {
   HANDLE handle = (HANDLE) arg;
   DWORD ret = WaitForSingleObject(handle,INFINITE);
@@ -142,21 +137,18 @@ unsigned __stdcall watchEmulatorThread(void *arg)
 void watchParent()
 {
   char buf[100];
-  int pid;
-  HANDLE handle;
-  unsigned thrid;
 
   if (GetEnvironmentVariable("OZPPID",buf,sizeof(buf)) == 0) {
     WishPanic("getenv failed");
   }
 
-  pid = atoi(buf);
-  handle = OpenProcess(SYNCHRONIZE, 0, pid);
+  int pid = atoi(buf);
+  HANDLE handle = OpenProcess(SYNCHRONIZE, 0, pid);
   if (handle==0) {
     WishPanic("OpenProcess(%d) failed",pid);
   } else {
+    DWORD thrid;
     CreateThread(0,10000,watchEmulatorThread,handle,0,&thrid);
-    //_beginthreadex(0,0,watchEmulatorThread,handle,0,&thrid);
   }
 }
 
@@ -165,16 +157,10 @@ void watchParent()
 CRITICAL_SECTION lock;
 
 int APIENTRY
-WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
-    HINSTANCE hInstance;
-    HINSTANCE hPrevInstance;
-    LPSTR lpszCmdLine;
-    int nCmdShow;
+WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 {
-    char **argv, **argvlist, *args, *p, *ozhome;
-    int argc, size, i, code;
-    char buf[300];
-    size_t length;
+    char **argv, **argvlist, *args, *p;
+    int size, i;
 
     DebugCode(
 	      dbgin  = fopen("c:\\tmp\\wishdbgin","w");
@@ -186,21 +172,10 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 
     InitializeCriticalSection(&lock);
 
-    TkWinXInit(hInstance);
-
-    /*
-     * Increase the application queue size from default value of 8.
-     * At the default value, cross application SendMessage of WM_KILLFOCUS
-     * will fail because the handler will not be able to do a PostMessage!
-     * This is only needed for Windows 3.x, since NT dynamically expands
-     * the queue.
-     */
-    SetMessageQueue(64);
-
     interp = Tcl_CreateInterp();
 
     /* set TCL_LIBRARY and TK_LIBRARY */
-    ozhome = getenv("OZHOME");
+    char *ozhome = getenv("OZHOME");
     if (ozhome == NULL) {
       WishPanic("OZHOME not set\n");
     }
@@ -241,7 +216,7 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 	}
     }
     argv[i] = NULL;
-    argc = i;
+    int argc = i;
 
     /*
      * Parse command-line arguments.  A leading "-file" argument is
@@ -254,45 +229,7 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 
     GetModuleFileName(NULL, argv0, 255);
 
-    if (argc > 0) {
-      length = strlen(argv[0]);
-      if ((length >= 2) && (strncmp(argv[0], "-file", length) == 0)) {
-	argc--;
-	argv++;
-      }
-    }
-    if ((argc > 0) && (argv[0][0] != '-')) {
-      fileName = argv[0];
-      argc--;
-      argv++;
-    }
-
-    if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, argv, argTable,
-	    TK_ARGV_DONT_SKIP_FIRST_ARG) != TCL_OK) {
-      WishPanic("%s\n", interp->result);
-    }
-    if (fileName != NULL) {
-      p = fileName;
-    } else {
-      p = argv0;
-    }
-
-    /*
-     * Make command-line arguments available in the Tcl variables "argc"
-     * and "argv".    Also set the "geometry" variable from the geometry
-     * specified on the command line.
-     */
-
-    args = Tcl_Merge(argc, argv);
-    Tcl_SetVar(interp, "argv", args, TCL_GLOBAL_ONLY);
-    ckfree(args);
-    sprintf(buf, "%d", argc);
-    Tcl_SetVar(interp, "argc", buf, TCL_GLOBAL_ONLY);
-    Tcl_SetVar(interp, "argv0", (fileName != NULL) ? fileName : argv0,
-	    TCL_GLOBAL_ONLY);
-
     Tcl_SetVar2(interp, "env", "DISPLAY", "localhost:0", TCL_GLOBAL_ONLY);
-
     Tcl_SetVar(interp, "tcl_interactive", "0", TCL_GLOBAL_ONLY);
 
     /*
@@ -306,46 +243,63 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 
     Tcl_ResetResult(interp);
 
-    /*
-     * Loop infinitely, waiting for commands to execute.  When there
-     * are no windows left, Tk_MainLoop returns and we exit.
-     */
-
     ckfree((char *)argvlist);
 
     Tcl_CreateCommand(interp, "puts", (Tcl_CmdProc*) PutsCmd,  (ClientData) NULL,
 		      (Tcl_CmdDeleteProc *) NULL);
 
-    setmode(fileno(stdout),O_BINARY);
-    setmode(fileno(stdin),O_BINARY);
-
-    outstream = fdopen(fileno(stdout),"wb");
-    
-#if 1
-    /* mm: do not show the main window */
-    code = Tcl_GlobalEval(interp, "wm withdraw . ");
-    if (code != TCL_OK) {
-      fprintf(outstream, "w %s\n.\n", interp->result);
-      fflush(outstream); /* added mm */
+    if (argc!=1) {
+      WishPanic("argc!=1 (%d)\nUsage: tk.exe port\n", argc);
     }
-#endif
 
-    {
-      ReaderInfo *info = (ReaderInfo*) malloc(sizeof(ReaderInfo));
-      unsigned tid;
-      unsigned long thread;
+    WSADATA wsa_data;
+    WORD req_version = MAKEWORD(1,1);
+    (void) WSAStartup(req_version, &wsa_data);
+    
+    char hostname[1000];
+    int aux = gethostname(hostname,sizeof(hostname));
+    if (aux != 0) {
+      WishPanic("gethostname failed: %d\n",GetLastError());	
+    }
+    
+    struct hostent *hostaddr = gethostbyname(hostname);
+    if (hostaddr==NULL) {
+      WishPanic("gethostbyname(%s) failed: %d\n",hostname,WSAGetLastError());	
+    }
+    
+    struct in_addr tmp;
+    memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(tmp));
+    
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr=tmp.s_addr;
+    addr.sin_port = htons(atoi(argv[0]));
+    
+    outstream = socket(PF_INET,SOCK_STREAM,0);
+    if(outstream <0 || connect(outstream,(struct sockaddr *) &addr,sizeof(addr))!=0) {
+      WishPanic("socket creation failed: %d, %d, %d\n", 
+		outstream, WSAGetLastError(),addr.sin_port);
+    }
+    
+    /* mm: do not show the main window */
+    int code = Tcl_GlobalEval(interp, "wm withdraw . ");
+    if (code != TCL_OK) {
+      char buf[1000];
+      sprintf(buf,"w %s\n.\n", interp->result);
+      sendToEngine(buf);
+    }
 
-      info->ash            = Tcl_AsyncCreate(asyncHandler,(ClientData)info);
-      info->toplevelThread = GetCurrentThreadId();
-      info->cmd            = NULL;
-      info->cmdlen         = -1;
-
-      thread = (unsigned long) CreateThread(NULL,0,readerThread,info,0,&tid);
-      if (thread==0) {
-	fprintf(outstream, "w reader thread creation failed\n.\n");
-	fflush(outstream); /* added mm */
-	exit(1);
-      }
+    ReaderInfo *info = (ReaderInfo*) malloc(sizeof(ReaderInfo));
+    info->ash            = Tcl_AsyncCreate(asyncHandler,(ClientData)info);
+    info->toplevelThread = GetCurrentThreadId();
+    info->cmd            = NULL;
+    info->cmdlen         = -1;
+    info->fd             = outstream;
+    
+    DWORD tid;
+    if (CreateThread(NULL,0,readerThread,info,0,&tid)==0){
+      sendToEngine("w reader thread creation failed\n.\n");
+      exit(1);
     }
 
     watchParent();
@@ -386,35 +340,32 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 void cdecl
 WishPanic TCL_VARARGS_DEF(char *,arg1)
 {
-    va_list argList;
-    char buf[1024];
-    char *format;
-    
-    format = TCL_VARARGS_START(char *,arg1,argList);
-    vsprintf(buf, format, argList);
-
-    MessageBeep(MB_ICONEXCLAMATION);
-    MessageBox(NULL, buf, "Fatal Error in Wish",
-            MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
-    ExitProcess(1);
+  va_list argList;
+  char *format = TCL_VARARGS_START(char *,arg1,argList);
+  char buf[1024];
+  vsprintf(buf, format, argList);
+  
+  MessageBeep(MB_ICONEXCLAMATION);
+  MessageBox(NULL, buf, "Fatal Error in Wish",
+	     MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+  ExitProcess(1);
 }
 
 
 void cdecl idleProc(ClientData cd)
 {
   ReaderInfo *ri = (ReaderInfo*) cd;
-  int code;
 
   EnterCriticalSection(&lock);
 
-  code = Tcl_GlobalEval(interp, ri->cmd);
+  int code = Tcl_GlobalEval(interp, ri->cmd);
 
   if (code != TCL_OK) {
+    char buf[1000];
     DebugCode(fprintf(dbgin,"### Error(%d):  %s\n", code,interp->result);
 	      fflush(dbgin));
-    fprintf(outstream,"w --- %s", ri->cmd);
-    fprintf(outstream,"---  %s\n---\n.\n", interp->result);
-    fflush(outstream); /* by mm */
+    sprintf(buf,"w --- %s---  %s\n---\n.\n", ri->cmd,interp->result);
+    sendToEngine(buf);
   }
 
   free(ri->cmd);
@@ -431,7 +382,7 @@ int cdecl asyncHandler(ClientData cd, Tcl_Interp *i, int code)
 }
 
 
-static unsigned __stdcall readerThread(void *arg)
+static DWORD __stdcall readerThread(void *arg)
 {
   ReaderInfo *ri = (ReaderInfo *)arg;
   int count,i;
@@ -444,13 +395,13 @@ static unsigned __stdcall readerThread(void *arg)
 
     if (used>=bufSize) {
       bufSize *= 2;
-      buffer = realloc(buffer,bufSize+1);
+      buffer = (char *) realloc(buffer,bufSize+1);
       if (buffer==0)
 	WishPanic("realloc of buffer failed");	
     }
-    if (ReadFile(GetStdHandle(STD_INPUT_HANDLE),buffer+used,
-		 bufSize-used,&count,0)==FALSE) {
-      WishPanic("Connection to engine lost");
+    if ((count = recv(ri->fd,buffer+used,bufSize-used,0))<0) {
+      WishPanic("Connection to engine lost: %d, %d, %d", 
+		count, ri->fd,WSAGetLastError());
     }
 
     DebugCode(fprintf(dbgin,"\n### read done: %d\n",count); fflush(dbgin));
@@ -465,14 +416,14 @@ static unsigned __stdcall readerThread(void *arg)
     EnterCriticalSection(&lock);
     if (ri->cmd==NULL) {
       ri->cmdlen = used+1;
-      ri->cmd = malloc(ri->cmdlen);
+      ri->cmd = (char*) malloc(ri->cmdlen);
       memcpy(ri->cmd,buffer,used+1);
       Tcl_AsyncMark(ri->ash);
     } else {
       char *oldcmd = ri->cmd;
       int oldlen   = ri->cmdlen;
       ri->cmdlen   = oldlen+used;
-      ri->cmd      = malloc(ri->cmdlen);
+      ri->cmd      = (char *) malloc(ri->cmdlen);
       memcpy(ri->cmd,oldcmd,oldlen);
       free(oldcmd);
       memcpy(ri->cmd+oldlen-1,buffer,used+1);

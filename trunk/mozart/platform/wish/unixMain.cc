@@ -34,6 +34,10 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include "conf.h"
 
 #include <stdio.h>
@@ -126,9 +130,7 @@ static void		StdinProc _ANSI_ARGS_((ClientData clientData,
  */
 
 int
-main(argc, argv)
-    int argc;				/* Number of arguments. */
-    char **argv;			/* Array of argument strings. */
+main(int argc, char **argv)
 {
     char *args, *p, *msg;
     char buf[20];
@@ -320,17 +322,14 @@ error:
 
     /* ARGSUSED */
 static void
-StdinProc(clientData, mask)
-    ClientData clientData;		/* Not used. */
-    int mask;				/* Not used. */
+StdinProc(ClientData clientData, int mask)
 {
 #define BUFFER_SIZE 16384
     char input[BUFFER_SIZE+1];
     static int gotPartial = 0;
-    char *cmd;
-    int code, count;
+    int code;
 
-    count = read(fileno(stdin), input, BUFFER_SIZE);
+    int count = read(fileno(stdin), (void*)input, BUFFER_SIZE);
     if (count <= 0) {
 	if (!gotPartial) {
 	    if (tty) {
@@ -346,7 +345,7 @@ StdinProc(clientData, mask)
 	    count = 0;
 	}
     }
-    cmd = Tcl_DStringAppend(&command, input, count);
+    char *cmd = Tcl_DStringAppend(&command, input, count);
     if (count != 0) {
 	if ((input[count-1] != '\n') && (input[count-1] != ';')) {
 	    gotPartial = 1;
@@ -383,7 +382,7 @@ StdinProc(clientData, mask)
      * Output a prompt.
      */
 
-    prompt:
+ prompt:
     if (tty) {
 	Prompt(interp, gotPartial);
     }
@@ -408,16 +407,9 @@ StdinProc(clientData, mask)
  */
 
 static void
-Prompt(interp, partial)
-    Tcl_Interp *interp;			/* Interpreter to use for prompting. */
-    int partial;			/* Non-zero means there already
-					 * exists a partial command, so use
-					 * the secondary prompt. */
+Prompt(Tcl_Interp *interp, int partial)
 {
-    char *promptCmd;
-    int code;
-
-    promptCmd = Tcl_GetVar(interp,
+    char *promptCmd = Tcl_GetVar(interp,
 	partial ? "tcl_prompt2" : "tcl_prompt1", TCL_GLOBAL_ONLY);
     if (promptCmd == NULL) {
 	defaultPrompt:
@@ -425,7 +417,7 @@ Prompt(interp, partial)
 	    fputs("% ", stdout);
 	}
     } else {
-	code = Tcl_Eval(interp, promptCmd);
+	int code = Tcl_Eval(interp, promptCmd);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (script that generates prompt)");
@@ -435,4 +427,30 @@ Prompt(interp, partial)
 	}
     }
     fflush(stdout);
+}
+
+
+/*
+ * The following variable is a special hack that allows applications
+ * to be linked using the procedure "main" from the Tk library.  The
+ * variable generates a reference to "main", which causes main to
+ * be brought in from the library (and all of Tk and Tcl with it).
+ */
+
+
+int *tclDummyMainPtr = (int *) main;
+
+int
+Tcl_AppInit(Tcl_Interp *interp)
+{
+    Tk_Window main = Tk_MainWindow(interp);
+
+    if (Tcl_Init(interp) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    if (Tk_Init(interp) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+
+    return TCL_OK;
 }
