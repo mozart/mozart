@@ -285,6 +285,7 @@ void pushUnify(Thread *t, TaggedRef t1, TaggedRef t2)
   t->pushCall(BI_Unify,t1,t2);
 }
 
+// mm2: should be OZ_unifyInThread???
 void SiteUnify(TaggedRef val1,TaggedRef val2)
 {
   TaggedRef aux1 = val1; DEREF(aux1,_1,_2);
