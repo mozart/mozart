@@ -314,6 +314,7 @@ public:
 
 
 extern State dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
+extern State uparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
 
 
 #endif
