@@ -124,7 +124,7 @@ exception, but it would not attempt to retrieve the input url from the
 net.
       </list>
   <section proglang=oz>
-    <title/Resolvers/
+    <title/Interface of <code/Resolve/ Module/
     <p>A resolver is a module that encapsulates and exports the
 resolving services of a sequence of search methods.  For different
 purposes, you may need to apply different resolution strategies.  For
@@ -208,7 +208,44 @@ then this is replaced by ?_{Subst} and looked up instead.
 ?_{Pattern}, then this is replaced by the corresponding instantiation
 of ?_{Subst} and looked up instead.
 	    </list>
+      </list></p>
+  </section>
+  <section>
+    <title/Interface of a Resolver/
+    <p>Each resolver <code/R/ exports the following methods
+<list>
+	<entry/<code/R.getHandlers/<index/getHandlers//
+	<synopsis/<code/{R.getHandlers ??{L}}//
+	<item>obtains <code/R/'s current list of handlers.
+	<entry/<code/R.setHandlers/<index/setHandlers//
+	<synopsis/<code/{R.setHandlers ?+{L}}//
+	<item>install's ?_{L} as <code/R/'s current list of
+handlers.
+	<entry/<code/R.addHandler/<index/addHandler//
+	<synopsis/<code/{R.addHandler front(H)}
+{R.addHandler back(H)}//
+	<item>adds <code/H/ at the front (resp.&nbsp;at the back) of
+<code/R/'s list of handlers.
+	<entry/<code/R.localize/<index/localize//
+	<synopsis/<code/{R.localize ?+{Url} ??{Rec}}/<index/localize//
+	<item>the return value ?_{Rec} is <code/old(Filename)/ if
+?_{Url} resolves to local file <code/Filename/, else it is
+<code/new(Filename)/ where <code/Filename/ is a new local file created
+by retrieving the data at ?_{Url}.
+	<entry/<code/R.open/<index/open//
+	<synopsis/<code/{R.open ?+{Url} ??{FdI}}//
+	<item>returns ?_{FdI}, which is an integer file descriptor
+open for read on the data available from ?_{Url}.
+	<entry/<code/R.load/<index/load//
+	<synopsis/<code/{R.load ?+{Url} ??{V}}//
+	<item>returns the value ?_{V} obtained from the pickle
+available at ?_{Url}.
+	<entry/<code/R.native/<index/native//
+	<synopsis/<code/{R.native ?+{Url} ??{M}}//
+	<item>returns the native module ?_{M} obtained by dynamically
+linking the native functor available in file ?_{Url}.
       </list>
+  </section>
 </Chapter>
 
 <!--
