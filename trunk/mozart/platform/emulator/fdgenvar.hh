@@ -45,7 +45,7 @@ public:
 
   GenFDVariable(TaggedRef pn = AtomVoid)
   : GenCVariable(FDVariable, pn) {
-    finiteDomain.fullDomain();
+    finiteDomain.setFull();
     fdSuspList[det] = fdSuspList[bounds] = NULL;
     fdSuspList[size] = fdSuspList[eqvar] = NULL;
   }
