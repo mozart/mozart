@@ -1805,8 +1805,6 @@ BIspec fdSpec[] = {
   {"fdDistinctOffset_body", 2, BIfdDistinctOffset_body},
   {"fdCPIterate", 2, BIfdCPIterate},
   {"fdCPIterate_body", 2, BIfdCPIterate_body},
-  {"fdCPIterate2", 2, BIfdCPIterate2},
-  {"fdCPIterate2_body", 2, BIfdCPIterate2_body},
   
 // fdbool.cc
   {"fdAnd", 3, BIfdAnd},
