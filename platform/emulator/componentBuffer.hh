@@ -87,6 +87,9 @@ protected:
   BYTE *accessNext(int &size);
   // once accessing is done, call this:
   void chunkDone();
+  // once loading is finished (or we've decided to drop an output
+  // buffer), use this:
+  void dropBuffers();
 };
 
 //
@@ -154,6 +157,7 @@ public:
   BYTE *accessFirst(int &size);
   BYTE *accessNext(int &size);
   void chunkDone();
+  void dropBuffers();
 
   // from PickleMarshalerBuffer;
   virtual void marshalBegin();
