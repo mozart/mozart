@@ -166,14 +166,15 @@ TaskIntervalsProof::~TaskIntervalsProof(void)
 //////////
 OZ_C_proc_begin(sched_taskIntervalsProof, 5)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_STREAM "," OZ_EM_INT);
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD 
+		   "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_STREAM "," OZ_EM_INT);
 
   PropagatorExpect pe;
 
   pe.collectVarsOff();
   OZ_EXPECT(pe, 0, expectVectorVectorLiteral);
-  OZ_EXPECT(pe, 1, expectVectorIntVarAny);
-  OZ_EXPECT(pe, 2, expectVectorInt);
+  OZ_EXPECT(pe, 1, expectProperRecordIntVarMinMax);
+  OZ_EXPECT(pe, 2, expectProperRecordInt);
   pe.collectVarsOn();
 
   OZ_EXPECT(pe, 3, expectStream);
@@ -343,7 +344,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	  // fill in order
           if (!strcmp("#", old_label)) {
 	    int res   = OZ_intToC( OZ_getArg(old_out, 0));
-	    int left  = OZ_intToC( OZ_getArg(old_out, 1));
+	    int left  = OZ_intToC( OZ_getArg(old_out, 1)); 
 	    int right = OZ_intToC( OZ_getArg(old_out, 2));
 	    bm3.set(res, left, right);
 	  }
@@ -459,7 +460,6 @@ OZ_Return TaskIntervalsProof::propagate(void)
 		       && (bm3.is(i, task, right) == 0) )
 		    lasts[count_lasts++] = task;
 		}
-	  
 		// test whether firsts or lasts are empty
                 if (count_firsts == 0) {
 		  for (l=0; l < cset->extSize; l++) {
@@ -485,7 +485,6 @@ OZ_Return TaskIntervalsProof::propagate(void)
 		      addImpose(fd_prop_bounds, right_side_task);
 		      impose(new LessEqOffPropagator(right_side_task, left_side_task,
 						    -all_durs[i][left]));
-
 		    }
 		  }
 		  int value = up - cdur;
@@ -508,10 +507,8 @@ OZ_Return TaskIntervalsProof::propagate(void)
 			constraints[constraintsSize+3] = right;
 			constraintsSize +=4;
 
-
 			FailOnEmpty(*all_fds[i][right] >= all_vars[i][task].min + all_durs[i][task]);
 			FailOnEmpty(*all_fds[i][task] <= all_vars[i][right].max - all_durs[i][task]);
-
 			OZ_Term left_side_task = reg_fds[resource_starts[i] 
 							+ task];
 			OZ_Term right_side_task = reg_fds[resource_starts[i] 
@@ -521,7 +518,6 @@ OZ_Return TaskIntervalsProof::propagate(void)
 			
 			impose(new LessEqOffPropagator(left_side_task, right_side_task,
 						      -all_durs[i][task]));
-
 		      }
 		    }
 		    // right >= low + cdur - d(right)
@@ -597,7 +593,6 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	     lasts[count_lasts++] = task;
 	  }
   
-	  
           // Impose the constraints
 	  for (i = 0; i < constraintsSize / 4; i++){
 	    int cur = i * 4;
@@ -613,7 +608,6 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	      break;
 	    }
 	  }
-
 
 	  
 	  //	Assert( (count_firsts > 0) && (count_lasts > 0) );  
