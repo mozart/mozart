@@ -139,7 +139,7 @@ make src</code>
 make doc</code>
         This will suck in all the installed documentation and create
 	file <file>mozart-$VERSION.$DATE-src.tar.gz</file>.</p>
-	<p>Except I lied aqnd you need to install the standard library
+	<p>Except I lied and you need to install the standard library
 	before that, else its doc will be missing.  See below.</p>
       </section>
       <section>
