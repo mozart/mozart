@@ -37,11 +37,12 @@ INSTALL_DIR	= @INSTALL_DIR@
 LIBFILES = \
 	$(ELISPDIR)/oz.el $(ELISPDIR)/oz.elc \
 	$(ELISPDIR)/mozart.el $(ELISPDIR)/mozart.elc \
-	$(ELISPDIR)/oz-extra.el $(ELISPDIR)/oz-extra.elc
+	$(ELISPDIR)/oz-extra.el $(ELISPDIR)/oz-extra.elc \
+	$(ELISPDIR)/oz-server.el $(ELISPDIR)/oz-server.elc
 
 .PHONY: bootstrap all install clean veryclean distclean tags check depend
 
-all: oz.elc mozart.elc oz-extra.elc
+all: oz.elc mozart.elc oz-extra.elc oz-server.elc
 
 bootstrap: all
 
@@ -56,7 +57,7 @@ mozart.el: mozart.el.in ../config.status
 
 mozart.elc: oz.elc
 
-oz.elc mozart.elc oz-extra.elc: %.elc : %.el
+oz.elc mozart.elc oz-extra.elc oz-server.elc: %.elc : %.el
 	$(EMACS) --eval "(setq load-path (cons \"$(SRCDIR)\" load-path))" -q -batch -f batch-byte-compile $< && \
 	if [ $<c != $@ ]; then mv $<c $@; fi
 
