@@ -45,7 +45,8 @@
       to set breakpoints at arbitrary source lines.
       <p>
       Finally, the application ozd is provided to debug standalone
-      programs.
+      programs, see <ptr.extern to="ozdoc:tools" key="chapter.debugger">
+      for more information.
     </abstract>
   <body>
     <chapter id="chapter.start">
@@ -57,23 +58,23 @@
 	<title/Invocation from the OPI/
 	<p>
 	To start Ozcar from the OPI, you have to apply the elisp
-	function <span proglang=elisp><<oz-debugger>></span> (<Key/C-.
-	C-. d/). Executed with prefix argument (<Key/C-u C-. C-. d/), the
-	Ozcar window gets closed again. Note, however, that this just
-	suspends the debugger; after re-opening the window, you can
-	continue debugging exactly where you stopped before,
-	presupposing that all debugged threads are stopped (see
-	single-stepping).
+	function <span proglang=elisp><<oz-debugger>></span>, which is
+	bound to the key sequence <Key/C-. C-. d/ by default. Executed
+	with prefix argument (<Key/C-u C-. C-. d/), the Ozcar window
+	is closed again. Note, however, that the debugger will only be
+	suspended; after re-starting it, you can continue debugging
+	exactly where you stopped before.
       <section>
 	<title/Invocation from the Shell/
 	<p>
-	Another way of using Ozcar is to debug Oz applications
-	(see <ptr.extern to="ozdoc:apptut" key="chapter.hello">).
-	For this purpose, the program ozd is provided (which is an
-	oz application itself, btw.). If you want to debug the
-	application foo, you just type from the shell 'ozd -E foo'. This
-	starts an Oz engine, which in turn starts Ozcar and Emacs (the
-	latter because of the -E option).
+	Another way of using Ozcar is to debug Oz applications (see
+	<ptr.extern to="ozdoc:apptut" key="chapter.hello">).  For this
+	purpose, the program ozd is provided (which is an oz
+	application itself, btw.). If you want to debug the
+	application foo, you just type from the shell 'ozd -E
+	foo'. This starts an Oz engine, which in turn starts Ozcar and
+	Emacs (the latter because of the -E option). See also
+	<ptr.extern to="ozdoc:tools" key="chapter.debugger">.
     <chapter id="chapter.gui">
       <title/Ozcar's Main Components/
 	<p>
@@ -88,19 +89,21 @@
 	<p>
 	On the left, there is a window labeled <def>Thread
 	Forest</def>. Here you can see all the threads which are
-	currently attached. The hierarchical dependencies
-	are illustrated by printing all threads as nodes of a tree:
+	currently attached. Their hierarchical dependencies
+	are illustrated by printing them as nodes of a tree:
 	Children are always inserted below their parent, indented to
 	the right.
 	<p>
-	<Para class=apropos><Title/Thread States/
-	Different node chapes correspond to different thread states:
+	<subsection>
+	<title/Thread States/
+	<p>
+	Different node shapes correspond to different thread states:
 	The state of a thread can be seen as a pair of two values.
 	The first one determines if the thread is currently stopped by
-	the debugger. Nodes of stopped threads are printed with a
+	the debugger. Nodes of such threads are printed with a
 	normal font, running threads are printed in bold face. The
 	second component of the pair can have one of the following
-	four states:
+	four values:
 	<list>
 	  <entry>runnable
 	  <item>
@@ -119,6 +122,9 @@
 	  <item>
 	  The thread is dead. Such a thread is printed in grey.
 	</list>
+	<subsection>
+	<title/Thread Selection/
+	<p>
 	One thread (if there is any one attached) is the <def>selected
 	thread</def>; its node is marked with an asterix. Some actions,
 	like single stepping or selecting stack frames, are always
@@ -129,20 +135,23 @@
 	<title/Stack View/
 	<p>
 	Right beside the thread window, there is another window
-	labeled <def>Stack</def>. It prints the stack of the currently
-	selected thread. Beware: the topmost frame is displayed at the
-	bottom. The procedure arguments are printed in bold face and
-	can be further investigated (using the Browser tool) by
-	clicking on them.
+	labeled <def>Stack</def> or <def>Stack of Thread
+	&lt;id&gt;</def>. It prints the stack of the currently
+	selected thread (if there is any). Beware: the topmost frame
+	is displayed at the bottom. The procedure arguments are
+	printed in bold face and can be further investigated (using
+	the Browser tool) by clicking on them.
+	<subsection>
+	<title/Stackframe Selection/
 	<p>
 	One frame is the <def>selected frame</def>. It is displayed
-	white on blue. Initially, the top frame is selected
+	white on blue. Initially, the topmost frame is selected
 	implicitely, without being marked in any way.  You can
 	navigate through the stack by clicking on a frame (search for
 	a position within the line where no arguments are displayed!)
 	or by using the up and down cursor keys.
 	<p>
-	While the current thread is running for a longer time, its
+	When the current thread is running for a longer time, its
 	stack is printed in grey to visualize that the display
 	is out of date.
       <section>
@@ -169,7 +178,9 @@
 	main window. Instead, Emacs serves for this purpose by
 	highlightening source code lines appropriately while single stepping.
 	<p>
-	<Para class=apropos><Title/Color scheme/
+	<subsection>
+	<title/Color scheme/
+	<p>
 	Emacs gives the highlighted lines different colors, depending on
 	how the line was reached by the corresponding thread. The idea
 	is quite simple: If nothing really special has happened (just
@@ -186,7 +197,7 @@
 in
    {Show S # ' world!'}
 end>>>
-	<Para class=apropos><Title/Attaching the thread/
+	<Para class=apropos><Title/Attaching the Thread/
 	Let's check how this code is executed by the virtual machine
 	of mozart&emdash;step by step. The default behaviour of Ozcar
 	is to <q>catch</q> all threads which are created by Emacs
@@ -198,21 +209,23 @@ end>>>
 	  <caption/The main window after feeding the program/
 	  <p><picture.extern gif to="ozcar-hello.gif">
 	</figure>
-	First, you are informed by the status line that there
-	has been attached a new thread with thread number 96, and this
-	thread was selected automatically. In the thread forest
-	window, you see a single, bold faced node, labeled with the
-	thread number. The thread has been stopped directly
-	after its creation, so the stack window displays a single
-	stack frame, containing the first application of the program,
-	<<S = 'hello'>>, which is, translated into core syntax,
-	<<{Value.'='_ hello}>>. The variable name seems to be lost,
-	and in fact, it is, at least in the stack window. But, there
-	is no need to despair, we have our variable windows, and
-	indeed, the variable <<S>> can be found in the local
-	environment, still unbound (visualized by the underscore
-	char). The right arrow at the beginning of the line in
-	the stack window means: You are about to apply the
+
+	First, you are informed by the status line that there has been
+	attached a new thread with thread number 53, and this thread
+	was selected automatically. In the thread forest window, you
+	see a node, labeled with the thread number, and tagged with an
+	asterix.
+	<Para class=apropos><Title/Checking the Environment/
+	The thread has been stopped directly after its creation, so
+	the stack window displays a single stack frame, containing the
+	first application of the program, <<S = 'hello'>>, which is,
+	translated into core syntax, <<{Value.'='_ hello}>>. The
+	variable name seems to be lost, and in fact, it is, at least
+	in the stack window. But, there is no need to despair, we have
+	our variable windows, and indeed, the variable <<S>> can be
+	found in the local environment, still unbound (visualized by
+	the underscore char). The right arrow at the beginning of the
+	line in the stack window means: You are about to apply the
 	function, but you haven't yet! The number beside the arrow
 	means: This is stack frame number one.
 	<p>
@@ -232,7 +245,7 @@ end>>>
 	and thus, execution stops again directly after leaving the
 	application, detectable by the left arrow at the beginning of
 	the stack frame line.
-	<p>
+	<Para class=apropos><Title/Detaching the Thread/
 	You can click another two times on the <picture.extern inline
 	gif to="step.gif"> button to apply also the <Q/Show/ application.
 	Finally, the stack is empty, and the thread terminates.
@@ -265,7 +278,7 @@ end>>>
 	  of a procedure, function or class. Emacs highlights the
 	  <<proc>>, <<fun>>, <<class>> or <<end>> keyword, respectively. The
 	  stack view displays a stack frame containing the single word
-	  definition.
+	  <samp/definition/.
 	  <entry>Application
 	  <item>
 	  You can stop a thread right before and after a procedure,
@@ -281,26 +294,30 @@ end>>>
 	  conditional. This makes it possible to investigate the
 	  arbiter. Emacs highlights the <<case>> and <<end>> keyword,
 	  respectively. The stack view displays a stack frame containing
-	  the word conditional, followed by the clickable value of
+	  the word <samp/conditional/, followed by the clickable value of
 	  the arbiter.
 	  <entry>Thread Creation
 	  <item>
 	  A thread can be stopped whenever a new thread is created
 	  explicitely. Emacs highlights the <<thread>> and <<end>> keyword,
 	  respectively. The stack view displays a stack frame containing
-	  the single word thread.
+	  the single word <samp/thread/.
 	  <entry>Installation of Exception Handlers
 	  <item>
 	  A thread can be stopped when an exception handler gets installed.
 	  Emacs highlights the <<try>> and <<end>> keyword,
 	  respectively. The stack view displays a stack frame containing
-	  the single word try.
+	  <samp/exception handler/. Moreover, when an exception is catched,
+	  the thread can stop on the corresponding <<catch>> clause, and
+	  in the stack window you see the single word <samp/catch/, followed
+	  by the clickable pattern that matched.
 	  <entry>Entering Locks
 	  <item>
-	  Finally, you can stop a thread when a locked block is entered
-	  or leaved. Emacs highlights the <<lock>> and <<end>> keyword,
-	  respectively. The stack view displays a stack frame containing
-	  the single word lock, followed by the value of the lock.
+	  Finally, you can stop a thread when a locked code block is
+	  entered or leaved. Emacs highlights the <<lock>> and <<end>>
+	  keyword, respectively. The stack view displays a stack frame
+	  containing the single word <samp/lock/, followed by the
+	  clickable value of the lock.
 	</list>
 	<section>
 	<title/Action Step Into/
@@ -400,9 +417,10 @@ end
 
 	Static breakpoints are useful if you want the breakpoint to
 	survive multiple invokations of the mozart system. They
-	are inserted before you feed your code. On the other
-	hand, you might decide to insert a breakpoint after you
-	feeded the code. Then you need dynamic breakpoints.
+	are inserted before you feed your code.
+	<p>
+	On the other hand, you might decide to insert a breakpoint
+	after you feeded the code. Then you need dynamic breakpoints.
 	<subsection>
 	<title/Dynamic Breakpoints/
 	<p>
@@ -461,8 +479,8 @@ end
 	<subsection>
 	<title/Execution of Statements/
 	<p>
-	Another thing you can do with the Query dialog is to execute
-	Oz statements. For example, if you type <<{Browse hugo}>>
+	Something other you can do with the Query dialog is to execute
+	Oz statements. For example, when you type <<{Browse hugo}>>
 	and press the Exec button, the Browser pops up and prints
 	the obvious data. Note that the result of executing a statement
 	is <<unit>>. Another example comes with
@@ -474,6 +492,10 @@ end
 	<caption/You can execute all kinds of statements/
 	  <p><picture.extern gif to="exec-statement.gif">
 	</figure>
+	<p>
+	You can open as many Query dialogs as you like. This makes
+	it possible to evaluate several expressions more than one time
+	without always re-entering them.
       <chapter id="chapter.exception">
 	<title/Exceptions/
 	<p>
@@ -488,8 +510,8 @@ end
 	the exception in the status line. All stack frames
 	provide variable information.
 	<p>
-	Here comes an example. There was forgotten an <<else>> branch
-	in the case statement.
+	In the following example there was forgotten an
+	<<else>> branch in the case statement:
 <<<
 local
    proc {Check X}
@@ -513,6 +535,10 @@ end
 	<caption/Emacs shows the position where the error occured/
 	  <p><picture.extern gif to="exception-emacs.gif">
 	</figure>
+	<p>
+	Note that the thread is just about to die; if you do a
+	single step into, it will actually terminate, and the post
+	mortem stack vanishes.
       <chapter id="chapter.reference">
       <title/Reference Section/
 	<p>
@@ -676,7 +702,8 @@ end
 	  In this menu you can determine how to display values in the
 	  stack and variable windows. There is a short form which only
 	  prints type information, and a long form which prints the
-	  actual value (up to a given print depth, see ??).
+	  actual value (up to a given print width/depth, which can be set
+	  in the Preferences dialog box, see below).
 	  <list>
             <entry><menu key="<"/Types Only/
 	    <item>
@@ -688,8 +715,7 @@ end
 	    <span proglang=oz><<Value.toVirtualString>></span>. This
 	    display mode can be quite unhandy if the values to be printed
 	    are large tuples or records. So you should carefully
-	    adjust the print depth and print width to your needs,
-	    see ??.
+	    adjust the print depth and print width to your needs.
             <entry><menu key="C-e"/Use Emacs/
 	    <item>
 	    If turned off there are no bars printed within Emacs,
@@ -706,6 +732,8 @@ end
             <entry><menu key="C-o"/Preferences.../
 	    <item>
 	    Opens a dialog box to adjust some self explanatory options.
+	    For example you can adjust the print width/depth of
+	    values in the stack and variable windows.
 	  </list>
 	<section>
 	  <title/The SubThreads Menu/
@@ -731,7 +759,7 @@ end
 	    <item>
 	    They are attached and the command 'Unleash 1' is executed. This
 	    makes it possible to even explore the environment of every
-	    child thread just before its termination.
+	    child thread just before it terminates.
 	  </list> 
 	<section>
 	  <title/The Queries Menu/
