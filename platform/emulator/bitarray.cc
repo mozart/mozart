@@ -63,6 +63,9 @@ public:
                   oz_atom(" bits at "),   oz_int((int)this));
   }
 
+  virtual OZ_Return getFeatureV(OZ_Term,OZ_Term&);
+  // virtual OZ_Return putFeatureV(OZ_Term,OZ_Term );
+
   virtual
   OZ_Extension *gCollectV(void);
   OZ_Extension *sCloneV(void);
@@ -290,6 +293,19 @@ OZ_BI_define(BIbitArray_test,2,1)
   else
     return oz_raise(E_ERROR,E_KERNEL,"BitArray.index",2,OZ_in(0),OZ_in(1));
 } OZ_BI_end
+
+OZ_Return BitArray::getFeatureV(OZ_Term f,OZ_Term& v)
+{
+  if (!OZ_isInt(f)) { oz_typeError(1,"int"); }
+  int i = OZ_intToC(f);
+  if (checkBounds(i)) {
+    v = test(i)? OZ_true(): OZ_false();
+    return PROCEED;
+  } else {
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.index",2,
+                    oz_makeTaggedExtension(this),f);
+  }
+}
 
 OZ_BI_define(BIbitArray_low,1,1)
 {

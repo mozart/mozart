@@ -50,6 +50,11 @@ OZ_Term OZ_SituatedExtension::typeV() {
   return AtomSituatedExtension;
 }
 
+OZ_Term OZ_Extension::getFeatureV(OZ_Term f) {
+  OZ_Term t;
+  return (getFeatureV(f,t)==PROCEED)?t:0;
+}
+
 unsigned int oz_newUniqueId() {
   static unsigned int counter=OZ_E_LAST;
   if (counter==0) OZ_error("oz_newUniqueId: counter overflow");

@@ -894,6 +894,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 ("="|{COMPARE})":"             { return T_FDCOMPARE; }
 {LMACRO}                       { return T_LMACRO; }
 {RMACRO}                       { return T_RMACRO; }
+":="                           { return T_DOTASSIGN; }
 
 "."({SPACE}|\n)*[0-9]+         { // Hack to avoid strange parsing of X.1.1:
                                  // If "." is followed by integer, then
