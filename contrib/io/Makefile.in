@@ -1,0 +1,50 @@
+@SET_MAKE@
+BUILDTOP        = @BUILDTOP@
+prefix          = @prefix@
+SRCDIR          = @srcdir@
+VPATH           = @srcdir@
+PLATFORM        = @PLATFORM@
+LIB_DIR         = $(prefix)/contrib/io
+
+OZC             = @OZC@
+
+INSTALL         = @INSTALL@
+INSTALL_DIR     = @INSTALL_DIR@
+INSTALL_LIB     = $(INSTALL) -m 444
+
+TARGETS         = mode.ozf
+LIB_TARGETS     = $(addprefix $(LIB_DIR)/,$(TARGETS))
+
+.PHONY: all install clean veryclean distclean bootstrap depend
+
+all:            $(TARGETS)
+install:        $(LIB_DIR) $(LIB_TARGETS)
+
+$(LIB_DIR):
+        $(INSTALL_DIR) $@
+
+$(LIB_TARGETS): $(LIB_DIR)/% : %
+        $(INSTALL_LIB) $< $@
+
+%.ozf: %.oz
+        $(OZC) -c $< -o $@
+
+clean veryclean:
+        -$(RM) *~ *.ozf
+
+distclean: veryclean
+        -$(RM) config.* Makefile
+
+include $(SRCDIR)/../../share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+        ./config.status
+
+config.status: configure
+        ./config.status --recheck
