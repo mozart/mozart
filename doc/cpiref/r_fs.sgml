@@ -19,8 +19,10 @@
 <p>
 <table>
 <tr> <th/value/ <th/meaning/
-<tr> <td/<<fs_empty>>/ <td/the empty set/
-<tr> <td/<<fs_full>>/ <td/the set <math>\{0, \ldots, OZ\_getFDSup()\}</math>/
+<tr> <td/<<fs_empty>>/ 
+     <td/the empty set/
+<tr> <td/<<fs_full>>/ 
+     <td/the set <math>\{\mbox{\tt OZ\_getFSInf()}, \ldots, \mbox{\tt OZ\_getFSSup()}\}</math>/
 </table>
  
 </List>
@@ -257,6 +259,28 @@ otherwise the empty set.
 
 <Item> Returns the cardinality of <<*this>>' complement.
 
+<Entry class="member function"><<copyExtension>>
+<Index class=proglang><<OZ_FSetValue>><And><<copyExtension>></Index>
+<Synopsis> <<void copyExtension(void);>>
+
+<Item> This member function replaces the current extension of the
+set value representation by a copy of it.
+
+
+<Entry class="member function"><<disposeExtension>>
+<Index class=proglang><<OZ_FSetValue>><And><<disposeExtension>></Index>
+<Synopsis> <<void disposeExtension(void);>>
+
+<Item> This member function frees the heap memory occupied by the
+extension of the set value.
+
+<Entry class="constant member function"><<toString>>
+<Index class=proglang><<OZ_FSetValue>><And><<toString>></Index>
+<Synopsis><<char * toString(void) const;>>
+
+<Item> Returns a textual representation of the finite set value pointing
+to a static array of <<char>>s.
+
 </List>
 
 <!--
@@ -280,14 +304,5 @@ static void operator delete(void *, size_t);
 
 <p>
 
-<para class=apropos><title/<<toString>>/
-<em/member function/
-<p>
-<<
-char * toString(void)
->>
-<p>
-
-<p>
 
 -->

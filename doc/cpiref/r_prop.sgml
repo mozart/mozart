@@ -138,17 +138,18 @@ case <<v>> does not denote a variable nothing happens. The value of
 
 <Entry class="member function"><<impose>>
 <Index class=proglang><<OZ_Propagator>><And><<impose>></Index>
-<Synopsis> <<
-void impose(OZ_Propagator * p, 
-            int prio = OZ_getMediumPrio());
->>
+<Synopsis> <<void impose(OZ_Propagator * p);>>
 
-<Item> This member function imposes the propagator <<p>> with the
-priority <<prio>> on the parameters collected by <<addImpose>>. An
-admissible value for <<prio>> can be obtained by the functions
-<<OZ_getLowPrio()>>, <<OZ_getMediumPrio()>>, and
-<<OZ_getHighPrio()>>. The propagator is immediately switched to
-<em/runnable/, but not initially run.
+<Item> This member function imposes the propagator <<p>> on the
+parameters collected by <<addImpose>>. The propagator is immediately
+switched to <em/runnable/, but not initially run.
+
+<Entry class="constant member function"><<toString>>
+<Index class=proglang><<OZ_Propagator>><And><<toString>></Index>
+<Synopsis><<char * toString(void) const;>>
+
+<Item> Returns a textual representation of the propagator pointing to
+a static array of <<char>>s.
 
 </List>
 

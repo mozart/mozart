@@ -41,7 +41,7 @@ of the class <<OZ_FiniteDomain>> or in conjunction with operators
 <tr> <th/value/ <th/explanation/
 <tr> <td/<<fd_empty>>/ <td/The domain does not contain any element/
 <tr> <td/<<fd_full>>/ <td/The domain contains all elements possible,
-&ie <math/0, \ldots, OZ\_getFDSup()/
+&ie <math/0, \ldots, \mbox{\tt OZ\_getFDSup()}/
 <tr> <td/<<fd_bool>>/ <td/The domain contains <math/0/ and <math/1/./
 <tr> <td/<<fd_singl>>/ <td/The domain contains a single element./
 </table>
@@ -142,7 +142,7 @@ a domain description in <ptr to="expect.checkconstr">, entry
 <Synopsis> <<int OZ_FiniteDomain::initFull(void);>>
 
 <Item> Initialises an instance of class <<OZ_FiniteDomain>> to the
-domain <math/\{0, \ldots, OZ\_getFDSup()\}/.
+domain <math/\{0, \ldots, \mbox{\tt OZ\_getFDSup()}\}/.
 
 
 <Entry class="member function"><<initEmpty>>
@@ -318,7 +318,8 @@ represented by <<y>> and <<*this>>.
 <Item>
 This member function returns the negation of the finite domain
 represented by <<*this>>. The negation is computed by removing all
-elements contained in <<*this>> from <math/\{0, \ldots, OZ\_getFDSup()\}/.
+elements contained in <<*this>> from <math/\{0, \ldots, \mbox{\tt
+OZ\_getFDSup()}\}/.
 
 
 <Entry class="operator member function"><<operator &amp;=>>
@@ -434,6 +435,13 @@ domain representation by a copy of it.
 
 <Item> This member function frees the heap memory occupied by the
 extension of the domain.
+
+<Entry class="constant member function"><<toString>>
+<Index class=proglang><<OZ_FiniteDomain>><And><<toString>></Index>
+<Synopsis><<char * toString(void) const;>>
+
+<Item> Returns a textual representation of the finite domain pointing
+to a static array of <<char>>s.
 
 </List>
 
