@@ -37,6 +37,7 @@
 \lefthyphenmin=2
 \righthyphenmin=2
 \usepackage{verbatim}
+\usepackage{epsfig}
 </xsl:text>
 <xsl:for-each select="FRONT/META[@NAME='LATEX.PACKAGE']">
 \usepackage{<xsl:value-of select="@VALUE"/>}
@@ -72,6 +73,7 @@
 \maketitle
 </xsl:text>
 <xsl:apply-templates select="BODY"/>
+<xsl:apply-templates select="BACK" mode="back"/>
 <xsl:text>\end{document}
 </xsl:text>
 </data>
@@ -380,6 +382,12 @@
 <xsl:text>}</xsl:text>
 </xsl:template>
 
+<xsl:template name="pageref">
+<xsl:text>(page~\pageref{</xsl:text>
+<xsl:value-of select="@ID"/>
+<xsl:text>})</xsl:text>
+</xsl:template>
+
 <xsl:template mode="ref" match="CHAPTER">
 <xsl:call-template name="secref">
   <xsl:param name="label">Chapter</xsl:param>
@@ -402,6 +410,16 @@
 <xsl:call-template name="secref">
   <xsl:param name="label">Figure</xsl:param>
 </xsl:call-template>
+</xsl:template>
+
+<xsl:template mode="ref" match="PARA">
+<xsl:call-template name="pageref"/>
+</xsl:template>
+
+<xsl:template mode="ref" match="BIB.EXTERN">
+<xsl:text>\cite{</xsl:text>
+<xsl:value-of select="@KEY"/>
+<xsl:text>}</xsl:text>
 </xsl:template>
 
 <xsl:template mode="ref" match="*">
@@ -464,22 +482,31 @@
     <xsl:when test="$to='ozdoc:tools'">
      <xsl:text>Oz Shell Utilities</xsl:text>
     </xsl:when>
+    <xsl:when test="$to='ozdoc:foreign'">
+     <xsl:text>Interfacing to C and C++</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:cpiref'">
+     <xsl:text>The Mozart Constraint Extensions Reference</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:wp'">
+     <xsl:text>Window Programming in Mozart</xsl:text>
+    </xsl:when>
     <xsl:otherwise>
      <xsl:text>!!!UNKNOWN REF!!!</xsl:text>
-     <xsl:value-of select="@TO"/>
+     <xsl:value-of select="tex:quote((string(@TO)))"/>
      <xsl:text>!!!</xsl:text>
     </xsl:otherwise>
    </xsl:choose>
    <xsl:if test="@KEY">
     <xsl:text> (</xsl:text>
-    <xsl:value-of select="@KEY"/>
+    <xsl:value-of select="tex:quote((string(@KEY)))"/>
     <xsl:text>)</xsl:text>
    </xsl:if>
    <xsl:text>}</xsl:text>
   </xsl:when>
   <xsl:otherwise>
    <xsl:text>\texttt{</xsl:text>
-   <xsl:value-of select="$to"/>
+   <xsl:value-of select="tex:quote((string($to)))"/>
    <xsl:text>}</xsl:text>
   </xsl:otherwise>
  </xsl:choose>
@@ -619,8 +646,13 @@
   </xsl:when>
   <xsl:when test="PICTURE.EXTERN[@TYPE='PS']">
     <xsl:text>\epsfig{file=</xsl:text>
-    <xsl:value-of select="PICTURE[@TYPE='PS']/@TO"/>
+    <xsl:value-of select="PICTURE.EXTERN[@TYPE='PS']/@TO"/>
     <xsl:text>,width=0.7\linewidth}</xsl:text>
+  </xsl:when>
+  <xsl:when test="PICTURE.EXTERN[@TYPE='GIF']">
+    <xsl:text>\epsfig{file=</xsl:text>
+    <xsl:value-of select="PICTURE.EXTERN[@TYPE='GIF']/@TO"/>
+    <xsl:text>.ps,width=0.7\linewidth}</xsl:text>
   </xsl:when>
   <xsl:otherwise>
     <xsl:text>{UNKNOWN PICTURE}</xsl:text>
@@ -639,6 +671,12 @@
 <xsl:text>\begin{center}\begin{minipage}{\linewidth}\input{</xsl:text>
 <xsl:value-of select="@TO"/>
 <xsl:text>}\end{minipage}\end{center}</xsl:text>
+</xsl:template>
+
+<xsl:template match="PICTURE.EXTERN[@DISPLAY='DISPLAY' and @TYPE='GIF']">
+<xsl:text>\begin{center}\begin{minipage}{\linewidth}\begin{center}\epsfig{file=</xsl:text>
+<xsl:value-of select="@TO"/>
+<xsl:text>.ps,width=\linewidth}\end{center}\end{minipage}\end{center}</xsl:text>
 </xsl:template>
 
 <xsl:template match="Q">
@@ -762,8 +800,25 @@
 <xsl:text>}</xsl:text>
 </xsl:template>
 
+<xsl:template match="NOTE[not(@FOOT='FOOT')]">
+<xsl:text>\paragraph{Note:}</xsl:text>
+<xsl:apply-templates/>
+</xsl:template>
+
 <xsl:template match="NOTE/P.SILENT">
 <xsl:apply-templates/>
 </xsl:template>
 
+<xsl:template match="BACK" mode="back">
+<xsl:apply-templates mode="bibdecl" select="BIB.EXTERN[position()=1]"/>
+</xsl:template>
+
+<xsl:template mode="bibdecl" match="BIB.EXTERN">
+<xsl:text>
+\bibliographystyle{plain}
+\bibliography{</xsl:text>
+<xsl:value-of select="substring-before((string(@TO)),'.bib')"/>
+<xsl:text>}
+</xsl:text>
+</xsl:template>
 </xsl:stylesheet>
