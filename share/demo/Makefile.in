@@ -88,17 +88,12 @@ JobShop.oza: $(JOBSHOPFUN2)
 Cutting/%.ozf: Cutting/%.oz
 	$(COMPILE) -b $(BUILDDIR)/Cutting/ $< -o $@
 
-CUTTING1 = \
-	Configure
-CUTTING2 = \
-	Script Edit Compute Main
+CUTTING = \
+	Configure Script Edit Compute Main
 
-CUTTINGFUN1 = $(CUTTING1:%=Cutting/%.ozf)
-CUTTINGFUN2 = $(CUTTING2:%=Cutting/%.ozf)
+CUTTINGFUN = $(CUTTING:%=Cutting/%.ozf)
 
-$(CUTTINGFUN2): $(CUTTINGFUN1) 
-
-Cutting.oza: $(CUTTINGFUN2)
+Cutting.oza: $(CUTTINGFUN)
 	$(LINK) Cutting/Main.ozf -o $@
 
 
