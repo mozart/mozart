@@ -253,11 +253,17 @@ in
 				     state:   disabled
 				     key:     u
 				     feature: all)
+			     separator
 			     command(label:   'Hide Failed Subtrees'
 				     action:  self # nodes(hideFailed)
 				     state:   disabled
 				     key:     f
 				     feature: failed)
+			     command(label:   'Unhide All but Failed Subtrees'
+				     action:  self # nodes(unhideButFailed)
+				     state:   disabled
+				     key:     ctrl(f)
+				     feature: butfailed)
 			    ]
 		      feature: hide)]
 	  nil}
@@ -272,7 +278,7 @@ in
 				     nextSol prevSol top back])
 			       search([all next step])
 			       nodes([cmp info selCmp deselCmp stat])
-			       hide([toggle all failed])]
+			       hide([toggle all failed butfailed])]
 	  tk(entryconf state:disabled)}
       end
 
@@ -282,7 +288,7 @@ in
 				     nextSol prevSol top back])
 			       search([all next step])
 			       nodes([cmp info selCmp deselCmp stat])
-			       hide([toggle all failed])
+			       hide([toggle all failed butfailed])
 			       options([search layout info postscript])]
 	  tk(entryconf state:disabled)}
       end

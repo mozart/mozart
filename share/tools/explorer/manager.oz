@@ -134,17 +134,21 @@ in
 	    end
 	    %% Nodes
 	    case {CurNode isHidden($)} then
-	       <<MenuManager  normal(hide([toggle all]))>>
+	       <<MenuManager  normal(hide([toggle all butfailed]))>>
 	       <<MenuManager  disable([nodes([info cmp selCmp deselCmp])
 				       hide(failed)])>>
 	    else
+	       IsUnhidable     = {CurNode isUnhidable($)}
+	       IsFailedHidable = {CurNode isFailedHidable($)}
+	       IsButFailedUn   = IsUnhidable orelse IsFailedHidable
+	    in
 	       <<MenuManager normal(nodes(info))>>
 	       <<MenuManager state(@cmpNode==False nodes(selCmp))>>
 	       <<MenuManager state(@cmpNode\=False nodes([deselCmp cmp]))>>
 	       <<MenuManager state(CurNode.kind==choose hide(toggle))>>
-	       <<MenuManager state({CurNode isUnhidable($)} hide(all))>>
-	       <<MenuManager state({CurNode isFailedHidable($)}
-				   hide(failed))>>
+	       <<MenuManager state(IsUnhidable     hide(all))>>
+	       <<MenuManager state(IsFailedHidable hide(failed))>>
+	       <<MenuManager state(IsButFailedUn   hide(butfailed))>>
 	       <<MenuManager state(CurNode.kind==choose orelse
 				   CurNode.kind==succeeded
 				   nodes(stat))>>
