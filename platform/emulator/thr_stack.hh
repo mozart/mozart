@@ -34,7 +34,7 @@ enum ContFlag {
   C_LOCAL          = 6, // a local computation space
   C_EXCEPT_HANDLER = 7, // 
   C_SET_CAA        = 8, // supply the emulator with the CAA pointer;
-  C_SET_CUROBJECT  = 9  // set am.curObject
+  C_SET_SELF       = 9  // set am.cachedSelf
 };
 
 
@@ -178,9 +178,9 @@ public:
     tos = newTop+2;
   }
 
-  void pushDebug(OzDebug *deb)       { pushPair(deb,C_DEBUG_CONT); }
-  void pushSetCaa (AskActor *aa)     { pushPair(aa,C_SET_CAA); }
-  void pushSetCurObject(Object *obj) { pushPair(obj,C_SET_CUROBJECT); }
+  void pushDebug(OzDebug *deb)   { pushPair(deb,C_DEBUG_CONT); }
+  void pushSetCaa (AskActor *aa) { pushPair(aa,C_SET_CAA); }
+  void pushSelf(Object *obj)     { pushPair(obj,C_SET_SELF); }
   void pushExceptionHandler(TaggedRef pred) { 
     pushPair(ToPointer(pred),C_EXCEPT_HANDLER);
   }

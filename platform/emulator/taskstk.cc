@@ -62,8 +62,8 @@ int TaskStack::getSeqSize()
     if (cFlag == C_JOB) {
       return oldTos-tos-1;
     }
-    if (cFlag == C_SET_CUROBJECT) {
-      am.setCurrentObject((Object*) *(tos-1));
+    if (cFlag == C_SET_SELF) {
+      am.setSelf((Object*) *(tos-1));
     }
     Assert(cFlag != C_LOCAL);
     tos = tos - frameSize(cFlag) + 1;
@@ -118,7 +118,7 @@ int TaskStack::frameSize(ContFlag cFlag)
   case C_DEBUG_CONT:
   case C_EXCEPT_HANDLER:
   case C_SET_CAA:
-  case C_SET_CUROBJECT:
+  case C_SET_SELF:
     return 2;
   case C_CALL_CONT:  
   case C_CFUNC_CONT:
