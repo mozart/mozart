@@ -4,9 +4,6 @@
 # oztool cc  ...        same for the c compiler
 # oztool ld  ...        creates DLLs
 
-: ${OZHOME="/usr/local/oz"}
-: ${OZDYNLD="$OZHOME/bin/ozdynld"}
-
 : ${oztool_cxx="@OZTOOL_CXX@"}
 : ${oztool_cc="cc"}
 : ${oztool_ld=$oztool_cxx}
