@@ -1324,8 +1324,9 @@ LBLsuspendThread:
 #endif
 
     if (e->debugmode() && CTT->isTraced()) {
-      TaskStack *ts = CTT->getTaskStackRef();
-      ProgramCounter debugPC = (ProgramCounter) *(ts->getTop()-frameSz-1);
+      TaskStackEntry *auxtos = CTT->getTaskStackRef()->getTop();
+      PopFrame(auxtos,debugPC,_Y,_G);
+      PopFrameNoDecl(auxtos,debugPC,_Y,_G);
       debugStreamSuspend(debugPC,CTT);
     }
 
