@@ -1,12 +1,8 @@
 <!--
   - Authors:
-  -   Denys Duchier     <duchier@ps.uni-sb.de>
-  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
   -   Christian Schulte <schulte@ps.uni-sb.de>
   -
   - Copyright:
-  -   Denys Duchier, 1998
-  -   Leif Kornstaedt, 1998
   -   Christian Schulte, 1998
   -
   - Last change:
@@ -27,4 +23,11 @@
 
 <Chapter id="Chapter.TkTools">
   <Title/Graphical Tools: <<TkTools>>/
+
+  <p>
+    The reference documentation for this chapter is not yet finished. 
+    However, examples and documentation that is sufficient to use the
+    graphical abstractions the module <<TkTools>> provides, can be
+    found in <ptr.extern to="ozdoc:wp" key="chapter.tools">.
+
 </Chapter>
