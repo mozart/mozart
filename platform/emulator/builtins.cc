@@ -4483,7 +4483,7 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   Port *port  = tagged2Port(prt);
 
   if (port->isProxy()) {
-    return remoteApplication("Port.send",port,val);
+    return remoteApplication("Send",port,val);
   } 
 
   CheckLocalBoard(port,"port");
