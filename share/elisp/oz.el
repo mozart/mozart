@@ -1311,14 +1311,15 @@ OZ compiler, machine and error window")
    (oz-hide-errors)
    (oz-send-string (concat directive " '" oz-temp-file "'\n"))
    (sleep-for 2)
-   (let ((buf (get-buffer-create "*Oz Temp*")))
-     (save-excursion
-       (set-buffer buf)
-       (delete-region (point-min) (point-max))
-       (insert-file-contents (concat oz-temp-file suffix))
-       (display-buffer buf t)
-       (oz-mode)
-       (if mode (oz-fontify-buffer)))))
+   (if (not (get-buffer-window "*Oz Errors*"))
+       (let ((buf (get-buffer-create "*Oz Temp*")))
+	 (save-excursion
+	   (set-buffer buf)
+	   (delete-region (point-min) (point-max))
+	   (insert-file-contents (concat oz-temp-file suffix))
+	   (display-buffer buf t)
+	   (oz-mode)
+	   (if mode (oz-fontify-buffer))))))
 
 
 
