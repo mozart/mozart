@@ -43,7 +43,7 @@ static const double GDT_MAXENTRIES      = 0.9;
 // static const double GDT_MAXENTRIES   = 1.0;
 // static const double GDT_MAXSLOTS     = 1.0;
 //
-static const double GDT_IDEALENTRIES    = 0.7; // wrt the number of slots;
+static const double GDT_IDEALENTRIES    = 0.7;
 static const int GDT_MINFULL            = 4;   //
 
 //
