@@ -2670,6 +2670,13 @@ void MsgTermSnapshotImpl::gcFinish()
     OZ_Term hv = *hvp;
 
     //
+    if (oz_isRef(hv)) {
+      _DEREF(hv, hvp, _tag);
+      Assert(oz_isVariable(hv));
+      l->gcSetLoc(makeTaggedRef(hvp));
+    }
+
+    //
     if (oz_isGCStubVar(hv)) {
       GCStubVar *gcsv = oz_getGCStubVar(hv);
       *hvp = gcsv->getValue();
