@@ -24,8 +24,7 @@
  *
  */
 
-#include "standard.hh"
-#include "filter.hh"
+#include "mozart_cpi.hh"
 
 OZ_Service &OZ_Service::replace_propagator(OZ_Propagator * prop,
 					   int vars_drop = 0, 
@@ -36,7 +35,7 @@ OZ_Service &OZ_Service::replace_propagator(OZ_Propagator * prop,
       _actions[_nb_actions]._what = _actions_t::_serv_replace;
       _actions[_nb_actions]._action_params._replacement = prop;
       _nb_actions += 1;
-      OZ_ASSERT(_nb_actions =< _max_actions);
+      Assert(_nb_actions =< _max_actions);
   }
   //
   va_list ap;
@@ -49,4 +48,3 @@ OZ_Service &OZ_Service::replace_propagator(OZ_Propagator * prop,
   _closed = 1;
   return *this;
 }
-
