@@ -2747,7 +2747,7 @@ LBLsuspendThread:
 			       mkSTupleX("proc",makeTaggedConst(predicate),
 					X,predArity)));
 	     }
-	     CheckArity(1,o->getPrintName());
+	     CheckArity(1,makeTaggedConst(o));
 	     def = o->getAbstraction();
 	     X[predArity++] = o->getSlowMethods();
 	     X[predArity++] = makeTaggedConst(o);
@@ -2758,7 +2758,7 @@ LBLsuspendThread:
 	     // o->deepness handelt by 'objectIsFree'
 	   } else {
 	     def = (Abstraction *) predicate;
-	     CheckArity(def->getArity(), def->getPrintName());
+	     CheckArity(def->getArity(), makeTaggedConst(def));
 	     if (!isTailCall) { CallPushCont(PC); }
 	   }
 	   CallDoChecks(def,def->getGRegs(),def->getArity());
@@ -2773,7 +2773,7 @@ LBLsuspendThread:
 	 {
 	   bi = (Builtin *) predicate;
 	   
-	   CheckArity(bi->getArity(),bi->getPrintName());
+	   CheckArity(bi->getArity(),makeTaggedConst(bi));
 	   
 	   switch (bi->getType()) {
 	     
