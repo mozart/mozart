@@ -137,7 +137,7 @@ OZ_BI_define(fdp_sumCN, 4, 0)
   const char * op = OZ_atomToC(OZ_in(2));
 
   if (!strcmp(SUM_OP_NEQ, op)) {
-    OZ_EXPECT(pe, 1, expectVectorVectorIntVarSingl);
+    OZ_EXPECT(pe, 1, expectVectorLinearVectorIntVarSingl);
     OZ_EXPECT(pe, 3, expectIntVarSingl);
 
     return pe.impose(new SumCNNeqPropagator(OZ_in(0),OZ_in(1),OZ_in(3)));
