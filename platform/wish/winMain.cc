@@ -216,9 +216,9 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
       WishPanic("Usage: tk.exe port\n", argc);
 
     int port = atoi(argv[0]);
-    Tcl_Channel inout = Tcl_OpenTcpClient(interp,port,Tcl_GetHostName(),0,0,0);
+    Tcl_Channel inout = Tcl_OpenTcpClient(interp,port,"localhost",0,0,0);
     if (inout==0)
-      WishPanic("Tcl_OpenTcpClient(%d,%s) failed",port,Tcl_GetHostName());
+      WishPanic("Tcl_OpenTcpClient(%d,%s) failed",port,"localhost");
 
     Tcl_SetChannelOption(interp, inout, "-blocking", "off");
     Tcl_SetChannelOption(interp, inout, "-translation", "binary");
