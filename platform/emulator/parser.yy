@@ -1514,8 +1514,8 @@ static OZ_Term parse() {
 OZ_BI_define(parser_parseFile, 2, 1)
 {
   // {ParseFile FileName OptRec ?(AST#ReporterMessages)}
-  OZ_declareVirtualStringIN(0, file);
-  OZ_declareNonvarIN(1, optRec);
+  OZ_declareVirtualString(0, file);
+  OZ_declareDetTerm(1, optRec);
   if (!OZ_isRecord(optRec))
     return OZ_typeError(1, "ParseOptions");
   OZ_Term defines = init_options(optRec);
@@ -1531,8 +1531,8 @@ OZ_BI_end
 OZ_BI_define(parser_parseVirtualString, 2, 1)
 {
   // {ParseVirtualString VS OptRec ?(AST#ReporterMessages)}
-  OZ_declareVirtualStringIN(0, str);
-  OZ_declareNonvarIN(1, optRec);
+  OZ_declareVirtualString(0, str);
+  OZ_declareDetTerm(1, optRec);
   if (!OZ_isRecord(optRec))
     return OZ_typeError(1, "ParseOptions");
   OZ_Term defines = init_options(optRec);
